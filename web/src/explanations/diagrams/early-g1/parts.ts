@@ -13,15 +13,23 @@ export function cutsAllowed(shape: ShapeKind): number[] {
   return [0, 1];
 }
 
-/** How many straight cut lines make the parts (a child may count those instead of the parts). */
-export function cutLines(parts: 2 | 4, cut: number): number {
-  if (parts === 2) return 1;
-  return cut === 1 ? 3 : 2;
+/** The cuts that fit a shape for 2, 3 or 4 parts; cut 3 is strips across (4 parts), and 3 parts are strips down (0) or across (1). */
+export function cutsFor(shape: ShapeKind, parts: 2 | 3 | 4): number[] {
+  if (shape === 2) return [0];
+  if (parts === 3) return [0, 1];
+  return [...cutsAllowed(shape), ...(parts === 4 ? [3] : [])];
 }
 
-interface Part { segs: Seg[]; c: Pt }
+/** How many straight cut lines make the parts (a child may count those instead of the parts). */
+export function cutLines(parts: 2 | 3 | 4, cut: number, shape: ShapeKind = 0): number {
+  if (parts === 2) return 1;
+  if (parts === 3) return shape === 2 ? 3 : 2;
+  return cut === 1 || cut === 3 ? 3 : 2;
+}
 
-function partsOf(shape: ShapeKind, parts: 2 | 4, cut: number): { outline: Seg[]; parts: Part[]; cuts: [Pt, Pt][] } {
+export interface Part { segs: Seg[]; c: Pt }
+
+export function partsOf(shape: ShapeKind, parts: 2 | 3 | 4, cut: number): { outline: Seg[]; parts: Part[]; cuts: [Pt, Pt][] } {
   if (shape === 2) {
     const r = 86, C: Pt = [0, 0];
     const wedge = (a0: number, a1: number): Part => {
@@ -30,6 +38,10 @@ function partsOf(shape: ShapeKind, parts: 2 | 4, cut: number): { outline: Seg[];
     };
     const outline = [...arc(C, r, 0, 359.9), Z];
     if (parts === 2) return { outline, parts: [wedge(90, 270), wedge(-90, 90)], cuts: [[[0, -r], [0, r]]] };
+    if (parts === 3) {
+      const rim = (a: number): Pt => [Math.cos((a * Math.PI) / 180) * r, -Math.sin((a * Math.PI) / 180) * r];
+      return { outline, parts: [wedge(90, 210), wedge(210, 330), wedge(330, 450)], cuts: [[C, rim(90)], [C, rim(210)], [C, rim(330)]] };
+    }
     return { outline, parts: [wedge(90, 180), wedge(0, 90), wedge(180, 270), wedge(270, 360)], cuts: [[[0, -r], [0, r]], [[-r, 0], [r, 0]]] };
   }
   const w = shape === 1 ? 170 : 240, h = shape === 1 ? 170 : 150;
@@ -37,6 +49,10 @@ function partsOf(shape: ShapeKind, parts: 2 | 4, cut: number): { outline: Seg[];
   const tri = (a: Pt, b: Pt, c: Pt): Part => ({ segs: [M(a), L(b), L(c), Z], c: [(a[0] + b[0] + c[0]) / 3, (a[1] + b[1] + c[1]) / 3] });
   const outline = [M([0, 0]), L([w, 0]), L([w, h]), L([0, h]), Z];
   const TL: Pt = [0, 0], TR: Pt = [w, 0], BR: Pt = [w, h], BL: Pt = [0, h], O: Pt = [w / 2, h / 2];
+  if (parts === 3) {
+    if (cut === 0) return { outline, parts: [0, 1, 2].map(i => box((i * w) / 3, 0, ((i + 1) * w) / 3, h)), cuts: [1, 2].map((i): [Pt, Pt] => [[(i * w) / 3, 0], [(i * w) / 3, h]]) };
+    return { outline, parts: [0, 1, 2].map(i => box(0, (i * h) / 3, w, ((i + 1) * h) / 3)), cuts: [1, 2].map((i): [Pt, Pt] => [[0, (i * h) / 3], [w, (i * h) / 3]]) };
+  }
   if (parts === 2) {
     if (cut === 0) return { outline, parts: [box(0, 0, w / 2, h), box(w / 2, 0, w, h)], cuts: [[[w / 2, 0], [w / 2, h]]] };
     if (cut === 1) return { outline, parts: [box(0, 0, w, h / 2), box(0, h / 2, w, h)], cuts: [[[0, h / 2], [w, h / 2]]] };
@@ -44,6 +60,7 @@ function partsOf(shape: ShapeKind, parts: 2 | 4, cut: number): { outline: Seg[];
   }
   if (cut === 0) return { outline, parts: [box(0, 0, w / 2, h / 2), box(w / 2, 0, w, h / 2), box(0, h / 2, w / 2, h), box(w / 2, h / 2, w, h)], cuts: [[[w / 2, 0], [w / 2, h]], [[0, h / 2], [w, h / 2]]] };
   if (cut === 1) return { outline, parts: [0, 1, 2, 3].map(i => box((i * w) / 4, 0, ((i + 1) * w) / 4, h)), cuts: [1, 2, 3].map((i): [Pt, Pt] => [[(i * w) / 4, 0], [(i * w) / 4, h]]) };
+  if (cut === 3) return { outline, parts: [0, 1, 2, 3].map(i => box(0, (i * h) / 4, w, ((i + 1) * h) / 4)), cuts: [1, 2, 3].map((i): [Pt, Pt] => [[0, (i * h) / 4], [w, (i * h) / 4]]) };
   return { outline, parts: [tri(TL, TR, O), tri(TR, BR, O), tri(BR, BL, O), tri(BL, TL, O)], cuts: [[TL, BR], [TR, BL]] };
 }
 

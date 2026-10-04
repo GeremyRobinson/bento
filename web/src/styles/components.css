@@ -476,3 +476,8 @@
 .viz-svg .glyph{fill:var(--tint)} .viz-svg .glyph.acc{fill:var(--acc)} .viz-svg .glyph-line{fill:none;stroke:var(--tint);stroke-width:2.5;stroke-linecap:round}
 .viz-svg .keypill{fill:none;stroke:var(--rule);stroke-width:1}
 .viz-svg .spacer{stroke:none}
+/* coins (g2-coins): the only real-world colors in the pictures, from the Design tokens coin-copper / coin-silver and their rims */
+.viz-svg .coin{stroke-width:2.5} .viz-svg .coin.cu{fill:#c77b4a;stroke:#8f5230} .viz-svg .coin.ag{fill:#cfd4dc;stroke:#7d8592}
+.viz-svg .coin-ridge{fill:none;stroke-width:1.2} .viz-svg .coin-ridge.cu{stroke:#8f5230} .viz-svg .coin-ridge.ag{stroke:#7d8592}
+.viz-svg .coin-art{fill:none;stroke-width:2;stroke-linejoin:round} .viz-svg .coin-art.cu{stroke:#8f5230} .viz-svg .coin-art.ag{stroke:#7d8592}
+.viz-svg .xmark{fill:none;stroke:var(--tint);stroke-width:3.5;stroke-linecap:round}

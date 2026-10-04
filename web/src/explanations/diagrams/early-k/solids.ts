@@ -113,6 +113,8 @@ export interface SolidSpec {
    */
   beats?: { faces?: number; edges?: number; corners?: number; move?: number; name?: number; until?: number };
   name?: string;
+  /** count out loud (g2-solids): every face lights in turn, hidden ones too, with a running count beside the solid */
+  running?: boolean;
   alt: string;
 }
 
@@ -211,7 +213,20 @@ export function buildSolid(s: SolidSpec): SceneDiagram {
   const counts = poly ? POLY_COUNTS[s.kind as keyof typeof POLY_COUNTS] : null;
   const bottom = Math.max(...(poly ? poly.v.map(p => p[1]) : [s.kind === "sphere" ? 64 : s.turn === 2 ? 64 : 140]));
   const label = (y: number, text: string, from: number, until?: number) => items.push(t(poly ? 90 : 40, bottom + y, text, "lbl", { from, ...(until != null ? { until } : {}), enter: "rise" }));
-  if (b.faces != null) {
+  // a running count beside the solid: each number shows while its thing lights, the last one stays
+  const right = Math.max(...(poly ? poly.v.map(p => p[0]) : [64])) + 44, midY = poly ? (Math.min(...poly.v.map(p => p[1])) + bottom) / 2 : 0;
+  const runCount = (n: number, from: number, step: number, until?: number) => {
+    for (let i = 0; i < n; i++) {
+      const last = i === n - 1, d = step * i;
+      items.push(t(right, midY, String(i + 1), "lbl big acc", { from, ...(until != null ? { until } : {}), enter: last ? "pop" : "flash", delay: d, ...(last ? {} : { vars: { "--d2": `${(d + step).toFixed(2)}s` } }) }));
+    }
+  };
+  if (b.faces != null && s.running && poly) {
+    const stop = b.edges ?? b.move ?? b.name, until = stop != null ? stop - 1 : undefined, step = 0.7;
+    poly.faces.forEach((f, i) => items.push(path(polySegs(f.at.map(k => poly.v[k]!)), "lit", { from: b.faces!, ...(until != null ? { until } : {}), enter: "flash", delay: step * i, vars: { "--d2": `${(step * i + step).toFixed(2)}s` } })));
+    runCount(poly.faces.length, b.faces, step, until);
+    label(40, `${counts!.faces} flat faces`, b.faces, until);
+  } else if (b.faces != null) {
     const faces = litFaces(s, 0), stop = b.edges ?? b.move ?? b.name;
     faces.forEach((f, i) => items.push(path(f, "lit", { from: b.faces!, ...(stop != null ? { until: stop - 1 } : {}), enter: "fade", delay: 0.6 * i })));
     const n = counts ? counts.faces : s.kind === "cylinder" ? 2 : s.kind === "cone" ? 1 : 0;
@@ -220,10 +235,12 @@ export function buildSolid(s: SolidSpec): SceneDiagram {
   if (poly && b.edges != null) {
     const stop = b.corners ?? b.name;
     poly.edges.forEach(([a, c], i) => items.push(path([M(poly.v[a]!), L(poly.v[c]!)], "litedge", { from: b.edges!, ...(stop != null ? { until: stop - 1 } : {}), enter: "draw", delay: 0.25 * i })));
+    if (s.running) runCount(poly.edges.length, b.edges, 0.25, stop != null ? stop - 1 : undefined);
     label(40, `${counts!.edges} edges`, b.edges, stop != null ? stop - 1 : undefined);
   }
   if (poly && b.corners != null) {
     poly.v.forEach((p, i) => items.push({ type: "circle", cx: p[0], cy: p[1], r: 6, cls: "dota", from: b.corners!, enter: "pop", delay: 0.3 * i } as Draft));
+    if (s.running) runCount(poly.v.length, b.corners, 0.3, b.name != null ? b.name - 1 : undefined);
     label(40, `${counts!.corners} corners`, b.corners, b.name != null ? b.name - 1 : undefined);
   }
   if (b.move != null) {
