@@ -70,3 +70,21 @@ export function words(...parts: (string | number)[]): MathText {
 
 /** Lines of words, one under the other. */
 export const lines = (...ls: MathText[]): MathText => ls.flatMap((l, i) => (i ? [br(), ...l] : l));
+
+/**
+ * A step that also takes another right answer (adding in a different order is slower, not wrong):
+ * any value in `also` passes, then the step's known slips, then the generic nudge.
+ */
+export function alsoAccept(step: AnswerStep, also: number[]): AnswerStep {
+  const id = step.slots[0]!.id;
+  return {
+    ...step,
+    check: values => {
+      const v = values[id];
+      if (v != null && (v === step.slots[0]!.expected || also.includes(v))) return { ok: true };
+      for (const k of step.known) if (k.values[id] === v) return { ok: false, kind: k.kind, message: k.message, generic: false };
+      return { ok: false, kind: step.label, message: step.hint, generic: true };
+    },
+    known: step.known.filter(k => !also.includes(k.values[id]!)),
+  };
+}

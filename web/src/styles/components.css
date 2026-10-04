@@ -471,3 +471,8 @@
 .viz-svg .pin{fill:var(--card)} .viz-svg .pinline{stroke:var(--card);stroke-width:2;fill:none;stroke-linecap:round} .viz-svg .pinbox{fill:none;stroke:var(--card);stroke-width:2}
 .viz-svg .dotpath{fill:var(--tint);stroke:var(--tint);stroke-width:1;stroke-linejoin:round}
 .viz-svg .hlrow{fill:color-mix(in srgb,var(--acc) 20%,transparent)}
+.viz-svg .ring{fill:none;stroke:var(--acc);stroke-width:3}
+.viz-svg .tally{fill:none;stroke:var(--tint);stroke-width:3.5;stroke-linecap:round}
+.viz-svg .glyph{fill:var(--tint)} .viz-svg .glyph.acc{fill:var(--acc)} .viz-svg .glyph-line{fill:none;stroke:var(--tint);stroke-width:2.5;stroke-linecap:round}
+.viz-svg .keypill{fill:none;stroke:var(--rule);stroke-width:1}
+.viz-svg .spacer{stroke:none}

@@ -23,7 +23,7 @@ const ORACLES: Record<string, Oracle> = {
  "k-story":p=>[p.take?p.a-p.b:p.a+p.b],
  "k-write":p=>[String(p.n)],"k-bonds":p=>[p.whole-p.part],"k-solids":p=>[["Cube","Sphere","Cylinder","Cone"][p.shape]],
  "k-sort":p=>{const v=p.ask?Math.min(...p.counts):Math.max(...p.counts);return [[["Buttons","Leaves","Blocks"],["Circles","Squares","Triangles"]][p.by]![(p.counts.indexOf(v)+p.theme)%3]]},
- "g1-tensones":p=>[p.n],"g1-tenmore":p=>[p.more?p.n+10:p.n-10],"g1-ten":p=>[p.a+p.b],"g1-add20":p=>[p.a+p.b],"g1-sub20":p=>[p.a-p.b],
+ "g1-tensones":p=>[p.n],"g1-tenmore":p=>[p.more?p.n+10:p.n-10],"g1-ten":p=>[p.a+p.b],"g1-add20":p=>[p.a+p.b],"g1-three":p=>[p.a+p.b+p.c],"g1-tally":p=>{const c=p.counts;return [[c[p.x],c[p.x]-c[p.y],c[0]+c[1]+c[2]][p.ask]]},"g1-picgraph":p=>{const c=p.counts,v=p.few?Math.min(...c):Math.max(...c);return [[c[p.x],[["Apples","Bananas","Grapes"],["Dogs","Cats","Fish"],["Sunny","Rainy","Cloudy"],["Crackers","Popcorn","Pretzels"]][p.theme]![c.indexOf(v)],c[p.x]-c[p.y],c[p.x]+c[p.y]][p.ask]]},"g1-sub20":p=>[p.a-p.b],
  "g1-missing":p=>[p.c-p.a],"g1-addtens":p=>[p.n+p.k*10],"g1-time":p=>[p.hour,p.minute],
  "g2-hundreds":p=>[Math.floor(p.n/100)*100,Math.floor(p.n/10)%10*10,p.n%10],"g2-skip":p=>[p.start+5*p.by],
  "g2-evenodd":p=>[p.n%2?"Odd":"Even"],"g2-regroup":p=>[p.a+p.b],"g2-subregroup":p=>[p.a-p.b],"g2-within1000":p=>[p.sub?p.a-p.b:p.a+p.b],
