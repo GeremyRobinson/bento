@@ -58,3 +58,45 @@ export function buildLinePlot(s: LinePlotSpec): SceneDiagram {
   items.push(t(W / 2, 54, "inches", "xs"));
   return frame("line-plot", items, s.alt, 14, { w: 360 });
 }
+
+export interface FracRulerSpec {
+  /** length in fourths of an inch */
+  len: number;
+  /** the ruler's last whole inch */
+  max: number;
+  /** marks the reader counts in: 2 halves or 4 fourths */
+  to: number;
+  beats?: { whole: number; extra: number };
+  text?: string;
+  alt: string;
+}
+
+/** An inch ruler with half and quarter marks, a thing lying on it from 0. Learn hops whole inches, then the extra part. */
+export function buildFracRuler(s: FracRulerSpec): SceneDiagram {
+  const U = 96, q = U / 4, x = (fourths: number) => fourths * q, b = s.beats, items: Draft[] = [];
+  if (!(Number.isInteger(s.len) && s.len > 0 && s.len <= 4 * s.max)) throw new Error("ruler: the thing fits");
+  items.push({ type: "rect", x: -14, y: 0, w: x(4 * s.max) + 28, h: 52, rx: 6, cls: "fillsoft" } as Draft, { type: "rect", x: -14, y: 0, w: x(4 * s.max) + 28, h: 52, rx: 6, cls: "ax thin" } as Draft);
+  for (let k = 0; k <= 4 * s.max; k++) {
+    const h = k % 4 === 0 ? 20 : k % 2 === 0 ? 14 : 9;
+    items.push(path([M([x(k), 0]), L([x(k), h])], k % 4 === 0 ? "ax thin" : "tk"));
+    if (k % 4 === 0) items.push(t(x(k), 34, String(k / 4), "sm"));
+  }
+  items.push(t(x(4 * s.max) + 22, 28, "in", "sm start"));
+  const top = -40, tip = Math.min(22, x(s.len) / 4);
+  items.push({ type: "rect", x: 0, y: top, w: x(s.len) - tip, h: 24, rx: 3, cls: "cell c2" } as Draft);
+  items.push({ type: "polygon", points: [[x(s.len) - tip, top], [x(s.len), top + 12], [x(s.len) - tip, top + 24]], cls: "cell c2" } as Draft);
+  if (b) {
+    const whole = Math.floor(s.len / 4), per = 4 / s.to;
+    for (let k = 0; k < whole; k++) {
+      items.push(path([{ c: "M", p: [x(4 * k), 60] }, { c: "Q", q: [x(4 * k + 2), 92], p: [x(4 * k + 4), 60] }], "ln", { from: b.whole, enter: "draw", delay: 0.3 * k }));
+      items.push(t(x(4 * k + 2), 98, String(k + 1), "sm", { from: b.whole, enter: "rise", delay: 0.3 * k + 0.2 }));
+    }
+    for (let k = 0; k * per < s.len - 4 * whole; k++) {
+      const a = 4 * whole + k * per;
+      items.push(path([{ c: "M", p: [x(a), 60] }, { c: "Q", q: [x(a + per / 2), 80], p: [x(a + per), 60] }], "ln2", { from: b.extra, enter: "draw", delay: 0.3 * k }));
+    }
+    items.push(path([M([x(s.len), top - 10]), L([x(s.len), 0])], "ln2 dash", { from: b.extra, enter: "draw" }));
+    if (s.text) items.push(t(x(s.len) / 2, top - 30, s.text, "lbl big acc", { from: b.extra, enter: "rise", delay: 0.8 }));
+  }
+  return frame("frac-ruler", items, s.alt, 14, { w: 360 });
+}

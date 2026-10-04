@@ -481,3 +481,9 @@
 .viz-svg .coin-ridge{fill:none;stroke-width:1.2} .viz-svg .coin-ridge.cu{stroke:#8f5230} .viz-svg .coin-ridge.ag{stroke:#7d8592}
 .viz-svg .coin-art{fill:none;stroke-width:2;stroke-linejoin:round} .viz-svg .coin-art.cu{stroke:#8f5230} .viz-svg .coin-art.ag{stroke:#7d8592}
 .viz-svg .xmark{fill:none;stroke:var(--tint);stroke-width:3.5;stroke-linecap:round}
+.viz-svg .dialface{fill:var(--card);stroke:var(--text);stroke-width:2} .viz-svg .hub{fill:var(--text)}
+.viz-svg .needle{fill:none;stroke:var(--tint);stroke-width:3.5;stroke-linecap:round}
+.viz-svg text.muted{fill:var(--muted)}
+.a-swing{transform-box:view-box;transform-origin:var(--ox) var(--oy);animation:swing .9s var(--ease) var(--d,0s) both} @keyframes swing{from{transform:rotate(var(--from))}}
+.viz-svg .jugline{fill:none;stroke:var(--text);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.viz-svg .water{fill:color-mix(in srgb,var(--tint) 30%,var(--card))} .viz-svg .surface{fill:none;stroke:var(--tint);stroke-width:3.5;stroke-linecap:round}
