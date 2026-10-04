@@ -487,3 +487,11 @@
 .a-swing{transform-box:view-box;transform-origin:var(--ox) var(--oy);animation:swing .9s var(--ease) var(--d,0s) both} @keyframes swing{from{transform:rotate(var(--from))}}
 .viz-svg .jugline{fill:none;stroke:var(--text);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
 .viz-svg .water{fill:color-mix(in srgb,var(--tint) 30%,var(--card))} .viz-svg .surface{fill:none;stroke:var(--tint);stroke-width:3.5;stroke-linecap:round}
+.viz-svg .figline{fill:none;stroke:var(--tint);stroke-width:3.5;stroke-linecap:round} .viz-svg .arrowhead{fill:var(--tint)} .viz-svg .figdot{fill:var(--tint)}
+.viz-svg .card{fill:color-mix(in srgb,var(--muted) 12%,transparent);stroke:var(--rule);stroke-width:1.5;stroke-dasharray:4 4}
+.viz-svg .foldshape{fill:color-mix(in srgb,var(--tint) 18%,var(--card));stroke:var(--tint);stroke-width:2.5;stroke-linejoin:round}
+.viz-svg .foldhalf{fill:color-mix(in srgb,var(--tint) 40%,var(--card));stroke:var(--tint);stroke-width:2.5;stroke-linejoin:round}
+.viz-svg .foldline{fill:none;stroke:var(--text);stroke-width:2;stroke-dasharray:6 6} .viz-svg .symline{fill:none;stroke:var(--tint);stroke-width:2.5;stroke-dasharray:6 6}
+.viz-svg .misfit{fill:color-mix(in srgb,var(--err) 30%,transparent);stroke:var(--err);stroke-width:2;stroke-dasharray:6 4} .viz-svg text.okmark{fill:var(--ok)}
+.a-fold{transform-box:view-box;transform-origin:var(--ox) var(--oy);animation:fold 2.4s var(--ease) var(--d,0s) both}
+@keyframes fold{0%{transform:rotate(var(--r)) scaleY(1) rotate(calc(-1 * var(--r)))} 38%,70%{transform:rotate(var(--r)) scaleY(-1) rotate(calc(-1 * var(--r)))} 100%{transform:rotate(var(--r)) scaleY(1) rotate(calc(-1 * var(--r)))}}
