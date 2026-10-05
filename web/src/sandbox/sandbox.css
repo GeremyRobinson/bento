@@ -1,0 +1,59 @@
+/* The design sandbox (preview and dev builds only). Its own controls keep to plain greys so they never
+   compete with the app they're showing; the tiles on the board are the app's own pieces. */
+.sbtoggle{position:fixed;left:16px;bottom:max(16px,env(safe-area-inset-bottom));z-index:60;height:40px;padding:0 18px;border-radius:999px;
+  background:var(--text);color:var(--page);font:650 14px/1 var(--sans);box-shadow:0 6px 24px rgb(0 0 0/.18)}
+.sbpanel{position:fixed;right:12px;top:12px;bottom:12px;z-index:60;width:320px;overflow:auto;overscroll-behavior:contain;
+  background:color-mix(in srgb,var(--page) 92%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-radius:28px;box-shadow:0 0 0 1px var(--rule),0 12px 40px rgb(0 0 0/.16);padding:8px;font:400 14px/20px var(--sans);color:var(--text);
+  animation:sbIn .35s cubic-bezier(.2,.8,.2,1) both}
+@keyframes sbIn{from{opacity:0;transform:translateX(12px)}}
+@media (max-width:700px){.sbpanel{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:55vh}}
+.sbbar{display:flex;align-items:center;justify-content:space-between;padding:4px 4px 4px 12px}
+.sbbar b{font-weight:650;font-size:15px}
+.sbsec{background:var(--well);border-radius:20px;padding:10px 12px;margin-top:8px;display:grid;gap:8px}
+.sbsec h3{margin:0;font:650 12px/16px var(--sans);letter-spacing:.02em;text-transform:uppercase;color:var(--muted)}
+.sbpills{display:flex;flex-wrap:wrap;gap:6px}
+.sbpill{height:32px;padding:0 14px;border-radius:999px;background:var(--card);color:var(--text);font:550 13px/1 var(--sans);transition:background .15s}
+.sbpill:hover{background:var(--hover)}
+.sbpill.on{background:var(--text);color:var(--page)}
+.sbgrades{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.sbgrade{height:32px;border-radius:999px;background:var(--card);color:var(--gc);font:650 14px/1 var(--sans)}
+.sbgrade.on{background:var(--gc);color:#fff}
+.sbpanel select{height:36px;border-radius:12px;border:0;background:var(--card);color:var(--text);padding:0 10px;font:400 14px var(--sans);width:100%}
+.sbtok{display:grid;grid-template-columns:1fr auto 64px 20px;align-items:center;gap:8px;min-height:32px}
+.sbtok-name{display:grid;line-height:16px}
+.sbtok-name small{color:var(--muted);font-size:11px}
+.sbtok.on .sbtok-name{font-weight:650}
+.sbtok input[type=color]{width:40px;height:28px;border:0;padding:0;background:none;border-radius:8px;cursor:pointer}
+.sbtok input[type=range]{width:96px}
+.sbtok-val{font:400 12px/1 ui-monospace,Menlo,monospace;color:var(--muted);text-align:right}
+.sbx{width:20px;height:20px;border-radius:50%;background:var(--card);color:var(--muted);font-size:14px;line-height:20px;text-align:center;padding:0}
+span.sbx{background:none}
+.sbcss{width:100%;min-height:140px;border-radius:12px;border:0;background:var(--card);color:var(--text);padding:10px;font:400 12px/18px ui-monospace,Menlo,monospace;resize:vertical}
+
+/* the board: one tile per grade, all built from the app's own classes */
+.sbboard{display:grid;gap:24px;padding-right:0}
+/* on wide screens the app moves over so the panel never covers it */
+@media (min-width:1100px){body:has(.sbpanel){padding-right:336px}}
+.sbhead h1{margin:0;font:650 34px/40px var(--sans)}
+.sbhead p{margin:4px 0 0;max-width:60ch}
+.sbgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.sbt{padding:0;margin:0;max-width:none;width:auto;min-height:0}
+.sbt-in{width:100%;height:100%;text-align:left;cursor:pointer;align-content:start;transition:transform .2s var(--spring),box-shadow .2s}
+.sbt-in:hover{transform:translateY(-2px)}
+.sbt.focus .sbt-in{box-shadow:0 0 0 2px var(--ink)}
+.sbt-head{display:flex;align-items:center;gap:12px}
+.sbt-num{font:650 40px/1 var(--sans);color:var(--display);min-width:44px}
+.sbt-name{display:grid;line-height:20px}
+.sbt-name small{font-size:13px;line-height:18px}
+.sbt-pic{min-height:160px;align-content:center;overflow:hidden}
+.sbt-pic svg{max-height:200px;width:100%}
+.sbt-row{display:flex;align-items:center;gap:12px}
+.sbt-row .steps{justify-content:flex-start}
+.sbt-sw{display:flex;align-items:center;gap:6px}
+.sbt-sw i{width:22px;height:22px;border-radius:50%}
+.sbt-ink{margin-left:auto;font-weight:650;color:var(--ink)}
+/* the board uses the whole screen, beside the panel */
+.wrap:has(>.sbboard){max-width:1680px}
+.sbgrid>.sbt{display:block;width:100%;max-width:none;margin:0;padding:0}
+.sbgrid>.sbt>.sbt-in{display:grid;height:100%}

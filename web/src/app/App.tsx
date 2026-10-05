@@ -1,7 +1,9 @@
 import { Facts } from "../screens/Facts";
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { bandOf, lineOf } from "../curriculum/grades";
-import { lessonById, lessonsInGrade } from "../curriculum/registry";
+import { lessonById } from "../curriculum/registry";
+import { tintOf } from "./tint";
+import { useSandboxSeed } from "../sandbox/store";
 import { currentItem } from "../engine/session/practice";
 import { GradeSheet } from "../components/GradeSheet";
 import { Home } from "../screens/Home";
@@ -16,12 +18,15 @@ import { isTopLevel } from "./routes";
 import { Island } from "../components/Island";
 import { canCrossFade } from "./transition";
 
-/** lessons added in wave 1 (2026-10-04); older lessons keep the picture color they had before these arrived */
-const WAVE1 = new Set(["k-write", "k-bonds", "k-solids", "k-sort", "g1-three", "g1-tally", "g1-picgraph", "g2-solids", "g2-shares", "g2-coins", "g2-lineplot", "g2-estimate", "g3-mass", "g3-liters", "g3-graphs", "g3-lineplot", "g3-quads", "g4-mult2x2", "g4-lineplot", "g4-lines", "g4-symmetry"]);
+// the design sandbox loads only in the preview and dev builds; the live site never carries it
+const SANDBOX = import.meta.env.MODE === "preview" || import.meta.env.MODE === "development";
+const Sandbox = SANDBOX ? lazy(() => import("../sandbox/Sandbox").then(m => ({ default: m.Sandbox }))) : () => null;
+const SandboxBoard = SANDBOX ? lazy(() => import("../sandbox/Sandbox").then(m => ({ default: m.SandboxBoard }))) : () => null;
 
 /** Picks the screen for the route and sets the grade band and tint the styles key off. */
 export function App() {
   const { route, progress, reports, lastReport, sheetOpen } = useApp();
+  const sbSeed = useSandboxSeed(SANDBOX);
   // no grade until the learner picks one (G: choice is the default); grade pages without one show the neutral look
   const chosenGrade = progress.grade;
 
@@ -45,8 +50,7 @@ export function App() {
   const top = isTopLevel(route);
   const grade: number | null = top ? chosenGrade : testGrade ?? lesson?.grade ?? chosenGrade;
   const choosing = route.name === "welcome" || (route.name === "home" && grade == null);
-  // one of the grade's three colors, lesson by lesson, counted without the wave 1 lessons so adding lessons never shifts an older lesson's color
-  const tint = top || !lesson ? 0 : lessonsInGrade(lesson.grade).filter(l => l === lesson || !WAVE1.has(l.id)).indexOf(lesson) % 3;
+  const tint = top || !lesson ? 0 : tintOf(lesson);
 
   // the canvas behind the bento follows the line the screen belongs to; the landing page stays plain
   const line = choosing || grade == null ? "welcome" : lineOf(grade).id;
@@ -65,16 +69,18 @@ export function App() {
     case "report": screen = <ReportScreen rep={reports[route.key]} />; break;
     case "parent": screen = <Parent />; break;
     case "me": screen = <Me />; break;
+    case "sandbox": screen = SANDBOX ? <Suspense fallback={null}><SandboxBoard /></Suspense> : <Home />; break;
     case "facts": screen = <Facts table={route.table} start={!!route.start} />; break;
     default: screen = grade == null ? <Welcome shelf /> : <Home />;
   }
   // a new screen (or a new grade on a top-level screen) re-enters; with view transitions the browser cross-fades instead
-  const viewKey = [route.name, route.name === "learn" ? route.lessonId : route.name === "report" ? route.key : route.name === "facts" ? route.table ?? "" : "", top ? chosenGrade : ""].join("|");
-  return (
+  const viewKey = [route.name, route.name === "learn" ? route.lessonId : route.name === "report" ? route.key : route.name === "facts" ? route.table ?? "" : "", top ? chosenGrade : "", SANDBOX ? sbSeed : ""].join("|");
+  return (<>
     <main id="app" className={`wrap t${tint}${canCrossFade() ? "" : " fresh"}`} data-band={grade == null ? "middle" : bandOf(grade)} data-grade={grade ?? "none"} key={viewKey}>
       <Island grade={grade} guest={choosing} />
       {screen}
       {sheetOpen && <GradeSheet />}
     </main>
-  );
+    {SANDBOX && <Suspense fallback={null}><Sandbox /></Suspense>}
+  </>);
 }
