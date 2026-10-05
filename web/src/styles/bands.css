@@ -53,6 +53,11 @@
 :root[data-theme="dark"] .wrap,:root[data-theme="dark"] .wrap *{--ink:var(--tint) !important;--display:var(--tint);--on-tint:#14161b}
 .wrap,.wrap *{--tint-soft:color-mix(in srgb,var(--tint) 13%,var(--card))}
 .wrap[data-grade="12"]{--on-tint:var(--page)}
+/* lesson screens: a grey interface, the same in every lesson; the pictures keep the grade's colors (design handoff-4) */
+.wrap.neutral{--tint:var(--text);--ink:var(--text)}
+.wrap.neutral,.wrap.neutral *{--tint-soft:var(--well)}
+.wrap.neutral .viz-svg,.wrap.neutral .am{--tint:var(--c0);--ink:var(--k0)}
+.wrap.neutral .viz-svg,.wrap.neutral .viz-svg *,.wrap.neutral .am,.wrap.neutral .am *{--tint-soft:color-mix(in srgb,var(--tint) 13%,var(--card))}
 
 
 /* ---- the canvas: the page behind the bento. The tiles, type and controls stay the same everywhere; the canvas

@@ -1,7 +1,7 @@
 import { Facts } from "../screens/Facts";
 import { useEffect } from "react";
 import { bandOf, lineOf } from "../curriculum/grades";
-import { lessonById, lessonsInGrade } from "../curriculum/registry";
+import { lessonById } from "../curriculum/registry";
 import { currentItem } from "../engine/session/practice";
 import { GradeSheet } from "../components/GradeSheet";
 import { Home } from "../screens/Home";
@@ -42,7 +42,8 @@ export function App() {
   const top = isTopLevel(route);
   const grade: number | null = top ? chosenGrade : testGrade ?? lesson?.grade ?? chosenGrade;
   const choosing = route.name === "welcome" || (route.name === "home" && grade == null);
-  const tint = top || !lesson ? 0 : lessonsInGrade(lesson.grade).indexOf(lesson) % 3;
+  // lesson screens are neutral and the same in every lesson; only the pictures carry the grade colors (design handoff-4)
+  const neutral = !top && !!lesson;
 
   // the canvas behind the bento follows the line the screen belongs to; the landing page stays plain
   const line = choosing || grade == null ? "welcome" : lineOf(grade).id;
@@ -67,7 +68,7 @@ export function App() {
   // a new screen (or a new grade on a top-level screen) re-enters; with view transitions the browser cross-fades instead
   const viewKey = [route.name, route.name === "learn" ? route.lessonId : route.name === "report" ? route.key : route.name === "facts" ? route.table ?? "" : "", top ? chosenGrade : ""].join("|");
   return (
-    <main id="app" className={`wrap t${tint}${canCrossFade() ? "" : " fresh"}`} data-band={grade == null ? "middle" : bandOf(grade)} data-grade={grade ?? "none"} key={viewKey}>
+    <main id="app" className={`wrap t0${neutral ? " neutral" : ""}${canCrossFade() ? "" : " fresh"}`} data-band={grade == null ? "middle" : bandOf(grade)} data-grade={grade ?? "none"} key={viewKey}>
       <Island grade={grade} guest={choosing} />
       {screen}
       {sheetOpen && <GradeSheet />}
