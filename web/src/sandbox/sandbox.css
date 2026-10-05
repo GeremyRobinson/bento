@@ -57,3 +57,11 @@ span.sbx{background:none}
 .wrap:has(>.sbboard){max-width:1680px}
 .sbgrid>.sbt{display:block;width:100%;max-width:none;margin:0;padding:0}
 .sbgrid>.sbt>.sbt-in{display:grid;height:100%}
+.sbnote{margin:0;font-size:13px;line-height:18px;color:var(--muted)}
+.sbpill:disabled{opacity:.4;cursor:default}
+.sbt-note{font-size:12px;line-height:16px}
+.sbt.master{grid-column:1/-1}
+.sbt.master .sbt-in{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);grid-template-areas:"head pic" "row pic" "sw pic" "note pic";align-items:start}
+.sbt.master .sbt-head{grid-area:head}.sbt.master .sbt-pic{grid-area:pic}.sbt.master .sbt-row{grid-area:row}.sbt.master .sbt-sw{grid-area:sw}.sbt.master .sbt-note{grid-area:note}
+.sbt.master .sbt-num{font-size:48px}
+@media (max-width:700px){.sbt.master .sbt-in{grid-template-columns:none;grid-template-areas:none}.sbt.master .sbt-in>*{grid-area:auto}}

@@ -25,14 +25,17 @@
 .wrap[data-grade="10"]{--l0:#0369a1;--l1:#b45309;--l2:#475569;--la:#db2777}
 .wrap[data-grade="11"]{--l0:#7c3aed;--l1:#c026d3;--l2:#2563eb;--la:#f59e0b}
 .wrap[data-grade="12"]{--l0:var(--text);--l1:var(--text);--l2:var(--text);--la:var(--muted)}
-.wrap{--l0:#3b82f6;--l1:#f2683c;--l2:#8b5cf6;--la:#f59e0b;--c0:var(--l0);--c1:var(--l1);--c2:var(--l2);--acc:var(--la)}
+/* Grade (master): every grade is an instance of this one. A grade's line above overrides only what it changes;
+   anything it leaves out comes from here. */
+.wrap{--master-l0:#3b82f6;--master-l1:#f2683c;--master-l2:#8b5cf6;--master-la:#f59e0b;--master-k0:#2d69cc;--master-k1:#b44d2d;--master-k2:#7950d6}
+.wrap{--l0:var(--master-l0);--l1:var(--master-l1);--l2:var(--master-l2);--la:var(--master-la);--c0:var(--l0);--c1:var(--l1);--c2:var(--l2);--acc:var(--la)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--c0:color-mix(in srgb,var(--l0) 75%,white);--c1:color-mix(in srgb,var(--l1) 75%,white);--c2:color-mix(in srgb,var(--l2) 75%,white);--acc:color-mix(in srgb,var(--la) 80%,white)}}
 /* the three darkest grade colours need a little more lift to read on dark cards (4.5:1) */
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap[data-grade="7"],:root:not([data-theme="light"]) .wrap[data-grade="10"],:root:not([data-theme="light"]) .wrap[data-grade="11"]{--c0:color-mix(in srgb,var(--l0) 70%,white);--c1:color-mix(in srgb,var(--l1) 70%,white);--c2:color-mix(in srgb,var(--l2) 70%,white)}}
 .t0{--tint:var(--c0)} .t1{--tint:var(--c1)} .t2{--tint:var(--c2)} .t3{--tint:var(--muted)}
 
 /* ---- ink: each colour darkened just enough for text, and for fills behind white text (4.5:1 on white). Drawings keep the bright colour. ---- */
-.wrap{--k0:#2d69cc;--k1:#b44d2d;--k2:#7950d6}
+.wrap{--k0:var(--master-k0);--k1:var(--master-k1);--k2:var(--master-k2)}
 .wrap[data-grade="0"]{--k0:#9a6307;--k1:#bb3979;--k2:#167f3d}
 .wrap[data-grade="1"]{--k0:#117c38;--k1:#0973a3;--k2:#b05110}
 .wrap[data-grade="2"]{--k0:#077590;--k1:#595cd9;--k2:#b05110}

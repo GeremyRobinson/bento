@@ -8,7 +8,7 @@ import { Diagram } from "../components/diagrams/Diagram";
 import { firstExample } from "../screens/Learn";
 import type { AnyLesson } from "../curriculum/schemas/lesson";
 import type { Explanation } from "../explanations/schema";
-import { emptyOverrides, GRADE_TOKENS, handoffCss, overrideCss, SHARED_TOKENS, SIZE_TOKENS, toHex, type Overrides, type Token } from "./tokens";
+import { BAND_NAMES, emptyOverrides, GRADE_TOKENS, handoffCss, MASTER, MASTER_GRADE, overrideCss, overridesOf, readGrade, SHARED_TOKENS, SIZE_TOKENS, toHex, type Overrides, type Token } from "./tokens";
 import { get, set, useSb } from "./store";
 import "./sandbox.css";
 
@@ -35,34 +35,44 @@ function pickLesson(g: number, seed: number): { lesson: AnyLesson; ex: Explanati
  */
 export function SandboxBoard() {
   const { go } = useApp();
-  const { seed, grade } = useSb();
+  const { seed, grade, mode, o } = useSb();
   const tiles = useMemo(() => GRADES.map(d => ({ g: d.grade, pick: pickLesson(d.grade, seed) })), [seed]);
+  // the master shows a 5th grade picture, the way every grade draws before it brings its own colors
+  const masterPick = useMemo(() => pickLesson(5, seed + 1), [seed]);
   useEffect(() => { if (!get().open) set({ open: true }); }, []);
+  // what each instance overrides, read back from the page after the edits land
+  const [over, setOver] = useState<Record<number, number>>({});
+  useEffect(() => { const t = setTimeout(() => setOver(Object.fromEntries(GRADES.map(d => [d.grade, overridesOf(String(d.grade)).size]))), 0); return () => clearTimeout(t); }, [o]);
+  const tile = (key: string, dataGrade: string, band: string, tint: number, num: string, name: string, sub: string, note: string, pick: { lesson: AnyLesson; ex: Explanation } | null, focus: boolean, onClick: () => void) => (
+    <section key={key} className={`wrap t${tint} sbt${focus ? " focus" : ""}${dataGrade === MASTER_GRADE ? " master" : ""}`} data-grade={dataGrade} data-band={band}>
+      <button className="panel sbt-in" onClick={onClick}>
+        <div className="sbt-head">
+          <span className="sbt-num">{num}</span>
+          <span className="sbt-name"><b>{name}</b><small className="muted">{sub}</small></span>
+        </div>
+        <div className="card sbt-pic">
+          {pick?.ex.diagram ? <Diagram diagram={pick.ex.diagram} timeline={pick.ex.timeline} at={pick.ex.timeline.length - 1} /> : <p className="muted">No picture</p>}
+        </div>
+        <div className="sbt-row">
+          <span className="steps"><span className="dot ok" /><span className="dot ok" /><span className="dot busy" /><span className="dot" /></span>
+          <span className="ctl go">Check</span>
+        </div>
+        <div className="sbt-sw">{["c0", "c1", "c2", "acc"].map(c => <i key={c} style={{ background: `var(--${c})` }} title={c} />)}<span className="sbt-ink">Aa</span></div>
+        <div className="sbt-note muted">{note}</div>
+      </button>
+    </section>
+  );
   return (
     <div className="sbboard">
       <header className="sbhead">
         <h1>Sandbox</h1>
-        <p className="muted">Every grade is the same component with its own colors. Change a token in the panel and every tile, and every screen, follows. Tap a tile to open that lesson.</p>
+        <p className="muted">One Grade component, thirteen instances. Each grade passes only its colors, its band look, its name and its lessons; everything else comes from the master. Tap the master to edit it, or a grade to open its lesson.</p>
       </header>
       <div className="sbgrid">
-        {tiles.map(({ g, pick }) => (
-          <section key={g} className={`wrap t${pick ? tintOf(pick.lesson) : 0} sbt${g === grade ? " focus" : ""}`} data-grade={g} data-band={bandOf(g)}>
-            <button className="panel sbt-in" onClick={() => { set({ grade: g }); if (pick) go({ name: "learn", lessonId: pick.lesson.id }, "fwd"); }}>
-              <div className="sbt-head">
-                <span className="sbt-num">{gradeOf(g).short}</span>
-                <span className="sbt-name"><b>{gradeOf(g).name}</b><small className="muted">{pick?.lesson.title ?? "No picture yet"}</small></span>
-              </div>
-              <div className="card sbt-pic">
-                {pick?.ex.diagram ? <Diagram diagram={pick.ex.diagram} timeline={pick.ex.timeline} at={pick.ex.timeline.length - 1} /> : <p className="muted">No picture</p>}
-              </div>
-              <div className="sbt-row">
-                <span className="steps"><span className="dot ok" /><span className="dot ok" /><span className="dot busy" /><span className="dot" /></span>
-                <span className="ctl go">Check</span>
-              </div>
-              <div className="sbt-sw">{["c0", "c1", "c2", "acc"].map(c => <i key={c} style={{ background: `var(--${c})` }} title={c} />)}<span className="sbt-ink">Aa</span></div>
-            </button>
-          </section>
-        ))}
+        {tile("master", MASTER_GRADE, "kid", 0, "G", "Grade (master)", "Every grade below is an instance of this", "Edit it and all 13 follow, except what a grade overrides", masterPick, mode === "master", () => set({ mode: "master" }))}
+        {tiles.map(({ g, pick }) => tile(String(g), String(g), bandOf(g), pick ? tintOf(pick.lesson) : 0, gradeOf(g).short, gradeOf(g).name, pick?.lesson.title ?? "No picture yet",
+          `Overrides ${over[g] ?? "…"} of ${GRADE_TOKENS.length} colors · ${BAND_NAMES[bandOf(g)]} · ${lessonsInGrade(g).length} lessons`,
+          pick, mode === "grade" && g === grade, () => { set({ grade: g, mode: "grade" }); if (pick) go({ name: "learn", lessonId: pick.lesson.id }, "fwd"); }))}
       </div>
     </div>
   );
@@ -110,40 +120,43 @@ export function Sandbox() {
   const pickGrade = (n: number) => { set({ grade: n }); if (screen !== "Board" && screen !== "Landing") show(screen, n, undefined); };
 
   // current values, read from the page (stylesheets plus edits) for the focused grade and theme
+  const master = sb.mode === "master";
   const [values, setValues] = useState<Record<string, string>>({});
+  const [masterValues, setMasterValues] = useState<Record<string, string>>({});
+  const [over, setOver] = useState<Set<string>>(new Set());
   useEffect(() => {
     if (!sb.open) return;
-    const probe = document.createElement("div");
-    probe.className = "wrap"; probe.dataset.grade = String(g); probe.style.display = "none";
-    document.body.appendChild(probe);
-    const cs = getComputedStyle(probe), root = getComputedStyle(document.documentElement), out: Record<string, string> = {};
-    for (const t of [...GRADE_TOKENS, ...SIZE_TOKENS]) out[t.v] = cs.getPropertyValue(t.v).trim();
+    const root = getComputedStyle(document.documentElement), out = readGrade(String(g));
     for (const t of SHARED_TOKENS) out[t.v] = root.getPropertyValue(t.v).trim();
-    probe.remove();
-    setValues(out);
-  }, [sb.open, g, sb.theme, sb.o]);
+    setValues(out); setMasterValues(readGrade(MASTER_GRADE)); setOver(overridesOf(String(g)));
+  }, [sb.open, g, sb.theme, sb.o, sb.mode]);
 
-  const edit = (scope: "grade" | "shared" | "sizes", v: string, val: string | null) => {
-    const o: Overrides = { shared: { light: { ...sb.o.shared.light }, dark: { ...sb.o.shared.dark } }, sizes: { ...sb.o.sizes }, grades: { ...sb.o.grades, [g]: { ...sb.o.grades[g] } } };
-    const bag = scope === "grade" ? o.grades[g]! : scope === "shared" ? o.shared[sb.theme] : o.sizes;
+  type Scope = "master" | "grade" | "shared" | "sizes";
+  const edit = (scope: Scope, v: string, val: string | null) => {
+    const o: Overrides = { master: { ...sb.o.master }, shared: { light: { ...sb.o.shared.light }, dark: { ...sb.o.shared.dark } }, sizes: { ...sb.o.sizes }, grades: { ...sb.o.grades, [g]: { ...sb.o.grades[g] } } };
+    const bag = scope === "master" ? o.master : scope === "grade" ? o.grades[g]! : scope === "shared" ? o.shared[sb.theme] : o.sizes;
     if (val == null) delete bag[v]; else bag[v] = val;
     set({ o });
   };
-  const changed = (scope: "grade" | "shared" | "sizes", v: string) =>
-    v in (scope === "grade" ? sb.o.grades[g] ?? {} : scope === "shared" ? sb.o.shared[sb.theme] : sb.o.sizes);
+  const bagOf = (scope: Scope) => (scope === "master" ? sb.o.master ?? {} : scope === "grade" ? sb.o.grades[g] ?? {} : scope === "shared" ? sb.o.shared[sb.theme] : sb.o.sizes);
+  const changed = (scope: Scope, v: string) => v in bagOf(scope);
+  const resetToMaster = () => edit2(Object.fromEntries(GRADE_TOKENS.filter(t => over.has(t.v)).map(t => [t.v, MASTER])));
+  const edit2 = (vals: Record<string, string>) => set({ o: { ...sb.o, grades: { ...sb.o.grades, [g]: { ...sb.o.grades[g], ...vals } } } });
 
   if (!sb.open) return <button className="sbtoggle" onClick={() => set({ open: true })}>Sandbox</button>;
 
-  const row = (scope: "grade" | "shared" | "sizes", t: Token) => {
-    const cur = values[t.v] ?? "";
+  const row = (scope: Scope, t: Token) => {
+    const cur = (scope === "master" ? masterValues : values)[t.v] ?? "";
+    const overrides = scope === "grade" && over.has(t.v);
     return (
       <label key={t.v} className={`sbtok${changed(scope, t.v) ? " on" : ""}`}>
-        <span className="sbtok-name">{t.label}<small>{t.v}</small></span>
+        <span className="sbtok-name">{t.label}<small>{scope === "grade" ? (overrides ? "overrides master" : "from master") : scope === "master" ? `--master-${t.v.slice(2)}` : t.v}</small></span>
         {t.kind === "color"
           ? <input type="color" value={toHex(cur) ?? "#000000"} onChange={e => edit(scope, t.v, e.target.value)} />
           : <input type="range" min={t.min} max={t.max} value={parseFloat(cur) || t.min} onChange={e => edit(scope, t.v, `${e.target.value}px`)} />}
         <span className="sbtok-val">{t.kind === "px" ? `${parseFloat(cur) || ""}` : toHex(cur) ?? cur}</span>
-        {changed(scope, t.v) ? <button className="sbx" onClick={e => { e.preventDefault(); edit(scope, t.v, null); }} aria-label={`Reset ${t.label}`}>×</button> : <span className="sbx" />}
+        {overrides ? <button className="sbx" title="Reset to master" onClick={e => { e.preventDefault(); edit(scope, t.v, MASTER); }} aria-label={`Reset ${t.label} to master`}>↺</button>
+          : changed(scope, t.v) ? <button className="sbx" onClick={e => { e.preventDefault(); edit(scope, t.v, null); }} aria-label={`Undo ${t.label}`}>×</button> : <span className="sbx" />}
       </label>
     );
   };
@@ -175,9 +188,24 @@ export function Sandbox() {
         <div className="sbpills">{(["light", "dark"] as const).map(t => <button key={t} className={`sbpill${sb.theme === t ? " on" : ""}`} onClick={() => set({ theme: t })}>{t === "light" ? "Light" : "Dark"}</button>)}</div>
       </div>
 
-      <div className="sbsec"><h3>{gradeOf(g).name} colors</h3>{GRADE_TOKENS.map(t => row("grade", t))}</div>
-      <div className="sbsec"><h3>Shared colors · {sb.theme}</h3>{SHARED_TOKENS.map(t => row("shared", t))}</div>
-      <div className="sbsec"><h3>Sizes · every grade</h3>{SIZE_TOKENS.map(t => row("sizes", t))}</div>
+      <div className="sbsec"><h3>Editing</h3>
+        <div className="sbpills">
+          <button className={`sbpill${master ? " on" : ""}`} onClick={() => set({ mode: "master" })}>Grade (master)</button>
+          <button className={`sbpill${master ? "" : " on"}`} onClick={() => set({ mode: "grade" })}>{gradeOf(g).name}</button>
+        </div>
+        <p className="sbnote">{master ? "Changes here reach all 13 grades, except colors a grade overrides."
+          : `An instance of Grade: ${BAND_NAMES[bandOf(g)]}, ${lessonsInGrade(g).length} lessons, and it overrides ${over.size} of ${GRADE_TOKENS.length} master colors.`}</p>
+      </div>
+
+      {master ? <>
+        <div className="sbsec"><h3>Master colors</h3>{GRADE_TOKENS.map(t => row("master", t))}</div>
+        <div className="sbsec"><h3>Shared colors · {sb.theme}</h3>{SHARED_TOKENS.map(t => row("shared", t))}</div>
+        <div className="sbsec"><h3>Sizes</h3>{SIZE_TOKENS.map(t => row("sizes", t))}</div>
+      </> : <>
+        <div className="sbsec"><h3>{gradeOf(g).name} overrides</h3>{GRADE_TOKENS.map(t => row("grade", t))}
+          <div className="sbpills"><button className="sbpill" disabled={!over.size} onClick={resetToMaster}>Reset all to master</button></div>
+        </div>
+      </>}
 
       <div className="sbsec">
         <div className="sbpills">

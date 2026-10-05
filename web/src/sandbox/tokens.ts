@@ -42,11 +42,20 @@ export const SIZE_TOKENS: Token[] = [
 
 export type Theme = "light" | "dark";
 export interface Overrides {
+  /** the Grade (master) colors every grade starts from, keyed by the grade token they feed (--l0 → --master-l0) */
+  master: Record<string, string>;
   shared: Record<Theme, Record<string, string>>;
   sizes: Record<string, string>;
   grades: Record<string, Record<string, string>>;
 }
-export const emptyOverrides = (): Overrides => ({ shared: { light: {}, dark: {} }, sizes: {}, grades: {} });
+/** an instance token set to this follows the master again */
+export const MASTER = "@master";
+export const masterVar = (v: string) => `--master-${v.slice(2)}`;
+const inst = (v: string) => (v === MASTER ? "" : v);
+const resolve = (vals: Record<string, string>) => Object.fromEntries(Object.entries(vals).map(([k, v]) => [k, inst(v) || `var(${masterVar(k)})`]));
+const masterVals = (o: Overrides) => Object.fromEntries(Object.entries(o.master ?? {}).map(([k, v]) => [masterVar(k), v]));
+
+export const emptyOverrides = (): Overrides => ({ master: {}, shared: { light: {}, dark: {} }, sizes: {}, grades: {} });
 
 const block = (sel: string, vals: Record<string, string>) => {
   const body = Object.entries(vals).map(([k, v]) => `${k}:${v}`).join(";");
@@ -55,8 +64,8 @@ const block = (sel: string, vals: Record<string, string>) => {
 
 /** The CSS that applies the edits. Doubled selectors outrank the stylesheets' own rules, phone sizes included. */
 export function overrideCss(o: Overrides): string {
-  let css = block(':root:root[data-theme="light"]', o.shared.light) + block(':root:root[data-theme="dark"]', o.shared.dark) + block(".wrap.wrap", o.sizes);
-  for (const [g, vals] of Object.entries(o.grades)) css += block(`.wrap.wrap[data-grade="${g}"]`, vals);
+  let css = block(".wrap.wrap", masterVals(o)) + block(':root:root[data-theme="light"]', o.shared.light) + block(':root:root[data-theme="dark"]', o.shared.dark) + block(".wrap.wrap", o.sizes);
+  for (const [g, vals] of Object.entries(o.grades)) css += block(`.wrap.wrap[data-grade="${g}"]`, resolve(vals));
   return css;
 }
 
@@ -64,11 +73,12 @@ export function overrideCss(o: Overrides): string {
 export function handoffCss(o: Overrides): string {
   const lines = (vals: Record<string, string>) => Object.entries(vals).map(([k, v]) => `${k}:${v}`).join(";");
   let out = "";
+  if (Object.keys(o.master ?? {}).length) out += `/* bands.css, Grade (master): reaches every grade that doesn't override it */\n.wrap{${lines(masterVals(o))}}\n`;
   if (Object.keys(o.shared.light).length) out += `/* tokens.css, :root */\n:root{${lines(o.shared.light)}}\n`;
   if (Object.keys(o.shared.dark).length) out += `/* tokens.css, dark */\n:root[data-theme="dark"]{${lines(o.shared.dark)}}\n`;
   if (Object.keys(o.sizes).length) out += `/* bands.css, sizes */\n.wrap{${lines(o.sizes)}}\n`;
   const gs = Object.entries(o.grades).filter(([, v]) => Object.keys(v).length);
-  if (gs.length) out += "/* bands.css, grade colors */\n" + gs.map(([g, v]) => `.wrap[data-grade="${g}"]{${lines(v)}}`).join("\n") + "\n";
+  if (gs.length) out += "/* bands.css, grade instances: var(--master-…) means delete that override so the grade follows the master */\n" + gs.map(([g, v]) => `.wrap[data-grade="${g}"]{${lines(resolve(v))}}`).join("\n") + "\n";
   return out || "No changes yet.";
 }
 
@@ -86,4 +96,26 @@ export function toHex(css: string): string | null {
     const out = String(probe.fillStyle);
     return /^#[0-9a-f]{6}$/i.test(out) ? out : null;
   } catch { return null; }
+}
+
+/** "Grade (master)" in the sandbox: a probe grade no instance line matches, so it shows the master as is */
+export const MASTER_GRADE = "master";
+export const BAND_NAMES = { little: "K–2 look", kid: "3–5 look", middle: "6–8 look", high: "9–12 look" } as const;
+
+/** The grade tokens as the page has them right now for one grade (or the master). */
+export function readGrade(grade: string): Record<string, string> {
+  const probe = document.createElement("div");
+  probe.className = "wrap"; probe.dataset.grade = grade; probe.style.display = "none";
+  document.body.appendChild(probe);
+  const cs = getComputedStyle(probe), out: Record<string, string> = {};
+  for (const t of [...GRADE_TOKENS, ...SIZE_TOKENS]) out[t.v] = cs.getPropertyValue(t.v).trim();
+  probe.remove();
+  return out;
+}
+
+/** Which grade tokens an instance overrides: the ones whose value differs from the master's. */
+export function overridesOf(grade: string): Set<string> {
+  const m = readGrade(MASTER_GRADE), g = readGrade(grade), out = new Set<string>();
+  for (const t of GRADE_TOKENS) if ((toHex(g[t.v]!) ?? g[t.v]) !== (toHex(m[t.v]!) ?? m[t.v])) out.add(t.v);
+  return out;
 }
