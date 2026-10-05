@@ -56,8 +56,11 @@
 /* lesson screens: a grey interface, the same in every lesson; the pictures keep the grade's colors (design handoff-4) */
 .wrap.neutral{--tint:var(--text);--ink:var(--text)}
 .wrap.neutral,.wrap.neutral *{--tint-soft:var(--well)}
-.wrap.neutral .viz-svg,.wrap.neutral .am{--tint:var(--c0);--ink:var(--k0)}
-.wrap.neutral .viz-svg,.wrap.neutral .viz-svg *,.wrap.neutral .am,.wrap.neutral .am *{--tint-soft:color-mix(in srgb,var(--tint) 13%,var(--card))}
+/* pictures keep exactly the colors they had before: the lesson's own one of the grade's three (data-pic) */
+.wrap.neutral :is(.viz-svg,.am,.rs,.dotrow){--tint:var(--c0);--ink:var(--k0)}
+.wrap.neutral[data-pic="1"] :is(.viz-svg,.am,.rs,.dotrow){--tint:var(--c1);--ink:var(--k1)}
+.wrap.neutral[data-pic="2"] :is(.viz-svg,.am,.rs,.dotrow){--tint:var(--c2);--ink:var(--k2)}
+.wrap.neutral :is(.viz-svg,.am,.rs,.dotrow),.wrap.neutral :is(.viz-svg,.am,.rs,.dotrow) *{--tint-soft:color-mix(in srgb,var(--tint) 13%,var(--card))}
 
 
 /* ---- the canvas: the page behind the bento. The tiles, type and controls stay the same everywhere; the canvas
