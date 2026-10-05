@@ -1,8 +1,9 @@
 // Data pictures for 1st to 3rd grade (design/pictures-k4.md §6): tally charts, picture graphs (one picture per thing, or a
 // key that makes each picture stand for more, with half pictures) and scaled bar graphs. Rows never show their counts in
-// practice; color never marks a category.
+// practice; each row or bar takes its own grade color, like the older lessons' parts.
 import type { SceneDiagram } from "../scene/schema";
 import { frame, path, t, M, L, Z, type Draft, type Pt, type Seg } from "../geo/kit";
+import { P, tint } from "../early-k/fit";
 
 export type Icon = "apple" | "paw" | "star" | "cookie";
 type Timing = { from?: number; until?: number; enter?: Draft["enter"]; delay?: number };
@@ -73,15 +74,15 @@ export function buildRows(s: RowsSpec): SceneDiagram {
     if (s.kind === "tally") {
       for (let k = 0; k < n; k++) {
         const bundle = Math.floor(k / 5), j = k % 5, x0 = colX + 12 + bundle * 64;
-        if (j < 4) items.push(path([M([x0 + j * 10, y - 14]), L([x0 + j * 10, y + 14])], "tally", o(k)));
-        else items.push(path([M([x0 - 6, y + 10]), L([x0 + 36, y - 10])], "tally", o(k)));
+        if (j < 4) items.push(path([M([x0 + j * 10, y - 14]), L([x0 + j * 10, y + 14])], `tally ${P(r)}`, o(k)));
+        else items.push(path([M([x0 - 6, y + 10]), L([x0 + 36, y - 10])], `tally ${P(r)}`, o(k)));
         last = x0 + (j < 4 ? j * 10 : 36);
       }
     } else {
       const whole = Math.floor(n / scale), half = n % scale !== 0;
       for (let k = 0; k < whole + (half ? 1 : 0); k++) {
         const x = colX + 18 + k * PITCH;
-        items.push(...icon(s.icon, x, y, "glyph", o(k), half && k === whole));
+        items.push(...tint(icon(s.icon, x, y, "glyph", o(k), half && k === whole), r));
         last = x + 14;
       }
     }
@@ -134,7 +135,7 @@ export function buildScaledBars(s: ScaledBarsSpec): SceneDiagram {
   }
   items.push({ type: "line", x1: 0, y1: 0, x2: W, y2: 0, cls: "ax" } as Draft, { type: "line", x1: 0, y1: 0, x2: 0, y2: -steps * U - 8, cls: "ax" } as Draft);
   s.counts.forEach((v, i) => {
-    items.push({ type: "rect", x: bx(i), y: y(v), w: BW, h: -y(v), rx: 4, cls: "bar", ...(b ? { from: b.grow, enter: "growy", delay: 0.15 * i } : {}) } as Draft);
+    items.push({ type: "rect", x: bx(i), y: y(v), w: BW, h: -y(v), rx: 4, cls: `bar ${P(i)}`, ...(b ? { from: b.grow, enter: "growy", delay: 0.15 * i } : {}) } as Draft);
     items.push(t(bx(i) + BW / 2, 20, s.names[i]!, "sm"));
     if (b?.read != null && s.read?.includes(i)) {
       items.push({ type: "line", x1: bx(i), y1: y(v), x2: 0, y2: y(v), cls: "ln2 dash", from: b.read, enter: "draw" } as Draft);

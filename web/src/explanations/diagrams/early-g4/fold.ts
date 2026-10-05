@@ -60,7 +60,7 @@ export function buildFold(s: FoldSpec): SceneDiagram {
     const deg = s.line + R, ok = isSymmetry(poly, deg);
     if (b?.fold != null) {
       const u = dirOf(deg), screen = (Math.atan2(u[1], u[0]) * 180) / Math.PI;
-      items.push(path(segs(halfOf(poly, deg)), "foldhalf", { from: b.fold, enter: "fold" as Draft["enter"], vars: { "--r": `${screen.toFixed(1)}deg` } }));
+      items.push(path(segs(halfOf(poly, deg)), "foldhalf p1", { from: b.fold, enter: "fold" as Draft["enter"], vars: { "--r": `${screen.toFixed(1)}deg` } }));
       if (ok) items.push(t(ext * 0.7 * u[0] + 26, ext * 0.7 * u[1] - 20, "✓", "lbl big okmark", { from: b.fold, enter: "pop", delay: 1.6 }));
       else items.push(path(segs(poly.map(p => reflect(p, deg))), "misfit", { from: b.fold, enter: "fade", delay: 1.6 }));
     }
@@ -76,6 +76,6 @@ export function buildFold(s: FoldSpec): SceneDiagram {
   const sc = frame("fold", [...items, { type: "line", x1: -ext, y1: -ext, x2: -ext, y2: -ext, cls: "spacer" } as Draft, { type: "line", x1: ext + 50, y1: ext, x2: ext + 50, y2: ext, cls: "spacer" } as Draft, { type: "circle", cx: 0, cy: 0, r: 0, cls: "spacer" } as Draft], s.alt, 14, {});
   // the half flips about the shape's center, wherever framing moved it
   const o = sc.items.find(i => i.type === "circle" && i.cls === "spacer") as { cx: number; cy: number } | undefined;
-  if (o) for (const it of sc.items) if (it.cls === "foldhalf") it.vars = { ...it.vars, "--ox": `${o.cx}px`, "--oy": `${o.cy}px` };
+  if (o) for (const it of sc.items) if (it.cls?.startsWith("foldhalf")) it.vars = { ...it.vars, "--ox": `${o.cx}px`, "--oy": `${o.cy}px` };
   return sc;
 }

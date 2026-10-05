@@ -1,9 +1,9 @@
-// Things to sort (k-sort): mixed-up objects of two or three kinds, all in the grade's color so color never marks a group
+// Things to sort (k-sort): mixed-up objects of two or three kinds in mixed grade colors, so color never marks a group
 // (design/pictures-k4.md). In the lesson they slide into one row per kind and each row is counted.
 import type { SceneDiagram } from "../scene/schema";
 import { createRng } from "../../../curriculum/generators/rng";
 import { frame, path, t, M, L, Z, type Draft } from "../geo/kit";
-import { WIDE } from "./fit";
+import { WIDE, tint } from "./fit";
 
 export type Glyph = "button" | "leaf" | "block" | "circle" | "square" | "triangle";
 
@@ -48,7 +48,7 @@ export function buildSort(s: SortSpec): SceneDiagram {
   s.counts.forEach((n, g) => {
     for (let i = 0; i < n; i++, k++) {
       const c = cells[k]!, x = (c % COLS) * CELL + CELL / 2 + rng.int(-9, 9), y = Math.floor(c / COLS) * CELL + CELL / 2 + rng.int(-9, 9);
-      items.push(...glyph(s.glyphs[g]!, x, y, b ? { from: 0, until: b.rows - 1, enter: "pop", delay: 0.05 * k } : {}));
+      items.push(...tint(glyph(s.glyphs[g]!, x, y, b ? { from: 0, until: b.rows - 1, enter: "pop", delay: 0.05 * k } : {}), i + g));
     }
   });
   if (b) {
@@ -56,7 +56,7 @@ export function buildSort(s: SortSpec): SceneDiagram {
     s.counts.forEach((n, g) => {
       const y = top + g * rowH + 20;
       if (s.mark === g) items.push({ type: "rect", x: -14, y: y - 24, w: n * pitch + 80, h: 48, rx: 24, cls: "hlrow", from: b.mark, enter: "fade" } as Draft);
-      for (let i = 0; i < n; i++) items.push(...glyph(s.glyphs[g]!, 14 + i * pitch, y, { from: b.rows, enter: "pop", delay: 0.08 * i + 0.3 * g }));
+      for (let i = 0; i < n; i++) items.push(...tint(glyph(s.glyphs[g]!, 14 + i * pitch, y, { from: b.rows, enter: "pop", delay: 0.08 * i + 0.3 * g }), i + g));
       items.push(t(14 + n * pitch + 12, y, String(n), "lbl big start", { from: b.count, enter: "rise", delay: 0.4 * g }));
     });
   }

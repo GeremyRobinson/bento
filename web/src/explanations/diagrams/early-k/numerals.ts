@@ -74,7 +74,7 @@ export function writeNumber(s: WriteSpec): SceneDiagram {
       for (const segs of strokes) {
         stroke++;
         const start = (segs[0] as { p: Pt }).p;
-        items.push(path(segs, "numst", { from: b.write, enter: "draw", delay: delay + 0.2 }));
+        items.push(path(segs, "numst p1", { from: b.write, enter: "draw", delay: delay + 0.2 }));
         items.push({ type: "circle", cx: start[0], cy: start[1], r: 9, cls: "dota", from: b.write, until: b.write, enter: "pop", delay } as Draft);
         items.push(t(start[0], start[1], String(stroke), "xs onlbl", { from: b.write, until: b.write, enter: "fade", delay }));
         delay += 0.8;

@@ -9,9 +9,9 @@ const dirOf = (deg: number): Pt => [Math.cos((deg * Math.PI) / 180), -Math.sin((
 const at = (p: Pt, u: Pt, k: number): Pt => [p[0] + u[0] * k, p[1] + u[1] * k];
 
 /** an arrowhead at tip pointing along u */
-function arrow(tip: Pt, u: Pt, o: Partial<Draft> = {}): Draft {
+function arrow(tip: Pt, u: Pt, o: Partial<Draft> = {}, cls = "arrowhead"): Draft {
   const n: Pt = [-u[1], u[0]], back = at(tip, u, -16);
-  return path([M(tip), L(at(back, n, 8)), L(at(back, n, -8)), Z], "arrowhead", o);
+  return path([M(tip), L(at(back, n, 8)), L(at(back, n, -8)), Z], cls, o);
 }
 const dot = (p: Pt, cls = "figdot", o: Partial<Draft> = {}): Draft => ({ type: "circle", cx: p[0], cy: p[1], r: 6, cls, ...o }) as Draft;
 
@@ -64,9 +64,9 @@ export function buildAngleFig(s: AngleFigSpec): SceneDiagram {
     items.push(path([M(V), L(c1), L(c2), L(c3), Z], "card", { from: b.open, enter: "fade" }));
   }
   items.push(path([M(P1), L(V)], "figline"));
-  items.push(path([M(V), L(P2)], "figline second", b ? { from: 0, enter: "swing" as Draft["enter"], vars: { "--from": `${s.deg}deg` } } : {}));
+  items.push(path([M(V), L(P2)], "figline second p1", b ? { from: 0, enter: "swing" as Draft["enter"], vars: { "--from": `${s.deg}deg` } } : {}));
   items.push(arrow(P1, u1));
-  items.push(arrow(P2, u2, b ? { enter: "swing" as Draft["enter"], vars: { "--from": `${s.deg}deg` } } : {}));
+  items.push(arrow(P2, u2, b ? { enter: "swing" as Draft["enter"], vars: { "--from": `${s.deg}deg` } } : {}, "arrowhead p1"));
   items.push(dot(V));
   if (s.deg === 90) {
     const c1 = at(V, u1, 18), c2 = at(c1, u2, 18), c3 = at(V, u2, 18);
@@ -98,24 +98,25 @@ export interface PairSpec {
 export function buildPair(s: PairSpec): SceneDiagram {
   const b = s.beats, items: Draft[] = [], T = (p: Pt) => rot(p, -s.turn);
   const seg = (p: Pt, q: Pt, cls: string, o: Partial<Draft> = {}) => path([M(T(p)), L(T(q))], cls, o);
-  const ends = (p: Pt, q: Pt) => {
+  // the second line of a pair takes the next grade color
+  const ends = (p: Pt, q: Pt, cls = "arrowhead") => {
     const d: Pt = [q[0] - p[0], q[1] - p[1]], l = Math.hypot(...d), u: Pt = [d[0] / l, d[1] / l];
-    items.push(arrow(T(q), rot(u, -s.turn)), arrow(T(p), rot([-u[0], -u[1]], -s.turn)));
+    items.push(arrow(T(q), rot(u, -s.turn), {}, cls), arrow(T(p), rot([-u[0], -u[1]], -s.turn), {}, cls));
   };
   if (s.item === 0) {
-    items.push(seg([-130, -40], [130, -40], "figline"), seg([-130, 40], [130, 40], "figline"));
-    ends([-130, -40], [130, -40]); ends([-130, 40], [130, 40]);
+    items.push(seg([-130, -40], [130, -40], "figline"), seg([-130, 40], [130, 40], "figline p1"));
+    ends([-130, -40], [130, -40]); ends([-130, 40], [130, 40], "arrowhead p1");
     if (b) for (const y of [-40, 40]) items.push(seg([130, y], [200, y], "ln2 dash", { from: b.run, enter: "draw" }), seg([-200, y], [-130, y], "ln2 dash", { from: b.run, enter: "draw" }));
     if (b) items.push(seg([160, -40], [160, 40], "ln thin", { from: b.run, enter: "fade", delay: 0.8 }), seg([-160, -40], [-160, 40], "ln thin", { from: b.run, enter: "fade", delay: 0.8 }));
   } else if (s.item === 1) {
-    items.push(seg([-130, 0], [130, 0], "figline"), seg([0, -100], [0, 100], "figline"));
-    ends([-130, 0], [130, 0]); ends([0, -100], [0, 100]);
+    items.push(seg([-130, 0], [130, 0], "figline"), seg([0, -100], [0, 100], "figline p1"));
+    ends([-130, 0], [130, 0]); ends([0, -100], [0, 100], "arrowhead p1");
     if (b) items.push(path([M(T([0, -18])), L(T([18, -18])), L(T([18, 0]))], "ln2", { from: b.run, enter: "draw" }));
   } else {
     // two lines leaning together: they meet off to the right, past what's drawn
     const a = (s.deg * Math.PI) / 180, X = 230, y2 = (x: number) => -Math.tan(a) * (x - X);
-    items.push(seg([-130, 0], [130, 0], "figline"), seg([-130, y2(-130) * 0.5], [130, y2(130) * 0.5], "figline"));
-    ends([-130, 0], [130, 0]); ends([-130, y2(-130) * 0.5], [130, y2(130) * 0.5]);
+    items.push(seg([-130, 0], [130, 0], "figline"), seg([-130, y2(-130) * 0.5], [130, y2(130) * 0.5], "figline p1"));
+    ends([-130, 0], [130, 0]); ends([-130, y2(-130) * 0.5], [130, y2(130) * 0.5], "arrowhead p1");
     if (b) {
       const Y = (x: number) => y2(x) * 0.5, meet: Pt = [X, 0];
       items.push(seg([130, 0], meet, "ln2 dash", { from: b.run, enter: "draw" }), seg([130, Y(130)], meet, "ln2 dash", { from: b.run, enter: "draw" }));
