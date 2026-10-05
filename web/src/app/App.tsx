@@ -45,11 +45,8 @@ export function App() {
   const top = isTopLevel(route);
   const grade: number | null = top ? chosenGrade : testGrade ?? lesson?.grade ?? chosenGrade;
   const choosing = route.name === "welcome" || (route.name === "home" && grade == null);
-  // lesson screens are neutral and the same in every lesson; only the pictures carry the grade colors (design handoff-4)
-  const neutral = !top && !!lesson;
-  // each lesson's pictures keep the color they always had (one of the grade's three, lesson by lesson)
-  // counted without the wave 1 lessons, so adding lessons never shifts an older lesson's color
-  const pic = top || !lesson ? 0 : lessonsInGrade(lesson.grade).filter(l => l === lesson || !WAVE1.has(l.id)).indexOf(lesson) % 3;
+  // one of the grade's three colors, lesson by lesson, counted without the wave 1 lessons so adding lessons never shifts an older lesson's color
+  const tint = top || !lesson ? 0 : lessonsInGrade(lesson.grade).filter(l => l === lesson || !WAVE1.has(l.id)).indexOf(lesson) % 3;
 
   // the canvas behind the bento follows the line the screen belongs to; the landing page stays plain
   const line = choosing || grade == null ? "welcome" : lineOf(grade).id;
@@ -74,7 +71,7 @@ export function App() {
   // a new screen (or a new grade on a top-level screen) re-enters; with view transitions the browser cross-fades instead
   const viewKey = [route.name, route.name === "learn" ? route.lessonId : route.name === "report" ? route.key : route.name === "facts" ? route.table ?? "" : "", top ? chosenGrade : ""].join("|");
   return (
-    <main id="app" className={`wrap t0${neutral ? " neutral" : ""}${canCrossFade() ? "" : " fresh"}`} data-band={grade == null ? "middle" : bandOf(grade)} data-grade={grade ?? "none"} data-pic={pic} key={viewKey}>
+    <main id="app" className={`wrap t${tint}${canCrossFade() ? "" : " fresh"}`} data-band={grade == null ? "middle" : bandOf(grade)} data-grade={grade ?? "none"} key={viewKey}>
       <Island grade={grade} guest={choosing} />
       {screen}
       {sheetOpen && <GradeSheet />}
