@@ -6,10 +6,7 @@ import { upNext } from "../app/today";
 import { gradeOf } from "../curriculum/grades";
 import { LEVELS } from "../engine/mastery/levels";
 import { GROWN_UP, NO_UNIT, SETTING } from "../app/copy";
-
-const LockIcon = () => (
-  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><rect x="5" y="10.5" width="14" height="9.5" rx="2.5" /><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></svg>
-);
+import { LockIcon } from "./primitives/icons";
 
 /** A chapter's 0-4 score as a four-cell battery, the same fill the book uses. */
 function ChapterBattery({ score }: { score: number }) {
