@@ -1,4 +1,5 @@
 import { useEffect, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 
 /**
  * One quick question before something is lost (G 2026-10-06: a way out of anything started). It is the quick-settings
@@ -12,7 +13,9 @@ export function ConfirmStack({ title, body, confirm, cancel = "Keep going", onCo
     addEventListener("keydown", onKey);
     return () => removeEventListener("keydown", onKey);
   }, [onCancel]);
-  return (
+  // drawn at the app's root, so no screen's own layout (a fit grid, a transform) can move it off-screen (Review v45 #1)
+  const root = (typeof document !== "undefined" && (document.getElementById("app") ?? document.body)) || null;
+  const stack = (
     <>
       <div className="fdim" onClick={onCancel} />
       <div className="fstack fconfirm" role="alertdialog" aria-label={title} style={{ "--n": 4 } as CSSProperties}>
@@ -22,4 +25,5 @@ export function ConfirmStack({ title, body, confirm, cancel = "Keep going", onCo
       </div>
     </>
   );
+  return root ? createPortal(stack, root) : stack;
 }

@@ -214,8 +214,9 @@ export function Practice() {
         <>
           <div className="fdim phdim" onClick={() => setHintOpen(false)} />
           <div className="fstack phint" role="dialog" aria-label="Hint" style={{ "--n": 4 } as CSSProperties}>
-            <span className="flbl" style={{ "--i": 0 } as CSSProperties}>{s.hinted ? `Hint · ${s.hintsLeft} left` : "No hints left"}</span>
-            <span className="fpill htext" style={{ "--i": 1 } as CSSProperties}><span><Rich text={s.hinted ? step.hint : "No hints left in this lesson. You can do it."} /></span></span>
+            {/* before a first try the hint waits, so say that, not "none left" (Review v45 #2) */}
+            <span className="flbl" style={{ "--i": 0 } as CSSProperties}>{s.hinted ? `Hint · ${s.hintsLeft} left` : s.hintsLeft ? `Hint · ${s.hintsLeft} left` : "No hints left"}</span>
+            <span className="fpill htext" style={{ "--i": 1 } as CSSProperties}><span><Rich text={s.hinted ? step.hint : s.hintsLeft ? (fb?.type === "hint" && fb.text ? fb.text : "Try it once first. Then the hint opens.") : "No hints left in this lesson. You can do it."} /></span></span>
             <span className="hrow" style={{ "--i": 2 } as CSSProperties}>
               {showMeAvailable(s) && <button className="fpill" onClick={() => { setHintOpen(false); act((st, p, d) => showMe(st, p, d)); }}>{SHOW_ME} the step</button>}
               <button className="fpill go" autoFocus onClick={() => setHintOpen(false)}>Got it</button>
