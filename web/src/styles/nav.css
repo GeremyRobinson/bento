@@ -26,8 +26,10 @@
 .island .iplace b{font-size:15px;line-height:19px;font-weight:650;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* how far along: a circle that fills from the bottom in the lesson's step of the grade hue, with the grade's number on it */
 .island .ibat{flex:none;position:relative;width:42px;height:42px;border-radius:50%;background:var(--well);overflow:hidden;display:grid;place-items:center}
-.island .ibat>i{position:absolute;inset:auto 0 0;height:calc(var(--p) * 100%);background:color-mix(in oklab,var(--tint) 32%,var(--well));transition:height .5s var(--glide)}
-.island .ibat>.gnum{position:relative;font-size:15px;letter-spacing:-.02em}
+.island .ibat>i{position:absolute;inset:auto 0 0;height:calc(var(--p) * 100%);background:var(--gn,var(--ink));transition:height .5s var(--glide)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .island .ibat>i{background:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,white)}}
+:root[data-theme="dark"] .island .ibat>i{background:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,white)}
+.island .iplace .ign{font:inherit;letter-spacing:inherit}
 @media (min-width:700px){.island:not(.guest){width:min(460px,100%)}}
 .island .iword{font:650 16px/1 var(--sans);letter-spacing:-.02em}
 .island.guest{padding:0 5px 0 0;gap:4px}
@@ -53,7 +55,6 @@
 @media (max-width:699px){
   .itop{grid-template-columns:auto minmax(0,1fr) auto}
   .island{width:100%}
-  .icorner.right .icon:first-child{display:none}
   .iresume{padding:0;width:52px;justify-content:center}.iresume .rtext,.iresume .rcount{display:none}
   /* one grade circle on a phone: the island's own; an unfinished lesson waits on Today instead (G 2026-10-06) */
   .itop:has(>.icorner.left){grid-template-columns:minmax(0,1fr) auto;gap:8px}
@@ -74,7 +75,12 @@ button.fpill:active{transform:scale(.96)}
 .fpill[aria-checked="true"] .sw{background:var(--ink)}
 .fpill[aria-checked="true"] .sw::after{transform:translateX(16px)}
 .qset{top:calc(max(12px,env(safe-area-inset-top)) + 60px);right:max(16px,calc((100vw - var(--sb-right,0px) - 1180px) / 2 + 20px));align-items:flex-end}
-.qset{width:290px;align-items:stretch}
+/* each pill only as wide as its words, lined up on the right under the settings button (UI notes preview, G 2026-10-06) */
+.qset{align-items:flex-end;max-width:calc(100vw - 32px)}
+.qset .flbl{padding:6px 14px 0}
+/* the island and its buttons stay above the dim while quick settings are open, so the settings button closes them */
+.itop.qopen{z-index:32}
+@media (max-width:699px){.qset{right:16px}}
 
 /* every tap leaves a soft halo spreading from the finger, so you know it landed */
 .halo{position:fixed;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;pointer-events:none;z-index:99;border:2px solid var(--halo);
@@ -181,7 +187,7 @@ html[data-motion="reduce"] .battery>.fill{animation:none}
 button.book:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--rule),0 14px 30px -18px rgba(15,20,30,.3)}
 .book.on{box-shadow:0 0 0 2px var(--tint)}
 .book b{font-weight:650;font-size:15px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-@media (min-width:900px){.zshelf .shelf,.sheet .shelf{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:calc(var(--u) * 1.5)}}
+@media (min-width:900px){.zshelf .shelf{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:calc(var(--u) * 1.5)}}
 .zshelf{display:grid;gap:calc(var(--u) * 1.5)}
 .zcard{min-height:150px;display:flex;flex-direction:column}
 .zcard .bcount{padding-top:12px}
@@ -252,3 +258,13 @@ button.book:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--rule),0 
 html:has(.screen),html:has(.screen) body{overflow:hidden;overscroll-behavior:none;height:100%}
 html:has(.screen) .itop{position:fixed;top:max(12px,env(safe-area-inset-top));
   left:max(16px,calc((100vw - var(--sb-right,0px) - var(--screen-max,1180px)) / 2));right:calc(max(16px,calc((100vw - var(--sb-right,0px) - var(--screen-max,1180px)) / 2)) + var(--sb-right,0px))}
+
+/* the grade sheet: every line on its own row, the same columns in every line, all twelve grades in view where
+   they fit, and a fade at the bottom while more waits below (Review v39 item 11) */
+.sheet .sbooks.n3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.sheet .sbooks.n4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.sheet .book{height:auto;min-height:118px;padding:12px 14px 14px}
+.sheet .book .gnum{font-size:36px}
+.sheet .panel.more,.screen .slist.more{-webkit-mask-image:linear-gradient(#000 calc(100% - 64px),#0000);mask-image:linear-gradient(#000 calc(100% - 64px),#0000)}
+@media (min-width:1000px){.sheet .panel{width:min(1040px,94vw)}.sheet .shelf{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:calc(var(--u) * 1.5)}}
+@media (max-width:699px){.sheet .sbooks.n4{grid-template-columns:repeat(2,minmax(0,1fr))}.sheet .book{min-height:104px}.sheet .book .gnum{font-size:32px}}

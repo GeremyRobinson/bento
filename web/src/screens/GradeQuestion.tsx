@@ -3,6 +3,8 @@ import { useApp } from "../app/AppState";
 import { previewOf, statementBeat } from "../app/preview";
 import { bandOf, GRADES, gradeOf, tintStyle } from "../curriculum/grades";
 import { lessonsInGrade } from "../curriculum/registry";
+import { unitsInGrade } from "../app/curriculum";
+import { MathLine } from "../components/primitives/MathLine";
 import { placeKey } from "../engine/session/practice";
 import { PlayingDiagram } from "../components/diagrams/PlayingDiagram";
 import { FitScreen } from "../components/screen/Screen";
@@ -20,9 +22,8 @@ export function GradeQuestion() {
   const seed = useMemo(() => Math.floor(deps().rng.next() * 2 ** 31), []); // eslint-disable-line react-hooks/exhaustive-deps
   const shown = useMemo(() => {
     if (picked == null) return null;
-    // a lesson of the year that draws a picture, picked at random
-    const rng = deps().rng;
-    for (const l of rng.shuffle(lessonsInGrade(picked))) {
+    // a real first problem: the year's first lesson that draws a picture, with fresh random numbers (UI notes preview)
+    for (const l of lessonsInGrade(picked)) {
       const pv = previewOf(l, seed + picked);
       if (pv?.ex.diagram && pv.ex.diagram.kind !== "chain") return pv;
     }
@@ -30,6 +31,7 @@ export function GradeQuestion() {
   }, [picked, seed]); // eslint-disable-line react-hooks/exhaustive-deps
   const find = () => { if (picked == null) setAsk(true); else startTest(placeKey(picked)); };
   const d = picked == null ? null : gradeOf(picked);
+  const chapters = picked == null ? [] : unitsInGrade(picked).filter(u => u.name !== "Skills");
   // the ring glides to the grade you tap
   const ring = useRef<HTMLSpanElement>(null), moved = useRef(false);
   useLayoutEffect(() => {
@@ -63,11 +65,17 @@ export function GradeQuestion() {
           <div className="wrap t0 gyin" data-grade={d.grade} data-band={bandOf(d.grade)} key={d.grade}>
             <div className="gytext">
               <GradeNum grade={d.grade} />
-              <h2>{d.name}</h2>
-              <p>This year: {d.subtitle.toLowerCase()}. {lessonsInGrade(d.grade).length} lessons.</p>
+              <h2>{d.subtitle}</h2>
+              <p>{lessonsInGrade(d.grade).length} lessons in {chapters.length} chapter{chapters.length === 1 ? "" : "s"}.</p>
+              <ul className="gychips" aria-label={`${d.name} chapters`}>{chapters.map(u => <li key={u.name}>{u.name}</li>)}</ul>
               <div className="gygo"><Pill go onClick={() => chooseGrade(d.grade)}>Start {d.name.split(" · ")[0]} ›</Pill></div>
             </div>
-            {shown?.ex.diagram && <div className="gypic"><PlayingDiagram key={picked} ex={{ ...shown.ex, diagram: shown.ex.diagram }} end={statementBeat(shown.ex)} /></div>}
+            {shown?.ex.diagram && (
+              <figure className="gypic">
+                <figcaption>A real first problem: <b><MathLine math={shown.ex.statement} /></b></figcaption>
+                <div className="gyviz"><PlayingDiagram key={picked} ex={{ ...shown.ex, diagram: shown.ex.diagram }} end={statementBeat(shown.ex)} /></div>
+              </figure>
+            )}
           </div>
         )}
       </section>

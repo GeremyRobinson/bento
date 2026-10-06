@@ -43,7 +43,8 @@ function GradeHome({ g }: { g: number }) {
   const show = routePick ? "detail" : "list";
   const openUnit = units.find(u => u.entries.some(c => c.id === pick)) ?? units.find(u => u.entries.some(c => c.id === next?.entry.id)) ?? units[0];
   const [shut, setShut] = useState<string | null>(null);
-  const select = (p: string) => go({ name: "home", pick: p }, "fwd");
+  // beside the list, picking a row only glides the selection and swaps the detail; on a phone the detail is its own screen
+  const select = (p: string) => go({ name: "home", pick: p }, typeof matchMedia !== "undefined" && matchMedia("(max-width: 699px)").matches ? "fwd" : "still");
   let k = 0;
   // the picked row's highlight glides to the row you tap, like the floating preview
   const knob = useRef<HTMLSpanElement>(null), placed = useRef(false);
@@ -61,12 +62,10 @@ function GradeHome({ g }: { g: number }) {
   const listPane = (
     <>
       <span className="sknob" ref={knob} aria-hidden />
+      {/* the list opens on the grade's big number, like the UI notes preview */}
       <header className="shead">
         <GradeNum grade={g} />
-        <div>
-          <h1>{grade.name}</h1>
-          <p className="ysub">This year: {grade.subtitle.toLowerCase()}.</p>
-        </div>
+        <h1 className="vh">{grade.name}</h1>
       </header>
       <button className={`srow${pick === "today" ? " on" : ""}`} aria-current={pick === "today" ? "true" : undefined} onClick={() => select("today")}>
         <span className="sname"><b>Today</b></span><small className="smeta">{todayMeta(progress, g)}</small>
@@ -125,7 +124,10 @@ function TodayDetail({ g }: { g: number }) {
   const doneScore = (i: TodayItem) => i.kind === "review" ? progress.reviews[new Date(deps().now).toDateString()]
     : i.kind === "lesson" ? lastScore(progress, i.id) : i.kind === "facts" ? undefined : progress.tests[i.key]?.last;
   const minutes = plan.filter(i => !i.done).reduce((m, i) => m + i.minutes, 0);
+  const nextLesson = upNext(progress, g)?.entry.id;
   return (
+    <div className="sdl">
+    {nextLesson && <PreviewWell key={nextLesson} lessonId={nextLesson} />}
     <div className={`bhome sday${weak.length ? " tall" : ""}`}>
       <section className="tile today">
         <h2>Today</h2>
@@ -161,6 +163,41 @@ function TodayDetail({ g }: { g: number }) {
         </section>
       )}
     </div>
+    </div>
+  );
+}
+
+/**
+ * Up next, as a picture: the very first problem of the lesson waiting, in whatever room the plan leaves (UI notes
+ * preview: a big live picture on top of the detail). It draws only when it fits PREVIEW_MIN tall.
+ */
+function PreviewWell({ lessonId }: { lessonId: string }) {
+  const { deps } = useApp();
+  const lesson = lessonById(lessonId);
+  const seed = useMemo(() => Math.floor(deps().rng.next() * 2 ** 31), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const pv = useMemo(() => (lesson ? previewOf(lesson, seed) : null), [lesson, seed]);
+  const pic = pv?.ex.diagram && pv.ex.diagram.kind !== "chain" ? pv : null;
+  const box = useRef<HTMLElement>(null);
+  const [h, setH] = useState(0);
+  useLayoutEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const measure = () => setH(el.clientHeight);
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [pic]);
+  if (!pic) return null;
+  const fits = h >= PREVIEW_MIN;
+  return (
+    <figure className={`card spreview grow${fits ? "" : " empty"}`} ref={box} aria-hidden={!fits}>
+      {fits && <>
+        <figcaption>Up next · {lesson!.title}, <b><MathLine math={pic.ex.statement} /></b></figcaption>
+        <div className="sppic"><PlayingDiagram ex={{ ...pic.ex, diagram: pic.ex.diagram! }} end={statementBeat(pic.ex)} /></div>
+      </>}
+    </figure>
   );
 }
 

@@ -66,4 +66,3 @@ span.sbx{background:none}
 .sbt.master .sbt-num{font-size:48px}
 @media (max-width:700px){.sbt.master .sbt-in{grid-template-columns:none;grid-template-areas:none}.sbt.master .sbt-in>*{grid-area:auto}}
 /* the toggle floats bottom-left; on a phone the screen stops above it so nothing sits under it */
-html:has(.sbtoggle) .wrap{--screen-bottom:72px}

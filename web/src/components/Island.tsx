@@ -3,9 +3,10 @@ import { useApp } from "../app/AppState";
 import type { Route } from "../app/routes";
 import { doneCount, entriesInGrade, entryById, unitsInGrade } from "../app/curriculum";
 import { readAloudOn, readSettings } from "../app/settings";
-import { gradeOf } from "../curriculum/grades";
+import { gradeOf, inkOf } from "../curriculum/grades";
 import { lessonById } from "../curriculum/registry";
 import { currentItem, lessonOfItem } from "../engine/session/practice";
+import { upNext } from "../app/today";
 import { Contents, type Level } from "./Contents";
 import { tableById } from "../engine/facts/tables";
 import { Chevron } from "./primitives/icons";
@@ -63,10 +64,27 @@ function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): P
       const phone = typeof matchMedia !== "undefined" && matchMedia("(max-width: 699px)").matches;
       return route.name === "home" && route.pick && phone
         ? { kicker: gradeOf(grade).name, title: route.pick === "today" ? "Today" : lessonById(route.pick)?.title ?? "Lesson", back: { label: "chapters", to: { name: "home" } } }
-        : { kicker: "Contents", title: gradeOf(grade).name };
+        : { kicker: homeChapter(route, app, grade), title: gradeOf(grade).name };
     }
   }
 }
+
+/** On the book, the small line names the chapter you're in: the picked lesson's, else the one up next. */
+function homeChapter(route: Route, app: ReturnType<typeof useApp>, grade: number): string {
+  const id = route.name === "home" && route.pick && route.pick !== "today" ? route.pick : upNext(app.progress, grade)?.entry.id;
+  const p = id ? pageOf(id) : null;
+  return p && p.grade === grade && p.chapter !== "Skills" ? p.chapter : "Contents";
+}
+
+/** "5th grade" with its number in the grade's colour, the way the UI notes preview names the grade. */
+function GradeTitle({ grade }: { grade: number }) {
+  const g = gradeOf(grade), style = { "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties;
+  const m = /^(\d+\w*)( grade)$/.exec(g.name);
+  return m ? <b><span className="gnum ign" style={style}>{m[1]}</span>{m[2]}</b> : <b><span className="gnum ign" style={style}>{g.name}</span></b>;
+}
+
+/** preview and dev builds carry the design sandbox; quick settings is its way in */
+const SANDBOX = import.meta.env.MODE === "preview" || import.meta.env.MODE === "development";
 
 /** Sliders: the quick settings. */
 const SettingsIcon = () => (
@@ -97,6 +115,8 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   const [open, setOpen] = useState<Level | null>(null);
   const [quick, setQuick] = useState(false);
   const start: Level = route.name === "home" ? "shelf" : place.lesson ? "chapter" : "year";
+  // going anywhere (Me included) puts quick settings away
+  useEffect(() => { setQuick(false); }, [route]);
 
   // pinching the page closed (two fingers coming together) zooms out to the contents; spreading them is left to the browser
   useEffect(() => {
@@ -137,7 +157,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   const back = place.back;
   return (
     <>
-    <div className="itop">
+    <div className={`itop${quick ? " qopen" : ""}`}>
       <div className="icorner left">
         {showResume && (
           <button className="iresume" onClick={() => go({ name: "practice" }, "fwd")}
@@ -154,11 +174,9 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
           : <button className="iback" onClick={() => openSheet(true)} aria-label="Change grade"><Chevron dir="left" /></button>}
         <button className="iplace" onClick={() => setOpen(start)} aria-label={`Contents. You're on ${place.title}`} aria-haspopup="dialog">
           <small>{place.kicker}</small>
-          <b>{place.title}</b>
+          {place.title === gradeOf(grade).name ? <GradeTitle grade={grade} /> : <b>{place.title}</b>}
         </button>
-        <span className="ibat" aria-hidden style={{ "--p": fill } as CSSProperties}>
-          <i /><span className="gnum" style={{ "--gn": g.color } as CSSProperties}>{g.short}</span>
-        </span>
+        <span className="ibat" aria-hidden style={{ "--p": fill, "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties}><i /></span>
       </header>
       <div className="icorner right">
         <button className={`icon${quick ? " on" : ""}`} onClick={() => setQuick(q => !q)} aria-label="Settings" aria-expanded={quick}><SettingsIcon /></button>
@@ -203,6 +221,7 @@ function QuickSettings({ close }: { close: () => void }) {
           </button>
         ))}
         <button className="fpill" onClick={() => { close(); go({ name: "me" }, "fwd"); }} style={{ "--i": rows.length + 1 } as CSSProperties}>All settings ›</button>
+        {SANDBOX && <button className="fpill" onClick={() => { close(); dispatchEvent(new Event("bento:sandbox")); }} style={{ "--i": rows.length + 2 } as CSSProperties}>Sandbox ›</button>}
       </div>
     </>
   );

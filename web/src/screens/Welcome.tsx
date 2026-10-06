@@ -137,6 +137,9 @@ function HeroPictures({ rng }: { rng: Rng }) {
 }
 
 /** The first screen on a new device: what Bento is, the real thing working, and the grade shelf to start from. */
+/** preview and dev builds carry the design sandbox; on the landing page its way in is the footer */
+const SANDBOX = import.meta.env.MODE === "preview" || import.meta.env.MODE === "development";
+
 export function Welcome({ shelf = false }: { shelf?: boolean }) {
   const { chooseGrade, deps, go } = useApp();
   const rng = useMemo(() => deps().rng, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -157,7 +160,7 @@ export function Welcome({ shelf = false }: { shelf?: boolean }) {
       <section className="lsec"><h2>Everything in one box.</h2><p>Lessons, plus everything that helps them stick.</p></section>
       <FeatureBox rng={rng} />
       <Advanced />
-      <footer className="lfoot">Bento · Kindergarten to 12th grade</footer>
+      <footer className="lfoot">Bento · Kindergarten to 12th grade{SANDBOX && <> · <button className="tlink" onClick={() => dispatchEvent(new Event("bento:sandbox"))}>Sandbox</button></>}</footer>
     </div>
   );
 }

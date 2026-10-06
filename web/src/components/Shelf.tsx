@@ -25,7 +25,7 @@ export function Shelf({ current, onPick }: { current: number | null; onPick: (gr
       {LINES.filter(l => l.grades.length).map(line => (
         <div key={line.id} className="sline">
           <span className="k">{line.name}</span>
-          <div className="sbooks">
+          <div className={`sbooks n${line.grades.length}`}>
             {line.grades.map(n => {
               const d = GRADES[n]!, list = entriesInGrade(n), done = doneCount(progress, list);
               return (

@@ -21,9 +21,10 @@ html:has(.screen) body{overflow:hidden}
 /* ---- instances ---- */
 /* the grade's book: the list (floating preview: a well, rows as pills, the picked row's highlight glides) */
 .screen .slist{position:relative;padding:12px}
-.slist .shead{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:2px 14px;padding:6px 16px 14px}
-.slist .shead .gnum{font:650 48px/1 var(--sans);letter-spacing:-.04em}
-.slist .shead .gnum small{font-size:19px;vertical-align:top}
+.slist .shead{padding:10px 16px 18px}
+.slist .shead .gnum{font:650 64px/1 var(--sans);letter-spacing:-.04em}
+.slist .shead .gnum small{font-size:24px;vertical-align:top}
+.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px}
 .slist .shead h1{margin:0;font:650 19px/24px var(--sans);letter-spacing:-.01em}
 .slist .shead .ysub{margin:0;color:var(--muted);font-size:var(--small);line-height:20px}
 .sknob{position:absolute;left:12px;right:12px;top:0;height:52px;border-radius:999px;background:var(--float);box-shadow:var(--float-shadow);pointer-events:none;z-index:0;
@@ -60,13 +61,17 @@ html:has(.screen) body{overflow:hidden}
 .spreview figcaption b{color:var(--text)}
 .spreview figcaption .math,.spreview figcaption .ml{font-size:14px}
 /* the picture scales to the room it gets, never past it */
-.sppic,.gypic{position:relative;min-height:0}
-.sppic>.viz,.gypic>.viz{position:absolute;inset:0;display:grid;min-height:0;margin:0}
-.gypic>.viz{inset:var(--u)}
-.sppic>.viz>svg,.gypic>.viz>svg{width:100%!important;height:100%!important;max-height:none;margin:0;min-height:0}
-.sppic .viz-cap,.sppic .replay,.gypic .viz-cap,.gypic .replay{display:none}
+.sppic,.gyviz{position:relative;min-height:0}
+.sppic>.viz,.gyviz>.viz{position:absolute;inset:0;display:grid;min-height:0;margin:0}
+.sppic>.viz>svg,.gyviz>.viz>svg{width:100%!important;height:100%!important;max-height:none;margin:0;min-height:0}
+.sppic .viz-cap,.sppic .replay,.gyviz .viz-cap,.gyviz .replay{display:none}
 /* landscape: the preview sits above the detail; portrait and phone: below */
 @media (orientation:landscape) and (min-width:700px){.spreview{order:-1}}
+.spreview.grow{flex:1 1 0;min-height:0;display:grid}
+.spreview.grow.empty{background:none;padding:0}
+.sdl>.bhome{flex:none}
+/* picking a row swaps the detail with a short fade; nothing else on the screen moves */
+.sdetail>*{animation:fadeIn .25s var(--ease) both}
 @media (max-width:699px){.sdtext{padding:20px 22px}.sdtext h2{font-size:26px;line-height:32px}.sfootrow .grow{display:none}}
 
 /* "Which grade are you in?" (floating preview: floating circles, a ring that glides to your pick) */
@@ -89,7 +94,11 @@ html:has(.screen) body{overflow:hidden}
 .gytext .gnum small{font-size:26px;vertical-align:top}
 .gytext h2{margin:0;font:650 30px/1.1 var(--sans);letter-spacing:-.03em}
 .gytext p{margin:0;color:var(--muted);font-size:17px;line-height:1.45}
-.gypic{grid-area:pic;min-height:0;background:var(--well);border-radius:var(--r-panel);display:grid;place-items:center;padding:20px;overflow:hidden;animation:floatIn .4s var(--ease) both;animation-delay:60ms}
+.gychips{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.gychips li{padding:5px 12px;border-radius:999px;background:var(--well);font-size:13px;font-weight:550;color:var(--text)}
+.gypic figcaption{font-size:var(--small);font-weight:550;color:var(--muted)}
+.gypic figcaption b{color:var(--text);font-weight:650}
+.gypic{grid-area:pic;margin:0;min-height:0;background:var(--well);border-radius:var(--r-panel);display:grid;grid-template-rows:auto minmax(0,1fr);gap:12px;padding:20px 24px 24px;overflow:hidden;animation:floatIn .4s var(--ease) both;animation-delay:60ms}
 .gygo{margin-top:6px}
 .gygo>.ctl{--pill-h:52px;font-size:17px}
 @media (orientation:portrait),(max-width:899px){

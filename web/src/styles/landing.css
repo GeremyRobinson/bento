@@ -39,9 +39,15 @@
 /* the grade picker is the same shelf as the book's contents */
 .lshelf .book{animation:rise .5s var(--ease) both}
 @media (min-width:900px){.lshelf .shelf{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:calc(var(--u) * 1.5)}}
+/* every line keeps its own columns: 9th to 12th as one row of four, never 12th alone (Review landing check, item 3) */
+.lshelf .sbooks.n3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.lshelf .sbooks.n4{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media (max-width:699px){
-  .lshelf .sbooks{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .lshelf .book{height:128px;padding:12px 12px 14px;gap:4px}
+  .lshelf .sbooks.n3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .lshelf .sbooks.n4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  /* names wrap to three lines instead of being cut off (item 4) */
+  .lshelf .book{height:auto;min-height:128px;padding:12px 12px 14px;gap:4px}
+  .lshelf .book b{-webkit-line-clamp:3}
   .lshelf .book .gnum{font-size:34px}
   .lshelf .book .gnum small{font-size:14px;top:2px}
   .lshelf .book b{font-size:13px}
@@ -146,7 +152,7 @@
 /* ---- Bento Advanced: the AP line, introduced like a pro product. Always on its own dark canvas, in light hairlines. ---- */
 .ladv{--adv-ink:#f5f5f7;--adv-dim:#86868b;--adv-glow:#a78bfa;margin-top:calc(var(--u) * 2);background:radial-gradient(120% 80% at 50% 0%,#1d1b2e 0%,#0a0a0c 62%);color:var(--adv-ink);
   border-radius:var(--r-panel);padding:calc(var(--u) * 4) calc(var(--u) + 4px) calc(var(--u) * 2.5);display:grid;justify-items:center;text-align:center;gap:calc(var(--u) - 4px);
-  overflow:hidden;color-scheme:dark;animation:rise .8s var(--ease) both}
+  overflow:hidden;color-scheme:dark}
 .adv-eyebrow{font-size:calc(var(--fs) * .95);font-weight:650;color:var(--adv-dim)}
 .ladv h2{font:650 clamp(44px,8vw,84px)/1 var(--sans);letter-spacing:-.045em;background:linear-gradient(100deg,#f5f5f7 20%,#c4b5fd 55%,#f0abfc 85%);-webkit-background-clip:text;background-clip:text;color:transparent;padding:0 .1em .06em}
 .ladv>p{max-width:560px;color:var(--adv-dim);font-size:calc(var(--fs) * 1.08);line-height:1.5;font-weight:400;text-wrap:pretty}
@@ -170,7 +176,10 @@
 @keyframes advGrow{from{transform:scaleY(0)}}
 .adv-spin{animation:advSpin 6s linear infinite}
 @keyframes advSpin{to{transform:rotate(-360deg)}}
-.ladv:not(.in),.ladv:not(.in) *{animation-play-state:paused}
+/* the section and its cards are drawn ahead of time, so a fast scroll never lands on a blank band; only the
+   pictures inside wait to play until they're on screen (Review landing check, item 2) */
+.ladv .adv-course{animation:none}
+.ladv:not(.in) svg,.ladv:not(.in) svg *{animation-play-state:paused}
 
 /* Bento²: the name is the headline */
 .ladv h2{font-size:clamp(64px,13vw,148px);letter-spacing:-.06em;line-height:.95}
@@ -184,3 +193,6 @@
 .adv-drift{animation:advDrift 5s ease-in-out infinite alternate}
 @keyframes advDrift{from{transform:translateX(-26px)}to{transform:translateX(26px)}}
 @media (prefers-reduced-motion:reduce){.adv-trail,.adv-bend,.adv-mass,.adv-drift{animation:none}.adv-trail{opacity:.5}}
+
+/* the landing's pill scrolls away with the page instead of sitting on the content (Review landing check, item 1) */
+html:has(.land) .itop{position:relative;top:0}

@@ -76,7 +76,7 @@ export function Advanced() {
     const el = box.current;
     if (!el) return;
     if (typeof IntersectionObserver === "undefined") { el.classList.add("in"); return; }
-    const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { el.classList.add("in"); io.disconnect(); } }, { threshold: 0.15 });
+    const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { el.classList.add("in"); io.disconnect(); } }, { threshold: 0, rootMargin: "0px 0px 200px 0px" });
     io.observe(el);
     return () => io.disconnect();
   }, []);

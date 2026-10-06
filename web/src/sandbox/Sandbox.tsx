@@ -93,6 +93,12 @@ export function Sandbox() {
     if (sb.open) document.documentElement.dataset.theme = sb.theme;
     else delete document.documentElement.dataset.theme;
   }, [sb.theme, sb.open]);
+  // quick settings opens the sandbox in preview builds, so no pill floats over the screens (Review v39 item 19)
+  useEffect(() => {
+    const open = () => set({ open: true });
+    addEventListener("bento:sandbox", open);
+    return () => removeEventListener("bento:sandbox", open);
+  }, []);
   // the edits, layered over the real stylesheets
   useEffect(() => {
     let el = document.getElementById("sb-tokens") as HTMLStyleElement | null;
@@ -146,7 +152,8 @@ export function Sandbox() {
   const resetToMaster = () => edit2(Object.fromEntries(GRADE_TOKENS.filter(t => over.has(t.v)).map(t => [t.v, MASTER])));
   const edit2 = (vals: Record<string, string>) => set({ o: { ...sb.o, grades: { ...sb.o.grades, [g]: { ...sb.o.grades[g], ...vals } } } });
 
-  if (!sb.open) return <button className="sbtoggle" onClick={() => set({ open: true })}>Sandbox</button>;
+  // closed, it waits behind quick settings (and the landing page's footer), never floating over a screen
+  if (!sb.open) return null;
 
   const row = (scope: Scope, t: Token) => {
     const cur = (scope === "master" ? masterValues : values)[t.v] ?? "";

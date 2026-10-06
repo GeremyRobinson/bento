@@ -33,7 +33,6 @@ describe("first launch: landing → grade → home", () => {
     fireEvent.click(screen.getByRole("button", { name: /^5th grade:/ }));
     // a grade opens on its book: the cover, today's plan, then every chapter with its pages
     expect(screen.getByRole("heading", { level: 1, name: "5th grade" })).toBeInTheDocument();
-    expect(screen.getByText("This year: fractions and decimals.")).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: "Today" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: new RegExp(`Up next.*${LESSON}`) })).toBeInTheDocument();
     expect(document.querySelectorAll(".schapter")).toHaveLength(4);
@@ -69,7 +68,7 @@ describe("no grade until one is chosen", () => {
     renderApp({ grade: null, chosen: false }, {}, "#/learn/no-such-lesson");
     fireEvent.click(screen.getByRole("radio", { name: /^3rd grade/ }));
     expect(screen.getByRole("radio", { name: /^3rd grade/ })).toHaveAttribute("aria-checked", "true");
-    expect(screen.getByRole("heading", { level: 2, name: /^3rd grade/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: /^Multiplying/ })).toBeInTheDocument();
     tap("Start 3rd grade ›");
     expect(screen.getByRole("heading", { level: 1, name: "3rd grade" })).toBeInTheDocument();
   });
