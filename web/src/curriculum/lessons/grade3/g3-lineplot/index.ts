@@ -75,7 +75,7 @@ function answers(p: FracPlotProblem): AnswerModel {
           id: "write", label: "Write it", question: "How long is it, as a mixed number?",
           prompt: b => [b.w!, frac([b.n!], [b.d!]), text(" inches")], ans: { w: p.whole, n: extra, d: p.to }, small: ["w"],
           wrong: [[{ w: p.whole, n: extra, d: p.to === 2 ? 4 : 2 }, "Used the wrong size of piece", `The pieces are ${name}, so the bottom number is ${p.to}.`]],
-          hint: `${p.whole} whole inches and ${extra} ${extra === 1 ? one : name}.`,
+          hint: `${p.whole} whole ${p.whole === 1 ? "inch" : "inches"} and ${extra} ${extra === 1 ? one : name}.`,
         }),
       ],
       finalParts: [-1],

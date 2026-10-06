@@ -16,7 +16,7 @@ export function legacyText(m: MathText): string {
       case "sup": return `^(${legacyText(t.v)})`;
       case "sub": return `_(${legacyText(t.v)})`;
       case "sqrt": return `√${legacyText(t.v)}`;
-      case "mark": case "muted": case "bold": return legacyText(t.v);
+      case "mark": case "muted": case "bold": case "part": return legacyText(t.v);
       case "br": return " ";
     }
   };
