@@ -28,7 +28,7 @@
 .bar .grow{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:var(--w-bold);padding:0 var(--s)}
 .wrap>*,.panel>*,.lessons>*,.card>*,.bento>*{min-width:0}
 .dot{width:12px;height:12px;border-radius:50%;flex:none;background:var(--faint);transition:background .3s,transform .3s var(--spring)}
-.dot.ok{background:var(--ok)} .dot.busy{background:var(--busy);transform:scale(1.25)} .dot.err{background:var(--err)}
+.dot.ok{background:var(--ok)} .dot.busy{background:var(--tint);transform:scale(1.25)} .dot.err{background:var(--err)}
 .actions{display:flex;gap:var(--s);justify-content:center;flex-wrap:wrap}
 
 /* ---- panels and cards ---- */
@@ -142,9 +142,12 @@
 @keyframes ringIn{from{stroke-dashoffset:1}}
 .ring b{font:650 34px/1 var(--num);color:var(--sc,var(--tint));text-box:trim-both cap alphabetic}
 .score{display:inline-flex;align-items:center;gap:6px;flex:none;white-space:nowrap}
-.score b{min-width:30px;height:30px;padding:0 6px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font:650 16px/1 var(--num);color:#14161b;background:var(--sc)}
-.score span{font-weight:var(--w-bold);font-size:var(--small);color:var(--sc)}
-.s4{--sc:var(--ok)} .s3{--sc:var(--score3)} .s2{--sc:var(--busy)} .s1{--sc:var(--err)} .s0{--sc:var(--score0)}
+.score b{min-width:30px;height:30px;padding:0 6px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font:650 16px/1 var(--num);color:var(--sc-fg);background:var(--sc)}
+.score span{font-weight:var(--w-bold);font-size:var(--small);color:var(--ink)}
+/* scores are the grade's own hue (G 2026-10-06: the lesson UI is monochromatic): the higher the score, the stronger the shade */
+.s4{--sc:color-mix(in srgb,var(--ink) 82%,black);--sc-fg:var(--on-tint)} .s3{--sc:var(--ink);--sc-fg:var(--on-tint)}
+.s2{--sc:color-mix(in srgb,var(--tint) 40%,var(--card));--sc-fg:var(--ink)} .s1{--sc:color-mix(in srgb,var(--tint) 18%,var(--card));--sc-fg:var(--ink)}
+.s0{--sc:var(--well);--sc-fg:var(--muted)}
 
 .donehead{position:relative;display:flex;align-items:center;gap:var(--u);padding:var(--s) var(--s) 0}
 .donehead .ring{margin:0;flex:none}
@@ -214,7 +217,7 @@
 .feedback .dot{margin-top:calc((var(--lh) - 12px) / 2)}
 .fb-good{background:color-mix(in srgb,var(--ok) 14%,var(--card))}
 .fb-bad{background:color-mix(in srgb,var(--err) 12%,var(--card))}
-.fb-hint{background:color-mix(in srgb,var(--busy) 15%,var(--card))}
+.fb-hint{background:var(--tint-soft)}
 .feedback .fr{font-size:var(--fs)}
 .tray{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s);max-width:480px;width:100%;margin:0 auto}
 .tray button{height:var(--key);border-radius:999px;background:var(--card);font-family:var(--num);font-weight:500;font-size:calc(var(--key) * .46);display:flex;align-items:center;justify-content:center;transition:background .15s,transform .15s var(--spring)}
@@ -363,7 +366,7 @@
 .mt-text small{color:var(--muted);font-size:var(--small);font-weight:var(--w-mid);line-height:1.3}
 .switch{flex:none;width:50px;height:30px;border-radius:999px;background:var(--faint);position:relative;transition:background .2s}
 .switch i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgb(0 0 0 / .25);transition:transform .25s var(--spring)}
-.mtoggle[aria-checked="true"] .switch{background:var(--ok)}
+.mtoggle[aria-checked="true"] .switch{background:var(--ink)}
 .mtoggle[aria-checked="true"] .switch i{transform:translateX(20px)}
 .seg{flex:none;display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--well)}
 .seg button{width:40px;height:34px;border-radius:999px;font-weight:650;color:var(--muted);display:grid;place-items:center}
