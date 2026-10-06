@@ -8,7 +8,8 @@ export type Route =
   | { name: "practice" }
   | { name: "results" }
   | { name: "report"; key: string }
-  | { name: "parent" }
+  /** the grown-up page; `pick` is the mistake pattern the detail shows (on a phone, the detail on its own) */
+  | { name: "parent"; pick?: string }
   /** the personal hub: grades, progress, the grown-up page, accessibility and backups */
   | { name: "me" }
   /** the facts tables: all of them for the grade, or one table */
@@ -27,7 +28,7 @@ export function parseRoute(hash: string): Route {
     case "practice": return { name: "practice" };
     case "results": return { name: "results" };
     case "report": return parts[1] ? { name: "report", key: parts[1] } : { name: "home" };
-    case "grown-up": return { name: "parent" };
+    case "grown-up": return parts[1] ? { name: "parent", pick: parts[1] } : { name: "parent" };
     case "me": return { name: "me" };
     case "facts": return parts[1] ? { name: "facts", table: parts[1], ...(parts[2] === "go" ? { start: true } : {}) } : { name: "facts" };
     case "sandbox": return import.meta.env.MODE === "preview" || import.meta.env.MODE === "development" ? { name: "sandbox" } : { name: "home" };
@@ -43,7 +44,7 @@ export function routeHash(r: Route): string {
     case "practice": return "#/practice";
     case "results": return "#/results";
     case "report": return `#/report/${encodeURIComponent(r.key)}`;
-    case "parent": return "#/grown-up";
+    case "parent": return r.pick ? `#/grown-up/${encodeURIComponent(r.pick)}` : "#/grown-up";
     case "me": return "#/me";
     case "sandbox": return "#/sandbox";
     case "facts": return r.table ? `#/facts/${encodeURIComponent(r.table)}${r.start ? "/go" : ""}` : "#/facts";

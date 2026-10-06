@@ -47,8 +47,11 @@
 .mline .mk{display:inline-flex;flex-wrap:wrap;align-items:center;justify-content:center;min-width:0;max-width:100%}
 .mline .mk.w{flex-wrap:nowrap}
 .math>.mline:has(.br){flex-wrap:wrap}
-.math>.mline{flex-wrap:nowrap;font-size:min(1em, 8.5vw)}
+.math>.mline{flex-wrap:nowrap}
 .mline .ans{font-weight:var(--w-bold)}
+/* the solved problem's "?" becomes its answer, settling in where the box was */
+.math .mline .ans{color:var(--ink);animation:ansIn var(--dur-420) var(--spring) both}
+@keyframes ansIn{from{opacity:0;transform:scale(.7)}}
 /* the problem's two parts wear their picture's colours, in the statement, the steps' math and the steps' words alike
    (statement.ts partsLook says how the picture colours them): the first part the lesson's own picture colour (the
    .t0/.t1/.t2 the picture's --tint and --ink follow), the second the colour pictures give a second part (.p1, --c1).
@@ -70,7 +73,9 @@
 .visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .mline-in{display:contents}
 /* in a flex line vertical-align does nothing, so raise and lower by hand */
-.mline sup{font-size:.6em;line-height:1;align-self:flex-start;margin-top:-.1em}
+/* a power sits up against its base, measured from the line's middle, so a tall answer box beside it can't lift it away */
+.mline sup{font-size:.6em;line-height:1;align-self:center;position:relative;top:-.6em}
+.mline .slot+.t,.mline .t+.slot{margin-left:.12em}
 .mline sub{font-size:.6em;line-height:1;align-self:flex-end;margin-bottom:-.1em}
 .mline .lims{display:inline-flex;flex-direction:column;align-self:stretch;justify-content:space-between;font-size:.6em;line-height:1;margin:-.15em .1em -.25em .05em}
 .mline .lims>sup,.mline .lims>sub{font-size:1em;align-self:flex-start;margin:0}
@@ -97,4 +102,5 @@
 :root[data-theme="dark"] .am .region.r2 :is(.product,.product text,.part){fill:var(--k2)}
 :root[data-theme="dark"] .am .total{fill:var(--ka)}
 /* a question in words wraps like a sentence, at the question size, never wider than its card */
+.math.words .t{white-space:pre-wrap}
 .math.words>.mline{flex-wrap:wrap;font-size:calc(var(--math) * .6);font-weight:var(--w-bold);line-height:1.2;letter-spacing:-.01em;max-width:100%;text-wrap:balance}

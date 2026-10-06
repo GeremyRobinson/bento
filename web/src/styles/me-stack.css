@@ -1,0 +1,42 @@
+/* Me as a floating stack (Design's RedesignMe spec): rows of pills under the Me circle, over a blurred dim */
+.fdim.fblur{-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.mset{gap:var(--sp-2)}
+.mset .frow{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:var(--sp-2)}
+.mset .frow.fgap{margin-top:var(--sp-2)}
+.mset .frow>*{animation:stackIn var(--dur-300) var(--ease) both;animation-delay:calc(var(--i,0) * var(--dur-42))}
+.mset.out .frow>*{animation:stackOut var(--dur-140) var(--ease) both;animation-delay:calc((var(--n,6) - var(--i,0)) * var(--dur-22))}
+.mset .frow{animation:none}
+.mset .fpill b{font-weight:var(--w-bold);color:var(--text)}
+.mset .fpill .funit{color:var(--muted);margin-left:-6px}
+.mset .fgrade{gap:6px}
+.mset .fgrade .gn{color:var(--ink);font-size:var(--fz-xl)}
+.mset .fpill.toggle{padding:0 14px 0 22px}
+.fpill.rew{color:var(--muted);box-shadow:inset 0 0 0 2px var(--faint),var(--float-shadow);gap:10px}
+.fpill .ftag{font-size:11px;font-weight:var(--w-bold);letter-spacing:.06em;text-transform:uppercase;background:var(--well);border-radius:var(--r-pill);padding:3px var(--sp-2)}
+.mset .fchap{gap:10px}
+.cbat{position:relative;display:inline-flex;gap:2px;width:44px;height:22px;padding:3px;border-radius:7px;box-shadow:inset 0 0 0 1.5px var(--faint);margin-right:var(--sp-1)}
+.cbat::after{content:"";position:absolute;right:-5px;top:7px;width:3px;height:8px;border-radius:0 2px 2px 0;background:var(--faint)}
+.cbat i{flex:1;border-radius:3px;background:var(--well)}
+.cbat i.on{background:var(--tint)}
+.fpill.fnote{min-height:40px;padding:0 18px 0 14px;gap:var(--sp-2);font-size:var(--fz-sm);color:var(--muted);background:color-mix(in srgb,var(--float) 82%,transparent);white-space:normal}
+.fnote svg{flex:none;color:var(--ink)}
+/* on a phone the rows become even columns of compact pills, so the whole stack fits one screen */
+@media (max-width:699px){
+  .mset{left:var(--sp-4);align-items:stretch;gap:6px;max-height:calc(100dvh - 88px);overflow:auto}
+  .mset .flbl{text-align:left;padding:var(--sp-1) var(--sp-2) 0}
+  .mset .frow{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px}
+  .mset .frow.fgap{margin-top:0}
+  .mset .fpill,.mset .fpill.toggle{min-height:var(--tap);padding:var(--sp-1) 10px var(--sp-1) 14px;font-size:var(--fz-sm);white-space:normal;line-height:1.2;gap:6px}
+  .mset .fpill{justify-content:flex-start}
+  .mset .fpill.toggle{justify-content:space-between}
+  .mset .fpill b,.mset .fchap{white-space:nowrap}
+  .mset .fchap .funit{display:none}
+  .mset .fgrade .gn{font-size:var(--fz-lg)}
+  .mset .fpill .funit{margin-left:-2px}
+  .mset .fpill .ftag{font-size:9px;padding:2px 6px}
+  .mset .cbat{width:36px;height:18px;padding:2px}
+  .mset .cbat::after{top:5px;height:8px}
+  .mset .fnote{font-size:var(--fz-2xs)}
+}
+@media (prefers-reduced-motion:reduce){.mset .frow>*{animation:none}}
+:root[data-motion="reduce"] .mset .frow>*{animation:none}

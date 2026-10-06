@@ -36,7 +36,8 @@ interface AppState extends AppData {
   act(step: (s: PracticeSession, progress: Progress, deps: Deps) => PracticeSession | null): void;
   finish(): void;
   /** ends a test, check-up or review without scoring it, and goes home */
-  quit(): void;
+  /** ends the run in progress and forgets it; `stay` keeps the current screen (quitting from the Resume pill) */
+  quit(opts?: { stay?: boolean }): void;
   /** save a finished fact sprint */
   saveSprint(table: string, answers: SprintAnswer[]): void;
   /** change accessibility and comfort settings */
@@ -168,7 +169,8 @@ export function AppProvider(props: {
         const next = step(p.run, p, deps());
         return next ? { ...p, run: next } : p;
       }),
-      quit: () => withTransition(() => { setProgress(p => ({ ...p, run: null })); show({ name: "home" }); }, "back"),
+      quit: opts => opts?.stay ? setProgress(p => ({ ...p, run: null }))
+        : withTransition(() => { setProgress(p => ({ ...p, run: null })); show({ name: "home" }); }, "back"),
       finish: () => {
         const run = data.progress.run;
         if (!run) return;

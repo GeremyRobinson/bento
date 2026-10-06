@@ -11,7 +11,7 @@ import { FeatureBox } from "../components/LandingTiles";
 import { GradeNum, Shelf } from "../components/Shelf";
 import { Advanced } from "../components/Advanced";
 import type { Explanation } from "../explanations/schema";
-import { CHOOSE_GRADE } from "../app/copy";
+import { START_LEARNING } from "../app/copy";
 
 /**
  * Layouts for the landing grid, in the order the tiles are placed. Each one fills three columns by three rows
@@ -151,7 +151,7 @@ export function Welcome({ shelf = false }: { shelf?: boolean }) {
       <section className="lhero">
         <h1>Math that <span>clicks.</span></h1>
         <p>Watch each idea play out, then solve it one step at a time. If you slip, Bento shows you the exact step and why.</p>
-        <div className="lcta"><Pill go onClick={() => go({ name: "home" }, "fwd")}>{CHOOSE_GRADE}</Pill><span>Free. No account.</span></div>
+        <div className="lcta"><Pill go onClick={() => go({ name: "home" }, "fwd")}>{START_LEARNING}</Pill><span>Free. No account.</span></div>
       </section>
       <section className="lhbox">
         <HeroPictures rng={rng} />

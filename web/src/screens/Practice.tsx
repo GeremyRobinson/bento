@@ -123,7 +123,7 @@ export function Practice() {
   return (
     <WorkScreen
       head={<>
-        {mixed && <Pill onClick={quit}>Quit</Pill>}
+        {mixed && <Pill onClick={() => quit()}>Quit</Pill>}
         <span className="steps" aria-label={`Problem ${s.i + 1} of ${n}`}>
           {s.items.map((_, i) => <span key={i} className={`dot ${i < s.i ? "ok" : i === s.i ? "busy" : ""}`} />)}
         </span>
@@ -133,7 +133,7 @@ export function Practice() {
       problem={<>
         <div className="card wq">
           {mixed && <div className="label">{lesson.title}</div>}
-          <ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} />
+          <ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} solved={s.solved} />
           <div className="work">
             {s.work.map((w, k) => (
               <div key={k} className={`workline${w.shown ? " shown" : ""}${s.fx === "line" && k === s.work.length - 1 ? " enter" : ""}`}>

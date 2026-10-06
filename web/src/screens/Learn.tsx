@@ -8,7 +8,6 @@ import { LEVELS } from "../engine/mastery/levels";
 import { lastScore } from "../engine/mastery/progress";
 import { when } from "../app/format";
 import { Diagram } from "../components/diagrams/Diagram";
-import { entriesInGrade } from "../app/curriculum";
 import { BuildUp } from "../components/BuildUp";
 import type { Rng } from "../curriculum/generators/rng";
 import type { AnyLesson } from "../curriculum/schemas/lesson";
@@ -89,9 +88,6 @@ export function Learn({ lessonId }: { lessonId: string }) {
 
   const sc = lastScore(progress, lesson.id), rep = reports[lesson.id], tier = tierFor(sc);
   const low = sc != null && sc <= 1;
-  const all = entriesInGrade(lesson.grade), place = all.findIndex(c => c.id === lesson.id);
-  const unit = all.filter(c => (c.unit || "") === (all[place]?.unit || ""));
-  const page = unit.findIndex(c => c.id === lesson.id);
 
   const step = (d: 1 | -1) => { setPlaying(false); setAt(a => Math.max(0, Math.min(last, a + d))); };
   // arrow keys and a sideways swipe move through the explanation, like the current app's lesson cards
@@ -122,9 +118,11 @@ export function Learn({ lessonId }: { lessonId: string }) {
     <FitScreen className={`lscreen parts-${look}`}>
       {/* the brief intro: what this picture is about, then the steps that explain it, each one tied to the picture */}
       <section className="lintro">
-        <p className="k">{lesson.unit || gradeOf(lesson.grade).name} · lesson {page + 1} of {unit.length}
-          {sc != null && <> · last <ScoreChip n={sc} /></>}</p>
-        <h1 className={/[=²³√ⁿ₀-₉]/.test(ex.heading) ? "formula" : undefined}>{ex.heading}</h1>
+        {/* one name per lesson (Review v43 item 12): the island carries the chapter and page; the heading is the
+            lesson's name, and the explanation's own heading becomes the line under it */}
+        {sc != null && <p className="k">Last time <ScoreChip n={sc} /></p>}
+        <h1>{lesson.title}</h1>
+        {ex.heading && ex.heading !== lesson.title && <p className={`lsub${/[=²³√ⁿ₀-₉]/.test(ex.heading) ? " formula" : ""}`}>{ex.heading}</p>}
         {ex.idea?.slice(0, 2).map((t, i) => <p key={i} className="idea"><Rich text={t} /></p>)}
         <ol className="beats" aria-live="polite">
           {ex.steps.map((st, i) => (

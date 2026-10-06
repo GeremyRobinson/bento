@@ -76,7 +76,7 @@ function GradeHome({ g }: { g: number }) {
           <div className={`schapter${isOpen ? " open" : ""}`} key={u.name}>
             <button className="srow chap" aria-expanded={isOpen}
               onClick={() => { if (isOpen) setShut(u.name); else { setShut(null); select((u.entries.find(c => c.id === next?.entry.id) ?? u.entries.find(c => isReady(c.id)) ?? u.entries[0]!).id); } }}>
-              <span className="sname"><b>{u.name}</b></span><small className="smeta">{done === u.entries.length ? "Done" : done ? `${done} of ${u.entries.length}` : `${u.entries.length} lesson${u.entries.length === 1 ? "" : "s"}`}</small>
+              <span className="sname"><b>{u.name}</b></span><small className="smeta">{done === u.entries.length ? "Done" : !done && u.entries.includes(next?.entry as never) ? UP_NEXT : `${done} of ${u.entries.length}`}</small>
             </button>
             {isOpen && lessons.map(({ c }) => {
               const sc = lastScore(progress, c.id), live = isReady(c.id);
@@ -124,12 +124,16 @@ function TodayDetail({ g }: { g: number }) {
     : i.kind === "lesson" ? lastScore(progress, i.id) : i.kind === "facts" ? undefined : progress.tests[i.key]?.last;
   const minutes = plan.filter(i => !i.done).reduce((m, i) => m + i.minutes, 0);
   const nextLesson = upNext(progress, g)?.entry.id;
+  // the picture comes from the next lesson; when that one is all equations, from the next lesson after it that draws
+  // one (G 2026-10-06: Today always has a live picture)
+  const ready = list.filter(c => isReady(c.id)), at = Math.max(0, ready.findIndex(c => c.id === nextLesson));
+  const picFrom = [...ready.slice(at), ...ready.slice(0, at)].map(c => c.id);
   const units = unitsInGrade(g);
   // Today as a bento that fills the screen (G 2026-10-06, "needs better use of space"): the up-next problem drawn big,
   // the plan, how far the year is, the streak, and every chapter as its own fill
   return (
-    <div className={`bhome sday sbento${nextLesson ? "" : " nopic"}`}>
-      {nextLesson && <PreviewWell key={nextLesson} lessonId={nextLesson} />}
+    <div className={`bhome sday sbento${picFrom.length ? "" : " nopic"}`}>
+      {picFrom.length > 0 && <PreviewWell key={nextLesson ?? picFrom[0]} candidates={picFrom} next={nextLesson} />}
       <section className="tile today">
         <h2>Today</h2>
         <p className="sub">{!plan.length ? "New lessons for this grade are almost ready." : first ? `About ${minutes} minutes.` : "That's everything for today."}</p>
@@ -188,12 +192,18 @@ function TodayDetail({ g }: { g: number }) {
  * Up next, as a picture: the very first problem of the lesson waiting, in whatever room the plan leaves (UI notes
  * preview: a big live picture on top of the detail). It draws only when it fits PREVIEW_MIN tall.
  */
-function PreviewWell({ lessonId }: { lessonId: string }) {
+function PreviewWell({ candidates, next }: { candidates: string[]; next?: string }) {
   const { deps } = useApp();
-  const lesson = lessonById(lessonId);
   const seed = useMemo(() => Math.floor(deps().rng.next() * 2 ** 31), []); // eslint-disable-line react-hooks/exhaustive-deps
-  const pv = useMemo(() => (lesson ? previewOf(lesson, seed) : null), [lesson, seed]);
-  const pic = pv?.ex.diagram && pv.ex.diagram.kind !== "chain" ? pv : null;
+  // the first lesson in line whose first problem draws a picture
+  const found = useMemo(() => {
+    for (const id of candidates) {
+      const l = lessonById(id), pv = l ? previewOf(l, seed) : null;
+      if (l && pv?.ex.diagram && pv.ex.diagram.kind !== "chain") return { lesson: l, pic: pv };
+    }
+    return null;
+  }, [candidates.join(), seed]); // eslint-disable-line react-hooks/exhaustive-deps
+  const lesson = found?.lesson, pic = found?.pic ?? null;
   const box = useRef<HTMLElement>(null);
   const [h, setH] = useState(0);
   useLayoutEffect(() => {
@@ -211,7 +221,7 @@ function PreviewWell({ lessonId }: { lessonId: string }) {
   return (
     <figure className={`card spreview grow${fits ? "" : " empty"}`} ref={box} aria-hidden={!fits}>
       {fits && <>
-        <figcaption>Up next · {lesson!.title}, <b><MathLine math={pic.ex.statement} /></b></figcaption>
+        <figcaption>{lesson!.id === next ? "Up next" : "Coming up"} · {lesson!.title}, <b><MathLine math={pic.ex.statement} /></b></figcaption>
         <div className="sppic"><PlayingDiagram ex={{ ...pic.ex, diagram: pic.ex.diagram! }} end={statementBeat(pic.ex)} /></div>
       </>}
     </figure>

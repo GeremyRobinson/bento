@@ -122,7 +122,8 @@ html:has(.screen) body{overflow:hidden}
 .lintro{grid-area:intro;min-height:0;overflow:auto;scrollbar-width:thin;display:flex;flex-direction:column;gap:var(--sp-3);padding:var(--sp-2) 6px var(--sp-2) var(--sp-2)}
 .lintro .k{margin:0;color:var(--muted);font-size:var(--fz-sm);font-weight:var(--w-mid);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .lintro h1{margin:0;font:var(--w-bold) 30px/1.12 var(--sans);letter-spacing:-.03em;color:var(--text)}
-.lintro h1.formula{font-variant-numeric:tabular-nums}
+.lintro .lsub{margin:0;font-size:var(--fz-lg);font-weight:var(--w-mid);color:var(--ink)}
+.lintro .lsub.formula{font-variant-numeric:tabular-nums}
 .lintro .idea{margin:0;color:var(--muted);font-size:var(--fz-lg);line-height:1.45}
 .lintro .beats{margin-top:6px;gap:6px}
 .lintro .beat>button{display:flex;align-items:flex-start;gap:var(--sp-3);width:100%;padding:10px 14px 10px var(--sp-2);border-radius:var(--r-2xl);text-align:left}
