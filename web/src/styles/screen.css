@@ -75,6 +75,9 @@ html:has(.screen) body{overflow:hidden}
 .gqhead h1{margin:0;font:650 44px/1.1 var(--sans);letter-spacing:-.04em}
 .gstrip{position:relative;display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:10px;justify-items:center;padding:6px 0}
 .gbtn{width:62px;height:62px;border-radius:50%;background:var(--float);box-shadow:var(--float-shadow);color:var(--ink);font:650 25px/1 var(--sans);letter-spacing:-.03em;transition:transform .18s var(--ease),background .2s}
+/* dark mode: the grade's color lifted so the number reads on the dark circle (4.5:1 or better) */
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .gbtn{color:color-mix(in srgb,var(--tint) 70%,white)}}
+:root[data-theme="dark"] .gbtn{color:color-mix(in srgb,var(--tint) 70%,white)}
 .gbtn:hover{background:color-mix(in oklab,var(--float) 94%,var(--text))}
 .gbtn:active{transform:scale(.96)}
 .gring{position:absolute;left:0;top:0;width:72px;height:72px;border-radius:50%;box-shadow:0 0 0 3px var(--text);pointer-events:none;opacity:0;transition:transform .38s var(--glide),opacity .2s var(--ease)}
@@ -116,7 +119,8 @@ html:has(.screen) body{overflow:hidden}
 .lintro .beat>button{display:flex;align-items:flex-start;gap:12px;width:100%;padding:10px 14px 10px 8px;border-radius:24px;text-align:left}
 .lintro .beat{background:none;border-radius:24px}
 .lintro .beat[data-state="now"]{background:var(--float);box-shadow:var(--float-shadow)}
-.lintro .beat[data-state="later"]{opacity:.45}
+/* steps still to come stay readable (4.5:1): muted text at full strength, not faded */
+.lintro .beat[data-state="later"]{opacity:1;color:var(--muted)}
 .lintro .beat .badge{--badge:30px;min-width:30px;height:30px;font-size:14px;background:var(--well);color:var(--ink)}
 .lintro .beat[data-state="now"] .badge{background:var(--ink);color:var(--on-tint)}
 .lintro .beat .say{gap:2px;font-size:16px;line-height:1.4}
@@ -124,7 +128,7 @@ html:has(.screen) body{overflow:hidden}
 .lintro .lhelp{margin:0;color:var(--muted);font-size:14px}
 .lintro .lhelp b{color:var(--ink)}
 .lintro .tlink{padding:4px 0;min-height:0}
-.lhero{grid-area:hero;margin:0;min-height:0;display:grid;justify-items:stretch;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;gap:12px;padding:24px 28px 20px;border-radius:var(--r-panel);background:var(--float);box-shadow:var(--float-shadow)}
+.lshero{grid-area:hero;margin:0;min-height:0;display:grid;justify-items:stretch;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;gap:12px;padding:24px 28px 20px;border-radius:var(--r-panel);background:var(--float);box-shadow:var(--float-shadow)}
 .lmath{display:flex;justify-content:center;font-size:clamp(30px,4.4vw,46px);font-weight:650;letter-spacing:-.02em}
 .lmath .mline{font-size:inherit}
 .lpic{position:relative;min-height:0}
@@ -133,7 +137,7 @@ html:has(.screen) body{overflow:hidden}
 .lpic .viz-cap,.lpic .replay{display:none}
 .lpic.flow{overflow:auto}
 .lpic.flow>.viz{position:static}
-.lhero .caption{text-align:center;font-size:15px;margin:0}
+.lshero .caption{text-align:center;font-size:15px;margin:0}
 .lnow{display:none;margin:0;text-align:center;font-size:16px;line-height:1.4}
 .lctl{grid-area:ctl;display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;padding-bottom:2px}
 .lctl .ctl{--pill-h:52px;font-size:17px;background:var(--float);box-shadow:var(--float-shadow)}
@@ -150,9 +154,9 @@ html:has(.screen) body{overflow:hidden}
   .lintro .beats,.lintro .lhelp,.lintro .tlink,.lintro .idea+.idea{display:none}
   .lintro h1{font-size:26px}
   .lintro .idea{font-size:16px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  .lhero{grid-template-rows:auto minmax(0,1fr) auto auto;padding:18px 18px 16px}
+  .lshero{grid-template-rows:auto minmax(0,1fr) auto auto;padding:18px 18px 16px}
   .lnow{display:block}
-  .lhero .caption{display:none}
+  .lshero .caption{display:none}
 }
 @media (max-width:520px){.lctl .ctl:not(.go){padding:0 16px}.ldots{display:none}}
 

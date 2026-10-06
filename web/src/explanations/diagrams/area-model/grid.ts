@@ -168,7 +168,7 @@ export function buildAreaGrid(spec: AreaGridSpec): SceneDiagram & { geometry: Ar
   // which cell the beat is about
   spec.cells.forEach((row, j) => row.forEach((c, i) => {
     for (const b of c?.focus ?? []) {
-      items.push({ type: "rect", x: r1(xs[i]! + 2), y: r1(ys[j]! + 2), w: r1(xs[i + 1]! - xs[i]! - 4), h: r1(ys[j + 1]! - ys[j]! - 4), rx: 6, cls: "hlline", from: b, until: b, enter: "fade" });
+      items.push({ type: "rect", x: r1(xs[i]! + 7), y: r1(ys[j]! + 7), w: r1(xs[i + 1]! - xs[i]! - 14), h: r1(ys[j + 1]! - ys[j]! - 14), rx: 4, cls: "hlline", from: b, until: b, enter: "fade" });
     }
   }));
 

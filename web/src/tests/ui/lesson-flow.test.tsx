@@ -38,8 +38,8 @@ describe("a whole lesson in the browser", () => {
     expect(tens + ones).toBe(b);
     const pic = screen.getByRole("img");
     expect(pic.getAttribute("aria-label")).toBe(`${a} by ${b} rectangle, split into ${a} by ${tens} = ${a * tens} and ${a} by ${ones} = ${a * ones}. Total ${a * b}.`);
-    // before Play the picture rests on its finished frame (Design handoff 3)
-    expect(pic.getAttribute("data-split")).toBe("true");
+    // before Play the picture rests on its first frame, so Play only ever builds forward (G 2026-10-06)
+    expect(pic.getAttribute("data-split")).toBe("false");
     fireEvent.click(screen.getByRole("button", { name: "Show all" }));
     expect(pic.getAttribute("data-split")).toBe("true");
     expect(pic.getAttribute("data-sum")).toBe("true");

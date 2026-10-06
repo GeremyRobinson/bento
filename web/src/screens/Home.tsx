@@ -212,7 +212,7 @@ function LessonDetail({ g, entry }: { g: number; entry: Entry }) {
       {fits && (
         <figure className="card spreview" style={{ height: Math.min(room, 460) }}>
           <figcaption>Preview · your first problem, <b><MathLine math={pv!.ex.statement} /></b></figcaption>
-          <div className="sppic"><PlayingDiagram ex={{ ...pic!.ex, diagram: pic!.ex.diagram! }} hold={600} end={statementBeat(pic!.ex)} /></div>
+          <div className="sppic"><PlayingDiagram ex={{ ...pic!.ex, diagram: pic!.ex.diagram! }} end={statementBeat(pic!.ex)} /></div>
         </figure>
       )}
     </div>

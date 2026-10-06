@@ -256,7 +256,7 @@
 .viz-svg .ln{stroke:var(--tint);stroke-width:var(--d-bold);fill:none;stroke-linecap:round;stroke-linejoin:round}
 .viz-svg .ln2{stroke:var(--acc);stroke-width:var(--d-bold);fill:none;stroke-linecap:round;stroke-linejoin:round}
 .viz-svg .ln.thin{stroke-width:var(--d-line);opacity:.7} .viz-svg .ln.faint{stroke:var(--rule);stroke-width:var(--d-line)}
-.viz-svg .hl{stroke:var(--acc);stroke-width:var(--d-glow);stroke-linecap:round;opacity:.6}
+.viz-svg .hl{stroke:var(--acc);stroke-width:var(--d-glow);stroke-linecap:round;opacity:.35}
 .viz-svg .hlline{stroke:var(--acc);stroke-width:var(--d-mark);stroke-linecap:round;opacity:.45;fill:none}
 .viz-svg .fill{fill:var(--tint);opacity:.16} .viz-svg .fillsoft{fill:color-mix(in srgb,var(--tint) var(--d-f10),transparent)}
 .viz-svg .dotp{fill:var(--tint)} .viz-svg .dota{fill:var(--acc)} .viz-svg .hole{fill:var(--card);stroke:var(--tint);stroke-width:var(--d-stroke)}

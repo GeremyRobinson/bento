@@ -67,7 +67,7 @@ export function GradeQuestion() {
               <p>This year: {d.subtitle.toLowerCase()}. {lessonsInGrade(d.grade).length} lessons.</p>
               <div className="gygo"><Pill go onClick={() => chooseGrade(d.grade)}>Start {d.name.split(" · ")[0]} ›</Pill></div>
             </div>
-            {shown?.ex.diagram && <div className="gypic"><PlayingDiagram key={picked} ex={{ ...shown.ex, diagram: shown.ex.diagram }} hold={600} end={statementBeat(shown.ex)} /></div>}
+            {shown?.ex.diagram && <div className="gypic"><PlayingDiagram key={picked} ex={{ ...shown.ex, diagram: shown.ex.diagram }} end={statementBeat(shown.ex)} /></div>}
           </div>
         )}
       </section>

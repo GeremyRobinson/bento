@@ -101,7 +101,10 @@ export function Learn({ lessonId }: { lessonId: string }) {
   });
 
   const now = ex.steps.find(st => st.state === at);
-  const shownAt = at === 0 || (reduceMotion() && playing) ? last : at;
+  // the picture starts from its first beat and only ever builds forward on Play; showing the finished picture first
+  // made every Play un-build it in reverse before building it again (G 2026-10-06: the glitch at the start of most
+  // diagrams). Without motion, playing jumps straight to the end.
+  const shownAt = reduceMotion() && playing ? last : at;
   return (
     <FitScreen className="lscreen">
       {/* the brief intro: what this picture is about, then the steps that explain it, each one tied to the picture */}
@@ -126,7 +129,7 @@ export function Learn({ lessonId }: { lessonId: string }) {
         {rep && <button className="tlink" onClick={() => go({ name: "report", key: rep.key })}>Last time: {LEVELS[rep.level]}, {when(rep.date)} ›</button>}
       </section>
       {/* the hero: the problem and its picture, as big as the screen allows */}
-      <figure className="lhero">
+      <figure className="lshero">
         <div className="lmath"><MathLine math={ex.statement} /></div>
         {ex.diagram && (
           <div className={ex.diagram.kind === "chain" ? "lpic flow" : "lpic"}>
