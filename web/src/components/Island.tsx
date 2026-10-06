@@ -2,7 +2,6 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { useApp } from "../app/AppState";
 import type { Route } from "../app/routes";
 import { doneCount, entriesInGrade, entryById, unitsInGrade } from "../app/curriculum";
-import { reduceMotion } from "../app/transition";
 import { gradeOf, inkOf } from "../curriculum/grades";
 import { lessonById } from "../curriculum/registry";
 import { currentItem, currentStep, lessonOfItem, problemOf } from "../engine/session/practice";
@@ -10,7 +9,6 @@ import { problemShape, ProblemLine } from "./practice/ProblemView";
 import { upNext } from "../app/today";
 import { Contents, type Level } from "./Contents";
 import { BentoMark } from "./primitives/BentoMark";
-import { MeStack } from "./MeStack";
 import { ConfirmStack } from "./ConfirmStack";
 import { tableById } from "../engine/facts/tables";
 import { Chevron, LockIcon } from "./primitives/icons";
@@ -66,10 +64,10 @@ function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): P
     case "parent": {
       // on a phone a picked pattern is its own screen, and back returns to the list
       const phone = typeof matchMedia !== "undefined" && matchMedia("(max-width: 699px)").matches;
-      return { kicker: `Me · ${gradeOf(grade).name}`, title: GROWN_UP, lock: true,
-        back: route.pick && phone ? { label: GROWN_UP, to: { name: "parent" } } : { label: "Me", to: { name: "me" } } };
+      return { kicker: `${YOUR_BENTO} · ${gradeOf(grade).name}`, title: GROWN_UP, lock: true,
+        back: route.pick && phone ? { label: GROWN_UP, to: { name: "parent" } } : { label: YOUR_BENTO, to: { name: "me" } } };
     }
-    case "me": return { kicker: "Me", title: YOUR_BENTO, back: contents };
+    case "me": return { kicker: gradeOf(grade).name, title: YOUR_BENTO, back: contents };
     case "settings": return { kicker: "Bento", title: "Settings", back: contents, lock: true };
     case "facts": {
       const t = route.table ? tableById(route.table) : undefined;
@@ -143,24 +141,9 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   const grade = chosen ?? 0;
   const place = placeOf(route, app, grade);
   const [open, setOpen] = useState<Level | null>(null);
-  const [me, setMe] = useState<"open" | "closing" | null>(null);
-  const meOpen = me === "open";
-  const shutMe = () => setMe(q => (q === "open" ? "closing" : q));
-  useEffect(() => {
-    if (me !== "closing") return;
-    const t = setTimeout(() => setMe(null), reduceMotion() ? 0 : 240);
-    return () => clearTimeout(t);
-  }, [me]);
   const start: Level = route.name === "home" ? "shelf" : place.lesson ? "chapter" : "year";
-  // going anywhere puts Me away
-  useEffect(() => { setMe(null); }, [route]);
-  // feedback and Me never overlap: new feedback puts Me away, and opening Me tells Practice
-  useEffect(() => {
-    const onPanel = (e: Event) => { if ((e as CustomEvent).detail === "feedback") shutMe(); };
-    addEventListener("bento:panel", onPanel);
-    return () => removeEventListener("bento:panel", onPanel);
-  }, []);
-  const openMe = () => { setMe("open"); dispatchEvent(new CustomEvent("bento:panel", { detail: "settings" })); };
+  // My Bento is a page of its own (G 2026-10-06: no pop-over version); the person circle goes there
+  const openMe = () => { if (route.name !== "me") go({ name: "me" }, "fwd"); };
 
   // pinching the page closed (two fingers coming together) zooms out to the contents; spreading them is left to the browser
   useEffect(() => {
@@ -216,7 +199,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   const back = place.back;
   return (
     <>
-    <div className={`itop${meOpen ? " qopen" : ""}`}>
+    <div className="itop">
       <div className="icorner left">
         {showResume && (
           <button className="iresume" onClick={() => go({ name: "practice" }, "fwd")}
@@ -245,19 +228,18 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
       </header>
       <div className="icorner right">
         {hintable && (
-          <button className={`icon ihint${run!.hintsLeft || run!.hinted ? "" : " spent"}${hinting ? " on" : ""}`} onClick={() => { shutMe(); dispatchEvent(new Event("bento:hint")); }}
+          <button className={`icon ihint${run!.hintsLeft || run!.hinted ? "" : " spent"}${hinting ? " on" : ""}`} onClick={() => dispatchEvent(new Event("bento:hint"))}
             aria-label={`Hint, ${run!.hintsLeft} left`} aria-expanded={hinting}><BulbIcon /><em className="ibadge" aria-hidden>{run!.hintsLeft}</em></button>
         )}
         {/* Settings is a page of its own (G 2026-10-06: no pop-over version); the gear goes there */}
         <button className={`icon${route.name === "settings" ? " on" : ""}`} onClick={() => { if (route.name !== "settings") go({ name: "settings" }, "fwd"); }}
           aria-label="Settings" aria-current={route.name === "settings" ? "page" : undefined}><SettingsIcon /></button>
-        <button className={`icon ime${meOpen || route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={() => (meOpen ? shutMe() : openMe())}
-          aria-label={`Me: ${progress.streak} day streak, ${progress.xp} XP`} aria-haspopup="dialog" aria-expanded={meOpen}>
+        <button className={`icon ime${route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={openMe}
+          aria-label={`${YOUR_BENTO}: ${progress.streak} day streak, ${progress.xp} XP`} aria-current={route.name === "me" ? "page" : undefined}>
           <MeIcon />
         </button>
       </div>
     </div>
-      {me && <MeStack closing={me === "closing"} close={shutMe} />}
       {asking && run && (
         <ConfirmStack title={`Quit ${run.title}?`} body="Your answers so far won't be kept." confirm="Quit"
           onCancel={() => setAsking(false)} onConfirm={() => { setAsking(false); quit({ stay: true }); }} />

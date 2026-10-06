@@ -89,20 +89,11 @@ button.fpill:active{transform:scale(.96)}
 .fpill .sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:var(--r-round);background:var(--knob);box-shadow:0 1px 3px var(--black-a25);transition:transform var(--dur-300) var(--glide)}
 .fpill[aria-checked="true"] .sw{background:var(--ink)}
 .fpill[aria-checked="true"] .sw::after{transform:translateX(16px)}
-.qset{top:calc(max(var(--sp-3),env(safe-area-inset-top)) + 60px);right:max(var(--sp-4),calc((100vw - var(--sb-right,0px) - 1180px) / 2 + var(--sp-5)));align-items:flex-end}
-/* each pill only as wide as its words, lined up on the right under the settings button (UI notes preview, G 2026-10-06) */
-.qset{align-items:flex-end;max-width:calc(100vw - 32px)}
-.qset .flbl{padding:6px var(--sp-2) 0;color:var(--muted);text-shadow:none}
-/* the notes preview's pills: 17px words on a 52px pill, hugging their text */
-.qset .fpill{font-size:var(--fz-lg);min-height:var(--float-h);padding:0 22px;gap:10px;white-space:nowrap}
 /* putting them away: the pills ripple out bottom first, quicker than they came, and the dim fades with them */
 .fstack.out>*{animation:stackOut var(--dur-140) var(--ease) both;animation-delay:calc((var(--n,6) - var(--i,0)) * var(--dur-22))}
 @keyframes stackOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-4px)}}
 .fdim.out{animation:fadeOut var(--dur-240) var(--ease) both;pointer-events:none}
 @keyframes fadeOut{to{opacity:0}}
-/* the island and its buttons stay above the dim while quick settings are open, so the settings button closes them */
-.itop.qopen{z-index:var(--z-island-open)}
-@media (max-width:699px){.qset{right:var(--sp-4)}}
 
 /* every tap leaves a soft halo spreading from the finger, so you know it landed */
 .halo{position:fixed;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:var(--r-round);pointer-events:none;z-index:var(--z-halo);border:2px solid var(--halo);
