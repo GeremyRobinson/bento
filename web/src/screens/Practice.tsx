@@ -1,5 +1,5 @@
 import { Pill, PillLabel } from "../components/primitives/Pill";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { playTone, readAloudOn, readSettings, speak } from "../app/settings";
 import { useApp } from "../app/AppState";
 import { withTransition } from "../app/transition";
@@ -73,12 +73,30 @@ export function Practice() {
 
   // the problem's own picture, as the lesson drew it: it starts on the set-up and grows one step behind the learner,
   // so it helps without giving the answer away (Review v39 item 15). Tests go without, so they stay fair.
-  const ex = useMemo<Explanation | null>(() => {
-    if (!s || s.mode === "test") return null;
+  const [full, ownPic] = useMemo<[Explanation | null, boolean]>(() => {
+    if (!s || s.mode === "test") return [null, false];
     const item = currentItem(s), l = requireLesson(item.lessonId), p = problemOf(item);
-    if (l.picture?.(p)) return null; // the problem already shows its own picture
-    try { const e = l.explain(p, l.answers(p)); return e.diagram && e.diagram.kind !== "chain" ? e : null; } catch { return null; }
+    try { return [l.explain(p, l.answers(p)), !!l.picture?.(p)]; } catch { return [null, false]; }
   }, [s?.i, s?.mode, s?.t0]); // eslint-disable-line react-hooks/exhaustive-deps
+  // the problem already shows its own picture when the lesson draws one
+  const ex = full && !ownPic && full.diagram && full.diagram.kind !== "chain" ? full : null;
+
+  // the tapped answer wears right or wrong on itself (UI notes preview)
+  const [tapped, setTapped] = useState<{ at: string; i: number } | null>(null);
+  // feedback and quick settings never overlap: opening settings puts the feedback away, and new feedback closes settings
+  const [fbAway, setFbAway] = useState(false);
+  const fbKey = s?.feedback ? `${s.i}-${s.step}-${s.mistakes.length}-${s.hints}-${s.feedback.strong}-${s.feedback.text}-${s.feedback.left}` : "";
+  useEffect(() => {
+    setFbAway(false);
+    if (fbKey) dispatchEvent(new CustomEvent("bento:panel", { detail: "feedback" }));
+  }, [fbKey]);
+  useEffect(() => {
+    const onPanel = (e: Event) => { if ((e as CustomEvent).detail === "settings") setFbAway(true); };
+    // the light bulb up top asks for a hint
+    const onHint = () => act((st, _p, d) => hint(st, d));
+    addEventListener("bento:panel", onPanel); addEventListener("bento:hint", onHint);
+    return () => { removeEventListener("bento:panel", onPanel); removeEventListener("bento:hint", onHint); };
+  }, [act]);
 
   if (!s) {
     return (
@@ -90,6 +108,11 @@ export function Practice() {
   const it = currentItem(s), lesson = lessonOfItem(it), step = currentStep(s), fb = s.feedback, n = s.items.length;
   const test = s.mode === "test", mixed = s.mode !== "practice", band = bandOfSession(s);
   const tapOnly = !!s.pick || !!step?.choices;
+  const at = `${s.i}-${s.step}`, mark = (i: number) => tapped?.at === at && tapped.i === i && fb ? (fb.type === "bad" ? " no" : " ok") : "";
+  const nextLabel = s.i < n - 1 ? "Next problem" : test ? "Finish test" : s.mode === "review" ? "Finish review" : "Finish lesson";
+  // "Right." carries the lesson's last idea, in this problem's numbers
+  const idea = s.solved && full?.steps.length ? full.steps[full.steps.length - 1]!.narration : undefined;
+  const showFb = !!fb && !fbAway;
   function onNext() {
     if (s && isLastProblem(s)) finish();
     else withTransition(() => act((st, p, d) => nextProblem(st, p, d)), "fwd");
@@ -127,7 +150,7 @@ export function Practice() {
                   <div className="label lspeak">{step.label}
                     <button className="speak" aria-label="Read it to me" onClick={() => speak([step.question, document.querySelector("#app .card")?.textContent].filter(Boolean).join(". ").replace(/\*\*/g, ""))}><SpeakerIcon /></button>
                   </div>
-                  <div className="ask">
+                  <div className={`ask${fb?.type === "bad" && !fbAway ? " no" : ""}`}>
                     {step.question && <span className="q"><Rich text={step.question} /></span>}
                     <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={id => act(st => focusSlot(st, id))} />
                   </div>
@@ -136,6 +159,7 @@ export function Practice() {
               )}
             </div>
           )}
+          {showFb && <FeedbackBox key={fbKey} fb={fb!} idea={idea} next={step ? undefined : { label: nextLabel, go: onNext }} />}
           {ex && (
             <figure className="card ppic" aria-label="Picture of this problem">
               <div className="viz"><Diagram key={s.i} diagram={ex.diagram!} timeline={ex.timeline}
@@ -144,35 +168,25 @@ export function Practice() {
           )}
         </div>
         <div className="col">
-          {/* feedback; on a wide screen it sits under the keypad, so the keys don't jump under a finger when a message appears */}
-          <div className="fbslot">{fb && <FeedbackBox key={`${s.i}-${s.step}-${s.mistakes.length}-${s.hints}-${fb.strong}-${fb.text}`} fb={fb} enter={s.fx != null} />}</div>
           {step && tapOnly && (
             // tap answers sit where the keypad goes, so they never fall below the fold beside a long problem
             <div className="tappad">
               <div className="tapnote muted">{s.pick ? "You plan this one: tap the step that comes next." : "Tap your answer."}</div>
               <div className="choices">{s.pick
-                ? s.pick.options.map((o, i) => <button key={`${i}-${o}`} className="choice" onClick={() => act(st => pickPlan(st, i))}>{o}</button>)
-                : step.choices!.map((o, i) => <button key={`${i}-${o}`} className="choice" onClick={() => act((st, p, d) => choose(st, i, p, d))}>{o}</button>)}</div>
+                ? s.pick.options.map((o, i) => <button key={`${i}-${o}`} className={`choice${mark(i)}`} onClick={() => { setTapped({ at, i }); act(st => pickPlan(st, i)); }}>{o}</button>)
+                : step.choices!.map((o, i) => <button key={`${i}-${o}`} className={`choice${mark(i)}`} onClick={() => { setTapped({ at, i }); act((st, p, d) => choose(st, i, p, d)); }}>{o}</button>)}</div>
             </div>
           )}
           {step && !tapOnly && <Keypad band={band} onKey={key => act(st => pressKey(st, key))} />}
           {step ? (
             <div className="actions">
-              {!test && (
-                <Pill badged disabled={!(s.hintsLeft || s.hinted) || !!s.pick} onClick={() => act((st, _p, d) => hint(st, d))}>
-                  <span className="badge">{s.hintsLeft}</span>Hint{s.hintsLeft === 1 ? "" : "s"}
-                </Pill>
-              )}
               {showMeAvailable(s) && <Pill onClick={() => act((st, p, d) => showMe(st, p, d))}>Show me</Pill>}
               {skipAvailable(s) && <Pill onClick={() => act((st, _p, d) => toggleSkip(st, d))}>{s.skip ? "Show steps" : "Final answer only"}</Pill>}
               {!tapOnly && <Pill go onClick={() => act((st, p, d) => check(st, p, d))}>Check</Pill>}
             </div>
-          ) : (
-            <div className="actions">
-              <Pill go onClick={onNext}>
-                {s.i < n - 1 ? "Next problem" : test ? "Finish test" : s.mode === "review" ? "Finish review" : "Finish lesson"}
-              </Pill>
-            </div>
+          ) : !showFb && (
+            // the next button rides in the feedback stack; it waits here only while that stack is put away
+            <div className="actions"><Pill go onClick={onNext}>{nextLabel}</Pill></div>
           )}
         </div>
       </section>

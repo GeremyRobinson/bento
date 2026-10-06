@@ -31,7 +31,7 @@ describe("today's review", () => {
     // a mixed run: Quit rather than Lesson, and each problem names its lesson
     expect(screen.getByRole("button", { name: "Quit" })).toBeInTheDocument();
     expect(document.querySelector(".split .card .label")!.textContent).toMatch(/Multiply two-digit numbers|Twin of two-digit multiplying/);
-    expect(screen.getByRole("button", { name: /Hints?$/ })).toHaveTextContent("4");
+    expect(screen.getByRole("button", { name: "Hint, 4 left" })).toBeInTheDocument();
     expect(solveRun()).toBe(8);
     expect(document.querySelector(".island")).toHaveTextContent("Today's review");
     expect(screen.queryByRole("button", { name: "Practice again" })).toBeNull();
@@ -39,5 +39,28 @@ describe("today's review", () => {
     tap("All lessons");
     const done = screen.getByRole("button", { name: /Today's review: done/ });
     expect(done.querySelector(".score b")!.textContent).toBe("4");
+  });
+});
+
+// UI notes preview: the hint is a light bulb beside Settings, and it answers in the floating feedback stack with the count left
+describe("hints", () => {
+  it("the light bulb gives a hint after a first try and says how many are left", () => {
+    renderApp({ grade: 5, chosen: true, done: 2, lessons: { "g5-mult2": 1, "review-twin": 1 },
+      scores: { "g5-mult2": scored(1), "review-twin": scored(3) }, seen: { "g5-mult2": t - 3 * day, "review-twin": t - day } });
+    fireEvent.click(screen.getByRole("button", { name: /Today's review/ }));
+    const stack = () => document.querySelector(".fstack.pfb")?.textContent ?? "";
+    expect(screen.queryByRole("button", { name: /^Hints?$/ })).toBeNull(); // no second hint button under the keypad
+    // a wrong first try, then the hint
+    fireEvent.keyDown(window, { key: "1" });
+    fireEvent.keyDown(window, { key: "Enter" });
+    expect(stack()).toMatch(/^Look again\./);
+    // at a score of 3 the first try may have been the shortcut, which opens the steps; one wrong try on a real step
+    if (/needs the steps/.test(stack())) { fireEvent.keyDown(window, { key: "1" }); fireEvent.keyDown(window, { key: "Enter" }); }
+    fireEvent.click(screen.getByRole("button", { name: "Hint, 4 left" }));
+    expect(stack()).toMatch(/^Hint:/);
+    expect(stack()).toMatch(/3 hints left$/);
+    expect(screen.getByRole("button", { name: "Hint, 3 left" })).toBeInTheDocument();
+    // a solved problem's next button rides in the same stack
+    expect(solveRun()).toBeGreaterThanOrEqual(8);
   });
 });

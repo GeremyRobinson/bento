@@ -6,7 +6,7 @@ import { readAloudOn, readSettings } from "../app/settings";
 import { reduceMotion } from "../app/transition";
 import { gradeOf, inkOf } from "../curriculum/grades";
 import { lessonById } from "../curriculum/registry";
-import { currentItem, lessonOfItem } from "../engine/session/practice";
+import { currentItem, currentStep, lessonOfItem } from "../engine/session/practice";
 import { upNext } from "../app/today";
 import { Contents, type Level } from "./Contents";
 import { tableById } from "../engine/facts/tables";
@@ -88,6 +88,12 @@ function GradeTitle({ grade }: { grade: number }) {
 const SANDBOX = import.meta.env.MODE === "preview" || import.meta.env.MODE === "development";
 
 /** Sliders: the quick settings. */
+const BulbIcon = () => (
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z" />
+  </svg>
+);
+
 const SettingsIcon = () => (
   <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></svg>
 );
@@ -126,6 +132,13 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   const start: Level = route.name === "home" ? "shelf" : place.lesson ? "chapter" : "year";
   // going anywhere (Me included) puts quick settings away
   useEffect(() => { setQs(null); }, [route]);
+  // feedback and quick settings never overlap: new feedback puts settings away, and opening settings tells Practice
+  useEffect(() => {
+    const onPanel = (e: Event) => { if ((e as CustomEvent).detail === "feedback") shut(); };
+    addEventListener("bento:panel", onPanel);
+    return () => removeEventListener("bento:panel", onPanel);
+  }, []);
+  const openQuick = () => { setQs("open"); dispatchEvent(new CustomEvent("bento:panel", { detail: "settings" })); };
 
   // pinching the page closed (two fingers coming together) zooms out to the contents; spreading them is left to the browser
   useEffect(() => {
@@ -151,6 +164,8 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
 
   const run = progress.run, runGrade = run ? gradeOf(lessonOfItem(currentItem(run)).grade) : null;
   const showResume = !!run && !!runGrade && route.name !== "practice" && !welcome;
+  // in a lesson's practice, a light bulb sits beside Settings (UI notes preview); tests have no hints
+  const hintable = route.name === "practice" && !!run && run.mode !== "test" && !!currentStep(run) && !run.pick;
 
   if (welcome) return (
     <div className="itop"><span /><header className="island guest">
@@ -188,8 +203,12 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
         <span className="ibat" aria-hidden style={{ "--p": fill, "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties}><i /></span>
       </header>
       <div className="icorner right">
-        <button className={`icon${quick ? " on" : ""}`} onClick={() => (quick ? shut() : setQs("open"))} aria-label="Settings" aria-expanded={quick}><SettingsIcon /></button>
-        <button className={`icon${route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={() => go({ name: "me" }, "fwd")} aria-label={`Me: ${progress.streak} day streak, ${progress.xp} XP`}>
+        {hintable && (
+          <button className={`icon ihint${run!.hintsLeft || run!.hinted ? "" : " spent"}`} onClick={() => { shut(); dispatchEvent(new Event("bento:hint")); }}
+            aria-label={`Hint, ${run!.hintsLeft} left`}><BulbIcon /></button>
+        )}
+        <button className={`icon${quick ? " on" : ""}`} onClick={() => (quick ? shut() : openQuick())} aria-label="Settings" aria-expanded={quick}><SettingsIcon /></button>
+        <button className={`icon ime${route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={() => go({ name: "me" }, "fwd")} aria-label={`Me: ${progress.streak} day streak, ${progress.xp} XP`}>
           <MeIcon />
         </button>
       </div>

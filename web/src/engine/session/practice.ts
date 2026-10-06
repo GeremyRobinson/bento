@@ -338,7 +338,7 @@ export function check(s: PracticeSession, progress: Progress, deps: Deps): Pract
   }
   const band = bandOfSession(next);
   const msg = cat === "concept" ? r.message
-    : SAY[cat] ?? `${nudge(expected, values, band)} ${next.hinted ? step.hint : `Read the step again${next.hintsLeft ? ", or tap Hint" : ""}.`}`.trim();
+    : SAY[cat] ?? `${nudge(expected, values, band)} ${next.hinted ? step.hint : `Read the step again${next.hintsLeft ? ", or tap the light bulb for a hint" : ""}.`}`.trim();
   const lines: string[] = [];
   if (rushed) lines.push("Slow down a little and read the step again.");
   if (canShowMe({ test: false, misses: next.misses, hinted: next.hinted })) lines.push("Stuck? Tap **Show me**.");
@@ -349,12 +349,13 @@ export function check(s: PracticeSession, progress: Progress, deps: Deps): Pract
 export function hint(s: PracticeSession, deps: Deps): PracticeSession {
   const step = currentStep(s);
   if (!step || isTest(s)) return s;
-  if (s.hinted) return { ...s, fx: "feedback", feedback: { type: "hint", strong: "Hint:", text: step.hint } };
-  if (!s.hintsLeft) return { ...s, fx: "feedback", feedback: { type: "hint", text: "You've used this lesson's hints. **Show me** opens after two tries." } };
+  if (s.hinted) return { ...s, fx: "feedback", feedback: { type: "hint", strong: "Hint:", text: step.hint, left: s.hintsLeft } };
+  // the last hint says so kindly (UI notes preview)
+  if (!s.hintsLeft) return { ...s, fx: "feedback", feedback: { type: "hint", text: "No hints left in this lesson. You can do it.", lines: showMeAvailable(s) ? ["Stuck? Tap **Show me**."] : [] } };
   if (!s.misses && deps.now - s.stepT0 < HINT_WAIT_MS) return { ...s, fx: "feedback", feedback: { type: "hint", text: "Try it once first. Then the hint opens." } };
   return {
     ...s, hinted: true, hintsLeft: s.hintsLeft - 1, hints: s.hints + 1, prob: { ...s.prob, hints: s.prob.hints + 1 }, fx: "feedback",
-    feedback: { type: "hint", strong: "Hint:", text: step.hint },
+    feedback: { type: "hint", strong: "Hint:", text: step.hint, left: s.hintsLeft - 1 },
   };
 }
 

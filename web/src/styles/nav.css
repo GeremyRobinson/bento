@@ -268,3 +268,26 @@ html:has(.screen) .itop{position:fixed;top:max(12px,env(safe-area-inset-top));
 .sheet .panel.more,.screen .slist.more{-webkit-mask-image:linear-gradient(#000 calc(100% - 64px),#0000);mask-image:linear-gradient(#000 calc(100% - 64px),#0000)}
 @media (min-width:1000px){.sheet .panel{width:min(1040px,94vw)}.sheet .shelf{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:calc(var(--u) * 1.5)}}
 @media (max-width:699px){.sheet .sbooks.n4{grid-template-columns:repeat(2,minmax(0,1fr))}.sheet .book{min-height:104px}.sheet .book .gnum{font-size:32px}}
+
+/* Practice feedback (UI notes preview): a stack of floating pills over the bottom of the problem, centred, rippling in
+   one at a time; the tapped answer wears right or wrong on itself */
+.fstack.pfb{position:static;z-index:5;align-items:center;pointer-events:none;animation:none}
+@media (min-width:900px) and (orientation:landscape){
+  .fstack.pfb{position:fixed;left:var(--fb-left,0);width:var(--fb-width,100%);bottom:calc(var(--fb-bottom,0px) + var(--s) + env(safe-area-inset-bottom,0px));padding-inline:var(--s)}
+  .fstack.pfb.side{top:var(--fb-top,0px);bottom:auto}
+}
+.fstack.pfb>*{display:flex;justify-content:center;max-width:100%;pointer-events:auto}
+.fstack.pfb .fpill{justify-content:flex-start;font-weight:400;max-width:100%}
+.fstack.pfb .fpill b,.fstack.pfb .fpill strong{font-weight:650}
+.fstack.pfb .fbm .dot{flex:none;align-self:flex-start;margin-top:.45em}
+.fstack.pfb .fpill.muted{color:var(--muted);min-height:40px;padding-block:8px}
+.fpill.fb-good{background:color-mix(in srgb,var(--ok) 14%,var(--float))}
+.fpill.fb-bad{background:color-mix(in srgb,var(--err) 12%,var(--float))}
+.fpill.fb-hint{background:color-mix(in srgb,var(--tint) 10%,var(--float))}
+.fstack.pfb .fbgo{--pill-h:52px;--pill-pad:28px;font-size:17px;box-shadow:var(--float-shadow)}
+.panel.split .choice.ok{background:var(--ok);color:var(--page)}
+.panel.split .choice.no{background:var(--err);color:var(--page);animation:shake .3s var(--ease)}
+.ask.no .slot{border-color:var(--err)}
+.icon.ihint.spent{color:var(--muted)}
+/* on a phone, mid-problem, the light bulb takes Me's place so the island keeps room for its words */
+@media (max-width:600px){.icorner.right:has(.ihint) .ime{display:none}}

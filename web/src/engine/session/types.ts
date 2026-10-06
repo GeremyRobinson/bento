@@ -25,6 +25,8 @@ export interface Feedback {
   lines?: string[];
   /** celebration mark for the younger bands */
   pop?: "big" | "star";
+  /** hints still left in the lesson, shown muted under a hint */
+  left?: number;
 }
 
 export interface Mistake {

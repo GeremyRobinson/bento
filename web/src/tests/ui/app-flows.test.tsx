@@ -171,7 +171,7 @@ describe("unit test and check-up", () => {
     openRow(LESSON);
     tap("Whole numbers test");
     expect(screen.getByText("Whole numbers test: no hints, one try per step")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Hints?$/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Hint/ })).toBeNull();
     expect(screen.getByRole("button", { name: "Quit" })).toBeInTheDocument();
     expect(solveRun()).toBeGreaterThanOrEqual(6);
     expect(document.querySelector(".island")).toHaveTextContent("Whole numbers test");
