@@ -321,8 +321,8 @@ html:has(.screen) .itop{position:fixed;top:max(var(--sp-3),env(safe-area-inset-t
 /* a quick question before something is lost: centred, the safe choice first */
 .fconfirm{left:50%;top:50%;transform:translate(-50%,-50%);align-items:stretch;width:min(360px,calc(100vw - 32px))}
 .fconfirm .fpill{justify-content:center;font-size:var(--fz-lg)}
-.fconfirm .fq{flex-direction:column;align-items:flex-start;gap:var(--sp-1);padding-block:var(--sp-4);font-weight:var(--w-regular)}
-.fconfirm .fq b{font-weight:var(--w-bold)}
-.fconfirm .fq span{color:var(--muted);font-size:var(--fz-md)}
-.fconfirm .fquit{color:var(--ink)}
+.fconfirm .fcq{flex-direction:column;align-items:flex-start;gap:var(--sp-1);padding-block:var(--sp-4);font-weight:var(--w-regular)}
+.fconfirm .fcq b{font-weight:var(--w-bold)}
+.fconfirm .fcq span{color:var(--muted);font-size:var(--fz-md)}
+.fconfirm .fcquit{color:var(--ink)}
 .iresume-x{display:grid;place-items:center;width:var(--float-in);height:var(--float-in);border-radius:var(--r-pill);background:var(--float);box-shadow:var(--float-shadow);color:var(--muted)}

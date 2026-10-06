@@ -19,7 +19,7 @@ export function ConfirmStack({ title, body, confirm, cancel = "Keep going", onCo
     <>
       <div className="fdim" onClick={onCancel} />
       <div className="fstack fconfirm" role="alertdialog" aria-label={title} style={{ "--n": 4 } as CSSProperties}>
-        <span className="fpill fq" style={{ "--i": 0 } as CSSProperties}><b>{title}</b>{body && <span>{body}</span>}</span>
+        <span className="fpill fcq" style={{ "--i": 0 } as CSSProperties}><b>{title}</b>{body && <span>{body}</span>}</span>
         <button className="fpill" autoFocus onClick={onCancel} style={{ "--i": 1 } as CSSProperties}>{cancel}</button>
         <button className="fpill fquit" onClick={onConfirm} style={{ "--i": 2 } as CSSProperties}>{confirm}</button>
       </div>
