@@ -280,7 +280,8 @@ html:has(.screen) .itop{position:fixed;top:max(var(--sp-3),env(safe-area-inset-t
 .sheet .sbooks.n4{grid-template-columns:repeat(4,minmax(0,1fr))}
 .sheet .book{height:auto;min-height:118px;padding:var(--sp-3) 14px 14px}
 .sheet .book .gnum{font-size:36px}
-.sheet .panel.more,.screen .slist.more{-webkit-mask-image:linear-gradient(var(--mask-solid) calc(100% - 64px),var(--mask-clear));mask-image:linear-gradient(var(--mask-solid) calc(100% - 64px),var(--mask-clear))}
+/* the list panel keeps its whole outline (Panel line): it no longer fades out at the bottom */
+.sheet .panel.more{-webkit-mask-image:linear-gradient(var(--mask-solid) calc(100% - 64px),var(--mask-clear));mask-image:linear-gradient(var(--mask-solid) calc(100% - 64px),var(--mask-clear))}
 @media (min-width:1000px){.sheet .panel{width:min(1040px,94vw)}.sheet .shelf{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:calc(var(--u) * 1.5)}}
 @media (max-width:699px){.sheet .sbooks.n4{grid-template-columns:repeat(2,minmax(0,1fr))}.sheet .book{min-height:104px}.sheet .book .gnum{font-size:32px}}
 
