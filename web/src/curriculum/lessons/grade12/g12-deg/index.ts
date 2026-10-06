@@ -60,6 +60,7 @@ export const lesson: LessonDefinition<RadiansToDegreesProblem> = withEasyStart({
   grade: 12,
   unit: "Trigonometry",
   title: "Radians to degrees",
+  pre: "g12-rad",
   reference: createRadiansToDegrees(5, 6),
   generate: rng => {
     let n: number, d: number;

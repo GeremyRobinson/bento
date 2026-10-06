@@ -95,6 +95,7 @@ export const lesson: LessonDefinition<SpecialTriangleProblem> = withEasyStart({
   grade: 10,
   unit: "Right triangles and trig",
   title: "Special right triangles",
+  pre: "g9-radical",
   reference: createSpecialTriangle(45, 5),
   generate: rng => { const t = rng.next() < 0.5 ? 45 : 30; return createSpecialTriangle(t, rng.int(2, 12)); },
   restore: restoreSpecialTriangle,

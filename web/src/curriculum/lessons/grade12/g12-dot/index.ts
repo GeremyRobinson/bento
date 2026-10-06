@@ -81,6 +81,7 @@ export const lesson: LessonDefinition<DotProblem> = withEasyStart({
   grade: 12,
   unit: "Vectors and series",
   title: "Dot product",
+  pre: "g12-vecmag",
   reference: createDot(2, 3, 4, -1),
   generate: rng => generateDot(rng),
   restore: restoreDot,

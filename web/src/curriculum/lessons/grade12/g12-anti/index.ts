@@ -67,6 +67,7 @@ export const lesson: LessonDefinition<Antiderivative> = withEasyStart({
   grade: 12,
   unit: "Integrals",
   title: "Antiderivatives",
+  pre: "g12-power",
   reference: createAntiderivative(6, 2),
   generate: rng => generateAntiderivative(rng),
   restore: restoreAntiderivative,

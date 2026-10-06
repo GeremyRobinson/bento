@@ -74,6 +74,7 @@ export const lesson: LessonDefinition<VecMagProblem> = withEasyStart({
   grade: 12,
   unit: "Vectors and series",
   title: "Vector length",
+  pre: "g10-dist",
   reference: createVecMag(3, -4),
   generate: rng => generateVecMag(rng),
   restore: restoreVecMag,

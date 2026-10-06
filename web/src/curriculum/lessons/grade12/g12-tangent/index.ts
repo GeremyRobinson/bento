@@ -11,6 +11,7 @@ export const lesson: LessonDefinition<TangentProblem> = withEasyStart({
   grade: 12,
   unit: "Derivatives",
   title: "Slope of a tangent line",
+  pre: "g12-polyd",
   reference: createTangent(1, 3, 2),
   generate: rng => generateTangent(rng),
   restore: restoreTangent,

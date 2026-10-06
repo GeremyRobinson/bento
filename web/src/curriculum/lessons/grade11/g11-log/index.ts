@@ -89,6 +89,7 @@ export const lesson: LessonDefinition<LogProblem> = withEasyStart({
   grade: 11,
   unit: "Exponents and logs",
   title: "Evaluating logarithms",
+  pre: "g11-expeq",
   reference: createLog(2, 3, 2),
   generate: rng => generateLog(rng),
   restore: restoreLog,

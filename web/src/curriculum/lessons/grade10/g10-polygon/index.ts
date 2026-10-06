@@ -69,6 +69,7 @@ export const lesson: LessonDefinition<PolygonAnglesProblem> = withEasyStart({
   grade: 10,
   unit: "Angles and triangles",
   title: "Angles in a polygon",
+  pre: "g8-tri",
   reference: createPolygonAngles(6),
   generate: rng => createPolygonAngles(rng.pick(POLYGON_SIDES)),
   restore: restorePolygonAngles,
