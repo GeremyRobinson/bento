@@ -164,6 +164,21 @@ describe("home", () => {
     expect(screen.getByRole("button", { name: "Check" })).toBeInTheDocument();
   });
 
+  it("quits a run you don't want to finish, after one quick confirm", () => {
+    renderApp();
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(`Up next.*${LESSON}`) }));
+    tap("Show all"); tap("Your turn ›");
+    tap(`Back to ${LESSON}`);
+    fireEvent.click(screen.getByRole("button", { name: `Quit ${LESSON}` }));
+    const ask = screen.getByRole("alertdialog", { name: `Quit ${LESSON}?` });
+    fireEvent.click(within(ask).getByRole("button", { name: "Keep going" }));
+    expect(screen.getByRole("button", { name: /^Resume / })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: `Quit ${LESSON}` }));
+    fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Quit" }));
+    expect(screen.queryByRole("button", { name: /^Resume / })).toBeNull();
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+  });
+
   it("zooms out from a lesson to its chapter, the year and every grade, and opens whatever is tapped", () => {
     renderApp();
     fireEvent.click(screen.getByRole("button", { name: new RegExp(`Up next.*${LESSON}`) }));

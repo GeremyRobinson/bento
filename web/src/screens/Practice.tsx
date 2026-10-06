@@ -122,7 +122,7 @@ export function Practice() {
   return (
     <>
       <div className="bar">
-        {mixed && <Pill onClick={quit}>Quit</Pill>}
+        {mixed && <Pill onClick={() => quit()}>Quit</Pill>}
         <span className="steps" aria-label={`Problem ${s.i + 1} of ${n}`}>
           {s.items.map((_, i) => <span key={i} className={`dot ${i < s.i ? "ok" : i === s.i ? "busy" : ""}`} />)}
         </span>

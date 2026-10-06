@@ -10,9 +10,15 @@ import { currentItem, currentStep, lessonOfItem } from "../engine/session/practi
 import { upNext } from "../app/today";
 import { Contents, type Level } from "./Contents";
 import { MeStack } from "./MeStack";
+import { ConfirmStack } from "./ConfirmStack";
 import { tableById } from "../engine/facts/tables";
 import { Chevron, LockIcon } from "./primitives/icons";
 import { CONTENTS, GROWN_UP, NO_UNIT, PRACTICE, REPORT, REVIEW, SETTING, YOUR_BENTO } from "../app/copy";
+
+/** A small cross: quit. */
+const CrossIcon = () => (
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden><path d="M7 7l10 10M17 7L7 17" /></svg>
+);
 
 /** A simple person: a head and shoulders. */
 const MeIcon = () => (
@@ -121,7 +127,9 @@ function fillOf(place: Place, app: ReturnType<typeof useApp>, grade: number): nu
  */
 export function Island({ grade: chosen, guest }: { grade: number | null; guest?: boolean }) {
   const app = useApp();
-  const { progress, go, route, openSheet } = app;
+  const { progress, go, route, openSheet, quit } = app;
+  // quitting a run you started and don't want to finish (G 2026-10-06): one quick confirm, then it's gone
+  const [asking, setAsking] = useState(false);
   // the landing page, and any grade page reached before a grade is chosen, get the plain guest island
   const welcome = !!guest || route.name === "welcome" || chosen == null;
   const grade = chosen ?? 0;
@@ -209,6 +217,9 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
             <span className="rcount">{run!.i + 1}/{run!.items.length}</span>
           </button>
         )}
+        {showResume && (
+          <button className="iresume-x" onClick={() => setAsking(true)} aria-label={`Quit ${run!.title}`}><CrossIcon /></button>
+        )}
       </div>
       <header className="island">
         {back
@@ -236,6 +247,10 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
     </div>
       {qs && <QuickSettings closing={qs === "closing"} close={shut} />}
       {me && <MeStack closing={me === "closing"} close={shutMe} />}
+      {asking && run && (
+        <ConfirmStack title={`Quit ${run.title}?`} body="Your answers so far won't be kept." confirm="Quit"
+          onCancel={() => setAsking(false)} onConfirm={() => { setAsking(false); quit({ stay: true }); }} />
+      )}
       {open && <Contents grade={place.lesson ? pageOf(place.lesson)?.grade ?? grade : grade} lessonId={place.lesson} level={open} close={() => setOpen(null)} />}
     </>
   );
