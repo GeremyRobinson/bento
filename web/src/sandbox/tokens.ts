@@ -4,7 +4,7 @@
  * and layers its edits on top, so one change shows on every screen and every grade at once.
  */
 export type TokenKind = "color" | "px" | "pct" | "num";
-export interface Token { v: string; label: string; kind: TokenKind; min?: number; max?: number; step?: number }
+export interface Token { v: string; label: string; kind: TokenKind; min?: number; max?: number; step?: number; /** shown while the token is unset and the master falls back to this */ fallback?: string }
 
 /** each grade's own colors: the three part colors and the accent pictures use, and their darker text inks */
 export const GRADE_TOKENS: Token[] = [
@@ -32,7 +32,6 @@ export const SHARED_TOKENS: Token[] = [
 
 /** the shared sizes; the nested radii (card, box) follow the panel radius and padding on their own */
 export const SIZE_TOKENS: Token[] = [
-  { v: "--r-panel", label: "Panel corner", kind: "px", min: 8, max: 56 },
   { v: "--u", label: "Padding", kind: "px", min: 8, max: 32 },
   { v: "--h", label: "Button height", kind: "px", min: 32, max: 64 },
   { v: "--fs", label: "Body text", kind: "px", min: 14, max: 24 },
@@ -58,6 +57,14 @@ export const PILL_TOKENS: Token[] = [
   { v: "--pill-weight", label: "Weight", kind: "num", min: 400, max: 700, step: 50 },
   { v: "--pill-press", label: "Press squeeze", kind: "num", min: 0.8, max: 1, step: 0.01 },
   { v: "--pill-lift", label: "Hover brighten", kind: "num", min: 1, max: 1.3, step: 0.01 },
+];
+
+/** the Surface master: every panel, card and tile */
+export const SURFACE_TOKENS: Token[] = [
+  { v: "--r-panel", label: "Panel corner", kind: "px", min: 8, max: 56 },
+  { v: "--nest", label: "Nesting gap", kind: "px", min: 2, max: 20 },
+  { v: "--surf-1", label: "Level 1 (panel)", kind: "color", fallback: "--well" },
+  { v: "--surf-2", label: "Level 2 (card)", kind: "color", fallback: "--card" },
 ];
 
 export type Theme = "light" | "dark";
@@ -97,8 +104,9 @@ export function handoffCss(o: Overrides): string {
   if (Object.keys(o.shared.light).length) out += `/* tokens.css, :root */\n:root{${lines(o.shared.light)}}\n`;
   if (Object.keys(o.shared.dark).length) out += `/* tokens.css, dark */\n:root[data-theme="dark"]{${lines(o.shared.dark)}}\n`;
   const pick = (f: (k: string) => boolean) => Object.fromEntries(Object.entries(o.sizes).filter(([k]) => f(k)));
-  const dia = pick(k => k.startsWith("--d-")), pill = pick(k => k.startsWith("--pill-")), sz = pick(k => !k.startsWith("--d-") && !k.startsWith("--pill-"));
+  const dia = pick(k => k.startsWith("--d-")), pill = pick(k => k.startsWith("--pill-")), surf = pick(k => k === "--nest" || k === "--r-panel"), sz = pick(k => !k.startsWith("--d-") && !k.startsWith("--pill-") && k !== "--nest" && k !== "--r-panel");
   if (Object.keys(sz).length) out += `/* bands.css, sizes */\n.wrap{${lines(sz)}}\n`;
+  if (Object.keys(surf).length) out += `/* components.css, Surface (master) */\n.wrap{${lines(surf)}}\n`;
   if (Object.keys(pill).length) out += `/* components.css, Pill (master) */\n.wrap{${lines(pill)}}\n`;
   if (Object.keys(dia).length) out += `/* diagram-master.css */\n.wrap{${lines(dia)}}\n`;
   const gs = Object.entries(o.grades).filter(([, v]) => Object.keys(v).length);
@@ -132,7 +140,7 @@ export function readGrade(grade: string): Record<string, string> {
   probe.className = "wrap"; probe.dataset.grade = grade; probe.style.display = "none";
   document.body.appendChild(probe);
   const cs = getComputedStyle(probe), out: Record<string, string> = {};
-  for (const t of [...GRADE_TOKENS, ...SIZE_TOKENS, ...DIAGRAM_TOKENS, ...PILL_TOKENS]) out[t.v] = cs.getPropertyValue(t.v).trim();
+  for (const t of [...GRADE_TOKENS, ...SIZE_TOKENS, ...DIAGRAM_TOKENS, ...PILL_TOKENS, ...SURFACE_TOKENS]) out[t.v] = cs.getPropertyValue(t.v).trim() || (t.fallback ? cs.getPropertyValue(t.fallback).trim() : "");
   probe.remove();
   return out;
 }

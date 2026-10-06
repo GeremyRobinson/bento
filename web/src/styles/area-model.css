@@ -26,7 +26,7 @@
 
 /* the explanation beats under the picture */
 .beats{display:grid;gap:var(--s);margin:0;padding:0;list-style:none}
-.beat{display:flex;align-items:center;gap:var(--u);padding:10px var(--u);border-radius:var(--r-box);background:var(--well);color:var(--muted);transition:background .3s,color .3s,opacity .3s}
+.beat{display:flex;align-items:center;gap:var(--u);padding:10px var(--u);border-radius:var(--r-box);background:var(--surf-1,var(--well));color:var(--muted);transition:background .3s,color .3s,opacity .3s}
 .beat .badge{background:var(--card);color:var(--muted);flex:none}
 .beat[data-state="done"]{color:var(--text)}
 .beat[data-state="now"]{background:var(--tint-soft);color:var(--text)}

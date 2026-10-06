@@ -8,7 +8,7 @@ import { Diagram } from "../components/diagrams/Diagram";
 import { firstExample } from "../screens/Learn";
 import type { AnyLesson } from "../curriculum/schemas/lesson";
 import type { Explanation } from "../explanations/schema";
-import { BAND_NAMES, DIAGRAM_TOKENS, PILL_TOKENS, emptyOverrides, GRADE_TOKENS, handoffCss, MASTER, MASTER_GRADE, overrideCss, overridesOf, readGrade, SHARED_TOKENS, SIZE_TOKENS, toHex, type Overrides, type Token } from "./tokens";
+import { BAND_NAMES, DIAGRAM_TOKENS, PILL_TOKENS, SURFACE_TOKENS, emptyOverrides, GRADE_TOKENS, handoffCss, MASTER, MASTER_GRADE, overrideCss, overridesOf, readGrade, SHARED_TOKENS, SIZE_TOKENS, toHex, type Overrides, type Token } from "./tokens";
 import { get, set, useSb } from "./store";
 import "./sandbox.css";
 
@@ -201,6 +201,7 @@ export function Sandbox() {
         <div className="sbsec"><h3>Master colors</h3>{GRADE_TOKENS.map(t => row("master", t))}</div>
         <div className="sbsec"><h3>Shared colors · {sb.theme}</h3>{SHARED_TOKENS.map(t => row("shared", t))}</div>
         <div className="sbsec"><h3>Sizes</h3>{SIZE_TOKENS.map(t => row("sizes", t))}</div>
+        <div className="sbsec"><h3>Surface (master)</h3><p className="sbnote">Every panel, card and tile; inner corners follow the outer one.</p>{SURFACE_TOKENS.map(t => row(t.kind === "color" ? "shared" : "sizes", t))}</div>
         <div className="sbsec"><h3>Pill (master)</h3><p className="sbnote">Every button on every screen.</p>{PILL_TOKENS.map(t => row("sizes", t))}</div>
         <div className="sbsec"><h3>Diagram (master)</h3><p className="sbnote">Every picture in every grade draws with these.</p>{DIAGRAM_TOKENS.map(t => row("sizes", t))}</div>
       </> : <>

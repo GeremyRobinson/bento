@@ -1,4 +1,8 @@
 /* Shared components: controls, panels, header, grade sheet, home tiles, lessons, learn, practice, summaries, pictures, planning. */
+/* Surface (master): every panel, card and tile is an instance. Level 1 sits on the page (--surf-1, the well), level 2
+   sits inside it (--surf-2, the card), and nesting is concentric: each level's radius is the outer one minus the gap
+   between them (--r-panel, --r-card, --r-box in bands.css). A surface only overrides what differs. */
+.wrap{--r-tile:calc(var(--r-panel) - 4px);--pad-md:calc(var(--u) * 1.25);--pad-lg:calc(var(--u) + 4px);--pad-xl:calc(var(--u) * 1.5);--ring:0 0 0 1px var(--rule)}
 /* ---- controls ---- */
 /* Pill (master): every button is an instance of .ctl. Sizes and feel come from the --pill-* tokens; colors fall back to the
    grade roles, so a context (a card, the landing page) or a variant (go, circ) only overrides what it changes. */
@@ -16,7 +20,7 @@
 .badge{min-width:var(--badge);height:var(--badge);border-radius:999px;display:inline-flex;align-items:center;justify-content:center;padding:0 var(--s);font-family:var(--num);font-weight:650;background:var(--well);color:var(--text);flex:none;font-variant-numeric:tabular-nums}
 .card .badge,.ctl .badge{background:var(--tint-soft);color:var(--ink)}
 .badge.on,.card .badge.on,.ctl .badge.on{background:var(--ink);color:var(--on-tint)}
-.bar{display:flex;align-items:center;gap:var(--s);padding:var(--inset);background:var(--well);border-radius:999px;min-width:0}
+.bar{display:flex;align-items:center;gap:var(--s);padding:var(--inset);background:var(--surf-1,var(--well));border-radius:999px;min-width:0}
 .ctl.circ{width:var(--pill-h);padding:0;flex:none;background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
 .ctl.circ:hover{background:var(--tint-soft)}
 .ctl.circ svg{width:22px;height:22px;display:block}
@@ -28,8 +32,8 @@
 .actions{display:flex;gap:var(--s);justify-content:center;flex-wrap:wrap}
 
 /* ---- panels and cards ---- */
-.panel{background:var(--well);border-radius:var(--r-panel);padding:var(--u);display:grid;gap:var(--u)}
-.card{background:var(--card);border-radius:var(--r-card);padding:var(--u);display:grid;gap:var(--u)}
+.panel{background:var(--surf-1,var(--well));border-radius:var(--r-panel);padding:var(--u);display:grid;gap:var(--u)}
+.card{background:var(--surf-2,var(--card));border-radius:var(--r-card);padding:var(--u);display:grid;gap:var(--u)}
 .head{display:flex;justify-content:space-between;align-items:center;gap:var(--u);flex-wrap:wrap;padding:0 var(--s);min-height:24px}
 .head h2{font-size:var(--fs)}
 
@@ -55,13 +59,13 @@
 
 
 /* ---- grade hero ---- */
-.hero{position:relative;overflow:hidden;background:var(--tint-soft);border-radius:var(--r-panel);padding:calc(var(--u) + 4px);display:grid;gap:var(--u)}
+.hero{position:relative;overflow:hidden;background:var(--tint-soft);border-radius:var(--r-panel);padding:var(--pad-lg);display:grid;gap:var(--u)}
 .hero .pat{position:absolute;inset:0;opacity:.55;pointer-events:none;background-repeat:repeat;animation:drift 40s linear infinite}
 @keyframes drift{to{background-position:240px 120px}}
 .hero>*:not(.pat){position:relative}
 .hero h1{font-size:calc(var(--fs) * 1.5);line-height:1.15;color:var(--ink);font-weight:var(--w-bold)}
 .hero .sub{color:var(--muted);font-weight:var(--w-mid)}
-.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:var(--card);border-radius:var(--r-card)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:var(--surf-2,var(--card));border-radius:var(--r-card)}
 .stats>div{padding:10px var(--u);display:grid;gap:2px;min-width:0}
 .stats>div+div{border-left:1px solid var(--rule)}
 .stats .k{color:var(--muted);font-size:var(--small);line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -71,9 +75,9 @@
 
 /* ---- Bento home: one grid of tiles. Phone: one column. Tablet portrait: two. Landscape: the big next-up tile on the left, the rest stacked beside it. ---- */
 .bhome{display:grid;gap:var(--u);grid-template-columns:minmax(0,1fr)}
-.tile{background:var(--well);border-radius:var(--r-panel);padding:var(--u);display:grid;gap:var(--u);align-content:start;min-width:0;text-align:left}
+.tile{background:var(--surf-1,var(--well));border-radius:var(--r-panel);padding:var(--u);display:grid;gap:var(--u);align-content:start;min-width:0;text-align:left}
 .b-hero{align-content:space-between;min-height:220px}
-.upnext{display:grid;gap:6px;background:var(--card);border-radius:var(--r-card);padding:calc(var(--u) + 2px);text-align:left;width:100%;box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px -12px color-mix(in srgb,var(--tint) 45%,transparent);transition:transform .2s var(--spring)}
+.upnext{display:grid;gap:6px;background:var(--surf-2,var(--card));border-radius:var(--r-card);padding:calc(var(--u) + 2px);text-align:left;width:100%;box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px -12px color-mix(in srgb,var(--tint) 45%,transparent);transition:transform .2s var(--spring)}
 .upnext:active{transform:scale(.98)}
 .upnext .k{color:var(--muted);font-size:var(--small);line-height:18px;font-weight:var(--w-mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .upnext b{font-size:calc(var(--fs) * 1.45);line-height:1.2;font-weight:var(--w-bold);color:var(--text)}
@@ -119,14 +123,14 @@
 .lesson .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lesson .muted{font-weight:var(--w-mid);font-size:var(--small);white-space:nowrap}
 .lesson[disabled]{cursor:default}
-.facts{border-radius:var(--r-card);background:var(--card)}
+.facts{border-radius:var(--r-card);background:var(--surf-2,var(--card))}
 .facts>div{display:flex;justify-content:space-between;align-items:center;gap:var(--u);padding:10px var(--u);min-height:var(--h)}
 .facts>div+div{border-top:1px solid var(--rule)}
 .facts .k{color:var(--muted);font-size:var(--small);line-height:20px}
 .facts .v{font-family:var(--num);text-align:right;flex:none;white-space:nowrap}
 .facts .pattern,.mlist>div{align-items:flex-start}
 .facts .pattern>span:first-child,.mlist>div>span{display:grid;gap:2px;min-width:0}
-.bento{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-radius:var(--r-card);background:var(--card);align-items:stretch}
+.bento{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-radius:var(--r-card);background:var(--surf-2,var(--card));align-items:stretch}
 .bento>div{padding:var(--u);display:flex;flex-direction:column;justify-content:center;gap:4px;min-width:0}
 .bento>div+div{border-left:1px solid var(--rule)}
 .bento .k{color:var(--muted);font-size:var(--small);line-height:18px}
@@ -186,7 +190,7 @@
 }
 .steps{display:flex;gap:6px;align-items:center;flex:1;justify-content:center;min-width:0;flex-wrap:wrap}
 @media (max-width:480px){.steps{gap:4px}.steps .dot{width:9px;height:9px}}
-.work{display:grid;border-radius:var(--r-box);background:var(--well);overflow:hidden}
+.work{display:grid;border-radius:var(--r-box);background:var(--surf-1,var(--well));overflow:hidden}
 .work:empty{display:none}
 .workline{display:flex;align-items:baseline;gap:var(--u);padding:10px var(--u);font-family:var(--num);font-size:var(--work);line-height:1.25;flex-wrap:wrap;min-width:0}
 .workline+.workline{border-top:1px solid var(--rule)}
@@ -314,7 +318,7 @@
 .blearn{display:grid;gap:var(--u);grid-template-columns:minmax(0,1fr);align-items:start}
 .lside{display:grid;gap:var(--u);align-content:start;min-width:0;grid-template-columns:minmax(0,1fr)}
 .lmap .k,.helptile .k{color:var(--muted);font-size:var(--small);line-height:18px;font-weight:var(--w-mid)}
-.outline{display:grid;gap:4px;background:var(--card);border-radius:var(--r-card);padding:6px}
+.outline{display:grid;gap:4px;background:var(--surf-2,var(--card));border-radius:var(--r-card);padding:6px}
 .outline button{display:flex;align-items:center;gap:10px;min-height:44px;padding:4px 10px 4px 4px;border-radius:999px;text-align:left;font-size:var(--small);line-height:18px;font-weight:var(--w-mid);color:var(--muted);transition:background .15s}
 .outline button:not([disabled]):hover{background:var(--well)}
 .outline button.on{background:var(--tint-soft);color:var(--text);font-weight:var(--w-bold);cursor:default}
@@ -340,7 +344,7 @@
 .bme{display:grid;gap:var(--u);grid-template-columns:minmax(0,1fr)}
 @media (min-width:760px){.bme{grid-template-columns:repeat(2,minmax(0,1fr))}.mhero,.mgrades{grid-column:1 / -1}.macc{grid-row:span 2}}
 @media (min-width:1100px){.bme{grid-template-columns:repeat(3,minmax(0,1fr))}.mhero{grid-column:span 2}.macc{grid-column:3;grid-row:1 / span 3}.mgrades{grid-column:1 / span 2}}
-.mtile{display:grid;gap:var(--s);align-content:start;padding:var(--u);border-radius:var(--r-panel);background:var(--well)}
+.mtile{display:grid;gap:var(--s);align-content:start;padding:var(--u);border-radius:var(--r-panel);background:var(--surf-1,var(--well))}
 .mtile .k{color:var(--muted);font-size:var(--small);font-weight:var(--w-bold)}
 .mtile h2{font:650 calc(var(--fs) * 1.3)/1.15 var(--sans);letter-spacing:-.02em;margin:0 0 4px}
 .mtile .actions{display:flex;gap:8px;flex-wrap:wrap}
@@ -350,10 +354,10 @@
 .mhero h1{font:650 clamp(30px,5vw,44px)/1.05 var(--sans);letter-spacing:-.03em;margin:2px 0}
 .mhero .k{color:var(--ink);font-weight:var(--w-mid);font-size:var(--small)}
 .mstats{grid-column:1 / -1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.mstats>div{background:var(--card);border-radius:var(--r-card);padding:12px;display:grid;gap:2px;text-align:center}
+.mstats>div{background:var(--surf-2,var(--card));border-radius:var(--r-card);padding:12px;display:grid;gap:2px;text-align:center}
 .mstats b{font-size:calc(var(--fs) * 1.6);line-height:1}
 .mstats span{color:var(--muted);font-size:var(--small);font-weight:var(--w-mid)}
-.mtoggle,.mseg{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:var(--r-card);background:var(--card);text-align:left}
+.mtoggle,.mseg{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:var(--r-card);background:var(--surf-2,var(--card));text-align:left}
 .mt-text{display:grid;gap:1px;flex:1;min-width:0}
 .mt-text b{font-weight:var(--w-bold)}
 .mt-text small{color:var(--muted);font-size:var(--small);font-weight:var(--w-mid);line-height:1.3}
@@ -421,7 +425,7 @@
   .bhome>.b-weak{grid-column:3}
 }
 /* units: one quiet card each, lessons as hairline rows instead of pills inside a well */
-.units>.panel{background:var(--card);box-shadow:0 0 0 1px var(--rule);padding:calc(var(--u) * 1.25) calc(var(--u) * 1.25) var(--s);gap:var(--s)}
+.units>.panel{background:var(--surf-2,var(--card));box-shadow:var(--ring);padding:var(--pad-md) calc(var(--u) * 1.25) var(--s);gap:var(--s)}
 .units .unit{padding:0;min-height:36px}
 .units .unit h3{color:var(--text);font-size:var(--fs);font-weight:650;letter-spacing:-.01em}
 .units .unit .ctl{--pill-h:36px;--pill-pad:14px;background:none!important;box-shadow:inset 0 0 0 1px var(--rule);font-size:var(--small);font-weight:550;color:var(--muted)}

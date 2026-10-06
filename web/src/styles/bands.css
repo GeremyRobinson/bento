@@ -9,7 +9,7 @@
 @media (max-width:480px){
   .wrap{--fs:17px;--lh:24px;--u:12px;--sec:16px;--h:44px;--row:56px;--math:40px;--ask:32px;--slot:56px;--key:56px;--work:21px;--r-panel:28px}
 }
-.wrap{--r-card:calc(var(--r-panel) - var(--u)); --r-box:max(8px, calc(var(--r-card) - var(--u))); --badge:calc(var(--h) - 2*var(--inset)); --rbadge:calc(var(--row) - 2*var(--inset))}
+.wrap{--r-card:max(4px, calc(var(--r-panel) - var(--u))); --r-box:max(8px, calc(var(--r-card) - var(--u))); --badge:calc(var(--h) - 2*var(--inset)); --rbadge:calc(var(--row) - 2*var(--inset))}
 
 /* ---- each grade's colours (light values; dark mode lifts them) ---- */
 .wrap[data-grade="0"]{--l0:#f59e0b;--l1:#ec4899;--l2:#22c55e;--la:#3b82f6}
