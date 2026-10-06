@@ -11,7 +11,7 @@ import { FeatureBox } from "../components/LandingTiles";
 import { GradeNum, Shelf } from "../components/Shelf";
 import { Advanced } from "../components/Advanced";
 import type { Explanation } from "../explanations/schema";
-import { CHOOSE_GRADE } from "../app/copy";
+import { START_LEARNING } from "../app/copy";
 
 /**
  * Layouts for the landing grid, in the order the tiles are placed. Each one fills three columns by three rows
@@ -142,16 +142,18 @@ function HeroPictures({ rng }: { rng: Rng }) {
 const SANDBOX = import.meta.env.MODE === "preview" || import.meta.env.MODE === "development";
 
 export function Welcome({ shelf = false }: { shelf?: boolean }) {
-  const { chooseGrade, deps, go } = useApp();
+  const { chooseGrade, deps, go, progress, openSheet } = useApp();
   const rng = useMemo(() => deps().rng, []); // eslint-disable-line react-hooks/exhaustive-deps
   // sent here to choose a grade: open at the shelf
   useEffect(() => { if (shelf) document.getElementById("lshelf")?.scrollIntoView?.({ block: "start" }); }, [shelf]);
+  // always lands on choosing a grade: with a grade already chosen, home alone would skip it
+  const start = () => { go({ name: "home" }, "fwd"); if (progress.grade != null) openSheet(true); };
   return (
     <div className="land">
       <section className="lhero">
         <h1>Math that <span>clicks.</span></h1>
         <p>Watch each idea play out, then solve it one step at a time. If you slip, Bento shows you the exact step and why.</p>
-        <div className="lcta"><Pill go onClick={() => go({ name: "home" }, "fwd")}>{CHOOSE_GRADE}</Pill><span>Free. No account.</span></div>
+        <div className="lcta"><Pill go onClick={start}>{START_LEARNING}</Pill><span>Free. No account.</span></div>
       </section>
       <section className="lhbox">
         <HeroPictures rng={rng} />

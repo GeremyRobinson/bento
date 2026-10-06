@@ -5,6 +5,7 @@
  */
 
 export const CHOOSE_GRADE = "Choose your grade";
+export const START_LEARNING = "Start learning";
 export const FIND_MY_LEVEL = "Find my level";
 export const GRADE_CHECKUP = "Grade check-up";
 export const ALL_LESSONS = "All lessons";
