@@ -94,7 +94,7 @@ export function TrackScreen({ trackId, pick: routePick }: { trackId: string; pic
           {!inline && <small className="b2kick">{p.build ? "The build" : "Small project"} · after {lessonNumber(p.after)} {after?.title}</small>}
           {!inline && <h2>{p.name}</h2>}
           <p><Rich text={p.makes} /></p>
-          <p className="b2small">Saves {p.shelf.map(s => `\`${s}\``).join(" and ")} to your Number shelf{have.length ? ` (${have.length === p.shelf.length ? "saved" : `${have.join(", ")} saved`})` : ""}.</p>
+          <p className="b2small">{p.shelf.length ? <>Saves {p.shelf.map(s => `\`${s}\``).join(" and ")} to your Number shelf{have.length ? ` (${have.length === p.shelf.length ? "saved" : `${have.join(", ")} saved`})` : ""}.</> : "Saves to your Notebook."}</p>
         </div>
         {Pic && <figure className="b2well proj"><Pic props={p.scene.props ?? {}} place="project" /></figure>}
       </div>
