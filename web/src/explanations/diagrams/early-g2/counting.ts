@@ -77,7 +77,7 @@ export function buildCoins(spec: CoinsSpec): SceneDiagram {
       const cx = x + c.r;
       running += g.value;
       items.push(circle(cx, MAXR, c.r, c.cls, { enter: "pop", delay: 0.06 * idx++ }));
-      items.push(t(cx, MAXR, `${g.value}¢`, "sm"));
+      items.push(t(cx, MAXR, `${g.value}¢`, "sm coin-val"));
       if (!spec.bare) items.push(t(cx, 2 * MAXR + 24, String(running), k === g.count - 1 ? "lbl acc" : "sm", { from: g.beat, enter: "rise", delay: 0.35 * k }));
       x += 2 * c.r + 8;
     }

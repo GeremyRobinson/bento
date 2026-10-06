@@ -68,3 +68,14 @@
 /* highlighted parts never touch: a little air between marks, and a marked sign keeps its own spacing outside the box */
 .mline mark{display:inline-flex;align-items:center;margin:0 .14em}
 .mline mark>.o:only-child{margin:0 .12em}
+/* dark: numbers in a part read in that part's color lifted to 4.5:1 (--k*, bands.css Dark pictures); the total in --ka */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .am .region.r0 :is(.product,.product text,.part){fill:var(--k0)}
+  :root:not([data-theme="light"]) .am .region.r1 :is(.product,.product text,.part){fill:var(--k1)}
+  :root:not([data-theme="light"]) .am .region.r2 :is(.product,.product text,.part){fill:var(--k2)}
+  :root:not([data-theme="light"]) .am .total{fill:var(--ka)}
+}
+:root[data-theme="dark"] .am .region.r0 :is(.product,.product text,.part){fill:var(--k0)}
+:root[data-theme="dark"] .am .region.r1 :is(.product,.product text,.part){fill:var(--k1)}
+:root[data-theme="dark"] .am .region.r2 :is(.product,.product text,.part){fill:var(--k2)}
+:root[data-theme="dark"] .am .total{fill:var(--ka)}
