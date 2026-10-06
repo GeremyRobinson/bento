@@ -10,9 +10,9 @@ export const lesson: LessonDefinition<DefIntProblem> = {
   unit: "Integrals",
   title: "Definite integrals",
   reference: createDefInt(2, 3, 2),
-  generate: rng => generateDefInt(rng),
+  generate: (rng, i) => generateDefInt(rng, i),
   restore: restoreDefInt,
-  display: p => [text("∫"), sub(0), sup(p.k), text(" "), ...powerTerm(p.a, p.n), text(" dx")],
+  display: p => [text("∫"), sub(p.j), sup(p.k), text(" "), ...powerTerm(p.a, p.n), text(" dx")],
   answers: defIntAnswers,
   explain: explainDefInt,
 };

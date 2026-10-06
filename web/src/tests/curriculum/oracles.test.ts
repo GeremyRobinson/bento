@@ -76,7 +76,7 @@ const ORACLES: Record<string, Oracle> = {
  "g11-compose":p=>[p.a*(p.c*p.k+p.d)+p.b],"g11-radical":p=>[p.b*p.b-p.a],"g11-complex":p=>[p.a*p.c-p.b*p.d,p.a*p.d+p.b*p.c],
  "g11-comb":p=>{let r=1;for(let i=0;i<p.k;i++)r=r*(p.n-i)/(i+1);return [r]},
  "g12-deg":p=>[180*p.n/p.d],"g12-rad":p=>simp(p.t,180),"g12-power":p=>[p.a*p.n,p.n-1],"g12-chain":p=>[p.n*p.a],
- "g12-tangent":p=>[2*p.a*p.k+p.b],"g12-anti":p=>[p.n+1,p.a/(p.n+1)],"g12-defint":p=>[p.a*p.k**(p.n+1)/(p.n+1)],
+ "g12-tangent":p=>[2*p.a*p.k+p.b],"g12-anti":p=>[p.n+1,p.a/(p.n+1)],"g12-defint":p=>[p.a*(p.k**(p.n+1)-(p.j??0)**(p.n+1))/(p.n+1)],
  "g12-series":p=>{const last=p.a+(p.n-1)*p.d;return [p.n*(p.a+last)/2]},"g12-vecmag":p=>[Math.hypot(p.x,p.y)],"g12-dot":p=>[p.a*p.c+p.b*p.d],
  "k-compare":p=>[p.top>p.bottom?"More than":p.top<p.bottom?"Less than":"The same as"],
  "g4-factors":p=>{let c=0;for(let i=1;i<=p.n;i++)if(p.n%i==0)c++;return [c]},
