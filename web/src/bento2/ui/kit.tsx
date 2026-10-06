@@ -40,8 +40,9 @@ export function Slider({ label, value, min, max, step, onChange, format, marks, 
 }
 
 /** A readout: a name and its live value. `tone` colours the value like its part of the picture. */
-export function Read({ label, value, tone, big }: { label: ReactNode; value: ReactNode; tone?: string; big?: boolean }) {
-  return <span className={`b2r${big ? " big" : ""}`}><small>{label}</small><b className={tone ? `tone-${tone}` : undefined}>{value}</b></span>;
+/** A readout. `minor` ones (often repeating a slider or the words) step aside in the lesson on a phone; tools and bigger screens keep them. */
+export function Read({ label, value, tone, big, minor }: { label: ReactNode; value: ReactNode; tone?: string; big?: boolean; minor?: boolean }) {
+  return <span className={`b2r${big ? " big" : ""}${minor ? " minor" : ""}`}><small>{label}</small><b className={tone ? `tone-${tone}` : undefined}>{value}</b></span>;
 }
 
 /** A two-way switch inside a picture ("Lab view" / "Muon's view"). */

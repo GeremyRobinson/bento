@@ -83,13 +83,14 @@ export function CardScene({ props }: SceneProps) {
         <button type="button" className="ctl go" onClick={() => setFly(f => !f)}>{fly ? "Back to launch" : "Launch"}</button>
       </>}
       readouts={<>
-        {!quiet && <Read label="Window" value={`Mars ${fx(m.phi, 0)}° ahead, every ${km(w.S * 365.25)} days`} tone="amber" />}
-        {!quiet && <Read label="Flight" value={`${km(m.days)} days`} />}
+        {!quiet && <Read minor label="Window" value={`Mars ${fx(m.phi, 0)}° ahead, every ${km(w.S * 365.25)} days`} tone="amber" />}
+        {!quiet && <Read minor label="Flight" value={`${km(m.days)} days`} />}
         {quiet && <Read label="The trip" value={`${km(h1)} km above Earth to ${km(h2)} km above Mars, I_sp ${isp} s`} />}
-        {!quiet && <Read label="Leave Earth" value={`${fx(m.dep, 2)} km/s (v∞ ${fx(m.vinf1, 2)})`} tone="sky" />}
-        {!quiet && <Read label="Stay at Mars" value={`${fx(m.cap, 2)} km/s (v∞ ${fx(m.vinf2, 2)})`} tone="pink" />}
+        {!quiet && <Read label="Leave Earth" value={`${fx(m.dep, 2)} km/s`} tone="sky" />}
+        {!quiet && <Read label="Stay at Mars" value={`${fx(m.cap, 2)} km/s`} tone="pink" />}
+        {!quiet && <Read minor label="v∞ out, in" value={`${fx(m.vinf1, 2)}, ${fx(m.vinf2, 2)} km/s`} />}
         {!quiet && <Read label="Total Δv" value={`${fx(m.total, 2)} km/s`} big />}
-        {!quiet && <Read label="Propellant" value={`${fx(m.frac, 1)}% of the ship`} />}
+        {!quiet && <Read minor label="Propellant" value={`${fx(m.frac, 1)}% of the ship`} />}
         {project && <Read label="Build pieces on your shelf" value={`${pieces} of ${of}`} />}
       </>}
       foot={project && <SaveRow what={<>Keep <b>mission</b>: {fx(m.total, 2)} km/s, {fx(m.frac, 1)}% propellant, in your Notebook as the build</>} saved={saved} onSave={onSave} />} />

@@ -95,7 +95,7 @@ export function ClockScene({ props, marker }: SceneProps) {
         {shown && <Read label="Windows every" value={`${km(w.S * 365.25)} days`} />}
         {shown && <Read label="Flight" value={`${km(w.days)} days${flying ? `, day ${km(flown)}` : ""}`} tone="sky" />}
         {flying && k >= 1 && <Read label="At arrival" value={miss < 3 ? `meets ${target}` : `${target} is ${fx(miss, 0)}° away`} />}
-        {!hide && <Read label="Stepper" value={`symplectic Euler, h = ${hHours} h`} />}
+        {!hide && <Read minor label="Stepper" value={`symplectic Euler, h = ${hHours} h`} />}
       </>} />
   );
 }

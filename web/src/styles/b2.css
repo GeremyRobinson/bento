@@ -251,6 +251,7 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
   .screen.fit.b2lesson.st-play{grid-template-rows:minmax(0,1fr) auto}
   .st-play .b2card{max-height:46dvh}
   .st-play .b2stage .b2read{gap:2px var(--sp-3)}
+  .b2lesson .b2stage .b2r.minor{display:none}
   .st-play .b2body .b2small{display:none}
   /* a project's Use it: the card first, with a button that opens the project full screen */
   .screen.fit.b2lesson.st-use.proj{grid-template-rows:minmax(0,1fr);grid-template-areas:"card"}
@@ -281,9 +282,10 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
   .b2nav .ctl{--pill-h:40px;font-size:var(--fz-sm);--pill-pad:14px}
   .b2ctl{gap:6px var(--sp-3)}
   /* a phone draws the picture smaller, so its words are drawn larger: 11px or more on screen at 375 wide */
-  .b2scene{grid-template-rows:minmax(128px,1fr) auto auto auto}
+  .b2scene{grid-template-rows:minmax(120px,1fr) auto auto auto}
   .b2t{font-size:var(--fz-lg)}
   .b2r b{font-size:var(--fz-md)}
+  .b2lesson .b2stage .b2r.big b{font-size:var(--fz-xl)}
   .b2slider input[type="range"]{height:24px}
 }
 

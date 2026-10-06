@@ -76,12 +76,12 @@ export function BurnScene({ props }: SceneProps) {
         <button type="button" className="ctl" onClick={() => { setDv1(exact.dv1 / unit); setDv2(exact.dv2 / unit); }}>Hohmann preset</button>
       </>}
       readouts={quiet ? <Read label="From and to" value={toy ? `r = 1 to r = ${fx(r2, 1)}` : `${km(r1 / 1000)} km to ${km(r2 / 1000)} km`} /> : <>
-        <Read label="Δv₁" value={vfmt(dv1)} tone="pink" />
-        <Read label="Δv₂" value={bound ? vfmt(dv2) : "none"} tone="pink" />
+        <Read minor label="Δv₁" value={vfmt(dv1)} tone="pink" />
+        <Read minor label="Δv₂" value={bound ? vfmt(dv2) : "none"} tone="pink" />
         <Read label="Ledger total" value={vfmt(total)} big />
         <Read label="Far point" value={!bound ? "escapes" : reach > 0.995 && reach < 1.005 ? "touches the outer orbit" : `${fx(reach * 100, 0)}% of the way`} tone="amber" />
-        {bound && <Read label="Coast" value={toy ? `${fx(coast, 2)} time units` : dur(coast)} />}
-        <Read label="New orbit" value={round ? "round, on the outer circle" : fin ? `e = ${fx(fin.e, 3)}` : "none"} tone="sky" />
+        {bound && <Read minor label="Coast" value={toy ? `${fx(coast, 2)} time units` : dur(coast)} />}
+        <Read minor label="New orbit" value={round ? "round, on the outer circle" : fin ? `e = ${fx(fin.e, 3)}` : "none"} tone="sky" />
         {project && <Read label={`Propellant, v_e ${fx(ve, 2)} km/s`} value={`${fx(frac, 1)}%`} />}
       </>}
       foot={project && <SaveRow what={<>Keep <b>dv_hohmann = {fx(total, 2)} km/s</b>{round ? "" : " (not round yet)"} and the plan in your Notebook</>} saved={savedNow} onSave={onSave} />} />
