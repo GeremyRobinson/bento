@@ -60,9 +60,11 @@ export function simplifyStep(S: number, L: number, label: string, id = "simplify
     ],
     known: [],
     check,
-    hint: S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}. The remainder goes on top.`
+    hint: S % L === 0 ? `${S} ÷ ${L} = ${S / L} exactly, so it's a whole number.`
+      : S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}. The remainder goes on top.`
       : gcd(S, L) > 1 ? `Both ${S} and ${L} can be divided by ${gcd(S, L)}.` : `No number (other than 1) divides both ${S} and ${L}. It's already simplest.`,
-    explain: S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}, then simplify.` : gcd(S, L) > 1 ? `Divide top and bottom by ${gcd(S, L)}.` : "It was already as simple as it gets.",
+    explain: S % L === 0 ? `${S} ÷ ${L} = ${S / L} exactly, so it's the whole number ${S / L}.`
+      : S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}, then simplify.` : gcd(S, L) > 1 ? `Divide top and bottom by ${gcd(S, L)}.` : "It was already as simple as it gets.",
     work: [frac(S, L), op("="), ...finalMath(S, L, true)],
   };
 }
@@ -120,7 +122,7 @@ function explain(p: DivideFractionsProblem) {
         lines: [[frac(a, b), op("÷"), mark([frac(c, d)])], [frac(a, b), mark([op("×")]), mark([frac(d, c)])]], answerStep: "flip" },
       { id: "multiply", narration: `Top times top, bottom times bottom: ${a} × ${d} = ${S} and ${b} × ${c} = ${L}.`, math: [frac(a, b), op("×"), frac(d, c), op("="), frac(S, L)],
         lines: [[frac(S, L)]], answerStep: "multiply" },
-      { id: "simplify", narration: same ? `${S}/${L} is already as simple as it gets.` : S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}, so ${S}/${L} is ${F.num ? `${F.whole ? `${F.whole} and ` : ""}${F.num}/${F.den}` : F.whole}.`
+      { id: "simplify", narration: same ? `${S}/${L} is already as simple as it gets.` : S % L === 0 ? `${S} ÷ ${L} = ${S / L} exactly, so ${S}/${L} is the whole number ${S / L}.` : S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}, so ${S}/${L} is ${F.num ? `${F.whole ? `${F.whole} and ` : ""}${F.num}/${F.den}` : F.whole}.`
           : `Divide the top and the bottom by ${gcd(S, L)}: ${F.num}/${F.den}.`,
         math: [frac(S, L), op("="), ...simplified], lines: same ? [] : [[frac(S, L), op("="), ...simplified]], answerStep: "simplify",
         ...(F.num === 0 ? { result: F.whole } : {}) },

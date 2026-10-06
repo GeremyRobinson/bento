@@ -98,5 +98,8 @@ export const lesson: LessonDefinition<LikeFractionsProblem> = {
   display: (p): MathText => [frac(p.a, p.d), op("+"), frac(p.c, p.d)],
   answers,
   explain,
-  story: ({ a, c, d }) => ({ op: "+", text: `Sam ate ${a}/${d} of a pizza. Ana ate ${c}/${d} of the same pizza. How much pizza did they eat together?` }),
+  // one pizza can't hold more than d/d, so when a + c > d Ana's share comes from a second pizza of the same size
+  story: ({ a, c, d }) => ({ op: "+", text: a + c <= d
+    ? `Sam ate ${a}/${d} of a pizza. Ana ate ${c}/${d} of the same pizza. How much pizza did they eat together?`
+    : `Sam ate ${a}/${d} of a pizza. Ana ate ${c}/${d} of another pizza the same size. How much pizza did they eat together?` }),
 };

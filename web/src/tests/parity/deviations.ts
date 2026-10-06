@@ -6,4 +6,7 @@
  */
 type Deviations = Record<string, Partial<Record<string, string>>>;
 const files = import.meta.glob<Deviations>("./deviations/*.ts", { eager: true, import: "deviations" });
+// A lesson listed in two files would silently lose one file's reasons, so each lesson lives in exactly one file.
+const twice = Object.values(files).flatMap(Object.keys).filter((id, i, all) => all.indexOf(id) !== i);
+if (twice.length) throw new Error(`deviations listed in more than one file: ${twice.join(", ")}`);
 export const DEVIATIONS: Deviations = Object.assign({}, ...Object.values(files));
