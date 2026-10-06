@@ -39,7 +39,7 @@ span.sbx{background:none}
 .sbhead p{margin:4px 0 0;max-width:60ch}
 .sbgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
 .sbt{padding:0;margin:0;max-width:none;width:auto;min-height:0}
-.sbt-in{width:100%;height:100%;text-align:left;cursor:pointer;align-content:start;transition:transform .2s var(--spring),box-shadow .2s}
+.sbt-in{width:100%;height:100%;text-align:left;cursor:pointer;align-content:start;transition:transform .2s var(--m-settle),box-shadow .2s}
 .sbt-in:hover{transform:translateY(-2px)}
 .sbt.focus .sbt-in{box-shadow:0 0 0 2px var(--ink)}
 .sbt-head{display:flex;align-items:center;gap:12px}
@@ -81,3 +81,4 @@ span.sbx{background:none}
 .sbnav{width:100%;pointer-events:auto}
 .sbnav .itop{position:static;pointer-events:auto}
 .sbnav-mid{font-size:12px;color:var(--muted)}
+.sbpanelbox{width:100%;max-height:200px;overflow:auto;border-radius:16px}

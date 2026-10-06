@@ -38,6 +38,16 @@ export function Pieces() {
         <p className="muted">Each piece is built and checked on its own, then nests into the bigger ones. These are the real components, so they work here the way they will in the app.</p>
       </header>
       <div className="sbpgrid">
+        <Piece name="Panel line" status="review" chunk="Panel master" nests="every outlined panel, card and grade row">
+          <div className="sbpanelbox">
+            <section className="tile mytile"><span className="k">Inside a scroll area</span><ul className="mygl">
+              <li className="battery" style={{ ["--p" as string]: 0.4 }}><span className="fill" style={{ ["--p" as string]: 0.4 }} /><b>A grade row</b></li>
+              <li className="battery on"><b>The one you're on</b></li>
+            </ul></section>
+          </div>
+          <Pill onClick={() => { const r = document.documentElement; if (r.dataset.contrast === "true") delete r.dataset.contrast; else r.dataset.contrast = "true"; }}>More contrast on / off</Pill>
+          <small className="muted">The line sits inside each panel's edge, so a scroll area, a corner or a fill never cuts it.</small>
+        </Piece>
         <Piece name="Motion" status="review" chunk="Chunks 1 and 6" nests="every page change">
           <div className="sbpills">
             <Pill onClick={() => move("fwd")}>Deeper</Pill><Pill onClick={() => move("back")}>Back</Pill>

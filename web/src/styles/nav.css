@@ -133,7 +133,7 @@ html[data-zoomed] body{overflow:hidden}
 .zoom h2{font:var(--w-bold) clamp(28px,4vw,40px)/1.1 var(--sans);letter-spacing:-.03em}
 
 /* a chapter: its picture and its pages */
-.zchapter{display:grid;gap:calc(var(--u) * 1.5);background:var(--surf-2,var(--card));border-radius:var(--r-panel);padding:var(--pad-xl);box-shadow:var(--ring),0 30px 60px -30px var(--ink-a25)}
+.zchapter{display:grid;gap:calc(var(--u) * 1.5);background:var(--surf-2,var(--card));border-radius:var(--r-panel);padding:var(--pad-xl);box-shadow:0 30px 60px -30px var(--ink-a25)}
 @media (min-width:800px){.zchapter{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center}}
 .zctext{display:grid;gap:var(--s);align-content:start}
 .zctext h2{margin-bottom:var(--s)}
@@ -153,8 +153,8 @@ html[data-zoomed] body{overflow:hidden}
 .zyear>header{display:grid;justify-items:center;text-align:center;gap:6px}
 .zyear>header .ctl{margin-top:var(--sp-2)}
 .zch{display:grid;gap:var(--s);grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
-.zcard{display:grid;gap:6px;align-content:start;text-align:left;padding:var(--pad-md);border-radius:var(--r-tile);background:var(--surf-2,var(--card));box-shadow:var(--ring);animation:rise var(--dur-500) var(--ease) both;animation-delay:calc(var(--i) * var(--dur-45));transition:transform var(--dur-250) var(--m-settle),box-shadow var(--dur-200)}
-.zcard:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--rule),0 14px 30px -18px var(--ink-a30)}
+.zcard{display:grid;gap:6px;align-content:start;text-align:left;padding:var(--pad-md);border-radius:var(--r-tile);background:var(--surf-2,var(--card));animation:rise var(--dur-500) var(--ease) both;animation-delay:calc(var(--i) * var(--dur-45));transition:transform var(--dur-250) var(--m-settle),box-shadow var(--dur-200)}
+.zcard:hover{transform:translateY(-2px);box-shadow:0 14px 30px -18px var(--ink-a30)}
 .zcard.on{box-shadow:0 0 0 2px var(--tint)}
 .zcard b{font-size:calc(var(--fs) * 1.1);font-weight:var(--w-bold);letter-spacing:-.01em}
 
@@ -203,8 +203,8 @@ html[data-motion="reduce"] .battery>.fill{animation:none}
 .sline{display:grid;gap:var(--s);align-content:start}
 .sline>.k{padding-left:var(--sp-1);font-size:var(--small);font-weight:var(--w-mid);color:var(--muted)}
 .sbooks{display:grid;gap:var(--s);grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
-.book{display:flex;flex-direction:column;gap:6px;height:156px;text-align:left;padding:14px 18px 18px;border-radius:var(--r-tile);background:var(--surf-2,var(--card));box-shadow:var(--ring);transition:transform var(--dur-250) var(--m-settle),box-shadow var(--dur-200)}
-button.book:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--rule),0 14px 30px -18px var(--ink-a30)}
+.book{display:flex;flex-direction:column;gap:6px;height:156px;text-align:left;padding:14px 18px 18px;border-radius:var(--r-tile);background:var(--surf-2,var(--card));transition:transform var(--dur-250) var(--m-settle),box-shadow var(--dur-200)}
+button.book:hover{transform:translateY(-2px);box-shadow:0 14px 30px -18px var(--ink-a30)}
 .book.on{box-shadow:0 0 0 2px var(--tint)}
 .book b{font-weight:var(--w-bold);font-size:var(--small);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 @media (min-width:900px){.zshelf .shelf{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:calc(var(--u) * 1.5)}}
@@ -215,7 +215,7 @@ button.book:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--rule),0 
 /* home's progress tile and the hub's level tile, as batteries */
 .bhome .b-stats.battery{gap:6px}
 .mhero.battery>.bbig{font-size:72px}
-.mhero.battery{background:var(--card);box-shadow:0 0 0 1px var(--rule)}
+.mhero.battery{background:var(--card)}
 .mhero.battery>.bbig{min-width:64px;text-align:center}
 .book{align-items:stretch;justify-content:flex-start}
 .cover .tlink{justify-self:center;margin-top:var(--sp-1)}

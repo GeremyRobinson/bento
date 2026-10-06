@@ -1,7 +1,7 @@
 /* Facts: tables that fill in as they're learned, the pattern behind them, and the sprint. */
 .ftables{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:var(--u);margin-top:var(--u)}
 .ftable{position:relative;overflow:hidden;display:grid;gap:var(--sp-1);align-content:start;text-align:left;min-height:168px;padding:calc(var(--u) + var(--sp-1));transition:transform var(--dur-200) var(--m-settle)}
-.ftable.panel{background:var(--card);box-shadow:0 0 0 1px var(--rule)}
+.ftable.panel{background:var(--card)}
 .ftable:active{transform:scale(.98)}
 .ftable h3{font-size:calc(var(--fs) * 1.1);line-height:1.2;position:relative}
 .ftable .k,.ftable p,.ftable .bcount{position:relative}

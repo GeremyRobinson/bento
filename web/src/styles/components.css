@@ -2,6 +2,11 @@
 /* Surface (master): every panel, card and tile is an instance. Level 1 sits on the page (--surf-1, the well), level 2
    sits inside it (--surf-2, the card), and nesting is concentric: each level's radius is the outer one minus the gap
    between them (--r-panel, --r-card, --r-box in bands.css). A surface only overrides what differs. */
+/* Panel line (master, G 2026-10-06: "panels aren't a shared component"): a surface's outline is drawn INSIDE its own
+   edge, as an inset outline painted over its contents, so a scroll area, a rounded corner or a fill reaching the
+   edge never cuts it. Every outlined surface is listed here once; nothing draws its own ring. */
+.wrap{--panel-line:var(--rule);--panel-w:1px}
+:is(.bhome .today,.bhome .b-stats,.bhome .b-weak,.units>.panel,.ftable.panel,.sbento .b-streak,.sbento .b-chaps,.lhpic,.ltile,.lbatt,.lonelist li.on,.lonepic,.zchapter,.zcard,.book,.mhero.battery,.mygl li){outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
 .wrap{--r-tile:calc(var(--r-panel) - 4px);--pad-md:calc(var(--u) * 1.25);--pad-lg:calc(var(--u) + 4px);--pad-xl:calc(var(--u) * 1.5);--ring:0 0 0 1px var(--rule)}
 /* ---- controls ---- */
 /* Pill (master): every button is an instance of .ctl. Sizes and feel come from the --pill-* tokens; colors fall back to the
@@ -389,7 +394,9 @@ button.gcell:active{transform:scale(.96)}
 :root[data-text="largest"] .wrap{zoom:1.3}
 :root[data-contrast="true"]{--text:#000;--muted:#3d4250;--faint:#b4b8c3;--rule:#9ca1b0}
 @media (prefers-color-scheme: dark){:root[data-contrast="true"]:not([data-theme="light"]){--text:#fff;--muted:#cfd3dc;--faint:#7c8290;--rule:#5a606e}}
-:root[data-contrast="true"] .tile,:root[data-contrast="true"] .panel,:root[data-contrast="true"] .card{box-shadow:0 0 0 1.5px var(--rule)}
+/* more contrast: every surface gets the Panel master's line, a little heavier */
+:root[data-contrast="true"]{--panel-w:1.5px}
+:root[data-contrast="true"] :is(.tile,.panel,.card){outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
 :root[data-color-safe="true"]{--ok:#2563eb;--err:#ea7a10;--ok-ink:#2563eb;--err-ink:#b75f0c}
 @media (prefers-color-scheme: dark){:root[data-color-safe="true"]:not([data-theme="light"]){--ok-ink:#60a5fa;--err-ink:#fb923c}}
 :root[data-color-safe="true"][data-theme="dark"]{--ok-ink:#60a5fa;--err-ink:#fb923c}
@@ -408,7 +415,7 @@ button.gcell:active{transform:scale(.96)}
 .phead h1{font-size:calc(var(--fs) * 1.6);letter-spacing:-.02em}
 
 /* ---- home, stripped back: today's plan, the year's progress, the units. Space does the work, not boxes. ---- */
-.bhome .today,.bhome .b-stats,.bhome .b-weak{background:var(--card);box-shadow:0 0 0 1px var(--rule);padding:calc(var(--u) * 1.75)}
+.bhome .today,.bhome .b-stats,.bhome .b-weak{background:var(--card);padding:calc(var(--u) * 1.75)}
 .today{gap:0;align-content:start}
 .today .sub{color:var(--muted);margin-top:var(--s);font-weight:var(--w-regular)}
 /* the vertical rhythm of a card: title, subtitle a small step under it, then a clear gap before the action (G 2026-10-06) */
@@ -442,7 +449,7 @@ button.gcell:active{transform:scale(.96)}
   .bhome>.b-weak{grid-column:3}
 }
 /* units: one quiet card each, lessons as hairline rows instead of pills inside a well */
-.units>.panel{background:var(--surf-2,var(--card));box-shadow:var(--ring);padding:var(--pad-md) calc(var(--u) * 1.25) var(--s);gap:var(--s)}
+.units>.panel{background:var(--surf-2,var(--card));padding:var(--pad-md) calc(var(--u) * 1.25) var(--s);gap:var(--s)}
 .units .unit{padding:0;min-height:36px}
 .units .unit h3{color:var(--text);font-size:var(--fs);font-weight:var(--w-bold);letter-spacing:-.01em}
 .units .unit .ctl{--pill-h:36px;--pill-pad:14px;background:none!important;box-shadow:inset 0 0 0 1px var(--rule);font-size:var(--small);font-weight:var(--w-mid);color:var(--muted)}

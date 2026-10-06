@@ -283,7 +283,7 @@ html:has(.screen) body{overflow:hidden}
 .pscreen>.fdim{position:fixed}
 .pscreen.hinting>.phero{z-index:var(--z-stack)}
 .pscreen>.fstack{position:absolute;z-index:var(--z-stack);left:0;top:0;width:330px;align-items:flex-start}
-.phint .htext{white-space:normal;padding:14px 22px;border-radius:var(--r-2xl);max-width:300px;font-weight:var(--w-regular);box-shadow:inset 4px 0 0 var(--acc),var(--float-shadow)}
+.phint .htext{white-space:normal;padding:14px 22px;border-radius:var(--r-2xl);max-width:300px;font-weight:var(--w-regular);outline:2px solid var(--acc);outline-offset:-2px;box-shadow:var(--float-shadow)}
 .pscreen .hrow{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
 .pscreen .fstack .fpill.go{background:var(--ink);color:var(--on-tint);box-shadow:none}
 .phint .flbl{color:var(--muted);text-shadow:none}
@@ -400,9 +400,9 @@ html:has(.screen) body{overflow:hidden}
 .sdetail>.sbento>.b-streak{grid-area:streak}
 .sdetail>.sbento>.b-chaps{grid-area:chaps}
 .sbento>.tile{border-radius:var(--r-panel)}
-.sbento .b-streak{background:var(--card);box-shadow:0 0 0 1px var(--rule);padding:calc(var(--u) * 1.75);display:grid;justify-items:center;align-content:center;text-align:center;gap:6px}
+.sbento .b-streak{background:var(--card);padding:calc(var(--u) * 1.75);display:grid;justify-items:center;align-content:center;text-align:center;gap:6px}
 .sbento .b-streak p{margin:0}
-.sbento .b-chaps{background:var(--card);box-shadow:0 0 0 1px var(--rule);padding:var(--sp-3);display:grid;gap:var(--sp-2);grid-template-columns:minmax(0,1fr);grid-auto-rows:minmax(var(--tap),64px);align-content:center;overflow:auto}
+.sbento .b-chaps{background:var(--card);padding:var(--sp-3);display:grid;gap:var(--sp-2);grid-template-columns:minmax(0,1fr);grid-auto-rows:minmax(var(--tap),64px);align-content:center;overflow:auto}
 .bchap{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:var(--tap);padding:var(--sp-2) var(--sp-4);border-radius:var(--r-pill);background:var(--well);text-align:left;transition:transform var(--dur-180) var(--ease)}
 .bchap:active{transform:scale(.97)}
 .bchap>.fill{background:color-mix(in oklab,var(--tint) 22%,var(--well))}
