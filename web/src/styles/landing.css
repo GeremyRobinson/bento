@@ -92,7 +92,7 @@
 .lreport b{font-weight:var(--w-bold);font-variant-numeric:tabular-nums;text-align:right}
 
 .lhelp{display:grid;gap:6px;justify-items:center}
-.lhelp span{padding:var(--sp-2) 18px;border-radius:var(--r-pill);background:var(--well);font-size:var(--small);font-weight:var(--w-bold);color:var(--muted);transition:background var(--dur-500) var(--ease),color var(--dur-500),opacity var(--dur-500),transform var(--dur-500) var(--spring)}
+.lhelp span{padding:var(--sp-2) 18px;border-radius:var(--r-pill);background:var(--well);font-size:var(--small);font-weight:var(--w-bold);color:var(--muted);transition:background var(--dur-500) var(--ease),color var(--dur-500),opacity var(--dur-500),transform var(--dur-500) var(--m-settle)}
 .lhelp span.on{background:var(--ink);color:var(--on-tint);transform:scale(1.06)}
 .lhelp span.gone{opacity:.3;transform:scale(.94)}
 
@@ -164,7 +164,7 @@
 @keyframes advDraw{from{stroke-dashoffset:400}}
 .adv-sweep{transform-box:fill-box;transform-origin:left;animation:advSweep var(--dur-2600) var(--ease) var(--dur-600) both}
 @keyframes advSweep{from{transform:scaleX(0)}}
-.adv-grow{transform-box:fill-box;transform-origin:bottom;animation:advGrow var(--dur-900) var(--spring) both}
+.adv-grow{transform-box:fill-box;transform-origin:bottom;animation:advGrow var(--dur-900) var(--m-ease) both}
 @keyframes advGrow{from{transform:scaleY(0)}}
 .adv-spin{animation:advSpin var(--dur-6000) linear infinite}
 @keyframes advSpin{to{transform:rotate(-360deg)}}

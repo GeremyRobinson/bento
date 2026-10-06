@@ -1,4 +1,31 @@
 /* One motion language. Everything here is switched off under reduced motion (see the end of the file). */
+/* Bento Box motion tokens (Design, 2026-10-06). The master is the Motion section of the Bento Box design system.
+   Drop-in for web/src/styles/motion.css: it keeps today's names working as aliases, so adoption can go one piece at a time. */
+:root{
+  /* curves: travel, settle (pushed into place), toss (confetti only) */
+  --m-ease:cubic-bezier(.2,.8,.2,1);
+  --m-settle:cubic-bezier(.34,1.22,.5,1);
+  --m-toss:cubic-bezier(.2,.7,.4,1);
+  /* durations */
+  --m-tap:120ms;   /* press down */
+  --m-swap:250ms;  /* small state change, press release, top-bar text */
+  --m-close:360ms; /* overlay close, segmented thumb, list highlight */
+  --m-out:450ms;   /* leaving page or layer */
+  --m-in:500ms;    /* arriving page, layer or piece */
+  --m-step:40ms;   /* cascade gap, at most 4 steps */
+  --m-beat:750ms;  /* one picture beat (first beat 450ms) */
+  --m-calm:200ms;  /* every pattern under Less motion */
+  /* distances */
+  --m-lift:8px; --m-slide:24px; --m-deeper:.97;
+  /* press depths */
+  --m-press-btn:.96; --m-press-key:.92; --m-press-card:.98;
+
+  /* aliases for today's names (remove once nothing reads them) */
+  --m-page:var(--m-in); --m-fade:var(--m-in);
+  --glide:var(--m-settle);
+  --ease-toss:var(--m-toss);
+  --pill-press:var(--m-press-btn);
+}
 /* ---- motion ---- */
 @keyframes rise{from{opacity:0;transform:translateY(12px)}}
 @keyframes fadeIn{from{opacity:0}}
@@ -8,7 +35,7 @@
 @keyframes enter{from{opacity:0;transform:translateY(-8px)}}
 @keyframes glow{0%{background:color-mix(in srgb,var(--ok) 30%,transparent)}100%{background:transparent}}
 .rise{animation:rise var(--dur-500) var(--ease) both}
-.pop{display:inline-block;animation:pop var(--dur-450) var(--spring) both}
+.pop{display:inline-block;animation:pop var(--dur-450) var(--m-ease) both}
 .pop{vertical-align:-4px;color:var(--ok-ink)} .pop.big{vertical-align:-6px}
 .shake{animation:shake var(--dur-400) ease}
 .enter{animation:enter var(--dur-450) var(--ease) both}
@@ -20,8 +47,6 @@
    contents zoom take --m-page on the one calm curve. Moving is depth, like the contents zoom: going deeper (book →
    lesson → practice) zooms in a little, going back zooms out, and the next or previous lesson slides sideways, so you
    feel where you came from without reading a label. No blur on the way in: the contents' own blur is the only one. */
-/* Review's motion spec (from the contents view G loves): one curve; in 500ms, out 450ms, closes 360ms, pieces 40ms apart */
-:root{--m-page:.5s;--m-in:var(--m-page);--m-fade:var(--m-page);--m-out:.45s;--m-close:.36s;--m-step:40ms;--m-ease:cubic-bezier(.2,.8,.2,1)}
 ::view-transition-group(root){animation-duration:var(--m-page)}
 ::view-transition-old(root){animation:var(--m-out) var(--m-ease) both vtOut}
 ::view-transition-new(root){animation:var(--m-page) var(--m-ease) both vtIn}

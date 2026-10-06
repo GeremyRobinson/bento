@@ -1,6 +1,6 @@
 /* ---- floating (UI research's floating preview, G 2026-10-06): no bars or boxes. Every control is its own capsule
    floating on the page, white with a soft shadow (light) or one step lighter than the page (dark). ---- */
-:root{--float:var(--card);--float-shadow:0 1px 2px rgba(20,22,27,.05),0 8px 22px rgba(20,22,27,.07);--dim:rgba(20,22,27,.16);--halo:rgba(20,22,27,.2);--glide:cubic-bezier(.34,1.22,.5,1)}
+:root{--float:var(--card);--float-shadow:0 1px 2px rgba(20,22,27,.05),0 8px 22px rgba(20,22,27,.07);--dim:rgba(20,22,27,.16);--halo:rgba(20,22,27,.2)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--float-shadow:0 0 0 1px rgba(255,255,255,.05),0 10px 30px rgba(0,0,0,.35);--dim:rgba(0,0,0,.4);--halo:rgba(238,240,244,.22)}}
 :root[data-theme="dark"]{--float-shadow:0 0 0 1px rgba(255,255,255,.05),0 10px 30px rgba(0,0,0,.35);--dim:rgba(0,0,0,.4);--halo:rgba(238,240,244,.22)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--float:color-mix(in oklab,var(--card) 88%,white)}}
@@ -153,7 +153,7 @@ html[data-zoomed] body{overflow:hidden}
 .zyear>header{display:grid;justify-items:center;text-align:center;gap:6px}
 .zyear>header .ctl{margin-top:var(--sp-2)}
 .zch{display:grid;gap:var(--s);grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
-.zcard{display:grid;gap:6px;align-content:start;text-align:left;padding:var(--pad-md);border-radius:var(--r-tile);background:var(--surf-2,var(--card));box-shadow:var(--ring);animation:rise var(--dur-500) var(--ease) both;animation-delay:calc(var(--i) * var(--dur-45));transition:transform var(--dur-250) var(--spring),box-shadow var(--dur-200)}
+.zcard{display:grid;gap:6px;align-content:start;text-align:left;padding:var(--pad-md);border-radius:var(--r-tile);background:var(--surf-2,var(--card));box-shadow:var(--ring);animation:rise var(--dur-500) var(--ease) both;animation-delay:calc(var(--i) * var(--dur-45));transition:transform var(--dur-250) var(--m-settle),box-shadow var(--dur-200)}
 .zcard:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--rule),0 14px 30px -18px var(--ink-a30)}
 .zcard.on{box-shadow:0 0 0 2px var(--tint)}
 .zcard b{font-size:calc(var(--fs) * 1.1);font-weight:var(--w-bold);letter-spacing:-.01em}
@@ -166,7 +166,7 @@ html[data-zoomed] body{overflow:hidden}
 
 /* ---- home is the book's cover: the grade, what the year is about, then today and every chapter ---- */
 .cover{display:grid;justify-items:center;text-align:center;gap:6px;padding:calc(var(--u) * 2) var(--u) var(--s);animation:rise var(--dur-600) var(--ease) both}
-.cover .gpick{border-radius:var(--r-round);margin-bottom:6px;transition:transform var(--dur-200) var(--spring)}
+.cover .gpick{border-radius:var(--r-round);margin-bottom:6px;transition:transform var(--dur-200) var(--m-settle)}
 .cover .gpick:hover{transform:scale(1.06)}
 .cover h1{font:var(--w-bold) clamp(40px,7vw,64px)/1.04 var(--sans);letter-spacing:-.035em;color:var(--display,var(--text))}
 .cover .ysub{font:var(--w-bold) clamp(19px,2.6vw,24px)/1.25 var(--sans);letter-spacing:-.02em}
@@ -203,7 +203,7 @@ html[data-motion="reduce"] .battery>.fill{animation:none}
 .sline{display:grid;gap:var(--s);align-content:start}
 .sline>.k{padding-left:var(--sp-1);font-size:var(--small);font-weight:var(--w-mid);color:var(--muted)}
 .sbooks{display:grid;gap:var(--s);grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
-.book{display:flex;flex-direction:column;gap:6px;height:156px;text-align:left;padding:14px 18px 18px;border-radius:var(--r-tile);background:var(--surf-2,var(--card));box-shadow:var(--ring);transition:transform var(--dur-250) var(--spring),box-shadow var(--dur-200)}
+.book{display:flex;flex-direction:column;gap:6px;height:156px;text-align:left;padding:14px 18px 18px;border-radius:var(--r-tile);background:var(--surf-2,var(--card));box-shadow:var(--ring);transition:transform var(--dur-250) var(--m-settle),box-shadow var(--dur-200)}
 button.book:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--rule),0 14px 30px -18px var(--ink-a30)}
 .book.on{box-shadow:0 0 0 2px var(--tint)}
 .book b{font-weight:var(--w-bold);font-size:var(--small);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
