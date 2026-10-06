@@ -7,6 +7,7 @@ import { Tile, Toggle } from "../components/PageTile";
 import { Nav, NavMark } from "../components/Nav";
 import { Confirm } from "../components/Confirm";
 import { PillRing } from "../components/primitives/PillRing";
+import { Keypad } from "../components/practice/Keypad";
 
 /** Where a piece is: being built, waiting on Review, or live. G sees work here before Review signs it off. */
 type Status = "building" | "review" | "next" | "live";
@@ -102,8 +103,8 @@ export function Pieces() {
         <Piece name="All grades in Contents" status="review" chunk="Chunk 8" nests="Contents, Slider, Shelf">
           <small className="muted">All grades is now the outer level of Contents and the one way to change grade. My Bento's Switch grade opens it too.</small>
         </Piece>
-        <Piece name="Keypad master" status="building" chunk="After chunk 8" nests="Practice">
-          <small className="muted">Practice's keypad moves onto one Keypad master, with the left-handed layout inside it.</small>
+        <Piece name="Keypad master" status="review" chunk="Keypad master" nests="Practice, every grade band">
+          <div className="sbkeys"><Keypad band="middle" onKey={() => {}} solved={false} go={{ label: "Check", run: () => {} }} /></div>
         </Piece>
         <Piece name="Design's motion system" status="next" chunk="7 small chunks" nests="everything that moves">
           <small className="muted">Tokens, page zoom direction, overlays without blur, slider thumb, one press rule, answer motion, Less motion as a fade.</small>

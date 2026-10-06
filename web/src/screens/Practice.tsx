@@ -10,8 +10,8 @@ import { requireLesson } from "../curriculum/registry";
 import type { Explanation } from "../explanations/schema";
 import { FeedbackBox } from "../components/practice/FeedbackBox";
 import { Confirm } from "../components/Confirm";
+import { Keypad } from "../components/practice/Keypad";
 import { FitScreen } from "../components/screen/Screen";
-import type { Band } from "../curriculum/grades";
 import { ALL_LESSONS, SHOW_ME } from "../app/copy";
 import {
   bandOfSession, check, choose, currentItem, currentStep, focusSlot, hint, isLastProblem, lessonOfItem, nextProblem,
@@ -202,7 +202,7 @@ export function Practice() {
           <small>{Math.min(here + 1, steps.length)} of {steps.length}</small><span className="chev" aria-hidden>⌃</span>
         </button>
       </div>
-      <Pad band={band} tap={step && tapOnly ? (
+      <Keypad band={band} tap={step && tapOnly ? (
         <div className="tappad">
           <div className="tapnote muted">{s.pick ? "You plan this one: tap the step that comes next." : "Tap your answer."}</div>
           <div className="choices">{s.pick
@@ -240,30 +240,5 @@ export function Practice() {
           onCancel={() => setAsking(false)} onConfirm={() => { setAsking(false); quit(); }} />
       )}
     </FitScreen>
-  );
-}
-
-/**
- * The keypad docked under the hero (practice-spec §1): on a wide screen two rows with Check tall on the right, in
- * portrait and on a phone four columns (1 2 3 ⌫ / 4 5 6 − / 7 8 9 . / 0 Check). Once the problem is solved the number
- * keys fade and go inert, and Check becomes the one next move.
- */
-function Pad({ band, onKey, go, tap, solved }: { band: Band; onKey: (k: string) => void; go?: { label: string; run: () => void }; tap?: React.ReactNode; solved: boolean }) {
-  const key = (k: string, label: string = k, cls = "", aria?: string) =>
-    <button key={k} type="button" data-key={k} className={`k-${cls || k}`} aria-label={aria} disabled={solved} onClick={() => onKey(k)}>{label}</button>;
-  return (
-    <div className={`ppad${tap ? " ptap" : ""}${solved ? " done" : ""}`}>
-      {tap ?? (
-        <div className={`tray${band === "little" ? " nosign" : ""}`}>
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(d => key(String(d), String(d), `d${d}`))}
-          {band !== "little" && key(".", ".", "dot", "Decimal point")}
-          {band !== "little" && key("−", "−", "neg", "Negative")}
-          {key("back", "⌫", "back", "Erase")}
-          {key("next", "⇥", "next", "Next box")}
-          {go && <Pill go className="k-go" onClick={go.run}>{go.label}</Pill>}
-        </div>
-      )}
-      {tap && go && <Pill go className="k-go" onClick={go.run}>{go.label}</Pill>}
-    </div>
   );
 }
