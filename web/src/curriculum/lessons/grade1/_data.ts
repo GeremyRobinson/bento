@@ -54,7 +54,7 @@ export function moreStep(th: Theme, counts: number[], x: number, y: number): Ans
     prompt: s => [num(a), op("−"), num(b), op("="), s], ans: a - b,
     wrong: slips(a - b, [[a + b, "Added instead", "How many more means the difference. Take away."]]),
     hint: `Line up the rows. How many extra in the ${th.names[x]} row?`,
-    explain: `${a} − ${b} = ${a - b}.`,
+    explain: `Lined up, the ${th.names[x]} row goes ${a - b} past the ${th.names[y]} row: ${a} − ${b} = ${a - b}.`,
   });
 }
 
@@ -66,6 +66,6 @@ export function bothStep(th: Theme, counts: number[], x: number, y: number): Ans
     prompt: s => [num(a), op("+"), num(b), op("="), s], ans: a + b,
     wrong: slips(a + b, [[Math.abs(a - b), "Subtracted instead", "Together means add."]]),
     hint: `Add the ${th.names[x]} row and the ${th.names[y]} row.`,
-    explain: `${a} + ${b} = ${a + b}.`,
+    explain: `Both rows together: ${a} + ${b} = ${a + b}.`,
   });
 }

@@ -19,5 +19,6 @@ export const deviations: Record<string, Partial<Record<string, string>>> = {
     steps: "a first step \"Split each row\" asks \"8 is 5 and how many more?\", so the learner makes the cut (Curriculum fixes-02, K-3 g3-split rewrite, 2026-10-06); the recorded steps follow it unchanged in answer",
     prompt: "the multiply steps ask about the picture: \"How many in the 6 rows of 5?\"; the sum step asks to put the arrays back together (same rewrite)",
     checks: "\"Add the parts\" names keeping only one part and a part added wrong, instead of the generic nudge (same rewrite)",
+    explain: "each multiply step says which small array it is, and the sum says the two make the whole array, not just the sum (Review v43 item 10: step text says why, 2026-10-06)",
     pre: "builds up from g3-facts and now comes after the facts and division facts: every part of the split is a times fact (Curriculum fixes-02, K-3 Order 1, 2026-10-06)" },
 };

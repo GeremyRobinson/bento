@@ -81,7 +81,7 @@ export function solveStep(o: Op, a: number, b: number, unit: string): AnswerStep
       [a, "Wrote the starting amount", o === "÷" ? `${withCommas(a)} ${unit} is the whole amount before it is shared. Share it into ${b} equal parts.` : o === "×" ? `${a} is how many groups there are. Each group is ${b} ${unit}, so multiply.` : `${withCommas(a)} ${unit} is where the story starts. ${OP_NAME[o]} ${withCommas(b)} to finish.`],
     ]),
     hint: `${OP_NAME[o]}: ${withCommas(a)} ${o} ${withCommas(b)}.`,
-    explain: `${withCommas(a)} ${o} ${withCommas(b)} = ${withCommas(ans)} ${unit}.`,
+    explain: `${o === "+" ? "Put the amounts together" : o === "−" ? "Take the amount away" : o === "×" ? `${a} equal groups of ${withCommas(b)} ${unit}` : `${withCommas(a)} ${unit} shared into ${b} equal parts`}: ${withCommas(a)} ${o} ${withCommas(b)} = ${withCommas(ans)} ${unit}.`,
   });
 }
 

@@ -96,7 +96,7 @@ function answers(p: BarGraphProblem): AnswerModel {
           ? [[a + b, "Added the bars", `"How many more" means compare. Take ${b} away from ${a}.`], [a, "Wrote the bigger bar", `${a} is all of the ${X}. How many more is that than ${b}?`]]
           : [[Math.abs(a - b), "Took away", `"In all" means put them together. Add ${a} and ${b}.`], [Math.max(a, b), "Wrote one bar", "Count both bars together."]]),
         hint: more ? `Count up from ${b} to ${a}.` : `Count on ${b} from ${a}.`,
-        explain: more ? `${a} − ${b} = ${ans}.` : `${a} + ${b} = ${ans}.`,
+        explain: more ? `The ${X} bar sticks up ${ans} above the ${Y} bar: ${a} − ${b} = ${ans}.` : `Both bars together: ${a} + ${b} = ${ans}.`,
       }),
     ],
     finalParts: [-1],
