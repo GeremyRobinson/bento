@@ -212,9 +212,9 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   // item 5); on a phone it is a circle holding your grade's number, with a spacer on the left to keep the pill centred
   const mine = progress.chosen && progress.grade != null ? gradeOf(progress.grade) : null;
   if (welcome) return (
-    <div className="itop guest"><span className="ispace" /><header className="island guest">
+    <div className="itop guest"><header className="island guest">
       <BentoMark className="iword" />
-    </header>
+    </header><span />
       <div className="icorner right">
         {mine && (
           <button className="imine" onClick={() => { openSheet(false); go({ name: "home" }, "fwd"); }}>
