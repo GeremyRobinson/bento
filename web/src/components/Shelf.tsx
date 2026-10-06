@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { useApp } from "../app/AppState";
 import { doneCount, entriesInGrade } from "../app/curriculum";
-import { GRADES, LINES, tintStyle } from "../curriculum/grades";
+import { GRADES, inkOf, LINES, tintStyle } from "../curriculum/grades";
 
 /** Progress as a fill: the box fills from the bottom in its colour, like a battery charging. frac is 0–1. */
 export const Fill = ({ frac }: { frac: number }) => <span className="fill" aria-hidden style={{ "--p": Math.max(0, Math.min(1, frac)) } as CSSProperties} />;
@@ -9,7 +9,8 @@ export const Fill = ({ frac }: { frac: number }) => <span className="fill" aria-
 /** "3rd", "12th": a grade's number with its ending, the way every grade is named on a card. */
 export function GradeNum({ grade }: { grade: number }) {
   const d = GRADES[grade]!;
-  return <span className="gnum" aria-hidden>{d.short}{grade > 0 && <small>{["", "st", "nd", "rd"][grade] ?? "th"}</small>}</span>;
+  // always the grade's own color, whatever lesson shade or grade it sits in (Review v35 item 6)
+  return <span className="gnum" aria-hidden style={{ "--gn": inkOf(d.color), "--gn-d": d.color } as CSSProperties}>{d.short}{grade > 0 && <small>{["", "st", "nd", "rd"][grade] ?? "th"}</small>}</span>;
 }
 
 /**

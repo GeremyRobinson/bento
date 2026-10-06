@@ -10,9 +10,10 @@ const BEAT_MS = 750;
  * and again each time `replay` changes. Without motion (or without IntersectionObserver) it shows the finished picture.
  * With `autoplay` off it rests on the finished picture and plays only when `replay` changes (a tap).
  * With `hold` set it opens on the finished picture and starts playing that many ms after it comes into view.
+ * With `end` set it stops at that beat instead of the last one.
  */
-export function PlayingDiagram({ ex, replay = 0, autoplay = true, hold }: { ex: Explanation & { diagram: NonNullable<Explanation["diagram"]> }; replay?: number; autoplay?: boolean; hold?: number }) {
-  const last = ex.timeline.length - 1;
+export function PlayingDiagram({ ex, replay = 0, autoplay = true, hold, end }: { ex: Explanation & { diagram: NonNullable<Explanation["diagram"]> }; replay?: number; autoplay?: boolean; hold?: number; end?: number }) {
+  const last = Math.min(end ?? Infinity, ex.timeline.length - 1);
   const still = reduceMotion() || typeof IntersectionObserver === "undefined";
   const [at, setAt] = useState(still || !autoplay || hold != null ? last : 0);
   const [playing, setPlaying] = useState(false);

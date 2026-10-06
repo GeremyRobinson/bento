@@ -22,3 +22,17 @@ export const handOff = (lessonId: string, problem: unknown) => { handed.set(less
 export const takeHandOff = (lessonId: string): unknown | undefined => handed.get(lessonId);
 /** once the lesson is on screen the hand-off is spent; a later visit gets a fresh problem */
 export const spendHandOff = (lessonId: string) => { handed.delete(lessonId); };
+
+/**
+ * Where a preview's picture should stop: the beat that shows the problem as its header writes it. Some pictures go on
+ * past it (3rd grade facts turn the array around, b × a); a preview stops at a × b so its picture and header agree.
+ */
+export function statementBeat(ex: Explanation): number {
+  const last = ex.timeline.length - 1, want = JSON.stringify(ex.statement);
+  for (const st of ex.steps) {
+    const m = st.math;
+    if (!m || m.length <= ex.statement.length) continue;
+    if (JSON.stringify(m.slice(0, ex.statement.length)) === want && JSON.stringify(m[ex.statement.length]).includes("=")) return Math.min(last, Math.max(0, st.state));
+  }
+  return last;
+}

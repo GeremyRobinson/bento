@@ -75,8 +75,8 @@ export const HERO_POOLS = [
   ["g2-hundreds", "g1-tensones", "g2-regroup", "g6-lcm", "g3-area", "g7-prob", "g1-time"],
   ["g9-solvefactor", "g11-log", "g12-tangent", "g8-roots", "g10-pyramid", "g9-factor", "g11-complex"],
 ];
-/** The big tile starts first, the others a beat later each; a change waits until no other tile changed for this long. */
-const HOLD = 1200;
+/** Each tile shows its finished picture this long before it plays (G 2026-10-03: open on the finished picture); the big tile starts first, the others a beat later each; a change waits until no other tile changed for GAP. */
+const HOLD = 3000;
 const STAGGER = 600, GAP = 1200;
 
 type Shot = { id: string; grade: number; ex: Pictured };
@@ -104,7 +104,7 @@ function HeroTile({ shot, n, big, start, next }: { shot: Shot; n: number; big: b
   const g = gradeOf(shot.grade), entry = entryById(shot.id);
   return (
     // the card stays put; only what's inside it fades over to the next picture
-    <figure className={`lhpic${big ? "" : " sm"}`} style={tintStyle(g) as CSSProperties} onClick={next}>
+    <figure className={`lhpic gpal${big ? "" : " sm"}`} data-grade={shot.grade} style={tintStyle(g) as CSSProperties} onClick={next}>
       <figcaption key={`c${n}`}><GradeNum grade={shot.grade} /><span><small>See it first</small><b>{entry?.title ?? shot.id}</b></span></figcaption>
       <div className="lhd" key={`d${n}`}><PlayingDiagram ex={shot.ex} hold={hold} /></div>
     </figure>

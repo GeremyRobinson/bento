@@ -12,7 +12,7 @@ import { Fill, GradeNum } from "../components/Shelf";
 import { SplitScreen } from "../components/screen/Screen";
 import { PlayingDiagram } from "../components/diagrams/PlayingDiagram";
 import { MathLine, Rich } from "../components/primitives/MathLine";
-import { handOff, previewOf } from "../app/preview";
+import { handOff, previewOf, statementBeat } from "../app/preview";
 import { GradeQuestion } from "./GradeQuestion";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 
@@ -203,7 +203,7 @@ function LessonDetail({ g, entry }: { g: number; entry: Entry }) {
       {fits && (
         <figure className="card spreview" style={{ height: Math.min(room, 460) }}>
           <figcaption>Preview · your first problem, <MathLine math={pv!.ex.statement} /></figcaption>
-          <div className="sppic"><PlayingDiagram ex={{ ...pic!.ex, diagram: pic!.ex.diagram! }} hold={600} /></div>
+          <div className="sppic"><PlayingDiagram ex={{ ...pic!.ex, diagram: pic!.ex.diagram! }} hold={600} end={statementBeat(pic!.ex)} /></div>
         </figure>
       )}
     </div>

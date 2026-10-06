@@ -2,7 +2,7 @@
 // rim and the same original art on every coin (a star for heads, two leaves for tails), so only size, color and edge
 // tell coins apart. Nothing on a coin names it or prints its value.
 import type { SceneDiagram } from "../scene/schema";
-import { frame, t, M, L, Z, type Draft, type Pt, type Seg } from "../geo/kit";
+import { arc, frame, t, M, L, Z, type Draft, type Pt, type Seg } from "../geo/kit";
 
 export const COIN_INFO = [
   { name: "penny", value: 1, mm: 19.05, copper: true, ridged: false },
@@ -40,6 +40,9 @@ function leaf(c: Pt, a: number, len: number): Seg[] {
 export function coinShape(coin: number, c: Pt, side: number, o: Timing = {}): Draft[] {
   const info = COIN_INFO[coin]!, r = (info.mm * PX) / 2, metal = info.copper ? "cu" : "ag", items: Draft[] = [];
   items.push({ type: "circle", cx: c[0], cy: c[1], r, cls: `coin ${metal}`, ...o } as Draft);
+  // the metal catches the light: a bright sheen up on the left, a soft shade down on the right
+  items.push({ type: "path", segs: arc(c, r * 0.86, 105, 175), cls: `coin-shine ${metal}`, ...o } as Draft);
+  items.push({ type: "path", segs: arc(c, r * 0.86, 285, 355), cls: `coin-shade ${metal}`, ...o } as Draft);
   if (info.ridged) {
     const segs: Seg[] = [];
     for (let i = 0; i < 60; i++) {

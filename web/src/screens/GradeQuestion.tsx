@@ -1,6 +1,6 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import { useApp } from "../app/AppState";
-import { previewOf } from "../app/preview";
+import { previewOf, statementBeat } from "../app/preview";
 import { bandOf, GRADES, gradeOf, tintStyle } from "../curriculum/grades";
 import { lessonsInGrade } from "../curriculum/registry";
 import { placeKey } from "../engine/session/practice";
@@ -53,7 +53,7 @@ export function GradeQuestion() {
               <h2>{d.name}</h2>
               <p className="muted">This year: {d.subtitle.toLowerCase()}. {lessonsInGrade(d.grade).length} lessons.</p>
             </div>
-            {shown?.ex.diagram && <div className="gypic"><PlayingDiagram key={picked} ex={{ ...shown.ex, diagram: shown.ex.diagram }} hold={600} /></div>}
+            {shown?.ex.diagram && <div className="gypic"><PlayingDiagram key={picked} ex={{ ...shown.ex, diagram: shown.ex.diagram }} hold={600} end={statementBeat(shown.ex)} /></div>}
             <div className="gygo"><Pill go className="dark" onClick={() => chooseGrade(d.grade)}>Start {d.name.split(" · ")[0]} ›</Pill></div>
           </div>
         )}

@@ -485,11 +485,14 @@
 .viz-svg .glyph{fill:var(--tint)} .viz-svg .glyph.acc{fill:var(--acc)} .viz-svg .glyph-line{fill:none;stroke:var(--tint);stroke-width:var(--d-edge);stroke-linecap:round}
 .viz-svg .keypill{fill:none;stroke:var(--rule);stroke-width:var(--d-hair)}
 .viz-svg .spacer{stroke:none}
-/* coins (g2-coins): the only real-world colors in the pictures, from the Design tokens coin-copper / coin-silver and their rims */
-/* silver coins take the grade's first color over a light silver, so they read as silver without going grey (G 2026-10-05) */
-.viz-svg .coin{stroke-width:var(--d-edge)} .viz-svg .coin.cu{fill:var(--d-copper);stroke:var(--d-copper-rim)} .viz-svg .coin.ag{fill:color-mix(in srgb,var(--c0) var(--d-f22),var(--d-silver));stroke:var(--c0)}
-.viz-svg .coin-ridge{fill:none;stroke-width:var(--d-ridge)} .viz-svg .coin-ridge.cu{stroke:var(--d-copper-rim)} .viz-svg .coin-ridge.ag{stroke:var(--c0)}
-.viz-svg .coin-art{fill:none;stroke-width:var(--d-line);stroke-linejoin:round} .viz-svg .coin-art.cu{stroke:var(--d-copper-rim)} .viz-svg .coin-art.ag{stroke:var(--c0)}
+/* coins (g2-coins): real coin colors from the diagram master, the only real-world colors in the pictures besides water.
+   Copper for the penny, metallic silver for the rest: a cool light body, a steel rim, a bright sheen and a soft shade (G 2026-10-06) */
+.viz-svg .coin{stroke-width:var(--d-edge)} .viz-svg .coin.cu{fill:var(--d-copper);stroke:var(--d-copper-rim)} .viz-svg .coin.ag{fill:var(--d-silver);stroke:var(--d-silver-rim)}
+.viz-svg .coin-ridge{fill:none;stroke-width:var(--d-ridge)} .viz-svg .coin-ridge.cu{stroke:var(--d-copper-rim)} .viz-svg .coin-ridge.ag{stroke:var(--d-silver-rim)}
+.viz-svg .coin-art{fill:none;stroke-width:var(--d-line);stroke-linejoin:round} .viz-svg .coin-art.cu{stroke:var(--d-copper-rim)} .viz-svg .coin-art.ag{stroke:var(--d-silver-art)}
+.viz-svg .coin-shine,.viz-svg .coin-shade{fill:none;stroke-width:var(--d-bold);stroke-linecap:round}
+.viz-svg .coin-shine.cu{stroke:var(--d-copper-shine)} .viz-svg .coin-shade.cu{stroke:var(--d-copper-shade)}
+.viz-svg .coin-shine.ag{stroke:var(--d-silver-shine)} .viz-svg .coin-shade.ag{stroke:var(--d-silver-shade)}
 .viz-svg .xmark{fill:none;stroke:var(--tint);stroke-width:var(--d-bold);stroke-linecap:round}
 .viz-svg .dialface{fill:color-mix(in srgb,var(--c0) var(--d-f12),var(--card));stroke:var(--c0);stroke-width:var(--d-heavy)} .viz-svg .hub{fill:var(--text)}
 .viz-svg .needle{fill:none;stroke:var(--c1);stroke-width:var(--d-bold);stroke-linecap:round}

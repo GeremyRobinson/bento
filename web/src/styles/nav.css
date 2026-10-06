@@ -124,7 +124,9 @@ html[data-motion="reduce"] .wrap>:not(.itop):not(.zoom){transition:none}
 html[data-motion="reduce"] .battery>.fill{animation:none}
 
 /* ---- a grade is its number, in its colour ---- */
-.gnum{font:650 44px/1 var(--sans);letter-spacing:-.04em;color:var(--ink);font-variant-numeric:tabular-nums}
+.gnum{font:650 44px/1 var(--sans);letter-spacing:-.04em;color:var(--gn,var(--ink));font-variant-numeric:tabular-nums}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .gnum{color:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,white)}}
+:root[data-theme="dark"] .gnum{color:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,white)}
 .gnum small{font-size:17px;font-weight:650;letter-spacing:0;margin-left:2px;vertical-align:top;position:relative;top:4px}
 
 /* ---- the shelf: every grade by line, one card size ---- */
@@ -196,7 +198,7 @@ button.book:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--rule),0 
 .units .lesson{height:56px;border-radius:calc(var(--r-panel) - var(--nest));margin:0 calc(var(--nest) - var(--u) * 1.25);width:calc(100% + (var(--u) * 1.25 - var(--nest)) * 2);padding:0 calc(var(--u) * 1.25 - var(--nest) + 14px)}
 /* the Me button stands as far from the place pill as the Bento word does */
 .island .ime{margin-left:14px}
-.mhero.battery>.bbig .gnum{font-size:64px;color:var(--display)}.mhero.battery>.bbig .gnum small{font-size:22px;top:6px}
+.mhero.battery>.bbig .gnum{font-size:64px}.mhero.battery>.bbig .gnum small{font-size:22px;top:6px}
 /* chapter cards: one fixed picture slot per breakpoint, so titles and Unit test pills in a row line up (handoff 3) */
 .units>.panel>.cpic{--cpic:200px;height:var(--cpic)}
 .units>.panel>.cpic .viz-svg,.units>.panel>.cpic .am{height:var(--cpic);max-height:var(--cpic);width:100%}

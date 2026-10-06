@@ -16,6 +16,7 @@
   /* dashes */
   --d-dash:6 6; --d-dash-short:4 4; --d-dash-wire:5 5; --d-dash-miss:6 4;
   /* the only real-world colors: coins, water, marbles, and the dark side of a solid */
-  --d-copper:#c77b4a; --d-copper-rim:#8f5230; --d-silver:#e3e7ee; --d-water:#38a3e8; --d-water-line:#2b8fd6;
+  --d-copper:#c77b4a; --d-copper-rim:#8f5230; --d-copper-shine:#efb58e; --d-copper-shade:#a5603a;
+  --d-silver:#dde2e9; --d-silver-rim:#7f8995; --d-silver-art:#8e98a4; --d-silver-shine:#ffffff; --d-silver-shade:#b3bbc6; --d-water:#38a3e8; --d-water-line:#2b8fd6;
   --d-marble-red:#ef4444; --d-marble-blue:#3b82f6; --d-marble-green:#22c55e; --d-shadow:#000;
 }

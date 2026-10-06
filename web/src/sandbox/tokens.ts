@@ -37,6 +37,8 @@ export const SIZE_TOKENS: Token[] = [
   { v: "--fs", label: "Body text", kind: "px", min: 14, max: 24 },
   { v: "--math", label: "Math size", kind: "px", min: 28, max: 72 },
   { v: "--key", label: "Keypad key", kind: "px", min: 44, max: 88 },
+  { v: "--shade-deep", label: "Lesson shade, deep", kind: "pct", min: 50, max: 100 },
+  { v: "--shade-light", label: "Lesson shade, light", kind: "pct", min: 40, max: 100 },
 ];
 
 /** the Diagram master (styles/diagram-master.css): every picture in every grade draws with these */
@@ -46,7 +48,7 @@ export const DIAGRAM_TOKENS: Token[] = [
     .map(([k, label]) => ({ v: `--d-${k}`, label, kind: "num" as const, min: 0.5, max: 16, step: 0.25 })),
   ...([["text", "Label"], ["text-sm", "Small label"], ["text-xs", "Tiny label"], ["text-lg", "Big label"], ["text-xl", "Huge label"]] as const)
     .map(([k, label]) => ({ v: `--d-${k}`, label, kind: "px" as const, min: 9, max: 40 })),
-  ...([["copper", "Copper"], ["silver", "Silver"], ["water", "Water"], ["water-line", "Water line"]] as const).map(([k, label]) => ({ v: `--d-${k}`, label, kind: "color" as const })),
+  ...([["copper", "Copper"], ["copper-rim", "Copper rim"], ["copper-shine", "Copper shine"], ["copper-shade", "Copper shade"], ["silver", "Silver"], ["silver-rim", "Silver rim"], ["silver-art", "Silver art"], ["silver-shine", "Silver shine"], ["silver-shade", "Silver shade"], ["water", "Water"], ["water-line", "Water line"]] as const).map(([k, label]) => ({ v: `--d-${k}`, label, kind: "color" as const })),
 ];
 
 /** the Pill master: every button in the app */
