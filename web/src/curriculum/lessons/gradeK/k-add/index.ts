@@ -6,6 +6,7 @@ import { buildNumberLine, type Hop } from "../../../../explanations/diagrams/num
 import { dotGroups } from "../../../../explanations/diagrams/number-line/counters";
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
 import { count, isAre } from "../../../text";
+import { slips } from "../kit";
 
 /** a dots and b more; the sum stays within 10 */
 export interface CountOnProblem { a: number; b: number }
@@ -23,7 +24,12 @@ function answers({ a, b }: CountOnProblem): AnswerModel {
       oneBox({
         id: "first", label: "Count the first group", question: "How many dots are in the first group?",
         prompt: s => [s], ans: a,
-        wrong: [[b, "Counted the wrong group", "That's the second group. Count the dots **before** the + sign."]],
+        wrong: slips(a, [
+          [b, "Counted the wrong group", "That's the second group. Count the dots **before** the + sign."],
+          [a + b, "Counted both groups", `That's all the dots. Count only the first group, the dots **before** the + sign.`],
+          [a + 1, "Counted a dot twice", `One too many. Touch each dot in the first group once.`],
+          [a - 1, "Skipped a dot", `One short. Touch every dot in the first group, even the last one.`],
+        ]),
         hint: "Touch each dot in the first group and count out loud.",
         explain: `There ${isAre(a)} ${count(a, "dot")} in the first group.`,
         work: [text("First group: "), { t: "answer", id: "x", v: a }],
@@ -53,7 +59,7 @@ function explain(p: CountOnProblem, model: AnswerModel): Explanation {
   ];
   return {
     heading: "Count on",
-    idea: ["Count the first group. Then keep counting, one number for each dot in the second group."],
+    idea: ["Adding puts two groups together. You don't have to start over: count the first group, then keep counting, one number for each dot in the second group."],
     statement: [num(a), op("+"), num(b)],
     diagram: buildNumberLine({ min: 0, max: 10, hops, alt: `Number line from 0 to 10: count ${a}, then hop on ${b} more to ${sum}.` }),
     caption: `Start at ${a} and count on ${b}: ${sum}.`,
@@ -71,7 +77,8 @@ export const lesson: LessonDefinition<CountOnProblem> = {
   unit: "Adding and subtracting",
   title: "Adding within 10",
   reference: createCountOn(3, 4), // the current app's picture: start at 3, count on 4
-  generate: rng => { const a = rng.int(1, 5); return createCountOn(a, rng.int(1, Math.min(5, 10 - a))); },
+  // the first three problems are small: a total of 5 or less
+  generate: (rng, index) => { const a = index < 3 ? rng.int(1, 3) : rng.int(1, 5); return createCountOn(a, rng.int(1, index < 3 ? 2 : Math.min(5, 10 - a))); },
   restore: raw => restoreVia(raw, ["a", "b"] as const, v => createCountOn(v.a, v.b)),
   display: p => [num(p.a), op("+"), num(p.b)],
   picture: p => dotGroups([p.a, p.b], `${count(p.a, "dot")} plus ${count(p.b, "dot")}`),

@@ -2,6 +2,7 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildMedianBars } from "../../../../explanations/diagrams/bars/build";
 import { asRecord, expected, listOf, mt, ns } from "../../_geometry/kit";
+import { withEasyStart } from "../../easy-start";
 
 /** An odd-length list of whole numbers. */
 export interface MedianProblem {
@@ -26,8 +27,8 @@ export function medianAnswers({ v }: MedianProblem): AnswerModel {
   const s2 = sorted(v), mid = (v.length + 1) / 2;
   return {
     steps: [
-      ns({ id: "count", label: "Count them", question: "How many numbers are there?", prompt: s => [s], ans: v.length, hint: "Count the list." }),
-      ns({ id: "spot", label: "Middle spot", prompt: s => mt`(${v.length} + 1) ÷ 2 = ${s}`, ans: mid, hint: "The middle position." }),
+      ns({ id: "count", label: "Count them", question: "How many numbers are there?", prompt: s => [s], ans: v.length, hint: "Count every number in the list, repeats too.", wrong: [[new Set(v).size === v.length ? v.length - 1 : new Set(v).size, "Missed one", "Count every number, including any that repeat."]] }),
+      ns({ id: "spot", label: "Middle spot", prompt: s => mt`(${v.length} + 1) ÷ 2 = ${s}`, ans: mid, hint: "The middle spot has as many numbers before it as after it.", wrong: [[v.length / 2, "Forgot the + 1", `Add 1 before halving: (${v.length} + 1) ÷ 2.`]] }),
       ns({ id: "median", label: "Median", question: `Put them in order: ${s2.join(", ")}. What's in spot ${mid}?`, prompt: s => mt`median = ${s}`, ans: s2[mid - 1]!,
         hint: "Count to the middle spot of the sorted list.",
         wrong: v[mid - 1] !== s2[mid - 1] ? [[v[mid - 1]!, "Didn't sort first", "Put the numbers in order from least to greatest first."]] : [] }),
@@ -59,7 +60,7 @@ export function explainMedian({ v }: MedianProblem, answers: AnswerModel): Expla
   };
 }
 
-export const lesson: LessonDefinition<MedianProblem> = {
+export const lesson: LessonDefinition<MedianProblem> = withEasyStart({
   id: "g9-median",
   grade: 9,
   unit: "Data",
@@ -71,4 +72,4 @@ export const lesson: LessonDefinition<MedianProblem> = {
   displayNote: () => "Find the median.",
   answers: medianAnswers,
   explain: explainMedian,
-};
+});

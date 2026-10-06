@@ -19,6 +19,7 @@ export function simplifyRootPicture(o: { k: number; m: number; n: number; square
       { text: `${n} = ${square} × ${m}`, from: 1, until: 1 },
       { text: `√${square} = ${k} tiles along a side`, from: 2, until: 2 },
       { text: `√${n} = ${k}√${m}`, from: 3, cls: "lbl big acc" },
+      { text: `check: (${k}√${m})² = ${square} × ${m} = ${n}`, from: 4, cls: "lbl pw" },
     ],
     alt: `A square of area ${n} cut into ${k} by ${k} tiles of area ${m}. Each tile's side is √${m}, so the square's side is ${k}√${m}.`,
   });
@@ -35,6 +36,8 @@ export function simplifyRootPicture(o: { k: number; m: number; n: number; square
   );
   // beat 2: one row of tiles lights up, its k sides along the top
   items.push({ type: "rect", x: r1(x0 - 3), y: r1(y0 - 3), w: r1(g.width + 6), h: r1(g.ys[1]! - y0 + 6), rx: 10, cls: "hlline", from: 2, until: 2, enter: "fade", delay: 0.2 });
+  // beat 4: the check squares the side back into the whole area
+  items.push({ type: "rect", x: r1(x0 - 3), y: r1(y0 - 3), w: r1(g.width + 6), h: r1(g.height + 6), rx: 10, cls: "hlline", from: 4, enter: "fade", delay: 0.2 });
   // beat 3: the side joins into k√m, a bracket down the right-hand side
   const xb = x1 + 8;
   items.push(

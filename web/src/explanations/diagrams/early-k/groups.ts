@@ -27,7 +27,9 @@ export function changeDots(s: ChangeSpec): SceneDiagram {
   const b = s.beats, items: Draft[] = [];
   const x = (i: number) => i * GAP;
   for (let i = 0; i < start; i++) {
-    items.push({ type: "circle", cx: x(i), cy: 0, r: R, cls: "dotp", from: 0, enter: "pop", delay: b ? 0.12 * i : 0 } as Draft);
+    // the counters are always the picture's first color (amber in kindergarten), never the page tint: a tint can be green,
+    // and green means right, so a crossed-out green counter would read as right and wrong at once (v43)
+    items.push({ type: "circle", cx: x(i), cy: 0, r: R, cls: "dotp p0", from: 0, enter: "pop", delay: b ? 0.12 * i : 0 } as Draft);
     if (b) items.push(t(x(i), 34, String(i + 1), "sm", { from: b.start, until: b.change, enter: "rise", delay: 0.12 * i + 0.1 }));
   }
   if (b) {

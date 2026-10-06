@@ -61,7 +61,7 @@ function renameStep(id: string, n: number, d: number, L: number): AnswerStep {
       [n, "Changed only the bottom", `The bottom went × ${k}, so the top goes × ${k} too.`],
       [n + L - d, "Added instead of multiplied", `${d} × ${k} = ${L}, so multiply the top by ${k} too.`],
     ]),
-    hint: `${d} × ${k} = ${L}. Do the same to the top: ${n} × ${k}.`,
+    hint: `What times ${d} makes ${L}? Multiply the top by the same number.`,
     explain: `Each ${pieceName(d, false)} is ${k} ${pieceName(L)}, so ${n}/${d} = ${N}/${L}.`,
   });
 }
@@ -75,7 +75,7 @@ function answers(p: FracCompareProblem): AnswerModel {
       id: "common", label: "A bottom for both", question: `Both need the same size pieces. Count by ${b}s and by ${d}s. What's the first number both reach?`,
       prompt: s => [text("same bottom"), op("="), s], ans: L,
       wrong: slips(L, [[b + d, "Added the bottoms", `Count by ${b}s and by ${d}s instead. Adding them doesn't give a number both go into.`]]),
-      hint: `${b}s: ${b}, ${2 * b}, ${3 * b}, … and ${d}s: ${d}, ${2 * d}, … Find the first match.`,
+      hint: `Count by ${Math.max(b, d)}s, and check each number: does ${Math.min(b, d)} go into it?`,
       explain: `${b} × ${d / gcd(b, d)} = ${L} and ${d} × ${b / gcd(b, d)} = ${L}, so both can be cut into ${pieceName(L)}.`,
     }));
   }

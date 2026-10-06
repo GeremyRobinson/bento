@@ -164,8 +164,13 @@ describe.each([
     // the −1 stand-in: only where (a + b) ÷ b isn't whole; it now gets the ordinary hint
     k === 0 && p.t === 1 && !Number.isInteger((p.a + p.b) / p.b) && c.v.x === -1
       ? { ...c, kind: "New exponent", msg: "Not quite. Dividing powers: subtract the exponents.", generic: true } : c],
-  ["g11-ratexp", (p: { n: number }, _k: number, c: Check) =>
-    c.kind === "Divided by the bottom" ? { ...c, msg: `A power of 1/${p.n} is a root, not dividing by ${p.n}.` } : c],
+  ["g11-ratexp", (p: { n: number; r: number; m: number }, k: number, c: Check) => {
+    if (c.kind === "Divided by the bottom") return { ...c, msg: `A power of 1/${p.n} is a root, not dividing by ${p.n}.` };
+    // fixes-02 (2026-10-06): the hints say why, so "Not quite. <hint>" quotes the new hint, and r × top is a named slip
+    if (c.ok || c.soft || !c.generic) return c;
+    if (k === 1 && c.v.x === p.r * p.m) return { ...c, kind: "Multiplied by the top", msg: `The top is a power: ${p.r} times itself, not ${p.r} × ${p.m}.`, generic: false };
+    return { ...c, msg: `Not quite. ${k === 0 ? `The bottom of the fraction picks the root: here it is the ${p.n === 2 ? "square" : "cube"} root.` : "The top of the fraction is the power: multiply the root by itself that many times."}` };
+  }],
 ] as const)("%s deviation is only what it says", (id, expected) => {
   it("judges every other recorded try the same way", () => {
     const l = lesson(id);

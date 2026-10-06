@@ -4,6 +4,7 @@ import type { AnswerModel, AnswerStep, LessonDefinition, StepCheck } from "../..
 import { chainExplanation } from "../../../../explanations/diagrams/chain/build";
 import { gcd, restoreVia, wholeIn } from "../../_number-line/steps";
 import { divideFractionsPicture } from "./picture";
+import { tapStep } from "../../grade4/_kit";
 
 /** a/b ÷ c/d, both fractions proper and in lowest terms, bottoms 2–9 */
 export interface DivideFractionsProblem { a: number; b: number; c: number; d: number }
@@ -64,7 +65,8 @@ export function simplifyStep(S: number, L: number, label: string, id = "simplify
     hint: S % L === 0 ? `${S} ÷ ${L} = ${S / L} exactly, so it's a whole number.`
       : S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}. The remainder goes on top.`
       : gcd(S, L) > 1 ? `Both ${S} and ${L} can be divided by ${gcd(S, L)}.` : `No number (other than 1) divides both ${S} and ${L}. It's already simplest.`,
-    explain: S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}, then simplify.` : gcd(S, L) > 1 ? `Divide top and bottom by ${gcd(S, L)}.` : "It was already as simple as it gets.",
+    explain: S % L === 0 ? `${S} ÷ ${L} = ${S / L} exactly, so it's the whole number ${S / L}.`
+      : S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}, then simplify.` : gcd(S, L) > 1 ? `Divide top and bottom by ${gcd(S, L)}.` : "It was already as simple as it gets.",
     work: [frac(S, L), op("="), ...finalMath(S, L, true)],
   };
 }
@@ -72,9 +74,29 @@ export function simplifyStep(S: number, L: number, label: string, id = "simplify
 const fracBoxes = () => frac([slot("n")], [slot("d")]);
 const both = (v: Record<string, number | null>) => v.n == null || v.d == null;
 
-function answers({ a, b, c, d }: DivideFractionsProblem): AnswerModel {
+/** Before any rule: does more than one c/d fit in a/b? (0 = Yes, 1 = No) */
+function sizeStep({ a, b, c, d }: DivideFractionsProblem): AnswerStep {
+  const more = a * d > b * c, same = a * d === b * c;
+  return tapStep({
+    id: "size", label: "More than one?",
+    question: `Will more than one ${c}/${d} fit in ${a}/${b}?`,
+    prompt: [frac(a, b), op("÷"), frac(c, d)],
+    choices: ["Yes", "No"], ans: more ? 0 : 1,
+    wrong: more
+      ? { 1: ["Compared the wrong way", `${c}/${d} is smaller than ${a}/${b}, so more than one fits.`] }
+      : { 0: ["Compared the wrong way", same ? `${c}/${d} is the same size as ${a}/${b}, so exactly one fits, not more.` : `${c}/${d} is bigger than ${a}/${b}, so not even one whole ${c}/${d} fits.`] },
+    hint: `Which is bigger, ${a}/${b} or ${c}/${d}? Think of them as parts of the same whole.`,
+    explain: more ? `${c}/${d} is smaller than ${a}/${b}, so more than one fits: the answer is more than 1.`
+      : same ? "They are the same size, so exactly one fits: the answer is 1." : `${c}/${d} is bigger than ${a}/${b}, so less than one fits: the answer is less than 1.`,
+    work: [{ t: "text", v: more ? "More than one fits." : same ? "Exactly one fits." : "Less than one fits." }],
+  });
+}
+
+function answers(p: DivideFractionsProblem): AnswerModel {
+  const { a, b, c, d } = p;
   return {
     steps: [
+      sizeStep(p),
       {
         id: "flip", label: "Flip the second fraction",
         prompt: [frac(c, d), op("→"), fracBoxes()], note: "Flip means the top and bottom trade places.",
@@ -86,7 +108,7 @@ function answers({ a, b, c, d }: DivideFractionsProblem): AnswerModel {
           if (v.n === b && v.d === a) return { ok: false, kind: "Flipped the wrong fraction", message: "Keep the first fraction. Flip the **second** one.", generic: false };
           return { ok: false, kind: "Flipping", message: `Swap them: the ${d} goes on top, the ${c} on the bottom.`, generic: false };
         },
-        hint: "Top goes to the bottom, bottom goes to the top.", explain: `${c}/${d} flipped is ${d}/${c}.`,
+        hint: `How many ${c}/${d} fit in 1 whole? ${d}/${c} of them. That's the flipped fraction.`, explain: `${c}/${d} flipped is ${d}/${c}.`,
         work: [op("÷"), frac(c, d), { t: "text", v: " becomes " }, op("×"), frac([answer("n", d)], [answer("d", c)])],
       },
       {
@@ -99,7 +121,7 @@ function answers({ a, b, c, d }: DivideFractionsProblem): AnswerModel {
           if (v.n === a * c && v.d === b * d) return { ok: false, kind: "Multiplied without flipping", message: "Use the flipped fraction from step 1.", generic: false };
           return { ok: false, kind: "Multiplying fractions", message: `Top: ${a} × ${d}. Bottom: ${b} × ${c}.`, generic: false };
         },
-        hint: `${a} × ${d} on top, ${b} × ${c} on the bottom.`, explain: `${a} × ${d} = ${a * d} and ${b} × ${c} = ${b * c}.`,
+        hint: "Multiply the two tops together, then the two bottoms.", explain: `${a} × ${d} = ${a * d} and ${b} × ${c} = ${b * c}.`,
         work: [frac(a, b), op("×"), frac(d, c), op("="), frac([answer("n", a * d)], [answer("d", b * c)])],
       },
       simplifyStep(a * d, b * c, "Simplify"),
@@ -113,19 +135,25 @@ function explain(p: DivideFractionsProblem) {
   const simplified = finalMath(S, L);
   const same = F.whole === 0 && F.num === S && F.den === L;
   return chainExplanation({
-    heading: "Keep, change, flip",
-    idea: ["Keep the first fraction, change ÷ to ×, and flip the second fraction. Then multiply and simplify."],
+    heading: "How many fit?",
+    idea: [
+      "Dividing asks how many of the second amount fit into the first. 1 ÷ 1/4 = 4, because 4 quarters fit in one whole.",
+      `So dividing by ${c}/${d} is the same as multiplying by ${d}/${c}: that's how many ${c}/${d} fit in each whole.`,
+    ],
     statement: [frac(a, b), op("÷"), frac(c, d)],
     alt: `${a}/${b} ÷ ${c}/${d} becomes ${a}/${b} × ${d}/${c} = ${S}/${L}.`,
     diagram: divideFractionsPicture({ a, b, c, d, S, L, mixed: F.num ? `${F.whole ? `${F.whole} ` : ""}${F.num}/${F.den}` : `${F.whole}` }),
     beats: [
-      { id: "flip", narration: `Keep ${a}/${b}, change ÷ to ×, and flip ${c}/${d} to ${d}/${c}.`, math: [frac(c, d), op("→"), frac(d, c)],
+      { id: "size", narration: S > L ? `${c}/${d} is smaller than ${a}/${b}, so more than one ${c}/${d} fits. Expect an answer bigger than 1.`
+          : S === L ? `${c}/${d} is the same size as ${a}/${b}, so exactly one fits.` : `${c}/${d} is bigger than ${a}/${b}, so not even one whole ${c}/${d} fits. Expect an answer less than 1.`,
+        math: [frac(a, b), op("÷"), frac(c, d)], lines: [], answerStep: "size" },
+      { id: "flip", narration: `${d}/${c} of ${c}/${d} fit in each whole, so dividing by ${c}/${d} is the same as multiplying by ${d}/${c}.`, math: [frac(c, d), op("→"), frac(d, c)],
         lines: [[frac(a, b), op("÷"), mark([frac(c, d)])], [frac(a, b), mark([op("×")]), mark([frac(d, c)])]], answerStep: "flip" },
       { id: "multiply", narration: `Top times top, bottom times bottom: ${a} × ${d} = ${S} and ${b} × ${c} = ${L}.`, math: [frac(a, b), op("×"), frac(d, c), op("="), frac(S, L)],
         lines: [[frac(S, L)]], answerStep: "multiply" },
-      { id: "simplify", narration: same ? `${S}/${L} is already as simple as it gets.` : S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}, so ${S}/${L} is ${F.num ? `${F.whole ? `${F.whole} and ` : ""}${F.num}/${F.den}` : F.whole}.`
-          : `Divide the top and the bottom by ${gcd(S, L)}: ${F.num}/${F.den}.`,
-        math: [frac(S, L), op("="), ...simplified], lines: same ? [] : [[frac(S, L), op("="), ...simplified]], answerStep: "simplify",
+      { id: "simplify", narration: (same ? `No number but 1 divides both ${S} and ${L}, so ${S}/${L} is already as simple as it gets.` : S % L === 0 ? `${S} ÷ ${L} = ${S / L} exactly, so ${S}/${L} is the whole number ${S / L}.` : S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}, so ${S}/${L} is ${F.num ? `${F.whole ? `${F.whole} and ` : ""}${F.num}/${F.den}` : F.whole}.`
+          : `Divide the top and the bottom by ${gcd(S, L)}: ${F.num}/${F.den}.`) + (F.whole && F.num ? ` So ${F.whole} whole ${c}/${d}${F.whole === 1 ? "" : "s"} fit, and ${F.num}/${F.den} of another.` : ""),
+        math: same ? [frac(S, L)] : [frac(S, L), op("="), ...simplified], lines: same ? [] : [[frac(S, L), op("="), ...simplified]], answerStep: "simplify",
         ...(F.num === 0 ? { result: F.whole } : {}) },
     ],
   });
@@ -136,12 +164,17 @@ export const lesson: LessonDefinition<DivideFractionsProblem> = {
   grade: 6,
   unit: "Number system",
   title: "Dividing fractions",
-  pre: "g5-multfrac",
+  pre: "g5-unitdiv",
   reference: createDivideFractions(2, 3, 1, 4), // 2/3 ÷ 1/4 = 8/3 = 2 2/3, the current app's example
-  generate: rng => {
+  generate: (rng, index = 3) => {
     const top = (den: number) => { let n: number; do n = rng.int(1, den - 1); while (gcd(n, den) !== 1); return n; };
-    const b = rng.int(2, 9), d = rng.int(2, 9);
-    return createDivideFractions(top(b), b, top(d), d);
+    for (;;) {
+      const b = rng.int(2, 9), d = rng.int(2, 9);
+      // the first problems divide by a unit fraction that fits more than once, as in g5-unitdiv: how many 1/d fit?
+      const a = top(b), c = index < 3 ? 1 : top(d);
+      if (a * d === b * c || (index < 3 && a * d <= b)) continue;
+      return createDivideFractions(a, b, c, d);
+    }
   },
   restore: raw => restoreVia(raw, ["a", "b", "c", "d"] as const, v => createDivideFractions(v.a, v.b, v.c, v.d)),
   display: p => [frac(p.a, p.b), op("÷"), frac(p.c, p.d)],

@@ -1,6 +1,6 @@
 // Points, lines, rays and angles: name a line, ray or segment; name an angle by comparing it to a square corner;
 // tell parallel, perpendicular and intersecting lines apart.
-import { text } from "../../../schemas/math-text";
+import { num, text } from "../../../schemas/math-text";
 import type { AnswerModel, AnswerStep, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildAngleFig, buildFigure, buildPair } from "../../../../explanations/diagrams/early-g4/figures";
@@ -38,7 +38,7 @@ function answers(p: LinesProblem): AnswerModel {
       steps: [
         oneBox({ id: "ends", label: "Endpoints", question: "How many endpoints?", prompt: s => [s, text(" endpoints")], ans: ends,
           wrong: slips(ends, [[2, "Counted the arrowheads", "Arrowheads mean it keeps going. They aren't endpoints."], [1, "Counted one end", "Look at both ends: is each a dot or an arrowhead?"]]),
-          hint: "A dot is an endpoint. An arrowhead means it keeps going.", explain: ends ? `${ends} ${ends === 1 ? "endpoint" : "endpoints"}.` : "No endpoints: it goes on forever both ways." }),
+          hint: "A dot is an endpoint. An arrowhead means it keeps going.", work: [num(ends), text(ends === 1 ? " endpoint" : " endpoints")], explain: ends ? `${ends} ${ends === 1 ? "endpoint" : "endpoints"}.` : "No endpoints: it goes on forever both ways." }),
         tapStep({ id: "name", label: "Name it", question: "What is it called?", prompt: [text("It's a ?")], choices: FIGURES, right: p.item,
           wrong: i => [`Picked ${FIGURES[i]!.toLowerCase()}`, i === 0 ? "A line goes on forever both ways: arrowheads at both ends." : i === 1 ? "A ray has one endpoint and goes on forever one way." : "A segment has two endpoints and stops at both."],
           hint: "Count the endpoints: 0 is a line, 1 a ray, 2 a segment.", explain: `${ends} endpoints: a ${FIGURES[p.item]!.toLowerCase()}.`.replace("0 endpoints", "No endpoints").replace("1 endpoints", "1 endpoint"), work: [text(FIGURES[p.item]!)] }),
@@ -122,5 +122,5 @@ export const lesson: LessonDefinition<LinesProblem> = {
   picture: p => picture(p),
   answers,
   explain,
-  pre: "g4-angles",
+  pre: "g3-quads",
 };

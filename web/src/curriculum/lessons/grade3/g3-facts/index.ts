@@ -15,9 +15,15 @@ export function createFact(a: number, b: number): FactProblem {
   return { a, b };
 }
 
-/** Early problems count by 2, 5 or 10 a few times; later ones use any fact up to 10 × 10. */
+/**
+ * Early problems count by 2, 5 or 10 a few times, never a square (5 × 5 turned around is still 5 × 5, so the turn step
+ * would show nothing); later ones use any fact up to 10 × 10.
+ */
 export function generateFact(rng: Rng, index: number): FactProblem {
-  if (index < 3) return createFact(rng.int(3, 6), rng.pick([2, 5, 10]));
+  if (index < 3) {
+    const b = rng.pick([2, 5, 10]);
+    return createFact(b === 5 ? rng.pick([3, 4, 6]) : rng.int(3, 6), b);
+  }
   let a: number, b: number;
   do { a = rng.int(2, 10); b = rng.int(3, 9); } while (a === b && rng.next() < 0.6);
   return createFact(a, b);
@@ -32,20 +38,23 @@ function skipList({ a, b }: FactProblem, last: MathToken): MathText {
 
 function answers(p: FactProblem): AnswerModel {
   const { a, b } = p, P = a * b;
+  const count1 = box({
+    id: "count", label: `Count by ${b}s`, question: `Count by ${b}s, ${a} times. What is the last number?`,
+    prompt: x => skipList(p, x), ans: P,
+    wrong: [
+      [(a - 1) * b + 1, "Counted on by 1", `Each jump is ${b}, not 1. ${(a - 1) * b} + ${b} = ${P}.`],
+      [(a - 1) * b, "Stopped one jump short", `That's only ${count(a - 1, "jump")} of ${b}. Make ${count(a, "jump")}.`],
+      [(a + 1) * b, "One jump too many", `That's ${count(a + 1, "jump")} of ${b}. Stop after ${count(a, "jump")}.`],
+      [a + b, "Added the two numbers", `${a} + ${b} puts them together once. You need ${count(a, "group")} of ${b}.`],
+    ],
+    hint: `Add ${b} to the last number you see.`,
+    explain: `${count(a, "jump")} of ${b} land on ${P}.`,
+  });
+  // a square turned around is the same square, so there is nothing new to find
+  if (a === b) return { steps: [count1], finalParts: [-1] };
   return {
     steps: [
-      box({
-        id: "count", label: `Count by ${b}s`, question: `Count by ${b}s, ${a} times. What is the last number?`,
-        prompt: x => skipList(p, x), ans: P,
-        wrong: [
-          [(a - 1) * b + 1, "Counted on by 1", `Each jump is ${b}, not 1. ${(a - 1) * b} + ${b} = ${P}.`],
-          [(a - 1) * b, "Stopped one jump short", `That's only ${count(a - 1, "jump")} of ${b}. Make ${count(a, "jump")}.`],
-          [(a + 1) * b, "One jump too many", `That's ${count(a + 1, "jump")} of ${b}. Stop after ${count(a, "jump")}.`],
-          [a + b, "Added the two numbers", `${a} + ${b} puts them together once. You need ${count(a, "group")} of ${b}.`],
-        ],
-        hint: `Add ${b} to the last number you see.`,
-        explain: `${count(a, "jump")} of ${b} land on ${P}.`,
-      }),
+      count1,
       box({
         id: "turn", label: "Turn it around", question: `${count(a, "group")} of ${b} is the same as ${count(b, "group")} of ${a}.`,
         prompt: x => [num(b), op("×"), num(a), op("="), x], ans: P,
@@ -53,7 +62,7 @@ function answers(p: FactProblem): AnswerModel {
           [a + b, "Added instead of multiplied", `× means groups. ${count(b, "group")} of ${a} is ${P}, not ${a + b}.`],
           [b * b, "Used the same number twice", `That's ${b} × ${b}. Here it is ${count(b, "group")} of ${a}.`],
         ],
-        hint: `Turning the array around does not change how many dots there are. You just found ${a} × ${b}.`,
+        hint: `Turn the array on its side. The rows become columns, but no dots are added or taken away, so the total is the same as the ${a} × ${b} you just counted.`,
         explain: `${b} × ${a} = ${P}, the same as ${a} × ${b}.`,
       }),
     ],
@@ -61,35 +70,39 @@ function answers(p: FactProblem): AnswerModel {
   };
 }
 
-/** a rows of b dots; the running count appears at the end of each row, then columns of a show it turned around. */
+/**
+ * a rows of b dots; the running count appears at the end of each row, then columns of a show it turned around.
+ * A square (a = b) looks the same turned around, so it stops after the count.
+ */
 export function factPicture({ a, b }: FactProblem, P: number) {
+  const square = a === b;
   return buildArray({
     rows: a, cols: b,
     rowTotals: { from: 1, text: r => String((r + 1) * b), acc: r => r === a - 1 },
-    colBoxes: { from: 2, text: () => String(a) },
+    ...(square ? {} : { colBoxes: { from: 2, text: () => String(a) } }),
     lines: [
       { text: `${count(a, "row")} of ${b}`, from: 0, until: 0, cls: "lbl" },
-      { text: `${a} × ${b} = ${P}`, from: 1, until: 1 },
-      { text: `${count(b, "column")} of ${a}: ${b} × ${a} = ${P}`, from: 2 },
+      { text: `${a} × ${b} = ${P}`, from: 1, ...(square ? {} : { until: 1 }) },
+      ...(square ? [] : [{ text: `${count(b, "column")} of ${a}: ${b} × ${a} = ${P}`, from: 2 }]),
     ],
-    alt: `${count(a, "row")} of ${count(b, "dot")}. Counting by ${b}s row by row reaches ${P}. Seen as ${count(b, "column")} of ${a}, it is still ${P}.`,
+    alt: `${count(a, "row")} of ${count(b, "dot")}. Counting by ${b}s row by row reaches ${P}.${square ? "" : ` Seen as ${count(b, "column")} of ${a}, it is still ${P}.`}`,
   });
 }
 
 function explain(p: FactProblem, model: AnswerModel): Explanation {
-  const { a, b } = p, P = expectedOf(model, "count"), T = expectedOf(model, "turn");
+  const { a, b } = p, P = expectedOf(model, "count"), square = a === b, T = square ? P : expectedOf(model, "turn");
   return {
     heading: "Count equal groups",
     idea: ["Multiplying counts equal groups. Count by the group size, once for each group.", "You can turn the array around. The total stays the same."],
     statement: [num(a), op("×"), num(b)],
     diagram: factPicture(p, P),
     caption: `${count(a, "row")} with ${count(b, "dot")} in each row.`,
-    timeline: beats(3),
+    timeline: beats(square ? 2 : 3),
     steps: [
       { id: "count", state: 1, answerStep: "count", result: P, math: [num(a), op("×"), num(b), op("="), num(P)],
         narration: `Count by ${b}s, one row at a time: ${Array.from({ length: Math.min(a, 3) }, (_, i) => (i + 1) * b).join(", ")}${a > 3 ? `, and on to ${P}` : ""}. That's ${count(a, "row")}, so ${a} × ${b} = ${P}.` },
-      { id: "turn", state: 2, answerStep: "turn", result: T, math: [num(b), op("×"), num(a), op("="), num(T)],
-        narration: `Now look down the columns. There are ${count(b, "column")} of ${a}, and still ${count(T, "dot")}.` },
+      ...(square ? [] : [{ id: "turn", state: 2, answerStep: "turn", result: T, math: [num(b), op("×"), num(a), op("="), num(T)],
+        narration: `Now look down the columns. There are ${count(b, "column")} of ${a}, and still ${count(T, "dot")}.` }]),
     ],
   };
 }

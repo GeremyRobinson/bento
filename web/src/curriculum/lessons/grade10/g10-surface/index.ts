@@ -5,6 +5,7 @@ import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildBox3d } from "../../../../explanations/diagrams/box3d/build";
 import { expectedOf, ns, plusChain, readNumbers } from "../../area-common/steps";
 import { aNum, cap } from "../../../text";
+import { withEasyStart } from "../../easy-start";
 
 /** The surface of an l × w × h box: three pairs of matching faces. */
 export interface SurfaceProblem { l: number; w: number; h: number }
@@ -20,9 +21,9 @@ export const generateSurface = (rng: Rng): SurfaceProblem => ({ l: rng.int(2, 10
 export function surfaceAnswers({ l, w, h }: SurfaceProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "top", label: "Top and bottom", prompt: x => [num(l), op("×"), num(w), op("="), x], ans: l * w, hint: "One face: length × width." }),
-      ns({ id: "front", label: "Front and back", prompt: x => [num(l), op("×"), num(h), op("="), x], ans: l * h, hint: "Length × height." }),
-      ns({ id: "side", label: "The two sides", prompt: x => [num(w), op("×"), num(h), op("="), x], ans: w * h, hint: "Width × height." }),
+      ns({ id: "top", label: "Top and bottom", prompt: x => [num(l), op("×"), num(w), op("="), x], ans: l * w, hint: "One face: length × width.", wrong: [[l + w, "Added", "A face's area is length × width."]] }),
+      ns({ id: "front", label: "Front and back", prompt: x => [num(l), op("×"), num(h), op("="), x], ans: l * h, hint: "The front face is as long as the box and as tall as it: length × height.", wrong: [[l + h, "Added", "A face's area is length × height."]] }),
+      ns({ id: "side", label: "The two sides", prompt: x => [num(w), op("×"), num(h), op("="), x], ans: w * h, hint: "A side face is as wide as the box and as tall as it: width × height.", wrong: [[w + h, "Added", "A face's area is width × height."]] }),
       ns({ id: "total", label: "All six faces", prompt: x => [num(2), op("×"), text("("), ...plusChain([l * w, l * h, w * h]), text(")"), op("="), x], ans: 2 * (l * w + l * h + w * h),
         hint: "Each face has a matching partner.", wrong: [[l * w + l * h + w * h, "Counted only three faces", "Each face has a twin on the other side: double it."]] }),
     ],
@@ -55,7 +56,7 @@ export function explainSurface(p: SurfaceProblem, answers: AnswerModel): Explana
   };
 }
 
-export const lesson: LessonDefinition<SurfaceProblem> = {
+export const lesson: LessonDefinition<SurfaceProblem> = withEasyStart({
   id: "g10-surface",
   grade: 10,
   unit: "Area and volume",
@@ -67,4 +68,4 @@ export const lesson: LessonDefinition<SurfaceProblem> = {
   displayNote: () => "Find the surface area: the total area of all 6 faces.",
   answers: surfaceAnswers,
   explain: explainSurface,
-};
+});

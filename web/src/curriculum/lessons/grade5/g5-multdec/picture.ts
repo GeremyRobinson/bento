@@ -1,48 +1,64 @@
 // The g5-multdec picture (Curriculum fixes-02, Part B): x × y as a strip x wide and y tall laid on whole unit squares,
-// each unit square cut 10 by 10 into hundredths. The strip covers A tenths across and B tenths up: A × B tiny squares,
-// each a hundredth, so the digits of A × B count hundredths. Built on the area grid with a tenth grid.
+// each unit square cut into the small pieces the two numbers count (tenths by tenths: hundredths; tenths by wholes:
+// tenths; hundredths by tenths: thousandths). The strip covers A pieces across and B up: A × B small pieces, so the
+// digits of A × B count those pieces and the point goes that many places from the right. Built on the area grid.
 import { buildAreaGrid } from "../../../../explanations/diagrams/area-model/grid";
 import type { SceneDiagram, SceneItem } from "../../../../explanations/diagrams/scene/schema";
 import { r1 } from "../../../../explanations/diagrams/scene/helpers";
 import { formatNumber as f } from "../../../schemas/math-text";
 
-export function multiplyDecimalsPicture(o: { A: number; B: number; P: number; ans: number }): SceneDiagram {
-  const { A, B, P, ans } = o;
-  const x = A / 10, y = B / 10, wholes = Math.ceil(x);
+const PLACE = ["ones", "tenths", "hundredths", "thousandths"];
+/** a cut is drawn as lines only while they stay this far apart, in px */
+const MIN_GAP = 3;
+
+export function multiplyDecimalsPicture(o: { A: number; B: number; pa: number; pb: number; P: number; ans: number }): SceneDiagram {
+  const { A, B, pa, pb, P, ans } = o;
+  const sx = 10 ** -pa, sy = 10 ** -pb, x = A * sx, y = B * sy, n = pa + pb, piece = f(10 ** -n);
+  const wholes = Math.ceil(x - 1e-9), tall = Math.ceil(y - 1e-9);
   const d = buildAreaGrid({
     family: "area-model",
     cols: [{ label: f(x), size: x, cls: "p0" }],
-    // the strip sits at the bottom of one row of unit squares; the room above it is the rest of each unit square
-    rows: [{ label: "", size: Math.round((10 - B)) / 10 }, { label: f(y), size: y, cls: "p0" }],
-    cells: [[null], [{ from: 0, color: 0 }]],
-    units: 0,
-    unitStep: 0.1,
+    // a strip less than 1 tall sits at the bottom of one row of unit squares; the room above it is the rest of them
+    rows: y < tall ? [{ label: "", size: Math.round((tall - y) * 10) / 10 }, { label: f(y), size: y, cls: "p0" }] : [{ label: f(y), size: y, cls: "p0" }],
+    cells: y < tall ? [[null], [{ from: 0, color: 0 }]] : [[{ from: 0, color: 0 }]],
     wholeOutlines: 0,
     minRow: 1,
     maxWidth: (360 * x) / wholes,
-    maxHeight: 180,
+    maxHeight: tall > 1 ? 260 : 180,
     lines: [
-      { text: `${A} × ${B} = ${P} tiny squares`, from: 0, until: 0 },
-      { text: "0.1 × 0.1 = 0.01, two decimal places", from: 1, until: 1 },
-      { text: `${P} hundredths = ${f(ans)}`, from: 2 },
+      { text: `${A} × ${B} = ${P} small pieces`, from: 0, until: 0 },
+      { text: `${f(sx)} × ${f(sy)} = ${piece}, ${n === 1 ? "one decimal place" : n === 2 ? "two decimal places" : "three decimal places"}`, from: 1, until: 1 },
+      { text: `${P} ${PLACE[n]} = ${f(ans)}`, from: 2 },
     ],
-    alt: `A strip ${f(x)} wide and ${f(y)} tall on whole unit squares, each cut into 100 tiny squares of 0.01. The strip covers ${A} by ${B} tiny squares: ${P} hundredths, ${f(ans)}.`,
+    alt: `A strip ${f(x)} wide and ${f(y)} tall on whole unit squares, each cut into pieces of ${piece}. The strip covers ${A} by ${B} pieces: ${P} ${PLACE[n]}, ${f(ans)}.`,
   });
-  const g = d.geometry, u = g.unitX / 10, xs = g.left, ys = g.ys[1]!;
+  const g = d.geometry, xs = g.left, top = g.ys[g.ys.length - 2]!, bottom = g.top + g.height;
   const items: SceneItem[] = d.items.filter(i => !(i.type === "text" && i.text === ""));
-  // beat 1: one tiny square ringed, and shown big beside the picture: 0.01
+  // the cut inside the strip: a line every piece across and up, while the lines stay far enough apart to see
+  const grid = (count: number, step: number, along: "x" | "y") => {
+    if (step < MIN_GAP) return;
+    for (let k = 1; k < count; k++) {
+      const v = r1(along === "x" ? xs + k * step : top + k * step);
+      items.push(along === "x"
+        ? { type: "line", x1: v, y1: r1(top + 2), x2: v, y2: r1(bottom - 2), cls: "grid", from: 0, enter: "fade", delay: 0.3 }
+        : { type: "line", x1: r1(xs + 2), y1: v, x2: r1(xs + g.width - 2), y2: v, cls: "grid", from: 0, enter: "fade", delay: 0.3 });
+    }
+  };
+  const ux = g.unitX * sx, uy = g.unitY * sy;
+  grid(A, ux, "x");
+  grid(B, uy, "y");
+  // beat 1: one piece ringed, and shown big beside the picture with its size
   const right = g.left + wholes * g.unitX, bx = right + 22, bs = 34, by = g.top;
+  const rw = Math.max(ux, 4), rh = Math.max(uy, 4);
   items.push(
-    { type: "rect", x: r1(xs - 3), y: r1(ys - 3), w: r1(u + 6), h: r1(u + 6), rx: 3, cls: "xring", from: 1, until: 1, enter: "pop", delay: 0.2 },
-    { type: "line", x1: r1(xs + u + 3), y1: r1(ys), x2: r1(bx), y2: r1(by + bs / 2), cls: "ln thin pq", from: 1, until: 1, enter: "draw", delay: 0.5 },
+    { type: "rect", x: r1(xs - 3), y: r1(top - 3), w: r1(rw + 6), h: r1(rh + 6), rx: 3, cls: "xring", from: 1, until: 1, enter: "pop", delay: 0.2 },
+    { type: "line", x1: r1(xs + rw + 3), y1: r1(top), x2: r1(bx), y2: r1(by + bs / 2), cls: "ln thin pq", from: 1, until: 1, enter: "draw", delay: 0.5 },
     { type: "rect", x: r1(bx), y: r1(by), w: bs, h: bs, rx: 4, cls: "xchip p0", from: 1, until: 1, enter: "pop", delay: 0.8 },
-    { type: "text", x: r1(bx + bs / 2), y: r1(by + bs + 14), text: "0.01", cls: "sm acc", from: 1, until: 1, enter: "rise", delay: 1 },
+    { type: "text", x: r1(bx + bs / 2), y: r1(by + bs + 14), text: piece, cls: "sm acc", from: 1, until: 1, enter: "rise", delay: 1 },
   );
-  // the count of tiny squares across and up
-  items.push(
-    { type: "text", x: r1(xs + g.width / 2), y: r1(g.ys[2]! + 14), text: `${A} tenths`, cls: "lbl sm p0", from: 0, enter: "rise", delay: 0.6 },
-  );
-  const width = Math.max(d.width, bx + bs + 14);
+  // the count of pieces across
+  items.push({ type: "text", x: r1(xs + g.width / 2), y: r1(bottom + 14), text: `${A} ${PLACE[pa]}`, cls: "lbl sm p0", from: 0, enter: "rise", delay: 0.6 });
+  const width = Math.max(d.width, bx + Math.max(bs, piece.length * 9) + 14);
   return { ...d, width: r1(width), height: r1(d.height + 10), items: shiftLines(items, 10) };
 }
 

@@ -26,7 +26,12 @@ export function circleAreaAnswers({ r }: CircleAreaProblem): AnswerModel {
   return {
     steps: [
       ns({ id: "square", label: "Square the radius", prompt: s => mt`${r}${sup("2")} = ${s}`, ans: r * r, hint: `${r} × ${r}.`, wrong: [[2 * r, "Squared as times 2", `Squared means ${r} × ${r}.`]] }),
-      ns({ id: "times-pi", label: "Times π", prompt: s => mt`${r * r} × 3.14 = ${s}`, ans: round6(r * r * 3.14), hint: `${r * r} × 3.14.` }),
+      ns({ id: "times-pi", label: "Times π", prompt: s => mt`${r * r} × 3.14 = ${s}`, ans: round6(r * r * 3.14), hint: `${r * r} × 3.14.`,
+        // fixes-02 A6: the two formulas learners mix up
+        wrong: [
+          [round6(2 * r * 3.14), "Used the circumference", "That's the distance around. Area uses r × r."],
+          [round6(4 * r * r * 3.14), "Squared the diameter", "Square the radius, not the diameter."],
+        ] }),
     ],
     finalParts: [-1],
   };
@@ -36,7 +41,7 @@ export function explainCircleArea({ r }: CircleAreaProblem, answers: AnswerModel
   const r2 = expected(answers, "square"), area = expected(answers, "times-pi");
   return {
     heading: "A = π × r × r",
-    idea: ["Make a square on the radius: r × r.", "The circle holds about 3.14 of those squares."],
+    idea: ["A square built on the radius covers just under a third of the circle: the circle holds about 3.14 of those squares.", "So the area is about 3.14 × r × r."],
     statement: mt`A = 3.14 × ${r}${sup("2")}`,
     caption: `The circle holds 3.14 squares of ${r2}: ${area}.`,
     diagram: buildCircleArea({ r, r2, area, pi: "3.14", squareBeat: 1, areaBeat: 2, alt: `A circle of radius ${r} with ${aNum(r)} by ${r} square on its radius. The circle holds about 3.14 of those squares: ${area}.` }),
@@ -54,9 +59,10 @@ export const lesson: LessonDefinition<CircleAreaProblem> = {
   grade: 7,
   unit: "Geometry",
   title: "Area of a circle",
-  pre: "g6-expo",
+  pre: "g7-circum",
   reference: createCircleArea(3),
-  generate: rng => createCircleArea(rng.int(2, 12)),
+  // the first three: small circles
+  generate: (rng, index) => createCircleArea(index < 3 ? rng.int(2, 5) : rng.int(2, 12)),
   restore: restoreCircleArea,
   display: p => mt`radius ${p.r}`,
   displayNote: () => "Area = π × r². Use 3.14 for π.",

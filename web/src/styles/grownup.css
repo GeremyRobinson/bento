@@ -1,0 +1,128 @@
+/* "For the grown-up" (Design's spec): one instance of the Screen master (split). Only what differs from the master
+   lives here: the list's labels, legend and privacy line, the score batteries, and the detail's floating cards.
+   The detail never scrolls; only the list does. Colours come from the grade's tokens. */
+.screen.gu .sdetail{overflow:hidden}
+.screen.gu .slist{padding-bottom:var(--sp-6)}
+.gu .slist .shead{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:2px 14px;padding:6px var(--sp-4) 10px}
+.gu .slist .shead .gnum{grid-row:span 2;font-size:48px}
+.gu .slist .shead .gnum small{font-size:var(--fz-xl)}
+.gu .slbl{position:relative;z-index:var(--z-up);display:flex;justify-content:space-between;gap:var(--sp-2);font-size:var(--fz-xs);font-weight:var(--w-mid);color:var(--muted);padding:14px 18px var(--sp-1)}
+.gu .srow .sname small{font-size:var(--fz-xs);line-height:17px;font-weight:var(--w-mid);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gu .srow.on .sname small,.gu .srow.chap .sname small{color:var(--ink)}
+.gu .srow.chap .sname small.none{color:var(--muted)}
+.gu .srow.sles{min-height:var(--tap)}
+.gu .gu-none{position:relative;z-index:var(--z-up);margin:0;padding:var(--sp-2) 18px;color:var(--muted);font-size:var(--small)}
+
+/* a score: the island's battery circle, filling from the bottom (score / 4), the digit on top */
+.gu .ibat{flex:none;position:relative;width:36px;height:36px;border-radius:var(--r-round);background:var(--float);box-shadow:inset 0 0 0 1.5px var(--rule);overflow:hidden;display:grid;place-items:center;
+  font-size:var(--fz-sm);line-height:1;font-weight:var(--w-bold);font-variant-numeric:tabular-nums}
+.gu .ibat>i{position:absolute;inset:auto 0 0;height:calc(var(--p) * 100%);background:color-mix(in oklab,var(--tint) 34%,var(--float))}
+.gu .ibat>span{position:relative}
+.gu .ibat.p4{color:var(--on-tint)}
+.gu .ibat.p4>i{background:var(--ink)}
+.gu .sles .ibat{width:30px;height:30px;font-size:var(--fz-xs)}
+
+.gu .gu-legend{position:relative;z-index:var(--z-up);list-style:none;margin:10px 18px 0;padding:var(--sp-3) 0 0;border-top:1px solid var(--rule);display:grid;grid-template-columns:1fr 1fr;gap:2px var(--sp-3);
+  font-size:var(--fz-xs);line-height:18px;font-weight:var(--w-mid);color:var(--muted)}
+.gu .gu-how{margin:6px 18px 0;font-size:var(--fz-xs);line-height:18px;color:var(--muted)}
+.gu .gu-foot{display:flex;gap:10px;align-items:flex-start;margin:0;padding:14px 18px 6px;font-size:var(--fz-xs);line-height:18px;color:var(--muted)}
+.gu .gu-foot svg{flex:none;margin-top:1px;color:var(--ink)}
+.gu .gu-foot b{color:var(--text);font-weight:var(--w-bold)}
+
+/* the island says the page stays on this device, in place of its fill */
+.island .ilock{flex:none;display:inline-flex;align-items:center;gap:6px;height:var(--float-in);padding:0 14px 0 var(--sp-3);border-radius:var(--r-pill);background:var(--well);color:var(--muted);
+  font-size:var(--fz-xs);font-weight:var(--w-mid);white-space:nowrap}
+.island .ilock svg{color:var(--ink)}
+
+/* ---- the detail: floating cards ---- */
+.gu .gu-stats{flex:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--u)}
+.gu .gu-stat{display:flex;align-items:center;gap:14px;min-width:0;height:76px;padding:0 var(--sp-5) 0 14px;border-radius:var(--r-pill);background:var(--float);box-shadow:var(--float-shadow)}
+.gu .gu-stat .ic{flex:none;width:48px;height:48px;border-radius:var(--r-round);background:var(--tint-soft);color:var(--ink);display:grid;place-items:center}
+.gu .gu-stat>div{min-width:0}
+.gu .gu-stat b{display:block;font:var(--w-bold) 26px/1 var(--sans);letter-spacing:-.03em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.gu .gu-stat b small{font-size:var(--small);font-weight:var(--w-mid);letter-spacing:0;color:var(--muted);margin-left:1px}
+.gu .gu-stat>div>span{display:block;font-size:var(--fz-xs);line-height:16px;font-weight:var(--w-mid);color:var(--muted);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.gu .gu-mcard{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:14px;padding:var(--sp-5) var(--sp-6) var(--sp-5)}
+.gu .gu-mcard h2{font-size:28px;line-height:32px;margin-top:var(--sp-1)}
+.gu .gu-calm{justify-content:center;align-items:center;text-align:center}
+.gu .gu-p{margin:0;color:var(--muted);font-size:var(--fz-lg);line-height:1.45;max-width:60ch}
+.gu .gu-mh{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--u);padding:0 var(--sp-1)}
+.gu .gu-mh>div:first-child{min-width:0}
+.gu .gu-rate{flex:none;display:flex;align-items:center;gap:10px;height:var(--float-h);padding:0 18px 0 6px;border-radius:var(--r-pill);background:var(--well);font-size:var(--fz-sm);line-height:17px;font-weight:var(--w-mid);color:var(--muted)}
+.gu .gu-rate .badge{min-width:40px;height:40px;padding:0 10px;border-radius:var(--r-pill);display:grid;place-items:center;background:var(--ink);color:var(--on-tint);font-size:var(--fz-md);font-weight:var(--w-bold);font-variant-numeric:tabular-nums}
+.gu .gu-rate b{display:block;color:var(--text);font-weight:var(--w-bold)}
+.gu .gu-ex{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 214px;gap:var(--sp-2)}
+.gu .gu-ex.nopic{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.gu .gu-col{margin:0;min-width:0;min-height:0;background:var(--well);border-radius:var(--r-lg);padding:var(--sp-3) var(--sp-2) var(--sp-2);display:flex;flex-direction:column;gap:var(--sp-2)}
+.gu .gu-col>.k{margin:0;padding:2px 10px;font-size:var(--fz-xs);line-height:16px;font-weight:var(--w-mid);color:var(--muted);display:flex;flex-wrap:wrap;align-items:baseline;gap:0 6px}
+.gu .gu-col>.k b{color:var(--text);font-weight:var(--w-bold)}
+.gu .gu-col>.k .mline{font-size:var(--fz-xs)}
+.gu .gu-s{display:grid;grid-template-columns:28px minmax(0,1fr) 26px;align-items:center;gap:10px;min-height:60px;padding:6px var(--sp-3) 6px 10px;border-radius:30px;background:var(--float);box-shadow:var(--float-shadow)}
+.gu .gu-s>div{min-width:0}
+.gu .gu-s .n{width:28px;height:28px;border-radius:var(--r-round);display:grid;place-items:center;background:var(--well);color:var(--ink);font-size:var(--fz-xs);font-weight:var(--w-bold)}
+.gu .gu-s small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:var(--fz-xs);line-height:15px;font-weight:var(--w-mid);color:var(--muted)}
+.gu .gu-s strong{display:block;font-size:var(--fz-lg);line-height:22px;font-weight:var(--w-bold);font-variant-numeric:tabular-nums;letter-spacing:-.01em;overflow-wrap:anywhere}
+.gu .gu-s.bad{box-shadow:inset 0 0 0 2.5px var(--err);background:color-mix(in srgb,var(--err) 9%,var(--float))}
+.gu .gu-s.bad .n{background:var(--err);color:var(--on-tint)}
+.gu .gu-s.good{box-shadow:inset 0 0 0 2.5px var(--ok);background:color-mix(in srgb,var(--ok) 10%,var(--float))}
+.gu .gu-s.good .n{background:var(--ok);color:var(--on-tint)}
+.gu .gu-s.shown{box-shadow:inset 0 0 0 1.5px var(--rule);background:var(--float)}
+.gu .mk{width:26px;height:26px;border-radius:var(--r-round);display:grid;place-items:center;font-size:var(--fz-sm);font-weight:var(--w-bold);line-height:1;color:var(--on-tint)}
+.gu .mk.y{background:var(--ok)}
+.gu .mk.x{background:var(--err)}
+.gu .mk.o{color:var(--muted);box-shadow:inset 0 0 0 2px var(--faint)}
+.gu .gu-why{margin:auto 0 0;font-size:var(--fz-xs);line-height:17px;color:var(--muted);padding:2px var(--sp-2) var(--sp-1)}
+.gu .gu-why b{color:var(--err-ink);font-weight:var(--w-bold)}
+.gu .gu-why b.y{color:var(--ok-ink)}
+.gu .gu-pic .sppic{flex:1 1 0;min-height:0}
+.gu .gu-more{display:flex;justify-content:flex-end;margin-top:-2px}
+.gu .gu-more .ctl{background:var(--well);box-shadow:none}
+
+.gu .gu-row{flex:none;display:grid;grid-template-columns:1.1fr 1fr;gap:var(--u)}
+.gu .gu-card{min-width:0;min-height:0;margin:0;background:var(--float);box-shadow:var(--float-shadow);border-radius:var(--r-panel);padding:var(--sp-5) var(--sp-6);display:flex;flex-direction:column;gap:var(--sp-2)}
+.gu .gu-card h3{margin:0;font:var(--w-bold) var(--fz-xl)/24px var(--sans);letter-spacing:-.01em}
+.gu .gu-card p{margin:0;font-size:var(--small);line-height:21px;color:var(--muted)}
+.gu .gu-bars{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:9px}
+.gu .gu-hb{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr) 22px;gap:var(--sp-3);align-items:center;font-size:var(--fz-xs);line-height:16px}
+.gu .gu-hb>span:first-child{color:var(--muted);font-weight:var(--w-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gu .gu-hb .tr{height:10px;border-radius:5px;background:var(--well);overflow:hidden}
+.gu .gu-hb .tr i{display:block;height:100%;border-radius:5px;background:var(--tint)}
+.gu .gu-hb b{text-align:right;font-weight:var(--w-bold);font-variant-numeric:tabular-nums}
+.gu .gu-home{background:var(--tint-soft);box-shadow:none}
+.gu .gu-home .k{margin:0;font-size:var(--fz-xs);line-height:16px;font-weight:var(--w-mid);color:var(--ink)}
+.gu .gu-home p{color:var(--text)}
+.gu .gu-say{margin-top:var(--sp-1);display:flex;align-items:center;min-height:var(--tap);padding:10px 18px;border-radius:22px;background:var(--float);font-size:var(--fz-lg);font-weight:var(--w-bold)}
+.gu .gu-say .mline{font-size:inherit}
+
+/* portrait: the two small cards move into the list; the worked example takes the detail's height, their steps above
+   the right ones and the picture under both */
+@media (orientation:portrait) and (min-width:700px){
+  .gu .gu-stats{gap:var(--sp-3)}
+  .gu .gu-stat{height:68px;padding:0 var(--sp-4) 0 var(--sp-5);gap:10px;border-radius:34px}
+  .gu .gu-stat .ic{display:none}
+  .gu .gu-stat b{font-size:var(--fz-2xl)}
+  .gu .gu-stat>div>span{white-space:normal;margin-top:3px}
+  .gu .gu-ex{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr)}
+}
+.gu .slist .gu-card{position:relative;z-index:var(--z-up);margin:var(--sp-2) 0}
+.gu .slist .gu-hb{grid-template-columns:minmax(0,1fr) 60px 22px}
+/* a phone: one at a time; the list carries the week, the hints and the home card, the detail the worked example */
+@media (max-width:699px){
+  .island .ilock{display:none}
+  .gu .slist .gu-stats{grid-template-columns:minmax(0,1fr);gap:var(--sp-2);margin:0 0 var(--sp-2)}
+  .gu .slist .gu-stat{height:var(--float-h)}
+  .gu .slist .gu-stat .ic{width:36px;height:36px}
+  .gu .slist .gu-stat>div{display:flex;align-items:baseline;gap:10px;flex-direction:row-reverse;justify-content:flex-end}
+  .gu .slist .gu-stat b{font-size:var(--fz-2xl)}
+  .gu .slist .gu-stat>div>span{margin:0}
+  .gu .gu-mcard{padding:18px var(--sp-4) var(--sp-4);gap:var(--sp-3)}
+  .gu .gu-mcard h2{font-size:var(--fz-2xl);line-height:28px}
+  .gu .gu-mh{flex-direction:column;gap:var(--sp-2)}
+  .gu .gu-rate{height:var(--tap)}
+  .gu .gu-rate .badge{height:34px}
+  .gu .gu-ex,.gu .gu-ex.nopic{flex:0 1 auto;grid-template-columns:minmax(0,1fr);align-content:start;gap:var(--sp-2)}
+  .gu .gu-pic{display:none}
+  .gu .gu-s{min-height:50px}
+  .gu .gu-why{margin-top:0}
+}

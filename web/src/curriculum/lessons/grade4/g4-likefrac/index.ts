@@ -16,10 +16,11 @@ export function createLikeFractions(a: number, c: number, d: number): LikeFracti
 }
 
 /** Same ranges as the current app: bottoms 3, 4, 5, 6, 8, 10 or 12, and a sum already in lowest terms. */
-export function generateLikeFractions(rng: Rng): LikeFractionsProblem {
-  const d = rng.pick([3, 4, 5, 6, 8, 10, 12]);
+export function generateLikeFractions(rng: Rng, index = 3): LikeFractionsProblem {
+  // the first three: small pieces (thirds to sixths) that fit in one whole
+  const early = index < 3, d = rng.pick(early ? [3, 4, 5, 6] : [3, 4, 5, 6, 8, 10, 12]);
   let a: number, c: number;
-  do { a = rng.int(1, d - 1); c = rng.int(1, d - 1); } while (gcd(a + c, d) !== 1);
+  do { a = rng.int(1, d - 1); c = rng.int(1, d - 1); } while (gcd(a + c, d) !== 1 || (early && a + c >= d));
   return createLikeFractions(a, c, d);
 }
 
@@ -28,9 +29,11 @@ const count = (n: number, d: number) => `${n} ${pieceName(d, n !== 1)}`;
 function answers({ a, c, d }: LikeFractionsProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "tops", l: "Add the tops", a: s => [num(a), op("+"), num(c), op("="), ...s], ans: a + c, h: `Count the pieces: ${count(a, d)} and ${count(c, d)}.` }),
-      fs({ id: "bottom", l: "Keep the bottom", a: s => [frac(a, d), op("+"), frac(c, d), op("="), ...s], N: a + c, D: d, h: `The pieces are still ${pieceName(d)}, so the bottom stays ${d}.`,
+      ns({ id: "tops", l: "Add the tops", a: s => [num(a), op("+"), num(c), op("="), ...s], ans: a + c, h: `Count the pieces: ${count(a, d)} and ${count(c, d)}.`,
+        w: [[a * c, "Multiplied the tops", "Putting the pieces together is adding: count them all."]] }),
+      { ...fs({ id: "bottom", l: "Keep the bottom", a: s => [frac(a, d), op("+"), frac(c, d), op("="), ...s], N: a + c, D: d, h: "Putting pieces together doesn't change their size. What size are the pieces?",
         w: [[a + c, 2 * d, "Added the bottoms", `The bottom is the size of the pieces. ${pieceName(d)} plus ${pieceName(d)} are still ${pieceName(d)}.`]], n: "Bigger than 1 is fine here." }),
+        explain: `The pieces are still ${pieceName(d)}, so the bottom stays ${d}: ${a + c}/${d}.` },
     ],
     finalParts: [-1],
   };
@@ -68,7 +71,7 @@ function explain(p: LikeFractionsProblem, model: AnswerModel): Explanation {
   const { a, c, d } = p, S = expectedOf(model.steps, "tops");
   return {
     heading: "Same pieces: add the tops",
-    idea: ["The bottom tells the size of the pieces, so it stays the same."],
+    idea: ["The bottom tells the size of the pieces, so it stays the same.", "Only the number of pieces, the top, grows."],
     statement: [frac(a, d), op("+"), frac(c, d)],
     diagram: likeFractionsPicture(p),
     caption: `${count(a, d)} and ${count(c, d)} make ${count(S, d)}.`,
@@ -90,7 +93,7 @@ export const lesson: LessonDefinition<LikeFractionsProblem> = {
   pre: "g4-equiv",
   // the current app's card and picture: 2/8 + 3/8 = 5/8
   reference: createLikeFractions(2, 3, 8),
-  generate: rng => generateLikeFractions(rng),
+  generate: (rng, index) => generateLikeFractions(rng, index),
   restore: raw => {
     const r = ints(raw, ["a", "c", "d"] as const);
     try { return r && createLikeFractions(r.a, r.c, r.d); } catch { return null; }
@@ -98,5 +101,8 @@ export const lesson: LessonDefinition<LikeFractionsProblem> = {
   display: (p): MathText => [frac(p.a, p.d), op("+"), frac(p.c, p.d)],
   answers,
   explain,
-  story: ({ a, c, d }) => ({ op: "+", text: `Sam ate ${a}/${d} of a pizza. Ana ate ${c}/${d} of the same pizza. How much pizza did they eat together?` }),
+  // one pizza can't hold more than d/d, so when a + c > d Ana's share comes from a second pizza of the same size
+  story: ({ a, c, d }) => ({ op: "+", text: a + c <= d
+    ? `Sam ate ${a}/${d} of a pizza. Ana ate ${c}/${d} of the same pizza. How much pizza did they eat together?`
+    : `Sam ate ${a}/${d} of a pizza. Ana ate ${c}/${d} of another pizza the same size. How much pizza did they eat together?` }),
 };

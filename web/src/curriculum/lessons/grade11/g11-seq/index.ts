@@ -5,6 +5,7 @@ import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildNumberLine, fitRange, type Hop } from "../../../../explanations/diagrams/number-line/build";
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
 import { count } from "../../../text";
+import { withEasyStart } from "../../easy-start";
 
 /** first term a1, common difference d, and the term number n to find */
 export interface SequenceProblem { a1: number; d: number; n: number }
@@ -22,14 +23,15 @@ function answers({ a1, d, n }: SequenceProblem): AnswerModel {
     steps: [
       oneBox({ id: "d", label: "Common difference", note: "How much does each term go up?", prompt: s => [text("d"), op("="), s], ans: d,
         wrong: [[a1, "Common difference", `That's the first term. d is the jump: ${a1 + d} − ${a1}.`], [a1 + d, "Common difference", `That's the second term. Subtract: ${a1 + d} − ${a1}.`]],
-        hint: `${a1 + d} − ${a1}.`, explain: `Each term goes up by ${d}.` }),
+        hint: `The jump is how much each term goes up: take the first term from the second, ${a1 + d} − ${a1}.`, explain: `Each term goes up by ${d}.` }),
       oneBox({ id: "jumps", label: "Count the jumps", question: `From term 1 to term ${n}, how many jumps?`, prompt: s => [s], ans: n - 1,
         wrong: [[n, "Off by one", `Term 1 is where you start, so it's ${n} minus 1, which is ${count(n - 1, "jump")}.`]],
-        hint: `${n} − 1.`, explain: `${n} − 1 = ${count(n - 1, "jump")}.`, work: [answer("x", n - 1), text(" jumps")] }),
+        hint: `You start on term 1, so getting to term ${n} takes one jump fewer than ${n}.`, explain: `${n} − 1 = ${count(n - 1, "jump")}.`, work: [answer("x", n - 1), text(" jumps")] }),
       oneBox({ id: "climb", label: "Total climb", prompt: s => [num(n - 1), op("×"), num(d), op("="), s], ans: climb,
-        hint: `${count(n - 1, "jump")} of ${d}.`, explain: `${n - 1} × ${d} = ${climb}.` }),
+        hint: `Each jump climbs ${d}, so ${count(n - 1, "jump")} climb ${n - 1} × ${d}.`, explain: `${n - 1} × ${d} = ${climb}.`,
+        wrong: [[n - 1 + d, "Added", `Each of the ${count(n - 1, "jump")} climbs ${d}: multiply.`]] }),
       oneBox({ id: "term", label: "Add the first term", prompt: s => [...term(n), op("="), num(a1), op("+"), num(climb), op("="), s], ans: a1 + climb,
-        hint: "Start at the first term and add the climb.", explain: `${a1} + ${climb} = ${a1 + climb}.`, work: [...term(n), op("="), answer("x", a1 + climb)] }),
+        hint: "Start at the first term and add the climb.", wrong: [[climb, "Forgot the start", "The climb starts from the first term: add the first term on."]], explain: `${a1} + ${climb} = ${a1 + climb}.`, work: [...term(n), op("="), answer("x", a1 + climb)] }),
     ],
     finalParts: [-1],
   };
@@ -64,7 +66,7 @@ function explain(p: SequenceProblem, model: AnswerModel): Explanation {
   };
 }
 
-export const lesson: LessonDefinition<SequenceProblem> = {
+export const lesson: LessonDefinition<SequenceProblem> = withEasyStart({
   id: "g11-seq",
   grade: 11,
   unit: "Sequences",
@@ -76,4 +78,4 @@ export const lesson: LessonDefinition<SequenceProblem> = {
   displayNote: p => `Find term number ${p.n}.`,
   answers,
   explain,
-};
+});

@@ -16,7 +16,9 @@ export function createFractionOfNumber(n: number, d: number, W: number): Fractio
 }
 
 /** Same ranges as the current app: bottom 2–9, a top in lowest terms, the number 2–12 groups of the bottom. */
-export function generateFractionOfNumber(rng: Rng): FractionOfNumberProblem {
+export function generateFractionOfNumber(rng: Rng, index = 3): FractionOfNumberProblem {
+  // the first three: one group (a unit fraction) of a small number
+  if (index < 3) { const d = rng.int(2, 5); return createFractionOfNumber(1, d, d * rng.int(2, 6)); }
   const d = rng.int(2, 9), n = coprimeTop(rng, d);
   return createFractionOfNumber(n, d, d * rng.int(2, 12));
 }
@@ -26,7 +28,8 @@ function answers({ n, d, W }: FractionOfNumberProblem): AnswerModel {
     steps: [
       ns({ id: "groups", l: "Split into equal groups", a: s => [num(W), op("÷"), num(d), op("="), ...s], ans: W / d, h: `The bottom number tells how many equal groups: ${d}.`,
         w: [[W * d, "Multiplied instead of divided", `Split ${W} into ${d} equal groups: divide.`]] }),
-      ns({ id: "take", l: "Take that many groups", a: s => [num(W / d), op("×"), num(n), op("="), ...s], ans: (W / d) * n, h: `The top number tells how many groups to take: ${n}.` }),
+      ns({ id: "take", l: "Take that many groups", a: s => [num(W / d), op("×"), num(n), op("="), ...s], ans: (W / d) * n, h: `The top number tells how many groups to take: ${n}.`,
+        w: [[W / d + n, "Added", `Take ${count(n, "group")} of ${W / d}: that's multiplying.`], [W - (W / d) * n, "Found the part not taken", `That's the groups left over. Take the ${n} the top number says.`]] }),
     ],
     finalParts: [-1],
   };
@@ -49,7 +52,8 @@ export function fractionOfNumberPicture({ n, d, W }: FractionOfNumberProblem) {
 function explain(p: FractionOfNumberProblem, model: AnswerModel): Explanation {
   const { n, d, W } = p, g = expectedOf(model.steps, "groups"), R = expectedOf(model.steps, "take");
   return {
-    heading: "Divide by the bottom, multiply by the top",
+    heading: "Equal groups, then take some",
+    idea: ["The bottom of a fraction says how many equal groups to split into, and the top says how many of those groups you take.", "So 3/4 of 20 is 3 groups of 5."],
     statement: [frac(n, d), text(" of "), num(W)],
     diagram: fractionOfNumberPicture(p),
     caption: `Split ${W} into ${count(d, "group")}. Take ${n} of them.`,
@@ -71,7 +75,7 @@ export const lesson: LessonDefinition<FractionOfNumberProblem> = {
   pre: "g4-fracwhole",
   // the current app's card and picture: 3/4 of 20 = 15
   reference: createFractionOfNumber(3, 4, 20),
-  generate: rng => generateFractionOfNumber(rng),
+  generate: (rng, index) => generateFractionOfNumber(rng, index),
   restore: raw => {
     const r = ints(raw, ["n", "d", "W"] as const);
     try { return r && createFractionOfNumber(r.n, r.d, r.W); } catch { return null; }

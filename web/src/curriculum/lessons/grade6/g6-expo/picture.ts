@@ -20,13 +20,14 @@ export function exponentOrderPicture(o: { a: number; n: number; b: number; c: nu
     stages: [
       { beat: 0, at: 0, tree: sum([power([T(String(a), String(n))]), T("+"), product()]) },
       { beat: 0, at: 1, tree: sum([power([T(String(a), String(n))], true), T("+"), product()]) },
-      // the exponent says how many copies of a to multiply
+      // the exponent says how many copies of a to multiply (beat 0 counts them; beat 1 works them out)
       { beat: 0, at: 2, tree: sum([power([repeated], true), T("+"), product()]) },
-      { beat: 0, at: 3.4, tree: sum([chip(E, PE, true), T("+"), product()]) },
-      { beat: 1, at: 0, tree: sum([chip(E, PE), T("+"), product(true)]) },
-      { beat: 1, at: 1.2, tree: sum([chip(E, PE), T("+"), chip(M, PM, true)]) },
-      { beat: 2, at: 0, tree: sum([chip(E, PE), T("+"), chip(M, PM)], true) },
-      { beat: 2, at: 1.2, tree: [chip(S, "pq", true)] },
+      { beat: 1, at: 0, tree: sum([power([repeated], true), T("+"), product()]) },
+      { beat: 1, at: 1.2, tree: sum([chip(E, PE, true), T("+"), product()]) },
+      { beat: 2, at: 0, tree: sum([chip(E, PE), T("+"), product(true)]) },
+      { beat: 2, at: 1.2, tree: sum([chip(E, PE), T("+"), chip(M, PM, true)]) },
+      { beat: 3, at: 0, tree: sum([chip(E, PE), T("+"), chip(M, PM)], true) },
+      { beat: 3, at: 1.2, tree: [chip(S, "pq", true)] },
     ],
     alt: `${a}${supText(n)} + ${b} × ${c} in boxes: the power opens into ${n} copies of ${a} and becomes ${E}, then ${b} × ${c} becomes ${M}, then ${E} + ${M} = ${S}.`,
   });

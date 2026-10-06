@@ -25,7 +25,8 @@ function answers({ a, b }: TenthsHundredthsProblem): AnswerModel {
     steps: [
       ns({ id: "hundredths", l: "Tenths to hundredths", a: s => [frac(a, 10), op("="), frac(s, 100)], ans: 10 * a, h: "Multiply the top and bottom by 10.",
         w: [[a, "Changed only the bottom", "Multiply the top by 10 too."]] }),
-      ns({ id: "add", l: "Add the hundredths", a: s => [frac(10 * a, 100), op("+"), frac(b, 100), op("="), frac(s, 100)], ans: S, h: "Same-size pieces: add the tops." }),
+      ns({ id: "add", l: "Add the hundredths", a: s => [frac(10 * a, 100), op("+"), frac(b, 100), op("="), frac(s, 100)], ans: S, h: "Same-size pieces: add the tops.",
+        w: [[a + b, "Used the tenths as they were", `Tenths are bigger pieces. Use the ${10 * a} hundredths from the step before.`]] }),
       ns({ id: "decimal", l: "Write it as a decimal", a: s => [frac(S, 100), op("="), ...s], ans: S / 100, h: "Hundredths go two places after the point.",
         w: [[S / 10, "Point in the wrong place", "Hundredths need two places after the decimal point."]] }),
     ],
@@ -65,6 +66,7 @@ function explain(p: TenthsHundredthsProblem, model: AnswerModel): Explanation {
   const A = expectedOf(model.steps, "hundredths"), S = expectedOf(model.steps, "add"), D = expectedOf(model.steps, "decimal");
   return {
     heading: "Make the pieces match",
+    idea: ["A tenth is 1 of 10 equal parts and a hundredth is 1 of 100, so 1 tenth is the same as 10 hundredths.", "Once both are in hundredths, the pieces are the same size and can be added."],
     statement: [frac(a, 10), op("+"), frac(b, 100)],
     diagram: tenthsHundredthsPicture(p),
     caption: `${a}/10 is the same as ${A}/100.`,
@@ -85,6 +87,7 @@ export const lesson: LessonDefinition<TenthsHundredthsProblem> = {
   grade: 4,
   unit: "Decimals",
   title: "Tenths and hundredths",
+  pre: "g4-equiv",
   // the current app's card: 3/10 + 25/100 = 0.55
   reference: createTenthsHundredths(3, 25),
   generate: rng => generateTenthsHundredths(rng),

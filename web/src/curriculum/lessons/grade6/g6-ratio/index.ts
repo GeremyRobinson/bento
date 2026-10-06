@@ -15,10 +15,12 @@ export function createRatio(a: number, b: number, k: number): RatioProblem {
 }
 
 /** Same ranges as the current app: a 1–9 and b 2–9 in lowest terms and different, scaled by 2–9. */
-export function generateRatio(rng: Rng): RatioProblem {
+export function generateRatio(rng: Rng, index = 3): RatioProblem {
+  // the first three: small parts, doubled or tripled
+  const top = index < 3 ? 5 : 9;
   let a: number, b: number;
-  do { a = rng.int(1, 9); b = rng.int(2, 9); } while (gcd(a, b) !== 1 || a === b);
-  return createRatio(a, b, rng.int(2, 9));
+  do { a = rng.int(1, top); b = rng.int(2, top); } while (gcd(a, b) !== 1 || a === b);
+  return createRatio(a, b, index < 3 ? rng.int(2, 3) : rng.int(2, 9));
 }
 
 function answers({ a, b, k }: RatioProblem): AnswerModel {
@@ -26,7 +28,7 @@ function answers({ a, b, k }: RatioProblem): AnswerModel {
     steps: [
       ns({ id: "factor", l: "Find the scale factor", a: s => [num(b), op("×"), ...s, op("="), num(b * k)], ans: k, h: `What times ${b} makes ${b * k}?`,
         w: [[b * k - b, "Added instead of multiplied", "Ratios grow by multiplying, not adding."]] }),
-      ns({ id: "scale", l: "Scale the other number", a: s => [num(a), op("×"), num(k), op("="), ...s], ans: a * k, h: `Multiply ${a} by the same ${k}.`,
+      ns({ id: "scale", l: "Scale the other number", a: s => [num(a), op("×"), num(k), op("="), ...s], ans: a * k, h: `Multiply ${a} by the same number you found for the other part.`,
         w: [[a + b * k - b, "Added instead of multiplied", "Use the same multiply on both numbers."]] }),
     ],
     finalParts: [-1],
@@ -53,6 +55,7 @@ function explain(p: RatioProblem, model: AnswerModel): Explanation {
   const { a, b } = p, k = expectedOf(model.steps, "factor"), ak = expectedOf(model.steps, "scale");
   return {
     heading: "Multiply both parts the same",
+    idea: ["A ratio compares two amounts, so when one part grows 3 times bigger, the other must grow 3 times bigger too, or the mix changes.", "Find what the known part was multiplied by, and multiply the other part by the same number."],
     statement: [num(a), text(" : "), num(b), op("="), text("? : "), num(b * k)],
     diagram: ratioPicture(p),
     caption: `Every box is the same size: ${k}.`,
@@ -73,7 +76,7 @@ export const lesson: LessonDefinition<RatioProblem> = {
   title: "Equivalent ratios",
   // the current app's card and picture: 2 : 3 = 8 : 12
   reference: createRatio(2, 3, 4),
-  generate: rng => generateRatio(rng),
+  generate: (rng, index) => generateRatio(rng, index),
   restore: raw => {
     const r = ints(raw, ["a", "b", "k"] as const);
     try { return r && createRatio(r.a, r.b, r.k); } catch { return null; }

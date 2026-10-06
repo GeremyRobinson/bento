@@ -114,7 +114,7 @@ export const lesson: LessonDefinition<SubRegroupProblem> = {
   grade: 2,
   unit: "Adding and subtracting",
   title: "Subtracting with regrouping",
-  pre: "g1-sub20",
+  pre: "g2-regroup",
   reference: createSubRegroup(52, 27),
   generate,
   restore: raw => restoreVia(raw, ["a", "b"] as const, v => createSubRegroup(v.a, v.b)),

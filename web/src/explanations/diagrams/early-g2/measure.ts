@@ -104,16 +104,18 @@ export function buildRuler(spec: RulerSpec): SceneDiagram {
     items.push(seg([x1, top - 12], [x1, 0], "ln2 dash", { from: beats.end, enter: "draw" }));
     items.push(t(x1, top - 24, "end", "xs", { from: beats.end, enter: "rise" }));
     items.push(circle(x1, 0, 6, "dota", { from: beats.end, enter: "pop", delay: 0.3 }));
-    // one hop under the ruler for every unit from start to end
+    // one hop under the ruler for every unit from start to end; a long object hops faster, so every hop and its count
+    // are drawn within a second, the same as a short one (v43: a 9 cm pencil's counter looked stuck at 5)
+    const gap = Math.min(0.2, 0.9 / (e - s));
     for (let v = s; v < e; v++) {
-      const d = 0.2 * (v - s);
+      const d = gap * (v - s);
       items.push(path([{ c: "M", p: [x(v), 60] }, { c: "Q", q: [x(v + 0.5), 60 + 26], p: [x(v + 1), 60] }], "ln", { from: beats.count, enter: "draw", delay: d }));
       items.push(t(x(v + 0.5), 88, String(v - s + 1), v === e - 1 ? "lbl acc" : "sm", { from: beats.count, enter: "rise", delay: d + 0.2 }));
     }
     const y = 128, mid = x(max) / 2;
     items.push(t(mid, y, spec.text.start, "lbl", { from: beats.start, until: beats.end - 1, enter: "rise", delay: 0.4 }));
     items.push(t(mid, y, spec.text.end, "lbl", { from: beats.end, until: beats.count - 1, enter: "rise", delay: 0.4 }));
-    items.push(t(mid, y, spec.text.count, "lbl big acc", { from: beats.count, enter: "rise", delay: 0.2 * (e - s) }));
+    items.push(t(mid, y, spec.text.count, "lbl big acc", { from: beats.count, enter: "rise", delay: gap * (e - s) }));
   }
   return frame("early-g2-ruler", items, spec.alt, 14, {});
 }

@@ -23,9 +23,11 @@ export function explainGrowth(p: GrowthProblem, model: AnswerModel): Explanation
       fit: [[t, total], [t + 0.3, 0]],
       items: [
         { kind: "curve", f: x => P * r ** x, x0: 0, x1: t, cls: "ln thin dash", from: 1 },
+        // the start sits on the y-axis just above the x-axis, so its label is placed first and goes above-right,
+        // clear of both axes (Review v43 #20); the hour labels then take what room is left
+        { kind: "point", at: [0, P], label: { text: n(P), prefer: ["nw", "w"], clearAxes: true } },
         ...hours.slice(1, -1).map((h): PlaneItem => ({ kind: "point", at: [h, P * r ** h], from: 1, delay: 0.3 * h, small: true,
           label: { text: n(P * r ** h), optional: true, prefer: ["nw", "w", "n"] } })),
-        { kind: "point", at: [0, P], label: { text: n(P), prefer: ["e", "ne", "se"] } },
         { kind: "point", at: [t, total], cls: "dota", from: 2, label: { text: n(total), acc: true, prefer: ["w", "nw", "sw"] } },
         { kind: "label", at: [t, 0], from: 1, label: { text: `${count(t, "hour")}`, optional: true, prefer: ["n", "nw"] } },
       ],

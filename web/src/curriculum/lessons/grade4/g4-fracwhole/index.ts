@@ -27,7 +27,7 @@ const count = (k: number, d: number) => `${k} ${pieceName(d, k !== 1)}`;
 function answers({ n, d, W }: FractionTimesWholeProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "top", l: "Multiply the top", a: s => [num(W), op("×"), num(n), op("="), ...s], ans: W * n, h: `${countOf(W, "group")} of ${countOf(n, "piece")}.`,
+      ns({ id: "top", l: "Multiply the top", a: s => [num(W), op("×"), num(n), op("="), ...s], ans: W * n, h: `Each group has ${countOf(n, "piece")}. How many pieces are in all the groups?`,
         w: [[W * d, "Multiplied the bottom", "The pieces stay the same size. Only the number of pieces changes."]] }),
       simplifyStep(W * n, d, "Write as a mixed number"),
     ],
@@ -66,9 +66,10 @@ function explain(p: FractionTimesWholeProblem, model: AnswerModel): Explanation 
   const simple = S >= d
     ? `${count(S, d)} is ${mixedLabel(S, d)}: every ${countOf(d, "piece")} make one whole.`
     : g > 1 ? `Divide the top and the bottom by ${g}: ${S}/${d} = ${mixedLabel(S, d)}.`
-    : `${S}/${d} is already as simple as it gets.`;
+    : `No number but 1 divides both ${S} and ${d}, so ${S}/${d} is already as simple as it gets.`;
   return {
     heading: "Groups of pieces",
+    idea: ["Times a whole number means that many groups of the same pieces, so the pieces stay the same size.", "Only the number of pieces grows: multiply the top and keep the bottom."],
     statement: [num(W), op("×"), frac(n, d)],
     diagram: fractionTimesWholePicture(p),
     caption: `${countOf(W, "group")} of ${count(n, d)}.`,
@@ -76,7 +77,7 @@ function explain(p: FractionTimesWholeProblem, model: AnswerModel): Explanation 
     steps: [
       { id: "top", state: 1, answerStep: "top", result: S, math: [num(W), op("×"), num(n), op("="), num(S)],
         narration: `${countOf(W, "group")} of ${count(n, d)} make ${count(S, d)}. The pieces stay the same size.` },
-      { id: "simplify", state: 2, answerStep: "simplify", ...(F.num === 0 ? { result: F.whole } : {}), math: [frac(S, d), op("="), ...mixedMath(S, d)], narration: simple },
+      { id: "simplify", state: 2, answerStep: "simplify", ...(F.num === 0 ? { result: F.whole } : {}), math: S < d && g === 1 ? [frac(S, d)] : [frac(S, d), op("="), ...mixedMath(S, d)], narration: simple },
     ],
   };
 }
@@ -86,6 +87,7 @@ export const lesson: LessonDefinition<FractionTimesWholeProblem> = {
   grade: 4,
   unit: "Fractions",
   title: "Fraction times a whole number",
+  pre: "g4-likefrac",
   // the current app's card and picture: 3 × 2/5 = 6/5
   reference: createFractionTimesWhole(2, 5, 3),
   generate: rng => generateFractionTimesWhole(rng),

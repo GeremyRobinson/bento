@@ -18,12 +18,14 @@ function answers({ d, qt }: DivDecimalProblem): AnswerModel {
   const x = (d * qt) / 10, y = d / 10;
   return {
     steps: [
-      oneBox({ id: "divisor", label: "Make the divisor whole", prompt: s => [num(y), op("×"), num(10), op("="), s], ans: d, hint: "Move its decimal point one place right." }),
+      oneBox({ id: "divisor", label: "Make the divisor whole", prompt: s => [num(y), op("×"), num(10), op("="), s], ans: d, hint: "Move its decimal point one place right.",
+        wrong: [[d * 10, "Moved the point too far", "Times 10 moves the point just one place."], [round6(y / 10), "Moved the point the wrong way", "Times 10 makes it bigger: the point moves right."]] }),
       oneBox({
         id: "other", label: "Do the same to the other number", prompt: s => [num(x), op("×"), num(10), op("="), s], ans: d * qt,
         hint: "Multiply it by 10 too, so the answer doesn't change.", wrong: [[round6(x), "Changed only one number", "Multiply both numbers by 10."]],
       }),
-      oneBox({ id: "divide", label: "Divide", prompt: s => [num(d * qt), op("÷"), num(d), op("="), s], ans: qt, hint: `How many ${d}s make ${d * qt}?` }),
+      oneBox({ id: "divide", label: "Divide", prompt: s => [num(d * qt), op("÷"), num(d), op("="), s], ans: qt, hint: `How many ${d}s make ${d * qt}?`,
+        wrong: [[round6(qt / 10), "Put the point back", "Both numbers grew ten times, so the answer didn't change: there's no point to put back."], [d * qt * d, "Multiplied", `How many ${d}s fit in ${d * qt}? That's dividing.`]] }),
     ],
     finalParts: [-1],
   };
@@ -34,7 +36,7 @@ function explain(p: DivDecimalProblem, model: AnswerModel) {
   const d = expectedOf(model, "divisor"), n = expectedOf(model, "other"), qt = expectedOf(model, "divide");
   return chainExplanation({
     heading: "Make the divisor a whole number",
-    idea: ["Multiply both numbers by 10 so the divisor is a whole number. Moving both points the same way doesn't change the answer."],
+    idea: ["Dividing asks how many of one number fit into the other, and that stays the same when both numbers are made ten times bigger.", "So multiply both by 10 to make the divisor a whole number."],
     statement: [num(x), op("÷"), num(y)],
     caption: `Move both points one place: ${f(x)} ÷ ${f(y)} and ${n} ÷ ${d} have the same answer.`,
     alt: `${f(x)} ÷ ${f(y)} becomes ${n} ÷ ${d} = ${qt}.`,

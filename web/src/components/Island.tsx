@@ -9,10 +9,17 @@ import { lessonById } from "../curriculum/registry";
 import { currentItem, currentStep, lessonOfItem } from "../engine/session/practice";
 import { upNext } from "../app/today";
 import { Contents, type Level } from "./Contents";
+import { BentoMark } from "./primitives/BentoMark";
 import { MeStack } from "./MeStack";
+import { ConfirmStack } from "./ConfirmStack";
 import { tableById } from "../engine/facts/tables";
-import { Chevron } from "./primitives/icons";
+import { Chevron, LockIcon } from "./primitives/icons";
 import { CONTENTS, GROWN_UP, NO_UNIT, PRACTICE, REPORT, REVIEW, SETTING, YOUR_BENTO } from "../app/copy";
+
+/** A small cross: quit. */
+const CrossIcon = () => (
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden><path d="M7 7l10 10M17 7L7 17" /></svg>
+);
 
 /** A simple person: a head and shoulders. */
 const MeIcon = () => (
@@ -28,7 +35,7 @@ export function pageOf(lessonId: string): { grade: number; chapter: string; page
   return { grade: g, chapter: ch.name, page: ch.entries.findIndex(c => c.id === lessonId) + 1, pages: ch.entries.length };
 }
 
-type Place = { kicker: string; title: string; back?: { label: string; to: Route }; lesson?: string };
+type Place = { kicker: string; title: string; back?: { label: string; to: Route }; lesson?: string; /** says the page stays on this device, in place of the fill */ lock?: boolean };
 
 /** What the island says on each screen: a small line for where you are in the book, and the page you're on. */
 function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): Place {
@@ -56,7 +63,12 @@ function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): P
         ? { kicker: chapterLine(l.id, "report"), title: l.title, back: { label: l.title, to: { name: "learn", lessonId: l.id } }, lesson: l.id }
         : { kicker: GROWN_UP, title: rep?.title ?? REPORT, back: { label: GROWN_UP, to: { name: "parent" } } };
     }
-    case "parent": return { kicker: "Me", title: GROWN_UP, back: { label: "Me", to: { name: "me" } } };
+    case "parent": {
+      // on a phone a picked pattern is its own screen, and back returns to the list
+      const phone = typeof matchMedia !== "undefined" && matchMedia("(max-width: 699px)").matches;
+      return { kicker: `Me · ${gradeOf(grade).name}`, title: GROWN_UP, lock: true,
+        back: route.pick && phone ? { label: GROWN_UP, to: { name: "parent" } } : { label: "Me", to: { name: "me" } } };
+    }
     case "me": return { kicker: "Me", title: YOUR_BENTO, back: contents };
     case "facts": {
       const t = route.table ? tableById(route.table) : undefined;
@@ -116,7 +128,9 @@ function fillOf(place: Place, app: ReturnType<typeof useApp>, grade: number): nu
  */
 export function Island({ grade: chosen, guest }: { grade: number | null; guest?: boolean }) {
   const app = useApp();
-  const { progress, go, route, openSheet } = app;
+  const { progress, go, route, openSheet, quit } = app;
+  // quitting a run you started and don't want to finish (G 2026-10-06): one quick confirm, then it's gone
+  const [asking, setAsking] = useState(false);
   // the landing page, and any grade page reached before a grade is chosen, get the plain guest island
   const welcome = !!guest || route.name === "welcome" || chosen == null;
   const grade = chosen ?? 0;
@@ -160,7 +174,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
     const onStart = (e: TouchEvent) => { d0 = e.touches.length === 2 && (visualViewport?.scale ?? 1) <= 1.01 ? dist(e.touches) : 0; };
     const onMove = (e: TouchEvent) => {
       if (!d0 || e.touches.length !== 2) return;
-      if (dist(e.touches) / d0 < 0.7) { d0 = 0; setOpen(start); }
+      if (dist(e.touches) / d0 < 0.7) { d0 = 0; if (start === "shelf") openSheet(true); else setOpen(start); }
     };
     document.addEventListener("touchstart", onStart, { passive: true });
     document.addEventListener("touchmove", onMove, { passive: true });
@@ -175,16 +189,15 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   }, [open]);
 
   const run = progress.run, runGrade = run ? gradeOf(lessonOfItem(currentItem(run)).grade) : null;
-  const showResume = !!run && !!runGrade && route.name !== "practice" && !welcome;
+  // the pages about you (Me, the grown-up page, facts) keep one island at the top (Review v43 item 17)
+  const showResume = !!run && !!runGrade && !welcome && !["practice", "me", "parent", "facts"].includes(route.name);
   // in a lesson's practice, a light bulb sits beside Settings (UI notes preview); tests have no hints
   const hintable = route.name === "practice" && !!run && run.mode !== "test" && !!currentStep(run) && !run.pick;
 
   if (welcome) return (
     <div className="itop"><span /><header className="island guest">
-      <span className="iword">Bento</span>
-      {progress.chosen
-        ? <button className="ilink" onClick={() => go({ name: "home" }, "fwd")}>My lessons ›</button>
-        : <span className="inote">Kindergarten to 12th grade</span>}
+      <BentoMark className="iword" />
+      {progress.chosen && <button className="ilink" onClick={() => { openSheet(false); go({ name: "home" }, "fwd"); }}>My lessons ›</button>}
     </header><span /></div>
   );
 
@@ -203,16 +216,21 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
             <span className="rcount">{run!.i + 1}/{run!.items.length}</span>
           </button>
         )}
+        {showResume && (
+          <button className="iresume-x" onClick={() => setAsking(true)} aria-label={`Quit ${run!.title}`}><CrossIcon /></button>
+        )}
       </div>
       <header className="island">
         {back
           ? <button className="iback" onClick={() => go(back.to, "back")} aria-label={`Back to ${back.label}`}><Chevron dir="left" /></button>
           : <button className="iback" onClick={() => openSheet(true)} aria-label="Change grade"><Chevron dir="left" /></button>}
-        <button className="iplace" onClick={() => setOpen(start)} aria-label={`Contents. You're on ${place.title}`} aria-haspopup="dialog">
+        <button className="iplace" onClick={() => setOpen(start === "shelf" ? "year" : start)} aria-label={`Contents. You're on ${place.title}`} aria-haspopup="dialog">
           <small>{place.kicker}</small>
           {place.title === gradeOf(grade).name ? <GradeTitle grade={grade} /> : <b>{place.title}</b>}
         </button>
-        <span className="ibat" aria-hidden style={{ "--p": fill, "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties}><i /></span>
+        {place.lock
+          ? <span className="ilock"><LockIcon />On this device</span>
+          : <span className="ibat" aria-hidden style={{ "--p": fill, "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties}><i /></span>}
       </header>
       <div className="icorner right">
         {hintable && (
@@ -228,6 +246,10 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
     </div>
       {qs && <QuickSettings closing={qs === "closing"} close={shut} />}
       {me && <MeStack closing={me === "closing"} close={shutMe} />}
+      {asking && run && (
+        <ConfirmStack title={`Quit ${run.title}?`} body="Your answers so far won't be kept." confirm="Quit"
+          onCancel={() => setAsking(false)} onConfirm={() => { setAsking(false); quit({ stay: true }); }} />
+      )}
       {open && <Contents grade={place.lesson ? pageOf(place.lesson)?.grade ?? grade : grade} lessonId={place.lesson} level={open} close={() => setOpen(null)} />}
     </>
   );
@@ -255,7 +277,7 @@ function QuickSettings({ close, closing }: { close: () => void; closing: boolean
   return (
     <>
       <div className={`fdim${closing ? " out" : ""}`} onClick={close} />
-      <div className={`fstack qset${closing ? " out" : ""}`} role="dialog" aria-label="Settings" style={{ "--n": rows.length + (SANDBOX ? 3 : 2) } as CSSProperties}>
+      <div className={`fstack qset${closing ? " out" : ""}`} role="dialog" aria-label="Settings" style={{ "--n": rows.length + (SANDBOX ? 4 : 3) } as CSSProperties}>
         <span className="flbl" style={{ "--i": 0 } as CSSProperties}>Settings</span>
         {rows.map((r, i) => (
           <button key={r.label} className="fpill toggle" role="switch" aria-checked={r.on} onClick={r.flip} style={{ "--i": i + 1 } as CSSProperties}>
@@ -263,7 +285,9 @@ function QuickSettings({ close, closing }: { close: () => void; closing: boolean
           </button>
         ))}
         <button className="fpill" onClick={() => { close(); go({ name: "me" }, "fwd"); }} style={{ "--i": rows.length + 1 } as CSSProperties}>All settings ›</button>
-        {SANDBOX && <button className="fpill" onClick={() => { close(); dispatchEvent(new Event("bento:sandbox")); }} style={{ "--i": rows.length + 2 } as CSSProperties}>Sandbox ›</button>}
+        {/* the website: what Bento is, from inside the app (G 2026-10-06) */}
+        <button className="fpill" onClick={() => { close(); go({ name: "welcome" }, "back"); }} style={{ "--i": rows.length + 2 } as CSSProperties}>About Bento ›</button>
+        {SANDBOX && <button className="fpill" onClick={() => { close(); dispatchEvent(new Event("bento:sandbox")); }} style={{ "--i": rows.length + 3 } as CSSProperties}>Sandbox ›</button>}
       </div>
     </>
   );

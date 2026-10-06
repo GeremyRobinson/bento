@@ -1,14 +1,15 @@
 // Hash routes, so the app works from any folder on GitHub Pages and offline.
 export type Route =
-  /** the landing page; `shelf` opens it at the grade shelf, for anyone who reached a grade page without choosing one */
-  | { name: "welcome"; shelf?: boolean }
+  /** the landing page */
+  | { name: "welcome" }
   /** the grade's book: a list beside its detail; `pick` is the row the detail shows ("today" or a lesson id) */
   | { name: "home"; pick?: string }
   | { name: "learn"; lessonId: string }
   | { name: "practice" }
   | { name: "results" }
   | { name: "report"; key: string }
-  | { name: "parent" }
+  /** the grown-up page; `pick` is the mistake pattern the detail shows (on a phone, the detail on its own) */
+  | { name: "parent"; pick?: string }
   /** the personal hub: grades, progress, the grown-up page, accessibility and backups */
   | { name: "me" }
   /** the facts tables: all of them for the grade, or one table */
@@ -21,13 +22,13 @@ const decode = (s: string) => { try { return decodeURIComponent(s); } catch { re
 export function parseRoute(hash: string): Route {
   const parts = hash.replace(/^#\/?/, "").split("/").filter(Boolean).map(decode);
   switch (parts[0]) {
-    case "welcome": return parts[1] === "grades" ? { name: "welcome", shelf: true } : { name: "welcome" };
+    case "welcome": return { name: "welcome" };
     case "year": return parts[1] ? { name: "home", pick: parts[1] } : { name: "home" };
     case "learn": return parts[1] ? { name: "learn", lessonId: parts[1] } : { name: "home" };
     case "practice": return { name: "practice" };
     case "results": return { name: "results" };
     case "report": return parts[1] ? { name: "report", key: parts[1] } : { name: "home" };
-    case "grown-up": return { name: "parent" };
+    case "grown-up": return parts[1] ? { name: "parent", pick: parts[1] } : { name: "parent" };
     case "me": return { name: "me" };
     case "facts": return parts[1] ? { name: "facts", table: parts[1], ...(parts[2] === "go" ? { start: true } : {}) } : { name: "facts" };
     case "sandbox": return import.meta.env.MODE === "preview" || import.meta.env.MODE === "development" ? { name: "sandbox" } : { name: "home" };
@@ -37,13 +38,13 @@ export function parseRoute(hash: string): Route {
 
 export function routeHash(r: Route): string {
   switch (r.name) {
-    case "welcome": return r.shelf ? "#/welcome/grades" : "#/welcome";
+    case "welcome": return "#/welcome";
     case "home": return r.pick ? `#/year/${encodeURIComponent(r.pick)}` : "#/";
     case "learn": return `#/learn/${encodeURIComponent(r.lessonId)}`;
     case "practice": return "#/practice";
     case "results": return "#/results";
     case "report": return `#/report/${encodeURIComponent(r.key)}`;
-    case "parent": return "#/grown-up";
+    case "parent": return r.pick ? `#/grown-up/${encodeURIComponent(r.pick)}` : "#/grown-up";
     case "me": return "#/me";
     case "sandbox": return "#/sandbox";
     case "facts": return r.table ? `#/facts/${encodeURIComponent(r.table)}${r.start ? "/go" : ""}` : "#/facts";

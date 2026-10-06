@@ -6,6 +6,7 @@ import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
 import { count as countOf } from "../../../text";
 import { exponentRulePicture } from "./picture";
+import { withEasyStart } from "../../easy-start";
 
 /**
  * One exponent rule on powers of x: t = 0 multiplies xᵃ · xᵇ, t = 1 divides xᵃ⁺ᵇ ÷ xᵇ, t = 2 raises (xᵃ)ᵇ.
@@ -68,7 +69,7 @@ export function explainExponentRule(p: ExponentRule, model: AnswerModel) {
   ][t]!;
   return beatExplanation({
     heading: "Three exponent rules",
-    idea: ["Multiply: add the exponents. Divide: subtract them. Power of a power: multiply them."],
+    idea: ["x³ · x² is three x's times two more x's, five in all.", "Count the x's and the rules follow: add to multiply, subtract to divide, multiply for a power of a power."],
     statement: shown(p),
     caption: count,
     diagram: exponentRulePicture({ t, a, b, e, value, shown: [`x${supText(a)} · x${supText(b)}`, `x${supText(a + b)} ÷ x${supText(b)}`, `(x${supText(a)})${supText(b)}`][t]! }),
@@ -82,7 +83,7 @@ export function explainExponentRule(p: ExponentRule, model: AnswerModel) {
   });
 }
 
-export const lesson: LessonDefinition<ExponentRule> = {
+export const lesson: LessonDefinition<ExponentRule> = withEasyStart({
   id: "g8-exp",
   grade: 8,
   unit: "Exponents and roots",
@@ -94,4 +95,4 @@ export const lesson: LessonDefinition<ExponentRule> = {
   displayNote: () => "Simplify, then try x = 2.",
   answers: exponentAnswers,
   explain: explainExponentRule,
-};
+});

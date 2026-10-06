@@ -62,7 +62,7 @@ function answers({ h, m }: TimeProblem): AnswerModel {
           m > 0 && [m + 5, "One five too many", `Count one 5 for each number up to ${K}, and stop there.`],
           m > 5 && [m - 5, "One five too few", `Count one 5 for each number, all the way to ${K}.`],
         ]),
-        hint: m ? `Count by 5s, one for each number: ${Array.from({ length: K }, (_, i) => 5 * (i + 1)).join(", ")}.` : "On 12, no minutes have gone by yet.",
+        hint: m ? `Put your finger on 12. Count by 5s, one count for each number, until you reach ${K}.` : "On 12, no minutes have gone by yet.",
         explain: m ? `${Array.from({ length: K }, (_, i) => 5 * (i + 1)).join(", ")}. That's ${count(m, "minute")}.` : "On 12 it is 0 minutes past the hour.",
       }),
       manyBoxes({
@@ -73,7 +73,8 @@ function answers({ h, m }: TimeProblem): AnswerModel {
           [{ h, m: K }, "Read the number as the minutes", `The long hand on ${K} means ${count(m, "minute")}.`],
           [{ h: K, m: (h % 12) * 5 }, "Swapped the hands", "The short hand gives the hour and the long hand gives the minutes."],
         ] as [Record<string, number>, string, string][]).filter(([v]) => !same(v)),
-        hint: `Hour first, then minutes: ${h} and ${m}.`,
+        hint: "The hour from the short hand goes first, then the minutes you counted.",
+        explain: `Hour first, then minutes: ${h}:${m < 10 ? "0" : ""}${m}.`,
       }),
     ],
     finalParts: [-1],

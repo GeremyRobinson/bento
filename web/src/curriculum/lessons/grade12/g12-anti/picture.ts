@@ -29,11 +29,11 @@ export function antiderivativePicture(o: { a: number; n: number; up: number; c: 
     dropRoom: true,
     marks: [{ row: "head", col: 1, kind: "ring", from: 0, until: 0, at: 0.3 }],
     // the check: the derivative takes the answer back to where the term started
-    arrows: [{ kind: "back", a: [2, 0], b: [0, 1], from: 2, at: 2 }],
+    arrows: [{ kind: "back", a: [2, 0], b: [0, 1], label: `× ${up}`, from: 3, at: 0.3 }],
     lines: [
       { text: `${n} + 1 = ${up}`, from: 1, until: 1, at: 0.9 },
       { text: `${f(a)} ÷ ${up} = ${f(c)}: ${termText(c, up)} + C`, from: 2, at: 1.3 },
-      { text: `check: its derivative is ${termText(a, n)} again`, from: 2, at: 2.2, cls: "sm muted" },
+      { text: `check: its derivative is ${termText(a, n)} again`, from: 3, at: 0.9, cls: "lbl pw" },
     ],
     alt: `${termText(a, n)} in the x${n === 1 ? "" : supText(n)} column moves one column left to x${supText(up)}, and ${f(a)} ÷ ${up} = ${f(c)}: ${termText(c, up)} + C. Its derivative gives ${termText(a, n)} back.`,
   });

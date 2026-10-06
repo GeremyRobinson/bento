@@ -7,11 +7,18 @@ import { oneBox, wholeIn } from "../../_number-line/steps";
 import { countUp, slips, tapStep, words } from "../kit";
 import { count } from "../../../text";
 
-interface Kind { glyph: Glyph; one: string; many: string }
+/** looks: what this kind of thing looks like, so a sorting slip can say why it belongs with its group */
+interface Kind { glyph: Glyph; one: string; many: string; looks: string }
 const KINDS: Kind[][] = [
-  [{ glyph: "button", one: "button", many: "buttons" }, { glyph: "leaf", one: "leaf", many: "leaves" }, { glyph: "block", one: "block", many: "blocks" }],
-  [{ glyph: "circle", one: "circle", many: "circles" }, { glyph: "square", one: "square", many: "squares" }, { glyph: "triangle", one: "triangle", many: "triangles" }],
+  [{ glyph: "button", one: "button", many: "buttons", looks: "It is round with 4 little holes" },
+    { glyph: "leaf", one: "leaf", many: "leaves", looks: "It has a pointed tip and a line down the middle" },
+    { glyph: "block", one: "block", many: "blocks", looks: "It has 4 corners and a little square in the middle" }],
+  [{ glyph: "circle", one: "circle", many: "circles", looks: "It is round all the way, with no corners" },
+    { glyph: "square", one: "square", many: "squares", looks: "It has 4 corners and 4 straight sides" },
+    { glyph: "triangle", one: "triangle", many: "triangles", looks: "It has 3 corners and 3 straight sides" }],
 ];
+/** the thing the learner sorts first: the first one of a group that turns with the problem */
+const pickOf = (p: SortProblem) => ({ group: (p.theme + p.counts[0]!) % p.counts.length, item: 0 });
 const cap = (s: string) => s[0]!.toUpperCase() + s.slice(1);
 
 /** by 0 sorts kinds of things, 1 shapes; counts holds one count per kind; theme turns which kinds come first; ask 1 asks for the fewest */
@@ -34,8 +41,17 @@ function answers(p: SortProblem): AnswerModel {
   const kinds = kindsOf(p), total = p.counts.reduce((a, b) => a + b, 0);
   const pick = p.ask ? Math.min(...p.counts) : Math.max(...p.counts), other = p.ask ? Math.max(...p.counts) : Math.min(...p.counts);
   const right = p.counts.indexOf(pick), word = p.ask ? "fewest" : "most";
+  const g = pickOf(p).group, k0 = kinds[g]!;
   return {
     steps: [
+      tapStep({
+        id: "sort", label: "Sort one", question: "Which group does the ringed one go in?",
+        prompt: words("The ringed one goes with the ?"), choices: kinds.map(k => cap(k.many)), right: g,
+        wrong: () => ["Put it in the wrong group", `${k0.looks}, like the ${k0.many}.`],
+        hint: "Look at its shape. Which things look just like it?",
+        explain: `${k0.looks}, so it goes with the ${k0.many}.`,
+        work: [text(`It goes with the ${k0.many}.`)],
+      }),
       ...p.counts.map((n, i) => {
         const k = kinds[i]!;
         return oneBox({
@@ -43,7 +59,7 @@ function answers(p: SortProblem): AnswerModel {
           prompt: x => [text(`${cap(k.many)}: `), x], ans: n,
           wrong: slips(n, [
             [total, "Counted everything", `That's all of them. Count only the ${k.many}.`],
-            [n - 1, "Skipped one", `One short. Touch each ${k.one} as you count.`],
+            ...(n > 1 ? [[n - 1, "Skipped one", `One short. Touch each ${k.one} as you count.`] as [number, string, string]] : []),
             [n + 1, "Counted one twice", `One too many. Touch each ${k.one} only once.`],
           ]),
           hint: `Find every ${k.one}. Touch each one as you count.`,
@@ -52,12 +68,12 @@ function answers(p: SortProblem): AnswerModel {
       }),
       tapStep({
         id: "compare", label: `Which has the ${word}?`, question: `Which group has the ${word}?`,
-        prompt: [...p.counts.flatMap((n, i) => [...(i ? [text(", ")] : []), num(n), text(` ${kinds[i]!.many}`)])],
+        prompt: [...p.counts.flatMap((n, i) => [...(i ? [text(", ")] : []), num(n), text(` ${n === 1 ? kinds[i]!.one : kinds[i]!.many}`)])],
         choices: kinds.map(k => cap(k.many)), right,
         wrong: i => p.counts[i] === other
           ? [`Picked the ${p.ask ? "most" : "fewest"}`, `That group has the ${p.ask ? "most" : "fewest"}. Which group has the ${word}?`]
-          : ["Picked a middle group", `Look at the numbers again. The ${word} is ${pick}.`],
-        hint: p.ask ? "The fewest is the smallest number." : "The most is the biggest number.",
+          : ["Picked a middle group", `That group is in the middle. Put the rows side by side: the ${word} is the ${p.ask ? "shortest" : "longest"} row.`],
+        hint: p.ask ? "Put the rows side by side. The shortest row has the fewest." : "Put the rows side by side. The longest row has the most.",
         explain: `${pick} is the ${p.ask ? "smallest" : "biggest"} number, so the ${kinds[right]!.many} have the ${word}.`,
         work: [text(`The ${kinds[right]!.many} have the ${word}.`)],
       }),
@@ -67,7 +83,7 @@ function answers(p: SortProblem): AnswerModel {
 }
 
 const seedOf = (p: SortProblem) => p.counts.reduce((a, c) => a * 9 + c, p.by * 7 + p.theme * 3 + 1);
-const altOf = (p: SortProblem) => { const total = p.counts.reduce((a, b) => a + b, 0); return `${total} ${p.by ? "shapes" : "things"} of different ${p.by ? "shapes" : "kinds"}, mixed up.`; };
+const altOf = (p: SortProblem) => { const total = p.counts.reduce((a, b) => a + b, 0); return p.by ? `${total} shapes, all mixed up.` : `${total} things of different kinds, all mixed up.`; };
 
 function explain(p: SortProblem, model: AnswerModel): Explanation {
   const kinds = kindsOf(p), right = model.steps.at(-1)!.slots[0]!.expected!, word = p.ask ? "fewest" : "most";
@@ -75,12 +91,12 @@ function explain(p: SortProblem, model: AnswerModel): Explanation {
     heading: "Sort, then count",
     idea: ["Put the things that match together. Then count each group and see which has more."],
     statement: words(`Which group has the ${word}?`),
-    diagram: buildSort({ glyphs: kinds.map(k => k.glyph), counts: p.counts, seed: seedOf(p), mark: right, beats: { rows: 1, count: 2, mark: 3 },
+    diagram: buildSort({ glyphs: kinds.map(k => k.glyph), counts: p.counts, seed: seedOf(p), mark: right, beats: { rows: 1, count: 2, mark: 3 }, pick: { ...pickOf(p), until: 0 },
       alt: `${altOf(p)} They slide into rows, one row for each kind: ${p.counts.map((n, i) => count(n, kinds[i]!.one, kinds[i]!.many)).join(", ")}.` }),
     caption: `The ${kinds[right]!.many} have the ${word}.`,
     timeline: beats(4),
     steps: [
-      { id: "mixed", narration: "Everything is mixed up.", math: words("Mixed up"), state: 0 },
+      { id: "sort", narration: `Everything is mixed up. Look at the ringed one: ${kinds[pickOf(p).group]!.looks.toLowerCase()}, so it goes with the ${kinds[pickOf(p).group]!.many}.`, math: words("Mixed up"), state: 0, answerStep: "sort", result: pickOf(p).group },
       { id: "rows", narration: "Put the things that match together, one row for each kind.", math: words("Sorted"), state: 1 },
       ...p.counts.map((n, i) => ({ id: `count${i}`, narration: `${countUp(1, n)}: **${count(n, kinds[i]!.one, kinds[i]!.many)}**.`, math: [text(`${cap(kinds[i]!.many)}: `), num(n)], state: 2, answerStep: `count${i}`, result: n })),
       { id: "compare", narration: `The ${p.ask ? "shortest" : "longest"} row has the ${word}: the **${kinds[right]!.many}**.`, math: [text(`The ${kinds[right]!.many} have the ${word}.`)], state: 3, answerStep: "compare", result: right },
@@ -107,7 +123,7 @@ export const lesson: LessonDefinition<SortProblem> = {
     try { return createSort(r.by as number, r.counts as number[], r.theme as number, r.ask as number); } catch { return null; }
   },
   display: p => words(`Sort them. Which group has the ${p.ask ? "fewest" : "most"}?`),
-  picture: p => buildSort({ glyphs: kindsOf(p).map(k => k.glyph), counts: p.counts, seed: seedOf(p), alt: altOf(p) }),
+  picture: p => buildSort({ glyphs: kindsOf(p).map(k => k.glyph), counts: p.counts, seed: seedOf(p), pick: pickOf(p), alt: `${altOf(p)} One ${kindsOf(p)[pickOf(p).group]!.one} has a ring around it.` }),
   answers,
   explain,
   pre: "k-compare",

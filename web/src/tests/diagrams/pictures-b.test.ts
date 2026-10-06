@@ -165,13 +165,15 @@ const value = (l: AnyLesson, p: unknown, id: string) => l.answers(p).steps.find(
 const fmt = (n: number) => (n < 0 ? `−${-n}` : String(n));
 
 describe("expression-box lessons", () => {
-  it("g5-order collapses the boxes in order, each into the value its step finds, ending on the answer", () => {
+  it("g5-order lights the box that goes first, then collapses the boxes in order, each into the value its step finds, ending on the answer", () => {
     const l = lesson("g5-order");
     for (const p of problemsOf(l, 30)) {
       const d = sceneOf(l, p);
-      ["s0", "s1"].forEach((id, beat) => expect(finalText(d, beat)).toContain(String(value(l, p, id))));
-      expect(finalText(d, 2)).toEqual(expect.arrayContaining([String(value(l, p, "s2"))]));
-      expect(chipsAt(d, 2, /\bxchip pq\b/)).toHaveLength(1);
+      expect(shownAt(d, 0).some(i => i.type === "rect" && /\bhlline\b/.test(i.cls ?? ""))).toBe(true);
+      expect(chipsAt(d, 0)).toHaveLength(0);
+      ["s0", "s1"].forEach((id, k) => expect(finalText(d, k + 1)).toContain(String(value(l, p, id))));
+      expect(finalText(d, 3)).toEqual(expect.arrayContaining([String(value(l, p, "s2"))]));
+      expect(chipsAt(d, 3, /\bxchip pq\b/)).toHaveLength(1);
     }
   });
   it("g6-expo opens the power into exactly n copies of a, never a × n", () => {
@@ -194,9 +196,11 @@ describe("expression-box lessons", () => {
     const l = lesson("g12-chain");
     for (const p of problemsOf(l, 30) as { a: number; n: number }[]) {
       const d = sceneOf(l, p);
-      for (let b = 0; b < 4; b++) expect(shownAt(d, b).some(i => /\bxbox p1 dash\b/.test(i.cls ?? ""))).toBe(true);
-      expect(d.items.some(i => i.from === 2 && i.enter === "slide" && i.type === "text" && i.text === String(p.a))).toBe(true);
-      expect(finalText(d, 3)).toContain(String(p.a * p.n));
+      for (let b = 0; b < 5; b++) expect(shownAt(d, b).some(i => /\bxbox p1 dash\b/.test(i.cls ?? ""))).toBe(true);
+      // why: the inside's own rate is named on its box before it moves
+      expect(textsAt(d, 2).map(t => t.text)).toContain(`moves ${p.a} per 1`);
+      expect(d.items.some(i => i.from === 3 && i.enter === "slide" && i.type === "text" && i.text === String(p.a))).toBe(true);
+      expect(finalText(d, 4)).toContain(String(p.a * p.n));
     }
   });
 });
@@ -257,12 +261,13 @@ describe("term-table lessons", () => {
       expect(cellsAt(d, 3).filter(t => t.y === bottom && t.text !== "=").sort((a, b) => a.x - b.x).map(t => t.text)).toEqual(ans);
     }
   });
-  it("g11-synth ends with 1, q and a ringed 0 in the bottom row", () => {
+  it("g11-synth ends with 1, q and the remainder (ringed when it lands, checked at r) in the bottom row", () => {
     const l = lesson("g11-synth");
     for (const p of problemsOf(l, 40)) {
-      const d = sceneOf(l, p), bottom = Math.max(...cellsAt(d, 5).map(t => t.y));
-      expect(cellsAt(d, 5).filter(t => t.y === bottom).sort((a, b) => a.x - b.x).map(t => t.text)).toEqual(["1", fmt(value(l, p, "add1")), "0"]);
-      expect(rects(d, 5, /\bxring\b/).length).toBeGreaterThan(0);
+      const d = sceneOf(l, p), bottom = Math.max(...cellsAt(d, 6).map(t => t.y)), rem = value(l, p, "rem");
+      expect(cellsAt(d, 6).filter(t => t.y === bottom).sort((a, b) => a.x - b.x).map(t => t.text)).toEqual(["1", fmt(value(l, p, "add1")), fmt(rem)]);
+      expect(rects(d, 4, /\bxring\b/).length).toBeGreaterThan(0);
+      expect(finalText(d, 5).join(" ")).toContain(`check:`);
     }
   });
   it("g12-polyd slides each term one column right with its exponent brought down", () => {
@@ -308,14 +313,19 @@ describe("area-model lessons", () => {
       expect(finalText(d, 3)).toContain(`${T} + ${O} = ${p.qt}`);
     }
   });
-  it("g5-multdec lays an A by B block of hundredths on whole unit squares", () => {
-    const l = lesson("g5-multdec");
-    for (const p of problemsOf(l) as { A: number; B: number }[]) {
+  it("g5-multdec lays an A by B block of small pieces on whole unit squares, and names the place they count", () => {
+    const l = lesson("g5-multdec"), PLACE = ["ones", "tenths", "hundredths", "thousandths"];
+    for (const p of problemsOf(l) as { A: number; B: number; pa?: number; pb?: number }[]) {
+      const pa = p.pa ?? 1, pb = p.pb ?? 1, x = p.A / 10 ** pa, y = p.B / 10 ** pb;
       const d = sceneOf(l, p), lines = shownAt(d, 0).filter(i => i.type === "line" && i.cls === "grid");
       const vertical = lines.filter(i => i.type === "line" && i.x1 === i.x2).length, flat = lines.length - vertical;
-      expect([vertical, flat]).toEqual([p.A - 1, p.B - 1]);
-      expect(rects(d, 0, /^ax$/)).toHaveLength(Math.ceil(p.A / 10));
-      expect(finalText(d, 0)).toContain(`${p.A} × ${p.B} = ${p.A * p.B} tiny squares`);
+      // every cut is drawn whole, or left out where its lines would run together; tenths by tenths always shows
+      expect([0, p.A - 1]).toContain(vertical);
+      expect([0, p.B - 1]).toContain(flat);
+      if (pa === 1 && pb === 1) expect([vertical, flat]).toEqual([p.A - 1, p.B - 1]);
+      expect(rects(d, 0, /^ax$/)).toHaveLength(Math.ceil(x - 1e-9) * Math.ceil(y - 1e-9));
+      expect(finalText(d, 0)).toContain(`${p.A} × ${p.B} = ${p.A * p.B} small pieces`);
+      expect(finalText(d, 2).join(" ")).toContain(`${p.A * p.B} ${PLACE[pa + pb]} = `);
       expect(rects(d, 1, /\bxring\b/)).toHaveLength(1);
     }
   });
@@ -350,10 +360,10 @@ describe("tape lessons", () => {
     const l = lesson("g6-divide");
     for (const p of problemsOf(l) as FracP[]) {
       const d = sceneOf(l, p), S = p.a * p.d, L = p.b * p.c;
-      const copies = d.items.filter(i => i.type === "rect" && i.from === 2 && /\bseg on\b/.test(i.cls ?? ""));
+      const copies = d.items.filter(i => i.type === "rect" && i.from === 3 && /\bseg on\b/.test(i.cls ?? ""));
       expect(copies).toHaveLength(Math.ceil(S / L));
       expect(copies.filter(i => i.vars?.["--tint"] === "var(--acc)")).toHaveLength(S % L ? 1 : 0);
-      expect(textsAt(d, 1).map(t => t.text)).toEqual(expect.arrayContaining([`${S} small pieces`, `${L} small pieces`]));
+      expect(textsAt(d, 2).map(t => t.text)).toEqual(expect.arrayContaining([`${S} small pieces`, `${L} small pieces`]));
       // never in grade 6's lime (right) part colour
       expect(d.items.filter(i => /\bp1\b/.test(i.cls ?? ""))).toEqual([]);
     }

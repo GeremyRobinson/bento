@@ -3,8 +3,9 @@ import type { LessonDefinition } from "../../../schemas/lesson";
 import { perpAnswers, slopeMath } from "./answers";
 import { explainPerp } from "./explanation";
 import { createPerp, generatePerp, restorePerp, type PerpProblem } from "./problem";
+import { withEasyStart } from "../../easy-start";
 
-export const lesson: LessonDefinition<PerpProblem> = {
+export const lesson: LessonDefinition<PerpProblem> = withEasyStart({
   id: "g10-perp",
   grade: 10,
   unit: "Coordinate geometry",
@@ -16,4 +17,4 @@ export const lesson: LessonDefinition<PerpProblem> = {
   displayNote: () => "Find the slope of a perpendicular line.",
   answers: perpAnswers,
   explain: explainPerp,
-};
+});

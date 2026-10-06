@@ -8,7 +8,8 @@ import type { Rng } from "../curriculum/generators/rng";
 import { PlayingDiagram } from "../components/diagrams/PlayingDiagram";
 import { reduceMotion } from "../app/transition";
 import { FeatureBox } from "../components/LandingTiles";
-import { GradeNum, Shelf } from "../components/Shelf";
+import { GradeNum } from "../components/Shelf";
+import { OneIdea } from "../components/LandingStory";
 import { Advanced } from "../components/Advanced";
 import type { Explanation } from "../explanations/schema";
 import { START_LEARNING } from "../app/copy";
@@ -137,27 +138,26 @@ function HeroPictures({ rng }: { rng: Rng }) {
   return <>{tiles.map((t, i) => <HeroTile key={i} shot={t.shot} n={t.n} big={i === 0} start={i * STAGGER} next={nexts[i]!} />)}</>;
 }
 
-/** The first screen on a new device: what Bento is, the real thing working, and the grade shelf to start from. */
+/** The first screen on a new device: what Bento is, the real thing working, and one idea climbing from K to 12th. */
 /** preview and dev builds carry the design sandbox; on the landing page its way in is the footer */
 const SANDBOX = import.meta.env.MODE === "preview" || import.meta.env.MODE === "development";
 
-export function Welcome({ shelf = false }: { shelf?: boolean }) {
-  const { chooseGrade, deps, go } = useApp();
+export function Welcome() {
+  const { deps, go, progress, openSheet } = useApp();
   const rng = useMemo(() => deps().rng, []); // eslint-disable-line react-hooks/exhaustive-deps
-  // sent here to choose a grade: open at the shelf
-  useEffect(() => { if (shelf) document.getElementById("lshelf")?.scrollIntoView?.({ block: "start" }); }, [shelf]);
+  // Start learning is the one way in: grades are chosen in the app, in picker D, with nothing picked (G 2026-10-06)
+  const start = () => { go({ name: "home" }, "fwd"); if (progress.grade != null) openSheet(true); };
   return (
     <div className="land">
       <section className="lhero">
         <h1>Math that <span>clicks.</span></h1>
         <p>Watch each idea play out, then solve it one step at a time. If you slip, Bento shows you the exact step and why.</p>
-        <div className="lcta"><Pill go onClick={() => go({ name: "home" }, "fwd")}>{START_LEARNING}</Pill><span>Free. No account.</span></div>
+        <div className="lcta"><Pill go onClick={start}>{START_LEARNING}</Pill><span>Start free. No account.</span></div>
       </section>
       <section className="lhbox">
         <HeroPictures rng={rng} />
       </section>
-      <section className="lsec" id="lshelf"><h2>Every grade, K to 12th.</h2><p>Each grade is a book of chapters. Start in any one and switch whenever you like.</p></section>
-      <div className="lshelf"><Shelf current={null} onPick={chooseGrade} /></div>
+      <OneIdea rng={rng} />
       <section className="lsec"><h2>Everything in one box.</h2><p>Lessons, plus everything that helps them stick.</p></section>
       <FeatureBox rng={rng} />
       <Advanced />

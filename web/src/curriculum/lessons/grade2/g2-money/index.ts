@@ -75,7 +75,7 @@ function answers(pr: MoneyProblem): AnswerModel {
         question: i === 0 ? `Each ${COINS[g.value].name} is ${g.value}¢.` : `Start at ${g.before}¢. Each ${COINS[g.value].name} adds ${g.value}¢.`,
         prompt: s => [...lead, num(g.count), text(` ${name} = `), s, text("¢")], ans: g.after,
         wrong: slips(g.after, slipsFor(g.value, g.count, g.before)),
-        hint: `${g.before ? `Start at ${g.before} and count` : "Count"} by ${g.value}s: ${g.seq.join(", ")}.`,
+        hint: `${g.before ? `Start at ${g.before} and count` : "Count"} by ${g.value}s, one count for each coin${g.seq.length > 2 ? `: ${g.seq.slice(0, 2).join(", ")}, and on` : ""}.`,
         explain: `${g.before ? `Start at ${g.before}, then ` : ""}${g.seq.join(", ")}. That's ${g.after}¢.`,
       });
     }),
@@ -122,7 +122,7 @@ export const lesson: LessonDefinition<MoneyProblem> = {
   grade: 2,
   unit: "Measurement and data",
   title: "Counting money",
-  pre: "g2-skip",
+  pre: "g2-coins",
   reference: createMoney(2, 1, 1, 3),
   generate,
   restore: raw => restoreVia(raw, ["q", "d", "n", "p"] as const, v => createMoney(v.q, v.d, v.n, v.p)),

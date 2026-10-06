@@ -5,6 +5,7 @@ import { fpm, ns, pm, v } from "../../algebra-kit/steps";
 import { attempt, nz, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
 import { radicalEquationPicture } from "./picture";
+import { withEasyStart } from "../../easy-start";
 
 /** √(x + a) = b, so x = b² − a. */
 export interface RadicalEquation { kind: "equation.radical"; a: number; b: number; x: number }
@@ -30,7 +31,7 @@ export function radicalAnswers({ a, b }: RadicalEquation): AnswerModel {
     steps: [
       ns({ id: "square", l: "Square both sides", a: s => [...inside(a), op("="), num(b), sup(2), op("="), ...s], ans: b * b, h: `Squaring undoes the square root: ${f(b)} × ${f(b)}.`,
         w: [[2 * b, "Doubled instead", "Squared means times itself."]] }),
-      ns({ id: "solve", l: "Solve", a: s => [v(), op("="), ...s], ans: b * b - a, h: `Undo the ${fpm(a)}.`, w: [[b * b + a, "Wrong direction", "Do the opposite operation."]] }),
+      ns({ id: "solve", l: "Solve", a: s => [v(), op("="), ...s], ans: b * b - a, h: `Do the same to both sides: undo the ${fpm(a)} by ${a > 0 ? "subtracting" : "adding"} ${f(Math.abs(a))}.`, w: [[b * b + a, "Wrong direction", `x ${fpm(a)} = ${f(b * b)}: to undo ${fpm(a)}, ${a > 0 ? "subtract" : "add"} ${f(Math.abs(a))}.`]] }),
     ],
     finalParts: [-1],
   };
@@ -41,6 +42,7 @@ export function explainRadical(p: RadicalEquation, model: AnswerModel) {
   const [sq, x] = model.steps.map(s => s.slots[0]!.expected!) as [number, number];
   return beatExplanation({
     heading: "Square to undo the root",
+    idea: ["Squaring undoes a square root, and doing the same thing to both sides keeps them equal.", "Squaring can sneak in an answer that doesn't work, so put your answer back into the root to check it."],
     statement: [...root(a), op("="), num(b)],
     caption: `Squaring both sides keeps them equal and removes the root.`,
     diagram: radicalEquationPicture({ a, b, sq, x }),
@@ -55,7 +57,7 @@ export function explainRadical(p: RadicalEquation, model: AnswerModel) {
   });
 }
 
-export const lesson: LessonDefinition<RadicalEquation> = {
+export const lesson: LessonDefinition<RadicalEquation> = withEasyStart({
   id: "g11-radical",
   grade: 11,
   unit: "Functions",
@@ -67,4 +69,4 @@ export const lesson: LessonDefinition<RadicalEquation> = {
   displayNote: () => "Solve for x.",
   answers: radicalAnswers,
   explain: explainRadical,
-};
+});

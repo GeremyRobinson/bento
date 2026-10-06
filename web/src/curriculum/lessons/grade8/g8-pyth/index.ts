@@ -5,6 +5,7 @@ import { beats } from "../../../../explanations/schema";
 import { buildRightTriangle } from "../../../../explanations/diagrams/right-triangle/build";
 import { asRecord, expected, mt, ns, numberField, TRIPLES } from "../../_geometry/kit";
 import type { Rng } from "../../../generators/rng";
+import { withEasyStart } from "../../easy-start";
 
 /** A right triangle with legs a (drawn up) and b (drawn across); c is the long side. */
 export interface PythagorasProblem {
@@ -37,13 +38,13 @@ export function restorePythagoras(raw: unknown): PythagorasProblem | null {
 export function pythagorasAnswers({ a, b, c }: PythagorasProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "square-a", label: "Square a", prompt: s => mt`${a}${sup("2")} = ${s}`, ans: a * a, hint: `${a} × ${a}.`,
+      ns({ id: "square-a", label: "Square a", prompt: s => mt`${a}${sup("2")} = ${s}`, ans: a * a, hint: `Squared means the side times itself: ${a} × ${a}.`,
         wrong: [[2 * a, "Squared as times 2", `Squared means ${a} × ${a}, not ${a} × 2.`]],
-        explain: `${a} × ${a} = ${a * a}.`, work: mt`${a}${sup("2")} = ${a * a}` }),
-      ns({ id: "square-b", label: "Square b", prompt: s => mt`${b}${sup("2")} = ${s}`, ans: b * b, hint: `${b} × ${b}.`,
+        explain: `Squared means the side times itself: ${a} × ${a} = ${a * a}.`, work: mt`${a}${sup("2")} = ${a * a}` }),
+      ns({ id: "square-b", label: "Square b", prompt: s => mt`${b}${sup("2")} = ${s}`, ans: b * b, hint: `Squared means the side times itself: ${b} × ${b}.`,
         wrong: [[2 * b, "Squared as times 2", `Squared means ${b} × ${b}, not ${b} × 2.`]],
-        explain: `${b} × ${b} = ${b * b}.`, work: mt`${b}${sup("2")} = ${b * b}` }),
-      ns({ id: "add", label: "Add them", prompt: s => mt`${a * a} + ${b * b} = c${sup("2")} = ${s}`, ans: c * c, hint: "Add the two squares.",
+        explain: `Squared means the side times itself: ${b} × ${b} = ${b * b}.`, work: mt`${b}${sup("2")} = ${b * b}` }),
+      ns({ id: "add", label: "Add them", prompt: s => mt`${a * a} + ${b * b} = c${sup("2")} = ${s}`, ans: c * c, hint: "The two small squares together fill the square on the long side: add them.", wrong: [[a + b, "Added the sides", "Add the two squares, not the sides."]],
         explain: `${a * a} + ${b * b} = ${c * c}.`, work: mt`c${sup("2")} = ${c * c}` }),
       ns({ id: "root", label: "Square root", prompt: s => mt`c = √${c * c} = ${s}`, ans: c, hint: `What number times itself makes ${c * c}?`,
         wrong: [[a + b, "Added the legs", `You can't just add the legs. Find the number that times itself makes ${c * c}.`],
@@ -83,7 +84,7 @@ export function explainPythagoras(p: PythagorasProblem, answers: AnswerModel): E
   };
 }
 
-export const lesson: LessonDefinition<PythagorasProblem> = {
+export const lesson: LessonDefinition<PythagorasProblem> = withEasyStart({
   id: "g8-pyth",
   grade: 8,
   unit: "Geometry",
@@ -96,4 +97,4 @@ export const lesson: LessonDefinition<PythagorasProblem> = {
   displayNote: p => `Right triangle with legs ${p.a} and ${p.b}. Find the long side, c.\na² + b² = c²`,
   answers: pythagorasAnswers,
   explain: explainPythagoras,
-};
+});

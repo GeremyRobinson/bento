@@ -23,11 +23,16 @@ export function powerRulePicture(o: { a: number; n: number; c: number; e: number
       { row: -0.55, col: 0, text: `${n} ×`, cls: "lbl acc", from: 1, until: 1, at: 0.2, enter: "drop" },
     ],
     dropRoom: true,
-    marks: [{ row: "head", col: 0, kind: "ring", from: 0, until: 0, at: 0.3 }],
+    marks: [
+      { row: "head", col: 0, kind: "ring", from: 0, until: 0, at: 0.3 },
+      // the slope at x = 1 is just the new coefficient
+      { row: 1, col: 1, kind: "focus", from: 4, at: 0.2 },
+    ],
     lines: [
       { text: `${n} × ${a} = ${c}`, from: 1, until: 1, at: 1.3 },
       { text: `${n} − 1 = ${e}`, from: 2, until: 2, at: 0.8 },
       { text: `f′(x) = ${term}`, from: 3, at: 0.2 },
+      { text: `at x = 1: f′(1) = ${f(c)}`, from: 4, at: 0.5 },
     ],
     alt: `${a}x${supText(n)} in the x${supText(n)} column: the exponent ${n} comes down, ${n} × ${a} = ${c}, and the term moves to the x${e === 1 ? "" : supText(e)} column: f′(x) = ${term}.`,
   });

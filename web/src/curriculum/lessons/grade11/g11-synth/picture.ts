@@ -1,5 +1,6 @@
 // The g11-synth picture (Curriculum fixes-02, Part B): synthetic division as a rhythm on the coefficient row. r in the
-// box, the coefficients 1, b, c on top; bring down, multiply by r into the next column, add down; the bottom row is the answer.
+// box, the coefficients 1, b, c on top; bring down, multiply by r into the next column, add down; the last number is the
+// remainder (checked against the polynomial at r), and the rest of the bottom row is the answer.
 import { buildTermTable } from "../../../../explanations/diagrams/algebra/terms";
 import type { SceneDiagram } from "../../../../explanations/diagrams/scene/schema";
 import { formatNumber as f } from "../../../schemas/math-text";
@@ -27,8 +28,10 @@ export function syntheticPicture(o: { r: number; b: number; c: number; rr: numbe
     ],
     marks: [
       { row: 0, col: -0.75, kind: "ring", from: 0, at: 0.1 },
-      { row: 2, col: 2, kind: "ring", from: 4, at: 1.1 },
-      { row: 2, col: 0, toCol: 1, kind: "focus", from: 5, at: 0.2 },
+      { row: 2, col: 2, kind: "ring", from: 4, until: 4, at: 1.1 },
+      // the check: the polynomial's value at r is that same last number
+      { row: 2, col: 2, kind: "focus", from: 5, until: 5, at: 0.6 },
+      { row: 2, col: 0, toCol: 1, kind: "focus", from: 6, at: 0.2 },
     ],
     ruleAbove: [{ row: 2, from: 1 }],
     arrows: [
@@ -41,8 +44,9 @@ export function syntheticPicture(o: { r: number; b: number; c: number; rr: numbe
       { text: `bring down 1, then 1 × ${P(r)} = ${f(rr)}`, from: 1, until: 1, at: 1.6, cls: "lbl pw" },
       { text: `${f(b)} + ${P(rr)} = ${f(q)}`, from: 2, until: 2, at: 0.9, cls: "lbl pw" },
       { text: `${f(q)} × ${P(r)} = ${f(qr)}`, from: 3, until: 3, at: 1.2, cls: "lbl pw" },
-      { text: `${f(c)} + ${P(qr)} = ${f(rem)}: no remainder`, from: 4, until: 4, at: 1, cls: "lbl pw" },
-      { text: `x ${q < 0 ? "−" : "+"} ${f(Math.abs(q))}, remainder ${f(rem)}`, from: 5, at: 0.5 },
+      { text: `${f(c)} + ${P(qr)} = ${f(rem)}: ${rem === 0 ? "no remainder" : "the remainder"}`, from: 4, until: 4, at: 1, cls: "lbl pw" },
+      { text: `check: ${P(r)}² + ${P(b)}·${P(r)} + ${P(c)} = ${f(rem)}`, from: 5, until: 5, at: 0.3, cls: "lbl pw" },
+      { text: `x ${q < 0 ? "−" : "+"} ${f(Math.abs(q))}, remainder ${f(rem)}`, from: 6, at: 0.5 },
     ],
     alt: `Synthetic division with ${f(r)} in the box: the top row 1, ${f(b)}, ${f(c)}; bring down 1, multiply by ${f(r)} and add down each column, giving 1, ${f(q)} and ${f(rem)}: x ${q < 0 ? "−" : "+"} ${f(Math.abs(q))}, remainder ${f(rem)}.`,
   });

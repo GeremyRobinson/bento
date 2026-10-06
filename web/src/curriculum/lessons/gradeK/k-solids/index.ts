@@ -7,12 +7,12 @@ import { expectedOf, restoreVia, wholeIn } from "../../_number-line/steps";
 import { tapStep, words } from "../kit";
 import { aOrAnWord } from "../../../text";
 
-interface Solid { kind: SolidKind; name: string; flat: string; rolls: boolean; faces: number; is: string; things: string[] }
+interface Solid { kind: SolidKind; name: string; flat: string; rolls: boolean; faces: number; is: string; where: string; things: string[] }
 const SOLIDS: Solid[] = [
-  { kind: "cube", name: "cube", flat: "square", rolls: false, faces: 6, is: "has 6 flat square faces", things: ["block", "dice", "box"] },
-  { kind: "sphere", name: "sphere", flat: "circle", rolls: true, faces: 0, is: "is round all over", things: ["ball", "orange", "marble"] },
-  { kind: "cylinder", name: "cylinder", flat: "rectangle", rolls: true, faces: 2, is: "has two flat circle ends", things: ["can", "drum", "candle"] },
-  { kind: "cone", name: "cone", flat: "triangle", rolls: true, faces: 1, is: "has one flat circle and a point", things: ["party hat", "ice-cream cone", "traffic cone"] },
+  { kind: "cube", name: "cube", flat: "square", rolls: false, faces: 6, is: "has 6 flat square faces", where: "the top, the bottom and 4 sides", things: ["block", "dice", "box"] },
+  { kind: "sphere", name: "sphere", flat: "circle", rolls: true, faces: 0, is: "is round all over", where: "it is round all over, so no part of it is flat", things: ["ball", "orange", "marble"] },
+  { kind: "cylinder", name: "cylinder", flat: "rectangle", rolls: true, faces: 2, is: "has two flat circle ends", where: "one circle at each end", things: ["can", "drum", "candle"] },
+  { kind: "cone", name: "cone", flat: "triangle", rolls: true, faces: 1, is: "has one flat circle and a point", where: "the circle at the bottom", things: ["party hat", "ice-cream cone", "traffic cone"] },
 ];
 const cap = (s: string) => s[0]!.toUpperCase() + s.slice(1);
 
@@ -58,7 +58,7 @@ function answers(p: SolidProblem): AnswerModel {
           : s.kind === "cone" ? ["Missed the flat bottom", "Look at the bottom. It's a flat circle."]
           : ["Missed the flat faces", "Every side of a cube is a flat square."],
         hint: "Could it stand still on a table on one side?",
-        explain: s.faces ? `It has ${s.faces === 1 ? "a flat face" : `${s.faces} flat faces`}.` : "It has no flat face.",
+        explain: s.faces ? `It has ${s.faces === 1 ? "a flat face" : `${s.faces} flat faces`}: ${s.where}.` : `It has no flat face: ${s.where}.`,
         work: [text(s.faces ? "It has a flat face." : "No flat face.")],
       }),
       tapStep({
@@ -71,7 +71,7 @@ function answers(p: SolidProblem): AnswerModel {
           const o = SOLIDS.find(x => x.name === n)!;
           return ["Picked another solid", `${aOrAnWord(o.name, true)} ${o.name} ${o.is}. This one ${s.is}.`];
         },
-        hint: `It ${s.is}.`,
+        hint: `Use what you found: it ${s.rolls ? "rolls" : "doesn't roll"} and has ${s.faces === 0 ? "no flat face" : s.faces === 1 ? "1 flat face" : `${s.faces} flat faces`}. Which solid is like that?`,
         explain: `It ${s.is}. It's ${aOrAnWord(s.name)} ${s.name}.`,
         work: [text(`It's ${aOrAnWord(s.name)} ${s.name}.`)],
       }),

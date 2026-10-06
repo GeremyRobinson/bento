@@ -9,7 +9,7 @@ const chip = (text: number | string, part: string, id?: string, pop = false): XN
 export function orderPicture(o: { t: 0 | 1 | 2; a: number; b: number; c: number; d: number; r0: number; r1: number; r2: number }): SceneDiagram {
   const { t, a, b, c, d, r0, r1, r2 } = o;
   const box = (part: string, kids: XNode[], lit = false): XNode => ({ t: "box", part, kids, lit });
-  // the three looks of each beat: as it was, its box lit, then the box collapsed into its value
+  // the looks of each step: as it was (the first only), its box lit, then the box collapsed into its value
   const trees: { before: XNode[]; lit: XNode[]; after: XNode[] }[] =
     t === 1 ? [
       { before: [box("pw", [box("p1", [box("p0", [T(`(${a} + ${b})`)]), T("×"), T(`${c}`)]), T("−"), T(`${d}`)])],
@@ -33,12 +33,16 @@ export function orderPicture(o: { t: 0 | 1 | 2; a: number; b: number; c: number;
         after: [box("pw", [T(`${a}`), T("+"), chip(r1, "p1", "r1", true)])] },
       { before: [], lit: [box("pw", [T(`${a}`), T("+"), chip(r1, "p1")], true)], after: [chip(r2, "pq", "r2", true)] },
     ];
-  const stages: XStage[] = trees.flatMap((s, beat) => [
-    // the whole expression draws in first, so you can see the groups before anything is worked
-    ...(s.before.length ? [{ beat, at: 0, tree: s.before }] : []),
-    { beat, at: s.before.length ? 1.2 : 0, tree: s.lit },
-    { beat, at: s.before.length ? 2.4 : 1.2, tree: s.after },
-  ]);
+  // beat 0 asks which part goes first: the whole expression draws in, then the box that goes first lights up.
+  // Each later beat collapses one box (beat 1 the first, beat 2 the next, beat 3 the last into the answer).
+  const stages: XStage[] = [
+    { beat: 0, at: 0, tree: trees[0]!.before },
+    { beat: 0, at: 1.2, tree: trees[0]!.lit },
+    ...trees.flatMap((s, i) => [
+      { beat: i + 1, at: 0, tree: s.lit },
+      { beat: i + 1, at: 1.2, tree: s.after },
+    ]),
+  ];
   const shape = t === 1 ? `(${a} + ${b}) × ${c} − ${d}` : t === 2 ? `${a} × ${b} − ${c} ÷ ${d}` : `${a} + ${b} × (${c} − ${d})`;
   return buildExprBoxes({ stages, header: shape, alt: `${shape} in nested boxes, one per operation; each box collapses into its value in turn: ${r0}, then ${r1}, then ${r2}.` });
 }

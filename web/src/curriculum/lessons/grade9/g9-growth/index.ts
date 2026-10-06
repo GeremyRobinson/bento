@@ -2,8 +2,9 @@ import type { LessonDefinition } from "../../../schemas/lesson";
 import { growthAnswers } from "./answers";
 import { explainGrowth, growthDisplay, growthNote } from "./explanation";
 import { createGrowth, generateGrowth, restoreGrowth, type GrowthProblem } from "./problem";
+import { withEasyStart } from "../../easy-start";
 
-export const lesson: LessonDefinition<GrowthProblem> = {
+export const lesson: LessonDefinition<GrowthProblem> = withEasyStart({
   id: "g9-growth",
   grade: 9,
   unit: "Exponents",
@@ -15,4 +16,4 @@ export const lesson: LessonDefinition<GrowthProblem> = {
   displayNote: growthNote,
   answers: growthAnswers,
   explain: explainGrowth,
-};
+});

@@ -3,8 +3,9 @@ import { f } from "../../_plane/kit";
 import { funcAnswers } from "./answers";
 import { explainFunc, funcMath } from "./explanation";
 import { createFunc, generateFunc, restoreFunc, type FuncProblem } from "./problem";
+import { withEasyStart } from "../../easy-start";
 
-export const lesson: LessonDefinition<FuncProblem> = {
+export const lesson: LessonDefinition<FuncProblem> = withEasyStart({
   id: "g8-func",
   grade: 8,
   unit: "Functions and slope",
@@ -16,4 +17,4 @@ export const lesson: LessonDefinition<FuncProblem> = {
   displayNote: p => `Find f(${f(p.x)}).`,
   answers: funcAnswers,
   explain: explainFunc,
-};
+});

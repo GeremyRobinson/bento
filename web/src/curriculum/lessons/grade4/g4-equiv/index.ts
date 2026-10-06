@@ -35,7 +35,7 @@ function answers({ a, b, k }: EquivProblem): AnswerModel {
     steps: [
       ns({ id: "times", l: "Times what?", q: `The bottom went from ${b} to ${b * k}. What was it multiplied by?`, a: s => [num(b), op("×"), ...s, op("="), num(b * k)], ans: k,
         h: `Count by ${b}s up to ${b * k}.`, w: [[b * k - b, "Added instead of multiplied", "Fractions grow by multiplying, not adding."]] }),
-      ns({ id: "top", l: "Same to the top", a: s => [num(a), op("×"), num(k), op("="), ...s], ans: a * k, h: `Do the same thing to the top: × ${k}.`,
+      ns({ id: "top", l: "Same to the top", a: s => [num(a), op("×"), num(k), op("="), ...s], ans: a * k, h: "Whatever the bottom was multiplied by, multiply the top by the same number.",
         w: [[a, "Changed only the bottom", "Whatever you multiply the bottom by, multiply the top by too."], [a + b * k - b, "Added instead of multiplied", `Multiply the top by ${k}.`]] }),
     ],
     finalParts: [-1],
@@ -78,7 +78,7 @@ function explain(p: EquivProblem, model: AnswerModel): Explanation {
   const K = expectedOf(model.steps, "times"), top = expectedOf(model.steps, "top");
   return {
     heading: "Same amount, smaller pieces",
-    idea: ["Cut every piece in 2 and you get twice as many pieces, each half as big.", "So multiply the top and the bottom by the same number."],
+    idea: ["When every piece is cut in 2, there are twice as many pieces, each half as big, so the amount stays the same.", "So multiply the top and the bottom by the same number."],
     statement: [frac(a, b), op("="), frac("?", b * k)],
     diagram: equivPicture(p),
     caption: `The same amount, cut into ${k} times as many pieces.`,

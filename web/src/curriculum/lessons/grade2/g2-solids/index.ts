@@ -52,7 +52,11 @@ function answers(p: FacesProblem): AnswerModel {
       oneBox({
         id: "corners", label: "Corners", question: "How many corners?",
         prompt: q => [q, text(" corners")], ans: c.corners,
-        wrong: slips(c.corners, [c.faces !== c.corners && [c.faces, "Counted the faces", "That's the faces. Corners are the points where edges meet."]]),
+        wrong: slips(c.corners, [
+          c.faces !== c.corners && [c.faces, "Counted the faces", "That's the faces. Corners are the points where edges meet."],
+          [c.edges, "Counted the edges", "That's the edges, the lines. Corners are the points where the lines meet."],
+          [c.corners - 1, "Missed a hidden corner", "One corner is round the back. Look where the dashed edges meet."],
+        ]),
         hint: "A corner is a point where edges meet.",
         explain: `${c.corners} corners.`,
       }),

@@ -2,13 +2,14 @@
 // Every block is drawn as plain rects and lines so a lesson can time each one by beat.
 import type { Draft } from "../geo/kit";
 
-export type Timing = { from?: number; until?: number; enter?: Draft["enter"]; delay?: number };
+export type Timing = { from?: number; until?: number; enter?: Draft["enter"]; delay?: number; vars?: Record<string, string> };
 
 const time = (o: Timing): Partial<Draft> => ({
   ...(o.from != null ? { from: o.from } : {}),
   ...(o.until != null ? { until: o.until } : {}),
   ...(o.enter ? { enter: o.enter } : {}),
   ...(o.delay != null ? { delay: Math.round(o.delay * 100) / 100 } : {}),
+  ...(o.vars ? { vars: o.vars } : {}),
 });
 
 export const rect = (x: number, y: number, w: number, h: number, cls: string, o: Timing = {}, rx = 2): Draft =>

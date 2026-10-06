@@ -6,6 +6,7 @@ import { attempt, nz, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
 import { coef, term } from "../../../text";
 import { polynomialSumPicture } from "./picture";
+import { withEasyStart } from "../../easy-start";
 
 /** (ax² + bx + c) ± (dx² + ex + f). */
 export interface PolynomialSum { kind: "polynomials.addSubtract"; a: number; b: number; c: number; d: number; e: number; f: number; sub: boolean }
@@ -38,15 +39,15 @@ const problem = (p: PolynomialSum, marks = false): MathText => {
 };
 
 export function polynomialSumAnswers(p: PolynomialSum): AnswerModel {
-  const k = p.sub ? -1 : 1, o = sign(p);
-  const W = (x: number, y: number): Slip[] => [[x - k * y, p.sub ? "Forgot to subtract" : "Subtracted instead of added", p.sub ? "Subtract every term of the second polynomial." : "This one is a plus."]];
+  const k = p.sub ? -1 : 1, o = sign(p), how = p.sub ? "Take the second away from the first." : "Add them.";
+  const W = (x: number, y: number): Slip[] => [[x - k * y, p.sub ? "Forgot to subtract" : "Subtracted instead of added", p.sub ? `The minus reaches every term in the second polynomial, including this one: ${f(x)} − ${fP(y)}.` : `Both polynomials are added, so add their numbers: ${f(x)} + ${fP(y)}.`]];
   const combine = (id: string, l: string, x: number, y: number, h: RichText) =>
     ns({ id, l, a: s => [num(x), op(o), ...P(y), op("="), ...s], ans: x + k * y, h, w: W(x, y) });
   return {
     steps: [
-      combine("x2", "x² terms", p.a, p.d, "Combine the x² numbers."),
-      combine("x1", "x terms", p.b, p.e, "Combine the x numbers."),
-      combine("x0", "Numbers", p.c, p.f, "Combine the plain numbers."),
+      combine("x2", "x² terms", p.a, p.d, `Find the x² term in each polynomial. ${how} Only x² goes with x².`),
+      combine("x1", "x terms", p.b, p.e, `Find the x term in each polynomial. ${how}`),
+      combine("x0", "Numbers", p.c, p.f, `Find the number on its own in each polynomial. ${how}`),
     ],
     finalParts: [-3, -2, -1],
   };
@@ -59,13 +60,13 @@ export function explainPolynomialSum(p: PolynomialSum, model: AnswerModel) {
   const word = p.sub ? "minus" : "plus";
   return beatExplanation({
     heading: "Combine like terms",
-    idea: ["For subtraction, flip every sign in the second one first."],
+    idea: ["Like terms are the same kind of thing: x² with x², x with x, numbers with numbers. 3x² + 5x² is 8x², like 3 apples and 5 apples, but x² and x never combine.", "A minus in front of parentheses takes away every term inside, not just the first one."],
     statement: problem(p),
     caption: `Only like terms combine: x² with x², x with x, numbers with numbers.`,
     diagram: polynomialSumPicture({ ...p, A, B, C, answer: toPlainText(quad(A, B, C)) }),
     alt: `${coef(p.a, "x²")} ${o} ${term(p.d, "x²")} = ${coef(A, "x²")}, ${coef(p.b, "x")} ${o} ${term(p.e, "x")} = ${coef(B, "x")}, ${f(p.c)} ${o} ${fP(p.f)} = ${f(C)}.`,
     steps: [
-      { id: "problem", narration: `Two polynomials, ${word}. Find the like terms, starting with x².`, math: problem(p, true) },
+      { id: "problem", narration: `Two polynomials, ${word}. Line up the matching kinds: x² under x², x under x, numbers under numbers.`, math: problem(p, true) },
       { id: "x2", narration: `x² terms: ${f(p.a)} ${o} ${fP(p.d)} = ${f(A)}.`, math: m(p.a, op(o), ...P(p.d), op("="), A),
         line: [...(A ? poly([[A, X2]]) : [num(0)]), op("+"), ...pending(p.b, p.e, X1), op("+"), ...pending(p.c, p.f, [])], answerStep: "x2", result: A },
       { id: "x1", narration: `x terms: ${f(p.b)} ${o} ${fP(p.e)} = ${f(B)}.`, math: m(p.b, op(o), ...P(p.e), op("="), B),
@@ -76,7 +77,7 @@ export function explainPolynomialSum(p: PolynomialSum, model: AnswerModel) {
   });
 }
 
-export const lesson: LessonDefinition<PolynomialSum> = {
+export const lesson: LessonDefinition<PolynomialSum> = withEasyStart({
   id: "g9-polyadd",
   grade: 9,
   unit: "Polynomials and quadratics",
@@ -87,4 +88,4 @@ export const lesson: LessonDefinition<PolynomialSum> = {
   display: p => problem(p),
   answers: polynomialSumAnswers,
   explain: explainPolynomialSum,
-};
+});
