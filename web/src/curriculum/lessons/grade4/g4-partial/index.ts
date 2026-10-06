@@ -14,8 +14,15 @@ export function createPartial(n: number, m: number): PartialProblem {
   return { n, m };
 }
 
-/** Same as the current app: n 112–989, m 3–9. */
-export const generatePartial = (rng: Rng): PartialProblem => ({ n: rng.int(112, 989), m: rng.int(3, 9) });
+/**
+ * n 112–989, m 3–9, as in the current app, but never a whole number of hundreds (600): that is one strip and
+ * practises no partial products (fixes-02 A1). A 0 in the tens (502) stays: "there are no tens, so that part is 0".
+ */
+export const generatePartial = (rng: Rng): PartialProblem => {
+  let n: number;
+  do n = rng.int(112, 989); while (n % 100 === 0);
+  return { n, m: rng.int(3, 9) };
+};
 
 const places = (n: number) => ({ H: Math.floor(n / 100), T: Math.floor(n / 10) % 10, O: n % 10 });
 
@@ -28,11 +35,13 @@ export function partialAnswers({ n, m }: PartialProblem): AnswerModel {
         hint: `Do ${H} × ${m}, then add two zeros.`, explain: `${H} × ${m} = ${H * m}, so ${H * 100} × ${m} = ${P[0]}.`, work: [num(H * 100), op("×"), num(m), op("="), num(P[0]!)] }),
       numStep({ id: "tens", label: "Tens", prompt: x => [num(T * 10), op("×"), num(m), op("="), x], ans: P[1]!,
         wrong: T ? [[T * m, "Lost the place value", `That's ${T} × ${m}. The ${T} stands for ${T * 10}, so put a zero on the end.`]] : [],
-        hint: `Do ${T} × ${m}, then add one zero.`, explain: `${T * 10} × ${m} = ${P[1]}.`, work: [num(T * 10), op("×"), num(m), op("="), num(P[1]!)] }),
+        hint: T ? `Do ${T} × ${m}, then add one zero.` : "There are no tens, so this part is 0.", explain: `${T * 10} × ${m} = ${P[1]}.`, work: [num(T * 10), op("×"), num(m), op("="), num(P[1]!)] }),
       numStep({ id: "ones", label: "Ones", prompt: x => [num(O), op("×"), num(m), op("="), x], ans: P[2]!,
         wrong: [[O + m, "Added instead of multiplied", "This one is times, not plus."]],
-        hint: `${count(O, "group")} of ${m}.`, explain: `${O} × ${m} = ${P[2]}.`, work: [num(O), op("×"), num(m), op("="), num(P[2]!)] }),
+        hint: O ? `${count(O, "group")} of ${m}.` : "There are no ones, so this part is 0.", explain: `${O} × ${m} = ${P[2]}.`, work: [num(O), op("×"), num(m), op("="), num(P[2]!)] }),
       numStep({ id: "sum", label: "Add the parts", prompt: x => [...plusChain(P), op("="), x], ans: n * m,
+        // the commonest slip: only the two biggest parts added (fixes-02 A1); dropped when the ones part is 0
+        wrong: [[P[0]! + P[1]!, "Left out a part", `Add all three parts: ${P.join(" + ")}.`]],
         hint: "Line them up by place value and add.", explain: `${P.join(" + ")} = ${n * m}.`, work: [num(n), op("×"), num(m), op("="), answer("x", n * m)] }),
     ],
     finalParts: [-1],

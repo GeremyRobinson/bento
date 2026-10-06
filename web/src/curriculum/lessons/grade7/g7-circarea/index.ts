@@ -26,7 +26,12 @@ export function circleAreaAnswers({ r }: CircleAreaProblem): AnswerModel {
   return {
     steps: [
       ns({ id: "square", label: "Square the radius", prompt: s => mt`${r}${sup("2")} = ${s}`, ans: r * r, hint: `${r} × ${r}.`, wrong: [[2 * r, "Squared as times 2", `Squared means ${r} × ${r}.`]] }),
-      ns({ id: "times-pi", label: "Times π", prompt: s => mt`${r * r} × 3.14 = ${s}`, ans: round6(r * r * 3.14), hint: `${r * r} × 3.14.` }),
+      ns({ id: "times-pi", label: "Times π", prompt: s => mt`${r * r} × 3.14 = ${s}`, ans: round6(r * r * 3.14), hint: `${r * r} × 3.14.`,
+        // fixes-02 A6: the two formulas learners mix up
+        wrong: [
+          [round6(2 * r * 3.14), "Used the circumference", "That's the distance around. Area uses r × r."],
+          [round6(4 * r * r * 3.14), "Squared the diameter", "Square the radius, not the diameter."],
+        ] }),
     ],
     finalParts: [-1],
   };

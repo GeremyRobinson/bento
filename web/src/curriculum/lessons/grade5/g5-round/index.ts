@@ -36,8 +36,12 @@ function answers(pr: RoundProblem): AnswerModel {
       oneBox({ id: "next", label: "Look next door", question: "Which digit is just to its right?", prompt: s => [s], ans: next, hint: "Look one place further right." }),
       oneBox({
         id: "round", label: "Round", question: "5 or more rounds up. 4 or less stays.", prompt: s => [num(value), op("≈"), s], ans: R, hint: `The next digit is ${next}.`,
-        wrong: R === T ? [[round6(T + 10 ** -p), "Rounded up when it should stay", `${next} is 4 or less, so the digit stays the same.`]]
-          : [[T, "Didn't round up", `${next} is 5 or more, so round up.`]],
+        wrong: [
+          ...(R === T ? [[round6(T + 10 ** -p), "Rounded up when it should stay", `${next} is 4 or less, so the digit stays the same.`] as [number, string, string]]
+            : [[T, "Didn't round up", `${next} is 5 or more, so round up.`] as [number, string, string]]),
+          // the commonest slip: rounding to the other place (51.647 to hundredths given as 51.6) (fixes-02 A2)
+          [Math.round(pr.N / 10 ** p) / 10 ** (3 - p), "Rounded to the wrong place", `Round to the ${name}: that's ${p} digit${p > 1 ? "s" : ""} after the point.`],
+        ],
       }),
     ],
     finalParts: [-1],
@@ -82,7 +86,13 @@ export const lesson: LessonDefinition<RoundProblem> = {
   pre: "g4-dec",
   reference: createRound(3476, 2), // 3.476 ≈ 3.48, the current app's example
   // a number with nothing past the place (69.320 to hundredths) is already rounded; give it a digit there
-  generate: rng => {
+  generate: (rng, index) => {
+    // problem 6 always rolls a 9 over (4.96 → 5.0, 3.795 → 3.80), which hardly ever comes up by chance (fixes-02 A2)
+    if (index === 5) {
+      const p = rng.int(1, 2), W = rng.int(1, 99);
+      const dec = p === 1 ? 900 + 10 * rng.int(5, 9) + rng.int(0, 9) : 100 * rng.int(0, 9) + 90 + rng.int(5, 9);
+      return createRound(W * 1000 + dec, p);
+    }
     const N = rng.int(1001, 99999), p = rng.int(1, 2), unit = 10 ** (3 - p);
     return createRound(N % unit ? N : N + rng.int(1, unit - 1), p);
   },
