@@ -182,7 +182,7 @@ button.book:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--rule),0 
    Today card (radius 36). */
 .wrap{--nest:8px}
 .pitem{border-radius:999px;padding:var(--nest) 14px var(--nest) 14px;margin:0 calc(var(--nest) - var(--u) * 1.75);width:calc(100% + (var(--u) * 1.75 - var(--nest)) * 2)}
-.pitem .ctl.go{height:40px}
+.pitem .ctl.go{--pill-h:40px}
 .bhome .today{border-radius:calc(20px + var(--nest) * 2)}
 .bhome .today:has(.plan:last-child){padding-bottom:var(--nest)}
 

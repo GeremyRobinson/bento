@@ -50,6 +50,16 @@ export const DIAGRAM_TOKENS: Token[] = [
   ...([["copper", "Copper"], ["silver", "Silver"], ["water", "Water"], ["water-line", "Water line"]] as const).map(([k, label]) => ({ v: `--d-${k}`, label, kind: "color" as const })),
 ];
 
+/** the Pill master: every button in the app */
+export const PILL_TOKENS: Token[] = [
+  { v: "--pill-h", label: "Height", kind: "px", min: 32, max: 72 },
+  { v: "--pill-pad", label: "Side padding", kind: "px", min: 8, max: 40 },
+  { v: "--pill-radius", label: "Corner", kind: "px", min: 0, max: 36 },
+  { v: "--pill-weight", label: "Weight", kind: "num", min: 400, max: 700, step: 50 },
+  { v: "--pill-press", label: "Press squeeze", kind: "num", min: 0.8, max: 1, step: 0.01 },
+  { v: "--pill-lift", label: "Hover brighten", kind: "num", min: 1, max: 1.3, step: 0.01 },
+];
+
 export type Theme = "light" | "dark";
 export interface Overrides {
   /** the Grade (master) colors every grade starts from, keyed by the grade token they feed (--l0 → --master-l0) */
@@ -86,8 +96,10 @@ export function handoffCss(o: Overrides): string {
   if (Object.keys(o.master ?? {}).length) out += `/* bands.css, Grade (master): reaches every grade that doesn't override it */\n.wrap{${lines(masterVals(o))}}\n`;
   if (Object.keys(o.shared.light).length) out += `/* tokens.css, :root */\n:root{${lines(o.shared.light)}}\n`;
   if (Object.keys(o.shared.dark).length) out += `/* tokens.css, dark */\n:root[data-theme="dark"]{${lines(o.shared.dark)}}\n`;
-  const dia = Object.fromEntries(Object.entries(o.sizes).filter(([k]) => k.startsWith("--d-"))), sz = Object.fromEntries(Object.entries(o.sizes).filter(([k]) => !k.startsWith("--d-")));
+  const pick = (f: (k: string) => boolean) => Object.fromEntries(Object.entries(o.sizes).filter(([k]) => f(k)));
+  const dia = pick(k => k.startsWith("--d-")), pill = pick(k => k.startsWith("--pill-")), sz = pick(k => !k.startsWith("--d-") && !k.startsWith("--pill-"));
   if (Object.keys(sz).length) out += `/* bands.css, sizes */\n.wrap{${lines(sz)}}\n`;
+  if (Object.keys(pill).length) out += `/* components.css, Pill (master) */\n.wrap{${lines(pill)}}\n`;
   if (Object.keys(dia).length) out += `/* diagram-master.css */\n.wrap{${lines(dia)}}\n`;
   const gs = Object.entries(o.grades).filter(([, v]) => Object.keys(v).length);
   if (gs.length) out += "/* bands.css, grade instances: var(--master-…) means delete that override so the grade follows the master */\n" + gs.map(([g, v]) => `.wrap[data-grade="${g}"]{${lines(resolve(v))}}`).join("\n") + "\n";
@@ -120,7 +132,7 @@ export function readGrade(grade: string): Record<string, string> {
   probe.className = "wrap"; probe.dataset.grade = grade; probe.style.display = "none";
   document.body.appendChild(probe);
   const cs = getComputedStyle(probe), out: Record<string, string> = {};
-  for (const t of [...GRADE_TOKENS, ...SIZE_TOKENS, ...DIAGRAM_TOKENS]) out[t.v] = cs.getPropertyValue(t.v).trim();
+  for (const t of [...GRADE_TOKENS, ...SIZE_TOKENS, ...DIAGRAM_TOKENS, ...PILL_TOKENS]) out[t.v] = cs.getPropertyValue(t.v).trim();
   probe.remove();
   return out;
 }

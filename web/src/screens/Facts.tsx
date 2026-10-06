@@ -1,3 +1,4 @@
+import { Pill } from "../components/primitives/Pill";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useApp } from "../app/AppState";
 import { gradeOf } from "../curriculum/grades";
@@ -28,7 +29,7 @@ function FactsHome() {
         <p className="ysub">Know them by heart.</p>
         <p className="muted">Each grade leans on its own facts: counting on, times tables, squares, powers. Choose your grade to see yours.</p>
       </header>
-      <div className="actions"><button className="ctl go" onClick={() => go({ name: "welcome", shelf: true }, "fwd")}>Choose your grade</button></div>
+      <div className="actions"><Pill go onClick={() => go({ name: "welcome", shelf: true }, "fwd")}>Choose your grade</Pill></div>
     </>
   );
   return <GradeFacts g={progress.grade} />;
@@ -52,7 +53,7 @@ function GradeFacts({ g }: { g: number }) {
           <section className="tile today">
             <h2>Today's sprint</h2>
             <p className="sub">{done ? "Done for today. Another one never hurts." : `About 2 minutes of ${today.name.toLowerCase()}.`}</p>
-            <button className="ctl go fstart" onClick={() => setSprint(today)}>{done ? "Go again" : "Start"}</button>
+            <Pill go className="fstart" onClick={() => setSprint(today)}>{done ? "Go again" : "Start"}</Pill>
           </section>
         )}
         <section className="tile b-stats battery">
@@ -99,7 +100,7 @@ function TablePage({ t, start }: { t: FactTable; start: boolean }) {
         <h1>{t.name}</h1>
         <p className="ysub">{t.blurb}</p>
         <p className="muted">{known} of {total} known. Tap any fact to see the pattern around it.</p>
-        <button className="ctl go fstart" onClick={() => setSprint(true)}>Practice these</button>
+        <Pill go className="fstart" onClick={() => setSprint(true)}>Practice these</Pill>
       </header>
       <section className="panel fgridwrap">
         {t.pattern === "hundred" ? <><Hundred t={t} /><Row t={t} sel={sel} setSel={setSel} /></> : isGrid ? <Grid t={t} sel={sel} setSel={setSel} /> : <Row t={t} sel={sel} setSel={setSel} />}
@@ -241,7 +242,7 @@ function Sprint({ t, onDone }: { t: FactTable; onDone: () => void }) {
           <div className="frowlist">{[...new Set(missed)].map(m => <span key={m.id} className="fchip miss"><small>{m.ask}</small><b>{fmt(m.answer)}</b></span>)}</div>
         )}
         {missed.length > 0 && <p className="muted fsmall">These come back first next time.</p>}
-        <div className="actions"><button className="ctl" onClick={onDone}>Done</button></div>
+        <div className="actions"><Pill onClick={onDone}>Done</Pill></div>
       </section>
     );
   }
@@ -263,7 +264,7 @@ function Sprint({ t, onDone }: { t: FactTable; onDone: () => void }) {
           <button type="button" onClick={() => press("0")}>0</button>
           <button type="button" aria-label="Erase" onClick={() => press("back")}>⌫</button>
         </div>
-        <div className="actions"><button className="ctl" onClick={() => { if (answers.length) saveSprint(t.id, answers); onDone(); }}>Stop</button></div>
+        <div className="actions"><Pill onClick={() => { if (answers.length) saveSprint(t.id, answers); onDone(); }}>Stop</Pill></div>
       </div>
     </section>
   );

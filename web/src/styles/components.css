@@ -1,20 +1,23 @@
 /* Shared components: controls, panels, header, grade sheet, home tiles, lessons, learn, practice, summaries, pictures, planning. */
 /* ---- controls ---- */
-.ctl{height:var(--h);padding:0 calc(var(--u) + 2px);border-radius:999px;background:var(--well);display:inline-flex;align-items:center;justify-content:center;gap:var(--s);white-space:nowrap;font-weight:var(--w-mid);transition:background .15s,transform .2s var(--spring),box-shadow .15s}
-.ctl:hover{background:var(--hover)}
-.ctl:active{transform:scale(.95)}
+/* Pill (master): every button is an instance of .ctl. Sizes and feel come from the --pill-* tokens; colors fall back to the
+   grade roles, so a context (a card, the landing page) or a variant (go, circ) only overrides what it changes. */
+.wrap{--pill-h:var(--h);--pill-pad:calc(var(--u) + 2px);--pill-radius:999px;--pill-weight:var(--w-mid);--pill-gap:var(--s);--pill-press:.95;--pill-lift:1.06}
+.ctl{height:var(--pill-h);padding:0 var(--pill-pad);border-radius:var(--pill-radius);background:var(--pill-bg,var(--well));display:inline-flex;align-items:center;justify-content:center;gap:var(--pill-gap);white-space:nowrap;font-weight:var(--pill-weight);transition:background .15s,transform .2s var(--spring),box-shadow .15s}
+.ctl:hover{background:var(--pill-hover,var(--hover))}
+.ctl:active{transform:scale(var(--pill-press))}
 .ctl[disabled]{color:var(--faint);cursor:default;transform:none}
 .ctl.badged{padding-left:var(--inset)}
-.card .ctl,.panel .ctl{background:var(--card)}
-.card .ctl:hover,.panel .ctl:hover{background:var(--hover)}
-.ctl.go,.panel .ctl.go,.card .ctl.go{background:var(--ink);color:var(--on-tint)}
-.ctl.go:hover{filter:brightness(1.06)}
+.card .ctl,.panel .ctl{background:var(--pill-bg,var(--card))}
+.card .ctl:hover,.panel .ctl:hover{background:var(--pill-hover,var(--hover))}
+.ctl.go,.panel .ctl.go,.card .ctl.go{background:var(--pill-go-bg,var(--ink));color:var(--pill-go-fg,var(--on-tint))}
+.ctl.go:hover{filter:brightness(var(--pill-lift))}
 .ctl.go .badge{background:rgba(255,255,255,.25);color:var(--on-tint)}
 .badge{min-width:var(--badge);height:var(--badge);border-radius:999px;display:inline-flex;align-items:center;justify-content:center;padding:0 var(--s);font-family:var(--num);font-weight:650;background:var(--well);color:var(--text);flex:none;font-variant-numeric:tabular-nums}
 .card .badge,.ctl .badge{background:var(--tint-soft);color:var(--ink)}
 .badge.on,.card .badge.on,.ctl .badge.on{background:var(--ink);color:var(--on-tint)}
 .bar{display:flex;align-items:center;gap:var(--s);padding:var(--inset);background:var(--well);border-radius:999px;min-width:0}
-.ctl.circ{width:var(--h);padding:0;flex:none;background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.ctl.circ{width:var(--pill-h);padding:0;flex:none;background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
 .ctl.circ:hover{background:var(--tint-soft)}
 .ctl.circ svg{width:22px;height:22px;display:block}
 .ctl.circ[disabled]{background:color-mix(in srgb,var(--card) 45%,transparent);box-shadow:none;color:var(--faint)}
@@ -401,7 +404,7 @@
 .ptext b{font-size:calc(var(--fs) * 1.08);font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .15s}
 .pitem.done .ptext b{color:var(--muted);font-weight:400}
 .pmin{color:var(--muted);font-size:var(--small);font-weight:400;white-space:nowrap}
-.pitem .ctl.go{height:40px;padding:0 20px}
+.pitem .ctl.go{--pill-h:40px;--pill-pad:20px}
 .bhome .b-stats{justify-items:center;text-align:center;align-content:center;gap:12px}
 .b-stats p{color:var(--text);line-height:1.5}
 .b-stats p b{font-weight:650}
@@ -421,7 +424,7 @@
 .units>.panel{background:var(--card);box-shadow:0 0 0 1px var(--rule);padding:calc(var(--u) * 1.25) calc(var(--u) * 1.25) var(--s);gap:var(--s)}
 .units .unit{padding:0;min-height:36px}
 .units .unit h3{color:var(--text);font-size:var(--fs);font-weight:650;letter-spacing:-.01em}
-.units .unit .ctl{height:36px;padding:0 14px;background:none!important;box-shadow:inset 0 0 0 1px var(--rule);font-size:var(--small);font-weight:550;color:var(--muted)}
+.units .unit .ctl{--pill-h:36px;--pill-pad:14px;background:none!important;box-shadow:inset 0 0 0 1px var(--rule);font-size:var(--small);font-weight:550;color:var(--muted)}
 .units .unit .ctl:hover{color:var(--text);box-shadow:inset 0 0 0 1px var(--faint)}
 .units .lessons{gap:2px}
 .units .lesson{background:none;border-radius:999px;height:52px;padding:0 14px;font-weight:550;gap:12px;transition:background .15s}
@@ -430,7 +433,7 @@
 .units .lesson .badge.on{color:var(--ink)!important;font-weight:650}
 .units .lesson .name{transition:color .15s}
 .units .facts{background:none}
-.bhome .b-stats>.ctl{background:none!important;box-shadow:inset 0 0 0 1px var(--rule);height:40px;padding:0 18px;font-size:var(--small);font-weight:550}
+.bhome .b-stats>.ctl{background:none!important;box-shadow:inset 0 0 0 1px var(--rule);--pill-h:40px;--pill-pad:18px;font-size:var(--small);font-weight:550}
 .bhome .b-stats>.ctl:hover{box-shadow:inset 0 0 0 1px var(--faint)}
 .units .lesson .dot.busy{background:var(--tint)}
 @media (max-width:699px){

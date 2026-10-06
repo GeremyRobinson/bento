@@ -1,3 +1,4 @@
+import { Pill } from "../components/primitives/Pill";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useApp } from "../app/AppState";
 import { mins, when } from "../app/format";
@@ -53,9 +54,9 @@ function Placed({ rep }: { rep: SessionReport }) {
         </li>
       ))}</ol>
       <div className="actions">
-        <button className="ctl go" onClick={() => same ? go({ name: "home" }, "fwd") : chooseGrade(grade)}>Start {gd.name} ›</button>
-        {next != null && <button className="ctl" onClick={() => startTest(placeKey(next))}>Try {gradeOf(next).name}</button>}
-        {!same && progress.grade != null && <button className="ctl" onClick={() => go({ name: "home" }, "back")}>Stay in {gradeOf(progress.grade).name}</button>}
+        <Pill go onClick={() => same ? go({ name: "home" }, "fwd") : chooseGrade(grade)}>Start {gd.name} ›</Pill>
+        {next != null && <Pill onClick={() => startTest(placeKey(next))}>Try {gradeOf(next).name}</Pill>}
+        {!same && progress.grade != null && <Pill onClick={() => go({ name: "home" }, "back")}>Stay in {gradeOf(progress.grade).name}</Pill>}
       </div>
     </section>
   );
@@ -64,7 +65,7 @@ function Placed({ rep }: { rep: SessionReport }) {
 /** The screen after a run: score ring, XP, time, what to do next, then the full report. */
 export function Results() {
   const { lastReport: rep, progress, go, startLesson, startTest } = useApp();
-  if (!rep) return <section className="panel"><p className="empty">Nothing finished yet.</p><div className="actions"><button className="ctl go" onClick={() => go({ name: "home" })}>All lessons</button></div></section>;
+  if (!rep) return <section className="panel"><p className="empty">Nothing finished yet.</p><div className="actions"><Pill go onClick={() => go({ name: "home" })}>All lessons</Pill></div></section>;
   if (rep.key.startsWith("place:")) return <Placed rep={rep} />;
   const lesson = lessonById(rep.key), test = rep.mode === "test", review = rep.mode === "review";
   const grade = lesson ? lessonsInGrade(lesson.grade) : [], k = lesson ? grade.indexOf(lesson) : -1, next = grade[k + 1];
@@ -87,10 +88,10 @@ export function Results() {
           </div>
           {low && <BuildUp lessonId={rep.key} />}
           <div className="actions">
-            {rep.mode === "practice" && next && <button className="ctl go" onClick={() => go({ name: "learn", lessonId: next.id }, "next")}>Next lesson</button>}
-            {test ? <button className="ctl go" onClick={() => startTest(rep.key)}>Take it again</button>
-              : !review && lesson && <button className="ctl" onClick={() => startLesson(lesson.id)}>Practice again</button>}
-            <button className="ctl" onClick={() => go({ name: "home" }, "back")}>All lessons</button>
+            {rep.mode === "practice" && next && <Pill go onClick={() => go({ name: "learn", lessonId: next.id }, "next")}>Next lesson</Pill>}
+            {test ? <Pill go onClick={() => startTest(rep.key)}>Take it again</Pill>
+              : !review && lesson && <Pill onClick={() => startLesson(lesson.id)}>Practice again</Pill>}
+            <Pill onClick={() => go({ name: "home" }, "back")}>All lessons</Pill>
           </div>
         </section>
         <div className="bcol"><SessionReportView rep={rep} /></div>

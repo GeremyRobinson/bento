@@ -1,3 +1,4 @@
+import { Pill, PillLabel } from "../components/primitives/Pill";
 import { useEffect, useRef } from "react";
 import { playTone, readAloudOn, readSettings, speak } from "../app/settings";
 import { useApp } from "../app/AppState";
@@ -70,7 +71,7 @@ export function Practice() {
   if (!s) {
     return (
       <section className="panel"><p className="empty">No lesson in progress.</p>
-        <div className="actions"><button className="ctl go" onClick={() => go({ name: "home" })}>All lessons</button></div></section>
+        <div className="actions"><Pill go onClick={() => go({ name: "home" })}>All lessons</Pill></div></section>
     );
   }
 
@@ -85,11 +86,11 @@ export function Practice() {
   return (
     <>
       <div className="bar">
-        {mixed && <button className="ctl" onClick={quit}>Quit</button>}
+        {mixed && <Pill onClick={quit}>Quit</Pill>}
         <span className="steps" aria-label={`Problem ${s.i + 1} of ${n}`}>
           {s.items.map((_, i) => <span key={i} className={`dot ${i < s.i ? "ok" : i === s.i ? "busy" : ""}`} />)}
         </span>
-        <span className="ctl badged"><span className="badge on">{s.i + 1}</span>of <span className="mono">{n}</span></span>
+        <PillLabel badged><span className="badge on">{s.i + 1}</span>of <span className="mono">{n}</span></PillLabel>
       </div>
       {test && <div className="bar"><span className="grow" style={{ textAlign: "center" }}>{s.title}: no hints, one try per step</span></div>}
       <section className="panel split">
@@ -140,19 +141,19 @@ export function Practice() {
           {step ? (
             <div className="actions">
               {!test && (
-                <button className="ctl badged" disabled={!(s.hintsLeft || s.hinted) || !!s.pick} onClick={() => act((st, _p, d) => hint(st, d))}>
+                <Pill badged disabled={!(s.hintsLeft || s.hinted) || !!s.pick} onClick={() => act((st, _p, d) => hint(st, d))}>
                   <span className="badge">{s.hintsLeft}</span>Hint{s.hintsLeft === 1 ? "" : "s"}
-                </button>
+                </Pill>
               )}
-              {showMeAvailable(s) && <button className="ctl" onClick={() => act((st, p, d) => showMe(st, p, d))}>Show me</button>}
-              {skipAvailable(s) && <button className="ctl" onClick={() => act((st, _p, d) => toggleSkip(st, d))}>{s.skip ? "Show steps" : "Final answer only"}</button>}
-              {!tapOnly && <button className="ctl go" onClick={() => act((st, p, d) => check(st, p, d))}>Check</button>}
+              {showMeAvailable(s) && <Pill onClick={() => act((st, p, d) => showMe(st, p, d))}>Show me</Pill>}
+              {skipAvailable(s) && <Pill onClick={() => act((st, _p, d) => toggleSkip(st, d))}>{s.skip ? "Show steps" : "Final answer only"}</Pill>}
+              {!tapOnly && <Pill go onClick={() => act((st, p, d) => check(st, p, d))}>Check</Pill>}
             </div>
           ) : (
             <div className="actions">
-              <button className="ctl go" onClick={onNext}>
+              <Pill go onClick={onNext}>
                 {s.i < n - 1 ? "Next problem" : test ? "Finish test" : s.mode === "review" ? "Finish review" : "Finish lesson"}
-              </button>
+              </Pill>
             </div>
           )}
         </div>

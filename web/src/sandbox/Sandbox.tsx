@@ -8,7 +8,7 @@ import { Diagram } from "../components/diagrams/Diagram";
 import { firstExample } from "../screens/Learn";
 import type { AnyLesson } from "../curriculum/schemas/lesson";
 import type { Explanation } from "../explanations/schema";
-import { BAND_NAMES, DIAGRAM_TOKENS, emptyOverrides, GRADE_TOKENS, handoffCss, MASTER, MASTER_GRADE, overrideCss, overridesOf, readGrade, SHARED_TOKENS, SIZE_TOKENS, toHex, type Overrides, type Token } from "./tokens";
+import { BAND_NAMES, DIAGRAM_TOKENS, PILL_TOKENS, emptyOverrides, GRADE_TOKENS, handoffCss, MASTER, MASTER_GRADE, overrideCss, overridesOf, readGrade, SHARED_TOKENS, SIZE_TOKENS, toHex, type Overrides, type Token } from "./tokens";
 import { get, set, useSb } from "./store";
 import "./sandbox.css";
 
@@ -154,7 +154,7 @@ export function Sandbox() {
         {t.kind === "color"
           ? <input type="color" value={toHex(cur) ?? "#000000"} onChange={e => edit(scope, t.v, e.target.value)} />
           : <input type="range" min={t.min} max={t.max} step={t.step ?? 1} value={parseFloat(cur) || t.min} onChange={e => edit(scope, t.v, `${e.target.value}${t.kind === "px" ? "px" : t.kind === "pct" ? "%" : ""}`)} />}
-        <span className="sbtok-val">{t.kind === "color" ? toHex(cur) ?? cur : `${parseFloat(cur)}${t.kind === "pct" ? "%" : ""}`}</span>
+        <span className="sbtok-val">{t.kind === "color" ? toHex(cur) ?? cur : (isNaN(parseFloat(cur)) ? cur : `${parseFloat(cur)}${t.kind === "pct" ? "%" : ""}`)}</span>
         {overrides ? <button className="sbx" title="Reset to master" onClick={e => { e.preventDefault(); edit(scope, t.v, MASTER); }} aria-label={`Reset ${t.label} to master`}>↺</button>
           : changed(scope, t.v) ? <button className="sbx" onClick={e => { e.preventDefault(); edit(scope, t.v, null); }} aria-label={`Undo ${t.label}`}>×</button> : <span className="sbx" />}
       </label>
@@ -201,6 +201,7 @@ export function Sandbox() {
         <div className="sbsec"><h3>Master colors</h3>{GRADE_TOKENS.map(t => row("master", t))}</div>
         <div className="sbsec"><h3>Shared colors · {sb.theme}</h3>{SHARED_TOKENS.map(t => row("shared", t))}</div>
         <div className="sbsec"><h3>Sizes</h3>{SIZE_TOKENS.map(t => row("sizes", t))}</div>
+        <div className="sbsec"><h3>Pill (master)</h3><p className="sbnote">Every button on every screen.</p>{PILL_TOKENS.map(t => row("sizes", t))}</div>
         <div className="sbsec"><h3>Diagram (master)</h3><p className="sbnote">Every picture in every grade draws with these.</p>{DIAGRAM_TOKENS.map(t => row("sizes", t))}</div>
       </> : <>
         <div className="sbsec"><h3>{gradeOf(g).name} overrides</h3>{GRADE_TOKENS.map(t => row("grade", t))}

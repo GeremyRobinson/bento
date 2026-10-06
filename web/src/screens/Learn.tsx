@@ -1,3 +1,4 @@
+import { Pill } from "../components/primitives/Pill";
 import { useEffect, useMemo, useState } from "react";
 import { useApp } from "../app/AppState";
 import { gradeOf } from "../curriculum/grades";
@@ -108,15 +109,15 @@ export function Learn({ lessonId }: { lessonId: string }) {
   return (
     <>
       <div className="bar lbar">
-        <button className="ctl circ" disabled={!prev} onClick={() => prev && go({ name: "learn", lessonId: prev.id }, "prev")} aria-label="Previous lesson"><Chevron dir="left" /></button>
+        <Pill circ disabled={!prev} onClick={() => prev && go({ name: "learn", lessonId: prev.id }, "prev")} aria-label="Previous lesson"><Chevron dir="left" /></Pill>
         <span className="dots-nav grow" role="group" aria-label={`Lesson ${unit.indexOf(all[place]!) + 1} of ${unit.length} in ${all[place]?.unit || gradeOf(lesson.grade).name}`}>
           {unit.map((c, i) => (
             <button key={c.id} className={`dot ${i === shownPage ? "busy" : lastScore(progress, c.id) != null ? "ok" : ""}`} disabled={c.id === lesson.id || !isReady(c.id)}
               onClick={() => go({ name: "learn", lessonId: c.id }, i < shownPage ? "prev" : "next")} aria-label={c.title} aria-current={c.id === lesson.id ? "page" : undefined} />
           ))}
         </span>
-        <button className="ctl pbtn" onClick={() => startLesson(lesson.id)}>Practice</button>
-        <button className="ctl circ" disabled={!next} onClick={() => next && go({ name: "learn", lessonId: next.id }, "next")} aria-label="Next lesson"><Chevron dir="right" /></button>
+        <Pill className="pbtn" onClick={() => startLesson(lesson.id)}>Practice</Pill>
+        <Pill circ disabled={!next} onClick={() => next && go({ name: "learn", lessonId: next.id }, "next")} aria-label="Next lesson"><Chevron dir="right" /></Pill>
       </div>
       <div className="blearn">
         <section className="panel learn walk">
@@ -139,19 +140,19 @@ export function Learn({ lessonId }: { lessonId: string }) {
             {(finished || at === 0) && <p className="note">{finished ? "That's the whole problem. Your turn." : ex.diagram?.kind === "areaModel" ? "Tap Play to watch it split up." : "Tap Play to watch it step by step."}</p>}
           </div>
           <div className="actions" style={{ justifyContent: "space-between" }}>
-            <button className="ctl" disabled={at === 0} onClick={() => step(-1)}>Back</button>
+            <Pill disabled={at === 0} onClick={() => step(-1)}>Back</Pill>
             <span className="actions">
               {finished ? (
                 <>
-                  <button className="ctl" onClick={() => { setExample(fresh()); setAt(0); }}>Show another</button>
-                  <button className="ctl go" onClick={() => startLesson(lesson.id)}>Start practice</button>
+                  <Pill onClick={() => { setExample(fresh()); setAt(0); }}>Show another</Pill>
+                  <Pill go onClick={() => startLesson(lesson.id)}>Start practice</Pill>
                 </>
               ) : (
                 <>
-                  <button className="ctl" onClick={() => { setPlaying(false); setAt(last); }}>Show all</button>
+                  <Pill onClick={() => { setPlaying(false); setAt(last); }}>Show all</Pill>
                   {!playing && at === 0
-                    ? <button className="ctl go" onClick={() => { setAt(1); setPlaying(true); }}>Play</button>
-                    : <button className="ctl go" onClick={() => { setPlaying(false); setAt(a => Math.min(last, a + 1)); }}>Next</button>}
+                    ? <Pill go onClick={() => { setAt(1); setPlaying(true); }}>Play</Pill>
+                    : <Pill go onClick={() => { setPlaying(false); setAt(a => Math.min(last, a + 1)); }}>Next</Pill>}
                 </>
               )}
             </span>
@@ -171,7 +172,7 @@ export function Learn({ lessonId }: { lessonId: string }) {
                 );
               })}
             </div>
-            <button className="ctl go" onClick={() => startLesson(lesson.id)}>Start practice ›</button>
+            <Pill go onClick={() => startLesson(lesson.id)}>Start practice ›</Pill>
           </section>
           {rep && (
             <button className="lesson" onClick={() => go({ name: "report", key: rep.key })}>

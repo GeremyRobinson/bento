@@ -1,3 +1,4 @@
+import { Pill } from "../components/primitives/Pill";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useApp } from "../app/AppState";
 import { entryById } from "../app/curriculum";
@@ -147,7 +148,7 @@ export function Welcome({ shelf = false }: { shelf?: boolean }) {
       <section className="lhero">
         <h1>Math that <span>clicks.</span></h1>
         <p>Watch each idea play out, then solve it one step at a time. If you slip, Bento shows you the exact step and why.</p>
-        <div className="lcta"><button className="ctl go" onClick={toShelf}>Choose your grade</button><span>Free. No account.</span></div>
+        <div className="lcta"><Pill go onClick={toShelf}>Choose your grade</Pill><span>Free. No account.</span></div>
       </section>
       <section className="lhbox">
         <HeroPictures rng={rng} />

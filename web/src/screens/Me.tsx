@@ -1,3 +1,4 @@
+import { Pill } from "../components/primitives/Pill";
 import { useRef, type CSSProperties, type ReactNode } from "react";
 import { useApp } from "../app/AppState";
 import { readAloudOn, readSettings, speak, playTone, type Settings } from "../app/settings";
@@ -68,7 +69,7 @@ export function Me() {
             <div className="mh-text">
               <h1>Your Bento</h1>
               <p className="muted">Choose your grade to start. You can change it any time.</p>
-              <button className="ctl go" onClick={() => go({ name: "welcome", shelf: true }, "fwd")}>Choose your grade</button>
+              <Pill go onClick={() => go({ name: "welcome", shelf: true }, "fwd")}>Choose your grade</Pill>
             </div>
           )}
           <div className="mstats">
@@ -103,14 +104,14 @@ export function Me() {
 
         <Tile title="For the grown-up" k="Report" className="mgrown">
           <p className="muted">Scores by grade, the exact mistakes made, hints used and every session, so you know what to work on next.</p>
-          <button className="ctl go" onClick={() => go({ name: "parent" }, "fwd")}>Open the report ›</button>
+          <Pill go onClick={() => go({ name: "parent" }, "fwd")}>Open the report ›</Pill>
         </Tile>
 
         <Tile title="Keep your progress" k="Backup" className="mbackup">
           <p className="muted">Everything stays on this device. Save a backup file to move it to another one.</p>
           <div className="actions">
-            <button className="ctl" onClick={save}>Save a backup</button>
-            <button className="ctl" onClick={() => file.current?.click()}>Restore</button>
+            <Pill onClick={save}>Save a backup</Pill>
+            <Pill onClick={() => file.current?.click()}>Restore</Pill>
           </div>
           <input ref={file} type="file" accept="application/json,.json" hidden onChange={e => void load(e.target.files?.[0])} />
         </Tile>

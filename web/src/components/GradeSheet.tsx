@@ -1,3 +1,4 @@
+import { Pill } from "./primitives/Pill";
 import { useEffect, useRef } from "react";
 import { useApp } from "../app/AppState";
 import { GradeLineup } from "./GradeLineup";
@@ -15,7 +16,7 @@ export function GradeSheet() {
   return (
     <div className="sheet" onClick={e => { if (e.target === e.currentTarget) openSheet(false); }}>
       <div className="panel" role="dialog" aria-modal="true" aria-label="Choose your grade" ref={panel}>
-        <div className="head"><h2>Choose your grade</h2><button className="ctl" onClick={() => openSheet(false)}>Done</button></div>
+        <div className="head"><h2>Choose your grade</h2><Pill onClick={() => openSheet(false)}>Done</Pill></div>
         <GradeLineup onPick={chooseGrade} />
       </div>
     </div>

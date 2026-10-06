@@ -1,3 +1,4 @@
+import { Pill, PillLabel } from "../components/primitives/Pill";
 import { useApp } from "../app/AppState";
 import { doneCount, entriesInGrade, gradeAverage, isReady, testKey, testReady, unitsInGrade, type Entry } from "../app/curriculum";
 import { gradeOf } from "../curriculum/grades";
@@ -62,7 +63,7 @@ function GradeHome({ g }: { g: number }) {
                   aria-label={i.kind === "facts" ? `Fact sprint: ${i.title}${i.done ? ", done" : ""}` : i.kind === "review" ? (i.done ? "Today's review: done" : "Today's review") : i.kind === "lesson" && !i.done ? `${i.again ? "Practice" : "Up next"}: ${i.title}` : undefined}>
                   <span className="pmark" aria-hidden>{i.done ? <Check /> : null}</span>
                   <span className="ptext"><small>{i.kind === "lesson" && i.again ? "Practice" : KIND[i.kind]}</small><b>{i.title}</b></span>
-                  {i === first ? <span className="ctl go">Start</span> : i.done ? <ScoreChip n={doneScore(i)} /> : <span className="pmin">{i.minutes} min</span>}
+                  {i === first ? <PillLabel go>Start</PillLabel> : i.done ? <ScoreChip n={doneScore(i)} /> : <span className="pmin">{i.minutes} min</span>}
                 </button>
               </li>
             ))}</ol>
@@ -77,7 +78,7 @@ function GradeHome({ g }: { g: number }) {
           <span className="bbig">{done}</span>
           <p><b>of {list.length}</b> lessons done{avg != null && <><br /><span className="muted">Average score {avg.toFixed(1)} of 4</span></>}</p>
           {gt && <p className="muted gtline">Grade check-up <ScoreChip n={gt.last} /></p>}
-          {testReady(g) && <button className="ctl" onClick={() => startTest(testKey(g))}>Grade check-up</button>}
+          {testReady(g) && <Pill onClick={() => startTest(testKey(g))}>Grade check-up</Pill>}
         </section>
         {weak.length > 0 && (
           <section className="tile b-weak"><h3>Practice again</h3>
@@ -95,7 +96,7 @@ function GradeHome({ g }: { g: number }) {
               <ChapterPic entries={u.entries} rng={rng} />
               {(units.length > 1 || u.name !== "Skills") && (
                 <div className="unit"><div><span className="k">Chapter {ui + 1}</span><h3>{u.name}</h3></div>
-                  {testReady(g, u.name) && <button className={`ctl${t ? " badged" : ""}`} onClick={() => startTest(tk)}>{t && <ScoreChip n={t.last} />}Unit test</button>}
+                  {testReady(g, u.name) && <Pill badged={!!t} onClick={() => startTest(tk)}>{t && <ScoreChip n={t.last} />}Unit test</Pill>}
                 </div>
               )}
               <div className="lessons">{u.entries.map(c => {

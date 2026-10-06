@@ -1,3 +1,4 @@
+import { Pill } from "./primitives/Pill";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useApp } from "../app/AppState";
 import { doneCount, isReady, testKey, testReady, unitsInGrade, type Entry } from "../app/curriculum";
@@ -102,7 +103,7 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
             );
           })}</ol>
           {testReady(grade, unit.name) && units.length > 1 && (
-            <button className="ctl" onClick={() => { close(); startTest(tk); }}>{t && <ScoreChip n={t.last} />}{unit.name} test</button>
+            <Pill onClick={() => { close(); startTest(tk); }}>{t && <ScoreChip n={t.last} />}{unit.name} test</Pill>
           )}
         </div>
       </section>
@@ -111,7 +112,7 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
     body = (
       <section className="zyear">
         <header><span className="k">{g.subtitle}</span><h2>{g.name}</h2>
-          <button className="ctl go" onClick={() => { close(); go({ name: "home" }, "back"); }}>Open the year ›</button></header>
+          <Pill go onClick={() => { close(); go({ name: "home" }, "back"); }}>Open the year ›</Pill></header>
         <div className="zch">{units.map((u, k) => {
           const done = doneCount(progress, u.entries), on = u.name === here?.name;
           return (
@@ -142,7 +143,7 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
             <button key={l} aria-pressed={l === level} disabled={l === "chapter" && !unit} onClick={() => to(l)}>{NAMES[l]}</button>
           ))}
         </div>
-        <button className="ctl zclose" onClick={close}>Done</button>
+        <Pill className="zclose" onClick={close}>Done</Pill>
       </div>
       <div className={`zstage ${way}`} key={level + (level === "chapter" ? chapter : "")}>{body}</div>
       <p className="zhint muted">Pinch to zoom in and out</p>
