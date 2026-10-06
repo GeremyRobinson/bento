@@ -18,6 +18,8 @@ export const isOpen = (pickerId: string) => !!BY_PICKER.get(pickerId)?.lessons.l
 
 export const lessonsInUnit = (t: B2Track, n: number) => t.lessons.filter(l => l.unit === n);
 export const projectAfter = (t: B2Track, lessonId: string): B2Project | undefined => t.projects.find(p => p.after === lessonId);
+/** every project that sits after a lesson, in the track's order (a small project, then the build) */
+export const projectsAfter = (t: B2Track, lessonId: string): B2Project[] => t.projects.filter(p => p.after === lessonId);
 export const projectById = (t: B2Track, id: string): B2Project | undefined => t.projects.find(p => p.id === id);
 /** "b2-re-03" → "03" */
 export const lessonNumber = (id: string) => id.split("-")[2] ?? "";

@@ -121,6 +121,8 @@ export interface B2Lesson<P = unknown> {
   oracle(p: P): number[];
   useIt: B2UseIt;
   deeper: RichText[];
+  /** a whole Deeper lesson: off the build's path on the map, never needed to finish the build */
+  optional?: boolean;
 }
 
 export type AnyB2Lesson = B2Lesson<any>;
