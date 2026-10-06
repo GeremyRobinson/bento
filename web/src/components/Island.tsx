@@ -9,6 +9,7 @@ import { lessonById } from "../curriculum/registry";
 import { currentItem, currentStep, lessonOfItem } from "../engine/session/practice";
 import { upNext } from "../app/today";
 import { Contents, type Level } from "./Contents";
+import { BentoMark } from "./primitives/BentoMark";
 import { MeStack } from "./MeStack";
 import { ConfirmStack } from "./ConfirmStack";
 import { tableById } from "../engine/facts/tables";
@@ -195,7 +196,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
 
   if (welcome) return (
     <div className="itop"><span /><header className="island guest">
-      <span className="iword">Bento</span>
+      <BentoMark className="iword" />
       {progress.chosen
         ? <button className="ilink" onClick={() => { openSheet(false); go({ name: "home" }, "fwd"); }}>My lessons ›</button>
         : <span className="inote">Kindergarten to 12th grade</span>}

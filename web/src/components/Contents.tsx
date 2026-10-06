@@ -1,5 +1,6 @@
 import { Pill } from "./primitives/Pill";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { BentoMark } from "./primitives/BentoMark";
 import { useApp } from "../app/AppState";
 import { doneCount, isReady, testKey, testReady, unitsInGrade, type Entry } from "../app/curriculum";
 import { upNext } from "../app/today";
@@ -140,8 +141,10 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
   return (
     <div className="zoom" ref={box} role="dialog" aria-modal="true" aria-label={CONTENTS} onClick={e => { if (e.target === e.currentTarget) close(); }}>
       <div className="zbar-top">
+        <BentoMark className="zmark" />
+        {/* widest to narrowest, left to right (G 2026-10-06) */}
         <div className="zlevels" role="group" aria-label="Zoom">
-          {LEVELS.map(l => (
+          {[...LEVELS].reverse().map(l => (
             <button key={l} aria-pressed={l === level} disabled={l === "chapter" && !unit} onClick={() => to(l)}>{NAMES[l]}</button>
           ))}
         </div>

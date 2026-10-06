@@ -31,6 +31,8 @@
 :root[data-theme="dark"] .island .ibat>i{background:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}
 .island .iplace .ign{font:inherit;letter-spacing:inherit}
 @media (min-width:700px){.island:not(.guest){width:min(460px,100%)}}
+.bmark{font:var(--w-bold) var(--fz-md)/1 var(--sans);letter-spacing:-.02em;color:var(--text)}
+.zbar-top .zmark{grid-column:1;justify-self:start;font-size:var(--fz-xl);padding-left:var(--sp-2)}
 .island .iword{font:var(--w-bold) var(--fz-md)/1 var(--sans);letter-spacing:-.02em}
 .island.guest{padding:0 5px 0 0;gap:var(--sp-1)}
 .island.guest .iword{display:grid;place-items:center;height:var(--float-in);padding:0 var(--sp-4) 0 22px}
@@ -108,7 +110,7 @@ html[data-zoomed] body{overflow:hidden}
 .zlevels button[aria-pressed=true],.zlevels button[aria-pressed=true]:hover{background:var(--text);color:var(--card)}
 .zlevels button:disabled{opacity:.35}
 .zclose{grid-column:3;justify-self:end;background:color-mix(in srgb,var(--card) 72%,transparent)!important;box-shadow:0 0 0 1px var(--rule)}
-@media (max-width:560px){.zbar-top{grid-template-columns:auto 1fr}.zlevels{grid-column:1}.zlevels button{padding:0 var(--sp-3)}}
+@media (max-width:560px){.zbar-top{grid-template-columns:auto 1fr}.zbar-top .zmark{display:none}.zlevels{grid-column:1}.zlevels button{padding:0 var(--sp-3)}}
 .zstage{width:min(1040px,100%);transform-origin:50% 30%;animation:zFrom var(--dur-500) var(--ease) both}
 .zstage.out{animation-name:zOut} .zstage.in{animation-name:zIn}
 @keyframes zFrom{from{opacity:0;transform:scale(1.08)}}
