@@ -11,7 +11,7 @@ import { useLetterModel } from "./Letters";
 
 const SHOWN = 6;
 
-export function TransformerScene({ props }: SceneProps) {
+export function TransformerScene({ props, place }: SceneProps) {
   const quiet = flag(props, "quiet"), compare = num(props, "compare", 0);
   const [d, setD] = useState(num(props, "d", 64));
   const [L, setL] = useState(num(props, "L", 2));
@@ -60,13 +60,13 @@ export function TransformerScene({ props }: SceneProps) {
       controls={<>
         <Slider label="Width d" value={d} min={16} max={128} step={16} onChange={setD} marks={[{ v: 32, label: "32" }, { v: 64, label: "64" }, { v: 128, label: "128" }]} />
         <Slider label="Blocks L" value={L} min={1} max={12} step={1} onChange={setL} />
-        <Slider label="Vocabulary V" value={V} min={50} max={300} step={50} onChange={setV} />
+        {place !== "lesson" && <Slider label="Vocabulary V" value={V} min={50} max={300} step={50} onChange={setV} />}
         <Toggle label="View" value={view} onChange={setView} options={[{ v: "count", label: "Counts" }, { v: "next", label: "Next letter" }]} />
       </>}
       readouts={quiet ? <Read label="Width d" value={String(d)} /> : <>
         <Read label="One block, 12d²" value={group(block)} tone="amber" big />
         {compare > 0 && <Read label={`At d = ${compare}`} value={`${group(12 * compare * compare)}, so × ${fx(block / (12 * compare * compare), 0)}`} />}
-        <Read label="Total, 12Ld² + V·d" value={group(total)} />
+        <Read label="Total, 12Ld² + V·d" value={group(total)} minor />
       </>}
     />
   );

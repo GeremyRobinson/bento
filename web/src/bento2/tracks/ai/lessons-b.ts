@@ -488,8 +488,8 @@ export const ai14: B2Lesson<P14> = {
     return [Math.round((C / 10 ** e) * 10) / 10, e, C / 10 ** p.s, C / 10 ** p.s / 60, (p.n * 10 ** p.b) / (p.m * 10 ** p.a)];
   },
   useIt: {
-    say: ["Estimate the build's own training compute: 6 × 1,210 parameters × 3,000 training digits × 20 passes ≈ 4.4 × 10⁸ FLOPs, counting each digit as one example. At a phone's peak of about 10¹² FLOP/s that's under a millisecond; in the browser it takes a second or so, because real code rarely gets near peak.",
-      "Save `C_digits`, then set it beside a published large run on the Compute meter's log scale."],
+    say: ["The build's own training compute: 6 × 1,210 parameters × 3,000 digits × 20 passes ≈ 4.4 × 10⁸ FLOPs. At a phone's peak, 10¹² FLOP/s, that's under a millisecond; the browser takes a second or so, since real code rarely nears peak.",
+      "Save `C_digits` and set it beside a published large run."],
     saves: { name: "C_digits", value: () => 6 * readerParams(16) * 3000 * 20, unit: "FLOPs", note: "6 × parameters × digits × passes for the build's reader" },
     scene: { scene: "compute", props: { m: 4.4, a: 0, n: 1, b: 8, s: 12, build: true } },
   },

@@ -9,7 +9,7 @@ import { attentionRow, KEYS, QUERIES, SENTENCE } from "../maths";
 import { lin } from "./common";
 
 /** where each key's word sits beside its tip, so the close ones don't collide: [dx, dy, anchor] */
-const LABEL: [number, number, "start" | "middle" | "end"][] = [[6, 12, "start"], [-4, -9, "end"], [6, 4, "start"], [-4, -8, "start"], [6, 12, "start"], [6, 4, "start"], [0, -8, "middle"]];
+const LABEL: [number, number, "start" | "middle" | "end"][] = [[6, 4, "start"], [0, 18, "middle"], [6, 4, "start"], [-6, -8, "start"], [6, 4, "start"], [6, 4, "start"], [6, 14, "start"]];
 
 export function AttentionScene({ props }: SceneProps) {
   const quiet = flag(props, "quiet");
@@ -22,7 +22,7 @@ export function AttentionScene({ props }: SceneProps) {
   const rows = SENTENCE.map((_, i) => attentionRow(i === at ? q : QUERIES[i]!, upto(i)));
   const row = rows[at]!, top = row.indexOf(Math.max(...row));
   const W = 360, H = 260, c = 18, gx = 80, gy = 74;
-  const px = lin(-1.2, 2.5, 222, 352), py = lin(-1.2, 1.8, 250, 120), ux = lin(222, 352, -1.2, 2.5), uy = lin(250, 120, -1.2, 1.8);
+  const px = lin(-1.2, 2.5, 222, 352), py = lin(-1.2, 1.8, 250, 70), ux = lin(222, 352, -1.2, 2.5), uy = lin(250, 70, -1.2, 1.8);
   const hidden = (i: number) => quiet && i === at;
   const svg = (
     <svg ref={ref} viewBox={`0 0 ${W} ${H}`} className="b2pic" role="img"
@@ -50,8 +50,7 @@ export function AttentionScene({ props }: SceneProps) {
         <circle cx={px(q[0])} cy={py(q[1])} r="6" className="b2handle" />
         <circle cx={px(q[0])} cy={py(q[1])} r="18" className="b2hit" {...drag((x, y) => setQ([Math.max(-1.2, Math.min(2.5, ux(x))), Math.max(-1.2, Math.min(1.8, uy(y)))]))} />
       </g>}
-      <text x="222" y="92" className="b2t">keys</text>
-      <text x="222" y="110" className="b2t sky">query of "{SENTENCE[at]}"</text>
+      <text x="8" y="252" className="b2t">dots: keys · <tspan className="b2t sky">blue: query of "{SENTENCE[at]}"</tspan></text>
     </svg>
   );
   return (
