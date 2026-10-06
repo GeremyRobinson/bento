@@ -36,14 +36,13 @@ function leaf(c: Pt, a: number, len: number): Seg[] {
   return [M(c), { c: "Q", q: m(1), p: tip }, { c: "Q", q: m(-1), p: c }, Z];
 }
 
-/** one coin centered at c; side 0 heads (a star), 1 tails (two leaves) */
-export function coinShape(coin: number, c: Pt, side: number, o: Timing = {}): Draft[] {
-  const info = COIN_INFO[coin]!, r = (info.mm * PX) / 2, metal = info.copper ? "cu" : "ag", items: Draft[] = [];
+/** The metal of a coin: its disc, a bright sheen up on the left, a soft shade down on the right, and a ridged edge when it has one. */
+export function coinFace(c: Pt, r: number, metal: "cu" | "ag", ridged: boolean, o: Timing = {}): Draft[] {
+  const items: Draft[] = [];
   items.push({ type: "circle", cx: c[0], cy: c[1], r, cls: `coin ${metal}`, ...o } as Draft);
-  // the metal catches the light: a bright sheen up on the left, a soft shade down on the right
   items.push({ type: "path", segs: arc(c, r * 0.86, 105, 175), cls: `coin-shine ${metal}`, ...o } as Draft);
   items.push({ type: "path", segs: arc(c, r * 0.86, 285, 355), cls: `coin-shade ${metal}`, ...o } as Draft);
-  if (info.ridged) {
+  if (ridged) {
     const segs: Seg[] = [];
     for (let i = 0; i < 60; i++) {
       const a = (2 * Math.PI * i) / 60, u: Pt = [Math.cos(a), Math.sin(a)];
@@ -51,6 +50,13 @@ export function coinShape(coin: number, c: Pt, side: number, o: Timing = {}): Dr
     }
     items.push({ type: "path", segs, cls: `coin-ridge ${metal}`, ...o } as Draft);
   }
+  return items;
+}
+
+/** one coin centered at c; side 0 heads (a star), 1 tails (two leaves) */
+export function coinShape(coin: number, c: Pt, side: number, o: Timing = {}): Draft[] {
+  const info = COIN_INFO[coin]!, r = (info.mm * PX) / 2, metal = info.copper ? "cu" : "ag", items: Draft[] = [];
+  items.push(...coinFace(c, r, metal, info.ridged, o));
   items.push({ type: "circle", cx: c[0], cy: c[1], r: r * 0.72, cls: `coin-art ${metal}`, ...o } as Draft);
   if (side === 0) items.push({ type: "path", segs: star(c, r * 0.42), cls: `coin-art ${metal}`, ...o } as Draft);
   else {

@@ -4,6 +4,7 @@ import type { SceneDiagram } from "../scene/schema";
 import { frame, t, type Draft } from "../geo/kit";
 import { circle, rect } from "./kit";
 import { tw } from "./blocks";
+import { coinFace } from "./coins";
 
 export interface PairsSpec {
   n: number;
@@ -47,10 +48,10 @@ export function buildPairs(spec: PairsSpec): SceneDiagram {
 /** The four coins, with the look each one gets: real things keep their real colors (silver, and a copper penny), not
     picture roles, so no coin looks like "the unknown" (handoff-6). */
 export const COINS = {
-  25: { name: "quarter", r: 30, cls: "coin ag" },
-  10: { name: "dime", r: 21, cls: "coin ag" },
-  5: { name: "nickel", r: 26, cls: "coin ag" },
-  1: { name: "penny", r: 23, cls: "coin cu" },
+  25: { name: "quarter", r: 30, metal: "ag", ridged: true },
+  10: { name: "dime", r: 21, metal: "ag", ridged: true },
+  5: { name: "nickel", r: 26, metal: "ag", ridged: false },
+  1: { name: "penny", r: 23, metal: "cu", ridged: false },
 } as const;
 export type CoinValue = keyof typeof COINS;
 
@@ -76,7 +77,8 @@ export function buildCoins(spec: CoinsSpec): SceneDiagram {
     for (let k = 0; k < g.count; k++) {
       const cx = x + c.r;
       running += g.value;
-      items.push(circle(cx, MAXR, c.r, c.cls, { enter: "pop", delay: 0.06 * idx++ }));
+      // real metal, with its sheen and edge (G 2026-10-06: real metallic silver, not flat grey)
+      items.push(...coinFace([cx, MAXR], c.r, c.metal, c.ridged, { enter: "pop", delay: 0.06 * idx++ }));
       items.push(t(cx, MAXR, `${g.value}¢`, "sm coin-val"));
       if (!spec.bare) items.push(t(cx, 2 * MAXR + 24, String(running), k === g.count - 1 ? "lbl acc" : "sm", { from: g.beat, enter: "rise", delay: 0.35 * k }));
       x += 2 * c.r + 8;
