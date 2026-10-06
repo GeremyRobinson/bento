@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { numStep, supText, v } from "../../algebra-kit/steps";
 import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { powerRulePicture } from "./picture";
 import { withEasyStart } from "../../easy-start";
 
 /** f(x) = a·xⁿ, so f′(x) = (n·a)·xⁿ⁻¹. */
@@ -66,6 +67,7 @@ export function explainPowerRule(p: PowerRule, model: AnswerModel) {
     idea: ["The derivative f′(x) is the slope of the graph at each x: how fast f grows.", "For x², grow a square of side x by a sliver: it gains two strips of length x, so its area grows 2x times as fast. In general xⁿ grows n·xⁿ⁻¹ times as fast. The exponent comes down in front and drops by 1."],
     statement: [text("f(x)"), op("="), ...term(a, n)],
     caption: "Bring the exponent down, then lower it by 1.",
+    diagram: powerRulePicture({ a, n, c, e }),
     alt: `f(x) = ${f(a)}x${supText(n)}: ${f(n)} × ${f(a)} = ${f(c)} and ${f(n)} − 1 = ${f(e)}, so f′(x) = ${f(c)}x${supText(e)}.`,
     steps: [
       { id: "problem", narration: `f′ tells how steep f is. For a power of x, the exponent ${f(n)} is what comes down.`, math: [num(a), v(), sup([mark(n)])] },

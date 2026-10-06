@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { fP, ns, P, poly, v, xp } from "../../algebra-kit/steps";
 import { attempt, nz, readInts } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { evaluatePolynomialPicture } from "./picture";
 import { withEasyStart } from "../../easy-start";
 
 /** f(x) = ax² + bx + c, evaluated at x = k. */
@@ -54,6 +55,7 @@ export function explainEvaluate(p: EvaluatePolynomial, model: AnswerModel) {
     idea: ["f(k) is the height of the graph at x = k: put k in every place x appears.", "Powers come before multiplying, so square first. A negative number squared is positive, because negative times negative is positive."],
     statement: [...fx(p), text(",  "), ...at(k)],
     caption: `Put ${f(k)} in for every x, then work out each part.`,
+    diagram: evaluatePolynomialPicture({ a, b, c, k, A, B, total }),
     alt: `f(${f(k)}) = ${f(A)} + ${fP(B)} + ${fP(c)} = ${f(total)}.`,
     steps: [
       { id: "plug", narration: `Put ${f(k)} in place of every x.`, math: [...at(k), op("="), ...plugged] },

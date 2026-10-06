@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { fP, ns, P, poly, v } from "../../algebra-kit/steps";
 import { attempt, nz, readInts } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { compositionPicture } from "./picture";
 import { withEasyStart } from "../../easy-start";
 
 /** f(x) = ax + b and g(x) = cx + d; find f(g(k)). */
@@ -46,6 +47,7 @@ export function explainComposition(p: Composition, model: AnswerModel) {
     idea: ["f(g(x)) is a chain of two machines: g works on x first, and whatever comes out goes into f.", "So work from the inside out: find g's answer, then put that number into f."],
     statement: [...fx(p), br(), ...gx(p), br(), ...call("f", call("g", [num(k)]))],
     caption: `g works on ${f(k)} first; f works on what g gives back.`,
+    diagram: compositionPicture({ a, b, c, d, k, g, out }),
     alt: `g(${f(k)}) = ${f(g)}, then f(${f(g)}) = ${f(out)}.`,
     steps: [
       { id: "problem", narration: `f(g(${f(k)})) means: put ${f(k)} into g, then put that answer into f.`, math: call("f", call("g", [mark(k)])) },

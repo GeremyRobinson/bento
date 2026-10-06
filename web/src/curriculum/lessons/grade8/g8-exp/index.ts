@@ -5,6 +5,7 @@ import { ns, supText, v, xp, type Slip } from "../../algebra-kit/steps";
 import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
 import { count as countOf } from "../../../text";
+import { exponentRulePicture } from "./picture";
 import { withEasyStart } from "../../easy-start";
 
 /**
@@ -71,6 +72,7 @@ export function explainExponentRule(p: ExponentRule, model: AnswerModel) {
     idea: ["x³ · x² is three x's times two more x's, five in all.", "Count the x's and the rules follow: add to multiply, subtract to divide, multiply for a power of a power."],
     statement: shown(p),
     caption: count,
+    diagram: exponentRulePicture({ t, a, b, e, value, shown: [`x${supText(a)} · x${supText(b)}`, `x${supText(a + b)} ÷ x${supText(b)}`, `(x${supText(a)})${supText(b)}`][t]! }),
     alt: `${[`x to the ${f(a)} times x to the ${f(b)}`, `x to the ${f(a + b)} divided by x to the ${f(b)}`, `x to the ${f(a)}, all to the ${f(b)}`][t]}, written out as x's, makes x to the ${f(e)}.`,
     steps: [
       { id: "problem", narration: ["Two powers of x multiplied.", "A power of x divided by another.", "A power of x raised to a power."][t]!, math: shown(p) },

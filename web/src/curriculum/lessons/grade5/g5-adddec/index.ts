@@ -4,6 +4,7 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { chainExplanation } from "../../../../explanations/diagrams/chain/build";
 import { expectedOf, oneBox, restoreVia, round6, wholeIn } from "../../_number-line/steps";
 import { count } from "../../../text";
+import { buildDecimalColumns } from "../../../../explanations/diagrams/early-g4/columns";
 
 /** a has tenths (1.1 to 99.9), b has hundredths (1.01 to 99.99) */
 export interface AddDecimalsProblem { a: number; b: number }
@@ -24,6 +25,9 @@ function hundredths(x: number): MathText {
   const s = f(x), full = x.toFixed(2);
   return s === full ? [num(x)] : [text(s), mark(full.slice(s.length))];
 }
+
+/** digits after the point as the number is written (12.5 → 1) */
+const decimalsShown = (x: number) => f(x).split(".")[1]?.length ?? 0;
 
 function answers(p: AddDecimalsProblem): AnswerModel {
   const { a, b } = p, { wa, wb, da, db } = split(p);
@@ -55,6 +59,11 @@ function explain(p: AddDecimalsProblem, model: AnswerModel) {
     statement: [num(a), op("+"), num(b)],
     ...(padded.length ? { caption: `Write ${rewrite} so both have hundredths.` } : {}),
     alt: `${f(a)} + ${f(b)}: whole parts ${W}, decimal parts ${f(D)}, total ${f(sum)}.`,
+    diagram: buildDecimalColumns({
+      a: Math.round(a * 100), b: Math.round(b * 100), shown: [decimalsShown(a), decimalsShown(b)], point: 2,
+      beats: { lineUp: 0, whole: 1, decimal: 2, total: 3 },
+      alt: `${f(a)} and ${f(b)} lined up by their points${padded.length ? `, with ${rewrite}` : ""}: the whole columns make ${W}, the decimal columns make ${D.toFixed(2)}, together ${f(sum)}.`,
+    }),
     beats: [
       { id: "line-up", narration: padded.length ? `Line up the decimal points: write ${rewrite} so both numbers have hundredths.` : "Both numbers already have hundredths, so the points line up.",
         math: [...hundredths(a), op("+"), ...hundredths(b)], lines: [[...hundredths(a), op("+"), ...hundredths(b)]] },
