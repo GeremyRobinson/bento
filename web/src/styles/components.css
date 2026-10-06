@@ -489,6 +489,12 @@
 .viz-svg .p0{--tint:var(--c0)} .viz-svg .p1{--tint:var(--c1)} .viz-svg .p2{--tint:var(--c2)}
 /* the other two picture roles (handoff-6): pw = the whole / a total (ink), pq = the unknown being found (amber; pair it with "?" or .dash) */
 .viz-svg .pw{--tint:var(--text)} .viz-svg .pq{--tint:var(--acc)}
+/* expression boxes, factor chips and term tables (fixes-02 Part B): a box is one operation, outlined in its part colour over
+   a light wash; a chip is a value, filled in its part colour; the answer chip is outlined in the accent */
+.viz-svg .xbox{fill:color-mix(in srgb,var(--tint) var(--d-f10),var(--card));stroke:var(--tint);stroke-width:var(--d-line)} .viz-svg .xbox.dash{stroke-dasharray:var(--d-dash-short);stroke-width:var(--d-edge)}
+.viz-svg .xbox.pw{fill:none;stroke:var(--faint)}
+.viz-svg .xchip{fill:var(--tint);stroke:var(--tint);stroke-width:var(--d-line)} .viz-svg .xchip.pq{fill:color-mix(in srgb,var(--acc) var(--d-f22),var(--card));stroke:var(--acc);stroke-width:var(--d-stroke)}
+.viz-svg .xring{fill:none;stroke:var(--acc);stroke-width:var(--d-stroke)} .viz-svg .xchip.ghost{fill:var(--card);stroke-dasharray:var(--d-dash-short)} .viz-svg .cut{opacity:.4}
 .viz-svg .numst{fill:none;stroke:var(--tint);stroke-width:var(--d-numeral);stroke-linecap:round;stroke-linejoin:round}
 .viz-svg .numghost{fill:none;stroke:var(--rule);stroke-width:var(--d-numeral);stroke-linecap:round;stroke-linejoin:round}
 .viz-svg .sol.f{fill:color-mix(in srgb,var(--tint) var(--d-f30),var(--card))} .viz-svg .sol.b{fill:color-mix(in srgb,var(--tint) var(--d-f55),var(--card))}
