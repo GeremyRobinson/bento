@@ -103,6 +103,14 @@ describe("no grade until one is chosen", () => {
   });
 });
 
+/** Changing grade goes through picker D: the island's back chevron, a grade, then Start. */
+function pickGrade(name: string) {
+  fireEvent.click(screen.getByRole("button", { name: "Change grade" }));
+  expect(screen.getByRole("heading", { level: 1, name: "Which grade are you in?" })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("radio", { name: new RegExp(`^${name}`) }));
+  tap(`Start ${name} ›`);
+}
+
 describe("home", () => {
   it("lists every lesson of the grade, with unit tests, the check-up and the grown-up page", () => {
     renderApp();
@@ -129,18 +137,14 @@ describe("home", () => {
 
   it("shows the whole year for 2nd grade, and switches grades from the sheet", () => {
     renderApp();
-    fireEvent.click(screen.getByRole("button", { name: "Change grade" }));
-    const sheet = screen.getByRole("dialog", { name: "Choose your grade" });
-    fireEvent.click(within(sheet).getByRole("button", { name: /2nd/ }));
-    expect(screen.queryByRole("dialog")).toBeNull();
+    pickGrade("2nd grade");
     expect(screen.getByRole("heading", { level: 1, name: "2nd grade" })).toBeInTheDocument();
     expect(document.querySelector("main")!.dataset.band).toBe("little");
     expect(screen.queryByText("Coming soon")).toBeNull();
     const titles = everyRow().map(r => r.textContent!);
     for (const c of CATALOG.filter(c => c.grade === 2)) expect(titles.some(t => t.includes(c.title))).toBe(true);
     // 9th grade takes the plain look
-    fireEvent.click(screen.getByRole("button", { name: "Change grade" }));
-    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: /9th/ }));
+    pickGrade("9th grade");
     expect(screen.queryByText("Coming soon")).toBeNull();
     expect(document.querySelector("main")!.dataset.band).toBe("high");
   });
@@ -154,8 +158,7 @@ describe("home", () => {
     const resume = screen.getByRole("button", { name: new RegExp(`Resume ${LESSON}, 5th grade, problem 1 of 8`) });
     expect(resume).toHaveTextContent(`5Resume${LESSON}1/8`);
     tap("Back to contents");
-    fireEvent.click(screen.getByRole("button", { name: "Change grade" }));
-    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: /Kindergarten/ }));
+    pickGrade("Kindergarten");
     expect(screen.queryByRole("button", { name: new RegExp(`Up next.*${LESSON}`) })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /^Resume / }));
     expect(screen.getByRole("button", { name: "Check" })).toBeInTheDocument();
@@ -175,11 +178,12 @@ describe("home", () => {
     expect(book.querySelectorAll(".zcard")).toHaveLength(4);
     fireEvent.click(book.querySelectorAll(".zcard")[1]!);
     expect(within(book).getByRole("button", { name: "Chapter" })).toHaveAttribute("aria-pressed", "true");
-    // every grade, then into another grade's book
+    // every grade is picker D, then into another grade's book
     fireEvent.click(within(book).getByRole("button", { name: "All grades" }));
-    expect(book.querySelectorAll("button.book")).toHaveLength(13);
-    fireEvent.click(within(book).getByRole("button", { name: /^7th grade:/ }));
     expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getAllByRole("radio")).toHaveLength(13);
+    fireEvent.click(screen.getByRole("radio", { name: "7th grade" }));
+    tap("Start 7th grade ›");
     expect(screen.getByRole("heading", { level: 1, name: "7th grade" })).toBeInTheDocument();
   });
 });

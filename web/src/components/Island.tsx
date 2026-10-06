@@ -165,7 +165,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
     const onStart = (e: TouchEvent) => { d0 = e.touches.length === 2 && (visualViewport?.scale ?? 1) <= 1.01 ? dist(e.touches) : 0; };
     const onMove = (e: TouchEvent) => {
       if (!d0 || e.touches.length !== 2) return;
-      if (dist(e.touches) / d0 < 0.7) { d0 = 0; setOpen(start); }
+      if (dist(e.touches) / d0 < 0.7) { d0 = 0; if (start === "shelf") openSheet(true); else setOpen(start); }
     };
     document.addEventListener("touchstart", onStart, { passive: true });
     document.addEventListener("touchmove", onMove, { passive: true });
@@ -188,7 +188,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
     <div className="itop"><span /><header className="island guest">
       <span className="iword">Bento</span>
       {progress.chosen
-        ? <button className="ilink" onClick={() => go({ name: "home" }, "fwd")}>My lessons ›</button>
+        ? <button className="ilink" onClick={() => { openSheet(false); go({ name: "home" }, "fwd"); }}>My lessons ›</button>
         : <span className="inote">Kindergarten to 12th grade</span>}
     </header><span /></div>
   );
@@ -213,7 +213,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
         {back
           ? <button className="iback" onClick={() => go(back.to, "back")} aria-label={`Back to ${back.label}`}><Chevron dir="left" /></button>
           : <button className="iback" onClick={() => openSheet(true)} aria-label="Change grade"><Chevron dir="left" /></button>}
-        <button className="iplace" onClick={() => setOpen(start)} aria-label={`Contents. You're on ${place.title}`} aria-haspopup="dialog">
+        <button className="iplace" onClick={() => setOpen(start === "shelf" ? "year" : start)} aria-label={`Contents. You're on ${place.title}`} aria-haspopup="dialog">
           <small>{place.kicker}</small>
           {place.title === gradeOf(grade).name ? <GradeTitle grade={grade} /> : <b>{place.title}</b>}
         </button>

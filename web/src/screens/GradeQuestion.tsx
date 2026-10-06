@@ -49,7 +49,14 @@ const phone = () => typeof matchMedia !== "undefined" && matchMedia("(max-width:
  * in place with its picture and Start, so nothing scrolls past one screen.
  */
 export function GradeQuestion() {
-  const { chooseGrade, startTest, deps } = useApp();
+  const { chooseGrade, startTest, deps, sheetOpen, openSheet } = useApp();
+  // opened to change grade: Escape goes back to your lessons
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") openSheet(false); };
+    addEventListener("keydown", onKey);
+    return () => removeEventListener("keydown", onKey);
+  }, [sheetOpen, openSheet]);
   const [picked, setPicked] = useState<number | null>(null);
   const [ask, setAsk] = useState(false);
   // Bento or Bento²: the switch remembers your last side on this device; a first visit opens on Bento
