@@ -86,18 +86,18 @@ export function PairScene({ props, marker }: SceneProps) {
   return (
     <Scene svg={svg}
       controls={<>
-        {!game && <Slider label="Alice's dial a" value={a} min={0} max={180} step={5} onChange={setA} format={v => `${v}°`} marks={[0, 30, 45].map(v => ({ v, label: `${v}°` }))} />}
+        {!game && <Slider label="Alice's dial a" value={a} min={0} max={180} step={5} onChange={setA} format={v => `${v}°`} />}
         {!game && <Slider label="Bob's dial b" value={b} min={0} max={180} step={5} onChange={setB} format={v => `${v}°`} marks={[0, 30, 45, 90].map(v => ({ v, label: `${v}°` }))} />}
-        <Toggle label="Mode" value={mode} onChange={setMode} options={[{ v: "match", label: "Match rate" }, { v: "game", label: "CHSH game" }]} />
-        {!quiet && <button type="button" className="ctl go" onClick={run.run}>{game ? "Play 1,000 rounds" : "Run 1,000 pairs"}</button>}
+        <Toggle label="Mode" value={mode} onChange={setMode} options={[{ v: "match", label: "Match" }, { v: "game", label: "Game" }]} />
+        {!quiet && <button type="button" className="ctl go" onClick={run.run}>{game ? "Play 1,000" : "Run 1,000"}</button>}
       </>}
       readouts={game ? <>
         <Read label="Wins so far" value={shown ? `${wins.toLocaleString("en-US")} of ${shown.toLocaleString("en-US")}` : "none yet"} tone="sky" big />
         <Read label="Win rate" value={shown ? fx(wins / shown, 3) : "?"} tone="sky" />
         <Read label="Entangled, in theory" value={fx(Q, 3)} tone="amber" />
-        <Read label="Best plan in advance" value="0.750" />
+        <Read label="Best plan in advance" value="0.750" minor />
       </> : <>
-        <Read label="a − b" value={`${fx(a - b, 0)}°`} />
+        <Read label="a − b" value={`${fx(a - b, 0)}°`} minor />
         <Read label={hide ? "P(same)" : "P(same) = cos²(a − b)"} value={hide ? "?" : fx(P, 3)} tone="amber" />
         {shown > 0 && <Read label="Matches" value={`${matches.toLocaleString("en-US")} of ${shown.toLocaleString("en-US")}`} tone="sky" big />}
       </>}

@@ -61,8 +61,8 @@ export function SpringScene({ props, marker }: SceneProps) {
         <Slider label="Friction c" value={c} min={0} max={Math.round(cmax * 10) / 10} step={cc0 / 100} onChange={setC} format={v => `${fx(v, cc0 >= 100 ? 0 : 2)} N·s/m`} />
       </>}
       readouts={<>
-        {!quiet && <Read label="ω = √(k/m)" value={`${fx(w, 2)} per s`} />}
-        {!quiet && <Read label="Period" value={`${fx((2 * Math.PI) / w, 2)} s`} />}
+        {!quiet && <Read label="ω = √(k/m)" value={`${fx(w, 2)} per s`} minor />}
+        {!quiet && <Read label="Period" value={`${fx((2 * Math.PI) / w, 2)} s`} minor />}
         {!quiet && <Read label="c_crit = 2√(mk)" value={fx(cc, cc >= 100 ? 0 : 2)} tone="amber" />}
         {!quiet && <Read label="ζ" value={fx(z, 2)} tone="pink" />}
         {!quiet && <Read label="Motion" value={type} />}

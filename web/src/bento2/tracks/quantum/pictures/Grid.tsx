@@ -65,14 +65,14 @@ export function GridScene({ props }: SceneProps) {
     <Scene svg={svg}
       controls={<>
         <Slider label="Top qubit's angle" value={Math.round(tAng)} min={-180} max={180} step={1} onChange={reset(setTa)} format={d => `${d}°`} marks={MARKS} />
-        <Slider label="Bottom qubit's angle" value={Math.round(ba)} min={-180} max={180} step={1} onChange={reset(setBa)} format={d => `${d}°`} marks={MARKS} />
-        {hasCnot && <Toggle label="CNOT" value={on} onChange={reset(setOn)} options={[{ v: "off", label: "No CNOT" }, { v: "on", label: "CNOT on" }]} />}
+        <Slider label="Bottom qubit's angle" value={Math.round(ba)} min={-180} max={180} step={1} onChange={reset(setBa)} format={d => `${d}°`} />
+        {hasCnot && <Toggle label="CNOT" value={on} onChange={reset(setOn)} options={[{ v: "off", label: "No CNOT" }, { v: "on", label: "CNOT" }]} />}
         {!quiet && <button type="button" className="ctl" onClick={doMeasure}>Measure top</button>}
       </>}
       readouts={<>
         <Read label="ps − qr" value={quiet ? "?" : fx(x, 3)} tone="amber" />
         <Read label="So it is" value={quiet ? "?" : ent ? "entangled" : "a product"} />
-        {!quiet && <Read label="Chances" value={v.map(a => fx(a * a, 2)).join(", ")} />}
+        {!quiet && <Read label="Chances" value={v.map(a => fx(a * a, 2)).join(", ")} minor />}
         {read != null && condP && <Read label={`Top read ${read}; the bottom now reads`} value={condP[0]! > 0.9999 ? "0, for sure" : condP[1]! > 0.9999 ? "1, for sure" : `0 with chance ${fx(condP[0]!, 2)}`} tone="sky" />}
       </>}
     />

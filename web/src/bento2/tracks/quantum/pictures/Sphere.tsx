@@ -130,7 +130,7 @@ export function SphereScene({ props, marker }: SceneProps) {
   return (
     <Scene svg={svg}
       controls={<>
-        <Slider label="θ, down from the top" value={Math.round(th)} min={0} max={180} step={1} onChange={t => set(t, ph)} format={x => `${x}°`} marks={[0, 60, 90, 120, 180].map(x => ({ v: x, label: `${x}°` }))} />
+        <Slider label="θ, down from the top" value={Math.round(th)} min={0} max={180} step={1} onChange={t => set(t, ph)} format={x => `${x}°`} />
         <Slider label="φ, around" value={Math.round(ph)} min={0} max={359} step={1} onChange={p => set(th, p)} format={x => `${x}°`} />
         <span className="b2ops" role="group" aria-label="Gates">
           {["X", "Z", "H", "S"].map(g => <button type="button" key={g} className="ctl" disabled={busy && queue.length > 3} onClick={() => gate(g)}>{g}</button>)}
@@ -139,16 +139,16 @@ export function SphereScene({ props, marker }: SceneProps) {
         </span>
       </>}
       readouts={quiet ? <>
-        <Read label="θ" value={`${Math.round(th)}°`} tone="amber" />
-        <Read label="φ" value={`${Math.round(ph)}°`} />
-        {log.length > 0 && <Read label="Gates so far" value={log.join(", ")} />}
+        <Read label="θ" value={`${Math.round(th)}°`} tone="amber" minor />
+        <Read label="φ" value={`${Math.round(ph)}°`} minor />
+        {log.length > 0 && <Read label="Gates so far" value={log.join(", ")} minor />}
       </> : <>
-        <Read label="Amplitude of 0, cos(θ/2)" value={fx(Math.cos((th * Math.PI) / 360), 3)} tone="sky" />
-        <Read label="Amplitude of 1, e^(iφ) sin(θ/2)" value={`${fx(Math.sin((th * Math.PI) / 360), 3)} at ${Math.round(ph)}°`} tone="pink" />
+        <Read label="Amplitude of 0, cos(θ/2)" value={fx(Math.cos((th * Math.PI) / 360), 3)} tone="sky" minor />
+        <Read label="Amplitude of 1, e^(iφ) sin(θ/2)" value={`${fx(Math.sin((th * Math.PI) / 360), 3)} at ${Math.round(ph)}°`} tone="pink" minor />
         <Read label="P(0)" value={fx(P0, 3)} tone="sky" />
         <Read label="P(1)" value={fx(P1, 3)} tone="pink" />
-        <Read label="Height z" value={fx(v[2], 3)} tone="amber" />
-        {log.length > 0 && <Read label="Gates so far" value={log.join(", ")} />}
+        <Read label="Height z" value={fx(v[2], 3)} tone="amber" minor />
+        {log.length > 0 && <Read label="Gates so far" value={log.join(", ")} minor />}
         {shown > 0 && <Read label="Shots: 0s and 1s" value={`${counts[0]} and ${counts[1]}`} />}
       </>}
     />

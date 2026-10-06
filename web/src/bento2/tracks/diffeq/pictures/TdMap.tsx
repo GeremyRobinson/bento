@@ -125,6 +125,7 @@ export function GalleryScene() {
       {mats.map((M, k) => <circle key={k} cx={f.X(Math.max(-4, Math.min(4, trace(M))))} cy={f.Y(Math.max(-3, Math.min(5, det(M))))} r={k === tile ? 8 : 5} className={k === tile ? "b2handle" : `b2dot ${TILES[k]!.tone}`} />)}
       <Mini A={A} />
       <text x={(MINI.l + MINI.r) / 2} y={MINI.t - 8} textAnchor="middle" className={`b2t ${TILES[tile]!.tone}`}>{TILES[tile]!.name}</text>
+      <text x={(MINI.l + MINI.r) / 2} y={MINI.b + 18} textAnchor="middle" className={`b2t ${right ? "mint" : ""}`}>{right ? "in its region" : reg === 6 ? "on the border" : `lands: ${TYPES[reg] ?? "D = 0"}`}</text>
     </svg>
   );
   return (
@@ -136,9 +137,9 @@ export function GalleryScene() {
         ))}
       </>}
       readouts={<>
-        <Read label="T, D" value={`${T}, ${D}`.replace(/-/g, "−")} />
-        <Read label="Lands in" value={TYPES[reg] ?? "D = 0"} tone={TILES[tile]!.tone} />
-        <Read label="Tiles kept" value={`${count} of 4`} />
+        <Read label="T, D" value={`${T}, ${D}`.replace(/-/g, "−")} minor />
+        <Read label="Lands in" value={TYPES[reg] ?? "D = 0"} tone={TILES[tile]!.tone} minor />
+        <Read label="Tiles kept" value={`${count} of 4`} minor />
       </>}
       foot={<SaveRow what={right ? <>Keep <b>{TILES[tile]!.id} = {mat(A)}</b></> : <>Move the dot into the {TILES[tile]!.name.toLowerCase()} region to keep it</>} saved={savedHere && right} onSave={onSave} />}
     />
