@@ -178,17 +178,11 @@ html:has(.screen) body{overflow:hidden}
 }
 @media (max-width:520px){.lctl{gap:6px}.lctl .ctl:not(.go){padding:0 14px}.lctl .ctl.go{min-width:0;padding:0 var(--sp-5)}.ldots{display:none}}
 
-/* ---- solve (instance, WorkScreen): one problem at a time, in every mode (lessons, unit tests, check-ups, review, Find my level,
-   the facts sprint). Where you are floats on top; a test's rules ride in a kicker over the problem. The problem sits
-   beside its answer pad; in portrait and on a phone they stack with the pad at the bottom. The page never scrolls: the
-   picture takes only the room that's left, and a long problem scrolls inside its own column (G 2026-10-06). ---- */
-.screen.solve{--work-pic-min:120px;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+/* ---- solve (instance, WorkScreen): the facts sprint, one question at a time beside its keys. Where you are floats
+   on top. In portrait and on a phone they stack with the keys at the bottom; the page never scrolls. ---- */
+.screen.solve{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
 .screen.solve:not(:has(>.whead)){grid-template-rows:minmax(0,1fr)}
 .whead{display:flex;align-items:center;justify-content:center;gap:var(--sp-2);min-width:0}
-.whead .steps{flex:0 1 auto;min-width:0;display:inline-flex;flex-wrap:nowrap;align-items:center;gap:6px;height:var(--float-h);padding:0 var(--sp-5);border-radius:var(--r-pill);background:var(--float);box-shadow:var(--float-shadow);overflow:hidden}
-.whead .steps .dot{flex:none;width:8px;height:8px}
-.whead .steps .dot.busy{width:24px;background:var(--tint)}
-.whead .steps .dot.ok{background:color-mix(in oklab,var(--tint) 45%,var(--float))}
 .whead>.ctl{flex:none;--pill-h:var(--float-h);background:var(--float);box-shadow:var(--float-shadow)}
 .wkick{flex:none;margin:0;padding:0 var(--sp-2);color:var(--muted);font-size:var(--fz-sm);font-weight:var(--w-mid);line-height:1.35}
 .panel.split{background:none;padding:0}
@@ -197,54 +191,160 @@ html:has(.screen) body{overflow:hidden}
 /* each side scrolls inside itself only when it must; the padding keeps the floating shadows from being clipped */
 .wbody>.col{position:static;min-height:0;display:flex;flex-direction:column;gap:var(--screen-gap);overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:var(--sp-2);margin:calc(var(--sp-2) * -1)}
 .wbody>.col>*{flex:none}
-/* the problem gives way first: it shrinks and scrolls inside its card, so the step being answered stays in view */
-.wprob>.card.wq{flex:0 1 auto;min-height:min(var(--work-pic-min),max-content);overflow:auto;scrollbar-width:thin;display:flex;flex-direction:column}
-.wq>*{flex:none}
-/* a problem drawn with its own picture (a Kindergarten bond, a clock) shrinks that picture before anything scrolls */
-.wq>.dotrow{flex:0 1 auto;min-height:var(--work-pic-min)}
-.wq>.dotrow svg{height:100%;max-height:100%;width:auto;max-width:100%}
-.wq .math,.wq .story,.wq .work,.wstep .ask{max-width:100%;min-width:0}
-.wq .math>.mline,.wstep .ask>.mline{max-width:100%}
-.wq .workline .wl{overflow-x:auto;scrollbar-width:thin}
-/* words in a finished line or a step wrap like a sentence instead of running on as one unbreakable line */
-:is(.wq .workline,.wstep .ask) .mline .t{white-space:pre-wrap}
-/* practice's picture: the problem drawn the way the lesson drew it, in whatever room is left under the step */
-.panel.split .ppic{flex:1 1 0;min-height:var(--work-pic-min);margin:0;display:grid;place-items:stretch;background:var(--well);box-shadow:none;position:relative}
-.ppic>.viz{position:absolute;inset:var(--sp-3);display:grid;margin:0;min-height:0}
-.ppic>.viz>svg,.ppic>.viz>.viz-svg,.ppic>.viz>.am{width:100%!important;height:100%!important;max-height:none;margin:0;min-height:0}
-.ppic .viz-cap,.ppic .replay{display:none}
 .panel.split .card{background:var(--float);box-shadow:var(--float-shadow);border-radius:var(--r-panel);padding:var(--sp-5) var(--sp-6)}
 .panel.split .tray button{background:var(--float);box-shadow:var(--float-shadow)}
 .panel.split .tray button:hover{background:color-mix(in oklab,var(--float) 90%,var(--tint))}
 .panel.split .actions .ctl{--pill-h:var(--float-h);font-size:var(--fz-lg);background:var(--float);box-shadow:var(--float-shadow)}
-.panel.split .actions .ctl.go{background:var(--ink);box-shadow:none;min-width:120px}
-.panel.split .choice{background:var(--float);box-shadow:var(--float-shadow);border-color:transparent}
-/* the feedback stack floats over the bottom of the problem at every size; stacked, once the problem is solved, it
-   sits at the foot of the screen where the pad was */
-.screen.solve .fstack.pfb{position:fixed;left:var(--fb-left,0);width:var(--fb-width,100%);bottom:calc(var(--fb-bottom,0px) + var(--s));padding-inline:var(--s)}
-@media not ((min-width:900px) and (orientation:landscape)){.screen.solve .fstack.pfb.side{top:auto}}
-/* stacked: the pad sits at the bottom, centred and as compact as the height needs */
-@media not ((min-width:900px) and (orientation:landscape)){
-  .wpad{overflow:visible}
-  .wpad .tray{max-width:520px}
-  .wpad .tappad .choices{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
-  .wpad .tappad .choice{min-height:var(--h)}
+@media not ((min-width:900px) and (orientation:landscape)){.wpad{overflow:visible}.wpad .tray{max-width:520px}}
+@media (max-width:699px){.screen.solve{--key:44px;--screen-gap:var(--sp-2)}.panel.split .card{padding:var(--sp-3) var(--sp-4);gap:var(--sp-2)}.wpad .tray{gap:6px}}
+
+/* ---- practice, picture first (instance of Learn's lesson grid; Design practice-spec, G 2026-10-06). The problem and
+   its steps on the left (on top in portrait); the hero holds the step's equation with its answer box, the feedback
+   line and the picture; the keypad docks under the hero. The hero's rows and the keypad share one column, so the
+   equation, the answer box, the feedback line, the picture and the keys always line up on the same left and right
+   edges, in every lesson, grade and size. Only the picture flexes; the page never scrolls. ---- */
+.screen.fit.lscreen.pscreen{--key:52px;--slot:58px;--ask:36px;--pfb-h:46px;--pic-min:120px;
+  grid-template-columns:minmax(300px,330px) minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"intro hero" "intro pad";align-content:stretch}
+.pscreen>.pbar{grid-area:bar;display:none}
+.pscreen>.ppad{grid-area:pad;min-width:0}
+/* the problem and its steps */
+.pintro{overflow:auto;gap:var(--sp-3)}
+.pintro .k{justify-content:flex-start}
+.pdots{display:inline-flex;align-items:center;gap:5px}
+.pdots i{width:8px;height:8px;border-radius:var(--r-xs);background:var(--faint)}
+.pdots i.ok{background:color-mix(in oklab,var(--tint) 45%,var(--float))}
+.pdots i.now{width:20px;background:var(--tint)}
+.ptestk{margin:0;color:var(--muted);font-size:var(--fz-sm);font-weight:var(--w-mid);line-height:1.35}
+.plabel{color:var(--ink);font-size:var(--fz-sm);font-weight:var(--w-bold)}
+.pprob{display:grid;gap:var(--sp-2);justify-items:start;min-width:0}
+.pprob .math{justify-content:flex-start;padding:0;font:var(--w-bold) 34px/1.1 var(--sans);letter-spacing:-.03em;font-variant-numeric:tabular-nums;max-width:100%}
+.pprob .math>.mline{justify-content:flex-start;max-width:100%}
+.pprob .math.words>.mline{font-size:var(--fz-2xl);line-height:1.25}
+.pprob .story{padding:0;font-size:var(--fz-lg)}
+.pprob .askline{font-size:var(--fz-sm)}
+.pprob .note{text-align:left}
+.pbeats{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.pbeats .beat{display:flex;align-items:flex-start;gap:var(--sp-3);padding:10px 14px 10px var(--sp-2);border-radius:var(--r-2xl);color:var(--muted)}
+.pbeats .beat[data-state="now"]{background:var(--float);box-shadow:var(--float-shadow);color:var(--text)}
+.pbeats .badge{--badge:28px;flex:none;min-width:28px;height:28px;font-size:var(--fz-xs);background:var(--well);color:var(--ink)}
+.pbeats .beat[data-state="done"] .badge{background:var(--tint);color:var(--on-tint)}
+.pbeats .beat[data-state="now"] .badge{background:var(--ink);color:var(--on-tint)}
+.pbeats .say{display:grid;gap:2px;min-width:0;font-size:var(--fz-md);line-height:1.35}
+.pbeats .say b{font-weight:var(--w-mid);color:inherit}
+.pbeats .beat[data-state="now"] .say b{font-weight:var(--w-bold)}
+.pbeats .pline{font:var(--w-mid) var(--fz-lg)/1.3 var(--num);color:var(--ink);font-variant-numeric:tabular-nums}
+.pbeats .pline.shown{color:var(--muted)}
+.pbeats .pline .mline{justify-content:flex-start;max-width:100%}
+.pbeats .pline .mline .t{white-space:pre-wrap}
+.pextra{margin-top:auto;display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+.pextra .ctl,.psteps .ctl{--pill-h:var(--h);background:var(--float);box-shadow:var(--float-shadow)}
+/* the hero: one column, three rows; the equation and the feedback line keep their height, the picture takes the rest */
+.lshero.phero{grid-template-rows:auto var(--pfb-h) minmax(var(--pic-min),1fr);padding:var(--sp-5) var(--sp-6) var(--sp-5);gap:var(--sp-1);position:relative}
+.pscreen.nopic .lshero.phero{grid-template-rows:auto var(--pfb-h);align-content:center}
+.pmath{min-width:0;gap:var(--sp-1)}
+.pmath .q{font:var(--w-mid) var(--fz-lg)/1.35 var(--sans);letter-spacing:0;color:var(--text);text-wrap:balance}
+.pmath .ask{font-size:var(--ask);padding:0;max-width:100%;min-width:0}
+.pmath .ask .mline{max-width:100%}
+.pmath .ask .mline .t{white-space:pre-wrap}
+.pmath .note{font-size:var(--fz-sm);font-weight:var(--w-regular);letter-spacing:0}
+.pmath .speak{position:absolute;top:var(--sp-3);right:var(--sp-3);margin:0}
+/* the feedback line: its height is kept even while empty, so it never covers the answer and nothing jumps */
+.pfb{min-height:var(--pfb-h);height:var(--pfb-h);display:flex;align-items:center;justify-content:center;gap:10px;padding:0 var(--sp-3);text-align:center;font-size:var(--fz-md);line-height:1.35;min-width:0}
+.pfb .pfbt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pfb .dot{flex:none;width:10px;height:10px;border-radius:var(--r-xs)}
+.pfb.fb-bad .dot{background:var(--err)}.pfb.fb-good .dot{background:var(--ok)}.pfb.fb-hint .dot{background:var(--acc)}
+.pfb strong{font-weight:var(--w-bold)}
+.pfb>*{animation:fadeIn var(--dur-250) var(--ease) both}
+/* the picture: as big as the hero allows; the part a hint is about rings in amber, twice, and stays ringed */
+.lpic.ppic{border-radius:var(--r-box)}
+.lpic.ppic>.viz>svg,.lpic.ppic>.viz>.viz-svg,.lpic.ppic>.viz>.am{width:100%!important;height:100%!important;max-height:none;margin:0;min-height:0}
+.lpic.ppic .viz-cap,.lpic.ppic .replay{display:none}
+.lpic.ppic.hinted{box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 55%,transparent);animation:hintRing var(--dur-500) var(--ease) 2}
+@keyframes hintRing{50%{box-shadow:0 0 0 7px color-mix(in srgb,var(--acc) 25%,transparent)}}
+/* the keypad: the hero's width, two rows, Check tall on the right */
+.ppad .tray{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) minmax(0,2fr);grid-auto-rows:var(--key);gap:var(--sp-2);max-width:none;margin:0}
+.ppad .tray button{height:auto;background:var(--float);box-shadow:var(--float-shadow);font-size:calc(var(--key) * .42)}
+.ppad .tray button:hover{background:color-mix(in oklab,var(--float) 90%,var(--tint))}
+.ppad .tray .k-go{grid-column:8;grid-row:1 / 3;height:auto;--pill-h:auto;border-radius:var(--r-2xl);font-size:var(--fz-lg);background:var(--ink);box-shadow:none}
+.ppad .tray .k-next,.ppad .tray .k-back{color:var(--ink)}
+.ppad.done .tray button:not(.k-go){opacity:.35;pointer-events:none;transition:opacity var(--dur-380) var(--ease) var(--dur-500)}
+.ppad.ptap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--sp-2);align-items:end}
+.ppad .tappad{display:grid;gap:var(--sp-2)}
+.ppad .tapnote{padding:0}
+.ppad .choices{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.ppad .choice{min-height:var(--key);background:var(--float);box-shadow:var(--float-shadow);border-color:transparent}
+.ppad .choice.ok{background:var(--ok);color:var(--page)}
+.ppad .choice.no{background:var(--err);color:var(--page);animation:shake var(--dur-300) var(--ease)}
+.ppad>.k-go{--pill-h:var(--key);font-size:var(--fz-lg)}
+/* the hint, and on a phone the steps: Settings-style stacks; the hero stays sharp above the dim */
+.pscreen>.fdim{position:fixed}
+.pscreen.hinting>.phero{z-index:var(--z-stack)}
+.pscreen>.fstack{position:absolute;z-index:var(--z-stack);left:0;top:0;width:330px;align-items:flex-start}
+.phint .htext{white-space:normal;padding:14px 22px;border-radius:var(--r-2xl);max-width:300px;font-weight:var(--w-regular);box-shadow:inset 4px 0 0 var(--acc),var(--float-shadow)}
+.pscreen .hrow{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+.pscreen .fstack .fpill.go{background:var(--ink);color:var(--on-tint);box-shadow:none}
+.phint .flbl{color:var(--muted);text-shadow:none}
+.psteps .pwhere{gap:var(--sp-3)}
+.psteps .pblist{display:block;padding:var(--sp-2);border-radius:var(--r-2xl);white-space:normal;width:100%}
+/* solved, in one motion (practice-spec §5): the box turns green, the picture finishes, the "?" fills, then the keys
+   fade and Check becomes Next problem; the island's battery ticks up with one glow */
+.pmath .ask.ok{padding:var(--sp-1) var(--sp-4);border-radius:var(--r-lg);box-shadow:inset 0 0 0 2.5px var(--ok);animation:fadeIn var(--dur-120) var(--ease) both}
+.psolved .pprob .math .slot,.psolved .pprob .math .qbox{transition:background var(--dur-400) var(--ease) var(--dur-350)}
+.island .ibat.tick{animation:batTick var(--dur-400) var(--ease) var(--dur-500) both}
+@keyframes batTick{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--tint) 22%,transparent)}}
+@property --p{syntax:"<number>";inherits:true;initial-value:0}
+.island .iprob{display:none}
+.ihint{position:relative}
+.ihint .ibadge{position:absolute;right:-2px;top:-2px;min-width:18px;height:18px;padding:0 var(--sp-1);border-radius:var(--r-pill);background:var(--ink);color:var(--on-tint);font:var(--w-bold) var(--fz-2xs)/18px var(--sans);font-style:normal;text-align:center}
+.icon.ihint.on{background:var(--ink);color:var(--on-tint)}
+.icon.ihint.on .ibadge{background:var(--float);color:var(--ink)}
+/* tests: no picture, no bulb; the equation and the feedback line sit centred in the hero */
+.pscreen.ptest .lshero.phero{align-content:center}
+
+/* portrait and narrow: the problem and the current step on top, then the hero, then a four-column keypad */
+@media (max-aspect-ratio:1/1),(max-width:760px){
+  .screen.fit.lscreen.pscreen{--key:62px;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"intro" "hero" "pad"}
+  .pintro{overflow:visible;padding:0 var(--sp-1);gap:var(--sp-2);display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}
+  .pintro>*{grid-column:1 / -1}
+  .pintro>.k{grid-column:1}
+  .pintro>.pextra{grid-column:2;grid-row:1;margin:0}
+  .pintro .pbeats>:not([data-state="now"]){display:none}
+  .pintro .pbeats .beat{padding:var(--sp-2) var(--sp-3)}
+  .pprob .math{font-size:28px}
+  .ppad .tray{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .ppad .tray .k-d1{grid-area:1/1}.ppad .tray .k-d2{grid-area:1/2}.ppad .tray .k-d3{grid-area:1/3}.ppad .tray .k-back{grid-area:1/4}
+  .ppad .tray .k-d4{grid-area:2/1}.ppad .tray .k-d5{grid-area:2/2}.ppad .tray .k-d6{grid-area:2/3}.ppad .tray .k-neg{grid-area:2/4}
+  .ppad .tray .k-d7{grid-area:3/1}.ppad .tray .k-d8{grid-area:3/2}.ppad .tray .k-d9{grid-area:3/3}.ppad .tray .k-dot{grid-area:3/4}
+  .ppad .tray .k-d0{grid-area:4/1/5/3}.ppad .tray .k-go{grid-area:4/3/5/5;border-radius:var(--r-pill)}
+  .ppad .tray .k-next{display:none}
+  .pscreen>.fstack{top:auto;bottom:0;left:0;width:auto;right:0}
 }
-@media (max-height:900px) and (min-width:900px) and (orientation:landscape){.screen.solve{--key:56px}}
-@media (max-width:699px){
-  .screen.solve{--key:44px;--work-pic-min:72px;--math:32px;--ask:28px;--slot:48px;--work:18px;--screen-gap:var(--sp-2)}
-  .whead{gap:6px}
-  .whead .steps{padding:0 var(--sp-3);gap:var(--sp-1)}
-  .whead .steps .dot{width:6px;height:6px}.whead .steps .dot.busy{width:16px}
-  .whead>.ctl{--pill-pad:var(--sp-4)}
-  .panel.split .card{padding:var(--sp-3) var(--sp-4);gap:var(--sp-2)}
-  .wpad .tray{gap:6px}
-  .wpad .tray .wide{font-size:var(--fz-md)}
-  .panel.split .actions .ctl{--pill-h:var(--h)}
-  .wpad .tapnote{padding:0}
-  .wpad .tappad .choice{min-height:var(--tap)}
-  .wstep .speak{width:var(--tap);height:var(--tap)}
+/* iPad landscape at its height: keys stay 52 */
+@media (max-height:700px) and (orientation:landscape){.screen.fit.lscreen.pscreen{--key:44px;--pic-min:96px}}
+/* a phone ("Tuck away", option A): the problem moves into the island, the steps fold into one bar over the keypad,
+   and the picture gets the room */
+@media (max-width:520px){
+  .screen.fit.lscreen.pscreen{--key:48px;--slot:48px;--ask:28px;--pfb-h:42px;grid-template-rows:minmax(0,1fr) auto auto;grid-template-areas:"hero" "bar" "pad";gap:var(--sp-2)}
+  .screen.fit.lscreen.pscreen.pwordy{grid-template-rows:auto minmax(0,1fr) auto auto;grid-template-areas:"intro" "hero" "bar" "pad"}
+  .pscreen:not(.pwordy)>.pintro{display:none}
+  .pscreen.pwordy>.pintro>:not(.pprob){display:none}
+  .pscreen.pwordy .pprob .math.words>.mline,.pscreen.pwordy .pprob .story{font-size:var(--fz-lg)}
+  .pscreen>.pbar{display:flex}
+  .pscreen.ptest:not(.pwordy)>.pbar{display:flex}
+  .lshero.phero{padding:var(--sp-3) var(--sp-3) var(--sp-3)}
+  .pfb{font-size:var(--small)}
+  .stepbar{flex:1;min-height:var(--tap);padding:0 var(--sp-3) 0 6px;gap:10px;justify-content:flex-start}
+  .stepbar .badge{flex:none;width:28px;height:28px;border-radius:var(--r-round);background:var(--ink);color:var(--on-tint);display:grid;place-items:center;font-size:var(--fz-xs)}
+  .stepbar .sbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:var(--w-bold)}
+  .stepbar small{color:var(--muted);font-size:var(--fz-xs)}
+  .ppad .tray{gap:6px}
+  .pscreen .hrow{flex-wrap:nowrap}
+  html:has(.pscreen) .island:has(.iprob) .ititle{display:none}
+  html:has(.pscreen) .island .iprob{display:block;font:var(--w-bold) var(--fz-lg)/1.2 var(--num);white-space:nowrap;overflow:hidden}
+  html:has(.pscreen) .island .iprob .mline{flex-wrap:nowrap}
+  html:has(.pscreen) .island .iprob .slot{height:24px;min-width:32px;font-size:var(--fz-md)}
 }
+@media (max-width:520px) and (max-height:760px){.screen.fit.lscreen.pscreen{--key:44px}}
 
 /* ---- results (instance of fit): the score and what to do next beside the report, which scrolls inside itself;
    stacked in portrait and on a phone ---- */
@@ -321,3 +421,10 @@ html:has(.screen) body{overflow:hidden}
   .sbento .b-chaps{grid-template-columns:minmax(0,1fr)}
   .sbento .bbig{font-size:44px}
 }
+/* Learn's portrait rule folds its steps away; practice keeps the step being answered */
+.pscreen .pintro .pbeats{display:grid}
+/* the feedback line is a line, not a box: colour only on the dot (and the answer box) */
+.pfb:is(.fb-bad,.fb-good,.fb-hint){background:none}
+/* while a stack is open, what it covers fades almost away; the hero stays sharp */
+.pscreen:is(.hinting,.stepping)>:is(.pintro,.ppad,.pbar){opacity:.06;transition:opacity var(--dur-250) var(--ease)}
+.pscreen.stepping>.phero{opacity:.35}

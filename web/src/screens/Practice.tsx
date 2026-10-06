@@ -1,27 +1,34 @@
-import { Pill, PillLabel } from "../components/primitives/Pill";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Pill } from "../components/primitives/Pill";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { playTone, readAloudOn, readSettings, speak } from "../app/settings";
 import { useApp } from "../app/AppState";
 import { withTransition } from "../app/transition";
 import { MathLine, Rich } from "../components/primitives/MathLine";
-import { ProblemView } from "../components/practice/ProblemView";
+import { problemShape, ProblemView } from "../components/practice/ProblemView";
 import { Diagram } from "../components/diagrams/Diagram";
 import { requireLesson } from "../curriculum/registry";
 import type { Explanation } from "../explanations/schema";
 import { FeedbackBox } from "../components/practice/FeedbackBox";
-import { Keypad } from "../components/practice/Keypad";
-import { FitScreen, WorkScreen } from "../components/screen/Screen";
+import { ConfirmStack } from "../components/ConfirmStack";
+import { FitScreen } from "../components/screen/Screen";
+import type { Band } from "../curriculum/grades";
 import { ALL_LESSONS, SHOW_ME } from "../app/copy";
 import {
   bandOfSession, check, choose, currentItem, currentStep, focusSlot, hint, isLastProblem, lessonOfItem, nextProblem,
-  pickPlan, pressKey, problemOf, showMe, showMeAvailable, skipAvailable, toggleSkip,
+  pickPlan, pressKey, problemOf, showMe, showMeAvailable, skipAvailable, stepsOf, toggleSkip,
 } from "../engine/session/practice";
 
 const SpeakerIcon = () => (
   <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" /></svg>
 );
 
-/** One problem at a time: the problem and the finished lines on one side, the step, feedback and keypad on the other. */
+/**
+ * One problem at a time, picture first (Design, practice-spec.md, approved by G 2026-10-06). It sits on Learn's grid
+ * master: the problem and its steps on the left (on top in portrait), the hero with the step's equation and answer box,
+ * the feedback line and the picture, and the keypad docked under the hero, sharing its left and right edges. On a
+ * phone the problem moves into the island and the steps fold into one bar above the keypad. Hints open from the
+ * island's light bulb as a Settings-style stack.
+ */
 export function Practice() {
   const { progress, go, act, finish, quit } = useApp();
   const s = progress.run;
@@ -42,7 +49,7 @@ export function Practice() {
   // read aloud: each new problem is read out, as on screen
   useEffect(() => {
     if (!s || !aloud) return;
-    const t = setTimeout(() => speak(document.querySelector("#app .card")?.textContent ?? ""), 350);
+    const t = setTimeout(() => speak(document.querySelector("#app .pprob")?.textContent ?? ""), 350);
     return () => clearTimeout(t);
   }, [s?.i, aloud]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -54,7 +61,8 @@ export function Practice() {
   useEffect(() => {
     if (!s) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.metaKey || e.ctrlKey || e.altKey || asking) return;
+      if (e.key === "Escape") { setHintOpen(false); setStepsOpen(false); return; }
       // tap-to-answer steps and planning: 1–4 pick a choice
       const st = currentStep(s);
       if (s.pick || st?.choices) {
@@ -85,24 +93,28 @@ export function Practice() {
 
   // the tapped answer wears right or wrong on itself (UI notes preview)
   const [tapped, setTapped] = useState<{ at: string; i: number } | null>(null);
+  // the hint stack, the phone's steps stack and the quit question: one at a time
+  const [hintOpen, setHintOpen] = useState(false), [stepsOpen, setStepsOpen] = useState(false), [asking, setAsking] = useState(false);
+  useEffect(() => { setHintOpen(false); setStepsOpen(false); }, [s?.i, s?.step, s?.solved]);
+  useEffect(() => { dispatchEvent(new CustomEvent("bento:hintopen", { detail: hintOpen })); }, [hintOpen]);
   // feedback and quick settings never overlap: opening settings puts the feedback away, and new feedback closes settings
   const [fbAway, setFbAway] = useState(false);
   const fbKey = s?.feedback ? `${s.i}-${s.step}-${s.mistakes.length}-${s.hints}-${s.feedback.strong}-${s.feedback.text}-${s.feedback.left}` : "";
   useEffect(() => {
     setFbAway(false);
-    if (fbKey) dispatchEvent(new CustomEvent("bento:panel", { detail: "feedback" }));
+    if (fbKey && s?.feedback?.type !== "hint") dispatchEvent(new CustomEvent("bento:panel", { detail: "feedback" }));
   }, [fbKey]);
   useEffect(() => {
-    const onPanel = (e: Event) => { if ((e as CustomEvent).detail === "settings") setFbAway(true); };
-    // the light bulb up top asks for a hint
-    const onHint = () => act((st, _p, d) => hint(st, d));
+    const onPanel = (e: Event) => { if ((e as CustomEvent).detail === "settings") { setFbAway(true); setHintOpen(false); setStepsOpen(false); } };
+    // the light bulb up top asks for a hint, and the hint opens as a stack (reopening it shows the same hint, free)
+    const onHint = () => { act((st, _p, d) => hint(st, d)); setStepsOpen(false); setHintOpen(true); dispatchEvent(new CustomEvent("bento:panel", { detail: "feedback" })); };
     addEventListener("bento:panel", onPanel); addEventListener("bento:hint", onHint);
     return () => { removeEventListener("bento:panel", onPanel); removeEventListener("bento:hint", onHint); };
   }, [act]);
 
   if (!s) {
     return (
-      <FitScreen className="wnone"><section className="panel"><p className="empty">No lesson in progress.</p>
+      <FitScreen className="pnone"><section className="panel"><p className="empty">No lesson in progress.</p>
         <div className="actions"><Pill go onClick={() => go({ name: "home" })}>{ALL_LESSONS}</Pill></div></section></FitScreen>
     );
   }
@@ -112,84 +124,144 @@ export function Practice() {
   const tapOnly = !!s.pick || !!step?.choices;
   const at = `${s.i}-${s.step}`, mark = (i: number) => tapped?.at === at && tapped.i === i && fb ? (fb.type === "bad" ? " no" : " ok") : "";
   const nextLabel = s.i < n - 1 ? "Next problem" : test ? "Finish test" : s.mode === "review" ? "Finish review" : "Finish lesson";
-  // "Right." carries the lesson's last idea, in this problem's numbers
+  // "Solved." carries the lesson's last idea, in this problem's numbers
   const idea = s.solved && full?.steps.length ? full.steps[full.steps.length - 1]!.narration : undefined;
-  const showFb = !!fb && !fbAway;
+  // the light bulb's own answers open in the hint stack, not on the feedback line
+  const bulbHint = fb?.type === "hint" && (fb.strong === "Hint:" || /^No hints left/.test(fb.text ?? ""));
+  const shape = problemShape(it.lessonId, problemOf(it), !!it.story);
+  // tests go without the explanation's picture (ex is null), but a problem drawn as its own picture keeps it: it IS the problem
+  const pic = !!ex || shape.picture;
+  // the steps: done ones with their finished line, the one being answered, the ones still to come by number only
+  // (their names could give a plan-the-step choice away)
+  const steps = stepsOf(s), here = s.solved ? steps.length : s.step;
+  const beats = steps.map((st, k) => ({ k, state: k < here ? "done" : k === here ? "now" : "later", label: k === here && s.pick ? "What comes next?" : k <= here ? st.base : `Step ${k + 1}`, line: s.work[k] }));
+  const now = beats.find(b => b.state === "now");
+  // quitting asks only when answers would be lost
+  const started = s.i > 0 || s.work.length > 0 || s.mistakes.length > 0 || s.solved;
+  const onQuit = () => (started ? setAsking(true) : quit());
+  const dots = <span className="pdots" aria-hidden>{s.items.map((_, i) => <i key={i} className={i < s.i ? "ok" : i === s.i ? "now" : ""} />)}</span>;
   function onNext() {
     if (s && isLastProblem(s)) finish();
     else withTransition(() => act((st, p, d) => nextProblem(st, p, d)), "fwd");
   }
+  const beatList = (
+    <ol className="beats pbeats">
+      {beats.map(b => (
+        <li key={b.k} className={`beat${b.line && s.fx === "line" && b.k === s.work.length - 1 ? " enter" : ""}`} data-state={b.state}>
+          <span className="badge">{b.state === "done" ? "✓" : b.k + 1}</span>
+          <span className="say"><b>{b.label}</b>{b.line && <span className={`pline${b.line.shown ? " shown" : ""}`}><MathLine math={b.line.math} /></span>}</span>
+        </li>
+      ))}
+    </ol>
+  );
+  const extras = <>
+    {skipAvailable(s) && <Pill onClick={() => act((st, _p, d) => toggleSkip(st, d))}>{s.skip ? "Show steps" : "Final answer only"}</Pill>}
+    <Pill className="pquit" onClick={onQuit}>Quit</Pill>
+  </>;
 
   return (
-    <WorkScreen
-      head={<>
-        {mixed && <Pill onClick={() => quit()}>Quit</Pill>}
-        <span className="steps" aria-label={`Problem ${s.i + 1} of ${n}`}>
-          {s.items.map((_, i) => <span key={i} className={`dot ${i < s.i ? "ok" : i === s.i ? "busy" : ""}`} />)}
-        </span>
-        <PillLabel badged><span className="badge on">{s.i + 1}</span>of <span className="mono">{n}</span></PillLabel>
-      </>}
-      kicker={test ? `${s.title}: no hints, one try per step` : undefined}
-      problem={<>
-        <div className="card wq">
-          {mixed && <div className="label">{lesson.title}</div>}
-          <ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} solved={s.solved} />
-          <div className="work">
-            {s.work.map((w, k) => (
-              <div key={k} className={`workline${w.shown ? " shown" : ""}${s.fx === "line" && k === s.work.length - 1 ? " enter" : ""}`}>
-                <span className="k">Step {k + 1}</span><span className="wl"><MathLine math={w.math} /></span>
-              </div>
-            ))}
-          </div>
+    <FitScreen className={`lscreen pscreen${test ? " ptest" : ""}${pic ? "" : " nopic"}${shape.short ? "" : " pwordy"}${s.solved ? " psolved" : ""}${hintOpen ? " hinting" : ""}${stepsOpen ? " stepping" : ""}`}
+      style={{ "--steps": steps.length } as CSSProperties}>
+      {/* the problem and how it's going: where you are, the problem with its "?", and the steps */}
+      <section className="lintro pintro">
+        <p className="k"><span>Problem {s.i + 1} of {n}</span>{dots}</p>
+        {test && <p className="ptestk">{s.title}: no hints, one try per step</p>}
+        {mixed && <div className="label plabel">{lesson.title}</div>}
+        <div className="pprob"><ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} solved={s.solved} part="text" /></div>
+        {beatList}
+        <div className="pextra">{extras}</div>
+      </section>
+      {/* the hero: the step's equation with its answer box, its feedback line, and the picture */}
+      <figure className="lshero phero">
+        <div className="lmath pmath">
+          {step && !s.pick ? <>
+            {step.question && <span className="q"><Rich text={step.question} /></span>}
+            <div className={`ask${fb?.type === "bad" && !fbAway ? " no" : ""}${s.fx === "shake" ? " shake" : ""}`} key={`${at}-${s.mistakes.length}`}>
+              <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={id => act(st => focusSlot(st, id))} />
+            </div>
+            {step.note && <span className="note"><Rich text={step.note} /></span>}
+          </> : s.pick ? <span className="q">Step {s.step + 1} · What comes next?</span>
+            : <div className="ask ok"><MathLine math={s.work[s.work.length - 1]?.math ?? []} /></div>}
+          <button className="speak" aria-label="Read it to me" onClick={() => speak([step?.question, document.querySelector("#app .pprob")?.textContent].filter(Boolean).join(". ").replace(/\*\*/g, ""))}><SpeakerIcon /></button>
         </div>
-        {step && (
-          <div key={`${s.i}-${s.step}-${s.collapsed}-${s.mistakes.length}`} className={`card wstep${s.fx === "shake" ? " shake" : ""}${s.fx === "line" ? " enter" : ""}`}>
-            {s.pick ? (
-              <div className="label">Step {s.step + 1} · What comes next?</div>
-            ) : (
-              <>
-                <div className="label lspeak">{step.label}
-                  <button className="speak" aria-label="Read it to me" onClick={() => speak([step.question, document.querySelector("#app .card")?.textContent].filter(Boolean).join(". ").replace(/\*\*/g, ""))}><SpeakerIcon /></button>
-                </div>
-                <div className={`ask${fb?.type === "bad" && !fbAway ? " no" : ""}`}>
-                  {step.question && <span className="q"><Rich text={step.question} /></span>}
-                  <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={id => act(st => focusSlot(st, id))} />
-                </div>
-                {step.note && <div className="note"><Rich text={step.note} /></div>}
-              </>
-            )}
+        <FeedbackBox key={fbKey} fb={fbAway || bulbHint ? null : fb} idea={idea} solved={s.solved && !fbAway && fb?.type !== "hint"} />
+        {pic && (
+          <div className={`lpic ppic${s.hinted ? " hinted" : ""}`} aria-label="Picture of this problem" role="img">
+            <div className="viz">{ex
+              ? <Diagram key={s.i} diagram={ex.diagram!} timeline={ex.timeline} fit
+                at={s.solved ? ex.timeline.length - 1 : Math.min(ex.timeline.length - 1, s.step > 0 ? ex.steps[s.step - 1]?.state ?? 0 : 0)} />
+              : <ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} part="picture" />}</div>
           </div>
         )}
-        {showFb && <FeedbackBox key={fbKey} fb={fb!} idea={idea} next={step ? undefined : { label: nextLabel, go: onNext }} />}
-        {ex && (
-          <figure className="card ppic" aria-label="Picture of this problem">
-            <div className="viz"><Diagram key={s.i} diagram={ex.diagram!} timeline={ex.timeline}
-              at={s.solved ? ex.timeline.length - 1 : Math.min(ex.timeline.length - 1, s.step > 0 ? ex.steps[s.step - 1]?.state ?? 0 : 0)} /></div>
-          </figure>
-        )}
-      </>}
-      pad={<>
-        {step && tapOnly && (
-          // tap answers sit where the keypad goes, so they never fall below the fold beside a long problem
-          <div className="tappad">
-            <div className="tapnote muted">{s.pick ? "You plan this one: tap the step that comes next." : "Tap your answer."}</div>
-            <div className="choices">{s.pick
-              ? s.pick.options.map((o, i) => <button key={`${i}-${o}`} className={`choice${mark(i)}`} onClick={() => { setTapped({ at, i }); act(st => pickPlan(st, i)); }}>{o}</button>)
-              : step.choices!.map((o, i) => <button key={`${i}-${o}`} className={`choice${mark(i)}`} onClick={() => { setTapped({ at, i }); act((st, p, d) => choose(st, i, p, d)); }}>{o}</button>)}</div>
+      </figure>
+      {/* a phone: the steps fold into one bar over the keypad */}
+      <div className="pbar">
+        <button className="fpill stepbar" onClick={() => setStepsOpen(o => !o)} aria-expanded={stepsOpen} aria-label={`Steps: ${now?.label ?? "done"}, ${Math.min(here + 1, steps.length)} of ${steps.length}`}>
+          <span className="badge">{s.solved ? "✓" : here + 1}</span><span className="sbl">{s.solved ? "Solved" : now?.label}</span>
+          <small>{Math.min(here + 1, steps.length)} of {steps.length}</small><span className="chev" aria-hidden>⌃</span>
+        </button>
+      </div>
+      <Pad band={band} tap={step && tapOnly ? (
+        <div className="tappad">
+          <div className="tapnote muted">{s.pick ? "You plan this one: tap the step that comes next." : "Tap your answer."}</div>
+          <div className="choices">{s.pick
+            ? s.pick.options.map((o, i) => <button key={`${i}-${o}`} className={`choice${mark(i)}`} onClick={() => { setTapped({ at, i }); act(st => pickPlan(st, i)); }}>{o}</button>)
+            : step.choices!.map((o, i) => <button key={`${i}-${o}`} className={`choice${mark(i)}`} onClick={() => { setTapped({ at, i }); act((st, p, d) => choose(st, i, p, d)); }}>{o}</button>)}</div>
+        </div>) : undefined}
+        solved={s.solved} onKey={key => act(st => pressKey(st, key))}
+        go={s.solved ? { label: nextLabel, run: onNext } : tapOnly ? undefined : { label: "Check", run: () => act((st, p, d) => check(st, p, d)) }} />
+      {hintOpen && step && (
+        <>
+          <div className="fdim phdim" onClick={() => setHintOpen(false)} />
+          <div className="fstack phint" role="dialog" aria-label="Hint" style={{ "--n": 4 } as CSSProperties}>
+            <span className="flbl" style={{ "--i": 0 } as CSSProperties}>{s.hinted ? `Hint · ${s.hintsLeft} left` : "No hints left"}</span>
+            <span className="fpill htext" style={{ "--i": 1 } as CSSProperties}><span><Rich text={s.hinted ? step.hint : "No hints left in this lesson. You can do it."} /></span></span>
+            <span className="hrow" style={{ "--i": 2 } as CSSProperties}>
+              {showMeAvailable(s) && <button className="fpill" onClick={() => { setHintOpen(false); act((st, p, d) => showMe(st, p, d)); }}>{SHOW_ME} the step</button>}
+              <button className="fpill go" autoFocus onClick={() => setHintOpen(false)}>Got it</button>
+            </span>
           </div>
-        )}
-        {step && !tapOnly && <Keypad band={band} onKey={key => act(st => pressKey(st, key))} />}
-        {step ? (
-          <div className="actions">
-            {showMeAvailable(s) && <Pill onClick={() => act((st, p, d) => showMe(st, p, d))}>{SHOW_ME}</Pill>}
-            {skipAvailable(s) && <Pill onClick={() => act((st, _p, d) => toggleSkip(st, d))}>{s.skip ? "Show steps" : "Final answer only"}</Pill>}
-            {!tapOnly && <Pill go onClick={() => act((st, p, d) => check(st, p, d))}>Check</Pill>}
+        </>
+      )}
+      {stepsOpen && (
+        <>
+          <div className="fdim phdim" onClick={() => setStepsOpen(false)} />
+          <div className="fstack psteps" role="dialog" aria-label="Steps" style={{ "--n": 3 } as CSSProperties}>
+            <span className="fpill pwhere" style={{ "--i": 0 } as CSSProperties}>Problem {s.i + 1} of {n}{dots}</span>
+            <div className="fpill pblist" style={{ "--i": 1 } as CSSProperties}>{beatList}</div>
+            <span className="hrow" style={{ "--i": 2 } as CSSProperties}>{extras}</span>
           </div>
-        ) : !showFb && (
-          // the next button rides in the feedback stack; it waits here only while that stack is put away
-          <div className="actions"><Pill go onClick={onNext}>{nextLabel}</Pill></div>
-        )}
-      </>}
-    />
+        </>
+      )}
+      {asking && (
+        <ConfirmStack title={`Quit ${s.title}?`} body="Your answers so far won't be kept." confirm="Quit"
+          onCancel={() => setAsking(false)} onConfirm={() => { setAsking(false); quit(); }} />
+      )}
+    </FitScreen>
+  );
+}
+
+/**
+ * The keypad docked under the hero (practice-spec §1): on a wide screen two rows with Check tall on the right, in
+ * portrait and on a phone four columns (1 2 3 ⌫ / 4 5 6 − / 7 8 9 . / 0 Check). Once the problem is solved the number
+ * keys fade and go inert, and Check becomes the one next move.
+ */
+function Pad({ band, onKey, go, tap, solved }: { band: Band; onKey: (k: string) => void; go?: { label: string; run: () => void }; tap?: React.ReactNode; solved: boolean }) {
+  const key = (k: string, label: string = k, cls = "", aria?: string) =>
+    <button key={k} type="button" data-key={k} className={`k-${cls || k}`} aria-label={aria} disabled={solved} onClick={() => onKey(k)}>{label}</button>;
+  return (
+    <div className={`ppad${tap ? " ptap" : ""}${solved ? " done" : ""}`}>
+      {tap ?? (
+        <div className={`tray${band === "little" ? " nosign" : ""}`}>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(d => key(String(d), String(d), `d${d}`))}
+          {band !== "little" && key(".", ".", "dot", "Decimal point")}
+          {band !== "little" && key("−", "−", "neg", "Negative")}
+          {key("back", "⌫", "back", "Erase")}
+          {key("next", "⇥", "next", "Next box")}
+          {go && <Pill go className="k-go" onClick={go.run}>{go.label}</Pill>}
+        </div>
+      )}
+      {tap && go && <Pill go className="k-go" onClick={go.run}>{go.label}</Pill>}
+    </div>
   );
 }

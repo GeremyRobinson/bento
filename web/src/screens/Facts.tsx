@@ -252,6 +252,8 @@ function Sprint({ t, onDone }: { t: FactTable; onDone: () => void }) {
   }
   return (
     <WorkScreen className="fsprint"
+      // a way out of anything started; what's been answered is kept, so it needs no question first
+      head={<Pill onClick={() => { if (answers.length) saveSprint(t.id, answers); onDone(); }}>Quit</Pill>}
       problem={
         <div className="card fq">
           <div className="label">{t.name} · {i + 1} of {queue.length}</div>
@@ -268,7 +270,6 @@ function Sprint({ t, onDone }: { t: FactTable; onDone: () => void }) {
           <button type="button" onClick={() => press("0")}>0</button>
           <button type="button" aria-label="Erase" onClick={() => press("back")}>⌫</button>
         </div>
-        <div className="actions"><Pill onClick={() => { if (answers.length) saveSprint(t.id, answers); onDone(); }}>Stop</Pill></div>
       </>}
     />
   );

@@ -23,7 +23,7 @@
 @keyframes rvIn{from{opacity:.2;transform:translateY(10px) scale(.985);filter:blur(6px)}}
 /* a work screen's body is a frame, not a piece: its two sides' pieces arrive instead (and a moving frame would carry
    the fixed feedback stack with it) */
-:is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:not(.wbody),.wrap>.bar{animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(var(--i,0) * var(--m-step))}
+:is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:not(.wbody):not(.fdim):not(.fstack),.wrap>.bar{animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(var(--i,0) * var(--m-step))}
 :is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(2){--i:1}
 :is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(3){--i:2}
 :is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(4){--i:3}
