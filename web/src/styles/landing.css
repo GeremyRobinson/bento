@@ -308,3 +308,8 @@
 .ldemo .lvis{height:290px}
 .ldemo .lvis{grid-template-rows:auto minmax(0,1fr)}
 .ldemo .lnew{align-self:end}
+
+/* Review layout-shift #1: a wide front card can't widen the tile, so the heading never rewraps on phones */
+.ltile{grid-template-columns:minmax(0,1fr)}
+@media (max-width:599px){.lreview span{max-width:100%;font-size:clamp(15px,4.6vw,20px);padding-inline:14px}}
+.lcount b{min-width:3ch;text-align:center}

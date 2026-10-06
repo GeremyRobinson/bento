@@ -31,12 +31,17 @@
 :root[data-theme="dark"] .island .ibat>i{background:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}
 .island .iplace .ign{font:inherit;letter-spacing:inherit}
 @media (min-width:700px){.island:not(.guest){width:min(460px,100%)}}
-.bmark{font:var(--w-bold) var(--fz-md)/1 var(--sans);letter-spacing:-.02em;color:var(--text)}
+.bmark{font:var(--w-bold) var(--fz-md)/1 var(--sans);letter-spacing:-.02em;color:var(--text);transition:color var(--m-page) var(--m-ease)}
 .zbar-top .zmark{grid-column:1;justify-self:start;font-size:var(--fz-xl);padding-left:var(--sp-2)}
 .island .iword{font:var(--w-bold) var(--fz-md)/1 var(--sans);letter-spacing:-.02em}
 /* the landing's "Bento" is the wordmark alone: plain text on the left, no pill (G, 2026-10-06) */
 /* with no pill, the page fades out under the sticky wordmark so it stays readable as the page scrolls past */
-.itop.guest::before{content:"";position:fixed;top:0;left:0;right:0;height:calc(env(safe-area-inset-top) + var(--float-h) + var(--sp-5));background:linear-gradient(var(--page) 62%,transparent);z-index:var(--z-under);pointer-events:none}
+.itop.guest::before{content:"";position:fixed;top:0;left:0;right:0;height:calc(env(safe-area-inset-top) + 64px);background:linear-gradient(var(--page) 40%,transparent);z-index:var(--z-under);pointer-events:none;transition:opacity var(--m-page) var(--m-ease)}
+/* over the dark Bento² section the fade steps aside and the wordmark turns light (Review layout-shift should-fix) */
+html[data-nav-dark] .itop.guest::before{opacity:0}
+html[data-nav-dark] .itop.guest .imark,html[data-nav-dark] .itop.guest .bmark{color:var(--on-tint)}
+/* where the dark section is inset (wide screens) the mark straddles its edge, so a soft shadow keeps the part over the light page readable */
+html[data-nav-dark] .itop.guest .bmark{text-shadow:0 0 1px var(--black-a25),0 1px 8px var(--black-a25)}
 /* My lessons, once a grade is chosen: its own floating pill in the right corner, so "Bento" stays centred */
 .imine{display:flex;align-items:center;height:var(--float-h);padding:0 22px;border-radius:var(--r-pill);font-weight:var(--w-bold);white-space:nowrap;
   background:var(--float);box-shadow:var(--float-shadow);color:var(--text);animation:floatIn var(--dur-400) var(--ease) both;animation-delay:var(--dur-60);transition:transform var(--dur-180) var(--ease)}
@@ -318,7 +323,7 @@ html:has(.screen) .itop{position:fixed;top:max(var(--sp-3),env(safe-area-inset-t
 
 /* ---- the nav's wordmark: on every screen, plain "Bento" on the left, the same as the landing page's; it always
    takes you home (G 2026-10-06) ---- */
-.imark{display:grid;place-items:center;height:var(--float-h);padding:0 var(--sp-2);border-radius:var(--r-pill);color:var(--text);transition:transform var(--dur-180) var(--ease)}
+.imark{display:grid;place-items:center;height:var(--float-h);padding:0 var(--sp-2);border-radius:var(--r-pill);color:var(--text);transition:transform var(--dur-180) var(--ease),color var(--m-page) var(--m-ease)}
 .imark:active{transform:scale(.96)}
 .imark .iword{font:var(--w-bold) var(--fz-lg)/1 var(--sans);letter-spacing:-.02em}
 /* on a phone the place pill needs the room: its fill circle becomes the pill's own fill, charging left to right */

@@ -168,6 +168,20 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
     return () => { document.removeEventListener("touchstart", onStart); document.removeEventListener("touchmove", onMove); };
   }, [welcome, open, start]);
 
+  // on the landing, while the dark Bento² section is under the nav, the wordmark turns light and the page fade steps aside
+  useEffect(() => {
+    if (!welcome) return;
+    const root = document.documentElement;
+    const check = () => {
+      const r = document.querySelector(".ladv")?.getBoundingClientRect();
+      if (r && r.top < 64 && r.bottom > 0) root.dataset.navDark = ""; else delete root.dataset.navDark;
+    };
+    check();
+    addEventListener("scroll", check, { passive: true });
+    addEventListener("resize", check);
+    return () => { removeEventListener("scroll", check); removeEventListener("resize", check); delete root.dataset.navDark; };
+  }, [welcome]);
+
   // the page behind steps back while the contents are open
   useEffect(() => {
     if (open) document.documentElement.dataset.zoomed = "";
