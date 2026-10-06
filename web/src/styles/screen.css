@@ -177,17 +177,40 @@ html:has(.screen) body{overflow:hidden}
 }
 @media (max-width:520px){.lctl{gap:6px}.lctl .ctl:not(.go){padding:0 14px}.lctl .ctl.go{min-width:0;padding:0 var(--sp-5)}.ldots{display:none}}
 
-/* ---- practice, floating: no bars or boxes, the cards and keys float on the page in the grade's hue ---- */
-.wrap:has(>.panel.split)>.bar{background:none;padding:0;justify-content:center;gap:var(--sp-2)}
-.wrap:has(>.panel.split)>.bar .steps{flex:none;display:inline-flex;align-items:center;gap:6px;height:var(--float-h);padding:0 var(--sp-5);border-radius:var(--r-pill);background:var(--float);box-shadow:var(--float-shadow)}
-.wrap:has(>.panel.split)>.bar .steps .dot{width:8px;height:8px}
-.wrap:has(>.panel.split)>.bar .steps .dot.busy{width:24px;background:var(--tint)}
-.wrap:has(>.panel.split)>.bar .steps .dot.ok{background:color-mix(in oklab,var(--tint) 45%,var(--float))}
-.wrap:has(>.panel.split)>.bar>.ctl{--pill-h:var(--float-h);background:var(--float);box-shadow:var(--float-shadow)}
+/* ---- solve (instance, WorkScreen): one problem at a time, in every mode (lessons, unit tests, check-ups, review, Find my level,
+   the facts sprint). Where you are floats on top; a test's rules ride in a kicker over the problem. The problem sits
+   beside its answer pad; in portrait and on a phone they stack with the pad at the bottom. The page never scrolls: the
+   picture takes only the room that's left, and a long problem scrolls inside its own column (G 2026-10-06). ---- */
+.screen.solve{--work-pic-min:120px;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+.screen.solve:not(:has(>.whead)){grid-template-rows:minmax(0,1fr)}
+.whead{display:flex;align-items:center;justify-content:center;gap:var(--sp-2);min-width:0}
+.whead .steps{flex:0 1 auto;min-width:0;display:inline-flex;flex-wrap:nowrap;align-items:center;gap:6px;height:var(--float-h);padding:0 var(--sp-5);border-radius:var(--r-pill);background:var(--float);box-shadow:var(--float-shadow);overflow:hidden}
+.whead .steps .dot{flex:none;width:8px;height:8px}
+.whead .steps .dot.busy{width:24px;background:var(--tint)}
+.whead .steps .dot.ok{background:color-mix(in oklab,var(--tint) 45%,var(--float))}
+.whead>.ctl{flex:none;--pill-h:var(--float-h);background:var(--float);box-shadow:var(--float-shadow)}
+.wkick{flex:none;margin:0;padding:0 var(--sp-2);color:var(--muted);font-size:var(--fz-sm);font-weight:var(--w-mid);line-height:1.35}
 .panel.split{background:none;padding:0}
-/* practice's picture: the problem drawn the way the lesson drew it, filling the room under the step */
-.panel.split .ppic{margin:0;display:grid;place-items:center;min-height:220px;background:var(--well);box-shadow:none}
-.ppic>.viz{width:100%;margin:0}.ppic>.viz>svg{width:100%;max-height:min(46vh,420px)}
+.screen.solve>.wbody{min-height:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;align-items:stretch;gap:var(--screen-gap)}
+@media (min-width:900px) and (orientation:landscape){.screen.solve>.wbody{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr)}}
+/* each side scrolls inside itself only when it must; the padding keeps the floating shadows from being clipped */
+.wbody>.col{position:static;min-height:0;display:flex;flex-direction:column;gap:var(--screen-gap);overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:var(--sp-2);margin:calc(var(--sp-2) * -1)}
+.wbody>.col>*{flex:none}
+/* the problem gives way first: it shrinks and scrolls inside its card, so the step being answered stays in view */
+.wprob>.card.wq{flex:0 1 auto;min-height:min(var(--work-pic-min),max-content);overflow:auto;scrollbar-width:thin;display:flex;flex-direction:column}
+.wq>*{flex:none}
+/* a problem drawn with its own picture (a Kindergarten bond, a clock) shrinks that picture before anything scrolls */
+.wq>.dotrow{flex:0 1 auto;min-height:var(--work-pic-min)}
+.wq>.dotrow svg{height:100%;max-height:100%;width:auto;max-width:100%}
+.wq .math,.wq .story,.wq .work,.wstep .ask{max-width:100%;min-width:0}
+.wq .math>.mline,.wstep .ask>.mline{max-width:100%}
+.wq .workline .wl{overflow-x:auto;scrollbar-width:thin}
+/* words in a finished line or a step wrap like a sentence instead of running on as one unbreakable line */
+:is(.wq .workline,.wstep .ask) .mline .t{white-space:pre-wrap}
+/* practice's picture: the problem drawn the way the lesson drew it, in whatever room is left under the step */
+.panel.split .ppic{flex:1 1 0;min-height:var(--work-pic-min);margin:0;display:grid;place-items:stretch;background:var(--well);box-shadow:none;position:relative}
+.ppic>.viz{position:absolute;inset:var(--sp-3);display:grid;margin:0;min-height:0}
+.ppic>.viz>svg,.ppic>.viz>.viz-svg,.ppic>.viz>.am{width:100%!important;height:100%!important;max-height:none;margin:0;min-height:0}
 .ppic .viz-cap,.ppic .replay{display:none}
 .panel.split .card{background:var(--float);box-shadow:var(--float-shadow);border-radius:var(--r-panel);padding:var(--sp-5) var(--sp-6)}
 .panel.split .tray button{background:var(--float);box-shadow:var(--float-shadow)}
@@ -195,6 +218,71 @@ html:has(.screen) body{overflow:hidden}
 .panel.split .actions .ctl{--pill-h:var(--float-h);font-size:var(--fz-lg);background:var(--float);box-shadow:var(--float-shadow)}
 .panel.split .actions .ctl.go{background:var(--ink);box-shadow:none;min-width:120px}
 .panel.split .choice{background:var(--float);box-shadow:var(--float-shadow);border-color:transparent}
+/* the feedback stack floats over the bottom of the problem at every size; stacked, once the problem is solved, it
+   sits at the foot of the screen where the pad was */
+.screen.solve .fstack.pfb{position:fixed;left:var(--fb-left,0);width:var(--fb-width,100%);bottom:calc(var(--fb-bottom,0px) + var(--s));padding-inline:var(--s)}
+@media not ((min-width:900px) and (orientation:landscape)){.screen.solve .fstack.pfb.side{top:auto}}
+/* stacked: the pad sits at the bottom, centred and as compact as the height needs */
+@media not ((min-width:900px) and (orientation:landscape)){
+  .wpad{overflow:visible}
+  .wpad .tray{max-width:520px}
+  .wpad .tappad .choices{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+  .wpad .tappad .choice{min-height:var(--h)}
+}
+@media (max-height:900px) and (min-width:900px) and (orientation:landscape){.screen.solve{--key:56px}}
+@media (max-width:699px){
+  .screen.solve{--key:44px;--work-pic-min:72px;--math:32px;--ask:28px;--slot:48px;--work:18px;--screen-gap:var(--sp-2)}
+  .whead{gap:6px}
+  .whead .steps{padding:0 var(--sp-3);gap:var(--sp-1)}
+  .whead .steps .dot{width:6px;height:6px}.whead .steps .dot.busy{width:16px}
+  .whead>.ctl{--pill-pad:var(--sp-4)}
+  .panel.split .card{padding:var(--sp-3) var(--sp-4);gap:var(--sp-2)}
+  .wpad .tray{gap:6px}
+  .wpad .tray .wide{font-size:var(--fz-md)}
+  .panel.split .actions .ctl{--pill-h:var(--h)}
+  .wpad .tapnote{padding:0}
+  .wpad .tappad .choice{min-height:var(--tap)}
+  .wstep .speak{width:var(--tap);height:var(--tap)}
+}
+
+/* ---- results (instance of fit): the score and what to do next beside the report, which scrolls inside itself;
+   stacked in portrait and on a phone ---- */
+.screen.fit.rscreen{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);align-content:stretch}
+@media (min-width:900px) and (orientation:landscape){.screen.fit.rscreen:not(.rsaved){grid-template-columns:minmax(0,5fr) minmax(0,7fr);grid-template-rows:minmax(0,1fr);align-items:start}}
+.rscreen>.rsum{min-height:0;max-height:100%;overflow:auto;scrollbar-width:thin}
+.rscreen>.rsum .actions{justify-content:flex-start}
+.rscreen>.rreport{align-self:stretch;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;border-radius:var(--r-panel)}
+@media (max-width:699px){
+  .rscreen>.rsum{gap:var(--sp-3);padding:var(--sp-3)}
+  .rscreen>.rsum .donehead .ring{width:64px;height:64px}
+  .rscreen>.rsum .bento .v{font-size:var(--fz-2xl)}
+}
+/* Find my level's answer: one column, centred, scrolling inside itself if the grades run long */
+.screen.fit.placed{max-width:none;width:auto;margin:0;grid-template-columns:minmax(0,560px);grid-template-rows:none;justify-content:center;align-content:start;justify-items:start;overflow:auto;scrollbar-width:thin;padding-top:var(--u)}
+
+/* ---- facts (instance of fit): the heading and today's sprint stay put; the tables scroll inside themselves ---- */
+.screen.fit.fscreen{grid-template-columns:minmax(0,1fr);grid-template-rows:auto;align-content:start;overflow:auto;scrollbar-width:thin}
+.fscreen>.cover{padding:var(--sp-2) var(--u) 0}
+.screen.fit.fhome{grid-template-rows:auto auto minmax(0,1fr);align-content:stretch;overflow:visible}
+.fhome>.ftables{margin:0;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;align-content:start;padding:var(--sp-1);margin:calc(var(--sp-1) * -1)}
+.screen.fit.ftablepage{grid-template-rows:auto minmax(0,1fr);align-content:stretch;overflow:visible}
+.ftablepage>.fgridwrap{min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;container-type:size;align-content:start}
+/* the grid is as big as the room allows, square cells and all, never past it */
+.ftablepage .fgrid{width:min(100%,820px,calc((100cqh - var(--lh) * 2 - var(--u)) * var(--cols) / var(--rows)))}
+.ftablepage .h100{width:min(100%,520px,max(240px,calc(100cqh - 10em)))}
+.screen.fit.fscreen:has(>.fdone){align-content:center}
+@media (orientation:portrait),(max-width:899px){.fhome>.bhome{grid-template-columns:repeat(2,minmax(0,1fr))}.fhome>.bhome>*{grid-column:auto;grid-row:auto}}
+@media (max-width:699px){
+  .fscreen>.cover h1{font-size:var(--fz-2xl)}
+  .fscreen>.cover .ysub{font-size:var(--fz-lg)}
+  .fscreen>.cover .muted{display:none}
+  .fhome>.bhome{gap:var(--sp-2)}
+  .fhome>.bhome>.tile{padding:var(--sp-4)}
+  .fhome>.bhome .today h2{font-size:var(--fz-xl)}
+  .fhome>.bhome .bbig{font-size:var(--fz-2xl)}
+}
+/* the sprint: the question beside its keys, as in practice */
+.fsprint .fq{min-height:0}
 
 /* ---- Today as a bento (G 2026-10-06, "needs better use of space"): tiles of different sizes that fill the detail to
    the bottom. The up-next problem is the big tile; the plan, the year's fill, the streak and every chapter sit round it. ---- */

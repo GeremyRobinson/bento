@@ -10,6 +10,7 @@ import { requireLesson } from "../curriculum/registry";
 import type { Explanation } from "../explanations/schema";
 import { FeedbackBox } from "../components/practice/FeedbackBox";
 import { Keypad } from "../components/practice/Keypad";
+import { FitScreen, WorkScreen } from "../components/screen/Screen";
 import { ALL_LESSONS, SHOW_ME } from "../app/copy";
 import {
   bandOfSession, check, choose, currentItem, currentStep, focusSlot, hint, isLastProblem, lessonOfItem, nextProblem,
@@ -101,8 +102,8 @@ export function Practice() {
 
   if (!s) {
     return (
-      <section className="panel"><p className="empty">No lesson in progress.</p>
-        <div className="actions"><Pill go onClick={() => go({ name: "home" })}>{ALL_LESSONS}</Pill></div></section>
+      <FitScreen className="wnone"><section className="panel"><p className="empty">No lesson in progress.</p>
+        <div className="actions"><Pill go onClick={() => go({ name: "home" })}>{ALL_LESSONS}</Pill></div></section></FitScreen>
     );
   }
 
@@ -120,77 +121,75 @@ export function Practice() {
   }
 
   return (
-    <>
-      <div className="bar">
+    <WorkScreen
+      head={<>
         {mixed && <Pill onClick={quit}>Quit</Pill>}
         <span className="steps" aria-label={`Problem ${s.i + 1} of ${n}`}>
           {s.items.map((_, i) => <span key={i} className={`dot ${i < s.i ? "ok" : i === s.i ? "busy" : ""}`} />)}
         </span>
         <PillLabel badged><span className="badge on">{s.i + 1}</span>of <span className="mono">{n}</span></PillLabel>
-      </div>
-      {test && <div className="bar"><span className="grow tcenter">{s.title}: no hints, one try per step</span></div>}
-      <section className="panel split">
-        <div className="col">
-          <div className="card">
-            {mixed && <div className="label">{lesson.title}</div>}
-            <ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} />
-            <div className="work">
-              {s.work.map((w, k) => (
-                <div key={k} className={`workline${w.shown ? " shown" : ""}${s.fx === "line" && k === s.work.length - 1 ? " enter" : ""}`}>
-                  <span className="k">Step {k + 1}</span><span className="wl"><MathLine math={w.math} /></span>
-                </div>
-              ))}
-            </div>
+      </>}
+      kicker={test ? `${s.title}: no hints, one try per step` : undefined}
+      problem={<>
+        <div className="card wq">
+          {mixed && <div className="label">{lesson.title}</div>}
+          <ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} />
+          <div className="work">
+            {s.work.map((w, k) => (
+              <div key={k} className={`workline${w.shown ? " shown" : ""}${s.fx === "line" && k === s.work.length - 1 ? " enter" : ""}`}>
+                <span className="k">Step {k + 1}</span><span className="wl"><MathLine math={w.math} /></span>
+              </div>
+            ))}
           </div>
-          {step && (
-            <div key={`${s.i}-${s.step}-${s.collapsed}-${s.mistakes.length}`} className={`card${s.fx === "shake" ? " shake" : ""}${s.fx === "line" ? " enter" : ""}`}>
-              {s.pick ? (
-                <div className="label">Step {s.step + 1} · What comes next?</div>
-              ) : (
-                <>
-                  <div className="label lspeak">{step.label}
-                    <button className="speak" aria-label="Read it to me" onClick={() => speak([step.question, document.querySelector("#app .card")?.textContent].filter(Boolean).join(". ").replace(/\*\*/g, ""))}><SpeakerIcon /></button>
-                  </div>
-                  <div className={`ask${fb?.type === "bad" && !fbAway ? " no" : ""}`}>
-                    {step.question && <span className="q"><Rich text={step.question} /></span>}
-                    <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={id => act(st => focusSlot(st, id))} />
-                  </div>
-                  {step.note && <div className="note"><Rich text={step.note} /></div>}
-                </>
-              )}
-            </div>
-          )}
-          {showFb && <FeedbackBox key={fbKey} fb={fb!} idea={idea} next={step ? undefined : { label: nextLabel, go: onNext }} />}
-          {ex && (
-            <figure className="card ppic" aria-label="Picture of this problem">
-              <div className="viz"><Diagram key={s.i} diagram={ex.diagram!} timeline={ex.timeline}
-                at={s.solved ? ex.timeline.length - 1 : Math.min(ex.timeline.length - 1, s.step > 0 ? ex.steps[s.step - 1]?.state ?? 0 : 0)} /></div>
-            </figure>
-          )}
         </div>
-        <div className="col">
-          {step && tapOnly && (
-            // tap answers sit where the keypad goes, so they never fall below the fold beside a long problem
-            <div className="tappad">
-              <div className="tapnote muted">{s.pick ? "You plan this one: tap the step that comes next." : "Tap your answer."}</div>
-              <div className="choices">{s.pick
-                ? s.pick.options.map((o, i) => <button key={`${i}-${o}`} className={`choice${mark(i)}`} onClick={() => { setTapped({ at, i }); act(st => pickPlan(st, i)); }}>{o}</button>)
-                : step.choices!.map((o, i) => <button key={`${i}-${o}`} className={`choice${mark(i)}`} onClick={() => { setTapped({ at, i }); act((st, p, d) => choose(st, i, p, d)); }}>{o}</button>)}</div>
-            </div>
-          )}
-          {step && !tapOnly && <Keypad band={band} onKey={key => act(st => pressKey(st, key))} />}
-          {step ? (
-            <div className="actions">
-              {showMeAvailable(s) && <Pill onClick={() => act((st, p, d) => showMe(st, p, d))}>{SHOW_ME}</Pill>}
-              {skipAvailable(s) && <Pill onClick={() => act((st, _p, d) => toggleSkip(st, d))}>{s.skip ? "Show steps" : "Final answer only"}</Pill>}
-              {!tapOnly && <Pill go onClick={() => act((st, p, d) => check(st, p, d))}>Check</Pill>}
-            </div>
-          ) : !showFb && (
-            // the next button rides in the feedback stack; it waits here only while that stack is put away
-            <div className="actions"><Pill go onClick={onNext}>{nextLabel}</Pill></div>
-          )}
-        </div>
-      </section>
-    </>
+        {step && (
+          <div key={`${s.i}-${s.step}-${s.collapsed}-${s.mistakes.length}`} className={`card wstep${s.fx === "shake" ? " shake" : ""}${s.fx === "line" ? " enter" : ""}`}>
+            {s.pick ? (
+              <div className="label">Step {s.step + 1} · What comes next?</div>
+            ) : (
+              <>
+                <div className="label lspeak">{step.label}
+                  <button className="speak" aria-label="Read it to me" onClick={() => speak([step.question, document.querySelector("#app .card")?.textContent].filter(Boolean).join(". ").replace(/\*\*/g, ""))}><SpeakerIcon /></button>
+                </div>
+                <div className={`ask${fb?.type === "bad" && !fbAway ? " no" : ""}`}>
+                  {step.question && <span className="q"><Rich text={step.question} /></span>}
+                  <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={id => act(st => focusSlot(st, id))} />
+                </div>
+                {step.note && <div className="note"><Rich text={step.note} /></div>}
+              </>
+            )}
+          </div>
+        )}
+        {showFb && <FeedbackBox key={fbKey} fb={fb!} idea={idea} next={step ? undefined : { label: nextLabel, go: onNext }} />}
+        {ex && (
+          <figure className="card ppic" aria-label="Picture of this problem">
+            <div className="viz"><Diagram key={s.i} diagram={ex.diagram!} timeline={ex.timeline}
+              at={s.solved ? ex.timeline.length - 1 : Math.min(ex.timeline.length - 1, s.step > 0 ? ex.steps[s.step - 1]?.state ?? 0 : 0)} /></div>
+          </figure>
+        )}
+      </>}
+      pad={<>
+        {step && tapOnly && (
+          // tap answers sit where the keypad goes, so they never fall below the fold beside a long problem
+          <div className="tappad">
+            <div className="tapnote muted">{s.pick ? "You plan this one: tap the step that comes next." : "Tap your answer."}</div>
+            <div className="choices">{s.pick
+              ? s.pick.options.map((o, i) => <button key={`${i}-${o}`} className={`choice${mark(i)}`} onClick={() => { setTapped({ at, i }); act(st => pickPlan(st, i)); }}>{o}</button>)
+              : step.choices!.map((o, i) => <button key={`${i}-${o}`} className={`choice${mark(i)}`} onClick={() => { setTapped({ at, i }); act((st, p, d) => choose(st, i, p, d)); }}>{o}</button>)}</div>
+          </div>
+        )}
+        {step && !tapOnly && <Keypad band={band} onKey={key => act(st => pressKey(st, key))} />}
+        {step ? (
+          <div className="actions">
+            {showMeAvailable(s) && <Pill onClick={() => act((st, p, d) => showMe(st, p, d))}>{SHOW_ME}</Pill>}
+            {skipAvailable(s) && <Pill onClick={() => act((st, _p, d) => toggleSkip(st, d))}>{s.skip ? "Show steps" : "Final answer only"}</Pill>}
+            {!tapOnly && <Pill go onClick={() => act((st, p, d) => check(st, p, d))}>Check</Pill>}
+          </div>
+        ) : !showFb && (
+          // the next button rides in the feedback stack; it waits here only while that stack is put away
+          <div className="actions"><Pill go onClick={onNext}>{nextLabel}</Pill></div>
+        )}
+      </>}
+    />
   );
 }

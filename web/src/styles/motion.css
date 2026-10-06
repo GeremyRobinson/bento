@@ -21,7 +21,9 @@
 ::view-transition-new(root){animation:none}
 @keyframes vtOut{to{opacity:0}}
 @keyframes rvIn{from{opacity:.2;transform:translateY(10px) scale(.985);filter:blur(6px)}}
-:is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>*,.wrap>.bar{animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(var(--i,0) * var(--m-step))}
+/* a work screen's body is a frame, not a piece: its two sides' pieces arrive instead (and a moving frame would carry
+   the fixed feedback stack with it) */
+:is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:not(.wbody),.wrap>.bar{animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(var(--i,0) * var(--m-step))}
 :is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(2){--i:1}
 :is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(3){--i:2}
 :is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(4){--i:3}
@@ -31,7 +33,7 @@
 /* every other screen (landing, Me, the grown-up page, results, facts, reports): its own top-level pieces stagger the
    same way; screens built of one container stagger that container's children instead */
 #app>:not(.itop):not(.sheet):not(.zoom):not(.screen):not(.land):not(.bgrown):not(.bar):not(.panel.split){animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(var(--i,0) * var(--m-step))}
-:where(.land,.bgrown,.placed)>*{animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(min(var(--k,0),6) * var(--m-step))}
+:where(.land,.bgrown,.placed:not(.screen))>*{animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(min(var(--k,0),6) * var(--m-step))}
 #app>:nth-child(3){--i:1} #app>:nth-child(4){--i:2} #app>:nth-child(5){--i:3} #app>:nth-child(n+6){--i:4}
 :is(.land,.bgrown,.placed)>:nth-child(2){--k:1} :is(.land,.bgrown,.placed)>:nth-child(3){--k:2} :is(.land,.bgrown,.placed)>:nth-child(4){--k:3} :is(.land,.bgrown,.placed)>:nth-child(n+5){--k:4}
 /* sheets and the contents rise in on the same curve and fade with the same dim */
