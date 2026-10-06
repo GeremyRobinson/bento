@@ -23,7 +23,23 @@ export function createPicGraph(theme: number, counts: number[], ask: number, x: 
 
 function answers(p: PicGraphProblem): AnswerModel {
   const th = THEMES[p.theme]!, c = p.counts;
-  if (p.ask === 0) return { steps: [readRow("read", th, c, p.x)], finalParts: [-1] };
+  if (p.ask === 0) {
+    // read the row, then use the line-up: is it longer or shorter than another row? (the answer stays the count)
+    const read = readRow("read", th, c, p.x, { kind: "picture" });
+    if (p.x === p.y) return { steps: [read], finalParts: [-1] };
+    const longer = c[p.x]! > c[p.y]!, X = th.names[p.x]!, Y = th.names[p.y]!;
+    return {
+      steps: [read, tapStep({
+        id: "line-up", label: "Compare it", question: `Is the ${X} row longer or shorter than the ${Y} row?`,
+        prompt: [text(`${X} row: longer or shorter than ${Y}?`)], choices: ["Longer", "Shorter"], right: longer ? 0 : 1,
+        wrong: () => [longer ? "Said shorter" : "Said longer", `The pictures line up. Look where each row ends: the ${X} row ${longer ? "goes past" : "stops before"} the end of the ${Y} row.`],
+        hint: "The pictures line up, one under the other. Which row reaches further?",
+        explain: `${X} has ${c[p.x]} and ${Y} has ${c[p.y]}, so the ${X} row is ${longer ? "longer" : "shorter"}: ${longer ? "more" : "fewer"} ${th.things === "days" ? "days" : "pictures"}.`,
+        work: [text(`The ${X} row is ${longer ? "longer" : "shorter"}.`)],
+      })],
+      finalParts: [0],
+    };
+  }
   if (p.ask === 1) {
     const word = p.few ? "fewest" : "most", v = p.few ? Math.min(...c) : Math.max(...c), right = c.indexOf(v);
     const other = c.indexOf(p.few ? Math.max(...c) : Math.min(...c));
@@ -42,7 +58,7 @@ function answers(p: PicGraphProblem): AnswerModel {
       finalParts: [-1],
     };
   }
-  const reads = [readRow("x", th, c, p.x), readRow("y", th, c, p.y)];
+  const reads = [readRow("x", th, c, p.x, { kind: "picture" }), readRow("y", th, c, p.y, { kind: "picture" })];
   return { steps: [...reads, p.ask === 2 ? moreStep(th, c, p.x, p.y) : bothStep(th, c, p.x, p.y)], finalParts: [-1] };
 }
 
@@ -50,7 +66,7 @@ const alt = (p: PicGraphProblem) => `A picture graph of ${THEMES[p.theme]!.title
 const rowsRead = (p: PicGraphProblem) => (p.ask === 0 ? [p.x] : p.ask === 1 ? [0, 1, 2] : [p.x, p.y]);
 
 function explain(p: PicGraphProblem, model: AnswerModel): Explanation {
-  const th = THEMES[p.theme]!, last = model.steps.at(-1)!, more = p.ask === 2;
+  const th = THEMES[p.theme]!, last = model.steps[p.ask === 0 ? 0 : model.steps.length - 1]!, more = p.ask === 2;
   const read = rowsRead(p);
   return {
     heading: "Picture graphs",
@@ -93,7 +109,7 @@ export const lesson: LessonDefinition<PicGraphProblem> = {
     if (!r || typeof r !== "object") return null;
     try { return createPicGraph(r.theme as number, r.counts as number[], r.ask as number, r.x as number, r.y as number, r.few === true); } catch { return null; }
   },
-  display: p => words(answers(p).steps.at(-1)!.question ?? ""),
+  display: p => words(answers(p).steps[p.ask === 0 ? 0 : answers(p).steps.length - 1]!.question ?? ""),
   picture: p => buildRows({ kind: "pictures", title: THEMES[p.theme]!.title, names: THEMES[p.theme]!.names, counts: p.counts, icon: THEMES[p.theme]!.icon, alt: alt(p) }),
   answers,
   explain,

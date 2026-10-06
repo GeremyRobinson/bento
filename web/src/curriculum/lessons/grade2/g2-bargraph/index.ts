@@ -6,6 +6,7 @@ import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildBarGraph } from "../../../../explanations/diagrams/early-g2/measure";
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
 import { slips, type Slip } from "../kit";
+import { words } from "../../gradeK/kit";
 
 /** Four bars (v0 to v3) on a theme; the question is about bars x and y. kind 0 asks how many more, 1 asks how many in all. */
 export interface BarGraphProblem { theme: number; v0: number; v1: number; v2: number; v3: number; x: number; y: number; kind: number }
@@ -42,11 +43,12 @@ export function createBarGraph(theme: number, v0: number, v1: number, v2: number
   return { theme, v0, v1, v2, v3, x, y, kind };
 }
 
-/** Early graphs go up to 8; later ones up to 10. */
+/** Early graphs go up to 8 with four different bars, so no first graph is flat; later ones go up to 10. */
 function generate(rng: Rng, index: number): BarGraphProblem {
   const top = index < 3 ? 8 : 10;
   for (;;) {
     const v = [rng.int(1, top), rng.int(1, top), rng.int(1, top), rng.int(1, top)];
+    if (index < 3 && new Set(v).size < 4) continue;
     const [x, y] = rng.shuffle([0, 1, 2, 3]) as [number, number];
     const kind = rng.int(0, 1);
     if (kind === 0 && v[x]! <= v[y]!) continue;
@@ -63,8 +65,8 @@ function readSlips(vals: number[], names: string[], i: number, other: number): S
   const v = vals[i]!, name = names[i]!;
   return slips(v, [
     [vals[other]!, "Read the other bar", `That's the ${names[other]} bar. Find the bar named ${name}.`],
-    [v + 1, "Read the line above", `Run your finger straight across from the top of the ${name} bar to the numbers.`],
-    [v - 1, "Read the line below", `Run your finger straight across from the top of the ${name} bar to the numbers.`],
+    [v + 1, "Read the line above", `That's one line too high. The ${name} bar stops just below that line. Look across from the very top of the bar.`],
+    [v - 1, "Read the line below", `That's one line too low. The ${name} bar goes past that line. Look across from the very top of the bar.`],
     ...vals.map((w, j): Slip | false => j !== i && j !== other && [w, "Read a different bar", `That's the ${names[j]} bar. Check the word under each bar for ${name}.`]),
   ]);
 }
@@ -134,7 +136,7 @@ export const lesson: LessonDefinition<BarGraphProblem> = {
   generate,
   restore: raw => restoreVia(raw, ["theme", "v0", "v1", "v2", "v3", "x", "y", "kind"] as const,
     v => createBarGraph(v.theme, v.v0, v.v1, v.v2, v.v3, v.x, v.y, v.kind)),
-  display: p => { const th = THEMES[p.theme]!; return [text(`${th.names[p.x]} ${p.kind ? "and" : "or"} ${th.names[p.y]}?`)]; },
+  display: p => words(questionOf(p)),
   displayNote: questionOf,
   lead: questionOf,
   picture: p => {

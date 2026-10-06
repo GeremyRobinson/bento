@@ -23,7 +23,7 @@ export function createTally(theme: number, counts: number[], ask: number, x: num
 
 function readBundles(p: TallyProblem): AnswerStep[] {
   const th = THEMES[p.theme]!, n = p.counts[p.x]!, five = Math.floor(n / 5), rest = n % 5;
-  if (n < 5) return [readRow("all", th, p.counts, p.x)];
+  if (n < 5) return [readRow("all", th, p.counts, p.x, { kind: "tally" })];
   return [
     oneBox({
       id: "bundles", label: "Count the bundles", question: "How many bundles of 5?",
@@ -42,10 +42,10 @@ function readBundles(p: TallyProblem): AnswerStep[] {
       prompt: s => [text(`${th.names[p.x]}: `), s], ans: n,
       wrong: slips(n, [
         [five + rest, "Counted a bundle as 1", `Each bundle is 5, not 1. Count ${Array.from({ length: five }, (_, i) => 5 * (i + 1)).join(", ")}, then count on.`],
-        [n - 1, "Counted one short", "Count by 5s for the bundles, then count on."],
-        [n + 1, "Counted one too many", "Count by 5s for the bundles, then count on."],
+        [n - 1, "Counted one short", `One short. Say ${five * 5} for the bundles, then one more number for each single mark.`],
+        [n + 1, "Counted one too many", `One too many. Say ${five * 5} for the bundles, then one more number for each single mark.`],
       ]),
-      hint: "Count by 5s for the bundles, then count on.",
+      hint: `You found ${five === 1 ? "1 bundle" : `${five} bundles`} and ${rest} single ${rest === 1 ? "mark" : "marks"}. Count the bundles by 5s, then count on.`,
       explain: `${Array.from({ length: five }, (_, i) => 5 * (i + 1)).join(", ")}${rest ? `, then ${Array.from({ length: rest }, (_, i) => five * 5 + i + 1).join(", ")}` : ""}. That's ${n}.`,
     }),
   ];
@@ -54,11 +54,11 @@ function readBundles(p: TallyProblem): AnswerStep[] {
 function answers(p: TallyProblem): AnswerModel {
   const th = THEMES[p.theme]!, c = p.counts;
   if (p.ask === 0) return { steps: readBundles(p), finalParts: [-1] };
-  if (p.ask === 1) return { steps: [readRow("x", th, c, p.x), readRow("y", th, c, p.y), moreStep(th, c, p.x, p.y)], finalParts: [-1] };
+  if (p.ask === 1) return { steps: [readRow("x", th, c, p.x, { kind: "tally" }), readRow("y", th, c, p.y, { kind: "tally" }), moreStep(th, c, p.x, p.y)], finalParts: [-1] };
   const sum = c[0]! + c[1]! + c[2]!;
   return {
     steps: [
-      ...c.map((_, i) => readRow(`row${i}`, th, c, i)),
+      ...c.map((_, i) => readRow(`row${i}`, th, c, i, { kind: "tally" })),
       oneBox({
         id: "total", label: "Add them all", question: "How many in all?",
         prompt: s => [num(c[0]!), op("+"), num(c[1]!), op("+"), num(c[2]!), op("="), s], ans: sum,
@@ -100,7 +100,9 @@ export const lesson: LessonDefinition<TallyProblem> = {
     const early = index < 3, hi = early ? 9 : 14;
     for (;;) {
       const counts = rng.shuffle(Array.from({ length: hi }, (_, i) => i + 1)).slice(0, 3);
-      const ask = early ? 0 : index % 3, x = rng.int(0, 2);
+      // the first three read a row of 5 to 9, so the first problem already has a bundle to count by 5s
+      const ask = early ? 0 : index % 3, x = early ? counts.findIndex(c => c >= 5) : rng.int(0, 2);
+      if (x < 0) continue;
       if (ask === 2 && counts.reduce((a, b) => a + b, 0) > 20) continue;
       if (ask === 1) {
         const y = rng.pick([0, 1, 2].filter(i => i !== x));

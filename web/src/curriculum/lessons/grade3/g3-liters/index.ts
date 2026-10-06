@@ -17,7 +17,7 @@ export function createLiters(p: LitersProblem): LitersProblem {
   wholeIn("kind", kind, 0, 1);
   if (kind === 0) {
     if (![5, 10, 20].includes(cap)) throw new Error("jugs hold 5, 10 or 20 liters");
-    if (!(step === 1 || (cap === 20 && (step === 2 || step === 5)))) throw new Error("marks every liter, or every 2 or 5 on the big jug");
+    if (!(step === 1 || (cap === 20 && (step === 2 || step === 5)) || (cap === 10 && step === 2))) throw new Error("marks every liter, every 2 on the 10 liter jug, or every 2 or 5 on the big jug");
     wholeIn("value", value, step, cap - step);
     if (value % step) throw new Error("the water sits on a mark");
     return { kind, cap, step, value, op: 0, a: 0, b: 0, who: 0 };
@@ -27,13 +27,15 @@ export function createLiters(p: LitersProblem): LitersProblem {
   return { kind, cap: 0, step: 1, value: 0, op, a, b, who };
 }
 
+const lit = (n: number) => `${n} ${n === 1 ? "liter" : "liters"}`;
+
 export function litersStory(p: LitersProblem): string {
   const who = WHO[p.who]!;
   switch (OPS[p.op]!) {
-    case "+": return `${who} pours ${p.a} liters of water into a tub, then ${p.b} more liters. How many liters are in the tub?`;
-    case "−": return `A fish tank holds ${p.a} liters. ${who} drains ${p.b} liters to clean it. How many liters are left?`;
-    case "×": return `${who} fills ${p.a} bottles with ${p.b} liters of juice each. How many liters is that in all?`;
-    default: return `${who} pours ${p.a} liters of lemonade equally into ${p.b} jugs. How many liters go in each jug?`;
+    case "+": return `${who} pours ${lit(p.a)} of water into a tub, then ${p.b} more ${p.b === 1 ? "liter" : "liters"}. How many liters are in the tub?`;
+    case "−": return `A fish tank holds ${lit(p.a)}. ${who} drains ${lit(p.b)} to clean it. How many liters are left?`;
+    case "×": return `${who} fills ${p.a} bottles with ${lit(p.b)} of juice each. How many liters is that in all?`;
+    default: return `${who} pours ${lit(p.a)} of lemonade equally into ${p.b} jugs. How many liters go in each jug?`;
   }
 }
 
@@ -46,7 +48,11 @@ function answers(p: LitersProblem): AnswerModel {
       oneBox({
         id: "step", label: "Each mark", question: "How many liters is each mark?",
         prompt: s => [s, text(" L each mark")], ans: p.step,
-        wrong: slips(p.step, [p.step !== 1 && [1, "Counted each mark as 1", `The marks jump by ${p.step} each, not 1. Look at the labels.`]]),
+        wrong: slips(p.step, [
+          p.step !== 1 && [1, "Counted each mark as 1", `The marks jump by ${p.step} each, not 1. Look at the labels.`],
+          [p.cap, "Read a label", `${p.cap} is a label. Count the spaces from 0 to ${p.cap}: each one is ${p.step} L.`],
+          p.step !== 1 && [n, "Counted the marks", `There are ${n} marks up to ${p.cap}, but the labels jump by ${p.step}. Each mark is worth ${p.step} L.`],
+        ]),
         hint: "Find two labeled marks. How many spaces are between them?",
         explain: `Each mark is ${p.step} ${p.step === 1 ? "liter" : "liters"}.`,
       }),
@@ -56,8 +62,8 @@ function answers(p: LitersProblem): AnswerModel {
         wrong: slips(p.value, [
           [p.cap, "Read the top of the jug", "That's how much the jug can hold. Read where the water is."],
           below !== p.value && [below, "Read the label below", `The water is past ${below}. Count on the small marks.`],
-          [p.value - p.step, "One mark short", "Count the marks again up to the water."],
-          [p.value + p.step, "One mark too many", "Count the marks again up to the water."],
+          [p.value - p.step, "One mark short", "The water is one mark higher. Count up from the last label to the very top of the water."],
+          [p.value + p.step, "One mark too many", "That mark is above the water. Stop at the top of the water."],
           p.step !== 1 && [marks, "Counted the marks by 1", `Each mark is ${p.step} liters. Count by ${p.step}s.`],
         ]),
         hint: `Find the top of the water. Count up the marks by ${p.step}.`,
@@ -68,12 +74,11 @@ function answers(p: LitersProblem): AnswerModel {
   };
 }
 
-const lit = (n: number) => `${n} ${n === 1 ? "liter" : "liters"}`;
 const jugAlt = "A jug marked in liters, partly full.";
 
 function explain(p: LitersProblem, model: AnswerModel): Explanation {
   const steps = model.steps.map((s, i) => ({ id: s.id, narration: s.explain, math: s.work ?? [], state: i === model.steps.length - 1 ? 2 : 1, answerStep: s.id, result: s.slots[0]!.expected! }));
-  const idea = ["Liquid volume is how much a container holds. A big water bottle holds about 1 liter."];
+  const idea = ["A liter is a fixed amount: a big water bottle holds about 1 liter. The marks on a jug count liters, like a ruler counts inches."];
   if (p.kind === 1) {
     const ans = apply(OPS[p.op]!, p.a, p.b);
     return {
@@ -100,7 +105,9 @@ export const lesson: LessonDefinition<LitersProblem> = {
   generate: (rng, index) => {
     const base = { kind: 0, cap: 10, step: 1, value: 0, op: 0, a: 0, b: 0, who: 0 };
     if (index < 3 || index % 2 === 0) {
-      const cap = index < 3 ? rng.pick([5, 10]) : rng.pick([5, 10, 20]), step = cap === 20 && index >= 3 ? rng.pick([1, 2, 5]) : 1;
+      // problem 0 counts liters one by one; problems 1 and 2 use a 10 liter jug marked every 2, so the scale step matters
+      const cap = index === 0 ? rng.pick([5, 10]) : index < 3 ? 10 : rng.pick([5, 10, 20]);
+      const step = index === 0 ? 1 : index < 3 ? 2 : cap === 20 ? rng.pick([1, 2, 5]) : cap === 10 ? rng.pick([1, 2]) : 1;
       return createLiters({ ...base, cap, step, value: step * rng.int(1, cap / step - 1) });
     }
     const op = rng.int(0, 3), [a, b] = storyNumbers(rng, op, 50, 1);

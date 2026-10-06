@@ -47,11 +47,14 @@ describe.each(CATALOG.filter(c => lessonById(c.id) && byId.has(c.id)).map(c => c
       }
     });
 
+    // with a reviewed "steps" deviation (a step added, removed or renamed), each recorded step is matched to the step with
+    // its label, or else to the step in its place
+    const counterpart = (k: number) => (skip("steps") ? model.steps.find(s => s.label === c.steps[k]!.label) ?? model.steps[k] : model.steps[k]);
     it("has the same steps", () => {
       if (!skip("steps")) expect(model.steps.map(s => s.label)).toEqual(c.steps.map(s => s.label));
-      model.steps.forEach((s, k) => {
-        const o = c.steps[k];
-        if (!o) return;
+      c.steps.forEach((o, k) => {
+        const s = counterpart(k);
+        if (!s) return;
         const ctx = `step ${k + 1} (${o.label})`;
         if (!skip("prompt")) expect(squash((s.question ? legacyRich(s.question) : "") + legacyText(s.prompt)), ctx).toBe(squash(o.ask));
         if (!skip("stepNote")) expect(squash(legacyRich(s.note ?? "")), ctx).toBe(squash(o.note));
@@ -65,9 +68,9 @@ describe.each(CATALOG.filter(c => lessonById(c.id) && byId.has(c.id)).map(c => c
 
     it("judges every recorded try the same way", () => {
       if (skip("checks")) return;
-      model.steps.forEach((s, k) => {
-        const o = c.steps[k];
-        if (!o) return;
+      c.steps.forEach((o, k) => {
+        const s = counterpart(k);
+        if (!s) return;
         for (const t of o.checks) {
           const r = checkAnswerStep(s, t.v);
           const got = { ok: r.ok, soft: !r.ok && !!r.soft, kind: !r.ok && !r.soft ? r.kind : null, msg: r.ok ? null : squash(legacyRich(r.message)), generic: !r.ok && !r.soft ? r.generic : false };

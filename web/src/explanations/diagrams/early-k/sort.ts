@@ -35,6 +35,8 @@ export interface SortSpec {
   /** beats: sorted into rows, rows counted, the answer row marked (with `mark`). Leave out for practice. */
   beats?: { rows: number; count: number; mark: number };
   mark?: number;
+  /** one object to ring in the pile, by group and place in its group: the one the learner sorts first */
+  pick?: { group: number; item: number; until?: number };
   alt: string;
 }
 
@@ -51,6 +53,7 @@ export function buildSort(s: SortSpec): SceneDiagram {
     for (let i = 0; i < n; i++, k++) {
       const c = cells[k]!, x = (c % COLS) * CELL + CELL / 2 + rng.int(-9, 9), y = Math.floor(c / COLS) * CELL + CELL / 2 + rng.int(-9, 9);
       items.push(...glyph(s.glyphs[g]!, x, y, b ? { from: 0, until: b.rows - 1, enter: "pop", delay: 0.05 * k } : {}));
+      if (s.pick && s.pick.group === g && s.pick.item === i) items.push({ type: "circle", cx: x, cy: y, r: 24, cls: "hlline", from: 0, ...(s.pick.until != null ? { until: s.pick.until } : {}), enter: "pop", delay: 0.4 } as Draft);
       // on the sorting beat the pile stays put and each object only fades out as its copy lands in its row, so nothing
       // vanishes at once (v43: the blocks blanked out at Play and popped back later)
       if (b) items.push(...glyph(s.glyphs[g]!, x, y, { from: b.rows, until: b.rows, enter: "flash", delay: -1, vars: { "--d2": `${rowDelay(g, i).toFixed(2)}s` } } as Timing));
