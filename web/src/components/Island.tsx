@@ -199,7 +199,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
       <BentoMark className="iword" />
       {progress.chosen
         ? <button className="ilink" onClick={() => { openSheet(false); go({ name: "home" }, "fwd"); }}>My lessons ›</button>
-        : <span className="inote">Kindergarten to 12th grade</span>}
+        : <span className="inote">For learners</span>}
     </header><span /></div>
   );
 
