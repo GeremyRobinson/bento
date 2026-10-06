@@ -5,6 +5,8 @@
  */
 
 export const CHOOSE_GRADE = "Choose your grade";
+/** the landing page's one button: it opens the grade picker, like walking into the app (G 2026-10-06) */
+export const START_LEARNING = "Start learning";
 export const FIND_MY_LEVEL = "Find my level";
 export const GRADE_CHECKUP = "Grade check-up";
 export const ALL_LESSONS = "All lessons";
