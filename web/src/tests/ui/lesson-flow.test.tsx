@@ -83,6 +83,6 @@ describe("a whole lesson in the browser", () => {
     // home now shows the score and keeps no run in progress
     fireEvent.click(screen.getByRole("button", { name: "All lessons" }));
     expect(screen.queryByText(/Keep going/)).toBeNull();
-    expect(document.querySelector(".lesson .score b")!.textContent).toBe("4");
+    expect(document.querySelector(".srow.sles .score b")!.textContent).toBe("4");
   });
 });

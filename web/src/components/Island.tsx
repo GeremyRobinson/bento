@@ -61,7 +61,13 @@ function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): P
       const t = route.table ? tableById(route.table) : undefined;
       return t ? { kicker: "Facts", title: t.name, back: { label: "facts", to: { name: "facts" } } } : { kicker: gradeOf(grade).name, title: "Facts", back: contents };
     }
-    default: return { kicker: "Contents", title: gradeOf(grade).name };
+    default: {
+      // on a phone the picked row's detail is its own screen, and back returns to the list
+      const phone = typeof matchMedia !== "undefined" && matchMedia("(max-width: 699px)").matches;
+      return route.name === "home" && route.pick && phone
+        ? { kicker: gradeOf(grade).name, title: route.pick === "today" ? "Today" : lessonById(route.pick)?.title ?? "Lesson", back: { label: "chapters", to: { name: "home" } } }
+        : { kicker: "Contents", title: gradeOf(grade).name };
+    }
   }
 }
 

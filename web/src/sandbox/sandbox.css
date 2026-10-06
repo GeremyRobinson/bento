@@ -34,7 +34,7 @@ span.sbx{background:none}
 /* the board: one tile per grade, all built from the app's own classes */
 .sbboard{display:grid;gap:24px;padding-right:0}
 /* on wide screens the app moves over so the panel never covers it */
-@media (min-width:1100px){body:has(.sbpanel){padding-right:336px}}
+@media (min-width:1100px){body:has(.sbpanel){padding-right:336px;--sb-right:336px}}
 .sbhead h1{margin:0;font:650 34px/40px var(--sans)}
 .sbhead p{margin:4px 0 0;max-width:60ch}
 .sbgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
@@ -65,3 +65,5 @@ span.sbx{background:none}
 .sbt.master .sbt-head{grid-area:head}.sbt.master .sbt-pic{grid-area:pic}.sbt.master .sbt-row{grid-area:row}.sbt.master .sbt-sw{grid-area:sw}.sbt.master .sbt-note{grid-area:note}
 .sbt.master .sbt-num{font-size:48px}
 @media (max-width:700px){.sbt.master .sbt-in{grid-template-columns:none;grid-template-areas:none}.sbt.master .sbt-in>*{grid-area:auto}}
+/* the toggle floats bottom-left; on a phone the screen stops above it so nothing sits under it */
+@media (max-width:699px){html:has(.sbtoggle) .wrap{--screen-bottom:72px}}

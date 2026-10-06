@@ -63,7 +63,7 @@ export function App() {
   let screen;
   switch (route.name) {
     case "welcome": screen = <Welcome shelf={!!route.shelf} />; break;
-    case "learn": screen = lessonById(route.lessonId) ? <Learn lessonId={route.lessonId} /> : grade == null ? <Welcome shelf /> : <Home />; break;
+    case "learn": screen = lessonById(route.lessonId) ? <Learn lessonId={route.lessonId} /> : <Home />; break;
     case "practice": screen = <Practice />; break;
     case "results": screen = <Results />; break;
     case "report": screen = <ReportScreen rep={reports[route.key]} />; break;
@@ -71,7 +71,7 @@ export function App() {
     case "me": screen = <Me />; break;
     case "sandbox": screen = SANDBOX ? <Suspense fallback={null}><SandboxBoard /></Suspense> : <Home />; break;
     case "facts": screen = <Facts table={route.table} start={!!route.start} />; break;
-    default: screen = grade == null ? <Welcome shelf /> : <Home />;
+    default: screen = <Home />;
   }
   // a new screen (or a new grade on a top-level screen) re-enters; with view transitions the browser cross-fades instead
   const viewKey = [route.name, route.name === "learn" ? route.lessonId : route.name === "report" ? route.key : route.name === "facts" ? route.table ?? "" : "", top ? chosenGrade : "", SANDBOX ? sbSeed : ""].join("|");

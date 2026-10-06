@@ -21,6 +21,7 @@ const PLAY_MS = 1800;
 /** the last lesson page shown, so the next one can glide its pill over from there */
 let lastPage: { chapter: string; i: number } | null = null;
 import { reduceMotion } from "../app/transition";
+import { spendHandOff, takeHandOff } from "../app/preview";
 import { readAloudOn, readSettings, speak } from "../app/settings";
 import { toPlainText } from "../curriculum/schemas/math-text";
 
@@ -47,11 +48,14 @@ export function Learn({ lessonId }: { lessonId: string }) {
   const lesson = requireLesson(lessonId);
   // every visit opens on a fresh problem; the reference problem is only the fallback
   const fresh = () => firstExample(lesson, deps().rng);
-  const [example, setExample] = useState<unknown>(fresh);
+  // the first visit opens on the problem the lesson preview showed, when there was one
+  const opening = () => { const p = takeHandOff(lesson.id); return p === undefined ? fresh() : p; };
+  const [example, setExample] = useState<unknown>(opening);
+  useEffect(() => spendHandOff(lesson.id), [lesson.id]);
   const [shownFor, setShownFor] = useState(lesson.id);
   const [at, setAt] = useState(0);
   const [playing, setPlaying] = useState(false);
-  if (shownFor !== lesson.id) { setShownFor(lesson.id); setExample(fresh()); setAt(0); setPlaying(false); }
+  if (shownFor !== lesson.id) { setShownFor(lesson.id); setExample(opening()); setAt(0); setPlaying(false); }
 
   const ex: Explanation = useMemo(() => lesson.explain(example, lesson.answers(example)), [lesson, example]);
   const last = ex.timeline.length - 1, finished = at >= last;

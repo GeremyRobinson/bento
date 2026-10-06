@@ -69,7 +69,7 @@ export function Me() {
             <div className="mh-text">
               <h1>Your Bento</h1>
               <p className="muted">Choose your grade to start. You can change it any time.</p>
-              <Pill go onClick={() => go({ name: "welcome", shelf: true }, "fwd")}>Choose your grade</Pill>
+              <Pill go onClick={() => go({ name: "home" }, "fwd")}>Choose your grade</Pill>
             </div>
           )}
           <div className="mstats">

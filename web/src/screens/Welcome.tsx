@@ -138,9 +138,8 @@ function HeroPictures({ rng }: { rng: Rng }) {
 
 /** The first screen on a new device: what Bento is, the real thing working, and the grade shelf to start from. */
 export function Welcome({ shelf = false }: { shelf?: boolean }) {
-  const { chooseGrade, deps } = useApp();
+  const { chooseGrade, deps, go } = useApp();
   const rng = useMemo(() => deps().rng, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const toShelf = () => document.getElementById("lshelf")?.scrollIntoView?.({ behavior: reduceMotion() ? "auto" : "smooth", block: "start" });
   // sent here to choose a grade: open at the shelf
   useEffect(() => { if (shelf) document.getElementById("lshelf")?.scrollIntoView?.({ block: "start" }); }, [shelf]);
   return (
@@ -148,7 +147,7 @@ export function Welcome({ shelf = false }: { shelf?: boolean }) {
       <section className="lhero">
         <h1>Math that <span>clicks.</span></h1>
         <p>Watch each idea play out, then solve it one step at a time. If you slip, Bento shows you the exact step and why.</p>
-        <div className="lcta"><Pill go onClick={toShelf}>Choose your grade</Pill><span>Free. No account.</span></div>
+        <div className="lcta"><Pill go onClick={() => go({ name: "home" }, "fwd")}>Choose your grade</Pill><span>Free. No account.</span></div>
       </section>
       <section className="lhbox">
         <HeroPictures rng={rng} />

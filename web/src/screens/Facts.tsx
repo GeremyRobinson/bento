@@ -29,7 +29,7 @@ function FactsHome() {
         <p className="ysub">Know them by heart.</p>
         <p className="muted">Each grade leans on its own facts: counting on, times tables, squares, powers. Choose your grade to see yours.</p>
       </header>
-      <div className="actions"><Pill go onClick={() => go({ name: "welcome", shelf: true }, "fwd")}>Choose your grade</Pill></div>
+      <div className="actions"><Pill go onClick={() => go({ name: "home" }, "fwd")}>Choose your grade</Pill></div>
     </>
   );
   return <GradeFacts g={progress.grade} />;

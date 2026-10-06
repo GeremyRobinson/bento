@@ -1,0 +1,98 @@
+/* Screen (master): the frame every app screen sits in. The page never scrolls on a split or fit screen: the screen
+   fills what's left under the island, and only its list scrolls, with a thin scroll mark (Design, handoff 5).
+   Instances (split, fit) override only what differs. */
+.wrap{--screen-list:340px;--screen-gap:var(--u);--screen-max:1180px;--screen-bottom:16px}
+@media (orientation:portrait){.wrap{--screen-list:300px}}
+.wrap:has(>.screen){max-width:var(--screen-max);padding-bottom:0}
+html:has(.screen) body{overflow:hidden}
+.screen{position:fixed;top:var(--below-island);bottom:max(var(--screen-bottom),env(safe-area-inset-bottom));
+  left:max(16px,calc((100vw - var(--sb-right,0px) - var(--screen-max)) / 2));right:calc(max(16px,calc((100vw - var(--sb-right,0px) - var(--screen-max)) / 2)) + var(--sb-right,0px));
+  display:grid;gap:var(--screen-gap);min-height:0}
+.screen.split{grid-template-columns:var(--screen-list) minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+.screen.split>*{align-self:stretch}
+.screen .slist{min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;background:var(--surf-1,var(--well));border-radius:var(--r-panel);padding:var(--nest)}
+.screen .sdetail{min-height:0;overflow:auto;scrollbar-width:thin;display:flex;flex-direction:column;gap:var(--screen-gap)}
+@media (max-width:699px){
+  .screen.split{grid-template-columns:minmax(0,1fr)}
+  .screen.split.show-list .sdetail,.screen.split.show-detail .slist{display:none}
+}
+.screen.fit{grid-template-rows:auto auto minmax(0,1fr);align-content:start}
+
+/* ---- instances ---- */
+/* the grade's book: the list */
+.slist .shead{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:4px 12px;padding:8px 12px 12px}
+.slist .shead .gnum{font:650 44px/1 var(--sans);color:var(--display);letter-spacing:-.03em}
+.slist .shead .gnum small{font-size:18px;vertical-align:top}
+.slist .shead h1{margin:0;font:650 20px/26px var(--sans)}
+.slist .shead .ysub{margin:0;color:var(--muted);font-size:var(--small);line-height:20px}
+.slist .shead .tlink{grid-column:1 / -1;justify-self:start;padding:0}
+.srow{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:6px 14px;border-radius:calc(var(--r-panel) - var(--nest));text-align:left;transition:background .15s}
+.srow:not([disabled]):hover{background:color-mix(in srgb,var(--text) 5%,transparent)}
+.srow.on{background:color-mix(in srgb,var(--text) 9%,transparent)}
+.srow .sname{flex:1;min-width:0;display:grid}
+.srow .sname b{font-weight:var(--w-mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srow .sname small,.srow>small{color:var(--muted);font-size:var(--small)}
+.srow.on>small,.srow .snext{color:var(--ink)}
+.srow.chap .sname b{font-weight:650}
+.srow.sles{padding-left:22px;min-height:48px}
+.srow.sles .badge{min-width:0;height:auto;background:none!important;color:var(--muted)!important;font:550 var(--small)/1 var(--sans);width:22px;justify-content:flex-start;padding:0}
+.srow.sles .badge.on{color:var(--ink)!important}
+.srow.soon{opacity:.5}
+.schapter.open{padding-bottom:4px}
+.sfoot{padding:12px 8px 4px}
+/* the grade's book: the detail */
+.sdetail>.sday{align-content:start}
+.sdl{flex:1;min-height:0;display:flex;flex-direction:column;gap:var(--screen-gap)}
+.sdtext{flex:none;background:var(--surf-2,var(--card));box-shadow:var(--ring);padding:var(--pad-xl)}
+.sdtext .k{margin:0;color:var(--muted);font-size:var(--small)}
+.sdtext h2{margin:0;font:650 32px/38px var(--sans);letter-spacing:-.02em}
+.sdidea{margin:0;color:var(--muted);max-width:60ch}
+.ssteps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--nest)}
+.ssteps li{display:grid;gap:2px;padding:12px 14px;border-radius:var(--r-box);background:var(--surf-1,var(--well))}
+.ssteps li span{color:var(--muted);font-size:var(--small)}
+.sdtext .actions{display:flex;flex-wrap:wrap;gap:var(--nest);justify-content:flex-start}
+.spreview{flex:none;margin:0;background:var(--surf-1,var(--well));grid-template-rows:auto minmax(0,1fr);overflow:hidden}
+.spreview figcaption{color:var(--muted);font-size:var(--small);display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.spreview figcaption .math,.spreview figcaption .ml{font-size:var(--small)}
+/* the picture scales to the room it gets, never past it */
+.sppic,.gypic{position:relative;min-height:0}
+.sppic>svg,.gypic>svg{position:absolute;inset:0;width:100%!important;height:100%!important;margin:0}
+.gypic>svg{inset:var(--u);width:calc(100% - 2 * var(--u))!important;height:calc(100% - 2 * var(--u))!important}
+/* landscape: the preview sits above the detail; portrait and phone: below */
+@media (orientation:landscape) and (min-width:700px){.spreview{order:-1}}
+@media (max-width:699px){.ssteps{grid-template-columns:minmax(0,1fr)}.sdtext h2{font-size:26px;line-height:32px}}
+
+/* "Which grade are you in?" */
+.gq{grid-template-rows:auto auto minmax(0,1fr)}
+.gqhead{display:flex;align-items:baseline;justify-content:space-between;gap:var(--u);flex-wrap:wrap}
+.gqhead h1{margin:0;font:650 40px/46px var(--sans);letter-spacing:-.02em}
+.gstrip{display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:var(--nest);justify-items:center}
+.gbtn{width:56px;height:56px;border-radius:50%;background:var(--surf-2,var(--card));box-shadow:var(--ring);color:var(--ink);font:650 22px/1 var(--sans);transition:box-shadow .2s,transform .2s var(--spring)}
+.gbtn:hover{transform:scale(1.05)}
+.gbtn.on{box-shadow:0 0 0 3px var(--text)}
+.gyear{min-height:0;background:var(--surf-1,var(--well));border-radius:var(--r-panel);padding:var(--pad-xl);display:grid;overflow:hidden}
+.gempty{margin:auto;font-size:var(--fs)}
+.wrap.gyin{max-width:none;margin:0;padding:0;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);grid-template-rows:auto minmax(0,1fr) auto;
+  grid-template-areas:"text pic" "go pic" ". pic";gap:var(--u) var(--pad-xl);animation:fadeIn .4s ease both}
+.gytext{grid-area:text;display:grid;gap:6px;align-content:start}
+.gytext .gnum{font:650 72px/1 var(--sans);color:var(--display);letter-spacing:-.04em}
+.gytext .gnum small{font-size:26px;vertical-align:top}
+.gytext h2{margin:0;font:650 26px/32px var(--sans)}
+.gytext p{margin:0}
+.gypic{grid-area:pic;min-height:0;background:var(--surf-2,var(--card));border-radius:var(--r-card);display:grid;place-items:center;padding:var(--u);overflow:hidden}
+.gygo{grid-area:go;align-self:start}
+.gygo .ctl.go{--pill-go-bg:var(--text);--pill-go-fg:var(--page)}
+@media (orientation:portrait),(max-width:899px){
+  .gqhead{display:grid;justify-items:start}
+  .gstrip{grid-template-columns:repeat(7,minmax(0,1fr));row-gap:12px}
+  .gbtn{width:72px;height:72px;font-size:26px}
+  .wrap.gyin{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"text" "pic" "go"}
+}
+@media (max-width:699px){
+  .gqhead h1{font-size:30px;line-height:36px}
+  .gqhead .tlink{order:3}
+  .gbtn{width:42px;height:42px;font-size:18px}
+  .gq{grid-template-rows:auto auto minmax(0,1fr) auto}
+}
+.sdtext .ctl:not(.go){box-shadow:var(--ring)}
+.sfoot .ctl{box-shadow:var(--ring)}

@@ -2,7 +2,8 @@
 export type Route =
   /** the landing page; `shelf` opens it at the grade shelf, for anyone who reached a grade page without choosing one */
   | { name: "welcome"; shelf?: boolean }
-  | { name: "home" }
+  /** the grade's book: a list beside its detail; `pick` is the row the detail shows ("today" or a lesson id) */
+  | { name: "home"; pick?: string }
   | { name: "learn"; lessonId: string }
   | { name: "practice" }
   | { name: "results" }
@@ -21,7 +22,7 @@ export function parseRoute(hash: string): Route {
   const parts = hash.replace(/^#\/?/, "").split("/").filter(Boolean).map(decode);
   switch (parts[0]) {
     case "welcome": return parts[1] === "grades" ? { name: "welcome", shelf: true } : { name: "welcome" };
-    case "year": return { name: "home" };
+    case "year": return parts[1] ? { name: "home", pick: parts[1] } : { name: "home" };
     case "learn": return parts[1] ? { name: "learn", lessonId: parts[1] } : { name: "home" };
     case "practice": return { name: "practice" };
     case "results": return { name: "results" };
@@ -37,7 +38,7 @@ export function parseRoute(hash: string): Route {
 export function routeHash(r: Route): string {
   switch (r.name) {
     case "welcome": return r.shelf ? "#/welcome/grades" : "#/welcome";
-    case "home": return "#/";
+    case "home": return r.pick ? `#/year/${encodeURIComponent(r.pick)}` : "#/";
     case "learn": return `#/learn/${encodeURIComponent(r.lessonId)}`;
     case "practice": return "#/practice";
     case "results": return "#/results";
