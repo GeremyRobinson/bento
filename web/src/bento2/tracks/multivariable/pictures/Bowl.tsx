@@ -66,11 +66,11 @@ export function BowlScene({ props, marker, onMarker }: SceneProps) {
   }, [rolling, xs, ys, fit.m, fit.b, fit.Sxx, fit.n, fit.Sx]);
 
   const showBowl = !quiet;
-  const sc: [number, number, number, number] = showBowl ? [26, 8, 160, 200] : [40, 8, 300, 200];
+  const sc: [number, number, number, number] = showBowl ? [22, 26, 164, 192] : [40, 26, 300, 192];
   const SX = (x: number) => sc[0] + ((x - frame.x0) / (frame.x1 - frame.x0)) * sc[2];
   const SY = (y: number) => sc[1] + sc[3] - ((y - frame.y0) / (frame.y1 - frame.y0)) * sc[3];
   const iy = (py: number) => frame.y0 + ((sc[1] + sc[3] - py) / sc[3]) * (frame.y1 - frame.y0);
-  const bm = mapper(frame.bowl, [200, 8, 154, 200]);
+  const bm = mapper(frame.bowl, [206, 26, 148, 192]);
   const levels = useMemo(() => Array.from({ length: 11 }, (_, i) => eBest + (i + 1) ** 2 * (land ? 0.02 : 0.6)), [eBest, land]);
   const { ref, drag } = useSvgDrag();
   const hx = [xs[0]!, xs[xs.length - 1]!];
@@ -85,11 +85,18 @@ export function BowlScene({ props, marker, onMarker }: SceneProps) {
   const lineAt = (mm: number, bb: number) => ({ x1: SX(frame.x0), y1: SY(mm * frame.x0 + bb), x2: SX(frame.x1), y2: SY(mm * frame.x1 + bb) });
   const inBowl = (p: [number, number]): [number, number] => [Math.max(frame.bowl[0], Math.min(frame.bowl[1], p[0])), Math.max(frame.bowl[2], Math.min(frame.bowl[3], p[1]))];
   const ball = inBowl([m, b]);
+  const range = frame.y1 - frame.y0, ystep = [0.25, 0.5, 1, 2, 5].find(v => range / v <= 6) ?? 10;
+  const yticks = Array.from({ length: 40 }, (_, i) => Math.ceil(frame.y0 / ystep) * ystep + i * ystep).filter(v => v <= frame.y1);
   const svg = (
     <svg ref={ref} viewBox={`0 0 ${W} ${H}`} className="b2pic mv" role="img"
       aria-label={`Points ${xs.map((x, i) => `(${nice(x)}, ${nice(ys[i]!)})`).join(", ")} and the line y = ${nice(m)}x + ${nice(b)}, ${quiet ? "" : `total squared error ${nice(eNow, 2)}.`}${quiet ? "" : ` The best line is y = ${nice(fit.m, 3)}x + ${nice(fit.b, 3)}.`}`}>
       <defs><clipPath id="mvbowlclip"><rect x={sc[0]} y={sc[1]} width={sc[2]} height={sc[3]} /></clipPath></defs>
       <rect x={sc[0]} y={sc[1]} width={sc[2]} height={sc[3]} className="mvframe" />
+      {yticks.map(v => <g key={`y${v}`}>
+        <line x1={sc[0]} y1={SY(v)} x2={sc[0] + sc[2]} y2={SY(v)} className="b2grid" />
+        <text x={sc[0] - 3} y={SY(v) + 4} textAnchor="end" className="b2t">{nice(v)}</text>
+      </g>)}
+      {xs.map((x, i) => <text key={`x${i}`} x={SX(x)} y={sc[1] + sc[3] + 14} textAnchor="middle" className="b2t">{nice(x)}</text>)}
       {frame.y0 < 0 && <line x1={sc[0]} y1={SY(0)} x2={sc[0] + sc[2]} y2={SY(0)} className="b2grid strong" />}
       <g clipPath="url(#mvbowlclip)">
         {!quiet && <line {...lineAt(fit.m, fit.b)} className="mvcut amber" />}
@@ -105,8 +112,8 @@ export function BowlScene({ props, marker, onMarker }: SceneProps) {
         <circle cx={SX(x)} cy={SY(m * x + b)} r="6" className="mvhandle sky" />
         {(guessing || !marker) && <circle cx={SX(x)} cy={SY(m * x + b)} r="18" className="b2hit" {...drag((_, py) => moveHandle(k as 0 | 1, py))} />}
       </g>)}
-      <text x={sc[0] + 4} y={sc[1] + 14} className="b2t">{land ? "height along y = 1/2" : "drag the points and the line"}</text>
-      <text x={sc[0] + sc[2] / 2} y={sc[1] + sc[3] + 16} textAnchor="middle" className="b2t">x</text>
+      <text x={sc[0]} y={sc[1] - 8} className="b2t">{land ? "height along y = 1/2" : guessing ? "drag the line's handles" : "drag the points and the line"}</text>
+      <text x={sc[0] + sc[2]} y={sc[1] + sc[3] + 14} textAnchor="end" className="b2t">x</text>
       {showBowl && <>
         <FlatMap f={E} box={frame.bowl} m={bm} levels={levels}>
           {marker && !onMarker && <circle cx={bm.X(inBowl(marker)[0])} cy={bm.Y(inBowl(marker)[1])} r="8" className="b2mark guess round" />}
@@ -114,7 +121,8 @@ export function BowlScene({ props, marker, onMarker }: SceneProps) {
           <circle cx={bm.X(ball[0])} cy={bm.Y(ball[1])} r="7" className="mvball" />
         </FlatMap>
         <text x={bm.frame[0] + bm.frame[2] / 2} y={bm.frame[1] + bm.frame[3] + 16} textAnchor="middle" className="b2t">slope m</text>
-        <text x={bm.frame[0] + 4} y={bm.frame[1] + 14} className="b2t">E(m, b): the bowl</text>
+        <text x={bm.frame[0]} y={bm.frame[1] - 8} className="b2t">the error bowl E(m, b)</text>
+        <text x={bm.frame[0] - 4} y={bm.frame[1] + bm.frame[3] / 2} textAnchor="end" className="b2t">b</text>
       </>}
     </svg>
   );

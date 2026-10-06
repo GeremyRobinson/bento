@@ -266,7 +266,7 @@ export function LakeScene({ props }: SceneProps) {
       <rect x={sec[0]} y={sec[1]} width={sec[2]} height={sec[3]} className="mvframe" />
       {wetX.length > 0 && <rect x={SX(wetX[0]!)} y={SZ(level)} width={SX(wetX[wetX.length - 1]!) - SX(wetX[0]!)} height={Math.max(0, sec[1] + sec[3] - SZ(level))} className="mvwater" />}
       <path d={path(xs.map((x, i) => [SX(x), SZ(gz[i]!)]))} className="b2curve sky" />
-      <text x={sec[0] + 4} y={sec[1] + 14} className="b2t">cross-section through the spot</text>
+      <text x={sec[0]} y={sec[1] - 6} className="b2t">cross-section through the spot</text>
     </svg>
   );
   return (

@@ -187,7 +187,7 @@ export function MultiStartScene({ props }: SceneProps) {
         <rect x={strip[0]} y={strip[1]} width={strip[2]} height={strip[3]} className="mvframe" />
         <path d={path([...ss.map((s, i) => [SX(s), SZ(ground[i]!)] as [number, number]), [SX(1), strip[1] + strip[3]], [SX(0), strip[1] + strip[3]]]) + "Z"} className="mvground" />
         <path d={path(ss.map((s, i) => [SX(s), SZ(string[i]!)]))} className={`mvstring${dips ? " below" : ""}`} />
-        <text x={strip[0] + 4} y={strip[1] + 14} className="b2t">ground from A to B, and the string</text>
+        <text x={strip[0]} y={strip[1] - 6} className="b2t">ground from A to B, and the string</text>
       </>}
     </svg>
   );

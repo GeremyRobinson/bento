@@ -29,7 +29,7 @@ export function HikerScene({ props, marker }: SceneProps) {
   const tw = formula ? t0 : quiet ? 0 : (clock % (T + 1)) > T ? T : clock % (T + 1);
   const wide = box[1] - box[0] > box[3] - box[2];
   const m = mapper(box, wide ? [6, 4, 348, 150] : [6, 10, 180, 180]);
-  const strip: [number, number, number, number] = wide ? [26, 170, 324, 66] : [204, 20, 150, 196];
+  const strip: [number, number, number, number] = wide ? [26, 166, 324, 62] : [204, 20, 150, 196];
   const N = 160, ts = Array.from({ length: N + 1 }, (_, i) => tStart + (T * i) / N);
   const hs = ts.map(t => { const [x, y] = at(t); return f(x, y); });
   const rate = (t: number) => { const p = at(t + 1e-4), q = at(t - 1e-4); return (f(...p) - f(...q)) / 2e-4; };
@@ -47,6 +47,8 @@ export function HikerScene({ props, marker }: SceneProps) {
         <path d={path(ts.map(t => { const [x, y] = at(t); return [m.X(x), m.Y(y)] as Pt; }))} className="mvtrail" />
         {!formula && [A, M, B].map((p, i) => <circle key={i} cx={m.X(p[0])} cy={m.Y(p[1])} r="6" className="mvhandle trav" />)}
         {!formula && !quiet && <circle cx={m.X(at(peakT)[0])} cy={m.Y(at(peakT)[1])} r="5" className="mvdot pink" />}
+        {!formula && [1, 2, 3].map(k => { const [x, y] = at(k); return <g key={`t${k}`}><circle cx={m.X(x)} cy={m.Y(y)} r="2.5" className="mvdot" /><text x={m.X(x)} y={m.Y(y) + 15} textAnchor="middle" className="b2t">{k}</text></g>; })}
+        {marker && !formula && (() => { const [x, y] = at(marker[0]); return <circle cx={m.X(x)} cy={m.Y(y)} r="8" className="b2mark guess round" />; })()}
         <circle cx={m.X(wx)} cy={m.Y(wy)} r="7" className="mvball" />
         {!formula && [[A, setA], [M, setM], [B, setB]].map(([p, set], i) => <circle key={`h${i}`} cx={m.X((p as Pt)[0])} cy={m.Y((p as Pt)[1])} r="18" className="b2hit" {...dragPt(set as (p: Pt) => void)} />)}
       </FlatMap>
@@ -58,7 +60,8 @@ export function HikerScene({ props, marker }: SceneProps) {
       <line x1={SX(tw)} y1={strip[1]} x2={SX(tw)} y2={strip[1] + strip[3]} className="mvtrail dash" />
       {!quiet && <text x={strip[0] + 4} y={strip[1] + 14} className="b2t sky">height</text>}
       {!quiet && <text x={strip[0] + strip[2] - 4} y={strip[1] + 14} textAnchor="end" className="b2t pink">rate of climb</text>}
-      <text x={strip[0] + strip[2]} y={strip[1] + strip[3] + 14} textAnchor="end" className="b2t">t</text>
+      {!formula && wide ? Array.from({ length: T + 1 }, (_, k) => <text key={`k${k}`} x={SX(k)} y={strip[1] + strip[3] + 14} textAnchor="middle" className="b2t">{k === T ? `${k} s` : k}</text>)
+        : <text x={strip[0] + strip[2]} y={strip[1] + strip[3] + 14} textAnchor="end" className="b2t">t</text>}
     </svg>
   );
   return (

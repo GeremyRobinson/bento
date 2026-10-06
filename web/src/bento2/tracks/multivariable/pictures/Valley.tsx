@@ -23,7 +23,7 @@ function search(f: F2, box: Box, fence: Box | null) {
   }
   const eta = Math.min(0.2, 0.5 / k), runs: [number, number][][] = [];
   for (let r = 0; r < 20; r++) {
-    let x = area[0] + rnd() * (area[1] - area[0]), y = area[2] + rnd() * (area[3] - area[2]), T = 0.08;
+    let x = area[0] + rnd() * (area[1] - area[0]), y = area[2] + rnd() * (area[3] - area[2]), T = 0.02;
     const trail: [number, number][] = [[x, y]];
     for (let s = 0; s < 240; s++) {
       const [gx, gy] = grad(f, x, y), u1 = Math.max(1e-12, rnd()), u2 = rnd(), g = Math.sqrt(-2 * Math.log(u1));
@@ -76,7 +76,7 @@ export function ValleyScene({ props }: SceneProps) {
   const water = useMemo(() => {
     if (!res || onFence) return null;
     const passes = flatSpots(f, box).filter(p => p.kind === "pass" && p.z > res.z + 1e-6).sort((a, b) => a.z - b.z);
-    const level = passes.length ? passes[0]!.z : res.z + 0.25;
+    const level = passes.length ? passes[0]!.z - 0.02 : res.z + 0.25;
     return { level, pass: passes[0] ?? null, ...lake(f, box, res.x, res.y, level - 1e-6, 120, Math.round((120 * (box[3] - box[2])) / (box[1] - box[0]))) };
   }, [res, onFence, f, box.join(",")]); // eslint-disable-line react-hooks/exhaustive-deps
   const m = mapper(box, which === "typed" ? [80, 4, 200, 200] : [6, 4, 348, 174]);
@@ -94,6 +94,20 @@ export function ValleyScene({ props }: SceneProps) {
       }
     }
   }
+  // the cross-section through the lowest point, along x, with the lake's water in it
+  const wide = which !== "typed";
+  const sec: [number, number, number, number] = [26, 196, 324, 44];
+  const sxs = Array.from({ length: 121 }, (_, i) => box[0] + ((box[1] - box[0]) * i) / 120);
+  const gz = res ? sxs.map(x => f(x, res.y)) : [];
+  const sz0 = res ? Math.min(...gz) - 0.05 : 0, sz1 = res ? Math.min(Math.max(...gz), (water?.level ?? res.z) + 1.5) : 1;
+  const SX = (x: number) => sec[0] + ((x - box[0]) / (box[1] - box[0])) * sec[2], SZ = (z: number) => sec[1] + sec[3] - ((Math.min(sz1, z) - sz0) / (sz1 - sz0)) * sec[3];
+  const wetRun = (() => {
+    if (!water || !res) return null;
+    let a = res.x, b = res.x;
+    while (a > box[0] && f(a - 0.01, res.y) < water.level) a -= 0.01;
+    while (b < box[1] && f(b + 0.01, res.y) < water.level) b += 0.01;
+    return [a, b] as const;
+  })();
   const snap = (v: number) => Math.round(v * 20) / 20;
   const what = !res ? "" : onFence ? "on the fence" : kind ? KIND_WORD[kind] : "";
   const saved = !!res && Array.isArray(b2.shelf.lowest?.value) && Math.abs((b2.shelf.lowest!.value as number[])[2]! - res.z) < 1e-9;
@@ -127,6 +141,13 @@ export function ValleyScene({ props }: SceneProps) {
           <circle cx={m.X(p[0])} cy={m.Y(p[1])} r="18" className="b2hit" {...drag((x, y) => set([snap(Math.max(box[0], Math.min(box[1], m.ix(x)))), snap(Math.max(box[2], Math.min(box[3], m.iy(y))))]))} />
         </g>)}
       </FlatMap>
+      {wide && res && done && <>
+        <rect x={sec[0]} y={sec[1]} width={sec[2]} height={sec[3]} className="mvframe" />
+        {wetRun && water && <rect x={SX(wetRun[0])} y={SZ(water.level)} width={SX(wetRun[1]) - SX(wetRun[0])} height={Math.max(0, sec[1] + sec[3] - SZ(water.level))} className="mvwater" />}
+        <path d={path(sxs.map((x, i) => [SX(x), SZ(gz[i]!)]))} className="b2curve sky" />
+        <circle cx={SX(res.x)} cy={SZ(res.z)} r="4" className="mvball" />
+        <text x={sec[0]} y={sec[1] - 6} className="b2t">cross-section through the lowest point</text>
+      </>}
       {!res && <text x={W / 2} y={H - 30} textAnchor="middle" className="b2t">press Search to drop 20 balls</text>}
     </svg>
   );
@@ -150,7 +171,7 @@ export function ValleyScene({ props }: SceneProps) {
         <Read label="Height" value={fx(res.z, 4)} tone="trav" />
         <Read label="Hessian test" value={onFence ? `on the fence, ∇f = ⟨${fx(gx, 2)}, ${fx(gy, 2)}⟩` : what} tone="sky" />
         <Read label="Shape" value={res.convex ? "convex: one ball is enough" : `not convex: ${res.distinct} resting places`} tone="amber" />
-        {water && <Read label="Lake there" value={`up to ${fx(water.level, 3)}, volume ${fx(water.volume, 3)}`} tone="mint" />}
+        {water && <Read label="Lake there" value={`filled to ${fx(water.level, 3)}, volume ${fx(water.volume, 3)}`} tone="mint" />}
       </> : undefined}
       foot={project && res && done ? <SaveRow what={<>Keep <b>lowest</b>: the valley finder's answer</>} saved={saved} onSave={onSave} /> : undefined} />
   );

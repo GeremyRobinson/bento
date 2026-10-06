@@ -26,19 +26,19 @@ export function SurfaceScene({ props }: SceneProps) {
   const show = !quiet;
   const svg = (
     <svg viewBox={`0 0 ${W} ${H}`} className="b2pic mv" role="img" aria-label={`A landscape in 3D over its contour map${show ? `, cut by a flat plane at height ${nice(k)}` : ""}. Drag to turn it.`}>
-      <View3D f={f} box={box} z={zr} rect={[0, 0, 226, H]} levels={levels} floor={show} hiLevels={show ? [k] : []}
+      <View3D f={f} box={box} z={zr} rect={[0, 0, show ? 226 : W, H]} levels={levels} floor={show} hiLevels={show ? [k] : []}
         overlay={P => <>
           {show && <path d={(box.length ? [[box[0], box[2]], [box[1], box[2]], [box[1], box[3]], [box[0], box[3]]] : []).map(([x, y], i) => { const [sx, sy] = P(x!, y!, Math.min(k, zr[1])); return `${i ? "L" : "M"}${sx},${sy}`; }).join("") + "Z"} className="mvplane amber" />}
           {hasPt && (() => { const [sx, sy] = P(px as number, py as number, Math.min(zr[1], f(px as number, py as number))); return <circle cx={sx} cy={sy} r="5" className="mvball" />; })()}
         </>} />
-      <FlatMap f={f} box={box} m={m} levels={show ? levels : []} hi={show ? [k] : []}>
+      {show && <FlatMap f={f} box={box} m={m} levels={levels} hi={show ? [k] : []}>
         {show && cross && ellipse && <>
           {[[xa, 0], [-xa, 0], [0, yb], [0, -yb]].map(([x, y], i) => <circle key={i} cx={m.X(x!)} cy={m.Y(y!)} r="3.5" className="mvdot amber" />)}
           <text x={m.X(xa)} y={m.Y(0) - 7} textAnchor="middle" className="b2t amber">{nice(xa)}</text>
           <text x={m.X(0) + 6} y={m.Y(yb) - 5} className="b2t amber">{nice(yb)}</text>
         </>}
         {hasPt && <circle cx={m.X(px as number)} cy={m.Y(py as number)} r="4" className="mvball" />}
-      </FlatMap>
+      </FlatMap>}
       {show && <text x={m.frame[0]} y={m.frame[1] - 8} className="b2t">contour map</text>}
     </svg>
   );

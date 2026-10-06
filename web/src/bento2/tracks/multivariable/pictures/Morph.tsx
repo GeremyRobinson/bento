@@ -31,7 +31,7 @@ export function MorphScene({ props }: SceneProps) {
       <rect x={rect[0]} y={rect[1]} width={rect[2]} height={rect[3]} className="mvframe" />
       <line x1={rect[0]} y1={Z(0)} x2={rect[0] + rect[2]} y2={Z(0)} className="b2grid strong" />
       <path d={path(ts.map((t, i) => [X(t), Z(zs[i]!)]))} className={`b2curve ${cls}`} />
-      <text x={rect[0] + 6} y={rect[1] + 16} className={`b2t ${cls}`}>{label}</text>
+      <text x={rect[0]} y={rect[1] - 7} className={`b2t ${cls}`}>{label}</text>
     </g>;
   };
   const svg = (

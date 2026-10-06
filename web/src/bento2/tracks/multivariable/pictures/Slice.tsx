@@ -52,7 +52,7 @@ export function SliceScene({ props, marker }: SceneProps) {
       {!quiet && <path d={tan(slope)} className="b2curve pink" />}
       <circle cx={G.X(at)} cy={G.Z(zAt)} r="5" className="mvball" />
       <text x={G.rect[0] + G.rect[2]} y={G.rect[1] + G.rect[3] + 16} textAnchor="end" className="b2t">{dir}</text>
-      <text x={G.rect[0] + 4} y={G.rect[1] + 14} className="b2t amber">{dir === "x" ? `slice y = ${nice(b)}` : `slice x = ${nice(a)}`}</text>
+      <text x={G.rect[0]} y={G.rect[1] - 7} className="b2t amber">{dir === "x" ? `slice y = ${nice(b)}` : `slice x = ${nice(a)}`}</text>
     </svg>
   );
   return (
@@ -106,11 +106,11 @@ export function CompassScene({ props, marker }: SceneProps) {
       {cos.length > 1 && <path d={path(cos.map(d => [dial.X(d), dial.Z(gx * Math.cos((d * Math.PI) / 180) + gy * Math.sin((d * Math.PI) / 180))]))} className="b2curve pink" />}
       {!quiet && drawn >= 360 && <circle cx={dial.X(gAng)} cy={dial.Z(G)} r="5" className="mvdot pink" />}
       <line x1={dial.X(needle)} y1={dial.rect[1]} x2={dial.X(needle)} y2={dial.rect[1] + dial.rect[3]} className="mvtrail dash" />
-      <text x={dial.rect[0] + 4} y={dial.rect[1] + 14} className="b2t pink">slope vs angle</text>
+      <text x={dial.rect[0]} y={dial.rect[1] - 7} className="b2t pink">slope vs angle</text>
       <rect x={sl.rect[0]} y={sl.rect[1]} width={sl.rect[2]} height={sl.rect[3]} className="mvframe" />
       <path d={path(slicePts)} className="b2curve amber" />
       <circle cx={sl.X(0)} cy={sl.Z(f(a, b))} r="4" className="mvball" />
-      <text x={sl.rect[0] + 4} y={sl.rect[1] + 14} className="b2t amber">slice this way</text>
+      <text x={sl.rect[0]} y={sl.rect[1] - 7} className="b2t amber">slice this way</text>
     </svg>
   );
   return (

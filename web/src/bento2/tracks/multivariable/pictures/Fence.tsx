@@ -61,7 +61,7 @@ function FenceWalk({ props, marker, road }: SceneProps & { road: boolean }) {
       {!quiet && <circle cx={SX(bx)} cy={SZ(want)} r="4.5" className="mvdot amber" />}
       {!quiet && <>
       <line x1={SX(Math.min(sMax, s))} y1={strip[1]} x2={SX(Math.min(sMax, s))} y2={strip[1] + strip[3]} className="mvtrail dash" />
-      <text x={strip[0] + 4} y={strip[1] + 14} className="b2t sky">height along the {road ? "road" : "fence"}</text>
+      <text x={strip[0]} y={strip[1] - 6} className="b2t sky">height along the {road ? "road" : "fence"}</text>
       </>}
     </svg>
   );
