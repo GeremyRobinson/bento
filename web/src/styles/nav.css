@@ -117,15 +117,13 @@ html[data-zoomed] body{overflow:hidden}
 .zoom{position:fixed;inset:0;z-index:var(--z-zoom);overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;display:grid;align-content:start;justify-items:center;gap:calc(var(--u) * 1.5);
   padding:max(var(--sp-3),env(safe-area-inset-top)) var(--u) calc(var(--u) * 3);background:color-mix(in srgb,var(--page) 55%,transparent);animation:fadeIn var(--m-page) var(--m-ease) both}
 .zbar-top{position:sticky;top:0;z-index:var(--z-up2);width:min(1040px,100%);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:var(--s)}
-.zlevels{grid-column:2;display:flex;gap:2px;padding:var(--sp-1);border-radius:var(--r-pill);background:color-mix(in srgb,var(--card) 72%,transparent);-webkit-backdrop-filter:saturate(1.8) blur(20px);backdrop-filter:saturate(1.8) blur(20px);box-shadow:0 0 0 1px var(--rule),0 8px 28px -12px var(--ink-a18)}
-.zlevels button{height:40px;padding:0 18px;border-radius:var(--r-pill);font-weight:var(--w-mid);color:var(--muted);white-space:nowrap;transition:background var(--dur-200),color var(--dur-200)}
-.zlevels button:hover:not(:disabled){color:var(--text)}
-.zlevels button[aria-pressed=true],.zlevels button[aria-pressed=true]:hover{background:var(--text);color:var(--card)}
-.zlevels button:disabled{opacity:.35}
+/* the contents' level slider: an instance of the tap slider, frosted to float over the zoom */
+.zlevels{grid-column:2;--sl-pad:var(--sp-1);--sl-h:40px;--sl-x:18px;--sl-fz:var(--fz-md);--sl-bg:color-mix(in srgb,var(--card) 72%,transparent);-webkit-backdrop-filter:saturate(1.8) blur(20px);backdrop-filter:saturate(1.8) blur(20px);box-shadow:0 0 0 1px var(--rule),0 8px 28px -12px var(--ink-a18)}
+.zlevels>button[aria-pressed="true"]{color:var(--card)}
 .zclose{grid-column:3;justify-self:end;background:color-mix(in srgb,var(--card) 72%,transparent)!important;box-shadow:0 0 0 1px var(--rule)}
 /* a phone: the zoom bar keeps the app's 16px gutter, so Done lines up with the island's corner buttons */
 @media (max-width:699px){.zoom{padding-inline:var(--sp-4)}}
-@media (max-width:560px){.zbar-top{grid-template-columns:auto 1fr}.zbar-top .zmark{display:none}.zlevels{grid-column:1}.zlevels button{padding:0 var(--sp-3)}}
+@media (max-width:560px){.zbar-top{grid-template-columns:minmax(0,1fr) auto}.zbar-top .zmark{display:none}.zlevels{grid-column:1;--sl-x:var(--sp-1);--sl-fz:var(--fz-sm);justify-self:start;width:100%;max-width:300px}}
 .zstage{width:min(1040px,100%);transform-origin:50% 30%;animation:zFrom var(--m-page) var(--m-ease) both}
 .zstage.out{animation-name:zOut} .zstage.in{animation-name:zIn}
 @keyframes zFrom{from{opacity:0;transform:scale(1.08)}}

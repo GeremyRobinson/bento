@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { Slider } from "../components/primitives/Slider";
 import { useApp } from "../app/AppState";
 import { previewOf, statementBeat } from "../app/preview";
 import { bandOf, gradeOf, tintStyle } from "../curriculum/grades";
@@ -183,11 +184,8 @@ export function GradeQuestion() {
   };
 
   const sideSwitch = (
-    <div className="sideswitch" role="group" aria-label="Bento or Bento²">
-      <span className="sidek" aria-hidden />
-      <button aria-pressed={side === "bento"} onClick={() => flip("bento")}>Bento</button>
-      <button aria-pressed={side === "b2"} aria-label="Bento squared" onClick={() => flip("b2")}>Bento²</button>
-    </div>
+    <Slider className="sideswitch" label="Bento or Bento²" value={side} onPick={flip}
+      options={[{ id: "bento", label: "Bento" }, { id: "b2", label: "Bento²", ariaLabel: "Bento squared" }]} />
   );
 
   let row = 0;

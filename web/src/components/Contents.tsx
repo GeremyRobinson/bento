@@ -1,4 +1,5 @@
 import { Pill } from "./primitives/Pill";
+import { Slider } from "./primitives/Slider";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { BentoMark } from "./primitives/BentoMark";
 import { useApp } from "../app/AppState";
@@ -48,7 +49,7 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
 
   useEffect(() => {
     const el = box.current!;
-    el.querySelector<HTMLElement>(".zlevels button[aria-pressed=true]")?.focus();
+    el.querySelector<HTMLElement>(".zlevels>button[aria-pressed=true]")?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") close();
       else if (e.key === "-" || e.key === "_") to(LEVELS[Math.min(2, LEVELS.indexOf(level) + 1)]!);
@@ -142,12 +143,9 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
     <div className="zoom" ref={box} role="dialog" aria-modal="true" aria-label={CONTENTS} onClick={e => { if (e.target === e.currentTarget) close(); }}>
       <div className="zbar-top">
         <BentoMark className="zmark" />
-        {/* widest to narrowest, left to right (G 2026-10-06) */}
-        <div className="zlevels" role="group" aria-label="Zoom">
-          {[...LEVELS].reverse().map(l => (
-            <button key={l} aria-pressed={l === level} disabled={l === "chapter" && !unit} onClick={() => to(l)}>{NAMES[l]}</button>
-          ))}
-        </div>
+        {/* widest to narrowest, left to right (G 2026-10-06); a tap slider, the same master as Bento / Bento² */}
+        <Slider className="zlevels" label="Zoom" value={level} onPick={to}
+          options={[...LEVELS].reverse().map(l => ({ id: l, label: NAMES[l], disabled: l === "chapter" && !unit }))} />
         <Pill className="zclose" onClick={close}>Done</Pill>
       </div>
       <div className={`zstage ${way}`} key={level + (level === "chapter" ? chapter : "")}>{body}</div>
