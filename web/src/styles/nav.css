@@ -174,7 +174,7 @@ html[data-zoomed] body{overflow:hidden}
 .zyear{display:grid;gap:calc(var(--u) * 1.5)}
 .zyear>header{display:grid;justify-items:center;text-align:center;gap:6px}
 .zyear>header .ctl{margin-top:var(--sp-2)}
-.zch{display:grid;gap:var(--s);grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.zch{display:grid;gap:var(--s);grid-template-columns:repeat(auto-fit,minmax(min(200px,calc(50% - var(--s))),1fr))}
 .zcard{display:grid;gap:6px;align-content:start;text-align:left;padding:var(--pad-md);border-radius:var(--r-tile);background:var(--surf-2,var(--card));animation:rise var(--dur-500) var(--ease) both;animation-delay:calc(var(--i) * var(--dur-45));transition:transform var(--dur-250) var(--m-settle),box-shadow var(--dur-200)}
 .zcard:hover{transform:translateY(-2px);box-shadow:none}
 .zcard.on{box-shadow:0 0 0 2px var(--tint)}
@@ -231,8 +231,10 @@ button.book:hover{transform:translateY(-2px);box-shadow:none}
 .book b{font-weight:var(--w-bold);font-size:var(--small);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 @media (min-width:900px){.zshelf .shelf{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:calc(var(--u) * 1.5)}}
 .zshelf{display:grid;gap:calc(var(--u) * 1.5)}
-.zcard{min-height:150px;display:flex;flex-direction:column}
-.zcard .bcount{padding-top:var(--sp-3)}
+/* a chapter card is as tall as what it says: the kicker, the name, and its lesson count tight under it, so the whole
+   year fits at once, two across even on a phone (G 2026-10-06: "so much wasted space") */
+.zcard{display:grid;align-content:start;gap:var(--sp-1)}
+.zcard .bcount{margin:0}
 
 /* home's progress tile and the hub's level tile, as batteries */
 .bhome .b-stats.battery{gap:6px}
