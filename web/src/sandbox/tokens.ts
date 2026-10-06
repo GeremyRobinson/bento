@@ -15,6 +15,11 @@ export const GRADE_TOKENS: Token[] = [
   { v: "--hd1", label: "Dark step 1", kind: "color" },
   { v: "--hd2", label: "Dark step 2", kind: "color" },
   { v: "--hd3", label: "Dark step 3", kind: "color" },
+  // the grade's picture palette: colorful, each lesson's picture takes one of the first three (G 2026-10-06)
+  { v: "--l0", label: "Picture color 1", kind: "color" },
+  { v: "--l1", label: "Picture color 2", kind: "color" },
+  { v: "--l2", label: "Picture color 3", kind: "color" },
+  { v: "--la", label: "Picture accent", kind: "color" },
 ];
 
 /** the colors every grade shares (edited per theme) */
