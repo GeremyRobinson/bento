@@ -299,6 +299,7 @@
 .a-flash{animation:fadeIn .4s ease var(--d) both, fadeOut .3s ease var(--d2) forwards}
 .rs{display:grid;justify-items:center;gap:4px;font-family:var(--num);font-size:calc(var(--math) * .62);line-height:1.25;text-align:center}
 .rs-arrow{color:var(--muted);font-size:.7em}
+.rs-line,.rs-line>.mline{max-width:100%}
 .rs mark{background:color-mix(in srgb,var(--acc) var(--d-f26),transparent);color:inherit;border-radius:8px;padding:0 .15em;animation:markIn .8s ease both;animation-delay:inherit}
 @keyframes markIn{from{background:transparent}}
 

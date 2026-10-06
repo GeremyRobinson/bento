@@ -57,6 +57,8 @@ export function buildMixedBars(s: MixedBarsSpec): SceneDiagram {
     items.push({ type: "rect", x: x - 4, y: y - 4, w: U + 8, h: H + 8, rx: 9, cls: "ln2", from: s.beats.regroup, enter: "pop" } as Draft);
     items.push(t(x + U / 2, y - 17, "1 whole", "sm acc", { from: s.beats.regroup, enter: "rise", delay: 0.2 }));
   }
-  items.push(t(-70, y + H + 34, s.total, "lbl acc start", { from: s.beats.total, enter: "rise" }));
+  // the answer sits centred under the bars it adds up
+  const end = x + (S > d ? 2 * U + GAP : U);
+  items.push(t(end / 2, y + H + 34, s.total, "lbl acc", { from: s.beats.total, enter: "rise" }));
   return frame("mixed-bars", items, s.alt, 14, { w: 320 });
 }
