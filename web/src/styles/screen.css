@@ -428,3 +428,10 @@ html:has(.screen) body{overflow:hidden}
 /* while a stack is open, what it covers fades almost away; the hero stays sharp */
 .pscreen:is(.hinting,.stepping)>:is(.pintro,.ppad,.pbar){opacity:.06;transition:opacity var(--dur-250) var(--ease)}
 .pscreen.stepping>.phero{opacity:.35}
+
+/* Results with nothing finished: the next lesson, and its picture takes the rest of the screen */
+.screen.fit.rnone{grid-template-rows:auto minmax(0,1fr)}
+.rnone .panel{align-content:start}
+.rnone .panel .actions{justify-content:start}
+.rnone .spreview{display:grid;min-height:0}
+@media (min-width:700px) and (min-aspect-ratio:1/1){.screen.fit.rnone{grid-template-columns:minmax(300px,380px) minmax(0,1fr);grid-template-rows:minmax(0,1fr)}.rnone>.panel{grid-area:1/1}.rnone>.spreview{grid-area:1/2}}

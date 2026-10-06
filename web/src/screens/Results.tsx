@@ -12,6 +12,8 @@ import type { SessionReport } from "../engine/session/types";
 import { SessionReportView } from "../components/reports/SessionReportView";
 import { FitScreen } from "../components/screen/Screen";
 import { ALL_LESSONS, PRACTICE_AGAIN } from "../app/copy";
+import { upNext } from "../app/today";
+import { PreviewWell } from "./Home";
 
 function Confetti() {
   const bits = useMemo(() => {
@@ -67,7 +69,23 @@ function Placed({ rep }: { rep: SessionReport }) {
 /** The screen after a run: score ring, XP, time, what to do next, then the full report. */
 export function Results() {
   const { lastReport: rep, progress, go, startLesson, startTest } = useApp();
-  if (!rep) return <FitScreen className="rnone"><section className="panel"><p className="empty">Nothing finished yet.</p><div className="actions"><Pill go onClick={() => go({ name: "home" })}>{ALL_LESSONS}</Pill></div></section></FitScreen>;
+  if (!rep) {
+    // nothing finished yet: the grade's next lesson, with its own first picture, instead of an empty page (Review v43 #19)
+    const next = progress.grade == null ? null : upNext(progress, progress.grade);
+    return (
+      <FitScreen className="rnone">
+        <section className="panel">
+          <h2>Nothing finished yet</h2>
+          {next && <p className="muted">Up next in {gradeOf(progress.grade!).name}: {next.entry.title}.</p>}
+          <div className="actions">
+            {next && <Pill go onClick={() => go({ name: "learn", lessonId: next.entry.id }, "fwd")}>Start {next.entry.title} ›</Pill>}
+            <Pill go={!next} onClick={() => go({ name: "home" })}>{ALL_LESSONS}</Pill>
+          </div>
+        </section>
+        {next && <PreviewWell key={next.entry.id} candidates={[next.entry.id]} next={next.entry.id} />}
+      </FitScreen>
+    );
+  }
   if (rep.key.startsWith("place:")) return <Placed rep={rep} />;
   const lesson = lessonById(rep.key), test = rep.mode === "test", review = rep.mode === "review";
   const grade = lesson ? lessonsInGrade(lesson.grade) : [], k = lesson ? grade.indexOf(lesson) : -1, next = grade[k + 1];
