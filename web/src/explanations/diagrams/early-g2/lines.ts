@@ -29,7 +29,7 @@ export function buildSkipLine(spec: SkipLineSpec): SceneDiagram {
   const x = (i: number) => i * GAP, H = 30;
   const items: Draft[] = [line(-30, 0, x(values.length - 1) + 30, 0, "ax", { enter: "fade" })];
   values.forEach((v, i) => {
-    items.push(line(x(i), -8, x(i), 8, "tk"));
+    items.push(line(x(i), -6, x(i), 6, "tk")); // shorter than a dot, so a dot sitting on it covers it whole
     if (i < given) {
       items.push(t(x(i), 26, String(v), "sm"));
       items.push(circle(x(i), 0, 7, "dotp", { enter: "pop", delay: 0.15 * i }));

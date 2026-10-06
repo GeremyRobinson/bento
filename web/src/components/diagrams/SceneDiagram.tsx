@@ -28,7 +28,7 @@ export function SceneDiagram({ diagram: d, at, fit = false }: { diagram: Scene; 
   return (
     <svg ref={ref} className="viz-svg" viewBox={`${r1(vb.x)} ${r1(vb.y)} ${r1(vb.w)} ${r1(vb.h)}`} role="img" aria-label={d.alt}
       style={{ "--w": Math.round(d.width), "--h": Math.round(d.height) } as CSSProperties} data-family={d.family}>
-      {d.items.map((it, i) => {
+      {dotsOnTop(d.items).map((it, i) => {
         const from = it.from ?? 0;
         if (from > at || (it.until != null && at > it.until)) return null;
         const cls = [it.cls ?? "", enterClass(it.enter)].join(" ").trim();
@@ -55,6 +55,10 @@ const r1 = (v: number) => Math.round(v * 10) / 10;
 const MAX_ZOOM = 1.8;
 
 /** The bounds of every shape in the scene, measured off screen with the picture's own styles (null where SVG can't measure). */
+const isDot = (it: SceneItem) => it.type === "circle" && /\bdot[pa]\b/.test(it.cls ?? "");
+/** Point dots draw over every line, tick and hop that meets them, in every family (G 2026-10-06: no line showing through a dot). */
+export const dotsOnTop = (items: SceneItem[]): SceneItem[] => [...items.filter(i => !isDot(i)), ...items.filter(isDot)];
+
 function contentBox(svg: SVGSVGElement, items: SceneItem[]): Box | null {
   const ns = "http://www.w3.org/2000/svg";
   const g = document.createElementNS(ns, "g") as SVGGElement;

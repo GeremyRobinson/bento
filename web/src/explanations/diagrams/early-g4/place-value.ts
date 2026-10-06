@@ -66,7 +66,7 @@ export function buildRounding(s: RoundingSpec): SceneDiagram {
   for (let j = 0; j <= 10; j++) {
     const v = s.lo + (j * s.place) / 10, big = j === 0 || j === 10;
     if (j === 5) continue;
-    items.push({ type: "line", x1: X(v), y1: y - (big ? 9 : 5), x2: X(v), y2: y + (big ? 9 : 5), cls: "tk", ...at, delay: j * 0.03 } as Draft);
+    items.push({ type: "line", x1: X(v), y1: y - (big ? 7 : 5), x2: X(v), y2: y + (big ? 7 : 5), cls: "tk", ...at, delay: j * 0.03 } as Draft);
   }
   const mid = s.lo + s.place / 2;
   items.push({ type: "line", x1: X(mid), y1: y - 12, x2: X(mid), y2: y + 12, cls: "ln2", from: s.beats.next, enter: "draw" } as Draft);
