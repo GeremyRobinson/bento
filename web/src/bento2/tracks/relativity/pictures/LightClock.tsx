@@ -50,13 +50,14 @@ export function LightClockScene({ props, place, marker }: SceneProps) {
       </g>
       <circle cx={pulse[0]} cy={pulse[1]} r="6" className="b2pulse" />
       {/* the triangle for one trip up: legs cτ and vt, hypotenuse ct (in units where cτ = 4) */}
-      <g transform={`translate(${W - 24 - Math.min(b, 150)},${16})`} className={tri && !hide ? "b2tri on" : "b2tri"}>
+      {/* while guessing, the triangle's sides would give the answer away, so it isn't drawn at all */}
+      {!hide && !flag(props, "quiet") && <g transform={`translate(${W - 24 - Math.min(b, 150)},${16})`} className={tri ? "b2tri on" : "b2tri"}>
         <path d={`M0,${a} L${Math.min(b, 150)},${a} L${Math.min(b, 150)},0 Z`} />
         <path d={`M0,${a} L${Math.min(b, 150)},0`} className="hyp" />
         <text x={Math.min(b, 150) + 6} y={a / 2 + 5} className="b2t">cτ = 4</text>
         <text x={Math.min(b, 150) / 2} y={a + 17} textAnchor="middle" className="b2t">vt = {fx(4 * beta * g)}</text>
         <text x={Math.min(b, 150) / 2 - 10} y={a / 2 - 6} textAnchor="end" className="b2t amber">ct = {fx(4 * g)}</text>
-      </g>
+      </g>}
     </svg>
   );
 

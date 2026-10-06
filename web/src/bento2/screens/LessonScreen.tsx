@@ -43,7 +43,9 @@ export function LessonScreen({ trackId, lessonId }: { trackId: string; lessonId:
   const [deeper, setDeeper] = useState<"open" | "closing" | null>(null);
   // on a phone a project's Use it opens the project full screen, then comes back to the lesson card
   const [projOpen, setProjOpen] = useState(false);
-  useEffect(() => setProjOpen(false), [stage]);
+  // on a phone Play's words fold to a few lines so the picture keeps its room; "More" opens them
+  const [sayOpen, setSayOpen] = useState(false);
+  useEffect(() => { setProjOpen(false); setSayOpen(false); }, [stage]);
 
   // Guess: what the learner predicts; the reveal shows the answer in the picture. Recorded, never scored.
   const gs = lesson.guess;
@@ -144,7 +146,8 @@ export function LessonScreen({ trackId, lessonId }: { trackId: string; lessonId:
 
   let body;
   if (stage === "play") body = <>
-    <p className="b2say"><Rich text={lesson.play.say} /></p>
+    <p className={`b2say b2fold${sayOpen ? " open" : ""}`}><Rich text={lesson.play.say} /></p>
+    <button type="button" className="tlink b2more" aria-expanded={sayOpen} onClick={() => setSayOpen(o => !o)}>{sayOpen ? "Less" : "More"}</button>
     <p className="b2small">Everything in the picture is live: drag it, or use the sliders.</p>
     {tools}
   </>;
