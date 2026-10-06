@@ -1,0 +1,13 @@
+/* Information's pictures: the typed fields (a message, a codeword, letter counts), the code table and the decoded line.
+   The pictures themselves use b2.css's parts and palette. */
+.b2field{display:inline-flex;align-items:center;gap:var(--sp-2);min-width:0;font-size:var(--fz-sm);font-weight:var(--w-mid);color:var(--muted)}
+.b2field.wide{flex:1 1 220px}
+.b2field input{flex:1;min-width:0;width:64px;height:36px;padding:0 10px;border:0;border-radius:var(--r-sm);background:var(--well);box-shadow:inset 0 0 0 1px var(--adv-hair);color:var(--text);font:var(--w-regular) var(--fz-md) var(--sans);font-variant-numeric:tabular-nums}
+.b2field.wide input{width:0}
+.b2field input:focus{outline:2px solid var(--ink);outline-offset:1px}
+.b2codes{display:flex;flex-wrap:wrap;gap:var(--sp-1) var(--sp-3);font-size:var(--fz-sm);font-variant-numeric:tabular-nums;color:var(--muted)}
+.b2codes b{color:var(--text)}
+.b2decoded{margin:0;flex:1 1 100%;font-size:var(--fz-sm);line-height:1.4;overflow-wrap:anywhere}
+.b2decoded small{margin-right:var(--sp-2);color:var(--muted);font-size:var(--fz-2xs)}
+.b2decoded.bad{color:var(--b2-pink)}
+.b2field.full{flex:1 1 100%}
