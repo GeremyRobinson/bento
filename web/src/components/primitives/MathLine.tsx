@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from "react";
+import { Fragment, useLayoutEffect, useRef, type ReactNode } from "react";
 import type { Tone } from "./statement";
 import { formatNumber, slotsIn, toPlainText, type MathText, type MathToken } from "../../curriculum/schemas/math-text";
 
@@ -13,6 +13,46 @@ interface Props {
   /** a title that may wrap: keep each group together (brackets, an operator and what follows it) and break only
    *  between sides of "=" first, then between terms or words */
   keep?: boolean;
+}
+
+/** the smallest a line may shrink to fit its card; past this it is still readable, and wrapping lines wrap instead */
+const MIN_FIT = 0.5;
+
+/** The narrowest box around the line: no ancestor's content box may be overflowed. */
+function room(el: HTMLElement): number {
+  let w = Infinity;
+  for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) {
+    const cs = getComputedStyle(a);
+    if (cs.display === "contents") continue;
+    w = Math.min(w, a.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
+  }
+  return w;
+}
+
+/**
+ * Every equation fits its card (G 2026-10-06: a 12th grade polynomial ran past both edges). A line wider than the box
+ * around it is zoomed down, as a whole, until it fits; it never runs off the card or makes the page scroll sideways.
+ */
+function useFit(math: unknown) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    let busy = false;
+    const fit = () => {
+      if (busy) return;
+      busy = true;
+      el.style.zoom = "";
+      const need = Math.max(el.scrollWidth, el.getBoundingClientRect().width), have = room(el);
+      if (need > have + 0.5 && have > 0) el.style.zoom = String(Math.max(MIN_FIT, Math.floor((have / need) * 1000) / 1000));
+      requestAnimationFrame(() => { busy = false; });
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    if (el.parentElement) ro.observe(el.parentElement);
+    return () => ro.disconnect();
+  }, [math]);
+  return ref;
 }
 
 const REL = new Set(["=", "<", ">", "≤", "≥", "≈"]);
@@ -57,6 +97,7 @@ export function breakLevels(m: MathText): { tok: MathToken; lvl: number }[] {
 
 /** Renders MathText. Numbers are formatted in one place; answer boxes become buttons when `onSlot` is given. */
 export function MathLine({ math, values = {}, active = null, onSlot, className = "", keep = false }: Props) {
+  const fitRef = useFit(math);
   // a written space next to an operator would double the operator's own spacing ("area  = ?")
   const tidy = (m: MathText): MathText => m.map((tok, i) => {
     if (tok.t !== "text") return tok;
@@ -123,7 +164,7 @@ export function MathLine({ math, values = {}, active = null, onSlot, className =
   };
   return (
     // interactive lines keep their boxes reachable; read-only lines are read out as plain text
-    <span className={`mline ${className}`.trim()} data-plain={toPlainText(math, "blank")}>
+    <span ref={fitRef} className={`mline ${className}`.trim()} data-plain={toPlainText(math, "blank")}>
       {onSlot ? render(math) : <><span aria-hidden="true" className="mline-in">{keep ? grouped(math) : render(math)}</span><span className="visually-hidden">{toPlainText(math, "blank")}</span></>}
     </span>
   );

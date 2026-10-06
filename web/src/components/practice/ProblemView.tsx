@@ -13,7 +13,7 @@ export function ProblemView({ lessonId, problem, story }: { lessonId: string; pr
   const lead = lesson.lead?.(problem), shown = lesson.display(problem);
   // a question in words ("How many are in the other group?") reads as a sentence: it wraps inside the card at the
   // question size, rather than one unbreakable line at the size of an equation (G 2026-10-06, Kindergarten check-up)
-  const wordy = shown.filter(k => k.t === "text" && /[a-z]{2}/i.test(k.v)).length >= 3;
+  const wordy = shown.flatMap(k => (k.t === "text" ? k.v.match(/[a-z]{2,}/gi) ?? [] : [])).length >= 3;
   const note = lead ? undefined : lesson.displayNote?.(problem), counters = lesson.displayCounters?.(problem), picture = lesson.picture?.(problem);
   // the parts wear the colours the problem's picture gives them (statement.ts partsLook)
   const look = ((): PartsLook => { try { return partsLook(lesson.explain(problem, lesson.answers(problem)).diagram); } catch { return "one"; } })();
