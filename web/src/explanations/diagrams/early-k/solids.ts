@@ -1,8 +1,8 @@
 // Solid shapes for k-solids and g2-solids (design/pictures-k4.md §2): one fixed oblique view (depth at 45°, half length),
-// two flat tones (front face 30%, other visible faces 55%) in the solid's own grade color, solid visible edges, hidden edges dashed only when counting edges.
+// two flat tones (front face 30%, other visible faces 55%) in part blue (one color for every solid, so color never stands for a kind; handoff-6), solid visible edges, hidden edges dashed only when counting edges.
 import type { SceneDiagram } from "../scene/schema";
 import { frame, path, t, M, L, Z, type Draft, type Pt, type Seg } from "../geo/kit";
-import { WIDE, tint } from "./fit";
+import { WIDE } from "./fit";
 
 export type SolidKind = "cube" | "box" | "triPrism" | "pyramid" | "sphere" | "cylinder" | "cone";
 /** the flat solids: corners, edges and faces you can count */
@@ -122,10 +122,9 @@ type Timing = { from?: number; until?: number; enter?: Draft["enter"]; delay?: n
 
 /** The solid's own drawing at x offset dx. */
 function drawSolid(s: SolidSpec, dx: number, o: Timing): Draft[] {
-  return tint(drawShape(s, dx, o), SOLID_ORDER.indexOf(s.kind));
+  return drawShape(s, dx, o);
 }
 
-const SOLID_ORDER: SolidKind[] = ["cube", "box", "triPrism", "pyramid", "sphere", "cylinder", "cone"];
 
 function drawShape(s: SolidSpec, dx: number, o: Timing): Draft[] {
   const items: Draft[] = [], sh = (p: Pt): Pt => [p[0] + dx, p[1]];

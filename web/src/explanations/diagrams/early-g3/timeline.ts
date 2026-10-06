@@ -29,16 +29,19 @@ export function buildTimeline(s: TimelineSpec): SceneDiagram {
       if (m === 12 * 60) items.push(t(X(m), 46, "noon", "xs", { enter: "fade" }));
     }
   }
-  for (const st of s.stretches) {
-    items.push(seg([X(st.from), 0], [X(st.to), 0], st.cls === "hl" ? "hl" : "ln", { from: st.beat, enter: "growx" }));
+  // roles (handoff-6): the stretches are the parts of the time between, in part order (blue, orange, violet), each
+  // labelled in its own color; the given start and end times are ink; the total being found is amber
+  s.stretches.forEach((st, k) => {
+    const part = `p${k % 3}`;
+    items.push(seg([X(st.from), 0], [X(st.to), 0], `ln ${part}`, { from: st.beat, enter: "growx" }));
     items.push(seg([X(st.from), -4], [X(st.from), -16], "tk", { from: st.beat, enter: "fade" }));
     items.push(seg([X(st.to), -4], [X(st.to), -16], "tk", { from: st.beat, enter: "fade" }));
-    items.push(t((X(st.from) + X(st.to)) / 2, -28, st.text, "sm", { from: st.beat, enter: "rise", delay: 0.3 }));
-  }
+    items.push(t((X(st.from) + X(st.to)) / 2, -28, st.text, `sm lbl ${part}`, { from: st.beat, enter: "rise", delay: 0.3 }));
+  });
   for (const [m, word] of [[s.start, "start"], [s.end, "end"]] as const) {
-    items.push({ type: "circle", cx: X(m), cy: 0, r: 7, cls: "dota", enter: "pop" } as Draft);
+    items.push({ type: "circle", cx: X(m), cy: 0, r: 7, cls: "dotp pw", enter: "pop" } as Draft);
     items.push(t(X(m), -62, word, "xs", { enter: "fade" }));
-    items.push(t(X(m), -80, s.clock(m), "lbl acc", { enter: "rise" }));
+    items.push(t(X(m), -80, s.clock(m), "lbl pw", { enter: "rise" }));
   }
   if (s.total) items.push(t(L / 2, 78, s.total.text, "lbl acc", { from: s.total.beat, enter: "rise", delay: 0.3 }));
   return frame("timeline", items, s.alt, 14, { w: 540 });

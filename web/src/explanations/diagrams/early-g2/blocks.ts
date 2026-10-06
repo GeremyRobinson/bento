@@ -37,7 +37,7 @@ export function buildPlaceBlocks(spec: PlaceBlocksSpec): SceneDiagram {
     if (i) items.push(line(xs[i]! - COL_GAP / 2, 0, xs[i]! - COL_GAP / 2, base + 8, "grid"));
     // the column being counted gets a ring for its beat
     items.push(rect(xs[i]! - 8, top - 8, w + 16, blocksH + 16, "hlline", { from: colBeats[i]!, until: colBeats[i]!, enter: "fade" }, 10));
-    items.push(t(cx, base + 26, texts[i]!, "lbl", { from: colBeats[i]!, enter: "rise", delay: 0.3 }));
+    items.push(t(cx, base + 26, texts[i]!, `lbl p${i}`, { from: colBeats[i]!, enter: "rise", delay: 0.3 }));
   });
   // flats in rows of three, bottom row first so they sit on the same floor as the rods
   const left0 = xs[0]! + (widths[0]! - contentW[0]!) / 2;

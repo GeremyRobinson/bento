@@ -40,9 +40,9 @@ function answers({ a, b, k }: RatioProblem): AnswerModel {
 export function ratioPicture({ a, b, k }: RatioProblem) {
   return buildTape({
     rows: [
-      { length: a, parts: a, fills: [{ a: 0, b: a, tone: "acc", from: 2 }], each: [{ text: () => `${k}`, from: 2 }], label: [{ text: `${a} part${a === 1 ? "" : "s"}` }],
+      { length: a, parts: a, fills: [{ a: 0, b: a, tone: "on", from: 2 }], each: [{ text: () => `${k}`, from: 2 }], label: [{ text: `${a} part${a === 1 ? "" : "s"}` }],
         total: [{ text: "?", until: 1 }, { text: `${a * k}`, from: 2, acc: true }] },
-      { length: b, parts: b, fills: [{ a: 0, b, tone: "on", from: 1 }], each: [{ text: () => `${k}`, from: 1 }], label: [{ text: `${b} part${b === 1 ? "" : "s"}` }],
+      { length: b, parts: b, fills: [{ a: 0, b, tone: "two", from: 1 }], each: [{ text: () => `${k}`, from: 1 }], label: [{ text: `${b} part${b === 1 ? "" : "s"}` }],
         total: [{ text: `${b * k}` }] },
     ],
     alt: `A ratio tape: ${count(a, "box", "boxes")} and ${count(b, "box", "boxes")} of the same size. ${count(b, "box", "boxes")} ${verb(b, "makes", "make")} ${b * k}, so each box is ${k} and ${count(a, "box", "boxes")} ${verb(a, "makes", "make")} ${a * k}.`,

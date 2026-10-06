@@ -37,7 +37,7 @@ export function unitRatePicture({ u, n, m, item }: UnitRateProblem) {
     rows: [
       { length: n, parts: n, fills: [{ a: 0, b: n, tone: "on", from: 1 }], each: [{ text: () => `$${u}`, from: 1 }], label: [{ text: `${n} ${item}` }],
         total: [{ text: `$${u * n}` }] },
-      { length: m, parts: m, from: 1, fills: [{ a: 0, b: m, tone: "acc", from: 2 }], each: [{ text: () => `$${u}`, from: 2 }], label: [{ text: `${m} ${item}` }],
+      { length: m, parts: m, from: 1, fills: [{ a: 0, b: m, tone: "two", from: 2 }], each: [{ text: () => `$${u}`, from: 2 }], label: [{ text: `${m} ${item}` }],
         total: [{ text: "?", until: 1 }, { text: `$${m * u}`, from: 2, acc: true }] },
     ],
     alt: `${n} ${item} cost $${u * n}, so each costs $${u}; ${m} ${item} cost $${m * u}.`,

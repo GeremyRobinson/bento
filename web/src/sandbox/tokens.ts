@@ -6,15 +6,15 @@
 export type TokenKind = "color" | "px" | "pct" | "num";
 export interface Token { v: string; label: string; kind: TokenKind; min?: number; max?: number; step?: number; /** shown while the token is unset and the master falls back to this */ fallback?: string }
 
-/** each grade's own colors: the three part colors and the accent pictures use, and their darker text inks */
+/** each grade's own color: its hue (the grade number), the three lesson steps the interface uses, and their dark-mode steps */
 export const GRADE_TOKENS: Token[] = [
-  { v: "--l0", label: "Part 1", kind: "color" },
-  { v: "--l1", label: "Part 2", kind: "color" },
-  { v: "--l2", label: "Part 3", kind: "color" },
-  { v: "--la", label: "Accent", kind: "color" },
-  { v: "--k0", label: "Text ink 1", kind: "color" },
-  { v: "--k1", label: "Text ink 2", kind: "color" },
-  { v: "--k2", label: "Text ink 3", kind: "color" },
+  { v: "--hue", label: "Grade color", kind: "color" },
+  { v: "--h1", label: "Lesson step 1", kind: "color" },
+  { v: "--h2", label: "Lesson step 2", kind: "color" },
+  { v: "--h3", label: "Lesson step 3", kind: "color" },
+  { v: "--hd1", label: "Dark step 1", kind: "color" },
+  { v: "--hd2", label: "Dark step 2", kind: "color" },
+  { v: "--hd3", label: "Dark step 3", kind: "color" },
 ];
 
 /** the colors every grade shares (edited per theme) */
@@ -37,12 +37,12 @@ export const SIZE_TOKENS: Token[] = [
   { v: "--fs", label: "Body text", kind: "px", min: 14, max: 24 },
   { v: "--math", label: "Math size", kind: "px", min: 28, max: 72 },
   { v: "--key", label: "Keypad key", kind: "px", min: 44, max: 88 },
-  { v: "--shade-deep", label: "Lesson shade, deep", kind: "pct", min: 50, max: 100 },
-  { v: "--shade-light", label: "Lesson shade, light", kind: "pct", min: 40, max: 100 },
 ];
 
 /** the Diagram master (styles/diagram-master.css): every picture in every grade draws with these */
 export const DIAGRAM_TOKENS: Token[] = [
+  ...([["l0", "Part 1"], ["l1", "Part 2"], ["l2", "Part 3"], ["la", "Unknown"], ["k0", "Part 1 text"], ["k1", "Part 2 text"], ["k2", "Part 3 text"], ["ka", "Unknown text"]] as const)
+    .map(([k, label]) => ({ v: `--${k}`, label, kind: "color" as const })),
   ...[10, 12, 18, 20, 22, 26, 30, 35, 40, 45, 50, 55, 70].map(n => ({ v: `--d-f${n}`, label: `Fill step ${n}`, kind: "pct" as const, min: 0, max: 100 })),
   ...([["hair", "Hairline"], ["thin", "Thin line"], ["line", "Line"], ["edge", "Edge"], ["stroke", "Stroke"], ["bold", "Bold line"], ["heavy", "Heavy line"], ["numeral", "Numeral stroke"]] as const)
     .map(([k, label]) => ({ v: `--d-${k}`, label, kind: "num" as const, min: 0.5, max: 16, step: 0.25 })),

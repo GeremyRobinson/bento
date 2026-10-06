@@ -1,6 +1,6 @@
 import { Facts } from "../screens/Facts";
 import { lazy, Suspense, useEffect } from "react";
-import { bandOf, lineOf } from "../curriculum/grades";
+import { bandOf, gradeOf, lineOf } from "../curriculum/grades";
 import { lessonById } from "../curriculum/registry";
 import { tintOf } from "./tint";
 import { useSandboxSeed } from "../sandbox/store";
@@ -17,6 +17,7 @@ import { useApp } from "./AppState";
 import { isTopLevel } from "./routes";
 import { Island } from "../components/Island";
 import { canCrossFade } from "./transition";
+import { motionOff } from "./settings";
 
 // the design sandbox loads only in the preview and dev builds; the live site never carries it
 const SANDBOX = import.meta.env.MODE === "preview" || import.meta.env.MODE === "development";
@@ -55,10 +56,30 @@ export function App() {
   // the canvas behind the bento follows the line the screen belongs to; the landing page stays plain
   const line = choosing || grade == null ? "welcome" : lineOf(grade).id;
   useEffect(() => { document.documentElement.dataset.line = line; }, [line]);
+  // the page behind the app takes a wash of the grade's hue, so the whole screen is one color family
+  const hue = choosing || grade == null ? null : gradeOf(grade).color;
+  useEffect(() => {
+    const el = document.documentElement;
+    if (hue) { el.dataset.hue = ""; el.style.setProperty("--page-hue", hue); }
+    else { delete el.dataset.hue; el.style.removeProperty("--page-hue"); }
+  }, [hue]);
 
   useEffect(() => {
     document.title = route.name === "learn" && lesson ? `${lesson.title} · Bento` : "Bento";
   }, [route.name, lesson]);
+
+  // every tap on a control leaves a soft halo, so a finger knows it landed (Less motion turns it off)
+  useEffect(() => {
+    const onDown = (e: PointerEvent) => {
+      if (motionOff() || !(e.target instanceof Element) || !e.target.closest("button:not([disabled])")) return;
+      const h = document.createElement("span");
+      h.className = "halo"; h.style.left = `${e.clientX}px`; h.style.top = `${e.clientY}px`;
+      document.body.appendChild(h);
+      setTimeout(() => h.remove(), 600);
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, []);
 
   let screen;
   switch (route.name) {

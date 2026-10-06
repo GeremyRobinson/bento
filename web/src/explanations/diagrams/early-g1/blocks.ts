@@ -99,20 +99,21 @@ export interface CompareBlocksSpec {
 
 export function buildCompareBlocks(s: CompareBlocksSpec): SceneDiagram {
   const bottom = ROD_H, items: Draft[] = [];
-  const side = (n: number, x: number, cls: string, tensText: string, onesText: string) => {
-    const set = blockSet(x, bottom, Math.floor(n / 10), n % 10, cls, { enter: "pop" });
+  // each number its own part color (blue, then orange), its labels too; the sign being found is amber
+  const side = (n: number, x: number, k: 0 | 1, tensText: string, onesText: string) => {
+    const set = blockSet(x, bottom, Math.floor(n / 10), n % 10, `cell c${k}`, { enter: "pop" });
     items.push(...set.items);
     const cx = x + set.width / 2;
-    items.push(t(cx, bottom + 30, String(n), "lbl big"));
+    items.push(t(cx, bottom + 30, String(n), `lbl big p${k}`));
     items.push(ring(set.rodsX, 0, Math.max(set.rodsW, 1), ROD_H, { from: s.beats.tens, until: s.beats.ones ?? s.beats.tens }));
-    items.push(t(cx, bottom + 62, tensText, "lbl", { from: s.beats.tens, until: s.beats.ones != null ? s.beats.tens : undefined, enter: "rise", delay: 0.2 }));
+    items.push(t(cx, bottom + 62, tensText, `lbl p${k}`, { from: s.beats.tens, until: s.beats.ones != null ? s.beats.tens : undefined, enter: "rise", delay: 0.2 }));
     if (s.beats.ones != null && n % 10) items.push(ring(set.onesX, bottom - 5 * CUBE, set.onesW, 5 * CUBE, { from: s.beats.ones, until: s.beats.ones }));
-    if (s.beats.ones != null) items.push(t(cx, bottom + 62, onesText, "lbl", { from: s.beats.ones, enter: "rise", delay: 0.2 }));
+    if (s.beats.ones != null) items.push(t(cx, bottom + 62, onesText, `lbl p${k}`, { from: s.beats.ones, enter: "rise", delay: 0.2 }));
     return set.width;
   };
-  const wa = side(s.a, 0, "cell c0", s.text.aTens, s.text.aOnes);
+  const wa = side(s.a, 0, 0, s.text.aTens, s.text.aOnes);
   const gap = 84;
-  side(s.b, wa + gap, "cell c1", s.text.bTens, s.text.bOnes);
+  side(s.b, wa + gap, 1, s.text.bTens, s.text.bOnes);
   items.push({ type: "circle", cx: wa + gap / 2, cy: bottom / 2 + 10, r: 26, cls: "sq big", from: s.beats.sign, enter: "pop" } as Draft);
   items.push(t(wa + gap / 2, bottom / 2 + 10, s.sign, "big", { from: s.beats.sign, enter: "pop", delay: 0.2 }));
   return frame("place-value", items, s.alt, 14);

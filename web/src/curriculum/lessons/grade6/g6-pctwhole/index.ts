@@ -33,8 +33,8 @@ export function percentWholePicture({ p, P }: PercentWholeProblem) {
   const k = 100 / p;
   return buildTape({
     rows: [
-      { length: p / 100, parts: 1, fills: [{ a: 0, b: p / 100, tone: "acc" }], each: [{ text: () => `${P}` }], label: [{ text: `${p}%` }] },
-      { length: 1, parts: k, from: 1, fills: [{ a: 0, b: p / 100, tone: "acc", from: 2 }, { a: p / 100, b: 1, tone: "on", from: 2 }],
+      { length: p / 100, parts: 1, fills: [{ a: 0, b: p / 100, tone: "on" }], each: [{ text: () => `${P}` }], label: [{ text: `${p}%` }] },
+      { length: 1, parts: k, from: 1, fills: [{ a: 0, b: 1, tone: "on", from: 2 }],
         each: [{ text: () => `${P}`, from: 2 }], label: [{ text: "100%" }],
         total: [{ text: "?", until: 1 }, { text: `${P * k}`, from: 2, acc: true }] },
     ],

@@ -325,7 +325,7 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
     if (!chosen || (q.label.optional && chosen.s >= 40)) continue;
     placed.push(chosen.b);
     texts.push({
-      type: "text", x: r1(chosen.cx), y: r1(chosen.cy), text: q.label.text, cls: `lbl${q.label.acc ? " acc" : ""}`, enter: "rise",
+      type: "text", x: r1(chosen.cx), y: r1(chosen.cy), text: q.label.text, cls: `lbl${q.label.acc ? " acc" : q.label.part != null ? ` p${q.label.part}` : ""}`, enter: "rise",
       ...(q.from ? { from: q.from } : {}), ...(q.until != null ? { until: q.until } : {}), delay: q.delay,
     });
   }

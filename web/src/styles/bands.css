@@ -11,57 +11,67 @@
 }
 .wrap{--r-card:max(4px, calc(var(--r-panel) - var(--u))); --r-box:max(8px, calc(var(--r-card) - var(--u))); --badge:calc(var(--h) - 2*var(--inset)); --rbadge:calc(var(--row) - 2*var(--inset))}
 
-/* ---- each grade's colours (light values; dark mode lifts them) ---- */
-:is(.wrap,.gpal)[data-grade="0"]{--l0:#f59e0b;--l1:#ec4899;--l2:#22c55e;--la:#3b82f6}
-:is(.wrap,.gpal)[data-grade="1"]{--l0:#16a34a;--l1:#0ea5e9;--l2:#f97316;--la:#a855f7}
-:is(.wrap,.gpal)[data-grade="2"]{--l0:#0891b2;--l1:#6366f1;--l2:#f97316;--la:#eab308}
-:is(.wrap,.gpal)[data-grade="3"]{--l0:#db2777;--l1:#9333ea;--l2:#f59e0b;--la:#0ea5e9}
-:is(.wrap,.gpal)[data-grade="4"]{--l0:#2563eb;--l1:#0d9488;--l2:#e11d48;--la:#f59e0b}
-:is(.wrap,.gpal)[data-grade="5"]{--l0:#3b82f6;--l1:#f2683c;--l2:#8b5cf6;--la:#f59e0b}
-:is(.wrap,.gpal)[data-grade="6"]{--l0:#0f766e;--l1:#65a30d;--l2:#ea580c;--la:#0284c7}
-:is(.wrap,.gpal)[data-grade="7"]{--l0:#4f46e5;--l1:#0891b2;--l2:#e11d48;--la:#f59e0b}
-:is(.wrap,.gpal)[data-grade="8"]{--l0:#ea580c;--l1:#dc2626;--l2:#7c3aed;--la:#0891b2}
-:is(.wrap,.gpal)[data-grade="9"]{--l0:#2563eb;--l1:#7c3aed;--l2:#0d9488;--la:#f97316}
-:is(.wrap,.gpal)[data-grade="10"]{--l0:#0369a1;--l1:#b45309;--l2:#475569;--la:#db2777}
-:is(.wrap,.gpal)[data-grade="11"]{--l0:#7c3aed;--l1:#c026d3;--l2:#2563eb;--la:#f59e0b}
-:is(.wrap,.gpal)[data-grade="12"]{--l0:var(--text);--l1:var(--text);--l2:var(--text);--la:var(--muted)}
-/* Grade (master): every grade is an instance of this one. A grade's line above overrides only what it changes;
-   anything it leaves out comes from here. */
-:is(.wrap,.gpal){--master-l0:#3b82f6;--master-l1:#f2683c;--master-l2:#8b5cf6;--master-la:#f59e0b;--master-k0:#2d69cc;--master-k1:#b44d2d;--master-k2:#7950d6}
-:is(.wrap,.gpal){--l0:var(--master-l0);--l1:var(--master-l1);--l2:var(--master-l2);--la:var(--master-la);--c0:var(--l0);--c1:var(--l1);--c2:var(--l2);--acc:var(--la)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal){--c0:color-mix(in srgb,var(--l0) 75%,white);--c1:color-mix(in srgb,var(--l1) 75%,white);--c2:color-mix(in srgb,var(--l2) 75%,white);--acc:color-mix(in srgb,var(--la) 80%,white)}}
-/* the three darkest grade colours need a little more lift to read on dark cards (4.5:1) */
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="7"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="10"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="11"]{--c0:color-mix(in srgb,var(--l0) 70%,white);--c1:color-mix(in srgb,var(--l1) 70%,white);--c2:color-mix(in srgb,var(--l2) 70%,white)}}
-/* one hue per grade (G 2026-10-05 23:05): every lesson takes the grade's own color, each a shade of it, never another hue.
-   The shade steps are master tokens; the grade's other colors (--c1, --c2) stay for the parts of a picture. */
-.wrap{--shade-deep:80%;--shade-light:72%}
-.t0{--tint:var(--c0)} .t1{--tint:color-mix(in srgb,var(--c0) var(--shade-deep),black)} .t2{--tint:color-mix(in srgb,var(--c0) var(--shade-light),white)} .t3{--tint:var(--muted)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .t1{--tint:color-mix(in srgb,var(--c0) var(--shade-deep),white)}}
-:root[data-theme="dark"] .t1{--tint:color-mix(in srgb,var(--c0) var(--shade-deep),white)}
+/* ---- color has two jobs (G 2026-10-05/06, research/color-theory.md) ----
+   1. The interface is MONOCHROME in the grade's one hue: buttons, badges, fills, washes, even the greys lean into it.
+      Each lesson takes one of three lightness steps of that hue (light L .40/.48/.56, dark L .72/.79/.86), so
+      neighbouring lessons differ but never leave the grade's color. Every light step holds white text at 4.4:1 or
+      better; every dark step holds the dark on-tint at 6.7:1 or better.
+   2. Pictures use fixed ROLES, the same in every grade ("Same everywhere"): part 1 blue, part 2 orange, part 3 deep
+      violet, the unknown amber, the whole ink, the frame grey, right/wrong green/red. Pictures never read the grade hue. */
 
-/* ---- ink: each colour darkened just enough for text, and for fills behind white text (4.5:1 on white). Drawings keep the bright colour. ---- */
-:is(.wrap,.gpal){--k0:var(--master-k0);--k1:var(--master-k1);--k2:var(--master-k2)}
-:is(.wrap,.gpal)[data-grade="0"]{--k0:#9a6307;--k1:#bb3979;--k2:#167f3d}
-:is(.wrap,.gpal)[data-grade="1"]{--k0:#117c38;--k1:#0973a3;--k2:#b05110}
-:is(.wrap,.gpal)[data-grade="2"]{--k0:#077590;--k1:#595cd9;--k2:#b05110}
-:is(.wrap,.gpal)[data-grade="3"]{--k0:#c5236b;--k1:#9032e5;--k2:#9a6307}
-:is(.wrap,.gpal)[data-grade="4"]{--k0:#2460e4;--k1:#0a7970;--k2:#ca1a41}
-:is(.wrap,.gpal)[data-grade="5"]{--k0:#306ac9;--k1:#b44d2c;--k2:#7950d7}
-:is(.wrap,.gpal)[data-grade="6"]{--k0:#0f766e;--k1:#4c7a09;--k2:#b94609}
-:is(.wrap,.gpal)[data-grade="7"]{--k0:#4f46e5;--k1:#077590;--k2:#ca1a41}
-:is(.wrap,.gpal)[data-grade="8"]{--k0:#b94609;--k1:#ca2323;--k2:#7c3aed}
-:is(.wrap,.gpal)[data-grade="9"]{--k0:#2460e4;--k1:#7c3aed;--k2:#0a7970}
-:is(.wrap,.gpal)[data-grade="10"]{--k0:#0369a1;--k1:#ab4f09;--k2:#475569}
-:is(.wrap,.gpal)[data-grade="11"]{--k0:#7c3aed;--k1:#af23c0;--k2:#2460e4}
-:is(.wrap,.gpal)[data-grade="12"]{--k0:var(--text);--k1:var(--text);--k2:var(--text)}
-/* text stays dark enough on every shade: the deep shade deepens the ink too; the light shade keeps the grade's ink */
-.t0{--ink:var(--k0)} .t1{--ink:color-mix(in srgb,var(--k0) 85%,black)} .t2{--ink:var(--k0)} .t3{--ink:var(--muted)}
-/* big display type (a grade's name, a big count) only needs 3:1, so it keeps more of the bright colour */
-.wrap,.wrap *{--display:color-mix(in srgb,var(--tint) 78%,black)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap,:root:not([data-theme="light"]) .wrap *{--ink:var(--tint) !important;--display:var(--tint);--on-tint:#14161b}}
-:root[data-theme="dark"] .wrap,:root[data-theme="dark"] .wrap *{--ink:var(--tint) !important;--display:var(--tint);--on-tint:#14161b}
-.wrap,.wrap *{--tint-soft:color-mix(in srgb,var(--tint) 13%,var(--card))}
-:is(.wrap,.gpal)[data-grade="12"]{--on-tint:var(--page)}
+/* Grade (master): every grade is an instance; a grade's line overrides only what it changes. */
+:is(.wrap,.gpal){--master-hue:#3b82f6;--master-h1:#01409c;--master-h2:#0755c5;--master-h3:#276ee0;--master-hd1:#6da4fe;--master-hd2:#92bcff;--master-hd3:#b7d3fe}
+:is(.wrap,.gpal){--hue:var(--master-hue);--h1:var(--master-h1);--h2:var(--master-h2);--h3:var(--master-h3);--hd1:var(--master-hd1);--hd2:var(--master-hd2);--hd3:var(--master-hd3)}
+:is(.wrap,.gpal)[data-grade="0"]{--hue:#f59e0b;--h1:#653e00;--h2:#825203;--h3:#a16602;--hd1:#e19007;--hd2:#fca51e;--hd3:#ffc580}
+:is(.wrap,.gpal)[data-grade="1"]{--hue:#16a34a;--h1:#015723;--h2:#02712f;--h3:#048c3c;--hd1:#43c166;--hd2:#5dd87c;--hd3:#76ef92}
+:is(.wrap,.gpal)[data-grade="2"]{--hue:#0891b2;--h1:#025064;--h2:#066880;--h3:#02819f;--hd1:#43b4d6;--hd2:#5dcbed;--hd3:#85e0fe}
+:is(.wrap,.gpal)[data-grade="3"]{--hue:#db2777;--h1:#850043;--h2:#ab0158;--h3:#d0156e;--hd1:#ff689e;--hd2:#fe96b6;--hd3:#febcce}
+:is(.wrap,.gpal)[data-grade="4"]{--hue:#2563eb;--h1:#0036b0;--h2:#104dd4;--h3:#2968f0;--hd1:#74a2fe;--hd2:#97baff;--hd3:#bad2fe}
+:is(.wrap,.gpal)[data-grade="5"]{--hue:#3b82f6;--h1:#01409c;--h2:#0755c5;--h3:#276ee0;--hd1:#6da4fe;--hd2:#92bcff;--hd3:#b7d3fe}
+:is(.wrap,.gpal)[data-grade="6"]{--hue:#0f766e;--h1:#00544e;--h2:#006d65;--h3:#27857c;--hd1:#5fb6ad;--hd2:#75cdc3;--hd3:#8ce4da}
+:is(.wrap,.gpal)[data-grade="7"]{--hue:#4f46e5;--h1:#3817be;--h2:#483bda;--h3:#5b57f6;--hd1:#8e9aff;--hd2:#a9b4fe;--hd3:#c5cefe}
+:is(.wrap,.gpal)[data-grade="8"]{--hue:#ea580c;--h1:#7b2901;--h2:#9e3802;--h3:#c24604;--hd1:#ff763f;--hd2:#ff9e7a;--hd3:#ffc1aa}
+:is(.wrap,.gpal)[data-grade="9"]{--hue:#2563eb;--h1:#0036b0;--h2:#104dd4;--h3:#2968f0;--hd1:#74a2fe;--hd2:#97baff;--hd3:#bad2fe}
+:is(.wrap,.gpal)[data-grade="10"]{--hue:#0369a1;--h1:#024c76;--h2:#016399;--h3:#247bb4;--hd1:#5bade9;--hd2:#74c3ff;--hd3:#a6d8ff}
+:is(.wrap,.gpal)[data-grade="11"]{--hue:#7c3aed;--h1:#5403b0;--h2:#6c1ed7;--h3:#8141f4;--hd1:#aa8fff;--hd2:#bdacff;--hd3:#d2c9fe}
+:is(.wrap,.gpal)[data-grade="12"]{--hue:#6b7280;--h1:#424853;--h2:#585e69;--h3:#6f7581;--hd1:#9ea5b2;--hd2:#b4bbc8;--hd3:#cad1df}
+/* no grade chosen yet: the neutral look, ink only */
+:is(.wrap,.gpal)[data-grade="none"]{--hue:var(--text);--h1:var(--text);--h2:var(--text);--h3:var(--text);--hd1:var(--text);--hd2:var(--text);--hd3:var(--text)}
+
+/* the lesson's step of the hue: --tint fills and draws, --ink is text in the hue (the light steps read on white) */
+.wrap{--tint:var(--h2)}
+.t0{--tint:var(--h2)} .t1{--tint:var(--h1)} .t2{--tint:var(--h3)} .t3{--tint:var(--h2)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--tint:var(--hd1)} :root:not([data-theme="light"]) .t0{--tint:var(--hd1)} :root:not([data-theme="light"]) .t1{--tint:var(--hd2)} :root:not([data-theme="light"]) .t2{--tint:var(--hd3)} :root:not([data-theme="light"]) .t3{--tint:var(--hd1)}}
+:root[data-theme="dark"] .wrap{--tint:var(--hd1)} :root[data-theme="dark"] .t0{--tint:var(--hd1)} :root[data-theme="dark"] .t1{--tint:var(--hd2)} :root[data-theme="dark"] .t2{--tint:var(--hd3)} :root[data-theme="dark"] .t3{--tint:var(--hd1)}
+.wrap,.wrap *{--ink:var(--tint);--display:var(--tint);--tint-soft:color-mix(in oklab,var(--tint) 11%,var(--card))}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--on-tint:#14161b}}
+:root[data-theme="dark"] .wrap{--on-tint:#14161b}
+
+/* the greys lean into the hue too, so a blue grade is blue all the way through (never a flat grey). Light: */
+.wrap:not([data-grade="none"]){
+  --muted:color-mix(in oklab,var(--h1) 30%,#5a6070); --faint:color-mix(in oklab,var(--hue) 22%,#c9ccd4);
+  --rule:color-mix(in oklab,var(--hue) 14%,#e4e6eb); --well:color-mix(in oklab,var(--hue) 7%,#f3f4f7);
+  --hover:color-mix(in oklab,var(--hue) 10%,#eef0f4); --page:color-mix(in oklab,var(--hue) 4%,#fbfbfd)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap:not([data-grade="none"]){
+  --muted:color-mix(in oklab,var(--hd2) 30%,#979eae); --faint:color-mix(in oklab,var(--hue) 25%,#4a4f5c);
+  --rule:color-mix(in oklab,var(--hue) 16%,#2b2f38); --well:color-mix(in oklab,var(--hue) 9%,#15181e);
+  --card:color-mix(in oklab,var(--hue) 9%,#1e2129); --hover:color-mix(in oklab,var(--hue) 14%,#262a33); --page:color-mix(in oklab,var(--hue) 6%,#0c0e12)}}
+:root[data-theme="dark"] .wrap:not([data-grade="none"]){
+  --muted:color-mix(in oklab,var(--hd2) 30%,#979eae); --faint:color-mix(in oklab,var(--hue) 25%,#4a4f5c);
+  --rule:color-mix(in oklab,var(--hue) 16%,#2b2f38); --well:color-mix(in oklab,var(--hue) 9%,#15181e);
+  --card:color-mix(in oklab,var(--hue) 9%,#1e2129); --hover:color-mix(in oklab,var(--hue) 14%,#262a33); --page:color-mix(in oklab,var(--hue) 6%,#0c0e12)}
+/* the page behind the app takes the same wash (App puts the grade's hue on <html>) */
+html[data-hue]{--page:color-mix(in oklab,var(--page-hue) 4%,#fbfbfd)}
+@media (prefers-color-scheme: dark){html[data-hue]:not([data-theme="light"]){--page:color-mix(in oklab,var(--page-hue) 6%,#0c0e12)}}
+html[data-hue][data-theme="dark"]{--page:color-mix(in oklab,var(--page-hue) 6%,#0c0e12)}
+
+/* picture roles, one set for every grade (handoff 6). --l* draw, --k* are the text inks; dark mode lifts them */
+:is(.wrap,.gpal){--l0:#3b82f6;--l1:#f2683c;--l2:#6d28d9;--la:#f59e0b;--k0:#3472d8;--k1:#c45431;--k2:#6d28d9;--ka:#a46a07;
+  --c0:var(--l0);--c1:var(--l1);--c2:var(--l2);--acc:var(--la)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal){--c0:color-mix(in srgb,var(--l0) 75%,white);--c1:color-mix(in srgb,var(--l1) 75%,white);--c2:#8b5cf6;--acc:color-mix(in srgb,var(--la) 80%,white);--k0:var(--c0);--k1:var(--c1);--k2:var(--text);--ka:var(--acc)}}
+:root[data-theme="dark"] :is(.wrap,.gpal){--c0:color-mix(in srgb,var(--l0) 75%,white);--c1:color-mix(in srgb,var(--l1) 75%,white);--c2:#8b5cf6;--acc:color-mix(in srgb,var(--la) 80%,white);--k0:var(--c0);--k1:var(--c1);--k2:var(--text);--ka:var(--acc)}
+/* inside a picture, the default part is part 1: pictures never take the lesson's hue */
+.viz-svg,.am,.viz,.dotrow,.bb,.tf{--tint:var(--c0);--ink:var(--k0);--tint-soft:color-mix(in srgb,var(--c0) 13%,var(--card))}
 
 
 /* ---- the canvas: the page behind the bento. The tiles, type and controls stay the same everywhere; the canvas
@@ -87,5 +97,3 @@ html[data-line="middle"] body{background-image:
 /* high contrast wants a plain page */
 html[data-contrast="true"] body{background-image:none}
 
-/* no grade chosen yet: a neutral look, ink and text only, until the learner picks one */
-:is(.wrap,.gpal)[data-grade="none"]{--l0:var(--text);--l1:var(--text);--l2:var(--text);--la:var(--muted);--k0:var(--text);--k1:var(--text);--k2:var(--text)}

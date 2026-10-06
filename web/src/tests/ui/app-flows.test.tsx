@@ -1,5 +1,5 @@
 // Every flow of the app through the UI, written against whichever lessons are rebuilt (g5-mult2 is always there).
-import { fireEvent, screen, within } from "@testing-library/react";
+import { act, fireEvent, screen, within } from "@testing-library/react";
 import { CATALOG } from "../../curriculum/catalog";
 import { lessonById } from "../../curriculum/registry";
 import type { Progress } from "../../engine/mastery/progress";
@@ -39,8 +39,8 @@ describe("first launch: landing → grade → home", () => {
     expect(document.querySelectorAll(".schapter")).toHaveLength(4);
     expect(everyRow()).toHaveLength(grade5.length);
 
-    // the wordmark goes back to the landing page, which now offers the way back
-    fireEvent.click(screen.getByRole("button", { name: "Bento home page" }));
+    // the landing page, visited again, now offers the way back
+    act(() => { location.hash = "#/welcome"; dispatchEvent(new HashChangeEvent("hashchange")); });
     tap("My lessons ›");
     expect(screen.getByRole("heading", { level: 1, name: "5th grade" })).toBeInTheDocument();
   });
@@ -130,7 +130,7 @@ describe("home", () => {
   it("keeps going with a run left mid-lesson", () => {
     renderApp();
     fireEvent.click(screen.getByRole("button", { name: new RegExp(`Up next.*${LESSON}`) }));
-    tap("Start practice ›");
+    tap("Show all"); tap("Your turn ›");
     tap(`Back to ${LESSON}`);
     // the unfinished lesson waits beside the island; each grade's plan keeps showing its own next lesson
     const resume = screen.getByRole("button", { name: new RegExp(`Resume ${LESSON}, 5th grade, problem 1 of 8`) });
@@ -232,7 +232,7 @@ describe("report, grown-up page and back to basics", () => {
   it("opens the last report from the lesson, and goes back to it", () => {
     renderApp();
     fireEvent.click(screen.getByRole("button", { name: new RegExp(`Up next.*${LESSON}`) }));
-    tap("Start practice ›");
+    tap("Show all"); tap("Your turn ›");
     solveRun();
     tap("All lessons");
     openRow(LESSON);
@@ -242,7 +242,7 @@ describe("report, grown-up page and back to basics", () => {
     expect(screen.getByRole("heading", { level: 2, name: "For the grown-up" })).toBeInTheDocument();
     expect(screen.getByText(/Practiced/)).toHaveTextContent(`Practiced ${LESSON}.`);
     tap(`Back to ${LESSON}`);
-    expect(screen.getByRole("button", { name: "Start practice ›" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show all" })).toBeInTheDocument();
   });
 
   it("shows scores by grade, mistake patterns, what needs practice and recent sessions", () => {
@@ -281,7 +281,7 @@ describe("report, grown-up page and back to basics", () => {
     fireEvent.click(recent[0]!);
     expect(screen.getByText(/Typed/)).toHaveTextContent("Typed 141, answer 1410. Lost the place value (quick retry).");
     tap(`Back to ${LESSON}`);
-    expect(screen.getByRole("button", { name: "Start practice ›" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show all" })).toBeInTheDocument();
   });
 
   it("suggests building up first after a low score, in the lesson and on the results", () => {
@@ -290,7 +290,7 @@ describe("report, grown-up page and back to basics", () => {
     tap(/^Start lesson/);
     const pre = CATALOG.find(c => c.id === "g4-partial")!;
     expect(screen.getByRole("button", { name: new RegExp(`Build up first: ${pre.title}`) })).toBeInTheDocument();
-    tap("Start practice ›");
+    tap("Show all"); tap("Your turn ›");
     failRun();
     expect(screen.getByRole("heading", { level: 2, name: "Not yet" })).toBeInTheDocument();
     const build = screen.getByRole("button", { name: new RegExp(`Build up first: ${pre.title}`) });

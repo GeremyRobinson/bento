@@ -108,15 +108,15 @@ function answers(p: FracCompareProblem): AnswerModel {
  */
 export function compareBars(p: FracCompareProblem, at: { cut: number; first: number; second: number; compare: number }) {
   const { a, b, c, d } = p, { L, A, C } = parts(p), k = compareIndex(A, C);
-  const row = (n: number, den: number, N: number, name: number, tone: "on" | "acc", big: boolean): TapeRow => ({
+  const row = (n: number, den: number, N: number, name: number, tone: "on" | "two", big: boolean): TapeRow => ({
     length: 1, parts: den === L ? den : [{ count: den, from: 0 }, { count: L, from: Math.min(at.cut, name) }],
     fills: [{ a: 0, b: n / den, tone }],
     label: den === L ? [{ text: `${n}/${den}` }]
-      : [{ text: `${n}/${den}`, until: Math.min(at.cut, name) - 1 }, ...(at.cut < name ? [{ text: `?/${L}`, from: at.cut, until: name - 1 }] : []), { text: `${N}/${L}`, from: name, acc: tone === "acc" }],
+      : [{ text: `${n}/${den}`, until: Math.min(at.cut, name) - 1 }, ...(at.cut < name ? [{ text: `?/${L}`, from: at.cut, until: name - 1 }] : []), { text: `${N}/${L}`, from: name }],
     total: big ? [{ text: k === 1 ? "same" : "more", from: at.compare, acc: true }] : [],
   });
   return buildTape({
-    rows: [row(a, b, A, at.first, "on", k !== 0), row(c, d, C, at.second, "acc", k !== 2)],
+    rows: [row(a, b, A, at.first, "on", k !== 0), row(c, d, C, at.second, "two", k !== 2)],
     guides: [{ at: a / b, rows: [0, 1], from: at.compare }, ...(k === 1 ? [] : [{ at: c / d, rows: [0, 1] as [number, number], from: at.compare }])],
     alt: `Two bars: ${a}/${b} shaded and ${c}/${d} shaded. In ${pieceName(L)} they are ${A}/${L} and ${C}/${L}, so ${a}/${b} ${signName[k]} ${c}/${d}.`,
     width: 440,

@@ -104,12 +104,12 @@ describe("fraction grid", () => {
   it("shades r of the rows, c of the columns, and the overlap is r × c squares", () => {
     const d = buildFracGrid({ rows: 3, cols: 4, r: 2, c: 3, beats: { grid: 0, rows: 1, cols: 2, both: 3 }, rowLabel: "2/3", colLabel: "3/4", alt: "" });
     const count = (cls: string) => d.items.filter(i => i.cls === cls).length;
-    expect([count("seg"), count("shadeA"), count("shadeB"), count("both")]).toEqual([12, 8, 9, 6]);
-    expect(d.items.filter(i => i.cls === "both").every(i => i.from === 3)).toBe(true);
+    expect([count("seg"), count("shadeA"), count("shadeA p1"), count("both pq")]).toEqual([12, 8, 9, 6]);
+    expect(d.items.filter(i => i.cls === "both pq").every(i => i.from === 3)).toBe(true);
   });
   it("g5-multfrac follows the problem", () => {
     const d = scene("g5-multfrac", { a: 3, b: 4, c: 1, d: 4 });
-    expect(d.items.filter(i => i.cls === "both")).toHaveLength(3);
+    expect(d.items.filter(i => i.cls === "both pq")).toHaveLength(3);
     expect(texts(d).map(t => t.text)).toEqual(expect.arrayContaining(["3/4", "1/4", "3 of 16 squares", "3/16 is already simplest"]));
   });
 });

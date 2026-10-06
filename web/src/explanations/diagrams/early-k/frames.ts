@@ -28,13 +28,13 @@ export function teenFrames(ones: number, alt: string, beats?: { ten: number; one
   }
   for (let i = 0; i < ones; i++) {
     const [cx, cy] = center(x1, i);
-    items.push({ type: "circle", cx, cy, r: DOT, cls: "dota", from: b.ones, enter: "pop", delay: beats ? 0.25 * i : 0 } as Draft);
+    items.push({ type: "circle", cx, cy, r: DOT, cls: "dotp p1", from: b.ones, enter: "pop", delay: beats ? 0.25 * i : 0 } as Draft);
   }
   if (beats) {
     const under = 2 * CELL + 26;
     items.push(t(2.5 * CELL, under, `${TEN} ones`, "lbl", { from: beats.ten, enter: "rise", delay: 0.9 }));
-    items.push(t(x1 + 2.5 * CELL, under, `${ones} more`, "lbl acc", { from: beats.ones, enter: "rise", delay: 0.25 * ones }));
-    items.push(t((x1 + 5 * CELL) / 2, under + 46, `${TEN} + ${ones} = ${TEN + ones}`, "lbl big", { from: beats.whole, enter: "rise", delay: 0.2 }));
+    items.push(t(x1 + 2.5 * CELL, under, `${ones} more`, "lbl p1", { from: beats.ones, enter: "rise", delay: 0.25 * ones }));
+    items.push(t((x1 + 5 * CELL) / 2, under + 46, `${TEN} + ${ones} = ${TEN + ones}`, "lbl big pw", { from: beats.whole, enter: "rise", delay: 0.2 }));
   }
   return frame("early-frames", items, alt, 14, WIDE);
 }
@@ -57,7 +57,7 @@ export function fillTen(have: number, alt: string, beats?: { have: number; fill:
       items.push(t(cx, cy, String(k + 1), "onlbl", { from: beats.fill, enter: "fade", delay: 0.35 * k + 0.15 }));
     }
     const under = 2 * CELL + 30;
-    items.push(t(2.5 * CELL, under, `${have} + ${need} = ${TEN}`, "lbl big", { from: beats.whole, enter: "rise", delay: 0.2 }));
+    items.push(t(2.5 * CELL, under, `${have} + ${need} = ${TEN}`, "lbl big pw", { from: beats.whole, enter: "rise", delay: 0.2 }));
   }
   return frame("early-frames", items, alt, 14, WIDE);
 }

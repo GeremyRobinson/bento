@@ -34,7 +34,7 @@ export function scalePicture({ c, km, g }: ScaleProblem) {
     rows: [
       { length: g, parts: [{ count: 1, from: 0 }, { count: g, from: 1 }], fills: [{ a: 0, b: g, tone: "on" }], each: [{ text: () => `${c} cm`, from: 1 }],
         label: [{ text: "map" }], total: [{ text: `${c * g} cm` }] },
-      { length: g, parts: g, from: 2, fills: [{ a: 0, b: g, tone: "acc" }], each: [{ text: () => `${km} km` }], label: [{ text: "real" }],
+      { length: g, parts: g, from: 2, fills: [{ a: 0, b: g, tone: "two" }], each: [{ text: () => `${km} km` }], label: [{ text: "real" }],
         total: [{ text: `${g * km} km`, acc: true }] },
     ],
     alt: `A map distance of ${c * g} cm cut into ${count(g, "group")} of ${c} cm; each group is ${km} km, so the real distance is ${g * km} km.`,

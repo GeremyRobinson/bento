@@ -44,7 +44,7 @@ export function mixedToImproperPicture({ w, n, d }: MixedToImproperProblem) {
     length: 1, parts: d, fills: [{ a: 0, b: 1, tone: "on" }], label: [{ text: "1" }],
     total: [{ text: `${(j + 1) * d}`, from: 1, acc: j === w - 1 }],
   }));
-  rows.push({ length: 1, parts: d, fills: [{ a: 0, b: n / d, tone: "acc" }], label: [{ text: `${n}/${d}` }],
+  rows.push({ length: 1, parts: d, fills: [{ a: 0, b: n / d, tone: "two" }], label: [{ text: `${n}/${d}` }],
     total: [{ text: `${S}`, from: 2, until: 2, acc: true }, { text: `${S}/${d}`, from: 3, acc: true }] });
   return buildTape({ rows, alt: `${w} whole bars of ${count(d, "piece")} and a bar with ${n} of ${count(d, "piece")}: ${count(S, "piece")} in all, so ${w} ${n}/${d} = ${S}/${d}.` });
 }

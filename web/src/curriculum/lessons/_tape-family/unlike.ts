@@ -150,7 +150,7 @@ export function unlikePicture(p: UnlikeFractionsProblem) {
       fills: [{ a: 0, b: a / b, tone: "on", until: 1 }, { a: 0, b: a / b, tone: "on", from: 2 }],
       label: [{ text: `${a}/${b}`, until: 1 }, { text: `${A}/${L}`, from: 2 }] },
     { length: 1, parts: [{ count: d, from: 0 }, { count: L, from: 3 }], ticks: [{ count: L, from: 1, until: 2, dashed: true }],
-      fills: [{ a: 0, b: c / d, tone: "acc", until: 2 }, { a: 0, b: c / d, tone: "acc", from: 3 }],
+      fills: [{ a: 0, b: c / d, tone: "two", until: 2 }, { a: 0, b: c / d, tone: "two", from: 3 }],
       label: [{ text: `${c}/${d}`, until: 2 }, { text: `${C}/${L}`, from: 3 }] },
   ];
   const F = finalForm(S, L), changes = !(F.whole === 0 && F.den === L);
@@ -164,7 +164,7 @@ export function unlikePicture(p: UnlikeFractionsProblem) {
       const on = [Math.max(0, -w * L), Math.min(L, A - w * L)], acc = [Math.max(0, A - w * L), Math.min(L, S - w * L)];
       const fills: TapeFill[] = [
         ...(on[1]! > on[0]! ? [{ a: on[0]! / L, b: on[1]! / L, tone: "on" as const }] : []),
-        ...(acc[1]! > acc[0]! ? [{ a: acc[0]! / L, b: acc[1]! / L, tone: "acc" as const }] : []),
+        ...(acc[1]! > acc[0]! ? [{ a: acc[0]! / L, b: acc[1]! / L, tone: "two" as const }] : []),
       ];
       rows.push({ length: 1, parts: L, from: 4, fills, label: w === 0 ? [{ text: `${S}/${L}`, acc: true }] : [], total: w === wholes - 1 ? answerTotal : [] });
     }

@@ -1,8 +1,9 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { useApp } from "../app/AppState";
 import type { Route } from "../app/routes";
-import { entriesInGrade, entryById, unitsInGrade } from "../app/curriculum";
-import { gradeOf, inkOf } from "../curriculum/grades";
+import { doneCount, entriesInGrade, entryById, unitsInGrade } from "../app/curriculum";
+import { readAloudOn, readSettings } from "../app/settings";
+import { gradeOf } from "../curriculum/grades";
 import { lessonById } from "../curriculum/registry";
 import { currentItem, lessonOfItem } from "../engine/session/practice";
 import { Contents, type Level } from "./Contents";
@@ -12,10 +13,6 @@ import { Chevron } from "./primitives/icons";
 /** A simple person: a head and shoulders. */
 const MeIcon = () => (
   <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="8.5" r="3.6" /><path d="M5 20c1.2-3.6 4-5.4 7-5.4s5.8 1.8 7 5.4" /></svg>
-);
-/** Four small squares: the contents of the book. */
-const GridIcon = () => (
-  <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="1" y="1" width="6" height="6" rx="1.6" /><rect x="9" y="1" width="6" height="6" rx="1.6" /><rect x="1" y="9" width="6" height="6" rx="1.6" /><rect x="9" y="9" width="6" height="6" rx="1.6" /></svg>
 );
 
 /** Where a lesson sits in its grade's book: its chapter, and which page of that chapter it is. */
@@ -71,19 +68,34 @@ function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): P
   }
 }
 
+/** Sliders: the quick settings. */
+const SettingsIcon = () => (
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></svg>
+);
+
+/** How far along the place is: the page in its chapter on a lesson, the lessons done in the year elsewhere. */
+function fillOf(place: Place, app: ReturnType<typeof useApp>, grade: number): number {
+  if (place.lesson) { const p = pageOf(place.lesson); if (p) return p.page / p.pages; }
+  const all = entriesInGrade(grade);
+  return all.length ? doneCount(app.progress, all) / all.length : 0;
+}
+
 /**
- * The one way around Bento: a small floating island at the top of every screen. It says where you are in the book
- * (chapter and page), steps back one page, and opens the contents, which zoom out from the page to its chapter, the
- * year, and every grade. Pinching the page closed does the same.
+ * The one way around Bento, floating at the top of every screen (UI research's floating preview, G 2026-10-06):
+ * the island in the middle says where you are (chapter and page) with one step back on its left and a fill for how
+ * far along you are on its right; tapping it opens the contents, which zoom out from the page to its chapter, the
+ * year, and every grade. Pinching the page closed does the same. Quick settings and Me float on their own in the
+ * top-right corner; an unfinished lesson waits in the top-left one.
  */
 export function Island({ grade: chosen, guest }: { grade: number | null; guest?: boolean }) {
   const app = useApp();
-  const { progress, go, route } = app;
+  const { progress, go, route, openSheet } = app;
   // the landing page, and any grade page reached before a grade is chosen, get the plain guest island
   const welcome = !!guest || route.name === "welcome" || chosen == null;
   const grade = chosen ?? 0;
   const place = placeOf(route, app, grade);
   const [open, setOpen] = useState<Level | null>(null);
+  const [quick, setQuick] = useState(false);
   const start: Level = route.name === "home" ? "shelf" : place.lesson ? "chapter" : "year";
 
   // pinching the page closed (two fingers coming together) zooms out to the contents; spreading them is left to the browser
@@ -112,40 +124,86 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   const showResume = !!run && !!runGrade && route.name !== "practice" && !welcome;
 
   if (welcome) return (
-    <div className="itop"><header className="island guest">
+    <div className="itop"><span /><header className="island guest">
       <span className="iword">Bento</span>
       {progress.chosen
         ? <button className="ilink" onClick={() => go({ name: "home" }, "fwd")}>My lessons ›</button>
         : <span className="inote">Kindergarten to 12th grade</span>}
-    </header></div>
+    </header><span /></div>
   );
 
+  const g = gradeOf(grade), fill = fillOf(place, app, grade);
+  // on the book itself, one step back is the grade question
+  const back = place.back;
   return (
     <>
     <div className="itop">
-      <header className="island" style={{ "--itint": inkOf(gradeOf(grade).color) } as CSSProperties}>
-        {place.back
-          ? <button className="iside" onClick={() => go(place.back!.to, "back")} aria-label={`Back to ${place.back.label}`}><Chevron dir="left" /></button>
-          : <button className="iside iword" onClick={() => go({ name: "welcome" }, "back")} aria-label="Bento home page">Bento</button>}
+      <div className="icorner left">
+        {showResume && (
+          <button className="iresume" onClick={() => go({ name: "practice" }, "fwd")}
+            aria-label={`Resume ${run!.title}, ${runGrade!.name}, problem ${run!.i + 1} of ${run!.items.length}`}>
+            <span className="rdot gnum" style={{ "--gn": runGrade!.color } as CSSProperties}>{runGrade!.short}</span>
+            <span className="rtext"><small>Resume</small><b>{run!.title}</b></span>
+            <span className="rcount">{run!.i + 1}/{run!.items.length}</span>
+          </button>
+        )}
+      </div>
+      <header className="island">
+        {back
+          ? <button className="iback" onClick={() => go(back.to, "back")} aria-label={`Back to ${back.label}`}><Chevron dir="left" /></button>
+          : <button className="iback" onClick={() => openSheet(true)} aria-label="Change grade"><Chevron dir="left" /></button>}
         <button className="iplace" onClick={() => setOpen(start)} aria-label={`Contents. You're on ${place.title}`} aria-haspopup="dialog">
           <small>{place.kicker}</small>
           <b>{place.title}</b>
-          <span className="igrid"><GridIcon /></span>
         </button>
-        <button className={`iside ime${route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={() => go({ name: "me" }, "fwd")} aria-label={`Me: ${progress.streak} day streak, ${progress.xp} XP`}>
+        <span className="ibat" aria-hidden style={{ "--p": fill } as CSSProperties}>
+          <i /><span className="gnum" style={{ "--gn": g.color } as CSSProperties}>{g.short}</span>
+        </span>
+      </header>
+      <div className="icorner right">
+        <button className={`icon${quick ? " on" : ""}`} onClick={() => setQuick(q => !q)} aria-label="Settings" aria-expanded={quick}><SettingsIcon /></button>
+        <button className={`icon${route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={() => go({ name: "me" }, "fwd")} aria-label={`Me: ${progress.streak} day streak, ${progress.xp} XP`}>
           <MeIcon />
         </button>
-      </header>
-      {showResume && (
-        <button className="iresume" style={{ "--rtint": inkOf(runGrade!.color) } as CSSProperties} onClick={() => go({ name: "practice" }, "fwd")}
-          aria-label={`Resume ${run!.title}, ${runGrade!.name}, problem ${run!.i + 1} of ${run!.items.length}`}>
-          <span className="rdot" style={{ background: inkOf(runGrade!.color) }}>{runGrade!.short}</span>
-          <span className="rtext"><small>Resume</small><b>{run!.title}</b></span>
-          <span className="rcount">{run!.i + 1}/{run!.items.length}</span>
-        </button>
-      )}
+      </div>
     </div>
+      {quick && <QuickSettings close={() => setQuick(false)} />}
       {open && <Contents grade={place.lesson ? pageOf(place.lesson)?.grade ?? grade : grade} lessonId={place.lesson} level={open} close={() => setOpen(null)} />}
+    </>
+  );
+}
+
+/**
+ * Quick settings: a column of separate floating pills under the settings button, arriving one at a time, over a light
+ * dim so they never sit on the problem. The rest of the settings live in Me.
+ */
+function QuickSettings({ close }: { close: () => void }) {
+  const { progress, setSettings, go } = useApp();
+  const s = readSettings(progress.settings);
+  const aloud = readAloudOn(s, progress.grade);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
+    addEventListener("keydown", onKey);
+    return () => removeEventListener("keydown", onKey);
+  }, [close]);
+  const rows: { label: string; on: boolean; flip: () => void }[] = [
+    { label: "Less motion", on: s.motion === "reduce", flip: () => setSettings({ motion: s.motion === "reduce" ? "system" : "reduce" }) },
+    { label: "Color-blind friendly", on: s.colorSafe, flip: () => setSettings({ colorSafe: !s.colorSafe }) },
+    { label: "Read aloud", on: aloud, flip: () => setSettings({ readAloud: !aloud }) },
+    { label: "Sounds", on: s.sounds, flip: () => setSettings({ sounds: !s.sounds }) },
+  ];
+  return (
+    <>
+      <div className="fdim" onClick={close} />
+      <div className="fstack qset" role="dialog" aria-label="Settings">
+        <span className="flbl" style={{ "--i": 0 } as CSSProperties}>Settings</span>
+        {rows.map((r, i) => (
+          <button key={r.label} className="fpill toggle" role="switch" aria-checked={r.on} onClick={r.flip} style={{ "--i": i + 1 } as CSSProperties}>
+            {r.label}<span className="sw" />
+          </button>
+        ))}
+        <button className="fpill" onClick={() => { close(); go({ name: "me" }, "fwd"); }} style={{ "--i": rows.length + 1 } as CSSProperties}>All settings ›</button>
+      </div>
     </>
   );
 }

@@ -10,12 +10,16 @@ export interface TapeText {
   text: string;
   from?: number;
   until?: number;
-  /** accent colour, for the answer */
+  /** amber, for the thing being found (a "?" is always amber) */
   acc?: boolean;
 }
 
-/** How a stretch of a bar is coloured. on: main colour; acc: second colour; cut: taken away (faded and struck through). */
-export type TapeTone = "on" | "acc" | "cut";
+/**
+ * How a stretch of a bar is coloured, by its role (handoff-6): on: the first quantity (part blue); two: the second
+ * quantity, what's added or compared (part orange); acc: the thing being found or the step in focus (amber);
+ * cut: taken away (faded and struck through).
+ */
+export type TapeTone = "on" | "two" | "acc" | "cut";
 
 export interface TapeFill {
   /** from and to, in units (positions are absolute: 0 is the left edge of every bar that starts at 0) */

@@ -40,9 +40,9 @@ function answers({ a, b, k }: ProportionProblem): AnswerModel {
 export function proportionPicture({ a, b, k }: ProportionProblem) {
   return buildTape({
     rows: [
-      { length: a, parts: a, fills: [{ a: 0, b: a, tone: "acc", from: 2 }], each: [{ text: () => `${k}`, from: 2 }], label: [{ text: "top" }],
+      { length: a, parts: a, fills: [{ a: 0, b: a, tone: "on", from: 2 }], each: [{ text: () => `${k}`, from: 2 }], label: [{ text: "top" }],
         total: [{ text: `${a}`, until: 0 }, { text: "x", from: 1, until: 1 }, { text: `x = ${a * k}`, from: 2, acc: true }] },
-      { length: b, parts: b, fills: [{ a: 0, b, tone: "on", from: 2 }], each: [{ text: () => `${k}`, from: 2 }], label: [{ text: "bottom" }],
+      { length: b, parts: b, fills: [{ a: 0, b, tone: "two", from: 2 }], each: [{ text: () => `${k}`, from: 2 }], label: [{ text: "bottom" }],
         total: [{ text: `${b}`, until: 0 }, { text: `${b * k}`, from: 1 }] },
     ],
     alt: `${count(a, "box", "boxes")} over ${count(b, "box", "boxes")} of the same size. When the ${count(b, "box", "boxes")} ${verb(b, "makes", "make")} ${b * k}, each box is ${k}, so the ${count(a, "box", "boxes")} ${verb(a, "makes", "make")} ${a * k}.`,

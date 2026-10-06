@@ -34,7 +34,7 @@ export function Home() {
 }
 
 function GradeHome({ g }: { g: number }) {
-  const { progress, route, go, openSheet, startTest } = useApp();
+  const { progress, route, go, startTest } = useApp();
   const grade = gradeOf(g), units = unitsInGrade(g);
   const next = upNext(progress, g);
   const routePick = route.name === "home" ? route.pick : undefined;
@@ -45,37 +45,49 @@ function GradeHome({ g }: { g: number }) {
   const [shut, setShut] = useState<string | null>(null);
   const select = (p: string) => go({ name: "home", pick: p }, "fwd");
   let k = 0;
+  // the picked row's highlight glides to the row you tap, like the floating preview
+  const knob = useRef<HTMLSpanElement>(null), placed = useRef(false);
+  useLayoutEffect(() => {
+    const el = knob.current, row = el?.parentElement?.querySelector<HTMLElement>(".srow.on");
+    if (!el) return;
+    if (!row) { el.style.opacity = "0"; return; }
+    if (!placed.current) el.style.transition = "none";
+    el.style.opacity = "1";
+    el.style.transform = `translateY(${row.offsetTop}px)`;
+    el.style.height = `${row.offsetHeight}px`;
+    if (!placed.current) { void el.offsetHeight; el.style.transition = ""; placed.current = true; }
+  });
 
   const listPane = (
     <>
+      <span className="sknob" ref={knob} aria-hidden />
       <header className="shead">
         <GradeNum grade={g} />
         <div>
           <h1>{grade.name}</h1>
           <p className="ysub">This year: {grade.subtitle.toLowerCase()}.</p>
         </div>
-        <button className="tlink" onClick={() => openSheet(true)} aria-label="Change grade">Change grade</button>
       </header>
       <button className={`srow${pick === "today" ? " on" : ""}`} aria-current={pick === "today" ? "true" : undefined} onClick={() => select("today")}>
-        <span className="sname"><b>Today</b></span><small>{todayMeta(progress, g)}</small>
+        <span className="sname"><b>Today</b></span><small className="smeta">{todayMeta(progress, g)}</small>
       </button>
-      {units.map((u, ui) => {
+      {units.map(u => {
         const isOpen = u === openUnit && shut !== u.name, done = doneCount(progress, u.entries);
         const lessons = u.entries.map(c => ({ c, n: ++k }));
         return (
           <div className={`schapter${isOpen ? " open" : ""}`} key={u.name}>
             <button className="srow chap" aria-expanded={isOpen}
               onClick={() => { if (isOpen) setShut(u.name); else { setShut(null); select((u.entries.find(c => c.id === next?.entry.id) ?? u.entries.find(c => isReady(c.id)) ?? u.entries[0]!).id); } }}>
-              <span className="sname"><small>Chapter {ui + 1}</small><b>{u.name}</b></span><small>{done} of {u.entries.length}</small>
+              <span className="sname"><b>{u.name}</b></span><small className="smeta">{done === u.entries.length ? "Done" : done ? `${done} of ${u.entries.length}` : `${u.entries.length} lesson${u.entries.length === 1 ? "" : "s"}`}</small>
             </button>
-            {isOpen && lessons.map(({ c, n }) => {
+            {isOpen && lessons.map(({ c }) => {
               const sc = lastScore(progress, c.id), live = isReady(c.id);
               return (
                 <button key={c.id} className={`srow sles${pick === c.id ? " on" : ""}${live ? "" : " soon"}`} disabled={!live} aria-current={pick === c.id ? "true" : undefined}
                   onClick={() => select(c.id)} aria-label={live ? `${c.title}${c === next?.entry ? ", up next" : ""}` : `${c.title}, coming soon`}>
-                  <span className={`badge${timesDone(progress, c.id) > 0 ? " on" : ""}`}>{n}</span>
+                  <span className={`sdot${timesDone(progress, c.id) > 0 ? " done" : ""}`} aria-hidden />
                   <span className="sname"><b>{c.title}</b></span>
-                  {sc != null ? <ScoreChip n={sc} /> : c === next?.entry ? <small className="snext">Up next</small> : live ? null : <small>soon</small>}
+                  {sc != null ? <ScoreChip n={sc} /> : c === next?.entry ? <small className="snext">Up next</small> : live ? <small className="smeta">{LESSON_MINUTES} min</small> : <small>soon</small>}
                 </button>
               );
             })}
@@ -187,22 +199,19 @@ function LessonDetail({ g, entry }: { g: number; entry: Entry }) {
   return (
     <div className="sdl" ref={box}>
       <div className="card sdtext" ref={text}>
-        <p className="k">Chapter {ui + 1} · {unit.name} · {unit.entries.length} lesson{unit.entries.length === 1 ? "" : "s"}</p>
+        <p className="k">{unit.name} · lesson {unit.entries.indexOf(entry) + 1} of {unit.entries.length}</p>
         <h2>{entry.title}</h2>
         {pv?.ex.idea?.[0] && <p className="sdidea"><Rich text={pv.ex.idea[0]} /></p>}
-        <ol className="ssteps">
-          <li><b>Learn</b><span>Watch it play out</span></li>
-          <li><b>Practice</b><span>Solve it a step at a time</span></li>
-          <li><b>Check</b><span>See your score{sc != null && <> · last <ScoreChip n={sc} /></>}</span></li>
-        </ol>
-        <div className="actions">
-          <Pill go disabled={!lesson} onClick={start}>Start lesson · {LESSON_MINUTES} min</Pill>
+        <div className="sfootrow">
+          {sc != null && <span className="slast">Last score <ScoreChip n={sc} /></span>}
           {testReady(g, unit.name) && <Pill badged={!!t} onClick={() => startTest(tk)}>{t && <ScoreChip n={t.last} />}{unit.name} test</Pill>}
+          <span className="grow" />
+          <Pill go disabled={!lesson} onClick={start}>Start lesson · {LESSON_MINUTES} min</Pill>
         </div>
       </div>
       {fits && (
         <figure className="card spreview" style={{ height: Math.min(room, 460) }}>
-          <figcaption>Preview · your first problem, <MathLine math={pv!.ex.statement} /></figcaption>
+          <figcaption>Preview · your first problem, <b><MathLine math={pv!.ex.statement} /></b></figcaption>
           <div className="sppic"><PlayingDiagram ex={{ ...pic!.ex, diagram: pic!.ex.diagram! }} hold={600} end={statementBeat(pic!.ex)} /></div>
         </figure>
       )}

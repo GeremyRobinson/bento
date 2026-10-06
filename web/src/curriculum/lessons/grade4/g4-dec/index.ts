@@ -43,7 +43,7 @@ export function tenthsHundredthsPicture({ a, b }: TenthsHundredthsProblem) {
   const rows: TapeRow[] = [
     { length: 1, parts: 10, ticks: [{ count: 100, from: 1 }], fills: [{ a: 0, b: a / 10, tone: "on" }],
       label: [{ text: `${a}/10`, until: 0 }, { text: `${10 * a}/100`, from: 1 }] },
-    { length: 1, parts: 10, ticks: [{ count: 100 }], fills: [{ a: 0, b: b / 100, tone: "acc" }], label: [{ text: `${b}/100` }] },
+    { length: 1, parts: 10, ticks: [{ count: 100 }], fills: [{ a: 0, b: b / 100, tone: "two" }], label: [{ text: `${b}/100` }] },
   ];
   for (let w = 0; w < wholes; w++) {
     const on = [Math.max(0, -w * 100), Math.min(100, 10 * a - w * 100)], acc = [Math.max(0, 10 * a - w * 100), Math.min(100, S - w * 100)];
@@ -51,7 +51,7 @@ export function tenthsHundredthsPicture({ a, b }: TenthsHundredthsProblem) {
       length: 1, parts: 10, ticks: [{ count: 100, from: 2 }], from: 2,
       fills: [
         ...(on[1]! > on[0]! ? [{ a: on[0]! / 100, b: on[1]! / 100, tone: "on" as const }] : []),
-        ...(acc[1]! > acc[0]! ? [{ a: acc[0]! / 100, b: acc[1]! / 100, tone: "acc" as const }] : []),
+        ...(acc[1]! > acc[0]! ? [{ a: acc[0]! / 100, b: acc[1]! / 100, tone: "two" as const }] : []),
       ],
       label: w === 0 ? [{ text: `${S}/100` }] : [],
       total: w === wholes - 1 ? [{ text: `= ${f(S / 100)}`, from: 3, acc: true }] : [],

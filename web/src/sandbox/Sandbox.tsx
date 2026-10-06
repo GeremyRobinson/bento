@@ -88,8 +88,11 @@ export function Sandbox() {
   const sb = useSb();
   const [copy, setCopy] = useState(false);
 
-  // the theme the sandbox shows; the app itself has no switch, so this lives only here
-  useEffect(() => { document.documentElement.dataset.theme = sb.theme; }, [sb.theme]);
+  // the theme the sandbox shows, only while it's open; the app itself has no switch and follows the device
+  useEffect(() => {
+    if (sb.open) document.documentElement.dataset.theme = sb.theme;
+    else delete document.documentElement.dataset.theme;
+  }, [sb.theme, sb.open]);
   // the edits, layered over the real stylesheets
   useEffect(() => {
     let el = document.getElementById("sb-tokens") as HTMLStyleElement | null;

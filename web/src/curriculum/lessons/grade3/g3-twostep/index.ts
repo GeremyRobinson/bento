@@ -132,7 +132,7 @@ export function twoStepPicture(p: TwoStepProblem, first: number, second: number)
       { length: P, parts: a, each: [{ text: () => String(b) }], label: [{ text: `${a} ${w.groups}` }], total: [{ text: String(P), from: 1, acc: true }] },
       kind === 0
         ? { length: P, parts: 1, from: 2, fills: [{ a: 0, b: P - c, tone: "on" }, { a: P - c, b: P, tone: "cut" }], label: [{ text: "left" }], total: [{ text: `${second} left`, acc: true }] }
-        : { length: P + c, parts: 1, from: 2, fills: [{ a: 0, b: P, tone: "on" }, { a: P, b: P + c, tone: "acc" }], label: [{ text: "in all" }], total: [{ text: String(second), acc: true }] },
+        : { length: P + c, parts: 1, from: 2, fills: [{ a: 0, b: P, tone: "on" }, { a: P, b: P + c, tone: "two" }], label: [{ text: "in all" }], total: [{ text: String(second), acc: true }] },
     ];
   } else {
     const R = first;

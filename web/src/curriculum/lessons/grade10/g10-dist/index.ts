@@ -65,10 +65,10 @@ export function explainDist(p: DistProblem, model: AnswerModel): Explanation {
       alt: `Graph: the points ${pt(x1, y1)} and ${pt(x2, y2)}, ${f(dx)} across and ${f(dy)} up, ${f(d)} apart.`,
       equal: true,
       items: [
-        { kind: "segment", a: [x1, y1], b: [x2, y1], cls: "ln2 dash", from: 1, label: { text: f(dx), acc: true, prefer: ["s", "n"] } },
-        { kind: "segment", a: [x2, y1], b: [x2, y2], cls: "ln2 dash", from: 2, label: { text: f(dy), acc: true, prefer: ["e", "w"] } },
+        { kind: "segment", a: [x1, y1], b: [x2, y1], cls: "ln p0 dash", from: 1, label: { text: f(dx), part: 0, prefer: ["s", "n"] } },
+        { kind: "segment", a: [x2, y1], b: [x2, y2], cls: "ln p1 dash", from: 2, label: { text: f(dy), part: 1, prefer: ["e", "w"] } },
         { kind: "rightAngle", at: [x2, y1], u: [-1, 0], v: [0, 1], from: 2 },
-        { kind: "segment", a: [x1, y1], b: [x2, y2], from: 4, slow: true, label: { text: `d = ${f(d)}`, acc: true, prefer: ["nw", "w", "n"] } },
+        { kind: "segment", a: [x1, y1], b: [x2, y2], cls: "ln pq", from: 4, slow: true, label: { text: `d = ${f(d)}`, acc: true, prefer: ["nw", "w", "n"] } },
         { kind: "point", at: [x1, y1], label: { text: pt(x1, y1), prefer: ["w", "sw", "s"] } },
         { kind: "point", at: [x2, y2], label: { text: pt(x2, y2), prefer: ["n", "e", "ne"] } },
       ],

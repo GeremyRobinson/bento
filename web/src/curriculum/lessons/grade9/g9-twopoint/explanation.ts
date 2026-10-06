@@ -21,8 +21,8 @@ export function explainTwoPoint(p: TwoPointProblem, model: AnswerModel): Explana
       fit: [[x1, y1], [x2, y2], [0, b]],
       items: [
         { kind: "line", m, b, from: 3, label: { text: line }, labelX: x2 + 0.8 },
-        { kind: "segment", a: [x1, y1], b: [x2, y1], cls: "ln2 dash", from: 1, label: { text: `run ${f(run)}`, acc: true, prefer: up ? ["s", "n"] : ["n", "s"] } },
-        { kind: "segment", a: [x2, y1], b: [x2, y2], cls: "ln2 dash", from: 1, delay: 0.4, label: { text: `rise ${f(rise)}`, acc: true, prefer: ["e", "w"] } },
+        { kind: "segment", a: [x1, y1], b: [x2, y1], cls: "ln p0 dash", from: 1, label: { text: `run ${f(run)}`, part: 0, prefer: up ? ["s", "n"] : ["n", "s"] } },
+        { kind: "segment", a: [x2, y1], b: [x2, y2], cls: "ln p1 dash", from: 1, delay: 0.4, label: { text: `rise ${f(rise)}`, part: 1, prefer: ["e", "w"] } },
         { kind: "point", at: [0, b], cls: "dota", from: 2, label: { text: `b = ${f(b)}`, acc: true, prefer: m > 0 ? ["nw", "w", "se"] : ["sw", "w", "ne"] } },
         { kind: "point", at: [x1, y1], label: { text: pt(x1, y1), prefer: up ? ["nw", "w", "n"] : ["sw", "w", "s"] } },
         { kind: "point", at: [x2, y2], label: { text: pt(x2, y2), prefer: up ? ["nw", "n", "w"] : ["sw", "s", "w"] } },

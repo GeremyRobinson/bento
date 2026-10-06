@@ -20,8 +20,8 @@ export function explainSlope(p: SlopeProblem, model: AnswerModel): Explanation {
       items: [
         { kind: "line", m, b: y1 - m * x1, cls: "ln thin", from: 3, label: { text: `slope ${f(m)}`, acc: true }, labelX: x2 + run * 0.6 },
         { kind: "segment", a: [x1, y1], b: [x2, y2] },
-        { kind: "segment", a: [x2, y1], b: [x2, y2], cls: "ln2 dash", from: 1, label: { text: `rise ${f(rise)}`, acc: true, prefer: ["e", "w"] } },
-        { kind: "segment", a: [x1, y1], b: [x2, y1], cls: "ln2 dash", from: 2, label: { text: `run ${f(run)}`, acc: true, prefer: up ? ["s", "n"] : ["n", "s"] } },
+        { kind: "segment", a: [x2, y1], b: [x2, y2], cls: "ln p1 dash", from: 1, label: { text: `rise ${f(rise)}`, part: 1, prefer: ["e", "w"] } },
+        { kind: "segment", a: [x1, y1], b: [x2, y1], cls: "ln p0 dash", from: 2, label: { text: `run ${f(run)}`, part: 0, prefer: up ? ["s", "n"] : ["n", "s"] } },
         { kind: "point", at: [x1, y1], label: { text: pt(x1, y1), prefer: up ? ["w", "nw", "sw", "s"] : ["w", "sw", "nw", "n"] } },
         { kind: "point", at: [x2, y2], label: { text: pt(x2, y2), prefer: up ? ["n", "nw", "w"] : ["s", "sw", "w"] } },
       ],

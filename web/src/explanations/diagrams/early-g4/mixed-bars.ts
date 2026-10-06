@@ -15,7 +15,8 @@ export interface MixedBarsSpec {
 }
 
 const U = 66, H = 32, GAP = 8, ROW = 54;
-const ACC = { "--tint": "var(--acc)" };
+// the second mixed number is part orange (it was the accent colour, which now means only "the unknown")
+const ACC = { "--tint": "var(--c1)" };
 
 export function buildMixedBars(s: MixedBarsSpec): SceneDiagram {
   const { d } = s, items: Draft[] = [];
@@ -41,7 +42,7 @@ export function buildMixedBars(s: MixedBarsSpec): SceneDiagram {
     const x = m.w * (U + GAP);
     if (acc) bar(x, y, 0, m.n, 0);
     else bar(x, y, m.n, m.n, 0);
-    label(y, m.label, 0, acc ? "lbl acc" : "lbl");
+    label(y, m.label, 0, acc ? "lbl p1" : "lbl");
   });
 
   // together: the wholes, then the pieces, then a full bar of pieces becomes a whole

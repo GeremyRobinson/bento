@@ -27,8 +27,8 @@ export function buildRegroupBlocks(spec: RegroupBlocksSpec): SceneDiagram {
   const onesW = Math.max(2 * (s + GAP) + GAP, textWidth(spec.text.ones) + 20, textWidth(spec.text.regroup) + 20);
   const tensX = 12, onesX = tensX + tensW + 10;
   const items: SceneItem[] = [];
-  items.push({ type: "text", x: r1(tensX + tensW / 2), y: 20, text: "tens", cls: "lbl", from: beats.blocks, enter: "rise" });
-  items.push({ type: "text", x: r1(onesX + onesW / 2), y: 20, text: "ones", cls: "lbl", from: beats.blocks, enter: "rise" });
+  items.push({ type: "text", x: r1(tensX + tensW / 2), y: 20, text: "tens", cls: "sm", from: beats.blocks, enter: "rise" });
+  items.push({ type: "text", x: r1(onesX + onesW / 2), y: 20, text: "ones", cls: "sm", from: beats.blocks, enter: "rise" });
   items.push({ type: "line", x1: r1(onesX - 5), y1: 8, x2: r1(onesX - 5), y2: top + rodH + 8, cls: "ax thin", from: beats.blocks, enter: "fade" });
 
   // a rod is a column of ten squares, from the bottom up

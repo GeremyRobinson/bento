@@ -14,7 +14,8 @@ export interface FactorRectsSpec {
   alt: string;
 }
 
-const TONES = ["cell c0", "cell c1", "cell c2"];
+// every rectangle is the same n squares, so they share one color (part blue), not a color each for variety (handoff-6)
+const TONE = "cell c0";
 
 export function buildFactorRects(s: FactorRectsSpec): SceneDiagram {
   const cs = Math.min(18, 440 / s.n), gap = 16;
@@ -24,9 +25,9 @@ export function buildFactorRects(s: FactorRectsSpec): SceneDiagram {
   const square = (row: number, col: number, top: number, cls: string, from: number, k: number) =>
     items.push({ type: "rect", x: col * cs + 1, y: top + row * cs + 1, w: cs - 2, h: cs - 2, rx: Math.min(3, cs / 5), cls, from, enter: "pop", delay: Math.round(Math.min(0.8, k * 0.012) * 100) / 100 } as Draft);
 
-  s.pairs.forEach((p, k) => {
+  s.pairs.forEach(p => {
     let c = 0;
-    for (let col = 0; col < p.b; col++) for (let row = 0; row < p.a; row++) square(row, col, y, TONES[k % 3]!, p.beat, c++);
+    for (let col = 0; col < p.b; col++) for (let row = 0; row < p.a; row++) square(row, col, y, TONE, p.beat, c++);
     items.push(t(labelX, y + (p.a * cs) / 2, `${p.a} × ${p.b}`, "lbl start", { from: p.beat, enter: "rise", delay: 0.3 }));
     y += p.a * cs + gap;
   });

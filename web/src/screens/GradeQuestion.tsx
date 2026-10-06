@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from "react";
+import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useApp } from "../app/AppState";
 import { previewOf, statementBeat } from "../app/preview";
 import { bandOf, GRADES, gradeOf, tintStyle } from "../curriculum/grades";
@@ -30,14 +30,27 @@ export function GradeQuestion() {
   }, [picked, seed]); // eslint-disable-line react-hooks/exhaustive-deps
   const find = () => { if (picked == null) setAsk(true); else startTest(placeKey(picked)); };
   const d = picked == null ? null : gradeOf(picked);
+  // the ring glides to the grade you tap
+  const ring = useRef<HTMLSpanElement>(null), moved = useRef(false);
+  useLayoutEffect(() => {
+    const el = ring.current, b = el?.parentElement?.querySelector<HTMLElement>(".gbtn.on");
+    if (!el) return;
+    if (!b) { el.style.opacity = "0"; return; }
+    if (!moved.current) el.style.transition = "opacity .2s";
+    el.style.opacity = "1";
+    el.style.width = el.style.height = `${b.offsetWidth + 10}px`;
+    el.style.transform = `translate(${b.offsetLeft - 5}px,${b.offsetTop - 5}px)`;
+    if (!moved.current) { void el.offsetHeight; el.style.transition = ""; moved.current = true; }
+  });
 
   return (
     <FitScreen className="gq">
       <header className="gqhead">
         <h1>Which grade are you in?</h1>
-        <button className="tlink" onClick={find}>Not sure? Find my level ›</button>
+        <button className="fpill" onClick={find}>Not sure? Find my level</button>
       </header>
       <div className="gstrip" role="radiogroup" aria-label="Grades">
+        <span className="gring" ref={ring} aria-hidden />
         {GRADES.map(g => (
           <button key={g.grade} role="radio" aria-checked={g.grade === picked} aria-label={g.name} className={`gbtn${g.grade === picked ? " on" : ""}`}
             style={tintStyle(g) as CSSProperties} onClick={() => { setPicked(g.grade); setAsk(false); }}>{g.short}</button>
@@ -45,16 +58,16 @@ export function GradeQuestion() {
       </div>
       <section className="gyear">
         {d == null ? (
-          <p className="muted gempty">{ask ? "Tap the grade you think you're in, then Find my level checks it." : "Pick a grade to see what's inside."}</p>
+          <p className="gempty">{ask ? "Tap the grade you think you're in, then Find my level checks it." : "Pick a grade to see what's inside."}</p>
         ) : (
           <div className="wrap t0 gyin" data-grade={d.grade} data-band={bandOf(d.grade)} key={d.grade}>
             <div className="gytext">
               <GradeNum grade={d.grade} />
               <h2>{d.name}</h2>
-              <p className="muted">This year: {d.subtitle.toLowerCase()}. {lessonsInGrade(d.grade).length} lessons.</p>
+              <p>This year: {d.subtitle.toLowerCase()}. {lessonsInGrade(d.grade).length} lessons.</p>
+              <div className="gygo"><Pill go onClick={() => chooseGrade(d.grade)}>Start {d.name.split(" · ")[0]} ›</Pill></div>
             </div>
             {shown?.ex.diagram && <div className="gypic"><PlayingDiagram key={picked} ex={{ ...shown.ex, diagram: shown.ex.diagram }} hold={600} end={statementBeat(shown.ex)} /></div>}
-            <div className="gygo"><Pill go className="dark" onClick={() => chooseGrade(d.grade)}>Start {d.name.split(" · ")[0]} ›</Pill></div>
           </div>
         )}
       </section>

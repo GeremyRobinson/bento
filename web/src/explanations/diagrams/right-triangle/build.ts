@@ -56,7 +56,8 @@ export function buildRightTriangle(spec: RightTriangleSpec): SceneDiagram {
     const pts = squareOf[k];
     const centre: Pt = [pts.reduce((x, p) => x + p[0], 0) / 4, pts.reduce((y, p) => y + p[1], 0) / 4];
     const side = dist(pts[0]!, pts[1]!);
-    items.push(poly(pts, k === "c" ? "sq big" : `cell c${k === "a" ? 0 : 1}`, { ...beat(s), enter: "pop" }));
+    // roles (handoff-6): a² is part 1 (blue), b² part 2 (orange), c² the square being found (amber, dashed)
+    items.push(poly(pts, k === "c" ? "sq big dash" : `cell c${k === "a" ? 0 : 1}`, { ...beat(s), enter: "pop" }));
     // two lines inside: the side squared, then the area. A square too small for both keeps the area inside
     // and puts the side squared just outside, on the side away from the triangle.
     const roomy = side >= 66;
@@ -67,7 +68,7 @@ export function buildRightTriangle(spec: RightTriangleSpec): SceneDiagram {
       else if (k === "a") items.push(t(centre[0] - side / 2 - 8, centre[1], top.text, `${top.cls ?? "sm"} end`, shown));
       else items.push(t(centre[0], centre[1] + side / 2 + 14, top.text, top.cls ?? "sm", shown));
     }
-    items.push(t(centre[0], roomy ? centre[1] + gap * 0.75 : centre[1], s.area, `lbl${side >= 40 ? " big" : ""}${k === "c" ? " acc" : ""}`, { from: s.areaFrom, enter: "rise" }));
+    items.push(t(centre[0], roomy ? centre[1] + gap * 0.75 : centre[1], s.area, `lbl${side >= 40 ? " big" : ""}${k === "c" ? " acc" : k === "a" ? " p0" : " p1"}`, { from: s.areaFrom, enter: "rise" }));
   });
 
   items.push(poly([A, B, C], "ln fillsoft", { enter: "draw" }));
@@ -87,7 +88,9 @@ export function buildRightTriangle(spec: RightTriangleSpec): SceneDiagram {
     const sqFrom = sq[s]?.from;
     for (const l of Array.isArray(given) ? given : [given]) {
       const until = l.until ?? (sqFrom != null ? sqFrom - 1 : undefined);
-      items.push(t(o.at[0], o.at[1], l.text, `lbl ${o.cls}${l.acc ? " acc" : ""}`.trim(), { ...beat({ ...(l.from ? { from: l.from } : {}), ...(until != null ? { until } : {}) }), enter: "rise", delay: 0.3 }));
+      // a leg's label takes its part color (a blue, b orange) whenever squares show them; c and any unknown are amber
+      const role = l.acc ? " acc" : anySquare && s !== "c" ? (s === "a" ? " p0" : " p1") : "";
+      items.push(t(o.at[0], o.at[1], l.text, `lbl ${o.cls}${role}`.trim(), { ...beat({ ...(l.from ? { from: l.from } : {}), ...(until != null ? { until } : {}) }), enter: "rise", delay: 0.3 }));
     }
   });
 

@@ -1,5 +1,6 @@
 // A rectangle of unit squares for area by counting: the first row is counted square by square,
-// then the rows are counted, then every square fills in. Sizes and labels come from the lesson.
+// then the rows are counted, then every square fills in. Roles (handoff-6): the first row and its label blue, the
+// rows counted down the side orange, and the area being found amber. Sizes and labels come from the lesson.
 import type { SceneDiagram } from "../scene/schema";
 import { frame, t, type Draft } from "../geo/kit";
 
@@ -37,11 +38,11 @@ export function buildSquares(s: SquaresSpec): SceneDiagram {
       if (i > 0) for (let j = 0; j < s.cols; j++) sq(i, j, "cell c1", { from: s.colBeat, enter: "fade", delay: Math.round(i * 0.15 * 100) / 100 });
       items.push(t(-12, (i + 0.5) * c, String(i + 1), "sm end", { from: s.colBeat, enter: "rise", delay: Math.round(i * 0.15 * 100) / 100 }));
     }
-    if (s.sideLabel) items.push(t(-40, (s.rows * c) / 2, s.sideLabel, "lbl end", { from: s.colBeat, enter: "rise", delay: 0.4 }));
+    if (s.sideLabel) items.push(t(-40, (s.rows * c) / 2, s.sideLabel, "lbl end p1", { from: s.colBeat, enter: "rise", delay: 0.4 }));
   }
   items.push({ type: "rect", x: 0, y: 0, w: s.cols * c, h: s.rows * c, cls: "ax thin", enter: "fade" } as Draft);
   if (s.fillBeat != null) {
-    for (let i = 0; i < s.rows; i++) for (let j = 0; j < s.cols; j++) sq(i, j, "cell c2", { from: s.fillBeat, enter: "pop", delay: Math.round((i * s.cols + j) * 0.015 * 100) / 100 });
+    for (let i = 0; i < s.rows; i++) for (let j = 0; j < s.cols; j++) sq(i, j, "sq big", { from: s.fillBeat, enter: "pop", delay: Math.round((i * s.cols + j) * 0.015 * 100) / 100 });
     if (s.note) items.push(t((s.cols * c) / 2, s.rows * c + 26, s.note, "lbl acc", { from: s.fillBeat, enter: "rise", delay: 0.6 }));
   }
   return frame("squares", items, s.alt, 14, { w: 540 });

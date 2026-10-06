@@ -57,7 +57,7 @@ export function buildChoose(s: ChooseSpec): SceneDiagram {
   }
   for (let i = 0; i < s.n; i++) {
     const [x, y] = pt(i);
-    items.push({ type: "circle", cx: x, cy: y, r: 15, cls: `marble c${i % 3}`, enter: "pop", delay: i * 0.06 } as Draft);
+    items.push({ type: "circle", cx: x, cy: y, r: 15, cls: "marble c0", enter: "pop", delay: i * 0.06 } as Draft);
     items.push(t(x, y, letter(i), "sm onlbl", { enter: "fade", delay: 0.1 + i * 0.06 }));
   }
   // the chosen group written in every order: they are all the same group

@@ -58,10 +58,10 @@ export function buildClock(spec: ClockSpec): SceneDiagram {
 // ---------------------------------------------------------------- ruler
 
 export const THINGS = [
-  { name: "pencil", cls: "cell c2", tip: true },
+  { name: "pencil", cls: "cell c0", tip: true },
   { name: "crayon", cls: "cell c0", tip: true },
-  { name: "ribbon", cls: "cell c1", tip: false },
-  { name: "straw", cls: "cell c2", tip: false },
+  { name: "ribbon", cls: "cell c0", tip: false },
+  { name: "straw", cls: "cell c0", tip: false },
 ] as const;
 
 export interface RulerSpec {
@@ -152,10 +152,12 @@ export function buildBarGraph(spec: BarGraphSpec): SceneDiagram {
     items.push(rect(bx(i), y(v), BW, v * U, "bar", { enter: "growy", delay: 0.1 * i }, 4));
     items.push(t(bx(i) + BW / 2, 22, spec.names[i]!, "sm"));
   });
-  items.push(t(W / 2, y(top) - 30, spec.title, "lbl"));
+  items.push(t(W / 2, y(top) - 30, spec.title, "lbl pw"));
   if (!spec.bare) {
     const read = (i: number, beat: number, until?: number) => {
       const v = values[i]!;
+      // every bar is blue; a bar the question asks about turns amber while it's read (handoff-6)
+      items.push(rect(bx(i), y(v), BW, v * U, "bar pq", { from: beat, ...(spec.kind === "more" ? { until: beats.combine - 1 } : {}), enter: "fade" }, 4));
       items.push(rect(bx(i) - 5, y(v) - 5, BW + 10, v * U + 5, "hlline", { from: beat, ...(until != null ? { until } : {}), enter: "fade" }, 6));
       items.push(seg([bx(i), y(v)], [0, y(v)], "ln2 dash", { from: beat, enter: "draw", delay: 0.3 }));
       items.push(t(bx(i) + BW / 2, y(v) + U / 2, String(v), "lbl onlbl", { from: beat, enter: "rise", delay: 0.5 }));

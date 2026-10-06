@@ -19,7 +19,7 @@
 .am[data-split="true"] .whole{opacity:0}
 .am .split-line{stroke:var(--text);stroke-width:var(--d-line);stroke-dasharray:var(--d-dash);opacity:0;transition:opacity .4s ease}
 .am[data-split="true"] .split-line{opacity:.55}
-.am .total{fill:var(--tint);opacity:0;transition:opacity .4s ease}
+.am .total{fill:var(--acc);opacity:0;transition:opacity .4s ease}
 .am[data-sum="true"] .total{opacity:1}
 .am .leader{stroke:var(--faint);stroke-width:var(--d-thin)}
 @media (prefers-reduced-motion:reduce){.am *{transition:none!important}}

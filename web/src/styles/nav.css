@@ -1,42 +1,82 @@
-/* ---- the island: one small floating capsule, the same on every screen. Where you are in the book, one step back,
-   the contents, and you. ---- */
-.itop{position:sticky;top:max(10px,env(safe-area-inset-top));z-index:15;display:flex;justify-content:center;align-items:center;gap:8px;pointer-events:none;min-width:0}
-.itop>*{pointer-events:auto}
-.island{display:flex;align-items:center;gap:8px;height:52px;padding:4px;min-width:0;max-width:min(560px,100%);border-radius:999px;
-  background:color-mix(in srgb,var(--card) 72%,transparent);-webkit-backdrop-filter:saturate(1.8) blur(20px);backdrop-filter:saturate(1.8) blur(20px);
-  box-shadow:0 0 0 1px color-mix(in srgb,var(--rule) 80%,transparent),0 8px 28px -12px rgba(15,20,30,.18);animation:islandIn .5s var(--spring) both}
-@keyframes islandIn{from{opacity:0;transform:scale(.9)}}
-.island .iside{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--text);transition:background .15s,transform .2s var(--spring)}
-.island .iside:hover{background:var(--hover)}
-.island .iside:active,.island .iplace:active{transform:scale(.95)}
-.island .iside svg{width:20px;height:20px}
-.island .iword{width:auto;padding:0 14px;border-radius:999px;font:650 16px/1 var(--sans);letter-spacing:-.02em}
-.island .ime{background:var(--itint);color:#fff}
-.island .ime:hover{background:var(--itint);filter:brightness(1.08)}
-.island .ime.on{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--itint)}
-.island .iplace{flex:1;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:20px;align-items:center;height:44px;padding:0 6px 0 24px;border-radius:999px;text-align:left;transition:background .15s,transform .2s var(--spring)}
-.island .iplace:hover{background:var(--hover)}
-.island .iplace small{grid-column:1;font-size:12px;line-height:15px;color:var(--muted);font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.island .iplace b{grid-column:1;font-size:15px;line-height:19px;font-weight:650;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.island .igrid{grid-column:2;grid-row:1 / span 2;color:var(--muted);display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--well)}
-.island.guest{padding:4px 4px 4px 0}
-.island.guest .iword{display:grid;place-items:center;height:44px;padding:0 16px 0 20px}
-.island .ilink{height:44px;padding:0 18px;border-radius:999px;font-weight:650;background:var(--text);color:var(--card)}
-.island .inote{color:var(--muted);font-size:var(--small);font-weight:550;padding:0 18px 0 6px}
-@media (min-width:700px){.island:not(.guest){width:min(560px,100%)}}
+/* ---- floating (UI research's floating preview, G 2026-10-06): no bars or boxes. Every control is its own capsule
+   floating on the page, white with a soft shadow (light) or one step lighter than the page (dark). ---- */
+:root{--float:var(--card);--float-shadow:0 1px 2px rgba(20,22,27,.05),0 8px 22px rgba(20,22,27,.07);--dim:rgba(20,22,27,.16);--halo:rgba(20,22,27,.2);--glide:cubic-bezier(.34,1.22,.5,1)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--float-shadow:0 0 0 1px rgba(255,255,255,.05),0 10px 30px rgba(0,0,0,.35);--dim:rgba(0,0,0,.4);--halo:rgba(238,240,244,.22)}}
+:root[data-theme="dark"]{--float-shadow:0 0 0 1px rgba(255,255,255,.05),0 10px 30px rgba(0,0,0,.35);--dim:rgba(0,0,0,.4);--halo:rgba(238,240,244,.22)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--float:color-mix(in oklab,var(--card) 88%,white)}}
+:root[data-theme="dark"] .wrap{--float:color-mix(in oklab,var(--card) 88%,white)}
 
-/* an unfinished lesson waits beside the island */
-.iresume{flex:0 1 auto;min-width:0;display:flex;align-items:center;gap:10px;height:52px;padding:4px 16px 4px 4px;border-radius:999px;text-align:left;
-  background:color-mix(in srgb,var(--card) 72%,transparent);-webkit-backdrop-filter:saturate(1.8) blur(20px);backdrop-filter:saturate(1.8) blur(20px);
-  box-shadow:0 0 0 1px color-mix(in srgb,var(--rule) 80%,transparent),0 8px 28px -12px rgba(15,20,30,.18);animation:pop .45s var(--spring) both;transition:transform .2s var(--spring)}
-.iresume:active{transform:scale(.96)}
-.iresume .rdot{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#fff;font:650 15px/1 var(--sans)}
+/* ---- the top: the island in the middle, a corner on each side ---- */
+.itop{position:sticky;top:max(12px,env(safe-area-inset-top));z-index:15;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:var(--s);pointer-events:none;min-width:0}
+.itop>*{pointer-events:auto}
+.icorner{display:flex;gap:8px;align-items:center;min-width:0}
+.icorner.left{justify-self:start}
+.icorner.right{justify-self:end}
+.icorner:empty{pointer-events:none}
+
+.island{display:flex;align-items:center;gap:12px;height:52px;padding:0 5px;min-width:0;max-width:min(520px,100%);border-radius:999px;
+  background:var(--float);box-shadow:var(--float-shadow);animation:floatIn .4s var(--ease) both}
+@keyframes floatIn{from{opacity:0;transform:translateY(8px) scale(.985);filter:blur(6px)}}
+.island .iback{flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--well);color:var(--ink);transition:background .2s,transform .18s var(--ease)}
+.island .iback:hover{background:var(--hover)}
+.island .iback svg{width:20px;height:20px}
+.island .iback:active,.island .iplace:active,.icon:active,.iresume:active{transform:scale(.96)}
+.island .iplace{flex:1;min-width:0;display:grid;align-content:center;height:42px;padding:0 6px;border-radius:999px;text-align:left;transition:transform .18s var(--ease)}
+.island .iplace small{font-size:12px;line-height:15px;color:var(--muted);font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.island .iplace b{font-size:15px;line-height:19px;font-weight:650;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* how far along: a circle that fills from the bottom in the lesson's step of the grade hue, with the grade's number on it */
+.island .ibat{flex:none;position:relative;width:42px;height:42px;border-radius:50%;background:var(--well);overflow:hidden;display:grid;place-items:center}
+.island .ibat>i{position:absolute;inset:auto 0 0;height:calc(var(--p) * 100%);background:color-mix(in oklab,var(--tint) 32%,var(--well));transition:height .5s var(--glide)}
+.island .ibat>.gnum{position:relative;font-size:15px;letter-spacing:-.02em}
+@media (min-width:700px){.island:not(.guest){width:min(460px,100%)}}
+.island .iword{font:650 16px/1 var(--sans);letter-spacing:-.02em}
+.island.guest{padding:0 5px 0 0;gap:4px}
+.island.guest .iword{display:grid;place-items:center;height:42px;padding:0 16px 0 22px}
+.island .ilink{height:42px;padding:0 18px;border-radius:999px;font-weight:650;background:var(--text);color:var(--card)}
+.island .inote{color:var(--muted);font-size:var(--small);font-weight:550;padding:0 18px 0 6px}
+
+/* round icon pills: exactly the island's height, 8px apart */
+.icon{flex:none;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:var(--float);box-shadow:var(--float-shadow);color:var(--ink);transition:background .2s,transform .18s var(--ease),box-shadow .2s;animation:floatIn .4s var(--ease) both;animation-delay:60ms}
+.icon:hover{background:color-mix(in oklab,var(--float) 92%,var(--tint))}
+.icon.on{background:var(--ink);color:var(--on-tint)}
+.icon+.icon{animation-delay:100ms}
+
+/* an unfinished lesson waits in the left corner */
+.iresume{flex:0 1 auto;min-width:0;display:flex;align-items:center;gap:10px;height:52px;padding:0 18px 0 5px;border-radius:999px;text-align:left;
+  background:var(--float);box-shadow:var(--float-shadow);animation:floatIn .4s var(--ease) both;transition:transform .18s var(--ease)}
+.iresume .rdot{flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--well);font-size:15px}
 .iresume .rtext{display:grid;min-width:0;line-height:1.2}
 .iresume small{font-size:12px;color:var(--muted);font-weight:550}
 .iresume b{font-size:14px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
 .iresume .rcount{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
-@media (max-width:900px){.iresume .rtext b{display:none}.iresume small{font-size:14px;color:var(--text);font-weight:650}}
-@media (max-width:520px){.iresume .rcount,.iresume .rdot{display:none}.iresume{padding:0 16px;box-shadow:0 0 0 2px var(--rtint),0 8px 28px -12px rgba(15,20,30,.18)}}
+@media (max-width:1100px){.iresume .rtext b,.iresume .rcount{display:none}.iresume small{font-size:14px;color:var(--text);font-weight:650}}
+@media (max-width:699px){
+  .itop{grid-template-columns:auto minmax(0,1fr) auto}
+  .island{width:100%}
+  .icorner.right .icon:first-child{display:none}
+  .iresume{padding:0;width:52px;justify-content:center}.iresume .rtext,.iresume .rcount{display:none}
+}
+
+/* ---- floating stacks: a column of separate pills (settings, feedback), arriving one at a time top to bottom
+   (fade, rise, blur to sharp), over a light dim so they never sit on the problem ---- */
+.fdim{position:fixed;inset:0;z-index:30;background:var(--dim);animation:fadeIn .25s var(--ease) both}
+.fstack{position:fixed;z-index:31;display:flex;flex-direction:column;gap:8px}
+.fstack>*{animation:stackIn .3s var(--ease) both;animation-delay:calc(var(--i,0) * 42ms)}
+@keyframes stackIn{from{opacity:0;transform:translateY(10px) scale(.985);filter:blur(6px)}}
+.flbl{font-size:13px;font-weight:550;color:var(--text);padding:6px 10px 0;text-shadow:0 0 12px var(--page)}
+.fpill{display:inline-flex;align-items:center;gap:14px;justify-content:space-between;min-height:52px;padding:12px 22px;border-radius:999px;background:var(--float);box-shadow:var(--float-shadow);font-weight:550;text-align:left;line-height:1.35;transition:background .2s,transform .18s var(--ease)}
+button.fpill:active{transform:scale(.96)}
+.fpill .sw{flex:none;width:40px;height:24px;border-radius:999px;background:var(--rule);position:relative;transition:background-color .25s var(--ease)}
+.fpill .sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .3s var(--glide)}
+.fpill[aria-checked="true"] .sw{background:var(--ink)}
+.fpill[aria-checked="true"] .sw::after{transform:translateX(16px)}
+.qset{top:calc(max(12px,env(safe-area-inset-top)) + 60px);right:max(16px,calc((100vw - var(--sb-right,0px) - 1180px) / 2 + 20px));align-items:flex-end}
+.qset{width:290px;align-items:stretch}
+
+/* every tap leaves a soft halo spreading from the finger, so you know it landed */
+.halo{position:fixed;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;pointer-events:none;z-index:99;border:2px solid var(--halo);
+  background:radial-gradient(circle,var(--halo) 0,transparent 70%);animation:halo .55s var(--ease) forwards}
+@keyframes halo{from{transform:scale(.4);opacity:1}to{transform:scale(2.1);opacity:0}}
 
 /* ---- the contents: the book, zoomed out. Chapter, year, every grade. ---- */
 .wrap>:not(.itop):not(.zoom){transition:transform .45s var(--ease),filter .45s var(--ease),opacity .45s var(--ease)}
@@ -189,15 +229,13 @@ button.book:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--rule),0 
 .bhome .today:has(.plan:last-child){padding-bottom:var(--nest)}
 
 /* anything that sticks while you scroll stops below the island, not under it */
-.wrap{--below-island:calc(max(10px,env(safe-area-inset-top)) + 52px + var(--u))}
+.wrap{--below-island:calc(max(12px,env(safe-area-inset-top)) + 52px + var(--u))}
 @media (min-width:900px) and (orientation:landscape){.lside,.bdone>.panel{top:var(--below-island)}}
 .panel.split>.col:last-child{top:var(--below-island)}
 /* chapter rows on home follow the same rule: 8px inside their card, radius = card radius − 8px
    (a full pill on iPad, a softer rounded row on phones where cards are less round) */
 .units>.panel{padding-bottom:var(--nest)}
 .units .lesson{height:56px;border-radius:calc(var(--r-panel) - var(--nest));margin:0 calc(var(--nest) - var(--u) * 1.25);width:calc(100% + (var(--u) * 1.25 - var(--nest)) * 2);padding:0 calc(var(--u) * 1.25 - var(--nest) + 14px)}
-/* the Me button stands as far from the place pill as the Bento word does */
-.island .ime{margin-left:14px}
 .mhero.battery>.bbig .gnum{font-size:64px}.mhero.battery>.bbig .gnum small{font-size:22px;top:6px}
 /* chapter cards: one fixed picture slot per breakpoint, so titles and Unit test pills in a row line up (handoff 3) */
 .units>.panel>.cpic{--cpic:200px;height:var(--cpic)}

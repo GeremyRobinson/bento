@@ -1,9 +1,12 @@
 // Data pictures for 1st to 3rd grade (design/pictures-k4.md §6): tally charts, picture graphs (one picture per thing, or a
 // key that makes each picture stand for more, with half pictures) and scaled bar graphs. Rows never show their counts in
-// practice; each row or bar takes its own grade color, like the older lessons' parts.
+// practice. Every row and bar is the same kind of thing, so all data is one color (part blue); the row or bar a question
+// asks about turns amber while it's read (handoff-6; one color per bar for variety is the Kaminski & Sloutsky trap).
 import type { SceneDiagram } from "../scene/schema";
 import { frame, path, t, M, L, Z, type Draft, type Pt, type Seg } from "../geo/kit";
-import { P, tint } from "../early-k/fit";
+
+/** the same drawing with a role class added (pq: the asked row, amber) */
+const role = (items: Draft[], cls: string): Draft[] => items.map(d => ({ ...d, cls: `${(d as { cls?: string }).cls ?? ""} ${cls}`.trim() }) as Draft);
 
 export type Icon = "apple" | "paw" | "star" | "cookie";
 type Timing = { from?: number; until?: number; enter?: Draft["enter"]; delay?: number };
@@ -71,31 +74,36 @@ export function buildRows(s: RowsSpec): SceneDiagram {
     items.push({ type: "line", x1: colX - 4, y1: y - ROW / 2 + 2, x2: colX - 4, y2: y + ROW / 2 - 2, cls: "grid" } as Draft);
     let last = colX;
     const o = (k: number): Timing => (b ? { from: b.fill, enter: "pop", delay: 0.12 * k + 0.3 * r } : {});
+    // the asked row, drawn again in amber over itself while it's read (back to blue when the extra pictures light up)
+    const asked = b?.read != null && !!s.read?.includes(r);
+    const lit: Timing = asked ? { from: b!.read!, ...(b!.more != null ? { until: b!.more - 1 } : {}), enter: "fade" } : {};
     if (s.kind === "tally") {
       for (let k = 0; k < n; k++) {
         const bundle = Math.floor(k / 5), j = k % 5, x0 = colX + 12 + bundle * 64;
-        if (j < 4) items.push(path([M([x0 + j * 10, y - 14]), L([x0 + j * 10, y + 14])], `tally ${P(r)}`, o(k)));
-        else items.push(path([M([x0 - 6, y + 10]), L([x0 + 36, y - 10])], `tally ${P(r)}`, o(k)));
+        const mark = j < 4 ? [M([x0 + j * 10, y - 14]), L([x0 + j * 10, y + 14])] : [M([x0 - 6, y + 10]), L([x0 + 36, y - 10])];
+        items.push(path(mark, "tally", o(k)));
+        if (asked) items.push(path(mark, "tally pq", lit));
         last = x0 + (j < 4 ? j * 10 : 36);
       }
     } else {
       const whole = Math.floor(n / scale), half = n % scale !== 0;
       for (let k = 0; k < whole + (half ? 1 : 0); k++) {
         const x = colX + 18 + k * PITCH;
-        items.push(...tint(icon(s.icon, x, y, "glyph", o(k), half && k === whole), r));
+        items.push(...icon(s.icon, x, y, "glyph", o(k), half && k === whole));
+        if (asked) items.push(...role(icon(s.icon, x, y, "glyph", lit, half && k === whole), "pq"));
         last = x + 14;
       }
     }
     if (b?.read != null && s.read?.includes(r)) {
       items.push({ type: "rect", x: colX - 2, y: y - ROW / 2 + 4, w: last - colX + 16, h: ROW - 8, rx: (ROW - 8) / 2, cls: "hlrow", from: b.read, enter: "fade" } as Draft);
-      items.push(t(last + 26, y, String(n), "lbl big start", { from: b.read, enter: "rise", delay: 0.4 }));
+      items.push(t(last + 26, y, String(n), "lbl big start acc", { from: b.read, enter: "rise", delay: 0.4 }));
     }
   });
   if (b?.more != null && s.more && s.kind === "pictures") {
     const [hi, lo] = s.more, y = hi * ROW, from = Math.floor(s.counts[lo]! / scale);
     for (let k = from; k < Math.floor(s.counts[hi]! / scale); k++) {
       const x = colX + 18 + k * PITCH;
-      items.push(...icon(s.icon, x, y, "glyph acc", { from: b.more, enter: "pop", delay: 0.3 * (k - from) }));
+      items.push(...role(icon(s.icon, x, y, "glyph", { from: b.more, enter: "pop", delay: 0.3 * (k - from) }), "pq"));
       items.push(t(x, y + 24, String(k - from + 1), "xs", { from: b.more, enter: "fade", delay: 0.3 * (k - from) }));
     }
     items.push({ type: "line", x1: colX + 18 + from * PITCH - PITCH / 2, y1: Math.min(hi, lo) * ROW - 22, x2: colX + 18 + from * PITCH - PITCH / 2, y2: Math.max(hi, lo) * ROW + 22, cls: "ln2 dash", from: b.more, enter: "draw" } as Draft);
@@ -135,11 +143,13 @@ export function buildScaledBars(s: ScaledBarsSpec): SceneDiagram {
   }
   items.push({ type: "line", x1: 0, y1: 0, x2: W, y2: 0, cls: "ax" } as Draft, { type: "line", x1: 0, y1: 0, x2: 0, y2: -steps * U - 8, cls: "ax" } as Draft);
   s.counts.forEach((v, i) => {
-    items.push({ type: "rect", x: bx(i), y: y(v), w: BW, h: -y(v), rx: 4, cls: `bar ${P(i)}`, ...(b ? { from: b.grow, enter: "growy", delay: 0.15 * i } : {}) } as Draft);
+    items.push({ type: "rect", x: bx(i), y: y(v), w: BW, h: -y(v), rx: 4, cls: "bar", ...(b ? { from: b.grow, enter: "growy", delay: 0.15 * i } : {}) } as Draft);
     items.push(t(bx(i) + BW / 2, 20, s.names[i]!, "sm"));
     if (b?.read != null && s.read?.includes(i)) {
+      // the asked bar turns amber while it's read
+      items.push({ type: "rect", x: bx(i), y: y(v), w: BW, h: -y(v), rx: 4, cls: "bar pq", from: b.read, enter: "fade" } as Draft);
       items.push({ type: "line", x1: bx(i), y1: y(v), x2: 0, y2: y(v), cls: "ln2 dash", from: b.read, enter: "draw" } as Draft);
-      items.push(t(bx(i) + BW / 2, y(v) - 16, String(v), "lbl", { from: b.read, enter: "rise", delay: 0.4 }));
+      items.push(t(bx(i) + BW / 2, y(v) - 16, String(v), "lbl acc", { from: b.read, enter: "rise", delay: 0.4 }));
     }
   });
   items.push(t(W / 2, -steps * U - 34, s.title, "sm"));

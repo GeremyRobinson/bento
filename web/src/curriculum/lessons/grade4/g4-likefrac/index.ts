@@ -37,14 +37,14 @@ function answers({ a, c, d }: LikeFractionsProblem): AnswerModel {
 }
 
 /**
- * Two bars of d pieces, a shaded and c shaded in a second colour; then the pieces put together in a sum bar
+ * Two bars of d pieces, a shaded and c shaded in the second part color (orange); then the pieces put together in a sum bar
  * (two bars when the sum is more than one whole), still cut into d pieces.
  */
 export function likeFractionsPicture({ a, c, d }: LikeFractionsProblem) {
   const S = a + c, wholes = Math.ceil(S / d);
   const rows: TapeRow[] = [
     { length: 1, parts: d, fills: [{ a: 0, b: a / d, tone: "on" }], label: [{ text: `${a}/${d}` }] },
-    { length: 1, parts: d, fills: [{ a: 0, b: c / d, tone: "acc" }], label: [{ text: `${c}/${d}` }] },
+    { length: 1, parts: d, fills: [{ a: 0, b: c / d, tone: "two" }], label: [{ text: `${c}/${d}` }] },
   ];
   for (let w = 0; w < wholes; w++) {
     const on = [Math.max(0, -w * d), Math.min(d, a - w * d)], acc = [Math.max(0, a - w * d), Math.min(d, S - w * d)];
@@ -52,7 +52,7 @@ export function likeFractionsPicture({ a, c, d }: LikeFractionsProblem) {
       length: 1, parts: d, from: 1,
       fills: [
         ...(on[1]! > on[0]! ? [{ a: on[0]! / d, b: on[1]! / d, tone: "on" as const }] : []),
-        ...(acc[1]! > acc[0]! ? [{ a: acc[0]! / d, b: acc[1]! / d, tone: "acc" as const }] : []),
+        ...(acc[1]! > acc[0]! ? [{ a: acc[0]! / d, b: acc[1]! / d, tone: "two" as const }] : []),
       ],
       label: w === 0 ? [{ text: "?", until: 1 }, { text: `${S}/${d}`, from: 2, acc: true }] : [],
       total: w === wholes - 1 ? [{ text: count(S, d) }] : [],

@@ -31,7 +31,7 @@ describe("a whole lesson in the browser", () => {
 
     // learn: a freshly generated problem (the owner's choice: every picture is random), its picture, and narration
     // from the same model. The statement, the picture and the narration must all describe the same numbers.
-    const statement = document.querySelector(".math .mline")!.getAttribute("data-plain")!;
+    const statement = document.querySelector(".lmath .mline")!.getAttribute("data-plain")!;
     const sm = statement.match(/^(\d+) × (\d+) = \1 × \((\d+) \+ (\d+)\)$/);
     expect(sm, statement).not.toBeNull();
     const [a, b, tens, ones] = sm!.slice(1).map(Number) as [number, number, number, number];
@@ -48,9 +48,10 @@ describe("a whole lesson in the browser", () => {
 
     // a new example redraws everything from a new problem
     fireEvent.click(screen.getByRole("button", { name: "Show another" }));
-    expect(document.querySelector(".math .mline")!.getAttribute("data-plain")).not.toBe(statement);
+    expect(document.querySelector(".lmath .mline")!.getAttribute("data-plain")).not.toBe(statement);
 
-    fireEvent.click(screen.getByRole("button", { name: "Start practice ›" }));
+    fireEvent.click(screen.getByRole("button", { name: "Show all" }));
+    fireEvent.click(screen.getByRole("button", { name: "Your turn ›" }));
 
     // practice: a wrong answer gets a reason, then solve every step of every problem with the keypad
     const pad = () => document.querySelector(".tray") as HTMLElement;

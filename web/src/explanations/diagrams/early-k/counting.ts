@@ -20,7 +20,7 @@ export function countStrip(n: number, alt: string, counted?: { firstBeat: number
     const beat = counted ? (row === 0 ? counted.firstBeat : counted.restBeat) : 0;
     const delay = counted ? 0.28 * col : 0.03 * i;
     const last = i === n - 1;
-    items.push({ type: "circle", cx, cy, r: R, cls: row === 0 ? "dotp" : "dota", from: beat, enter: "pop", delay } as Draft);
+    items.push({ type: "circle", cx, cy, r: R, cls: row === 0 ? "dotp" : "dotp p1", from: beat, enter: "pop", delay } as Draft);
     if (!counted) continue;
     items.push(t(cx, cy + 30, String(i + 1), last ? "lbl acc" : "sm", { from: beat, enter: "rise", delay: delay + 0.1 }));
     if (last) items.push({ type: "circle", cx, cy, r: R + 6, cls: "ln2", from: counted.restBeat, enter: "pop", delay: delay + 0.4 } as Draft);

@@ -44,12 +44,13 @@ export function buildPairs(spec: PairsSpec): SceneDiagram {
   return frame("early-g2-pairs", items, spec.alt, 14, { w: Math.max(320, tw(spec.text.left) + 30) });
 }
 
-/** The four coins, with the look each one gets. */
+/** The four coins, with the look each one gets: real things keep their real colors (silver, and a copper penny), not
+    picture roles, so no coin looks like "the unknown" (handoff-6). */
 export const COINS = {
-  25: { name: "quarter", r: 30, cls: "cell c0" },
-  10: { name: "dime", r: 21, cls: "cell c1" },
-  5: { name: "nickel", r: 26, cls: "cell c2" },
-  1: { name: "penny", r: 23, cls: "sq big" },
+  25: { name: "quarter", r: 30, cls: "coin ag" },
+  10: { name: "dime", r: 21, cls: "coin ag" },
+  5: { name: "nickel", r: 26, cls: "coin ag" },
+  1: { name: "penny", r: 23, cls: "coin cu" },
 } as const;
 export type CoinValue = keyof typeof COINS;
 

@@ -5,7 +5,7 @@ import { formatNumber } from "../../../curriculum/schemas/math-text";
 import type { SceneDiagram, SceneItem } from "../scene/schema";
 import { r1 } from "../scene/helpers";
 
-/** A jump along the line, drawn as an arc. Hops below the line count the other way (the accent colour). */
+/** A jump along the line, drawn as an arc. Hops below the line count the other way: what's taken away, part orange. */
 export interface Hop {
   from: number;
   to: number;
@@ -152,15 +152,15 @@ export function buildNumberLine(spec: NumberLineSpec): SceneDiagram {
     if (h.from === h.to) continue;
     const x1 = x(h.from), x2 = x(h.to), hh = hopHeight(x2 - x1), mx = (x1 + x2) / 2, dir = h.below ? 1 : -1;
     if (h.start !== false) raw.push({ type: "circle", cx: r1(x1), cy: 0, r: 7, cls: "dotp", enter: "pop", ...timing(h) });
-    raw.push({ type: "arc", arc: { x1, x2, mx, c: dir * hh * 2 }, cls: h.below ? "ln2" : "ln", enter: "draw", ...timing(h, 0.1) });
-    if (h.land !== false) raw.push({ type: "circle", cx: r1(x2), cy: 0, r: 7, cls: h.below ? "dota" : "dotp", enter: "pop", ...timing(h, 0.55) });
+    raw.push({ type: "arc", arc: { x1, x2, mx, c: dir * hh * 2 }, cls: h.below ? "ln p1" : "ln", enter: "draw", ...timing(h, 0.1) });
+    if (h.land !== false) raw.push({ type: "circle", cx: r1(x2), cy: 0, r: 7, cls: h.below ? "dotp p1" : "dotp", enter: "pop", ...timing(h, 0.55) });
     if (!h.label) continue;
     const w = textWidth(h.label, 17), ly = h.below ? Math.max(hh + 16, 44) : -hh - 14;
     const probe: Box = { x: clampX(mx, w), y: ly, w, h: 60, ...windowOf(h) };
     if (hopLabels.some(o => meets(o, probe))) continue;
     const box = place(h.label, mx, ly, h.below ? 1 : -1, 17, windowOf(h));
     hopLabels.push(box);
-    raw.push({ type: "text", x: r1(box.x), y: r1(box.y), text: h.label, cls: h.below ? "lbl acc" : "lbl", enter: "rise", ...timing(h, 0.35) });
+    raw.push({ type: "text", x: r1(box.x), y: r1(box.y), text: h.label, cls: h.below ? "lbl p1" : "lbl", enter: "rise", ...timing(h, 0.35) });
   }
   // span labels go under the tick numbers, and under any arcs below the line
   const belowDepth = Math.max(0, ...hops.filter(h => h.below && h.from !== h.to).map(h => Math.max(hopHeight(x(h.to) - x(h.from)) + 16, 44) + 22));
