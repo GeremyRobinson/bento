@@ -8,7 +8,7 @@
 .ftable .bcount{margin-top:auto}
 .fstart{justify-self:start;min-width:120px}
 /* the Start pill sits in the Today card's corner with the concentric 8px gap (Review) */
-.fhome .today>.fstart{margin:0 0 var(--sp-2) var(--sp-2)}
+@media (min-width:700px){.fhome .today>.fstart{margin:0 0 var(--sp-2) var(--sp-2)}}
 .cover .fstart{justify-self:center;margin-top:var(--s)}
 .tlinks{display:flex;flex-wrap:wrap;column-gap:var(--u)}
 

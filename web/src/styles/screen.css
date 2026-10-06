@@ -45,7 +45,7 @@ html:has(.screen) body{overflow:hidden}
 .srow .sdot.done{background:var(--tint)}
 .srow.soon{opacity:.5}
 .schapter.open{padding-bottom:var(--sp-1)}
-.sfoot{padding:var(--sp-3) var(--sp-2) calc(var(--sp-1) + var(--sp-3));position:sticky;bottom:calc(var(--sp-3) * -1);background:var(--surf-1,var(--well));z-index:var(--z-up)}
+.sfoot{padding:var(--sp-3) var(--sp-2) calc(var(--sp-1) + var(--sp-3));position:sticky;bottom:calc(var(--panel-w,1px) - var(--sp-3));background:var(--surf-1,var(--well));z-index:var(--z-up)}
 /* the grade's book: the detail (a well with the preview, a floating card with the lesson) */
 .sdetail>.sday{align-content:start}
 .sdl{flex:1;min-height:0;display:flex;flex-direction:column;gap:var(--screen-gap)}
@@ -160,7 +160,7 @@ html:has(.screen) body{overflow:hidden}
 .lnow>p{grid-area:1/1;margin:0;display:grid;justify-items:center;align-content:center;gap:2px;visibility:hidden}
 .lnow>p.on{visibility:visible}
 /* the first step, waiting before Play: the same line, quieter */
-.lnow>p.ahead{color:var(--muted)}
+.lnow>p.ahead{color:color-mix(in oklab,var(--muted) 88%,var(--text))}
 .lctl{grid-area:ctl;display:flex;justify-content:center;align-items:center;gap:var(--sp-2);flex-wrap:wrap;padding-bottom:2px}
 .lctl .ctl{--pill-h:var(--float-h);font-size:var(--fz-lg);background:var(--float);box-shadow:var(--float-shadow)}
 .lctl .ctl.go{background:var(--ink);box-shadow:none;min-width:120px}
