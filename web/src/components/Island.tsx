@@ -242,7 +242,7 @@ function QuickSettings({ close, closing }: { close: () => void; closing: boolean
   return (
     <>
       <div className={`fdim${closing ? " out" : ""}`} onClick={close} />
-      <div className={`fstack qset${closing ? " out" : ""}`} role="dialog" aria-label="Settings" style={{ "--n": rows.length + (SANDBOX ? 3 : 2) } as CSSProperties}>
+      <div className={`fstack qset${closing ? " out" : ""}`} role="dialog" aria-label="Settings" style={{ "--n": rows.length + (SANDBOX ? 4 : 3) } as CSSProperties}>
         <span className="flbl" style={{ "--i": 0 } as CSSProperties}>Settings</span>
         {rows.map((r, i) => (
           <button key={r.label} className="fpill toggle" role="switch" aria-checked={r.on} onClick={r.flip} style={{ "--i": i + 1 } as CSSProperties}>
@@ -250,7 +250,9 @@ function QuickSettings({ close, closing }: { close: () => void; closing: boolean
           </button>
         ))}
         <button className="fpill" onClick={() => { close(); go({ name: "me" }, "fwd"); }} style={{ "--i": rows.length + 1 } as CSSProperties}>All settings ›</button>
-        {SANDBOX && <button className="fpill" onClick={() => { close(); dispatchEvent(new Event("bento:sandbox")); }} style={{ "--i": rows.length + 2 } as CSSProperties}>Sandbox ›</button>}
+        {/* the website: what Bento is, from inside the app (G 2026-10-06) */}
+        <button className="fpill" onClick={() => { close(); go({ name: "welcome" }, "back"); }} style={{ "--i": rows.length + 2 } as CSSProperties}>About Bento ›</button>
+        {SANDBOX && <button className="fpill" onClick={() => { close(); dispatchEvent(new Event("bento:sandbox")); }} style={{ "--i": rows.length + 3 } as CSSProperties}>Sandbox ›</button>}
       </div>
     </>
   );
