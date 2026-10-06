@@ -174,6 +174,7 @@ export function calc(src: string, env: EvalEnv = {}): { ok: true; value: number 
   try {
     const v = evaluate(parse(src), env);
     if (Number.isNaN(v)) return { ok: false, error: "That has no value (like √ of a negative, or 0 ÷ 0)." };
+    if (!Number.isFinite(v)) return { ok: false, error: "That runs off to infinity (like dividing by 0)." };
     return { ok: true, value: v };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
@@ -191,5 +192,8 @@ export function showValue(x: number, sig = 10): string {
     const sup = String(Number(e)).replace(/-/g, "⁻").replace(/\d/g, d => "⁰¹²³⁴⁵⁶⁷⁸⁹"[+d]!);
     return `${neg}${mant} × 10${sup}`;
   }
-  return neg + String(Number(ax.toPrecision(sig)));
+  // whole numbers show every digit (c is 299,792,458, not 299,792,000); thousands are grouped the US way
+  const s = Number.isInteger(ax) ? String(ax) : String(Number(ax.toPrecision(sig)));
+  const [whole, frac] = s.split(".");
+  return neg + whole!.replace(/\B(?=(\d{3})+(?!\d))/g, ",") + (frac ? `.${frac}` : "");
 }
