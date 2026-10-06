@@ -1,0 +1,32 @@
+/* The math behind AI: the parts its pictures add to the b2 room's set (styles/b2.css). Colours are the room's picture
+   palette: sky and amber are the two classes of dots (blue and orange), pink a miss or a loss, mint a second curve,
+   violet the learner's own guess or drawing. Green and red stay for right and wrong. */
+.aibtns{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-2)}
+.aibtns .ctl{--pill-h:36px;--pill-pad:14px;font-size:var(--fz-sm)}
+.aidot{stroke:var(--page);stroke-width:1.5}
+.aidot.c0{fill:var(--b2-sky)}
+.aidot.c1{fill:var(--b2-amber)}
+.aisq{fill:var(--b2-pink);fill-opacity:.18;stroke:var(--b2-pink);stroke-width:1}
+.aisq.b{fill:var(--b2-mint);stroke:var(--b2-mint)}
+.ailine{stroke:var(--text);stroke-width:2.5;fill:none}
+.ailine.ghost{opacity:.4;stroke-dasharray:5 4}
+.aicell{stroke:var(--b2-grid);stroke-width:.5}
+.aipad{fill:var(--well);stroke:var(--b2-line);stroke-width:1}
+.aiink{fill:none;stroke:var(--b2-violet);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;opacity:.55}
+.aibox{fill:var(--well);stroke:var(--b2-line);stroke-width:1}
+.aibox.on{stroke:var(--k,var(--ink));stroke-width:2}
+.aiwire{stroke:var(--b2-line);stroke-width:1.5;fill:none}
+.aiwire.k{stroke:var(--k);stroke-width:2.5}
+.aifill{fill:var(--k,var(--muted))}
+.aizone{fill:var(--b2-pink);fill-opacity:.08}
+.aitile{fill:var(--well);stroke:var(--b2-grid)}
+.aitile.rug{fill:var(--b2-violet);fill-opacity:.3}
+.aidirt{fill:var(--b2-amber)}
+.airobot{fill:var(--b2-sky);stroke:var(--page);stroke-width:2}
+.aidiag{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:5 4}
+.aitext{width:100%;min-height:64px;max-height:96px;padding:var(--sp-2) var(--sp-3);border-radius:var(--r-md);background:var(--well);color:var(--text);border:0;box-shadow:inset 0 0 0 1px var(--adv-hair);font:var(--w-regular) var(--fz-sm)/1.4 var(--sans);resize:none}
+.aisample{margin:0;padding:var(--sp-2) var(--sp-3);border-radius:var(--r-md);background:var(--well);font:var(--w-regular) var(--fz-sm)/1.4 var(--mono,var(--sans));overflow-wrap:anywhere}
+.aisample small{display:block;color:var(--muted);font-family:var(--sans)}
+.ainote{margin:0;font-size:var(--fz-2xs);line-height:1.35;color:var(--muted)}
+.aiparts{display:flex;flex-wrap:wrap;gap:var(--sp-1)}
+.aiparts .ctl{--pill-h:32px;--pill-pad:var(--sp-3);font-size:var(--fz-2xs)}
