@@ -123,6 +123,11 @@ html[data-zoomed] body{overflow:hidden}
 @keyframes zOut{from{opacity:0;transform:scale(1.14)}}
 @keyframes zIn{from{opacity:0;transform:scale(.86)}}
 .zhint{font-size:var(--fz-xs);margin-top:-8px}
+/* closing the contents plays them out (Review nav #6): the stage grows a little as it fades, the dim lifts */
+@keyframes zClose{to{opacity:0;transform:scale(1.04)}}
+@keyframes fadeOut{to{opacity:0}}
+.zoom.closing{animation:fadeOut var(--m-close) var(--m-ease) both;pointer-events:none}
+.zoom.closing .zstage{animation:zClose var(--m-close) var(--m-ease) both}
 @media (hover:hover) and (pointer:fine){.zhint{display:none}}
 .zoom .k{font-size:var(--small);font-weight:var(--w-mid);color:var(--muted)}
 .zoom h2{font:var(--w-bold) clamp(28px,4vw,40px)/1.1 var(--sans);letter-spacing:-.03em}

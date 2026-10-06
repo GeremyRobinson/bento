@@ -23,6 +23,8 @@ interface AppState extends AppData {
   sheetOpen: boolean;
   /** move to a screen; dir slides the cross-fade forward or back */
   go(route: Route, dir?: Dir): void;
+  /** one step up to a parent page, through history when that is where you came from (never adds a history step) */
+  back(route: Route): void;
   openSheet(open: boolean): void;
   /** pick a grade (from the sheet or the landing page); the landing page then gives way to home */
   chooseGrade(grade: number): void;
@@ -117,8 +119,10 @@ export function AppProvider(props: {
     return () => { removeEventListener("pagehide", onHide); document.removeEventListener("visibilitychange", onHide); };
   }, [flush]);
 
+  const caughtUp = useRef<string | null>(null);
   useEffect(() => {
-    const onHash = () => withTransition(() => setRoute(parseRoute(location.hash)), "back");
+    // a back() already showed this page; history only caught up with it
+    const onHash = () => { if (caughtUp.current === location.hash) { caughtUp.current = null; return; } withTransition(() => setRoute(parseRoute(location.hash)), "back"); };
     addEventListener("hashchange", onHash);
     return () => removeEventListener("hashchange", onHash);
   }, []);
@@ -127,10 +131,33 @@ export function AppProvider(props: {
     setRoute(r);
     const h = routeHash(r);
     // sandboxed frames can refuse history changes; the app keeps working from its own state
-    try { if (location.hash !== h) history.pushState(null, "", h); } catch { /* ignore */ }
+    // each entry remembers the page under it, so back can return to it instead of adding a step; an open overlay's
+    // entry (the contents) is replaced by the page you open from it, so back from there skips the overlay
+    try {
+      if (location.hash !== h) {
+        const entry = { prev: location.hash };
+        if ((history.state as { overlay?: boolean } | null)?.overlay) history.replaceState({ prev: (history.state as { prev?: string }).prev ?? null }, "", h);
+        else history.pushState(entry, "", h);
+      }
+    } catch { /* ignore */ }
     try { scrollTo(0, 0); } catch { /* ignore */ }
   }, []);
   const go = useCallback((r: Route, dir: Dir = "") => withTransition(() => show(r), dir), [show]);
+  // one step up (the island's < and Escape): back through history when the page before is the parent, else the
+  // parent replaces this page, so back never adds a step and browser back never returns you to where you just were
+  const back = useCallback((r: Route) => {
+    const h = routeHash(r);
+    let viaHistory = false;
+    try { viaHistory = (history.state as { prev?: string } | null)?.prev === h; } catch { /* ignore */ }
+    withTransition(() => {
+      setRoute(r);
+      try {
+        if (viaHistory) { caughtUp.current = h; history.back(); }
+        else history.replaceState({ prev: null }, "", h);
+      } catch { /* ignore */ }
+      try { scrollTo(0, 0); } catch { /* ignore */ }
+    }, "back");
+  }, []);
 
   const deps = useCallback((): Deps => ({ now: now(), rng: rng.current }), [now]);
 
@@ -141,7 +168,7 @@ export function AppProvider(props: {
     // after a reload the results screen shows the newest saved report
     const latest = lastReport ?? (data.progress.log[0] ? data.reports[data.progress.log[0].key] ?? null : null);
     return {
-      ...data, route, lastReport: latest, sheetOpen, go, openSheet, deps,
+      ...data, route, lastReport: latest, sheetOpen, go, back, openSheet, deps,
       chooseGrade: g => withTransition(() => {
         // a grade opens on its book: the year's cover, today's plan and every chapter
         setProgress(p => ({ ...p, grade: g, chosen: true }));
@@ -191,7 +218,7 @@ export function AppProvider(props: {
         setData({ progress: b.progress, reports: b.reports });
       },
     };
-  }, [data, route, lastReport, sheetOpen, go, show, deps, now]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data, route, lastReport, sheetOpen, go, back, show, deps, now]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!value) return null;
   return <Ctx.Provider value={value}>{props.children}</Ctx.Provider>;

@@ -33,7 +33,8 @@ export function ChapterPic({ entries, rng }: { entries: Entry[]; rng: Rng }) {
  * The contents: the book zoomed out. Pinch closed (or tap a level) to step out from the chapter you're in, to the
  * year, to every grade; pinch open or tap a chapter to step back in. Whatever you tap opens right there.
  */
-export function Contents({ grade, lessonId, level: first, close }: { grade: number; lessonId?: string; level: Level; close: () => void }) {
+export function Contents({ grade, lessonId, level: first, close, leave = close, closing }: { grade: number; lessonId?: string; level: Level; close: () => void;
+  /** closes because a page is opening from here: no close animation, the page change carries it */ leave?: () => void; closing?: boolean }) {
   const { progress, go, chooseGrade, startTest, deps, openSheet } = useApp();
   const rng = useMemo(() => deps().rng, []); // eslint-disable-line react-hooks/exhaustive-deps
   const units = unitsInGrade(grade);
@@ -44,7 +45,7 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
   // which way the last step went, so the new level grows in from the old one (out) or comes forward (in)
   const [way, setWay] = useState<"out" | "in" | "">("");
   // every grade is one place, picker D (Review v43 item 15): zooming out past the year opens it
-  const to = (l: Level) => { if (l === level) return; if (l === "shelf") { close(); openSheet(true); return; } setWay(LEVELS.indexOf(l) > LEVELS.indexOf(level) ? "out" : "in"); setLevel(l); };
+  const to = (l: Level) => { if (l === level) return; if (l === "shelf") { leave(); openSheet(true); return; } setWay(LEVELS.indexOf(l) > LEVELS.indexOf(level) ? "out" : "in"); setLevel(l); };
   const box = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -82,7 +83,7 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
     return () => { removeEventListener("keydown", onKey); el.removeEventListener("touchstart", onStart); el.removeEventListener("touchmove", onMove); el.removeEventListener("wheel", onWheel); };
   });
 
-  const open = (c: Entry) => { close(); go({ name: "learn", lessonId: c.id }, "fwd"); };
+  const open = (c: Entry) => { leave(); go({ name: "learn", lessonId: c.id }, "fwd"); };
   const unit = units.find(u => u.name === chapter) ?? units[0];
   const g = gradeOf(grade);
 
@@ -107,7 +108,7 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
             );
           })}</ol>
           {testReady(grade, unit.name) && units.length > 1 && (
-            <Pill onClick={() => { close(); startTest(tk); }}>{t && <ScoreChip n={t.last} />}{unit.name} test</Pill>
+            <Pill onClick={() => { leave(); startTest(tk); }}>{t && <ScoreChip n={t.last} />}{unit.name} test</Pill>
           )}
         </div>
       </section>
@@ -116,7 +117,7 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
     body = (
       <section className="zyear">
         <header><span className="k">{g.subtitle}</span><h2>{g.name}</h2>
-          <Pill go onClick={() => { close(); go({ name: "home" }, "back"); }}>Open the year ›</Pill></header>
+          <Pill go onClick={() => { leave(); go({ name: "home" }, "back"); }}>Open the year ›</Pill></header>
         <div className="zch">{units.map((u, k) => {
           const done = doneCount(progress, u.entries), on = u.name === here?.name;
           return (
@@ -133,16 +134,16 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
   } else {
     body = (
       <section className="zshelf">
-        <Shelf current={grade} onPick={n => { close(); chooseGrade(n); }} />
-        <button className="tlink" onClick={() => { close(); go({ name: "welcome" }, "back"); }}>About Bento ›</button>
+        <Shelf current={grade} onPick={n => { leave(); chooseGrade(n); }} />
+        <button className="tlink" onClick={() => { leave(); go({ name: "welcome" }, "back"); }}>About Bento ›</button>
       </section>
     );
   }
 
   return (
-    <div className="zoom" ref={box} role="dialog" aria-modal="true" aria-label={CONTENTS} onClick={e => { if (e.target === e.currentTarget) close(); }}>
+    <div className={`zoom${closing ? " closing" : ""}`} ref={box} role="dialog" aria-modal="true" aria-label={CONTENTS} onClick={e => { if (e.target === e.currentTarget) close(); }}>
       <div className="zbar-top">
-        <span className="zmark"><NavMark onHome={() => { close(); go({ name: "home" }, "back"); }} /></span>
+        <span className="zmark"><NavMark onHome={() => { leave(); go({ name: "home" }, "back"); }} /></span>
         {/* widest to narrowest, left to right (G 2026-10-06); a tap slider, the same master as Bento / Bento² */}
         <Slider className="zlevels" label="Zoom" value={level} onPick={to}
           options={[...LEVELS].reverse().map(l => ({ id: l, label: NAMES[l], disabled: l === "chapter" && !unit }))} />

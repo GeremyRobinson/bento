@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useApp } from "../app/AppState";
 import type { Route } from "../app/routes";
 import { doneCount, entriesInGrade, entryById, unitsInGrade } from "../app/curriculum";
@@ -127,7 +127,7 @@ function fillOf(place: Place, app: ReturnType<typeof useApp>, grade: number): nu
  */
 export function Island({ grade: chosen, guest }: { grade: number | null; guest?: boolean }) {
   const app = useApp();
-  const { progress, go, route, openSheet, quit } = app;
+  const { progress, go, back: up, route, openSheet, quit, sheetOpen } = app;
   // quitting a run you started and don't want to finish (G 2026-10-06): one quick confirm, then it's gone
   const [asking, setAsking] = useState(false);
   // Practice's hint stack is open: the bulb turns ink-filled while it is
@@ -141,7 +141,32 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   const welcome = !!guest || route.name === "welcome" || chosen == null;
   const grade = chosen ?? 0;
   const place = placeOf(route, app, grade);
-  const [open, setOpen] = useState<Level | null>(null);
+  const [open, setOpenState] = useState<Level | null>(null);
+  // the contents take a history step of their own, so system back and Escape close them first (Review nav #3)
+  const setOpen = (l: Level | null) => {
+    if (l) { try { history.pushState({ ...(history.state ?? {}), overlay: true }, "", location.href); } catch { /* ignore */ } }
+    setOpenState(l);
+  };
+  // closing plays the contents out (the stage grows a little and fades, the page and its top bar come back)
+  const [closing, setClosing] = useState(false);
+  const closingRef = useRef(false);
+  const dismiss = () => {
+    if (!open || closing) return;
+    try { if ((history.state as { overlay?: boolean } | null)?.overlay) history.back(); } catch { /* ignore */ }
+    if (reduceMotion() || typeof matchMedia === "undefined") { setOpenState(null); return; }
+    setClosing(true); closingRef.current = true;
+    setTimeout(() => { setOpenState(null); setClosing(false); closingRef.current = false; }, 360);
+  };
+  // leaving for a page opened from the contents: the page change carries the motion, and that page takes the
+  // contents' history step (AppState.show replaces it)
+  const leave = () => setOpenState(null);
+  useEffect(() => {
+    if (!open) return;
+    // system back closes them at once; a close already playing out (which stepped history back itself) finishes
+    const onPop = () => { if (!closingRef.current && !(history.state as { overlay?: boolean } | null)?.overlay) setOpenState(null); };
+    addEventListener("popstate", onPop);
+    return () => removeEventListener("popstate", onPop);
+  }, [open]);
   const start: Level = route.name === "home" ? "shelf" : place.lesson ? "chapter" : "year";
   // My Bento is a page of its own (G 2026-10-06: no pop-over version); the person circle goes there
   const openMe = () => { if (route.name !== "me") go({ name: "me" }, "fwd"); };
@@ -184,10 +209,21 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
 
   // the page behind steps back while the contents are open
   useEffect(() => {
-    if (open) document.documentElement.dataset.zoomed = "";
+    if (open && !closing) document.documentElement.dataset.zoomed = "";
     else delete document.documentElement.dataset.zoomed;
     return () => { delete document.documentElement.dataset.zoomed; };
-  }, [open]);
+  }, [open, closing]);
+
+  // Escape on a page is the same step as the island's < (Review nav #3); overlays, stacks and the sheet handle their own
+  useEffect(() => {
+    if (welcome || open || asking || sheetOpen || !place.back) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented || document.querySelector(".zoom,.fstack,.sheet,dialog[open]")) return;
+      up(place.back!.to);
+    };
+    addEventListener("keydown", onKey);
+    return () => removeEventListener("keydown", onKey);
+  });
 
   const run = progress.run, runGrade = run ? gradeOf(lessonOfItem(currentItem(run)).grade) : null;
   // the pages about you (Me, the grown-up page, facts) keep one island at the top (Review v43 item 17)
@@ -232,7 +268,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
       </>} center={
       <header className="island" style={{ "--p": fill, "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties}>
         {back
-          ? <button className="iback" onClick={() => go(back.to, "back")} aria-label={`Back to ${back.label}`}><Chevron dir="left" /></button>
+          ? <button className="iback" onClick={() => up(back.to)} aria-label={`Back to ${back.label}`}><Chevron dir="left" /></button>
           : <button className="iback" onClick={() => openSheet(true)} aria-label="Change grade"><Chevron dir="left" /></button>}
         <button className="iplace" onClick={() => setOpen(start === "shelf" ? "year" : start)} aria-label={`Contents. You're on ${place.title}`} aria-haspopup="dialog">
           <small>{place.kicker}</small>
@@ -259,7 +295,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
         <ConfirmStack title={`Quit ${run.title}?`} body="Your answers so far won't be kept." confirm="Quit"
           onCancel={() => setAsking(false)} onConfirm={() => { setAsking(false); quit({ stay: true }); }} />
       )}
-      {open && <Contents grade={place.lesson ? pageOf(place.lesson)?.grade ?? grade : grade} lessonId={place.lesson} level={open} close={() => setOpen(null)} />}
+      {open && <Contents grade={place.lesson ? pageOf(place.lesson)?.grade ?? grade : grade} lessonId={place.lesson} level={open} close={dismiss} leave={leave} closing={closing} />}
     </>
   );
 }
