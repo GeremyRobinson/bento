@@ -127,6 +127,17 @@ describe("chain helper", () => {
     expect(ex.steps.map(s => s.state)).toEqual([0, 1]);
     expect(buildChain([{ math: [num(1)] }, { math: [num(2), op("+"), num(3)] }, { math: [num(5)], from: 4 }], "x").lines.map(l => l.from)).toEqual([0, 1, 4]);
   });
+
+  it("draws a given picture instead of the chain, with the same steps", () => {
+    const pic: SceneDiagram = { kind: "scene", family: "test", width: 10, height: 10, items: [], alt: "p" };
+    const o = {
+      heading: "h", statement: [num(1)], alt: "a",
+      beats: [{ id: "a", narration: "one", math: [num(1)], lines: [[num(1)]], answerStep: "a", result: 1 }],
+    };
+    const ex = chainExplanation({ ...o, diagram: pic });
+    expect(ex.diagram).toBe(pic);
+    expect(ex.steps).toEqual(chainExplanation(o).steps);
+  });
 });
 
 // every picture this family draws, for the reference problem and many generated ones: nothing overlaps, nothing runs off

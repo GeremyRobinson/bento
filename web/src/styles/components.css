@@ -306,7 +306,7 @@
 .a-sweep{animation:sweep var(--dur-1200) var(--ease) var(--d,0s) both} @keyframes sweep{from{stroke-dasharray:0 1}}
 .a-level{transform-box:fill-box;transform-origin:center bottom;animation:level var(--dur-1000) var(--ease) var(--d,0s) both} @keyframes level{from{transform:scaleY(var(--from))}}
 .a-outsoon{animation:fadeOut var(--dur-400) ease var(--d,0s) forwards} @keyframes fadeOut{to{opacity:0}}
-.a-slide{animation:slide var(--dur-1000) var(--ease) var(--d,0s) both} @keyframes slide{from{transform:translateX(var(--dx))}}
+.a-slide{animation:slide var(--dur-1000) var(--ease) var(--d,0s) both} @keyframes slide{from{transform:translate(var(--dx,0px),var(--dy,0px))}}
 .a-move{animation:move var(--dur,var(--dur-1000)) var(--ease) var(--d,0s) both} @keyframes move{to{transform:translateX(var(--dx))}}
 .a-drop{animation:drop var(--dur-600) var(--spring) var(--d,0s) both} @keyframes drop{from{opacity:0;transform:translateY(-30px)}}
 .a-grow{transform-box:view-box;animation:growS var(--dur-1200) var(--ease) var(--d,0s) both} @keyframes growS{from{transform:scale(var(--from))}}
