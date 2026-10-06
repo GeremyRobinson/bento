@@ -210,7 +210,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
     return () => { document.removeEventListener("touchstart", onStart); document.removeEventListener("touchmove", onMove); };
   }, [welcome, open, start]);
 
-  // on the landing, while the dark Bento² section is under the nav, the wordmark turns light and the page fade steps aside
+  // on the landing, while the dark Bento² section is under the nav, the wordmark turns light
   useEffect(() => {
     if (!welcome) return;
     const root = document.documentElement;
