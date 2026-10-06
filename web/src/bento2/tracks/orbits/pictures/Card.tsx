@@ -44,20 +44,20 @@ export function CardScene({ props }: SceneProps) {
   for (let j = 0; j <= 24; j++) arcPts.push(pos(e0 + (m.phi * j) / 24, 0.42));
   const svg = (
     <svg viewBox={`0 0 ${W} ${H}`} className="b2pic" role="img"
-      aria-label={`The Mars plan: launch with Mars ${fx(m.phi, 0)} degrees ahead, fly ${km(m.days)} days${quiet ? "" : `, total delta v ${fx(m.total, 2)} km/s`}.`}>
+      aria-label={quiet ? "The Mars plan: Earth's and Mars's orbits around the Sun, and the transfer between them." : `The Mars plan: launch with Mars ${fx(m.phi, 0)} degrees ahead, fly ${km(m.days)} days, total delta v ${fx(m.total, 2)} km/s.`}>
       <circle cx={cx} cy={cy} r="8" className="b2dot amber" />
       <circle cx={cx} cy={cy} r={s} className="b2orbit" />
       <circle cx={cx} cy={cy} r={s * PLANET_AU.Mars} className="b2orbit" />
       <path d={path(full)} className="b2curve" style={{ strokeWidth: 1, opacity: 0.3 }} />
       {fly && <path d={path(half)} className="b2curve sky" style={{ strokeWidth: 2 }} />}
-      {!fly && <><path d={path(arcPts)} className="b2curve amber" style={{ strokeWidth: 1.5 }} />
+      {!fly && !quiet && <><path d={path(arcPts)} className="b2curve amber" style={{ strokeWidth: 1.5 }} />
         <line x1={cx} y1={cy} x2={pos(e0, 1)[0]} y2={pos(e0, 1)[1]} className="b2grid strong" />
         <line x1={cx} y1={cy} x2={pos(e0 + m.phi, PLANET_AU.Mars)[0]} y2={pos(e0 + m.phi, PLANET_AU.Mars)[1]} className="b2grid strong" />
         <text x={pos(e0 + m.phi / 2, 0.55)[0]} y={pos(e0 + m.phi / 2, 0.55)[1] + 4} textAnchor="middle" className="b2t amber">{fx(m.phi, 0)}°</text></>}
       <circle cx={ex} cy={ey} r="6" className="b2dot sky" />
       <text x={ex + 9} y={ey + 14} className="b2t sky">Earth</text>
-      <circle cx={mx} cy={my} r="6" className="b2dot pink" />
-      <text x={mx + 9} y={my + 4} className="b2t pink">Mars</text>
+      {!quiet && <><circle cx={mx} cy={my} r="6" className="b2dot pink" />
+      <text x={mx + 9} y={my + 4} className="b2t pink">Mars</text></>}
       {fly && <circle cx={ship[0]} cy={ship[1]} r="4.5" className="b2sat" />}
       <text x="10" y="20" className="b2t">{fly ? `day ${km(k * m.days)} of ${km(m.days)}` : "at launch"}</text>
     </svg>
@@ -76,15 +76,16 @@ export function CardScene({ props }: SceneProps) {
   };
   return (
     <Scene svg={svg}
-      controls={<>
+      controls={!quiet && <>
         <Slider label="Parking orbit" value={h1} min={150} max={1000} step={10} onChange={setH1} format={x => `${km(x)} km up`} />
         <Slider label="Mars orbit" value={h2} min={150} max={2000} step={10} onChange={setH2} format={x => `${km(x)} km up`} />
         <Toggle label="Engine" value={isp} onChange={setIsp} options={ENGINES.map(e => ({ v: e, label: `${e} s` }))} />
         <button type="button" className="ctl go" onClick={() => setFly(f => !f)}>{fly ? "Back to launch" : "Launch"}</button>
       </>}
       readouts={<>
-        <Read label="Window" value={`Mars ${fx(m.phi, 0)}° ahead, every ${km(w.S * 365.25)} days`} tone="amber" />
-        <Read label="Flight" value={`${km(m.days)} days`} />
+        {!quiet && <Read label="Window" value={`Mars ${fx(m.phi, 0)}° ahead, every ${km(w.S * 365.25)} days`} tone="amber" />}
+        {!quiet && <Read label="Flight" value={`${km(m.days)} days`} />}
+        {quiet && <Read label="The trip" value={`${km(h1)} km above Earth to ${km(h2)} km above Mars, I_sp ${isp} s`} />}
         {!quiet && <Read label="Leave Earth" value={`${fx(m.dep, 2)} km/s (v∞ ${fx(m.vinf1, 2)})`} tone="sky" />}
         {!quiet && <Read label="Stay at Mars" value={`${fx(m.cap, 2)} km/s (v∞ ${fx(m.vinf2, 2)})`} tone="pink" />}
         {!quiet && <Read label="Total Δv" value={`${fx(m.total, 2)} km/s`} big />}

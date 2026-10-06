@@ -36,7 +36,7 @@ function PullView({ props }: SceneProps) {
   const k = Math.min(1, Math.max(0, (t - 0.3) / 1.4)), ease = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
   const dd = from > 0 && !moved ? from + (d - from) * ease : d;
   const { ref, drag } = useSvgDrag();
-  const W = 360, H = 260, cx = 70, cy = 136, R = 34, g0 = 64;
+  const W = 360, H = 260, cx = 70, cy = 136, R = 34, g0 = 84;
   const g = (r: number) => gAt((r - 1) * R_KM);
   const px = cx + dd * R * Math.cos(ang), py = cy + dd * R * Math.sin(ang);
   const arrowLen = (r: number) => (g(r) / 9.81) * g0;
@@ -74,10 +74,10 @@ function PullView({ props }: SceneProps) {
   );
   return (
     <Scene svg={svg}
-      controls={<Slider label="Distance from Earth's center" value={d} min={1} max={8} step={0.01} onChange={v => { setMoved(true); setD(v); }} format={v => `${km(v * R_KM)} km`}
+      controls={<Slider label={quiet ? "Height above the ground" : "Distance from Earth's center"} value={d} min={1} max={8} step={0.01} onChange={v => { setMoved(true); setD(v); }} format={v => `${km((quiet ? v - 1 : v) * R_KM)} km`}
         marks={[{ v: 1, label: "Ground" }, { v: 1 + 400 / R_KM, label: "Station" }, { v: 2, label: "2 R⊕" }, { v: 4, label: "4 R⊕" }]} />}
       readouts={<>
-        <Read label="Distance r" value={`${km(dd * R_KM)} km`} />
+        {!quiet && <Read label="Distance r" value={`${km(dd * R_KM)} km`} />}
         <Read label="Height" value={`${km((dd - 1) * R_KM)} km`} />
         {!quiet && <Read label="Pull g" value={`${fx(g(dd), 2)} m/s²`} tone="sky" big />}
         {!quiet && <Read label="Of the ground's" value={`${Math.round((100 * g(dd)) / 9.81)}%`} />}
@@ -94,7 +94,8 @@ function PairView({ props }: SceneProps) {
   const single = typeof props.h === "number";
   const [k, setK] = useState(num(props, "k", 4));
   const [h, setH] = useState(num(props, "h", 300));
-  const t = useClock(true, 0.6);
+  // still while a guess or a problem is open, so the lap times give nothing away
+  const t = useClock(!quiet, 0.6);
   const W = 360, H = 260, cx = 180, cy = 130;
   if (single) {
     const r = R_KM + h, v = vCirc(MU_E, r * 1000) / 1000, T = period(MU_E, r * 1000);
@@ -114,7 +115,7 @@ function PairView({ props }: SceneProps) {
         controls={<Slider label="Height above Earth" value={h} min={150} max={36000} step={50} onChange={setH} format={x => `${km(x)} km`}
           marks={[{ v: 300, label: "Parking" }, { v: 400, label: "Station" }, { v: 20200, label: "GPS" }, { v: 35800, label: "Geo" }]} />}
         readouts={<>
-          <Read label="Radius r" value={`${km(r)} km`} />
+          {!quiet && <Read label="Radius r" value={`${km(r)} km`} />}
           {!quiet && <Read label="Speed √(μ/r)" value={`${fx(v, 2)} km/s`} tone="sky" big />}
           {!quiet && <Read label="One lap" value={dur(T)} />}
         </>} />
@@ -161,10 +162,11 @@ const KIND_NAME = { circle: "Circle", ellipse: "Ellipse", parabola: "Parabola", 
 
 function LaunchView({ props, marker }: SceneProps) {
   const hide = flag(props, "hide"), quiet = flag(props, "quiet"), showE = flag(props, "energy"), sweep = flag(props, "sweep");
-  const [body, setBody] = useState<BodyId>(str(props, "body", "earth") as BodyId);
+  const [body, setBody] = useState<BodyId>(str(props, "body", typeof props.mode === "string" ? "toy" : "earth") as BodyId);
   const [speed, setSpeed] = useState(num(props, "speed", 1.15));
   const [tilt, setTilt] = useState(0);
   const [warp, setWarp] = useState(1);
+  // the body only sets the units and the drawn size; the shape depends on the speed ratio alone
   const [touched, setTouched] = useState(false);
   // the escape reveal slides the speed up from the circle until the orbit opens
   const [goal, setGoal] = useState(sweep ? 1 : speed);
@@ -172,7 +174,8 @@ function LaunchView({ props, marker }: SceneProps) {
   const tw = useTween(goal, 2200);
   const s = sweep && !touched ? tw : speed;
   const B = BODIES[body];
-  const W = 360, H = 260, cx = showE ? 236 : 214, cy = 130, r0 = 50, Rp = 0.34;
+  const W = 360, H = 260, cx = showE ? 236 : 214, cy = 130, r0 = 50;
+  const Rp = body === "earth" ? R_KM / B.r0 : body === "mars" ? R_MARS_KM / B.r0 : body === "sun" ? 0.06 : 0.34;
   // the launch: at (1, 0) in units of the start distance, speed s × circular speed, tilted from sideways by `tilt`
   const vx = -s * Math.sin(tilt), vy = s * Math.cos(tilt);
   const c = conicOf(1, 1, 0, vx, vy);
@@ -199,7 +202,7 @@ function LaunchView({ props, marker }: SceneProps) {
   const eps = s * s / 2 - 1, kind = KIND_NAME[c.kind];
   const typeText = crash ? `${kind}, hits the ${body === "sun" ? "Sun" : "planet"}` : kind;
   // energy bars, per kilogram, in units of μ/r at the start: kinetic s²/2 up, potential −1 down, total
-  const bars = showE && (() => {
+  const bars = showE && !quiet && (() => {
     const z = 150, u = 50, bar = (x: number, v: number, tone: string, label: string, val: boolean) => (
       <g className={tone}>
         <rect x={x} y={v >= 0 ? z - v * u : z} width="18" height={Math.max(1.5, Math.abs(v) * u)} rx="3" className="b2bar" />
@@ -247,8 +250,8 @@ function LaunchView({ props, marker }: SceneProps) {
     <Scene svg={svg}
       controls={<>
         <Slider label="Launch speed" value={s} min={0.3} max={1.8} step={0.005} onChange={v => { setTouched(true); setSpeed(v); }}
-          format={x => `${fx(x, 3)} × circular${body === "toy" ? "" : `, ${fx((x * v0) / 1000, 2)} km/s`}`} marks={[{ v: 1, label: "Circle" }, { v: Math.SQRT2, label: "Escape" }]} />
-        {!hide && <Slider label="Time warp" value={warp} min={0.25} max={4} step={0.25} onChange={setWarp} format={x => `× ${fx(x, 2)}`} />}
+          format={x => `${fx(x, 3)} × circular`} marks={[{ v: 1, label: "Circle" }, { v: Math.SQRT2, label: "Escape" }]} />
+        {!hide && <Toggle label="Time warp" value={String(warp)} onChange={v => setWarp(Number(v))} options={["0.5", "1", "4"].map(v => ({ v, label: `× ${v}` }))} />}
         {!hide && <Toggle label="Central body" value={body} onChange={setBody} options={(Object.keys(BODIES) as BodyId[]).map(b => ({ v: b, label: BODIES[b].name }))} />}
       </>}
       readouts={hide ? <Read label="Start distance" value={dist(1)} /> : <>
@@ -267,14 +270,14 @@ function LaunchView({ props, marker }: SceneProps) {
 
 function runOrbit(h: number, m: Method, laps: number) {
   let s: State = { x: 1, y: 0, vx: 0, vy: 1 };
-  const pts: [number, number][] = [[1, 0]], es: number[] = [energy(s, 1)];
+  const pts: [number, number][] = [[1, 0]], es: number[] = [energy(s, 1)], ts: number[] = [0];
   const n = Math.ceil((laps * 2 * Math.PI) / h), every = Math.max(1, Math.floor(n / 1400));
   for (let i = 1; i <= n; i++) {
     s = step(s, h, 1, m);
-    if (i % every === 0 || i === n) { pts.push([s.x, s.y]); es.push(energy(s, 1)); }
-    if (Math.hypot(s.x, s.y) > 12) { pts.push([s.x, s.y]); es.push(energy(s, 1)); break; }
+    if (i % every === 0 || i === n) { pts.push([s.x, s.y]); es.push(energy(s, 1)); ts.push((i * h) / (2 * Math.PI)); }
+    if (Math.hypot(s.x, s.y) > 12) { pts.push([s.x, s.y]); es.push(energy(s, 1)); ts.push((i * h) / (2 * Math.PI)); break; }
   }
-  return { pts, es, end: s };
+  return { pts, es, ts, end: s };
 }
 
 function IntegratorView({ props }: SceneProps) {
@@ -304,9 +307,9 @@ function IntegratorView({ props }: SceneProps) {
   );
   // the energy along the run: Euler's climbs; symplectic Euler's wobbles around the start
   const es = orbit.es.slice(0, shown + 1);
-  const gw = 340, gh = 70, lo = -0.6, hi = 0.1, X = (i: number) => 10 + (i / Math.max(1, orbit.es.length - 1)) * (gw - 20), Y = (e: number) => gh - 8 - ((Math.min(hi, Math.max(lo, e)) - lo) / (hi - lo)) * (gh - 16);
+  const gw = 340, gh = 90, lo = -0.6, hi = 0.1, X = (i: number) => 10 + (i / Math.max(1, orbit.es.length - 1)) * (gw - 20), Y = (e: number) => gh - 8 - ((Math.min(hi, Math.max(lo, e)) - lo) / (hi - lo)) * (gh - 16);
   const graph = !quiet && (
-    <svg viewBox={`0 0 ${gw} ${gh}`} className="b2pic" role="img" aria-label={`Energy over the run, from −0.5 to ${fx(es[es.length - 1]!, 3)}.`} style={{ maxHeight: 76 }}>
+    <svg viewBox={`0 0 ${gw} ${gh}`} className="b2pic" role="img" aria-label={`Energy over the run, from −0.5 to ${fx(es[es.length - 1]!, 3)}.`} style={{ maxHeight: 92 }}>
       <line x1="10" y1={Y(-0.5)} x2={gw - 10} y2={Y(-0.5)} className="b2grid strong" />
       <line x1="10" y1={Y(0)} x2={gw - 10} y2={Y(0)} className="b2grid" />
       <path d={path(es.map((e, i) => [X(i), Y(e)]))} className={`b2curve ${m === "euler" ? "pink" : "sky"}`} style={{ strokeWidth: 1.5 }} />
@@ -314,7 +317,6 @@ function IntegratorView({ props }: SceneProps) {
       <text x={gw - 14} y={Y(0) - 5} textAnchor="end" className="b2t">0: escapes</text>
     </svg>
   );
-  const done = Math.round((k * (orbit.pts.length - 1) / Math.max(1, orbit.pts.length - 1)) * 100);
   return (
     <Scene svg={svg}
       controls={<>
@@ -324,7 +326,7 @@ function IntegratorView({ props }: SceneProps) {
       readouts={quiet ? <Read label="Start" value="r = (1, 0), v = (0, 1), energy −0.5" /> : <>
         <Read label="Distance now" value={fx(lastR, 2)} tone={m === "euler" ? "pink" : "sky"} big />
         <Read label="Energy now" value={fx(es[es.length - 1]!, 3)} />
-        <Read label="Run" value={lastR > 11.9 ? "flew off" : `${done}% of ${laps} orbits`} />
+        <Read label="Orbits so far" value={lastR > 11.9 ? `${fx(orbit.ts[shown] ?? 0, 0)}, then it flew off` : `${fx(orbit.ts[shown] ?? 0, 0)} of ${laps}`} />
         {run && <Read label="Started at" value="r = 1, energy −0.5" />}
       </>}
       foot={graph || undefined} />

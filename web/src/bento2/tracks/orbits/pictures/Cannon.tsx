@@ -7,11 +7,11 @@ import { fx, path, Read, Scene, Slider, useClock } from "../../../ui/kit";
 import { MU_E, R_E, period, propagator, vCirc, vEsc } from "../maths";
 import { dur } from "./parts";
 
-const VC = vCirc(MU_E, R_E) / 1000, VE = vEsc(MU_E, R_E) / 1000, GROUND = 0.9;
+const VC = vCirc(MU_E, R_E) / 1000, VE = vEsc(MU_E, R_E) / 1000, GROUND = 0.8;
 
 export function CannonScene({ props }: SceneProps) {
-  const [v, setV] = useState(num(props, "v", 5));
-  const W = 360, H = 260, cx = 180, cy = 150, s = 100;
+  const [v, setV] = useState(num(props, "v", 6.5));
+  const W = 360, H = 260, cx = 180, cy = 140, s = 76;
   // the flight, sampled in time until it hits the ground, laps once, or leaves the picture
   const flight = useMemo(() => {
     const pr = propagator(1, 0, 1, Math.max(1e-6, v / VC), 0);

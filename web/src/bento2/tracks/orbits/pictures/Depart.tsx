@@ -39,7 +39,7 @@ export function DepartScene({ props }: SceneProps) {
     <svg viewBox={`0 0 ${W} ${H}`} className="b2pic" role="img"
       aria-label={`${mars ? "Arriving at Mars" : "Leaving Earth"} from a ${km(h)} km orbit${quiet ? "" : `: a burn of ${fx(burn, 2)} km/s${open ? `, leftover speed ${fx(vinf, 2)} km/s` : ", still bound"}`}.`}>
       <circle cx={cx} cy={cy} r={300} className="b2cancel" style={{ opacity: 0.6 }} />
-      <text x={W - 8} y="18" textAnchor="end" className="b2t amber">edge of {mars ? "Mars's" : "Earth's"} pull (not to scale)</text>
+      <text x="10" y="20" className="b2t amber">edge of {mars ? "Mars's" : "Earth's"} pull (not to scale)</text>
       <circle cx={cx} cy={cy} r={(s * R) / (R + h)} className="b2earth" />
       <circle cx={cx} cy={cy} r={s} className="b2orbit" />
       {(!quiet || mars) && <path d={conicPath(c, cx, cy, s, 9, open ? (mars ? "in" : "out") : "all")} className={`b2curve ${open ? "pink" : "amber"}`} />}
@@ -71,14 +71,14 @@ export function DepartScene({ props }: SceneProps) {
   const saved = Math.abs(((b2.shelf.dv_depart?.value as number) ?? NaN) - plan.dep) < 1e-9 && Math.abs(((b2.shelf.dv_capture?.value as number) ?? NaN) - plan.cap) < 1e-9;
   return (
     <Scene svg={view === "sun" && !mars ? sunSvg : planet}
-      controls={<>
+      controls={!quiet && <>
         {mars
           ? <Slider label="Arriving with v∞" value={vinfIn} min={0} max={5} step={0.01} onChange={setVinfIn} format={x => `${fx(x, 2)} km/s`} marks={[{ v: 2.65, label: "From the transfer" }]} />
           : <Slider label="Burn Δv" value={dv} min={0} max={6} step={0.01} onChange={setDv} format={x => `${fx(x, 2)} km/s`} marks={[{ v: Math.round((ve - vc) * 100) / 100, label: "Just escapes" }]} />}
         {!mars && <Toggle label="View" value={view} onChange={setView} options={[{ v: "planet", label: "Earth's view" }, { v: "sun", label: "Sun's view" }]} />}
       </>}
       readouts={<>
-        <Read label={mars ? "Capture burn" : "Burn"} value={quiet && mars ? "?" : `${fx(burn, 2)} km/s`} tone="amber" big={!quiet} />
+        <Read label={mars ? "Capture burn" : "Burn"} value={quiet && (mars || startVinf >= 0) ? "?" : `${fx(burn, 2)} km/s`} tone="amber" big={!quiet} />
         {!quiet && <Read label="Speed after" value={`${fx(vAfter, 2)} km/s`} />}
         {!quiet && <Read label="Escape speed here" value={`${fx(ve, 2)} km/s`} />}
         {!quiet && <Read label="Circle speed here" value={`${fx(vc, 2)} km/s`} />}

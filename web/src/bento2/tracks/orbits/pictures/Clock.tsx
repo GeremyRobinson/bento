@@ -89,11 +89,11 @@ export function ClockScene({ props, marker }: SceneProps) {
         <button type="button" className="ctl go" onClick={() => setLaunch(day)}>Launch</button>
       </>}
       readouts={<>
-        {!hide && <Read label={`${target} from Earth`} value={`${fx(Math.abs(phase), 0)}° ${phase >= 0 ? "ahead" : "behind"}`} tone="pink" big />}
+        {!hide && <Read label={flying ? `${target} from Earth at launch` : `${target} from Earth`} value={`${fx(Math.abs(phase), 0)}° ${phase >= 0 ? "ahead" : "behind"}`} tone="pink" big />}
         {shown && <Read label="Transfer needs" value={`${fx(Math.abs(w.phi), 0)}° ${w.phi >= 0 ? "ahead" : "behind"}`} tone="amber" />}
         {shown && !flying && <Read label="Next window" value={wait < 0.5 ? "now" : `in ${km(wait)} days`} />}
         {shown && <Read label="Windows every" value={`${km(w.S * 365.25)} days`} />}
-        {!hide && <Read label="Flight" value={`${km(w.days)} days${flying ? `, day ${km(flown)}` : ""}`} tone="sky" />}
+        {shown && <Read label="Flight" value={`${km(w.days)} days${flying ? `, day ${km(flown)}` : ""}`} tone="sky" />}
         {flying && k >= 1 && <Read label="At arrival" value={miss < 3 ? `meets ${target}` : `${target} is ${fx(miss, 0)}° away`} />}
         {!hide && <Read label="Stepper" value={`symplectic Euler, h = ${hHours} h`} />}
       </>} />

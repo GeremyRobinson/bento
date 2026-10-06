@@ -38,12 +38,12 @@ export function StackScene({ props }: SceneProps) {
       {cmp > 0 && stack(56, cmp, "sky", `${fx(cmp, 1)} t`)}
       <line x1={gx0} y1={gy0} x2={gx1} y2={gy0} className="b2axis" />
       <line x1={gx0} y1={gy1} x2={gx0} y2={gy0} className="b2axis" />
-      <text x={gx1} y={gy0 + 16} textAnchor="end" className="b2t">propellant, tonnes</text>
+      <text x={gx1} y={gy0 - 8} textAnchor="end" className="b2t">propellant, tonnes</text>
       <text x={gx0 + 6} y={gy1 + 4} className="b2t">Δv, km/s</text>
       {[5, 10, 15, 20].map(m => <text key={m} x={X(m)} y={gy0 + 16} textAnchor="middle" className="b2t">{m === 20 ? "" : m}</text>)}
-      <path d={path(curve)} className="b2curve amber" />
-      <line x1={X(prop)} y1={gy0} x2={X(prop)} y2={Y(dv(prop))} className="b2mark amber" />
-      <circle cx={X(prop)} cy={Y(dv(prop))} r="6" className="b2dot amber" />
+      {!quiet && <path d={path(curve)} className="b2curve amber" />}
+      {!quiet && <line x1={X(prop)} y1={gy0} x2={X(prop)} y2={Y(dv(prop))} className="b2mark amber" />}
+      {!quiet && <circle cx={X(prop)} cy={Y(dv(prop))} r="6" className="b2dot amber" />}
       {!quiet && <text x={X(prop) + 9} y={Y(dv(prop)) + 16} className="b2t amber">{fx(dv(prop), 2)}</text>}
       {cmp > 0 && <>
         <circle cx={X(cmp)} cy={Y(dv(cmp))} r="6" className="b2dot sky" />
@@ -58,8 +58,9 @@ export function StackScene({ props }: SceneProps) {
         {!fixedVe && <Toggle label="Engine" value={isp} onChange={setIsp} options={ENGINES.map(e => ({ v: e.v, label: e.label }))} />}
       </>}
       readouts={<>
-        <Read label="Exhaust speed v_e" value={`${fx(ve, 2)} km/s`} />
-        <Read label="Mass ratio" value={fx((dry + prop) / dry, 2)} />
+        {!quiet && <Read label="Exhaust speed v_e" value={`${fx(ve, 2)} km/s`} />}
+        {!quiet && <Read label="Mass ratio" value={fx((dry + prop) / dry, 2)} />}
+        {quiet && <Read label="Ship" value={`1 t dry, ${fx(prop, 1)} t of propellant`} tone="amber" />}
         {!quiet && <Read label="Δv" value={`${fx(dv(prop), 2)} km/s`} tone="amber" big />}
         {!quiet && <Read label="The next tonne adds" value={`${fx(next, 2)} km/s`} />}
         {!quiet && <Read label="Propellant fraction" value={`${fx((100 * prop) / (dry + prop), 1)}%`} />}

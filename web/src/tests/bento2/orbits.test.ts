@@ -58,6 +58,9 @@ describe("Orbits: the track", () => {
     for (const t of track.tools) expect(pics.has(t.id), t.id).toBe(true);
     for (const p of track.projects) expect(pics.has(p.scene.scene), p.id).toBe(true);
   });
+  it("every Guess picture starts with its answer hidden (quiet or hide) and the reveal turns it on", () => {
+    for (const l of track.lessons) expect(l.guess.props?.quiet === true || l.guess.props?.hide === true, l.id).toBe(true);
+  });
   const answers = (id: string, p?: unknown) => {
     const l = track.lessons.find(x => x.id === id)!;
     return l.workIt.steps(p ?? l.workIt.reference).map(s => s.answer.map(a => formatAnswer(a, s.choices ? "whole" : s.form)).join(", "));

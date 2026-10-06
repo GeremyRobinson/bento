@@ -14,7 +14,7 @@ export function KeplerScene(sp: SceneProps) {
 
 const PLANETS: { name: string; a: number; label?: boolean }[] = [
   { name: "Mercury", a: 0.387, label: true }, { name: "Venus", a: 0.723 }, { name: "Earth", a: 1, label: true }, { name: "Mars", a: 1.524 },
-  { name: "Jupiter", a: 5.203, label: true }, { name: "Saturn", a: 9.537, label: true }, { name: "Uranus", a: 19.19 }, { name: "Neptune", a: 30.07, label: true },
+  { name: "Jupiter", a: 5.203, label: true }, { name: "Saturn", a: 9.537 }, { name: "Uranus", a: 19.19 }, { name: "Neptune", a: 30.07, label: true },
 ];
 
 function LogLogView({ props, marker }: SceneProps) {
@@ -39,11 +39,11 @@ function LogLogView({ props, marker }: SceneProps) {
       {!hide && <path d={path([[X(0.25), Y(0.125)], [X(40), Y(253)]])} className="b2curve sky" style={{ strokeWidth: 1.5, opacity: 0.7 }} />}
       {PLANETS.map(p => <g key={p.name}>
         <circle cx={X(p.a)} cy={Y(p.a ** 1.5)} r="4" className="b2dot sky" />
-        {p.label && <text x={X(p.a) + 7} y={Y(p.a ** 1.5) + 14} className="b2t">{p.name}</text>}
+        {p.label && <text x={X(p.a) + (p.a > 20 ? -9 : 7)} y={Y(p.a ** 1.5) + (p.a > 20 ? 4 : 14)} textAnchor={p.a > 20 ? "end" : "start"} className="b2t">{p.name}</text>}
       </g>)}
       {marker && <>
         <line x1={x0} y1={Y(marker[0])} x2={x1} y2={Y(marker[0])} className="b2mark guess" />
-        <text x={x1 - 4} y={Y(marker[0]) - 6} textAnchor="end" className="b2t">your guess: {fx(marker[0], 1)} years</text>
+        <text x={x0 + 6} y={Y(marker[0]) - 6} className="b2t">your guess: {fx(marker[0], 1)} years</text>
       </>}
       {!hide && <>
         <line x1={X(a)} y1={y0} x2={X(a)} y2={Y(T)} className="b2mark amber" />
@@ -60,7 +60,7 @@ function LogLogView({ props, marker }: SceneProps) {
         <Read label="Distance a" value={`${fx(a, 2)} AU`} tone="amber" />
         {!hide && <Read label="Year T = a^(3/2)" value={`${fx(T, 2)} years`} tone="amber" big />}
         {!hide && <Read label="T² and a³" value={`${fx(T * T, 1)} and ${fx(a ** 3, 1)}`} />}
-        <Read label="Line's slope" value="3/2" tone="sky" />
+        {!hide && <Read label="Line's slope" value="3/2" tone="sky" />}
       </>} />
   );
 }
@@ -75,7 +75,7 @@ function eccAnomaly(M: number, e: number) {
 function AreasView({ props }: SceneProps) {
   const quiet = flag(props, "quiet"), arrows = flag(props, "arrows");
   const [e, setE] = useState(num(props, "e", 0.5));
-  const t = useClock(true, 0.15);
+  const t = useClock(!quiet, 0.15);
   const W = 360, H = 250, N = 12;
   // a fixed: the ellipse fits; the Sun sits at the right-hand focus, so the near point is on the right
   const A = Math.min(160, 106 / Math.sqrt(1 - e * e)), B = A * Math.sqrt(1 - e * e), cx = 180, cy = 116;
