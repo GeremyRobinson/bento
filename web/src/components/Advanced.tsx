@@ -1,3 +1,4 @@
+import { BentoMark } from "./primitives/BentoMark";
 import { useEffect, useRef, useState } from "react";
 import { TEASER_MS, TeaserPic, type TeaserId } from "./TeaserPics";
 
@@ -29,7 +30,7 @@ export function Advanced() {
   }, []);
   return (
     <section className="ladv" ref={box} aria-labelledby="adv-title">
-      <h2 id="adv-title" aria-label="Bento squared">Bento²</h2>
+      <h2 id="adv-title"><BentoMark className="advmark" squared /></h2>
       <p className="adv-tag">Bento, maxed out.</p>
       <p>Where 12th grade ends, the box opens up: the math that moves pictures, steers spacecraft and teaches computers to learn. A full set of tools comes with it.</p>
       <div className="adv-tease">

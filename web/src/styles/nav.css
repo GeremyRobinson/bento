@@ -33,14 +33,15 @@
 @media (min-width:700px){.island:not(.guest){width:min(460px,100%)}}
 /* TEXT LOGO 1, "Bento, tightened" (G picked it 2026-10-06): Inter 650, drawn tight at -.05em */
 :root{--mark-track:-.05em}
-.bmark{font:var(--w-bold) var(--fz-md)/1 var(--sans);letter-spacing:var(--mark-track);color:var(--text);transition:color var(--m-page) var(--m-ease)}
+.bmark{font:var(--w-bold) var(--fz-lg)/1 var(--sans);letter-spacing:var(--mark-track);font-feature-settings:"cv05","cv08","cv11";color:var(--text);transition:color var(--m-page) var(--m-ease)}
+.bmark sup{font-size:.42em;vertical-align:.95em;margin-left:.04em;letter-spacing:0;line-height:0}
 .zbar-top .zmark{grid-column:1;justify-self:start}
 /* inside Contents the mark lines up with the Contents window, not the page bar; it fades out with the bar and reveals
    here a beat later, never sliding between the two (G 2026-10-06) */
 .zoom .zmark .imark .bl{animation:blIn var(--m-in) var(--m-ease) both;animation-delay:calc(var(--mark-wait) + var(--c,0) * var(--m-step))}
 html[data-motion="reduce"] .zoom .zmark .imark .bl{animation:fadeIn var(--m-swap) var(--m-ease) var(--mark-wait) both}
 .zoom.closing .zmark .imark{animation:fadeOut var(--m-tap) var(--m-ease) both}
-.island .iword{font:var(--w-bold) var(--fz-md)/1 var(--sans);letter-spacing:var(--mark-track)}
+.island .iword{font-size:var(--fz-lg)}
 /* the landing's "Bento" is the wordmark alone: plain text on the left, no pill (G, 2026-10-06) */
 /* nothing sits behind it: no fade, no band, no line; the wordmark and buttons float over the page (G 2026-10-06: "no bar") */
 /* over the dark Bento² section the wordmark turns light (Review layout-shift should-fix) */
@@ -360,7 +361,7 @@ html:has(.screen),html:has(.screen) body{overflow:hidden;overscroll-behavior:non
    takes you home (G 2026-10-06) ---- */
 .imark{display:grid;place-items:center;height:var(--float-h);padding:0 var(--sp-2);border-radius:var(--r-pill);color:var(--text);transition:transform var(--dur-180) var(--ease),color var(--m-page) var(--m-ease)}
 .imark:active{transform:scale(.96)}
-.imark .iword{font:var(--w-bold) var(--fz-lg)/1 var(--sans);letter-spacing:var(--mark-track)}
+.imark .iword{font-size:var(--fz-lg)}
 /* on a phone the place pill needs the room: its fill circle becomes the pill's own fill, charging left to right */
 @media (max-width:699px){
   .itop,.itop:has(>.icorner.left){grid-template-columns:auto minmax(0,1fr) auto;gap:var(--sp-2)}

@@ -146,7 +146,9 @@
   border-radius:var(--r-panel);padding:calc(var(--u) * 4) calc(var(--u) + var(--sp-1)) calc(var(--u) * 2.5);display:grid;justify-items:center;text-align:center;gap:calc(var(--u) - var(--sp-1));
   overflow:hidden;color-scheme:dark}
 .adv-eyebrow{font-size:calc(var(--fs) * .95);font-weight:var(--w-bold);color:var(--adv-dim)}
-.ladv h2{font:var(--w-bold) clamp(44px,8vw,84px)/1 var(--sans);letter-spacing:-.045em;background:linear-gradient(100deg,var(--adv-ink) 20%,var(--adv-lilac) 55%,var(--adv-pink) 85%);-webkit-background-clip:text;background-clip:text;color:transparent;padding:0 .1em .06em}
+/* the Bento² heading is the wordmark itself, solid, no gradient (Design wordmark handoff, G: nothing colorful) */
+.ladv h2{font:var(--w-bold) clamp(44px,8vw,84px)/1 var(--sans);color:var(--adv-ink);padding:0 .1em .06em}
+.ladv h2 .bmark{font-size:inherit;color:inherit}
 .ladv>p{max-width:560px;color:var(--adv-dim);font-size:calc(var(--fs) * 1.08);line-height:1.5;font-weight:var(--w-regular);text-wrap:pretty}
 .adv-courses{width:100%;display:grid;gap:var(--s);grid-template-columns:repeat(2,minmax(0,1fr));margin-top:calc(var(--u) * 1.5)}
 @media (min-width:900px){.adv-courses{grid-template-columns:repeat(4,minmax(0,1fr))}}
