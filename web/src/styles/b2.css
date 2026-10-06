@@ -247,7 +247,10 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
   .screen.fit.b2lesson.st-guess{grid-template-rows:minmax(0,.78fr) minmax(0,1.22fr)}
   .screen.fit.b2lesson.st-name,.screen.fit.b2lesson.st-use:not(.proj){grid-template-rows:minmax(0,1fr);grid-template-areas:"card"}
   .b2lesson.st-name .b2stage,.b2lesson.st-use:not(.proj) .b2stage{display:none}
-  .screen.fit.b2lesson.st-play{grid-template-rows:minmax(0,1.2fr) minmax(0,.8fr)}
+  /* Play: the card takes what its words need (up to about half), the picture takes the rest */
+  .screen.fit.b2lesson.st-play{grid-template-rows:minmax(0,1fr) auto}
+  .st-play .b2card{max-height:46dvh}
+  .st-play .b2stage .b2read{gap:2px var(--sp-3)}
   .st-play .b2body .b2small{display:none}
   /* a project's Use it: the card first, with a button that opens the project full screen */
   .screen.fit.b2lesson.st-use.proj{grid-template-rows:minmax(0,1fr);grid-template-areas:"card"}
