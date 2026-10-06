@@ -412,6 +412,15 @@ html:has(.screen) body{overflow:hidden}
 .bchap b{font-size:var(--fz-sm);line-height:1.25;font-weight:var(--w-bold);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-wrap:pretty}
 .bchap small{flex:none;font-size:var(--fz-xs);font-weight:var(--w-mid);color:var(--muted)}
 .sbento .today .b-weak{margin-top:var(--s);padding:0;background:none;box-shadow:none}
+/* landscape (an iPad held sideways, a laptop): the plan takes the tall slot beside the streak and the
+   chapters, sized to its own content, and the picture takes what's left; Practice again stays on the plan's Review
+   and on My Bento, so the plan is never cut (Review smoke, returning learner at 1366x768 and 1180x820) */
+@media (orientation:landscape) and (min-width:900px){
+  .sdetail>.sbento{grid-template-rows:minmax(0,1fr) auto auto;grid-template-areas:"pic pic stats" "plan plan streak" "plan plan chaps"}
+  .sdetail>.sbento.nopic{grid-template-areas:"plan plan stats" "plan plan streak" "plan plan chaps"}
+  .sdetail>.sbento>.today{min-height:auto;overflow:visible}
+  .sbento .today .b-weak{display:none}
+}
 /* portrait: the picture across the top, the two numbers side by side, then the plan and the chapters */
 @media (orientation:portrait),(max-width:899px){
   /* tiles keep their full height here; the detail scrolls inside itself when they need more room than the screen */

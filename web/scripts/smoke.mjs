@@ -16,26 +16,37 @@ const AUDIT = readFileSync(here + "smoke/audit.js", "utf8");
 const PAGE = "file://" + fileURLToPath(new URL("../dist-preview/index.html", import.meta.url));
 
 /** audit kinds that mean something is cut off; the corner checks (concentric, outline-over) are reported, not failed */
-const CLIPS = new Set(["content-cut", "spill", "viewport", "poke-clipped", "box", "mask"]);
-/** a battery's fill (the cards' and the nav's lesson dot) is cut by its own rounded corners on purpose */
-const CLIP_BY_DESIGN = /(battery > span\.fill|span\.ibat > i)$/;
-const SIZES = [{ w: 390, h: 844, scheme: "dark" }, { w: 1366, h: 1024, scheme: "light" }];
+const CLIPS = new Set(["content-cut", "spill", "viewport", "poke-clipped", "box", "mask", "ring", "scroll-cut"]);
+const SIZES = [{ w: 390, h: 844, scheme: "dark" }, { w: 1180, h: 820, scheme: "light" }, { w: 1366, h: 768, scheme: "dark" }, { w: 1366, h: 1024, scheme: "light" }];
+/** containers meant to scroll (a long list); anything else that scrolls inside itself is cut */
+const SCROLLERS = ".fhome>.ftables, nav.slist.more";
 const ROUTES = ["home", "year", "learn", "facts", "me", "settings", "grown-up", "welcome"];
 
 const fails = [], notes = [];
 const browser = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {});
-for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) {
+/** a 5th-grader a few weeks in: scores (two weak), a grade check-up, a streak, so every tile carries its longest content */
+const RETURNING = { grade: 5, chosen: true, xp: 1240, gxp: { 5: 1240 }, streak: 12, done: 9, last: new Date().toDateString(),
+  lessons: { "g5-pow10": 2, "g5-order": 1, "g5-round": 1, "g5-adddec": 1, "g5-multdec": 1, "g5-divdec": 1, "g5-mult2": 1, "g5-divide": 1 },
+  scores: Object.fromEntries([["g5-pow10", 4], ["g5-order", 3], ["g5-round", 1], ["g5-adddec", 1], ["g5-multdec", 0], ["g5-divdec", 3], ["g5-mult2", 2], ["g5-divide", 3]]
+    .map(([id, l]) => [id, { last: l, best: l, pct: l * 25, date: Date.now(), mastered: l === 4 }])),
+  tests: { "grade:5": { last: 3, best: 3, pct: 75, date: Date.now(), mastered: false } } };
+for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for (const learner of ["new", "returning"]) {
   const ctx = await browser.newContext({ viewport: { width: w, height: h }, colorScheme: scheme });
   const p = await ctx.newPage();
-  const tag = `${w} ${scheme}${contrast ? " contrast" : ""}`;
+  const tag = `${w}x${h} ${scheme}${contrast ? " contrast" : ""} ${learner}`;
   p.on("pageerror", e => fails.push(`${tag}: page error ${e.message}`));
   await p.addInitScript(() => { let s = 42; Math.random = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; });
-  // a learner who picked 5th grade
-  await p.goto(PAGE + "#/welcome"); await p.waitForTimeout(500);
-  await p.getByRole("button", { name: /Start learning/ }).first().click(); await p.waitForTimeout(400);
-  await p.getByRole("radio", { name: /5th grade/ }).first().click(); await p.waitForTimeout(300);
-  const go = p.locator(".gdgo button").first(); if (await go.count()) await go.click();
-  await p.waitForTimeout(800);
+  if (learner === "returning") {
+    await p.addInitScript(save => { try { if (!localStorage.getItem("stepmath")) localStorage.setItem("stepmath", JSON.stringify(save)); } catch {} }, RETURNING);
+    await p.goto(PAGE + "#/"); await p.waitForTimeout(800);
+  } else {
+    // a learner who picked 5th grade
+    await p.goto(PAGE + "#/welcome"); await p.waitForTimeout(500);
+    await p.getByRole("button", { name: /Start learning/ }).first().click(); await p.waitForTimeout(400);
+    await p.getByRole("radio", { name: /5th grade/ }).first().click(); await p.waitForTimeout(300);
+    const go = p.locator(".gdgo button").first(); if (await go.count()) await go.click();
+    await p.waitForTimeout(800);
+  }
   // today's lesson, opened the way a learner would
   await p.evaluate(() => document.querySelector(".pitem.now")?.click()); await p.waitForTimeout(500);
   const lesson = await p.evaluate(() => location.hash.startsWith("#/learn/") ? location.hash : null);
@@ -48,8 +59,10 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) {
     await p.evaluate(() => document.getAnimations().forEach(a => a.finish())); await p.waitForTimeout(100);
     const at = `${tag} ${route}`;
     await p.addScriptTag({ content: AUDIT });
-    const r = await p.evaluate(() => {
-      const flags = window.__ecAudit().flags;
+    const r = await p.evaluate((SCROLLERS) => {
+      // a battery's fill is cut by the battery's own corners on purpose (the cards and the nav's lesson dot)
+      // inside a list meant to scroll, a row past the edge is scrolled, not cut
+      const flags = window.__ecAudit().flags.filter(f => !document.querySelector(`[data-ec="${f.id}"]`)?.closest(".battery,.ibat," + SCROLLERS));
       const shown = e => { const s = getComputedStyle(e); const b = e.getBoundingClientRect(); return s.visibility !== "hidden" && +s.opacity > 0 && b.width > 0 && b.height > 0; };
       const tiny = [];
       const walk = document.createTreeWalker(document.getElementById("app") ?? document.body, NodeFilter.SHOW_TEXT);
@@ -61,9 +74,17 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) {
         const s = getComputedStyle(e); return s.outlineStyle === "solid" && parseFloat(s.outlineOffset) < 0 && shown(e) && !e.matches(":focus-visible");
       }).filter(e => parseFloat(getComputedStyle(e).borderTopLeftRadius) === 0).map(e => `${e.tagName.toLowerCase()}.${e.className}`);
       const marks = [...document.querySelectorAll(".itop .imark")].filter(shown).map(e => { const b = e.getBoundingClientRect(); return `${Math.round(b.x)},${Math.round(b.y)}`; });
-      return { flags, tiny, corners, marks, scroll: document.documentElement.scrollHeight - innerHeight };
-    });
-    for (const f of r.flags.filter(f => !CLIP_BY_DESIGN.test(f.path ?? f.el)))
+      // a tile that scrolls inside itself: its last rows are cut with no sign they're there (scrollbars are hidden)
+      for (const e of document.querySelectorAll("#app *")) {
+        const s = getComputedStyle(e); if (!/auto|scroll/.test(s.overflowY + s.overflowX) || !shown(e) || e.matches(SCROLLERS)) continue;
+        if (e.scrollHeight > e.clientHeight + 2 || e.scrollWidth > e.clientWidth + 2) flags.push({ kind: "scroll-cut", el: `${e.tagName.toLowerCase()}.${[...e.classList].join(".")} ${e.scrollHeight}/${e.clientHeight}` });
+      }
+      // the page never scrolls: html and body hide overflow, so measure how far any box reaches below the screen
+      // (scrollHeight alone reads a few px over on a fitted lesson with nothing actually below the edge)
+      const low = Math.max(0, ...[...document.querySelectorAll("#app *")].filter(shown).filter(e => !e.closest(SCROLLERS)).map(e => e.getBoundingClientRect().bottom));
+      return { flags, tiny, corners, marks, scroll: Math.round(low - innerHeight) };
+    }, SCROLLERS);
+    for (const f of r.flags)
       (CLIPS.has(f.kind) ? fails : notes).push(`${at}: ${f.kind} ${f.el}${f.path ? " in " + f.path : ""}`);
     for (const t of r.tiny.slice(0, 5)) fails.push(`${at}: text under 11px ${t}`);
     for (const c of [...new Set(r.corners)]) fails.push(`${at}: Panel line without a corner ${c}`);
