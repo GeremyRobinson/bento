@@ -59,7 +59,7 @@ function answers({ hour, minute }: TimeProblem): AnswerModel {
             : "The long hand at the top means the hour is just starting: 0 minutes."],
           [hour, "Read the short hand", "That's the short hand. The **long** hand tells the minutes."],
         ]),
-        hint: half ? "The long hand has gone halfway around. Half an hour is 30 minutes." : "Long hand at the top, on 12, means 0 minutes: o'clock.",
+        hint: half ? "The long hand has gone halfway around. An hour is 60 minutes: what is half of that?" : "Long hand at the top, on 12, means 0 minutes: o'clock.",
         explain: half ? `The long hand at ${longAt} is halfway around: ${count(HALF, "minute")}.` : "The long hand at 12 means 0 minutes.",
       }),
       { ...time, explain: `${count(hour, "hour")} and ${count(minute, "minute")} is written ${timeText(hour, minute)}.`, work: timeWork },

@@ -47,7 +47,11 @@ function answers(p: QuadProblem): AnswerModel {
   steps.push(
     oneBox({
       id: "corners", label: "Square corners", question: "How many square corners?", prompt: s => [s, text(" square corners")], ans: c.nRight,
-      wrong: slips(c.nRight, [c.nRight !== 4 && [4, "Counted every corner", "Check the corners with a square corner: they don't all fit."]]),
+      wrong: slips(c.nRight, [
+        c.nRight !== 4 && [4, "Counted every corner", "Check the corners with a square corner: they don't all fit."],
+        [c.nRight - 1, "Missed a square corner", "One more corner fits a page corner exactly. Try each corner in turn."],
+        [c.nRight + 1, "Counted a slanted corner", "One of those corners is too wide or too narrow to fit a page corner."],
+      ]),
       hint: "A square corner is like the corner of a page.", explain: c.nRight ? `${c.nRight} square ${c.nRight === 1 ? "corner" : "corners"}.` : "No square corners.",
     }),
     tapStep({
@@ -57,7 +61,9 @@ function answers(p: QuadProblem): AnswerModel {
     }),
     tapStep({
       id: "parallel", label: "Parallel sides", question: "How many pairs of sides go the same direction and never meet?", prompt: [text("Pairs of parallel sides: ?")], choices: ["0", "1", "2"], right: c.nPar,
-      wrong: i => ["Counted the pairs wrong", i > c.nPar ? "Run the sides on in your head: some pairs would meet." : "Look again: opposite sides that go the same way never meet."],
+      wrong: i => (i > c.nPar
+        ? ["Counted a pair that meets", "Run the sides on in your head: some of those pairs lean toward each other and would meet."]
+        : ["Missed a parallel pair", `${c.nPar === 2 ? "Both pairs" : "One pair"} of opposite sides ${c.nPar === 2 ? "go" : "goes"} the same way, like train tracks, and would never meet.`]),
       hint: "Look at opposite sides. Would they ever meet if they kept going?", explain: `${c.nPar} ${c.nPar === 1 ? "pair" : "pairs"} of parallel sides.`, work: [text(String(c.nPar))],
     }),
     tapStep({

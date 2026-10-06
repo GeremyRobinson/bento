@@ -77,7 +77,8 @@ function answers(p: FracPlotProblem): AnswerModel {
           id: "write", label: "Write it", question: "How long is it, as a mixed number?",
           prompt: b => [b.w!, frac([b.n!], [b.d!]), text(" inches")], ans: { w: p.whole, n: extra, d: p.to }, small: ["w"],
           wrong: [[{ w: p.whole, n: extra, d: p.to === 2 ? 4 : 2 }, "Used the wrong size of piece", `The pieces are ${name}, so the bottom number is ${p.to}.`]],
-          hint: `${p.whole} whole ${p.whole === 1 ? "inch" : "inches"} and ${extra} ${extra === 1 ? one : name}.`,
+          hint: "The whole inches you found go in front. Under the line: how many pieces make one inch. On top: how many pieces past the whole inches.",
+          explain: `${p.whole} whole ${p.whole === 1 ? "inch" : "inches"} and ${extra} ${extra === 1 ? one : name}.`,
         }),
       ],
       finalParts: [-1],
@@ -88,8 +89,13 @@ function answers(p: FracPlotProblem): AnswerModel {
     const n = howMany(p.data, p.v);
     return { steps: [oneBox({
       id: "stack", label: "Read a stack", question: `How many ${th.many} are ${said(p.v)} ${p.v === 4 ? "inch" : "inches"} long?`, prompt: s => [s, text(` ${th.many}`)], ans: n,
-      wrong: slips(n, [-1, 1].map(dv => [howMany(p.data, p.v + dv), "Read the next stack", `That's ${said(p.v + dv)}. Each space is one fourth: count the marks from ${Math.floor(p.v / 4)}.`] as [number, string, string])),
-      hint: `Find ${said(p.v)} on the line, then count the X's above it.`, explain: `${n} X's above ${said(p.v)}.`,
+      wrong: slips(n, [
+        ...[-1, 1].map(dv => [howMany(p.data, p.v + dv), "Read the next stack", `That's the stack at ${said(p.v + dv)}. Each space is one fourth: count the marks from ${Math.floor(p.v / 4)}.`] as [number, string, string]),
+        [p.data.length, "Counted every X", `That's all the X's on the plot. Count only the stack above ${said(p.v)}.`],
+        [n + 1, "Counted an X twice", `One too many. Touch each X above ${said(p.v)} once.`],
+        [n - 1, "Skipped an X", `One short. Count every X above ${said(p.v)}, up to the top one.`],
+      ]),
+      hint: `Find ${said(p.v)} on the line, then count the X's above it.`, explain: `${n === 1 ? "1 X" : `${n} X's`} above ${said(p.v)}.`,
     })], finalParts: [-1] };
   }
   const { vals, right } = choicesOf(p);
@@ -157,5 +163,5 @@ export const lesson: LessonDefinition<FracPlotProblem> = {
   picture: p => (p.kind === 0 ? buildFracRuler({ len: 4 * p.whole + p.quarters, max: Math.max(4, p.whole + 1), to: p.to, alt: alt(p) }) : buildLinePlot({ ...plot(p), alt: alt(p) })),
   answers: p => singularWork(answers(p)),
   explain,
-  pre: "g2-lineplot",
+  pre: "g3-fracline",
 };

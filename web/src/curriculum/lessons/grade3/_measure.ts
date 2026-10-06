@@ -9,11 +9,19 @@ import { aOrAn } from "../../text";
 export const OPS = ["+", "−", "×", "÷"] as const;
 export type Op = (typeof OPS)[number];
 const OP_NAME = { "+": "Add", "−": "Subtract", "×": "Multiply", "÷": "Divide" } as const;
-const OP_WHY = {
-  "+": "Putting amounts together means adding.",
-  "−": "Taking away, or finding how much more, means subtracting.",
-  "×": "Equal groups means multiplying.",
-  "÷": "Sharing equally, or splitting into groups, means dividing.",
+/** why the story's operation fits, said with the story's own first amount */
+const OP_WHY = (o: Op, a: number, unit: string) => ({
+  "+": "Two amounts go together, so there will be more than either one. That's adding.",
+  "−": `Some of it goes away, so there will be less than ${withCommas(a)} ${unit}. That's subtracting.`,
+  "×": "There are equal groups, each the same amount. That's multiplying.",
+  "÷": `${withCommas(a)} ${unit} is shared out equally, so each part gets less. That's dividing.`,
+})[o];
+/** what each wrong pick would mean, so the slip names the mix-up */
+const OP_SLIP = {
+  "+": ["Picked adding", "Adding puts amounts together and makes more. Does this story put two amounts together?"],
+  "−": ["Picked subtracting", "Subtracting takes some away and leaves less. Does anything go away in this story?"],
+  "×": ["Picked multiplying", "Multiplying counts equal groups of the same amount. Are there equal groups here?"],
+  "÷": ["Picked dividing", "Dividing shares an amount out equally. Is anything being shared out here?"],
 } as const;
 export const WHO = ["Maya", "Leo", "Ana", "Sam", "Noor", "Eli"];
 
@@ -42,16 +50,16 @@ export function storyNumbers(rng: { int: (lo: number, hi: number) => number }, o
   }
 }
 
-/** pick the operation: the same choices and messages practice uses for word problems */
-export function operationStep(o: Op, line: string): AnswerStep {
+/** pick the operation: the same choices practice uses for word problems; a is the story's first amount, in unit */
+export function operationStep(o: Op, line: string, a: number, unit: string): AnswerStep {
   const k = OPS.indexOf(o);
   return {
     id: "story", label: "Read the story", question: "Which operation solves it?", prompt: [],
     choices: OPS.map(x => `${x} ${OP_NAME[x]}`),
     slots: [{ id: "c", expected: k }],
-    known: [],
-    check: v => (v.c === k ? { ok: true } : { ok: false, kind: "Picked the wrong operation", message: "Read the story again. Is it putting together, taking away, equal groups, or sharing?", generic: false }),
-    hint: OP_WHY[o], explain: OP_WHY[o],
+    known: OPS.flatMap((x, i) => (i === k ? [] : [{ values: { c: i }, kind: OP_SLIP[x][0], message: OP_SLIP[x][1] }])),
+    hint: "What happens in the story? Are amounts put together, is some taken away, are there equal groups, or is an amount shared out?",
+    explain: OP_WHY(o, a, unit),
     work: [text(`${line} (${OP_NAME[o].toLowerCase()})`)],
   };
 }
@@ -70,6 +78,7 @@ export function solveStep(o: Op, a: number, b: number, unit: string): AnswerStep
       o !== "+" && other("+", "Added", o === "−" ? "The story takes some away. Subtract." : o === "×" ? "Equal groups: multiply, don't add." : "Sharing equally means dividing."),
       o !== "−" && other("−", "Subtracted", o === "+" ? "The story puts amounts together. Add." : "Read the story again: it isn't taking away."),
       o === "÷" && other("×", "Multiplied", "The amount is shared out, so it gets smaller. Divide."),
+      [a, "Wrote the starting amount", o === "÷" ? `${withCommas(a)} ${unit} is the whole amount before it is shared. Share it into ${b} equal parts.` : o === "×" ? `${a} is how many groups there are. Each group is ${b} ${unit}, so multiply.` : `${withCommas(a)} ${unit} is where the story starts. ${OP_NAME[o]} ${withCommas(b)} to finish.`],
     ]),
     hint: `${OP_NAME[o]}: ${withCommas(a)} ${o} ${withCommas(b)}.`,
     explain: `${withCommas(a)} ${o} ${withCommas(b)} = ${withCommas(ans)} ${unit}.`,

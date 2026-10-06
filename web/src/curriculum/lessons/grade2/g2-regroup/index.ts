@@ -76,6 +76,7 @@ export const lesson: LessonDefinition<RegroupProblem> = {
   grade: 2,
   unit: "Adding and subtracting",
   title: "Adding with regrouping",
+  pre: "g1-addtens",
   reference: createRegroup(47, 38),
   generate: rng => generateRegroup(rng),
   restore: raw => { const r = readNumbers(raw, ["a", "b"] as const); try { return r && createRegroup(r.a, r.b); } catch { return null; } },

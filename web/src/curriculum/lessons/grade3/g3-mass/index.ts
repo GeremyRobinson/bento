@@ -139,11 +139,11 @@ function answers(p: MassProblem): AnswerModel {
           prompt: s => [s, text(` ${u}`)], ans: p.value,
           wrong: slips(p.value, [
             label !== p.value && [label, "Read the label before", `The needle is past ${withCommas(label)}. Count on the small marks.`],
-            [p.value - p.step, "One mark short", `Count the marks again from ${withCommas(label)}.`],
-            [p.value + p.step, "One mark too many", `Count the marks again from ${withCommas(label)}.`],
+            [p.value - p.step, "One mark short", `The needle is one mark further on. Count the spaces from the label ${withCommas(label)} right up to the needle.`],
+            [p.value + p.step, "One mark too many", `That mark is past the needle. Count the spaces from the label ${withCommas(label)} and stop at the needle.`],
             p.step !== 1 && [label + (marks % 5), "Counted the marks by 1", `Each mark is ${p.step} ${u}. Count on by ${p.step} from ${withCommas(label)}.`],
           ]),
-          hint: `Start at ${withCommas(label)} and count on by ${p.step} to the needle.`,
+          hint: label === p.value ? "Find the label the needle points straight at." : `Start at ${withCommas(label)} and count on by ${p.step} to the needle.`,
           explain: label === p.value ? `The needle points at ${withCommas(p.value)} ${u}.` : `From ${withCommas(label)}, count on ${marks % 5} ${marks % 5 === 1 ? "mark" : "marks"} of ${p.step}: ${withCommas(p.value)} ${u}.`,
         }),
       ],
@@ -151,7 +151,7 @@ function answers(p: MassProblem): AnswerModel {
     };
   }
   const o = OPS[p.op]! as Op;
-  return { steps: [operationStep(o, massStory(p)), solveStep(o, p.a, p.b, UNIT(p.unit))], finalParts: [-1] };
+  return { steps: [operationStep(o, massStory(p), p.a, UNIT(p.unit)), solveStep(o, p.a, p.b, UNIT(p.unit))], finalParts: [-1] };
 }
 
 const scaleAlt = (p: MassProblem) => `A scale in ${unitWord(p.unit)} with labels ${[0, 1, 2, 3, 4].map(k => withCommas(k * 5 * p.step)).join(", ")}.`;

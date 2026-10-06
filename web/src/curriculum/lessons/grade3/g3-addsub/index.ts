@@ -56,7 +56,7 @@ function jumpStep(p: AddSubProblem, j: ReturnType<typeof jumps>[number]): Answer
   }
   if (s === -1 && place < 100 && digit < v) {
     const flip = from - digit + (v - digit);
-    wrong.push([flip, "Took the smaller from the bigger", `There are only ${digit / place} ${digit === place ? one : many} in ${from}, fewer than ${d}. Trade 1 ${NAMES[place * 10]![1]} for 10 ${many} first.`]);
+    wrong.push([flip, "Took the smaller from the bigger", `There ${digit === place ? "is" : "are"} only ${digit / place} ${digit === place ? one : many} in ${from}, fewer than ${d}, so the jump back of ${v} goes past ${from - digit}. Taking ${digit / place} from ${d} instead goes the wrong way.`]);
     wrong.push([to + place * 10, `Forgot the trade`, `When you trade 1 ${NAMES[place * 10]![1]} for 10 ${many}, the next place goes down by 1.`]);
   }
   return box({

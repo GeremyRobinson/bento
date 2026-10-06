@@ -62,6 +62,7 @@ export const lesson: LessonDefinition<MakeTenProblem> = {
   grade: 1,
   unit: "Adding and subtracting",
   title: "Make a ten to add",
+  pre: "k-make10",
   reference: createMakeTen(8, 5),
   generate: rng => { const a = rng.int(6, 9); return createMakeTen(a, rng.int(11 - a, 9)); },
   restore: raw => restoreVia(raw, ["a", "b"] as const, v => createMakeTen(v.a, v.b)),

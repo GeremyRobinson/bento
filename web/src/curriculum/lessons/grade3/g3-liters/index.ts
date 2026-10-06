@@ -38,7 +38,7 @@ export function litersStory(p: LitersProblem): string {
 }
 
 function answers(p: LitersProblem): AnswerModel {
-  if (p.kind === 1) { const o = OPS[p.op]! as Op; return { steps: [operationStep(o, litersStory(p)), solveStep(o, p.a, p.b, "L")], finalParts: [-1] }; }
+  if (p.kind === 1) { const o = OPS[p.op]! as Op; return { steps: [operationStep(o, litersStory(p), p.a, "L"), solveStep(o, p.a, p.b, "L")], finalParts: [-1] }; }
   const n = p.cap / p.step, every = n <= 10 ? 1 : n <= 20 ? 2 : 5, labelStep = every * p.step;
   const marks = p.value / p.step, below = Math.floor(p.value / labelStep) * labelStep;
   return {

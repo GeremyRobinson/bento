@@ -47,6 +47,8 @@ function answers(p: SharesProblem): AnswerModel {
         wrong: slips(parts, [
           [lines, "Counted the cut lines", "That's the cut lines. Count the pieces between them."],
           shaded < parts && [shaded, "Counted only the shaded parts", "Count **every** part, shaded or not."],
+          [parts + 1, "Counted a piece twice", "One too many. Touch each piece once, and count it once."],
+          [parts - 1, "Missed a piece", "One short. Every piece counts, even the one at the edge."],
         ]),
         hint: "Touch each piece and count it once.",
         explain: `The ${shape} is cut into ${parts} equal parts.`,
@@ -68,6 +70,8 @@ function answers(p: SharesProblem): AnswerModel {
         wrong: slips(shaded, [
           shaded < parts && [parts - shaded, "Counted the white parts", "Those are the parts that are **not** shaded. Count the colored ones."],
           shaded < parts && [parts, "Counted every part", "Count only the **shaded** parts."],
+          [shaded + 1, "Counted a white part", "One too many. Count only the colored parts."],
+          [shaded - 1, "Missed a shaded part", "One short. Look for every colored part."],
         ]),
         hint: "Count only the colored parts.",
         explain: `${shaded} ${word(shaded, parts)} ${shaded === 1 ? "is" : "are"} shaded.`,
@@ -76,7 +80,10 @@ function answers(p: SharesProblem): AnswerModel {
       oneBox({
         id: "whole", label: "The whole", question: `How many ${name} make the whole ${shape}?`,
         prompt: s => [s, text(` ${name} make 1 whole`)], ans: parts,
-        wrong: slips(parts, [shaded < parts && [shaded, "Counted only the shaded ones", "That's only the shaded ones. Count every part."]]),
+        wrong: slips(parts, [
+          shaded < parts && [shaded, "Counted only the shaded ones", "That's only the shaded ones. Count every part."],
+          [1, "Called the whole one part", `The whole ${shape} is made of all the parts. How many ${name} fit in it?`],
+        ]),
         hint: `Count every part of the ${shape}.`,
         explain: `${parts} ${name} make the whole ${shape}.`,
         work: [num(parts), text(` ${name} = 1 whole`)],
