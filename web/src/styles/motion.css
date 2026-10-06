@@ -7,14 +7,14 @@
 @keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
 @keyframes enter{from{opacity:0;transform:translateY(-8px)}}
 @keyframes glow{0%{background:color-mix(in srgb,var(--ok) 30%,transparent)}100%{background:transparent}}
-.rise{animation:rise .5s var(--ease) both}
-.pop{display:inline-block;animation:pop .45s var(--spring) both}
+.rise{animation:rise var(--dur-500) var(--ease) both}
+.pop{display:inline-block;animation:pop var(--dur-450) var(--spring) both}
 .pop{vertical-align:-4px;color:var(--ok-ink)} .pop.big{vertical-align:-6px}
-.shake{animation:shake .4s ease}
-.enter{animation:enter .45s var(--ease) both}
-.workline.enter{animation:enter .45s var(--ease) both, glow 1.2s ease .2s}
-::view-transition-old(root){animation:.22s ease both vtOut}
-::view-transition-new(root){animation:.38s var(--ease) both vtIn}
+.shake{animation:shake var(--dur-400) ease}
+.enter{animation:enter var(--dur-450) var(--ease) both}
+.workline.enter{animation:enter var(--dur-450) var(--ease) both, glow var(--dur-1200) ease var(--dur-200)}
+::view-transition-old(root){animation:var(--dur-220) ease both vtOut}
+::view-transition-new(root){animation:var(--dur-380) var(--ease) both vtIn}
 @keyframes vtOut{to{opacity:0;transform:scale(.99)}}
 @keyframes vtIn{from{opacity:0;transform:translateY(10px)}}
 :root[data-dir="fwd"]::view-transition-new(root){animation-name:vtFwd} :root[data-dir="back"]::view-transition-new(root){animation-name:vtBack}
@@ -24,5 +24,5 @@
 
 /* a picture that starts over is drawn fresh and fades in, never un-built in reverse */
 @keyframes vizIn{from{opacity:0}}
-.viz>*{animation:vizIn .3s ease both}
+.viz>*{animation:vizIn var(--dur-300) ease both}
 @media (prefers-reduced-motion:reduce){.viz>*{animation:none}}

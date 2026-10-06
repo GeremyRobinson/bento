@@ -14,6 +14,7 @@ import { levelOf, problemXp, stepPoints } from "../mastery/levels";
 import { lastScore, type Progress } from "../mastery/progress";
 import { PRAISE } from "./praise";
 import type { Mistake, PracticeSession, RunItem, SessionReport } from "./types";
+import { FIND_MY_LEVEL, NO_UNIT, TODAYS_REVIEW } from "../../app/copy";
 
 /** Clock and randomness are passed in, so every rule can be tested exactly. */
 export interface Deps {
@@ -99,7 +100,7 @@ export const testKey = (g: number, unit?: string) => (unit ? `unit:${g}:${unit}`
 export function startTest(key: string, progress: Progress, deps: Deps): PracticeSession {
   const [kind, gs, unit] = key.split(":"), g = Number(gs);
   if (kind === "place") return startPlacement(g, progress, deps);
-  const list = kind === "unit" ? lessonsInGrade(g).filter(l => (l.unit || "Skills") === unit) : lessonsInGrade(g);
+  const list = kind === "unit" ? lessonsInGrade(g).filter(l => (l.unit || NO_UNIT) === unit) : lessonsInGrade(g);
   if (!list.length) throw new Error(`no lessons for test ${key}`);
   const n = Math.min(kind === "unit" ? 10 : 12, Math.max(6, list.length * 2));
   const order = deps.rng.shuffle(list);
@@ -122,7 +123,7 @@ function startPlacement(g: number, progress: Progress, deps: Deps): PracticeSess
   const grades = placementGrades(g);
   if (!grades.length) throw new Error(`no lessons around grade ${g}`);
   const items = grades.flatMap(x => deps.rng.shuffle(lessonsInGrade(x)).concat(lessonsInGrade(x)).slice(0, 3).map((l, k) => makeItem(l, 2 + k, deps.rng)));
-  return newRun({ mode: "test", key: placeKey(g), title: "Find my level", items, startTier: 0, hintsLeft: 0 }, progress, deps);
+  return newRun({ mode: "test", key: placeKey(g), title: FIND_MY_LEVEL, items, startTier: 0, hintsLeft: 0 }, progress, deps);
 }
 
 /**
@@ -175,7 +176,7 @@ export function startReview(progress: Progress, deps: Deps): PracticeSession {
     live[k]!.n++;
     items.push(makeItem(live[k]!.lesson, deps.rng.int(1, 8), deps.rng));
   }
-  return newRun({ mode: "review", key: "review", title: "Today's review", items: deps.rng.shuffle(items), startTier: 0, hintsLeft: 4 }, progress, deps);
+  return newRun({ mode: "review", key: "review", title: TODAYS_REVIEW, items: deps.rng.shuffle(items), startTier: 0, hintsLeft: 4 }, progress, deps);
 }
 
 function newRun(o: { mode: PracticeSession["mode"]; key: string; title: string; items: RunItem[]; startTier: Tier; hintsLeft?: number },

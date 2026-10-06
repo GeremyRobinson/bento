@@ -10,6 +10,7 @@ import { PlayingDiagram } from "../components/diagrams/PlayingDiagram";
 import { FitScreen } from "../components/screen/Screen";
 import { Pill } from "../components/primitives/Pill";
 import { GradeNum } from "../components/Shelf";
+import { FIND_MY_LEVEL, NO_UNIT } from "../app/copy";
 
 /**
  * The app's first screen while no grade is chosen: "Which grade are you in?" (Design, handoff 5). Nothing is picked
@@ -31,7 +32,7 @@ export function GradeQuestion() {
   }, [picked, seed]); // eslint-disable-line react-hooks/exhaustive-deps
   const find = () => { if (picked == null) setAsk(true); else startTest(placeKey(picked)); };
   const d = picked == null ? null : gradeOf(picked);
-  const chapters = picked == null ? [] : unitsInGrade(picked).filter(u => u.name !== "Skills");
+  const chapters = picked == null ? [] : unitsInGrade(picked).filter(u => u.name !== NO_UNIT);
   // the ring glides to the grade you tap
   const ring = useRef<HTMLSpanElement>(null), moved = useRef(false);
   useLayoutEffect(() => {
@@ -49,7 +50,7 @@ export function GradeQuestion() {
     <FitScreen className="gq">
       <header className="gqhead">
         <h1>Which grade are you in?</h1>
-        <button className="fpill" onClick={find}>Not sure? Find my level</button>
+        <button className="fpill" onClick={find}>Not sure? {FIND_MY_LEVEL}</button>
       </header>
       <div className="gstrip" role="radiogroup" aria-label="Grades">
         <span className="gring" ref={ring} aria-hidden />

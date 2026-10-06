@@ -15,10 +15,9 @@ import { MathLine, Rich } from "../components/primitives/MathLine";
 import { handOff, previewOf, statementBeat } from "../app/preview";
 import { GradeQuestion } from "./GradeQuestion";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { FACT_SPRINT, GRADE_CHECKUP, LESSON_MINUTES, minLabel, PRACTICE, PRACTICE_AGAIN, REVIEW, TODAYS_REVIEW, UP_NEXT } from "../app/copy";
 
-const KIND = { lesson: "Up next", review: "Review", test: "Unit test", facts: "Fact sprint" } as const;
-/** a lesson takes about this long: watch it, then eight problems */
-const LESSON_MINUTES = 8;
+const KIND = { lesson: UP_NEXT, review: REVIEW, test: "Unit test", facts: FACT_SPRINT } as const;
 /** the preview only shows when it fits at least this tall without shrinking any text (handoff 5) */
 const PREVIEW_MIN = 150;
 
@@ -86,14 +85,14 @@ function GradeHome({ g }: { g: number }) {
                   onClick={() => select(c.id)} aria-label={live ? `${c.title}${c === next?.entry ? ", up next" : ""}` : `${c.title}, coming soon`}>
                   <span className={`sdot${timesDone(progress, c.id) > 0 ? " done" : ""}`} aria-hidden />
                   <span className="sname"><b>{c.title}</b></span>
-                  {sc != null ? <ScoreChip n={sc} /> : c === next?.entry ? <small className="snext">Up next</small> : live ? <small className="smeta">{LESSON_MINUTES} min</small> : <small>soon</small>}
+                  {sc != null ? <ScoreChip n={sc} /> : c === next?.entry ? <small className="snext">{UP_NEXT}</small> : live ? <small className="smeta">{minLabel(LESSON_MINUTES)}</small> : <small>soon</small>}
                 </button>
               );
             })}
           </div>
         );
       })}
-      {testReady(g) && <div className="sfoot"><Pill onClick={() => startTest(testKey(g))}>Grade check-up</Pill></div>}
+      {testReady(g) && <div className="sfoot"><Pill onClick={() => startTest(testKey(g))}>{GRADE_CHECKUP}</Pill></div>}
     </>
   );
 
@@ -107,7 +106,7 @@ function GradeHome({ g }: { g: number }) {
 /** what the Today row says under its name */
 function todayMeta(progress: ReturnType<typeof useApp>["progress"], g: number): string {
   const next = upNext(progress, g);
-  return next ? (next.again ? "Practice" : "Up next") : "All done";
+  return next ? (next.again ? PRACTICE : UP_NEXT) : "All done";
 }
 
 /** Today: the short plan (one tap starts it), how the year is going, and anything worth practicing again. */
@@ -136,10 +135,10 @@ function TodayDetail({ g }: { g: number }) {
           <ol className="plan">{plan.map(i => (
             <li key={i.kind}>
               <button className={`pitem${i.done ? " done" : ""}${i === first ? " now" : ""}`} onClick={() => run(i)}
-                aria-label={i.kind === "facts" ? `Fact sprint: ${i.title}${i.done ? ", done" : ""}` : i.kind === "review" ? (i.done ? "Today's review: done" : "Today's review") : i.kind === "lesson" && !i.done ? `${i.again ? "Practice" : "Up next"}: ${i.title}` : undefined}>
+                aria-label={i.kind === "facts" ? `${FACT_SPRINT}: ${i.title}${i.done ? ", done" : ""}` : i.kind === "review" ? (i.done ? `${TODAYS_REVIEW}: done` : TODAYS_REVIEW) : i.kind === "lesson" && !i.done ? `${i.again ? PRACTICE : UP_NEXT}: ${i.title}` : undefined}>
                 <span className="pmark" aria-hidden>{i.done ? <Check /> : null}</span>
-                <span className="ptext"><small>{i.kind === "lesson" && i.again ? "Practice" : KIND[i.kind]}</small><b>{i.title}</b></span>
-                {i === first ? <PillLabel go>Start</PillLabel> : i.done ? <ScoreChip n={doneScore(i)} /> : <span className="pmin">{i.minutes} min</span>}
+                <span className="ptext"><small>{i.kind === "lesson" && i.again ? PRACTICE : KIND[i.kind]}</small><b>{i.title}</b></span>
+                {i === first ? <PillLabel go>Start</PillLabel> : i.done ? <ScoreChip n={doneScore(i)} /> : <span className="pmin">{minLabel(i.minutes)}</span>}
               </button>
             </li>
           ))}</ol>
@@ -153,10 +152,10 @@ function TodayDetail({ g }: { g: number }) {
         <Fill frac={list.length ? done / list.length : 0} />
         <span className="bbig">{done}</span>
         <p><b>of {list.length}</b> lessons done{avg != null && <><br /><span className="muted">Average score {avg.toFixed(1)} of 4</span></>}</p>
-        {gt && <p className="muted gtline">Grade check-up <ScoreChip n={gt.last} /></p>}
+        {gt && <p className="muted gtline">{GRADE_CHECKUP} <ScoreChip n={gt.last} /></p>}
       </section>
       {weak.length > 0 && (
-        <section className="tile b-weak"><h3>Practice again</h3>
+        <section className="tile b-weak"><h3>{PRACTICE_AGAIN}</h3>
           <div className="lessons">{weak.slice(0, 3).map(c => (
             <button key={c.id} className="lesson" disabled={!isReady(c.id)} onClick={() => go({ name: "learn", lessonId: c.id })}><ScoreChip n={lastScore(progress, c.id)} /><span className="name">{c.title}</span></button>
           ))}</div>
@@ -243,7 +242,7 @@ function LessonDetail({ g, entry }: { g: number; entry: Entry }) {
           {sc != null && <span className="slast">Last score <ScoreChip n={sc} /></span>}
           {testReady(g, unit.name) && <Pill badged={!!t} onClick={() => startTest(tk)}>{t && <ScoreChip n={t.last} />}{unit.name} test</Pill>}
           <span className="grow" />
-          <Pill go disabled={!lesson} onClick={start}>Start lesson · {LESSON_MINUTES} min</Pill>
+          <Pill go disabled={!lesson} onClick={start}>Start lesson · {minLabel(LESSON_MINUTES)}</Pill>
         </div>
       </div>
       {fits && (

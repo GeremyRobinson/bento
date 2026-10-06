@@ -1,32 +1,32 @@
 /* Area model. The renderer sets data-* attributes from the animation state; CSS only animates the change. */
 .am{width:min(100%, calc(var(--w) * 1px), calc(min(56vh, 460px) * var(--w) / var(--h)));height:auto;overflow:visible;display:block;margin:0 auto}
-.am text{font-family:var(--num);font-size:max(var(--d-text-area),calc(12px * var(--px,0)));fill:var(--text);text-anchor:middle;dominant-baseline:central;font-weight:650}
+.am text{font-family:var(--num);font-size:max(var(--d-text-area),calc(12px * var(--px,0)));fill:var(--text);text-anchor:middle;dominant-baseline:central;font-weight:var(--w-bold)}
 .am .outline{fill:none;stroke:var(--faint);stroke-width:var(--d-line)}
 .am .axis-label{fill:var(--muted)}
-.am .whole{transition:opacity .4s ease}
-.am .region rect{fill:var(--well);stroke:var(--faint);stroke-width:var(--d-line);transition:fill .5s var(--ease),stroke .5s var(--ease),opacity .5s ease}
+.am .whole{transition:opacity var(--dur-400) ease}
+.am .region rect{fill:var(--well);stroke:var(--faint);stroke-width:var(--d-line);transition:fill var(--dur-500) var(--ease),stroke var(--dur-500) var(--ease),opacity var(--dur-500) ease}
 .am .region[data-shown="true"].r0 rect{fill:color-mix(in srgb,var(--c0) var(--d-f18),var(--card));stroke:var(--c0)}
 .am .region[data-shown="true"].r1 rect{fill:color-mix(in srgb,var(--c1) var(--d-f18),var(--card));stroke:var(--c1)}
 .am .region[data-shown="true"].r2 rect{fill:color-mix(in srgb,var(--c2) var(--d-f18),var(--card));stroke:var(--c2)}
 .am .region[data-active="true"] rect{stroke-width:var(--d-bold)}
-.am .region .product{opacity:0;transition:opacity .4s ease .15s}
+.am .region .product{opacity:0;transition:opacity var(--dur-400) ease var(--dur-150)}
 .am .region[data-shown="true"] .product{opacity:1}
 .am .region.r0 .product,.am .region.r0 .product text,.am .region.r0 .part{fill:var(--c0)}
 .am .region.r1 .product,.am .region.r1 .product text,.am .region.r1 .part{fill:var(--c1)}
 .am .region.r2 .product,.am .region.r2 .product text,.am .region.r2 .part{fill:var(--c2)}
-.am .part{opacity:0;transition:opacity .4s ease}
+.am .part{opacity:0;transition:opacity var(--dur-400) ease}
 .am[data-split="true"] .part{opacity:1}
 .am[data-split="true"] .whole{opacity:0}
-.am .split-line{stroke:var(--text);stroke-width:var(--d-line);stroke-dasharray:var(--d-dash);opacity:0;transition:opacity .4s ease}
+.am .split-line{stroke:var(--text);stroke-width:var(--d-line);stroke-dasharray:var(--d-dash);opacity:0;transition:opacity var(--dur-400) ease}
 .am[data-split="true"] .split-line{opacity:.55}
-.am .total{fill:var(--acc);opacity:0;transition:opacity .4s ease}
+.am .total{fill:var(--acc);opacity:0;transition:opacity var(--dur-400) ease}
 .am[data-sum="true"] .total{opacity:1}
 .am .leader{stroke:var(--faint);stroke-width:var(--d-thin)}
 @media (prefers-reduced-motion:reduce){.am *{transition:none!important}}
 
 /* the explanation beats under the picture */
 .beats{display:grid;gap:var(--s);margin:0;padding:0;list-style:none}
-.beat{display:flex;align-items:center;gap:var(--u);padding:10px var(--u);border-radius:var(--r-box);background:var(--surf-1,var(--well));color:var(--muted);transition:background .3s,color .3s,opacity .3s}
+.beat{display:flex;align-items:center;gap:var(--u);padding:10px var(--u);border-radius:var(--r-box);background:var(--surf-1,var(--well));color:var(--muted);transition:background var(--dur-300),color var(--dur-300),opacity var(--dur-300)}
 .beat .badge{background:var(--card);color:var(--muted);flex:none}
 .beat[data-state="done"]{color:var(--text)}
 .beat[data-state="now"]{background:var(--tint-soft);color:var(--text)}
@@ -45,8 +45,8 @@
 .mline .br{flex-basis:100%;height:.15em}
 .math>.mline:has(.br){flex-wrap:wrap}
 .math>.mline{flex-wrap:nowrap;font-size:min(1em, 8.5vw)}
-.mline .ans{font-weight:650}
-.slot .caret{width:2px;height:.9em;background:var(--tint);margin-left:2px;animation:blink 1s steps(1) infinite}
+.mline .ans{font-weight:var(--w-bold)}
+.slot .caret{width:2px;height:.9em;background:var(--tint);margin-left:2px;animation:blink var(--dur-1000) steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.slot .caret{animation:none}}
 

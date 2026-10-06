@@ -5,6 +5,7 @@ import { CATALOG, type CatalogEntry } from "../curriculum/catalog";
 import { lessonById } from "../curriculum/registry";
 import { lastScore, timesDone, type Progress } from "../engine/mastery/progress";
 import { backFor, testKey } from "../engine/session/practice";
+import { NO_UNIT } from "./copy";
 
 export type Entry = CatalogEntry;
 
@@ -16,7 +17,7 @@ export const titleOf = (id: string) => lessonById(id)?.title ?? entryById(id)?.t
 export function unitsInGrade(g: number): { name: string; entries: Entry[] }[] {
   const out: { name: string; entries: Entry[] }[] = [];
   for (const c of entriesInGrade(g)) {
-    const name = c.unit || "Skills";
+    const name = c.unit || NO_UNIT;
     let u = out.find(o => o.name === name);
     if (!u) out.push((u = { name, entries: [] }));
     u.entries.push(c);
@@ -47,6 +48,6 @@ export function buildUpFor(id: string): Entry | null {
 
 /** A unit test or grade check-up can start once at least one of its lessons is rebuilt. */
 export const testReady = (g: number, unit?: string) =>
-  entriesInGrade(g).some(c => (!unit || (c.unit || "Skills") === unit) && isReady(c.id));
+  entriesInGrade(g).some(c => (!unit || (c.unit || NO_UNIT) === unit) && isReady(c.id));
 
 export { testKey };

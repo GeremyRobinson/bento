@@ -10,6 +10,7 @@ import { showcasePicture } from "../screens/Welcome";
 import { PlayingDiagram } from "./diagrams/PlayingDiagram";
 import { ScoreChip } from "./primitives/Score";
 import { Fill, Shelf } from "./Shelf";
+import { CONTENTS, lessonCount, NO_UNIT, THIS_YEAR } from "../app/copy";
 
 /** How far out the contents are zoomed: one chapter's pages, the whole year, or every grade on the shelf. */
 export type Level = "chapter" | "year" | "shelf";
@@ -89,8 +90,8 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
       <section className="zchapter">
         <ChapterPic key={unit.name} entries={unit.entries} rng={rng} />
         <div className="zctext">
-          <span className="k">{units.length > 1 ? `Chapter ${k + 1} of ${units.length}` : "This year"} · {g.name}</span>
-          <h2>{unit.name === "Skills" ? g.name : unit.name}</h2>
+          <span className="k">{units.length > 1 ? `Chapter ${k + 1} of ${units.length}` : THIS_YEAR} · {g.name}</span>
+          <h2>{unit.name === NO_UNIT ? g.name : unit.name}</h2>
           <ol className="zpages">{unit.entries.map((c, i) => {
             const s = lastScore(progress, c.id), live = isReady(c.id), on = c.id === lessonId;
             return (
@@ -117,10 +118,10 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
           const done = doneCount(progress, u.entries), on = u.name === here?.name;
           return (
             <button key={u.name} className={`zcard battery${on ? " on" : ""}`} style={{ "--i": k } as CSSProperties} onClick={() => { setChapter(u.name); to("chapter"); }}>
-              <span className="k">{units.length > 1 ? `Chapter ${k + 1}` : "This year"}</span>
-              <b>{u.name === "Skills" ? g.name : u.name}</b>
+              <span className="k">{units.length > 1 ? `Chapter ${k + 1}` : THIS_YEAR}</span>
+              <b>{u.name === NO_UNIT ? g.name : u.name}</b>
               <Fill frac={u.entries.length ? done / u.entries.length : 0} />
-              <span className="bcount">{done === 0 ? `${u.entries.length} lesson${u.entries.length === 1 ? "" : "s"}` : done === u.entries.length ? "Finished" : `${done} of ${u.entries.length} done`}</span>
+              <span className="bcount">{lessonCount(done, u.entries.length)}</span>
             </button>
           );
         })}</div>
@@ -136,7 +137,7 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
   }
 
   return (
-    <div className="zoom" ref={box} role="dialog" aria-modal="true" aria-label="Contents" onClick={e => { if (e.target === e.currentTarget) close(); }}>
+    <div className="zoom" ref={box} role="dialog" aria-modal="true" aria-label={CONTENTS} onClick={e => { if (e.target === e.currentTarget) close(); }}>
       <div className="zbar-top">
         <div className="zlevels" role="group" aria-label="Zoom">
           {LEVELS.map(l => (

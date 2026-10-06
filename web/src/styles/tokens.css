@@ -13,8 +13,64 @@
   --ease:cubic-bezier(.2,.8,.2,1); --spring:cubic-bezier(.34,1.45,.64,1);
   --c0:#3b82f6; --c1:#f2683c; --c2:#8b5cf6; --acc:#f59e0b;
   color-scheme:light;
+
+  /* ---- the system scales. Stylesheets use these instead of typing values (scripts/tokenize.mjs rewrites any that
+     slip in, and src/tests/styles/hard-coded.test.ts fails on a raw z-index, duration, curve, weight or colour). ---- */
+  /* weights: one typeface, three weights, plus a medium for the keypad's digits. bands.css repeats bold and mid on .wrap. */
+  --w-regular:400; --w-key:500; --w-mid:550; --w-bold:650;
+  /* the text scale (15px is --small, on .wrap in bands.css). Display sizes, 25px and up, are set per element. */
+  --fz-2xs:12px; --fz-xs:13px; --fz-sm:14px; --fz-md:16px; --fz-lg:17px; --fz-xl:19px; --fz-2xl:22px;
+  /* the 4px grid, for padding, margins, gaps and offsets: --sp-n is n × 4px */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:24px; --sp-7:28px; --sp-8:32px; --sp-10:40px;
+  /* corners: a full pill, a circle, the grid steps, and the grade sheet. Panels nest from --r-panel (bands.css). */
+  --r-pill:999px; --r-round:50%; --r-xs:4px; --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:20px; --r-2xl:24px; --r-sheet:36px;
+  /* controls: the floating capsule (island, icon pills, big pills), the circle inside it, and the smallest tap target */
+  --float-h:52px; --float-in:42px; --tap:44px;
+  /* layers, bottom to top */
+  --z-under:-1; --z-flat:0; --z-up:1; --z-up2:2; --z-island:15; --z-sheet:20; --z-dim:30; --z-stack:31; --z-island-open:32;
+  --z-zoom:40; --z-halo:99;
+  /* motion: --dur-n is n milliseconds (--dur-off is the near-zero "Less motion" setting). Curves: --ease, --spring
+     above, --glide in nav.css, and --ease-toss for confetti. */
+  --dur-42:42ms; --dur-45:45ms; --dur-50:50ms; --dur-60:60ms; --dur-70:70ms; --dur-100:100ms; --dur-140:140ms; --dur-150:.15s;
+  --dur-180:.18s; --dur-200:.2s; --dur-220:.22s; --dur-250:.25s; --dur-300:.3s; --dur-350:.35s; --dur-360:.36s; --dur-380:.38s;
+  --dur-400:.4s; --dur-450:.45s; --dur-500:.5s; --dur-550:.55s; --dur-600:.6s; --dur-700:.7s; --dur-800:.8s; --dur-900:.9s;
+  --dur-1000:1s; --dur-1200:1.2s; --dur-1600:1.6s; --dur-2400:2.4s; --dur-2600:2.6s; --dur-4000:4s; --dur-5000:5s; --dur-6000:6s;
+  --dur-40000:40s; --dur-off:.001ms;
+  --ease-toss:cubic-bezier(.2,.7,.4,1);
+
+  /* ---- colours that are the same in both themes (listed again in the dark blocks below, unchanged, so every colour
+     token says what it is in dark) ---- */
+  /* shadows and overlays: black, the shadow ink (15 20 30), and white, each at one strength */
+  --black-a04:rgba(0,0,0,.04); --black-a06:rgba(0,0,0,.06); --black-a08:rgba(0,0,0,.08); --black-a12:rgba(0,0,0,.12); --black-a25:rgba(0,0,0,.25);
+  --ink-a18:rgba(15,20,30,.18); --ink-a25:rgba(15,20,30,.25); --ink-a30:rgba(15,20,30,.3); --ink-a35:rgba(15,20,30,.35);
+  --white-a25:rgba(255,255,255,.25); --scrim:rgba(10,12,16,.35);
+  /* a switch's knob is white on its track in both themes */
+  --knob:#fff;
+  /* mask gradients only read alpha: solid shows, clear hides */
+  --mask-solid:#000; --mask-clear:#0000;
+  /* what a colour is mixed toward to lift it on dark cards (color-mix only; never paint with it) */
+  --mix-lift:#fff;
+  /* the landing's call to action is ink, not the grade: near-black in light, and in dark a light pill with dark text */
+  --cta-ink:#1b1d22; --cta-ink-dark:#eef0f4; --cta-text-dark:#14161b;
+  /* Bento Advanced always sits on its own dark canvas */
+  --adv-sky:#1d1b2e; --adv-night:#0a0a0c; --adv-lilac:#c4b5fd; --adv-pink:#f0abfc;
+  --adv-card:rgb(255 255 255 / .04); --adv-hair:rgb(255 255 255 / .08); --adv-faint-line:rgb(255 255 255 / .16); --adv-ring:rgb(255 255 255 / .22);
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --text:#eef0f4; --muted:#979eae; --faint:#4a4f5c; --rule:#2b2f38; --page:#0e1014; --well:#181b22; --card:#21252e; --hover:#2b303b; --ok-ink:#4ade80; --err-ink:#f87171; color-scheme:dark}}
-:root[data-theme="dark"]{--text:#eef0f4; --muted:#979eae; --faint:#4a4f5c; --rule:#2b2f38; --page:#0e1014; --well:#181b22; --card:#21252e; --hover:#2b303b; --ok-ink:#4ade80; --err-ink:#f87171; color-scheme:dark}
+  --text:#eef0f4; --muted:#979eae; --faint:#4a4f5c; --rule:#2b2f38; --page:#0e1014; --well:#181b22; --card:#21252e; --hover:#2b303b; --ok-ink:#4ade80; --err-ink:#f87171; color-scheme:dark;
+  /* unchanged in dark */
+  --black-a04:rgba(0,0,0,.04); --black-a06:rgba(0,0,0,.06); --black-a08:rgba(0,0,0,.08); --black-a12:rgba(0,0,0,.12); --black-a25:rgba(0,0,0,.25);
+  --ink-a18:rgba(15,20,30,.18); --ink-a25:rgba(15,20,30,.25); --ink-a30:rgba(15,20,30,.3); --ink-a35:rgba(15,20,30,.35);
+  --white-a25:rgba(255,255,255,.25); --scrim:rgba(10,12,16,.35); --knob:#fff; --mask-solid:#000; --mask-clear:#0000; --mix-lift:#fff;
+  --cta-ink:#1b1d22; --cta-ink-dark:#eef0f4; --cta-text-dark:#14161b;
+  --adv-sky:#1d1b2e; --adv-night:#0a0a0c; --adv-lilac:#c4b5fd; --adv-pink:#f0abfc;
+  --adv-card:rgb(255 255 255 / .04); --adv-hair:rgb(255 255 255 / .08); --adv-faint-line:rgb(255 255 255 / .16); --adv-ring:rgb(255 255 255 / .22);}}
+:root[data-theme="dark"]{--text:#eef0f4; --muted:#979eae; --faint:#4a4f5c; --rule:#2b2f38; --page:#0e1014; --well:#181b22; --card:#21252e; --hover:#2b303b; --ok-ink:#4ade80; --err-ink:#f87171; color-scheme:dark;
+  /* unchanged in dark */
+  --black-a04:rgba(0,0,0,.04); --black-a06:rgba(0,0,0,.06); --black-a08:rgba(0,0,0,.08); --black-a12:rgba(0,0,0,.12); --black-a25:rgba(0,0,0,.25);
+  --ink-a18:rgba(15,20,30,.18); --ink-a25:rgba(15,20,30,.25); --ink-a30:rgba(15,20,30,.3); --ink-a35:rgba(15,20,30,.35);
+  --white-a25:rgba(255,255,255,.25); --scrim:rgba(10,12,16,.35); --knob:#fff; --mask-solid:#000; --mask-clear:#0000; --mix-lift:#fff;
+  --cta-ink:#1b1d22; --cta-ink-dark:#eef0f4; --cta-text-dark:#14161b;
+  --adv-sky:#1d1b2e; --adv-night:#0a0a0c; --adv-lilac:#c4b5fd; --adv-pink:#f0abfc;
+  --adv-card:rgb(255 255 255 / .04); --adv-hair:rgb(255 255 255 / .08); --adv-faint-line:rgb(255 255 255 / .16); --adv-ring:rgb(255 255 255 / .22);}
 

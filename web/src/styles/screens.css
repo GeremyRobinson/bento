@@ -1,10 +1,10 @@
 /* Screen-level additions on top of the current app's styles. */
 
 /* Without view transitions, a new screen rises in, one block after another (the current app's fallback). */
-.wrap.fresh>:not(.sheet){animation:rise .5s var(--ease) both}
-.wrap.fresh>:nth-child(2){animation-delay:50ms} .wrap.fresh>:nth-child(3){animation-delay:100ms}
-.wrap.fresh>:nth-child(4){animation-delay:150ms} .wrap.fresh>:nth-child(5){animation-delay:200ms}
-.wrap.fresh>:nth-child(6){animation-delay:250ms} .wrap.fresh>:nth-child(n+7){animation-delay:300ms}
+.wrap.fresh>:not(.sheet){animation:rise var(--dur-500) var(--ease) both}
+.wrap.fresh>:nth-child(2){animation-delay:var(--dur-50)} .wrap.fresh>:nth-child(3){animation-delay:var(--dur-100)}
+.wrap.fresh>:nth-child(4){animation-delay:var(--dur-150)} .wrap.fresh>:nth-child(5){animation-delay:var(--dur-200)}
+.wrap.fresh>:nth-child(6){animation-delay:var(--dur-250)} .wrap.fresh>:nth-child(n+7){animation-delay:var(--dur-300)}
 
 /* Lessons still being rebuilt: listed in their place, quieter, and not tappable yet. */
 .lesson.soon,.lesson[disabled]:not(.soon){cursor:default}
@@ -20,3 +20,10 @@
 
 /* The "For the grown-up" page's bar, and empty states. */
 .empty{padding:var(--s) 5px;color:var(--muted)}
+
+/* What used to be inline styles in the screens: report text lined up with its label, fact lists on a card, a centred
+   bar title, and the three "A"s that preview the text sizes on Me. */
+.indent{padding:0 5px}
+.facts.oncard{background:var(--card)}
+.tcenter{text-align:center}
+.tsize0{font-size:var(--fz-sm)} .tsize1{font-size:18px} .tsize2{font-size:var(--fz-2xl)}

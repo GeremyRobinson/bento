@@ -7,6 +7,7 @@ import { MathLine, Rich } from "../components/primitives/MathLine";
 import { ProblemView } from "../components/practice/ProblemView";
 import { FeedbackBox } from "../components/practice/FeedbackBox";
 import { Keypad } from "../components/practice/Keypad";
+import { ALL_LESSONS, SHOW_ME } from "../app/copy";
 import {
   bandOfSession, check, choose, currentItem, currentStep, focusSlot, hint, isLastProblem, lessonOfItem, nextProblem,
   pickPlan, pressKey, problemOf, showMe, showMeAvailable, skipAvailable, toggleSkip,
@@ -71,7 +72,7 @@ export function Practice() {
   if (!s) {
     return (
       <section className="panel"><p className="empty">No lesson in progress.</p>
-        <div className="actions"><Pill go onClick={() => go({ name: "home" })}>All lessons</Pill></div></section>
+        <div className="actions"><Pill go onClick={() => go({ name: "home" })}>{ALL_LESSONS}</Pill></div></section>
     );
   }
 
@@ -92,7 +93,7 @@ export function Practice() {
         </span>
         <PillLabel badged><span className="badge on">{s.i + 1}</span>of <span className="mono">{n}</span></PillLabel>
       </div>
-      {test && <div className="bar"><span className="grow" style={{ textAlign: "center" }}>{s.title}: no hints, one try per step</span></div>}
+      {test && <div className="bar"><span className="grow tcenter">{s.title}: no hints, one try per step</span></div>}
       <section className="panel split">
         <div className="col">
           <div className="card">
@@ -145,7 +146,7 @@ export function Practice() {
                   <span className="badge">{s.hintsLeft}</span>Hint{s.hintsLeft === 1 ? "" : "s"}
                 </Pill>
               )}
-              {showMeAvailable(s) && <Pill onClick={() => act((st, p, d) => showMe(st, p, d))}>Show me</Pill>}
+              {showMeAvailable(s) && <Pill onClick={() => act((st, p, d) => showMe(st, p, d))}>{SHOW_ME}</Pill>}
               {skipAvailable(s) && <Pill onClick={() => act((st, _p, d) => toggleSkip(st, d))}>{s.skip ? "Show steps" : "Final answer only"}</Pill>}
               {!tapOnly && <Pill go onClick={() => act((st, p, d) => check(st, p, d))}>Check</Pill>}
             </div>
