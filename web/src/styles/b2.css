@@ -251,7 +251,8 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
   .screen.fit.b2lesson.st-play{grid-template-rows:minmax(0,1fr) auto}
   .st-play .b2card{max-height:46dvh}
   .b2say.b2fold:not(.open){display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden}
-  .b2body .b2more{display:inline-flex;align-self:flex-start;min-height:32px;padding:0}
+  .b2nav .b2more{display:inline-flex;align-items:center;min-height:40px;padding:0 var(--sp-1)}
+  .b2lesson .b2scene{gap:var(--sp-2)}
   .st-play .b2stage .b2read{gap:2px var(--sp-3)}
   .b2lesson .b2stage .b2r.minor{display:none}
   .st-play .b2body .b2small{display:none}

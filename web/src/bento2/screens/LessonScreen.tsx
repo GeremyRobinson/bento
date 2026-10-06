@@ -147,7 +147,6 @@ export function LessonScreen({ trackId, lessonId }: { trackId: string; lessonId:
   let body;
   if (stage === "play") body = <>
     <p className={`b2say b2fold${sayOpen ? " open" : ""}`}><Rich text={lesson.play.say} /></p>
-    <button type="button" className="tlink b2more" aria-expanded={sayOpen} onClick={() => setSayOpen(o => !o)}>{sayOpen ? "Less" : "More"}</button>
     <p className="b2small">Everything in the picture is live: drag it, or use the sliders.</p>
     {tools}
   </>;
@@ -242,6 +241,7 @@ export function LessonScreen({ trackId, lessonId }: { trackId: string; lessonId:
           )}
           <div className="b2nav">
             {at > 0 && <Pill onClick={() => setStage(STAGES[at - 1]!)}>‹ {STAGE_NAMES[STAGES[at - 1]!]}</Pill>}
+            {stage === "play" && <button type="button" className="tlink b2more" aria-expanded={sayOpen} onClick={() => setSayOpen(o => !o)}>{sayOpen ? "Less" : "More"}</button>}
             <span className="grow" />
             {!(stage === "guess" && !revealed) && <button type="button" className="ctl b2deep" aria-expanded={!!deeper} onClick={() => setDeeper("open")}>Deeper</button>}
             {!(stage === "guess" && !revealed) && <span className="grow" />}

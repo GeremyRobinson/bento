@@ -200,7 +200,7 @@ export function SpacetimeScene({ props, marker, onMarker }: SceneProps) {
         <span className="b2grid2">{M.flat().map((v, i) => <b key={i}>{quiet ? "?" : nice(v)}</b>)}</span>
       </span>
       {!quiet && !hideEvent && <Read label="(ct′, x′)" value={`(${nice(e1p[0])}, ${nice(e1p[1])})`} tone="sky" />}
-      {!quiet && <Read label="det Λ" value="1" />}
+      {!quiet && <Read minor label="det Λ" value="1" />}
       {!quiet && <button type="button" className="ctl b2send" onClick={() => openTool("matrix", { A: M, label: `boost for β = ${nice(beta)}` })}>Boost to Matrix pad ›</button>}
     </>;
   } else if (mode === "interval") {

@@ -108,10 +108,10 @@ export function LightClockScene({ props, place, marker }: SceneProps) {
       </>}
       readouts={mode === "muon" ? (hide ? <Read label="γ" value={fx(g)} /> : <>
         <Read label="γ" value={fx(g)} />
-        <Read label="Lab life" value={`${fx(g * TAU)} μs`} />
+        <Read minor label="Lab life" value={`${fx(g * TAU)} μs`} />
         <Read label="With relativity" value={`${fx(far)} km`} tone="sky" />
         <Read label="Without" value={`${fx(plain)} km`} tone="pink" />
-        <Read label="Atmosphere for the muon" value={`${fx(Lc)} km`} />
+        <Read minor label="Atmosphere for the muon" value={`${fx(Lc)} km`} />
       </>) : hide ? undefined : <>
         <Read label="γ" value={fx(g)} tone="amber" />
         <Read label="Ground clock" value={fx(groundTicks, 1)} />
