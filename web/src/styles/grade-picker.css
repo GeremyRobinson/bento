@@ -59,7 +59,7 @@
 .sideswitch{position:relative;flex:none;display:grid;grid-template-columns:1fr 1fr;padding:3px;border-radius:var(--r-pill);background:var(--well);box-shadow:inset 0 0 0 1px var(--rule)}
 .sideswitch button{position:relative;z-index:var(--z-up);min-width:76px;height:34px;padding:0 var(--sp-3);border-radius:var(--r-pill);font-size:var(--fz-sm);font-weight:var(--w-mid);color:var(--muted);transition:color var(--dur-200) var(--ease) var(--dur-120)}
 .sideswitch button[aria-pressed="true"]{color:var(--page)}
-.sideswitch .sidek{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);border-radius:var(--r-pill);background:var(--text);transition:transform var(--dur-420) var(--glide)}
+.sideswitch .sidek{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);border-radius:var(--r-pill);background:var(--text);transition:transform var(--m-page) var(--m-ease)}
 .sideswitch:has(button:last-child[aria-pressed="true"]) .sidek{transform:translateX(100%)}
 .sideswitch button:focus-visible{outline:2px solid var(--tint);outline-offset:2px}
 .sideset>.gpart>*{animation:sideIn var(--dur-300) var(--ease) both;animation-delay:calc(var(--dur-220) + var(--i,0) * var(--dur-30))}

@@ -15,12 +15,35 @@
 .workline.enter{animation:enter var(--dur-450) var(--ease) both, glow var(--dur-1200) ease var(--dur-200)}
 /* ---- one motion master (the UI notes preview's motion, G 2026-10-06): every screen and lesson change is the same.
    The old screen fades out quickly, never slides; the new one is drawn at once and its pieces arrive one at a time
-   (rise, fade, blur to sharp), so there is never a blank frame or a jump. Less motion turns all of it off. ---- */
-:root{--m-in:.34s;--m-fade:.26s;--m-out:.14s;--m-step:42ms;--m-ease:cubic-bezier(.3,.8,.2,1)}
-::view-transition-old(root){animation:var(--m-fade) var(--m-ease) both vtOut}
-::view-transition-new(root){animation:none}
+   (a fade and a small lift), so there is never a blank frame or a jump. Less motion turns all of it off. ---- */
+/* ONE SPEED (G 2026-10-06: "a unified speed that's relaxing for all page openings"): every page change, panel and the
+   contents zoom take --m-page on the one calm curve. Moving is depth, like the contents zoom: going deeper (book →
+   lesson → practice) zooms in a little, going back zooms out, and the next or previous lesson slides sideways, so you
+   feel where you came from without reading a label. No blur on the way in: the contents' own blur is the only one. */
+:root{--m-page:.48s;--m-in:var(--m-page);--m-fade:var(--m-page);--m-out:.2s;--m-step:40ms;--m-ease:cubic-bezier(.32,.72,0,1)}
+::view-transition-group(root){animation-duration:var(--m-page)}
+::view-transition-old(root){animation:var(--m-page) var(--m-ease) both vtOut}
+::view-transition-new(root){animation:var(--m-page) var(--m-ease) both vtIn}
+html[data-dir="fwd"]::view-transition-old(root){animation-name:vtOutDeeper}
+html[data-dir="fwd"]::view-transition-new(root){animation-name:vtInDeeper}
+html[data-dir="back"]::view-transition-old(root){animation-name:vtOutBack}
+html[data-dir="back"]::view-transition-new(root){animation-name:vtInBack}
+html[data-dir="next"]::view-transition-old(root){animation-name:vtOutLeft}
+html[data-dir="next"]::view-transition-new(root){animation-name:vtInRight}
+html[data-dir="prev"]::view-transition-old(root){animation-name:vtOutRight}
+html[data-dir="prev"]::view-transition-new(root){animation-name:vtInLeft}
 @keyframes vtOut{to{opacity:0}}
-@keyframes rvIn{from{opacity:.2;transform:translateY(10px) scale(.985);filter:blur(6px)}}
+@keyframes vtIn{from{opacity:0}}
+@keyframes vtOutDeeper{to{opacity:0;transform:scale(1.035)}}
+@keyframes vtInDeeper{from{opacity:0;transform:scale(.965)}}
+@keyframes vtOutBack{to{opacity:0;transform:scale(.965)}}
+@keyframes vtInBack{from{opacity:0;transform:scale(1.035)}}
+@keyframes vtOutLeft{to{opacity:0;transform:translateX(-28px)}}
+@keyframes vtInRight{from{opacity:0;transform:translateX(28px)}}
+@keyframes vtOutRight{to{opacity:0;transform:translateX(28px)}}
+@keyframes vtInLeft{from{opacity:0;transform:translateX(-28px)}}
+/* a screen's pieces follow the page in with a light cascade: a fade and a small lift, never a blur */
+@keyframes rvIn{from{opacity:0;transform:translateY(6px)}}
 /* a work screen's body is a frame, not a piece: its two sides' pieces arrive instead (and a moving frame would carry
    the fixed feedback stack with it) */
 :is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:not(.wbody):not(.fdim):not(.fstack),.wrap>.bar{animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(var(--i,0) * var(--m-step))}
@@ -40,7 +63,7 @@
 #app .sheet{animation:fadeIn var(--m-fade) var(--m-ease) both}
 #app .sheet .panel{animation:rvIn var(--m-in) var(--m-ease) both}
 /* picking a row swaps only the detail: its pieces never start from nothing, so the frame after a tap is never blank */
-@keyframes rvSoft{from{opacity:.3;transform:translateY(6px) scale(.992);filter:blur(4px)}}
+@keyframes rvSoft{from{opacity:.3;transform:translateY(4px)}}
 .wrap :is(.sdetail>.sbento,.sdl)>*{animation-name:rvSoft}
 
 @media (prefers-reduced-motion:reduce){ *,::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){transition:none!important;animation:none!important} .a-outsoon,.a-flash:not(:last-of-type){opacity:0} .a-move{transform:translateX(var(--dx))} .viz-svg .bar.mid{fill:var(--acc)} }
