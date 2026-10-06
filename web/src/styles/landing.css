@@ -289,3 +289,22 @@
 .tp-field{stroke:var(--adv-faint-line);stroke-width:1.3;stroke-linecap:round}
 .tp-hyp{fill:none;stroke:var(--tp-lilac);stroke-width:1;opacity:.45}
 .tp-light{stroke:var(--tp-amber);stroke-width:1.4;stroke-dasharray:5 5}
+
+/* ---- fixed picture slots (G 2026-10-06): every landing picture has a slot of its own fixed size, and the picture
+   scales to fit inside it, so when one picture changes to the next nothing else on the page moves ---- */
+.lhpic{height:var(--lslot);min-height:0;grid-template-rows:auto minmax(0,1fr)}
+.lhpic:not(.sm){--lslot:460px}
+.lhpic.sm{--lslot:300px}
+@media (min-width:960px){.lhbox{grid-template-rows:repeat(2,300px)}.lhpic,.lhpic.sm,.lhpic:not(.sm){height:auto}}
+@media (max-width:699px){.lhpic:not(.sm){--lslot:400px}.lhpic.sm{--lslot:300px}}
+.lhpic .lhd,.lonepic .lsd{position:relative;min-height:0}
+.lhpic .lhd>.viz,.lonepic .lsd>.viz{position:absolute;inset:0;display:block;align-self:stretch;justify-self:stretch}
+/* the picture fills its slot's height; a small drawing grows at most to twice its size */
+.lhpic .viz-svg,.lhpic .am,.lonepic .lsd .viz-svg,.lonepic .lsd .am{width:100%;height:100%;max-height:none;max-width:min(100%, calc(var(--w) * 2px))}
+.lonepic{height:440px;min-height:0}
+.lonepic .lstage{grid-template-rows:minmax(0,1fr)}
+@media (max-width:899px){.lonepic{height:380px}}
+/* the step demos change problem every few seconds; their box is sized for the tallest one, so the row never jumps */
+.ldemo .lvis{height:290px}
+.ldemo .lvis{grid-template-rows:auto minmax(0,1fr)}
+.ldemo .lnew{align-self:end}
