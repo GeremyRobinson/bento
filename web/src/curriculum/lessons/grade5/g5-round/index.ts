@@ -4,6 +4,7 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildNumberLine, type Hop, type Mark } from "../../../../explanations/diagrams/number-line/build";
 import { expectedOf, oneBox, restoreVia, round6, wholeIn } from "../../_number-line/steps";
+import { slips } from "../../grade4/_kit";
 
 /** the number N / 1000 (three decimal places), rounded to p places (1: tenths, 2: hundredths) */
 export interface RoundProblem { N: number; p: number }
@@ -29,11 +30,18 @@ const parts = ({ N, p }: RoundProblem) => {
 
 function answers(pr: RoundProblem): AnswerModel {
   const { p } = pr, { name, value, digit, next, T, R } = parts(pr);
+  const at = (place: number) => Math.floor(pr.N / 10 ** (3 - place)) % 10; // 0 ones, 1 tenths, 2 hundredths, 3 thousandths
+  const other = p === 1 ? "hundredths" : "tenths";
   return {
     steps: [
       oneBox({ id: "digit", label: `Find the ${name} place`, question: `Which digit is in the ${name} place?`, prompt: s => [s], ans: digit,
-        hint: `The ${name} place is ${p} digit${p > 1 ? "s" : ""} after the point.` }),
-      oneBox({ id: "next", label: "Look next door", question: "Which digit is just to its right?", prompt: s => [s], ans: next, hint: "Look one place further right." }),
+        hint: `The ${name} place is ${p} digit${p > 1 ? "s" : ""} after the point.`,
+        wrong: slips(digit, [
+          [at(3 - p), `Read the ${other} place`, `That's the ${other} digit. The ${name} place is ${p} digit${p > 1 ? "s" : ""} after the point.`],
+          [at(p - 1), "Looked one place too far left", `Start just after the point and count ${p} digit${p > 1 ? "s" : ""}.`],
+        ]) }),
+      oneBox({ id: "next", label: "Look next door", question: "Which digit is just to its right?", prompt: s => [s], ans: next, hint: "Look one place further right.",
+        wrong: slips(next, [[digit, "Read the place itself", `${digit} is the ${name} digit. The one that decides sits just to its right.`]]) }),
       oneBox({
         id: "round", label: "Round", question: "5 or more rounds up. 4 or less stays.", prompt: s => [num(value), op("≈"), s], ans: R, hint: `The next digit is ${next}.`,
         wrong: [
@@ -61,7 +69,7 @@ function explain(pr: RoundProblem, model: AnswerModel): Explanation {
   if (!hops.length) marks.push({ v: R, beat: 2, cls: "dota" });
   return {
     heading: "Look one place to the right",
-    idea: ["To round, look at the digit one place to the right of the place you are rounding to. 5 or more rounds up. 4 or less stays the same."],
+    idea: ["Rounding picks the closer of the two numbers on either side, and the halfway point is where the next digit is 5.", "So 5 or more rounds up, and 4 or less stays the same."],
     statement: [num(value), op("≈"), text("?"), muted(` (nearest ${name.slice(0, -1)})`)],
     diagram: buildNumberLine({
       min: T, max: up, step: tick, every: 10, labelAt: [half], marks, hops,
@@ -93,7 +101,8 @@ export const lesson: LessonDefinition<RoundProblem> = {
       const dec = p === 1 ? 900 + 10 * rng.int(5, 9) + rng.int(0, 9) : 100 * rng.int(0, 9) + 90 + rng.int(5, 9);
       return createRound(W * 1000 + dec, p);
     }
-    const N = rng.int(1001, 99999), p = rng.int(1, 2), unit = 10 ** (3 - p);
+    // the first three: a one-digit whole part, rounded to tenths
+    const N = index < 3 ? rng.int(1001, 9999) : rng.int(1001, 99999), p = index < 3 ? 1 : rng.int(1, 2), unit = 10 ** (3 - p);
     return createRound(N % unit ? N : N + rng.int(1, unit - 1), p);
   },
   restore: raw => restoreVia(raw, ["N", "p"] as const, v => createRound(v.N, v.p)),

@@ -48,6 +48,8 @@ export function manyBoxes(o: {
   /** slips: [typed values by box, kind, message] */
   wrong?: [Record<string, number>, string, RichText][];
   hint: RichText;
+  /** what "Show me" says; default: the hint */
+  explain?: RichText;
   /** exponent boxes are drawn small */
   small?: string[];
 }): AnswerStep {
@@ -69,7 +71,7 @@ export function manyBoxes(o: {
     known: (o.wrong ?? []).map(([values, kind, message]) => ({ values, kind, message })),
     check,
     hint: o.hint,
-    explain: o.hint,
+    explain: o.explain ?? o.hint,
     work: o.prompt(Object.fromEntries(ids.map(id => [id, answer(id, o.ans[id]!)]))),
   };
 }

@@ -23,7 +23,8 @@ export function rectAnswers({ l, w }: RectProblem): AnswerModel {
     steps: [
       ns({ id: "area", label: "Area", question: "Area is the squares inside: length × width.", prompt: x => [num(l), op("×"), num(w), op("="), x, text(" m"), sup(2)], ans: l * w,
         hint: `${count(l, "row")} of ${count(w, "square")}.`, wrong: [[2 * (l + w), "Found the perimeter", "That's the distance around. Area is length × width."], [l + w, "Added instead of multiplied", "Area is length × width."]] }),
-      ns({ id: "half", label: "Length + width", prompt: x => [num(l), op("+"), num(w), op("="), x], ans: l + w, hint: "Add one long side and one short side." }),
+      ns({ id: "half", label: "Length + width", prompt: x => [num(l), op("+"), num(w), op("="), x], ans: l + w, hint: "Add one long side and one short side.",
+        wrong: [[l * w, "Multiplied the sides", "This step goes along the edge: one long side plus one short side."]] }),
       ns({ id: "perimeter", label: "Perimeter", question: "Perimeter is the distance all the way around.", prompt: x => [num(2), op("×"), num(l + w), op("="), x, text(" m")], ans: 2 * (l + w),
         hint: "There are two long sides and two short sides.", wrong: [[l * w, "Found the area", "Perimeter goes around the edge: add all four sides."]] }),
     ],

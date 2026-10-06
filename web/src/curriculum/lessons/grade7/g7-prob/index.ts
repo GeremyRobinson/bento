@@ -30,14 +30,22 @@ export function restoreProbability(raw: unknown): ProbabilityProblem | null {
   try { return createProbability(r, b, g, c); } catch { return null; }
 }
 
+/** " = 1/3" when want/T simplifies, else nothing */
+const simp = (n: number, d: number) => { const g = gcdOf(n, d); return g > 1 ? ` = ${n / g}/${d / g}` : ""; };
+const gcdOf = (a: number, b: number): number => (b ? gcdOf(b, a % b) : a);
+
 export function probabilityAnswers(p: ProbabilityProblem): AnswerModel {
   const want = [p.r, p.b, p.g][p.c]!, name = NAMES[p.c], T = p.r + p.b + p.g;
   return {
     steps: [
-      ns({ id: "want", label: "Ways to win", question: `How many marbles are ${name}?`, prompt: s => [s], ans: want, hint: `Count the ${count(name, "one")}.` }),
-      ns({ id: "all", label: "All the ways", question: "How many marbles in all?", prompt: s => [s], ans: T, hint: "Add all three colors." }),
-      fs({ id: "chance", label: "Write the chance", prompt: s => mt`P(${name}) = ${s}`, N: want, D: T, hint: `${name} out of all: ${want} over ${T}, simplified.`,
+      ns({ id: "want", label: "Ways to win", question: `How many marbles are ${name}?`, prompt: s => [s], ans: want, hint: `Count the ${count(name, "one")}.`,
+        wrong: [[T, "Counted every marble", `Count only the ${name} ones.`]] }),
+      ns({ id: "all", label: "All the ways", question: "How many marbles in all?", prompt: s => [s], ans: T, hint: "Add all three colors.",
+        wrong: [[T - want, `Left out the ${name} ones`, `All the marbles means every color, the ${name} ones too.`]] }),
+      { ...fs({ id: "chance", label: "Write the chance", prompt: s => mt`P(${name}) = ${s}`, N: want, D: T, hint: `How many are ${name}, out of how many in all? Write it in lowest terms.`,
         wrong: [[want, T - want, "Used the losers on the bottom", "The bottom is **all** the marbles."]] }),
+        known: [{ values: { n: want, d: T - want }, kind: "Used the losers on the bottom", message: "The bottom is **all** the marbles." }],
+        explain: `${want} ${name} out of ${T} in all: ${want}/${T}${simp(want, T)}.` },
     ],
     finalParts: [-1],
   };
@@ -75,7 +83,8 @@ export const lesson: LessonDefinition<ProbabilityProblem> = {
   unit: "Probability",
   title: "Probability",
   reference: createProbability(3, 5, 2, 0),
-  generate: rng => createProbability(rng.int(1, 8), rng.int(1, 8), rng.int(1, 8), rng.int(0, 2)),
+  // the first three: a small bag, up to 4 of each color
+  generate: (rng, index) => { const t = index < 3 ? 4 : 8; return createProbability(rng.int(1, t), rng.int(1, t), rng.int(1, t), rng.int(0, 2)); },
   restore: restoreProbability,
   display: p => mt`${p.r} red, ${p.b} blue, ${p.g} green`,
   displayNote: p => `You pick one marble without looking. What's the chance it's ${NAMES[p.c]}?`,

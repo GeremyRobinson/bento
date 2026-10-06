@@ -39,11 +39,13 @@ export function createSplitMultiplication(firstFactor: number, secondFactor: num
 }
 
 /** Same ranges as the current app: both factors 12–98, and the second never a multiple of ten. */
-export function generateSplitMultiplication(rng: Rng): SplitMultiplicationProblem {
+export function generateSplitMultiplication(rng: Rng, index = 3): SplitMultiplicationProblem {
+  // the first three are friendlier: 12–39 times 12–29
+  const early = index < 3;
   let second: number;
-  do second = rng.int(12, 98);
+  do second = rng.int(12, early ? 29 : 98);
   while (second % 10 === 0);
-  return createSplitMultiplication(rng.int(12, 98), second);
+  return createSplitMultiplication(rng.int(12, early ? 39 : 98), second);
 }
 
 /** Every rule the model must satisfy. An empty list means the problem is sound. */

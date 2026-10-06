@@ -26,10 +26,14 @@ const show = ({ a, b, c }: DistributeProblem): MathText => [num(a), text("("), x
 export function distributeAnswers({ a, b, c }: DistributeProblem): AnswerModel {
   return {
     steps: [
-      ms({ id: "distribute", label: "Distribute", prompt: s => [num(a), text("("), x, op("+"), num(b), text(")"), op("="), s.p!, x, op("+"), s.q!], ans: { p: a, q: a * b },
-        hint: `Multiply ${a} by x and by ${b}.`, wrong: [[{ p: a, q: b }, "Only multiplied the first term", `Multiply ${a} by **both** x and ${b}.`]] }),
-      ns({ id: "combine", label: "Combine the x terms", prompt: s => [num(a), x, op("+"), ...cx(c), op("="), s, x], ans: a + c, hint: "Add the numbers in front of x." }),
-      ms({ id: "simple", label: "Write it simply", prompt: s => [s.p!, x, op("+"), s.q!], ans: { p: a + c, q: a * b }, hint: `${a + c}x and the number ${a * b}.` }),
+      { ...ms({ id: "distribute", label: "Distribute", prompt: s => [num(a), text("("), x, op("+"), num(b), text(")"), op("="), s.p!, x, op("+"), s.q!], ans: { p: a, q: a * b },
+        hint: "Multiply the number outside by each term inside.", wrong: [[{ p: a, q: b }, "Only multiplied the first term", `Multiply ${a} by **both** x and ${b}.`]] }),
+        explain: `${a} × x = ${a}x and ${a} × ${b} = ${a * b}.` },
+      ns({ id: "combine", label: "Combine the x terms", prompt: s => [num(a), x, op("+"), ...cx(c), op("="), s, x], ans: a + c, hint: "Add the numbers in front of x.",
+        wrong: [[a * c, "Multiplied the x terms", "Like terms add: count all the x's."]] }),
+      { ...ms({ id: "simple", label: "Write it simply", prompt: s => [s.p!, x, op("+"), s.q!], ans: { p: a + c, q: a * b }, hint: "Put together what you found: the x terms, then the plain number.",
+        wrong: [[{ p: a + c, q: b }, "Lost the multiplied number", `The plain number is ${a} × ${b}, from the first step.`], [{ p: a, q: a * b }, "Left out the other x terms", "Use the x terms you combined."]] }),
+        explain: `The x terms make ${a + c}x and the plain number is ${a * b}.` },
     ],
     finalParts: [-1],
   };
@@ -76,6 +80,7 @@ export const lesson: LessonDefinition<DistributeProblem> = {
   grade: 7,
   unit: "Expressions and equations",
   title: "Distribute and combine",
+  pre: "g6-gcf",
   reference: createDistribute(3, 4, 2),
   generate: rng => generateDistribute(rng),
   restore: raw => { const r = readNumbers(raw, ["a", "b", "c"] as const); try { return r && createDistribute(r.a, r.b, r.c); } catch { return null; } },

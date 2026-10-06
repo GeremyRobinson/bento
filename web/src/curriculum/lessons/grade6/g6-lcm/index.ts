@@ -23,10 +23,11 @@ function answers({ a, b }: LcmProblem): AnswerModel {
     steps: [
       oneBox({
         id: "count", label: "Count by the bigger number", question: `Count by ${b}s: ${b}, ${2 * b}, ${3 * b}, … Which is the first one ${a} goes into?`,
-        prompt: s => [s], ans: L, hint: `Check each multiple of ${b}: does ${a} divide it evenly?`,
+        prompt: s => [s], ans: L, hint: `Check each number as you count: does ${a} divide it evenly?`,
         wrong: L !== a * b ? [[a * b, "Common multiple, but not the least", `${a * b} works, but there's a smaller one.`]] : [],
       }),
-      oneBox({ id: "check", label: "Check it", prompt: s => [num(L), op("÷"), num(a), op("="), s], ans: L / a, hint: "It should come out even." }),
+      oneBox({ id: "check", label: "Check it", prompt: s => [num(L), op("÷"), num(a), op("="), s], ans: L / a, hint: "It should come out even.",
+        wrong: [[L / b, "Divided by the other number", `Check with ${a}, the smaller number: does it go in evenly?`]] }),
     ],
     finalParts: [0],
   };
@@ -44,7 +45,7 @@ function explain(p: LcmProblem, model: AnswerModel): Explanation {
   ];
   return {
     heading: "The first number both go into",
-    idea: ["Count by the bigger number. The first one the smaller number also goes into is the least common multiple."],
+    idea: ["A common multiple is a number both counts land on, so the first one they share is the least common multiple.", "Count by the bigger number and check each one."],
     statement: [text("LCM("), num(a), text(", "), num(b), text(")"), op("="), num(L)],
     diagram: buildNumberLine({
       ...range, every: sparseEvery(range),

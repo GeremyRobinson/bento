@@ -26,8 +26,10 @@ describe.each(CATALOG.filter(c => lessonById(c.id) && byId.has(c.id)).map(c => c
   const skip = (field: string) => !!dev[field];
 
   it("has the same place in the curriculum", () => {
-    expect({ grade: lesson.grade, unit: skip("unit") ? fx.meta.unit : lesson.unit, title: lesson.title, pre: lesson.pre ?? null, story: !!lesson.story })
+    expect({ grade: lesson.grade, unit: skip("unit") ? fx.meta.unit : lesson.unit, title: lesson.title, pre: skip("pre") ? fx.meta.pre : lesson.pre ?? null, story: !!lesson.story })
       .toEqual({ grade: fx.meta.grade, unit: fx.meta.unit, title: fx.meta.title, pre: fx.meta.pre, story: fx.meta.story });
+    // a reviewed new `pre` still has to match the catalog's
+    expect(lesson.pre ?? null).toBe(CATALOG.find(c => c.id === id)!.pre);
     expect(lesson.answers(lesson.reference).finalParts).toEqual(fx.meta.final);
   });
 

@@ -16,10 +16,12 @@ export function createGcf(g: number, m: number, n: number): GcfProblem {
 }
 
 /** Same as the current app: m, n 1–9, different and sharing no factor; g 2–9. */
-export function generateGcf(rng: Rng): GcfProblem {
+export function generateGcf(rng: Rng, index = 3): GcfProblem {
+  // the first three: small shared factors and small numbers left inside
+  const top = index < 3 ? 5 : 9;
   let m: number, n: number;
-  do { m = rng.int(1, 9); n = rng.int(1, 9); } while (m === n || gcd(m, n) !== 1);
-  return { g: rng.int(2, 9), m, n };
+  do { m = rng.int(1, top); n = rng.int(1, top); } while (m === n || gcd(m, n) !== 1);
+  return { g: rng.int(2, index < 3 ? 5 : 9), m, n };
 }
 
 export function gcfAnswers({ g, m, n }: GcfProblem): AnswerModel {
@@ -29,9 +31,12 @@ export function gcfAnswers({ g, m, n }: GcfProblem): AnswerModel {
   return {
     steps: [
       ns({ id: "gcf", label: "Greatest common factor", prompt: x => [text("GCF("), num(A), text(", "), num(B), text(")"), op("="), x], ans: g,
-        hint: `The biggest number that divides both ${A} and ${B}.`, wrong: smaller }),
-      ms({ id: "factor", label: "Factor it out", prompt: s => [num(A), op("+"), num(B), op("="), num(g), text("("), s.m!, op("+"), s.n!, text(")")], ans: { m, n },
-        hint: `${A} ÷ ${g} and ${B} ÷ ${g}.` }),
+        hint: "Try the factors of the smaller number, biggest first. Stop at the first one that also divides the other number.",
+        wrong: [...smaller, [1, "Settled for 1", "1 divides every number. Look for a bigger number that divides both."]] }),
+      { ...ms({ id: "factor", label: "Factor it out", prompt: s => [num(A), op("+"), num(B), op("="), num(g), text("("), s.m!, op("+"), s.n!, text(")")], ans: { m, n },
+        hint: "Divide each number by the factor you pulled out.",
+        wrong: [[{ m: A, n: B }, "Left the numbers whole", `Inside goes what's left after taking out ${g}: divide each number by ${g}.`], [{ m: A - g, n: B - g }, "Subtracted the factor", `Factoring out ${g} divides by it: ${A} ÷ ${g} and ${B} ÷ ${g}.`]] }),
+        explain: `${A} ÷ ${g} = ${m} and ${B} ÷ ${g} = ${n}, so ${A} + ${B} = ${g}(${m} + ${n}).` },
     ],
     finalParts: [-1],
   };
@@ -42,7 +47,7 @@ export function explainGcf(p: GcfProblem, answers: AnswerModel): Explanation {
   const fm = expectedOf(answers.steps, "factor", "m"), fn = expectedOf(answers.steps, "factor", "n");
   return {
     heading: "Pull out the biggest shared factor",
-    idea: ["Find the biggest number that divides both. Write it outside, and what is left of each number inside."],
+    idea: ["Both numbers are the same factor times something, so that shared factor can be written once outside the parentheses.", "The greatest common factor leaves nothing more to pull out."],
     statement: [num(A), op("+"), num(B), op("="), num(g), text("("), num(fm), op("+"), num(fn), text(")")],
     diagram: buildAreaGrid({
       cols: [{ label: String(fm), size: m, from: 2 }, { label: String(fn), size: n, from: 2 }],
@@ -67,7 +72,7 @@ export const lesson: LessonDefinition<GcfProblem> = {
   unit: "Number system",
   title: "Factor out the GCF",
   reference: createGcf(12, 2, 3),
-  generate: rng => generateGcf(rng),
+  generate: (rng, index) => generateGcf(rng, index),
   restore: raw => { const r = readNumbers(raw, ["g", "m", "n"] as const); try { return r && createGcf(r.g, r.m, r.n); } catch { return null; } },
   display: p => [num(p.g * p.m), op("+"), num(p.g * p.n)],
   displayNote: () => "Factor out the greatest common factor.",

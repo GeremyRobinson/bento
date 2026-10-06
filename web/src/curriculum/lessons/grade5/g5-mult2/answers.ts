@@ -25,7 +25,8 @@ export function splitMultiplicationAnswers(p: SplitMultiplicationProblem): Answe
       label: `Multiply by the ${placeName(part)}`,
       prompt: [num(a), op("×"), num(part), op("="), slot("x")],
       slots: [{ id: "x", expected }],
-      known: zeros === 0 ? [] : [{
+      // a ones part of 1 has no adding slip to name (a + 1 is also the off-by-one try)
+      known: zeros === 0 ? (part === 1 ? [] : [{ values: { x: a + part }, kind: "Added instead of multiplied", message: `This part is ${f(a)} times ${f(part)}, not plus.` }]) : [{
         values: { x: a * digit },
         kind: "Lost the place value",
         message: `That's ${f(a)} × ${f(digit)}. The ${placeName(part)} digit stands for ${f(part)}, so add ${zeros === 1 ? "a zero" : `${zeros} zeros`}.`,
@@ -42,7 +43,10 @@ export function splitMultiplicationAnswers(p: SplitMultiplicationProblem): Answe
       label: "Add the parts",
       prompt: [...plusChain(p.partialProducts), op("="), slot("x")],
       slots: [{ id: "x", expected: p.product }],
-      known: [],
+      // the commonest slip: a part left out
+      known: p.partialProducts.map(x => ({ values: { x: p.product - x }, kind: "Left out a part", message: `Add every part: ${p.partialProducts.map(f).join(" + ")}.` }))
+        // not where the current app's place-value or off-by-one tries land, so those keep their recorded messages
+        .filter((k, i, all) => k.values.x !== p.product + 1 && !p.parts.some(part => k.values.x === a * leadingDigit(part)) && all.findIndex(o => o.values.x === k.values.x) === i),
       hint,
       explain: `${hint} That makes ${f(p.product)}.`,
       work: [...plusChain(p.partialProducts), op("="), answer("x", p.product)],

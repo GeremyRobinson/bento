@@ -18,10 +18,12 @@ export function createPartial(n: number, m: number): PartialProblem {
  * n 112–989, m 3–9, as in the current app, but never a whole number of hundreds (600): that is one strip and
  * practises no partial products (fixes-02 A1). A 0 in the tens (502) stays: "there are no tens, so that part is 0".
  */
-export const generatePartial = (rng: Rng): PartialProblem => {
+export const generatePartial = (rng: Rng, index = 3): PartialProblem => {
+  // the first three are friendlier: hundreds 1–3 and a small multiplier
+  const [lo, hi, m] = index < 3 ? [112, 399, rng.int(2, 5)] : [112, 989, rng.int(3, 9)];
   let n: number;
-  do n = rng.int(112, 989); while (n % 100 === 0);
-  return { n, m: rng.int(3, 9) };
+  do n = rng.int(lo, hi); while (n % 100 === 0);
+  return { n, m };
 };
 
 const places = (n: number) => ({ H: Math.floor(n / 100), T: Math.floor(n / 10) % 10, O: n % 10 });
@@ -62,7 +64,7 @@ export function explainPartial(p: PartialProblem, answers: AnswerModel): Explana
   const statement: MathText = [num(n), op("×"), num(m), ...(split ? [op("="), ...shown.flatMap(([v], k) => [...(k ? [op("+")] : []), num(v), op("×"), num(m)])] : [])];
   return {
     heading: "Multiply one place at a time",
-    idea: ["Split the big number into hundreds, tens and ones. Multiply each part, then add."],
+    idea: ["A big number is its hundreds, tens and ones put together, so each part can be multiplied on its own.", "The parts added together make the whole product."],
     statement,
     diagram: buildAreaGrid({
       cols, rows: [{ label: String(m), size: m }], cells: [cells], minRow: 80,
@@ -89,7 +91,7 @@ export const lesson: LessonDefinition<PartialProblem> = {
   title: "Multiply big numbers",
   pre: "g3-split",
   reference: createPartial(346, 7),
-  generate: rng => generatePartial(rng),
+  generate: (rng, index) => generatePartial(rng, index),
   restore: raw => { const r = readNumbers(raw, ["n", "m"] as const); try { return r && createPartial(r.n, r.m); } catch { return null; } },
   display: p => [num(p.n), op("×"), num(p.m)],
   answers: partialAnswers,

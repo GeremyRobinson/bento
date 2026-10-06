@@ -81,7 +81,7 @@ export function unlikeAnswers(p: UnlikeFractionsProblem): AnswerModel {
       const bad = x % b !== 0 ? b : d;
       return { ok: false, generic: false, kind: "Finding the LCD", message: `${bad} doesn't go into ${x} evenly (${x} ÷ ${bad} has a remainder). Both bottom numbers must divide into it.` };
     },
-    hint: `Count by ${big}s: ${[1, 2, 3, 4].map(i => i * big).join(", ")}… Stop at the first one that ${small} also goes into.`,
+    hint: "Count by the bigger bottom number, and stop at the first number the smaller one also goes into.",
     explain: `Counting by ${big}s, the first number ${small} also goes into is ${L}.`,
     work: [text("LCD of "), num(b), text(" and "), num(d), text(" is "), answer("x", L)],
   };
@@ -129,7 +129,7 @@ export function unlikeAnswers(p: UnlikeFractionsProblem): AnswerModel {
       if (!sub && n === Math.abs(A - C)) return { ok: false, generic: false, kind: "Subtracted instead of adding", message: "You subtracted. Look at the sign: this one is a **plus**." };
       return { ok: false, generic: false, kind: sub ? "Subtracting numerators" : "Adding numerators", message: `The bottom is right. Check the top: ${A} ${p.op} ${C} = ?` };
     },
-    hint: `${sub ? "Subtract" : "Add"} only the tops. The bottom stays ${L}.`,
+    hint: `The pieces are the same size now, so only the tops ${sub ? "get taken away" : "add"}. Does the size of a piece change?`,
     explain: `${A} ${p.op} ${C} = ${S}, and the bottom stays ${L}.`,
     work: [frac(A, L), op(p.op), frac(C, L), op("="), frac([answer("n", S)], [answer("d", L)])],
   };
@@ -181,7 +181,7 @@ const IDEAS = {
     "Every problem takes the same 5 steps: find the LCD, rewrite both fractions, add, then simplify."],
   sub: ["Before you can take away, the pieces have to be the same size.",
     "Never subtract the bottoms: you can't cut something into 0 pieces."],
-  mix: ["This lesson mixes plus and minus problems. The first three steps are exactly the same. At step 4, look at the sign before you add or take away."],
+  mix: ["Adding and taking away both need same-size pieces, so the first steps are the same either way.", "At the step that adds or takes away, look at the sign first."],
 };
 
 export function explainUnlike(lesson: "add" | "sub" | "mix") {

@@ -287,7 +287,7 @@ describe("report, grown-up page and back to basics", () => {
     renderApp({ grade: 5, chosen: true, scores: { "g5-mult2": scored(1, Date.UTC(2026, 9, 1)) }, lessons: { "g5-mult2": 1 }, done: 1 });
     openRow(LESSON);
     tap(/^Start lesson/);
-    const pre = CATALOG.find(c => c.id === "g4-partial")!;
+    const pre = CATALOG.find(c => c.id === CATALOG.find(l => l.id === "g5-mult2")!.pre)!;
     expect(screen.getByRole("button", { name: new RegExp(`Build up first: ${pre.title}`) })).toBeInTheDocument();
     tap("Show all"); tap("Your turn ›");
     failRun();

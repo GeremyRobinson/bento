@@ -27,10 +27,12 @@ function answers(pr: PercentChangeProblem): AnswerModel {
   const { O, p } = pr, N = newValue(pr), c = Math.abs(N - O);
   return {
     steps: [
-      ns({ id: "change", l: "How much did it change?", a: s => [text("|"), num(N), op("−"), num(O), text("|"), op("="), ...s], ans: c, h: "Subtract to find the change." }),
+      ns({ id: "change", l: "How much did it change?", a: s => [text("|"), num(N), op("−"), num(O), text("|"), op("="), ...s], ans: c, h: "Subtract to find the change.",
+        w: [[N + O, "Added", "The change is the gap between the two amounts: subtract."]] }),
       ns({ id: "divide", l: "Divide by the original", a: s => [num(c), op("÷"), num(O), op("="), ...s], ans: round6(c / O), h: `Always divide by where you started: ${O}.`,
         w: [[round6(c / N), "Divided by the new number", "Divide by the original amount."]] }),
-      ns({ id: "percent", l: "Write it as a percent", a: s => [num(round6(c / O)), op("="), ...s, text("%")], ans: p, h: "Move the decimal point two places right." }),
+      ns({ id: "percent", l: "Write it as a percent", a: s => [num(round6(c / O)), op("="), ...s, text("%")], ans: p, h: "Percent means hundredths: how many hundredths is it?",
+        w: [[round6(c / O), "Kept the decimal", `A percent counts hundredths: ${f(round6(c / O))} is how many hundredths?`], [round6(c / O * 10), "Moved the point one place", "Hundredths: move the point two places."]] }),
     ],
     finalParts: [-1],
   };
@@ -65,6 +67,7 @@ function explain(pr: PercentChangeProblem, model: AnswerModel): Explanation {
   const c = expectedOf(model.steps, "change"), r = expectedOf(model.steps, "divide"), p = expectedOf(model.steps, "percent");
   return {
     heading: "Change ÷ original",
+    idea: ["Percent change compares the change with where you started, so the same change is a bigger percent of a smaller start.", "Change ÷ original, written as hundredths, is the percent."],
     statement: [num(O), op("→"), num(N)],
     diagram: percentChangePicture(pr),
     caption: `Each block is ${g}% of ${O}, which is ${f((O * g) / 100)}.`,
@@ -85,6 +88,7 @@ export const lesson: LessonDefinition<PercentChangeProblem> = {
   grade: 7,
   unit: "Proportions and percents",
   title: "Percent change",
+  pre: "g7-discount",
   // the current app's card and picture: 50 → 65 is +30%
   reference: createPercentChange(50, 30, true),
   generate: rng => generatePercentChange(rng),

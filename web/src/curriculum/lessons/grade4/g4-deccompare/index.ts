@@ -116,7 +116,7 @@ function explain(p: DecCompareProblem, model: AnswerModel): Explanation {
       : `${partIs(w, X)} ${cols(Math.floor(h / 10))}${h % 10 ? ` and ${sq(h % 10)} more` : ""}: ${hund(h)}.`;
   return {
     heading: "Count the same-size pieces",
-    idea: ["Write both decimals in hundredths. Then the one with more hundredths is bigger, however many digits it has."],
+    idea: ["Hundredths are all the same size, so the decimal with more hundredths is bigger, however many digits it shows.", "Write both in hundredths to compare them."],
     statement: [text(`${X} ? ${Y}`)],
     diagram: buildHundredths({
       grids: [{ label: X, count: A, note: note(A), beat: 1 }, { label: Y, count: B, note: note(B), beat: 2 }],

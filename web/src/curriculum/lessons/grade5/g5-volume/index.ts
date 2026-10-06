@@ -38,7 +38,7 @@ export function explainBox(p: BoxProblem, answers: AnswerModel): Explanation {
   const { l, w, h } = p, base = expectedOf(answers.steps, "base"), V = expectedOf(answers.steps, "volume");
   return {
     heading: "Volume = length × width × height",
-    idea: ["Count the cubes in the bottom layer, then multiply by the number of layers."],
+    idea: ["Volume counts the cubes that fill a box, and every layer holds the same number of cubes as the bottom one.", "So the cubes in one layer times the number of layers is the volume."],
     statement: [num(l), op("×"), num(w), op("×"), num(h)],
     diagram: buildBox3d({
       mode: "cubes", l, w, h, layerBeats: [1, ...Array.from({ length: h - 1 }, () => 2)],

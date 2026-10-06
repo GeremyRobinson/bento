@@ -21,7 +21,8 @@ function answers(p: MulIntegersProblem): AnswerModel {
   return {
     steps: [
       oneBox({ id: "size", label: "Ignore the signs", prompt: s => (div ? [num(Math.abs(a * b)), op("÷"), num(Math.abs(b)), op("="), s] : [num(Math.abs(a)), op("×"), num(Math.abs(b)), op("="), s]),
-        ans: Math.abs(ans), hint: div ? "Divide the sizes." : "Multiply the sizes." }),
+        ans: Math.abs(ans), hint: div ? "Divide the sizes." : "Multiply the sizes.",
+        wrong: div ? [[Math.abs(a * b) * Math.abs(b), "Multiplied", "This one divides: how many jumps make the size?"]] : [[Math.abs(a) + Math.abs(b), "Added", "This one is times, not plus."]] }),
       oneBox({ id: "sign", label: "Pick the sign", prompt: s => [...shown(p), op("="), s], ans, hint: "Same signs make a positive. Different signs make a negative.",
         wrong: [[-ans, "Wrong sign", "Same signs give a positive answer. Different signs give a negative one."]] }),
     ],
@@ -57,7 +58,7 @@ function explain(p: MulIntegersProblem, model: AnswerModel): Explanation {
   const sign = differ ? "The signs are different, so it's negative." : "The signs match, so it's positive.";
   return {
     heading: "Same signs: positive. Different: negative.",
-    idea: ["Work with the sizes first and ignore the signs. Then pick the sign: same signs make a positive, different signs make a negative."],
+    idea: ["Multiplying by a negative flips a number to the other side of 0, so one negative makes the answer negative and a second one flips it back.", "So work with the sizes, then pick the sign: same signs positive, different signs negative."],
     statement: [...shown(p), op("="), num(ans)],
     diagram: buildNumberLine({
       ...range, every: sparseEvery(range), labelAt: div ? [] : [size, ...(differ ? [-size] : [])],
@@ -86,9 +87,11 @@ export const lesson: LessonDefinition<MulIntegersProblem> = {
   grade: 7,
   unit: "Integers",
   title: "Multiplying and dividing integers",
+  pre: "g7-addint",
   reference: createMulIntegers(-6, 4, false), // −6 × 4 = −24, the current app's example
-  generate: rng => {
-    const nz = () => { let x: number; do x = rng.int(-12, 12); while (x === 0); return x; };
+  generate: (rng, index) => {
+    // the first three: sizes up to 5
+    const t = index < 3 ? 5 : 12, nz = () => { let x: number; do x = rng.int(-t, t); while (x === 0); return x; };
     const a = nz(), b = nz();
     return createMulIntegers(a, b, rng.next() < 0.5);
   },
