@@ -45,6 +45,7 @@ export function Surface3D({ f, polar, domain, rmin = 0, zscale = 1, points = [],
       if (b.length > 1) lines.push(path(b));
     }
   }
+  const at = points.map(p => P(p.x, p.y, p.z));
   const onDown = (e: React.PointerEvent<SVGSVGElement>) => { (e.target as Element).setPointerCapture?.(e.pointerId); last.current = { x: e.clientX, y: e.clientY }; };
   const onMove = (e: React.PointerEvent<SVGSVGElement>) => {
     if (!last.current) return;
@@ -58,12 +59,19 @@ export function Surface3D({ f, polar, domain, rmin = 0, zscale = 1, points = [],
       onPointerDown={onDown} onPointerMove={onMove} onPointerUp={() => (last.current = null)} onPointerCancel={() => (last.current = null)}>
       <g className="b2wire">{lines.map((d, i) => <path key={i} d={d} />)}</g>
       {points.map((p, i) => {
-        const [x, y] = P(p.x, p.y, p.z);
+        const [x, y] = at[i]!;
+        // a label that would run into another point's label (that one sits to its right, at about its height) reads
+        // to the left of its dot instead
+        const left = !!p.label && points.some((q, j) => {
+          if (j === i || !q.label) return false;
+          const [qx, qy] = at[j]!, dx = qx - x;
+          return Math.abs(qy - y) < 34 && dx < 170 && (dx > 2 || (Math.abs(dx) <= 2 && j > i));
+        });
         return (
           <g key={i}>
             {p.ring != null && <circle cx={x} cy={y} r={(p.r ?? 6) + p.ring * 16} className={`b2ring ${p.cls}`} opacity={1 - p.ring} />}
             <circle cx={x} cy={y} r={p.r ?? 6} className={`b2dot ${p.cls}`} />
-            {p.label && <text x={x + 10} y={y - 8} className={`b2t ${p.cls}`}>{p.label}</text>}
+            {p.label && <text x={left ? x - 10 : x + 10} y={y - 8} textAnchor={left ? "end" : undefined} className={`b2t ${p.cls}`}>{p.label}</text>}
           </g>
         );
       })}

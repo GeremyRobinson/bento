@@ -73,18 +73,18 @@ describe("Bento² from picker D through a lesson", () => {
     expect(document.querySelector('.b2steps [data-state="now"]')).not.toBeNull();
     tap("Use it ›");
 
-    // Use it: keep c on the shelf, and the lesson's ability shows on the track
+    // Use it: keep c_light on the shelf, and the lesson's ability shows on the track
     tap("Save");
     expect(screen.getByRole("button", { name: "On your shelf ✓" })).toBeInTheDocument();
     tap("Back to Relativity ›");
     expect(screen.getByLabelText("Your abilities")).toHaveTextContent(`You can ${re01.youCan}`);
     expect(screen.getByLabelText(/The build: 1 of 7 pieces/)).toBeInTheDocument();
 
-    // the island's Tools button opens the tools list; the Number shelf has c
+    // the island's Tools button opens the tools list; the Number shelf has c_light
     fireEvent.click(screen.getAllByRole("button", { name: "Tools" })[0]!);
     fireEvent.click(within(screen.getByRole("dialog", { name: "Tools" })).getByRole("button", { name: "Number shelf" }));
     const shelf = screen.getByRole("dialog", { name: "Number shelf" });
-    expect(within(shelf).getByText("c")).toBeInTheDocument();
+    expect(within(shelf).getByText("c_light")).toBeInTheDocument();
     expect(shelf).toHaveTextContent("299,792,458");
   });
 

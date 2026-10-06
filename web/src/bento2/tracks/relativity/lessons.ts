@@ -93,7 +93,7 @@ export const re01: B2Lesson<P01> = {
   useIt: {
     say: ["A GPS receiver times signals from four satellites. If one satellite's clock is 1 μs off, your position is off by about 300 m.",
       "That is the build's first piece: every microsecond of clock error is 0.3 km on the map."],
-    saves: { name: "c", value: () => C, unit: "m/s", note: "the speed of light, exact" },
+    saves: { name: "c_light", value: () => C, unit: "m/s", note: "the speed of light, exact" },
     scene: { scene: "spacetime", props: { mode: "light", beta: 0 } },
   },
   deeper: [
@@ -534,10 +534,17 @@ export const re07: B2Lesson<P07> = {
           slips: [slip("faster", 0, `u ⊕ v is below 1 whenever u and v are: here ${fr(w)}.`)] }),
       ];
       if (p.matrix) {
-        const gu = gammaOf(p.u), gv = gammaOf(p.v), G = gu * gv * (1 + p.u * p.v);
-        steps.push(fracStep("G", "γ of the product", G, { ask: "Multiply the boosts for u and v. What is the top-left entry?",
-          hint: `Top-left: γ₁γ₂ + (β₁γ₁)(β₂γ₂) = ${fr(gu)} × ${fr(gv)} + ${fr(p.u * gu)} × ${fr(p.v * gv)}.`,
-          slips: [slip("γ₁γ₂ only", gu * gv, "Multiply the matrices: the top-left entry is γ₁γ₂ + (β₁γ₁)(β₂γ₂)."), slip("minus", gu * gv * (1 - p.u * p.v), "Both off-diagonal entries are negative, so their product adds: γ₁γ₂ + (β₁γ₁)(β₂γ₂).")] }));
+        // the whole product of the two boosts: it is itself a boost, γ on the diagonal and −βγ off it, for u ⊕ v
+        const gu = gammaOf(p.u), gv = gammaOf(p.v), G = gu * gv * (1 + p.u * p.v), O = -gu * gv * (p.u + p.v);
+        steps.push(multiStep("prod", "The product of the boosts", [G, O, O, G], "fraction", { boxes: ["top left", "top right", "bottom left", "bottom right"],
+          ask: `Multiply the boost for u, [${fr(gu)}, −${fr(p.u * gu)}; −${fr(p.u * gu)}, ${fr(gu)}], by the boost for v. Row by row.`,
+          hint: `Top left: γ₁γ₂ + (β₁γ₁)(β₂γ₂) = ${fr(gu)} × ${fr(gv)} + ${fr(p.u * gu)} × ${fr(p.v * gv)}. Top right: −(γ₁β₂γ₂ + β₁γ₁γ₂).`,
+          done: `The product of the boosts: [${fr(G)}, ${fr(O)}; ${fr(O)}, ${fr(G)}], the boost for ${fr((p.u + p.v) / (1 + p.u * p.v))}`,
+          slips: [
+            slip("γ₁γ₂ only", [gu * gv, O, O, gu * gv], "Each entry is a row times a column: the top left is γ₁γ₂ + (β₁γ₁)(β₂γ₂), two products added."),
+            slip("minus", [gu * gv * (1 - p.u * p.v), O, O, gu * gv * (1 - p.u * p.v)], "Both off-diagonal entries are negative, so their product adds: γ₁γ₂ + (β₁γ₁)(β₂γ₂)."),
+            slip("signs", [G, -O, -O, G], "The off-diagonal entries stay negative: a boost forward has −βγ there."),
+          ] }));
       }
       return steps;
     },
@@ -545,7 +552,7 @@ export const re07: B2Lesson<P07> = {
   },
   oracle: p => {
     const out = [p.u + p.v, 1 + p.u * p.v, (p.u + p.v) / (1 + p.u * p.v), 1];
-    if (p.matrix) { const A = boost(p.u), B = boost(p.v); out.push(A[0]![0]! * B[0]![0]! + A[0]![1]! * B[1]![0]!); }
+    if (p.matrix) { const A = boost(p.u), B = boost(p.v); for (const i of [0, 1]) for (const j of [0, 1]) out.push(A[i]![0]! * B[0]![j]! + A[i]![1]! * B[1]![j]!); }
     return out;
   },
   useIt: {
@@ -652,7 +659,7 @@ export const re09: B2Lesson<P09> = {
   guess: { scene: "smallspeed", props: { beta: 7.67 / C_KMS, zoom: true }, kind: "choice", options: ["0.03", "3", "28", "280"], answer: 2,
     ask: "A space station clock (about 400 km up) moves at 7.67 km/s. How many microseconds per day does it lose to a ground clock?",
     revealProps: { beta: 7.67 / C_KMS, zoom: true, day: true },
-    reveal: "28.3 μs a day. Each second it loses only 3.27 × 10⁻¹⁰ s, but a day has 86,400 of them." },
+    reveal: "28.3 μs a day. The day clock runs a day at 10,000 times speed: each second the station clock loses only 3.27 × 10⁻¹⁰ s, but a day has 86,400 of them." },
   nameIt: {
     say: [
       "For speeds far below c, γ is almost exactly 1 + β²/2, so a moving clock loses the fraction v²/2c² of every second.",

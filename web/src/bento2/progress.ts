@@ -56,9 +56,12 @@ const isObj = (x: unknown): x is Record<string, unknown> => !!x && typeof x === 
 /** Reads whatever is saved (or nothing) into the current shape. */
 export function readB2(raw: unknown): B2Progress {
   if (!isObj(raw)) return emptyB2();
+  let shelf = isObj(raw.shelf) ? (raw.shelf as B2Progress["shelf"]) : {};
+  // Relativity's first piece was once kept as "c", which hid the constant c; it is "c_light" now
+  if (shelf.c?.from === "b2-re-01" && !shelf.c_light) { const { c, ...rest } = shelf; shelf = { ...rest, c_light: c }; }
   return {
     lessons: isObj(raw.lessons) ? (raw.lessons as B2Progress["lessons"]) : {},
-    shelf: isObj(raw.shelf) ? (raw.shelf as B2Progress["shelf"]) : {},
+    shelf,
     notebook: Array.isArray(raw.notebook) ? (raw.notebook as NotebookEntry[]) : [],
     tools: isObj(raw.tools) ? raw.tools : {},
   };

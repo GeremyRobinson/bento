@@ -7,7 +7,7 @@ import { flag, num, str, type SceneProps } from "../../../scenes";
 import { fx, path, Read, Scene, Slider, Toggle, useSvgDrag, useTween } from "../../../ui/kit";
 import { openTool } from "../../../ui/useB2";
 import { applyBoost, boost, gammaOf } from "../physics";
-import { formatAnswer } from "../../../steps";
+import { formatAnswer, toFraction } from "../../../steps";
 
 type Mode = "light" | "pair" | "boost" | "interval" | "free";
 type Frame = "ground" | "traveler";
@@ -19,6 +19,17 @@ const BETA_MARKS = [{ v: 0, label: "0" }, { v: 0.6, label: "3/5" }, { v: 0.8, la
 /** a number as a short fraction when it is one (5/4), else to 2 places */
 const nice = (x: number) => { const f = formatAnswer(x, "fraction"); return f.length <= 6 && Math.abs(eval2(f) - x) < 1e-9 ? f : fx(x); };
 const eval2 = (f: string) => { const [n, d] = f.replace("−", "-").split("/").map(Number); return d ? n! / d : n!; };
+/** The boost for β as exact entries for the Matrix pad: β = p/q gives γ = q/√(q² − p²) and −βγ = −p/√(q² − p²), so
+ *  det Λ comes out 1, not 0.9994 from 4-figure decimals. */
+export function boostCells(beta: number): string[][] {
+  const [p, q] = toFraction(beta, 1000);
+  if (Math.abs(p / q - beta) > 1e-12) return boost(beta).map(r => r.map(x => String(x)));
+  const n = q * q - p * p, k = Math.round(Math.sqrt(n));
+  const over = (top: number) => (k * k === n ? (top % k === 0 ? String(top / k) : `${top}/${k}`) : `${top}/√(${n})`);
+  const off = p > 0 ? `-${over(p)}` : p < 0 ? over(-p) : "0";
+  return [[over(q), off], [off, over(q)]];
+}
+const sendBoost = (beta: number) => openTool("matrix", { A: boost(beta), cells: boostCells(beta), label: `boost for β = ${nice(beta)}` });
 
 export function SpacetimeScene({ props, marker, onMarker }: SceneProps) {
   const mode = str<Mode>(props, "mode", "free");
@@ -201,7 +212,7 @@ export function SpacetimeScene({ props, marker, onMarker }: SceneProps) {
       </span>
       {!quiet && !hideEvent && <Read label="(ct′, x′)" value={`(${nice(e1p[0])}, ${nice(e1p[1])})`} tone="sky" />}
       {!quiet && <Read minor label="det Λ" value="1" />}
-      {!quiet && <button type="button" className="ctl b2send" onClick={() => openTool("matrix", { A: M, label: `boost for β = ${nice(beta)}` })}>Boost to Matrix pad ›</button>}
+      {!quiet && <button type="button" className="ctl b2send" onClick={() => sendBoost(beta)}>Boost to Matrix pad ›</button>}
     </>;
   } else if (mode === "interval") {
     readouts = quiet ? undefined : <>
@@ -216,7 +227,7 @@ export function SpacetimeScene({ props, marker, onMarker }: SceneProps) {
       <Read label="(ct, x)" value={`(${fx(e1[0], 1)}, ${fx(e1[1], 1)})`} />
       <Read label="(ct′, x′)" value={`(${fx(e1p[0])}, ${fx(e1p[1])})`} tone="sky" />
       <Read label="Its kind from the origin" value={s2 > 1e-9 ? "timelike" : s2 < -1e-9 ? "spacelike" : "lightlike"} />
-      <button type="button" className="ctl b2send" onClick={() => openTool("matrix", { A: boost(beta), label: `boost for β = ${nice(beta)}` })}>Boost to Matrix pad ›</button>
+      <button type="button" className="ctl b2send" onClick={() => sendBoost(beta)}>Boost to Matrix pad ›</button>
     </>;
   }
   return <Scene svg={svg} controls={controls} readouts={readouts} />;

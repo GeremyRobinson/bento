@@ -26,12 +26,14 @@ const KEYS = ["7", "8", "9", "back", "4", "5", "6", "/", "1", "2", "3", "−", "
 const KEY_LABEL: Record<string, string> = { back: "⌫", next: "⇥" };
 const KEY_ARIA: Record<string, string> = { back: "Erase", next: "Next box", "/": "Fraction bar", "−": "Negative", ".": "Decimal point" };
 
-/** The live picture for a stage: its scene, keyed by its numbers so new numbers start it fresh. */
-function Picture({ scene, extra, marker, onMarker, place = "lesson" }: { scene: SceneRef; extra?: SceneValues; marker?: [number, number]; onMarker?: (p: [number, number]) => void; place?: "lesson" | "project" }) {
+/** The live picture for a stage: its scene, keyed by its numbers so new numbers start it fresh. A scene that follows
+ *  its props (liveReveal) is keyed without the Guess's extra values, so the reveal animates in place, not from scratch. */
+function Picture({ scene, extra, marker, onMarker, place = "lesson", slot = "" }: { scene: SceneRef; extra?: SceneValues; marker?: [number, number]; onMarker?: (p: [number, number]) => void; place?: "lesson" | "project"; slot?: string }) {
   const C = sceneByName(scene.scene);
   const props = { ...(scene.props ?? {}), ...(extra ?? {}) };
   if (!C) return null;
-  return <C key={`${scene.scene}:${JSON.stringify(props)}`} props={props} place={place} marker={marker} onMarker={onMarker} />;
+  const key = C.liveReveal ? `${slot}:${scene.scene}:${JSON.stringify(scene.props ?? {})}` : `${scene.scene}:${JSON.stringify(props)}`;
+  return <C key={key} props={props} place={place} marker={marker} onMarker={onMarker} />;
 }
 
 export function LessonScreen({ trackId, lessonId }: { trackId: string; lessonId: string }) {
@@ -132,7 +134,7 @@ export function LessonScreen({ trackId, lessonId }: { trackId: string; lessonId:
   let picture;
   if (stage === "guess") {
     const marker: [number, number] | undefined = gs.kind === "point" ? (guess as [number, number]) : gs.kind === "slider" && guess != null ? [guess as number, 0] : undefined;
-    picture = <Picture scene={gs} extra={revealed ? { quiet: false, hide: false, hideEvent: false, ...gs.revealProps } : GUESSING} marker={marker} onMarker={gs.kind === "point" && !revealed ? p => setGuess(p) : undefined} />;
+    picture = <Picture slot="guess" scene={gs} extra={revealed ? { quiet: false, hide: false, hideEvent: false, ...gs.revealProps } : GUESSING} marker={marker} onMarker={gs.kind === "point" && !revealed ? p => setGuess(p) : undefined} />;
   } else if (stage === "work") picture = <Picture scene={lesson.workIt.scene?.(problem) ?? lesson.play} />;
   else if (stage === "use") picture = project ? <Picture scene={project.scene} place="project" /> : <Picture scene={lesson.useIt.scene ?? lesson.play} />;
   else picture = <Picture scene={lesson.play} />;

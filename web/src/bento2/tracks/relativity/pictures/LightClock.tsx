@@ -3,7 +3,7 @@
 // mode: a shower from 10 km up, with the lab view and the muon's view (contracted atmosphere) as a toggle (03).
 import { useState } from "react";
 import { flag, num, str, type SceneProps } from "../../../scenes";
-import { fx, path, Read, SaveRow, Scene, Slider, Toggle, useClock } from "../../../ui/kit";
+import { fx, path, Read, SaveRow, Scene, Slider, Toggle, useClock, useFollowProp } from "../../../ui/kit";
 import { useB2 } from "../../../ui/useB2";
 import { gammaOf } from "../physics";
 
@@ -16,6 +16,8 @@ export function LightClockScene({ props, place, marker }: SceneProps) {
   const muonFirst = str<string>(props, "mode", "clock") === "muon";
   const [mode, setMode] = useState<"clock" | "muon">(muonFirst ? "muon" : "clock");
   const [beta, setBeta] = useState(num(props, "beta", 0.6));
+  // a Guess reveal changes the props in place: β slides back to the asked speed if it was dragged away
+  useFollowProp(props, num(props, "beta", 0.6), beta, setBeta);
   const [view, setView] = useState<"lab" | "muon">("lab");
   const project = flag(props, "project"), hide = flag(props, "hide");
   const g = gammaOf(beta);
@@ -25,7 +27,8 @@ export function LightClockScene({ props, place, marker }: SceneProps) {
   // the clock: mirrors 120 px apart, light at 110 px a second (slowed so you can follow it), the train at βc
   const d = 120, cpx = 110, oneWay = (d / cpx) * g, v = beta * cpx;
   const trainW = 120, span = W + trainW + 40;
-  const trainX = ((20 + v * t) % span) - trainW + 40;
+  // the train starts whole on screen at x = 20, runs off the right and comes back in from the left
+  const trainX = ((20 + trainW + v * t) % span) - trainW;
   const leg = Math.floor(t / oneWay), f = t / oneWay - leg;
   const yOf = (k: number) => (k % 2 === 0 ? 210 : 210 - d);
   const pulse: [number, number] = [trainX + trainW / 2, yOf(leg) + (yOf(leg + 1) - yOf(leg)) * f];
@@ -38,7 +41,9 @@ export function LightClockScene({ props, place, marker }: SceneProps) {
   }
   const groundTicks = t / (2 * (d / cpx)), trainTicks = groundTicks / g;
 
-  const tri = flag(props, "triangle"), sc = 20, a = 4 * sc, b = 4 * beta * g * sc;
+  // the triangle for one trip between the mirrors (cτ = 4 units), drawn in the strip above the train so the train
+  // never runs over its labels: the vt leg on top, the cτ leg down its right side, ct the slant
+  const tri = flag(props, "triangle"), sc = 12.5, a = 4 * sc, b = Math.min(4 * beta * g * sc, 150);
   const clockSvg = (
     <svg viewBox={`0 0 ${W} ${H}`} className="b2pic lc" role="img" aria-label={`A light clock on a train at ${fx(beta)} of light speed. Each tick takes γ = ${fx(g)} times longer seen from the ground.`}>
       <line x1="0" y1="236" x2={W} y2="236" className="b2axis" />
@@ -49,14 +54,14 @@ export function LightClockScene({ props, place, marker }: SceneProps) {
         <line x1="20" y1="210" x2={trainW - 20} y2="210" className="b2mirror" />
       </g>
       <circle cx={pulse[0]} cy={pulse[1]} r="6" className="b2pulse" />
-      {/* the triangle for one trip up: legs cτ and vt, hypotenuse ct (in units where cτ = 4) */}
       {/* while guessing, the triangle's sides would give the answer away, so it isn't drawn at all */}
-      {!hide && !flag(props, "quiet") && <g transform={`translate(${W - 24 - Math.min(b, 150)},${16})`} className={tri ? "b2tri on" : "b2tri"}>
-        <path d={`M0,${a} L${Math.min(b, 150)},${a} L${Math.min(b, 150)},0 Z`} />
-        <path d={`M0,${a} L${Math.min(b, 150)},0`} className="hyp" />
-        <text x={Math.min(b, 150) + 6} y={a / 2 + 5} className="b2t">cτ = 4</text>
-        <text x={Math.min(b, 150) / 2} y={a + 17} textAnchor="middle" className="b2t">vt = {fx(4 * beta * g)}</text>
-        <text x={Math.min(b, 150) / 2 - 10} y={a / 2 - 6} textAnchor="end" className="b2t amber">ct = {fx(4 * g)}</text>
+      {!hide && !flag(props, "quiet") && <g transform={`translate(${W - 66 - b},${26})`}>
+        {/* the tint goes on the shape only, so the labels keep their full colour */}
+        <path d={`M0,0 L${b},0 L${b},${a} Z`} className={tri ? "b2tri on" : "b2tri"} />
+        <path d={`M0,0 L${b},${a}`} className="hyp" />
+        <text x={b + 6} y={a / 2 + 5} className="b2t">cτ = 4</text>
+        <text x={b / 2} y={-6} textAnchor="middle" className="b2t">vt = {fx(4 * beta * g)}</text>
+        <text x={b / 2 - 8} y={a / 2 + 14} textAnchor="end" className="b2t amber">ct = {fx(4 * g)}</text>
       </g>}
     </svg>
   );
@@ -122,3 +127,4 @@ export function LightClockScene({ props, place, marker }: SceneProps) {
     />
   );
 }
+LightClockScene.liveReveal = true;

@@ -32,6 +32,6 @@ export const track: B2Track = {
     { id: "well", name: "Gravity well", short: "Well" },
     { id: "gps", name: "GPS checker", short: "GPS" },
   ],
-  buildPieces: ["c", "gamma", "boost", "twin", "sr_drift", "gr_drift", "gps_net"],
+  buildPieces: ["c_light", "gamma", "boost", "twin", "sr_drift", "gr_drift", "gps_net"],
   lessons: RELATIVITY_LESSONS,
 };

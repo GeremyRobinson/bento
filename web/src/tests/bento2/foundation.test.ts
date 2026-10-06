@@ -80,21 +80,21 @@ describe("typed answers and the rounding rule", () => {
 describe("the Number shelf and progress, per device", () => {
   it("keeps values by name, readable by later lessons and tools", () => {
     let b = emptyB2();
-    b = shelve(b, "c", { value: 299792458, unit: "m/s", from: "b2-re-01" }, 1);
+    b = shelve(b, "c_light", { value: 299792458, unit: "m/s", from: "b2-re-01" }, 1);
     b = shelve(b, "twin", { value: [10, 6], labels: ["home", "traveler"], unit: "years", from: "re-twin" }, 2);
     b = shelve(b, "L", { value: [[1.25, -0.75], [-0.75, 1.25]], from: "matrix" }, 3);
-    expect(readShelf(b, "c")).toBe(299792458);
-    expect(shelfNumbers(b)).toEqual({ c: 299792458 });
-    expect(shelfText(b.shelf.c!)).toBe("299,792,458 m/s");
+    expect(readShelf(b, "c_light")).toBe(299792458);
+    expect(shelfNumbers(b)).toEqual({ c_light: 299792458 });
+    expect(shelfText(b.shelf.c_light!)).toBe("299,792,458 m/s");
     expect(shelfText(b.shelf.twin!)).toBe("home 10, traveler 6 years");
     // the calculator reads shelf names
-    expect(calc("c / 1000", { vars: shelfNumbers(b) })).toEqual({ ok: true, value: 299792.458 });
+    expect(calc("c_light / 1000", { vars: shelfNumbers(b) })).toEqual({ ok: true, value: 299792.458 });
     b = renameShelf(b, "L", "boost");
     expect(readShelf(b, "L")).toBeUndefined();
     expect(readShelf(b, "boost")).toEqual([[1.25, -0.75], [-0.75, 1.25]]);
     expect(renameShelf(b, "boost", "2bad")).toBe(b);
     b = unshelve(b, "twin");
-    expect(Object.keys(b.shelf).sort()).toEqual(["boost", "c"]);
+    expect(Object.keys(b.shelf).sort()).toEqual(["boost", "c_light"]);
     expect(() => shelve(b, "no spaces", { value: 1, from: "x" }, 4)).toThrow();
     for (const n of ["gamma", "sr_drift", "v2", "A"]) expect(validName(n)).toBe(true);
     for (const n of ["", "2v", "a b", "a-b", "x".repeat(25)]) expect(validName(n)).toBe(false);

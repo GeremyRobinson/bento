@@ -1,20 +1,30 @@
 // The small-speed curve (Grapher 2D, relativity.md): γ against β with its parabola 1 + β²/2 overlaid, and a zoom to
 // everyday speeds. Zoomed, both axes go logarithmic (γ − 1 against β), so a speed of 0.25 km/s and one of 0.99c
-// sit on one picture, and the two curves lie on top of each other until near light speed.
+// sit on one picture, and the two curves lie on top of each other until near light speed. With `day` (re-09's
+// reveal) a day clock runs a whole day at 10⁴ times speed and counts what the moving clock has lost so far.
 import { useState } from "react";
 import { flag, num, type SceneProps } from "../../../scenes";
-import { fx, path, Read, Scene, Slider, Toggle, useSvgDrag } from "../../../ui/kit";
+import { fx, path, Read, Scene, Slider, Toggle, useClock, useFollowProp, useSvgDrag } from "../../../ui/kit";
 import { showValue } from "../../../tools/expr";
-import { C_KMS, gammaMinus1, gammaOf, lossPerDayUs } from "../physics";
+import { C_KMS, gammaMinus1, gammaOf } from "../physics";
 
 const W = 360, H = 250, L = 48, R = 344, T = 14, B = 214;
+/** the day clock's pace: a day of 86,400 s in 8.64 s */
+const DAY_PACE = 1e4;
 
 export function SmallSpeedScene({ props }: SceneProps) {
   const [zoom, setZoom] = useState(flag(props, "zoom"));
   const [beta, setBeta] = useState(num(props, "beta", 0.3));
-  const quiet = flag(props, "quiet");
+  useFollowProp(props, num(props, "beta", 0.3), beta, setBeta);
+  const quiet = flag(props, "quiet"), day = flag(props, "day") && !quiet;
+  // with less motion the clock shows the whole day at once
+  const t = useClock(day, 86400 / DAY_PACE);
   const { ref, drag } = useSvgDrag();
   const g1 = gammaMinus1(beta), par = (beta * beta) / 2, vk = beta * C_KMS;
+  // what the moving clock loses per day: the fraction 1 − 1/γ = (γ − 1)/γ of 86,400 s (v²/2c² only at low speed)
+  const lossUs = (g1 / (1 + g1)) * 86400e6;
+  const hours = Math.min(24, (t * DAY_PACE) / 3600), lostSoFar = lossUs * (hours / 24);
+  const lossText = (us: number) => (us >= 1e6 ? `${showValue(us / 1e6, 3)} s` : `${showValue(us, 3)} μs`);
   // plain: β 0…0.98, γ 1…4. Zoomed: log β from 10⁻⁷ to 1, log(γ − 1) from 10⁻¹⁴ to 10
   const X = zoom ? (b: number) => L + ((Math.log10(b) + 7) / 7) * (R - L) : (b: number) => L + (b / 0.98) * (R - L);
   const Yg = zoom ? (y: number) => B - ((Math.log10(Math.max(y, 1e-15)) + 14) / 15) * (B - T) : (y: number) => B - ((y - 1) / 3) * (B - T);
@@ -51,6 +61,16 @@ export function SmallSpeedScene({ props }: SceneProps) {
       <rect x={L} y={B - 16} width={R - L} height="40" className="b2hit" {...drag(x => set(fromX(x)))} />
       <text x={R - 4} y={T + 14} textAnchor="end" className="b2t sky">{zoom ? "γ − 1" : "γ"}</text>
       <text x={R - 4} y={T + 32} textAnchor="end" className="b2t pink">{zoom ? "β²/2" : "1 + β²/2"}</text>
+      {day && (() => {
+        // the day clock: one turn of the hand is a day; it stops at 24 h
+        const cx = L + 36, cy = T + 60, rr = 24, a = (hours / 24) * 2 * Math.PI;
+        return <g aria-hidden="true">
+          <circle cx={cx} cy={cy} r={rr} className="b2clock amber" />
+          <line x1={cx} y1={cy} x2={cx + rr * 0.8 * Math.sin(a)} y2={cy - rr * 0.8 * Math.cos(a)} className="b2curve amber" />
+          <text x={cx + rr + 8} y={cy - 4} className="b2t">{Math.floor(hours)} h of a day</text>
+          <text x={cx + rr + 8} y={cy + 14} className="b2t amber">clock behind {lossText(lostSoFar)}</text>
+        </g>;
+      })()}
     </svg>
   );
   return (
@@ -65,8 +85,9 @@ export function SmallSpeedScene({ props }: SceneProps) {
         <Read label="v" value={`${showValue(vk, 4)} km/s`} />
         {!quiet && <Read label="γ − 1" value={showValue(g1, 4)} tone="sky" />}
         {!quiet && <Read label="β²/2" value={showValue(par, 4)} tone="pink" />}
-        {!quiet && <Read label="Clock loses per day" value={`${showValue(lossPerDayUs(vk), 3)} μs`} tone="amber" />}
+        {!quiet && <Read label="Clock loses per day" value={lossText(lossUs)} tone="amber" />}
       </>}
     />
   );
 }
+SmallSpeedScene.liveReveal = true;

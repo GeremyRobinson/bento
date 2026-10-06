@@ -12,7 +12,9 @@ export interface SceneProps {
   marker?: [number, number];
   onMarker?: (p: [number, number]) => void;
 }
-export type SceneComponent = ComponentType<SceneProps>;
+/** `liveReveal`: the scene follows its props as they change (it reads its flags each render and slides any value a
+ *  prop seeded), so a Guess reveal updates it in place instead of starting it over */
+export type SceneComponent = ComponentType<SceneProps> & { liveReveal?: boolean };
 
 const modules = import.meta.glob<{ scenes: Record<string, SceneComponent> }>("./tracks/*/scenes.tsx", { eager: true });
 const ALL: Record<string, SceneComponent> = Object.assign({}, ...Object.values(modules).map(m => m.scenes));

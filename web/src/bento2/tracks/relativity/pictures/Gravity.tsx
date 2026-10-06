@@ -3,7 +3,7 @@
 // bottom of an accelerating rocket, with pulses sent up and the spacing readout (10).
 import { useState } from "react";
 import { flag, num, type SceneProps } from "../../../scenes";
-import { fx, path, Read, Scene, Slider, useClock } from "../../../ui/kit";
+import { fx, path, Read, Scene, Slider, useClock, useFollowProp } from "../../../ui/kit";
 import { Surface3D } from "../../../ui/Surface3D";
 import { C, G0, R_E } from "../../../constants";
 import { gravityGainUs, K_US } from "../physics";
@@ -14,6 +14,7 @@ const ORBITS = [{ v: 6771 / R_KM, label: "Station" }, { v: 2, label: "2R" }, { v
 
 export function WellScene({ props }: SceneProps) {
   const [r, setR] = useState(num(props, "r", 2));
+  useFollowProp(props, num(props, "r", 2), r, setR);
   const quiet = flag(props, "quiet"), compare = flag(props, "compare");
   const t = useClock(true, 0.35);
   // ticks shown far faster than real, and the difference exaggerated, so a ring can be seen to beat faster higher up
@@ -24,7 +25,8 @@ export function WellScene({ props }: SceneProps) {
   const well = (
     <Surface3D polar={rr => -1 / rr} domain={8} rmin={1} zscale={2.2} label={`The gravity well around Earth, with a clock at ${fx(r, 2)} Earth radii.`}
       points={[
-        { x: Math.cos(-0.9), y: Math.sin(-0.9), z: -1, cls: "pink", ring: ring(1), label: "ground" },
+        // the ground clock sits across the well from yours, so their labels never share a spot
+        { x: Math.cos(0.5 + Math.PI), y: Math.sin(0.5 + Math.PI), z: -1, cls: "pink", ring: ring(1), label: "ground" },
         { x: r * Math.cos(0.5), y: r * Math.sin(0.5), z: -1 / r, cls: "sky", ring: ring(r), r: 7, label: "your clock" },
       ]} />
   );
@@ -59,6 +61,8 @@ export function WellScene({ props }: SceneProps) {
     />
   );
 }
+
+WellScene.liveReveal = true;
 
 export function RocketScene({ props }: SceneProps) {
   const [acc, setAcc] = useState(num(props, "acc", 1));

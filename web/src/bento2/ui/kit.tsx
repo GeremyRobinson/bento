@@ -122,6 +122,26 @@ export function useTween(target: number, ms = 1400): number {
   return v;
 }
 
+/** A dragged value that a prop seeded: when the scene's props change later (a Guess reveal, `props` here), the value
+ *  slides back to its prop from wherever it was dragged, instead of the picture starting over. Less motion jumps. */
+export function useFollowProp(props: object, prop: number, value: number, set: (x: number) => void, ms = 1400) {
+  const first = useRef(true), now = useRef(value);
+  now.current = value;
+  useEffect(() => {
+    if (first.current) { first.current = false; return; }
+    if (reduceMotion() || now.current === prop) { set(prop); return; }
+    const a = now.current, t0 = performance.now();
+    let raf = 0;
+    const step = (t: number) => {
+      const k = Math.min(1, (t - t0) / ms), e = k < 0.5 ? 4 * k ** 3 : 1 - (-2 * k + 2) ** 3 / 2;
+      set(a + (prop - a) * e);
+      if (k < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [JSON.stringify(props)]); // eslint-disable-line react-hooks/exhaustive-deps
+}
+
 /** Numbers as pictures show them: a real minus sign, a fixed number of places. */
 export const fx = (x: number, places = 2) => (x < 0 && Math.abs(x) >= 0.5 * 10 ** -places ? "−" : "") + Math.abs(x).toFixed(places);
 

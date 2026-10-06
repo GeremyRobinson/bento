@@ -27,8 +27,9 @@ export function MatrixPad({ args }: { args?: unknown }) {
   const set = (p: Partial<PadState>) => setToolState("matrix", { ...st, ...p });
   // a picture sends a matrix in (the spacetime diagram's boost)
   useEffect(() => {
-    const a = args as { A?: Mat; label?: string } | undefined;
-    if (a?.A) { set({ A: fromMat(a.A) }); setRes({ label: a.label ? `A is the ${a.label}` : "A loaded", M: a.A }); }
+    // `cells`, when sent, are the exact entries as typed math (10/√(91)), so nothing is lost to rounding
+    const a = args as { A?: Mat; cells?: string[][]; label?: string } | undefined;
+    if (a?.A) { set({ A: a.cells ?? fromMat(a.A) }); setRes({ label: a.label ? `A is the ${a.label}` : "A loaded", M: a.A }); }
   }, [args]); // eslint-disable-line react-hooks/exhaustive-deps
   const vars = useMemo(() => ({ ...CONSTANT_VALUES, ...shelfNumbers(b2) }), [b2]);
   const read = (g: string[][]): Mat => g.map(r => r.map(c => { const v = calc(c || "0", { vars }); if (!v.ok) throw new Error(`Can't read "${c}": ${v.error}`); return v.value; }));

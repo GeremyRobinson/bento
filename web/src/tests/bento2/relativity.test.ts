@@ -37,7 +37,7 @@ describe("Relativity: the track", () => {
     expect(track.lessons.map(l => l.id)).toEqual(Array.from({ length: 12 }, (_, i) => `b2-re-${String(i + 1).padStart(2, "0")}`));
     expect(track.units.map(u => track.lessons.filter(l => l.unit === u.n).length)).toEqual([3, 4, 2, 3]);
     expect(track.projects.map(p => p.after)).toEqual(["b2-re-03", "b2-re-06", "b2-re-09", "b2-re-12"]);
-    expect(track.buildPieces).toEqual(["c", "gamma", "boost", "twin", "sr_drift", "gr_drift", "gps_net"]);
+    expect(track.buildPieces).toEqual(["c_light", "gamma", "boost", "twin", "sr_drift", "gr_drift", "gps_net"]);
   });
   it("every lesson has every part of the spec block", () => {
     for (const l of track.lessons) {
@@ -115,3 +115,23 @@ for (const l of track.lessons) {
     });
   });
 }
+
+describe("review fixes", () => {
+  it("the boost goes to the Matrix pad exactly: det 1 at β = 0.3, fractions where they exist", async () => {
+    const { boostCells } = await import("../../bento2/tracks/relativity/pictures/Spacetime");
+    const { calc } = await import("../../bento2/tools/expr");
+    const read = (c: string[][]) => c.map(r => r.map(x => { const v = calc(x); if (!v.ok) throw new Error(x); return v.value; }));
+    expect(boostCells(0.3)).toEqual([["10/√(91)", "-3/√(91)"], ["-3/√(91)", "10/√(91)"]]);
+    const M = read(boostCells(0.3));
+    expect(M[0]![0]! * M[1]![1]! - M[0]![1]! * M[1]![0]!).toBeCloseTo(1, 12);
+    expect(boostCells(0.6)).toEqual([["5/4", "-3/4"], ["-3/4", "5/4"]]);
+    expect(boostCells(-0.8)).toEqual([["5/3", "4/3"], ["4/3", "5/3"]]);
+    expect(boostCells(0)).toEqual([["1", "0"], ["0", "1"]]);
+  });
+  it("a light-speed value saved as c by an older version reads back as c_light", async () => {
+    const { readB2 } = await import("../../bento2/progress");
+    const b = readB2({ shelf: { c: { value: 299792458, unit: "m/s", from: "b2-re-01", at: 1 } } });
+    expect(Object.keys(b.shelf)).toEqual(["c_light"]);
+    expect(track.buildPieces[0]).toBe("c_light");
+  });
+});
