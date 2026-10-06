@@ -193,3 +193,40 @@ html:has(.screen) body{overflow:hidden}
 .panel.split .actions .ctl{--pill-h:52px;font-size:17px;background:var(--float);box-shadow:var(--float-shadow)}
 .panel.split .actions .ctl.go{background:var(--ink);box-shadow:none;min-width:120px}
 .panel.split .choice{background:var(--float);box-shadow:var(--float-shadow);border-color:transparent}
+
+/* ---- Today as a bento (G 2026-10-06, "needs better use of space"): tiles of different sizes that fill the detail to
+   the bottom. The up-next problem is the big tile; the plan, the year's fill, the streak and every chapter sit round it. ---- */
+.sdetail>.sbento{flex:1;min-height:0;display:grid;gap:var(--screen-gap);grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-rows:minmax(0,1fr) minmax(0,1fr) auto;grid-template-areas:"pic pic stats" "pic pic streak" "plan plan chaps"}
+.sdetail>.sbento.nopic{grid-template-areas:"plan plan stats" "plan plan streak" "chaps chaps chaps"}
+.sdetail>.sbento>*{grid-column:auto;grid-row:auto;min-height:0;margin:0}
+.sdetail>.sbento>.spreview{grid-area:pic;height:auto}
+.sdetail>.sbento>.today{grid-area:plan}
+.sdetail>.sbento>.b-stats{grid-area:stats}
+.sdetail>.sbento>.b-streak{grid-area:streak}
+.sdetail>.sbento>.b-chaps{grid-area:chaps}
+.sbento>.tile{border-radius:var(--r-panel)}
+.sbento .b-streak{background:var(--card);box-shadow:0 0 0 1px var(--rule);padding:calc(var(--u) * 1.75);display:grid;justify-items:center;align-content:center;text-align:center;gap:6px}
+.sbento .b-streak p{margin:0}
+.sbento .b-chaps{background:var(--card);box-shadow:0 0 0 1px var(--rule);padding:12px;display:grid;gap:8px;grid-template-columns:minmax(0,1fr);align-content:stretch;overflow:auto}
+.bchap{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:8px 16px;border-radius:999px;background:var(--well);text-align:left;transition:transform .18s var(--ease)}
+.bchap:active{transform:scale(.97)}
+.bchap>.fill{background:color-mix(in oklab,var(--tint) 22%,var(--well))}
+.bchap b{font-size:14px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bchap small{flex:none;font-size:13px;font-weight:550;color:var(--muted)}
+.sbento .today .b-weak{margin-top:var(--s);padding:0;background:none;box-shadow:none}
+/* portrait: the picture across the top, the two numbers side by side, then the plan and the chapters */
+@media (orientation:portrait),(max-width:899px){
+  /* tiles keep their full height here; the detail scrolls inside itself when they need more room than the screen */
+  .sdetail>.sbento{flex:1 0 auto}
+  .sdetail>.sbento>:not(.spreview){min-height:auto}
+  .sdetail>.sbento{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:minmax(240px,1fr) auto auto auto;
+    grid-template-areas:"pic pic" "stats streak" "plan plan" "chaps chaps"}
+  .sdetail>.sbento.nopic{grid-template-rows:auto auto auto;grid-template-areas:"stats streak" "plan plan" "chaps chaps"}
+  .sbento .b-chaps{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:699px){
+  .sdetail>.sbento{grid-template-rows:240px auto auto auto;grid-template-areas:"pic pic" "plan plan" "stats streak" "chaps chaps"}
+  .sbento .b-chaps{grid-template-columns:minmax(0,1fr)}
+  .sbento .bbig{font-size:44px}
+}

@@ -125,10 +125,12 @@ function TodayDetail({ g }: { g: number }) {
     : i.kind === "lesson" ? lastScore(progress, i.id) : i.kind === "facts" ? undefined : progress.tests[i.key]?.last;
   const minutes = plan.filter(i => !i.done).reduce((m, i) => m + i.minutes, 0);
   const nextLesson = upNext(progress, g)?.entry.id;
+  const units = unitsInGrade(g);
+  // Today as a bento that fills the screen (G 2026-10-06, "needs better use of space"): the up-next problem drawn big,
+  // the plan, how far the year is, the streak, and every chapter as its own fill
   return (
-    <div className="sdl">
-    {nextLesson && <PreviewWell key={nextLesson} lessonId={nextLesson} />}
-    <div className={`bhome sday${weak.length ? " tall" : ""}`}>
+    <div className={`bhome sday sbento${nextLesson ? "" : " nopic"}`}>
+      {nextLesson && <PreviewWell key={nextLesson} lessonId={nextLesson} />}
       <section className="tile today">
         <h2>Today</h2>
         <p className="sub">{!plan.length ? "New lessons for this grade are almost ready." : first ? `About ${minutes} minutes.` : "That's everything for today."}</p>
@@ -144,6 +146,13 @@ function TodayDetail({ g }: { g: number }) {
             </li>
           ))}</ol>
         )}
+        {weak.length > 0 && (
+          <div className="b-weak"><h3>Practice again</h3>
+            <div className="lessons">{weak.slice(0, 3).map(c => (
+              <button key={c.id} className="lesson" disabled={!isReady(c.id)} onClick={() => go({ name: "learn", lessonId: c.id })}><ScoreChip n={lastScore(progress, c.id)} /><span className="name">{c.title}</span></button>
+            ))}</div>
+          </div>
+        )}
         <div className="tlinks">
           {!progress.log.length && <button className="tlink" onClick={() => startTest(placeKey(g))}>Not sure this is your grade? Find my level ›</button>}
           <button className="tlink" onClick={() => go({ name: "facts" }, "fwd")}>All facts ›</button>
@@ -155,14 +164,23 @@ function TodayDetail({ g }: { g: number }) {
         <p><b>of {list.length}</b> lessons done{avg != null && <><br /><span className="muted">Average score {avg.toFixed(1)} of 4</span></>}</p>
         {gt && <p className="muted gtline">Grade check-up <ScoreChip n={gt.last} /></p>}
       </section>
-      {weak.length > 0 && (
-        <section className="tile b-weak"><h3>Practice again</h3>
-          <div className="lessons">{weak.slice(0, 3).map(c => (
-            <button key={c.id} className="lesson" disabled={!isReady(c.id)} onClick={() => go({ name: "learn", lessonId: c.id })}><ScoreChip n={lastScore(progress, c.id)} /><span className="name">{c.title}</span></button>
-          ))}</div>
-        </section>
-      )}
-    </div>
+      <section className="tile b-streak">
+        <span className="bbig">{progress.streak}</span>
+        <p><b>day{progress.streak === 1 ? "" : "s"}</b> in a row</p>
+        <p className="muted">{progress.xp} XP</p>
+      </section>
+      <section className="tile b-chaps" aria-label="Chapters">
+        {units.map(u => {
+          const d = doneCount(progress, u.entries), n = u.entries.length;
+          return (
+            <button key={u.name} className="bchap battery" onClick={() => go({ name: "home", pick: (u.entries.find(c => timesDone(progress, c.id) === 0 && isReady(c.id)) ?? u.entries[0]!).id }, "still")}
+              aria-label={`${u.name}: ${d} of ${n} done`}>
+              <Fill frac={n ? d / n : 0} />
+              <b>{u.name}</b><small>{d === n ? "Done" : `${d} of ${n}`}</small>
+            </button>
+          );
+        })}
+      </section>
     </div>
   );
 }
