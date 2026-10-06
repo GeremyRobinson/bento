@@ -12,7 +12,7 @@ import { Pill } from "../components/primitives/Pill";
 import { GradeNum } from "../components/Shelf";
 import { FIND_MY_LEVEL, NO_UNIT } from "../app/copy";
 import { TRACKS, TRACK_PARTS, type Track } from "../app/tracks";
-import { HorizonPic } from "../components/Advanced";
+import { TeaserPic } from "../components/TeaserPics";
 
 type Side = "bento" | "b2";
 /** small per-device memories, never required: storage can be missing or blocked */
@@ -137,7 +137,7 @@ export function GradeQuestion() {
           <h2>Bento²</h2>
           <p>Ten tracks past 12th grade: the math thinking machines are built from, then the sciences that use it. It's part of the membership, and it's on the way.</p>
         </div>
-        <figure className="gdpic b2pic"><HorizonPic id="ai" /></figure>
+        <figure className="gdpic b2pic"><TeaserPic id="ai" play /></figure>
       </div>
     );
     const n = TRACKS.indexOf(t) + 1, on = notify.includes(t.id);
@@ -151,7 +151,7 @@ export function GradeQuestion() {
             <p>{t.about} Bento² is part of the membership.</p>
           </div>
         )}
-        <figure className="gdpic b2pic"><HorizonPic id={t.id} /></figure>
+        <figure className="gdpic b2pic"><TeaserPic id={t.id} play /></figure>
         <div className="gdgo">
           <Pill onClick={toggle} aria-pressed={on}>{on ? "We'll tell you on this device ✓" : "Tell me when it's ready"}</Pill>
           <small>Coming later</small>
@@ -186,7 +186,7 @@ export function GradeQuestion() {
                 <div key={t.id} className="gitem" style={{ "--i": row++ } as CSSProperties}>
                   <button role="radio" aria-checked={on} aria-label={t.name} className={`srow trow${on ? " on" : ""}`}
                     onClick={() => setTrack(on && phone() ? null : t.id)}>
-                    <span className="ticon"><HorizonPic id={t.id} /></span>
+                    <span className="ticon"><TeaserPic id={t.id} play={false} /></span>
                     <span className="sname"><b>{t.name}</b></span>
                     <small>Coming later</small>
                   </button>

@@ -1,8 +1,8 @@
-import type { TrackPicId } from "../components/Advanced";
+import type { TeaserId } from "../components/TeaserPics";
 
 /** Bento²'s ten tracks as the grade screen's switch shows them (Design's Bento / Bento² switch, G 2026-10-06).
  *  This is the preview side only: every track is "Coming later" until the grades are finished. */
-export interface Track { id: TrackPicId; name: string; about: string; part: "spine" | "branch" }
+export interface Track { id: TeaserId; name: string; about: string; part: "spine" | "branch" }
 
 export const TRACKS: Track[] = [
   { id: "linear", part: "spine", name: "Linear algebra", about: "Arrows and grids of numbers. It's how a computer moves pictures, games and data, and it's the base of all AI." },
