@@ -71,7 +71,7 @@ html:has(.screen) body{overflow:hidden}
 .spreview.grow.empty{background:none;padding:0}
 .sdl>.bhome{flex:none}
 /* picking a row swaps the detail with a short fade; nothing else on the screen moves */
-.sdetail>*{animation:fadeIn .25s var(--ease) both}
+
 @media (max-width:699px){.sdtext{padding:20px 22px}.sdtext h2{font-size:26px;line-height:32px}.sfootrow .grow{display:none}}
 
 /* "Which grade are you in?" (floating preview: floating circles, a ring that glides to your pick) */

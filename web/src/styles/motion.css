@@ -13,12 +13,24 @@
 .shake{animation:shake .4s ease}
 .enter{animation:enter .45s var(--ease) both}
 .workline.enter{animation:enter .45s var(--ease) both, glow 1.2s ease .2s}
-::view-transition-old(root){animation:.22s ease both vtOut}
-::view-transition-new(root){animation:.38s var(--ease) both vtIn}
-@keyframes vtOut{to{opacity:0;transform:scale(.99)}}
-@keyframes vtIn{from{opacity:0;transform:translateY(10px)}}
-:root[data-dir="fwd"]::view-transition-new(root){animation-name:vtFwd} :root[data-dir="back"]::view-transition-new(root){animation-name:vtBack}
-@keyframes vtFwd{from{opacity:0;transform:translateX(28px)}} @keyframes vtBack{from{opacity:0;transform:translateX(-28px)}}
+/* ---- one motion master (the UI notes preview's motion, G 2026-10-06): every screen and lesson change is the same.
+   The old screen fades out quickly, never slides; the new one is drawn at once and its pieces arrive one at a time
+   (rise, fade, blur to sharp), so there is never a blank frame or a jump. Less motion turns all of it off. ---- */
+:root{--m-in:.34s;--m-fade:.26s;--m-out:.14s;--m-step:42ms;--m-ease:cubic-bezier(.3,.8,.2,1)}
+::view-transition-old(root){animation:var(--m-out) var(--m-ease) both vtOut}
+::view-transition-new(root){animation:none}
+@keyframes vtOut{to{opacity:0}}
+@keyframes rvIn{from{opacity:0;transform:translateY(10px) scale(.985);filter:blur(6px)}}
+:is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>*,.wrap>.bar{animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(var(--i,0) * var(--m-step))}
+:is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(2){--i:1}
+:is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(3){--i:2}
+:is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(4){--i:3}
+:is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(5){--i:4}
+:is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(n+6){--i:5}
+.panel.split>.col:last-child>*{--i:2}
+/* picking a row swaps only the detail: its pieces never start from nothing, so the frame after a tap is never blank */
+@keyframes rvSoft{from{opacity:.3;transform:translateY(6px) scale(.992);filter:blur(4px)}}
+.wrap :is(.sdetail>.sbento,.sdl)>*{animation-name:rvSoft}
 
 @media (prefers-reduced-motion:reduce){ *,::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){transition:none!important;animation:none!important} .a-outsoon,.a-flash:not(:last-of-type){opacity:0} .a-move{transform:translateX(var(--dx))} .viz-svg .bar.mid{fill:var(--acc)} }
 

@@ -1,5 +1,5 @@
 import { Facts } from "../screens/Facts";
-import { lazy, Suspense, useEffect } from "react";
+import { Fragment, lazy, Suspense, useEffect } from "react";
 import { bandOf, gradeOf, lineOf } from "../curriculum/grades";
 import { lessonById } from "../curriculum/registry";
 import { tintOf } from "./tint";
@@ -16,7 +16,6 @@ import { Welcome } from "../screens/Welcome";
 import { useApp } from "./AppState";
 import { isTopLevel } from "./routes";
 import { Island } from "../components/Island";
-import { canCrossFade } from "./transition";
 import { motionOff } from "./settings";
 
 // the design sandbox loads only in the preview and dev builds; the live site never carries it
@@ -97,9 +96,11 @@ export function App() {
   // a new screen (or a new grade on a top-level screen) re-enters; with view transitions the browser cross-fades instead
   const viewKey = [route.name, route.name === "learn" ? route.lessonId : route.name === "report" ? route.key : route.name === "facts" ? route.table ?? "" : "", top ? chosenGrade : "", SANDBOX ? sbSeed : ""].join("|");
   return (<>
-    <main id="app" className={`wrap t${tint}${canCrossFade() ? "" : " fresh"}`} data-band={grade == null ? "middle" : bandOf(grade)} data-grade={grade ?? "none"} key={viewKey}>
+    {/* the island stays put across screens (UI notes preview); only the screen under it is new, and its pieces
+        stagger in (motion.css, "one motion master") */}
+    <main id="app" className={`wrap t${tint}`} data-band={grade == null ? "middle" : bandOf(grade)} data-grade={grade ?? "none"}>
       <Island grade={grade} guest={choosing} />
-      {screen}
+      <Fragment key={viewKey}>{screen}</Fragment>
       {sheetOpen && <GradeSheet />}
     </main>
     {SANDBOX && <Suspense fallback={null}><Sandbox /></Suspense>}
