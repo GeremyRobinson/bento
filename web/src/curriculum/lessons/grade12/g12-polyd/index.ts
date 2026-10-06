@@ -5,6 +5,7 @@ import { fP, ns, P, poly, v, xp } from "../../algebra-kit/steps";
 import { attempt, nz, readInts } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
 import { coef } from "../../../text";
+import { polynomialDerivativePicture } from "./picture";
 import { withEasyStart } from "../../easy-start";
 
 /** f(x) = ax³ + bx² + cx + d; f′(x) = 3ax² + 2bx + c, and f′(1). */
@@ -49,6 +50,7 @@ export function explainPolynomialDerivative(p: PolynomialDerivative, model: Answ
     statement: fx(p),
     caption: d ? `The constant ${f(d)} drops out: its derivative is 0.` : "Each term follows the power rule on its own.",
     alt: `f′(x) = ${f(A)}x² + ${fP(B)}x + ${fP(C)}, and f′(1) = ${f(total)}.`,
+    diagram: polynomialDerivativePicture({ a, b, c: p.c, d, A, B, C, total }),
     steps: [
       { id: "problem", narration: `Take the derivative one term at a time.${d ? ` The ${f(d)} on its own will drop out.` : ""}`, math: [text("f(x)"), op("="), ...poly([[a, xp(3)], [b, xp(2)], [p.c, X]]), ...(d ? [op(d < 0 ? "−" : "+"), mark(Math.abs(d))] : [])] },
       { id: "x3", narration: `x³ term: bring the 3 down, 3 × ${f(a)} = ${f(A)}, and x³ becomes x².`, math: m(3, op("×"), ...P(a), op("="), A), line: fprime([[A, xp(2)]]), answerStep: "x3", result: A },
@@ -64,6 +66,7 @@ export const lesson: LessonDefinition<PolynomialDerivative> = withEasyStart({
   grade: 12,
   unit: "Derivatives",
   title: "Derivative of a polynomial",
+  pre: "g12-power",
   reference: createPolynomialDerivative(2, -1, 5, 7),
   generate: rng => generatePolynomialDerivative(rng),
   restore: restorePolynomialDerivative,

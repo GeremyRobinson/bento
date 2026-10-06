@@ -9,7 +9,9 @@ export type Weight =
   /** a number block; negative numbers are drawn dashed (they pull the pan up). `late` blocks pop in after the strike-outs. */
   | { kind: "n"; value: number; off?: boolean; added?: boolean; late?: boolean }
   /** a piece of x, such as x ÷ 4 */
-  | { kind: "part"; label: string; off?: boolean };
+  | { kind: "part"; label: string; off?: boolean }
+  /** a y tile in the second part colour; −y is drawn dashed (it pulls the pan up), like a negative block */
+  | { kind: "y"; neg?: boolean; off?: boolean };
 
 /** A pan's load as groups: a group stays together on one row, and groups sit a little apart. */
 export type Pan = Weight[][];
@@ -37,10 +39,10 @@ const xs = (n: number): Weight[] => Array.from({ length: n }, () => ({ kind: "x"
 export const xTiles = (n: number, off = false): Weight[] => xs(n).map(w => (off ? { ...w, off } : w));
 export const block = (value: number, extra: { off?: boolean; added?: boolean; late?: boolean } = {}): Weight => ({ kind: "n", value, ...extra });
 
-const labelOf = (w: Weight) => (w.kind === "x" ? "x" : w.kind === "n" ? formatNumber(w.value) : w.label);
+const labelOf = (w: Weight) => (w.kind === "x" ? "x" : w.kind === "y" ? (w.neg ? "−y" : "y") : w.kind === "n" ? formatNumber(w.value) : w.label);
 /** Width of a tile: x tiles are square, blocks grow with their label. */
 export const weightWidth = (w: Weight) =>
-  w.kind === "x" ? BALANCE.tile : w.kind === "n" ? Math.max(BALANCE.tile, 18 + labelOf(w).length * 12) : Math.max(52, 16 + labelOf(w).length * 10);
+  w.kind === "x" || w.kind === "y" ? BALANCE.tile : w.kind === "n" ? Math.max(BALANCE.tile, 18 + labelOf(w).length * 12) : Math.max(52, 16 + labelOf(w).length * 10);
 
 interface Placed { w: Weight; x: number; row: number; width: number }
 
@@ -100,13 +102,13 @@ export function buildBalance(frames: BalanceFrame[], alt: string): SceneDiagram 
     const side = (p: { placed: Placed[] }, cx: number) => {
       for (const { w, x, row, width } of p.placed) {
         const left = cx + x, y = beamY - gap - (row + 1) * tile - row * gap;
-        const cls = w.kind === "n" ? `tile n${w.value < 0 ? " dash" : ""}` : "tile x";
+        const cls = w.kind === "n" ? `tile n${w.value < 0 ? " dash" : ""}` : w.kind === "y" ? `tile y${w.neg ? " dash" : ""}` : "tile x";
         // what is left once the same thing comes off both pans is the answer: it shows only after the strike-outs
         const late = w.kind === "n" && w.late ? { enter: "pop" as const, delay: 1 } : null;
         items.push({ type: "rect", x: left, y, w: width, h: tile, rx: 9, cls, ...when, enter: w.kind === "n" && w.added ? "pop" : "fade", ...late });
         items.push({
           type: "text", x: left + width / 2, y: y + tile / 2, text: labelOf(w),
-          cls: w.kind === "x" ? "lbl onlbl" : w.kind === "part" ? "sm onlbl" : w.added ? "lbl acc" : "lbl", ...when, enter: "fade", ...late,
+          cls: w.kind === "x" ? "lbl onlbl" : w.kind === "y" ? (w.neg ? "lbl p1" : "lbl onlbl") : w.kind === "part" ? "sm onlbl" : w.added ? "lbl acc" : "lbl", ...when, enter: "fade", ...late,
         });
         if (w.off) items.push({ type: "line", x1: left - 3, y1: y + tile + 3, x2: left + width + 3, y2: y - 3, cls: "ln2", ...when, enter: "draw", delay: 0.5 });
       }

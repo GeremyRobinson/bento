@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { fpm, ns, pm, supText, v } from "../../algebra-kit/steps";
 import { attempt, nz, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { chainRulePicture } from "./picture";
 import { withEasyStart } from "../../easy-start";
 
 /** f(x) = (ax + b)ⁿ, so f′(x) = n·a·(ax + b)ⁿ⁻¹. */
@@ -46,6 +47,7 @@ export function explainChainRule(p: ChainRule, model: AnswerModel) {
     idea: ["f is a function inside a function. When x moves a little, the inside moves by its own slope, and the outside responds to the inside's change.", "Rates of change multiply, like gears: f′ = (the outside's derivative) × (the inside's derivative)."],
     statement: [text("f(x)"), op("="), ...wrapped(a, b, n)],
     caption: `The power rule on the outside, times the inside's derivative, ${f(da)}.`,
+    diagram: chainRulePicture({ a, b, n, e, da, front, inner: innerText(a, b) }),
     alt: `(${innerText(a, b)})${supText(n)}: ${f(n)}(${innerText(a, b)})${supText(e)} × ${f(da)} = ${f(front)}(${innerText(a, b)})${supText(e)}.`,
     steps: [
       { id: "problem", narration: `The outside is a power. The inside is ${innerText(a, b)}.`, math: wrapped(a, b, n, [mark(inner(a, b))]) },
@@ -63,6 +65,7 @@ export const lesson: LessonDefinition<ChainRule> = withEasyStart({
   grade: 12,
   unit: "Derivatives",
   title: "Chain rule",
+  pre: "g12-power",
   reference: createChainRule(3, 1, 4),
   generate: rng => generateChainRule(rng),
   restore: restoreChainRule,

@@ -89,13 +89,14 @@ function explain(p: CirclePartProblem, model: AnswerModel): Explanation {
   };
 }
 
-export function circlePartLesson(kind: CirclePartProblem["kind"], meta: { id: string; title: string; reference: [number, number]; note: string }): LessonDefinition<CirclePartProblem> {
+export function circlePartLesson(kind: CirclePartProblem["kind"], meta: { id: string; title: string; pre?: string; reference: [number, number]; note: string }): LessonDefinition<CirclePartProblem> {
   const create = make(kind);
   return {
     id: meta.id,
     grade: 10,
     unit: "Circles",
     title: meta.title,
+    ...(meta.pre ? { pre: meta.pre } : {}),
     reference: create(...meta.reference),
     generate: rng => { const { t, r } = generateCirclePart(rng); return create(t, r); },
     restore: restore(kind),

@@ -4,6 +4,8 @@
 :root{
   --text:#1b1d22; --muted:#626879; --faint:#c9ccd4; --rule:#e4e6eb; --page:#fbfbfd; --well:#f1f2f6; --card:#fff; --hover:#e8eaf0;
   --ok:#1fbf5f; --busy:#f5a524; --err:#ef4444; --on-tint:#fff;
+  /* a switch's track while it is off: visible against a card or a floating pill in both themes */
+  --sw-off:#d3d6de;
   /* text versions of ok and err, 4.5:1 or better on card and on their own soft grounds; the chip fills for scores 3 and 0 */
   --ok-ink:#15803d; --err-ink:#b91c1c; --score3:#3b82f6; --score0:#9aa0ad;
   /* one typeface for words and numbers. Inter with its friendlier cuts: a single-storey a, an l with a tail and an I with bars,
@@ -57,7 +59,7 @@
   --adv-card:rgb(255 255 255 / .04); --adv-hair:rgb(255 255 255 / .08); --adv-faint-line:rgb(255 255 255 / .16); --adv-ring:rgb(255 255 255 / .22);
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --text:#eef0f4; --muted:#979eae; --faint:#4a4f5c; --rule:#2b2f38; --page:#0e1014; --well:#181b22; --card:#21252e; --hover:#2b303b; --ok-ink:#4ade80; --err-ink:#f87171; color-scheme:dark;
+  --text:#eef0f4; --muted:#979eae; --faint:#4a4f5c; --rule:#2b2f38; --page:#0e1014; --well:#181b22; --card:#21252e; --hover:#2b303b; --ok-ink:#4ade80; --err-ink:#f87171; --sw-off:#5c6271; color-scheme:dark;
   /* unchanged in dark */
   --black-a04:rgba(0,0,0,.04); --black-a06:rgba(0,0,0,.06); --black-a08:rgba(0,0,0,.08); --black-a12:rgba(0,0,0,.12); --black-a25:rgba(0,0,0,.25);
   --ink-a18:rgba(15,20,30,.18); --ink-a25:rgba(15,20,30,.25); --ink-a30:rgba(15,20,30,.3); --ink-a35:rgba(15,20,30,.35);
@@ -65,7 +67,7 @@
   --cta-ink:#1b1d22; --cta-ink-dark:#eef0f4; --cta-text-dark:#14161b;
   --adv-sky:#1d1b2e; --adv-night:#0a0a0c; --adv-lilac:#c4b5fd; --adv-pink:#f0abfc;
   --adv-card:rgb(255 255 255 / .04); --adv-hair:rgb(255 255 255 / .08); --adv-faint-line:rgb(255 255 255 / .16); --adv-ring:rgb(255 255 255 / .22);}}
-:root[data-theme="dark"]{--text:#eef0f4; --muted:#979eae; --faint:#4a4f5c; --rule:#2b2f38; --page:#0e1014; --well:#181b22; --card:#21252e; --hover:#2b303b; --ok-ink:#4ade80; --err-ink:#f87171; color-scheme:dark;
+:root[data-theme="dark"]{--text:#eef0f4; --muted:#979eae; --faint:#4a4f5c; --rule:#2b2f38; --page:#0e1014; --well:#181b22; --card:#21252e; --hover:#2b303b; --ok-ink:#4ade80; --err-ink:#f87171; --sw-off:#5c6271; color-scheme:dark;
   /* unchanged in dark */
   --black-a04:rgba(0,0,0,.04); --black-a06:rgba(0,0,0,.06); --black-a08:rgba(0,0,0,.08); --black-a12:rgba(0,0,0,.12); --black-a25:rgba(0,0,0,.25);
   --ink-a18:rgba(15,20,30,.18); --ink-a25:rgba(15,20,30,.25); --ink-a30:rgba(15,20,30,.3); --ink-a35:rgba(15,20,30,.35);

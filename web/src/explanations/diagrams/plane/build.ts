@@ -240,9 +240,9 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
         const pa: [number, number] = [X(it.a[0]), Y(it.a[1])], pb: [number, number] = [X(it.b[0]), Y(it.b[1])];
         const ang = Math.atan2(pb[1] - pa[1], pb[0] - pa[0]), len = Math.hypot(pb[0] - pa[0], pb[1] - pa[1]);
         const head = Math.min(13, Math.max(8, len * 0.4)), cut = it.arrow ? Math.min(head * 0.55, len / 2) : 0, end: [number, number] = [pb[0] - cut * Math.cos(ang), pb[1] - cut * Math.sin(ang)];
-        const cls = it.cls ?? "ln";
+        const cls = it.cls ?? "ln", part = /\bp[012]\b/.exec(cls)?.[0];
         shapes.push({ type: "path", d: `M${r1(pa[0])} ${r1(pa[1])} L${r1(end[0])} ${r1(end[1])}`, cls, enter: it.slow ? "draw slow" : "draw", ...t });
-        if (it.arrow && len > 1) shapes.push(arrowHead(r1(pb[0]), r1(pb[1]), ang, head, { cls: cls.includes("ln2") ? "dota" : "dotp", enter: "pop", ...t, delay: (it.delay ?? 0) + 0.6 }));
+        if (it.arrow && len > 1) shapes.push(arrowHead(r1(pb[0]), r1(pb[1]), ang, head, { cls: cls.includes("ln2") ? "dota" : `dotp${part ? ` ${part}` : ""}`, enter: "pop", ...t, delay: (it.delay ?? 0) + 0.6 }));
         sampleLine(pa, pb, LINE);
         // a label beside the middle, on whichever side is free
         const vertical = Math.abs(pb[0] - pa[0]) < 1, flat = Math.abs(pb[1] - pa[1]) < 1;

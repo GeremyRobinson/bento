@@ -5,7 +5,7 @@ import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildNumberLine, type Hop } from "../../../../explanations/diagrams/number-line/build";
 import { dotGroups } from "../../../../explanations/diagrams/number-line/counters";
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
-import { count, isAre } from "../../../text";
+import { count, isAre, noun } from "../../../text";
 import { slips } from "../kit";
 
 /** a dots and b more; the sum stays within 10 */
@@ -52,9 +52,10 @@ function answers({ a, b }: CountOnProblem): AnswerModel {
 function explain(p: CountOnProblem, model: AnswerModel): Explanation {
   const { a, b } = p, first = expectedOf(model, "first"), sum = expectedOf(model, "count-on");
   const counted = Array.from({ length: b }, (_, i) => a + i + 1);
-  // the first group counted from 0 under the line, then one hop on top for every dot of the second group
+  // the first group counted from 0, then one more hop for every dot of the second group; every hop arcs
+  // above the line (below would mean taking away), so counting reads as one run from 0 to the sum
   const hops: Hop[] = [
-    ...Array.from({ length: a }, (_, i): Hop => ({ from: i, to: i + 1, below: true, beat: 0, delay: 0.25 * i, start: i === 0, land: i === a - 1 })),
+    ...Array.from({ length: a }, (_, i): Hop => ({ from: i, to: i + 1, label: String(i + 1), beat: 0, delay: 0.25 * i, start: i === 0, land: i === a - 1 })),
     ...counted.map((v, i): Hop => ({ from: v - 1, to: v, label: String(v), beat: 1, delay: 0.45 * i, start: false })),
   ];
   return {
@@ -65,7 +66,7 @@ function explain(p: CountOnProblem, model: AnswerModel): Explanation {
     caption: `Start at ${a} and count on ${b}: ${sum}.`,
     timeline: beats(2),
     steps: [
-      { id: "first", narration: `Count the first group: **${first}** dots. That brings you to ${first}.`, math: [text("First group: "), num(first)], state: 0, answerStep: "first", result: first },
+      { id: "first", narration: `Count the first group: **${first}** ${noun(first, "dot")}. That brings you to ${first}.`, math: [text("First group: "), num(first)], state: 0, answerStep: "first", result: first },
       { id: "count-on", narration: `Count on ${b} more, one hop for each dot: ${counted.join(", ")}.`, math: [num(a), op("+"), num(b), op("="), num(sum)], state: 1, answerStep: "count-on", result: sum },
     ],
   };

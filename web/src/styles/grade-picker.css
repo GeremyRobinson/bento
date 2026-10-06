@@ -9,6 +9,13 @@
 .srow.grow .gnum{font:var(--w-bold) var(--fz-2xl)/1 var(--sans);letter-spacing:-.03em}
 .srow.grow .gnum small{font-size:.5em;vertical-align:top}
 .srow.grow.on .sname b{color:var(--ink)}
+/* on light, the picked grade's words and its Start pill take the grade's darker shade (--h2), not the raw hue, so
+   they read at 4.5:1 on the near-white list; dark takes its lightest shade (--hd1) */
+.gpal{--pick-ink:var(--h2)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .gpal{--pick-ink:var(--hd1)}}
+:root[data-theme="dark"] .gpal{--pick-ink:var(--hd1)}
+.srow.grow.gpal.on .sname b,.srow.grow.gpal.on>small{color:var(--pick-ink)}
+.gdgo.gpal .ctl.go{background:var(--pick-ink)}
 .gopen{display:none}
 
 .gdl{flex:1;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:var(--sp-4);padding:var(--sp-6);border-radius:var(--r-panel);background:var(--float);box-shadow:var(--float-shadow)}
@@ -37,6 +44,13 @@
 @media (orientation:portrait){.wrap:has(.gqh){--screen-list:360px}}
 .srow.grow .sname b{white-space:normal;overflow:visible}
 .gdpic:not(:has(figcaption)){grid-template-rows:minmax(0,1fr)}
+/* a portrait iPad's detail is tall and narrow, and a picture is sized by its width: the well wraps the picture at its own
+   shape, centred in the room, rather than leaving it tiny in a 770px box. Landscape and phones keep the filling well. */
+@media (orientation:portrait) and (min-width:700px){
+  .gdl:not(.inline) .gdpic{align-self:center;max-height:100%}
+  .gdl:not(.inline) .gdpic .gyviz{aspect-ratio:var(--ar,4 / 3);max-height:100%}
+  .gdl:not(.inline) .b2pic{aspect-ratio:200 / 110;height:auto}
+}
 
 /* The Bento / Bento² switch (Design's 5-bento-toggle, G 2026-10-06). It sits on the question's line. Bento² dims the
    room into its own dark canvas and swaps the grades for its ten tracks, rows fading out and in 30ms apart: the dimming
@@ -79,6 +93,10 @@ body{transition:background-color var(--dur-300) var(--ease) var(--dur-120)}
 @keyframes sideFade{from{opacity:0}}
 /* ten tracks and two labels fit the list without scrolling on an iPad */
 .srow.trow{min-height:var(--tap);padding-block:var(--sp-1)}
+/* a track's name is read whole: it wraps to a second line rather than losing its end, and in portrait the note
+   above the list already says every track is coming later, so the rows give that label's room to the names */
+.srow.trow .sname b{white-space:normal;overflow:visible;line-height:1.2}
+@media (orientation:portrait){.srow.trow>small{display:none}}
 .b2d .ctl{box-shadow:inset 0 0 0 1px var(--adv-ring)}
 .b2d .ctl[aria-pressed="true"]{background:var(--tint-soft);color:var(--ink)}
 /* Bento² rows show the tracks' real pictures, finished and without their words (they're read in the detail) */

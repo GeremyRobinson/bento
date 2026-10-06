@@ -37,6 +37,8 @@
   .mset .cbat{width:36px;height:18px;padding:2px}
   .mset .cbat::after{top:5px;height:8px}
   .mset .fnote{font-size:var(--fz-2xs)}
+  /* three stats share a row: their words sit 10px in from each side so "0 of 14 lessons" fits a 375px phone */
+  .mset .fpill:not(.toggle){padding-inline:10px}
 }
 @media (prefers-reduced-motion:reduce){.mset .frow>*{animation:none}}
 :root[data-motion="reduce"] .mset .frow>*{animation:none}

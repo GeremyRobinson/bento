@@ -137,8 +137,10 @@ export function buildRadians(s: RadianSpec): SceneDiagram {
   items.push(seg(O, polar(O, R, s.t), "ln", { from: s.angleBeat, enter: "draw", delay: 0.6 }));
   const at = angleLabelAt(O, 0, s.t, `${s.t}°`.length * 10.2, 36, 56);
   items.push(t(at[0], at[1], `${s.t}°`, "lbl", { from: s.angleBeat, enter: "rise", delay: 0.8 }));
-  items.push(...column(R + 34, -15, [
-    { text: s.pieceNote, cls: "sm", from: s.pieceBeat },
+  // the piece note breaks after its colon ("30° pieces:" / "6 of them make π"): on one line it ran past the card at phone size
+  const notes = s.pieceNote.split(/(?<=:) /);
+  items.push(...column(R + 34, -15 - (notes.length - 1) * 15, [
+    ...notes.map(text => ({ text, cls: "sm", from: s.pieceBeat })),
     { text: s.answerNote, cls: "lbl acc", from: s.angleBeat },
   ]));
   return frame("circle", items, s.alt);

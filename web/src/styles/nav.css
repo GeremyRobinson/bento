@@ -38,7 +38,17 @@
 .island.guest{padding:0 5px;gap:var(--sp-1)}
 @media (min-width:700px){.island.guest{width:460px}}
 .island.guest .iword{flex:1;display:grid;place-items:center;height:var(--float-in);padding:0 var(--sp-4)}
-.island .ilink{height:var(--float-in);padding:0 18px;border-radius:var(--r-pill);font-weight:var(--w-bold);background:var(--text);color:var(--card)}
+/* My lessons, once a grade is chosen: its own floating pill in the right corner, so "Bento" stays centred */
+.imine{display:flex;align-items:center;height:var(--float-h);padding:0 22px;border-radius:var(--r-pill);font-weight:var(--w-bold);white-space:nowrap;
+  background:var(--float);box-shadow:var(--float-shadow);color:var(--text);animation:floatIn var(--dur-400) var(--ease) both;animation-delay:var(--dur-60);transition:transform var(--dur-180) var(--ease)}
+.imine:active{transform:scale(.96)}
+.imine .imgrade{display:none;font-size:var(--fz-md);letter-spacing:-.02em}
+@media (max-width:699px){
+  .itop.guest:has(.imine) .ispace{width:var(--float-h)}
+  .imine{width:var(--float-h);padding:0;justify-content:center}
+  .imine .imtext{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  .imine .imgrade{display:block}
+}
 .island .inote{color:var(--muted);font-size:var(--small);font-weight:var(--w-mid);padding:0 18px 0 6px}
 
 /* round icon pills: exactly the island's height, 8px apart */
@@ -74,7 +84,7 @@
 .flbl{font-size:var(--fz-xs);font-weight:var(--w-mid);color:var(--text);padding:6px 10px 0;text-shadow:0 0 12px var(--page)}
 .fpill{display:inline-flex;align-items:center;gap:14px;justify-content:space-between;min-height:var(--float-h);padding:var(--sp-3) 22px;border-radius:var(--r-pill);background:var(--float);box-shadow:var(--float-shadow);font-weight:var(--w-mid);text-align:left;line-height:1.35;transition:background var(--dur-200),transform var(--dur-180) var(--ease)}
 button.fpill:active{transform:scale(.96)}
-.fpill .sw{flex:none;width:40px;height:24px;border-radius:var(--r-pill);background:var(--rule);position:relative;transition:background-color var(--dur-250) var(--ease)}
+.fpill .sw{flex:none;width:40px;height:24px;border-radius:var(--r-pill);background:var(--sw-off);position:relative;transition:background-color var(--dur-250) var(--ease)}
 .fpill .sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:var(--r-round);background:var(--knob);box-shadow:0 1px 3px var(--black-a25);transition:transform var(--dur-300) var(--glide)}
 .fpill[aria-checked="true"] .sw{background:var(--ink)}
 .fpill[aria-checked="true"] .sw::after{transform:translateX(16px)}
@@ -112,6 +122,8 @@ html[data-zoomed] body{overflow:hidden}
 .zlevels button[aria-pressed=true],.zlevels button[aria-pressed=true]:hover{background:var(--text);color:var(--card)}
 .zlevels button:disabled{opacity:.35}
 .zclose{grid-column:3;justify-self:end;background:color-mix(in srgb,var(--card) 72%,transparent)!important;box-shadow:0 0 0 1px var(--rule)}
+/* a phone: the zoom bar keeps the app's 16px gutter, so Done lines up with the island's corner buttons */
+@media (max-width:699px){.zoom{padding-inline:var(--sp-4)}}
 @media (max-width:560px){.zbar-top{grid-template-columns:auto 1fr}.zbar-top .zmark{display:none}.zlevels{grid-column:1}.zlevels button{padding:0 var(--sp-3)}}
 .zstage{width:min(1040px,100%);transform-origin:50% 30%;animation:zFrom var(--dur-500) var(--ease) both}
 .zstage.out{animation-name:zOut} .zstage.in{animation-name:zIn}
@@ -296,11 +308,15 @@ html:has(.screen) .itop{position:fixed;top:max(var(--sp-3),env(safe-area-inset-t
 /* on a phone, mid-problem, the light bulb takes Me's place so the island keeps room for its words */
 @media (max-width:600px){.icorner.right:has(.ihint) .ime{display:none}}
 
-/* a phone: the island's name gets two lines instead of an ellipsis, and the chapter line lives in Contents (Review v43 item 16) */
+/* a phone: the chapter line lives in Contents (Review v43 item 16), and the name keeps to one line at a smaller size,
+   so it never wraps and gets cut mid-word (v44 sweep item 6). The island's label carries the whole title. */
 @media (max-width:699px){
   .island .iplace small{display:none}
-  .island .iplace b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:17px;font-size:var(--fz-sm)}
+  .island .iplace b{line-height:19px;font-size:var(--fz-sm);letter-spacing:-.015em}
+  .island:not(.guest){gap:var(--sp-2)}
+  .island .iplace{padding:0 var(--sp-1)}
 }
+@media (max-width:400px){.island .iplace b{font-size:var(--fz-xs)}}
 /* the picked lesson row shows its whole name; Up next is already said in the detail */
 .srow.sles.on .snext{display:none}
 .srow.sles.on .sname b{white-space:normal}

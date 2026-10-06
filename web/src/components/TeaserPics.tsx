@@ -82,7 +82,7 @@ function Linear({ play }: { play: boolean }) {
         <text x={ix + 6} y={iy + 14} className="tp-lbl" fill="var(--tp-pink)">î</text>
         <text x={jx - 14} y={jy - 4} className="tp-lbl" fill="var(--tp-mint)">ĵ</text>
         <text x={vx + 8} y={vy - 4} className="tp-lbl" fill="var(--tp-amber)">Av = {f(1 + t)}v</text>
-        <text x={P(0.72, 0.22)[0]} y={P(0.72, 0.22)[1] + 4} textAnchor="middle" className="tp-sm" fill="var(--tp-amber)">area {f(det)}</text>
+        <text x={P(0.72, 0.22)[0]} y={P(0.72, 0.22)[1] + 4} textAnchor="middle" className="tp-sm tp-minor" fill="var(--tp-amber)">area {f(det)}</text>
       </g>
       <g className="tp-panel">
         <rect x="10" y="10" width="118" height="100" rx="10" />
@@ -121,8 +121,9 @@ function Orbit({ play }: { play: boolean }) {
       <line x1={fx} y1={cy} x2={px} y2={py} className="tp-r" />
       <Arrow x1={px} y1={py} x2={px + vx * 0.22} y2={py + vy * 0.22} c="var(--tp-mint)" w={2} />
       <circle cx={px} cy={py} r="6" fill="var(--tp-sky)" />
-      <text x="388" y={cy + 64} textAnchor="end" className="tp-sm">fast near the sun</text>
-      <text x={cx - a + 6} y={cy + 48} className="tp-sm">slow far away</text>
+      {/* top right, clear of the ellipse and the near wedge's tip; "slow" sits inside the ellipse, past its left edge */}
+      <text x="388" y="18" textAnchor="end" className="tp-sm">fast near the sun</text>
+      <text x={cx - a + 24} y={cy + 48} className="tp-sm">slow far away</text>
       <text x="12" y="230" className="tp-math">r = a(1 − e²) / (1 + e cos θ)</text>
       <text x="388" y="230" textAnchor="end" className="tp-sm">e = 0.6</text>
       <text x="12" y="18" className="tp-sm">equal areas in equal times</text>
@@ -245,8 +246,8 @@ function Prob({ play }: { play: boolean }) {
       {counts.map((_, k) => <text key={k} x={binX(k)} y={binTop + 105} textAnchor="middle" className="tp-xs">{k}</text>)}
       <text x="262" y="40" className="tp-math">P(k) = C(8, k) / 2⁸</text>
       <text x="262" y="66" className="tp-sm">{n} balls</text>
-      <text x="262" y="86" className="tp-sm">mean {n ? mean.toFixed(2) : "–"} · expected 4</text>
-      <text x="262" y="106" className="tp-sm" fill="var(--tp-pink)" style={{ opacity: span(t, 0.5, 0.95) }}>bell curve: μ = 4, σ = √2</text>
+      <text x="262" y="86" className="tp-sm tp-minor">mean {n ? mean.toFixed(2) : "–"} · expected 4</text>
+      <text x="262" y="106" className="tp-sm tp-minor" fill="var(--tp-pink)" style={{ opacity: span(t, 0.5, 0.95) }}>bell curve: μ = 4, σ = √2</text>
     </Svg>
   );
 }

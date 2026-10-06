@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { ns, poly, supText, v, xp } from "../../algebra-kit/steps";
 import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { antiderivativePicture } from "./picture";
 import { withEasyStart } from "../../easy-start";
 
 /** ∫ a·xⁿ dx = (a ÷ (n + 1))·xⁿ⁺¹ + C, with a a multiple of n + 1. */
@@ -51,6 +52,7 @@ export function explainAntiderivative(p: Antiderivative, model: AnswerModel) {
     statement: integral(p),
     caption: `Check: the derivative of ${termText(c, up)} is ${f(up)} × ${termText(c, n)} = ${termText(a, n)}.`,
     alt: `∫ ${termText(a, n)} dx: the exponent goes up to ${f(up)}, and ${f(a)} ÷ ${f(up)} = ${f(c)}, so ${termText(c, up)} + C.`,
+    diagram: antiderivativePicture({ a, n, up, c }),
     steps: [
       { id: "problem", narration: `Integrating goes the other way from derivatives.`, math: integral(p, [mark(n)]) },
       { id: "raise", narration: `Raise the exponent by 1: ${f(n)} + 1 = ${f(up)}.`, math: m(n, op("+"), 1, op("="), up), line: [frac([...coef(a), v(), sup([mark(up)])], [mark(up)])], answerStep: "raise", result: up },
@@ -67,6 +69,7 @@ export const lesson: LessonDefinition<Antiderivative> = withEasyStart({
   grade: 12,
   unit: "Integrals",
   title: "Antiderivatives",
+  pre: "g12-power",
   reference: createAntiderivative(6, 2),
   generate: rng => generateAntiderivative(rng),
   restore: restoreAntiderivative,

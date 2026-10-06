@@ -13,6 +13,7 @@ import { GradeNum } from "../components/Shelf";
 import { FIND_MY_LEVEL, NO_UNIT } from "../app/copy";
 import { TRACKS, TRACK_PARTS, type Track } from "../app/tracks";
 import { TeaserPic } from "../components/TeaserPics";
+import type { DiagramModel } from "../explanations/schema";
 
 type Side = "bento" | "b2";
 /** small per-device memories, never required: storage can be missing or blocked */
@@ -39,6 +40,9 @@ function firstPicture(grade: number, seed: number) {
   return null;
 }
 
+/** The picture's own shape, so a portrait iPad's well can wrap it instead of leaving it tiny in a tall box (v44 sweep #17). */
+const aspectOf = (d: DiagramModel): CSSProperties | undefined =>
+  "width" in d && "height" in d && d.width > 0 && d.height > 0 ? ({ "--ar": `${Math.round(d.width)} / ${Math.round(d.height)}` } as CSSProperties) : undefined;
 const phone = () => typeof matchMedia !== "undefined" && matchMedia("(max-width: 699px)").matches;
 
 /**
@@ -49,7 +53,7 @@ const phone = () => typeof matchMedia !== "undefined" && matchMedia("(max-width:
  * in place with its picture and Start, so nothing scrolls past one screen.
  */
 export function GradeQuestion() {
-  const { chooseGrade, startTest, deps, sheetOpen, openSheet } = useApp();
+  const { chooseGrade, startTest, deps, sheetOpen, openSheet, progress } = useApp();
   // opened to change grade: Escape goes back to your lessons
   useEffect(() => {
     if (!sheetOpen) return;
@@ -57,7 +61,9 @@ export function GradeQuestion() {
     addEventListener("keydown", onKey);
     return () => removeEventListener("keydown", onKey);
   }, [sheetOpen, openSheet]);
-  const [picked, setPicked] = useState<number | null>(null);
+  // opened over your lessons (Change grade, All grades) your grade is already picked and showing; a first launch, with
+  // no grade chosen yet, still opens with nothing picked (G 2026-10-06)
+  const [picked, setPicked] = useState<number | null>(() => (sheetOpen && progress.chosen ? progress.grade : null));
   const [ask, setAsk] = useState(false);
   // Bento or Bento²: the switch remembers your last side on this device; a first visit opens on Bento
   const [side, setSide] = useState<Side>(() => (remember.get("bento-side") === "b2" ? "b2" : "bento"));
@@ -78,7 +84,7 @@ export function GradeQuestion() {
 
   // the highlight glides to the row you tap
   const knob = useRef<HTMLSpanElement>(null), placed = useRef(false);
-  useLayoutEffect(() => {
+  const place = () => {
     const el = knob.current, row = el?.parentElement?.querySelector<HTMLElement>(".srow.on");
     if (!el) return;
     if (!row) { el.style.opacity = "0"; return; }
@@ -89,7 +95,22 @@ export function GradeQuestion() {
     el.style.transform = `translateY(${top}px)`;
     el.style.height = `${row.offsetHeight}px`;
     if (!placed.current) { void el.offsetHeight; el.style.transition = ""; placed.current = true; }
-  });
+  };
+  useLayoutEffect(place);
+  // opened with your grade already picked, the highlight is placed while the rows are still arriving and the list is
+  // still settling, so for that first moment it settles with them (as their entry motion ends, as the list resizes),
+  // and the picked row is brought into view at once: it was already chosen, so nothing glides to it
+  useEffect(() => {
+    const list = knob.current?.parentElement;
+    if (!list) return;
+    const until = performance.now() + 1200;
+    const again = () => { if (performance.now() < until) { placed.current = false; place(); } };
+    list.addEventListener("animationend", again);
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(again) : null;
+    ro?.observe(list.querySelector(".sideset") ?? list);
+    list.querySelector(".srow.on")?.closest(".gitem")?.scrollIntoView?.({ block: "nearest" });
+    return () => { list.removeEventListener("animationend", again); ro?.disconnect(); };
+  }, [side]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const detail = (g: number | null, inline = false) => {
     if (g == null) return (
@@ -101,7 +122,7 @@ export function GradeQuestion() {
         {teaser?.ex.diagram && (
           // the picture keeps its own grade's colours; only the chrome around it waits for a choice
           <figure className="gdpic" data-grade={seed % 13} data-band={bandOf(seed % 13)}>
-            <div className="gyviz"><PlayingDiagram key="teaser" ex={{ ...teaser.ex, diagram: teaser.ex.diagram }} end={statementBeat(teaser.ex)} /></div>
+            <div className="gyviz" style={aspectOf(teaser.ex.diagram)}><PlayingDiagram key="teaser" ex={{ ...teaser.ex, diagram: teaser.ex.diagram }} end={statementBeat(teaser.ex)} /></div>
           </figure>
         )}
       </div>
@@ -119,10 +140,11 @@ export function GradeQuestion() {
         {shown?.ex.diagram && (
           <figure className="gdpic">
             <figcaption>Your first problem: <b><MathLine math={shown.ex.statement} /></b></figcaption>
-            <div className="gyviz"><PlayingDiagram key={g} ex={{ ...shown.ex, diagram: shown.ex.diagram }} end={statementBeat(shown.ex)} /></div>
+            <div className="gyviz" style={aspectOf(shown.ex.diagram)}><PlayingDiagram key={g} ex={{ ...shown.ex, diagram: shown.ex.diagram }} end={statementBeat(shown.ex)} /></div>
           </figure>
         )}
-        <div className="gdgo">
+        {/* the grade's darker shades carry its text and the Start pill on light, so both read at 4.5:1 (v44 sweep item 11) */}
+        <div className="gdgo gpal" data-grade={g}>
           <Pill go onClick={() => chooseGrade(g)}>Start {d.name.split(" · ")[0]} ›</Pill>
           {inline && <small>{chapters.length} chapter{chapters.length === 1 ? "" : "s"}</small>}
         </div>
@@ -216,7 +238,7 @@ export function GradeQuestion() {
               const d = gradeOf(g), on = g === picked;
               return (
                 <div key={g} className="gitem" style={{ "--i": row++ } as CSSProperties}>
-                  <button role="radio" aria-checked={on} aria-label={d.name} className={`srow grow${on ? " on" : ""}`} style={tintStyle(d) as CSSProperties}
+                  <button role="radio" aria-checked={on} aria-label={d.name} className={`srow grow gpal${on ? " on" : ""}`} data-grade={g} style={tintStyle(d) as CSSProperties}
                     onClick={() => { setAsk(false); setPicked(on && phone() ? null : g); }}>
                     <span className="gcol"><GradeNum grade={g} /></span>
                     <span className="sname"><b>{d.subtitle}</b></span>

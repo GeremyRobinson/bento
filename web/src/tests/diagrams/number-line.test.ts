@@ -127,6 +127,17 @@ describe("chain helper", () => {
     expect(ex.steps.map(s => s.state)).toEqual([0, 1]);
     expect(buildChain([{ math: [num(1)] }, { math: [num(2), op("+"), num(3)] }, { math: [num(5)], from: 4 }], "x").lines.map(l => l.from)).toEqual([0, 1, 4]);
   });
+
+  it("draws a given picture instead of the chain, with the same steps", () => {
+    const pic: SceneDiagram = { kind: "scene", family: "test", width: 10, height: 10, items: [], alt: "p" };
+    const o = {
+      heading: "h", statement: [num(1)], alt: "a",
+      beats: [{ id: "a", narration: "one", math: [num(1)], lines: [[num(1)]], answerStep: "a", result: 1 }],
+    };
+    const ex = chainExplanation({ ...o, diagram: pic });
+    expect(ex.diagram).toBe(pic);
+    expect(ex.steps).toEqual(chainExplanation(o).steps);
+  });
 });
 
 // every picture this family draws, for the reference problem and many generated ones: nothing overlaps, nothing runs off
@@ -148,11 +159,15 @@ describe.each(SCENE_LESSONS)("%s pictures fit", id => {
 });
 
 describe("pictures follow the problem", () => {
-  it("k-add hops on from a to a + b", () => {
+  it("k-add counts the first group from 0, then hops on from a to a + b, every hop above the line", () => {
     const l = lessonById("k-add")!, p = l.generate(createRng(3), 0) as { a: number; b: number };
     const d = l.explain(p, l.answers(p)).diagram as SceneDiagram;
     const top = texts(d).filter(t => t.cls === "lbl").map(t => Number(t.text));
-    expect(top).toEqual(Array.from({ length: p.b }, (_, i) => p.a + i + 1));
+    expect(top).toEqual(Array.from({ length: p.a + p.b }, (_, i) => i + 1));
+    // a hop below the line means taking away (v44 sweep #3): none here, so no arc is drawn in the second part colour
+    const arcs = d.items.filter(it => it.type === "path" && /\bln\b/.test((it as { cls?: string }).cls ?? ""));
+    expect(arcs).toHaveLength(p.a + p.b);
+    expect(arcs.filter(it => /\bp1\b/.test((it as { cls?: string }).cls ?? ""))).toEqual([]);
   });
   it("g6-numline's hops are labelled with the two distances", () => {
     const l = lessonById("g6-numline")!, p = l.restore({ a: -7, b: 4 });

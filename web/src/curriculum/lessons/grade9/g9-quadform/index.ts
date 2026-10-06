@@ -9,6 +9,7 @@ export const lesson: LessonDefinition<QuadFormProblem> = withEasyStart({
   grade: 9,
   unit: "Polynomials and quadratics",
   title: "The quadratic formula",
+  pre: "g9-solvefactor",
   reference: createQuadForm(4, -2),
   generate: (rng, i) => generateQuadForm(rng, i),
   restore: restoreQuadForm,

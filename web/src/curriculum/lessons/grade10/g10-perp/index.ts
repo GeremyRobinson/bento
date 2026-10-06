@@ -10,6 +10,7 @@ export const lesson: LessonDefinition<PerpProblem> = withEasyStart({
   grade: 10,
   unit: "Coordinate geometry",
   title: "Perpendicular slopes",
+  pre: "g8-slope",
   reference: createPerp(2, 3),
   generate: rng => generatePerp(rng),
   restore: restorePerp,

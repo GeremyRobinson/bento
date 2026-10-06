@@ -5,6 +5,7 @@ import { fs, ns, supText } from "../../algebra-kit/steps";
 import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
 import { count } from "../../../text";
+import { negativeExponentPicture } from "./picture";
 import { withEasyStart } from "../../easy-start";
 
 /** a to the −n: 1 over aⁿ. */
@@ -48,6 +49,7 @@ export function explainNegativeExponent(p: NegativeExponent, model: AnswerModel)
     idea: ["Each step down in the exponent divides by the base once more. One step below the first power is 1, so anything to the 0 power is 1.", "Below 0 you keep dividing, so a negative exponent gives 1 over the power."],
     statement: pow(a, -n),
     caption: `Each step down divides by ${f(a)}.`,
+    diagram: negativeExponentPicture({ a, n, power }),
     alt: `Powers of ${f(a)} counting down from ${f(a)}${supText(n)} = ${f(power)} to ${f(a)}⁰ = 1, then ${f(a)}${supText(-n)} = 1/${f(flip)}.`,
     steps: [
       { id: "positive", narration: `Start with the positive power: ${f(n)} cop${n === 1 ? "y" : "ies"} of ${f(a)} make ${f(power)}.`, math: m(...pow(a, n), op("="), power), answerStep: "positive", result: power },
@@ -62,6 +64,7 @@ export const lesson: LessonDefinition<NegativeExponent> = withEasyStart({
   grade: 9,
   unit: "Exponents",
   title: "Zero and negative exponents",
+  pre: "g8-exp",
   reference: createNegativeExponent(2, 3),
   generate: rng => generateNegativeExponent(rng),
   restore: restoreNegativeExponent,

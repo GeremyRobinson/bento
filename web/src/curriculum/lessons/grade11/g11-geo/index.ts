@@ -82,6 +82,7 @@ export const lesson: LessonDefinition<GeoProblem> = withEasyStart({
   grade: 11,
   unit: "Sequences",
   title: "Geometric sequences",
+  pre: "g11-seq",
   reference: createGeo(3, 2, 6),
   generate: rng => generateGeo(rng),
   restore: restoreGeo,

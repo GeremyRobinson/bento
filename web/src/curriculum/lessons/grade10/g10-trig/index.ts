@@ -83,6 +83,7 @@ export const lesson: LessonDefinition<TrigRatioProblem> = withEasyStart({
   grade: 10,
   unit: "Right triangles and trig",
   title: "Sine, cosine and tangent",
+  pre: "g10-similar",
   reference: createTrigRatio(3, 4, 5, "sin"),
   generate: rng => { const [a, b, c] = rng.pick(TRIPLES); return createTrigRatio(a, b, c, rng.pick(["sin", "cos", "tan"] as const)); },
   restore: restoreTrigRatio,

@@ -192,7 +192,7 @@ function TodayDetail({ g }: { g: number }) {
  * Up next, as a picture: the very first problem of the lesson waiting, in whatever room the plan leaves (UI notes
  * preview: a big live picture on top of the detail). It draws only when it fits PREVIEW_MIN tall.
  */
-function PreviewWell({ candidates, next }: { candidates: string[]; next?: string }) {
+export function PreviewWell({ candidates, next }: { candidates: string[]; next?: string }) {
   const { deps } = useApp();
   const seed = useMemo(() => Math.floor(deps().rng.next() * 2 ** 31), []); // eslint-disable-line react-hooks/exhaustive-deps
   // the first lesson in line whose first problem draws a picture

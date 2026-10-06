@@ -9,6 +9,7 @@ export const lesson: LessonDefinition<SystemProblem> = withEasyStart({
   grade: 8,
   unit: "Linear equations",
   title: "Systems by substitution",
+  pre: "g8-intercept",
   reference: createSystem(2, 5),
   generate: rng => generateSystem(rng),
   restore: restoreSystem,

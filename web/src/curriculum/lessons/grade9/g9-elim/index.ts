@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { fP, ns, P, v } from "../../algebra-kit/steps";
 import { attempt, readInts } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { eliminationPicture } from "./picture";
 import { withEasyStart } from "../../easy-start";
 
 /** x + y = sum and x − y = difference, solved by adding the equations. */
@@ -45,6 +46,7 @@ export function explainElimination(p: EliminationSystem, model: AnswerModel) {
     idea: ["Adding equal amounts to both sides keeps an equation true, and the second equation's two sides are equal amounts. So you can add one whole equation to the other.", "Add when a variable has opposite signs, like + y and − y: it cancels and leaves one variable to solve."],
     statement: system(p),
     caption: "Add the equations: +y and −y cancel.",
+    diagram: eliminationPicture({ sum, difference, twoX, x, y }),
     alt: `x + y = ${f(sum)} and x − y = ${f(difference)}. Adding them gives 2x = ${f(twoX)}, so x = ${f(x)}; then y = ${f(y)}.`,
     steps: [
       { id: "first", narration: `The first equation has + y.`, math: first(sum, [mark("y")]) },
@@ -62,6 +64,7 @@ export const lesson: LessonDefinition<EliminationSystem> = withEasyStart({
   grade: 9,
   unit: "Equations",
   title: "Systems by elimination",
+  pre: "g8-system",
   reference: createElimination(7, 3),
   generate: (rng, i) => generateElimination(rng, i),
   restore: restoreElimination,

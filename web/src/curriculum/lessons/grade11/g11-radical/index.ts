@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { fpm, ns, pm, v } from "../../algebra-kit/steps";
 import { attempt, nz, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { radicalEquationPicture } from "./picture";
 import { withEasyStart } from "../../easy-start";
 
 /** √(x + a) = b, so x = b² − a. */
@@ -44,6 +45,7 @@ export function explainRadical(p: RadicalEquation, model: AnswerModel) {
     idea: ["Squaring undoes a square root, and doing the same thing to both sides keeps them equal.", "Squaring can sneak in an answer that doesn't work, so put your answer back into the root to check it."],
     statement: [...root(a), op("="), num(b)],
     caption: `Squaring both sides keeps them equal and removes the root.`,
+    diagram: radicalEquationPicture({ a, b, sq, x }),
     alt: `√(x ${fpm(a)}) = ${f(b)}. Squaring gives x ${fpm(a)} = ${f(sq)}, so x = ${f(x)}.`,
     steps: [
       { id: "problem", narration: `x is stuck under a square root.`, math: [...root(a), op("="), num(b)] },

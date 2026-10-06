@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { ns, supText } from "../../algebra-kit/steps";
 import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { rationalExponentPicture } from "./picture";
 import { withEasyStart } from "../../easy-start";
 
 /** (rⁿ) to the m/n: the n-th root is r, then r to the m. */
@@ -48,6 +49,7 @@ export function explainRational(p: RationalExponent, model: AnswerModel) {
     idea: ["Taking a root twice of the same size undoes squaring, so a power of 1/2 has to be the square root: (a to the 1/2) × (a to the 1/2) = a to the 1.", "A fraction power m/n splits into two moves: the bottom n takes the root, and the top m raises to a power. Root first keeps the numbers small."],
     statement: [num(base), sup(exponent(top, n))],
     caption: `${rootSign(n)}${f(base)} = ${f(r)}, then ${f(r)}${supText(top)} = ${f(value)}.`,
+    diagram: rationalExponentPicture({ n, m: top, r, base, value }),
     alt: `${f(base)} to the ${f(top)}/${f(n)} is the ${root} root of ${f(base)}, ${f(r)}, to the power ${f(top)}: ${f(value)}.`,
     steps: [
       { id: "problem", narration: `The exponent is a fraction: the bottom ${f(n)} is a ${root} root, the top ${f(top)} is a power.`, math: [num(base), sup([mark(exponent(top, n))])] },
@@ -63,6 +65,7 @@ export const lesson: LessonDefinition<RationalExponent> = withEasyStart({
   grade: 11,
   unit: "Exponents and logs",
   title: "Rational exponents",
+  pre: "g8-roots",
   reference: createRationalExponent(3, 2, 2),
   generate: rng => generateRationalExponent(rng),
   restore: restoreRationalExponent,

@@ -10,6 +10,7 @@ export const lesson: LessonDefinition<DefIntProblem> = withEasyStart({
   grade: 12,
   unit: "Integrals",
   title: "Definite integrals",
+  pre: "g12-anti",
   reference: createDefInt(2, 3, 2),
   generate: (rng, i) => generateDefInt(rng, i),
   restore: restoreDefInt,
