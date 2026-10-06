@@ -3,6 +3,7 @@ import { answer, mark, num, op } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { chainExplanation } from "../../../../explanations/diagrams/chain/build";
 import { tenFrames } from "../../../../explanations/diagrams/number-line/counters";
+import { makeTenFrames } from "../../../../explanations/diagrams/early-k/frames";
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
 
 /** a (6–9) plus b, where b is big enough to go past 10 */
@@ -53,6 +54,8 @@ function explain(p: MakeTenProblem, model: AnswerModel) {
     statement: [num(a), op("+"), num(b)],
     caption: `Borrow ${need} from the ${b} to fill the ten.`,
     alt: `${a} + ${b} becomes ${a} + ${need} + ${left}, then 10 + ${left} = ${sum}.`,
+    // grade 1's first picture colour is green (right), so the two numbers take its other two part colours
+    diagram: makeTenFrames({ a, b, beats: { ten: 0, break: 1, add: 2 }, parts: ["p1", "p2"], alt: `Two ten frames: ${a} dots and ${b} dots. ${need === 1 ? "1 dot moves" : `${need} dots move`} over to fill the first frame, so ${a} + ${b} = 10 + ${left} = ${sum}.` }),
     beats: [
       { id: "ten", narration: `${a} needs ${need} more to make 10.`, math: [num(a), op("+"), num(need), op("="), num(10)],
         lines: [[num(a), op("+"), num(b)]], answerStep: "ten", result: need },

@@ -17,7 +17,7 @@ export const deviations: Record<string, Partial<Record<string, string>>> = {
   "g5-divide": { prompt: "the tens step asks for the biggest tens number, so only one answer fits (reviewer, 2026-10-03)",
     checks: "new named slips on Subtract and Divide what's left: \"Added instead of took away\", \"One too many\", \"One too few\" (Curriculum fixes-02 Part C, 2026-10-06)" },
   "g4-fracwhole": { steps: "the last step is named \"Write as a mixed number\", not \"Simplify\" (reviewer, 2026-10-03)", checks: "step names appear in slip messages; a wrong top repeats the new hint",
-    hint: "the top hint asks \"Each group has 1 piece. How many pieces are in all the groups?\": \"5 groups of 1 piece\" gave the answer (Curriculum fixes-02 Part C, 2026-10-06)", explain: "Show me starts from the new hint",
+    hint: "the top hint asks \"Each group has 1 piece. How many pieces are in all the groups?\": \"5 groups of 1 piece\" gave the answer (Curriculum fixes-02 Part C, 2026-10-06); when the division comes out whole the simplify hint says \"S ÷ L = q exactly, so it's a whole number\" instead of \"remainder 0. The remainder goes on top\" (Curriculum fixes-02, 2026-10-06)", explain: "Show me starts from the new hint",
     pre: "g4-likefrac: W × n/d is adding like fractions again and again (Curriculum fixes-02 Part C, 2026-10-06, Order 2)" },
   "g3-split": { unit: "3rd grade has units now; this lesson lives in Multiplication and division",
     steps: "a first step \"Split each row\" asks \"8 is 5 and how many more?\", so the learner makes the cut (Curriculum fixes-02, K-3 g3-split rewrite, 2026-10-06); the recorded steps follow it unchanged in answer",

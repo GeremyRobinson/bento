@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { ms, ns } from "../../algebra-kit/steps";
 import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { simplifyRootPicture } from "./picture";
 import { withEasyStart } from "../../easy-start";
 
 /** The square-free parts the current app uses, so k² is always the biggest perfect square inside. */
@@ -56,6 +57,7 @@ export function explainSimplifyRoot(p: SimplifyRoot, model: AnswerModel) {
     idea: ["A square root splits over a product: √(a × b) = √a × √b. When one factor is a perfect square, its root is a whole number and moves out front.", "Use the biggest perfect square, so nothing more can come out."],
     statement: [sqrt(n)],
     caption: `${f(n)} = ${f(square)} × ${f(rest)}, and √${f(square)} = ${f(k)}.`,
+    diagram: simplifyRootPicture({ k, m: rest, n, square }),
     alt: `√${f(n)} = √(${f(square)} × ${f(rest)}) = ${f(k)}√${f(rest)}.`,
     steps: [
       { id: "start", narration: `Look for the biggest perfect square that divides ${f(n)}.`, math: [sqrt(n)] },

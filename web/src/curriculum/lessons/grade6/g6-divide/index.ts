@@ -3,6 +3,7 @@ import { answer, frac, mark, num, op, slot, type MathText } from "../../../schem
 import type { AnswerModel, AnswerStep, LessonDefinition, StepCheck } from "../../../schemas/lesson";
 import { chainExplanation } from "../../../../explanations/diagrams/chain/build";
 import { gcd, restoreVia, wholeIn } from "../../_number-line/steps";
+import { divideFractionsPicture } from "./picture";
 import { tapStep } from "../../grade4/_kit";
 
 /** a/b ÷ c/d, both fractions proper and in lowest terms, bottoms 2–9 */
@@ -141,6 +142,7 @@ function explain(p: DivideFractionsProblem) {
     ],
     statement: [frac(a, b), op("÷"), frac(c, d)],
     alt: `${a}/${b} ÷ ${c}/${d} becomes ${a}/${b} × ${d}/${c} = ${S}/${L}.`,
+    diagram: divideFractionsPicture({ a, b, c, d, S, L, mixed: F.num ? `${F.whole ? `${F.whole} ` : ""}${F.num}/${F.den}` : `${F.whole}` }),
     beats: [
       { id: "size", narration: S > L ? `${c}/${d} is smaller than ${a}/${b}, so more than one ${c}/${d} fits. Expect an answer bigger than 1.`
           : S === L ? `${c}/${d} is the same size as ${a}/${b}, so exactly one fits.` : `${c}/${d} is bigger than ${a}/${b}, so not even one whole ${c}/${d} fits. Expect an answer less than 1.`,

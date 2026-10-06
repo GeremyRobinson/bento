@@ -5,6 +5,7 @@ import { fP, ns, P, poly, v, xp, type Slip } from "../../algebra-kit/steps";
 import { attempt, nz, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
 import { coef, term } from "../../../text";
+import { polynomialSumPicture } from "./picture";
 import { withEasyStart } from "../../easy-start";
 
 /** (ax² + bx + c) ± (dx² + ex + f). */
@@ -62,6 +63,7 @@ export function explainPolynomialSum(p: PolynomialSum, model: AnswerModel) {
     idea: ["Like terms are the same kind of thing: x² with x², x with x, numbers with numbers. 3x² + 5x² is 8x², like 3 apples and 5 apples, but x² and x never combine.", "A minus in front of parentheses takes away every term inside, not just the first one."],
     statement: problem(p),
     caption: `Only like terms combine: x² with x², x with x, numbers with numbers.`,
+    diagram: polynomialSumPicture({ ...p, A, B, C, answer: toPlainText(quad(A, B, C)) }),
     alt: `${coef(p.a, "x²")} ${o} ${term(p.d, "x²")} = ${coef(A, "x²")}, ${coef(p.b, "x")} ${o} ${term(p.e, "x")} = ${coef(B, "x")}, ${f(p.c)} ${o} ${fP(p.f)} = ${f(C)}.`,
     steps: [
       { id: "problem", narration: `Two polynomials, ${word}. Line up the matching kinds: x² under x², x under x, numbers under numbers.`, math: problem(p, true) },

@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { fP, ms, ns, P, poly, v, xp } from "../../algebra-kit/steps";
 import { attempt, nz, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { syntheticPicture } from "./picture";
 import { withEasyStart } from "../../easy-start";
 
 /**
@@ -73,6 +74,7 @@ export function explainSynthetic(p: SyntheticDivision, model: AnswerModel) {
       "The last number is the remainder. It equals the polynomial's value at r, so a remainder of 0 means x − r is a factor.",
     ],
     statement: problem(p),
+    diagram: syntheticPicture({ r, b, c, rr, q, qr, rem }),
     caption: `${f(r)} makes x ${r < 0 ? "+" : "−"} ${f(Math.abs(r))} equal 0, so ${f(r)} goes in the box.`,
     alt: `Synthetic division by ${f(r)}: the row 1, ${f(b)}, ${f(c)} becomes 1, ${f(quot)}, ${f(rem)}, so the answer is x ${quot < 0 ? "−" : "+"} ${f(Math.abs(quot))}, remainder ${f(rem)}.`,
     steps: [

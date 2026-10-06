@@ -146,7 +146,8 @@ export function simplifyStep(S: number, L: number, label: string, id = "simplify
     slots: [{ id: "w", expected: hasWhole ? F.whole : null }, { id: "n", expected: fracPart ? F.num : null }, { id: "d", expected: fracPart ? F.den : null }],
     known: [],
     check,
-    hint: S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}. The remainder goes on top.`
+    hint: S % L === 0 ? `${S} ÷ ${L} = ${S / L} exactly, so it's a whole number.`
+      : S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}. The remainder goes on top.`
       : gcd(S, L) > 1 ? `Both ${S} and ${L} can be divided by ${gcd(S, L)}.` : `No number (other than 1) divides both ${S} and ${L}. It's already simplest.`,
     explain: S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}, then simplify.` : gcd(S, L) > 1 ? `Divide top and bottom by ${gcd(S, L)}.` : "It was already as simple as it gets.",
     work: [frac(S, L), op("="), ...mixedMath(S, L, true)],

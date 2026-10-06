@@ -4,6 +4,7 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { chainExplanation } from "../../../../explanations/diagrams/chain/build";
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
 import { count } from "../../../text";
+import { divisionAreaPicture } from "./picture";
 import { slips } from "../_kit";
 
 /** (dv × q + r) ÷ dv: the quotient q is never a multiple of 10, the remainder r is less than dv */
@@ -62,6 +63,7 @@ function explain(p: RemainderProblem, model: AnswerModel) {
     statement: [num(n), op("÷"), num(dv)],
     caption: `Take out ${T / 10} ${T === 10 ? "ten" : "tens"}, then ${O} ${O === 1 ? "one" : "ones"}. ${r ? `What's left, ${r}, is the remainder.` : "Nothing is left over."}`,
     alt: `${n} ÷ ${dv}: ${dv} × ${T} = ${dv * T}, ${dv} × ${O} = ${dv * O}, so ${r ? `${q} R ${r}` : `${q} exactly`}.`,
+    diagram: divisionAreaPicture({ n, dv, T, O, left, q, r }),
     beats: [
       { id: "tens", narration: `${dv} × ${T} = ${dv * T} fits into ${n}, and ${dv} × ${T + 10} = ${dv * (T + 10)} would not.`,
         math: [num(dv), op("×"), num(T), op("="), num(dv * T)],

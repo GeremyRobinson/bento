@@ -3,6 +3,7 @@ import { formatNumber as f, mark, num, op, text, type MathText } from "../../../
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { chainExplanation } from "../../../../explanations/diagrams/chain/build";
 import { expectedOf, oneBox, restoreVia, round6, wholeIn } from "../../_number-line/steps";
+import { multiplyDecimalsPicture } from "./picture";
 
 /**
  * A/10^pa × B/10^pb. The current app always had tenths × tenths (pa = pb = 1, A two digits, B one digit);
@@ -72,6 +73,7 @@ function explain(p: MultDecimalsProblem, model: AnswerModel) {
     statement: [num(x), op("×"), num(y)],
     caption: `${f(x)} × ${f(y)} has the same digits as ${A} × ${B}; the ${places} decimal places say where the point goes.`,
     alt: `${f(x)} × ${f(y)}: ${A} × ${B} = ${P}, ${places} decimal places, so ${f(ans)}.`,
+    diagram: multiplyDecimalsPicture({ A, B, pa, pb, P, ans }),
     beats: [
       { id: "whole", narration: `Ignore the points: ${A} × ${B} = ${P}.`, math: [num(A), op("×"), num(B), op("="), num(P)],
         lines: [[num(x), op("×"), num(y)], [num(A), op("×"), num(B), op("="), mark(P)]], answerStep: "whole", result: P },

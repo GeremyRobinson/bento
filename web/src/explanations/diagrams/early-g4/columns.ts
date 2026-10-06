@@ -101,3 +101,78 @@ export function buildColumns(s: ColumnSpec): SceneDiagram {
 
   return frame("columns", items, s.alt, 14, { w: 300 });
 }
+
+/**
+ * Decimal columns (Curriculum fixes-02, Part B; g5-adddec): two numbers with their points in one line, a written-in 0
+ * where a number stops short of hundredths, then partial rows: the whole columns added on their own, the decimal
+ * columns added on their own, and the two partials put together. Numbers come in as whole hundredths (`point` digits
+ * after the point), so nothing is ever a float.
+ */
+export interface DecimalColumnSpec {
+  /** the numbers in hundredths (12.5 → 1250) */
+  a: number;
+  b: number;
+  /** digits each number shows after its point before padding (12.5 → 1); the rest are written-in zeros */
+  shown: [number, number];
+  /** digits after the point (2 for hundredths) */
+  point: number;
+  beats: { lineUp: number; whole: number; decimal: number; total: number };
+  /** part roles for the whole partial and the decimal partial */
+  parts?: [string, string];
+  alt: string;
+}
+
+const DCW = 30, DROW = 44, POINT = 14;
+
+export function buildDecimalColumns(s: DecimalColumnSpec): SceneDiagram {
+  const P = s.point, unit = 10 ** P, sum = s.a + s.b;
+  const W = Math.floor(s.a / unit) + Math.floor(s.b / unit), D = (s.a % unit) + (s.b % unit);
+  const [pw, pd] = s.parts ?? ["p0", "p1"];
+  const wholeLen = (v: number) => String(Math.floor(v / unit)).length;
+  const nW = Math.max(wholeLen(s.a), wholeLen(s.b), wholeLen(sum), String(W).length);
+  // place i counts from the last decimal digit (i = 0); the point sits between place P − 1 and P
+  const X = (i: number) => (nW + P - 1 - i) * DCW + (i < P ? POINT : 0);
+  const xPoint = X(P) + DCW / 2 + POINT / 2;
+  const digit = (v: number, i: number) => Math.floor(v / 10 ** i) % 10;
+  const yA = 0, yB = DROW, yL1 = DROW + 26, yW = DROW * 2 + 14, yD = yW + DROW, yL2 = yD + 26, yR = yD + DROW + 12;
+  const items: Draft[] = [];
+  const { lineUp, whole, decimal, total } = s.beats;
+  const band = (i0: number, i1: number, part: string, b: number) =>
+    items.push({ type: "rect", x: X(i1) - DCW / 2, y: yA - 22, w: X(i0) - X(i1) + DCW, h: yR - yA + 44, rx: 10, cls: `fillsoft ${part}`, from: b, until: b, enter: "fade" } as Draft);
+  // the column groups light up in turn: the whole columns, then the decimal columns
+  band(P, P + nW - 1, pw, whole);
+  band(0, P - 1, pd, decimal);
+  // the point line through every row
+  items.push(seg([xPoint, yA - 20], [xPoint, yR + 20], "wire", { from: lineUp, enter: "draw" }));
+
+  const row = (v: number, y: number, cls: string, extra: Partial<Draft>, opts: { pad?: number; whole?: boolean; decimals?: boolean; lead?: boolean } = {}) => {
+    const lenW = wholeLen(v);
+    for (let i = 0; i < P + lenW; i++) {
+      const isDec = i < P;
+      if (isDec && opts.decimals === false) continue;
+      if (!isDec && opts.whole === false) continue;
+      const padded = opts.pad != null && isDec && i < P - opts.pad;
+      items.push(t(X(i), y, String(digit(v, i)), padded ? "lbl big acc" : cls, padded ? { from: lineUp, enter: "pop", delay: 0.6 + 0.2 * (P - 1 - i) } : extra));
+    }
+    if (opts.decimals !== false) items.push(t(xPoint, y + 6, ".", cls, extra));
+  };
+  row(s.a, yA, "lbl big pw", { enter: "fade" }, { pad: s.shown[0] });
+  row(s.b, yB, "lbl big pw", { enter: "fade" }, { pad: s.shown[1] });
+  items.push(t(X(P + nW - 1) - DCW, yB, "+", "lbl big pw"));
+  items.push(seg([X(P + nW - 1) - DCW * 1.5, yL1], [X(0) + DCW / 2, yL1], "ax"));
+  // the partials: the whole parts' sum under the whole columns, the decimal parts' sum under the decimal columns
+  row(W * unit, yW, `lbl big ${pw}`, { from: whole, enter: "rise", delay: 0.4 }, { decimals: false });
+  for (let i = 0; i < P; i++) items.push(t(X(i), yD, String(digit(D, i)), `lbl big ${pd}`, { from: decimal, enter: "rise", delay: 0.4 + 0.15 * (P - 1 - i) }));
+  items.push(t(xPoint, yD + 6, ".", `lbl big ${pd}`, { from: decimal, enter: "rise", delay: 0.4 }));
+  const carry = Math.floor(D / unit);
+  // the decimal sum's whole part sits left of the point: 0, or a 1 that has crossed over into the ones
+  items.push(t(X(P), yD, String(carry), carry ? "lbl big acc" : `lbl big ${pd}`, { from: decimal, enter: carry ? "pop" : "rise", delay: carry ? 1 : 0.4 }));
+  if (carry) {
+    items.push({ type: "rect", x: X(P) - 15, y: yD - 17, w: 30, h: 34, rx: 10, cls: "xring", from: decimal, until: decimal, enter: "pop", delay: 1.2 } as Draft);
+  }
+  items.push(t(X(P + nW - 1) - DCW, yD, "+", "lbl big pw", { from: total, enter: "fade" }));
+  // the two partials add into the answer
+  items.push(seg([X(P + nW - 1) - DCW * 1.5, yL2], [X(0) + DCW / 2, yL2], "ax", { from: total, enter: "draw" }));
+  row(sum, yR, "lbl big acc", { from: total, enter: "rise", delay: 0.5 });
+  return frame("columns", items, s.alt, 14, { w: 260 });
+}
