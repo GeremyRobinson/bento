@@ -257,7 +257,7 @@ export const de15: B2Lesson<P15> = {
           slips: [st === 1 && slip("called it stable", 0, `|2 − ${fr(p.r)}| = ${fr(Math.abs(s))} > 1. The fixed point repels, and the orbit settles into a cycle instead.`)] }),
       ];
     },
-    scene: (p): SceneRef => (p.kind === 0 ? { scene: "chaos", props: { r: p.r, view: "cobweb" } } : { scene: "chaos", props: { r: 4, view: "gap", k: p.k } }),
+    scene: (p): SceneRef => (p.kind === 0 ? { scene: "chaos", props: { r: p.r, view: "cobweb", quiet: true } } : { scene: "chaos", props: { r: 4, view: "gap", k: p.k, quiet: true } }),
   },
   oracle: p => (p.kind === 0 ? [1 - 1 / p.r, 2 - p.r, Math.abs(2 - p.r) < 1 ? 0 : 1] : [Math.ceil(Math.log2(p.G * 10 ** p.k))]),
   useIt: {

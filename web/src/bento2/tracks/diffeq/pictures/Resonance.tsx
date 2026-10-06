@@ -37,8 +37,9 @@ export function ResonanceScene({ props, marker }: SceneProps) {
       {/* the resonance curve */}
       <line x1={rc.box.l} y1={rc.box.b} x2={rc.box.r} y2={rc.box.b} className="b2axis" />
       <line x1={rc.box.l} y1={rc.box.t} x2={rc.box.l} y2={rc.box.b} className="b2axis" />
-      <line x1={rc.X(w0)} y1={rc.box.t} x2={rc.X(w0)} y2={rc.box.b} className="b2grid strong" />
-      <text x={rc.X(w0)} y={rc.box.b + 15} textAnchor="middle" className="b2t">ω₀</text>
+      {/* ω₀ sits a hair from the peak, so the Guess keeps it back until the reveal */}
+      {showCurve && <line x1={rc.X(w0)} y1={rc.box.t} x2={rc.X(w0)} y2={rc.box.b} className="b2grid strong" />}
+      {showCurve && <text x={rc.X(w0)} y={rc.box.b + 15} textAnchor="middle" className="b2t">ω₀</text>}
       <text x={rc.box.r} y={rc.box.b + 15} textAnchor="end" className="b2t">ω</text>
       <text x={rc.box.l + 4} y={rc.box.t + 4} className="b2t">size</text>
       {showCurve && <path d={curve(sweep ? 0.01 + wMax * k : wMax)} className="b2curve amber" />}
@@ -56,7 +57,7 @@ export function ResonanceScene({ props, marker }: SceneProps) {
       </>}
       readouts={<>
         <Read label="Natural ω₀" value={String(w0)} />
-        <Read label="Steady size" value={fx(amp, 2)} tone="pink" />
+        {!quiet && <Read label="Steady size" value={fx(amp, 2)} tone="pink" />}
         {!quiet && <Read label="Peak at ω" value={fx(peakW, 2)} tone="amber" />}
       </>}
     />

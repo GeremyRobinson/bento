@@ -107,7 +107,7 @@ export function PendulumScene({ props, place }: SceneProps) {
         {!twin && mode === "push" && <Slider label="Speed at the bottom" value={v} min={0.5} max={Math.ceil(vTop * 1.5)} step={0.05} onChange={setV} format={x => `${fx(x, 2)} m/s`} />}
       </>}
       readouts={<>
-        <Read label="Small-swing period" value={`${fx(T0, 2)} s`} tone="sky" />
+        {!quiet && <Read label="Small-swing period" value={`${fx(T0, 2)} s`} tone="sky" />}
         {!quiet && !twin && <Read label={mode === "push" && v / L >= 2 * w ? "Time per turn" : "This swing's period"} value={`${fx(Tnow, 2)} s`} tone="trav" />}
         {!quiet && !twin && mode === "push" && <Read label="Over the top above" value={`${fx(vTop, 2)} m/s`} tone="amber" />}
         {twin > 0 && <Read label={`${twin}° over 10°`} value={`× ${fx(pendulumPeriod(L, twin * D2R) / pendulumPeriod(L, 10 * D2R), 3)}`} tone="pink" big />}

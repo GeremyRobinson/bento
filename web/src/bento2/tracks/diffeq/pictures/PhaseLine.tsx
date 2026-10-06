@@ -37,7 +37,9 @@ export function PhaseLineView({ f, roots, lo, hi, tmax, quiet, start, run, marke
   const runK = useRun(run !== undefined, 3);
   const sorted = [...roots].sort((a, b) => a - b);
   const slope = (y: number) => (f(y + 1e-5) - f(y - 1e-5)) / 2e-5;
-  const fmax = Math.max(1e-6, ...Array.from({ length: 61 }, (_, k) => Math.abs(f(lo + ((hi - lo) * k) / 60))));
+  // f's scale comes from around the roots, so its humps show; beyond them the curve runs off the panel
+  const rlo = Math.max(lo, Math.min(...roots) - (hi - lo) * 0.06), rhi = Math.min(hi, Math.max(...roots) + (hi - lo) * 0.06);
+  const fmax = Math.max(1e-6, ...Array.from({ length: 61 }, (_, k) => Math.abs(f(rlo + ((rhi - rlo) * k) / 60))));
   const FX = (v: number) => (FG.l + FG.r) / 2 + (v / fmax) * ((FG.r - FG.l) / 2);
   const curve = useMemo(() => path(Array.from({ length: 121 }, (_, k) => { const y = lo + ((hi - lo) * k) / 120; return [FX(f(y)), Y(y)] as [number, number]; })), [f, lo, hi, fmax]); // eslint-disable-line react-hooks/exhaustive-deps
   const sol = (t0: number, y0: number) => solve((_t, y) => [f(y[0]!)], [y0], t0, tmax, 0.01).filter(p => p.y[0]! > lo - 1 && p.y[0]! < hi + 1).map(p => [X(p.t), Y(p.y[0]!)] as [number, number]);
@@ -87,7 +89,8 @@ export function PhaseLineView({ f, roots, lo, hi, tmax, quiet, start, run, marke
       {start !== undefined && <circle cx={PL} cy={Y(run !== undefined && runPath ? fr.iy(runPath[Math.max(0, Math.ceil(runPath.length * runK) - 1)]![1]) : start)} r="5" className="b2dot trav" />}
       {/* f on its side */}
       <line x1={FX(0)} y1={FIELD.t} x2={FX(0)} y2={FIELD.b} className="b2axis" />
-      <path d={curve} className="b2curve pink" />
+      <defs><clipPath id="fgclip"><rect x={FG.l} y={FIELD.t} width={FG.r - FG.l} height={FIELD.b - FIELD.t} /></clipPath></defs>
+      <path d={curve} className="b2curve pink" clipPath="url(#fgclip)" />
       <text x={FG.r} y={FIELD.t + 10} textAnchor="end" className="b2t pink">f</text>
       {roots.map((r, i) => fixed.includes(i) || !onRoot ? null : (
         <g key={`h${i}`}>
@@ -120,9 +123,9 @@ export function PhaseLineScene({ props, marker }: SceneProps) {
       svg={<PhaseLineView f={f} roots={roots} lo={-5} hi={7} tmax={4} quiet={quiet} start={start} run={run} marker={marker?.[0]} onRoot={quiet ? undefined : move} />}
       controls={!quiet && <Toggle label="Sign of f" value={String(s)} options={SIGN} onChange={v => setS(Number(v))} />}
       readouts={<>
-        <Read label="Rest points" value={sorted.map(r => sn(r)).join(", ")} tone="amber" />
+        {!quiet && <Read label="Rest points" value={sorted.map(r => sn(r)).join(", ")} tone="amber" />}
         {!quiet && <Read label="Stable" value={sorted.filter(r => slope(r) < 0).map(r => sn(r)).join(", ") || "none"} />}
-        {start !== undefined && <Read label={`f(${sn(start)})`} value={fx(f(start), 1)} tone="pink" />}
+        {start !== undefined && !quiet && <Read label={`f(${sn(start)})`} value={fx(f(start), 1)} tone="pink" />}
         {!quiet && <Read label="Tap the field" value="to start a solution" />}
       </>}
     />

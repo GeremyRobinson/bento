@@ -39,7 +39,7 @@ export function NonlinearScene({ props }: SceneProps) {
       <rect x={BOX.l} y={BOX.t} width={BOX.r - BOX.l} height={BOX.b - BOX.t} className="b2hit" {...drag((x, y) => { if (!quiet) setTaps(s => [...s.slice(-7), [fr.ix(x), fr.iy(y)]]); })} />
       <g clipPath="url(#nlclip)" pointerEvents="none">
         <line x1={BOX.l} y1={fr.Y(0)} x2={BOX.r} y2={fr.Y(0)} className="b2axis" opacity={0.5} />
-        <FieldArrows fr={fr} f={F} n={15} len={8} />
+        {!quiet && <FieldArrows fr={fr} f={F} n={15} len={8} />}
         {sys === "pend" && b === 0 && [-1, 0, 1].map(k => <g key={k}><path d={sep(1, k)} className="b2mark amber" /><path d={sep(-1, k)} className="b2mark amber" /></g>)}
         {!quiet && paths.map((pts, i) => <path key={i} d={path(pts)} className="b2curve sky" style={{ strokeWidth: 1.8 }} />)}
         {!quiet && paths.map((pts, i) => { const d = pts[Math.floor(loopK * (pts.length - 1))]; return d && <circle key={`d${i}`} cx={d[0]} cy={d[1]} r="3.5" className="b2dot sky" />; })}

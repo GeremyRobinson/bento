@@ -71,7 +71,7 @@ export const part = (pts: [number, number][], k: number) => path(pts.slice(0, Ma
 /** a run that plays once over `secs` and then holds; Less motion shows it finished */
 export function useRun(play: boolean, secs: number) {
   const t = useClock(play, 1e6);
-  return play ? Math.min(1, t / secs) : 0;
+  return play ? Math.min(1, Math.max(0, t / secs)) : 0;
 }
 /** a picture that keeps moving (a swing, a bounce): seconds, looping; Less motion holds `still` */
-export const useLoop = (still = 0) => useClock(true, still);
+export const useLoop = (still = 0) => Math.max(0, useClock(true, still)); // a frame stamp can come just before the start: never negative

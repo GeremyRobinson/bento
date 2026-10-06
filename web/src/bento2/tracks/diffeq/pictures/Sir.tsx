@@ -39,7 +39,7 @@ export function SirScene({ props, marker, place }: SceneProps) {
       lines: [`R₀ = ${fx(R0, 2)}: vaccinate ${fx(herd * 100, 1)}% to stop outbreaks.`, `With ${fx(vax * 100, 0)}% vaccinated the peak is ${outbreak ? `${fx(peak.y[1]! * 100, 1)}% sick at once, on day ${fx(peak.t, 0)}` : "nothing: the outbreak can't start"}.`] });
   };
   const svg = (
-    <svg viewBox={`0 0 ${W} ${H}`} className="b2pic" role="img" aria-label={`SIR town with R₀ = ${fx(R0, 2)}${quiet ? "" : `; infections peak at ${fx(peak.y[1]! * 100, 1)} percent`}.`}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="b2pic" role="img" aria-label={`SIR town${quiet ? "" : ` with R₀ = ${fx(R0, 2)}; infections peak at ${fx(peak.y[1]! * 100, 1)} percent`}.`}>
       <line x1={f.box.l} y1={f.box.b} x2={f.box.r} y2={f.box.b} className="b2axis" />
       <line x1={f.box.l} y1={f.box.t} x2={f.box.l} y2={f.box.b} className="b2axis" />
       {[0.25, 0.5, 0.75, 1].map(y => <line key={y} x1={f.box.l} y1={f.Y(y)} x2={f.box.r} y2={f.Y(y)} className="b2grid" />)}
@@ -50,8 +50,8 @@ export function SirScene({ props, marker, place }: SceneProps) {
         <text x={f.box.r} y={f.Y(1 / R0) - 6} textAnchor="end" className="b2t amber">herd line 1/R₀</text>
       </>}
       <path d={curve(0)} className="b2curve sky" />
-      <path d={curve(2)} className="b2curve mint" />
-      <path d={curve(1)} className="b2curve pink" />
+      {!quiet && <path d={curve(2)} className="b2curve mint" />}
+      {!quiet && <path d={curve(1)} className="b2curve pink" />}
       {!quiet && outbreak && <>
         <line x1={f.X(peak.t)} y1={f.box.t} x2={f.X(peak.t)} y2={f.box.b} className="b2mark pink" />
         <circle cx={f.X(peak.t)} cy={f.Y(peak.y[1]!)} r="5" className="b2dot pink" />
@@ -59,8 +59,8 @@ export function SirScene({ props, marker, place }: SceneProps) {
       </>}
       {marker && <line x1={f.box.l} y1={f.Y(marker[0])} x2={f.box.r} y2={f.Y(marker[0])} className="b2mark guess" />}
       <text x={f.box.l + 6} y={f.Y(run[0]!.y[0]!) + 16} className="b2t sky">S</text>
-      <text x={f.X(peak.t) + 8} y={f.Y(peak.y[1]!) - 6} className="b2t pink">I</text>
-      <text x={f.box.r - 4} y={f.Y(run.at(-1)!.y[2]!) + 16} textAnchor="end" className="b2t mint">R</text>
+      {!quiet && <text x={f.X(peak.t) + 8} y={f.Y(peak.y[1]!) - 6} className="b2t pink">I</text>}
+      {!quiet && <text x={f.box.r - 4} y={f.Y(run.at(-1)!.y[2]!) + 16} textAnchor="end" className="b2t mint">R</text>}
     </svg>
   );
   return (
@@ -71,7 +71,7 @@ export function SirScene({ props, marker, place }: SceneProps) {
         <Slider label="Vaccinated" value={vax} min={0} max={0.95} step={0.01} onChange={setVax} format={x => `${fx(x * 100, 0)}%`} />
       </>}
       readouts={<>
-        <Read label="R₀ = βD" value={fx(R0, 2)} tone="amber" />
+        {!quiet && <Read label="R₀ = βD" value={fx(R0, 2)} tone="amber" />}
         {!quiet && <Read label="Herd immunity" value={`${fx(herd * 100, 1)}%`} tone="amber" />}
         {!quiet && <Read label="Peak sick at once" value={outbreak ? `${fx(peak.y[1]! * 100, 1)}%` : "no outbreak"} tone="pink" />}
         {!quiet && vax > 0 && <Read label="R₀ after vaccinating" value={fx(R0 * (1 - vax), 2)} />}

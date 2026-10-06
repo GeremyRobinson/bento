@@ -27,9 +27,9 @@ function Coffee({ props, marker }: SceneProps) {
   const [A, setA] = useState(num(props, "A", 20));
   const [T0, setT0] = useState(num(props, "T0", 84));
   const [h, setH] = useState(num(props, "h", 10));
-  const quiet = flag(props, "quiet");
+  const quiet = flag(props, "quiet"), at = num(props, "at", 30);
   const t = useLoop(60);
-  const f = frame(0, 60, 0, 100, BOX);
+  const f = frame(0, 60, 0, T0 > 96 ? 110 : 100, BOX);
   const T = (tt: number) => A + (T0 - A) * 2 ** (-tt / h);
   const pts = useMemo(() => Array.from({ length: 121 }, (_, k) => [f.X(k / 2), f.Y(T(k / 2))] as [number, number]), [A, T0, h]); // eslint-disable-line react-hooks/exhaustive-deps
   const halvings = Array.from({ length: Math.floor(60 / h) }, (_, k) => k + 1);
@@ -40,8 +40,8 @@ function Coffee({ props, marker }: SceneProps) {
       <line x1={BOX.l} y1={f.Y(A)} x2={BOX.r} y2={f.Y(A)} className="b2mark amber" />
       <text x={BOX.r} y={f.Y(A) + 15} textAnchor="end" className="b2t amber">room {A}°</text>
       {quiet ? <>
-        <line x1={f.X(30)} y1={BOX.t} x2={f.X(30)} y2={BOX.b} className="b2grid strong" />
-        <text x={f.X(30) + 4} y={BOX.t + 10} className="b2t">30 min</text>
+        <line x1={f.X(at)} y1={BOX.t} x2={f.X(at)} y2={BOX.b} className="b2grid strong" />
+        <text x={f.X(at) + 4} y={BOX.t + 10} className="b2t">{at} min</text>
       </> : <>
         <path d={path(pts)} className="b2curve sky" />
         {halvings.map(n => (
@@ -54,7 +54,7 @@ function Coffee({ props, marker }: SceneProps) {
         <circle cx={f.X(now)} cy={f.Y(T(now))} r="6" className="b2dot trav" />
       </>}
       <circle cx={f.X(0)} cy={f.Y(T0)} r="5" className="b2dot sky" />
-      {marker && <circle cx={f.X(30)} cy={f.Y(marker[0])} r="7" className="b2marker" />}
+      {marker && <circle cx={f.X(at)} cy={f.Y(marker[0])} r="7" className="b2marker" />}
     </svg>
   );
   return (
@@ -65,7 +65,7 @@ function Coffee({ props, marker }: SceneProps) {
         <Slider label="Gap halves every" value={h} min={3} max={20} step={1} onChange={setH} format={v => `${v} min`} />
       </>}
       readouts={<>
-        <Read label="Gap at the start" value={`${T0 - A} °C`} tone="pink" />
+        {!quiet && <Read label="Gap at the start" value={`${T0 - A} °C`} tone="pink" />}
         {!quiet && <Read label="k = ln 2 / h" value={`${fx(Math.LN2 / h, 4)} per min`} />}
         {!quiet && <Read label="At 30 minutes" value={`${fx(T(30), 1)} °C`} tone="sky" />}
       </>}
@@ -97,7 +97,7 @@ function Factor({ props }: SceneProps) {
     <Scene svg={svg}
       controls={<Slider label="Start y(1)" value={y0} min={a - 3} max={a + 6} step={1} onChange={setY0} />}
       readouts={<>
-        <Read label="C = y(1) − a" value={String(C).replace("-", "−")} tone="sky" />
+        {!quiet && <Read label="C = y(1) − a" value={String(C).replace("-", "−")} tone="sky" />}
         {!quiet && <Read label="μ" value={n === 1 ? "t" : "t²"} tone="amber" />}
       </>}
     />

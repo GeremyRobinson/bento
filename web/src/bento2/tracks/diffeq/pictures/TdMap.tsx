@@ -11,7 +11,7 @@ import { mat } from "../text";
 
 const W = 360, H = 260;
 const MAP = { l: 26, r: 222, t: 12, b: 248 }, MINI = { l: 238, r: 354, t: 72, b: 188 };
-const LABELS: [string, number, number][] = [["saddle", 0, -1.8], ["node in", -3, 1.2], ["node out", 3, 1.2], ["spiral in", -1.5, 3.8], ["spiral out", 1.5, 3.8]];
+const LABELS: [string, number, number][] = [["saddle", 0, -1.8], ["node in", -3, 1.2], ["node out", 3, 1.2], ["spiral in", -1.6, 3.2], ["spiral out", 1.6, 3.2]];
 
 /** a small portrait of x′ = Ax: arrows and a ring of paths */
 export function Mini({ A, box = MINI }: { A: M2; box?: typeof MINI }) {
@@ -50,9 +50,9 @@ function MapBase({ quiet, shade }: { quiet: boolean; shade: boolean }) {
       <line x1={f.X(0)} y1={f.Y(0)} x2={f.X(0)} y2={MAP.t} className="b2leg trav" style={{ strokeWidth: 2.5 }} />
       <path d={para} className="b2curve amber" />
       <text x={MAP.r - 2} y={f.Y(0) + 15} textAnchor="end" className="b2t">T</text>
-      <text x={f.X(0) + 6} y={MAP.b - 4} className="b2t">D</text>
+      <text x={f.X(0) - 6} y={MAP.t + 12} textAnchor="end" className="b2t">D</text>
       {!quiet && LABELS.map(([s, T, D]) => <text key={s} x={f.X(T)} y={f.Y(D)} textAnchor="middle" className="b2t">{s}</text>)}
-      {!quiet && <text x={f.X(0)} y={MAP.t + 12} textAnchor="middle" className="b2t trav">center</text>}
+      {!quiet && <text x={f.X(0) + 6} y={MAP.t + 12} className="b2t trav">center</text>}
     </g>
   );
 }
@@ -72,20 +72,23 @@ export function TdMapScene({ props, marker, onMarker }: SceneProps) {
     if (onMarker) onMarker(p); else { setTd(p); setMoved(true); }
   };
   const reg = regionNear(T, D);
+  // Work it (quiet with no guess marker) hides where the matrix lands: the learner places it from their own T and D
+  const work = quiet && !marker;
   const svg = (
-    <svg ref={ref} viewBox={`0 0 ${W} ${H}`} className="b2pic" role="img" aria-label={`Trace–determinant map, dot at T = ${fx(T, 2)}, D = ${fx(D, 2)}${quiet ? "" : `: ${TYPES[reg] ?? "D = 0"}`}.`}>
-      <MapBase quiet={quiet} shade={flag(props, "shade")} />
+    <svg ref={ref} viewBox={`0 0 ${W} ${H}`} className="b2pic" role="img" aria-label={`Trace–determinant map, ${work ? "" : `dot at T = ${fx(T, 2)}, D = ${fx(D, 2)}`}${quiet ? "" : `: ${TYPES[reg] ?? "D = 0"}`}.`}>
+      <MapBase quiet={quiet && !work} shade={flag(props, "shade")} />
       <rect x={MAP.l} y={MAP.t} width={MAP.r - MAP.l} height={MAP.b - MAP.t} className="b2hit" {...drag(move)} />
-      <circle cx={f.X(T)} cy={f.Y(D)} r={marker ? 9 : 8} className={marker ? "b2marker" : "b2handle"} pointerEvents="none" />
-      <Mini A={A} />
-      <text x={(MINI.l + MINI.r) / 2} y={MINI.t - 8} textAnchor="middle" className="b2t">its portrait</text>
+      {!work && <circle cx={f.X(T)} cy={f.Y(D)} r={marker ? 9 : 8} className={marker ? "b2marker" : "b2handle"} pointerEvents="none" />}
+      {!quiet && <Mini A={A} />}
+      {!quiet && <text x={(MINI.l + MINI.r) / 2} y={MINI.t - 8} textAnchor="middle" className="b2t">its portrait</text>}
     </svg>
   );
   return (
     <Scene svg={svg}
       readouts={<>
-        <Read label="T" value={fx(T, 2)} />
-        <Read label="D" value={fx(D, 2)} />
+        {!work && <Read label="T" value={fx(T, 2)} />}
+        {!work && <Read label="D" value={fx(D, 2)} />}
+        {work && <Read label="Your T and D" value="place them on the map" />}
         {!quiet && <Read label="T² − 4D" value={fx(T * T - 4 * D, 2)} tone="amber" />}
         {!quiet && <Read label="Type" value={TYPES[reg] ?? "D = 0: a line of rest points"} />}
         {!quiet && <Read label="Rest is" value={T < 0 && D > 0 ? "stable" : "not stable"} />}

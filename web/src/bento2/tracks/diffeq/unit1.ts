@@ -172,7 +172,7 @@ export const de02: B2Lesson<P02> = {
           slips: [slip("multiplied by tⁿ", p.a * 2 ** p.m + C * 2 ** p.n, `C sits over ${tPow(p.n)}: divide by 2${p.n === 2 ? "²" : ""}.`)] }),
       ];
     },
-    scene: (p): SceneRef => (p.kind === 0 ? { scene: "cooling", props: { A: p.A, T0: p.A + p.gap, h: p.h, quiet: true } } : { scene: "cooling", props: { mode: "factor", n: p.n, m: p.m, a: p.a, y0: p.y0, quiet: true } }),
+    scene: (p): SceneRef => (p.kind === 0 ? { scene: "cooling", props: { A: p.A, T0: p.A + p.gap, h: p.h, at: p.n * p.h, quiet: true } } : { scene: "cooling", props: { mode: "factor", n: p.n, m: p.m, a: p.a, y0: p.y0, quiet: true } }),
   },
   oracle: p => (p.kind === 0
     ? [p.gap, p.n, p.A + p.gap * 2 ** -p.n, Math.log(2) / p.h]
