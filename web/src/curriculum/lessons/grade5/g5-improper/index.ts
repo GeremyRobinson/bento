@@ -28,7 +28,7 @@ function answers({ w, n, d }: MixedToImproperProblem): AnswerModel {
     steps: [
       ns({ id: "wholes", l: "Wholes into pieces", a: s => [num(w), op("×"), num(d), op("="), ...s], ans: w * d, h: `Each whole has ${count(d, "piece")}.`,
         w: [[w + d, "Added instead of multiplied", `${count(w, "whole")} with ${count(d, "piece")} each: multiply.`]] }),
-      ns({ id: "extra", l: "Add the extra pieces", a: s => [num(w * d), op("+"), num(n), op("="), ...s], ans: S, h: `Add the ${n} extra pieces.` }),
+      ns({ id: "extra", l: "Add the extra pieces", a: s => [num(w * d), op("+"), num(n), op("="), ...s], ans: S, h: `Add the ${count(n, "extra piece")}.` }),
       ms({ id: "fraction", l: "Write the fraction", a: X => [num(w), frac(n, d), op("="), frac(X.n!, X.d!)], ans: { n: S, d },
         h: `${count(S, "piece")}, each a ${d === 2 ? "half" : "1/" + d}. The bottom stays ${d}.`,
         w: [[{ n: S, d: w * d }, "Changed the bottom", "The piece size doesn't change: the bottom stays " + d + "."]] }),

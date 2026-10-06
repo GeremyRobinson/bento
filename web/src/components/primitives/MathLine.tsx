@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
+import type { Tone } from "./statement";
 import { formatNumber, slotsIn, toPlainText, type MathText, type MathToken } from "../../curriculum/schemas/math-text";
 
 interface Props {
@@ -17,6 +18,9 @@ interface Props {
 const REL = new Set(["=", "<", ">", "≤", "≥", "≈"]);
 const SUM = new Set(["+", "−", "±"]);
 const PRODUCT = new Set(["×", "÷", "·"]);
+/** a "?" that stands for a number: not straight after a letter or a closing bracket, where it ends a question */
+const UNKNOWN = /(?<![\p{L})\]])\?/u;
+const UNKNOWN_SPLIT = /(?<![\p{L})\]])(\?)/u;
 const ENDS_OP = /[+−×÷=<>≤≥≈±·(]$/;
 /** how strongly a line may break before an operator: relations first, then sums, then products */
 const opLevel = (o: string) => (REL.has(o) ? 3 : SUM.has(o) ? 2 : PRODUCT.has(o) ? 1 : 0);
@@ -85,7 +89,12 @@ export function MathLine({ math, values = {}, active = null, onSlot, className =
   };
   const token = (tok: MathToken, i: number): ReactNode => {
     switch (tok.t) {
-      case "text": return <span key={i} className={tok.v === "(" ? "t lp" : tok.v === ")" ? "t rp" : "t"}>{tok.v}</span>;
+      case "text": {
+        const cls = tok.v === "(" ? "t lp" : tok.v === ")" ? "t rp" : "t";
+        // the unknown: a "?" standing for a number (not a question's own mark, "How many dots?") is a dashed box
+        if (!UNKNOWN.test(tok.v)) return <span key={i} className={cls}>{tok.v}</span>;
+        return <span key={i} className={cls}>{tok.v.split(UNKNOWN_SPLIT).map((p, k) => (k % 2 ? <span key={k} className="unk">?</span> : p))}</span>;
+      }
       case "num": return <span key={i} className="n">{formatNumber(tok.v)}</span>;
       case "op": return <span key={i} className="o">{tok.v}</span>;
       case "answer": return <b key={i} className="ans">{formatNumber(tok.v)}</b>;
@@ -99,9 +108,10 @@ export function MathLine({ math, values = {}, active = null, onSlot, className =
       case "mark": return <mark key={i}>{render(tok.v)}</mark>;
       case "muted": return <span key={i} className="muted">{render(tok.v)}</span>;
       case "bold": return <b key={i}>{render(tok.v)}</b>;
+      case "part": return <span key={i} className={`pt p${tok.k}`}>{render(tok.v)}</span>;
       case "br": return <span key={i} className="br" />;
       case "slot": {
-        const v = values[tok.id] ?? "", on = active === tok.id, cls = `slot${tok.small ? " small" : ""}${on ? " active" : ""}`;
+        const v = values[tok.id] ?? "", on = active === tok.id, cls = `slot${tok.small ? " small" : ""}${on ? " active" : ""}${v ? "" : " empty"}`;
         return onSlot ? (
           <button key={i} type="button" className={cls} aria-pressed={on} data-slot={tok.id}
             aria-label={`Answer box${v ? `, ${v}` : ", empty"}`} onClick={() => onSlot(tok.id)}>
@@ -119,8 +129,19 @@ export function MathLine({ math, values = {}, active = null, onSlot, className =
   );
 }
 
-/** Short message text: `**bold**` becomes bold, everything else stays as typed. */
-export function Rich({ text }: { text: string }) {
+/** Short message text: `**bold**` becomes bold, everything else stays as typed. With `tones`, each part's number
+ *  ("16", "1/2") wears that part's colour, as it does in the statement and the picture. */
+export function Rich({ text, tones }: { text: string; tones?: Tone[] }) {
   const parts = text.split(/\*\*(.+?)\*\*/g);
-  return <>{parts.map((p, i) => (i % 2 ? <b key={i}>{p}</b> : p))}</>;
+  const tone = (s: string): ReactNode => {
+    if (!tones?.length) return s;
+    const esc = (x: string) => x.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
+    // the whole number only: not the 6 in 16 or 6.5, not the 3 in −3 or 3/4
+    const re = new RegExp(`(?<![\\d.,/−-]|\\d[.,])(${tones.map(t => esc(t.s)).join("|")})(?!\\d|[.,/]\\d)`, "g");
+    return s.split(re).map((p, k) => {
+      const hit = k % 2 ? tones.find(t => t.s === p) : undefined;
+      return hit ? <span key={k} className={`tone p${hit.k}`}>{p}</span> : p;
+    });
+  };
+  return <>{parts.map((p, i) => (i % 2 ? <b key={i}>{tone(p)}</b> : <Fragment key={i}>{tone(p)}</Fragment>))}</>;
 }

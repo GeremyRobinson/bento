@@ -15,6 +15,8 @@ import type { AnyLesson } from "../curriculum/schemas/lesson";
 import { Chevron } from "../components/primitives/icons";
 import { FitScreen } from "../components/screen/Screen";
 import { MathLine, Rich } from "../components/primitives/MathLine";
+import { AskLine } from "../components/primitives/AskLine";
+import { dressStatement, partsLook, toneMath, tonesOf } from "../components/primitives/statement";
 import { ScoreChip } from "../components/primitives/Score";
 import type { Explanation } from "../explanations/schema";
 
@@ -65,6 +67,10 @@ export function Learn({ lessonId }: { lessonId: string }) {
 
   const ex: Explanation = useMemo(() => lesson.explain(example, lesson.answers(example)), [lesson, example]);
   const last = ex.timeline.length - 1, finished = at >= last;
+  // the statement with its parts in their picture colours and the unknown boxed; the steps colour the same numbers
+  const look = partsLook(ex.diagram);
+  const statement = useMemo(() => dressStatement(ex.statement, look), [ex, look]);
+  const tones = useMemo(() => tonesOf(statement), [statement]);
   // read aloud: the problem first, then each step as it plays
   const readAloud = readAloudOn(readSettings(progress.settings), lesson.grade);
   useEffect(() => {
@@ -113,7 +119,7 @@ export function Learn({ lessonId }: { lessonId: string }) {
   // diagrams). Without motion, playing jumps straight to the end.
   const shownAt = reduceMotion() && playing ? last : at;
   return (
-    <FitScreen className="lscreen">
+    <FitScreen className={`lscreen parts-${look}`}>
       {/* the brief intro: what this picture is about, then the steps that explain it, each one tied to the picture */}
       <section className="lintro">
         <p className="k">{lesson.unit || gradeOf(lesson.grade).name} · lesson {page + 1} of {unit.length}
@@ -125,7 +131,7 @@ export function Learn({ lessonId }: { lessonId: string }) {
             <li key={st.id} className="beat" data-state={beatState(st.state, at)}>
               <button disabled={st.state === at} onClick={() => { setPlaying(false); setAt(st.state); }} aria-label={`Go to step ${i + 1}`}>
                 <span className="badge">{i + 1}</span>
-                <span className="say"><MathLine math={st.math} /><span><Rich text={st.narration} /></span></span>
+                <span className="say"><MathLine math={toneMath(st.math, tones)} /><span><Rich text={st.narration} tones={tones} /></span></span>
               </button>
             </li>
           ))}
@@ -137,7 +143,7 @@ export function Learn({ lessonId }: { lessonId: string }) {
       </section>
       {/* the hero: the problem and its picture, as big as the screen allows */}
       <figure className="lshero">
-        <div className="lmath"><MathLine math={ex.statement} keep /></div>
+        <div className="lmath"><AskLine math={ex.statement} /><MathLine math={statement} keep /></div>
         {ex.diagram && (
           <div className={ex.diagram.kind === "chain" ? "lpic flow" : "lpic"}>
             <div className="viz"><Diagram diagram={ex.diagram} timeline={ex.timeline} at={shownAt} fit /></div>
@@ -150,8 +156,8 @@ export function Learn({ lessonId }: { lessonId: string }) {
           {ex.caption && <p className={now ? undefined : "on"}><span><Rich text={ex.caption} /></span></p>}
           {ex.steps.map(st => (
             <p key={st.id} className={st === now ? "on" : undefined}>
-              {!saysMath(st.narration, st.math) && <MathLine math={st.math} />}
-              <span><Rich text={st.narration} /></span>
+              {!saysMath(st.narration, st.math) && <MathLine math={toneMath(st.math, tones)} />}
+              <span><Rich text={st.narration} tones={tones} /></span>
             </p>
           ))}
         </div>
@@ -171,6 +177,8 @@ export function Learn({ lessonId }: { lessonId: string }) {
         ) : (
           <>
             <Pill onClick={() => { setPlaying(false); setAt(last); }}>Show all</Pill>
+            {/* straight to the first practice problem, without watching to the end (the end's "Your turn ›" does the same) */}
+            <Pill className="try" onClick={() => startLesson(lesson.id)}>Try one</Pill>
             {!playing && at === 0
               ? <Pill go onClick={() => { setAt(1); setPlaying(true); }}>Play</Pill>
               : <Pill go onClick={() => { setPlaying(false); setAt(a => Math.min(last, a + 1)); }}>Next</Pill>}

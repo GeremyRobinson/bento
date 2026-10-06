@@ -49,6 +49,18 @@
 .math>.mline:has(.br){flex-wrap:wrap}
 .math>.mline{flex-wrap:nowrap;font-size:min(1em, 8.5vw)}
 .mline .ans{font-weight:650}
+/* the problem's two parts wear their picture's colours, in the statement, the steps' math and the steps' words alike
+   (statement.ts partsLook says how the picture colours them): the first part the lesson's own picture colour (the
+   .t0/.t1/.t2 the picture's --tint and --ink follow), the second the colour pictures give a second part (.p1, --c1).
+   .parts-fixed: the picture uses the fixed part colours, so the first is --k0. .parts-one: the picture has one colour,
+   so the second stays ink. Text-safe --k* shades, with their dark values (bands.css). */
+.mline .pt.p0,.tone.p0{color:var(--k0)} .t1 :is(.mline .pt.p0,.tone.p0){color:var(--k1)} .t2 :is(.mline .pt.p0,.tone.p0){color:var(--k2)}
+.parts-fixed :is(.mline .pt.p0,.tone.p0){color:var(--k0)}
+.mline .pt.p1,.tone.p1{color:var(--k1)} .parts-one :is(.mline .pt.p1,.tone.p1){color:inherit}
+/* the unknown: a dashed box in the accent (amber in the master), the same "?" the picture marks */
+.mline .unk{display:inline-grid;place-items:center;min-width:1.2em;height:1.25em;padding:0 .14em;margin:0 .04em;border:max(2px,.06em) dashed var(--ka);border-radius:.24em;color:var(--ka);background:color-mix(in srgb,var(--acc) 12%,transparent);font-size:.82em;line-height:1;font-weight:650}
+/* the short question over an equation ("What is x?") */
+.askline{margin:0;color:var(--muted);font-size:18px;font-weight:550;line-height:1.3;text-align:center;letter-spacing:0}
 .slot .caret{width:2px;height:.9em;background:var(--tint);margin-left:2px;animation:blink 1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.slot .caret{animation:none}}

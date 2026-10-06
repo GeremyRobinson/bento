@@ -140,6 +140,8 @@ html:has(.screen) body{overflow:hidden}
 .lshero{grid-area:hero;margin:0;min-height:0;display:grid;justify-items:stretch;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;gap:12px;padding:24px 28px 20px;border-radius:var(--r-panel);background:var(--float);box-shadow:var(--float-shadow)}
 .lmath{display:flex;justify-content:center;text-align:center;font-size:clamp(26px,4.4vw,46px);line-height:1.15;font-weight:650;letter-spacing:-.02em;min-width:0}
 .lmath .mline{font-size:inherit;row-gap:.1em;max-width:100%}
+.lmath{flex-direction:column;align-items:center;gap:4px}
+.lmath .askline{font-size:max(16px,.42em)}
 .lmath .mline .br{height:0;margin:-.05em 0}
 .lpic{position:relative;min-height:0}
 .lpic>.viz{position:absolute;inset:0;display:grid;min-height:0;margin:0}
@@ -173,7 +175,7 @@ html:has(.screen) body{overflow:hidden}
   .lnow{display:grid}
   .lshero .caption{display:none}
 }
-@media (max-width:520px){.lctl .ctl:not(.go){padding:0 16px}.ldots{display:none}}
+@media (max-width:520px){.lctl{gap:6px}.lctl .ctl:not(.go){padding:0 14px}.lctl .ctl.go{min-width:0;padding:0 20px}.ldots{display:none}}
 
 /* ---- practice, floating: no bars or boxes, the cards and keys float on the page in the grade's hue ---- */
 .wrap:has(>.panel.split)>.bar{background:none;padding:0;justify-content:center;gap:8px}

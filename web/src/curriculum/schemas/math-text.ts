@@ -19,6 +19,8 @@ export type MathToken =
   /** quiet side notes such as "(× 3)" */
   | { t: "muted"; v: MathText }
   | { t: "bold"; v: MathText }
+  /** a number that names a part of the picture (0 = the first part, 1 = the second): it wears that part's colour */
+  | { t: "part"; k: 0 | 1; v: MathText }
   /** a line break, for problems shown as two lines (two equations, two functions) */
   | { t: "br" };
 
@@ -63,7 +65,7 @@ export function toPlainText(m: MathText, slotText = "?"): string {
       case "sup": { const s = inner(tok.v); return [...s].every(c => SUPS[c]) ? [...s].map(c => SUPS[c]).join("") : `^${s}`; }
       case "sub": return inner(tok.v);
       case "sqrt": return `√${inner(tok.v)}`;
-      case "mark": case "muted": case "bold": return tok.v.map(one).join("");
+      case "mark": case "muted": case "bold": case "part": return tok.v.map(one).join("");
       case "br": return "; ";
     }
   };
@@ -77,7 +79,7 @@ export const numbersIn = (m: MathText): number[] =>
     switch (tok.t) {
       case "num": case "answer": return [tok.v];
       case "frac": return [...numbersIn(tok.n), ...numbersIn(tok.d)];
-      case "sup": case "sub": case "sqrt": case "mark": case "muted": case "bold": return numbersIn(tok.v);
+      case "sup": case "sub": case "sqrt": case "mark": case "muted": case "bold": case "part": return numbersIn(tok.v);
       default: return [];
     }
   });
@@ -88,7 +90,7 @@ export const slotsIn = (m: MathText): string[] =>
     switch (tok.t) {
       case "slot": return [tok.id];
       case "frac": return [...slotsIn(tok.n), ...slotsIn(tok.d)];
-      case "sup": case "sub": case "sqrt": case "mark": case "muted": case "bold": return slotsIn(tok.v);
+      case "sup": case "sub": case "sqrt": case "mark": case "muted": case "bold": case "part": return slotsIn(tok.v);
       default: return [];
     }
   });

@@ -28,9 +28,9 @@ const count = (n: number, d: number) => `${n} ${pieceName(d, n !== 1)}`;
 function answers({ a, c, d }: LikeFractionsProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "tops", l: "Add the tops", a: s => [num(a), op("+"), num(c), op("="), ...s], ans: a + c, h: "Count the pieces: add the top numbers." }),
-      fs({ id: "bottom", l: "Keep the bottom", a: s => [frac(a, d), op("+"), frac(c, d), op("="), ...s], N: a + c, D: d, h: `The pieces are still ${d}ths, so the bottom stays ${d}.`,
-        w: [[a + c, 2 * d, "Added the bottoms", `The bottom is the size of the pieces. ${d}ths plus ${d}ths are still ${d}ths.`]], n: "Bigger than 1 is fine here." }),
+      ns({ id: "tops", l: "Add the tops", a: s => [num(a), op("+"), num(c), op("="), ...s], ans: a + c, h: `Count the pieces: ${count(a, d)} and ${count(c, d)}.` }),
+      fs({ id: "bottom", l: "Keep the bottom", a: s => [frac(a, d), op("+"), frac(c, d), op("="), ...s], N: a + c, D: d, h: `The pieces are still ${pieceName(d)}, so the bottom stays ${d}.`,
+        w: [[a + c, 2 * d, "Added the bottoms", `The bottom is the size of the pieces. ${pieceName(d)} plus ${pieceName(d)} are still ${pieceName(d)}.`]], n: "Bigger than 1 is fine here." }),
     ],
     finalParts: [-1],
   };
