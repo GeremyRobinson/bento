@@ -37,14 +37,15 @@ function restore(kind: CirclePartProblem["kind"]) {
 
 function answers({ kind, t, r }: CirclePartProblem): AnswerModel {
   const g = gcd(t, 360), part = frac(t / g, 360 / g);
-  const first = fs({ id: "fraction", label: "Fraction of the circle", prompt: s => mt`${t} ÷ 360 = ${s}`, N: t, D: 360, hint: `${t} out of 360 degrees.` });
+  const first = fs({ id: "fraction", label: "Fraction of the circle", prompt: s => mt`${t} ÷ 360 = ${s}`, N: t, D: 360, hint: `A full turn is 360°, so the slice is ${t} parts out of 360. Divide top and bottom by the same number.`,
+    wrong: [[t, 180, "Used a half turn", "A full turn is 360°, not 180°."]] });
   if (kind === "geometry.sector") {
     const A = round6(3.14 * r * r);
     return {
       steps: [
         first,
-        ns({ id: "whole", label: "Whole circle", prompt: s => mt`3.14 × ${r}${sup("2")} = ${s}`, ans: A, hint: `${r} × ${r} × 3.14.`, wrong: [[round6(3.14 * 2 * r), "Squared as times 2", `r² means ${r} × ${r}.`]] }),
-        ns({ id: "part", label: "The slice", prompt: s => mt`${part} × ${A} = ${s}`, ans: round6((A * t) / 360), hint: "Take that fraction of the whole area." }),
+        ns({ id: "whole", label: "Whole circle", prompt: s => mt`3.14 × ${r}${sup("2")} = ${s}`, ans: A, hint: `A circle's area is π × r × r: 3.14 × ${r} × ${r}.`, wrong: [[round6(3.14 * 2 * r), "Squared as times 2", `r² means ${r} × ${r}.`]] }),
+        ns({ id: "part", label: "The slice", prompt: s => mt`${part} × ${A} = ${s}`, ans: round6((A * t) / 360), hint: "The slice is that fraction of the whole circle, so multiply the area by it.", wrong: [[round6(A * 360 / t), "Divided by the fraction", "The slice is smaller than the circle: multiply by the fraction."]] }),
       ],
       finalParts: [-1],
     };
@@ -53,8 +54,8 @@ function answers({ kind, t, r }: CirclePartProblem): AnswerModel {
   return {
     steps: [
       first,
-      ns({ id: "whole", label: "Whole circumference", prompt: s => mt`2 × 3.14 × ${r} = ${s}`, ans: C, hint: "2πr.", wrong: [[round6(3.14 * r), "Used the radius alone", "Circumference is 2 × π × r."]] }),
-      ns({ id: "part", label: "The arc", prompt: s => mt`${part} × ${C} = ${s}`, ans: round6((C * t) / 360), hint: "Take that fraction of the circumference." }),
+      ns({ id: "whole", label: "Whole circumference", prompt: s => mt`2 × 3.14 × ${r} = ${s}`, ans: C, hint: "The distance around a circle is 2 × π × r.", wrong: [[round6(3.14 * r), "Used the radius alone", "Circumference is 2 × π × r."]] }),
+      ns({ id: "part", label: "The arc", prompt: s => mt`${part} × ${C} = ${s}`, ans: round6((C * t) / 360), hint: "The arc is that fraction of the way around, so multiply the circumference by it.", wrong: [[round6(C * 360 / t), "Divided by the fraction", "The arc is shorter than the way around: multiply by the fraction."]] }),
     ],
     finalParts: [-1],
   };

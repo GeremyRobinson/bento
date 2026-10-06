@@ -3,6 +3,7 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildUnitCircle } from "../../../../explanations/diagrams/circle/build";
 import { asRecord, expected, fracText, fs, mt, ns, numberField } from "../../_geometry/kit";
+import { withEasyStart } from "../../easy-start";
 
 /** sin or cos of an angle whose reference angle is 30° or 60°, so the value is ±1/2. */
 export interface UnitCircleProblem {
@@ -34,8 +35,8 @@ export function unitCircleAnswers(p: UnitCircleProblem): AnswerModel {
   const { f, t } = p, { quad, ref, pos } = facts(p);
   return {
     steps: [
-      ns({ id: "quadrant", label: "Quadrant", prompt: s => mt`${t}° is in quadrant ${s}`, ans: quad, hint: "I is 0–90°, II is 90–180°, III is 180–270°, IV is 270–360°." }),
-      ns({ id: "reference", label: "Reference angle", prompt: s => mt`reference angle = ${s}°`, ans: ref, hint: "The angle back to the nearest x-axis." }),
+      ns({ id: "quadrant", label: "Quadrant", prompt: s => mt`${t}° is in quadrant ${s}`, ans: quad, hint: "I is 0–90°, II is 90–180°, III is 180–270°, IV is 270–360°.", wrong: [[5 - quad, "Turned clockwise", "Angles turn counterclockwise from the right, through I, II, III, IV."]] }),
+      ns({ id: "reference", label: "Reference angle", prompt: s => mt`reference angle = ${s}°`, ans: ref, hint: "The angle back to the nearest x-axis, whichever side is closer.", wrong: [[90 - ref, "Measured to the y-axis", "The reference angle goes back to the x-axis, not the y-axis."]] }),
       fs({ id: "value", label: "Value", prompt: s => mt`${f} ${t}° = ${s}`, N: pos ? 1 : -1, D: 2, note: "Put any minus sign on the top.",
         hint: `${f} ${ref}° = 1/2. ${f === "sin" ? "Sine" : "Cosine"} is ${pos ? "positive" : "negative"} in quadrant ${quad}.`,
         wrong: [[pos ? -1 : 1, 2, "Wrong sign", f === "sin" ? "Sine is the y value: positive above the x-axis." : "Cosine is the x value: positive right of the y-axis."]] }),
@@ -69,15 +70,16 @@ export function explainUnitCircle(p: UnitCircleProblem, answers: AnswerModel): E
   };
 }
 
-export const lesson: LessonDefinition<UnitCircleProblem> = {
+export const lesson: LessonDefinition<UnitCircleProblem> = withEasyStart({
   id: "g12-unit",
   grade: 12,
   unit: "Trigonometry",
   title: "Unit circle values",
   reference: createUnitCircle("sin", 210),
-  generate: (rng, i) => (i % 2 ? createUnitCircle("sin", rng.pick([30, 150, 210, 330])) : createUnitCircle("cos", rng.pick([60, 120, 240, 300]))),
+  // the first three problems stay in quadrant I, where every value is positive
+  generate: (rng, i) => (i % 2 ? createUnitCircle("sin", i < 3 ? 30 : rng.pick([30, 150, 210, 330])) : createUnitCircle("cos", i < 3 ? 60 : rng.pick([60, 120, 240, 300]))),
   restore: restoreUnitCircle,
   display: p => mt`${p.f} ${p.t}°`,
   answers: unitCircleAnswers,
   explain: explainUnitCircle,
-};
+});

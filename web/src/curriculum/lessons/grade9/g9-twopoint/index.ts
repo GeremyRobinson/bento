@@ -2,8 +2,9 @@ import type { LessonDefinition } from "../../../schemas/lesson";
 import { twoPointAnswers } from "./answers";
 import { explainTwoPoint, twoPointMath } from "./explanation";
 import { createTwoPoint, generateTwoPoint, restoreTwoPoint, type TwoPointProblem } from "./problem";
+import { withEasyStart } from "../../easy-start";
 
-export const lesson: LessonDefinition<TwoPointProblem> = {
+export const lesson: LessonDefinition<TwoPointProblem> = withEasyStart({
   id: "g9-twopoint",
   grade: 9,
   unit: "Linear functions",
@@ -15,4 +16,4 @@ export const lesson: LessonDefinition<TwoPointProblem> = {
   displayNote: () => "Write the line as y = mx + b.",
   answers: twoPointAnswers,
   explain: explainTwoPoint,
-};
+});

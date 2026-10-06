@@ -3,6 +3,7 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildCylinder } from "../../../../explanations/diagrams/cylinder/build";
 import { asRecord, expected, mt, ns, numberField, round6 } from "../../_geometry/kit";
+import { withEasyStart } from "../../easy-start";
 
 /** A cone with radius r and height h, where r² × h divides by 3; the lesson uses 3.14 for π. */
 export interface ConeProblem {
@@ -26,10 +27,11 @@ export function coneAnswers({ r, h }: ConeProblem): AnswerModel {
   const rh = r * r * h;
   return {
     steps: [
-      ns({ id: "cylinder", label: "r² × h", prompt: s => mt`${r}${sup("2")} × ${h} = ${s}`, ans: rh, hint: `${r * r} × ${h}.` }),
+      ns({ id: "cylinder", label: "r² × h", prompt: s => mt`${r}${sup("2")} × ${h} = ${s}`, ans: rh, hint: "Square the radius, then stack it as high as the cone: r × r × h.", wrong: [[2 * r * h, "Squared as times 2", `Squared means ${r} × ${r}.`]] }),
       ns({ id: "third", label: "Divide by 3", prompt: s => mt`${rh} ÷ 3 = ${s}`, ans: rh / 3, hint: "A cone is a third of a cylinder.",
         wrong: [[rh, "Forgot the ÷ 3", "A cone holds a third of a cylinder: divide by 3."]] }),
-      ns({ id: "times-pi", label: "Times π", prompt: s => mt`${rh / 3} × 3.14 = ${s}`, ans: round6((rh / 3) * 3.14), hint: `${rh / 3} × 3.14.` }),
+      ns({ id: "times-pi", label: "Times π", prompt: s => mt`${rh / 3} × 3.14 = ${s}`, ans: round6((rh / 3) * 3.14), hint: "The base is a circle, not a square: a circle holds about 3.14 times r × r.",
+        wrong: [[round6((rh / 3) * 6.28), "Used 2π", "2 × π is for the distance around. The area of a circle uses π once."]] }),
     ],
     finalParts: [-1],
   };
@@ -57,7 +59,7 @@ export function explainCone({ r, h }: ConeProblem, answers: AnswerModel): Explan
   };
 }
 
-export const lesson: LessonDefinition<ConeProblem> = {
+export const lesson: LessonDefinition<ConeProblem> = withEasyStart({
   id: "g8-cone",
   grade: 8,
   unit: "Geometry",
@@ -69,4 +71,4 @@ export const lesson: LessonDefinition<ConeProblem> = {
   displayNote: () => "V = π × r² × h ÷ 3. Use 3.14 for π.",
   answers: coneAnswers,
   explain: explainCone,
-};
+});

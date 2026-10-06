@@ -5,6 +5,7 @@ import { fs, ns, supText } from "../../algebra-kit/steps";
 import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
 import { count } from "../../../text";
+import { withEasyStart } from "../../easy-start";
 
 /** a to the −n: 1 over aⁿ. */
 export interface NegativeExponent { kind: "exponents.negative"; a: number; n: number; power: number }
@@ -27,8 +28,8 @@ const pow = (a: number, e: number): MathText => [num(a), sup(e)];
 export function negativeExponentAnswers({ a, n }: NegativeExponent): AnswerModel {
   return {
     steps: [
-      ns({ id: "positive", l: "Make the exponent positive", a: s => [...pow(a, n), op("="), ...s], ans: a ** n, h: `Multiply ${count(f(n), "copy", "copies")} of ${f(a)}.` }),
-      fs({ id: "flip", l: "Flip it", a: s => [...pow(a, -n), op("="), ...s], N: 1, D: a ** n, n: "A negative exponent means 1 over the power.", h: `1 over ${f(a ** n)}.`,
+      ns({ id: "positive", l: "Make the exponent positive", a: s => [...pow(a, n), op("="), ...s], ans: a ** n, h: `The exponent counts how many ${f(a)}'s multiply together.`, w: [[a * n, "Multiplied by the exponent", `Multiply ${count(f(n), "copy", "copies")} of ${f(a)} together, not ${f(a)} × ${f(n)}.`]] }),
+      fs({ id: "flip", l: "Flip it", a: s => [...pow(a, -n), op("="), ...s], N: 1, D: a ** n, n: "A negative exponent means 1 over the power.", h: "Each step below 0 in the exponent divides by the base once more, so a negative exponent makes 1 over the power.",
         w: [[-(a ** n), 1, "Thought it was a negative number", "A negative exponent doesn't make the number negative. It flips it: 1 over the power."]] }),
     ],
     finalParts: [-1],
@@ -44,7 +45,7 @@ export function explainNegativeExponent(p: NegativeExponent, model: AnswerModel)
   const below = Array.from({ length: n }, (_, i) => i + 1).map(k => m(...pow(a, -k), op("="), frac(1, a ** k)));
   return beatExplanation({
     heading: "Negative exponent = flip",
-    idea: ["Anything to the 0 power is 1."],
+    idea: ["Each step down in the exponent divides by the base once more. One step below the first power is 1, so anything to the 0 power is 1.", "Below 0 you keep dividing, so a negative exponent gives 1 over the power."],
     statement: pow(a, -n),
     caption: `Each step down divides by ${f(a)}.`,
     alt: `Powers of ${f(a)} counting down from ${f(a)}${supText(n)} = ${f(power)} to ${f(a)}⁰ = 1, then ${f(a)}${supText(-n)} = 1/${f(flip)}.`,
@@ -56,7 +57,7 @@ export function explainNegativeExponent(p: NegativeExponent, model: AnswerModel)
   });
 }
 
-export const lesson: LessonDefinition<NegativeExponent> = {
+export const lesson: LessonDefinition<NegativeExponent> = withEasyStart({
   id: "g9-negexp",
   grade: 9,
   unit: "Exponents",
@@ -67,4 +68,4 @@ export const lesson: LessonDefinition<NegativeExponent> = {
   display: p => pow(p.a, -p.n),
   answers: negativeExponentAnswers,
   explain: explainNegativeExponent,
-};
+});

@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildPlane } from "../../../../explanations/diagrams/plane/build";
 import { attempt, expected, f, ints, ms, ns, nz, pt } from "../../_plane/kit";
+import { withEasyStart } from "../../easy-start";
 
 /** (x − h)² + (y − k)² = r² */
 export interface CircleProblem { kind: "coordinate.circle"; h: number; k: number; r: number }
@@ -28,7 +29,7 @@ export function circleAnswers({ h, k, r }: CircleProblem): AnswerModel {
   return {
     steps: [
       ms({ id: "center", label: "Center", prompt: S => [text("("), ...S.h!, text(", "), ...S.k!, text(")")], ans: { h, k },
-        hint: "The center uses the opposite signs of what's inside the parentheses.",
+        hint: "(x − h)² is 0 when x = h, and that is the center. So the center has the opposite sign of the number you see: a + inside means a negative center.",
         wrong: [[{ h: -h, k: -k }, "Flipped the signs", "(x − h)²: the center's x is h, so x + 3 means h = −3."]] }),
       ns({ id: "r", label: "Radius", prompt: s => [text("r"), op("="), text("√"), num(r * r), op("="), ...s], ans: r,
         hint: `The equation shows r² = ${r * r}.`, wrong: [[r * r, "Forgot the square root", "The right side is r², so take the square root."]] }),
@@ -63,7 +64,7 @@ export function explainCircle(p: CircleProblem, model: AnswerModel): Explanation
   };
 }
 
-export const lesson: LessonDefinition<CircleProblem> = {
+export const lesson: LessonDefinition<CircleProblem> = withEasyStart({
   id: "g10-circle",
   grade: 10,
   unit: "Coordinate geometry",
@@ -75,4 +76,4 @@ export const lesson: LessonDefinition<CircleProblem> = {
   displayNote: () => "Find the center and radius.",
   answers: circleAnswers,
   explain: explainCircle,
-};
+});

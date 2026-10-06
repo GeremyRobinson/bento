@@ -1,0 +1,65 @@
+// Grades 8 to 12, Curriculum fixes-02 Part C (2026-10-06): hints that say why instead of restating the step's
+// arithmetic or handing over the answer, and slips that name the mistake. Only the words of the hint, of "Show me"
+// (which repeats the hint) and of the mistake messages change; every step, prompt, answer and worked line is the
+// current app's. Lessons that already have an entry in another file get these fields there instead.
+const HINT = "the hint gives the reason for the step and keeps the numbers, instead of only the arithmetic (\"15 × 15.\") or the answer (fixes-02 Part C, pattern 3)";
+const EXPLAIN = "Show me repeats the new hint, then \"That makes …\" as before";
+const CHECKS = "tries the current app called \"Not quite\" now get a named slip where the step predicts one (fixes-02 Part C, pattern 5), and the generic \"Not quite\" message quotes the new hint; right and wrong verdicts are unchanged";
+export const all = { hint: HINT, explain: EXPLAIN, checks: CHECKS };
+export { HINT, EXPLAIN, CHECKS };
+
+export const deviations: Record<string, Partial<Record<string, string>>> = {
+  "g8-sci": all,
+  "g8-slope": all,
+  "g8-tri": all,
+  "g9-growth": all,
+  "g9-median": all,
+  "g8-roots": all,
+  "g8-both": all,
+  "g8-system": all,
+  "g8-intercept": all,
+  "g8-func": all,
+  "g8-pyth": all,
+  "g8-leg": all,
+  "g8-cyl": all,
+  "g8-cone": all,
+  "g9-multistep": all,
+  "g9-elim": all,
+  "g9-twopoint": all,
+  "g9-negexp": all,
+  "g9-radical": all,
+  "g9-polyadd": all,
+  "g9-foil": all,
+  "g9-gcf": all,
+  "g9-solvefactor": all,
+  "g9-quadform": all,
+  "g9-factor": { hint: HINT },
+  "g10-perp": all,
+  "g10-dist": all,
+  "g10-circle": all,
+  "g10-polygon": all,
+  "g10-special": all,
+  "g10-trig": all,
+  "g10-sector": all,
+  "g10-arc": all,
+  "g10-surface": all,
+  "g10-pyramid": all,
+  "g11-log": all,
+  "g11-expeq": all,
+  "g11-evalpoly": all,
+  "g11-inverse": all,
+  "g11-vertex": all,
+  "g11-comb": all,
+  "g11-compose": all,
+  "g11-radical": all,
+  "g12-rad": all,
+  "g12-deg": all,
+  "g12-unit": all,
+  "g12-power": all,
+  "g12-polyd": all,
+  "g12-chain": all,
+  "g12-tangent": all,
+  "g12-anti": all,
+  "g12-vecmag": all,
+  "g12-dot": all,
+};

@@ -19,9 +19,10 @@ export function createQuadForm(r1: number, r2: number): QuadFormProblem {
 }
 
 /** Same ranges as the current app: two different roots from −8 to 8. */
-export function generateQuadForm(rng: Rng): QuadFormProblem {
+/** Roots −8..8, different; the first three problems have no root at 0, so c is never 0 (no "x² − x = 0"). */
+export function generateQuadForm(rng: Rng, index = 3): QuadFormProblem {
   let r1: number, r2: number;
-  do { r1 = rng.int(-8, 8); r2 = rng.int(-8, 8); } while (r1 === r2);
+  do { r1 = rng.int(-8, 8); r2 = rng.int(-8, 8); } while (r1 === r2 || (index < 3 && r1 * r2 === 0));
   return createQuadForm(r1, r2);
 }
 

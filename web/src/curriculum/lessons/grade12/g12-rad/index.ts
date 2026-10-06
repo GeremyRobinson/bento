@@ -3,6 +3,7 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildRadians } from "../../../../explanations/diagrams/circle/build";
 import { asRecord, expected, fs, gcd, mt, ns, numberField, piText } from "../../_geometry/kit";
+import { withEasyStart } from "../../easy-start";
 
 /** An angle in degrees to write in radians. */
 export interface DegreesToRadiansProblem {
@@ -25,10 +26,14 @@ export function restoreDegreesToRadians(raw: unknown): DegreesToRadiansProblem |
 
 export function degreesToRadiansAnswers({ t }: DegreesToRadiansProblem): AnswerModel {
   const g = gcd(t, 180);
+  // the biggest common factor below g, the usual near miss
+  let smaller = g - 1;
+  while (smaller > 1 && g % smaller) smaller--;
   return {
     steps: [
-      ns({ id: "gcf", label: "Common factor", prompt: s => mt`GCF of ${t} and 180 = ${s}`, ans: g, hint: `The biggest number that divides both ${t} and 180.` }),
-      fs({ id: "radians", label: "Radians", prompt: s => mt`${t}° × ${frac("π", 180)} = ${s} π`, N: t, D: 180, hint: `${t} ÷ ${g} over 180 ÷ ${g}.`, note: "Write the number in front of π, in lowest terms." }),
+      ns({ id: "gcf", label: "Common factor", prompt: s => mt`GCF of ${t} and 180 = ${s}`, ans: g, hint: "The biggest number that divides both: it splits the half turn into equal pieces that fit the angle exactly.",
+        wrong: smaller > 1 ? [[smaller, "Not the biggest", `${smaller} divides both, but a bigger number does too.`]] : [] }),
+      fs({ id: "radians", label: "Radians", prompt: s => mt`${t}° × ${frac("π", 180)} = ${s} π`, N: t, D: 180, hint: `π is a half turn, 180°. Divide the top and the bottom by ${g} to write ${t}/180 in lowest terms.`, wrong: [[180, t, "Upside down", "Degrees go on top: the angle over the half turn, 180."]], note: "Write the number in front of π, in lowest terms." }),
     ],
     finalParts: [-1],
   };
@@ -56,7 +61,7 @@ export function explainDegreesToRadians({ t }: DegreesToRadiansProblem, answers:
   };
 }
 
-export const lesson: LessonDefinition<DegreesToRadiansProblem> = {
+export const lesson: LessonDefinition<DegreesToRadiansProblem> = withEasyStart({
   id: "g12-rad",
   grade: 12,
   unit: "Trigonometry",
@@ -68,4 +73,4 @@ export const lesson: LessonDefinition<DegreesToRadiansProblem> = {
   displayNote: () => "Write it in radians.",
   answers: degreesToRadiansAnswers,
   explain: explainDegreesToRadians,
-};
+});

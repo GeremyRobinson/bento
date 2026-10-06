@@ -3,6 +3,7 @@ import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildChoose } from "../../../../explanations/diagrams/marbles/build";
 import { asRecord, expected, mt, ns, numberField } from "../../_geometry/kit";
 import { count } from "../../../text";
+import { withEasyStart } from "../../easy-start";
 
 /** Choose k (2 or 3) of n things when order doesn't matter. */
 export interface CombinationProblem {
@@ -30,8 +31,8 @@ export function combinationAnswers(p: CombinationProblem): AnswerModel {
   const { n, k } = p, { top, f } = parts(p);
   return {
     steps: [
-      ns({ id: "ordered", label: "Ordered picks", prompt: s => mt`${picks(p)} = ${s}`, ans: top, hint: `Count down ${k} numbers from ${n} and multiply.` }),
-      ns({ id: "orders", label: "Ways to order them", prompt: s => mt`${k}! = ${s}`, ans: f, hint: k === 2 ? "2 × 1." : "3 × 2 × 1." }),
+      ns({ id: "ordered", label: "Ordered picks", prompt: s => mt`${picks(p)} = ${s}`, ans: top, hint: `Any of the ${n} can be picked first, then one fewer for each pick after it: ${k} numbers counting down from ${n}, multiplied.`, wrong: [[n * k, `Multiplied by ${k}`, `Count down: ${n}, then ${n - 1}${k === 3 ? `, then ${n - 2}` : ""}, and multiply them.`]] }),
+      ns({ id: "orders", label: "Ways to order them", prompt: s => mt`${k}! = ${s}`, ans: f, hint: `Any of the ${k} can go first, then any of the ${k - 1} left${k === 3 ? ", then the last one" : ""}: multiply.`, wrong: [[k, "Counted the picks", `${k} picks can be lined up in ${k}! ways: multiply down from ${k}.`]] }),
       ns({ id: "divide", label: "Divide", prompt: s => mt`${top} ÷ ${f} = ${s}`, ans: top / f, hint: "Order doesn't matter, so divide out the repeats.",
         wrong: [[top, "Didn't divide", "Each group got counted once for every order."]] }),
     ],
@@ -65,7 +66,7 @@ export function explainCombination(p: CombinationProblem, answers: AnswerModel):
   };
 }
 
-export const lesson: LessonDefinition<CombinationProblem> = {
+export const lesson: LessonDefinition<CombinationProblem> = withEasyStart({
   id: "g11-comb",
   grade: 11,
   unit: "Probability",
@@ -77,4 +78,4 @@ export const lesson: LessonDefinition<CombinationProblem> = {
   displayNote: p => `How many ways to choose ${p.k} from ${p.n} when order doesn't matter?`,
   answers: combinationAnswers,
   explain: explainCombination,
-};
+});

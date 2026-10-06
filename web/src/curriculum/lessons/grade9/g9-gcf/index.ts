@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildAreaGrid } from "../../../../explanations/diagrams/area-model/grid";
 import { expectedOf, gcd, ms, ns, polyText, readNumbers } from "../../area-common/steps";
+import { withEasyStart } from "../../easy-start";
 
 /** g·m x² + g·n x = gx(mx + n), with m and n sharing no factor. */
 export interface PolyGcfProblem { g: number; m: number; n: number }
@@ -26,11 +27,15 @@ const show = ({ g, m, n }: PolyGcfProblem): MathText => [num(g * m), x, sup(2), 
 
 export function polyGcfAnswers(p: PolyGcfProblem): AnswerModel {
   const { g, m, n } = p;
+  // the biggest common factor below g, a learner's usual near miss (none when g is prime)
+  let smaller = g - 1;
+  while (smaller > 1 && g % smaller) smaller--;
   return {
     steps: [
-      ns({ id: "number", label: "Number part", question: `What's the biggest number that divides ${g * m} and ${g * n}?`, prompt: s => [s], ans: g, hint: "Find the greatest common factor of the numbers." }),
+      ns({ id: "number", label: "Number part", question: `What's the biggest number that divides ${g * m} and ${g * n}?`, prompt: s => [s], ans: g, hint: "Find the greatest common factor of the numbers.", wrong: smaller < 2 ? [] : [[smaller, "Not the biggest", `${smaller} divides both, but a bigger number does too.`]] }),
       ms({ id: "factor", label: "Factor it out", note: "Both terms have an x, so take out an x too.", prompt: s => [...show(p), op("="), num(g), x, text("("), s.m!, x, op("+"), s.n!, text(")")], ans: { m, n },
-        hint: `${g * m}x² ÷ ${g}x = ${m === 1 ? "" : m}x and ${g * n}x ÷ ${g}x = ${n}.` }),
+        hint: `Divide each term by ${g}x: what times ${g}x makes ${g * m}x², and what times ${g}x makes ${g * n}x?`,
+        wrong: [[{ m: g * m, n: g * n }, "Didn't divide", `Take ${g}x out of each term: divide each by ${g}x.`], [{ m: m, n: n * g }, "Divided only the first term", `Both terms share the ${g}x, so divide both by it.`]] }),
     ],
     finalParts: [-1],
   };
@@ -63,7 +68,7 @@ export function explainPolyGcf(p: PolyGcfProblem, answers: AnswerModel): Explana
   };
 }
 
-export const lesson: LessonDefinition<PolyGcfProblem> = {
+export const lesson: LessonDefinition<PolyGcfProblem> = withEasyStart({
   id: "g9-gcf",
   grade: 9,
   unit: "Polynomials and quadratics",
@@ -74,4 +79,4 @@ export const lesson: LessonDefinition<PolyGcfProblem> = {
   display: show,
   answers: polyGcfAnswers,
   explain: explainPolyGcf,
-};
+});
