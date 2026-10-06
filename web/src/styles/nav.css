@@ -35,7 +35,8 @@
 .zbar-top .zmark{grid-column:1;justify-self:start}
 /* inside Contents the mark lines up with the Contents window, not the page bar; it fades out with the bar and reveals
    here a beat later, never sliding between the two (G 2026-10-06) */
-.zoom .zmark .imark{animation:fadeIn var(--m-swap) var(--m-ease) var(--dur-120) both}
+.zoom .zmark .imark .bl{animation:blIn var(--m-swap) var(--m-ease) both;animation-delay:calc(var(--mark-wait) + var(--c,0) * var(--m-step))}
+html[data-motion="reduce"] .zoom .zmark .imark .bl{animation:fadeIn var(--m-swap) var(--m-ease) var(--mark-wait) both}
 .zoom.closing .zmark .imark{animation:fadeOut var(--m-tap) var(--m-ease) both}
 .island .iword{font:var(--w-bold) var(--fz-md)/1 var(--sans);letter-spacing:-.02em}
 /* the landing's "Bento" is the wordmark alone: plain text on the left, no pill (G, 2026-10-06) */
@@ -111,9 +112,15 @@ button.fpill:active{transform:scale(.96)}
 .wrap>:not(.itop):not(.zoom){transition:transform var(--m-page) var(--m-ease),filter var(--m-page) var(--m-ease),opacity var(--m-page) var(--m-ease)}
 html[data-zoomed] .wrap>:not(.itop):not(.zoom){transform:scale(.92);filter:blur(6px);opacity:.4}
 html[data-zoomed] .itop{opacity:0;pointer-events:none}
-/* the wordmark leaves first and comes back a beat after the rest, so it never seems to jump (G 2026-10-06) */
-.itop .imark{transition:opacity var(--m-swap) var(--m-ease) var(--dur-120)}
-html[data-zoomed] .itop .imark{opacity:0;transition-delay:0s;transition-duration:var(--m-tap)}
+/* THE WORDMARK'S RETURN (G 2026-10-06): it leaves at once, waits a beat after everything else has settled, then its
+   letters cascade back one after another, B to o, each a step behind the last. Less motion: one plain fade. */
+.bl{display:inline-block}
+.itop .imark .bl{transition:opacity var(--m-swap) var(--m-ease),translate var(--m-swap) var(--m-ease);transition-delay:calc(var(--mark-wait) + var(--c,0) * var(--m-step))}
+html[data-zoomed] .itop .imark .bl{opacity:0;translate:0 4px;transition-delay:0s;transition-duration:var(--m-tap)}
+:root{--mark-wait:var(--m-in)}
+@keyframes blIn{from{opacity:0;translate:0 4px}}
+html[data-motion="reduce"] .itop .imark .bl{translate:none;transition:opacity var(--m-swap) var(--m-ease) var(--mark-wait)}
+html[data-motion="reduce"][data-zoomed] .itop .imark .bl{transition-delay:0s}
 html[data-zoomed] body{overflow:hidden}
 .zoom{position:fixed;inset:0;z-index:var(--z-zoom);overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;display:grid;align-content:start;justify-items:center;gap:calc(var(--u) * 1.5);
   padding:max(var(--sp-3),env(safe-area-inset-top)) var(--u) calc(var(--u) * 3);background:color-mix(in srgb,var(--page) 55%,transparent);animation:fadeIn var(--m-page) var(--m-ease) both}

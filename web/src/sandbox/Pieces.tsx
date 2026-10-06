@@ -32,6 +32,7 @@ export function Pieces() {
   const [side, setSide] = useState<"a" | "b">("a");
   const [sw, setSw] = useState(true);
   const [ask, setAsk] = useState(false);
+  const [cascade, setCascade] = useState(0);
   const move = (dir: Dir) => go({ name: "sandbox" }, dir);
   return (
     <section className="sbpieces" aria-label="Pieces in progress">
@@ -40,6 +41,11 @@ export function Pieces() {
         <p className="muted">Each piece is built and checked on its own, then nests into the bigger ones. These are the real components, so they work here the way they will in the app.</p>
       </header>
       <div className="sbpgrid">
+        <Piece name="Wordmark return" status="review" chunk="Wordmark cascade" nests="Nav, Contents">
+          <span className="sbcascade" key={cascade}><NavMark onHome={() => {}} /></span>
+          <Pill onClick={() => setCascade(c => c + 1)}>Play it again</Pill>
+          <small className="muted">Waits a beat, then the letters come back one after another. Less motion: one plain fade.</small>
+        </Piece>
         <Piece name="Confirm" status="review" chunk="Confirm master" nests="Quit a lesson, Quit practice">
           <Pill go onClick={() => setAsk(true)}>Ask before quitting</Pill>
           {ask && <Confirm title="Quit Equivalent ratios?" body="Your answers so far won't be kept." confirm="Quit" onConfirm={() => setAsk(false)} onCancel={() => setAsk(false)} />}
