@@ -73,7 +73,8 @@ export function TwinScene({ props }: SceneProps) {
         <Read label="Home twin ages" value={`${fx(home, 1)} years`} />
         <Read label="Traveler ages" value={`${fx(trav, 1)} years`} tone="sky" />
         <Read label="Difference" value={`${fx(home - trav, 1)} years`} tone="amber" />
-        <Read label="Now jumps by" value={`${fx(nowBack - nowOut, 1)} years`} tone="pink" />
+        {/* the turnaround's jump is the side story here: phones keep the ages and drop it (minor) so nothing is cut */}
+        <Read label="Now jumps by" value={`${fx(nowBack - nowOut, 1)} years`} tone="pink" minor />
       </>}
       foot={project ? <SaveRow what={<>Keep <b>twin = {fx(home, 1)}, {fx(trav, 1)} years</b> (home, traveler)</>} saved={saved} onSave={onSave} /> : undefined}
     />

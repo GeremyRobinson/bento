@@ -21,6 +21,15 @@ const SAME_BY_CHANCE: Record<string, string> = {
   "b2-in-10": "1.00", // H(X) is 1 bit; the answer is the shared information, which stays hidden
 };
 
+/** every way the picture might write the answer: the guess's own format, then plain figures */
+function answerAs(g: AnyB2Lesson["guess"]): string[] {
+  const figs = (x: number) => [...new Set([String(+x.toFixed(4)), x.toFixed(1), x.toFixed(2)].map(f => f.replace("-", "−")).concat(String(+x.toFixed(4))))];
+  if (g.kind === "choice") return [g.options[g.answer]!];
+  if (g.kind === "slider") return g.format ? [g.format(g.answer), ...(Number.isInteger(g.answer) ? [] : figs(g.answer))] : Number.isInteger(g.answer) ? [String(g.answer)] : figs(g.answer);
+  const [x, y] = g.answer, f = (v: number) => String(+v.toFixed(2)).replace("-", "−");
+  return [`(${f(x)}, ${f(y)})`, `(${String(x)}, ${String(y)})`, `(${x.toFixed(1)}, ${y.toFixed(1)})`];
+}
+
 /** everything a learner can read or hear in the guess picture, drawn the way the lesson draws it before the guess */
 function guessPicture(l: AnyB2Lesson) {
   const S = sceneByName(l.guess.scene)!;
@@ -45,8 +54,14 @@ describe("Bento² guard", () => {
     expect([...owner].filter(([, by]) => by.length > 1).map(([n, by]) => `${n}: ${by.join(", ")}`)).toEqual([]);
   });
 
-  it("every scene a lesson's Play and Guess name has a picture", () => {
-    expect(lessons.flatMap(l => [l.play.scene, l.guess.scene].filter(s => !sceneByName(s)).map(s => `${l.id}: ${s}`))).toEqual([]);
+  it("every scene a lesson, project or tool names has a picture", () => {
+    const missing: string[] = [];
+    for (const t of B2_TRACKS) {
+      for (const l of t.lessons as AnyB2Lesson[]) for (const s of [l.play.scene, l.guess.scene, l.useIt.scene?.scene]) if (s && !sceneByName(s)) missing.push(`${l.id}: ${s}`);
+      for (const p of t.projects ?? []) if (!sceneByName(p.scene.scene)) missing.push(`${t.code} project: ${p.scene.scene}`);
+      for (const tool of t.tools ?? []) if (!sceneByName(tool.id)) missing.push(`${t.code} tool: ${tool.id}`);
+    }
+    expect(missing).toEqual([]);
   });
 
   it("the Guess control doesn't start on the answer, and the answer is one of the choices", () => {
@@ -60,15 +75,21 @@ describe("Bento² guard", () => {
   });
 
   it("the guess picture doesn't show the answer before the guess (the question's own numbers aside)", () => {
-    const bad: string[] = [];
+    const bad: string[] = [], skipped: string[] = [];
     for (const l of lessons) {
       const g = l.guess, ask = words(g.ask);
-      const said = g.kind === "choice" ? g.options[g.answer]! : g.kind === "slider" && g.format ? g.format(g.answer) : null;
-      if (!said || said.trim().length < 2 || ask.includes(said) || SAME_BY_CHANCE[l.id] === said) continue;
-      const pic = guessPicture(l), at = pic.search(new RegExp(`(?<![\\d.,])${said.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\d,]|\\.\\d)`));
-      if (at >= 0) bad.push(`${l.id}: "${said}" in …${pic.slice(Math.max(0, at - 50), at + 30)}…`);
+      const said = answerAs(g).filter(a => a.trim().length >= 2 && !ask.includes(a) && SAME_BY_CHANCE[l.id] !== a);
+      if (!said.length) { skipped.push(l.id); continue; }
+      const pic = guessPicture(l);
+      for (const a of said) {
+        const at = pic.search(new RegExp(`(?<![\\d.,])${a.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\d,]|\\.\\d)`));
+        if (at >= 0) { bad.push(`${l.id}: "${a}" in …${pic.slice(Math.max(0, at - 50), at + 30)}…`); break; }
+      }
       cleanup();
     }
     expect(bad).toEqual([]);
+    // unchecked: one-character answers (a digit, a letter: they'd match nearly any picture) and answers the question
+    // itself states; 18 of 154 today, and the count only grows if a new guess is one of those
+    expect(skipped.length).toBeLessThanOrEqual(18);
   }, 120000);
 });
