@@ -7,6 +7,6 @@ export const deviations: Record<string, Partial<Record<string, string>>> = {
     checks: "a wrong try's message repeats the step's hint, so it names the digits too (same review item)" },
   "g4-divide": { prompt: "the tens step asks for the biggest tens number, so only one answer fits (reviewer, 2026-10-03)", checks: "a new slip for too few tens" },
   "g5-divide": { prompt: "the tens step asks for the biggest tens number, so only one answer fits (reviewer, 2026-10-03)" },
-  "g4-fracwhole": { steps: "the last step is named \"Write as a mixed number\", not \"Simplify\" (reviewer, 2026-10-03)", checks: "step names appear in slip messages" },
+  "g4-fracwhole": { steps: "the last step is named \"Write as a mixed number\", not \"Simplify\" (reviewer, 2026-10-03)", checks: "step names appear in slip messages", hint: "when the division comes out whole the hint says \"S ÷ L = q exactly, so it's a whole number\" instead of \"remainder 0. The remainder goes on top\" (Curriculum fixes-02, 2026-10-06)" },
   "g3-split": { unit: "3rd grade has units now; this lesson lives in Multiplication and division" },
 };
