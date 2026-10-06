@@ -5,6 +5,7 @@ import type { AnswerModel, AnswerStep, LessonDefinition } from "../../../schemas
 import type { Rng } from "../../../generators/rng";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildHundredths } from "../../../../explanations/diagrams/early-g4/hundredths";
+import type { SceneDiagram } from "../../../../explanations/diagrams/scene/schema";
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
 import { COMPARE, compareIndex, signName, slips, tapStep } from "../_kit";
 
@@ -105,6 +106,21 @@ function answers(p: DecCompareProblem): AnswerModel {
   };
 }
 
+/**
+ * Each number keeps its own colour on every run: the first decimal is part colour 0, the second part colour 2
+ * (the grid builder leaves the first to the picture's tint and makes the second part 1, so the two could swap sides).
+ */
+export function ownColours(d: SceneDiagram): SceneDiagram {
+  const fix = (cls: string | undefined) => {
+    if (!cls) return cls;
+    const words = cls.split(" ");
+    if (words.includes("p1")) return words.map(w => (w === "p1" ? "p2" : w)).join(" ");
+    if (words.includes("on") && !words.some(w => /^p\d$/.test(w))) return `${cls} p0`;
+    return cls;
+  };
+  return { ...d, items: d.items.map(it => ("cls" in it ? { ...it, cls: fix(it.cls) } : it)) as SceneDiagram["items"] };
+}
+
 function explain(p: DecCompareProblem, model: AnswerModel): Explanation {
   const { w, pa, pb } = p, A = expectedOf(model, "first"), B = expectedOf(model, "second");
   const X = written(w, A, pa), Y = written(w, B, pb), k = compareIndex(A, B), sign = COMPARE[k];
@@ -118,11 +134,11 @@ function explain(p: DecCompareProblem, model: AnswerModel): Explanation {
     heading: "Count the same-size pieces",
     idea: ["Hundredths are all the same size, so the decimal with more hundredths is bigger, however many digits it shows.", "Write both in hundredths to compare them."],
     statement: [text(`${X} ? ${Y}`)],
-    diagram: buildHundredths({
+    diagram: ownColours(buildHundredths({
       grids: [{ label: X, count: A, note: note(A), beat: 1 }, { label: Y, count: B, note: note(B), beat: 2 }],
       sign: { text: sign, beat: 3 },
       alt: `Two hundredths grids: ${X} shades ${sq(A)} and ${Y} shades ${sq(B)}, so ${X} ${signName[k]} ${Y}.`,
-    }),
+    })),
     caption: w ? `Both have ${w} ${w === 1 ? "whole" : "wholes"}, so the grids show the part after the point.` : "Each grid is one whole: 10 columns of tenths, 100 squares of hundredths.",
     timeline: beats(4),
     steps: [
