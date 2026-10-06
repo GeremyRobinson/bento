@@ -25,6 +25,12 @@
 .island .iplace small{font-size:var(--fz-2xs);line-height:15px;color:var(--muted);font-weight:var(--w-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .island .iplace b{font-size:var(--small);line-height:19px;font-weight:var(--w-bold);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* how far along: a circle that fills from the bottom in the lesson's step of the grade hue, with the grade's number on it */
+/* the progress ring (PillRing): the Panel line all round, the grade's colour filling it from the left end */
+.pring{display:none;position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:var(--z-up)}
+.pring path{fill:none;stroke-width:2px;vector-effect:non-scaling-stroke}
+.pring-track{stroke:var(--panel-line,var(--rule));stroke-width:1px!important}
+.pring-fill{stroke:var(--gn,var(--ink));stroke-linecap:round;transition:stroke-dasharray var(--m-in) var(--m-ease)}
+html[data-motion="reduce"] .pring-fill{transition:none}
 .island .ibat{flex:none;position:relative;width:var(--float-in);height:var(--float-in);border-radius:var(--r-round);background:var(--well);overflow:hidden;display:grid;place-items:center}
 .island .ibat>i{position:absolute;inset:auto 0 0;height:calc(var(--p) * 100%);background:var(--gn,var(--ink));transition:height var(--dur-500) var(--glide)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .island .ibat>i{background:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}}
@@ -369,7 +375,9 @@ html:has(.screen),html:has(.screen) body{overflow:hidden;overscroll-behavior:non
   .itop>.icorner.left>:not(.imark){display:none}
   .imark{padding:0 var(--sp-1)}
   .island{position:relative;overflow:hidden;isolation:isolate}
-  .island::before{content:"";position:absolute;left:0;bottom:0;height:3px;width:calc(var(--p,0) * 100%);z-index:var(--z-under);background:var(--gn,var(--ink));transition:width var(--m-page) var(--m-ease)}
+  /* the pill's edge is the progress: it fills around the rounded outline, so nothing is cut off by the radius */
+  .island{box-shadow:none}
+  .island .pring{display:block}
   .island .ibat{display:none}
   .island .iplace{padding-right:var(--sp-3)}
 }

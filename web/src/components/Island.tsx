@@ -11,6 +11,7 @@ import { Contents, type Level } from "./Contents";
 import { Nav, NavMark } from "./Nav";
 import { reduceMotion } from "../app/transition";
 import { Confirm } from "./Confirm";
+import { PillRing } from "./primitives/PillRing";
 import { tableById } from "../engine/facts/tables";
 import { Chevron, LockIcon } from "./primitives/icons";
 import { CONTENTS, GROWN_UP, NO_UNIT, PRACTICE, REPORT, REVIEW, YOUR_BENTO } from "../app/copy";
@@ -289,6 +290,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
         )}
       </>} center={
       <header className="island" style={{ "--p": fill, "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties}>
+        <PillRing p={fill} />
         {back
           ? <button className="iback" onClick={() => up(back.to)} aria-label={`Back to ${back.label}`}><Chevron dir="left" /></button>
           : null /* the book is the top: no step back from it, and grade changes live in All grades (Review nav #4) */}

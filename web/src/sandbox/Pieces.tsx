@@ -6,6 +6,7 @@ import { Pill } from "../components/primitives/Pill";
 import { Tile, Toggle } from "../components/PageTile";
 import { Nav, NavMark } from "../components/Nav";
 import { Confirm } from "../components/Confirm";
+import { PillRing } from "../components/primitives/PillRing";
 
 /** Where a piece is: being built, waiting on Review, or live. G sees work here before Review signs it off. */
 type Status = "building" | "review" | "next" | "live";
@@ -33,6 +34,7 @@ export function Pieces() {
   const [sw, setSw] = useState(true);
   const [ask, setAsk] = useState(false);
   const [cascade, setCascade] = useState(0);
+  const [ring, setRing] = useState(0.3);
   const move = (dir: Dir) => go({ name: "sandbox" }, dir);
   return (
     <section className="sbpieces" aria-label="Pieces in progress">
@@ -41,6 +43,10 @@ export function Pieces() {
         <p className="muted">Each piece is built and checked on its own, then nests into the bigger ones. These are the real components, so they work here the way they will in the app.</p>
       </header>
       <div className="sbpgrid">
+        <Piece name="Progress ring" status="review" chunk="Pill progress" nests="Nav (phone), every lesson and practice">
+          <div className="sbring"><div className="island" style={{ position: "relative" }}><PillRing p={ring} /><span className="iplace"><b>Multiply two-digit numbers</b></span></div></div>
+          <Pill onClick={() => setRing(r => (r >= 1 ? 0 : Math.min(1, r + 0.2)))}>{ring >= 1 ? "Start over" : "Next problem"}</Pill>
+        </Piece>
         <Piece name="Wordmark return" status="review" chunk="Wordmark cascade" nests="Nav, Contents">
           <span className="sbcascade" key={cascade}><NavMark onHome={() => {}} /></span>
           <Pill onClick={() => setCascade(c => c + 1)}>Play it again</Pill>

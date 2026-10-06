@@ -84,3 +84,5 @@ span.sbx{background:none}
 .sbpanelbox{width:100%;max-height:200px;overflow:auto;border-radius:16px}
 .sbcascade .imark .bl{animation:blIn var(--m-in) var(--m-ease) both;animation-delay:calc(var(--mark-wait) + var(--c,0) * var(--m-step))}
 html[data-motion="reduce"] .sbcascade .imark .bl{animation:fadeIn var(--m-swap) var(--m-ease) var(--mark-wait) both}
+.sbring .pring{display:block}
+.sbring .island{box-shadow:none;width:100%}
