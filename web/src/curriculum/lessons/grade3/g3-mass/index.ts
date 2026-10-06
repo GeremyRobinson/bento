@@ -8,6 +8,7 @@ import { buildEstimateThing } from "../../../../explanations/diagrams/early-g3/t
 import { oneBox, wholeIn } from "../../_number-line/steps";
 import { tapStep, words } from "../../gradeK/kit";
 import { slips } from "../../grade2/kit";
+import { count } from "../../../text";
 import { OPS, WHO, apply, checkStory, operationStep, solveStep, storyNumbers, withCommas, type Op } from "../_measure";
 
 /** the things to weigh, with a sensible mass: light ones in grams, heavy ones in kilograms */
@@ -45,12 +46,46 @@ export function createMass(p: MassProblem): MassProblem {
 const UNIT = (u: number) => (u ? "kg" : "g");
 const unitWord = (u: number) => (u ? "kilograms" : "grams");
 
-/** the 3 guesses for a thing: sensible, 100 times too small, 100 times too big, in an order that changes */
-function guesses(thing: number) {
+/** grams written as a label, "2,000 g" */
+const gramLabel = (g: number) => `${withCommas(g)} g`;
+
+/** something a child has held that weighs about this much, to say how heavy or light a wrong guess really is */
+export function feelsLike(label: string): string {
+  const g = gramsOf(label);
+  if (g >= 1000 && label.endsWith(" kg")) return g === 1000 ? "a big bottle of water" : `${count(g / 1000, "big bottle")} of water`;
+  if (g <= 2) return "a paper clip";
+  if (g <= 30) return "a key";
+  if (g <= 60) return "a handful of coins";
+  if (g <= 200) return "an apple";
+  if (g <= 600) return "a few apples";
+  return "a big book";
+}
+
+/** a guess label ("500 g", "2 kg") in grams */
+export const gramsOf = (label: string) => {
+  const m = /^([\d,]+) (g|kg)$/.exec(label);
+  if (!m) throw new Error(`not a mass label: ${label}`);
+  return Number(m[1]!.replace(/,/g, "")) * (m[2] === "kg" ? 1000 : 1);
+};
+
+/**
+ * The 3 guesses for a thing, in an order that changes. A gram thing gets the sensible guess, one 100 times too heavy
+ * and one 1,000 times too heavy (so there is no "too light" choice: small is -1). A kilogram thing gets the sensible
+ * guess, one far too light (in grams) and one 100 times too heavy.
+ */
+export function guesses(thing: number) {
   const th = MASS_THINGS[thing]!, v = th.v;
-  const vals = th.kg ? [`${v} kg`, `${v * 10} g`, `${withCommas(v * 100)} kg`] : [`${v} g`, `${v * 100} g`, `${v} kg`];
+  const vals = th.kg ? [`${v} kg`, gramLabel(v * 10), `${withCommas(v * 100)} kg`] : [`${v} g`, gramLabel(v * 100), `${v} kg`];
   const k = thing % 3, order = [0, 1, 2].map(i => (i + k) % 3);
-  return { labels: order.map(i => vals[i]!), right: order.indexOf(0), small: order.indexOf(1), big: order.indexOf(2) };
+  return { labels: order.map(i => vals[i]!), right: order.indexOf(0), small: th.kg ? order.indexOf(1) : -1, heavy: th.kg ? -1 : order.indexOf(1), big: order.indexOf(2) };
+}
+
+/** the message for a wrong guess, by which way it is wrong */
+function guessSlip(thing: number, i: number): [string, string] {
+  const th = MASS_THINGS[thing]!, g = guesses(thing), label = g.labels[i]!;
+  if (i === g.small) return ["Guessed far too light", `${label} is about as light as ${feelsLike(label)}. A ${th.name} is much heavier than that.`];
+  if (th.kg) return ["Guessed far too heavy", `${label} is far too heavy for a ${th.name}. A ${th.name} is much lighter than that.`];
+  return [i === g.heavy ? "Guessed too heavy" : "Guessed far too heavy", `${label} is about as heavy as ${feelsLike(label)}. A ${th.name} is much lighter than that.`];
 }
 
 export function massStory(p: MassProblem): string {
@@ -79,7 +114,7 @@ function answers(p: MassProblem): AnswerModel {
         tapStep({
           id: "guess", label: "Best guess", question: "About how heavy is it?",
           prompt: [text(`A ${th.name} is about ?`)], choices: g.labels, right: g.right,
-          wrong: i => (i === g.small ? ["Guessed far too light", `${g.labels[i]} is about as light as ${th.kg ? "an apple" : "a handful of paper clips"}. A ${th.name} is heavier.`] : ["Guessed far too heavy", `${g.labels[i]} is far too heavy for a ${th.name}.`]),
+          wrong: i => guessSlip(p.thing, i),
           hint: "Think of something you've held that weighs about the same.",
           explain: `A ${th.name} is about ${g.labels[g.right]}.`,
           work: [text(`about ${g.labels[g.right]}`)],
