@@ -438,3 +438,15 @@ html:has(.screen) body{overflow:hidden}
 .rnone .panel .actions{justify-content:start}
 .rnone .spreview{display:grid;min-height:0}
 @media (min-width:700px) and (min-aspect-ratio:1/1){.screen.fit.rnone{grid-template-columns:minmax(300px,380px) minmax(0,1fr);grid-template-rows:minmax(0,1fr)}.rnone>.panel{grid-area:1/1}.rnone>.spreview{grid-area:1/2}}
+/* Left-handed keypad (Settings): Check and the action keys move to the left, under the left thumb; the digits keep
+   their order (1 2 3 reads left to right) */
+:root[data-hand="left"] .ppad .tray{grid-template-columns:minmax(0,2fr) repeat(7,minmax(0,1fr))}
+:root[data-hand="left"] .ppad .tray .k-go{grid-column:1}
+@media (max-aspect-ratio:1/1),(max-width:760px){
+  :root[data-hand="left"] .ppad .tray{grid-template-columns:repeat(4,minmax(0,1fr))}
+  :root[data-hand="left"] .ppad .tray .k-back{grid-area:1/1}:root[data-hand="left"] .ppad .tray .k-neg{grid-area:2/1}:root[data-hand="left"] .ppad .tray .k-dot{grid-area:3/1}
+  :root[data-hand="left"] .ppad .tray .k-d1{grid-area:1/2}:root[data-hand="left"] .ppad .tray .k-d2{grid-area:1/3}:root[data-hand="left"] .ppad .tray .k-d3{grid-area:1/4}
+  :root[data-hand="left"] .ppad .tray .k-d4{grid-area:2/2}:root[data-hand="left"] .ppad .tray .k-d5{grid-area:2/3}:root[data-hand="left"] .ppad .tray .k-d6{grid-area:2/4}
+  :root[data-hand="left"] .ppad .tray .k-d7{grid-area:3/2}:root[data-hand="left"] .ppad .tray .k-d8{grid-area:3/3}:root[data-hand="left"] .ppad .tray .k-d9{grid-area:3/4}
+  :root[data-hand="left"] .ppad .tray .k-go{grid-area:4/1/5/3}:root[data-hand="left"] .ppad .tray .k-d0{grid-area:4/3/5/5}
+}

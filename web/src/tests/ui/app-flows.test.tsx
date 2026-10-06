@@ -362,6 +362,24 @@ describe("the personal hub", () => {
   });
 });
 
+describe("Settings", () => {
+  it("the gear opens the Settings page, which holds every setting and the backup (G 2026-10-06: no pop-over)", () => {
+    renderApp({ grade: 5, chosen: true });
+    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getByRole("button", { name: "Settings" })).toHaveAttribute("aria-current", "page");
+    fireEvent.click(screen.getByRole("switch", { name: /High contrast/ }));
+    expect(document.documentElement.dataset.contrast).toBe("true");
+    fireEvent.click(screen.getByRole("switch", { name: /Left-handed keypad/ }));
+    expect(document.documentElement.dataset.hand).toBe("left");
+    fireEvent.click(screen.getByRole("switch", { name: /Less motion/ }));
+    expect(document.documentElement.dataset.motion).toBe("reduce");
+    fireEvent.click(screen.getByRole("radio", { name: "Largest" }));
+    expect(document.documentElement.dataset.text).toBe("largest");
+    expect(screen.getByRole("button", { name: "Save a backup" })).toBeInTheDocument();
+  });
+});
+
 describe("find my level", () => {
   it("runs a short placement from a new grade's home and offers the grade to start in", () => {
     renderApp({ grade: 5, chosen: true });
@@ -373,10 +391,10 @@ describe("find my level", () => {
 });
 
 describe("the website from inside the app", () => {
-  it("quick settings has About Bento, which opens the landing page", () => {
+  it("Settings has About Bento, which opens the landing page", () => {
     renderApp();
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
-    tap("About Bento ›");
+    tap("What Bento is ›");
     expect(screen.getByRole("heading", { level: 1, name: "Math that clicks." })).toBeInTheDocument();
     // Start learning goes into the app and its grade picker, even with a grade chosen
     fireEvent.click(screen.getAllByRole("button", { name: "Start learning" })[0]!);
