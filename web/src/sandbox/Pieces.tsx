@@ -74,7 +74,8 @@ export function Pieces() {
         <Piece name="My Bento page" status="review" chunk="Chunk 4" nests="Tile, Fill, Grade number, Pill">
           <Pill go onClick={() => go({ name: "me" }, "fwd")}>Open My Bento ›</Pill>
         </Piece>
-        <Piece name="Nav" status="review" chunk="Chunk 5" nests="every page">
+        <Piece name="Nav" status="review" chunk="Chunks 5 and wordmark" nests="every page">
+          <small className="muted">One fixed place on every page: the Bento wordmark sits at the same spot and size on the landing page, every page and Contents, and fades out and back a beat later when Contents opens.</small>
           <div className="sbnav"><Nav left={<NavMark onHome={() => {}} />} center={<span className="sbnav-mid">The page's own middle</span>} right={<span className="sbnav-mid">Its buttons</span>} /></div>
         </Piece>
         <Piece name="Back and Escape" status="review" chunk="Chunk 7" nests="Nav, Contents">

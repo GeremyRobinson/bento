@@ -32,7 +32,9 @@
 .island .iplace .ign{font:inherit;letter-spacing:inherit}
 @media (min-width:700px){.island:not(.guest){width:min(460px,100%)}}
 .bmark{font:var(--w-bold) var(--fz-md)/1 var(--sans);letter-spacing:-.02em;color:var(--text);transition:color var(--m-page) var(--m-ease)}
-.zbar-top .zmark{grid-column:1;justify-self:start;font-size:var(--fz-xl);padding-left:var(--sp-2)}
+.zbar-top .zmark{grid-column:1;justify-self:start}
+.zoom .zmark .imark{position:fixed;top:var(--nav-top);left:var(--nav-x);animation:fadeIn var(--m-swap) var(--m-ease) var(--dur-120) both}
+.zoom.closing .zmark .imark{animation:fadeOut var(--m-tap) var(--m-ease) both}
 .island .iword{font:var(--w-bold) var(--fz-md)/1 var(--sans);letter-spacing:-.02em}
 /* the landing's "Bento" is the wordmark alone: plain text on the left, no pill (G, 2026-10-06) */
 /* with no pill, the page fades out under the sticky wordmark so it stays readable as the page scrolls past */
@@ -107,6 +109,9 @@ button.fpill:active{transform:scale(.96)}
 .wrap>:not(.itop):not(.zoom){transition:transform var(--m-page) var(--m-ease),filter var(--m-page) var(--m-ease),opacity var(--m-page) var(--m-ease)}
 html[data-zoomed] .wrap>:not(.itop):not(.zoom){transform:scale(.92);filter:blur(6px);opacity:.4}
 html[data-zoomed] .itop{opacity:0;pointer-events:none}
+/* the wordmark leaves first and comes back a beat after the rest, so it never seems to jump (G 2026-10-06) */
+.itop .imark{transition:opacity var(--m-swap) var(--m-ease) var(--dur-120)}
+html[data-zoomed] .itop .imark{opacity:0;transition-delay:0s;transition-duration:var(--m-tap)}
 html[data-zoomed] body{overflow:hidden}
 .zoom{position:fixed;inset:0;z-index:var(--z-zoom);overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;display:grid;align-content:start;justify-items:center;gap:calc(var(--u) * 1.5);
   padding:max(var(--sp-3),env(safe-area-inset-top)) var(--u) calc(var(--u) * 3);background:color-mix(in srgb,var(--page) 55%,transparent);animation:fadeIn var(--m-page) var(--m-ease) both}
@@ -271,8 +276,10 @@ button.book:hover{transform:translateY(-2px);box-shadow:none}
 /* on a screen that never scrolls, the island is pinned to the same frame as the screen under it, so the two can
    never drift apart (G 2026-10-06: on a phone the bar sat low, over the list's heading) */
 html:has(.screen),html:has(.screen) body{overflow:hidden;overscroll-behavior:none;height:100%}
-html:has(.screen) .itop{position:fixed;top:max(var(--sp-3),env(safe-area-inset-top));
-  left:max(var(--sp-4),calc((100vw - var(--sb-right,0px) - var(--screen-max,1180px)) / 2));right:calc(max(var(--sp-4),calc((100vw - var(--sb-right,0px) - var(--screen-max,1180px)) / 2)) + var(--sb-right,0px))}
+/* ONE NAV FRAME (G 2026-10-06: "are they the same Bento?"): the nav sits at one fixed place on every page, so the
+   wordmark never moves between pages; pages without a screen frame start below it */
+:root{--nav-top:max(var(--sp-3),env(safe-area-inset-top));--nav-x:max(var(--sp-4),calc((100vw - var(--sb-right,0px) - var(--screen-max,1180px)) / 2))}
+.itop{position:fixed;top:var(--nav-top);left:var(--nav-x);right:calc(var(--nav-x) + var(--sb-right,0px))}
 
 /* the grade sheet: every line on its own row, the same columns in every line, all twelve grades in view where
    they fit, and a fade at the bottom while more waits below (Review v39 item 11) */
@@ -348,7 +355,7 @@ html:has(.screen) .itop{position:fixed;top:max(var(--sp-3),env(safe-area-inset-t
 
 /* the nav sits at the same height on every page: its place in the page is where it sticks, so it never shifts (v46) */
 .wrap{padding-top:max(var(--sp-3),env(safe-area-inset-top))}
+html:not(:has(.screen)) .wrap{padding-top:calc(var(--nav-top) + var(--float-h) + var(--sec))}
 /* the contents' wordmark is the same NavMark, a little larger */
-.zbar-top .zmark .iword{font-size:var(--fz-xl)}
 /* the book is the top of the app, so its island has no back step; the words keep the pill's inner gutter */
 .island:not(:has(.iback)){padding-left:var(--sp-4)}
