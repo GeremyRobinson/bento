@@ -87,7 +87,7 @@ export function App() {
 
   let screen;
   switch (route.name) {
-    case "welcome": screen = <Welcome shelf={!!route.shelf} />; break;
+    case "welcome": screen = <Welcome />; break;
     case "learn": screen = lessonById(route.lessonId) ? <Learn lessonId={route.lessonId} /> : <Home />; break;
     case "practice": screen = <Practice />; break;
     case "results": screen = <Results />; break;

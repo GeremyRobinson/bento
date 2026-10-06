@@ -164,7 +164,7 @@ export function CountTile({ tint, k, size }: TileProps) {
 /** Privacy, said plainly. */
 export function PrivateTile({ tint, k, size }: TileProps) {
   return (
-    <Tile size={size} tint={tint} k={k} title="Yours alone" label="Free. No account, no ads, and nothing leaves this device.">
+    <Tile size={size} tint={tint} k={k} title="Yours alone" label="The first chapter of every grade is free. No ads, and nothing leaves this device.">
       <div className="lprivate"><svg viewBox="0 0 48 48"><rect x="10" y="21" width="28" height="20" rx="6" /><path d="M16 21v-5a8 8 0 0116 0v5" /><circle cx="24" cy="31" r="2.5" /></svg></div>
     </Tile>
   );

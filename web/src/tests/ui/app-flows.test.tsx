@@ -26,11 +26,10 @@ describe("first launch: landing → grade → home", () => {
     expect(document.querySelectorAll(".lbox .ltile")).toHaveLength(11);
     expect(document.querySelectorAll(".lbox .ldemo")).toHaveLength(2);
 
-    // the shelf shows all thirteen grades, nothing that isn't open yet, and picks none: grades are chosen in the app
-    expect(document.querySelectorAll(".lshelf .book")).toHaveLength(13);
-    expect(document.querySelectorAll(".lshelf button")).toHaveLength(0);
-    expect(document.querySelector(".lshelf .book.soon")).toBeNull();
-    tap("Start learning");
+    // no grade switching on the landing page: Start learning is the way in, and picker D chooses the grade
+    expect(document.querySelector(".lshelf")).toBeNull();
+    fireEvent.click(screen.getAllByRole("button", { name: "Start learning" })[0]!);
+    expect(screen.queryByRole("radio", { checked: true })).toBeNull();
     fireEvent.click(screen.getByRole("radio", { name: /^5th grade/ }));
     tap("Start 5th grade ›");
     // a grade opens on its book: the cover, today's plan, then every chapter with its pages
@@ -54,9 +53,10 @@ describe("first launch: landing → grade → home", () => {
 });
 
 describe("no grade until one is chosen", () => {
-  for (const hash of ["#/", "#/year"]) it(`${hash} opens the landing page's grade shelf`, () => {
+  for (const hash of ["#/", "#/year"]) it(`${hash} opens the landing page, with no grade switching on it`, () => {
     renderApp({ grade: null, chosen: false }, {}, hash);
-    expect(screen.getByRole("heading", { name: "Every grade, K to 12th." })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Math that clicks." })).toBeInTheDocument();
+    expect(document.querySelector(".lshelf")).toBeNull();
     expect(document.querySelector("#app")!.getAttribute("data-grade")).toBe("none");
   });
   it("#/learn/no-such-lesson asks which grade, with nothing picked", () => {
@@ -377,10 +377,9 @@ describe("the website from inside the app", () => {
     renderApp();
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
     tap("About Bento ›");
-    expect(screen.getByRole("heading", { name: "Every grade, K to 12th." })).toBeInTheDocument();
-    // the shelf only shows the grades; Start learning goes into the app and its grade picker, even with a grade chosen
-    expect(screen.queryByRole("button", { name: /^5th grade/ })).toBeNull();
-    tap("Start learning");
+    expect(screen.getByRole("heading", { level: 1, name: "Math that clicks." })).toBeInTheDocument();
+    // Start learning goes into the app and its grade picker, even with a grade chosen
+    fireEvent.click(screen.getAllByRole("button", { name: "Start learning" })[0]!);
     expect(screen.getByRole("heading", { name: "Which grade are you in?" })).toBeInTheDocument();
   });
 });
