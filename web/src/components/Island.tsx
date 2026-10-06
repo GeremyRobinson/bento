@@ -2,7 +2,6 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { useApp } from "../app/AppState";
 import type { Route } from "../app/routes";
 import { doneCount, entriesInGrade, entryById, unitsInGrade } from "../app/curriculum";
-import { readAloudOn, readSettings } from "../app/settings";
 import { reduceMotion } from "../app/transition";
 import { gradeOf, inkOf } from "../curriculum/grades";
 import { lessonById } from "../curriculum/registry";
@@ -11,11 +10,10 @@ import { problemShape, ProblemLine } from "./practice/ProblemView";
 import { upNext } from "../app/today";
 import { Contents, type Level } from "./Contents";
 import { BentoMark } from "./primitives/BentoMark";
-import { MeStack } from "./MeStack";
 import { ConfirmStack } from "./ConfirmStack";
 import { tableById } from "../engine/facts/tables";
 import { Chevron, LockIcon } from "./primitives/icons";
-import { CONTENTS, GROWN_UP, NO_UNIT, PRACTICE, REPORT, REVIEW, SETTING, YOUR_BENTO } from "../app/copy";
+import { CONTENTS, GROWN_UP, NO_UNIT, PRACTICE, REPORT, REVIEW, YOUR_BENTO } from "../app/copy";
 
 /** A small cross: quit. */
 const CrossIcon = () => (
@@ -67,10 +65,11 @@ function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): P
     case "parent": {
       // on a phone a picked pattern is its own screen, and back returns to the list
       const phone = typeof matchMedia !== "undefined" && matchMedia("(max-width: 699px)").matches;
-      return { kicker: `Me · ${gradeOf(grade).name}`, title: GROWN_UP, lock: true,
-        back: route.pick && phone ? { label: GROWN_UP, to: { name: "parent" } } : { label: "Me", to: { name: "me" } } };
+      return { kicker: `${YOUR_BENTO} · ${gradeOf(grade).name}`, title: GROWN_UP, lock: true,
+        back: route.pick && phone ? { label: GROWN_UP, to: { name: "parent" } } : { label: YOUR_BENTO, to: { name: "me" } } };
     }
-    case "me": return { kicker: "Me", title: YOUR_BENTO, back: contents };
+    case "me": return { kicker: gradeOf(grade).name, title: YOUR_BENTO, back: contents };
+    case "settings": return { kicker: "Bento", title: "Settings", back: contents, lock: true };
     case "facts": {
       const t = route.table ? tableById(route.table) : undefined;
       return t ? { kicker: "Facts", title: t.name, back: { label: "facts", to: { name: "facts" } } } : { kicker: gradeOf(grade).name, title: "Facts", back: contents };
@@ -99,10 +98,6 @@ function GradeTitle({ grade }: { grade: number }) {
   return m ? <b><span className="gnum ign" style={style}>{m[1]}</span>{m[2]}</b> : <b><span className="gnum ign" style={style}>{g.name}</span></b>;
 }
 
-/** preview and dev builds carry the design sandbox; quick settings is its way in */
-const SANDBOX = import.meta.env.MODE === "preview" || import.meta.env.MODE === "development";
-
-/** Sliders: the quick settings. */
 const BulbIcon = () => (
   <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z" />
@@ -147,35 +142,16 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   const grade = chosen ?? 0;
   const place = placeOf(route, app, grade);
   const [open, setOpen] = useState<Level | null>(null);
-  // quick settings: open, closing (the pills ripple out, last first, as in the UI notes preview), or put away
-  const [qs, setQs] = useState<"open" | "closing" | null>(null);
-  const quick = qs === "open";
-  const shut = () => setQs(q => (q === "open" ? "closing" : q));
-  useEffect(() => {
-    if (qs !== "closing") return;
-    const t = setTimeout(() => setQs(null), reduceMotion() ? 0 : 240);
-    return () => clearTimeout(t);
-  }, [qs]);
-  // Me: the same kind of floating stack, under the Me circle (Design's RedesignMe spec); only one stack is ever open
-  const [me, setMe] = useState<"open" | "closing" | null>(null);
-  const meOpen = me === "open";
-  const shutMe = () => setMe(q => (q === "open" ? "closing" : q));
-  useEffect(() => {
-    if (me !== "closing") return;
-    const t = setTimeout(() => setMe(null), reduceMotion() ? 0 : 240);
-    return () => clearTimeout(t);
-  }, [me]);
   const start: Level = route.name === "home" ? "shelf" : place.lesson ? "chapter" : "year";
-  // going anywhere (Me included) puts quick settings away
-  useEffect(() => { setQs(null); setMe(null); }, [route]);
-  // feedback and quick settings never overlap: new feedback puts settings away, and opening settings tells Practice
-  useEffect(() => {
-    const onPanel = (e: Event) => { if ((e as CustomEvent).detail === "feedback") { shut(); shutMe(); } };
-    addEventListener("bento:panel", onPanel);
-    return () => removeEventListener("bento:panel", onPanel);
-  }, []);
-  const openMe = () => { shut(); setMe("open"); dispatchEvent(new CustomEvent("bento:panel", { detail: "settings" })); };
-  const openQuick = () => { shutMe(); setQs("open"); dispatchEvent(new CustomEvent("bento:panel", { detail: "settings" })); };
+  // Settings and My Bento are pages of their own now (G 2026-10-06: no pop-over versions); their circles go there
+  const openPage = (name: "settings" | "me") => { if (route.name !== name) go({ name }, "fwd"); };
+  // the wordmark always means home: your book once a grade is chosen, else the top of the landing page
+  const home = () => {
+    if (chosen != null && progress.chosen) { openSheet(false); go({ name: "home" }, "back"); }
+    else if (route.name === "welcome") scrollTo({ top: 0, behavior: reduceMotion() ? "auto" : "smooth" });
+    else go({ name: "welcome" }, "back");
+  };
+  const mark = <button className="imark" onClick={home} aria-label="Bento, home"><BentoMark className="iword" /></button>;
 
   // pinching the page closed (two fingers coming together) zooms out to the contents; spreading them is left to the browser
   useEffect(() => {
@@ -211,10 +187,12 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   // the way back to your lessons floats on its own in the right corner, so "Bento" stays centred in its pill (v44 sweep
   // item 5); on a phone it is a circle holding your grade's number, with a spacer on the left to keep the pill centred
   const mine = progress.chosen && progress.grade != null ? gradeOf(progress.grade) : null;
+  // one nav on every screen (G 2026-10-06): the wordmark on the left, where you are in the middle, your buttons on the
+  // right. The landing page is the same frame with the guest's contents: no place yet, and the way back to your lessons
   if (welcome) return (
-    <div className="itop guest"><header className="island guest">
-      <BentoMark className="iword" />
-    </header><span />
+    <div className="itop guest">
+      <div className="icorner left">{mark}</div>
+      <span />
       <div className="icorner right">
         {mine && (
           <button className="imine" onClick={() => { openSheet(false); go({ name: "home" }, "fwd"); }}>
@@ -231,8 +209,9 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   const back = place.back;
   return (
     <>
-    <div className={`itop${quick || meOpen ? " qopen" : ""}`}>
+    <div className="itop">
       <div className="icorner left">
+        {mark}
         {showResume && (
           <button className="iresume" onClick={() => go({ name: "practice" }, "fwd")}
             aria-label={`Resume ${run!.title}, ${runGrade!.name}, problem ${run!.i + 1} of ${run!.items.length}`}>
@@ -245,7 +224,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
           <button className="iresume-x" onClick={() => setAsking(true)} aria-label={`Quit ${run!.title}`}><CrossIcon /></button>
         )}
       </div>
-      <header className="island">
+      <header className="island" style={{ "--p": fill, "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties}>
         {back
           ? <button className="iback" onClick={() => go(back.to, "back")} aria-label={`Back to ${back.label}`}><Chevron dir="left" /></button>
           : <button className="iback" onClick={() => openSheet(true)} aria-label="Change grade"><Chevron dir="left" /></button>}
@@ -256,65 +235,26 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
         </button>
         {place.lock
           ? <span className="ilock"><LockIcon />On this device</span>
-          : <span className={`ibat${route.name === "practice" && run?.solved ? " tick" : ""}`} aria-hidden style={{ "--p": fill, "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties}><i /></span>}
+          : <span className={`ibat${route.name === "practice" && run?.solved ? " tick" : ""}`} aria-hidden><i /></span>}
       </header>
       <div className="icorner right">
         {hintable && (
-          <button className={`icon ihint${run!.hintsLeft || run!.hinted ? "" : " spent"}${hinting ? " on" : ""}`} onClick={() => { shut(); shutMe(); dispatchEvent(new Event("bento:hint")); }}
+          <button className={`icon ihint${run!.hintsLeft || run!.hinted ? "" : " spent"}${hinting ? " on" : ""}`} onClick={() => dispatchEvent(new Event("bento:hint"))}
             aria-label={`Hint, ${run!.hintsLeft} left`} aria-expanded={hinting}><BulbIcon /><em className="ibadge" aria-hidden>{run!.hintsLeft}</em></button>
         )}
-        <button className={`icon${quick ? " on" : ""}`} onClick={() => (quick ? shut() : openQuick())} aria-label="Settings" aria-expanded={quick}><SettingsIcon /></button>
-        <button className={`icon ime${meOpen || route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={() => (meOpen ? shutMe() : openMe())}
-          aria-label={`Me: ${progress.streak} day streak, ${progress.xp} XP`} aria-haspopup="dialog" aria-expanded={meOpen}>
+        <button className={`icon${route.name === "settings" ? " on" : ""}`} onClick={() => openPage("settings")} aria-label="Settings"
+          aria-current={route.name === "settings" ? "page" : undefined}><SettingsIcon /></button>
+        <button className={`icon ime${route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={() => openPage("me")}
+          aria-label={`${YOUR_BENTO}: ${progress.streak} day streak, ${progress.xp} XP`} aria-current={route.name === "me" ? "page" : undefined}>
           <MeIcon />
         </button>
       </div>
     </div>
-      {qs && <QuickSettings closing={qs === "closing"} close={shut} />}
-      {me && <MeStack closing={me === "closing"} close={shutMe} />}
       {asking && run && (
         <ConfirmStack title={`Quit ${run.title}?`} body="Your answers so far won't be kept." confirm="Quit"
           onCancel={() => setAsking(false)} onConfirm={() => { setAsking(false); quit({ stay: true }); }} />
       )}
       {open && <Contents grade={place.lesson ? pageOf(place.lesson)?.grade ?? grade : grade} lessonId={place.lesson} level={open} close={() => setOpen(null)} />}
-    </>
-  );
-}
-
-/**
- * Quick settings: a column of separate floating pills under the settings button, arriving one at a time, over a light
- * dim so they never sit on the problem. The rest of the settings live in Me.
- */
-function QuickSettings({ close, closing }: { close: () => void; closing: boolean }) {
-  const { progress, setSettings, go } = useApp();
-  const s = readSettings(progress.settings);
-  const aloud = readAloudOn(s, progress.grade);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
-    addEventListener("keydown", onKey);
-    return () => removeEventListener("keydown", onKey);
-  }, [close]);
-  const rows: { label: string; on: boolean; flip: () => void }[] = [
-    { label: SETTING.motion, on: s.motion === "reduce", flip: () => setSettings({ motion: s.motion === "reduce" ? "system" : "reduce" }) },
-    { label: SETTING.colorSafe, on: s.colorSafe, flip: () => setSettings({ colorSafe: !s.colorSafe }) },
-    { label: SETTING.readAloud, on: aloud, flip: () => setSettings({ readAloud: !aloud }) },
-    { label: SETTING.sounds, on: s.sounds, flip: () => setSettings({ sounds: !s.sounds }) },
-  ];
-  return (
-    <>
-      <div className={`fdim${closing ? " out" : ""}`} onClick={close} />
-      <div className={`fstack qset${closing ? " out" : ""}`} role="dialog" aria-label="Settings" style={{ "--n": rows.length + (SANDBOX ? 4 : 3) } as CSSProperties}>
-        <span className="flbl" style={{ "--i": 0 } as CSSProperties}>Settings</span>
-        {rows.map((r, i) => (
-          <button key={r.label} className="fpill toggle" role="switch" aria-checked={r.on} onClick={r.flip} style={{ "--i": i + 1 } as CSSProperties}>
-            {r.label}<span className="sw" />
-          </button>
-        ))}
-        <button className="fpill" onClick={() => { close(); go({ name: "me" }, "fwd"); }} style={{ "--i": rows.length + 1 } as CSSProperties}>All settings ›</button>
-        {/* the website: what Bento is, from inside the app (G 2026-10-06) */}
-        <button className="fpill" onClick={() => { close(); go({ name: "welcome" }, "back"); }} style={{ "--i": rows.length + 2 } as CSSProperties}>About Bento ›</button>
-        {SANDBOX && <button className="fpill" onClick={() => { close(); dispatchEvent(new Event("bento:sandbox")); }} style={{ "--i": rows.length + 3 } as CSSProperties}>Sandbox ›</button>}
-      </div>
     </>
   );
 }

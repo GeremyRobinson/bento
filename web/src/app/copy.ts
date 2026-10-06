@@ -20,7 +20,7 @@ export const SHOW_ME = "Show me";
 export const CONTENTS = "Contents";
 export const THIS_YEAR = "This year";
 export const FINISHED = "Finished";
-export const YOUR_BENTO = "Your Bento";
+export const YOUR_BENTO = "My Bento";
 export const GROWN_UP = "For the grown-up";
 export const REPORT = "Report";
 

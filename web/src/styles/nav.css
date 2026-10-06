@@ -16,7 +16,7 @@
 
 .island{display:flex;align-items:center;gap:var(--sp-3);height:var(--float-h);padding:0 5px;min-width:0;max-width:min(520px,100%);border-radius:var(--r-pill);
   background:var(--float);box-shadow:var(--float-shadow);animation:floatIn var(--dur-400) var(--ease) both}
-@keyframes floatIn{from{opacity:0;transform:translateY(8px) scale(.985);filter:blur(6px)}}
+@keyframes floatIn{from{opacity:0;transform:translateY(6px)}}
 .island .iback{flex:none;width:var(--float-in);height:var(--float-in);border-radius:var(--r-round);display:grid;place-items:center;background:var(--well);color:var(--ink);transition:background var(--dur-200),transform var(--dur-180) var(--ease)}
 .island .iback:hover{background:var(--hover)}
 .island .iback svg{width:20px;height:20px}
@@ -77,11 +77,11 @@
 }
 
 /* ---- floating stacks: a column of separate pills (settings, feedback), arriving one at a time top to bottom
-   (fade, rise, blur to sharp), over a light dim so they never sit on the problem ---- */
+   (a fade and a small lift), over a light dim so they never sit on the problem ---- */
 .fdim{position:fixed;inset:0;z-index:var(--z-dim);background:var(--dim);animation:fadeIn var(--dur-250) var(--ease) both}
 .fstack{position:fixed;z-index:var(--z-stack);display:flex;flex-direction:column;gap:var(--sp-2)}
 .fstack>*{animation:stackIn var(--dur-300) var(--ease) both;animation-delay:calc(var(--i,0) * var(--dur-42))}
-@keyframes stackIn{from{opacity:0;transform:translateY(10px) scale(.985);filter:blur(6px)}}
+@keyframes stackIn{from{opacity:0;transform:translateY(6px)}}
 .flbl{font-size:var(--fz-xs);font-weight:var(--w-mid);color:var(--text);padding:6px 10px 0;text-shadow:0 0 12px var(--page)}
 .fpill{display:inline-flex;align-items:center;gap:14px;justify-content:space-between;min-height:var(--float-h);padding:var(--sp-3) 22px;border-radius:var(--r-pill);background:var(--float);box-shadow:var(--float-shadow);font-weight:var(--w-mid);text-align:left;line-height:1.35;transition:background var(--dur-200),transform var(--dur-180) var(--ease)}
 button.fpill:active{transform:scale(.96)}
@@ -89,20 +89,11 @@ button.fpill:active{transform:scale(.96)}
 .fpill .sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:var(--r-round);background:var(--knob);box-shadow:0 1px 3px var(--black-a25);transition:transform var(--dur-300) var(--glide)}
 .fpill[aria-checked="true"] .sw{background:var(--ink)}
 .fpill[aria-checked="true"] .sw::after{transform:translateX(16px)}
-.qset{top:calc(max(var(--sp-3),env(safe-area-inset-top)) + 60px);right:max(var(--sp-4),calc((100vw - var(--sb-right,0px) - 1180px) / 2 + var(--sp-5)));align-items:flex-end}
-/* each pill only as wide as its words, lined up on the right under the settings button (UI notes preview, G 2026-10-06) */
-.qset{align-items:flex-end;max-width:calc(100vw - 32px)}
-.qset .flbl{padding:6px var(--sp-2) 0;color:var(--muted);text-shadow:none}
-/* the notes preview's pills: 17px words on a 52px pill, hugging their text */
-.qset .fpill{font-size:var(--fz-lg);min-height:var(--float-h);padding:0 22px;gap:10px;white-space:nowrap}
 /* putting them away: the pills ripple out bottom first, quicker than they came, and the dim fades with them */
 .fstack.out>*{animation:stackOut var(--dur-140) var(--ease) both;animation-delay:calc((var(--n,6) - var(--i,0)) * var(--dur-22))}
-@keyframes stackOut{from{opacity:1;transform:none;filter:none}to{opacity:0;transform:translateY(-6px) scale(.99);filter:blur(4px)}}
+@keyframes stackOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-4px)}}
 .fdim.out{animation:fadeOut var(--dur-240) var(--ease) both;pointer-events:none}
 @keyframes fadeOut{to{opacity:0}}
-/* the island and its buttons stay above the dim while quick settings are open, so the settings button closes them */
-.itop.qopen{z-index:var(--z-island-open)}
-@media (max-width:699px){.qset{right:var(--sp-4)}}
 
 /* every tap leaves a soft halo spreading from the finger, so you know it landed */
 .halo{position:fixed;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:var(--r-round);pointer-events:none;z-index:var(--z-halo);border:2px solid var(--halo);
@@ -110,23 +101,25 @@ button.fpill:active{transform:scale(.96)}
 @keyframes halo{from{transform:scale(.4);opacity:1}to{transform:scale(2.1);opacity:0}}
 
 /* ---- the contents: the book, zoomed out. Chapter, year, every grade. ---- */
-.wrap>:not(.itop):not(.zoom){transition:transform var(--dur-450) var(--ease),filter var(--dur-450) var(--ease),opacity var(--dur-450) var(--ease)}
+.wrap>:not(.itop):not(.zoom){transition:transform var(--m-page) var(--m-ease),filter var(--m-page) var(--m-ease),opacity var(--m-page) var(--m-ease)}
 html[data-zoomed] .wrap>:not(.itop):not(.zoom){transform:scale(.92);filter:blur(6px);opacity:.4}
 html[data-zoomed] .itop{opacity:0;pointer-events:none}
 html[data-zoomed] body{overflow:hidden}
 .zoom{position:fixed;inset:0;z-index:var(--z-zoom);overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;display:grid;align-content:start;justify-items:center;gap:calc(var(--u) * 1.5);
-  padding:max(var(--sp-3),env(safe-area-inset-top)) var(--u) calc(var(--u) * 3);background:color-mix(in srgb,var(--page) 55%,transparent);animation:fadeIn var(--dur-300) ease both}
+  padding:max(var(--sp-3),env(safe-area-inset-top)) var(--u) calc(var(--u) * 3);background:color-mix(in srgb,var(--page) 55%,transparent);animation:fadeIn var(--m-page) var(--m-ease) both}
 .zbar-top{position:sticky;top:0;z-index:var(--z-up2);width:min(1040px,100%);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:var(--s)}
-.zlevels{grid-column:2;display:flex;gap:2px;padding:var(--sp-1);border-radius:var(--r-pill);background:color-mix(in srgb,var(--card) 72%,transparent);-webkit-backdrop-filter:saturate(1.8) blur(20px);backdrop-filter:saturate(1.8) blur(20px);box-shadow:0 0 0 1px var(--rule),0 8px 28px -12px var(--ink-a18)}
-.zlevels button{height:40px;padding:0 18px;border-radius:var(--r-pill);font-weight:var(--w-mid);color:var(--muted);white-space:nowrap;transition:background var(--dur-200),color var(--dur-200)}
+.zlevels{grid-column:2;position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:var(--sp-1);border-radius:var(--r-pill);background:color-mix(in srgb,var(--card) 72%,transparent);-webkit-backdrop-filter:saturate(1.8) blur(20px);backdrop-filter:saturate(1.8) blur(20px);box-shadow:0 0 0 1px var(--rule),0 8px 28px -12px var(--ink-a18)}
+/* the slider's thumb: one pill that glides under the level you tap */
+.zthumb{position:absolute;top:var(--sp-1);bottom:var(--sp-1);left:var(--sp-1);width:calc((100% - var(--sp-1) * 2) / 3);border-radius:var(--r-pill);background:var(--text);transform:translateX(calc(var(--zi,1) * 100%));transition:transform var(--m-page) var(--m-ease)}
+.zlevels button{position:relative;z-index:var(--z-up);height:40px;padding:0 18px;border-radius:var(--r-pill);font-weight:var(--w-mid);color:var(--muted);white-space:nowrap;transition:color var(--dur-200) var(--ease) var(--dur-120)}
 .zlevels button:hover:not(:disabled){color:var(--text)}
-.zlevels button[aria-pressed=true],.zlevels button[aria-pressed=true]:hover{background:var(--text);color:var(--card)}
+.zlevels button[aria-pressed=true],.zlevels button[aria-pressed=true]:hover{color:var(--card)}
 .zlevels button:disabled{opacity:.35}
 .zclose{grid-column:3;justify-self:end;background:color-mix(in srgb,var(--card) 72%,transparent)!important;box-shadow:0 0 0 1px var(--rule)}
 /* a phone: the zoom bar keeps the app's 16px gutter, so Done lines up with the island's corner buttons */
 @media (max-width:699px){.zoom{padding-inline:var(--sp-4)}}
 @media (max-width:560px){.zbar-top{grid-template-columns:auto 1fr}.zbar-top .zmark{display:none}.zlevels{grid-column:1}.zlevels button{padding:0 var(--sp-3)}}
-.zstage{width:min(1040px,100%);transform-origin:50% 30%;animation:zFrom var(--dur-500) var(--ease) both}
+.zstage{width:min(1040px,100%);transform-origin:50% 30%;animation:zFrom var(--m-page) var(--m-ease) both}
 .zstage.out{animation-name:zOut} .zstage.in{animation-name:zIn}
 @keyframes zFrom{from{opacity:0;transform:scale(1.08)}}
 @keyframes zOut{from{opacity:0;transform:scale(1.14)}}
@@ -235,7 +228,7 @@ button.book:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--rule),0 
    so the pill in the bar can glide to the next lesson */
 .itop{view-transition-name:island}
 .lbar{view-transition-name:lessonbar}
-::view-transition-group(island),::view-transition-group(lessonbar){animation-duration:var(--dur-500)}
+::view-transition-group(island),::view-transition-group(lessonbar){animation-duration:var(--m-page);animation-timing-function:var(--m-ease)}
 ::view-transition-old(island),::view-transition-old(lessonbar){display:none}
 ::view-transition-new(island),::view-transition-new(lessonbar){animation:none}
 /* next and previous lesson use the one motion master too (motion.css): no sideways slide */

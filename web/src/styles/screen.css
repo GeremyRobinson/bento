@@ -438,3 +438,6 @@ html:has(.screen) body{overflow:hidden}
 .rnone .panel .actions{justify-content:start}
 .rnone .spreview{display:grid;min-height:0}
 @media (min-width:700px) and (min-aspect-ratio:1/1){.screen.fit.rnone{grid-template-columns:minmax(300px,380px) minmax(0,1fr);grid-template-rows:minmax(0,1fr)}.rnone>.panel{grid-area:1/1}.rnone>.spreview{grid-area:1/2}}
+/* Left-handed keypad (Settings): the answer pad takes the left side in landscape, and hugs the left edge when stacked */
+@media (min-width:900px) and (orientation:landscape){:root[data-hand="left"] .screen.solve>.wbody{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}:root[data-hand="left"] .wbody>.wpad{order:-1}}
+@media not ((min-width:900px) and (orientation:landscape)){:root[data-hand="left"] .wpad .tray{margin-inline:0 auto}}

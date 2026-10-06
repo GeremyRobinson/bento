@@ -10,8 +10,10 @@ export type Route =
   | { name: "report"; key: string }
   /** the grown-up page; `pick` is the mistake pattern the detail shows (on a phone, the detail on its own) */
   | { name: "parent"; pick?: string }
-  /** the personal hub: grades, progress, the grown-up page, accessibility and backups */
+  /** My Bento: your grade, progress, chapter, grades and the grown-up page (no settings: those have their own page) */
   | { name: "me" }
+  /** every setting in one place, plus backups and About Bento (G 2026-10-06: settings live only here) */
+  | { name: "settings" }
   /** the facts tables: all of them for the grade, or one table */
   | { name: "facts"; table?: string; start?: boolean }
   /** the design sandbox: every grade side by side with live token controls (preview and dev builds only) */
@@ -30,6 +32,7 @@ export function parseRoute(hash: string): Route {
     case "report": return parts[1] ? { name: "report", key: parts[1] } : { name: "home" };
     case "grown-up": return parts[1] ? { name: "parent", pick: parts[1] } : { name: "parent" };
     case "me": return { name: "me" };
+    case "settings": return { name: "settings" };
     case "facts": return parts[1] ? { name: "facts", table: parts[1], ...(parts[2] === "go" ? { start: true } : {}) } : { name: "facts" };
     case "sandbox": return import.meta.env.MODE === "preview" || import.meta.env.MODE === "development" ? { name: "sandbox" } : { name: "home" };
     default: return { name: "home" };
@@ -46,10 +49,11 @@ export function routeHash(r: Route): string {
     case "report": return `#/report/${encodeURIComponent(r.key)}`;
     case "parent": return r.pick ? `#/grown-up/${encodeURIComponent(r.pick)}` : "#/grown-up";
     case "me": return "#/me";
+    case "settings": return "#/settings";
     case "sandbox": return "#/sandbox";
     case "facts": return r.table ? `#/facts/${encodeURIComponent(r.table)}${r.start ? "/go" : ""}` : "#/facts";
   }
 }
 
 /** Screens that take the chosen grade's look rather than a lesson's (the current app's "home" group). */
-export const isTopLevel = (r: Route) => r.name === "welcome" || r.name === "home" || r.name === "parent" || r.name === "me";
+export const isTopLevel = (r: Route) => r.name === "welcome" || r.name === "home" || r.name === "parent" || r.name === "me" || r.name === "settings";

@@ -141,9 +141,11 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
   return (
     <div className="zoom" ref={box} role="dialog" aria-modal="true" aria-label={CONTENTS} onClick={e => { if (e.target === e.currentTarget) close(); }}>
       <div className="zbar-top">
-        <BentoMark className="zmark" />
+        <button className="zmark" onClick={() => { close(); go({ name: "home" }, "back"); }} aria-label="Bento, home"><BentoMark /></button>
         {/* widest to narrowest, left to right (G 2026-10-06) */}
-        <div className="zlevels" role="group" aria-label="Zoom">
+        {/* a tap slider (G 2026-10-06): one thumb glides to the level you tap, the same switch as Bento / Bento² */}
+        <div className="zlevels" role="group" aria-label="Zoom" style={{ "--zi": [...LEVELS].reverse().indexOf(level) } as CSSProperties}>
+          <span className="zthumb" aria-hidden />
           {[...LEVELS].reverse().map(l => (
             <button key={l} aria-pressed={l === level} disabled={l === "chapter" && !unit} onClick={() => to(l)}>{NAMES[l]}</button>
           ))}
