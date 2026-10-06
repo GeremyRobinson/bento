@@ -155,8 +155,9 @@ export function Learn({ lessonId }: { lessonId: string }) {
             tall as the longest one and the picture doesn't resize from step to step. */}
         <div className="lnow" aria-hidden>
           {ex.caption && <p className={now ? undefined : "on"}><span><Rich text={ex.caption} /></span></p>}
-          {ex.steps.map(st => (
-            <p key={st.id} className={st === now ? "on" : undefined}>
+          {/* at rest, with no caption to show, the first step waits there muted, so the row always has a purpose */}
+          {ex.steps.map((st, i) => (
+            <p key={st.id} className={st === now ? "on" : !now && !ex.caption && i === 0 ? "on ahead" : undefined}>
               {!saysMath(st.narration, st.math) && <MathLine math={toneMath(st.math, tones)} />}
               <span><Rich text={st.narration} tones={tones} /></span>
             </p>

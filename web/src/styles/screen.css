@@ -161,6 +161,8 @@ html:has(.screen) body{overflow:hidden}
 .lnow{display:none;margin:0;text-align:center;font-size:var(--fz-md);line-height:1.4}
 .lnow>p{grid-area:1/1;margin:0;display:grid;justify-items:center;align-content:center;gap:2px;visibility:hidden}
 .lnow>p.on{visibility:visible}
+/* the first step, waiting before Play: the same line, quieter */
+.lnow>p.ahead{color:var(--muted);opacity:.7}
 .lctl{grid-area:ctl;display:flex;justify-content:center;align-items:center;gap:var(--sp-2);flex-wrap:wrap;padding-bottom:2px}
 .lctl .ctl{--pill-h:var(--float-h);font-size:var(--fz-lg);background:var(--float);box-shadow:var(--float-shadow)}
 .lctl .ctl.go{background:var(--ink);box-shadow:none;min-width:120px}
