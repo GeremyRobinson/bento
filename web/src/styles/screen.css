@@ -138,16 +138,22 @@ html:has(.screen) body{overflow:hidden}
 .lintro .lhelp b{color:var(--ink)}
 .lintro .tlink{padding:4px 0;min-height:0}
 .lshero{grid-area:hero;margin:0;min-height:0;display:grid;justify-items:stretch;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;gap:12px;padding:24px 28px 20px;border-radius:var(--r-panel);background:var(--float);box-shadow:var(--float-shadow)}
-.lmath{display:flex;justify-content:center;font-size:clamp(30px,4.4vw,46px);font-weight:650;letter-spacing:-.02em}
-.lmath .mline{font-size:inherit}
+.lmath{display:flex;justify-content:center;text-align:center;font-size:clamp(26px,4.4vw,46px);line-height:1.15;font-weight:650;letter-spacing:-.02em;min-width:0}
+.lmath .mline{font-size:inherit;row-gap:.1em;max-width:100%}
+.lmath .mline .br{height:0;margin:-.05em 0}
 .lpic{position:relative;min-height:0}
 .lpic>.viz{position:absolute;inset:0;display:grid;min-height:0;margin:0}
 .lpic>.viz>svg,.lpic>.viz>.viz-svg,.lpic>.viz>.am{width:100%!important;height:100%!important;max-height:none;margin:0;min-height:0}
 .lpic .viz-cap,.lpic .replay{display:none}
-.lpic.flow{overflow:auto}
-.lpic.flow>.viz{position:static}
-.lshero .caption{text-align:center;font-size:15px;margin:0}
+/* a picture made of lines of math: centred in the card, scrolling inside it only when it can't fit */
+.lpic.flow{display:grid;overflow:auto;scrollbar-width:thin;container-type:size}
+/* the whole chain (every line, so it doesn't rescale per step) fits the card where it can, never below 16px */
+.lpic.flow .rs{font-size:max(16px,min(calc(var(--math) * .62),calc(100cqh / (var(--n,1) * 2.3))))}
+.lpic.flow>.viz{position:static;margin:auto 0}
+.lshero .caption{text-align:center;font-size:17px;line-height:1.4;margin:0}
 .lnow{display:none;margin:0;text-align:center;font-size:16px;line-height:1.4}
+.lnow>p{grid-area:1/1;margin:0;display:grid;justify-items:center;align-content:center;gap:2px;visibility:hidden}
+.lnow>p.on{visibility:visible}
 .lctl{grid-area:ctl;display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;padding-bottom:2px}
 .lctl .ctl{--pill-h:52px;font-size:17px;background:var(--float);box-shadow:var(--float-shadow)}
 .lctl .ctl.go{background:var(--ink);box-shadow:none;min-width:120px}
@@ -164,7 +170,7 @@ html:has(.screen) body{overflow:hidden}
   .lintro h1{font-size:26px}
   .lintro .idea{font-size:16px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .lshero{grid-template-rows:auto minmax(0,1fr) auto auto;padding:18px 18px 16px}
-  .lnow{display:block}
+  .lnow{display:grid}
   .lshero .caption{display:none}
 }
 @media (max-width:520px){.lctl .ctl:not(.go){padding:0 16px}.ldots{display:none}}

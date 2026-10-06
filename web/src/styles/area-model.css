@@ -43,6 +43,9 @@
 .mline .fr{margin:0 .15em}
 .mline>.muted,.mline-in>.muted{margin-left:.3em}
 .mline .br{flex-basis:100%;height:.15em}
+/* a title that may wrap (MathLine keep): each side of "=" wraps as a whole, then by terms; a term never splits */
+.mline .mk{display:inline-flex;flex-wrap:wrap;align-items:center;justify-content:center;min-width:0;max-width:100%}
+.mline .mk.w{flex-wrap:nowrap}
 .math>.mline:has(.br){flex-wrap:wrap}
 .math>.mline{flex-wrap:nowrap;font-size:min(1em, 8.5vw)}
 .mline .ans{font-weight:650}

@@ -22,7 +22,7 @@ const PLAY_MS = 1800;
 import { reduceMotion } from "../app/transition";
 import { spendHandOff, takeHandOff } from "../app/preview";
 import { readAloudOn, readSettings, speak } from "../app/settings";
-import { toPlainText } from "../curriculum/schemas/math-text";
+import { toPlainText, type MathText } from "../curriculum/schemas/math-text";
 
 /** A freshly generated problem for the lesson; the reference problem only if generating fails. */
 export function firstExample(lesson: AnyLesson, rng: Rng): unknown {
@@ -33,6 +33,13 @@ export function firstExample(lesson: AnyLesson, rng: Rng): unknown {
   } catch {
     return lesson.reference;
   }
+}
+
+/** True when the narration already reads out the step's math, so it isn't shown twice. */
+export function saysMath(narration: string, math: MathText): boolean {
+  const norm = (t: string) => t.replace(/\*\*/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+  const m = norm(toPlainText(math));
+  return !!m && norm(narration).includes(m);
 }
 
 /** Which beat a timeline position belongs to: done, playing now, or still to come. */
@@ -130,14 +137,24 @@ export function Learn({ lessonId }: { lessonId: string }) {
       </section>
       {/* the hero: the problem and its picture, as big as the screen allows */}
       <figure className="lshero">
-        <div className="lmath"><MathLine math={ex.statement} /></div>
+        <div className="lmath"><MathLine math={ex.statement} keep /></div>
         {ex.diagram && (
           <div className={ex.diagram.kind === "chain" ? "lpic flow" : "lpic"}>
-            <div className="viz"><Diagram diagram={ex.diagram} timeline={ex.timeline} at={shownAt} /></div>
+            <div className="viz"><Diagram diagram={ex.diagram} timeline={ex.timeline} at={shownAt} fit /></div>
           </div>
         )}
-        {/* on a narrow screen only the step being shown sits under the picture */}
-        <p className="lnow" aria-hidden>{now ? <><MathLine math={now.math} /> <Rich text={now.narration} /></> : ex.caption ? <Rich text={ex.caption} /> : null}</p>
+        {/* on a narrow screen only the step being shown sits under the picture: its math on one line, the words under it
+            (the math left out when the words already say it). Every step is laid out in the same cell, so the box is as
+            tall as the longest one and the picture doesn't resize from step to step. */}
+        <div className="lnow" aria-hidden>
+          {ex.caption && <p className={now ? undefined : "on"}><span><Rich text={ex.caption} /></span></p>}
+          {ex.steps.map(st => (
+            <p key={st.id} className={st === now ? "on" : undefined}>
+              {!saysMath(st.narration, st.math) && <MathLine math={st.math} />}
+              <span><Rich text={st.narration} /></span>
+            </p>
+          ))}
+        </div>
         {ex.caption && <figcaption className="caption muted"><Rich text={ex.caption} /></figcaption>}
       </figure>
       {/* the controls float under it all: back a step, where you are, and the one thing to do next */}
