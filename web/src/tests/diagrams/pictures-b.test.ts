@@ -50,6 +50,7 @@ const badText = (d: SceneDiagram) => d.items.filter((i): i is Text => i.type ===
 
 /** The 26 lessons whose page was a stack of equations, and the family each one now draws with. */
 const PICTURED = {
+  "g1-ten": "early-frames",
   "g6-trap": "area-model",
 } as const;
 
@@ -88,5 +89,37 @@ describe("g6-trap", () => {
     expect(texts(0)).toEqual(expect.arrayContaining(["4", "8", "5", "4 + 8 = 12"]));
     expect(texts(1)).toContain("12 × 5 = 60");
     expect(texts(2)).toEqual(expect.arrayContaining(["30", "60 ÷ 2 = 30"]));
+  });
+});
+
+describe("g1-ten", () => {
+  const l = lesson("g1-ten");
+  type Circle = Extract<SceneItem, { type: "circle" }>;
+  it("fills the first frame with dots that slide over from the second, leaving the rest there", () => {
+    for (const p of problemsOf(l) as { a: number; b: number }[]) {
+      const d = sceneOf(l, p), need = 10 - p.a, left = p.b - need;
+      const cells = d.items.filter(i => i.type === "rect" && /\bseg\b/.test(i.cls ?? "")) as Extract<SceneItem, { type: "rect" }>[];
+      const split = (cells[4]!.x + cells[4]!.w + cells[10]!.x) / 2;
+      const dots = (b: number) => shownAt(d, b).filter((i): i is Circle => i.type === "circle" && /\bdotp\b/.test(i.cls ?? ""));
+      const count = (b: number) => [dots(b).filter(c => c.cx < split).length, dots(b).filter(c => c.cx > split).length];
+      expect(count(0)).toEqual([p.a, p.b]);
+      expect(count(1)).toEqual([10, left]);
+      expect(count(2)).toEqual([10, left]);
+      // the counted empty boxes are the ones the moving dots land in
+      expect(shownAt(d, 0).filter(i => i.type === "circle" && /\bpq\b/.test(i.cls ?? "")).length).toBe(need);
+      // each sliding dot starts exactly where one of the second frame's last dots was
+      const before = dots(0).filter(c => c.cx > split).slice(left);
+      const moved = dots(1).filter(c => c.enter === "slide");
+      expect(moved.length).toBe(need);
+      moved.forEach((c, k) => {
+        const dx = parseFloat(String(c.vars!["--dx"])), dy = parseFloat(String(c.vars!["--dy"]));
+        expect([c.cx + dx, c.cy + dy]).toEqual([before[k]!.cx, before[k]!.cy]);
+      });
+      expect(textsAt(d, 2).map(t => t.text)).toEqual(expect.arrayContaining(["10", `${p.b} = ${need} + ${left}`, `10 + ${left} = ${p.a + p.b}`]));
+    }
+  });
+  it("never draws a number in grade 1's green (right) part colour", () => {
+    const d = sceneOf(l, l.reference);
+    expect(d.items.filter(i => /\bp0\b/.test(i.cls ?? ""))).toEqual([]);
   });
 });
