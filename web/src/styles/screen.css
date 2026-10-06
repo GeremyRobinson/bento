@@ -33,6 +33,8 @@ html:has(.screen) body{overflow:hidden}
 .srow:not([disabled]):not(.on):hover{background:color-mix(in oklab,var(--tint) 7%,transparent)}
 .srow .sname{flex:1;min-width:0;display:grid}
 .srow .sname b{font-weight:var(--w-mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* a long name wraps to a second line rather than losing its end (v44 sweep item 8) */
+.srow .sname b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.25;text-wrap:pretty}
 .srow>small{color:var(--muted);font-size:var(--fz-xs);font-weight:var(--w-mid);white-space:nowrap;font-variant-numeric:tabular-nums}
 .srow.on>small,.srow .snext{color:var(--ink)}
 .srow.chap .sname b{font-weight:var(--w-bold)}
@@ -171,7 +173,8 @@ html:has(.screen) body{overflow:hidden}
   .lintro{overflow:visible;padding:0 var(--sp-2);gap:6px}
   .lintro .beats,.lintro .lhelp,.lintro .tlink,.lintro .idea+.idea{display:none}
   .lintro h1{font-size:26px}
-  .lintro .idea{font-size:var(--fz-md);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  /* the idea is read whole, never cut mid-sentence: the picture under it gives up the room (v44 sweep item 7) */
+  .lintro .idea{font-size:var(--fz-md);line-height:1.4;text-wrap:pretty}
   .lshero{grid-template-rows:auto minmax(0,1fr) auto auto;padding:18px 18px var(--sp-4)}
   .lnow{display:grid}
   .lshero .caption{display:none}
@@ -399,11 +402,11 @@ html:has(.screen) body{overflow:hidden}
 .sbento>.tile{border-radius:var(--r-panel)}
 .sbento .b-streak{background:var(--card);box-shadow:0 0 0 1px var(--rule);padding:calc(var(--u) * 1.75);display:grid;justify-items:center;align-content:center;text-align:center;gap:6px}
 .sbento .b-streak p{margin:0}
-.sbento .b-chaps{background:var(--card);box-shadow:0 0 0 1px var(--rule);padding:var(--sp-3);display:grid;gap:var(--sp-2);grid-template-columns:minmax(0,1fr);align-content:stretch;overflow:auto}
+.sbento .b-chaps{background:var(--card);box-shadow:0 0 0 1px var(--rule);padding:var(--sp-3);display:grid;gap:var(--sp-2);grid-template-columns:minmax(0,1fr);grid-auto-rows:minmax(var(--tap),64px);align-content:center;overflow:auto}
 .bchap{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:var(--tap);padding:var(--sp-2) var(--sp-4);border-radius:var(--r-pill);background:var(--well);text-align:left;transition:transform var(--dur-180) var(--ease)}
 .bchap:active{transform:scale(.97)}
 .bchap>.fill{background:color-mix(in oklab,var(--tint) 22%,var(--well))}
-.bchap b{font-size:var(--fz-sm);font-weight:var(--w-bold);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bchap b{font-size:var(--fz-sm);line-height:1.25;font-weight:var(--w-bold);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-wrap:pretty}
 .bchap small{flex:none;font-size:var(--fz-xs);font-weight:var(--w-mid);color:var(--muted)}
 .sbento .today .b-weak{margin-top:var(--s);padding:0;background:none;box-shadow:none}
 /* portrait: the picture across the top, the two numbers side by side, then the plan and the chapters */

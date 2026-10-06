@@ -9,6 +9,13 @@
 .srow.grow .gnum{font:var(--w-bold) var(--fz-2xl)/1 var(--sans);letter-spacing:-.03em}
 .srow.grow .gnum small{font-size:.5em;vertical-align:top}
 .srow.grow.on .sname b{color:var(--ink)}
+/* on light, the picked grade's words and its Start pill take the grade's darker shade (--h2), not the raw hue, so
+   they read at 4.5:1 on the near-white list; dark takes its lightest shade (--hd1) */
+.gpal{--pick-ink:var(--h2)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .gpal{--pick-ink:var(--hd1)}}
+:root[data-theme="dark"] .gpal{--pick-ink:var(--hd1)}
+.srow.grow.gpal.on .sname b,.srow.grow.gpal.on>small{color:var(--pick-ink)}
+.gdgo.gpal .ctl.go{background:var(--pick-ink)}
 .gopen{display:none}
 
 .gdl{flex:1;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:var(--sp-4);padding:var(--sp-6);border-radius:var(--r-panel);background:var(--float);box-shadow:var(--float-shadow)}
@@ -77,5 +84,9 @@ body{transition:background-color var(--dur-300) var(--ease) var(--dur-120)}
 @keyframes sideFade{from{opacity:0}}
 /* ten tracks and two labels fit the list without scrolling on an iPad */
 .srow.trow{min-height:var(--tap);padding-block:var(--sp-1)}
+/* a track's name is read whole: it wraps to a second line rather than losing its end, and in portrait the note
+   above the list already says every track is coming later, so the rows give that label's room to the names */
+.srow.trow .sname b{white-space:normal;overflow:visible;line-height:1.2}
+@media (orientation:portrait){.srow.trow>small{display:none}}
 .b2d .ctl{box-shadow:inset 0 0 0 1px var(--adv-ring)}
 .b2d .ctl[aria-pressed="true"]{background:var(--tint-soft);color:var(--ink)}

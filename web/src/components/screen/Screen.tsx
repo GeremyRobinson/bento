@@ -1,4 +1,5 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { reduceMotion } from "../../app/transition";
 
 /**
  * Screen (master): the frame every app screen sits in, under the island. Instances only say what differs:
@@ -26,7 +27,43 @@ export function SplitScreen({ list, detail, show, label, className, detailLabel 
 }
 
 export function FitScreen({ children, className, style }: { children: ReactNode; className?: string; style?: CSSProperties }) {
-  return <div className={`screen fit${className ? ` ${className}` : ""}`} style={style}>{children}</div>;
+  const root = useRef<HTMLDivElement>(null);
+  useFollowStep(root);
+  return <div className={`screen fit${className ? ` ${className}` : ""}`} style={style} ref={root}>{children}</div>;
+}
+
+/**
+ * A column that scrolls inside itself follows the step that's now (`data-state="now"`, Learn's steps): as a step becomes
+ * current it is brought into view, and on the last step whatever closes the column under it ("That's the whole
+ * problem. Your turn.") comes into view with it, without pushing the step's top out (v44 sweep item 1). It only moves
+ * when the current step changes or the column grows, so it never fights your own scrolling. Less motion jumps there.
+ */
+function useFollowStep(root: { current: HTMLElement | null }) {
+  useEffect(() => {
+    const el = root.current;
+    if (!el || typeof MutationObserver === "undefined") return;
+    let last: Element | null = null, lastH = 0, frame = 0;
+    const follow = () => {
+      frame = 0;
+      const now = el.querySelector<HTMLElement>('[data-state="now"]');
+      if (!now) { last = null; return; }
+      let box = now.parentElement;
+      while (box && box !== el && !/(auto|scroll)/.test(getComputedStyle(box).overflowY)) box = box.parentElement;
+      if (!box || box === el || box.scrollHeight <= box.clientHeight + 1) { last = now; return; }
+      if (now === last && box.scrollHeight <= lastH) return;
+      last = now; lastH = box.scrollHeight;
+      const pad = 8, b = box.getBoundingClientRect(), r = now.getBoundingClientRect();
+      // the last step brings the rest of its column (the closing line) along
+      const end = now.nextElementSibling ? r.bottom : b.top - box.scrollTop + box.scrollHeight;
+      let by = 0;
+      if (r.top < b.top + pad) by = r.top - b.top - pad;
+      else if (end > b.bottom - pad) by = Math.min(end - b.bottom + pad, r.top - b.top - pad);
+      if (Math.abs(by) > 1 && typeof box.scrollBy === "function") box.scrollBy({ top: by, behavior: reduceMotion() ? "auto" : "smooth" });
+    };
+    const mo = new MutationObserver(() => { if (!frame) frame = requestAnimationFrame(follow); });
+    mo.observe(el, { subtree: true, childList: true, attributes: true, attributeFilter: ["data-state"] });
+    return () => { mo.disconnect(); if (frame) cancelAnimationFrame(frame); };
+  }, [root]);
 }
 
 /**

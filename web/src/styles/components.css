@@ -374,7 +374,7 @@ button.gcell:active{transform:scale(.96)}
 .mt-text{display:grid;gap:1px;flex:1;min-width:0}
 .mt-text b{font-weight:var(--w-bold)}
 .mt-text small{color:var(--muted);font-size:var(--small);font-weight:var(--w-mid);line-height:1.3}
-.switch{flex:none;width:50px;height:30px;border-radius:var(--r-pill);background:var(--faint);position:relative;transition:background var(--dur-200)}
+.switch{flex:none;width:50px;height:30px;border-radius:var(--r-pill);background:var(--sw-off);position:relative;transition:background var(--dur-200)}
 .switch i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:var(--r-round);background:var(--knob);box-shadow:0 1px 3px var(--black-a25);transition:transform var(--dur-250) var(--spring)}
 .mtoggle[aria-checked="true"] .switch{background:var(--ink)}
 .mtoggle[aria-checked="true"] .switch i{transform:translateX(20px)}

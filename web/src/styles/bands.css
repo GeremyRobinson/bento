@@ -149,7 +149,7 @@ html[data-hue][data-theme="dark"]{--page:color-mix(in oklab,var(--page-hue) 6%,#
    is what tells you which line you're in. Early is warm and scattered with counters, Core sits on dot paper,
    Middle on graph paper, High on a plain sheet. ---- */
 html[data-line] body{background-attachment:fixed}
-html[data-line="early"]{--page:color-mix(in srgb,#ffb547 6%,#fffdf8)}
+html[data-line="early"]{--page:color-mix(in srgb,#ffb547 6%,#fffdf8);--canvas:color-mix(in srgb,#ffb547 6%,#fffdf8)}
 html[data-line="early"] body{background-image:
   radial-gradient(circle at 12% 18%,color-mix(in srgb,#f59e0b 14%,transparent) 0 7px,transparent 8px),
   radial-gradient(circle at 63% 9%,color-mix(in srgb,#ec4899 12%,transparent) 0 5px,transparent 6px),
@@ -162,9 +162,13 @@ html[data-line="core"] body{background-image:radial-gradient(circle,var(--rule) 
 html[data-line="middle"] body{background-image:
   linear-gradient(color-mix(in srgb,var(--rule) 55%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--rule) 55%,transparent) 1px,transparent 1px);background-size:40px 40px}
 @media (prefers-color-scheme: dark){
-  :root[data-line="early"]:not([data-theme="light"]){--page:#14120f}
+  :root[data-line="early"]:not([data-theme="light"]){--page:#14120f;--canvas:#14120f}
   :root[data-line="core"]:not([data-theme="light"]) body{background-image:radial-gradient(circle,var(--rule) 1.2px,transparent 1.6px)}
 }
+/* the counters stay behind what you read: text that sits straight on the canvas (Learn's intro and steps) gets a
+   clean patch of the page under it, feathered at the edge, so no counter lands on a word (v44 sweep item 12) */
+html[data-line="early"] .lintro{background:var(--canvas);box-shadow:0 0 12px 6px var(--canvas);border-radius:var(--r-lg)}
+:root[data-line="early"][data-theme="dark"]{--page:#14120f;--canvas:#14120f}
 /* high contrast wants a plain page */
 html[data-contrast="true"] body{background-image:none}
 

@@ -208,11 +208,22 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   const item = route.name === "practice" && run ? currentItem(run) : null;
   const shortProblem = item && problemShape(item.lessonId, problemOf(item), !!item.story).short ? item : null;
 
+  // the way back to your lessons floats on its own in the right corner, so "Bento" stays centred in its pill (v44 sweep
+  // item 5); on a phone it is a circle holding your grade's number, with a spacer on the left to keep the pill centred
+  const mine = progress.chosen && progress.grade != null ? gradeOf(progress.grade) : null;
   if (welcome) return (
-    <div className="itop"><span /><header className="island guest">
+    <div className="itop guest"><span className="ispace" /><header className="island guest">
       <BentoMark className="iword" />
-      {progress.chosen && <button className="ilink" onClick={() => { openSheet(false); go({ name: "home" }, "fwd"); }}>My lessons ›</button>}
-    </header><span /></div>
+    </header>
+      <div className="icorner right">
+        {mine && (
+          <button className="imine" onClick={() => { openSheet(false); go({ name: "home" }, "fwd"); }}>
+            <span className="imtext">My lessons ›</span>
+            <span className="gnum imgrade" aria-hidden style={{ "--gn": inkOf(mine.color), "--gn-d": mine.color } as CSSProperties}>{mine.short}</span>
+          </button>
+        )}
+      </div>
+    </div>
   );
 
   const g = gradeOf(grade), fill = fillOf(place, app, grade);
