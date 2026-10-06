@@ -9,7 +9,7 @@ import { Diagram } from "../components/diagrams/Diagram";
 import { requireLesson } from "../curriculum/registry";
 import type { Explanation } from "../explanations/schema";
 import { FeedbackBox } from "../components/practice/FeedbackBox";
-import { ConfirmStack } from "../components/ConfirmStack";
+import { Confirm } from "../components/Confirm";
 import { FitScreen } from "../components/screen/Screen";
 import type { Band } from "../curriculum/grades";
 import { ALL_LESSONS, SHOW_ME } from "../app/copy";
@@ -236,7 +236,7 @@ export function Practice() {
         </>
       )}
       {asking && (
-        <ConfirmStack title={`Quit ${s.title}?`} body="Your answers so far won't be kept." confirm="Quit"
+        <Confirm title={`Quit ${s.title}?`} body="Your answers so far won't be kept." confirm="Quit"
           onCancel={() => setAsking(false)} onConfirm={() => { setAsking(false); quit(); }} />
       )}
     </FitScreen>

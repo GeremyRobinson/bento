@@ -328,13 +328,23 @@ html:has(.screen),html:has(.screen) body{overflow:hidden;overscroll-behavior:non
 /* the picked lesson row shows its whole name; Up next is already said in the detail */
 .srow.sles.on .snext{display:none}
 .srow.sles.on .sname b{white-space:normal}
-/* a quick question before something is lost: centred, the safe choice first */
-.fconfirm{left:50%;top:50%;transform:translate(-50%,-50%);align-items:stretch;width:min(360px,calc(100vw - 32px))}
-.fconfirm .fpill{justify-content:center;font-size:var(--fz-lg)}
-.fconfirm .fcq{flex-direction:column;align-items:flex-start;gap:var(--sp-1);padding-block:var(--sp-4);font-weight:var(--w-regular)}
-.fconfirm .fcq b{font-weight:var(--w-bold)}
-.fconfirm .fcq span{color:var(--muted);font-size:var(--fz-md)}
-.fconfirm .fcquit{color:var(--ink)}
+/* THE CONFIRM MASTER: a small bento box in the middle of the screen. The question spans the top; the two answers sit
+   side by side under it as tiles, the safe one filled in the grade's colour, the other outlined. Corners nest from the
+   panel with an 8px gap; no shadow, it comes forward from the centre (G 2026-10-06) */
+.confirm{position:fixed;z-index:var(--z-stack);left:50%;top:50%;translate:-50% -50%;width:min(400px,calc(100vw - 32px));
+  display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2);padding:var(--sp-2);border-radius:var(--r-panel);background:var(--card);
+  outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1);animation:confirmIn var(--m-in) var(--m-ease) both}
+@keyframes confirmIn{from{opacity:0;scale:.97}}
+.confirm .cq{grid-column:1 / -1;display:grid;gap:var(--sp-1);padding:calc(var(--u) + var(--sp-2)) calc(var(--u) + var(--sp-2)) var(--sp-3)}
+.confirm .cq b{font-size:var(--fz-xl);font-weight:var(--w-bold);letter-spacing:-.01em}
+.confirm .cq span{color:var(--muted);font-size:var(--fz-md)}
+.confirm .ca{min-height:var(--row);border-radius:calc(var(--r-panel) - var(--sp-2));font-size:var(--fz-lg);font-weight:var(--w-bold);color:var(--ink);
+  background:transparent;outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1);transition:background var(--m-tap) var(--m-ease),scale var(--m-tap) var(--m-ease)}
+.confirm .ca.keep{background:var(--tint);color:var(--on-tint);outline-color:var(--tint)}
+.confirm .ca:hover{background:var(--tint-soft)}
+.confirm .ca.keep:hover{background:color-mix(in oklab,var(--tint) 88%,var(--text))}
+.confirm .ca:active{scale:.97}
+.confirm .ca:focus-visible{outline:2px solid var(--tint);outline-offset:2px}
 .iresume-x{display:grid;place-items:center;width:var(--float-in);height:var(--float-in);border-radius:var(--r-pill);background:var(--float);box-shadow:var(--float-shadow);color:var(--muted)}
 
 /* ---- the nav's wordmark: on every screen, plain "Bento" on the left, the same as the landing page's; it always

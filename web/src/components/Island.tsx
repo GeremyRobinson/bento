@@ -10,7 +10,7 @@ import { upNext } from "../app/today";
 import { Contents, type Level } from "./Contents";
 import { Nav, NavMark } from "./Nav";
 import { reduceMotion } from "../app/transition";
-import { ConfirmStack } from "./ConfirmStack";
+import { Confirm } from "./Confirm";
 import { tableById } from "../engine/facts/tables";
 import { Chevron, LockIcon } from "./primitives/icons";
 import { CONTENTS, GROWN_UP, NO_UNIT, PRACTICE, REPORT, REVIEW, YOUR_BENTO } from "../app/copy";
@@ -310,7 +310,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
         </button>
       </>} />
       {asking && run && (
-        <ConfirmStack title={`Quit ${run.title}?`} body="Your answers so far won't be kept." confirm="Quit"
+        <Confirm title={`Quit ${run.title}?`} body="Your answers so far won't be kept." confirm="Quit"
           onCancel={() => setAsking(false)} onConfirm={() => { setAsking(false); quit({ stay: true }); }} />
       )}
       {open && <Contents grade={place.lesson ? pageOf(place.lesson)?.grade ?? grade : grade} lessonId={place.lesson} level={open} close={dismiss} leave={leave} closing={closing} />}

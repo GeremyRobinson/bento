@@ -5,6 +5,7 @@ import { Slider } from "../components/primitives/Slider";
 import { Pill } from "../components/primitives/Pill";
 import { Tile, Toggle } from "../components/PageTile";
 import { Nav, NavMark } from "../components/Nav";
+import { Confirm } from "../components/Confirm";
 
 /** Where a piece is: being built, waiting on Review, or live. G sees work here before Review signs it off. */
 type Status = "building" | "review" | "next" | "live";
@@ -30,6 +31,7 @@ export function Pieces() {
   const [lvl, setLvl] = useState<"chapter" | "year" | "all">("chapter");
   const [side, setSide] = useState<"a" | "b">("a");
   const [sw, setSw] = useState(true);
+  const [ask, setAsk] = useState(false);
   const move = (dir: Dir) => go({ name: "sandbox" }, dir);
   return (
     <section className="sbpieces" aria-label="Pieces in progress">
@@ -38,6 +40,10 @@ export function Pieces() {
         <p className="muted">Each piece is built and checked on its own, then nests into the bigger ones. These are the real components, so they work here the way they will in the app.</p>
       </header>
       <div className="sbpgrid">
+        <Piece name="Confirm" status="review" chunk="Confirm master" nests="Quit a lesson, Quit practice">
+          <Pill go onClick={() => setAsk(true)}>Ask before quitting</Pill>
+          {ask && <Confirm title="Quit Equivalent ratios?" body="Your answers so far won't be kept." confirm="Quit" onConfirm={() => setAsk(false)} onCancel={() => setAsk(false)} />}
+        </Piece>
         <Piece name="No shadows" status="review" chunk="Shadow sweep" nests="everything that floats or is picked">
           <div className="sbpills"><Pill>A floating pill</Pill><Pill go>Picked</Pill></div>
           <small className="muted">Nothing casts a shadow. Floating pieces show their edge with an outline; what's picked or active shows with its fill and outline.</small>
