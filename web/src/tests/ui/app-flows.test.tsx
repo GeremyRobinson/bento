@@ -72,6 +72,25 @@ describe("no grade until one is chosen", () => {
     tap("Start 3rd grade ›");
     expect(screen.getByRole("heading", { level: 1, name: "3rd grade" })).toBeInTheDocument();
   });
+  it("the Bento / Bento² switch swaps the grades for the ten tracks, all coming later", () => {
+    renderApp({ grade: null, chosen: false }, {}, "#/learn/no-such-lesson");
+    expect(screen.getByRole("button", { name: "Bento" })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Bento squared" }));
+    expect(screen.getByRole("heading", { level: 1, name: "Where do you want to go?" })).toBeInTheDocument();
+    expect(document.documentElement.dataset.side).toBe("b2");
+    expect(screen.getAllByRole("radio")).toHaveLength(10);
+    expect(screen.getAllByText("Coming later")).toHaveLength(10);
+    fireEvent.click(screen.getByRole("radio", { name: "Linear algebra" }));
+    expect(screen.getByRole("heading", { level: 2, name: "Linear algebra" })).toBeInTheDocument();
+    tap("Tell me when it's ready");
+    expect(screen.getByRole("button", { name: /We'll tell you/ })).toHaveAttribute("aria-pressed", "true");
+    // no lesson can start from Bento² yet
+    expect(screen.queryByRole("button", { name: /^Start/ })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Bento" }));
+    expect(screen.getByRole("heading", { level: 1, name: "Which grade are you in?" })).toBeInTheDocument();
+    expect(document.documentElement.dataset.side).toBeUndefined();
+    expect(screen.getAllByRole("radio")).toHaveLength(13);
+  });
   it("the hub and facts stay neutral and ask for a grade", () => {
     for (const hash of ["#/me", "#/facts"]) {
       const { unmount } = renderApp({ grade: null, chosen: false }, {}, hash);

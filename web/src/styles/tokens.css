@@ -31,8 +31,8 @@
   --z-zoom:40; --z-halo:99;
   /* motion: --dur-n is n milliseconds (--dur-off is the near-zero "Less motion" setting). Curves: --ease, --spring
      above, --glide in nav.css, and --ease-toss for confetti. */
-  --dur-22:22ms; --dur-42:42ms; --dur-45:45ms; --dur-50:50ms; --dur-60:60ms; --dur-70:70ms; --dur-100:100ms; --dur-140:140ms; --dur-150:.15s;
-  --dur-180:.18s; --dur-200:.2s; --dur-220:.22s; --dur-240:.24s; --dur-250:.25s; --dur-300:.3s; --dur-350:.35s; --dur-360:.36s; --dur-380:.38s;
+  --dur-22:22ms; --dur-30:30ms; --dur-42:42ms; --dur-45:45ms; --dur-50:50ms; --dur-60:60ms; --dur-70:70ms; --dur-100:100ms; --dur-120:120ms; --dur-140:140ms; --dur-150:.15s;
+  --dur-180:.18s; --dur-200:.2s; --dur-220:.22s; --dur-240:.24s; --dur-250:.25s; --dur-300:.3s; --dur-350:.35s; --dur-360:.36s; --dur-380:.38s; --dur-420:.42s;
   --dur-400:.4s; --dur-450:.45s; --dur-500:.5s; --dur-550:.55s; --dur-600:.6s; --dur-700:.7s; --dur-800:.8s; --dur-900:.9s;
   --dur-1000:1s; --dur-1200:1.2s; --dur-1600:1.6s; --dur-2400:2.4s; --dur-2600:2.6s; --dur-4000:4s; --dur-5000:5s; --dur-6000:6s;
   --dur-40000:40s; --dur-off:.001ms;
