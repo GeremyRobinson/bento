@@ -4,10 +4,10 @@
 .lhero h1{font:var(--w-bold) clamp(46px,9vw,104px)/.96 var(--sans);letter-spacing:-.05em;text-wrap:balance}
 .lhero p{max-width:560px;font-size:calc(var(--fs) * 1.12);line-height:1.5;color:var(--muted);font-weight:var(--w-mid);text-wrap:pretty}
 .lcta{display:flex;align-items:center;gap:var(--u);flex-wrap:wrap;justify-content:center;margin-top:var(--sp-1)}
-.lcta .ctl.go{--tint:var(--cta-ink);--ink:var(--cta-ink);--pill-h:var(--float-h);--pill-pad:var(--sp-7);--pill-weight:var(--w-bold);font-size:var(--fz-lg)}
+.lcta .ctl.go{--tint:var(--cta-bg);--ink:var(--cta-bg);--on-tint:var(--cta-fg);--pill-h:var(--float-h);--pill-pad:var(--sp-7);--pill-weight:var(--w-bold);font-size:var(--fz-lg)}
 .lcta>span{color:var(--muted);font-size:var(--small);font-weight:var(--w-mid)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .lcta .ctl.go{background:var(--cta-ink-dark) !important;color:var(--cta-text-dark) !important}}
-:root[data-theme="dark"] .lcta .ctl.go{background:var(--cta-ink-dark) !important;color:var(--cta-text-dark) !important}
+
+
 
 /* the hero box: a lesson's picture playing, a problem solving itself, and a slip being explained */
 /* the hero box: one big moving picture and two smaller ones beside it (below it on narrower screens, stacked on phones) */
@@ -142,7 +142,7 @@
 .lnew{justify-self:end;font-size:var(--fz-2xs);font-weight:var(--w-bold);color:var(--muted)}
 
 /* ---- Bento Advanced: the AP line, introduced like a pro product. Always on its own dark canvas, in light hairlines. ---- */
-.ladv{--adv-ink:#f5f5f7;--adv-dim:#86868b;--adv-glow:#a78bfa;margin-top:calc(var(--u) * 2);background:radial-gradient(120% 80% at 50% 0%,var(--adv-sky) 0%,var(--adv-night) 62%);color:var(--adv-ink);
+.ladv{margin-top:calc(var(--u) * 2);background:radial-gradient(120% 80% at 50% 0%,var(--adv-sky) 0%,var(--adv-night) 62%);color:var(--adv-ink);
   border-radius:var(--r-panel);padding:calc(var(--u) * 4) calc(var(--u) + var(--sp-1)) calc(var(--u) * 2.5);display:grid;justify-items:center;text-align:center;gap:calc(var(--u) - var(--sp-1));
   overflow:hidden;color-scheme:dark}
 .adv-eyebrow{font-size:calc(var(--fs) * .95);font-weight:var(--w-bold);color:var(--adv-dim)}
@@ -245,7 +245,7 @@
   .lonepic .gnum{font-size:30px}
 }
 /* Bento² teaser pictures: real diagrams in light lines and five hues on the dark canvas */
-.tp{--tp-sky:#7dd3fc;--tp-pink:#f472b6;--tp-mint:#6ee7b7;--tp-amber:#fbbf24;--tp-lilac:#c4b5fd;--adv-ink:#f5f5f7;--adv-dim:#9a9aa6}
+.tp{--adv-dim:var(--tp-dim)}
 .tp{width:100%;height:100%;display:block;overflow:hidden;font-family:var(--sans)}
 .tp text:not([fill]){fill:var(--adv-dim)}
 .tp .tp-math:not([fill]){fill:var(--adv-ink)}.tp .tp-math{font-size:var(--fz-sm);font-weight:var(--w-mid)}

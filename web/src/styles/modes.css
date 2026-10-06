@@ -1,0 +1,43 @@
+/* Dark values that depend on a component's own colours (a grade's hue, a diagram's palette), gathered in one place so
+   dark mode is defined once and nowhere else (G 2026-10-06). Plain colour values live in tokens.css. */
+
+/* from components.css */
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .viz-svg .ln.thin{opacity:1} :root:not([data-theme="light"]) .viz-svg .pie{stroke:color-mix(in srgb,var(--tint) 40%,transparent)}}
+:root[data-theme="dark"] .viz-svg .ln.thin{opacity:1}
+:root[data-theme="dark"] .viz-svg .pie{stroke:color-mix(in srgb,var(--tint) 40%,transparent)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .viz-svg .seg:not(.on){fill:color-mix(in oklab,var(--tint) 18%,var(--d-lift));stroke:color-mix(in oklab,var(--tint) 80%,var(--mix-lift))}}
+:root[data-theme="dark"] .viz-svg .seg:not(.on){fill:color-mix(in oklab,var(--tint) 18%,var(--d-lift));stroke:color-mix(in oklab,var(--tint) 80%,var(--mix-lift))}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .viz-svg .cf.cube{stroke:var(--tint)}}
+:root[data-theme="dark"] .viz-svg .cf.cube{stroke:var(--tint)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .viz-svg .tri.c0{fill:color-mix(in oklab,var(--l0) 62%,var(--card))} :root:not([data-theme="light"]) .viz-svg .tri.c1{fill:color-mix(in oklab,var(--l1) 62%,var(--card))} :root:not([data-theme="light"]) .viz-svg .tri.c2{fill:color-mix(in oklab,var(--l2) 62%,var(--card))}}
+:root[data-theme="dark"] .viz-svg .tri.c0{fill:color-mix(in oklab,var(--l0) 62%,var(--card))}
+:root[data-theme="dark"] .viz-svg .tri.c1{fill:color-mix(in oklab,var(--l1) 62%,var(--card))}
+:root[data-theme="dark"] .viz-svg .tri.c2{fill:color-mix(in oklab,var(--l2) 62%,var(--card))}
+
+/* from area-model.css */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .am .region.r0 :is(.product,.product text,.part){fill:var(--k0)}
+  :root:not([data-theme="light"]) .am .region.r1 :is(.product,.product text,.part){fill:var(--k1)}
+  :root:not([data-theme="light"]) .am .region.r2 :is(.product,.product text,.part){fill:var(--k2)}
+  :root:not([data-theme="light"]) .am .total{fill:var(--ka)}
+}
+:root[data-theme="dark"] .am .region.r0 :is(.product,.product text,.part){fill:var(--k0)}
+:root[data-theme="dark"] .am .region.r1 :is(.product,.product text,.part){fill:var(--k1)}
+:root[data-theme="dark"] .am .region.r2 :is(.product,.product text,.part){fill:var(--k2)}
+:root[data-theme="dark"] .am .total{fill:var(--ka)}
+
+/* from grade-picker.css */
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .gpal{--pick-ink:var(--hd1)}}
+:root[data-theme="dark"] .gpal{--pick-ink:var(--hd1)}
+
+/* from nav.css */
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--float:color-mix(in oklab,var(--card) 88%,var(--mix-lift))}}
+:root[data-theme="dark"] .wrap{--float:color-mix(in oklab,var(--card) 88%,var(--mix-lift))}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .island .ibat>i{background:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}}
+:root[data-theme="dark"] .island .ibat>i{background:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .gnum{color:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}}
+:root[data-theme="dark"] .gnum{color:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}
+
+/* from screen.css */
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .gbtn{color:color-mix(in srgb,var(--tint) 70%,var(--mix-lift))}}
+:root[data-theme="dark"] .gbtn{color:color-mix(in srgb,var(--tint) 70%,var(--mix-lift))}

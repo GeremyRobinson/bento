@@ -150,7 +150,7 @@ button.gcell:active{transform:scale(.96)}
 .score b{min-width:30px;height:30px;padding:0 6px;border-radius:var(--r-pill);display:inline-flex;align-items:center;justify-content:center;font:var(--w-bold) var(--fz-md)/1 var(--num);color:var(--sc-fg);background:var(--sc)}
 .score span{font-weight:var(--w-bold);font-size:var(--small);color:var(--ink)}
 /* scores are the grade's own hue (G 2026-10-06: the lesson UI is monochromatic): the higher the score, the stronger the shade */
-.s4{--sc:color-mix(in srgb,var(--ink) 82%,black);--sc-fg:var(--on-tint)} .s3{--sc:var(--ink);--sc-fg:var(--on-tint)}
+.s4{--sc:color-mix(in srgb,var(--ink) 82%,var(--mix-deep));--sc-fg:var(--on-tint)} .s3{--sc:var(--ink);--sc-fg:var(--on-tint)}
 .s2{--sc:color-mix(in srgb,var(--tint) 40%,var(--card));--sc-fg:var(--ink)} .s1{--sc:color-mix(in srgb,var(--tint) 18%,var(--card));--sc-fg:var(--ink)}
 .s0{--sc:var(--well);--sc-fg:var(--muted)}
 
@@ -262,8 +262,8 @@ button.gcell:active{transform:scale(.96)}
 .viz-svg .ln{stroke:var(--tint);stroke-width:var(--d-bold);fill:none;stroke-linecap:round;stroke-linejoin:round}
 .viz-svg .ln2{stroke:var(--acc);stroke-width:var(--d-bold);fill:none;stroke-linecap:round;stroke-linejoin:round}
 .viz-svg .ln.thin{stroke-width:var(--d-line);opacity:.7}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .viz-svg .ln.thin{opacity:1} :root:not([data-theme="light"]) .viz-svg .pie{stroke:color-mix(in srgb,var(--tint) 40%,transparent)}}
-:root[data-theme="dark"] .viz-svg .ln.thin{opacity:1} :root[data-theme="dark"] .viz-svg .pie{stroke:color-mix(in srgb,var(--tint) 40%,transparent)} .viz-svg .ln.faint{stroke:var(--rule);stroke-width:var(--d-line)}
+
+  .viz-svg .ln.faint{stroke:var(--rule);stroke-width:var(--d-line)}
 .viz-svg .hl{stroke:var(--acc);stroke-width:var(--d-glow);stroke-linecap:round;opacity:.35}
 .viz-svg .hlline{stroke:var(--acc);stroke-width:var(--d-mark);stroke-linecap:round;opacity:.45;fill:none} .viz-svg .hlline.full{opacity:1}
 .viz-svg .fill{fill:var(--tint);opacity:.16} .viz-svg .fillsoft{fill:color-mix(in srgb,var(--tint) var(--d-f10),transparent)}
@@ -272,14 +272,14 @@ button.gcell:active{transform:scale(.96)}
 .viz-svg .cell{stroke-width:var(--d-line)} .viz-svg .pend{fill:var(--well);stroke:var(--faint);stroke-width:var(--d-line);stroke-dasharray:var(--d-dash)} .viz-svg .cell.c0{fill:color-mix(in srgb,var(--c0) var(--d-f18),var(--card));stroke:var(--c0)} .viz-svg .cell.c1{fill:color-mix(in srgb,var(--c1) var(--d-f18),var(--card));stroke:var(--c1)} .viz-svg .cell.c2{fill:color-mix(in srgb,var(--c2) var(--d-f18),var(--card));stroke:var(--c2)}
 .viz-svg .seg{fill:var(--well);stroke:var(--faint);stroke-width:var(--d-thin)}
 /* dark: an empty part is a tinted box a step lighter than the tile, outlined in its own color (bands.css, Dark pictures) */
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .viz-svg .seg:not(.on){fill:color-mix(in oklab,var(--tint) 18%,var(--d-lift));stroke:color-mix(in oklab,var(--tint) 80%,var(--mix-lift))}}
-:root[data-theme="dark"] .viz-svg .seg:not(.on){fill:color-mix(in oklab,var(--tint) 18%,var(--d-lift));stroke:color-mix(in oklab,var(--tint) 80%,var(--mix-lift))} .viz-svg .seg.on{fill:var(--tint);stroke:var(--tint)} .viz-svg .seg.cut{opacity:.35}
+
+ .viz-svg .seg.on{fill:var(--tint);stroke:var(--tint)} .viz-svg .seg.cut{opacity:.35}
 .viz-svg .cf{stroke:var(--card);stroke-width:var(--d-thin);stroke-linejoin:round} .viz-svg .cf.top{fill:color-mix(in srgb,var(--tint) var(--d-f35),var(--card))} .viz-svg .cf.left{fill:var(--tint)} .viz-svg .cf.right{fill:color-mix(in srgb,var(--tint) var(--d-f70),var(--d-shadow))}
 /* boxes of cubes: the front face light, the other faces stronger, the box's visible edges solid (pictures-k4 solids) */
 .viz-svg .cf.cube{stroke:color-mix(in srgb,var(--tint) var(--d-f55),var(--card));stroke-width:var(--d-cube)} .viz-svg .cf.cube.left{fill:color-mix(in srgb,var(--tint) var(--d-f18),var(--card))} .viz-svg .cf.cube.top,.viz-svg .cf.cube.right{fill:color-mix(in srgb,var(--tint) var(--d-f40),var(--card))}
 /* dark: the unit-cube lines in the tint itself, so they read 3:1 on the tile (thinner than the box edge) */
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .viz-svg .cf.cube{stroke:var(--tint)}}
-:root[data-theme="dark"] .viz-svg .cf.cube{stroke:var(--tint)}
+
+
 .viz-svg .edge{fill:none;stroke:var(--tint);stroke-width:var(--d-edge);stroke-linejoin:round}
 .viz-svg .wire{fill:none;stroke:var(--muted);stroke-width:var(--d-thin);stroke-dasharray:var(--d-dash-wire)}
 .viz-svg .bar{fill:var(--tint)} .viz-svg .bar.mid{animation:barHi var(--dur-500) ease var(--d) both}
@@ -290,8 +290,8 @@ button.gcell:active{transform:scale(.96)}
 .viz-svg .marble.c0{fill:var(--c0)} .viz-svg .marble.c1{fill:var(--c1)} .viz-svg .marble.c2{fill:var(--c2)}
 .viz-svg .tri{stroke:var(--card);stroke-width:var(--d-line)} .viz-svg .tri.c0{fill:color-mix(in srgb,var(--c0) var(--d-f45),var(--card))} .viz-svg .tri.c1{fill:color-mix(in srgb,var(--c1) var(--d-f45),var(--card))} .viz-svg .tri.c2{fill:color-mix(in srgb,var(--c2) var(--d-f45),var(--card))}
 /* dark: triangles mix the grade's deep picture color (--l*) instead of the lifted one, so they stay clear colors, not mud */
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .viz-svg .tri.c0{fill:color-mix(in oklab,var(--l0) 62%,var(--card))} :root:not([data-theme="light"]) .viz-svg .tri.c1{fill:color-mix(in oklab,var(--l1) 62%,var(--card))} :root:not([data-theme="light"]) .viz-svg .tri.c2{fill:color-mix(in oklab,var(--l2) 62%,var(--card))}}
-:root[data-theme="dark"] .viz-svg .tri.c0{fill:color-mix(in oklab,var(--l0) 62%,var(--card))} :root[data-theme="dark"] .viz-svg .tri.c1{fill:color-mix(in oklab,var(--l1) 62%,var(--card))} :root[data-theme="dark"] .viz-svg .tri.c2{fill:color-mix(in oklab,var(--l2) 62%,var(--card))}
+
+  
 .viz-svg .shadeA{fill:color-mix(in srgb,var(--tint) var(--d-f35),transparent)} .viz-svg .shadeB{fill:color-mix(in srgb,var(--acc) var(--d-f35),transparent)} .viz-svg .both{fill:var(--tint)}
 .viz-svg .pie{fill:none;stroke:color-mix(in srgb,var(--tint) var(--d-f55),transparent);stroke-width:90;stroke-dasharray:var(--f) 1}
 .viz-svg .arcline{fill:none;stroke:var(--tint);stroke-width:var(--d-glow);stroke-linecap:round;stroke-dasharray:var(--f) 1}
@@ -392,14 +392,12 @@ button.gcell:active{transform:scale(.96)}
 /* ---- accessibility settings, set on <html> ---- */
 :root[data-text="large"] .wrap{zoom:1.15}
 :root[data-text="largest"] .wrap{zoom:1.3}
-:root[data-contrast="true"]{--text:#000;--muted:#3d4250;--faint:#b4b8c3;--rule:#9ca1b0}
-@media (prefers-color-scheme: dark){:root[data-contrast="true"]:not([data-theme="light"]){--text:#fff;--muted:#cfd3dc;--faint:#7c8290;--rule:#5a606e}}
+
 /* more contrast: every surface gets the Panel master's line, a little heavier */
 :root[data-contrast="true"]{--panel-w:1.5px}
 :root[data-contrast="true"] :is(.tile,.panel,.card){outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
-:root[data-color-safe="true"]{--ok:#2563eb;--err:#ea7a10;--ok-ink:#2563eb;--err-ink:#b75f0c}
-@media (prefers-color-scheme: dark){:root[data-color-safe="true"]:not([data-theme="light"]){--ok-ink:#60a5fa;--err-ink:#fb923c}}
-:root[data-color-safe="true"][data-theme="dark"]{--ok-ink:#60a5fa;--err-ink:#fb923c}
+
+
 :root[data-readable="true"] .wrap{--sans:Verdana,Tahoma,"Segoe UI",sans-serif;--num:Verdana,Tahoma,sans-serif;letter-spacing:.02em}
 :root[data-motion="reduce"] *,:root[data-motion="reduce"] *::before,:root[data-motion="reduce"] *::after{animation-duration:var(--dur-off)!important;animation-delay:0s!important;transition-duration:var(--dur-off)!important}
 

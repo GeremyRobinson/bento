@@ -1,10 +1,10 @@
 /* ---- floating (UI research's floating preview, G 2026-10-06): no bars or boxes. Every control is its own capsule
    floating on the page, white with a soft shadow (light) or one step lighter than the page (dark). ---- */
-:root{--float:var(--card);--float-shadow:inset 0 0 0 1px var(--rule);--dim:rgba(20,22,27,.16);--halo:rgba(20,22,27,.2)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--float-shadow:inset 0 0 0 1px var(--rule);--dim:rgba(0,0,0,.4);--halo:rgba(238,240,244,.22)}}
-:root[data-theme="dark"]{--float-shadow:inset 0 0 0 1px var(--rule);--dim:rgba(0,0,0,.4);--halo:rgba(238,240,244,.22)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--float:color-mix(in oklab,var(--card) 88%,white)}}
-:root[data-theme="dark"] .wrap{--float:color-mix(in oklab,var(--card) 88%,white)}
+:root{--float:var(--card);--float-shadow:inset 0 0 0 1px var(--rule)}
+
+
+
+
 
 /* ---- the top: the island in the middle, a corner on each side ---- */
 .itop{position:sticky;top:max(var(--sp-3),env(safe-area-inset-top));z-index:var(--z-island);display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:var(--s);pointer-events:none;min-width:0}
@@ -33,8 +33,8 @@
 html[data-motion="reduce"] .pring-fill{transition:none}
 .island .ibat{flex:none;position:relative;width:var(--float-in);height:var(--float-in);border-radius:var(--r-round);background:var(--well);overflow:hidden;display:grid;place-items:center}
 .island .ibat>i{position:absolute;inset:auto 0 0;height:calc(var(--p) * 100%);background:var(--gn,var(--ink));transition:height var(--dur-500) var(--glide)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .island .ibat>i{background:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}}
-:root[data-theme="dark"] .island .ibat>i{background:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}
+
+
 .island .iplace .ign{font:inherit;letter-spacing:inherit}
 @media (min-width:700px){.island:not(.guest){width:min(460px,100%)}}
 /* TEXT LOGO 1, "Bento, tightened" (G picked it 2026-10-06): Inter 650, drawn tight at -.05em */
@@ -52,7 +52,6 @@ html[data-motion="reduce"] .zoom .zmark .imark .bl{animation:fadeIn var(--m-swap
 /* nothing sits behind it: no fade, no band, no line; the wordmark and buttons float over the page (G 2026-10-06: "no bar") */
 /* over the dark Bento² section the wordmark turns light (Review layout-shift should-fix) */
 /* the Bento² section is night in both themes, so the mark over it is its light ink in both */
-:root{--mark-on-night:#f5f5f7}
 html[data-nav-dark] .itop.guest .imark,html[data-nav-dark] .itop.guest .bmark{color:var(--mark-on-night)}
 /* where the dark section is inset (wide screens) the mark would straddle its edge, half on light and half on dark, so it
    steps aside until the section has passed (no shadows, G 2026-10-06) */
@@ -217,8 +216,8 @@ html[data-motion="reduce"] .battery>.fill{animation:none}
 
 /* ---- a grade is its number, in its colour ---- */
 .gnum{font:var(--w-bold) 44px/1 var(--sans);letter-spacing:-.04em;color:var(--gn,var(--ink));font-variant-numeric:tabular-nums}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .gnum{color:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}}
-:root[data-theme="dark"] .gnum{color:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}
+
+
 .gnum small{font-size:var(--fz-lg);font-weight:var(--w-bold);letter-spacing:0;margin-left:2px;vertical-align:top;position:relative;top:var(--sp-1)}
 
 /* ---- the shelf: every grade by line, one card size ---- */

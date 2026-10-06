@@ -18,7 +18,7 @@
 .sbpill.on{background:var(--text);color:var(--page)}
 .sbgrades{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .sbgrade{height:32px;border-radius:999px;background:var(--card);color:var(--gc);font:650 14px/1 var(--sans)}
-.sbgrade.on{background:var(--gc);color:#fff}
+.sbgrade.on{background:var(--gc);color:var(--on-tint)}
 .sbpanel select{height:36px;border-radius:12px;border:0;background:var(--card);color:var(--text);padding:0 10px;font:400 14px var(--sans);width:100%}
 .sbtok{display:grid;grid-template-columns:1fr auto 64px 20px;align-items:center;gap:8px;min-height:32px}
 .sbtok-name{display:grid;line-height:16px}

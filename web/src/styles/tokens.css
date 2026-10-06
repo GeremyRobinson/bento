@@ -76,3 +76,23 @@
   --adv-sky:#1d1b2e; --adv-night:#0a0a0c; --adv-lilac:#c4b5fd; --adv-pink:#f0abfc;
   --adv-card:rgb(255 255 255 / .04); --adv-hair:rgb(255 255 255 / .08); --adv-faint-line:rgb(255 255 255 / .16); --adv-ring:rgb(255 255 255 / .22);}
 
+
+/* ---- colour values that used to sit in component files (G 2026-10-06: light and dark come from tokens only) ---- */
+:root{--dim:rgba(20,22,27,.16); --halo:rgba(20,22,27,.2); --mark-on-night:#f5f5f7; --mix-deep:#000; --cta-bg:var(--cta-ink); --cta-fg:#fff;
+  /* Bento² is night in both themes */
+  --adv-ink:#f5f5f7; --adv-dim:#86868b; --adv-glow:#a78bfa; --tp-dim:#9a9aa6;
+  --tp-sky:#7dd3fc; --tp-pink:#f472b6; --tp-mint:#6ee7b7; --tp-amber:#fbbf24; --tp-lilac:#c4b5fd}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--dim:rgba(0,0,0,.4); --halo:rgba(238,240,244,.22); --cta-bg:var(--cta-ink-dark); --cta-fg:var(--cta-text-dark)}}
+:root[data-theme="dark"]{--dim:rgba(0,0,0,.4); --halo:rgba(238,240,244,.22); --cta-bg:var(--cta-ink-dark); --cta-fg:var(--cta-text-dark)}
+/* More contrast and colour-safe answers: their own light and dark values */
+:root[data-contrast="true"]{--text:#000;--muted:#3d4250;--faint:#b4b8c3;--rule:#9ca1b0}
+@media (prefers-color-scheme: dark){:root[data-contrast="true"]:not([data-theme="light"]){--text:#fff;--muted:#cfd3dc;--faint:#7c8290;--rule:#5a606e}}
+:root[data-contrast="true"][data-theme="dark"]{--text:#fff;--muted:#cfd3dc;--faint:#7c8290;--rule:#5a606e}
+:root[data-color-safe="true"]{--ok:#2563eb;--err:#ea7a10;--ok-ink:#2563eb;--err-ink:#b75f0c}
+@media (prefers-color-scheme: dark){:root[data-color-safe="true"]:not([data-theme="light"]){--ok-ink:#60a5fa;--err-ink:#fb923c}}
+:root[data-color-safe="true"][data-theme="dark"]{--ok-ink:#60a5fa;--err-ink:#fb923c}
+/* the Bento² side is night whatever the device says */
+:root[data-side="b2"]{--text:#f5f5f7;--muted:#9a9aa6;--faint:#3e3d4c;--rule:#2a2936;--page:#0b0b10;--well:#17161f;--card:#1a1924;--hover:#24232f;--float:#16151e;
+  --float-shadow:inset 0 0 0 1px var(--rule);--tint:#a78bfa;--ink:#c4b5fd;--tint-soft:rgba(167,139,250,.14);color-scheme:dark;
+  --adv-ink:#f5f5f7;--adv-dim:#86868b;--adv-glow:#a78bfa}
+:root[data-side="b2"] .wrap{--tint:#a78bfa;--ink:#c4b5fd}

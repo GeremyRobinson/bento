@@ -83,8 +83,8 @@ html:has(.screen) body{overflow:hidden}
 .gstrip{position:relative;display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:10px;justify-items:center;padding:6px 0}
 .gbtn{width:62px;height:62px;border-radius:var(--r-round);background:var(--float);box-shadow:var(--float-shadow);color:var(--ink);font:var(--w-bold) 25px/1 var(--sans);letter-spacing:-.03em;transition:transform var(--dur-180) var(--ease),background var(--dur-200)}
 /* dark mode: the grade's color lifted so the number reads on the dark circle (4.5:1 or better) */
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .gbtn{color:color-mix(in srgb,var(--tint) 70%,var(--mix-lift))}}
-:root[data-theme="dark"] .gbtn{color:color-mix(in srgb,var(--tint) 70%,var(--mix-lift))}
+
+
 .gbtn:hover{background:color-mix(in oklab,var(--float) 94%,var(--text))}
 .gbtn:active{transform:scale(.96)}
 .gring{position:absolute;left:0;top:0;width:72px;height:72px;border-radius:var(--r-round);box-shadow:0 0 0 3px var(--text);pointer-events:none;opacity:0;transition:transform var(--dur-380) var(--glide),opacity var(--dur-200) var(--ease)}
