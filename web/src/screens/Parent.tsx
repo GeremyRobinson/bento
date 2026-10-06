@@ -31,7 +31,7 @@ export function Parent() {
       <div className="bgrown">
         <section className="panel">
           <div className="head"><h2>Scores by grade</h2><span className="muted">0 to 4</span></div>
-          <div className="facts" style={{ background: "var(--card)" }}>
+          <div className="facts oncard">
             {byGrade.length ? byGrade.map(({ gd, a, t }) => (
               <div className="pattern" key={gd.grade}>
                 <span><b>{gd.name}</b><span className="k">Lesson average {a == null ? "—" : `${a.toFixed(1)} of 4`} · check-up {t ? `${t.last}: ${LEVELS[t.last]}` : "not taken"}</span></span>
@@ -42,18 +42,18 @@ export function Parent() {
           <ul className="slegend" aria-label="What the scores mean">
             {([4, 3, 2, 1, 0] as Level[]).map(n => <li key={n}><ScoreChip n={n} /><span>{LEVELS[n]}</span></li>)}
           </ul>
-          <p className="muted" style={{ padding: "0 5px" }}>Based on how many steps were right on the first try. Hints count half.</p>
+          <p className="muted indent">Based on how many steps were right on the first try. Hints count half.</p>
         </section>
         <section className="panel">
           <div className="head"><h2>Mistake patterns</h2>{progress.log.length > 0 && <span className="muted">last {plural(progress.log.length, "session")}</span>}</div>
           {top.length ? (
-            <div className="facts" style={{ background: "var(--card)" }}>
+            <div className="facts oncard">
               {top.map(([k, n]) => { const m = first[k]; return (
                 <div className="pattern" key={k}><span><b>{k}</b>{m && <span className="k"><Rich text={explainMistake(m)} /></span>}</span><span className="v">×{n}</span></div>
               ); })}
             </div>
-          ) : <p style={{ padding: "0 5px" }}>No mistakes recorded yet.</p>}
-          <p className="muted" style={{ padding: "0 5px" }}>{plural(hints, "hint")} used{rushed ? `, ${plural(rushed, "quick retry")} that looked like guessing` : ""}.</p>
+          ) : <p className="indent">No mistakes recorded yet.</p>}
+          <p className="muted indent">{plural(hints, "hint")} used{rushed ? `, ${plural(rushed, "quick retry")} that looked like guessing` : ""}.</p>
         </section>
         {weak.length > 0 && (
           <section className="panel"><div className="head"><h2>Needs more practice</h2></div>

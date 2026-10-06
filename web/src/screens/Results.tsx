@@ -10,6 +10,7 @@ import { LEVELS } from "../engine/mastery/levels";
 import { BuildUp } from "../components/BuildUp";
 import type { SessionReport } from "../engine/session/types";
 import { SessionReportView } from "../components/reports/SessionReportView";
+import { ALL_LESSONS, PRACTICE_AGAIN } from "../app/copy";
 
 function Confetti() {
   const bits = useMemo(() => {
@@ -65,7 +66,7 @@ function Placed({ rep }: { rep: SessionReport }) {
 /** The screen after a run: score ring, XP, time, what to do next, then the full report. */
 export function Results() {
   const { lastReport: rep, progress, go, startLesson, startTest } = useApp();
-  if (!rep) return <section className="panel"><p className="empty">Nothing finished yet.</p><div className="actions"><Pill go onClick={() => go({ name: "home" })}>All lessons</Pill></div></section>;
+  if (!rep) return <section className="panel"><p className="empty">Nothing finished yet.</p><div className="actions"><Pill go onClick={() => go({ name: "home" })}>{ALL_LESSONS}</Pill></div></section>;
   if (rep.key.startsWith("place:")) return <Placed rep={rep} />;
   const lesson = lessonById(rep.key), test = rep.mode === "test", review = rep.mode === "review";
   const grade = lesson ? lessonsInGrade(lesson.grade) : [], k = lesson ? grade.indexOf(lesson) : -1, next = grade[k + 1];
@@ -90,8 +91,8 @@ export function Results() {
           <div className="actions">
             {rep.mode === "practice" && next && <Pill go onClick={() => go({ name: "learn", lessonId: next.id }, "next")}>Next lesson</Pill>}
             {test ? <Pill go onClick={() => startTest(rep.key)}>Take it again</Pill>
-              : !review && lesson && <Pill onClick={() => startLesson(lesson.id)}>Practice again</Pill>}
-            <Pill onClick={() => go({ name: "home" }, "back")}>All lessons</Pill>
+              : !review && lesson && <Pill onClick={() => startLesson(lesson.id)}>{PRACTICE_AGAIN}</Pill>}
+            <Pill onClick={() => go({ name: "home" }, "back")}>{ALL_LESSONS}</Pill>
           </div>
         </section>
         <div className="bcol"><SessionReportView rep={rep} /></div>

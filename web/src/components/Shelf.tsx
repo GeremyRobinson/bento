@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { useApp } from "../app/AppState";
 import { doneCount, entriesInGrade } from "../app/curriculum";
 import { GRADES, inkOf, LINES, tintStyle } from "../curriculum/grades";
+import { lessonCount } from "../app/copy";
 
 /** Progress as a fill: the box fills from the bottom in its colour, like a battery charging. frac is 0–1. */
 export const Fill = ({ frac }: { frac: number }) => <span className="fill" aria-hidden style={{ "--p": Math.max(0, Math.min(1, frac)) } as CSSProperties} />;
@@ -34,7 +35,7 @@ export function Shelf({ current, onPick }: { current: number | null; onPick: (gr
                   <GradeNum grade={n} />
                   <b>{d.subtitle}</b>
                   <Fill frac={list.length ? done / list.length : 0} />
-                  <span className="bcount">{done === 0 ? `${list.length} lesson${list.length === 1 ? "" : "s"}` : done === list.length ? "Finished" : `${done} of ${list.length} done`}</span>
+                  <span className="bcount">{lessonCount(done, list.length)}</span>
                 </button>
               );
             })}

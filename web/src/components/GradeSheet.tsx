@@ -2,6 +2,7 @@ import { Pill } from "./primitives/Pill";
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "../app/AppState";
 import { GradeLineup } from "./GradeLineup";
+import { CHOOSE_GRADE } from "../app/copy";
 
 /** "Choose your grade": the same window the header badge opens in the current app. */
 export function GradeSheet() {
@@ -19,8 +20,8 @@ export function GradeSheet() {
   }, [openSheet]);
   return (
     <div className="sheet" onClick={e => { if (e.target === e.currentTarget) openSheet(false); }}>
-      <div className={`panel${more ? " more" : ""}`} role="dialog" aria-modal="true" aria-label="Choose your grade" ref={panel} onScroll={check}>
-        <div className="head"><h2>Choose your grade</h2><Pill onClick={() => openSheet(false)}>Done</Pill></div>
+      <div className={`panel${more ? " more" : ""}`} role="dialog" aria-modal="true" aria-label={CHOOSE_GRADE} ref={panel} onScroll={check}>
+        <div className="head"><h2>{CHOOSE_GRADE}</h2><Pill onClick={() => openSheet(false)}>Done</Pill></div>
         <GradeLineup onPick={chooseGrade} />
       </div>
     </div>

@@ -5,6 +5,7 @@ import { GRADES, gradeOf, inkOf, tintStyle } from "../curriculum/grades";
 import type { Rng } from "../curriculum/generators/rng";
 import { Fill, GradeNum } from "./Shelf";
 import { SlipTile, SolveTile } from "./StepDemos";
+import { FACT_SPRINT, REVIEW, SHOW_ME } from "../app/copy";
 
 /**
  * The landing page's feature tiles: each one is a small working piece of the app (today's plan ticking off, a times
@@ -46,7 +47,7 @@ interface TileProps { tint: string; k: number; rng: Rng; size: Size }
 
 /** Today's plan: a lesson, a fact sprint and review, ticking off one by one. */
 export function TodayTile({ tint, k, size }: TileProps) {
-  const rows = [["Lesson", "Adding fractions"], ["Fact sprint", "Times tables"], ["Review", "4 old problems"]] as const;
+  const rows = [["Lesson", "Adding fractions"], [FACT_SPRINT, "Times tables"], [REVIEW, "4 old problems"]] as const;
   const { t, box } = useBeat(1100, 3);
   const at = t % 6; // three ticks, then a rest before it starts over
   return (
@@ -128,7 +129,7 @@ export function HelpTile({ tint, k, size }: TileProps) {
   const at = t % 5;
   return (
     <Tile box={box} size={size} tint={tint} k={k} title="Help that steps back" label="Hints fade as you get stronger, until it's just you.">
-      <div className="lhelp">{["Show me", "Hint", "Just you"].map((s, i) => (
+      <div className="lhelp">{[SHOW_ME, "Hint", "Just you"].map((s, i) => (
         <span key={s} className={i === Math.min(at, 2) ? "on" : i < Math.min(at, 2) ? "gone" : ""}>{s}</span>
       ))}</div>
     </Tile>

@@ -7,6 +7,7 @@ import { LEVEL_SENTENCES, plural, summaryLine, when } from "../../app/format";
 import { MathLine, Rich } from "../primitives/MathLine";
 import { ProblemView } from "../practice/ProblemView";
 import { ScoreChip } from "../primitives/Score";
+import { GROWN_UP } from "../../app/copy";
 
 /** The step, then what went wrong; the step's name is left off when the message already starts with it. */
 export const explainMistake = (m: { cat: Mistake["cat"]; label: string; msg: string }) => {
@@ -29,7 +30,7 @@ export function SessionReportView({ rep }: { rep: SessionReport }) {
     <>
       <section className="panel">
         <div className="head"><h2>What you did</h2><span className="muted">{when(rep.date)}</span></div>
-        <div className="prose" style={{ padding: "0 5px" }}>
+        <div className="prose indent">
           <p>{rep.mode === "test" ? "Tested " : "Practiced "}{skills.map((t, i) => <span key={i}>{i ? ", " : ""}<b>{t}</b></span>)}.</p>
           <p>{summaryLine(rep)}</p>
         </div>
@@ -51,19 +52,19 @@ export function SessionReportView({ rep }: { rep: SessionReport }) {
         </div>
       </section>
       <section className="panel">
-        <div className="head"><h2>For the grown-up</h2><ScoreChip n={rep.level} words /></div>
-        <div className="prose" style={{ padding: "0 5px" }}>
+        <div className="head"><h2>{GROWN_UP}</h2><ScoreChip n={rep.level} words /></div>
+        <div className="prose indent">
           <p>Score {rep.level} of 4: {LEVELS[rep.level]}. {LEVEL_SENTENCES[rep.level]}</p>
           {rushed > 0 && <p>{plural(rushed, "answer")} came very quickly after a miss, which usually means guessing.</p>}
         </div>
         {sorted.length ? (
           <>
-            <h3 className="label" style={{ padding: "0 5px" }}>Mistake patterns, most common first</h3>
-            <div className="facts" style={{ background: "var(--card)" }}>
+            <h3 className="label indent">Mistake patterns, most common first</h3>
+            <div className="facts oncard">
               {sorted.map(([k, g]) => <div className="pattern" key={k}><span><b>{k}</b><span className="k"><Rich text={explainMistake(g.first)} /></span></span><span className="v">×{g.n}</span></div>)}
             </div>
-            <h3 className="label" style={{ padding: "0 5px" }}>Every mistake</h3>
-            <div className="facts mlist" style={{ background: "var(--card)" }}>
+            <h3 className="label indent">Every mistake</h3>
+            <div className="facts mlist oncard">
               {rep.mistakes.map((m, i) => (
                 <div key={i}><span>
                   <span className="k">Problem {m.n} · Step {m.step} · {m.label}{rep.mode !== "practice" && (entryById(m.lessonId) || lessonById(m.lessonId)) ? ` · ${titleOf(m.lessonId)}` : ""}</span>
@@ -72,7 +73,7 @@ export function SessionReportView({ rep }: { rep: SessionReport }) {
               ))}
             </div>
           </>
-        ) : <p style={{ padding: "0 5px" }}>No mistakes this time.</p>}
+        ) : <p className="indent">No mistakes this time.</p>}
       </section>
     </>
   );

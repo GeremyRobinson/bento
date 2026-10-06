@@ -6,6 +6,7 @@ import { factKey, tableById, tablesForGrade, type Fact, type FactTable } from ".
 import { FAST_MS, KNOWN, levelOf, pickSprint, sprintDoneToday, sprintTableFor, tableProgress, type SprintAnswer } from "../engine/facts/mastery";
 import { readAloudOn, readSettings, speak } from "../app/settings";
 import { Fill } from "../components/Shelf";
+import { CHOOSE_GRADE } from "../app/copy";
 
 const SPRINT = 20;
 const fmt = (n: number) => (n < 0 ? `−${-n}` : String(n));
@@ -29,7 +30,7 @@ function FactsHome() {
         <p className="ysub">Know them by heart.</p>
         <p className="muted">Each grade leans on its own facts: counting on, times tables, squares, powers. Choose your grade to see yours.</p>
       </header>
-      <div className="actions"><Pill go onClick={() => go({ name: "home" }, "fwd")}>Choose your grade</Pill></div>
+      <div className="actions"><Pill go onClick={() => go({ name: "home" }, "fwd")}>{CHOOSE_GRADE}</Pill></div>
     </>
   );
   return <GradeFacts g={progress.grade} />;

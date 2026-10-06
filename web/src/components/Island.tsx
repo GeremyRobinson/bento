@@ -11,6 +11,7 @@ import { upNext } from "../app/today";
 import { Contents, type Level } from "./Contents";
 import { tableById } from "../engine/facts/tables";
 import { Chevron } from "./primitives/icons";
+import { CONTENTS, GROWN_UP, NO_UNIT, PRACTICE, REPORT, REVIEW, SETTING, YOUR_BENTO } from "../app/copy";
 
 /** A simple person: a head and shoulders. */
 const MeIcon = () => (
@@ -33,14 +34,14 @@ function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): P
   const contents = { label: "contents", to: { name: "home" } as Route };
   const chapterLine = (id: string, extra?: string) => {
     const p = pageOf(id);
-    return p ? `${p.chapter === "Skills" ? gradeOf(p.grade).name : p.chapter} · ${extra ?? `${p.page} of ${p.pages}`}` : gradeOf(grade).name;
+    return p ? `${p.chapter === NO_UNIT ? gradeOf(p.grade).name : p.chapter} · ${extra ?? `${p.page} of ${p.pages}`}` : gradeOf(grade).name;
   };
   switch (route.name) {
     case "learn": return { kicker: chapterLine(route.lessonId), title: lessonById(route.lessonId)?.title ?? "Lesson", back: contents, lesson: route.lessonId };
     case "practice": {
       const run = app.progress.run;
-      if (!run) return { kicker: gradeOf(grade).name, title: "Practice", back: contents };
-      if (run.mode !== "practice") return { kicker: run.mode === "test" ? "Test" : "Review", title: run.title, back: contents };
+      if (!run) return { kicker: gradeOf(grade).name, title: PRACTICE, back: contents };
+      if (run.mode !== "practice") return { kicker: run.mode === "test" ? "Test" : REVIEW, title: run.title, back: contents };
       const l = lessonOfItem(currentItem(run));
       return { kicker: chapterLine(l.id, "practice"), title: l.title, back: { label: l.title, to: { name: "learn", lessonId: l.id } }, lesson: l.id };
     }
@@ -52,10 +53,10 @@ function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): P
       const rep = app.reports[route.key], l = lessonById(route.key);
       return l
         ? { kicker: chapterLine(l.id, "report"), title: l.title, back: { label: l.title, to: { name: "learn", lessonId: l.id } }, lesson: l.id }
-        : { kicker: "For the grown-up", title: rep?.title ?? "Report", back: { label: "For the grown-up", to: { name: "parent" } } };
+        : { kicker: GROWN_UP, title: rep?.title ?? REPORT, back: { label: GROWN_UP, to: { name: "parent" } } };
     }
-    case "parent": return { kicker: "Me", title: "For the grown-up", back: { label: "Me", to: { name: "me" } } };
-    case "me": return { kicker: "Me", title: "Your Bento", back: contents };
+    case "parent": return { kicker: "Me", title: GROWN_UP, back: { label: "Me", to: { name: "me" } } };
+    case "me": return { kicker: "Me", title: YOUR_BENTO, back: contents };
     case "facts": {
       const t = route.table ? tableById(route.table) : undefined;
       return t ? { kicker: "Facts", title: t.name, back: { label: "facts", to: { name: "facts" } } } : { kicker: gradeOf(grade).name, title: "Facts", back: contents };
@@ -74,7 +75,7 @@ function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): P
 function homeChapter(route: Route, app: ReturnType<typeof useApp>, grade: number): string {
   const id = route.name === "home" && route.pick && route.pick !== "today" ? route.pick : upNext(app.progress, grade)?.entry.id;
   const p = id ? pageOf(id) : null;
-  return p && p.grade === grade && p.chapter !== "Skills" ? p.chapter : "Contents";
+  return p && p.grade === grade && p.chapter !== NO_UNIT ? p.chapter : CONTENTS;
 }
 
 /** "5th grade" with its number in the grade's colour, the way the UI notes preview names the grade. */
@@ -233,10 +234,10 @@ function QuickSettings({ close, closing }: { close: () => void; closing: boolean
     return () => removeEventListener("keydown", onKey);
   }, [close]);
   const rows: { label: string; on: boolean; flip: () => void }[] = [
-    { label: "Less motion", on: s.motion === "reduce", flip: () => setSettings({ motion: s.motion === "reduce" ? "system" : "reduce" }) },
-    { label: "Color-blind friendly", on: s.colorSafe, flip: () => setSettings({ colorSafe: !s.colorSafe }) },
-    { label: "Read aloud", on: aloud, flip: () => setSettings({ readAloud: !aloud }) },
-    { label: "Sounds", on: s.sounds, flip: () => setSettings({ sounds: !s.sounds }) },
+    { label: SETTING.motion, on: s.motion === "reduce", flip: () => setSettings({ motion: s.motion === "reduce" ? "system" : "reduce" }) },
+    { label: SETTING.colorSafe, on: s.colorSafe, flip: () => setSettings({ colorSafe: !s.colorSafe }) },
+    { label: SETTING.readAloud, on: aloud, flip: () => setSettings({ readAloud: !aloud }) },
+    { label: SETTING.sounds, on: s.sounds, flip: () => setSettings({ sounds: !s.sounds }) },
   ];
   return (
     <>

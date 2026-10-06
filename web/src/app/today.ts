@@ -7,6 +7,7 @@ import { lessonById } from "../curriculum/registry";
 import { entriesInGrade, isReady, testKey, unitsInGrade, type Entry } from "./curriculum";
 import { tablesForGrade } from "../engine/facts/tables";
 import { sprintDoneToday, sprintTableFor } from "../engine/facts/mastery";
+import { TODAYS_REVIEW } from "./copy";
 
 export type TodayItem =
   | { kind: "lesson"; id: string; title: string; again: boolean; done: boolean; minutes: number }
@@ -36,7 +37,7 @@ export function todayPlan(progress: Progress, g: number, now: number, reviewRead
   else if (next) items.push({ kind: "lesson", id: next.entry.id, title: next.entry.title, again: next.again, done: false, minutes: 8 });
 
   // a few problems from what's already been learned
-  if (reviewReady) items.push({ kind: "review", title: "Today's review", done: progress.reviews[new Date(now).toDateString()] != null, minutes: 5 });
+  if (reviewReady) items.push({ kind: "review", title: TODAYS_REVIEW, done: progress.reviews[new Date(now).toDateString()] != null, minutes: 5 });
 
   // a two-minute fact sprint, on the table that most needs it
   const ft = sprintTableFor(progress.facts ?? {}, tablesForGrade(g), now);
