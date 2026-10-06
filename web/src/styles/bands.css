@@ -89,6 +89,8 @@ html[data-hue][data-theme="dark"]{--page:color-mix(in oklab,var(--page-hue) 6%,#
 /* the three darkest grade colours need a little more lift to read on dark cards (4.5:1) */
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="7"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="10"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="11"]{--c0:color-mix(in srgb,var(--l0) 70%,white);--c1:color-mix(in srgb,var(--l1) 70%,white);--c2:color-mix(in srgb,var(--l2) 70%,white)}}
 :is(.wrap,.gpal){--k0:var(--master-k0);--k1:var(--master-k1);--k2:var(--master-k2)}
+/* the accent's text ink (answers, "= 0.45", the unknown): a darker accent on light cards, the lifted accent on dark ones */
+:is(.wrap,.gpal){--ka:color-mix(in srgb,var(--la) 62%,black)}
 :is(.wrap,.gpal)[data-grade="0"]{--k0:#9a6307;--k1:#bb3979;--k2:#167f3d}
 :is(.wrap,.gpal)[data-grade="1"]{--k0:#117c38;--k1:#0973a3;--k2:#b05110}
 :is(.wrap,.gpal)[data-grade="2"]{--k0:#077590;--k1:#595cd9;--k2:#b05110}
@@ -102,8 +104,8 @@ html[data-hue][data-theme="dark"]{--page:color-mix(in oklab,var(--page-hue) 6%,#
 :is(.wrap,.gpal)[data-grade="10"]{--k0:#0369a1;--k1:#ab4f09;--k2:#475569}
 :is(.wrap,.gpal)[data-grade="11"]{--k0:#7c3aed;--k1:#af23c0;--k2:#2460e4}
 :is(.wrap,.gpal)[data-grade="12"]{--k0:var(--text);--k1:var(--text);--k2:var(--text)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal){--k0:var(--c0);--k1:var(--c1);--k2:var(--c2)}}
-:root[data-theme="dark"] :is(.wrap,.gpal){--c0:color-mix(in srgb,var(--l0) 75%,white);--c1:color-mix(in srgb,var(--l1) 75%,white);--c2:color-mix(in srgb,var(--l2) 75%,white);--acc:color-mix(in srgb,var(--la) 80%,white);--k0:var(--c0);--k1:var(--c1);--k2:var(--c2)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal){--k0:var(--c0);--k1:var(--c1);--k2:var(--c2);--ka:var(--acc)}}
+:root[data-theme="dark"] :is(.wrap,.gpal){--c0:color-mix(in srgb,var(--l0) 75%,white);--c1:color-mix(in srgb,var(--l1) 75%,white);--c2:color-mix(in srgb,var(--l2) 75%,white);--acc:color-mix(in srgb,var(--la) 80%,white);--k0:var(--c0);--k1:var(--c1);--k2:var(--c2);--ka:var(--acc)}
 /* inside a picture: the lesson's own picture color, as on the live site */
 :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--tint:var(--c0);--ink:var(--k0)}
 .t1 :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--tint:var(--c1);--ink:var(--k1)}

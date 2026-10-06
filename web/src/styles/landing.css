@@ -75,7 +75,7 @@
 .lmark{flex:none;width:26px;height:26px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--faint);display:grid;place-items:center;transition:background .3s,box-shadow .3s}
 .ltoday li.now .lmark{box-shadow:inset 0 0 0 2px var(--ink)}
 .ltoday li.done .lmark{background:var(--ok);box-shadow:none}
-.lmark svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:16;animation:tick .35s var(--ease) both}
+.lmark svg{width:16px;height:16px;fill:none;stroke:var(--on-tint);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:16;animation:tick .35s var(--ease) both}
 @keyframes tick{from{stroke-dashoffset:16}}
 
 .lfacts{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:4px;width:100%;max-width:300px}
