@@ -369,3 +369,12 @@ describe("find my level", () => {
     expect(screen.getByRole("button", { name: /^Start .+ grade ›$/ })).toBeInTheDocument();
   });
 });
+
+describe("the website from inside the app", () => {
+  it("quick settings has About Bento, which opens the landing page", () => {
+    renderApp();
+    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+    tap("About Bento ›");
+    expect(screen.getByRole("heading", { name: "Every grade, K to 12th." })).toBeInTheDocument();
+  });
+});
