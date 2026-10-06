@@ -82,7 +82,7 @@ function Linear({ play }: { play: boolean }) {
         <text x={ix + 6} y={iy + 14} className="tp-lbl" fill="var(--tp-pink)">î</text>
         <text x={jx - 14} y={jy - 4} className="tp-lbl" fill="var(--tp-mint)">ĵ</text>
         <text x={vx + 8} y={vy - 4} className="tp-lbl" fill="var(--tp-amber)">Av = {f(1 + t)}v</text>
-        <text x={P(0.72, 0.22)[0]} y={P(0.72, 0.22)[1] + 4} textAnchor="middle" className="tp-sm" fill="var(--tp-amber)">area {f(det)}</text>
+        <text x={P(0.72, 0.22)[0]} y={P(0.72, 0.22)[1] + 4} textAnchor="middle" className="tp-sm tp-minor" fill="var(--tp-amber)">area {f(det)}</text>
       </g>
       <g className="tp-panel">
         <rect x="10" y="10" width="118" height="100" rx="10" />
@@ -246,8 +246,8 @@ function Prob({ play }: { play: boolean }) {
       {counts.map((_, k) => <text key={k} x={binX(k)} y={binTop + 105} textAnchor="middle" className="tp-xs">{k}</text>)}
       <text x="262" y="40" className="tp-math">P(k) = C(8, k) / 2⁸</text>
       <text x="262" y="66" className="tp-sm">{n} balls</text>
-      <text x="262" y="86" className="tp-sm">mean {n ? mean.toFixed(2) : "–"} · expected 4</text>
-      <text x="262" y="106" className="tp-sm" fill="var(--tp-pink)" style={{ opacity: span(t, 0.5, 0.95) }}>bell curve: μ = 4, σ = √2</text>
+      <text x="262" y="86" className="tp-sm tp-minor">mean {n ? mean.toFixed(2) : "–"} · expected 4</text>
+      <text x="262" y="106" className="tp-sm tp-minor" fill="var(--tp-pink)" style={{ opacity: span(t, 0.5, 0.95) }}>bell curve: μ = 4, σ = √2</text>
     </Svg>
   );
 }
