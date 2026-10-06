@@ -86,11 +86,9 @@ html[data-hue][data-theme="dark"]{--page:color-mix(in oklab,var(--page-hue) 6%,#
 :is(.wrap,.gpal){--master-l0:#3b82f6;--master-l1:#f2683c;--master-l2:#8b5cf6;--master-la:#f59e0b;--master-k0:#2d69cc;--master-k1:#b44d2d;--master-k2:#7950d6}
 :is(.wrap,.gpal){--l0:var(--master-l0);--l1:var(--master-l1);--l2:var(--master-l2);--la:var(--master-la);--c0:var(--l0);--c1:var(--l1);--c2:var(--l2);--acc:var(--la)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal){--c0:color-mix(in srgb,var(--l0) 75%,white);--c1:color-mix(in srgb,var(--l1) 75%,white);--c2:color-mix(in srgb,var(--l2) 75%,white);--acc:color-mix(in srgb,var(--la) 80%,white)}}
-/* the three darkest grade colours need a little more lift to read on dark cards (4.5:1) */
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="7"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="10"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="11"]{--c0:color-mix(in srgb,var(--l0) 70%,white);--c1:color-mix(in srgb,var(--l1) 70%,white);--c2:color-mix(in srgb,var(--l2) 70%,white)}}
+/* the darkest grade colours need a little more lift to read on dark cards (lines 3:1 on the raised picture tile) */
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="7"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="8"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="9"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="10"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="11"]{--c0:color-mix(in srgb,var(--l0) 70%,white);--c1:color-mix(in srgb,var(--l1) 70%,white);--c2:color-mix(in srgb,var(--l2) 70%,white)}}
 :is(.wrap,.gpal){--k0:var(--master-k0);--k1:var(--master-k1);--k2:var(--master-k2)}
-/* the accent's text ink (answers, "= 0.45", the unknown): a darker accent on light cards, the lifted accent on dark ones */
-:is(.wrap,.gpal){--ka:color-mix(in srgb,var(--la) 62%,black)}
 :is(.wrap,.gpal)[data-grade="0"]{--k0:#9a6307;--k1:#bb3979;--k2:#167f3d}
 :is(.wrap,.gpal)[data-grade="1"]{--k0:#117c38;--k1:#0973a3;--k2:#b05110}
 :is(.wrap,.gpal)[data-grade="2"]{--k0:#077590;--k1:#595cd9;--k2:#b05110}
@@ -104,13 +102,45 @@ html[data-hue][data-theme="dark"]{--page:color-mix(in oklab,var(--page-hue) 6%,#
 :is(.wrap,.gpal)[data-grade="10"]{--k0:#0369a1;--k1:#ab4f09;--k2:#475569}
 :is(.wrap,.gpal)[data-grade="11"]{--k0:#7c3aed;--k1:#af23c0;--k2:#2460e4}
 :is(.wrap,.gpal)[data-grade="12"]{--k0:var(--text);--k1:var(--text);--k2:var(--text)}
+/* --ka: the accent as text (the thing to look at, the unknown): --la darkened to 4.5:1 on white; dark mode reads --acc */
+:is(.wrap,.gpal){--ka:#a46a07}
+:is(.wrap,.gpal)[data-grade="0"]{--ka:#3371d6} :is(.wrap,.gpal)[data-grade="1"]{--ka:#994de1} :is(.wrap,.gpal)[data-grade="2"]{--ka:#916f05}
+:is(.wrap,.gpal)[data-grade="3"]{--ka:#0b7caf} :is(.wrap,.gpal)[data-grade="6"]{--ka:#027bb9} :is(.wrap,.gpal)[data-grade="8"]{--ka:#07809d}
+:is(.wrap,.gpal)[data-grade="9"]{--ka:#bd5711} :is(.wrap,.gpal)[data-grade="10"]{--ka:#d92776} :is(.wrap,.gpal)[data-grade="12"]{--ka:var(--text)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal){--k0:var(--c0);--k1:var(--c1);--k2:var(--c2);--ka:var(--acc)}}
 :root[data-theme="dark"] :is(.wrap,.gpal){--c0:color-mix(in srgb,var(--l0) 75%,white);--c1:color-mix(in srgb,var(--l1) 75%,white);--c2:color-mix(in srgb,var(--l2) 75%,white);--acc:color-mix(in srgb,var(--la) 80%,white);--k0:var(--c0);--k1:var(--c1);--k2:var(--c2);--ka:var(--acc)}
+:root[data-theme="dark"] :is(.wrap,.gpal):is([data-grade="7"],[data-grade="8"],[data-grade="9"],[data-grade="10"],[data-grade="11"]){--c0:color-mix(in srgb,var(--l0) 70%,white);--c1:color-mix(in srgb,var(--l1) 70%,white);--c2:color-mix(in srgb,var(--l2) 70%,white)}
 /* inside a picture: the lesson's own picture color, as on the live site */
 :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--tint:var(--c0);--ink:var(--k0)}
 .t1 :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--tint:var(--c1);--ink:var(--k1)}
 .t2 :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--tint:var(--c2);--ink:var(--k2)}
 :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--tint-soft:color-mix(in srgb,var(--tint) 13%,var(--card))}
+/* Dark pictures. In dark mode a picture sits on a raised tile (--float), lighter than --card, so inside it every fill
+   and line mixes from the tile it is drawn on. Its greys are lifted to read there: lines and outlines (--rule, --faint)
+   3:1 or better, small text (--muted) 4.5:1, and an empty part is a tinted box a step lighter than the tile, never a hole.
+   Labels in a part color (--lbl, --k*, --ka) are that color lifted toward white to 4.5:1; lines keep the color itself.
+   Labels carry a thin halo of the tile, so a label over a filled shape still reads.
+   Light mode reads none of this. */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) :is(.lshero,.panel.split .card) :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--card:var(--float)}
+  :root:not([data-theme="light"]) :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){
+    --rule:color-mix(in oklab,var(--text) 46%,var(--card)); --faint:color-mix(in oklab,var(--text) 50%,var(--card));
+    --muted:color-mix(in oklab,var(--text) 78%,var(--card)); --d-lift:color-mix(in oklab,var(--card) 86%,white);
+    --well:color-mix(in oklab,var(--tint) 16%,var(--d-lift));
+    --k0:color-mix(in srgb,var(--c0) 62%,white); --k1:color-mix(in srgb,var(--c1) 62%,white); --k2:color-mix(in srgb,var(--c2) 62%,white);
+    --ka:color-mix(in srgb,var(--acc) 62%,white)}
+    :root:not([data-theme="light"]) .viz-svg :is(text.onlbl,text.coin-val){stroke:none}
+  :root:not([data-theme="light"]) .viz-svg text{paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round;--lbl:color-mix(in srgb,var(--tint) 62%,white)}
+}
+:root[data-theme="dark"] :is(.lshero,.panel.split .card) :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--card:var(--float)}
+:root[data-theme="dark"] :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){
+  --rule:color-mix(in oklab,var(--text) 46%,var(--card)); --faint:color-mix(in oklab,var(--text) 50%,var(--card));
+  --muted:color-mix(in oklab,var(--text) 78%,var(--card)); --d-lift:color-mix(in oklab,var(--card) 86%,white);
+  --well:color-mix(in oklab,var(--tint) 16%,var(--d-lift));
+  --k0:color-mix(in srgb,var(--c0) 62%,white); --k1:color-mix(in srgb,var(--c1) 62%,white); --k2:color-mix(in srgb,var(--c2) 62%,white);
+  --ka:color-mix(in srgb,var(--acc) 62%,white)}
+:root[data-theme="dark"] .viz-svg :is(text.onlbl,text.coin-val){stroke:none}
+:root[data-theme="dark"] .viz-svg text{paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round;--lbl:color-mix(in srgb,var(--tint) 62%,white)}
 
 
 /* ---- the canvas: the page behind the bento. The tiles, type and controls stay the same everywhere; the canvas
