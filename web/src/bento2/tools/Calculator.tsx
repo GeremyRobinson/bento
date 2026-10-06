@@ -26,6 +26,8 @@ export function Calculator({ args }: { args?: unknown }) {
   const vars = useMemo(() => ({ ...CONSTANT_VALUES, ...shelfNumbers(b2), ...(state.history[0] ? { Ans: state.history[0].value } : {}) }), [b2, state.history]);
   // another tool can drop a name in (the Number shelf's "Use", a constant's "Insert")
   useEffect(() => { const a = args as { insert?: string } | undefined; if (a?.insert) setLine(l => l + a.insert); }, [args]);
+  // with a keyboard and a mouse the line takes typing at once; on a touch screen the keys below do, without the phone keyboard
+  useEffect(() => { if (typeof matchMedia !== "undefined" && matchMedia("(pointer: fine)").matches) input.current?.focus({ preventScroll: true }); }, []);
 
   const run = () => {
     if (!line.trim()) return;

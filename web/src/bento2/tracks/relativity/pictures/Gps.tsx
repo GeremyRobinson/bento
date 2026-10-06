@@ -21,10 +21,10 @@ export function GpsScene({ props, marker }: SceneProps) {
   const t = useClock(true, 0.8);
   const rk = r * R_KM, loss = speedLossUs(rk), gain = gravityGainUs(rk), net = netDriftUs(rk);
   const map = mapErrorKm(Math.abs(net)) * (hours / 24);
-  const W = 360, H = 250, ex = 104, ey = 122, eR = 16;
+  const W = 360, H = 250, ex = 92, ey = 122, eR = 16;
   // the satellite goes round (far faster than real), higher orbits slower, as Kepler says
   const ang = t * 1.6 * r ** -1.5;
-  const bx = 270, zero = 128, perUs = 1.5;
+  const bx = 206, zero = 128, perUs = 1.5;
   const bar = (x: number, us: number, cls: string, label: string, show: boolean) => {
     const h = Math.abs(us) * perUs, y = us >= 0 ? zero - h : zero;
     return (
@@ -45,8 +45,8 @@ export function GpsScene({ props, marker }: SceneProps) {
       {!hide && <text x={ex} y={ey - eR * 1.5 - 5} textAnchor="middle" className="b2t amber">cancel</text>}
       <line x1={bx - 10} y1={zero} x2={W - 6} y2={zero} className="b2axis" />
       {bar(bx, -loss, "pink", "speed", true)}
-      {bar(bx + 30, gain, "sky", "height", true)}
-      {bar(bx + 60, net, "amber", "net", !hide)}
+      {bar(bx + 52, gain, "sky", "height", true)}
+      {bar(bx + 104, net, "amber", "net", !hide)}
       <text x={bx - 10} y="16" className="b2t">μs a day</text>
     </svg>
   );

@@ -125,8 +125,8 @@ export function App() {
     <main id="app" className={`wrap t${tint}`} data-band={grade == null || neutral ? "middle" : bandOf(grade)} data-grade={neutral ? "none" : grade ?? "none"}>
       <Island grade={grade} guest={choosing} b2={b2 && !sheetOpen} />
       <Fragment key={viewKey}>{screen}</Fragment>
+      {b2 && !sheetOpen && <ToolShell track={b2Track} />}
     </main>
-    {b2 && !sheetOpen && <ToolShell track={b2Track} />}
     {SANDBOX && <Suspense fallback={null}><Sandbox /></Suspense>}
   </>);
 }

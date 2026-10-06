@@ -17,6 +17,9 @@
 /* the island in Bento²: the fill is the build */
 .island .ibat.b2bat{--gn:var(--ink);--gn-d:var(--ink)}
 .icon.itools.on,.icon.itools[aria-expanded="true"]{background:var(--ink);color:var(--on-tint)}
+.island .itoolsin{display:none;flex:none;width:var(--float-in);height:var(--float-in);border-radius:var(--r-round);place-items:center;background:var(--well);color:var(--ink)}
+.island .itoolsin.on{background:var(--ink);color:var(--on-tint)}
+@media (max-width:699px){.island .itoolsin{display:grid}.island:has(.itoolsin) .ibat,.icon.itools{display:none}}
 
 /* ---- shared bits ---- */
 .b2kick{display:block;font-size:var(--fz-xs);font-weight:var(--w-mid);color:var(--muted)}
@@ -36,9 +39,9 @@ button.b2chip:hover{background:var(--hover)}
 .err{color:var(--b2-wrong)}
 
 /* ---- the live picture: an SVG over its sliders and readouts ---- */
-.b2scene{height:100%;min-height:0;display:grid;grid-template-rows:minmax(0,1fr) auto auto auto;gap:10px}
-.b2svg{position:relative;min-height:150px}
-.b2svg>svg{position:absolute;inset:0;width:100%;height:100%;display:block;background:none;box-shadow:none;touch-action:none;overflow:visible}
+.b2scene{min-height:100%;display:grid;grid-template-rows:minmax(264px,1fr) auto auto auto;gap:10px}
+.b2svg{position:relative;min-height:0}
+.b2svg>svg.b2pic,.b2svg>svg{position:absolute;inset:0;width:100%;height:100%;display:block;background:none;box-shadow:none;touch-action:none}
 svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);background:none;box-shadow:none}
 .b2ctl{display:flex;flex-wrap:wrap;align-items:flex-end;gap:var(--sp-2) var(--sp-4)}
 .b2ctl>.b2slider{flex:1 1 180px}
@@ -131,7 +134,7 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
 .b2buildbar>span{flex:1;min-width:0;display:grid;gap:2px}
 .b2buildbar b{font-size:var(--fz-md);font-weight:var(--w-bold)}
 .b2buildbar small{font-size:var(--fz-2xs);color:var(--muted);font-weight:var(--w-mid)}
-.b2buildbar>i{flex:none;width:72px;height:6px;border-radius:var(--r-pill);background:linear-gradient(var(--ink),var(--ink)) 0 0 / calc(var(--p,0) * 100%) 100% no-repeat,var(--faint)}
+.b2buildbar>i{flex:none;width:56px;height:6px;border-radius:var(--r-pill);background:linear-gradient(var(--ink),var(--ink)) 0 0 / calc(var(--p,0) * 100%) 100% no-repeat,var(--faint)}
 .b2buildbar.on{box-shadow:inset 0 0 0 2px var(--ink)}
 .b2unit .slbl{padding-top:var(--sp-4)}
 .srow.b2row{min-height:46px;font-size:var(--small)}
@@ -215,7 +218,6 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
 .b2foot{flex:none;display:grid;gap:10px}
 .b2pad{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 .b2pad>button{height:44px;border-radius:var(--r-md);background:var(--well);box-shadow:inset 0 0 0 1px var(--adv-hair);font-size:var(--fz-xl);font-weight:var(--w-key);font-variant-numeric:tabular-nums;transition:background var(--dur-150),transform var(--dur-150) var(--ease)}
-.b2pad>button:hover{background:var(--hover)}
 .b2pad>button:active{transform:scale(.96)}
 .b2pad>.ctl.b2check{--pill-h:44px;--pill-radius:var(--r-md);width:100%;font-size:var(--fz-lg)}
 .b2nav{display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap}
@@ -224,10 +226,11 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
 /* in Guess the picture is the question: its setup stays put until you lock in */
 .st-guess .b2stage .b2ctl{display:none}
 @media (orientation:portrait) and (min-width:700px){
-  .screen.fit.b2lesson{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1.1fr);grid-template-areas:"stage" "card"}
+  .screen.fit.b2lesson{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1.3fr) minmax(0,1fr);grid-template-areas:"stage" "card"}
+  .screen.fit.b2lesson.typing{grid-template-rows:minmax(0,1fr) minmax(0,1.25fr)}
 }
 @media (max-width:699px){
-  .screen.fit.b2lesson{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(230px,.8fr) minmax(0,1.2fr);grid-template-areas:"stage" "card";gap:10px}
+  .screen.fit.b2lesson{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1.08fr) minmax(0,1fr);grid-template-areas:"stage" "card";gap:10px}
   /* typing an answer: the keypad needs the room, so the picture steps aside (it comes back with the next stage) */
   .screen.fit.b2lesson.typing{grid-template-rows:minmax(0,1fr);grid-template-areas:"card"}
   .b2lesson.typing .b2stage{display:none}
@@ -239,19 +242,24 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
   .b2pad>button,.b2pad>.ctl.b2check{height:var(--float-in);--pill-h:var(--float-in)}
   .b2nav .ctl{--pill-h:40px;font-size:var(--fz-sm);--pill-pad:14px}
   .b2ctl{gap:6px var(--sp-3)}
+  /* a phone draws the picture smaller, so its words are drawn larger: 11px or more on screen at 375 wide */
+  .b2scene{grid-template-rows:minmax(204px,1fr) auto auto auto}
+  .b2t{font-size:var(--fz-lg)}
   .b2r b{font-size:var(--fz-md)}
   .b2slider input[type="range"]{height:24px}
 }
 
 /* Deeper: an optional layer over the lesson, as a floating stack */
-.fstack.b2deeper{left:max(var(--sp-4),calc(50% - 300px));right:max(var(--sp-4),calc(50% - 300px));top:calc(max(var(--sp-3),env(safe-area-inset-top)) + var(--float-h) + var(--sp-6));max-height:calc(100dvh - 120px);overflow:auto;align-items:stretch;padding:var(--sp-1)}
+.fstack.b2deeper{left:max(var(--sp-4),calc(50% - 300px));right:max(var(--sp-4),calc(50% - 300px));top:50%;translate:0 -50%;max-height:calc(100dvh - 120px);overflow:auto;align-items:stretch;padding:var(--sp-1)}
 .b2deeper .flbl{color:var(--muted);text-shadow:none}
 .b2deeper p.fpill{display:block;margin:0;padding:14px 22px;border-radius:var(--r-xl);font-weight:var(--w-regular);font-size:var(--fz-md);line-height:1.5}
 .b2deeper .fpill.go{justify-content:center;background:var(--ink);color:var(--on-tint)}
 
 /* ---- the tools shell: the list floats under the island's Tools button; a tool is a floating panel ---- */
 .b2menu{max-height:calc(100dvh - 90px);overflow:auto}
-.b2menu .fpill{font-size:var(--fz-md)}
+.b2menu{gap:5px}
+.b2menu .fpill{font-size:var(--fz-md);min-height:38px;padding:0 18px}
+.b2menu .flbl{padding-top:var(--sp-2)}
 .fstack.b2tool{top:calc(max(var(--sp-3),env(safe-area-inset-top)) + var(--float-h) + var(--sp-5));bottom:var(--sp-4);right:max(var(--sp-4),calc((100vw - var(--sb-right,0px) - 1180px) / 2 + var(--sp-4)));width:min(420px,calc(100vw - 32px));transition:width var(--dur-300) var(--glide)}
 .fstack.b2tool.full{width:min(780px,calc(100vw - 32px))}
 .b2toolcard{flex:1;min-height:0;display:flex;flex-direction:column;border-radius:var(--r-2xl);background:var(--float);box-shadow:var(--float-shadow),0 0 0 1px var(--adv-ring)}
@@ -326,3 +334,15 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
 :root[data-motion="reduce"] :is(.b2detail,.b2body,.b2reveal,.b2fb){animation:none}
 :root[data-motion="reduce"] :is(.b2sk,.fstack.b2tool){transition:none}
 :root[data-motion="reduce"] .b2box.on span::after{animation:none}
+/* grid children take the room they're given, not their content's width */
+.b2well>*,.b2stage>*,.b2toolbody>*{min-width:0}
+/* the boost matrix as a readout: Λ beside its four entries */
+.b2mat{display:inline-flex;align-items:center;gap:var(--sp-2)}
+.b2mat>small{font-size:var(--fz-lg);color:var(--muted);font-weight:var(--w-mid)}
+.b2grid2{display:inline-grid;grid-template-columns:repeat(2,auto);gap:0 var(--sp-3);padding:2px 10px;border-inline:2px solid var(--muted);border-radius:var(--r-sm);font-variant-numeric:tabular-nums;font-size:var(--fz-md);text-align:right}
+.b2read .ctl.b2send{--pill-h:36px;--pill-pad:14px;font-size:var(--fz-sm)}
+/* a picture with a lot under it scrolls inside its own frame rather than squeezing the drawing away */
+.b2well,.b2stage{overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.b2map{display:grid;gap:var(--sp-1)}
+.b2map svg.b2pic{max-height:64px}
+.b2pad>button:not(.go):hover{background:var(--hover)}

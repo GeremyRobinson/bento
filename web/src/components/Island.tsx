@@ -299,7 +299,12 @@ export function Island({ grade: chosen, guest, b2 }: { grade: number | null; gue
         {place.lock
           ? <span className="ilock"><LockIcon />On this device</span>
           : b2
-            ? <span className="ibat b2bat" aria-hidden style={{ "--p": fill } as CSSProperties}><i /></span>
+            ? <>
+              <span className="ibat b2bat" aria-hidden style={{ "--p": fill } as CSSProperties}><i /></span>
+              {/* on a phone the corner has room for two circles, so the tools sit in the island in place of the fill */}
+              <button className={`itoolsin${tooling ? " on" : ""}`} onClick={() => { shut(); shutMe(); dispatchEvent(new Event("b2:tools")); }}
+                aria-label="Tools" aria-haspopup="dialog" aria-expanded={tooling}><ToolsIcon /></button>
+            </>
             : <span className={`ibat${route.name === "practice" && run?.solved ? " tick" : ""}`} aria-hidden style={{ "--p": fill, "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties}><i /></span>}
       </header>
       <div className="icorner right">

@@ -122,7 +122,7 @@ export function LessonScreen({ trackId, lessonId }: { trackId: string; lessonId:
   let picture;
   if (stage === "guess") {
     const marker: [number, number] | undefined = gs.kind === "point" ? (guess as [number, number]) : gs.kind === "slider" && guess != null ? [guess as number, 0] : undefined;
-    picture = <Picture scene={gs} extra={revealed ? gs.revealProps : undefined} marker={marker} onMarker={gs.kind === "point" && !revealed ? p => setGuess(p) : undefined} />;
+    picture = <Picture scene={gs} extra={revealed ? { quiet: false, hide: false, hideEvent: false, ...gs.revealProps } : undefined} marker={marker} onMarker={gs.kind === "point" && !revealed ? p => setGuess(p) : undefined} />;
   } else if (stage === "work") picture = <Picture scene={lesson.workIt.scene?.(problem) ?? lesson.play} />;
   else if (stage === "use") picture = project ? <Picture scene={project.scene} place="project" /> : <Picture scene={lesson.useIt.scene ?? lesson.play} />;
   else picture = <Picture scene={lesson.play} />;

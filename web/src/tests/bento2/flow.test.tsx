@@ -75,7 +75,7 @@ describe("Bento² from picker D through a lesson", () => {
     expect(screen.getByLabelText(/The build: 1 of 7 pieces/)).toBeInTheDocument();
 
     // the island's Tools button opens the tools list; the Number shelf has c
-    tap("Tools");
+    fireEvent.click(screen.getAllByRole("button", { name: "Tools" })[0]!);
     fireEvent.click(within(screen.getByRole("dialog", { name: "Tools" })).getByRole("button", { name: "Number shelf" }));
     const shelf = screen.getByRole("dialog", { name: "Number shelf" });
     expect(within(shelf).getByText("c")).toBeInTheDocument();

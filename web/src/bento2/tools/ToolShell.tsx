@@ -1,7 +1,7 @@
 // The always-there tools shell. The island's Tools button opens the list (a floating stack, like quick settings);
 // a tool opens as a floating panel beside the lesson (on a phone, over it). One tool panel at a time; it reopens with
 // the numbers it was left with. Pictures and other tools open a tool by sending "b2:tool" (ui/useB2.ts, openTool).
-import { useEffect, useRef, useState, type ComponentType, type CSSProperties } from "react";
+import { Fragment, useEffect, useRef, useState, type ComponentType, type CSSProperties } from "react";
 import { reduceMotion } from "../../app/transition";
 import type { B2ToolMeta, B2Track } from "../model";
 import { sceneByName } from "../scenes";
@@ -58,6 +58,7 @@ export function ToolShell({ track }: { track?: B2Track }) {
   useEffect(() => { dispatchEvent(new CustomEvent("b2:toolsopen", { detail: menu === "open" })); if (menu === "closing") return later(() => setMenu(null)); }, [menu]);
   useEffect(() => { if (closing) return later(() => { setPanel(null); setClosing(false); }); }, [closing]);
 
+  const own = track?.tools.length ?? 0;
   const all: B2ToolMeta[] = [...(track ? [...track.tools].sort((a, b) => Number(!!b.star) - Number(!!a.star)) : []), ...CORE_TOOLS];
   const meta = panel ? toolMeta(panel.id, track) ?? { id: panel.id, name: (panel.args as { title?: string } | undefined)?.title ?? panel.id, short: panel.id } : null;
   const Core = panel ? CORE_TOOLS.find(t => t.id === panel.id)?.C : undefined;
@@ -71,11 +72,13 @@ export function ToolShell({ track }: { track?: B2Track }) {
         <>
           <div className={`fdim${menu === "closing" ? " out" : ""}`} onClick={() => setMenu("closing")} />
           <div className={`fstack qset b2menu${menu === "closing" ? " out" : ""}`} role="dialog" aria-label="Tools" style={{ "--n": all.length + 1 } as CSSProperties}>
-            <span className="flbl" style={{ "--i": 0 } as CSSProperties}>Tools</span>
             {all.map((t, i) => (
-              <button key={t.id} className="fpill" style={{ "--i": i + 1 } as CSSProperties} onClick={() => dispatchEvent(new CustomEvent("b2:tool", { detail: { id: t.id } }))}>
-                {t.name}{t.star ? " ★" : ""}
-              </button>
+              <Fragment key={t.id}>
+                {(i === 0 || i === own) && <span className="flbl" style={{ "--i": i } as CSSProperties}>{i < own ? `${track!.name} tools` : "Always here"}</span>}
+                <button className="fpill" style={{ "--i": i + 1 } as CSSProperties} onClick={() => dispatchEvent(new CustomEvent("b2:tool", { detail: { id: t.id } }))}>
+                  {t.name}{t.star ? " ★" : ""}
+                </button>
+              </Fragment>
             ))}
           </div>
         </>
