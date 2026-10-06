@@ -3,8 +3,8 @@
  * (tokens.css for the shared ones, bands.css for each grade); the sandbox reads them from the page
  * and layers its edits on top, so one change shows on every screen and every grade at once.
  */
-export type TokenKind = "color" | "px";
-export interface Token { v: string; label: string; kind: TokenKind; min?: number; max?: number }
+export type TokenKind = "color" | "px" | "pct" | "num";
+export interface Token { v: string; label: string; kind: TokenKind; min?: number; max?: number; step?: number }
 
 /** each grade's own colors: the three part colors and the accent pictures use, and their darker text inks */
 export const GRADE_TOKENS: Token[] = [
@@ -38,6 +38,16 @@ export const SIZE_TOKENS: Token[] = [
   { v: "--fs", label: "Body text", kind: "px", min: 14, max: 24 },
   { v: "--math", label: "Math size", kind: "px", min: 28, max: 72 },
   { v: "--key", label: "Keypad key", kind: "px", min: 44, max: 88 },
+];
+
+/** the Diagram master (styles/diagram-master.css): every picture in every grade draws with these */
+export const DIAGRAM_TOKENS: Token[] = [
+  ...[10, 12, 18, 20, 22, 26, 30, 35, 40, 45, 50, 55, 70].map(n => ({ v: `--d-f${n}`, label: `Fill step ${n}`, kind: "pct" as const, min: 0, max: 100 })),
+  ...([["hair", "Hairline"], ["thin", "Thin line"], ["line", "Line"], ["edge", "Edge"], ["stroke", "Stroke"], ["bold", "Bold line"], ["heavy", "Heavy line"], ["numeral", "Numeral stroke"]] as const)
+    .map(([k, label]) => ({ v: `--d-${k}`, label, kind: "num" as const, min: 0.5, max: 16, step: 0.25 })),
+  ...([["text", "Label"], ["text-sm", "Small label"], ["text-xs", "Tiny label"], ["text-lg", "Big label"], ["text-xl", "Huge label"]] as const)
+    .map(([k, label]) => ({ v: `--d-${k}`, label, kind: "px" as const, min: 9, max: 40 })),
+  ...([["copper", "Copper"], ["silver", "Silver"], ["water", "Water"], ["water-line", "Water line"]] as const).map(([k, label]) => ({ v: `--d-${k}`, label, kind: "color" as const })),
 ];
 
 export type Theme = "light" | "dark";
@@ -76,7 +86,9 @@ export function handoffCss(o: Overrides): string {
   if (Object.keys(o.master ?? {}).length) out += `/* bands.css, Grade (master): reaches every grade that doesn't override it */\n.wrap{${lines(masterVals(o))}}\n`;
   if (Object.keys(o.shared.light).length) out += `/* tokens.css, :root */\n:root{${lines(o.shared.light)}}\n`;
   if (Object.keys(o.shared.dark).length) out += `/* tokens.css, dark */\n:root[data-theme="dark"]{${lines(o.shared.dark)}}\n`;
-  if (Object.keys(o.sizes).length) out += `/* bands.css, sizes */\n.wrap{${lines(o.sizes)}}\n`;
+  const dia = Object.fromEntries(Object.entries(o.sizes).filter(([k]) => k.startsWith("--d-"))), sz = Object.fromEntries(Object.entries(o.sizes).filter(([k]) => !k.startsWith("--d-")));
+  if (Object.keys(sz).length) out += `/* bands.css, sizes */\n.wrap{${lines(sz)}}\n`;
+  if (Object.keys(dia).length) out += `/* diagram-master.css */\n.wrap{${lines(dia)}}\n`;
   const gs = Object.entries(o.grades).filter(([, v]) => Object.keys(v).length);
   if (gs.length) out += "/* bands.css, grade instances: var(--master-…) means delete that override so the grade follows the master */\n" + gs.map(([g, v]) => `.wrap[data-grade="${g}"]{${lines(resolve(v))}}`).join("\n") + "\n";
   return out || "No changes yet.";
@@ -108,7 +120,7 @@ export function readGrade(grade: string): Record<string, string> {
   probe.className = "wrap"; probe.dataset.grade = grade; probe.style.display = "none";
   document.body.appendChild(probe);
   const cs = getComputedStyle(probe), out: Record<string, string> = {};
-  for (const t of [...GRADE_TOKENS, ...SIZE_TOKENS]) out[t.v] = cs.getPropertyValue(t.v).trim();
+  for (const t of [...GRADE_TOKENS, ...SIZE_TOKENS, ...DIAGRAM_TOKENS]) out[t.v] = cs.getPropertyValue(t.v).trim();
   probe.remove();
   return out;
 }

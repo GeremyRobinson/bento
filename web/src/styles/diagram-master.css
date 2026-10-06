@@ -1,0 +1,21 @@
+/* Diagram (master). Every picture in every lesson is an instance of this: the families (number line, tape, area model,
+   coins, solids, ...) only say which shapes to draw and which role each shape plays. How strong a fill is, how thick a
+   line, how big a label, the dash patterns and the few real-world colors all live here, once.
+   The colors themselves are roles from the Grade master: --tint (this part's color; .p0/.p1/.p2 pick part 1, 2 or 3),
+   --c0/--c1/--c2 (parts 1-3), --acc (the thing to look at), --text (the whole), --muted, --rule, --ok and --err (right
+   and wrong), drawn over --card. Change a value here and every picture in every grade follows. */
+.wrap{
+  /* fill steps: how much of a role color goes into a fill (the rest is the card) */
+  --d-f10:10%; --d-f12:12%; --d-f18:18%; --d-f20:20%; --d-f22:22%; --d-f26:26%; --d-f30:30%; --d-f35:35%;
+  --d-f40:40%; --d-f45:45%; --d-f50:50%; --d-f55:55%; --d-f70:70%;
+  /* line weights */
+  --d-hair:1; --d-ridge:1.2; --d-cube:1.25; --d-thin:1.5; --d-line:2; --d-edge:2.5; --d-stroke:3; --d-bold:3.5;
+  --d-heavy:4; --d-beam:5; --d-mark:7; --d-glow:8; --d-numeral:12;
+  /* labels (pictures also scale up with --px) */
+  --d-text:17px; --d-text-sm:15px; --d-text-xs:12px; --d-text-lg:22px; --d-text-xl:28px; --d-text-area:20px;
+  /* dashes */
+  --d-dash:6 6; --d-dash-short:4 4; --d-dash-wire:5 5; --d-dash-miss:6 4;
+  /* the only real-world colors: coins, water, marbles, and the dark side of a solid */
+  --d-copper:#c77b4a; --d-copper-rim:#8f5230; --d-silver:#e3e7ee; --d-water:#38a3e8; --d-water-line:#2b8fd6;
+  --d-marble-red:#ef4444; --d-marble-blue:#3b82f6; --d-marble-green:#22c55e; --d-shadow:#000;
+}

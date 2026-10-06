@@ -1,14 +1,14 @@
 /* Area model. The renderer sets data-* attributes from the animation state; CSS only animates the change. */
 .am{width:min(100%, calc(var(--w) * 1px), calc(min(56vh, 460px) * var(--w) / var(--h)));height:auto;overflow:visible;display:block;margin:0 auto}
-.am text{font-family:var(--num);font-size:max(20px,calc(12px * var(--px,0)));fill:var(--text);text-anchor:middle;dominant-baseline:central;font-weight:650}
-.am .outline{fill:none;stroke:var(--faint);stroke-width:2}
+.am text{font-family:var(--num);font-size:max(var(--d-text-area),calc(12px * var(--px,0)));fill:var(--text);text-anchor:middle;dominant-baseline:central;font-weight:650}
+.am .outline{fill:none;stroke:var(--faint);stroke-width:var(--d-line)}
 .am .axis-label{fill:var(--muted)}
 .am .whole{transition:opacity .4s ease}
-.am .region rect{fill:var(--well);stroke:var(--faint);stroke-width:2;transition:fill .5s var(--ease),stroke .5s var(--ease),opacity .5s ease}
-.am .region[data-shown="true"].r0 rect{fill:color-mix(in srgb,var(--c0) 18%,var(--card));stroke:var(--c0)}
-.am .region[data-shown="true"].r1 rect{fill:color-mix(in srgb,var(--c1) 18%,var(--card));stroke:var(--c1)}
-.am .region[data-shown="true"].r2 rect{fill:color-mix(in srgb,var(--c2) 18%,var(--card));stroke:var(--c2)}
-.am .region[data-active="true"] rect{stroke-width:3.5}
+.am .region rect{fill:var(--well);stroke:var(--faint);stroke-width:var(--d-line);transition:fill .5s var(--ease),stroke .5s var(--ease),opacity .5s ease}
+.am .region[data-shown="true"].r0 rect{fill:color-mix(in srgb,var(--c0) var(--d-f18),var(--card));stroke:var(--c0)}
+.am .region[data-shown="true"].r1 rect{fill:color-mix(in srgb,var(--c1) var(--d-f18),var(--card));stroke:var(--c1)}
+.am .region[data-shown="true"].r2 rect{fill:color-mix(in srgb,var(--c2) var(--d-f18),var(--card));stroke:var(--c2)}
+.am .region[data-active="true"] rect{stroke-width:var(--d-bold)}
 .am .region .product{opacity:0;transition:opacity .4s ease .15s}
 .am .region[data-shown="true"] .product{opacity:1}
 .am .region.r0 .product,.am .region.r0 .product text,.am .region.r0 .part{fill:var(--c0)}
@@ -17,11 +17,11 @@
 .am .part{opacity:0;transition:opacity .4s ease}
 .am[data-split="true"] .part{opacity:1}
 .am[data-split="true"] .whole{opacity:0}
-.am .split-line{stroke:var(--text);stroke-width:2;stroke-dasharray:6 6;opacity:0;transition:opacity .4s ease}
+.am .split-line{stroke:var(--text);stroke-width:var(--d-line);stroke-dasharray:var(--d-dash);opacity:0;transition:opacity .4s ease}
 .am[data-split="true"] .split-line{opacity:.55}
 .am .total{fill:var(--tint);opacity:0;transition:opacity .4s ease}
 .am[data-sum="true"] .total{opacity:1}
-.am .leader{stroke:var(--faint);stroke-width:1.5}
+.am .leader{stroke:var(--faint);stroke-width:var(--d-thin)}
 @media (prefers-reduced-motion:reduce){.am *{transition:none!important}}
 
 /* the explanation beats under the picture */
