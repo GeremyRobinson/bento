@@ -51,7 +51,7 @@ export function explainProbability(p: ProbabilityProblem, answers: AnswerModel):
     heading: "Winners over everything",
     idea: ["The chance of a color is how many of that color, out of how many marbles in all.", "Write it as a fraction in lowest terms."],
     statement: mt`P(${name}) = ${name} ÷ all`,
-    caption: `${want} of the ${T} are ${name}: P(${name}) = ${chance}.`,
+    caption: `${want} of the ${T} ${want === 1 ? "is" : "are"} ${name}: P(${name}) = ${chance}.`,
     diagram: buildMarbleBag({
       groups: [{ n: p.r, cls: "red", name: "red" }, { n: p.b, cls: "blue", name: "blue" }, { n: p.g, cls: "green", name: "green" }].filter(g => g.n > 0),
       want: [p.r, p.b, p.g].slice(0, p.c).filter(x => x > 0).length,
@@ -62,9 +62,9 @@ export function explainProbability(p: ProbabilityProblem, answers: AnswerModel):
     timeline: beats(4),
     steps: [
       { id: "bag", narration: `The bag holds ${p.r} red, ${p.b} blue and ${p.g} green marbles. You pick one without looking.`, math: mt`${p.r} red, ${p.b} blue, ${p.g} green`, state: 0 },
-      { id: "want", narration: `${want} of them are ${name}: those are the ways to win.`, math: mt`${want}`, state: 1, answerStep: "want", result: want },
+      { id: "want", narration: `${want} of them ${want === 1 ? "is" : "are"} ${name}: those are the ways to win.`, math: mt`${want}`, state: 1, answerStep: "want", result: want },
       { id: "all", narration: `There are ${p.r} + ${p.b} + ${p.g} = ${count(T, "marble")} in all.`, math: mt`${p.r} + ${p.b} + ${p.g} = ${T}`, state: 2, answerStep: "all", result: T },
-      { id: "chance", narration: `The chance is ${want} out of ${T}${chance === `${want}/${T}` ? "" : `, which simplifies to ${chance}`}.`, math: mt`P(${name}) = ${frac(want, T)} = ${frac(n, d)}`, state: 3, answerStep: "chance", result: n },
+      { id: "chance", narration: `The chance is ${want} out of ${T}${chance === `${want}/${T}` ? "" : `, which simplifies to ${chance}`}.`, math: n === want && d === T ? mt`P(${name}) = ${frac(want, T)}` : mt`P(${name}) = ${frac(want, T)} = ${frac(n, d)}`, state: 3, answerStep: "chance", result: n },
     ],
   };
 }

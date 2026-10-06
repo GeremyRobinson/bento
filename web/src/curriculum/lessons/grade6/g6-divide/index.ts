@@ -122,9 +122,9 @@ function explain(p: DivideFractionsProblem) {
         lines: [[frac(a, b), op("÷"), mark([frac(c, d)])], [frac(a, b), mark([op("×")]), mark([frac(d, c)])]], answerStep: "flip" },
       { id: "multiply", narration: `Top times top, bottom times bottom: ${a} × ${d} = ${S} and ${b} × ${c} = ${L}.`, math: [frac(a, b), op("×"), frac(d, c), op("="), frac(S, L)],
         lines: [[frac(S, L)]], answerStep: "multiply" },
-      { id: "simplify", narration: same ? `${S}/${L} is already as simple as it gets.` : S % L === 0 ? `${S} ÷ ${L} = ${S / L} exactly, so ${S}/${L} is the whole number ${S / L}.` : S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}, so ${S}/${L} is ${F.num ? `${F.whole ? `${F.whole} and ` : ""}${F.num}/${F.den}` : F.whole}.`
+      { id: "simplify", narration: same ? `No number but 1 divides both ${S} and ${L}, so ${S}/${L} is already as simple as it gets.` : S % L === 0 ? `${S} ÷ ${L} = ${S / L} exactly, so ${S}/${L} is the whole number ${S / L}.` : S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}, so ${S}/${L} is ${F.num ? `${F.whole ? `${F.whole} and ` : ""}${F.num}/${F.den}` : F.whole}.`
           : `Divide the top and the bottom by ${gcd(S, L)}: ${F.num}/${F.den}.`,
-        math: [frac(S, L), op("="), ...simplified], lines: same ? [] : [[frac(S, L), op("="), ...simplified]], answerStep: "simplify",
+        math: same ? [frac(S, L)] : [frac(S, L), op("="), ...simplified], lines: same ? [] : [[frac(S, L), op("="), ...simplified]], answerStep: "simplify",
         ...(F.num === 0 ? { result: F.whole } : {}) },
     ],
   });

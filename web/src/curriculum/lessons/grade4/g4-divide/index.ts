@@ -56,8 +56,8 @@ function explain(p: RemainderProblem, model: AnswerModel) {
     heading: "Share, then see what's left",
     idea: ["Take out as many tens as fit, then as many ones as fit. What's left over is the remainder."],
     statement: [num(n), op("÷"), num(dv)],
-    caption: `Take out ${T / 10} ${T === 10 ? "ten" : "tens"}, then ${O} ${O === 1 ? "one" : "ones"}. What's left, ${r}, is the remainder.`,
-    alt: `${n} ÷ ${dv}: ${dv} × ${T} = ${dv * T}, ${dv} × ${O} = ${dv * O}, so ${q} R ${r}.`,
+    caption: `Take out ${T / 10} ${T === 10 ? "ten" : "tens"}, then ${O} ${O === 1 ? "one" : "ones"}. ${r ? `What's left, ${r}, is the remainder.` : "Nothing is left over."}`,
+    alt: `${n} ÷ ${dv}: ${dv} × ${T} = ${dv * T}, ${dv} × ${O} = ${dv * O}, so ${r ? `${q} R ${r}` : `${q} exactly`}.`,
     beats: [
       { id: "tens", narration: `${dv} × ${T} = ${dv * T} fits into ${n}, and ${dv} × ${T + 10} = ${dv * (T + 10)} would not.`,
         math: [num(dv), op("×"), num(T), op("="), num(dv * T)],
@@ -68,9 +68,10 @@ function explain(p: RemainderProblem, model: AnswerModel) {
         lines: [[num(dv), op("×"), mark(O), op("="), num(dv * O)]], answerStep: "ones", result: O },
       { id: "answer", narration: `Add the tens and the ones: ${T} + ${O} = ${q}.`, math: [num(T), op("+"), num(O), op("="), num(q)],
         lines: [[num(T), op("+"), num(O), op("="), num(q)]], answerStep: "answer", result: q },
-      { id: "remainder", narration: `${left} − ${dv * O} = ${r} is left over. So ${n} ÷ ${dv} = ${q} with ${r} left over: ${q} R ${r}.`,
+      { id: "remainder", narration: r ? `${left} − ${dv * O} = ${r} is left over. So ${n} ÷ ${dv} = ${q} with ${r} left over: ${q} R ${r}.`
+          : `${left} − ${dv * O} = 0: nothing is left over, so ${dv} goes into ${n} exactly ${q} times.`,
         math: [num(left), op("−"), num(dv * O), op("="), num(r)],
-        lines: [[num(left), op("−"), num(dv * O), op("="), mark(r)], [num(n), op("÷"), num(dv), op("="), num(q), text(" R "), num(r)]],
+        lines: [[num(left), op("−"), num(dv * O), op("="), mark(r)], [num(n), op("÷"), num(dv), op("="), num(q), ...(r ? [text(" R "), num(r)] : [])]],
         answerStep: "remainder", result: r },
     ],
   });

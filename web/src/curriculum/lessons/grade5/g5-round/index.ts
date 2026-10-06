@@ -50,7 +50,7 @@ function explain(pr: RoundProblem, model: AnswerModel): Explanation {
   const place = 10 ** -p, up = round6(T + place), half = round6(T + place / 2), tick = place / 10;
   const halfway = Math.abs(value - half) < 1e-9, stays = Math.abs(R - T) < 1e-9;
   const marks: Mark[] = [
-    { v: value, label: f(value), beat: 0, until: 1 },
+    { v: value, label: f(value), beat: 0 }, // stays to the end, so the picture still shows which number was rounded (review v43 item 7)
     { v: half, beat: 1, cls: "dota" },
   ];
   const hops: Hop[] = Math.abs(value - R) > 1e-9 ? [{ from: value, to: R, label: halfway ? "halfway: up" : "closer", beat: 2, start: false }] : [];

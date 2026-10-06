@@ -67,7 +67,8 @@ export function explainPartial(p: PartialProblem, answers: AnswerModel): Explana
         id, narration: partsOf[i] ? `The ${names[i]}: ${partsOf[i]} × ${m} = ${P[i]}.` : `There are no ${names[i]}, so that part is 0.`,
         math: [num(partsOf[i]!), op("×"), num(m), op("="), num(P[i]!)], state: i + 1, answerStep: id, result: P[i]!,
       })),
-      { id: "sum", narration: `Add the parts: ${total}.`, math: [...plusChain(P), op("="), num(total)], state: 4, answerStep: "sum", result: total },
+      // a place worth 0 adds nothing, so the worked line leaves out "+ 0" (review v43 item 10)
+      { id: "sum", narration: `Add the parts: ${total}.`, math: [...(split ? plusChain(P.filter(x => x > 0)) : [num(n), op("×"), num(m)]), op("="), num(total)], state: 4, answerStep: "sum", result: total },
     ],
   };
 }

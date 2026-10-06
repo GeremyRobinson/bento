@@ -24,3 +24,23 @@ describe("content bugs", () => {
     for (const { p: q } of many("g6-divide")) expect(step("g6-divide", q, "simplify").hint).not.toMatch(/remainder 0/);
   });
 });
+
+// Review v43 items 10 and 13: a worked line says something new ("2/3 = 2/3", "R 0", "+ 0" teach nothing)
+const plain = (v: any): string => v == null ? "" : typeof v === "string" || typeof v === "number" ? String(v) : Array.isArray(v) ? v.map(plain).join("")
+  : v.t === "frac" ? `${plain(v.n)}/${plain(v.d)}` : v.t === "op" ? ` ${v.v} ` : plain(v.v);
+describe("worked lines in grades 4 to 7 say something", () => {
+  const ids = ["g4-partial", "g4-divide", "g4-fracwhole", "g5-divide", "g6-divide", "g7-prob", "g4-lines"];
+  it.each(ids)("%s", id => {
+    const l = L(id), bad: string[] = [];
+    for (const { p } of many(id, 200)) {
+      const e = l.explain(p, l.answers(p));
+      for (const s of e.steps) {
+        const t = plain(s.math).replace(/\s+/g, " ").trim(), sides = t.split(" = ");
+        if (sides.length > 1 && new Set(sides).size < sides.length) bad.push(t);
+        if (/\+ 0\b|R 0\b|\b1 of them are\b|\b1 endpoints\b/.test(`${t} ${s.narration} ${e.caption ?? ""}`)) bad.push(`${t} | ${s.narration}`);
+        if (/^(\d+) ÷ (\d+) = (\d+)\.$/.test(s.narration)) bad.push(s.narration);
+      }
+    }
+    expect(bad.slice(0, 3)).toEqual([]);
+  });
+});

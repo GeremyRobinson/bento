@@ -55,7 +55,7 @@ function explain(p: LongDivisionProblem, model: AnswerModel) {
         lines: [[num(n), op("÷"), num(dv)], [num(dv), op("×"), mark(T), op("="), num(dv * T)]], answerStep: "tens", result: T },
       { id: "subtract", narration: `That leaves ${n} − ${dv * T} = ${left}.`, math: [num(n), op("−"), num(dv * T), op("="), num(left)],
         lines: [[num(n), op("−"), num(dv * T), op("="), num(left)]], answerStep: "subtract", result: left },
-      { id: "ones", narration: `${left} ÷ ${dv} = ${O}.`, math: [num(left), op("÷"), num(dv), op("="), num(O)],
+      { id: "ones", narration: `${count(O, "group")} of ${dv} make ${left}, so ${O} more fit: ${left} ÷ ${dv} = ${O}.`, math: [num(left), op("÷"), num(dv), op("="), num(O)],
         lines: [[num(dv), op("×"), mark(O), op("="), num(left)]], answerStep: "ones", result: O },
       { id: "sum", narration: `So the answer is ${T} + ${O} = ${qt}.`, math: [num(T), op("+"), num(O), op("="), num(qt)],
         lines: [[num(T), op("+"), num(O), op("="), num(qt)]], answerStep: "sum", result: qt },

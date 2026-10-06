@@ -3,7 +3,7 @@ import { formatNumber as f, num, op, type MathText } from "../../../schemas/math
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildNumberLine, fitRange, type Hop, type Mark } from "../../../../explanations/diagrams/number-line/build";
-import { expectedOf, numbersOf, oneBox, paren, wholeIn } from "../../_number-line/steps";
+import { expectedOf, numbersOf, oneBox, paren, sparseEvery, wholeIn } from "../../_number-line/steps";
 
 /** a × b, or (a × b) ÷ b when div; a and b nonzero, −12 to 12 */
 export interface MulIntegersProblem { a: number; b: number; div: boolean }
@@ -52,13 +52,15 @@ function explain(p: MulIntegersProblem, model: AnswerModel): Explanation {
     else marks.push({ v: size, beat: 1, cls: "dota" });
     values = differ ? [-size, reach, 0] : [0, reach];
   }
+  // labels on round values only, so "−50 −40 −30" doesn't run together on a phone (review v43 item 9)
+  const range = fitRange(values, { maxTicks: 30, pad: 1, minStep: 1 });
   const sign = differ ? "The signs are different, so it's negative." : "The signs match, so it's positive.";
   return {
     heading: "Same signs: positive. Different: negative.",
     idea: ["Work with the sizes first and ignore the signs. Then pick the sign: same signs make a positive, different signs make a negative."],
     statement: [...shown(p), op("="), num(ans)],
     diagram: buildNumberLine({
-      ...fitRange(values, { maxTicks: 30, pad: 1, minStep: 1 }), labelAt: div ? [] : [size, ...(differ ? [-size] : [])],
+      ...range, every: sparseEvery(range), labelAt: div ? [] : [size, ...(differ ? [-size] : [])],
       hops, marks,
       alt: `Number line: ${jumps} reach ${reach}; the answer is ${f(ans)}.`,
     }),
