@@ -68,37 +68,37 @@ html[data-hue][data-theme="dark"]{--page:color-mix(in oklab,var(--page-hue) 6%,#
 /* ---- picture colors (G 2026-10-06: "colorful, different across diagrams, like the live site") ----
    Every grade brings its own picture palette, and each lesson's picture takes one of its three colors (App's .t0/.t1/.t2).
    The lesson UI around the picture stays monochrome in the grade hue (--h*, above). Coins keep real coin colors. */
-:is(.wrap,.gpal)[data-grade="0"]{--l0:#f59e0b;--l1:#ec4899;--l2:#22c55e;--la:#3b82f6}
+:is(.wrap,.gpal)[data-grade="0"]{--l0:#f59e0b;--l1:#ec4899;--l2:#8b5cf6;--la:#3b82f6}
 :is(.wrap,.gpal)[data-grade="1"]{--l0:#16a34a;--l1:#0ea5e9;--l2:#f97316;--la:#a855f7}
 :is(.wrap,.gpal)[data-grade="2"]{--l0:#0891b2;--l1:#6366f1;--l2:#f97316;--la:#eab308}
 :is(.wrap,.gpal)[data-grade="3"]{--l0:#db2777;--l1:#9333ea;--l2:#f59e0b;--la:#0ea5e9}
-:is(.wrap,.gpal)[data-grade="4"]{--l0:#2563eb;--l1:#0d9488;--l2:#e11d48;--la:#f59e0b}
-:is(.wrap,.gpal)[data-grade="5"]{--l0:#3b82f6;--l1:#f2683c;--l2:#8b5cf6;--la:#f59e0b}
-:is(.wrap,.gpal)[data-grade="6"]{--l0:#0f766e;--l1:#65a30d;--l2:#ea580c;--la:#0284c7}
-:is(.wrap,.gpal)[data-grade="7"]{--l0:#4f46e5;--l1:#0891b2;--l2:#e11d48;--la:#f59e0b}
-:is(.wrap,.gpal)[data-grade="8"]{--l0:#ea580c;--l1:#dc2626;--l2:#7c3aed;--la:#0891b2}
+:is(.wrap,.gpal)[data-grade="4"]{--l0:#2563eb;--l1:#0d9488;--l2:#9333ea;--la:#f59e0b}
+:is(.wrap,.gpal)[data-grade="5"]{--l0:#3b82f6;--l1:#ec4899;--l2:#8b5cf6;--la:#f59e0b}
+:is(.wrap,.gpal)[data-grade="6"]{--l0:#0f766e;--l1:#db2777;--l2:#ea580c;--la:#0284c7}
+:is(.wrap,.gpal)[data-grade="7"]{--l0:#4f46e5;--l1:#0891b2;--l2:#c026d3;--la:#f59e0b}
+:is(.wrap,.gpal)[data-grade="8"]{--l0:#ea580c;--l1:#ca8a04;--l2:#7c3aed;--la:#0891b2}
 :is(.wrap,.gpal)[data-grade="9"]{--l0:#2563eb;--l1:#7c3aed;--l2:#0d9488;--la:#f97316}
 :is(.wrap,.gpal)[data-grade="10"]{--l0:#0369a1;--l1:#b45309;--l2:#475569;--la:#db2777}
 :is(.wrap,.gpal)[data-grade="11"]{--l0:#7c3aed;--l1:#c026d3;--l2:#2563eb;--la:#f59e0b}
 :is(.wrap,.gpal)[data-grade="12"]{--l0:#c026d3;--l1:#0f766e;--l2:#1e3a8a;--la:#f59e0b}
 /* Grade (master): every grade is an instance of this one. A grade's line above overrides only what it changes;
    anything it leaves out comes from here. */
-:is(.wrap,.gpal){--master-l0:#3b82f6;--master-l1:#f2683c;--master-l2:#8b5cf6;--master-la:#f59e0b;--master-k0:#2d69cc;--master-k1:#b44d2d;--master-k2:#7950d6}
+:is(.wrap,.gpal){--master-l0:#3b82f6;--master-l1:#ec4899;--master-l2:#8b5cf6;--master-la:#f59e0b;--master-k0:#2d69cc;--master-k1:#d63187;--master-k2:#7950d6}
 :is(.wrap,.gpal){--l0:var(--master-l0);--l1:var(--master-l1);--l2:var(--master-l2);--la:var(--master-la);--c0:var(--l0);--c1:var(--l1);--c2:var(--l2);--acc:var(--la)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal){--c0:color-mix(in srgb,var(--l0) 75%,white);--c1:color-mix(in srgb,var(--l1) 75%,white);--c2:color-mix(in srgb,var(--l2) 75%,white);--acc:color-mix(in srgb,var(--la) 80%,white)}}
 /* the darkest grade colours need a little more lift to read on dark cards (lines 3:1 on the raised picture tile) */
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="7"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="8"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="9"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="10"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="11"]{--c0:color-mix(in srgb,var(--l0) 70%,white);--c1:color-mix(in srgb,var(--l1) 70%,white);--c2:color-mix(in srgb,var(--l2) 70%,white)}}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="12"]{--c0:color-mix(in srgb,var(--l0) 60%,white);--c1:color-mix(in srgb,var(--l1) 60%,white);--c2:color-mix(in srgb,var(--l2) 60%,white)}}
 :is(.wrap,.gpal){--k0:var(--master-k0);--k1:var(--master-k1);--k2:var(--master-k2)}
-:is(.wrap,.gpal)[data-grade="0"]{--k0:#9a6307;--k1:#bb3979;--k2:#167f3d}
+:is(.wrap,.gpal)[data-grade="0"]{--k0:#9a6307;--k1:#bb3979;--k2:#8757f1}
 :is(.wrap,.gpal)[data-grade="1"]{--k0:#117c38;--k1:#0973a3;--k2:#b05110}
 :is(.wrap,.gpal)[data-grade="2"]{--k0:#077590;--k1:#595cd9;--k2:#b05110}
 :is(.wrap,.gpal)[data-grade="3"]{--k0:#c5236b;--k1:#9032e5;--k2:#9a6307}
-:is(.wrap,.gpal)[data-grade="4"]{--k0:#2460e4;--k1:#0a7970;--k2:#ca1a41}
-:is(.wrap,.gpal)[data-grade="5"]{--k0:#306ac9;--k1:#b44d2c;--k2:#7950d7}
-:is(.wrap,.gpal)[data-grade="6"]{--k0:#0f766e;--k1:#4c7a09;--k2:#b94609}
-:is(.wrap,.gpal)[data-grade="7"]{--k0:#4f46e5;--k1:#077590;--k2:#ca1a41}
-:is(.wrap,.gpal)[data-grade="8"]{--k0:#b94609;--k1:#ca2323;--k2:#7c3aed}
+:is(.wrap,.gpal)[data-grade="4"]{--k0:#2460e4;--k1:#0a7970;--k2:#9333ea}
+:is(.wrap,.gpal)[data-grade="5"]{--k0:#306ac9;--k1:#d63187;--k2:#7950d7}
+:is(.wrap,.gpal)[data-grade="6"]{--k0:#0f766e;--k1:#db2777;--k2:#b94609}
+:is(.wrap,.gpal)[data-grade="7"]{--k0:#4f46e5;--k1:#077590;--k2:#c026d3}
+:is(.wrap,.gpal)[data-grade="8"]{--k0:#b94609;--k1:#9f6c06;--k2:#7c3aed}
 :is(.wrap,.gpal)[data-grade="9"]{--k0:#2460e4;--k1:#7c3aed;--k2:#0a7970}
 :is(.wrap,.gpal)[data-grade="10"]{--k0:#0369a1;--k1:#ab4f09;--k2:#475569}
 :is(.wrap,.gpal)[data-grade="11"]{--k0:#7c3aed;--k1:#af23c0;--k2:#2460e4}

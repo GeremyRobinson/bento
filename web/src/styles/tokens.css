@@ -11,7 +11,7 @@
   --sans:"Inter",-apple-system,"SF Pro Text",system-ui,"Helvetica Neue",Arial,sans-serif;
   --num:var(--sans);
   --ease:cubic-bezier(.2,.8,.2,1); --spring:cubic-bezier(.34,1.45,.64,1);
-  --c0:#3b82f6; --c1:#f2683c; --c2:#8b5cf6; --acc:#f59e0b;
+  --c0:#3b82f6; --c1:#ec4899; --c2:#8b5cf6; --acc:#f59e0b;
   color-scheme:light;
 
   /* ---- the system scales. Stylesheets use these instead of typing values (scripts/tokenize.mjs rewrites any that
