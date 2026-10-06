@@ -182,8 +182,7 @@
 @keyframes advDrift{from{transform:translateX(-26px)}to{transform:translateX(26px)}}
 @media (prefers-reduced-motion:reduce){.adv-trail,.adv-bend,.adv-mass,.adv-drift{animation:none}.adv-trail{opacity:.5}}
 
-/* the landing's pill scrolls away with the page instead of sitting on the content (Review landing check, item 1) */
-html:has(.land) .itop{position:relative;top:0}
+/* the landing's pill is the in-app centre pill, and it stays with you as the page scrolls (G 2026-10-06) */
 
 /* ---- the landing's "One idea, K to 12th" section, which replaced the grade shelf (G approved, 2026-10-06) ---- */
 .lsd{display:grid;align-items:center;min-height:0}

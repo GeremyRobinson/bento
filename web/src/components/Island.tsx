@@ -197,9 +197,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   if (welcome) return (
     <div className="itop"><span /><header className="island guest">
       <BentoMark className="iword" />
-      {progress.chosen
-        ? <button className="ilink" onClick={() => { openSheet(false); go({ name: "home" }, "fwd"); }}>My lessons ›</button>
-        : <span className="inote">For learners</span>}
+      {progress.chosen && <button className="ilink" onClick={() => { openSheet(false); go({ name: "home" }, "fwd"); }}>My lessons ›</button>}
     </header><span /></div>
   );
 
