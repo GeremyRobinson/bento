@@ -25,6 +25,15 @@ export const G0 = 9.81;
 export const R_GPS = 26.571e6;
 export const DAY = 86400;
 export const TAU_MU = 2.2e-6;
+// Orbits and spaceflight (orbits.md, "Constants and rounding")
+export const MU_SUN = 1.327e20;
+export const AU = 1.496e11;
+export const MU_MARS = 4.283e13;
+export const R_MARS = 3.39e6;
+export const SIDEREAL_DAY = 86164;
+export const YEAR = 365.25 * DAY;
+/** circular, coplanar orbit radii in AU, for timing */
+export const PLANET_AU = { Venus: 0.723, Earth: 1, Mars: 1.524, Jupiter: 5.203, Saturn: 9.537 } as const;
 
 export const CONSTANTS: Constant[] = [
   { id: "c", symbol: "c", name: "Speed of light", value: C, unit: "m/s", shown: "299,792 km/s", also: ["0.2998 m per nanosecond", "0.2998 km per microsecond"], exact: true },
@@ -36,6 +45,16 @@ export const CONSTANTS: Constant[] = [
   { id: "tau_mu", symbol: "τ_μ", name: "Muon mean life", value: TAU_MU, unit: "s", shown: "2.2 μs" },
   { id: "G", symbol: "G", name: "Gravitational constant", value: 6.674e-11, unit: "m³/(kg s²)", shown: "6.674 × 10⁻¹¹ m³/(kg s²)" },
   { id: "M_E", symbol: "M⊕", name: "Earth's mass", value: 5.972e24, unit: "kg", shown: "5.972 × 10²⁴ kg" },
+  { id: "sday", symbol: "T⊕", name: "Sidereal day", value: SIDEREAL_DAY, unit: "s", shown: "86,164 s", also: ["23 h 56 min 4 s"] },
+  { id: "mu_S", symbol: "μ☉", name: "The Sun's GM", value: MU_SUN, unit: "m³/s²", shown: "1.327 × 10²⁰ m³/s²" },
+  { id: "AU", symbol: "AU", name: "Astronomical unit", value: AU, unit: "m", shown: "1.496 × 10¹¹ m" },
+  { id: "yr", symbol: "yr", name: "One year", value: YEAR, unit: "s", shown: "365.25 days", exact: true },
+  { id: "mu_M", symbol: "μ♂", name: "Mars's GM", value: MU_MARS, unit: "m³/s²", shown: "4.283 × 10¹³ m³/s²" },
+  { id: "R_M", symbol: "R♂", name: "Mars's radius", value: R_MARS, unit: "m", shown: "3390 km" },
+  { id: "a_Mars", symbol: "a♂", name: "Mars's orbit radius", value: PLANET_AU.Mars * AU, unit: "m", shown: "1.524 AU", also: ["treated as a circle in Earth's plane"] },
+  { id: "a_Venus", symbol: "a♀", name: "Venus's orbit radius", value: PLANET_AU.Venus * AU, unit: "m", shown: "0.723 AU" },
+  { id: "a_Jupiter", symbol: "a♃", name: "Jupiter's orbit radius", value: PLANET_AU.Jupiter * AU, unit: "m", shown: "5.203 AU" },
+  { id: "a_Saturn", symbol: "a♄", name: "Saturn's orbit radius", value: PLANET_AU.Saturn * AU, unit: "m", shown: "9.537 AU" },
   { id: "h", symbol: "h", name: "Planck's constant", value: 6.62607015e-34, unit: "J s", shown: "6.626 × 10⁻³⁴ J s", exact: true },
 ];
 
@@ -47,7 +66,7 @@ export const CONSTANT_VALUES: Record<string, number> = Object.fromEntries(CONSTA
 export const UNITS: Record<string, { id: string; name: string; si: number }[]> = {
   length: [
     { id: "m", name: "m", si: 1 }, { id: "km", name: "km", si: 1e3 }, { id: "ls", name: "light-seconds", si: C },
-    { id: "lns", name: "light-nanoseconds", si: C * 1e-9 }, { id: "ly", name: "light-years", si: C * 365.25 * DAY }, { id: "RE", name: "Earth radii", si: R_E },
+    { id: "lns", name: "light-nanoseconds", si: C * 1e-9 }, { id: "ly", name: "light-years", si: C * 365.25 * DAY }, { id: "RE", name: "Earth radii", si: R_E }, { id: "AU", name: "AU", si: AU },
   ],
   time: [
     { id: "ns", name: "ns", si: 1e-9 }, { id: "us", name: "μs", si: 1e-6 }, { id: "ms", name: "ms", si: 1e-3 }, { id: "s", name: "s", si: 1 },
