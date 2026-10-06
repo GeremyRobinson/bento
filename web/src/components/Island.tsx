@@ -218,11 +218,13 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
       const r = document.querySelector(".ladv")?.getBoundingClientRect();
       const m = document.querySelector(".itop.guest .imark")?.getBoundingClientRect();
       if (r && r.top < 64 && r.bottom > 0) root.dataset.navDark = m && m.left < r.left ? "edge" : ""; else delete root.dataset.navDark;
+      // once the page has scrolled, the bar gets its solid band and hairline
+      if (scrollY > 0) root.dataset.navScrolled = ""; else delete root.dataset.navScrolled;
     };
     check();
     addEventListener("scroll", check, { passive: true });
     addEventListener("resize", check);
-    return () => { removeEventListener("scroll", check); removeEventListener("resize", check); delete root.dataset.navDark; };
+    return () => { removeEventListener("scroll", check); removeEventListener("resize", check); delete root.dataset.navDark; delete root.dataset.navScrolled; };
   }, [welcome]);
 
   // the page behind steps back while the contents are open
