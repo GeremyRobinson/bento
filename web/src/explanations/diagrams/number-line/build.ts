@@ -29,6 +29,8 @@ export interface Mark {
   until?: number;
   delay?: number;
   cls?: "dotp" | "dota" | "hole";
+  /** the label goes under the line, below the hops drawn there, in their part colour: for a label that counts those hops */
+  below?: boolean;
 }
 
 /** A highlighted stretch of the line (the original's `seg`), with an optional label under the tick numbers. */
@@ -176,6 +178,12 @@ export function buildNumberLine(spec: NumberLineSpec): SceneDiagram {
   for (const m of marks) {
     raw.push({ type: "circle", cx: r1(x(m.v)), cy: 0, r: 7, cls: m.cls ?? "dotp", enter: "pop", ...timing(m) });
     if (!m.label) continue;
+    if (m.below) {
+      // with the hops it counts: under the line, past the arcs and labels hanging there (review v45 blocker 4)
+      const box = place(m.label, x(m.v), Math.max(44, belowDepth), 1, 17, windowOf(m));
+      raw.push({ type: "text", x: r1(box.x), y: r1(box.y), text: m.label, cls: "lbl p1", enter: "rise", ...timing(m, 0.2) });
+      continue;
+    }
     // above any arc that passes over the mark, so the label never sits on a hop; when hops only end at the mark,
     // the label sits beside the point on the side away from them instead of floating over the arc
     const up = hops.filter(h => !h.below && h.from !== h.to && Math.min(h.from, h.to) <= m.v && m.v <= Math.max(h.from, h.to));
