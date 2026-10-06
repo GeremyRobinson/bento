@@ -371,6 +371,19 @@ describe("Settings", () => {
     expect(document.documentElement.dataset.text).toBe("largest");
     expect(screen.getByRole("button", { name: "Save a backup" })).toBeInTheDocument();
   });
+  it("the gear and My Bento are toggles: tapped again while open, they close back to where you were (G 2026-10-06)", () => {
+    renderApp({ grade: 5, chosen: true });
+    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+    expect(screen.getByRole("button", { name: "Settings" })).toHaveAttribute("aria-current", "page");
+    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+    expect(screen.getByRole("button", { name: "Settings" })).not.toHaveAttribute("aria-current");
+    expect(screen.queryByRole("switch", { name: /High contrast/ })).toBeNull();
+    const me = () => screen.getByRole("button", { name: /^Your Bento|^My Bento/ });
+    fireEvent.click(me());
+    expect(me()).toHaveAttribute("aria-current", "page");
+    fireEvent.click(me());
+    expect(me()).not.toHaveAttribute("aria-current");
+  });
 });
 
 describe("find my level", () => {

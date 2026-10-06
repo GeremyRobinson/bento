@@ -186,7 +186,9 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   }, [open]);
   const start: Level = route.name === "home" ? "shelf" : place.lesson ? "chapter" : "year";
   // My Bento is a page of its own (G 2026-10-06: no pop-over version); the person circle goes there
-  const openMe = () => { if (route.name !== "me") go({ name: "me" }, "fwd"); };
+  // Settings and My Bento are toggles (G 2026-10-06): tapped again while open, they close the page the way < does; the
+  // icon stays the same, its filled state already says it's open
+  const openMe = () => { if (route.name !== "me") go({ name: "me" }, "fwd"); else if (place.back) up(place.back.to); };
   // the wordmark always means home: your book once a grade is chosen, else the top of the landing page
   const home = () => {
     if (chosen != null && progress.chosen) { openSheet(false); go({ name: "home" }, "back"); }
@@ -238,7 +240,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   useEffect(() => {
     if (welcome || open || asking || sheetOpen || !place.back) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || e.defaultPrevented || document.querySelector(".zoom,.fstack,.sheet,dialog[open]")) return;
+      if (e.key !== "Escape" || e.defaultPrevented || document.querySelector(".zoom,.fstack,.confirm,.sheet,dialog[open]")) return;
       up(place.back!.to);
     };
     addEventListener("keydown", onKey);
@@ -304,7 +306,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
             aria-label={`Hint, ${run!.hintsLeft} left`} aria-expanded={hinting}><BulbIcon /><em className="ibadge" aria-hidden>{run!.hintsLeft}</em></button>
         )}
         {/* Settings is a page of its own (G 2026-10-06: no pop-over version); the gear goes there */}
-        <button className={`icon${route.name === "settings" ? " on" : ""}`} onClick={() => { if (route.name !== "settings") go({ name: "settings" }, "fwd"); }}
+        <button className={`icon${route.name === "settings" ? " on" : ""}`} onClick={() => { if (route.name !== "settings") go({ name: "settings" }, "fwd"); else if (place.back) up(place.back.to); }}
           aria-label="Settings" aria-current={route.name === "settings" ? "page" : undefined}><SettingsIcon /></button>
         <button className={`icon ime${route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={openMe}
           aria-label={`${YOUR_BENTO}: ${progress.streak} day streak, ${progress.xp} XP`} aria-current={route.name === "me" ? "page" : undefined}>
