@@ -5,7 +5,7 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
  * `split` for a list beside its detail (on a phone, one at a time), `fit` for a screen that must fit without the
  * page scrolling. Only a list or a sheet may scroll inside itself (Design, handoff 5).
  */
-export function SplitScreen({ list, detail, show, label }: { list: ReactNode; detail: ReactNode; show: "list" | "detail"; label: string }) {
+export function SplitScreen({ list, detail, show, label, className, detailLabel }: { list: ReactNode; detail: ReactNode; show: "list" | "detail"; label: string; className?: string; /** id of the detail's heading */ detailLabel?: string }) {
   // a list taller than its pane fades out at the bottom while more waits below (Review v39 item 12)
   const nav = useRef<HTMLElement>(null);
   const [more, setMore] = useState(false);
@@ -18,9 +18,9 @@ export function SplitScreen({ list, detail, show, label }: { list: ReactNode; de
     return () => ro.disconnect();
   });
   return (
-    <div className={`screen split show-${show}`}>
+    <div className={`screen split show-${show}${className ? ` ${className}` : ""}`}>
       <nav className={`slist${more ? " more" : ""}`} aria-label={label} ref={nav} onScroll={check}>{list}</nav>
-      <section className="sdetail">{detail}</section>
+      <section className="sdetail" aria-labelledby={detailLabel}>{detail}</section>
     </div>
   );
 }

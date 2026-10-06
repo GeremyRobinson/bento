@@ -244,7 +244,7 @@ describe("report, grown-up page and back to basics", () => {
     expect(screen.getByRole("button", { name: "Show all" })).toBeInTheDocument();
   });
 
-  it("shows scores by grade, mistake patterns, what needs practice and recent sessions", () => {
+  it("shows mistake patterns, scores by chapter and where help was used, and opens the session behind a pattern", () => {
     const t = Date.UTC(2026, 9, 1, 15);
     const progress: Partial<Progress> = {
       grade: 5, chosen: true, xp: 120, done: 2,
@@ -264,20 +264,18 @@ describe("report, grown-up page and back to basics", () => {
     renderApp(progress, { "g5-mult2": report });
     fireEvent.click(screen.getByRole("button", { name: /^Me:/ }));
     tap("Open the report ›");
-    for (const h of ["Scores by grade", "Mistake patterns", "Needs more practice", "Recent sessions"]) {
-      expect(screen.getByRole("heading", { level: 2, name: h })).toBeInTheDocument();
-    }
-    expect(screen.getByText("Lesson average 1.5 of 4 · check-up 3: Proficient")).toBeInTheDocument();
-    expect(screen.getByText("Lost the place value")).toBeInTheDocument();
-    expect(screen.getByText("Multiply by the tens: The tens digit stands for 30, so add a zero.")).toBeInTheDocument();
-    expect(screen.getByText("2 hints used, 1 quick retry that looked like guessing.")).toBeInTheDocument();
-    // needs more practice lists both scored lessons; the one not rebuilt yet can't be opened
-    const needs = screen.getByRole("heading", { name: "Needs more practice" }).closest("section")!;
-    expect(within(needs).getAllByRole("button")).toHaveLength(2);
-    // a session without a saved report can't be opened; one with a report opens it, and Back returns to the lesson
-    const recent = within(screen.getByRole("heading", { name: "Recent sessions" }).closest("section")!).getAllByRole("button");
-    expect(recent[1]).toBeDisabled();
-    fireEvent.click(recent[0]!);
+    expect(screen.getByRole("heading", { level: 1, name: "For the grown-up" })).toBeInTheDocument();
+    // the pattern, picked, with what went wrong and the lesson's own explanation of it
+    const row = screen.getByRole("button", { name: `Lost the place value, ${LESSON}: 1 of 1 problems` });
+    expect(row).toHaveAttribute("aria-current", "true");
+    expect(screen.getByRole("heading", { level: 2, name: "Lost the place value" })).toBeInTheDocument();
+    const notes = [...document.querySelectorAll(".gu-why")].map(n => n.textContent);
+    expect(notes).toEqual(["Step 1: typed 141 first.", "Step 1: Multiply by the tens: The tens digit stands for 30, so add a zero."]);
+    expect(screen.getByText("2 hints in 2 sessions. 1 step filled in with Show me. 1 quick retry looked like guessing.")).toBeInTheDocument();
+    // scores by chapter: the lesson's battery says its score in words
+    expect(screen.getAllByRole("img", { name: "1, Beginning" }).length).toBeGreaterThan(0);
+    // the session behind the pattern opens, and Back returns to the lesson
+    tap("See that session ›");
     expect(screen.getByText(/Typed/)).toHaveTextContent("Typed 141, answer 1410. Lost the place value (quick retry).");
     tap(`Back to ${LESSON}`);
     expect(screen.getByRole("button", { name: "Show all" })).toBeInTheDocument();

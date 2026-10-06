@@ -10,7 +10,7 @@ import { currentItem, currentStep, lessonOfItem } from "../engine/session/practi
 import { upNext } from "../app/today";
 import { Contents, type Level } from "./Contents";
 import { tableById } from "../engine/facts/tables";
-import { Chevron } from "./primitives/icons";
+import { Chevron, LockIcon } from "./primitives/icons";
 import { CONTENTS, GROWN_UP, NO_UNIT, PRACTICE, REPORT, REVIEW, SETTING, YOUR_BENTO } from "../app/copy";
 
 /** A simple person: a head and shoulders. */
@@ -27,7 +27,7 @@ export function pageOf(lessonId: string): { grade: number; chapter: string; page
   return { grade: g, chapter: ch.name, page: ch.entries.findIndex(c => c.id === lessonId) + 1, pages: ch.entries.length };
 }
 
-type Place = { kicker: string; title: string; back?: { label: string; to: Route }; lesson?: string };
+type Place = { kicker: string; title: string; back?: { label: string; to: Route }; lesson?: string; /** says the page stays on this device, in place of the fill */ lock?: boolean };
 
 /** What the island says on each screen: a small line for where you are in the book, and the page you're on. */
 function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): Place {
@@ -55,7 +55,12 @@ function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): P
         ? { kicker: chapterLine(l.id, "report"), title: l.title, back: { label: l.title, to: { name: "learn", lessonId: l.id } }, lesson: l.id }
         : { kicker: GROWN_UP, title: rep?.title ?? REPORT, back: { label: GROWN_UP, to: { name: "parent" } } };
     }
-    case "parent": return { kicker: "Me", title: GROWN_UP, back: { label: "Me", to: { name: "me" } } };
+    case "parent": {
+      // on a phone a picked pattern is its own screen, and back returns to the list
+      const phone = typeof matchMedia !== "undefined" && matchMedia("(max-width: 699px)").matches;
+      return { kicker: `Me · ${gradeOf(grade).name}`, title: GROWN_UP, lock: true,
+        back: route.pick && phone ? { label: GROWN_UP, to: { name: "parent" } } : { label: "Me", to: { name: "me" } } };
+    }
     case "me": return { kicker: "Me", title: YOUR_BENTO, back: contents };
     case "facts": {
       const t = route.table ? tableById(route.table) : undefined;
@@ -201,7 +206,9 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
           <small>{place.kicker}</small>
           {place.title === gradeOf(grade).name ? <GradeTitle grade={grade} /> : <b>{place.title}</b>}
         </button>
-        <span className="ibat" aria-hidden style={{ "--p": fill, "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties}><i /></span>
+        {place.lock
+          ? <span className="ilock"><LockIcon />On this device</span>
+          : <span className="ibat" aria-hidden style={{ "--p": fill, "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties}><i /></span>}
       </header>
       <div className="icorner right">
         {hintable && (
