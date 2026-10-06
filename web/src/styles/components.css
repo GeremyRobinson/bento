@@ -410,7 +410,9 @@
 /* ---- home, stripped back: today's plan, the year's progress, the units. Space does the work, not boxes. ---- */
 .bhome .today,.bhome .b-stats,.bhome .b-weak{background:var(--card);box-shadow:0 0 0 1px var(--rule);padding:calc(var(--u) * 1.75)}
 .today{gap:0;align-content:start}
-.today .sub{color:var(--muted);margin-top:10px;font-weight:400}
+.today .sub{color:var(--muted);margin-top:var(--s);font-weight:400}
+/* the vertical rhythm of a card: title, subtitle a small step under it, then a clear gap before the action (G 2026-10-06) */
+.today>.ctl{margin-top:var(--sec)}
 .plan{list-style:none;margin:calc(var(--u) * 1.5) 0 0;padding:0;display:grid}
 .plan li+li{border-top:1px solid var(--rule)}
 .pitem{width:100%;display:flex;align-items:center;gap:var(--u);padding:14px 0;text-align:left;border-radius:14px;transition:opacity .2s}
