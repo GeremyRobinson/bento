@@ -228,7 +228,7 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
 .b2nav .ctl{--pill-h:var(--tap);font-size:var(--fz-md)}
 /* in Guess the picture is the question: its setup stays put until you lock in */
 .st-guess .b2stage .b2ctl{display:none}
-.b2projbtn,.b2projback,.b2deepm{display:none}
+.b2projbtn,.b2projback{display:none}
 /* typing an answer takes the keypad's room: the picture keeps its drawing and drops its sliders */
 .b2lesson.st-work .b2stage .b2ctl,.b2lesson.st-name .b2stage .b2ctl{display:none}
 .b2lesson.st-work .b2scene{grid-template-rows:minmax(120px,1fr) auto auto auto}
@@ -257,11 +257,9 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
   .b2lesson.st-use.proj.projopen .b2card{display:none}
   .b2lesson.st-use.proj.projopen .b2stage{display:grid;align-content:start;gap:var(--sp-2)}
   .b2lesson.projopen .b2projback{display:inline-flex;justify-self:start;--pill-h:40px;font-size:var(--fz-sm)}
-  /* the island already names the lesson, so the card's header steps aside: Deeper moves to the bottom row */
+  /* the island already names the lesson, so the card's header steps aside */
   .b2card>.b2lhead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
-  .b2nav .b2deepm{display:inline-flex}
-  .b2nav span.b2deepm{display:block}
-  .b2nav .ctl.b2deepm{--pill-pad:var(--sp-3)}
+  .b2nav .ctl.b2deep{--pill-pad:var(--sp-3)}
   /* Work it is words and a keypad on a phone: the picture steps aside */
   .screen.fit.b2lesson.st-work{grid-template-rows:minmax(0,1fr);grid-template-areas:"card"}
   .b2lesson.st-work .b2stage{display:none}

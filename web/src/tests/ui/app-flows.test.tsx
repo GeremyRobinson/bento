@@ -83,9 +83,9 @@ describe("no grade until one is chosen", () => {
     expect(document.documentElement.dataset.side).toBe("b2");
     expect(screen.getAllByRole("radio")).toHaveLength(10);
     expect(screen.getAllByText("Coming later")).toHaveLength(10 - B2_TRACKS_LIVE.length);
-    expect(B2_TRACKS_LIVE).not.toContain("linear");
-    fireEvent.click(screen.getByRole("radio", { name: "Linear algebra" }));
-    expect(screen.getByRole("heading", { level: 2, name: "Linear algebra" })).toBeInTheDocument();
+    expect(B2_TRACKS_LIVE).not.toContain("ai");
+    fireEvent.click(screen.getByRole("radio", { name: "The math behind AI" }));
+    expect(screen.getByRole("heading", { level: 2, name: "The math behind AI" })).toBeInTheDocument();
     tap("Tell me when it's ready");
     expect(screen.getByRole("button", { name: /We'll tell you/ })).toHaveAttribute("aria-pressed", "true");
     // no lesson can start from Bento² yet

@@ -222,7 +222,6 @@ export function LessonScreen({ trackId, lessonId }: { trackId: string; lessonId:
       <section className="b2card" aria-labelledby="b2title">
         <header className="b2lhead">
           <div><small className="b2kick">{track.name} · Unit {lesson.unit} · {lessonNumber(lesson.id)}</small><h1 id="b2title">{lesson.title}</h1></div>
-          <button type="button" className="ctl b2deep" aria-expanded={!!deeper} onClick={() => setDeeper("open")}>Deeper</button>
         </header>
         <div className="b2stages" role="tablist" aria-label="The lesson's loop" style={{ "--at": at } as CSSProperties}>
           <span className="b2sk" aria-hidden />
@@ -241,8 +240,8 @@ export function LessonScreen({ trackId, lessonId }: { trackId: string; lessonId:
           <div className="b2nav">
             {at > 0 && <Pill onClick={() => setStage(STAGES[at - 1]!)}>‹ {STAGE_NAMES[STAGES[at - 1]!]}</Pill>}
             <span className="grow" />
-            {!(stage === "guess" && !revealed) && <button type="button" className="ctl b2deep b2deepm" aria-expanded={!!deeper} onClick={() => setDeeper("open")}>Deeper</button>}
-            {!(stage === "guess" && !revealed) && <span className="grow b2deepm" />}
+            {!(stage === "guess" && !revealed) && <button type="button" className="ctl b2deep" aria-expanded={!!deeper} onClick={() => setDeeper("open")}>Deeper</button>}
+            {!(stage === "guess" && !revealed) && <span className="grow" />}
             {stage === "work" && solved && <Pill onClick={another}>Another problem</Pill>}
             {stage === "guess" && !revealed ? <Pill go disabled={guess == null} onClick={lockIn}>Lock in my guess</Pill> : nextStage
               ? <Pill go={stage !== "work" || solved} onClick={() => setStage(nextStage)}>{STAGE_NAMES[nextStage]} ›</Pill>

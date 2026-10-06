@@ -83,7 +83,7 @@ describe("Bento² from picker D through a lesson", () => {
   });
 
   it("a track that isn't open falls back to the book, and a b2 hash for an open track lands on its screen", () => {
-    const { unmount } = renderApp({ grade: 5, chosen: true }, {}, "#/b2/linear");
+    const { unmount } = renderApp({ grade: 5, chosen: true }, {}, "#/b2/ai");
     expect(screen.queryByRole("heading", { level: 1, name: "Linear algebra" })).toBeNull();
     expect(document.documentElement.dataset.side).toBeUndefined();
     unmount();
