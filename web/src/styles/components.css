@@ -479,9 +479,10 @@
 .viz-svg .keypill{fill:none;stroke:var(--rule);stroke-width:1}
 .viz-svg .spacer{stroke:none}
 /* coins (g2-coins): the only real-world colors in the pictures, from the Design tokens coin-copper / coin-silver and their rims */
-.viz-svg .coin{stroke-width:2.5} .viz-svg .coin.cu{fill:#c77b4a;stroke:#8f5230} .viz-svg .coin.ag{fill:#cfd4dc;stroke:#7d8592}
-.viz-svg .coin-ridge{fill:none;stroke-width:1.2} .viz-svg .coin-ridge.cu{stroke:#8f5230} .viz-svg .coin-ridge.ag{stroke:#7d8592}
-.viz-svg .coin-art{fill:none;stroke-width:2;stroke-linejoin:round} .viz-svg .coin-art.cu{stroke:#8f5230} .viz-svg .coin-art.ag{stroke:#7d8592}
+/* silver coins take the grade's first color over a light silver, so they read as silver without going grey (G 2026-10-05) */
+.viz-svg .coin{stroke-width:2.5} .viz-svg .coin.cu{fill:#c77b4a;stroke:#8f5230} .viz-svg .coin.ag{fill:color-mix(in srgb,var(--c0) 22%,#e3e7ee);stroke:var(--c0)}
+.viz-svg .coin-ridge{fill:none;stroke-width:1.2} .viz-svg .coin-ridge.cu{stroke:#8f5230} .viz-svg .coin-ridge.ag{stroke:var(--c0)}
+.viz-svg .coin-art{fill:none;stroke-width:2;stroke-linejoin:round} .viz-svg .coin-art.cu{stroke:#8f5230} .viz-svg .coin-art.ag{stroke:var(--c0)}
 .viz-svg .xmark{fill:none;stroke:var(--tint);stroke-width:3.5;stroke-linecap:round}
 .viz-svg .dialface{fill:color-mix(in srgb,var(--c0) 12%,var(--card));stroke:var(--c0);stroke-width:4} .viz-svg .hub{fill:var(--text)}
 .viz-svg .needle{fill:none;stroke:var(--c1);stroke-width:3.5;stroke-linecap:round}
