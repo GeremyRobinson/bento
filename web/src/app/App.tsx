@@ -14,7 +14,11 @@ import { Practice } from "../screens/Practice";
 import { ReportScreen, Results } from "../screens/Results";
 import { Welcome } from "../screens/Welcome";
 import { useApp } from "./AppState";
-import { isTopLevel } from "./routes";
+import { isB2, isTopLevel } from "./routes";
+import { isOpen as b2Open, b2LessonById, trackByPickerId } from "../bento2/registry";
+import { TrackScreen } from "../bento2/screens/TrackScreen";
+import { LessonScreen } from "../bento2/screens/LessonScreen";
+import { ToolShell } from "../bento2/tools/ToolShell";
 import { Island } from "../components/Island";
 import { motionOff } from "./settings";
 
@@ -47,21 +51,33 @@ export function App() {
     }
   }
   const lesson = lessonId ? lessonById(lessonId) : undefined;
+  // Bento²: a track screen or one of its lessons, in the b2 room (picker D's Bento² side); a track that isn't open
+  // (or a lesson it doesn't have) falls back to the book
+  const b2Track = isB2(route) && b2Open(route.track) ? trackByPickerId(route.track) : undefined;
+  const b2Lesson = route.name === "b2lesson" && b2Track ? b2LessonById(route.lessonId) : undefined;
+  const b2 = !!b2Track && (route.name === "b2track" || (!!b2Lesson && b2Lesson.track === b2Track.code));
   const top = isTopLevel(route);
   const grade: number | null = top ? chosenGrade : testGrade ?? lesson?.grade ?? chosenGrade;
   // changing grade opens picker D over everything (Review v43 item 15: one way to change grade)
-  const choosing = sheetOpen || route.name === "welcome" || (route.name === "home" && grade == null);
+  const choosing = sheetOpen || route.name === "welcome" || (route.name === "home" && grade == null) || (isB2(route) && !b2 && grade == null);
   const tint = top || !lesson ? 0 : tintOf(lesson);
   // the website and the grade picker are about every grade, so their surfaces stay neutral: a chosen grade's hue
   // would tint every card (G 2026-10-06: "why is this burgundy?")
-  const neutral = route.name === "welcome" || sheetOpen;
+  const neutral = route.name === "welcome" || sheetOpen || b2;
 
 
   // the canvas behind the bento follows the line the screen belongs to; the landing page stays plain
-  const line = choosing || grade == null ? "welcome" : lineOf(grade).id;
+  const line = choosing || grade == null || b2 ? "welcome" : lineOf(grade).id;
   useEffect(() => { document.documentElement.dataset.line = line; }, [line]);
   // the page behind the app takes a wash of the grade's hue, so the whole screen is one color family
-  const hue = choosing || grade == null ? null : gradeOf(grade).color;
+  const hue = choosing || grade == null || b2 ? null : gradeOf(grade).color;
+  // Bento² screens are in the b2 room (dark, its own hue); picker D sets the room itself while it is open, and
+  // clears it when it closes, so this follows both the route and the sheet
+  useEffect(() => {
+    if (sheetOpen) return;
+    const el = document.documentElement;
+    if (b2) el.dataset.side = "b2"; else delete el.dataset.side;
+  }, [b2, sheetOpen, route]);
   useEffect(() => {
     const el = document.documentElement;
     if (hue) { el.dataset.hue = ""; el.style.setProperty("--page-hue", hue); }
@@ -69,8 +85,8 @@ export function App() {
   }, [hue]);
 
   useEffect(() => {
-    document.title = route.name === "learn" && lesson ? `${lesson.title} · Bento` : "Bento";
-  }, [route.name, lesson]);
+    document.title = b2Lesson ? `${b2Lesson.title} · Bento²` : b2 && b2Track ? `${b2Track.name} · Bento²` : route.name === "learn" && lesson ? `${lesson.title} · Bento` : "Bento";
+  }, [route.name, lesson, b2, b2Track, b2Lesson]);
 
   // every tap on a control leaves a soft halo, so a finger knows it landed (Less motion turns it off)
   useEffect(() => {
@@ -96,18 +112,21 @@ export function App() {
     case "me": screen = <Me />; break;
     case "sandbox": screen = SANDBOX ? <Suspense fallback={null}><SandboxBoard /></Suspense> : <Home />; break;
     case "facts": screen = <Facts table={route.table} start={!!route.start} />; break;
+    case "b2track": screen = b2 ? <TrackScreen trackId={route.track} pick={route.pick} /> : <Home />; break;
+    case "b2lesson": screen = b2 ? <LessonScreen trackId={route.track} lessonId={route.lessonId} /> : <Home />; break;
     default: screen = <Home />;
   }
   if (sheetOpen) screen = <GradeQuestion />;
   // a new screen (or a new grade on a top-level screen) re-enters; with view transitions the browser cross-fades instead
-  const viewKey = [sheetOpen ? "grades" : route.name, route.name === "learn" ? route.lessonId : route.name === "report" ? route.key : route.name === "facts" ? route.table ?? "" : "", top ? chosenGrade : "", SANDBOX ? sbSeed : ""].join("|");
+  const viewKey = [sheetOpen ? "grades" : route.name, route.name === "learn" ? route.lessonId : route.name === "report" ? route.key : route.name === "facts" ? route.table ?? "" : route.name === "b2lesson" ? route.lessonId : route.name === "b2track" ? route.track : "", top ? chosenGrade : "", SANDBOX ? sbSeed : ""].join("|");
   return (<>
     {/* the island stays put across screens (UI notes preview); only the screen under it is new, and its pieces
         stagger in (motion.css, "one motion master") */}
     <main id="app" className={`wrap t${tint}`} data-band={grade == null || neutral ? "middle" : bandOf(grade)} data-grade={neutral ? "none" : grade ?? "none"}>
-      <Island grade={grade} guest={choosing} />
+      <Island grade={grade} guest={choosing} b2={b2 && !sheetOpen} />
       <Fragment key={viewKey}>{screen}</Fragment>
     </main>
+    {b2 && !sheetOpen && <ToolShell track={b2Track} />}
     {SANDBOX && <Suspense fallback={null}><Sandbox /></Suspense>}
   </>);
 }

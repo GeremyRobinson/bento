@@ -15,6 +15,8 @@ import { MeStack } from "./MeStack";
 import { ConfirmStack } from "./ConfirmStack";
 import { tableById } from "../engine/facts/tables";
 import { Chevron, LockIcon } from "./primitives/icons";
+import { b2LessonById, lessonNumber, trackByPickerId } from "../bento2/registry";
+import { buildDone } from "../bento2/screens/TrackScreen";
 import { CONTENTS, GROWN_UP, NO_UNIT, PRACTICE, REPORT, REVIEW, SETTING, YOUR_BENTO } from "../app/copy";
 
 /** A small cross: quit. */
@@ -85,6 +87,20 @@ function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): P
   }
 }
 
+/** Bento²: the track (and the lesson in it), with the build's progress as the fill. Back from a lesson is its track;
+ * back from a track is picker D, on its Bento² side. */
+function b2PlaceOf(route: Route, app: ReturnType<typeof useApp>): Place & { fill: number } {
+  const trackId = route.name === "b2track" || route.name === "b2lesson" ? route.track : "";
+  const t = trackByPickerId(trackId);
+  const fill = t ? buildDone(t, app.b2.shelf) / t.buildPieces.length : 0;
+  if (route.name === "b2lesson") {
+    const l = b2LessonById(route.lessonId), u = t?.units.find(x => x.n === l?.unit);
+    return { kicker: `${t?.name ?? "Bento²"} · ${u ? `${u.name} · ` : ""}${lessonNumber(route.lessonId)}`, title: l?.title ?? "Lesson",
+      back: { label: t?.name ?? "the track", to: { name: "b2track", track: trackId, pick: route.lessonId } }, fill };
+  }
+  return { kicker: "Bento²", title: t?.name ?? "Bento²", fill };
+}
+
 /** On the book, the small line names the chapter you're in: the picked lesson's, else the one up next. */
 function homeChapter(route: Route, app: ReturnType<typeof useApp>, grade: number): string {
   const id = route.name === "home" && route.pick && route.pick !== "today" ? route.pick : upNext(app.progress, grade)?.entry.id;
@@ -109,6 +125,13 @@ const BulbIcon = () => (
   </svg>
 );
 
+/** A ruler and a pencil, crossed: the Bento² tools. */
+const ToolsIcon = () => (
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M4 17.5L17.5 4l2.5 2.5L6.5 20H4z" /><path d="M14 7.5l2.5 2.5M5 5l14 14" />
+  </svg>
+);
+
 const SettingsIcon = () => (
   <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></svg>
 );
@@ -130,7 +153,7 @@ function fillOf(place: Place, app: ReturnType<typeof useApp>, grade: number): nu
  * year, and every grade. Pinching the page closed does the same. Quick settings and Me float on their own in the
  * top-right corner; an unfinished lesson waits in the top-left one.
  */
-export function Island({ grade: chosen, guest }: { grade: number | null; guest?: boolean }) {
+export function Island({ grade: chosen, guest, b2 }: { grade: number | null; guest?: boolean; b2?: boolean }) {
   const app = useApp();
   const { progress, go, route, openSheet, quit } = app;
   // quitting a run you started and don't want to finish (G 2026-10-06): one quick confirm, then it's gone
@@ -143,9 +166,17 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
     return () => removeEventListener("bento:hintopen", on);
   }, []);
   // the landing page, and any grade page reached before a grade is chosen, get the plain guest island
-  const welcome = !!guest || route.name === "welcome" || chosen == null;
+  const welcome = !b2 && (!!guest || route.name === "welcome" || chosen == null);
   const grade = chosen ?? 0;
-  const place = placeOf(route, app, grade);
+  const b2place = b2 ? b2PlaceOf(route, app) : null;
+  const place = b2place ?? placeOf(route, app, grade);
+  // Bento²'s tools list is open: the tools button is ink-filled while it is
+  const [tooling, setTooling] = useState(false);
+  useEffect(() => {
+    const on = (e: Event) => setTooling(!!(e as CustomEvent).detail);
+    addEventListener("b2:toolsopen", on);
+    return () => removeEventListener("b2:toolsopen", on);
+  }, []);
   const [open, setOpen] = useState<Level | null>(null);
   // quick settings: open, closing (the pills ripple out, last first, as in the UI notes preview), or put away
   const [qs, setQs] = useState<"open" | "closing" | null>(null);
@@ -179,7 +210,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
 
   // pinching the page closed (two fingers coming together) zooms out to the contents; spreading them is left to the browser
   useEffect(() => {
-    if (welcome || open) return;
+    if (welcome || open || b2) return;
     let d0 = 0;
     const dist = (t: TouchList) => Math.hypot(t[0]!.clientX - t[1]!.clientX, t[0]!.clientY - t[1]!.clientY);
     const onStart = (e: TouchEvent) => { d0 = e.touches.length === 2 && (visualViewport?.scale ?? 1) <= 1.01 ? dist(e.touches) : 0; };
@@ -190,7 +221,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
     document.addEventListener("touchstart", onStart, { passive: true });
     document.addEventListener("touchmove", onMove, { passive: true });
     return () => { document.removeEventListener("touchstart", onStart); document.removeEventListener("touchmove", onMove); };
-  }, [welcome, open, start]);
+  }, [welcome, open, start, b2]);
 
   // the page behind steps back while the contents are open
   useEffect(() => {
@@ -201,7 +232,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
 
   const run = progress.run, runGrade = run ? gradeOf(lessonOfItem(currentItem(run)).grade) : null;
   // the pages about you (Me, the grown-up page, facts) keep one island at the top (Review v43 item 17)
-  const showResume = !!run && !!runGrade && !welcome && !["practice", "me", "parent", "facts"].includes(route.name);
+  const showResume = !!run && !!runGrade && !welcome && !b2 && !["practice", "me", "parent", "facts"].includes(route.name);
   // in a lesson's practice, a light bulb sits beside Settings (UI notes preview); tests have no hints
   const hintable = route.name === "practice" && !!run && run.mode !== "test" && !!currentStep(run) && !run.pick;
   // on a phone, practice's island shows the problem itself in place of the lesson's name (practice-spec §2c A)
@@ -226,7 +257,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
     </div>
   );
 
-  const g = gradeOf(grade), fill = fillOf(place, app, grade);
+  const g = gradeOf(grade), fill = b2place ? b2place.fill : fillOf(place, app, grade);
   // on the book itself, one step back is the grade question
   const back = place.back;
   return (
@@ -248,20 +279,37 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
       <header className="island">
         {back
           ? <button className="iback" onClick={() => go(back.to, "back")} aria-label={`Back to ${back.label}`}><Chevron dir="left" /></button>
-          : <button className="iback" onClick={() => openSheet(true)} aria-label="Change grade"><Chevron dir="left" /></button>}
+          : b2
+            ? <button className="iback" onClick={() => { try { localStorage.setItem("bento-side", "b2"); } catch { /* fine */ } openSheet(true); }} aria-label="Back to Bento² tracks"><Chevron dir="left" /></button>
+            : <button className="iback" onClick={() => openSheet(true)} aria-label="Change grade"><Chevron dir="left" /></button>}
+        {b2place
+          ? (
+            <button className="iplace" onClick={() => { if (back) go(back.to, "back"); }} aria-label={`${place.title}${back ? `. Back to ${back.label}` : ""}`}>
+              <small>{place.kicker}</small>
+              <b>{place.title}</b>
+            </button>
+          )
+          : (
         <button className="iplace" onClick={() => setOpen(start === "shelf" ? "year" : start)} aria-label={`Contents. You're on ${place.title}`} aria-haspopup="dialog">
           <small>{place.kicker}</small>
           {place.title === gradeOf(grade).name ? <GradeTitle grade={grade} /> : <b className={shortProblem ? "ititle" : undefined}>{place.title}</b>}
           {shortProblem && <b className="iprob"><ProblemLine lessonId={shortProblem.lessonId} problem={problemOf(shortProblem)} solved={run!.solved} /></b>}
         </button>
+          )}
         {place.lock
           ? <span className="ilock"><LockIcon />On this device</span>
-          : <span className={`ibat${route.name === "practice" && run?.solved ? " tick" : ""}`} aria-hidden style={{ "--p": fill, "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties}><i /></span>}
+          : b2
+            ? <span className="ibat b2bat" aria-hidden style={{ "--p": fill } as CSSProperties}><i /></span>
+            : <span className={`ibat${route.name === "practice" && run?.solved ? " tick" : ""}`} aria-hidden style={{ "--p": fill, "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties}><i /></span>}
       </header>
       <div className="icorner right">
         {hintable && (
           <button className={`icon ihint${run!.hintsLeft || run!.hinted ? "" : " spent"}${hinting ? " on" : ""}`} onClick={() => { shut(); shutMe(); dispatchEvent(new Event("bento:hint")); }}
             aria-label={`Hint, ${run!.hintsLeft} left`} aria-expanded={hinting}><BulbIcon /><em className="ibadge" aria-hidden>{run!.hintsLeft}</em></button>
+        )}
+        {b2 && (
+          <button className={`icon itools${tooling ? " on" : ""}`} onClick={() => { shut(); shutMe(); dispatchEvent(new Event("b2:tools")); }}
+            aria-label="Tools" aria-haspopup="dialog" aria-expanded={tooling}><ToolsIcon /></button>
         )}
         <button className={`icon${quick ? " on" : ""}`} onClick={() => (quick ? shut() : openQuick())} aria-label="Settings" aria-expanded={quick}><SettingsIcon /></button>
         <button className={`icon ime${meOpen || route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={() => (meOpen ? shutMe() : openMe())}

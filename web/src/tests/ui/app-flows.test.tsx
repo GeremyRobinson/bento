@@ -5,6 +5,7 @@ import { lessonById } from "../../curriculum/registry";
 import type { Progress } from "../../engine/mastery/progress";
 import type { SessionReport } from "../../engine/session/types";
 import { answerWrong, failRun, renderApp, solveRun, tap } from "./helpers";
+import { B2_TRACKS_LIVE } from "../../bento2/flags";
 
 const LESSON = "Multiply two-digit numbers";
 const grade5 = CATALOG.filter(c => c.grade === 5);
@@ -74,14 +75,15 @@ describe("no grade until one is chosen", () => {
     tap("Start 3rd grade ›");
     expect(screen.getByRole("heading", { level: 1, name: "3rd grade" })).toBeInTheDocument();
   });
-  it("the Bento / Bento² switch swaps the grades for the ten tracks, all coming later", () => {
+  it("the Bento / Bento² switch swaps the grades for the ten tracks; the ones not in B2_TRACKS_LIVE are coming later", () => {
     renderApp({ grade: null, chosen: false }, {}, "#/learn/no-such-lesson");
     expect(screen.getByRole("button", { name: "Bento" })).toHaveAttribute("aria-pressed", "true");
     fireEvent.click(screen.getByRole("button", { name: "Bento squared" }));
     expect(screen.getByRole("heading", { level: 1, name: "Where do you want to go?" })).toBeInTheDocument();
     expect(document.documentElement.dataset.side).toBe("b2");
     expect(screen.getAllByRole("radio")).toHaveLength(10);
-    expect(screen.getAllByText("Coming later")).toHaveLength(10);
+    expect(screen.getAllByText("Coming later")).toHaveLength(10 - B2_TRACKS_LIVE.length);
+    expect(B2_TRACKS_LIVE).not.toContain("linear");
     fireEvent.click(screen.getByRole("radio", { name: "Linear algebra" }));
     expect(screen.getByRole("heading", { level: 2, name: "Linear algebra" })).toBeInTheDocument();
     tap("Tell me when it's ready");

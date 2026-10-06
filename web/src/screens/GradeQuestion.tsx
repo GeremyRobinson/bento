@@ -13,6 +13,7 @@ import { GradeNum } from "../components/Shelf";
 import { FIND_MY_LEVEL, NO_UNIT } from "../app/copy";
 import { TRACKS, TRACK_PARTS, type Track } from "../app/tracks";
 import { TeaserPic } from "../components/TeaserPics";
+import { isOpen as b2Open } from "../bento2/registry";
 import type { DiagramModel } from "../explanations/schema";
 
 type Side = "bento" | "b2";
@@ -53,7 +54,7 @@ const phone = () => typeof matchMedia !== "undefined" && matchMedia("(max-width:
  * in place with its picture and Start, so nothing scrolls past one screen.
  */
 export function GradeQuestion() {
-  const { chooseGrade, startTest, deps, sheetOpen, openSheet, progress } = useApp();
+  const { chooseGrade, startTest, deps, sheetOpen, openSheet, progress, go } = useApp();
   // opened to change grade: Escape goes back to your lessons
   useEffect(() => {
     if (!sheetOpen) return;
@@ -174,10 +175,18 @@ export function GradeQuestion() {
           </div>
         )}
         <figure className="gdpic b2pic"><TeaserPic id={t.id} play /></figure>
-        <div className="gdgo">
-          <Pill onClick={toggle} aria-pressed={on}>{on ? "We'll tell you on this device ✓" : "Tell me when it's ready"}</Pill>
-          <small>Coming later</small>
-        </div>
+        {b2Open(t.id)
+          ? (
+            <div className="gdgo">
+              <Pill go onClick={() => { openSheet(false); go({ name: "b2track", track: t.id }, "fwd"); }}>Open {t.name} ›</Pill>
+            </div>
+          )
+          : (
+            <div className="gdgo">
+              <Pill onClick={toggle} aria-pressed={on}>{on ? "We'll tell you on this device ✓" : "Tell me when it's ready"}</Pill>
+              <small>Coming later</small>
+            </div>
+          )}
       </div>
     );
   };
@@ -196,7 +205,7 @@ export function GradeQuestion() {
       <span className="sknob" ref={knob} aria-hidden />
       <header className="shead gqh">
         <div className="gqline"><h1>Where do you want to go?</h1>{sideSwitch}</div>
-        <span className="b2note">A preview: every track is coming later.</span>
+        <span className="b2note">{TRACKS.some(t => b2Open(t.id)) ? `Open now: ${TRACKS.filter(t => b2Open(t.id)).map(t => t.name).join(", ")}. The rest are coming later.` : "A preview: every track is coming later."}</span>
       </header>
       <div role="radiogroup" aria-label="Bento² tracks" className="sideset" key="b2">
         {TRACK_PARTS.map(part => (
@@ -210,7 +219,7 @@ export function GradeQuestion() {
                     onClick={() => setTrack(on && phone() ? null : t.id)}>
                     <span className="ticon"><TeaserPic id={t.id} play={false} /></span>
                     <span className="sname"><b>{t.name}</b></span>
-                    <small>Coming later</small>
+                    <small className={b2Open(t.id) ? "topen" : undefined}>{b2Open(t.id) ? "Open" : "Coming later"}</small>
                   </button>
                   {on && phone() && <div className="gopen">{trackDetail(t, true)}</div>}
                 </div>

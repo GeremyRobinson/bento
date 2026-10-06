@@ -50,8 +50,10 @@ export function ToolShell({ track }: { track?: B2Track }) {
     };
     const onMenu = () => setMenu(m => (m === "open" ? "closing" : "open"));
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setMenu(m => (m ? "closing" : m)); if (isOpen.current) setClosing(true); } };
-    addEventListener("b2:tool", onTool); addEventListener("b2:tools", onMenu); addEventListener("keydown", onKey);
-    return () => { removeEventListener("b2:tool", onTool); removeEventListener("b2:tools", onMenu); removeEventListener("keydown", onKey); };
+    // quick settings and Me are stacks too; only one stack is ever open
+    const onPanel = (e: Event) => { if ((e as CustomEvent).detail === "settings") setMenu(m => (m === "open" ? "closing" : m)); };
+    addEventListener("b2:tool", onTool); addEventListener("b2:tools", onMenu); addEventListener("keydown", onKey); addEventListener("bento:panel", onPanel);
+    return () => { removeEventListener("b2:tool", onTool); removeEventListener("b2:tools", onMenu); removeEventListener("keydown", onKey); removeEventListener("bento:panel", onPanel); };
   }, []);
   useEffect(() => { dispatchEvent(new CustomEvent("b2:toolsopen", { detail: menu === "open" })); if (menu === "closing") return later(() => setMenu(null)); }, [menu]);
   useEffect(() => { if (closing) return later(() => { setPanel(null); setClosing(false); }); }, [closing]);
