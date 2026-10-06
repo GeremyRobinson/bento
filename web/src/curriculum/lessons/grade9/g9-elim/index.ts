@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { fP, ns, P, v } from "../../algebra-kit/steps";
 import { attempt, readInts } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { eliminationPicture } from "./picture";
 
 /** x + y = sum and x − y = difference, solved by adding the equations. */
 export interface EliminationSystem { kind: "system.elimination"; x: number; y: number; sum: number; difference: number }
@@ -41,6 +42,7 @@ export function explainElimination(p: EliminationSystem, model: AnswerModel) {
     heading: "Add to cancel a variable",
     statement: system(p),
     caption: "Add the equations: +y and −y cancel.",
+    diagram: eliminationPicture({ sum, difference, twoX, x, y }),
     alt: `x + y = ${f(sum)} and x − y = ${f(difference)}. Adding them gives 2x = ${f(twoX)}, so x = ${f(x)}; then y = ${f(y)}.`,
     steps: [
       { id: "first", narration: `The first equation has + y.`, math: first(sum, [mark("y")]) },

@@ -3,6 +3,7 @@ import { formatNumber as f, mark, num, op } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { chainExplanation } from "../../../../explanations/diagrams/chain/build";
 import { expectedOf, oneBox, restoreVia, round6, wholeIn } from "../../_number-line/steps";
+import { buildDoubleLine } from "../../../../explanations/diagrams/early-g4/double-line";
 
 /** (d × qt)/10 ÷ d/10, so the answer is the whole number qt */
 export interface DivDecimalProblem { d: number; qt: number }
@@ -37,6 +38,14 @@ function explain(p: DivDecimalProblem, model: AnswerModel) {
     statement: [num(x), op("÷"), num(y)],
     caption: `Move both points one place: ${f(x)} ÷ ${f(y)} and ${n} ÷ ${d} have the same answer.`,
     alt: `${f(x)} ÷ ${f(y)} becomes ${n} ÷ ${d} = ${qt}.`,
+    diagram: buildDoubleLine({
+      n: qt, per: d, extra: 0, top: "", bottom: "", between: "× 10",
+      topText: j => f(round6(j * y)), bottomText: j => String(j * d),
+      beats: { one: 0, all: 1, extra: null, total: 2 }, hops: { from: 2 },
+      lines: [{ text: `${f(y)} × 10 = ${d}`, from: 0, until: 0 }, { text: `${f(x)} × 10 = ${n}`, from: 1, until: 1 }],
+      total: `${n} ÷ ${d} = ${qt}, and ${f(x)} ÷ ${f(y)} = ${qt}`,
+      alt: `A double number line: the top counts by ${f(y)} up to ${f(x)}, the bottom by ${d} up to ${n}, tick for tick. ${qt} hops on each line, so both divisions are ${qt}.`,
+    }),
     beats: [
       { id: "divisor", narration: `Make the divisor whole: ${f(y)} × 10 = ${d}.`, math: [num(y), op("×"), num(10), op("="), num(d)],
         lines: [[num(x), op("÷"), num(y)], [num(y), op("×"), num(10), op("="), num(d)]], answerStep: "divisor", result: d },

@@ -4,6 +4,7 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { chainExplanation } from "../../../../explanations/diagrams/chain/build";
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
 import { count } from "../../../text";
+import { divisionAreaPicture } from "../../grade4/g4-divide/picture";
 
 /** n ÷ dv with n = dv × qt; the quotient qt is never a multiple of 10 */
 export interface LongDivisionProblem { dv: number; qt: number; n: number }
@@ -50,6 +51,7 @@ function explain(p: LongDivisionProblem, model: AnswerModel) {
     statement: [num(n), op("÷"), num(dv)],
     caption: `Take out big chunks of ${dv} first.`,
     alt: `${n} ÷ ${dv}: ${dv} × ${T} = ${dv * T}, ${left} is left, ${left} ÷ ${dv} = ${O}, so ${T} + ${O} = ${qt}.`,
+    diagram: divisionAreaPicture({ n, dv, T, O, left, q: qt }),
     beats: [
       { id: "tens", narration: `How many tens of ${dv} fit? ${dv} × ${T} = ${dv * T}.`, math: [num(dv), op("×"), num(T), op("="), num(dv * T)],
         lines: [[num(n), op("÷"), num(dv)], [num(dv), op("×"), mark(T), op("="), num(dv * T)]], answerStep: "tens", result: T },

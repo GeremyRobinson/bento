@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { ms, ns } from "../../algebra-kit/steps";
 import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { simplifyRootPicture } from "./picture";
 
 /** The square-free parts the current app uses, so k² is always the biggest perfect square inside. */
 export const SQUARE_FREE = [2, 3, 5, 6, 7] as const;
@@ -42,6 +43,7 @@ export function explainSimplifyRoot(p: SimplifyRoot, model: AnswerModel) {
     heading: "Pull out the perfect square",
     statement: [sqrt(n)],
     caption: `${f(n)} = ${f(square)} × ${f(rest)}, and √${f(square)} = ${f(k)}.`,
+    diagram: simplifyRootPicture({ k, m: rest, n, square }),
     alt: `√${f(n)} = √(${f(square)} × ${f(rest)}) = ${f(k)}√${f(rest)}.`,
     steps: [
       { id: "start", narration: `Look for the biggest perfect square that divides ${f(n)}.`, math: [sqrt(n)] },

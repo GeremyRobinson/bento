@@ -128,8 +128,8 @@ describe("pairs", () => {
 const CHAIN_LESSONS = ["g8-exp", "g9-elim", "g9-negexp", "g9-radical", "g9-polyadd", "g11-expeq", "g11-ratexp", "g11-evalpoly", "g11-synth", "g11-compose", "g11-radical", "g12-power", "g12-polyd", "g12-chain", "g12-anti"];
 
 // Lessons that now draw a picture of their own (Curriculum fixes-02, Part B) keep the same beat checks; their pictures
-// are checked in pictures-b.test.ts. The rest still draw the equation chain.
-const PICTURED_CHAIN_LESSONS = new Set(["g8-exp", "g9-negexp", "g9-polyadd", "g11-expeq", "g11-ratexp", "g11-synth", "g11-compose", "g12-power", "g12-polyd", "g12-chain", "g12-anti"]);
+// are checked in pictures-b.test.ts. A lesson left off this list must still draw the equation chain, and is checked as one.
+const PICTURED_CHAIN_LESSONS = new Set(["g8-exp", "g9-elim", "g9-negexp", "g9-radical", "g9-polyadd", "g11-expeq", "g11-ratexp", "g11-evalpoly", "g11-synth", "g11-compose", "g11-radical", "g12-power", "g12-polyd", "g12-chain", "g12-anti"]);
 
 describe.each(CHAIN_LESSONS)("%s equation chain", id => {
   const l = lesson(id);

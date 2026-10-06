@@ -74,6 +74,17 @@ const PICTURED = {
   "g12-polyd": "term-table",
   "g12-power": "term-table",
   "g12-anti": "term-table",
+  "g4-divide": "area-model",
+  "g5-divide": "area-model",
+  "g5-multdec": "area-model",
+  "g9-radical": "area-model",
+  "g11-radical": "area-model",
+  "g6-divide": "tape",
+  "g6-eval": "tape",
+  "g5-adddec": "columns",
+  "g5-divdec": "double-line",
+  "g9-elim": "balance",
+  "g11-evalpoly": "plane",
 } as const;
 
 describe.each(Object.entries(PICTURED))("%s draws a picture", (id, family) => {
@@ -270,6 +281,136 @@ describe("term-table lessons", () => {
         const s = sceneOf(l, p).items.find(i => i.from === beat && i.enter === "slide" && i.type === "rect")!;
         expect(Math.sign(parseFloat(String(s.vars!["--dx"])))).toBe(dir);
       }
+    }
+  });
+});
+
+// ---- the lessons on the existing families ----
+describe("area-model lessons", () => {
+  it("g4-divide fills a T column, then an O column, and leaves r unit squares beside it, too few for a column", () => {
+    const l = lesson("g4-divide");
+    for (const p of problemsOf(l) as { dv: number; q: number; r: number }[]) {
+      const d = sceneOf(l, p), T = p.q - (p.q % 10), O = p.q % 10;
+      expect(textsAt(d, 0).map(t => t.text)).toEqual(expect.arrayContaining([String(p.dv * T), `${p.dv} × ${T} = ${p.dv * T}`]));
+      expect(textsAt(d, 2).map(t => t.text)).toContain(String(p.dv * O));
+      const stub = rects(d, 4, /\bxchip pq\b/) as Rect[], column = (rects(d, 4, /^pend$/) as Rect[]).at(-1)!;
+      expect(stub).toHaveLength(p.r);
+      // dv of the remainder's squares would fill the column next to them
+      if (p.r) expect(column.h / (stub[0]!.h + 3)).toBeCloseTo(p.dv, 1);
+      expect(finalText(d, 4)).toContain(`${p.r} left over: ${p.q} R ${p.r}`);
+    }
+  });
+  it("g5-divide fills the rest exactly, with no remainder, and joins the two widths into the answer", () => {
+    const l = lesson("g5-divide");
+    for (const p of problemsOf(l) as { dv: number; qt: number }[]) {
+      const d = sceneOf(l, p), T = p.qt - (p.qt % 10), O = p.qt % 10;
+      expect(rects(d, 3, /\bxchip\b/)).toHaveLength(0);
+      expect(finalText(d, 3)).toContain(`${T} + ${O} = ${p.qt}`);
+    }
+  });
+  it("g5-multdec lays an A by B block of hundredths on whole unit squares", () => {
+    const l = lesson("g5-multdec");
+    for (const p of problemsOf(l) as { A: number; B: number }[]) {
+      const d = sceneOf(l, p), lines = shownAt(d, 0).filter(i => i.type === "line" && i.cls === "grid");
+      const vertical = lines.filter(i => i.type === "line" && i.x1 === i.x2).length, flat = lines.length - vertical;
+      expect([vertical, flat]).toEqual([p.A - 1, p.B - 1]);
+      expect(rects(d, 0, /^ax$/)).toHaveLength(Math.ceil(p.A / 10));
+      expect(finalText(d, 0)).toContain(`${p.A} × ${p.B} = ${p.A * p.B} tiny squares`);
+      expect(rects(d, 1, /\bxring\b/)).toHaveLength(1);
+    }
+  });
+  it("g9-radical cuts the square into k × k tiles of m, and its side into k√m", () => {
+    const l = lesson("g9-radical");
+    for (const p of problemsOf(l) as { k: number; m: number }[]) {
+      const d = sceneOf(l, p);
+      expect(rects(d, 1, /^cell /)).toHaveLength(p.k * p.k);
+      expect(textsAt(d, 1).filter(t => t.text === String(p.m))).toHaveLength(p.k * p.k);
+      expect(textsAt(d, 3).map(t => t.text)).toContain(`${p.k}√${p.m}`);
+    }
+  });
+  it("g11-radical splits the b × b unit squares into the + a and x, spilling over when x is not more than 0", () => {
+    const l = lesson("g11-radical");
+    const cases = [...problemsOf(l), { a: 6, b: 2 }, { a: 4, b: 2 }, { a: -9, b: 9 }].map(p => l.restore(p) as { a: number; b: number; x: number });
+    for (const p of cases) {
+      const d = sceneOf(l, p), sq = p.b * p.b;
+      const inA = Math.max(0, Math.min(p.a, sq));
+      expect(rects(d, 3, /\bxchip p0\b/)).toHaveLength(inA);
+      expect(rects(d, 3, /\bxchip p2\b/)).toHaveLength(sq - inA);
+      const outside = p.a < 0 ? -p.a : Math.max(0, p.a - sq);
+      expect(rects(d, 3, /\bdash\b/)).toHaveLength(outside);
+      expect(shownAt(d, 3).filter(i => i.type === "line" && i.cls === "ln2")).toHaveLength(p.a > 0 ? outside : 0);
+      expect(finalText(d, 3).join(" ")).toContain(`= ${fmt(p.x)}`);
+    }
+  });
+});
+
+describe("tape lessons", () => {
+  type FracP = { a: number; b: number; c: number; d: number };
+  it("g6-divide measures a/b with copies of c/d: whole copies, then a short one in the accent", () => {
+    const l = lesson("g6-divide");
+    for (const p of problemsOf(l) as FracP[]) {
+      const d = sceneOf(l, p), S = p.a * p.d, L = p.b * p.c;
+      const copies = d.items.filter(i => i.type === "rect" && i.from === 2 && /\bseg on\b/.test(i.cls ?? ""));
+      expect(copies).toHaveLength(Math.ceil(S / L));
+      expect(copies.filter(i => i.vars?.["--tint"] === "var(--acc)")).toHaveLength(S % L ? 1 : 0);
+      expect(textsAt(d, 1).map(t => t.text)).toEqual(expect.arrayContaining([`${S} small pieces`, `${L} small pieces`]));
+      // never in grade 6's lime (right) part colour
+      expect(d.items.filter(i => /\bp1\b/.test(i.cls ?? ""))).toEqual([]);
+    }
+  });
+  it("g6-eval draws a boxes of x and b boxes of y on one scale, then both lengths in one bar", () => {
+    const l = lesson("g6-eval");
+    for (const p of problemsOf(l) as { a: number; b: number; x: number; y: number }[]) {
+      const d = sceneOf(l, p), segs = (b: number) => d.items.filter((i): i is Rect => i.type === "rect" && i.cls === "seg" && (i.from ?? 0) === b);
+      expect(segs(0)).toHaveLength(p.a);
+      expect(segs(1)).toHaveLength(p.b);
+      const len = (rs: Rect[]) => Math.max(...rs.map(r => r.x + r.w)) - Math.min(...rs.map(r => r.x));
+      // within the parts' small insets (a few px at each end of a bar)
+      expect(Math.abs((len(segs(0)) + 3) / (len(segs(1)) + 3) / ((p.a * p.x) / (p.b * p.y)) - 1)).toBeLessThan(0.05);
+      expect(textsAt(d, 2).map(t => t.text)).toContain(String(p.a * p.x + p.b * p.y));
+      // a letter in a box gives way to its number
+      for (const t of d.items.filter((i): i is Text => i.type === "text" && (i.text === "x" || i.text === "y"))) expect(t.cls).toMatch(/a-outsoon/);
+    }
+  });
+});
+
+describe("columns, double line, balance and plane lessons", () => {
+  it("g5-adddec lines the points up, writes in the zeros, and adds the whole and decimal partials into the sum", () => {
+    const l = lesson("g5-adddec");
+    for (const p of problemsOf(l) as { a: number; b: number }[]) {
+      const d = sceneOf(l, p), sum = Math.round((p.a + p.b) * 100);
+      const pads = [p.a, p.b].reduce((s, v) => s + 2 - (String(v).split(".")[1]?.length ?? 0), 0);
+      expect(textsAt(d, 0).filter(t => t.cls === "lbl big acc")).toHaveLength(pads);
+      const answer = textsAt(d, 3).filter(t => t.cls === "lbl big acc" && t.from === 3 && t.text !== ".").sort((x, y) => x.x - y.x).map(t => t.text).join("");
+      expect(answer).toBe(String(sum));
+    }
+  });
+  it("g5-divdec matches the lines tick for tick and hops qt times", () => {
+    const l = lesson("g5-divdec");
+    for (const p of problemsOf(l) as { d: number; qt: number }[]) {
+      const d = sceneOf(l, p);
+      const hops = d.items.filter(i => i.type === "path" && i.cls === "ln thin pq" && i.from === 2);
+      expect(hops).toHaveLength(2 * p.qt);
+      expect(textsAt(d, 2).map(t => t.text)).toEqual(expect.arrayContaining([String(p.qt), String(p.d * p.qt)]));
+    }
+  });
+  it("g9-elim strikes y and −y together, and the late blocks are 2x, x and y", () => {
+    const l = lesson("g9-elim");
+    for (const p of problemsOf(l) as { x: number; y: number }[]) {
+      const d = sceneOf(l, p);
+      expect(shownAt(d, 2).filter(i => i.type === "rect" && /\btile y\b/.test(i.cls ?? ""))).toHaveLength(2);
+      const late = [2, 3, 4].map(b => textsAt(d, b).find(t => t.delay === 1 && t.cls === "lbl acc")!.text);
+      expect(late).toEqual([fmt(2 * p.x), fmt(p.x), fmt(p.y)]);
+    }
+  });
+  it("g11-evalpoly stacks the three pieces and lands on the curve at (k, f(k))", () => {
+    const l = lesson("g11-evalpoly");
+    for (const p of problemsOf(l) as { a: number; b: number; c: number; k: number }[]) {
+      const d = sceneOf(l, p), total = p.a * p.k * p.k + p.b * p.k + p.c;
+      const pieces = d.items.filter(i => i.type === "path" && /\bln p[012]\b/.test(i.cls ?? ""));
+      expect(pieces).toHaveLength(p.c ? 3 : 2);
+      expect(textsAt(d, 3).map(t => t.text)).toContain(`f(${fmt(p.k)}) = ${fmt(total)}`);
+      expect(shownAt(d, 3).some(i => i.type === "circle" && /\bdota\b/.test(i.cls ?? ""))).toBe(true);
     }
   });
 });

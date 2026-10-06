@@ -3,6 +3,7 @@ import { mark, num, op, text } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { chainExplanation } from "../../../../explanations/diagrams/chain/build";
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
+import { evaluatePicture } from "./picture";
 
 /** ax + by when x and y are given */
 export interface EvaluateProblem { a: number; b: number; x: number; y: number }
@@ -34,6 +35,7 @@ function explain(p: EvaluateProblem, model: AnswerModel) {
     idea: ["Put each number in place of its letter. A number written next to a letter means multiply."],
     statement: [num(a), X, op("+"), num(b), Y, text(", "), X, op("="), num(x), text(", "), Y, op("="), num(y)],
     alt: `${a}x + ${b}y with x = ${x} and y = ${y}: ${AX} + ${BY} = ${S}.`,
+    diagram: evaluatePicture({ a, b, x, y, AX, BY, S }),
     beats: [
       { id: "ax", narration: `Swap in x = ${x}: ${a}x means ${a} × ${x} = ${AX}.`, math: [num(a), op("×"), num(x), op("="), num(AX)],
         lines: [[num(a), mark([X]), op("+"), num(b), mark([Y])], [mark([num(a), op("×"), num(x)]), op("+"), num(b), op("×"), num(y)]], answerStep: "ax", result: AX },

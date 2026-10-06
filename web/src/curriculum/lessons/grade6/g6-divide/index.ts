@@ -3,6 +3,7 @@ import { answer, frac, mark, num, op, slot, type MathText } from "../../../schem
 import type { AnswerModel, AnswerStep, LessonDefinition, StepCheck } from "../../../schemas/lesson";
 import { chainExplanation } from "../../../../explanations/diagrams/chain/build";
 import { gcd, restoreVia, wholeIn } from "../../_number-line/steps";
+import { divideFractionsPicture } from "./picture";
 
 /** a/b ÷ c/d, both fractions proper and in lowest terms, bottoms 2–9 */
 export interface DivideFractionsProblem { a: number; b: number; c: number; d: number }
@@ -116,6 +117,7 @@ function explain(p: DivideFractionsProblem) {
     idea: ["Keep the first fraction, change ÷ to ×, and flip the second fraction. Then multiply and simplify."],
     statement: [frac(a, b), op("÷"), frac(c, d)],
     alt: `${a}/${b} ÷ ${c}/${d} becomes ${a}/${b} × ${d}/${c} = ${S}/${L}.`,
+    diagram: divideFractionsPicture({ a, b, c, d, S, L, mixed: F.num ? `${F.whole ? `${F.whole} ` : ""}${F.num}/${F.den}` : `${F.whole}` }),
     beats: [
       { id: "flip", narration: `Keep ${a}/${b}, change ÷ to ×, and flip ${c}/${d} to ${d}/${c}.`, math: [frac(c, d), op("→"), frac(d, c)],
         lines: [[frac(a, b), op("÷"), mark([frac(c, d)])], [frac(a, b), mark([op("×")]), mark([frac(d, c)])]], answerStep: "flip" },
