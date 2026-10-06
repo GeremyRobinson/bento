@@ -398,6 +398,9 @@ button.gcell:active{transform:scale(.96)}
 /* More contrast darkens the Panel line too, inside the grade (.wrap's own --rule would otherwise win) */
 :root[data-contrast="true"] .wrap{--panel-line:color-mix(in oklab,var(--ink) 55%,var(--rule))}
 :root[data-contrast="true"] :is(.tile,.panel,.card){outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
+/* a Panel that scrolls draws its line as a border, not an outline: scrolled rows pass under the border's inner edge, so
+   they never paint over the line (Review). Placed after More contrast so it wins there too. */
+.wrap :is(.screen .slist,.sbento .b-chaps,.sdetail>.sbento>.today){outline:none;border:var(--panel-w) solid var(--panel-line)}
 
 
 :root[data-readable="true"] .wrap{--sans:Verdana,Tahoma,"Segoe UI",sans-serif;--num:Verdana,Tahoma,sans-serif;letter-spacing:.02em}

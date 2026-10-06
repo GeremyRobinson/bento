@@ -74,6 +74,12 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
         const s = getComputedStyle(e); return s.outlineStyle === "solid" && parseFloat(s.outlineOffset) < 0 && shown(e) && !e.matches(":focus-visible");
       }).filter(e => parseFloat(getComputedStyle(e).borderTopLeftRadius) === 0).map(e => `${e.tagName.toLowerCase()}.${e.className}`);
       const marks = [...document.querySelectorAll(".itop .imark")].filter(shown).map(e => { const b = e.getBoundingClientRect(); return `${Math.round(b.x)},${Math.round(b.y)}`; });
+      // a Panel that scrolls must draw its line as a border: scrolled rows paint over an inset outline (Review)
+      for (const e of document.querySelectorAll("#app *")) {
+        const s = getComputedStyle(e);
+        if (/auto|scroll/.test(s.overflowY + s.overflowX) && s.outlineStyle === "solid" && parseFloat(s.outlineOffset) < 0 && shown(e) && !e.matches(":focus-visible"))
+          flags.push({ kind: "outline-over", el: `${e.tagName.toLowerCase()}.${[...e.classList].join(".")} scrolls under its own outline` });
+      }
       // a tile that scrolls inside itself: its last rows are cut with no sign they're there (scrollbars are hidden)
       for (const e of document.querySelectorAll("#app *")) {
         const s = getComputedStyle(e); if (!/auto|scroll/.test(s.overflowY + s.overflowX) || !shown(e) || e.matches(SCROLLERS)) continue;
