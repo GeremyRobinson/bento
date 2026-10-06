@@ -239,6 +239,8 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
   .screen.fit.b2lesson.st-name{grid-template-rows:minmax(0,.9fr) minmax(0,1.1fr)}
   .st-guess .b2choices{grid-template-columns:repeat(2,minmax(0,1fr))}
   .screen.fit.b2lesson.st-work{grid-template-rows:minmax(0,.7fr) minmax(0,1.3fr)}
+  /* a project's Use it: the project is the point, so it gets the bigger share */
+  .screen.fit.b2lesson.st-use.proj{grid-template-rows:minmax(0,1.4fr) minmax(0,1fr)}
 }
 @media (max-width:699px){
   .screen.fit.b2lesson{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1.08fr) minmax(0,1fr);grid-template-areas:"stage" "card";gap:10px}
@@ -393,5 +395,5 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
 /* a picture with a lot under it scrolls inside its own frame rather than squeezing the drawing away */
 .b2well,.b2stage{overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}
 .b2map{display:grid;gap:var(--sp-1)}
-.b2map svg.b2pic{max-height:64px}
+.b2map svg.b2pic{max-height:48px}
 .b2pad>button:not(.go):hover{background:var(--hover)}
