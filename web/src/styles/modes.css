@@ -41,3 +41,9 @@
 /* from screen.css */
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .gbtn{color:color-mix(in srgb,var(--tint) 70%,var(--mix-lift))}}
 :root[data-theme="dark"] .gbtn{color:color-mix(in srgb,var(--tint) 70%,var(--mix-lift))}
+
+/* Bento²'s violet over the grade hue; here, after bands.css, so it wins over the grade's tint in light and dark alike (Review) */
+:root[data-side="b2"] .wrap{--tint:var(--b2-tint);--ink:var(--b2-ink)}
+/* the lesson ring in dark: the grade's own bright colour, like the lesson dot beside it */
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .pring-fill{stroke:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}}
+:root[data-theme="dark"] .pring-fill{stroke:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}

@@ -11,7 +11,8 @@ export function PillRing({ p }: { p: number }) {
   useLayoutEffect(() => {
     const el = ref.current?.parentElement;
     if (!el) return;
-    const size = () => setBox(b => (b && b[0] === el.clientWidth && b[1] === el.clientHeight ? b : [el.clientWidth, el.clientHeight]));
+    // the drawn box, unrounded: clientWidth rounds, which left the right end short of the edge (Review)
+    const size = () => { const r = el.getBoundingClientRect(); setBox(b => (b && b[0] === r.width && b[1] === r.height ? b : [r.width, r.height])); };
     size();
     if (typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(size);
@@ -26,7 +27,8 @@ export function PillRing({ p }: { p: number }) {
   return (
     <svg ref={ref} className="pring" width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden="true">
       {d && <path className="pring-track" d={d} pathLength={1} />}
-      {d && f > 0 && <path className="pring-fill" d={d} pathLength={1} style={{ strokeDasharray: `${f} 1` }} />}
+      {/* always drawn, so the first step grows from nothing instead of popping in */}
+      {d && <path className={`pring-fill${f > 0 ? "" : " empty"}`} d={d} pathLength={1} style={{ strokeDasharray: `${f} 1` }} />}
     </svg>
   );
 }

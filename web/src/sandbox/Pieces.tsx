@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
+import { gradeOf, inkOf } from "../curriculum/grades";
 import { useApp } from "../app/AppState";
 import type { Dir } from "../app/transition";
 import { Slider } from "../components/primitives/Slider";
@@ -29,7 +30,8 @@ function Piece({ name, status, chunk, nests, children }: { name: string; status:
  * live instance, marked with where it is, so it can be tried here before Review signs it off and it goes live.
  */
 export function Pieces() {
-  const { go } = useApp();
+  const { go, progress } = useApp();
+  const lg = gradeOf(progress.grade ?? 5), gn = { position: "relative", "--gn": inkOf(lg.color), "--gn-d": lg.color } as CSSProperties;
   const [lvl, setLvl] = useState<"chapter" | "year" | "all">("chapter");
   const [side, setSide] = useState<"a" | "b">("a");
   const [sw, setSw] = useState(true);
@@ -45,7 +47,7 @@ export function Pieces() {
       </header>
       <div className="sbpgrid">
         <Piece name="Progress ring" status="review" chunk="Pill progress" nests="Nav (phone), every lesson and practice">
-          <div className="sbring"><div className="island" style={{ position: "relative" }}><PillRing p={ring} /><span className="iplace"><b>Multiply two-digit numbers</b></span></div></div>
+          <div className="sbring"><div className="island" style={gn}><PillRing p={ring} /><span className="iplace"><b>Multiply two-digit numbers</b></span></div></div>
           <Pill onClick={() => setRing(r => (r >= 1 ? 0 : Math.min(1, r + 0.2)))}>{ring >= 1 ? "Start over" : "Next problem"}</Pill>
         </Piece>
         <Piece name="Wordmark return" status="review" chunk="Wordmark cascade" nests="Nav, Contents">

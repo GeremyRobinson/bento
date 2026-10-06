@@ -167,7 +167,9 @@ window.__ecAudit = function () {
     const band = -off + 0.5, r = d.r, el = d.el; let hit = '';
     const near = q => q.width > 0.5 && q.height > 0.5 && (q.left < r.left + band || q.right > r.right - band || q.top < r.top + band || q.bottom > r.bottom - band) && q.right > r.left && q.left < r.right && q.bottom > r.top && q.top < r.bottom;
     const tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-    while (tw.nextNode()) { const n = tw.currentNode; if (!n.textContent.trim()) continue; const rg = document.createRange(); rg.selectNodeContents(n); if ([...rg.getClientRects()].some(near)) { hit += 'text"' + n.textContent.trim().slice(0, 20) + '" '; break; } }
+    // (smoke copy) text inside a clipped, visually hidden parent is for screen readers and can't touch the outline
+    const hidden = e => { for (let a = e; a && a !== el; a = a.parentElement) { const s = getComputedStyle(a); if (s.clipPath !== 'none' || (s.clip && s.clip !== 'auto') || a.matches('.vh,.visually-hidden')) return true; } return false; };
+    while (tw.nextNode()) { const n = tw.currentNode; if (!n.textContent.trim() || hidden(n.parentElement)) continue; const rg = document.createRange(); rg.selectNodeContents(n); if ([...rg.getClientRects()].some(near)) { hit += 'text"' + n.textContent.trim().slice(0, 20) + '" '; break; } }
     for (const c of el.querySelectorAll('svg,img,canvas,figure,*')) { if (c === el) continue; const cs2 = getComputedStyle(c); if (!(c.tagName === 'svg' || c.tagName === 'IMG' || !T(cs2.backgroundColor) || cs2.boxShadow !== 'none')) continue; if (cs2.position === 'absolute' && /fill|bar/.test(c.className)) continue; if (near(c.getBoundingClientRect())) { hit += desc(c).split(' "')[0] + ' '; break; } }
     if (hit) flags.push({ id: mark(el), kind: 'outline-over', el: desc(el), path: path(el), w: d.cs.outlineWidth, off: d.cs.outlineOffset, hit, rect: [r.x + scrollX, r.y + scrollY, r.width, r.height].map(Math.round) });
   }

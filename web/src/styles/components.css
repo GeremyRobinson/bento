@@ -7,7 +7,7 @@
    edge never cuts it. Every outlined surface is listed here once; nothing draws its own ring. */
 .wrap{--panel-line:var(--rule);--panel-w:1px}
 :is(.tile,.screen .slist,.spreview,.bhome .today,.bhome .b-stats,.bhome>.b-weak,.units>.panel,.ftable.panel,.sbento .b-streak,.sbento .b-chaps,.lhpic,.ltile,.lbatt,.lonelist li.on,.lonepic,.zchapter,.zcard,.book,.mhero.battery,.mygl li,.phint .htext){outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
-.wrap{--r-tile:calc(var(--r-panel) - 4px);--pad-md:calc(var(--u) * 1.25);--pad-lg:calc(var(--u) + 4px);--pad-xl:calc(var(--u) * 1.5);--ring:0 0 0 1px var(--rule)}
+.wrap{--r-tile:calc(var(--r-panel) - 4px);--pad-md:calc(var(--u) * 1.25);--pad-lg:calc(var(--u) + 4px);--pad-xl:calc(var(--u) * 1.5);--ring:inset 0 0 0 1px var(--rule)}
 /* ---- controls ---- */
 /* Pill (master): every button is an instance of .ctl. Sizes and feel come from the --pill-* tokens; colors fall back to the
    grade roles, so a context (a card, the landing page) or a variant (go, circ) only overrides what it changes. */
