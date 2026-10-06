@@ -217,7 +217,9 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
     const check = () => {
       const r = document.querySelector(".ladv")?.getBoundingClientRect();
       const m = document.querySelector(".itop.guest .imark")?.getBoundingClientRect();
-      if (r && r.top < 64 && r.bottom > 0) root.dataset.navDark = m && m.left < r.left ? "edge" : ""; else delete root.dataset.navDark;
+      // it turns light only once the dark section reaches the middle of the mark itself (Review: it turned a moment early)
+      const mid = m ? m.top + m.height / 2 : 32;
+      if (r && r.top < mid && r.bottom > mid) root.dataset.navDark = m && m.left < r.left ? "edge" : ""; else delete root.dataset.navDark;
     };
     check();
     addEventListener("scroll", check, { passive: true });
