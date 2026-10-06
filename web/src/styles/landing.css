@@ -97,7 +97,7 @@
 .lhelp span.gone{opacity:.3;transform:scale(.94)}
 
 .lreview{display:grid;place-items:center;width:100%}
-.lreview span{grid-area:1/1;padding:14px 22px;border-radius:18px;background:var(--card);box-shadow:0 0 0 1px var(--rule),0 10px 24px -14px var(--ink-a35);font:var(--w-bold) 20px/1 var(--num);font-variant-numeric:tabular-nums;white-space:nowrap;
+.lreview span{grid-area:1/1;padding:14px 22px;border-radius:18px;background:var(--card);box-shadow:0 0 0 1px var(--rule);font:var(--w-bold) 20px/1 var(--num);font-variant-numeric:tabular-nums;white-space:nowrap;
   transform:translateY(calc(var(--j) * 14px)) scale(calc(1 - var(--j) * .08));z-index:calc(3 - var(--j));opacity:calc(1 - var(--j) * .3);transition:transform var(--dur-500) var(--ease),opacity var(--dur-500) var(--ease)}
 .lreview span.top{color:var(--ink)}
 /* the stack is whole from the first frame; each beat only the card joining at the back rises in (Review v43 #20) */
@@ -195,7 +195,7 @@
 /* Bento² teaser: five subjects, one playing at a time, and a dashed tile with more to find */
 .adv-tease{width:100%;display:grid;gap:var(--s);grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(170px,auto);margin-top:calc(var(--u) * 1.5)}
 .adv-tease .adv-course{align-content:end;transition:box-shadow var(--dur-500) var(--ease)}
-.adv-tease .adv-course.on{box-shadow:inset 0 0 0 1px var(--adv-ring),0 0 32px color-mix(in srgb,var(--adv-glow) 16%,transparent)}
+.adv-tease .adv-course.on{box-shadow:inset 0 0 0 1px var(--adv-ring)}
 .adv-tease .big{grid-column:span 2;grid-row:span 2}.adv-tease .wide{grid-column:span 2}
 .adv-tease .big h3{font-size:calc(var(--fs) * 1.35)}
 .adv-pic{width:100%;align-self:center}

@@ -205,7 +205,8 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
     const root = document.documentElement;
     const check = () => {
       const r = document.querySelector(".ladv")?.getBoundingClientRect();
-      if (r && r.top < 64 && r.bottom > 0) root.dataset.navDark = ""; else delete root.dataset.navDark;
+      const m = document.querySelector(".itop.guest .imark")?.getBoundingClientRect();
+      if (r && r.top < 64 && r.bottom > 0) root.dataset.navDark = m && m.left < r.left ? "edge" : ""; else delete root.dataset.navDark;
     };
     check();
     addEventListener("scroll", check, { passive: true });

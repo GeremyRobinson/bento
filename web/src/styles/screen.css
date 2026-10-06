@@ -287,7 +287,7 @@ html:has(.screen) body{overflow:hidden}
 .phint .htext{--panel-line:var(--tint);--panel-w:2px;white-space:normal;padding:14px 22px;border-radius:var(--r-2xl);max-width:300px;font-weight:var(--w-regular);box-shadow:var(--float-shadow)}
 .pscreen .hrow{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
 .pscreen .fstack .fpill.go{background:var(--ink);color:var(--on-tint);box-shadow:none}
-.phint .flbl{color:var(--muted);text-shadow:none}
+.phint .flbl{color:var(--muted)}
 .psteps .pwhere{gap:var(--sp-3)}
 .psteps .pblist{display:block;padding:var(--sp-2);border-radius:var(--r-2xl);white-space:normal;width:100%}
 /* solved, in one motion (practice-spec §5): the box turns green, the picture finishes, the "?" fills, then the keys

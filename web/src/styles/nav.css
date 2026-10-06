@@ -1,8 +1,8 @@
 /* ---- floating (UI research's floating preview, G 2026-10-06): no bars or boxes. Every control is its own capsule
    floating on the page, white with a soft shadow (light) or one step lighter than the page (dark). ---- */
-:root{--float:var(--card);--float-shadow:0 1px 2px rgba(20,22,27,.05),0 8px 22px rgba(20,22,27,.07);--dim:rgba(20,22,27,.16);--halo:rgba(20,22,27,.2)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--float-shadow:0 0 0 1px rgba(255,255,255,.05),0 10px 30px rgba(0,0,0,.35);--dim:rgba(0,0,0,.4);--halo:rgba(238,240,244,.22)}}
-:root[data-theme="dark"]{--float-shadow:0 0 0 1px rgba(255,255,255,.05),0 10px 30px rgba(0,0,0,.35);--dim:rgba(0,0,0,.4);--halo:rgba(238,240,244,.22)}
+:root{--float:var(--card);--float-shadow:inset 0 0 0 1px var(--rule);--dim:rgba(20,22,27,.16);--halo:rgba(20,22,27,.2)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--float-shadow:inset 0 0 0 1px var(--rule);--dim:rgba(0,0,0,.4);--halo:rgba(238,240,244,.22)}}
+:root[data-theme="dark"]{--float-shadow:inset 0 0 0 1px var(--rule);--dim:rgba(0,0,0,.4);--halo:rgba(238,240,244,.22)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--float:color-mix(in oklab,var(--card) 88%,white)}}
 :root[data-theme="dark"] .wrap{--float:color-mix(in oklab,var(--card) 88%,white)}
 
@@ -40,8 +40,9 @@
 /* over the dark Bento² section the fade steps aside and the wordmark turns light (Review layout-shift should-fix) */
 html[data-nav-dark] .itop.guest::before{opacity:0}
 html[data-nav-dark] .itop.guest .imark,html[data-nav-dark] .itop.guest .bmark{color:var(--on-tint)}
-/* where the dark section is inset (wide screens) the mark straddles its edge, so a soft shadow keeps the part over the light page readable */
-html[data-nav-dark] .itop.guest .bmark{text-shadow:0 0 1px var(--black-a25),0 1px 8px var(--black-a25)}
+/* where the dark section is inset (wide screens) the mark would straddle its edge, half on light and half on dark, so it
+   steps aside until the section has passed (no shadows, G 2026-10-06) */
+html[data-nav-dark="edge"] .itop.guest .imark{opacity:0;pointer-events:none}
 /* My lessons, once a grade is chosen: its own floating pill in the right corner, so "Bento" stays centred */
 .imine{display:flex;align-items:center;height:var(--float-h);padding:0 22px;border-radius:var(--r-pill);font-weight:var(--w-bold);white-space:nowrap;
   background:var(--float);box-shadow:var(--float-shadow);color:var(--text);animation:floatIn var(--dur-400) var(--ease) both;animation-delay:var(--dur-60);transition:transform var(--dur-180) var(--ease)}
@@ -84,11 +85,11 @@ html[data-nav-dark] .itop.guest .bmark{text-shadow:0 0 1px var(--black-a25),0 1p
 .fstack{position:fixed;z-index:var(--z-stack);display:flex;flex-direction:column;gap:var(--sp-2)}
 .fstack>*{animation:stackIn var(--dur-300) var(--ease) both;animation-delay:calc(var(--i,0) * var(--dur-42))}
 @keyframes stackIn{from{opacity:0;transform:translateY(6px)}}
-.flbl{font-size:var(--fz-xs);font-weight:var(--w-mid);color:var(--text);padding:6px 10px 0;text-shadow:0 0 12px var(--page)}
+.flbl{font-size:var(--fz-xs);font-weight:var(--w-mid);color:var(--text);padding:6px 10px 0}
 .fpill{display:inline-flex;align-items:center;gap:14px;justify-content:space-between;min-height:var(--float-h);padding:var(--sp-3) 22px;border-radius:var(--r-pill);background:var(--float);box-shadow:var(--float-shadow);font-weight:var(--w-mid);text-align:left;line-height:1.35;transition:background var(--dur-200),transform var(--dur-180) var(--ease)}
 button.fpill:active{transform:scale(.96)}
 .fpill .sw{flex:none;width:40px;height:24px;border-radius:var(--r-pill);background:var(--sw-off);position:relative;transition:background-color var(--dur-250) var(--ease)}
-.fpill .sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:var(--r-round);background:var(--knob);box-shadow:0 1px 3px var(--black-a25);transition:transform var(--dur-300) var(--glide)}
+.fpill .sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:var(--r-round);background:var(--knob);box-shadow:none;transition:transform var(--dur-300) var(--glide)}
 .fpill[aria-checked="true"] .sw{background:var(--ink)}
 .fpill[aria-checked="true"] .sw::after{transform:translateX(16px)}
 /* putting them away: the pills ripple out bottom first, quicker than they came, and the dim fades with them */
@@ -111,7 +112,7 @@ html[data-zoomed] body{overflow:hidden}
   padding:max(var(--sp-3),env(safe-area-inset-top)) var(--u) calc(var(--u) * 3);background:color-mix(in srgb,var(--page) 55%,transparent);animation:fadeIn var(--m-page) var(--m-ease) both}
 .zbar-top{position:sticky;top:0;z-index:var(--z-up2);width:min(1040px,100%);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:var(--s)}
 /* the contents' level slider: an instance of the tap slider, frosted to float over the zoom */
-.zlevels{grid-column:2;--sl-pad:var(--sp-1);--sl-h:40px;--sl-x:18px;--sl-fz:var(--fz-md);--sl-bg:color-mix(in srgb,var(--card) 72%,transparent);-webkit-backdrop-filter:saturate(1.8) blur(20px);backdrop-filter:saturate(1.8) blur(20px);box-shadow:0 0 0 1px var(--rule),0 8px 28px -12px var(--ink-a18)}
+.zlevels{grid-column:2;--sl-pad:var(--sp-1);--sl-h:40px;--sl-x:18px;--sl-fz:var(--fz-md);--sl-bg:color-mix(in srgb,var(--card) 72%,transparent);-webkit-backdrop-filter:saturate(1.8) blur(20px);backdrop-filter:saturate(1.8) blur(20px);box-shadow:0 0 0 1px var(--rule)}
 .zlevels>button[aria-pressed="true"]{color:var(--card)}
 .zclose{grid-column:3;justify-self:end;background:color-mix(in srgb,var(--card) 72%,transparent)!important;box-shadow:0 0 0 1px var(--rule)}
 /* a phone: the zoom bar keeps the app's 16px gutter, so Done lines up with the island's corner buttons */
@@ -133,7 +134,7 @@ html[data-zoomed] body{overflow:hidden}
 .zoom h2{font:var(--w-bold) clamp(28px,4vw,40px)/1.1 var(--sans);letter-spacing:-.03em}
 
 /* a chapter: its picture and its pages */
-.zchapter{display:grid;gap:calc(var(--u) * 1.5);background:var(--surf-2,var(--card));border-radius:var(--r-panel);padding:var(--pad-xl);box-shadow:0 30px 60px -30px var(--ink-a25)}
+.zchapter{display:grid;gap:calc(var(--u) * 1.5);background:var(--surf-2,var(--card));border-radius:var(--r-panel);padding:var(--pad-xl);box-shadow:none}
 @media (min-width:800px){.zchapter{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center}}
 .zctext{display:grid;gap:var(--s);align-content:start}
 .zctext h2{margin-bottom:var(--s)}
@@ -154,7 +155,7 @@ html[data-zoomed] body{overflow:hidden}
 .zyear>header .ctl{margin-top:var(--sp-2)}
 .zch{display:grid;gap:var(--s);grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
 .zcard{display:grid;gap:6px;align-content:start;text-align:left;padding:var(--pad-md);border-radius:var(--r-tile);background:var(--surf-2,var(--card));animation:rise var(--dur-500) var(--ease) both;animation-delay:calc(var(--i) * var(--dur-45));transition:transform var(--dur-250) var(--m-settle),box-shadow var(--dur-200)}
-.zcard:hover{transform:translateY(-2px);box-shadow:0 14px 30px -18px var(--ink-a30)}
+.zcard:hover{transform:translateY(-2px);box-shadow:none}
 .zcard.on{box-shadow:0 0 0 2px var(--tint)}
 .zcard b{font-size:calc(var(--fs) * 1.1);font-weight:var(--w-bold);letter-spacing:-.01em}
 
@@ -186,7 +187,7 @@ html[data-motion="reduce"] .wrap>:not(.itop):not(.zoom){transition:none}
 /* ---- progress is a fill: a box fills from the bottom in its colour, like a battery charging ---- */
 .battery{position:relative;overflow:hidden;isolation:isolate}
 .battery>.fill{position:absolute;inset:auto 0 0;height:calc(var(--p) * 100%);z-index:var(--z-under);pointer-events:none;transform-origin:bottom;animation:charge var(--dur-900) var(--ease) var(--dur-150) both;
-  background:linear-gradient(to top,color-mix(in srgb,var(--tint) 30%,transparent),color-mix(in srgb,var(--tint) 14%,transparent));box-shadow:inset 0 1.5px 0 color-mix(in srgb,var(--tint) 55%,transparent)}
+  background:linear-gradient(to top,color-mix(in srgb,var(--tint) 30%,transparent),color-mix(in srgb,var(--tint) 14%,transparent));box-shadow:none}
 @keyframes charge{from{transform:scaleY(0)}}
 .bcount{margin-top:auto;font-size:var(--fz-xs);font-weight:var(--w-mid);color:var(--muted);font-variant-numeric:tabular-nums}
 .bbig{font:var(--w-bold) 56px/1 var(--sans);letter-spacing:-.04em;color:var(--display);font-variant-numeric:tabular-nums}
@@ -204,7 +205,7 @@ html[data-motion="reduce"] .battery>.fill{animation:none}
 .sline>.k{padding-left:var(--sp-1);font-size:var(--small);font-weight:var(--w-mid);color:var(--muted)}
 .sbooks{display:grid;gap:var(--s);grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
 .book{display:flex;flex-direction:column;gap:6px;height:156px;text-align:left;padding:14px 18px 18px;border-radius:var(--r-tile);background:var(--surf-2,var(--card));transition:transform var(--dur-250) var(--m-settle),box-shadow var(--dur-200)}
-button.book:hover{transform:translateY(-2px);box-shadow:0 14px 30px -18px var(--ink-a30)}
+button.book:hover{transform:translateY(-2px);box-shadow:none}
 .book.on{box-shadow:0 0 0 2px var(--tint)}
 .book b{font-weight:var(--w-bold);font-size:var(--small);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 @media (min-width:900px){.zshelf .shelf{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:calc(var(--u) * 1.5)}}

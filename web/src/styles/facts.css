@@ -33,7 +33,7 @@
 /* the hundred chart */
 .fhundred{display:grid;gap:var(--u);justify-items:center}
 .fhundred .seg button{width:auto;padding:0 var(--sp-3);min-height:var(--tap);white-space:nowrap}
-.fhundred .seg button[aria-pressed=true]{background:var(--card);color:var(--ink);box-shadow:0 1px 2px var(--black-a08)}
+.fhundred .seg button[aria-pressed=true]{background:var(--card);color:var(--ink);box-shadow:none}
 .h100{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:3px;width:min(100%,520px)}
 .h100 span{aspect-ratio:1;display:grid;place-items:center;border-radius:var(--r-sm);background:var(--well);font:var(--w-mid) clamp(11px,2.4vw,15px)/1 var(--num);color:var(--muted);transition:background var(--dur-300) var(--d),color var(--dur-300) var(--d)}
 .h100 span.on{background:var(--ink);color:var(--on-tint);font-weight:var(--w-bold)}

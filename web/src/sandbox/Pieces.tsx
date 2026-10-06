@@ -38,6 +38,10 @@ export function Pieces() {
         <p className="muted">Each piece is built and checked on its own, then nests into the bigger ones. These are the real components, so they work here the way they will in the app.</p>
       </header>
       <div className="sbpgrid">
+        <Piece name="No shadows" status="review" chunk="Shadow sweep" nests="everything that floats or is picked">
+          <div className="sbpills"><Pill>A floating pill</Pill><Pill go>Picked</Pill></div>
+          <small className="muted">Nothing casts a shadow. Floating pieces show their edge with an outline; what's picked or active shows with its fill and outline.</small>
+        </Piece>
         <Piece name="Panel line" status="review" chunk="Panel master" nests="every outlined panel, card and grade row">
           <div className="sbpanelbox">
             <section className="tile mytile"><span className="k">Inside a scroll area</span><ul className="mygl">
