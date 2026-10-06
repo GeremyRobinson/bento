@@ -10,6 +10,7 @@ import type { AnyLesson } from "../curriculum/schemas/lesson";
 import type { Explanation } from "../explanations/schema";
 import { BAND_NAMES, DIAGRAM_TOKENS, PILL_TOKENS, SURFACE_TOKENS, emptyOverrides, GRADE_TOKENS, handoffCss, MASTER, MASTER_GRADE, overrideCss, overridesOf, readGrade, SHARED_TOKENS, SIZE_TOKENS, toHex, type Overrides, type Token } from "./tokens";
 import { get, set, useSb } from "./store";
+import { Pieces } from "./Pieces";
 import "./sandbox.css";
 
 /** A fresh problem's explanation for a lesson that draws a picture, or null when none of the tries draw one. */
@@ -74,11 +75,12 @@ export function SandboxBoard() {
           `Overrides ${over[g] ?? "…"} of ${GRADE_TOKENS.length} colors · ${BAND_NAMES[bandOf(g)]} · ${lessonsInGrade(g).length} lessons`,
           pick, mode === "grade" && g === grade, () => { set({ grade: g, mode: "grade" }); if (pick) go({ name: "learn", lessonId: pick.lesson.id }, "fwd"); }))}
       </div>
+      <Pieces />
     </div>
   );
 }
 
-const SCREENS = ["Board", "Landing", "Home", "Lesson", "Practice", "Me"] as const;
+const SCREENS = ["Board", "Landing", "Home", "Lesson", "Practice", "Me", "Settings"] as const;
 type ScreenName = (typeof SCREENS)[number];
 
 /** The floating sandbox panel: which screen, grade and lesson to look at, light or dark, and the tokens. */
@@ -112,7 +114,7 @@ export function Sandbox() {
   const g = sb.grade;
   const lessonId = shownLesson?.grade === g ? shownLesson.id : lessonsInGrade(g)[0]?.id;
   const screen: ScreenName = route.name === "sandbox" ? "Board" : route.name === "welcome" ? "Landing" : route.name === "home" ? "Home"
-    : route.name === "learn" ? "Lesson" : route.name === "practice" || route.name === "results" ? "Practice" : route.name === "me" ? "Me" : "Board";
+    : route.name === "learn" ? "Lesson" : route.name === "practice" || route.name === "results" ? "Practice" : route.name === "me" ? "Me" : route.name === "settings" ? "Settings" : "Board";
 
   const show = (s: ScreenName, grade = g, id = lessonId) => {
     const first = lessonsInGrade(grade)[0]?.id;
@@ -124,6 +126,7 @@ export function Sandbox() {
       case "Lesson": if (lid) go({ name: "learn", lessonId: lid }); break;
       case "Practice": if (lid) startLesson(lid); break;
       case "Me": if (progress.grade !== grade) chooseGrade(grade); go({ name: "me" }); break;
+      case "Settings": go({ name: "settings" }); break;
     }
   };
   const pickGrade = (n: number) => { set({ grade: n }); if (screen !== "Board" && screen !== "Landing") show(screen, n, undefined); };
