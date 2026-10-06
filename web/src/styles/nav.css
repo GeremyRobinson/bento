@@ -41,7 +41,9 @@
 .itop.guest::before{content:"";position:fixed;top:0;left:0;right:0;height:calc(env(safe-area-inset-top) + 64px);background:linear-gradient(var(--page) 40%,transparent);z-index:var(--z-under);pointer-events:none;transition:opacity var(--m-page) var(--m-ease)}
 /* over the dark Bento² section the fade steps aside and the wordmark turns light (Review layout-shift should-fix) */
 html[data-nav-dark] .itop.guest::before{opacity:0}
-html[data-nav-dark] .itop.guest .imark,html[data-nav-dark] .itop.guest .bmark{color:var(--on-tint)}
+/* the Bento² section is night in both themes, so the mark over it is its light ink in both */
+:root{--mark-on-night:#f5f5f7}
+html[data-nav-dark] .itop.guest .imark,html[data-nav-dark] .itop.guest .bmark{color:var(--mark-on-night)}
 /* where the dark section is inset (wide screens) the mark would straddle its edge, half on light and half on dark, so it
    steps aside until the section has passed (no shadows, G 2026-10-06) */
 html[data-nav-dark="edge"] .itop.guest .imark{opacity:0;pointer-events:none}
@@ -117,8 +119,7 @@ html[data-zoomed] body{overflow:hidden}
   padding:max(var(--sp-3),env(safe-area-inset-top)) var(--u) calc(var(--u) * 3);background:color-mix(in srgb,var(--page) 55%,transparent);animation:fadeIn var(--m-page) var(--m-ease) both}
 .zbar-top{position:sticky;top:0;z-index:var(--z-up2);width:min(1040px,100%);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:var(--s)}
 /* the contents' level slider: an instance of the tap slider, frosted to float over the zoom */
-.zlevels{grid-column:2;--sl-pad:var(--sp-1);--sl-h:40px;--sl-x:18px;--sl-fz:var(--fz-md);--sl-bg:color-mix(in srgb,var(--card) 72%,transparent);-webkit-backdrop-filter:saturate(1.8) blur(20px);backdrop-filter:saturate(1.8) blur(20px);box-shadow:0 0 0 1px var(--rule)}
-.zlevels>button[aria-pressed="true"]{color:var(--card)}
+.zlevels{grid-column:2;--sl-pad:var(--sp-1);--sl-h:40px;--sl-x:18px;--sl-fz:var(--fz-md);--sl-bg:var(--card);--sl-ring:inset 0 0 0 1px var(--rule)}
 .zclose{grid-column:3;justify-self:end;background:color-mix(in srgb,var(--card) 72%,transparent)!important;box-shadow:0 0 0 1px var(--rule)}
 /* a phone: the zoom bar keeps the app's 16px gutter, so Done lines up with the island's corner buttons */
 @media (max-width:699px){.zoom{padding-inline:var(--sp-4)}}

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useApp } from "../app/AppState";
-import type { Route } from "../app/routes";
+import { parseRoute, type Route } from "../app/routes";
 import { doneCount, entriesInGrade, entryById, unitsInGrade } from "../app/curriculum";
 import { gradeOf, inkOf } from "../curriculum/grades";
 import { lessonById } from "../curriculum/registry";
@@ -36,6 +36,16 @@ export function pageOf(lessonId: string): { grade: number; chapter: string; page
 
 type Place = { kicker: string; title: string; back?: { label: string; to: Route }; lesson?: string; /** says the page stays on this device, in place of the fill */ lock?: boolean };
 
+/** The page this one was opened from (this history entry remembers it), when it's another in-app page with a name. */
+function cameFrom(route: Route, app: ReturnType<typeof useApp>, grade: number): { label: string; to: Route } | undefined {
+  let prev: unknown = null;
+  try { prev = (history.state as { prev?: unknown } | null)?.prev; } catch { /* ignore */ }
+  if (typeof prev !== "string" || !prev.startsWith("#/")) return undefined;
+  const to = parseRoute(prev);
+  if (to.name === route.name || to.name === "welcome" || to.name === "me" || to.name === "settings") return undefined;
+  return { label: placeOf(to, app, grade).title, to };
+}
+
 /** What the island says on each screen: a small line for where you are in the book, and the page you're on. */
 function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): Place {
   const contents = { label: "contents", to: { name: "home" } as Route };
@@ -68,8 +78,9 @@ function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): P
       return { kicker: `${YOUR_BENTO} · ${gradeOf(grade).name}`, title: GROWN_UP, lock: true,
         back: route.pick && phone ? { label: GROWN_UP, to: { name: "parent" } } : { label: YOUR_BENTO, to: { name: "me" } } };
     }
-    case "me": return { kicker: gradeOf(grade).name, title: YOUR_BENTO, back: contents };
-    case "settings": return { kicker: "Bento", title: "Settings", back: contents, lock: true };
+    // pages you open from anywhere (the corner buttons) step back to where you were, a lesson or a problem included
+    case "me": return { kicker: gradeOf(grade).name, title: YOUR_BENTO, back: cameFrom(route, app, grade) ?? contents };
+    case "settings": return { kicker: "Bento", title: "Settings", back: cameFrom(route, app, grade) ?? contents, lock: true };
     case "facts": {
       const t = route.table ? tableById(route.table) : undefined;
       return t ? { kicker: "Facts", title: t.name, back: { label: "facts", to: { name: "facts" } } } : { kicker: gradeOf(grade).name, title: "Facts", back: contents };

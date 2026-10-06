@@ -134,7 +134,10 @@ export function AppProvider(props: {
     // each entry remembers the page under it, so back can return to it instead of adding a step; an open overlay's
     // entry (the contents) is replaced by the page you open from it, so back from there skips the overlay
     try {
-      if (location.hash !== h) {
+      // the page picked from the contents is the one already showing: take the contents' history step back off, so
+      // Back never has a dead step (Review chunk 8)
+      if (location.hash === h && (history.state as { overlay?: boolean } | null)?.overlay) history.back();
+      else if (location.hash !== h) {
         const entry = { prev: location.hash };
         if ((history.state as { overlay?: boolean } | null)?.overlay) history.replaceState({ prev: (history.state as { prev?: string }).prev ?? null }, "", h);
         else history.pushState(entry, "", h);
@@ -173,7 +176,7 @@ export function AppProvider(props: {
         // a grade opens on its book: the year's cover, today's plan and every chapter
         setProgress(p => ({ ...p, grade: g, chosen: true }));
         openSheet(false);
-        if (route.name !== "home") show({ name: "home" });
+        show({ name: "home" });
       }),
       startLesson: id => withTransition(() => {
         setProgress(p => ({ ...p, run: startPractice(id, p, deps()) }));

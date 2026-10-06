@@ -46,7 +46,7 @@ export function Me() {
 
   return (
     <div className="bmine">
-      <section className="tile mytile myhero battery" style={grade ? tintStyle(grade) as CSSProperties : undefined}>
+      <section className="tile mytile myhero battery">
         {grade ? <>
           <Fill frac={into / LEVEL_XP} />
           <span className="bbig"><GradeNum grade={g!} /></span>
@@ -71,7 +71,7 @@ export function Me() {
       <Stat className="mydone" n={lessonsDone} label={lessonsDone === 1 ? "lesson done" : "lessons done"} />
 
       {chapter && g != null && (
-        <Tile className="mytile mychap" style={tintStyle(grade!) as CSSProperties} k={`Chapter ${ci + 1} of ${chapters.length}`} title={chapter.name}>
+        <Tile className="mytile mychap" k={`Chapter ${ci + 1} of ${chapters.length}`} title={chapter.name}>
           <div className="mych-score"><ChapterBattery score={score} /><span><b>{LEVELS[score]}</b><small>{chDone} of {chapter.entries.length} lessons · test {score} of 4</small></span></div>
           {next && <Pill go onClick={() => go({ name: "learn", lessonId: next.id }, "fwd")}>Up next: {next.title} ›</Pill>}
         </Tile>

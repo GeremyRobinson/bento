@@ -23,7 +23,7 @@
 /* the chapter you're in: its test battery, and what's up next */
 .mychap{grid-column:1 / -1}
 .mych-score{display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-1) 0}
-.mych-score>span{display:grid;gap:1px}
+.mych-score>span:not(.cbat){display:grid;gap:1px}
 .mych-score b{font-weight:var(--w-bold)}
 .mych-score small{color:var(--muted);font-size:var(--small);font-weight:var(--w-mid)}
 .mychap .ctl.go{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
