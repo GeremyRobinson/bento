@@ -34,12 +34,9 @@
 .bmark{font:var(--w-bold) var(--fz-md)/1 var(--sans);letter-spacing:-.02em;color:var(--text)}
 .zbar-top .zmark{grid-column:1;justify-self:start;font-size:var(--fz-xl);padding-left:var(--sp-2)}
 .island .iword{font:var(--w-bold) var(--fz-md)/1 var(--sans);letter-spacing:-.02em}
-/* on the landing page the name sits on the left, in the same floating pill as the app's, and stays as you scroll (G 2026-10-06) */
 /* the landing's "Bento" is the wordmark alone: plain text on the left, no pill (G, 2026-10-06) */
 /* with no pill, the page fades out under the sticky wordmark so it stays readable as the page scrolls past */
 .itop.guest::before{content:"";position:fixed;top:0;left:0;right:0;height:calc(env(safe-area-inset-top) + var(--float-h) + var(--sp-5));background:linear-gradient(var(--page) 62%,transparent);z-index:var(--z-under);pointer-events:none}
-.island.guest{grid-column:1;justify-self:start;padding:0;gap:var(--sp-1);background:none;box-shadow:none}
-.island.guest .iword{display:grid;place-items:center;height:var(--float-in);padding:0 var(--sp-1)}
 /* My lessons, once a grade is chosen: its own floating pill in the right corner, so "Bento" stays centred */
 .imine{display:flex;align-items:center;height:var(--float-h);padding:0 22px;border-radius:var(--r-pill);font-weight:var(--w-bold);white-space:nowrap;
   background:var(--float);box-shadow:var(--float-shadow);color:var(--text);animation:floatIn var(--dur-400) var(--ease) both;animation-delay:var(--dur-60);transition:transform var(--dur-180) var(--ease)}
@@ -318,3 +315,25 @@ html:has(.screen) .itop{position:fixed;top:max(var(--sp-3),env(safe-area-inset-t
 .fconfirm .fcq span{color:var(--muted);font-size:var(--fz-md)}
 .fconfirm .fcquit{color:var(--ink)}
 .iresume-x{display:grid;place-items:center;width:var(--float-in);height:var(--float-in);border-radius:var(--r-pill);background:var(--float);box-shadow:var(--float-shadow);color:var(--muted)}
+
+/* ---- the nav's wordmark: on every screen, plain "Bento" on the left, the same as the landing page's; it always
+   takes you home (G 2026-10-06) ---- */
+.imark{display:grid;place-items:center;height:var(--float-h);padding:0 var(--sp-2);border-radius:var(--r-pill);color:var(--text);transition:transform var(--dur-180) var(--ease)}
+.imark:active{transform:scale(.96)}
+.imark .iword{font:var(--w-bold) var(--fz-lg)/1 var(--sans);letter-spacing:-.02em}
+/* on a phone the place pill needs the room: its fill circle becomes the pill's own fill, charging left to right */
+@media (max-width:699px){
+  .itop,.itop:has(>.icorner.left){grid-template-columns:auto minmax(0,1fr) auto;gap:var(--sp-2)}
+  .itop>.icorner.left{display:flex}
+  .itop>.icorner.left>:not(.imark){display:none}
+  .imark{padding:0 var(--sp-1)}
+  .island{position:relative;overflow:hidden;isolation:isolate}
+  .island::before{content:"";position:absolute;left:0;bottom:0;height:3px;width:calc(var(--p,0) * 100%);z-index:var(--z-under);background:var(--gn,var(--ink));transition:width var(--m-page) var(--m-ease)}
+  .island .ibat{display:none}
+  .island .iplace{padding-right:var(--sp-3)}
+}
+
+/* the nav sits at the same height on every page: its place in the page is where it sticks, so it never shifts (v46) */
+.wrap{padding-top:max(var(--sp-3),env(safe-area-inset-top))}
+/* the contents' wordmark is the same NavMark, a little larger */
+.zbar-top .zmark .iword{font-size:var(--fz-xl)}

@@ -349,6 +349,9 @@ describe("My Bento", () => {
     expect(screen.getByRole("button", { name: "Switch grade" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Open the report ›" })).toBeInTheDocument();
     expect(screen.queryByRole("switch")).toBeNull();
+    // the nav's wordmark always means home: your book
+    fireEvent.click(screen.getByRole("button", { name: "Bento, home" }));
+    expect(screen.getByRole("button", { name: "Grade check-up" })).toBeInTheDocument();
   });
 });
 

@@ -1,7 +1,7 @@
 import { Pill } from "./primitives/Pill";
 import { Slider } from "./primitives/Slider";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { BentoMark } from "./primitives/BentoMark";
+import { NavMark } from "./Nav";
 import { useApp } from "../app/AppState";
 import { doneCount, isReady, testKey, testReady, unitsInGrade, type Entry } from "../app/curriculum";
 import { upNext } from "../app/today";
@@ -142,7 +142,7 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
   return (
     <div className="zoom" ref={box} role="dialog" aria-modal="true" aria-label={CONTENTS} onClick={e => { if (e.target === e.currentTarget) close(); }}>
       <div className="zbar-top">
-        <BentoMark className="zmark" />
+        <span className="zmark"><NavMark onHome={() => { close(); go({ name: "home" }, "back"); }} /></span>
         {/* widest to narrowest, left to right (G 2026-10-06); a tap slider, the same master as Bento / Bento² */}
         <Slider className="zlevels" label="Zoom" value={level} onPick={to}
           options={[...LEVELS].reverse().map(l => ({ id: l, label: NAMES[l], disabled: l === "chapter" && !unit }))} />

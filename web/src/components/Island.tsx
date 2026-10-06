@@ -8,7 +8,8 @@ import { currentItem, currentStep, lessonOfItem, problemOf } from "../engine/ses
 import { problemShape, ProblemLine } from "./practice/ProblemView";
 import { upNext } from "../app/today";
 import { Contents, type Level } from "./Contents";
-import { BentoMark } from "./primitives/BentoMark";
+import { Nav, NavMark } from "./Nav";
+import { reduceMotion } from "../app/transition";
 import { ConfirmStack } from "./ConfirmStack";
 import { tableById } from "../engine/facts/tables";
 import { Chevron, LockIcon } from "./primitives/icons";
@@ -144,6 +145,13 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   const start: Level = route.name === "home" ? "shelf" : place.lesson ? "chapter" : "year";
   // My Bento is a page of its own (G 2026-10-06: no pop-over version); the person circle goes there
   const openMe = () => { if (route.name !== "me") go({ name: "me" }, "fwd"); };
+  // the wordmark always means home: your book once a grade is chosen, else the top of the landing page
+  const home = () => {
+    if (chosen != null && progress.chosen) { openSheet(false); go({ name: "home" }, "back"); }
+    else if (route.name === "welcome") scrollTo({ top: 0, behavior: reduceMotion() ? "auto" : "smooth" });
+    else go({ name: "welcome" }, "back");
+  };
+  const mark = <NavMark onHome={home} />;
 
   // pinching the page closed (two fingers coming together) zooms out to the contents; spreading them is left to the browser
   useEffect(() => {
@@ -179,19 +187,14 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   // the way back to your lessons floats on its own in the right corner, so "Bento" stays centred in its pill (v44 sweep
   // item 5); on a phone it is a circle holding your grade's number, with a spacer on the left to keep the pill centred
   const mine = progress.chosen && progress.grade != null ? gradeOf(progress.grade) : null;
+  // the landing page: the same nav, filled with the guest's pieces (no place yet, and the way back to your lessons)
   if (welcome) return (
-    <div className="itop guest"><header className="island guest">
-      <BentoMark className="iword" />
-    </header><span />
-      <div className="icorner right">
-        {mine && (
-          <button className="imine" onClick={() => { openSheet(false); go({ name: "home" }, "fwd"); }}>
-            <span className="imtext">My lessons ›</span>
-            <span className="gnum imgrade" aria-hidden style={{ "--gn": inkOf(mine.color), "--gn-d": mine.color } as CSSProperties}>{mine.short}</span>
-          </button>
-        )}
-      </div>
-    </div>
+    <Nav guest left={mark} right={mine && (
+      <button className="imine" onClick={() => { openSheet(false); go({ name: "home" }, "fwd"); }}>
+        <span className="imtext">My lessons ›</span>
+        <span className="gnum imgrade" aria-hidden style={{ "--gn": inkOf(mine.color), "--gn-d": mine.color } as CSSProperties}>{mine.short}</span>
+      </button>
+    )} />
   );
 
   const g = gradeOf(grade), fill = fillOf(place, app, grade);
@@ -199,8 +202,8 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   const back = place.back;
   return (
     <>
-    <div className="itop">
-      <div className="icorner left">
+    <Nav left={<>
+        {mark}
         {showResume && (
           <button className="iresume" onClick={() => go({ name: "practice" }, "fwd")}
             aria-label={`Resume ${run!.title}, ${runGrade!.name}, problem ${run!.i + 1} of ${run!.items.length}`}>
@@ -212,8 +215,8 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
         {showResume && (
           <button className="iresume-x" onClick={() => setAsking(true)} aria-label={`Quit ${run!.title}`}><CrossIcon /></button>
         )}
-      </div>
-      <header className="island">
+      </>} center={
+      <header className="island" style={{ "--p": fill, "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties}>
         {back
           ? <button className="iback" onClick={() => go(back.to, "back")} aria-label={`Back to ${back.label}`}><Chevron dir="left" /></button>
           : <button className="iback" onClick={() => openSheet(true)} aria-label="Change grade"><Chevron dir="left" /></button>}
@@ -224,9 +227,8 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
         </button>
         {place.lock
           ? <span className="ilock"><LockIcon />On this device</span>
-          : <span className={`ibat${route.name === "practice" && run?.solved ? " tick" : ""}`} aria-hidden style={{ "--p": fill, "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties}><i /></span>}
-      </header>
-      <div className="icorner right">
+          : <span className={`ibat${route.name === "practice" && run?.solved ? " tick" : ""}`} aria-hidden><i /></span>}
+      </header>} right={<>
         {hintable && (
           <button className={`icon ihint${run!.hintsLeft || run!.hinted ? "" : " spent"}${hinting ? " on" : ""}`} onClick={() => dispatchEvent(new Event("bento:hint"))}
             aria-label={`Hint, ${run!.hintsLeft} left`} aria-expanded={hinting}><BulbIcon /><em className="ibadge" aria-hidden>{run!.hintsLeft}</em></button>
@@ -238,8 +240,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
           aria-label={`${YOUR_BENTO}: ${progress.streak} day streak, ${progress.xp} XP`} aria-current={route.name === "me" ? "page" : undefined}>
           <MeIcon />
         </button>
-      </div>
-    </div>
+      </>} />
       {asking && run && (
         <ConfirmStack title={`Quit ${run.title}?`} body="Your answers so far won't be kept." confirm="Quit"
           onCancel={() => setAsking(false)} onConfirm={() => { setAsking(false); quit({ stay: true }); }} />
