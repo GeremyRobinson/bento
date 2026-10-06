@@ -66,10 +66,10 @@ export function Pieces() {
         <Piece name="Back and Escape" status="review" chunk="Chunk 7" nests="Nav, Contents">
           <small className="muted">The back arrow and Escape step up without adding history. Open a lesson, then try back, Escape and the browser's back.</small>
         </Piece>
-        <Piece name="All grades in Contents" status="building" chunk="Chunk 8" nests="Contents, Slider">
-          <small className="muted">All grades becomes the outer level of Contents, and the only way to change grade.</small>
+        <Piece name="All grades in Contents" status="review" chunk="Chunk 8" nests="Contents, Slider, Shelf">
+          <small className="muted">All grades is now the outer level of Contents and the one way to change grade. My Bento's Switch grade opens it too.</small>
         </Piece>
-        <Piece name="Keypad master" status="next" chunk="After chunk 8" nests="Practice">
+        <Piece name="Keypad master" status="building" chunk="After chunk 8" nests="Practice">
           <small className="muted">Practice's keypad moves onto one Keypad master, with the left-handed layout inside it.</small>
         </Piece>
         <Piece name="Design's motion system" status="next" chunk="7 small chunks" nests="everything that moves">

@@ -35,17 +35,17 @@ export function ChapterPic({ entries, rng }: { entries: Entry[]; rng: Rng }) {
  */
 export function Contents({ grade, lessonId, level: first, close, leave = close, closing }: { grade: number; lessonId?: string; level: Level; close: () => void;
   /** closes because a page is opening from here: no close animation, the page change carries it */ leave?: () => void; closing?: boolean }) {
-  const { progress, go, chooseGrade, startTest, deps, openSheet } = useApp();
+  const { progress, go, chooseGrade, startTest, deps } = useApp();
   const rng = useMemo(() => deps().rng, []); // eslint-disable-line react-hooks/exhaustive-deps
   const units = unitsInGrade(grade);
   const here = lessonId ? units.find(u => u.entries.some(c => c.id === lessonId)) : undefined;
   const next = upNext(progress, grade);
   const [chapter, setChapter] = useState(here?.name ?? units.find(u => u.entries.some(c => c.id === next?.entry.id))?.name ?? units[0]?.name);
-  const [level, setLevel] = useState<Level>(first === "shelf" ? "year" : first);
+  const [level, setLevel] = useState<Level>(first);
   // which way the last step went, so the new level grows in from the old one (out) or comes forward (in)
   const [way, setWay] = useState<"out" | "in" | "">("");
-  // every grade is one place, picker D (Review v43 item 15): zooming out past the year opens it
-  const to = (l: Level) => { if (l === level) return; if (l === "shelf") { leave(); openSheet(true); return; } setWay(LEVELS.indexOf(l) > LEVELS.indexOf(level) ? "out" : "in"); setLevel(l); };
+  // All grades is the outermost level, inside the contents (Review nav #5): the slider's thumb lands there, never out
+  const to = (l: Level) => { if (l === level) return; setWay(LEVELS.indexOf(l) > LEVELS.indexOf(level) ? "out" : "in"); setLevel(l); };
   const box = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

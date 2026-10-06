@@ -160,6 +160,12 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   // leaving for a page opened from the contents: the page change carries the motion, and that page takes the
   // contents' history step (AppState.show replaces it)
   const leave = () => setOpenState(null);
+  // other pages open the contents at a level (My Bento's "Switch grade" opens All grades, the one way to change grade)
+  useEffect(() => {
+    const on = (e: Event) => setOpen((e as CustomEvent<Level>).detail);
+    addEventListener("bento:contents", on);
+    return () => removeEventListener("bento:contents", on);
+  });
   useEffect(() => {
     if (!open) return;
     // system back closes them at once; a close already playing out (which stepped history back itself) finishes
@@ -186,7 +192,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
     const onStart = (e: TouchEvent) => { d0 = e.touches.length === 2 && (visualViewport?.scale ?? 1) <= 1.01 ? dist(e.touches) : 0; };
     const onMove = (e: TouchEvent) => {
       if (!d0 || e.touches.length !== 2) return;
-      if (dist(e.touches) / d0 < 0.7) { d0 = 0; if (start === "shelf") openSheet(true); else setOpen(start); }
+      if (dist(e.touches) / d0 < 0.7) { d0 = 0; setOpen(start); }
     };
     document.addEventListener("touchstart", onStart, { passive: true });
     document.addEventListener("touchmove", onMove, { passive: true });
@@ -269,7 +275,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
       <header className="island" style={{ "--p": fill, "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties}>
         {back
           ? <button className="iback" onClick={() => up(back.to)} aria-label={`Back to ${back.label}`}><Chevron dir="left" /></button>
-          : <button className="iback" onClick={() => openSheet(true)} aria-label="Change grade"><Chevron dir="left" /></button>}
+          : null /* the book is the top: no step back from it, and grade changes live in All grades (Review nav #4) */}
         <button className="iplace" onClick={() => setOpen(start === "shelf" ? "year" : start)} aria-label={`Contents. You're on ${place.title}`} aria-haspopup="dialog">
           <small>{place.kicker}</small>
           {place.title === gradeOf(grade).name ? <GradeTitle grade={grade} /> : <b className={shortProblem ? "ititle" : undefined}>{place.title}</b>}

@@ -105,12 +105,12 @@ describe("no grade until one is chosen", () => {
   });
 });
 
-/** Changing grade goes through picker D: the island's back chevron, a grade, then Start. */
+/** Changing grade has one way (Review nav #4): the contents zoomed out to All grades, then a grade. */
 function pickGrade(name: string) {
-  fireEvent.click(screen.getByRole("button", { name: "Change grade" }));
-  expect(screen.getByRole("heading", { level: 1, name: "Which grade are you in?" })).toBeInTheDocument();
-  fireEvent.click(screen.getByRole("radio", { name: new RegExp(`^${name}`) }));
-  tap(`Start ${name} ›`);
+  fireEvent.click(screen.getByRole("button", { name: /^Contents/ }));
+  const book = screen.getByRole("dialog", { name: "Contents" });
+  fireEvent.click(within(book).getByRole("button", { name: "All grades" }));
+  fireEvent.click(within(book).getByRole("button", { name: new RegExp(`^${name}( ·[^:]*)?:`) }));
 }
 
 describe("home", () => {
@@ -138,7 +138,7 @@ describe("home", () => {
     expect(screen.queryByText("Today's review")).toBeNull();
   });
 
-  it("shows the whole year for 2nd grade, and switches grades from the sheet", () => {
+  it("shows the whole year for 2nd grade, and switches grades from All grades", () => {
     renderApp();
     pickGrade("2nd grade");
     expect(screen.getByRole("heading", { level: 1, name: "2nd grade" })).toBeInTheDocument();
@@ -196,12 +196,12 @@ describe("home", () => {
     expect(book.querySelectorAll(".zcard")).toHaveLength(4);
     fireEvent.click(book.querySelectorAll(".zcard")[1]!);
     expect(within(book).getByRole("button", { name: "Chapter" })).toHaveAttribute("aria-pressed", "true");
-    // every grade is picker D, then into another grade's book
+    // every grade is the outermost level, inside the contents; tapping one opens its book
     fireEvent.click(within(book).getByRole("button", { name: "All grades" }));
+    expect(within(book).getByRole("button", { name: "All grades" })).toHaveAttribute("aria-pressed", "true");
+    expect(within(book).getAllByRole("button", { name: /: \d+ of \d+ lessons? done$/ })).toHaveLength(13);
+    fireEvent.click(within(book).getByRole("button", { name: /^7th grade:/ }));
     expect(screen.queryByRole("dialog")).toBeNull();
-    expect(screen.getAllByRole("radio")).toHaveLength(13);
-    fireEvent.click(screen.getByRole("radio", { name: "7th grade" }));
-    tap("Start 7th grade ›");
     expect(screen.getByRole("heading", { level: 1, name: "7th grade" })).toBeInTheDocument();
   });
 });

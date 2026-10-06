@@ -348,3 +348,5 @@ html:has(.screen) .itop{position:fixed;top:max(var(--sp-3),env(safe-area-inset-t
 .wrap{padding-top:max(var(--sp-3),env(safe-area-inset-top))}
 /* the contents' wordmark is the same NavMark, a little larger */
 .zbar-top .zmark .iword{font-size:var(--fz-xl)}
+/* the book is the top of the app, so its island has no back step; the words keep the pill's inner gutter */
+.island:not(:has(.iback)){padding-left:var(--sp-4)}

@@ -55,7 +55,7 @@ export function Me() {
             <h1>Level {lvl}</h1>
             <p className="muted">{into} of {LEVEL_XP} XP to level {lvl + 1}</p>
           </div>
-          <Pill onClick={() => openSheet(true)}>Switch grade</Pill>
+          <Pill onClick={() => dispatchEvent(new CustomEvent("bento:contents", { detail: "shelf" }))}>Switch grade</Pill>
         </> : (
           <div className="myh-text">
             <span className="k">{YOUR_BENTO}</span>
