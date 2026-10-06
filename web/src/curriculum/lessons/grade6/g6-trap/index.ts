@@ -3,6 +3,7 @@ import { formatNumber as f, num, op, text } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { chainExplanation } from "../../../../explanations/diagrams/chain/build";
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
+import { trapezoidPicture } from "./picture";
 
 /** bases a ≠ b (2–15) and height h (2–12), with a whole-number area */
 export interface TrapezoidProblem { a: number; b: number; h: number }
@@ -34,6 +35,7 @@ function explain(p: TrapezoidProblem, model: AnswerModel) {
     statement: [text("bases "), num(a), text(" and "), num(b), text(", height "), num(h)],
     caption: `Same as averaging the bases: (${a} + ${b}) ÷ 2 = ${f(S / 2)}, and ${f(S / 2)} × ${h} = ${A}.`,
     alt: `Trapezoid area: (${a} + ${b}) × ${h} ÷ 2 = ${A}.`,
+    diagram: trapezoidPicture({ a, b, h, S, P, A }),
     beats: [
       { id: "sum", narration: `Add the two parallel sides: ${a} + ${b} = ${S}.`, math: [num(a), op("+"), num(b), op("="), num(S)],
         lines: [[num(a), op("+"), num(b), op("="), num(S)]], answerStep: "sum", result: S },
