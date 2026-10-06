@@ -15,8 +15,8 @@ const here = fileURLToPath(new URL(".", import.meta.url));
 const AUDIT = readFileSync(here + "smoke/audit.js", "utf8");
 const PAGE = "file://" + fileURLToPath(new URL("../dist-preview/index.html", import.meta.url));
 
-/** audit kinds that mean something is cut off; the corner checks (concentric, outline-over) are reported, not failed */
-const CLIPS = new Set(["content-cut", "spill", "viewport", "poke-clipped", "box", "mask", "ring", "scroll-cut"]);
+/** audit kinds that fail the run: anything cut off, text under an outline, and a nested surface whose corner isn't concentric */
+const CLIPS = new Set(["content-cut", "spill", "viewport", "poke-clipped", "box", "mask", "ring", "scroll-cut", "outline-over", "concentric"]);
 const SIZES = [{ w: 390, h: 844, scheme: "dark" }, { w: 1180, h: 820, scheme: "light" }, { w: 1366, h: 768, scheme: "dark" }, { w: 1366, h: 1024, scheme: "light" }];
 /** containers meant to scroll (a long list); anything else that scrolls inside itself is cut */
 const SCROLLERS = ".fhome>.ftables, nav.slist.more";

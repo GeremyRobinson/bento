@@ -93,7 +93,7 @@
 .gu .gu-home{background:var(--tint-soft);box-shadow:none}
 .gu .gu-home .k{margin:0;font-size:var(--fz-xs);line-height:16px;font-weight:var(--w-mid);color:var(--ink)}
 .gu .gu-home p{color:var(--text)}
-.gu .gu-say{margin-top:var(--sp-1);display:flex;align-items:center;min-height:var(--tap);padding:10px 18px;border-radius:22px;background:var(--float);font-size:var(--fz-lg);font-weight:var(--w-bold)}
+.gu .gu-say{margin-top:var(--sp-1);display:flex;align-items:center;min-height:var(--tap);padding:10px 18px;border-radius:max(var(--r-sm),calc(var(--r-panel) - var(--sp-5)));background:var(--float);font-size:var(--fz-lg);font-weight:var(--w-bold)}
 .gu .gu-say .mline{font-size:inherit}
 
 /* portrait: the two small cards move into the list; the worked example takes the detail's height, their steps above
