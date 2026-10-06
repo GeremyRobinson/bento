@@ -61,7 +61,7 @@
 .parts-fixed :is(.mline .pt.p0,.tone.p0){color:var(--k0)}
 .mline .pt.p1,.tone.p1{color:var(--k1)} .parts-one :is(.mline .pt.p1,.tone.p1){color:inherit}
 /* the unknown: a dashed box in the accent (amber in the master), the same "?" the picture marks */
-.mline .unk{display:inline-grid;place-items:center;min-width:1.2em;height:1.25em;padding:0 .14em;margin:0 .04em;border:max(2px,.06em) dashed var(--ka);border-radius:.24em;color:var(--ka);background:color-mix(in srgb,var(--acc) 12%,transparent);font-size:.82em;line-height:1;font-weight:var(--w-bold)}
+.mline .unk{display:inline-grid;place-items:center;min-width:1.2em;height:1.25em;padding:0 .14em;margin:0 .04em;border:max(2px,.06em) dashed var(--ink);border-radius:.24em;color:var(--ink);background:color-mix(in srgb,var(--tint) 12%,transparent);font-size:.82em;line-height:1;font-weight:var(--w-bold)}
 /* the short question over an equation ("What is x?") */
 .askline{margin:0;color:var(--muted);font-size:18px;font-weight:var(--w-mid);line-height:1.3;text-align:center;letter-spacing:0}
 .slot .caret{width:2px;height:.9em;background:var(--tint);margin-left:2px;animation:blink var(--dur-1000) steps(1) infinite}

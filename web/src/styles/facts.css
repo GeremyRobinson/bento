@@ -1,5 +1,5 @@
 /* Facts: tables that fill in as they're learned, the pattern behind them, and the sprint. */
-.ftables{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:var(--u);margin-top:var(--u)}
+.ftables{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));grid-auto-rows:max-content;gap:var(--u);margin-top:var(--u)}
 .ftable{position:relative;overflow:hidden;display:grid;gap:var(--sp-1);align-content:start;text-align:left;min-height:168px;padding:calc(var(--u) + var(--sp-1));transition:transform var(--dur-200) var(--m-settle)}
 .ftable.panel{background:var(--card)}
 .ftable:active{transform:scale(.98)}
