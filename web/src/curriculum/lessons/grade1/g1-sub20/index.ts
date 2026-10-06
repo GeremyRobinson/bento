@@ -90,7 +90,7 @@ export const lesson: LessonDefinition<Sub20Problem> = {
   grade: 1,
   unit: "Adding and subtracting",
   title: "Subtract within 20",
-  pre: "k-sub",
+  pre: "g1-ten",
   reference: createSub20(14, 6),
   generate: (rng, index) => {
     const a = rng.int(11, index < 3 ? 14 : 18);

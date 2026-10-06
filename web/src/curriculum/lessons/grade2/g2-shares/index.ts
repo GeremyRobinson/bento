@@ -47,6 +47,8 @@ function answers(p: SharesProblem): AnswerModel {
         wrong: slips(parts, [
           [lines, "Counted the cut lines", "That's the cut lines. Count the pieces between them."],
           shaded < parts && [shaded, "Counted only the shaded parts", "Count **every** part, shaded or not."],
+          [parts + 1, "Counted a piece twice", "One too many. Touch each piece once, and count it once."],
+          [parts - 1, "Missed a piece", "One short. Every piece counts, even the one at the edge."],
         ]),
         hint: "Touch each piece and count it once.",
         explain: `The ${shape} is cut into ${parts} equal parts.`,
@@ -68,6 +70,8 @@ function answers(p: SharesProblem): AnswerModel {
         wrong: slips(shaded, [
           shaded < parts && [parts - shaded, "Counted the white parts", "Those are the parts that are **not** shaded. Count the colored ones."],
           shaded < parts && [parts, "Counted every part", "Count only the **shaded** parts."],
+          [shaded + 1, "Counted a white part", "One too many. Count only the colored parts."],
+          [shaded - 1, "Missed a shaded part", "One short. Look for every colored part."],
         ]),
         hint: "Count only the colored parts.",
         explain: `${shaded} ${word(shaded, parts)} ${shaded === 1 ? "is" : "are"} shaded.`,
@@ -76,7 +80,10 @@ function answers(p: SharesProblem): AnswerModel {
       oneBox({
         id: "whole", label: "The whole", question: `How many ${name} make the whole ${shape}?`,
         prompt: s => [s, text(` ${name} make 1 whole`)], ans: parts,
-        wrong: slips(parts, [shaded < parts && [shaded, "Counted only the shaded ones", "That's only the shaded ones. Count every part."]]),
+        wrong: slips(parts, [
+          shaded < parts && [shaded, "Counted only the shaded ones", "That's only the shaded ones. Count every part."],
+          [1, "Called the whole one part", `The whole ${shape} is made of all the parts. How many ${name} fit in it?`],
+        ]),
         hint: `Count every part of the ${shape}.`,
         explain: `${parts} ${name} make the whole ${shape}.`,
         work: [num(parts), text(` ${name} = 1 whole`)],
@@ -99,7 +106,7 @@ function explain(p: SharesProblem, model: AnswerModel): Explanation {
     diagram: buildShares({
       ...spec(p), beats: { count: 0, match: 1, one: 2, shaded: 3 },
       text: { count: `${parts} equal parts`, match: "every part is the same size", one: `each part is one ${one(parts)}`, shaded: `${shaded} ${word(shaded, parts)} shaded` },
-      alt: `A ${shape} cut into ${parts} equal parts. The parts lift out and land on top of each other: they match. ${shaded} of them are shaded.`,
+      alt: `A ${shape} cut into ${parts} equal parts. The parts lift out and land on top of each other: they match. ${shaded} of them ${shaded === 1 ? "is" : "are"} shaded.`,
     }),
     caption: `${parts} equal parts are ${name}. ${shaded} ${word(shaded, parts)} shaded.`,
     timeline: beats(4),

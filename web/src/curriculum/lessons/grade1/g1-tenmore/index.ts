@@ -7,6 +7,7 @@ import { buildTensOnes } from "../../../../explanations/diagrams/early-g1/blocks
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
 import { count, onesOf, plural, slips, tensOf } from "../_kit";
 import { count as countOf, verb } from "../../../text";
+import { singularWork } from "../../gradeK/kit";
 
 const TEN = 10;
 
@@ -97,7 +98,8 @@ export const lesson: LessonDefinition<TenMoreProblem> = {
   reference: createTenMore(34, 1),
   generate: (rng, index) => {
     const more = index < 2 ? 1 : rng.int(0, 1);
-    let n = rng.int(11, 89);
+    // the first three stay under 50, so the chart rows are ones a first grader knows well
+    let n = index < 3 ? rng.int(11, 49) : rng.int(11, 89);
     if (!more && n < 20) n += 10; // keep the answer a two-digit number
     if (n % 10 === 0 && index < 4) n += rng.int(1, 9); // early problems have some ones to keep
     return createTenMore(n, more);
@@ -106,6 +108,6 @@ export const lesson: LessonDefinition<TenMoreProblem> = {
   display: p => [num(p.n), op(p.more ? "+" : "−"), num(TEN)],
   displayNote: p => `What is 10 ${words(p.more)} than ${p.n}?`,
   picture: p => buildTensOnes({ tens: tensOf(p.n), ones: onesOf(p.n), alt: `${p.n} as tens rods and ones cubes` }),
-  answers,
+  answers: p => singularWork(answers(p)),
   explain,
 };

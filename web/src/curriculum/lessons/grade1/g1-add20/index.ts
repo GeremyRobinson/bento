@@ -74,7 +74,7 @@ export const lesson: LessonDefinition<Add20Problem> = {
   grade: 1,
   unit: "Adding and subtracting",
   title: "Add within 20",
-  pre: "g1-ten",
+  pre: "k-add",
   reference: createAdd20(3, 9),
   generate: (rng, index) => {
     const small = rng.int(2, index < 3 ? 3 : 5);

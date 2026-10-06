@@ -15,16 +15,18 @@ export interface PlaceBlocksSpec {
   alt: string;
 }
 
-const S = 11, F = 10 * S, FG = 6, RG = 5, CG = 3, COL_GAP = 30;
+const S = 11, F = 10 * S, RG = 5, CG = 3, COL_GAP = 30, STEP = 12;
 
 /** A three-digit number as blocks in three labelled columns; each column is ringed and counted on its beat. */
 export function buildPlaceBlocks(spec: PlaceBlocksSpec): SceneDiagram {
   const { hundreds: h, tens: tn, ones: o, beats } = spec;
   if (![h, tn, o].every(v => Number.isInteger(v) && v >= 0 && v <= 9)) throw new Error("place blocks: digits 0 to 9");
-  const flatRows = Math.ceil(h / 3), top = 34;
-  const blocksH = Math.max(flatRows * (F + FG) - FG, 10 * S);
+  // the flats stand in one stack, each a step up and to the right of the one in front, so 9 hundreds fit in about two
+  // flats' room and the picture keeps a size a phone can read (v43: rows of three made it tiny on a phone)
+  const stack = h ? F + (h - 1) * STEP : 0, top = 34;
+  const blocksH = Math.max(stack, 10 * S);
   const base = top + blocksH;
-  const contentW = [Math.min(h, 3) * (F + FG) - FG, tn * (S + RG) - RG, Math.ceil(o / 5) * (S + CG) - CG];
+  const contentW = [stack, tn * (S + RG) - RG, Math.ceil(o / 5) * (S + CG) - CG];
   const names = ["hundreds", "tens", "ones"], texts = [spec.text.hundreds, spec.text.tens, spec.text.ones];
   const widths = contentW.map((w, i) => Math.max(w, tw(names[i]!), tw(texts[i]!), 40));
   const xs: number[] = [];
@@ -39,11 +41,11 @@ export function buildPlaceBlocks(spec: PlaceBlocksSpec): SceneDiagram {
     items.push(rect(xs[i]! - 8, top - 8, w + 16, blocksH + 16, "hlline", { from: colBeats[i]!, until: colBeats[i]!, enter: "fade" }, 10));
     items.push(t(cx, base + 26, texts[i]!, `lbl p${i}`, { from: colBeats[i]!, enter: "rise", delay: 0.3 }));
   });
-  // flats in rows of three, bottom row first so they sit on the same floor as the rods
+  // flats from the back of the stack to the front, the front one on the same floor as the rods
   const left0 = xs[0]! + (widths[0]! - contentW[0]!) / 2;
   for (let k = 0; k < h; k++) {
-    const row = Math.floor(k / 3), col = k % 3;
-    items.push(...flat(left0 + col * (F + FG), base - (row + 1) * (F + FG) + FG, F, "cell c0", { enter: "pop", delay: 0.06 * k }));
+    const back = h - 1 - k;
+    items.push(...flat(left0 + back * STEP, base - F - back * STEP, F, "cell c0", { enter: "pop", delay: 0.06 * k }));
   }
   const left1 = xs[1]! + (widths[1]! - contentW[1]!) / 2;
   for (let k = 0; k < tn; k++) items.push(...rod(left1 + k * (S + RG), base - 10 * S, S, "cell c1", { enter: "pop", delay: 0.2 + 0.05 * k }));

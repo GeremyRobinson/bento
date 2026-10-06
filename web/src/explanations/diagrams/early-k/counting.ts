@@ -18,7 +18,9 @@ export function countStrip(n: number, alt: string, counted?: { firstBeat: number
   for (let i = 0; i < n; i++) {
     const row = Math.floor(i / ROW), col = i % ROW, cx = col * GAP, cy = row * ROWGAP;
     const beat = counted ? (row === 0 ? counted.firstBeat : counted.restBeat) : 0;
-    const delay = counted ? 0.28 * col : 0.03 * i;
+    // a row counts in about a second, so the top row is full before the steps move on to the next one (v43: the picture
+    // showed 7 + 2 while the words said "keep going from 10")
+    const delay = counted ? 0.11 * col : 0.03 * i;
     const last = i === n - 1;
     items.push({ type: "circle", cx, cy, r: R, cls: row === 0 ? "dotp" : "dotp p1", from: beat, enter: "pop", delay } as Draft);
     if (!counted) continue;

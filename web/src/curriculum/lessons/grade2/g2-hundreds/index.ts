@@ -37,7 +37,7 @@ function answers({ n }: HundredsProblem): AnswerModel {
           [t, "Read the tens digit", `${t} is the middle digit, the tens. The hundreds digit is the first one on the left.`],
           [o, "Read the ones digit", `${o} is the last digit, the ones. The hundreds digit is the first one on the left.`],
         ]),
-        hint: "The hundreds digit is the first digit on the left.",
+        hint: "Each big flat is one hundred. Count the flats: the hundreds digit, first on the left, says how many.",
         explain: `${n} starts with ${h}, so it has ${count(h, "hundred")}.`,
       }),
       oneBox({
@@ -48,7 +48,7 @@ function answers({ n }: HundredsProblem): AnswerModel {
           [h, "Read the hundreds digit", `${h} is the first digit, the hundreds. The tens digit is in the middle.`],
           [o, "Read the ones digit", `${o} is the last digit, the ones. The tens digit is in the middle.`],
         ]),
-        hint: "The tens digit is the middle digit.",
+        hint: "Each long rod is one ten. Count the rods: the tens digit, in the middle, says how many.",
         explain: `The middle digit of ${n} is ${t}, so it has ${count(t, "ten")}.`,
       }),
       oneBox({
@@ -58,7 +58,7 @@ function answers({ n }: HundredsProblem): AnswerModel {
           [h, "Read the hundreds digit", `${h} is the first digit, the hundreds. The ones digit is the last one.`],
           [t, "Read the tens digit", `${t} is the middle digit, the tens. The ones digit is the last one.`],
         ]),
-        hint: "The ones digit is the last digit on the right.",
+        hint: "Each small cube is one. Count the cubes: the ones digit, last on the right, says how many.",
         explain: `The last digit of ${n} is ${o}, so it has ${count(o, "one")}.`,
       }),
       manyBoxes({
@@ -69,7 +69,8 @@ function answers({ n }: HundredsProblem): AnswerModel {
           [{ h: h * 100, t, o }, "Tens as ones", `The ${t} is in the tens place, so it is worth ${t * 10}.`],
           [{ h, t: t * 10, o }, "Hundreds as ones", `The ${h} is in the hundreds place, so it is worth ${h * 100}.`],
         ] as [Record<string, number>, string, string][]).filter(([v]) => !same(v)),
-        hint: `${count(h, "hundred")} is ${h * 100}, ${count(t, "ten")} is ${t * 10}, and ${count(o, "one")} is ${o}.`,
+        hint: "A flat is worth 100, a rod is worth 10 and a cube is worth 1. What are all the flats worth? All the rods?",
+        explain: `${count(h, "hundred")} is ${h * 100}, ${count(t, "ten")} is ${t * 10}, and ${count(o, "one")} is ${o}.`,
       }),
     ],
     finalParts: [-1],

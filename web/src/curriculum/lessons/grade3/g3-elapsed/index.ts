@@ -76,7 +76,11 @@ function answers(p: ElapsedProblem): AnswerModel {
       box({
         id: "after", label: "Past the hour", question: `From ${clock(H2 * 60)} to ${clock(end)}, how many minutes?`,
         prompt: x => [text(`${clock(H2 * 60)} to ${clock(end)} `), op("="), x, text(" min")], ans: m3,
-        wrong: [[60 - m3, "Counted to the next hour", `Count from :00 up to :${String(m3).padStart(2, "0")}. That's ${count(m3, "minute")}.`]],
+        wrong: [
+          [60 - m3, "Counted to the next hour", `Count from :00 up to :${String(m3).padStart(2, "0")}. That's ${count(m3, "minute")}.`],
+          ...(m3 % 5 === 0 && m3 > 5 ? [[m3 / 5, "Counted the numbers, not the minutes", `The minute hand passes ${m3 / 5} numbers, but each number is 5 minutes. Count by 5s.`] as [number, string, string]] : []),
+          [60 + m3, "Counted the hour too", `The hour is already counted. Only count the minutes after :00.`],
+        ],
         hint: `The minute hand goes from :00 to :${String(m3).padStart(2, "0")}.`,
         explain: `${clock(H2 * 60)} to ${clock(end)} is ${count(m3, "minute")}.`,
       }),
@@ -91,7 +95,8 @@ function answers(p: ElapsedProblem): AnswerModel {
           ] as [Record<string, number>, string, string][] : []),
           [{ h, m: Math.abs(m3 - m1) }, "Subtracted the minutes", `Add the minutes before and after: ${m1} + ${m3}.`],
         ],
-        hint: `Hours: ${h}. Minutes: ${m1} + ${m3}.${m1 + m3 >= 60 ? " Then trade 60 minutes for an hour." : ""}`,
+        hint: `Add the whole hours you found. Then add the minutes before the hour and the minutes after it.${m1 + m3 >= 60 ? " 60 minutes make 1 more hour." : ""}`,
+        explain: `${hrs(h)}, and ${m1} + ${m3} = ${count(m1 + m3, "minute")}${m1 + m3 >= 60 ? `: trade 60 of them for 1 hour` : ""}. That's ${th} h ${tm} min.`,
       }),
     ],
     finalParts: [-1],

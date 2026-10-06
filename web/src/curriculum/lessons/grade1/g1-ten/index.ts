@@ -20,16 +20,23 @@ function answers({ a, b }: MakeTenProblem): AnswerModel {
     steps: [
       oneBox({
         id: "ten", label: "Make a ten", prompt: s => [num(a), op("+"), s, op("="), num(10)], ans: need,
+        wrong: [
+          [10, "Wrote the full frame", `10 is the full frame. How many empty boxes does ${a} leave?`],
+          [a, "Wrote the dots already there", `That's the dots already there. Count the empty boxes.`],
+        ],
         hint: `Count up from ${a} to 10. How many did you count?`, explain: `${a} + ${need} = 10.`,
       }),
       oneBox({
         id: "break", label: `Break apart ${b}`, prompt: s => [num(b), op("="), num(need), op("+"), s], ans: left,
-        wrong: [[b + need, "Breaking apart", `Both parts have to be smaller than ${b}. What is ${b} take away ${need}?`]],
+        wrong: [
+          [b + need, "Breaking apart", `Both parts have to be smaller than ${b}. What is ${b} take away ${need}?`],
+          [b, "Kept all of it", `That's all ${b}. ${need} of them went into the ten frame. How many are still outside?`],
+        ],
         hint: `${b} take away ${need}.`, explain: `${b} − ${need} = ${left}.`,
       }),
       oneBox({
         id: "add", label: "Add to the ten", prompt: s => [num(10), op("+"), num(left), op("="), s], ans: a + b,
-        wrong: [[left, "Forgot the ten", "Don't forget the 10!"]],
+        wrong: [[left, "Forgot the ten", `That's only the dots left over. The full frame is 10 more: 10 and ${left} is ${a + b}.`]],
         hint: `10 plus ${left} is ten and ${left} more.`, explain: `10 + ${left} = ${a + b}.`,
         work: [num(a), op("+"), num(b), op("="), num(10), op("+"), num(left), op("="), answer("x", a + b)],
       }),
@@ -42,7 +49,7 @@ function explain(p: MakeTenProblem, model: AnswerModel) {
   const { a, b } = p, need = expectedOf(model, "ten"), left = expectedOf(model, "break"), sum = expectedOf(model, "add");
   return chainExplanation({
     heading: "Make a ten first",
-    idea: ["Fill up a ten first: break the second number into the part that makes 10 and the rest. Tens are easy to add."],
+    idea: ["10 is easy to add to. So fill the first ten frame: move some dots from the second number until the frame is full. Now it is 10 and the dots that are left."],
     statement: [num(a), op("+"), num(b)],
     caption: `Borrow ${need} from the ${b} to fill the ten.`,
     alt: `${a} + ${b} becomes ${a} + ${need} + ${left}, then 10 + ${left} = ${sum}.`,
@@ -62,8 +69,10 @@ export const lesson: LessonDefinition<MakeTenProblem> = {
   grade: 1,
   unit: "Adding and subtracting",
   title: "Make a ten to add",
+  pre: "k-make10",
   reference: createMakeTen(8, 5),
-  generate: rng => { const a = rng.int(6, 9); return createMakeTen(a, rng.int(11 - a, 9)); },
+  // the first three fill the frame with 1 or 2 dots, and the second number stays small
+  generate: (rng, index) => { const a = index < 3 ? rng.int(8, 9) : rng.int(6, 9); return createMakeTen(a, rng.int(11 - a, index < 3 ? 6 : 9)); },
   restore: raw => restoreVia(raw, ["a", "b"] as const, v => createMakeTen(v.a, v.b)),
   display: p => [num(p.a), op("+"), num(p.b)],
   picture: p => tenFrames([p.a, p.b], `A ten frame with ${p.a} and a ten frame with ${p.b}`),

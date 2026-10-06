@@ -25,7 +25,13 @@ export function buildPairs(spec: PairsSpec): SceneDiagram {
   const items: Draft[] = [];
   // the row as counted: dots spread across the same width
   const rowGap = 26, rowLeft = W / 2 - ((n - 1) * rowGap) / 2;
-  for (let k = 0; k < n; k++) items.push(circle(rowLeft + k * rowGap, PY / 2, R, "dotp", { until: beats.pairs - 1, enter: "pop", delay: 0.03 * k }));
+  // when dot k lands in its pair (or, the odd one out, in its own spot); on the pairs beat the row stays and each dot only
+  // fades out as it lands, so the row never collapses all at once (v43)
+  const lands = (k: number) => (odd && k === n - 1 ? 0.12 * pairs : 0.12 * Math.floor(k / 2) + (k % 2) * 0.05);
+  for (let k = 0; k < n; k++) {
+    items.push(circle(rowLeft + k * rowGap, PY / 2, R, "dotp", { until: beats.pairs - 1, enter: "pop", delay: 0.03 * k }));
+    items.push(circle(rowLeft + k * rowGap, PY / 2, R, "dotp", { from: beats.pairs, until: beats.pairs, enter: "flash", delay: -1, vars: { "--d2": `${lands(k).toFixed(2)}s` } }));
+  }
   for (let k = 0; k < pairs; k++) {
     const x = k * PX, d = 0.12 * k;
     items.push(rect(x - R - 5, -R - 5, 2 * R + 10, PY + 2 * R + 10, "wire", { from: beats.pairs, enter: "fade", delay: d + 0.2 }, R + 5));

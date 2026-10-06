@@ -6,6 +6,7 @@ import { buildAddTens } from "../../../../explanations/diagrams/early-g1/blocks"
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
 import { count, onesOf, plural, slips, tensOf } from "../_kit";
 import { count as countOf, verb } from "../../../text";
+import { singularWork } from "../../gradeK/kit";
 
 /** n + k tens; the sum stays under 100 */
 export interface AddTensProblem { n: number; k: number }
@@ -91,6 +92,6 @@ export const lesson: LessonDefinition<AddTensProblem> = {
   },
   restore: raw => restoreVia(raw, ["n", "k"] as const, v => createAddTens(v.n, v.k)),
   display: p => [num(p.n), op("+"), num(p.k * 10)],
-  answers,
+  answers: p => singularWork(answers(p)),
   explain,
 };

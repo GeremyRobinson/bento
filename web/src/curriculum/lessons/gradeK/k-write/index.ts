@@ -17,6 +17,13 @@ export function createWrite(n: number): WriteProblem {
 
 /** digits that are easy to mix up when reading */
 const LOOKS: Record<number, number> = { 6: 9, 9: 6, 2: 5, 5: 2, 3: 8, 8: 3, 1: 7, 7: 1, 4: 9 };
+/** what each digit's shape looks like, so a look-alike slip can say what tells them apart */
+const SHAPE: Record<number, string> = {
+  0: "0 is one closed ring", 1: "1 is one straight line down", 2: "2 curves on top and sits on a flat line",
+  3: "3 has two bumps and is open on the left", 4: "4 has a corner and a line straight down", 5: "5 has a flat hat on top and a round belly",
+  6: "6 has its loop at the bottom", 7: "7 has a flat line on top, then slants down", 8: "8 has two closed loops, one on top of the other",
+  9: "9 has its loop at the top",
+};
 const swap = (n: number) => Number(String(n).split("").reverse().join(""));
 
 /** the right numeral and two look-alikes, in an order fixed by the number */
@@ -52,9 +59,12 @@ function answers({ n }: WriteProblem): AnswerModel {
         wrong: i => {
           const v = options[i]!;
           if (n > 10 && v === swap(n) && v !== n) return ["Swapped the digits", `That's ${v}. ${n} starts with 1: 1 ten and ${count(n - 10, "one")}.`];
-          return ["Picked a look-alike", `Count the dots again: ${n}.`];
+          if (n <= 9 && v <= 9) return ["Picked a look-alike", `That's ${v}, not ${n}. ${SHAPE[v]}. ${SHAPE[n]}.`];
+          if (Math.abs(v - n) === 1) return ["Picked the number next to it", `That's ${v}, one ${v > n ? "more" : "less"} than ${n}. You counted ${count(n, "dot")}.`];
+          if (v % 10 === 0 && n % 10 === 0) return ["Mixed up the tens", `That's ${v}: ${count(v / 10, "ten")}. ${n} is ${count(n / 10, "ten")}.`];
+          return ["Picked a look-alike", `That's ${v}. You counted ${count(n, "dot")}, and ${n} is written ${n}.`];
         },
-        hint: n === 20 ? "20 is 2 tens. It starts with 2." : n > 10 ? `${n} is 1 ten and ${count(n - 10, "one")}. It starts with 1.` : `Find the number that looks like ${n}.`,
+        hint: n === 20 ? "20 is 2 tens. It starts with 2." : n > 10 ? `${n} is 1 ten and ${count(n - 10, "one")}. It starts with 1.` : n <= 9 ? `${SHAPE[n]}.` : `Find the number that looks like ${n}.`,
         explain: `This is how ${n} is written: ${n}.`,
         work: [text("It's written "), num(n)],
       }),

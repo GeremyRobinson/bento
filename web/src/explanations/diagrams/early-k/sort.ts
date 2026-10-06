@@ -7,7 +7,7 @@ import { WIDE } from "./fit";
 
 export type Glyph = "button" | "leaf" | "block" | "circle" | "square" | "triangle";
 
-type Timing = { from?: number; until?: number; enter?: Draft["enter"]; delay?: number };
+type Timing = { from?: number; until?: number; enter?: Draft["enter"]; delay?: number; vars?: Record<string, string> };
 
 /** one object centered at (x, y), about 30 across */
 export function glyph(g: Glyph, x: number, y: number, o: Timing): Draft[] {
@@ -35,6 +35,8 @@ export interface SortSpec {
   /** beats: sorted into rows, rows counted, the answer row marked (with `mark`). Leave out for practice. */
   beats?: { rows: number; count: number; mark: number };
   mark?: number;
+  /** one object to ring in the pile, by group and place in its group: the one the learner sorts first */
+  pick?: { group: number; item: number; until?: number };
   alt: string;
 }
 
@@ -45,10 +47,16 @@ export function buildSort(s: SortSpec): SceneDiagram {
   const rng = createRng(s.seed), cells = rng.shuffle(Array.from({ length: COLS * Math.max(rows, 3) }, (_, i) => i));
   const b = s.beats, items: Draft[] = [];
   let k = 0;
+  /** when each object's place in its row pops in, so the same object leaves the pile at that moment */
+  const rowDelay = (g: number, i: number) => 0.08 * i + 0.3 * g;
   s.counts.forEach((n, g) => {
     for (let i = 0; i < n; i++, k++) {
       const c = cells[k]!, x = (c % COLS) * CELL + CELL / 2 + rng.int(-9, 9), y = Math.floor(c / COLS) * CELL + CELL / 2 + rng.int(-9, 9);
       items.push(...glyph(s.glyphs[g]!, x, y, b ? { from: 0, until: b.rows - 1, enter: "pop", delay: 0.05 * k } : {}));
+      if (s.pick && s.pick.group === g && s.pick.item === i) items.push({ type: "circle", cx: x, cy: y, r: 24, cls: "hlline", from: 0, ...(s.pick.until != null ? { until: s.pick.until } : {}), enter: "pop", delay: 0.4 } as Draft);
+      // on the sorting beat the pile stays put and each object only fades out as its copy lands in its row, so nothing
+      // vanishes at once (v43: the blocks blanked out at Play and popped back later)
+      if (b) items.push(...glyph(s.glyphs[g]!, x, y, { from: b.rows, until: b.rows, enter: "flash", delay: -1, vars: { "--d2": `${rowDelay(g, i).toFixed(2)}s` } } as Timing));
     }
   });
   if (b) {
@@ -56,7 +64,7 @@ export function buildSort(s: SortSpec): SceneDiagram {
     s.counts.forEach((n, g) => {
       const y = top + g * rowH + 20;
       if (s.mark === g) items.push({ type: "rect", x: -14, y: y - 24, w: n * pitch + 80, h: 48, rx: 24, cls: "hlrow", from: b.mark, enter: "fade" } as Draft);
-      for (let i = 0; i < n; i++) items.push(...glyph(s.glyphs[g]!, 14 + i * pitch, y, { from: b.rows, enter: "pop", delay: 0.08 * i + 0.3 * g }));
+      for (let i = 0; i < n; i++) items.push(...glyph(s.glyphs[g]!, 14 + i * pitch, y, { from: b.rows, enter: "pop", delay: rowDelay(g, i) }));
       items.push(t(14 + n * pitch + 12, y, String(n), "lbl big start", { from: b.count, enter: "rise", delay: 0.4 * g }));
     });
   }

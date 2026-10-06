@@ -60,7 +60,7 @@ function answers({ rows, cols }: ArrayProblem): AnswerModel {
           [total - cols, "Left out a row", `There are ${countOf(rows, "row")}, so add ${cols} ${rows} times.`],
           [total + cols, "Added an extra row", `There are only ${countOf(rows, "row")}. Add ${cols} ${rows} times.`],
         ]),
-        hint: `Skip count by ${cols}s: ${Array.from({ length: rows }, (_, i) => cols * (i + 1)).join(", ")}.`,
+        hint: `Skip count by ${cols}s, once for each row${rows > 2 ? `: ${cols}, ${2 * cols}, and on` : ""}.`,
         explain: `${Array.from({ length: rows }, (_, i) => cols * (i + 1)).join(", ")}. There are ${countOf(total, "dot")}.`,
       }),
     ],
