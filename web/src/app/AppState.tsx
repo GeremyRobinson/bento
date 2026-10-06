@@ -10,6 +10,7 @@ import { loadAll } from "../persistence/load";
 import type { Store } from "../persistence/db";
 import { parseRoute, routeHash, type Route } from "./routes";
 import { withTransition, type Dir } from "./transition";
+import { readB2, type B2Progress } from "../bento2/progress";
 
 export interface AppData {
   progress: Progress;
@@ -45,6 +46,11 @@ interface AppState extends AppData {
   exportBackup(): string;
   importBackup(json: string): Promise<void>;
   deps(): Deps;
+  /** Bento²'s saved data (abilities, Number shelf, Notebook, tools), read into the current shape */
+  b2: B2Progress;
+  /** change Bento²'s saved data; it is saved with the rest of the progress */
+  updateB2(f: (b: B2Progress) => B2Progress): void;
+  now(): number;
 }
 
 const Ctx = createContext<AppState | null>(null);
@@ -141,7 +147,9 @@ export function AppProvider(props: {
     // after a reload the results screen shows the newest saved report
     const latest = lastReport ?? (data.progress.log[0] ? data.reports[data.progress.log[0].key] ?? null : null);
     return {
-      ...data, route, lastReport: latest, sheetOpen, go, openSheet, deps,
+      ...data, route, lastReport: latest, sheetOpen, go, openSheet, deps, now,
+      b2: readB2(data.progress.b2),
+      updateB2: f => setProgress(p => ({ ...p, b2: f(readB2(p.b2)) })),
       chooseGrade: g => withTransition(() => {
         // a grade opens on its book: the year's cover, today's plan and every chapter
         setProgress(p => ({ ...p, grade: g, chosen: true }));

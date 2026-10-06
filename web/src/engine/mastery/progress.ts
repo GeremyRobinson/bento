@@ -2,6 +2,7 @@ import { defaultSettings, type Settings } from "../../app/settings";
 import type { Level } from "./levels";
 import type { PracticeSession } from "../session/types";
 import type { FactRecord, SprintRecord } from "../facts/mastery";
+import type { B2Progress } from "../../bento2/progress";
 
 export interface ScoreRecord {
   last: Level;
@@ -59,6 +60,8 @@ export interface Progress {
   facts: Record<string, FactRecord>;
   /** finished fact sprints, newest last (kept to the last 200) */
   sprints: SprintRecord[];
+  /** Bento²: abilities, the Number shelf, the Notebook and the tools' own numbers (absent until first used) */
+  b2?: B2Progress;
 }
 
 export const emptyProgress = (): Progress => ({
