@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { fP, ns, P, poly, v, xp } from "../../algebra-kit/steps";
 import { attempt, nz, readInts } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { withEasyStart } from "../../easy-start";
 
 /** f(x) = ax² + bx + c, evaluated at x = k. */
 export interface EvaluatePolynomial { kind: "polynomials.evaluate"; a: number; b: number; c: number; k: number }
@@ -27,10 +28,12 @@ const at = (k: number): MathText => [text("f("), num(k), text(")")];
 export function evaluateAnswers({ a, b, c, k }: EvaluatePolynomial): AnswerModel {
   return {
     steps: [
-      ns({ id: "square", l: "Square term", a: s => [num(a), op("·"), ...P(k), sup(2), op("="), ...s], ans: a * k * k, h: `Square ${f(k)} first (${f(k * k)}), then multiply by ${f(a)}.`,
+      ns({ id: "square", l: "Square term", a: s => [num(a), op("·"), ...P(k), sup(2), op("="), ...s], ans: a * k * k, h: `Powers come before multiplying: square ${f(k)} first, then multiply by ${f(a)}.`,
         w: [[-a * k * k, "Sign of the square", "A negative squared is positive."], [a * 2 * k, "Doubled instead of squared", "Squared means times itself."]] }),
-      ns({ id: "linear", l: "x term", a: s => [num(b), op("·"), ...P(k), op("="), ...s], ans: b * k, h: "Watch the signs." }),
-      ns({ id: "total", l: "Add it up", a: s => [num(a * k * k), op("+"), ...P(b * k), op("+"), ...P(c), op("="), ...s], ans: a * k * k + b * k + c, h: "Add the three parts." }),
+      ns({ id: "linear", l: "x term", a: s => [num(b), op("·"), ...P(k), op("="), ...s], ans: b * k, h: `${f(b)} × ${fP(k)}: ${b * k < 0 ? "one negative makes it negative" : b < 0 ? "two negatives make a positive" : "two positives make a positive"}.`,
+        w: [[-b * k, "Sign slip", `${b < 0 ? "Negative" : "Positive"} times ${k < 0 ? "negative" : "positive"} is ${b * k < 0 ? "negative" : "positive"}.`]] }),
+      ns({ id: "total", l: "Add it up", a: s => [num(a * k * k), op("+"), ...P(b * k), op("+"), ...P(c), op("="), ...s], ans: a * k * k + b * k + c, h: "f(k) is all three parts together: add them, keeping each one's sign.",
+        w: [[a * k * k - b * k + c, "Dropped a sign", `Keep each part's sign: ${f(a * k * k)} + ${fP(b * k)} + ${fP(c)}.`]] }),
     ],
     finalParts: [-1],
   };
@@ -63,7 +66,7 @@ export function explainEvaluate(p: EvaluatePolynomial, model: AnswerModel) {
   });
 }
 
-export const lesson: LessonDefinition<EvaluatePolynomial> = {
+export const lesson: LessonDefinition<EvaluatePolynomial> = withEasyStart({
   id: "g11-evalpoly",
   grade: 11,
   unit: "Polynomials",
@@ -75,4 +78,4 @@ export const lesson: LessonDefinition<EvaluatePolynomial> = {
   displayNote: p => `Find f(${f(p.k)}).`,
   answers: evaluateAnswers,
   explain: explainEvaluate,
-};
+});

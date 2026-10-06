@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { ms, ns } from "../../algebra-kit/steps";
 import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { withEasyStart } from "../../easy-start";
 
 /** The square-free parts the current app uses, so k² is always the biggest perfect square inside. */
 export const SQUARE_FREE = [2, 3, 5, 6, 7] as const;
@@ -27,9 +28,11 @@ export function restoreSimplifyRoot(raw: unknown): SimplifyRoot | null {
 export function simplifyRootAnswers({ k, m: rest, n }: SimplifyRoot): AnswerModel {
   return {
     steps: [
-      ns({ id: "square", l: "Biggest perfect square", a: s => [num(n), op("="), ...s, op("×"), num(rest)], ans: k * k, h: `Look for 4, 9, 16, 25, 36 that divide ${f(n)}.` }),
-      ns({ id: "root", l: "Its square root", a: s => [sqrt(k * k), op("="), ...s], ans: k, h: `${f(k)} × ${f(k)} = ${f(k * k)}.` }),
-      ms({ id: "simple", l: "Write it simply", a: S => [sqrt(n), op("="), ...S.c!, sqrt(S.r!)], ans: { c: k, r: rest }, h: `${f(k)} comes out, ${f(rest)} stays inside.` }),
+      ns({ id: "square", l: "Biggest perfect square", a: s => [num(n), op("="), ...s, op("×"), num(rest)], ans: k * k, h: `Which perfect square, a whole number times itself, times ${f(rest)} makes ${f(n)}?`,
+        w: [[n / rest / 2, "Halved instead", `${f(n)} ÷ ${f(rest)} is the square: ${f(rest)} times it makes ${f(n)}.`]] }),
+      ns({ id: "root", l: "Its square root", a: s => [sqrt(k * k), op("="), ...s], ans: k, h: `Which whole number times itself makes ${f(k * k)}?`, w: [[k * k / 2, "Halved it", `The root is the number that times itself makes ${f(k * k)}, not half of it.`]] }),
+      ms({ id: "simple", l: "Write it simply", a: S => [sqrt(n), op("="), ...S.c!, sqrt(S.r!)], ans: { c: k, r: rest }, h: `√(${f(k * k)} × ${f(rest)}) = √${f(k * k)} × √${f(rest)}. Which part is a whole number?`,
+        w: [[{ c: k * k, r: rest }, "The square came out", `The square itself doesn't come out, its root does: √${f(k * k)} = ${f(k)}.`], [{ c: k, r: n }, "Left it all inside", `Once ${f(k)} is outside, only ${f(rest)} stays under the root.`]] }),
     ],
     finalParts: [-1],
   };
@@ -53,7 +56,7 @@ export function explainSimplifyRoot(p: SimplifyRoot, model: AnswerModel) {
   });
 }
 
-export const lesson: LessonDefinition<SimplifyRoot> = {
+export const lesson: LessonDefinition<SimplifyRoot> = withEasyStart({
   id: "g9-radical",
   grade: 9,
   unit: "Exponents",
@@ -64,4 +67,4 @@ export const lesson: LessonDefinition<SimplifyRoot> = {
   display: p => [sqrt(p.n)],
   answers: simplifyRootAnswers,
   explain: explainSimplifyRoot,
-};
+});

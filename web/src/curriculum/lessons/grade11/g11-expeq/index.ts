@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { big, fpm, ns, pm, v } from "../../algebra-kit/steps";
 import { attempt, nz, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { withEasyStart } from "../../easy-start";
 
 /** b to the (x + c) = bᵏ, so x + c = k. */
 export interface ExponentialEquation { kind: "equation.exponential"; b: number; k: number; c: number; value: number; x: number }
@@ -30,9 +31,10 @@ const lhs = (p: ExponentialEquation): MathText => [num(p.b), sup(exponent(p.c))]
 export function exponentialAnswers({ b, k, c, value }: ExponentialEquation): AnswerModel {
   return {
     steps: [
-      ns({ id: "base", l: "Same base", a: s => [text(big(value)), op("="), num(b), sup(s)], ans: k, h: `How many ${f(b)}'s multiply to ${big(value)}?` }),
+      ns({ id: "base", l: "Same base", a: s => [text(big(value)), op("="), num(b), sup(s)], ans: k, h: `Count how many times the base multiplies to make ${big(value)}.`,
+        w: [[value / b, "Divided", `That is ${big(value)} ÷ ${f(b)}. Count how many ${f(b)}'s multiply together to make ${big(value)}.`]] }),
       ns({ id: "solve", l: "Set exponents equal", a: s => [...exponent(c), op("="), num(k), text(", so "), v(), op("="), ...s], ans: k - c,
-        h: `Same base means the exponents match. Undo the ${fpm(c)}.`, w: [[k + c, "Wrong direction", `To undo ${fpm(c)}, do the opposite.`]] }),
+        h: `Same base means the exponents match. Undo the ${fpm(c)}.`, w: [[k + c, "Wrong direction", `x ${fpm(c)} = ${f(k)} means x is ${c > 0 ? "less" : "more"} than ${f(k)} by ${f(Math.abs(c))}, so ${c > 0 ? "subtract" : "add"} ${f(Math.abs(c))}.`]] }),
     ],
     finalParts: [-1],
   };
@@ -57,7 +59,7 @@ export function explainExponential(p: ExponentialEquation, model: AnswerModel) {
   });
 }
 
-export const lesson: LessonDefinition<ExponentialEquation> = {
+export const lesson: LessonDefinition<ExponentialEquation> = withEasyStart({
   id: "g11-expeq",
   grade: 11,
   unit: "Exponents and logs",
@@ -69,4 +71,4 @@ export const lesson: LessonDefinition<ExponentialEquation> = {
   displayNote: () => "Solve for x.",
   answers: exponentialAnswers,
   explain: explainExponential,
-};
+});

@@ -5,6 +5,7 @@ import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildAreaGrid } from "../../../../explanations/diagrams/area-model/grid";
 import { expectedOf, polyText, twoNums } from "../../area-common/steps";
 import { coef } from "../../../text";
+import { withEasyStart } from "../../easy-start";
 
 /** x² + (p + q)x + pq = (x + p)(x + q), with 1 ≤ p ≤ q. */
 export interface FactorProblem { p: number; qn: number }
@@ -34,7 +35,7 @@ export function factorAnswers({ p, qn }: FactorProblem): AnswerModel {
       { id: "factors", label: "Write the factors", prompt: [text("("), x, op("+"), slot("m"), text(")("), x, op("+"), slot("n"), text(")")],
         note: "Use the two numbers you found.", slots: [{ id: "m", expected: p }, { id: "n", expected: qn }], known: [],
         check: twoNums(p, qn, "Writing the factors", "Writing the factors"),
-        hint: `Put ${p} in one and ${qn} in the other.`, explain: `(x + ${p})(x + ${qn}).`,
+        hint: "Each number you found goes with one x: (x + one)(x + the other).", explain: `(x + ${p})(x + ${qn}).`,
         work: [text("("), x, op("+"), answer("m", p), text(")("), x, op("+"), answer("n", qn), text(")")] },
     ],
     finalParts: [-1],
@@ -71,7 +72,7 @@ export function explainFactor(prob: FactorProblem, answers: AnswerModel): Explan
   };
 }
 
-export const lesson: LessonDefinition<FactorProblem> = {
+export const lesson: LessonDefinition<FactorProblem> = withEasyStart({
   id: "g9-factor",
   grade: 9,
   unit: "Polynomials and quadratics",
@@ -88,4 +89,4 @@ export const lesson: LessonDefinition<FactorProblem> = {
   displayNote: () => "Factor it.",
   answers: factorAnswers,
   explain: explainFactor,
-};
+});

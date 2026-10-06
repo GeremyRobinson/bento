@@ -4,8 +4,9 @@ import { f, poly } from "../../_plane/kit";
 import { tangentAnswers } from "./answers";
 import { explainTangent } from "./explanation";
 import { createTangent, generateTangent, restoreTangent, type TangentProblem } from "./problem";
+import { withEasyStart } from "../../easy-start";
 
-export const lesson: LessonDefinition<TangentProblem> = {
+export const lesson: LessonDefinition<TangentProblem> = withEasyStart({
   id: "g12-tangent",
   grade: 12,
   unit: "Derivatives",
@@ -17,4 +18,4 @@ export const lesson: LessonDefinition<TangentProblem> = {
   displayNote: p => `Find the slope at x = ${f(p.k)}.`,
   answers: tangentAnswers,
   explain: explainTangent,
-};
+});

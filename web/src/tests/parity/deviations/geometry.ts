@@ -4,6 +4,9 @@
 // the problem instead of being a fixed illustration.
 export const deviations: Record<string, Partial<Record<string, string>>> = {
   "g10-exterior": {
+    hint: "the Third inside angle hint says why (the three share 180°) (fixes-02 Part C, pattern 3)",
+    explain: "Show me repeats the new hint, then \"That makes …\" as before",
+    checks: "new named slips: taking only one angle off 180°, and 180 − a on the outside step (fixes-02 A4); the generic message quotes the new hint",
     steps: "a third step, \"Check with the far angles\" (a° + b° = ?), is added after the two recorded steps so the lesson's heading (outside = the two far angles added) is practised, not only stated. The two recorded steps keep their labels, prompts, answers and hints (Curriculum fixes-02 A4, 2026-10-06)",
   },
 };

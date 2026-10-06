@@ -3,6 +3,7 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation, type ExplanationStep } from "../../../../explanations/schema";
 import { buildRightTriangle } from "../../../../explanations/diagrams/right-triangle/build";
 import { asRecord, expected, ms, mt, ns, numberField } from "../../_geometry/kit";
+import { withEasyStart } from "../../easy-start";
 
 /** A 45-45-90 triangle with leg s, or a 30-60-90 triangle with short leg s. */
 export interface SpecialTriangleProblem {
@@ -26,11 +27,13 @@ export function restoreSpecialTriangle(raw: unknown): SpecialTriangleProblem | n
 
 export function specialTriangleAnswers({ t, s }: SpecialTriangleProblem): AnswerModel {
   const steps = t === 45 ? [
-    ms({ id: "hyp", label: "Hypotenuse", prompt: S => mt`${S.c!}√${S.r!}`, ans: { c: s, r: 2 }, hint: "In a 45-45-90 triangle, hypotenuse = leg × √2." }),
+    ms({ id: "hyp", label: "Hypotenuse", prompt: S => mt`${S.c!}√${S.r!}`, ans: { c: s, r: 2 }, hint: "Half a square: leg² + leg² is two leg²'s. Take the square root: the leg comes out in front, and what stays under the root?",
+      wrong: [[{ c: 2 * s, r: 1 }, "Doubled the leg", "Doubling is for the 30-60-90 hypotenuse. These legs are equal, so use √2."], [{ c: s, r: 3 }, "Used √3", "√3 belongs to 30-60-90."]] }),
   ] : [
-    ns({ id: "hyp", label: "Hypotenuse", prompt: x => mt`2 × ${s} = ${x}`, ans: 2 * s, hint: "The hypotenuse is twice the short leg." }),
-    ms({ id: "long", label: "Long leg", prompt: S => mt`${S.c!}√${S.r!}`, ans: { c: s, r: 3 }, hint: "The long leg is the short leg × √3.",
-      wrong: [[{ c: s, r: 2 }, "Used √2", "√2 is for 45-45-90 triangles. 30-60-90 uses √3."]] }),
+    ns({ id: "hyp", label: "Hypotenuse", prompt: x => mt`2 × ${s} = ${x}`, ans: 2 * s, hint: `This triangle is half of an equilateral triangle, so the hypotenuse is a whole side: 2 × ${s}.`,
+      wrong: [[s, "Used the short leg", "The short leg is half a side of the equilateral triangle; the hypotenuse is a whole side."]] }),
+    ms({ id: "long", label: "Long leg", prompt: S => mt`${S.c!}√${S.r!}`, ans: { c: s, r: 3 }, hint: `Long leg² = hypotenuse² − short leg² = (2 × ${s})² − ${s}², which is three of ${s}². Take the square root: ${s} comes out in front.`,
+      wrong: [[{ c: s, r: 2 }, "Used √2", "√2 is for 45-45-90 triangles. 30-60-90 uses √3."], [{ c: 2 * s, r: 3 }, "Used the hypotenuse", `Use the short leg, not the hypotenuse: ${s}√3.`]] }),
   ];
   return { steps, finalParts: [-1] };
 }
@@ -87,7 +90,7 @@ export function explainSpecialTriangle(p: SpecialTriangleProblem, answers: Answe
   };
 }
 
-export const lesson: LessonDefinition<SpecialTriangleProblem> = {
+export const lesson: LessonDefinition<SpecialTriangleProblem> = withEasyStart({
   id: "g10-special",
   grade: 10,
   unit: "Right triangles and trig",
@@ -99,4 +102,4 @@ export const lesson: LessonDefinition<SpecialTriangleProblem> = {
   displayNote: p => (p.t === 45 ? "Find the hypotenuse." : "Find the hypotenuse and the long leg."),
   answers: specialTriangleAnswers,
   explain: explainSpecialTriangle,
-};
+});

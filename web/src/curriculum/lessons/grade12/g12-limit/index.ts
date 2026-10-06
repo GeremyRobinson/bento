@@ -5,6 +5,7 @@ import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildPlane } from "../../../../explanations/diagrams/plane/build";
 import { attempt, expected, f, ints, ns, nz, P, poly, polyText, pt } from "../../_plane/kit";
 import { signed } from "../../../text";
+import { withEasyStart } from "../../easy-start";
 
 /** lim x→a of (x − a)(x + b) ÷ (x − a) = a + b */
 export interface LimitProblem { kind: "limit.factor"; a: number; b: number }
@@ -35,9 +36,10 @@ export function limitAnswers({ a, b }: LimitProblem): AnswerModel {
   return {
     steps: [
       ns({ id: "b", label: "Factor the top", prompt: s => [text(`${factor(a)}(x + `), ...s, text(")")], ans: b,
-        hint: `Find the other factor: it multiplies with ${f(-a)} to make ${f(-a * b)}.`, note: "Plugging in gives 0 ÷ 0, so factor first." }),
+        hint: `Plugging x = ${f(a)} into the top gives 0, so ${factor(a)} is a factor. Find the other one: what times ${f(-a)} makes the number on its own?`, note: "Plugging in gives 0 ÷ 0, so factor first.",
+        wrong: [[-b, "Sign slip", `Multiply it back out: ${factor(a)} times (x + your number) has to give the top's number on its own, ${f(-a * b)}.`]] }),
       ns({ id: "lim", label: "Cancel and plug in", prompt: s => [num(a), op("+"), ...P(b), op("="), ...s], ans: a + b,
-        hint: `After canceling, plug x = ${f(a)} into x ${signed(b)}.`, wrong: [[0, "Stopped at 0 ÷ 0", "0 ÷ 0 means simplify, not that the limit is 0."]] }),
+        hint: "Away from the hole, the fraction is just the other factor. Plug x into it to see where the line is heading.", wrong: [[0, "Stopped at 0 ÷ 0", "0 ÷ 0 means simplify, not that the limit is 0."]] }),
     ],
     finalParts: [-1],
   };
@@ -71,7 +73,7 @@ export function explainLimit(p: LimitProblem, model: AnswerModel): Explanation {
   };
 }
 
-export const lesson: LessonDefinition<LimitProblem> = {
+export const lesson: LessonDefinition<LimitProblem> = withEasyStart({
   id: "g12-limit",
   grade: 12,
   unit: "Limits",
@@ -82,4 +84,4 @@ export const lesson: LessonDefinition<LimitProblem> = {
   display: limitMath,
   answers: limitAnswers,
   explain: explainLimit,
-};
+});

@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { numStep, supText, v } from "../../algebra-kit/steps";
 import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { withEasyStart } from "../../easy-start";
 
 /** f(x) = a·xⁿ, so f′(x) = (n·a)·xⁿ⁻¹. */
 export interface PowerRule { kind: "derivatives.power"; a: number; n: number }
@@ -39,17 +40,17 @@ export function powerRuleAnswers({ a, n }: PowerRule): AnswerModel {
       if (vals.e === n) return { ok: false, kind: "Kept the exponent", message: "Lower the exponent by 1.", generic: false };
       return { ok: false, kind: "Power rule", message: `Coefficient ${f(a)} × ${f(n)}, exponent ${f(n)} − 1.`, generic: false };
     },
-    hint: `${f(c)}x to the ${f(e)}.`,
+    hint: "Your first answer goes in front, and your second is the new exponent.",
     explain: `f′(x) = ${f(c)}x${supText(e)}.`,
     work: [text("f′(x)"), op("="), answer("c", c), v(), sup([answer("e", e)])],
   };
   return {
     steps: [
       numStep({ id: "coefficient", l: "Bring the exponent down", a: s => [num(n), op("×"), num(a), op("="), ...s], ans: c,
-        w: [[a + n, "Added instead of multiplied", "Multiply the coefficient by the exponent."]], h: `${f(n)} × ${f(a)}.`, explain: `${f(n)} × ${f(a)} = ${f(c)}.`,
+        w: [[a + n, "Added instead of multiplied", "Multiply the coefficient by the exponent."]], h: `The exponent ${f(n)} comes down and multiplies the ${f(a)} in front.`, explain: `The exponent ${f(n)} comes down: ${f(n)} × ${f(a)} = ${f(c)}.`,
         work: [text("New coefficient:"), answer("x", c)] }),
       numStep({ id: "exponent", l: "Lower the exponent", a: s => [num(n), op("−"), num(1), op("="), ...s], ans: e,
-        w: [[n + 1, "Raised the exponent", "For a derivative the exponent goes **down** by 1."]], h: `${f(n)} − 1.`, explain: `${f(n)} − 1 = ${f(e)}.`,
+        w: [[n + 1, "Raised the exponent", "For a derivative the exponent goes **down** by 1."]], h: `The new power is one less than ${f(n)}.`, explain: `One less than ${f(n)}: ${f(n)} − 1 = ${f(e)}.`,
         work: [text("New exponent:"), answer("x", e)] }),
       write,
     ],
@@ -76,7 +77,7 @@ export function explainPowerRule(p: PowerRule, model: AnswerModel) {
   });
 }
 
-export const lesson: LessonDefinition<PowerRule> = {
+export const lesson: LessonDefinition<PowerRule> = withEasyStart({
   id: "g12-power",
   grade: 12,
   unit: "Derivatives",
@@ -88,4 +89,4 @@ export const lesson: LessonDefinition<PowerRule> = {
   displayNote: () => "Find f′(x).",
   answers: powerRuleAnswers,
   explain: explainPowerRule,
-};
+});

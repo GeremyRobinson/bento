@@ -3,6 +3,7 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildRightTriangle } from "../../../../explanations/diagrams/right-triangle/build";
 import { asRecord, expected, mt, ns, numberField, TRIPLES } from "../../_geometry/kit";
+import { withEasyStart } from "../../easy-start";
 
 /** A right triangle with leg a (drawn up), long side c, and the missing leg b (drawn across). */
 export interface MissingLegProblem {
@@ -28,11 +29,11 @@ export function restoreMissingLeg(raw: unknown): MissingLegProblem | null {
 export function missingLegAnswers({ a, b, c }: MissingLegProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "square-c", label: "Square c", prompt: s => mt`${c}${sup("2")} = ${s}`, ans: c * c, hint: `${c} × ${c}.`, wrong: [[2 * c, "Squared as times 2", `Squared means ${c} × ${c}.`]] }),
-      ns({ id: "square-a", label: "Square a", prompt: s => mt`${a}${sup("2")} = ${s}`, ans: a * a, hint: `${a} × ${a}.` }),
+      ns({ id: "square-c", label: "Square c", prompt: s => mt`${c}${sup("2")} = ${s}`, ans: c * c, hint: `Squared means the side times itself: ${c} × ${c}.`, wrong: [[2 * c, "Squared as times 2", `Squared means ${c} × ${c}.`]] }),
+      ns({ id: "square-a", label: "Square a", prompt: s => mt`${a}${sup("2")} = ${s}`, ans: a * a, hint: `Squared means the side times itself: ${a} × ${a}.`, wrong: [[2 * a, "Squared as times 2", `Squared means ${a} × ${a}.`]] }),
       ns({ id: "subtract", label: "Subtract", prompt: s => mt`b${sup("2")} = ${c * c} − ${a * a} = ${s}`, ans: b * b, hint: "For a leg, subtract.",
         wrong: [[c * c + a * a, "Added instead of subtracted", "c is the longest side, so subtract to find a leg."]] }),
-      ns({ id: "root", label: "Square root", prompt: s => mt`b = √${b * b} = ${s}`, ans: b, hint: `What number times itself is ${b * b}?` }),
+      ns({ id: "root", label: "Square root", prompt: s => mt`b = √${b * b} = ${s}`, ans: b, hint: `What number times itself is ${b * b}?`, wrong: [[b * b / 2, "Halved instead of taking the root", `The root is the number that times itself makes ${b * b}, not half of it.`]] }),
     ],
     finalParts: [-1],
   };
@@ -67,7 +68,7 @@ export function explainMissingLeg(p: MissingLegProblem, answers: AnswerModel): E
   };
 }
 
-export const lesson: LessonDefinition<MissingLegProblem> = {
+export const lesson: LessonDefinition<MissingLegProblem> = withEasyStart({
   id: "g8-leg",
   grade: 8,
   unit: "Geometry",
@@ -80,4 +81,4 @@ export const lesson: LessonDefinition<MissingLegProblem> = {
   displayNote: () => "Right triangle: c is the long side. a² + b² = c²",
   answers: missingLegAnswers,
   explain: explainMissingLeg,
-};
+});

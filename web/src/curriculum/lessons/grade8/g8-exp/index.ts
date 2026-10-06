@@ -5,6 +5,7 @@ import { ns, supText, v, xp, type Slip } from "../../algebra-kit/steps";
 import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
 import { count as countOf } from "../../../text";
+import { withEasyStart } from "../../easy-start";
 
 /**
  * One exponent rule on powers of x: t = 0 multiplies xᵃ · xᵇ, t = 1 divides xᵃ⁺ᵇ ÷ xᵇ, t = 2 raises (xᵃ)ᵇ.
@@ -80,7 +81,7 @@ export function explainExponentRule(p: ExponentRule, model: AnswerModel) {
   });
 }
 
-export const lesson: LessonDefinition<ExponentRule> = {
+export const lesson: LessonDefinition<ExponentRule> = withEasyStart({
   id: "g8-exp",
   grade: 8,
   unit: "Exponents and roots",
@@ -92,4 +93,4 @@ export const lesson: LessonDefinition<ExponentRule> = {
   displayNote: () => "Simplify, then try x = 2.",
   answers: exponentAnswers,
   explain: explainExponentRule,
-};
+});

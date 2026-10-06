@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildAreaGrid } from "../../../../explanations/diagrams/area-model/grid";
 import { expectedOf, nonZero, ns, numP, readNumbers } from "../../area-common/steps";
+import { withEasyStart } from "../../easy-start";
 
 /** (a + bi)(c + di), every part a nonzero whole number. */
 export interface ComplexProblem { a: number; b: number; c: number; d: number }
@@ -31,12 +32,12 @@ const signed = (v: number, unit: string) => `${v < 0 ? "−" : "+"}${Math.abs(v)
 export function complexAnswers({ a, b, c, d }: ComplexProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "first", label: "First × first", prompt: s => [num(a), op("·"), ...numP(c), op("="), s], ans: a * c, hint: "Multiply the two real parts." }),
+      ns({ id: "first", label: "First × first", prompt: s => [num(a), op("·"), ...numP(c), op("="), s], ans: a * c, hint: "First × first is the two plain numbers multiplied.", wrong: [[a + c, "Added", "Multiply the two real parts."]] }),
       ns({ id: "last", label: "Last × last", prompt: s => [...iTerm(b), op("·"), ...iTermP(d), op("="), ...iTerm(b * d), sup(2), op("="), s], ans: -b * d, hint: "i² = −1, so flip the sign.",
         wrong: [[b * d, "Forgot i² = −1", "i × i = −1, so the sign flips."]] }),
-      ns({ id: "real", label: "Real part", prompt: s => [num(a * c), op("+"), ...numP(-b * d), op("="), s], ans: a * c - b * d, hint: "Add the two plain numbers." }),
+      ns({ id: "real", label: "Real part", prompt: s => [num(a * c), op("+"), ...numP(-b * d), op("="), s], ans: a * c - b * d, hint: "The real part is every plain number together: add them.", wrong: [[a * c + b * d, "Kept i² as +1", "i² is −1, so the corner is the opposite sign."]] }),
       ns({ id: "imag", label: "Imaginary part", note: "These are the i terms.", prompt: s => [num(a), op("·"), ...numP(d), op("+"), ...numP(b), op("·"), ...numP(c), op("="), s], ans: a * d + b * c,
-        hint: "Outside × outside plus inside × inside." }),
+        hint: "Outer and inner both have one i: multiply each pair, then add them.", wrong: [[a * d - b * c, "Subtracted", "Outer and inner are both i terms side by side: add them."]] }),
     ],
     finalParts: [-2, -1],
   };
@@ -75,7 +76,7 @@ export function explainComplex(p: ComplexProblem, answers: AnswerModel): Explana
   };
 }
 
-export const lesson: LessonDefinition<ComplexProblem> = {
+export const lesson: LessonDefinition<ComplexProblem> = withEasyStart({
   id: "g11-complex",
   grade: 11,
   unit: "Complex numbers",
@@ -86,4 +87,4 @@ export const lesson: LessonDefinition<ComplexProblem> = {
   display: show,
   answers: complexAnswers,
   explain: explainComplex,
-};
+});

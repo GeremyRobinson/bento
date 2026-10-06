@@ -5,6 +5,7 @@ import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildBox3d } from "../../../../explanations/diagrams/box3d/build";
 import { expectedOf, ns, readNumbers } from "../../area-common/steps";
 import { aNum } from "../../../text";
+import { withEasyStart } from "../../easy-start";
 
 /** A pyramid on a square base of side s, height h; s·s·h divides by 3. */
 export interface PyramidProblem { s: number; h: number }
@@ -24,8 +25,8 @@ export function generatePyramid(rng: Rng): PyramidProblem {
 export function pyramidAnswers({ s, h }: PyramidProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "base", label: "Base area", prompt: x => [num(s), op("×"), num(s), op("="), x], ans: s * s, hint: "The base is a square." }),
-      ns({ id: "box", label: "Times the height", prompt: x => [num(s * s), op("×"), num(h), op("="), x], ans: s * s * h, hint: "Multiply by the height." }),
+      ns({ id: "base", label: "Base area", prompt: x => [num(s), op("×"), num(s), op("="), x], ans: s * s, hint: `The base is a square: its area is the side times itself, ${s} × ${s}.`, wrong: [[4 * s, "Found the perimeter", "That is the distance around. The area is side × side."]] }),
+      ns({ id: "box", label: "Times the height", prompt: x => [num(s * s), op("×"), num(h), op("="), x], ans: s * s * h, hint: "The box around the pyramid stacks the base as high as the pyramid.", wrong: [[s * s + h, "Added", "Stacking the base layer by layer multiplies by the height."]] }),
       ns({ id: "third", label: "Divide by 3", prompt: x => [num(s * s * h), op("÷"), num(3), op("="), x], ans: (s * s * h) / 3, hint: "A pyramid is a third of a box.",
         wrong: [[s * s * h, "Forgot the ÷ 3", "A pyramid holds a third of a box with the same base and height."]] }),
     ],
@@ -61,7 +62,7 @@ export function explainPyramid(p: PyramidProblem, answers: AnswerModel): Explana
   };
 }
 
-export const lesson: LessonDefinition<PyramidProblem> = {
+export const lesson: LessonDefinition<PyramidProblem> = withEasyStart({
   id: "g10-pyramid",
   grade: 10,
   unit: "Area and volume",
@@ -73,4 +74,4 @@ export const lesson: LessonDefinition<PyramidProblem> = {
   displayNote: () => "V = base area × height ÷ 3",
   answers: pyramidAnswers,
   explain: explainPyramid,
-};
+});

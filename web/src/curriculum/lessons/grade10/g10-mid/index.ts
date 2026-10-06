@@ -2,8 +2,9 @@ import type { LessonDefinition } from "../../../schemas/lesson";
 import { midAnswers } from "./answers";
 import { explainMid, midMath } from "./explanation";
 import { createMid, generateMid, restoreMid, type MidProblem } from "./problem";
+import { withEasyStart } from "../../easy-start";
 
-export const lesson: LessonDefinition<MidProblem> = {
+export const lesson: LessonDefinition<MidProblem> = withEasyStart({
   id: "g10-mid",
   grade: 10,
   unit: "Coordinate geometry",
@@ -15,4 +16,4 @@ export const lesson: LessonDefinition<MidProblem> = {
   displayNote: () => "Find the midpoint.",
   answers: midAnswers,
   explain: explainMid,
-};
+});

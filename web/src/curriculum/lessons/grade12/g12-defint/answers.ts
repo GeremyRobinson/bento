@@ -11,7 +11,7 @@ export function defIntAnswers(p: DefIntProblem): AnswerModel {
   const { n, a, j, k, c } = p;
   return {
     steps: [
-      ms({ id: "anti", label: "Antiderivative", prompt: S => [...S.c!, text("x"), sup(S.e!)], ans: { c, e: n + 1 }, small: ["e"], hint: `Raise ${n} to ${n + 1}, then ${a} ÷ ${n + 1}.`,
+      ms({ id: "anti", label: "Antiderivative", prompt: S => [...S.c!, text("x"), sup(S.e!)], ans: { c, e: n + 1 }, small: ["e"], hint: "Run the power rule backwards: raise the power by 1, then divide the number in front by the new power, so the derivative gives it back.",
         wrong: [
           [{ c: a, e: n + 1 }, "Didn't divide", `Divide by the new power: ${a} ÷ ${n + 1}.`],
           [{ c: a * n, e: n - 1 }, "Took the derivative", "That's the derivative. Antiderivatives raise the power by 1."],

@@ -3,6 +3,7 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildRightTriangle, type Side } from "../../../../explanations/diagrams/right-triangle/build";
 import { asRecord, expected, fracText, fs, mt, ns, numberField, TRIPLES } from "../../_geometry/kit";
+import { withEasyStart } from "../../easy-start";
 
 export type TrigFunction = "sin" | "cos" | "tan";
 /** Right triangle: side a is opposite angle A, side b is next to it, c is the hypotenuse. */
@@ -37,8 +38,10 @@ export function trigRatioAnswers(p: TrigRatioProblem): AnswerModel {
         prompt: s => [s], ans: top, hint: "SOH CAH TOA: sin = opposite/hyp, cos = adjacent/hyp, tan = opposite/adjacent.",
         wrong: [[f === "cos" ? a : b, "Mixed up opposite and adjacent", "Opposite is across from the angle. Adjacent is next to it (not the hypotenuse)."]] }),
       ns({ id: "bottom", label: "Bottom of the ratio", question: f === "tan" ? "Tangent uses the adjacent side on the bottom. Which side?" : "Which side is the hypotenuse?",
-        prompt: s => [s], ans: bot, hint: "SOH CAH TOA." }),
-      fs({ id: "ratio", label: "Write the ratio", prompt: s => mt`${f} A = ${s}`, N: top, D: bot, hint: `${top} over ${bot}, simplified.` }),
+        prompt: s => [s], ans: bot, hint: f === "tan" ? "Tangent is opposite over adjacent, so the adjacent side goes on the bottom: the side next to A that isn't the hypotenuse." : "The hypotenuse is the longest side, across from the square corner.",
+        wrong: [[top, "Same side twice", "The bottom of the ratio is a different side from the top."]] }),
+      fs({ id: "ratio", label: "Write the ratio", prompt: s => mt`${f} A = ${s}`, N: top, D: bot, hint: "The side you found for the top goes over the side you found for the bottom. Then divide both by any common factor.",
+        wrong: [[bot, top, "Upside down", "Put the top side over the bottom side, not the other way."]] }),
     ],
     finalParts: [-1],
   };
@@ -75,7 +78,7 @@ export function explainTrigRatio(p: TrigRatioProblem, answers: AnswerModel): Exp
   };
 }
 
-export const lesson: LessonDefinition<TrigRatioProblem> = {
+export const lesson: LessonDefinition<TrigRatioProblem> = withEasyStart({
   id: "g10-trig",
   grade: 10,
   unit: "Right triangles and trig",
@@ -87,4 +90,4 @@ export const lesson: LessonDefinition<TrigRatioProblem> = {
   displayNote: p => `Right triangle: side ${p.a} is opposite angle A, side ${p.b} is next to it, hypotenuse ${p.c}.`,
   answers: trigRatioAnswers,
   explain: explainTrigRatio,
-};
+});

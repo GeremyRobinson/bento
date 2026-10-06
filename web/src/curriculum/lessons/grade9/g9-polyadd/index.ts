@@ -5,6 +5,7 @@ import { fP, ns, P, poly, v, xp, type Slip } from "../../algebra-kit/steps";
 import { attempt, nz, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
 import { coef, term } from "../../../text";
+import { withEasyStart } from "../../easy-start";
 
 /** (ax² + bx + c) ± (dx² + ex + f). */
 export interface PolynomialSum { kind: "polynomials.addSubtract"; a: number; b: number; c: number; d: number; e: number; f: number; sub: boolean }
@@ -37,15 +38,15 @@ const problem = (p: PolynomialSum, marks = false): MathText => {
 };
 
 export function polynomialSumAnswers(p: PolynomialSum): AnswerModel {
-  const k = p.sub ? -1 : 1, o = sign(p);
-  const W = (x: number, y: number): Slip[] => [[x - k * y, p.sub ? "Forgot to subtract" : "Subtracted instead of added", p.sub ? "Subtract every term of the second polynomial." : "This one is a plus."]];
+  const k = p.sub ? -1 : 1, o = sign(p), how = p.sub ? "Take the second away from the first." : "Add them.";
+  const W = (x: number, y: number): Slip[] => [[x - k * y, p.sub ? "Forgot to subtract" : "Subtracted instead of added", p.sub ? `The minus reaches every term in the second polynomial, including this one: ${f(x)} − ${fP(y)}.` : `Both polynomials are added, so add their numbers: ${f(x)} + ${fP(y)}.`]];
   const combine = (id: string, l: string, x: number, y: number, h: RichText) =>
     ns({ id, l, a: s => [num(x), op(o), ...P(y), op("="), ...s], ans: x + k * y, h, w: W(x, y) });
   return {
     steps: [
-      combine("x2", "x² terms", p.a, p.d, "Combine the x² numbers."),
-      combine("x1", "x terms", p.b, p.e, "Combine the x numbers."),
-      combine("x0", "Numbers", p.c, p.f, "Combine the plain numbers."),
+      combine("x2", "x² terms", p.a, p.d, `Find the x² term in each polynomial. ${how} Only x² goes with x².`),
+      combine("x1", "x terms", p.b, p.e, `Find the x term in each polynomial. ${how}`),
+      combine("x0", "Numbers", p.c, p.f, `Find the number on its own in each polynomial. ${how}`),
     ],
     finalParts: [-3, -2, -1],
   };
@@ -74,7 +75,7 @@ export function explainPolynomialSum(p: PolynomialSum, model: AnswerModel) {
   });
 }
 
-export const lesson: LessonDefinition<PolynomialSum> = {
+export const lesson: LessonDefinition<PolynomialSum> = withEasyStart({
   id: "g9-polyadd",
   grade: 9,
   unit: "Polynomials and quadratics",
@@ -85,4 +86,4 @@ export const lesson: LessonDefinition<PolynomialSum> = {
   display: p => problem(p),
   answers: polynomialSumAnswers,
   explain: explainPolynomialSum,
-};
+});

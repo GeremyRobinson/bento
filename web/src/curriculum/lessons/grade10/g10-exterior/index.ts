@@ -2,6 +2,7 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildTriangleAngles } from "../../../../explanations/diagrams/triangle-angles/build";
 import { asRecord, expected, mt, ns, numberField } from "../../_geometry/kit";
+import { withEasyStart } from "../../easy-start";
 
 /** Two inside angles a and b of a triangle; the outside angle at the third corner is wanted. */
 export interface ExteriorAngleProblem {
@@ -25,10 +26,10 @@ export function restoreExteriorAngle(raw: unknown): ExteriorAngleProblem | null 
 export function exteriorAngleAnswers({ a, b }: ExteriorAngleProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "inside", label: "Third inside angle", prompt: s => mt`180° − ${a}° − ${b}° = ${s}°`, ans: 180 - a - b, hint: "Inside angles add to 180°." }),
+      ns({ id: "inside", label: "Third inside angle", prompt: s => mt`180° − ${a}° − ${b}° = ${s}°`, ans: 180 - a - b, hint: "The three inside angles share 180°, so the third is what's left after the two you know.", wrong: [[180 - a, "Took away only one", `Take both known angles off 180°: ${a}° and ${b}°.`]] }),
       ns({ id: "outside", label: "Outside angle", prompt: s => mt`180° − ${180 - a - b}° = ${s}°`, ans: a + b, hint: "The outside angle and the inside one make a straight line.",
         wrong: [[180 - a - b, "Gave the inside angle", "The outside angle is the other part of the straight line."], [180 - a, "Used a far angle", `Use the inside angle next to it: ${180 - a - b}°.`]] }),
-      ns({ id: "check", label: "Check with the far angles", prompt: s => mt`${a}° + ${b}° = ${s}°`, ans: a + b, hint: "The outside angle equals the two far inside angles." }),
+      ns({ id: "check", label: "Check with the far angles", prompt: s => mt`${a}° + ${b}° = ${s}°`, ans: a + b, hint: "The outside angle equals the two far inside angles.", wrong: [[Math.abs(a - b), "Subtracted", "The two far angles together make the outside angle: add them."]] }),
     ],
     finalParts: [-1],
   };
@@ -62,7 +63,7 @@ export function explainExteriorAngle(p: ExteriorAngleProblem, answers: AnswerMod
   };
 }
 
-export const lesson: LessonDefinition<ExteriorAngleProblem> = {
+export const lesson: LessonDefinition<ExteriorAngleProblem> = withEasyStart({
   id: "g10-exterior",
   grade: 10,
   unit: "Angles and triangles",
@@ -74,4 +75,4 @@ export const lesson: LessonDefinition<ExteriorAngleProblem> = {
   displayNote: () => "Two inside angles of a triangle. Find the outside angle at the third corner.",
   answers: exteriorAngleAnswers,
   explain: explainExteriorAngle,
-};
+});

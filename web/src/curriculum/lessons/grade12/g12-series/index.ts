@@ -6,6 +6,7 @@ import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
 import { buildPairs } from "../../../../explanations/diagrams/algebra/pairs";
 import { count, noun } from "../../../text";
+import { withEasyStart } from "../../easy-start";
 
 /** The first n terms of a, a + d, a + 2d, … added up. */
 export interface ArithmeticSeries { kind: "series.arithmetic"; a: number; d: number; n: number; last: number; sum: number }
@@ -29,9 +30,9 @@ const firstTerms = ({ a, d }: ArithmeticSeries): MathText => [0, 1, 2].flatMap((
 export function seriesAnswers({ a, d, n, last }: ArithmeticSeries): AnswerModel {
   return {
     steps: [
-      ns({ id: "last", l: "Last term", a: s => [num(a), op("+"), num(n - 1), op("×"), num(d), op("="), ...s], ans: last, h: `Term ${f(n)} is ${f(n - 1)} ${noun(n - 1, "jump")} from the first.`,
+      ns({ id: "last", l: "Last term", a: s => [num(a), op("+"), num(n - 1), op("×"), num(d), op("="), ...s], ans: last, h: "You start on the first term, so the last term is one jump fewer than the number of terms away.",
         w: [[a + n * d, "Off by one", `It's ${f(n)} minus 1, which is ${count(n - 1, "jump")}.`]] }),
-      ns({ id: "pair", l: "First plus last", a: s => [num(a), op("+"), num(last), op("="), ...s], ans: a + last, h: "Pair the first and last terms." }),
+      ns({ id: "pair", l: "First plus last", a: s => [num(a), op("+"), num(last), op("="), ...s], ans: a + last, h: "Pair the first and last terms: every pair adds to this same total.", w: [[last - a, "Subtracted", "A pair is the two terms added together."]] }),
       ns({ id: "sum", l: "Sum", a: s => [num(a + last), op("×"), num(n), op("÷"), num(2), op("="), ...s], ans: ((a + last) * n) / 2, h: `There are ${f(n)} ÷ 2 pairs, each worth ${f(a + last)}.`,
         w: [[(a + last) * n, "Forgot to halve", "Each pair uses two terms, so divide by 2."]] }),
     ],
@@ -62,7 +63,7 @@ export function explainSeries(p: ArithmeticSeries, model: AnswerModel) {
   });
 }
 
-export const lesson: LessonDefinition<ArithmeticSeries> = {
+export const lesson: LessonDefinition<ArithmeticSeries> = withEasyStart({
   id: "g12-series",
   grade: 12,
   unit: "Vectors and series",
@@ -74,4 +75,4 @@ export const lesson: LessonDefinition<ArithmeticSeries> = {
   displayNote: p => `Add the first ${f(p.n)} terms.`,
   answers: seriesAnswers,
   explain: explainSeries,
-};
+});

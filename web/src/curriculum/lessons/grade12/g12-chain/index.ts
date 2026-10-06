@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { fpm, ns, pm, supText, v } from "../../algebra-kit/steps";
 import { attempt, nz, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { withEasyStart } from "../../easy-start";
 
 /** f(x) = (ax + b)ⁿ, so f′(x) = n·a·(ax + b)ⁿ⁻¹. */
 export interface ChainRule { kind: "derivatives.chain"; a: number; b: number; n: number }
@@ -28,10 +29,10 @@ const innerText = (a: number, b: number) => `${f(a)}x ${fpm(b)}`;
 export function chainRuleAnswers({ a, b, n }: ChainRule): AnswerModel {
   return {
     steps: [
-      ns({ id: "outside", l: "Outside: power rule", a: s => [num(n), ...wrapped(a, b, s)], ans: n - 1, h: "Lower the exponent by 1." }),
-      ns({ id: "inside", l: "Inside's derivative", a: s => [text("d/dx"), text("("), ...inner(a, b), text(")"), op("="), ...s], ans: a, h: "The derivative of ax + b is a." }),
-      ns({ id: "front", l: "Multiply in front", a: s => [text("f′(x)"), op("="), ...s, ...wrapped(a, b, n - 1)], ans: n * a, h: `${f(n)} × ${f(a)}.`,
-        w: [[n, "Forgot the inside", "The chain rule multiplies by the inside's derivative too."]] }),
+      ns({ id: "outside", l: "Outside: power rule", a: s => [num(n), ...wrapped(a, b, s)], ans: n - 1, h: `Treat (${innerText(a, b)}) as one block, u. The power rule on uⁿ lowers the exponent by 1.`, w: [[n, "Kept the exponent", `Lower the exponent by 1: ${f(n)} − 1.`]] }),
+      ns({ id: "inside", l: "Inside's derivative", a: s => [text("d/dx"), text("("), ...inner(a, b), text(")"), op("="), ...s], ans: a, h: "ax + b is a line, and its slope is a.", w: [[b, "Took the number", `The derivative of the number ${f(b)} is 0. The derivative of ${f(a)}x is ${f(a)}.`]] }),
+      ns({ id: "front", l: "Multiply in front", a: s => [text("f′(x)"), op("="), ...s, ...wrapped(a, b, n - 1)], ans: n * a, h: `Multiply the ${f(n)} that came down by the inside's slope, ${f(a)}.`,
+        w: [[n, "Forgot the inside", "The chain rule multiplies by the inside's derivative too."], [a, "Dropped the power's number", `Keep the ${f(n)} that the power rule brought down too: ${f(n)} × ${f(a)}.`]] }),
     ],
     finalParts: [-1],
   };
@@ -56,7 +57,7 @@ export function explainChainRule(p: ChainRule, model: AnswerModel) {
   });
 }
 
-export const lesson: LessonDefinition<ChainRule> = {
+export const lesson: LessonDefinition<ChainRule> = withEasyStart({
   id: "g12-chain",
   grade: 12,
   unit: "Derivatives",
@@ -68,4 +69,4 @@ export const lesson: LessonDefinition<ChainRule> = {
   displayNote: () => "Find f′(x).",
   answers: chainRuleAnswers,
   explain: explainChainRule,
-};
+});

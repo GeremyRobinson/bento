@@ -5,6 +5,7 @@ import { ns, v } from "../../algebra-kit/steps";
 import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
 import { block, buildBalance, xTiles, type BalanceFrame } from "../../../../explanations/diagrams/algebra/balance";
+import { withEasyStart } from "../../easy-start";
 
 /** ax + b = cx + d with a > c, so x = (d − b) ÷ (a − c). */
 export interface BothSidesEquation { kind: "equation.bothSides"; a: number; b: number; c: number; d: number; x: number }
@@ -34,10 +35,11 @@ export function bothSidesAnswers({ a, b, c, d, x }: BothSidesEquation): AnswerMo
   return {
     steps: [
       ns({ id: "gather", l: "Get x on one side", n: `Subtract ${cxText(c)} from both sides.`, a: s => [...s, v(), op("+"), num(b), op("="), num(d)], ans: a - c,
-        h: `${f(a)} − ${f(c)}.`, w: [[a + c, "Added instead of subtracted", `Subtract ${cxText(c)} from both sides.`]] }),
+        h: `Taking ${cxText(c)} off both sides leaves ${f(a)} − ${f(c)} x's on the left.`, w: [[a + c, "Added instead of subtracted", `Subtract ${cxText(c)} from both sides.`]] }),
       ns({ id: "move", l: "Move the number", a: s => [num(a - c), v(), op("="), ...s], ans: d - b, h: `Subtract ${f(b)} from both sides.`,
         w: [[d + b, "Added instead of subtracted", `To undo + ${f(b)}, subtract ${f(b)}.`]] }),
-      ns({ id: "divide", l: "Divide", a: s => [v(), op("="), ...s], ans: x, h: `${f(d - b)} ÷ ${f(a - c)}.` }),
+      ns({ id: "divide", l: "Divide", a: s => [v(), op("="), ...s], ans: x, h: a - c === 1 ? "Only one x is left, so x is the number on the other side." : `${cxText(a - c)} means ${f(a - c)} groups of x. Split both sides into ${f(a - c)} equal groups: ${f(d - b)} ÷ ${f(a - c)}.`,
+        w: [[(d - b) * (a - c), "Multiplied instead of divided", `${cxText(a - c)} is ${f(a - c)} times x, so divide by ${f(a - c)} to undo it.`]] }),
     ],
     finalParts: [-1],
   };
@@ -72,7 +74,7 @@ export function explainBothSides(p: BothSidesEquation, model: AnswerModel) {
   });
 }
 
-export const lesson: LessonDefinition<BothSidesEquation> = {
+export const lesson: LessonDefinition<BothSidesEquation> = withEasyStart({
   id: "g8-both",
   grade: 8,
   unit: "Linear equations",
@@ -84,4 +86,4 @@ export const lesson: LessonDefinition<BothSidesEquation> = {
   display: equation,
   answers: bothSidesAnswers,
   explain: explainBothSides,
-};
+});

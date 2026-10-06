@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { fP, ms, ns, P, poly, v, xp } from "../../algebra-kit/steps";
 import { attempt, nz, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { withEasyStart } from "../../easy-start";
 
 /**
  * (x − r)(x − s) + e = x² + bx + c divided by (x − r): the quotient is x − s and the remainder is e.
@@ -86,7 +87,7 @@ export function explainSynthetic(p: SyntheticDivision, model: AnswerModel) {
   });
 }
 
-export const lesson: LessonDefinition<SyntheticDivision> = {
+export const lesson: LessonDefinition<SyntheticDivision> = withEasyStart({
   id: "g11-synth",
   grade: 11,
   unit: "Polynomials",
@@ -98,4 +99,4 @@ export const lesson: LessonDefinition<SyntheticDivision> = {
   displayNote: p => `Use ${f(p.r)} in the box. Bring down the 1.`,
   answers: syntheticAnswers,
   explain: explainSynthetic,
-};
+});

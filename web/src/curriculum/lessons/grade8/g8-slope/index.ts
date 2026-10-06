@@ -4,8 +4,9 @@ import { ptM } from "../../_plane/kit";
 import { slopeAnswers } from "./answers";
 import { explainSlope } from "./explanation";
 import { createSlope, generateSlope, restoreSlope, type SlopeProblem } from "./problem";
+import { withEasyStart } from "../../easy-start";
 
-export const lesson: LessonDefinition<SlopeProblem> = {
+export const lesson: LessonDefinition<SlopeProblem> = withEasyStart({
   id: "g8-slope",
   grade: 8,
   unit: "Functions and slope",
@@ -17,4 +18,4 @@ export const lesson: LessonDefinition<SlopeProblem> = {
   displayNote: () => "Find the slope.",
   answers: slopeAnswers,
   explain: explainSlope,
-};
+});

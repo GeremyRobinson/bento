@@ -2,8 +2,9 @@ import type { LessonDefinition } from "../../../schemas/lesson";
 import { solveFactorAnswers } from "./answers";
 import { explainSolveFactor, solveFactorMath } from "./explanation";
 import { createSolveFactor, generateSolveFactor, restoreSolveFactor, type SolveFactorProblem } from "./problem";
+import { withEasyStart } from "../../easy-start";
 
-export const lesson: LessonDefinition<SolveFactorProblem> = {
+export const lesson: LessonDefinition<SolveFactorProblem> = withEasyStart({
   id: "g9-solvefactor",
   grade: 9,
   unit: "Polynomials and quadratics",
@@ -14,4 +15,4 @@ export const lesson: LessonDefinition<SolveFactorProblem> = {
   display: solveFactorMath,
   answers: solveFactorAnswers,
   explain: explainSolveFactor,
-};
+});
