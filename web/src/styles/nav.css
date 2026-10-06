@@ -39,7 +39,7 @@ html[data-motion="reduce"] .pring-fill{transition:none}
 @media (min-width:700px){.island:not(.guest){width:min(460px,100%)}}
 /* TEXT LOGO 1, "Bento, tightened" (G picked it 2026-10-06): Inter 650, drawn tight at -.05em */
 :root{--mark-track:-.05em}
-.bmark{font:var(--w-bold) var(--fz-lg)/1 var(--sans);letter-spacing:var(--mark-track);font-feature-settings:"cv05","cv08","cv11";color:var(--text);transition:color var(--m-page) var(--m-ease)}
+.bmark{font:var(--w-bold) var(--fz-lg)/1 var(--sans);letter-spacing:var(--mark-track);color:var(--text);transition:color var(--m-page) var(--m-ease)}
 .bmark sup{font-size:.42em;vertical-align:.95em;margin-left:.04em;letter-spacing:0;line-height:0}
 .zbar-top .zmark{grid-column:1;justify-self:start}
 /* inside Contents the mark lines up with the Contents window, not the page bar; it fades out with the bar and reveals
@@ -348,7 +348,7 @@ html:has(.screen),html:has(.screen) body{overflow:hidden;overscroll-behavior:non
 /* THE CONFIRM MASTER: a small bento box in the middle of the screen. The question spans the top; the two answers sit
    side by side under it as tiles, the safe one filled in the grade's colour, the other outlined. Corners nest from the
    panel with an 8px gap; no shadow, it comes forward from the centre (G 2026-10-06) */
-.confirm{position:fixed;z-index:var(--z-stack);left:50%;top:50%;translate:-50% -50%;width:min(400px,calc(100vw - 32px));
+.confirm{position:fixed;z-index:var(--z-stack);left:50%;top:50%;translate:-50% -50%;width:min(400px,calc((100vw - 32px) / var(--text-zoom,1)));
   display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2);padding:var(--sp-2);border-radius:var(--r-panel);background:var(--card);
   outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1);animation:confirmIn var(--m-in) var(--m-ease) both}
 @keyframes confirmIn{from{opacity:0;scale:.97}}

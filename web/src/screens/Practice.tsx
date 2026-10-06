@@ -62,7 +62,8 @@ export function Practice() {
     if (!s) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey || asking) return;
-      if (e.key === "Escape") { setHintOpen(false); setStepsOpen(false); return; }
+      // an open hint or steps stack takes Escape for itself, so the page underneath doesn't also step back (Review)
+      if (e.key === "Escape") { if (document.querySelector("#app .fstack[role=dialog]")) e.preventDefault(); setHintOpen(false); setStepsOpen(false); return; }
       // tap-to-answer steps and planning: 1–4 pick a choice
       const st = currentStep(s);
       if (s.pick || st?.choices) {

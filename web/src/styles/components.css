@@ -390,8 +390,8 @@ button.gcell:active{transform:scale(.96)}
 .seg button.on{background:var(--card);color:var(--text);box-shadow:none}
 
 /* ---- accessibility settings, set on <html> ---- */
-:root[data-text="large"] .wrap{zoom:1.15}
-:root[data-text="largest"] .wrap{zoom:1.3}
+:root[data-text="large"] .wrap{zoom:1.15;--text-zoom:1.15}
+:root[data-text="largest"] .wrap{zoom:1.3;--text-zoom:1.3}
 
 /* more contrast: every surface gets the Panel master's line, a little heavier */
 :root[data-contrast="true"]{--panel-w:1.5px}

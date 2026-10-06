@@ -139,7 +139,11 @@ export function AppProvider(props: {
       if (location.hash === h && (history.state as { overlay?: boolean } | null)?.overlay) history.back();
       else if (location.hash !== h) {
         const entry = { prev: location.hash };
-        if ((history.state as { overlay?: boolean } | null)?.overlay) history.replaceState({ prev: (history.state as { prev?: string }).prev ?? null }, "", h);
+        // Settings and My Bento sit side by side over the page you were on: moving between them replaces the step and
+        // keeps that page as the one to return to (Review: Practice → gear → My Bento → My Bento landed on Contents)
+        const side = (x: string) => x === "#/settings" || x === "#/me";
+        if ((history.state as { overlay?: boolean } | null)?.overlay || (side(location.hash) && side(h)))
+          history.replaceState({ prev: (history.state as { prev?: string } | null)?.prev ?? null }, "", h);
         else history.pushState(entry, "", h);
       }
     } catch { /* ignore */ }

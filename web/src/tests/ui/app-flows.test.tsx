@@ -382,7 +382,13 @@ describe("Settings", () => {
     fireEvent.click(me());
     expect(me()).toHaveAttribute("aria-current", "page");
     fireEvent.click(me());
+    // Settings and My Bento sit side by side: from one to the other and closed, you're back on the book, not Contents
+    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+    fireEvent.click(me());
+    fireEvent.click(me());
     expect(me()).not.toHaveAttribute("aria-current");
+    expect(screen.getByRole("button", { name: "Settings" })).not.toHaveAttribute("aria-current");
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 });
 

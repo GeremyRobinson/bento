@@ -147,8 +147,6 @@ html:has(.screen) body{overflow:hidden}
 .lmath .askline{font-size:max(16px,.42em)}
 .lmath .mline .br{height:0;margin:-.05em 0}
 .lpic{position:relative;min-height:0}
-/* the panel hugs a picture limited by its width, and sits in the middle of the room it had (snug.ts) */
-.lshero.snug{height:var(--snug-h);align-self:center}
 .lpic>.viz{position:absolute;inset:0;display:grid;min-height:0;margin:0}
 .lpic>.viz>svg,.lpic>.viz>.viz-svg,.lpic>.viz>.am{width:100%!important;height:100%!important;max-height:none;margin:0;min-height:0}
 .lpic .viz-cap,.lpic .replay{display:none}

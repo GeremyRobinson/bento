@@ -1,5 +1,5 @@
 import { Pill } from "../components/primitives/Pill";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useApp } from "../app/AppState";
 import { gradeOf } from "../curriculum/grades";
 import { requireLesson } from "../curriculum/registry";
@@ -13,7 +13,6 @@ import type { Rng } from "../curriculum/generators/rng";
 import type { AnyLesson } from "../curriculum/schemas/lesson";
 import { Chevron } from "../components/primitives/icons";
 import { FitScreen } from "../components/screen/Screen";
-import { useSnugHero } from "../components/screen/snug";
 import { MathLine, Rich } from "../components/primitives/MathLine";
 import { AskLine } from "../components/primitives/AskLine";
 import { dressStatement, partsLook, toneMath, tonesOf } from "../components/primitives/statement";
@@ -70,8 +69,6 @@ export function Learn({ lessonId }: { lessonId: string }) {
   // the statement with its parts in their picture colours and the unknown boxed; the steps colour the same numbers
   const look = partsLook(ex.diagram);
   const statement = useMemo(() => dressStatement(ex.statement, look), [ex, look]);
-  const hero = useRef<HTMLElement>(null);
-  useSnugHero(hero, ex);
   const tones = useMemo(() => tonesOf(statement), [statement]);
   // read aloud: the problem first, then each step as it plays
   const readAloud = readAloudOn(readSettings(progress.settings), lesson.grade);
@@ -143,7 +140,7 @@ export function Learn({ lessonId }: { lessonId: string }) {
         {rep && <button className="tlink" onClick={() => go({ name: "report", key: rep.key })}>Last time: {LEVELS[rep.level]}, {when(rep.date)} ›</button>}
       </section>
       {/* the hero: the problem and its picture, as big as the screen allows */}
-      <figure className="lshero" ref={hero}>
+      <figure className="lshero">
         <div className="lmath"><AskLine math={ex.statement} /><MathLine math={statement} keep /></div>
         {ex.diagram && (
           <div className={ex.diagram.kind === "chain" ? "lpic flow" : "lpic"}>

@@ -11,7 +11,7 @@ export function Confirm({ title, body, confirm, cancel = "Keep going", onConfirm
   title: string; body?: string; confirm: string; cancel?: string; onConfirm: () => void; onCancel: () => void;
 }) {
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.preventDefault(); onCancel(); } };
     addEventListener("keydown", onKey);
     return () => removeEventListener("keydown", onKey);
   }, [onCancel]);
@@ -20,7 +20,7 @@ export function Confirm({ title, body, confirm, cancel = "Keep going", onConfirm
   const box = (
     <>
       <div className="fdim" onClick={onCancel} />
-      <div className="confirm" role="alertdialog" aria-label={title} aria-describedby={body ? "confirm-body" : undefined}>
+      <div className="confirm" role="alertdialog" aria-modal="true" aria-label={title} aria-describedby={body ? "confirm-body" : undefined}>
         <div className="cq"><b>{title}</b>{body && <span id="confirm-body">{body}</span>}</div>
         <button className="ca keep" autoFocus onClick={onCancel}>{cancel}</button>
         <button className="ca" onClick={onConfirm}>{confirm}</button>
