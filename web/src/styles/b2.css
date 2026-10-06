@@ -257,7 +257,7 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
   .b2lesson .b2scene{gap:var(--sp-2)}
   .b2lesson .b2stage .b2ctl>.ctl{--pill-h:36px;--pill-pad:var(--sp-3);font-size:var(--fz-sm)}
   .st-play .b2stage .b2read{gap:2px var(--sp-3)}
-  .b2lesson .b2stage .b2r.minor{display:none}
+  .b2lesson:not(.projopen) .b2stage .b2r.minor{display:none}
   .st-play .b2body .b2small{display:none}
   /* a project's Use it: the card first, with a button that opens the project full screen */
   .screen.fit.b2lesson.st-use.proj{grid-template-rows:minmax(0,1fr);grid-template-areas:"card"}
