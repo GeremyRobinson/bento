@@ -17,10 +17,10 @@
    The old screen fades out quickly, never slides; the new one is drawn at once and its pieces arrive one at a time
    (rise, fade, blur to sharp), so there is never a blank frame or a jump. Less motion turns all of it off. ---- */
 :root{--m-in:.34s;--m-fade:.26s;--m-out:.14s;--m-step:42ms;--m-ease:cubic-bezier(.3,.8,.2,1)}
-::view-transition-old(root){animation:var(--m-out) var(--m-ease) both vtOut}
+::view-transition-old(root){animation:var(--m-fade) var(--m-ease) both vtOut}
 ::view-transition-new(root){animation:none}
 @keyframes vtOut{to{opacity:0}}
-@keyframes rvIn{from{opacity:0;transform:translateY(10px) scale(.985);filter:blur(6px)}}
+@keyframes rvIn{from{opacity:.2;transform:translateY(10px) scale(.985);filter:blur(6px)}}
 :is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>*,.wrap>.bar{animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(var(--i,0) * var(--m-step))}
 :is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(2){--i:1}
 :is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(3){--i:2}
@@ -28,6 +28,15 @@
 :is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(5){--i:4}
 :is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(n+6){--i:5}
 .panel.split>.col:last-child>*{--i:2}
+/* every other screen (landing, Me, the grown-up page, results, facts, reports): its own top-level pieces stagger the
+   same way; screens built of one container stagger that container's children instead */
+#app>:not(.itop):not(.sheet):not(.zoom):not(.screen):not(.land):not(.bgrown):not(.bar):not(.panel.split){animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(var(--i,0) * var(--m-step))}
+:where(.land,.bgrown,.placed)>*{animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(min(var(--k,0),6) * var(--m-step))}
+#app>:nth-child(3){--i:1} #app>:nth-child(4){--i:2} #app>:nth-child(5){--i:3} #app>:nth-child(n+6){--i:4}
+:is(.land,.bgrown,.placed)>:nth-child(2){--k:1} :is(.land,.bgrown,.placed)>:nth-child(3){--k:2} :is(.land,.bgrown,.placed)>:nth-child(4){--k:3} :is(.land,.bgrown,.placed)>:nth-child(n+5){--k:4}
+/* sheets and the contents rise in on the same curve and fade with the same dim */
+#app .sheet{animation:fadeIn var(--m-fade) var(--m-ease) both}
+#app .sheet .panel{animation:rvIn var(--m-in) var(--m-ease) both}
 /* picking a row swaps only the detail: its pieces never start from nothing, so the frame after a tap is never blank */
 @keyframes rvSoft{from{opacity:.3;transform:translateY(6px) scale(.992);filter:blur(4px)}}
 .wrap :is(.sdetail>.sbento,.sdl)>*{animation-name:rvSoft}
