@@ -55,6 +55,9 @@
   .island{width:100%}
   .icorner.right .icon:first-child{display:none}
   .iresume{padding:0;width:52px;justify-content:center}.iresume .rtext,.iresume .rcount{display:none}
+  /* one grade circle on a phone: the island's own; an unfinished lesson waits on Today instead (G 2026-10-06) */
+  .itop:has(>.icorner.left){grid-template-columns:minmax(0,1fr) auto;gap:8px}
+  .itop>.icorner.left{display:none}
 }
 
 /* ---- floating stacks: a column of separate pills (settings, feedback), arriving one at a time top to bottom
@@ -243,3 +246,9 @@ button.book:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--rule),0 
 @media (max-width:699px){.units>.panel>.cpic{--cpic:168px}}
 /* phone Today plan: a long lesson name wraps to a second line instead of cutting off */
 @media (max-width:699px){.ptext b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.25}.pitem{border-radius:22px}}
+
+/* on a screen that never scrolls, the island is pinned to the same frame as the screen under it, so the two can
+   never drift apart (G 2026-10-06: on a phone the bar sat low, over the list's heading) */
+html:has(.screen),html:has(.screen) body{overflow:hidden;overscroll-behavior:none;height:100%}
+html:has(.screen) .itop{position:fixed;top:max(12px,env(safe-area-inset-top));
+  left:max(16px,calc((100vw - var(--sb-right,0px) - var(--screen-max,1180px)) / 2));right:calc(max(16px,calc((100vw - var(--sb-right,0px) - var(--screen-max,1180px)) / 2)) + var(--sb-right,0px))}
