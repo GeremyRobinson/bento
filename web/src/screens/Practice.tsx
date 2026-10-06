@@ -1,10 +1,13 @@
 import { Pill, PillLabel } from "../components/primitives/Pill";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { playTone, readAloudOn, readSettings, speak } from "../app/settings";
 import { useApp } from "../app/AppState";
 import { withTransition } from "../app/transition";
 import { MathLine, Rich } from "../components/primitives/MathLine";
 import { ProblemView } from "../components/practice/ProblemView";
+import { Diagram } from "../components/diagrams/Diagram";
+import { requireLesson } from "../curriculum/registry";
+import type { Explanation } from "../explanations/schema";
 import { FeedbackBox } from "../components/practice/FeedbackBox";
 import { Keypad } from "../components/practice/Keypad";
 import {
@@ -68,6 +71,15 @@ export function Practice() {
     return () => removeEventListener("keydown", onKey);
   });
 
+  // the problem's own picture, as the lesson drew it: it starts on the set-up and grows one step behind the learner,
+  // so it helps without giving the answer away (Review v39 item 15). Tests go without, so they stay fair.
+  const ex = useMemo<Explanation | null>(() => {
+    if (!s || s.mode === "test") return null;
+    const item = currentItem(s), l = requireLesson(item.lessonId), p = problemOf(item);
+    if (l.picture?.(p)) return null; // the problem already shows its own picture
+    try { const e = l.explain(p, l.answers(p)); return e.diagram && e.diagram.kind !== "chain" ? e : null; } catch { return null; }
+  }, [s?.i, s?.mode, s?.t0]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!s) {
     return (
       <section className="panel"><p className="empty">No lesson in progress.</p>
@@ -123,6 +135,12 @@ export function Practice() {
                 </>
               )}
             </div>
+          )}
+          {ex && (
+            <figure className="card ppic" aria-label="Picture of this problem">
+              <div className="viz"><Diagram key={s.i} diagram={ex.diagram!} timeline={ex.timeline}
+                at={s.solved ? ex.timeline.length - 1 : Math.min(ex.timeline.length - 1, s.step > 0 ? ex.steps[s.step - 1]?.state ?? 0 : 0)} /></div>
+            </figure>
           )}
         </div>
         <div className="col">

@@ -177,6 +177,10 @@ html:has(.screen) body{overflow:hidden}
 .wrap:has(>.panel.split)>.bar .steps .dot.ok{background:color-mix(in oklab,var(--tint) 45%,var(--float))}
 .wrap:has(>.panel.split)>.bar>.ctl{--pill-h:52px;background:var(--float);box-shadow:var(--float-shadow)}
 .panel.split{background:none;padding:0}
+/* practice's picture: the problem drawn the way the lesson drew it, filling the room under the step */
+.panel.split .ppic{margin:0;display:grid;place-items:center;min-height:220px;background:var(--well);box-shadow:none}
+.ppic>.viz{width:100%;margin:0}.ppic>.viz>svg{width:100%;max-height:min(46vh,420px)}
+.ppic .viz-cap,.ppic .replay{display:none}
 .panel.split .card{background:var(--float);box-shadow:var(--float-shadow);border-radius:var(--r-panel);padding:20px 24px}
 .panel.split .tray button{background:var(--float);box-shadow:var(--float-shadow)}
 .panel.split .tray button:hover{background:color-mix(in oklab,var(--float) 90%,var(--tint))}

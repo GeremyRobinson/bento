@@ -144,6 +144,9 @@ export function buildAreaGrid(spec: AreaGridSpec): SceneDiagram & { geometry: Ar
   spec.cells.forEach((row, j) => row.forEach((c, i) => {
     if (!c) return;
     const w = xs[i + 1]! - xs[i]!, h = ys[j + 1]! - ys[j]!;
+    // until its turn, each part waits as a faint empty box, so the picture opens on the whole rectangle to fill
+    // rather than on labels floating over nothing (Review v39 item 1)
+    if ((c.from ?? 0) > 0) items.push({ type: "rect", x: r1(xs[i]! + 2), y: r1(ys[j]! + 2), w: r1(w - 4), h: r1(h - 4), rx: r1(Math.min(8, w / 4, h / 4)), cls: "pend", from: 0, until: c.from! - 1, enter: "fade" });
     items.push({ type: "rect", x: r1(xs[i]! + 2), y: r1(ys[j]! + 2), w: r1(w - 4), h: r1(h - 4), rx: r1(Math.min(8, w / 4, h / 4)), cls: `cell c${c.color ?? (i + j) % 3}`, from: c.from ?? 0, enter: "pop", delay: 0.1 });
   }));
 
