@@ -436,11 +436,10 @@ export const cs15: B2Lesson<P15> = {
     reveal: "It runs twice: once for each 1 in 101. The rounds with a 0 bit just shift." },
   nameIt: {
     say: [
-      "Hardware only adds and shifts; everything else is an **algorithm** on top. Binary long multiplication is **shift-and-add**: each 1 bit of the multiplier adds one shifted copy.",
-      "A 4-bit adder can't hold shifted copies as big as 52, so the chip shifts the running total right instead: each round it adds M into the top half A, then slides [carry | A | Q] right. After 4 rounds [A | Q] holds the 8-bit product.",
-      "Schoolbook multiplication of two n-digit numbers takes n² digit products; cleverer recursion takes fewer.",
+      "Hardware only adds and shifts; the rest is an **algorithm**. **Shift-and-add**: each 1 bit of the multiplier adds one copy of M.",
+      "Schoolbook multiplying of two n-digit numbers takes n² digit products; cleverer recursion takes fewer.",
     ],
-    formula: ["a × b = Σ (a shifted left by i) over each bit i of b that is 1", "adds = number of 1s in b", "each round: if Q₀ = 1, A ← A + M; then shift [C | A | Q] right", "schoolbook = n² · Karatsuba (n = 2ᵏ) = 3ᵏ"],
+    formula: ["adds = number of 1s in b", "round: if Q₀ = 1, A ← A + M; shift [C | A | Q] right", "schoolbook n² · Karatsuba (n = 2ᵏ) 3ᵏ"],
   },
   workIt: {
     reference: { a: 13, b: 6, n: 1024 },
@@ -505,6 +504,7 @@ export const cs15: B2Lesson<P15> = {
     project: "cs-room",
   },
   deeper: [
+    "In symbols, a × b = Σ (a shifted left by i) over each bit i of b that is 1. A 4-bit adder can't hold shifted copies as big as 52, so the chip shifts the running total right instead: after 4 rounds [A | Q] holds the 8-bit product.",
     "Karatsuba's trick (three multiplies instead of four) gives n^(log₂ 3) ≈ n^1.585; Toom–Cook and FFT methods do better, and Harvey and van der Hoeven's 2019 algorithm runs in O(n log n).",
     "Multiplying is easy, but undoing it (factoring) isn't known to be: the best known classical methods are super-polynomial, while Shor's quantum algorithm factors in polynomial time (`qu`).",
   ],

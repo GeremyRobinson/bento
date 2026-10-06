@@ -101,7 +101,7 @@ export function CltScene({ props, marker, place }: SceneProps) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         <Slider label="Sample size n" value={n} min={1} max={50} step={1} onChange={setN} />
         <Toggle label="Shape" value={(Object.keys(SHAPES).find(s => JSON.stringify(SHAPES[s]) === JSON.stringify(w)) ?? "own") as string}

@@ -56,7 +56,7 @@ export function SpinScene({ props }: SceneProps) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<Slider label="Link: Y leans with X" value={rho} min={-0.9} max={0.9} step={0.05} onChange={setRho} format={x => (Math.abs(x) < 0.025 ? "none" : x < 0 ? `against, ${fx(x)}` : `with, ${fx(x)}`)} marks={[{ v: -0.7, label: "against" }, { v: 0, label: "none" }, { v: 0.7, label: "with" }]} />}
       readouts={<>
         <Read label="Var X, Var Y" value="1, 1" />

@@ -10,14 +10,14 @@ import type { Mat } from "../../../tools/matrix";
 import { ink, MatRead, tint, tintEdge, type Tone } from "./plane";
 
 type Mode = "box" | "cube" | "collapse" | "planes";
-const W = 360, H = 290;
+const W = 360, H = 260;
 
 /** the camera: turn by yaw about the up axis, then tilt by pitch */
 function camera(yaw: number, pitch: number, scale: number) {
   const c = Math.cos(yaw), s = Math.sin(yaw);
   const P = (v: Vec): [number, number] => {
     const X = v[0]! * c - v[1]! * s, Y = v[0]! * s + v[1]! * c;
-    return [W / 2 + X * scale, H / 2 + Y * scale * Math.sin(pitch) - v[2]! * scale * Math.cos(pitch)];
+    return [W / 2 + X * scale, H / 2 + 22 + Y * scale * Math.sin(pitch) - v[2]! * scale * Math.cos(pitch)];
   };
   /** the direction the eye looks along (it projects to a single point) */
   const look: Vec = [s * Math.cos(pitch), c * Math.cos(pitch), Math.sin(pitch)];
@@ -146,7 +146,7 @@ export function Space3DScene({ props }: SceneProps) {
     </>;
     controls = <Slider label="Third column's height off the plane of the first two" value={e} min={-3} max={3} step={0.1} onChange={setE} format={x => fx(x, 1)} />;
     readouts = <>
-      <MatRead label="A" M={M3.map(rw => rw.map(x => Math.round(x * 10) / 10))} />
+      <MatRead label="A" M={M3.map(rw => rw.map(x => Math.round(x * 10) / 10))} minor={quiet} />
       {!quiet && <Read label="The image of all of space" value={["a point", "a line", "a plane", "all of space"][r]!} tone={r < 3 ? "pink" : "sky"} />}
       {!quiet && <Read label="rank, nullity" value={`${r}, ${3 - r}`} />}
     </>;
@@ -170,7 +170,7 @@ export function Space3DScene({ props }: SceneProps) {
       <button type="button" className="ctl go" disabled={show >= states.length - 1} onClick={() => setStepAt(s => Math.min(states.length - 1, s + 1))}>Next row operation ›</button>
     </> : undefined;
     readouts = <>
-      <span className="b2r eqs" aria-label="The equations">
+      <span className={`b2r eqs${quiet ? " minor" : ""}`} aria-label="The equations">
         <small>{cur!.say}</small>
         {cur!.A.map((row, i) => <b key={i} className={`tone-${tones[i]}`}>{eq(row, cur!.b[i]!)}</b>)}
       </span>

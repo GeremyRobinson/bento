@@ -50,7 +50,7 @@ function NumberGame({ props, marker, pick }: SceneProps & { pick: ReactNode }) {
   const [t, setT] = useState(() => (worst ? worstOf(Math.round(num(props, "N", 64))) : Math.max(1, Math.round(num(props, "N", 64) * 0.37))));
   const target = Math.min(t, N);
   const qs = questions(N, target);
-  const clock = useClock(!quiet, 99);
+  const clock = Math.max(0, useClock(!quiet, 99));
   const shown = quiet ? 0 : Math.min(qs.length, Math.floor(clock / 0.7));
   const { ref, drag } = useSvgDrag();
   const x0 = 14, x1 = W - 14, xOf = (k: number) => x0 + ((k - 1) / N) * (x1 - x0), wOf = (a: number, b: number) => ((b - a + 1) / N) * (x1 - x0);

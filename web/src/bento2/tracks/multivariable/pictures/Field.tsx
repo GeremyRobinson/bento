@@ -4,10 +4,10 @@
 import type { ReactElement } from "react";
 import { useMemo, useRef, useState } from "react";
 import { flag, num, str, type SceneProps } from "../../../scenes";
-import { fx, path, Read, Scene, Slider, useClock, useSvgDrag } from "../../../ui/kit";
+import { fx, path, Read, Scene, Slider, useSvgDrag } from "../../../ui/kit";
 import { grad, LAND, LAND_BOX, seeded, type Box } from "../maths";
 import { compile } from "../maths";
-import { Arrow, mapper, nice } from "./common";
+import { useTime, Arrow, mapper, nice } from "./common";
 
 const W = 360, H = 250;
 type V2 = (x: number, y: number) => [number, number];
@@ -31,7 +31,7 @@ export function FieldScene({ props }: SceneProps) {
   const box: Box = land ? LAND_BOX : [-3, 3, -3, 3];
   const m = mapper(box, land ? [6, 30, 348, 174] : mode === "paint" ? [70, 4, 220, 220] : [6, 4, 220, 220]);
   const { ref, drag } = useSvgDrag();
-  const t = useClock(true, 2.5);
+  const t = useTime(true, 2.5);
 
   // arrows on a grid, scaled to the longest
   const nx = land ? 17 : 11, ny = land ? 9 : 11;
@@ -93,13 +93,13 @@ export function FieldScene({ props }: SceneProps) {
   return (
     <Scene svg={svg}
       controls={!land && !typed ? <>
-        <Slider label="P = a·x + b·y: a" value={a} min={-3} max={3} step={0.5} onChange={setA} format={v => nice(v)} />
-        <Slider label="b" value={b} min={-3} max={3} step={0.5} onChange={setB} format={v => nice(v)} />
-        <Slider label="Q = c·x + d·y: c" value={c} min={-3} max={3} step={0.5} onChange={setC} format={v => nice(v)} />
-        <Slider label="d" value={d} min={-3} max={3} step={0.5} onChange={setD} format={v => nice(v)} />
+        <div className="mvsl2"><Slider label="P: a" value={a} min={-3} max={3} step={0.5} onChange={setA} format={v => nice(v)} />
+        <Slider label="P: b" value={b} min={-3} max={3} step={0.5} onChange={setB} format={v => nice(v)} />
+        <Slider label="Q: c" value={c} min={-3} max={3} step={0.5} onChange={setC} format={v => nice(v)} />
+        <Slider label="Q: d" value={d} min={-3} max={3} step={0.5} onChange={setD} format={v => nice(v)} /></div>
       </> : undefined}
       readouts={<>
-        {!land && !typed && <Read label="F" value={`⟨${lin(a, b)}, ${lin(c, d)}⟩`} tone="mint" />}
+        {!land && !typed && <Read minor label="F" value={`⟨${lin(a, b)}, ${lin(c, d)}⟩`} tone="mint" />}
         {!quiet && <Read label={`Curl at the wheel (${nice(wheel[0])}, ${nice(wheel[1])})`} value={`${fx(curl, 2)}${Math.abs(curl) < 1e-6 ? "" : curl > 0 ? ", counterclockwise" : ", clockwise"}`} tone="trav" />}
         <Read label={`Divergence at the dye (${nice(dye[0])}, ${nice(dye[1])})`} value={`${fx(div, 2)}${Math.abs(div) < 1e-6 ? "" : div > 0 ? ", spreads" : ", squeezes"}`} tone="amber" />
       </>} />
@@ -172,8 +172,8 @@ function WorkView({ F, m, flow, mode, props, quiet, t, sliders }: {
       {mode === "loop" && <circle cx={m.X(c[0])} cy={m.Y(c[1])} r="3.5" className="mvdot trav" />}
       {mode === "path" && <><circle cx={m.X(end[0])} cy={m.Y(end[1])} r="6" className="mvhandle trav" /><circle cx={m.X(end[0])} cy={m.Y(end[1])} r="18" className="b2hit" {...drag((x, y) => setEnd([Math.round(m.ix(x)), Math.round(m.iy(y))]))} /></>}
       {mode !== "carts" && !quiet && <g>
-        {[{ v: work(curves[0]!, prog), label: "work", cls: "pink" }, ...(inside ? [{ v: green, label: "curl × area", cls: "trav" }] : [])].map((mt, k) => {
-          const x = meterBox[0]! + 14 + k * 54, zero = meterBox[1]! + meterBox[3]! / 2, scale = 80 / Math.max(1, Math.abs(totals[0]!), Math.abs(green));
+        {[{ v: work(curves[0]!, prog), label: "work", cls: "pink" }, ...(inside ? [{ v: green, label: "curl·area", cls: "trav" }] : [])].map((mt, k) => {
+          const x = meterBox[0]! + 8 + k * 62, zero = meterBox[1]! + meterBox[3]! / 2, scale = 80 / Math.max(1, Math.abs(totals[0]!), Math.abs(green));
           const hgt = mt.v * scale;
           return <g key={k}>
             <rect x={x} y={hgt >= 0 ? zero - hgt : zero} width="30" height={Math.max(1, Math.abs(hgt))} rx="4" className={`b2bar ${mt.cls}`} />
@@ -191,10 +191,10 @@ function WorkView({ F, m, flow, mode, props, quiet, t, sliders }: {
       controls={<>
         {mode === "loop" && !rect && <Slider label="Loop radius" value={r} min={0.5} max={2.5} step={0.1} onChange={setR} format={v => nice(v, 1)} />}
         {s && <>
-          <Slider label="P = a·x + b·y: a" value={s.a} min={-2} max={2} step={0.5} onChange={s.setA} format={v => nice(v)} />
-          <Slider label="b" value={s.b} min={-2} max={2} step={0.5} onChange={s.setB} format={v => nice(v)} />
-          <Slider label="Q = c·x + d·y: c" value={s.c} min={-2} max={2} step={0.5} onChange={s.setC} format={v => nice(v)} />
-          <Slider label="d" value={s.d} min={-2} max={2} step={0.5} onChange={s.setD} format={v => nice(v)} />
+          <div className="mvsl2"><Slider label="P: a" value={s.a} min={-2} max={2} step={0.5} onChange={s.setA} format={v => nice(v)} />
+          <Slider label="P: b" value={s.b} min={-2} max={2} step={0.5} onChange={s.setB} format={v => nice(v)} />
+          <Slider label="Q: c" value={s.c} min={-2} max={2} step={0.5} onChange={s.setC} format={v => nice(v)} />
+          <Slider label="Q: d" value={s.d} min={-2} max={2} step={0.5} onChange={s.setD} format={v => nice(v)} /></div>
         </>}
       </>}
       readouts={mode === "carts" ? <>
@@ -202,7 +202,7 @@ function WorkView({ F, m, flow, mode, props, quiet, t, sliders }: {
         <Read label="Work by −∇f, curved trail" value={fx(totals[1]!, 3)} tone="pink" />
         <Read label="f(start) − f(end)" value={fx(LAND(-1.2, -0.6) - LAND(1, 0.5), 3)} />
       </> : <>
-        {s && <Read label="F" value={`⟨${lin(s.a, s.b)}, ${lin(s.c, s.d)}⟩`} tone="mint" />}
+        {s && <Read minor label="F" value={`⟨${lin(s.a, s.b)}, ${lin(s.c, s.d)}⟩`} tone="mint" />}
         {!quiet && <Read label={inside ? "Work around the loop" : "Work along the path"} value={fx(totals[0]!, 3)} tone="pink" big />}
         {!quiet && inside && <Read label="Curl × area inside" value={fx(green, 3)} tone="trav" big />}
       </>} />

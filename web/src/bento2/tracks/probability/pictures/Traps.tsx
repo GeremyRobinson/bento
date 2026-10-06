@@ -46,7 +46,7 @@ export function RetestScene({ props, marker }: SceneProps) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         <Slider label="Share of the score that is skill" value={rho} min={0} max={1} step={0.05} onChange={setRho} format={x => `${fx(x * 100, 0)}%`} />
         <Slider label={low ? "Pick the bottom" : "Pick the top"} value={share} min={2} max={50} step={1} onChange={setShare} format={x => `${x}%`} />
@@ -104,7 +104,7 @@ export function SimpsonScene({ props }: SceneProps) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         <Slider label={`Severe cases given A, of ${totA}`} value={sa} min={0} max={totA} step={totA % 10 ? 1 : 10} onChange={setSa} />
         <Slider label={`Severe cases given B, of ${totB}`} value={sb} min={0} max={totB} step={totB % 10 ? 1 : 10} onChange={setSb} />

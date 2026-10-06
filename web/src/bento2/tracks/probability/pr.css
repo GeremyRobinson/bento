@@ -1,0 +1,11 @@
+/* Probability's pictures on small screens. A picture's extras (a second readout, a what-if slider, the alarm buttons,
+   a tool's mode picker) step aside on a lesson card so the drawing keeps its room; tools still show everything.
+   Every rule is scoped to .prs, the class on Probability's scenes. */
+.prx{display:contents}
+@media (max-width:899px){.b2stage .prs .prx2{display:none}.b2stage .prs .b2acts .ctl{--pill-h:38px}}
+@media (max-width:699px){
+  .b2stage .prs .prx{display:none}
+  .b2stage .prs .b2acts .ctl{--pill-h:34px;--pill-pad:var(--sp-3);font-size:var(--fz-sm)}
+  .b2stage .prs .b2toggle button{min-height:30px}
+  .b2stage .prs .b2marks{display:none}
+}

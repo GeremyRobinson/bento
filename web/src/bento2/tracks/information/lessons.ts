@@ -681,7 +681,7 @@ export const in08: B2Lesson<P08> = {
         return { msg, ps, tops };
       }
     },
-    show: p => `The message is **${[...p.msg].join(" ")}**. The model gave the letters that came: ${p.ps.map(showFr).join(", ")}.${p.tops.some((t, i) => t !== p.ps[i]) ? ` Where it liked another letter more, its top pick had ${p.tops.map((t, i) => (t !== p.ps[i] ? `${showFr(t)} (letter ${i + 1})` : "")).filter(Boolean).join(", ")}.` : ""} A flat model gives each of A, B, C, D 1/4.`,
+    show: p => `**${[...p.msg].join(" ")}**: the model gave the letters that came ${p.ps.map(showFr).join(", ")}.${p.tops.some((t, i) => t !== p.ps[i]) ? ` Its top pick had ${p.tops.map((t, i) => (t !== p.ps[i] ? `${showFr(t)} (letter ${i + 1})` : "")).filter(Boolean).join(", ")}.` : ""}`,
     steps(p) {
       const bits = p.ps.map(f => log2(f[1] / f[0])), total = sum(bits), even = p.ps.every(dyadic);
       const width = prodFr(p.ps), flat = 2 * p.msg.length, saved = flat - total;
@@ -702,7 +702,7 @@ export const in08: B2Lesson<P08> = {
           slips: [slip("whole number", width[1] / width[0], `The width is a slice of [0, 1], so it's the product of fractions: ${p.ps.map(showFr).join(" × ")}.`)],
         }),
         numOr("sv", "Saved against the flat model", saved, even, 1, {
-          unit: "bits", ask: `The flat model spends 2 bits a letter, ${flat} in all. Type flat minus model.`,
+          unit: "bits", ask: `A flat model (1/4 each) spends 2 bits a letter, ${flat} in all. Flat minus model?`,
           hint: `${flat} − ${even ? total : group(total, 1)}.`,
           done: `Saved against the flat model: ${formatAnswer(saved, form1)} bits${saved < 0 ? ". This model is worse than guessing evenly." : ""}`,
           slips: [slip("backward", -saved, "Saved is flat minus model: positive when the model spends fewer bits.")],
@@ -907,7 +907,7 @@ export const in11: B2Lesson<P11> = {
     reveal: "Circles 1 and 4, because 5 = 4 + 1 in binary (101). The lit circles spell the bad cell's position." },
   nameIt: {
     say: [
-      "Add redundancy cleverly and a code can repair noise. **Hamming (7, 4)** puts check bits at positions 1, 2 and 4, each covering the positions whose binary form has that bit set.",
+      "**Hamming (7, 4)** repairs noise: it puts check bits at positions 1, 2 and 4, each covering the positions whose binary form has that bit set.",
       "XOR together the positions of all the 1s (the **syndrome**): 0 means no error, anything else is the position of the flipped bit.",
       "It sends 4 data bits in 7, a rate of 4/7; triple repetition only manages 1/3. For a channel that flips each bit with chance f, no code can send more than its capacity, 1 − H(f) bits per bit.",
     ],

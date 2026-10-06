@@ -6,7 +6,7 @@ import { flag, num, str, type SceneProps } from "../../../scenes";
 import { fx, path, Read, SaveRow, Scene, Slider } from "../../../ui/kit";
 import { useB2 } from "../../../ui/useB2";
 import { binomPmf, Phi, normalPdf, seeded } from "../maths";
-import { Act, Acts, commas, K, lin } from "./parts";
+import { Act, Acts, commas, K, lin, Extra } from "./parts";
 
 const W = 360, H = 240;
 
@@ -64,7 +64,7 @@ export function ShuffleScene({ props }: SceneProps) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<Acts>
         <Act onClick={() => { setAll(false); setCount(c => Math.min(2000, c + 1)); }}>Shuffle</Act>
         <Act onClick={() => { setAll(false); setCount(c => Math.min(2000, c + 100)); }}>×100</Act>
@@ -119,17 +119,17 @@ export function PowerScene({ props }: SceneProps) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         <Slider label="Effect δ" value={delta} min={0} max={20} step={0.05} onChange={setDelta} format={x => fx(x)} />
         <Slider label="SD σ" value={sigma} min={1} max={40} step={1} onChange={setSigma} />
         <Slider label="n" value={n} min={4} max={1000} step={1} onChange={setN} marks={[{ v: 100, label: "100" }, { v: 400, label: "400" }]} />
       </>}
       readouts={<>
-        <Read label="SE = σ/√n" value={fx(se)} />
-        <Read label="Shift = δ/SE" value={fx(shift)} />
+        <Extra><Read label="SE = σ/√n" value={fx(se)} /></Extra>
+        <Read label="Shift = δ/SE" value={fx(shift)} minor />
         {!quiet && <Read label="Power" value={`${fx(power * 100, 1)}%`} tone="sky" big />}
-        <Read label="False alarms, each side" value="2.5%" tone="pink" />
+        <Extra><Read label="False alarms, each side" value="2.5%" tone="pink" /></Extra>
         {!quiet && <Read label="n for 80%" value={delta > 0 ? commas(Math.ceil(7.84 * (sigma / delta) ** 2 - 1e-9)) : "none"} />}
       </>}
     />
@@ -170,7 +170,7 @@ export function CourtScene({ props }: SceneProps) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         <Slider label="Prior chance it's loaded" value={prior} min={5} max={95} step={5} onChange={setPrior} format={x => `${x}%`} />
         <Slider label="Plan: flips" value={n} min={10} max={200} step={10} onChange={v => { setN(v); setRan(false); setShown(false); }} />

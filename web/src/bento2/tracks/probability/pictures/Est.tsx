@@ -48,7 +48,7 @@ export function VarEstScene({ props }: SceneProps) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         <Slider label="Sample size n" value={n} min={2} max={10} step={1} onChange={setN} />
         <Acts><Act onClick={() => setSeed(s => s + 1)}>Draw again</Act></Acts>
@@ -102,7 +102,7 @@ export function BootScene({ props }: SceneProps) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<Acts>
         <Act onClick={() => { setB(b => Math.min(1000, b + 1)); }}>Resample</Act>
         <Act onClick={() => setB(b => Math.min(1000, b + 100))}>×100</Act>
@@ -152,7 +152,7 @@ export function BetaScene({ props, marker }: SceneProps) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         <Slider label="Prior a" value={a} min={0.5} max={20} step={0.5} onChange={setA} format={x => fx(x, 1)} />
         <Slider label="Prior b" value={b} min={0.5} max={20} step={0.5} onChange={setB} format={x => fx(x, 1)} />
@@ -224,7 +224,7 @@ export function ErrBarsScene({ props }: SceneProps) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         <Slider label="Tries n" value={n} min={4} max={200} step={1} onChange={v => { setK(Math.round((kk / n) * v)); setN(v); }} />
         <Slider label="Successes k" value={kk} min={0} max={n} step={1} onChange={setK} />

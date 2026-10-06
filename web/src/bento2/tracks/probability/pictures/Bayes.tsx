@@ -6,7 +6,7 @@ import { useState } from "react";
 import { flag, num, str, type SceneProps } from "../../../scenes";
 import { fx, Read, SaveRow, Scene, Slider, Toggle } from "../../../ui/kit";
 import { useB2 } from "../../../ui/useB2";
-import { Act, Acts, commas, K, lin } from "./parts";
+import { Act, Acts, commas, K, lin, Extra } from "./parts";
 
 const W = 360, H = 240;
 
@@ -91,25 +91,23 @@ function People({ props, quiet, marker, pick, project }: Part & { project: boole
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         <Slider label="Have it" value={prev} min={0.1} max={30} step={0.1} onChange={setPrev} format={x => `${fx(x, 1)}%`} marks={[{ v: 1, label: "1%" }, { v: 2, label: "2%" }, { v: 5, label: "5%" }, { v: 10, label: "10%" }]} />
-        <Slider label="Catches (sensitivity)" value={sens} min={50} max={99.9} step={0.1} onChange={setSens} format={x => `${fx(x, 1)}%`} />
-        <Slider label="Clears healthy (specificity)" value={spec} min={50} max={99.9} step={0.1} onChange={setSpec} format={x => `${fx(x, 1)}%`} />
-        {!quiet && <Acts><Act onClick={() => { setPrev(Math.max(0.1, Math.min(99, Math.round(ppv * 1000) / 10))); setTimes(t => t + 1); }}>Test again{times > 1 ? ` (test ${times + 1})` : ""}</Act></Acts>}
+        <Slider label="Catches" value={sens} min={50} max={99.9} step={0.1} onChange={setSens} format={x => `${fx(x, 1)}%`} />
+        <Slider label="Clears healthy" value={spec} min={50} max={99.9} step={0.1} onChange={setSpec} format={x => `${fx(x, 1)}%`} />
+        {!quiet && <Extra><Acts><Act onClick={() => { setPrev(Math.max(0.1, Math.min(99, Math.round(ppv * 1000) / 10))); setTimes(t => t + 1); }}>Test again{times > 1 ? ` (test ${times + 1})` : ""}</Act></Acts></Extra>}
         {pick}
       </>}
       readouts={<>
-        <Read label="Have it" value={commas(have)} tone="pink" />
-        {!quiet && <Read label="True positives" value={commas(TP)} tone="pink" />}
-        {!quiet && <Read label="False positives" value={commas(FP)} tone="amber" />}
+        <Read label="Have it" value={commas(have)} tone="pink" minor />
+        {!quiet && <Extra><Read label="True positives" value={commas(TP)} tone="pink" /><Read label="False positives" value={commas(FP)} tone="amber" /></Extra>}
         {!quiet && <Read label="P(has it | positive)" value={`${fx(ppv * 100, 1)}%`} big />}
-        {!quiet && <Read label="Missed" value={commas(FN)} />}
-        {!quiet && <Read label="Cleared" value={commas(TN)} />}
+        {!quiet && <Extra><Read label="Missed" value={commas(FN)} /><Read label="Cleared" value={commas(TN)} /></Extra>}
       </>}
       foot={project && <>
-        <label className="b2slider"><span className="b2sl"><span>What a positive means, in your words</span></span>
-          <input type="text" value={line} placeholder={sentence} onChange={e => setLine(e.currentTarget.value)} style={{ minHeight: "36px", borderRadius: "10px", padding: "0 10px", background: "var(--well)", color: "var(--text)", border: "1px solid var(--faint)" }} /></label>
+        <label className="b2slider">
+          <input type="text" aria-label="What a positive means, in your words" value={line} placeholder={sentence} onChange={e => setLine(e.currentTarget.value)} style={{ minHeight: "36px", borderRadius: "10px", padding: "0 10px", background: "var(--well)", color: "var(--text)", border: "1px solid var(--faint)" }} /></label>
         <SaveRow what={<>Keep <b>ppv = {fx(ppv, 3)}</b> and the card in your Notebook</>} saved={saved} onSave={onSave} />
       </>}
     />
@@ -145,7 +143,7 @@ function Ideas({ props, quiet, marker, pick }: Part) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         <Slider label="Really true" value={real} min={1} max={90} step={1} onChange={setReal} format={x => `${x}%`} marks={[{ v: 10, label: "10%" }, { v: 20, label: "20%" }, { v: 50, label: "50%" }]} />
         <Slider label="Power" value={power} min={5} max={99} step={1} onChange={setPower} format={x => `${x}%`} />
@@ -153,9 +151,9 @@ function Ideas({ props, quiet, marker, pick }: Part) {
         {pick}
       </>}
       readouts={<>
-        <Read label="Real ideas" value={commas(R)} tone="pink" />
-        {!quiet && <Read label="Real hits" value={commas(hits)} tone="pink" />}
-        {!quiet && <Read label="False hits" value={commas(F)} tone="amber" />}
+        <Read label="Real ideas" value={commas(R)} tone="pink" minor />
+        {!quiet && <Read label="Real hits" value={commas(hits)} tone="pink" minor />}
+        {!quiet && <Read label="False hits" value={commas(F)} tone="amber" minor />}
         {!quiet && <Read label="Hits that are false" value={`${fx(share * 100, 1)}%`} big />}
       </>}
     />

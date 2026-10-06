@@ -2,11 +2,11 @@
 // height and rate of climb against time (04). Also project 1, My landscape: type or sculpt a terrain and keep it.
 import { useMemo, useState } from "react";
 import { flag, num, str, type SceneProps } from "../../../scenes";
-import { fx, path, Read, SaveRow, Scene, Toggle, useClock, useSvgDrag } from "../../../ui/kit";
+import { fx, path, Read, SaveRow, Scene, Toggle, useSvgDrag } from "../../../ui/kit";
 import { useB2 } from "../../../ui/useB2";
 import { evaluate, parse } from "../../../tools/expr";
 import { compile, grad, LAND_BOX, LAND_SRC, type F2 } from "../maths";
-import { FlatMap, mapper, MINE, nice, useLandscape, type MineState } from "./common";
+import { useTime, FlatMap, mapper, MINE, nice, useLandscape, type MineState } from "./common";
 
 const W = 360, H = 250;
 type Pt = [number, number];
@@ -25,7 +25,7 @@ export function HikerScene({ props, marker }: SceneProps) {
   const T = formula ? 2 : 4, tStart = formula ? t0 - 1 : 0;
   const at = (t: number): Pt => (formula ? formula(t) : bez(A, M, B, t / T));
   const { ref, drag } = useSvgDrag();
-  const clock = useClock(!quiet, formula ? 1 : 1.6);
+  const clock = useTime(!quiet, formula ? 1 : 1.6);
   const tw = formula ? t0 : quiet ? 0 : (clock % (T + 1)) > T ? T : clock % (T + 1);
   const wide = box[1] - box[0] > box[3] - box[2];
   const m = mapper(box, wide ? [6, 4, 348, 150] : [6, 10, 180, 180]);

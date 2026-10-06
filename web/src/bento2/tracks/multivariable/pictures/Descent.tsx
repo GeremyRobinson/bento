@@ -3,9 +3,9 @@
 // the convexity check (18); and noise with a temperature dial plus the 1,000-drop simulator (20).
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { flag, num, str, type SceneProps } from "../../../scenes";
-import { fx, path, Read, Scene, Slider, useClock, useSvgDrag } from "../../../ui/kit";
+import { fx, path, Read, Scene, Slider, useSvgDrag } from "../../../ui/kit";
 import { descend, eig2, flatSpots, grad, hess, seeded, type Box, type F2 } from "../maths";
-import { FlatMap, mapper, nice, useLandscape } from "./common";
+import { useTime, FlatMap, mapper, nice, useLandscape } from "./common";
 
 const W = 360, H = 250;
 const inBox = (b: Box, x: number, y: number) => x >= b[0] && x <= b[1] && y >= b[2] && y <= b[3];
@@ -30,7 +30,7 @@ export function DescentScene({ props }: SceneProps) {
   const [s, setS] = useState<[number, number]>([num(props, "sx", 0.5), num(props, "sy", 1)]);
   const [eta, setEta] = useState(num(props, "eta", typed ? 0.25 : 0.1));
   const [k, setK] = useState(0);
-  const t = useClock(auto, 99);
+  const t = useTime(auto, 99);
   const target = typed ? 10 : 80;
   const shown = quiet ? 0 : Math.max(k, auto ? Math.min(target, Math.floor(t / (typed ? 0.35 : 0.08))) : 0);
   const pts = useMemo(() => descend(f, s[0], s[1], eta, shown), [f, s, eta, shown]);
@@ -89,7 +89,7 @@ export function RaceScene({ props }: SceneProps) {
     const count = (pts: [number, number][]) => { const i = pts.findIndex(([x, y]) => Math.hypot(x - bottom[0], y - bottom[1]) <= d0 / 1000); return i < 0 ? null : i; };
     return { plain, fast, nt, n: [count(plain), count(fast), land ? null : count(nt)] };
   }, [f, eta, etaM, beta, land]); // eslint-disable-line react-hooks/exhaustive-deps
-  const t = useClock(!quiet, 99), shown = quiet ? 0 : Math.floor(t * 18);
+  const t = useTime(!quiet, 99), shown = quiet ? 0 : Math.floor(t * 18);
   const m = mapper(box, [6, 4, 348, 174]);
   const draw = (pts: [number, number][], cls: string) => {
     const p = pts.slice(0, shown + 1);
@@ -113,18 +113,18 @@ export function RaceScene({ props }: SceneProps) {
     <Scene svg={svg}
       controls={<>
         {land ? <Slider label="Stretch y: f = (x² − 1)² + s·y² + x/4, s" value={b} min={1} max={25} step={1} onChange={setB} />
-          : <>
+          : <div className="mvsl2">
             <Slider label="a (x²)" value={a} min={1} max={3} step={1} onChange={setA} />
             <Slider label="b (y²)" value={b} min={1} max={40} step={1} onChange={setB} marks={[{ v: 3, label: "3" }, { v: 30, label: "30" }]} />
-          </>}
+          </div>}
         <span className="b2marks">
           <Btn on={mom} onClick={() => setMom(v => !v)}>Momentum</Btn>
           {!land && <Btn on={newton} onClick={() => setNewton(v => !v)}>Newton step</Btn>}
         </span>
       </>}
       readouts={<>
-        <Read label="κ" value={nice(kappa, 2)} />
-        <Read label="Best fixed step η" value={nice(eta, 4)} />
+        <Read minor label="κ" value={nice(kappa, 2)} />
+        <Read minor label="Best fixed step η" value={nice(eta, 4)} />
         {!quiet && <Read label="Plain: steps to shrink 1,000×" value={word(runs.n[0]!)} tone="trav" big />}
         {!quiet && mom && <Read label="Momentum" value={word(runs.n[1]!)} tone="amber" />}
         {!quiet && newton && !land && <Read label="Newton" value={word(runs.n[2]!)} tone="sky" />}
@@ -137,7 +137,7 @@ export function MultiStartScene({ props }: SceneProps) {
   const { f, box } = useLandscape(props);
   const quiet = flag(props, "quiet"), auto = flag(props, "auto");
   const [run, setRun] = useState(0);
-  const t = useClock(auto || run > 0, 99);
+  const t = useTime(auto || run > 0, 99);
   const wide = box[1] - box[0] > box[3] - box[2];
   const m = mapper(box, wide ? [6, 4, 348, 150] : [6, 4, 180, 180]);
   const strip: [number, number, number, number] = wide ? [26, 178, 324, 56] : [200, 40, 150, 140];
@@ -210,7 +210,7 @@ export function AnnealScene({ props }: SceneProps) {
   const [cool, setCool] = useState(false);
   const [start, setStart] = useState<[number, number]>([num(props, "sx", 0.6), num(props, "sy", 0.6)]);
   const [sim, setSim] = useState(drops);
-  const t = useClock(true, 0);
+  const t = useTime(true, 0);
   const eta = 0.5 / maxCurv(f, box);
   const flats = useMemo(() => flatSpots(f, box), [f, box]);
   const pits = flats.filter(p => p.kind === "pit").sort((a, b) => a.z - b.z), pass = flats.filter(p => p.kind === "pass").sort((a, b) => a.z - b.z)[0];
@@ -270,9 +270,9 @@ export function AnnealScene({ props }: SceneProps) {
         </span>
       </>}
       readouts={<>
-        <Read label="Temperature now" value={nice(S.T, 3)} tone="amber" />
+        <Read minor label="Temperature now" value={nice(S.T, 3)} tone="amber" />
         {barrier != null && <Read label="Pass above this valley" value={fx(barrier, 3)} />}
-        {barrier != null && <Read label="Chance a hop over it is kept" value={S.T > 0 ? fx(Math.exp(-barrier / S.T), 3) : "0"} tone="amber" />}
+        {barrier != null && <Read minor label="Chance a hop over it is kept" value={S.T > 0 ? fx(Math.exp(-barrier / S.T), 3) : "0"} tone="amber" />}
         {result && !quiet && <Read label="Drops ending in the lowest valley" value={`${(share * 100).toFixed(1)}%`} tone="sky" big />}
       </>} />
   );

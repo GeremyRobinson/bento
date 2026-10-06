@@ -50,11 +50,11 @@ export function SurfaceScene({ props }: SceneProps) {
         {ellipse && <Slider label="Stretch in y, b" value={b} min={0.5} max={9} step={0.5} onChange={setB} format={v => nice(v)} />}
       </>}
       readouts={<>
-        <Read label="Plane at height" value={nice(k)} tone="amber" />
+        <Read minor label="Plane at height" value={nice(k)} tone="amber" />
         {ellipse && show && <Read label="Crosses the x-axis at" value={`±${nice(xa)}`} />}
         {ellipse && show && <Read label="Crosses the y-axis at" value={`±${nice(yb)}`} />}
         {hasPt && <Read label={`Height at (${nice(px as number)}, ${nice(py as number)})`} value={nice(f(px as number, py as number))} tone="trav" />}
-        {ellipse && <Read label="Landscape" value={`f = ${a === 1 ? "" : nice(a)}x² + ${b === 1 ? "" : nice(b)}y²`} />}
+        {ellipse && <Read minor label="Landscape" value={`f = ${a === 1 ? "" : nice(a)}x² + ${b === 1 ? "" : nice(b)}y²`} />}
       </>} />
   );
 }
@@ -113,8 +113,8 @@ export function PlaneScene({ props }: SceneProps) {
     <Scene svg={svg}
       controls={<Slider label="Zoom" value={zoom} min={1} max={20} step={0.5} onChange={setZoom} format={v => `${nice(v, 1)}×`} marks={[{ v: 1, label: "1×" }, { v: 4, label: "4×" }, { v: 20, label: "20×" }]} />}
       readouts={<>
-        <Read label={`f(${nice(a, 1)}, ${nice(b, 1)})`} value={fx(f0, 2)} tone="trav" />
-        <Read label="Tilt of the plane (f_x, f_y)" value={`${fx(gx, 2)}, ${fx(gy, 2)}`} tone="amber" />
+        <Read minor label={`f(${nice(a, 1)}, ${nice(b, 1)})`} value={fx(f0, 2)} tone="trav" />
+        <Read minor label="Tilt of the plane (f_x, f_y)" value={`${fx(gx, 2)}, ${fx(gy, 2)}`} tone="amber" />
         {hasT && <Read label={`Plane's estimate at (${nice(tx as number)}, ${nice(ty as number)})`} value={fx(est, 3)} tone="amber" />}
         {hasT && !quiet && <Read label="True height" value={fx(tru, 3)} tone="sky" />}
       </>} />

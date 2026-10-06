@@ -46,7 +46,7 @@ function Sketch({ pick }: { pick: React.ReactNode }) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         <Slider label="From a" value={a} min={0} max={6} step={0.1} onChange={setA} format={x => fx(x, 1)} />
         <Slider label="To b" value={b} min={0} max={6} step={0.1} onChange={setB} format={x => fx(x, 1)} />
@@ -93,7 +93,7 @@ function Exp({ props, pick }: { props: SceneProps["props"]; pick: React.ReactNod
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         <Slider label="Mean wait" value={m} min={big ? 1000 : 1} max={big ? 12000 : 20} step={big ? 10 : 0.5} onChange={setM} format={lab} />
         {waitOn && <Slider label="Already waited t" value={t} min={0} max={3 * m} step={m / 20} onChange={setT} format={lab} />}

@@ -79,9 +79,9 @@ export function FlowScene({ props, place }: SceneProps) {
         <button type="button" className="ctl" onClick={() => { setBase(0); setRunning(false); }}>Start over</button>
       </>}
       readouts={<>
-        <MatRead label="A" M={[[(10 - P) / 10, Q / 10], [P / 10, (10 - Q) / 10]]} />
+        <MatRead minor label="A" M={[[(10 - P) / 10, Q / 10], [P / 10, (10 - Q) / 10]]} />
         <Read label={`Now at ${names.a}`} value={`${atA} of ${DOTS}`} tone="sky" />
-        <Read label="Eigenvalues" value={`1 and ${fx(lam2, 1)}`} tone="amber" />
+        <Read minor label="Eigenvalues" value={`1 and ${fx(lam2, 1)}`} tone="amber" />
         <Read label={`Long run at ${names.a}, q / (p + q)`} value={`${fx(steadyA * 100, 1)}%`} tone="amber" />
       </>}
       foot={project ? <SaveRow what={<>Keep <b>steady</b> = {fx(steady[0]!, 3)}, {fx(steady[1]!, 3)} ({names.a}, {names.b})</>} saved={saved} onSave={() => {

@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { flag, num, str, type SceneProps } from "../../../scenes";
 import { fx, path, Read, Scene, Slider, Toggle, useClock, useSvgDrag } from "../../../ui/kit";
 import { seeded } from "../maths";
-import { Act, Acts, K, lin, WrapToggle } from "./parts";
+import { Act, Acts, K, lin, WrapToggle, Extra } from "./parts";
 
 const W = 360, H = 240;
 const WEEK = [12, 9, 15, 11, 8, 14, 8];
@@ -57,20 +57,20 @@ function Curve({ props, poisson, marker, pick }: { props: SceneProps["props"]; p
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         {poisson ? <Slider label="Days of counts" value={days} min={7} max={56} step={7} onChange={setDays} />
           : <><Slider label="Flips n" value={n} min={1} max={100} step={1} onChange={v => { setK(Math.round((kk / n) * v)); setN(v); }} />
             <Slider label="Heads k" value={kk} min={0} max={n} step={1} onChange={setK} /></>}
         <Slider label={poisson ? "Compare with λ" : "Compare with p"} value={p2} min={lo + (poisson ? 0 : 0.01)} max={hi - (poisson ? 0 : 0.01)} step={poisson ? 0.1 : 0.01} onChange={setP2} format={x => fx(x, poisson ? 1 : 2)} />
         <Acts><Act on={log} onClick={() => setLog(v => !v)}>Log</Act></Acts>
-        {pick}
+        <Extra>{pick}</Extra>
       </>}
       readouts={quiet ? <Read label="Data" value={`${kk} heads in ${n}`} /> : <>
-        <Read label={poisson ? "Counts" : "Data"} value={poisson ? `${days} days, mean ${fx(peak, 1)}` : `${kk} heads in ${n}`} />
+        <Read minor label={poisson ? "Counts" : "Data"} value={poisson ? `${days} days, mean ${fx(peak, 1)}` : `${kk} heads in ${n}`} />
         <Read label={poisson ? "λ̂ = x̄" : "p̂ = k/n"} value={fx(peak, poisson ? 1 : 3)} tone="sky" />
-        <Read label={`Height at ${fx(p1, poisson ? 1 : 2)}`} value={log ? fx(rel(p1), 2) : fx(rel(p1), 3)} tone="amber" />
-        <Read label={`L(${fx(p1, poisson ? 1 : 2)}) / L(${fx(p2, poisson ? 1 : 2)})`} value={lr > 1e4 || lr < 1e-4 ? lr.toExponential(1) : fx(lr, 3)} tone="pink" />
+        <Extra><Read label={`Height at ${fx(p1, poisson ? 1 : 2)}`} value={log ? fx(rel(p1), 2) : fx(rel(p1), 3)} tone="amber" />
+        <Read label={`L(${fx(p1, poisson ? 1 : 2)}) / L(${fx(p2, poisson ? 1 : 2)})`} value={lr > 1e4 || lr < 1e-4 ? lr.toExponential(1) : fx(lr, 3)} tone="pink" /></Extra>
       </>}
     />
   );
@@ -101,11 +101,11 @@ function Walk({ pick }: { pick: React.ReactNode }) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         <Acts><Act onClick={() => setSeed(s => s + 1)}>New coin</Act></Acts>
         <Toggle label="The coin really is" value={truth} onChange={v => { setTruth(v); setSeed(s => s + 1); }} options={[{ v: "fair", label: "Really fair" }, { v: "loaded", label: "Really loaded" }]} />
-        {pick}
+        <Extra>{pick}</Extra>
       </>}
       readouts={<>
         <Read label="Flips" value={`${heads} heads in ${shown}`} />

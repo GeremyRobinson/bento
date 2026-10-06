@@ -3,10 +3,10 @@
 // spot finder that classifies pits, peaks and passes by the Hessian (13).
 import { useMemo, useState, type ReactElement } from "react";
 import { flag, num, type SceneProps } from "../../../scenes";
-import { fx, path, Read, SaveRow, Scene, useClock, useSvgDrag } from "../../../ui/kit";
+import { fx, path, Read, SaveRow, Scene, useSvgDrag } from "../../../ui/kit";
 import { useB2 } from "../../../ui/useB2";
 import { basins, contour, flatSpots, grad, hess, KIND_WORD, sample, seeded } from "../maths";
-import { Arrow, FlatMap, mapper, nice, segPath, useLandscape } from "./common";
+import { useTime, Arrow, FlatMap, mapper, nice, segPath, useLandscape } from "./common";
 
 const W = 360, H = 250;
 
@@ -104,7 +104,7 @@ export function RainScene({ props }: SceneProps) {
     }
     return { cells, shares: count.map(c => c / total), bottoms: bots, passes, streams };
   }, [f, box]); // eslint-disable-line react-hooks/exhaustive-deps
-  const t = useClock(true, 99);
+  const t = useTime(true, 99);
   const shown = Math.min(streams.length, Math.floor(t * 12));
   const big = shares.map((s, i) => ({ s, i })).filter(o => o.s > 0.01);
   const value = big.map(o => o.s);

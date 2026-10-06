@@ -139,14 +139,14 @@ export const cs07: B2Lesson<P07> = {
         if (inversions(list) >= 2) return { list, n: rng.pick(i < 3 ? [8, 16] : [8, 16, 32, 1024]) };
       }
     },
-    show: p => `The list **[${p.list.join(", ")}]**. Then counts for **n = ${g(p.n)}** items.`,
+    show: p => `The list **[${p.list.join(", ")}]**, then **n = ${g(p.n)}** items.`,
     steps(p) {
       const pass = bubblePass(p.list), L = p.list.length, inv = inversions(p.list), k = Math.log2(p.n);
       const min = Math.min(...p.list), toFront = [min, ...p.list.filter(x => x !== min)];
       const firstPassSwaps = countPassSwaps(p.list);
       return [
         multiStep("pass", "After one bubble pass", pass, "whole", {
-          boxes: ORD.slice(0, L), ask: "Compare each neighboring pair from left to right, swapping any out of order. Type the list after one pass.",
+          boxes: ORD.slice(0, L), ask: "Swap each out-of-order neighbor pair, left to right. The list after one pass?",
           hint: "The largest number gets carried all the way to the end; everything it passes slides one place left.",
           done: `After one pass: [${pass.join(", ")}]`,
           slips: [

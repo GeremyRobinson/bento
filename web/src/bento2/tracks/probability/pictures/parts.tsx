@@ -2,6 +2,7 @@
 // bars, action buttons, and a reveal clock that plays a run out once (with Less motion it shows the finished run).
 import type { ReactNode } from "react";
 import { useClock } from "../../../ui/kit";
+import "../pr.css";
 
 /** each colour is one part of the idea; green and red only ever mean right and wrong */
 export const K = {
@@ -58,4 +59,9 @@ export function WrapToggle<T extends string>({ value, options, onChange, label }
       {options.map(o => <button type="button" key={o.v} aria-pressed={o.v === value} onClick={() => onChange(o.v)}>{o.label}</button>)}
     </span>
   );
+}
+
+/** a picture's extra: shown in tools and on wide screens, set aside on a phone's lesson card (see pr.css) */
+export function Extra({ children, below = 700 }: { children: ReactNode; below?: 700 | 900 }) {
+  return <span className={below === 900 ? "prx prx2" : "prx"}>{children}</span>;
 }

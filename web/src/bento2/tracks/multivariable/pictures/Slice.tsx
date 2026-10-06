@@ -2,9 +2,9 @@
 // tangent (02); or cut along any direction through a point, with a compass needle and the slope-against-angle dial (11).
 import { useState } from "react";
 import { flag, num, str, type SceneProps } from "../../../scenes";
-import { fx, path, Read, Scene, Slider, Toggle, useClock, useSvgDrag } from "../../../ui/kit";
+import { fx, path, Read, Scene, Slider, Toggle, useSvgDrag } from "../../../ui/kit";
 import { grad } from "../maths";
-import { Arrow, FlatMap, mapper, nice, useLandscape } from "./common";
+import { useTime, Arrow, FlatMap, mapper, nice, useLandscape } from "./common";
 
 const W = 360, H = 250;
 /** a graph frame: maps (t, z) into a rectangle with z auto-scaled */
@@ -77,7 +77,7 @@ export function CompassScene({ props, marker }: SceneProps) {
   const [a, setA] = useState(num(props, "a", 1)), [b, setB] = useState(num(props, "b", 1));
   const [ang, setAng] = useState(num(props, "ang", 0));
   const quiet = flag(props, "quiet"), spin = flag(props, "spin");
-  const t = useClock(spin, 99);
+  const t = useTime(spin, 99);
   const { ref, drag } = useSvgDrag();
   const wide = box[1] - box[0] > box[3] - box[2];
   const m = mapper(box, wide ? [6, 70, 176, 88] : [6, 34, 170, 170]);
@@ -117,11 +117,11 @@ export function CompassScene({ props, marker }: SceneProps) {
     <Scene svg={svg}
       controls={<>
         <Slider label="Needle angle" value={ang} min={0} max={359} step={1} onChange={setAng} format={v => `${Math.round(v)}°`} />
-        <Slider label="Point x" value={a} min={box[0]} max={box[1]} step={0.1} onChange={setA} format={v => nice(v, 1)} />
-        <Slider label="Point y" value={b} min={box[2]} max={box[3]} step={0.1} onChange={setB} format={v => nice(v, 1)} />
+        <div className="mvsl2"><Slider label="Point x" value={a} min={box[0]} max={box[1]} step={0.1} onChange={setA} format={v => nice(v, 1)} />
+        <Slider label="Point y" value={b} min={box[2]} max={box[3]} step={0.1} onChange={setB} format={v => nice(v, 1)} /></div>
       </>}
       readouts={<>
-        <Read label="Direction u" value={`⟨${fx(u[0], 2)}, ${fx(u[1], 2)}⟩`} tone="trav" />
+        <Read minor label="Direction u" value={`⟨${fx(u[0], 2)}, ${fx(u[1], 2)}⟩`} tone="trav" />
         {!quiet && <Read label="Slope this way, D_u f" value={fx(D, 2)} tone="amber" />}
         {!quiet && <Read label="Steepest, at" value={`${Math.round(gAng)}°, slope ${fx(G, 2)}`} tone="pink" />}
       </>} />

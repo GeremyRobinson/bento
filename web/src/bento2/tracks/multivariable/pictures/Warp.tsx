@@ -46,10 +46,10 @@ export function WarpScene({ props }: SceneProps) {
   const sl = (label: string, v: number, set: (x: number) => void) => <Slider label={label} value={v} min={-3} max={3} step={0.5} onChange={set} format={x => nice(x)} />;
   return (
     <Scene svg={svg}
-      controls={<>{sl("x = a·u, a", a, setA)}{sl("+ b·v, b", b, setB)}{sl("y = c·u, c", c, setC)}{sl("+ d·v, d", d, setD)}</>}
+      controls={<div className="mvsl2">{sl("x: a", a, setA)}{sl("x: b", b, setB)}{sl("y: c", c, setC)}{sl("y: d", d, setD)}</div>}
       readouts={<>
-        <Read label="Region in (u, v)" value={nice(s * t, 3)} tone="sky" />
-        <Read label="Small square" value={nice(hu * hv, 4)} tone="amber" />
+        <Read minor label="Region in (u, v)" value={nice(s * t, 3)} tone="sky" />
+        <Read minor label="Small square" value={nice(hu * hv, 4)} tone="amber" />
         {!quiet && <Read label="Its image" value={nice(Math.abs(det) * hu * hv, 4)} tone="amber" />}
         {!quiet && <Read label="|det J|" value={fx(Math.abs(det), 2)} big />}
         {!quiet && <Read label="Image of the region" value={nice(Math.abs(det) * s * t, 3)} tone="sky" />}

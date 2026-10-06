@@ -37,7 +37,7 @@ function One({ props, marker, pick }: WithPick) {
   const [s, setS] = useState(surprise(num(props, "p", 0.25)));
   const p = 2 ** -s;
   const quiet = flag(props, "quiet"), halve = flag(props, "halve");
-  const t = useClock(true, 0);
+  const t = Math.max(0, useClock(true, 0));
   const shown = useTween(quiet ? 0 : s, 900);
   const cx = 110, cy = 130, R = 92, spin = (t * 40) % 360;
   const wedge = (frac: number) => {
@@ -146,7 +146,7 @@ function Coin({ props, pick }: WithPick) {
   const [p, setP] = useState(num(props, "p", 0.7));
   const quiet = flag(props, "quiet"), runs = num(props, "runs", 0);
   const [seed, setSeed] = useState(7);
-  const t = useClock(true, 20);
+  const t = Math.max(0, useClock(true, 20));
   // flips arrive 8 a second, from a seeded stream that restarts when p changes; a reveal shows `runs` flips at once
   const flips = useMemo(() => { const r = seeded(seed + Math.round(p * 1000)); return Array.from({ length: 400 }, () => r() < p); }, [p, seed]);
   const k = Math.min(400, Math.max(runs, Math.floor(t * 8)));

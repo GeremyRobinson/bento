@@ -2,10 +2,10 @@
 // with curved edges (06), polar boxes of rings and wedges (07), and project 2, Fill the lake.
 import { useMemo, useState, type ReactElement } from "react";
 import { flag, num, str, type SceneProps } from "../../../scenes";
-import { fx, path, Read, SaveRow, Scene, Slider, Toggle, useClock, useSvgDrag } from "../../../ui/kit";
+import { fx, path, Read, SaveRow, Scene, Slider, Toggle, useSvgDrag } from "../../../ui/kit";
 import { useB2 } from "../../../ui/useB2";
 import { lake, LAND, type Box } from "../maths";
-import { FlatMap, mapper, nice, useLandscape, View3D, type Proj } from "./common";
+import { useTime, FlatMap, mapper, nice, useLandscape, View3D, type Proj } from "./common";
 
 const W = 360, H = 250;
 const poly = (pts: [number, number][]) => pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`).join("") + "Z";
@@ -115,7 +115,7 @@ const THUMBS: { label: string; inside: (x: number, y: number) => boolean }[] = [
   { label: "D", inside: (x, y) => x + y <= 1 },
 ];
 function PickRegion({ paint }: { paint: boolean }) {
-  const t = useClock(paint, 9);
+  const t = useTime(paint, 9);
   const sweep = paint ? Math.min(1, t / 2) : 0;
   const svg = (
     <svg viewBox={`0 0 ${W} ${H}`} className="b2pic mv" role="img" aria-label={`Four shaded regions in the unit square, A to D.${paint ? " C is painted by the sweep." : ""}`}>

@@ -94,7 +94,8 @@ export function useClock(play: boolean, still: number): number {
     if (!play || off) { setT(still); return; }
     let raf = 0;
     const t0 = performance.now();
-    const tick = (now: number) => { setT((now - t0) / 1000); raf = requestAnimationFrame(tick); };
+    // the first frame can be stamped a hair before t0; a clock never runs backwards past its start
+    const tick = (now: number) => { setT(Math.max(0, (now - t0) / 1000)); raf = requestAnimationFrame(tick); };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [play, off, still]);

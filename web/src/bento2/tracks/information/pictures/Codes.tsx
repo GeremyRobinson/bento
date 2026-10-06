@@ -132,7 +132,7 @@ function Huffman({ props, marker, pick }: SceneProps & { pick: ReactNode }) {
   const nodes = useMemo(() => merges(counts.length ? counts : [1]), [countsText]); // eslint-disable-line react-hooks/exhaustive-deps
   const quiet = flag(props, "quiet"), auto = flag(props, "auto");
   const [m, setM] = useState(0);
-  const t = useClock(auto, 99);
+  const t = Math.max(0, useClock(auto, 99));
   const done = auto ? Math.min(k - 1, Math.floor(t / 0.9)) : quiet ? 0 : Math.min(m, k - 1);
   const live = nodes.filter(n => n.leaf != null || n.at < done);
   const isRoot = (id: number) => !live.some(n => n.kids?.includes(id));

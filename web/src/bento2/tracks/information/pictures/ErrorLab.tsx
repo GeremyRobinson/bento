@@ -91,7 +91,7 @@ function Repeat({ props, pick }: { props: SceneProps["props"]; pick: ReactNode }
   const given = str<string>(props, "copies", "");
   const [f, setF] = useState(0.1);
   const msg = [1, 0, 1, 1];
-  const t = useClock(!given, 30);
+  const t = Math.max(0, useClock(!given, 30));
   const sends = given ? 1 : Math.max(1, Math.floor(t * 4));
   // every send flips each bit of each copy with chance f, from a stream that restarts when f changes
   const runs = useMemo(() => {

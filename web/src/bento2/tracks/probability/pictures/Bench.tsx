@@ -8,7 +8,7 @@ import { flag, type SceneProps } from "../../../scenes";
 import { fx, Read, SaveRow, Scene, Slider } from "../../../ui/kit";
 import { useB2 } from "../../../ui/useB2";
 import { gauss, Phi, PhiInv, seeded } from "../maths";
-import { Act, Acts, commas, K, WrapToggle } from "./parts";
+import { Act, Acts, commas, K, WrapToggle, Extra } from "./parts";
 
 const W = 360, H = 240, BASE = 0.1;
 
@@ -94,32 +94,34 @@ export function BenchScene({ props }: SceneProps) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         <Slider label="Plan: n per version" value={n} min={500} max={20000} step={500} onChange={setN} format={commas}
           marks={typeof shelf("nNeeded") === "number" ? [{ v: Math.min(20000, Math.max(500, Math.round((shelf("nNeeded") as number) / 500) * 500)), label: "your nNeeded" }] : undefined} />
-        <Slider label="A real effect is" value={lift} min={0.5} max={3} step={0.1} onChange={setLift} format={x => `+${fx(x, 1)} points`} />
+        <Extra below={project ? 700 : 900}><Slider label="A real effect is" value={lift} min={0.5} max={3} step={0.1} onChange={setLift} format={x => `+${fx(x, 1)} points`} /></Extra>
         <WrapToggle label="Metrics checked" value={m} onChange={setM} options={(["1", "2", "5", "10"] as const).map(v => ({ v, label: v === "1" ? "1 metric" : `${v} metrics` }))} />
         <WrapToggle label="Ideas that are real" value={r} onChange={setR} options={(["10", "20", "50"] as const).map(v => ({ v, label: `${v}% real` }))} />
         <Acts>
-          <Act onClick={() => { setExp(e => e + 1); setShown(false); }}>Run an experiment</Act>
-          <Act onClick={reveal}>Reveal the truth</Act>
+          <Act onClick={() => { setExp(e => e + 1); setShown(false); }}>Run one</Act>
+          <Act onClick={reveal}>Reveal truth</Act>
           <Act onClick={runMany}>Run 100</Act>
-          <Act on={alarms.extreme} onClick={() => setAlarms(a => ({ ...a, extreme: !a.extreme }))}>Picked extremes?</Act>
-          <Act on={alarms.notRandom} onClick={() => setAlarms(a => ({ ...a, notRandom: !a.notRandom }))}>Not random?</Act>
-          <Act on={alarms.peeked} onClick={() => setAlarms(a => ({ ...a, peeked: !a.peeked }))}>Peeked?</Act>
         </Acts>
+        <Extra below={project ? 700 : 900}><span className="b2toggle" role="group" aria-label="Alarms" style={{ flexWrap: "wrap", borderRadius: "18px", maxWidth: "100%" }}>
+          {([["extreme", "Extremes?"], ["notRandom", "Not random?"], ["peeked", "Peeked?"]] as const).map(([k, lab]) => (
+            <button type="button" key={k} aria-pressed={alarms[k]} onClick={() => setAlarms(x => ({ ...x, [k]: !x[k] }))}>{lab}</button>
+          ))}
+        </span></Extra>
       </>}
       readouts={<>
-        <Read label="Verdict" value={run.clears ? "B beats A" : "no clear winner"} tone={run.clears ? "amber" : undefined} big />
-        <Read label="Effect, 95% interval" value={`${fx(run.d * 100, 2)} (${fx(run.lo * 100, 2)} to ${fx(run.hi * 100, 2)}) points`} />
-        <Read label="Chance it's real" value={`${fx(run.chance * 100, 0)}%`} tone="pink" />
-        {warn.map(w => <Read key={w} label="Alarm" value={w} />)}
-        {typeof shelf("fdrField") === "number" && <Read label="fdrField, your shelf" value={`${fx((shelf("fdrField") as number) * 100, 1)}% of hits false`} />}
+        <Extra below={project ? 900 : 700}><Read label="Verdict" value={run.clears ? "B beats A" : "no clear winner"} tone={run.clears ? "amber" : undefined} big /></Extra>
+        <Extra below={900}><Read label="Effect, 95% interval" value={`${fx(run.d * 100, 2)} (${fx(run.lo * 100, 2)} to ${fx(run.hi * 100, 2)}) points`} /></Extra>
+        <Read label="Chance it's real" value={`${fx(run.chance * 100, 0)}%`} tone="pink" minor />
+        <Extra below={900}>{warn.map(w => <Read key={w} label="Alarm" value={w} />)}</Extra>
+        {typeof shelf("fdrField") === "number" && <Read minor label="fdrField, your shelf" value={`${fx((shelf("fdrField") as number) * 100, 1)}% of hits false`} />}
       </>}
       foot={project && <>
-        <label className="b2slider"><span className="b2sl"><span>Your one-line verdict</span></span>
-          <input type="text" value={line} placeholder={verdict} onChange={e => setLine(e.currentTarget.value)} style={{ minHeight: "36px", borderRadius: "10px", padding: "0 10px", background: "var(--well)", color: "var(--text)", border: "1px solid var(--faint)" }} /></label>
+        <label className="b2slider">
+          <input type="text" aria-label="Your one-line verdict" value={line} placeholder={verdict} onChange={e => setLine(e.currentTarget.value)} style={{ minHeight: "36px", borderRadius: "10px", padding: "0 10px", background: "var(--well)", color: "var(--text)", border: "1px solid var(--faint)" }} /></label>
         <SaveRow what={<>Keep <b>luckDetector</b> and this bench in your Notebook</>} saved={saved} onSave={onSave} />
       </>}
     />

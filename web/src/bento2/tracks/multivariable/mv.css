@@ -45,3 +45,5 @@
 .mvform{display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap}
 .mvform input{flex:1 1 200px;min-width:0;min-height:38px;padding:0 var(--sp-3);border-radius:var(--r-md);background:var(--well);color:var(--text);font:inherit;font-size:var(--fz-md);box-shadow:inset 0 0 0 1px var(--adv-hair)}
 .mvform small{font-size:var(--fz-2xs);color:var(--muted)}
+.mvsl2{display:grid;grid-template-columns:1fr 1fr;gap:6px var(--sp-3);flex:1 1 100%;min-width:0}
+.mvsl2>.b2slider{min-width:0}

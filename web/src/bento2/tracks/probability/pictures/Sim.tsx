@@ -74,7 +74,7 @@ function Avg({ props, pick }: Part) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         <Slider label="Chance of heads p" value={p} min={0.05} max={0.95} step={0.01} onChange={setP} format={x => fx(x)} />
         <Acts>
@@ -115,7 +115,7 @@ function Pi({ pick }: Part) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         <Slider label="Drops" value={e} min={1} max={5.05} step={0.01} onChange={setE} format={() => commas(D)} marks={[{ v: 2, label: "100" }, { v: 4, label: "10,000" }, { v: 5.0414, label: "110,000" }]} />
         <Acts><Act onClick={() => setSeed(s => s + 1)}>Drop again</Act></Acts>
@@ -159,7 +159,7 @@ function Env({ props, pick }: Part) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         <Slider label="Letters n" value={n} min={2} max={100} step={1} onChange={v => { setN(v); setSeed(s => s + 1); }} />
         <Acts><Act onClick={() => setSeed(s => s + 1)}>Shuffle again</Act></Acts>
@@ -217,7 +217,7 @@ function Rain({ props, pick }: Part) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         <Slider label="Rate λ, a minute" value={lam} min={0.5} max={6} step={0.1} onChange={setLam} format={x => fx(x, 1)} marks={[{ v: 1, label: "1" }, { v: 2, label: "2" }, { v: 3, label: "3" }]} />
         <Acts>
@@ -273,7 +273,7 @@ function Walk({ props, pick }: Part) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<><Acts><Act onClick={() => setSeed(s => s + 1)}>New 100 flips</Act></Acts>{pick}</>}
       readouts={<>
         <Read label="Flips" value={quiet ? 100 : shown} />
@@ -322,7 +322,7 @@ function Markov({ props, pick }: Part) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         <Slider label="a: A to B" value={a} min={0.05} max={0.95} step={0.01} onChange={setA} format={x => fx(x)} />
         <Slider label="b: B to A" value={b} min={0.05} max={0.95} step={0.01} onChange={setB} format={x => fx(x)} />
@@ -396,7 +396,7 @@ function Wall({ props, pick }: Part) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         {!peek && <Slider label="Tests m" value={m} min={1} max={100} step={1} onChange={setM} />}
         <Acts>

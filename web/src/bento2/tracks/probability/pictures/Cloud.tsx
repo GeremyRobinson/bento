@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { flag, num, type SceneProps } from "../../../scenes";
 import { fx, path, Read, Scene, Slider, useSvgDrag } from "../../../ui/kit";
 import { gauss, seeded } from "../maths";
-import { K, lin } from "./parts";
+import { K, lin, Extra } from "./parts";
 
 const W = 360, H = 240;
 
@@ -53,19 +53,19 @@ export function CloudScene({ props, marker, onMarker }: SceneProps) {
     </svg>
   );
   return (
-    <Scene svg={svg}
+    <Scene className="prs" svg={svg}
       controls={<>
         <Slider label="Correlation ρ" value={rho} min={-0.95} max={0.95} step={0.05} onChange={setRho} format={x => fx(x)} />
-        <Slider label="σx" value={sx} min={0.5} max={20} step={0.5} onChange={setSx} format={x => fx(x, 1)} />
-        <Slider label="σy" value={sy} min={0.5} max={20} step={0.5} onChange={setSy} format={x => fx(x, 1)} />
+        <Extra><Slider label="σx" value={sx} min={0.5} max={20} step={0.5} onChange={setSx} format={x => fx(x, 1)} />
+          <Slider label="σy" value={sy} min={0.5} max={20} step={0.5} onChange={setSy} format={x => fx(x, 1)} /></Extra>
         <Slider label="Slice at x, in SDs" value={s} min={-2.5} max={2.5} step={0.1} onChange={setS} format={x => fx(x, 1)} />
       </>}
       readouts={<>
-        <Read label="Cov = ρσxσy" value={fx(rho * sx * sy)} />
+        <Extra><Read label="Cov = ρσxσy" value={fx(rho * sx * sy)} /></Extra>
         {!quiet && <Read label="Slice's middle, SDs of y" value={fx(sliceMid / ny)} tone="pink" />}
         {!quiet && <Read label="ρ × slice" value={fx(rho * s)} tone="pink" />}
         <Read label="Long axis, at the slice" value={fx((axisSlope * sxPos) / ny)} tone="amber" />
-        {!quiet && <Read label="Leftover SD, σy√(1 − ρ²)" value={fx(sy * Math.sqrt(1 - rho * rho))} />}
+        {!quiet && <Extra><Read label="Leftover SD, σy√(1 − ρ²)" value={fx(sy * Math.sqrt(1 - rho * rho))} /></Extra>}
       </>}
     />
   );

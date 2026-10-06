@@ -5,10 +5,10 @@
 import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
 import { flag, type SceneProps } from "../../../scenes";
-import { fx, path, Read, SaveRow, Scene, Toggle, useClock, useSvgDrag } from "../../../ui/kit";
+import { fx, path, Read, SaveRow, Scene, Toggle, useSvgDrag } from "../../../ui/kit";
 import { useB2 } from "../../../ui/useB2";
 import { compile, eig2, flatSpots, grad, hess, kindAt, KIND_WORD, lake, LAND_SRC, seeded, type Box, type F2 } from "../maths";
-import { FlatMap, mapper, MINE, nice, type MineState } from "./common";
+import { useTime, FlatMap, mapper, MINE, nice, type MineState } from "./common";
 
 const W = 360, H = 250;
 type Src = "mine" | "land" | "typed";
@@ -67,7 +67,7 @@ export function ValleyScene({ props }: SceneProps) {
   const fence: Box | null = fenced ? [Math.min(A[0], B[0]), Math.max(A[0], B[0]), Math.min(A[1], B[1]), Math.max(A[1], B[1])] : null;
   const [run, setRun] = useState(0);
   const res = useMemo(() => (run ? search(f, box, fence) : null), [run, f, box.join(","), fence?.join(",")]); // eslint-disable-line react-hooks/exhaustive-deps
-  const t = useClock(run > 0, 99), shown = Math.min(1, t / 2.5);
+  const t = useTime(run > 0, 99), shown = Math.min(1, t / 2.5);
   const done = !!res && shown >= 1;
   const onFence = !!res && !!fence && (Math.abs(res.x - fence[0]) < 1e-3 || Math.abs(res.x - fence[1]) < 1e-3 || Math.abs(res.y - fence[2]) < 1e-3 || Math.abs(res.y - fence[3]) < 1e-3);
   const kind = res ? kindAt(f, res.x, res.y) : null;

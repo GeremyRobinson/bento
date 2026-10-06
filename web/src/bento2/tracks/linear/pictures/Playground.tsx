@@ -172,8 +172,8 @@ function ComposeView(sp: SceneProps) {
     <MatRead label={`${name(ka)}, then ${name(kb)}: BA`} M={mm(Bm, Am)} tone="sky" />
     <MatRead label={`${name(kb)}, then ${name(ka)}: AB`} M={mm(Am, Bm)} tone="pink" />
   </> : <>
-    <MatRead label={`A (${name(ka)})`} M={Am} />
-    <MatRead label={`B (${name(kb)})`} M={Bm} />
+    <MatRead minor label={`A (${name(ka)})`} M={Am} />
+    <MatRead minor label={`B (${name(kb)})`} M={Bm} />
     {/* during a guess the product stays hidden: it would answer "same or different?" */}
     {!quiet && <MatRead label={order === "ab" ? "A, then B: BA" : "B, then A: AB"} M={mm(second, first)} tone="sky" />}
   </>;
@@ -196,7 +196,7 @@ function CircleView(sp: SceneProps) {
   // a symmetric matrix's axes are its eigenvectors (stretched by λ); any matrix's are its singular directions
   const ax = (k: 0 | 1) => (e ? e.v[k]!.map(x => x * e.l[k]!) : s.u[k]!.map(x => x * s.s[k]!));
   const inp = (k: 0 | 1) => (e ? e.v[k]! : s.v[k]!);
-  const viewToggle = symm && flag(props, "surface") && <Toggle label="View" value={view} onChange={setView} options={[{ v: "ellipse", label: "Ellipse" }, { v: "surface", label: "Surface z = xᵀAx" }]} />;
+  const viewToggle = symm && flag(props, "surface") && <Toggle label="View" value={view} onChange={setView} options={[{ v: "ellipse", label: "Ellipse" }, { v: "surface", label: "Surface" }]} />;
   if (symm && view === "surface") {
     const f = (x: number, y: number) => sa * x * x + 2 * sb * x * y + sd * y * y;
     const zs = 1 / Math.max(1, Math.abs(sa) + Math.abs(sb) + Math.abs(sd));
@@ -225,11 +225,11 @@ function CircleView(sp: SceneProps) {
   </>;
   const controls = symm ? <>{symSliders(sa, sb, sd, setSa, setSb, setSd)}{viewToggle}</> : undefined;
   const readouts = <>
-    <MatRead label="A" M={M} hide={quiet && !symm} />
+    <MatRead label="A" M={M} hide={quiet && !symm} minor={symm} />
     {show && (e ? <>
-      <Read label="λ₁ (long axis)" value={fx(e.l[0], 2)} tone="amber" />
-      <Read label="λ₂" value={fx(e.l[1], 2)} tone="mint" />
-      <Read label="Shape of xᵀAx" value={shapeOf(e.l)} />
+      <Read minor label="λ₁ (long axis)" value={fx(e.l[0], 2)} tone="amber" />
+      <Read minor label="λ₂" value={fx(e.l[1], 2)} tone="mint" />
+      <Read minor label="Shape of xᵀAx" value={shapeOf(e.l)} />
     </> : <>
       <Read label="σ₁ (longest)" value={fx(s.s[0], 2)} tone="amber" />
       <Read label="σ₂ (shortest)" value={fx(s.s[1], 2)} tone="mint" />
@@ -265,13 +265,13 @@ function FilterView(sp: SceneProps) {
     <Slider label="Shear" value={k} min={-1} max={1} step={0.25} onChange={v => { setK(v); setGoal(0); }} format={x => fx(x, 2)} />
     <Slider label="Stretch across" value={sx} min={0.5} max={2} step={0.25} onChange={v => { setSx(v); setGoal(0); }} format={x => fx(x, 2)} />
     <Slider label="Stretch up" value={sy} min={-2} max={2} step={0.25} onChange={v => { setSy(v); setGoal(0); }} format={x => fx(x, 2)} />
-    <button type="button" className="ctl" aria-pressed={goal === 1} onClick={() => setGoal(1)}>Filter with M</button>
-    <button type="button" className="ctl" disabled={goal !== 1 || !ok} onClick={() => setGoal(2)}>Undo with Minv</button>
+    {/* one button: filter the sprite, then undo it with Minv */}
+    <button type="button" className="ctl" disabled={goal === 1 && !ok} onClick={() => setGoal(goal === 1 ? 2 : 1)}>{goal === 1 ? "Undo with Minv" : "Filter with M"}</button>
   </>;
   const readouts = <>
     <MatRead label="M" M={M.map(rw => rw.map(round2))} tone="sky" />
-    <Read label="det M, the area scale" value={fx(dM, 2)} tone={dM < 0 ? "pink" : "sky"} />
-    {Mi ? <MatRead label="Minv" M={Mi.map(rw => rw.map(round2))} tone="amber" /> : <Read label="Minv" value="none: the sprite is squashed flat" />}
+    <Read minor label="det M, the area scale" value={fx(dM, 2)} tone={dM < 0 ? "pink" : "sky"} />
+    {Mi ? <MatRead minor label="Minv" M={Mi.map(rw => rw.map(round2))} tone="amber" /> : <Read label="Minv" value="none: the sprite is squashed flat" />}
   </>;
   let foot: React.ReactNode;
   if (project) {

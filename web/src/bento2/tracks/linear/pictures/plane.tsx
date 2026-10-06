@@ -94,8 +94,9 @@ const fmtDec = (x: number, k: number) => { const s = Math.abs(x).toFixed(k); ret
 export const snap = (x: number, to = 1) => Math.round(x / to) * to;
 
 /** A matrix as a readout: its name beside its entries, in brackets (2 × 2 or 3 × 3). */
-export function MatRead({ label, M, tone, hide }: { label: string; M: number[][]; tone?: Tone; hide?: boolean }) {
-  return (
+export function MatRead({ label, M, tone, hide, minor }: { label: string; M: number[][]; tone?: Tone; hide?: boolean; minor?: boolean }) {
+  // a minor matrix steps aside in the lesson on a phone, like a minor readout
+  const m = (
     <span className="b2mat" aria-label={`${label}: ${M.map(r => r.map(x => matNum(x)).join(", ")).join("; ")}`}>
       <small>{label}</small>
       <span className={`b2grid2${tone ? ` tone-${tone}` : ""}`} style={{ gridTemplateColumns: `repeat(${M[0]!.length}, auto)` }}>
@@ -103,4 +104,5 @@ export function MatRead({ label, M, tone, hide }: { label: string; M: number[][]
       </span>
     </span>
   );
+  return minor ? <span className="b2r minor">{m}</span> : m;
 }

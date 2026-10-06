@@ -3,7 +3,7 @@
 // its contour map on the floor. Overlays get the projection, so planes, balls and cuts sit in the same space.
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { num, str, type SceneValues } from "../../../scenes";
-import { path } from "../../../ui/kit";
+import { path, useClock } from "../../../ui/kit";
 import { useB2 } from "../../../ui/useB2";
 import { compile, contour, LAND, LAND_BOX, LAND_SRC, levelsOf, sample, type Box, type F2 } from "../maths";
 import "../mv.css";
@@ -162,3 +162,6 @@ export const nice = (x: number, places = 2) => {
   const v = Number(x.toFixed(places));
   return (v < 0 ? "−" : "") + String(Math.abs(v));
 };
+
+/** the kit's clock, never below 0: a frame can arrive stamped a hair before the clock started */
+export const useTime = (play: boolean, still: number) => Math.max(0, useClock(play, still));
