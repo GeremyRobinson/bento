@@ -75,7 +75,7 @@ export const lesson: LessonDefinition<FracTimesProblem> = {
   grade: 5,
   unit: "Fractions",
   title: "Multiplying fractions",
-  pre: "g4-fracwhole",
+  pre: "g5-fracof",
   reference: createFracTimes(2, 3, 3, 4),
   generate: (rng, index) => generateFracTimes(rng, index),
   restore: raw => { const r = readNumbers(raw, ["a", "b", "c", "d"] as const); try { return r && createFracTimes(r.a, r.b, r.c, r.d); } catch { return null; } },

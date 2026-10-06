@@ -167,3 +167,16 @@ describe("weakest lessons, rewritten to the fixes-02 drafts", () => {
     }
   });
 });
+
+describe("fixes-02 Order, grades 4 to 7", () => {
+  it("puts each lesson after the one it builds on", async () => {
+    const { CATALOG } = await import("../../curriculum/catalog");
+    const at = (id: string) => CATALOG.findIndex(c => c.id === id);
+    const before = (a: string, b: string) => expect(at(a), `${a} before ${b}`).toBeLessThan(at(b));
+    before("g4-lines", "g4-angles"); before("g4-angles", "g4-symmetry"); before("g4-equiv", "g4-fraccompare"); before("g4-fraccompare", "g4-likefrac");
+    before("g5-fracof", "g5-multfrac"); before("mix", "g5-fracof"); before("g5-multfrac", "g5-unitdiv"); before("g6-lcm", "g6-gcf");
+    expect(CATALOG.find(c => c.id === "g4-angles")!.unit).toBe("Lines and shapes");
+    // every grade 4-7 pre is a lesson that comes earlier
+    for (const c of CATALOG.filter(c => c.grade >= 4 && c.grade <= 7 && c.pre)) before(c.pre!, c.id);
+  });
+});

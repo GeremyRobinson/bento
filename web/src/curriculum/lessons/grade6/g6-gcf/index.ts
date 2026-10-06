@@ -71,6 +71,7 @@ export const lesson: LessonDefinition<GcfProblem> = {
   grade: 6,
   unit: "Number system",
   title: "Factor out the GCF",
+  pre: "g4-factors",
   reference: createGcf(12, 2, 3),
   generate: (rng, index) => generateGcf(rng, index),
   restore: raw => { const r = readNumbers(raw, ["g", "m", "n"] as const); try { return r && createGcf(r.g, r.m, r.n); } catch { return null; } },

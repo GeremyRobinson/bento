@@ -54,6 +54,8 @@ export const deviations: Record<string, Partial<Record<string, string>>> = {
     checks: `${SLIPS}: g4-convert's mix-ups ("Used 10", "Mixed up a day" …) and "Divided instead of multiplied"`,
   },
   "g4-angles": {
+    unit: "\"Lines and shapes\", right after g4-lines, which first says what an angle is (fixes-02 Order 1)",
+    pre: "g4-lines (fixes-02 Order 1)",
     prompt: "the missing part is asked as a° + [ ]° = T°, so the step doesn't hand over the operation (fixes-02 draft)",
     hint: "\"Is it a square corner or a straight line?\": the old whole hint stated both answers",
     explain: "Show me says the result where it only repeated the hint",

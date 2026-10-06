@@ -122,5 +122,5 @@ export const lesson: LessonDefinition<LinesProblem> = {
   picture: p => picture(p),
   answers,
   explain,
-  pre: "g4-angles",
+  pre: "g3-quads",
 };

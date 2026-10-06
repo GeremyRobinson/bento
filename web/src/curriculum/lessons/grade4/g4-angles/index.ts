@@ -65,8 +65,9 @@ export function explainAngleParts(p: AnglePartsProblem, answers: AnswerModel): E
 export const lesson: LessonDefinition<AnglePartsProblem> = {
   id: "g4-angles",
   grade: 4,
-  unit: "Measurement",
+  unit: "Lines and shapes",
   title: "Angles add up",
+  pre: "g4-lines",
   reference: createAngleParts(false, 35),
   generate: (rng, index = 3) => {
     // a right angle in tens first, so the subtracting is easy while the idea is new
