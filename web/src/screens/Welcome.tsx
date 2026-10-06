@@ -142,12 +142,12 @@ function HeroPictures({ rng }: { rng: Rng }) {
 const SANDBOX = import.meta.env.MODE === "preview" || import.meta.env.MODE === "development";
 
 export function Welcome({ shelf = false }: { shelf?: boolean }) {
-  const { chooseGrade, deps } = useApp();
+  const { deps, go, progress, openSheet } = useApp();
   const rng = useMemo(() => deps().rng, []); // eslint-disable-line react-hooks/exhaustive-deps
   // sent here to choose a grade: open at the shelf
   useEffect(() => { if (shelf) document.getElementById("lshelf")?.scrollIntoView?.({ block: "start" }); }, [shelf]);
-  // Start learning glides down to the grade shelf on this page; picking a grade there starts it (G 2026-10-06)
-  const start = () => document.getElementById("lshelf")?.scrollIntoView?.({ behavior: reduceMotion() ? "auto" : "smooth", block: "start" });
+  // Start learning goes into the app, where grades are chosen in picker D; the shelf below only shows them (G 2026-10-06)
+  const start = () => { go({ name: "home" }, "fwd"); if (progress.grade != null) openSheet(true); };
   return (
     <div className="land">
       <section className="lhero">
@@ -159,7 +159,7 @@ export function Welcome({ shelf = false }: { shelf?: boolean }) {
         <HeroPictures rng={rng} />
       </section>
       <section className="lsec" id="lshelf"><h2>Every grade, K to 12th.</h2><p>Each grade is a book of chapters. Start in any one and switch whenever you like.</p></section>
-      <div className="lshelf"><Shelf current={null} onPick={chooseGrade} /></div>
+      <div className="lshelf"><Shelf current={null} /></div>
       <section className="lsec"><h2>Everything in one box.</h2><p>Lessons, plus everything that helps them stick.</p></section>
       <FeatureBox rng={rng} />
       <Advanced />

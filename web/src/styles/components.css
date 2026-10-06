@@ -52,7 +52,7 @@
 @media (min-width:700px){.sheet{align-items:center}.sheet .panel{border-radius:var(--r-sheet);width:min(640px,94vw)}}
 @keyframes sheetUp{from{transform:translateY(40px);opacity:0}}
 .gcell{display:flex;align-items:center;gap:10px;padding:6px var(--sp-3) 6px 6px;border-radius:var(--r-pill);background:var(--card);height:64px;text-align:left;transition:background var(--dur-150),transform var(--dur-200) var(--spring)}
-.gcell:active{transform:scale(.96)}
+button.gcell:active{transform:scale(.96)}
 .gcell.on{box-shadow:inset 0 0 0 2px var(--tint)}
 .hero.welcome{min-height:160px;align-content:end}
 .hero.welcome h1{font-size:calc(var(--fs) * 2)}

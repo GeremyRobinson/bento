@@ -1,6 +1,5 @@
 // Every flow of the app through the UI, written against whichever lessons are rebuilt (g5-mult2 is always there).
 import { act, fireEvent, screen, within } from "@testing-library/react";
-import { vi } from "vitest";
 import { CATALOG } from "../../curriculum/catalog";
 import { lessonById } from "../../curriculum/registry";
 import type { Progress } from "../../engine/mastery/progress";
@@ -27,11 +26,13 @@ describe("first launch: landing → grade → home", () => {
     expect(document.querySelectorAll(".lbox .ltile")).toHaveLength(11);
     expect(document.querySelectorAll(".lbox .ldemo")).toHaveLength(2);
 
-    // the grade picker is the shelf: thirteen grade cards, nothing that isn't open yet
-    const grades = [...document.querySelectorAll(".lshelf button.book")];
-    expect(grades).toHaveLength(13);
+    // the shelf shows all thirteen grades, nothing that isn't open yet, and picks none: grades are chosen in the app
+    expect(document.querySelectorAll(".lshelf .book")).toHaveLength(13);
+    expect(document.querySelectorAll(".lshelf button")).toHaveLength(0);
     expect(document.querySelector(".lshelf .book.soon")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: /^5th grade:/ }));
+    tap("Start learning");
+    fireEvent.click(screen.getByRole("radio", { name: /^5th grade/ }));
+    tap("Start 5th grade ›");
     // a grade opens on its book: the cover, today's plan, then every chapter with its pages
     expect(screen.getByRole("heading", { level: 1, name: "5th grade" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: "Today" })).toBeInTheDocument();
@@ -377,10 +378,9 @@ describe("the website from inside the app", () => {
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
     tap("About Bento ›");
     expect(screen.getByRole("heading", { name: "Every grade, K to 12th." })).toBeInTheDocument();
-    // Start learning glides to the grade shelf on the same page
-    const shelf = document.getElementById("lshelf")!, glide = vi.fn();
-    shelf.scrollIntoView = glide;
+    // the shelf only shows the grades; Start learning goes into the app and its grade picker, even with a grade chosen
+    expect(screen.queryByRole("button", { name: /^5th grade/ })).toBeNull();
     tap("Start learning");
-    expect(glide).toHaveBeenCalled();
+    expect(screen.getByRole("heading", { name: "Which grade are you in?" })).toBeInTheDocument();
   });
 });
