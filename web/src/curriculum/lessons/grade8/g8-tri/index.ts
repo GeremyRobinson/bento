@@ -38,7 +38,7 @@ export function explainTriangleAngles(p: TriangleAnglesProblem, answers: AnswerM
   const { a, b } = p, sum = expected(answers, "add"), c = expected(answers, "third");
   return {
     heading: "Triangles add up to 180°",
-    idea: ["The three angles of any triangle add up to 180°.", "Add the two you know, then take that away from 180."],
+    idea: ["Tear off the three corners of any triangle and line them up: they make a straight line, 180°.", "Add the two you know, then take that away from 180."],
     statement: mt`${a}° + ${b}° + ? = 180°`,
     caption: `${a}° + ${b}° + ${c}° = 180°.`,
     diagram: buildTriangleAngles({

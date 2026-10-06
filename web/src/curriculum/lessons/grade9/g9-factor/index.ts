@@ -47,7 +47,7 @@ export function explainFactor(prob: FactorProblem, answers: AnswerModel): Explan
   const X = Math.max(p, q) + 3;
   return {
     heading: "Multiply to c, add to b",
-    idea: ["Find two numbers that multiply to the last number and add to the middle one. They are the numbers in the two factors."],
+    idea: ["Multiplying (x + p)(x + q) gives x² + (p + q)x + pq: the two numbers add to make the middle and multiply to make the last.", "So factoring runs that backwards: find two numbers that multiply to the last number and add to the middle one."],
     statement: trinomial(prob),
     diagram: buildAreaGrid({
       cols: [{ label: "x", size: X }, { label: String(q), size: q, from: 1, cls: "acc" }],

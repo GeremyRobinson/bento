@@ -19,7 +19,7 @@ export function explainDefInt(p: DefIntProblem, model: AnswerModel): Explanation
   const anti = c === 1 ? `x${supText(n + 1)}` : powerText(c, n + 1);
   return {
     heading: "F(top) − F(bottom)",
-    idea: ["A definite integral is the area under the curve between two x values. Find an antiderivative F, then work out F(top) − F(bottom)."],
+    idea: ["A definite integral is the area under the curve between two x values.", "An antiderivative F adds up that area from 0: F(top) is all the area up to the top, so take away F(bottom), the part before the start."],
     statement: [text("∫"), sub(j), sup(k), text(" "), ...powerTerm(a, n), text(" dx")],
     caption: `The shaded area under y = ${powerText(a, n)} from ${f(j)} to ${f(k)} is ${f(area)}.`,
     diagram: buildPlane({

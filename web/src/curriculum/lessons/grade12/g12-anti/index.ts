@@ -56,6 +56,8 @@ export function explainAntiderivative(p: Antiderivative, model: AnswerModel) {
       { id: "raise", narration: `Raise the exponent by 1: ${f(n)} + 1 = ${f(up)}.`, math: m(n, op("+"), 1, op("="), up), line: [frac([...coef(a), v(), sup([mark(up)])], [mark(up)])], answerStep: "raise", result: up },
       { id: "divide", narration: `Divide by the new exponent: ${f(a)} ÷ ${f(up)} = ${f(c)}. Add + C for any constant.`, math: m(a, op("÷"), up, op("="), c),
         line: [...poly([[c, xp(up)]]), op("+"), text("C")], answerStep: "divide", result: c },
+      { id: "check", narration: `Check by going forward: the derivative of ${termText(c, up)} is ${f(up)} × ${termText(c, n)} = ${termText(a, n)}, the function we started with.`,
+        math: [text("d/dx"), text(" "), ...poly([[c, xp(up)]]), op("="), ...poly([[a, n === 1 ? [v()] : xp(n)]])], line: null },
     ],
   });
 }

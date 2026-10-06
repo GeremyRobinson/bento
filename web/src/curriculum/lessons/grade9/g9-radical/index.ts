@@ -1,4 +1,4 @@
-import { formatNumber as f, m, mark, num, op, sqrt, text } from "../../../schemas/math-text";
+import { formatNumber as f, m, mark, num, op, sqrt, sup, text } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import type { Rng } from "../../../generators/rng";
 import { ms, ns } from "../../algebra-kit/steps";
@@ -52,6 +52,7 @@ export function explainSimplifyRoot(p: SimplifyRoot, model: AnswerModel) {
       { id: "square", narration: `${f(n)} = ${f(square)} × ${f(rest)}, and ${f(square)} is a perfect square.`, math: m(n, op("="), square, op("×"), rest), line: [sqrt([text("("), mark(square), op("×"), num(rest), text(")")])], answerStep: "square", result: square },
       { id: "root", narration: `√${f(square)} = ${f(k)}, because ${f(k)} × ${f(k)} = ${f(square)}.`, math: m(sqrt(square), op("="), k), line: [sqrt(square), op("×"), sqrt(rest)], answerStep: "root", result: k },
       { id: "simple", narration: `${f(k)} comes out, and ${f(rest)} stays under the root: ${f(k)}√${f(rest)}.`, math: [sqrt(n), op("="), num(k), sqrt(rest)], line: [mark(k), sqrt(rest)], answerStep: "simple", result: k },
+      { id: "check", narration: `Check: (${f(k)}√${f(rest)})² = ${f(square)} × ${f(rest)} = ${f(n)}.`, math: [text("("), num(k), sqrt(rest), text(")"), sup(2), op("="), num(square), op("×"), num(rest), op("="), num(n)], line: null },
     ],
   });
 }

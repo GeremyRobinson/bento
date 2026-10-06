@@ -57,7 +57,7 @@ export function explainTrigRatio(p: TrigRatioProblem, answers: AnswerModel): Exp
   const sideOf = (name: string): Side => (name === "opposite" ? "a" : name === "adjacent" ? "b" : "c");
   return {
     heading: "SOH CAH TOA",
-    idea: ["sin = opposite ÷ hypotenuse. cos = adjacent ÷ hypotenuse. tan = opposite ÷ adjacent.", "Opposite is across from the angle; adjacent is next to it."],
+    idea: ["Every right triangle with the same angle A is the same shape, just scaled, so the ratio of two of its sides depends only on A.", "sin = opposite ÷ hypotenuse, cos = adjacent ÷ hypotenuse, tan = opposite ÷ adjacent. Opposite is across from the angle; adjacent is next to it."],
     statement: mt`${f} A = ${text(topName)} ÷ ${text(botName)}`,
     caption: `From angle A: opposite ${a}, adjacent ${b}, hypotenuse ${c}.`,
     diagram: buildRightTriangle({

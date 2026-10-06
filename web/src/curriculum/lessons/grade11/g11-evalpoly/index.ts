@@ -59,9 +59,9 @@ export function explainEvaluate(p: EvaluatePolynomial, model: AnswerModel) {
       { id: "plug", narration: `Put ${f(k)} in place of every x.`, math: [...at(k), op("="), ...plugged] },
       { id: "square", narration: `Square ${f(k)} first: ${f(k * k)}. Times ${f(a)} makes ${f(A)}.`, math: m(a, op("·"), ...P(k), sup(2), op("="), A),
         line: [num(A), op(b < 0 ? "−" : "+"), ...(Math.abs(b) === 1 ? [] : [num(Math.abs(b))]), ...K(), ...(c ? [op(c < 0 ? "−" : "+"), num(Math.abs(c))] : [])], answerStep: "square", result: A },
-      { id: "linear", narration: `${f(b)} times ${f(k)} is ${f(B)}. Watch the signs.`, math: m(b, op("·"), ...P(k), op("="), B),
+      { id: "linear", narration: `${f(b)} times ${fP(k)} is ${f(B)}: ${b * k < 0 ? "one negative makes it negative" : b < 0 ? "two negatives make a positive" : "two positives make a positive"}.`, math: m(b, op("·"), ...P(k), op("="), B),
         line: m(A, op("+"), ...P(B), op("+"), ...P(c)), answerStep: "linear", result: B },
-      { id: "total", narration: `Add the three parts: f(${f(k)}) = ${f(total)}.`, math: m(...at(k), op("="), total), answerStep: "total", result: total },
+      { id: "total", narration: `Add the three parts: f(${f(k)}) = ${f(total)}. So the point (${f(k)}, ${f(total)}) is on the graph of f.`, math: m(...at(k), op("="), total), answerStep: "total", result: total },
     ],
   });
 }

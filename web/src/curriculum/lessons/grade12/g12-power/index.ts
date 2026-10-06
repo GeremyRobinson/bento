@@ -68,11 +68,12 @@ export function explainPowerRule(p: PowerRule, model: AnswerModel) {
     caption: "Bring the exponent down, then lower it by 1.",
     alt: `f(x) = ${f(a)}x${supText(n)}: ${f(n)} × ${f(a)} = ${f(c)} and ${f(n)} − 1 = ${f(e)}, so f′(x) = ${f(c)}x${supText(e)}.`,
     steps: [
-      { id: "problem", narration: `The exponent ${f(n)} is what comes down.`, math: [num(a), v(), sup([mark(n)])] },
+      { id: "problem", narration: `f′ tells how steep f is. For a power of x, the exponent ${f(n)} is what comes down.`, math: [num(a), v(), sup([mark(n)])] },
       { id: "coefficient", narration: `Bring the exponent down and multiply: ${f(n)} × ${f(a)} = ${f(c)}.`, math: m(n, op("×"), a, op("="), c),
         line: [mark(n), op("·"), num(a), v(), sup([num(n), op("−"), num(1)])], answerStep: "coefficient", result: c },
       { id: "exponent", narration: `Then lower the exponent by 1: ${f(n)} − 1 = ${f(e)}.`, math: m(n, op("−"), 1, op("="), e), line: term(c, e), answerStep: "exponent", result: e },
       { id: "write", narration: `So f′(x) = ${f(c)}x${supText(e)}.`, math: [text("f′(x)"), op("="), ...term(c, e)], line: null, answerStep: "write", result: c },
+      { id: "slope", narration: `At x = 1, f′(1) = ${f(c)}: ${c > 0 ? `the graph of f climbs ${f(c)} for each 1 across there` : `the graph of f falls ${f(-c)} for each 1 across there`}.`, math: [text("f′(1)"), op("="), num(c)], line: null },
     ],
   });
 }

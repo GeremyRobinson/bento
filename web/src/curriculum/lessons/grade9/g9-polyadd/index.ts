@@ -59,12 +59,12 @@ export function explainPolynomialSum(p: PolynomialSum, model: AnswerModel) {
   const word = p.sub ? "minus" : "plus";
   return beatExplanation({
     heading: "Combine like terms",
-    idea: ["For subtraction, flip every sign in the second one first."],
+    idea: ["Like terms are the same kind of thing: x² with x², x with x, numbers with numbers. 3x² + 5x² is 8x², like 3 apples and 5 apples, but x² and x never combine.", "A minus in front of parentheses takes away every term inside, not just the first one."],
     statement: problem(p),
     caption: `Only like terms combine: x² with x², x with x, numbers with numbers.`,
     alt: `${coef(p.a, "x²")} ${o} ${term(p.d, "x²")} = ${coef(A, "x²")}, ${coef(p.b, "x")} ${o} ${term(p.e, "x")} = ${coef(B, "x")}, ${f(p.c)} ${o} ${fP(p.f)} = ${f(C)}.`,
     steps: [
-      { id: "problem", narration: `Two polynomials, ${word}. Find the like terms, starting with x².`, math: problem(p, true) },
+      { id: "problem", narration: `Two polynomials, ${word}. Line up the matching kinds: x² under x², x under x, numbers under numbers.`, math: problem(p, true) },
       { id: "x2", narration: `x² terms: ${f(p.a)} ${o} ${fP(p.d)} = ${f(A)}.`, math: m(p.a, op(o), ...P(p.d), op("="), A),
         line: [...(A ? poly([[A, X2]]) : [num(0)]), op("+"), ...pending(p.b, p.e, X1), op("+"), ...pending(p.c, p.f, [])], answerStep: "x2", result: A },
       { id: "x1", narration: `x terms: ${f(p.b)} ${o} ${fP(p.e)} = ${f(B)}.`, math: m(p.b, op(o), ...P(p.e), op("="), B),

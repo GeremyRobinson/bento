@@ -43,12 +43,12 @@ export function explainSpecialTriangle(p: SpecialTriangleProblem, answers: Answe
   if (t === 45) {
     const c = expected(answers, "hyp", "c"), r = expected(answers, "hyp", "r");
     const steps: ExplanationStep[] = [
-      { id: "triangle", narration: `Both legs of a 45°-45°-90° triangle are the same: ${s} and ${s}.`, math: mt`45°-45°-90°, leg ${s}`, state: 0 },
-      { id: "hyp", narration: `The hypotenuse is always the leg times √${r}: ${f(c)}√${r}.`, math: mt`${s} × √${r} = ${c}√${r}`, state: 1, answerStep: "hyp" },
+      { id: "triangle", narration: `Both legs of a 45°-45°-90° triangle are the same: ${s} and ${s}. Two of these triangles make a square, cut along its diagonal.`, math: mt`45°-45°-90°, leg ${s}`, state: 0 },
+      { id: "hyp", narration: `The hypotenuse is the square's diagonal: ${s}² + ${s}² = 2 × ${s}², so it is ${s} × √${r} = ${f(c)}√${r}.`, math: mt`${s} × √${r} = ${c}√${r}`, state: 1, answerStep: "hyp" },
     ];
     return {
-      heading: "Two triangles to remember",
-      idea: ["45-45-90: the legs match, and the hypotenuse is a leg × √2.", "30-60-90: short leg x, hypotenuse 2x, long leg x√3."],
+      heading: "Half a square, half an equilateral triangle",
+      idea: ["A 45-45-90 triangle is half a square. Its legs match, so leg² + leg² = 2 × leg², and the hypotenuse is leg × √2.", "A 30-60-90 triangle is half an equilateral triangle. The short leg is half a side, so the hypotenuse is twice it, and the Pythagorean theorem makes the long leg short leg × √3."],
       statement: mt`45°-45°-90°, leg ${s}`,
       caption: `Legs ${s} and ${s}: the hypotenuse is ${s}√2.`,
       diagram: buildRightTriangle({
@@ -65,8 +65,8 @@ export function explainSpecialTriangle(p: SpecialTriangleProblem, answers: Answe
   const hyp = expected(answers, "hyp");
   const long = expected(answers, "long", "c");
   return {
-    heading: "Two triangles to remember",
-    idea: ["45-45-90: the legs match, and the hypotenuse is a leg × √2.", "30-60-90: short leg x, hypotenuse 2x, long leg x√3."],
+    heading: "Half a square, half an equilateral triangle",
+    idea: ["A 45-45-90 triangle is half a square. Its legs match, so leg² + leg² = 2 × leg², and the hypotenuse is leg × √2.", "A 30-60-90 triangle is half an equilateral triangle. The short leg is half a side, so the hypotenuse is twice it, and the Pythagorean theorem makes the long leg short leg × √3."],
     statement: mt`30°-60°-90°, short leg ${s}`,
     caption: `Short leg ${s}: the hypotenuse is ${hyp} and the long leg is ${s}√3.`,
     diagram: buildRightTriangle({
@@ -83,9 +83,9 @@ export function explainSpecialTriangle(p: SpecialTriangleProblem, answers: Answe
     }),
     timeline: beats(3),
     steps: [
-      { id: "triangle", narration: `In a 30°-60°-90° triangle the short leg, ${s}, is across from the 30° angle.`, math: mt`30°-60°-90°, short leg ${s}`, state: 0 },
-      { id: "hyp", narration: `The hypotenuse is twice the short leg: 2 × ${s} = ${hyp}.`, math: mt`2 × ${s} = ${hyp}`, state: 1, answerStep: "hyp", result: hyp },
-      { id: "long", narration: `The long leg is the short leg times √3: ${long}√3.`, math: mt`${s} × √3 = ${long}√3`, state: 2, answerStep: "long" },
+      { id: "triangle", narration: `In a 30°-60°-90° triangle the short leg, ${s}, is across from the 30° angle. Flip it over the long leg: together they make an equilateral triangle, all sides ${hyp}.`, math: mt`30°-60°-90°, short leg ${s}`, state: 0 },
+      { id: "hyp", narration: `The short leg is half of a side of that equilateral triangle, and the hypotenuse is a whole side: 2 × ${s} = ${hyp}.`, math: mt`2 × ${s} = ${hyp}`, state: 1, answerStep: "hyp", result: hyp },
+      { id: "long", narration: `By the Pythagorean theorem, long leg² = ${hyp}² − ${s}² = 3 × ${s}², so the long leg is ${long}√3.`, math: mt`${s} × √3 = ${long}√3`, state: 2, answerStep: "long" },
     ],
   };
 }

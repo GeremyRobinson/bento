@@ -48,12 +48,12 @@ export function explainExponential(p: ExponentialEquation, model: AnswerModel) {
     idea: ["Each power of 3 is a different number: 3, 9, 27, 81 and so on. So if 3 to one power equals 3 to another, the powers must be the same.", "Write both sides as powers of the same base, then set the exponents equal."],
     statement: [...lhs(p), op("="), text(big(value))],
     caption: `Write ${big(value)} as a power of ${f(b)}, then the exponents must be equal.`,
-    alt: `${f(b)} to the x ${fpm(c)} = ${big(value)} = ${f(b)} to the ${f(k)}, so x ${fpm(c)} = ${f(k)} and x = ${f(x)}.`,
+    alt: `${f(b)} to the power (x ${fpm(c)}) = ${big(value)} = ${f(b)} to the ${f(k)}, so x ${fpm(c)} = ${f(k)} and x = ${f(x)}.`,
     steps: [
       { id: "problem", narration: `The left side is a power of ${f(b)}. Can ${big(value)} be one too?`, math: [...lhs(p), op("="), mark(big(value))] },
       { id: "base", narration: `${f(k)} ${f(b)}'s multiply to ${big(value)}, so ${big(value)} = ${f(b)} to the ${f(k)}.`, math: [text(big(value)), op("="), num(b), sup(k)],
         line: [...lhs(p), op("="), num(b), sup([mark(k)])], answerStep: "base", result: k },
-      { id: "match", narration: `Same base, so the exponents match.`, math: [...exponent(c), op("="), num(k)] },
+      { id: "match", narration: `Same base, and different powers of ${f(b)} are different numbers, so the exponents must be equal.`, math: [...exponent(c), op("="), num(k)] },
       { id: "solve", narration: `Undo the ${fpm(c)}: x = ${f(x)}.`, math: m(v(), op("="), k, op(c < 0 ? "+" : "−"), Math.abs(c), op("="), x), answerStep: "solve", result: x },
     ],
   });

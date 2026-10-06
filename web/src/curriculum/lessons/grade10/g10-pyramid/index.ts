@@ -38,7 +38,7 @@ export function explainPyramid(p: PyramidProblem, answers: AnswerModel): Explana
   const { s, h } = p, B = expectedOf(answers.steps, "base"), box = expectedOf(answers.steps, "box"), V = expectedOf(answers.steps, "third");
   return {
     heading: "A third of a box",
-    idea: ["A pyramid holds a third of the box with the same base and height: base area × height ÷ 3."],
+    idea: ["Three pyramids of the same base and height fill the box around them exactly, as you can check by pouring sand.", "So a pyramid holds a third of its box: base area × height ÷ 3."],
     statement: [text("square base "), num(s), text(", height "), num(h)],
     diagram: buildBox3d({
       // the base is drawn from the start, so its side labels never float over an empty card (review v43 item 8);

@@ -45,7 +45,7 @@ export function explainNegativeExponent(p: NegativeExponent, model: AnswerModel)
   const below = Array.from({ length: n }, (_, i) => i + 1).map(k => m(...pow(a, -k), op("="), frac(1, a ** k)));
   return beatExplanation({
     heading: "Negative exponent = flip",
-    idea: ["Anything to the 0 power is 1."],
+    idea: ["Each step down in the exponent divides by the base once more. One step below the first power is 1, so anything to the 0 power is 1.", "Below 0 you keep dividing, so a negative exponent gives 1 over the power."],
     statement: pow(a, -n),
     caption: `Each step down divides by ${f(a)}.`,
     alt: `Powers of ${f(a)} counting down from ${f(a)}${supText(n)} = ${f(power)} to ${f(a)}⁰ = 1, then ${f(a)}${supText(-n)} = 1/${f(flip)}.`,

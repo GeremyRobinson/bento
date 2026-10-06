@@ -50,6 +50,7 @@ export function explainChainRule(p: ChainRule, model: AnswerModel) {
     steps: [
       { id: "problem", narration: `The outside is a power. The inside is ${innerText(a, b)}.`, math: wrapped(a, b, n, [mark(inner(a, b))]) },
       { id: "outside", narration: `Outside first: the power rule brings ${f(n)} down and lowers the exponent to ${f(e)}.`, math: [num(n), ...wrapped(a, b, e)], answerStep: "outside", result: e },
+      { id: "why", narration: `Why multiply: the inside ${innerText(a, b)} moves ${f(a)} for each 1 that x moves, so whatever the outside does happens ${f(a)} times as fast.`, math: m(text("d/dx"), text("("), ...inner(a, b), text(")"), op("="), a), line: null },
       { id: "inside", narration: `Then multiply by the inside's derivative: the derivative of ${innerText(a, b)} is ${f(da)}.`, math: m(text("d/dx"), text("("), ...inner(a, b), text(")"), op("="), da),
         line: [num(n), ...wrapped(a, b, e), op("·"), mark(da)], answerStep: "inside", result: da },
       { id: "front", narration: `${f(n)} × ${f(da)} = ${f(front)} goes in front: f′(x) = ${f(front)}(${innerText(a, b)})${supText(e)}.`, math: [text("f′(x)"), op("="), num(front), ...wrapped(a, b, e)], answerStep: "front", result: front },

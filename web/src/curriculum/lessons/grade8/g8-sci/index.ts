@@ -38,7 +38,7 @@ function explain(p: SciProblem, model: AnswerModel): Explanation {
   const n = full(p), digits = String(n), e = expectedOf(model, "places"), front = expectedOf(model, "write", "c");
   return {
     heading: "A number from 1 to 10, times a power of 10",
-    idea: ["Move the decimal point until it sits just after the first digit. The number of places it moved is the power of 10."],
+    idea: ["Each place a digit moves left makes it 10 times smaller, so moving the point is the same as dividing by 10 that many times.", "Move the point until it sits just after the first digit; the number of places it moved is the power of 10 that puts it back."],
     statement: [text(withCommas(n)), op("="), num(front), op("×"), num(10), sup(e)],
     diagram: buildDecimalShift({
       digits, from: digits.length, to: digits.length - e, beat: 0, moveBeat: 1,

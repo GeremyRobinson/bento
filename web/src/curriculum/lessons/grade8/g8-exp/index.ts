@@ -68,7 +68,7 @@ export function explainExponentRule(p: ExponentRule, model: AnswerModel) {
   ][t]!;
   return beatExplanation({
     heading: "Three exponent rules",
-    idea: ["Multiply: add the exponents. Divide: subtract them. Power of a power: multiply them."],
+    idea: ["x³ · x² is three x's times two more x's, five in all.", "Count the x's and the rules follow: add to multiply, subtract to divide, multiply for a power of a power."],
     statement: shown(p),
     caption: count,
     alt: `${[`x to the ${f(a)} times x to the ${f(b)}`, `x to the ${f(a + b)} divided by x to the ${f(b)}`, `x to the ${f(a)}, all to the ${f(b)}`][t]}, written out as x's, makes x to the ${f(e)}.`,

@@ -52,6 +52,7 @@ export function explainElimination(p: EliminationSystem, model: AnswerModel) {
       { id: "add", narration: `Add the equations: x + x = 2x and ${f(sum)} + ${fP(difference)} = ${f(twoX)}.`, math: m(2, v(), op("="), sum, op("+"), ...P(difference), op("="), twoX), answerStep: "add", result: twoX },
       { id: "x", narration: `Divide by 2: x = ${f(x)}.`, math: m(v(), op("="), twoX, op("÷"), 2, op("="), x), answerStep: "x", result: x },
       { id: "y", narration: `Put x = ${f(x)} back into x + y = ${f(sum)}: y = ${f(sum)} − ${fP(x)} = ${f(y)}.`, math: m(x, op("+"), v("y"), op("="), sum, text(", so "), v("y"), op("="), y), answerStep: "y", result: y },
+      { id: "check", narration: `Check in the second equation: ${f(x)} − ${fP(y)} = ${f(difference)}. Both equations are true.`, math: m(x, op("−"), ...P(y), op("="), difference) },
     ],
   });
 }
