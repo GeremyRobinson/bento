@@ -15,6 +15,8 @@ const DOT = 6.5;
 const MAX_GROW = 70;
 /** How much a label should avoid covering a drawn line, per sampled point (axes count less). */
 const LINE = 16, AXIS = 6;
+/** What a label that asks to stay clear of the axes pays for touching one or its tick-number band. */
+const GUTTER = 24;
 
 interface Pads { l: number; r: number; t: number; b: number }
 const NO_PADS: Pads = { l: 0, r: 0, t: 0, b: 0 };
@@ -295,8 +297,13 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
   xTick.forEach(t => tickBoxes.push(boxAt(t.cx, t.cy, textWidth(t.s, FONT.xs), FONT.xs * 1.1)));
   yTick.forEach(t => { const w = textWidth(t.s, FONT.xs); tickBoxes.push(boxAt(t.cx - w / 2, t.cy, w, FONT.xs * 1.1)); });
 
-  const score = (b: Box) => {
+  // the band under the x-axis where its tick numbers go: a label there reads as a tick sitting on the axis.
+  // Labels that ask to stay clear of the axes pay for landing in it, or for touching either axis line.
+  const gutters: Box[] = [{ x0: X(x0), x1: X(x1), y0: Y(ay) - 3, y1: Y(ay) + 14 + FONT.xs * 0.6 }];
+  if (x0 <= 0 && x1 >= 0) gutters.push({ x0: X(0) - 3, x1: X(0) + 3, y0: Y(y1), y1: Y(y0) });
+  const score = (b: Box, clear = false) => {
     let s = 0;
+    if (clear) for (const g of gutters) if (overlap(b, g)) s += GUTTER;
     const out = Math.max(0, 2 - b.x0) + Math.max(0, 2 - b.y0) + Math.max(0, b.x1 - (W - 2)) + Math.max(0, b.y1 - (H - 2));
     if (out > MAX_GROW) s += 1000;
     else if (out > 0) s += 6 + out * 0.5;
@@ -321,7 +328,7 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
         const cx = anchor[0] + ux * ((diag ? q.gap * 0.7 : q.gap) + 4 + ring + w / 2);
         const cy = anchor[1] + uy * ((diag ? q.gap * 0.7 : q.gap) + 3 + ring + h / 2);
         const b = boxAt(cx, cy, w, h);
-        const s = score(b) + (k < prefer.length ? k : 10 + k) + ring + ai * 3;
+        const s = score(b, q.label.clearAxes) + (k < prefer.length ? k : 10 + k) + ring + ai * 3;
         if (!best || s < best.s) best = { b, cx, cy, s };
       });
     }

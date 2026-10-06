@@ -94,8 +94,10 @@
 
 .lreview{display:grid;place-items:center;width:100%}
 .lreview span{grid-area:1/1;padding:14px 22px;border-radius:18px;background:var(--card);box-shadow:0 0 0 1px var(--rule),0 10px 24px -14px var(--ink-a35);font:var(--w-bold) 20px/1 var(--num);font-variant-numeric:tabular-nums;white-space:nowrap;
-  transform:translateY(calc(var(--j) * 14px)) scale(calc(1 - var(--j) * .08));z-index:calc(3 - var(--j));opacity:calc(1 - var(--j) * .3);animation:rise var(--dur-500) var(--ease) both}
+  transform:translateY(calc(var(--j) * 14px)) scale(calc(1 - var(--j) * .08));z-index:calc(3 - var(--j));opacity:calc(1 - var(--j) * .3);transition:transform var(--dur-500) var(--ease),opacity var(--dur-500) var(--ease)}
 .lreview span.top{color:var(--ink)}
+/* the stack is whole from the first frame; each beat only the card joining at the back rises in (Review v43 #20) */
+.lreview span.new{animation:rise var(--dur-500) var(--ease) both}
 
 .lcount{display:grid;justify-items:center;gap:2px}
 .lcount b{font:var(--w-bold) clamp(60px,8vw,92px)/1 var(--sans);letter-spacing:-.05em;color:var(--display,var(--ink));font-variant-numeric:tabular-nums}
@@ -127,9 +129,12 @@
 /* rows still to come wait as faint pills with their answers hidden, so the tile is never an empty band */
 .ldemo .off{opacity:.4}
 .ldemo .off b{opacity:0}
-.ldemo .lmiss p.off{opacity:0;transform:translateY(6px)}
-.ldemo .lsteps>div.on b,.lmiss .good.on b{animation:popIn var(--dur-400) var(--ease) var(--dur-250) both;display:inline-block}
-.ldemo .shook{animation:shake var(--dur-500) ease var(--dur-200) both}
+/* a slip's why and fix are there from its first frame, faint, and light up on their beat (Review v43 #20) */
+.ldemo .lmiss .off b{opacity:1}
+.ldemo .lsteps:not(.rest)>div.on b{animation:popIn var(--dur-400) var(--ease) var(--dur-250) both;display:inline-block}
+.ldemo :not(.rest)>.shook{animation:shake var(--dur-500) ease var(--dur-200) both}
+/* the first demo opens finished: nothing in it plays an entrance */
+.ldemo .rest,.ldemo .rest *{animation:none}
 .lnew{justify-self:end;font-size:var(--fz-2xs);font-weight:var(--w-bold);color:var(--muted)}
 
 /* ---- Bento Advanced: the AP line, introduced like a pro product. Always on its own dark canvas, in light hairlines. ---- */
