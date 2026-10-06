@@ -39,3 +39,5 @@ export const factoryMHz = (netUs: number) => 10.23 * (1 - (netUs * 1e-6) / DAY);
 
 /** Pythagorean speeds: β = a/c with γ = c/b, so every answer is a fraction. */
 export const TRIPLES: [number, number, number][] = [[3, 4, 5], [4, 3, 5], [5, 12, 13], [12, 5, 13], [8, 15, 17], [15, 8, 17], [7, 24, 25], [24, 7, 25], [20, 21, 29], [21, 20, 29]];
+/** γ − 1 without losing digits at small speeds: β² / (√(1 − β²)(1 + √(1 − β²))) */
+export const gammaMinus1 = (b: number) => { const r = Math.sqrt(1 - b * b); return (b * b) / (r * (1 + r)); };

@@ -323,9 +323,9 @@ export const re05: B2Lesson<P05> = {
   tools: ["spacetime", "matrix"],
   play: { scene: "spacetime", props: { mode: "boost", beta: 0.3 },
     say: "Drag β and the diagram's grid squeezes along the light lines: one diagonal stretches by some factor, the other shrinks by the same factor. The boost's matrix updates as you drag." },
-  guess: { scene: "spacetime", props: { mode: "boost", beta: 0.6, e1t: 5, e1x: 3 }, kind: "point", answer: [4, 0], near: 0.75, start: [5, 3],
-    ask: "Drag the marker to where you think the event (ct, x) = (5, 3) lands for a traveler at 3/5 of light speed.",
-    revealProps: { mode: "boost", beta: 0.6, e1t: 5, e1x: 3, applied: true },
+  guess: { scene: "spacetime", props: { mode: "boost", beta: 0.6, e1t: 5, e1x: 3, frame: "traveler", lockFrame: true, hideEvent: true, quiet: true }, kind: "point", answer: [4, 0], near: 0.75, start: [5, 3],
+    ask: "The diagram is drawn in the traveler's frame (3/5 of light speed). Drag the marker to where you think the event (ct, x) = (5, 3) lands.",
+    revealProps: { mode: "boost", beta: 0.6, e1t: 5, e1x: 3, frame: "traveler", lockFrame: true, applied: true },
     reveal: "The matrix sends (5, 3) to (4, 0): straight onto the traveler's own time axis, 4 ticks up." },
   nameIt: {
     say: [
