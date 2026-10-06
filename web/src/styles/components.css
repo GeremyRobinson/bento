@@ -2,12 +2,17 @@
 /* Surface (master): every panel, card and tile is an instance. Level 1 sits on the page (--surf-1, the well), level 2
    sits inside it (--surf-2, the card), and nesting is concentric: each level's radius is the outer one minus the gap
    between them (--r-panel, --r-card, --r-box in bands.css). A surface only overrides what differs. */
+/* Panel line (master, G 2026-10-06: "panels aren't a shared component"): a surface's outline is drawn INSIDE its own
+   edge, as an inset outline painted over its contents, so a scroll area, a rounded corner or a fill reaching the
+   edge never cuts it. Every outlined surface is listed here once; nothing draws its own ring. */
+.wrap{--panel-line:var(--rule);--panel-w:1px}
+:is(.tile,.screen .slist,.spreview,.lintro,.bhome .today,.bhome .b-stats,.bhome .b-weak,.units>.panel,.ftable.panel,.sbento .b-streak,.sbento .b-chaps,.lhpic,.ltile,.lbatt,.lonelist li.on,.lonepic,.zchapter,.zcard,.book,.mhero.battery,.mygl li,.phint .htext){outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
 .wrap{--r-tile:calc(var(--r-panel) - 4px);--pad-md:calc(var(--u) * 1.25);--pad-lg:calc(var(--u) + 4px);--pad-xl:calc(var(--u) * 1.5);--ring:0 0 0 1px var(--rule)}
 /* ---- controls ---- */
 /* Pill (master): every button is an instance of .ctl. Sizes and feel come from the --pill-* tokens; colors fall back to the
    grade roles, so a context (a card, the landing page) or a variant (go, circ) only overrides what it changes. */
-.wrap{--pill-h:var(--h);--pill-pad:calc(var(--u) + 2px);--pill-radius:999px;--pill-weight:var(--w-mid);--pill-gap:var(--s);--pill-press:.95;--pill-lift:1.06}
-.ctl{height:var(--pill-h);padding:0 var(--pill-pad);border-radius:var(--pill-radius);background:var(--pill-bg,var(--well));display:inline-flex;align-items:center;justify-content:center;gap:var(--pill-gap);white-space:nowrap;font-weight:var(--pill-weight);transition:background var(--dur-150),transform var(--dur-200) var(--spring),box-shadow var(--dur-150)}
+.wrap{--pill-h:var(--h);--pill-pad:calc(var(--u) + 2px);--pill-radius:999px;--pill-weight:var(--w-mid);--pill-gap:var(--s);--pill-lift:1.06}
+.ctl{height:var(--pill-h);padding:0 var(--pill-pad);border-radius:var(--pill-radius);background:var(--pill-bg,var(--well));display:inline-flex;align-items:center;justify-content:center;gap:var(--pill-gap);white-space:nowrap;font-weight:var(--pill-weight);transition:background var(--dur-150),transform var(--dur-200) var(--m-settle),box-shadow var(--dur-150)}
 .ctl:hover{background:var(--pill-hover,var(--hover))}
 .ctl:active{transform:scale(var(--pill-press))}
 .ctl[disabled]{color:var(--faint);cursor:default;transform:none}
@@ -21,13 +26,13 @@
 .card .badge,.ctl .badge{background:var(--tint-soft);color:var(--ink)}
 .badge.on,.card .badge.on,.ctl .badge.on{background:var(--ink);color:var(--on-tint)}
 .bar{display:flex;align-items:center;gap:var(--s);padding:var(--inset);background:var(--surf-1,var(--well));border-radius:var(--r-pill);min-width:0}
-.ctl.circ{width:var(--pill-h);padding:0;flex:none;background:var(--card);color:var(--ink);box-shadow:0 1px 2px var(--black-a06)}
+.ctl.circ{width:var(--pill-h);padding:0;flex:none;background:var(--card);color:var(--ink);box-shadow:none}
 .ctl.circ:hover{background:var(--tint-soft)}
 .ctl.circ svg{width:22px;height:22px;display:block}
 .ctl.circ[disabled]{background:color-mix(in srgb,var(--card) 45%,transparent);box-shadow:none;color:var(--faint)}
 .bar .grow{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:var(--w-bold);padding:0 var(--s)}
 .wrap>*,.panel>*,.lessons>*,.card>*,.bento>*{min-width:0}
-.dot{width:12px;height:12px;border-radius:var(--r-round);flex:none;background:var(--faint);transition:background var(--dur-300),transform var(--dur-300) var(--spring)}
+.dot{width:12px;height:12px;border-radius:var(--r-round);flex:none;background:var(--faint);transition:background var(--dur-300),transform var(--dur-300) var(--m-settle)}
 .dot.ok{background:var(--ok)} .dot.busy{background:var(--tint);transform:scale(1.25)} .dot.err{background:var(--err)}
 .actions{display:flex;gap:var(--s);justify-content:center;flex-wrap:wrap}
 
@@ -51,7 +56,7 @@
 .sheet .panel{width:min(720px,100%);border-radius:var(--r-sheet) var(--r-sheet) 0 0;padding:var(--sp-4) var(--sp-4) max(var(--sp-6),env(safe-area-inset-bottom));background:var(--page);animation:sheetUp var(--dur-450) var(--ease) both;max-height:88vh;overflow:auto;font:var(--w-bold) var(--fz-md)/22px var(--sans)}
 @media (min-width:700px){.sheet{align-items:center}.sheet .panel{border-radius:var(--r-sheet);width:min(640px,94vw)}}
 @keyframes sheetUp{from{transform:translateY(40px);opacity:0}}
-.gcell{display:flex;align-items:center;gap:10px;padding:6px var(--sp-3) 6px 6px;border-radius:var(--r-pill);background:var(--card);height:64px;text-align:left;transition:background var(--dur-150),transform var(--dur-200) var(--spring)}
+.gcell{display:flex;align-items:center;gap:10px;padding:6px var(--sp-3) 6px 6px;border-radius:var(--r-pill);background:var(--card);height:64px;text-align:left;transition:background var(--dur-150),transform var(--dur-200) var(--m-settle)}
 button.gcell:active{transform:scale(.96)}
 .gcell.on{box-shadow:inset 0 0 0 2px var(--tint)}
 .hero.welcome{min-height:160px;align-content:end}
@@ -77,7 +82,7 @@ button.gcell:active{transform:scale(.96)}
 .bhome{display:grid;gap:var(--u);grid-template-columns:minmax(0,1fr)}
 .tile{background:var(--surf-1,var(--well));border-radius:var(--r-panel);padding:var(--u);display:grid;gap:var(--u);align-content:start;min-width:0;text-align:left}
 .b-hero{align-content:space-between;min-height:220px}
-.upnext{display:grid;gap:6px;background:var(--surf-2,var(--card));border-radius:var(--r-card);padding:calc(var(--u) + 2px);text-align:left;width:100%;box-shadow:0 1px 2px var(--black-a04),0 8px 24px -12px color-mix(in srgb,var(--tint) 45%,transparent);transition:transform var(--dur-200) var(--spring)}
+.upnext{display:grid;gap:6px;background:var(--surf-2,var(--card));border-radius:var(--r-card);padding:calc(var(--u) + 2px);text-align:left;width:100%;box-shadow:none;transition:transform var(--dur-200) var(--m-settle)}
 .upnext:active{transform:scale(.98)}
 .upnext .k{color:var(--muted);font-size:var(--small);line-height:18px;font-weight:var(--w-mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .upnext b{font-size:calc(var(--fs) * 1.45);line-height:1.2;font-weight:var(--w-bold);color:var(--text)}
@@ -116,7 +121,7 @@ button.gcell:active{transform:scale(.96)}
 .unit{display:flex;justify-content:space-between;align-items:center;gap:var(--s);padding:0 0 0 var(--s);min-height:var(--h)}
 .unit h3{color:var(--ink);font-size:var(--small);line-height:20px;font-weight:var(--w-bold);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lessons{display:grid;gap:var(--s)}
-.lesson{display:flex;align-items:center;gap:calc(var(--u) - var(--sp-1));height:var(--row);padding:0 var(--u) 0 var(--inset);border-radius:var(--r-pill);background:var(--card);text-align:left;width:100%;font-weight:var(--w-bold);transition:background var(--dur-150),transform var(--dur-200) var(--spring)}
+.lesson{display:flex;align-items:center;gap:calc(var(--u) - var(--sp-1));height:var(--row);padding:0 var(--u) 0 var(--inset);border-radius:var(--r-pill);background:var(--card);text-align:left;width:100%;font-weight:var(--w-bold);transition:background var(--dur-150),transform var(--dur-200) var(--m-settle)}
 .lesson:hover{background:var(--tint-soft)}
 .lesson:active{transform:scale(.98)}
 .lesson .badge{min-width:var(--rbadge);height:var(--rbadge);font-size:calc(var(--rbadge) * .42)}
@@ -201,13 +206,13 @@ button.gcell:active{transform:scale(.96)}
 .workline .wl{flex:1;min-width:0}
 .ask{font-family:var(--num);font-size:var(--ask);line-height:1.2;display:flex;align-items:center;justify-content:center;gap:var(--s) var(--u);flex-wrap:wrap;padding:var(--s) 0}
 .ask .q{font-family:var(--sans);font-weight:var(--w-mid);font-size:var(--fs);line-height:var(--lh);width:100%;text-align:center}
-.slot{min-width:calc(var(--slot) * 1.3);height:var(--slot);padding:0 var(--u);border-radius:calc(var(--slot) / 4);background:var(--well);border:2px solid var(--rule);font-family:var(--num);font-size:var(--ask);display:inline-flex;align-items:center;justify-content:center;color:var(--text);transition:border-color var(--dur-150),background var(--dur-150),transform var(--dur-200) var(--spring)}
+.slot{min-width:calc(var(--slot) * 1.3);height:var(--slot);padding:0 var(--u);border-radius:calc(var(--slot) / 4);background:var(--well);border:2px solid var(--rule);font-family:var(--num);font-size:var(--ask);display:inline-flex;align-items:center;justify-content:center;color:var(--text);transition:border-color var(--dur-150),background var(--dur-150),transform var(--dur-200) var(--m-settle)}
 .slot.active{border-color:var(--tint);background:var(--tint-soft)}
 /* an empty box is the unknown: dashed in the accent, like the "?" in the statement; the one being typed in also rings */
 .slot.empty{border-style:dashed;border-color:var(--ka);background:color-mix(in srgb,var(--acc) 10%,var(--well))}
 .slot.empty.active{box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 30%,transparent)}
 .slot.small{min-width:var(--slot)}
-.slot.typed{animation:pop var(--dur-250) var(--spring)}
+.slot.typed{animation:pop var(--dur-250) var(--m-ease)}
 .fr .slot{margin:var(--sp-1) 0}
 .fr.slots>span:first-child{padding-bottom:6px}
 .mixed{display:inline-flex;align-items:center;gap:var(--s)}
@@ -221,7 +226,7 @@ button.gcell:active{transform:scale(.96)}
 .fb-hint{background:var(--tint-soft)}
 .feedback .fr{font-size:var(--fs)}
 .tray{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s);max-width:480px;width:100%;margin:0 auto}
-.tray button{height:var(--key);border-radius:var(--r-pill);background:var(--card);font-family:var(--num);font-weight:var(--w-key);font-size:calc(var(--key) * .46);display:flex;align-items:center;justify-content:center;transition:background var(--dur-150),transform var(--dur-150) var(--spring)}
+.tray button{height:var(--key);border-radius:var(--r-pill);background:var(--card);font-family:var(--num);font-weight:var(--w-key);font-size:calc(var(--key) * .46);display:flex;align-items:center;justify-content:center;transition:background var(--dur-150),transform var(--dur-150) var(--m-settle)}
 .tray button:hover{background:var(--tint-soft)}
 .tray button:active{transform:scale(.92);background:var(--tint-soft)}
 .tray .wide{grid-column:span 2;font-family:var(--sans);font-size:var(--fs);font-weight:var(--w-mid)}
@@ -298,7 +303,7 @@ button.gcell:active{transform:scale(.96)}
 @keyframes draw{from{stroke-dashoffset:1}}
 .a-fade{animation:fadeIn var(--dur-500) ease var(--d,0s) both}
 .a-rise{animation:rise var(--dur-500) var(--ease) var(--d,0s) both}
-.a-pop{transform-box:fill-box;transform-origin:center;animation:popIn var(--dur-500) var(--spring) var(--d,0s) both}
+.a-pop{transform-box:fill-box;transform-origin:center;animation:popIn var(--dur-500) var(--m-ease) var(--d,0s) both}
 .a-growx{transform-box:fill-box;transform-origin:left center;animation:growX var(--dur-700) var(--ease) var(--d,0s) both} @keyframes growX{from{transform:scaleX(0)}}
 .a-growy{transform-box:fill-box;transform-origin:center bottom;animation:growY var(--dur-900) var(--ease) var(--d,0s) both} @keyframes growY{from{transform:scaleY(0)}}
 .a-sweep{animation:sweep var(--dur-1200) var(--ease) var(--d,0s) both} @keyframes sweep{from{stroke-dasharray:0 1}}
@@ -308,7 +313,7 @@ button.gcell:active{transform:scale(.96)}
 /* a slide that starts late in its beat is hidden until it starts, instead of waiting in plain sight at its start */
 .a-slide.late{animation:slide var(--dur-1000) var(--ease) var(--d,0s) both,fadeIn var(--dur-300) ease var(--d,0s) both}
 .a-move{animation:move var(--dur,var(--dur-1000)) var(--ease) var(--d,0s) both} @keyframes move{to{transform:translateX(var(--dx))}}
-.a-drop{animation:drop var(--dur-600) var(--spring) var(--d,0s) both} @keyframes drop{from{opacity:0;transform:translateY(-30px)}}
+.a-drop{animation:drop var(--dur-600) var(--m-ease) var(--d,0s) both} @keyframes drop{from{opacity:0;transform:translateY(-30px)}}
 .a-grow{transform-box:view-box;animation:growS var(--dur-1200) var(--ease) var(--d,0s) both} @keyframes growS{from{transform:scale(var(--from))}}
 .a-flash{animation:fadeIn var(--dur-400) ease var(--d) both, fadeOut var(--dur-300) ease var(--d2) forwards}
 .rs{display:grid;justify-items:center;gap:var(--sp-1);font-family:var(--num);font-size:calc(var(--math) * .62);line-height:1.25;text-align:center}
@@ -319,7 +324,7 @@ button.gcell:active{transform:scale(.96)}
 
 /* ---- planning, word problems and choices ---- */
 .choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--s)}
-.choice{min-height:var(--h);padding:10px var(--u);border-radius:calc(var(--h) / 2);background:var(--well);border:2px solid var(--rule);font-weight:var(--w-bold);line-height:1.2;transition:background var(--dur-150),transform var(--dur-200) var(--spring),border-color var(--dur-150)}
+.choice{min-height:var(--h);padding:10px var(--u);border-radius:calc(var(--h) / 2);background:var(--well);border:2px solid var(--rule);font-weight:var(--w-bold);line-height:1.2;transition:background var(--dur-150),transform var(--dur-200) var(--m-settle),border-color var(--dur-150)}
 .choice:hover{background:var(--tint-soft);border-color:var(--tint)}
 .choice:active{transform:scale(.96)}
 .story{font-size:calc(var(--fs) * 1.15);line-height:1.45;font-weight:var(--w-mid);padding:var(--s) var(--sp-1);text-wrap:pretty}
@@ -377,19 +382,21 @@ button.gcell:active{transform:scale(.96)}
 .mt-text b{font-weight:var(--w-bold)}
 .mt-text small{color:var(--muted);font-size:var(--small);font-weight:var(--w-mid);line-height:1.3}
 .switch{flex:none;width:50px;height:30px;border-radius:var(--r-pill);background:var(--sw-off);position:relative;transition:background var(--dur-200)}
-.switch i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:var(--r-round);background:var(--knob);box-shadow:0 1px 3px var(--black-a25);transition:transform var(--dur-250) var(--spring)}
+.switch i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:var(--r-round);background:var(--knob);box-shadow:none;transition:transform var(--dur-250) var(--m-settle)}
 .mtoggle[aria-checked="true"] .switch{background:var(--ink)}
 .mtoggle[aria-checked="true"] .switch i{transform:translateX(20px)}
 .seg{flex:none;display:flex;gap:2px;padding:3px;border-radius:var(--r-pill);background:var(--well)}
 .seg button{width:40px;height:34px;border-radius:var(--r-pill);font-weight:var(--w-bold);color:var(--muted);display:grid;place-items:center}
-.seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 3px var(--black-a12)}
+.seg button.on{background:var(--card);color:var(--text);box-shadow:none}
 
 /* ---- accessibility settings, set on <html> ---- */
 :root[data-text="large"] .wrap{zoom:1.15}
 :root[data-text="largest"] .wrap{zoom:1.3}
 :root[data-contrast="true"]{--text:#000;--muted:#3d4250;--faint:#b4b8c3;--rule:#9ca1b0}
 @media (prefers-color-scheme: dark){:root[data-contrast="true"]:not([data-theme="light"]){--text:#fff;--muted:#cfd3dc;--faint:#7c8290;--rule:#5a606e}}
-:root[data-contrast="true"] .tile,:root[data-contrast="true"] .panel,:root[data-contrast="true"] .card{box-shadow:0 0 0 1.5px var(--rule)}
+/* more contrast: every surface gets the Panel master's line, a little heavier */
+:root[data-contrast="true"]{--panel-w:1.5px}
+:root[data-contrast="true"] :is(.tile,.panel,.card){outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
 :root[data-color-safe="true"]{--ok:#2563eb;--err:#ea7a10;--ok-ink:#2563eb;--err-ink:#b75f0c}
 @media (prefers-color-scheme: dark){:root[data-color-safe="true"]:not([data-theme="light"]){--ok-ink:#60a5fa;--err-ink:#fb923c}}
 :root[data-color-safe="true"][data-theme="dark"]{--ok-ink:#60a5fa;--err-ink:#fb923c}
@@ -408,7 +415,7 @@ button.gcell:active{transform:scale(.96)}
 .phead h1{font-size:calc(var(--fs) * 1.6);letter-spacing:-.02em}
 
 /* ---- home, stripped back: today's plan, the year's progress, the units. Space does the work, not boxes. ---- */
-.bhome .today,.bhome .b-stats,.bhome .b-weak{background:var(--card);box-shadow:0 0 0 1px var(--rule);padding:calc(var(--u) * 1.75)}
+.bhome .today,.bhome .b-stats,.bhome .b-weak{background:var(--card);padding:calc(var(--u) * 1.75)}
 .today{gap:0;align-content:start}
 .today .sub{color:var(--muted);margin-top:var(--s);font-weight:var(--w-regular)}
 /* the vertical rhythm of a card: title, subtitle a small step under it, then a clear gap before the action (G 2026-10-06) */
@@ -442,7 +449,7 @@ button.gcell:active{transform:scale(.96)}
   .bhome>.b-weak{grid-column:3}
 }
 /* units: one quiet card each, lessons as hairline rows instead of pills inside a well */
-.units>.panel{background:var(--surf-2,var(--card));box-shadow:var(--ring);padding:var(--pad-md) calc(var(--u) * 1.25) var(--s);gap:var(--s)}
+.units>.panel{background:var(--surf-2,var(--card));padding:var(--pad-md) calc(var(--u) * 1.25) var(--s);gap:var(--s)}
 .units .unit{padding:0;min-height:36px}
 .units .unit h3{color:var(--text);font-size:var(--fs);font-weight:var(--w-bold);letter-spacing:-.01em}
 .units .unit .ctl{--pill-h:36px;--pill-pad:14px;background:none!important;box-shadow:inset 0 0 0 1px var(--rule);font-size:var(--small);font-weight:var(--w-mid);color:var(--muted)}

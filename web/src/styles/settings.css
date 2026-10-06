@@ -1,0 +1,5 @@
+/* ---- Settings: a page of tiles (Tile master), each holding Toggle rows; one column on a phone, two on an iPad ---- */
+.bset{display:grid;gap:var(--s);grid-template-columns:minmax(0,1fr);align-content:start;padding-bottom:calc(var(--u) * 2)}
+@media (min-width:760px){.bset{grid-template-columns:repeat(2,minmax(0,1fr))}.bset .ssee{grid-row:span 2}}
+.snote{display:flex;align-items:center;gap:var(--sp-2);color:var(--muted);font-weight:var(--w-mid);font-size:var(--small)}
+.snote svg{flex:none;color:var(--ink)}

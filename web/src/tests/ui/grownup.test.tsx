@@ -33,7 +33,7 @@ const progress: Partial<Progress> = {
   ],
 };
 
-const openPage = () => { fireEvent.click(screen.getByRole("button", { name: /^Me:/ })); tap("For the grown-up ›"); };
+const openPage = () => { fireEvent.click(screen.getByRole("button", { name: /^My Bento:/ })); tap("Open the report ›"); };
 
 describe("the grown-up page", () => {
   it("with no history: a calm page that says what will show, and that it stays on this device", () => {
@@ -45,9 +45,9 @@ describe("the grown-up page", () => {
     expect(screen.getByText("Everything here stays on this device.")).toBeInTheDocument();
     expect(screen.getByText("On this device")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /problems$/ })).toBeNull();
-    // the island names the page and the grade, and steps back to Me
-    expect(screen.getByRole("button", { name: "Contents. You're on For the grown-up" })).toHaveTextContent("Me · 5th grade");
-    tap("Back to Me");
+    // the island names the page and the grade, and steps back to My Bento
+    expect(screen.getByRole("button", { name: "Contents. You're on For the grown-up" })).toHaveTextContent("My Bento · 5th grade");
+    tap("Back to My Bento");
     expect(screen.getByRole("button", { name: "Open the report ›" })).toBeInTheDocument();
   });
 

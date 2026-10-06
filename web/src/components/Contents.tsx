@@ -1,6 +1,7 @@
 import { Pill } from "./primitives/Pill";
+import { Slider } from "./primitives/Slider";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { BentoMark } from "./primitives/BentoMark";
+import { NavMark } from "./Nav";
 import { useApp } from "../app/AppState";
 import { doneCount, isReady, testKey, testReady, unitsInGrade, type Entry } from "../app/curriculum";
 import { upNext } from "../app/today";
@@ -32,23 +33,24 @@ export function ChapterPic({ entries, rng }: { entries: Entry[]; rng: Rng }) {
  * The contents: the book zoomed out. Pinch closed (or tap a level) to step out from the chapter you're in, to the
  * year, to every grade; pinch open or tap a chapter to step back in. Whatever you tap opens right there.
  */
-export function Contents({ grade, lessonId, level: first, close }: { grade: number; lessonId?: string; level: Level; close: () => void }) {
-  const { progress, go, chooseGrade, startTest, deps, openSheet } = useApp();
+export function Contents({ grade, lessonId, level: first, close, leave = close, closing }: { grade: number; lessonId?: string; level: Level; close: () => void;
+  /** closes because a page is opening from here: no close animation, the page change carries it */ leave?: () => void; closing?: boolean }) {
+  const { progress, go, chooseGrade, startTest, deps } = useApp();
   const rng = useMemo(() => deps().rng, []); // eslint-disable-line react-hooks/exhaustive-deps
   const units = unitsInGrade(grade);
   const here = lessonId ? units.find(u => u.entries.some(c => c.id === lessonId)) : undefined;
   const next = upNext(progress, grade);
   const [chapter, setChapter] = useState(here?.name ?? units.find(u => u.entries.some(c => c.id === next?.entry.id))?.name ?? units[0]?.name);
-  const [level, setLevel] = useState<Level>(first === "shelf" ? "year" : first);
+  const [level, setLevel] = useState<Level>(first);
   // which way the last step went, so the new level grows in from the old one (out) or comes forward (in)
   const [way, setWay] = useState<"out" | "in" | "">("");
-  // every grade is one place, picker D (Review v43 item 15): zooming out past the year opens it
-  const to = (l: Level) => { if (l === level) return; if (l === "shelf") { close(); openSheet(true); return; } setWay(LEVELS.indexOf(l) > LEVELS.indexOf(level) ? "out" : "in"); setLevel(l); };
+  // All grades is the outermost level, inside the contents (Review nav #5): the slider's thumb lands there, never out
+  const to = (l: Level) => { if (l === level) return; setWay(LEVELS.indexOf(l) > LEVELS.indexOf(level) ? "out" : "in"); setLevel(l); };
   const box = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = box.current!;
-    el.querySelector<HTMLElement>(".zlevels button[aria-pressed=true]")?.focus();
+    el.querySelector<HTMLElement>(".zlevels>button[aria-pressed=true]")?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") close();
       else if (e.key === "-" || e.key === "_") to(LEVELS[Math.min(2, LEVELS.indexOf(level) + 1)]!);
@@ -81,7 +83,7 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
     return () => { removeEventListener("keydown", onKey); el.removeEventListener("touchstart", onStart); el.removeEventListener("touchmove", onMove); el.removeEventListener("wheel", onWheel); };
   });
 
-  const open = (c: Entry) => { close(); go({ name: "learn", lessonId: c.id }, "fwd"); };
+  const open = (c: Entry) => { leave(); go({ name: "learn", lessonId: c.id }, "fwd"); };
   const unit = units.find(u => u.name === chapter) ?? units[0];
   const g = gradeOf(grade);
 
@@ -106,7 +108,7 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
             );
           })}</ol>
           {testReady(grade, unit.name) && units.length > 1 && (
-            <Pill onClick={() => { close(); startTest(tk); }}>{t && <ScoreChip n={t.last} />}{unit.name} test</Pill>
+            <Pill onClick={() => { leave(); startTest(tk); }}>{t && <ScoreChip n={t.last} />}{unit.name} test</Pill>
           )}
         </div>
       </section>
@@ -115,7 +117,7 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
     body = (
       <section className="zyear">
         <header><span className="k">{g.subtitle}</span><h2>{g.name}</h2>
-          <Pill go onClick={() => { close(); go({ name: "home" }, "back"); }}>Open the year ›</Pill></header>
+          <Pill go onClick={() => { leave(); go({ name: "home" }, "back"); }}>Open the year ›</Pill></header>
         <div className="zch">{units.map((u, k) => {
           const done = doneCount(progress, u.entries), on = u.name === here?.name;
           return (
@@ -132,22 +134,19 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
   } else {
     body = (
       <section className="zshelf">
-        <Shelf current={grade} onPick={n => { close(); chooseGrade(n); }} />
-        <button className="tlink" onClick={() => { close(); go({ name: "welcome" }, "back"); }}>About Bento ›</button>
+        <Shelf current={grade} onPick={n => { leave(); chooseGrade(n); }} />
+        <button className="tlink" onClick={() => { leave(); go({ name: "welcome" }, "back"); }}>About Bento ›</button>
       </section>
     );
   }
 
   return (
-    <div className="zoom" ref={box} role="dialog" aria-modal="true" aria-label={CONTENTS} onClick={e => { if (e.target === e.currentTarget) close(); }}>
+    <div className={`zoom${closing ? " closing" : ""}`} ref={box} role="dialog" aria-modal="true" aria-label={CONTENTS} onClick={e => { if (e.target === e.currentTarget) close(); }}>
       <div className="zbar-top">
-        <BentoMark className="zmark" />
-        {/* widest to narrowest, left to right (G 2026-10-06) */}
-        <div className="zlevels" role="group" aria-label="Zoom">
-          {[...LEVELS].reverse().map(l => (
-            <button key={l} aria-pressed={l === level} disabled={l === "chapter" && !unit} onClick={() => to(l)}>{NAMES[l]}</button>
-          ))}
-        </div>
+        <span className="zmark"><NavMark onHome={() => { leave(); go({ name: "home" }, "back"); }} /></span>
+        {/* widest to narrowest, left to right (G 2026-10-06); a tap slider, the same master as Bento / Bento² */}
+        <Slider className="zlevels" label="Zoom" value={level} onPick={to}
+          options={[...LEVELS].reverse().map(l => ({ id: l, label: NAMES[l], disabled: l === "chapter" && !unit }))} />
         <Pill className="zclose" onClick={close}>Done</Pill>
       </div>
       <div className={`zstage ${way}`} key={level + (level === "chapter" ? chapter : "")}>{body}</div>

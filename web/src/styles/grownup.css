@@ -1,7 +1,8 @@
 /* "For the grown-up" (Design's spec): one instance of the Screen master (split). Only what differs from the master
    lives here: the list's labels, legend and privacy line, the score batteries, and the detail's floating cards.
-   The detail never scrolls; only the list does. Colours come from the grade's tokens. */
-.screen.gu .sdetail{overflow:hidden}
+   Colours come from the grade's tokens. The detail fits the screen when it can; when a worked example is taller than
+   the screen allows, the detail scrolls instead of letting steps spill out of their panels (G 2026-10-06). */
+.screen.gu .sdetail{overflow:auto}
 .screen.gu .slist{padding-bottom:var(--sp-6)}
 .gu .slist .shead{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:2px 14px;padding:6px var(--sp-4) 10px}
 .gu .slist .shead .gnum{grid-row:span 2;font-size:48px}
@@ -43,7 +44,7 @@
 .gu .gu-stat b small{font-size:var(--small);font-weight:var(--w-mid);letter-spacing:0;color:var(--muted);margin-left:1px}
 .gu .gu-stat>div>span{display:block;font-size:var(--fz-xs);line-height:16px;font-weight:var(--w-mid);color:var(--muted);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-.gu .gu-mcard{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:14px;padding:var(--sp-5) var(--sp-6) var(--sp-5)}
+.gu .gu-mcard{flex:1 0 auto;min-height:auto;display:flex;flex-direction:column;gap:14px;padding:var(--sp-5) var(--sp-6) var(--sp-5)}
 .gu .gu-mcard h2{font-size:28px;line-height:32px;margin-top:var(--sp-1)}
 .gu .gu-calm{justify-content:center;align-items:center;text-align:center}
 .gu .gu-p{margin:0;color:var(--muted);font-size:var(--fz-lg);line-height:1.45;max-width:60ch}
@@ -52,9 +53,9 @@
 .gu .gu-rate{flex:none;display:flex;align-items:center;gap:10px;height:var(--float-h);padding:0 18px 0 6px;border-radius:var(--r-pill);background:var(--well);font-size:var(--fz-sm);line-height:17px;font-weight:var(--w-mid);color:var(--muted)}
 .gu .gu-rate .badge{min-width:40px;height:40px;padding:0 10px;border-radius:var(--r-pill);display:grid;place-items:center;background:var(--ink);color:var(--on-tint);font-size:var(--fz-md);font-weight:var(--w-bold);font-variant-numeric:tabular-nums}
 .gu .gu-rate b{display:block;color:var(--text);font-weight:var(--w-bold)}
-.gu .gu-ex{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 214px;gap:var(--sp-2)}
+.gu .gu-ex{flex:1 0 auto;min-height:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 214px;gap:var(--sp-2)}
 .gu .gu-ex.nopic{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-.gu .gu-col{margin:0;min-width:0;min-height:0;background:var(--well);border-radius:var(--r-lg);padding:var(--sp-3) var(--sp-2) var(--sp-2);display:flex;flex-direction:column;gap:var(--sp-2)}
+.gu .gu-col{margin:0;min-width:0;min-height:auto;background:var(--well);border-radius:var(--r-lg);padding:var(--sp-3) var(--sp-2) var(--sp-2);display:flex;flex-direction:column;gap:var(--sp-2)}
 .gu .gu-col>.k{margin:0;padding:2px 10px;font-size:var(--fz-xs);line-height:16px;font-weight:var(--w-mid);color:var(--muted);display:flex;flex-wrap:wrap;align-items:baseline;gap:0 6px}
 .gu .gu-col>.k b{color:var(--text);font-weight:var(--w-bold)}
 .gu .gu-col>.k .mline{font-size:var(--fz-xs)}

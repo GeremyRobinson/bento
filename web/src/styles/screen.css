@@ -283,10 +283,11 @@ html:has(.screen) body{overflow:hidden}
 .pscreen>.fdim{position:fixed}
 .pscreen.hinting>.phero{z-index:var(--z-stack)}
 .pscreen>.fstack{position:absolute;z-index:var(--z-stack);left:0;top:0;width:330px;align-items:flex-start}
-.phint .htext{white-space:normal;padding:14px 22px;border-radius:var(--r-2xl);max-width:300px;font-weight:var(--w-regular);box-shadow:inset 4px 0 0 var(--acc),var(--float-shadow)}
+/* the hint bubble is a Panel line instance in the grade's own hue (UI chrome is never another hue) */
+.phint .htext{--panel-line:var(--tint);--panel-w:2px;white-space:normal;padding:14px 22px;border-radius:var(--r-2xl);max-width:300px;font-weight:var(--w-regular);box-shadow:var(--float-shadow)}
 .pscreen .hrow{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
 .pscreen .fstack .fpill.go{background:var(--ink);color:var(--on-tint);box-shadow:none}
-.phint .flbl{color:var(--muted);text-shadow:none}
+.phint .flbl{color:var(--muted)}
 .psteps .pwhere{gap:var(--sp-3)}
 .psteps .pblist{display:block;padding:var(--sp-2);border-radius:var(--r-2xl);white-space:normal;width:100%}
 /* solved, in one motion (practice-spec §5): the box turns green, the picture finishes, the "?" fills, then the keys
@@ -400,9 +401,9 @@ html:has(.screen) body{overflow:hidden}
 .sdetail>.sbento>.b-streak{grid-area:streak}
 .sdetail>.sbento>.b-chaps{grid-area:chaps}
 .sbento>.tile{border-radius:var(--r-panel)}
-.sbento .b-streak{background:var(--card);box-shadow:0 0 0 1px var(--rule);padding:calc(var(--u) * 1.75);display:grid;justify-items:center;align-content:center;text-align:center;gap:6px}
+.sbento .b-streak{background:var(--card);padding:calc(var(--u) * 1.75);display:grid;justify-items:center;align-content:center;text-align:center;gap:6px}
 .sbento .b-streak p{margin:0}
-.sbento .b-chaps{background:var(--card);box-shadow:0 0 0 1px var(--rule);padding:var(--sp-3);display:grid;gap:var(--sp-2);grid-template-columns:minmax(0,1fr);grid-auto-rows:minmax(var(--tap),64px);align-content:center;overflow:auto}
+.sbento .b-chaps{background:var(--card);padding:var(--sp-3);display:grid;gap:var(--sp-2);grid-template-columns:minmax(0,1fr);grid-auto-rows:minmax(var(--tap),64px);align-content:center;overflow:auto}
 .bchap{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:var(--tap);padding:var(--sp-2) var(--sp-4);border-radius:var(--r-pill);background:var(--well);text-align:left;transition:transform var(--dur-180) var(--ease)}
 .bchap:active{transform:scale(.97)}
 .bchap>.fill{background:color-mix(in oklab,var(--tint) 22%,var(--well))}
@@ -438,3 +439,15 @@ html:has(.screen) body{overflow:hidden}
 .rnone .panel .actions{justify-content:start}
 .rnone .spreview{display:grid;min-height:0}
 @media (min-width:700px) and (min-aspect-ratio:1/1){.screen.fit.rnone{grid-template-columns:minmax(300px,380px) minmax(0,1fr);grid-template-rows:minmax(0,1fr)}.rnone>.panel{grid-area:1/1}.rnone>.spreview{grid-area:1/2}}
+/* Left-handed keypad (Settings): Check and the action keys move to the left, under the left thumb; the digits keep
+   their order (1 2 3 reads left to right) */
+:root[data-hand="left"] .ppad .tray{grid-template-columns:minmax(0,2fr) repeat(7,minmax(0,1fr))}
+:root[data-hand="left"] .ppad .tray .k-go{grid-column:1}
+@media (max-aspect-ratio:1/1),(max-width:760px){
+  :root[data-hand="left"] .ppad .tray{grid-template-columns:repeat(4,minmax(0,1fr))}
+  :root[data-hand="left"] .ppad .tray .k-back{grid-area:1/1}:root[data-hand="left"] .ppad .tray .k-neg{grid-area:2/1}:root[data-hand="left"] .ppad .tray .k-dot{grid-area:3/1}
+  :root[data-hand="left"] .ppad .tray .k-d1{grid-area:1/2}:root[data-hand="left"] .ppad .tray .k-d2{grid-area:1/3}:root[data-hand="left"] .ppad .tray .k-d3{grid-area:1/4}
+  :root[data-hand="left"] .ppad .tray .k-d4{grid-area:2/2}:root[data-hand="left"] .ppad .tray .k-d5{grid-area:2/3}:root[data-hand="left"] .ppad .tray .k-d6{grid-area:2/4}
+  :root[data-hand="left"] .ppad .tray .k-d7{grid-area:3/2}:root[data-hand="left"] .ppad .tray .k-d8{grid-area:3/3}:root[data-hand="left"] .ppad .tray .k-d9{grid-area:3/4}
+  :root[data-hand="left"] .ppad .tray .k-go{grid-area:4/1/5/3}:root[data-hand="left"] .ppad .tray .k-d0{grid-area:4/3/5/5}
+}

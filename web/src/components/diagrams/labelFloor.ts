@@ -9,7 +9,13 @@ export function useLabelFloor<T extends SVGSVGElement>(width: number) {
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const set = () => { const w = el.getBoundingClientRect().width; if (w > 0) el.style.setProperty("--px", (width / w).toFixed(3)); };
+    // a picture held by its height (a fixed slot) draws smaller than its width says, so take whichever side binds
+    const set = () => {
+      const r = el.getBoundingClientRect(), vb = el.viewBox?.baseVal;
+      if (r.width <= 0) return;
+      const px = Math.max(width / r.width, vb && vb.height > 0 && r.height > 0 ? vb.height / r.height : 0);
+      el.style.setProperty("--px", px.toFixed(3));
+    };
     set();
     if (typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(set);

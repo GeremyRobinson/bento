@@ -14,7 +14,7 @@
 .lhbox{display:grid;gap:var(--s);grid-template-columns:repeat(2,minmax(0,1fr))}
 .lhpic:not(.sm){grid-column:1 / -1}
 @media (min-width:960px){.lhbox{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(250px,auto))}.lhpic:not(.sm){grid-column:span 2;grid-row:span 2}.lhpic.sm{grid-column:span 2}}
-.lhpic{margin:0;background:var(--surf-2,var(--card));border-radius:var(--r-panel);padding:var(--pad-lg);display:grid;grid-template-rows:auto 1fr;gap:var(--u);cursor:pointer;box-shadow:var(--ring);animation:fadeIn var(--dur-700) var(--ease) both;min-height:340px}
+.lhpic{margin:0;background:var(--surf-2,var(--card));border-radius:var(--r-panel);padding:var(--pad-lg);display:grid;grid-template-rows:auto 1fr;gap:var(--u);cursor:pointer;animation:fadeIn var(--dur-700) var(--ease) both;min-height:340px}
 .lhpic figcaption{display:flex;align-items:center;gap:14px;min-width:0}
 .lhpic .gnum{font-size:40px;flex:none;white-space:nowrap}
 .lhero h1 span{display:block}
@@ -44,7 +44,7 @@
 @media (min-width:960px){.lbox{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(272px,auto)}}
 .ltile.wide{grid-column:span 2}
 .ltile.tall{grid-row:span 2}
-.ltile{min-width:0;background:var(--surf-2,var(--card));border-radius:var(--r-panel);padding:var(--pad-lg);display:grid;grid-template-rows:1fr auto;gap:var(--u);box-shadow:var(--ring);animation:rise var(--dur-600) var(--ease) both;animation-delay:calc(var(--i) * var(--dur-50))}
+.ltile{min-width:0;background:var(--surf-2,var(--card));border-radius:var(--r-panel);padding:var(--pad-lg);display:grid;grid-template-rows:1fr auto;gap:var(--u);animation:rise var(--dur-600) var(--ease) both;animation-delay:calc(var(--i) * var(--dur-50))}
 .lvis{display:grid;place-items:center;min-height:0}
 .ltext{display:grid;gap:var(--sp-1)}
 .ltext h3{font-size:calc(var(--fs) * 1.05);font-weight:var(--w-bold);letter-spacing:-.01em}
@@ -70,7 +70,7 @@
   background:color-mix(in srgb,var(--tint) calc(var(--lv) * 30%),var(--well));transition:background var(--dur-500) var(--ease),color var(--dur-500)}
 .lfacts span.k{color:var(--on-tint);font-weight:var(--w-bold)}
 
-.lbatt{display:flex;flex-direction:column;gap:6px;width:min(100%,210px);height:150px;padding:14px 18px var(--sp-4);border-radius:calc(var(--r-panel) - var(--nest));background:var(--page);box-shadow:var(--ring);text-align:left}
+.lbatt{display:flex;flex-direction:column;gap:6px;width:min(100%,210px);height:150px;padding:14px 18px var(--sp-4);border-radius:calc(var(--r-panel) - var(--nest));background:var(--page);text-align:left}
 .lbatt b{font-size:var(--fz-sm);font-weight:var(--w-bold);line-height:1.3}
 .lbatt .gnum{font-size:40px}
 
@@ -92,12 +92,12 @@
 .lreport b{font-weight:var(--w-bold);font-variant-numeric:tabular-nums;text-align:right}
 
 .lhelp{display:grid;gap:6px;justify-items:center}
-.lhelp span{padding:var(--sp-2) 18px;border-radius:var(--r-pill);background:var(--well);font-size:var(--small);font-weight:var(--w-bold);color:var(--muted);transition:background var(--dur-500) var(--ease),color var(--dur-500),opacity var(--dur-500),transform var(--dur-500) var(--spring)}
+.lhelp span{padding:var(--sp-2) 18px;border-radius:var(--r-pill);background:var(--well);font-size:var(--small);font-weight:var(--w-bold);color:var(--muted);transition:background var(--dur-500) var(--ease),color var(--dur-500),opacity var(--dur-500),transform var(--dur-500) var(--m-settle)}
 .lhelp span.on{background:var(--ink);color:var(--on-tint);transform:scale(1.06)}
 .lhelp span.gone{opacity:.3;transform:scale(.94)}
 
 .lreview{display:grid;place-items:center;width:100%}
-.lreview span{grid-area:1/1;padding:14px 22px;border-radius:18px;background:var(--card);box-shadow:0 0 0 1px var(--rule),0 10px 24px -14px var(--ink-a35);font:var(--w-bold) 20px/1 var(--num);font-variant-numeric:tabular-nums;white-space:nowrap;
+.lreview span{grid-area:1/1;padding:14px 22px;border-radius:18px;background:var(--card);box-shadow:0 0 0 1px var(--rule);font:var(--w-bold) 20px/1 var(--num);font-variant-numeric:tabular-nums;white-space:nowrap;
   transform:translateY(calc(var(--j) * 14px)) scale(calc(1 - var(--j) * .08));z-index:calc(3 - var(--j));opacity:calc(1 - var(--j) * .3);transition:transform var(--dur-500) var(--ease),opacity var(--dur-500) var(--ease)}
 .lreview span.top{color:var(--ink)}
 /* the stack is whole from the first frame; each beat only the card joining at the back rises in (Review v43 #20) */
@@ -164,7 +164,7 @@
 @keyframes advDraw{from{stroke-dashoffset:400}}
 .adv-sweep{transform-box:fill-box;transform-origin:left;animation:advSweep var(--dur-2600) var(--ease) var(--dur-600) both}
 @keyframes advSweep{from{transform:scaleX(0)}}
-.adv-grow{transform-box:fill-box;transform-origin:bottom;animation:advGrow var(--dur-900) var(--spring) both}
+.adv-grow{transform-box:fill-box;transform-origin:bottom;animation:advGrow var(--dur-900) var(--m-ease) both}
 @keyframes advGrow{from{transform:scaleY(0)}}
 .adv-spin{animation:advSpin var(--dur-6000) linear infinite}
 @keyframes advSpin{to{transform:rotate(-360deg)}}
@@ -195,7 +195,7 @@
 /* Bento² teaser: five subjects, one playing at a time, and a dashed tile with more to find */
 .adv-tease{width:100%;display:grid;gap:var(--s);grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(170px,auto);margin-top:calc(var(--u) * 1.5)}
 .adv-tease .adv-course{align-content:end;transition:box-shadow var(--dur-500) var(--ease)}
-.adv-tease .adv-course.on{box-shadow:inset 0 0 0 1px var(--adv-ring),0 0 32px color-mix(in srgb,var(--adv-glow) 16%,transparent)}
+.adv-tease .adv-course.on{box-shadow:inset 0 0 0 1px var(--adv-ring)}
 .adv-tease .big{grid-column:span 2;grid-row:span 2}.adv-tease .wide{grid-column:span 2}
 .adv-tease .big h3{font-size:calc(var(--fs) * 1.35)}
 .adv-pic{width:100%;align-self:center}
@@ -216,12 +216,12 @@
 .lone{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:var(--s);align-items:stretch}
 .lonelist{list-style:none;margin:0;padding:var(--sp-2) 0;display:grid;align-content:center;gap:var(--sp-1)}
 .lonelist li{display:grid;grid-template-columns:64px minmax(0,1fr);align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);border-radius:var(--r-card);opacity:.38;transition:opacity var(--dur-500) var(--ease),background var(--dur-500) var(--ease)}
-.lonelist li.on{opacity:1;background:var(--surf-2,var(--card));box-shadow:var(--ring)}
+.lonelist li.on{opacity:1;background:var(--surf-2,var(--card))}
 .lonelist .gnum{font-size:32px;justify-self:start}
 .lonelist li>span:not(.gnum),.lonepic figcaption>span:not(.gnum){display:grid;gap:2px;min-width:0}
 .lonelist b,.lonepic b{font-weight:var(--w-bold);letter-spacing:-.01em}
 .lonelist small,.lonepic small{color:var(--muted);font-weight:var(--w-mid);font-size:var(--fz-xs,13px)}
-.lonepic{margin:0;background:var(--surf-2,var(--card));border-radius:var(--r-panel);box-shadow:var(--ring);padding:var(--pad-lg);min-height:380px;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:var(--u)}
+.lonepic{margin:0;background:var(--surf-2,var(--card));border-radius:var(--r-panel);padding:var(--pad-lg);min-height:380px;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:var(--u)}
 /* the new picture draws in place while the last one, on its finished frame, fades out on top: never a blank card */
 .lonepic .lstage{display:grid;min-height:0}
 .lonepic .lstage>.lsd{grid-area:1 / 1}
@@ -289,3 +289,27 @@
 .tp-field{stroke:var(--adv-faint-line);stroke-width:1.3;stroke-linecap:round}
 .tp-hyp{fill:none;stroke:var(--tp-lilac);stroke-width:1;opacity:.45}
 .tp-light{stroke:var(--tp-amber);stroke-width:1.4;stroke-dasharray:5 5}
+
+/* ---- fixed picture slots (G 2026-10-06): every landing picture has a slot of its own fixed size, and the picture
+   scales to fit inside it, so when one picture changes to the next nothing else on the page moves ---- */
+.lhpic{height:var(--lslot);min-height:0;grid-template-rows:auto minmax(0,1fr)}
+.lhpic:not(.sm){--lslot:460px}
+.lhpic.sm{--lslot:300px}
+@media (min-width:960px){.lhbox{grid-template-rows:repeat(2,300px)}.lhpic,.lhpic.sm,.lhpic:not(.sm){height:auto}}
+@media (max-width:699px){.lhpic:not(.sm){--lslot:400px}.lhpic.sm{--lslot:300px}}
+.lhpic .lhd,.lonepic .lsd{position:relative;min-height:0}
+.lhpic .lhd>.viz,.lonepic .lsd>.viz{position:absolute;inset:0;display:block;align-self:stretch;justify-self:stretch}
+/* the picture fills its slot's height; a small drawing grows at most to twice its size */
+.lhpic .viz-svg,.lhpic .am,.lonepic .lsd .viz-svg,.lonepic .lsd .am{width:100%;height:100%;max-height:none;max-width:min(100%, calc(var(--w) * 2px))}
+.lonepic{height:440px;min-height:0}
+.lonepic .lstage{grid-template-rows:minmax(0,1fr)}
+@media (max-width:899px){.lonepic{height:380px}}
+/* the step demos change problem every few seconds; their box is sized for the tallest one, so the row never jumps */
+.ldemo .lvis{height:290px}
+.ldemo .lvis{grid-template-rows:auto minmax(0,1fr)}
+.ldemo .lnew{align-self:end}
+
+/* Review layout-shift #1: a wide front card can't widen the tile, so the heading never rewraps on phones */
+.ltile{grid-template-columns:minmax(0,1fr)}
+@media (max-width:599px){.lreview span{max-width:100%;font-size:clamp(15px,4.6vw,20px);padding-inline:14px}}
+.lcount b{min-width:3ch;text-align:center}
