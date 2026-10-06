@@ -7,6 +7,7 @@ import { buildTensOnes } from "../../../../explanations/diagrams/early-g1/blocks
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
 import { count, onesOf, plural, slips, tensOf } from "../_kit";
 import { count as countOf, verb } from "../../../text";
+import { singularWork } from "../../gradeK/kit";
 
 const TEN = 10;
 
@@ -106,6 +107,6 @@ export const lesson: LessonDefinition<TenMoreProblem> = {
   display: p => [num(p.n), op(p.more ? "+" : "−"), num(TEN)],
   displayNote: p => `What is 10 ${words(p.more)} than ${p.n}?`,
   picture: p => buildTensOnes({ tens: tensOf(p.n), ones: onesOf(p.n), alt: `${p.n} as tens rods and ones cubes` }),
-  answers,
+  answers: p => singularWork(answers(p)),
   explain,
 };

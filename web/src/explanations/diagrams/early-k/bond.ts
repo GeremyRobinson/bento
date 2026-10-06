@@ -29,7 +29,8 @@ export function numberBond(s: BondSpec): SceneDiagram {
   // the other part is the one being found: dashed with "?" in its dots' color until it's counted, then solid
   if (b) items.push(
     { type: "circle", cx: right[0], cy: right[1], r: 30, cls: "hole p1 dash", from: 0, until: b.other - 1 } as Draft,
-    { type: "circle", cx: right[0], cy: right[1], r: 30, cls: "hole p1", from: b.other, enter: "fade" } as Draft,
+    // the solid ring takes the dashed one's place at once: a fade would leave a blank frame between them (v43)
+    { type: "circle", cx: right[0], cy: right[1], r: 30, cls: "hole p1", from: b.other } as Draft,
   );
   else items.push({ type: "circle", cx: right[0], cy: right[1], r: 30, cls: "hole p1 dash", from: 0 } as Draft);
   const dx = (i: number) => PITCH / 2 + i * PITCH + (i >= part && part && rest ? GAP : 0), y = 200;
@@ -45,6 +46,8 @@ export function numberBond(s: BondSpec): SceneDiagram {
   items.push(t(left[0], left[1], String(part), "lbl big p0", b ? { from: b.first, enter: "rise", delay: 0.1 * part } : {}));
   if (b) {
     items.push(t(right[0], right[1], "?", "lbl big p1", { from: 0, until: b.other - 1 }));
+    // the "?" stays until the counted number rises in its place
+    items.push(t(right[0], right[1], "?", "lbl big p1", { from: b.other, until: b.other, enter: "flash", delay: -1, vars: { "--d2": `${(0.1 * rest).toFixed(2)}s` } }));
     items.push(t(right[0], right[1], String(rest), "lbl big p1", { from: b.other, enter: "rise", delay: 0.1 * rest }));
     items.push(t(cx, y + 62, `${whole} is ${part} and ${rest}`, "lbl big pw", { from: b.sentence, enter: "rise" }));
   } else items.push(t(right[0], right[1], "?", "lbl big p1"));

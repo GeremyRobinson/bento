@@ -1,6 +1,6 @@
 // Curriculum's teaching-quality pass for kindergarten to grade 3 (fixes-02, Part C): the content bugs it found stay
 // fixed, and the rewritten lessons keep the behaviour their drafts ask for.
-import { requireLesson } from "../../curriculum/registry";
+import { LESSONS, requireLesson } from "../../curriculum/registry";
 import { createRng } from "../../curriculum/generators/rng";
 import { checkAnswerStep } from "../../engine/evaluation/steps";
 import { MASS_THINGS, gramsOf, guesses } from "../../curriculum/lessons/grade3/g3-mass";
@@ -44,5 +44,31 @@ describe("g3-facts: early problems turn around into something new", () => {
     const l = requireLesson("g3-facts"), p = l.restore({ a: 6, b: 6 })!;
     expect(l.answers(p).steps.map(s => s.id)).toEqual(["count"]);
     expect(l.answers(l.restore({ a: 6, b: 4 })!).steps.map(s => s.id)).toEqual(["count", "turn"]);
+  });
+});
+
+describe("worked lines read right in kindergarten to grade 3 (v43: \"1 halves\")", () => {
+  const plain = (v: unknown): string => {
+    if (v == null) return "";
+    if (typeof v === "string" || typeof v === "number") return String(v);
+    if (Array.isArray(v)) return v.map(plain).join("");
+    const o = v as { t?: string; v?: unknown; n?: unknown; d?: unknown };
+    if (o.t === "frac") return `${plain(o.n)}/${plain(o.d)}`;
+    if (o.t === "op") return ` ${plain(o.v)} `;
+    if (o.t === "slot") return "[ ]";
+    if (o.t === "br") return " | ";
+    return plain(o.v);
+  };
+  const OK = new Set(["is", "plus", "minus", "less", "times", "equals", "makes", "was", "has", "goes", "gets", "means", "stays"]);
+  it.each(LESSONS.filter(l => l.grade <= 3).map(l => [l.id, l] as const))("%s", (_id, lesson) => {
+    const rng = createRng(13), bad = new Set<string>();
+    for (let i = 0; i < 60; i++) {
+      const p = lesson.generate(rng, i % 10), m = lesson.answers(p);
+      for (const s of m.steps) {
+        const line = plain(s.work).replace(/\s+/g, " ");
+        for (const x of line.matchAll(/(?<![\d.,/\-−^])\b1 ([a-z]+s)\b/g)) if (!OK.has(x[1]!)) bad.add(`${s.id}: ${line}`);
+      }
+    }
+    expect([...bad].slice(0, 5)).toEqual([]);
   });
 });

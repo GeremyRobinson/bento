@@ -99,7 +99,7 @@ function explain(p: SharesProblem, model: AnswerModel): Explanation {
     diagram: buildShares({
       ...spec(p), beats: { count: 0, match: 1, one: 2, shaded: 3 },
       text: { count: `${parts} equal parts`, match: "every part is the same size", one: `each part is one ${one(parts)}`, shaded: `${shaded} ${word(shaded, parts)} shaded` },
-      alt: `A ${shape} cut into ${parts} equal parts. The parts lift out and land on top of each other: they match. ${shaded} of them are shaded.`,
+      alt: `A ${shape} cut into ${parts} equal parts. The parts lift out and land on top of each other: they match. ${shaded} of them ${shaded === 1 ? "is" : "are"} shaded.`,
     }),
     caption: `${parts} equal parts are ${name}. ${shaded} ${word(shaded, parts)} shaded.`,
     timeline: beats(4),

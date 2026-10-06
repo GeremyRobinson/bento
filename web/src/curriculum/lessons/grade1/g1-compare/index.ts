@@ -5,6 +5,7 @@ import { beats, type Explanation, type ExplanationStep } from "../../../../expla
 import { buildCompareBlocks } from "../../../../explanations/diagrams/early-g1/blocks";
 import { manyBoxes, restoreVia, wholeIn } from "../../_number-line/steps";
 import { choiceStep, count, onesOf, plural, slipsMany, tensOf } from "../_kit";
+import { singularWork } from "../../gradeK/kit";
 
 /** two numbers from 10 to 99 to compare */
 export interface CompareProblem { a: number; b: number }
@@ -116,6 +117,6 @@ export const lesson: LessonDefinition<CompareProblem> = {
   },
   restore: raw => restoreVia(raw, ["a", "b"] as const, v => createCompare(v.a, v.b)),
   display: p => [num(p.a), text(" ? "), num(p.b)],
-  answers,
+  answers: p => singularWork(answers(p)),
   explain,
 };

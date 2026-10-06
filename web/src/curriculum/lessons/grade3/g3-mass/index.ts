@@ -184,12 +184,16 @@ function explain(p: MassProblem, model: AnswerModel): Explanation {
       steps: [{ id: "read", narration: "Read the story. Draw the amounts.", math: words("Read it."), state: 0 }, ...steps],
     };
   }
+  const th = MASS_THINGS[p.thing]!, right = guesses(p.thing);
   return {
     heading: "Grams or kilograms", idea, statement: words("Grams or kilograms?"),
-    diagram: picture(p) as ReturnType<typeof buildScale>,
+    diagram: buildEstimateThing({
+      thing: th.name, scale: { reading: right.labels[right.right]!, cue: th.kg ? "Heavy, so kilograms" : "Light, so grams", beats: { unit: 1, guess: 2 } },
+      alt: `A ${th.name} on a kitchen scale. It is ${th.kg ? "heavy, so kilograms" : "light, so grams"}, and the scale reads about ${right.labels[right.right]}.`,
+    }),
     caption: `${model.steps[1]!.explain}`,
     timeline: beats(3),
-    steps: [{ id: "look", narration: `Picture holding a ${MASS_THINGS[p.thing]!.name}.`, math: words("Light or heavy?"), state: 0 }, ...steps],
+    steps: [{ id: "look", narration: `Imagine holding a ${th.name} in your hand. Is it light or heavy?`, math: words("Light or heavy?"), state: 0 }, ...steps],
   };
 }
 

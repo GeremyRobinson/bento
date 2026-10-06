@@ -5,7 +5,7 @@ import type { AnswerModel, AnswerStep, LessonDefinition } from "../../../schemas
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildLinePlot } from "../../../../explanations/diagrams/early-g2/lineplot";
 import { oneBox, wholeIn } from "../../_number-line/steps";
-import { words } from "../../gradeK/kit";
+import { words, singularWork } from "../../gradeK/kit";
 import { count, slips } from "../kit";
 
 const THINGS = [
@@ -140,7 +140,7 @@ export const lesson: LessonDefinition<LinePlotProblem> = {
   },
   display: p => words(answers(p).steps.at(-1)!.question ?? ""),
   picture: p => buildLinePlot({ ...plot(p), alt: alt(p) }),
-  answers,
+  answers: p => singularWork(answers(p)),
   explain,
   pre: "g2-measure",
 };

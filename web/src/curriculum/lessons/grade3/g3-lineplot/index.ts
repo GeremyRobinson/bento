@@ -1,10 +1,10 @@
 // Line plots with halves and fourths: measure to the nearest half or fourth inch, or read a line plot marked in fourths.
-import { frac, text } from "../../../schemas/math-text";
+import { answer, frac, text } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildFracRuler, buildLinePlot, plotLabel } from "../../../../explanations/diagrams/early-g2/lineplot";
 import { manyBoxes, oneBox, wholeIn } from "../../_number-line/steps";
-import { tapStep, words } from "../../gradeK/kit";
+import { tapStep, words, singularWork } from "../../gradeK/kit";
 import { slips } from "../../grade2/kit";
 
 const THINGS = [
@@ -63,11 +63,13 @@ function answers(p: FracPlotProblem): AnswerModel {
       steps: [
         oneBox({
           id: "whole", label: "Whole inches", question: "How many whole inches long?", prompt: s => [s, text(" whole inches")], ans: p.whole,
+          work: [answer("x", p.whole), text(p.whole === 1 ? " whole inch" : " whole inches")],
           wrong: slips(p.whole, [[p.whole + 1, "Read the next inch", `It hasn't reached ${p.whole + 1} yet. Read the last whole number it passes.`]]),
           hint: "Find the last whole-inch number it passes.", explain: `It passes ${p.whole}, but not ${p.whole + 1}.`,
         }),
         oneBox({
           id: "extra", label: "The extra part", question: `How many ${name} more?`, prompt: s => [s, text(` ${name}`)], ans: extra,
+          work: [answer("x", extra), text(` ${extra === 1 ? one : name}`)],
           wrong: slips(extra, [[extra + 1, "Counted the marks", `Count the spaces past ${p.whole}, not the marks. The mark at ${p.whole} is where you start.`]]),
           hint: `From ${p.whole}, count the ${one}-inch spaces to the end.`, explain: `${extra} ${extra === 1 ? one : name} past ${p.whole}.`,
         }),
@@ -153,7 +155,7 @@ export const lesson: LessonDefinition<FracPlotProblem> = {
   },
   display: p => words(p.kind === 0 ? "How long is the crayon?" : answers(p).steps.at(-1)!.question ?? ""),
   picture: p => (p.kind === 0 ? buildFracRuler({ len: 4 * p.whole + p.quarters, max: Math.max(4, p.whole + 1), to: p.to, alt: alt(p) }) : buildLinePlot({ ...plot(p), alt: alt(p) })),
-  answers,
+  answers: p => singularWork(answers(p)),
   explain,
   pre: "g2-lineplot",
 };

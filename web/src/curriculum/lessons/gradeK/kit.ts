@@ -88,3 +88,23 @@ export function alsoAccept(step: AnswerStep, also: number[]): AnswerStep {
     known: step.known.filter(k => !also.includes(k.values[id]!)),
   };
 }
+
+const KEEP = new Set(["has", "was", "plus", "times", "equals", "makes", "gets", "goes", "means", "stays", "across", "its", "as", "this"]);
+const SINGULAR: Record<string, string> = { leaves: "leaf", halves: "half", inches: "inch", boxes: "box", wholes: "whole" };
+/**
+ * A worked line with its answers filled in reads "1 ten", not "1 tens": a count of 1 (an answer or a number) followed by
+ * a plural word gets the word in the singular. The box line keeps its plural ("[ ] tens"), since the box could be any
+ * count (v43 grammar: "1 halves").
+ */
+export function singularAfterOne(m: MathText): MathText {
+  return m.map((tok, i) => {
+    const before = m[i - 1];
+    if (tok.t !== "text" || !before || !((before.t === "answer" || before.t === "num") && before.v === 1)) return tok;
+    const v = tok.v.replace(/^ ([a-z]+s)\b/, (all, w: string) => (SINGULAR[w] ? ` ${SINGULAR[w]}` : KEEP.has(w) || /(ss|us|is)$/.test(w) ? all : ` ${w.slice(0, -1)}`));
+    return v === tok.v ? tok : { ...tok, v };
+  });
+}
+
+/** Every step's worked line through singularAfterOne. */
+export const singularWork = <M extends { steps: AnswerStep[] }>(model: M): M =>
+  ({ ...model, steps: model.steps.map(s => (s.work ? { ...s, work: singularAfterOne(s.work) } : s)) });

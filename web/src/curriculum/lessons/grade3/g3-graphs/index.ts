@@ -4,7 +4,7 @@ import type { AnswerModel, AnswerStep, LessonDefinition } from "../../../schemas
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildRows, buildScaledBars, type Icon } from "../../../../explanations/diagrams/early-g1/data";
 import { oneBox, wholeIn } from "../../_number-line/steps";
-import { words } from "../../gradeK/kit";
+import { words, singularWork } from "../../gradeK/kit";
 import { slips } from "../../grade2/kit";
 
 interface Theme { title: string; names: string[]; icon: Icon; things: string }
@@ -147,7 +147,7 @@ export const lesson: LessonDefinition<GraphProblem> = {
   },
   display: p => words(answers(p).steps.at(-1)!.question ?? ""),
   picture: p => diagram(p, false),
-  answers,
+  answers: p => singularWork(answers(p)),
   explain,
   pre: "g2-bargraph",
 };
