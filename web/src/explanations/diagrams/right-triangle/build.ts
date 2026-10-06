@@ -107,7 +107,9 @@ export function buildRightTriangle(spec: RightTriangleSpec): SceneDiagram {
 
   for (const h of spec.hl ?? []) {
     const [p, q] = sides[h.side];
-    items.push(seg(p, q, "hlline", { from: h.from, ...(h.until != null ? { until: h.until } : {}), enter: "draw" }));
+    // drawn solid over the side, not see-through: the accent mixed with the side's own colour under it read as red
+    // (review v45 blocker 5, g10-special: magenta over orange gave rgb 192,64,64)
+    items.push(seg(p, q, "hlline full", { from: h.from, ...(h.until != null ? { until: h.until } : {}), enter: "draw" }));
   }
   return frame("right-triangle", items, spec.alt, 14);
 }

@@ -260,7 +260,7 @@ button.gcell:active{transform:scale(.96)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .viz-svg .ln.thin{opacity:1} :root:not([data-theme="light"]) .viz-svg .pie{stroke:color-mix(in srgb,var(--tint) 40%,transparent)}}
 :root[data-theme="dark"] .viz-svg .ln.thin{opacity:1} :root[data-theme="dark"] .viz-svg .pie{stroke:color-mix(in srgb,var(--tint) 40%,transparent)} .viz-svg .ln.faint{stroke:var(--rule);stroke-width:var(--d-line)}
 .viz-svg .hl{stroke:var(--acc);stroke-width:var(--d-glow);stroke-linecap:round;opacity:.35}
-.viz-svg .hlline{stroke:var(--acc);stroke-width:var(--d-mark);stroke-linecap:round;opacity:.45;fill:none}
+.viz-svg .hlline{stroke:var(--acc);stroke-width:var(--d-mark);stroke-linecap:round;opacity:.45;fill:none} .viz-svg .hlline.full{opacity:1}
 .viz-svg .fill{fill:var(--tint);opacity:.16} .viz-svg .fillsoft{fill:color-mix(in srgb,var(--tint) var(--d-f10),transparent)}
 .viz-svg .dotp{fill:var(--tint)} .viz-svg .dota{fill:var(--acc)} .viz-svg .hole{fill:var(--card);stroke:var(--tint);stroke-width:var(--d-stroke)}
 .viz-svg .sq{fill:color-mix(in srgb,var(--tint) var(--d-f18),var(--card));stroke:var(--tint);stroke-width:var(--d-line)} .viz-svg .sq.big{fill:color-mix(in srgb,var(--acc) var(--d-f22),var(--card));stroke:var(--acc)}
@@ -305,6 +305,8 @@ button.gcell:active{transform:scale(.96)}
 .a-level{transform-box:fill-box;transform-origin:center bottom;animation:level var(--dur-1000) var(--ease) var(--d,0s) both} @keyframes level{from{transform:scaleY(var(--from))}}
 .a-outsoon{animation:fadeOut var(--dur-400) ease var(--d,0s) forwards} @keyframes fadeOut{to{opacity:0}}
 .a-slide{animation:slide var(--dur-1000) var(--ease) var(--d,0s) both} @keyframes slide{from{transform:translate(var(--dx,0px),var(--dy,0px))}}
+/* a slide that starts late in its beat is hidden until it starts, instead of waiting in plain sight at its start */
+.a-slide.late{animation:slide var(--dur-1000) var(--ease) var(--d,0s) both,fadeIn var(--dur-300) ease var(--d,0s) both}
 .a-move{animation:move var(--dur,var(--dur-1000)) var(--ease) var(--d,0s) both} @keyframes move{to{transform:translateX(var(--dx))}}
 .a-drop{animation:drop var(--dur-600) var(--spring) var(--d,0s) both} @keyframes drop{from{opacity:0;transform:translateY(-30px)}}
 .a-grow{transform-box:view-box;animation:growS var(--dur-1200) var(--ease) var(--d,0s) both} @keyframes growS{from{transform:scale(var(--from))}}
@@ -529,6 +531,8 @@ button.gcell:active{transform:scale(.96)}
 .viz-svg .foldshape{fill:color-mix(in srgb,var(--tint) var(--d-f30),var(--card));stroke:var(--tint);stroke-width:var(--d-edge);stroke-linejoin:round}
 .viz-svg .foldhalf{fill:color-mix(in srgb,var(--tint) var(--d-f55),var(--card));stroke:var(--tint);stroke-width:var(--d-edge);stroke-linejoin:round}
 .viz-svg .foldline{fill:none;stroke:var(--text);stroke-width:var(--d-line);stroke-dasharray:var(--d-dash)} .viz-svg .symline{fill:none;stroke:var(--tint);stroke-width:var(--d-edge);stroke-dasharray:var(--d-dash)}
-.viz-svg .misfit{fill:color-mix(in srgb,var(--err) var(--d-f30),transparent);stroke:var(--err);stroke-width:var(--d-line);stroke-dasharray:var(--d-dash-miss)} .viz-svg text.okmark{fill:var(--ok)}
+/* the fold's result is part of the picture, not a verdict on the learner's answer, so it takes part colours, never
+   right-green or wrong-red (review v45 blocker 5): the folded copy that doesn't fit in the third part colour, the check in the accent */
+.viz-svg .misfit{fill:color-mix(in srgb,var(--c2) var(--d-f30),transparent);stroke:var(--c2);stroke-width:var(--d-line);stroke-dasharray:var(--d-dash-miss)} .viz-svg text.okmark{fill:var(--ka)}
 .a-fold{transform-box:view-box;transform-origin:var(--ox) var(--oy);animation:fold var(--dur-2400) var(--ease) var(--d,0s) both}
 @keyframes fold{0%{transform:rotate(var(--r)) scaleY(1) rotate(calc(-1 * var(--r)))} 38%,70%{transform:rotate(var(--r)) scaleY(-1) rotate(calc(-1 * var(--r)))} 100%{transform:rotate(var(--r)) scaleY(1) rotate(calc(-1 * var(--r)))}}

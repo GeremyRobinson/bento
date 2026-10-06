@@ -49,7 +49,9 @@ function explain(p: LcmProblem, model: AnswerModel): Explanation {
     statement: [text("LCM("), num(a), text(", "), num(b), text(")"), op("="), num(L)],
     diagram: buildNumberLine({
       ...range, every: sparseEvery(range),
-      hops, marks: [{ v: L, beat: 2, cls: "dota", label: `${L} ÷ ${a} = ${count(k, "jump")}` }],
+      hops,
+      // the check counts the jumps of a, so its label sits under the line with those arcs, in their colour (review v45 blocker 4)
+      marks: [{ v: L, beat: 2, cls: "dota", label: `${L} ÷ ${a} = ${count(k, "jump")}`, below: true }],
       alt: `Number line from 0 to ${L}: jumps of ${b} above and jumps of ${a} below both land on ${L}.`,
     }),
     caption: `Both land on ${L} first.`,

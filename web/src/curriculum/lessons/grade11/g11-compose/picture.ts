@@ -1,5 +1,7 @@
 // The g11-compose picture (Curriculum fixes-02, Part B): f's box around g's box around k. g works on k first and
 // collapses to its value; that value slides into f's slot; then f works on it. The nesting itself shows the order.
+// Every stage lands inside its beat (Learn plays a beat every 1.8 s), in the narration's order: the rule with the
+// number put in, then its value (review v45 blocker 3: the collapse was timed at 2.6 s, past the beat's end).
 import { buildExprBoxes, type XNode } from "../../../../explanations/diagrams/algebra/boxes";
 import type { SceneDiagram } from "../../../../explanations/diagrams/scene/schema";
 import { formatNumber as f } from "../../../schemas/math-text";
@@ -22,12 +24,12 @@ export function compositionPicture(o: { a: number; b: number; c: number; d: numb
       { beat: 0, at: 0, tree: F([G([K])]) },
       { beat: 1, at: 0, tree: F([G([K], true)]) },
       // g's rule with k put in
-      { beat: 1, at: 1, tree: F([G([T(`${f(c)} ·`), { ...K, text: bracket(k), id: "k2", from: "k" }, T(plus(d))], true)]) },
+      { beat: 1, at: 0.4, tree: F([G([T(`${f(c)} ·`), { ...K, text: bracket(k), id: "k2", from: "k" }, T(plus(d))], true)]) },
       // g collapses; its value goes into f's slot
-      { beat: 1, at: 2.6, tree: F([{ t: "chip", id: "g", text: f(g), part: PG, from: "G" }]) },
+      { beat: 1, at: 1.2, tree: F([{ t: "chip", id: "g", text: f(g), part: PG, from: "G" }]) },
       { beat: 2, at: 0, tree: F([{ t: "chip", id: "g", text: f(g), part: PG }], true) },
-      { beat: 2, at: 1, tree: F([T(`${f(a)} ·`), { t: "chip", id: "g2", text: bracket(g), part: PG }, T(plus(b))], true) },
-      { beat: 2, at: 2.6, tree: [{ t: "chip", text: f(out), part: "pq", pop: true }] },
+      { beat: 2, at: 0.4, tree: F([T(`${f(a)} ·`), { t: "chip", id: "g2", text: bracket(g), part: PG }, T(plus(b))], true) },
+      { beat: 2, at: 1.2, tree: [{ t: "chip", text: f(out), part: "pq", pop: true }] },
     ],
     alt: `f's box around g's box around ${f(k)}. Inside first: g(${f(k)}) = ${f(g)}; that goes into f: f(${f(g)}) = ${f(out)}.`,
   });

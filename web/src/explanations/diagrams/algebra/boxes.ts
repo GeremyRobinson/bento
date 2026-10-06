@@ -118,7 +118,9 @@ export function buildExprBoxes(o: { stages: XStage[]; alt: string; family?: stri
       if (chip && !sameBeat && (enters || chip.pop || chip.from)) {
         const src = chip.from ? prev.find(p => p.id === chip.from) : undefined;
         const me = laid.at.find(p => p.id === chip.id);
-        if (src && me) t = { ...t, enter: "slide", delay: at, vars: { "--dx": `${r1(src.cx - me.cx)}px`, "--dy": `${r1(src.cy - me.cy)}px` } };
+        // a slide that waits (at > 0) also fades in, so the chip isn't already sitting at its start while it waits
+        // (review v45 blocker 3: g's value showed over g's input from the start of the beat)
+        if (src && me) t = { ...t, ...(at > 0 ? { cls: `${t.cls ?? ""} late`.trim() } : {}), enter: "slide", delay: at, vars: { "--dx": `${r1(src.cx - me.cx)}px`, "--dy": `${r1(src.cy - me.cy)}px` } };
         else if (chip.pop) t = { ...t, enter: "pop", delay: at + 0.15 };
       }
       items.push(t);
