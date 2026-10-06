@@ -30,7 +30,7 @@ describe("today's review", () => {
     fireEvent.click(tile);
     // a mixed run: Quit rather than Lesson, and each problem names its lesson
     expect(screen.getByRole("button", { name: "Quit" })).toBeInTheDocument();
-    expect(document.querySelector(".split .card .label")!.textContent).toMatch(/Multiply two-digit numbers|Twin of two-digit multiplying/);
+    expect(document.querySelector(".pscreen .plabel")!.textContent).toMatch(/Multiply two-digit numbers|Twin of two-digit multiplying/);
     expect(screen.getByRole("button", { name: "Hint, 4 left" })).toBeInTheDocument();
     expect(solveRun()).toBe(8);
     expect(document.querySelector(".island")).toHaveTextContent("Today's review");
@@ -42,25 +42,32 @@ describe("today's review", () => {
   });
 });
 
-// UI notes preview: the hint is a light bulb beside Settings, and it answers in the floating feedback stack with the count left
+// the hint is a light bulb beside Settings (practice-spec §2b): it opens a Settings-style stack, and the bulb carries the count left
 describe("hints", () => {
   it("the light bulb gives a hint after a first try and says how many are left", () => {
     renderApp({ grade: 5, chosen: true, done: 2, lessons: { "g5-mult2": 1, "review-twin": 1 },
       scores: { "g5-mult2": scored(1), "review-twin": scored(3) }, seen: { "g5-mult2": t - 3 * day, "review-twin": t - day } });
     fireEvent.click(screen.getByRole("button", { name: /Today's review/ }));
-    const stack = () => document.querySelector(".fstack.pfb")?.textContent ?? "";
+    // wrong tries land on the feedback line under the equation; the bulb's hint opens as its own stack
+    const line = () => document.querySelector(".pfb")?.textContent ?? "";
+    const stack = () => document.querySelector(".fstack.phint")?.textContent ?? "";
     expect(screen.queryByRole("button", { name: /^Hints?$/ })).toBeNull(); // no second hint button under the keypad
     // a wrong first try, then the hint
     fireEvent.keyDown(window, { key: "1" });
     fireEvent.keyDown(window, { key: "Enter" });
-    expect(stack()).toMatch(/^Look again\./);
+    expect(line()).toMatch(/^Look again\./);
     // at a score of 3 the first try may have been the shortcut, which opens the steps; one wrong try on a real step
-    if (/needs the steps/.test(stack())) { fireEvent.keyDown(window, { key: "1" }); fireEvent.keyDown(window, { key: "Enter" }); }
+    if (/needs the steps/.test(line())) { fireEvent.keyDown(window, { key: "1" }); fireEvent.keyDown(window, { key: "Enter" }); }
     fireEvent.click(screen.getByRole("button", { name: "Hint, 4 left" }));
-    expect(stack()).toMatch(/^Hint:/);
-    expect(stack()).toMatch(/3 hints left$/);
+    expect(stack()).toMatch(/^Hint · 3 left/);
+    expect(line()).not.toMatch(/Hint/);
     expect(screen.getByRole("button", { name: "Hint, 3 left" })).toBeInTheDocument();
-    // a solved problem's next button rides in the same stack
+    // reopening shows the same hint and costs nothing
+    fireEvent.click(screen.getByRole("button", { name: "Got it" }));
+    expect(stack()).toBe("");
+    fireEvent.click(screen.getByRole("button", { name: "Hint, 3 left" }));
+    expect(stack()).toMatch(/^Hint · 3 left/);
+    fireEvent.click(screen.getByRole("button", { name: "Got it" }));
     expect(solveRun()).toBeGreaterThanOrEqual(8);
   });
 });
