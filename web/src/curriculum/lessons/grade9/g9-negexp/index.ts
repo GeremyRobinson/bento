@@ -62,6 +62,7 @@ export const lesson: LessonDefinition<NegativeExponent> = withEasyStart({
   grade: 9,
   unit: "Exponents",
   title: "Zero and negative exponents",
+  pre: "g8-exp",
   reference: createNegativeExponent(2, 3),
   generate: rng => generateNegativeExponent(rng),
   restore: restoreNegativeExponent,

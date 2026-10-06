@@ -68,6 +68,7 @@ export const lesson: LessonDefinition<ArithmeticSeries> = withEasyStart({
   grade: 12,
   unit: "Vectors and series",
   title: "Arithmetic series",
+  pre: "g11-seq",
   reference: createSeries(1, 1, 100),
   generate: rng => generateSeries(rng),
   restore: restoreSeries,

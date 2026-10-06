@@ -9,6 +9,7 @@ export const lesson: LessonDefinition<TwoPointProblem> = withEasyStart({
   grade: 9,
   unit: "Linear functions",
   title: "Line through two points",
+  pre: "g8-intercept",
   reference: createTwoPoint(2, 3, 1, 3),
   generate: rng => generateTwoPoint(rng),
   restore: restoreTwoPoint,

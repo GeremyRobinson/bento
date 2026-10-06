@@ -75,6 +75,7 @@ export const lesson: LessonDefinition<UnitCircleProblem> = withEasyStart({
   grade: 12,
   unit: "Trigonometry",
   title: "Unit circle values",
+  pre: "g10-special",
   reference: createUnitCircle("sin", 210),
   // the first three problems stay in quadrant I, where every value is positive
   generate: (rng, i) => (i % 2 ? createUnitCircle("sin", i < 3 ? 30 : rng.pick([30, 150, 210, 330])) : createUnitCircle("cos", i < 3 ? 60 : rng.pick([60, 120, 240, 300]))),

@@ -78,6 +78,7 @@ export const lesson: LessonDefinition<LimitProblem> = withEasyStart({
   grade: 12,
   unit: "Limits",
   title: "Limits by factoring",
+  pre: "g9-factor",
   reference: createLimit(2, 2),
   generate: rng => generateLimit(rng),
   restore: restoreLimit,

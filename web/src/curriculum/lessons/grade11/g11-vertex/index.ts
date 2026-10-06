@@ -73,6 +73,7 @@ export const lesson: LessonDefinition<VertexProblem> = withEasyStart({
   grade: 11,
   unit: "Functions",
   title: "Vertex of a parabola",
+  pre: "g9-solvefactor",
   reference: createVertex(1, 3, 5),
   generate: rng => generateVertex(rng),
   restore: restoreVertex,

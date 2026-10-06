@@ -90,6 +90,7 @@ export const lesson: LessonDefinition<DistProblem> = withEasyStart({
   grade: 10,
   unit: "Coordinate geometry",
   title: "Distance between points",
+  pre: "g8-pyth",
   reference: createDist(1, 2, 4, 6),
   generate: rng => generateDist(rng),
   restore: restoreDist,
