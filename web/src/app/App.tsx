@@ -8,7 +8,6 @@ import { currentItem } from "../engine/session/practice";
 import { GradeQuestion } from "../screens/GradeQuestion";
 import { Home } from "../screens/Home";
 import { Me } from "../screens/Me";
-import { SettingsScreen } from "../screens/Settings";
 import { Learn } from "../screens/Learn";
 import { Parent } from "../screens/Parent";
 import { Practice } from "../screens/Practice";
@@ -95,7 +94,6 @@ export function App() {
     case "report": screen = <ReportScreen rep={reports[route.key]} />; break;
     case "parent": screen = <Parent />; break;
     case "me": screen = <Me />; break;
-    case "settings": screen = <SettingsScreen />; break;
     case "sandbox": screen = SANDBOX ? <Suspense fallback={null}><SandboxBoard /></Suspense> : <Home />; break;
     case "facts": screen = <Facts table={route.table} start={!!route.start} />; break;
     default: screen = <Home />;
