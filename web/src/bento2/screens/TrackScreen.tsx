@@ -9,7 +9,7 @@ import { Pill } from "../../components/primitives/Pill";
 import { Rich } from "../../components/primitives/MathLine";
 import type { AnyB2Lesson, B2Project, B2Track } from "../model";
 import { isDone } from "../progress";
-import { b2LessonById, lessonNumber, lessonsInUnit, projectAfter, trackByPickerId } from "../registry";
+import { b2LessonById, lessonNumber, lessonsInUnit, projectsAfter, trackByPickerId } from "../registry";
 import { sceneByName } from "../scenes";
 import { openTool } from "../ui/useB2";
 import { toolMeta } from "../tools/ToolShell";
@@ -57,7 +57,7 @@ export function TrackScreen({ trackId, pick: routePick }: { trackId: string; pic
     return (
       <div className={`b2detail${inline ? " inline" : ""}`} key={l.id}>
         <div className="b2dtext">
-          {!inline && <small className="b2kick">Unit {unit.n} · {unit.name} · {lessonNumber(l.id)}</small>}
+          {!inline && <small className="b2kick">Unit {unit.n} · {unit.name} · {lessonNumber(l.id)}{l.optional ? " · a Deeper lesson, off the build's path" : ""}</small>}
           {!inline && <h2>{l.title}</h2>}
           <p className={was ? "b2can on" : "b2can"}>{was ? "You can" : "When you're done, you can"} {l.youCan}</p>
           {l.needs.length > 0 && (
@@ -116,7 +116,7 @@ export function TrackScreen({ trackId, pick: routePick }: { trackId: string; pic
       </div>
       {(() => { const star = track.tools.find(t => t.star), Pic = star && sceneByName(star.id); return Pic ? <figure className="b2well"><Pic props={{}} place="tool" /></figure> : null; })()}
       <div className="b2go">
-        {(() => { const next = track.lessons.find(l => !isDone(b2, l.id)) ?? track.lessons[0]!; return <Pill go onClick={() => open(next)}>{done.length ? "Next" : "Start"}: {lessonNumber(next.id)} {next.title} ›</Pill>; })()}
+        {(() => { const next = track.lessons.find(l => !isDone(b2, l.id) && !l.optional) ?? track.lessons[0]!; return <Pill go onClick={() => open(next)}>{done.length ? "Next" : "Start"}: {lessonNumber(next.id)} {next.title} ›</Pill>; })()}
       </div>
     </div>
   );
@@ -137,18 +137,19 @@ export function TrackScreen({ trackId, pick: routePick }: { trackId: string; pic
         <div key={u.n} className="b2unit">
           <span className="slbl" style={{ "--i": row++ } as CSSProperties}>{u.n} · {u.name}</span>
           {lessonsInUnit(track, u.n).map(l => {
-            const on = pick === l.id, d = isDone(b2, l.id), proj = projectAfter(track, l.id);
+            const on = pick === l.id, d = isDone(b2, l.id), projs = projectsAfter(track, l.id);
             return (
               <div key={l.id}>
                 <div className="gitem" style={{ "--i": row++ } as CSSProperties}>
                   <button className={`srow b2row${on ? " on" : ""}`} aria-current={on ? "true" : undefined} onClick={() => choose(l.id)}>
                     <span className={`b2num${d ? " done" : ""}`}>{d ? "✓" : lessonNumber(l.id)}</span>
                     <span className="sname"><b>{l.title}</b></span>
+                    {l.optional && <small>Deeper</small>}
                   </button>
                   {on && phone() && <div className="gopen">{lessonDetail(l, true)}</div>}
                 </div>
-                {proj && (
-                  <div className="gitem" style={{ "--i": row++ } as CSSProperties}>
+                {projs.map(proj => (
+                  <div key={proj.id} className="gitem" style={{ "--i": row++ } as CSSProperties}>
                     <button className={`srow b2row proj${pick === proj.id ? " on" : ""}`} aria-current={pick === proj.id ? "true" : undefined} onClick={() => choose(proj.id)}>
                       <span className={`b2num proj${proj.shelf.every(s => s in b2.shelf) ? " done" : ""}`} aria-hidden>{proj.build ? "★" : "◆"}</span>
                       <span className="sname"><b>{proj.name}</b></span>
@@ -156,7 +157,7 @@ export function TrackScreen({ trackId, pick: routePick }: { trackId: string; pic
                     </button>
                     {pick === proj.id && phone() && <div className="gopen">{projectDetail(proj, true)}</div>}
                   </div>
-                )}
+                ))}
               </div>
             );
           })}
