@@ -283,7 +283,8 @@ html:has(.screen) body{overflow:hidden}
 .pscreen>.fdim{position:fixed}
 .pscreen.hinting>.phero{z-index:var(--z-stack)}
 .pscreen>.fstack{position:absolute;z-index:var(--z-stack);left:0;top:0;width:330px;align-items:flex-start}
-.phint .htext{white-space:normal;padding:14px 22px;border-radius:var(--r-2xl);max-width:300px;font-weight:var(--w-regular);outline:2px solid var(--acc);outline-offset:-2px;box-shadow:var(--float-shadow)}
+/* the hint bubble is a Panel line instance in the grade's own hue (UI chrome is never another hue) */
+.phint .htext{--panel-line:var(--tint);--panel-w:2px;white-space:normal;padding:14px 22px;border-radius:var(--r-2xl);max-width:300px;font-weight:var(--w-regular);box-shadow:var(--float-shadow)}
 .pscreen .hrow{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
 .pscreen .fstack .fpill.go{background:var(--ink);color:var(--on-tint);box-shadow:none}
 .phint .flbl{color:var(--muted);text-shadow:none}
