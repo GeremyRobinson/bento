@@ -181,7 +181,6 @@
 html:has(.land) .itop{position:relative;top:0}
 
 /* ---- the landing's "One idea, K to 12th" section, which replaced the grade shelf (G approved, 2026-10-06) ---- */
-.lcta2{justify-self:center;margin-top:var(--sp-2)}
 .lsd{display:grid;align-items:center;min-height:0}
 .lsd .viz{min-height:0}.lsd .viz-cap,.lsd .replay{display:none}
 

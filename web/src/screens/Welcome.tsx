@@ -158,7 +158,6 @@ export function Welcome() {
         <HeroPictures rng={rng} />
       </section>
       <OneIdea rng={rng} />
-      <div className="lcta lcta2"><Pill go onClick={start}>{START_LEARNING}</Pill><span>Start free. No account.</span></div>
       <section className="lsec"><h2>Everything in one box.</h2><p>Lessons, plus everything that helps them stick.</p></section>
       <FeatureBox rng={rng} />
       <Advanced />
