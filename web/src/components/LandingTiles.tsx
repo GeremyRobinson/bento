@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactElement, type ReactNode } from "react";
 import { reduceMotion } from "../app/transition";
 import { CATALOG } from "../curriculum/catalog";
-import { GRADES, gradeOf, inkOf, tintStyle } from "../curriculum/grades";
+import { GRADES, gradeOf, tintStyle } from "../curriculum/grades";
 import type { Rng } from "../curriculum/generators/rng";
 import { Fill, GradeNum } from "./Shelf";
 import { SlipTile, SolveTile } from "./StepDemos";
+import { FeatureTile, type FeatureSize } from "./FeatureTile";
 import { FACT_SPRINT, REVIEW, SHOW_ME } from "../app/copy";
 
 /**
@@ -32,15 +33,11 @@ function useBeat(ms: number, end: number) {
   return { t: still ? end : t, box };
 }
 
-type Size = "one" | "wide" | "tall";
+type Size = FeatureSize;
 
+/** each landing tile is an instance of the FeatureTile master */
 function Tile({ size, tint, title, children, box, k, label }: { size: Size; tint: string; title: string; children: ReactNode; box?: React.Ref<HTMLElement>; k: number; label: ReactNode }) {
-  return (
-    <article ref={box} className={`ltile ${size}`} style={{ "--tint": tint, "--ink": inkOf(tint), "--i": k } as CSSProperties}>
-      <div className="lvis" aria-hidden>{children}</div>
-      <div className="ltext"><h3>{title}</h3><p>{label}</p></div>
-    </article>
-  );
+  return <FeatureTile box={box} size={size} tint={tint} k={k} title={title} label={label}>{children}</FeatureTile>;
 }
 
 interface TileProps { tint: string; k: number; rng: Rng; size: Size }

@@ -10,7 +10,8 @@ import { upNext } from "../app/today";
 import { Contents, type Level } from "./Contents";
 import { Nav, NavMark } from "./Nav";
 import { reduceMotion } from "../app/transition";
-import { ConfirmStack } from "./ConfirmStack";
+import { Confirm } from "./Confirm";
+import { PillRing } from "./primitives/PillRing";
 import { tableById } from "../engine/facts/tables";
 import { Chevron, LockIcon } from "./primitives/icons";
 import { CONTENTS, GROWN_UP, NO_UNIT, PRACTICE, REPORT, REVIEW, YOUR_BENTO } from "../app/copy";
@@ -186,7 +187,9 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   }, [open]);
   const start: Level = route.name === "home" ? "shelf" : place.lesson ? "chapter" : "year";
   // My Bento is a page of its own (G 2026-10-06: no pop-over version); the person circle goes there
-  const openMe = () => { if (route.name !== "me") go({ name: "me" }, "fwd"); };
+  // Settings and My Bento are toggles (G 2026-10-06): tapped again while open, they close the page the way < does; the
+  // icon stays the same, its filled state already says it's open
+  const openMe = () => { if (route.name !== "me") go({ name: "me" }, "fwd"); else if (place.back) up(place.back.to); };
   // the wordmark always means home: your book once a grade is chosen, else the top of the landing page
   const home = () => {
     if (chosen != null && progress.chosen) { openSheet(false); go({ name: "home" }, "back"); }
@@ -238,7 +241,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   useEffect(() => {
     if (welcome || open || asking || sheetOpen || !place.back) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || e.defaultPrevented || document.querySelector(".zoom,.fstack,.sheet,dialog[open]")) return;
+      if (e.key !== "Escape" || e.defaultPrevented || document.querySelector(".zoom,.fstack,.confirm,.sheet,dialog[open]")) return;
       up(place.back!.to);
     };
     addEventListener("keydown", onKey);
@@ -287,6 +290,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
         )}
       </>} center={
       <header className="island" style={{ "--p": fill, "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties}>
+        <PillRing p={fill} />
         {back
           ? <button className="iback" onClick={() => up(back.to)} aria-label={`Back to ${back.label}`}><Chevron dir="left" /></button>
           : null /* the book is the top: no step back from it, and grade changes live in All grades (Review nav #4) */}
@@ -304,7 +308,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
             aria-label={`Hint, ${run!.hintsLeft} left`} aria-expanded={hinting}><BulbIcon /><em className="ibadge" aria-hidden>{run!.hintsLeft}</em></button>
         )}
         {/* Settings is a page of its own (G 2026-10-06: no pop-over version); the gear goes there */}
-        <button className={`icon${route.name === "settings" ? " on" : ""}`} onClick={() => { if (route.name !== "settings") go({ name: "settings" }, "fwd"); }}
+        <button className={`icon${route.name === "settings" ? " on" : ""}`} onClick={() => { if (route.name !== "settings") go({ name: "settings" }, "fwd"); else if (place.back) up(place.back.to); }}
           aria-label="Settings" aria-current={route.name === "settings" ? "page" : undefined}><SettingsIcon /></button>
         <button className={`icon ime${route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={openMe}
           aria-label={`${YOUR_BENTO}: ${progress.streak} day streak, ${progress.xp} XP`} aria-current={route.name === "me" ? "page" : undefined}>
@@ -312,7 +316,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
         </button>
       </>} />
       {asking && run && (
-        <ConfirmStack title={`Quit ${run.title}?`} body="Your answers so far won't be kept." confirm="Quit"
+        <Confirm title={`Quit ${run.title}?`} body="Your answers so far won't be kept." confirm="Quit"
           onCancel={() => setAsking(false)} onConfirm={() => { setAsking(false); quit({ stay: true }); }} />
       )}
       {open && <Contents grade={place.lesson ? pageOf(place.lesson)?.grade ?? grade : grade} lessonId={place.lesson} level={open} close={dismiss} leave={leave} closing={closing} />}

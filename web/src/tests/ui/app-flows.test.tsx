@@ -182,6 +182,25 @@ describe("home", () => {
     expect(screen.queryByRole("alertdialog")).toBeNull();
   });
 
+  it("Escape closes only what's on top: the hint, then the quit question, never the page under them (Review)", () => {
+    renderApp();
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(`Up next.*${LESSON}`) }));
+    tap("Show all"); tap("Your turn ›");
+    const esc = () => act(() => { dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", cancelable: true })); });
+    act(() => { dispatchEvent(new Event("bento:hint")); });
+    expect(screen.getByRole("dialog", { name: "Hint" })).toBeInTheDocument();
+    esc();
+    expect(screen.queryByRole("dialog", { name: "Hint" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Check" })).toBeInTheDocument();
+    tap(`Back to ${LESSON}`);
+    fireEvent.click(screen.getByRole("button", { name: `Quit ${LESSON}` }));
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+    esc();
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(screen.getByRole("button", { name: /^Resume / })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: `Quit ${LESSON}` })).toBeInTheDocument();
+  });
+
   it("zooms out from a lesson to its chapter, the year and every grade, and opens whatever is tapped", () => {
     renderApp();
     fireEvent.click(screen.getByRole("button", { name: new RegExp(`Up next.*${LESSON}`) }));
@@ -370,6 +389,25 @@ describe("Settings", () => {
     fireEvent.click(screen.getByRole("radio", { name: "Largest" }));
     expect(document.documentElement.dataset.text).toBe("largest");
     expect(screen.getByRole("button", { name: "Save a backup" })).toBeInTheDocument();
+  });
+  it("the gear and My Bento are toggles: tapped again while open, they close back to where you were (G 2026-10-06)", () => {
+    renderApp({ grade: 5, chosen: true });
+    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+    expect(screen.getByRole("button", { name: "Settings" })).toHaveAttribute("aria-current", "page");
+    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+    expect(screen.getByRole("button", { name: "Settings" })).not.toHaveAttribute("aria-current");
+    expect(screen.queryByRole("switch", { name: /High contrast/ })).toBeNull();
+    const me = () => screen.getByRole("button", { name: /^Your Bento|^My Bento/ });
+    fireEvent.click(me());
+    expect(me()).toHaveAttribute("aria-current", "page");
+    fireEvent.click(me());
+    // Settings and My Bento sit side by side: from one to the other and closed, you're back on the book, not Contents
+    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+    fireEvent.click(me());
+    fireEvent.click(me());
+    expect(me()).not.toHaveAttribute("aria-current");
+    expect(screen.getByRole("button", { name: "Settings" })).not.toHaveAttribute("aria-current");
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 });
 

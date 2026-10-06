@@ -44,6 +44,8 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--tint:var(--hd1)} :root:not([data-theme="light"]) .t0{--tint:var(--hd1)} :root:not([data-theme="light"]) .t1{--tint:var(--hd2)} :root:not([data-theme="light"]) .t2{--tint:var(--hd3)} :root:not([data-theme="light"]) .t3{--tint:var(--hd1)}}
 :root[data-theme="dark"] .wrap{--tint:var(--hd1)} :root[data-theme="dark"] .t0{--tint:var(--hd1)} :root[data-theme="dark"] .t1{--tint:var(--hd2)} :root[data-theme="dark"] .t2{--tint:var(--hd3)} :root[data-theme="dark"] .t3{--tint:var(--hd1)}
 .wrap,.wrap *{--ink:var(--tint);--display:var(--tint);--tint-soft:color-mix(in oklab,var(--tint) 11%,var(--card))}
+/* a switch that's off is the grade's quiet shade, never grey (Review off-hue 8) */
+.wrap{--sw-off:color-mix(in oklab,var(--tint) 18%,var(--well))}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--on-tint:#14161b}}
 :root[data-theme="dark"] .wrap{--on-tint:#14161b}
 
@@ -167,7 +169,7 @@ html[data-line="middle"] body{background-image:
 }
 /* the counters stay behind what you read: text that sits straight on the canvas (Learn's intro and steps) gets a
    clean patch of the page under it, feathered at the edge, so no counter lands on a word (v44 sweep item 12) */
-html[data-line="early"] .lintro{background:var(--canvas);box-shadow:none;border-radius:var(--r-lg)}
+html[data-line="early"] .lintro{background:var(--canvas);box-shadow:none;border-radius:var(--r-lg);outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
 :root[data-line="early"][data-theme="dark"]{--page:#14120f;--canvas:#14120f}
 /* high contrast wants a plain page */
 html[data-contrast="true"] body{background-image:none}

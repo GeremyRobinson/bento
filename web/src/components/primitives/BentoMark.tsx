@@ -1,4 +1,19 @@
-/** The Bento wordmark: one master for every place the name stands as the logo (the island, the contents bar). */
-export function BentoMark({ className }: { className?: string }) {
-  return <span className={`bmark${className ? ` ${className}` : ""}`}>Bento</span>;
+import type { CSSProperties } from "react";
+
+/**
+ * The wordmark: text logo 1, "Bento, tightened" (G 2026-10-06). Its letters are separate pieces so it can cascade
+ * in one after another when it comes back, the way the diagrams' labels do; a reader hears one word. Squared, it is
+ * Bento² with a real superscript 2 (Inter's ² sits too low and light).
+ */
+export function BentoMark({ className, squared }: { className?: string; squared?: boolean }) {
+  const letters = [..."Bento"];
+  return (
+    <span className={`bmark${className ? ` ${className}` : ""}`}>
+      <span className="vh">{squared ? "Bento squared" : "Bento"}</span>
+      <span aria-hidden="true">
+        {letters.map((l, i) => <span key={i} className="bl" style={{ "--c": i } as CSSProperties}>{l}</span>)}
+        {squared && <sup className="bl" style={{ "--c": letters.length } as CSSProperties}>2</sup>}
+      </span>
+    </span>
+  );
 }

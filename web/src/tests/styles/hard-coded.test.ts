@@ -89,6 +89,26 @@ describe("no hard-coded styles", () => {
     expect(bad.map(show)).toEqual([]);
   });
 
+  // G 2026-10-06: "light and dark should have been set in sandbox long time ago". Colour values are typed in one
+  // place, and dark mode is defined in one place, so nothing needs checking in both themes by hand.
+  /** where colour values may be typed: the token sheet, and the two palette sheets (grade hues, diagram materials) */
+  const PALETTES = [TOKENS, "styles/bands.css", "styles/diagram-master.css"];
+  /** where dark mode may be spelled out: the tokens, the grade palettes, and modes.css for values built on a component's own colour */
+  const MODES = [TOKENS, "styles/bands.css", "styles/modes.css"];
+
+  it("colour values are typed only in the token and palette sheets, never as a component's own variable", () => {
+    const bad = declarations().filter(d => isDef(d.prop) && RAW_COLOR.test(d.val) && !PALETTES.includes(d.file));
+    expect(bad.map(show)).toEqual([]);
+  });
+
+  it("dark mode is defined once: no component sheet has its own dark rules", () => {
+    const bad = css.filter(([f]) => !MODES.includes(f) && f !== FONTS)
+      .flatMap(([f, t]) => t.replace(/\/\*[\s\S]*?\*\//g, "").split("\n").map((line, i) => ({ f, line, i }))
+        .filter(({ line }) => /prefers-color-scheme:\s*dark|data-theme="dark"/.test(line)))
+      .map(({ f, line, i }) => `${f}:${i + 1}: ${line.trim().slice(0, 80)}`);
+    expect(bad).toEqual([]);
+  });
+
   it("every colour token has a dark value", () => {
     const tokens = css.find(([f]) => f === TOKENS)![1].replace(/\/\*[\s\S]*?\*\//g, "");
     const light = tokens.match(/^:root\{([^}]*)\}/m)![1]!;

@@ -1,7 +1,8 @@
+import { FeatureTile } from "./FeatureTile";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { reduceMotion } from "../app/transition";
 import type { Rng } from "../curriculum/generators/rng";
-import { gradeOf, inkOf, tintStyle } from "../curriculum/grades";
+import { gradeOf, tintStyle } from "../curriculum/grades";
 import { frac, num, op, sup, text, type MathText } from "../curriculum/schemas/math-text";
 import { MathLine } from "./primitives/MathLine";
 
@@ -136,13 +137,10 @@ function Chip({ grade }: { grade: number }) {
 
 interface DemoTileProps { tint: string; k: number; rng: Rng }
 
-/** A wide feature-box tile around a demo: the demo on top, the feature's name and line underneath. */
+/** A wide FeatureTile instance around a demo: the demo on top, the feature's name and line underneath. */
 function DemoTile({ box, tint, k, title, label, another, children }: DemoTileProps & { box: React.Ref<HTMLElement>; title: string; label: string; another: () => void; children: React.ReactNode }) {
   return (
-    <article ref={box} className="ltile wide ldemo" onClick={another} aria-live="polite" style={{ "--tint": tint, "--ink": inkOf(tint), "--i": k } as CSSProperties}>
-      <div className="lvis">{children}<span className="lnew">Tap for another</span></div>
-      <div className="ltext"><h3>{title}</h3><p>{label}</p></div>
-    </article>
+    <FeatureTile box={box} size="wide" tint={tint} k={k} title={title} label={label} onTap={another} live extra={<span className="lnew">Tap for another</span>}>{children}</FeatureTile>
   );
 }
 

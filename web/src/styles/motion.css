@@ -81,7 +81,7 @@ html[data-dir="prev"]::view-transition-new(root){animation-name:vtInLeft}
 .panel.split>.col:last-child>*{--i:2}
 /* every other screen (landing, Me, the grown-up page, results, facts, reports): its own top-level pieces stagger the
    same way; screens built of one container stagger that container's children instead */
-#app>:not(.itop):not(.sheet):not(.zoom):not(.screen):not(.land):not(.bgrown):not(.bar):not(.panel.split){animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(var(--i,0) * var(--m-step))}
+#app>:not(.itop):not(.sheet):not(.zoom):not(.confirm):not(.fdim):not(.screen):not(.land):not(.bgrown):not(.bar):not(.panel.split){animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(var(--i,0) * var(--m-step))}
 :where(.land,.bgrown,.placed:not(.screen))>*{animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(min(var(--k,0),4) * var(--m-step))}
 #app>:nth-child(3){--i:1} #app>:nth-child(4){--i:2} #app>:nth-child(5){--i:3} #app>:nth-child(n+6){--i:4}
 :is(.land,.bgrown,.placed)>:nth-child(2){--k:1} :is(.land,.bgrown,.placed)>:nth-child(3){--k:2} :is(.land,.bgrown,.placed)>:nth-child(4){--k:3} :is(.land,.bgrown,.placed)>:nth-child(n+5){--k:4}
@@ -92,7 +92,7 @@ html[data-dir="prev"]::view-transition-new(root){animation-name:vtInLeft}
 @keyframes rvSoft{from{opacity:.3;transform:translateY(4px)}}
 .wrap :is(.sdetail>.sbento,.sdl)>*{animation-name:rvSoft}
 
-@media (prefers-reduced-motion:reduce){ *,::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){transition:none!important;animation:none!important} .a-outsoon,.a-flash:not(:last-of-type){opacity:0} .a-move{transform:translateX(var(--dx))} .viz-svg .bar.mid{fill:var(--acc)} }
+@media (prefers-reduced-motion:reduce){ *,*::before,*::after,::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){transition:none!important;animation:none!important} .a-outsoon,.a-flash:not(:last-of-type){opacity:0} .a-move{transform:translateX(var(--dx))} .viz-svg .bar.mid{fill:var(--acc)} }
 
 /* a picture that starts over is drawn fresh and fades in, never un-built in reverse */
 @keyframes vizIn{from{opacity:0}}

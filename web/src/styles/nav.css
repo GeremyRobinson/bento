@@ -1,10 +1,11 @@
 /* ---- floating (UI research's floating preview, G 2026-10-06): no bars or boxes. Every control is its own capsule
    floating on the page, white with a soft shadow (light) or one step lighter than the page (dark). ---- */
-:root{--float:var(--card);--float-shadow:inset 0 0 0 1px var(--rule);--dim:rgba(20,22,27,.16);--halo:rgba(20,22,27,.2)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--float-shadow:inset 0 0 0 1px var(--rule);--dim:rgba(0,0,0,.4);--halo:rgba(238,240,244,.22)}}
-:root[data-theme="dark"]{--float-shadow:inset 0 0 0 1px var(--rule);--dim:rgba(0,0,0,.4);--halo:rgba(238,240,244,.22)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--float:color-mix(in oklab,var(--card) 88%,white)}}
-:root[data-theme="dark"] .wrap{--float:color-mix(in oklab,var(--card) 88%,white)}
+/* defined on .wrap too, so floating pieces take the grade's own card and line, not the neutral root ones (Review off-hue 7) */
+:root,.wrap{--float:var(--card);--float-shadow:inset 0 0 0 1px var(--panel-line,var(--rule))}
+
+
+
+
 
 /* ---- the top: the island in the middle, a corner on each side ---- */
 .itop{position:sticky;top:max(var(--sp-3),env(safe-area-inset-top));z-index:var(--z-island);display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:var(--s);pointer-events:none;min-width:0}
@@ -25,24 +26,34 @@
 .island .iplace small{font-size:var(--fz-2xs);line-height:15px;color:var(--muted);font-weight:var(--w-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .island .iplace b{font-size:var(--small);line-height:19px;font-weight:var(--w-bold);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* how far along: a circle that fills from the bottom in the lesson's step of the grade hue, with the grade's number on it */
+/* the progress ring (PillRing): the Panel line all round, the grade's colour filling it from the left end */
+.pring{display:none;position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:var(--z-up)}
+.pring path{fill:none;stroke-width:2px;vector-effect:non-scaling-stroke}
+.pring-track{stroke:var(--panel-line,var(--rule));stroke-width:1px!important}
+.pring-fill{stroke:var(--gn,var(--ink));stroke-linecap:round;transition:stroke-dasharray var(--m-in) var(--m-ease)}
+.pring-fill.empty{stroke-opacity:0}
+html[data-motion="reduce"] .pring-fill{transition:none}
 .island .ibat{flex:none;position:relative;width:var(--float-in);height:var(--float-in);border-radius:var(--r-round);background:var(--well);overflow:hidden;display:grid;place-items:center}
 .island .ibat>i{position:absolute;inset:auto 0 0;height:calc(var(--p) * 100%);background:var(--gn,var(--ink));transition:height var(--dur-500) var(--glide)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .island .ibat>i{background:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}}
-:root[data-theme="dark"] .island .ibat>i{background:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}
+
+
 .island .iplace .ign{font:inherit;letter-spacing:inherit}
 @media (min-width:700px){.island:not(.guest){width:min(460px,100%)}}
-.bmark{font:var(--w-bold) var(--fz-md)/1 var(--sans);letter-spacing:-.02em;color:var(--text);transition:color var(--m-page) var(--m-ease)}
+/* TEXT LOGO 1, "Bento, tightened" (G picked it 2026-10-06): Inter 650, drawn tight at -.05em */
+:root{--mark-track:-.05em}
+.bmark{font:var(--w-bold) var(--fz-lg)/1 var(--sans);letter-spacing:var(--mark-track);color:var(--text);transition:color var(--m-page) var(--m-ease)}
+.bmark sup{font-size:.42em;vertical-align:.95em;margin-left:.04em;letter-spacing:0;line-height:0}
 .zbar-top .zmark{grid-column:1;justify-self:start}
 /* inside Contents the mark lines up with the Contents window, not the page bar; it fades out with the bar and reveals
    here a beat later, never sliding between the two (G 2026-10-06) */
-.zoom .zmark .imark{animation:fadeIn var(--m-swap) var(--m-ease) var(--dur-120) both}
+.zoom .zmark .imark .bl{animation:blIn var(--m-in) var(--m-ease) both;animation-delay:calc(var(--mark-wait) + var(--c,0) * var(--m-step))}
+html[data-motion="reduce"] .zoom .zmark .imark .bl{animation:fadeIn var(--m-swap) var(--m-ease) var(--mark-wait) both}
 .zoom.closing .zmark .imark{animation:fadeOut var(--m-tap) var(--m-ease) both}
-.island .iword{font:var(--w-bold) var(--fz-md)/1 var(--sans);letter-spacing:-.02em}
+.island .iword{font-size:var(--fz-lg)}
 /* the landing's "Bento" is the wordmark alone: plain text on the left, no pill (G, 2026-10-06) */
 /* nothing sits behind it: no fade, no band, no line; the wordmark and buttons float over the page (G 2026-10-06: "no bar") */
 /* over the dark Bento² section the wordmark turns light (Review layout-shift should-fix) */
 /* the Bento² section is night in both themes, so the mark over it is its light ink in both */
-:root{--mark-on-night:#f5f5f7}
 html[data-nav-dark] .itop.guest .imark,html[data-nav-dark] .itop.guest .bmark{color:var(--mark-on-night)}
 /* where the dark section is inset (wide screens) the mark would straddle its edge, half on light and half on dark, so it
    steps aside until the section has passed (no shadows, G 2026-10-06) */
@@ -111,16 +122,22 @@ button.fpill:active{transform:scale(.96)}
 .wrap>:not(.itop):not(.zoom){transition:transform var(--m-page) var(--m-ease),filter var(--m-page) var(--m-ease),opacity var(--m-page) var(--m-ease)}
 html[data-zoomed] .wrap>:not(.itop):not(.zoom){transform:scale(.92);filter:blur(6px);opacity:.4}
 html[data-zoomed] .itop{opacity:0;pointer-events:none}
-/* the wordmark leaves first and comes back a beat after the rest, so it never seems to jump (G 2026-10-06) */
-.itop .imark{transition:opacity var(--m-swap) var(--m-ease) var(--dur-120)}
-html[data-zoomed] .itop .imark{opacity:0;transition-delay:0s;transition-duration:var(--m-tap)}
+/* THE WORDMARK'S RETURN (G 2026-10-06): it leaves at once, waits a beat after everything else has settled, then its
+   letters cascade back one after another, B to o, each a step behind the last. Less motion: one plain fade. */
+.bl{display:inline-block}
+.itop .imark .bl{transition:opacity var(--m-in) var(--m-ease),translate var(--m-in) var(--m-ease);transition-delay:calc(var(--mark-wait) + var(--c,0) * var(--m-step))}
+html[data-zoomed] .itop .imark .bl{opacity:0;translate:0 8px;transition-delay:0s;transition-duration:var(--m-tap)}
+:root{--mark-wait:var(--m-in)}
+@keyframes blIn{from{opacity:0;translate:0 8px}}
+html[data-motion="reduce"] .itop .imark .bl{translate:none;transition:opacity var(--m-swap) var(--m-ease) var(--mark-wait)}
+html[data-motion="reduce"][data-zoomed] .itop .imark .bl{transition-delay:0s}
 html[data-zoomed] body{overflow:hidden}
 .zoom{position:fixed;inset:0;z-index:var(--z-zoom);overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;display:grid;align-content:start;justify-items:center;gap:calc(var(--u) * 1.5);
   padding:max(var(--sp-3),env(safe-area-inset-top)) var(--u) calc(var(--u) * 3);background:color-mix(in srgb,var(--page) 55%,transparent);animation:fadeIn var(--m-page) var(--m-ease) both}
 .zbar-top{position:sticky;top:0;z-index:var(--z-up2);width:min(1040px,100%);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:var(--s)}
 /* the contents' level slider: an instance of the tap slider, frosted to float over the zoom */
 .zlevels{grid-column:2;--sl-pad:var(--sp-1);--sl-h:40px;--sl-x:18px;--sl-fz:var(--fz-md);--sl-bg:var(--card);--sl-ring:inset 0 0 0 1px var(--rule)}
-.zclose{grid-column:3;justify-self:end;background:color-mix(in srgb,var(--card) 72%,transparent)!important;box-shadow:0 0 0 1px var(--rule)}
+.zclose{grid-column:3;justify-self:end;background:color-mix(in srgb,var(--card) 72%,transparent)!important;box-shadow:inset 0 0 0 1px var(--rule)}
 /* a phone: the zoom bar keeps the app's 16px gutter, so Done lines up with the island's corner buttons */
 @media (max-width:699px){.zoom{padding-inline:var(--sp-4)}}
 @media (max-width:560px){.zbar-top{grid-template-columns:minmax(0,1fr) auto}.zbar-top .zmark{display:none}.zlevels{grid-column:1;--sl-x:var(--sp-1);--sl-fz:var(--fz-sm);justify-self:start;width:100%;max-width:300px}}
@@ -159,11 +176,14 @@ html[data-zoomed] body{overflow:hidden}
 .zyear{display:grid;gap:calc(var(--u) * 1.5)}
 .zyear>header{display:grid;justify-items:center;text-align:center;gap:6px}
 .zyear>header .ctl{margin-top:var(--sp-2)}
-.zch{display:grid;gap:var(--s);grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
-.zcard{display:grid;gap:6px;align-content:start;text-align:left;padding:var(--pad-md);border-radius:var(--r-tile);background:var(--surf-2,var(--card));animation:rise var(--dur-500) var(--ease) both;animation-delay:calc(var(--i) * var(--dur-45));transition:transform var(--dur-250) var(--m-settle),box-shadow var(--dur-200)}
+/* even rows: up to 4 chapters sit in one row, more split into two rows; phones take two a row, an odd last card spans both (Review) */
+.zch{display:grid;gap:var(--s);grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (min-width:700px){.zch{grid-template-columns:repeat(var(--cols,2),minmax(0,1fr))}}
+@media (max-width:699px){.zch>:last-child:nth-child(odd){grid-column:1/-1}}
+.zcard{display:grid;gap:var(--sp-1);align-content:start;text-align:left;padding:var(--pad-md);border-radius:var(--r-tile);background:var(--surf-2,var(--card));animation:rise var(--dur-500) var(--ease) both;animation-delay:calc(var(--i) * var(--dur-45));transition:transform var(--dur-250) var(--m-settle),box-shadow var(--dur-200)}
 .zcard:hover{transform:translateY(-2px);box-shadow:none}
-.zcard.on{box-shadow:0 0 0 2px var(--tint)}
-.zcard b{font-size:calc(var(--fs) * 1.1);font-weight:var(--w-bold);letter-spacing:-.01em}
+.zcard.on{--panel-line:var(--tint);--panel-w:2px}
+.zcard b{min-height:2lh;font-size:calc(var(--fs) * 1.1);font-weight:var(--w-bold);letter-spacing:-.01em}
 
 /* the shelf: every grade, grouped by line, plus Advanced */
 .zshelf{display:grid;gap:calc(var(--u) * 1.5);align-items:start}
@@ -201,8 +221,8 @@ html[data-motion="reduce"] .battery>.fill{animation:none}
 
 /* ---- a grade is its number, in its colour ---- */
 .gnum{font:var(--w-bold) 44px/1 var(--sans);letter-spacing:-.04em;color:var(--gn,var(--ink));font-variant-numeric:tabular-nums}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .gnum{color:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}}
-:root[data-theme="dark"] .gnum{color:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}
+
+
 .gnum small{font-size:var(--fz-lg);font-weight:var(--w-bold);letter-spacing:0;margin-left:2px;vertical-align:top;position:relative;top:var(--sp-1)}
 
 /* ---- the shelf: every grade by line, one card size ---- */
@@ -212,12 +232,13 @@ html[data-motion="reduce"] .battery>.fill{animation:none}
 .sbooks{display:grid;gap:var(--s);grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
 .book{display:flex;flex-direction:column;gap:6px;height:156px;text-align:left;padding:14px 18px 18px;border-radius:var(--r-tile);background:var(--surf-2,var(--card));transition:transform var(--dur-250) var(--m-settle),box-shadow var(--dur-200)}
 button.book:hover{transform:translateY(-2px);box-shadow:none}
-.book.on{box-shadow:0 0 0 2px var(--tint)}
+.book.on{--panel-line:var(--tint);--panel-w:2px;box-shadow:none}
 .book b{font-weight:var(--w-bold);font-size:var(--small);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 @media (min-width:900px){.zshelf .shelf{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:calc(var(--u) * 1.5)}}
 .zshelf{display:grid;gap:calc(var(--u) * 1.5)}
-.zcard{min-height:150px;display:flex;flex-direction:column}
-.zcard .bcount{padding-top:var(--sp-3)}
+/* a chapter card is as tall as what it says: the kicker, the name, and its lesson count tight under it, so the whole
+   year fits at once, two across even on a phone (G 2026-10-06: "so much wasted space") */
+.zcard .bcount{margin:0}
 
 /* home's progress tile and the hub's level tile, as batteries */
 .bhome .b-stats.battery{gap:6px}
@@ -328,20 +349,30 @@ html:has(.screen),html:has(.screen) body{overflow:hidden;overscroll-behavior:non
 /* the picked lesson row shows its whole name; Up next is already said in the detail */
 .srow.sles.on .snext{display:none}
 .srow.sles.on .sname b{white-space:normal}
-/* a quick question before something is lost: centred, the safe choice first */
-.fconfirm{left:50%;top:50%;transform:translate(-50%,-50%);align-items:stretch;width:min(360px,calc(100vw - 32px))}
-.fconfirm .fpill{justify-content:center;font-size:var(--fz-lg)}
-.fconfirm .fcq{flex-direction:column;align-items:flex-start;gap:var(--sp-1);padding-block:var(--sp-4);font-weight:var(--w-regular)}
-.fconfirm .fcq b{font-weight:var(--w-bold)}
-.fconfirm .fcq span{color:var(--muted);font-size:var(--fz-md)}
-.fconfirm .fcquit{color:var(--ink)}
+/* THE CONFIRM MASTER: a small bento box in the middle of the screen. The question spans the top; the two answers sit
+   side by side under it as tiles, the safe one filled in the grade's colour, the other outlined. Corners nest from the
+   panel with an 8px gap; no shadow, it comes forward from the centre (G 2026-10-06) */
+.confirm{position:fixed;z-index:var(--z-stack);left:50%;top:50%;translate:-50% -50%;width:min(400px,calc((100vw - 32px) / var(--text-zoom,1)));
+  display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2);padding:var(--sp-2);border-radius:var(--r-panel);background:var(--card);
+  outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1);animation:confirmIn var(--m-in) var(--m-ease) both}
+@keyframes confirmIn{from{opacity:0;scale:.97}}
+.confirm .cq{grid-column:1 / -1;display:grid;gap:var(--sp-1);padding:calc(var(--u) + var(--sp-2)) calc(var(--u) + var(--sp-2)) var(--sp-3)}
+.confirm .cq b{font-size:var(--fz-xl);font-weight:var(--w-bold);letter-spacing:-.01em}
+.confirm .cq span{color:var(--muted);font-size:var(--fz-md)}
+.confirm .ca{min-height:var(--row);border-radius:calc(var(--r-panel) - var(--sp-2));font-size:var(--fz-lg);font-weight:var(--w-bold);color:var(--ink);
+  background:transparent;outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1);transition:background var(--m-tap) var(--m-ease),scale var(--m-tap) var(--m-ease)}
+.confirm .ca.keep{background:var(--tint);color:var(--on-tint);outline-color:var(--tint)}
+.confirm .ca:hover{background:var(--tint-soft)}
+.confirm .ca.keep:hover{background:color-mix(in oklab,var(--tint) 88%,var(--text))}
+.confirm .ca:active{scale:.97}
+.confirm .ca:focus-visible{outline:2px solid var(--tint);outline-offset:2px}
 .iresume-x{display:grid;place-items:center;width:var(--float-in);height:var(--float-in);border-radius:var(--r-pill);background:var(--float);box-shadow:var(--float-shadow);color:var(--muted)}
 
 /* ---- the nav's wordmark: on every screen, plain "Bento" on the left, the same as the landing page's; it always
    takes you home (G 2026-10-06) ---- */
 .imark{display:grid;place-items:center;height:var(--float-h);padding:0 var(--sp-2);border-radius:var(--r-pill);color:var(--text);transition:transform var(--dur-180) var(--ease),color var(--m-page) var(--m-ease)}
 .imark:active{transform:scale(.96)}
-.imark .iword{font:var(--w-bold) var(--fz-lg)/1 var(--sans);letter-spacing:-.02em}
+.imark .iword{font-size:var(--fz-lg)}
 /* on a phone the place pill needs the room: its fill circle becomes the pill's own fill, charging left to right */
 @media (max-width:699px){
   .itop,.itop:has(>.icorner.left){grid-template-columns:auto minmax(0,1fr) auto;gap:var(--sp-2)}
@@ -349,7 +380,9 @@ html:has(.screen),html:has(.screen) body{overflow:hidden;overscroll-behavior:non
   .itop>.icorner.left>:not(.imark){display:none}
   .imark{padding:0 var(--sp-1)}
   .island{position:relative;overflow:hidden;isolation:isolate}
-  .island::before{content:"";position:absolute;left:0;bottom:0;height:3px;width:calc(var(--p,0) * 100%);z-index:var(--z-under);background:var(--gn,var(--ink));transition:width var(--m-page) var(--m-ease)}
+  /* the pill's edge is the progress: it fills around the rounded outline, so nothing is cut off by the radius */
+  .island{box-shadow:none}
+  .island .pring{display:block}
   .island .ibat{display:none}
   .island .iplace{padding-right:var(--sp-3)}
 }

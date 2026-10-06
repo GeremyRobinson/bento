@@ -118,7 +118,7 @@ export function Contents({ grade, lessonId, level: first, close, leave = close, 
       <section className="zyear">
         <header><span className="k">{g.subtitle}</span><h2>{g.name}</h2>
           <Pill go onClick={() => { leave(); go({ name: "home" }, "back"); }}>Open the year ›</Pill></header>
-        <div className="zch">{units.map((u, k) => {
+        <div className="zch" style={{ "--cols": units.length <= 4 ? units.length : Math.ceil(units.length / 2) } as CSSProperties}>{units.map((u, k) => {
           const done = doneCount(progress, u.entries), on = u.name === here?.name;
           return (
             <button key={u.name} className={`zcard battery${on ? " on" : ""}`} style={{ "--i": k } as CSSProperties} onClick={() => { setChapter(u.name); to("chapter"); }}>

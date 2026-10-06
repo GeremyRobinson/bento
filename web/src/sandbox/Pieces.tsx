@@ -1,10 +1,14 @@
-import { useState, type ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
+import { gradeOf, inkOf } from "../curriculum/grades";
 import { useApp } from "../app/AppState";
 import type { Dir } from "../app/transition";
 import { Slider } from "../components/primitives/Slider";
 import { Pill } from "../components/primitives/Pill";
 import { Tile, Toggle } from "../components/PageTile";
 import { Nav, NavMark } from "../components/Nav";
+import { Confirm } from "../components/Confirm";
+import { PillRing } from "../components/primitives/PillRing";
+import { Keypad } from "../components/practice/Keypad";
 
 /** Where a piece is: being built, waiting on Review, or live. G sees work here before Review signs it off. */
 type Status = "building" | "review" | "next" | "live";
@@ -26,10 +30,14 @@ function Piece({ name, status, chunk, nests, children }: { name: string; status:
  * live instance, marked with where it is, so it can be tried here before Review signs it off and it goes live.
  */
 export function Pieces() {
-  const { go } = useApp();
+  const { go, progress } = useApp();
+  const lg = gradeOf(progress.grade ?? 5), gn = { position: "relative", "--gn": inkOf(lg.color), "--gn-d": lg.color } as CSSProperties;
   const [lvl, setLvl] = useState<"chapter" | "year" | "all">("chapter");
   const [side, setSide] = useState<"a" | "b">("a");
   const [sw, setSw] = useState(true);
+  const [ask, setAsk] = useState(false);
+  const [cascade, setCascade] = useState(0);
+  const [ring, setRing] = useState(0.3);
   const move = (dir: Dir) => go({ name: "sandbox" }, dir);
   return (
     <section className="sbpieces" aria-label="Pieces in progress">
@@ -38,6 +46,19 @@ export function Pieces() {
         <p className="muted">Each piece is built and checked on its own, then nests into the bigger ones. These are the real components, so they work here the way they will in the app.</p>
       </header>
       <div className="sbpgrid">
+        <Piece name="Progress ring" status="review" chunk="Pill progress" nests="Nav (phone), every lesson and practice">
+          <div className="sbring"><div className="island" style={gn}><PillRing p={ring} /><span className="iplace"><b>Multiply two-digit numbers</b></span></div></div>
+          <Pill onClick={() => setRing(r => (r >= 1 ? 0 : Math.min(1, r + 0.2)))}>{ring >= 1 ? "Start over" : "Next problem"}</Pill>
+        </Piece>
+        <Piece name="Wordmark return" status="review" chunk="Wordmark cascade" nests="Nav, Contents">
+          <span className="sbcascade" key={cascade}><NavMark onHome={() => {}} /></span>
+          <Pill onClick={() => setCascade(c => c + 1)}>Play it again</Pill>
+          <small className="muted">Waits a beat, then the letters come back one after another. Less motion: one plain fade.</small>
+        </Piece>
+        <Piece name="Confirm" status="review" chunk="Confirm master" nests="Quit a lesson, Quit practice">
+          <Pill go onClick={() => setAsk(true)}>Ask before quitting</Pill>
+          {ask && <Confirm title="Quit Equivalent ratios?" body="Your answers so far won't be kept." confirm="Quit" onConfirm={() => setAsk(false)} onCancel={() => setAsk(false)} />}
+        </Piece>
         <Piece name="No shadows" status="review" chunk="Shadow sweep" nests="everything that floats or is picked">
           <div className="sbpills"><Pill>A floating pill</Pill><Pill go>Picked</Pill></div>
           <small className="muted">Nothing casts a shadow. Floating pieces show their edge with an outline; what's picked or active shows with its fill and outline.</small>
@@ -84,8 +105,8 @@ export function Pieces() {
         <Piece name="All grades in Contents" status="review" chunk="Chunk 8" nests="Contents, Slider, Shelf">
           <small className="muted">All grades is now the outer level of Contents and the one way to change grade. My Bento's Switch grade opens it too.</small>
         </Piece>
-        <Piece name="Keypad master" status="building" chunk="After chunk 8" nests="Practice">
-          <small className="muted">Practice's keypad moves onto one Keypad master, with the left-handed layout inside it.</small>
+        <Piece name="Keypad master" status="review" chunk="Keypad master" nests="Practice, every grade band">
+          <div className="sbkeys"><Keypad band="middle" onKey={() => {}} solved={false} go={{ label: "Check", run: () => {} }} /></div>
         </Piece>
         <Piece name="Design's motion system" status="next" chunk="7 small chunks" nests="everything that moves">
           <small className="muted">Tokens, page zoom direction, overlays without blur, slider thumb, one press rule, answer motion, Less motion as a fade.</small>
