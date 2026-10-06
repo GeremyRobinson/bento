@@ -18,5 +18,6 @@ export const deviations: Record<string, Partial<Record<string, string>>> = {
   "g3-split": { unit: "3rd grade has units now; this lesson lives in Multiplication and division",
     steps: "a first step \"Split each row\" asks \"8 is 5 and how many more?\", so the learner makes the cut (Curriculum fixes-02, K-3 g3-split rewrite, 2026-10-06); the recorded steps follow it unchanged in answer",
     prompt: "the multiply steps ask about the picture: \"How many in the 6 rows of 5?\"; the sum step asks to put the arrays back together (same rewrite)",
-    checks: "\"Add the parts\" names keeping only one part and a part added wrong, instead of the generic nudge (same rewrite)" },
+    checks: "\"Add the parts\" names keeping only one part and a part added wrong, instead of the generic nudge (same rewrite)",
+    pre: "builds up from g3-facts and now comes after the facts and division facts: every part of the split is a times fact (Curriculum fixes-02, K-3 Order 1, 2026-10-06)" },
 };

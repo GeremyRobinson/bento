@@ -74,6 +74,7 @@ export const lesson: LessonDefinition<SplitFactProblem> = {
   grade: 3,
   unit: "Multiplication and division",
   title: "Multiply by breaking apart",
+  pre: "g3-facts",
   reference: createSplitFact(7, 8),
   generate: (rng, index) => generateSplitFact(rng, index),
   restore: raw => { const r = readNumbers(raw, ["a", "b"] as const); try { return r && createSplitFact(r.a, r.b); } catch { return null; } },

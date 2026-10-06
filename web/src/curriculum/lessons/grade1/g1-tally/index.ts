@@ -121,5 +121,5 @@ export const lesson: LessonDefinition<TallyProblem> = {
   picture: p => buildRows({ kind: "tally", title: THEMES[p.theme]!.title, names: THEMES[p.theme]!.names, counts: p.counts, icon: THEMES[p.theme]!.icon, alt: alt(p) }),
   answers,
   explain,
-  pre: "k-sort",
+  pre: "g1-picgraph",
 };

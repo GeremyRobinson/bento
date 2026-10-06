@@ -113,5 +113,5 @@ export const lesson: LessonDefinition<PicGraphProblem> = {
   picture: p => buildRows({ kind: "pictures", title: THEMES[p.theme]!.title, names: THEMES[p.theme]!.names, counts: p.counts, icon: THEMES[p.theme]!.icon, alt: alt(p) }),
   answers,
   explain,
-  pre: "g1-tally",
+  pre: "k-sort",
 };
