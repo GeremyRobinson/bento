@@ -1,7 +1,7 @@
 // The product grid (quantum.md, inside the circuit board; 07 and 08): two qubits as a 2×2 grid of the four amplitudes,
 // rows for the top qubit and columns for the bottom one. For separate qubits each cell is its row's amplitude times its
 // column's, so the grid is a column times a row and ps − qr = 0. A CNOT swaps the 10 and 11 cells; then the grid
-// usually can't be split, and the cross-check shows it. Measure the top qubit to see what the bottom one does.
+// usually can't be split, and the cross-check shows it. Measure top shows what the bottom one does.
 import { useEffect, useState } from "react";
 import { flag, num, type SceneProps } from "../../../scenes";
 import { fx, Read, Scene, Slider, Toggle, useTween } from "../../../ui/kit";
@@ -66,8 +66,8 @@ export function GridScene({ props }: SceneProps) {
       controls={<>
         <Slider label="Top qubit's angle" value={Math.round(tAng)} min={-180} max={180} step={1} onChange={reset(setTa)} format={d => `${d}°`} marks={MARKS} />
         <Slider label="Bottom qubit's angle" value={Math.round(ba)} min={-180} max={180} step={1} onChange={reset(setBa)} format={d => `${d}°`} marks={MARKS} />
-        {hasCnot && <Toggle label="CNOT" value={on} onChange={reset(setOn)} options={[{ v: "off", label: "No CNOT" }, { v: "on", label: "CNOT, top controls" }]} />}
-        {!quiet && <button type="button" className="ctl" onClick={doMeasure}>Measure the top qubit</button>}
+        {hasCnot && <Toggle label="CNOT" value={on} onChange={reset(setOn)} options={[{ v: "off", label: "No CNOT" }, { v: "on", label: "CNOT on" }]} />}
+        {!quiet && <button type="button" className="ctl" onClick={doMeasure}>Measure top</button>}
       </>}
       readouts={<>
         <Read label="ps − qr" value={quiet ? "?" : fx(x, 3)} tone="amber" />

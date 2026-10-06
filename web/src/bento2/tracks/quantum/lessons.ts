@@ -516,7 +516,7 @@ export const qu08: B2Lesson<P08> = {
   needs: ["b2-qu-07", "b2-cs-04"],
   tools: ["grid", "pair", "matrix"],
   play: { scene: "grid", props: { a: Math.SQRT1_2, b: Math.SQRT1_2, c: 1, d: 0, cnot: true },
-    say: "H on the top qubit, then a CNOT from top to bottom. Switch the CNOT on and off: with it, the product grid can't be split into a column times a row, and the cross-check ps − qr stops being 0. Measure the top qubit: the bottom one always matches." },
+    say: "H on the top qubit, then a CNOT. Switch it on: the grid no longer splits into a column times a row, and ps − qr stops being 0. Measure the top qubit: the bottom always matches." },
   guess: { scene: "grid", props: { a: 1, b: 0, c: 1, d: 0, quiet: true }, kind: "choice", options: ["(1/2, 0, 0, 1/2)", "(1/4, 1/4, 1/4, 1/4)", "(1/2, 1/2, 0, 0)"], answer: 0,
     ask: "Start at 00, apply H to the top qubit, then CNOT. What are the chances of 00, 01, 10 and 11?",
     revealProps: { steps: true },
@@ -594,7 +594,7 @@ export const qu09: B2Lesson<P09> = {
   needs: ["b2-qu-08", "b2-pr-01"],
   tools: ["pair"],
   play: { scene: "pair", props: { a: 0, b: 30 },
-    say: "Bell pairs fly to two analyzers. Turn the dials: at equal angles they always match, and as the angles move apart the match rate falls smoothly. In game mode a referee asks random questions and counts wins." },
+    say: "Bell pairs fly to two analyzers. At equal dials they always match; as the dials move apart, the match rate falls smoothly. Game mode counts wins." },
   guess: { scene: "pair", props: { a: 0, b: 30, quiet: true }, kind: "slider", min: 0, max: 1, step: 0.01, start: 0.5, answer: 0.75, near: 0.05, unit: "match rate",
     format: x => x.toFixed(2),
     ask: "With the dials 30° apart, how often do the two results match?",
@@ -836,7 +836,7 @@ export const qu12: B2Lesson<P12> = {
     show: p => `The marked item is **${LABELS2[p.m]}**. Start at 00 and run one round. Every state in units of 1/2.`,
     steps(p) {
       const s1 = [1, 1, 1, 1], s2 = s1.map((x, i) => (i === p.m ? -x : x)), s3 = hh(s2), s4 = s3.map((x, i) => (i === 0 ? x : -x)), s5 = clean(hh(s4));
-      const boxes = LABELS2, ask = "In units of 1/2.";
+      const boxes = LABELS2;
       const signSlip = (from: number[]) => slip("H⊗H sign pattern", hhCrossed(from), `The sign for x and y is (−1) to the number of places where both have a 1, top digit with top digit: for y = 11 the signs are +, −, −, +.`);
       const done = (l: string, v: number[]) => `${l}: ${tuple(clean(v))}/2`;
       const steps: B2Step[] = [];
@@ -846,16 +846,16 @@ export const qu12: B2Lesson<P12> = {
           p.m === 2 && slip("top and bottom", 1, "The left digit is the top qubit. For 10 the bottom one is 0, so the X gates go on the bottom qubit."),
         ] }));
       steps.push(
-        multiStep("s1", "After H on both", s1, "whole", { boxes, ask, hint: "H on each qubit spreads 00 evenly: every amplitude 1/2.",
+        multiStep("s1", "After H on both", s1, "whole", { boxes, hint: "H on each qubit spreads 00 evenly: every amplitude 1/2.",
           slips: [slip("units", [0.5, 0.5, 0.5, 0.5], "Boxes are in units of 1/2: an amplitude of 1/2 is typed as 1.")], done: done("After H on both", s1) }),
-        multiStep("s2", "After the oracle", s2, "whole", { boxes, ask, hint: `The oracle flips the sign of ${LABELS2[p.m]}.`,
+        multiStep("s2", "After the oracle", s2, "whole", { boxes, hint: `The oracle flips the sign of ${LABELS2[p.m]}.`,
           slips: [slip("no flip", s1, `The oracle flips the sign of the marked item, ${LABELS2[p.m]}.`)], done: done("After the oracle", s2) }),
-        multiStep("s3", "After H on both", clean(s3), "whole", { boxes, ask, hint: "out(y) = ½ Σ (−1)^(x·y) a(x).",
+        multiStep("s3", "After H on both", clean(s3), "whole", { boxes, hint: "out(y) = ½ Σ (−1)^(x·y) a(x).",
           slips: [signSlip(s2), slip("didn't halve", s3.map(x => 2 * x), "H on both divides by 2: out(y) is half the signed sum.")], done: done("After H on both", s3) }),
-        multiStep("s4", "After flipping all but 00", clean(s4), "whole", { boxes, ask, hint: "Keep 00 and flip the sign of the other three.",
+        multiStep("s4", "After flipping all but 00", clean(s4), "whole", { boxes, hint: "Keep 00 and flip the sign of the other three.",
           slips: [slip("flipped 00 too", clean(s3.map(x => -x)), "Flip every amplitude except 00: (2|00⟩⟨00| − I) keeps 00 and negates the rest."), slip("flipped only 00", clean(s3.map((x, i) => (i === 0 ? -x : x))), "That's the same state turned by an overall sign, which changes no chance, but the circuit keeps 00 and flips the other three.")],
           done: done("After flipping all but 00", s4) }),
-        multiStep("s5", "After H on both", s5, "whole", { boxes, ask, hint: "Same H pattern as before.",
+        multiStep("s5", "After H on both", s5, "whole", { boxes, hint: "Same H pattern as before.",
           slips: [slip("typed 1", s5.map(x => x / 2), "Boxes are in units of 1/2: an amplitude of 1 is typed as 2."), signSlip(s4)], done: done("After H on both", s5) }),
         fracStep("P", `Chance of reading ${LABELS2[p.m]}`, 1, { hint: "The marked amplitude is 2 in units of 1/2: square the real amplitude.",
           slips: [slip("squared the units", 4, "The box said 2 because it's in units of 1/2: the amplitude is 1, so the chance is 1² = 1."), slip("in units", 2, "The box said 2 because it's in units of 1/2: the amplitude is 1, so the chance is 1² = 1."), slip("before the search", 1 / 4, "That was the chance before the search. After one round the marked amplitude is 1, so the chance is 1.")] }),
