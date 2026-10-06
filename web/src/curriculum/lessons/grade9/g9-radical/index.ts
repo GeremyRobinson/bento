@@ -40,6 +40,7 @@ export function explainSimplifyRoot(p: SimplifyRoot, model: AnswerModel) {
   const [square, k] = model.steps.map(s => s.slots[0]!.expected!) as [number, number];
   return beatExplanation({
     heading: "Pull out the perfect square",
+    idea: ["A square root splits over a product: √(a × b) = √a × √b. When one factor is a perfect square, its root is a whole number and moves out front.", "Use the biggest perfect square, so nothing more can come out."],
     statement: [sqrt(n)],
     caption: `${f(n)} = ${f(square)} × ${f(rest)}, and √${f(square)} = ${f(k)}.`,
     alt: `√${f(n)} = √(${f(square)} × ${f(rest)}) = ${f(k)}√${f(rest)}.`,

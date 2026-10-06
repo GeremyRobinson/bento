@@ -39,6 +39,7 @@ export function explainElimination(p: EliminationSystem, model: AnswerModel) {
   const [twoX, x, y] = model.steps.map(s => s.slots[0]!.expected!) as [number, number, number];
   return beatExplanation({
     heading: "Add to cancel a variable",
+    idea: ["Adding equal amounts to both sides keeps an equation true, and the second equation's two sides are equal amounts. So you can add one whole equation to the other.", "Add when a variable has opposite signs, like + y and − y: it cancels and leaves one variable to solve."],
     statement: system(p),
     caption: "Add the equations: +y and −y cancel.",
     alt: `x + y = ${f(sum)} and x − y = ${f(difference)}. Adding them gives 2x = ${f(twoX)}, so x = ${f(x)}; then y = ${f(y)}.`,

@@ -42,6 +42,7 @@ export function explainChainRule(p: ChainRule, model: AnswerModel) {
   const [e, da, front] = model.steps.map(s => s.slots[0]!.expected!) as [number, number, number];
   return beatExplanation({
     heading: "Outside, then times inside",
+    idea: ["f is a function inside a function. When x moves a little, the inside moves by its own slope, and the outside responds to the inside's change.", "Rates of change multiply, like gears: f′ = (the outside's derivative) × (the inside's derivative)."],
     statement: [text("f(x)"), op("="), ...wrapped(a, b, n)],
     caption: `The power rule on the outside, times the inside's derivative, ${f(da)}.`,
     alt: `(${innerText(a, b)})${supText(n)}: ${f(n)}(${innerText(a, b)})${supText(e)} × ${f(da)} = ${f(front)}(${innerText(a, b)})${supText(e)}.`,

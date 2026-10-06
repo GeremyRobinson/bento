@@ -43,6 +43,7 @@ export function explainExponential(p: ExponentialEquation, model: AnswerModel) {
   const [k, x] = model.steps.map(s => s.slots[0]!.expected!) as [number, number];
   return beatExplanation({
     heading: "Make the bases match",
+    idea: ["Each power of 3 is a different number: 3, 9, 27, 81 and so on. So if 3 to one power equals 3 to another, the powers must be the same.", "Write both sides as powers of the same base, then set the exponents equal."],
     statement: [...lhs(p), op("="), text(big(value))],
     caption: `Write ${big(value)} as a power of ${f(b)}, then the exponents must be equal.`,
     alt: `${f(b)} to the x ${fpm(c)} = ${big(value)} = ${f(b)} to the ${f(k)}, so x ${fpm(c)} = ${f(k)} and x = ${f(x)}.`,

@@ -43,6 +43,7 @@ export function explainPolynomialDerivative(p: PolynomialDerivative, model: Answ
   const fprime = (terms: [number, MathText][]): MathText => [text("f′(x)"), op("="), ...poly(terms)];
   return beatExplanation({
     heading: "One term at a time",
+    idea: ["The slope of a sum is the sum of the slopes, so take the derivative one term at a time.", "A constant is a flat line with slope 0, so it drops out. f′(1) is how steep the graph is at x = 1."],
     statement: fx(p),
     caption: d ? `The constant ${f(d)} drops out: its derivative is 0.` : "Each term follows the power rule on its own.",
     alt: `f′(x) = ${f(A)}x² + ${fP(B)}x + ${fP(C)}, and f′(1) = ${f(total)}.`,

@@ -84,7 +84,7 @@ const ORACLES: Record<string, Oracle> = {
  "g5-order":p=>[[p.a+p.b*(p.c-p.d),(p.a+p.b)*p.c-p.d,p.a*p.b-p.c/p.d][p.t]],
  "g5-round":p=>[Math.round(p.N/10**(3-p.p))/10**p.p],"g6-gcf":p=>[p.m,p.n],"g8-sci":p=>[p.c/10,p.e],
  "g9-radical":p=>[p.k,p.m],"g9-factor":p=>[p.p,p.qn],"g10-circle":p=>[p.h,p.k,p.r],"g11-expeq":p=>[p.x],"g11-inverse":p=>[p.x],
- "g11-vertex":p=>[p.h,p.a*p.h*p.h+p.b*p.h+p.c],"g11-synth":p=>[p.b+p.r],"g8-exp":p=>[p.t==0?p.a+p.b:p.t==1?p.a+p.b-p.b:p.exponent],
+ "g11-vertex":p=>[p.h,p.a*p.h*p.h+p.b*p.h+p.c],"g11-synth":p=>p.e?[p.b+p.r,p.e]:[p.b+p.r],"g8-exp":p=>[p.t==0?p.a+p.b:p.t==1?p.a+p.b-p.b:p.exponent],
  "g9-polyadd":p=>p.sub?[p.a-p.d,p.b-p.e,p.c-p.f]:[p.a+p.d,p.b+p.e,p.c+p.f],
  "g10-trig":p=>{const opp=p.a,adj=p.b,h=p.c;const [x,y]=({sin:[opp,h],cos:[adj,h],tan:[opp,adj]} as Record<string,[number,number]>)[p.f]!;return simp(x,y)},
  "g7-prob":p=>simp([p.r,p.b,p.g][p.c],p.r+p.b+p.g),

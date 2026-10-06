@@ -50,7 +50,7 @@ export function explainLog(p: LogProblem, model: AnswerModel): Explanation {
   const hi = Math.max(m, k), lo = Math.min(m, k);
   return {
     heading: "A log is an exponent",
-    idea: [`log${subText(b)} X asks: ${b} to what power makes X? On the graph of y = ${b}ˣ, it is the x where the curve reaches X.`, "Adding logs with the same base adds the exponents: it is the log of the product."],
+    idea: ["A log asks: the base to what power makes this number? On the graph of the base to the power x, it is the x where the curve reaches that number.", "Adding logs with the same base adds the exponents: it is the log of the product."],
     statement: logMath(p),
     caption: `${f(b)}${supText(m)} = ${big(b ** m)} and ${f(b)}${supText(k)} = ${big(b ** k)}, so the sum is ${f(m)} + ${f(k)} = ${f(s)}.`,
     diagram: buildPlane({

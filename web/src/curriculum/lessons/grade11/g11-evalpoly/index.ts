@@ -48,6 +48,7 @@ export function explainEvaluate(p: EvaluatePolynomial, model: AnswerModel) {
   ];
   return beatExplanation({
     heading: "Plug in, then simplify",
+    idea: ["f(k) is the height of the graph at x = k: put k in every place x appears.", "Powers come before multiplying, so square first. A negative number squared is positive, because negative times negative is positive."],
     statement: [...fx(p), text(",  "), ...at(k)],
     caption: `Put ${f(k)} in for every x, then work out each part.`,
     alt: `f(${f(k)}) = ${f(A)} + ${fP(B)} + ${fP(c)} = ${f(total)}.`,

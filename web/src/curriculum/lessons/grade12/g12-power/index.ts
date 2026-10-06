@@ -62,6 +62,7 @@ export function explainPowerRule(p: PowerRule, model: AnswerModel) {
   const [c, e] = model.steps.map(s => s.slots[0]!.expected!) as [number, number];
   return beatExplanation({
     heading: "The power rule",
+    idea: ["The derivative f′(x) is the slope of the graph at each x: how fast f grows.", "For x², grow a square of side x by a sliver: it gains two strips of length x, so its area grows 2x times as fast. In general xⁿ grows n·xⁿ⁻¹ times as fast. The exponent comes down in front and drops by 1."],
     statement: [text("f(x)"), op("="), ...term(a, n)],
     caption: "Bring the exponent down, then lower it by 1.",
     alt: `f(x) = ${f(a)}x${supText(n)}: ${f(n)} × ${f(a)} = ${f(c)} and ${f(n)} − 1 = ${f(e)}, so f′(x) = ${f(c)}x${supText(e)}.`,
