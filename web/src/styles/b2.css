@@ -253,6 +253,7 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
   .b2say.b2fold:not(.open){display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden}
   .b2nav .b2more{display:inline-flex;align-items:center;min-height:40px;padding:0 var(--sp-1)}
   .b2lesson .b2scene{gap:var(--sp-2)}
+  .b2lesson .b2stage .b2ctl>.ctl{--pill-h:36px;--pill-pad:var(--sp-3);font-size:var(--fz-sm)}
   .st-play .b2stage .b2read{gap:2px var(--sp-3)}
   .b2lesson .b2stage .b2r.minor{display:none}
   .st-play .b2body .b2small{display:none}
@@ -263,7 +264,9 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
   .screen.fit.b2lesson.st-use.proj.projopen{grid-template-areas:"stage"}
   .b2lesson.st-use.proj.projopen .b2card{display:none}
   .b2lesson.st-use.proj.projopen .b2stage{display:grid;align-content:start;gap:var(--sp-2)}
-  .b2lesson.projopen .b2projback{display:inline-flex;justify-self:start;--pill-h:40px;font-size:var(--fz-sm)}
+  /* "Back to the lesson" floats in the drawing's top corner rather than taking a row */
+  .b2lesson.st-use.proj.projopen .b2stage{position:relative}
+  .b2lesson.projopen .b2projback{display:inline-flex;position:absolute;top:var(--sp-2);right:var(--sp-2);z-index:var(--z-up);--pill-h:36px;--pill-pad:var(--sp-3);font-size:var(--fz-sm)}
   /* the island already names the lesson, so the card's header steps aside */
   .b2card>.b2lhead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
   .b2nav .ctl.b2deep{--pill-pad:var(--sp-3)}
@@ -288,7 +291,7 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
   .b2scene{grid-template-rows:minmax(204px,1fr) auto auto auto}
   .b2lesson.st-work .b2scene{grid-template-rows:minmax(150px,1fr) auto auto auto}
   /* a project opened full screen has the room: its drawing gets a proper height */
-  .b2lesson.projopen .b2scene{grid-template-rows:minmax(260px,1fr) auto auto auto}
+  .b2lesson.projopen .b2scene{grid-template-rows:minmax(230px,1fr) auto auto auto}
   .b2t{font-size:var(--fz-lg)}
   .b2r b{font-size:var(--fz-md)}
   .b2lesson .b2stage .b2r.big b{font-size:var(--fz-xl)}
