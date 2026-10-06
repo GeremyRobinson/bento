@@ -77,7 +77,14 @@ button.fpill:active{transform:scale(.96)}
 .qset{top:calc(max(12px,env(safe-area-inset-top)) + 60px);right:max(16px,calc((100vw - var(--sb-right,0px) - 1180px) / 2 + 20px));align-items:flex-end}
 /* each pill only as wide as its words, lined up on the right under the settings button (UI notes preview, G 2026-10-06) */
 .qset{align-items:flex-end;max-width:calc(100vw - 32px)}
-.qset .flbl{padding:6px 14px 0}
+.qset .flbl{padding:6px 8px 0;color:var(--muted);text-shadow:none}
+/* the notes preview's pills: 17px words on a 52px pill, hugging their text */
+.qset .fpill{font-size:17px;min-height:52px;padding:0 22px;gap:10px;white-space:nowrap}
+/* putting them away: the pills ripple out bottom first, quicker than they came, and the dim fades with them */
+.fstack.out>*{animation:stackOut .14s var(--ease) both;animation-delay:calc((var(--n,6) - var(--i,0)) * 22ms)}
+@keyframes stackOut{from{opacity:1;transform:none;filter:none}to{opacity:0;transform:translateY(-6px) scale(.99);filter:blur(4px)}}
+.fdim.out{animation:fadeOut .24s var(--ease) both;pointer-events:none}
+@keyframes fadeOut{to{opacity:0}}
 /* the island and its buttons stay above the dim while quick settings are open, so the settings button closes them */
 .itop.qopen{z-index:32}
 @media (max-width:699px){.qset{right:16px}}

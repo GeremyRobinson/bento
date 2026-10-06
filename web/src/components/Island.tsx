@@ -3,6 +3,7 @@ import { useApp } from "../app/AppState";
 import type { Route } from "../app/routes";
 import { doneCount, entriesInGrade, entryById, unitsInGrade } from "../app/curriculum";
 import { readAloudOn, readSettings } from "../app/settings";
+import { reduceMotion } from "../app/transition";
 import { gradeOf, inkOf } from "../curriculum/grades";
 import { lessonById } from "../curriculum/registry";
 import { currentItem, lessonOfItem } from "../engine/session/practice";
@@ -113,10 +114,18 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   const grade = chosen ?? 0;
   const place = placeOf(route, app, grade);
   const [open, setOpen] = useState<Level | null>(null);
-  const [quick, setQuick] = useState(false);
+  // quick settings: open, closing (the pills ripple out, last first, as in the UI notes preview), or put away
+  const [qs, setQs] = useState<"open" | "closing" | null>(null);
+  const quick = qs === "open";
+  const shut = () => setQs(q => (q === "open" ? "closing" : q));
+  useEffect(() => {
+    if (qs !== "closing") return;
+    const t = setTimeout(() => setQs(null), reduceMotion() ? 0 : 240);
+    return () => clearTimeout(t);
+  }, [qs]);
   const start: Level = route.name === "home" ? "shelf" : place.lesson ? "chapter" : "year";
   // going anywhere (Me included) puts quick settings away
-  useEffect(() => { setQuick(false); }, [route]);
+  useEffect(() => { setQs(null); }, [route]);
 
   // pinching the page closed (two fingers coming together) zooms out to the contents; spreading them is left to the browser
   useEffect(() => {
@@ -179,13 +188,13 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
         <span className="ibat" aria-hidden style={{ "--p": fill, "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties}><i /></span>
       </header>
       <div className="icorner right">
-        <button className={`icon${quick ? " on" : ""}`} onClick={() => setQuick(q => !q)} aria-label="Settings" aria-expanded={quick}><SettingsIcon /></button>
+        <button className={`icon${quick ? " on" : ""}`} onClick={() => (quick ? shut() : setQs("open"))} aria-label="Settings" aria-expanded={quick}><SettingsIcon /></button>
         <button className={`icon${route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={() => go({ name: "me" }, "fwd")} aria-label={`Me: ${progress.streak} day streak, ${progress.xp} XP`}>
           <MeIcon />
         </button>
       </div>
     </div>
-      {quick && <QuickSettings close={() => setQuick(false)} />}
+      {qs && <QuickSettings closing={qs === "closing"} close={shut} />}
       {open && <Contents grade={place.lesson ? pageOf(place.lesson)?.grade ?? grade : grade} lessonId={place.lesson} level={open} close={() => setOpen(null)} />}
     </>
   );
@@ -195,7 +204,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
  * Quick settings: a column of separate floating pills under the settings button, arriving one at a time, over a light
  * dim so they never sit on the problem. The rest of the settings live in Me.
  */
-function QuickSettings({ close }: { close: () => void }) {
+function QuickSettings({ close, closing }: { close: () => void; closing: boolean }) {
   const { progress, setSettings, go } = useApp();
   const s = readSettings(progress.settings);
   const aloud = readAloudOn(s, progress.grade);
@@ -212,8 +221,8 @@ function QuickSettings({ close }: { close: () => void }) {
   ];
   return (
     <>
-      <div className="fdim" onClick={close} />
-      <div className="fstack qset" role="dialog" aria-label="Settings">
+      <div className={`fdim${closing ? " out" : ""}`} onClick={close} />
+      <div className={`fstack qset${closing ? " out" : ""}`} role="dialog" aria-label="Settings" style={{ "--n": rows.length + (SANDBOX ? 3 : 2) } as CSSProperties}>
         <span className="flbl" style={{ "--i": 0 } as CSSProperties}>Settings</span>
         {rows.map((r, i) => (
           <button key={r.label} className="fpill toggle" role="switch" aria-checked={r.on} onClick={r.flip} style={{ "--i": i + 1 } as CSSProperties}>
