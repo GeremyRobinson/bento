@@ -33,7 +33,9 @@
 @media (min-width:700px){.island:not(.guest){width:min(460px,100%)}}
 .bmark{font:var(--w-bold) var(--fz-md)/1 var(--sans);letter-spacing:-.02em;color:var(--text);transition:color var(--m-page) var(--m-ease)}
 .zbar-top .zmark{grid-column:1;justify-self:start}
-.zoom .zmark .imark{position:fixed;top:var(--nav-top);left:var(--nav-x);animation:fadeIn var(--m-swap) var(--m-ease) var(--dur-120) both}
+/* inside Contents the mark lines up with the Contents window, not the page bar; it fades out with the bar and reveals
+   here a beat later, never sliding between the two (G 2026-10-06) */
+.zoom .zmark .imark{animation:fadeIn var(--m-swap) var(--m-ease) var(--dur-120) both}
 .zoom.closing .zmark .imark{animation:fadeOut var(--m-tap) var(--m-ease) both}
 .island .iword{font:var(--w-bold) var(--fz-md)/1 var(--sans);letter-spacing:-.02em}
 /* the landing's "Bento" is the wordmark alone: plain text on the left, no pill (G, 2026-10-06) */
