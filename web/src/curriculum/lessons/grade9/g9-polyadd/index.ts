@@ -5,6 +5,7 @@ import { fP, ns, P, poly, v, xp, type Slip } from "../../algebra-kit/steps";
 import { attempt, nz, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
 import { coef, term } from "../../../text";
+import { polynomialSumPicture } from "./picture";
 
 /** (ax² + bx + c) ± (dx² + ex + f). */
 export interface PolynomialSum { kind: "polynomials.addSubtract"; a: number; b: number; c: number; d: number; e: number; f: number; sub: boolean }
@@ -61,6 +62,7 @@ export function explainPolynomialSum(p: PolynomialSum, model: AnswerModel) {
     idea: ["For subtraction, flip every sign in the second one first."],
     statement: problem(p),
     caption: `Only like terms combine: x² with x², x with x, numbers with numbers.`,
+    diagram: polynomialSumPicture({ ...p, A, B, C, answer: toPlainText(quad(A, B, C)) }),
     alt: `${coef(p.a, "x²")} ${o} ${term(p.d, "x²")} = ${coef(A, "x²")}, ${coef(p.b, "x")} ${o} ${term(p.e, "x")} = ${coef(B, "x")}, ${f(p.c)} ${o} ${fP(p.f)} = ${f(C)}.`,
     steps: [
       { id: "problem", narration: `Two polynomials, ${word}. Find the like terms, starting with x².`, math: problem(p, true) },

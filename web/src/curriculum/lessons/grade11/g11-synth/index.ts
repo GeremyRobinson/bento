@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { fP, ns, P, poly, v, xp } from "../../algebra-kit/steps";
 import { attempt, nz, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { syntheticPicture } from "./picture";
 
 /** (x − r)(x − s) = x² + bx + c divided by (x − r): the quotient is x − s, remainder 0. */
 export interface SyntheticDivision { kind: "polynomials.synthetic"; r: number; s: number; b: number; c: number }
@@ -51,6 +52,7 @@ export function explainSynthetic(p: SyntheticDivision, model: AnswerModel) {
     heading: "Multiply, add, repeat",
     statement: problem(p),
     caption: `${f(r)} goes in the box: the divisor's number with its sign flipped.`,
+    diagram: syntheticPicture({ r, b, c, rr, q, qr, rem }),
     alt: `Synthetic division by ${f(r)}: the row 1, ${f(b)}, ${f(c)} becomes 1, ${f(quot)}, ${f(rem)}, so the answer is x ${quot < 0 ? "−" : "+"} ${f(Math.abs(quot))}, remainder ${f(rem)}.`,
     steps: [
       { id: "setup", narration: `Put ${f(r)} in the box and the numbers of the polynomial in a row: 1, ${f(b)}, ${f(c)}.`, math: [num(r), text("|"), num(1), gap, num(b), gap, num(c)] },

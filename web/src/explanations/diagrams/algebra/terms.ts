@@ -20,8 +20,9 @@ export interface TermCell extends When {
 export interface TermNote extends When { row: number; col: number; text: string; sup?: string; cls?: string; enter?: Enter; anchor?: "start" | "end" }
 /** "down": straight down a column; "across": from a cell to the next column's cell (multiply across); "back": a faint check arrow. */
 export interface TermArrow extends When { kind: "down" | "across" | "back"; a: [row: number, col: number]; b: [row: number, col: number]; label?: string }
-/** An outline round a cell (or a run of cells along a row): `ring` circles a value, `focus` lights the one talked about. */
-export interface TermMark extends When { /** "head": round the column's header */ row: number | "head"; col: number; toCol?: number; kind: "ring" | "focus" }
+/** An outline round a cell (or a run of cells along a row): `ring` circles a value, `focus` lights the one talked about,
+    `strike` crosses out a term that drops out. */
+export interface TermMark extends When { /** "head": round the column's header */ row: number | "head"; col: number; toCol?: number; kind: "ring" | "focus" | "strike" }
 /** A line of text under the table. */
 export interface TermLine extends When { text: string; cls?: string }
 
@@ -66,6 +67,10 @@ export function buildTermTable(s: TermTableSpec): SceneDiagram {
   for (const m of s.marks ?? []) {
     const to = m.toCol ?? m.col, x0 = X(m.col) - cell / 2 - 8, x1 = X(to) + cell / 2 + 8;
     const ym = m.row === "head" ? TERMS.head / 2 : Y(m.row);
+    if (m.kind === "strike") {
+      items.push({ type: "line", x1: r1(X(m.col) - cell / 2 - 4), y1: r1(ym + cell / 2 + 4), x2: r1(X(to) + cell / 2 + 4), y2: r1(ym - cell / 2 - 4), ...time(m, "ln2", "draw") } as SceneItem);
+      continue;
+    }
     const mh = m.row === "head" ? TERMS.head - 4 : cell + 12;
     items.push({ type: "rect", x: r1(x0), y: r1(ym - mh / 2), w: r1(x1 - x0), h: mh, rx: 14, ...time(m, m.kind === "ring" ? "xring" : "hlline") } as SceneItem);
   }
@@ -94,7 +99,7 @@ export function buildTermTable(s: TermTableSpec): SceneDiagram {
     items.push({ ...arrowHead(r1(x1), r1(y1), Math.atan2(y1 - y0, x1 - x0), 10), ...time({ ...a, at: (a.at ?? 0) + 0.5 }, a.kind === "back" ? "dotp pw cut" : "dota", "fade") } as SceneItem);
     if (a.label) {
       // the label sits beside the arrow's middle, on its outer side
-      const mx = (x0 + x1) / 2, my = (y0 + y1) / 2, nx = -uy, ny = ux, side = a.kind === "down" ? 1 : -1;
+      const mx = (x0 + x1) / 2, my = (y0 + y1) / 2, nx = -uy, ny = ux, side = 1;
       items.push({ type: "text", x: r1(mx + nx * 22 * side), y: r1(my + ny * 22 * side), text: a.label, ...time({ ...a, at: (a.at ?? 0) + 0.3 }, a.kind === "back" ? "sm muted" : "sm acc", "fade") } as SceneItem);
     }
   }
@@ -112,7 +117,8 @@ export function buildTermTable(s: TermTableSpec): SceneDiagram {
   }
   const extraCol = [...s.cells.map(c => c.col), ...(s.notes ?? []).map(n => n.col)].some(c => c >= nCols) ? 1 : 0;
   const tableW = left + (nCols + extraCol) * cw;
-  const lineW = Math.max(0, ...lines.map(l => l.text.length * 17 * 0.6));
+  const lineSize = (l: TermLine) => (/\bbig\b/.test(l.cls ?? "lbl big") ? 22 : /\bsm\b/.test(l.cls ?? "") ? 15 : 17);
+  const lineW = Math.max(0, ...lines.map(l => l.text.length * lineSize(l) * 0.6));
   const W = Math.max(tableW + pad, lineW + 2 * pad, 300), cx = Math.max(lineW / 2 + pad, (left + nCols * cw) / 2);
   const top = head + nRows * rh + 8;
   lines.forEach((l, k) => items.push({ type: "text", x: r1(cx), y: r1(top + 20 + rowOf[k]! * 28), text: l.text, ...time(l, l.cls ?? "lbl big acc", "rise") } as SceneItem));

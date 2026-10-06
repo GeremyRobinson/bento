@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { numStep, supText, v } from "../../algebra-kit/steps";
 import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { powerRulePicture } from "./picture";
 
 /** f(x) = a·xⁿ, so f′(x) = (n·a)·xⁿ⁻¹. */
 export interface PowerRule { kind: "derivatives.power"; a: number; n: number }
@@ -64,6 +65,7 @@ export function explainPowerRule(p: PowerRule, model: AnswerModel) {
     heading: "The power rule",
     statement: [text("f(x)"), op("="), ...term(a, n)],
     caption: "Bring the exponent down, then lower it by 1.",
+    diagram: powerRulePicture({ a, n, c, e }),
     alt: `f(x) = ${f(a)}x${supText(n)}: ${f(n)} × ${f(a)} = ${f(c)} and ${f(n)} − 1 = ${f(e)}, so f′(x) = ${f(c)}x${supText(e)}.`,
     steps: [
       { id: "problem", narration: `The exponent ${f(n)} is what comes down.`, math: [num(a), v(), sup([mark(n)])] },

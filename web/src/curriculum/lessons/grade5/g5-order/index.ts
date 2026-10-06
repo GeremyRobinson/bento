@@ -4,6 +4,7 @@ import { formatNumber, mark, num, op, text, type MathText } from "../../../schem
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { chainExplanation, type ChainBeat } from "../../../../explanations/diagrams/chain/build";
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
+import { orderPicture } from "./picture";
 
 export interface OrderProblem { t: 0 | 1 | 2; a: number; b: number; c: number; d: number }
 
@@ -83,6 +84,7 @@ function explain(p: OrderProblem, model: AnswerModel) {
     statement: expression(p),
     ...(leftToRight != null && Number.isInteger(leftToRight) && leftToRight !== r2 ? { caption: `Going left to right would give ${formatNumber(leftToRight)}, which is wrong.` } : {}),
     alt: `Order of operations, one step per line, ending at ${r2}.`,
+    diagram: orderPicture({ t, a, b, c, d, r0, r1, r2 }),
     beats,
   });
 }

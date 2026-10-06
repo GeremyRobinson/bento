@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { fpm, ns, pm, supText, v } from "../../algebra-kit/steps";
 import { attempt, nz, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { chainRulePicture } from "./picture";
 
 /** f(x) = (ax + b)ⁿ, so f′(x) = n·a·(ax + b)ⁿ⁻¹. */
 export interface ChainRule { kind: "derivatives.chain"; a: number; b: number; n: number }
@@ -44,6 +45,7 @@ export function explainChainRule(p: ChainRule, model: AnswerModel) {
     heading: "Outside, then times inside",
     statement: [text("f(x)"), op("="), ...wrapped(a, b, n)],
     caption: `The power rule on the outside, times the inside's derivative, ${f(da)}.`,
+    diagram: chainRulePicture({ a, b, n, e, da, front, inner: innerText(a, b) }),
     alt: `(${innerText(a, b)})${supText(n)}: ${f(n)}(${innerText(a, b)})${supText(e)} × ${f(da)} = ${f(front)}(${innerText(a, b)})${supText(e)}.`,
     steps: [
       { id: "problem", narration: `The outside is a power. The inside is ${innerText(a, b)}.`, math: wrapped(a, b, n, [mark(inner(a, b))]) },

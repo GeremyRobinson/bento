@@ -3,6 +3,7 @@ import { mark, num, op, sup, type MathText } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { chainExplanation } from "../../../../explanations/diagrams/chain/build";
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
+import { exponentOrderPicture } from "./picture";
 
 export interface ExponentOrderProblem { a: number; n: number; b: number; c: number }
 
@@ -36,6 +37,7 @@ function explain(p: ExponentOrderProblem, model: AnswerModel) {
     idea: ["Work out exponents first. Then multiply. Add last."],
     statement: [...pow(a, n), op("+"), num(b), op("×"), num(c)],
     alt: `${power(a, n)} + ${b} × ${c}: ${E} + ${M} = ${S}.`,
+    diagram: exponentOrderPicture({ a, n, b, c, E, M, S }),
     beats: [
       { id: "exp", narration: `Exponent first: ${power(a, n)} = ${Array(n).fill(a).join(" × ")} = ${E}.`, math: [...pow(a, n), op("="), num(E)],
         lines: [[mark(pow(a, n)), op("+"), num(b), op("×"), num(c)]], answerStep: "exp", result: E },

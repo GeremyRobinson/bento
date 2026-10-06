@@ -5,6 +5,7 @@ import { fs, ns, supText } from "../../algebra-kit/steps";
 import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
 import { count } from "../../../text";
+import { negativeExponentPicture } from "./picture";
 
 /** a to the −n: 1 over aⁿ. */
 export interface NegativeExponent { kind: "exponents.negative"; a: number; n: number; power: number }
@@ -47,6 +48,7 @@ export function explainNegativeExponent(p: NegativeExponent, model: AnswerModel)
     idea: ["Anything to the 0 power is 1."],
     statement: pow(a, -n),
     caption: `Each step down divides by ${f(a)}.`,
+    diagram: negativeExponentPicture({ a, n, power }),
     alt: `Powers of ${f(a)} counting down from ${f(a)}${supText(n)} = ${f(power)} to ${f(a)}⁰ = 1, then ${f(a)}${supText(-n)} = 1/${f(flip)}.`,
     steps: [
       { id: "positive", narration: `Start with the positive power: ${f(n)} cop${n === 1 ? "y" : "ies"} of ${f(a)} make ${f(power)}.`, math: m(...pow(a, n), op("="), power), answerStep: "positive", result: power },

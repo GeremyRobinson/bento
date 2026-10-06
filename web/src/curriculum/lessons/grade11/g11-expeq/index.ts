@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { big, fpm, ns, pm, v } from "../../algebra-kit/steps";
 import { attempt, nz, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { exponentialPicture } from "./picture";
 
 /** b to the (x + c) = bᵏ, so x + c = k. */
 export interface ExponentialEquation { kind: "equation.exponential"; b: number; k: number; c: number; value: number; x: number }
@@ -45,6 +46,7 @@ export function explainExponential(p: ExponentialEquation, model: AnswerModel) {
     heading: "Make the bases match",
     statement: [...lhs(p), op("="), text(big(value))],
     caption: `Write ${big(value)} as a power of ${f(b)}, then the exponents must be equal.`,
+    diagram: exponentialPicture({ b, c, k, x, value }),
     alt: `${f(b)} to the x ${fpm(c)} = ${big(value)} = ${f(b)} to the ${f(k)}, so x ${fpm(c)} = ${f(k)} and x = ${f(x)}.`,
     steps: [
       { id: "problem", narration: `The left side is a power of ${f(b)}. Can ${big(value)} be one too?`, math: [...lhs(p), op("="), mark(big(value))] },

@@ -29,18 +29,27 @@ const boxOf = (t: Text) => {
   return { x0, x1: x0 + w, y0: t.y - size / 2, y1: t.y + size / 2 };
 };
 
+/** When within beat `b` a shape is on screen, in seconds: it comes in at its delay (on its own beat) and goes when it fades out. */
+function windowOf(t: SceneItem, b: number): [number, number] {
+  const mine = (t.from ?? 0) === b;
+  const start = mine && t.enter ? t.delay ?? 0 : 0;
+  const end = /a-outsoon/.test(t.cls ?? "") ? t.delay ?? 0 : t.enter === "flash" ? parseFloat(String(t.vars?.["--d2"] ?? "Infinity")) : Infinity;
+  return [start, end];
+}
+
 /** Labels on screen together never overlap, and every label sits inside the canvas. */
 function labelProblems(d: SceneDiagram, beats: number): string[] {
   const out: string[] = [];
   for (let b = 0; b < beats; b++) {
     const ts = textsAt(d, b).filter(t => t.text.trim());
-    const boxes = ts.map(boxOf);
+    const boxes = ts.map(boxOf), spans = ts.map(t => windowOf(t, b));
     boxes.forEach((a, i) => {
       const t = ts[i]!;
       if (a.x0 < -1 || a.x1 > d.width + 1 || a.y0 < -1 || a.y1 > d.height + 1) out.push(`beat ${b}: "${t.text}" leaves the ${d.width}×${d.height} canvas`);
       for (let j = i + 1; j < boxes.length; j++) {
         const c = boxes[j]!;
-        if (a.x0 < c.x1 - 1 && c.x0 < a.x1 - 1 && a.y0 < c.y1 - 1 && c.y0 < a.y1 - 1) out.push(`beat ${b}: "${t.text}" overlaps "${ts[j]!.text}"`);
+        const together = spans[i]![0] < spans[j]![1] && spans[j]![0] < spans[i]![1];
+        if (together && a.x0 < c.x1 - 1 && c.x0 < a.x1 - 1 && a.y0 < c.y1 - 1 && c.y0 < a.y1 - 1) out.push(`beat ${b}: "${t.text}" overlaps "${ts[j]!.text}"`);
       }
     });
   }
@@ -52,6 +61,19 @@ const badText = (d: SceneDiagram) => d.items.filter((i): i is Text => i.type ===
 const PICTURED = {
   "g1-ten": "early-frames",
   "g6-trap": "area-model",
+  "g5-order": "expression-boxes",
+  "g6-expo": "expression-boxes",
+  "g11-compose": "expression-boxes",
+  "g12-chain": "expression-boxes",
+  "g8-exp": "factor-chips",
+  "g9-negexp": "factor-chips",
+  "g11-expeq": "factor-chips",
+  "g11-ratexp": "factor-chips",
+  "g9-polyadd": "term-table",
+  "g11-synth": "term-table",
+  "g12-polyd": "term-table",
+  "g12-power": "term-table",
+  "g12-anti": "term-table",
 } as const;
 
 describe.each(Object.entries(PICTURED))("%s draws a picture", (id, family) => {
@@ -121,5 +143,133 @@ describe("g1-ten", () => {
   it("never draws a number in grade 1's green (right) part colour", () => {
     const d = sceneOf(l, l.reference);
     expect(d.items.filter(i => /\bp0\b/.test(i.cls ?? ""))).toEqual([]);
+  });
+});
+
+// ---- the lessons on the three new kinds ----
+type Rect = Extract<SceneItem, { type: "rect" }>;
+const finalText = (d: SceneDiagram, beat: number) => textsAt(d, beat).filter(t => !/a-outsoon/.test(t.cls ?? "") && t.enter !== "flash").map(t => t.text);
+const chipsAt = (d: SceneDiagram, beat: number, cls = /\bxchip\b/) => shownAt(d, beat).filter((i): i is Rect => i.type === "rect" && cls.test(i.cls ?? "") && !/a-outsoon/.test(i.cls ?? "") && i.enter !== "flash");
+const value = (l: AnyLesson, p: unknown, id: string) => l.answers(p).steps.find(s => s.id === id)!.slots[0]!.expected!;
+const fmt = (n: number) => (n < 0 ? `−${-n}` : String(n));
+
+describe("expression-box lessons", () => {
+  it("g5-order collapses the boxes in order, each into the value its step finds, ending on the answer", () => {
+    const l = lesson("g5-order");
+    for (const p of problemsOf(l, 30)) {
+      const d = sceneOf(l, p);
+      ["s0", "s1"].forEach((id, beat) => expect(finalText(d, beat)).toContain(String(value(l, p, id))));
+      expect(finalText(d, 2)).toEqual(expect.arrayContaining([String(value(l, p, "s2"))]));
+      expect(chipsAt(d, 2, /\bxchip pq\b/)).toHaveLength(1);
+    }
+  });
+  it("g6-expo opens the power into exactly n copies of a, never a × n", () => {
+    const l = lesson("g6-expo");
+    for (const p of problemsOf(l, 30) as { a: number; n: number }[]) {
+      const opened = textsAt(sceneOf(l, p), 0).map(t => t.text).filter(t => t.includes("×") && !t.includes("+"));
+      expect(opened).toContain(Array(p.n).fill(p.a).join(" × "));
+    }
+  });
+  it("g11-compose works inside out: g's value slides into f's slot, and f gives the answer", () => {
+    const l = lesson("g11-compose");
+    for (const p of problemsOf(l, 30)) {
+      const d = sceneOf(l, p), g = value(l, p, "inside"), out = value(l, p, "outside");
+      const slid = d.items.find(i => i.from === 1 && i.enter === "slide" && i.type === "text")!;
+      expect((slid as { text: string }).text).toBe(fmt(g));
+      expect(finalText(d, 2)).toContain(fmt(out));
+    }
+  });
+  it("g12-chain keeps the inside dashed and untouched, sends its rate to the front, and merges n × a", () => {
+    const l = lesson("g12-chain");
+    for (const p of problemsOf(l, 30) as { a: number; n: number }[]) {
+      const d = sceneOf(l, p);
+      for (let b = 0; b < 4; b++) expect(shownAt(d, b).some(i => /\bxbox p1 dash\b/.test(i.cls ?? ""))).toBe(true);
+      expect(d.items.some(i => i.from === 2 && i.enter === "slide" && i.type === "text" && i.text === String(p.a))).toBe(true);
+      expect(finalText(d, 3)).toContain(String(p.a * p.n));
+    }
+  });
+});
+
+describe("factor-chip lessons", () => {
+  it("g8-exp writes out every x, counts the ones left to the new exponent, then turns them into 2s", () => {
+    const l = lesson("g8-exp");
+    for (const p of problemsOf(l, 40) as { t: number; a: number; b: number; exponent: number }[]) {
+      const d = sceneOf(l, p), e = p.exponent;
+      const xs = chipsAt(d, 1).length;
+      expect(xs).toBe([p.a + p.b, p.a + 2 * p.b, p.a * p.b][p.t]);
+      const counts = textsAt(d, 2).filter(t => /\bpq\b/.test(t.cls ?? "") && /^\d+$/.test(t.text));
+      expect(counts.map(t => Number(t.text)).sort((x, y) => x - y)).toEqual(Array.from({ length: e }, (_, i) => i + 1));
+      expect(textsAt(d, 3).filter(t => t.text === "2" && t.enter === "pop")).toHaveLength(e);
+      if (p.t === 1) expect(shownAt(d, 2).filter(i => i.type === "line" && i.cls === "ln2")).toHaveLength(2 * p.b);
+    }
+  });
+  it("g9-negexp takes the chips away one by one to an empty 1, then brings them back under a bar", () => {
+    const l = lesson("g9-negexp");
+    for (const p of problemsOf(l, 30) as { a: number; n: number }[]) {
+      const d = sceneOf(l, p);
+      expect(chipsAt(d, 0)).toHaveLength(p.n);
+      expect(shownAt(d, 1).filter(i => i.type === "rect" && /a-outsoon/.test(i.cls ?? ""))).toHaveLength(p.n);
+      expect(rects(d, 1, /\bghost\b/)).toHaveLength(1);
+      expect(chipsAt(d, 2, /\bxchip p1\b/)).toHaveLength(p.n);
+      expect(finalText(d, 2).at(-1)).toBe(`${p.a}⁻${"⁰¹²³"[p.n]} = 1/${p.a ** p.n}`);
+    }
+  });
+  it("g11-expeq writes the value as k chips of the base, and the chips left over (or missing) give x", () => {
+    const l = lesson("g11-expeq");
+    for (const p of problemsOf(l, 60) as { b: number; k: number; c: number; x: number }[]) {
+      const d = sceneOf(l, p);
+      expect(chipsAt(d, 1, /\bxchip p0\b/)).toHaveLength(p.k);
+      expect(finalText(d, 3).join(" ")).toContain(`= ${fmt(p.x)}`);
+      if (p.c < 0) expect(rects(d, 3, /\bghost\b/)).toHaveLength(-p.c);
+      if (p.c > p.k) expect(shownAt(d, 3).filter(i => i.type === "line" && i.cls === "ln2")).toHaveLength(p.c - p.k);
+    }
+  });
+  it("g11-ratexp splits the base into n equal chips, lifts one out, and lines up m copies", () => {
+    const l = lesson("g11-ratexp");
+    for (const p of problemsOf(l, 30) as { n: number; r: number; m: number }[]) {
+      const d = sceneOf(l, p);
+      expect(chipsAt(d, 0, /\bxchip p0\b/)).toHaveLength(p.n);
+      expect(chipsAt(d, 2, /\bxchip p1\b/)).toHaveLength(p.m);
+      expect(d.items.some(i => i.type === "text" && i.text.includes("÷"))).toBe(false);
+    }
+  });
+});
+const rects = (d: SceneDiagram, beat: number, cls: RegExp) => shownAt(d, beat).filter(i => i.type === "rect" && cls.test(i.cls ?? ""));
+
+describe("term-table lessons", () => {
+  const cellsAt = (d: SceneDiagram, beat: number) => textsAt(d, beat).filter(t => /^−?\d+$/.test(t.text) && /\blbl big (pw|acc)\b/.test(t.cls ?? "") && !/a-outsoon/.test(t.cls ?? "") && t.enter !== "flash");
+  it("g9-polyadd adds each column down into the answer row", () => {
+    const l = lesson("g9-polyadd");
+    for (const p of problemsOf(l, 40)) {
+      const d = sceneOf(l, p), ans = ["x2", "x1", "x0"].map(id => fmt(value(l, p, id)));
+      const bottom = Math.max(...cellsAt(d, 3).map(t => t.y));
+      expect(cellsAt(d, 3).filter(t => t.y === bottom && t.text !== "=").sort((a, b) => a.x - b.x).map(t => t.text)).toEqual(ans);
+    }
+  });
+  it("g11-synth ends with 1, q and a ringed 0 in the bottom row", () => {
+    const l = lesson("g11-synth");
+    for (const p of problemsOf(l, 40)) {
+      const d = sceneOf(l, p), bottom = Math.max(...cellsAt(d, 5).map(t => t.y));
+      expect(cellsAt(d, 5).filter(t => t.y === bottom).sort((a, b) => a.x - b.x).map(t => t.text)).toEqual(["1", fmt(value(l, p, "add1")), "0"]);
+      expect(rects(d, 5, /\bxring\b/).length).toBeGreaterThan(0);
+    }
+  });
+  it("g12-polyd slides each term one column right with its exponent brought down", () => {
+    const l = lesson("g12-polyd");
+    for (const p of problemsOf(l, 40)) {
+      const d = sceneOf(l, p), ids = ["x3", "x2", "x1"];
+      ids.forEach((id, k) => expect(d.items.some(i => i.from === k + 1 && i.enter === "slide" && i.type === "text" && i.text === fmt(value(l, p, id)))).toBe(true));
+      expect(finalText(d, 4).join(" ")).toContain(`= ${fmt(value(l, p, "at1"))}`);
+      if ((p as { d: number }).d) expect(shownAt(d, 3).some(i => i.type === "line" && i.cls === "ln2")).toBe(true);
+    }
+  });
+  it("g12-power and g12-anti move the term one column (right, then left) to its new coefficient", () => {
+    for (const [id, beat, dir] of [["g12-power", 2, -1], ["g12-anti", 1, 1]] as const) {
+      const l = lesson(id);
+      for (const p of problemsOf(l, 30)) {
+        const s = sceneOf(l, p).items.find(i => i.from === beat && i.enter === "slide" && i.type === "rect")!;
+        expect(Math.sign(parseFloat(String(s.vars!["--dx"])))).toBe(dir);
+      }
+    }
   });
 });

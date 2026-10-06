@@ -5,6 +5,7 @@ import { ns, supText, v, xp, type Slip } from "../../algebra-kit/steps";
 import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
 import { count as countOf } from "../../../text";
+import { exponentRulePicture } from "./picture";
 
 /**
  * One exponent rule on powers of x: t = 0 multiplies xᵃ · xᵇ, t = 1 divides xᵃ⁺ᵇ ÷ xᵇ, t = 2 raises (xᵃ)ᵇ.
@@ -70,6 +71,7 @@ export function explainExponentRule(p: ExponentRule, model: AnswerModel) {
     idea: ["Multiply: add the exponents. Divide: subtract them. Power of a power: multiply them."],
     statement: shown(p),
     caption: count,
+    diagram: exponentRulePicture({ t, a, b, e, value, shown: [`x${supText(a)} · x${supText(b)}`, `x${supText(a + b)} ÷ x${supText(b)}`, `(x${supText(a)})${supText(b)}`][t]! }),
     alt: `${[`x to the ${f(a)} times x to the ${f(b)}`, `x to the ${f(a + b)} divided by x to the ${f(b)}`, `x to the ${f(a)}, all to the ${f(b)}`][t]}, written out as x's, makes x to the ${f(e)}.`,
     steps: [
       { id: "problem", narration: ["Two powers of x multiplied.", "A power of x divided by another.", "A power of x raised to a power."][t]!, math: shown(p) },

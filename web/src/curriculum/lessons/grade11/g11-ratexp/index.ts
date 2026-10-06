@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { ns, supText } from "../../algebra-kit/steps";
 import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { rationalExponentPicture } from "./picture";
 
 /** (rⁿ) to the m/n: the n-th root is r, then r to the m. */
 export interface RationalExponent { kind: "exponents.rational"; n: 2 | 3; r: number; m: number; base: number }
@@ -46,6 +47,7 @@ export function explainRational(p: RationalExponent, model: AnswerModel) {
     heading: "Bottom is the root, top is the power",
     statement: [num(base), sup(exponent(top, n))],
     caption: `${rootSign(n)}${f(base)} = ${f(r)}, then ${f(r)}${supText(top)} = ${f(value)}.`,
+    diagram: rationalExponentPicture({ n, m: top, r, base, value }),
     alt: `${f(base)} to the ${f(top)}/${f(n)} is the ${root} root of ${f(base)}, ${f(r)}, to the power ${f(top)}: ${f(value)}.`,
     steps: [
       { id: "problem", narration: `The exponent is a fraction: the bottom ${f(n)} is a ${root} root, the top ${f(top)} is a power.`, math: [num(base), sup([mark(exponent(top, n))])] },
