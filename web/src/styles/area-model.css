@@ -49,6 +49,9 @@
 .math>.mline:has(.br){flex-wrap:wrap}
 .math>.mline{flex-wrap:nowrap}
 .mline .ans{font-weight:var(--w-bold)}
+/* the solved problem's "?" becomes its answer, settling in where the box was */
+.math .mline .ans{color:var(--ink);animation:ansIn var(--dur-420) var(--spring) both}
+@keyframes ansIn{from{opacity:0;transform:scale(.7)}}
 /* the problem's two parts wear their picture's colours, in the statement, the steps' math and the steps' words alike
    (statement.ts partsLook says how the picture colours them): the first part the lesson's own picture colour (the
    .t0/.t1/.t2 the picture's --tint and --ink follow), the second the colour pictures give a second part (.p1, --c1).

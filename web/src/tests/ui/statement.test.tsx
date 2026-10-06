@@ -2,7 +2,7 @@
 // the unknown as a dashed "?" box, "What is x?" over a one-letter equation, and the steps' numbers coloured to match.
 import { render } from "@testing-library/react";
 import { MathLine, Rich } from "../../components/primitives/MathLine";
-import { askOf, dressStatement, partsLook, toneMath, tonesOf } from "../../components/primitives/statement";
+import { askOf, dressStatement, fillUnknown, partsLook, toneMath, tonesOf } from "../../components/primitives/statement";
 import { ProblemView } from "../../components/practice/ProblemView";
 import { lessonById } from "../../curriculum/registry";
 import { createRng } from "../../curriculum/generators/rng";
@@ -83,5 +83,15 @@ describe("the question over an equation", () => {
     expect(askOf([text("f(x)"), op("="), num(2), text("x")])).toBeNull();
     expect(askOf([text("y"), op("="), num(2), text("x")])).toBeNull();
     expect(askOf([num(2), text("x"), op("+"), num(5)])).toBeNull();
+  });
+});
+
+describe("the solved problem's unknown", () => {
+  it("fills the ? after = with the answer, and leaves other shapes alone", () => {
+    const m: MathText = [num(48), op("+"), num(27), op("="), text("?")];
+    expect(fillUnknown(m, 75).at(-1)).toMatchObject({ t: "answer", v: 75 });
+    expect(fillUnknown(m, null)).toBe(m);
+    const q: MathText = [text("How many dots?")];
+    expect(fillUnknown(q, 5)).toBe(q);
   });
 });

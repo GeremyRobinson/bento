@@ -3,11 +3,19 @@ import { beats } from "../../explanations/schema";
 import { Diagram } from "../diagrams/Diagram";
 import { MathLine, Rich } from "../primitives/MathLine";
 import { AskLine } from "../primitives/AskLine";
-import { dressStatement, partsLook, type PartsLook } from "../primitives/statement";
+import { dressStatement, fillUnknown, partsLook, type PartsLook } from "../primitives/statement";
 import { CounterRow } from "./CounterRow";
 
+/** The problem's one answer, when it is a single number (the last step's only box); else null. */
+function finalAnswer(lesson: ReturnType<typeof requireLesson>, problem: unknown): number | null {
+  try {
+    const steps = lesson.answers(problem).steps, last = steps[steps.length - 1];
+    return last && last.slots.length === 1 && !last.choices ? last.slots[0]!.expected : null;
+  } catch { return null; }
+}
+
 /** The problem as the current app shows it: the story for word problems, otherwise the math, its counters and its note. */
-export function ProblemView({ lessonId, problem, story }: { lessonId: string; problem: unknown; story: boolean }) {
+export function ProblemView({ lessonId, problem, story, solved }: { lessonId: string; problem: unknown; story: boolean; solved?: boolean }) {
   const lesson = requireLesson(lessonId);
   if (story && lesson.story) return <div className="story"><p><Rich text={lesson.story(problem).text} /></p></div>;
   const lead = lesson.lead?.(problem), shown = lesson.display(problem);
@@ -19,7 +27,7 @@ export function ProblemView({ lessonId, problem, story }: { lessonId: string; pr
   const look = ((): PartsLook => { try { return partsLook(lesson.explain(problem, lesson.answers(problem)).diagram); } catch { return "one"; } })();
   return (
     <>
-      {lead ? <div className="story"><p><Rich text={lead} /></p></div> : <><AskLine math={shown} /><div className={`math parts-${look}${wordy ? " words" : ""}`}><MathLine math={dressStatement(shown, look)} /></div></>}
+      {lead ? <div className="story"><p><Rich text={lead} /></p></div> : <><AskLine math={shown} /><div className={`math parts-${look}${wordy ? " words" : ""}`}><MathLine math={solved ? fillUnknown(dressStatement(shown, look), finalAnswer(lesson, problem)) : dressStatement(shown, look)} /></div></>}
       {counters && <CounterRow counters={counters} />}
       {picture && <div className="dotrow"><Diagram diagram={picture} timeline={beats(1)} at={0} /></div>}
       {note && <p className="note"><Rich text={note} /></p>}

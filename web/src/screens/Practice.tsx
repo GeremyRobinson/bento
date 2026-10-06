@@ -133,7 +133,7 @@ export function Practice() {
         <div className="col">
           <div className="card">
             {mixed && <div className="label">{lesson.title}</div>}
-            <ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} />
+            <ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} solved={s.solved} />
             <div className="work">
               {s.work.map((w, k) => (
                 <div key={k} className={`workline${w.shown ? " shown" : ""}${s.fx === "line" && k === s.work.length - 1 ? " enter" : ""}`}>

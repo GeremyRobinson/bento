@@ -2,7 +2,7 @@
 // wear their picture colours, the unknown is a "?" box, and an equation in one letter asks for that letter.
 // Everything here is read from the math itself, never written per lesson, and it stays plain whenever the shape is
 // not one it is sure of: a wrong colour is worse than none.
-import { op, text, toPlainText, type MathText, type MathToken } from "../../curriculum/schemas/math-text";
+import { answer as answerTok, op, text, toPlainText, type MathText, type MathToken } from "../../curriculum/schemas/math-text";
 import type { DiagramModel } from "../../explanations/schema";
 
 /** One part's number as it is written in a sentence ("16", "1/2"), and which part it is. */
@@ -119,4 +119,16 @@ export function partsLook(d?: DiagramModel): PartsLook {
   if (d?.kind !== "scene") return "one";
   const cls = d.items.map(it => it.cls ?? "").join(" ");
   return /\b(c0|p0)\b/.test(cls) ? "fixed" : /\b(c1|p1)\b/.test(cls) ? "two" : "one";
+}
+
+/**
+ * The statement once the problem is solved (Review v43 item 11): its unknown, the "?" after "=", fills with the
+ * answer, which then reads as part of the equation. Only a single number fills it; anything else stays as it was.
+ */
+export function fillUnknown(m: MathText, answer: number | null | undefined): MathText {
+  if (answer == null || !Number.isFinite(answer)) return m;
+  let i = -1;
+  m.forEach((t, k) => { if (t.t === "text" && t.v.trim() === "?") i = k; });
+  if (i < 1 || m[i - 1]?.t !== "op" || (m[i - 1] as { v: string }).v !== "=") return m;
+  return [...m.slice(0, i), answerTok("solved", answer), ...m.slice(i + 1)];
 }
