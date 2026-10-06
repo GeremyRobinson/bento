@@ -227,8 +227,9 @@ button.book:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--rule),0 
 .itop{view-transition-name:island}
 .lbar{view-transition-name:lessonbar}
 ::view-transition-group(island),::view-transition-group(lessonbar){animation-duration:var(--m-page);animation-timing-function:var(--m-ease)}
-::view-transition-old(island),::view-transition-old(lessonbar){display:none}
-::view-transition-new(island),::view-transition-new(lessonbar){animation:none}
+/* the top bar never comes or goes; only its words cross-fade, quickly (Review motion spec) */
+::view-transition-old(island),::view-transition-old(lessonbar){animation:var(--dur-250) var(--m-ease) both vtOut}
+::view-transition-new(island),::view-transition-new(lessonbar){animation:var(--dur-250) var(--m-ease) both vtIn}
 /* next and previous lesson use the one motion master too (motion.css): no sideways slide */
 /* the dots in the lesson bar are buttons: tap one to jump to that lesson */
 .lbar .dots-nav button.dot{padding:0;border:0;cursor:pointer;position:relative}

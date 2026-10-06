@@ -20,9 +20,10 @@
    contents zoom take --m-page on the one calm curve. Moving is depth, like the contents zoom: going deeper (book →
    lesson → practice) zooms in a little, going back zooms out, and the next or previous lesson slides sideways, so you
    feel where you came from without reading a label. No blur on the way in: the contents' own blur is the only one. */
-:root{--m-page:.48s;--m-in:var(--m-page);--m-fade:var(--m-page);--m-out:.2s;--m-step:40ms;--m-ease:cubic-bezier(.32,.72,0,1)}
+/* Review's motion spec (from the contents view G loves): one curve; in 500ms, out 450ms, closes 360ms, pieces 40ms apart */
+:root{--m-page:.5s;--m-in:var(--m-page);--m-fade:var(--m-page);--m-out:.45s;--m-close:.36s;--m-step:40ms;--m-ease:cubic-bezier(.2,.8,.2,1)}
 ::view-transition-group(root){animation-duration:var(--m-page)}
-::view-transition-old(root){animation:var(--m-page) var(--m-ease) both vtOut}
+::view-transition-old(root){animation:var(--m-out) var(--m-ease) both vtOut}
 ::view-transition-new(root){animation:var(--m-page) var(--m-ease) both vtIn}
 html[data-dir="fwd"]::view-transition-old(root){animation-name:vtOutDeeper}
 html[data-dir="fwd"]::view-transition-new(root){animation-name:vtInDeeper}
@@ -34,16 +35,16 @@ html[data-dir="prev"]::view-transition-old(root){animation-name:vtOutRight}
 html[data-dir="prev"]::view-transition-new(root){animation-name:vtInLeft}
 @keyframes vtOut{to{opacity:0}}
 @keyframes vtIn{from{opacity:0}}
-@keyframes vtOutDeeper{to{opacity:0;transform:scale(1.035)}}
-@keyframes vtInDeeper{from{opacity:0;transform:scale(.965)}}
-@keyframes vtOutBack{to{opacity:0;transform:scale(.965)}}
-@keyframes vtInBack{from{opacity:0;transform:scale(1.035)}}
-@keyframes vtOutLeft{to{opacity:0;transform:translateX(-28px)}}
-@keyframes vtInRight{from{opacity:0;transform:translateX(28px)}}
-@keyframes vtOutRight{to{opacity:0;transform:translateX(28px)}}
-@keyframes vtInLeft{from{opacity:0;transform:translateX(-28px)}}
+@keyframes vtOutDeeper{to{opacity:0;transform:scale(.96)}}
+@keyframes vtInDeeper{from{opacity:0;transform:scale(.97)}}
+@keyframes vtOutBack{to{opacity:0;transform:scale(1.03)}}
+@keyframes vtInBack{from{opacity:0;transform:scale(1.03)}}
+@keyframes vtOutLeft{to{opacity:0;transform:translateX(-24px)}}
+@keyframes vtInRight{from{opacity:0;transform:translateX(24px)}}
+@keyframes vtOutRight{to{opacity:0;transform:translateX(24px)}}
+@keyframes vtInLeft{from{opacity:0;transform:translateX(-24px)}}
 /* a screen's pieces follow the page in with a light cascade: a fade and a small lift, never a blur */
-@keyframes rvIn{from{opacity:0;transform:translateY(6px)}}
+@keyframes rvIn{from{opacity:0;transform:translateY(8px)}}
 /* a work screen's body is a frame, not a piece: its two sides' pieces arrive instead (and a moving frame would carry
    the fixed feedback stack with it) */
 :is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:not(.wbody):not(.fdim):not(.fstack),.wrap>.bar{animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(var(--i,0) * var(--m-step))}
@@ -51,12 +52,12 @@ html[data-dir="prev"]::view-transition-new(root){animation-name:vtInLeft}
 :is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(3){--i:2}
 :is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(4){--i:3}
 :is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(5){--i:4}
-:is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(n+6){--i:5}
+:is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(n+6){--i:4}
 .panel.split>.col:last-child>*{--i:2}
 /* every other screen (landing, Me, the grown-up page, results, facts, reports): its own top-level pieces stagger the
    same way; screens built of one container stagger that container's children instead */
 #app>:not(.itop):not(.sheet):not(.zoom):not(.screen):not(.land):not(.bgrown):not(.bar):not(.panel.split){animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(var(--i,0) * var(--m-step))}
-:where(.land,.bgrown,.placed:not(.screen))>*{animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(min(var(--k,0),6) * var(--m-step))}
+:where(.land,.bgrown,.placed:not(.screen))>*{animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(min(var(--k,0),4) * var(--m-step))}
 #app>:nth-child(3){--i:1} #app>:nth-child(4){--i:2} #app>:nth-child(5){--i:3} #app>:nth-child(n+6){--i:4}
 :is(.land,.bgrown,.placed)>:nth-child(2){--k:1} :is(.land,.bgrown,.placed)>:nth-child(3){--k:2} :is(.land,.bgrown,.placed)>:nth-child(4){--k:3} :is(.land,.bgrown,.placed)>:nth-child(n+5){--k:4}
 /* sheets and the contents rise in on the same curve and fade with the same dim */

@@ -142,7 +142,8 @@ export function Practice() {
   const dots = <span className="pdots" aria-hidden>{s.items.map((_, i) => <i key={i} className={i < s.i ? "ok" : i === s.i ? "now" : ""} />)}</span>;
   function onNext() {
     if (s && isLastProblem(s)) finish();
-    else withTransition(() => act((st, p, d) => nextProblem(st, p, d)), "fwd");
+    // the next problem is a step along the row, not a step deeper: it slides, the page never zooms (Review)
+    else withTransition(() => act((st, p, d) => nextProblem(st, p, d)), "next");
   }
   const beatList = (
     <ol className="beats pbeats">
