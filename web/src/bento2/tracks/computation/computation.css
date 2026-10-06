@@ -1,0 +1,10 @@
+/* Computation's pictures: typed fields (a statement, a tape), proof chips and pick lists.
+   The pictures themselves use b2.css's parts and palette. */
+.csfield{display:inline-flex;align-items:center;gap:var(--sp-2);flex:1 1 200px;min-width:0;font-size:var(--fz-sm);font-weight:var(--w-mid);color:var(--muted)}
+.csfield input{flex:1;min-width:0;width:0;height:36px;padding:0 10px;border:0;border-radius:var(--r-sm);background:var(--well);box-shadow:inset 0 0 0 1px var(--adv-hair);color:var(--text);font:var(--w-regular) var(--fz-md) var(--sans);font-variant-numeric:tabular-nums}
+.csfield input:focus{outline:2px solid var(--ink);outline-offset:1px}
+.csfield.bad input{box-shadow:inset 0 0 0 2px var(--b2-pink)}
+.cspick{display:flex;flex-wrap:wrap;gap:var(--sp-1)}
+.cspick button{min-height:32px;padding:0 var(--sp-3);border-radius:var(--r-pill);background:var(--well);font-size:var(--fz-2xs);font-weight:var(--w-mid);color:var(--muted)}
+.cspick button[aria-pressed="true"]{background:var(--tint-soft);color:var(--ink)}
+.cspick small{align-self:center;margin-right:var(--sp-1);font-size:var(--fz-2xs);color:var(--muted)}
