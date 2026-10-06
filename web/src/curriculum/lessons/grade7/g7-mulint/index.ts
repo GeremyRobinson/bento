@@ -33,7 +33,8 @@ function explain(p: MulIntegersProblem, model: AnswerModel): Explanation {
   const { a, b, div } = p, size = expectedOf(model, "size"), ans = expectedOf(model, "sign");
   // sizes first, on the positive side: jumps of one size, as many as the other
   const jump = div ? Math.abs(b) : Math.abs(a), count = div ? size : Math.abs(b), reach = jump * count;
-  const differ = Math.sign(a) !== Math.sign(b);
+  // the signs that decide the answer: the factors when multiplying, the dividend a × b and the divisor b when dividing
+  const differ = Math.sign(div ? a * b : a) !== Math.sign(b);
   const hops: Hop[] = Array.from({ length: count }, (_, i) => ({ from: i * jump, to: (i + 1) * jump, label: String(jump), beat: 0, delay: r(0.35 * i * Math.min(1, 6 / count)), start: i === 0 }));
   const jumps = `${count} ${count === 1 ? "jump" : "jumps"} of ${jump}`;
   const marks: Mark[] = [];
