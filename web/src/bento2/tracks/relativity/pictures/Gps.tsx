@@ -61,7 +61,8 @@ export function GpsScene({ props, marker }: SceneProps) {
         `Factory frequency: ${factoryMHz(net).toFixed(10)} MHz.`] });
   };
   // the map: you stand still, and the fix drifts away from you as the hours pass
-  const mapStrip = !quiet && !hide && (
+  // the map strip and the factory frequency belong to the build (the project); a lesson keeps to the drift itself
+  const mapStrip = project && !quiet && !hide && (
     <div className="b2map">
       <svg viewBox="0 0 340 44" className="b2pic" role="img" aria-label={`After ${hours} hours your map would be ${fx(map, 1)} km off.`}>
         <line x1="10" y1="22" x2="330" y2="22" className="b2grid strong" />
@@ -81,7 +82,7 @@ export function GpsScene({ props, marker }: SceneProps) {
         <Read label="Height" value={`+${fx(gain, 1)} μs`} tone="sky" />
         {!hide && !quiet && <Read label="Net a day" value={`${net >= 0 ? "+" : "−"}${fx(Math.abs(net), 1)} μs, ${net >= 0 ? "ahead" : "behind"}`} tone="amber" big />}
         {!hide && !quiet && <Read label={`Map error after ${hours} h`} value={`${fx(map, 1)} km`} />}
-        {!hide && !quiet && <Read label="Factory frequency" value={`${factoryMHz(net).toFixed(9)} MHz`} />}
+        {project && !hide && !quiet && <Read label="Factory frequency" value={`${factoryMHz(net).toFixed(9)} MHz`} />}
         {project && typeof shelfSr === "number" && <Read label="sr_drift, your shelf" value={`${fx(shelfSr, 1)} μs`} tone="pink" />}
         {project && typeof shelfGr === "number" && <Read label="gr_drift, your shelf" value={`+${fx(shelfGr, 1)} μs`} tone="sky" />}
       </>}

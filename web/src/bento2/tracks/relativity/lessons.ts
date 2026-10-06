@@ -113,7 +113,7 @@ export const re02: B2Lesson<P02> = {
   tools: ["lightclock", "spacetime"],
   play: { scene: "lightclock", props: { beta: 0.3 },
     say: "A light pulse bounces between two mirrors on a train. Drag the train's speed: from the ground the pulse zigzags on a longer path, so each tick takes longer, and the ground clock pulls ahead." },
-  guess: { scene: "lightclock", props: { beta: 0.6 }, kind: "slider", min: 1, max: 2, step: 0.05, start: 1.5, answer: 1.25, near: 0.05, unit: "ground s",
+  guess: { scene: "lightclock", props: { beta: 0.6, hide: true }, kind: "slider", min: 1, max: 2, step: 0.05, start: 1.5, answer: 1.25, near: 0.05, unit: "ground s",
     format: x => x.toFixed(2),
     ask: "At 3/5 of light speed, how many ground seconds pass for each train second?",
     revealProps: { beta: 0.6, triangle: true },

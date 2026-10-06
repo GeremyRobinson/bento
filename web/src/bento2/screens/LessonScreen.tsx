@@ -18,6 +18,9 @@ import { openTool, useB2 } from "../ui/useB2";
 import { toolMeta } from "../tools/ToolShell";
 import { shelfText } from "../tools/ShelfTool";
 
+// before the guess is locked in, every picture stays quiet: no readout, label or count may give the answer away
+const GUESSING: SceneValues = { quiet: true };
+
 type Fb = { tone: "slip" | "generic" | "soft"; text: string } | null;
 const KEYS = ["7", "8", "9", "back", "4", "5", "6", "/", "1", "2", "3", "−", "0", ".", "next"];
 const KEY_LABEL: Record<string, string> = { back: "⌫", next: "⇥" };
@@ -38,6 +41,9 @@ export function LessonScreen({ trackId, lessonId }: { trackId: string; lessonId:
   const lesson = track.lessons.find(l => l.id === lessonId)! as AnyB2Lesson;
   const [stage, setStage] = useState<Stage>("play");
   const [deeper, setDeeper] = useState<"open" | "closing" | null>(null);
+  // on a phone a project's Use it opens the project full screen, then comes back to the lesson card
+  const [projOpen, setProjOpen] = useState(false);
+  useEffect(() => setProjOpen(false), [stage]);
 
   // Guess: what the learner predicts; the reveal shows the answer in the picture. Recorded, never scored.
   const gs = lesson.guess;
@@ -66,6 +72,8 @@ export function LessonScreen({ trackId, lessonId }: { trackId: string; lessonId:
   const step: B2Step | undefined = steps[k];
   const solved = k >= steps.length;
   useEffect(() => { setBoxes(step ? step.answer.map(() => "") : []); setActive(0); setFb(null); setMisses(0); setHint(false); }, [k, problem]); // eslint-disable-line react-hooks/exhaustive-deps
+  // the step you're on stays in view as the steps go by
+  useEffect(() => { document.querySelector(".b2steps>li[data-state=\"now\"]")?.scrollIntoView?.({ block: "nearest" }); }, [k, problem]);
   const another = () => { const i = wi + 1; setWi(i); setProblem(lesson.workIt.generate(deps().rng, i)); setK(0); };
   const advance = () => {
     const next = k + 1;
@@ -122,7 +130,7 @@ export function LessonScreen({ trackId, lessonId }: { trackId: string; lessonId:
   let picture;
   if (stage === "guess") {
     const marker: [number, number] | undefined = gs.kind === "point" ? (guess as [number, number]) : gs.kind === "slider" && guess != null ? [guess as number, 0] : undefined;
-    picture = <Picture scene={gs} extra={revealed ? { quiet: false, hide: false, hideEvent: false, ...gs.revealProps } : undefined} marker={marker} onMarker={gs.kind === "point" && !revealed ? p => setGuess(p) : undefined} />;
+    picture = <Picture scene={gs} extra={revealed ? { quiet: false, hide: false, hideEvent: false, ...gs.revealProps } : GUESSING} marker={marker} onMarker={gs.kind === "point" && !revealed ? p => setGuess(p) : undefined} />;
   } else if (stage === "work") picture = <Picture scene={lesson.workIt.scene?.(problem) ?? lesson.play} />;
   else if (stage === "use") picture = project ? <Picture scene={project.scene} place="project" /> : <Picture scene={lesson.useIt.scene ?? lesson.play} />;
   else picture = <Picture scene={lesson.play} />;
@@ -154,16 +162,13 @@ export function LessonScreen({ trackId, lessonId }: { trackId: string; lessonId:
       </label>
     )}
     {gs.kind === "point" && <p className="b2small">Drag the marker in the picture. Now at <b>{guessText(guess)}</b>.</p>}
-    {!revealed
-      ? <Pill go disabled={guess == null} onClick={lockIn}>Lock in my guess</Pill>
-      : <div className="b2reveal" aria-live="polite"><p className="b2small">Your guess: <b>{guessText(guess)}</b></p><p><Rich text={gs.reveal} /></p></div>}
+    {revealed && <div className="b2reveal" aria-live="polite"><p className="b2small">Your guess: <b>{guessText(guess)}</b></p><p><Rich text={gs.reveal} /></p></div>}
   </>;
   else if (stage === "name") body = <>
     {lesson.nameIt.say.map((t, i) => <p key={i} className="b2say"><Rich text={t} /></p>)}
     <div className="b2formula" aria-label="The formula">{lesson.nameIt.formula.map((f, i) => <span key={i}>{f}</span>)}</div>
   </>;
   else if (stage === "work") body = <>
-    <p className="b2prob"><Rich text={lesson.workIt.show(problem)} /></p>
     <ol className="b2steps">
       {steps.map((s, i) => (
         <li key={`${wi}-${s.id}`} data-state={i < k ? "done" : i === k ? "now" : "later"}>
@@ -171,7 +176,7 @@ export function LessonScreen({ trackId, lessonId }: { trackId: string; lessonId:
           {i < k ? <span className="b2done"><Rich text={s.done} /></span>
             : i === k ? (
               <div className="b2now">
-                <b>{s.label}</b>
+                <b><small className="b2of">Step {i + 1} of {steps.length}</small>{s.label}</b>
                 {s.ask && <span className="b2ask"><Rich text={s.ask} /></span>}
                 {s.choices
                   ? <div className="b2choices">{s.choices.map((c, j) => <button type="button" key={c} className="b2choice" onClick={() => check([j])}>{c}</button>)}</div>
@@ -207,12 +212,13 @@ export function LessonScreen({ trackId, lessonId }: { trackId: string; lessonId:
       </div>
     )}
     {project && <p className="b2small">{project.build ? "The build" : "Your project"}, <b>{project.name}</b>, is in the picture. Set it up and save it there.</p>}
+    {project && <Pill go className="b2projbtn" onClick={() => setProjOpen(true)}>Open {project.name} ›</Pill>}
     <p className="b2can on">You can {lesson.youCan}</p>
   </>;
 
   const stepLeft = !solved && stage === "work" && !step?.choices;
   return (
-    <FitScreen className={`b2lesson st-${stage}${stepLeft ? " typing" : ""}`}>
+    <FitScreen className={`b2lesson st-${stage}${stepLeft ? " typing" : ""}${stage === "use" && project ? " proj" : ""}${projOpen ? " projopen" : ""}`}>
       <section className="b2card" aria-labelledby="b2title">
         <header className="b2lhead">
           <div><small className="b2kick">{track.name} · Unit {lesson.unit} · {lessonNumber(lesson.id)}</small><h1 id="b2title">{lesson.title}</h1></div>
@@ -222,6 +228,8 @@ export function LessonScreen({ trackId, lessonId }: { trackId: string; lessonId:
           <span className="b2sk" aria-hidden />
           {STAGES.map(s => <button key={s} role="tab" aria-selected={s === stage} onClick={() => setStage(s)}>{STAGE_NAMES[s]}</button>)}
         </div>
+        {/* the problem stays pinned above its steps, so working down the steps never scrolls it away */}
+        {stage === "work" && <p className="b2prob"><Rich text={lesson.workIt.show(problem)} /></p>}
         <div className="b2body" key={stage}>{body}</div>
         <div className="b2foot">
           {stage === "work" && !solved && !step?.choices && (
@@ -233,14 +241,19 @@ export function LessonScreen({ trackId, lessonId }: { trackId: string; lessonId:
           <div className="b2nav">
             {at > 0 && <Pill onClick={() => setStage(STAGES[at - 1]!)}>‹ {STAGE_NAMES[STAGES[at - 1]!]}</Pill>}
             <span className="grow" />
+            {!(stage === "guess" && !revealed) && <button type="button" className="ctl b2deep b2deepm" aria-expanded={!!deeper} onClick={() => setDeeper("open")}>Deeper</button>}
+            {!(stage === "guess" && !revealed) && <span className="grow b2deepm" />}
             {stage === "work" && solved && <Pill onClick={another}>Another problem</Pill>}
-            {stage === "guess" && !revealed ? null : nextStage
+            {stage === "guess" && !revealed ? <Pill go disabled={guess == null} onClick={lockIn}>Lock in my guess</Pill> : nextStage
               ? <Pill go={stage !== "work" || solved} onClick={() => setStage(nextStage)}>{STAGE_NAMES[nextStage]} ›</Pill>
               : <Pill go onClick={() => go({ name: "b2track", track: trackId }, "back")}>Back to {track.name} ›</Pill>}
           </div>
         </div>
       </section>
-      <figure className="b2stage" aria-label="The live picture">{picture}</figure>
+      <figure className="b2stage" aria-label="The live picture">
+        {projOpen && <Pill className="b2projback" onClick={() => setProjOpen(false)}>‹ Back to the lesson</Pill>}
+        {picture}
+      </figure>
       {deeper && (
         <>
           <div className={`fdim${deeper === "closing" ? " out" : ""}`} onClick={() => setDeeper("closing")} />

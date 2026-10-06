@@ -17,7 +17,7 @@ export function LightClockScene({ props, place, marker }: SceneProps) {
   const [mode, setMode] = useState<"clock" | "muon">(muonFirst ? "muon" : "clock");
   const [beta, setBeta] = useState(num(props, "beta", 0.6));
   const [view, setView] = useState<"lab" | "muon">("lab");
-  const project = flag(props, "project");
+  const project = flag(props, "project"), hide = flag(props, "hide");
   const g = gammaOf(beta);
   const t = useClock(true, 3.4);
   const { b2, save, note } = useB2();
@@ -50,7 +50,7 @@ export function LightClockScene({ props, place, marker }: SceneProps) {
       </g>
       <circle cx={pulse[0]} cy={pulse[1]} r="6" className="b2pulse" />
       {/* the triangle for one trip up: legs cτ and vt, hypotenuse ct (in units where cτ = 4) */}
-      <g transform={`translate(${W - 24 - Math.min(b, 150)},${16})`} className={tri ? "b2tri on" : "b2tri"}>
+      <g transform={`translate(${W - 24 - Math.min(b, 150)},${16})`} className={tri && !hide ? "b2tri on" : "b2tri"}>
         <path d={`M0,${a} L${Math.min(b, 150)},${a} L${Math.min(b, 150)},0 Z`} />
         <path d={`M0,${a} L${Math.min(b, 150)},0`} className="hyp" />
         <text x={Math.min(b, 150) + 6} y={a / 2 + 5} className="b2t">cτ = 4</text>
@@ -62,7 +62,7 @@ export function LightClockScene({ props, place, marker }: SceneProps) {
 
   // muon mode: 10 km of atmosphere, the muon from the top. In the muon's view the muon stays put and the (shorter)
   // atmosphere rushes up past it; it decays at the same fraction of the way down in both views
-  const L0 = num(props, "L0", 10), hide = flag(props, "hide"), compare = flag(props, "compare");
+  const L0 = num(props, "L0", 10), compare = flag(props, "compare");
   const far = beta * CMU * g * TAU, plain = beta * CMU * TAU, Lc = L0 / g;
   const top = 24, bot = 236, kmPx = (bot - top) / L0;
   const loop = 3.2, k = (t % loop) / loop;
@@ -111,7 +111,7 @@ export function LightClockScene({ props, place, marker }: SceneProps) {
         <Read label="With relativity" value={`${fx(far)} km`} tone="sky" />
         <Read label="Without" value={`${fx(plain)} km`} tone="pink" />
         <Read label="Atmosphere for the muon" value={`${fx(Lc)} km`} />
-      </>) : <>
+      </>) : hide ? undefined : <>
         <Read label="γ" value={fx(g)} tone="amber" />
         <Read label="Ground clock" value={fx(groundTicks, 1)} />
         <Read label="Train clock" value={fx(trainTicks, 1)} tone="sky" />

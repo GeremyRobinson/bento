@@ -182,7 +182,7 @@ export function SpacetimeScene({ props, marker, onMarker }: SceneProps) {
   if (mode === "light") readouts = <>
     <Read label="γ" value={fx(g)} />
     <Read label="Ball ahead" value={`${fx(lightBall(0.5))}c`} tone="mint" />
-    <Read label="Light ahead" value={flag(props, "measure") ? "c in both frames" : "1.00c"} tone="amber" />
+    <Read label="Light ahead" value={quiet ? "?" : flag(props, "measure") ? "c in both frames" : "1.00c"} tone="amber" />
   </>;
   else if (mode === "pair") {
     const d = g * (e2[0] - beta * e2[1]);

@@ -54,7 +54,7 @@ export function TwinScene({ props }: SceneProps) {
       <line x1={X(D)} y1={Y(turn)} x2={X(0)} y2={Y(nowBack)} className="b2now faint" />
       <line x1={X(0) - 8} y1={Y(nowOut)} x2={X(0) - 8} y2={Y(nowBack)} className="b2jump" />
       {homeTicks.map(t => <circle key={`h${t}`} cx={X(0)} cy={Y(t)} r="2.8" className="b2dot" />)}
-      {travTicks.map(tau => { const [x, t] = travAt(tau); return <circle key={`t${tau}`} cx={X(x)} cy={Y(t)} r="2.8" className="b2dot trav" />; })}
+      {!hide && travTicks.map(tau => { const [x, t] = travAt(tau); return <circle key={`t${tau}`} cx={X(x)} cy={Y(t)} r="2.8" className="b2dot trav" />; })}
       {!hide && <>
         <text x={X(0) - 12} y={Y(home) + 4} textAnchor="end" className="b2t">{fx(home, 1)} y</text>
         <text x={X(0) + 10} y={Y(home) - 8} className="b2t sky">{fx(trav, 1)} y</text>

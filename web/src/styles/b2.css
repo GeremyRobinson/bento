@@ -180,7 +180,7 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
 .b2body{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;display:flex;flex-direction:column;gap:var(--sp-3);animation:b2in var(--dur-250) var(--ease) both}
 .b2body>.ctl{align-self:flex-start;--pill-h:var(--tap)}
 .b2say{margin:0;font-size:var(--fz-lg);line-height:1.45}
-.b2prob{margin:0;font-size:var(--fz-lg);line-height:1.45;padding:var(--sp-3) var(--sp-4);border-radius:var(--r-lg);background:var(--well)}
+.b2prob{flex:none;margin:0;font-size:var(--fz-lg);line-height:1.45;padding:var(--sp-3) var(--sp-4);border-radius:var(--r-lg);background:var(--well)}
 .b2choices{display:grid;gap:var(--sp-2)}
 .b2choice{min-height:var(--tap);padding:10px var(--sp-4);border-radius:var(--r-lg);background:var(--well);box-shadow:inset 0 0 0 1px var(--adv-hair);text-align:left;font-size:var(--fz-md);line-height:1.3;transition:background var(--dur-150),box-shadow var(--dur-150)}
 .b2choice:not([disabled]):hover{background:var(--hover)}
@@ -197,6 +197,9 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
 .b2steps>li[data-state="now"]>.badge{background:var(--ink);color:var(--on-tint)}
 .b2done{color:var(--muted)}
 .b2later{color:var(--faint)}
+/* the steps still to come stay out of the way: the step you're on says where you are ("Step 2 of 5") */
+.b2steps>li[data-state="later"]{display:none}
+.b2of{display:block;color:var(--muted);font-size:var(--fz-2xs);font-weight:var(--w-mid);letter-spacing:.01em}
 .b2now{flex:1;min-width:0;display:grid;gap:var(--sp-2)}
 .b2now>b{font-weight:var(--w-bold)}
 .b2ask{color:var(--muted);font-size:var(--fz-sm)}
@@ -225,12 +228,46 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
 .b2nav .ctl{--pill-h:var(--tap);font-size:var(--fz-md)}
 /* in Guess the picture is the question: its setup stays put until you lock in */
 .st-guess .b2stage .b2ctl{display:none}
+.b2projbtn,.b2projback,.b2deepm{display:none}
+/* typing an answer takes the keypad's room: the picture keeps its drawing and drops its sliders */
+.b2lesson.st-work .b2stage .b2ctl,.b2lesson.st-name .b2stage .b2ctl{display:none}
+.b2lesson.st-work .b2scene{grid-template-rows:minmax(120px,1fr) auto auto auto}
+.b2lesson.typing .b2card{gap:10px}
+@media (max-height:900px){.b2pad>button,.b2pad>.ctl.b2check{height:40px;--pill-h:40px}}
 @media (orientation:portrait) and (min-width:700px){
   .screen.fit.b2lesson{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1.3fr) minmax(0,1fr);grid-template-areas:"stage" "card"}
-  .screen.fit.b2lesson.typing{grid-template-rows:minmax(0,1fr) minmax(0,1.25fr)}
+  .screen.fit.b2lesson.st-name{grid-template-rows:minmax(0,.9fr) minmax(0,1.1fr)}
+  .st-guess .b2choices{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .screen.fit.b2lesson.st-work{grid-template-rows:minmax(0,.7fr) minmax(0,1.3fr)}
 }
 @media (max-width:699px){
   .screen.fit.b2lesson{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1.08fr) minmax(0,1fr);grid-template-areas:"stage" "card";gap:10px}
+  /* a phone gives the card the room each stage needs: Guess keeps a smaller picture (it's the question); Name it and
+     a Use it without a project are words, so the picture steps aside; a project's Use it is the picture */
+  .screen.fit.b2lesson.st-guess{grid-template-rows:minmax(0,.78fr) minmax(0,1.22fr)}
+  .screen.fit.b2lesson.st-name,.screen.fit.b2lesson.st-use:not(.proj){grid-template-rows:minmax(0,1fr);grid-template-areas:"card"}
+  .b2lesson.st-name .b2stage,.b2lesson.st-use:not(.proj) .b2stage{display:none}
+  .screen.fit.b2lesson.st-play{grid-template-rows:minmax(0,1.2fr) minmax(0,.8fr)}
+  .st-play .b2body .b2small{display:none}
+  /* a project's Use it: the card first, with a button that opens the project full screen */
+  .screen.fit.b2lesson.st-use.proj{grid-template-rows:minmax(0,1fr);grid-template-areas:"card"}
+  .b2lesson.st-use.proj .b2stage{display:none}
+  .b2lesson.proj .b2projbtn{display:inline-flex;align-self:flex-start}
+  .screen.fit.b2lesson.st-use.proj.projopen{grid-template-areas:"stage"}
+  .b2lesson.st-use.proj.projopen .b2card{display:none}
+  .b2lesson.st-use.proj.projopen .b2stage{display:grid;align-content:start;gap:var(--sp-2)}
+  .b2lesson.projopen .b2projback{display:inline-flex;justify-self:start;--pill-h:40px;font-size:var(--fz-sm)}
+  /* the island already names the lesson, so the card's header steps aside: Deeper moves to the bottom row */
+  .b2card>.b2lhead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+  .b2nav .b2deepm{display:inline-flex}
+  .b2nav span.b2deepm{display:block}
+  .b2nav .ctl.b2deepm{--pill-pad:var(--sp-3)}
+  /* Work it is words and a keypad on a phone: the picture steps aside */
+  .screen.fit.b2lesson.st-work{grid-template-rows:minmax(0,1fr);grid-template-areas:"card"}
+  .b2lesson.st-work .b2stage{display:none}
+  .b2body .b2chips{display:none}
+  .st-guess .b2choices{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .st-guess .b2choice{min-height:40px;padding:var(--sp-2) var(--sp-3)}
   /* typing an answer: the keypad needs the room, so the picture steps aside (it comes back with the next stage) */
   .screen.fit.b2lesson.typing{grid-template-rows:minmax(0,1fr);grid-template-areas:"card"}
   .b2lesson.typing .b2stage{display:none}
@@ -243,7 +280,7 @@ svg.b2pic{display:block;width:100%;height:auto;font-family:var(--sans);backgroun
   .b2nav .ctl{--pill-h:40px;font-size:var(--fz-sm);--pill-pad:14px}
   .b2ctl{gap:6px var(--sp-3)}
   /* a phone draws the picture smaller, so its words are drawn larger: 11px or more on screen at 375 wide */
-  .b2scene{grid-template-rows:minmax(204px,1fr) auto auto auto}
+  .b2scene{grid-template-rows:minmax(128px,1fr) auto auto auto}
   .b2t{font-size:var(--fz-lg)}
   .b2r b{font-size:var(--fz-md)}
   .b2slider input[type="range"]{height:24px}
