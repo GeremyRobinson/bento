@@ -192,7 +192,6 @@ describe("the registry and B2_TRACKS_LIVE", () => {
   it("a track opens only when it has lessons and the flag lists it", () => {
     expect(isTrackLive("relativity")).toBe(true);
     expect(isOpen("relativity")).toBe(true);
-    expect(isOpen("ai")).toBe(false);
     expect(isOpen("nope")).toBe(false);
   });
 });

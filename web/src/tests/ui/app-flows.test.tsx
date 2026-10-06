@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 // Every flow of the app through the UI, written against whichever lessons are rebuilt (g5-mult2 is always there).
 import { act, fireEvent, screen, within } from "@testing-library/react";
 import { CATALOG } from "../../curriculum/catalog";
@@ -6,6 +7,12 @@ import type { Progress } from "../../engine/mastery/progress";
 import type { SessionReport } from "../../engine/session/types";
 import { answerWrong, failRun, renderApp, solveRun, tap } from "./helpers";
 import { B2_TRACKS_LIVE } from "../../bento2/flags";
+// the "coming later" path is tested with one track held back (all ten are open in the app)
+vi.mock("../../bento2/flags", async (load) => {
+  const real = await load<typeof import("../../bento2/flags")>();
+  const live = real.B2_TRACKS_LIVE.filter(id => id !== "ai");
+  return { ...real, B2_TRACKS_LIVE: live, isTrackLive: (id: string) => live.includes(id) };
+});
 
 const LESSON = "Multiply two-digit numbers";
 const grade5 = CATALOG.filter(c => c.grade === 5);

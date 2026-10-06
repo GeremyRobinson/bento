@@ -7,6 +7,12 @@ import { renderApp } from "../ui/helpers";
 import { re01 } from "../../bento2/tracks/relativity/lessons";
 import { formatAnswer } from "../../bento2/steps";
 import { C_KMS } from "../../bento2/tracks/relativity/physics";
+// the "coming later" path is tested with one track held back (all ten are open in the app)
+vi.mock("../../bento2/flags", async (load) => {
+  const real = await load<typeof import("../../bento2/flags")>();
+  const live = real.B2_TRACKS_LIVE.filter(id => id !== "ai");
+  return { ...real, B2_TRACKS_LIVE: live, isTrackLive: (id: string) => live.includes(id) };
+});
 
 const tap = (name: string | RegExp) => fireEvent.click(screen.getByRole("button", { name }));
 const pad = () => document.querySelector(".b2pad") as HTMLElement;
