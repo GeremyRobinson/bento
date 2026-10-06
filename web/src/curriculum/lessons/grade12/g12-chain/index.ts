@@ -65,6 +65,7 @@ export const lesson: LessonDefinition<ChainRule> = withEasyStart({
   grade: 12,
   unit: "Derivatives",
   title: "Chain rule",
+  pre: "g12-power",
   reference: createChainRule(3, 1, 4),
   generate: rng => generateChainRule(rng),
   restore: restoreChainRule,

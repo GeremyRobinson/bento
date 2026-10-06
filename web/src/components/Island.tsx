@@ -6,7 +6,8 @@ import { readAloudOn, readSettings } from "../app/settings";
 import { reduceMotion } from "../app/transition";
 import { gradeOf, inkOf } from "../curriculum/grades";
 import { lessonById } from "../curriculum/registry";
-import { currentItem, currentStep, lessonOfItem } from "../engine/session/practice";
+import { currentItem, currentStep, lessonOfItem, problemOf } from "../engine/session/practice";
+import { problemShape, ProblemLine } from "./practice/ProblemView";
 import { upNext } from "../app/today";
 import { Contents, type Level } from "./Contents";
 import { BentoMark } from "./primitives/BentoMark";
@@ -114,6 +115,9 @@ const SettingsIcon = () => (
 
 /** How far along the place is: the page in its chapter on a lesson, the lessons done in the year elsewhere. */
 function fillOf(place: Place, app: ReturnType<typeof useApp>, grade: number): number {
+  // in practice, the battery is the run: each solved problem ticks it up by its share (practice-spec §5)
+  const run = app.progress.run;
+  if (app.route.name === "practice" && run) return (run.i + (run.solved ? 1 : 0)) / run.items.length;
   if (place.lesson) { const p = pageOf(place.lesson); if (p) return p.page / p.pages; }
   const all = entriesInGrade(grade);
   return all.length ? doneCount(app.progress, all) / all.length : 0;
@@ -131,6 +135,13 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   const { progress, go, route, openSheet, quit } = app;
   // quitting a run you started and don't want to finish (G 2026-10-06): one quick confirm, then it's gone
   const [asking, setAsking] = useState(false);
+  // Practice's hint stack is open: the bulb turns ink-filled while it is
+  const [hinting, setHinting] = useState(false);
+  useEffect(() => {
+    const on = (e: Event) => setHinting(!!(e as CustomEvent).detail);
+    addEventListener("bento:hintopen", on);
+    return () => removeEventListener("bento:hintopen", on);
+  }, []);
   // the landing page, and any grade page reached before a grade is chosen, get the plain guest island
   const welcome = !!guest || route.name === "welcome" || chosen == null;
   const grade = chosen ?? 0;
@@ -193,6 +204,9 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   const showResume = !!run && !!runGrade && !welcome && !["practice", "me", "parent", "facts"].includes(route.name);
   // in a lesson's practice, a light bulb sits beside Settings (UI notes preview); tests have no hints
   const hintable = route.name === "practice" && !!run && run.mode !== "test" && !!currentStep(run) && !run.pick;
+  // on a phone, practice's island shows the problem itself in place of the lesson's name (practice-spec §2c A)
+  const item = route.name === "practice" && run ? currentItem(run) : null;
+  const shortProblem = item && problemShape(item.lessonId, problemOf(item), !!item.story).short ? item : null;
 
   if (welcome) return (
     <div className="itop"><span /><header className="island guest">
@@ -226,16 +240,17 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
           : <button className="iback" onClick={() => openSheet(true)} aria-label="Change grade"><Chevron dir="left" /></button>}
         <button className="iplace" onClick={() => setOpen(start === "shelf" ? "year" : start)} aria-label={`Contents. You're on ${place.title}`} aria-haspopup="dialog">
           <small>{place.kicker}</small>
-          {place.title === gradeOf(grade).name ? <GradeTitle grade={grade} /> : <b>{place.title}</b>}
+          {place.title === gradeOf(grade).name ? <GradeTitle grade={grade} /> : <b className={shortProblem ? "ititle" : undefined}>{place.title}</b>}
+          {shortProblem && <b className="iprob"><ProblemLine lessonId={shortProblem.lessonId} problem={problemOf(shortProblem)} solved={run!.solved} /></b>}
         </button>
         {place.lock
           ? <span className="ilock"><LockIcon />On this device</span>
-          : <span className="ibat" aria-hidden style={{ "--p": fill, "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties}><i /></span>}
+          : <span className={`ibat${route.name === "practice" && run?.solved ? " tick" : ""}`} aria-hidden style={{ "--p": fill, "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties}><i /></span>}
       </header>
       <div className="icorner right">
         {hintable && (
-          <button className={`icon ihint${run!.hintsLeft || run!.hinted ? "" : " spent"}`} onClick={() => { shut(); dispatchEvent(new Event("bento:hint")); }}
-            aria-label={`Hint, ${run!.hintsLeft} left`}><BulbIcon /></button>
+          <button className={`icon ihint${run!.hintsLeft || run!.hinted ? "" : " spent"}${hinting ? " on" : ""}`} onClick={() => { shut(); shutMe(); dispatchEvent(new Event("bento:hint")); }}
+            aria-label={`Hint, ${run!.hintsLeft} left`} aria-expanded={hinting}><BulbIcon /><em className="ibadge" aria-hidden>{run!.hintsLeft}</em></button>
         )}
         <button className={`icon${quick ? " on" : ""}`} onClick={() => (quick ? shut() : openQuick())} aria-label="Settings" aria-expanded={quick}><SettingsIcon /></button>
         <button className={`icon ime${meOpen || route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={() => (meOpen ? shutMe() : openMe())}

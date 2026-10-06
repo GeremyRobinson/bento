@@ -26,11 +26,21 @@ export function restoreSimplifyRoot(raw: unknown): SimplifyRoot | null {
   return r && attempt(() => createSimplifyRoot(r.k, r.m));
 }
 
+/** Smaller squares that also divide n = k² × rest: j² for each j that divides k. Each one leaves a square inside. */
+function smallerSquares(k: number, rest: number): [Record<string, number>, string, string][] {
+  const out: [Record<string, number>, string, string][] = [];
+  for (let j = 2; j < k; j++) if (k % j === 0) {
+    const left = (k * k * rest) / (j * j);
+    out.push([{ sq: j * j, rest: left }, "Not the biggest square", `${f(j * j)} works, but ${f(left)} still has a perfect square inside. Look for a bigger one.`]);
+  }
+  return out;
+}
+
 export function simplifyRootAnswers({ k, m: rest, n }: SimplifyRoot): AnswerModel {
   return {
     steps: [
-      ns({ id: "square", l: "Biggest perfect square", a: s => [num(n), op("="), ...s, op("×"), num(rest)], ans: k * k, h: `Which perfect square, a whole number times itself, times ${f(rest)} makes ${f(n)}?`,
-        w: [[n / rest / 2, "Halved instead", `${f(n)} ÷ ${f(rest)} is the square: ${f(rest)} times it makes ${f(n)}.`]] }),
+      ms({ id: "square", l: "Biggest perfect square", a: S => [num(n), op("="), ...S.sq!, op("×"), ...S.rest!], ans: { sq: k * k, rest }, h: `Find the biggest perfect square, a whole number times itself, that divides ${f(n)}. Write it first, then what is left.`,
+        w: [...smallerSquares(k, rest), [{ sq: rest, rest: k * k }, "Square second", "Put the perfect square first, then what is left."]] }),
       ns({ id: "root", l: "Its square root", a: s => [sqrt(k * k), op("="), ...s], ans: k, h: `Which whole number times itself makes ${f(k * k)}?`, w: [[k * k / 2, "Halved it", `The root is the number that times itself makes ${f(k * k)}, not half of it.`]] }),
       ms({ id: "simple", l: "Write it simply", a: S => [sqrt(n), op("="), ...S.c!, sqrt(S.r!)], ans: { c: k, r: rest }, h: `√(${f(k * k)} × ${f(rest)}) = √${f(k * k)} × √${f(rest)}. Which part is a whole number?`,
         w: [[{ c: k * k, r: rest }, "The square came out", `The square itself doesn't come out, its root does: √${f(k * k)} = ${f(k)}.`], [{ c: k, r: n }, "Left it all inside", `Once ${f(k)} is outside, only ${f(rest)} stays under the root.`]] }),

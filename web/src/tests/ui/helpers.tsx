@@ -32,7 +32,7 @@ const tap = (name: string | RegExp) => fireEvent.click(screen.getByRole("button"
 export function answerOnScreen(): string {
   let ask = document.querySelector(".ask .mline")!.getAttribute("data-plain")!.replace(/−/g, "-");
   // "Final answer only": the answer to the whole problem shown above the step
-  if (ask === "blank") ask = `${document.querySelector(".split .math .mline")!.getAttribute("data-plain")} = blank`;
+  if (ask === "blank") ask = `${document.querySelector(".pprob .math .mline")!.getAttribute("data-plain")} = blank`;
   const m = ask.match(/^(-?\d+) ([×+]) (-?\d+)(?: \+ (-?\d+))? = blank$/);
   if (!m) throw new Error(`can't read step: ${ask}`);
   const nums = [m[1], m[3], m[4]].filter(Boolean).map(Number);
@@ -100,8 +100,15 @@ export function failRun(): void {
       if (last) return;
       continue;
     }
-    const show = screen.queryByRole("button", { name: "Show me" });
-    if (show) { fireEvent.click(show); continue; }
+    // Show me lives in the hint stack, which the light bulb opens (practice-spec §2b)
+    if (document.querySelector(".pfb")?.textContent?.includes("Show me")) {
+      const bulb = screen.queryByRole("button", { name: /^Hint, / });
+      if (bulb) fireEvent.click(bulb);
+      const show = screen.queryByRole("button", { name: "Show me the step" });
+      if (show) { fireEvent.click(show); continue; }
+      const got = screen.queryByRole("button", { name: "Got it" });
+      if (got) fireEvent.click(got);
+    }
     answerWrong();
     act(() => { clock.t += 10000; });
   }

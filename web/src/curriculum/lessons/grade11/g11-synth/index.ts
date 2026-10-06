@@ -94,6 +94,7 @@ export const lesson: LessonDefinition<SyntheticDivision> = withEasyStart({
   grade: 11,
   unit: "Polynomials",
   title: "Synthetic division",
+  pre: "g11-evalpoly",
   reference: createSyntheticDivision(2, -3),
   generate: (rng, i) => generateSyntheticDivision(rng, i),
   restore: restoreSyntheticDivision,

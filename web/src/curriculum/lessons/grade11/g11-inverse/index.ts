@@ -71,6 +71,7 @@ export const lesson: LessonDefinition<InverseProblem> = withEasyStart({
   grade: 11,
   unit: "Functions",
   title: "Inverse functions",
+  pre: "g11-compose",
   reference: createInverse(3, 2, 4),
   generate: rng => generateInverse(rng),
   restore: restoreInverse,

@@ -65,6 +65,7 @@ export const lesson: LessonDefinition<RationalExponent> = withEasyStart({
   grade: 11,
   unit: "Exponents and logs",
   title: "Rational exponents",
+  pre: "g8-roots",
   reference: createRationalExponent(3, 2, 2),
   generate: rng => generateRationalExponent(rng),
   restore: restoreRationalExponent,

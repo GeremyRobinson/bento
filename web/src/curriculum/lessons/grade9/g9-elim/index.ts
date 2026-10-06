@@ -64,6 +64,7 @@ export const lesson: LessonDefinition<EliminationSystem> = withEasyStart({
   grade: 9,
   unit: "Equations",
   title: "Systems by elimination",
+  pre: "g8-system",
   reference: createElimination(7, 3),
   generate: (rng, i) => generateElimination(rng, i),
   restore: restoreElimination,

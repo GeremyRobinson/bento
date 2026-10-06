@@ -66,6 +66,7 @@ export const lesson: LessonDefinition<PolynomialDerivative> = withEasyStart({
   grade: 12,
   unit: "Derivatives",
   title: "Derivative of a polynomial",
+  pre: "g12-power",
   reference: createPolynomialDerivative(2, -1, 5, 7),
   generate: rng => generatePolynomialDerivative(rng),
   restore: restorePolynomialDerivative,

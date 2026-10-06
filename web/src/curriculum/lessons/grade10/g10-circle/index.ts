@@ -69,6 +69,7 @@ export const lesson: LessonDefinition<CircleProblem> = withEasyStart({
   grade: 10,
   unit: "Coordinate geometry",
   title: "Equation of a circle",
+  pre: "g10-dist",
   reference: createCircle(2, -3, 4),
   generate: rng => generateCircle(rng),
   restore: restoreCircle,

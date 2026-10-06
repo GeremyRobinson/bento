@@ -67,6 +67,7 @@ export const lesson: LessonDefinition<PyramidProblem> = withEasyStart({
   grade: 10,
   unit: "Area and volume",
   title: "Volume of a pyramid",
+  pre: "g8-cone",
   reference: createPyramid(6, 5),
   generate: rng => generatePyramid(rng),
   restore: raw => { const r = readNumbers(raw, ["s", "h"] as const); try { return r && createPyramid(r.s, r.h); } catch { return null; } },

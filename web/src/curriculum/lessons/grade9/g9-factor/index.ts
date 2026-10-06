@@ -77,6 +77,7 @@ export const lesson: LessonDefinition<FactorProblem> = withEasyStart({
   grade: 9,
   unit: "Polynomials and quadratics",
   title: "Factoring quadratics",
+  pre: "g9-foil",
   reference: createFactor(3, 4),
   generate: rng => generateFactor(rng),
   restore: raw => {

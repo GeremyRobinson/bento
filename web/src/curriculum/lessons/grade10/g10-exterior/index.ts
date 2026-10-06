@@ -68,6 +68,7 @@ export const lesson: LessonDefinition<ExteriorAngleProblem> = withEasyStart({
   grade: 10,
   unit: "Angles and triangles",
   title: "Exterior angle",
+  pre: "g8-tri",
   reference: createExteriorAngle(50, 60),
   generate: rng => createExteriorAngle(rng.int(20, 80), rng.int(20, 80)),
   restore: restoreExteriorAngle,

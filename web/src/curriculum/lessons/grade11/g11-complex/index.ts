@@ -81,6 +81,7 @@ export const lesson: LessonDefinition<ComplexProblem> = withEasyStart({
   grade: 11,
   unit: "Complex numbers",
   title: "Multiplying complex numbers",
+  pre: "g9-foil",
   reference: createComplex(2, 3, 1, 4),
   generate: rng => generateComplex(rng),
   restore: raw => { const r = readNumbers(raw, ["a", "b", "c", "d"] as const); try { return r && createComplex(r.a, r.b, r.c, r.d); } catch { return null; } },
