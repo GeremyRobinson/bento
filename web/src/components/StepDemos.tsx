@@ -101,13 +101,17 @@ export const SLIPS: ((rng: Rng) => SlipDemo)[] = [
   },
 ];
 
-/** Steps a demo through its beats while it's on screen, then moves on to a fresh one of a different kind. */
-function useDemo<T extends { kind: string }>(make: ((rng: Rng) => T)[], rng: Rng, beats: (d: T) => number) {
+/**
+ * Steps a demo through its beats while it's on screen, then moves on to a fresh one of a different kind. The first
+ * demo opens finished, so the tile reads complete on its first frame (Review v43 #20); later ones start at beat
+ * `from`. `rest` is true while that opening picture is showing, so nothing in it plays an entrance.
+ */
+function useDemo<T extends { kind: string }>(make: ((rng: Rng) => T)[], rng: Rng, beats: (d: T) => number, from = 0) {
   const order = useMemo(() => rng.shuffle(make.map((_, i) => i)), [make, rng]);
   const [n, setN] = useState(0);
   const demo = useMemo(() => make[order[n % order.length]!]!(rng), [n, make, order, rng]);
   const last = beats(demo), still = reduceMotion();
-  const [at, setAt] = useState(still ? last : 0);
+  const [at, setAt] = useState(Infinity);
   const [seen, setSeen] = useState(false);
   const box = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -118,11 +122,11 @@ function useDemo<T extends { kind: string }>(make: ((rng: Rng) => T)[], rng: Rng
   }, [still]);
   useEffect(() => {
     if (still || !seen) return;
-    const t = setTimeout(() => (at >= last ? (setN(k => k + 1), setAt(0)) : setAt(a => a + 1)), at >= last ? 4200 : at === 0 ? 700 : 1000);
+    const t = setTimeout(() => (at >= last ? (setN(k => k + 1), setAt(from)) : setAt(a => a + 1)), at >= last ? 4200 : at === 0 ? 700 : 1000);
     return () => clearTimeout(t);
-  }, [at, last, seen, still]);
-  const another = () => { setN(k => k + 1); setAt(still ? Infinity : 0); };
-  return { demo, at: Math.min(at, last), box, another, key: n };
+  }, [at, from, last, seen, still]);
+  const another = () => { setN(k => k + 1); setAt(still ? Infinity : from); };
+  return { demo, at: Math.min(at, last), box, another, key: n, rest: n === 0 };
 }
 
 function Chip({ grade }: { grade: number }) {
@@ -144,10 +148,10 @@ function DemoTile({ box, tint, k, title, label, another, children }: DemoTilePro
 
 /** "One step at a time": a random worked problem whose named steps fill in one by one. */
 export function SolveTile({ tint, k, rng }: DemoTileProps) {
-  const { demo, at, box, another, key } = useDemo(SOLVES, rng, d => d.rows.length);
+  const { demo, at, box, another, key, rest } = useDemo(SOLVES, rng, d => d.rows.length);
   return (
     <DemoTile box={box} tint={tint} k={k} rng={rng} another={another} title="One step at a time" label="Every problem splits into named steps, checked as you go.">
-      <div className="lsteps" key={key} style={tintStyle(gradeOf(demo.grade)) as CSSProperties}>
+      <div className={`lsteps${rest ? " rest" : ""}`} key={key} style={tintStyle(gradeOf(demo.grade)) as CSSProperties}>
         <div className="q a-rise"><MathLine math={demo.q} /><Chip grade={demo.grade} /></div>
         {demo.rows.map((r, i) => (
           <div key={i} className={`${i === demo.rows.length - 1 ? "sum " : ""}${i < at ? "on" : "off"}`}>
@@ -161,10 +165,11 @@ export function SolveTile({ tint, k, rng }: DemoTileProps) {
 
 /** "Slips, explained": a random wrong answer, then exactly what went wrong and the fix. */
 export function SlipTile({ tint, k, rng }: DemoTileProps) {
-  const { demo, at, box, another, key } = useDemo(SLIPS, rng, () => 3);
+  // a fresh slip arrives with its wrong answer showing; the why and the fix wait faintly underneath, then light up
+  const { demo, at, box, another, key, rest } = useDemo(SLIPS, rng, () => 3, 1);
   return (
     <DemoTile box={box} tint={tint} k={k} rng={rng} another={another} title="Slips, explained" label="Get it wrong and Bento tells you exactly where, and why.">
-      <div className="lmiss" key={key}>
+      <div className={`lmiss${rest ? " rest" : ""}`} key={key}>
         <div className="q a-rise"><MathLine math={demo.q} /><Chip grade={demo.grade} /></div>
         <div className={`bad ${at >= 1 ? "on" : "off"}${at >= 2 ? " shook" : ""}`}><span>Your answer</span><b><MathLine math={demo.wrong} /></b></div>
         <p className={at >= 2 ? "on" : "off"}><b>{demo.why}</b> {demo.detail}</p>

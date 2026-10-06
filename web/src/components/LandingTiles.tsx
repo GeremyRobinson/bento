@@ -62,12 +62,16 @@ export function TodayTile({ tint, k, size }: TileProps) {
   );
 }
 
-/** A times table whose cells fill in as they're learned. */
+/**
+ * A times table whose cells fill in as they're learned. It opens part-learned, most cells already tinted, so the
+ * tile reads complete on its first frame (Review v43 #20); the rest then fill in, it holds full, and goes back to
+ * part-learned. Without motion it sits full.
+ */
 export function FactsTile({ tint, k, rng, size }: TileProps) {
-  const N = 6;
+  const N = 6, FULL = N * N * 2, REST = 40;
   const order = useMemo(() => rng.shuffle(Array.from({ length: N * N }, (_, i) => i)), [rng]);
-  const { t, box } = useBeat(160, N * N * 2);
-  const step = t % (N * N * 2 + 12); // fill in, settle, then start over
+  const { t, box } = useBeat(160, FULL - REST);
+  const step = REST + (t % (FULL - REST + 12)); // fill in, settle, then back to part-learned
   const lv = (i: number) => { const r = order.indexOf(i); return Math.max(0, Math.min(3, Math.floor((step - r) / 12))); };
   return (
     <Tile box={box} size={size} tint={tint} k={k} title="Facts by heart" label="Times tables, squares and powers. Each fact fills in once you know it. Two minutes a day.">
@@ -136,14 +140,17 @@ export function HelpTile({ tint, k, size }: TileProps) {
   );
 }
 
-/** Review: yesterday's slips come back today. */
+/**
+ * Review: yesterday's slips come back today. The stack of three is there from the first frame (Review v43 #20);
+ * each beat the cards step forward and only the card joining at the back rises in.
+ */
 export function ReviewTile({ tint, k, rng, size }: TileProps) {
   const cards = useMemo(() => rng.shuffle(["3/4 + 1/8", "48 × 6", "2x + 5 = 17", "7²", "0.6 × 0.4", "−3 × −8"]), [rng]);
   const { t, box } = useBeat(1800, 0);
   return (
     <Tile box={box} size={size} tint={tint} k={k} title="Review that sticks" label="Problems you missed come back until you've got them.">
       <div className="lreview">{[0, 1, 2].map(i => (
-        <span key={(t + i) % cards.length} className={i ? undefined : "top"} style={{ "--j": i } as CSSProperties}>{cards[(t + i) % cards.length]}</span>
+        <span key={(t + i) % cards.length} className={[i ? "" : "top", t && i === 2 ? "new" : ""].join(" ").trim() || undefined} style={{ "--j": i } as CSSProperties}>{cards[(t + i) % cards.length]}</span>
       ))}</div>
     </Tile>
   );

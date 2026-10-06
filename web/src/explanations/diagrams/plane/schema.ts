@@ -27,6 +27,8 @@ export interface PlaneLabel {
   optional?: boolean;
   /** beat the label appears at, when later than its item */
   from?: number;
+  /** keep out of the axes' tick-number bands, for a point sitting on or beside an axis */
+  clearAxes?: boolean;
 }
 
 export type PlaneItem =
