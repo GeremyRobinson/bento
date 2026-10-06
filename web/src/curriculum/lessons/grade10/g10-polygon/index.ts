@@ -3,6 +3,7 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildPolygonSplit } from "../../../../explanations/diagrams/polygon-split/build";
 import { asRecord, expected, mt, ns, numberField } from "../../_geometry/kit";
+import { withEasyStart } from "../../easy-start";
 
 /** A regular polygon with n sides. */
 export interface PolygonAnglesProblem {
@@ -27,10 +28,11 @@ export function restorePolygonAngles(raw: unknown): PolygonAnglesProblem | null 
 export function polygonAnglesAnswers({ n }: PolygonAnglesProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "triangles", label: "Triangles inside", prompt: s => mt`${n} − 2 = ${s}`, ans: n - 2, hint: "A polygon splits into (sides − 2) triangles." }),
+      ns({ id: "triangles", label: "Triangles inside", prompt: s => mt`${n} − 2 = ${s}`, ans: n - 2, hint: "Lines from one corner split the polygon into triangles: the two sides next to that corner don't make one of their own, so it's sides − 2.",
+        wrong: [[n, "One per side", "From one corner, the two sides next to it don't make triangles of their own: it's sides − 2."]] }),
       ns({ id: "total", label: "Total degrees", prompt: s => mt`${n - 2} × 180° = ${s}°`, ans: (n - 2) * 180, hint: "Each triangle has 180°.",
         wrong: [[n * 180, "Used n instead of n − 2", `It's ${n} − 2 triangles, not ${n}.`]] }),
-      ns({ id: "each", label: "Each angle", prompt: s => mt`${(n - 2) * 180}° ÷ ${n} = ${s}°`, ans: ((n - 2) * 180) / n, hint: "Regular means all angles are equal: divide." }),
+      ns({ id: "each", label: "Each angle", prompt: s => mt`${(n - 2) * 180}° ÷ ${n} = ${s}°`, ans: ((n - 2) * 180) / n, hint: "Regular means all angles are equal, so share the total out equally among the corners.", wrong: [[(n - 2) * 180 / (n - 2), "Divided by the triangles", `Share the total among the ${n} corners, not the ${n - 2} triangles.`]] }),
     ],
     finalParts: [-1],
   };
@@ -62,11 +64,12 @@ export function explainPolygonAngles({ n }: PolygonAnglesProblem, answers: Answe
   };
 }
 
-export const lesson: LessonDefinition<PolygonAnglesProblem> = {
+export const lesson: LessonDefinition<PolygonAnglesProblem> = withEasyStart({
   id: "g10-polygon",
   grade: 10,
   unit: "Angles and triangles",
   title: "Angles in a polygon",
+  pre: "g8-tri",
   reference: createPolygonAngles(6),
   generate: rng => createPolygonAngles(rng.pick(POLYGON_SIDES)),
   restore: restorePolygonAngles,
@@ -74,4 +77,4 @@ export const lesson: LessonDefinition<PolygonAnglesProblem> = {
   displayNote: () => "How big is each inside angle?",
   answers: polygonAnglesAnswers,
   explain: explainPolygonAngles,
-};
+});

@@ -1,11 +1,11 @@
 // Add three numbers: find two that are easy to add first (a ten pair or a double), then add the last one.
-import { num, op } from "../../../schemas/math-text";
+import { num, op, text } from "../../../schemas/math-text";
 import { count } from "../../../text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildThree } from "../../../../explanations/diagrams/early-g1/three";
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
-import { alsoAccept, countUp, slips } from "../../gradeK/kit";
+import { alsoAccept, countUp, slips, tapStep } from "../../gradeK/kit";
 
 export interface ThreeProblem { a: number; b: number; c: number }
 
@@ -26,21 +26,41 @@ export function pairOf(p: ThreeProblem): { pair: [number, number]; why: "ten" | 
   return { pair: [0, 1], why: "order" };
 }
 
+/** The order the pairs are offered in: first and second, first and third, second and third. */
+const OFFER: [number, number][] = [[0, 1], [0, 2], [1, 2]];
+const friendly = (v: number[], [i, j]: [number, number]) => v[i]! + v[j]! === 10 || v[i] === v[j];
+
 function answers(p: ThreeProblem): AnswerModel {
   const v = [p.a, p.b, p.c], { pair: [i, j], why } = pairOf(p), k = 3 - i - j;
   const x = v[i]!, y = v[j]!, z = v[k]!, first = x + y, sum = p.a + p.b + p.c;
   const add = oneBox({
-    id: "first", label: "Add two first", question: "Which two are easy to add first? Add them.",
+    id: "first", label: "Add two first", question: why === "order" ? "Add the first two." : "Add the two you picked.",
     prompt: s => [num(x), op("+"), num(y), op("="), s], ans: first,
-    wrong: slips(first, [
-      [first - 1, "Counted one short", `Count on from ${Math.max(x, y)} again.`],
-      [first + 1, "Counted one too many", `Count on from ${Math.max(x, y)} again.`],
-    ]),
-    hint: why === "ten" ? "Look for two numbers that make 10." : why === "double" ? `${x} and ${x} is a double.` : "Add the first two.",
+    wrong: slips(first, why === "ten"
+      ? [[first - 1, "Counted one short", `${x} and ${y} fill a ten frame exactly: that's 10.`], [first + 1, "Counted one too many", `${x} and ${y} fill a ten frame exactly: that's 10.`]]
+      : why === "double"
+        ? [[first - 1, "Counted one short", `A double is the same number twice: ${x} and ${x} more.`], [first + 1, "Counted one too many", `A double is the same number twice: ${x} and ${x} more.`]]
+        : [[first - 1, "Counted one short", `Start at ${Math.max(x, y)} and count on ${Math.min(x, y)}, one number for each dot.`], [first + 1, "Counted one too many", `Don't count ${Math.max(x, y)} again: the first number you say is ${Math.max(x, y) + 1}.`]]),
+    hint: why === "ten" ? `Which number goes with ${x} to fill a ten frame?` : why === "double" ? `${x} and ${x} is a double. What is double ${x}?` : "Add the first two.",
     explain: why === "ten" ? `${x} and ${y} make 10.` : why === "double" ? `Double ${x} is ${first}.` : `${x} + ${y} = ${first}.`,
   });
+  // choosing the easy pair: offered when exactly one pair makes 10 or a double, and the three pairs read differently
+  const labels = OFFER.map(([s, t]) => `${v[s]} and ${v[t]}`);
+  const choose = why !== "order" && OFFER.filter(q => friendly(v, q)).length === 1 && new Set(labels).size === 3;
+  const pick = choose ? [tapStep({
+    id: "pick", label: "Pick two", question: "Which two make 10 or a double?", prompt: [num(p.a), op("+"), num(p.b), op("+"), num(p.c)],
+    choices: labels, right: OFFER.findIndex(([s, t]) => s === i && t === j),
+    wrong: n => {
+      const [s, t] = OFFER[n]!;
+      return ["Picked a pair that isn't easy", `${v[s]} and ${v[t]} make ${v[s]! + v[t]!}. Look for two that ${why === "ten" ? "make 10" : "are the same"}: then the last add is easy.`];
+    },
+    hint: "Check each pair: do they fill a ten frame, or are they the same number?",
+    explain: why === "ten" ? `${x} and ${y} make 10.` : `${x} and ${y} are the same: a double.`,
+    work: [text(`${x} and ${y}`)],
+  })] : [];
   return {
     steps: [
+      ...pick,
       i === 0 && j === 1 ? add : alsoAccept(add, [p.a + p.b]),
       oneBox({
         id: "last", label: "Add the last one", question: "Now add the number that's left.",

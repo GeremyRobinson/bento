@@ -31,15 +31,15 @@ describe("a whole lesson in the browser", () => {
 
     // learn: a freshly generated problem (the owner's choice: every picture is random), its picture, and narration
     // from the same model. The statement, the picture and the narration must all describe the same numbers.
-    const statement = document.querySelector(".math .mline")!.getAttribute("data-plain")!;
+    const statement = document.querySelector(".lmath .mline")!.getAttribute("data-plain")!;
     const sm = statement.match(/^(\d+) × (\d+) = \1 × \((\d+) \+ (\d+)\)$/);
     expect(sm, statement).not.toBeNull();
     const [a, b, tens, ones] = sm!.slice(1).map(Number) as [number, number, number, number];
     expect(tens + ones).toBe(b);
     const pic = screen.getByRole("img");
     expect(pic.getAttribute("aria-label")).toBe(`${a} by ${b} rectangle, split into ${a} by ${tens} = ${a * tens} and ${a} by ${ones} = ${a * ones}. Total ${a * b}.`);
-    // before Play the picture rests on its finished frame (Design handoff 3)
-    expect(pic.getAttribute("data-split")).toBe("true");
+    // before Play the picture rests on its first frame, so Play only ever builds forward (G 2026-10-06)
+    expect(pic.getAttribute("data-split")).toBe("false");
     fireEvent.click(screen.getByRole("button", { name: "Show all" }));
     expect(pic.getAttribute("data-split")).toBe("true");
     expect(pic.getAttribute("data-sum")).toBe("true");
@@ -48,9 +48,10 @@ describe("a whole lesson in the browser", () => {
 
     // a new example redraws everything from a new problem
     fireEvent.click(screen.getByRole("button", { name: "Show another" }));
-    expect(document.querySelector(".math .mline")!.getAttribute("data-plain")).not.toBe(statement);
+    expect(document.querySelector(".lmath .mline")!.getAttribute("data-plain")).not.toBe(statement);
 
-    fireEvent.click(screen.getByRole("button", { name: "Start practice ›" }));
+    fireEvent.click(screen.getByRole("button", { name: "Show all" }));
+    fireEvent.click(screen.getByRole("button", { name: "Your turn ›" }));
 
     // practice: a wrong answer gets a reason, then solve every step of every problem with the keypad
     const pad = () => document.querySelector(".tray") as HTMLElement;
@@ -83,6 +84,6 @@ describe("a whole lesson in the browser", () => {
     // home now shows the score and keeps no run in progress
     fireEvent.click(screen.getByRole("button", { name: "All lessons" }));
     expect(screen.queryByText(/Keep going/)).toBeNull();
-    expect(document.querySelector(".lesson .score b")!.textContent).toBe("4");
+    expect(document.querySelector(".srow.sles .score b")!.textContent).toBe("4");
   });
 });

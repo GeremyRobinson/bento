@@ -14,6 +14,7 @@ import { levelOf, problemXp, stepPoints } from "../mastery/levels";
 import { lastScore, type Progress } from "../mastery/progress";
 import { PRAISE } from "./praise";
 import type { Mistake, PracticeSession, RunItem, SessionReport } from "./types";
+import { FIND_MY_LEVEL, NO_UNIT, TODAYS_REVIEW } from "../../app/copy";
 
 /** Clock and randomness are passed in, so every rule can be tested exactly. */
 export interface Deps {
@@ -99,7 +100,7 @@ export const testKey = (g: number, unit?: string) => (unit ? `unit:${g}:${unit}`
 export function startTest(key: string, progress: Progress, deps: Deps): PracticeSession {
   const [kind, gs, unit] = key.split(":"), g = Number(gs);
   if (kind === "place") return startPlacement(g, progress, deps);
-  const list = kind === "unit" ? lessonsInGrade(g).filter(l => (l.unit || "Skills") === unit) : lessonsInGrade(g);
+  const list = kind === "unit" ? lessonsInGrade(g).filter(l => (l.unit || NO_UNIT) === unit) : lessonsInGrade(g);
   if (!list.length) throw new Error(`no lessons for test ${key}`);
   const n = Math.min(kind === "unit" ? 10 : 12, Math.max(6, list.length * 2));
   const order = deps.rng.shuffle(list);
@@ -122,7 +123,7 @@ function startPlacement(g: number, progress: Progress, deps: Deps): PracticeSess
   const grades = placementGrades(g);
   if (!grades.length) throw new Error(`no lessons around grade ${g}`);
   const items = grades.flatMap(x => deps.rng.shuffle(lessonsInGrade(x)).concat(lessonsInGrade(x)).slice(0, 3).map((l, k) => makeItem(l, 2 + k, deps.rng)));
-  return newRun({ mode: "test", key: placeKey(g), title: "Find my level", items, startTier: 0, hintsLeft: 0 }, progress, deps);
+  return newRun({ mode: "test", key: placeKey(g), title: FIND_MY_LEVEL, items, startTier: 0, hintsLeft: 0 }, progress, deps);
 }
 
 /**
@@ -175,7 +176,7 @@ export function startReview(progress: Progress, deps: Deps): PracticeSession {
     live[k]!.n++;
     items.push(makeItem(live[k]!.lesson, deps.rng.int(1, 8), deps.rng));
   }
-  return newRun({ mode: "review", key: "review", title: "Today's review", items: deps.rng.shuffle(items), startTier: 0, hintsLeft: 4 }, progress, deps);
+  return newRun({ mode: "review", key: "review", title: TODAYS_REVIEW, items: deps.rng.shuffle(items), startTier: 0, hintsLeft: 4 }, progress, deps);
 }
 
 function newRun(o: { mode: PracticeSession["mode"]; key: string; title: string; items: RunItem[]; startTier: Tier; hintsLeft?: number },
@@ -338,7 +339,7 @@ export function check(s: PracticeSession, progress: Progress, deps: Deps): Pract
   }
   const band = bandOfSession(next);
   const msg = cat === "concept" ? r.message
-    : SAY[cat] ?? `${nudge(expected, values, band)} ${next.hinted ? step.hint : `Read the step again${next.hintsLeft ? ", or tap Hint" : ""}.`}`.trim();
+    : SAY[cat] ?? `${nudge(expected, values, band)} ${next.hinted ? step.hint : `Read the step again${next.hintsLeft ? ", or tap the light bulb for a hint" : ""}.`}`.trim();
   const lines: string[] = [];
   if (rushed) lines.push("Slow down a little and read the step again.");
   if (canShowMe({ test: false, misses: next.misses, hinted: next.hinted })) lines.push("Stuck? Tap **Show me**.");
@@ -349,12 +350,13 @@ export function check(s: PracticeSession, progress: Progress, deps: Deps): Pract
 export function hint(s: PracticeSession, deps: Deps): PracticeSession {
   const step = currentStep(s);
   if (!step || isTest(s)) return s;
-  if (s.hinted) return { ...s, fx: "feedback", feedback: { type: "hint", strong: "Hint:", text: step.hint } };
-  if (!s.hintsLeft) return { ...s, fx: "feedback", feedback: { type: "hint", text: "You've used this lesson's hints. **Show me** opens after two tries." } };
+  if (s.hinted) return { ...s, fx: "feedback", feedback: { type: "hint", strong: "Hint:", text: step.hint, left: s.hintsLeft } };
+  // the last hint says so kindly (UI notes preview)
+  if (!s.hintsLeft) return { ...s, fx: "feedback", feedback: { type: "hint", text: "No hints left in this lesson. You can do it.", lines: showMeAvailable(s) ? ["Stuck? Tap **Show me**."] : [] } };
   if (!s.misses && deps.now - s.stepT0 < HINT_WAIT_MS) return { ...s, fx: "feedback", feedback: { type: "hint", text: "Try it once first. Then the hint opens." } };
   return {
     ...s, hinted: true, hintsLeft: s.hintsLeft - 1, hints: s.hints + 1, prob: { ...s.prob, hints: s.prob.hints + 1 }, fx: "feedback",
-    feedback: { type: "hint", strong: "Hint:", text: step.hint },
+    feedback: { type: "hint", strong: "Hint:", text: step.hint, left: s.hintsLeft - 1 },
   };
 }
 

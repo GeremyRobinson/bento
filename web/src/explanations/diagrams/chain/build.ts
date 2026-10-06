@@ -2,7 +2,7 @@
 // (the current app's `steps(...)` pictures). Any lesson can use it; every line and beat comes from the problem.
 import type { MathText } from "../../../curriculum/schemas/math-text";
 import type { RichText } from "../../../curriculum/schemas/lesson";
-import { beats, type Explanation, type ExplanationStep } from "../../schema";
+import { beats, type DiagramModel, type Explanation, type ExplanationStep } from "../../schema";
 import type { ChainDiagram } from "./schema";
 
 /** A chain built straight from lines; a line without `from` appears one beat after the line above it. */
@@ -29,18 +29,24 @@ export interface ChainBeat {
   result?: number;
 }
 
-/**
- * A whole lesson page as a chain: one timeline state per beat, and each beat's lines appear on its own state.
- * The caller computes every line, narration and result from the problem; this only wires them together.
- */
-export function chainExplanation(o: {
+interface ChainPage {
   heading: string;
   idea?: RichText[];
   statement: MathText;
   caption?: RichText;
   alt: string;
   beats: ChainBeat[];
-}): Explanation & { diagram: ChainDiagram } {
+}
+
+/**
+ * A whole lesson page as a chain: one timeline state per beat, and each beat's lines appear on its own state.
+ * The caller computes every line, narration and result from the problem; this only wires them together.
+ * With a `diagram` (a picture with one state per beat), the picture is drawn instead of the chain;
+ * the steps, narration, math and results stay exactly the same.
+ */
+export function chainExplanation(o: ChainPage & { diagram?: undefined }): Explanation & { diagram: ChainDiagram };
+export function chainExplanation(o: ChainPage & { diagram: DiagramModel }): Explanation & { diagram: DiagramModel };
+export function chainExplanation(o: ChainPage & { diagram?: DiagramModel }): Explanation & { diagram: DiagramModel } {
   if (!o.beats.length) throw new Error("a chain page needs at least one beat");
   const steps: ExplanationStep[] = o.beats.map((b, i) => ({
     id: b.id,
@@ -54,7 +60,7 @@ export function chainExplanation(o: {
     heading: o.heading,
     ...(o.idea ? { idea: o.idea } : {}),
     statement: o.statement,
-    diagram: { kind: "chain", lines: o.beats.flatMap((b, i) => b.lines.map(math => ({ math, from: i }))), alt: o.alt },
+    diagram: o.diagram ?? { kind: "chain", lines: o.beats.flatMap((b, i) => b.lines.map(math => ({ math, from: i }))), alt: o.alt },
     ...(o.caption ? { caption: o.caption } : {}),
     timeline: beats(o.beats.length),
     steps,

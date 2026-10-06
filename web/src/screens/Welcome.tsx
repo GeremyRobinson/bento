@@ -1,3 +1,4 @@
+import { Pill } from "../components/primitives/Pill";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useApp } from "../app/AppState";
 import { entryById } from "../app/curriculum";
@@ -7,9 +8,11 @@ import type { Rng } from "../curriculum/generators/rng";
 import { PlayingDiagram } from "../components/diagrams/PlayingDiagram";
 import { reduceMotion } from "../app/transition";
 import { FeatureBox } from "../components/LandingTiles";
-import { GradeNum, Shelf } from "../components/Shelf";
+import { GradeNum } from "../components/Shelf";
+import { OneIdea } from "../components/LandingStory";
 import { Advanced } from "../components/Advanced";
 import type { Explanation } from "../explanations/schema";
+import { START_LEARNING } from "../app/copy";
 
 /**
  * Layouts for the landing grid, in the order the tiles are placed. Each one fills three columns by three rows
@@ -74,8 +77,8 @@ export const HERO_POOLS = [
   ["g2-hundreds", "g1-tensones", "g2-regroup", "g6-lcm", "g3-area", "g7-prob", "g1-time"],
   ["g9-solvefactor", "g11-log", "g12-tangent", "g8-roots", "g10-pyramid", "g9-factor", "g11-complex"],
 ];
-/** The big tile starts first, the others a beat later each; a change waits until no other tile changed for this long. */
-const HOLD = 1200;
+/** Each tile shows its finished picture this long before it plays (G 2026-10-03: open on the finished picture); the big tile starts first, the others a beat later each; a change waits until no other tile changed for GAP. */
+const HOLD = 3000;
 const STAGGER = 600, GAP = 1200;
 
 type Shot = { id: string; grade: number; ex: Pictured };
@@ -103,7 +106,7 @@ function HeroTile({ shot, n, big, start, next }: { shot: Shot; n: number; big: b
   const g = gradeOf(shot.grade), entry = entryById(shot.id);
   return (
     // the card stays put; only what's inside it fades over to the next picture
-    <figure className={`lhpic${big ? "" : " sm"}`} style={tintStyle(g) as CSSProperties} onClick={next}>
+    <figure className={`lhpic gpal${big ? "" : " sm"}`} data-grade={shot.grade} style={tintStyle(g) as CSSProperties} onClick={next}>
       <figcaption key={`c${n}`}><GradeNum grade={shot.grade} /><span><small>See it first</small><b>{entry?.title ?? shot.id}</b></span></figcaption>
       <div className="lhd" key={`d${n}`}><PlayingDiagram ex={shot.ex} hold={hold} /></div>
     </figure>
@@ -135,29 +138,30 @@ function HeroPictures({ rng }: { rng: Rng }) {
   return <>{tiles.map((t, i) => <HeroTile key={i} shot={t.shot} n={t.n} big={i === 0} start={i * STAGGER} next={nexts[i]!} />)}</>;
 }
 
-/** The first screen on a new device: what Bento is, the real thing working, and the grade shelf to start from. */
-export function Welcome({ shelf = false }: { shelf?: boolean }) {
-  const { chooseGrade, deps } = useApp();
+/** The first screen on a new device: what Bento is, the real thing working, and one idea climbing from K to 12th. */
+/** preview and dev builds carry the design sandbox; on the landing page its way in is the footer */
+const SANDBOX = import.meta.env.MODE === "preview" || import.meta.env.MODE === "development";
+
+export function Welcome() {
+  const { deps, go, progress, openSheet } = useApp();
   const rng = useMemo(() => deps().rng, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const toShelf = () => document.getElementById("lshelf")?.scrollIntoView?.({ behavior: reduceMotion() ? "auto" : "smooth", block: "start" });
-  // sent here to choose a grade: open at the shelf
-  useEffect(() => { if (shelf) document.getElementById("lshelf")?.scrollIntoView?.({ block: "start" }); }, [shelf]);
+  // Start learning is the one way in: grades are chosen in the app, in picker D, with nothing picked (G 2026-10-06)
+  const start = () => { go({ name: "home" }, "fwd"); if (progress.grade != null) openSheet(true); };
   return (
     <div className="land">
       <section className="lhero">
         <h1>Math that <span>clicks.</span></h1>
         <p>Watch each idea play out, then solve it one step at a time. If you slip, Bento shows you the exact step and why.</p>
-        <div className="lcta"><button className="ctl go" onClick={toShelf}>Choose your grade</button><span>Free. No account.</span></div>
+        <div className="lcta"><Pill go onClick={start}>{START_LEARNING}</Pill><span>Start free. No account.</span></div>
       </section>
       <section className="lhbox">
         <HeroPictures rng={rng} />
       </section>
-      <section className="lsec" id="lshelf"><h2>Every grade, K to 12th.</h2><p>Each grade is a book of chapters. Start in any one and switch whenever you like.</p></section>
-      <div className="lshelf"><Shelf current={null} onPick={chooseGrade} /></div>
+      <OneIdea rng={rng} />
       <section className="lsec"><h2>Everything in one box.</h2><p>Lessons, plus everything that helps them stick.</p></section>
       <FeatureBox rng={rng} />
       <Advanced />
-      <footer className="lfoot">Bento · Kindergarten to 12th grade</footer>
+      <footer className="lfoot">Bento · Kindergarten to 12th grade{SANDBOX && <> · <button className="tlink" onClick={() => dispatchEvent(new Event("bento:sandbox"))}>Sandbox</button></>}</footer>
     </div>
   );
 }

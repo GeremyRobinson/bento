@@ -74,7 +74,8 @@ function answers(p: EstimateProblem): AnswerModel {
 }
 
 // a centimeter ruler only as long as the picture needs, so its numbers stay readable
-const spec = (p: EstimateProblem) => ({ unit: UNITS[p.unit]!.abbr, max: p.unit ? Math.max(10, p.start + p.len + 2) : UNITS[0]!.max, start: p.start, len: p.len, thing: THINGS[p.unit]![p.thing]!.name });
+// the ruler runs just past the thing, not always to 12 inches, so the picture stays big enough to read on a phone (v43)
+const spec = (p: EstimateProblem) => ({ unit: UNITS[p.unit]!.abbr, max: p.unit ? Math.max(10, p.start + p.len + 2) : Math.min(UNITS[0]!.max, Math.max(6, p.start + p.len + 2)), start: p.start, len: p.len, thing: THINGS[p.unit]![p.thing]!.name });
 const alt = (p: EstimateProblem) => `A ${THINGS[p.unit]![p.thing]!.name} above ${p.unit ? "a centimeter ruler, with a centimeter cube" : "an inch ruler, with a paper clip"} beside it.`;
 
 function explain(p: EstimateProblem, model: AnswerModel): Explanation {

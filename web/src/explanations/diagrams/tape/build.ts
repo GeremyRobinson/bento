@@ -9,6 +9,8 @@ const M = 10; // outer margin
 const BRACKET = 28; // room for a bracket and its text
 const FS = { label: 15, total: 17, each: 12, bracket: 15 };
 const EPS = 1e-9;
+/** narrowest a shaded piece is drawn, in px */
+const MIN_FILL = 9;
 
 /** Rough width of text in the picture fonts. */
 export const textWidth = (s: string, size: number) => s.length * size * 0.62;
@@ -91,7 +93,8 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
   // a label or total: a stacked fraction when there is room, otherwise one line
   const textAt = (t: TapeText, cx: number, cy: number, cls: string, anchor: "end" | "start" | "middle", run: { from: number; until?: number }) => {
     const m = L.stacked ? t.text.match(FRAC) : null;
-    const c = `${cls}${t.acc ? " acc" : ""}`;
+    // a "?" is the unknown, so it's amber; a total that isn't is ink (the whole), never a part color
+    const c = `${cls}${t.acc || t.text === "?" ? " acc" : ""}`;
     if (!m) {
       push({ type: "text", x: r1(cx), y: r1(cy), text: t.text, cls: `${c}${anchor === "middle" ? "" : ` ${anchor}`}`, enter: "rise", ...when(run.from, run.until) });
       return;
@@ -133,14 +136,16 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
         for (let i = 0; i < lay.count; i++) {
           const p0 = start + i * pu, p1 = p0 + pu, lo = Math.max(fill.a, p0), hi = Math.min(fill.b, p1);
           if (hi - lo < EPS) continue;
-          const xa = X(lo) + (Math.abs(lo - p0) < EPS ? ins : 0), xb = X(hi) - (Math.abs(hi - p1) < EPS ? ins : 0);
+          const xa = X(lo) + (Math.abs(lo - p0) < EPS ? ins : 0);
+          // a sliver (one hundredth past the tenths) keeps a readable minimum width inside its part, not a hairline
+          const xb = Math.max(X(hi) - (Math.abs(hi - p1) < EPS ? ins : 0), Math.min(xa + MIN_FILL, X(p1) - ins));
           push({ type: "rect", x: r1(xa), y: top, w: r1(Math.max(0.5, xb - xa)), h, rx: r1(Math.min(7, (xb - xa) / 3, h / 4)),
-            cls: fill.tone === "cut" ? "seg on cut" : "seg on", ...(fill.tone === "acc" ? { vars: { "--tint": "var(--acc)" } } : {}),
+            cls: fill.tone === "cut" ? "seg on cut" : fill.tone === "two" ? "seg on p1" : "seg on", ...(fill.tone === "acc" ? { vars: { "--tint": "var(--acc)" } } : {}),
             enter, delay: r1(k++ * Math.min(0.06, 0.6 / lay.count) * 100) / 100, ...when(from, until) });
         }
       }
       if (fill.tone === "cut") {
-        push({ type: "line", x1: r1(X(fill.a) + 4), y1: top + h - 5, x2: r1(X(fill.b) - 4), y2: top + 5, cls: "ln2", enter: "draw", delay: 0.4, ...when(run.from, run.until) });
+        push({ type: "line", x1: r1(X(fill.a) + 4), y1: top + h - 5, x2: r1(X(fill.b) - 4), y2: top + 5, cls: "ln p1", enter: "draw", delay: 0.4, ...when(run.from, run.until) });
       }
     }
 
@@ -197,7 +202,7 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
     }
     for (const t of row.total ?? []) {
       const run = within(t.from ?? 0, t.until, row);
-      if (run) textAt(t, X(start + row.length) + 10, top + h / 2, "lbl", "start", run);
+      if (run) textAt(t, X(start + row.length) + 10, top + h / 2, "lbl pw", "start", run);
     }
   });
 

@@ -36,8 +36,9 @@ export function buildFracGrid(spec: FracGridSpec): SceneDiagram {
   const box = (i: number, j: number, inset: number) => ({ x: r1(left + j * cell + inset), y: r1(top + i * cell + inset), w: r1(cell - 2 * inset), h: r1(cell - 2 * inset) });
   for (let i = 0; i < rows; i++) for (let j = 0; j < cols; j++) items.push({ type: "rect", ...box(i, j, 2), rx: 6, cls: "seg", from: beats.grid, enter: "fade", delay: (i * cols + j) * 0.01 });
   for (let i = 0; i < r; i++) for (let j = 0; j < cols; j++) items.push({ type: "rect", ...box(i, j, 2), rx: 6, cls: "shadeA", from: beats.rows, enter: "fade", delay: 0.2 + i * 0.15 });
-  for (let j = 0; j < c; j++) for (let i = 0; i < rows; i++) items.push({ type: "rect", ...box(i, j, 2), rx: 6, cls: "shadeB", from: beats.cols, enter: "fade", delay: 0.2 + j * 0.15 });
-  for (let i = 0; i < r; i++) for (let j = 0; j < c; j++) items.push({ type: "rect", ...box(i, j, 6), rx: 4, cls: "both", from: beats.both, enter: "pop", delay: 0.2 + (i * c + j) * 0.06 });
+  for (let j = 0; j < c; j++) for (let i = 0; i < rows; i++) items.push({ type: "rect", ...box(i, j, 2), rx: 6, cls: "shadeA p1", from: beats.cols, enter: "fade", delay: 0.2 + j * 0.15 });
+  for (let i = 0; i < r; i++) for (let j = 0; j < c; j++) items.push({ type: "rect", ...box(i, j, 6), rx: 4, cls: "both pq", from: beats.both, enter: "pop", delay: 0.2 + (i * c + j) * 0.06 });
+  // roles (handoff-6): the first fraction (rows) blue, the second (columns) orange, the overlap being found amber
   // brackets along the shaded rows (left) and the shaded columns (top), with their fractions
   if (r > 0) {
     const y0 = top + 2, y1 = top + r * cell - 2, x = left - 10;
@@ -46,8 +47,8 @@ export function buildFracGrid(spec: FracGridSpec): SceneDiagram {
   }
   if (c > 0) {
     const x0 = left + 2, x1 = left + c * cell - 2, y = top - 10;
-    items.push({ type: "path", d: `M${r1(x0)} ${r1(y + 6)} V${r1(y)} H${r1(x1)} V${r1(y + 6)}`, cls: "ln2", from: beats.cols, enter: "draw" });
-    items.push({ type: "text", x: r1((x0 + x1) / 2), y: r1(y - 12), text: spec.colLabel, cls: "lbl acc", from: beats.cols, enter: "rise", delay: 0.3 });
+    items.push({ type: "path", d: `M${r1(x0)} ${r1(y + 6)} V${r1(y)} H${r1(x1)} V${r1(y + 6)}`, cls: "ln p1", from: beats.cols, enter: "draw" });
+    items.push({ type: "text", x: r1((x0 + x1) / 2), y: r1(y - 12), text: spec.colLabel, cls: "lbl p1", from: beats.cols, enter: "rise", delay: 0.3 });
   }
   const gridH = rows * cell, notes = spec.notes ?? [];
   const noteW = Math.max(0, ...notes.map(n => n.text.length * 10.2));

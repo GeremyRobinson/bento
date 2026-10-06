@@ -1,116 +1,111 @@
 /* ---- welcome: Bento's front door. The real thing working, in one box, then the shelf to start from ---- */
-.land{max-width:1120px;margin:0 auto;display:grid;gap:var(--s);padding:0 4px calc(var(--u) * 2)}
-.lhero{display:grid;justify-items:center;gap:calc(var(--u) + 4px);text-align:center;padding:calc(var(--u) * 3.5) var(--u) calc(var(--u) * 2);animation:rise .7s var(--ease) both}
-.lhero h1{font:650 clamp(46px,9vw,104px)/.96 var(--sans);letter-spacing:-.05em;text-wrap:balance}
+.land{max-width:1120px;margin:0 auto;display:grid;gap:var(--s);padding:0 var(--sp-1) calc(var(--u) * 2)}
+.lhero{display:grid;justify-items:center;gap:calc(var(--u) + var(--sp-1));text-align:center;padding:calc(var(--u) * 3.5) var(--u) calc(var(--u) * 2);animation:rise var(--dur-700) var(--ease) both}
+.lhero h1{font:var(--w-bold) clamp(46px,9vw,104px)/.96 var(--sans);letter-spacing:-.05em;text-wrap:balance}
 .lhero p{max-width:560px;font-size:calc(var(--fs) * 1.12);line-height:1.5;color:var(--muted);font-weight:var(--w-mid);text-wrap:pretty}
-.lcta{display:flex;align-items:center;gap:var(--u);flex-wrap:wrap;justify-content:center;margin-top:4px}
-.lcta .ctl.go{--tint:#1b1d22;--ink:#1b1d22;height:52px;padding:0 28px;font-size:17px;font-weight:650}
+.lcta{display:flex;align-items:center;gap:var(--u);flex-wrap:wrap;justify-content:center;margin-top:var(--sp-1)}
+.lcta .ctl.go{--tint:var(--cta-ink);--ink:var(--cta-ink);--pill-h:var(--float-h);--pill-pad:var(--sp-7);--pill-weight:var(--w-bold);font-size:var(--fz-lg)}
 .lcta>span{color:var(--muted);font-size:var(--small);font-weight:var(--w-mid)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .lcta .ctl.go{background:#eef0f4 !important;color:#14161b !important}}
-:root[data-theme="dark"] .lcta .ctl.go{background:#eef0f4 !important;color:#14161b !important}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .lcta .ctl.go{background:var(--cta-ink-dark) !important;color:var(--cta-text-dark) !important}}
+:root[data-theme="dark"] .lcta .ctl.go{background:var(--cta-ink-dark) !important;color:var(--cta-text-dark) !important}
 
 /* the hero box: a lesson's picture playing, a problem solving itself, and a slip being explained */
 /* the hero box: one big moving picture and two smaller ones beside it (below it on narrower screens, stacked on phones) */
 .lhbox{display:grid;gap:var(--s);grid-template-columns:repeat(2,minmax(0,1fr))}
 .lhpic:not(.sm){grid-column:1 / -1}
 @media (min-width:960px){.lhbox{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(250px,auto))}.lhpic:not(.sm){grid-column:span 2;grid-row:span 2}.lhpic.sm{grid-column:span 2}}
-.lhpic{margin:0;background:var(--card);border-radius:var(--r-panel);padding:calc(var(--u) + 4px);display:grid;grid-template-rows:auto 1fr;gap:var(--u);cursor:pointer;box-shadow:0 0 0 1px var(--rule);animation:fadeIn .7s var(--ease) both;min-height:340px}
+.lhpic{margin:0;background:var(--surf-2,var(--card));border-radius:var(--r-panel);padding:var(--pad-lg);display:grid;grid-template-rows:auto 1fr;gap:var(--u);cursor:pointer;box-shadow:var(--ring);animation:fadeIn var(--dur-700) var(--ease) both;min-height:340px}
 .lhpic figcaption{display:flex;align-items:center;gap:14px;min-width:0}
 .lhpic .gnum{font-size:40px;flex:none;white-space:nowrap}
 .lhero h1 span{display:block}
 .lhpic figcaption>span:not(.gnum){display:grid;gap:2px;min-width:0}
-.lhpic figcaption>span:not(.gnum) small{font-size:13px;font-weight:550;color:var(--muted)}
-.lhpic b{font-size:calc(var(--fs) * 1.05);font-weight:650;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lhpic figcaption>span:not(.gnum) small{font-size:var(--fz-xs);font-weight:var(--w-mid);color:var(--muted)}
+.lhpic b{font-size:calc(var(--fs) * 1.05);font-weight:var(--w-bold);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lhpic .lhd{display:grid;align-items:center;min-height:0}
-.lhpic figcaption,.lhpic .lhd{animation:fadeIn .6s var(--ease) both}
+.lhpic figcaption,.lhpic .lhd{animation:fadeIn var(--dur-600) var(--ease) both}
 .lhpic .viz{align-self:center;min-height:0}
 .lhpic .viz-cap,.lhpic .replay{display:none}
 .lhpic .viz-svg,.lhpic .am{max-height:400px;width:100%}
 .lhpic.sm{min-height:250px;padding:var(--u)}
 .lhpic.sm .gnum{font-size:30px}
 .lhpic.sm .viz-svg,.lhpic.sm .am{max-height:220px}
+/* side by side, a small tile's caption starts as far down as the big one's, so the two titles share a baseline */
+@media (min-width:960px){.lhpic.sm{padding-top:var(--pad-lg)}}
 @media (max-width:699px){.lhbox{grid-template-columns:minmax(0,1fr)}.lhpic{min-height:300px}.lhpic.sm{min-height:260px}}
 
 /* section heads */
-.lsec{display:grid;justify-items:center;gap:8px;text-align:center;padding:calc(var(--u) * 4) var(--u) var(--u)}
-.lsec h2{font:650 clamp(32px,5vw,56px)/1.02 var(--sans);letter-spacing:-.04em}
+.lsec{display:grid;justify-items:center;gap:var(--sp-2);text-align:center;padding:calc(var(--u) * 4) var(--u) var(--u)}
+.lsec h2{font:var(--w-bold) clamp(32px,5vw,56px)/1.02 var(--sans);letter-spacing:-.04em}
 .lsec p{max-width:520px;color:var(--muted);font-weight:var(--w-mid);line-height:1.5;font-size:calc(var(--fs) * 1.02);text-wrap:pretty}
 
-/* the grade picker is the same shelf as the book's contents */
-.lshelf .book{animation:rise .5s var(--ease) both}
-@media (min-width:900px){.lshelf .shelf{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:calc(var(--u) * 1.5)}}
-@media (max-width:699px){
-  .lshelf .sbooks{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .lshelf .book{height:128px;padding:12px 12px 14px;gap:4px}
-  .lshelf .book .gnum{font-size:34px}
-  .lshelf .book .gnum small{font-size:14px;top:2px}
-  .lshelf .book b{font-size:13px}
-  .lshelf .book .bcount{font-size:12px}
-}
 
 /* the feature box: every tile is a small working piece of the app */
 .lbox{display:grid;gap:var(--s);grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(232px,auto);grid-auto-flow:row dense}
 @media (min-width:960px){.lbox{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(272px,auto)}}
 .ltile.wide{grid-column:span 2}
 .ltile.tall{grid-row:span 2}
-.ltile{min-width:0;background:var(--card);border-radius:var(--r-panel);padding:calc(var(--u) + 4px);display:grid;grid-template-rows:1fr auto;gap:var(--u);box-shadow:0 0 0 1px var(--rule);animation:rise .6s var(--ease) both;animation-delay:calc(var(--i) * 50ms)}
+.ltile{min-width:0;background:var(--surf-2,var(--card));border-radius:var(--r-panel);padding:var(--pad-lg);display:grid;grid-template-rows:1fr auto;gap:var(--u);box-shadow:var(--ring);animation:rise var(--dur-600) var(--ease) both;animation-delay:calc(var(--i) * var(--dur-50))}
 .lvis{display:grid;place-items:center;min-height:0}
-.ltext{display:grid;gap:4px}
-.ltext h3{font-size:calc(var(--fs) * 1.05);font-weight:650;letter-spacing:-.01em}
+.ltext{display:grid;gap:var(--sp-1)}
+.ltext h3{font-size:calc(var(--fs) * 1.05);font-weight:var(--w-bold);letter-spacing:-.01em}
 .ltext p{color:var(--muted);font-weight:var(--w-mid);line-height:1.45;font-size:calc(var(--fs) * .9);text-wrap:pretty}
-@media (max-width:699px){.ltile:not(.wide) .ltext p{font-size:14px}.ltile{padding:var(--u)}}
+@media (max-width:699px){.ltile:not(.wide) .ltext p{font-size:var(--fz-sm)}.ltile{padding:var(--u)}}
 
 .ltoday{list-style:none;margin:0;padding:0;display:grid;gap:6px;width:100%}
-.ltoday li{display:flex;align-items:center;gap:12px;padding:8px 16px 8px 10px;border-radius:999px;background:var(--well);transition:background .4s var(--ease)}
+.ltoday li{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-4) var(--sp-2) 10px;border-radius:var(--r-pill);background:var(--well);transition:background var(--dur-400) var(--ease)}
 .ltoday li.now{background:var(--tint-soft)}
 .ltoday li>span:last-child{display:grid;gap:1px;min-width:0}
-.ltoday small{font-size:12px;font-weight:550;color:var(--muted)}
-.ltoday b{font-size:15px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lmark{flex:none;width:26px;height:26px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--faint);display:grid;place-items:center;transition:background .3s,box-shadow .3s}
+.ltoday small{font-size:var(--fz-2xs);font-weight:var(--w-mid);color:var(--muted)}
+.ltoday b{font-size:var(--small);font-weight:var(--w-bold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lmark{flex:none;width:26px;height:26px;border-radius:var(--r-round);box-shadow:inset 0 0 0 2px var(--faint);display:grid;place-items:center;transition:background var(--dur-300),box-shadow var(--dur-300)}
 .ltoday li.now .lmark{box-shadow:inset 0 0 0 2px var(--ink)}
-.ltoday li.done .lmark{background:var(--ok);box-shadow:none}
-.lmark svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:16;animation:tick .35s var(--ease) both}
+/* done is ink, not green: green only ever means a right answer */
+.ltoday li.done .lmark{background:var(--ink);box-shadow:none}
+.ltoday li.done .lmark svg{stroke:var(--card)}
+.lmark svg{width:16px;height:16px;fill:none;stroke:var(--on-tint);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:16;animation:tick var(--dur-350) var(--ease) both}
 @keyframes tick{from{stroke-dashoffset:16}}
 
-.lfacts{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:4px;width:100%;max-width:300px}
-.lfacts span{aspect-ratio:1;border-radius:8px;display:grid;place-items:center;font:550 clamp(10px,1.3vw,14px)/1 var(--num);font-variant-numeric:tabular-nums;color:var(--muted);
-  background:color-mix(in srgb,var(--tint) calc(var(--lv) * 30%),var(--well));transition:background .5s var(--ease),color .5s}
-.lfacts span.k{color:var(--on-tint);font-weight:650}
+.lfacts{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:var(--sp-1);width:100%;max-width:300px}
+.lfacts span{aspect-ratio:1;border-radius:var(--r-sm);display:grid;place-items:center;font:var(--w-mid) clamp(10px,1.3vw,14px)/1 var(--num);font-variant-numeric:tabular-nums;color:var(--muted);
+  background:color-mix(in srgb,var(--tint) calc(var(--lv) * 30%),var(--well));transition:background var(--dur-500) var(--ease),color var(--dur-500)}
+.lfacts span.k{color:var(--on-tint);font-weight:var(--w-bold)}
 
-.lbatt{display:flex;flex-direction:column;gap:6px;width:min(100%,210px);height:150px;padding:14px 18px 16px;border-radius:calc(var(--r-panel) - 8px);background:var(--page);box-shadow:0 0 0 1px var(--rule);text-align:left}
-.lbatt b{font-size:14px;font-weight:650;line-height:1.3}
+.lbatt{display:flex;flex-direction:column;gap:6px;width:min(100%,210px);height:150px;padding:14px 18px var(--sp-4);border-radius:calc(var(--r-panel) - var(--nest));background:var(--page);box-shadow:var(--ring);text-align:left}
+.lbatt b{font-size:var(--fz-sm);font-weight:var(--w-bold);line-height:1.3}
 .lbatt .gnum{font-size:40px}
 
-.lbook{display:grid;grid-template-columns:repeat(3,28px);grid-auto-rows:36px;gap:6px;padding:10px;border-radius:16px;transition:transform .8s var(--ease),background .8s}
-.lbook span{border-radius:7px;background:var(--well);transition:opacity .6s var(--ease),transform .8s var(--ease),background .6s}
-.lbook .page{background:var(--tint);position:relative;z-index:1}
+.lbook{display:grid;grid-template-columns:repeat(3,28px);grid-auto-rows:36px;gap:6px;padding:10px;border-radius:var(--r-lg);transition:transform var(--dur-800) var(--ease),background var(--dur-800)}
+.lbook span{border-radius:7px;background:var(--well);transition:opacity var(--dur-600) var(--ease),transform var(--dur-800) var(--ease),background var(--dur-600)}
+.lbook .page{background:var(--tint);position:relative;z-index:var(--z-up)}
 .lbook.z0 span:not(.page){opacity:0}
 .lbook.z0 .page{transform:scale(3.6);border-radius:3px}
 .lbook.z1 .page{transform:none}
 .lbook.z2{transform:scale(.72);background:var(--tint-soft)}
 .lbook.z2 span:not(.page){background:color-mix(in srgb,var(--tint) 30%,var(--card))}
 
-.lreport{display:grid;gap:12px;width:100%}
-.lreport>div{display:grid;grid-template-columns:minmax(0,9fr) minmax(0,8fr) 28px;align-items:center;gap:12px;font-size:14px;font-weight:550}
+.lreport{display:grid;gap:var(--sp-3);width:100%}
+.lreport>div{display:grid;grid-template-columns:minmax(0,9fr) minmax(0,8fr) 28px;align-items:center;gap:var(--sp-3);font-size:var(--fz-sm);font-weight:var(--w-mid)}
 .lreport span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lreport i{height:10px;border-radius:999px;background:var(--well);position:relative;overflow:hidden}
-.lreport i::after{content:"";position:absolute;inset:0 auto 0 0;width:calc(var(--w) * 100%);border-radius:inherit;background:var(--ink);transform-origin:left;animation:grow .9s var(--ease) both;animation-delay:calc(var(--d) * 140ms + 150ms)}
+.lreport i{height:10px;border-radius:var(--r-pill);background:var(--well);position:relative;overflow:hidden}
+.lreport i::after{content:"";position:absolute;inset:0 auto 0 0;width:calc(var(--w) * 100%);border-radius:inherit;background:var(--ink);transform-origin:left;animation:grow var(--dur-900) var(--ease) both;animation-delay:calc(var(--d) * var(--dur-140) + var(--dur-150))}
 @keyframes grow{from{transform:scaleX(0)}}
-.lreport b{font-weight:650;font-variant-numeric:tabular-nums;text-align:right}
+.lreport b{font-weight:var(--w-bold);font-variant-numeric:tabular-nums;text-align:right}
 
 .lhelp{display:grid;gap:6px;justify-items:center}
-.lhelp span{padding:8px 18px;border-radius:999px;background:var(--well);font-size:15px;font-weight:650;color:var(--muted);transition:background .5s var(--ease),color .5s,opacity .5s,transform .5s var(--spring)}
+.lhelp span{padding:var(--sp-2) 18px;border-radius:var(--r-pill);background:var(--well);font-size:var(--small);font-weight:var(--w-bold);color:var(--muted);transition:background var(--dur-500) var(--ease),color var(--dur-500),opacity var(--dur-500),transform var(--dur-500) var(--spring)}
 .lhelp span.on{background:var(--ink);color:var(--on-tint);transform:scale(1.06)}
 .lhelp span.gone{opacity:.3;transform:scale(.94)}
 
 .lreview{display:grid;place-items:center;width:100%}
-.lreview span{grid-area:1/1;padding:14px 22px;border-radius:18px;background:var(--card);box-shadow:0 0 0 1px var(--rule),0 10px 24px -14px rgba(15,20,30,.35);font:650 20px/1 var(--num);font-variant-numeric:tabular-nums;white-space:nowrap;
-  transform:translateY(calc(var(--j) * 14px)) scale(calc(1 - var(--j) * .08));z-index:calc(3 - var(--j));opacity:calc(1 - var(--j) * .3);animation:rise .5s var(--ease) both}
+.lreview span{grid-area:1/1;padding:14px 22px;border-radius:18px;background:var(--card);box-shadow:0 0 0 1px var(--rule),0 10px 24px -14px var(--ink-a35);font:var(--w-bold) 20px/1 var(--num);font-variant-numeric:tabular-nums;white-space:nowrap;
+  transform:translateY(calc(var(--j) * 14px)) scale(calc(1 - var(--j) * .08));z-index:calc(3 - var(--j));opacity:calc(1 - var(--j) * .3);transition:transform var(--dur-500) var(--ease),opacity var(--dur-500) var(--ease)}
 .lreview span.top{color:var(--ink)}
+/* the stack is whole from the first frame; each beat only the card joining at the back rises in (Review v43 #20) */
+.lreview span.new{animation:rise var(--dur-500) var(--ease) both}
 
 .lcount{display:grid;justify-items:center;gap:2px}
-.lcount b{font:650 clamp(60px,8vw,92px)/1 var(--sans);letter-spacing:-.05em;color:var(--display,var(--ink));font-variant-numeric:tabular-nums}
-.lcount span{color:var(--muted);font-weight:550}
+.lcount b{font:var(--w-bold) clamp(60px,8vw,92px)/1 var(--sans);letter-spacing:-.05em;color:var(--display,var(--ink));font-variant-numeric:tabular-nums}
+.lcount span{color:var(--muted);font-weight:var(--w-mid)}
 .lprivate svg{width:72px;height:72px;fill:none;stroke:var(--ink);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
 .lprivate circle{fill:var(--ink);stroke:none}
 .lfoot{text-align:center;color:var(--muted);font-size:var(--small);font-weight:var(--w-mid);padding-top:calc(var(--u) * 2)}
@@ -118,69 +113,179 @@
 
 /* "One step at a time" and "Slips, explained": wide feature tiles whose steps stack from the top and play in turn; a tap brings another */
 .ldemo{cursor:pointer;-webkit-user-select:none;user-select:none}
-.ldemo .lvis{place-items:stretch;align-content:start;gap:8px}
-.lchip{flex:none;font-size:12px;line-height:22px;padding:0 9px;border-radius:999px;background:var(--tint-soft);color:var(--ink);font-weight:var(--w-bold);font-family:var(--sans)}
+.ldemo .lvis{place-items:stretch;align-content:start;gap:var(--sp-2)}
+.lchip{flex:none;font-size:var(--fz-2xs);line-height:22px;padding:0 9px;border-radius:var(--r-pill);background:var(--tint-soft);color:var(--ink);font-weight:var(--w-bold);font-family:var(--sans)}
 .lsteps,.lmiss{display:grid;gap:6px;font-family:var(--num);align-content:start}
 .lsteps .q,.lmiss .q{display:flex;align-items:center;justify-content:space-between;gap:var(--u);font-size:calc(var(--fs) * 1.45);margin:0 0 2px}
-.lsteps>div:not(.q),.lmiss .bad,.lmiss .good{display:flex;align-items:center;justify-content:space-between;gap:var(--u);padding:7px 14px;border-radius:999px;background:var(--well);font-size:var(--fs)}
-.lsteps b{color:var(--ink);font-weight:650}
+.lsteps>div:not(.q),.lmiss .bad,.lmiss .good{display:flex;align-items:center;justify-content:space-between;gap:var(--u);padding:7px 14px;border-radius:var(--r-pill);background:var(--well);font-size:var(--fs)}
+.lsteps b{color:var(--ink);font-weight:var(--w-bold)}
 .lsteps .sum{background:var(--tint-soft)}
 .lsteps>div:not(.q)>span{color:var(--muted);font-family:var(--sans);font-weight:var(--w-mid);font-size:calc(var(--fs) * .92)}
 .lmiss .bad{background:color-mix(in srgb,var(--err) 12%,var(--card))}
-.lmiss .bad b{color:var(--err-ink);font-weight:650;position:relative}
-.lmiss .bad b::after{content:"";position:absolute;left:-3px;right:-3px;top:52%;height:2px;border-radius:2px;background:currentColor;transform-origin:left;transform:scaleX(0);transition:transform .35s var(--ease) .15s}
+.lmiss .bad b{color:var(--err-ink);font-weight:var(--w-bold);position:relative}
+.lmiss .bad b::after{content:"";position:absolute;left:-3px;right:-3px;top:52%;height:2px;border-radius:2px;background:currentColor;transform-origin:left;transform:scaleX(0);transition:transform var(--dur-350) var(--ease) var(--dur-150)}
 .lmiss .bad.shook b::after{transform:scaleX(1)}
 .lmiss p{font-family:var(--sans);color:var(--text);line-height:1.45;font-size:calc(var(--fs) * .92)}
 .lmiss p b{color:var(--err-ink)}
 .lmiss .good{background:color-mix(in srgb,var(--ok) 14%,var(--card))}
-.lmiss .good b{color:var(--ok-ink);font-weight:650}
-.ldemo .lsteps>div,.ldemo .lmiss>div,.ldemo .lmiss p{transition:opacity .45s var(--ease),transform .45s var(--ease)}
+.lmiss .good b{color:var(--ok-ink);font-weight:var(--w-bold)}
+.ldemo .lsteps>div,.ldemo .lmiss>div,.ldemo .lmiss p{transition:opacity var(--dur-450) var(--ease),transform var(--dur-450) var(--ease)}
 /* rows still to come wait as faint pills with their answers hidden, so the tile is never an empty band */
 .ldemo .off{opacity:.4}
 .ldemo .off b{opacity:0}
-.ldemo .lmiss p.off{opacity:0;transform:translateY(6px)}
-.ldemo .lsteps>div.on b,.lmiss .good.on b{animation:popIn .4s var(--ease) .25s both;display:inline-block}
-.ldemo .shook{animation:shake .5s ease .2s both}
-.lnew{justify-self:end;font-size:12px;font-weight:var(--w-bold);color:var(--muted)}
+/* a slip's why and fix are there from its first frame, faint, and light up on their beat (Review v43 #20) */
+.ldemo .lmiss .off b{opacity:1}
+.ldemo .lsteps:not(.rest)>div.on b{animation:popIn var(--dur-400) var(--ease) var(--dur-250) both;display:inline-block}
+.ldemo :not(.rest)>.shook{animation:shake var(--dur-500) ease var(--dur-200) both}
+/* the first demo opens finished: nothing in it plays an entrance */
+.ldemo .rest,.ldemo .rest *{animation:none}
+.lnew{justify-self:end;font-size:var(--fz-2xs);font-weight:var(--w-bold);color:var(--muted)}
 
 /* ---- Bento Advanced: the AP line, introduced like a pro product. Always on its own dark canvas, in light hairlines. ---- */
-.ladv{--adv-ink:#f5f5f7;--adv-dim:#86868b;--adv-glow:#a78bfa;margin-top:calc(var(--u) * 2);background:radial-gradient(120% 80% at 50% 0%,#1d1b2e 0%,#0a0a0c 62%);color:var(--adv-ink);
-  border-radius:var(--r-panel);padding:calc(var(--u) * 4) calc(var(--u) + 4px) calc(var(--u) * 2.5);display:grid;justify-items:center;text-align:center;gap:calc(var(--u) - 4px);
-  overflow:hidden;color-scheme:dark;animation:rise .8s var(--ease) both}
-.adv-eyebrow{font-size:calc(var(--fs) * .95);font-weight:650;color:var(--adv-dim)}
-.ladv h2{font:650 clamp(44px,8vw,84px)/1 var(--sans);letter-spacing:-.045em;background:linear-gradient(100deg,#f5f5f7 20%,#c4b5fd 55%,#f0abfc 85%);-webkit-background-clip:text;background-clip:text;color:transparent;padding:0 .1em .06em}
-.ladv>p{max-width:560px;color:var(--adv-dim);font-size:calc(var(--fs) * 1.08);line-height:1.5;font-weight:400;text-wrap:pretty}
+.ladv{--adv-ink:#f5f5f7;--adv-dim:#86868b;--adv-glow:#a78bfa;margin-top:calc(var(--u) * 2);background:radial-gradient(120% 80% at 50% 0%,var(--adv-sky) 0%,var(--adv-night) 62%);color:var(--adv-ink);
+  border-radius:var(--r-panel);padding:calc(var(--u) * 4) calc(var(--u) + var(--sp-1)) calc(var(--u) * 2.5);display:grid;justify-items:center;text-align:center;gap:calc(var(--u) - var(--sp-1));
+  overflow:hidden;color-scheme:dark}
+.adv-eyebrow{font-size:calc(var(--fs) * .95);font-weight:var(--w-bold);color:var(--adv-dim)}
+.ladv h2{font:var(--w-bold) clamp(44px,8vw,84px)/1 var(--sans);letter-spacing:-.045em;background:linear-gradient(100deg,var(--adv-ink) 20%,var(--adv-lilac) 55%,var(--adv-pink) 85%);-webkit-background-clip:text;background-clip:text;color:transparent;padding:0 .1em .06em}
+.ladv>p{max-width:560px;color:var(--adv-dim);font-size:calc(var(--fs) * 1.08);line-height:1.5;font-weight:var(--w-regular);text-wrap:pretty}
 .adv-courses{width:100%;display:grid;gap:var(--s);grid-template-columns:repeat(2,minmax(0,1fr));margin-top:calc(var(--u) * 1.5)}
 @media (min-width:900px){.adv-courses{grid-template-columns:repeat(4,minmax(0,1fr))}}
-.adv-course{display:grid;gap:4px;justify-items:start;text-align:left;padding:var(--u);border-radius:var(--r-card);background:rgb(255 255 255 / .04);box-shadow:inset 0 0 0 1px rgb(255 255 255 / .08);animation:rise .7s var(--ease) both}
+.adv-course{display:grid;gap:var(--sp-1);justify-items:start;text-align:left;padding:var(--u);border-radius:var(--r-card);background:var(--adv-card);box-shadow:inset 0 0 0 1px var(--adv-hair);animation:rise var(--dur-700) var(--ease) both}
 .adv-course svg{width:100%;height:auto;margin-bottom:6px;overflow:visible}
-.adv-course h3{font-size:calc(var(--fs) * 1.02);font-weight:650;color:var(--adv-ink);letter-spacing:-.01em}
-.adv-course>span{font-size:12px;font-weight:650;color:var(--adv-dim)}
-.adv-soon{margin-top:calc(var(--u) * 1.5);font-size:var(--small);font-weight:650;color:var(--adv-ink);padding:8px 16px;border-radius:999px;box-shadow:inset 0 0 0 1px rgb(255 255 255 / .22)}
+.adv-course h3{font-size:calc(var(--fs) * 1.02);font-weight:var(--w-bold);color:var(--adv-ink);letter-spacing:-.01em}
+.adv-course>span{font-size:var(--fz-2xs);font-weight:var(--w-bold);color:var(--adv-dim)}
+.adv-soon{margin-top:calc(var(--u) * 1.5);font-size:var(--small);font-weight:var(--w-bold);color:var(--adv-ink);padding:var(--sp-2) var(--sp-4);border-radius:var(--r-pill);box-shadow:inset 0 0 0 1px var(--adv-ring)}
 .adv-line{fill:none;stroke:var(--adv-ink);stroke-width:2;stroke-linecap:round}
-.adv-faint{fill:none;stroke:rgb(255 255 255 / .16);stroke-width:1.25}
+.adv-faint{fill:none;stroke:var(--adv-faint-line);stroke-width:1.25}
 .adv-dash{stroke-dasharray:4 5}
 .adv-fill{fill:color-mix(in srgb,var(--adv-glow) 38%,transparent)}
 .adv-dot{fill:var(--adv-glow)}
-.adv-draw{stroke-dasharray:400;animation:advDraw 2.4s var(--ease) .3s both}
+.adv-draw{stroke-dasharray:400;animation:advDraw var(--dur-2400) var(--ease) var(--dur-300) both}
 @keyframes advDraw{from{stroke-dashoffset:400}}
-.adv-sweep{transform-box:fill-box;transform-origin:left;animation:advSweep 2.6s var(--ease) .6s both}
+.adv-sweep{transform-box:fill-box;transform-origin:left;animation:advSweep var(--dur-2600) var(--ease) var(--dur-600) both}
 @keyframes advSweep{from{transform:scaleX(0)}}
-.adv-grow{transform-box:fill-box;transform-origin:bottom;animation:advGrow .9s var(--spring) both}
+.adv-grow{transform-box:fill-box;transform-origin:bottom;animation:advGrow var(--dur-900) var(--spring) both}
 @keyframes advGrow{from{transform:scaleY(0)}}
-.adv-spin{animation:advSpin 6s linear infinite}
+.adv-spin{animation:advSpin var(--dur-6000) linear infinite}
 @keyframes advSpin{to{transform:rotate(-360deg)}}
-.ladv:not(.in),.ladv:not(.in) *{animation-play-state:paused}
+/* the section and its cards are drawn ahead of time, so a fast scroll never lands on a blank band; only the
+   pictures inside wait to play until they're on screen (Review landing check, item 2) */
+.ladv .adv-course{animation:none}
+.ladv:not(.in) svg,.ladv:not(.in) svg *{animation-play-state:paused}
 
 /* Bento²: the name is the headline */
 .ladv h2{font-size:clamp(64px,13vw,148px);letter-spacing:-.06em;line-height:.95}
-.adv-tag{font:650 clamp(22px,3vw,30px)/1.2 var(--sans);letter-spacing:-.02em;color:var(--adv-ink);margin-top:-4px}
-.adv-trail{fill:var(--adv-glow);opacity:0;animation:advTrail 4s linear infinite}
+.adv-tag{font:var(--w-bold) clamp(22px,3vw,30px)/1.2 var(--sans);letter-spacing:-.02em;color:var(--adv-ink);margin-top:-4px}
+.adv-trail{fill:var(--adv-glow);opacity:0;animation:advTrail var(--dur-4000) linear infinite}
 @keyframes advTrail{0%,8%{opacity:0}20%,70%{opacity:.5}100%{opacity:0}}
-.adv-bend{animation:advBend 5s var(--ease) infinite alternate}
+.adv-bend{animation:advBend var(--dur-5000) var(--ease) infinite alternate}
 @keyframes advBend{from{transform:translateY(0)}to{transform:translateY(3px)}}
-.adv-mass{transform-box:fill-box;transform-origin:center;animation:advPulse 2.6s ease-in-out infinite alternate}
+.adv-mass{transform-box:fill-box;transform-origin:center;animation:advPulse var(--dur-2600) ease-in-out infinite alternate}
 @keyframes advPulse{to{transform:scale(1.35)}}
-.adv-drift{animation:advDrift 5s ease-in-out infinite alternate}
+.adv-drift{animation:advDrift var(--dur-5000) ease-in-out infinite alternate}
 @keyframes advDrift{from{transform:translateX(-26px)}to{transform:translateX(26px)}}
 @media (prefers-reduced-motion:reduce){.adv-trail,.adv-bend,.adv-mass,.adv-drift{animation:none}.adv-trail{opacity:.5}}
+
+/* the landing's pill is the in-app centre pill, and it stays with you as the page scrolls (G 2026-10-06) */
+
+/* ---- the landing's "One idea, K to 12th" section, which replaced the grade shelf (G approved, 2026-10-06) ---- */
+.lsd{display:grid;align-items:center;min-height:0}
+.lsd .viz{min-height:0}.lsd .viz-cap,.lsd .replay{display:none}
+
+/* Bento² teaser: five subjects, one playing at a time, and a dashed tile with more to find */
+.adv-tease{width:100%;display:grid;gap:var(--s);grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(170px,auto);margin-top:calc(var(--u) * 1.5)}
+.adv-tease .adv-course{align-content:end;transition:box-shadow var(--dur-500) var(--ease)}
+.adv-tease .adv-course.on{box-shadow:inset 0 0 0 1px var(--adv-ring),0 0 32px color-mix(in srgb,var(--adv-glow) 16%,transparent)}
+.adv-tease .big{grid-column:span 2;grid-row:span 2}.adv-tease .wide{grid-column:span 2}
+.adv-tease .big h3{font-size:calc(var(--fs) * 1.35)}
+.adv-pic{width:100%;align-self:center}
+.adv-tease .more{grid-column:span 2;background:transparent;box-shadow:none;border:1.5px dashed var(--adv-ring)}
+.adv-ghost{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-2);width:100%;filter:blur(2.5px);opacity:.4}
+.adv-tools{display:flex;flex-wrap:wrap;gap:var(--sp-2);justify-content:center;align-items:center;margin-top:calc(var(--u) * 1.2)}
+.adv-tools small{color:var(--adv-dim);font-weight:var(--w-bold);font-size:var(--fz-2xs,12px);margin-right:var(--sp-1)}
+.adv-tools span{padding:7px 14px;border-radius:var(--r-pill);box-shadow:inset 0 0 0 1px var(--adv-ring);font-size:var(--fz-xs,13px);font-weight:var(--w-mid)}
+.adv-foot{display:flex;gap:var(--sp-3);align-items:center;justify-content:center;flex-wrap:wrap}
+.adv-foot small{color:var(--adv-dim);font-weight:var(--w-bold);font-size:var(--small);margin-top:calc(var(--u) * 1.5)}
+@media (max-width:899px){.adv-tease{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(140px,auto)}.adv-tease .wide{grid-column:span 2}.adv-tease .adv-course:not(.big)>span{display:none}}
+.adv-tease{grid-auto-rows:200px}
+.adv-tease .adv-course{grid-template-rows:minmax(0,1fr) auto auto;align-content:stretch;overflow:hidden}
+.adv-pic{min-height:0;height:100%}.adv-tease .adv-course .adv-pic svg{width:100%;height:100%;margin:0}
+.adv-ghost{min-height:0;height:100%;align-items:center}.adv-ghost svg{height:100%;max-height:110px}
+@media (max-width:899px){.adv-tease{grid-auto-rows:150px}}
+/* one stage, one picture at a time; the five steps beside it (a row of grade numbers on a phone) */
+.lone{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:var(--s);align-items:stretch}
+.lonelist{list-style:none;margin:0;padding:var(--sp-2) 0;display:grid;align-content:center;gap:var(--sp-1)}
+.lonelist li{display:grid;grid-template-columns:64px minmax(0,1fr);align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);border-radius:var(--r-card);opacity:.38;transition:opacity var(--dur-500) var(--ease),background var(--dur-500) var(--ease)}
+.lonelist li.on{opacity:1;background:var(--surf-2,var(--card));box-shadow:var(--ring)}
+.lonelist .gnum{font-size:32px;justify-self:start}
+.lonelist li>span:not(.gnum),.lonepic figcaption>span:not(.gnum){display:grid;gap:2px;min-width:0}
+.lonelist b,.lonepic b{font-weight:var(--w-bold);letter-spacing:-.01em}
+.lonelist small,.lonepic small{color:var(--muted);font-weight:var(--w-mid);font-size:var(--fz-xs,13px)}
+.lonepic{margin:0;background:var(--surf-2,var(--card));border-radius:var(--r-panel);box-shadow:var(--ring);padding:var(--pad-lg);min-height:380px;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:var(--u)}
+/* the new picture draws in place while the last one, on its finished frame, fades out on top: never a blank card */
+.lonepic .lstage{display:grid;min-height:0}
+.lonepic .lstage>.lsd{grid-area:1 / 1}
+.lonepic .lsd.out{z-index:var(--z-up);animation:fadeOut var(--dur-700) var(--ease) forwards;pointer-events:none;background:var(--surf-2,var(--card))}
+/* small pictures (a 2 × 4 array) grow to use the card, up to twice their drawn size */
+.lonepic .lsd .viz-svg{width:min(100%, calc(var(--w) * 2px), calc(320px * var(--w) / var(--h)))}
+.lonepic .lsd .viz-svg,.lonepic .lsd .am{max-height:320px}
+.lonepic figcaption{display:none}
+@media (max-width:899px){
+  .lone{grid-template-columns:minmax(0,1fr)}
+  .lonelist{order:2;display:flex;justify-content:center;gap:6px;padding:0}
+  .lonelist li{display:block;padding:6px 10px}
+  .lonelist li>span:not(.gnum){display:none}
+  .lonelist .gnum{font-size:var(--fz-2xl)}
+  .lonepic{min-height:300px;padding:var(--u)}
+  .lonepic .lsd .viz-svg{width:min(100%, calc(var(--w) * 2px), calc(280px * var(--w) / var(--h)))}
+  .lonepic .lsd .viz-svg,.lonepic .lsd .am{max-height:280px}
+  .lonepic figcaption{display:flex;align-items:center;gap:var(--sp-3);animation:fadeIn var(--dur-600) var(--ease) both}
+  .lonepic .gnum{font-size:30px}
+}
+/* Bento² teaser pictures: real diagrams in light lines and five hues on the dark canvas */
+.tp{--tp-sky:#7dd3fc;--tp-pink:#f472b6;--tp-mint:#6ee7b7;--tp-amber:#fbbf24;--tp-lilac:#c4b5fd;--adv-ink:#f5f5f7;--adv-dim:#9a9aa6}
+.tp{width:100%;height:100%;display:block;overflow:hidden;font-family:var(--sans)}
+.tp text:not([fill]){fill:var(--adv-dim)}
+.tp .tp-math:not([fill]){fill:var(--adv-ink)}.tp .tp-math{font-size:var(--fz-sm);font-weight:var(--w-mid)}
+.tp .tp-sm{font-size:11.5px;font-weight:var(--w-mid)}
+.tp .tp-xs{font-size:10px}
+.tp .tp-lbl{font-size:var(--small);font-weight:var(--w-bold)}
+/* on a phone the 400-wide pictures draw at about 0.72 to 0.8 scale: labels grow so none renders under 11px, and the
+   minor ones that would then crowd the picture step out (v44 sweep #16) */
+@media (max-width:560px){.tp .tp-sm,.tp .tp-xs,.tp .tp-math,.tp .tp-lbl{font-size:15.5px}.tp .tp-minor{display:none}}
+.tp-ghost{stroke:var(--adv-hair);stroke-width:1;fill:none}
+.tp-grid{stroke:var(--adv-faint-line);stroke-width:1;fill:none}
+.tp-eig{stroke:var(--tp-amber);stroke-width:1.2;stroke-dasharray:5 5;opacity:.55}
+.tp-eig2{stroke:var(--tp-sky);stroke-width:1.2;stroke-dasharray:5 5;opacity:.45}
+.tp-area{fill:color-mix(in srgb,var(--tp-amber) 22%,transparent);stroke:var(--tp-amber);stroke-width:1.2}
+.tp-ink-f{fill:var(--adv-ink)}.tp-dim-f{fill:var(--adv-dim)}
+.tp-panel rect{fill:var(--white-a05);stroke:var(--adv-hair)}
+.tp-brk{fill:none;stroke:var(--adv-ink);stroke-width:1.4}
+.tp-path{fill:none;stroke:var(--adv-faint-line);stroke-width:1.4}
+.tp-wedge{fill:color-mix(in srgb,var(--tp-lilac) 30%,transparent);stroke:var(--tp-lilac);stroke-width:1}
+.tp-sun{fill:color-mix(in srgb,var(--tp-amber) 30%,transparent)}
+.tp-trail{fill:none;stroke:var(--tp-sky);stroke-width:2.5;opacity:.45;stroke-linecap:round}
+.tp-r{stroke:var(--adv-dim);stroke-width:1;stroke-dasharray:3 4}
+.tp-wave{fill:none;stroke:var(--tp-sky);stroke-width:1.4;opacity:.55}
+.tp-wall{stroke:var(--adv-ink);stroke-width:4;stroke-linecap:round}
+.tp-ring{fill:none;stroke:var(--tp-sky);stroke-width:1.2}
+.tp-screen{stroke:var(--adv-faint-line);stroke-width:2}
+.tp-hit{fill:var(--tp-lilac);opacity:.85}.tp-hit-new{fill:var(--knob)}
+.tp-curve{fill:none;stroke:var(--tp-pink);stroke-width:2.2}
+.tp-gd{fill:none;stroke:var(--adv-ink);stroke-width:1.6;opacity:.8}
+.tp-axis{stroke:var(--adv-dim);stroke-width:1}
+.tp-loss{fill:none;stroke:var(--tp-pink);stroke-width:2.2;stroke-linejoin:round}
+.adv-tease .adv-course .adv-pic .tp{height:100%}
+/* the pictures are real diagrams, so every subject gets the same full-size card: two across, one across on a phone */
+.adv-tease{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:auto}
+.adv-tease .adv-course,.adv-tease .big,.adv-tease .wide,.adv-tease .more{grid-column:auto;grid-row:auto;grid-template-rows:auto auto auto}
+.adv-tease .big h3{font-size:calc(var(--fs) * 1.02)}
+.adv-tease .adv-pic,.adv-tease .adv-ghost{height:auto;aspect-ratio:400 / 240;max-width:100%}
+.adv-ghost svg{max-height:none}
+@media (max-width:899px){.adv-tease{grid-template-columns:minmax(0,1fr);grid-auto-rows:auto}.adv-tease .adv-course:not(.big)>span{display:block}}
+.tp-mesh{fill:none;stroke:var(--tp-lilac);stroke-width:.9;opacity:.6}
+.tp-walk{fill:none;stroke:var(--tp-amber);stroke-width:2.4;stroke-linecap:round}
+.tp-band{fill:var(--white-a05);stroke:var(--adv-hair)}
+.tp-field{stroke:var(--adv-faint-line);stroke-width:1.3;stroke-linecap:round}
+.tp-hyp{fill:none;stroke:var(--tp-lilac);stroke-width:1;opacity:.45}
+.tp-light{stroke:var(--tp-amber);stroke-width:1.4;stroke-dasharray:5 5}

@@ -26,8 +26,10 @@ describe.each(CATALOG.filter(c => lessonById(c.id) && byId.has(c.id)).map(c => c
   const skip = (field: string) => !!dev[field];
 
   it("has the same place in the curriculum", () => {
-    expect({ grade: lesson.grade, unit: skip("unit") ? fx.meta.unit : lesson.unit, title: lesson.title, pre: lesson.pre ?? null, story: !!lesson.story })
+    expect({ grade: lesson.grade, unit: skip("unit") ? fx.meta.unit : lesson.unit, title: lesson.title, pre: skip("pre") ? fx.meta.pre : lesson.pre ?? null, story: !!lesson.story })
       .toEqual({ grade: fx.meta.grade, unit: fx.meta.unit, title: fx.meta.title, pre: fx.meta.pre, story: fx.meta.story });
+    // a reviewed new `pre` still has to match the catalog's
+    expect(lesson.pre ?? null).toBe(CATALOG.find(c => c.id === id)!.pre);
     expect(lesson.answers(lesson.reference).finalParts).toEqual(fx.meta.final);
   });
 
@@ -35,7 +37,14 @@ describe.each(CATALOG.filter(c => lessonById(c.id) && byId.has(c.id)).map(c => c
     const p = lesson.restore(c.p);
     it("restores the current app's saved problem", () => expect(p).not.toBeNull());
     if (p == null) return;
-    const model = lesson.answers(p);
+    const full = lesson.answers(p);
+    // steps the rebuild reviewed in as new (deviation `added:<stepId>`) have no recording, so they are left out of the comparison
+    const model = { ...full, steps: full.steps.filter(s => !skip(`added:${s.id}`)) };
+
+    it("lists only new steps that really exist", () => {
+      const ids = full.steps.map(s => s.id);
+      for (const key of Object.keys(dev).filter(k => /^(added|answers):/.test(k))) expect(ids, key).toContain(key.split(":")[1]);
+    });
 
     it("shows the same problem", () => {
       if (!skip("show")) expect(squash(legacyText(lesson.display(p)))).toBe(squash(c.showMath));
@@ -47,15 +56,20 @@ describe.each(CATALOG.filter(c => lessonById(c.id) && byId.has(c.id)).map(c => c
       }
     });
 
+    // with a reviewed "steps" deviation (a step added, removed or renamed), each recorded step is matched to the step with
+    // its label, or else to the step in its place
+    const counterpart = (k: number) => (skip("steps") ? model.steps.find(s => s.label === c.steps[k]!.label) ?? model.steps[k] : model.steps[k]);
     it("has the same steps", () => {
       if (!skip("steps")) expect(model.steps.map(s => s.label)).toEqual(c.steps.map(s => s.label));
-      model.steps.forEach((s, k) => {
-        const o = c.steps[k];
-        if (!o) return;
+      c.steps.forEach((o, k) => {
+        const s = counterpart(k);
+        if (!s) return;
         const ctx = `step ${k + 1} (${o.label})`;
         if (!skip("prompt")) expect(squash((s.question ? legacyRich(s.question) : "") + legacyText(s.prompt)), ctx).toBe(squash(o.ask));
         if (!skip("stepNote")) expect(squash(legacyRich(s.note ?? "")), ctx).toBe(squash(o.note));
-        expect(Object.fromEntries(s.slots.map(x => [x.id, x.expected])), ctx).toEqual(o.choices ? { c: o.answer.c } : o.answer);
+        // a reviewed `answers:<stepId>` deviation lets a step ask a different in-between number; the final answer is never excused
+        const changed = skip(`answers:${s.id}`) && !full.finalParts.some(f => (f < 0 ? full.steps.length + f : f) === full.steps.indexOf(s));
+        if (!changed) expect(Object.fromEntries(s.slots.map(x => [x.id, x.expected])), ctx).toEqual(o.choices ? { c: o.answer.c } : o.answer);
         if (!skip("hint")) expect(squash(legacyRich(s.hint)), ctx).toBe(squash(o.hint));
         if (!skip("explain")) expect(squash(legacyRich(s.explain)), ctx).toBe(squash(o.explain));
         if (!skip("work")) expect(squash(legacyText(s.work)), ctx).toBe(squash(o.work));
@@ -65,9 +79,10 @@ describe.each(CATALOG.filter(c => lessonById(c.id) && byId.has(c.id)).map(c => c
 
     it("judges every recorded try the same way", () => {
       if (skip("checks")) return;
-      model.steps.forEach((s, k) => {
-        const o = c.steps[k];
-        if (!o) return;
+      c.steps.forEach((o, k) => {
+        const s = counterpart(k);
+        if (!s) return;
+        if (skip(`answers:${s.id}`)) return; // recorded tries were judged against the old in-between answer
         for (const t of o.checks) {
           const r = checkAnswerStep(s, t.v);
           const got = { ok: r.ok, soft: !r.ok && !!r.soft, kind: !r.ok && !r.soft ? r.kind : null, msg: r.ok ? null : squash(legacyRich(r.message)), generic: !r.ok && !r.soft ? r.generic : false };

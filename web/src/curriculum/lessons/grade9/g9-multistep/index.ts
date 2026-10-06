@@ -6,6 +6,7 @@ import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
 import { block, buildBalance, xTiles } from "../../../../explanations/diagrams/algebra/balance";
 import { count } from "../../../text";
+import { withEasyStart } from "../../easy-start";
 
 /** a(x + b) = a·(x + b). */
 export interface MultiStepEquation { kind: "equation.multiStep"; a: number; b: number; x: number; c: number }
@@ -30,8 +31,10 @@ export function multiStepAnswers({ a, b, x, c }: MultiStepEquation): AnswerModel
     steps: [
       ns({ id: "distribute", l: "Distribute", a: s => [num(a), v(), op("+"), ...s, op("="), num(c)], ans: a * b, h: `Multiply ${f(a)} by ${f(b)} too.`,
         w: [[b, "Only multiplied the first term", `Multiply ${f(a)} by **both** x and ${f(b)}.`]] }),
-      ns({ id: "subtract", l: "Subtract", a: s => [num(a), v(), op("="), ...s], ans: a * x, h: `${f(c)} − ${f(a * b)}.` }),
-      ns({ id: "divide", l: "Divide", a: s => [v(), op("="), ...s], ans: x, h: `${f(a * x)} ÷ ${f(a)}.` }),
+      ns({ id: "subtract", l: "Subtract", a: s => [num(a), v(), op("="), ...s], ans: a * x, h: `To undo + ${f(a * b)}, take ${f(a * b)} off both sides: ${f(c)} − ${f(a * b)}.`,
+        w: [[c + a * b, "Added instead of subtracted", `To undo + ${f(a * b)}, subtract ${f(a * b)} from both sides.`], [c - b, "Took off the number before distributing", `After distributing, the number is ${f(a)} × ${f(b)} = ${f(a * b)}. Take that off.`]] }),
+      ns({ id: "divide", l: "Divide", a: s => [v(), op("="), ...s], ans: x, h: `${f(a)}x means ${f(a)} groups of x. Split both sides into ${f(a)} equal groups.`,
+        w: [[a * x - a, "Subtracted instead of divided", `${f(a)}x is ${f(a)} times x, so divide by ${f(a)}.`]] }),
     ],
     finalParts: [-1],
   };
@@ -48,6 +51,7 @@ export function explainMultiStep(p: MultiStepEquation, model: AnswerModel) {
   ], `A balance with ${count(f(a), "group")} of x and ${f(b)} against ${f(c)}. That is ${f(a)} x's and ${f(ab)}; taking ${f(ab)} off both pans and splitting into ${f(a)} shows x = ${f(x)}.`);
   return beatExplanation({
     heading: "Distribute, then undo",
+    idea: ["A number outside parentheses multiplies everything inside, so multiply it out first.", "Then undo the adding and the multiplying, doing the same thing to both sides so the balance stays level."],
     statement: equation(p),
     diagram,
     alt: diagram.alt,
@@ -60,7 +64,7 @@ export function explainMultiStep(p: MultiStepEquation, model: AnswerModel) {
   });
 }
 
-export const lesson: LessonDefinition<MultiStepEquation> = {
+export const lesson: LessonDefinition<MultiStepEquation> = withEasyStart({
   id: "g9-multistep",
   grade: 9,
   unit: "Equations",
@@ -72,4 +76,4 @@ export const lesson: LessonDefinition<MultiStepEquation> = {
   display: equation,
   answers: multiStepAnswers,
   explain: explainMultiStep,
-};
+});

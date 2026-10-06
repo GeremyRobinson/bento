@@ -39,12 +39,13 @@ export function buildHundredRows(s: HundredRowsSpec): SceneDiagram {
     const v = r * 10 + c + 1, [x, y] = at(v);
     items.push(t(x + CELL / 2, y + CELL / 2, String(v), "sm", { enter: "fade", delay: Math.round(((r - first) * 10 + c) * 0.01 * 100) / 100 }));
   }
-  // the jump curves out past the right side of the two squares, so it never covers a number
-  const x0 = fx + CELL - 4, y0 = fy + CELL / 2, y1 = ty + CELL / 2, bulge = 34;
+  // the jump curves out just past the right side of the two squares, staying clear of the next column's numbers, and its
+  // label sits in the margin right of the chart, level with the jump (v43: "+10" covered 90 and 100 on a phone)
+  const x0 = fx + CELL - 4, y0 = fy + CELL / 2, y1 = ty + CELL / 2, bulge = colOf(s.from) === 9 ? 34 : 18;
   items.push(path([M([x0, y0]), { c: "Q", q: [x0 + bulge, (y0 + y1) / 2], p: [x0 + 2, y1] }], "ln2", { from: s.beats.jump, enter: "draw", delay: 0.2 }));
   const ang = Math.atan2(y1 - (y0 + y1) / 2, x0 + 2 - (x0 + bulge));
   items.push({ ...arrowHead(x0 + 2, y1, ang, 10, { from: s.beats.jump, enter: "fade", delay: 0.9 }), cls: "dota" } as Draft);
-  items.push(t(x0 + bulge / 2 + 10, (y0 + y1) / 2, s.jump, "lbl acc start", { from: s.beats.jump, enter: "rise", delay: 0.5 }));
+  items.push(t(10 * CELL + (colOf(s.from) === 9 ? 30 : 14), (y0 + y1) / 2, s.jump, "lbl acc start", { from: s.beats.jump, enter: "rise", delay: 0.5 }));
   const below = (last - first + 1) * CELL + 30;
   for (const n of s.notes) items.push(t(5 * CELL, below, n.text, "lbl", { from: n.beat, ...(n.until != null ? { until: n.until } : {}), enter: "rise", delay: 0.2 }));
   return frame("hundred-chart", items, s.alt, 14, { w: 520 });

@@ -4,6 +4,7 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildDecimalShift } from "../../../../explanations/diagrams/number-line/decimal-shift";
 import { expectedOf, manyBoxes, oneBox, restoreVia, wholeIn, withCommas } from "../../_number-line/steps";
+import { withEasyStart } from "../../easy-start";
 
 /** the number (c / 10) × 10^e, written out in full: c is two digits, e is 3 to 7 */
 export interface SciProblem { c: number; e: number }
@@ -20,11 +21,12 @@ function answers(p: SciProblem): AnswerModel {
   const { c, e } = p, big = withCommas(full(p));
   return {
     steps: [
-      oneBox({ id: "places", label: "Count the places", question: "Put the point after the first digit. How many places did it move?", prompt: s => [s], ans: e, hint: "Count the digits after the first one." }),
+      oneBox({ id: "places", label: "Count the places", question: "Put the point after the first digit. How many places did it move?", prompt: s => [s], ans: e, hint: "Count the digits after the first one.",
+        wrong: [[e + 1, "Counted every digit", "Count only the digits after the first one: the first digit stays in front of the point."]] }),
       manyBoxes({
         id: "write", label: "Write it",
         prompt: b => [text(big), op("="), b.c!, op("×"), num(10), sup([b.e!])], ans: { c: c / 10, e }, small: ["e"],
-        hint: `The front number is between 1 and 10: ${f(c / 10)}.`,
+        hint: "Each place the point moves is one more × 10. The front number has to be at least 1 and less than 10.",
         wrong: [[{ c, e: e - 1 }, "Front number too big", "The front number has to be at least 1 and less than 10."]],
       }),
     ],
@@ -36,7 +38,7 @@ function explain(p: SciProblem, model: AnswerModel): Explanation {
   const n = full(p), digits = String(n), e = expectedOf(model, "places"), front = expectedOf(model, "write", "c");
   return {
     heading: "A number from 1 to 10, times a power of 10",
-    idea: ["Move the decimal point until it sits just after the first digit. The number of places it moved is the power of 10."],
+    idea: ["Each place a digit moves left makes it 10 times smaller, so moving the point is the same as dividing by 10 that many times.", "Move the point until it sits just after the first digit; the number of places it moved is the power of 10 that puts it back."],
     statement: [text(withCommas(n)), op("="), num(front), op("×"), num(10), sup(e)],
     diagram: buildDecimalShift({
       digits, from: digits.length, to: digits.length - e, beat: 0, moveBeat: 1,
@@ -54,7 +56,7 @@ function explain(p: SciProblem, model: AnswerModel): Explanation {
   };
 }
 
-export const lesson: LessonDefinition<SciProblem> = {
+export const lesson: LessonDefinition<SciProblem> = withEasyStart({
   id: "g8-sci",
   grade: 8,
   unit: "Exponents and roots",
@@ -66,4 +68,4 @@ export const lesson: LessonDefinition<SciProblem> = {
   displayNote: () => "Write it in scientific notation.",
   answers,
   explain,
-};
+});

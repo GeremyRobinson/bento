@@ -29,7 +29,7 @@ export function lengthBars(s: LengthSpec): SceneDiagram {
     }
   };
   bar(top, 0, "bar", b?.top);
-  bar(bottom, Y2, "sq big", b?.bottom);
+  bar(bottom, Y2, "bar p1", b?.bottom);
   // the start line both things touch
   items.push(seg([0, -12], [0, Y2 + H + 12], "ax thin"));
   if (b) {

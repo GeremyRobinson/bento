@@ -15,12 +15,14 @@ export function createPercentWhole(p: number, P: number): PercentWholeProblem {
 }
 
 /** Same ranges as the current app: 10, 20, 25 or 50 percent of a part 2–30. */
-export const generatePercentWhole = (rng: Rng) => createPercentWhole(rng.pick([10, 20, 25, 50]), rng.int(2, 30));
+// the first three: halves and tenths of small wholes
+export const generatePercentWhole = (rng: Rng, index = 3) => (index < 3 ? createPercentWhole(rng.pick([10, 50]), rng.int(2, 10)) : createPercentWhole(rng.pick([10, 20, 25, 50]), rng.int(2, 30)));
 
 function answers({ p, P }: PercentWholeProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "parts", l: "How many parts make 100%?", a: s => [num(p), text("%"), op("×"), ...s, op("="), num(100), text("%")], ans: 100 / p, h: `100 ÷ ${p}.` }),
+      ns({ id: "parts", l: "How many parts make 100%?", a: s => [num(p), text("%"), op("×"), ...s, op("="), num(100), text("%")], ans: 100 / p, h: "How many of those parts make 100%? Count up by the percent you know.",
+        w: [[100 - p, "Subtracted", `How many ${p}%s fit in 100%? Count them, don't take ${p} away.`]] }),
       ns({ id: "whole", l: "Find the whole", a: s => [num(P), op("×"), num(100 / p), op("="), ...s], ans: (P * 100) / p, h: `The whole is ${100 / p} of those parts.`,
         w: [[round6((P * p) / 100), "Took a percent again", `You want the whole, so it's bigger than ${P}.`]] }),
     ],
@@ -33,8 +35,8 @@ export function percentWholePicture({ p, P }: PercentWholeProblem) {
   const k = 100 / p;
   return buildTape({
     rows: [
-      { length: p / 100, parts: 1, fills: [{ a: 0, b: p / 100, tone: "acc" }], each: [{ text: () => `${P}` }], label: [{ text: `${p}%` }] },
-      { length: 1, parts: k, from: 1, fills: [{ a: 0, b: p / 100, tone: "acc", from: 2 }, { a: p / 100, b: 1, tone: "on", from: 2 }],
+      { length: p / 100, parts: 1, fills: [{ a: 0, b: p / 100, tone: "on" }], each: [{ text: () => `${P}` }], label: [{ text: `${p}%` }] },
+      { length: 1, parts: k, from: 1, fills: [{ a: 0, b: 1, tone: "on", from: 2 }],
         each: [{ text: () => `${P}`, from: 2 }], label: [{ text: "100%" }],
         total: [{ text: "?", until: 1 }, { text: `${P * k}`, from: 2, acc: true }] },
     ],
@@ -47,6 +49,7 @@ function explain(pr: PercentWholeProblem, model: AnswerModel): Explanation {
   const { p, P } = pr, k = expectedOf(model.steps, "parts"), W = expectedOf(model.steps, "whole");
   return {
     heading: "Count up to 100%",
+    idea: ["A percent is a part out of 100, so when you know what one part is worth, you can count parts up to 100%.", "Find how many of those parts make 100%, then multiply."],
     statement: [num(P), text(" is "), num(p), text("% of ?")],
     diagram: percentWholePicture(pr),
     caption: `${count(k, "block")} of ${p}% make 100%.`,
@@ -65,9 +68,10 @@ export const lesson: LessonDefinition<PercentWholeProblem> = {
   grade: 6,
   unit: "Ratios and percents",
   title: "Find the whole",
+  pre: "g6-pctof",
   // the current app's card and picture: 15 is 25% of 60
   reference: createPercentWhole(25, 15),
-  generate: rng => generatePercentWhole(rng),
+  generate: (rng, index) => generatePercentWhole(rng, index),
   restore: raw => {
     const r = ints(raw, ["p", "P"] as const);
     try { return r && createPercentWhole(r.p, r.P); } catch { return null; }

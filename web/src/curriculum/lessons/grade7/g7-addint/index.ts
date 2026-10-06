@@ -22,9 +22,11 @@ function answers(p: AddIntegersProblem): AnswerModel {
   return {
     steps: [
       same
-        ? oneBox({ id: "size", label: "Same signs: add the sizes", prompt: s => [num(A), op("+"), num(B), op("="), s], ans: A + B, hint: "Both are negative, so add their sizes." })
+        ? oneBox({ id: "size", label: "Same signs: add the sizes", prompt: s => [num(A), op("+"), num(B), op("="), s], ans: A + B, hint: "Both are negative, so add their sizes.",
+          wrong: A !== B ? [[Math.abs(A - B), "Subtracted the sizes", "Both numbers step the same way, so their sizes add."]] : [] })
         : oneBox({ id: "size", label: "Different signs: subtract the sizes", prompt: s => [num(Math.max(A, B)), op("−"), num(Math.min(A, B)), op("="), s], ans: Math.abs(A - B),
-          hint: "Take the smaller size from the bigger one." }),
+          hint: "Take the smaller size from the bigger one.",
+          wrong: [[A + B, "Added the sizes", "One steps up and one steps down: the steps toward 0 cancel, so subtract the sizes."]] }),
       oneBox({
         id: "sign", label: "Pick the sign", prompt: s => [num(a), op("+"), ...paren(b), op("="), s], ans: a + b,
         hint: same ? "Two negatives make a negative." : "The answer takes the sign of the number farther from 0.",
@@ -42,7 +44,7 @@ function explain(p: AddIntegersProblem, model: AnswerModel): Explanation {
   const spans: Span[] = sum !== 0 ? [{ from: Math.min(0, sum), to: Math.max(0, sum), beat: 1, label: `${size} from 0` }] : [];
   return {
     heading: "Sizes and signs",
-    idea: ["Same signs: add the sizes and keep the sign. Different signs: subtract the sizes, and the answer takes the sign of the number farther from 0."],
+    idea: ["A negative number steps left of 0 and a positive steps right, so steps the same way add up and steps opposite ways cancel.", "The answer takes the sign of whichever side has more steps."],
     statement: [num(a), op("+"), ...paren(b), op("="), num(sum)],
     diagram: buildNumberLine({
       ...fitRange([a, sum, 0], { maxTicks: 34, pad: 1, minStep: 1 }),
@@ -72,6 +74,7 @@ export const lesson: LessonDefinition<AddIntegersProblem> = {
   grade: 7,
   unit: "Integers",
   title: "Adding integers",
+  pre: "g6-numline",
   reference: createAddIntegers(-7, 12), // −7 + 12 = 5, the current app's example
   generate: rng => {
     const nz = () => { let x: number; do x = rng.int(-15, 15); while (x === 0); return x; };

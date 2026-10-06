@@ -23,7 +23,8 @@ export function restoreCircumference(raw: unknown): CircumferenceProblem | null 
 export function circumferenceAnswers({ r }: CircumferenceProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "diameter", label: "Diameter", prompt: s => mt`2 × ${r} = ${s}`, ans: 2 * r, hint: "The diameter is twice the radius." }),
+      ns({ id: "diameter", label: "Diameter", prompt: s => mt`2 × ${r} = ${s}`, ans: 2 * r, hint: "The diameter is twice the radius.",
+        wrong: [[round6(r / 2), "Halved the radius", "The diameter goes all the way across: two radii."], [r * r, "Squared the radius", "Twice the radius is 2 × r, not r × r."]] }),
       ns({ id: "times-pi", label: "Times π", prompt: s => mt`${2 * r} × 3.14 = ${s}`, ans: round6(2 * r * 3.14), hint: `${2 * r} × 3.14.`,
         wrong: [[round6(r * 3.14), "Used the radius", "Use the diameter, which is 2 × the radius."]] }),
     ],
@@ -54,7 +55,8 @@ export const lesson: LessonDefinition<CircumferenceProblem> = {
   unit: "Geometry",
   title: "Circumference",
   reference: createCircumference(5),
-  generate: rng => createCircumference(rng.int(2, 12)),
+  // the first three: small circles
+  generate: (rng, index) => createCircumference(index < 3 ? rng.int(2, 5) : rng.int(2, 12)),
   restore: restoreCircumference,
   display: p => mt`radius ${p.r}`,
   displayNote: () => "Circumference = π × diameter. Use 3.14 for π.",

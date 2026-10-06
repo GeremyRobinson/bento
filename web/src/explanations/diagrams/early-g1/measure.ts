@@ -21,13 +21,14 @@ export function buildMeasure(s: MeasureSpec): SceneDiagram {
   const nameW = 82, rowH = BAR + U + 26;
   const b = s.beats;
   s.things.forEach((thing, r) => {
-    const y = r * rowH, tone = r ? "c1" : "c0";
-    items.push(t(0, y + BAR / 2, thing.name, "lbl start", { enter: "fade" }));
+    // the first thing is part 1 (blue) and the one compared with it part 2 (orange): the thing, its name and its cubes
+    const y = r * rowH, tone = r ? "c1" : "c0", part = r ? "p1" : "p0";
+    items.push(t(0, y + BAR / 2, thing.name, `lbl start ${part}`, { enter: "fade" }));
     // the thing itself, with a rounded end
     items.push({ type: "rect", x: nameW, y, w: thing.length * U, h: BAR, rx: BAR / 2, cls: `cell ${tone}`, enter: "growx", delay: 0.1 + 0.2 * r } as Draft);
     for (let i = 0; i < thing.length; i++) {
       const x = nameW + i * U, cy = y + BAR + 4;
-      items.push({ type: "rect", x: x + 1, y: cy, w: U - 2, h: U - 2, rx: 3, cls: "sq", ...(b ? { from: b.rows[r]!, enter: "drop", delay: 0.08 * i } : { enter: "fade" }) } as Draft);
+      items.push({ type: "rect", x: x + 1, y: cy, w: U - 2, h: U - 2, rx: 3, cls: `sq ${part}`, ...(b ? { from: b.rows[r]!, enter: "drop", delay: 0.08 * i } : { enter: "fade" }) } as Draft);
       if (b) items.push(t(x + U / 2, cy + U / 2 - 1, String(i + 1), "xs", { from: b.rows[r]!, enter: "fade", delay: 0.08 * i + 0.3 }));
     }
     // a dashed start line keeps both things lined up at the same edge

@@ -17,21 +17,24 @@ export function createMixedToImproper(w: number, n: number, d: number): MixedToI
 }
 
 /** Same ranges as the current app: bottom 2–9, a top in lowest terms, 1–6 wholes. */
-export function generateMixedToImproper(rng: Rng): MixedToImproperProblem {
-  const d = rng.int(2, 9), n = coprimeTop(rng, d);
-  return createMixedToImproper(rng.int(1, 6), n, d);
+export function generateMixedToImproper(rng: Rng, index = 3): MixedToImproperProblem {
+  // the first three: 1 or 2 wholes cut into halves to fifths
+  const early = index < 3, d = rng.int(2, early ? 5 : 9), n = coprimeTop(rng, d);
+  return createMixedToImproper(rng.int(1, early ? 2 : 6), n, d);
 }
 
 function answers({ w, n, d }: MixedToImproperProblem): AnswerModel {
   const S = w * d + n;
   return {
     steps: [
-      ns({ id: "wholes", l: "Wholes into pieces", a: s => [num(w), op("×"), num(d), op("="), ...s], ans: w * d, h: `Each whole has ${count(d, "piece")}.`,
+      ns({ id: "wholes", l: "Wholes into pieces", a: s => [num(w), op("×"), num(d), op("="), ...s], ans: w * d, h: `How many pieces are in one whole? Then in all ${w === 1 ? "of it" : `${w} wholes`}?`,
         w: [[w + d, "Added instead of multiplied", `${count(w, "whole")} with ${count(d, "piece")} each: multiply.`]] }),
-      ns({ id: "extra", l: "Add the extra pieces", a: s => [num(w * d), op("+"), num(n), op("="), ...s], ans: S, h: `Add the ${n} extra pieces.` }),
-      ms({ id: "fraction", l: "Write the fraction", a: X => [num(w), frac(n, d), op("="), frac(X.n!, X.d!)], ans: { n: S, d },
-        h: `${count(S, "piece")}, each a ${d === 2 ? "half" : "1/" + d}. The bottom stays ${d}.`,
+      ns({ id: "extra", l: "Add the extra pieces", a: s => [num(w * d), op("+"), num(n), op("="), ...s], ans: S, h: `Add the ${count(n, "extra piece")}.`,
+        w: [[w + n, "Added the whole number", `Use the ${w * d} pieces the wholes make, not the ${w}.`]] }),
+      { ...ms({ id: "fraction", l: "Write the fraction", a: X => [num(w), frac(n, d), op("="), frac(X.n!, X.d!)], ans: { n: S, d },
+        h: "The top counts every piece. The bottom says how big each piece is.",
         w: [[{ n: S, d: w * d }, "Changed the bottom", "The piece size doesn't change: the bottom stays " + d + "."]] }),
+        explain: `${count(S, "piece")}, each a ${d === 2 ? "half" : "1/" + d}: ${S}/${d}.` },
     ],
     finalParts: [-1],
   };
@@ -44,7 +47,7 @@ export function mixedToImproperPicture({ w, n, d }: MixedToImproperProblem) {
     length: 1, parts: d, fills: [{ a: 0, b: 1, tone: "on" }], label: [{ text: "1" }],
     total: [{ text: `${(j + 1) * d}`, from: 1, acc: j === w - 1 }],
   }));
-  rows.push({ length: 1, parts: d, fills: [{ a: 0, b: n / d, tone: "acc" }], label: [{ text: `${n}/${d}` }],
+  rows.push({ length: 1, parts: d, fills: [{ a: 0, b: n / d, tone: "two" }], label: [{ text: `${n}/${d}` }],
     total: [{ text: `${S}`, from: 2, until: 2, acc: true }, { text: `${S}/${d}`, from: 3, acc: true }] });
   return buildTape({ rows, alt: `${w} whole bars of ${count(d, "piece")} and a bar with ${n} of ${count(d, "piece")}: ${count(S, "piece")} in all, so ${w} ${n}/${d} = ${S}/${d}.` });
 }
@@ -54,6 +57,7 @@ function explain(p: MixedToImproperProblem, model: AnswerModel): Explanation {
   const pieces = (k: number) => `${k} ${pieceName(d, k !== 1)}`;
   return {
     heading: "Count all the pieces",
+    idea: ["Each whole is cut into the same size pieces as the fraction, so the wholes can be counted in pieces too.", "All the pieces together, over the size of one piece, make one fraction."],
     statement: [num(w), frac(n, d), op("="), frac("?", d)],
     diagram: mixedToImproperPicture(p),
     caption: `Each whole is ${pieces(d)}.`,
@@ -74,10 +78,10 @@ export const lesson: LessonDefinition<MixedToImproperProblem> = {
   grade: 5,
   unit: "Fractions",
   title: "Mixed numbers to fractions",
-  pre: "g4-equiv",
+  pre: "g4-mixed",
   // the current app's card and picture: 2 3/4 = 11/4
   reference: createMixedToImproper(2, 3, 4),
-  generate: rng => generateMixedToImproper(rng),
+  generate: (rng, index) => generateMixedToImproper(rng, index),
   restore: raw => {
     const r = ints(raw, ["w", "n", "d"] as const);
     try { return r && createMixedToImproper(r.w, r.n, r.d); } catch { return null; }

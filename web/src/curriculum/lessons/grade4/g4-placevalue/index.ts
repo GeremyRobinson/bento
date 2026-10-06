@@ -68,6 +68,7 @@ function answers(p: RoundProblem): AnswerModel {
           ...(small >= 10 ? [[{ lo: Math.floor(n / small) * small, hi: Math.floor(n / small) * small + small }, "Used the wrong place", `Those are round ${ONE[small]}s. Count by ${commas(place)}s instead.`] as [Record<string, number>, string, string]] : []),
         ]),
         hint: `Keep the digits up to the ${name} and make the rest zeros. That's the one below. Add ${commas(place)} for the one above.`,
+        explain: `Keep the digits up to the ${name} and make the rest zeros: ${commas(lo)}. One ${ONE[place]} more is ${commas(hi)}.`,
       }),
       oneBox({
         id: "next", label: "Look next door", question: `The digit just right of the ${name} decides. What is it?`,
@@ -84,7 +85,7 @@ function answers(p: RoundProblem): AnswerModel {
           [R + (n % place), "Kept the digits after the place", `A rounded number ends in zeros. Every digit after the ${name} becomes 0.`],
           [finer, "Rounded to the wrong place", `That's ${N} to the nearest ${ONE[small]}. Round to the nearest ${ONE[place]} instead.`],
         ]),
-        hint: `5 or more rounds up to ${commas(hi)}. Less than 5 rounds down to ${commas(lo)}.`,
+        hint: "Is the next digit 5 or more, or less than 5? That decides which of your two round numbers it goes to.",
         explain: `The next digit is ${next}, so ${N} rounds ${up ? "up" : "down"} to ${commas(R)}.`,
       }),
     ],
@@ -98,7 +99,7 @@ function explain(p: RoundProblem, model: AnswerModel): Explanation {
   const next = expectedOf(model, "next"), R = expectedOf(model, "round"), mid = lo + place / 2;
   return {
     heading: "Which round number is closer?",
-    idea: ["Find the place you round to. The digit just to its right decides: 5 or more rounds up, less than 5 rounds down."],
+    idea: ["Rounding finds the round number that's closest.", "The digit just right of the place decides: 5 or more is at or past halfway, so round up; less than 5 rounds down."],
     statement: [text(N), op("≈"), text("?")],
     diagram: buildRounding({
       n, place, lo, hi, result: R, beats: { place: 1, line: 2, next: 3, round: 4 },

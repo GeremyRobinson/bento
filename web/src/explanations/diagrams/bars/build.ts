@@ -26,6 +26,8 @@ export function buildMeanBars(s: MeanBarsSpec): SceneDiagram {
     items.push(t(x(i) + BW / 2, 16, String(i + 1), "xs", { from: s.countBeat, enter: "fade", delay: i * 0.12 }));
   });
   items.push(seg([-10, -s.mean * sc], [W + 10, -s.mean * sc], "ln2 dash", { from: s.shareBeat, enter: "draw", delay: 1 }));
+  // the level line says what level it is
+  items.push(t(W + 18, -s.mean * sc, String(s.mean), "lbl acc start", { from: s.shareBeat, enter: "rise", delay: 1.2 }));
   const top = -H - 40;
   items.push(t(W / 2, top, s.sumNote, "lbl", { from: s.sumBeat, until: s.countBeat - 1, enter: "rise" }));
   items.push(t(W / 2, top, s.countNote, "lbl", { from: s.countBeat, until: s.shareBeat - 1, enter: "rise" }));

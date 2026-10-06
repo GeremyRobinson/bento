@@ -58,10 +58,10 @@ export function buildClock(spec: ClockSpec): SceneDiagram {
 // ---------------------------------------------------------------- ruler
 
 export const THINGS = [
-  { name: "pencil", cls: "cell c2", tip: true },
+  { name: "pencil", cls: "cell c0", tip: true },
   { name: "crayon", cls: "cell c0", tip: true },
-  { name: "ribbon", cls: "cell c1", tip: false },
-  { name: "straw", cls: "cell c2", tip: false },
+  { name: "ribbon", cls: "cell c0", tip: false },
+  { name: "straw", cls: "cell c0", tip: false },
 ] as const;
 
 export interface RulerSpec {
@@ -104,16 +104,18 @@ export function buildRuler(spec: RulerSpec): SceneDiagram {
     items.push(seg([x1, top - 12], [x1, 0], "ln2 dash", { from: beats.end, enter: "draw" }));
     items.push(t(x1, top - 24, "end", "xs", { from: beats.end, enter: "rise" }));
     items.push(circle(x1, 0, 6, "dota", { from: beats.end, enter: "pop", delay: 0.3 }));
-    // one hop under the ruler for every unit from start to end
+    // one hop under the ruler for every unit from start to end; a long object hops faster, so every hop and its count
+    // are drawn within a second, the same as a short one (v43: a 9 cm pencil's counter looked stuck at 5)
+    const gap = Math.min(0.2, 0.9 / (e - s));
     for (let v = s; v < e; v++) {
-      const d = 0.2 * (v - s);
+      const d = gap * (v - s);
       items.push(path([{ c: "M", p: [x(v), 60] }, { c: "Q", q: [x(v + 0.5), 60 + 26], p: [x(v + 1), 60] }], "ln", { from: beats.count, enter: "draw", delay: d }));
       items.push(t(x(v + 0.5), 88, String(v - s + 1), v === e - 1 ? "lbl acc" : "sm", { from: beats.count, enter: "rise", delay: d + 0.2 }));
     }
     const y = 128, mid = x(max) / 2;
     items.push(t(mid, y, spec.text.start, "lbl", { from: beats.start, until: beats.end - 1, enter: "rise", delay: 0.4 }));
     items.push(t(mid, y, spec.text.end, "lbl", { from: beats.end, until: beats.count - 1, enter: "rise", delay: 0.4 }));
-    items.push(t(mid, y, spec.text.count, "lbl big acc", { from: beats.count, enter: "rise", delay: 0.2 * (e - s) }));
+    items.push(t(mid, y, spec.text.count, "lbl big acc", { from: beats.count, enter: "rise", delay: gap * (e - s) }));
   }
   return frame("early-g2-ruler", items, spec.alt, 14, {});
 }
@@ -152,10 +154,12 @@ export function buildBarGraph(spec: BarGraphSpec): SceneDiagram {
     items.push(rect(bx(i), y(v), BW, v * U, "bar", { enter: "growy", delay: 0.1 * i }, 4));
     items.push(t(bx(i) + BW / 2, 22, spec.names[i]!, "sm"));
   });
-  items.push(t(W / 2, y(top) - 30, spec.title, "lbl"));
+  items.push(t(W / 2, y(top) - 30, spec.title, "lbl pw"));
   if (!spec.bare) {
     const read = (i: number, beat: number, until?: number) => {
       const v = values[i]!;
+      // every bar is blue; a bar the question asks about turns amber while it's read (handoff-6)
+      items.push(rect(bx(i), y(v), BW, v * U, "bar pq", { from: beat, ...(spec.kind === "more" ? { until: beats.combine - 1 } : {}), enter: "fade" }, 4));
       items.push(rect(bx(i) - 5, y(v) - 5, BW + 10, v * U + 5, "hlline", { from: beat, ...(until != null ? { until } : {}), enter: "fade" }, 6));
       items.push(seg([bx(i), y(v)], [0, y(v)], "ln2 dash", { from: beat, enter: "draw", delay: 0.3 }));
       items.push(t(bx(i) + BW / 2, y(v) + U / 2, String(v), "lbl onlbl", { from: beat, enter: "rise", delay: 0.5 }));

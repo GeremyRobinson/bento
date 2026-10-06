@@ -5,6 +5,7 @@ import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildPlane } from "../../../../explanations/diagrams/plane/build";
 import { attempt, expected, f, ints, ns, pt, ptM } from "../../_plane/kit";
 import { TRIPLES } from "../../_geometry/kit";
+import { withEasyStart } from "../../easy-start";
 
 /** Two points whose distance is whole: across and up are the legs of a Pythagorean triple. */
 export interface DistProblem { kind: "coordinate.distance"; x1: number; y1: number; x2: number; y2: number; dx: number; dy: number; d: number }
@@ -36,13 +37,13 @@ export function distAnswers({ x1, y1, x2, y2, dx, dy, d }: DistProblem): AnswerM
     steps: [
       ns({ id: "dx", label: "Change in x", prompt: s => [num(x2), op("−"), num(x1), op("="), ...s], ans: dx,
         wrong: [[x2 + x1, "Added instead of subtracted", "Distance across is the **difference**: subtract."]],
-        hint: `${x2} − ${x1}.`, explain: `${x2} − ${x1} = ${dx}.`, work: [text("Across: "), answer("x", dx)] }),
+        hint: `How far across: take the first x from the second, ${x2} − ${x1}.`, explain: `How far across: ${x2} − ${x1} = ${dx}.`, work: [text("Across: "), answer("x", dx)] }),
       ns({ id: "dy", label: "Change in y", prompt: s => [num(y2), op("−"), num(y1), op("="), ...s], ans: dy,
         wrong: [[y2 + y1, "Added instead of subtracted", "Distance up is the **difference**: subtract."]],
-        hint: `${y2} − ${y1}.`, explain: `${y2} − ${y1} = ${dy}.`, work: [text("Up: "), answer("x", dy)] }),
+        hint: `How far up: take the first y from the second, ${y2} − ${y1}.`, explain: `How far up: ${y2} − ${y1} = ${dy}.`, work: [text("Up: "), answer("x", dy)] }),
       ns({ id: "sum", label: "Square and add", prompt: s => [...sq(dx), op("+"), ...sq(dy), op("="), ...s], ans: S,
         wrong: [[2 * dx + 2 * dy, "Squared as times 2", "Squared means a number times itself."], [dx + dy, "Forgot to square", "Square each one first."]],
-        hint: `${dx * dx} + ${dy * dy}.`, explain: `${dx * dx} + ${dy * dy} = ${S}.`, work: [...sq(dx), op("+"), ...sq(dy), op("="), num(S)] }),
+        hint: "Across and up are the legs of a right triangle: square each, then add.", explain: `Square each leg and add: ${dx * dx} + ${dy * dy} = ${S}.`, work: [...sq(dx), op("+"), ...sq(dy), op("="), num(S)] }),
       ns({ id: "d", label: "Square root", prompt: s => [text("d"), op("="), text("√"), num(S), op("="), ...s], ans: d,
         wrong: [[dx + dy, "Added the sides", "The straight line is shorter than going across and up."]],
         hint: `What number times itself makes ${S}?`, explain: `${d} × ${d} = ${d * d}.`, work: [text("d"), op("="), answer("x", d)] }),
@@ -65,10 +66,10 @@ export function explainDist(p: DistProblem, model: AnswerModel): Explanation {
       alt: `Graph: the points ${pt(x1, y1)} and ${pt(x2, y2)}, ${f(dx)} across and ${f(dy)} up, ${f(d)} apart.`,
       equal: true,
       items: [
-        { kind: "segment", a: [x1, y1], b: [x2, y1], cls: "ln2 dash", from: 1, label: { text: f(dx), acc: true, prefer: ["s", "n"] } },
-        { kind: "segment", a: [x2, y1], b: [x2, y2], cls: "ln2 dash", from: 2, label: { text: f(dy), acc: true, prefer: ["e", "w"] } },
+        { kind: "segment", a: [x1, y1], b: [x2, y1], cls: "ln p0 dash", from: 1, label: { text: f(dx), part: 0, prefer: ["s", "n"] } },
+        { kind: "segment", a: [x2, y1], b: [x2, y2], cls: "ln p1 dash", from: 2, label: { text: f(dy), part: 1, prefer: ["e", "w"] } },
         { kind: "rightAngle", at: [x2, y1], u: [-1, 0], v: [0, 1], from: 2 },
-        { kind: "segment", a: [x1, y1], b: [x2, y2], from: 4, slow: true, label: { text: `d = ${f(d)}`, acc: true, prefer: ["nw", "w", "n"] } },
+        { kind: "segment", a: [x1, y1], b: [x2, y2], cls: "ln pq", from: 4, slow: true, label: { text: `d = ${f(d)}`, acc: true, prefer: ["nw", "w", "n"] } },
         { kind: "point", at: [x1, y1], label: { text: pt(x1, y1), prefer: ["w", "sw", "s"] } },
         { kind: "point", at: [x2, y2], label: { text: pt(x2, y2), prefer: ["n", "e", "ne"] } },
       ],
@@ -84,11 +85,12 @@ export function explainDist(p: DistProblem, model: AnswerModel): Explanation {
   };
 }
 
-export const lesson: LessonDefinition<DistProblem> = {
+export const lesson: LessonDefinition<DistProblem> = withEasyStart({
   id: "g10-dist",
   grade: 10,
   unit: "Coordinate geometry",
   title: "Distance between points",
+  pre: "g8-pyth",
   reference: createDist(1, 2, 4, 6),
   generate: rng => generateDist(rng),
   restore: restoreDist,
@@ -96,4 +98,4 @@ export const lesson: LessonDefinition<DistProblem> = {
   displayNote: () => "How far apart are the two points?",
   answers: distAnswers,
   explain: explainDist,
-};
+});

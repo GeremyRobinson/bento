@@ -10,12 +10,17 @@ const BEAT_MS = 750;
  * and again each time `replay` changes. Without motion (or without IntersectionObserver) it shows the finished picture.
  * With `autoplay` off it rests on the finished picture and plays only when `replay` changes (a tap).
  * With `hold` set it opens on the finished picture and starts playing that many ms after it comes into view.
+ * With `end` set it stops at that beat instead of the last one.
  */
-export function PlayingDiagram({ ex, replay = 0, autoplay = true, hold }: { ex: Explanation & { diagram: NonNullable<Explanation["diagram"]> }; replay?: number; autoplay?: boolean; hold?: number }) {
-  const last = ex.timeline.length - 1;
+export function PlayingDiagram({ ex, replay = 0, autoplay = true, hold, end }: { ex: Explanation & { diagram: NonNullable<Explanation["diagram"]> }; replay?: number; autoplay?: boolean; hold?: number; end?: number }) {
+  const last = Math.min(end ?? Infinity, ex.timeline.length - 1);
   const still = reduceMotion() || typeof IntersectionObserver === "undefined";
   const [at, setAt] = useState(still || !autoplay || hold != null ? last : 0);
   const [playing, setPlaying] = useState(false);
+  // every restart draws a fresh picture from its first beat: going back to beat 0 on the same picture would run every
+  // transition in reverse (the finished picture un-building itself), which reads as a glitch before each play
+  const [gen, setGen] = useState(0);
+  const restart = () => { setGen(g => g + 1); setAt(0); setPlaying(true); };
   const box = useRef<HTMLDivElement>(null);
 
   // start when at least a third of it is on screen
@@ -25,7 +30,7 @@ export function PlayingDiagram({ ex, replay = 0, autoplay = true, hold }: { ex: 
       if (!es.some(e => e.isIntersecting)) return;
       io.disconnect();
       if (hold == null) setPlaying(true);
-      else t = setTimeout(() => { setAt(0); setPlaying(true); }, hold);
+      else t = setTimeout(restart, hold);
     }, { threshold: 0.35 });
     let t: ReturnType<typeof setTimeout> | undefined;
     io.observe(box.current);
@@ -37,8 +42,7 @@ export function PlayingDiagram({ ex, replay = 0, autoplay = true, hold }: { ex: 
   useEffect(() => {
     if (first.current) { first.current = false; return; }
     if (still) return;
-    setAt(0);
-    setPlaying(true);
+    restart();
   }, [replay, still]);
 
   useEffect(() => {
@@ -48,5 +52,5 @@ export function PlayingDiagram({ ex, replay = 0, autoplay = true, hold }: { ex: 
     return () => clearTimeout(t);
   }, [playing, at, last]);
 
-  return <div className="viz" ref={box}><Diagram key={replay} diagram={ex.diagram} timeline={ex.timeline} at={at} /></div>;
+  return <div className="viz" ref={box}><Diagram key={gen} diagram={ex.diagram} timeline={ex.timeline} at={at} /></div>;
 }

@@ -5,6 +5,7 @@ import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildPlane } from "../../../../explanations/diagrams/plane/build";
 import { attempt, expected, f, ints, ns, nz, P, poly, polyText, pt } from "../../_plane/kit";
 import { signed } from "../../../text";
+import { withEasyStart } from "../../easy-start";
 
 /** lim x→a of (x − a)(x + b) ÷ (x − a) = a + b */
 export interface LimitProblem { kind: "limit.factor"; a: number; b: number }
@@ -35,9 +36,10 @@ export function limitAnswers({ a, b }: LimitProblem): AnswerModel {
   return {
     steps: [
       ns({ id: "b", label: "Factor the top", prompt: s => [text(`${factor(a)}(x + `), ...s, text(")")], ans: b,
-        hint: `Find the other factor: it multiplies with ${f(-a)} to make ${f(-a * b)}.`, note: "Plugging in gives 0 ÷ 0, so factor first." }),
+        hint: `Plugging x = ${f(a)} into the top gives 0, so ${factor(a)} is a factor. Find the other one: what times ${f(-a)} makes the number on its own?`, note: "Plugging in gives 0 ÷ 0, so factor first.",
+        wrong: [[-b, "Sign slip", `Multiply it back out: ${factor(a)} times (x + your number) has to give the top's number on its own, ${f(-a * b)}.`]] }),
       ns({ id: "lim", label: "Cancel and plug in", prompt: s => [num(a), op("+"), ...P(b), op("="), ...s], ans: a + b,
-        hint: `After canceling, plug x = ${f(a)} into x ${signed(b)}.`, wrong: [[0, "Stopped at 0 ÷ 0", "0 ÷ 0 means simplify, not that the limit is 0."]] }),
+        hint: "Away from the hole, the fraction is just the other factor. Plug x into it to see where the line is heading.", wrong: [[0, "Stopped at 0 ÷ 0", "0 ÷ 0 means simplify, not that the limit is 0."]] }),
     ],
     finalParts: [-1],
   };
@@ -54,31 +56,33 @@ export function explainLimit(p: LimitProblem, model: AnswerModel): Explanation {
       alt: `Graph: the line y = ${polyText([[1, "x"], [b, ""]])} with a hole at ${pt(a, L)}; the limit is ${f(L)}.`,
       fit: [[a - 2, L - 2], [a + 2, L + 2], [0, 0]],
       items: [
-        { kind: "line", m: 1, b, from: 1, label: { text: `y = ${polyText([[1, "x"], [b, ""]])}`, optional: true } },
+        // the graph is there from the start: the line with a hole where the bottom is 0
+        { kind: "line", m: 1, b, label: { text: `y = ${polyText([[1, "x"], [b, ""]])}`, optional: true, from: 1 } },
         { kind: "segment", a: [a, 0], b: [a, L], cls: "ln2 dash", from: 2, label: { text: `x = ${f(a)}`, acc: true, optional: true, prefer: ["e", "w"] } },
-        { kind: "point", at: [a, L], cls: "hole", from: 1, delay: 0.5, label: { text: pt(a, L), acc: true, from: 2, prefer: ["nw", "se", "w"] } },
+        { kind: "point", at: [a, L], cls: "hole", delay: 0.5, label: { text: pt(a, L), acc: true, from: 2, prefer: ["nw", "se", "w"] } },
       ],
     }),
     timeline: beats(3),
     steps: [
       { id: "zero", narration: `At x = ${f(a)} the top and the bottom are both 0. 0 ÷ 0 means: simplify first.`, math: limitMath(p), state: 0 },
       { id: "b", narration: `Factor the top: ${polyText(top(p))} = ${factor(a)}(x ${signed(b)}). Cancel ${factor(a)}, leaving x ${signed(b)}, a line with a hole at x = ${f(a)}.`,
-        math: [text(`${factor(a)}(x + `), num(b), text(")")], state: 1, answerStep: "b", result: b },
+        math: [text(`${factor(a)}(x ${signed(b)})`)], state: 1, answerStep: "b", result: b },
       { id: "lim", narration: `Plug in: ${f(a)} ${signed(b)} = ${f(L)}. The line heads to ${f(L)}, so the limit is ${f(L)}.`,
         math: [num(a), op("+"), ...P(b), op("="), num(L)], state: 2, answerStep: "lim", result: L },
     ],
   };
 }
 
-export const lesson: LessonDefinition<LimitProblem> = {
+export const lesson: LessonDefinition<LimitProblem> = withEasyStart({
   id: "g12-limit",
   grade: 12,
   unit: "Limits",
   title: "Limits by factoring",
+  pre: "g9-factor",
   reference: createLimit(2, 2),
   generate: rng => generateLimit(rng),
   restore: restoreLimit,
   display: limitMath,
   answers: limitAnswers,
   explain: explainLimit,
-};
+});

@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildPlane } from "../../../../explanations/diagrams/plane/build";
 import { attempt, expected, f, fP, ints, ns, nz, parabolaFit, poly, polyText, pt } from "../../_plane/kit";
+import { withEasyStart } from "../../easy-start";
 
 /** y = a·x² + b·x + c with a whole-number vertex x = h (b = −2ah). */
 export interface VertexProblem { kind: "parabola.vertex"; a: number; b: number; c: number; h: number }
@@ -33,9 +34,9 @@ const yPrompt = (a: number, b: number, c: number, h: number) => [text(`y = ${f(a
 export function vertexAnswers({ a, b, c, h }: VertexProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "x", label: "x of the vertex", prompt: s => [...xPrompt(a, b), op("="), ...s], ans: h, hint: "Use x = −b ÷ 2a.",
+      ns({ id: "x", label: "x of the vertex", prompt: s => [...xPrompt(a, b), op("="), ...s], ans: h, hint: "The vertex sits halfway between the two places the parabola has the same height: x = −b ÷ (2 × a).",
         wrong: [[-h, "Forgot the minus", "The formula starts with −b."]] }),
-      ns({ id: "y", label: "y of the vertex", prompt: s => [...yPrompt(a, b, c, h), op("="), ...s], ans: a * h * h + b * h + c, hint: `Plug x = ${f(h)} back in.` }),
+      ns({ id: "y", label: "y of the vertex", prompt: s => [...yPrompt(a, b, c, h), op("="), ...s], ans: a * h * h + b * h + c, wrong: [[a * h * h + b * h, "Left out c", "Keep the number on its own: add c too."], [-a * h * h + b * h + c, "Sign of the square", "A negative squared is positive."]], hint: `The vertex is on the parabola, so its y is the height at x = ${f(h)}: put it in for every x.` }),
     ],
     finalParts: [-2, -1],
   };
@@ -67,11 +68,12 @@ export function explainVertex(p: VertexProblem, model: AnswerModel): Explanation
   };
 }
 
-export const lesson: LessonDefinition<VertexProblem> = {
+export const lesson: LessonDefinition<VertexProblem> = withEasyStart({
   id: "g11-vertex",
   grade: 11,
   unit: "Functions",
   title: "Vertex of a parabola",
+  pre: "g9-solvefactor",
   reference: createVertex(1, 3, 5),
   generate: rng => generateVertex(rng),
   restore: restoreVertex,
@@ -79,4 +81,4 @@ export const lesson: LessonDefinition<VertexProblem> = {
   displayNote: () => "Find the vertex.",
   answers: vertexAnswers,
   explain: explainVertex,
-};
+});

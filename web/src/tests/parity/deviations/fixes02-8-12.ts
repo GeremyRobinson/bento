@@ -1,0 +1,83 @@
+// Grades 8 to 12, Curriculum fixes-02 Part C (2026-10-06): hints that say why instead of restating the step's
+// arithmetic or handing over the answer, and slips that name the mistake. Only the words of the hint, of "Show me"
+// (which repeats the hint) and of the mistake messages change; every step, prompt, answer and worked line is the
+// current app's. Lessons that already have an entry in another file get these fields there instead.
+const HINT = "the hint gives the reason for the step and keeps the numbers, instead of only the arithmetic (\"15 × 15.\") or the answer (fixes-02 Part C, pattern 3)";
+const EXPLAIN = "Show me repeats the new hint, then \"That makes …\" as before";
+const CHECKS = "tries the current app called \"Not quite\" now get a named slip where the step predicts one (fixes-02 Part C, pattern 5), and the generic \"Not quite\" message quotes the new hint; right and wrong verdicts are unchanged";
+export const all = { hint: HINT, explain: EXPLAIN, checks: CHECKS };
+export { HINT, EXPLAIN, CHECKS };
+
+export const deviations: Record<string, Partial<Record<string, string>>> = {
+  "g8-sci": all,
+  "g8-slope": all,
+  "g8-tri": all,
+  "g9-growth": all,
+  "g9-median": all,
+  "g8-roots": all,
+  "g8-both": all,
+  "g8-system": { ...all, pre: "g8-intercept: its picture is two lines crossing and its first equation is y = mx + b, both taught in g8-intercept; Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g8-intercept": all,
+  "g8-func": all,
+  "g8-pyth": all,
+  "g8-leg": all,
+  "g8-cyl": {
+    ...all,
+    steps: "base area before height (Curriculum fixes-02, g8-cyl): the steps are r², then 3.14 × r² for the circle base, then base × height, so π belongs to the circle instead of arriving last as \"Times π\". The last step is renamed \"Base × height\" so the recorded \"Times the height\" (r² × h) is not matched to it",
+    "answers:base": "the second step now asks the base area 3.14 × r² instead of r² × h; the volume is the same number and is still compared",
+    prompt: "the second and third prompts show 3.14 × r² and base × h instead of r² × h and r²h × 3.14",
+    work: "the worked lines follow the new prompts",
+  },
+  "g8-cone": {
+    ...all,
+    steps: "base area, then the cylinder, then a third (Curriculum fixes-02, g8-cone), so π belongs to the circle base instead of arriving last as \"Times π\". The last step is \"Take a third\" so the recorded \"Divide by 3\" (r²h ÷ 3) is matched to the step in its place",
+    "answers:base": "the first step now asks the base area 3.14 × r² instead of r² × h",
+    "answers:cylinder": "the second step now asks the cylinder, base × h, instead of r²h ÷ 3; the volume is the same number and is still compared",
+    prompt: "the prompts show 3.14 × r², base × h and cylinder ÷ 3 instead of r² × h, r²h ÷ 3 and × 3.14",
+    work: "the worked lines follow the new prompts",
+  },
+  "g9-multistep": all,
+  "g9-elim": { ...all, pre: "g8-system: elimination is the second way to solve the systems g8-system starts; Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g9-twopoint": { ...all, pre: "g8-intercept: the line it finds is written as y = mx + b, which g8-intercept teaches; Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g9-negexp": { ...all, pre: "g8-exp: a negative exponent extends the exponent rules from g8-exp; Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g9-radical": {
+    ...all,
+    "answers:square": "the first step is two boxes, n = [square] × [rest], instead of n = [ ] × rest, so the learner finds the split rather than dividing by a number already shown (Curriculum fixes-02, g9-radical); the square is the same number, and the final k√m is still compared",
+    prompt: "the first prompt has two boxes, n = [ ] × [ ]",
+    work: "the first worked line shows both boxes",
+  },
+  "g9-polyadd": all,
+  "g9-foil": all,
+  "g9-gcf": all,
+  "g9-solvefactor": { ...all, pre: "g9-factor: it solves by factoring the way g9-factor teaches; Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g9-quadform": { ...all, pre: "g9-solvefactor: the formula is for the quadratics that factoring in g9-solvefactor can't solve; Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g9-factor": { hint: HINT, pre: "g9-foil: factoring runs g9-foil's (x + p)(x + q) area backwards; Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g10-perp": { ...all, pre: "g8-slope: perpendicular slopes are built from slope (g8-slope); Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g10-dist": { ...all, pre: "g8-pyth: the distance is the Pythagorean theorem (g8-pyth) on the grid; Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g10-circle": { ...all, pre: "g10-dist: the radius is a distance (g10-dist); Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g10-polygon": { ...all, pre: "g8-tri: a polygon is cut into triangles, each 180° (g8-tri); Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g10-special": { ...all, pre: "g9-radical: the sides are written with √2 and √3 (g9-radical); Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g10-trig": { ...all, pre: "g10-similar: the ratios rest on similar triangles (g10-similar); Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g10-sector": { ...all, pre: "g7-circarea: a sector is a slice of the circle's area (g7-circarea); Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g10-arc": { ...all, pre: "g7-circum: an arc is a slice of the circumference (g7-circum); Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g10-surface": all,
+  "g10-pyramid": { ...all, pre: "g8-cone: a pyramid is a third of its prism, as a cone is of its cylinder (g8-cone); Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g11-log": { ...all, pre: "g11-expeq: matching bases (g11-expeq) is the easy case that logs extend; Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g11-expeq": all,
+  "g11-evalpoly": all,
+  "g11-inverse": { ...all, pre: "g11-compose: an inverse is the function that composes with f to give back x (g11-compose); Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g11-vertex": { ...all, pre: "g9-solvefactor: the vertex sits halfway between the roots found in g9-solvefactor; Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g11-comb": all,
+  "g11-compose": all,
+  "g11-radical": all,
+  "g12-rad": all,
+  "g12-deg": { ...all, pre: "g12-rad: it turns radians back into degrees (g12-rad); Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g12-unit": { ...all, pre: "g10-special: the unit circle's points come from the special triangles (g10-special); Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g12-power": all,
+  "g12-polyd": { ...all, pre: "g12-power: a polynomial is differentiated term by term with the power rule (g12-power); Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g12-chain": { ...all, pre: "g12-power: the outside derivative is the power rule (g12-power); Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g12-tangent": { ...all, pre: "g12-polyd: the slope is the derivative of a polynomial (g12-polyd); Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g12-anti": { ...all, pre: "g12-power: it runs the power rule (g12-power) backwards; Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g12-vecmag": { ...all, pre: "g10-dist: a vector's length is the distance formula (g10-dist); Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+  "g12-dot": { ...all, pre: "g12-vecmag: the dot product uses the vector's components and length (g12-vecmag); Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on" },
+};

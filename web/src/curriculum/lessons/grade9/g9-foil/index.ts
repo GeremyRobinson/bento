@@ -4,7 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildAreaGrid } from "../../../../explanations/diagrams/area-model/grid";
 import { expectedOf, ms, nonZero, ns, numP, polyText, readNumbers } from "../../area-common/steps";
-import { coef } from "../../../text";
+import { withEasyStart } from "../../easy-start";
 
 /** (x + a)(x + b) with a and b nonzero (either may be negative). */
 export interface FoilProblem { a: number; b: number }
@@ -27,10 +27,11 @@ const sideText = (a: number) => (a < 0 ? `−${Math.abs(a)}` : `+${a}`);
 export function foilAnswers({ a, b }: FoilProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "middle", label: "Outer + inner", prompt: s => [num(b), x, op("+"), ...numP(a), x, op("="), s, x], ans: a + b, hint: `Outer: x × ${f(b)}. Inner: ${f(a)} × x. Add them.` }),
+      ns({ id: "middle", label: "Outer + inner", prompt: s => [num(b), x, op("+"), ...numP(a), x, op("="), s, x], ans: a + b, hint: `Outer: x × ${f(b)}. Inner: ${f(a)} × x. Both are x terms, so add them.`, wrong: [[a * b, "Multiplied instead", "Outer and inner are two x terms side by side, so add them."]] }),
       ns({ id: "last", label: "Last", prompt: s => [...numP(a), op("×"), ...numP(b), op("="), s], ans: a * b, hint: "Multiply the two numbers.",
         wrong: [[a + b, "Added instead of multiplied", "The last terms multiply."]] }),
-      ms({ id: "answer", label: "Write the answer", prompt: s => [x, sup(2), op("+"), s.p!, x, op("+"), s.q!], ans: { p: a + b, q: a * b }, hint: `x², then ${coef(a + b, "x")}, then ${f(a * b)}.` }),
+      ms({ id: "answer", label: "Write the answer", prompt: s => [x, sup(2), op("+"), s.p!, x, op("+"), s.q!], ans: { p: a + b, q: a * b }, hint: "First gives x². Then outer + inner is the x term, and last is the number on its own.",
+        wrong: [[{ p: a * b, q: a + b }, "Swapped them", "Outer + inner goes with x; last × last is the number on its own."]] }),
     ],
     finalParts: [-1],
   };
@@ -68,7 +69,7 @@ export function explainFoil(p: FoilProblem, answers: AnswerModel): Explanation {
   };
 }
 
-export const lesson: LessonDefinition<FoilProblem> = {
+export const lesson: LessonDefinition<FoilProblem> = withEasyStart({
   id: "g9-foil",
   grade: 9,
   unit: "Polynomials and quadratics",
@@ -79,4 +80,4 @@ export const lesson: LessonDefinition<FoilProblem> = {
   display: p => [...binom(p.a), ...binom(p.b)],
   answers: foilAnswers,
   explain: explainFoil,
-};
+});

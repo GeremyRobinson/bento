@@ -5,7 +5,7 @@ import type { AnswerModel, AnswerStep, LessonDefinition } from "../../../schemas
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildLinePlot } from "../../../../explanations/diagrams/early-g2/lineplot";
 import { oneBox, wholeIn } from "../../_number-line/steps";
-import { words } from "../../gradeK/kit";
+import { tapStep, words, singularWork } from "../../gradeK/kit";
 import { count, slips } from "../kit";
 
 const THINGS = [
@@ -40,25 +40,41 @@ export function createLinePlot(thing: number, lo: number, data: number[], ask: n
 function answers(p: LinePlotProblem): AnswerModel {
   const th = THINGS[p.thing]!, d = p.data, v = p.v;
   if (p.ask === 0) {
-    const n = howMany(d, v);
-    return { steps: [oneBox({
-      id: "stack", label: "Read a stack", question: `How many ${th.many} are ${v} inches long?`,
-      prompt: s => [s, text(` ${th.many}`)], ans: n,
-      wrong: slips(n, [
-        [howMany(d, v - 1), "Read the next stack", `That's the stack above ${v - 1}. Find ${v} on the line first.`],
-        [howMany(d, v + 1), "Read the next stack", `That's the stack above ${v + 1}. Find ${v} on the line first.`],
-        [d.length, "Counted every X", `That's every ${th.one}. Count only the X's above ${v}.`],
-      ]),
-      hint: `Find ${v} on the line. Count the X's above it.`,
-      explain: `There ${n === 1 ? "is 1 X" : `are ${n} X's`} above ${v}: ${count(n, th.one, th.many)}.`,
-    })], finalParts: [-1] };
+    // plot one more first, so the X is something the learner does; then read the stack with the new X in it
+    const n = howMany(d, v) + 1, spots = [v - 1, v, v + 1], said = (x: number) => `Above ${x}`;
+    return { steps: [
+      tapStep({
+        id: "plot", label: "Plot one more", question: `A new ${th.one} is ${v} inches long. Where does its X go?`,
+        prompt: words(`The new X goes ?`), choices: spots.map(said), right: 1,
+        wrong: i => [`Put it above ${spots[i]}`, `That's above ${spots[i]}. Find ${v} on the line: the X goes right above it.`],
+        hint: `Find ${v} on the number line. Each X sits above its own length.`,
+        explain: `The new ${th.one} is ${v} inches, so its X goes on top of the stack above ${v}.`,
+        work: [text(`Above ${v}`)],
+      }),
+      oneBox({
+        id: "stack", label: "Read a stack", question: `Now how many ${th.many} are ${v} inches long?`,
+        prompt: s => [s, text(` ${th.many}`)], ans: n,
+        wrong: slips(n, [
+          [n - 1, "Left out the new X", `Count the new ${th.one} too: its X is on top of the stack.`],
+          [howMany(d, v - 1), "Read the next stack", `That's the stack above ${v - 1}. Find ${v} on the line first.`],
+          [howMany(d, v + 1), "Read the next stack", `That's the stack above ${v + 1}. Find ${v} on the line first.`],
+          [d.length + 1, "Counted every X", `That's every ${th.one}. Count only the X's above ${v}.`],
+        ]),
+        hint: `Find ${v} on the line. Count the X's above it, the new one too.`,
+        explain: `There ${n === 1 ? "is 1 X" : `are ${n} X's`} above ${v}: ${count(n, th.one, th.many)}.`,
+      }),
+    ], finalParts: [-1] };
   }
   if (p.ask === 1) {
     const m = modeOf(d)[0]!, n = howMany(d, m);
     return { steps: [oneBox({
       id: "mode", label: "Tallest stack", question: "Which length came up most?",
       prompt: s => [s, text(" inches")], ans: m,
-      wrong: slips(m, [[n, "Gave the number of X's", "That's how many X's. The question asks which length: read the number under the stack."]]),
+      wrong: slips(m, [
+        [n, "Gave the number of X's", "That's how many X's. The question asks which length: read the number under the stack."],
+        [m - 1, "Read the number beside it", `That number is next to the tallest stack. Read the number right under it.`],
+        [m + 1, "Read the number beside it", `That number is next to the tallest stack. Read the number right under it.`],
+      ]),
       hint: "Find the tallest stack. Read the number under it.",
       explain: `The tallest stack, ${count(n, "X", "X's")}, is above ${m}. ${m} inches came up most.`,
     })], finalParts: [-1] };
@@ -76,10 +92,17 @@ function answers(p: LinePlotProblem): AnswerModel {
   const hi = Math.max(...d), lo = Math.min(...d);
   const steps: AnswerStep[] = [
     oneBox({ id: "max", label: "Longest", question: `How long is the longest ${th.one}?`, prompt: s => [s, text(" inches")], ans: hi,
-      wrong: slips(hi, [[modeOf(d)[0]!, "Read the tallest stack", "The tallest stack is the most common length. The longest is the X farthest right."]]),
+      wrong: slips(hi, [
+        [modeOf(d)[0]!, "Read the tallest stack", "The tallest stack is the most common length. The longest is the X farthest right."],
+        [lo, "Read the shortest", "That's the X farthest left, the shortest. The longest is farthest right."],
+        [p.lo + 6, "Read the end of the line", "Read the farthest-right X, not the end of the line."],
+      ]),
       hint: "Find the X farthest to the right.", explain: `The longest is ${hi} inches.` }),
     oneBox({ id: "min", label: "Shortest", question: `How long is the shortest ${th.one}?`, prompt: s => [s, text(" inches")], ans: lo,
-      wrong: slips(lo, [[p.lo - 1, "Read the start of the line", "Read the farthest-left X, not the start of the line."]]),
+      wrong: slips(lo, [
+        [p.lo - 1, "Read the start of the line", "Read the farthest-left X, not the start of the line."],
+        [hi, "Read the longest", "That's the X farthest right, the longest. The shortest is farthest left."],
+      ]),
       hint: "Find the X farthest to the left.", explain: `The shortest is ${lo} inches.` }),
     oneBox({ id: "diff", label: "How much longer", question: "How much longer is the longest than the shortest?",
       prompt: s => [num(hi), op("−"), num(lo), op("="), s, text(" inches")], ans: hi - lo,
@@ -96,7 +119,8 @@ const lit = (p: LinePlotProblem) => {
   if (p.ask === 2) return [...new Set(d.filter(u => u > p.v))];
   return [Math.max(...d), Math.min(...d)];
 };
-const plot = (p: LinePlotProblem) => ({ d: 1, lo: p.lo - 1, hi: p.lo + 6, data: p.data, title: THINGS[p.thing]!.title });
+/** the plot; on the lesson page of a read-a-stack problem it has the learner's new X in it too */
+const plot = (p: LinePlotProblem, withNew = false) => ({ d: 1, lo: p.lo - 1, hi: p.lo + 6, data: withNew && p.ask === 0 ? [...p.data, p.v] : p.data, title: THINGS[p.thing]!.title });
 const alt = (p: LinePlotProblem) => `A line plot of ${THINGS[p.thing]!.one} lengths in inches.`;
 
 function explain(p: LinePlotProblem, model: AnswerModel): Explanation {
@@ -105,12 +129,12 @@ function explain(p: LinePlotProblem, model: AnswerModel): Explanation {
     heading: "Line plots",
     idea: ["A line plot puts an X above the number line for each thing measured. Tall stacks show the lengths that came up most."],
     statement: words(last.question ?? ""),
-    diagram: buildLinePlot({ ...plot(p), beats: { drop: 0, light: 1 }, light: lit(p),
+    diagram: buildLinePlot({ ...plot(p, true), beats: { drop: 0, light: 1 }, light: lit(p),
       alt: `${alt(p)} Each ${THINGS[p.thing]!.one} drops an X above its length, then the stacks the question is about light up.` }),
     caption: `${last.explain}`,
     timeline: beats(2),
     steps: [
-      { id: "drop", narration: `Each ${THINGS[p.thing]!.one} is measured, and an X goes above its length.`, math: words(THINGS[p.thing]!.title), state: 0 },
+      { id: "drop", narration: `Each ${THINGS[p.thing]!.one} is measured, and an X goes above its length.${p.ask === 0 ? ` The new one is ${p.v} inches, so its X goes above ${p.v}.` : ""}`, math: words(THINGS[p.thing]!.title), state: 0 },
       ...model.steps.map(s => ({ id: s.id, narration: s.explain, math: s.work ?? [num(s.slots[0]!.expected as number)], state: 1, answerStep: s.id, result: s.slots[0]!.expected! })),
     ],
   };
@@ -138,9 +162,11 @@ export const lesson: LessonDefinition<LinePlotProblem> = {
     if (!r || typeof r !== "object") return null;
     try { return createLinePlot(r.thing as number, r.lo as number, r.data as number[], r.ask as number, r.v as number); } catch { return null; }
   },
-  display: p => words(answers(p).steps.at(-1)!.question ?? ""),
+  display: p => words(p.ask === 0
+    ? `Add a ${THINGS[p.thing]!.one} that is ${p.v} inches long. Then how many ${THINGS[p.thing]!.many} are ${p.v} inches long?`
+    : answers(p).steps.at(-1)!.question ?? ""),
   picture: p => buildLinePlot({ ...plot(p), alt: alt(p) }),
-  answers,
+  answers: p => singularWork(answers(p)),
   explain,
   pre: "g2-measure",
 };

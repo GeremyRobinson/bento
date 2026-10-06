@@ -127,14 +127,22 @@ describe("pairs", () => {
 
 const CHAIN_LESSONS = ["g8-exp", "g9-elim", "g9-negexp", "g9-radical", "g9-polyadd", "g11-expeq", "g11-ratexp", "g11-evalpoly", "g11-synth", "g11-compose", "g11-radical", "g12-power", "g12-polyd", "g12-chain", "g12-anti"];
 
+// Lessons that now draw a picture of their own (Curriculum fixes-02, Part B) keep the same beat checks; their pictures
+// are checked in pictures-b.test.ts. A lesson left off this list must still draw the equation chain, and is checked as one.
+const PICTURED_CHAIN_LESSONS = new Set(["g8-exp", "g9-elim", "g9-negexp", "g9-radical", "g9-polyadd", "g11-expeq", "g11-ratexp", "g11-evalpoly", "g11-synth", "g11-compose", "g11-radical", "g12-power", "g12-polyd", "g12-chain", "g12-anti"]);
+
 describe.each(CHAIN_LESSONS)("%s equation chain", id => {
   const l = lesson(id);
   it.each(problemsOf(l, 12).map((p, i) => [i, p] as const))("problem %i: lines appear in order and the beats arrive at the answer model's values", (_i, p) => {
     const model = l.answers(p), ex = l.explain(p, model);
-    const d = ex.diagram as ChainDiagram;
-    expect(d.kind).toBe("chain");
-    expect(d.lines.length).toBeGreaterThan(1);
-    d.lines.forEach((line, i) => { if (i) expect(line.from).toBeGreaterThanOrEqual(d.lines[i - 1]!.from); });
+    if (PICTURED_CHAIN_LESSONS.has(id)) {
+      expect(ex.diagram?.kind).toBe("scene");
+    } else {
+      const d = ex.diagram as ChainDiagram;
+      expect(d.kind).toBe("chain");
+      expect(d.lines.length).toBeGreaterThan(1);
+      d.lines.forEach((line, i) => { if (i) expect(line.from).toBeGreaterThanOrEqual(d.lines[i - 1]!.from); });
+    }
     // every answer step is reached by some beat, with its own value
     for (const s of model.steps) {
       const beat = ex.steps.find(b => b.answerStep === s.id);
@@ -156,8 +164,13 @@ describe.each([
     // the −1 stand-in: only where (a + b) ÷ b isn't whole; it now gets the ordinary hint
     k === 0 && p.t === 1 && !Number.isInteger((p.a + p.b) / p.b) && c.v.x === -1
       ? { ...c, kind: "New exponent", msg: "Not quite. Dividing powers: subtract the exponents.", generic: true } : c],
-  ["g11-ratexp", (p: { n: number }, _k: number, c: Check) =>
-    c.kind === "Divided by the bottom" ? { ...c, msg: `A power of 1/${p.n} is a root, not dividing by ${p.n}.` } : c],
+  ["g11-ratexp", (p: { n: number; r: number; m: number }, k: number, c: Check) => {
+    if (c.kind === "Divided by the bottom") return { ...c, msg: `A power of 1/${p.n} is a root, not dividing by ${p.n}.` };
+    // fixes-02 (2026-10-06): the hints say why, so "Not quite. <hint>" quotes the new hint, and r × top is a named slip
+    if (c.ok || c.soft || !c.generic) return c;
+    if (k === 1 && c.v.x === p.r * p.m) return { ...c, kind: "Multiplied by the top", msg: `The top is a power: ${p.r} times itself, not ${p.r} × ${p.m}.`, generic: false };
+    return { ...c, msg: `Not quite. ${k === 0 ? `The bottom of the fraction picks the root: here it is the ${p.n === 2 ? "square" : "cube"} root.` : "The top of the fraction is the power: multiply the root by itself that many times."}` };
+  }],
 ] as const)("%s deviation is only what it says", (id, expected) => {
   it("judges every other recorded try the same way", () => {
     const l = lesson(id);

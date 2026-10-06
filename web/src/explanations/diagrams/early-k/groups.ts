@@ -2,6 +2,7 @@
 // and two rows lined up so each dot finds a partner and the extras stand out.
 import type { SceneDiagram } from "../scene/schema";
 import { frame, t, type Draft } from "../geo/kit";
+import { r1 } from "../scene/helpers";
 import { WIDE } from "./fit";
 
 const GAP = 52, R = 15;
@@ -26,28 +27,32 @@ export function changeDots(s: ChangeSpec): SceneDiagram {
   const b = s.beats, items: Draft[] = [];
   const x = (i: number) => i * GAP;
   for (let i = 0; i < start; i++) {
-    items.push({ type: "circle", cx: x(i), cy: 0, r: R, cls: "dotp", from: 0, enter: "pop", delay: b ? 0.12 * i : 0 } as Draft);
+    // the counters are always the picture's first color (amber in kindergarten), never the page tint: a tint can be green,
+    // and green means right, so a crossed-out green counter would read as right and wrong at once (v43)
+    items.push({ type: "circle", cx: x(i), cy: 0, r: R, cls: "dotp p0", from: 0, enter: "pop", delay: b ? 0.12 * i : 0 } as Draft);
     if (b) items.push(t(x(i), 34, String(i + 1), "sm", { from: b.start, until: b.change, enter: "rise", delay: 0.12 * i + 0.1 }));
   }
   if (b) {
     if (kind === "join") {
       for (let k = 0; k < change; k++) {
-        items.push({ type: "circle", cx: x(start + k), cy: 0, r: R, cls: "dota", from: b.change, enter: "drop", delay: 0.3 * k } as Draft);
+        items.push({ type: "circle", cx: x(start + k), cy: 0, r: R, cls: "dotp p1", from: b.change, enter: "drop", delay: 0.3 * k } as Draft);
       }
-      items.push(t((x(start) + x(start + change - 1)) / 2, -42, `${change} more`, "lbl acc", { from: b.change, enter: "rise" }));
+      items.push(t((x(start) + x(start + change - 1)) / 2, -42, `${change} more`, "lbl p1", { from: b.change, enter: "rise" }));
     } else {
       for (let k = 0; k < change; k++) {
         const cx = x(start - change + k), d = R * 0.85;
-        items.push({ type: "line", x1: cx - d, y1: -d, x2: cx + d, y2: d, cls: "ln2", from: b.change, enter: "draw", delay: 0.3 * k } as Draft);
-        items.push({ type: "line", x1: cx - d, y1: d, x2: cx + d, y2: -d, cls: "ln2", from: b.change, enter: "draw", delay: 0.3 * k + 0.12 } as Draft);
+        items.push({ type: "line", x1: cx - d, y1: -d, x2: cx + d, y2: d, cls: "ln p1", from: b.change, enter: "draw", delay: 0.3 * k } as Draft);
+        items.push({ type: "line", x1: cx - d, y1: d, x2: cx + d, y2: -d, cls: "ln p1", from: b.change, enter: "draw", delay: 0.3 * k + 0.12 } as Draft);
       }
-      items.push(t((x(start - change) + x(start - 1)) / 2, -42, `take away ${change}`, "lbl acc", { from: b.change, enter: "rise" }));
+      items.push(t((x(start - change) + x(start - 1)) / 2, -42, `take away ${change}`, "lbl p1", { from: b.change, enter: "rise" }));
     }
-    // count what is there now; the last number is the answer
+    // count what is there now; the last number is the answer. The count keeps a steady pace but always reaches the
+    // answer within about a second and a half, so a long count is not left at 4 when the beat moves on.
+    const pace = Math.min(0.25, 1.5 / Math.max(1, end - 1));
     for (let i = 0; i < end; i++) {
       const last = i === end - 1;
-      items.push(t(x(i), 34, String(i + 1), last ? "lbl acc" : "sm", { from: b.end, enter: "rise", delay: 0.25 * i }));
-      if (last) items.push({ type: "circle", cx: x(i), cy: 0, r: R + 6, cls: "ln", from: b.end, enter: "pop", delay: 0.25 * i + 0.2 } as Draft);
+      items.push(t(x(i), 34, String(i + 1), last ? "lbl acc" : "sm", { from: b.end, enter: "rise", delay: r1(pace * i) }));
+      if (last) items.push({ type: "circle", cx: x(i), cy: 0, r: R + 6, cls: "ln pq", from: b.end, enter: "pop", delay: r1(pace * i + 0.2) } as Draft);
     }
     if (end === 0) items.push(t(x(start - 1) / 2, 40, "none left", "lbl acc", { from: b.end, enter: "rise" }));
   }
@@ -70,10 +75,10 @@ export function pairRows(s: PairSpec): SceneDiagram {
   const Y2 = 90, x = (i: number) => i * GAP;
   const row = (n: number, y: number, cls: string, beat: number, label: number) => {
     for (let i = 0; i < n; i++) items.push({ type: "circle", cx: x(i), cy: y, r: R, cls, from: beat, enter: "pop", delay: shown ? 0.12 * i : 0 } as Draft);
-    if (shown) items.push(t(x(n - 1) + R + 26, y, String(label), cls === "dotp" ? "lbl" : "lbl acc", { from: beat, enter: "rise", delay: 0.12 * n }));
+    if (shown) items.push(t(x(n - 1) + R + 26, y, String(label), cls === "dotp" ? "lbl p0" : "lbl p1", { from: beat, enter: "rise", delay: 0.12 * n }));
   };
   row(top, 0, "dotp", b.top, top);
-  row(bottom, Y2, "dota", b.bottom, bottom);
+  row(bottom, Y2, "dotp p1", b.bottom, bottom);
   if (shown) {
     const pairs = Math.min(top, bottom);
     for (let i = 0; i < pairs; i++) {

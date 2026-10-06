@@ -40,7 +40,7 @@ function answers({ ones }: TeenProblem): AnswerModel {
           [n - 1, "Counted on one short", `Start at ${TEN}, then say ${TEN + 1} for the first extra dot.`],
           [n + 1, "Counted on one too many", `One too many. Start at ${TEN} and count on just ${ones}.`],
         ]),
-        hint: `Say ${TEN}, then count on ${ones}: ${countUp(TEN + 1, n)}.`,
+        hint: `Say ${TEN} for the full frame. Then count on, one number for each dot in the second frame.`,
         explain: `${TEN} and ${ones} more make ${n}. A teen number is a ten and some ones.`,
         work: [num(TEN), op("+"), num(ones), op("="), answer("x", n)],
       }),

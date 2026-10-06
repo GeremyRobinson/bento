@@ -21,10 +21,14 @@ interface Timing {
 export interface PlaneLabel {
   text: string;
   acc?: boolean;
+  /** a part's color for the label (0 blue, 1 orange, 2 violet), matching the part it names (handoff-6) */
+  part?: 0 | 1 | 2;
   prefer?: Side[];
   optional?: boolean;
   /** beat the label appears at, when later than its item */
   from?: number;
+  /** keep out of the axes' tick-number bands, for a point sitting on or beside an axis */
+  clearAxes?: boolean;
 }
 
 export type PlaneItem =

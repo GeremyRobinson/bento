@@ -68,7 +68,8 @@ export function showFinal(F: { whole: number; num: number; den: number }, id = "
 /** Simplify S/L to lowest terms or a mixed number (the current app's simplifyStep). */
 export function simplifyStep(S: number, L: number, label: string, id = "simplify"): AnswerStep {
   const F = finalForm(S, L), hasWhole = F.whole > 0, fracPart = F.num > 0, g = gcd(S, L);
-  const hint = S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}. The remainder goes on top.`
+  const hint = S % L === 0 ? `${S} ÷ ${L} = ${S / L} exactly, so it's a whole number.`
+    : S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}. The remainder goes on top.`
     : g > 1 ? `Both ${S} and ${L} can be divided by ${g}.` : `No number (other than 1) divides both ${S} and ${L}. It's already simplest.`;
   return {
     id, label,

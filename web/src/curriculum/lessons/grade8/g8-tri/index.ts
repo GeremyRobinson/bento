@@ -2,6 +2,7 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildTriangleAngles } from "../../../../explanations/diagrams/triangle-angles/build";
 import { asRecord, expected, mt, ns, numberField } from "../../_geometry/kit";
+import { withEasyStart } from "../../easy-start";
 
 /** Two angles of a triangle, a and b; the third is missing. */
 export interface TriangleAnglesProblem {
@@ -25,7 +26,7 @@ export function restoreTriangleAngles(raw: unknown): TriangleAnglesProblem | nul
 export function triangleAnglesAnswers({ a, b }: TriangleAnglesProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "add", label: "Add the two angles", prompt: s => mt`${a}° + ${b}° = ${s}°`, ans: a + b, hint: "Add them." }),
+      ns({ id: "add", label: "Add the two angles", prompt: s => mt`${a}° + ${b}° = ${s}°`, ans: a + b, hint: "The two angles you know take up this much of the 180°: add them.", wrong: [[Math.abs(a - b), "Subtracted", "Put the two known angles together: add them."]] }),
       ns({ id: "third", label: "Subtract from 180", prompt: s => mt`180° − ${a + b}° = ${s}°`, ans: 180 - a - b, hint: "A triangle's angles add up to 180°.",
         wrong: [[360 - a - b, "Used 360°", "Triangles add up to 180°. 360° is for four-sided shapes."]] }),
     ],
@@ -37,7 +38,7 @@ export function explainTriangleAngles(p: TriangleAnglesProblem, answers: AnswerM
   const { a, b } = p, sum = expected(answers, "add"), c = expected(answers, "third");
   return {
     heading: "Triangles add up to 180°",
-    idea: ["The three angles of any triangle add up to 180°.", "Add the two you know, then take that away from 180."],
+    idea: ["Tear off the three corners of any triangle and line them up: they make a straight line, 180°.", "Add the two you know, then take that away from 180."],
     statement: mt`${a}° + ${b}° + ? = 180°`,
     caption: `${a}° + ${b}° + ${c}° = 180°.`,
     diagram: buildTriangleAngles({
@@ -56,7 +57,7 @@ export function explainTriangleAngles(p: TriangleAnglesProblem, answers: AnswerM
   };
 }
 
-export const lesson: LessonDefinition<TriangleAnglesProblem> = {
+export const lesson: LessonDefinition<TriangleAnglesProblem> = withEasyStart({
   id: "g8-tri",
   grade: 8,
   unit: "Geometry",
@@ -68,4 +69,4 @@ export const lesson: LessonDefinition<TriangleAnglesProblem> = {
   displayNote: () => "Two angles of a triangle. Find the third.",
   answers: triangleAnglesAnswers,
   explain: explainTriangleAngles,
-};
+});

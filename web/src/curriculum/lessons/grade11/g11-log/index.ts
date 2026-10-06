@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildPlane } from "../../../../explanations/diagrams/plane/build";
 import { attempt, big, expected, f, ints, ns, supText } from "../../_plane/kit";
+import { withEasyStart } from "../../easy-start";
 
 /** log_b(b^m) + log_b(b^k) */
 export interface LogProblem { kind: "logarithm.sum"; b: number; m: number; k: number }
@@ -19,7 +20,11 @@ export function createLog(b: number, m: number, k: number): LogProblem {
 /** Same as the current app: base 2, 3, 5 or 10; powers up to 6, 4, 3, 3. */
 export function generateLog(rng: Rng): LogProblem {
   const b = rng.pick(BASES), top = topFor(b);
-  return createLog(b, rng.int(1, top), rng.int(1, top));
+  // two different logs, so the problem never reads "log₅ 25 + log₅ 25"
+  const m = rng.int(1, top);
+  let k: number;
+  do k = rng.int(1, top); while (k === m);
+  return createLog(b, m, k);
 }
 
 export function restoreLog(raw: unknown): LogProblem | null {
@@ -36,9 +41,9 @@ export function logAnswers({ b, m, k }: LogProblem): AnswerModel {
   return {
     steps: [
       ns({ id: "m", label: "First log", question: `${b} to what power makes ${big(b ** m)}?`, prompt: s => [...log(b, b ** m), op("="), ...s], ans: m,
-        hint: `Count how many ${b}'s multiply to ${big(b ** m)}.`, wrong: [[b ** m / b, "Divided instead", "A log asks for the exponent, not a quotient."]] }),
-      ns({ id: "k", label: "Second log", prompt: s => [...log(b, b ** k), op("="), ...s], ans: k, hint: `${b} to what power is ${big(b ** k)}?` }),
-      ns({ id: "sum", label: "Add them", prompt: s => [num(m), op("+"), num(k), op("="), ...s], ans: m + k, hint: "Add the two exponents.",
+        hint: `A log is an exponent: count how many times the base multiplies to make ${big(b ** m)}.`, wrong: [[b ** m / b, "Divided instead", "A log asks for the exponent, not a quotient."]] }),
+      ns({ id: "k", label: "Second log", prompt: s => [...log(b, b ** k), op("="), ...s], ans: k, hint: `The base to what power makes ${big(b ** k)}?`, wrong: [[b ** k / b, "Divided instead", "A log asks for the exponent, not a quotient."]] }),
+      ns({ id: "sum", label: "Add them", prompt: s => [num(m), op("+"), num(k), op("="), ...s], ans: m + k, hint: "Multiplying powers of the same base adds their exponents, so add the two logs.",
         note: `Check: log${subText(b)} (${big(b ** m)} × ${big(b ** k)}) is the same.` }),
     ],
     finalParts: [-1],
@@ -50,7 +55,7 @@ export function explainLog(p: LogProblem, model: AnswerModel): Explanation {
   const hi = Math.max(m, k), lo = Math.min(m, k);
   return {
     heading: "A log is an exponent",
-    idea: [`log${subText(b)} X asks: ${b} to what power makes X? On the graph of y = ${b}ˣ, it is the x where the curve reaches X.`, "Adding logs with the same base adds the exponents: it is the log of the product."],
+    idea: ["A log asks: the base to what power makes this number? On the graph of the base to the power x, it is the x where the curve reaches that number.", "Adding logs with the same base adds the exponents: it is the log of the product."],
     statement: logMath(p),
     caption: `${f(b)}${supText(m)} = ${big(b ** m)} and ${f(b)}${supText(k)} = ${big(b ** k)}, so the sum is ${f(m)} + ${f(k)} = ${f(s)}.`,
     diagram: buildPlane({
@@ -79,15 +84,16 @@ export function explainLog(p: LogProblem, model: AnswerModel): Explanation {
   };
 }
 
-export const lesson: LessonDefinition<LogProblem> = {
+export const lesson: LessonDefinition<LogProblem> = withEasyStart({
   id: "g11-log",
   grade: 11,
   unit: "Exponents and logs",
   title: "Evaluating logarithms",
+  pre: "g11-expeq",
   reference: createLog(2, 3, 2),
   generate: rng => generateLog(rng),
   restore: restoreLog,
   display: logMath,
   answers: logAnswers,
   explain: explainLog,
-};
+});

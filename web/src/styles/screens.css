@@ -1,11 +1,5 @@
 /* Screen-level additions on top of the current app's styles. */
 
-/* Without view transitions, a new screen rises in, one block after another (the current app's fallback). */
-.wrap.fresh>:not(.sheet){animation:rise .5s var(--ease) both}
-.wrap.fresh>:nth-child(2){animation-delay:50ms} .wrap.fresh>:nth-child(3){animation-delay:100ms}
-.wrap.fresh>:nth-child(4){animation-delay:150ms} .wrap.fresh>:nth-child(5){animation-delay:200ms}
-.wrap.fresh>:nth-child(6){animation-delay:250ms} .wrap.fresh>:nth-child(n+7){animation-delay:300ms}
-
 /* Lessons still being rebuilt: listed in their place, quieter, and not tappable yet. */
 .lesson.soon,.lesson[disabled]:not(.soon){cursor:default}
 .lesson.soon{background:color-mix(in srgb,var(--card) 55%,transparent);color:var(--muted)}

@@ -29,13 +29,13 @@ export function buildSkipLine(spec: SkipLineSpec): SceneDiagram {
   const x = (i: number) => i * GAP, H = 30;
   const items: Draft[] = [line(-30, 0, x(values.length - 1) + 30, 0, "ax", { enter: "fade" })];
   values.forEach((v, i) => {
-    items.push(line(x(i), -8, x(i), 8, "tk"));
+    items.push(line(x(i), -6, x(i), 6, "tk")); // shorter than a dot, so a dot sitting on it covers it whole
     if (i < given) {
       items.push(t(x(i), 26, String(v), "sm"));
       items.push(circle(x(i), 0, 7, "dotp", { enter: "pop", delay: 0.15 * i }));
     } else {
       const beat = spec.revealBeats[i - given]!;
-      items.push(t(x(i), 26, "?", "sm", { until: beat - 1 }));
+      items.push(t(x(i), 26, "?", "sm acc", { until: beat - 1 }));
       items.push(t(x(i), 28, String(v), "lbl acc", { from: beat, enter: "rise", delay: 0.6 }));
     }
     if (i === 0) return;
@@ -73,8 +73,9 @@ export function buildOpenLine(spec: OpenLineSpec): SceneDiagram {
   spec.hops.forEach((h, i) => {
     const x1 = xs[i]!, x2 = xs[i + 1]!, ht = Math.min(48, Math.abs(x2 - x1) * 0.3 + 14);
     const last = i === spec.hops.length - 1;
-    items.push(path(arcSegs(x1, x2, ht), deltas[i]! < 0 ? "ln2" : "ln", { from: h.beat, enter: "draw" }));
-    items.push(t((x1 + x2) / 2, -ht - 16, h.label, "lbl", { from: h.beat, enter: "rise", delay: 0.3 }));
+    // the start is part 1 (blue); every hop is what's added or taken away (part 2, orange), its label too
+    items.push(path(arcSegs(x1, x2, ht), "ln p1", { from: h.beat, enter: "draw" }));
+    items.push(t((x1 + x2) / 2, -ht - 16, h.label, "lbl p1", { from: h.beat, enter: "rise", delay: 0.3 }));
     items.push(circle(x2, 0, 7, last ? "dota" : "dotp", { from: h.beat, enter: "pop", delay: 0.55 }));
     items.push(t(x2, 28, String(h.to), last ? "lbl acc" : "sm", { from: h.beat, enter: "rise", delay: 0.6 }));
   });

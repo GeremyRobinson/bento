@@ -16,7 +16,10 @@ export function createUnitRate(u: number, n: number, m: number, item: string): U
 }
 
 /** Same ranges as the current app: $2–15 each, 2–9 bought, 2–12 asked about. */
-export const generateUnitRate = (rng: Rng) => createUnitRate(rng.int(2, 15), rng.int(2, 9), rng.int(2, 12), rng.pick(ITEMS));
+// the first three: small prices and counts
+export const generateUnitRate = (rng: Rng, index = 3) => (index < 3
+  ? createUnitRate(rng.int(2, 5), rng.int(2, 4), rng.int(2, 6), rng.pick(ITEMS))
+  : createUnitRate(rng.int(2, 15), rng.int(2, 9), rng.int(2, 12), rng.pick(ITEMS)));
 
 const $ = (s: MathText): MathText => [text("$"), ...s];
 
@@ -25,7 +28,8 @@ function answers({ u, n, m }: UnitRateProblem): AnswerModel {
     steps: [
       ns({ id: "one", l: "Cost of one", a: s => [...$([num(u * n)]), op("÷"), num(n), op("="), ...$(s)], ans: u, h: `Share the cost over ${n}.`,
         w: [[u * n * n, "Multiplied instead of divided", "To find the cost of one, divide."]] }),
-      ns({ id: "many", l: `Cost of ${m}`, a: s => [num(m), op("×"), ...$([num(u)]), op("="), ...$(s)], ans: m * u, h: `${m} of them at $${u} each.` }),
+      ns({ id: "many", l: `Cost of ${m}`, a: s => [num(m), op("×"), ...$([num(u)]), op("="), ...$(s)], ans: m * u, h: `${m} of them at $${u} each.`,
+        w: [[u * n * m, "Used the cost of all of them", `Use the cost of one, $${u}, not $${u * n}.`], [m + u, "Added", `${m} of them, $${u} each: that's ${m} groups of $${u}.`]] }),
     ],
     finalParts: [-1],
   };
@@ -37,7 +41,7 @@ export function unitRatePicture({ u, n, m, item }: UnitRateProblem) {
     rows: [
       { length: n, parts: n, fills: [{ a: 0, b: n, tone: "on", from: 1 }], each: [{ text: () => `$${u}`, from: 1 }], label: [{ text: `${n} ${item}` }],
         total: [{ text: `$${u * n}` }] },
-      { length: m, parts: m, from: 1, fills: [{ a: 0, b: m, tone: "acc", from: 2 }], each: [{ text: () => `$${u}`, from: 2 }], label: [{ text: `${m} ${item}` }],
+      { length: m, parts: m, from: 1, fills: [{ a: 0, b: m, tone: "two", from: 2 }], each: [{ text: () => `$${u}`, from: 2 }], label: [{ text: `${m} ${item}` }],
         total: [{ text: "?", until: 1 }, { text: `$${m * u}`, from: 2, acc: true }] },
     ],
     alt: `${n} ${item} cost $${u * n}, so each costs $${u}; ${m} ${item} cost $${m * u}.`,
@@ -48,6 +52,7 @@ function explain(p: UnitRateProblem, model: AnswerModel): Explanation {
   const { n, m, item } = p, u = expectedOf(model.steps, "one"), total = expectedOf(model.steps, "many");
   return {
     heading: "Find the cost of one first",
+    idea: ["A rate says how much for one, and every one costs the same, so the cost of one is the bridge to any number of them.", "Divide to find the cost of one, then multiply."],
     statement: [num(n), text(` ${item} cost $`), num(u * n)],
     diagram: unitRatePicture(p),
     caption: `Each box is one of the ${item}: $${u}.`,
@@ -69,7 +74,7 @@ export const lesson: LessonDefinition<UnitRateProblem> = {
   pre: "g5-divide",
   // the current app's card and picture: 4 apples cost $12, so 7 apples cost $21
   reference: createUnitRate(3, 4, 7, "apples"),
-  generate: rng => generateUnitRate(rng),
+  generate: (rng, index) => generateUnitRate(rng, index),
   restore: raw => {
     if (!raw || typeof raw !== "object") return null;
     const r = raw as Record<string, unknown>;

@@ -49,8 +49,8 @@ export function buildDecimalShift(spec: DecimalShiftSpec): SceneDiagram {
     items.push({ type: "rect", x: r1(left + i * CW + 3), y: y - 30, w: CW - 6, h: 56, rx: 10, cls: "seg", enter: isNew ? "pop" : "fade", ...at });
     items.push({ type: "text", x: r1(left + i * CW + CW / 2), y: y - 2, text: dg, cls: isNew ? "big acc" : "big", enter: isNew ? "pop" : "fade", ...at });
   });
-  // the point: where it starts (until the move), then where it lands
-  items.push({ type: "circle", cx: X(from), cy: y + 22, r: 6, cls: "dotp", enter: "pop", from: spec.beat, until: spec.moveBeat - 1 });
+  // the point: where it starts (kept, so the hops visibly leave from it), then where it lands
+  items.push({ type: "circle", cx: X(from), cy: y + 22, r: 6, cls: "dotp", enter: "pop", from: spec.beat });
   for (let k = 0; k < steps; k++) {
     const a = X(from + k * dir), c = X(from + (k + 1) * dir);
     items.push({ type: "path", d: `M${a} ${y + 40} Q${r1((a + c) / 2)} ${y + 62} ${c} ${y + 40}`, cls: "ln2 arrow", enter: "draw", from: spec.moveBeat, delay: r1(k * 0.45) });

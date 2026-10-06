@@ -4,6 +4,8 @@ import type { Rng } from "../../../generators/rng";
 import { ns, supText } from "../../algebra-kit/steps";
 import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { rationalExponentPicture } from "./picture";
+import { withEasyStart } from "../../easy-start";
 
 /** (rⁿ) to the m/n: the n-th root is r, then r to the m. */
 export interface RationalExponent { kind: "exponents.rational"; n: 2 | 3; r: number; m: number; base: number }
@@ -30,9 +32,9 @@ const exponent = (top: number, bottom: number): MathText => [num(top), text("/")
 export function rationalAnswers({ n, r, m: top, base }: RationalExponent): AnswerModel {
   return {
     steps: [
-      ns({ id: "root", l: "Take the root", a: s => [text(rootSign(n)), num(base), op("="), ...s], ans: r, h: `The bottom ${f(n)} means the ${n === 2 ? "square" : "cube"} root.`,
+      ns({ id: "root", l: "Take the root", a: s => [text(rootSign(n)), num(base), op("="), ...s], ans: r, h: `The bottom of the fraction picks the root: here it is the ${n === 2 ? "square" : "cube"} root.`,
         w: [[base / n, "Divided by the bottom", `A power of 1/${f(n)} is a root, not dividing by ${f(n)}.`]] }),
-      ns({ id: "power", l: "Raise to the top", a: s => [num(r), sup(top), op("="), ...s], ans: r ** top, h: `The top ${f(top)} is the power.` }),
+      ns({ id: "power", l: "Raise to the top", a: s => [num(r), sup(top), op("="), ...s], ans: r ** top, h: "The top of the fraction is the power: multiply the root by itself that many times.", w: [[r * top, "Multiplied by the top", `The top is a power: ${f(r)} times itself, not ${f(r)} × ${f(top)}.`]] }),
     ],
     finalParts: [-1],
   };
@@ -44,8 +46,10 @@ export function explainRational(p: RationalExponent, model: AnswerModel) {
   const root = n === 2 ? "square" : "cube";
   return beatExplanation({
     heading: "Bottom is the root, top is the power",
+    idea: ["Taking a root twice of the same size undoes squaring, so a power of 1/2 has to be the square root: (a to the 1/2) × (a to the 1/2) = a to the 1.", "A fraction power m/n splits into two moves: the bottom n takes the root, and the top m raises to a power. Root first keeps the numbers small."],
     statement: [num(base), sup(exponent(top, n))],
     caption: `${rootSign(n)}${f(base)} = ${f(r)}, then ${f(r)}${supText(top)} = ${f(value)}.`,
+    diagram: rationalExponentPicture({ n, m: top, r, base, value }),
     alt: `${f(base)} to the ${f(top)}/${f(n)} is the ${root} root of ${f(base)}, ${f(r)}, to the power ${f(top)}: ${f(value)}.`,
     steps: [
       { id: "problem", narration: `The exponent is a fraction: the bottom ${f(n)} is a ${root} root, the top ${f(top)} is a power.`, math: [num(base), sup([mark(exponent(top, n))])] },
@@ -56,15 +60,16 @@ export function explainRational(p: RationalExponent, model: AnswerModel) {
   });
 }
 
-export const lesson: LessonDefinition<RationalExponent> = {
+export const lesson: LessonDefinition<RationalExponent> = withEasyStart({
   id: "g11-ratexp",
   grade: 11,
   unit: "Exponents and logs",
   title: "Rational exponents",
+  pre: "g8-roots",
   reference: createRationalExponent(3, 2, 2),
   generate: rng => generateRationalExponent(rng),
   restore: restoreRationalExponent,
   display: p => [num(p.base), sup(exponent(p.m, p.n))],
   answers: rationalAnswers,
   explain: explainRational,
-};
+});

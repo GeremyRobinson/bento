@@ -3,6 +3,7 @@ import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildRadians } from "../../../../explanations/diagrams/circle/build";
 import { asRecord, expected, gcd, mt, ns, numberField, piText } from "../../_geometry/kit";
 import { count } from "../../../text";
+import { withEasyStart } from "../../easy-start";
 
 /** An angle of nπ/d radians to write in degrees. */
 export interface RadiansToDegreesProblem {
@@ -25,8 +26,8 @@ export function restoreRadiansToDegrees(raw: unknown): RadiansToDegreesProblem |
 export function radiansToDegreesAnswers({ n, d }: RadiansToDegreesProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "piece", label: "One piece", prompt: s => mt`180° ÷ ${d} = ${s}°`, ans: 180 / d, hint: "π is 180°, so split 180 into the bottom number of pieces." }),
-      ns({ id: "degrees", label: "Times the top", prompt: s => mt`${n} × ${180 / d}° = ${s}°`, ans: (180 * n) / d, hint: `Take ${n} of those pieces.` }),
+      ns({ id: "piece", label: "One piece", prompt: s => mt`180° ÷ ${d} = ${s}°`, ans: 180 / d, hint: "π is 180°, so split 180 into the bottom number of pieces.", wrong: [[180 * d, "Multiplied", `π/${d} is 180° split into ${d} pieces: divide.`]] }),
+      ns({ id: "degrees", label: "Times the top", prompt: s => mt`${n} × ${180 / d}° = ${s}°`, ans: (180 * n) / d, hint: `The top says how many of those pieces: ${n} of them.`, wrong: [[180 / d + n, "Added", `${count(n, "piece")} of ${180 / d}° each: multiply.`]] }),
     ],
     finalParts: [-1],
   };
@@ -54,11 +55,12 @@ export function explainRadiansToDegrees({ n, d }: RadiansToDegreesProblem, answe
   };
 }
 
-export const lesson: LessonDefinition<RadiansToDegreesProblem> = {
+export const lesson: LessonDefinition<RadiansToDegreesProblem> = withEasyStart({
   id: "g12-deg",
   grade: 12,
   unit: "Trigonometry",
   title: "Radians to degrees",
+  pre: "g12-rad",
   reference: createRadiansToDegrees(5, 6),
   generate: rng => {
     let n: number, d: number;
@@ -70,4 +72,4 @@ export const lesson: LessonDefinition<RadiansToDegreesProblem> = {
   displayNote: () => "Write it in degrees.",
   answers: radiansToDegreesAnswers,
   explain: explainRadiansToDegrees,
-};
+});

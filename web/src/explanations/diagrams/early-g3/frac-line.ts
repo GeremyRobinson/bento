@@ -24,7 +24,7 @@ export function buildFracLine(s: FracLineSpec): SceneDiagram {
   for (let k = 0; k <= n; k++) {
     const whole = k % s.den === 0;
     items.push(seg([X(k), whole ? -11 : -7], [X(k), whole ? 11 : 7], whole ? "ax" : "tk", { enter: "fade", delay: Math.round(k * 0.02 * 100) / 100 }));
-    if (whole) items.push(t(X(k), 30, String(k / s.den), "lbl", { enter: "fade" }));
+    if (whole) items.push(t(X(k), 30, String(k / s.den), "lbl pw", { enter: "fade" }));
   }
   if (s.spacesBeat != null) {
     for (let k = 0; k < s.den; k++) {

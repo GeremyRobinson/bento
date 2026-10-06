@@ -1,4 +1,5 @@
-// Three numbers to add (g1-three): three ten frames, each group its own color; the easy pair lights up and joins first, then the last group.
+// Three numbers to add (g1-three): three ten frames, each addend its own part color (blue, orange, violet) with its
+// label in the same color, and the sums being made in amber; the easy pair lights up and joins first, then the last group.
 import type { SceneDiagram } from "../scene/schema";
 import { frame, t, type Draft } from "../geo/kit";
 import { P } from "../early-k/fit";
@@ -35,7 +36,7 @@ export function buildThree(s: ThreeSpec): SceneDiagram {
     const x = i * (fw + GAP);
     items.push(...frames(n, x, 0, `dotp ${P(i)}`, { from: 0, enter: "pop", delay: b ? 0.3 * i : 0 }).items);
     if (i) items.push(t(x - GAP / 2, CELL, "+", "big"));
-    if (b) items.push(t(x + fw / 2, 2 * CELL + 18, String(n), "lbl", { from: b.groups, enter: "rise", delay: 0.3 * i }));
+    if (b) items.push(t(x + fw / 2, 2 * CELL + 18, String(n), `lbl ${P(i)}`, { from: b.groups, enter: "rise", delay: 0.3 * i }));
   });
   if (b && s.pair) {
     const [i, j] = s.pair, k = [0, 1, 2].find(q => q !== i && q !== j)!;

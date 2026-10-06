@@ -15,6 +15,8 @@ const DOT = 6.5;
 const MAX_GROW = 70;
 /** How much a label should avoid covering a drawn line, per sampled point (axes count less). */
 const LINE = 16, AXIS = 6;
+/** What a label that asks to stay clear of the axes pays for touching one or its tick-number band. */
+const GUTTER = 24;
 
 interface Pads { l: number; r: number; t: number; b: number }
 const NO_PADS: Pads = { l: 0, r: 0, t: 0, b: 0 };
@@ -121,6 +123,7 @@ export function planeFrame(spec: PlaneSpec, extra: Pads = NO_PADS): PlaneFrame {
 interface Box { x0: number; y0: number; x1: number; y1: number }
 const overlap = (a: Box, b: Box) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
 const boxAt = (cx: number, cy: number, w: number, h: number): Box => ({ x0: cx - w / 2, y0: cy - h / 2, x1: cx + w / 2, y1: cy + h / 2 });
+const grow = (b: Box, m: number): Box => ({ x0: b.x0 - m, y0: b.y0 - m, x1: b.x1 + m, y1: b.y1 + m });
 
 const SIDES: Record<Side, [number, number]> = { n: [0, -1], s: [0, 1], e: [1, 0], w: [-1, 0], ne: [1, -1], nw: [-1, -1], se: [1, 1], sw: [-1, 1], c: [0, 0] };
 const ORDER: Side[] = ["n", "ne", "e", "se", "s", "sw", "w", "nw"];
@@ -199,8 +202,9 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
   const anchorsOn = (runs: [number, number][][], at?: number): [number, number][] => {
     const all = runs.flat();
     if (!all.length) return [];
-    const ps = at == null ? [0.82, 0.62, 0.4, 0.18, 0.95].map(t => all[Math.floor((all.length - 1) * t)]!)
-      : [all.reduce((best, q) => (Math.abs(q[0] - at) < Math.abs(best[0] - at) ? q : best))];
+    const spread = [0.82, 0.62, 0.4, 0.18, 0.95].map(t => all[Math.floor((all.length - 1) * t)]!);
+    // the asked-for spot first; the others are fallbacks for when that spot is crowded (near the origin, say)
+    const ps = at == null ? spread : [all.reduce((best, q) => (Math.abs(q[0] - at) < Math.abs(best[0] - at) ? q : best)), ...spread];
     return ps.map(p => [X(p[0]), Y(p[1])]);
   };
 
@@ -236,9 +240,9 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
         const pa: [number, number] = [X(it.a[0]), Y(it.a[1])], pb: [number, number] = [X(it.b[0]), Y(it.b[1])];
         const ang = Math.atan2(pb[1] - pa[1], pb[0] - pa[0]), len = Math.hypot(pb[0] - pa[0], pb[1] - pa[1]);
         const head = Math.min(13, Math.max(8, len * 0.4)), cut = it.arrow ? Math.min(head * 0.55, len / 2) : 0, end: [number, number] = [pb[0] - cut * Math.cos(ang), pb[1] - cut * Math.sin(ang)];
-        const cls = it.cls ?? "ln";
+        const cls = it.cls ?? "ln", part = /\bp[012]\b/.exec(cls)?.[0];
         shapes.push({ type: "path", d: `M${r1(pa[0])} ${r1(pa[1])} L${r1(end[0])} ${r1(end[1])}`, cls, enter: it.slow ? "draw slow" : "draw", ...t });
-        if (it.arrow && len > 1) shapes.push(arrowHead(r1(pb[0]), r1(pb[1]), ang, head, { cls: cls.includes("ln2") ? "dota" : "dotp", enter: "pop", ...t, delay: (it.delay ?? 0) + 0.6 }));
+        if (it.arrow && len > 1) shapes.push(arrowHead(r1(pb[0]), r1(pb[1]), ang, head, { cls: cls.includes("ln2") ? "dota" : `dotp${part ? ` ${part}` : ""}`, enter: "pop", ...t, delay: (it.delay ?? 0) + 0.6 }));
         sampleLine(pa, pb, LINE);
         // a label beside the middle, on whichever side is free
         const vertical = Math.abs(pb[0] - pa[0]) < 1, flat = Math.abs(pb[1] - pa[1]) < 1;
@@ -293,14 +297,21 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
   xTick.forEach(t => tickBoxes.push(boxAt(t.cx, t.cy, textWidth(t.s, FONT.xs), FONT.xs * 1.1)));
   yTick.forEach(t => { const w = textWidth(t.s, FONT.xs); tickBoxes.push(boxAt(t.cx - w / 2, t.cy, w, FONT.xs * 1.1)); });
 
-  const score = (b: Box) => {
+  // the band under the x-axis where its tick numbers go: a label there reads as a tick sitting on the axis.
+  // Labels that ask to stay clear of the axes pay for landing in it, or for touching either axis line.
+  const gutters: Box[] = [{ x0: X(x0), x1: X(x1), y0: Y(ay) - 3, y1: Y(ay) + 14 + FONT.xs * 0.6 }];
+  if (x0 <= 0 && x1 >= 0) gutters.push({ x0: X(0) - 3, x1: X(0) + 3, y0: Y(y1), y1: Y(y0) });
+  const score = (b: Box, clear = false) => {
     let s = 0;
+    if (clear) for (const g of gutters) if (overlap(b, g)) s += GUTTER;
     const out = Math.max(0, 2 - b.x0) + Math.max(0, 2 - b.y0) + Math.max(0, b.x1 - (W - 2)) + Math.max(0, b.y1 - (H - 2));
     if (out > MAX_GROW) s += 1000;
     else if (out > 0) s += 6 + out * 0.5;
-    for (const p of placed) if (overlap(b, p)) s += 500;
+    // labels keep a little air between them: two labels touching near the origin read as one
+    for (const p of placed) if (overlap(b, p)) s += 500; else if (overlap(b, grow(p, 5))) s += 60;
     for (const d of dotsAt) if (overlap(b, { x0: d.x - d.r, y0: d.y - d.r, x1: d.x + d.r, y1: d.y + d.r })) s += 300;
-    for (const p of samples) if (p.x > b.x0 - 2 && p.x < b.x1 + 2 && p.y > b.y0 - 2 && p.y < b.y1 + 2) s += p.w;
+    // a line just under or over a label reads as crossing it, so lines keep a little room above and below
+    for (const p of samples) if (p.x > b.x0 - 2 && p.x < b.x1 + 2 && p.y > b.y0 - 3 && p.y < b.y1 + 3) s += p.w;
     for (const tb of tickBoxes) if (overlap(b, tb)) s += 4;
     return s;
   };
@@ -317,7 +328,7 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
         const cx = anchor[0] + ux * ((diag ? q.gap * 0.7 : q.gap) + 4 + ring + w / 2);
         const cy = anchor[1] + uy * ((diag ? q.gap * 0.7 : q.gap) + 3 + ring + h / 2);
         const b = boxAt(cx, cy, w, h);
-        const s = score(b) + (k < prefer.length ? k : 10 + k) + ring + ai * 3;
+        const s = score(b, q.label.clearAxes) + (k < prefer.length ? k : 10 + k) + ring + ai * 3;
         if (!best || s < best.s) best = { b, cx, cy, s };
       });
     }
@@ -325,7 +336,7 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
     if (!chosen || (q.label.optional && chosen.s >= 40)) continue;
     placed.push(chosen.b);
     texts.push({
-      type: "text", x: r1(chosen.cx), y: r1(chosen.cy), text: q.label.text, cls: `lbl${q.label.acc ? " acc" : ""}`, enter: "rise",
+      type: "text", x: r1(chosen.cx), y: r1(chosen.cy), text: q.label.text, cls: `lbl${q.label.acc ? " acc" : q.label.part != null ? ` p${q.label.part}` : ""}`, enter: "rise",
       ...(q.from ? { from: q.from } : {}), ...(q.until != null ? { until: q.until } : {}), delay: q.delay,
     });
   }

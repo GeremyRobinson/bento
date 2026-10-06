@@ -14,8 +14,17 @@ export function createPartial(n: number, m: number): PartialProblem {
   return { n, m };
 }
 
-/** Same as the current app: n 112–989, m 3–9. */
-export const generatePartial = (rng: Rng): PartialProblem => ({ n: rng.int(112, 989), m: rng.int(3, 9) });
+/**
+ * n 112–989, m 3–9, as in the current app, but never a whole number of hundreds (600): that is one strip and
+ * practises no partial products (fixes-02 A1). A 0 in the tens (502) stays: "there are no tens, so that part is 0".
+ */
+export const generatePartial = (rng: Rng, index = 3): PartialProblem => {
+  // the first three are friendlier: hundreds 1–3 and a small multiplier
+  const [lo, hi, m] = index < 3 ? [112, 399, rng.int(2, 5)] : [112, 989, rng.int(3, 9)];
+  let n: number;
+  do n = rng.int(lo, hi); while (n % 100 === 0);
+  return { n, m };
+};
 
 const places = (n: number) => ({ H: Math.floor(n / 100), T: Math.floor(n / 10) % 10, O: n % 10 });
 
@@ -28,11 +37,13 @@ export function partialAnswers({ n, m }: PartialProblem): AnswerModel {
         hint: `Do ${H} × ${m}, then add two zeros.`, explain: `${H} × ${m} = ${H * m}, so ${H * 100} × ${m} = ${P[0]}.`, work: [num(H * 100), op("×"), num(m), op("="), num(P[0]!)] }),
       numStep({ id: "tens", label: "Tens", prompt: x => [num(T * 10), op("×"), num(m), op("="), x], ans: P[1]!,
         wrong: T ? [[T * m, "Lost the place value", `That's ${T} × ${m}. The ${T} stands for ${T * 10}, so put a zero on the end.`]] : [],
-        hint: `Do ${T} × ${m}, then add one zero.`, explain: `${T * 10} × ${m} = ${P[1]}.`, work: [num(T * 10), op("×"), num(m), op("="), num(P[1]!)] }),
+        hint: T ? `Do ${T} × ${m}, then add one zero.` : "There are no tens, so this part is 0.", explain: `${T * 10} × ${m} = ${P[1]}.`, work: [num(T * 10), op("×"), num(m), op("="), num(P[1]!)] }),
       numStep({ id: "ones", label: "Ones", prompt: x => [num(O), op("×"), num(m), op("="), x], ans: P[2]!,
         wrong: [[O + m, "Added instead of multiplied", "This one is times, not plus."]],
-        hint: `${count(O, "group")} of ${m}.`, explain: `${O} × ${m} = ${P[2]}.`, work: [num(O), op("×"), num(m), op("="), num(P[2]!)] }),
+        hint: O ? `${count(O, "group")} of ${m}.` : "There are no ones, so this part is 0.", explain: `${O} × ${m} = ${P[2]}.`, work: [num(O), op("×"), num(m), op("="), num(P[2]!)] }),
       numStep({ id: "sum", label: "Add the parts", prompt: x => [...plusChain(P), op("="), x], ans: n * m,
+        // the commonest slip: only the two biggest parts added (fixes-02 A1); dropped when the ones part is 0
+        wrong: [[P[0]! + P[1]!, "Left out a part", `Add all three parts: ${P.join(" + ")}.`]],
         hint: "Line them up by place value and add.", explain: `${P.join(" + ")} = ${n * m}.`, work: [num(n), op("×"), num(m), op("="), answer("x", n * m)] }),
     ],
     finalParts: [-1],
@@ -48,24 +59,27 @@ export function explainPartial(p: PartialProblem, answers: AnswerModel): Explana
   const shown = partsOf.map((v, i) => [v, i] as const).filter(([v]) => v > 0);
   const cols: AreaSide[] = shown.map(([v]) => ({ label: String(v), size: v }));
   const cells: AreaCell[] = shown.map(([, i]) => ({ text: String(P[i]), from: i + 1, focus: [i + 1] }));
-  const statement: MathText = [num(n), op("×"), num(m), op("="), ...shown.flatMap(([v], k) => [...(k ? [op("+")] : []), num(v), op("×"), num(m)])];
+  // a number with one nonzero place (600) is already one strip: say the problem once, not "600 × 4 = 600 × 4"
+  const split = shown.length > 1;
+  const statement: MathText = [num(n), op("×"), num(m), ...(split ? [op("="), ...shown.flatMap(([v], k) => [...(k ? [op("+")] : []), num(v), op("×"), num(m)])] : [])];
   return {
     heading: "Multiply one place at a time",
-    idea: ["Split the big number into hundreds, tens and ones. Multiply each part, then add."],
+    idea: ["A big number is its hundreds, tens and ones put together, so each part can be multiplied on its own.", "The parts added together make the whole product."],
     statement,
     diagram: buildAreaGrid({
       cols, rows: [{ label: String(m), size: m }], cells: [cells], minRow: 80,
-      lines: [{ text: `${n} × ${m} = ${P.filter(x => x > 0).join(" + ")} = ${total}`, from: 4 }],
+      lines: [{ text: split ? `${n} × ${m} = ${P.filter(x => x > 0).join(" + ")} = ${total}` : `${n} × ${m} = ${total}`, from: 4 }],
       alt: `${cap(aNum(m))} by ${n} rectangle cut by place value: ${shown.map(([v, i]) => `${m} × ${v} = ${P[i]}`).join(", ")}. Together ${total}.`,
     }),
-    caption: `${n} is ${shown.map(([v]) => v).join(" + ")}: one strip for each place.`,
+    caption: split ? `${n} is ${shown.map(([v]) => v).join(" + ")}: one strip for each place.` : `${n} is just ${count(H, "hundred")}, so it is one strip.`,
     timeline: beats(5),
     steps: [
       ...ids.map((id, i) => ({
         id, narration: partsOf[i] ? `The ${names[i]}: ${partsOf[i]} × ${m} = ${P[i]}.` : `There are no ${names[i]}, so that part is 0.`,
         math: [num(partsOf[i]!), op("×"), num(m), op("="), num(P[i]!)], state: i + 1, answerStep: id, result: P[i]!,
       })),
-      { id: "sum", narration: `Add the parts: ${total}.`, math: [...plusChain(P), op("="), num(total)], state: 4, answerStep: "sum", result: total },
+      // a place worth 0 adds nothing, so the worked line leaves out "+ 0" (review v43 item 10)
+      { id: "sum", narration: `Add the parts: ${total}.`, math: [...(split ? plusChain(P.filter(x => x > 0)) : [num(n), op("×"), num(m)]), op("="), num(total)], state: 4, answerStep: "sum", result: total },
     ],
   };
 }
@@ -77,7 +91,7 @@ export const lesson: LessonDefinition<PartialProblem> = {
   title: "Multiply big numbers",
   pre: "g3-split",
   reference: createPartial(346, 7),
-  generate: rng => generatePartial(rng),
+  generate: (rng, index) => generatePartial(rng, index),
   restore: raw => { const r = readNumbers(raw, ["n", "m"] as const); try { return r && createPartial(r.n, r.m); } catch { return null; } },
   display: p => [num(p.n), op("×"), num(p.m)],
   answers: partialAnswers,

@@ -1,6 +1,7 @@
 import { flushSync } from "react-dom";
 
-export type Dir = "" | "fwd" | "back" | "next" | "prev";
+/** "still": no cross-fade at all, for changes inside a screen (picking a row) where only one part should move */
+export type Dir = "" | "fwd" | "back" | "next" | "prev" | "still";
 
 export { motionOff as reduceMotion } from "./settings";
 import { motionOff as reduceMotion } from "./settings";
@@ -16,7 +17,7 @@ export const canCrossFade = () => typeof document !== "undefined" && !!(document
  */
 export function withTransition(update: () => void, dir: Dir = ""): void {
   const d = typeof document === "undefined" ? null : (document as VTDocument);
-  if (!d || !d.startViewTransition || reduceMotion()) { update(); return; }
+  if (!d || !d.startViewTransition || reduceMotion() || dir === "still") { update(); return; }
   d.documentElement.dataset.dir = dir;
   try {
     d.startViewTransition(() => { flushSync(update); });

@@ -1,7 +1,8 @@
 // Folding for symmetry (design/pictures-k4.md §7, g4-symmetry): a shape with a dashed fold line. In Learn the half on
-// one side flips across the line (a flat squash, not 3D), the result shows (a check when the halves match, the parts
-// that stick out in err when they don't), and it unfolds again so it ends still and flat. Counting shows each line
-// of symmetry drawn in turn with a running count.
+// one side flips across the line (a flat squash, not 3D), the result shows and it unfolds again so it ends still and
+// flat. The result is a check in the accent when the halves match, or the folded copy that doesn't fit in the third
+// part colour when they don't: never green or red, which mean right and wrong (review v45 blocker 5). Counting shows
+// each line of symmetry drawn in turn with a running count.
 import type { SceneDiagram } from "../scene/schema";
 import { frame, path, t, M, L, Z, type Draft, type Pt } from "../geo/kit";
 

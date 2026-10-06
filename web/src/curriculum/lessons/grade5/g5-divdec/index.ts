@@ -3,6 +3,7 @@ import { formatNumber as f, mark, num, op } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { chainExplanation } from "../../../../explanations/diagrams/chain/build";
 import { expectedOf, oneBox, restoreVia, round6, wholeIn } from "../../_number-line/steps";
+import { buildDoubleLine } from "../../../../explanations/diagrams/early-g4/double-line";
 
 /** (d × qt)/10 ÷ d/10, so the answer is the whole number qt */
 export interface DivDecimalProblem { d: number; qt: number }
@@ -17,12 +18,14 @@ function answers({ d, qt }: DivDecimalProblem): AnswerModel {
   const x = (d * qt) / 10, y = d / 10;
   return {
     steps: [
-      oneBox({ id: "divisor", label: "Make the divisor whole", prompt: s => [num(y), op("×"), num(10), op("="), s], ans: d, hint: "Move its decimal point one place right." }),
+      oneBox({ id: "divisor", label: "Make the divisor whole", prompt: s => [num(y), op("×"), num(10), op("="), s], ans: d, hint: "Move its decimal point one place right.",
+        wrong: [[d * 10, "Moved the point too far", "Times 10 moves the point just one place."], [round6(y / 10), "Moved the point the wrong way", "Times 10 makes it bigger: the point moves right."]] }),
       oneBox({
         id: "other", label: "Do the same to the other number", prompt: s => [num(x), op("×"), num(10), op("="), s], ans: d * qt,
         hint: "Multiply it by 10 too, so the answer doesn't change.", wrong: [[round6(x), "Changed only one number", "Multiply both numbers by 10."]],
       }),
-      oneBox({ id: "divide", label: "Divide", prompt: s => [num(d * qt), op("÷"), num(d), op("="), s], ans: qt, hint: `How many ${d}s make ${d * qt}?` }),
+      oneBox({ id: "divide", label: "Divide", prompt: s => [num(d * qt), op("÷"), num(d), op("="), s], ans: qt, hint: `How many ${d}s make ${d * qt}?`,
+        wrong: [[round6(qt / 10), "Put the point back", "Both numbers grew ten times, so the answer didn't change: there's no point to put back."], [d * qt * d, "Multiplied", `How many ${d}s fit in ${d * qt}? That's dividing.`]] }),
     ],
     finalParts: [-1],
   };
@@ -33,10 +36,18 @@ function explain(p: DivDecimalProblem, model: AnswerModel) {
   const d = expectedOf(model, "divisor"), n = expectedOf(model, "other"), qt = expectedOf(model, "divide");
   return chainExplanation({
     heading: "Make the divisor a whole number",
-    idea: ["Multiply both numbers by 10 so the divisor is a whole number. Moving both points the same way doesn't change the answer."],
+    idea: ["Dividing asks how many of one number fit into the other, and that stays the same when both numbers are made ten times bigger.", "So multiply both by 10 to make the divisor a whole number."],
     statement: [num(x), op("÷"), num(y)],
     caption: `Move both points one place: ${f(x)} ÷ ${f(y)} and ${n} ÷ ${d} have the same answer.`,
     alt: `${f(x)} ÷ ${f(y)} becomes ${n} ÷ ${d} = ${qt}.`,
+    diagram: buildDoubleLine({
+      n: qt, per: d, extra: 0, top: "", bottom: "", between: "× 10",
+      topText: j => f(round6(j * y)), bottomText: j => String(j * d),
+      beats: { one: 0, all: 1, extra: null, total: 2 }, hops: { from: 2 },
+      lines: [{ text: `${f(y)} × 10 = ${d}`, from: 0, until: 0 }, { text: `${f(x)} × 10 = ${n}`, from: 1, until: 1 }],
+      total: `${n} ÷ ${d} = ${qt}, and ${f(x)} ÷ ${f(y)} = ${qt}`,
+      alt: `A double number line: the top counts by ${f(y)} up to ${f(x)}, the bottom by ${d} up to ${n}, tick for tick. ${qt} hops on each line, so both divisions are ${qt}.`,
+    }),
     beats: [
       { id: "divisor", narration: `Make the divisor whole: ${f(y)} × 10 = ${d}.`, math: [num(y), op("×"), num(10), op("="), num(d)],
         lines: [[num(x), op("÷"), num(y)], [num(y), op("×"), num(10), op("="), num(d)]], answerStep: "divisor", result: d },

@@ -52,6 +52,7 @@ function answers(p: RoundProblem): AnswerModel {
           [{ lo: hi, hi: hi + to }, "One step too high", `${n} is less than ${hi}. Look for the ${place(to, false)} just below it.`],
         ],
         hint: `Count by ${to}s. Which two do you pass ${n} between?`,
+        explain: `Counting by ${to}s, ${n} comes after ${lo} and before ${hi}.`,
       }),
       box({
         id: "mid", label: "Find halfway", question: `What number is halfway between ${lo} and ${hi}?`,

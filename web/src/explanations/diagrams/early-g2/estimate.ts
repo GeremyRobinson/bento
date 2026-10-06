@@ -21,24 +21,24 @@ function clip(x: number, y: number, w: number, cls: string, o: Timing): Draft[] 
   return [path(segs, cls, o)];
 }
 
-/** the thing lying from x0 to x1 with its bottom on y = bot */
+/** the thing lying from x0 to x1 with its bottom on y = bot, always part blue (the benchmarks laid along it are orange) */
 function thingShape(kind: EstimateThing, x0: number, x1: number, bot: number, o: Timing): Draft[] {
   const len = x1 - x0;
   switch (kind) {
     case "crayon": case "pencil": case "marker": {
-      const H = kind === "marker" ? 26 : 22, tip = Math.min(24, len / 4), cls = kind === "crayon" ? "cell c0" : kind === "pencil" ? "cell c2" : "cell c1";
+      const H = kind === "marker" ? 26 : 22, tip = Math.min(24, len / 4), cls = "cell c0";
       const items = [rect(x0, bot - H, len - tip, H, cls, o, 3), path(poly([[x1 - tip, bot - H], [x1, bot - H / 2], [x1 - tip, bot]]), cls, o)];
-      if (kind === "marker") items.push(rect(x0, bot - H, Math.min(40, len / 3), H, "cell c1 fillc", o, 3));
+      if (kind === "marker") items.push(rect(x0, bot - H, Math.min(40, len / 3), H, "cell c0 fillc", o, 3));
       return items;
     }
     case "spoon": {
       const bw = Math.min(46, len * 0.38);
-      return [rect(x0, bot - 15, len - bw + 4, 8, "cell c1", o, 4), path(ellipse([x1 - bw / 2, bot - 11], bw / 2, 11), "cell c1", o)];
+      return [rect(x0, bot - 15, len - bw + 4, 8, "cell c0", o, 4), path(ellipse([x1 - bw / 2, bot - 11], bw / 2, 11), "cell c0", o)];
     }
     case "shoe":
       return [path(poly([[x0 + 6, bot], [x1 - 4, bot], [x1, bot - 12], [x1 - len * 0.3, bot - 20], [x0 + len * 0.32, bot - 40], [x0, bot - 40], [x0, bot - 6]]), "cell c0", o)];
     case "book":
-      return [rect(x0, bot - 34, len, 34, "cell c1", o, 3), line(x0 + 10, bot - 34, x0 + 10, bot, "edge thin", o)];
+      return [rect(x0, bot - 34, len, 34, "cell c0", o, 3), line(x0 + 10, bot - 34, x0 + 10, bot, "edge thin", o)];
     case "eraser":
       return [rect(x0, bot - 24, len, 24, "cell c0", o, 8)];
     case "paper clip":
@@ -74,14 +74,14 @@ export function buildEstimate(s: EstimateSpec): SceneDiagram {
   const bot = -10;
   items.push(...thingShape(s.thing, x(start), x(end), bot, {}));
   const benchY = bot - 64;
-  if (s.unit === "in") items.push(...clip(x(start), benchY, u, "ln2", {}));
-  else items.push(rect(x(start), benchY - u / 2, u, u, "cell c2", {}, 2));
+  if (s.unit === "in") items.push(...clip(x(start), benchY, u, "ln p1", {}));
+  else items.push(rect(x(start), benchY - u / 2, u, u, "cell c1", {}, 2));
   if (b) {
     // more benchmarks end to end along the thing
     for (let k = 1; k < len; k++) {
       const o: Timing = { from: b.lay, enter: "pop", delay: 0.25 * k };
-      if (s.unit === "in") items.push(...clip(x(start + k), benchY, u, "ln2", o));
-      else items.push(rect(x(start + k), benchY - u / 2, u, u, "cell c2", o, 2));
+      if (s.unit === "in") items.push(...clip(x(start + k), benchY, u, "ln p1", o));
+      else items.push(rect(x(start + k), benchY - u / 2, u, u, "cell c1", o, 2));
     }
     items.push(t(x(end) + 12, benchY, `about ${len}`, "lbl start", { from: b.lay, until: b.ruler - 1, enter: "rise", delay: 0.25 * len }));
     items.push(path([M([x(end), benchY + 18]), L([x(end), 0])], "ln2 dash", { from: b.ruler, enter: "draw", delay: 1 }));

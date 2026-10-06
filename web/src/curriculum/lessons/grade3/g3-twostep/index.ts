@@ -73,7 +73,11 @@ function answers(p: TwoStepProblem): AnswerModel {
         box({
           id: "groups", label: "How many in the groups", question: `${a} ${w.groups} with ${b} in each. Multiply.`,
           prompt: x => [num(a), op("×"), num(b), op("="), x], ans: P,
-          wrong: [[a + b, "Added the groups and the things", `${a} ${w.groups} of ${b} is ${a} equal groups. Multiply: ${a} × ${b}.`]],
+          wrong: [
+            [a + b, "Added the groups and the things", `${a} ${w.groups} of ${b} is ${a} equal groups. Multiply: ${a} × ${b}.`],
+            [(a - 1) * b, "One group short", `That's ${a - 1} × ${b}. There are ${a} ${w.groups}: count ${b} more.`],
+            [(a + 1) * b, "One group too many", `That's ${a + 1} × ${b}. There are only ${a} ${w.groups}.`],
+          ],
           hint: `Count by ${b}s, once for each of the ${a} ${w.groups}.`, explain: `${a} × ${b} = ${P} ${w.things} in the ${w.groups}.`,
         }),
         kind === 0
@@ -114,6 +118,8 @@ function answers(p: TwoStepProblem): AnswerModel {
         wrong: [
           [R - b, "Subtracted instead of sharing", `Sharing into ${b} equal ${w.groups} means dividing: ${b} × ? = ${R}.`],
           [b, `Wrote the number of ${w.groups}`, `${b} is how many ${w.groups}. How many go in each one?`],
+          [q + 1, "Too many in each", `${b} × ${q + 1} = ${b * (q + 1)}, more than ${R}. Each one gets fewer.`],
+          [q - 1, "Too few in each", `${b} × ${q - 1} = ${b * (q - 1)}, so ${R - b * (q - 1)} would be left over. Each one gets more.`],
         ],
         hint: `${b} × ? = ${R}.`, explain: `${R} ÷ ${b} = ${q}, because ${b} × ${q} = ${R}.`,
       }),
@@ -132,7 +138,7 @@ export function twoStepPicture(p: TwoStepProblem, first: number, second: number)
       { length: P, parts: a, each: [{ text: () => String(b) }], label: [{ text: `${a} ${w.groups}` }], total: [{ text: String(P), from: 1, acc: true }] },
       kind === 0
         ? { length: P, parts: 1, from: 2, fills: [{ a: 0, b: P - c, tone: "on" }, { a: P - c, b: P, tone: "cut" }], label: [{ text: "left" }], total: [{ text: `${second} left`, acc: true }] }
-        : { length: P + c, parts: 1, from: 2, fills: [{ a: 0, b: P, tone: "on" }, { a: P, b: P + c, tone: "acc" }], label: [{ text: "in all" }], total: [{ text: String(second), acc: true }] },
+        : { length: P + c, parts: 1, from: 2, fills: [{ a: 0, b: P, tone: "on" }, { a: P, b: P + c, tone: "two" }], label: [{ text: "in all" }], total: [{ text: String(second), acc: true }] },
     ];
   } else {
     const R = first;

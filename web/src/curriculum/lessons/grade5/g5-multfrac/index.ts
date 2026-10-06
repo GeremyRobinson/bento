@@ -16,9 +16,10 @@ export function createFracTimes(a: number, b: number, c: number, d: number): Fra
 }
 
 /** Same as the current app: bottoms 2–9, each top a number below its bottom that shares no factor with it. */
-export function generateFracTimes(rng: Rng): FracTimesProblem {
+export function generateFracTimes(rng: Rng, index = 3): FracTimesProblem {
   const top = (den: number) => { let n: number; do n = rng.int(1, den - 1); while (gcd(n, den) !== 1); return n; };
-  const b = rng.int(2, 9), d = rng.int(2, 9);
+  // the first three: halves to fifths
+  const most = index < 3 ? 5 : 9, b = rng.int(2, most), d = rng.int(2, most);
   const a = top(b), c = top(d);
   return { a, b, c, d };
 }
@@ -26,9 +27,10 @@ export function generateFracTimes(rng: Rng): FracTimesProblem {
 export function fracTimesAnswers({ a, b, c, d }: FracTimesProblem): AnswerModel {
   return {
     steps: [
-      ms({ id: "across", label: "Multiply straight across", prompt: s => [frac(a, b), op("×"), frac(c, d), op("="), frac([s.n!], [s.d!])], ans: { n: a * c, d: b * d },
-        hint: `Top × top: ${a} × ${c}. Bottom × bottom: ${b} × ${d}.`,
+      { ...ms({ id: "across", label: "Multiply straight across", prompt: s => [frac(a, b), op("×"), frac(c, d), op("="), frac([s.n!], [s.d!])], ans: { n: a * c, d: b * d },
+        hint: "Top times top counts the squares in the overlap. Bottom times bottom counts all the squares.",
         wrong: [[{ n: a * d, d: b * c }, "Flipped like dividing", "Flipping is only for dividing. To multiply, go straight across."], [{ n: a + c, d: b + d }, "Added instead of multiplied", "Multiply top × top and bottom × bottom."]] }),
+        explain: `${a} × ${c} = ${a * c} on top and ${b} × ${d} = ${b * d} on the bottom: ${a * c}/${b * d}.` },
       simplifyStep(a * c, b * d, "Simplify"),
     ],
     finalParts: [-1],
@@ -43,7 +45,7 @@ export function explainFracTimes(p: FracTimesProblem, answers: AnswerModel): Exp
   const simplifyResult = answers.steps[1]!.slots.find(s => s.expected != null)!.expected!;
   return {
     heading: "Top times top, bottom times bottom",
-    idea: ["Multiply the tops and the bottoms. Then simplify."],
+    idea: ["Taking a fraction of a fraction cuts the pieces smaller: half of a third is a sixth.", "On the grid, top × top counts the overlap squares and bottom × bottom counts all the squares."],
     statement: [frac(a, b), op("×"), frac(c, d)],
     diagram: buildFracGrid({
       rows: b, cols: d, r: a, c,
@@ -73,9 +75,9 @@ export const lesson: LessonDefinition<FracTimesProblem> = {
   grade: 5,
   unit: "Fractions",
   title: "Multiplying fractions",
-  pre: "g4-fracwhole",
+  pre: "g5-fracof",
   reference: createFracTimes(2, 3, 3, 4),
-  generate: rng => generateFracTimes(rng),
+  generate: (rng, index) => generateFracTimes(rng, index),
   restore: raw => { const r = readNumbers(raw, ["a", "b", "c", "d"] as const); try { return r && createFracTimes(r.a, r.b, r.c, r.d); } catch { return null; } },
   display: p => [frac(p.a, p.b), op("×"), frac(p.c, p.d)],
   answers: fracTimesAnswers,

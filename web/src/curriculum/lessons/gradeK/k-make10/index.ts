@@ -71,7 +71,7 @@ export const lesson: LessonDefinition<MakeTenProblem> = {
   grade: 0,
   unit: "Adding and subtracting",
   title: "Make 10",
-  pre: "k-add",
+  pre: "k-bonds",
   reference: createMakeTen(7),
   generate: (rng, index) => createMakeTen(rng.int(index < 3 ? 6 : 1, TEN - 1)),
   restore: raw => restoreVia(raw, ["have"] as const, v => createMakeTen(v.have)),

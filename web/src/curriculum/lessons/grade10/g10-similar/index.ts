@@ -3,6 +3,7 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildSimilar } from "../../../../explanations/diagrams/similar/build";
 import { asRecord, expected, mt, ns, numberField, round6 } from "../../_geometry/kit";
+import { withEasyStart } from "../../easy-start";
 
 /** A small triangle with sides a and b; the similar big one is k times bigger. */
 export interface SimilarProblem {
@@ -60,7 +61,7 @@ export function explainSimilar(p: SimilarProblem, answers: AnswerModel): Explana
   };
 }
 
-export const lesson: LessonDefinition<SimilarProblem> = {
+export const lesson: LessonDefinition<SimilarProblem> = withEasyStart({
   id: "g10-similar",
   grade: 10,
   unit: "Angles and triangles",
@@ -77,4 +78,4 @@ export const lesson: LessonDefinition<SimilarProblem> = {
   displayNote: () => "The triangles are similar. Find the missing side.",
   answers: similarAnswers,
   explain: explainSimilar,
-};
+});

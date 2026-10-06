@@ -5,6 +5,7 @@ import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildTensOnes } from "../../../../explanations/diagrams/early-g1/blocks";
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
 import { count, onesOf, plural, slips, tensOf } from "../_kit";
+import { singularWork } from "../../gradeK/kit";
 
 /** a two-digit number shown as tens rods and ones cubes */
 export interface TensOnesProblem { n: number }
@@ -47,7 +48,7 @@ function answers({ n }: TensOnesProblem): AnswerModel {
           [o * 10 + t, "Swapped tens and ones", `The tens come first. Write ${t}, then ${o}.`],
           [tensValue, "Left out the ones", `That's just the tens. Add the ${plural(o, "one", "ones")} too.`],
         ]),
-        hint: `${plural(t, "ten", "tens")} is ${tensValue}. Then count on ${o} more.`,
+        hint: o ? "Count the rods by 10s. Then count on the cubes by 1s." : "Count the rods by 10s. Are there any cubes to count on?",
         explain: `${tensValue} and ${o} more is ${n}.`,
         work: [num(t), text(tw), num(o), text(ow), answer("x", n)],
       }),
@@ -91,6 +92,6 @@ export const lesson: LessonDefinition<TensOnesProblem> = {
   display: () => [text("What number is it?")],
   displayNote: () => "Count the tens rods and the ones cubes.",
   picture: p => buildTensOnes({ tens: tensOf(p.n), ones: onesOf(p.n), alt: `${plural(tensOf(p.n), "tens rod", "tens rods")} and ${plural(onesOf(p.n), "ones cube", "ones cubes")}` }),
-  answers,
+  answers: p => singularWork(answers(p)),
   explain,
 };

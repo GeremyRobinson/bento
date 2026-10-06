@@ -7,6 +7,7 @@ import { buildBox3d } from "../../../../explanations/diagrams/box3d/build";
 import { r1 } from "../../../../explanations/diagrams/scene/helpers";
 import { expectedOf, ns } from "../../area-common/steps";
 import { count } from "../../../text";
+import { withEasyStart } from "../../easy-start";
 
 /** √(n²) or ∛(n³): find n. */
 export interface RootProblem { cube: boolean; n: number }
@@ -30,9 +31,10 @@ export function rootAnswers(p: RootProblem): AnswerModel {
   return {
     steps: [
       ns({ id: "root", label: "Find the root", question: `What number times itself${cube ? ", three times," : ""} makes ${v}?`, prompt: x => [...radical(p), op("="), x], ans: n,
-        hint: `Try numbers: ${cube ? "2 × 2 × 2 = 8, 3 × 3 × 3 = 27, …" : "5 × 5 = 25, 6 × 6 = 36, …"}`,
+        hint: cube ? `Try a number times itself three times, and get closer: is it more or less than ${v}?` : `Try a number times itself, and get closer: is it more or less than ${v}?`,
         wrong: [[v / k, "The root isn't a division", `${cube ? "Cube" : "Square"} root means the number that multiplies by itself.`]] }),
-      ns({ id: "check", label: "Check it", prompt: x => [...Array.from({ length: k }, (_, i) => (i ? [op("×"), num(n)] : [num(n)])).flat(), op("="), x], ans: v, hint: "Multiply to check." }),
+      ns({ id: "check", label: "Check it", prompt: x => [...Array.from({ length: k }, (_, i) => (i ? [op("×"), num(n)] : [num(n)])).flat(), op("="), x], ans: v, hint: `Multiply ${n} by itself${cube ? " three times" : ""}: you should get back the number under the root.`,
+        wrong: [[n * k, `Multiplied by ${k}`, `${cube ? "Cubed" : "Squared"} means ${n} times itself, not ${n} × ${k}.`]] }),
     ],
     finalParts: [0],
   };
@@ -71,7 +73,7 @@ export function explainRoot(p: RootProblem, answers: AnswerModel): Explanation {
   };
 }
 
-export const lesson: LessonDefinition<RootProblem> = {
+export const lesson: LessonDefinition<RootProblem> = withEasyStart({
   id: "g8-roots",
   grade: 8,
   unit: "Exponents and roots",
@@ -87,4 +89,4 @@ export const lesson: LessonDefinition<RootProblem> = {
   display: radical,
   answers: rootAnswers,
   explain: explainRoot,
-};
+});

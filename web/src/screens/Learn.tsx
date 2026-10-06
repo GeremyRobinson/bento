@@ -1,27 +1,29 @@
+import { Pill } from "../components/primitives/Pill";
 import { useEffect, useMemo, useState } from "react";
 import { useApp } from "../app/AppState";
 import { gradeOf } from "../curriculum/grades";
-import { lessonsInGrade, requireLesson } from "../curriculum/registry";
+import { requireLesson } from "../curriculum/registry";
 import { HELP_TIERS, tierFor } from "../engine/adaptive-help/policy";
 import { LEVELS } from "../engine/mastery/levels";
 import { lastScore } from "../engine/mastery/progress";
 import { when } from "../app/format";
 import { Diagram } from "../components/diagrams/Diagram";
-import { entriesInGrade, isReady } from "../app/curriculum";
 import { BuildUp } from "../components/BuildUp";
 import type { Rng } from "../curriculum/generators/rng";
 import type { AnyLesson } from "../curriculum/schemas/lesson";
 import { Chevron } from "../components/primitives/icons";
+import { FitScreen } from "../components/screen/Screen";
 import { MathLine, Rich } from "../components/primitives/MathLine";
+import { AskLine } from "../components/primitives/AskLine";
+import { dressStatement, partsLook, toneMath, tonesOf } from "../components/primitives/statement";
 import { ScoreChip } from "../components/primitives/Score";
 import type { Explanation } from "../explanations/schema";
 
 const PLAY_MS = 1800;
-/** the last lesson page shown, so the next one can glide its pill over from there */
-let lastPage: { chapter: string; i: number } | null = null;
 import { reduceMotion } from "../app/transition";
+import { spendHandOff, takeHandOff } from "../app/preview";
 import { readAloudOn, readSettings, speak } from "../app/settings";
-import { toPlainText } from "../curriculum/schemas/math-text";
+import { toPlainText, type MathText } from "../curriculum/schemas/math-text";
 
 /** A freshly generated problem for the lesson; the reference problem only if generating fails. */
 export function firstExample(lesson: AnyLesson, rng: Rng): unknown {
@@ -32,6 +34,13 @@ export function firstExample(lesson: AnyLesson, rng: Rng): unknown {
   } catch {
     return lesson.reference;
   }
+}
+
+/** True when the narration already reads out the step's math, so it isn't shown twice. */
+export function saysMath(narration: string, math: MathText): boolean {
+  const norm = (t: string) => t.replace(/\*\*/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+  const m = norm(toPlainText(math));
+  return !!m && norm(narration).includes(m);
 }
 
 /** Which beat a timeline position belongs to: done, playing now, or still to come. */
@@ -46,14 +55,21 @@ export function Learn({ lessonId }: { lessonId: string }) {
   const lesson = requireLesson(lessonId);
   // every visit opens on a fresh problem; the reference problem is only the fallback
   const fresh = () => firstExample(lesson, deps().rng);
-  const [example, setExample] = useState<unknown>(fresh);
+  // the first visit opens on the problem the lesson preview showed, when there was one
+  const opening = () => { const p = takeHandOff(lesson.id); return p === undefined ? fresh() : p; };
+  const [example, setExample] = useState<unknown>(opening);
+  useEffect(() => spendHandOff(lesson.id), [lesson.id]);
   const [shownFor, setShownFor] = useState(lesson.id);
   const [at, setAt] = useState(0);
   const [playing, setPlaying] = useState(false);
-  if (shownFor !== lesson.id) { setShownFor(lesson.id); setExample(fresh()); setAt(0); setPlaying(false); }
+  if (shownFor !== lesson.id) { setShownFor(lesson.id); setExample(opening()); setAt(0); setPlaying(false); }
 
   const ex: Explanation = useMemo(() => lesson.explain(example, lesson.answers(example)), [lesson, example]);
   const last = ex.timeline.length - 1, finished = at >= last;
+  // the statement with its parts in their picture colours and the unknown boxed; the steps colour the same numbers
+  const look = partsLook(ex.diagram);
+  const statement = useMemo(() => dressStatement(ex.statement, look), [ex, look]);
+  const tones = useMemo(() => tonesOf(statement), [statement]);
   // read aloud: the problem first, then each step as it plays
   const readAloud = readAloudOn(readSettings(progress.settings), lesson.grade);
   useEffect(() => {
@@ -70,20 +86,8 @@ export function Learn({ lessonId }: { lessonId: string }) {
     return () => clearTimeout(t);
   }, [playing, at, finished, last]);
 
-  const grade = lessonsInGrade(lesson.grade), k = grade.indexOf(lesson);
-  const prev = grade[k - 1], next = grade[k + 1];
   const sc = lastScore(progress, lesson.id), rep = reports[lesson.id], tier = tierFor(sc);
   const low = sc != null && sc <= 1;
-  const all = entriesInGrade(lesson.grade), place = all.findIndex(c => c.id === lesson.id);
-  const unit = all.filter(c => (c.unit || "") === (all[place]?.unit || ""));
-  // the pill for this lesson glides over from the one you came from, like turning a slide
-  const page = unit.findIndex(c => c.id === lesson.id), chapter = all[place]?.unit || "";
-  const [shownPage, setShownPage] = useState(() => lastPage && lastPage.chapter === chapter && !reduceMotion() ? lastPage.i : page);
-  useEffect(() => {
-    lastPage = { chapter, i: page };
-    const t = requestAnimationFrame(() => setShownPage(page));
-    return () => cancelAnimationFrame(t);
-  }, [chapter, page]);
 
   const step = (d: 1 | -1) => { setPlaying(false); setAt(a => Math.max(0, Math.min(last, a + d))); };
   // arrow keys and a sideways swipe move through the explanation, like the current app's lesson cards
@@ -105,89 +109,81 @@ export function Learn({ lessonId }: { lessonId: string }) {
     return () => { removeEventListener("keydown", onKey); document.removeEventListener("touchstart", onStart); document.removeEventListener("touchend", onEnd); };
   });
 
+  const now = ex.steps.find(st => st.state === at);
+  // the picture starts from its first beat and only ever builds forward on Play; showing the finished picture first
+  // made every Play un-build it in reverse before building it again (G 2026-10-06: the glitch at the start of most
+  // diagrams). Without motion, playing jumps straight to the end.
+  const shownAt = reduceMotion() && playing ? last : at;
   return (
-    <>
-      <div className="bar lbar">
-        <button className="ctl circ" disabled={!prev} onClick={() => prev && go({ name: "learn", lessonId: prev.id }, "prev")} aria-label="Previous lesson"><Chevron dir="left" /></button>
-        <span className="dots-nav grow" role="group" aria-label={`Lesson ${unit.indexOf(all[place]!) + 1} of ${unit.length} in ${all[place]?.unit || gradeOf(lesson.grade).name}`}>
-          {unit.map((c, i) => (
-            <button key={c.id} className={`dot ${i === shownPage ? "busy" : lastScore(progress, c.id) != null ? "ok" : ""}`} disabled={c.id === lesson.id || !isReady(c.id)}
-              onClick={() => go({ name: "learn", lessonId: c.id }, i < shownPage ? "prev" : "next")} aria-label={c.title} aria-current={c.id === lesson.id ? "page" : undefined} />
+    <FitScreen className={`lscreen parts-${look}`}>
+      {/* the brief intro: what this picture is about, then the steps that explain it, each one tied to the picture */}
+      <section className="lintro">
+        {/* one name per lesson (Review v43 item 12): the island carries the chapter and page; the heading is the
+            lesson's name, and the explanation's own heading becomes the line under it */}
+        {sc != null && <p className="k">Last time <ScoreChip n={sc} /></p>}
+        <h1>{lesson.title}</h1>
+        {ex.heading && ex.heading !== lesson.title && <p className={`lsub${/[=²³√ⁿ₀-₉]/.test(ex.heading) ? " formula" : ""}`}>{ex.heading}</p>}
+        {ex.idea?.slice(0, 2).map((t, i) => <p key={i} className="idea"><Rich text={t} /></p>)}
+        <ol className="beats" aria-live="polite">
+          {ex.steps.map((st, i) => (
+            <li key={st.id} className="beat" data-state={beatState(st.state, at)}>
+              <button disabled={st.state === at} onClick={() => { setPlaying(false); setAt(st.state); }} aria-label={`Go to step ${i + 1}`}>
+                <span className="badge">{i + 1}</span>
+                <span className="say"><MathLine math={toneMath(st.math, tones)} /><span><Rich text={st.narration} tones={tones} /></span></span>
+              </button>
+            </li>
           ))}
+        </ol>
+        {finished && <p className="lhelp">That's the whole problem. Your turn.</p>}
+        {low && <BuildUp lessonId={lesson.id} />}
+        {sc != null && <p className="lhelp">Help in practice: <b>{HELP_TIERS[tier]}</b></p>}
+        {rep && <button className="tlink" onClick={() => go({ name: "report", key: rep.key })}>Last time: {LEVELS[rep.level]}, {when(rep.date)} ›</button>}
+      </section>
+      {/* the hero: the problem and its picture, as big as the screen allows */}
+      <figure className="lshero">
+        <div className="lmath"><AskLine math={ex.statement} /><MathLine math={statement} keep /></div>
+        {ex.diagram && (
+          <div className={ex.diagram.kind === "chain" ? "lpic flow" : "lpic"}>
+            <div className="viz"><Diagram diagram={ex.diagram} timeline={ex.timeline} at={shownAt} fit /></div>
+          </div>
+        )}
+        {/* on a narrow screen only the step being shown sits under the picture: its math on one line, the words under it
+            (the math left out when the words already say it). Every step is laid out in the same cell, so the box is as
+            tall as the longest one and the picture doesn't resize from step to step. */}
+        <div className="lnow" aria-hidden>
+          {ex.caption && <p className={now ? undefined : "on"}><span><Rich text={ex.caption} /></span></p>}
+          {ex.steps.map(st => (
+            <p key={st.id} className={st === now ? "on" : undefined}>
+              {!saysMath(st.narration, st.math) && <MathLine math={toneMath(st.math, tones)} />}
+              <span><Rich text={st.narration} tones={tones} /></span>
+            </p>
+          ))}
+        </div>
+        {ex.caption && <figcaption className="caption muted"><Rich text={ex.caption} /></figcaption>}
+      </figure>
+      {/* the controls float under it all: back a step, where you are, and the one thing to do next */}
+      <div className="lctl">
+        <button className="icon" disabled={at === 0} onClick={() => step(-1)} aria-label="Back a step"><Chevron dir="left" /></button>
+        <span className="ldots" aria-label={`Step ${Math.max(1, ex.steps.findIndex(st => st.state === at) + 1)} of ${ex.steps.length}`}>
+          {ex.steps.map(st => <i key={st.id} className={beatState(st.state, at)} />)}
         </span>
-        <button className="ctl pbtn" onClick={() => startLesson(lesson.id)}>Practice</button>
-        <button className="ctl circ" disabled={!next} onClick={() => next && go({ name: "learn", lessonId: next.id }, "next")} aria-label="Next lesson"><Chevron dir="right" /></button>
+        {finished ? (
+          <>
+            <Pill onClick={() => { setExample(fresh()); setAt(0); }}>Show another</Pill>
+            <Pill go onClick={() => startLesson(lesson.id)}>Your turn ›</Pill>
+          </>
+        ) : (
+          <>
+            <Pill onClick={() => { setPlaying(false); setAt(last); }}>Show all</Pill>
+            {/* straight to the first practice problem, without watching to the end (the end's "Your turn ›" does the same) */}
+            <Pill className="try" onClick={() => startLesson(lesson.id)}>Try one</Pill>
+            {!playing && at === 0
+              ? <Pill go onClick={() => { setAt(1); setPlaying(true); }}>Play</Pill>
+              : <Pill go onClick={() => { setPlaying(false); setAt(a => Math.min(last, a + 1)); }}>Next</Pill>}
+          </>
+        )}
       </div>
-      <div className="blearn">
-        <section className="panel learn walk">
-          <div className="card">
-            <h2 className={`label${/[=²³√ⁿ₀-₉]/.test(ex.heading) ? " formula" : ""}`}>{ex.heading}</h2>
-            {ex.idea?.map((t, i) => <p key={i} className="idea"><Rich text={t} /></p>)}
-            <div className="math"><MathLine math={ex.statement} /></div>
-            {ex.diagram && <Diagram diagram={ex.diagram} timeline={ex.timeline} at={at === 0 || (reduceMotion() && playing) ? last : at} />}
-            {ex.caption && <p className="caption muted"><Rich text={ex.caption} /></p>}
-            <ol className="beats" aria-live="polite">
-              {ex.steps.map((s, i) => (
-                <li key={s.id} className="beat" data-state={beatState(s.state, at)}>
-                  <button disabled={s.state === at} onClick={() => { setPlaying(false); setAt(s.state); }} aria-label={`Go to step ${i + 1}`}>
-                    <span className="badge">{i + 1}</span>
-                    <span className="say"><MathLine math={s.math} /><span><Rich text={s.narration} /></span></span>
-                  </button>
-                </li>
-              ))}
-            </ol>
-            {(finished || at === 0) && <p className="note">{finished ? "That's the whole problem. Your turn." : ex.diagram?.kind === "areaModel" ? "Tap Play to watch it split up." : "Tap Play to watch it step by step."}</p>}
-          </div>
-          <div className="actions" style={{ justifyContent: "space-between" }}>
-            <button className="ctl" disabled={at === 0} onClick={() => step(-1)}>Back</button>
-            <span className="actions">
-              {finished ? (
-                <>
-                  <button className="ctl" onClick={() => { setExample(fresh()); setAt(0); }}>Show another</button>
-                  <button className="ctl go" onClick={() => startLesson(lesson.id)}>Start practice</button>
-                </>
-              ) : (
-                <>
-                  <button className="ctl" onClick={() => { setPlaying(false); setAt(last); }}>Show all</button>
-                  {!playing && at === 0
-                    ? <button className="ctl go" onClick={() => { setAt(1); setPlaying(true); }}>Play</button>
-                    : <button className="ctl go" onClick={() => { setPlaying(false); setAt(a => Math.min(last, a + 1)); }}>Next</button>}
-                </>
-              )}
-            </span>
-          </div>
-        </section>
-        <aside className="lside">
-          <section className="tile lmap">
-            <span className="k">{lesson.unit || gradeOf(lesson.grade).name} · lesson {place + 1} of {all.length}</span>
-            <div className="outline">
-              {unit.map(c => {
-                const n = all.indexOf(c) + 1, here = c.id === lesson.id, s = lastScore(progress, c.id);
-                return (
-                  <button key={c.id} className={here ? "on" : s != null ? "seen" : ""} disabled={here || !isReady(c.id)}
-                    onClick={() => go({ name: "learn", lessonId: c.id }, all.indexOf(c) < place ? "prev" : "next")}>
-                    <span className="badge">{n}</span><span className="name">{c.title}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <button className="ctl go" onClick={() => startLesson(lesson.id)}>Start practice ›</button>
-          </section>
-          {rep && (
-            <button className="lesson" onClick={() => go({ name: "report", key: rep.key })}>
-              <ScoreChip n={rep.level} /><span className="name">Last time: {LEVELS[rep.level]}</span><span className="muted">{when(rep.date)} ›</span>
-            </button>
-          )}
-          {sc != null && (
-            <section className="tile helptile">
-              <span className="k">Help in practice</span><b>{HELP_TIERS[tier]}</b>
-              <span className="muted">{["It fades as your score grows.", "Score 3 to switch to final answers only.", "Miss one and the steps come back."][tier]}</span>
-            </section>
-          )}
-          {low && <BuildUp lessonId={lesson.id} />}
-          <span className="visually-hidden">{gradeOf(lesson.grade).name}</span>
-        </aside>
-      </div>
-    </>
+      <span className="visually-hidden">{gradeOf(lesson.grade).name}</span>
+    </FitScreen>
   );
 }

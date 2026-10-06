@@ -4,6 +4,7 @@ import type { SceneDiagram } from "../scene/schema";
 import { frame, t, type Draft } from "../geo/kit";
 import { circle, rect } from "./kit";
 import { tw } from "./blocks";
+import { coinFace } from "./coins";
 
 export interface PairsSpec {
   n: number;
@@ -24,7 +25,13 @@ export function buildPairs(spec: PairsSpec): SceneDiagram {
   const items: Draft[] = [];
   // the row as counted: dots spread across the same width
   const rowGap = 26, rowLeft = W / 2 - ((n - 1) * rowGap) / 2;
-  for (let k = 0; k < n; k++) items.push(circle(rowLeft + k * rowGap, PY / 2, R, "dotp", { until: beats.pairs - 1, enter: "pop", delay: 0.03 * k }));
+  // when dot k lands in its pair (or, the odd one out, in its own spot); on the pairs beat the row stays and each dot only
+  // fades out as it lands, so the row never collapses all at once (v43)
+  const lands = (k: number) => (odd && k === n - 1 ? 0.12 * pairs : 0.12 * Math.floor(k / 2) + (k % 2) * 0.05);
+  for (let k = 0; k < n; k++) {
+    items.push(circle(rowLeft + k * rowGap, PY / 2, R, "dotp", { until: beats.pairs - 1, enter: "pop", delay: 0.03 * k }));
+    items.push(circle(rowLeft + k * rowGap, PY / 2, R, "dotp", { from: beats.pairs, until: beats.pairs, enter: "flash", delay: -1, vars: { "--d2": `${lands(k).toFixed(2)}s` } }));
+  }
   for (let k = 0; k < pairs; k++) {
     const x = k * PX, d = 0.12 * k;
     items.push(rect(x - R - 5, -R - 5, 2 * R + 10, PY + 2 * R + 10, "wire", { from: beats.pairs, enter: "fade", delay: d + 0.2 }, R + 5));
@@ -44,12 +51,13 @@ export function buildPairs(spec: PairsSpec): SceneDiagram {
   return frame("early-g2-pairs", items, spec.alt, 14, { w: Math.max(320, tw(spec.text.left) + 30) });
 }
 
-/** The four coins, with the look each one gets. */
+/** The four coins, with the look each one gets: real things keep their real colors (silver, and a copper penny), not
+    picture roles, so no coin looks like "the unknown" (handoff-6). */
 export const COINS = {
-  25: { name: "quarter", r: 30, cls: "cell c0" },
-  10: { name: "dime", r: 21, cls: "cell c1" },
-  5: { name: "nickel", r: 26, cls: "cell c2" },
-  1: { name: "penny", r: 23, cls: "sq big" },
+  25: { name: "quarter", r: 30, metal: "ag", ridged: true },
+  10: { name: "dime", r: 21, metal: "ag", ridged: true },
+  5: { name: "nickel", r: 26, metal: "ag", ridged: false },
+  1: { name: "penny", r: 23, metal: "cu", ridged: false },
 } as const;
 export type CoinValue = keyof typeof COINS;
 
@@ -75,8 +83,9 @@ export function buildCoins(spec: CoinsSpec): SceneDiagram {
     for (let k = 0; k < g.count; k++) {
       const cx = x + c.r;
       running += g.value;
-      items.push(circle(cx, MAXR, c.r, c.cls, { enter: "pop", delay: 0.06 * idx++ }));
-      items.push(t(cx, MAXR, `${g.value}¢`, "sm"));
+      // real metal, with its sheen and edge (G 2026-10-06: real metallic silver, not flat grey)
+      items.push(...coinFace([cx, MAXR], c.r, c.metal, c.ridged, { enter: "pop", delay: 0.06 * idx++ }));
+      items.push(t(cx, MAXR, `${g.value}¢`, "sm coin-val"));
       if (!spec.bare) items.push(t(cx, 2 * MAXR + 24, String(running), k === g.count - 1 ? "lbl acc" : "sm", { from: g.beat, enter: "rise", delay: 0.35 * k }));
       x += 2 * c.r + 8;
     }

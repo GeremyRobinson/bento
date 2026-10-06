@@ -60,7 +60,8 @@ function answers(p: MixedProblem): AnswerModel {
       id: "pieces", label: "Add the pieces", note: `The pieces are all ${piece}.`,
       prompt: b => [frac(n1, d), op("+"), frac(n2, d), op("="), frac([b.n!], [b.d!])], ans: { n: S, d },
       wrong: boxSlips({ n: S, d }, [[{ n: S, d: 2 * d }, "Added the bottoms", `The bottom is the size of the pieces. ${cap(piece)} plus ${piece} are still ${piece}, so it stays ${d}.`]]),
-      hint: `Add the tops: ${n1} + ${n2}. The bottom stays ${d}.`,
+      hint: "Count the pieces in both. Do the pieces change size when you put them together?",
+      explain: `${n1} + ${n2} = ${pieces(S, d)}. They are still ${piece}, so the bottom stays ${d}: ${S}/${d}.`,
     }),
   ];
   if (trade) steps.push(manyBoxes({
@@ -71,6 +72,7 @@ function answers(p: MixedProblem): AnswerModel {
       [{ w: 0, n: S }, "Didn't make a whole", `${S} is ${d} or more, so ${d} of them make 1 whole.`],
     ]),
     hint: `${d}/${d} is 1 whole. Take ${count(d, "piece")} out of ${S}.`,
+    explain: `${S} − ${d} = ${R}, so ${S}/${d} is 1 whole and ${R}/${d}.`,
   }));
   const fin: [Record<string, number>, string, string][] = trade
     ? [
@@ -82,7 +84,8 @@ function answers(p: MixedProblem): AnswerModel {
     id: "answer", label: "Put it together", question: trade ? `${wholes(W)}, plus 1 whole and ${R}/${d}.` : `${wholes(W)} and ${S}/${d}.`,
     prompt: b => [...sum, op("="), b.w!, frac([b.n!], d)], ans: { w: total, n: R }, small: ["w"],
     wrong: boxSlips({ w: total, n: R }, fin),
-    hint: trade ? `Wholes: ${W} + 1. Pieces: the ${R}/${d} left over.` : `Wholes: ${W}. Pieces: ${S}/${d}.`,
+    hint: trade ? "The wholes you added, plus the 1 whole you just made. Then the pieces that were left over." : "The wholes you added, then the pieces you added.",
+    explain: trade ? `${wholes(W)} and 1 more make ${wholes(total)}, with ${R}/${d} left: ${total} ${R}/${d}.` : `${wholes(W)} and ${S}/${d}: ${total} ${R}/${d}.`,
   }));
   return { steps, finalParts: [-1] };
 }
@@ -106,7 +109,7 @@ function explain(p: MixedProblem, model: AnswerModel): Explanation {
     narration: trade ? `${wholes(W)} and 1 more make ${total}, with ${R}/${d} left: ${label(total, R, d)}.` : `${wholes(W)} and ${S}/${d}: ${label(total, R, d)}.` });
   return {
     heading: "Wholes with wholes, pieces with pieces",
-    idea: ["Add the wholes, then add the pieces. If the pieces make a whole or more, trade them for a whole."],
+    idea: ["Wholes and pieces are different sizes, so wholes add with wholes and pieces add with pieces.", "When the pieces make a whole or more, trade them for 1 whole."],
     statement: [...mixed(w1, n1, d), op("+"), ...mixed(w2, n2, d)],
     diagram: buildMixedBars({
       d, first: { w: w1, n: n1, label: label(w1, n1, d) }, second: { w: w2, n: n2, label: label(w2, n2, d) },

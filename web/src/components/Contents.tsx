@@ -1,4 +1,6 @@
+import { Pill } from "./primitives/Pill";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { BentoMark } from "./primitives/BentoMark";
 import { useApp } from "../app/AppState";
 import { doneCount, isReady, testKey, testReady, unitsInGrade, type Entry } from "../app/curriculum";
 import { upNext } from "../app/today";
@@ -9,6 +11,7 @@ import { showcasePicture } from "../screens/Welcome";
 import { PlayingDiagram } from "./diagrams/PlayingDiagram";
 import { ScoreChip } from "./primitives/Score";
 import { Fill, Shelf } from "./Shelf";
+import { CONTENTS, lessonCount, NO_UNIT, THIS_YEAR } from "../app/copy";
 
 /** How far out the contents are zoomed: one chapter's pages, the whole year, or every grade on the shelf. */
 export type Level = "chapter" | "year" | "shelf";
@@ -30,16 +33,17 @@ export function ChapterPic({ entries, rng }: { entries: Entry[]; rng: Rng }) {
  * year, to every grade; pinch open or tap a chapter to step back in. Whatever you tap opens right there.
  */
 export function Contents({ grade, lessonId, level: first, close }: { grade: number; lessonId?: string; level: Level; close: () => void }) {
-  const { progress, go, chooseGrade, startTest, deps } = useApp();
+  const { progress, go, chooseGrade, startTest, deps, openSheet } = useApp();
   const rng = useMemo(() => deps().rng, []); // eslint-disable-line react-hooks/exhaustive-deps
   const units = unitsInGrade(grade);
   const here = lessonId ? units.find(u => u.entries.some(c => c.id === lessonId)) : undefined;
   const next = upNext(progress, grade);
   const [chapter, setChapter] = useState(here?.name ?? units.find(u => u.entries.some(c => c.id === next?.entry.id))?.name ?? units[0]?.name);
-  const [level, setLevel] = useState<Level>(first);
+  const [level, setLevel] = useState<Level>(first === "shelf" ? "year" : first);
   // which way the last step went, so the new level grows in from the old one (out) or comes forward (in)
   const [way, setWay] = useState<"out" | "in" | "">("");
-  const to = (l: Level) => { if (l === level) return; setWay(LEVELS.indexOf(l) > LEVELS.indexOf(level) ? "out" : "in"); setLevel(l); };
+  // every grade is one place, picker D (Review v43 item 15): zooming out past the year opens it
+  const to = (l: Level) => { if (l === level) return; if (l === "shelf") { close(); openSheet(true); return; } setWay(LEVELS.indexOf(l) > LEVELS.indexOf(level) ? "out" : "in"); setLevel(l); };
   const box = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -88,8 +92,8 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
       <section className="zchapter">
         <ChapterPic key={unit.name} entries={unit.entries} rng={rng} />
         <div className="zctext">
-          <span className="k">{units.length > 1 ? `Chapter ${k + 1} of ${units.length}` : "This year"} · {g.name}</span>
-          <h2>{unit.name === "Skills" ? g.name : unit.name}</h2>
+          <span className="k">{units.length > 1 ? `Chapter ${k + 1} of ${units.length}` : THIS_YEAR} · {g.name}</span>
+          <h2>{unit.name === NO_UNIT ? g.name : unit.name}</h2>
           <ol className="zpages">{unit.entries.map((c, i) => {
             const s = lastScore(progress, c.id), live = isReady(c.id), on = c.id === lessonId;
             return (
@@ -102,7 +106,7 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
             );
           })}</ol>
           {testReady(grade, unit.name) && units.length > 1 && (
-            <button className="ctl" onClick={() => { close(); startTest(tk); }}>{t && <ScoreChip n={t.last} />}{unit.name} test</button>
+            <Pill onClick={() => { close(); startTest(tk); }}>{t && <ScoreChip n={t.last} />}{unit.name} test</Pill>
           )}
         </div>
       </section>
@@ -111,15 +115,15 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
     body = (
       <section className="zyear">
         <header><span className="k">{g.subtitle}</span><h2>{g.name}</h2>
-          <button className="ctl go" onClick={() => { close(); go({ name: "home" }, "back"); }}>Open the year ›</button></header>
+          <Pill go onClick={() => { close(); go({ name: "home" }, "back"); }}>Open the year ›</Pill></header>
         <div className="zch">{units.map((u, k) => {
           const done = doneCount(progress, u.entries), on = u.name === here?.name;
           return (
             <button key={u.name} className={`zcard battery${on ? " on" : ""}`} style={{ "--i": k } as CSSProperties} onClick={() => { setChapter(u.name); to("chapter"); }}>
-              <span className="k">{units.length > 1 ? `Chapter ${k + 1}` : "This year"}</span>
-              <b>{u.name === "Skills" ? g.name : u.name}</b>
+              <span className="k">{units.length > 1 ? `Chapter ${k + 1}` : THIS_YEAR}</span>
+              <b>{u.name === NO_UNIT ? g.name : u.name}</b>
               <Fill frac={u.entries.length ? done / u.entries.length : 0} />
-              <span className="bcount">{done === 0 ? `${u.entries.length} lesson${u.entries.length === 1 ? "" : "s"}` : done === u.entries.length ? "Finished" : `${done} of ${u.entries.length} done`}</span>
+              <span className="bcount">{lessonCount(done, u.entries.length)}</span>
             </button>
           );
         })}</div>
@@ -135,14 +139,16 @@ export function Contents({ grade, lessonId, level: first, close }: { grade: numb
   }
 
   return (
-    <div className="zoom" ref={box} role="dialog" aria-modal="true" aria-label="Contents" onClick={e => { if (e.target === e.currentTarget) close(); }}>
+    <div className="zoom" ref={box} role="dialog" aria-modal="true" aria-label={CONTENTS} onClick={e => { if (e.target === e.currentTarget) close(); }}>
       <div className="zbar-top">
+        <BentoMark className="zmark" />
+        {/* widest to narrowest, left to right (G 2026-10-06) */}
         <div className="zlevels" role="group" aria-label="Zoom">
-          {LEVELS.map(l => (
+          {[...LEVELS].reverse().map(l => (
             <button key={l} aria-pressed={l === level} disabled={l === "chapter" && !unit} onClick={() => to(l)}>{NAMES[l]}</button>
           ))}
         </div>
-        <button className="ctl zclose" onClick={close}>Done</button>
+        <Pill className="zclose" onClick={close}>Done</Pill>
       </div>
       <div className={`zstage ${way}`} key={level + (level === "chapter" ? chapter : "")}>{body}</div>
       <p className="zhint muted">Pinch to zoom in and out</p>

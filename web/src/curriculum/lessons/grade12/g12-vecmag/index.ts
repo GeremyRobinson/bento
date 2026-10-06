@@ -5,6 +5,7 @@ import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildPlane } from "../../../../explanations/diagrams/plane/build";
 import { attempt, expected, f, ints, ns, P } from "../../_plane/kit";
 import { TRIPLES } from "../../_geometry/kit";
+import { withEasyStart } from "../../easy-start";
 
 /** v = ⟨x, y⟩ with a whole length m. */
 export interface VecMagProblem { kind: "vector.magnitude"; x: number; y: number; m: number }
@@ -34,8 +35,8 @@ export function vecMagAnswers({ x, y, m }: VecMagProblem): AnswerModel {
   return {
     steps: [
       ns({ id: "sum", label: "Square and add", prompt: s => [...sq(x), op("+"), ...sq(y), op("="), ...s], ans: x * x + y * y,
-        hint: `${x * x} + ${y * y}.`, wrong: [[x + y, "Forgot to square", "Square each part first."]] }),
-      ns({ id: "m", label: "Square root", prompt: s => [text("√"), num(x * x + y * y), op("="), ...s], ans: m, hint: "It's the Pythagorean theorem." }),
+        hint: "The two parts are the legs of a right triangle: square each, then add.", wrong: [[x + y, "Forgot to square", "Square each part first."]] }),
+      ns({ id: "m", label: "Square root", prompt: s => [text("√"), num(x * x + y * y), op("="), ...s], ans: m, hint: "The length is the long side of that right triangle: the number that times itself makes the sum.", wrong: [[Math.abs(x) + Math.abs(y), "Added the parts", "The straight arrow is shorter than going across and then up."]] }),
     ],
     finalParts: [-1],
   };
@@ -68,11 +69,12 @@ export function explainVecMag(p: VecMagProblem, model: AnswerModel): Explanation
   };
 }
 
-export const lesson: LessonDefinition<VecMagProblem> = {
+export const lesson: LessonDefinition<VecMagProblem> = withEasyStart({
   id: "g12-vecmag",
   grade: 12,
   unit: "Vectors and series",
   title: "Vector length",
+  pre: "g10-dist",
   reference: createVecMag(3, -4),
   generate: rng => generateVecMag(rng),
   restore: restoreVecMag,
@@ -80,4 +82,4 @@ export const lesson: LessonDefinition<VecMagProblem> = {
   displayNote: () => "Find |v|.",
   answers: vecMagAnswers,
   explain: explainVecMag,
-};
+});

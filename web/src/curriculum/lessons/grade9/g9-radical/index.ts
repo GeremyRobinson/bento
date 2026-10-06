@@ -1,9 +1,11 @@
-import { formatNumber as f, m, mark, num, op, sqrt, text } from "../../../schemas/math-text";
+import { formatNumber as f, m, mark, num, op, sqrt, sup, text } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import type { Rng } from "../../../generators/rng";
 import { ms, ns } from "../../algebra-kit/steps";
 import { attempt, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { simplifyRootPicture } from "./picture";
+import { withEasyStart } from "../../easy-start";
 
 /** The square-free parts the current app uses, so k² is always the biggest perfect square inside. */
 export const SQUARE_FREE = [2, 3, 5, 6, 7] as const;
@@ -24,12 +26,24 @@ export function restoreSimplifyRoot(raw: unknown): SimplifyRoot | null {
   return r && attempt(() => createSimplifyRoot(r.k, r.m));
 }
 
+/** Smaller squares that also divide n = k² × rest: j² for each j that divides k. Each one leaves a square inside. */
+function smallerSquares(k: number, rest: number): [Record<string, number>, string, string][] {
+  const out: [Record<string, number>, string, string][] = [];
+  for (let j = 2; j < k; j++) if (k % j === 0) {
+    const left = (k * k * rest) / (j * j);
+    out.push([{ sq: j * j, rest: left }, "Not the biggest square", `${f(j * j)} works, but ${f(left)} still has a perfect square inside. Look for a bigger one.`]);
+  }
+  return out;
+}
+
 export function simplifyRootAnswers({ k, m: rest, n }: SimplifyRoot): AnswerModel {
   return {
     steps: [
-      ns({ id: "square", l: "Biggest perfect square", a: s => [num(n), op("="), ...s, op("×"), num(rest)], ans: k * k, h: `Look for 4, 9, 16, 25, 36 that divide ${f(n)}.` }),
-      ns({ id: "root", l: "Its square root", a: s => [sqrt(k * k), op("="), ...s], ans: k, h: `${f(k)} × ${f(k)} = ${f(k * k)}.` }),
-      ms({ id: "simple", l: "Write it simply", a: S => [sqrt(n), op("="), ...S.c!, sqrt(S.r!)], ans: { c: k, r: rest }, h: `${f(k)} comes out, ${f(rest)} stays inside.` }),
+      ms({ id: "square", l: "Biggest perfect square", a: S => [num(n), op("="), ...S.sq!, op("×"), ...S.rest!], ans: { sq: k * k, rest }, h: `Find the biggest perfect square, a whole number times itself, that divides ${f(n)}. Write it first, then what is left.`,
+        w: [...smallerSquares(k, rest), [{ sq: rest, rest: k * k }, "Square second", "Put the perfect square first, then what is left."]] }),
+      ns({ id: "root", l: "Its square root", a: s => [sqrt(k * k), op("="), ...s], ans: k, h: `Which whole number times itself makes ${f(k * k)}?`, w: [[k * k / 2, "Halved it", `The root is the number that times itself makes ${f(k * k)}, not half of it.`]] }),
+      ms({ id: "simple", l: "Write it simply", a: S => [sqrt(n), op("="), ...S.c!, sqrt(S.r!)], ans: { c: k, r: rest }, h: `√(${f(k * k)} × ${f(rest)}) = √${f(k * k)} × √${f(rest)}. Which part is a whole number?`,
+        w: [[{ c: k * k, r: rest }, "The square came out", `The square itself doesn't come out, its root does: √${f(k * k)} = ${f(k)}.`], [{ c: k, r: n }, "Left it all inside", `Once ${f(k)} is outside, only ${f(rest)} stays under the root.`]] }),
     ],
     finalParts: [-1],
   };
@@ -40,19 +54,22 @@ export function explainSimplifyRoot(p: SimplifyRoot, model: AnswerModel) {
   const [square, k] = model.steps.map(s => s.slots[0]!.expected!) as [number, number];
   return beatExplanation({
     heading: "Pull out the perfect square",
+    idea: ["A square root splits over a product: √(a × b) = √a × √b. When one factor is a perfect square, its root is a whole number and moves out front.", "Use the biggest perfect square, so nothing more can come out."],
     statement: [sqrt(n)],
     caption: `${f(n)} = ${f(square)} × ${f(rest)}, and √${f(square)} = ${f(k)}.`,
+    diagram: simplifyRootPicture({ k, m: rest, n, square }),
     alt: `√${f(n)} = √(${f(square)} × ${f(rest)}) = ${f(k)}√${f(rest)}.`,
     steps: [
       { id: "start", narration: `Look for the biggest perfect square that divides ${f(n)}.`, math: [sqrt(n)] },
       { id: "square", narration: `${f(n)} = ${f(square)} × ${f(rest)}, and ${f(square)} is a perfect square.`, math: m(n, op("="), square, op("×"), rest), line: [sqrt([text("("), mark(square), op("×"), num(rest), text(")")])], answerStep: "square", result: square },
       { id: "root", narration: `√${f(square)} = ${f(k)}, because ${f(k)} × ${f(k)} = ${f(square)}.`, math: m(sqrt(square), op("="), k), line: [sqrt(square), op("×"), sqrt(rest)], answerStep: "root", result: k },
       { id: "simple", narration: `${f(k)} comes out, and ${f(rest)} stays under the root: ${f(k)}√${f(rest)}.`, math: [sqrt(n), op("="), num(k), sqrt(rest)], line: [mark(k), sqrt(rest)], answerStep: "simple", result: k },
+      { id: "check", narration: `Check: (${f(k)}√${f(rest)})² = ${f(square)} × ${f(rest)} = ${f(n)}.`, math: [text("("), num(k), sqrt(rest), text(")"), sup(2), op("="), num(square), op("×"), num(rest), op("="), num(n)], line: null },
     ],
   });
 }
 
-export const lesson: LessonDefinition<SimplifyRoot> = {
+export const lesson: LessonDefinition<SimplifyRoot> = withEasyStart({
   id: "g9-radical",
   grade: 9,
   unit: "Exponents",
@@ -63,4 +80,4 @@ export const lesson: LessonDefinition<SimplifyRoot> = {
   display: p => [sqrt(p.n)],
   answers: simplifyRootAnswers,
   explain: explainSimplifyRoot,
-};
+});

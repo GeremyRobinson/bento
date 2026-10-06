@@ -63,17 +63,23 @@ export function buildBox3d(spec: Box3dSpec): SceneDiagram {
     // the box's outline, which the layers fill
     if (Math.min(...spec.layerBeats) > 0) items.push(poly(top(h), "wire", 0, "fade"), poly(front(0, h), "wire", 0, "fade"), poly(side(0, h), "wire", 0, "fade"));
     const beatsSeen = new Map<number, number>();
+    const layerBeat = (z: number) => spec.layerBeats[z] ?? spec.layerBeats[spec.layerBeats.length - 1] ?? 0;
+    // layers sharing a beat stagger, but all of them land within about a beat (11 layers at half a second each
+    // left the picture showing 2 layers under a caption that says 11)
+    const perBeat = new Map<number, number>();
+    for (let z = 0; z < h; z++) perBeat.set(layerBeat(z), (perBeat.get(layerBeat(z)) ?? 0) + 1);
+    const gap = (from: number) => Math.min(0.5, 1.4 / Math.max(1, perBeat.get(from)! - 1));
     for (let z = 0; z < h; z++) {
-      const from = spec.layerBeats[z] ?? spec.layerBeats[spec.layerBeats.length - 1] ?? 0;
+      const from = layerBeat(z);
       const k = beatsSeen.get(from) ?? 0;
       beatsSeen.set(from, k + 1);
-      const d = 0.2 + k * 0.5;
+      const d = r1(0.2 + k * gap(from));
       items.push(poly(top(z + 1), "cf cube top", from, "drop", d), poly(front(z, z + 1), "cf cube left", from, "drop", d), poly(side(z, z + 1), "cf cube right", from, "drop", d));
       for (let i = 1; i < l; i++) items.push(seg([i, 0, z + 1], [i, w, z + 1], "cf cube", from, "drop", d), seg([i, w, z], [i, w, z + 1], "cf cube", from, "drop", d));
       for (let j = 1; j < w; j++) items.push(seg([0, j, z + 1], [l, j, z + 1], "cf cube", from, "drop", d), seg([l, j, z], [l, j, z + 1], "cf cube", from, "drop", d));
     }
     // the finished box: its visible edges drawn solid once every layer is in
-    const done = Math.max(...spec.layerBeats), dd = 0.2 + ((beatsSeen.get(done) ?? 1) - 1) * 0.5 + 0.4;
+    const done = Math.max(...spec.layerBeats), dd = r1(0.2 + ((beatsSeen.get(done) ?? 1) - 1) * (perBeat.has(done) ? gap(done) : 0.5) + 0.4);
     items.push(poly(top(h), "edge", done, "fade", dd), poly(front(0, h), "edge", done, "fade", dd), poly(side(0, h), "edge", done, "fade", dd));
   } else if (spec.mode === "faces") {
     const b = spec.beats;

@@ -88,6 +88,15 @@ describe("a practice run", () => {
     expect(s.hinted).toBe(true);
     expect(s.hintsLeft).toBe(3);
     expect(s.feedback?.text).toMatch(/then add a zero/);
+    expect(s.feedback?.left).toBe(3);
+  });
+
+  it("says kindly when the hints are used up", () => {
+    const p = emptyProgress();
+    let s = { ...startPractice("g5-mult2", p, deps()), hintsLeft: 0 };
+    s = hint(s, { now: s.stepT0 + 16000, rng });
+    expect(s.hinted).toBe(false);
+    expect(s.feedback?.text).toBe("No hints left in this lesson. You can do it.");
   });
 
   it("asks for the plan first at a score of 2", () => {

@@ -39,6 +39,10 @@ export interface AreaGridSpec {
   cells: (AreaCell | null)[][];
   /** draw the unit squares from this beat (only when every side is a whole number and squares stay big enough) */
   units?: number;
+  /** the side of the squares `units` draws, in problem units (default 1; 0.1 cuts each unit square 10 by 10) */
+  unitStep?: number;
+  /** beat whole unit squares appear at as outlines behind everything, covering the rectangle rounded up to whole units */
+  wholeOutlines?: number;
   /** lines of text under the picture */
   lines?: PictureLine[];
   /** extra shapes drawn over the grid, placed with the computed layout */
@@ -140,25 +144,38 @@ export function buildAreaGrid(spec: AreaGridSpec): SceneDiagram & { geometry: Ar
   spec.cols.forEach((c, i) => items.push(label((xs[i]! + xs[i + 1]!) / 2, top - 16, c, "lbl", 0.1 + i * 0.15)));
   spec.rows.forEach((r, j) => items.push(label(left - 12, (ys[j]! + ys[j + 1]!) / 2, r, "lbl end", 0.1 + j * 0.15)));
 
+  // whole unit squares behind everything, when the sides are not whole (a strip of tenths laid on whole squares)
+  const wholeCols = Math.ceil(spec.cols.reduce((a, c) => a + Math.abs(c.size), 0) - 1e-9), wholeRows = Math.ceil(spec.rows.reduce((a, r) => a + Math.abs(r.size), 0) - 1e-9);
+  if (spec.wholeOutlines != null && g.toScale) {
+    for (let r = 0; r < wholeRows; r++) for (let k = 0; k < wholeCols; k++) {
+      items.push({ type: "rect", x: r1(left + k * g.unitX), y: r1(top + r * g.unitY), w: r1(g.unitX), h: r1(g.unitY), cls: "ax", from: spec.wholeOutlines, enter: "fade" });
+    }
+  }
+
   // cells
   spec.cells.forEach((row, j) => row.forEach((c, i) => {
     if (!c) return;
     const w = xs[i + 1]! - xs[i]!, h = ys[j + 1]! - ys[j]!;
+    // until its turn, each part waits as a faint empty box, so the picture opens on the whole rectangle to fill
+    // rather than on labels floating over nothing (Review v39 item 1)
+    if ((c.from ?? 0) > 0) items.push({ type: "rect", x: r1(xs[i]! + 2), y: r1(ys[j]! + 2), w: r1(w - 4), h: r1(h - 4), rx: r1(Math.min(8, w / 4, h / 4)), cls: "pend", from: 0, until: c.from! - 1, enter: "fade" });
     items.push({ type: "rect", x: r1(xs[i]! + 2), y: r1(ys[j]! + 2), w: r1(w - 4), h: r1(h - 4), rx: r1(Math.min(8, w / 4, h / 4)), cls: `cell c${c.color ?? (i + j) % 3}`, from: c.from ?? 0, enter: "pop", delay: 0.1 });
   }));
 
   // unit squares, when the picture is to scale and each square is big enough to see
-  const whole = [...spec.cols, ...spec.rows].every(s => Number.isInteger(s.size));
-  if (spec.units != null && whole && g.toScale && g.unitX >= 6) {
+  const step = spec.unitStep ?? 1, steps = (v: number) => Math.round(Math.abs(v) / step);
+  const whole = [...spec.cols, ...spec.rows].every(s => Math.abs(Math.abs(s.size) / step - steps(s.size)) < 1e-6);
+  // whole unit squares need 6 units to be seen; a finer cut is drawn as lines down to 3 units apart
+  if (spec.units != null && whole && g.toScale && g.unitX * step >= (step < 1 ? 3 : 6)) {
     spec.cells.forEach((row, j) => row.forEach((c, i) => {
       if (!c) return;
       const from = Math.max(spec.units!, c.from ?? 0);
-      for (let k = 1; k < Math.abs(spec.cols[i]!.size); k++) {
-        const x = r1(xs[i]! + k * g.unitX);
+      for (let k = 1; k < steps(spec.cols[i]!.size); k++) {
+        const x = r1(xs[i]! + k * step * g.unitX);
         items.push({ type: "line", x1: x, y1: r1(ys[j]! + 2), x2: x, y2: r1(ys[j + 1]! - 2), cls: "grid", from, enter: "fade", delay: 0.3 });
       }
-      for (let k = 1; k < Math.abs(spec.rows[j]!.size); k++) {
-        const y = r1(ys[j]! + k * g.unitY);
+      for (let k = 1; k < steps(spec.rows[j]!.size); k++) {
+        const y = r1(ys[j]! + k * step * g.unitY);
         items.push({ type: "line", x1: r1(xs[i]! + 2), y1: y, x2: r1(xs[i + 1]! - 2), y2: y, cls: "grid", from, enter: "fade", delay: 0.3 });
       }
     }));
@@ -168,7 +185,7 @@ export function buildAreaGrid(spec: AreaGridSpec): SceneDiagram & { geometry: Ar
   // which cell the beat is about
   spec.cells.forEach((row, j) => row.forEach((c, i) => {
     for (const b of c?.focus ?? []) {
-      items.push({ type: "rect", x: r1(xs[i]! + 2), y: r1(ys[j]! + 2), w: r1(xs[i + 1]! - xs[i]! - 4), h: r1(ys[j + 1]! - ys[j]! - 4), rx: 6, cls: "hlline", from: b, until: b, enter: "fade" });
+      items.push({ type: "rect", x: r1(xs[i]! + 7), y: r1(ys[j]! + 7), w: r1(xs[i + 1]! - xs[i]! - 14), h: r1(ys[j + 1]! - ys[j]! - 14), rx: 4, cls: "hlline", from: b, until: b, enter: "fade" });
     }
   }));
 
@@ -180,7 +197,8 @@ export function buildAreaGrid(spec: AreaGridSpec): SceneDiagram & { geometry: Ar
     items.push({ type: "text", x: r1((xs[i]! + xs[i + 1]!) / 2), y: r1((ys[j]! + ys[j + 1]!) / 2), text: c.text, ...(c.sup ? { sup: c.sup } : {}), cls: "lbl", from: Math.max(c.from ?? 0, c.textFrom ?? 0), enter: "rise", delay: 0.3 });
   }));
 
-  const width = Math.max(left + g.width + 14, lineW + 24);
+  const outlineW = spec.wholeOutlines != null && g.toScale ? wholeCols * g.unitX : g.width;
+  const width = Math.max(left + Math.max(g.width, outlineW) + 14, lineW + 24);
   const cx = Math.min(Math.max(left + g.width / 2, lineW / 2 + 12), width - lineW / 2 - 12);
   const { rowOf, count } = lineRows(lines);
   lines.forEach((l, k) => items.push({ type: "text", x: r1(cx), y: r1(top + g.height + 28 + rowOf[k]! * 26), text: l.text, cls: l.cls ?? "lbl acc", from: l.from, ...(l.until != null ? { until: l.until } : {}), enter: "rise" }));

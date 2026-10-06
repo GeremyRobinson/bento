@@ -4,6 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildPlane } from "../../../../explanations/diagrams/plane/build";
 import { attempt, expected, f, fP, ints, ns, nz, P, poly, polyText, pt } from "../../_plane/kit";
+import { withEasyStart } from "../../easy-start";
 
 /** f(x) = a·x + b; find f⁻¹(a·x + b), which is x. */
 export interface InverseProblem { kind: "function.inverse"; a: number; b: number; x: number; y: number }
@@ -29,7 +30,7 @@ export function inverseAnswers({ a, b, x, y }: InverseProblem): AnswerModel {
     steps: [
       ns({ id: "sub", label: "Undo the adding", prompt: s => [num(y), op("−"), ...P(b), op("="), ...s], ans: a * x,
         hint: "The inverse undoes f in reverse order: subtract first.", wrong: [[a * x + 2 * b, "Added instead", "Undo + with −."]] }),
-      ns({ id: "x", label: "Undo the multiplying", prompt: s => [num(a * x), op("÷"), ...P(a), op("="), ...s], ans: x, hint: `Divide by ${f(a)}.` }),
+      ns({ id: "x", label: "Undo the multiplying", prompt: s => [num(a * x), op("÷"), ...P(a), op("="), ...s], ans: x, hint: "f multiplied first, so the inverse undoes that last: divide.", wrong: [[a * x * a, "Multiplied again", `f multiplied by ${f(a)}; the inverse divides by ${f(a)}.`]] }),
     ],
     finalParts: [-1],
   };
@@ -65,11 +66,12 @@ export function explainInverse(p: InverseProblem, model: AnswerModel): Explanati
   };
 }
 
-export const lesson: LessonDefinition<InverseProblem> = {
+export const lesson: LessonDefinition<InverseProblem> = withEasyStart({
   id: "g11-inverse",
   grade: 11,
   unit: "Functions",
   title: "Inverse functions",
+  pre: "g11-compose",
   reference: createInverse(3, 2, 4),
   generate: rng => generateInverse(rng),
   restore: restoreInverse,
@@ -77,4 +79,4 @@ export const lesson: LessonDefinition<InverseProblem> = {
   displayNote: p => `Find f⁻¹(${f(p.y)}).`,
   answers: inverseAnswers,
   explain: explainInverse,
-};
+});

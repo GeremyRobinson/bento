@@ -4,6 +4,8 @@ import type { Rng } from "../../../generators/rng";
 import { fP, ns, P, poly, v, xp } from "../../algebra-kit/steps";
 import { attempt, nz, readInts } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
+import { evaluatePolynomialPicture } from "./picture";
+import { withEasyStart } from "../../easy-start";
 
 /** f(x) = ax² + bx + c, evaluated at x = k. */
 export interface EvaluatePolynomial { kind: "polynomials.evaluate"; a: number; b: number; c: number; k: number }
@@ -27,10 +29,12 @@ const at = (k: number): MathText => [text("f("), num(k), text(")")];
 export function evaluateAnswers({ a, b, c, k }: EvaluatePolynomial): AnswerModel {
   return {
     steps: [
-      ns({ id: "square", l: "Square term", a: s => [num(a), op("·"), ...P(k), sup(2), op("="), ...s], ans: a * k * k, h: `Square ${f(k)} first (${f(k * k)}), then multiply by ${f(a)}.`,
+      ns({ id: "square", l: "Square term", a: s => [num(a), op("·"), ...P(k), sup(2), op("="), ...s], ans: a * k * k, h: `Powers come before multiplying: square ${f(k)} first, then multiply by ${f(a)}.`,
         w: [[-a * k * k, "Sign of the square", "A negative squared is positive."], [a * 2 * k, "Doubled instead of squared", "Squared means times itself."]] }),
-      ns({ id: "linear", l: "x term", a: s => [num(b), op("·"), ...P(k), op("="), ...s], ans: b * k, h: "Watch the signs." }),
-      ns({ id: "total", l: "Add it up", a: s => [num(a * k * k), op("+"), ...P(b * k), op("+"), ...P(c), op("="), ...s], ans: a * k * k + b * k + c, h: "Add the three parts." }),
+      ns({ id: "linear", l: "x term", a: s => [num(b), op("·"), ...P(k), op("="), ...s], ans: b * k, h: `${f(b)} × ${fP(k)}: ${b * k < 0 ? "one negative makes it negative" : b < 0 ? "two negatives make a positive" : "two positives make a positive"}.`,
+        w: [[-b * k, "Sign slip", `${b < 0 ? "Negative" : "Positive"} times ${k < 0 ? "negative" : "positive"} is ${b * k < 0 ? "negative" : "positive"}.`]] }),
+      ns({ id: "total", l: "Add it up", a: s => [num(a * k * k), op("+"), ...P(b * k), op("+"), ...P(c), op("="), ...s], ans: a * k * k + b * k + c, h: "f(k) is all three parts together: add them, keeping each one's sign.",
+        w: [[a * k * k - b * k + c, "Dropped a sign", `Keep each part's sign: ${f(a * k * k)} + ${fP(b * k)} + ${fP(c)}.`]] }),
     ],
     finalParts: [-1],
   };
@@ -48,21 +52,23 @@ export function explainEvaluate(p: EvaluatePolynomial, model: AnswerModel) {
   ];
   return beatExplanation({
     heading: "Plug in, then simplify",
+    idea: ["f(k) is the height of the graph at x = k: put k in every place x appears.", "Powers come before multiplying, so square first. A negative number squared is positive, because negative times negative is positive."],
     statement: [...fx(p), text(",  "), ...at(k)],
     caption: `Put ${f(k)} in for every x, then work out each part.`,
+    diagram: evaluatePolynomialPicture({ a, b, c, k, A, B, total }),
     alt: `f(${f(k)}) = ${f(A)} + ${fP(B)} + ${fP(c)} = ${f(total)}.`,
     steps: [
       { id: "plug", narration: `Put ${f(k)} in place of every x.`, math: [...at(k), op("="), ...plugged] },
       { id: "square", narration: `Square ${f(k)} first: ${f(k * k)}. Times ${f(a)} makes ${f(A)}.`, math: m(a, op("·"), ...P(k), sup(2), op("="), A),
         line: [num(A), op(b < 0 ? "−" : "+"), ...(Math.abs(b) === 1 ? [] : [num(Math.abs(b))]), ...K(), ...(c ? [op(c < 0 ? "−" : "+"), num(Math.abs(c))] : [])], answerStep: "square", result: A },
-      { id: "linear", narration: `${f(b)} times ${f(k)} is ${f(B)}. Watch the signs.`, math: m(b, op("·"), ...P(k), op("="), B),
+      { id: "linear", narration: `${f(b)} times ${fP(k)} is ${f(B)}: ${b * k < 0 ? "one negative makes it negative" : b < 0 ? "two negatives make a positive" : "two positives make a positive"}.`, math: m(b, op("·"), ...P(k), op("="), B),
         line: m(A, op("+"), ...P(B), op("+"), ...P(c)), answerStep: "linear", result: B },
-      { id: "total", narration: `Add the three parts: f(${f(k)}) = ${f(total)}.`, math: m(...at(k), op("="), total), answerStep: "total", result: total },
+      { id: "total", narration: `Add the three parts: f(${f(k)}) = ${f(total)}. So the point (${f(k)}, ${f(total)}) is on the graph of f.`, math: m(...at(k), op("="), total), answerStep: "total", result: total },
     ],
   });
 }
 
-export const lesson: LessonDefinition<EvaluatePolynomial> = {
+export const lesson: LessonDefinition<EvaluatePolynomial> = withEasyStart({
   id: "g11-evalpoly",
   grade: 11,
   unit: "Polynomials",
@@ -74,4 +80,4 @@ export const lesson: LessonDefinition<EvaluatePolynomial> = {
   displayNote: p => `Find f(${f(p.k)}).`,
   answers: evaluateAnswers,
   explain: explainEvaluate,
-};
+});

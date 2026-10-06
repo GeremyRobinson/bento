@@ -1,0 +1,106 @@
+/* The grade picker (Design's D, G 2026-10-06): one instance of the Screen master's split. The list holds all 13 grades
+   in Bento's four parts; the detail plays the picked grade's first problem. Before a choice it stays neutral. */
+.slist .gqh{display:grid;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4) var(--sp-3)}
+.slist .gqh h1{margin:0;font:var(--w-bold) 30px/1.1 var(--sans);letter-spacing:-.03em}
+.slist .gqh .tlink{justify-self:start}
+.slist .slbl{display:block;padding:var(--sp-3) 18px var(--sp-1);font-size:var(--fz-xs);font-weight:var(--w-mid);color:var(--muted)}
+.srow.grow{gap:var(--sp-4)}
+.srow.grow .gcol{flex:none;width:40px}
+.srow.grow .gnum{font:var(--w-bold) var(--fz-2xl)/1 var(--sans);letter-spacing:-.03em}
+.srow.grow .gnum small{font-size:.5em;vertical-align:top}
+.srow.grow.on .sname b{color:var(--ink)}
+/* on light, the picked grade's words and its Start pill take the grade's darker shade (--h2), not the raw hue, so
+   they read at 4.5:1 on the near-white list; dark takes its lightest shade (--hd1) */
+.gpal{--pick-ink:var(--h2)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .gpal{--pick-ink:var(--hd1)}}
+:root[data-theme="dark"] .gpal{--pick-ink:var(--hd1)}
+.srow.grow.gpal.on .sname b,.srow.grow.gpal.on>small{color:var(--pick-ink)}
+.gdgo.gpal .ctl.go{background:var(--pick-ink)}
+.gopen{display:none}
+
+.gdl{flex:1;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:var(--sp-4);padding:var(--sp-6);border-radius:var(--r-panel);background:var(--float);box-shadow:var(--float-shadow)}
+.gdl .gdtext{display:grid;gap:var(--sp-2)}
+.gdl .gdtext .gnum{font:var(--w-bold) 68px/1 var(--sans);letter-spacing:-.04em}
+.gdl .gdtext .gnum small{font-size:26px;vertical-align:top}
+.gdl h2{margin:0;font:var(--w-bold) 30px/1.1 var(--sans);letter-spacing:-.03em}
+.gdl p{margin:0;color:var(--muted);font-size:var(--fz-lg);line-height:1.45}
+.gdpic{margin:0;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr);gap:var(--sp-2);padding:var(--sp-4);border-radius:calc(var(--r-panel) - var(--sp-4));background:var(--well)}
+.gdpic figcaption{font-size:var(--small);font-weight:var(--w-mid);color:var(--muted)}
+.gdpic figcaption b{color:var(--text);font-weight:var(--w-bold)}
+.gdl.gneutral{grid-template-rows:auto minmax(0,1fr)}
+.gdgo{display:flex;align-items:center;gap:var(--sp-3)}
+.gdgo small{color:var(--muted);font-size:var(--fz-xs);font-weight:var(--w-mid)}
+
+/* a phone: the picked row opens in place under itself, and the detail pane is not shown */
+@media (max-width:699px){
+  .screen.split:has(.gqh) .sdetail{display:none}
+  .gopen{display:block;padding:var(--sp-1) 0 var(--sp-3)}
+  .gdl.inline{padding:var(--sp-3);grid-template-rows:auto auto;box-shadow:none;background:none}
+  .gdl.inline .gdpic{height:200px}
+  .slist .gqh h1{font-size:var(--fz-2xl);line-height:1.2}
+}
+/* the subjects are what you pick by, so the list is wide enough to read them whole */
+.wrap:has(.gqh){--screen-list:440px}
+@media (orientation:portrait){.wrap:has(.gqh){--screen-list:360px}}
+.srow.grow .sname b{white-space:normal;overflow:visible}
+.gdpic:not(:has(figcaption)){grid-template-rows:minmax(0,1fr)}
+/* a portrait iPad's detail is tall and narrow, and a picture is sized by its width: the well wraps the picture at its own
+   shape, centred in the room, rather than leaving it tiny in a 770px box. Landscape and phones keep the filling well. */
+@media (orientation:portrait) and (min-width:700px){
+  .gdl:not(.inline) .gdpic{align-self:center;max-height:100%}
+  .gdl:not(.inline) .gdpic .gyviz{aspect-ratio:var(--ar,4 / 3);max-height:100%}
+  .gdl:not(.inline) .b2pic{aspect-ratio:200 / 110;height:auto}
+}
+
+/* The Bento / Bento² switch (Design's 5-bento-toggle, G 2026-10-06). It sits on the question's line. Bento² dims the
+   room into its own dark canvas and swaps the grades for its ten tracks, rows fading out and in 30ms apart: the dimming
+   says you crossed into Bento², the row swap says the list itself changed. Less motion turns it into one crossfade. */
+.gqline{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3)}
+.sideswitch{position:relative;flex:none;display:grid;grid-template-columns:1fr 1fr;padding:3px;border-radius:var(--r-pill);background:var(--well);box-shadow:inset 0 0 0 1px var(--rule)}
+.sideswitch button{position:relative;z-index:var(--z-up);min-width:76px;height:34px;padding:0 var(--sp-3);border-radius:var(--r-pill);font-size:var(--fz-sm);font-weight:var(--w-mid);color:var(--muted);transition:color var(--dur-200) var(--ease) var(--dur-120)}
+.sideswitch button[aria-pressed="true"]{color:var(--page)}
+.sideswitch .sidek{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);border-radius:var(--r-pill);background:var(--text);transition:transform var(--dur-420) var(--glide)}
+.sideswitch:has(button:last-child[aria-pressed="true"]) .sidek{transform:translateX(100%)}
+.sideswitch button:focus-visible{outline:2px solid var(--tint);outline-offset:2px}
+.sideset>.gpart>*{animation:sideIn var(--dur-300) var(--ease) both;animation-delay:calc(var(--dur-220) + var(--i,0) * var(--dur-30))}
+@keyframes sideIn{from{opacity:0;transform:translateY(8px)}}
+
+/* Bento²'s room: its own dark canvas, the same on a light or dark device */
+:root[data-side="b2"]{--text:#f5f5f7;--muted:#9a9aa6;--faint:#3e3d4c;--rule:#2a2936;--page:#0b0b10;--well:#17161f;--card:#1a1924;--hover:#24232f;--float:#16151e;
+  --float-shadow:0 0 0 1px rgba(255,255,255,.06),0 10px 30px rgba(0,0,0,.45);--tint:#a78bfa;--ink:#c4b5fd;--tint-soft:rgba(167,139,250,.14);color-scheme:dark;
+  --adv-ink:#f5f5f7;--adv-dim:#86868b;--adv-glow:#a78bfa}
+:root[data-side="b2"] .wrap{--tint:#a78bfa;--ink:#c4b5fd}
+body{transition:background-color var(--dur-300) var(--ease) var(--dur-120)}
+:root[data-side="b2"] body{background:radial-gradient(120% 70% at 50% 0%,var(--adv-sky) 0%,var(--page) 60%) fixed,var(--page)}
+.trow{gap:var(--sp-3)}
+.trow .ticon{flex:none;width:44px;height:26px;display:grid;place-items:center}
+.trow .ticon svg{width:44px;height:26px}
+.trow .ticon svg *{animation:none!important}
+.trow small{color:var(--muted)}
+.b2note{font-size:var(--fz-xs);font-weight:var(--w-mid);color:var(--muted)}
+.b2d .b2kick{font-size:var(--fz-xs);font-weight:var(--w-mid);color:var(--muted)}
+.b2pic{display:grid;place-items:center;background:var(--adv-card,var(--well));box-shadow:inset 0 0 0 1px var(--adv-hair)}
+.b2pic svg{width:100%;height:100%;max-height:100%}
+@media (max-width:699px){
+  .gqline{flex-direction:column;align-items:stretch}
+  .sideswitch button{min-width:0;height:38px}
+  /* the picture keeps its own shape on a phone so its words stay readable */
+  .gdl.inline.b2d .gdpic{height:auto;padding:var(--sp-2)}
+  .gdl.inline.b2d .b2pic .tp{height:auto}
+}
+@media (prefers-reduced-motion:reduce){.sideset>.gpart>*{animation:sideFade var(--dur-150) linear both}.sideswitch .sidek{transition:none}}
+:root[data-motion="reduce"] .sideset>.gpart>*{animation:sideFade var(--dur-150) linear both}
+@keyframes sideFade{from{opacity:0}}
+/* ten tracks and two labels fit the list without scrolling on an iPad */
+.srow.trow{min-height:var(--tap);padding-block:var(--sp-1)}
+/* a track's name is read whole: it wraps to a second line rather than losing its end, and in portrait the note
+   above the list already says every track is coming later, so the rows give that label's room to the names */
+.srow.trow .sname b{white-space:normal;overflow:visible;line-height:1.2}
+@media (orientation:portrait){.srow.trow>small{display:none}}
+.b2d .ctl{box-shadow:inset 0 0 0 1px var(--adv-ring)}
+.b2d .ctl[aria-pressed="true"]{background:var(--tint-soft);color:var(--ink)}
+/* Bento² rows show the tracks' real pictures, finished and without their words (they're read in the detail) */
+.trow .ticon{width:68px;height:41px;border-radius:var(--r-sm);background:var(--adv-card,var(--well));box-shadow:inset 0 0 0 1px var(--adv-hair);overflow:hidden}
+.trow .ticon svg{width:68px;height:41px}
+.trow .ticon .tp text,.trow .ticon .tp-panel{display:none}
+.b2pic .tp{width:100%;height:100%}

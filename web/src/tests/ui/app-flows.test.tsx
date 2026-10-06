@@ -1,7 +1,7 @@
 // Every flow of the app through the UI, written against whichever lessons are rebuilt (g5-mult2 is always there).
-import { fireEvent, screen, within } from "@testing-library/react";
+import { act, fireEvent, screen, within } from "@testing-library/react";
 import { CATALOG } from "../../curriculum/catalog";
-import { lessonById, lessonsInGrade } from "../../curriculum/registry";
+import { lessonById } from "../../curriculum/registry";
 import type { Progress } from "../../engine/mastery/progress";
 import type { SessionReport } from "../../engine/session/types";
 import { answerWrong, failRun, renderApp, solveRun, tap } from "./helpers";
@@ -26,21 +26,21 @@ describe("first launch: landing → grade → home", () => {
     expect(document.querySelectorAll(".lbox .ltile")).toHaveLength(11);
     expect(document.querySelectorAll(".lbox .ldemo")).toHaveLength(2);
 
-    // the grade picker is the shelf: thirteen grade cards, nothing that isn't open yet
-    const grades = [...document.querySelectorAll(".lshelf button.book")];
-    expect(grades).toHaveLength(13);
-    expect(document.querySelector(".lshelf .book.soon")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: /^5th grade:/ }));
+    // no grade switching on the landing page: Start learning is the way in, and picker D chooses the grade
+    expect(document.querySelector(".lshelf")).toBeNull();
+    fireEvent.click(screen.getAllByRole("button", { name: "Start learning" })[0]!);
+    expect(screen.queryByRole("radio", { checked: true })).toBeNull();
+    fireEvent.click(screen.getByRole("radio", { name: /^5th grade/ }));
+    tap("Start 5th grade ›");
     // a grade opens on its book: the cover, today's plan, then every chapter with its pages
     expect(screen.getByRole("heading", { level: 1, name: "5th grade" })).toBeInTheDocument();
-    expect(screen.getByText("This year: fractions and decimals.")).toBeInTheDocument();
-    expect(document.querySelectorAll(".units>.panel")).toHaveLength(4);
-    expect(document.querySelectorAll(".units .lesson")).toHaveLength(grade5.length);
     expect(screen.getByRole("heading", { level: 2, name: "Today" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: new RegExp(`Up next.*${LESSON}`) })).toBeInTheDocument();
+    expect(document.querySelectorAll(".schapter")).toHaveLength(4);
+    expect(everyRow()).toHaveLength(grade5.length);
 
-    // the wordmark goes back to the landing page, which now offers the way back
-    fireEvent.click(screen.getByRole("button", { name: "Bento home page" }));
+    // the landing page, visited again, now offers the way back
+    act(() => { location.hash = "#/welcome"; dispatchEvent(new HashChangeEvent("hashchange")); });
     tap("My lessons ›");
     expect(screen.getByRole("heading", { level: 1, name: "5th grade" })).toBeInTheDocument();
   });
@@ -53,10 +53,45 @@ describe("first launch: landing → grade → home", () => {
 });
 
 describe("no grade until one is chosen", () => {
-  for (const hash of ["#/", "#/year", "#/learn/no-such-lesson"]) it(`${hash} opens the landing page's grade shelf`, () => {
+  for (const hash of ["#/", "#/year"]) it(`${hash} opens the landing page, with no grade switching on it`, () => {
     renderApp({ grade: null, chosen: false }, {}, hash);
-    expect(screen.getByRole("heading", { name: "Every grade, K to 12th." })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Math that clicks." })).toBeInTheDocument();
+    expect(document.querySelector(".lshelf")).toBeNull();
     expect(document.querySelector("#app")!.getAttribute("data-grade")).toBe("none");
+  });
+  it("#/learn/no-such-lesson asks which grade, with nothing picked", () => {
+    renderApp({ grade: null, chosen: false }, {}, "#/learn/no-such-lesson");
+    expect(screen.getByRole("heading", { level: 1, name: "Which grade are you in?" })).toBeInTheDocument();
+    expect(screen.getAllByRole("radio")).toHaveLength(13);
+    expect(screen.queryByRole("radio", { checked: true })).toBeNull();
+    expect(document.querySelector("#app")!.getAttribute("data-grade")).toBe("none");
+  });
+  it("the grade question shows a picked grade, then starts it", () => {
+    renderApp({ grade: null, chosen: false }, {}, "#/learn/no-such-lesson");
+    fireEvent.click(screen.getByRole("radio", { name: /^3rd grade/ }));
+    expect(screen.getByRole("radio", { name: /^3rd grade/ })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("heading", { level: 2, name: /^Multiplying/ })).toBeInTheDocument();
+    tap("Start 3rd grade ›");
+    expect(screen.getByRole("heading", { level: 1, name: "3rd grade" })).toBeInTheDocument();
+  });
+  it("the Bento / Bento² switch swaps the grades for the ten tracks, all coming later", () => {
+    renderApp({ grade: null, chosen: false }, {}, "#/learn/no-such-lesson");
+    expect(screen.getByRole("button", { name: "Bento" })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Bento squared" }));
+    expect(screen.getByRole("heading", { level: 1, name: "Where do you want to go?" })).toBeInTheDocument();
+    expect(document.documentElement.dataset.side).toBe("b2");
+    expect(screen.getAllByRole("radio")).toHaveLength(10);
+    expect(screen.getAllByText("Coming later")).toHaveLength(10);
+    fireEvent.click(screen.getByRole("radio", { name: "Linear algebra" }));
+    expect(screen.getByRole("heading", { level: 2, name: "Linear algebra" })).toBeInTheDocument();
+    tap("Tell me when it's ready");
+    expect(screen.getByRole("button", { name: /We'll tell you/ })).toHaveAttribute("aria-pressed", "true");
+    // no lesson can start from Bento² yet
+    expect(screen.queryByRole("button", { name: /^Start/ })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Bento" }));
+    expect(screen.getByRole("heading", { level: 1, name: "Which grade are you in?" })).toBeInTheDocument();
+    expect(document.documentElement.dataset.side).toBeUndefined();
+    expect(screen.getAllByRole("radio")).toHaveLength(13);
   });
   it("the hub and facts stay neutral and ask for a grade", () => {
     for (const hash of ["#/me", "#/facts"]) {
@@ -64,26 +99,36 @@ describe("no grade until one is chosen", () => {
       expect(document.querySelector("#app")!.getAttribute("data-grade")).toBe("none");
       expect(screen.queryByText(/5th grade/)).toBeNull();
       fireEvent.click(screen.getAllByRole("button", { name: "Choose your grade" })[0]!);
-      expect(screen.getByRole("heading", { name: "Every grade, K to 12th." })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Which grade are you in?" })).toBeInTheDocument();
       unmount();
     }
   });
 });
 
+/** Changing grade goes through picker D: the island's back chevron, a grade, then Start. */
+function pickGrade(name: string) {
+  fireEvent.click(screen.getByRole("button", { name: "Change grade" }));
+  expect(screen.getByRole("heading", { level: 1, name: "Which grade are you in?" })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("radio", { name: new RegExp(`^${name}`) }));
+  tap(`Start ${name} ›`);
+}
+
 describe("home", () => {
   it("lists every lesson of the grade, with unit tests, the check-up and the grown-up page", () => {
     renderApp();
-    const rows = document.querySelectorAll(".units .lesson");
+    const rows = everyRow();
     expect(rows).toHaveLength(grade5.length);
     grade5.forEach((c, i) => {
       expect(rows[i]!.textContent).toContain(c.title);
-      expect((rows[i] as HTMLButtonElement).disabled).toBe(!lessonById(c.id));
+      expect(rows[i]!.disabled).toBe(!lessonById(c.id));
     });
-    // a unit test for each unit with a rebuilt lesson; the grade check-up; the grown-up page
-    const units = [...new Set(grade5.map(c => c.unit))];
-    for (const u of units) {
-      const head = [...document.querySelectorAll(".units .unit")].find(h => h.querySelector("h3")!.textContent === u)!;
-      expect(!!within(head as HTMLElement).queryByRole("button", { name: /Unit test/ })).toBe(lessonsInGrade(5).some(l => l.unit === u));
+    // a lesson's detail offers its chapter's unit test when the chapter has a rebuilt lesson
+    for (const u of [...new Set(grade5.map(c => c.unit))]) {
+      const c = grade5.find(c => c.unit === u && lessonById(c.id));
+      if (!c) continue;
+      openRow(c.title);
+      expect(screen.getByRole("heading", { level: 2, name: c.title })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: new RegExp(`${u} test`) })).toBeInTheDocument();
     }
     expect(screen.getByRole("button", { name: "Grade check-up" })).toBeInTheDocument();
     // the grown-up page, accessibility and backups live in the personal hub
@@ -94,17 +139,14 @@ describe("home", () => {
 
   it("shows the whole year for 2nd grade, and switches grades from the sheet", () => {
     renderApp();
-    fireEvent.click(screen.getByRole("button", { name: "Change grade" }));
-    const sheet = screen.getByRole("dialog", { name: "Choose your grade" });
-    fireEvent.click(within(sheet).getByRole("button", { name: /2nd/ }));
-    expect(screen.queryByRole("dialog")).toBeNull();
+    pickGrade("2nd grade");
     expect(screen.getByRole("heading", { level: 1, name: "2nd grade" })).toBeInTheDocument();
     expect(document.querySelector("main")!.dataset.band).toBe("little");
     expect(screen.queryByText("Coming soon")).toBeNull();
-    for (const c of CATALOG.filter(c => c.grade === 2)) expect(screen.getAllByText(c.title).length).toBeGreaterThan(0);
+    const titles = everyRow().map(r => r.textContent!);
+    for (const c of CATALOG.filter(c => c.grade === 2)) expect(titles.some(t => t.includes(c.title))).toBe(true);
     // 9th grade takes the plain look
-    fireEvent.click(screen.getByRole("button", { name: "Change grade" }));
-    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: /9th/ }));
+    pickGrade("9th grade");
     expect(screen.queryByText("Coming soon")).toBeNull();
     expect(document.querySelector("main")!.dataset.band).toBe("high");
   });
@@ -112,17 +154,31 @@ describe("home", () => {
   it("keeps going with a run left mid-lesson", () => {
     renderApp();
     fireEvent.click(screen.getByRole("button", { name: new RegExp(`Up next.*${LESSON}`) }));
-    tap("Start practice ›");
+    tap("Show all"); tap("Your turn ›");
     tap(`Back to ${LESSON}`);
     // the unfinished lesson waits beside the island; each grade's plan keeps showing its own next lesson
     const resume = screen.getByRole("button", { name: new RegExp(`Resume ${LESSON}, 5th grade, problem 1 of 8`) });
     expect(resume).toHaveTextContent(`5Resume${LESSON}1/8`);
     tap("Back to contents");
-    fireEvent.click(screen.getByRole("button", { name: "Change grade" }));
-    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: /Kindergarten/ }));
+    pickGrade("Kindergarten");
     expect(screen.queryByRole("button", { name: new RegExp(`Up next.*${LESSON}`) })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /^Resume / }));
     expect(screen.getByRole("button", { name: "Check" })).toBeInTheDocument();
+  });
+
+  it("quits a run you don't want to finish, after one quick confirm", () => {
+    renderApp();
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(`Up next.*${LESSON}`) }));
+    tap("Show all"); tap("Your turn ›");
+    tap(`Back to ${LESSON}`);
+    fireEvent.click(screen.getByRole("button", { name: `Quit ${LESSON}` }));
+    const ask = screen.getByRole("alertdialog", { name: `Quit ${LESSON}?` });
+    fireEvent.click(within(ask).getByRole("button", { name: "Keep going" }));
+    expect(screen.getByRole("button", { name: /^Resume / })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: `Quit ${LESSON}` }));
+    fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Quit" }));
+    expect(screen.queryByRole("button", { name: /^Resume / })).toBeNull();
+    expect(screen.queryByRole("alertdialog")).toBeNull();
   });
 
   it("zooms out from a lesson to its chapter, the year and every grade, and opens whatever is tapped", () => {
@@ -139,11 +195,12 @@ describe("home", () => {
     expect(book.querySelectorAll(".zcard")).toHaveLength(4);
     fireEvent.click(book.querySelectorAll(".zcard")[1]!);
     expect(within(book).getByRole("button", { name: "Chapter" })).toHaveAttribute("aria-pressed", "true");
-    // every grade, then into another grade's book
+    // every grade is picker D, then into another grade's book
     fireEvent.click(within(book).getByRole("button", { name: "All grades" }));
-    expect(book.querySelectorAll("button.book")).toHaveLength(13);
-    fireEvent.click(within(book).getByRole("button", { name: /^7th grade:/ }));
     expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getAllByRole("radio")).toHaveLength(13);
+    fireEvent.click(screen.getByRole("radio", { name: "7th grade" }));
+    tap("Start 7th grade ›");
     expect(screen.getByRole("heading", { level: 1, name: "7th grade" })).toBeInTheDocument();
   });
 });
@@ -151,10 +208,10 @@ describe("home", () => {
 describe("unit test and check-up", () => {
   it("runs a unit test with no hints, then offers it again and shows its score on home", () => {
     renderApp();
-    const head = [...document.querySelectorAll(".units .unit")].find(h => h.textContent!.includes("Whole numbers")) as HTMLElement;
-    fireEvent.click(within(head).getByRole("button", { name: /Unit test/ }));
+    openRow(LESSON);
+    tap("Whole numbers test");
     expect(screen.getByText("Whole numbers test: no hints, one try per step")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Hints?$/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Hint/ })).toBeNull();
     expect(screen.getByRole("button", { name: "Quit" })).toBeInTheDocument();
     expect(solveRun()).toBeGreaterThanOrEqual(6);
     expect(document.querySelector(".island")).toHaveTextContent("Whole numbers test");
@@ -163,8 +220,8 @@ describe("unit test and check-up", () => {
     tap("Take it again");
     expect(screen.getByText("Whole numbers test: no hints, one try per step")).toBeInTheDocument();
     tap("Quit");
-    const again = [...document.querySelectorAll(".units .unit")].find(h => h.textContent!.includes("Whole numbers")) as HTMLElement;
-    expect(within(again).getByRole("button", { name: /Unit test/ }).querySelector(".score b")!.textContent).toBe("4");
+    openRow(LESSON);
+    expect(screen.getByRole("button", { name: /Whole numbers test/ }).querySelector(".score b")!.textContent).toBe("4");
   });
 
   it("runs the grade check-up and records it", () => {
@@ -185,25 +242,49 @@ describe("unit test and check-up", () => {
   });
 });
 
+/** every lesson row of the grade's list, opening each chapter in turn */
+function everyRow(): HTMLButtonElement[] {
+  const out: HTMLButtonElement[] = [];
+  const count = document.querySelectorAll(".schapter").length;
+  for (let i = 0; i < count; i++) {
+    const ch = document.querySelectorAll(".schapter")[i]!;
+    const head = ch.querySelector<HTMLButtonElement>(".srow.chap")!;
+    if (head.getAttribute("aria-expanded") !== "true") fireEvent.click(head);
+    out.push(...document.querySelectorAll(".schapter")[i]!.querySelectorAll<HTMLButtonElement>(".srow.sles"));
+  }
+  return out;
+}
+
+/** picks a lesson in the list, opening its chapter first */
+function openRow(title: string) {
+  const find = () => [...document.querySelectorAll<HTMLButtonElement>(".srow.sles")].find(r => r.textContent!.includes(title));
+  for (const head of document.querySelectorAll<HTMLButtonElement>(".srow.chap")) {
+    if (find()) break;
+    if (head.getAttribute("aria-expanded") !== "true") fireEvent.click(head);
+  }
+  fireEvent.click(find()!);
+}
+
 const scored = (level: 0 | 1 | 2 | 3 | 4, date: number) => ({ last: level, best: level, pct: level / 4, date, mastered: false });
 
 describe("report, grown-up page and back to basics", () => {
   it("opens the last report from the lesson, and goes back to it", () => {
     renderApp();
     fireEvent.click(screen.getByRole("button", { name: new RegExp(`Up next.*${LESSON}`) }));
-    tap("Start practice ›");
+    tap("Show all"); tap("Your turn ›");
     solveRun();
     tap("All lessons");
-    fireEvent.click(document.querySelector(".units .lesson:not([disabled])")!);
+    openRow(LESSON);
+    tap(/^Start lesson/);
     fireEvent.click(screen.getByRole("button", { name: /Last time: Advanced/ }));
     expect(screen.getByRole("heading", { level: 2, name: "What you did" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: "For the grown-up" })).toBeInTheDocument();
     expect(screen.getByText(/Practiced/)).toHaveTextContent(`Practiced ${LESSON}.`);
     tap(`Back to ${LESSON}`);
-    expect(screen.getByRole("button", { name: "Start practice ›" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show all" })).toBeInTheDocument();
   });
 
-  it("shows scores by grade, mistake patterns, what needs practice and recent sessions", () => {
+  it("shows mistake patterns, scores by chapter and where help was used, and opens the session behind a pattern", () => {
     const t = Date.UTC(2026, 9, 1, 15);
     const progress: Partial<Progress> = {
       grade: 5, chosen: true, xp: 120, done: 2,
@@ -222,32 +303,31 @@ describe("report, grown-up page and back to basics", () => {
     };
     renderApp(progress, { "g5-mult2": report });
     fireEvent.click(screen.getByRole("button", { name: /^Me:/ }));
-    tap("Open the report ›");
-    for (const h of ["Scores by grade", "Mistake patterns", "Needs more practice", "Recent sessions"]) {
-      expect(screen.getByRole("heading", { level: 2, name: h })).toBeInTheDocument();
-    }
-    expect(screen.getByText("Lesson average 1.5 of 4 · check-up 3: Proficient")).toBeInTheDocument();
-    expect(screen.getByText("Lost the place value")).toBeInTheDocument();
-    expect(screen.getByText("Multiply by the tens: The tens digit stands for 30, so add a zero.")).toBeInTheDocument();
-    expect(screen.getByText("2 hints used, 1 quick retry that looked like guessing.")).toBeInTheDocument();
-    // needs more practice lists both scored lessons; the one not rebuilt yet can't be opened
-    const needs = screen.getByRole("heading", { name: "Needs more practice" }).closest("section")!;
-    expect(within(needs).getAllByRole("button")).toHaveLength(2);
-    // a session without a saved report can't be opened; one with a report opens it, and Back returns to the lesson
-    const recent = within(screen.getByRole("heading", { name: "Recent sessions" }).closest("section")!).getAllByRole("button");
-    expect(recent[1]).toBeDisabled();
-    fireEvent.click(recent[0]!);
+    tap("For the grown-up ›");
+    expect(screen.getByRole("heading", { level: 1, name: "For the grown-up" })).toBeInTheDocument();
+    // the pattern, picked, with what went wrong and the lesson's own explanation of it
+    const row = screen.getByRole("button", { name: `Lost the place value, ${LESSON}: 1 of 1 problems` });
+    expect(row).toHaveAttribute("aria-current", "true");
+    expect(screen.getByRole("heading", { level: 2, name: "Lost the place value" })).toBeInTheDocument();
+    const notes = [...document.querySelectorAll(".gu-why")].map(n => n.textContent);
+    expect(notes).toEqual(["Step 1: typed 141 first.", "Step 1: Multiply by the tens: The tens digit stands for 30, so add a zero."]);
+    expect(screen.getByText("2 hints in 2 sessions. 1 step filled in with Show me. 1 quick retry looked like guessing.")).toBeInTheDocument();
+    // scores by chapter: the lesson's battery says its score in words
+    expect(screen.getAllByRole("img", { name: "1, Beginning" }).length).toBeGreaterThan(0);
+    // the session behind the pattern opens, and Back returns to the lesson
+    tap("See that session ›");
     expect(screen.getByText(/Typed/)).toHaveTextContent("Typed 141, answer 1410. Lost the place value (quick retry).");
     tap(`Back to ${LESSON}`);
-    expect(screen.getByRole("button", { name: "Start practice ›" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show all" })).toBeInTheDocument();
   });
 
   it("suggests building up first after a low score, in the lesson and on the results", () => {
     renderApp({ grade: 5, chosen: true, scores: { "g5-mult2": scored(1, Date.UTC(2026, 9, 1)) }, lessons: { "g5-mult2": 1 }, done: 1 });
-    fireEvent.click(document.querySelector(".units .lesson:not([disabled])")!);
-    const pre = CATALOG.find(c => c.id === "g4-partial")!;
+    openRow(LESSON);
+    tap(/^Start lesson/);
+    const pre = CATALOG.find(c => c.id === CATALOG.find(l => l.id === "g5-mult2")!.pre)!;
     expect(screen.getByRole("button", { name: new RegExp(`Build up first: ${pre.title}`) })).toBeInTheDocument();
-    tap("Start practice ›");
+    tap("Show all"); tap("Your turn ›");
     failRun();
     expect(screen.getByRole("heading", { level: 2, name: "Not yet" })).toBeInTheDocument();
     const build = screen.getByRole("button", { name: new RegExp(`Build up first: ${pre.title}`) });
@@ -257,18 +337,28 @@ describe("report, grown-up page and back to basics", () => {
 });
 
 describe("the personal hub", () => {
-  it("shows progress and grades, and its settings land on the page", () => {
-    renderApp({ grade: 5, chosen: true, xp: 40, streak: 3 });
-    fireEvent.click(screen.getByRole("button", { name: "Me: 3 day streak, 40 XP" }));
-    expect(screen.getByRole("heading", { level: 1, name: "Your Bento" })).toBeInTheDocument();
-    expect(document.querySelectorAll(".mgrades .gcell")).toHaveLength(13);
-    fireEvent.click(screen.getByRole("switch", { name: /High contrast/ }));
-    expect(screen.getByRole("switch", { name: /High contrast/ })).toHaveAttribute("aria-checked", "true");
+  it("opens Me as a floating stack over the screen, and its switches land on the page", () => {
+    renderApp({ grade: 5, chosen: true, xp: 1240, streak: 3 });
+    const me = screen.getByRole("button", { name: "Me: 3 day streak, 1240 XP" });
+    fireEvent.click(me);
+    expect(me).toHaveAttribute("aria-expanded", "true");
+    const stack = screen.getByRole("dialog", { name: "Me" });
+    expect(stack).toHaveTextContent("5thgrade");
+    expect(stack).toHaveTextContent("1,240XP");
+    expect(stack).toHaveTextContent("3-daystreak");
+    expect(within(stack).getByText("Placeholder")).toBeInTheDocument();
+    fireEvent.click(within(stack).getByRole("switch", { name: /High contrast/ }));
+    expect(within(stack).getByRole("switch", { name: /High contrast/ })).toHaveAttribute("aria-checked", "true");
     expect(document.documentElement.dataset.contrast).toBe("true");
+    fireEvent.click(within(stack).getByRole("switch", { name: /Left-handed keypad/ }));
+    expect(document.documentElement.dataset.hand).toBe("left");
+    fireEvent.click(within(stack).getByRole("switch", { name: /Less motion/ }));
+    expect(document.documentElement.dataset.motion).toBe("reduce");
+    // the full page still holds every setting and the backup
+    tap("All settings and backup ›");
+    expect(screen.getByRole("heading", { level: 1, name: "Your Bento" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("radio", { name: "Largest" }));
     expect(document.documentElement.dataset.text).toBe("largest");
-    fireEvent.click(screen.getByRole("switch", { name: /Less motion/ }));
-    expect(document.documentElement.dataset.motion).toBe("reduce");
   });
 });
 
@@ -279,5 +369,17 @@ describe("find my level", () => {
     solveRun();
     expect(screen.getByRole("heading", { level: 1, name: /^Start in .+ grade\.$/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^Start .+ grade ›$/ })).toBeInTheDocument();
+  });
+});
+
+describe("the website from inside the app", () => {
+  it("quick settings has About Bento, which opens the landing page", () => {
+    renderApp();
+    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+    tap("About Bento ›");
+    expect(screen.getByRole("heading", { level: 1, name: "Math that clicks." })).toBeInTheDocument();
+    // Start learning goes into the app and its grade picker, even with a grade chosen
+    fireEvent.click(screen.getAllByRole("button", { name: "Start learning" })[0]!);
+    expect(screen.getByRole("heading", { name: "Which grade are you in?" })).toBeInTheDocument();
   });
 });

@@ -46,7 +46,8 @@ export function oneStepAnswers(p: OneStepEquation): AnswerModel {
   return {
     steps: [
       ns({ id: "undo", l: "Undo it", n: undoText(p), a: s => [v(), op("="), ...s], ans: p.x, h: undoText(p)!, w: [[sameOperation(p), "Used the same operation", "Do the opposite to undo it."]] }),
-      ns({ id: "check", l: "Check", a: s => [...checkSide(p, p.x), op("="), ...s], ans: p.rhs, h: "Put your x back in the equation." }),
+      ns({ id: "check", l: "Check", a: s => [...checkSide(p, p.x), op("="), ...s], ans: p.rhs, h: "Put your x back in the equation.",
+        w: [[p.x, "Wrote x again", "Work out the left side with your x in it. It should match the other side."]] }),
     ],
     finalParts: [0],
   };
@@ -61,7 +62,7 @@ function frames(p: OneStepEquation): BalanceFrame[] {
   switch (t) {
     case 0: return [
       { left: [xTiles(1), [block(a)]], right: [[block(rhs)]], note: eq },
-      { left: [xTiles(1), [block(a, { off: true })]], right: [[block(x)], [block(a, { off: true })]], note: `take ${f(a)} off both sides` },
+      { left: [xTiles(1), [block(a, { off: true })]], right: [[block(x, { late: true })], [block(a, { off: true })]], note: `take ${f(a)} off both sides` },
       { left: [[block(x)], [block(a)]], right: [[block(rhs)]], note: `check: ${f(x)} + ${f(a)} = ${f(rhs)}` },
     ];
     case 1: return [
@@ -71,7 +72,7 @@ function frames(p: OneStepEquation): BalanceFrame[] {
     ];
     case 2: return [
       { left: [xTiles(a)], right: [[block(rhs)]], note: eq },
-      { left: groups(a, xTiles(1)), right: groups(a, [block(x)]), note: `split both sides into ${f(a)}` },
+      { left: groups(a, xTiles(1)), right: groups(a, [block(x, { late: true })]), note: `split both sides into ${f(a)}` },
       { left: groups(a, [block(x)]), right: [[block(rhs)]], note: `check: ${f(a)} × ${f(x)} = ${f(rhs)}` },
     ];
     case 3: return [
@@ -89,6 +90,7 @@ export function explainOneStep(p: OneStepEquation, model: AnswerModel) {
   const diagram = buildBalance(frames(p), `A balance: ${f(rhs)} on one pan against the other side of the equation. Doing the opposite to both pans leaves x = ${f(x)}.`);
   return beatExplanation({
     heading: "Do the opposite",
+    idea: ["An equation is a balance: both sides weigh the same, so whatever you do to one side you do to the other.", "The opposite operation undoes what was done to x and leaves it alone."],
     statement: [...lhs(p), op("="), num(p.rhs)],
     diagram,
     alt: diagram.alt,
@@ -105,7 +107,7 @@ export const lesson: LessonDefinition<OneStepEquation> = {
   grade: 6,
   unit: "Expressions and equations",
   title: "One-step equations",
-  pre: "g5-order",
+  pre: "g6-eval",
   reference: createOneStep(0, 7, 8),
   generate: rng => generateOneStep(rng),
   restore: restoreOneStep,

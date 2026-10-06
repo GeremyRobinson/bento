@@ -1,3 +1,4 @@
+import { Pill } from "../components/primitives/Pill";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useApp } from "../app/AppState";
 import { gradeOf } from "../curriculum/grades";
@@ -5,6 +6,8 @@ import { factKey, tableById, tablesForGrade, type Fact, type FactTable } from ".
 import { FAST_MS, KNOWN, levelOf, pickSprint, sprintDoneToday, sprintTableFor, tableProgress, type SprintAnswer } from "../engine/facts/mastery";
 import { readAloudOn, readSettings, speak } from "../app/settings";
 import { Fill } from "../components/Shelf";
+import { CHOOSE_GRADE } from "../app/copy";
+import { FitScreen, WorkScreen } from "../components/screen/Screen";
 
 const SPRINT = 20;
 const fmt = (n: number) => (n < 0 ? `−${-n}` : String(n));
@@ -22,14 +25,14 @@ export function Facts({ table, start = false }: { table?: string; start?: boolea
 function FactsHome() {
   const { progress, go } = useApp();
   if (progress.grade == null) return (
-    <>
+    <FitScreen className="fscreen">
       <header className="cover">
         <h1>Facts</h1>
         <p className="ysub">Know them by heart.</p>
         <p className="muted">Each grade leans on its own facts: counting on, times tables, squares, powers. Choose your grade to see yours.</p>
       </header>
-      <div className="actions"><button className="ctl go" onClick={() => go({ name: "welcome", shelf: true }, "fwd")}>Choose your grade</button></div>
-    </>
+      <div className="actions"><Pill go onClick={() => go({ name: "home" }, "fwd")}>{CHOOSE_GRADE}</Pill></div>
+    </FitScreen>
   );
   return <GradeFacts g={progress.grade} />;
 }
@@ -41,7 +44,7 @@ function GradeFacts({ g }: { g: number }) {
   const [sprint, setSprint] = useState<FactTable | null>(null);
   if (sprint) return <Sprint t={sprint} onDone={() => setSprint(null)} />;
   return (
-    <>
+    <FitScreen className="fscreen fhome">
       <header className="cover">
         <h1>Facts</h1>
         <p className="ysub">Know them by heart.</p>
@@ -52,7 +55,7 @@ function GradeFacts({ g }: { g: number }) {
           <section className="tile today">
             <h2>Today's sprint</h2>
             <p className="sub">{done ? "Done for today. Another one never hurts." : `About 2 minutes of ${today.name.toLowerCase()}.`}</p>
-            <button className="ctl go fstart" onClick={() => setSprint(today)}>{done ? "Go again" : "Start"}</button>
+            <Pill go className="fstart" onClick={() => setSprint(today)}>{done ? "Go again" : "Start"}</Pill>
           </section>
         )}
         <section className="tile b-stats battery">
@@ -76,7 +79,7 @@ function GradeFacts({ g }: { g: number }) {
           );
         })}
       </div>
-    </>
+    </FitScreen>
   );
 }
 
@@ -94,18 +97,18 @@ function TablePage({ t, start }: { t: FactTable; start: boolean }) {
   if (sprint) return <Sprint t={t} onDone={() => (start ? go({ name: "home" }, "back") : setSprint(false))} />;
   const isGrid = t.rowHeads.length > 1;
   return (
-    <>
+    <FitScreen className="fscreen ftablepage">
       <header className="cover">
         <h1>{t.name}</h1>
         <p className="ysub">{t.blurb}</p>
         <p className="muted">{known} of {total} known. Tap any fact to see the pattern around it.</p>
-        <button className="ctl go fstart" onClick={() => setSprint(true)}>Practice these</button>
+        <Pill go className="fstart" onClick={() => setSprint(true)}>Practice these</Pill>
       </header>
       <section className="panel fgridwrap">
         {t.pattern === "hundred" ? <><Hundred t={t} /><Row t={t} sel={sel} setSel={setSel} /></> : isGrid ? <Grid t={t} sel={sel} setSel={setSel} /> : <Row t={t} sel={sel} setSel={setSel} />}
         <p className="fnote" aria-live="polite">{sel ? noteFor(t, sel) : t.pattern === "times" ? "Tap a fact. Its twin on the other side of the diagonal lights up too: 3 × 7 and 7 × 3 are the same fact." : t.pattern === "add" ? "Tap a fact. Every fact on the same slanted line makes the same total." : "Tap a fact to see it."}</p>
       </section>
-    </>
+    </FitScreen>
   );
 }
 
@@ -135,7 +138,7 @@ function Grid({ t, sel, setSel }: { t: FactTable; sel: Fact | null; setSel: (f: 
     return "";
   };
   return (
-    <div className="fgrid" role="grid" style={{ "--cols": t.colHeads.length + 1 } as CSSProperties} aria-label={t.name}>
+    <div className="fgrid" role="grid" style={{ "--cols": t.colHeads.length + 1, "--rows": t.rowHeads.length + 1 } as CSSProperties} aria-label={t.name}>
       <span className="fh corner" aria-hidden>{t.id === "times" || t.id === "divide" ? "×" : t.id.startsWith("sub") ? "−" : t.id === "signs" ? "×" : "+"}</span>
       {t.colHeads.map(h => <span key={`c${h}`} className="fh" aria-hidden>{h}</span>)}
       {t.rowHeads.map((h, r) => (
@@ -234,37 +237,40 @@ function Sprint({ t, onDone }: { t: FactTable; onDone: () => void }) {
     const right = answers.filter(a => a.right).length, fast = answers.filter(a => a.right && a.ms <= FAST_MS).length;
     const missed = answers.filter(a => !a.right).map(a => t.facts.find(x => factKey(t, x) === a.key)!).filter(Boolean);
     return (
-      <section className="panel fdone">
-        <h2>{right === answers.length ? "Every one right." : `${right} of ${answers.length} right.`}</h2>
-        <p className="muted">{fast} answered in under {FAST_MS / 1000} seconds. Quick and right is what fills a fact in.</p>
-        {missed.length > 0 && (
-          <div className="frowlist">{[...new Set(missed)].map(m => <span key={m.id} className="fchip miss"><small>{m.ask}</small><b>{fmt(m.answer)}</b></span>)}</div>
-        )}
-        {missed.length > 0 && <p className="muted fsmall">These come back first next time.</p>}
-        <div className="actions"><button className="ctl" onClick={onDone}>Done</button></div>
-      </section>
+      <FitScreen className="fscreen">
+        <section className="panel fdone">
+          <h2>{right === answers.length ? "Every one right." : `${right} of ${answers.length} right.`}</h2>
+          <p className="muted">{fast} answered in under {FAST_MS / 1000} seconds. Quick and right is what fills a fact in.</p>
+          {missed.length > 0 && (
+            <div className="frowlist">{[...new Set(missed)].map(m => <span key={m.id} className="fchip miss"><small>{m.ask}</small><b>{fmt(m.answer)}</b></span>)}</div>
+          )}
+          {missed.length > 0 && <p className="muted fsmall">These come back first next time.</p>}
+          <div className="actions"><Pill onClick={onDone}>Done</Pill></div>
+        </section>
+      </FitScreen>
     );
   }
   return (
-    <section className="panel split fsprint">
-      <div className="col">
+    <WorkScreen className="fsprint"
+      // a way out of anything started; what's been answered is kept, so it needs no question first
+      head={<Pill onClick={() => { if (answers.length) saveSprint(t.id, answers); onDone(); }}>Quit</Pill>}
+      problem={
         <div className="card fq">
           <div className="label">{t.name} · {i + 1} of {queue.length}</div>
           <div className="fbar" aria-hidden><i style={{ width: `${(i / queue.length) * 100}%` }} /></div>
           <div className="fask" aria-live="polite">{f!.ask.includes("?") ? f!.ask : `${f!.ask} =`}</div>
-          <div className={`fans${miss != null ? " miss" : ""}`} aria-label="Your answer">{miss != null ? fmt(miss) : typed || " "}</div>
+          <div className={`fans${miss != null ? " miss" : ""}`} aria-label="Your answer">{miss != null ? fmt(miss) : typed || " "}</div>
           {miss != null && <p className="muted fsmall">You typed {typed}. It's {fmt(miss)}. It comes back soon.</p>}
         </div>
-      </div>
-      <div className="col">
+      }
+      pad={<>
         <div className="tray">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => <button key={n} type="button" onClick={() => press(String(n))}>{n}</button>)}
           {neg ? <button type="button" aria-label="Negative" onClick={() => press("−")}>−</button> : <span />}
           <button type="button" onClick={() => press("0")}>0</button>
           <button type="button" aria-label="Erase" onClick={() => press("back")}>⌫</button>
         </div>
-        <div className="actions"><button className="ctl" onClick={() => { if (answers.length) saveSprint(t.id, answers); onDone(); }}>Stop</button></div>
-      </div>
-    </section>
+      </>}
+    />
   );
 }

@@ -5,6 +5,7 @@ import { beats, type Explanation, type ExplanationStep } from "../../../../expla
 import { buildCompareBlocks } from "../../../../explanations/diagrams/early-g1/blocks";
 import { manyBoxes, restoreVia, wholeIn } from "../../_number-line/steps";
 import { choiceStep, count, onesOf, plural, slipsMany, tensOf } from "../_kit";
+import { singularWork } from "../../gradeK/kit";
 
 /** two numbers from 10 to 99 to compare */
 export interface CompareProblem { a: number; b: number }
@@ -30,7 +31,8 @@ function answers({ a, b }: CompareProblem): AnswerModel {
         [{ ta: ao, tb: bo }, "Read the ones digits", "Those are the ones digits. The tens digit is the **first** digit."],
         [{ ta: tb, tb: ta }, "Swapped the numbers", `Check which number is which: ${a} comes first, then ${b}.`],
       ]),
-      hint: `The first digit tells the tens. ${a} starts with ${ta}.`,
+      hint: `Which digit sits in the tens place of ${a}, and of ${b}? Each tens rod is one ten.`,
+      explain: `The first digit tells the tens: ${a} has ${plural(ta, "ten", "tens")} and ${b} has ${plural(tb, "ten", "tens")}.`,
     }),
   ];
   if (ta === tb) steps.push(manyBoxes({
@@ -41,7 +43,8 @@ function answers({ a, b }: CompareProblem): AnswerModel {
       [{ ao: ta, bo: tb }, "Read the tens digits", "Those are the tens. The ones digit is the **last** digit."],
       [{ ao: bo, bo: ao }, "Swapped the numbers", `Check which number is which: ${a} comes first, then ${b}.`],
     ]),
-    hint: `The tens match, so look at the last digit. ${a} ends with ${ao}.`,
+    hint: `The tens match, so the ones decide. Which digit sits in the ones place of each number?`,
+    explain: `The last digit tells the ones: ${a} has ${plural(ao, "one", "ones")} and ${b} has ${plural(bo, "one", "ones")}.`,
   }));
   const bigger = Math.max(a, b), smaller = Math.min(a, b);
   const why = ta !== tb
@@ -116,6 +119,6 @@ export const lesson: LessonDefinition<CompareProblem> = {
   },
   restore: raw => restoreVia(raw, ["a", "b"] as const, v => createCompare(v.a, v.b)),
   display: p => [num(p.a), text(" ? "), num(p.b)],
-  answers,
+  answers: p => singularWork(answers(p)),
   explain,
 };

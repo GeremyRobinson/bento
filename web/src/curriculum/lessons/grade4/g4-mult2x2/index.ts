@@ -42,8 +42,8 @@ function answers(p: TwoByTwoProblem): AnswerModel {
         wrong: slips(P[2]!, [[u * s, "Lost the place value", `${10 * s} is ${tens(s)}. ${u} × ${tens(s)} is ${tens(u * s)}: ${P[2]}.`]]),
         hint: `${u} × ${s}, then one zero.`, explain: `${u} × ${10 * s} = ${P[2]}.`, work: [num(u), op("×"), num(10 * s), op("="), num(P[2]!)] }),
       numStep({ id: "oo", label: "Ones × ones", prompt: x => [num(u), op("×"), num(v), op("="), x], ans: P[3]!,
-        wrong: slips(P[3]!, [[u + v, "Added instead", "This one is times, not plus."], [P[3]! - 1, "Fact slip", `Check that fact: ${u} × ${v} = ${P[3]}.`], [P[3]! + 1, "Fact slip", `Check that fact: ${u} × ${v} = ${P[3]}.`], [u * (v - 1), "Fact slip", `Check that fact: ${u} × ${v} = ${P[3]}.`], [u * (v + 1), "Fact slip", `Check that fact: ${u} × ${v} = ${P[3]}.`]]),
-        hint: `${u === 1 ? "1 group" : `${u} groups`} of ${v}.`, explain: `${u} × ${v} = ${P[3]}.`, work: [num(u), op("×"), num(v), op("="), num(P[3]!)] }),
+        wrong: slips(P[3]!, [[u + v, "Added instead", "This one is times, not plus."], [P[3]! - 1, "Fact slip", `Close. Skip-count by ${v}s, ${u} times.`], [P[3]! + 1, "Fact slip", `Close. Skip-count by ${v}s, ${u} times.`], [u * (v - 1), "One group short", `That's ${u} × ${v - 1}. Skip-count by ${v}s, ${u} times.`], [u * (v + 1), "One group too many", `That's ${u} × ${v + 1}. Skip-count by ${v}s, ${u} times.`]]),
+        hint: u === 1 ? "Times 1 leaves a number as it is." : `${u} groups of ${v}: skip-count by ${v}s.`, explain: `${u} × ${v} = ${P[3]}.`, work: [num(u), op("×"), num(v), op("="), num(P[3]!)] }),
       numStep({ id: "sum", label: "Add the parts", prompt: x => [...plusChain(P), op("="), x], ans: total,
         wrong: slips(total, [
           [P[0]! + P[3]!, "Added only the corners", "That's only the two corners. Add the middle parts too."],
@@ -60,7 +60,7 @@ function explain(p: TwoByTwoProblem, model: AnswerModel): Explanation {
   const pr = parts(p);
   return {
     heading: "Split both numbers",
-    idea: ["Split both numbers into tens and ones. The area model makes four smaller rectangles. Multiply each, then add the four parts."],
+    idea: ["Each number is tens plus ones, so the big rectangle cuts into four smaller ones that are easy to multiply.", "The four parts together make the whole area."],
     statement: [num(p.a), op("×"), num(p.b)],
     diagram: buildAreaGrid({
       cols: [{ label: String(10 * t), size: 10 * t }, { label: String(u), size: u }],

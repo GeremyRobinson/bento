@@ -3,7 +3,9 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import type { Rng } from "../../../generators/rng";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildPlane } from "../../../../explanations/diagrams/plane/build";
+import type { Side } from "../../../../explanations/diagrams/plane/schema";
 import { attempt, expected, f, fP, ints, ns, nz, P } from "../../_plane/kit";
+import { withEasyStart } from "../../easy-start";
 
 /** ⟨a, b⟩ · ⟨c, d⟩ */
 export interface DotProblem { kind: "vector.dot"; a: number; b: number; c: number; d: number }
@@ -28,10 +30,10 @@ export const dotMath = ({ a, b, c, d }: DotProblem): MathText => [...vec(a, b), 
 export function dotAnswers({ a, b, c, d }: DotProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "x", label: "x parts", prompt: s => [num(a), op("×"), ...P(c), op("="), ...s], ans: a * c, hint: "Multiply the first numbers." }),
-      ns({ id: "y", label: "y parts", prompt: s => [num(b), op("×"), ...P(d), op("="), ...s], ans: b * d, hint: "Multiply the second numbers." }),
+      ns({ id: "x", label: "x parts", prompt: s => [num(a), op("×"), ...P(c), op("="), ...s], ans: a * c, hint: "The x parts are the first numbers of each arrow: multiply them.", wrong: [[a + c, "Added", "Multiply the x parts; adding comes last."]] }),
+      ns({ id: "y", label: "y parts", prompt: s => [num(b), op("×"), ...P(d), op("="), ...s], ans: b * d, hint: "The y parts are the second numbers of each arrow: multiply them.", wrong: [[a * d, "Mixed the parts", "Match x with x and y with y: the second number times the second number."]] }),
       ns({ id: "dot", label: "Add", prompt: s => [num(a * c), op("+"), ...P(b * d), op("="), ...s], ans: a * c + b * d,
-        hint: "The dot product is one number: add them.", note: "If it's 0, the vectors are perpendicular." }),
+        hint: "The dot product is one number: add the two products.", wrong: [[a * c * b * d, "Multiplied", "Multiply within each part, then add the parts."]], note: "If it's 0, the vectors are perpendicular." }),
     ],
     finalParts: [-1],
   };
@@ -52,8 +54,15 @@ export function explainDot(p: DotProblem, model: AnswerModel): Explanation {
       items: [
         { kind: "segment", a: [0, 0], b: [a, b], arrow: true, label: { text: vt(a, b) } },
         { kind: "segment", a: [0, 0], b: [c, d], arrow: true, cls: "ln2", delay: 0.4, label: { text: vt(c, d), acc: true } },
-        ...(D === 0 ? [{ kind: "rightAngle" as const, at: [0, 0] as const, u: [a, b] as const, v: [c, d] as const, from: 3 }]
-          : [{ kind: "angle" as const, at: [0, 0] as const, u: [a, b] as const, v: [c, d] as const, from: 3 }]),
+        // beat 1: drop each tip to the x-axis (the x parts); beat 2: across to the y-axis (the y parts)
+        { kind: "segment", a: [a, b], b: [a, 0], cls: "ln faint dash", from: 1, label: { text: `${f(a)} × ${fP(c)} = ${f(X)}`, optional: true, prefer: ["s", "e", "w"] } },
+        { kind: "segment", a: [c, d], b: [c, 0], cls: "ln faint dash", from: 1 },
+        { kind: "segment", a: [a, b], b: [0, b], cls: "ln faint dash", from: 2, label: { text: `${f(b)} × ${fP(d)} = ${f(Y)}`, optional: true, prefer: ["n", "w", "e"] } },
+        { kind: "segment", a: [c, d], b: [0, d], cls: "ln faint dash", from: 2 },
+        // beat 3: the dot product itself, on the angle it describes
+        ...(D === 0 ? [{ kind: "rightAngle" as const, at: [0, 0] as const, u: [a, b] as const, v: [c, d] as const, from: 3 },
+          { kind: "label" as const, at: [0, 0] as const, from: 3, label: { text: "dot = 0", acc: true, prefer: ["sw", "nw", "se", "ne"] as Side[] } }]
+          : [{ kind: "angle" as const, at: [0, 0] as const, u: [a, b] as const, v: [c, d] as const, from: 3, label: { text: `dot = ${f(D)}`, acc: true } }]),
       ],
     }),
     timeline: beats(4),
@@ -67,15 +76,16 @@ export function explainDot(p: DotProblem, model: AnswerModel): Explanation {
   };
 }
 
-export const lesson: LessonDefinition<DotProblem> = {
+export const lesson: LessonDefinition<DotProblem> = withEasyStart({
   id: "g12-dot",
   grade: 12,
   unit: "Vectors and series",
   title: "Dot product",
+  pre: "g12-vecmag",
   reference: createDot(2, 3, 4, -1),
   generate: rng => generateDot(rng),
   restore: restoreDot,
   display: dotMath,
   answers: dotAnswers,
   explain: explainDot,
-};
+});

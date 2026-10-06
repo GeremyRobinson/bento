@@ -25,7 +25,7 @@ export const GRADES: GradeDefinition[] = [
   { grade: 9, short: "9", name: "9th grade · Algebra 1", subtitle: "Algebra 1", color: "#2563eb" },
   { grade: 10, short: "10", name: "10th grade · Geometry", subtitle: "Geometry", color: "#0369a1" },
   { grade: 11, short: "11", name: "11th grade · Algebra 2", subtitle: "Algebra 2", color: "#7c3aed" },
-  { grade: 12, short: "12", name: "12th grade", subtitle: "Precalculus and calculus", color: "#6b7280" },
+  { grade: 12, short: "12", name: "12th grade", subtitle: "Precalculus and calculus", color: "#c026d3" },
 ];
 
 export const bandOf = (g: number): Band => (g <= 2 ? "little" : g <= 5 ? "kid" : g <= 8 ? "middle" : "high");

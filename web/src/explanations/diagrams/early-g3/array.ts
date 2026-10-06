@@ -37,7 +37,7 @@ export function buildArray(s: ArraySpec): SceneDiagram {
     const x = c * px, y = r * py;
     if (!chip) items.push({ type: "circle", cx: x, cy: y, r: R, cls, enter: "pop", delay, ...when(from, until) } as Draft);
     else {
-      items.push({ type: "rect", x: x - cw / 2, y: y - ch / 2, w: cw, h: ch, rx: 6, cls: cls === "dota" ? "cell c1" : "cell c0", enter: "pop", delay, ...when(from, until) } as Draft);
+      items.push({ type: "rect", x: x - cw / 2, y: y - ch / 2, w: cw, h: ch, rx: 6, cls: cls === "dota" ? "sq big" : "cell c0", enter: "pop", delay, ...when(from, until) } as Draft);
       items.push(t(x, y, s.chip!, "xs", { enter: "fade", delay, ...when(from, until) }));
     }
   };
