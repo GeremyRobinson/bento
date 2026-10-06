@@ -28,7 +28,9 @@ function answers({ p, W }: PercentOfProblem): AnswerModel {
       ns({ id: "base", l: `Find ${base}%`, a: s => [num(base), text("% of "), num(W), op("="), ...s], ans: part,
         h: base === 10 ? `10% is one tenth: ${W} ÷ 10.` : `25% is one quarter: ${W} ÷ 4.`,
         w: [[W * base, "Multiplied instead of divided", `${base}% is a part of ${W}, so it's smaller than ${W}.`]] }),
-      ns({ id: "scale", l: `Scale up to ${p}%`, a: s => [num(p / base), op("×"), num(part), op("="), ...s], ans: (W * p) / 100, h: `${p}% is ${count(p / base, "group")} of ${base}%.` }),
+      ns({ id: "scale", l: `Scale up to ${p}%`, a: s => [num(p / base), op("×"), num(part), op("="), ...s], ans: (W * p) / 100, h: `${p}% is ${count(p / base, "group")} of ${base}%.`,
+        w: [...(p > base ? [[part * p, "Multiplied by the percent", `${p}% is ${p / base} blocks of ${base}%. Multiply ${part} by ${p / base}, not ${p}.`] as [number, string, string]] : []),
+          [W - (W * p) / 100, "Found what's left", `That's the part not taken. ${p}% is the shaded part.`]] }),
     ],
     finalParts: [-1],
   };
@@ -51,6 +53,10 @@ function explain(pr: PercentOfProblem, model: AnswerModel): Explanation {
   const { p, W } = pr, base = baseOf(p), part = expectedOf(model.steps, "base"), R = expectedOf(model.steps, "scale");
   return {
     heading: base === 10 ? "Start from 10%" : "Start from 25%",
+    idea: [
+      `Percent means out of 100: ${p}% of a number is ${p} of every 100 parts of it, the same as ${p}/100.`,
+      base === 10 ? "10% is one tenth, so find 10% and build the percent from it." : "25% is one quarter, so find 25% and build the percent from it.",
+    ],
     statement: [num(p), text("% of "), num(W)],
     diagram: percentOfPicture(pr),
     caption: `Each block is ${base}%, which is ${part}.`,

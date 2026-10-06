@@ -14,8 +14,13 @@ export function createBox(l: number, w: number, h: number): BoxProblem {
   return { l, w, h };
 }
 
-/** Same as the current app: every side 2–12. */
-export const generateBox = (rng: Rng): BoxProblem => ({ l: rng.int(2, 12), w: rng.int(2, 12), h: rng.int(2, 12) });
+/**
+ * Boxes small enough to count on a phone (fixes-02 A3): length and width 2–8, height 2–6 (up to 384 cubes); the first
+ * three problems 2–5 on every side, so they can be counted cube by cube.
+ */
+export const generateBox = (rng: Rng, index = 3): BoxProblem => index < 3
+  ? { l: rng.int(2, 5), w: rng.int(2, 5), h: rng.int(2, 5) }
+  : { l: rng.int(2, 8), w: rng.int(2, 8), h: rng.int(2, 6) };
 
 export function boxAnswers({ l, w, h }: BoxProblem): AnswerModel {
   return {
@@ -33,7 +38,7 @@ export function explainBox(p: BoxProblem, answers: AnswerModel): Explanation {
   const { l, w, h } = p, base = expectedOf(answers.steps, "base"), V = expectedOf(answers.steps, "volume");
   return {
     heading: "Volume = length × width × height",
-    idea: ["Count the cubes in the bottom layer, then multiply by the number of layers."],
+    idea: ["Volume counts the cubes that fill a box, and every layer holds the same number of cubes as the bottom one.", "So the cubes in one layer times the number of layers is the volume."],
     statement: [num(l), op("×"), num(w), op("×"), num(h)],
     diagram: buildBox3d({
       mode: "cubes", l, w, h, layerBeats: [1, ...Array.from({ length: h - 1 }, () => 2)],
@@ -60,7 +65,7 @@ export const lesson: LessonDefinition<BoxProblem> = {
   title: "Volume of a box",
   pre: "g4-area",
   reference: createBox(4, 3, 2),
-  generate: rng => generateBox(rng),
+  generate: (rng, index) => generateBox(rng, index),
   restore: raw => { const r = readNumbers(raw, ["l", "w", "h"] as const); try { return r && createBox(r.l, r.w, r.h); } catch { return null; } },
   display: p => [num(p.l), op("×"), num(p.w), op("×"), num(p.h)],
   displayNote: ({ l, w, h }) => `A box ${l} cm long, ${w} cm wide and ${h} cm tall. How many cubic cm?`,

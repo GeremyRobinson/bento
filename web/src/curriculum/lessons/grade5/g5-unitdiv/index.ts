@@ -16,12 +16,14 @@ export function createUnitDivision(W: number, d: number): UnitDivisionProblem {
 }
 
 /** Same ranges as the current app: 2–10 wholes, pieces of 1/2 to 1/8. */
-export const generateUnitDivision = (rng: Rng) => createUnitDivision(rng.int(2, 10), rng.int(2, 8));
+// the first three: a few wholes cut into halves, thirds or fourths
+export const generateUnitDivision = (rng: Rng, index = 3) => (index < 3 ? createUnitDivision(rng.int(2, 4), rng.int(2, 4)) : createUnitDivision(rng.int(2, 10), rng.int(2, 8)));
 
 function answers({ W, d }: UnitDivisionProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "one", l: "Pieces in one whole", q: `How many 1/${count(d, "piece")} make 1 whole?`, a: s => s, ans: d, h: `It takes ${d} of them.` }),
+      ns({ id: "one", l: "Pieces in one whole", q: `How many 1/${count(d, "piece")} make 1 whole?`, a: s => s, ans: d, h: "Look at one whole bar and count the pieces in it.",
+        w: [[d - 1, "Counted the cuts", "Count the pieces, not the cut lines between them."]] }),
       ns({ id: "all", l: "Pieces in all", a: s => [num(W), op("×"), num(d), op("="), ...s], ans: W * d, h: `${count(W, "whole")}, ${count(d, "piece")} in each.`,
         w: [[round6(W / d), "Divided the wrong way", `The pieces are small, so lots of them fit. The answer is bigger than ${W}.`]] }),
     ],
@@ -43,6 +45,7 @@ function explain(p: UnitDivisionProblem, model: AnswerModel): Explanation {
   const { W, d } = p, one = expectedOf(model.steps, "one"), all = expectedOf(model.steps, "all");
   return {
     heading: "How many pieces fit?",
+    idea: ["Dividing by 1/4 asks how many quarters fit, and 4 quarters fit in every whole.", "So the answer is the number of wholes times the pieces in each whole."],
     statement: [num(W), op("÷"), frac(1, d)],
     diagram: unitDivisionPicture(p),
     caption: `${count(W, "whole")}, ${d} ${pieceName(d)} in each: ${W * d} ${pieceName(d)}.`,
@@ -64,7 +67,7 @@ export const lesson: LessonDefinition<UnitDivisionProblem> = {
   pre: "g5-fracof",
   // the current app's card and picture: 3 ÷ 1/4 = 12
   reference: createUnitDivision(3, 4),
-  generate: rng => generateUnitDivision(rng),
+  generate: (rng, index) => generateUnitDivision(rng, index),
   restore: raw => {
     const r = ints(raw, ["W", "d"] as const);
     try { return r && createUnitDivision(r.W, r.d); } catch { return null; }

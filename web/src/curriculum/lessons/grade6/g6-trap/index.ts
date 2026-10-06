@@ -17,9 +17,14 @@ export function createTrapezoid(a: number, b: number, h: number): TrapezoidProbl
 function answers({ a, b, h }: TrapezoidProblem): AnswerModel {
   return {
     steps: [
-      oneBox({ id: "sum", label: "Add the bases", prompt: s => [num(a), op("+"), num(b), op("="), s], ans: a + b, hint: "Add the two parallel sides." }),
-      oneBox({ id: "times", label: "Times the height", prompt: s => [num(a + b), op("×"), num(h), op("="), s], ans: (a + b) * h, hint: "Multiply by the height." }),
-      oneBox({ id: "half", label: "Half of it", prompt: s => [num((a + b) * h), op("÷"), num(2), op("="), s], ans: ((a + b) * h) / 2, hint: "Divide by 2.",
+      oneBox({ id: "sum", label: "Add the bases", prompt: s => [num(a), op("+"), num(b), op("="), s], ans: a + b,
+        hint: `The two copies lie end to end along the bottom: ${a} + ${b}.`, explain: `End to end, the bottom is ${a} + ${b} = ${a + b} long.`,
+        wrong: [[a * b, "Multiplied the bases", "Put the bases end to end: add them."]] }),
+      oneBox({ id: "times", label: "Times the height", prompt: s => [num(a + b), op("×"), num(h), op("="), s], ans: (a + b) * h,
+        hint: `A parallelogram's area is length × height: ${a + b} × ${h}.`, explain: `The parallelogram is ${a + b} × ${h} = ${(a + b) * h}.`,
+        wrong: [[a + b + h, "Added the height", "Area is length times height."]] }),
+      oneBox({ id: "half", label: "Half of it", prompt: s => [num((a + b) * h), op("÷"), num(2), op("="), s], ans: ((a + b) * h) / 2,
+        hint: "That area holds two trapezoids. Take half.", explain: `One trapezoid is half: ${(a + b) * h} ÷ 2 = ${((a + b) * h) / 2}.`,
         wrong: [[(a + b) * h, "Forgot to halve", "Divide by 2 at the end."]] }),
     ],
     finalParts: [-1],
@@ -29,17 +34,20 @@ function answers({ a, b, h }: TrapezoidProblem): AnswerModel {
 function explain(p: TrapezoidProblem, model: AnswerModel) {
   const { a, b, h } = p, S = expectedOf(model, "sum"), P = expectedOf(model, "times"), A = expectedOf(model, "half");
   return chainExplanation({
-    heading: "Average the bases",
-    idea: ["Add the two bases, multiply by the height, then take half. It's the same as averaging the bases and multiplying by the height."],
+    heading: "Two copies make a parallelogram",
+    idea: [
+      "A second copy of the trapezoid, turned upside down next to it, makes a parallelogram as long as both bases together.",
+      "The trapezoid is half of that parallelogram.",
+    ],
     statement: [text("bases "), num(a), text(" and "), num(b), text(", height "), num(h)],
     caption: `Same as averaging the bases: (${a} + ${b}) ÷ 2 = ${f(S / 2)}, and ${f(S / 2)} × ${h} = ${A}.`,
     alt: `Trapezoid area: (${a} + ${b}) × ${h} ÷ 2 = ${A}.`,
     beats: [
-      { id: "sum", narration: `Add the two parallel sides: ${a} + ${b} = ${S}.`, math: [num(a), op("+"), num(b), op("="), num(S)],
+      { id: "sum", narration: `Lay a flipped copy next to it: along the bottom, the bases ${a} and ${b} sit end to end, ${a} + ${b} = ${S}.`, math: [num(a), op("+"), num(b), op("="), num(S)],
         lines: [[num(a), op("+"), num(b), op("="), num(S)]], answerStep: "sum", result: S },
-      { id: "times", narration: `Multiply by the height: ${S} × ${h} = ${P}.`, math: [num(S), op("×"), num(h), op("="), num(P)],
+      { id: "times", narration: `The two copies make a parallelogram ${S} long and ${h} high: ${S} × ${h} = ${P}.`, math: [num(S), op("×"), num(h), op("="), num(P)],
         lines: [[num(S), op("×"), num(h), op("="), num(P)]], answerStep: "times", result: P },
-      { id: "half", narration: `Half of that is the area: ${P} ÷ 2 = ${A}.`, math: [num(P), op("÷"), num(2), op("="), num(A)],
+      { id: "half", narration: `That's two trapezoids, so one is half: ${P} ÷ 2 = ${A}.`, math: [num(P), op("÷"), num(2), op("="), num(A)],
         lines: [[num(P), op("÷"), num(2), op("="), num(A)]], answerStep: "half", result: A },
     ],
   });

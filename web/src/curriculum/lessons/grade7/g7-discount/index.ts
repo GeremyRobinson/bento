@@ -26,7 +26,8 @@ function answers({ P, p, off }: DiscountProblem): AnswerModel {
   const amt = (P * p) / 100;
   return {
     steps: [
-      ns({ id: "percent", l: `Find ${p}%`, a: s => [num(p), text("% of "), ...$(P), op("="), ...$(s)], ans: amt, h: `10% of $${P} is $${f(P / 10)}.` }),
+      ns({ id: "percent", l: `Find ${p}%`, a: s => [num(p), text("% of "), ...$(P), op("="), ...$(s)], ans: amt, h: `Find 10% first, one tenth of $${P}. Then build up to ${p}%.`,
+        w: [[P * p, "Multiplied by the percent", `${p}% means ${p} out of every 100: find 10% first.`], [P + (off ? -amt : amt), "Found the new price", `That's the price after. This step asks for the ${p}% itself.`]] }),
       ns({ id: "total", l: off ? "Take it off" : "Add it on", a: s => [...$(P), op(off ? "−" : "+"), ...$(amt), op("="), ...$(s)], ans: P + (off ? -amt : amt),
         h: off ? "A discount takes money off." : "A tip adds money on.",
         w: [[P + (off ? amt : -amt), off ? "Added the discount" : "Subtracted the tip", off ? "A discount takes money off: subtract." : "Tips and tax add on: add."]] }),
@@ -65,6 +66,7 @@ function explain(pr: DiscountProblem, model: AnswerModel): Explanation {
   const { P, p, off } = pr, amt = expectedOf(model.steps, "percent"), total = expectedOf(model.steps, "total");
   return {
     heading: "Find the percent, then add or subtract",
+    idea: ["Percent means out of 100, so 10% of a price is one tenth of it, and other percents build up from there.", "A discount takes that amount off; a tip or tax adds it on."],
     statement: [...$(P), text(off ? `, ${p}% off` : `, ${p}% tip`)],
     diagram: discountPicture(pr),
     caption: off ? `${p}% off: $${f(amt)} comes off.` : `A ${p}% tip: $${f(amt)} goes on.`,
@@ -83,6 +85,7 @@ export const lesson: LessonDefinition<DiscountProblem> = {
   grade: 7,
   unit: "Proportions and percents",
   title: "Discounts, tax and tips",
+  pre: "g6-pctof",
   // the current app's card and picture: $80, 25% off, sale price $60
   reference: createDiscount(80, 25, true),
   generate: rng => generateDiscount(rng),

@@ -48,7 +48,7 @@ export function manyBoxes(o: {
   /** slips: [typed values by box, kind, message] */
   wrong?: [Record<string, number>, string, RichText][];
   hint: RichText;
-  /** default: the hint */
+  /** what "Show me" says; default: the hint */
   explain?: RichText;
   /** exponent boxes are drawn small */
   small?: string[];
@@ -121,3 +121,16 @@ export function wholeIn(name: string, x: number, lo: number, hi: number) {
 export const gcd = (a: number, b: number): number => (b ? gcd(b, a % b) : Math.abs(a));
 export const lcm = (a: number, b: number) => (a * b) / gcd(a, b);
 export const round6 = (x: number) => Math.round(x * 1e6) / 1e6;
+
+/**
+ * How often to label the ticks of a long line so labels stay readable on a phone (review v43 item 9): on round values
+ * (1, 2, 5, 10, 20, 25, 50 … apart) that are whole ticks, at most `most` gaps across. Returns the `every` of buildNumberLine.
+ */
+export function sparseEvery({ min, max, step }: { min: number; max: number; step: number }, most = 7): number {
+  for (const s of [1, 2, 5, 10, 20, 25, 50, 100, 200, 500, 1000]) {
+    const k = Math.round(s / step);
+    if (s < step - 1e-9 || Math.abs(k * step - s) > 1e-9) continue;
+    if ((max - min) / s <= most + 1e-9) return k;
+  }
+  return Math.max(1, Math.round((max - min) / step));
+}

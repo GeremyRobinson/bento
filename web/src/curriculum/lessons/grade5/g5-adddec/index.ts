@@ -29,14 +29,16 @@ function answers(p: AddDecimalsProblem): AnswerModel {
   const { a, b } = p, { wa, wb, da, db } = split(p);
   return {
     steps: [
-      oneBox({ id: "whole", label: "Add the whole numbers", prompt: s => [num(wa), op("+"), num(wb), op("="), s], ans: wa + wb, hint: "Add the parts before the decimal points." }),
+      oneBox({ id: "whole", label: "Add the whole numbers", prompt: s => [num(wa), op("+"), num(wb), op("="), s], ans: wa + wb, hint: "Add the parts before the decimal points.",
+        wrong: (wa % 10) + (wb % 10) >= 10 ? [[wa + wb - 10, "Forgot to carry", `The ones make ${(wa % 10) + (wb % 10)}: carry the 1 ten.`]] : [[Math.abs(wa - wb), "Subtracted", "This step adds the whole parts."]] }),
       oneBox({
         id: "decimal", label: "Add the decimal parts", prompt: s => [num(da), op("+"), num(db), op("="), s], ans: round6(da + db),
         hint: `Line up the points: ${f(da)} is the same as ${da.toFixed(2)}.`,
         wrong: [[round6((Math.round(da * 10) + Math.round(db * 100)) / 100), "Didn't line up the decimal points",
           `${f(da)} means ${count(Math.round(da * 10), "tenth")}, which is ${count(Math.round(da * 100), "hundredth")}. Line up the points.`]],
       }),
-      oneBox({ id: "total", label: "Put them together", prompt: s => [num(a), op("+"), num(b), op("="), s], ans: round6(a + b), hint: `${wa + wb} + ${f(round6(da + db))}.` }),
+      oneBox({ id: "total", label: "Put them together", prompt: s => [num(a), op("+"), num(b), op("="), s], ans: round6(a + b), hint: `${wa + wb} + ${f(round6(da + db))}.`,
+        wrong: da + db >= 1 ? [[round6(a + b - 1), "Lost a whole", `${f(round6(da + db))} is more than 1 whole: that 1 goes with the whole numbers.`]] : [[wa + wb, "Left off the decimal part", `Keep the ${f(round6(da + db))} after the point.`]] }),
     ],
     finalParts: [-1],
   };
@@ -49,7 +51,7 @@ function explain(p: AddDecimalsProblem, model: AnswerModel) {
   const rewrite = padded.map(x => `${f(x)} as ${x.toFixed(2)}`).join(" and ");
   return chainExplanation({
     heading: "Line up the decimal points",
-    idea: ["Line up the decimal points, writing zeros so both numbers have hundredths. Add the whole parts, add the decimal parts, then put them together."],
+    idea: ["Each place after the point is a size of piece, so only same-size pieces add: tenths with tenths, hundredths with hundredths.", "That's why the points line up, with a 0 where a number has no hundredths."],
     statement: [num(a), op("+"), num(b)],
     ...(padded.length ? { caption: `Write ${rewrite} so both have hundredths.` } : {}),
     alt: `${f(a)} + ${f(b)}: whole parts ${W}, decimal parts ${f(D)}, total ${f(sum)}.`,
@@ -73,7 +75,8 @@ export const lesson: LessonDefinition<AddDecimalsProblem> = {
   title: "Adding decimals",
   pre: "g4-dec",
   reference: createAddDecimals(12.5, 3.75), // 12.5 + 3.75 = 16.25, the current app's example
-  generate: rng => createAddDecimals(rng.int(11, 999) / 10, rng.int(101, 9999) / 100),
+  // the first three: one-digit whole parts
+  generate: (rng, index) => (index < 3 ? createAddDecimals(rng.int(11, 99) / 10, rng.int(101, 999) / 100) : createAddDecimals(rng.int(11, 999) / 10, rng.int(101, 9999) / 100)),
   restore: raw => restoreVia(raw, ["a", "b"] as const, v => createAddDecimals(v.a, v.b)),
   display: p => [num(p.a), op("+"), num(p.b)],
   answers,

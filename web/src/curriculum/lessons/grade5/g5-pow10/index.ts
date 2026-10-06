@@ -21,7 +21,8 @@ function answers({ x, k }: PowerOfTenProblem): AnswerModel {
   const m = 10 ** k, ans = round6(x * m);
   return {
     steps: [
-      oneBox({ id: "zeros", label: "Count the zeros", question: `How many zeros does ${m} have?`, prompt: s => [s], ans: k, hint: `Count the 0s in ${m}.` }),
+      oneBox({ id: "zeros", label: "Count the zeros", question: `How many zeros does ${m} have?`, prompt: s => [s], ans: k, hint: `Count the 0s in ${m}.`,
+        wrong: [[k + 1, "Counted the 1 too", `The 1 isn't a zero. Count only the 0s in ${m}.`], [m, "Wrote the number", `That's the whole number. How many 0s are in it?`]] }),
       oneBox({
         id: "move", label: "Move the decimal point", question: `Move the point ${plural(k, "place")} to the right.`,
         prompt: s => [num(x), op("×"), num(m), op("="), s], ans, hint: "Each zero moves the point one place to the right.",
@@ -41,7 +42,7 @@ function explain(p: PowerOfTenProblem, model: AnswerModel): Explanation {
   const [whole, frac = ""] = f(x).split(".");
   return {
     heading: "Each zero moves the point",
-    idea: ["Each zero moves the decimal point one place to the right. Multiplying by 10, 100 or 1000 always makes the number bigger."],
+    idea: ["Times 10 makes every digit worth ten times as much, so each digit shifts one place left and the point seems to hop one place right.", "Each zero in 10, 100 or 1000 is one hop."],
     statement: [num(x), op("×"), num(m), op("="), text("?")],
     diagram: buildDecimalShift({
       digits: whole! + frac, from: whole!.length, to: whole!.length + k, beat: 0, moveBeat: 1,
@@ -63,8 +64,10 @@ export const lesson: LessonDefinition<PowerOfTenProblem> = {
   grade: 5,
   unit: "Decimals",
   title: "Multiply by 10, 100, 1000",
+  pre: "g4-dec",
   reference: createPowerOfTen(3.47, 2), // 3.47 × 100 = 347, the current app's example
-  generate: rng => createPowerOfTen(rng.int(101, 9999) / 100, rng.int(1, 3)),
+  // the first three: a one-digit whole part times 10
+  generate: (rng, index) => (index < 3 ? createPowerOfTen(rng.int(101, 999) / 100, 1) : createPowerOfTen(rng.int(101, 9999) / 100, rng.int(1, 3))),
   restore: raw => restoreVia(raw, ["x", "k"] as const, v => createPowerOfTen(v.x, v.k)),
   display: p => [num(p.x), op("×"), num(10 ** p.k)],
   answers,

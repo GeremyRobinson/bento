@@ -15,12 +15,15 @@ export function createSubtractIntegers(a: number, b: number): SubtractIntegersPr
 }
 
 function answers({ a, b }: SubtractIntegersProblem): AnswerModel {
+  const dir = b < 0 ? "right" : "left", B = Math.abs(b);
   return {
     steps: [
       oneBox({ id: "opp", label: "Add the opposite", question: `What is the opposite of ${f(b)}?`, prompt: s => [s], ans: -b, hint: "The opposite has the other sign.",
         wrong: [[b, "Kept the same sign", "The opposite flips the sign."]] }),
-      oneBox({ id: "add", label: "Now add", prompt: s => [num(a), op("+"), ...paren(-b), op("="), s], ans: a - b, hint: "Add the two numbers.",
-        wrong: [[a + b, "Forgot to change the sign", "Subtracting means adding the opposite."]] }),
+      oneBox({ id: "add", label: "Now add", prompt: s => [num(a), op("+"), ...paren(-b), op("="), s], ans: a - b,
+        hint: `Start at ${f(a)} and move ${B} ${dir}.`, explain: `From ${f(a)}, moving ${B} ${dir} lands on ${f(a - b)}.`,
+        wrong: [[a + b, "Forgot to change the sign", "Subtracting means adding the opposite."],
+          [-(a - b), "Wrong sign", `From ${f(a)}, moving ${B} ${dir} lands on ${f(a - b)}.`]] }),
     ],
     finalParts: [-1],
   };
@@ -31,7 +34,10 @@ function explain(p: SubtractIntegersProblem, model: AnswerModel): Explanation {
   const dir = opp > 0 ? "right" : "left", B = Math.abs(b);
   return {
     heading: "Subtracting is adding the opposite",
-    idea: ["Change − to + and flip the sign of the second number. Then add."],
+    idea: [
+      "Taking away a debt makes you richer: 5 − (−3) is the same as 5 + 3.",
+      "That's why subtracting a number gives the same answer as adding its opposite.",
+    ],
     statement: [num(a), op("−"), ...paren(b), op("="), num(a), op("+"), ...paren(opp)],
     diagram: buildNumberLine({
       ...fitRange([a, b, opp, diff, 0], { maxTicks: 34, pad: 1, minStep: 1 }),
@@ -57,8 +63,11 @@ export const lesson: LessonDefinition<SubtractIntegersProblem> = {
   grade: 7,
   unit: "Integers",
   title: "Subtracting integers",
+  pre: "g7-addint",
   reference: createSubtractIntegers(5, -3), // 5 − (−3) = 5 + 3 = 8, the current app's example
-  generate: rng => {
+  generate: (rng, index = 3) => {
+    // the first problems take away a negative from a positive: the case the idea is about
+    if (index < 3) return createSubtractIntegers(rng.int(1, 6), -rng.int(1, 5));
     const nz = () => { let x: number; do x = rng.int(-12, 12); while (x === 0); return x; };
     const a = nz();
     return createSubtractIntegers(a, nz());

@@ -26,9 +26,12 @@ export function meanAnswers({ v }: MeanProblem): AnswerModel {
   const T = total(v);
   return {
     steps: [
-      ns({ id: "sum", label: "Add them up", prompt: s => mt`${listOf(v, "+")} = ${s}`, ans: T, hint: "Add all the numbers." }),
-      ns({ id: "count", label: "Count them", question: "How many numbers are there?", prompt: s => [s], ans: v.length, hint: "Count the numbers in the list." }),
-      ns({ id: "divide", label: "Divide", prompt: s => mt`${T} ÷ ${v.length} = ${s}`, ans: T / v.length, hint: "Share the total equally." }),
+      ns({ id: "sum", label: "Add them up", prompt: s => mt`${listOf(v, "+")} = ${s}`, ans: T, hint: "Add all the numbers.",
+        wrong: [[T - v[v.length - 1]!, "Left one out", "Add every number in the list, the last one too."]] }),
+      ns({ id: "count", label: "Count them", question: "How many numbers are there?", prompt: s => [s], ans: v.length, hint: "Count the numbers in the list.",
+        wrong: [[T, "Wrote the total", "Count how many numbers there are, not what they add up to."], [v.length - 1, "Missed one", "Count every number in the list."]] }),
+      ns({ id: "divide", label: "Divide", prompt: s => mt`${T} ÷ ${v.length} = ${s}`, ans: T / v.length, hint: "Share the total equally.",
+        wrong: [[T * v.length, "Multiplied", "Sharing out equally is dividing."]] }),
     ],
     finalParts: [-1],
   };
