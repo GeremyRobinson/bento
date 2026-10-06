@@ -1,5 +1,6 @@
 // Every flow of the app through the UI, written against whichever lessons are rebuilt (g5-mult2 is always there).
 import { act, fireEvent, screen, within } from "@testing-library/react";
+import { vi } from "vitest";
 import { CATALOG } from "../../curriculum/catalog";
 import { lessonById } from "../../curriculum/registry";
 import type { Progress } from "../../engine/mastery/progress";
@@ -376,8 +377,10 @@ describe("the website from inside the app", () => {
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
     tap("About Bento ›");
     expect(screen.getByRole("heading", { name: "Every grade, K to 12th." })).toBeInTheDocument();
-    // Start learning always reaches the grade picker, even with a grade already chosen
+    // Start learning glides to the grade shelf on the same page
+    const shelf = document.getElementById("lshelf")!, glide = vi.fn();
+    shelf.scrollIntoView = glide;
     tap("Start learning");
-    expect(screen.getByRole("heading", { name: "Which grade are you in?" })).toBeInTheDocument();
+    expect(glide).toHaveBeenCalled();
   });
 });

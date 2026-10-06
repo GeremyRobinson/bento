@@ -142,12 +142,12 @@ function HeroPictures({ rng }: { rng: Rng }) {
 const SANDBOX = import.meta.env.MODE === "preview" || import.meta.env.MODE === "development";
 
 export function Welcome({ shelf = false }: { shelf?: boolean }) {
-  const { chooseGrade, deps, go, progress, openSheet } = useApp();
+  const { chooseGrade, deps } = useApp();
   const rng = useMemo(() => deps().rng, []); // eslint-disable-line react-hooks/exhaustive-deps
   // sent here to choose a grade: open at the shelf
   useEffect(() => { if (shelf) document.getElementById("lshelf")?.scrollIntoView?.({ block: "start" }); }, [shelf]);
-  // always lands on the grade picker: with a grade already chosen, home would skip it
-  const start = () => { go({ name: "home" }, "fwd"); if (progress.grade != null) openSheet(true); };
+  // Start learning glides down to the grade shelf on this page; picking a grade there starts it (G 2026-10-06)
+  const start = () => document.getElementById("lshelf")?.scrollIntoView?.({ behavior: reduceMotion() ? "auto" : "smooth", block: "start" });
   return (
     <div className="land">
       <section className="lhero">
