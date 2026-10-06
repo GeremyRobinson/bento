@@ -182,6 +182,25 @@ describe("home", () => {
     expect(screen.queryByRole("alertdialog")).toBeNull();
   });
 
+  it("Escape closes only what's on top: the hint, then the quit question, never the page under them (Review)", () => {
+    renderApp();
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(`Up next.*${LESSON}`) }));
+    tap("Show all"); tap("Your turn ›");
+    const esc = () => act(() => { dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", cancelable: true })); });
+    act(() => { dispatchEvent(new Event("bento:hint")); });
+    expect(screen.getByRole("dialog", { name: "Hint" })).toBeInTheDocument();
+    esc();
+    expect(screen.queryByRole("dialog", { name: "Hint" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Check" })).toBeInTheDocument();
+    tap(`Back to ${LESSON}`);
+    fireEvent.click(screen.getByRole("button", { name: `Quit ${LESSON}` }));
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+    esc();
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(screen.getByRole("button", { name: /^Resume / })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: `Quit ${LESSON}` })).toBeInTheDocument();
+  });
+
   it("zooms out from a lesson to its chapter, the year and every grade, and opens whatever is tapped", () => {
     renderApp();
     fireEvent.click(screen.getByRole("button", { name: new RegExp(`Up next.*${LESSON}`) }));
