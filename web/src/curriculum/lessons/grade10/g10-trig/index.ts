@@ -69,7 +69,8 @@ export function explainTrigRatio(p: TrigRatioProblem, answers: AnswerModel): Exp
       { id: "triangle", narration: `Stand at angle A. Side ${a} is across from it, side ${b} runs next to it, and ${c} is the hypotenuse.`, math: mt`${f} A = ${text(topName)} ÷ ${text(botName)}`, state: 0 },
       { id: "top", narration: `${f} uses the ${topName} side on top: ${top}.`, math: mt`${text(topName)} = ${top}`, state: 1, answerStep: "top", result: top },
       { id: "bottom", narration: `On the bottom goes the ${botName}: ${bot}.`, math: mt`${text(botName)} = ${bot}`, state: 2, answerStep: "bottom", result: bot },
-      { id: "ratio", narration: `So ${f} A = ${top}/${bot}${n === top ? "" : `, which simplifies to ${fracText(n, d)}`}.`, math: mt`${f} A = ${frac(top, bot)} = ${frac(n, d)}`, state: 3, answerStep: "ratio", result: n },
+      { id: "ratio", narration: `So ${f} A = ${top}/${bot}${n === top ? `. ${top} and ${bot} share no factor, so it is already in lowest terms` : `, which simplifies to ${fracText(n, d)}`}.`,
+        math: n === top ? mt`${f} A = ${frac(top, bot)}` : mt`${f} A = ${frac(top, bot)} = ${frac(n, d)}`, state: 3, answerStep: "ratio", result: n },
     ],
   };
 }

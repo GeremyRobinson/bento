@@ -84,7 +84,7 @@ describe("lesson pictures follow the problem", () => {
   });
   it("g11-complex: the i² corner turns into a plain number", () => {
     const d = scene("g11-complex", { a: 2, b: 3, c: 1, d: 4 });
-    expect(texts(d).map(t => t.text)).toEqual(expect.arrayContaining(["2", "8i", "3i", "12i² = −12", "real: 2 − 12 = −10", "= −10 + 11i"]));
+    expect(texts(d).map(t => t.text)).toEqual(expect.arrayContaining(["2", "8i", "3i", "12i² = −12", "real: 2 − 12 = −10", "product: −10 + 11i"]));
   });
 });
 

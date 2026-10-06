@@ -40,7 +40,9 @@ export function explainPyramid(p: PyramidProblem, answers: AnswerModel): Explana
     idea: ["A pyramid holds a third of the box with the same base and height: base area × height ÷ 3."],
     statement: [text("square base "), num(s), text(", height "), num(h)],
     diagram: buildBox3d({
-      mode: "pyramid", l: s, w: s, h, beats: { base: 1, box: 2, pyramid: 3 }, baseText: String(B),
+      // the base is drawn from the start, so its side labels never float over an empty card (review v43 item 8);
+      // its area arrives as the first line of working
+      mode: "pyramid", l: s, w: s, h, beats: { base: 0, box: 2, pyramid: 3 },
       labels: { l: String(s), w: String(s), h: String(h), from: 0 },
       lines: [
         { text: `base: ${s} × ${s} = ${B}`, from: 1, until: 1 },

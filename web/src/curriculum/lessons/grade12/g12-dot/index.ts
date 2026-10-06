@@ -3,6 +3,7 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import type { Rng } from "../../../generators/rng";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildPlane } from "../../../../explanations/diagrams/plane/build";
+import type { Side } from "../../../../explanations/diagrams/plane/schema";
 import { attempt, expected, f, fP, ints, ns, nz, P } from "../../_plane/kit";
 
 /** ⟨a, b⟩ · ⟨c, d⟩ */
@@ -52,8 +53,15 @@ export function explainDot(p: DotProblem, model: AnswerModel): Explanation {
       items: [
         { kind: "segment", a: [0, 0], b: [a, b], arrow: true, label: { text: vt(a, b) } },
         { kind: "segment", a: [0, 0], b: [c, d], arrow: true, cls: "ln2", delay: 0.4, label: { text: vt(c, d), acc: true } },
-        ...(D === 0 ? [{ kind: "rightAngle" as const, at: [0, 0] as const, u: [a, b] as const, v: [c, d] as const, from: 3 }]
-          : [{ kind: "angle" as const, at: [0, 0] as const, u: [a, b] as const, v: [c, d] as const, from: 3 }]),
+        // beat 1: drop each tip to the x-axis (the x parts); beat 2: across to the y-axis (the y parts)
+        { kind: "segment", a: [a, b], b: [a, 0], cls: "ln faint dash", from: 1, label: { text: `${f(a)} × ${fP(c)} = ${f(X)}`, optional: true, prefer: ["s", "e", "w"] } },
+        { kind: "segment", a: [c, d], b: [c, 0], cls: "ln faint dash", from: 1 },
+        { kind: "segment", a: [a, b], b: [0, b], cls: "ln faint dash", from: 2, label: { text: `${f(b)} × ${fP(d)} = ${f(Y)}`, optional: true, prefer: ["n", "w", "e"] } },
+        { kind: "segment", a: [c, d], b: [0, d], cls: "ln faint dash", from: 2 },
+        // beat 3: the dot product itself, on the angle it describes
+        ...(D === 0 ? [{ kind: "rightAngle" as const, at: [0, 0] as const, u: [a, b] as const, v: [c, d] as const, from: 3 },
+          { kind: "label" as const, at: [0, 0] as const, from: 3, label: { text: "dot = 0", acc: true, prefer: ["sw", "nw", "se", "ne"] as Side[] } }]
+          : [{ kind: "angle" as const, at: [0, 0] as const, u: [a, b] as const, v: [c, d] as const, from: 3, label: { text: `dot = ${f(D)}`, acc: true } }]),
       ],
     }),
     timeline: beats(4),
