@@ -17,10 +17,13 @@ export interface SceneProps {
 export type SceneComponent = ComponentType<SceneProps> & { liveReveal?: boolean };
 
 const modules = import.meta.glob<{ scenes: Record<string, SceneComponent> }>("./tracks/*/scenes.tsx", { eager: true });
-const ALL: Record<string, SceneComponent> = Object.assign({}, ...Object.values(modules).map(m => m.scenes));
+// gathered on first use, not at import: a track's pictures import this file, so gathering at import could run before
+// that track's own table exists and drop it
+let ALL: Record<string, SceneComponent> | undefined;
+const all = () => (ALL ??= Object.assign({}, ...Object.values(modules).map(m => m.scenes)));
 
-export const sceneByName = (name: string): SceneComponent | undefined => ALL[name];
-export const sceneNames = () => Object.keys(ALL);
+export const sceneByName = (name: string): SceneComponent | undefined => all()[name];
+export const sceneNames = () => Object.keys(all());
 
 /** reads a scene value with a default */
 export const num = (p: SceneValues, k: string, d: number) => (typeof p[k] === "number" ? (p[k] as number) : d);

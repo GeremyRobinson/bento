@@ -1016,7 +1016,7 @@ export const in12: B2Lesson<P12> = {
   tools: ["in-shrinker", "in-bits", "in-guess"],
   play: { scene: "in-shrinker", props: { stage: "full" },
     say: "Type a message. The Shrinker strip shows each stage's size: 8 bits per letter raw, then Huffman, then the context model, then the armor. Drag the noise slider to flip random bits on the way and watch the decoder repair them, or fail when two land in one block." },
-  guess: { scene: "in-shrinker", props: { stage: "sizes", N: 400, S: 900, quiet: true }, kind: "slider", min: 0, max: 3200, step: 25, start: 1600, answer: 1575, near: 100, unit: "bits",
+  guess: { scene: "in-shrinker", props: { stage: "sizes", N: 400, S: 900, quiet: true }, kind: "slider", min: 0, max: 3200, step: 25, start: 400, answer: 1575, near: 100, unit: "bits",
     format: x => group(x),
     ask: "Your message is 400 letters and shrinks to 900 bits. After Hamming armor, is it still smaller than the raw 3,200 bits? Drag where the armored bar lands.",
     revealProps: { stage: "sizes", N: 400, S: 900 },

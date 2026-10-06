@@ -183,9 +183,9 @@ export const mv03: B2Lesson<P03> = {
   youCan: "write the flat plane that touches a landscape and use it to estimate nearby heights.",
   needs: ["c-linapprox", "b2-mv-02"],
   tools: ["surface", "calc"],
-  play: { scene: "plane", props: { src: "x^2 + y^2", r: 2, a: 1, b: 1, zoom: 1 },
+  play: { scene: "tangent", props: { src: "x^2 + y^2", r: 2, a: 1, b: 1, zoom: 1 },
     say: "A flat sheet touches the surface at a point you drag. Zoom in on the touch point and the surface flattens until you can't tell it from the sheet." },
-  guess: { scene: "plane", props: { src: "x^2 + y^2", r: 2, a: 1, b: 1, zoom: 1, tx: 1.2, ty: 0.9, quiet: true }, kind: "choice",
+  guess: { scene: "tangent", props: { src: "x^2 + y^2", r: 2, a: 1, b: 1, zoom: 1, tx: 1.2, ty: 0.9, quiet: true }, kind: "choice",
     options: ["Too high", "Too low", "Exact"], answer: 1,
     ask: "On the bowl f = x² + y², touching at (1, 1): is the plane's estimate of f(1.2, 0.9) too high, too low or exact?",
     revealProps: { zoom: 4 },
@@ -222,7 +222,7 @@ export const mv03: B2Lesson<P03> = {
         ] }),
       ];
     },
-    scene: p => ({ scene: "plane", props: { src: `${ex(p.p)}*x^2 + ${ex(p.q)}*x*y + ${ex(p.r)}*y^2`, r: 2.5, a: p.a, b: p.b, zoom: 1, tx: p.a + p.s / 10, ty: p.b + p.t / 10 } }),
+    scene: p => ({ scene: "tangent", props: { src: `${ex(p.p)}*x^2 + ${ex(p.q)}*x*y + ${ex(p.r)}*y^2`, r: 2.5, a: p.a, b: p.b, zoom: 1, tx: p.a + p.s / 10, ty: p.b + p.t / 10 } }),
   },
   oracle: p => {
     const f = f03(p), h = 1e-5, f0 = f(p.a, p.b);
@@ -232,7 +232,7 @@ export const mv03: B2Lesson<P03> = {
   useIt: {
     say: ["The hiker on Two lakes now carries a small tangent tile under its feet. The tile's tilt is (f_x, f_y); drag the hiker and watch it lean.",
       "Saved as the hiker's local plane."],
-    scene: { scene: "plane", props: { fn: "land", a: 0.5, b: 0.5, zoom: 1 } },
+    scene: { scene: "tangent", props: { fn: "land", a: 0.5, b: 0.5, zoom: 1 } },
   },
   deeper: [
     "Differentiable means the plane's error shrinks faster than the step: (f(p + h) − f(p) − L(h)) / |h| → 0.",

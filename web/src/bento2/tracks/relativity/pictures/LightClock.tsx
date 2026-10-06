@@ -45,7 +45,7 @@ export function LightClockScene({ props, place, marker }: SceneProps) {
   // never runs over its labels: the vt leg on top, the cτ leg down its right side, ct the slant
   const tri = flag(props, "triangle"), sc = 12.5, a = 4 * sc, b = Math.min(4 * beta * g * sc, 150);
   const clockSvg = (
-    <svg viewBox={`0 0 ${W} ${H}`} className="b2pic lc" role="img" aria-label={`A light clock on a train at ${fx(beta)} of light speed. Each tick takes γ = ${fx(g)} times longer seen from the ground.`}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="b2pic lc" role="img" aria-label={`A light clock on a train at ${fx(beta)} of light speed.${hide ? "" : ` Each tick takes γ = ${fx(g)} times longer seen from the ground.`}`}>
       <line x1="0" y1="236" x2={W} y2="236" className="b2axis" />
       <path d={path(zig)} className="b2zig" />
       <g transform={`translate(${trainX},0)`}>

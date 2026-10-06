@@ -224,9 +224,9 @@ export const mv14: B2Lesson<P14> = {
   youCan: "find a low point by stepping against the gradient, and pick a step size that works.",
   needs: ["b2-mv-12", "b2-mv-13"],
   tools: ["finder", "surface"],
-  play: { scene: "descent", props: { src: "x^2 + y^2", r: 4, sx: 3, sy: 2, eta: 0.25 },
+  play: { scene: "downhill", props: { src: "x^2 + y^2", r: 4, sx: 3, sy: 2, eta: 0.25 },
     say: "Drop a ball on a bowl. Each tap takes one step x ← x − η∇f and leaves a dot on the contour map. Drag η: small steps creep, medium ones land, big ones bounce, bigger ones fly off." },
-  guess: { scene: "descent", props: { src: "x^2 + y^2", r: 4, sx: 3, sy: 2, eta: 1.1, quiet: true }, kind: "choice", options: ["It settles", "It bounces forever", "It flies off"], answer: 2,
+  guess: { scene: "downhill", props: { src: "x^2 + y^2", r: 4, sx: 3, sy: 2, eta: 1.1, quiet: true }, kind: "choice", options: ["It settles", "It bounces forever", "It flies off"], answer: 2,
     ask: "On f = x² + y² from (3, 2), η = 0.5 lands on the bottom in one step. What happens with η = 1.1?",
     revealProps: { auto: true },
     reveal: "It flies off. Each step multiplies the position by 1 − 2(1.1) = −1.2: it flips sides and lands farther out every time." },
@@ -264,7 +264,7 @@ export const mv14: B2Lesson<P14> = {
           slips: [slip("2 over", 2 / Math.max(p.a, p.b), `Here f = ${terms([[Math.max(p.a, p.b), p.a >= p.b ? "x²" : "y²"]])} in the steep direction, so the factor is 1 − ${2 * Math.max(p.a, p.b)}η. It stays above −1 only while η < 1/${Math.max(p.a, p.b)}.`)] }),
       ];
     },
-    scene: p => ({ scene: "descent", props: { src: `${p.a}*x^2 + ${p.b}*y^2`, r: 5, sx: p.x0, sy: p.y0, eta: p.en / p.ed } }),
+    scene: p => ({ scene: "downhill", props: { src: `${p.a}*x^2 + ${p.b}*y^2`, r: 5, sx: p.x0, sy: p.y0, eta: p.en / p.ed } }),
   },
   oracle: p => {
     const eta = p.en / p.ed, run = descend(quad(p.a, 0, p.b), p.x0, p.y0, eta, 2);
@@ -276,7 +276,7 @@ export const mv14: B2Lesson<P14> = {
     say: ["Drop the ball on Two lakes at (1/2, 1) with η = 0.1, run it, and save where it stops: near (0.97, 0), the higher valley.",
       "The build gains the ball, and its first lesson: descent finds a low point, not always the lowest."],
     saves: { name: "bestSoFar", value: () => { const r = descend(LAND, 0.5, 1, 0.1, 400), [x, y] = r[r.length - 1]!; return [x, y, LAND(x, y)]; }, labels: ["x", "y", "height"], note: "where descent from (1/2, 1) stops on Two lakes" },
-    scene: { scene: "descent", props: { fn: "land", sx: 0.5, sy: 1, eta: 0.1, auto: true } },
+    scene: { scene: "downhill", props: { fn: "land", sx: 0.5, sy: 1, eta: 0.1, auto: true } },
   },
   deeper: [
     "If ∇f changes no faster than L (f is L-smooth), any η ≤ 1/L makes f drop every step, by at least (η/2)|∇f|²: the descent lemma.",

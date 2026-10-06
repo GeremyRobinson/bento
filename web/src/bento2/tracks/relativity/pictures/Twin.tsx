@@ -39,7 +39,7 @@ export function TwinScene({ props }: SceneProps) {
   };
 
   const svg = (
-    <svg viewBox={`0 0 ${W} ${H}`} className="b2pic twin" role="img" aria-label={`Twin trip: ${fx(D, 1)} light-years at ${fx(beta)} of light speed. Home ages ${fx(home, 1)} years, the traveler ${fx(trav, 1)}.`}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="b2pic twin" role="img" aria-label={`Twin trip: ${fx(D, 1)} light-years at ${fx(beta)} of light speed.${hide ? "" : ` Home ages ${fx(home, 1)} years, the traveler ${fx(trav, 1)}.`}`}>
       <line x1={X(0)} y1={Y(0)} x2={X(0)} y2={12} className="b2axis" />
       <line x1={X(0)} y1={Y(0)} x2={W - 8} y2={Y(0)} className="b2axis" />
       <line x1={X(D)} y1={Y(0)} x2={X(D)} y2={12} className="b2grid" />

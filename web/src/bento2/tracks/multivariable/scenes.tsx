@@ -15,9 +15,9 @@ import { LakeScene, PolarScene, SweepScene, VolumeScene } from "./pictures/Volum
 import { WarpScene } from "./pictures/Warp";
 
 export const scenes: Record<string, SceneComponent> = {
-  surface: SurfaceScene, plane: PlaneScene, slice: SliceScene, compass: CompassScene, hiker: HikerScene, myland: MyLandScene,
+  surface: SurfaceScene, tangent: PlaneScene, slice: SliceScene, compass: CompassScene, hiker: HikerScene, myland: MyLandScene,
   volume: VolumeScene, sweep: SweepScene, polar: PolarScene, lake: LakeScene, warp: WarpScene, field: FieldScene,
-  gradient: GradientScene, rain: RainScene, flats: FlatsScene, morph: MorphScene, descent: DescentScene, finder: DescentScene,
+  gradient: GradientScene, rain: RainScene, flats: FlatsScene, morph: MorphScene, downhill: DescentScene, finder: DescentScene,
   race: RaceScene, multistart: MultiStartScene, anneal: AnnealScene, fence: FenceScene, park: ParkScene, bowl: BowlScene,
   valley: ValleyScene,
 };
