@@ -180,7 +180,8 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   }, [open]);
 
   const run = progress.run, runGrade = run ? gradeOf(lessonOfItem(currentItem(run)).grade) : null;
-  const showResume = !!run && !!runGrade && route.name !== "practice" && !welcome;
+  // the pages about you (Me, the grown-up page, facts) keep one island at the top (Review v43 item 17)
+  const showResume = !!run && !!runGrade && !welcome && !["practice", "me", "parent", "facts"].includes(route.name);
   // in a lesson's practice, a light bulb sits beside Settings (UI notes preview); tests have no hints
   const hintable = route.name === "practice" && !!run && run.mode !== "test" && !!currentStep(run) && !run.pick;
 

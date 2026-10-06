@@ -291,3 +291,12 @@ html:has(.screen) .itop{position:fixed;top:max(var(--sp-3),env(safe-area-inset-t
 .icon.ihint.spent{color:var(--muted)}
 /* on a phone, mid-problem, the light bulb takes Me's place so the island keeps room for its words */
 @media (max-width:600px){.icorner.right:has(.ihint) .ime{display:none}}
+
+/* a phone: the island's name gets two lines instead of an ellipsis, and the chapter line lives in Contents (Review v43 item 16) */
+@media (max-width:699px){
+  .island .iplace small{display:none}
+  .island .iplace b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:17px;font-size:var(--fz-sm)}
+}
+/* the picked lesson row shows its whole name; Up next is already said in the detail */
+.srow.sles.on .snext{display:none}
+.srow.sles.on .sname b{white-space:normal}

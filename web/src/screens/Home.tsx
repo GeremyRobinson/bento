@@ -76,7 +76,7 @@ function GradeHome({ g }: { g: number }) {
           <div className={`schapter${isOpen ? " open" : ""}`} key={u.name}>
             <button className="srow chap" aria-expanded={isOpen}
               onClick={() => { if (isOpen) setShut(u.name); else { setShut(null); select((u.entries.find(c => c.id === next?.entry.id) ?? u.entries.find(c => isReady(c.id)) ?? u.entries[0]!).id); } }}>
-              <span className="sname"><b>{u.name}</b></span><small className="smeta">{done === u.entries.length ? "Done" : done ? `${done} of ${u.entries.length}` : `${u.entries.length} lesson${u.entries.length === 1 ? "" : "s"}`}</small>
+              <span className="sname"><b>{u.name}</b></span><small className="smeta">{done === u.entries.length ? "Done" : !done && u.entries.includes(next?.entry as never) ? UP_NEXT : `${done} of ${u.entries.length}`}</small>
             </button>
             {isOpen && lessons.map(({ c }) => {
               const sc = lastScore(progress, c.id), live = isReady(c.id);
