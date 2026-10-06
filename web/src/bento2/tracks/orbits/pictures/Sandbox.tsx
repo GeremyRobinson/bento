@@ -290,8 +290,10 @@ function IntegratorView({ props }: SceneProps) {
   const t = useClock(!quiet, 99);
   const k = quiet ? 0 : Math.min(1, t / 6);
   const shown = Math.max(1, Math.round(k * (orbit.pts.length - 1)));
-  const W = 360, H = 200, cx = 180, cy = 100, s = 36;
+  // the view zooms out as the run grows, so the widest point drawn so far always fits
   const pts = orbit.pts.slice(0, shown + 1);
+  const reach = Math.max(1, ...pts.map(p => Math.hypot(p[0], p[1])));
+  const W = 360, H = 200, cx = 180, cy = 100, s = Math.min(36, 90 / reach);
   const last = pts[pts.length - 1]!;
   const lastR = Math.hypot(last[0], last[1]);
   const view = (p: [number, number]): [number, number] => [cx + p[0] * s, cy - p[1] * s];
@@ -302,7 +304,7 @@ function IntegratorView({ props }: SceneProps) {
       {!quiet && <path d={path(pts.map(view))} className={`b2curve ${m === "euler" ? "pink" : "sky"}`} style={{ strokeWidth: 1 }} />}
       <circle cx={view(last)[0]} cy={view(last)[1]} r="5" className="b2sat" />
       {quiet && <Arrow x1={cx + s} y1={cy} x2={cx + s} y2={cy - 30} tone="sky" />}
-      <text x="10" y="20" className="b2t">start circle, r = 1</text>
+      <text x="10" y="20" className="b2t">dashed: the start circle, r = 1</text>
     </svg>
   );
   // the energy along the run: Euler's climbs; symplectic Euler's wobbles around the start
