@@ -51,6 +51,10 @@ export function App() {
   const grade: number | null = top ? chosenGrade : testGrade ?? lesson?.grade ?? chosenGrade;
   const choosing = route.name === "welcome" || (route.name === "home" && grade == null);
   const tint = top || !lesson ? 0 : tintOf(lesson);
+  // the website and the grade picker are about every grade, so their surfaces stay neutral: a chosen grade's hue
+  // would tint every card (G 2026-10-06: "why is this burgundy?")
+  const neutral = route.name === "welcome";
+
 
   // the canvas behind the bento follows the line the screen belongs to; the landing page stays plain
   const line = choosing || grade == null ? "welcome" : lineOf(grade).id;
@@ -98,7 +102,7 @@ export function App() {
   return (<>
     {/* the island stays put across screens (UI notes preview); only the screen under it is new, and its pieces
         stagger in (motion.css, "one motion master") */}
-    <main id="app" className={`wrap t${tint}`} data-band={grade == null ? "middle" : bandOf(grade)} data-grade={grade ?? "none"}>
+    <main id="app" className={`wrap t${tint}`} data-band={grade == null || neutral ? "middle" : bandOf(grade)} data-grade={neutral ? "none" : grade ?? "none"}>
       <Island grade={grade} guest={choosing} />
       <Fragment key={viewKey}>{screen}</Fragment>
       {sheetOpen && <GradeSheet />}
