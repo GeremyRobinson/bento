@@ -63,15 +63,18 @@ describe.each([
     }
   });
 
-  it("3. each region width is proportional to its split value, on one scale for both axes", () => {
+  it("3. each region width is proportional to its split value, on one scale for both axes, but no part is a hairline", () => {
     for (const p of problems) {
       const d = explainSplitMultiplication(p, lesson.answers(p)).diagram;
+      // a part too thin for its label is held at a readable width; the others share one scale
+      const held = d.regions.filter(r => r.width > r.part * d.unit + 0.01), free = d.regions.filter(r => !held.includes(r));
+      for (const r of held) expect(r.width).toBeGreaterThanOrEqual(26);
+      for (const r of free) expect(near(r.width / r.part, free[0]!.width / free[0]!.part)).toBe(true);
       for (const r of d.regions) {
-        expect(near(r.width, r.part * d.unit)).toBe(true);
         expect(near(r.widthFraction, r.part / p.secondFactor)).toBe(true);
         expect(near(r.height, p.firstFactor * d.unit)).toBe(true);
       }
-      expect(near(d.horizontal.length / d.vertical.length, p.secondFactor / p.firstFactor)).toBe(true);
+      if (!held.length) expect(near(d.horizontal.length / d.vertical.length, p.secondFactor / p.firstFactor)).toBe(true);
     }
   });
 

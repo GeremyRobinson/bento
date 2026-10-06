@@ -61,7 +61,13 @@ export function MathLine({ math, values = {}, active = null, onSlot, className =
     if (m[i - 1]?.t === "op") v = v.trimStart();
     return v === tok.v || !v ? tok : { t: "text", v };
   });
-  const render = (m: MathText): ReactNode[] => tidy(m).map((tok, i) => token(tok, i));
+  // a sub straight before a sup (the bounds of ∫₀²) stack in one column, lower bound under the upper
+  const render = (raw: MathText): ReactNode[] => { const m = tidy(raw); return m.flatMap((tok, i): ReactNode[] => {
+    const next = m[i + 1], prev = m[i - 1];
+    if (tok.t === "sup" && prev?.t === "sub") return [];
+    if (tok.t === "sub" && next?.t === "sup") return [<span key={i} className="lims"><sup>{render(next.v)}</sup><sub>{render(tok.v)}</sub></span>];
+    return [token(tok, i)];
+  }); };
   // keep: each side of a relation wraps as a whole; only a side too wide for the line wraps, at its + and −, then × and ÷
   const grouped = (m: MathText): ReactNode[] => {
     type Piece = { tok: MathToken; lvl: number };

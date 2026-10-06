@@ -9,6 +9,8 @@ const M = 10; // outer margin
 const BRACKET = 28; // room for a bracket and its text
 const FS = { label: 15, total: 17, each: 12, bracket: 15 };
 const EPS = 1e-9;
+/** narrowest a shaded piece is drawn, in px */
+const MIN_FILL = 9;
 
 /** Rough width of text in the picture fonts. */
 export const textWidth = (s: string, size: number) => s.length * size * 0.62;
@@ -134,7 +136,9 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
         for (let i = 0; i < lay.count; i++) {
           const p0 = start + i * pu, p1 = p0 + pu, lo = Math.max(fill.a, p0), hi = Math.min(fill.b, p1);
           if (hi - lo < EPS) continue;
-          const xa = X(lo) + (Math.abs(lo - p0) < EPS ? ins : 0), xb = X(hi) - (Math.abs(hi - p1) < EPS ? ins : 0);
+          const xa = X(lo) + (Math.abs(lo - p0) < EPS ? ins : 0);
+          // a sliver (one hundredth past the tenths) keeps a readable minimum width inside its part, not a hairline
+          const xb = Math.max(X(hi) - (Math.abs(hi - p1) < EPS ? ins : 0), Math.min(xa + MIN_FILL, X(p1) - ins));
           push({ type: "rect", x: r1(xa), y: top, w: r1(Math.max(0.5, xb - xa)), h, rx: r1(Math.min(7, (xb - xa) / 3, h / 4)),
             cls: fill.tone === "cut" ? "seg on cut" : fill.tone === "two" ? "seg on p1" : "seg on", ...(fill.tone === "acc" ? { vars: { "--tint": "var(--acc)" } } : {}),
             enter, delay: r1(k++ * Math.min(0.06, 0.6 / lay.count) * 100) / 100, ...when(from, until) });

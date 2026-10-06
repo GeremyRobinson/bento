@@ -46,7 +46,7 @@ export function explainMedian({ v }: MedianProblem, answers: AnswerModel): Expla
     caption: `Sorted: ${s2.join(", ")}. The middle one is ${med}.`,
     diagram: buildMedianBars({
       values: v, countBeat: 1, sortBeat: 2, medianBeat: 3,
-      countNote: `${n} numbers`, spotNote: `in order: the middle spot is ${mid}`, medianNote: `median = ${med}`,
+      countNote: `${n} numbers`, spotNote: `in order: the middle spot is ${mid}`, medianNote: `middle spot ${mid}: median = ${med}`,
       alt: `Bars of heights ${v.join(", ")} slide into order: ${s2.join(", ")}. The middle one, in spot ${mid}, is ${med}.`,
     }),
     timeline: beats(4),

@@ -1,6 +1,6 @@
 // Every rebuilt lesson's lesson page is built from its problem: the beats fit the timeline, the picture's numbers are real,
 // beat results agree with the answer model, and a different problem draws a different picture.
-import { LESSONS } from "../../curriculum/registry";
+import { LESSONS, requireLesson } from "../../curriculum/registry";
 import { createRng } from "../../curriculum/generators/rng";
 import { toPlainText } from "../../curriculum/schemas/math-text";
 import type { DiagramModel } from "../../explanations/schema";
@@ -51,5 +51,34 @@ describe("the landing page's pictures", () => {
       expect(ex, id).not.toBeNull();
       expect(ex!.diagram.kind, id).not.toBe("chain");
     }
+  });
+});
+
+describe("pictures and words agree (review v39)", () => {
+  const explain = (id: string, p: unknown) => { const l = requireLesson(id); return l.explain(p as never, l.answers(p as never)); };
+  const texts = (id: string, p: unknown) => { const d = explain(id, p).diagram; return d?.kind === "scene" ? d.items.flatMap(i => (i.type === "text" ? [i.text] : [])) : []; };
+
+  it("a solid rolls or slides in the picture as its own words say: a cube slides, a sphere rolls", () => {
+    const l = requireLesson("k-solids"), rng = createRng(3);
+    for (let i = 0; i < 60; i++) {
+      const p = l.generate(rng, i) as { shape: number }, ex = explain("k-solids", p), said = ex.steps.find(s => s.id === "roll")!.narration;
+      const drawn = texts("k-solids", p).find(t => t === "it rolls" || t === "it slides")!;
+      expect(said.includes("**rolls**")).toBe(drawn === "it rolls");
+      if (toPlainText(ex.steps.at(-1)!.math).includes("cube")) expect(drawn).toBe("it slides");
+      if (toPlainText(ex.steps.at(-1)!.math).includes("sphere")) expect(drawn).toBe("it rolls");
+    }
+  });
+
+  it("never states the answer before it is worked", () => {
+    for (const id of ["g5-round", "g5-pow10", "g10-exterior"]) {
+      const l = requireLesson(id), rng = createRng(5);
+      for (let i = 0; i < 20; i++) expect(toPlainText(explain(id, l.generate(rng, i)).statement), id).toContain("?");
+    }
+    expect(toPlainText(explain("g4-partial", { n: 600, m: 4 }).statement)).toBe("600 × 4");
+  });
+
+  it("g5-round never asks to round a number that is already rounded", () => {
+    const l = requireLesson("g5-round"), rng = createRng(11);
+    for (let i = 0; i < 300; i++) { const p = l.generate(rng, i) as { N: number; p: number }; expect(p.N % 10 ** (3 - p.p)).not.toBe(0); }
   });
 });

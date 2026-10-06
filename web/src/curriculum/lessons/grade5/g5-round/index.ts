@@ -1,5 +1,5 @@
 // Rounding decimals (the current app's g5-round): find the place, look one place to the right, round.
-import { formatNumber as f, num, op, text } from "../../../schemas/math-text";
+import { formatNumber as f, muted, num, op, text } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildNumberLine, type Hop, type Mark } from "../../../../explanations/diagrams/number-line/build";
@@ -58,7 +58,7 @@ function explain(pr: RoundProblem, model: AnswerModel): Explanation {
   return {
     heading: "Look one place to the right",
     idea: ["To round, look at the digit one place to the right of the place you are rounding to. 5 or more rounds up. 4 or less stays the same."],
-    statement: [num(value), op("≈"), num(R)],
+    statement: [num(value), op("≈"), text("?"), muted(` (nearest ${name.slice(0, -1)})`)],
     diagram: buildNumberLine({
       min: T, max: up, step: tick, every: 10, labelAt: [half], marks, hops,
       alt: `Number line from ${f(T)} to ${f(up)} with ${f(value)} marked; it rounds to ${f(R)}.`,
@@ -81,7 +81,11 @@ export const lesson: LessonDefinition<RoundProblem> = {
   title: "Rounding decimals",
   pre: "g4-dec",
   reference: createRound(3476, 2), // 3.476 ≈ 3.48, the current app's example
-  generate: rng => createRound(rng.int(1001, 99999), rng.int(1, 2)),
+  // a number with nothing past the place (69.320 to hundredths) is already rounded; give it a digit there
+  generate: rng => {
+    const N = rng.int(1001, 99999), p = rng.int(1, 2), unit = 10 ** (3 - p);
+    return createRound(N % unit ? N : N + rng.int(1, unit - 1), p);
+  },
   restore: raw => restoreVia(raw, ["N", "p"] as const, v => createRound(v.N, v.p)),
   display: p => [num(p.N / 1000)],
   displayNote: p => `Round to the nearest ${p.p === 1 ? "tenth" : "hundredth"}.`,

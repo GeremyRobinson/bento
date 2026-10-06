@@ -38,12 +38,13 @@ export function explainExteriorAngle(p: ExteriorAngleProblem, answers: AnswerMod
   return {
     heading: "Exterior = the two far angles added",
     idea: ["An outside angle and the inside angle next to it make a straight line: 180°.", "So the outside angle equals the two far inside angles added together."],
-    statement: mt`${a}° + ${b}° + ? = 180°`,
+    // the problem asks for the outside angle, the one angle the picture marks "?"
+    statement: mt`outside angle = ?`,
     caption: `The outside angle is ${a} + ${b} = ${out}°.`,
     diagram: buildTriangleAngles({
       // the third corner sits bottom right, so its outside angle opens along the base
       left: a, right: c,
-      labels: { left: [{ text: `${a}°` }], top: [{ text: `${b}°` }], right: [{ text: "?", until: 0 }, { text: `${c}°`, from: 1 }] },
+      labels: { left: [{ text: `${a}°` }], top: [{ text: `${b}°` }], right: [{ text: `${c}°`, from: 1 }] },
       exterior: { labels: [{ text: "?", until: 1 }, { text: `${out}°`, from: 2 }] },
       notes: [{ text: `180° − ${a}° − ${b}° = ${c}°`, from: 1, until: 1 }, { text: `outside = ${a}° + ${b}° = ${out}°`, from: 2 }],
       alt: `A triangle with inside angles ${a}°, ${b}° and ${c}°. The base runs on past the ${c}° corner, making an outside angle of ${out}°.`,

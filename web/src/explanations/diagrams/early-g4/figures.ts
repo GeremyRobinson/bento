@@ -29,7 +29,10 @@ export function buildFigure(s: FigureSpec): SceneDiagram {
   if (b) {
     if (s.item === 0) items.push(path([M(at(A, u, -90)), L(A)], "ln2 dash", { from: b.more, enter: "draw" }));
     if (s.item <= 1) items.push(path([M(B), L(at(B, u, 90))], "ln2 dash", { from: b.more, enter: "draw" }));
-    if (s.item <= 1) items.push(t(...at(B, u, 50), "on and on", "xs acc", { from: b.more, enter: "rise", delay: 0.6 }));
+    // beside the dashed part, on the side away from the letters, not on top of it (further out when the line is
+    // steep, since the words are wide)
+    const off: Pt = [u[1], -u[0]], k = 12 + 36 * Math.abs(off[0]) + 4 * Math.abs(off[1]);
+    if (s.item <= 1) items.push(t(...at(at(B, u, 50), off, k), "on and on", "xs acc", { from: b.more, enter: "rise", delay: 0.6 }));
   }
   items.push(path([M(A), L(B)], "figline"));
   if (s.item === 0) items.push(arrow(A, [-u[0], -u[1]]), arrow(B, u));

@@ -60,6 +60,8 @@
 /* in a flex line vertical-align does nothing, so raise and lower by hand */
 .mline sup{font-size:.6em;line-height:1;align-self:flex-start;margin-top:-.1em}
 .mline sub{font-size:.6em;line-height:1;align-self:flex-end;margin-bottom:-.1em}
+.mline .lims{display:inline-flex;flex-direction:column;align-self:stretch;justify-content:space-between;font-size:.6em;line-height:1;margin:-.15em .1em -.25em .05em}
+.mline .lims>sup,.mline .lims>sub{font-size:1em;align-self:flex-start;margin:0}
 .mline mark{background:color-mix(in srgb,var(--acc) 26%,transparent);color:inherit;border-radius:6px;padding:0 .12em}
 .label.formula{text-transform:none!important}
 .learn .math>.mline{flex-wrap:wrap;row-gap:.1em}

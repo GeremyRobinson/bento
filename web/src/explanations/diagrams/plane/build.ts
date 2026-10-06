@@ -121,6 +121,7 @@ export function planeFrame(spec: PlaneSpec, extra: Pads = NO_PADS): PlaneFrame {
 interface Box { x0: number; y0: number; x1: number; y1: number }
 const overlap = (a: Box, b: Box) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
 const boxAt = (cx: number, cy: number, w: number, h: number): Box => ({ x0: cx - w / 2, y0: cy - h / 2, x1: cx + w / 2, y1: cy + h / 2 });
+const grow = (b: Box, m: number): Box => ({ x0: b.x0 - m, y0: b.y0 - m, x1: b.x1 + m, y1: b.y1 + m });
 
 const SIDES: Record<Side, [number, number]> = { n: [0, -1], s: [0, 1], e: [1, 0], w: [-1, 0], ne: [1, -1], nw: [-1, -1], se: [1, 1], sw: [-1, 1], c: [0, 0] };
 const ORDER: Side[] = ["n", "ne", "e", "se", "s", "sw", "w", "nw"];
@@ -199,8 +200,9 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
   const anchorsOn = (runs: [number, number][][], at?: number): [number, number][] => {
     const all = runs.flat();
     if (!all.length) return [];
-    const ps = at == null ? [0.82, 0.62, 0.4, 0.18, 0.95].map(t => all[Math.floor((all.length - 1) * t)]!)
-      : [all.reduce((best, q) => (Math.abs(q[0] - at) < Math.abs(best[0] - at) ? q : best))];
+    const spread = [0.82, 0.62, 0.4, 0.18, 0.95].map(t => all[Math.floor((all.length - 1) * t)]!);
+    // the asked-for spot first; the others are fallbacks for when that spot is crowded (near the origin, say)
+    const ps = at == null ? spread : [all.reduce((best, q) => (Math.abs(q[0] - at) < Math.abs(best[0] - at) ? q : best)), ...spread];
     return ps.map(p => [X(p[0]), Y(p[1])]);
   };
 
@@ -298,9 +300,11 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
     const out = Math.max(0, 2 - b.x0) + Math.max(0, 2 - b.y0) + Math.max(0, b.x1 - (W - 2)) + Math.max(0, b.y1 - (H - 2));
     if (out > MAX_GROW) s += 1000;
     else if (out > 0) s += 6 + out * 0.5;
-    for (const p of placed) if (overlap(b, p)) s += 500;
+    // labels keep a little air between them: two labels touching near the origin read as one
+    for (const p of placed) if (overlap(b, p)) s += 500; else if (overlap(b, grow(p, 5))) s += 60;
     for (const d of dotsAt) if (overlap(b, { x0: d.x - d.r, y0: d.y - d.r, x1: d.x + d.r, y1: d.y + d.r })) s += 300;
-    for (const p of samples) if (p.x > b.x0 - 2 && p.x < b.x1 + 2 && p.y > b.y0 - 2 && p.y < b.y1 + 2) s += p.w;
+    // a line just under or over a label reads as crossing it, so lines keep a little room above and below
+    for (const p of samples) if (p.x > b.x0 - 2 && p.x < b.x1 + 2 && p.y > b.y0 - 3 && p.y < b.y1 + 3) s += p.w;
     for (const tb of tickBoxes) if (overlap(b, tb)) s += 4;
     return s;
   };

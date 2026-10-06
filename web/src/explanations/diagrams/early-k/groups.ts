@@ -2,6 +2,7 @@
 // and two rows lined up so each dot finds a partner and the extras stand out.
 import type { SceneDiagram } from "../scene/schema";
 import { frame, t, type Draft } from "../geo/kit";
+import { r1 } from "../scene/helpers";
 import { WIDE } from "./fit";
 
 const GAP = 52, R = 15;
@@ -43,11 +44,13 @@ export function changeDots(s: ChangeSpec): SceneDiagram {
       }
       items.push(t((x(start - change) + x(start - 1)) / 2, -42, `take away ${change}`, "lbl p1", { from: b.change, enter: "rise" }));
     }
-    // count what is there now; the last number is the answer
+    // count what is there now; the last number is the answer. The count keeps a steady pace but always reaches the
+    // answer within about a second and a half, so a long count is not left at 4 when the beat moves on.
+    const pace = Math.min(0.25, 1.5 / Math.max(1, end - 1));
     for (let i = 0; i < end; i++) {
       const last = i === end - 1;
-      items.push(t(x(i), 34, String(i + 1), last ? "lbl acc" : "sm", { from: b.end, enter: "rise", delay: 0.25 * i }));
-      if (last) items.push({ type: "circle", cx: x(i), cy: 0, r: R + 6, cls: "ln pq", from: b.end, enter: "pop", delay: 0.25 * i + 0.2 } as Draft);
+      items.push(t(x(i), 34, String(i + 1), last ? "lbl acc" : "sm", { from: b.end, enter: "rise", delay: r1(pace * i) }));
+      if (last) items.push({ type: "circle", cx: x(i), cy: 0, r: R + 6, cls: "ln pq", from: b.end, enter: "pop", delay: r1(pace * i + 0.2) } as Draft);
     }
     if (end === 0) items.push(t(x(start - 1) / 2, 40, "none left", "lbl acc", { from: b.end, enter: "rise" }));
   }

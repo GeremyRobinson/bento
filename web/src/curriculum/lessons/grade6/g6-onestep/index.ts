@@ -61,7 +61,7 @@ function frames(p: OneStepEquation): BalanceFrame[] {
   switch (t) {
     case 0: return [
       { left: [xTiles(1), [block(a)]], right: [[block(rhs)]], note: eq },
-      { left: [xTiles(1), [block(a, { off: true })]], right: [[block(x)], [block(a, { off: true })]], note: `take ${f(a)} off both sides` },
+      { left: [xTiles(1), [block(a, { off: true })]], right: [[block(x, { late: true })], [block(a, { off: true })]], note: `take ${f(a)} off both sides` },
       { left: [[block(x)], [block(a)]], right: [[block(rhs)]], note: `check: ${f(x)} + ${f(a)} = ${f(rhs)}` },
     ];
     case 1: return [
@@ -71,7 +71,7 @@ function frames(p: OneStepEquation): BalanceFrame[] {
     ];
     case 2: return [
       { left: [xTiles(a)], right: [[block(rhs)]], note: eq },
-      { left: groups(a, xTiles(1)), right: groups(a, [block(x)]), note: `split both sides into ${f(a)}` },
+      { left: groups(a, xTiles(1)), right: groups(a, [block(x, { late: true })]), note: `split both sides into ${f(a)}` },
       { left: groups(a, [block(x)]), right: [[block(rhs)]], note: `check: ${f(a)} × ${f(x)} = ${f(rhs)}` },
     ];
     case 3: return [

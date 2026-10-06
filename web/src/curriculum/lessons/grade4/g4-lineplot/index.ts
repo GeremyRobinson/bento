@@ -17,7 +17,7 @@ const gcd = (a: number, b: number): number => (b ? gcd(b, a % b) : a);
 /** v d-ths in lowest terms as [whole, n, d] */
 export const mixedOf = (v: number, d: number): [number, number, number] => { const w = Math.floor(v / d), r = v % d, g = gcd(r, d) || d; return [w, r / g, d / g]; };
 const said = (v: number, d: number) => { const [w, n, dd] = mixedOf(v, d); return n ? `${w ? `${w} ` : ""}${n}/${dd}` : String(w); };
-const inches = (v: number, d: number) => `${said(v, d)} ${v === d ? "inch" : "inches"}`;
+const inches = (v: number, d: number) => `${said(v, d)} ${v <= d ? "inch" : "inches"}`;
 
 /** d 4 or 8; data in d-ths on a plot from lo to lo + 2d; ask 0 longest − shortest, 1 total of the ones at v, 2 how many longer than v */
 export interface FracLineProblem { d: number; thing: number; lo: number; data: number[]; ask: number; v: number }
@@ -62,7 +62,8 @@ function mixedStep(o: { id: string; label: string; question: string; value: numb
       return { ok: false, kind: o.label, message: `Not quite. ${o.hint}`, generic: true };
     },
     hint: o.hint, explain: o.explain,
-    work: prompt(answer("w", w), answer("n", n), answer("d", dd)),
+    // no "0 3/4 in": a whole part of 0 is left off the worked line
+    work: [...(o.lead ?? []), ...(w ? [answer("w", w)] : []), frac([answer("n", n)], [answer("d", dd)]), text(" in")],
   };
 }
 
@@ -76,7 +77,8 @@ function answers(p: FracLineProblem): AnswerModel {
         mixedStep({ id: "min", label: "Shortest", question: `How long is the shortest ${th.one}?`, value: lo, d, hint: "Find the X farthest to the left.", explain: `The shortest is ${inches(lo, d)}.` }),
         mixedStep({ id: "diff", label: "Difference", question: "How much longer is the longest than the shortest?", value: hi - lo, d,
           wrong: [[hi + lo, "Added", "How much longer means subtract."]],
-          hint: `${said(hi, d)} − ${said(lo, d)}. Count the spaces between them on the line.`, explain: `${said(hi, d)} − ${said(lo, d)} = ${said(hi - lo, d)}.` }),
+          hint: `${said(hi, d)} − ${said(lo, d)}. Count the spaces between them on the line.`,
+          explain: `${said(hi, d)} − ${said(lo, d)} = ${said(hi - lo, d)}, so the longest is ${inches(hi - lo, d)} longer.` }),
       ],
       finalParts: [-1],
     };
@@ -98,7 +100,7 @@ function answers(p: FracLineProblem): AnswerModel {
   const n = p.data.filter(u => u > p.v).length, ge = p.data.filter(u => u >= p.v).length;
   return { steps: [oneBox({ id: "longer", label: "Count", question: `How many ${th.many} are longer than ${inches(p.v, d)}?`, prompt: s => [s, text(` ${th.many}`)], ans: n,
     wrong: slips(n, [[ge, `Counted ${said(p.v, d)} too`, `Longer than ${said(p.v, d)} doesn't include ${said(p.v, d)} itself.`]]),
-    hint: `Count the X's to the right of ${said(p.v, d)}.`, explain: `${n} X's to the right of ${said(p.v, d)}.` })], finalParts: [-1] };
+    hint: `Count the X's to the right of ${said(p.v, d)}.`, explain: `${n} X's to the right of ${said(p.v, d)}, so ${n} ${n === 1 ? `${th.one} is` : `${th.many} are`} longer.` })], finalParts: [-1] };
 }
 
 const plot = (p: FracLineProblem) => ({ d: p.d, lo: p.lo, hi: p.lo + 2 * p.d, data: p.data, title: THINGS[p.thing]!.title });
@@ -113,10 +115,11 @@ function explain(p: FracLineProblem, model: AnswerModel): Explanation {
     statement: words(last.question ?? ""),
     diagram: buildLinePlot({ ...plot(p), beats: { drop: 0, light: 1 }, light: lit, alt: `${alt(p)} The X's drop in, then the stacks the question is about light up.` }),
     caption: `${last.explain}`,
-    timeline: beats(2),
+    // a beat for each step, so the line under the picture ends on the answer, not on the first reading
+    timeline: beats(1 + model.steps.length),
     steps: [
       { id: "drop", narration: "Each thing measured drops an X above its length.", math: words(THINGS[p.thing]!.title), state: 0 },
-      ...model.steps.map(s => ({ id: s.id, narration: s.explain, math: s.work, state: 1, answerStep: s.id, result: s.slots.at(-1)!.expected! })),
+      ...model.steps.map((s, i) => ({ id: s.id, narration: s.explain, math: s.work, state: i + 1, answerStep: s.id, result: s.slots.at(-1)!.expected! })),
     ],
   };
 }
