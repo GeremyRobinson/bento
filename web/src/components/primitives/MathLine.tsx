@@ -13,7 +13,13 @@ interface Props {
 
 /** Renders MathText. Numbers are formatted in one place; answer boxes become buttons when `onSlot` is given. */
 export function MathLine({ math, values = {}, active = null, onSlot, className = "" }: Props) {
-  const render = (m: MathText): ReactNode[] => m.map((tok, i) => token(tok, i));
+  // a sub straight before a sup (the bounds of ∫₀²) stack in one column, lower bound under the upper
+  const render = (m: MathText): ReactNode[] => m.flatMap((tok, i): ReactNode[] => {
+    const next = m[i + 1], prev = m[i - 1];
+    if (tok.t === "sup" && prev?.t === "sub") return [];
+    if (tok.t === "sub" && next?.t === "sup") return [<span key={i} className="lims"><sup>{render(next.v)}</sup><sub>{render(tok.v)}</sub></span>];
+    return [token(tok, i)];
+  });
   const token = (tok: MathToken, i: number): ReactNode => {
     switch (tok.t) {
       case "text": return <span key={i} className={tok.v === "(" ? "t lp" : tok.v === ")" ? "t rp" : "t"}>{tok.v}</span>;

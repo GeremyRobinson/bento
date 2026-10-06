@@ -107,7 +107,7 @@ function explain(p: StoryProblem, model: AnswerModel): Explanation {
       { id: "start", narration: `The story starts with **${a}** ${what}. Each dot is one.`, math: [text("At the start: "), num(a)], state: 0, answerStep: "start", result: a },
       { id: "more", narration: p.take ? `${goes(p.b)}. Cross ${p.b === 1 ? "it" : "them"} out. There will be **fewer**.` : `${comes(p.b)}. Add ${p.b === 1 ? "its dot" : "their dots"}. There will be **more**.`,
         math: [num(a), op(sign(p)), num(p.b)], state: 1, answerStep: "more", result: more },
-      { id: "end", narration: `Count what is there now: ${countUp(1, end)}. **${end}** ${what}.`, math: sentence(p, [num(end)]), state: 2, answerStep: "end", result: end },
+      { id: "end", narration: `Count what is there now: ${countUp(1, end)}. **${end}** ${end === 1 ? what.slice(0, -1) : what}.`, math: sentence(p, [num(end)]), state: 2, answerStep: "end", result: end },
     ],
   };
 }

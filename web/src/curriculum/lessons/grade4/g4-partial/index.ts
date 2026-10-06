@@ -48,17 +48,19 @@ export function explainPartial(p: PartialProblem, answers: AnswerModel): Explana
   const shown = partsOf.map((v, i) => [v, i] as const).filter(([v]) => v > 0);
   const cols: AreaSide[] = shown.map(([v]) => ({ label: String(v), size: v }));
   const cells: AreaCell[] = shown.map(([, i]) => ({ text: String(P[i]), from: i + 1, focus: [i + 1] }));
-  const statement: MathText = [num(n), op("×"), num(m), op("="), ...shown.flatMap(([v], k) => [...(k ? [op("+")] : []), num(v), op("×"), num(m)])];
+  // a number with one nonzero place (600) is already one strip: say the problem once, not "600 × 4 = 600 × 4"
+  const split = shown.length > 1;
+  const statement: MathText = [num(n), op("×"), num(m), ...(split ? [op("="), ...shown.flatMap(([v], k) => [...(k ? [op("+")] : []), num(v), op("×"), num(m)])] : [])];
   return {
     heading: "Multiply one place at a time",
     idea: ["Split the big number into hundreds, tens and ones. Multiply each part, then add."],
     statement,
     diagram: buildAreaGrid({
       cols, rows: [{ label: String(m), size: m }], cells: [cells], minRow: 80,
-      lines: [{ text: `${n} × ${m} = ${P.filter(x => x > 0).join(" + ")} = ${total}`, from: 4 }],
+      lines: [{ text: split ? `${n} × ${m} = ${P.filter(x => x > 0).join(" + ")} = ${total}` : `${n} × ${m} = ${total}`, from: 4 }],
       alt: `${cap(aNum(m))} by ${n} rectangle cut by place value: ${shown.map(([v, i]) => `${m} × ${v} = ${P[i]}`).join(", ")}. Together ${total}.`,
     }),
-    caption: `${n} is ${shown.map(([v]) => v).join(" + ")}: one strip for each place.`,
+    caption: split ? `${n} is ${shown.map(([v]) => v).join(" + ")}: one strip for each place.` : `${n} is just ${count(H, "hundred")}, so it is one strip.`,
     timeline: beats(5),
     steps: [
       ...ids.map((id, i) => ({

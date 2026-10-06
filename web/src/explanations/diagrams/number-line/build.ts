@@ -85,7 +85,7 @@ export function fitRange(values: number[], opts: { maxTicks?: number; pad?: numb
 }
 
 type Box = { x: number; y: number; w: number; h: number; from: number; until: number };
-type Arc = { x1: number; x2: number; mx: number; c: number };
+type Arc = { x1: number; x2: number; mx: number; c: number; y0: number };
 type Draft = SceneItem | (Omit<Extract<SceneItem, { type: "path" }>, "type" | "d"> & { type: "arc"; arc: Arc });
 
 /** Builds the scene. Throws when a value lies off the line, so a lesson can never draw a wrong picture silently. */
@@ -146,24 +146,27 @@ export function buildNumberLine(spec: NumberLineSpec): SceneDiagram {
     ...(o.delay != null || extra ? { delay: r1((o.delay ?? 0) + extra) } : {}),
   });
 
-  // hops: arcs and dots, then labels; in a run of short hops a label that would hit its neighbour's is left off
+  // hops: arcs and dots, then labels; in a run of short hops a label that would hit its neighbour's is left off.
+  // Arcs below the line hang from under the tick numbers, so they never run through them.
+  const UNDER = 34;
   const hopLabels: Box[] = [];
   for (const h of hops) {
     if (h.from === h.to) continue;
     const x1 = x(h.from), x2 = x(h.to), hh = hopHeight(x2 - x1), mx = (x1 + x2) / 2, dir = h.below ? 1 : -1;
     if (h.start !== false) raw.push({ type: "circle", cx: r1(x1), cy: 0, r: 7, cls: "dotp", enter: "pop", ...timing(h) });
-    raw.push({ type: "arc", arc: { x1, x2, mx, c: dir * hh * 2 }, cls: h.below ? "ln p1" : "ln", enter: "draw", ...timing(h, 0.1) });
-    if (h.land !== false) raw.push({ type: "circle", cx: r1(x2), cy: 0, r: 7, cls: h.below ? "dotp p1" : "dotp", enter: "pop", ...timing(h, 0.55) });
+    const p1 = !!h.below;
+    raw.push({ type: "arc", arc: { x1, x2, mx, c: dir * hh * 2, y0: h.below ? UNDER : 0 }, cls: p1 ? "ln p1" : "ln", enter: "draw", ...timing(h, 0.1) });
+    if (h.land !== false) raw.push({ type: "circle", cx: r1(x2), cy: 0, r: 7, cls: p1 ? "dotp p1" : "dotp", enter: "pop", ...timing(h, 0.55) });
     if (!h.label) continue;
-    const w = textWidth(h.label, 17), ly = h.below ? Math.max(hh + 16, 44) : -hh - 14;
+    const w = textWidth(h.label, 17), ly = h.below ? UNDER + hh + 14 : -hh - 14;
     const probe: Box = { x: clampX(mx, w), y: ly, w, h: 60, ...windowOf(h) };
     if (hopLabels.some(o => meets(o, probe))) continue;
     const box = place(h.label, mx, ly, h.below ? 1 : -1, 17, windowOf(h));
     hopLabels.push(box);
-    raw.push({ type: "text", x: r1(box.x), y: r1(box.y), text: h.label, cls: h.below ? "lbl p1" : "lbl", enter: "rise", ...timing(h, 0.35) });
+    raw.push({ type: "text", x: r1(box.x), y: r1(box.y), text: h.label, cls: p1 ? "lbl p1" : "lbl", enter: "rise", ...timing(h, 0.35) });
   }
   // span labels go under the tick numbers, and under any arcs below the line
-  const belowDepth = Math.max(0, ...hops.filter(h => h.below && h.from !== h.to).map(h => Math.max(hopHeight(x(h.to) - x(h.from)) + 16, 44) + 22));
+  const belowDepth = Math.max(0, ...hops.filter(h => h.below && h.from !== h.to).map(h => UNDER + hopHeight(x(h.to) - x(h.from)) + 14 + 22));
   for (const s of spans) {
     raw.push({ type: "line", x1: r1(x(s.from)), y1: 0, x2: r1(x(s.to)), y2: 0, cls: "hl", enter: "growx", ...timing(s) });
     if (!s.label) continue;
@@ -173,17 +176,23 @@ export function buildNumberLine(spec: NumberLineSpec): SceneDiagram {
   for (const m of marks) {
     raw.push({ type: "circle", cx: r1(x(m.v)), cy: 0, r: 7, cls: m.cls ?? "dotp", enter: "pop", ...timing(m) });
     if (!m.label) continue;
-    // above any arc that lands on or passes over the mark, so the label never sits on a hop
-    const over = hops.filter(h => !h.below && Math.min(h.from, h.to) <= m.v && m.v <= Math.max(h.from, h.to))
-      .map(h => hopHeight(Math.abs(x(h.to) - x(h.from))) + 30);
-    const box = place(m.label, x(m.v), -Math.max(22, ...over), -1, 17, windowOf(m));
+    // above any arc that passes over the mark, so the label never sits on a hop; when hops only end at the mark,
+    // the label sits beside the point on the side away from them instead of floating over the arc
+    const up = hops.filter(h => !h.below && h.from !== h.to && Math.min(h.from, h.to) <= m.v && m.v <= Math.max(h.from, h.to));
+    const ends = up.filter(h => Math.abs(h.from - m.v) < 1e-9 || Math.abs(h.to - m.v) < 1e-9);
+    const away = new Set(ends.map(h => (Math.max(h.from, h.to) - m.v < 1e-9 ? 1 : -1)));
+    let beside = up.length > 0 && ends.length === up.length && away.size === 1 ? [...away][0]! : 0;
+    const lw = textWidth(m.label, 17), bx = x(m.v) + beside * (lw / 2 + 6);
+    if (bx - lw / 2 < 2 || bx + lw / 2 > W - 2) beside = 0; // no room beside it at the end of the line: back over the arcs
+    const over = beside ? [] : up.map(h => hopHeight(Math.abs(x(h.to) - x(h.from))) + 30);
+    const box = place(m.label, x(m.v) + beside * (lw / 2 + 6), -Math.max(22, ...over), -1, 17, windowOf(m));
     raw.push({ type: "text", x: r1(box.x), y: r1(box.y), text: m.label, cls: "lbl", enter: "rise", ...timing(m, 0.2) });
   }
 
   // fit the canvas around everything: an arc reaches half its control height, a label half its size
   const extent = (it: Draft): [number, number] => {
     switch (it.type) {
-      case "arc": return [Math.min(0, it.arc.c / 2), Math.max(0, it.arc.c / 2)];
+      case "arc": return [it.arc.y0 + Math.min(0, it.arc.c / 2), it.arc.y0 + Math.max(0, it.arc.c / 2)];
       case "text": return [it.y - 11, it.y + 11];
       case "circle": return [it.cy - it.r, it.cy + it.r];
       case "line": return [Math.min(it.y1, it.y2), Math.max(it.y1, it.y2)];
@@ -196,7 +205,8 @@ export function buildNumberLine(spec: NumberLineSpec): SceneDiagram {
     switch (it.type) {
       case "arc": {
         const { arc, type: _t, ...rest } = it;
-        return { ...rest, type: "path", d: `M${r1(arc.x1)} ${dy} Q${r1(arc.mx)} ${r1(dy + arc.c)} ${r1(arc.x2)} ${dy}` };
+        const y = r1(dy + arc.y0);
+        return { ...rest, type: "path", d: `M${r1(arc.x1)} ${y} Q${r1(arc.mx)} ${r1(y + arc.c)} ${r1(arc.x2)} ${y}` };
       }
       case "line": return { ...it, y1: r1(it.y1 + dy), y2: r1(it.y2 + dy) };
       case "circle": return { ...it, cy: r1(it.cy + dy) };

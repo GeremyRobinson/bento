@@ -97,7 +97,7 @@ describe("decimal shift", () => {
     expect(digits.map(t => t.text)).toEqual(["3", "4", "7"]);
     const [p0, p1] = circles(d);
     expect(p1!.cx - p0!.cx).toBeCloseTo(2 * 46, 5);
-    expect(p0!.until).toBe(0);
+    expect(p0!.until).toBeUndefined(); // the start stays, so the hops leave from it
     expect(d.items.filter(i => i.type === "path")).toHaveLength(2);
   });
 });

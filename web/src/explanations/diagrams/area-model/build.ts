@@ -1,6 +1,7 @@
 import { formatNumber } from "../../../curriculum/schemas/math-text";
 import type { SplitMultiplicationProblem } from "../../../curriculum/lessons/grade5/g5-mult2/problem";
 import { DEFAULT_AREA_LAYOUT, type AreaDiagram, type AreaLayout, type AreaRegion } from "./schema";
+import { fitParts } from "./grid";
 
 /** Rough width of a number label in the app's rounded number font. */
 /** how far apart two rows of labels sit */
@@ -19,9 +20,13 @@ export function buildSplitAreaDiagram(p: SplitMultiplicationProblem, layout: Are
   const totalHeight = p.firstFactor * unit;
   const left = margin.left, top = margin.top;
 
+  // a tiny part (the 2 of 40 + 2) keeps room for its label instead of a hairline; the other parts give up the space
+  const mins = p.parts.map(part => Math.max(26, labelWidth(formatNumber(part), labelFontSize)));
+  const { lengths } = fitParts(p.parts, mins, Math.max(totalWidth, mins.reduce((a, b) => a + b, 0)), unit);
+  const drawnWidth = lengths.reduce((a, b) => a + b, 0);
   let x = left;
   const regions: AreaRegion[] = p.parts.map((part, index) => {
-    const width = part * unit;
+    const width = lengths[index]!;
     const productLabel = formatNumber(p.partialProducts[index]!);
     const region: AreaRegion = {
       index,
@@ -65,11 +70,11 @@ export function buildSplitAreaDiagram(p: SplitMultiplicationProblem, layout: Are
 
   return {
     kind: "areaModel",
-    width: left + totalWidth + margin.right,
+    width: left + drawnWidth + margin.right,
     height: top + extraTop + totalHeight + margin.bottom + extraBottom,
     unit,
     vertical: { factor: "first", value: p.firstFactor, label: formatNumber(p.firstFactor), start: top + extraTop, length: totalHeight },
-    horizontal: { factor: "second", value: p.secondFactor, label: formatNumber(p.secondFactor), start: left, length: totalWidth },
+    horizontal: { factor: "second", value: p.secondFactor, label: formatNumber(p.secondFactor), start: left, length: drawnWidth },
     regions,
     splits: regions.slice(1).map(r => r.x),
     total: { terms: [...p.partialProducts], value: p.product },

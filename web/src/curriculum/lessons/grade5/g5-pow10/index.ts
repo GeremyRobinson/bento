@@ -42,7 +42,7 @@ function explain(p: PowerOfTenProblem, model: AnswerModel): Explanation {
   return {
     heading: "Each zero moves the point",
     idea: ["Each zero moves the decimal point one place to the right. Multiplying by 10, 100 or 1000 always makes the number bigger."],
-    statement: [num(x), op("×"), num(m), op("="), num(ans)],
+    statement: [num(x), op("×"), num(m), op("="), text("?")],
     diagram: buildDecimalShift({
       digits: whole! + frac, from: whole!.length, to: whole!.length + k, beat: 0, moveBeat: 1,
       label: `× ${m}: ${WORDS[k]} ${k > 1 ? "hops" : "hop"} right → ${f(ans)}`,
