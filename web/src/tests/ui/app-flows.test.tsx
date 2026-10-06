@@ -376,5 +376,8 @@ describe("the website from inside the app", () => {
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
     tap("About Bento ›");
     expect(screen.getByRole("heading", { name: "Every grade, K to 12th." })).toBeInTheDocument();
+    // Start learning always reaches the grade picker, even with a grade already chosen
+    tap("Start learning");
+    expect(screen.getByRole("heading", { name: "Which grade are you in?" })).toBeInTheDocument();
   });
 });
