@@ -6,7 +6,7 @@
 import { describe, expect, it } from "vitest";
 import { LESSONS } from "../../curriculum/registry";
 import { createRng } from "../../curriculum/generators/rng";
-import type { AnswerStep } from "../../curriculum/schemas/lesson";
+import type { AnswerModel, AnswerStep } from "../../curriculum/schemas/lesson";
 import { checkAnswerStep } from "../../engine/evaluation/steps";
 
 const BAND = LESSONS.filter(l => l.grade >= 4 && l.grade <= 7);
@@ -14,20 +14,31 @@ const PROBLEMS = 120;
 // the first word of an idea that tells the learner what to do instead of why it works
 const INSTRUCTION = /^(Add|Multiply|Work|Keep|Change|Count|Take|Find|Split|Divide|Subtract|Line|Put|Write|Make|Use|Start|Look|Round|Cut|Turn)\b/;
 
-// rewritten from Curriculum's drafts in the next commit (fixes-02 weakest lessons)
-const late = new Set<string>(["g6-divide", "g5-multdec", "g5-order", "g6-expo", "g6-trap", "g7-prop", "g5-units", "g4-lineplot", "g4-angles", "g7-subint", "g6-pctof"]);
 // the shared fraction "Simplify" step (_tape-family, area-common) is another helper's: its hint names the whole number
 // and its slips live in that shared check
 const SHARED = new Set(["simplify"]);
 
+/**
+ * Lessons whose first problems are easier in a way other than smaller answers (reviewed, fixes-02 drafts):
+ * how hard a problem is, by that lesson's own measure.
+ */
+type Run = { p: unknown; m: AnswerModel };
+const HARDER: Record<string, (r: Run) => number> = {
+  // tenths × a whole number (1 place), then tenths × tenths (2), then hundredths × tenths (3)
+  "g5-multdec": r => r.m.steps.find(s => s.id === "places")!.slots[0]!.expected!,
+  // big to small in whole units first; small to big, then halves, later
+  "g5-units": r => { const p = r.p as { n: number; up?: boolean }, ans = r.m.steps.at(-1)!.slots[0]!.expected!; return (p.up ? 1 : 0) + (Number.isInteger(p.n) && Number.isInteger(ans) ? 0 : 1); },
+};
+
 const named = (s: AnswerStep) => {
   if (s.choices) return true;
   if (s.known.length) return true;
-  // a step with its own check names its slips in code: a near miss gets a named message
-  const first = s.slots.findIndex(x => x.expected != null);
-  const near = Object.fromEntries(s.slots.map((x, i) => [x.id, x.expected == null ? null : i === first ? x.expected + 1 : x.expected]));
-  const r = checkAnswerStep(s, near);
-  return !r.ok && !r.soft && !r.generic;
+  // a step with its own check names its slips in code: some near miss (one box one off) gets a named message
+  return s.slots.some((y, k) => y.expected != null && [1, -1].some(dx => {
+    const near = Object.fromEntries(s.slots.map((x, i) => [x.id, x.expected == null ? null : i === k ? x.expected + dx : x.expected]));
+    const r = checkAnswerStep(s, near);
+    return !r.ok && !r.soft && !r.generic;
+  }));
 };
 /** the answer as a word in the hint: "… 1000 grams." gives away 1000 */
 const says = (hint: string, v: number) => Math.abs(v) >= 2 && new RegExp(`(?<![\\d.,/])${String(v).replace(".", "\\.")}(?![\\d/]|[.,]\\d)`).test(hint.replace(/(\d),(\d{3})/g, "$1$2"));
@@ -35,9 +46,8 @@ const says = (hint: string, v: number) => Math.abs(v) >= 2 && new RegExp(`(?<![\
 describe.each(BAND.map(l => [l.id, l] as const))("%s teaches", (id, lesson) => {
   const rng = createRng(4747);
   const runs = Array.from({ length: PROBLEMS }, (_, i) => { const p = lesson.generate(rng, i % 10), m = lesson.answers(p); return { i: i % 10, p, m, e: lesson.explain(p, m) }; });
-  const todo = late.has(id);
 
-  it.skipIf(todo)("an idea that says why", () => {
+  it("an idea that says why", () => {
     for (const r of runs) {
       const idea = r.e.idea ?? [];
       expect(idea.length, "one or two idea sentences").toBeGreaterThan(0);
@@ -46,8 +56,9 @@ describe.each(BAND.map(l => [l.id, l] as const))("%s teaches", (id, lesson) => {
     }
   });
 
-  it.skipIf(todo)("easier numbers first", () => {
+  it("easier numbers first", () => {
     const size = (r: (typeof runs)[number]) => {
+      if (HARDER[id]) return HARDER[id](r);
       const s = r.m.steps[(r.m.finalParts[0]! + r.m.steps.length) % r.m.steps.length]!;
       // every box counts: a fraction's bottom says how big the problem was
       const vs = s.slots.map(x => x.expected).filter((x): x is number => x != null);
@@ -60,7 +71,7 @@ describe.each(BAND.map(l => [l.id, l] as const))("%s teaches", (id, lesson) => {
     expect(med(early), `early ${early.join(",")}`).toBeLessThanOrEqual(med(later));
   });
 
-  it.skipIf(todo)("hints that point the way without giving the answer", () => {
+  it("hints that point the way without giving the answer", () => {
     const gives = new Map<string, number>(), seen = new Map<string, number>(), echo: string[] = [];
     for (const { m } of runs) for (const s of m.steps) {
       seen.set(s.id, (seen.get(s.id) ?? 0) + 1);
@@ -72,7 +83,7 @@ describe.each(BAND.map(l => [l.id, l] as const))("%s teaches", (id, lesson) => {
     expect([...gives].filter(([k, n]) => n > 0.25 * seen.get(k)!).map(([k, n]) => `${k} ${n}/${seen.get(k)}`).join(", "), "hint says the answer").toBe("");
   });
 
-  it.skipIf(todo)("a named slip on every typed step", () => {
+  it("a named slip on every typed step", () => {
     const bare = new Map<string, number>(), seen = new Map<string, number>();
     for (const { m } of runs) for (const s of m.steps) {
       seen.set(s.id, (seen.get(s.id) ?? 0) + 1);

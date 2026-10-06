@@ -2,6 +2,7 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildAngle } from "../../../../explanations/diagrams/angle/build";
 import { asRecord, expected, mt, ns, numberField } from "../../_geometry/kit";
+import { slips } from "../_kit";
 
 /** Two angles that make a straight line (st) or a right angle; a is the one we know. */
 export interface AnglePartsProblem {
@@ -28,8 +29,13 @@ export function anglePartsAnswers({ st, a }: AnglePartsProblem): AnswerModel {
   return {
     steps: [
       ns({ id: "whole", label: "The whole angle", question: st ? "How many degrees is a straight line?" : "How many degrees is a right angle?", prompt: s => mt`${s}°`, ans: T,
-        hint: "A right angle is a square corner: 90°. A straight line is two of them: 180°.", wrong: [[st ? 90 : 180, "Mixed up right and straight", "Right angle = 90°. Straight line = 180°."]] }),
-      ns({ id: "missing", label: "The missing part", prompt: s => mt`${T} − ${a} = ${s}°`, ans: T - a, hint: `Take ${a} away from ${T}.` }),
+        hint: "Is it a square corner or a straight line?", explain: st ? "A straight line is two square corners: 180°." : "A right angle is a square corner: 90°.", wrong: [[st ? 90 : 180, "Mixed up right and straight", "Right angle = 90°. Straight line = 180°."]] }),
+      ns({ id: "missing", label: "The missing part", prompt: s => mt`${a}° + ${s}° = ${T}°`, ans: T - a,
+        hint: `What goes with ${a}° to make ${T}°? Take ${a} away from ${T}.`, explain: `${T} − ${a} = ${T - a}, so the missing part is ${T - a}°.`,
+        wrong: slips(T - a, [
+          [(st ? 90 : 180) - a, "Used the wrong whole", `These two make ${st ? "a straight line, 180°" : "a right angle, 90°"}.`],
+          [T + a, "Added", "The missing part is smaller than the whole."],
+        ]).filter(([v]) => v > 0) }),
     ],
     finalParts: [-1],
   };
@@ -40,7 +46,10 @@ export function explainAngleParts(p: AnglePartsProblem, answers: AnswerModel): E
   const name = st ? "A straight line" : "A right angle";
   return {
     heading: "Angle parts add up",
-    idea: ["A right angle is a square corner: 90°. A straight line is 180°.", "Take the part you know away from the whole."],
+    idea: [
+      "An angle measures a turn. A full turn is 360 tiny turns called degrees, so a straight line is 180° and a square corner is 90°.",
+      "Angles that share a corner and fill a bigger angle add up to it.",
+    ],
     statement: mt`${a}° + ? = ${T}°`,
     caption: `${a}° and ${rest}° together make ${T}°.`,
     diagram: buildAngle({ total: st ? 180 : 90, part: a, wholeBeat: 1, missingBeat: 2, wholeNote: `${name} is ${T}°`, alt: `An angle of ${a}° and the missing ${rest}° together make ${st ? "a straight line" : "a right angle"}, ${T}°.` }),
@@ -59,7 +68,12 @@ export const lesson: LessonDefinition<AnglePartsProblem> = {
   unit: "Measurement",
   title: "Angles add up",
   reference: createAngleParts(false, 35),
-  generate: rng => { const st = rng.next() < 0.5; return createAngleParts(st, st ? rng.int(20, 160) : rng.int(15, 75)); },
+  generate: (rng, index = 3) => {
+    // a right angle in tens first, so the subtracting is easy while the idea is new
+    if (index < 3) return createAngleParts(false, 10 * rng.int(2, 7));
+    const st = rng.next() < 0.5;
+    return createAngleParts(st, st ? rng.int(20, 160) : rng.int(15, 75));
+  },
   restore: restoreAngleParts,
   display: p => mt`${p.a}° + ? = ${p.st ? 180 : 90}°`,
   displayNote: p => (p.st ? "Two angles make a straight line." : "Two angles make a right angle."),

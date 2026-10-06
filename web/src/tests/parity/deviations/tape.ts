@@ -19,7 +19,5 @@ export const deviations: Record<string, Partial<Record<string, string>>> = {
   "g4-equiv": { prompt: "\"What did we multiply by?\" is now \"What was it multiplied by?\" (Copy team: no teacher \"we\")",
     hint: "the top hint is \"Whatever the bottom was multiplied by, multiply the top by the same number.\": \"× 5\" gave the answer when the top was 1 (Curriculum fixes-02 Part C, 2026-10-06)",
     explain: "Show me starts from the new hint", checks: "a wrong try's message repeats the new hint" },
-  "g5-units": {
-    story: "The current app told every conversion as a rope's length (\"A rope is 8 kilograms long\"). The story now fits what the unit measures: a rope for feet, yards and meters, a bag of flour for kilograms and pounds, a road trip for hours, a fish tank for gallons. Same numbers, same operation (×).",
-  },
+  // g5-units moved to weakest.ts with its fixes-02 rewrite
 };

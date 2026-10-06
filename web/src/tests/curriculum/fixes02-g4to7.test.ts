@@ -86,3 +86,84 @@ describe("Part A generator and slip fixes", () => {
     expect(kindOf(s, { x: 314 })).toBe("Squared the diameter");
   });
 });
+
+describe("weakest lessons, rewritten to the fixes-02 drafts", () => {
+  it("g6-divide: first sizes the answer; the first problems divide by a unit fraction that fits more than once", () => {
+    for (const { i, p } of many("g6-divide")) {
+      const s = step("g6-divide", p, "size"), more = p.a * p.d > p.b * p.c;
+      expect(s.slots[0]!.expected).toBe(more ? 0 : 1);
+      expect(kindOf(s, { c: more ? 1 : 0 })).toBe("Compared the wrong way");
+      if (i < 3) { expect(p.c).toBe(1); expect(more).toBe(true); }
+    }
+    expect(L("g6-divide").pre).toBe("g5-unitdiv");
+  });
+  it("g5-multdec: the places answer is 1, then 2, then 3, and a misplaced point is named", () => {
+    const by = new Map<number, Set<number>>();
+    for (const { i, p } of many("g5-multdec")) {
+      const places = step("g5-multdec", p, "places").slots[0]!.expected!;
+      by.set(i, (by.get(i) ?? new Set()).add(places));
+      const place = step("g5-multdec", p, "place"), ans = place.slots[0]!.expected!;
+      expect(kindOf(place, { x: Math.round(ans * 10 * 1e6) / 1e6 })).toBe("Point in the wrong place");
+    }
+    expect([...by.get(0)!]).toEqual([1]); expect([...by.get(4)!]).toEqual([2]); expect([...by.get(8)!]).toEqual([3]);
+  });
+  it("g5-order: the first step asks what goes first, and left to right is a named slip", () => {
+    const p = L("g5-order").reference; // 3 + 4 × (6 − 2)
+    const s = step("g5-order", p, "first");
+    expect(s.choices).toEqual(["3 + 4", "4 × 6", "6 − 2"]);
+    expect(kindOf(s, { c: 0 })).toBe("Worked left to right");
+    expect(kindOf(s, { c: 2 })).toBe("ok");
+  });
+  it("g6-expo: counts the factors first, and adding before multiplying is named on the whole expression", () => {
+    const p = L("g6-expo").reference; // 2³ + 4 × 3
+    expect(step("g6-expo", p, "count").slots[0]!.expected).toBe(3);
+    expect(kindOf(step("g6-expo", p, "count"), { x: 2 })).toBe("Read the base");
+    expect(kindOf(step("g6-expo", p, "add"), { x: (8 + 4) * 3 })).toBe("Added before multiplying");
+  });
+  it("g7-prop: one part, then x; later problems may have a half for one part", () => {
+    const p = L("g7-prop").reference; // 3/4 = x/20
+    expect(step("g7-prop", p, "cross").slots[0]!.expected).toBe(5);
+    expect(kindOf(step("g7-prop", p, "cross"), { x: 16 })).toBe("Added instead of scaled");
+    const halves = many("g7-prop").filter(({ p: q }) => !Number.isInteger(q.k));
+    expect(halves.length).toBeGreaterThan(0);
+    for (const { i, p: q } of halves) { expect(i).toBeGreaterThanOrEqual(4); expect(Number.isInteger(q.a * q.k)).toBe(true); }
+    expect(L("g7-prop").restore({ a: 6, b: 4, k: 2.5 })).toEqual({ a: 6, b: 4, k: 2.5 });
+  });
+  it("g5-units: small to big divides, and more-or-fewer is asked", () => {
+    const l = L("g5-units"), p = l.restore({ u: "meter", n: 250, up: true })!;
+    const m = l.answers(p);
+    expect(m.steps.at(-1)!.slots[0]!.expected).toBe(2.5);
+    expect(kindOf(m.steps.find(s => s.id === "more")!, { c: 0 })).toBe("Bigger units, more of them");
+    expect(l.restore({ u: ["foot", "feet", "inches", 12], n: 3 })).toEqual(l.reference);
+    expect(many("g5-units").some(({ p: q }) => q.up)).toBe(true);
+  });
+  it("g4-angles: the missing part is asked as an addition, and the wrong whole is named", () => {
+    const p = L("g4-angles").reference; // 35° + ? = 90°
+    const s = step("g4-angles", p, "missing");
+    expect(kindOf(s, { x: 145 })).toBe("Used the wrong whole");
+    for (const { i, p: q } of many("g4-angles")) if (i < 3) expect(q.a % 10).toBe(0);
+  });
+  it("g4-lineplot: sprouts are tall, and reading the next mark is named", () => {
+    for (const { p } of many("g4-lineplot")) {
+      const qs = L("g4-lineplot").answers(p).steps.map(s => s.question ?? "").join(" ");
+      if (p.thing === 2) expect(qs).not.toMatch(/\blong(est)?\b|seed/);
+    }
+    const p = L("g4-lineplot").reference, s = step("g4-lineplot", p, "max"); // longest 7/4 = 1 3/4
+    expect(kindOf(s, { w: 1, n: 2, d: 4 })).toBe("Read the next mark");
+  });
+  it("g7-subint and g6-pctof: the new slips are named", () => {
+    expect(kindOf(step("g7-subint", L("g7-subint").reference, "add"), { x: -8 })).toBe("Wrong sign");
+    expect(kindOf(step("g6-pctof", L("g6-pctof").reference, "scale"), { x: 56 })).toBe("Found what's left");
+  });
+  it("g4-deccompare: the first number is always part colour 0 and the second part colour 2", () => {
+    const l = L("g4-deccompare");
+    for (const { p } of many("g4-deccompare", 60)) {
+      const d = l.explain(p, l.answers(p)).diagram as { items: { type: string; x?: number; cls?: string }[] };
+      const shaded = d.items.filter(it => it.type === "rect" && /\bon\b/.test(it.cls ?? ""));
+      // the two grids' outlines: a rect from the second one's left edge on belongs to the second number
+      const second = Math.max(...d.items.filter(it => it.type === "rect" && it.cls === "seg").map(it => it.x!));
+      for (const r of shaded) expect(r.cls).toMatch(r.x! < second - 0.5 ? /\bp0\b/ : /\bp2\b/);
+      expect(d.items.filter(it => /\bp1\b/.test(it.cls ?? ""))).toEqual([]);
+    }
+  });
+});

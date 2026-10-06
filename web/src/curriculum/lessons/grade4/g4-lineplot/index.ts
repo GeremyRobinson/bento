@@ -7,12 +7,14 @@ import { oneBox, wholeIn } from "../../_number-line/steps";
 import { words } from "../../gradeK/kit";
 import { slips } from "../_kit";
 
+/** what was measured, and the words for its size: sprouts are tall, the rest are long */
 const THINGS = [
-  { many: "ribbons", one: "ribbon", title: "Ribbon lengths" },
-  { many: "pencils", one: "pencil", title: "Pencil lengths" },
-  { many: "seeds", one: "seed", title: "Bean sprout heights" },
-  { many: "nails", one: "nail", title: "Nail lengths" },
+  { many: "ribbons", one: "ribbon", title: "Ribbon lengths", long: "long", most: "longest", least: "shortest", more: "longer", together: "Laid end to end" },
+  { many: "pencils", one: "pencil", title: "Pencil lengths", long: "long", most: "longest", least: "shortest", more: "longer", together: "Laid end to end" },
+  { many: "sprouts", one: "sprout", title: "Bean sprout heights", long: "tall", most: "tallest", least: "shortest", more: "taller", together: "Stacked one on top of another" },
+  { many: "nails", one: "nail", title: "Nail lengths", long: "long", most: "longest", least: "shortest", more: "longer", together: "Laid end to end" },
 ];
+const cap = (w: string) => w[0]!.toUpperCase() + w.slice(1);
 const gcd = (a: number, b: number): number => (b ? gcd(b, a % b) : a);
 /** v d-ths in lowest terms as [whole, n, d] */
 export const mixedOf = (v: number, d: number): [number, number, number] => { const w = Math.floor(v / d), r = v % d, g = gcd(r, d) || d; return [w, r / g, d / g]; };
@@ -71,14 +73,16 @@ function answers(p: FracLineProblem): AnswerModel {
   const th = THINGS[p.thing]!, d = p.d;
   if (p.ask === 0) {
     const hi = Math.max(...p.data), lo = Math.min(...p.data);
+    const nextMark = (v: number): [number, string, string][] => [v + 1, v - 1].filter(x => x > 0 && x % d !== 0)
+      .map(x => [x, "Read the next mark", `Each mark is 1/${d} inch. Count marks from the whole inch to the X.`]);
     return {
       steps: [
-        mixedStep({ id: "max", label: "Longest", question: `How long is the longest ${th.one}?`, value: hi, d, hint: "Find the X farthest to the right.", explain: `The longest is ${inches(hi, d)}.` }),
-        mixedStep({ id: "min", label: "Shortest", question: `How long is the shortest ${th.one}?`, value: lo, d, hint: "Find the X farthest to the left.", explain: `The shortest is ${inches(lo, d)}.` }),
-        mixedStep({ id: "diff", label: "Difference", question: "How much longer is the longest than the shortest?", value: hi - lo, d,
-          wrong: [[hi + lo, "Added", "How much longer means subtract."]],
+        mixedStep({ id: "max", label: cap(th.most), question: `How ${th.long} is the ${th.most} ${th.one}?`, value: hi, d, wrong: nextMark(hi), hint: "Find the X farthest to the right.", explain: `The ${th.most} is ${inches(hi, d)}.` }),
+        mixedStep({ id: "min", label: cap(th.least), question: `How ${th.long} is the ${th.least} ${th.one}?`, value: lo, d, wrong: nextMark(lo), hint: "Find the X farthest to the left.", explain: `The ${th.least} is ${inches(lo, d)}.` }),
+        mixedStep({ id: "diff", label: "Difference", question: `How much ${th.more} is the ${th.most} than the ${th.least}?`, value: hi - lo, d,
+          wrong: [[hi + lo, "Added", `How much ${th.more} means subtract.`], ...(((hi - lo + 1) % d) ? [[hi - lo + 1, "Counted marks, not spaces", "Count the jumps between the two X's, not the marks."] as [number, string, string]] : [])],
           hint: `${said(hi, d)} − ${said(lo, d)}. Count the spaces between them on the line.`,
-          explain: `${said(hi, d)} − ${said(lo, d)} = ${said(hi - lo, d)}, so the longest is ${inches(hi - lo, d)} longer.` }),
+          explain: `${said(hi, d)} − ${said(lo, d)} = ${said(hi - lo, d)}, so the ${th.most} is ${inches(hi - lo, d)} ${th.more}.` }),
       ],
       finalParts: [-1],
     };
@@ -87,20 +91,21 @@ function answers(p: FracLineProblem): AnswerModel {
     const n = howMany(p.data, p.v);
     return {
       steps: [
-        oneBox({ id: "count", label: "How many at that length", question: `How many ${th.many} are ${inches(p.v, d)} long?`, prompt: s => [s, text(` ${th.many}`)], ans: n,
+        oneBox({ id: "count", label: "How many at that length", question: `How many ${th.many} are ${inches(p.v, d)} ${th.long}?`, prompt: s => [s, text(` ${th.many}`)], ans: n,
           wrong: slips(n, [-1, 1].map(k => [howMany(p.data, p.v + k), "Read the next stack", `That's the stack above ${said(p.v + k, d)}. Find ${said(p.v, d)} first.`] as [number, string, string])),
           hint: `Find ${said(p.v, d)} on the line and count the X's.`, explain: `${n} X's above ${said(p.v, d)}.` }),
-        mixedStep({ id: "total", label: "Total length", question: `Laid end to end, how long are those ${th.many} in all?`, value: n * p.v, d, lead: [num(n), op("×")],
-          wrong: [[n * d, "Gave the count", `That's how many. Each one is ${said(p.v, d)} long: add ${said(p.v, d)} ${n} times.`]],
-          hint: `${n} × ${said(p.v, d)}: add ${said(p.v, d)} ${n} times.`, explain: `${n} × ${said(p.v, d)} = ${said(n * p.v, d)} inches.` }),
+        mixedStep({ id: "total", label: "Total length", question: `${th.together}, how ${th.long} are those ${th.many} in all?`, value: n * p.v, d, lead: [num(n), op("×")],
+          wrong: [[n * d, "Gave the count", `That's how many. Each one is ${said(p.v, d)} ${th.long}: add ${said(p.v, d)} ${n} times.`],
+            ...(n > 1 ? [[(n - 1) * p.v, "Left one out", `There are ${n} of them: add ${said(p.v, d)} ${n} times.`] as [number, string, string]] : [])],
+          hint: `Add ${said(p.v, d)} once for each ${th.one}.`, explain: `${n} × ${said(p.v, d)} = ${said(n * p.v, d)} inches.` }),
       ],
       finalParts: [-1],
     };
   }
   const n = p.data.filter(u => u > p.v).length, ge = p.data.filter(u => u >= p.v).length;
-  return { steps: [oneBox({ id: "longer", label: "Count", question: `How many ${th.many} are longer than ${inches(p.v, d)}?`, prompt: s => [s, text(` ${th.many}`)], ans: n,
-    wrong: slips(n, [[ge, `Counted ${said(p.v, d)} too`, `Longer than ${said(p.v, d)} doesn't include ${said(p.v, d)} itself.`]]),
-    hint: `Count the X's to the right of ${said(p.v, d)}.`, explain: `${n} X's to the right of ${said(p.v, d)}, so ${n} ${n === 1 ? `${th.one} is` : `${th.many} are`} longer.` })], finalParts: [-1] };
+  return { steps: [oneBox({ id: "longer", label: "Count", question: `How many ${th.many} are ${th.more} than ${inches(p.v, d)}?`, prompt: s => [s, text(` ${th.many}`)], ans: n,
+    wrong: slips(n, [[ge, `Counted ${said(p.v, d)} too`, `${cap(th.more)} than ${said(p.v, d)} doesn't include ${said(p.v, d)} itself.`]]),
+    hint: `Count the X's to the right of ${said(p.v, d)}.`, explain: `${n} X's to the right of ${said(p.v, d)}, so ${n} ${n === 1 ? `${th.one} is` : `${th.many} are`} ${th.more}.` })], finalParts: [-1] };
 }
 
 const plot = (p: FracLineProblem) => ({ d: p.d, lo: p.lo, hi: p.lo + 2 * p.d, data: p.data, title: THINGS[p.thing]!.title });
@@ -111,7 +116,10 @@ function explain(p: FracLineProblem, model: AnswerModel): Explanation {
   const lit = p.ask === 0 ? [Math.max(...p.data), Math.min(...p.data)] : p.ask === 1 ? [p.v] : [...new Set(p.data.filter(u => u > p.v))];
   return {
     heading: "Line plots with fractions",
-    idea: ["When the measurements are fractions, the line plot is marked in halves, fourths or eighths. You can add and subtract the lengths you read."],
+    idea: [
+      "Each X is one thing measured, sitting above its length. A taller stack means more things are that long.",
+      `The marks between whole inches are ${p.d === 4 ? "fourths" : "eighths"}: count marks from the last whole inch.`,
+    ],
     statement: words(last.question ?? ""),
     diagram: buildLinePlot({ ...plot(p), beats: { drop: 0, light: 1 }, light: lit, alt: `${alt(p)} The X's drop in, then the stacks the question is about light up.` }),
     caption: `${last.explain}`,
