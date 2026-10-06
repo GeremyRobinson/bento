@@ -9,6 +9,7 @@ import { lessonById } from "../curriculum/registry";
 import { currentItem, currentStep, lessonOfItem } from "../engine/session/practice";
 import { upNext } from "../app/today";
 import { Contents, type Level } from "./Contents";
+import { MeStack } from "./MeStack";
 import { tableById } from "../engine/facts/tables";
 import { Chevron } from "./primitives/icons";
 import { CONTENTS, GROWN_UP, NO_UNIT, PRACTICE, REPORT, REVIEW, SETTING, YOUR_BENTO } from "../app/copy";
@@ -130,16 +131,26 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
     const t = setTimeout(() => setQs(null), reduceMotion() ? 0 : 240);
     return () => clearTimeout(t);
   }, [qs]);
+  // Me: the same kind of floating stack, under the Me circle (Design's RedesignMe spec); only one stack is ever open
+  const [me, setMe] = useState<"open" | "closing" | null>(null);
+  const meOpen = me === "open";
+  const shutMe = () => setMe(q => (q === "open" ? "closing" : q));
+  useEffect(() => {
+    if (me !== "closing") return;
+    const t = setTimeout(() => setMe(null), reduceMotion() ? 0 : 240);
+    return () => clearTimeout(t);
+  }, [me]);
   const start: Level = route.name === "home" ? "shelf" : place.lesson ? "chapter" : "year";
   // going anywhere (Me included) puts quick settings away
-  useEffect(() => { setQs(null); }, [route]);
+  useEffect(() => { setQs(null); setMe(null); }, [route]);
   // feedback and quick settings never overlap: new feedback puts settings away, and opening settings tells Practice
   useEffect(() => {
-    const onPanel = (e: Event) => { if ((e as CustomEvent).detail === "feedback") shut(); };
+    const onPanel = (e: Event) => { if ((e as CustomEvent).detail === "feedback") { shut(); shutMe(); } };
     addEventListener("bento:panel", onPanel);
     return () => removeEventListener("bento:panel", onPanel);
   }, []);
-  const openQuick = () => { setQs("open"); dispatchEvent(new CustomEvent("bento:panel", { detail: "settings" })); };
+  const openMe = () => { shut(); setMe("open"); dispatchEvent(new CustomEvent("bento:panel", { detail: "settings" })); };
+  const openQuick = () => { shutMe(); setQs("open"); dispatchEvent(new CustomEvent("bento:panel", { detail: "settings" })); };
 
   // pinching the page closed (two fingers coming together) zooms out to the contents; spreading them is left to the browser
   useEffect(() => {
@@ -182,7 +193,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   const back = place.back;
   return (
     <>
-    <div className={`itop${quick ? " qopen" : ""}`}>
+    <div className={`itop${quick || meOpen ? " qopen" : ""}`}>
       <div className="icorner left">
         {showResume && (
           <button className="iresume" onClick={() => go({ name: "practice" }, "fwd")}
@@ -209,12 +220,14 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
             aria-label={`Hint, ${run!.hintsLeft} left`}><BulbIcon /></button>
         )}
         <button className={`icon${quick ? " on" : ""}`} onClick={() => (quick ? shut() : openQuick())} aria-label="Settings" aria-expanded={quick}><SettingsIcon /></button>
-        <button className={`icon ime${route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={() => go({ name: "me" }, "fwd")} aria-label={`Me: ${progress.streak} day streak, ${progress.xp} XP`}>
+        <button className={`icon ime${meOpen || route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={() => (meOpen ? shutMe() : openMe())}
+          aria-label={`Me: ${progress.streak} day streak, ${progress.xp} XP`} aria-haspopup="dialog" aria-expanded={meOpen}>
           <MeIcon />
         </button>
       </div>
     </div>
       {qs && <QuickSettings closing={qs === "closing"} close={shut} />}
+      {me && <MeStack closing={me === "closing"} close={shutMe} />}
       {open && <Contents grade={place.lesson ? pageOf(place.lesson)?.grade ?? grade : grade} lessonId={place.lesson} level={open} close={() => setOpen(null)} />}
     </>
   );

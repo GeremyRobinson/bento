@@ -16,10 +16,12 @@ export interface Settings {
   sounds: boolean;
   /** reads each step of a lesson and each problem out loud; null until chosen, which means on for kindergarten and 1st grade */
   readAloud: boolean | null;
+  /** the answer pad on the left, for left-handed learners */
+  leftHanded: boolean;
 }
 
 export const defaultSettings = (): Settings => ({
-  text: "standard", contrast: false, motion: "system", colorSafe: false, readable: false, sounds: false, readAloud: null,
+  text: "standard", contrast: false, motion: "system", colorSafe: false, readable: false, sounds: false, readAloud: null, leftHanded: false,
 });
 
 /** Settings from a save, with anything missing or unknown back at its default. */
@@ -35,6 +37,7 @@ export function readSettings(raw: unknown): Settings {
     readable: r.readable === true,
     sounds: r.sounds === true,
     readAloud: typeof r.readAloud === "boolean" ? r.readAloud : null,
+    leftHanded: r.leftHanded === true,
   };
 }
 
@@ -50,6 +53,7 @@ export function applySettings(s: Settings): void {
   el.motion = s.motion;
   el.colorSafe = String(s.colorSafe);
   el.readable = String(s.readable);
+  el.hand = s.leftHanded ? "left" : "right";
 }
 
 /** The device asks for less motion, or the person turned it down here. */

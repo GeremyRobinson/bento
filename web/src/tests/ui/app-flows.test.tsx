@@ -263,7 +263,7 @@ describe("report, grown-up page and back to basics", () => {
     };
     renderApp(progress, { "g5-mult2": report });
     fireEvent.click(screen.getByRole("button", { name: /^Me:/ }));
-    tap("Open the report ›");
+    tap("For the grown-up ›");
     for (const h of ["Scores by grade", "Mistake patterns", "Needs more practice", "Recent sessions"]) {
       expect(screen.getByRole("heading", { level: 2, name: h })).toBeInTheDocument();
     }
@@ -299,18 +299,28 @@ describe("report, grown-up page and back to basics", () => {
 });
 
 describe("the personal hub", () => {
-  it("shows progress and grades, and its settings land on the page", () => {
-    renderApp({ grade: 5, chosen: true, xp: 40, streak: 3 });
-    fireEvent.click(screen.getByRole("button", { name: "Me: 3 day streak, 40 XP" }));
-    expect(screen.getByRole("heading", { level: 1, name: "Your Bento" })).toBeInTheDocument();
-    expect(document.querySelectorAll(".mgrades .gcell")).toHaveLength(13);
-    fireEvent.click(screen.getByRole("switch", { name: /High contrast/ }));
-    expect(screen.getByRole("switch", { name: /High contrast/ })).toHaveAttribute("aria-checked", "true");
+  it("opens Me as a floating stack over the screen, and its switches land on the page", () => {
+    renderApp({ grade: 5, chosen: true, xp: 1240, streak: 3 });
+    const me = screen.getByRole("button", { name: "Me: 3 day streak, 1240 XP" });
+    fireEvent.click(me);
+    expect(me).toHaveAttribute("aria-expanded", "true");
+    const stack = screen.getByRole("dialog", { name: "Me" });
+    expect(stack).toHaveTextContent("5thgrade");
+    expect(stack).toHaveTextContent("1,240XP");
+    expect(stack).toHaveTextContent("3-daystreak");
+    expect(within(stack).getByText("Placeholder")).toBeInTheDocument();
+    fireEvent.click(within(stack).getByRole("switch", { name: /High contrast/ }));
+    expect(within(stack).getByRole("switch", { name: /High contrast/ })).toHaveAttribute("aria-checked", "true");
     expect(document.documentElement.dataset.contrast).toBe("true");
+    fireEvent.click(within(stack).getByRole("switch", { name: /Left-handed keypad/ }));
+    expect(document.documentElement.dataset.hand).toBe("left");
+    fireEvent.click(within(stack).getByRole("switch", { name: /Less motion/ }));
+    expect(document.documentElement.dataset.motion).toBe("reduce");
+    // the full page still holds every setting and the backup
+    tap("All settings and backup ›");
+    expect(screen.getByRole("heading", { level: 1, name: "Your Bento" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("radio", { name: "Largest" }));
     expect(document.documentElement.dataset.text).toBe("largest");
-    fireEvent.click(screen.getByRole("switch", { name: /Less motion/ }));
-    expect(document.documentElement.dataset.motion).toBe("reduce");
   });
 });
 
