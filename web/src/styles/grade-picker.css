@@ -37,6 +37,13 @@
 @media (orientation:portrait){.wrap:has(.gqh){--screen-list:360px}}
 .srow.grow .sname b{white-space:normal;overflow:visible}
 .gdpic:not(:has(figcaption)){grid-template-rows:minmax(0,1fr)}
+/* a portrait iPad's detail is tall and narrow, and a picture is sized by its width: the well wraps the picture at its own
+   shape, centred in the room, rather than leaving it tiny in a 770px box. Landscape and phones keep the filling well. */
+@media (orientation:portrait) and (min-width:700px){
+  .gdl:not(.inline) .gdpic{align-self:center;max-height:100%}
+  .gdl:not(.inline) .gdpic .gyviz{aspect-ratio:var(--ar,4 / 3);max-height:100%}
+  .gdl:not(.inline) .b2pic{aspect-ratio:200 / 110;height:auto}
+}
 
 /* The Bento / Bento² switch (Design's 5-bento-toggle, G 2026-10-06). It sits on the question's line. Bento² dims the
    room into its own dark canvas and swaps the grades for its ten tracks, rows fading out and in 30ms apart: the dimming

@@ -56,6 +56,16 @@ export function OneIdea({ rng }: { rng: Rng }) {
   }), [rng]);
   const turn = useTurns(cards);
   const at = Math.max(0, turn.i), c = cards[at];
+  // the picture that was showing stays (same element, on its finished frame) and fades out over the new one as that
+  // starts to draw, so the card is never blank between grades (v44 sweep #18)
+  // worked out during render, so the old layer never leaves the DOM between the two pictures
+  const [leaving, setLeaving] = useState<{ at: number; n: number } | null>(null);
+  const [was, setWas] = useState({ at, n: turn.n });
+  if (was.n !== turn.n) {
+    setWas({ at, n: turn.n });
+    setLeaving(reduceMotion() ? null : was);
+  }
+  const layers = [...(leaving && leaving.n !== turn.n ? [{ ...leaving, out: true }] : []), { at, n: turn.n, out: false }];
   if (!c) return null;
   // one calm stage: the list of five steps on the left, the one picture playing on the right
   return (
@@ -70,7 +80,17 @@ export function OneIdea({ rng }: { rng: Rng }) {
           ))}
         </ol>
         <figure className="lonepic gpal" data-grade={c.grade} style={tintStyle(gradeOf(c.grade)) as CSSProperties}>
-          <div className="lsd" key={turn.n}><PlayingDiagram ex={c.ex} /></div>
+          <div className="lstage">
+            {layers.map(l => {
+              const k = cards[l.at];
+              return k && (
+                <div key={l.n} className={`lsd gpal${l.out ? " out" : ""}`} data-grade={k.grade} style={tintStyle(gradeOf(k.grade)) as CSSProperties}
+                  aria-hidden={l.out || undefined} onAnimationEnd={e => { if (l.out && e.target === e.currentTarget) setLeaving(null); }}>
+                  <PlayingDiagram ex={k.ex} />
+                </div>
+              );
+            })}
+          </div>
           <figcaption key={`c${turn.n}`}><GradeNum grade={c.grade} /><span><b>{c.title}</b><small>{c.note}</small></span></figcaption>
         </figure>
       </div>

@@ -121,8 +121,9 @@ function Orbit({ play }: { play: boolean }) {
       <line x1={fx} y1={cy} x2={px} y2={py} className="tp-r" />
       <Arrow x1={px} y1={py} x2={px + vx * 0.22} y2={py + vy * 0.22} c="var(--tp-mint)" w={2} />
       <circle cx={px} cy={py} r="6" fill="var(--tp-sky)" />
-      <text x="388" y={cy + 64} textAnchor="end" className="tp-sm">fast near the sun</text>
-      <text x={cx - a + 6} y={cy + 48} className="tp-sm">slow far away</text>
+      {/* top right, clear of the ellipse and the near wedge's tip; "slow" sits inside the ellipse, past its left edge */}
+      <text x="388" y="18" textAnchor="end" className="tp-sm">fast near the sun</text>
+      <text x={cx - a + 24} y={cy + 48} className="tp-sm">slow far away</text>
       <text x="12" y="230" className="tp-math">r = a(1 − e²) / (1 + e cos θ)</text>
       <text x="388" y="230" textAnchor="end" className="tp-sm">e = 0.6</text>
       <text x="12" y="18" className="tp-sm">equal areas in equal times</text>
