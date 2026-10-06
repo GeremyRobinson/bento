@@ -56,8 +56,10 @@ html:has(.screen) body{overflow:hidden}
 .spreview figcaption .math,.spreview figcaption .ml{font-size:var(--small)}
 /* the picture scales to the room it gets, never past it */
 .sppic,.gypic{position:relative;min-height:0}
-.sppic>svg,.gypic>svg{position:absolute;inset:0;width:100%!important;height:100%!important;margin:0}
-.gypic>svg{inset:var(--u);width:calc(100% - 2 * var(--u))!important;height:calc(100% - 2 * var(--u))!important}
+.sppic>.viz,.gypic>.viz{position:absolute;inset:0;display:grid;min-height:0;margin:0}
+.gypic>.viz{inset:var(--u)}
+.sppic>.viz>svg,.gypic>.viz>svg{width:100%!important;height:100%!important;max-height:none;margin:0;min-height:0}
+.sppic .viz-cap,.sppic .replay,.gypic .viz-cap,.gypic .replay{display:none}
 /* landscape: the preview sits above the detail; portrait and phone: below */
 @media (orientation:landscape) and (min-width:700px){.spreview{order:-1}}
 @media (max-width:699px){.ssteps{grid-template-columns:minmax(0,1fr)}.sdtext h2{font-size:26px;line-height:32px}}

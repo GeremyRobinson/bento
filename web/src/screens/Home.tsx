@@ -10,7 +10,7 @@ import { lastScore, timesDone } from "../engine/mastery/progress";
 import { ScoreChip } from "../components/primitives/Score";
 import { Fill, GradeNum } from "../components/Shelf";
 import { SplitScreen } from "../components/screen/Screen";
-import { Diagram } from "../components/diagrams/Diagram";
+import { PlayingDiagram } from "../components/diagrams/PlayingDiagram";
 import { MathLine, Rich } from "../components/primitives/MathLine";
 import { handOff, previewOf } from "../app/preview";
 import { GradeQuestion } from "./GradeQuestion";
@@ -203,7 +203,7 @@ function LessonDetail({ g, entry }: { g: number; entry: Entry }) {
       {fits && (
         <figure className="card spreview" style={{ height: Math.min(room, 460) }}>
           <figcaption>Preview · your first problem, <MathLine math={pv!.ex.statement} /></figcaption>
-          <div className="sppic"><Diagram diagram={pic!.ex.diagram!} timeline={pic!.ex.timeline} at={pic!.ex.timeline.length - 1} /></div>
+          <div className="sppic"><PlayingDiagram ex={{ ...pic!.ex, diagram: pic!.ex.diagram! }} hold={600} /></div>
         </figure>
       )}
     </div>

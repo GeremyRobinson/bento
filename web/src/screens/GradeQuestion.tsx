@@ -4,7 +4,7 @@ import { previewOf } from "../app/preview";
 import { bandOf, GRADES, gradeOf, tintStyle } from "../curriculum/grades";
 import { lessonsInGrade } from "../curriculum/registry";
 import { placeKey } from "../engine/session/practice";
-import { Diagram } from "../components/diagrams/Diagram";
+import { PlayingDiagram } from "../components/diagrams/PlayingDiagram";
 import { FitScreen } from "../components/screen/Screen";
 import { Pill } from "../components/primitives/Pill";
 import { GradeNum } from "../components/Shelf";
@@ -53,7 +53,7 @@ export function GradeQuestion() {
               <h2>{d.name}</h2>
               <p className="muted">This year: {d.subtitle.toLowerCase()}. {lessonsInGrade(d.grade).length} lessons.</p>
             </div>
-            {shown?.ex.diagram && <div className="gypic"><Diagram diagram={shown.ex.diagram} timeline={shown.ex.timeline} at={shown.ex.timeline.length - 1} /></div>}
+            {shown?.ex.diagram && <div className="gypic"><PlayingDiagram key={picked} ex={{ ...shown.ex, diagram: shown.ex.diagram }} hold={600} /></div>}
             <div className="gygo"><Pill go className="dark" onClick={() => chooseGrade(d.grade)}>Start {d.name.split(" · ")[0]} ›</Pill></div>
           </div>
         )}
