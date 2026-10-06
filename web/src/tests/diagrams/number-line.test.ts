@@ -159,11 +159,15 @@ describe.each(SCENE_LESSONS)("%s pictures fit", id => {
 });
 
 describe("pictures follow the problem", () => {
-  it("k-add hops on from a to a + b", () => {
+  it("k-add counts the first group from 0, then hops on from a to a + b, every hop above the line", () => {
     const l = lessonById("k-add")!, p = l.generate(createRng(3), 0) as { a: number; b: number };
     const d = l.explain(p, l.answers(p)).diagram as SceneDiagram;
     const top = texts(d).filter(t => t.cls === "lbl").map(t => Number(t.text));
-    expect(top).toEqual(Array.from({ length: p.b }, (_, i) => p.a + i + 1));
+    expect(top).toEqual(Array.from({ length: p.a + p.b }, (_, i) => i + 1));
+    // a hop below the line means taking away (v44 sweep #3): none here, so no arc is drawn in the second part colour
+    const arcs = d.items.filter(it => it.type === "path" && /\bln\b/.test((it as { cls?: string }).cls ?? ""));
+    expect(arcs).toHaveLength(p.a + p.b);
+    expect(arcs.filter(it => /\bp1\b/.test((it as { cls?: string }).cls ?? ""))).toEqual([]);
   });
   it("g6-numline's hops are labelled with the two distances", () => {
     const l = lessonById("g6-numline")!, p = l.restore({ a: -7, b: 4 });

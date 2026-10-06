@@ -13,6 +13,7 @@ import { GradeNum } from "../components/Shelf";
 import { FIND_MY_LEVEL, NO_UNIT } from "../app/copy";
 import { TRACKS, TRACK_PARTS, type Track } from "../app/tracks";
 import { HorizonPic } from "../components/Advanced";
+import type { DiagramModel } from "../explanations/schema";
 
 type Side = "bento" | "b2";
 /** small per-device memories, never required: storage can be missing or blocked */
@@ -39,6 +40,9 @@ function firstPicture(grade: number, seed: number) {
   return null;
 }
 
+/** The picture's own shape, so a portrait iPad's well can wrap it instead of leaving it tiny in a tall box (v44 sweep #17). */
+const aspectOf = (d: DiagramModel): CSSProperties | undefined =>
+  "width" in d && "height" in d && d.width > 0 && d.height > 0 ? ({ "--ar": `${Math.round(d.width)} / ${Math.round(d.height)}` } as CSSProperties) : undefined;
 const phone = () => typeof matchMedia !== "undefined" && matchMedia("(max-width: 699px)").matches;
 
 /**
@@ -118,7 +122,7 @@ export function GradeQuestion() {
         {teaser?.ex.diagram && (
           // the picture keeps its own grade's colours; only the chrome around it waits for a choice
           <figure className="gdpic" data-grade={seed % 13} data-band={bandOf(seed % 13)}>
-            <div className="gyviz"><PlayingDiagram key="teaser" ex={{ ...teaser.ex, diagram: teaser.ex.diagram }} end={statementBeat(teaser.ex)} /></div>
+            <div className="gyviz" style={aspectOf(teaser.ex.diagram)}><PlayingDiagram key="teaser" ex={{ ...teaser.ex, diagram: teaser.ex.diagram }} end={statementBeat(teaser.ex)} /></div>
           </figure>
         )}
       </div>
@@ -136,7 +140,7 @@ export function GradeQuestion() {
         {shown?.ex.diagram && (
           <figure className="gdpic">
             <figcaption>Your first problem: <b><MathLine math={shown.ex.statement} /></b></figcaption>
-            <div className="gyviz"><PlayingDiagram key={g} ex={{ ...shown.ex, diagram: shown.ex.diagram }} end={statementBeat(shown.ex)} /></div>
+            <div className="gyviz" style={aspectOf(shown.ex.diagram)}><PlayingDiagram key={g} ex={{ ...shown.ex, diagram: shown.ex.diagram }} end={statementBeat(shown.ex)} /></div>
           </figure>
         )}
         {/* the grade's darker shades carry its text and the Start pill on light, so both read at 4.5:1 (v44 sweep item 11) */}

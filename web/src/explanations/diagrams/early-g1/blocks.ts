@@ -72,7 +72,9 @@ export function buildTensOnes(s: TensOnesSpec): SceneDiagram {
     if (s.tens && s.ones && ox - tx < need) { const m = (tx + ox) / 2; tx = m - need / 2; ox = m + need / 2; }
     if (s.tens) {
       items.push(ring(set.rodsX, 0, set.rodsW, ROD_H, { from: b.tens, until: b.tens }));
-      s.tensCount?.forEach((c, i) => items.push(t(set.rodsX + i * (CUBE + ROD_GAP) + CUBE / 2, -18, c, "xs", { from: b.tens, enter: "rise", delay: 0.3 + 0.25 * i })));
+      // rods sit one cube apart, closer than two labels at phone size ("10" "20" read as "1020"): every other count
+      // steps up a line, so neighbours never touch however small the picture is drawn
+      s.tensCount?.forEach((c, i) => items.push(t(set.rodsX + i * (CUBE + ROD_GAP) + CUBE / 2, i % 2 ? -40 : -18, c, "xs", { from: b.tens, enter: "rise", delay: 0.3 + 0.25 * i })));
       items.push(t(tx, bottom + 26, s.text.tens, "lbl", { from: b.tens, enter: "rise", delay: 0.2 }));
     }
     if (s.ones) {
