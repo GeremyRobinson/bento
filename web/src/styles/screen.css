@@ -426,14 +426,14 @@ html:has(.screen) body{overflow:hidden}
 .bchap b{font-size:var(--fz-sm);line-height:1.25;font-weight:var(--w-bold);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-wrap:pretty}
 .bchap small{flex:none;font-size:var(--fz-xs);font-weight:var(--w-mid);color:var(--muted)}
 .sbento .today .b-weak{margin-top:var(--s);padding:0;background:none;box-shadow:none}
-/* landscape (an iPad held sideways, a laptop): the picture keeps the big slot on the left, never under 240px; down
-   the right the year's fill and the streak at their own height, then the chapters, which scroll in the room left. The
-   plan sits under the picture at its own height (Practice again included) and scrolls inside itself only when a short
-   screen can't hold all of it beside the picture (Review, 3rd grade's nine chapters at 1366x768 and 1180x820) */
+/* landscape (an iPad held sideways, a laptop): the picture takes the top left, never under 240px and never shorter than
+   the year's fill beside it; the plan sits under it beside the streak and the chapters, so a tall year's fill (a narrow
+   laptop) never pushes it off. The picture and the chapters share what's left two to one; the chapters scroll, and the
+   plan scrolls inside itself only when a short screen can't hold all of it (Review, 1024x768 to 1366x1024) */
 @media (orientation:landscape) and (min-width:900px){
-  .sdetail>.sbento{grid-template-rows:auto auto minmax(0,1fr) minmax(0,max-content);
-    grid-template-areas:"pic pic stats" "pic pic streak" "pic pic chaps" "plan plan chaps"}
-  .sdetail>.sbento.nopic{grid-template-areas:"plan plan stats" "plan plan streak" "plan plan chaps" "plan plan chaps"}
+  .sdetail>.sbento{grid-template-rows:minmax(auto,2fr) auto minmax(0,1fr);
+    grid-template-areas:"pic pic stats" "plan plan streak" "plan plan chaps"}
+  .sdetail>.sbento.nopic{grid-template-areas:"plan plan stats" "plan plan streak" "plan plan chaps"}
   .sdetail>.sbento>.spreview{min-height:240px}
   .sdetail>.sbento>:is(.b-stats,.b-streak){min-height:max-content}
 }

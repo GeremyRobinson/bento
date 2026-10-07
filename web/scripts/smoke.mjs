@@ -1,6 +1,6 @@
 /**
  * The smoke run: Review's manual sweep as one command. Opens the preview build (npm run build:preview first) on the
- * main routes at a phone in dark and a big iPad in light, each with More contrast off and on, and fails on:
+ * main routes at a phone, iPads and laptops (1024x768 to 1366x1024), each with More contrast off and on, and fails on:
  * anything cut off or spilling (Review's edge audit, scripts/smoke/audit.js), text under 11px, a lesson page that
  * scrolls, a Panel line without its corner, or the nav's wordmark missing, doubled or moving between pages.
  *   node scripts/smoke.mjs            (playwright from node_modules or NODE_PATH)
@@ -17,7 +17,8 @@ const PAGE = "file://" + fileURLToPath(new URL("../dist-preview/index.html", imp
 
 /** audit kinds that fail the run: anything cut off, text under an outline, and a nested surface whose corner isn't concentric */
 const CLIPS = new Set(["content-cut", "spill", "viewport", "poke-clipped", "box", "mask", "ring", "scroll-cut", "outline-over", "concentric"]);
-const SIZES = [{ w: 390, h: 844, scheme: "dark" }, { w: 1180, h: 820, scheme: "light" }, { w: 1366, h: 768, scheme: "dark" }, { w: 1366, h: 1024, scheme: "light" }];
+const SIZES = [{ w: 390, h: 844, scheme: "dark" }, { w: 1180, h: 820, scheme: "light" }, { w: 1366, h: 768, scheme: "dark" }, { w: 1366, h: 1024, scheme: "light" },
+  { w: 1024, h: 768, scheme: "light" }, { w: 1280, h: 720, scheme: "dark" }];
 /** containers meant to scroll (a long list; the book's chapters, and its plan on a short landscape screen where the
  *  picture keeps its room); anything else that scrolls inside itself is cut */
 const SCROLLERS = ".fhome>.ftables, nav.slist.more, .sbento>.b-chaps, .sbento>.today";
@@ -95,13 +96,28 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
       const pic = document.querySelector(".sbento>.spreview");
       const picH = pic && shown(pic) && innerWidth >= 900 ? Math.round(pic.getBoundingClientRect().height) : null;
       const picEmpty = picH != null && pic.classList.contains("empty");
-      return { flags, tiny, corners, marks, picH, picEmpty, scroll: Math.round(low - innerHeight) };
+      // bento tiles never overlap, and the plan's first row (Start) is fully inside Today, unscrolled
+      const overlaps = [], tiles = [...document.querySelectorAll(".sbento>*")].filter(shown);
+      for (const [i, a] of tiles.entries()) for (const b of tiles.slice(i + 1)) {
+        const A = a.getBoundingClientRect(), B = b.getBoundingClientRect();
+        const x = Math.min(A.right, B.right) - Math.max(A.left, B.left), y = Math.min(A.bottom, B.bottom) - Math.max(A.top, B.top);
+        if (x > 1 && y > 1) overlaps.push(`${a.className} and ${b.className} by ${Math.round(Math.min(x, y))}px`);
+      }
+      const today = document.querySelector(".sbento>.today"), first = today?.querySelector(".plan li");
+      let startCut = 0;
+      if (today && first && shown(first)) {
+        const T = today.getBoundingClientRect(), F = first.getBoundingClientRect();
+        startCut = Math.round(Math.max(0, F.bottom - (T.bottom - today.clientTop) + today.scrollTop));
+      }
+      return { flags, tiny, corners, marks, picH, picEmpty, overlaps, startCut, scroll: Math.round(low - innerHeight) };
     }, SCROLLERS);
     for (const f of r.flags)
       (CLIPS.has(f.kind) ? fails : notes).push(`${at}: ${f.kind} ${f.el}${f.path ? " in " + f.path : ""}`);
     for (const t of r.tiny.slice(0, 5)) fails.push(`${at}: text under 11px ${t}`);
     for (const c of [...new Set(r.corners)]) fails.push(`${at}: Panel line without a corner ${c}`);
     if (r.picH != null && (r.picH < 200 || r.picEmpty)) fails.push(`${at}: the book's picture is ${r.picEmpty ? "empty" : r.picH + "px tall"}`);
+    for (const o of r.overlaps) fails.push(`${at}: tiles overlap: ${o}`);
+    if (r.startCut > 1) fails.push(`${at}: the plan's first row is cut by ${r.startCut}px`);
     if (route === "learn" && r.scroll > 1) fails.push(`${at}: the lesson page scrolls by ${r.scroll}px`);
     if (route !== "welcome") {
       if (r.marks.length !== 1) fails.push(`${at}: ${r.marks.length} wordmarks in the nav`);
