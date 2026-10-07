@@ -345,9 +345,6 @@ html:has(.screen),html:has(.screen) body{overflow:hidden;overscroll-behavior:non
   .island .iplace{padding:0 var(--sp-1)}
 }
 @media (max-width:400px){.island .iplace b{font-size:var(--fz-xs)}}
-/* the picked lesson row shows its whole name; Up next is already said in the detail */
-.srow.sles.on .snext{display:none}
-.srow.sles.on .sname b{white-space:normal}
 /* THE CONFIRM MASTER: a small bento box in the middle of the screen. The question spans the top; the two answers sit
    side by side under it as tiles, the safe one filled in the grade's colour, the other outlined. Corners nest from the
    panel with an 8px gap; no shadow, it comes forward from the centre (G 2026-10-06) */

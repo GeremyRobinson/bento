@@ -44,6 +44,10 @@ html:has(.screen) body{overflow:hidden}
 .srow.on>small,.srow .snext{color:var(--ink)}
 .srow.chap .sname b{font-weight:var(--w-bold)}
 .srow.sles{padding-left:22px;min-height:46px;font-size:var(--small)}
+/* a lesson row is always one line, picked or not: the name ends in an ellipsis and its label (time, score, Up next)
+   keeps its place, so no row grows or changes when it's picked (G 2026-10-07, "why is this happening?") */
+.srow.sles .sname b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srow.sles>small,.srow.sles>.score{flex:none}
 .srow.sles .sname b{font-weight:var(--w-regular)}
 .srow.sles.on .sname b{font-weight:var(--w-mid)}
 .srow .sdot{flex:none;width:10px;height:10px;border-radius:5px;background:var(--faint);transition:background var(--dur-300)}

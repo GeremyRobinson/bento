@@ -129,6 +129,10 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
         const P = pn.getBoundingClientRect(), R = rows.map(r => r.getBoundingClientRect());
         const gaps = [R[0].left - P.left, P.right - R[0].right, R[0].top - P.top, P.bottom - R.at(-1).bottom, ...R.slice(1).map((r, i) => r.top - R[i].bottom)];
         if (Math.max(...gaps) - Math.min(...gaps) > 1) nests.push(gaps.map(g => g.toFixed(1)).join("/"));
+        // every lesson row the same height, picked or not, each with its trailing label
+        const hs = R.map(r => Math.round(r.height));
+        if (Math.max(...hs) - Math.min(...hs) > 1) nests.push(`row heights ${hs.join("/")}`);
+        for (const r of rows) if (!r.disabled && ![...r.children].slice(2).some(shown)) nests.push(`"${r.textContent.trim().slice(0, 20)}" has no label`);
       }
       return { flags, tiny, corners, marks, picH, picEmpty, overlaps, startCut, steps, nests, scroll: Math.round(low - innerHeight) };
     }, SCROLLERS);
@@ -140,7 +144,7 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
     for (const o of r.overlaps) fails.push(`${at}: tiles overlap: ${o}`);
     if (r.startCut > 1) fails.push(`${at}: the plan's first row is cut by ${r.startCut}px`);
     for (const st of r.steps) fails.push(`${at}: step row not aligned: ${st}`);
-    for (const n of r.nests) fails.push(`${at}: chapter rows not evenly spaced (left/right/top/bottom/between): ${n}`);
+    for (const n of r.nests) fails.push(`${at}: chapter rows uneven (gaps left/right/top/bottom/between, heights, labels): ${n}`);
     if ((route === "learn" || route === "practice") && r.scroll > 1) fails.push(`${at}: the lesson page scrolls by ${r.scroll}px`);
     if (route !== "welcome") {
       if (r.marks.length !== 1) fails.push(`${at}: ${r.marks.length} wordmarks in the nav`);
