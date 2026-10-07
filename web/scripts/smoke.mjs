@@ -121,7 +121,16 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
         const left = B.left - P.left, top = B.top - P.top, mid = (F.top + F.bottom) / 2 - (B.top + B.bottom) / 2;
         if (Math.abs(left - top) > 1 || (F.height <= B.height + 1 && Math.abs(mid) > 1)) steps.push(`"${e.textContent.trim().slice(0, 20)}" in ${left.toFixed(1)}/${top.toFixed(1)}, line off ${mid.toFixed(1)}`);
       }
-      return { flags, tiny, corners, marks, picH, picEmpty, overlaps, startCut, steps, scroll: Math.round(low - innerHeight) };
+      // a chapter's lesson panel: the same gap between rows as round its edge, so a highlighted row never touches its
+      // neighbour or the panel (G 2026-10-07)
+      const nests = [];
+      for (const pn of document.querySelectorAll(".sgroup.open .sgroup-panel")) {
+        const rows = [...pn.children].filter(shown); if (!rows.length) continue;
+        const P = pn.getBoundingClientRect(), R = rows.map(r => r.getBoundingClientRect());
+        const gaps = [R[0].left - P.left, P.right - R[0].right, R[0].top - P.top, P.bottom - R.at(-1).bottom, ...R.slice(1).map((r, i) => r.top - R[i].bottom)];
+        if (Math.max(...gaps) - Math.min(...gaps) > 1) nests.push(gaps.map(g => g.toFixed(1)).join("/"));
+      }
+      return { flags, tiny, corners, marks, picH, picEmpty, overlaps, startCut, steps, nests, scroll: Math.round(low - innerHeight) };
     }, SCROLLERS);
     for (const f of r.flags)
       (CLIPS.has(f.kind) ? fails : notes).push(`${at}: ${f.kind} ${f.el}${f.path ? " in " + f.path : ""}`);
@@ -131,6 +140,7 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
     for (const o of r.overlaps) fails.push(`${at}: tiles overlap: ${o}`);
     if (r.startCut > 1) fails.push(`${at}: the plan's first row is cut by ${r.startCut}px`);
     for (const st of r.steps) fails.push(`${at}: step row not aligned: ${st}`);
+    for (const n of r.nests) fails.push(`${at}: chapter rows not evenly spaced (left/right/top/bottom/between): ${n}`);
     if ((route === "learn" || route === "practice") && r.scroll > 1) fails.push(`${at}: the lesson page scrolls by ${r.scroll}px`);
     if (route !== "welcome") {
       if (r.marks.length !== 1) fails.push(`${at}: ${r.marks.length} wordmarks in the nav`);

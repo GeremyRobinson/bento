@@ -50,13 +50,13 @@ html:has(.screen) body{overflow:hidden}
 .srow .sdot.done{background:var(--tint)}
 .srow.soon{opacity:.5}
 /* ListGroup (master): a chapter as an accordion. Its rows sit in a slightly darker panel nested under the head, corners
-   concentric with the rows' pills; the panel grows open and folds shut at the list highlight's speed (G 2026-10-07) */
-.sgroup{--nest-pad:var(--sp-1);--row-h:46px}
+   concentric with the rows' pills, the same 8px between rows as round the panel's edge (G 2026-10-07); the panel grows open and folds shut at the list highlight's speed (G 2026-10-07) */
+.sgroup{--nest-pad:var(--sp-2);--row-h:46px}
 .sgroup-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--m-close) var(--m-ease),visibility 0s var(--m-close)}
 .sgroup.open>.sgroup-body{grid-template-rows:1fr;transition:grid-template-rows var(--m-close) var(--m-ease)}
 .sgroup:not(.open)>.sgroup-body{visibility:hidden}
 .sgroup-in{min-height:0;overflow:hidden}
-.sgroup-panel{display:grid;margin-top:var(--sp-1);padding:var(--nest-pad);background:var(--surf-nest);border-radius:calc(var(--row-h) / 2 + var(--nest-pad))}
+.sgroup-panel{display:grid;gap:var(--nest-pad);margin-top:var(--sp-1);padding:var(--nest-pad);background:var(--surf-nest);border-radius:calc(var(--row-h) / 2 + var(--nest-pad))}
 .sgroup.open{padding-bottom:var(--sp-1)}
 .sgroup .srow.sles{min-height:var(--row-h)}
 .sfoot{padding:var(--sp-3) var(--sp-2) calc(var(--sp-1) + var(--sp-3));position:sticky;bottom:calc(var(--panel-w,1px) - var(--sp-3));background:var(--surf-1,var(--well));z-index:var(--z-up)}
