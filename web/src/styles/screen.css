@@ -38,7 +38,8 @@ html:has(.screen) body{overflow:hidden}
 :root[data-motion="reduce"] .srow::before{transition-duration:var(--m-calm)!important}
 .srow.chap.holds .sname b::after{content:"";display:inline-block;width:6px;height:6px;margin-left:var(--sp-2);border-radius:var(--r-round);background:var(--ink);vertical-align:middle}
 .srow{position:relative;z-index:var(--z-up);display:flex;align-items:center;gap:var(--sp-3);width:100%;min-height:var(--float-h);padding:var(--sp-2) 18px;border-radius:var(--r-pill);text-align:left;font-size:var(--fz-md);transition:background var(--m-swap) var(--m-ease),color var(--m-swap) var(--m-ease)}
-@media (hover:hover){.srow:not([disabled]):not(.on):hover{background:oklch(from var(--hue) .6 .15 h / .08)}}
+/* hover lifts a row one glass layer above what it sits on: list rows to --g2, lessons (on --g3) to --g4 */
+@media (hover:hover){.srow:not([disabled]):not(.on):hover{background:var(--g2,var(--hover))} .sgroup .srow.sles:not([disabled]):not(.on):hover{background:var(--g4,var(--hover))}}
 .srow .sname{flex:1;min-width:0;display:grid}
 .srow .sname b{font-weight:var(--w-mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* a long name wraps to a second line rather than losing its end (v44 sweep item 8) */
