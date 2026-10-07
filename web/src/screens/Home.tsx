@@ -57,6 +57,8 @@ function GradeHome({ g }: { g: number }) {
       <header className="shead">
         <GradeNum grade={g} />
         <h1 className="vh">{grade.name}</h1>
+        {/* the grade's check-up sits beside its number, top right (G 2026-10-07) */}
+        {testReady(g) && <Pill small className="scheck" onClick={() => startTest(testKey(g))}>{GRADE_CHECKUP}</Pill>}
       </header>
       <button className={`srow${pick === "today" ? " on" : ""}`} aria-current={pick === "today" ? "true" : undefined} onClick={() => select("today")}>
         <span className="sname"><b>Today</b></span><small className="smeta">{todayMeta(progress, g)}</small>
@@ -84,7 +86,6 @@ function GradeHome({ g }: { g: number }) {
           </ListGroup>
         );
       })}
-      {testReady(g) && <div className="sfoot"><Pill onClick={() => startTest(testKey(g))}>{GRADE_CHECKUP}</Pill></div>}
     </>
   );
 

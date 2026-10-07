@@ -19,108 +19,124 @@
    2. Pictures use fixed ROLES, the same in every grade ("Same everywhere"): part 1 blue, part 2 orange, part 3 deep
       violet, the unknown amber, the whole ink, the frame grey, right/wrong green/red. Pictures never read the grade hue. */
 
-/* Grade (master): every grade is an instance; a grade's line overrides only what it changes. */
-:is(.wrap,.gpal){--master-hue:#3b82f6;--master-h1:#01409c;--master-h2:#0755c5;--master-h3:#276ee0;--master-hd1:#6da4fe;--master-hd2:#92bcff;--master-hd3:#b7d3fe}
-:is(.wrap,.gpal){--hue:var(--master-hue);--h1:var(--master-h1);--h2:var(--master-h2);--h3:var(--master-h3);--hd1:var(--master-hd1);--hd2:var(--master-hd2);--hd3:var(--master-hd3)}
-:is(.wrap,.gpal)[data-grade="0"]{--hue:#f59e0b;--h1:#653e00;--h2:#825203;--h3:#a16602;--hd1:#e19007;--hd2:#fca51e;--hd3:#ffc580}
-:is(.wrap,.gpal)[data-grade="1"]{--hue:#16a34a;--h1:#015723;--h2:#02712f;--h3:#048c3c;--hd1:#43c166;--hd2:#5dd87c;--hd3:#76ef92}
-:is(.wrap,.gpal)[data-grade="2"]{--hue:#0891b2;--h1:#025064;--h2:#066880;--h3:#02819f;--hd1:#43b4d6;--hd2:#5dcbed;--hd3:#85e0fe}
-:is(.wrap,.gpal)[data-grade="3"]{--hue:#db2777;--h1:#850043;--h2:#ab0158;--h3:#d0156e;--hd1:#ff689e;--hd2:#fe96b6;--hd3:#febcce}
-:is(.wrap,.gpal)[data-grade="4"]{--hue:#2563eb;--h1:#0036b0;--h2:#104dd4;--h3:#2968f0;--hd1:#74a2fe;--hd2:#97baff;--hd3:#bad2fe}
-:is(.wrap,.gpal)[data-grade="5"]{--hue:#3b82f6;--h1:#01409c;--h2:#0755c5;--h3:#276ee0;--hd1:#6da4fe;--hd2:#92bcff;--hd3:#b7d3fe}
-:is(.wrap,.gpal)[data-grade="6"]{--hue:#0f766e;--h1:#00544e;--h2:#006d65;--h3:#27857c;--hd1:#5fb6ad;--hd2:#75cdc3;--hd3:#8ce4da}
-:is(.wrap,.gpal)[data-grade="7"]{--hue:#4f46e5;--h1:#3817be;--h2:#483bda;--h3:#5b57f6;--hd1:#8e9aff;--hd2:#a9b4fe;--hd3:#c5cefe}
-:is(.wrap,.gpal)[data-grade="8"]{--hue:#ea580c;--h1:#7b2901;--h2:#9e3802;--h3:#c24604;--hd1:#ff763f;--hd2:#ff9e7a;--hd3:#ffc1aa}
-:is(.wrap,.gpal)[data-grade="9"]{--hue:#2563eb;--h1:#0036b0;--h2:#104dd4;--h3:#2968f0;--hd1:#74a2fe;--hd2:#97baff;--hd3:#bad2fe}
-:is(.wrap,.gpal)[data-grade="10"]{--hue:#0369a1;--h1:#024c76;--h2:#016399;--h3:#247bb4;--hd1:#5bade9;--hd2:#74c3ff;--hd3:#a6d8ff}
-:is(.wrap,.gpal)[data-grade="11"]{--hue:#7c3aed;--h1:#5403b0;--h2:#6c1ed7;--h3:#8141f4;--hd1:#aa8fff;--hd2:#bdacff;--hd3:#d2c9fe}
-:is(.wrap,.gpal)[data-grade="12"]{--hue:#c026d3;--h1:#730080;--h2:#9500a5;--h3:#b512c8;--hd1:#db76e8;--hd2:#e29deb;--hd3:#eac0ef}
+/* Grade (master): every grade is one hue angle, --gh (G 2026-10-07, Design's colour fix). Every step is made from it by
+   one rule, so each grade's buttons and text carry the same strength in light and dark: 13 angles spaced round the
+   wheel so neighbouring grades never look alike, with no green or red (those mean right and wrong). K-2 warm and bright,
+   9-12 deep and cool; --vib/--calm (below) do the rest. */
+:is(.wrap,.gpal){--gh:250;
+  --hue:oklch(.6 .15 var(--gh));
+  --h1:oklch(.4 .14 var(--gh));--h2:oklch(.46 .14 var(--gh));--h3:oklch(.52 .14 var(--gh));
+  --hd1:oklch(.75 .12 var(--gh));--hd2:oklch(.81 .1 var(--gh));--hd3:oklch(.87 .075 var(--gh))}
+/* the grade colours from the live site (G 06:30: "they were more fun looking"); the hue of each, the ladder and pictures follow by rule */
+:is(.wrap,.gpal)[data-grade="0"]{--gh:70}
+:is(.wrap,.gpal)[data-grade="1"]{--gh:149}
+:is(.wrap,.gpal)[data-grade="2"]{--gh:222}
+:is(.wrap,.gpal)[data-grade="3"]{--gh:1}
+:is(.wrap,.gpal)[data-grade="4"]{--gh:263}
+:is(.wrap,.gpal)[data-grade="5"]{--gh:260}
+:is(.wrap,.gpal)[data-grade="6"]{--gh:186}
+:is(.wrap,.gpal)[data-grade="7"]{--gh:277}
+:is(.wrap,.gpal)[data-grade="8"]{--gh:41}
+:is(.wrap,.gpal)[data-grade="9"]{--gh:263}
+:is(.wrap,.gpal)[data-grade="10"]{--gh:243}
+:is(.wrap,.gpal)[data-grade="11"]{--gh:293}
+:is(.wrap,.gpal)[data-grade="12"]{--gh:323}
 /* no grade chosen yet: the neutral look, ink only */
 :is(.wrap,.gpal)[data-grade="none"]{--hue:var(--text);--h1:var(--text);--h2:var(--text);--h3:var(--text);--hd1:var(--text);--hd2:var(--text);--hd3:var(--text)}
 
+/* brighter in the early grades, calmer as the years go on (G 2026-10-07): --vib scales how much hue the surfaces
+   carry, --calm softens the lesson's own colour from 6th grade up */
+.wrap{--vib:1;--calm:1}
+.wrap[data-grade="0"]{--vib:1.15} .wrap[data-grade="1"]{--vib:1.5} .wrap[data-grade="2"]{--vib:1.4} .wrap[data-grade="3"]{--vib:1.2}
+.wrap[data-grade="4"]{--vib:1.8}
+/* in dark mode the warm grades (red, tangerine, amber, yellow) turn brown when their rungs keep full colour, so their dark ladder takes less (G 06:24) */
+.wrap[data-grade="0"]{--dvib:.4} .wrap[data-grade="8"]{--dvib:.55} .wrap[data-grade="6"]{--vib:.9;--calm:.92} .wrap[data-grade="7"]{--vib:.8;--calm:.86}
+.wrap[data-grade="8"]{--vib:.75;--calm:.8} .wrap[data-grade="9"]{--vib:.65;--calm:.74} .wrap[data-grade="10"]{--vib:.6;--calm:.68}
+.wrap[data-grade="11"]{--vib:.55;--calm:.62} .wrap[data-grade="12"]{--vib:.5;--calm:.56}
 /* the lesson's step of the hue: --tint fills and draws, --ink is text in the hue (the light steps read on white) */
-.wrap{--tint:var(--h2)}
-.t0{--tint:var(--h2)} .t1{--tint:var(--h1)} .t2{--tint:var(--h3)} .t3{--tint:var(--h2)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--tint:var(--hd1)} :root:not([data-theme="light"]) .t0{--tint:var(--hd1)} :root:not([data-theme="light"]) .t1{--tint:var(--hd2)} :root:not([data-theme="light"]) .t2{--tint:var(--hd3)} :root:not([data-theme="light"]) .t3{--tint:var(--hd1)}}
-:root[data-theme="dark"] .wrap{--tint:var(--hd1)} :root[data-theme="dark"] .t0{--tint:var(--hd1)} :root[data-theme="dark"] .t1{--tint:var(--hd2)} :root[data-theme="dark"] .t2{--tint:var(--hd3)} :root[data-theme="dark"] .t3{--tint:var(--hd1)}
+.wrap{--tint:oklch(from var(--h2) l calc(c * var(--calm)) h)}
+.t0{--tint:oklch(from var(--h2) l calc(c * var(--calm)) h)} .t1{--tint:oklch(from var(--h1) l calc(c * var(--calm)) h)} .t2{--tint:oklch(from var(--h3) l calc(c * var(--calm)) h)} .t3{--tint:oklch(from var(--h2) l calc(c * var(--calm)) h)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--tint:oklch(from var(--hd1) l calc(c * var(--calm)) h)} :root:not([data-theme="light"]) .t0{--tint:oklch(from var(--hd1) l calc(c * var(--calm)) h)} :root:not([data-theme="light"]) .t1{--tint:oklch(from var(--hd2) l calc(c * var(--calm)) h)} :root:not([data-theme="light"]) .t2{--tint:oklch(from var(--hd3) l calc(c * var(--calm)) h)} :root:not([data-theme="light"]) .t3{--tint:oklch(from var(--hd1) l calc(c * var(--calm)) h)}}
+:root[data-theme="dark"] .wrap{--tint:oklch(from var(--hd1) l calc(c * var(--calm)) h)} :root[data-theme="dark"] .t0{--tint:oklch(from var(--hd1) l calc(c * var(--calm)) h)} :root[data-theme="dark"] .t1{--tint:oklch(from var(--hd2) l calc(c * var(--calm)) h)} :root[data-theme="dark"] .t2{--tint:oklch(from var(--hd3) l calc(c * var(--calm)) h)} :root[data-theme="dark"] .t3{--tint:oklch(from var(--hd1) l calc(c * var(--calm)) h)}
 .wrap,.wrap *{--ink:var(--tint);--display:var(--tint);--tint-soft:color-mix(in oklab,var(--tint) 11%,var(--card))}
 /* a switch that's off is the grade's quiet shade, never grey (Review off-hue 8) */
 .wrap{--sw-off:color-mix(in oklab,var(--tint) 18%,var(--well))}
 /* a panel nested in a list (ListGroup): a step deeper than the list, in the grade's hue */
-.wrap{--surf-nest:color-mix(in oklab,var(--tint) 8%,var(--surf-1,var(--well)))}
+.wrap{--surf-nest:color-mix(in oklab,var(--tint) 8%,var(--surf-1,var(--well)));--surf-sub:color-mix(in oklab,var(--tint) 8%,var(--surf-nest))}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--on-tint:#14161b}}
 :root[data-theme="dark"] .wrap{--on-tint:#14161b}
 
-/* the greys lean into the hue too, so a blue grade is blue all the way through (never a flat grey). Light: */
+/* the greys are shades of the grade's one hue (G 2026-10-07: "one hue for the ui color on that grade with different
+   shades", every grade 04:46; "levels to the panels", "everything is tinted" 04:55): panels are near-neutral steps of lightness with only a hint of the hue; the hue itself is for what you pick, open and press. Panels stack like tinted glass (G 05:08; 5 points of lightness between rungs, G 05:12): one ladder, --g1..--g4, the same hue at rising saturation; every panel and every highlight takes a rung of it, so they all match (G 05:09): each layer in adds a step of the hue, so the deeper you go the more saturated it reads. In dark a nested panel steps lighter, never down toward black ("nesting gets too dark"), never a blue-grey mixed with it. Light: */
 .wrap:not([data-grade="none"]){
-  --muted:color-mix(in oklab,var(--h1) 30%,#5a6070); --faint:color-mix(in oklab,var(--hue) 22%,#c9ccd4);
-  --rule:color-mix(in oklab,var(--hue) 14%,#e4e6eb); --well:color-mix(in oklab,var(--hue) 7%,#f3f4f7);
-  --hover:color-mix(in oklab,var(--hue) 10%,#eef0f4); --page:color-mix(in oklab,var(--hue) 4%,#fbfbfd)}
+  --text:oklch(from var(--hue) .23 calc(0.012 * var(--vib)) h); --muted:oklch(from var(--hue) .44 calc(0.02 * var(--vib)) h); --faint:oklch(from var(--hue) .83 calc(0.016 * var(--vib)) h);
+  --rule:oklch(from var(--hue) .91 calc(0.012 * var(--vib)) h); --hover:oklch(from var(--hue) 0.93 calc(0.03 * var(--vib)) h); --well:oklch(from var(--hue) 0.955 calc(0.016 * var(--vib)) h);
+  --card:oklch(from var(--hue) 0.995 calc(0.004 * var(--vib)) h); --page:oklch(from var(--hue) 0.985 calc(0.005 * var(--vib)) h);
+  --surf-nest:oklch(from var(--hue) 0.925 calc(0.032 * var(--vib)) h); --surf-btn:oklch(from var(--hue) 0.935 calc(0.03 * var(--vib)) h); --surf-sub:oklch(from var(--hue) 0.895 calc(0.05 * var(--vib)) h);
+  --g1:oklch(from var(--hue) .935 calc(.018 * var(--vib)) h); --g2:oklch(from var(--hue) .885 calc(.035 * var(--vib)) h); --g3:oklch(from var(--hue) .835 calc(.055 * var(--lvib, var(--vib))) h); --g4:oklch(from var(--hue) .785 calc(.075 * var(--lvib, var(--vib))) h);
+  --well:var(--g1); --surf-nest:var(--g2); --surf-sub:var(--g3); --surf-btn:var(--btn-card); --hover:var(--g2); --faint:oklch(from var(--hue) .8 calc(.06 * var(--vib)) h); --btn:var(--g1); --btn-hover:var(--g2); --btn-card:var(--g1); --pane-plain:var(--card); --pane-glass:var(--g1); --btn-card-hover:var(--g2); --btn-panel:var(--g2); --btn-panel-hover:var(--g3)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap:not([data-grade="none"]){
-  --muted:color-mix(in oklab,var(--hd2) 30%,#979eae); --faint:color-mix(in oklab,var(--hue) 25%,#4a4f5c);
-  --rule:color-mix(in oklab,var(--hue) 16%,#2b2f38); --well:color-mix(in oklab,var(--hue) 9%,#15181e);
-  --card:color-mix(in oklab,var(--hue) 9%,#1e2129); --hover:color-mix(in oklab,var(--hue) 14%,#262a33); --page:color-mix(in oklab,var(--hue) 6%,#0c0e12)}}
+  --text:oklch(from var(--hue) .95 calc(0.006 * var(--dvib, var(--vib))) h); --muted:oklch(from var(--hue) .74 calc(0.018 * var(--dvib, var(--vib))) h); --faint:oklch(from var(--hue) .42 calc(0.016 * var(--dvib, var(--vib))) h);
+  --rule:oklch(from var(--hue) .31 calc(0.014 * var(--dvib, var(--vib))) h); --hover:oklch(from var(--hue) 0.29 calc(0.04 * var(--dvib, var(--vib))) h); --well:oklch(from var(--hue) 0.2 calc(0.02 * var(--dvib, var(--vib))) h);
+  --card:oklch(from var(--hue) 0.255 calc(0.026 * var(--dvib, var(--vib))) h); --page:oklch(from var(--hue) 0.135 calc(0.008 * var(--dvib, var(--vib))) h);
+  --surf-nest:oklch(from var(--hue) 0.24 calc(0.036 * var(--dvib, var(--vib))) h); --surf-btn:oklch(from var(--hue) 0.32 calc(0.045 * var(--dvib, var(--vib))) h); --surf-sub:oklch(from var(--hue) 0.28 calc(0.052 * var(--dvib, var(--vib))) h); --on-tint:oklch(from var(--hue) .18 calc(0.01 * var(--dvib, var(--vib))) h);
+  --g1:oklch(from var(--hue) .185 calc(.02 * var(--dvib, var(--vib))) h); --g2:oklch(from var(--hue) .235 calc(.036 * var(--dvib, var(--vib))) h); --g3:oklch(from var(--hue) .285 calc(.055 * var(--dvib, var(--lvib, var(--vib)))) h); --g4:oklch(from var(--hue) .335 calc(.075 * var(--dvib, var(--lvib, var(--vib)))) h);
+  --well:var(--g1); --surf-nest:var(--g2); --surf-sub:var(--g3); --surf-btn:var(--btn-card); --hover:var(--g2); --faint:oklch(from var(--hue) .45 calc(.06 * var(--dvib, var(--vib))) h); --btn:var(--g1); --btn-hover:var(--g2); --btn-card:var(--g3); --pane-plain:oklch(from var(--hue) .19 .006 h); --pane-glass:var(--g2); --btn-card-hover:var(--g4); --btn-panel:var(--g3); --btn-panel-hover:var(--g4)}}
 :root[data-theme="dark"] .wrap:not([data-grade="none"]){
-  --muted:color-mix(in oklab,var(--hd2) 30%,#979eae); --faint:color-mix(in oklab,var(--hue) 25%,#4a4f5c);
-  --rule:color-mix(in oklab,var(--hue) 16%,#2b2f38); --well:color-mix(in oklab,var(--hue) 9%,#15181e);
-  --card:color-mix(in oklab,var(--hue) 9%,#1e2129); --hover:color-mix(in oklab,var(--hue) 14%,#262a33); --page:color-mix(in oklab,var(--hue) 6%,#0c0e12)}
+  --text:oklch(from var(--hue) .95 calc(0.006 * var(--dvib, var(--vib))) h); --muted:oklch(from var(--hue) .74 calc(0.018 * var(--dvib, var(--vib))) h); --faint:oklch(from var(--hue) .42 calc(0.016 * var(--dvib, var(--vib))) h);
+  --rule:oklch(from var(--hue) .31 calc(0.014 * var(--dvib, var(--vib))) h); --hover:oklch(from var(--hue) 0.29 calc(0.04 * var(--dvib, var(--vib))) h); --well:oklch(from var(--hue) 0.2 calc(0.02 * var(--dvib, var(--vib))) h);
+  --card:oklch(from var(--hue) 0.255 calc(0.026 * var(--dvib, var(--vib))) h); --page:oklch(from var(--hue) 0.135 calc(0.008 * var(--dvib, var(--vib))) h);
+  --surf-nest:oklch(from var(--hue) 0.24 calc(0.036 * var(--dvib, var(--vib))) h); --surf-btn:oklch(from var(--hue) 0.32 calc(0.045 * var(--dvib, var(--vib))) h); --surf-sub:oklch(from var(--hue) 0.28 calc(0.052 * var(--dvib, var(--vib))) h); --on-tint:oklch(from var(--hue) .18 calc(0.01 * var(--dvib, var(--vib))) h);
+  --g1:oklch(from var(--hue) .185 calc(.02 * var(--dvib, var(--vib))) h); --g2:oklch(from var(--hue) .235 calc(.036 * var(--dvib, var(--vib))) h); --g3:oklch(from var(--hue) .285 calc(.055 * var(--dvib, var(--lvib, var(--vib)))) h); --g4:oklch(from var(--hue) .335 calc(.075 * var(--dvib, var(--lvib, var(--vib)))) h);
+  --well:var(--g1); --surf-nest:var(--g2); --surf-sub:var(--g3); --surf-btn:var(--btn-card); --hover:var(--g2); --faint:oklch(from var(--hue) .45 calc(.06 * var(--dvib, var(--vib))) h); --btn:var(--g1); --btn-hover:var(--g2); --btn-card:var(--g3); --pane-plain:oklch(from var(--hue) .19 .006 h); --pane-glass:var(--g2); --btn-card-hover:var(--g4); --btn-panel:var(--g3); --btn-panel-hover:var(--g4)}
+/* buttons are glass too (G 05:17, "all buttons, even floating ones"): a button sits one rung up from the surface under it and its hover one more; the nav island and its round buttons stay plain so the grade and progress read clearly (G 05:26). The top two rungs keep the early grades' extra colour so they stay clean, not dusty (G 05:28); only 3rd's teal is held back (--lvib), since teal at that lightness already reads as paint (G 05:23) */
 /* the page behind the app takes the same wash (App puts the grade's hue on <html>) */
-html[data-hue]{--page:color-mix(in oklab,var(--page-hue) 4%,#fbfbfd)}
-@media (prefers-color-scheme: dark){html[data-hue]:not([data-theme="light"]){--page:color-mix(in oklab,var(--page-hue) 6%,#0c0e12)}}
-html[data-hue][data-theme="dark"]{--page:color-mix(in oklab,var(--page-hue) 6%,#0c0e12)}
+html[data-hue]{--page:oklch(from var(--page-hue) .983 .007 h);--rule:oklch(from var(--page-hue) .91 .025 h)}
+@media (prefers-color-scheme: dark){html[data-hue]:not([data-theme="light"]){--page:oklch(from var(--page-hue) .165 .018 h);--rule:oklch(from var(--page-hue) .31 .035 h)}}
+html[data-hue][data-theme="dark"]{--page:oklch(from var(--page-hue) .165 .018 h);--rule:oklch(from var(--page-hue) .31 .035 h)}
 
 /* ---- picture colors (G 2026-10-06: "colorful, different across diagrams, like the live site") ----
    Every grade brings its own picture palette, and each lesson's picture takes one of its three colors (App's .t0/.t1/.t2).
    The lesson UI around the picture stays monochrome in the grade hue (--h*, above). Coins keep real coin colors. */
-:is(.wrap,.gpal)[data-grade="0"]{--l0:#f59e0b;--l1:#ec4899;--l2:#8b5cf6;--la:#3b82f6}
-:is(.wrap,.gpal)[data-grade="1"]{--l0:#16a34a;--l1:#0ea5e9;--l2:#f97316;--la:#a855f7}
-:is(.wrap,.gpal)[data-grade="2"]{--l0:#0891b2;--l1:#6366f1;--l2:#f97316;--la:#eab308}
-:is(.wrap,.gpal)[data-grade="3"]{--l0:#db2777;--l1:#9333ea;--l2:#f59e0b;--la:#0ea5e9}
-:is(.wrap,.gpal)[data-grade="4"]{--l0:#2563eb;--l1:#0d9488;--l2:#9333ea;--la:#f59e0b}
-:is(.wrap,.gpal)[data-grade="5"]{--l0:#3b82f6;--l1:#ec4899;--l2:#8b5cf6;--la:#f59e0b}
-:is(.wrap,.gpal)[data-grade="6"]{--l0:#0f766e;--l1:#db2777;--l2:#ea580c;--la:#0284c7}
-:is(.wrap,.gpal)[data-grade="7"]{--l0:#4f46e5;--l1:#0891b2;--l2:#c026d3;--la:#f59e0b}
-:is(.wrap,.gpal)[data-grade="8"]{--l0:#ea580c;--l1:#ca8a04;--l2:#7c3aed;--la:#0891b2}
-:is(.wrap,.gpal)[data-grade="9"]{--l0:#2563eb;--l1:#7c3aed;--l2:#0d9488;--la:#f97316}
-:is(.wrap,.gpal)[data-grade="10"]{--l0:#0369a1;--l1:#b45309;--l2:#475569;--la:#db2777}
-:is(.wrap,.gpal)[data-grade="11"]{--l0:#7c3aed;--l1:#c026d3;--l2:#2563eb;--la:#f59e0b}
-:is(.wrap,.gpal)[data-grade="12"]{--l0:#c026d3;--l1:#0f766e;--l2:#1e3a8a;--la:#f59e0b}
+/* Picture colours (G 06:11-06:12: "1 set of colours each grade with varying depths", "the opposite of the grade colour",
+   "basically the glass ladder but invert for the grade color"). A grade's pictures use ONE hue, the opposite of the grade's
+   UI hue on the colour wheel (moved off red, which means wrong), in three depths: deep (l0), mid (l1), light (l2). In dark
+   mode the ladder flips so the brightest depth leads. The answer stays amber, except where the pictures are themselves
+   warm (amber/orange/yellow); there the answer turns cyan so it still pops. */
+:is(.wrap,.gpal)[data-grade="0"]{--l0:#008ff4;--l1:#60b0ff;--l2:#9cccff;--la:#f8b500} /* grade 70: pictures 250 (opposite), answer amber */
+:is(.wrap,.gpal)[data-grade="1"]{--l0:#e300e0;--l1:#ff57fa;--l2:#ffa0f9;--la:#f8b500} /* grade 149: pictures 329 (opposite), answer amber */
+:is(.wrap,.gpal)[data-grade="2"]{--l0:#cf7000;--l1:#fb8900;--l2:#ffb57b;--la:#04bac9} /* grade 222: pictures 58 (opposite, moved off red), answer cyan (the pictures are already warm) */
+:is(.wrap,.gpal)[data-grade="3"]{--l0:#00a290;--l1:#00c6b0;--l2:#00e6cd;--la:#f8b500} /* grade 1: pictures 181 (opposite), answer amber */
+:is(.wrap,.gpal)[data-grade="4"]{--l0:#b38300;--l1:#d9a000;--l2:#fdbb00;--la:#04bac9} /* grade 263: pictures 83 (opposite), answer cyan (the pictures are already warm) */
+:is(.wrap,.gpal)[data-grade="5"]{--l0:#b68100;--l1:#dd9e00;--l2:#ffb920;--la:#04bac9} /* grade 260: pictures 80 (opposite), answer cyan (the pictures are already warm) */
+:is(.wrap,.gpal)[data-grade="6"]{--l0:#fe0074;--l1:#ff789b;--l2:#ffacbd;--la:#f8b500} /* grade 186: pictures 6 (opposite), answer amber */
+:is(.wrap,.gpal)[data-grade="7"]{--l0:#b08400;--l1:#d6a200;--l2:#fabd00;--la:#04bac9} /* grade 277: pictures 85 (opposite, moved off olive to gold), answer cyan (the pictures are already warm) */
+:is(.wrap,.gpal)[data-grade="8"]{--l0:#009cbe;--l1:#00bde7;--l2:#5bd9ff;--la:#f8b500} /* grade 41: pictures 221 (opposite), answer amber */
+:is(.wrap,.gpal)[data-grade="9"]{--l0:#b38300;--l1:#d9a000;--l2:#fdbb00;--la:#04bac9} /* grade 263: pictures 83 (opposite), answer cyan (the pictures are already warm) */
+:is(.wrap,.gpal)[data-grade="10"]{--l0:#c97500;--l1:#f38f00;--l2:#ffb571;--la:#04bac9} /* grade 243: pictures 63 (opposite), answer cyan (the pictures are already warm) */
+:is(.wrap,.gpal)[data-grade="11"]{--l0:#689f00;--l1:#7fc200;--l2:#95e200;--la:#f8b500} /* grade 293: pictures 130 (opposite, moved off olive to green), answer amber */
+:is(.wrap,.gpal)[data-grade="12"]{--l0:#00aa11;--l1:#00cf17;--l2:#00f11d;--la:#f8b500} /* grade 323: pictures 143 (opposite), answer amber */
 /* Grade (master): every grade is an instance of this one. A grade's line above overrides only what it changes;
    anything it leaves out comes from here. */
 :is(.wrap,.gpal){--master-l0:#3b82f6;--master-l1:#ec4899;--master-l2:#8b5cf6;--master-la:#f59e0b;--master-k0:#2d69cc;--master-k1:#d63187;--master-k2:#7950d6}
-:is(.wrap,.gpal){--l0:var(--master-l0);--l1:var(--master-l1);--l2:var(--master-l2);--la:var(--master-la);--c0:var(--l0);--c1:var(--l1);--c2:var(--l2);--acc:var(--la)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal){--c0:color-mix(in srgb,var(--l0) 75%,white);--c1:color-mix(in srgb,var(--l1) 75%,white);--c2:color-mix(in srgb,var(--l2) 75%,white);--acc:color-mix(in srgb,var(--la) 80%,white)}}
-/* the darkest grade colours need a little more lift to read on dark cards (lines 3:1 on the raised picture tile) */
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="7"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="8"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="9"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="10"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="11"]{--c0:color-mix(in srgb,var(--l0) 70%,white);--c1:color-mix(in srgb,var(--l1) 70%,white);--c2:color-mix(in srgb,var(--l2) 70%,white)}}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="12"]{--c0:color-mix(in srgb,var(--l0) 60%,white);--c1:color-mix(in srgb,var(--l1) 60%,white);--c2:color-mix(in srgb,var(--l2) 60%,white)}}
+/* pictures are the bright part (G 05:41, 05:43: "make every one of them super bright no matter what the color is"): every picture
+   colour keeps only its hue from the grade trio and is set to one bright lightness at full saturation (the browser keeps it
+   in gamut), in every grade and both modes. Inks (the colour as text) are the same hue, deep enough to read on white. */
+:is(.wrap,.gpal){--l0:var(--master-l0);--l1:var(--master-l1);--l2:var(--master-l2);--la:var(--master-la);--c0:oklch(from var(--l0) l .26 h);--c1:oklch(from var(--l1) l .2 h);--c2:oklch(from var(--l2) l .14 h);--acc:oklch(from var(--la) .8 .2 h)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal){--c0:oklch(from var(--l0) .82 .2 h);--c1:oklch(from var(--l1) .7 .2 h);--c2:oklch(from var(--l2) .58 .17 h);--acc:oklch(from var(--la) .86 .3 h);--k0:var(--c0);--k1:var(--c1);--k2:var(--c2);--ka:var(--acc)}}
+:root[data-theme="dark"] :is(.wrap,.gpal){--c0:oklch(from var(--l0) .82 .2 h);--c1:oklch(from var(--l1) .7 .2 h);--c2:oklch(from var(--l2) .58 .17 h);--acc:oklch(from var(--la) .86 .3 h);--k0:var(--c0);--k1:var(--c1);--k2:var(--c2);--ka:var(--acc)}
 :is(.wrap,.gpal){--k0:var(--master-k0);--k1:var(--master-k1);--k2:var(--master-k2)}
-:is(.wrap,.gpal)[data-grade="0"]{--k0:#9a6307;--k1:#bb3979;--k2:#8757f1}
-:is(.wrap,.gpal)[data-grade="1"]{--k0:#117c38;--k1:#0973a3;--k2:#b05110}
-:is(.wrap,.gpal)[data-grade="2"]{--k0:#077590;--k1:#595cd9;--k2:#b05110}
-:is(.wrap,.gpal)[data-grade="3"]{--k0:#c5236b;--k1:#9032e5;--k2:#9a6307}
-:is(.wrap,.gpal)[data-grade="4"]{--k0:#2460e4;--k1:#0a7970;--k2:#9333ea}
-:is(.wrap,.gpal)[data-grade="5"]{--k0:#306ac9;--k1:#d63187;--k2:#7950d7}
-:is(.wrap,.gpal)[data-grade="6"]{--k0:#0f766e;--k1:#db2777;--k2:#b94609}
-:is(.wrap,.gpal)[data-grade="7"]{--k0:#4f46e5;--k1:#077590;--k2:#c026d3}
-:is(.wrap,.gpal)[data-grade="8"]{--k0:#b94609;--k1:#9f6c06;--k2:#7c3aed}
-:is(.wrap,.gpal)[data-grade="9"]{--k0:#2460e4;--k1:#7c3aed;--k2:#0a7970}
-:is(.wrap,.gpal)[data-grade="10"]{--k0:#0369a1;--k1:#ab4f09;--k2:#475569}
-:is(.wrap,.gpal)[data-grade="11"]{--k0:#7c3aed;--k1:#af23c0;--k2:#2460e4}
-:is(.wrap,.gpal)[data-grade="12"]{--k0:#c026d3;--k1:#0f766e;--k2:#1e3a8a}
-/* --ka: the accent as text (the thing to look at, the unknown): --la darkened to 4.5:1 on white; dark mode reads --acc */
-:is(.wrap,.gpal){--ka:#a46a07}
-:is(.wrap,.gpal)[data-grade="0"]{--ka:#3371d6} :is(.wrap,.gpal)[data-grade="1"]{--ka:#994de1} :is(.wrap,.gpal)[data-grade="2"]{--ka:#916f05}
-:is(.wrap,.gpal)[data-grade="3"]{--ka:#0b7caf} :is(.wrap,.gpal)[data-grade="6"]{--ka:#027bb9} :is(.wrap,.gpal)[data-grade="8"]{--ka:#07809d}
-:is(.wrap,.gpal)[data-grade="9"]{--ka:#bd5711} :is(.wrap,.gpal)[data-grade="10"]{--ka:#d92776}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal){--k0:var(--c0);--k1:var(--c1);--k2:var(--c2);--ka:var(--acc)}}
-:root[data-theme="dark"] :is(.wrap,.gpal){--c0:color-mix(in srgb,var(--l0) 75%,white);--c1:color-mix(in srgb,var(--l1) 75%,white);--c2:color-mix(in srgb,var(--l2) 75%,white);--acc:color-mix(in srgb,var(--la) 80%,white);--k0:var(--c0);--k1:var(--c1);--k2:var(--c2);--ka:var(--acc)}
-:root[data-theme="dark"] :is(.wrap,.gpal):is([data-grade="7"],[data-grade="8"],[data-grade="9"],[data-grade="10"],[data-grade="11"]){--c0:color-mix(in srgb,var(--l0) 70%,white);--c1:color-mix(in srgb,var(--l1) 70%,white);--c2:color-mix(in srgb,var(--l2) 70%,white)}
-:root[data-theme="dark"] :is(.wrap,.gpal)[data-grade="12"]{--c0:color-mix(in srgb,var(--l0) 60%,white);--c1:color-mix(in srgb,var(--l1) 60%,white);--c2:color-mix(in srgb,var(--l2) 60%,white)}
+:is(.wrap,.gpal){--k0:oklch(from var(--l0) .58 .2 h);--k1:oklch(from var(--l1) .58 .2 h);--k2:oklch(from var(--l2) .58 .2 h)}
+:is(.wrap,.gpal){--ka:oklch(from var(--la) .7 .17 h)} /* the answer in text: bright amber, kept on its own hue so it never reads as the orange picture colour (G 05:46, 06:02) */
 /* inside a picture: the lesson's own picture color, as on the live site */
 :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--tint:var(--c0);--ink:var(--k0)}
 .t1 :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--tint:var(--c1);--ink:var(--k1)}
 .t2 :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--tint:var(--c2);--ink:var(--k2)}
 :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--tint-soft:color-mix(in srgb,var(--tint) 13%,var(--card))}
+/* lines and outlines carry the bold colour; anything filled is dialled back a step so it's easy on the eyes (G 06:10) */
+:is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--on-pic:oklch(from var(--c0) .26 .05 h);--dot:var(--soft);--soft:oklch(from var(--tint) calc(l + .08) calc(c * .6) h);--soft0:oklch(from var(--c0) calc(l + .08) calc(c * .6) h);--soft1:oklch(from var(--c1) calc(l + .08) calc(c * .6) h);--soft2:oklch(from var(--c2) calc(l + .08) calc(c * .6) h);--soft-acc:oklch(from var(--acc) calc(l + .04) calc(c * .7) h)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--on-pic:var(--on-tint);--dot:var(--tint);--soft:oklch(from var(--tint) calc(l - .1) calc(c * .65) h);--soft0:oklch(from var(--c0) calc(l - .1) calc(c * .65) h);--soft1:oklch(from var(--c1) calc(l - .1) calc(c * .65) h);--soft2:oklch(from var(--c2) calc(l - .1) calc(c * .65) h);--soft-acc:oklch(from var(--acc) calc(l - .08) calc(c * .7) h)}}
+:root[data-theme="dark"] :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--on-pic:var(--on-tint);--dot:var(--tint);--soft:oklch(from var(--tint) calc(l - .1) calc(c * .65) h);--soft0:oklch(from var(--c0) calc(l - .1) calc(c * .65) h);--soft1:oklch(from var(--c1) calc(l - .1) calc(c * .65) h);--soft2:oklch(from var(--c2) calc(l - .1) calc(c * .65) h);--soft-acc:oklch(from var(--acc) calc(l - .08) calc(c * .7) h)}
 /* Dark pictures. In dark mode a picture sits on a raised tile (--float), lighter than --card, so inside it every fill
    and line mixes from the tile it is drawn on. Its greys are lifted to read there: lines and outlines (--rule, --faint)
    3:1 or better, small text (--muted) 4.5:1, and an empty part is a tinted box a step lighter than the tile, never a hole.
@@ -133,20 +149,20 @@ html[data-hue][data-theme="dark"]{--page:color-mix(in oklab,var(--page-hue) 6%,#
     --rule:color-mix(in oklab,var(--text) 46%,var(--card)); --faint:color-mix(in oklab,var(--text) 50%,var(--card));
     --muted:color-mix(in oklab,var(--text) 78%,var(--card)); --d-lift:color-mix(in oklab,var(--card) 86%,white);
     --well:color-mix(in oklab,var(--tint) 16%,var(--d-lift));
-    --k0:color-mix(in srgb,var(--c0) 62%,white); --k1:color-mix(in srgb,var(--c1) 62%,white); --k2:color-mix(in srgb,var(--c2) 62%,white);
-    --ka:color-mix(in srgb,var(--acc) 62%,white)}
+    --k0:oklch(from var(--l0) .84 .25 h); --k1:oklch(from var(--l1) .84 .25 h); --k2:oklch(from var(--l2) .84 .25 h);
+    --ka:oklch(from var(--la) .88 .25 h)}
     :root:not([data-theme="light"]) .viz-svg :is(text.onlbl,text.coin-val){stroke:none}
-  :root:not([data-theme="light"]) .viz-svg text{paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round;--lbl:color-mix(in srgb,var(--tint) 62%,white)}
+  :root:not([data-theme="light"]) .viz-svg text{paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round;--lbl:oklch(from var(--tint) .84 .25 h)}
 }
 :root[data-theme="dark"] :is(.lshero,.panel.split .card) :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--card:var(--float)}
 :root[data-theme="dark"] :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){
   --rule:color-mix(in oklab,var(--text) 46%,var(--card)); --faint:color-mix(in oklab,var(--text) 50%,var(--card));
   --muted:color-mix(in oklab,var(--text) 78%,var(--card)); --d-lift:color-mix(in oklab,var(--card) 86%,white);
   --well:color-mix(in oklab,var(--tint) 16%,var(--d-lift));
-  --k0:color-mix(in srgb,var(--c0) 62%,white); --k1:color-mix(in srgb,var(--c1) 62%,white); --k2:color-mix(in srgb,var(--c2) 62%,white);
-  --ka:color-mix(in srgb,var(--acc) 62%,white)}
+  --k0:oklch(from var(--l0) .84 .25 h); --k1:oklch(from var(--l1) .84 .25 h); --k2:oklch(from var(--l2) .84 .25 h);
+  --ka:oklch(from var(--la) .88 .25 h)}
 :root[data-theme="dark"] .viz-svg :is(text.onlbl,text.coin-val){stroke:none}
-:root[data-theme="dark"] .viz-svg text{paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round;--lbl:color-mix(in srgb,var(--tint) 62%,white)}
+:root[data-theme="dark"] .viz-svg text{paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round;--lbl:oklch(from var(--tint) .84 .25 h)}
 
 
 /* ---- the canvas: the page behind the bento. The tiles, type and controls stay the same everywhere; the canvas
@@ -171,8 +187,20 @@ html[data-line="middle"] body{background-image:
 }
 /* the counters stay behind what you read: text that sits straight on the canvas (Learn's intro and steps) gets a
    clean patch of the page under it, feathered at the edge, so no counter lands on a word (v44 sweep item 12) */
-html[data-line="early"] .lintro{background:var(--canvas);box-shadow:none;border-radius:var(--r-lg);outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
+html[data-line="early"] .lintro{background:var(--pane-glass,var(--canvas));box-shadow:none;border-radius:var(--r-lg);outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
 :root[data-line="early"][data-theme="dark"]{--page:#14120f;--canvas:#14120f}
+/* one hue in shades (G 2026-10-07): the playful canvas takes the grade's hue too, its counters all
+   shades of it */
+html[data-line="early"][data-hue]{--page:oklch(from var(--page-hue) .983 .007 h);--canvas:oklch(from var(--page-hue) .983 .007 h)}
+html[data-line="early"][data-hue] body{background-image:
+  radial-gradient(circle at 12% 18%,color-mix(in oklab,var(--page-hue) 14%,transparent) 0 7px,transparent 8px),
+  radial-gradient(circle at 63% 9%,color-mix(in oklab,var(--page-hue) 9%,transparent) 0 5px,transparent 6px),
+  radial-gradient(circle at 86% 54%,color-mix(in oklab,var(--page-hue) 12%,transparent) 0 8px,transparent 9px),
+  radial-gradient(circle at 34% 72%,color-mix(in oklab,var(--page-hue) 8%,transparent) 0 6px,transparent 7px),
+  radial-gradient(circle at 74% 88%,color-mix(in oklab,var(--page-hue) 13%,transparent) 0 4px,transparent 5px),
+  radial-gradient(circle at 4% 92%,color-mix(in oklab,var(--page-hue) 10%,transparent) 0 5px,transparent 6px)}
+@media (prefers-color-scheme: dark){html[data-line="early"][data-hue]:not([data-theme="light"]){--page:oklch(from var(--page-hue) .165 .018 h);--canvas:oklch(from var(--page-hue) .165 .018 h)}}
+html[data-line="early"][data-theme="dark"][data-hue]{--page:oklch(from var(--page-hue) .165 .018 h);--canvas:oklch(from var(--page-hue) .165 .018 h)}
 /* high contrast wants a plain page */
 html[data-contrast="true"] body{background-image:none}
 

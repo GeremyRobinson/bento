@@ -5,8 +5,8 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .viz-svg .ln.thin{opacity:1} :root:not([data-theme="light"]) .viz-svg .pie{stroke:color-mix(in srgb,var(--tint) 40%,transparent)}}
 :root[data-theme="dark"] .viz-svg .ln.thin{opacity:1}
 :root[data-theme="dark"] .viz-svg .pie{stroke:color-mix(in srgb,var(--tint) 40%,transparent)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .viz-svg .seg:not(.on){fill:color-mix(in oklab,var(--tint) 18%,var(--d-lift));stroke:color-mix(in oklab,var(--tint) 80%,var(--mix-lift))}}
-:root[data-theme="dark"] .viz-svg .seg:not(.on){fill:color-mix(in oklab,var(--tint) 18%,var(--d-lift));stroke:color-mix(in oklab,var(--tint) 80%,var(--mix-lift))}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .viz-svg .seg:not(.on){fill:color-mix(in oklab,var(--tint) 14%,var(--card));stroke:color-mix(in oklab,var(--tint) 80%,var(--mix-lift))}}
+:root[data-theme="dark"] .viz-svg .seg:not(.on){fill:color-mix(in oklab,var(--tint) 14%,var(--card));stroke:color-mix(in oklab,var(--tint) 80%,var(--mix-lift))}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .viz-svg .cf.cube{stroke:var(--tint)}}
 :root[data-theme="dark"] .viz-svg .cf.cube{stroke:var(--tint)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .viz-svg .tri.c0{fill:color-mix(in oklab,var(--l0) 62%,var(--card))} :root:not([data-theme="light"]) .viz-svg .tri.c1{fill:color-mix(in oklab,var(--l1) 62%,var(--card))} :root:not([data-theme="light"]) .viz-svg .tri.c2{fill:color-mix(in oklab,var(--l2) 62%,var(--card))}}
@@ -49,5 +49,5 @@
 :root[data-theme="dark"] .pring-fill{stroke:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}
 
 /* from screen.css: a list's nested panel (ListGroup) goes a step deeper in dark too, toward the page */
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--surf-nest:color-mix(in oklab,var(--page) 45%,var(--surf-1,var(--well)))}}
-:root[data-theme="dark"] .wrap{--surf-nest:color-mix(in oklab,var(--page) 45%,var(--surf-1,var(--well)))}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--surf-nest:color-mix(in oklab,var(--page) 45%,var(--surf-1,var(--well)));--surf-sub:color-mix(in oklab,var(--page) 55%,var(--surf-nest))}}
+:root[data-theme="dark"] .wrap{--surf-nest:color-mix(in oklab,var(--page) 45%,var(--surf-1,var(--well)));--surf-sub:color-mix(in oklab,var(--page) 55%,var(--surf-nest))}

@@ -6,7 +6,7 @@
 .mytile .k svg{width:14px;height:14px;color:var(--ink)}
 .mytile h2{font:var(--w-bold) calc(var(--fs) * 1.3)/1.15 var(--sans);letter-spacing:-.02em}
 .mytile .ctl{justify-self:start}
-.mytile .ctl:not(.go){background:var(--card)}
+.mytile .ctl:not(.go){background:var(--btn-panel,var(--card))}
 
 /* the hero: your grade's number, your level charging up behind it, and the one way to switch */
 .myhero{grid-column:1 / -1;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:var(--u);padding:calc(var(--u) * 1.5);min-height:180px}

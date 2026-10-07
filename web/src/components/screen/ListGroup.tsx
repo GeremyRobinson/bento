@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 /**
  * ListGroup (master): a list's chapter as an accordion (G 2026-10-07). The head row opens and closes it; the rows inside
- * sit in a slightly darker panel nested under the head (--surf-nest), and the panel grows open and folds shut with the
+ * sit with the head in one slightly darker panel (--surf-nest), and the panel grows open and folds shut with the
  * list highlight's speed. While it folds shut its rows stay drawn, then leave. Instances say only what differs: the head
  * (a button with aria-expanded) and the rows.
  */
