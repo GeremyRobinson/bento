@@ -59,20 +59,21 @@ html:has(.screen) body{overflow:hidden}
    the head's words never move, at the fold's speed. The current lesson is shaded darker inside it. */
 .slist{--list-gap:var(--sp-2)}
 .slist>:is(.srow,.sgroup)+.sgroup,.slist>.sgroup+.srow{margin-top:var(--list-gap)}
-.sgroup{--row-h:46px;border-radius:calc(var(--row-h) / 2 + var(--list-gap));transition:background-color var(--m-close) var(--m-ease),padding var(--m-close) var(--m-ease),margin var(--m-close) var(--m-ease)}
+.sgroup{--row-h:46px;border-radius:calc(var(--row-h) / 2 + var(--list-gap) * 2);transition:background-color var(--m-close) var(--m-ease),padding var(--m-close) var(--m-ease),margin var(--m-close) var(--m-ease)}
 .sgroup.open{background:var(--surf-nest);margin-inline:calc(var(--list-gap) * -1);padding:var(--list-gap)}
 .sgroup-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--m-close) var(--m-ease),visibility 0s var(--m-close)}
 .sgroup.open>.sgroup-body{grid-template-rows:1fr;transition:grid-template-rows var(--m-close) var(--m-ease)}
 .sgroup:not(.open)>.sgroup-body{visibility:hidden}
 /* the fold's clip is as round as the rows, so its corners stay round while it folds (Review) */
-.sgroup-in{min-height:0;overflow:hidden;border-radius:calc(var(--row-h) / 2)}
+.sgroup-in{min-height:0;overflow:hidden;border-radius:calc(var(--row-h) / 2 + var(--list-gap))}
 /* the picked lesson's shade waits for its chapter to finish opening, then fades in; it never rides up with the panel (Review) */
 .sgroup:is(.opening,:not(.open)) .srow::before{opacity:0}
 .sgroup.opening .srow::before{transition:none}
-.sgroup-panel{display:grid;gap:var(--list-gap);padding-top:var(--list-gap)}
+/* the lessons sit in their own panel nested inside the chapter's, a step darker (G 2026-10-07, "its own separate background nester") */
+.sgroup-panel{display:grid;gap:var(--list-gap);margin-top:var(--list-gap);padding:var(--list-gap);background:var(--surf-sub);border-radius:calc(var(--row-h) / 2 + var(--list-gap))}
 .sgroup .srow.sles{min-height:var(--row-h)}
 /* the current lesson: a darker shade of the panel, never the floating pill (G: "so you know which one you're on") */
-.sgroup .srow.sles::before{background:color-mix(in oklab,var(--tint) 16%,var(--surf-nest));box-shadow:none}
+.sgroup .srow.sles::before{background:color-mix(in oklab,var(--tint) 16%,var(--surf-sub));box-shadow:none}
 /* hovering a lesson lights its dot in the grade's hue (G 2026-10-07) */
 .srow.sles .sdot{transition:background var(--m-swap) var(--m-ease)}
 @media (hover:hover){.srow.sles:not([disabled]):hover .sdot{background:var(--tint)}}

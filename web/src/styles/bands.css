@@ -47,7 +47,7 @@
 /* a switch that's off is the grade's quiet shade, never grey (Review off-hue 8) */
 .wrap{--sw-off:color-mix(in oklab,var(--tint) 18%,var(--well))}
 /* a panel nested in a list (ListGroup): a step deeper than the list, in the grade's hue */
-.wrap{--surf-nest:color-mix(in oklab,var(--tint) 8%,var(--surf-1,var(--well)))}
+.wrap{--surf-nest:color-mix(in oklab,var(--tint) 8%,var(--surf-1,var(--well)));--surf-sub:color-mix(in oklab,var(--tint) 8%,var(--surf-nest))}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--on-tint:#14161b}}
 :root[data-theme="dark"] .wrap{--on-tint:#14161b}
 

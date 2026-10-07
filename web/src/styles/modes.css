@@ -49,5 +49,5 @@
 :root[data-theme="dark"] .pring-fill{stroke:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}
 
 /* from screen.css: a list's nested panel (ListGroup) goes a step deeper in dark too, toward the page */
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--surf-nest:color-mix(in oklab,var(--page) 45%,var(--surf-1,var(--well)))}}
-:root[data-theme="dark"] .wrap{--surf-nest:color-mix(in oklab,var(--page) 45%,var(--surf-1,var(--well)))}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--surf-nest:color-mix(in oklab,var(--page) 45%,var(--surf-1,var(--well)));--surf-sub:color-mix(in oklab,var(--page) 55%,var(--surf-nest))}}
+:root[data-theme="dark"] .wrap{--surf-nest:color-mix(in oklab,var(--page) 45%,var(--surf-1,var(--well)));--surf-sub:color-mix(in oklab,var(--page) 55%,var(--surf-nest))}
