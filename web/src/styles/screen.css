@@ -638,13 +638,17 @@ html:has(.screen) body{overflow:hidden}
 .pscreen>.ppad .choice:not(.ok,.no){background:var(--btn-card,var(--well));box-shadow:none}
 .pscreen>.ppad .choice:not(.ok,.no):is(:hover,:active){background:var(--btn-card-hover,var(--hover))}
 .pscreen>.ppad .tapnote{padding:var(--sp-1) var(--sp-2) 0}
-/* Contents is the standard for gap and corner (G 18:38 "this page should be the standard"): everything inside a panel
-   sits one --nest gap in from its edge and from each other, and its corner is the panel's less that gap, so the shapes
-   nest concentric. The step bar, the open steps and the keys all follow it */
-.pscreen .phero .stepbar,.pscreen .pacc .pbeats .beat{border-radius:calc(var(--r-panel) - var(--nest))}
+/* corners nest from the inside out (G 18:54, "Inside out"; Contents is the model, G 18:38): the smallest shape keeps its
+   full round, and each shape around it is that round plus the one --nest gap, so every corner is concentric. In the solve
+   panel the step bar and the steps are rows --srow tall with a full round; the panel (and the picture beside it) is that
+   plus the gap. The keys are pills --key tall; their panel is that plus the gap */
+.pscreen{--srow:var(--tap)}
+.pscreen .phero .stepbar,.pscreen .pacc .pbeats .beat{border-radius:calc(var(--srow) / 2)}
 .pscreen .pacc .pbeats{gap:var(--nest)}
+.pscreen .lshero.phero::before,.pscreen .lshero.phero>.lpic{border-radius:calc(var(--srow) / 2 + var(--nest))}
+.pscreen>.ppad{border-radius:calc(var(--key) / 2 + var(--nest))}
 .pscreen>.ppad .tray{gap:var(--nest)}
-.pscreen>.ppad .tray>*,.pscreen>.ppad .choice{border-radius:calc(var(--r-panel) - var(--nest))}
+.pscreen>.ppad .tray>*,.pscreen>.ppad .choice{border-radius:calc(var(--key) / 2)}
 /* solved: Next problem stands on its own, no panel round it */
 .pscreen.psolved>.ppad{padding:0;background:none;outline:none}
 :root .pscreen.psolved>.ppad .tray>.k-go{border-radius:var(--r-pill)}
