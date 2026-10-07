@@ -18,18 +18,20 @@ const PAGE = "file://" + fileURLToPath(new URL("../dist-preview/index.html", imp
 /** audit kinds that fail the run: anything cut off, text under an outline, and a nested surface whose corner isn't concentric */
 const CLIPS = new Set(["content-cut", "spill", "viewport", "poke-clipped", "box", "mask", "ring", "scroll-cut", "outline-over", "concentric"]);
 const SIZES = [{ w: 390, h: 844, scheme: "dark" }, { w: 1180, h: 820, scheme: "light" }, { w: 1366, h: 768, scheme: "dark" }, { w: 1366, h: 1024, scheme: "light" }];
-/** containers meant to scroll (a long list); anything else that scrolls inside itself is cut */
-const SCROLLERS = ".fhome>.ftables, nav.slist.more";
+/** containers meant to scroll (a long list; the book's chapters, and its plan on a short landscape screen where the
+ *  picture keeps its room); anything else that scrolls inside itself is cut */
+const SCROLLERS = ".fhome>.ftables, nav.slist.more, .sbento>.b-chaps, .sbento>.today";
 const ROUTES = ["home", "year", "learn", "facts", "me", "settings", "grown-up", "welcome"];
 
 const fails = [], notes = [];
 const browser = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {});
-/** a 5th-grader a few weeks in: scores (two weak), a grade check-up, a streak, so every tile carries its longest content */
-const RETURNING = { grade: 5, chosen: true, xp: 1240, gxp: { 5: 1240 }, streak: 12, done: 9, last: new Date().toDateString(),
-  lessons: { "g5-pow10": 2, "g5-order": 1, "g5-round": 1, "g5-adddec": 1, "g5-multdec": 1, "g5-divdec": 1, "g5-mult2": 1, "g5-divide": 1 },
-  scores: Object.fromEntries([["g5-pow10", 4], ["g5-order", 3], ["g5-round", 1], ["g5-adddec", 1], ["g5-multdec", 0], ["g5-divdec", 3], ["g5-mult2", 2], ["g5-divide", 3]]
+/** a 3rd-grader a few weeks in: scores (two weak), a grade check-up, a streak, and 3rd grade's nine chapters, so every
+ *  tile carries its longest content */
+const RETURNING = { grade: 3, chosen: true, xp: 1240, gxp: { 3: 1240 }, streak: 12, done: 9, last: new Date().toDateString(),
+  lessons: { "g3-addsub": 2, "g3-round": 1, "g3-facts": 1, "g3-split": 1, "g3-divfacts": 1, "g3-mult10": 1, "g3-twostep": 1, "g3-unitfrac": 1 },
+  scores: Object.fromEntries([["g3-addsub", 4], ["g3-round", 3], ["g3-facts", 1], ["g3-split", 1], ["g3-divfacts", 0], ["g3-mult10", 3], ["g3-twostep", 2], ["g3-unitfrac", 3]]
     .map(([id, l]) => [id, { last: l, best: l, pct: l * 25, date: Date.now(), mastered: l === 4 }])),
-  tests: { "grade:5": { last: 3, best: 3, pct: 75, date: Date.now(), mastered: false } } };
+  tests: { "grade:3": { last: 3, best: 3, pct: 75, date: Date.now(), mastered: false } } };
 for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for (const learner of ["new", "returning"]) {
   const ctx = await browser.newContext({ viewport: { width: w, height: h }, colorScheme: scheme });
   const p = await ctx.newPage();
@@ -60,9 +62,10 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
     const at = `${tag} ${route}`;
     await p.addScriptTag({ content: AUDIT });
     const r = await p.evaluate((SCROLLERS) => {
-      // a battery's fill is cut by the battery's own corners on purpose (the cards and the nav's lesson dot)
-      // inside a list meant to scroll, a row past the edge is scrolled, not cut
-      const flags = window.__ecAudit().flags.filter(f => !document.querySelector(`[data-ec="${f.id}"]`)?.closest(".battery,.ibat," + SCROLLERS));
+      // a battery's fill is cut by the battery's own corners on purpose (the cards and the nav's lesson dot); only the
+      // fill is exempt, so a tile that holds a battery is still checked. Inside a list meant to scroll, a row past the
+      // edge is scrolled, not cut
+      const flags = window.__ecAudit().flags.filter(f => !document.querySelector(`[data-ec="${f.id}"]`)?.closest(".battery>.fill,.ibat>i," + SCROLLERS));
       const shown = e => { const s = getComputedStyle(e); const b = e.getBoundingClientRect(); return s.visibility !== "hidden" && +s.opacity > 0 && b.width > 0 && b.height > 0; };
       const tiny = [];
       const walk = document.createTreeWalker(document.getElementById("app") ?? document.body, NodeFilter.SHOW_TEXT);
@@ -88,12 +91,17 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
       // the page never scrolls: html and body hide overflow, so measure how far any box reaches below the screen
       // (scrollHeight alone reads a few px over on a fitted lesson with nothing actually below the edge)
       const low = Math.max(0, ...[...document.querySelectorAll("#app *")].filter(shown).filter(e => !e.closest(SCROLLERS)).map(e => e.getBoundingClientRect().bottom));
-      return { flags, tiny, corners, marks, scroll: Math.round(low - innerHeight) };
+      // the book's picture is the hero: on a wide screen it never shrinks to a sliver or an empty frame
+      const pic = document.querySelector(".sbento>.spreview");
+      const picH = pic && shown(pic) && innerWidth >= 900 ? Math.round(pic.getBoundingClientRect().height) : null;
+      const picEmpty = picH != null && pic.classList.contains("empty");
+      return { flags, tiny, corners, marks, picH, picEmpty, scroll: Math.round(low - innerHeight) };
     }, SCROLLERS);
     for (const f of r.flags)
       (CLIPS.has(f.kind) ? fails : notes).push(`${at}: ${f.kind} ${f.el}${f.path ? " in " + f.path : ""}`);
     for (const t of r.tiny.slice(0, 5)) fails.push(`${at}: text under 11px ${t}`);
     for (const c of [...new Set(r.corners)]) fails.push(`${at}: Panel line without a corner ${c}`);
+    if (r.picH != null && (r.picH < 200 || r.picEmpty)) fails.push(`${at}: the book's picture is ${r.picEmpty ? "empty" : r.picH + "px tall"}`);
     if (route === "learn" && r.scroll > 1) fails.push(`${at}: the lesson page scrolls by ${r.scroll}px`);
     if (route !== "welcome") {
       if (r.marks.length !== 1) fails.push(`${at}: ${r.marks.length} wordmarks in the nav`);

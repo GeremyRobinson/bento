@@ -100,7 +100,7 @@ button.gcell:active{transform:scale(.96)}
   .bhome.tall .b-hero{grid-row:1 / span 3}
   .bhome>.tile,.bhome>.b-stats:last-child{grid-column:3}
   .b-stats.solo{grid-row:1 / span 2}
-  .bhome .b-weak{grid-row:3}
+  .bhome>.b-weak{grid-row:3}
   .b-stats{grid-template-rows:1fr auto}
   .upnext b{font-size:calc(var(--fs) * 1.8)}
 }
@@ -399,8 +399,12 @@ button.gcell:active{transform:scale(.96)}
 :root[data-contrast="true"] .wrap{--panel-line:color-mix(in oklab,var(--ink) 55%,var(--rule))}
 :root[data-contrast="true"] :is(.tile,.panel,.card){outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
 /* a Panel that scrolls draws its line as a border, not an outline: scrolled rows pass under the border's inner edge, so
-   they never paint over the line (Review). Placed after More contrast so it wins there too. */
+   they never paint over the line (Review). Placed after More contrast so it wins there too; the padding gives back the
+   border's width so the content sits where it did under the outline. */
 .wrap :is(.screen .slist,.sbento .b-chaps,.sdetail>.sbento>.today){outline:none;border:var(--panel-w) solid var(--panel-line)}
+.wrap .screen .slist,.wrap .sbento .b-chaps{padding:calc(var(--sp-3) - var(--panel-w))}
+.wrap .screen.gu .slist{padding-bottom:calc(var(--sp-6) - var(--panel-w))}
+.wrap .sdetail>.sbento>.today{padding:calc(var(--u) * 1.75 - var(--panel-w))}
 
 
 :root[data-readable="true"] .wrap{--sans:Verdana,Tahoma,"Segoe UI",sans-serif;--num:Verdana,Tahoma,sans-serif;letter-spacing:.02em}

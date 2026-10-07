@@ -124,7 +124,7 @@ describe("no hard-coded styles", () => {
     const band = /^(:root|html|body|\.wrap|\.gpal|\.t\d|:is\(\.wrap,\.gpal\))/;
     const picture = /\.(viz-svg|viz|am|dotrow|bb|tf)\b|(^|[\s>(,])text\b/;
     const badBand = sel(css.find(([f]) => f === "styles/bands.css")![1]).filter(r => /dark/.test(r.sel))
-      .flatMap(r => listOf(r.sel)).filter(p => p.includes("dark") || true)
+      .flatMap(r => listOf(r.sel))
       .map(p => p.replace(/^.*?(:root|html)(\[[^\]]*\]|:not\((?:[^()]|\([^()]*\))*\))*\s*/, "")).filter(Boolean)
       .filter(p => !band.test(p) && !picture.test(p)).map(p => `bands.css: ${p}`);
     expect([...badTok, ...badBand]).toEqual([]);
