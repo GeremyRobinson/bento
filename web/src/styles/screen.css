@@ -22,6 +22,9 @@ html:has(.screen) body{overflow:hidden}
 /* the grade's book: the list (floating preview: a well, rows as pills, the picked row's highlight glides) */
 .screen .slist{position:relative;padding:var(--sp-3)}
 .slist .shead{padding:10px var(--sp-4) 18px}
+/* the book's head: the grade number on the left, its check-up on the right (G 2026-10-07) */
+.slist .shead:has(.scheck){display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);padding-right:var(--sp-2)}
+.shead .scheck{flex:none;box-shadow:var(--ring)}
 .slist .shead .gnum{font:var(--w-bold) 64px/1 var(--sans);letter-spacing:-.04em}
 .slist .shead .gnum small{font-size:24px;vertical-align:top}
 .vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px}
