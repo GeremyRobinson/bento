@@ -8,6 +8,10 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
  */
 export function ListGroup({ head, open, className, children }: { head: ReactNode; open: boolean; className?: string; children: ReactNode }) {
   const [keep, setKeep] = useState(open);
+  // while it grows open the rows' pill stays hidden, so it fades in once the panel is still
+  const [opening, setOpening] = useState(false);
+  const [was, setWas] = useState(open);
+  if (open !== was) { setWas(open); setOpening(open); }
   if (open && !keep) setKeep(true);
   const body = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -16,11 +20,16 @@ export function ListGroup({ head, open, className, children }: { head: ReactNode
     const el = body.current, t = el ? parseFloat(getComputedStyle(el).transitionDuration) : 0;
     if (!(t > 0.02)) setKeep(false);
   }, [open, keep]);
+  useLayoutEffect(() => {
+    if (!opening) return;
+    const el = body.current, t = el ? parseFloat(getComputedStyle(el).transitionDuration) : 0;
+    if (!(t > 0.02)) setOpening(false);
+  }, [opening]);
   return (
-    <div className={`sgroup${open ? " open" : ""}${className ? ` ${className}` : ""}`}>
+    <div className={`sgroup${open ? " open" : ""}${opening ? " opening" : ""}${className ? ` ${className}` : ""}`}>
       {head}
       <div className="sgroup-body" ref={body} inert={!open || undefined}
-        onTransitionEnd={e => { if (e.target === e.currentTarget && !open) setKeep(false); }}>
+        onTransitionEnd={e => { if (e.target !== e.currentTarget) return; if (open) setOpening(false); else setKeep(false); }}>
         <div className="sgroup-in"><div className="sgroup-panel">{keep && children}</div></div>
       </div>
     </div>

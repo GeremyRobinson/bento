@@ -59,7 +59,10 @@ html:has(.screen) body{overflow:hidden}
 .sgroup-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--m-close) var(--m-ease),visibility 0s var(--m-close)}
 .sgroup.open>.sgroup-body{grid-template-rows:1fr;transition:grid-template-rows var(--m-close) var(--m-ease)}
 .sgroup:not(.open)>.sgroup-body{visibility:hidden}
-.sgroup-in{min-height:0;overflow:hidden}
+/* the fold's clip is as round as the panel, so its corners stay round while it folds (Review) */
+.sgroup-in{min-height:0;overflow:hidden;border-radius:calc(var(--row-h) / 2 + var(--nest-pad))}
+/* the picked lesson's pill waits for its chapter to finish opening, then fades in; it never rides up with the panel (Review) */
+.sgroup:is(.opening,:not(.open)) .srow::before{opacity:0;transition:none}
 .sgroup-panel{display:grid;gap:var(--nest-pad);margin-top:var(--sp-1);padding:var(--nest-pad);background:var(--surf-nest);border-radius:calc(var(--row-h) / 2 + var(--nest-pad))}
 .sgroup.open{padding-bottom:var(--sp-1)}
 .sgroup .srow.sles{min-height:var(--row-h)}
