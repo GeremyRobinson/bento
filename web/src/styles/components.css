@@ -248,9 +248,9 @@ button.gcell:active{transform:scale(.96)}
 /* ---- pictures ---- */
 .tf{display:inline-grid;grid-template-columns:repeat(5,24px);grid-auto-rows:24px;border:1.5px solid var(--text);border-radius:var(--r-sm);overflow:hidden;gap:1.5px;background:var(--text)}
 .tf i{background:var(--card);display:grid;place-items:center}
-.tf i.on::after{content:"";width:15px;height:15px;border-radius:var(--r-round);background:var(--tint)}
+.tf i.on::after{content:"";width:15px;height:15px;border-radius:var(--r-round);background:var(--soft)}
 .bb{display:inline-flex;align-items:flex-end;gap:3px;flex-wrap:wrap;max-width:150px}
-.bb .rod{width:10px;height:60px;border-radius:3px;background:var(--tint)}
+.bb .rod{width:10px;height:60px;border-radius:3px;background:var(--soft)}
 .bb .cube{width:10px;height:10px;border-radius:2px;background:color-mix(in srgb,var(--tint) 55%,var(--card))}
 .viz-svg{width:min(100%, calc(var(--w) * 1.15px), calc(min(54vh, 400px) * var(--w) / var(--h)));height:auto;overflow:visible;display:block;justify-self:center;margin-inline:auto}
 .viz-svg text{font-family:var(--num);font-size:max(var(--d-text),calc(12px * var(--px,0)));fill:var(--text);text-anchor:middle;dominant-baseline:central}
@@ -269,14 +269,14 @@ button.gcell:active{transform:scale(.96)}
 .viz-svg .hl{stroke:var(--acc);stroke-width:var(--d-glow);stroke-linecap:round;opacity:.35}
 .viz-svg .hlline{stroke:var(--acc);stroke-width:var(--d-mark);stroke-linecap:round;opacity:.45;fill:none} .viz-svg .hlline.full{opacity:1}
 .viz-svg .fill{fill:var(--tint);opacity:.16} .viz-svg .fillsoft{fill:color-mix(in srgb,var(--tint) var(--d-f10),transparent)}
-.viz-svg .dotp{fill:var(--tint)} .viz-svg .was{opacity:.45} .viz-svg .dota{fill:var(--acc)} .viz-svg .hole{fill:var(--card);stroke:var(--tint);stroke-width:var(--d-stroke)}
+.viz-svg .dotp{fill:var(--soft)} .viz-svg .was{opacity:.45} .viz-svg .dota{fill:var(--soft-acc)} .viz-svg .hole{fill:var(--card);stroke:var(--tint);stroke-width:var(--d-stroke)}
 .viz-svg .sq{fill:color-mix(in srgb,var(--tint) var(--d-f18),var(--card));stroke:var(--tint);stroke-width:var(--d-line)} .viz-svg .sq.big{fill:color-mix(in srgb,var(--acc) var(--d-f22),var(--card));stroke:var(--acc)}
 .viz-svg .cell{stroke-width:var(--d-line)} .viz-svg .pend{fill:var(--well);stroke:var(--faint);stroke-width:var(--d-line);stroke-dasharray:var(--d-dash)} .viz-svg .cell.c0{fill:color-mix(in srgb,var(--c0) var(--d-f18),var(--card));stroke:var(--c0)} .viz-svg .cell.c1{fill:color-mix(in srgb,var(--c1) var(--d-f18),var(--card));stroke:var(--c1)} .viz-svg .cell.c2{fill:color-mix(in srgb,var(--c2) var(--d-f18),var(--card));stroke:var(--c2)}
 .viz-svg .seg{fill:var(--well);stroke:var(--faint);stroke-width:var(--d-thin)}
 /* dark: an empty part is a tinted box a step lighter than the tile, outlined in its own color (bands.css, Dark pictures) */
 
- .viz-svg .seg.on{fill:var(--tint);stroke:var(--tint)} .viz-svg .seg.cut{opacity:.35}
-.viz-svg .cf{stroke:var(--card);stroke-width:var(--d-thin);stroke-linejoin:round} .viz-svg .cf.top{fill:color-mix(in srgb,var(--tint) var(--d-f35),var(--card))} .viz-svg .cf.left{fill:var(--tint)} .viz-svg .cf.right{fill:color-mix(in srgb,var(--tint) var(--d-f70),var(--d-shadow))}
+ .viz-svg .seg.on{fill:var(--soft);stroke:var(--tint)} .viz-svg .seg.cut{opacity:.35}
+.viz-svg .cf{stroke:var(--card);stroke-width:var(--d-thin);stroke-linejoin:round} .viz-svg .cf.top{fill:color-mix(in srgb,var(--tint) var(--d-f35),var(--card))} .viz-svg .cf.left{fill:var(--soft)} .viz-svg .cf.right{fill:color-mix(in srgb,var(--tint) var(--d-f70),var(--d-shadow))}
 /* boxes of cubes: the front face light, the other faces stronger, the box's visible edges solid (pictures-k4 solids) */
 .viz-svg .cf.cube{stroke:color-mix(in srgb,var(--tint) var(--d-f55),var(--card));stroke-width:var(--d-cube)} .viz-svg .cf.cube.left{fill:color-mix(in srgb,var(--tint) var(--d-f18),var(--card))} .viz-svg .cf.cube.top,.viz-svg .cf.cube.right{fill:color-mix(in srgb,var(--tint) var(--d-f40),var(--card))}
 /* dark: the unit-cube lines in the tint itself, so they read 3:1 on the tile (thinner than the box edge) */
@@ -284,17 +284,17 @@ button.gcell:active{transform:scale(.96)}
 
 .viz-svg .edge{fill:none;stroke:var(--tint);stroke-width:var(--d-edge);stroke-linejoin:round}
 .viz-svg .wire{fill:none;stroke:var(--muted);stroke-width:var(--d-thin);stroke-dasharray:var(--d-dash-wire)}
-.viz-svg .bar{fill:var(--tint)} .viz-svg .bar.mid{animation:barHi var(--dur-500) ease var(--d) both}
-@keyframes barHi{to{fill:var(--acc)}}
+.viz-svg .bar{fill:var(--soft)} .viz-svg .bar.mid{animation:barHi var(--dur-500) ease var(--d) both}
+@keyframes barHi{to{fill:var(--soft-acc)}}
 .viz-svg .fulcrum{fill:var(--muted)} .viz-svg .beam{stroke:var(--text);stroke-width:var(--d-beam);stroke-linecap:round}
-.viz-svg .tile{stroke-width:var(--d-line)} .viz-svg .tile.x{fill:var(--tint);stroke:var(--tint)} .viz-svg .tile.y{fill:var(--c1);stroke:var(--c1)} .viz-svg .tile.y.dash{fill:color-mix(in srgb,var(--c1) 14%,var(--card))} .viz-svg .tile.n{fill:var(--card);stroke:var(--acc)}
+.viz-svg .tile{stroke-width:var(--d-line)} .viz-svg .tile.x{fill:var(--soft);stroke:var(--tint)} .viz-svg .tile.y{fill:var(--soft1);stroke:var(--c1)} .viz-svg .tile.y.dash{fill:color-mix(in srgb,var(--c1) 14%,var(--card))} .viz-svg .tile.n{fill:var(--card);stroke:var(--acc)}
 .viz-svg .marble{stroke:var(--card);stroke-width:var(--d-line)} .viz-svg .marble.red{fill:var(--d-marble-red)} .viz-svg .marble.blue{fill:var(--d-marble-blue)} .viz-svg .marble.green{fill:var(--d-marble-green)} .viz-svg .marble.ring{stroke:var(--text);stroke-width:var(--d-stroke)}
-.viz-svg .marble.c0{fill:var(--c0)} .viz-svg .marble.c1{fill:var(--c1)} .viz-svg .marble.c2{fill:var(--c2)}
+.viz-svg .marble.c0{fill:var(--soft0)} .viz-svg .marble.c1{fill:var(--soft1)} .viz-svg .marble.c2{fill:var(--soft2)}
 .viz-svg .tri{stroke:var(--card);stroke-width:var(--d-line)} .viz-svg .tri.c0{fill:color-mix(in srgb,var(--c0) var(--d-f45),var(--card))} .viz-svg .tri.c1{fill:color-mix(in srgb,var(--c1) var(--d-f45),var(--card))} .viz-svg .tri.c2{fill:color-mix(in srgb,var(--c2) var(--d-f45),var(--card))}
 /* dark: triangles mix the grade's deep picture color (--l*) instead of the lifted one, so they stay clear colors, not mud */
 
   
-.viz-svg .shadeA{fill:color-mix(in srgb,var(--tint) var(--d-f35),transparent)} .viz-svg .shadeB{fill:color-mix(in srgb,var(--acc) var(--d-f35),transparent)} .viz-svg .both{fill:var(--tint)}
+.viz-svg .shadeA{fill:color-mix(in srgb,var(--tint) var(--d-f35),transparent)} .viz-svg .shadeB{fill:color-mix(in srgb,var(--acc) var(--d-f35),transparent)} .viz-svg .both{fill:var(--soft)}
 .viz-svg .pie{fill:none;stroke:color-mix(in srgb,var(--tint) var(--d-f55),transparent);stroke-width:90;stroke-dasharray:var(--f) 1}
 .viz-svg .arcline{fill:none;stroke:var(--tint);stroke-width:var(--d-glow);stroke-linecap:round;stroke-dasharray:var(--f) 1}
 .viz-svg .arcline.thin{stroke-width:var(--d-heavy);stroke:var(--acc)}
@@ -506,7 +506,7 @@ button.gcell:active{transform:scale(.96)}
    a light wash; a chip is a value, filled in its part colour; the answer chip is outlined in the accent */
 .viz-svg .xbox{fill:color-mix(in srgb,var(--tint) var(--d-f10),var(--card));stroke:var(--tint);stroke-width:var(--d-line)} .viz-svg .xbox.dash{stroke-dasharray:var(--d-dash-short);stroke-width:var(--d-edge)}
 .viz-svg .xbox.pw{fill:none;stroke:var(--faint)}
-.viz-svg .xchip{fill:var(--tint);stroke:var(--tint);stroke-width:var(--d-line)} .viz-svg .xchip.pq{fill:color-mix(in srgb,var(--acc) var(--d-f22),var(--card));stroke:var(--acc);stroke-width:var(--d-stroke)}
+.viz-svg .xchip{fill:var(--soft);stroke:var(--tint);stroke-width:var(--d-line)} .viz-svg .xchip.pq{fill:color-mix(in srgb,var(--acc) var(--d-f22),var(--card));stroke:var(--acc);stroke-width:var(--d-stroke)}
 .viz-svg .xring{fill:none;stroke:var(--acc);stroke-width:var(--d-stroke)} .viz-svg .xchip.ghost{fill:var(--card);stroke-dasharray:var(--d-dash-short)} .viz-svg .cut{opacity:.4}
 .viz-svg .numst{fill:none;stroke:var(--tint);stroke-width:var(--d-numeral);stroke-linecap:round;stroke-linejoin:round}
 .viz-svg .numghost{fill:none;stroke:var(--rule);stroke-width:var(--d-numeral);stroke-linecap:round;stroke-linejoin:round}
@@ -519,7 +519,7 @@ button.gcell:active{transform:scale(.96)}
 .viz-svg .detail.fillc.c1{fill:color-mix(in srgb,var(--c1) var(--d-f40),var(--card))}
 .viz-svg .floor{fill:none;stroke:var(--rule);stroke-width:var(--d-line)}
 .viz-svg .pin{fill:var(--card)} .viz-svg .pinline{stroke:var(--card);stroke-width:var(--d-line);fill:none;stroke-linecap:round} .viz-svg .pinbox{fill:none;stroke:var(--card);stroke-width:var(--d-line)}
-.viz-svg .dotpath{fill:var(--tint);stroke:var(--tint);stroke-width:var(--d-hair);stroke-linejoin:round}
+.viz-svg .dotpath{fill:var(--soft);stroke:var(--tint);stroke-width:var(--d-hair);stroke-linejoin:round}
 .viz-svg .hlrow{fill:color-mix(in srgb,var(--acc) var(--d-f20),transparent)}
 .viz-svg .ring{fill:none;stroke:var(--acc);stroke-width:var(--d-stroke)}
 .viz-svg .tally{fill:none;stroke:var(--tint);stroke-width:var(--d-bold);stroke-linecap:round}
@@ -542,7 +542,7 @@ button.gcell:active{transform:scale(.96)}
 .a-swing{transform-box:view-box;transform-origin:var(--ox) var(--oy);animation:swing var(--dur-900) var(--ease) var(--d,0s) both} @keyframes swing{from{transform:rotate(var(--from))}}
 .viz-svg .jugline{fill:none;stroke:var(--text);stroke-width:var(--d-line);stroke-linejoin:round;stroke-linecap:round}
 .viz-svg .water{fill:color-mix(in srgb,var(--d-water) var(--d-f35),var(--card))} .viz-svg .surface{fill:none;stroke:var(--d-water-line);stroke-width:var(--d-bold);stroke-linecap:round}
-.viz-svg .figline{fill:none;stroke:var(--tint);stroke-width:var(--d-bold);stroke-linecap:round} .viz-svg .arrowhead{fill:var(--tint)} .viz-svg .figdot{fill:var(--tint)}
+.viz-svg .figline{fill:none;stroke:var(--tint);stroke-width:var(--d-bold);stroke-linecap:round} .viz-svg .arrowhead{fill:var(--tint)} .viz-svg .figdot{fill:var(--soft)}
 .viz-svg .card{fill:color-mix(in srgb,var(--muted) var(--d-f12),transparent);stroke:var(--rule);stroke-width:var(--d-thin);stroke-dasharray:var(--d-dash-short)}
 .viz-svg .foldshape{fill:color-mix(in srgb,var(--tint) var(--d-f30),var(--card));stroke:var(--tint);stroke-width:var(--d-edge);stroke-linejoin:round}
 .viz-svg .foldhalf{fill:color-mix(in srgb,var(--tint) var(--d-f55),var(--card));stroke:var(--tint);stroke-width:var(--d-edge);stroke-linejoin:round}
