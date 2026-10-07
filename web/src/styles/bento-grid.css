@@ -1,0 +1,19 @@
+/* BentoGrid (master, Design 2026-10-07): one grid every page's tiles sit on. Six columns; a tile only says its size,
+   never a column or a row. Sizes: n a number (half a phone, a third from 560px), s small (a third), t tall (a third,
+   two rows), w wide (two thirds), l large (two thirds, two rows), f full width. The grid sizes itself by its own width
+   (a container), so the same page lines up in a sidebar, on a phone and on a laptop. */
+.bgrid{container-type:inline-size}
+.bgrid>.bg-in{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:minmax(var(--bg-row),auto);grid-auto-flow:dense;gap:var(--u)}
+.bg-t{--sp:6;--rs:1;grid-column:span var(--sp);grid-row:span var(--rs);min-width:0}
+.bg-t.t,.bg-t.l{--rs:2}
+.bg-t.n{--sp:3}
+@container (min-width:560px){.bg-t.n,.bg-t.s,.bg-t.t{--sp:2}.bg-t.w,.bg-t.l{--sp:4}}
+/* fit mode (Book home): the grid takes exactly the height it is given, its rows share it, and a tile with more than its
+   share scrolls inside itself, never the page. A fit tile that can outgrow its share sets overflow:auto itself and is in
+   the Panel border list; the master never makes every tile scroll (a scrolling tile under its own outline paints over it). G: the page never scrolls, the picture is the hero */
+.bgrid.fit,.bgrid.fit>.bg-in{height:100%}
+.bgrid.fit>.bg-in{grid-auto-rows:minmax(0,1fr)}
+.bgrid.fit .bg-t{min-height:0}
+/* on a narrow fit grid a wide tile is full width, so one shared row is too short for what it holds: it takes two */
+/* and the large tile takes three, so it stays the biggest (Design 2026-10-07) */
+@container (max-width:559px){.bgrid.fit .bg-t.w{--rs:2}.bgrid.fit .bg-t.l{--rs:3}}

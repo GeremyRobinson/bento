@@ -140,11 +140,12 @@ html[data-zoomed] body{overflow:hidden}
 /* a phone: the zoom bar keeps the app's 16px gutter, so Done lines up with the island's corner buttons */
 @media (max-width:699px){.zoom{padding-inline:var(--sp-4)}}
 @media (max-width:560px){.zbar-top{grid-template-columns:minmax(0,1fr) auto}.zbar-top .zmark{display:none}.zlevels{grid-column:1;--sl-x:var(--sp-1);--sl-fz:var(--fz-sm);justify-self:start;width:100%;max-width:300px}}
+/* the switcher's motion is the app's one page change (motion.css .stage): the same keyframes, curve and speed */
 .zstage{width:min(1040px,100%);transform-origin:50% 30%;animation:zFrom var(--m-page) var(--m-ease) both}
 .zstage.out{animation-name:zOut} .zstage.in{animation-name:zIn}
-@keyframes zFrom{from{opacity:0;transform:scale(1.08)}}
-@keyframes zOut{from{opacity:0;transform:scale(1.14)}}
-@keyframes zIn{from{opacity:0;transform:scale(.86)}}
+@keyframes zFrom{from{opacity:0;transform:scale(var(--m-zfrom))}}
+@keyframes zOut{from{opacity:0;transform:scale(var(--m-zout))}}
+@keyframes zIn{from{opacity:0;transform:scale(var(--m-zin))}}
 .zhint{font-size:var(--fz-xs);margin-top:-8px}
 /* closing the contents plays them out (Review nav #6): the stage grows a little as it fades, the dim lifts */
 @keyframes zClose{to{opacity:0;transform:scale(1.04)}}
@@ -254,14 +255,6 @@ button.book:hover{transform:translateY(-2px);box-shadow:none}
 /* the home progress tile reads top to bottom on phones too */
 @media (max-width:699px){.bhome .b-stats.battery{grid-template-columns:none;justify-items:center;text-align:center}.bhome .b-stats.battery>.ctl{justify-self:center}}
 
-/* lessons turn like slides: the page slides across while the island and the lesson bar hold still,
-   so the pill in the bar can glide to the next lesson */
-.itop{view-transition-name:island}
-.lbar{view-transition-name:lessonbar}
-::view-transition-group(island),::view-transition-group(lessonbar){animation-duration:var(--m-page);animation-timing-function:var(--m-ease)}
-/* the top bar never comes or goes; only its words cross-fade, quickly (Review motion spec) */
-::view-transition-old(island),::view-transition-old(lessonbar){animation:var(--dur-250) var(--m-ease) both vtOut}
-::view-transition-new(island),::view-transition-new(lessonbar){animation:var(--dur-250) var(--m-ease) both vtIn}
 /* next and previous lesson use the one motion master too (motion.css): no sideways slide */
 /* the dots in the lesson bar are buttons: tap one to jump to that lesson */
 .lbar .dots-nav button.dot{padding:0;border:0;cursor:pointer;position:relative}
@@ -299,7 +292,7 @@ button.book:hover{transform:translateY(-2px);box-shadow:none}
 html:has(.screen),html:has(.screen) body{overflow:hidden;overscroll-behavior:none;height:100%}
 /* ONE NAV FRAME (G 2026-10-06: "are they the same Bento?"): the nav sits at one fixed place on every page, so the
    wordmark never moves between pages; pages without a screen frame start below it */
-:root{--nav-top:max(var(--sp-3),env(safe-area-inset-top));--nav-x:max(var(--sp-4),calc((100vw - var(--sb-right,0px) - var(--screen-max,1180px)) / 2))}
+:root{--nav-top:max(var(--sp-3),env(safe-area-inset-top));--nav-x:max(var(--sp-4),calc((100vw - var(--sb-right,0px) - var(--screen-max,var(--page-max))) / 2))}
 .itop{position:fixed;top:var(--nav-top);left:var(--nav-x);right:calc(var(--nav-x) + var(--sb-right,0px))}
 
 /* the grade sheet: every line on its own row, the same columns in every line, all twelve grades in view where
@@ -358,7 +351,9 @@ html:has(.screen),html:has(.screen) body{overflow:hidden;overscroll-behavior:non
 .confirm .cq{grid-column:1 / -1;display:grid;gap:var(--sp-1);padding:calc(var(--u) + var(--sp-2) - var(--cin)) calc(var(--u) + var(--sp-2) - var(--cin)) var(--sp-3)}
 .confirm .cq b{font-size:var(--fz-xl);font-weight:var(--w-bold);letter-spacing:-.01em}
 .confirm .cq span{color:var(--muted);font-size:var(--fz-md)}
-.confirm .ca{width:100%}
+.confirm .ca{width:100%;position:relative}
+/* the small pills draw 40px but answer a 44px touch */
+.confirm .ca::after{content:"";position:absolute;inset:-2px 0}
 /* the same height as the Resume pill beside it, like every nav button */
 .iresume-x{flex:none;display:grid;place-items:center;width:var(--float-h);height:var(--float-h);border-radius:var(--r-pill);background:var(--float);box-shadow:var(--float-shadow);color:var(--muted)}
 

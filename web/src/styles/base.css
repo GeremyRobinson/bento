@@ -5,7 +5,7 @@ body{margin:0;background:var(--page);color:var(--text);font:var(--w-regular) 18p
 .wrap{max-width:720px;margin:0 auto;padding:max(var(--sp-4),env(safe-area-inset-top)) max(var(--sp-5),env(safe-area-inset-right)) max(var(--sp-10),env(safe-area-inset-bottom)) max(var(--sp-5),env(safe-area-inset-left));
   display:grid;gap:var(--sec);font-size:var(--fs);line-height:var(--lh);font-family:var(--sans)}
 @media (max-width:480px){.wrap{padding-inline:max(var(--sp-3),env(safe-area-inset-left))}}
-@media (min-width:700px){.wrap{max-width:1180px}}
+@media (min-width:700px){.wrap{max-width:var(--page-max)}}
 h1,h2,h3,p{font-size:inherit;font-weight:var(--w-bold);margin:0}
 p{font-weight:var(--w-regular)}
 b,strong{font-weight:var(--w-bold)}
@@ -15,6 +15,8 @@ b,strong{font-weight:var(--w-bold)}
 h1,h2,h3{letter-spacing:-.011em}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 button:focus-visible{outline:2px solid var(--tint);outline-offset:2px}
+/* a page's heading takes focus after a page change so keyboards start there; it is not a control, so no ring */
+[tabindex="-1"]:focus{outline:none}
 /* optical centering: trim text to its cap height so labels sit dead centre in pills and circles */
 .ctl,.badge,.grades button,.score b,.tray button,.slot,.gbadge b,.chip{text-box:trim-both cap alphabetic}
 

@@ -165,9 +165,11 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   const dismiss = () => {
     if (!open || closing) return;
     try { if ((history.state as { overlay?: boolean } | null)?.overlay) history.back(); } catch { /* ignore */ }
-    if (reduceMotion() || typeof matchMedia === "undefined") { setOpenState(null); return; }
+    // focus goes back to the place button that opened the contents (Review page change #3)
+    const refocus = () => requestAnimationFrame(() => document.querySelector<HTMLElement>(".iplace")?.focus({ preventScroll: true }));
+    if (reduceMotion() || typeof matchMedia === "undefined") { setOpenState(null); refocus(); return; }
     setClosing(true); closingRef.current = true;
-    setTimeout(() => { setOpenState(null); setClosing(false); closingRef.current = false; }, 360);
+    setTimeout(() => { setOpenState(null); setClosing(false); closingRef.current = false; refocus(); }, 360);
   };
   // leaving for a page opened from the contents: the page change carries the motion, and that page takes the
   // contents' history step (AppState.show replaces it)

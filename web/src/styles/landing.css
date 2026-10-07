@@ -1,6 +1,9 @@
 /* ---- welcome: Bento's front door. The real thing working, in one box, then the shelf to start from ---- */
-.land{max-width:1120px;margin:0 auto;display:grid;gap:var(--s);padding:0 var(--sp-1) calc(var(--u) * 2)}
-.lhero{display:grid;justify-items:center;gap:calc(var(--u) + var(--sp-1));text-align:center;padding:calc(var(--u) * 3.5) var(--u) calc(var(--u) * 2);animation:rise var(--dur-700) var(--ease) both}
+.land{width:100%;max-width:calc(var(--page-max) + 2 * var(--sp-1));margin:0 auto;display:grid;gap:var(--s);padding:0 var(--sp-1) calc(var(--u) * 2)}
+.lhero{display:grid;justify-items:center;gap:calc(var(--u) + var(--sp-1));text-align:center;padding:calc(var(--u) * 3.5) var(--u) calc(var(--u) * 2)}
+/* the hero rises only on the app's first open; arriving by a page change, the page's own motion is the only one */
+:root:not([data-paged]) .lhero{animation:rise var(--m-in) var(--m-ease) both}
+:root:not([data-paged]) .lhpic{animation:fadeIn var(--m-in) var(--m-ease) both}
 .lhero h1{font:var(--w-bold) clamp(46px,9vw,104px)/.96 var(--sans);letter-spacing:-.05em;text-wrap:balance}
 .lhero p{max-width:560px;font-size:calc(var(--fs) * 1.12);line-height:1.5;color:var(--muted);font-weight:var(--w-mid);text-wrap:pretty}
 .lcta{display:flex;align-items:center;gap:var(--u);flex-wrap:wrap;justify-content:center;margin-top:var(--sp-1)}
@@ -14,7 +17,7 @@
 .lhbox{display:grid;gap:var(--s);grid-template-columns:repeat(2,minmax(0,1fr))}
 .lhpic:not(.sm){grid-column:1 / -1}
 @media (min-width:960px){.lhbox{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(250px,auto))}.lhpic:not(.sm){grid-column:span 2;grid-row:span 2}.lhpic.sm{grid-column:span 2}}
-.lhpic{margin:0;background:var(--surf-2,var(--card));border-radius:var(--r-panel);padding:var(--pad-lg);display:grid;grid-template-rows:auto 1fr;gap:var(--u);cursor:pointer;animation:fadeIn var(--dur-700) var(--ease) both;min-height:340px}
+.lhpic{margin:0;background:var(--surf-2,var(--card));border-radius:var(--r-panel);padding:var(--pad-lg);display:grid;grid-template-rows:auto 1fr;gap:var(--u);cursor:pointer;min-height:340px}
 .lhpic figcaption{display:flex;align-items:center;gap:14px;min-width:0}
 .lhpic .gnum{font-size:40px;flex:none;white-space:nowrap}
 .lhero h1 span{display:block}
@@ -22,7 +25,7 @@
 .lhpic figcaption>span:not(.gnum) small{font-size:var(--fz-xs);font-weight:var(--w-mid);color:var(--muted)}
 .lhpic b{font-size:calc(var(--fs) * 1.05);font-weight:var(--w-bold);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lhpic .lhd{display:grid;align-items:center;min-height:0}
-.lhpic figcaption,.lhpic .lhd{animation:fadeIn var(--dur-600) var(--ease) both}
+.lhpic figcaption,.lhpic .lhd{animation:fadeIn var(--m-swap) var(--m-ease) both}
 .lhpic .viz{align-self:center;min-height:0}
 .lhpic .viz-cap,.lhpic .replay{display:none}
 .lhpic .viz-svg,.lhpic .am{max-height:400px;width:100%}
@@ -316,3 +319,5 @@
 .ltile{grid-template-columns:minmax(0,1fr)}
 @media (max-width:599px){.lreview span{max-width:100%;font-size:clamp(15px,4.6vw,20px);padding-inline:14px}}
 .lcount b{min-width:3ch;text-align:center}
+/* the landing page lines up with the nav and every screen: its .wrap allows the page width plus its own padding (Review) */
+@media (min-width:700px){.wrap:has(>.land){max-width:calc(var(--page-max) + 2 * (var(--sp-5) + var(--sp-1)))}}

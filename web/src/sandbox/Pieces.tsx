@@ -10,6 +10,29 @@ import { Confirm } from "../components/Confirm";
 import { PillRing } from "../components/primitives/PillRing";
 import { Keypad } from "../components/practice/Keypad";
 import { ListGroup } from "../components/screen/ListGroup";
+import { BentoGrid, type TileSize } from "../components/BentoGrid";
+
+/** the Book home's tiles on the grid in fit mode (chunk 2): at whatever width and height the sliders set */
+const BOOK: [TileSize, string][] = [["l", "Picture"], ["n", "Lessons done"], ["n", "Days in a row"], ["w", "Today"], ["s", "Chapters"]];
+/** every size once, for flow mode */
+const SIZES: [TileSize, string][] = [["l", "Large"], ["t", "Tall"], ["n", "Number"], ["n", "Number"], ["s", "Small"], ["w", "Wide"], ["f", "Full"]];
+function DemoGrid() {
+  const [w, setW] = useState(768), [h, setH] = useState(560), [fit, setFit] = useState(true);
+  return (
+    <div className="sbbento">
+      <label className="sbbento-w"><span>Width {w}px</span>
+        <input type="range" min={320} max={1200} step={10} value={w} onChange={e => setW(+e.target.value)} /></label>
+      <label className="sbbento-w"><span>Height {h}px</span>
+        <input type="range" min={400} max={900} step={10} value={h} disabled={!fit} onChange={e => setH(+e.target.value)} /></label>
+      <Toggle label="Fit" note="On: the Book home, rows share the height. Off: flow, every size, rows grow." on={fit} set={setFit} />
+      <div className="sbbento-frame" style={{ width: w, height: fit ? h : undefined }}>
+        <BentoGrid fit={fit} label="Book home on the grid">
+          {(fit ? BOOK : SIZES).map(([size, name], i) => <Tile key={i} size={size} k={`size ${size}`} title={name}><span /></Tile>)}
+        </BentoGrid>
+      </div>
+    </div>
+  );
+}
 
 const DEMO = [{ name: "Whole numbers", rows: ["Multiply two-digit numbers", "Long division", "Order of operations"] },
   { name: "Fractions", rows: ["Add unlike fractions", "Multiply fractions"] }];
@@ -71,6 +94,10 @@ export function Pieces() {
         <p className="muted">Each piece is built and checked on its own, then nests into the bigger ones. These are the real components, so they work here the way they will in the app.</p>
       </header>
       <div className="sbpgrid">
+        <Piece name="BentoGrid" status="review" chunk="BentoGrid master" nests="Book home, My Bento, Settings, the grown-up page">
+          <DemoGrid />
+          <small className="muted">Six columns; each tile says only its size. Fit mode: the rows share the height they're given and the page never scrolls. Drag the width and height: tile edges line up across rows at every size.</small>
+        </Piece>
         <Piece name="Chapter accordion" status="building" chunk="ListGroup master" nests="the book's chapter list">
           <DemoChapters />
           <small className="muted">A chapter opens with its lessons in a slightly darker panel under it; opening another folds this one shut. The white pill belongs to the picked lesson and fades in on it; it never travels. A folded chapter holding the pick shows a small dot.</small>
@@ -102,12 +129,12 @@ export function Pieces() {
           <Pill onClick={() => { const r = document.documentElement; if (r.dataset.contrast === "true") delete r.dataset.contrast; else r.dataset.contrast = "true"; }}>More contrast on / off</Pill>
           <small className="muted">The line sits inside each panel's edge, so a scroll area, a corner or a fill never cuts it.</small>
         </Piece>
-        <Piece name="Motion" status="review" chunk="Chunks 1 and 6" nests="every page change">
+        <Piece name="Page change" status="building" chunk="The switcher's motion everywhere" nests="every page change, grade change and the landing page">
           <div className="sbpills">
             <Pill onClick={() => move("fwd")}>Deeper</Pill><Pill onClick={() => move("back")}>Back</Pill>
             <Pill onClick={() => move("next")}>Next</Pill><Pill onClick={() => move("prev")}>Previous</Pill>
           </div>
-          <small className="muted">One curve, 500ms in and 450ms out. Tap to play the page change on this board.</small>
+          <small className="muted">The contents' All grades / year / chapter switch, used for every page: the old page is gone at once and the new one fades in with a little zoom, 500ms on the one curve. Deeper zooms in from smaller, back settles from larger, next and previous come in from the side. Tap to play it on this board.</small>
         </Piece>
         <Piece name="Slider" status="review" chunk="Chunk 2" nests="Contents, Which grade">
           <Slider label="Zoom" value={lvl} onPick={setLvl} options={[{ id: "chapter", label: "Chapter" }, { id: "year", label: "Year" }, { id: "all", label: "All grades" }]} />

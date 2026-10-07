@@ -1,6 +1,7 @@
 import { Fragment, useLayoutEffect, useRef, type ReactNode } from "react";
 import type { Tone } from "./statement";
 import { formatNumber, slotsIn, toPlainText, type MathText, type MathToken } from "../../curriculum/schemas/math-text";
+import { layoutRect } from "../../app/transition";
 
 interface Props {
   math: MathText;
@@ -43,7 +44,7 @@ function useFit(math: unknown) {
       if (busy) return;
       busy = true;
       el.style.zoom = "";
-      const need = Math.max(el.scrollWidth, el.getBoundingClientRect().width), have = room(el);
+      const need = Math.max(el.scrollWidth, layoutRect(el).width), have = room(el);
       if (need > have + 0.5 && have > 0) el.style.zoom = String(Math.max(MIN_FIT, Math.floor((have / need) * 1000) / 1000));
       requestAnimationFrame(() => { busy = false; });
     };

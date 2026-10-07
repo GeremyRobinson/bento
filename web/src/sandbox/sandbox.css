@@ -90,3 +90,10 @@ html[data-motion="reduce"] .sbcascade .imark .bl{animation:fadeIn var(--m-swap) 
 /* the chapter accordion piece: a list pane at its real width, not the full screen grid */
 .sbchapters.screen{position:static;display:block;width:100%;max-width:360px}
 .sbchapters .slist{max-height:none}
+
+/* the BentoGrid piece: a frame as wide as the slider says, scrolling sideways inside the piece when it's wider */
+.sbpiece:has(.sbbento){grid-column:1 / -1}
+.sbbento{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--sp-2);width:100%;min-width:0;overflow-x:auto}
+.sbbento-w{display:flex;align-items:center;gap:var(--sp-3);font-size:var(--fz-sm)}
+.sbbento-w input{flex:1;max-width:360px}
+.sbbento-frame{flex:none}
