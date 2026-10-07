@@ -138,6 +138,22 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
         if (Math.max(...hs) - Math.min(...hs) > 1) nests.push(`row heights ${hs.join("/")}`);
         for (const r of rows) if (!r.disabled && ![...r.children].slice(2).some(shown)) nests.push(`"${r.textContent.trim().slice(0, 20)}" has no label`);
       }
+      // the accordion's one spacing (G 2026-10-07, ListGroup v41): the open chapter is one panel, its head and its lessons'
+      // panel set in from its edge by --list-gap, the same gap as between the list's rows
+      for (const g of document.querySelectorAll(".slist>.sgroup.open:not(.opening)")) {
+        const gap = parseFloat(getComputedStyle(g).getPropertyValue("--list-gap")) || 8;
+        const head = g.querySelector(":scope>.srow"), panel = g.querySelector(".sgroup-panel");
+        if (!head || !panel || !shown(panel)) continue;
+        const G = g.getBoundingClientRect(), H = head.getBoundingClientRect(), Pn = panel.getBoundingClientRect();
+        const ins = [H.left - G.left, G.right - H.right, H.top - G.top, Pn.top - H.bottom, Pn.left - G.left, G.right - Pn.right, G.bottom - Pn.bottom];
+        if (ins.some(x => Math.abs(x - gap) > 1)) nests.push(`open chapter "${head.textContent.trim().slice(0, 20)}" insets ${ins.map(x => x.toFixed(1)).join("/")} (want ${gap})`);
+      }
+      for (const l of document.querySelectorAll(".slist")) {
+        const gap = parseFloat(getComputedStyle(l).getPropertyValue("--list-gap")) || 8;
+        const items = [...l.children].filter(e => e.matches(".srow,.sgroup") && shown(e)).map(e => e.getBoundingClientRect());
+        const bad = items.slice(1).map((r, i) => r.top - items[i].bottom).filter(x => Math.abs(x - gap) > 1);
+        if (l.querySelector(":scope>.sgroup") && bad.length) nests.push(`chapter gaps ${bad.map(x => x.toFixed(1)).join("/")} (want ${gap})`);
+      }
       // a chapter's name on the book home is never cut mid-word (its own line clamp only ever ends a whole line)
       // on a phone the picture stays the biggest tile and Today's pinned Start is whole (Design 2026-10-07)
       const phone = [], tday = document.querySelector(".sbento .today"), tstart = document.querySelector(".sbento .tstart");
