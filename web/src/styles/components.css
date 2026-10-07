@@ -255,7 +255,7 @@ button.gcell:active{transform:scale(.96)}
 .viz-svg{width:min(100%, calc(var(--w) * 1.15px), calc(min(54vh, 400px) * var(--w) / var(--h)));height:auto;overflow:visible;display:block;justify-self:center;margin-inline:auto}
 .viz-svg text{font-family:var(--num);font-size:max(var(--d-text),calc(12px * var(--px,0)));fill:var(--text);text-anchor:middle;dominant-baseline:central}
 .viz-svg text.sm{font-size:max(var(--d-text-sm),calc(12px * var(--px,0)));font-family:var(--sans);font-weight:var(--w-bold)} .viz-svg text.xs{font-size:max(var(--d-text-xs),calc(12px * var(--px,0)));fill:var(--muted)} .viz-svg text.big{font-size:max(var(--d-text-xl),calc(12px * var(--px,0)))}
-.viz-svg text.lbl{font-weight:var(--w-bold);fill:var(--lbl,var(--tint))} .viz-svg text.lbl.big{font-size:max(var(--d-text-lg),calc(12px * var(--px,0)))} .viz-svg text.acc,.viz-svg text.pq,.viz-svg .pq text{fill:var(--ka)} .viz-svg text.onlbl{fill:var(--on-tint)}
+.viz-svg text.lbl{font-weight:var(--w-bold);fill:var(--lbl,var(--tint))} .viz-svg text.lbl.big{font-size:max(var(--d-text-lg),calc(12px * var(--px,0)))} .viz-svg text.acc,.viz-svg text.pq,.viz-svg .pq text{fill:var(--ka)} .viz-svg text.onlbl{fill:var(--on-pic,var(--on-tint))}
 .viz-svg text.end{text-anchor:end} .viz-svg text.start{text-anchor:start}
 .viz-svg .ax{stroke:var(--text);stroke-width:var(--d-line);fill:none;stroke-linecap:round}
 .viz-svg .ax.thin{stroke-width:var(--d-thin)} .viz-svg .dash{stroke-dasharray:var(--d-dash)}

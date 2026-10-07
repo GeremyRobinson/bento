@@ -110,11 +110,11 @@ html[data-hue][data-theme="dark"]{--page:oklch(from var(--page-hue) .165 .018 h)
 :is(.wrap,.gpal)[data-grade="4"]{--l0:#b38300;--l1:#d9a000;--l2:#fdbb00;--la:#04bac9} /* grade 263: pictures 83 (opposite), answer cyan (the pictures are already warm) */
 :is(.wrap,.gpal)[data-grade="5"]{--l0:#b68100;--l1:#dd9e00;--l2:#ffb920;--la:#04bac9} /* grade 260: pictures 80 (opposite), answer cyan (the pictures are already warm) */
 :is(.wrap,.gpal)[data-grade="6"]{--l0:#fe0074;--l1:#ff789b;--l2:#ffacbd;--la:#f8b500} /* grade 186: pictures 6 (opposite), answer amber */
-:is(.wrap,.gpal)[data-grade="7"]{--l0:#a38b00;--l1:#c6aa00;--l2:#e7c600;--la:#04bac9} /* grade 277: pictures 97 (opposite), answer cyan (the pictures are already warm) */
+:is(.wrap,.gpal)[data-grade="7"]{--l0:#b08400;--l1:#d6a200;--l2:#fabd00;--la:#04bac9} /* grade 277: pictures 85 (opposite, moved off olive to gold), answer cyan (the pictures are already warm) */
 :is(.wrap,.gpal)[data-grade="8"]{--l0:#009cbe;--l1:#00bde7;--l2:#5bd9ff;--la:#f8b500} /* grade 41: pictures 221 (opposite), answer amber */
 :is(.wrap,.gpal)[data-grade="9"]{--l0:#b38300;--l1:#d9a000;--l2:#fdbb00;--la:#04bac9} /* grade 263: pictures 83 (opposite), answer cyan (the pictures are already warm) */
 :is(.wrap,.gpal)[data-grade="10"]{--l0:#c97500;--l1:#f38f00;--l2:#ffb571;--la:#04bac9} /* grade 243: pictures 63 (opposite), answer cyan (the pictures are already warm) */
-:is(.wrap,.gpal)[data-grade="11"]{--l0:#8d9400;--l1:#acb500;--l2:#c9d300;--la:#04bac9} /* grade 293: pictures 113 (opposite), answer cyan (the pictures are already warm) */
+:is(.wrap,.gpal)[data-grade="11"]{--l0:#689f00;--l1:#7fc200;--l2:#95e200;--la:#f8b500} /* grade 293: pictures 130 (opposite, moved off olive to green), answer amber */
 :is(.wrap,.gpal)[data-grade="12"]{--l0:#00aa11;--l1:#00cf17;--l2:#00f11d;--la:#f8b500} /* grade 323: pictures 143 (opposite), answer amber */
 /* Grade (master): every grade is an instance of this one. A grade's line above overrides only what it changes;
    anything it leaves out comes from here. */
@@ -134,9 +134,9 @@ html[data-hue][data-theme="dark"]{--page:oklch(from var(--page-hue) .165 .018 h)
 .t2 :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--tint:var(--c2);--ink:var(--k2)}
 :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--tint-soft:color-mix(in srgb,var(--tint) 13%,var(--card))}
 /* lines and outlines carry the bold colour; anything filled is dialled back a step so it's easy on the eyes (G 06:10) */
-:is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--soft:oklch(from var(--tint) calc(l + .08) calc(c * .6) h);--soft0:oklch(from var(--c0) calc(l + .08) calc(c * .6) h);--soft1:oklch(from var(--c1) calc(l + .08) calc(c * .6) h);--soft2:oklch(from var(--c2) calc(l + .08) calc(c * .6) h);--soft-acc:oklch(from var(--acc) calc(l + .04) calc(c * .7) h)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--soft:oklch(from var(--tint) calc(l - .1) calc(c * .65) h);--soft0:oklch(from var(--c0) calc(l - .1) calc(c * .65) h);--soft1:oklch(from var(--c1) calc(l - .1) calc(c * .65) h);--soft2:oklch(from var(--c2) calc(l - .1) calc(c * .65) h);--soft-acc:oklch(from var(--acc) calc(l - .08) calc(c * .7) h)}}
-:root[data-theme="dark"] :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--soft:oklch(from var(--tint) calc(l - .1) calc(c * .65) h);--soft0:oklch(from var(--c0) calc(l - .1) calc(c * .65) h);--soft1:oklch(from var(--c1) calc(l - .1) calc(c * .65) h);--soft2:oklch(from var(--c2) calc(l - .1) calc(c * .65) h);--soft-acc:oklch(from var(--acc) calc(l - .08) calc(c * .7) h)}
+:is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--on-pic:oklch(from var(--c0) .26 .05 h);--soft:oklch(from var(--tint) calc(l + .08) calc(c * .6) h);--soft0:oklch(from var(--c0) calc(l + .08) calc(c * .6) h);--soft1:oklch(from var(--c1) calc(l + .08) calc(c * .6) h);--soft2:oklch(from var(--c2) calc(l + .08) calc(c * .6) h);--soft-acc:oklch(from var(--acc) calc(l + .04) calc(c * .7) h)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--on-pic:var(--on-tint);--soft:oklch(from var(--tint) calc(l - .1) calc(c * .65) h);--soft0:oklch(from var(--c0) calc(l - .1) calc(c * .65) h);--soft1:oklch(from var(--c1) calc(l - .1) calc(c * .65) h);--soft2:oklch(from var(--c2) calc(l - .1) calc(c * .65) h);--soft-acc:oklch(from var(--acc) calc(l - .08) calc(c * .7) h)}}
+:root[data-theme="dark"] :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--on-pic:var(--on-tint);--soft:oklch(from var(--tint) calc(l - .1) calc(c * .65) h);--soft0:oklch(from var(--c0) calc(l - .1) calc(c * .65) h);--soft1:oklch(from var(--c1) calc(l - .1) calc(c * .65) h);--soft2:oklch(from var(--c2) calc(l - .1) calc(c * .65) h);--soft-acc:oklch(from var(--acc) calc(l - .08) calc(c * .7) h)}
 /* Dark pictures. In dark mode a picture sits on a raised tile (--float), lighter than --card, so inside it every fill
    and line mixes from the tile it is drawn on. Its greys are lifted to read there: lines and outlines (--rule, --faint)
    3:1 or better, small text (--muted) 4.5:1, and an empty part is a tinted box a step lighter than the tile, never a hole.
