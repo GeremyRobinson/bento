@@ -27,30 +27,30 @@
   --hue:oklch(.6 .15 var(--gh));
   --h1:oklch(.4 .14 var(--gh));--h2:oklch(.46 .14 var(--gh));--h3:oklch(.52 .14 var(--gh));
   --hd1:oklch(.75 .12 var(--gh));--hd2:oklch(.81 .1 var(--gh));--hd3:oklch(.87 .075 var(--gh))}
-/* no pink grades (G 05:36); the early grades take muted primaries, red and green allowed when muted like 2nd's tangerine (G 05:40): K brick red, 1st blue, 2nd tangerine, 3rd green, 4th yellow; 9th a calm amber. The UI stays muted; the pictures are the bright part (G 05:41) */
-:is(.wrap,.gpal)[data-grade="0"]{--gh:35}
-:is(.wrap,.gpal)[data-grade="1"]{--gh:255}
-:is(.wrap,.gpal)[data-grade="2"]{--gh:65}
-:is(.wrap,.gpal)[data-grade="3"]{--gh:145}
-:is(.wrap,.gpal)[data-grade="4"]{--gh:90}
-:is(.wrap,.gpal)[data-grade="5"]{--gh:222}
-:is(.wrap,.gpal)[data-grade="6"]{--gh:170}
-:is(.wrap,.gpal)[data-grade="7"]{--gh:266}
-:is(.wrap,.gpal)[data-grade="8"]{--gh:218}
-:is(.wrap,.gpal)[data-grade="9"]{--gh:55}
-:is(.wrap,.gpal)[data-grade="10"]{--gh:202}
-:is(.wrap,.gpal)[data-grade="11"]{--gh:282}
-:is(.wrap,.gpal)[data-grade="12"]{--gh:234}
+/* the grade colours from the live site (G 06:30: "they were more fun looking"); the hue of each, the ladder and pictures follow by rule */
+:is(.wrap,.gpal)[data-grade="0"]{--gh:70}
+:is(.wrap,.gpal)[data-grade="1"]{--gh:149}
+:is(.wrap,.gpal)[data-grade="2"]{--gh:222}
+:is(.wrap,.gpal)[data-grade="3"]{--gh:1}
+:is(.wrap,.gpal)[data-grade="4"]{--gh:263}
+:is(.wrap,.gpal)[data-grade="5"]{--gh:260}
+:is(.wrap,.gpal)[data-grade="6"]{--gh:186}
+:is(.wrap,.gpal)[data-grade="7"]{--gh:277}
+:is(.wrap,.gpal)[data-grade="8"]{--gh:41}
+:is(.wrap,.gpal)[data-grade="9"]{--gh:263}
+:is(.wrap,.gpal)[data-grade="10"]{--gh:243}
+:is(.wrap,.gpal)[data-grade="11"]{--gh:293}
+:is(.wrap,.gpal)[data-grade="12"]{--gh:323}
 /* no grade chosen yet: the neutral look, ink only */
 :is(.wrap,.gpal)[data-grade="none"]{--hue:var(--text);--h1:var(--text);--h2:var(--text);--h3:var(--text);--hd1:var(--text);--hd2:var(--text);--hd3:var(--text)}
 
 /* brighter in the early grades, calmer as the years go on (G 2026-10-07): --vib scales how much hue the surfaces
    carry, --calm softens the lesson's own colour from 6th grade up */
 .wrap{--vib:1;--calm:1}
-.wrap[data-grade="0"]{--vib:1.15} .wrap[data-grade="1"]{--vib:1.5} .wrap[data-grade="2"]{--vib:1.4} .wrap[data-grade="3"]{--vib:1.2;--lvib:1}
+.wrap[data-grade="0"]{--vib:1.15} .wrap[data-grade="1"]{--vib:1.5} .wrap[data-grade="2"]{--vib:1.4} .wrap[data-grade="3"]{--vib:1.2}
 .wrap[data-grade="4"]{--vib:1.8}
 /* in dark mode the warm grades (red, tangerine, amber, yellow) turn brown when their rungs keep full colour, so their dark ladder takes less (G 06:24) */
-.wrap[data-grade="0"]{--dvib:.6} .wrap[data-grade="2"]{--dvib:.45} .wrap[data-grade="4"]{--dvib:.35} .wrap[data-grade="9"]{--dvib:.45} .wrap[data-grade="6"]{--vib:.9;--calm:.92} .wrap[data-grade="7"]{--vib:.8;--calm:.86}
+.wrap[data-grade="0"]{--dvib:.4} .wrap[data-grade="8"]{--dvib:.55} .wrap[data-grade="6"]{--vib:.9;--calm:.92} .wrap[data-grade="7"]{--vib:.8;--calm:.86}
 .wrap[data-grade="8"]{--vib:.75;--calm:.8} .wrap[data-grade="9"]{--vib:.65;--calm:.74} .wrap[data-grade="10"]{--vib:.6;--calm:.68}
 .wrap[data-grade="11"]{--vib:.55;--calm:.62} .wrap[data-grade="12"]{--vib:.5;--calm:.56}
 /* the lesson's step of the hue: --tint fills and draws, --ink is text in the hue (the light steps read on white) */
@@ -103,19 +103,19 @@ html[data-hue][data-theme="dark"]{--page:oklch(from var(--page-hue) .165 .018 h)
    UI hue on the colour wheel (moved off red, which means wrong), in three depths: deep (l0), mid (l1), light (l2). In dark
    mode the ladder flips so the brightest depth leads. The answer stays amber, except where the pictures are themselves
    warm (amber/orange/yellow); there the answer turns cyan so it still pops. */
-:is(.wrap,.gpal)[data-grade="0"]{--l0:#079db6;--l1:#07bfde;--l2:#31ddff;--la:#f8b500} /* grade 35: pictures 215 (opposite), answer amber */
-:is(.wrap,.gpal)[data-grade="1"]{--l0:#bb7e05;--l1:#e39a01;--l2:#ffb848;--la:#09bac9} /* grade 255: pictures 75 (opposite), answer cyan (the pictures are already warm) */
-:is(.wrap,.gpal)[data-grade="2"]{--l0:#0593e6;--l1:#50b3ff;--l2:#95cefe;--la:#f8b500} /* grade 65: pictures 245 (opposite), answer amber */
-:is(.wrap,.gpal)[data-grade="3"]{--l0:#dd04ec;--l1:#f464fe;--l2:#faa2ff;--la:#f8b500} /* grade 145: pictures 325 (opposite), answer amber */
-:is(.wrap,.gpal)[data-grade="4"]{--l0:#607fff;--l1:#8aa6fe;--l2:#b2c5ff;--la:#f8b500} /* grade 90: pictures 270 (opposite), answer amber */
-:is(.wrap,.gpal)[data-grade="5"]{--l0:#ce7005;--l1:#fa8906;--l2:#feb57d;--la:#09bac9} /* grade 222: pictures 58 (opposite, moved off red), answer cyan (the pictures are already warm) */
-:is(.wrap,.gpal)[data-grade="6"]{--l0:#f504a2;--l1:#ff71bb;--l2:#ffa9d2;--la:#f8b500} /* grade 170: pictures 350 (opposite), answer amber */
-:is(.wrap,.gpal)[data-grade="7"]{--l0:#af8505;--l1:#d5a209;--l2:#f7be0e;--la:#09bac9} /* grade 266: pictures 86 (opposite), answer cyan (the pictures are already warm) */
-:is(.wrap,.gpal)[data-grade="8"]{--l0:#ce7005;--l1:#fa8906;--l2:#feb57d;--la:#09bac9} /* grade 218: pictures 58 (opposite, moved off red), answer cyan (the pictures are already warm) */
-:is(.wrap,.gpal)[data-grade="9"]{--l0:#0a97d1;--l1:#07b8fe;--l2:#85d2fe;--la:#f8b500} /* grade 55: pictures 235 (opposite), answer amber */
-:is(.wrap,.gpal)[data-grade="10"]{--l0:#ce7005;--l1:#fa8906;--l2:#feb57d;--la:#09bac9} /* grade 202: pictures 58 (opposite, moved off red), answer cyan (the pictures are already warm) */
-:is(.wrap,.gpal)[data-grade="11"]{--l0:#9d8e00;--l1:#bfad06;--l2:#deca0e;--la:#09bac9} /* grade 282: pictures 102 (opposite), answer cyan (the pictures are already warm) */
-:is(.wrap,.gpal)[data-grade="12"]{--l0:#ce7005;--l1:#fa8906;--l2:#feb57d;--la:#09bac9} /* grade 234: pictures 58 (opposite), answer cyan (the pictures are already warm) */
+:is(.wrap,.gpal)[data-grade="0"]{--l0:#008ff4;--l1:#60b0ff;--l2:#9cccff;--la:#f8b500} /* grade 70: pictures 250 (opposite), answer amber */
+:is(.wrap,.gpal)[data-grade="1"]{--l0:#e300e0;--l1:#ff57fa;--l2:#ffa0f9;--la:#f8b500} /* grade 149: pictures 329 (opposite), answer amber */
+:is(.wrap,.gpal)[data-grade="2"]{--l0:#cf7000;--l1:#fb8900;--l2:#ffb57b;--la:#04bac9} /* grade 222: pictures 58 (opposite, moved off red), answer cyan (the pictures are already warm) */
+:is(.wrap,.gpal)[data-grade="3"]{--l0:#00a290;--l1:#00c6b0;--l2:#00e6cd;--la:#f8b500} /* grade 1: pictures 181 (opposite), answer amber */
+:is(.wrap,.gpal)[data-grade="4"]{--l0:#b38300;--l1:#d9a000;--l2:#fdbb00;--la:#04bac9} /* grade 263: pictures 83 (opposite), answer cyan (the pictures are already warm) */
+:is(.wrap,.gpal)[data-grade="5"]{--l0:#b68100;--l1:#dd9e00;--l2:#ffb920;--la:#04bac9} /* grade 260: pictures 80 (opposite), answer cyan (the pictures are already warm) */
+:is(.wrap,.gpal)[data-grade="6"]{--l0:#fe0074;--l1:#ff789b;--l2:#ffacbd;--la:#f8b500} /* grade 186: pictures 6 (opposite), answer amber */
+:is(.wrap,.gpal)[data-grade="7"]{--l0:#a38b00;--l1:#c6aa00;--l2:#e7c600;--la:#04bac9} /* grade 277: pictures 97 (opposite), answer cyan (the pictures are already warm) */
+:is(.wrap,.gpal)[data-grade="8"]{--l0:#009cbe;--l1:#00bde7;--l2:#5bd9ff;--la:#f8b500} /* grade 41: pictures 221 (opposite), answer amber */
+:is(.wrap,.gpal)[data-grade="9"]{--l0:#b38300;--l1:#d9a000;--l2:#fdbb00;--la:#04bac9} /* grade 263: pictures 83 (opposite), answer cyan (the pictures are already warm) */
+:is(.wrap,.gpal)[data-grade="10"]{--l0:#c97500;--l1:#f38f00;--l2:#ffb571;--la:#04bac9} /* grade 243: pictures 63 (opposite), answer cyan (the pictures are already warm) */
+:is(.wrap,.gpal)[data-grade="11"]{--l0:#8d9400;--l1:#acb500;--l2:#c9d300;--la:#04bac9} /* grade 293: pictures 113 (opposite), answer cyan (the pictures are already warm) */
+:is(.wrap,.gpal)[data-grade="12"]{--l0:#00aa11;--l1:#00cf17;--l2:#00f11d;--la:#f8b500} /* grade 323: pictures 143 (opposite), answer amber */
 /* Grade (master): every grade is an instance of this one. A grade's line above overrides only what it changes;
    anything it leaves out comes from here. */
 :is(.wrap,.gpal){--master-l0:#3b82f6;--master-l1:#ec4899;--master-l2:#8b5cf6;--master-la:#f59e0b;--master-k0:#2d69cc;--master-k1:#d63187;--master-k2:#7950d6}
