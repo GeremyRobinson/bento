@@ -66,6 +66,7 @@ function explain(p: TwoByTwoProblem, model: AnswerModel): Explanation {
       cols: [{ label: String(10 * t), size: 10 * t }, { label: String(u), size: u }],
       rows: [{ label: String(10 * s), size: 10 * s }, { label: String(v), size: v }],
       cells: [[{ text: withCommas(P[0]!), textFrom: 1, focus: [1] }, { text: withCommas(P[2]!), textFrom: 3, focus: [3] }], [{ text: withCommas(P[1]!), textFrom: 2, focus: [2] }, { text: withCommas(P[3]!), textFrom: 4, focus: [4] }]],
+      seats: 0,
       lines: [{ text: `${P.map(withCommas).join(" + ")} = ${withCommas(total)}`, from: 5 }],
       alt: `${capA(aOrAn(p.a))} ${p.a} by ${p.b} rectangle split into four parts at the tens: ${pr.map(([x, y], i) => `${x} × ${y} = ${P[i]}`).join(", ")}. Together ${total}.`,
     }),
