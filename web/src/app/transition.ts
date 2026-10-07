@@ -33,6 +33,36 @@ export function withTransition(update: () => void, dir: Dir = ""): void {
   delete d!.documentElement.dataset.zoomed;
   try { flushSync(update); } catch { update(); return; }
   playStage(WAY[dir]);
+  focusPage();
+}
+
+/** keyboard and screen reader users land on the new page's heading, not on the page's body (Review page change #3) */
+export function focusPage(): void {
+  const h = ["[data-focus]", "h1", "h2"].map(q => document.querySelector<HTMLElement>(`${PAGE} ${q}`)).find(Boolean);
+  if (!h) return;
+  if (!h.hasAttribute("tabindex")) h.tabIndex = -1;
+  try { h.focus({ preventScroll: true }); } catch { /* ignore */ }
+}
+
+/**
+ * Work a page saves for after its entrance (the landing's pictures and lower sections): runs once the page change has
+ * played, so nothing heavy is drawn while the page comes forward, or at once when there was no page change.
+ */
+export function afterStage(run: () => void): () => void {
+  let off = false;
+  const go = () => { if (!off) run(); };
+  const stage = typeof document === "undefined" ? null : document.querySelector("#app>.stage");
+  if (!stage) { const id = requestAnimationFrame(go); return () => { off = true; cancelAnimationFrame(id); }; }
+  const done = (e: Event) => { if (e.target === stage) { stage.removeEventListener("animationend", done); go(); } };
+  stage.addEventListener("animationend", done);
+  return () => { off = true; stage.removeEventListener("animationend", done); };
+}
+
+/** the next quiet moment (a frame's leftover time), so later sections never hold a frame of their own for long */
+export function whenIdle(run: () => void): () => void {
+  const w = typeof window === "undefined" ? null : window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
+  if (w?.requestIdleCallback) { const id = w.requestIdleCallback(run, { timeout: 400 }); return () => w.cancelIdleCallback?.(id); }
+  const t = setTimeout(run, 50); return () => clearTimeout(t);
 }
 
 /** play the stage entrance on the page now drawn under the nav */

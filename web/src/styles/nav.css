@@ -143,9 +143,9 @@ html[data-zoomed] body{overflow:hidden}
 /* the switcher's motion is the app's one page change (motion.css .stage): the same keyframes, curve and speed */
 .zstage{width:min(1040px,100%);transform-origin:50% 30%;animation:zFrom var(--m-page) var(--m-ease) both}
 .zstage.out{animation-name:zOut} .zstage.in{animation-name:zIn}
-@keyframes zFrom{from{opacity:0;transform:scale(1.08)}}
-@keyframes zOut{from{opacity:0;transform:scale(1.14)}}
-@keyframes zIn{from{opacity:0;transform:scale(.86)}}
+@keyframes zFrom{from{opacity:0;transform:scale(var(--m-zfrom))}}
+@keyframes zOut{from{opacity:0;transform:scale(var(--m-zout))}}
+@keyframes zIn{from{opacity:0;transform:scale(var(--m-zin))}}
 .zhint{font-size:var(--fz-xs);margin-top:-8px}
 /* closing the contents plays them out (Review nav #6): the stage grows a little as it fades, the dim lifts */
 @keyframes zClose{to{opacity:0;transform:scale(1.04)}}

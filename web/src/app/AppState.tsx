@@ -120,9 +120,19 @@ export function AppProvider(props: {
   }, [flush]);
 
   const caughtUp = useRef<string | null>(null);
+  // each history entry carries its place in the stack, so browser forward plays as going forward (Review page change #6)
+  const at = useRef<number>(0);
   useEffect(() => {
-    // a back() already showed this page; history only caught up with it
-    const onHash = () => { if (caughtUp.current === location.hash) { caughtUp.current = null; return; } withTransition(() => setRoute(parseRoute(location.hash)), "back"); };
+    try { const i = (history.state as { i?: number } | null)?.i; if (typeof i === "number") at.current = i; } catch { /* ignore */ }
+    const onHash = () => {
+      let i: number | undefined;
+      try { i = (history.state as { i?: number } | null)?.i; } catch { /* ignore */ }
+      const dir: Dir = typeof i === "number" && i > at.current ? "fwd" : "back";
+      if (typeof i === "number") at.current = i;
+      // a back() already showed this page; history only caught up with it
+      if (caughtUp.current === location.hash) { caughtUp.current = null; return; }
+      withTransition(() => setRoute(parseRoute(location.hash)), dir);
+    };
     addEventListener("hashchange", onHash);
     return () => removeEventListener("hashchange", onHash);
   }, []);
@@ -138,13 +148,17 @@ export function AppProvider(props: {
       // Back never has a dead step (Review chunk 8)
       if (location.hash === h && (history.state as { overlay?: boolean } | null)?.overlay) history.back();
       else if (location.hash !== h) {
-        const entry = { prev: location.hash };
+        const entry = { prev: location.hash, i: at.current + 1 };
         // Settings and My Bento sit side by side over the page you were on: moving between them replaces the step and
         // keeps that page as the one to return to (Review: Practice → gear → My Bento → My Bento landed on Contents)
         const side = (x: string) => x === "#/settings" || x === "#/me";
-        if ((history.state as { overlay?: boolean } | null)?.overlay || (side(location.hash) && side(h)))
-          history.replaceState({ prev: (history.state as { prev?: string } | null)?.prev ?? null }, "", h);
-        else history.pushState(entry, "", h);
+        // (the contents' own step sits one above the page it opened over, so the page replacing it does too)
+        const over = !!(history.state as { overlay?: boolean } | null)?.overlay;
+        if (over || (side(location.hash) && side(h))) {
+          if (over) at.current += 1;
+          history.replaceState({ prev: (history.state as { prev?: string } | null)?.prev ?? null, i: at.current }, "", h);
+        }
+        else { history.pushState(entry, "", h); at.current = entry.i; }
       }
     } catch { /* ignore */ }
     try { scrollTo(0, 0); } catch { /* ignore */ }
@@ -160,7 +174,7 @@ export function AppProvider(props: {
       setRoute(r);
       try {
         if (viaHistory) { caughtUp.current = h; history.back(); }
-        else history.replaceState({ prev: null }, "", h);
+        else history.replaceState({ prev: null, i: at.current }, "", h);
       } catch { /* ignore */ }
       try { scrollTo(0, 0); } catch { /* ignore */ }
     }, "back");

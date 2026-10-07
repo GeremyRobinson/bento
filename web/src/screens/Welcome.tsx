@@ -6,7 +6,7 @@ import { GRADES, gradeOf, tintStyle } from "../curriculum/grades";
 import { lessonById, lessonsInGrade } from "../curriculum/registry";
 import type { Rng } from "../curriculum/generators/rng";
 import { PlayingDiagram } from "../components/diagrams/PlayingDiagram";
-import { reduceMotion } from "../app/transition";
+import { afterStage, reduceMotion, whenIdle } from "../app/transition";
 import { FeatureBox } from "../components/LandingTiles";
 import { GradeNum } from "../components/Shelf";
 import { OneIdea } from "../components/LandingStory";
@@ -147,11 +147,18 @@ export function Welcome() {
   const rng = useMemo(() => deps().rng, []); // eslint-disable-line react-hooks/exhaustive-deps
   // Start learning is the one way in: grades are chosen in the app, in picker D, with nothing picked (G 2026-10-06)
   const start = () => { go({ name: "home" }, "fwd"); if (progress.grade != null) openSheet(true); };
-  // arriving by a page change, only the hero is drawn with the page; the sections below it follow once the page has
-  // come forward, so the change never waits on the whole landing (Review page-switch report, fix C)
-  // one section at a time, a frame apart, so no single frame holds the screen
-  const [rest, setRest] = useState(() => typeof document === "undefined" || !document.documentElement.hasAttribute("data-paged") ? 3 : 0);
-  useEffect(() => { if (rest >= 3) return; const t = setTimeout(() => setRest(n => n + 1), rest ? 50 : 550); return () => clearTimeout(t); }, [rest]);
+  // arriving by a page change, only the hero's words and its empty picture boxes are drawn with the page; the pictures
+  // follow once the page has come forward, then each section below in the next quiet moment, so the change never waits
+  // on the whole landing and nothing heavy is drawn while it plays (Review page change #1)
+  const [rest, setRest] = useState(() => typeof document === "undefined" || !document.documentElement.hasAttribute("data-paged") ? 4 : 0);
+  useEffect(() => {
+    if (rest >= 4) return;
+    const next = () => setRest(n => n + 1);
+    if (rest) return whenIdle(next);
+    let idle: (() => void) | undefined;
+    const stage = afterStage(() => { idle = whenIdle(next); });
+    return () => { stage(); idle?.(); };
+  }, [rest]);
   return (
     <div className="land">
       <section className="lhero">
@@ -160,14 +167,14 @@ export function Welcome() {
         <div className="lcta"><Pill go onClick={start}>{START_LEARNING}</Pill><span>Start free. No account.</span></div>
       </section>
       <section className="lhbox">
-        <HeroPictures rng={rng} />
+        {rest > 0 ? <HeroPictures rng={rng} /> : [0, 1, 2].map(i => <figure key={i} className={`lhpic${i ? " sm" : ""}`} aria-hidden="true" />)}
       </section>
-      {rest > 0 && <OneIdea rng={rng} />}
-      {rest > 1 && <>
+      {rest > 1 && <OneIdea rng={rng} />}
+      {rest > 2 && <>
         <section className="lsec"><h2>Everything in one box.</h2><p>Lessons, plus everything that helps them stick.</p></section>
         <FeatureBox rng={rng} />
       </>}
-      {rest > 2 && <Advanced />}
+      {rest > 3 && <Advanced />}
       <footer className="lfoot">Bento · Kindergarten to 12th grade{SANDBOX && <> · <button className="tlink" onClick={() => dispatchEvent(new Event("bento:sandbox"))}>Sandbox</button></>}</footer>
     </div>
   );

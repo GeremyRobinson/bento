@@ -7,7 +7,7 @@
  * half-drawn layout); a page change that never plays; and a frame that holds the screen too long. Adapted from Review's
  * page-switch guard (review/page-switch-jank/motion-guard.mjs).
  */
-const BUDGET = { frame: 400 }; // 4x-throttled milliseconds
+const BUDGET = { frame: 400, start: 750 }; // 4x-throttled milliseconds; start: from the tap to the page change's first frame
 const SIZES = [{ w: 1366, h: 1024 }, { w: 390, h: 844 }];
 const SAVE = { grade: 5, chosen: true, xp: 1240, gxp: { 5: 1240 }, streak: 12, done: 9, last: new Date().toDateString(), lessons: {}, scores: {}, tests: {} };
 
@@ -81,6 +81,8 @@ export async function motionGuard({ browser, PAGE, fails, notes }) {
         // from the first frame of the new page on: nothing over it, nothing blurred, nothing resizing
         const first = f.findIndex(x => x.stage), last = f[f.length - 1];
         if (first < 0) { fails.push(`${at}: the page change never played`); continue; }
+        // a freeze before the change starts is named on its own (Review: the landing held the contents 1042ms first)
+        if (f[first].t > BUDGET.start) fails.push(`${at}: the page change started ${Math.round(f[first].t)}ms after the tap (budget ${BUDGET.start})`);
         const after = f.slice(first);
         if (after.some(x => x.zoom)) fails.push(`${at}: the contents still drawn over the new page`);
         const old = after.find(x => x.was > 0);

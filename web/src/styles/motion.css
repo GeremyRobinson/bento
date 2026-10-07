@@ -17,6 +17,8 @@
   --m-calm:200ms;  /* every pattern under Less motion */
   /* distances */
   --m-lift:8px; --m-slide:24px; --m-deeper:.97;
+  /* the page change's zoom (the contents' switch): deeper from smaller, back from larger, a neutral move in between */
+  --m-zin:.86; --m-zout:1.14; --m-zfrom:1.08;
   /* press depths */
   --m-press-btn:.96; --m-press-key:.92; --m-press-card:.98;
 
@@ -55,7 +57,6 @@
 #app>.stage.next{animation-name:zNext} #app>.stage.prev{animation-name:zPrev}
 @keyframes zNext{from{opacity:0;transform:translateX(var(--m-slide))}}
 @keyframes zPrev{from{opacity:0;transform:translateX(calc(var(--m-slide) * -1))}}
-:root[data-motion="reduce"] #app>.stage{animation:fadeIn var(--m-calm) linear both}
 /* a screen's pieces follow the page in with a light cascade: a fade and a small lift, never a blur */
 @keyframes rvIn{from{opacity:0;transform:translateY(8px)}}
 /* a work screen's body is a frame, not a piece: its two sides' pieces arrive instead (and a moving frame would carry
