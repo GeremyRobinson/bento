@@ -37,27 +37,25 @@ describe("expression boxes", () => {
     expect(inner!.y + inner!.h).toBeLessThan(outer!.y + outer!.h);
   });
 
-  it("plays a beat's stages in turn: each gives way when the next comes in, and the beat's last stays", () => {
-    // the picture opens by fading in its first stage, which gives way at 1.2 s; the lit stage comes in then and goes at 2.4 s
-    const flashes = d.items.filter(i => i.enter === "flash");
-    expect(flashes.filter(i => i.delay === 0).every(i => i.vars?.["--d2"] === "1.20s")).toBe(true);
-    expect(flashes.filter(i => i.delay === 1.2).every(i => i.vars?.["--d2"] === "2.40s")).toBe(true);
-    expect(flashes.filter(i => i.delay === 0).length).toBeGreaterThan(0);
-    expect(flashes.filter(i => i.delay === 1.2).length).toBeGreaterThan(0);
-    // the beat's last stage stays to the end of the beat
-    expect(d.items.filter(i => i.from === 0 && i.enter !== "flash" && i.until === 0).length).toBeGreaterThan(0);
-    // the lit stage outlines the box it is about
+  it("writes each new expression on its own line under the last, like working on paper, and never moves a line", () => {
+    // stage 0 and its lit look share line 1; the collapse writes line 2 under it; the answer writes line 3
+    const ys = (re: RegExp) => [...new Set(texts(d).filter(t => re.test(t.text)).map(t => t.y))];
+    const [l1] = ys(/^\(5 − 1\)$/), [l2] = ys(/^4$/), [l3] = ys(/^8$/);
+    expect(l1!).toBeLessThan(l2!);
+    expect(l2!).toBeLessThan(l3!);
+    // every copy of a line sits at the same place: nothing slides or re-centres
+    expect(ys(/^2$/)).toHaveLength(2);
+    expect(d.items.some(i => i.enter === "slide")).toBe(false);
+    // a new line rises in; the lit box only lights its outline, which comes and goes on its own
+    expect(texts(d).find(t => t.text === "4")!.enter).toBe("rise");
     expect(d.items.some(i => i.cls?.includes("hlline") && i.enter === "flash")).toBe(true);
-    // the last stage of all has no last beat
+    expect(d.items.filter(i => i.enter === "flash").every(i => i.cls?.includes("hlline"))).toBe(true);
+    // earlier lines stay, dimmed, once a later beat starts
+    expect(shownAt(d, 1).filter(i => i.type === "text" && i.text === "(5 − 1)").every(i => /\bdimmed\b/.test(i.cls ?? ""))).toBe(true);
     expect(d.items.filter(i => i.from === 1).every(i => i.until == null)).toBe(true);
   });
 
-  it("slides a chip from where its box was, and pops a result", () => {
-    const chip = rects(d, /\bxchip p0\b/).find(r => r.enter === "slide")!;
-    const before = rects(d, /\bxbox p0\b/).find(r => r.enter === "flash" && r.delay === 1.2)!;
-    expect(chip.x + chip.w / 2 + px(chip.vars!["--dx"])).toBeCloseTo(before.x + before.w / 2, 0);
-    expect(rects(d, /\bxchip pq\b/)[0]!.enter).toBe("pop");
-  });
+  it("pops a result", () => expect(rects(d, /\bxchip pq\b/)[0]!.enter).toBe("pop"));
 
   it("shows the expression as written above it the whole time, and fits its canvas", () => {
     expect(texts(d).find(t => t.text === "2 × (5 − 1)")!.from ?? 0).toBe(0);
@@ -105,7 +103,7 @@ describe("term table", () => {
       { row: 1, col: 1, text: "8", from: 1, slideFrom: [0, 0], at: 0.8 },
       { row: 1, col: 2, text: "0", from: 2, tone: "faded" },
     ],
-    notes: [{ row: -0.55, col: 0, text: "2 ×", from: 1, until: 1, enter: "drop", at: 0.2 }],
+    notes: [{ row: -0.55, col: 0, text: "2 ×", from: 1, until: 1, enter: "rise", at: 0.2 }],
     arrows: [{ kind: "down", a: [0, 2], b: [1, 2], from: 2 }, { kind: "across", a: [1, 0], b: [0, 1], label: "× 3", from: 2 }],
     marks: [{ row: "head", col: 0, kind: "ring", from: 0, until: 0 }],
     dropRoom: true,
@@ -128,7 +126,7 @@ describe("term table", () => {
   });
 
   it("drops a note in from above, fades a 0 that drops out, and rings a header", () => {
-    expect(texts(d).find(t => t.text === "2 ×")!.enter).toBe("drop");
+    expect(texts(d).find(t => t.text === "2 ×")!.enter).toBe("rise");
     expect(rects(d, /\bcut\b/)).toHaveLength(1);
     expect(rects(d, /\bxring\b/)[0]!.y).toBeLessThan(TERMS.head);
   });

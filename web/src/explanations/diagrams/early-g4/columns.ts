@@ -71,7 +71,7 @@ export function buildColumns(s: ColumnSpec): SceneDiagram {
   if (s.sign === "+") {
     cols.forEach((c, i) => {
       if (!c.regroup) return;
-      items.push(t(X(i + 1), yUp, "1", "sm acc", { from: beatOf(i), enter: "drop", delay: 0.5 }));
+      items.push(t(X(i + 1), yUp, "1", "sm acc", { from: beatOf(i), enter: "rise", delay: 0.5 }));
     });
   } else {
     // a digit that lends a ten is crossed out and its new value written above; the digit that borrows gets a 1 in front
@@ -81,13 +81,13 @@ export function buildColumns(s: ColumnSpec): SceneDiagram {
       const lendNext = cols[lend];
       const lendUntil = lendNext?.regroup ? beatOf(lend) - 1 : undefined;
       items.push(seg([X(lend) - 11, yA + 13], [X(lend) + 11, yA - 13], "ln2", { from: bt, enter: "draw" }));
-      items.push(t(X(lend), yUp, String(lendNow), "sm acc", { from: bt, enter: "drop", delay: 0.3, ...(lendUntil != null ? { until: lendUntil } : {}) }));
+      items.push(t(X(lend), yUp, String(lendNow), "sm acc", { from: bt, enter: "rise", delay: 0.3, ...(lendUntil != null ? { until: lendUntil } : {}) }));
       if (lendNext?.regroup) items.push(t(X(lend), yUp, String(lendNow + 10), "sm acc", { from: beatOf(lend), enter: "pop" }));
       // the borrowing digit: crossed and rewritten with ten more (unless it already shows a new value above)
       const wasLent = i > 0 && cols[i - 1]!.regroup;
       if (!wasLent) {
         items.push(seg([X(i) - 11, yA + 13], [X(i) + 11, yA - 13], "ln2", { from: bt, enter: "draw", delay: 0.4 }));
-        items.push(t(X(i), yUp, String(c.top + 10), "sm acc", { from: bt, enter: "drop", delay: 0.6 }));
+        items.push(t(X(i), yUp, String(c.top + 10), "sm acc", { from: bt, enter: "rise", delay: 0.6 }));
       }
     });
   }

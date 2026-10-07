@@ -35,7 +35,7 @@ export function changeDots(s: ChangeSpec): SceneDiagram {
   if (b) {
     if (kind === "join") {
       for (let k = 0; k < change; k++) {
-        items.push({ type: "circle", cx: x(start + k), cy: 0, r: R, cls: "dotp p1", from: b.change, enter: "drop", delay: 0.3 * k } as Draft);
+        items.push({ type: "circle", cx: x(start + k), cy: 0, r: R, cls: "dotp p1", from: b.change, enter: "rise", delay: 0.3 * k } as Draft);
       }
       items.push(t((x(start) + x(start + change - 1)) / 2, -42, `${change} more`, "lbl p1", { from: b.change, enter: "rise" }));
     } else {

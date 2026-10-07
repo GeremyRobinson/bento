@@ -28,7 +28,7 @@ export function buildMeasure(s: MeasureSpec): SceneDiagram {
     items.push({ type: "rect", x: nameW, y, w: thing.length * U, h: BAR, rx: BAR / 2, cls: `cell ${tone}`, enter: "growx", delay: 0.1 + 0.2 * r } as Draft);
     for (let i = 0; i < thing.length; i++) {
       const x = nameW + i * U, cy = y + BAR + 4;
-      items.push({ type: "rect", x: x + 1, y: cy, w: U - 2, h: U - 2, rx: 3, cls: `sq ${part}`, ...(b ? { from: b.rows[r]!, enter: "drop", delay: 0.08 * i } : { enter: "fade" }) } as Draft);
+      items.push({ type: "rect", x: x + 1, y: cy, w: U - 2, h: U - 2, rx: 3, cls: `sq ${part}`, ...(b ? { from: b.rows[r]!, enter: "rise", delay: 0.08 * i } : { enter: "fade" }) } as Draft);
       if (b) items.push(t(x + U / 2, cy + U / 2 - 1, String(i + 1), "xs", { from: b.rows[r]!, enter: "fade", delay: 0.08 * i + 0.3 }));
     }
     // a dashed start line keeps both things lined up at the same edge

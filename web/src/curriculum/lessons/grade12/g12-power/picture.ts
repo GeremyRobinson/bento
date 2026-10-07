@@ -20,7 +20,7 @@ export function powerRulePicture(o: { a: number; n: number; c: number; e: number
     notes: [
       // the exponent, marked, then coming down to the front
       { row: -0.55, col: 0.4, text: "↓", cls: "lbl acc", from: 0, until: 0, at: 0.6 },
-      { row: -0.55, col: 0, text: `${n} ×`, cls: "lbl acc", from: 1, until: 1, at: 0.2, enter: "drop" },
+      { row: -0.55, col: 0, text: `${n} ×`, cls: "lbl acc", from: 1, until: 1, at: 0.2, enter: "rise" },
     ],
     dropRoom: true,
     marks: [

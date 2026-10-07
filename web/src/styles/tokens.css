@@ -12,7 +12,7 @@
      so letters and digits never get mixed up. Numbers use even-width figures so columns line up. */
   --sans:"Inter",-apple-system,"SF Pro Text",system-ui,"Helvetica Neue",Arial,sans-serif;
   --num:var(--sans);
-  --ease:cubic-bezier(.2,.8,.2,1);
+  --ease:var(--m-ease);
   --c0:#3b82f6; --c1:#ec4899; --c2:#8b5cf6; --acc:#f59e0b;
   color-scheme:light;
 

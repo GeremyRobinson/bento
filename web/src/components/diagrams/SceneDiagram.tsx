@@ -26,6 +26,8 @@ export function SceneDiagram({ diagram: d, at, fit = false }: { diagram: Scene; 
     ro.observe(el);
     return () => ro.disconnect();
   }, [d, fit, ref]);
+  // fit centres the finished picture once (the frame above); parts then appear where they stay, and nothing already
+  // drawn moves between beats (G 19:34: "random coming from the side animations")
   return (
     <svg ref={ref} className="viz-svg" viewBox={`${r1(vb.x)} ${r1(vb.y)} ${r1(vb.w)} ${r1(vb.h)}`} role="img" aria-label={d.alt}
       style={{ "--w": Math.round(d.width), "--h": Math.round(d.height) } as CSSProperties} data-family={d.family}>
