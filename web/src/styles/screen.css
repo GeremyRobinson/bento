@@ -85,6 +85,8 @@ html:has(.screen) body{overflow:hidden}
 /* hovering a lesson lights its dot in the grade's hue (G 2026-10-07) */
 .srow.sles .sdot{transition:background var(--m-swap) var(--m-ease)}
 @media (hover:hover){.srow.sles:not([disabled]):hover .sdot{background:var(--tint)}}
+/* the current lesson keeps its dot lit (G 2026-10-07) */
+.srow.sles.on .sdot{background:var(--tint)}
 .sfoot{padding:var(--sp-3) var(--sp-2) calc(var(--sp-1) + var(--sp-3));position:sticky;bottom:calc(var(--panel-w,1px) - var(--sp-3));background:var(--surf-1,var(--well));z-index:var(--z-up)}
 /* the grade's book: the detail (a well with the preview, a floating card with the lesson) */
 .sdetail>.sday{align-content:start}
