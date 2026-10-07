@@ -71,21 +71,22 @@
   --card:oklch(from var(--hue) 0.995 calc(0.004 * var(--vib)) h); --page:oklch(from var(--hue) 0.985 calc(0.005 * var(--vib)) h);
   --surf-nest:oklch(from var(--hue) 0.925 calc(0.032 * var(--vib)) h); --surf-btn:oklch(from var(--hue) 0.935 calc(0.03 * var(--vib)) h); --surf-sub:oklch(from var(--hue) 0.895 calc(0.05 * var(--vib)) h);
   --g1:oklch(from var(--hue) .935 calc(.018 * var(--vib)) h); --g2:oklch(from var(--hue) .885 calc(.035 * var(--vib)) h); --g3:oklch(from var(--hue) .835 calc(.055 * var(--vib)) h); --g4:oklch(from var(--hue) .785 calc(.075 * var(--vib)) h);
-  --well:var(--g1); --surf-nest:var(--g2); --surf-sub:var(--g3); --surf-btn:var(--g3); --hover:var(--g2); --faint:oklch(from var(--hue) .8 calc(.06 * var(--vib)) h)}
+  --well:var(--g1); --surf-nest:var(--g2); --surf-sub:var(--g3); --surf-btn:var(--g3); --hover:var(--g2); --faint:oklch(from var(--hue) .8 calc(.06 * var(--vib)) h); --float:var(--g1); --btn:var(--g1); --btn-hover:var(--g2); --btn-card:var(--g1); --btn-card-hover:var(--g2); --btn-panel:var(--g2); --btn-panel-hover:var(--g3); --btn-float:var(--g2); --btn-float-hover:var(--g3)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap:not([data-grade="none"]){
   --text:oklch(from var(--hue) .95 calc(0.006 * var(--vib)) h); --muted:oklch(from var(--hue) .74 calc(0.018 * var(--vib)) h); --faint:oklch(from var(--hue) .42 calc(0.016 * var(--vib)) h);
   --rule:oklch(from var(--hue) .31 calc(0.014 * var(--vib)) h); --hover:oklch(from var(--hue) 0.29 calc(0.04 * var(--vib)) h); --well:oklch(from var(--hue) 0.2 calc(0.02 * var(--vib)) h);
   --card:oklch(from var(--hue) 0.255 calc(0.026 * var(--vib)) h); --page:oklch(from var(--hue) 0.135 calc(0.008 * var(--vib)) h);
   --surf-nest:oklch(from var(--hue) 0.24 calc(0.036 * var(--vib)) h); --surf-btn:oklch(from var(--hue) 0.32 calc(0.045 * var(--vib)) h); --surf-sub:oklch(from var(--hue) 0.28 calc(0.052 * var(--vib)) h); --on-tint:oklch(from var(--hue) .18 calc(0.01 * var(--vib)) h);
   --g1:oklch(from var(--hue) .185 calc(.02 * var(--vib)) h); --g2:oklch(from var(--hue) .235 calc(.036 * var(--vib)) h); --g3:oklch(from var(--hue) .285 calc(.055 * var(--vib)) h); --g4:oklch(from var(--hue) .335 calc(.075 * var(--vib)) h);
-  --well:var(--g1); --surf-nest:var(--g2); --surf-sub:var(--g3); --surf-btn:var(--g3); --hover:var(--g2); --faint:oklch(from var(--hue) .45 calc(.06 * var(--vib)) h)}}
+  --well:var(--g1); --surf-nest:var(--g2); --surf-sub:var(--g3); --surf-btn:var(--g3); --hover:var(--g2); --faint:oklch(from var(--hue) .45 calc(.06 * var(--vib)) h); --float:var(--g2); --btn:var(--g1); --btn-hover:var(--g2); --btn-card:var(--g3); --btn-card-hover:var(--g4); --btn-panel:var(--g2); --btn-panel-hover:var(--g3); --btn-float:var(--g3); --btn-float-hover:var(--g4)}}
 :root[data-theme="dark"] .wrap:not([data-grade="none"]){
   --text:oklch(from var(--hue) .95 calc(0.006 * var(--vib)) h); --muted:oklch(from var(--hue) .74 calc(0.018 * var(--vib)) h); --faint:oklch(from var(--hue) .42 calc(0.016 * var(--vib)) h);
   --rule:oklch(from var(--hue) .31 calc(0.014 * var(--vib)) h); --hover:oklch(from var(--hue) 0.29 calc(0.04 * var(--vib)) h); --well:oklch(from var(--hue) 0.2 calc(0.02 * var(--vib)) h);
   --card:oklch(from var(--hue) 0.255 calc(0.026 * var(--vib)) h); --page:oklch(from var(--hue) 0.135 calc(0.008 * var(--vib)) h);
   --surf-nest:oklch(from var(--hue) 0.24 calc(0.036 * var(--vib)) h); --surf-btn:oklch(from var(--hue) 0.32 calc(0.045 * var(--vib)) h); --surf-sub:oklch(from var(--hue) 0.28 calc(0.052 * var(--vib)) h); --on-tint:oklch(from var(--hue) .18 calc(0.01 * var(--vib)) h);
   --g1:oklch(from var(--hue) .185 calc(.02 * var(--vib)) h); --g2:oklch(from var(--hue) .235 calc(.036 * var(--vib)) h); --g3:oklch(from var(--hue) .285 calc(.055 * var(--vib)) h); --g4:oklch(from var(--hue) .335 calc(.075 * var(--vib)) h);
-  --well:var(--g1); --surf-nest:var(--g2); --surf-sub:var(--g3); --surf-btn:var(--g3); --hover:var(--g2); --faint:oklch(from var(--hue) .45 calc(.06 * var(--vib)) h)}
+  --well:var(--g1); --surf-nest:var(--g2); --surf-sub:var(--g3); --surf-btn:var(--g3); --hover:var(--g2); --faint:oklch(from var(--hue) .45 calc(.06 * var(--vib)) h); --float:var(--g2); --btn:var(--g1); --btn-hover:var(--g2); --btn-card:var(--g3); --btn-card-hover:var(--g4); --btn-panel:var(--g2); --btn-panel-hover:var(--g3); --btn-float:var(--g3); --btn-float-hover:var(--g4)}
+/* buttons are glass too (G 05:17, "all buttons, even floating ones"): a button sits one rung up from the surface under it and its hover one more; floating pills and the nav island take a rung of their own */
 /* the page behind the app takes the same wash (App puts the grade's hue on <html>) */
 html[data-hue]{--page:oklch(from var(--page-hue) .983 .007 h);--rule:oklch(from var(--page-hue) .91 .025 h)}
 @media (prefers-color-scheme: dark){html[data-hue]:not([data-theme="light"]){--page:oklch(from var(--page-hue) .165 .018 h);--rule:oklch(from var(--page-hue) .31 .035 h)}}

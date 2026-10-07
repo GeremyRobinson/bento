@@ -18,8 +18,8 @@
 .island{display:flex;align-items:center;gap:var(--sp-3);height:var(--float-h);padding:0 5px;min-width:0;max-width:min(520px,100%);border-radius:var(--r-pill);
   background:var(--float);box-shadow:var(--float-shadow);animation:floatIn var(--dur-400) var(--ease) both}
 @keyframes floatIn{from{opacity:0;transform:translateY(6px)}}
-.island .iback{flex:none;width:var(--float-in);height:var(--float-in);border-radius:var(--r-round);display:grid;place-items:center;background:var(--well);color:var(--ink);transition:background var(--dur-200),transform var(--dur-180) var(--ease)}
-.island .iback:hover{background:var(--hover)}
+.island .iback{flex:none;width:var(--float-in);height:var(--float-in);border-radius:var(--r-round);display:grid;place-items:center;background:var(--btn-float,var(--well));color:var(--ink);transition:background var(--dur-200),transform var(--dur-180) var(--ease)}
+.island .iback:hover{background:var(--btn-float-hover,var(--hover))}
 .island .iback svg{width:20px;height:20px}
 .island .iback:active,.island .iplace:active,.icon:active,.iresume:active{transform:scale(.96)}
 .island .iplace{flex:1;min-width:0;display:grid;align-content:center;height:var(--float-in);padding:0 6px;border-radius:var(--r-pill);text-align:left;transition:transform var(--dur-180) var(--ease)}
@@ -33,7 +33,7 @@
 .pring-fill{stroke:var(--gn,var(--ink));stroke-linecap:round;transition:stroke-dasharray var(--m-in) var(--m-ease)}
 .pring-fill.empty{stroke-opacity:0}
 html[data-motion="reduce"] .pring-fill{transition:none}
-.island .ibat{flex:none;position:relative;width:var(--float-in);height:var(--float-in);border-radius:var(--r-round);background:var(--well);overflow:hidden;display:grid;place-items:center}
+.island .ibat{flex:none;position:relative;width:var(--float-in);height:var(--float-in);border-radius:var(--r-round);background:var(--btn-float,var(--well));overflow:hidden;display:grid;place-items:center}
 .island .ibat>i{position:absolute;inset:auto 0 0;height:calc(var(--p) * 100%);background:var(--gn,var(--ink));transition:height var(--dur-500) var(--glide)}
 
 
@@ -79,7 +79,7 @@ html[data-nav-dark="edge"] .itop.guest .imark{opacity:0;pointer-events:none}
 /* an unfinished lesson waits in the left corner */
 .iresume{flex:0 1 auto;min-width:0;display:flex;align-items:center;gap:10px;height:var(--float-h);padding:0 18px 0 5px;border-radius:var(--r-pill);text-align:left;
   background:var(--float);box-shadow:var(--float-shadow);animation:floatIn var(--dur-400) var(--ease) both;transition:transform var(--dur-180) var(--ease)}
-.iresume .rdot{flex:none;width:var(--float-in);height:var(--float-in);border-radius:var(--r-round);display:grid;place-items:center;background:var(--well);font-size:var(--small)}
+.iresume .rdot{flex:none;width:var(--float-in);height:var(--float-in);border-radius:var(--r-round);display:grid;place-items:center;background:var(--btn-float,var(--well));font-size:var(--small)}
 .iresume .rtext{display:grid;min-width:0;line-height:1.2}
 .iresume small{font-size:var(--fz-2xs);color:var(--muted);font-weight:var(--w-mid)}
 .iresume b{font-size:var(--fz-sm);font-weight:var(--w-bold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
