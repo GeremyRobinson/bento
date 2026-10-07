@@ -8,7 +8,7 @@
  * cell c0/c1/c2, seg, seg on, seg cut, cf top/left/right, wire, bar, fulcrum, beam, tile x/n, marble red/blue/ring/c0/c1/c2,
  * tri c0/c1/c2, shadeA, shadeB, both, pie, arcline, arcline thin. Text: sm, xs, big, lbl, lbl big, acc, onlbl, end, start.
  */
-export type Enter = "draw" | "draw slow" | "pop" | "growx" | "growy" | "fade" | "rise" | "sweep" | "grow" | "level" | "drop" | "slide" | "flash" | "swing" | "fold";
+export type Enter = "draw" | "draw slow" | "pop" | "growx" | "growy" | "fade" | "rise" | "sweep" | "grow" | "level" | "slide" | "flash" | "swing" | "fold";
 
 interface Base {
   cls?: string;

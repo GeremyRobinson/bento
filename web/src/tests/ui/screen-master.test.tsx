@@ -35,14 +35,14 @@ describe("every screen renders inside the Screen master", () => {
     expect(document.querySelector("#app > .screen.solve .wpad .tray")).not.toBeNull();
   });
 
-  it("practice sits on Learn's grid master: the problem and steps, the hero (equation, feedback line, picture), the keypad", () => {
+  it("practice sits on Learn's grid master: the hero is the solve tile (equation, feedback line, step bar, picture), then the keypad", () => {
     renderApp({ grade: 3, chosen: true }, {}, "#/learn/g3-split");
     tap("Try one");
     const root = document.querySelector("#app > .screen.fit.lscreen.pscreen")!;
     expect(root).not.toBeNull();
-    expect([...root.children].filter(c => !c.matches(".fdim,.fstack")).map(c => c.classList[0])).toEqual(["lintro", "lshero", "pbar", "ppad"]);
+    expect([...root.children].filter(c => !c.matches(".fdim,.fstack")).map(c => c.classList[0])).toEqual(["lintro", "lshero", "lpic", "ppad"]);
     const hero = root.querySelector(".lshero")!;
-    expect([...hero.children].map(c => c.classList[0])).toEqual(["lmath", "pfb", "lpic"]);
+    expect([...hero.children].map(c => c.classList[0])).toEqual(["lmath", "pfb", "pbar"]);
     // the answer box sits in the equation, and the feedback line is there (empty) before anything is said
     expect(hero.querySelector(".lmath .ask .slot")).not.toBeNull();
     expect(hero.querySelector(".pfb")!.textContent).toBe("");
@@ -88,17 +88,18 @@ describe("every screen renders inside the Screen master", () => {
     expect(document.querySelector("#app > .screen.fit.placed")).not.toBeNull();
   });
 
-  // the master locks the shared edges: the hero and the keypad share one grid column at every size, so the equation,
-  // the answer box, the feedback line, the picture and the keys line up on the same left and right edges
-  it("the hero and the keypad share one column in every layout", () => {
+  // the master locks the shared edges: the keys always sit straight under the picture, so on a phone the hero, the
+  // picture and the keys share one column, and on a wide screen the picture and the keys share the column beside the
+  // solve panel (G 20:08 "whats all this empty space on the left?")
+  it("the keypad shares the picture's column in every layout", () => {
     const css = fs.readFileSync(`${cwd}/src/styles/screen.css`, "utf8");
     const areas = [...css.matchAll(/\.screen\.fit\.lscreen\.pscreen(?:\.\w+)*\{[^}]*grid-template-areas:([^;}]+)/g)].map(m => m[1]!);
     expect(areas.length).toBeGreaterThanOrEqual(3);
     for (const a of areas) {
       const rows = [...a.matchAll(/"([^"]+)"/g)].map(r => r[1]!.trim().split(/\s+/));
       const col = (name: string) => rows.map(r => r.indexOf(name)).find(i => i >= 0);
-      expect(col("hero"), a).toBe(col("pad"));
-      if (rows.some(r => r.includes("bar"))) expect(col("bar"), a).toBe(col("pad"));
+      expect(col("pad"), a).toBeDefined();
+      if (rows.some(r => r.includes("pic"))) expect(col("pic"), a).toBe(col("pad"));
     }
   });
 

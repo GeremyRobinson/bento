@@ -137,7 +137,7 @@ export function buildAddTens(s: AddTensSpec): SceneDiagram {
   const bottom = ROD_H, t0 = Math.floor(s.n / 10), o = s.n % 10, items: Draft[] = [];
   const allRods = rodsWidth(t0 + s.k);
   for (let i = 0; i < t0; i++) items.push(...rod(i * (CUBE + ROD_GAP), bottom, "cell c0", { delay: 0.1 * i }));
-  for (let i = 0; i < s.k; i++) items.push(...rod((t0 + i) * (CUBE + ROD_GAP), bottom, "cell c1", { from: s.beats.added, enter: "drop", delay: 0.2 + 0.2 * i }));
+  for (let i = 0; i < s.k; i++) items.push(...rod((t0 + i) * (CUBE + ROD_GAP), bottom, "cell c1", { from: s.beats.added, enter: "rise", delay: 0.2 + 0.2 * i }));
   const onesX = allRods + 22;
   items.push(...onesCubes(onesX, bottom, o, "cell c0", { delay: 0.1 * t0 + 0.1 }));
   const mid = (onesX + onesWidth(o)) / 2;

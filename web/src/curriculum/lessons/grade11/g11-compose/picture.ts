@@ -16,11 +16,13 @@ export function compositionPicture(o: { a: number; b: number; c: number; d: numb
   const { a, b, c, d, k, g, out } = o;
   const ruleF = `f(x) = ${coef(a, "x")}${plus(b)}`, ruleG = `g(x) = ${coef(c, "x")}${plus(d)}`;
   const T = (text: string): XNode => ({ t: "text", text });
-  const G = (kids: XNode[], lit = false): XNode => ({ t: "box", id: "G", part: PG, name: "g", under: ruleG, kids, lit });
-  const F = (kids: XNode[], lit = false): XNode[] => [{ t: "box", id: "F", part: PF, name: "f", under: ruleF, kids, lit }];
+  // the rules sit once under the expression, so each written line is just the boxes (G 19:34: a stack)
+  const G = (kids: XNode[], lit = false): XNode => ({ t: "box", id: "G", part: PG, name: "g", kids, lit });
+  const F = (kids: XNode[], lit = false): XNode[] => [{ t: "box", id: "F", part: PF, name: "f", kids, lit }];
   const K: XNode = { t: "chip", id: "k", text: f(k), part: "pq" };
   return buildExprBoxes({
     header: `f(g(${f(k)}))`,
+    rules: `${ruleG}   ${ruleF}`,
     stages: [
       { beat: 0, at: 0, tree: F([G([K])]) },
       { beat: 1, at: 0, tree: F([G([K], true)]) },

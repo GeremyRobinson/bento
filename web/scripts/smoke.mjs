@@ -155,11 +155,11 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
         if (l.querySelector(":scope>.sgroup") && bad.length) nests.push(`chapter gaps ${bad.map(x => x.toFixed(1)).join("/")} (want ${gap})`);
       }
       // a chapter's name on the book home is never cut mid-word (its own line clamp only ever ends a whole line)
-      // on a phone the picture stays the biggest tile and Today's pinned Start is whole (Design 2026-10-07)
+      // on a phone Today gets the room (G 2026-10-07 07:36, which replaced "the picture stays the biggest tile"), the
+      // picture never shrinks under 200px, and Today's pinned Start is whole
       const phone = [], tday = document.querySelector(".sbento .today"), tstart = document.querySelector(".sbento .tstart");
       if (innerWidth < 700 && tday && shown(tday)) {
-        const area = e => { const b = e.getBoundingClientRect(); return b.width * b.height; };
-        if (pic && shown(pic) && area(pic) <= area(tday)) phone.push(`the picture (${Math.round(area(pic))}) is not bigger than Today (${Math.round(area(tday))})`);
+        if (picH != null && picH < 200) phone.push(`the picture is only ${picH}px tall`);
         if (tstart) {
           const S = tstart.getBoundingClientRect(), T = tday.getBoundingClientRect();
           if (!shown(tstart) || S.top < T.top || S.bottom > T.bottom - tday.clientTop || S.bottom > innerHeight) phone.push("Today's Start is not fully visible");

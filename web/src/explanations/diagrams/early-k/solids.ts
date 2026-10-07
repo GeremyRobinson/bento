@@ -257,7 +257,7 @@ export function buildSolid(s: SolidSpec): SceneDiagram {
   }
   if (b.move != null) {
     const rolls = s.kind !== "cube" && s.kind !== "box";
-    items.push(...drawSolid(s, 120, { from: b.move, enter: "slide", vars: { "--dx": "-120px" } }));
+    items.push(...drawSolid(s, 120, { from: b.move, enter: "rise" }));
     items.push(path([M([-80, bottom + 6]), L([poly ? 330 : 330, bottom + 6])], "floor", { from: b.move }));
     items.push(t(150, bottom + 40, rolls ? "it rolls" : "it slides", "lbl", { from: b.move, ...(b.name != null ? { until: b.name - 1 } : {}), enter: "rise", delay: 0.6 }));
   }

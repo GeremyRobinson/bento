@@ -1,52 +1,68 @@
-# Bento design philosophy
+# Bento design
 
-**Calm, clear and alive. A math tool made with care, for anyone from 5 to 99.**
+**Easy to use, easy to understand, good-looking where it counts. Function makes the design.**
 
-Every design choice has to pass two questions:
+Bento is one thing. Every page is built from the same few pieces, and they look and behave the same everywhere.
+The model for all of it is the **lesson overview panel** (Contents): if a page doesn't look like it belongs next to
+that panel, it isn't finished.
 
-1. Would a six-year-old know what to do?
-2. Would a grown-up look at it and want to try it?
+## The pieces
 
-If either answer is no, the design isn't finished.
+There are five pieces. Everything on every page is one of them, or several of them nested.
 
-## 1. One box, many compartments
-Everything in Bento is a tile on one grid. Tiles change size, but never change kind. Variety comes from how the tiles are arranged: a different arrangement, a different picture, a different problem every visit. The parts stay the same.
+| Piece | What it is | Master |
+|---|---|---|
+| **Panel** | A box that holds things. | `--pane-plain`, `--r-panel` |
+| **Row** | One line you read or tap: a lesson, a step, a setting. | `.srow` |
+| **Accordion** | A row that opens to show more rows. | `ListGroup` |
+| **Pill** | A button. | `Pill` |
+| **Picture** | The math, drawn. | `Diagram` |
 
-## 2. The interface holds still; the canvas changes
-Type, controls, spacing and navigation are the same from Kindergarten to 12th grade. Age shows in only two places:
+New UI is built by putting these pieces together. When a piece can't do something, change its master so every page gets it. Never build a one-off.
 
-- **The canvas behind the tiles:** warm counters for Early, dot paper for Core, graph paper for Middle, and a plain sheet for High.
-- **The voice of the feedback:** warmer for younger learners, more direct for older ones.
+## Three rules
 
-Nobody ever outgrows the buttons.
+**1. One gap.** Things inside a panel sit `--nest` (8px) apart, and the same 8px in from its edge.
 
-## 3. One typeface, used quietly
-Bento uses Inter, with its friendlier letterforms: a single-storey a, an l with a tail, and an I with bars, so letters and numbers never get confused.
+**2. Corners nest from the inside out.** The smallest shape keeps its full round. Each shape around it is that round plus 8px.
+- A 44px row has a 22px corner.
+- The panel around it is 30px.
+- The panel around that is 38px.
+Every corner then follows the one inside it.
+- Every main panel on every page, at every size, has that same corner: 46px (`--r-panel`), the Contents list's own.
+- Main panels sit 16px (`--screen-gap`) apart, the same as their distance from the screen edge.
 
-- **Weights:** 400 for reading, 550 for labels and 650 for titles. Numbers use the same typeface.
-- **Case:** sentence case everywhere. No all-caps labels.
-- **Headlines:** big, tightly spaced and short.
+**3. The glass ladder.** Each layer is one step deeper in the grade's own colour (`--g1` to `--g4`). Going in means going deeper, and hovering lifts one step. The row you're on is one step deeper than its neighbours. There are no shadows; outlines and fills only.
 
-## 4. Color means something
-Each grade has its own palette, and color marks what belongs to you: your grade, your next step, your answer. Green means right. Red means look again; it switches to orange when Color-blind friendly is on. Everything else is neutral grey.
+## Colour
 
-## 5. Motion explains
-Things move to show how the math works, like a box filling up, a carry sliding over or a step landing. Nothing moves just for decoration. Every animation ends on a finished still picture, so Less motion loses nothing.
+- **The app's look:** one colour, the grade's own hue, on the ladder.
+- **Pictures:** their own colours, never used for the app's look.
+- **Answers:** green means right. Anything else is calm, never red alarm.
+- A grade is shown as its number in its colour.
 
-## 6. Fun is earned, not applied
-The delight is the moment it clicks: a picture that resolves, or a slip that's explained exactly. Confetti is saved for real wins.
+## Type
 
-## 7. Bento is a book
-Each grade is a book. Home is its cover: what the year is about, today's plan, then every chapter (unit) with its moving picture. Lessons are pages.
+- Inter in three weights: 400 to read, 550 for labels, 650 for titles.
+- Sentence case everywhere.
 
-The island is the only navigation: a small floating capsule, the same on every screen. It says which chapter and page you're on, steps back one page, and holds you. Tap it, or pinch the page closed, and the book zooms out: the chapter, then the year, then every grade on the shelf. Pinch open or tap to go back in. You always know where you are because you watch the page shrink back into its place.
+## Motion
 
-A grade is always its number in its own color (K, 1st, 12th), never a badge plus its name. Progress is always a fill: a card fills from the bottom in its color, like a battery charging. In a row of steps, the one you're on stretches into a pill and glides along.
+- **One speed for everything:** the motion tokens (`--m-*`).
+- **One page change:** a cross-fade.
+- **Accordions:** open and fold with the `ListGroup` motion.
+- **Closing:** faster than opening.
+- **Pictures:** show the math. Pieces appear where they belong (in a stack or a grid) and never fly in from the side.
+- Every animation ends on a still. Less motion is a 200ms fade.
 
-Corners are concentric. A shape inside another sits the same gap in from its edges (8px), and its radius is the outer radius minus that gap. That's why a row hugging a card's corner is a full pill on iPad, and the card it sits in is rounder than the row.
+## Layout
 
-## 8. Respect people
-No account is needed, there are no ads, and nothing leaves the device. Accessibility settings sit in the hub, not hidden away.
+- Lessons never scroll the page. The picture is the hero and gets the room that's left.
+- A picture turns to fit its tile, except a story's picture, which keeps the story's rows.
+- One layout per page at every size; a phone stacks what a wide screen puts side by side.
 
-## 9. Bento² is quieter, not louder
-Bento² is the pro side of Bento. It starts where 12th grade (AP included) ends: linear algebra, multivariable calculus, probability and differential equations, then the math behind AI, space, relativity and quantum. It uses the same system on a dark canvas, with hairline drawings and fewer colors, like a calculator turned on its side. It feels premium because there's less on the page, not more.
+## Before calling something done
+
+1. Does it use only the five pieces?
+2. Do the gaps, corners and ladder match the lesson overview panel?
+3. Would a six-year-old know what to do, and would a grown-up want to try it?

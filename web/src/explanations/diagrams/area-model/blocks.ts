@@ -37,7 +37,7 @@ export function buildRegroupBlocks(spec: RegroupBlocksSpec): SceneDiagram {
   };
   const rodsLeft = tensX + (tensW - rods * (s + GAP) + GAP) / 2;
   for (let i = 0; i < at + bt; i++) rod(rodsLeft + i * (s + GAP), `cell ${i < at ? "c0" : "c1"}`, beats.blocks, "pop", 0.1 + i * 0.08);
-  rod(rodsLeft + (at + bt) * (s + GAP), "sq big", beats.regroup, "drop", 0.5);
+  rod(rodsLeft + (at + bt) * (s + GAP), "sq big", beats.regroup, "rise", 0.5);
 
   // ones fill columns of ten from the bottom; the first full column is the ten that moves
   const onesLeft = onesX + (onesW - 2 * (s + GAP) + GAP) / 2;

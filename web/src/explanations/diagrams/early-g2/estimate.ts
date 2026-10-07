@@ -61,7 +61,7 @@ export function buildEstimate(s: EstimateSpec): SceneDiagram {
   const { start, len, max } = s, end = start + len;
   if (!(Number.isInteger(start) && Number.isInteger(len) && start >= 0 && len >= 1 && end <= max)) throw new Error("estimate: the thing must lie on the ruler");
   const u = s.unit === "in" ? 44 : 26, x = (v: number) => v * u, b = s.beats, items: Draft[] = [];
-  const ro: Timing = b ? { from: b.ruler, enter: "slide" } : {};
+  const ro: Timing = b ? { from: b.ruler, enter: "rise" } : {};
   const rv = b ? { vars: { "--dx": "-80px" } } : {};
   // the ruler: a strip with a tick for every unit
   items.push({ ...rect(x(0) - 14, 0, x(max) + 28, 46, "fillsoft", ro, 6), ...rv } as Draft, { ...rect(x(0) - 14, 0, x(max) + 28, 46, "ax thin", ro, 6), ...rv } as Draft);
