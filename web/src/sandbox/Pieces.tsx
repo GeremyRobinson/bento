@@ -129,12 +129,12 @@ export function Pieces() {
           <Pill onClick={() => { const r = document.documentElement; if (r.dataset.contrast === "true") delete r.dataset.contrast; else r.dataset.contrast = "true"; }}>More contrast on / off</Pill>
           <small className="muted">The line sits inside each panel's edge, so a scroll area, a corner or a fill never cuts it.</small>
         </Piece>
-        <Piece name="Motion" status="review" chunk="Chunks 1 and 6" nests="every page change">
+        <Piece name="Page change" status="building" chunk="The switcher's motion everywhere" nests="every page change, grade change and the landing page">
           <div className="sbpills">
             <Pill onClick={() => move("fwd")}>Deeper</Pill><Pill onClick={() => move("back")}>Back</Pill>
             <Pill onClick={() => move("next")}>Next</Pill><Pill onClick={() => move("prev")}>Previous</Pill>
           </div>
-          <small className="muted">One curve, 500ms in and 450ms out. Tap to play the page change on this board.</small>
+          <small className="muted">The contents' All grades / year / chapter switch, used for every page: the old page is gone at once and the new one fades in with a little zoom, 500ms on the one curve. Deeper zooms in from smaller, back settles from larger, next and previous come in from the side. Tap to play it on this board.</small>
         </Piece>
         <Piece name="Slider" status="review" chunk="Chunk 2" nests="Contents, Which grade">
           <Slider label="Zoom" value={lvl} onPick={setLvl} options={[{ id: "chapter", label: "Chapter" }, { id: "year", label: "Year" }, { id: "all", label: "All grades" }]} />
