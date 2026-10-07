@@ -41,14 +41,14 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
   await p.addInitScript(() => { let s = 42; Math.random = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; });
   if (learner === "returning") {
     await p.addInitScript(save => { try { if (!localStorage.getItem("stepmath")) localStorage.setItem("stepmath", JSON.stringify(save)); } catch {} }, RETURNING);
-    await p.goto(PAGE + "#/"); await p.waitForTimeout(800);
+    await p.goto(PAGE + "#/"); await p.locator(".pitem.now").first().waitFor({ timeout: 8000 }).catch(() => {});
   } else {
     // a learner who picked 5th grade
     await p.goto(PAGE + "#/welcome"); await p.waitForTimeout(500);
     await p.getByRole("button", { name: /Start learning/ }).first().click(); await p.waitForTimeout(400);
     await p.getByRole("radio", { name: /5th grade/ }).first().click(); await p.waitForTimeout(300);
     const go = p.locator(".gdgo button").first(); if (await go.count()) await go.click();
-    await p.waitForTimeout(800);
+    await p.locator(".pitem.now").first().waitFor({ timeout: 8000 }).catch(() => {});
   }
   // today's lesson, opened the way a learner would
   await p.evaluate(() => document.querySelector(".pitem.now")?.click()); await p.waitForTimeout(500);

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Pill } from "./primitives/Pill";
 
@@ -12,6 +12,9 @@ import { Pill } from "./primitives/Pill";
 export function Confirm({ title, body, confirm, cancel = "Keep going", onConfirm, onCancel }: {
   title: string; body?: string; confirm: string; cancel?: string; onConfirm: () => void; onCancel: () => void;
 }) {
+  // when it closes, focus goes back to what opened it
+  const opener = useRef<Element | null>(typeof document !== "undefined" ? document.activeElement : null);
+  useEffect(() => () => { const el = opener.current; if (el instanceof HTMLElement && el.isConnected) el.focus(); }, []);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.preventDefault(); onCancel(); } };
     addEventListener("keydown", onKey);

@@ -35,7 +35,7 @@ html:has(.screen) body{overflow:hidden}
 :root[data-motion="reduce"] .srow::before{transition-duration:var(--m-calm)!important}
 .srow.chap.holds .sname b::after{content:"";display:inline-block;width:6px;height:6px;margin-left:var(--sp-2);border-radius:var(--r-round);background:var(--ink);vertical-align:middle}
 .srow{position:relative;z-index:var(--z-up);display:flex;align-items:center;gap:var(--sp-3);width:100%;min-height:var(--float-h);padding:var(--sp-2) 18px;border-radius:var(--r-pill);text-align:left;font-size:var(--fz-md);transition:background var(--m-swap) var(--m-ease),color var(--m-swap) var(--m-ease)}
-.srow:not([disabled]):not(.on):hover{background:color-mix(in oklab,var(--tint) 7%,transparent)}
+@media (hover:hover){.srow:not([disabled]):not(.on):hover{background:color-mix(in oklab,var(--tint) 7%,transparent)}}
 .srow .sname{flex:1;min-width:0;display:grid}
 .srow .sname b{font-weight:var(--w-mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* a long name wraps to a second line rather than losing its end (v44 sweep item 8) */
@@ -62,7 +62,8 @@ html:has(.screen) body{overflow:hidden}
 /* the fold's clip is as round as the panel, so its corners stay round while it folds (Review) */
 .sgroup-in{min-height:0;overflow:hidden;border-radius:calc(var(--row-h) / 2 + var(--nest-pad))}
 /* the picked lesson's pill waits for its chapter to finish opening, then fades in; it never rides up with the panel (Review) */
-.sgroup:is(.opening,:not(.open)) .srow::before{opacity:0;transition:none}
+.sgroup:is(.opening,:not(.open)) .srow::before{opacity:0}
+.sgroup.opening .srow::before{transition:none}
 .sgroup-panel{display:grid;gap:var(--nest-pad);margin-top:var(--sp-1);padding:var(--nest-pad);background:var(--surf-nest);border-radius:calc(var(--row-h) / 2 + var(--nest-pad))}
 .sgroup.open{padding-bottom:var(--sp-1)}
 .sgroup .srow.sles{min-height:var(--row-h)}

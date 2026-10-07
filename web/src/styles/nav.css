@@ -358,7 +358,9 @@ html:has(.screen),html:has(.screen) body{overflow:hidden;overscroll-behavior:non
 .confirm .cq{grid-column:1 / -1;display:grid;gap:var(--sp-1);padding:calc(var(--u) + var(--sp-2) - var(--cin)) calc(var(--u) + var(--sp-2) - var(--cin)) var(--sp-3)}
 .confirm .cq b{font-size:var(--fz-xl);font-weight:var(--w-bold);letter-spacing:-.01em}
 .confirm .cq span{color:var(--muted);font-size:var(--fz-md)}
-.confirm .ca{width:100%}
+.confirm .ca{width:100%;position:relative}
+/* the small pills draw 40px but answer a 44px touch */
+.confirm .ca::after{content:"";position:absolute;inset:-2px 0}
 /* the same height as the Resume pill beside it, like every nav button */
 .iresume-x{flex:none;display:grid;place-items:center;width:var(--float-h);height:var(--float-h);border-radius:var(--r-pill);background:var(--float);box-shadow:var(--float-shadow);color:var(--muted)}
 
