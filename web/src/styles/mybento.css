@@ -51,7 +51,9 @@
   .mygrown{grid-area:grown}.mychap{grid-area:chap}.mygrades{grid-area:grades}
 }
 @media (min-width:1100px){
-  .bmine{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-areas:"hero hero streak xp" "hero hero done grown" "chap chap grades grades"}
+  /* each tile as big as what it holds (G 2026-10-07 22:48, "a lot of stuff is just huge panels"): the level and the
+     three numbers share one row, the chapter and the grown-up's report the next, your grades run the full width */
+  .bmine{grid-template-areas:"hero hero hero streak xp done" "chap chap chap grown grown grown" "grades grades grades grades grades grades"}
   .bmine>*{grid-column:auto}
   .myhero{grid-area:hero;align-content:center}.mystreak{grid-area:streak}.myxp{grid-area:xp}.mydone{grid-area:done}
   .mygrown{grid-area:grown}.mychap{grid-area:chap}.mygrades{grid-area:grades}

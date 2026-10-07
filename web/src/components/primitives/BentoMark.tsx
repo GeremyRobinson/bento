@@ -7,7 +7,8 @@ import { APP_NAME } from "../../app/copy";
  * Bento² with a real superscript 2 (Inter's ² sits too low and light).
  */
 export function BentoMark({ className, squared }: { className?: string; squared?: boolean }) {
-  const name = APP_NAME, letters = [...name];
+  // the mark is set all lowercase, "obento" (G 2026-10-07 22:47); a reader still hears the name
+  const name = APP_NAME, letters = [...name.toLowerCase()];
   return (
     <span className={`bmark${className ? ` ${className}` : ""}`}>
       <span className="vh">{squared ? `${name} squared` : name}</span>
