@@ -87,7 +87,7 @@ html:has(.screen) body{overflow:hidden}
 .sdetail>.sday{align-content:start}
 .sdl{flex:1;min-height:0;display:flex;flex-direction:column;gap:var(--screen-gap)}
 /* panels with buttons are the lighter level; panels you look at (pictures, examples) a level darker (G 2026-10-07) */
-.sdtext{flex:none;background:var(--float);box-shadow:var(--float-shadow);padding:26px 30px;gap:10px;border-radius:var(--r-panel)}
+.sdtext{flex:none;background:var(--card);box-shadow:var(--float-shadow);padding:26px 30px;gap:10px;border-radius:var(--r-panel)}
 .sdtext .k{margin:0;color:var(--muted);font-size:var(--fz-sm);font-weight:var(--w-mid)}
 .sdtext h2{margin:0;font:var(--w-bold) 32px/38px var(--sans);letter-spacing:-.03em}
 .sdidea{margin:0;color:var(--muted);max-width:60ch;font-size:var(--fz-lg);line-height:1.45}
@@ -95,7 +95,8 @@ html:has(.screen) body{overflow:hidden}
 .sfootrow .grow{flex:1}
 .sfootrow .slast{display:inline-flex;align-items:center;gap:var(--sp-2);color:var(--muted);font-size:var(--fz-sm);font-weight:var(--w-mid)}
 .sfootrow .ctl{--pill-h:var(--float-h);font-size:var(--fz-lg)}
-.sfootrow .ctl:not(.go){background:var(--well);box-shadow:none}
+/* a quiet button is one level lighter than nothing: a step off its panel, never a dark hole in it */
+.sfootrow .ctl:not(.go){background:var(--surf-btn);box-shadow:none}
 .spreview{flex:none;margin:0;background:var(--well);border-radius:var(--r-panel);padding:var(--sp-5) var(--sp-7);grid-template-rows:auto minmax(0,1fr);overflow:hidden;box-shadow:none}
 .spreview figcaption{color:var(--muted);font-size:var(--fz-sm);font-weight:var(--w-mid);display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
 .spreview figcaption b{color:var(--text)}
