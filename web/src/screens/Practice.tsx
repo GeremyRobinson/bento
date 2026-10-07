@@ -1,4 +1,5 @@
 import { Pill } from "../components/primitives/Pill";
+import { Check, Chevron } from "../components/primitives/icons";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { playTone, readAloudOn, readSettings, speak } from "../app/settings";
 import { useApp } from "../app/AppState";
@@ -162,7 +163,7 @@ export function Practice() {
     <ol className="beats pbeats">
       {beats.map(b => (
         <li key={b.k} className={`beat${b.line && s.fx === "line" && b.k === s.work.length - 1 ? " enter" : ""}`} data-state={b.state}>
-          <span className="badge">{b.state === "done" ? "✓" : b.k + 1}</span>
+          <span className="badge">{b.state === "done" ? <Check /> : b.k + 1}</span>
           <span className="say"><b>{b.label}</b>{b.line && <span className={`pline${b.line.shown ? " shown" : ""}`}><MathLine math={b.line.math} /></span>}</span>
         </li>
       ))}
@@ -203,8 +204,8 @@ export function Practice() {
           pushes the picture down, and when the problem is solved the bar is where "Solved." and its idea land (G 2026-10-07) */}
         <div className="pbar">
           <button key={fb?.type === "good" && !s.solved ? fbKey : "bar"} className={`fpill stepbar${s.solved ? " solved" : ""}${fb?.type === "good" && !s.solved && !fbAway ? " flash" : ""}`} onClick={() => setStepsOpen(o => !o)} aria-expanded={stepsOpen} aria-label={`Steps: ${now?.label ?? "done"}, ${Math.min(here + 1, steps.length)} of ${steps.length}`}>
-            <span className="badge">{s.solved ? "✓" : here + 1}</span><span className="sbl">{s.solved ? <><b>Solved.</b>{idea && <> <Rich text={idea} /></>}</> : now?.label}</span>
-            <small>{Math.min(here + 1, steps.length)} of {steps.length}</small><span className="chev" aria-hidden>⌃</span>
+            <span className="badge">{s.solved ? <Check /> : here + 1}{fb?.type === "good" && !s.solved && !fbAway && <span className="tick"><Check /></span>}</span><span className="sbl">{s.solved ? <><b>Solved.</b>{idea && <> <Rich text={idea} /></>}</> : now?.label}</span>
+            <small>{Math.min(here + 1, steps.length)} of {steps.length}</small><span className="chev" aria-hidden><Chevron dir="down" /></span>
           </button>
         </div>
         {stepsOpen && (

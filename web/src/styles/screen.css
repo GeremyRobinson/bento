@@ -352,7 +352,9 @@ html:has(.screen) body{overflow:hidden}
 .psteps .pblist{display:block;padding:var(--sp-2);border-radius:var(--r-2xl);white-space:normal;width:100%}
 /* solved, in one motion (practice-spec §5): the box turns green, the picture finishes, the "?" fills, then the keys
    fade and Check becomes Next problem; the island's battery ticks up with one glow */
-.pmath .ask.ok{padding:var(--sp-1) var(--sp-4);border-radius:var(--r-lg);box-shadow:inset 0 0 0 2.5px var(--ok);animation:fadeIn var(--dur-120) var(--ease) both}
+/* solved: no box round the line; the answer itself lights up green, where its box was (G 18:16) */
+.pmath .ask.ok{animation:fadeIn var(--dur-120) var(--ease) both}
+.pmath .ask.ok .ans{display:inline-flex;align-items:center;min-height:var(--slot);padding:0 .3em;border-radius:calc(var(--slot) / 4);background:var(--ok);color:var(--on-tint);font-weight:inherit}
 .psolved .pprob .math .slot,.psolved .pprob .math .qbox{transition:background var(--dur-400) var(--ease) var(--dur-350)}
 .island .ibat.tick{outline:0 solid transparent;animation:batTick var(--dur-400) var(--ease) var(--dur-500) both}
 @keyframes batTick{50%{outline-width:5px;outline-color:color-mix(in srgb,var(--tint) 22%,transparent)}}
@@ -556,7 +558,9 @@ html:has(.screen) body{overflow:hidden}
 @keyframes sbTick{0%,70%{opacity:1}100%{opacity:0}}
 .stepbar.flash{animation:sbFlash var(--dur-1600) var(--ease) both}
 .stepbar .badge{position:relative}
-.stepbar.flash .badge::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;border-radius:inherit;background:var(--ok);color:var(--on-tint);animation:sbTick var(--dur-1600) var(--ease) both}
+.stepbar .badge>.tick{position:absolute;inset:0;display:grid;place-items:center;border-radius:inherit;background:var(--ok);color:var(--on-tint);animation:sbTick var(--dur-1600) var(--ease) both}
+/* ticks are the one Check icon everywhere, never a ✓ glyph (G 18:16) */
+:is(.stepbar,.beat) .badge>svg,.stepbar .badge>.tick>svg{width:16px;height:16px;display:block}
 /* the problem dots: the one you're on is solid and darker, no ring */
 .pdots i.now{background:var(--ink);box-shadow:none;outline:none}
 /* a phone keypad with no "." or "−" is three rows, not four, so each key takes the room back and grows */
@@ -591,10 +595,14 @@ html:has(.screen) body{overflow:hidden}
   .pscreen .phero .stepbar.solved .sbl{white-space:normal;font-weight:var(--w-regular);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
   .pscreen .phero .stepbar.solved .sbl b{font-weight:var(--w-bold)}
   .pscreen .phero .stepbar.solved small{display:none}
+  /* the chevron points down while the steps are shut and up while they're open, turning about its own centre (G 18:16) */
+  .pscreen .phero .stepbar .chev{width:20px;height:20px;flex:none;display:grid;place-items:center;transform-origin:50% 50%;transition:transform var(--m-swap) var(--m-ease)}
+  .pscreen .phero .stepbar .chev>svg{width:20px;height:20px;display:block}
   .pscreen .phero .stepbar[aria-expanded="true"] .chev{transform:rotate(180deg)}
-  .pscreen .phero .stepbar .chev{transition:transform var(--m-swap) var(--m-ease)}
   /* the steps accordion: opens under the bar and pushes the problem and picture down */
   .pscreen .lshero.phero>.pacc{grid-row:2;display:grid;gap:var(--sp-2);padding:var(--sp-3) var(--sp-3) 0;animation:stackIn var(--m-in) var(--m-ease) both}
+  /* long step lists scroll inside the panel, so Next problem and the keys always stay on screen */
+  .pscreen .lshero.phero>.pacc{max-height:38dvh;overflow-y:auto;overscroll-behavior:contain}
   .pscreen .pacc .pwhere{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);margin:0;padding:0 var(--sp-2);font-weight:var(--w-mid);color:var(--muted);font-size:var(--fz-sm)}
   /* the steps' ticks and words line up under the bar's own (G 17:44) */
   .pscreen .pacc .pbeats .beat{padding:6px var(--sp-3) 6px 6px;gap:10px}
