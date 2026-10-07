@@ -13,3 +13,7 @@ export const Check = () => (
 export const LockIcon = ({ size = 14 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><rect x="3.5" y="8" width="11" height="7.5" rx="2.5" /><path d="M6 8V6a3 3 0 0 1 6 0v2" /></svg>
 );
+/** A close cross, in the same strokes. */
+export const CloseIcon = () => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" /></svg>
+);

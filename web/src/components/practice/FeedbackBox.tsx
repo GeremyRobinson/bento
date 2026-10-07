@@ -19,7 +19,7 @@ export function FeedbackBox({ fb, idea, solved }: { fb: Feedback | null; idea?: 
   const shown = fb, on = !!shown || !!solved;
   const strong = solved ? "Solved." : shown?.strong, text = solved ? idea ?? shown?.text : shown?.text;
   return (
-    <div className={`pfb${on ? ` fb-${solved ? "good" : shown!.type}` : ""}`} role="status" aria-live="polite">
+    <div className={`pfb${on ? ` fb-${solved ? "good solved" : shown!.type}` : ""}`} role="status" aria-live="polite">
       {on && <>
         <span className={`dot ${solved ? "ok" : DOT[shown!.type]}`} />
         <span className="pfbt">

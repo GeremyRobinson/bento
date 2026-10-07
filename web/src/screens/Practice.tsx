@@ -11,6 +11,7 @@ import type { Explanation } from "../explanations/schema";
 import { FeedbackBox } from "../components/practice/FeedbackBox";
 import { Confirm } from "../components/Confirm";
 import { Keypad } from "../components/practice/Keypad";
+import { CloseIcon } from "../components/primitives/icons";
 import { FitScreen } from "../components/screen/Screen";
 import { ALL_LESSONS, SHOW_ME } from "../app/copy";
 import {
@@ -72,7 +73,7 @@ export function Practice() {
       }
       const map: Record<string, string> = { Backspace: "back", "-": "−", ".": ".", Tab: "next" };
       const key = /^\d$/.test(e.key) ? e.key : map[e.key];
-      if (key) { e.preventDefault(); act(st => pressKey(st, key)); }
+      if (key) { e.preventDefault(); if (s.feedback?.type === "bad") setFbAway(true); act(st => pressKey(st, key)); }
       else if (e.key === "Enter") {
         e.preventDefault();
         if (s.solved) onNext(); else act((st, p, d) => check(st, p, d));
@@ -91,6 +92,18 @@ export function Practice() {
   }, [s?.i, s?.mode, s?.t0]); // eslint-disable-line react-hooks/exhaustive-deps
   // the problem already shows its own picture when the lesson draws one
   const ex = full && !ownPic && full.diagram && full.diagram.kind !== "chain" ? full : null;
+
+  // a session whose answers are all whole numbers, none below zero, needs no "." or "−" key: the keypad drops them and
+  // its keys grow (G 2026-10-07). Worked out from every answer in the session, so no one problem gives itself away.
+  const plain = useMemo(() => {
+    if (!s) return false;
+    try {
+      return s.items.every(item => {
+        const l = requireLesson(item.lessonId);
+        return l.answers(problemOf(item)).steps.every(st => !!st.choices || st.slots.every(sl => sl.expected == null || (Number.isInteger(sl.expected) && sl.expected >= 0)));
+      });
+    } catch { return false; }
+  }, [s?.t0]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // the tapped answer wears right or wrong on itself (UI notes preview)
   const [tapped, setTapped] = useState<{ at: string; i: number } | null>(null);
@@ -198,7 +211,7 @@ export function Practice() {
       </figure>
       {/* a phone: the steps fold into one bar over the keypad */}
       <div className="pbar">
-        <button className="fpill stepbar" onClick={() => setStepsOpen(o => !o)} aria-expanded={stepsOpen} aria-label={`Steps: ${now?.label ?? "done"}, ${Math.min(here + 1, steps.length)} of ${steps.length}`}>
+        <button key={fb?.type === "good" && !s.solved ? fbKey : "bar"} className={`fpill stepbar${fb?.type === "good" && !s.solved && !fbAway ? " flash" : ""}`} onClick={() => setStepsOpen(o => !o)} aria-expanded={stepsOpen} aria-label={`Steps: ${now?.label ?? "done"}, ${Math.min(here + 1, steps.length)} of ${steps.length}`}>
           <span className="badge">{s.solved ? "✓" : here + 1}</span><span className="sbl">{s.solved ? "Solved" : now?.label}</span>
           <small>{Math.min(here + 1, steps.length)} of {steps.length}</small><span className="chev" aria-hidden>⌃</span>
         </button>
@@ -210,7 +223,7 @@ export function Practice() {
             ? s.pick.options.map((o, i) => <button key={`${i}-${o}`} className={`choice${mark(i)}`} onClick={() => { setTapped({ at, i }); act(st => pickPlan(st, i)); }}>{o}</button>)
             : step.choices!.map((o, i) => <button key={`${i}-${o}`} className={`choice${mark(i)}`} onClick={() => { setTapped({ at, i }); act((st, p, d) => choose(st, i, p, d)); }}>{o}</button>)}</div>
         </div>) : undefined}
-        solved={s.solved} onKey={key => act(st => pressKey(st, key))}
+        solved={s.solved} plain={plain} onKey={key => { if (fb?.type === "bad") setFbAway(true); act(st => pressKey(st, key)); }}
         go={s.solved ? { label: nextLabel, run: onNext } : tapOnly ? undefined : { label: "Check", run: () => act((st, p, d) => check(st, p, d)) }} />
       {hintOpen && step && (
         <>
@@ -230,7 +243,10 @@ export function Practice() {
         <>
           <div className="fdim phdim" onClick={() => setStepsOpen(false)} />
           <div className="fstack psteps" role="dialog" aria-label="Steps" style={{ "--n": 3 } as CSSProperties}>
-            <span className="fpill pwhere" style={{ "--i": 0 } as CSSProperties}>Problem {s.i + 1} of {n}{dots}</span>
+            <span className="hrow pwrow" style={{ "--i": 0 } as CSSProperties}>
+              <span className="fpill pwhere">Problem {s.i + 1} of {n}{dots}</span>
+              <button className="fpill pclose" aria-label="Close steps" onClick={() => setStepsOpen(false)}><CloseIcon /></button>
+            </span>
             <div className="fpill pblist" style={{ "--i": 1 } as CSSProperties}>{beatList}</div>
             <span className="hrow" style={{ "--i": 2 } as CSSProperties}>{extras}</span>
           </div>
