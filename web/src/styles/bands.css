@@ -59,22 +59,22 @@
 :root[data-theme="dark"] .wrap{--on-tint:#14161b}
 
 /* the greys are shades of the grade's one hue (G 2026-10-07: "one hue for the ui color on that grade with different
-   shades", every grade 04:46): every chrome colour is the hue at a set lightness and a low chroma, never a blue-grey mixed with it. Light: */
+   shades", every grade 04:46; "levels to the panels", "everything is tinted" 04:55): panels are near-neutral steps of lightness with only a hint of the hue; the hue itself is for what you pick, open and press, never a blue-grey mixed with it. Light: */
 .wrap:not([data-grade="none"]){
-  --text:oklch(from var(--hue) .23 calc(.03 * var(--vib)) h); --muted:oklch(from var(--hue) .49 calc(.06 * var(--vib)) h); --faint:oklch(from var(--hue) .83 calc(.045 * var(--vib)) h);
-  --rule:oklch(from var(--hue) .91 calc(.025 * var(--vib)) h); --hover:oklch(from var(--hue) .935 calc(.025 * var(--vib)) h); --well:oklch(from var(--hue) .955 calc(.016 * var(--vib)) h);
-  --card:oklch(from var(--hue) .995 calc(.003 * var(--vib)) h); --page:oklch(from var(--hue) .983 calc(.007 * var(--vib)) h);
-  --surf-nest:oklch(from var(--hue) .925 calc(.028 * var(--vib)) h); --surf-sub:oklch(from var(--hue) .895 calc(.038 * var(--vib)) h)}
+  --text:oklch(from var(--hue) .23 calc(0.012 * var(--vib)) h); --muted:oklch(from var(--hue) .49 calc(0.02 * var(--vib)) h); --faint:oklch(from var(--hue) .83 calc(0.016 * var(--vib)) h);
+  --rule:oklch(from var(--hue) .91 calc(0.012 * var(--vib)) h); --hover:oklch(from var(--hue) 0.925 calc(0.012 * var(--vib)) h); --well:oklch(from var(--hue) 0.945 calc(0.006 * var(--vib)) h);
+  --card:oklch(from var(--hue) 1 calc(0 * var(--vib)) h); --page:oklch(from var(--hue) 0.985 calc(0.003 * var(--vib)) h);
+  --surf-nest:oklch(from var(--hue) 0.912 calc(0.009 * var(--vib)) h); --surf-sub:oklch(from var(--hue) 0.875 calc(0.013 * var(--vib)) h)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap:not([data-grade="none"]){
-  --text:oklch(from var(--hue) .95 calc(.012 * var(--vib)) h); --muted:oklch(from var(--hue) .74 calc(.05 * var(--vib)) h); --faint:oklch(from var(--hue) .42 calc(.045 * var(--vib)) h);
-  --rule:oklch(from var(--hue) .31 calc(.035 * var(--vib)) h); --hover:oklch(from var(--hue) .29 calc(.035 * var(--vib)) h); --well:oklch(from var(--hue) .215 calc(.025 * var(--vib)) h);
-  --card:oklch(from var(--hue) .255 calc(.028 * var(--vib)) h); --page:oklch(from var(--hue) .165 calc(.018 * var(--vib)) h);
-  --surf-nest:oklch(from var(--hue) .19 calc(.022 * var(--vib)) h); --surf-sub:oklch(from var(--hue) .165 calc(.018 * var(--vib)) h); --on-tint:oklch(from var(--hue) .18 calc(.02 * var(--vib)) h)}}
+  --text:oklch(from var(--hue) .95 calc(0.006 * var(--vib)) h); --muted:oklch(from var(--hue) .74 calc(0.018 * var(--vib)) h); --faint:oklch(from var(--hue) .42 calc(0.016 * var(--vib)) h);
+  --rule:oklch(from var(--hue) .31 calc(0.014 * var(--vib)) h); --hover:oklch(from var(--hue) 0.29 calc(0.012 * var(--vib)) h); --well:oklch(from var(--hue) 0.2 calc(0.008 * var(--vib)) h);
+  --card:oklch(from var(--hue) 0.265 calc(0.01 * var(--vib)) h); --page:oklch(from var(--hue) 0.135 calc(0.006 * var(--vib)) h);
+  --surf-nest:oklch(from var(--hue) 0.168 calc(0.008 * var(--vib)) h); --surf-sub:oklch(from var(--hue) 0.14 calc(0.007 * var(--vib)) h); --on-tint:oklch(from var(--hue) .18 calc(0.01 * var(--vib)) h)}}
 :root[data-theme="dark"] .wrap:not([data-grade="none"]){
-  --text:oklch(from var(--hue) .95 calc(.012 * var(--vib)) h); --muted:oklch(from var(--hue) .74 calc(.05 * var(--vib)) h); --faint:oklch(from var(--hue) .42 calc(.045 * var(--vib)) h);
-  --rule:oklch(from var(--hue) .31 calc(.035 * var(--vib)) h); --hover:oklch(from var(--hue) .29 calc(.035 * var(--vib)) h); --well:oklch(from var(--hue) .215 calc(.025 * var(--vib)) h);
-  --card:oklch(from var(--hue) .255 calc(.028 * var(--vib)) h); --page:oklch(from var(--hue) .165 calc(.018 * var(--vib)) h);
-  --surf-nest:oklch(from var(--hue) .19 calc(.022 * var(--vib)) h); --surf-sub:oklch(from var(--hue) .165 calc(.018 * var(--vib)) h); --on-tint:oklch(from var(--hue) .18 calc(.02 * var(--vib)) h)}
+  --text:oklch(from var(--hue) .95 calc(0.006 * var(--vib)) h); --muted:oklch(from var(--hue) .74 calc(0.018 * var(--vib)) h); --faint:oklch(from var(--hue) .42 calc(0.016 * var(--vib)) h);
+  --rule:oklch(from var(--hue) .31 calc(0.014 * var(--vib)) h); --hover:oklch(from var(--hue) 0.29 calc(0.012 * var(--vib)) h); --well:oklch(from var(--hue) 0.2 calc(0.008 * var(--vib)) h);
+  --card:oklch(from var(--hue) 0.265 calc(0.01 * var(--vib)) h); --page:oklch(from var(--hue) 0.135 calc(0.006 * var(--vib)) h);
+  --surf-nest:oklch(from var(--hue) 0.168 calc(0.008 * var(--vib)) h); --surf-sub:oklch(from var(--hue) 0.14 calc(0.007 * var(--vib)) h); --on-tint:oklch(from var(--hue) .18 calc(0.01 * var(--vib)) h)}
 /* the page behind the app takes the same wash (App puts the grade's hue on <html>) */
 html[data-hue]{--page:oklch(from var(--page-hue) .983 .007 h);--rule:oklch(from var(--page-hue) .91 .025 h)}
 @media (prefers-color-scheme: dark){html[data-hue]:not([data-theme="light"]){--page:oklch(from var(--page-hue) .165 .018 h);--rule:oklch(from var(--page-hue) .31 .035 h)}}
