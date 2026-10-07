@@ -9,7 +9,7 @@ const SLIPS = "new named slips (fixes-02 Part C pattern 3); a wrong try that is 
 
 export const deviations: Record<string, Partial<Record<string, string>>> = {
   "g4-dec": { pre: "g4-equiv: tenths become hundredths by renaming (Order 2)", checks: `${SLIPS}: "Used the tenths as they were"` },
-  "g5-mult2": { pre: "g4-mult2x2: same area model, now one factor's tens and ones (Order 4)", checks: `${SLIPS}: "Added instead of multiplied", "Left out a part"` },
+  "g5-mult2": { story: "Curriculum fix-03 (2026-10-07): the picture is firstFactor seats tall, so the story calls firstFactor the rows and secondFactor the seats in each row; the recorded app had them swapped", pre: "g4-mult2x2: same area model, now one factor's tens and ones (Order 4)", checks: `${SLIPS}: "Added instead of multiplied", "Left out a part"` },
   "g5-pow10": { pre: "g4-dec: place value after the point (Order 4)", checks: `${SLIPS}: "Counted the 1 too", "Wrote the number"` },
   "g5-adddec": { checks: `${SLIPS}: "Forgot to carry" or "Subtracted", "Lost a whole" or "Left off the decimal part"` },
   "g5-divdec": { checks: `${SLIPS}: "Moved the point too far", "Moved the point the wrong way", "Put the point back", "Multiplied"` },
