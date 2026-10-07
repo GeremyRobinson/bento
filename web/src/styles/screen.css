@@ -596,7 +596,7 @@ html:has(.screen) body{overflow:hidden}
 .stepbar .badge{flex:none;width:28px;height:28px;border-radius:var(--r-round);background:var(--ink);color:var(--on-tint);display:grid;place-items:center;font-size:var(--fz-xs)}
 .stepbar .sbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:var(--w-bold)}
 .stepbar small{color:var(--muted);font-size:var(--fz-xs)}
-.pscreen .lshero.phero>.pbar{grid-row:1;display:flex;padding:var(--sp-3) var(--sp-3) 0}
+.pscreen .lshero.phero>.pbar{grid-row:1;display:flex;padding:var(--nest) var(--nest) 0}
 .pscreen .phero .stepbar{background:var(--btn-card,var(--well));box-shadow:none}
 .pscreen .phero .stepbar.solved{min-height:var(--tap);padding-block:var(--sp-2);align-items:center}
 .pscreen .phero .stepbar.solved .sbl{white-space:normal;font-weight:var(--w-regular);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
@@ -607,7 +607,7 @@ html:has(.screen) body{overflow:hidden}
 .pscreen .phero .stepbar .chev>svg{width:20px;height:20px;display:block}
 .pscreen .phero .stepbar[aria-expanded="true"] .chev{transform:rotate(180deg)}
 /* the steps accordion: opens under the bar and pushes the problem and picture down */
-.pscreen .lshero.phero>.pacc{grid-row:2;display:grid;align-content:start;gap:var(--sp-2);padding:var(--sp-3) var(--sp-3) 0}
+.pscreen .lshero.phero>.pacc{grid-row:2;display:grid;align-content:start;gap:var(--nest);padding:var(--nest) var(--nest) 0}
 /* long step lists scroll inside the panel, so Next problem and the keys always stay on screen */
 .pscreen .lshero.phero>.pacc{max-height:38dvh;overflow-y:auto;overscroll-behavior:contain}
 .pscreen .pacc .pwhere{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);margin:0;padding:0 var(--sp-2);font-weight:var(--w-mid);color:var(--muted);font-size:var(--fz-sm)}
@@ -622,7 +622,7 @@ html:has(.screen) body{overflow:hidden}
 .pscreen .lshero.phero>.pfb.fb-good{display:none}
 /* the keypad is a bento panel too, a glass step like the solve panel: the keys sit one rung in, and a pressed key lifts
    one rung more (G 18:20 "give it the bento paneling with the glass step thing") */
-.pscreen>.ppad{padding:var(--sp-2);border-radius:var(--r-panel);background:var(--pane-plain,var(--float));outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
+.pscreen>.ppad{padding:var(--nest);border-radius:var(--r-panel);background:var(--pane-plain,var(--float));outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
 .pscreen>.ppad .tray button:not(.k-go){background:var(--btn-card,var(--well));color:var(--text)}
 .pscreen>.ppad .tray button:not(.k-go):is(:hover,:active){background:var(--btn-card-hover,var(--hover))}
 .pscreen>.ppad .tray button:not(.k-go):active{transform:scale(.96)}
@@ -630,6 +630,16 @@ html:has(.screen) body{overflow:hidden}
 .pscreen>.ppad .choice:not(.ok,.no){background:var(--btn-card,var(--well));box-shadow:none}
 .pscreen>.ppad .choice:not(.ok,.no):is(:hover,:active){background:var(--btn-card-hover,var(--hover))}
 .pscreen>.ppad .tapnote{padding:var(--sp-1) var(--sp-2) 0}
+/* Contents is the standard for gap and corner (G 18:38 "this page should be the standard"): everything inside a panel
+   sits one --nest gap in from its edge and from each other, and its corner is the panel's less that gap, so the shapes
+   nest concentric. The step bar, the open steps and the keys all follow it */
+.pscreen .phero .stepbar,.pscreen .pacc .pbeats .beat{border-radius:calc(var(--r-panel) - var(--nest))}
+.pscreen .pacc .pbeats{gap:var(--nest)}
+.pscreen>.ppad .tray{gap:var(--nest)}
+.pscreen>.ppad .tray>*,.pscreen>.ppad .choice{border-radius:calc(var(--r-panel) - var(--nest))}
+/* solved: Next problem stands on its own, no panel round it */
+.pscreen.psolved>.ppad{padding:0;background:none;outline:none}
+:root .pscreen.psolved>.ppad .tray>.k-go{border-radius:var(--r-pill)}
 /* solved: the keys give way to "Next problem" */
 .pscreen.psolved .ppad .tray{grid-template-columns:minmax(0,1fr)}
 .pscreen.psolved .ppad .tray>:not(.k-go){display:none}
