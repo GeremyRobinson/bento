@@ -92,8 +92,8 @@ html[data-motion="reduce"] .sbcascade .imark .bl{animation:fadeIn var(--m-swap) 
 .sbchapters .slist{max-height:none}
 
 /* the BentoGrid piece: a frame as wide as the slider says, scrolling sideways inside the piece when it's wider */
-.sbpiece:has(.sbgrid){grid-column:1 / -1}
-.sbgrid{display:grid;gap:var(--sp-2);width:100%;min-width:0;overflow-x:auto}
-.sbgrid-w{display:flex;align-items:center;gap:var(--sp-3);font-size:var(--fz-sm)}
-.sbgrid-w input{flex:1;max-width:360px}
-.sbgrid-frame{flex:none}
+.sbpiece:has(.sbbento){grid-column:1 / -1}
+.sbbento{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--sp-2);width:100%;min-width:0;overflow-x:auto}
+.sbbento-w{display:flex;align-items:center;gap:var(--sp-3);font-size:var(--fz-sm)}
+.sbbento-w input{flex:1;max-width:360px}
+.sbbento-frame{flex:none}

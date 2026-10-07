@@ -14,17 +14,20 @@ import { BentoGrid, type TileSize } from "../components/BentoGrid";
 
 /** the Book home's tiles on the grid in fit mode (chunk 2): at whatever width and height the sliders set */
 const BOOK: [TileSize, string][] = [["l", "Picture"], ["n", "Lessons done"], ["n", "Days in a row"], ["w", "Today"], ["s", "Chapters"]];
+/** every size once, for flow mode */
+const SIZES: [TileSize, string][] = [["l", "Large"], ["t", "Tall"], ["n", "Number"], ["n", "Number"], ["s", "Small"], ["w", "Wide"], ["f", "Full"]];
 function DemoGrid() {
-  const [w, setW] = useState(768), [h, setH] = useState(560);
+  const [w, setW] = useState(768), [h, setH] = useState(560), [fit, setFit] = useState(true);
   return (
-    <div className="sbgrid">
-      <label className="sbgrid-w"><span>Width {w}px</span>
+    <div className="sbbento">
+      <label className="sbbento-w"><span>Width {w}px</span>
         <input type="range" min={320} max={1200} step={10} value={w} onChange={e => setW(+e.target.value)} /></label>
-      <label className="sbgrid-w"><span>Height {h}px</span>
-        <input type="range" min={400} max={900} step={10} value={h} onChange={e => setH(+e.target.value)} /></label>
-      <div className="sbgrid-frame" style={{ width: w, height: h }}>
-        <BentoGrid fit label="Book home on the grid">
-          {BOOK.map(([size, name], i) => <Tile key={i} size={size} k={`size ${size}`} title={name}><span /></Tile>)}
+      <label className="sbbento-w"><span>Height {h}px</span>
+        <input type="range" min={400} max={900} step={10} value={h} disabled={!fit} onChange={e => setH(+e.target.value)} /></label>
+      <Toggle label="Fit" note="On: the Book home, rows share the height. Off: flow, every size, rows grow." on={fit} set={setFit} />
+      <div className="sbbento-frame" style={{ width: w, height: fit ? h : undefined }}>
+        <BentoGrid fit={fit} label="Book home on the grid">
+          {(fit ? BOOK : SIZES).map(([size, name], i) => <Tile key={i} size={size} k={`size ${size}`} title={name}><span /></Tile>)}
         </BentoGrid>
       </div>
     </div>
