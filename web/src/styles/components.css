@@ -13,23 +13,23 @@
    grade roles, so a context (a card, the landing page) or a variant (go, circ) only overrides what it changes. */
 .wrap{--pill-h:var(--h);--pill-pad:calc(var(--u) + 2px);--pill-radius:999px;--pill-weight:var(--w-mid);--pill-gap:var(--s);--pill-lift:1.06}
 .ctl{height:var(--pill-h);padding:0 var(--pill-pad);border-radius:var(--pill-radius);background:var(--pill-bg,var(--btn,var(--well)));display:inline-flex;align-items:center;justify-content:center;gap:var(--pill-gap);white-space:nowrap;font-weight:var(--pill-weight);transition:background var(--dur-150),transform var(--dur-200) var(--m-settle),box-shadow var(--dur-150)}
-.ctl:hover{background:var(--pill-hover,var(--btn-hover,var(--hover)))}
+.ctl:hover,.ctl:active{background:var(--pill-hover,var(--btn-hover,var(--hover)))}
 .ctl:active{transform:scale(var(--pill-press))}
 .ctl[disabled]{color:var(--faint);cursor:default;transform:none}
 .ctl.badged{padding-left:var(--inset)}
 .panel .ctl{background:var(--pill-bg,var(--btn-panel,var(--card)))}
-.panel .ctl:hover{background:var(--pill-hover,var(--btn-panel-hover,var(--hover)))}
+.panel .ctl:hover,.panel .ctl:active{background:var(--pill-hover,var(--btn-panel-hover,var(--hover)))}
 .card .ctl{background:var(--pill-bg,var(--btn-card,var(--card)))}
-.card .ctl:hover{background:var(--pill-hover,var(--btn-card-hover,var(--hover)))}
+.card .ctl:hover,.card .ctl:active{background:var(--pill-hover,var(--btn-card-hover,var(--hover)))}
 .ctl.go,.panel .ctl.go,.card .ctl.go{background:var(--pill-go-bg,var(--ink));color:var(--pill-go-fg,var(--on-tint))}
-.ctl.go:hover{filter:brightness(var(--pill-lift))}
+.ctl.go:hover,.ctl.go:active{filter:brightness(var(--pill-lift))}
 .ctl.go .badge{background:var(--white-a25);color:var(--on-tint)}
 .badge{min-width:var(--badge);height:var(--badge);border-radius:var(--r-pill);display:inline-flex;align-items:center;justify-content:center;padding:0 var(--s);font-family:var(--num);font-weight:var(--w-bold);background:var(--well);color:var(--text);flex:none;font-variant-numeric:tabular-nums}
 .card .badge,.ctl .badge{background:var(--tint-soft);color:var(--ink)}
 .badge.on,.card .badge.on,.ctl .badge.on{background:var(--ink);color:var(--on-tint)}
 .bar{display:flex;align-items:center;gap:var(--s);padding:var(--inset);background:var(--surf-1,var(--well));border-radius:var(--r-pill);min-width:0}
 .ctl.circ{width:var(--pill-h);padding:0;flex:none;background:var(--btn-card,var(--card));color:var(--ink);box-shadow:none}
-.ctl.circ:hover{background:var(--tint-soft)}
+.ctl.circ:hover,.ctl.circ:active{background:var(--tint-soft)}
 .ctl.circ svg{width:22px;height:22px;display:block}
 .ctl.circ[disabled]{background:color-mix(in srgb,var(--card) 45%,transparent);box-shadow:none;color:var(--faint)}
 .bar .grow{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:var(--w-bold);padding:0 var(--s)}
@@ -124,7 +124,7 @@ button.gcell:active{transform:scale(.96)}
 .unit h3{color:var(--ink);font-size:var(--small);line-height:20px;font-weight:var(--w-bold);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lessons{display:grid;gap:var(--s)}
 .lesson{display:flex;align-items:center;gap:calc(var(--u) - var(--sp-1));height:var(--row);padding:0 var(--u) 0 var(--inset);border-radius:var(--r-pill);background:var(--card);text-align:left;width:100%;font-weight:var(--w-bold);transition:background var(--dur-150),transform var(--dur-200) var(--m-settle)}
-.lesson:hover{background:var(--tint-soft)}
+.lesson:hover,.lesson:active{background:var(--tint-soft)}
 .lesson:active{transform:scale(.98)}
 .lesson .badge{min-width:var(--rbadge);height:var(--rbadge);font-size:calc(var(--rbadge) * .42)}
 .lesson .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -229,7 +229,7 @@ button.gcell:active{transform:scale(.96)}
 .feedback .fr{font-size:var(--fs)}
 .tray{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s);max-width:480px;width:100%;margin:0 auto}
 .tray button{height:var(--key);border-radius:var(--r-pill);background:var(--btn-card,var(--card));font-family:var(--num);font-weight:var(--w-key);font-size:calc(var(--key) * .46);display:flex;align-items:center;justify-content:center;transition:background var(--dur-150),transform var(--dur-150) var(--m-settle)}
-.tray button:hover{background:var(--tint-soft)}
+.tray button:hover,.tray button:active{background:var(--tint-soft)}
 .tray button:active{transform:scale(.92);background:var(--tint-soft)}
 .tray .wide{grid-column:span 2;font-family:var(--sans);font-size:var(--fs);font-weight:var(--w-mid)}
 
@@ -271,7 +271,7 @@ button.gcell:active{transform:scale(.96)}
 .viz-svg .fill{fill:var(--tint);opacity:.16} .viz-svg .fillsoft{fill:color-mix(in srgb,var(--tint) var(--d-f10),transparent)}
 .viz-svg .dotp{fill:var(--dot,var(--soft))} .viz-svg .was{opacity:.45} .viz-svg .dota{fill:var(--soft-acc)} .viz-svg .hole{fill:var(--card);stroke:var(--tint);stroke-width:var(--d-stroke)}
 .viz-svg .sq{fill:color-mix(in srgb,var(--tint) var(--d-f18),var(--card));stroke:var(--tint);stroke-width:var(--d-line)} .viz-svg .sq.big{fill:color-mix(in srgb,var(--acc) var(--d-f22),var(--card));stroke:var(--acc)}
-.viz-svg .cell{stroke-width:var(--d-line)} .viz-svg .pend{fill:var(--well);stroke:var(--faint);stroke-width:var(--d-line);stroke-dasharray:var(--d-dash)} .viz-svg .cell.c0{fill:color-mix(in srgb,var(--c0) var(--d-f18),var(--card));stroke:var(--c0)} .viz-svg .cell.c1{fill:color-mix(in srgb,var(--c1) var(--d-f18),var(--card));stroke:var(--c1)} .viz-svg .cell.c2{fill:color-mix(in srgb,var(--c2) var(--d-f18),var(--card));stroke:var(--c2)}
+.viz-svg .cell{stroke-width:var(--d-line)} .viz-svg .pend{fill:var(--well);stroke:var(--faint);stroke-width:var(--d-line);stroke-dasharray:var(--d-dash)} .viz-svg .cell.c0{fill:var(--fill0);stroke:var(--c0)} .viz-svg .cell.c1{fill:var(--fill1);stroke:var(--c1)} .viz-svg .cell.c2{fill:var(--fill2);stroke:var(--c2)}
 .viz-svg .seg{fill:var(--well);stroke:var(--faint);stroke-width:var(--d-thin)}
 /* dark: an empty part is a tinted box a step lighter than the tile, outlined in its own color (bands.css, Dark pictures) */
 
@@ -327,11 +327,11 @@ button.gcell:active{transform:scale(.96)}
 /* ---- planning, word problems and choices ---- */
 .choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--s)}
 .choice{min-height:var(--h);padding:10px var(--u);border-radius:calc(var(--h) / 2);background:var(--btn,var(--well));border:2px solid var(--rule);font-weight:var(--w-bold);line-height:1.2;transition:background var(--dur-150),transform var(--dur-200) var(--m-settle),border-color var(--dur-150)}
-.choice:hover{background:var(--tint-soft);border-color:var(--tint)}
+.choice:hover,.choice:active{background:var(--tint-soft);border-color:var(--tint)}
 .choice:active{transform:scale(.96)}
 .story{font-size:calc(var(--fs) * 1.15);line-height:1.45;font-weight:var(--w-mid);padding:var(--s) var(--sp-1);text-wrap:pretty}
 .story b{color:var(--ink)}
-.lspeak{display:flex;align-items:center;justify-content:space-between;gap:var(--s)} .speak{width:44px;height:44px;margin:-12px -10px -12px 0;border-radius:var(--r-round);display:grid;place-items:center;color:var(--ink)} .speak:hover{background:var(--tint-soft)}
+.lspeak{display:flex;align-items:center;justify-content:space-between;gap:var(--s)} .speak{width:44px;height:44px;margin:-12px -10px -12px 0;border-radius:var(--r-round);display:grid;place-items:center;color:var(--ink)} .speak:hover,.speak:active{background:var(--tint-soft)}
 .tappad{display:grid;gap:var(--s)} .tappad .choices{grid-template-columns:1fr} .tappad .choice{min-height:64px;font-size:1.15em}
 .tapnote{text-align:center;font-weight:var(--w-mid);padding:var(--s)}
 .bcol{display:grid;gap:var(--u);align-items:start;min-width:0}
@@ -342,7 +342,7 @@ button.gcell:active{transform:scale(.96)}
 .lmap .k,.helptile .k{color:var(--muted);font-size:var(--small);line-height:18px;font-weight:var(--w-mid)}
 .outline{display:grid;gap:var(--sp-1);background:var(--surf-2,var(--card));border-radius:var(--r-card);padding:6px}
 .outline button{display:flex;align-items:center;gap:10px;min-height:var(--tap);padding:var(--sp-1) 10px var(--sp-1) var(--sp-1);border-radius:var(--r-pill);text-align:left;font-size:var(--small);line-height:18px;font-weight:var(--w-mid);color:var(--muted);transition:background var(--dur-150)}
-.outline button:not([disabled]):hover{background:var(--well)}
+.outline button:not([disabled]):hover,.outline button:not([disabled]):active{background:var(--well)}
 .outline button.on{background:var(--tint-soft);color:var(--text);font-weight:var(--w-bold);cursor:default}
 .outline button.seen{color:var(--text)}
 .outline .badge{min-width:32px;height:32px;font-size:var(--fz-sm);padding:0}
@@ -432,7 +432,7 @@ button.gcell:active{transform:scale(.96)}
 .plan{list-style:none;margin:calc(var(--u) * 1.5) 0 0;padding:0;display:grid}
 .plan li+li{border-top:1px solid var(--rule)}
 .pitem{width:100%;display:flex;align-items:center;gap:var(--u);padding:14px 0;text-align:left;border-radius:14px;transition:opacity var(--dur-200)}
-.pitem:hover .ptext b{color:var(--ink)}
+.pitem:hover .ptext b,.pitem:active .ptext b{color:var(--ink)}
 .pmark{flex:none;width:28px;height:28px;border-radius:var(--r-round);box-shadow:inset 0 0 0 1.5px var(--faint);display:grid;place-items:center;color:var(--on-tint)}
 .pitem.now .pmark{box-shadow:inset 0 0 0 2px var(--tint)}
 .pitem.done .pmark{background:var(--ink);box-shadow:none}
@@ -462,16 +462,16 @@ button.gcell:active{transform:scale(.96)}
 .units .unit{padding:0;min-height:36px}
 .units .unit h3{color:var(--text);font-size:var(--fs);font-weight:var(--w-bold);letter-spacing:-.01em}
 .units .unit .ctl{--pill-h:36px;--pill-pad:14px;background:none!important;box-shadow:inset 0 0 0 1px var(--rule);font-size:var(--small);font-weight:var(--w-mid);color:var(--muted)}
-.units .unit .ctl:hover{color:var(--text);box-shadow:inset 0 0 0 1px var(--faint)}
+.units .unit .ctl:hover,.units .unit .ctl:active{color:var(--text);box-shadow:inset 0 0 0 1px var(--faint)}
 .units .lessons{gap:2px}
 .units .lesson{background:none;border-radius:var(--r-pill);height:var(--float-h);padding:0 14px;font-weight:var(--w-mid);gap:var(--sp-3);transition:background var(--dur-150)}
-.units .lesson:not([disabled]):hover{background:var(--tint-soft)}
+.units .lesson:not([disabled]):hover,.units .lesson:not([disabled]):active{background:var(--tint-soft)}
 .units .lesson .badge{min-width:0;height:auto;background:none!important;color:var(--muted)!important;font:var(--w-mid) var(--small)/1 var(--sans);font-variant-numeric:tabular-nums;width:22px;justify-content:flex-start}
 .units .lesson .badge.on{color:var(--ink)!important;font-weight:var(--w-bold)}
 .units .lesson .name{transition:color var(--dur-150)}
 .units .facts{background:none}
 .bhome .b-stats>.ctl{background:none!important;box-shadow:inset 0 0 0 1px var(--rule);--pill-h:40px;--pill-pad:18px;font-size:var(--small);font-weight:var(--w-mid)}
-.bhome .b-stats>.ctl:hover{box-shadow:inset 0 0 0 1px var(--faint)}
+.bhome .b-stats>.ctl:hover,.bhome .b-stats>.ctl:active{box-shadow:inset 0 0 0 1px var(--faint)}
 .units .lesson .dot.busy{background:var(--tint)}
 @media (max-width:699px){
   .bhome .b-stats{grid-template-columns:auto 1fr;justify-items:start;text-align:left;column-gap:var(--u)}
@@ -479,7 +479,7 @@ button.gcell:active{transform:scale(.96)}
   .bhome .b-stats>.ctl{justify-self:start}
 }
 .tlink{justify-self:start;color:var(--ink);font-size:var(--small);font-weight:var(--w-mid);padding:var(--sp-3) 0;margin-top:0;min-height:var(--tap)}
-.tlink:hover{text-decoration:underline;text-underline-offset:3px}
+.tlink:hover,.tlink:active{text-decoration:underline;text-underline-offset:3px}
 .placed{max-width:560px;width:100%;margin:calc(var(--u) * 2) auto;display:grid;gap:var(--sp-3);justify-items:start}
 .placed .k{font-size:var(--small);font-weight:var(--w-bold);color:var(--ink)}
 .placed h1{font:var(--w-bold) clamp(36px,6vw,56px)/1.05 var(--sans);letter-spacing:-.035em}
@@ -491,8 +491,8 @@ button.gcell:active{transform:scale(.96)}
 .pdots i{width:12px;height:12px;border-radius:var(--r-round);box-shadow:inset 0 0 0 1.5px var(--faint)}
 .pdots i.on{background:var(--tint);box-shadow:none}
 .pitem{padding:14px var(--sp-3);margin:0 -12px;width:calc(100% + 24px);border-radius:18px;transition:background var(--dur-150)}
-.pitem:hover{background:var(--tint-soft)}
-.pitem:hover .ptext b{color:inherit}
+.pitem:hover,.pitem:active{background:var(--tint-soft)}
+.pitem:hover .ptext b,.pitem:active .ptext b{color:inherit}
 .plan li+li{border-top:0}
 .plan{gap:2px}
 .bhome .b-stats{grid-template-rows:none}

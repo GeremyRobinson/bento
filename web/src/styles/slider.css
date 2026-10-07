@@ -2,7 +2,7 @@
 .slider{position:relative;flex:none;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));padding:var(--sl-pad,3px);border-radius:var(--r-pill);background:var(--sl-bg,var(--well));box-shadow:var(--sl-ring,inset 0 0 0 1px var(--rule))}
 .slider>button{position:relative;z-index:var(--z-up);min-width:0;height:var(--sl-h,34px);padding:0 var(--sl-x,var(--sp-3));border-radius:var(--r-pill);font-size:var(--sl-fz,var(--fz-sm));font-weight:var(--w-mid);color:var(--muted);white-space:nowrap;
   transition:color var(--dur-200) var(--ease) var(--dur-120)}
-.slider>button:hover:not(:disabled):not([aria-pressed="true"]){color:var(--text)}
+.slider>button:hover:not(:disabled):not([aria-pressed="true"]),.slider>button:active:not(:disabled):not([aria-pressed="true"]){color:var(--text)}
 .slider>button[aria-pressed="true"]{color:var(--on-tint)}
 .slider>button:disabled{opacity:.35}
 .slider>button:focus-visible{outline:2px solid var(--tint);outline-offset:2px}

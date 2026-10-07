@@ -5,9 +5,9 @@
 .am .axis-label{fill:var(--muted)}
 .am .whole{transition:opacity var(--dur-400) ease}
 .am .region rect{fill:var(--well);stroke:var(--faint);stroke-width:var(--d-line);transition:fill var(--dur-500) var(--ease),stroke var(--dur-500) var(--ease),opacity var(--dur-500) ease}
-.am .region[data-shown="true"].r0 rect{fill:color-mix(in srgb,var(--c0) var(--d-f18),var(--card));stroke:var(--c0)}
-.am .region[data-shown="true"].r1 rect{fill:color-mix(in srgb,var(--c1) var(--d-f18),var(--card));stroke:var(--c1)}
-.am .region[data-shown="true"].r2 rect{fill:color-mix(in srgb,var(--c2) var(--d-f18),var(--card));stroke:var(--c2)}
+.am .region[data-shown="true"].r0 rect{fill:var(--fill0);stroke:var(--c0)}
+.am .region[data-shown="true"].r1 rect{fill:var(--fill1);stroke:var(--c1)}
+.am .region[data-shown="true"].r2 rect{fill:var(--fill2);stroke:var(--c2)}
 .am .region[data-active="true"] rect{stroke-width:var(--d-bold)}
 .am .region .product{opacity:0;transition:opacity var(--dur-400) ease var(--dur-150)}
 .am .region[data-shown="true"] .product{opacity:1}
@@ -85,7 +85,7 @@
 /* each step of the walk-through is a button that jumps the picture to it */
 .beat{padding:0}
 .beat>button{display:flex;align-items:center;gap:var(--u);width:100%;padding:10px var(--u);border-radius:inherit;text-align:left;color:inherit;font:inherit}
-.beat>button:not([disabled]):hover{background:color-mix(in srgb,var(--tint) 8%,transparent)}
+.beat>button:not([disabled]):hover,.beat>button:not([disabled]):active{background:color-mix(in srgb,var(--tint) 8%,transparent)}
 .beat>button[disabled]{cursor:default;opacity:1}
 /* highlighted parts never touch: a little air between marks, and a marked sign keeps its own spacing outside the box */
 .mline mark{display:inline-flex;align-items:center;margin:0 .14em}
