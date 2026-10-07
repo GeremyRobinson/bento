@@ -27,16 +27,17 @@
   --hue:oklch(.6 .15 var(--gh));
   --h1:oklch(.4 .14 var(--gh));--h2:oklch(.46 .14 var(--gh));--h3:oklch(.52 .14 var(--gh));
   --hd1:oklch(.75 .12 var(--gh));--hd2:oklch(.81 .1 var(--gh));--hd3:oklch(.87 .075 var(--gh))}
+/* no pink grades, and no green or red (kept for right and wrong): 2nd tangerine, 5th azure, 9th ochre, 1st a bluer violet (G 05:36) */
 :is(.wrap,.gpal)[data-grade="0"]{--gh:45}
-:is(.wrap,.gpal)[data-grade="1"]{--gh:298}
-:is(.wrap,.gpal)[data-grade="2"]{--gh:346}
+:is(.wrap,.gpal)[data-grade="1"]{--gh:288}
+:is(.wrap,.gpal)[data-grade="2"]{--gh:65}
 :is(.wrap,.gpal)[data-grade="3"]{--gh:186}
 :is(.wrap,.gpal)[data-grade="4"]{--gh:250}
-:is(.wrap,.gpal)[data-grade="5"]{--gh:330}
+:is(.wrap,.gpal)[data-grade="5"]{--gh:222}
 :is(.wrap,.gpal)[data-grade="6"]{--gh:170}
 :is(.wrap,.gpal)[data-grade="7"]{--gh:266}
 :is(.wrap,.gpal)[data-grade="8"]{--gh:218}
-:is(.wrap,.gpal)[data-grade="9"]{--gh:314}
+:is(.wrap,.gpal)[data-grade="9"]{--gh:75}
 :is(.wrap,.gpal)[data-grade="10"]{--gh:202}
 :is(.wrap,.gpal)[data-grade="11"]{--gh:282}
 :is(.wrap,.gpal)[data-grade="12"]{--gh:234}
