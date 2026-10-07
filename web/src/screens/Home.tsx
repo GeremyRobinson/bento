@@ -11,6 +11,7 @@ import { ScoreChip } from "../components/primitives/Score";
 import { Fill, GradeNum } from "../components/Shelf";
 import { SplitScreen } from "../components/screen/Screen";
 import { ListGroup } from "../components/screen/ListGroup";
+import { BentoGrid, bgClass, type TileSize } from "../components/BentoGrid";
 import { PlayingDiagram } from "../components/diagrams/PlayingDiagram";
 import { MathLine, Rich } from "../components/primitives/MathLine";
 import { handOff, previewOf, statementBeat } from "../app/preview";
@@ -119,13 +120,13 @@ function TodayDetail({ g }: { g: number }) {
   // one (G 2026-10-06: Today always has a live picture)
   const ready = list.filter(c => isReady(c.id)), at = Math.max(0, ready.findIndex(c => c.id === nextLesson));
   const picFrom = [...ready.slice(at), ...ready.slice(0, at)].map(c => c.id);
-  const units = unitsInGrade(g);
+  const units = unitsInGrade(g), pic = picFrom.length > 0;
   // Today as a bento that fills the screen (G 2026-10-06, "needs better use of space"): the up-next problem drawn big,
   // the plan, how far the year is, the streak, and every chapter as its own fill
   return (
-    <div className={`bhome sday sbento${picFrom.length ? "" : " nopic"}`}>
-      {picFrom.length > 0 && <PreviewWell key={nextLesson ?? picFrom[0]} candidates={picFrom} next={nextLesson} />}
-      <section className="tile today">
+    <BentoGrid fit className={`bhome sday sbento${pic ? "" : " nopic"}`}>
+      {pic && <PreviewWell key={nextLesson ?? picFrom[0]} candidates={picFrom} next={nextLesson} size="l" />}
+      <section className={`tile today ${bgClass(pic ? "w" : "l")}`}>
         <h2>Today</h2>
         <p className="sub">{!plan.length ? "New lessons for this grade are almost ready." : first ? `About ${minutes} minutes.` : "That's everything for today."}</p>
         {plan.length > 0 && (
@@ -152,18 +153,18 @@ function TodayDetail({ g }: { g: number }) {
           <button className="tlink" onClick={() => go({ name: "facts" }, "fwd")}>All facts ›</button>
         </div>
       </section>
-      <section className="tile b-stats battery">
+      <section className={`tile b-stats battery ${bgClass("n")}`}>
         <Fill frac={list.length ? done / list.length : 0} />
         <span className="bbig">{done}</span>
         <p><b>of {list.length}</b> lessons done{avg != null && <><br /><span className="muted">Average score {avg.toFixed(1)} of 4</span></>}</p>
         {gt && <p className="muted gtline">{GRADE_CHECKUP} <ScoreChip n={gt.last} /></p>}
       </section>
-      <section className="tile b-streak">
+      <section className={`tile b-streak ${bgClass("n")}`}>
         <span className="bbig">{progress.streak}</span>
         <p><b>day{progress.streak === 1 ? "" : "s"}</b> in a row</p>
         <p className="muted">{progress.xp} XP</p>
       </section>
-      <section className="tile b-chaps" aria-label="Chapters">
+      <section className={`tile b-chaps ${bgClass(pic ? "s" : "f")}`} aria-label="Chapters">
         {units.map(u => {
           const d = doneCount(progress, u.entries), n = u.entries.length;
           return (
@@ -175,7 +176,7 @@ function TodayDetail({ g }: { g: number }) {
           );
         })}
       </section>
-    </div>
+    </BentoGrid>
   );
 }
 
@@ -183,7 +184,7 @@ function TodayDetail({ g }: { g: number }) {
  * Up next, as a picture: the very first problem of the lesson waiting, in whatever room the plan leaves (UI notes
  * preview: a big live picture on top of the detail). It draws only when it fits PREVIEW_MIN tall.
  */
-export function PreviewWell({ candidates, next }: { candidates: string[]; next?: string }) {
+export function PreviewWell({ candidates, next, size }: { candidates: string[]; next?: string; size?: TileSize }) {
   const { deps } = useApp();
   const seed = useMemo(() => Math.floor(deps().rng.next() * 2 ** 31), []); // eslint-disable-line react-hooks/exhaustive-deps
   // the first lesson in line whose first problem draws a picture
@@ -210,7 +211,7 @@ export function PreviewWell({ candidates, next }: { candidates: string[]; next?:
   if (!pic) return null;
   const fits = h >= PREVIEW_MIN;
   return (
-    <figure className={`card spreview grow${fits ? "" : " empty"}`} ref={box} aria-hidden={!fits}>
+    <figure className={`card spreview grow${fits ? "" : " empty"} ${bgClass(size)}`} ref={box} aria-hidden={!fits}>
       {fits && <>
         <figcaption>{lesson!.id === next ? "Up next" : "Coming up"} · {lesson!.title}, <b><MathLine math={pic.ex.statement} /></b></figcaption>
         <div className="sppic"><PlayingDiagram ex={{ ...pic.ex, diagram: pic.ex.diagram! }} end={statementBeat(pic.ex)} /></div>

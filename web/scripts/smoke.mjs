@@ -21,7 +21,7 @@ const SIZES = [{ w: 390, h: 844, scheme: "dark" }, { w: 1180, h: 820, scheme: "l
   { w: 1024, h: 768, scheme: "light" }, { w: 1280, h: 720, scheme: "dark" }];
 /** containers meant to scroll (a long list; the book's chapters, and its plan on a short landscape screen where the
  *  picture keeps its room); anything else that scrolls inside itself is cut */
-const SCROLLERS = ".fhome>.ftables, nav.slist.more, .sbento>.b-chaps, .sbento>.today";
+const SCROLLERS = ".fhome>.ftables, nav.slist.more, .sbento .b-chaps, .sbento .today";
 const ROUTES = ["home", "year", "learn", "practice", "facts", "me", "settings", "grown-up", "welcome"];
 
 const fails = [], notes = [];
@@ -95,17 +95,17 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
       // (scrollHeight alone reads a few px over on a fitted lesson with nothing actually below the edge)
       const low = Math.max(0, ...[...document.querySelectorAll("#app *")].filter(shown).filter(e => !e.closest(SCROLLERS)).map(e => e.getBoundingClientRect().bottom));
       // the book's picture is the hero: on a wide screen it never shrinks to a sliver or an empty frame
-      const pic = document.querySelector(".sbento>.spreview");
+      const pic = document.querySelector(".sbento .spreview");
       const picH = pic && shown(pic) && innerWidth >= 900 ? Math.round(pic.getBoundingClientRect().height) : null;
       const picEmpty = picH != null && pic.classList.contains("empty");
       // bento tiles never overlap, and the plan's first row (Start) is fully inside Today, unscrolled
-      const overlaps = [], tiles = [...document.querySelectorAll(".sbento>*")].filter(shown);
+      const overlaps = [], tiles = [...document.querySelectorAll(".sbento>.bg-in>*")].filter(shown);
       for (const [i, a] of tiles.entries()) for (const b of tiles.slice(i + 1)) {
         const A = a.getBoundingClientRect(), B = b.getBoundingClientRect();
         const x = Math.min(A.right, B.right) - Math.max(A.left, B.left), y = Math.min(A.bottom, B.bottom) - Math.max(A.top, B.top);
         if (x > 1 && y > 1) overlaps.push(`${a.className} and ${b.className} by ${Math.round(Math.min(x, y))}px`);
       }
-      const today = document.querySelector(".sbento>.today"), first = today?.querySelector(".plan li");
+      const today = document.querySelector(".sbento .today"), first = today?.querySelector(".plan li");
       let startCut = 0;
       if (today && first && shown(first)) {
         const T = today.getBoundingClientRect(), F = first.getBoundingClientRect();

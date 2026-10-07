@@ -422,15 +422,8 @@ html:has(.screen) body{overflow:hidden}
 
 /* ---- Today as a bento (G 2026-10-06, "needs better use of space"): tiles of different sizes that fill the detail to
    the bottom. The up-next problem is the big tile; the plan, the year's fill, the streak and every chapter sit round it. ---- */
-.sdetail>.sbento{flex:1;min-height:0;display:grid;gap:var(--screen-gap);grid-template-columns:repeat(3,minmax(0,1fr));
-  grid-template-rows:minmax(max-content,1fr) minmax(max-content,1fr) auto;grid-template-areas:"pic pic stats" "pic pic streak" "plan plan chaps"}
-.sdetail>.sbento.nopic{grid-template-areas:"plan plan stats" "plan plan streak" "chaps chaps chaps"}
-.sdetail>.sbento>*{grid-column:auto;grid-row:auto;min-height:0;margin:0}
-.sdetail>.sbento>.spreview{grid-area:pic;height:auto}
-.sdetail>.sbento>.today{grid-area:plan;overflow:auto;overscroll-behavior:contain}
-.sdetail>.sbento>.b-stats{grid-area:stats}
-.sdetail>.sbento>.b-streak{grid-area:streak}
-.sdetail>.sbento>.b-chaps{grid-area:chaps}
+.sdetail>.sbento{flex:1;min-height:0;display:block}
+.sbento .bg-t{margin:0}
 .sbento>.tile{border-radius:var(--r-panel)}
 .sbento .b-streak{background:var(--card);padding:calc(var(--u) * 1.75);display:grid;justify-items:center;align-content:center;text-align:center;gap:6px}
 .sbento .b-streak p{margin:0}
@@ -441,32 +434,13 @@ html:has(.screen) body{overflow:hidden}
 .bchap b{font-size:var(--fz-sm);line-height:1.25;font-weight:var(--w-bold);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-wrap:pretty}
 .bchap small{flex:none;font-size:var(--fz-xs);font-weight:var(--w-mid);color:var(--muted)}
 .sbento .today .b-weak{margin-top:var(--s);padding:0;background:none;box-shadow:none}
-/* landscape (an iPad held sideways, a laptop): the picture takes the top left, never under 240px and never shorter than
-   the year's fill beside it; the plan sits under it beside the streak and the chapters, so a tall year's fill (a narrow
-   laptop) never pushes it off. The picture and the chapters share what's left two to one; the chapters scroll, and the
-   plan scrolls inside itself only when a short screen can't hold all of it (Review, 1024x768 to 1366x1024) */
-@media (orientation:landscape) and (min-width:900px){
-  .sdetail>.sbento{grid-template-rows:minmax(auto,2fr) auto minmax(0,1fr);
-    grid-template-areas:"pic pic stats" "plan plan streak" "plan plan chaps"}
-  .sdetail>.sbento.nopic{grid-template-areas:"plan plan stats" "plan plan streak" "plan plan chaps"}
-  .sdetail>.sbento>.spreview{min-height:240px}
-  .sdetail>.sbento>:is(.b-stats,.b-streak){min-height:max-content}
-}
-/* portrait: the picture across the top, the two numbers side by side, then the plan and the chapters */
-@media (orientation:portrait),(max-width:899px){
-  /* tiles keep their full height here; the detail scrolls inside itself when they need more room than the screen */
-  .sdetail>.sbento{flex:1 0 auto}
-  .sdetail>.sbento>:not(.spreview){min-height:auto}
-  .sdetail>.sbento{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:minmax(240px,1fr) auto auto auto;
-    grid-template-areas:"pic pic" "stats streak" "plan plan" "chaps chaps"}
-  .sdetail>.sbento.nopic{grid-template-rows:auto auto auto;grid-template-areas:"stats streak" "plan plan" "chaps chaps"}
-  .sbento .b-chaps{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-@media (max-width:699px){
-  .sdetail>.sbento{grid-template-rows:240px auto auto auto;grid-template-areas:"pic pic" "plan plan" "stats streak" "chaps chaps"}
-  .sbento .b-chaps{grid-template-columns:minmax(0,1fr)}
-  .sbento .bbig{font-size:44px}
-}
+/* Today sits on the BentoGrid master in fit mode (Home.tsx): the picture l top left, the two numbers n stacked beside it,
+   the plan w under it beside the chapters s; on a narrow grid the numbers sit side by side and the chapters take two
+   columns. Only the plan and the chapters scroll, inside their tiles */
+@container (max-width:559px){.sbento .b-chaps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container (max-width:559px){.sbento :is(.b-stats,.b-streak){padding:var(--sp-3);gap:2px}.sbento .bbig{font-size:40px}.sbento .b-streak .muted{display:none}.sbento :is(.b-stats,.b-streak) p{font-size:var(--fz-sm);line-height:1.3}}
+/* a short phone keeps only each number and its words */
+@media (max-height:740px) and (max-width:699px){.sbento .b-stats :is(br,p .muted,.gtline){display:none}}
 /* Learn's portrait rule folds its steps away; practice keeps the step being answered */
 .pscreen .pintro .pbeats{display:grid}
 /* the feedback line is a line, not a box: colour only on the dot (and the answer box) */

@@ -72,12 +72,12 @@ html[data-dir="prev"]::view-transition-new(root){animation-name:vtInLeft}
 @keyframes rvIn{from{opacity:0;transform:translateY(8px)}}
 /* a work screen's body is a frame, not a piece: its two sides' pieces arrive instead (and a moving frame would carry
    the fixed feedback stack with it) */
-:is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:not(.wbody):not(.fdim):not(.fstack),.wrap>.bar{animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(var(--i,0) * var(--m-step))}
-:is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(2){--i:1}
-:is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(3){--i:2}
-:is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(4){--i:3}
-:is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(5){--i:4}
-:is(.screen,.sdetail>.sbento,.sdl,.panel.split>.col,.gyin)>:nth-child(n+6){--i:4}
+:is(.screen,.sdetail>.sbento>.bg-in,.sdl,.panel.split>.col,.gyin)>:not(.wbody):not(.fdim):not(.fstack),.wrap>.bar{animation:rvIn var(--m-in) var(--m-ease) both;animation-delay:calc(var(--i,0) * var(--m-step))}
+:is(.screen,.sdetail>.sbento>.bg-in,.sdl,.panel.split>.col,.gyin)>:nth-child(2){--i:1}
+:is(.screen,.sdetail>.sbento>.bg-in,.sdl,.panel.split>.col,.gyin)>:nth-child(3){--i:2}
+:is(.screen,.sdetail>.sbento>.bg-in,.sdl,.panel.split>.col,.gyin)>:nth-child(4){--i:3}
+:is(.screen,.sdetail>.sbento>.bg-in,.sdl,.panel.split>.col,.gyin)>:nth-child(5){--i:4}
+:is(.screen,.sdetail>.sbento>.bg-in,.sdl,.panel.split>.col,.gyin)>:nth-child(n+6){--i:4}
 .panel.split>.col:last-child>*{--i:2}
 /* every other screen (landing, Me, the grown-up page, results, facts, reports): its own top-level pieces stagger the
    same way; screens built of one container stagger that container's children instead */
@@ -90,7 +90,7 @@ html[data-dir="prev"]::view-transition-new(root){animation-name:vtInLeft}
 #app .sheet .panel{animation:rvIn var(--m-in) var(--m-ease) both}
 /* picking a row swaps only the detail: its pieces never start from nothing, so the frame after a tap is never blank */
 @keyframes rvSoft{from{opacity:.3;transform:translateY(4px)}}
-.wrap :is(.sdetail>.sbento,.sdl)>*{animation-name:rvSoft}
+.wrap :is(.sdetail>.sbento>.bg-in,.sdl)>*{animation-name:rvSoft}
 
 @media (prefers-reduced-motion:reduce){ *,*::before,*::after,::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){transition:none!important;animation:none!important} .a-outsoon,.a-flash:not(:last-of-type){opacity:0} .a-move{transform:translateX(var(--dx))} .viz-svg .bar.mid{fill:var(--acc)} }
 
