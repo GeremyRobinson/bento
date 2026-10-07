@@ -134,14 +134,14 @@ html[data-hue][data-theme="dark"]{--page:oklch(from var(--page-hue) .165 .018 h)
 .t2 :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--tint:var(--c2);--ink:var(--k2)}
 :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--tint-soft:color-mix(in srgb,var(--tint) 13%,var(--card))}
 /* lines and outlines carry the bold colour; anything filled is dialled back a step so it's easy on the eyes (G 06:10) */
-:is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--on-pic:oklch(from var(--c0) .26 .05 h);--dot:var(--soft);--soft:oklch(from var(--tint) calc(l + .08) calc(c * .6) h);--soft0:oklch(from var(--c0) calc(l + .08) calc(c * .6) h);--soft1:oklch(from var(--c1) calc(l + .08) calc(c * .6) h);--soft2:oklch(from var(--c2) calc(l + .08) calc(c * .6) h);--soft-acc:oklch(from var(--acc) calc(l + .04) calc(c * .7) h)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--on-pic:var(--on-tint);--dot:var(--tint);--soft:oklch(from var(--tint) calc(l - .1) calc(c * .65) h);--soft0:oklch(from var(--c0) calc(l - .1) calc(c * .65) h);--soft1:oklch(from var(--c1) calc(l - .1) calc(c * .65) h);--soft2:oklch(from var(--c2) calc(l - .1) calc(c * .65) h);--soft-acc:oklch(from var(--acc) calc(l - .08) calc(c * .7) h)}}
-:root[data-theme="dark"] :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--on-pic:var(--on-tint);--dot:var(--tint);--soft:oklch(from var(--tint) calc(l - .1) calc(c * .65) h);--soft0:oklch(from var(--c0) calc(l - .1) calc(c * .65) h);--soft1:oklch(from var(--c1) calc(l - .1) calc(c * .65) h);--soft2:oklch(from var(--c2) calc(l - .1) calc(c * .65) h);--soft-acc:oklch(from var(--acc) calc(l - .08) calc(c * .7) h)}
+:is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--fill0:color-mix(in srgb,var(--c0) var(--d-f18),var(--card));--fill1:color-mix(in srgb,var(--c1) var(--d-f18),var(--card));--fill2:color-mix(in srgb,var(--c2) var(--d-f18),var(--card));--on-pic:oklch(from var(--c0) .26 .05 h);--dot:var(--soft);--soft:oklch(from var(--tint) calc(l + .08) calc(c * .6) h);--soft0:oklch(from var(--c0) calc(l + .08) calc(c * .6) h);--soft1:oklch(from var(--c1) calc(l + .08) calc(c * .6) h);--soft2:oklch(from var(--c2) calc(l + .08) calc(c * .6) h);--soft-acc:oklch(from var(--acc) calc(l + .04) calc(c * .7) h)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--fill0:oklch(from var(--c0) .38 calc(c * .5) h);--fill1:oklch(from var(--c1) .36 calc(c * .5) h);--fill2:oklch(from var(--c2) .34 calc(c * .5) h);--on-pic:var(--on-tint);--dot:var(--tint);--soft:oklch(from var(--tint) calc(l - .1) calc(c * .65) h);--soft0:oklch(from var(--c0) calc(l - .1) calc(c * .65) h);--soft1:oklch(from var(--c1) calc(l - .1) calc(c * .65) h);--soft2:oklch(from var(--c2) calc(l - .1) calc(c * .65) h);--soft-acc:oklch(from var(--acc) calc(l - .08) calc(c * .7) h)}}
+:root[data-theme="dark"] :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--fill0:oklch(from var(--c0) .38 calc(c * .5) h);--fill1:oklch(from var(--c1) .36 calc(c * .5) h);--fill2:oklch(from var(--c2) .34 calc(c * .5) h);--on-pic:var(--on-tint);--dot:var(--tint);--soft:oklch(from var(--tint) calc(l - .1) calc(c * .65) h);--soft0:oklch(from var(--c0) calc(l - .1) calc(c * .65) h);--soft1:oklch(from var(--c1) calc(l - .1) calc(c * .65) h);--soft2:oklch(from var(--c2) calc(l - .1) calc(c * .65) h);--soft-acc:oklch(from var(--acc) calc(l - .08) calc(c * .7) h)}
 /* Dark pictures. In dark mode a picture sits on a raised tile (--float), lighter than --card, so inside it every fill
    and line mixes from the tile it is drawn on. Its greys are lifted to read there: lines and outlines (--rule, --faint)
    3:1 or better, small text (--muted) 4.5:1, and an empty part is a tinted box a step lighter than the tile, never a hole.
    Labels in a part color (--lbl, --k*, --ka) are that color lifted toward white to 4.5:1; lines keep the color itself.
-   Labels carry a thin halo of the tile, so a label over a filled shape still reads.
+   Labels carry no halo (G 07:32); filled shapes are dark enough that a bright label reads on them.
    Light mode reads none of this. */
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]) :is(.lshero,.panel.split .card) :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--card:var(--float)}
@@ -152,7 +152,7 @@ html[data-hue][data-theme="dark"]{--page:oklch(from var(--page-hue) .165 .018 h)
     --k0:oklch(from var(--l0) .84 .25 h); --k1:oklch(from var(--l1) .84 .25 h); --k2:oklch(from var(--l2) .84 .25 h);
     --ka:oklch(from var(--la) .88 .25 h)}
     :root:not([data-theme="light"]) .viz-svg :is(text.onlbl,text.coin-val){stroke:none}
-  :root:not([data-theme="light"]) .viz-svg text{paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round;--lbl:oklch(from var(--tint) .84 .25 h)}
+  :root:not([data-theme="light"]) .viz-svg text{--lbl:oklch(from var(--tint) .84 .25 h)}
 }
 :root[data-theme="dark"] :is(.lshero,.panel.split .card) :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--card:var(--float)}
 :root[data-theme="dark"] :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){
@@ -162,7 +162,7 @@ html[data-hue][data-theme="dark"]{--page:oklch(from var(--page-hue) .165 .018 h)
   --k0:oklch(from var(--l0) .84 .25 h); --k1:oklch(from var(--l1) .84 .25 h); --k2:oklch(from var(--l2) .84 .25 h);
   --ka:oklch(from var(--la) .88 .25 h)}
 :root[data-theme="dark"] .viz-svg :is(text.onlbl,text.coin-val){stroke:none}
-:root[data-theme="dark"] .viz-svg text{paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round;--lbl:oklch(from var(--tint) .84 .25 h)}
+:root[data-theme="dark"] .viz-svg text{--lbl:oklch(from var(--tint) .84 .25 h)}
 
 
 /* ---- the canvas: the page behind the bento. The tiles, type and controls stay the same everywhere; the canvas

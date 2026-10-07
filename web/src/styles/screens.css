@@ -3,11 +3,11 @@
 /* Lessons still being rebuilt: listed in their place, quieter, and not tappable yet. */
 .lesson.soon,.lesson[disabled]:not(.soon){cursor:default}
 .lesson.soon{background:color-mix(in srgb,var(--card) 55%,transparent);color:var(--muted)}
-.lesson.soon:hover{background:color-mix(in srgb,var(--card) 55%,transparent)}
+.lesson.soon:hover,.lesson.soon:active{background:color-mix(in srgb,var(--card) 55%,transparent)}
 .lesson.soon:active{transform:none}
 .lesson.soon .badge{background:transparent;box-shadow:inset 0 0 0 2px var(--rule);color:var(--faint)}
 .lesson.soon .muted{color:var(--faint)}
-.lesson[disabled]:not(.soon):hover{background:var(--card)}
+.lesson[disabled]:not(.soon):hover,.lesson[disabled]:not(.soon):active{background:var(--card)}
 .lesson[disabled]:not(.soon):active{transform:none}
 .upnext.soonnext{box-shadow:none;cursor:default}
 .upnext.soonnext b{color:var(--muted)}

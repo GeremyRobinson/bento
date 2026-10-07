@@ -25,7 +25,7 @@ html:has(.screen) body{overflow:hidden}
 /* the book's head: the grade number on the left, its check-up on the right (G 2026-10-07) */
 .slist .shead:has(.scheck){display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);padding-right:var(--sp-2)}
 .shead .scheck{flex:none;box-shadow:var(--ring)}
-.slist .ctl:not(.go){background:var(--btn-panel,var(--card))} .slist .ctl:not(.go):hover{background:var(--btn-panel-hover,var(--hover))}
+.slist .ctl:not(.go){background:var(--btn-panel,var(--card))} .slist .ctl:not(.go):hover,.slist .ctl:not(.go):active{background:var(--btn-panel-hover,var(--hover))}
 .slist .shead .gnum{font:var(--w-bold) 64px/1 var(--sans);letter-spacing:-.04em}
 .slist .shead .gnum small{font-size:24px;vertical-align:top}
 .vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px}
@@ -40,7 +40,8 @@ html:has(.screen) body{overflow:hidden}
 .srow.chap.holds .sname b::after{content:"";display:inline-block;width:6px;height:6px;margin-left:var(--sp-2);border-radius:var(--r-round);background:var(--ink);vertical-align:middle}
 .srow{position:relative;z-index:var(--z-up);display:flex;align-items:center;gap:var(--sp-3);width:100%;min-height:var(--float-h);padding:var(--sp-2) 18px;border-radius:var(--r-pill);text-align:left;font-size:var(--fz-md);transition:background var(--m-swap) var(--m-ease),color var(--m-swap) var(--m-ease)}
 /* hover lifts a row one glass layer above what it sits on: list rows to --g2, lessons (on --g3) to --g4 */
-@media (hover:hover){.srow:not([disabled]):not(.on):hover{background:var(--g2,var(--hover))} .sgroup .srow.sles:not([disabled]):not(.on):hover{background:var(--g4,var(--hover))}}
+@media (hover:hover){.srow:not([disabled]):not(.on):hover,.srow:not([disabled]):not(.on):active{background:var(--g2,var(--hover))} .sgroup .srow.sles:not([disabled]):not(.on):hover,.sgroup .srow.sles:not([disabled]):not(.on):active{background:var(--g4,var(--hover))}}
+@media (hover:none){.srow:not([disabled]):not(.on):active{background:var(--g2,var(--hover))} .sgroup .srow.sles:not([disabled]):not(.on):active{background:var(--g4,var(--hover))}}
 .srow .sname{flex:1;min-width:0;display:grid}
 .srow .sname b{font-weight:var(--w-mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* a long name wraps to a second line rather than losing its end (v44 sweep item 8) */
@@ -75,7 +76,7 @@ html:has(.screen) body{overflow:hidden}
 .sgroup:is(.opening,:not(.open)) .srow::before{opacity:0}
 .sgroup.opening .srow::before{transition:none}
 /* the open chapter's title keeps its highlight while its lessons show (G 2026-10-07) */
-.sgroup.open>.srow.chap,.sgroup.open>.srow.chap:hover{background:var(--g3)}
+.sgroup.open>.srow.chap,.sgroup.open>.srow.chap:hover,.sgroup.open>.srow.chap:active{background:var(--g3)}
 /* the lessons sit in their own panel nested inside the chapter's, a step darker (G 2026-10-07, "its own separate background nester") */
 .sgroup-panel{display:grid;gap:var(--list-gap);margin-top:var(--list-gap);padding:var(--list-gap);background:var(--surf-sub);border-radius:calc(var(--row-h) / 2 + var(--list-gap))}
 .sgroup .srow.sles{min-height:var(--row-h)}
@@ -85,9 +86,10 @@ html:has(.screen) body{overflow:hidden}
 .slist .srow::before{background:var(--g3);box-shadow:none}
 /* hovering a lesson lights its dot in the grade's hue (G 2026-10-07) */
 .srow.sles .sdot{background:var(--g4,var(--faint));transition:background var(--m-swap) var(--m-ease)}
-@media (hover:hover){.srow.sles:not([disabled]):hover .sdot{background:var(--tint)}}
+@media (hover:hover){.srow.sles:not([disabled]):hover .sdot,.srow.sles:not([disabled]):active .sdot{background:var(--tint)}}
+@media (hover:none){.srow.sles:not([disabled]):active .sdot{background:var(--tint)}}
 /* panels with buttons take the glass, picture panels stay plain (G 05:28) */
-.bhome .today{background:var(--pane-glass,var(--card))} .bhome .today .ctl:not(.go){background:var(--btn-panel,var(--card))} .bhome .today .pitem:hover{background:var(--btn-panel,var(--tint-soft))}
+.bhome .today{background:var(--pane-glass,var(--card))} .bhome .today .ctl:not(.go){background:var(--btn-panel,var(--card))} .bhome .today .pitem:hover,.bhome .today .pitem:active{background:var(--btn-panel,var(--tint-soft))}
 /* the current lesson keeps its dot lit (G 2026-10-07) */
 .srow.sles.on .sdot{background:var(--tint)}
 .sfoot{padding:var(--sp-3) var(--sp-2) calc(var(--sp-1) + var(--sp-3));position:sticky;bottom:calc(var(--panel-w,1px) - var(--sp-3));background:var(--surf-1,var(--well));z-index:var(--z-up)}
@@ -104,7 +106,7 @@ html:has(.screen) body{overflow:hidden}
 .sfootrow .slast{display:inline-flex;align-items:center;gap:var(--sp-2);color:var(--muted);font-size:var(--fz-sm);font-weight:var(--w-mid)}
 .sfootrow .ctl{--pill-h:var(--float-h);font-size:var(--fz-lg)}
 /* a quiet button is one level lighter than nothing: a step off its panel, never a dark hole in it */
-.sfootrow .ctl:not(.go){background:var(--btn-panel,var(--surf-btn));box-shadow:none} .sfootrow .ctl:not(.go):hover{background:var(--btn-panel-hover,var(--hover))}
+.sfootrow .ctl:not(.go){background:var(--btn-panel,var(--surf-btn));box-shadow:none} .sfootrow .ctl:not(.go):hover,.sfootrow .ctl:not(.go):active{background:var(--btn-panel-hover,var(--hover))}
 .spreview{flex:none;margin:0;background:var(--pane-plain,var(--well));border-radius:var(--r-panel);padding:var(--sp-5) var(--sp-7);grid-template-rows:auto minmax(0,1fr);overflow:hidden;box-shadow:none}
 .spreview figcaption{color:var(--muted);font-size:var(--fz-sm);font-weight:var(--w-mid);display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
 .spreview figcaption b{color:var(--text)}
@@ -132,7 +134,7 @@ html:has(.screen) body{overflow:hidden}
 /* dark mode: the grade's color lifted so the number reads on the dark circle (4.5:1 or better) */
 
 
-.gbtn:hover{background:color-mix(in oklab,var(--float) 94%,var(--text))}
+.gbtn:hover,.gbtn:active{background:color-mix(in oklab,var(--float) 94%,var(--text))}
 .gbtn:active{transform:scale(.96)}
 .gring{position:absolute;left:0;top:0;width:72px;height:72px;border-radius:var(--r-round);outline:3px solid var(--text);pointer-events:none;opacity:0;transition:transform var(--dur-380) var(--glide),opacity var(--dur-200) var(--ease)}
 .gyear{min-height:0;display:grid;overflow:hidden}
@@ -219,7 +221,7 @@ html:has(.screen) body{overflow:hidden}
 .ldots i.now{width:24px;background:var(--tint)}
 @media (orientation:portrait),(max-width:899px){
   .screen.fit.lscreen{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"intro" "hero" "ctl"}
-  .lintro{overflow:visible;padding:0 var(--sp-2);gap:6px}
+  .lintro{overflow:visible;padding:var(--sp-3) var(--sp-4);gap:6px}
   .lintro .beats,.lintro .lhelp,.lintro .tlink,.lintro .idea+.idea{display:none}
   .lintro h1{font-size:26px}
   /* the idea is read whole, never cut mid-sentence: the picture under it gives up the room (v44 sweep item 7) */
@@ -245,7 +247,7 @@ html:has(.screen) body{overflow:hidden}
 .wbody>.col>*{flex:none}
 .panel.split .card{background:var(--float);box-shadow:var(--float-shadow);border-radius:var(--r-panel);padding:var(--sp-5) var(--sp-6)}
 .panel.split .tray button{background:var(--btn,var(--float));box-shadow:none}
-.panel.split .tray button:hover{background:var(--btn-hover,color-mix(in oklab,var(--float) 90%,var(--tint)))}
+.panel.split .tray button:hover,.panel.split .tray button:active{background:var(--btn-hover,color-mix(in oklab,var(--float) 90%,var(--tint)))}
 .panel.split .actions .ctl{--pill-h:var(--float-h);font-size:var(--fz-lg);background:var(--float);box-shadow:var(--float-shadow)}
 @media not ((min-width:900px) and (orientation:landscape)){.wpad{overflow:visible}.wpad .tray{max-width:520px}}
 @media (max-width:699px){.screen.solve{--key:44px;--screen-gap:var(--sp-2)}.panel.split .card{padding:var(--sp-3) var(--sp-4);gap:var(--sp-2)}.wpad .tray{gap:6px}}
@@ -300,6 +302,8 @@ html:has(.screen) body{overflow:hidden}
 /* the hero: one column, three rows; the equation and the feedback line keep their height, the picture takes the rest */
 .lshero.phero{grid-template-rows:auto var(--pfb-h) minmax(var(--pic-min),1fr);padding:var(--sp-5) var(--sp-6) var(--sp-5);gap:var(--sp-1);position:relative}
 .pscreen.nopic .lshero.phero{grid-template-rows:auto var(--pfb-h);align-content:center}
+/* a step with no picture fills the picture panel with its question instead of leaving it empty (G 07:34) */
+@media (orientation:portrait),(max-width:899px){.pscreen.nopic .pmath{font-size:clamp(40px,11vw,56px);--ask:clamp(38px,11vw,52px);gap:var(--sp-3)} .pscreen.nopic .pmath .q{font-size:clamp(20px,5.6vw,26px)}}
 .pmath{min-width:0;gap:var(--sp-1)}
 .pmath .q{font:var(--w-mid) var(--fz-lg)/1.35 var(--sans);letter-spacing:0;color:var(--text);text-wrap:balance}
 .pmath .ask{font-size:var(--ask);padding:0;max-width:100%;min-width:0}
@@ -323,7 +327,7 @@ html:has(.screen) body{overflow:hidden}
 /* the keypad: the hero's width, two rows, Check tall on the right */
 .ppad .tray{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) minmax(0,2fr);grid-auto-rows:var(--key);gap:var(--sp-2);max-width:none;margin:0}
 .ppad .tray button{height:auto;background:var(--btn,var(--float));box-shadow:none;font-size:calc(var(--key) * .42)}
-.ppad .tray button:not(.k-go):hover{background:var(--btn-hover,color-mix(in oklab,var(--float) 90%,var(--tint)))}
+.ppad .tray button:not(.k-go):hover,.ppad .tray button:not(.k-go):active{background:var(--btn-hover,color-mix(in oklab,var(--float) 90%,var(--tint)))}
 .ppad .tray .k-go{grid-column:8;grid-row:1 / 3;height:auto;--pill-h:auto;border-radius:var(--r-2xl);font-size:var(--fz-lg);background:var(--ink);box-shadow:none}
 .ppad .tray .k-next,.ppad .tray .k-back{color:var(--ink)}
 .ppad.done .tray button:not(.k-go){opacity:.35;pointer-events:none;transition:opacity var(--dur-380) var(--ease) var(--dur-500)}
@@ -468,7 +472,8 @@ html:has(.screen) body{overflow:hidden}
 .sbento .b-chaps{background:var(--card);padding:var(--sp-3);display:grid;gap:var(--sp-2);grid-template-columns:minmax(0,1fr);grid-auto-rows:minmax(var(--tap),64px);align-content:safe center;overflow:auto;overscroll-behavior:contain}
 .bchap{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:var(--tap);padding:var(--sp-2) var(--sp-4);border-radius:var(--r-pill);background:var(--surf-btn);text-align:left;transition:transform var(--dur-180) var(--ease),background var(--m-swap) var(--m-ease)}
 .bchap:active{transform:scale(.97)}
-@media (hover:hover){.bchap:hover{background:var(--btn-card-hover,var(--hover))}}
+@media (hover:hover){.bchap:hover,.bchap:active{background:var(--btn-card-hover,var(--hover))}}
+@media (hover:none){.bchap:active{background:var(--btn-card-hover,var(--hover))}}
 /* a chapter button is a lighter step on its tile, never a dark hole; its progress fills it in the grade hue */
 .bchap>.fill{background:color-mix(in oklab,var(--tint) 22%,var(--surf-btn))}
 .bchap b{font-size:var(--fz-sm);line-height:1.25;font-weight:var(--w-bold);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-wrap:pretty}
@@ -479,7 +484,9 @@ html:has(.screen) body{overflow:hidden}
    columns. Only the plan and the chapters scroll, inside their tiles */
 @container (max-width:559px){.sbento .b-chaps{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* a phone's grid is too narrow for two chapter names side by side: one column, so no name is cut mid-word */
-@container (max-width:419px){.sbento .b-chaps{grid-template-columns:minmax(0,1fr)}}
+/* a phone drops the chapters tile so Today has the room and its plan never scrolls (G 07:36); the chapters are one tap
+   away in Contents */
+@container (max-width:559px){.sbento .b-chaps{display:none}@media (min-height:741px){.bgrid.fit.sbento .bg-t.l{--rs:2}.bgrid.fit.sbento .bg-t.today{--rs:3}}}
 @container (max-width:559px){.sbento :is(.b-stats,.b-streak){padding:var(--sp-3);gap:2px}.sbento .bbig{font-size:40px}.sbento :is(.b-stats,.b-streak) p{font-size:var(--fz-sm);line-height:1.3}}
 /* a short phone (375x667): a number row is 72px, so the numbers sit closer to their edges */
 @media (max-width:699px) and (max-height:740px){.bhome.sbento :is(.b-stats,.b-streak){padding:var(--sp-2)}.sbento .bbig{font-size:32px}}
