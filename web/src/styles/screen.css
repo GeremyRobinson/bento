@@ -83,7 +83,7 @@ html:has(.screen) body{overflow:hidden}
 /* the picked row on the list (Today) is a glass rung too, never a white card */
 .slist .srow::before{background:var(--g3);box-shadow:none}
 /* hovering a lesson lights its dot in the grade's hue (G 2026-10-07) */
-.srow.sles .sdot{transition:background var(--m-swap) var(--m-ease)}
+.srow.sles .sdot{background:var(--g4,var(--faint));transition:background var(--m-swap) var(--m-ease)}
 @media (hover:hover){.srow.sles:not([disabled]):hover .sdot{background:var(--tint)}}
 /* the current lesson keeps its dot lit (G 2026-10-07) */
 .srow.sles.on .sdot{background:var(--tint)}
