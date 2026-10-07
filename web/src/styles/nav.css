@@ -352,20 +352,17 @@ html:has(.screen),html:has(.screen) body{overflow:hidden;overscroll-behavior:non
 /* THE CONFIRM MASTER: a small bento box in the middle of the screen. The question spans the top; the two answers sit
    side by side under it as tiles, the safe one filled in the grade's colour, the other outlined. Corners nest from the
    panel with an 8px gap; no shadow, it comes forward from the centre (G 2026-10-06) */
-.confirm{position:fixed;z-index:var(--z-stack);left:50%;top:50%;translate:-50% -50%;width:min(400px,calc((100vw - 32px) / var(--text-zoom,1)));
-  display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2);padding:var(--sp-2);border-radius:var(--r-panel);background:var(--card);
+.confirm{--cin:calc(var(--r-panel) - var(--pill-h) / 2);position:fixed;z-index:var(--z-stack);left:50%;top:50%;translate:-50% -50%;width:min(400px,calc((100vw - 32px) / var(--text-zoom,1)));
+  display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2);padding:var(--cin);border-radius:var(--r-panel);background:var(--card);
   outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1);animation:confirmIn var(--m-in) var(--m-ease) both}
+/* the answers are small Pills; the box is inset by the corner minus half a pill, so their round ends sit concentric with
+   its corners, the same space on every side; the question keeps its own room above them */
+.confirm,.confirm .ctl{--pill-h:40px}
 @keyframes confirmIn{from{opacity:0;scale:.97}}
-.confirm .cq{grid-column:1 / -1;display:grid;gap:var(--sp-1);padding:calc(var(--u) + var(--sp-2)) calc(var(--u) + var(--sp-2)) var(--sp-3)}
+.confirm .cq{grid-column:1 / -1;display:grid;gap:var(--sp-1);padding:calc(var(--u) + var(--sp-2) - var(--cin)) calc(var(--u) + var(--sp-2) - var(--cin)) var(--sp-3)}
 .confirm .cq b{font-size:var(--fz-xl);font-weight:var(--w-bold);letter-spacing:-.01em}
 .confirm .cq span{color:var(--muted);font-size:var(--fz-md)}
-.confirm .ca{min-height:var(--row);border-radius:calc(var(--r-panel) - var(--sp-2));font-size:var(--fz-lg);font-weight:var(--w-bold);color:var(--ink);
-  background:transparent;outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1);transition:background var(--m-tap) var(--m-ease),scale var(--m-tap) var(--m-ease)}
-.confirm .ca.keep{background:var(--tint);color:var(--on-tint);outline-color:var(--tint)}
-.confirm .ca:hover{background:var(--tint-soft)}
-.confirm .ca.keep:hover{background:color-mix(in oklab,var(--tint) 88%,var(--text))}
-.confirm .ca:active{scale:.97}
-.confirm .ca:focus-visible{outline:2px solid var(--tint);outline-offset:2px}
+.confirm .ca{width:100%}
 .iresume-x{display:grid;place-items:center;width:var(--float-in);height:var(--float-in);border-radius:var(--r-pill);background:var(--float);box-shadow:var(--float-shadow);color:var(--muted)}
 
 /* ---- the nav's wordmark: on every screen, plain "Bento" on the left, the same as the landing page's; it always

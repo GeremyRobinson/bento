@@ -1,10 +1,12 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
+import { Pill } from "./primitives/Pill";
 
 /**
  * The Confirm master: one quick question before something is lost. A small bento box (G 2026-10-06: "it can also be a
  * bento shape since the buttons don't need a lot of space"): one panel with the question across the top and the two
- * answers side by side under it, the safe one first and filled in the grade's colour. It comes forward from the
+ * answers side by side under it as small Pills, the safe one first and filled in the grade's colour; the box's padding
+ * around them keeps their round ends concentric with its corners. It comes forward from the
  * middle of the screen, never from a corner. Escape or the dim keeps going.
  */
 export function Confirm({ title, body, confirm, cancel = "Keep going", onConfirm, onCancel }: {
@@ -22,8 +24,8 @@ export function Confirm({ title, body, confirm, cancel = "Keep going", onConfirm
       <div className="fdim" onClick={onCancel} />
       <div className="confirm" role="alertdialog" aria-modal="true" aria-label={title} aria-describedby={body ? "confirm-body" : undefined}>
         <div className="cq"><b>{title}</b>{body && <span id="confirm-body">{body}</span>}</div>
-        <button className="ca keep" autoFocus onClick={onCancel}>{cancel}</button>
-        <button className="ca" onClick={onConfirm}>{confirm}</button>
+        <Pill go small className="ca keep" autoFocus onClick={onCancel}>{cancel}</Pill>
+        <Pill small className="ca" onClick={onConfirm}>{confirm}</Pill>
       </div>
     </>
   );

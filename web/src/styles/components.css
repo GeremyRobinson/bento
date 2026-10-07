@@ -439,7 +439,7 @@ button.gcell:active{transform:scale(.96)}
 .ptext b{font-size:calc(var(--fs) * 1.08);font-weight:var(--w-bold);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color var(--dur-150)}
 .pitem.done .ptext b{color:var(--muted);font-weight:var(--w-regular)}
 .pmin{color:var(--muted);font-size:var(--small);font-weight:var(--w-regular);white-space:nowrap}
-.pitem .ctl.go{--pill-h:40px;--pill-pad:var(--sp-5)}
+.ctl.sm,.pitem .ctl.go{--pill-h:40px;--pill-pad:var(--sp-5)}
 .bhome .b-stats{justify-items:center;text-align:center;align-content:center;gap:var(--sp-3)}
 .b-stats p{color:var(--text);line-height:1.5}
 .b-stats p b{font-weight:var(--w-bold)}
