@@ -99,6 +99,3 @@
 /* a question in words wraps like a sentence, at the question size, never wider than its card */
 .math.words .t{white-space:pre-wrap}
 .math.words>.mline{flex-wrap:wrap;font-size:calc(var(--math) * .6);font-weight:var(--w-bold);line-height:1.2;letter-spacing:-.01em;max-width:100%;text-wrap:balance}
-/* the seats: thin gaps between them, firmer gaps between the blocks of ten (G 2026-10-07) */
-.am .seat{stroke:var(--card);stroke-width:var(--d-hair)}
-.am .seat.ten{stroke-width:var(--d-stroke)}
