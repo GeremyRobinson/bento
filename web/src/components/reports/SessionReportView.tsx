@@ -51,7 +51,7 @@ export function SessionReportView({ rep }: { rep: SessionReport }) {
           })}
         </div>
       </section>
-      <section className="panel">
+      <section className="panel rgrown">
         <div className="head"><h2>{GROWN_UP}</h2><ScoreChip n={rep.level} words /></div>
         <div className="prose indent">
           <p>Score {rep.level} of 4: {LEVELS[rep.level]}. {LEVEL_SENTENCES[rep.level]}</p>
