@@ -58,6 +58,9 @@
   .mygrown h2{font-size:var(--fz-lg)}
 }
 @media (max-width:699px){
+  /* a wide Up next pill at the foot of a tile sits clear of the tile's corner, so the corners don't clash (Review) */
+  .mytile:has(>.ctl.go:last-child){padding-bottom:var(--r-panel)}
+
   .myhero{grid-template-columns:auto minmax(0,1fr);min-height:0;padding:var(--u)}
   .myhero>.ctl{grid-column:1 / -1;justify-self:start}
   .myhero .bbig .gnum{font-size:60px}

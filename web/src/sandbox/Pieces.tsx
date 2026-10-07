@@ -9,6 +9,31 @@ import { Nav, NavMark } from "../components/Nav";
 import { Confirm } from "../components/Confirm";
 import { PillRing } from "../components/primitives/PillRing";
 import { Keypad } from "../components/practice/Keypad";
+import { ListGroup } from "../components/screen/ListGroup";
+
+const DEMO = [{ name: "Whole numbers", rows: ["Multiply two-digit numbers", "Long division", "Order of operations"] },
+  { name: "Fractions", rows: ["Add unlike fractions", "Multiply fractions"] }];
+/** the book's chapter list in miniature: tap a chapter to open it, a lesson to pick it */
+function DemoChapters() {
+  const [open, setOpen] = useState<string | null>(DEMO[0]!.name);
+  const [pick, setPick] = useState(DEMO[0]!.rows[0]!);
+  return (
+    <div className="screen sbchapters"><nav className="slist" aria-label="Chapters">
+      {DEMO.map(u => (
+        <ListGroup key={u.name} open={open === u.name} head={
+          <button className={`srow chap${open !== u.name && u.rows.includes(pick) ? " holds" : ""}`} aria-expanded={open === u.name} onClick={() => { if (open === u.name) setOpen(null); else { setOpen(u.name); setPick(u.rows[0]!); } }}>
+            <span className="sname"><b>{u.name}</b></span><small className="smeta">{u.rows.length} lessons</small>
+          </button>}>
+          {u.rows.map(r => (
+            <button key={r} className={`srow sles${pick === r ? " on" : ""}`} onClick={() => setPick(r)}>
+              <span className="sdot" aria-hidden /><span className="sname"><b>{r}</b></span><small className="smeta">8 min</small>
+            </button>
+          ))}
+        </ListGroup>
+      ))}
+    </nav></div>
+  );
+}
 
 /** Where a piece is: being built, waiting on Review, or live. G sees work here before Review signs it off. */
 type Status = "building" | "review" | "next" | "live";
@@ -46,6 +71,10 @@ export function Pieces() {
         <p className="muted">Each piece is built and checked on its own, then nests into the bigger ones. These are the real components, so they work here the way they will in the app.</p>
       </header>
       <div className="sbpgrid">
+        <Piece name="Chapter accordion" status="building" chunk="ListGroup master" nests="the book's chapter list">
+          <DemoChapters />
+          <small className="muted">A chapter opens with its lessons in a slightly darker panel under it; opening another folds this one shut. The white pill belongs to the picked lesson and fades in on it; it never travels. A folded chapter holding the pick shows a small dot.</small>
+        </Piece>
         <Piece name="Progress ring" status="review" chunk="Pill progress" nests="Nav (phone), every lesson and practice">
           <div className="sbring"><div className="island" style={gn}><PillRing p={ring} /><span className="iplace"><b>Multiply two-digit numbers</b></span></div></div>
           <Pill onClick={() => setRing(r => (r >= 1 ? 0 : Math.min(1, r + 0.2)))}>{ring >= 1 ? "Start over" : "Next problem"}</Pill>

@@ -27,9 +27,14 @@ html:has(.screen) body{overflow:hidden}
 .vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px}
 .slist .shead h1{margin:0;font:var(--w-bold) var(--fz-xl)/24px var(--sans);letter-spacing:-.01em}
 .slist .shead .ysub{margin:0;color:var(--muted);font-size:var(--small);line-height:20px}
-.sknob{position:absolute;left:var(--sp-3);right:var(--sp-3);top:0;height:var(--float-h);border-radius:var(--r-pill);background:var(--float);box-shadow:var(--float-shadow);pointer-events:none;z-index:var(--z-flat);
-  transition:transform var(--dur-360) var(--glide),height var(--dur-360) var(--glide),opacity var(--dur-200)}
-.srow{position:relative;z-index:var(--z-up);display:flex;align-items:center;gap:var(--sp-3);width:100%;min-height:var(--float-h);padding:var(--sp-2) 18px;border-radius:var(--r-pill);text-align:left;font-size:var(--fz-md);transition:background var(--dur-150),color var(--dur-200)}
+/* the picked row wears the white pill itself (Review, selection motion): picking fades it in on that row while the old
+   one fades out; it never travels, so it can't cross a chapter or land on the wrong row while the list reflows. Never
+   on a chapter's head: a folded chapter that holds the pick shows a quiet dot instead */
+.srow::before{content:"";position:absolute;inset:0;z-index:var(--z-under);border-radius:inherit;background:var(--float);box-shadow:var(--float-shadow);opacity:0;pointer-events:none;transition:opacity var(--m-swap) var(--m-ease)}
+.srow.on:not(.chap)::before{opacity:1}
+:root[data-motion="reduce"] .srow::before{transition-duration:var(--m-calm)!important}
+.srow.chap.holds .sname b::after{content:"";display:inline-block;width:6px;height:6px;margin-left:var(--sp-2);border-radius:var(--r-round);background:var(--ink);vertical-align:middle}
+.srow{position:relative;z-index:var(--z-up);display:flex;align-items:center;gap:var(--sp-3);width:100%;min-height:var(--float-h);padding:var(--sp-2) 18px;border-radius:var(--r-pill);text-align:left;font-size:var(--fz-md);transition:background var(--m-swap) var(--m-ease),color var(--m-swap) var(--m-ease)}
 .srow:not([disabled]):not(.on):hover{background:color-mix(in oklab,var(--tint) 7%,transparent)}
 .srow .sname{flex:1;min-width:0;display:grid}
 .srow .sname b{font-weight:var(--w-mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -39,12 +44,28 @@ html:has(.screen) body{overflow:hidden}
 .srow.on>small,.srow .snext{color:var(--ink)}
 .srow.chap .sname b{font-weight:var(--w-bold)}
 .srow.sles{padding-left:22px;min-height:46px;font-size:var(--small)}
+/* a lesson row is always one line, picked or not: the name ends in an ellipsis and its label (time, score, Up next)
+   keeps its place, so no row grows or changes when it's picked (G 2026-10-07, "why is this happening?") */
+.srow.sles .sname b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srow.sles>small,.srow.sles>.score{flex:none}
 .srow.sles .sname b{font-weight:var(--w-regular)}
 .srow.sles.on .sname b{font-weight:var(--w-mid)}
 .srow .sdot{flex:none;width:10px;height:10px;border-radius:5px;background:var(--faint);transition:background var(--dur-300)}
 .srow .sdot.done{background:var(--tint)}
 .srow.soon{opacity:.5}
-.schapter.open{padding-bottom:var(--sp-1)}
+/* ListGroup (master): a chapter as an accordion. Its rows sit in a slightly darker panel nested under the head, corners
+   concentric with the rows' pills, the same 8px between rows as round the panel's edge (G 2026-10-07); the panel grows open and folds shut at the list highlight's speed (G 2026-10-07) */
+.sgroup{--nest-pad:var(--sp-2);--row-h:46px}
+.sgroup-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--m-close) var(--m-ease),visibility 0s var(--m-close)}
+.sgroup.open>.sgroup-body{grid-template-rows:1fr;transition:grid-template-rows var(--m-close) var(--m-ease)}
+.sgroup:not(.open)>.sgroup-body{visibility:hidden}
+/* the fold's clip is as round as the panel, so its corners stay round while it folds (Review) */
+.sgroup-in{min-height:0;overflow:hidden;border-radius:calc(var(--row-h) / 2 + var(--nest-pad))}
+/* the picked lesson's pill waits for its chapter to finish opening, then fades in; it never rides up with the panel (Review) */
+.sgroup:is(.opening,:not(.open)) .srow::before{opacity:0;transition:none}
+.sgroup-panel{display:grid;gap:var(--nest-pad);margin-top:var(--sp-1);padding:var(--nest-pad);background:var(--surf-nest);border-radius:calc(var(--row-h) / 2 + var(--nest-pad))}
+.sgroup.open{padding-bottom:var(--sp-1)}
+.sgroup .srow.sles{min-height:var(--row-h)}
 .sfoot{padding:var(--sp-3) var(--sp-2) calc(var(--sp-1) + var(--sp-3));position:sticky;bottom:calc(var(--panel-w,1px) - var(--sp-3));background:var(--surf-1,var(--well));z-index:var(--z-up)}
 /* the grade's book: the detail (a well with the preview, a floating card with the lesson) */
 .sdetail>.sday{align-content:start}
@@ -127,13 +148,13 @@ html:has(.screen) body{overflow:hidden}
 .lintro .lsub{margin:0;font-size:var(--fz-lg);font-weight:var(--w-mid);color:var(--ink)}
 .lintro .lsub.formula{font-variant-numeric:tabular-nums}
 .lintro .idea{margin:0;color:var(--muted);font-size:var(--fz-lg);line-height:1.45}
-.lintro .beats{margin-top:6px;gap:6px}
-.lintro .beat>button{display:flex;align-items:flex-start;gap:var(--sp-3);width:100%;padding:10px 14px 10px var(--sp-2);border-radius:var(--r-2xl);text-align:left}
-.lintro .beat{background:none;border-radius:var(--r-2xl)}
+.lintro .beats{margin-top:2px;gap:6px}
+.lintro .beat>button{display:flex;align-items:flex-start;gap:var(--sp-3);width:100%;text-align:left}
+.lintro .beat{background:none}
 .lintro .beat[data-state="now"]{background:var(--float);box-shadow:var(--float-shadow)}
 /* steps still to come stay readable (4.5:1): muted text at full strength, not faded */
 .lintro .beat[data-state="later"]{opacity:1;color:var(--muted)}
-.lintro .beat .badge{--badge:30px;min-width:30px;height:30px;font-size:var(--fz-sm);background:var(--well);color:var(--ink)}
+.lintro .beat .badge{font-size:var(--fz-sm);background:var(--well);color:var(--ink)}
 .lintro .beat[data-state="now"] .badge{background:var(--ink);color:var(--on-tint)}
 .lintro .beat .say{gap:2px;font-size:var(--fz-md);line-height:1.4}
 .lintro .beat .say .mline{font-size:var(--fz-xl)}
@@ -229,9 +250,9 @@ html:has(.screen) body{overflow:hidden}
 .pprob .askline{font-size:var(--fz-sm)}
 .pprob .note{text-align:left}
 .pbeats{list-style:none;margin:0;padding:0;display:grid;gap:6px}
-.pbeats .beat{display:flex;align-items:flex-start;gap:var(--sp-3);padding:10px 14px 10px var(--sp-2);border-radius:var(--r-2xl);color:var(--muted)}
+.pbeats .beat{display:flex;align-items:flex-start;gap:var(--sp-3);color:var(--muted)}
 .pbeats .beat[data-state="now"]{background:var(--float);box-shadow:var(--float-shadow);color:var(--text)}
-.pbeats .badge{--badge:28px;flex:none;min-width:28px;height:28px;font-size:var(--fz-xs);background:var(--well);color:var(--ink)}
+.pbeats .badge{flex:none;font-size:var(--fz-xs);background:var(--well);color:var(--ink)}
 .pbeats .beat[data-state="done"] .badge{background:var(--tint);color:var(--on-tint)}
 .pbeats .beat[data-state="now"] .badge{background:var(--ink);color:var(--on-tint)}
 .pbeats .say{display:grid;gap:2px;min-width:0;font-size:var(--fz-md);line-height:1.35}
@@ -240,6 +261,13 @@ html:has(.screen) body{overflow:hidden}
 .pbeats .pline{font:var(--w-mid) var(--fz-lg)/1.3 var(--num);color:var(--ink);font-variant-numeric:tabular-nums}
 .pbeats .pline.shown{color:var(--muted)}
 .pbeats .pline .mline{justify-content:flex-start;max-width:100%}
+/* Step row (master, Learn's steps and practice's): the number sits as far in from the pill's left end as from its top
+   and bottom, so it's concentric with the rounded end, and the step's first line is centred on the number (G 2026-10-07,
+   "not aligned correctly") */
+.pbeats .beat,.lintro .beat{--badge:28px}
+.pbeats .beat,.lintro .beat>button{--beat-in:10px;padding:var(--beat-in) 14px var(--beat-in) var(--beat-in)}
+.pbeats .beat,.lintro .beat,.lintro .beat>button{border-radius:calc(var(--badge) / 2 + 10px)}
+:is(.pbeats .beat,.lintro .beat) .say>:first-child{min-height:var(--badge);display:flex;align-items:center}
 .pbeats .pline .mline .t{white-space:pre-wrap}
 .pextra{margin-top:auto;display:flex;flex-wrap:wrap;gap:var(--sp-2)}
 .pextra .ctl,.psteps .ctl{--pill-h:var(--h);background:var(--float);box-shadow:var(--float-shadow)}
@@ -412,6 +440,17 @@ html:has(.screen) body{overflow:hidden}
 .bchap b{font-size:var(--fz-sm);line-height:1.25;font-weight:var(--w-bold);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-wrap:pretty}
 .bchap small{flex:none;font-size:var(--fz-xs);font-weight:var(--w-mid);color:var(--muted)}
 .sbento .today .b-weak{margin-top:var(--s);padding:0;background:none;box-shadow:none}
+/* landscape (an iPad held sideways, a laptop): the picture takes the top left, never under 240px and never shorter than
+   the year's fill beside it; the plan sits under it beside the streak and the chapters, so a tall year's fill (a narrow
+   laptop) never pushes it off. The picture and the chapters share what's left two to one; the chapters scroll, and the
+   plan scrolls inside itself only when a short screen can't hold all of it (Review, 1024x768 to 1366x1024) */
+@media (orientation:landscape) and (min-width:900px){
+  .sdetail>.sbento{grid-template-rows:minmax(auto,2fr) auto minmax(0,1fr);
+    grid-template-areas:"pic pic stats" "plan plan streak" "plan plan chaps"}
+  .sdetail>.sbento.nopic{grid-template-areas:"plan plan stats" "plan plan streak" "plan plan chaps"}
+  .sdetail>.sbento>.spreview{min-height:240px}
+  .sdetail>.sbento>:is(.b-stats,.b-streak){min-height:max-content}
+}
 /* portrait: the picture across the top, the two numbers side by side, then the plan and the chapters */
 @media (orientation:portrait),(max-width:899px){
   /* tiles keep their full height here; the detail scrolls inside itself when they need more room than the screen */

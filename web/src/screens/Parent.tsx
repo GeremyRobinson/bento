@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { useApp } from "../app/AppState";
 import { plural, when } from "../app/format";
 import { gradeOf } from "../curriculum/grades";
@@ -29,23 +29,6 @@ function useMedia(query: string): boolean {
     return () => q.removeEventListener?.("change", f);
   }, [q]);
   return on;
-}
-
-/** the list's picked-row highlight glides to the row (as on the book's list) */
-function useKnob(dep: unknown) {
-  const knob = useRef<HTMLSpanElement>(null), placed = useRef(false);
-  useLayoutEffect(() => {
-    const el = knob.current, row = el?.parentElement?.querySelector<HTMLElement>(".srow.on");
-    if (!el) return;
-    if (!row) { el.style.opacity = "0"; return; }
-    if (!placed.current) el.style.transition = "none";
-    el.style.opacity = "1";
-    el.style.transform = `translateY(${row.offsetTop}px)`;
-    el.style.height = `${row.offsetHeight}px`;
-    if (!placed.current) { void el.offsetHeight; el.style.transition = ""; placed.current = true; }
-  });
-  void dep;
-  return knob;
 }
 
 /**
@@ -100,7 +83,6 @@ function GrownUp({ g }: { g: number }) {
   // on a phone nothing is picked until a row is tapped; beside the list, the first pattern shows
   const on = phone && !routePick ? null : pat;
   const show = routePick && pat ? "detail" : "list";
-  const knob = useKnob(on?.id);
   const select = (id: string) => go({ name: "parent", pick: id }, phone ? "fwd" : "still");
   const since = firstDate(progress);
 
@@ -110,7 +92,6 @@ function GrownUp({ g }: { g: number }) {
 
   const list = (
     <>
-      <span className="sknob" ref={knob} aria-hidden />
       <Head g={g} sub={since ? `${plural(progress.log.length, "session")} since ${when(since)}` : gradeOf(g).name} />
       {phone && stats}
       <div className="slbl"><span>Mistake patterns</span>{patterns.length > 0 && <span>wrong / tries</span>}</div>

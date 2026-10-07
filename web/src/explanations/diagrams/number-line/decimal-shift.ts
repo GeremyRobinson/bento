@@ -22,6 +22,10 @@ export interface DecimalShiftSpec {
 }
 
 const CW = 46;
+/** the space between two boxes, wide enough to hold the point clear of both outlines */
+const GAP = 14;
+/** the point's radius */
+const R = 4.5;
 
 /**
  * Pads the digit row so the point can land on either end: zeros are written in after the last digit
@@ -46,16 +50,25 @@ export function buildDecimalShift(spec: DecimalShiftSpec): SceneDiagram {
   [...digits].forEach((dg, i) => {
     const isNew = added.includes(i);
     const at = isNew ? { from: spec.moveBeat, delay: r1(0.3 + steps * 0.45) } : { from: spec.beat, delay: r1(0.1 + i * 0.05) };
-    items.push({ type: "rect", x: r1(left + i * CW + 3), y: y - 30, w: CW - 6, h: 56, rx: 10, cls: "seg", enter: isNew ? "pop" : "fade", ...at });
+    items.push({ type: "rect", x: r1(left + i * CW + GAP / 2), y: y - 30, w: CW - GAP, h: 56, rx: 10, cls: "seg", enter: isNew ? "pop" : "fade", ...at });
     items.push({ type: "text", x: r1(left + i * CW + CW / 2), y: y - 2, text: dg, cls: isNew ? "big acc" : "big", enter: isNew ? "pop" : "fade", ...at });
   });
-  // the point: where it starts (kept, so the hops visibly leave from it), then where it lands
-  items.push({ type: "circle", cx: X(from), cy: y + 22, r: 6, cls: "dotp", enter: "pop", from: spec.beat });
+  // the point sits in the gap between two boxes at the digits' foot, clear of both outlines (G 2026-10-07: it read as a
+  // face when it sat on the corners). Before the move it's the solid point; on the move it stays behind as a hollow
+  // ring (where it was), each hop curves under a box from one gap to the next with a small head pointing the way, and
+  // the solid point lands at the end
+  const cy = y + 20, foot = cy + 8;
+  items.push({ type: "circle", cx: X(from), cy, r: R, cls: "dotp", enter: "pop", from: spec.beat, until: spec.moveBeat - 1 });
+  items.push({ type: "circle", cx: X(from), cy, r: R, cls: "hole was", enter: "fade", from: spec.moveBeat });
   for (let k = 0; k < steps; k++) {
-    const a = X(from + k * dir), c = X(from + (k + 1) * dir);
-    items.push({ type: "path", d: `M${a} ${y + 40} Q${r1((a + c) / 2)} ${y + 62} ${c} ${y + 40}`, cls: "ln2 arrow", enter: "draw", from: spec.moveBeat, delay: r1(k * 0.45) });
+    const a = X(from + k * dir), c = X(from + (k + 1) * dir), mx = r1((a + c) / 2), my = y + 60;
+    items.push({ type: "path", d: `M${a} ${foot} Q${mx} ${my} ${c} ${foot}`, cls: "ln2 arrow", enter: "draw", from: spec.moveBeat, delay: r1(k * 0.45) });
+    // the head: two short strokes back along the curve's last direction
+    const tx = c - mx, ty = foot - my, len = Math.hypot(tx, ty), ux = tx / len, uy = ty / len, H = 7;
+    const side = (s: number) => `${r1(c - H * (ux * Math.cos(0.5) - s * uy * Math.sin(0.5)))} ${r1(foot - H * (uy * Math.cos(0.5) + s * ux * Math.sin(0.5)))}`;
+    items.push({ type: "path", d: `M${side(1)} L${c} ${foot} L${side(-1)}`, cls: "ln2", enter: "fade", from: spec.moveBeat, delay: r1(0.35 + k * 0.45) });
   }
-  items.push({ type: "circle", cx: X(to), cy: y + 22, r: 6, cls: "dota", enter: "pop", from: spec.moveBeat, delay: r1(steps * 0.45) });
+  items.push({ type: "circle", cx: X(to), cy, r: R, cls: "dota", enter: "pop", from: spec.moveBeat, delay: r1(steps * 0.45) });
   items.push({ type: "text", x: r1(W / 2), y: y + 84, text: spec.label, cls: "lbl acc", enter: "rise", from: spec.moveBeat, delay: r1(0.2 + steps * 0.45) });
   let H = y + 98;
   if (spec.result) {

@@ -282,7 +282,6 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
             aria-label={`Resume ${run!.title}, ${runGrade!.name}, problem ${run!.i + 1} of ${run!.items.length}`}>
             <span className="rdot gnum" style={{ "--gn": runGrade!.color } as CSSProperties}>{runGrade!.short}</span>
             <span className="rtext"><small>Resume</small><b>{run!.title}</b></span>
-            <span className="rcount">{run!.i + 1}/{run!.items.length}</span>
           </button>
         )}
         {showResume && (

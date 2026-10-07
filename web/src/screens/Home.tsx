@@ -10,6 +10,7 @@ import { lastScore, timesDone } from "../engine/mastery/progress";
 import { ScoreChip } from "../components/primitives/Score";
 import { Fill, GradeNum } from "../components/Shelf";
 import { SplitScreen } from "../components/screen/Screen";
+import { ListGroup } from "../components/screen/ListGroup";
 import { PlayingDiagram } from "../components/diagrams/PlayingDiagram";
 import { MathLine, Rich } from "../components/primitives/MathLine";
 import { handOff, previewOf, statementBeat } from "../app/preview";
@@ -42,25 +43,15 @@ function GradeHome({ g }: { g: number }) {
   const show = routePick ? "detail" : "list";
   const openUnit = units.find(u => u.entries.some(c => c.id === pick)) ?? units.find(u => u.entries.some(c => c.id === next?.entry.id)) ?? units[0];
   const [shut, setShut] = useState<string | null>(null);
-  // beside the list, picking a row only glides the selection and swaps the detail; on a phone the detail is its own screen
-  const select = (p: string) => go({ name: "home", pick: p }, typeof matchMedia !== "undefined" && matchMedia("(max-width: 699px)").matches ? "fwd" : "still");
+  // on a phone a chapter tap only opens the chapter (the lessons are the next tap); beside the list it also picks a lesson
+  const [opened, setOpened] = useState<string | null>(null);
+  // beside the list, picking a row only moves the white pill to it and swaps the detail; on a phone the detail is its own screen
+  const phone = () => typeof matchMedia !== "undefined" && matchMedia("(max-width: 699px)").matches;
+  const select = (p: string) => go({ name: "home", pick: p }, phone() ? "fwd" : "still");
   let k = 0;
-  // the picked row's highlight glides to the row you tap, like the floating preview
-  const knob = useRef<HTMLSpanElement>(null), placed = useRef(false);
-  useLayoutEffect(() => {
-    const el = knob.current, row = el?.parentElement?.querySelector<HTMLElement>(".srow.on");
-    if (!el) return;
-    if (!row) { el.style.opacity = "0"; return; }
-    if (!placed.current) el.style.transition = "none";
-    el.style.opacity = "1";
-    el.style.transform = `translateY(${row.offsetTop}px)`;
-    el.style.height = `${row.offsetHeight}px`;
-    if (!placed.current) { void el.offsetHeight; el.style.transition = ""; placed.current = true; }
-  });
 
   const listPane = (
     <>
-      <span className="sknob" ref={knob} aria-hidden />
       {/* the list opens on the grade's big number, like the UI notes preview */}
       <header className="shead">
         <GradeNum grade={g} />
@@ -70,15 +61,15 @@ function GradeHome({ g }: { g: number }) {
         <span className="sname"><b>Today</b></span><small className="smeta">{todayMeta(progress, g)}</small>
       </button>
       {units.map(u => {
-        const isOpen = u === openUnit && shut !== u.name, done = doneCount(progress, u.entries);
+        const isOpen = (opened ? u.name === opened : u === openUnit) && shut !== u.name, done = doneCount(progress, u.entries);
         const lessons = u.entries.map(c => ({ c, n: ++k }));
         return (
-          <div className={`schapter${isOpen ? " open" : ""}`} key={u.name}>
-            <button className="srow chap" aria-expanded={isOpen}
-              onClick={() => { if (isOpen) setShut(u.name); else { setShut(null); select((u.entries.find(c => c.id === next?.entry.id) ?? u.entries.find(c => isReady(c.id)) ?? u.entries[0]!).id); } }}>
+          <ListGroup className="schapter" open={isOpen} key={u.name} head={
+            <button className={`srow chap${!isOpen && u.entries.some(c => c.id === pick) ? " holds" : ""}`} aria-expanded={isOpen}
+              onClick={() => { if (isOpen) setShut(u.name); else { setShut(null); setOpened(null); if (phone()) { setOpened(u.name); return; } select((u.entries.find(c => c.id === next?.entry.id) ?? u.entries.find(c => isReady(c.id)) ?? u.entries[0]!).id); } }}>
               <span className="sname"><b>{u.name}</b></span><small className="smeta">{done === u.entries.length ? "Done" : !done && u.entries.includes(next?.entry as never) ? UP_NEXT : `${done} of ${u.entries.length}`}</small>
-            </button>
-            {isOpen && lessons.map(({ c }) => {
+            </button>}>
+            {lessons.map(({ c }) => {
               const sc = lastScore(progress, c.id), live = isReady(c.id);
               return (
                 <button key={c.id} className={`srow sles${pick === c.id ? " on" : ""}${live ? "" : " soon"}`} disabled={!live} aria-current={pick === c.id ? "true" : undefined}
@@ -89,7 +80,7 @@ function GradeHome({ g }: { g: number }) {
                 </button>
               );
             })}
-          </div>
+          </ListGroup>
         );
       })}
       {testReady(g) && <div className="sfoot"><Pill onClick={() => startTest(testKey(g))}>{GRADE_CHECKUP}</Pill></div>}

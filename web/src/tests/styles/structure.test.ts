@@ -36,6 +36,15 @@ const show = (d: { file: string; sel: string; prop: string; val: string }) => `$
 const PALETTE = /var\(--(acc|ka|l1|l2|la)\b/;
 /** where a diagram draws: anything under these is a picture, not chrome */
 const PICTURE = /\.(viz-svg|viz|am|rs)\b/;
+/** the rule styles something inside a picture: a picture class on the element itself or an ancestor, never a sibling
+ *  (`.am ~ .x` is next to the picture, not in it) */
+const inPicture = (sel: string) => {
+  const bits = sel.split(/\s*([>+~])\s*|\s+/).filter(b => b !== undefined && b !== "");
+  // bits alternate compound, combinator; a bare space between compounds is the descendant combinator
+  const comp: string[] = [], comb: string[] = [];
+  for (const b of bits) if (/^[>+~]$/.test(b)) comb[comp.length - 1] = b; else { if (comp.length && comb[comp.length - 1] === undefined) comb[comp.length - 1] = " "; comp.push(b); }
+  return comp.some((c, i) => PICTURE.test(c) && comb.slice(i).every(k => k === " " || k === ">"));
+};
 const PALETTE_SHEETS = ["styles/bands.css", "styles/diagram-master.css"];
 const PALETTE_ALLOWED: { sel: RegExp; why: string }[] = [
   { sel: /^\.mline mark$/, why: "the highlighted part of a math line points into the diagram beside it" },
@@ -43,8 +52,9 @@ const PALETTE_ALLOWED: { sel: RegExp; why: string }[] = [
 
 describe("stylesheet structure", () => {
   it("the diagram palette stays in diagrams", () => {
-    const bad = rules().filter(d => PALETTE.test(d.val) && !d.prop.startsWith("--") && !PALETTE_SHEETS.includes(d.file))
-      .filter(d => !/^(from|to|[\d.]+%)$/.test(d.sel) && parts(d.sel).some(s => !PICTURE.test(s) && !PALETTE_ALLOWED.some(a => a.sel.test(s))));
+    // custom properties too: `--pill-bg:var(--acc)` on a button would carry the palette into the chrome
+    const bad = rules().filter(d => PALETTE.test(d.val) && !PALETTE_SHEETS.includes(d.file))
+      .filter(d => !/^(from|to|[\d.]+%)$/.test(d.sel) && parts(d.sel).some(s => !inPicture(s) && !PALETTE_ALLOWED.some(a => a.sel.test(s))));
     expect(bad.map(show)).toEqual([]);
     const tsx = ui.flatMap(([f, t]) => t.split("\n").map((line, i) => ({ f, line, i })))
       .filter(({ f, line }) => PALETTE.test(line) && !f.includes("/diagrams/") && !/Confetti|confetti/.test(line) && !line.includes("cols = "))

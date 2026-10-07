@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Slider } from "../components/primitives/Slider";
 import { useApp } from "../app/AppState";
 import { previewOf, statementBeat } from "../app/preview";
@@ -83,35 +83,12 @@ export function GradeQuestion() {
   const shown = useMemo(() => (picked == null ? null : firstPicture(picked, seed)), [picked, seed]);
   const find = () => { if (picked == null) setAsk(true); else startTest(placeKey(picked)); };
 
-  // the highlight glides to the row you tap
-  const knob = useRef<HTMLSpanElement>(null), placed = useRef(false);
-  const place = () => {
-    const el = knob.current, row = el?.parentElement?.querySelector<HTMLElement>(".srow.on");
-    if (!el) return;
-    if (!row) { el.style.opacity = "0"; return; }
-    if (!placed.current) el.style.transition = "none";
-    el.style.opacity = "1";
-    // measured from the list itself: the rows' entry motion makes each row its own offset parent
-    const list = el.parentElement!, top = row.getBoundingClientRect().top - list.getBoundingClientRect().top + list.scrollTop;
-    el.style.transform = `translateY(${top}px)`;
-    el.style.height = `${row.offsetHeight}px`;
-    if (!placed.current) { void el.offsetHeight; el.style.transition = ""; placed.current = true; }
-  };
-  useLayoutEffect(place);
-  // opened with your grade already picked, the highlight is placed while the rows are still arriving and the list is
-  // still settling, so for that first moment it settles with them (as their entry motion ends, as the list resizes),
-  // and the picked row is brought into view at once: it was already chosen, so nothing glides to it
+  // the picked row wears the white pill itself (the List master, screen.css); opened with your grade already picked,
+  // that row is brought into view at once
+  const listRef = useRef<HTMLSpanElement>(null);
   useEffect(() => {
-    const list = knob.current?.parentElement;
-    if (!list) return;
-    const until = performance.now() + 1200;
-    const again = () => { if (performance.now() < until) { placed.current = false; place(); } };
-    list.addEventListener("animationend", again);
-    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(again) : null;
-    ro?.observe(list.querySelector(".sideset") ?? list);
-    list.querySelector(".srow.on")?.closest(".gitem")?.scrollIntoView?.({ block: "nearest" });
-    return () => { list.removeEventListener("animationend", again); ro?.disconnect(); };
-  }, [side]); // eslint-disable-line react-hooks/exhaustive-deps
+    listRef.current?.parentElement?.querySelector(".srow.on")?.closest(".gitem")?.scrollIntoView?.({ block: "nearest" });
+  }, [side]);
 
   const detail = (g: number | null, inline = false) => {
     if (g == null) return (
@@ -191,7 +168,7 @@ export function GradeQuestion() {
   let row = 0;
   const b2list = (
     <>
-      <span className="sknob" ref={knob} aria-hidden />
+      <span className="slanchor" ref={listRef} hidden />
       <header className="shead gqh">
         <div className="gqline"><h1>Where do you want to go?</h1>{sideSwitch}</div>
         <span className="b2note">A preview: every track is coming later.</span>
@@ -223,7 +200,7 @@ export function GradeQuestion() {
   row = 0;
   const list = (
     <>
-      <span className="sknob" ref={knob} aria-hidden />
+      <span className="slanchor" ref={listRef} hidden />
       <header className="shead gqh">
         <div className="gqline"><h1>Which grade are you in?</h1>{sideSwitch}</div>
         <button className="tlink" onClick={find}>Not sure? {FIND_MY_LEVEL} ›</button>

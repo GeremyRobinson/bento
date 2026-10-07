@@ -39,7 +39,8 @@ function declarations() {
 const show = (d: { file: string; sel: string; prop: string; val: string }) => `${d.file}: ${d.sel.slice(-50)} { ${d.prop}:${d.val} }`;
 const isDef = (prop: string) => prop.startsWith("--");
 
-const RAW_COLOR = /#[0-9a-fA-F]{3,8}\b|\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch)\(|(?<![\w-])(white|black)(?![\w-])/;
+const NAMED = "white|black|red|green|blue|yellow|orange|purple|pink|violet|magenta|cyan|aqua|lime|teal|navy|maroon|olive|silver|gray|grey|gold|indigo|crimson|coral|salmon|tomato|orchid|plum|tan|beige|ivory|khaki|lavender|turquoise|chocolate|brown|darkgray|darkgrey|lightgray|lightgrey|slategray|slategrey|dimgray|dimgrey|whitesmoke|gainsboro|rebeccapurple";
+const RAW_COLOR = new RegExp(`#[0-9a-fA-F]{3,8}\\b|\\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|light-dark)\\(|(?<![\\w-])(${NAMED})(?![\\w-])`, "i");
 /**
  * The only raw colours outside a token definition, each with its reason. Keep this short: a new colour belongs in
  * tokens.css with a dark value.
@@ -104,9 +105,29 @@ describe("no hard-coded styles", () => {
   it("dark mode is defined once: no component sheet has its own dark rules", () => {
     const bad = css.filter(([f]) => !MODES.includes(f) && f !== FONTS)
       .flatMap(([f, t]) => t.replace(/\/\*[\s\S]*?\*\//g, "").split("\n").map((line, i) => ({ f, line, i }))
-        .filter(({ line }) => /prefers-color-scheme:\s*dark|data-theme="dark"/.test(line)))
+        .filter(({ line }) => /prefers-color-scheme:\s*dark|data-theme=["']?dark|light-dark\(/.test(line)))
       .map(({ f, line, i }) => `${f}:${i + 1}: ${line.trim().slice(0, 80)}`);
     expect(bad).toEqual([]);
+  });
+
+  it("tokens.css only sets custom properties on the page root, and bands.css's dark rules reach no component", () => {
+    // a component selector in tokens.css loses to bands.css at equal specificity, since tokens load first: that was
+    // Bento²'s white slider thumb in dark (Review). Component colours built on a grade's hue live in modes.css.
+    const root = /^(:root|html)(\[[^\]]*\]|:not\((?:[^()]|\([^()]*\))*\))*$/;
+    const sel = (t: string) => [...t.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/([^{}]*)\{([^{}]*)\}/g)].map(m => ({ sel: m[1]!.trim(), body: m[2]! }));
+    const listOf = (x: string) => { const o: string[] = []; let d = 0, c = ""; for (const ch of x) { if (ch === "(") d++; if (ch === ")") d--; if (ch === "," && !d) { o.push(c.trim()); c = ""; } else c += ch; } return [...o, c.trim()]; };
+    const tok = sel(css.find(([f]) => f === TOKENS)![1]).filter(r => !r.sel.startsWith("@") && r.sel !== "");
+    const badTok = tok.flatMap(r => [
+      ...listOf(r.sel).filter(p => !root.test(p)).map(p => `tokens.css: ${p}`),
+      ...r.body.split(";").map(d => d.trim()).filter(d => d && !d.startsWith("--") && !/^color-scheme\s*:/.test(d)).map(d => `tokens.css: ${r.sel.slice(0, 40)} { ${d} }`),
+    ]);
+    const band = /^(:root|html|body|\.wrap|\.gpal|\.t\d|:is\(\.wrap,\.gpal\))/;
+    const picture = /\.(viz-svg|viz|am|dotrow|bb|tf)\b|(^|[\s>(,])text\b/;
+    const badBand = sel(css.find(([f]) => f === "styles/bands.css")![1]).filter(r => /dark/.test(r.sel))
+      .flatMap(r => listOf(r.sel))
+      .map(p => p.replace(/^.*?(:root|html)(\[[^\]]*\]|:not\((?:[^()]|\([^()]*\))*\))*\s*/, "")).filter(Boolean)
+      .filter(p => !band.test(p) && !picture.test(p)).map(p => `bands.css: ${p}`);
+    expect([...badTok, ...badBand]).toEqual([]);
   });
 
   it("every colour token has a dark value", () => {

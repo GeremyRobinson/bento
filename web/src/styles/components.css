@@ -100,7 +100,7 @@ button.gcell:active{transform:scale(.96)}
   .bhome.tall .b-hero{grid-row:1 / span 3}
   .bhome>.tile,.bhome>.b-stats:last-child{grid-column:3}
   .b-stats.solo{grid-row:1 / span 2}
-  .bhome .b-weak{grid-row:3}
+  .bhome>.b-weak{grid-row:3}
   .b-stats{grid-template-rows:1fr auto}
   .upnext b{font-size:calc(var(--fs) * 1.8)}
 }
@@ -267,7 +267,7 @@ button.gcell:active{transform:scale(.96)}
 .viz-svg .hl{stroke:var(--acc);stroke-width:var(--d-glow);stroke-linecap:round;opacity:.35}
 .viz-svg .hlline{stroke:var(--acc);stroke-width:var(--d-mark);stroke-linecap:round;opacity:.45;fill:none} .viz-svg .hlline.full{opacity:1}
 .viz-svg .fill{fill:var(--tint);opacity:.16} .viz-svg .fillsoft{fill:color-mix(in srgb,var(--tint) var(--d-f10),transparent)}
-.viz-svg .dotp{fill:var(--tint)} .viz-svg .dota{fill:var(--acc)} .viz-svg .hole{fill:var(--card);stroke:var(--tint);stroke-width:var(--d-stroke)}
+.viz-svg .dotp{fill:var(--tint)} .viz-svg .was{opacity:.45} .viz-svg .dota{fill:var(--acc)} .viz-svg .hole{fill:var(--card);stroke:var(--tint);stroke-width:var(--d-stroke)}
 .viz-svg .sq{fill:color-mix(in srgb,var(--tint) var(--d-f18),var(--card));stroke:var(--tint);stroke-width:var(--d-line)} .viz-svg .sq.big{fill:color-mix(in srgb,var(--acc) var(--d-f22),var(--card));stroke:var(--acc)}
 .viz-svg .cell{stroke-width:var(--d-line)} .viz-svg .pend{fill:var(--well);stroke:var(--faint);stroke-width:var(--d-line);stroke-dasharray:var(--d-dash)} .viz-svg .cell.c0{fill:color-mix(in srgb,var(--c0) var(--d-f18),var(--card));stroke:var(--c0)} .viz-svg .cell.c1{fill:color-mix(in srgb,var(--c1) var(--d-f18),var(--card));stroke:var(--c1)} .viz-svg .cell.c2{fill:color-mix(in srgb,var(--c2) var(--d-f18),var(--card));stroke:var(--c2)}
 .viz-svg .seg{fill:var(--well);stroke:var(--faint);stroke-width:var(--d-thin)}
@@ -398,6 +398,13 @@ button.gcell:active{transform:scale(.96)}
 /* More contrast darkens the Panel line too, inside the grade (.wrap's own --rule would otherwise win) */
 :root[data-contrast="true"] .wrap{--panel-line:color-mix(in oklab,var(--ink) 55%,var(--rule))}
 :root[data-contrast="true"] :is(.tile,.panel,.card){outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
+/* a Panel that scrolls draws its line as a border, not an outline: scrolled rows pass under the border's inner edge, so
+   they never paint over the line (Review). Placed after More contrast so it wins there too; the padding gives back the
+   border's width so the content sits where it did under the outline. */
+.wrap :is(.screen .slist,.sbento .b-chaps,.sdetail>.sbento>.today){outline:none;border:var(--panel-w) solid var(--panel-line)}
+.wrap .screen .slist,.wrap .sbento .b-chaps{padding:calc(var(--sp-3) - var(--panel-w))}
+.wrap .screen.gu .slist{padding-bottom:calc(var(--sp-6) - var(--panel-w))}
+.wrap .sdetail>.sbento>.today{padding:calc(var(--u) * 1.75 - var(--panel-w))}
 
 
 :root[data-readable="true"] .wrap{--sans:Verdana,Tahoma,"Segoe UI",sans-serif;--num:Verdana,Tahoma,sans-serif;letter-spacing:.02em}
@@ -432,7 +439,7 @@ button.gcell:active{transform:scale(.96)}
 .ptext b{font-size:calc(var(--fs) * 1.08);font-weight:var(--w-bold);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color var(--dur-150)}
 .pitem.done .ptext b{color:var(--muted);font-weight:var(--w-regular)}
 .pmin{color:var(--muted);font-size:var(--small);font-weight:var(--w-regular);white-space:nowrap}
-.pitem .ctl.go{--pill-h:40px;--pill-pad:var(--sp-5)}
+.ctl.sm,.pitem .ctl.go{--pill-h:40px;--pill-pad:var(--sp-5)}
 .bhome .b-stats{justify-items:center;text-align:center;align-content:center;gap:var(--sp-3)}
 .b-stats p{color:var(--text);line-height:1.5}
 .b-stats p b{font-weight:var(--w-bold)}

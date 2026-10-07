@@ -95,10 +95,14 @@ describe("decimal shift", () => {
     const d = buildDecimalShift({ digits: "347", from: 1, to: 3, beat: 0, moveBeat: 1, label: "× 100", alt: "x" });
     const digits = texts(d).filter(t => /big/.test(t.cls ?? ""));
     expect(digits.map(t => t.text)).toEqual(["3", "4", "7"]);
-    const [p0, p1] = circles(d);
+    const [p0, was, p1] = circles(d);
     expect(p1!.cx - p0!.cx).toBeCloseTo(2 * 46, 5);
-    expect(p0!.until).toBeUndefined(); // the start stays, so the hops leave from it
-    expect(d.items.filter(i => i.type === "path")).toHaveLength(2);
+    expect(was!.cx).toBe(p0!.cx); // the start stays behind as a ring, so the hops leave from it
+    expect(was!.until).toBeUndefined();
+    expect(d.items.filter(i => i.type === "path" && /arrow/.test(i.cls ?? ""))).toHaveLength(2);
+    // the point sits in the gap, clear of both boxes' outlines
+    const boxes = d.items.filter(i => i.type === "rect") as { x: number; w: number }[];
+    for (const c of [p0!, p1!]) for (const b of boxes) expect(c.cx + c.r <= b.x || c.cx - c.r >= b.x + b.w).toBe(true);
   });
 });
 
@@ -178,6 +182,6 @@ describe("pictures follow the problem", () => {
     const l = lessonById("g8-sci")!, p = l.restore({ c: 54, e: 7 });
     const d = l.explain(p, l.answers(p)).diagram as SceneDiagram;
     expect(texts(d).filter(t => /big/.test(t.cls ?? "") && !/lbl/.test(t.cls ?? "")).map(t => t.text).join("")).toBe("54000000");
-    expect(d.items.filter(i => i.type === "path")).toHaveLength(7);
+    expect(d.items.filter(i => i.type === "path" && /arrow/.test(i.cls ?? ""))).toHaveLength(7);
   });
 });
