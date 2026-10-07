@@ -464,8 +464,9 @@ html:has(.screen) body{overflow:hidden}
 .sbento .b-streak{background:var(--card);padding:calc(var(--u) * 1.75);display:grid;justify-items:center;align-content:center;text-align:center;gap:6px}
 .sbento .b-streak p{margin:0}
 .sbento .b-chaps{background:var(--card);padding:var(--sp-3);display:grid;gap:var(--sp-2);grid-template-columns:minmax(0,1fr);grid-auto-rows:minmax(var(--tap),64px);align-content:safe center;overflow:auto;overscroll-behavior:contain}
-.bchap{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:var(--tap);padding:var(--sp-2) var(--sp-4);border-radius:var(--r-pill);background:var(--surf-btn);text-align:left;transition:transform var(--dur-180) var(--ease)}
+.bchap{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:var(--tap);padding:var(--sp-2) var(--sp-4);border-radius:var(--r-pill);background:var(--surf-btn);text-align:left;transition:transform var(--dur-180) var(--ease),background var(--m-swap) var(--m-ease)}
 .bchap:active{transform:scale(.97)}
+@media (hover:hover){.bchap:hover{background:var(--btn-card-hover,var(--hover))}}
 /* a chapter button is a lighter step on its tile, never a dark hole; its progress fills it in the grade hue */
 .bchap>.fill{background:color-mix(in oklab,var(--tint) 22%,var(--surf-btn))}
 .bchap b{font-size:var(--fz-sm);line-height:1.25;font-weight:var(--w-bold);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-wrap:pretty}
