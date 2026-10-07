@@ -1,0 +1,11 @@
+/* BentoGrid (master, Design 2026-10-07): one grid every page's tiles sit on. Six columns; a tile only says its size,
+   never a column or a row. Sizes: n a number (half a phone, a third from 560px), s small (a third), t tall (a third,
+   two rows), w wide (two thirds), l large (two thirds, two rows), f full width. The grid sizes itself by its own width
+   (a container), so the same page lines up in a sidebar, on a phone and on a laptop. */
+.bgrid{container-type:inline-size}
+.bgrid>.bg-in{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:minmax(var(--bg-row,120px),auto);grid-auto-flow:dense;gap:var(--u)}
+.wrap .bgrid{--bg-row:96px}
+.bg-t{--sp:6;--rs:1;grid-column:span var(--sp);grid-row:span var(--rs);min-width:0}
+.bg-t.t,.bg-t.l{--rs:2}
+.bg-t.n{--sp:3}
+@container (min-width:560px){.bg-t.n,.bg-t.s,.bg-t.t{--sp:2}.bg-t.w,.bg-t.l{--sp:4}}

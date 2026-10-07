@@ -1,5 +1,5 @@
 /* ---- welcome: Bento's front door. The real thing working, in one box, then the shelf to start from ---- */
-.land{max-width:1120px;margin:0 auto;display:grid;gap:var(--s);padding:0 var(--sp-1) calc(var(--u) * 2)}
+.land{max-width:var(--page-max);margin:0 auto;display:grid;gap:var(--s);padding:0 var(--sp-1) calc(var(--u) * 2)}
 .lhero{display:grid;justify-items:center;gap:calc(var(--u) + var(--sp-1));text-align:center;padding:calc(var(--u) * 3.5) var(--u) calc(var(--u) * 2);animation:rise var(--dur-700) var(--ease) both}
 .lhero h1{font:var(--w-bold) clamp(46px,9vw,104px)/.96 var(--sans);letter-spacing:-.05em;text-wrap:balance}
 .lhero p{max-width:560px;font-size:calc(var(--fs) * 1.12);line-height:1.5;color:var(--muted);font-weight:var(--w-mid);text-wrap:pretty}

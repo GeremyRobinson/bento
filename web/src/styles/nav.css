@@ -299,7 +299,7 @@ button.book:hover{transform:translateY(-2px);box-shadow:none}
 html:has(.screen),html:has(.screen) body{overflow:hidden;overscroll-behavior:none;height:100%}
 /* ONE NAV FRAME (G 2026-10-06: "are they the same Bento?"): the nav sits at one fixed place on every page, so the
    wordmark never moves between pages; pages without a screen frame start below it */
-:root{--nav-top:max(var(--sp-3),env(safe-area-inset-top));--nav-x:max(var(--sp-4),calc((100vw - var(--sb-right,0px) - var(--screen-max,1180px)) / 2))}
+:root{--nav-top:max(var(--sp-3),env(safe-area-inset-top));--nav-x:max(var(--sp-4),calc((100vw - var(--sb-right,0px) - var(--screen-max,var(--page-max))) / 2))}
 .itop{position:fixed;top:var(--nav-top);left:var(--nav-x);right:calc(var(--nav-x) + var(--sb-right,0px))}
 
 /* the grade sheet: every line on its own row, the same columns in every line, all twelve grades in view where

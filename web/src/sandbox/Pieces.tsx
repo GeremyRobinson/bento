@@ -10,6 +10,24 @@ import { Confirm } from "../components/Confirm";
 import { PillRing } from "../components/primitives/PillRing";
 import { Keypad } from "../components/practice/Keypad";
 import { ListGroup } from "../components/screen/ListGroup";
+import { BentoGrid, type TileSize } from "../components/BentoGrid";
+
+/** the Book home's tiles on the grid (Design's handoff, chunk 2), at whatever width the slider sets */
+const BOOK: [TileSize, string][] = [["l", "Today"], ["n", "Lessons done"], ["n", "Days in a row"], ["s", "Weak spots"], ["w", "Picture"], ["f", "Chapters"]];
+function DemoGrid() {
+  const [w, setW] = useState(768);
+  return (
+    <div className="sbgrid">
+      <label className="sbgrid-w"><span>Width {w}px</span>
+        <input type="range" min={320} max={1200} step={10} value={w} onChange={e => setW(+e.target.value)} /></label>
+      <div className="sbgrid-frame" style={{ width: w }}>
+        <BentoGrid label="Book home on the grid">
+          {BOOK.map(([size, name], i) => <Tile key={i} size={size} k={`size ${size}`} title={name}><span /></Tile>)}
+        </BentoGrid>
+      </div>
+    </div>
+  );
+}
 
 const DEMO = [{ name: "Whole numbers", rows: ["Multiply two-digit numbers", "Long division", "Order of operations"] },
   { name: "Fractions", rows: ["Add unlike fractions", "Multiply fractions"] }];
@@ -71,6 +89,10 @@ export function Pieces() {
         <p className="muted">Each piece is built and checked on its own, then nests into the bigger ones. These are the real components, so they work here the way they will in the app.</p>
       </header>
       <div className="sbpgrid">
+        <Piece name="BentoGrid" status="building" chunk="BentoGrid master" nests="Book home, My Bento, Settings, the grown-up page">
+          <DemoGrid />
+          <small className="muted">Six columns; each tile says only its size. Drag the width: tile edges line up across rows at every width.</small>
+        </Piece>
         <Piece name="Chapter accordion" status="building" chunk="ListGroup master" nests="the book's chapter list">
           <DemoChapters />
           <small className="muted">A chapter opens with its lessons in a slightly darker panel under it; opening another folds this one shut. The white pill belongs to the picked lesson and fades in on it; it never travels. A folded chapter holding the pick shows a small dot.</small>

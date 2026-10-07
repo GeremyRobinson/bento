@@ -1,7 +1,7 @@
 /* Screen (master): the frame every app screen sits in. The page never scrolls on a split or fit screen: the screen
    fills what's left under the island, and only its list scrolls, with a thin scroll mark (Design, handoff 5).
    Instances (split, fit) override only what differs. */
-.wrap{--screen-list:340px;--screen-gap:var(--u);--screen-max:1180px;--screen-bottom:16px}
+.wrap{--screen-list:340px;--screen-gap:var(--u);--screen-max:var(--page-max);--screen-bottom:16px}
 @media (orientation:portrait){.wrap{--screen-list:300px}}
 .wrap:has(>.screen){max-width:var(--screen-max);padding-bottom:0}
 html:has(.screen) body{overflow:hidden}
