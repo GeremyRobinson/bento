@@ -13,7 +13,9 @@ const TEASER: { id: TeaserId; title: string; math: string; size?: string }[] = [
 const TOOLS = ["Calculator", "Grapher", "3D grapher", "Matrix pad", "Units", "Scratch paper"];
 
 /** Bento² on the landing page: the pro side of Bento, introduced on its own dark canvas. One picture plays at a time. */
-export function Advanced() {
+/** `pics` and `ghost`: false draws the section without its pictures (or the faint ones behind "And more"), so a page
+ *  change can draw it in light steps */
+export function Advanced({ pics = true, ghost = pics }: { pics?: boolean; ghost?: boolean }) {
   const box = useRef<HTMLElement>(null);
   const [turn, setTurn] = useState({ i: -1, n: 0 });
   useEffect(() => {
@@ -36,13 +38,13 @@ export function Advanced() {
       <div className="adv-tease">
         {TEASER.map((h, k) => (
           <article key={h.id} className={`adv-course ${h.size ?? ""}${turn.i === k ? " on" : ""}`}>
-            <div className="adv-pic" key={turn.i === k ? turn.n : 0}><TeaserPic id={h.id} play={turn.i === k} /></div>
+            <div className="adv-pic" key={turn.i === k ? turn.n : 0}>{pics && <TeaserPic id={h.id} play={turn.i === k} />}</div>
             <h3>{h.title}</h3>
             <span>{h.math}</span>
           </article>
         ))}
         <article className="adv-course more" aria-label="More subjects to find inside">
-          <div className="adv-ghost" aria-hidden="true"><TeaserPic id="info" play={false} /><TeaserPic id="relativity" play={false} /><TeaserPic id="change" play={false} /></div>
+          <div className="adv-ghost" aria-hidden="true">{ghost && <><TeaserPic id="info" play={false} /><TeaserPic id="relativity" play={false} /><TeaserPic id="change" play={false} /></>}</div>
           <h3>And more to find</h3>
           <span>More subjects open up inside.</span>
         </article>
