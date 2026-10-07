@@ -94,7 +94,7 @@ export function Pieces() {
         <p className="muted">Each piece is built and checked on its own, then nests into the bigger ones. These are the real components, so they work here the way they will in the app.</p>
       </header>
       <div className="sbpgrid">
-        <Piece name="BentoGrid" status="building" chunk="BentoGrid master" nests="Book home, My Bento, Settings, the grown-up page">
+        <Piece name="BentoGrid" status="review" chunk="BentoGrid master" nests="Book home, My Bento, Settings, the grown-up page">
           <DemoGrid />
           <small className="muted">Six columns; each tile says only its size. Fit mode: the rows share the height they're given and the page never scrolls. Drag the width and height: tile edges line up across rows at every size.</small>
         </Piece>
