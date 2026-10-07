@@ -11,7 +11,6 @@ import type { Explanation } from "../explanations/schema";
 import { FeedbackBox } from "../components/practice/FeedbackBox";
 import { Confirm } from "../components/Confirm";
 import { Keypad } from "../components/practice/Keypad";
-import { CloseIcon } from "../components/primitives/icons";
 import { FitScreen } from "../components/screen/Screen";
 import { ALL_LESSONS, SHOW_ME } from "../app/copy";
 import {
@@ -175,7 +174,7 @@ export function Practice() {
   </>;
 
   return (
-    <FitScreen className={`lscreen pscreen${test ? " ptest" : ""}${pic ? "" : " nopic"}${shape.short ? "" : " pwordy"}${s.solved ? " psolved" : ""}${hintOpen ? " hinting" : ""}${stepsOpen ? " stepping" : ""}`}
+    <FitScreen className={`lscreen pscreen${test ? " ptest" : ""}${pic ? "" : " nopic"}${shape.short ? "" : " pwordy"}${s.solved ? " psolved" : ""}${hintOpen ? " hinting" : ""}${stepsOpen ? " stepsopen" : ""}`}
       style={{ "--steps": steps.length } as CSSProperties}>
       {/* the problem and how it's going: where you are, the problem with its "?", and the steps */}
       <section className="lintro pintro">
@@ -200,6 +199,21 @@ export function Practice() {
           <button className="speak" aria-label="Read it to me" onClick={() => speak([step?.question, document.querySelector("#app .pprob")?.textContent].filter(Boolean).join(". ").replace(/\*\*/g, ""))}><SpeakerIcon /></button>
         </div>
         <FeedbackBox key={fbKey} fb={fbAway || bulbHint ? null : fb} idea={idea} solved={s.solved && !fbAway && fb?.type !== "hint"} />
+        {/* a phone: the steps fold into one bar inside the problem's tile, under its math; it opens as an accordion that
+          pushes the picture down, and when the problem is solved the bar is where "Solved." and its idea land (G 2026-10-07) */}
+        <div className="pbar">
+          <button key={fb?.type === "good" && !s.solved ? fbKey : "bar"} className={`fpill stepbar${s.solved ? " solved" : ""}${fb?.type === "good" && !s.solved && !fbAway ? " flash" : ""}`} onClick={() => setStepsOpen(o => !o)} aria-expanded={stepsOpen} aria-label={`Steps: ${now?.label ?? "done"}, ${Math.min(here + 1, steps.length)} of ${steps.length}`}>
+            <span className="badge">{s.solved ? "✓" : here + 1}</span><span className="sbl">{s.solved ? <><b>Solved.</b>{idea && <> <Rich text={idea} /></>}</> : now?.label}</span>
+            <small>{Math.min(here + 1, steps.length)} of {steps.length}</small><span className="chev" aria-hidden>⌃</span>
+          </button>
+        </div>
+        {stepsOpen && (
+          <div className="pacc" role="region" aria-label="Steps">
+            <p className="pwhere">Problem {s.i + 1} of {n}{dots}</p>
+            {beatList}
+            <div className="hrow">{extras}</div>
+          </div>
+        )}
         {pic && (
           <div className={`lpic ppic${s.hinted ? " hinted" : ""}`} aria-label="Picture of this problem" role="img">
             <div className="viz">{ex
@@ -209,13 +223,6 @@ export function Practice() {
           </div>
         )}
       </figure>
-      {/* a phone: the steps fold into one bar over the keypad */}
-      <div className="pbar">
-        <button key={fb?.type === "good" && !s.solved ? fbKey : "bar"} className={`fpill stepbar${fb?.type === "good" && !s.solved && !fbAway ? " flash" : ""}`} onClick={() => setStepsOpen(o => !o)} aria-expanded={stepsOpen} aria-label={`Steps: ${now?.label ?? "done"}, ${Math.min(here + 1, steps.length)} of ${steps.length}`}>
-          <span className="badge">{s.solved ? "✓" : here + 1}</span><span className="sbl">{s.solved ? "Solved" : now?.label}</span>
-          <small>{Math.min(here + 1, steps.length)} of {steps.length}</small><span className="chev" aria-hidden>⌃</span>
-        </button>
-      </div>
       <Keypad band={band} tap={step && tapOnly ? (
         <div className="tappad">
           <div className="tapnote muted">{s.pick ? "You plan this one: tap the step that comes next." : "Tap your answer."}</div>
@@ -236,19 +243,6 @@ export function Practice() {
               {showMeAvailable(s) && <button className="fpill" onClick={() => { setHintOpen(false); act((st, p, d) => showMe(st, p, d)); }}>{SHOW_ME} the step</button>}
               <button className="fpill go" autoFocus onClick={() => setHintOpen(false)}>Got it</button>
             </span>
-          </div>
-        </>
-      )}
-      {stepsOpen && (
-        <>
-          <div className="fdim phdim" onClick={() => setStepsOpen(false)} />
-          <div className="fstack psteps" role="dialog" aria-label="Steps" style={{ "--n": 3 } as CSSProperties}>
-            <span className="hrow pwrow" style={{ "--i": 0 } as CSSProperties}>
-              <span className="fpill pwhere">Problem {s.i + 1} of {n}{dots}</span>
-              <button className="fpill pclose" aria-label="Close steps" onClick={() => setStepsOpen(false)}><CloseIcon /></button>
-            </span>
-            <div className="fpill pblist" style={{ "--i": 1 } as CSSProperties}>{beatList}</div>
-            <span className="hrow" style={{ "--i": 2 } as CSSProperties}>{extras}</span>
           </div>
         </>
       )}

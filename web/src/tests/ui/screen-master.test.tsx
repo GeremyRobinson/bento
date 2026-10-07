@@ -35,14 +35,14 @@ describe("every screen renders inside the Screen master", () => {
     expect(document.querySelector("#app > .screen.solve .wpad .tray")).not.toBeNull();
   });
 
-  it("practice sits on Learn's grid master: the problem and steps, the hero (equation, feedback line, picture), the keypad", () => {
+  it("practice sits on Learn's grid master: the hero is the solve tile (equation, feedback line, step bar, picture), then the keypad", () => {
     renderApp({ grade: 3, chosen: true }, {}, "#/learn/g3-split");
     tap("Try one");
     const root = document.querySelector("#app > .screen.fit.lscreen.pscreen")!;
     expect(root).not.toBeNull();
-    expect([...root.children].filter(c => !c.matches(".fdim,.fstack")).map(c => c.classList[0])).toEqual(["lintro", "lshero", "pbar", "ppad"]);
+    expect([...root.children].filter(c => !c.matches(".fdim,.fstack")).map(c => c.classList[0])).toEqual(["lintro", "lshero", "ppad"]);
     const hero = root.querySelector(".lshero")!;
-    expect([...hero.children].map(c => c.classList[0])).toEqual(["lmath", "pfb", "lpic"]);
+    expect([...hero.children].map(c => c.classList[0])).toEqual(["lmath", "pfb", "pbar", "lpic"]);
     // the answer box sits in the equation, and the feedback line is there (empty) before anything is said
     expect(hero.querySelector(".lmath .ask .slot")).not.toBeNull();
     expect(hero.querySelector(".pfb")!.textContent).toBe("");
