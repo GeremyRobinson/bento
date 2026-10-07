@@ -123,7 +123,7 @@ html[data-hue][data-theme="dark"]{--page:oklch(from var(--page-hue) .165 .018 h)
 :root[data-theme="dark"] :is(.wrap,.gpal){--c0:oklch(from var(--l0) 0.78 0.3 h);--c1:oklch(from var(--l1) 0.78 0.3 h);--c2:oklch(from var(--l2) 0.78 0.3 h);--acc:oklch(from var(--la) .86 .3 h);--k0:var(--c0);--k1:var(--c1);--k2:var(--c2);--ka:var(--acc)}
 :is(.wrap,.gpal){--k0:var(--master-k0);--k1:var(--master-k1);--k2:var(--master-k2)}
 :is(.wrap,.gpal){--k0:oklch(from var(--l0) .56 .3 h);--k1:oklch(from var(--l1) .56 .3 h);--k2:oklch(from var(--l2) .56 .3 h)}
-:is(.wrap,.gpal){--ka:oklch(from var(--la) .55 .2 h)}
+:is(.wrap,.gpal){--ka:oklch(from var(--la) .68 .2 calc(h - 15))} /* the answer in text: bright amber, nudged toward orange so it stays bold on white (G 05:46) */
 /* inside a picture: the lesson's own picture color, as on the live site */
 :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--tint:var(--c0);--ink:var(--k0)}
 .t1 :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--tint:var(--c1);--ink:var(--k1)}
