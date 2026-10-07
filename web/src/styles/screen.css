@@ -649,6 +649,21 @@ html:has(.screen) body{overflow:hidden}
 .pscreen>.ppad{border-radius:calc(var(--key) / 2 + var(--nest))}
 .pscreen>.ppad .tray{gap:var(--nest)}
 .pscreen>.ppad .tray>*,.pscreen>.ppad .choice{border-radius:calc(var(--key) / 2)}
+/* the steps sit in their own nested panel a rung deeper, like a chapter's lessons in Contents; the step you're on is one
+   rung deeper again, the rest lie flat on the panel (G 18:55 "give the sub steps the ladder") */
+.pscreen .pacc .pbeats{padding:var(--nest);background:var(--g2,var(--surf-nest));border-radius:calc(var(--srow) / 2 + var(--nest))}
+.pscreen .pacc .pbeats .beat{background:none}
+.pscreen .pacc .pbeats .beat[data-state="now"]{background:var(--g3,var(--surf-sub));box-shadow:none}
+/* a long list scrolls inside its own panel, so the panel keeps its round corners */
+.pscreen .lshero.phero>.pacc{max-height:none;overflow:hidden}
+.pscreen .pacc .pbeats{max-height:30dvh;overflow-y:auto;overscroll-behavior:contain}
+/* the bar's tick and chevron sit on its first line, top-aligned like the steps' ticks, however many lines the words take;
+   the chevron wears a circle one rung up, so it reads as the button it is (G 18:55) */
+.pscreen .phero .stepbar,.pscreen .phero .stepbar.solved{--badge:28px;align-items:flex-start;padding-block:calc((var(--srow) - var(--badge)) / 2)}
+.pscreen .phero .stepbar :is(.sbl,small){line-height:var(--badge)}
+.pscreen .phero .stepbar.solved .sbl{line-height:1.3;padding-top:calc((var(--badge) - 1.3em) / 2)}
+.pscreen .phero .stepbar .chev{width:var(--badge);height:var(--badge);border-radius:var(--r-round);background:var(--btn-card-hover,var(--hover));color:var(--ink)}
+.pscreen .phero .stepbar .chev>svg{width:18px;height:18px}
 /* solved: Next problem stands on its own, no panel round it */
 .pscreen.psolved>.ppad{padding:0;background:none;outline:none}
 :root .pscreen.psolved>.ppad .tray>.k-go{border-radius:var(--r-pill)}

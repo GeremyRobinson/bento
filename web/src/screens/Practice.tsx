@@ -114,6 +114,8 @@ export function Practice() {
   // the steps accordion opens and shuts on the motion system: it grows open over --m-in and folds shut faster, over
   // --m-close, both on --m-ease ("close faster than open"; G 18:21 "use the animation system")
   const accRef = useRef<HTMLDivElement>(null), shutting = useRef(false);
+  // the chevron turns the moment the steps start to close, not after they finish (G 18:55 "its animation is slow")
+  const [closing, setClosing] = useState(false);
   useLayoutEffect(() => {
     const el = accRef.current;
     if (!stepsOpen || !el || !el.animate || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
@@ -122,10 +124,10 @@ export function Practice() {
   }, [stepsOpen]);
   const toggleSteps = () => {
     const el = accRef.current;
-    if (!stepsOpen) { setStepsOpen(true); return; }
+    if (!stepsOpen) { setClosing(false); setStepsOpen(true); return; }
     if (shutting.current) return;
     if (!el || !el.animate || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) { setStepsOpen(false); return; }
-    shutting.current = true;
+    shutting.current = true; setClosing(true);
     const a = el.animate([{ height: `${el.offsetHeight}px`, opacity: 1 }, { height: "0px", opacity: 0, paddingTop: "0px" }], { ...motion(el, "--m-close"), fill: "forwards" });
     a.onfinish = () => { shutting.current = false; setStepsOpen(false); };
   };
@@ -221,7 +223,7 @@ export function Practice() {
         {/* a phone: the steps fold into one bar at the top of the problem's tile, over its math (G 17:38: steps on top); it opens as an accordion that
           pushes the picture down, and when the problem is solved the bar is where "Solved." and its idea land (G 2026-10-07) */}
         <div className="pbar">
-          <button key={fb?.type === "good" && !s.solved ? fbKey : "bar"} className={`fpill stepbar${s.solved ? " solved" : ""}${fb?.type === "good" && !s.solved && !fbAway ? " flash" : ""}`} onClick={toggleSteps} aria-expanded={stepsOpen} aria-label={`Steps: ${now?.label ?? "done"}, ${Math.min(here + 1, steps.length)} of ${steps.length}`}>
+          <button key={fb?.type === "good" && !s.solved ? fbKey : "bar"} className={`fpill stepbar${s.solved ? " solved" : ""}${fb?.type === "good" && !s.solved && !fbAway ? " flash" : ""}`} onClick={toggleSteps} aria-expanded={stepsOpen && !closing} aria-label={`Steps: ${now?.label ?? "done"}, ${Math.min(here + 1, steps.length)} of ${steps.length}`}>
             <span className="badge">{s.solved ? <Check /> : here + 1}{fb?.type === "good" && !s.solved && !fbAway && <span className="tick"><Check /></span>}</span><span className="sbl">{s.solved ? <><b>Solved.</b>{idea && <> <Rich text={idea} /></>}</> : now?.label}</span>
             <small>{Math.min(here + 1, steps.length)} of {steps.length}</small><span className="chev" aria-hidden><Chevron dir="down" /></span>
           </button>
