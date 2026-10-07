@@ -1,5 +1,5 @@
 import { Pill } from "../components/primitives/Pill";
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useApp } from "../app/AppState";
 import { entryById } from "../app/curriculum";
 import { GRADES, gradeOf, tintStyle } from "../curriculum/grades";
@@ -150,10 +150,11 @@ export function Welcome() {
   // arriving by a page change, only the hero's words and its empty picture boxes are drawn with the page; the pictures
   // follow once the page has come forward, then each section below in the next quiet moment, so the change never waits
   // on the whole landing and nothing heavy is drawn while it plays (Review page change #1)
-  const [rest, setRest] = useState(() => typeof document === "undefined" || !document.documentElement.hasAttribute("data-paged") ? 4 : 0);
+  const [rest, setRest] = useState(() => typeof document === "undefined" || !document.documentElement.hasAttribute("data-paged") ? 6 : 0);
   useEffect(() => {
-    if (rest >= 4) return;
-    const next = () => setRest(n => n + 1);
+    if (rest >= 6) return;
+    // each section is drawn as a transition, so React draws it in slices between frames instead of one long frame
+    const next = () => startTransition(() => setRest(n => n + 1));
     if (rest) return whenIdle(next);
     let idle: (() => void) | undefined;
     const stage = afterStage(() => { idle = whenIdle(next); });
@@ -174,7 +175,7 @@ export function Welcome() {
         <section className="lsec"><h2>Everything in one box.</h2><p>Lessons, plus everything that helps them stick.</p></section>
         <FeatureBox rng={rng} />
       </>}
-      {rest > 3 && <Advanced />}
+      {rest > 3 && <Advanced pics={rest > 4} ghost={rest > 5} />}
       <footer className="lfoot">Bento · Kindergarten to 12th grade{SANDBOX && <> · <button className="tlink" onClick={() => dispatchEvent(new Event("bento:sandbox"))}>Sandbox</button></>}</footer>
     </div>
   );

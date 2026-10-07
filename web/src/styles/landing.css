@@ -26,6 +26,8 @@
 .lhpic b{font-size:calc(var(--fs) * 1.05);font-weight:var(--w-bold);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lhpic .lhd{display:grid;align-items:center;min-height:0}
 .lhpic figcaption,.lhpic .lhd{animation:fadeIn var(--m-swap) var(--m-ease) both}
+/* while a page change plays, the page's own motion is the only one: a picture's beat waits until it has come forward */
+#app>.stage .lhpic :is(figcaption,.lhd){animation:none}
 .lhpic .viz{align-self:center;min-height:0}
 .lhpic .viz-cap,.lhpic .replay{display:none}
 .lhpic .viz-svg,.lhpic .am{max-height:400px;width:100%}

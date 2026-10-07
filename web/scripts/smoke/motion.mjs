@@ -7,7 +7,7 @@
  * half-drawn layout); a page change that never plays; and a frame that holds the screen too long. Adapted from Review's
  * page-switch guard (review/page-switch-jank/motion-guard.mjs).
  */
-const BUDGET = { frame: 400, start: 750 }; // 4x-throttled milliseconds; start: from the tap to the page change's first frame
+const BUDGET = { frame: 400, start: 750, settle: 500 }; // 4x-throttled ms; start: tap to the change's first frame; settle: any frame once it has played
 const SIZES = [{ w: 1366, h: 1024 }, { w: 390, h: 844 }];
 const SAVE = { grade: 5, chosen: true, xp: 1240, gxp: { 5: 1240 }, streak: 12, done: 9, last: new Date().toDateString(), lessons: {}, scores: {}, tests: {} };
 
@@ -62,21 +62,24 @@ export async function motionGuard({ browser, PAGE, fails, notes }) {
             ...[...document.querySelectorAll(".bg-in>.bg-t")].map(e => `${e.className.toString().split(" ")[0]}:${e.offsetWidth}x${e.offsetHeight}`)].join(" ");
           const was = [...document.querySelectorAll("#app [data-was]")].filter(e => shown(e) && !e.closest(".zoom") && e.getClientRects().length).length;
           f.push({ t: performance.now() - t0, was, zoom: !!document.querySelector(".zoom"), blur, sizes, stage: !!document.querySelector("#app>.stage"), hash: location.hash });
-          if (performance.now() - t0 < 1600) requestAnimationFrame(look);
+          if (performance.now() - t0 < 3000) requestAnimationFrame(look);
         };
         requestAnimationFrame(look);
       });
       try { await act(); } catch (e) { fails.push(`${at}: could not ${e.message.split("\n")[0]}`); continue; }
-      await p.waitForTimeout(2000);
+      await p.waitForTimeout(3200);
       const r = await p.evaluate(() => ({ f: window.__frames, vt: window.__vt }));
       for (const e of errs.splice(0)) fails.push(`${at}: console ${e}`);
       if (r.vt) fails.push(`${at}: ${r.vt} view transition(s); the page change is the stage`);
       const f = r.f, gaps = f.map((x, i) => (i ? x.t - f[i - 1].t : 0)), worst = Math.round(Math.max(0, ...gaps));
       const worstAt = Math.round(f[gaps.indexOf(Math.max(0, ...gaps))]?.t ?? 0);
-      // the budget holds from the tap until the change has played (its 500ms and a beat); work after that is the page's own
-      const s0 = f.findIndex(x => x.stage), until = (s0 < 0 ? 0 : f[s0].t) + 700;
+      // the frame budget holds from the tap until the change has played (its 500ms); after that, work the page saved for
+      // later (the landing's sections) still may not hold a frame past the settle budget (Review recheck 66966a1 #3)
+      const s0 = f.findIndex(x => x.stage), until = (s0 < 0 ? 0 : f[s0].t) + 500;
       const during = Math.round(Math.max(0, ...gaps.filter((g, i) => f[i].t <= until)));
       if (during > BUDGET.frame) fails.push(`${at}: one frame held the screen ${during}ms while the page changed (budget ${BUDGET.frame})`);
+      const later = gaps.map((g, i) => [g, f[i].t]).filter(([, t]) => t > until).sort((a, b) => b[0] - a[0])[0];
+      if (later && later[0] > BUDGET.settle) fails.push(`${at}: a frame held the screen ${Math.round(later[0])}ms after the change, ending ${Math.round(later[1])}ms after the tap (budget ${BUDGET.settle})`);
       if (page) {
         // from the first frame of the new page on: nothing over it, nothing blurred, nothing resizing
         const first = f.findIndex(x => x.stage), last = f[f.length - 1];

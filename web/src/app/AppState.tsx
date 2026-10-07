@@ -123,7 +123,12 @@ export function AppProvider(props: {
   // each history entry carries its place in the stack, so browser forward plays as going forward (Review page change #6)
   const at = useRef<number>(0);
   useEffect(() => {
-    try { const i = (history.state as { i?: number } | null)?.i; if (typeof i === "number") at.current = i; } catch { /* ignore */ }
+    // the first entry gets its place too, or forward to the page after it (About Bento's landing) would play as back
+    try {
+      const st = history.state as { i?: number } | null;
+      if (typeof st?.i === "number") at.current = st.i;
+      else history.replaceState({ ...(st ?? {}), i: at.current }, "", location.href);
+    } catch { /* ignore */ }
     const onHash = () => {
       let i: number | undefined;
       try { i = (history.state as { i?: number } | null)?.i; } catch { /* ignore */ }
