@@ -577,13 +577,15 @@ html:has(.screen) body{overflow:hidden}
   .pscreen .lshero.phero::before,.pscreen .lshero.phero>.lpic{background:var(--pane-plain,var(--float));border-radius:var(--r-panel);outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
   .pscreen .lshero.phero::before{content:"";grid-row:1 / 5;grid-column:1;z-index:var(--z-flat)}
   .pscreen .lshero.phero>*{z-index:var(--z-up);grid-column:1}
-  .pscreen .lshero.phero>.pmath{grid-row:3;position:relative;padding:var(--sp-2) calc(var(--sp-3) + 36px) var(--sp-2)}
-  .pscreen .lshero.phero>.pmath .speak{top:var(--sp-2);right:var(--sp-2)}
+  /* the solve panel gets room to breathe (G 18:08 "give the solve panel more space"): bigger box, more air round the math */
+  .screen.fit.lscreen.pscreen{--slot:64px;--ask:40px;--pic-min:104px}
+  .pscreen .lshero.phero>.pmath{grid-row:3;position:relative;padding:var(--sp-6) calc(var(--sp-3) + 36px) var(--sp-5)}
+  .pscreen .lshero.phero>.pmath .speak{top:var(--sp-3);right:var(--sp-3)}
   /* a wrong answer or a hint line: under the math, inside the tile */
-  .pscreen .lshero.phero>.pfb:is(.fb-bad,.fb-hint){grid-row:4;align-self:start;margin:0;padding:0 var(--sp-4) var(--sp-2);background:none;border-radius:0;height:auto;min-height:0}
+  .pscreen .lshero.phero>.pfb:is(.fb-bad,.fb-hint){grid-row:4;align-self:start;margin:0;padding:0 var(--sp-5) var(--sp-4);background:none;border-radius:0;height:auto;min-height:0}
   .pscreen .lshero.phero>.pfb.solved{display:none}
   /* the step bar, at the top of the tile (G 17:38 "steps on top") */
-  .pscreen .lshero.phero>.pbar{grid-row:1;display:flex;padding:var(--sp-2) var(--sp-2) 0}
+  .pscreen .lshero.phero>.pbar{grid-row:1;display:flex;padding:var(--sp-3) var(--sp-3) 0}
   .pscreen .phero .stepbar{background:var(--btn-card,var(--well));box-shadow:none}
   .pscreen .phero .stepbar.solved{min-height:var(--tap);padding-block:var(--sp-2);align-items:center}
   .pscreen .phero .stepbar.solved .sbl{white-space:normal;font-weight:var(--w-regular);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
@@ -592,7 +594,7 @@ html:has(.screen) body{overflow:hidden}
   .pscreen .phero .stepbar[aria-expanded="true"] .chev{transform:rotate(180deg)}
   .pscreen .phero .stepbar .chev{transition:transform var(--m-swap) var(--m-ease)}
   /* the steps accordion: opens under the bar and pushes the problem and picture down */
-  .pscreen .lshero.phero>.pacc{grid-row:2;display:grid;gap:var(--sp-2);padding:var(--sp-2) var(--sp-2) 0;animation:stackIn var(--m-in) var(--m-ease) both}
+  .pscreen .lshero.phero>.pacc{grid-row:2;display:grid;gap:var(--sp-2);padding:var(--sp-3) var(--sp-3) 0;animation:stackIn var(--m-in) var(--m-ease) both}
   .pscreen .pacc .pwhere{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);margin:0;padding:0 var(--sp-2);font-weight:var(--w-mid);color:var(--muted);font-size:var(--fz-sm)}
   /* the steps' ticks and words line up under the bar's own (G 17:44) */
   .pscreen .pacc .pbeats .beat{padding:6px var(--sp-3) 6px 6px;gap:10px}
