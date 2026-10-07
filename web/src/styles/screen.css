@@ -424,6 +424,16 @@ html:has(.screen) body{overflow:hidden}
    the bottom. The up-next problem is the big tile; the plan, the year's fill, the streak and every chapter sit round it. ---- */
 .sdetail>.sbento{flex:1;min-height:0;display:block}
 .sbento .bg-t{margin:0}
+.sbento .today{overflow:auto;overscroll-behavior:contain}
+/* a short landscape screen (1280x720, 1024x768): the numbers and the plan's heading take less room, so the numbers
+   never overflow and the plan's first row shows whole */
+@media (max-height:800px) and (min-width:700px){
+  .bhome.sbento :is(.b-stats,.b-streak){padding:var(--sp-4);gap:2px}
+  .bhome.sbento :is(.b-stats,.b-streak) p{font-size:var(--fz-sm);line-height:1.3}
+  .wrap .sdetail>.sbento .today{padding:calc(var(--sp-5) - var(--panel-w))}
+  .sbento .today h2{font-size:28px}
+  .sbento .today .sub{margin-top:2px}
+}
 .sbento>.tile{border-radius:var(--r-panel)}
 .sbento .b-streak{background:var(--card);padding:calc(var(--u) * 1.75);display:grid;justify-items:center;align-content:center;text-align:center;gap:6px}
 .sbento .b-streak p{margin:0}
@@ -439,8 +449,8 @@ html:has(.screen) body{overflow:hidden}
    columns. Only the plan and the chapters scroll, inside their tiles */
 @container (max-width:559px){.sbento .b-chaps{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @container (max-width:559px){.sbento :is(.b-stats,.b-streak){padding:var(--sp-3);gap:2px}.sbento .bbig{font-size:40px}.sbento .b-streak .muted{display:none}.sbento :is(.b-stats,.b-streak) p{font-size:var(--fz-sm);line-height:1.3}}
-/* a short phone keeps only each number and its words */
-@media (max-height:740px) and (max-width:699px){.sbento .b-stats :is(br,p .muted,.gtline){display:none}}
+/* a narrow grid keeps only each number and its words (the average and the check-up are on the grown-up page) */
+@container (max-width:559px){.sbento .b-stats :is(br,p .muted,.gtline){display:none}}
 /* Learn's portrait rule folds its steps away; practice keeps the step being answered */
 .pscreen .pintro .pbeats{display:grid}
 /* the feedback line is a line, not a box: colour only on the dot (and the answer box) */
