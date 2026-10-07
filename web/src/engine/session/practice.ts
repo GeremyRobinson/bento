@@ -112,7 +112,7 @@ function freshItems(n: number, make: (k: number, seen: RunItem[]) => RunItem): R
 function spread(items: RunItem[], rng: Rng): RunItem[] {
   const out = rng.shuffle(items), same = (a?: RunItem, b?: RunItem) => !!a && !!b && a.lessonId === b.lessonId && JSON.stringify(a.problem) === JSON.stringify(b.problem);
   for (let i = 1; i < out.length; i++) if (same(out[i], out[i - 1])) {
-    const j = out.findIndex((x, k) => k > i && !same(x, out[i - 1]) && !same(out[i], out[k + 1]));
+    const j = out.findIndex((x, k) => k > i && !same(x, out[i - 1]) && !same(out[i], out[k - 1]) && !same(out[i], out[k + 1]));
     if (j > 0) [out[i], out[j]] = [out[j]!, out[i]!];
   }
   return out;
