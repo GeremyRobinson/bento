@@ -189,7 +189,7 @@ html[data-line="middle"] body{background-image:
 }
 /* the counters stay behind what you read: text that sits straight on the canvas (Learn's intro and steps) gets a
    clean patch of the page under it, feathered at the edge, so no counter lands on a word (v44 sweep item 12) */
-html[data-line="early"] .lintro{background:var(--pane-glass,var(--canvas));box-shadow:none;border-radius:var(--r-panel);outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
+html[data-line="early"] .lintro{box-shadow:none}
 :root[data-line="early"][data-theme="dark"]{--page:#14120f;--canvas:#14120f}
 /* one hue in shades (G 2026-10-07): the playful canvas takes the grade's hue too, its counters all
    shades of it */
