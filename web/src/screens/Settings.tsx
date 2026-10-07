@@ -20,7 +20,7 @@ export function SettingsScreen() {
   const file = useRef<HTMLInputElement>(null);
   const save = () => {
     const url = URL.createObjectURL(new Blob([exportBackup()], { type: "application/json" }));
-    const a = Object.assign(document.createElement("a"), { href: url, download: `bento-backup-${new Date().toISOString().slice(0, 10)}.json` });
+    const a = Object.assign(document.createElement("a"), { href: url, download: `obento-backup-${new Date().toISOString().slice(0, 10)}.json` });
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
@@ -66,10 +66,10 @@ export function SettingsScreen() {
         <input ref={file} type="file" accept="application/json,.json" hidden onChange={e => void load(e.target.files?.[0])} />
       </Tile>
 
-      <Tile title="About Bento" k="Bento" className="sabout">
+      <Tile title="About Obento" k="Obento" className="sabout">
         <p className="snote"><LockIcon />On this device. No account, no ads, no data collected.</p>
         <div className="actions">
-          <Pill onClick={() => go({ name: "welcome" }, "back")}>What Bento is ›</Pill>
+          <Pill onClick={() => go({ name: "welcome" }, "back")}>What Obento is ›</Pill>
           {SANDBOX && <Pill onClick={() => dispatchEvent(new Event("bento:sandbox"))}>Sandbox ›</Pill>}
         </div>
       </Tile>

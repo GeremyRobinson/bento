@@ -135,7 +135,7 @@ export function Contents({ grade, lessonId, level: first, close, leave = close, 
     body = (
       <section className="zshelf">
         <Shelf current={grade} onPick={n => { leave(); chooseGrade(n); }} />
-        <button className="tlink" onClick={() => { leave(); go({ name: "welcome" }, "back"); }}>About Bento ›</button>
+        <button className="tlink" onClick={() => { leave(); go({ name: "welcome" }, "back"); }}>About Obento ›</button>
       </section>
     );
   }

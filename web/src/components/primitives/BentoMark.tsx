@@ -7,8 +7,7 @@ import { APP_NAME } from "../../app/copy";
  * Bento² with a real superscript 2 (Inter's ² sits too low and light).
  */
 export function BentoMark({ className, squared }: { className?: string; squared?: boolean }) {
-  // Bento² keeps its own name until Copy settles the advanced tier's
-  const name = squared ? "Bento" : APP_NAME, letters = [...name];
+  const name = APP_NAME, letters = [...name];
   return (
     <span className={`bmark${className ? ` ${className}` : ""}`}>
       <span className="vh">{squared ? `${name} squared` : name}</span>

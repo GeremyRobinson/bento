@@ -70,7 +70,7 @@ export function OneIdea({ rng }: { rng: Rng }) {
   // one calm stage: the list of five steps on the left, the one picture playing on the right
   return (
     <>
-      <section className="lsec"><h2>One idea, K to 12th.</h2><p>Bento teaches math as one story. The square you count in kindergarten is the same square calculus fills in.</p></section>
+      <section className="lsec"><h2>One idea, K to 12th.</h2><p>Obento teaches math as one story. The square you count in kindergarten is the same square calculus fills in.</p></section>
       <div className="lone">
         <ol className="lonelist">
           {cards.map((k, i) => (

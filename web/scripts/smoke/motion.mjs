@@ -39,9 +39,9 @@ export async function motionGuard({ browser, PAGE, fails, notes }) {
     const steps = [
       ...shelf(/^3rd grade:/), ...shelf(/^1st grade:/), ...shelf(/^10th grade/), ...shelf(/^5th grade:/),
       ["open the contents", open, false], ["Chapter", level("Chapter"), false], ["Year", level("Year"), false], ["Done", tap(p.locator(".zclose")), false],
-      ["open the contents", open, false], ["All grades", level("All grades"), false], ["About Bento (landing)", tap(p.getByRole("button", { name: /About Bento/ })), true],
+      ["open the contents", open, false], ["All grades", level("All grades"), false], ["About Obento (landing)", tap(p.getByRole("button", { name: /About Obento/ })), true],
       ["browser back from the landing", () => p.goBack({ waitUntil: "commit" }), true],
-      ["My Bento", tap(p.locator(".ime")), true], ["Back", tap(p.locator(".iback")), true],
+      ["My Obento", tap(p.locator(".ime")), true], ["Back", tap(p.locator(".iback")), true],
       ["open a lesson", lesson, true], ["Back from the lesson", tap(p.locator(".iback")), true],
     ];
     for (const [name, act, page] of steps) {

@@ -164,7 +164,7 @@ export function Welcome() {
     <div className="land">
       <section className="lhero">
         <h1>Math that <span>clicks.</span></h1>
-        <p>Watch each idea play out, then solve it one step at a time. If you slip, Bento shows you the exact step and why.</p>
+        <p>Watch each idea play out, then solve it one step at a time. If you slip, Obento shows you the exact step and why.</p>
         <div className="lcta"><Pill go onClick={start}>{START_LEARNING}</Pill><span>Start free. No account.</span></div>
       </section>
       <section className="lhbox">
@@ -176,7 +176,7 @@ export function Welcome() {
         <FeatureBox rng={rng} />
       </>}
       {rest > 3 && <Advanced pics={rest > 4} ghost={rest > 5} />}
-      <footer className="lfoot">Bento · Kindergarten to 12th grade{SANDBOX && <> · <button className="tlink" onClick={() => dispatchEvent(new Event("bento:sandbox"))}>Sandbox</button></>}</footer>
+      <footer className="lfoot">Obento · Kindergarten to 12th grade{SANDBOX && <> · <button className="tlink" onClick={() => dispatchEvent(new Event("bento:sandbox"))}>Sandbox</button></>}</footer>
     </div>
   );
 }

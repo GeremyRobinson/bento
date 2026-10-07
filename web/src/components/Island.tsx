@@ -81,7 +81,7 @@ function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): P
     }
     // pages you open from anywhere (the corner buttons) step back to where you were, a lesson or a problem included
     case "me": return { kicker: gradeOf(grade).name, title: YOUR_BENTO, back: cameFrom(route, app, grade) ?? contents };
-    case "settings": return { kicker: "Bento", title: "Settings", back: cameFrom(route, app, grade) ?? contents, lock: true };
+    case "settings": return { kicker: "Obento", title: "Settings", back: cameFrom(route, app, grade) ?? contents, lock: true };
     case "facts": {
       const t = route.table ? tableById(route.table) : undefined;
       return t ? { kicker: "Facts", title: t.name, back: { label: "facts", to: { name: "facts" } } } : { kicker: gradeOf(grade).name, title: "Facts", back: contents };
