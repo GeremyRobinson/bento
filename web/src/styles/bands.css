@@ -27,17 +27,17 @@
   --hue:oklch(.6 .15 var(--gh));
   --h1:oklch(.4 .14 var(--gh));--h2:oklch(.46 .14 var(--gh));--h3:oklch(.52 .14 var(--gh));
   --hd1:oklch(.75 .12 var(--gh));--hd2:oklch(.81 .1 var(--gh));--hd3:oklch(.87 .075 var(--gh))}
-/* no pink grades, and no green or red (kept for right and wrong): 2nd tangerine, 5th azure, 9th ochre, 1st a bluer violet (G 05:36) */
-:is(.wrap,.gpal)[data-grade="0"]{--gh:45}
-:is(.wrap,.gpal)[data-grade="1"]{--gh:288}
+/* no pink grades (G 05:36); the early grades take muted primaries, red and green allowed when muted like 2nd's tangerine (G 05:40): K brick red, 1st blue, 2nd tangerine, 3rd green, 4th yellow; 9th a calm amber. The UI stays muted; the pictures are the bright part (G 05:41) */
+:is(.wrap,.gpal)[data-grade="0"]{--gh:35}
+:is(.wrap,.gpal)[data-grade="1"]{--gh:255}
 :is(.wrap,.gpal)[data-grade="2"]{--gh:65}
-:is(.wrap,.gpal)[data-grade="3"]{--gh:186}
-:is(.wrap,.gpal)[data-grade="4"]{--gh:250}
+:is(.wrap,.gpal)[data-grade="3"]{--gh:145}
+:is(.wrap,.gpal)[data-grade="4"]{--gh:90}
 :is(.wrap,.gpal)[data-grade="5"]{--gh:222}
 :is(.wrap,.gpal)[data-grade="6"]{--gh:170}
 :is(.wrap,.gpal)[data-grade="7"]{--gh:266}
 :is(.wrap,.gpal)[data-grade="8"]{--gh:218}
-:is(.wrap,.gpal)[data-grade="9"]{--gh:75}
+:is(.wrap,.gpal)[data-grade="9"]{--gh:55}
 :is(.wrap,.gpal)[data-grade="10"]{--gh:202}
 :is(.wrap,.gpal)[data-grade="11"]{--gh:282}
 :is(.wrap,.gpal)[data-grade="12"]{--gh:234}
@@ -47,8 +47,8 @@
 /* brighter in the early grades, calmer as the years go on (G 2026-10-07): --vib scales how much hue the surfaces
    carry, --calm softens the lesson's own colour from 6th grade up */
 .wrap{--vib:1;--calm:1}
-.wrap[data-grade="0"]{--vib:1.6} .wrap[data-grade="1"]{--vib:1.5} .wrap[data-grade="2"]{--vib:1.4} .wrap[data-grade="3"]{--vib:1.2;--lvib:1}
-.wrap[data-grade="4"]{--vib:1.1} .wrap[data-grade="6"]{--vib:.9;--calm:.92} .wrap[data-grade="7"]{--vib:.8;--calm:.86}
+.wrap[data-grade="0"]{--vib:1.15} .wrap[data-grade="1"]{--vib:1.5} .wrap[data-grade="2"]{--vib:1.4} .wrap[data-grade="3"]{--vib:1.2;--lvib:1}
+.wrap[data-grade="4"]{--vib:1.8} .wrap[data-grade="6"]{--vib:.9;--calm:.92} .wrap[data-grade="7"]{--vib:.8;--calm:.86}
 .wrap[data-grade="8"]{--vib:.75;--calm:.8} .wrap[data-grade="9"]{--vib:.65;--calm:.74} .wrap[data-grade="10"]{--vib:.6;--calm:.68}
 .wrap[data-grade="11"]{--vib:.55;--calm:.62} .wrap[data-grade="12"]{--vib:.5;--calm:.56}
 /* the lesson's step of the hue: --tint fills and draws, --ink is text in the hue (the light steps read on white) */
@@ -115,7 +115,8 @@ html[data-hue][data-theme="dark"]{--page:oklch(from var(--page-hue) .165 .018 h)
 /* Grade (master): every grade is an instance of this one. A grade's line above overrides only what it changes;
    anything it leaves out comes from here. */
 :is(.wrap,.gpal){--master-l0:#3b82f6;--master-l1:#ec4899;--master-l2:#8b5cf6;--master-la:#f59e0b;--master-k0:#2d69cc;--master-k1:#d63187;--master-k2:#7950d6}
-:is(.wrap,.gpal){--l0:var(--master-l0);--l1:var(--master-l1);--l2:var(--master-l2);--la:var(--master-la);--c0:var(--l0);--c1:var(--l1);--c2:var(--l2);--acc:var(--la)}
+/* pictures are the bright part (G 05:41: "keep the colors muted but still do primaries and make all the examples super bright"): each trio colour is lifted and saturated by rule, in every grade */
+:is(.wrap,.gpal){--l0:var(--master-l0);--l1:var(--master-l1);--l2:var(--master-l2);--la:var(--master-la);--c0:oklch(from var(--l0) max(l, .62) calc(c * 1.45) h);--c1:oklch(from var(--l1) max(l, .62) calc(c * 1.45) h);--c2:oklch(from var(--l2) max(l, .62) calc(c * 1.45) h);--acc:var(--la)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal){--c0:color-mix(in srgb,var(--l0) 75%,white);--c1:color-mix(in srgb,var(--l1) 75%,white);--c2:color-mix(in srgb,var(--l2) 75%,white);--acc:color-mix(in srgb,var(--la) 80%,white)}}
 /* the darkest grade colours need a little more lift to read on dark cards (lines 3:1 on the raised picture tile) */
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="7"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="8"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="9"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="10"],:root:not([data-theme="light"]) :is(.wrap,.gpal)[data-grade="11"]{--c0:color-mix(in srgb,var(--l0) 70%,white);--c1:color-mix(in srgb,var(--l1) 70%,white);--c2:color-mix(in srgb,var(--l2) 70%,white)}}
