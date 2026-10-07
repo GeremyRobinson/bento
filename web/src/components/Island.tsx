@@ -302,7 +302,13 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
         </button>
         {place.lock
           ? <span className="ilock"><LockIcon />On this device</span>
-          : <span className={`ibat${route.name === "practice" && run?.solved ? " tick" : ""}`} aria-hidden><i /></span>}
+          : <span className={`ibat${route.name === "practice" && run?.solved ? " tick" : ""}`} aria-hidden>
+              {/* the circle says which lesson this is, and its own edge is the progress (G 21:33): the ring fills round
+                  from the top, the PillRing's way, instead of the circle filling up */}
+              <svg viewBox="0 0 36 36"><circle className="pring-track" cx="18" cy="18" r="17" pathLength={1} />
+                <circle className={`pring-fill${fill > 0 ? "" : " empty"}`} cx="18" cy="18" r="17" pathLength={1} style={{ strokeDasharray: `${Math.min(1, fill)} 1` }} /></svg>
+              {place.lesson && pageOf(place.lesson) ? <b>{pageOf(place.lesson)!.page}</b> : null}
+            </span>}
       </header>} right={<>
         {hintable && (
           <button className={`icon ihint${run!.hintsLeft || run!.hinted ? "" : " spent"}${hinting ? " on" : ""}`} onClick={() => dispatchEvent(new Event("bento:hint"))}

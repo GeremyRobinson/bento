@@ -173,8 +173,9 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
           if (side) phone.push(`a plan row runs past Today's sides by ${Math.round(Math.max(B.left - side.left, side.right - B.right))}px`);
         }
       }
-      // Today comes after the two number tiles: its top is below both (Review Book home #3: DOM order alone passed)
-      if (tday && shown(tday)) {
+      // Today comes after the two number tiles: its top is below both (Review Book home #3: DOM order alone passed). Only
+      // where Today runs the full width; wider, it is its own full-height column beside them (G 2026-10-07 21:27)
+      if (tday && shown(tday) && tday.getBoundingClientRect().width > tday.parentElement.getBoundingClientRect().width * 0.9) {
         const T = tday.getBoundingClientRect().top;
         for (const n of document.querySelectorAll(".sbento :is(.b-stats,.b-streak)"))
           if (shown(n) && T < n.getBoundingClientRect().top - 0.5) phone.push(`Today sits above the ${n.classList.contains("b-stats") ? "lessons done" : "days in a row"} tile`);

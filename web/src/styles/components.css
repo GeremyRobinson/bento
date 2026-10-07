@@ -6,7 +6,7 @@
    edge, as an inset outline painted over its contents, so a scroll area, a rounded corner or a fill reaching the
    edge never cuts it. Every outlined surface is listed here once; nothing draws its own ring. */
 .wrap{--panel-line:var(--rule);--panel-w:1px}
-:is(.tile,.screen .slist,.spreview,.bhome .today,.bhome .b-stats,.bhome>.b-weak,.units>.panel,.ftable.panel,.sbento .b-streak,.sbento .b-chaps,.lhpic,.ltile,.lbatt,.lonelist li.on,.lonepic,.zchapter,.zcard,.book,.mhero.battery,.mygl li,.phint .htext){outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
+:is(.tile,.screen .slist,.spreview,.bhome .today,.bhome .b-stats,.bhome>.b-weak,.units>.panel,.ftable.panel,.sbento .b-streak,.lhpic,.ltile,.lbatt,.lonelist li.on,.lonepic,.zchapter,.zcard,.book,.mhero.battery,.mygl li,.phint .htext){outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
 .wrap{--r-tile:calc(var(--r-panel) - 4px);--pad-md:calc(var(--u) * 1.25);--pad-lg:calc(var(--u) + 4px);--pad-xl:calc(var(--u) * 1.5);--ring:inset 0 0 0 1px var(--rule)}
 /* ---- controls ---- */
 /* Pill (master): every button is an instance of .ctl. Sizes and feel come from the --pill-* tokens; colors fall back to the
@@ -406,8 +406,8 @@ button.gcell:active{transform:scale(.96)}
 /* a Panel that scrolls draws its line as a border, not an outline: scrolled rows pass under the border's inner edge, so
    they never paint over the line (Review). Placed after More contrast so it wins there too; the padding gives back the
    border's width so the content sits where it did under the outline. */
-.wrap :is(.screen .slist,.sbento .b-chaps,.sdetail>.sbento .today){outline:none;border:var(--panel-w) solid var(--panel-line)}
-.wrap .screen .slist,.wrap .sbento .b-chaps{padding:calc(var(--sp-3) - var(--panel-w))}
+.wrap :is(.screen .slist,.sdetail>.sbento .today){outline:none;border:var(--panel-w) solid var(--panel-line)}
+.wrap .screen .slist{padding:calc(var(--sp-3) - var(--panel-w))}
 .wrap .screen.gu .slist{padding-bottom:calc(var(--sp-6) - var(--panel-w))}
 .wrap .sdetail>.sbento .today{padding:calc(var(--u) * 1.75 - var(--panel-w))}
 
@@ -555,3 +555,19 @@ button.gcell:active{transform:scale(.96)}
 .viz-svg .misfit{fill:color-mix(in srgb,var(--c2) var(--d-f30),transparent);stroke:var(--c2);stroke-width:var(--d-line);stroke-dasharray:var(--d-dash-miss)} .viz-svg text.okmark{fill:var(--ka)}
 .a-fold{transform-box:view-box;transform-origin:var(--ox) var(--oy);animation:fold var(--dur-2400) var(--ease) var(--d,0s) both}
 @keyframes fold{0%{transform:rotate(var(--r)) scaleY(1) rotate(calc(-1 * var(--r)))} 38%,70%{transform:rotate(var(--r)) scaleY(-1) rotate(calc(-1 * var(--r)))} 100%{transform:rotate(var(--r)) scaleY(1) rotate(calc(-1 * var(--r)))}}
+/* ---- Tile master on the ladder (G 21:36, Settings and My Bento "need the ladder fix"): the Layered Glass Bento rules,
+   the same as the Contents list. A tile sits 16px apart from the next and holds its rows 16px in; its rows are one
+   step deeper on the ladder, 8px apart, their corners the tile's less that 16px (30 in a 46 tile); a control in a row
+   (a switch, the text-size picker) is one step deeper again. Words above the rows line up with the rows' words */
+.wrap :is(.bset,.bmine){gap:var(--screen-gap)}
+.wrap .mtile{--row-r:calc(var(--r-panel) - var(--sp-4));padding:var(--sp-4);gap:var(--nest);background:var(--g1,var(--well))}
+.wrap .mtile>:is(.k,h2,p,.snote,.mych-score,.myh-text){margin-inline:var(--sp-4)}
+.wrap .mtile>h2{margin-bottom:var(--sp-2)}
+.wrap :is(.mtoggle,.mseg){min-height:calc(var(--tap) + var(--nest) * 2);padding:var(--nest) var(--sp-4);border-radius:var(--row-r,var(--r-card));background:var(--g2,var(--card))}
+@media (hover:hover){.wrap .mtoggle:hover{background:var(--g3,var(--hover))}}
+.wrap .mtoggle:not([aria-checked="true"]) .switch,.wrap .seg{background:var(--g3,var(--well))}
+.wrap .seg button.on{background:var(--pane-plain,var(--card))}
+.wrap .mtile .actions{margin-inline:var(--sp-2)}
+.wrap .mtile>.ctl{margin-inline:var(--sp-2)}
+.wrap .mtile .ctl:not(.go){background:var(--g2,var(--card))}
+.wrap .mtile .actions{justify-content:flex-start}

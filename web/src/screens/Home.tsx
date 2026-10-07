@@ -120,9 +120,10 @@ function TodayDetail({ g }: { g: number }) {
   // one (G 2026-10-06: Today always has a live picture)
   const ready = list.filter(c => isReady(c.id)), at = Math.max(0, ready.findIndex(c => c.id === nextLesson));
   const picFrom = [...ready.slice(at), ...ready.slice(0, at)].map(c => c.id);
-  const units = unitsInGrade(g), found = usePreviewPick(picFrom), pic = found != null;
+  const found = usePreviewPick(picFrom), pic = found != null;
   // Today as a bento that fills the screen (G 2026-10-06, "needs better use of space"): the up-next problem drawn big,
-  // the plan, how far the year is, the streak, and every chapter as its own fill
+  // the plan, how far the year is and the streak. No chapters tile: Contents beside it already lists them, so Today
+  // takes that room and runs the full height (G 21:27)
   return (
     <BentoGrid fit className={`bhome sday sbento${pic ? "" : " nopic"}`}>
       {pic && <PreviewWell pick={found} next={nextLesson} size="l" />}
@@ -135,7 +136,7 @@ function TodayDetail({ g }: { g: number }) {
         <span className="bbig">{progress.streak}</span>
         <p><b>day{progress.streak === 1 ? "" : "s"}</b> in a row</p>
       </section>
-      <section className={`tile today ${bgClass(pic ? "w" : "l")}`}>
+      <section className={`tile today ${bgClass(pic ? "t" : "l")}`}>
         <header className="thead"><h2>Today</h2>
           <p className="sub">{!plan.length ? "New lessons for this grade are almost ready." : first ? `About ${minutes} minutes.` : "That's everything for today."}</p></header>
         <div className="tbody">
@@ -165,18 +166,6 @@ function TodayDetail({ g }: { g: number }) {
         </div>
         {/* on a phone the plan scrolls between the title and this Start, which never scrolls away (Design 2026-10-07) */}
         {first && <Pill go className="tstart" onClick={() => run(first)} aria-label={`Start: ${first.title}`}>Start</Pill>}
-      </section>
-      <section className={`tile b-chaps ${bgClass(pic ? "s" : "f")}`} aria-label="Chapters">
-        {units.map(u => {
-          const d = doneCount(progress, u.entries), n = u.entries.length;
-          return (
-            <button key={u.name} className="bchap battery" onClick={() => go({ name: "home", pick: (u.entries.find(c => timesDone(progress, c.id) === 0 && isReady(c.id)) ?? u.entries[0]!).id }, "still")}
-              aria-label={`${u.name}: ${d} of ${n} done`}>
-              <Fill frac={n ? d / n : 0} />
-              <b>{u.name}</b><small>{d === n ? "Done" : `${d} of ${n}`}</small>
-            </button>
-          );
-        })}
       </section>
     </BentoGrid>
   );

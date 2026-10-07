@@ -33,8 +33,8 @@
 /* from nav.css */
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--float:color-mix(in oklab,var(--card) 88%,var(--mix-lift))}}
 :root[data-theme="dark"] .wrap{--float:color-mix(in oklab,var(--card) 88%,var(--mix-lift))}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .island .ibat>i{background:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}}
-:root[data-theme="dark"] .island .ibat>i{background:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .island .ibat{--gn:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}}
+:root[data-theme="dark"] .island .ibat{--gn:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .gnum{color:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}}
 :root[data-theme="dark"] .gnum{color:color-mix(in srgb,var(--gn-d,var(--ink)) 75%,var(--mix-lift))}
 

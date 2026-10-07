@@ -33,8 +33,11 @@
 .pring-fill{stroke:var(--gn,var(--ink));stroke-linecap:round;transition:stroke-dasharray var(--m-in) var(--m-ease)}
 .pring-fill.empty{stroke-opacity:0}
 html[data-motion="reduce"] .pring-fill{transition:none}
-.island .ibat{flex:none;position:relative;width:var(--float-in);height:var(--float-in);border-radius:var(--r-round);background:var(--btn-float,var(--well));overflow:hidden;display:grid;place-items:center}
-.island .ibat>i{position:absolute;inset:auto 0 0;height:calc(var(--p) * 100%);background:var(--gn,var(--ink));transition:height var(--dur-500) var(--glide)}
+.island .ibat{flex:none;position:relative;width:var(--float-in);height:var(--float-in);border-radius:var(--r-round);background:var(--btn-float,var(--well));display:grid;place-items:center}
+.island .ibat>svg{position:absolute;inset:0;width:100%;height:100%;rotate:-90deg;overflow:visible}
+.island .ibat circle{fill:none;stroke-width:3px;vector-effect:non-scaling-stroke}
+.island .ibat .pring-track{stroke-width:3px!important;stroke:var(--g2,var(--rule))}
+.island .ibat>b{position:relative;font:var(--w-bold) var(--fz-md)/1 var(--num);color:var(--gn,var(--ink));font-variant-numeric:tabular-nums}
 
 
 .island .iplace .ign{font:inherit;letter-spacing:inherit}
