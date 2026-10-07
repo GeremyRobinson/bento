@@ -7,7 +7,7 @@
   --r-panel:36px;
 }
 @media (max-width:480px){
-  .wrap{--fs:17px;--lh:24px;--u:12px;--sec:16px;--h:44px;--row:56px;--math:40px;--ask:32px;--slot:56px;--key:56px;--work:21px;--r-panel:28px}
+  .wrap{--fs:17px;--lh:24px;--u:12px;--sec:16px;--h:44px;--row:56px;--math:40px;--ask:32px;--slot:56px;--key:56px;--work:21px;--r-panel:28px;--bg-row:96px}
 }
 .wrap{--r-card:max(4px, calc(var(--r-panel) - var(--u))); --r-box:max(8px, calc(var(--r-card) - var(--u))); --badge:calc(var(--h) - 2*var(--inset)); --rbadge:calc(var(--row) - 2*var(--inset))}
 

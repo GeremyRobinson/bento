@@ -17,12 +17,12 @@ const PAGE = "file://" + fileURLToPath(new URL("../dist-preview/index.html", imp
 
 /** audit kinds that fail the run: anything cut off, text under an outline, and a nested surface whose corner isn't concentric */
 const CLIPS = new Set(["content-cut", "spill", "viewport", "poke-clipped", "box", "mask", "ring", "scroll-cut", "outline-over", "concentric"]);
-const SIZES = [{ w: 390, h: 844, scheme: "dark" }, { w: 1180, h: 820, scheme: "light" }, { w: 1366, h: 768, scheme: "dark" }, { w: 1366, h: 1024, scheme: "light" },
+const SIZES = [{ w: 390, h: 844, scheme: "dark" }, { w: 375, h: 667, scheme: "light" }, { w: 1180, h: 820, scheme: "light" }, { w: 1366, h: 768, scheme: "dark" }, { w: 1366, h: 1024, scheme: "light" },
   { w: 1024, h: 768, scheme: "light" }, { w: 1280, h: 720, scheme: "dark" }];
 /** containers meant to scroll (a long list; the book's chapters, and its plan on a short landscape screen where the
  *  picture keeps its room); anything else that scrolls inside itself is cut */
-const SCROLLERS = ".fhome>.ftables, nav.slist.more, .sbento .b-chaps, .sbento .today";
-const ROUTES = ["home", "year", "learn", "practice", "facts", "me", "settings", "grown-up", "welcome"];
+const SCROLLERS = ".fhome>.ftables, nav.slist.more, .sbento .b-chaps, .sbento .today, .sbento .tbody";
+const ROUTES = ["home", "year", "today", "learn", "practice", "facts", "me", "settings", "grown-up", "welcome"];
 
 const fails = [], notes = [];
 const browser = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {});
@@ -55,7 +55,7 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
   const lesson = await p.evaluate(() => location.hash.startsWith("#/learn/") ? location.hash : null);
   let markAt = null;
   for (const route of ROUTES) {
-    const hash = route === "home" ? "#/" : route === "year" ? "#/year" : route === "learn" || route === "practice" ? lesson : "#/" + route;
+    const hash = route === "home" ? "#/" : route === "year" ? "#/year" : route === "today" ? "#/year/today" : route === "learn" || route === "practice" ? lesson : "#/" + route;
     if (!hash) { fails.push(`${tag}: no lesson link on home`); continue; }
     await p.goto(PAGE + hash); await p.waitForTimeout(700);
     // practice: the lesson's own Try one
@@ -96,7 +96,8 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
       const low = Math.max(0, ...[...document.querySelectorAll("#app *")].filter(shown).filter(e => !e.closest(SCROLLERS)).map(e => e.getBoundingClientRect().bottom));
       // the book's picture is the hero: on a wide screen it never shrinks to a sliver or an empty frame
       const pic = document.querySelector(".sbento .spreview");
-      const picH = pic && shown(pic) && innerWidth >= 900 ? Math.round(pic.getBoundingClientRect().height) : null;
+      // (a phone keeps it too: never under the well's own 150px floor, never an empty frame)
+      const picH = pic && shown(pic) ? Math.round(pic.getBoundingClientRect().height) : null;
       const picEmpty = picH != null && pic.classList.contains("empty");
       // bento tiles never overlap, and the plan's first row (Start) is fully inside Today, unscrolled
       const overlaps = [], tiles = [...document.querySelectorAll(".sbento>.bg-in>*")].filter(shown);
@@ -134,15 +135,29 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
         if (Math.max(...hs) - Math.min(...hs) > 1) nests.push(`row heights ${hs.join("/")}`);
         for (const r of rows) if (!r.disabled && ![...r.children].slice(2).some(shown)) nests.push(`"${r.textContent.trim().slice(0, 20)}" has no label`);
       }
-      return { flags, tiny, corners, marks, picH, picEmpty, overlaps, startCut, steps, nests, scroll: Math.round(low - innerHeight) };
+      // a chapter's name on the book home is never cut mid-word (its own line clamp only ever ends a whole line)
+      // on a phone the picture stays the biggest tile and Today's pinned Start is whole (Design 2026-10-07)
+      const phone = [], tday = document.querySelector(".sbento .today"), tstart = document.querySelector(".sbento .tstart");
+      if (innerWidth < 700 && tday && shown(tday)) {
+        const area = e => { const b = e.getBoundingClientRect(); return b.width * b.height; };
+        if (pic && shown(pic) && area(pic) <= area(tday)) phone.push(`the picture (${Math.round(area(pic))}) is not bigger than Today (${Math.round(area(tday))})`);
+        if (tstart) {
+          const S = tstart.getBoundingClientRect(), T = tday.getBoundingClientRect();
+          if (!shown(tstart) || S.top < T.top || S.bottom > T.bottom - tday.clientTop || S.bottom > innerHeight) phone.push("Today's Start is not fully visible");
+        }
+      }
+      const chapCut = [...document.querySelectorAll(".bchap b")].filter(shown).filter(b => b.scrollWidth > b.clientWidth + 1).map(b => b.textContent);
+      return { flags, tiny, corners, marks, picH, picEmpty, overlaps, startCut, steps, nests, chapCut, phone, scroll: Math.round(low - innerHeight) };
     }, SCROLLERS);
     for (const f of r.flags)
       (CLIPS.has(f.kind) ? fails : notes).push(`${at}: ${f.kind} ${f.el}${f.path ? " in " + f.path : ""}`);
     for (const t of r.tiny.slice(0, 5)) fails.push(`${at}: text under 11px ${t}`);
     for (const c of [...new Set(r.corners)]) fails.push(`${at}: Panel line without a corner ${c}`);
-    if (r.picH != null && (r.picH < 200 || r.picEmpty)) fails.push(`${at}: the book's picture is ${r.picEmpty ? "empty" : r.picH + "px tall"}`);
+    if (r.picH != null && (r.picH < (w >= 900 ? 200 : 150) || r.picEmpty)) fails.push(`${at}: the book's picture is ${r.picEmpty ? "empty" : r.picH + "px tall"}`);
     for (const o of r.overlaps) fails.push(`${at}: tiles overlap: ${o}`);
     if (r.startCut > 1) fails.push(`${at}: the plan's first row is cut by ${r.startCut}px`);
+    for (const ph of r.phone) fails.push(`${at}: ${ph}`);
+    if (r.chapCut.length) fails.push(`${at}: chapter names cut mid-word: ${r.chapCut.join(", ")}`);
     for (const st of r.steps) fails.push(`${at}: step row not aligned: ${st}`);
     for (const n of r.nests) fails.push(`${at}: chapter rows uneven (gaps left/right/top/bottom/between, heights, labels): ${n}`);
     if ((route === "learn" || route === "practice") && r.scroll > 1) fails.push(`${at}: the lesson page scrolls by ${r.scroll}px`);

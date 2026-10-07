@@ -1,6 +1,6 @@
 import { Pill, PillLabel } from "../components/primitives/Pill";
 import { useApp } from "../app/AppState";
-import { doneCount, entriesInGrade, entryById, gradeAverage, isReady, testKey, testReady, unitsInGrade, type Entry } from "../app/curriculum";
+import { doneCount, entriesInGrade, entryById, isReady, testKey, testReady, unitsInGrade, type Entry } from "../app/curriculum";
 import { gradeOf } from "../curriculum/grades";
 import { lessonById } from "../curriculum/registry";
 import { todayPlan, upNext, type TodayItem } from "../app/today";
@@ -107,9 +107,8 @@ function TodayDetail({ g }: { g: number }) {
   const list = entriesInGrade(g);
   const plan = todayPlan(progress, g, deps().now, canReview());
   const first = plan.find(i => !i.done);
-  const done = doneCount(progress, list), avg = gradeAverage(progress, g);
+  const done = doneCount(progress, list);
   const weak = list.filter(c => { const s = lastScore(progress, c.id); return s != null && s <= 1; });
-  const gt = progress.tests[testKey(g)];
   const run = (i: TodayItem) => i.kind === "lesson" ? (i.done ? startLesson(i.id) : go({ name: "learn", lessonId: i.id }))
     : i.kind === "review" ? startReview() : i.kind === "facts" ? go({ name: "facts", table: i.table, start: true }, "fwd") : startTest(i.key);
   const doneScore = (i: TodayItem) => i.kind === "review" ? progress.reviews[new Date(deps().now).toDateString()]
@@ -120,15 +119,25 @@ function TodayDetail({ g }: { g: number }) {
   // one (G 2026-10-06: Today always has a live picture)
   const ready = list.filter(c => isReady(c.id)), at = Math.max(0, ready.findIndex(c => c.id === nextLesson));
   const picFrom = [...ready.slice(at), ...ready.slice(0, at)].map(c => c.id);
-  const units = unitsInGrade(g), pic = picFrom.length > 0;
+  const units = unitsInGrade(g), found = usePreviewPick(picFrom), pic = found != null;
   // Today as a bento that fills the screen (G 2026-10-06, "needs better use of space"): the up-next problem drawn big,
   // the plan, how far the year is, the streak, and every chapter as its own fill
   return (
     <BentoGrid fit className={`bhome sday sbento${pic ? "" : " nopic"}`}>
-      {pic && <PreviewWell key={nextLesson ?? picFrom[0]} candidates={picFrom} next={nextLesson} size="l" />}
+      {pic && <PreviewWell pick={found} next={nextLesson} size="l" />}
+      <section className={`tile b-stats battery ${bgClass("n")}`}>
+        <Fill frac={list.length ? done / list.length : 0} />
+        <span className="bbig">{done}</span>
+        <p><b>of {list.length}</b> lessons done</p>
+      </section>
+      <section className={`tile b-streak ${bgClass("n")}`}>
+        <span className="bbig">{progress.streak}</span>
+        <p><b>day{progress.streak === 1 ? "" : "s"}</b> in a row</p>
+      </section>
       <section className={`tile today ${bgClass(pic ? "w" : "l")}`}>
-        <h2>Today</h2>
-        <p className="sub">{!plan.length ? "New lessons for this grade are almost ready." : first ? `About ${minutes} minutes.` : "That's everything for today."}</p>
+        <header className="thead"><h2>Today</h2>
+          <p className="sub">{!plan.length ? "New lessons for this grade are almost ready." : first ? `About ${minutes} minutes.` : "That's everything for today."}</p></header>
+        <div className="tbody">
         {plan.length > 0 && (
           <ol className="plan">{plan.map(i => (
             <li key={i.kind}>
@@ -152,17 +161,9 @@ function TodayDetail({ g }: { g: number }) {
           {!progress.log.length && <button className="tlink" onClick={() => startTest(placeKey(g))}>Not sure this is your grade? Find my level ›</button>}
           <button className="tlink" onClick={() => go({ name: "facts" }, "fwd")}>All facts ›</button>
         </div>
-      </section>
-      <section className={`tile b-stats battery ${bgClass("n")}`}>
-        <Fill frac={list.length ? done / list.length : 0} />
-        <span className="bbig">{done}</span>
-        <p><b>of {list.length}</b> lessons done{avg != null && <><br /><span className="muted">Average score {avg.toFixed(1)} of 4</span></>}</p>
-        {gt && <p className="muted gtline">{GRADE_CHECKUP} <ScoreChip n={gt.last} /></p>}
-      </section>
-      <section className={`tile b-streak ${bgClass("n")}`}>
-        <span className="bbig">{progress.streak}</span>
-        <p><b>day{progress.streak === 1 ? "" : "s"}</b> in a row</p>
-        <p className="muted">{progress.xp} XP</p>
+        </div>
+        {/* on a phone the plan scrolls between the title and this Start, which never scrolls away (Design 2026-10-07) */}
+        {first && <Pill go className="tstart" onClick={() => run(first)} aria-label={`Start: ${first.title}`}>Start</Pill>}
       </section>
       <section className={`tile b-chaps ${bgClass(pic ? "s" : "f")}`} aria-label="Chapters">
         {units.map(u => {
@@ -184,17 +185,23 @@ function TodayDetail({ g }: { g: number }) {
  * Up next, as a picture: the very first problem of the lesson waiting, in whatever room the plan leaves (UI notes
  * preview: a big live picture on top of the detail). It draws only when it fits PREVIEW_MIN tall.
  */
-export function PreviewWell({ candidates, next, size }: { candidates: string[]; next?: string; size?: TileSize }) {
+/** the first lesson in line whose first problem draws a picture (one search, shared by the well and the page that sizes it) */
+export function usePreviewPick(candidates: string[]) {
   const { deps } = useApp();
   const seed = useMemo(() => Math.floor(deps().rng.next() * 2 ** 31), []); // eslint-disable-line react-hooks/exhaustive-deps
-  // the first lesson in line whose first problem draws a picture
-  const found = useMemo(() => {
+  return useMemo(() => {
     for (const id of candidates) {
       const l = lessonById(id), pv = l ? previewOf(l, seed) : null;
       if (l && pv?.ex.diagram && pv.ex.diagram.kind !== "chain") return { lesson: l, pic: pv };
     }
     return null;
   }, [candidates.join(), seed]); // eslint-disable-line react-hooks/exhaustive-deps
+}
+type PreviewPick = ReturnType<typeof usePreviewPick>;
+
+export function PreviewWell({ candidates = [], pick, next, size }: { candidates?: string[]; pick?: PreviewPick; next?: string; size?: TileSize }) {
+  const own = usePreviewPick(pick === undefined ? candidates : []);
+  const found = pick === undefined ? own : pick;
   const lesson = found?.lesson, pic = found?.pic ?? null;
   const box = useRef<HTMLElement>(null);
   const [h, setH] = useState(0);

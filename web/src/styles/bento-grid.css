@@ -9,9 +9,11 @@
 .bg-t.n{--sp:3}
 @container (min-width:560px){.bg-t.n,.bg-t.s,.bg-t.t{--sp:2}.bg-t.w,.bg-t.l{--sp:4}}
 /* fit mode (Book home): the grid takes exactly the height it is given, its rows share it, and a tile with more than its
-   share scrolls inside itself (the tile says so: overflow auto), never the page (G: the page never scrolls, the picture is the hero) */
+   share scrolls inside itself, never the page. A fit tile that can outgrow its share sets overflow:auto itself and is in
+   the Panel border list; the master never makes every tile scroll (a scrolling tile under its own outline paints over it). G: the page never scrolls, the picture is the hero */
 .bgrid.fit,.bgrid.fit>.bg-in{height:100%}
 .bgrid.fit>.bg-in{grid-auto-rows:minmax(0,1fr)}
 .bgrid.fit .bg-t{min-height:0}
 /* on a narrow fit grid a wide tile is full width, so one shared row is too short for what it holds: it takes two */
-@container (max-width:559px){.bgrid.fit .bg-t.w{--rs:2}}
+/* and the large tile takes three, so it stays the biggest (Design 2026-10-07) */
+@container (max-width:559px){.bgrid.fit .bg-t.w{--rs:2}.bgrid.fit .bg-t.l{--rs:3}}

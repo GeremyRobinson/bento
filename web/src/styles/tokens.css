@@ -30,7 +30,7 @@
   --float-h:52px; --float-in:42px; --tap:44px;
   /* the page's widest edge: the app, its screens and the landing page all stop here (BentoGrid handoff) */
   --page-max:1180px;
-  --bg-row:96px; /* a BentoGrid row in flow mode (Design to confirm 96 or 120) */
+  --bg-row:120px; /* a BentoGrid row in flow mode; 96px on a compact screen (bands.css) */
   /* layers, bottom to top */
   --z-under:-1; --z-flat:0; --z-up:1; --z-up2:2; --z-island:15; --z-sheet:20; --z-dim:30; --z-stack:31; --z-island-open:32;
   --z-zoom:40; --z-halo:99;

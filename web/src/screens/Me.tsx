@@ -1,7 +1,7 @@
 import { Pill } from "../components/primitives/Pill";
 import { type CSSProperties } from "react";
 import { useApp } from "../app/AppState";
-import { doneCount, entriesInGrade, testKey, unitsInGrade } from "../app/curriculum";
+import { doneCount, entriesInGrade, gradeAverage, testKey, unitsInGrade } from "../app/curriculum";
 import { upNext } from "../app/today";
 import { GRADES, gradeOf, tintStyle } from "../curriculum/grades";
 import { LEVEL_XP, LEVELS } from "../engine/mastery/levels";
@@ -80,11 +80,12 @@ export function Me() {
       <Tile className="mytile mygrades" k="Your grades">
         {yours.length ? (
           <ul className="mygl">{yours.map(n => {
-            const all = entriesInGrade(n), d = doneCount(progress, all), gd = gradeOf(n);
+            // each grade's average and check-up live here on every size (Design 2026-10-07), not in the book's number tiles
+            const all = entriesInGrade(n), d = doneCount(progress, all), gd = gradeOf(n), avg = gradeAverage(progress, n), gt = progress.tests[testKey(n)];
             return (
               <li key={n} className={`battery${n === g ? " on" : ""}`} style={tintStyle(gd) as CSSProperties}>
                 <Fill frac={all.length ? d / all.length : 0} />
-                <GradeNum grade={n} /><span><b>{gd.subtitle}</b><small>{d} of {all.length} lessons</small></span>
+                <GradeNum grade={n} /><span><b>{gd.subtitle}</b><small>{d} of {all.length} lessons{avg != null && ` · average ${avg.toFixed(1)} of 4`}{gt && ` · check-up ${gt.last} of 4`}</small></span>
               </li>
             );
           })}</ul>
