@@ -105,7 +105,7 @@ export function buildTradeBlocks(spec: TradeBlocksSpec): SceneDiagram {
   for (let k = 0; k < ao; k++) items.push(...cube(onesLeft, cy(k), T, "cell c1", { enter: "pop", delay: 0.3 + 0.05 * k }));
   for (let k = 0; k < 10; k++) {
     const row = k, taken = row >= 10 - bo;
-    items.push(...cube(onesLeft + T + TG, cy(row), T, "sq big", { from: beats.trade, ...(taken ? { until: beats.ones - 1 } : {}), enter: "drop", delay: 0.3 + 0.05 * k }));
+    items.push(...cube(onesLeft + T + TG, cy(row), T, "sq big", { from: beats.trade, ...(taken ? { until: beats.ones - 1 } : {}), enter: "rise", delay: 0.3 + 0.05 * k }));
     if (taken) items.push(...crossOut(onesLeft + T + TG, cy(row), T, T, beats.ones, 0.1 * (9 - row)));
   }
   const textY = base + 26;

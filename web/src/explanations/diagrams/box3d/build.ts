@@ -74,9 +74,9 @@ export function buildBox3d(spec: Box3dSpec): SceneDiagram {
       const k = beatsSeen.get(from) ?? 0;
       beatsSeen.set(from, k + 1);
       const d = r1(0.2 + k * gap(from));
-      items.push(poly(top(z + 1), "cf cube top", from, "drop", d), poly(front(z, z + 1), "cf cube left", from, "drop", d), poly(side(z, z + 1), "cf cube right", from, "drop", d));
-      for (let i = 1; i < l; i++) items.push(seg([i, 0, z + 1], [i, w, z + 1], "cf cube", from, "drop", d), seg([i, w, z], [i, w, z + 1], "cf cube", from, "drop", d));
-      for (let j = 1; j < w; j++) items.push(seg([0, j, z + 1], [l, j, z + 1], "cf cube", from, "drop", d), seg([l, j, z], [l, j, z + 1], "cf cube", from, "drop", d));
+      items.push(poly(top(z + 1), "cf cube top", from, "rise", d), poly(front(z, z + 1), "cf cube left", from, "rise", d), poly(side(z, z + 1), "cf cube right", from, "rise", d));
+      for (let i = 1; i < l; i++) items.push(seg([i, 0, z + 1], [i, w, z + 1], "cf cube", from, "rise", d), seg([i, w, z], [i, w, z + 1], "cf cube", from, "rise", d));
+      for (let j = 1; j < w; j++) items.push(seg([0, j, z + 1], [l, j, z + 1], "cf cube", from, "rise", d), seg([l, j, z], [l, j, z + 1], "cf cube", from, "rise", d));
     }
     // the finished box: its visible edges drawn solid once every layer is in
     const done = Math.max(...spec.layerBeats), dd = r1(0.2 + ((beatsSeen.get(done) ?? 1) - 1) * (perBeat.has(done) ? gap(done) : 0.5) + 0.4);
