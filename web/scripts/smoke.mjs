@@ -108,7 +108,9 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
       }
       const today = document.querySelector(".sbento .today"), first = today?.querySelector(".plan li");
       let startCut = 0;
-      if (today && first && shown(first)) {
+      // (on a phone Start is pinned at Today's edge and the plan scrolls above it; the phone guard checks Start there)
+      const pinned = document.querySelector(".sbento .tstart"), isPinned = pinned && getComputedStyle(pinned).display !== "none";
+      if (today && first && shown(first) && !isPinned) {
         const T = today.getBoundingClientRect(), F = first.getBoundingClientRect();
         startCut = Math.round(Math.max(0, F.bottom - (T.bottom - today.clientTop) + today.scrollTop));
       }
