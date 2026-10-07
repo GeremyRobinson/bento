@@ -44,7 +44,7 @@ export function createMass(p: MassProblem): MassProblem {
 }
 
 const UNIT = (u: number) => (u ? "kg" : "g");
-const unitWord = (u: number) => (u ? "kilograms" : "grams");
+const unitWord = (u: number, n = 2) => `${u ? "kilogram" : "gram"}${n === 1 ? "" : "s"}`;
 
 /** grams written as a label, "2,000 g" */
 const gramLabel = (g: number) => `${withCommas(g)} g`;
@@ -179,7 +179,7 @@ function explain(p: MassProblem, model: AnswerModel): Explanation {
     return {
       heading: "Mass stories", idea, statement: [text(massStory(p))],
       diagram: buildStoryBoxes({ op: OPS[p.op]!, a: p.a, b: p.b, unit: UNIT(p.unit), answer: 2, alt: `Boxes showing the story's amounts. The answer is ${withCommas(ans)} ${UNIT(p.unit)}.` }),
-      caption: `${withCommas(ans)} ${unitWord(p.unit)}.`,
+      caption: `${withCommas(ans)} ${unitWord(p.unit, ans)}.`,
       timeline: beats(3),
       steps: [{ id: "read", narration: "Read the story. Draw the amounts.", math: words("Read it."), state: 0 }, ...steps],
     };
@@ -215,8 +215,10 @@ export const lesson: LessonDefinition<MassProblem> = {
       const marks = early ? 5 * rng.int(1, 4) : rng.pick(Array.from({ length: DIAL_MARKS - 1 }, (_, i) => i + 1).filter(m => m % 5));
       return createMass({ ...base, kind, unit, step, value: marks * step });
     }
-    const op = rng.int(0, 3), [a, b] = storyNumbers(rng, op, unit ? 50 : 500, unit ? 1 : 10);
-    return createMass({ ...base, kind, unit, op, a, b, who: rng.int(0, WHO.length - 1) });
+    // the unit belongs to the story: bags of rice and beans can be grams or kilograms, but a box of books, a stack of
+    // boxes and buckets of sand are always kilograms (lesson audit, g3-mass)
+    const op = rng.int(0, 3), u = op === 0 ? unit : 1, [a, b] = storyNumbers(rng, op, u ? 50 : 500, u ? 1 : 10);
+    return createMass({ ...base, kind, unit: u, op, a, b, who: rng.int(0, WHO.length - 1) });
   },
   restore: raw => {
     const r = raw as Partial<MassProblem> | null;

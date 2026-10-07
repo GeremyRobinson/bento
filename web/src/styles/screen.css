@@ -368,7 +368,7 @@ html:has(.screen) body{overflow:hidden}
 /* portrait and narrow: the problem and the current step on top, then the hero, then a four-column keypad */
 @media (max-aspect-ratio:1/1),(max-width:760px){
   .screen.fit.lscreen.pscreen{--key:62px;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"intro" "hero" "pad"}
-  .pintro{overflow:visible;padding:0 var(--sp-1);gap:var(--sp-2);display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}
+  .pintro{overflow:visible;padding:var(--sp-2) var(--sp-3);gap:var(--sp-2);display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}
   .pintro>*{grid-column:1 / -1}
   .pintro>.k{grid-column:1}
   .pintro>.pextra{grid-column:2;grid-row:1;margin:0}
@@ -381,6 +381,8 @@ html:has(.screen) body{overflow:hidden}
   .ppad .tray .k-d7{grid-area:3/1}.ppad .tray .k-d8{grid-area:3/2}.ppad .tray .k-d9{grid-area:3/3}.ppad .tray .k-dot{grid-area:3/4}
   .ppad .tray .k-d0{grid-area:4/1/5/3}.ppad .tray .k-go{grid-area:4/3/5/5;border-radius:var(--r-pill)}
   .ppad .tray .k-next{display:none}
+  /* K-2 has no . or −: its keypad is three rows of four, 1 2 3 ⌫ / 4 5 6 0 / 7 8 9 Check, with no blank keys (Review's phone trim) */
+  .ppad .tray.nosign .k-d0{grid-area:2/4}.ppad .tray.nosign .k-go{grid-area:3/4}
   .pscreen>.fstack{top:auto;bottom:0;left:0;width:auto;right:0}
 }
 /* iPad landscape at its height: keys stay 52 */
@@ -397,6 +399,18 @@ html:has(.screen) body{overflow:hidden}
   .pscreen.ptest:not(.pwordy)>.pbar{display:flex}
   .lshero.phero{padding:var(--sp-3) var(--sp-3) var(--sp-3)}
   .pfb{font-size:var(--small)}
+  /* phone trims (Review's lesson check, G 07:44 "use space effectively"): the feedback line takes no room until it
+     has a message, then sits over the top of the picture; the step bar is 36px */
+  .lshero.phero{grid-template-rows:auto minmax(var(--pic-min),1fr)}
+  .pscreen.nopic .lshero.phero{grid-template-rows:auto auto}
+  .lshero.phero>.lpic{grid-row:2;grid-column:1}
+  .lshero.phero>.pfb{grid-row:2;grid-column:1;align-self:start;z-index:var(--z-up2);height:auto;min-height:0;padding:var(--sp-2) var(--sp-3);border-radius:var(--r-lg)}
+  .lshero.phero>.pfb:is(.fb-bad,.fb-good,.fb-hint){background:var(--pane-plain,var(--float))}
+  .lshero.phero>.pfb:not(.fb-bad,.fb-good,.fb-hint){display:none}
+  .pscreen .stepbar{min-height:36px}
+  .pscreen .stepbar .badge{width:24px;height:24px}
+  /* the results a child sees after a lesson skip the grown-up panel on a phone; it stays on the saved report the grown-up page opens */
+  .rscreen:not(.rsaved) .rgrown{display:none}
   .stepbar{flex:1;min-height:var(--tap);padding:0 var(--sp-3) 0 6px;gap:10px;justify-content:flex-start}
   .stepbar .badge{flex:none;width:28px;height:28px;border-radius:var(--r-round);background:var(--ink);color:var(--on-tint);display:grid;place-items:center;font-size:var(--fz-xs)}
   .stepbar .sbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:var(--w-bold)}
@@ -528,4 +542,5 @@ html:has(.screen) body{overflow:hidden}
   :root[data-hand="left"] .ppad .tray .k-d4{grid-area:2/2}:root[data-hand="left"] .ppad .tray .k-d5{grid-area:2/3}:root[data-hand="left"] .ppad .tray .k-d6{grid-area:2/4}
   :root[data-hand="left"] .ppad .tray .k-d7{grid-area:3/2}:root[data-hand="left"] .ppad .tray .k-d8{grid-area:3/3}:root[data-hand="left"] .ppad .tray .k-d9{grid-area:3/4}
   :root[data-hand="left"] .ppad .tray .k-go{grid-area:4/1/5/3}:root[data-hand="left"] .ppad .tray .k-d0{grid-area:4/3/5/5}
+  :root[data-hand="left"] .ppad .tray.nosign .k-d0{grid-area:2/1}:root[data-hand="left"] .ppad .tray.nosign .k-go{grid-area:3/1}
 }

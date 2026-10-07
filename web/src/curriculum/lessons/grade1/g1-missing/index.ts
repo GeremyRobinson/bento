@@ -70,20 +70,21 @@ function explain(p: MissingProblem, model: AnswerModel): Explanation {
     statement: equation(p),
     diagram: buildNumberLine({
       min, max, labelAt: [TEN],
-      marks: [{ v: a, label: `start ${a}`, beat: 0, until: 0 }],
+      marks: [{ v: a, label: `start ${a}`, beat: 0, until: 1 }],
       hops: [
-        { from: a, to: TEN, label: `+${up}`, beat: 0 },
-        { from: TEN, to: c, label: `+${rest}`, beat: 1, start: false },
+        { from: a, to: TEN, label: `+${up}`, beat: 1 },
+        { from: TEN, to: c, label: `+${rest}`, beat: 2, start: false },
       ],
-      spans: [{ from: a, to: c, beat: 2, label: `${up} + ${rest} = ${miss}` }],
+      spans: [{ from: a, to: c, beat: 3, label: `${up} + ${rest} = ${miss}` }],
       alt: `Number line from ${min} to ${max}: hop ${up} from ${a} to 10, then ${rest} more to ${c}. The hops make ${miss}.`,
     }),
     caption: `From ${a} to ${c} is ${miss}.`,
-    timeline: beats(3),
+    // beat 0 is the bare line, so practice's first step doesn't show the hop it asks for
+    timeline: beats(4),
     steps: [
-      { id: "to-ten", narration: `Start at ${a}. Hop **${up}** to get to 10.`, math: [num(a), op("+"), num(up), op("="), num(TEN)], state: 0, answerStep: "to-ten", result: up },
-      { id: "past-ten", narration: `From 10, hop **${rest}** more to get to ${c}.`, math: [num(TEN), op("+"), num(rest), op("="), num(c)], state: 1, answerStep: "past-ten", result: rest },
-      { id: "missing", narration: `The hops are ${up} and ${rest}. Together that's **${miss}**, the missing number.`, math: equation(p, [num(miss)]), state: 2, answerStep: "missing", result: miss },
+      { id: "to-ten", narration: `Start at ${a}. Hop **${up}** to get to 10.`, math: [num(a), op("+"), num(up), op("="), num(TEN)], state: 1, answerStep: "to-ten", result: up },
+      { id: "past-ten", narration: `From 10, hop **${rest}** more to get to ${c}.`, math: [num(TEN), op("+"), num(rest), op("="), num(c)], state: 2, answerStep: "past-ten", result: rest },
+      { id: "missing", narration: `The hops are ${up} and ${rest}. Together that's **${miss}**, the missing number.`, math: equation(p, [num(miss)]), state: 3, answerStep: "missing", result: miss },
     ],
   };
 }

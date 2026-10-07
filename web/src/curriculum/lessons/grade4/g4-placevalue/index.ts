@@ -103,7 +103,7 @@ function explain(p: RoundProblem, model: AnswerModel): Explanation {
     statement: [text(N), op("≈"), text("?")],
     diagram: buildRounding({
       n, place, lo, hi, result: R, beats: { place: 1, line: 2, next: 3, round: 4 },
-      alt: `A place-value chart of ${N} with the ${name} lit up, over a number line from ${commas(lo)} to ${commas(hi)}. ${N} is ${up ? "past" : "before"} the halfway mark, ${commas(mid)}, so it rounds to ${commas(R)}.`,
+      alt: `A place-value chart of ${N} with the ${name} lit up, over a number line from ${commas(lo)} to ${commas(hi)}. ${N} is ${n === mid ? "exactly at" : up ? "past" : "before"} the halfway mark, ${commas(mid)}, so it rounds to ${commas(R)}.`,
     }),
     caption: `Halfway between ${commas(lo)} and ${commas(hi)} is ${commas(mid)}.`,
     timeline: beats(5),
@@ -116,7 +116,8 @@ function explain(p: RoundProblem, model: AnswerModel): Explanation {
       { id: "next", state: 3, answerStep: "next", result: next, math: [text("next digit"), op("="), text(String(next))],
         narration: `The digit next door is ${next}. ${up ? `That's 5 or more, so ${N} is at or past the halfway mark, ${commas(mid)}.` : `That's less than 5, so ${N} is before the halfway mark, ${commas(mid)}.`}` },
       { id: "round", state: 4, answerStep: "round", result: R, math: [text(N), op("≈"), text(commas(R))],
-        narration: `It's closer to ${commas(R)}, so ${N} rounds ${up ? "up" : "down"} to ${commas(R)}.` },
+        narration: n === mid ? `It's exactly halfway, and halfway rounds up, so ${N} rounds up to ${commas(R)}.`
+          : `It's closer to ${commas(R)}, so ${N} rounds ${up ? "up" : "down"} to ${commas(R)}.` },
     ],
   };
 }

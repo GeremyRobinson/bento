@@ -7,12 +7,14 @@ import { oneBox, wholeIn } from "../../_number-line/steps";
 import { words, singularWork } from "../../gradeK/kit";
 import { slips } from "../../grade2/kit";
 
-interface Theme { title: string; names: string[]; icon: Icon; things: string }
+/** ask: the question for one row or bar, worded for the theme ("How many dogs?", "How many cookies on Monday?") */
+interface Theme { title: string; names: string[]; icon: Icon; things: string; ask: (name: string) => string }
+const DAYS: Record<string, string> = { Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday" };
 const THEMES: Theme[] = [
-  { title: "Books read this month", names: ["Ana", "Ben", "Cleo", "Dev"], icon: "star", things: "books" },
-  { title: "Favorite fruit", names: ["Apples", "Pears", "Plums", "Kiwis"], icon: "apple", things: "votes" },
-  { title: "Pets at our school", names: ["Dogs", "Cats", "Fish", "Birds"], icon: "paw", things: "pets" },
-  { title: "Cookies sold", names: ["Mon", "Tue", "Wed", "Thu"], icon: "cookie", things: "cookies" },
+  { title: "Books read this month", names: ["Ana", "Ben", "Cleo", "Dev"], icon: "star", things: "books", ask: n => `How many books did ${n} read?` },
+  { title: "Favorite fruit", names: ["Apples", "Pears", "Plums", "Kiwis"], icon: "apple", things: "votes", ask: n => `How many votes for ${n}?` },
+  { title: "Pets at our school", names: ["Dogs", "Cats", "Fish", "Birds"], icon: "paw", things: "pets", ask: n => `How many ${n.toLowerCase()}?` },
+  { title: "Cookies sold", names: ["Mon", "Tue", "Wed", "Thu"], icon: "cookie", things: "cookies", ask: n => `How many cookies on ${DAYS[n] ?? n}?` },
 ];
 const SCALES = [2, 5, 10];
 
@@ -43,7 +45,7 @@ function readSteps(p: GraphProblem, i: number, id: string): AnswerStep[] {
   if (p.type === 1) {
     const below = Math.floor(c / s) * s;
     return [oneBox({
-      id, label: `Read ${name}`, question: `How many ${th.things} for ${name}?`,
+      id, label: `Read ${name}`, question: th.ask(name),
       prompt: q => [text(`${name}: `), q], ans: c,
       wrong: slips(c, [
         [c / s, "Counted the lines", `Each line is ${s}, so count by ${s}s.`],
@@ -64,7 +66,7 @@ function readSteps(p: GraphProblem, i: number, id: string): AnswerStep[] {
       explain: `${whole} whole ${whole === 1 ? "picture" : "pictures"}${half ? " and a half" : ""}.`,
     }),
     oneBox({
-      id, label: `How many ${name}`, question: `How many ${th.things} for ${name}?`,
+      id, label: `How many ${name}`, question: th.ask(name),
       prompt: q => [num(whole), op("×"), num(s), ...(half ? [op("+"), num(s / 2)] : []), op("="), q], ans: c,
       wrong: slips(c, [[whole, "Counted pictures, not things", `Each picture is ${s}, so ${whole} ${whole === 1 ? "picture" : "pictures"} is ${whole} × ${s}.`], half && [whole * s, "Forgot the half picture", `Don't forget the half picture: half of ${s} is ${s / 2}.`]]),
       hint: `Each picture is ${s}.`,

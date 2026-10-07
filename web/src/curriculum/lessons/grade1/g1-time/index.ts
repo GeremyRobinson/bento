@@ -62,7 +62,7 @@ function answers({ hour, minute }: TimeProblem): AnswerModel {
         hint: half ? "The long hand has gone halfway around. An hour is 60 minutes: what is half of that?" : "Long hand at the top, on 12, means 0 minutes: o'clock.",
         explain: half ? `The long hand at ${longAt} is halfway around: ${count(HALF, "minute")}.` : "The long hand at 12 means 0 minutes.",
       }),
-      { ...time, explain: `${count(hour, "hour")} and ${count(minute, "minute")} is written ${timeText(hour, minute)}.`, work: timeWork },
+      { ...time, explain: `${count(hour, "hour")}${half ? ` and ${count(minute, "minute")}` : ""} is written ${timeText(hour, minute)}.`, work: timeWork },
     ],
     finalParts: [-1],
   };

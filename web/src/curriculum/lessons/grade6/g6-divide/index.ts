@@ -5,6 +5,7 @@ import { chainExplanation } from "../../../../explanations/diagrams/chain/build"
 import { gcd, restoreVia, wholeIn } from "../../_number-line/steps";
 import { divideFractionsPicture } from "./picture";
 import { tapStep } from "../../grade4/_kit";
+import { aOrAn } from "../../../text";
 
 /** a/b ÷ c/d, both fractions proper and in lowest terms, bottoms 2–9 */
 export interface DivideFractionsProblem { a: number; b: number; c: number; d: number }
@@ -180,5 +181,5 @@ export const lesson: LessonDefinition<DivideFractionsProblem> = {
   display: p => [frac(p.a, p.b), op("÷"), frac(p.c, p.d)],
   answers,
   explain,
-  story: p => ({ op: "÷", text: `You have ${p.a}/${p.b} yard of ribbon. Each bow needs ${p.c}/${p.d} yard. How many bows can you make?` }),
+  story: p => ({ op: "÷", text: `You have ${p.a}/${p.b} yard of ribbon. How many times does ${aOrAn(p.c)} ${p.c}/${p.d}-yard piece fit in it?` }),
 };

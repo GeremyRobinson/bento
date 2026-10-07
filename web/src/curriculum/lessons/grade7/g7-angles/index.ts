@@ -27,7 +27,7 @@ export function anglePairAnswers({ sup, a }: AnglePairProblem): AnswerModel {
   const T = sup ? 180 : 90;
   return {
     steps: [
-      ns({ id: "total", label: "What do they add up to?", question: `${sup ? "Supplementary" : "Complementary"} angles add up to how many degrees?`, prompt: s => mt`${s}°`, ans: T,
+      ns({ id: "total", label: "What do they add up to?", question: `${sup ? "Supplementary" : "Complementary"} angles add to?`, prompt: s => mt`${s}°`, ans: T,
         hint: "Complementary makes a right angle. Supplementary makes a straight line.", wrong: [[sup ? 90 : 180, "Mixed up the two", "Complementary = 90°, supplementary = 180°."]] }),
       ns({ id: "missing", label: "Missing angle", prompt: s => mt`${T}° − ${a}° = ${s}°`, ans: T - a, hint: `Subtract ${a} from ${T}.`,
         wrong: [[T + a, "Added", "The missing angle is part of the whole, so it's smaller than it."], [(sup ? 90 : 180) - a, "Used the wrong whole", `${sup ? "Supplementary angles make 180°" : "Complementary angles make 90°"}.`]] }),

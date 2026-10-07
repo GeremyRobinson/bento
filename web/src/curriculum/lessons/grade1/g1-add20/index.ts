@@ -23,7 +23,7 @@ function answers({ a, b }: Add20Problem): AnswerModel {
   return {
     steps: [
       oneBox({
-        id: "start", label: "Start with the bigger number", question: "Which number will you start counting from?",
+        id: "start", label: "Start with the bigger one", question: "Which number will you start counting from?",
         prompt: s => [text("Start at "), s], ans: big,
         wrong: slips(big, [[small, "Started with the smaller number", `You can, but it's a long count! Start at ${big}, then you only count on ${small}.`]]),
         hint: `Which is bigger, ${a} or ${b}? Start there.`,

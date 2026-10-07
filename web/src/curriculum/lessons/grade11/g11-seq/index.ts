@@ -39,11 +39,15 @@ function answers({ a1, d, n }: SequenceProblem): AnswerModel {
 
 function explain(p: SequenceProblem, model: AnswerModel): Explanation {
   const { a1, n } = p, d = expectedOf(model, "d"), jumps = expectedOf(model, "jumps"), climb = expectedOf(model, "climb"), an = expectedOf(model, "term");
-  // every jump from term 1 to term n, so each one is at least 460 / 29 pixels wide whatever d is
-  const hops: Hop[] = Array.from({ length: jumps }, (_, i): Hop => ({
-    from: a1 + i * d, to: a1 + (i + 1) * d, beat: i < 3 ? 0 : 1, start: i === 0,
-    ...(i < 3 ? { label: `+${d}`, delay: 0.5 * i } : { delay: Math.round(0.08 * (i - 3) * 100) / 100 }),
-  }));
+  // up to 12 jumps are drawn one by one; past that, too thin to read on a phone, the first 3 and the last 2 are drawn
+  // and one long hop stands for the jumps between them
+  const shown = jumps <= 12 ? jumps : 5, middle = jumps - 5;
+  const hops: Hop[] = Array.from({ length: shown }, (_, i): Hop => {
+    const k = jumps <= 12 || i < 3 ? i : i + middle;
+    return { from: a1 + k * d, to: a1 + (k + 1) * d, beat: i < 3 ? 0 : 1, start: i === 0,
+      ...(i < 3 ? { label: `+${d}`, delay: 0.5 * i } : { delay: Math.round(0.08 * (i - 3) * 100) / 100 }) };
+  });
+  if (jumps > 12) hops.splice(3, 0, { from: a1 + 3 * d, to: a1 + (jumps - 2) * d, beat: 1, start: false, label: `${middle} more jumps` });
   return {
     heading: "aₙ = a₁ + (n − 1)d",
     idea: ["Start at the first term and jump by the same amount each time. To reach term n you make n − 1 jumps."],

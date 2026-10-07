@@ -24,7 +24,7 @@ export function explainSystem(p: SystemProblem, model: AnswerModel): Explanation
         { kind: "line", m: k, b: 0, label: { text: `y = ${k}x` }, labelX: x * 0.5 },
         { kind: "line", m: -1, b: s, cls: "ln2", delay: 0.6, label: { text: `x + y = ${s}`, acc: true } },
         { kind: "segment", a: [x, 0], b: [x, y], cls: "ln thin dash", from: 2, label: { text: `x = ${f(x)}`, prefer: ["e", "w"] } },
-        { kind: "segment", a: [0, y], b: [x, y], cls: "ln thin dash", from: 3, label: { text: `y = ${f(y)}`, prefer: ["n", "s"] } },
+        { kind: "segment", a: [0, y], b: [x, y], cls: "ln thin dash", from: 3, label: { text: `y = ${f(y)}`, prefer: ["e", "ne"], clearAxes: true } },
         { kind: "point", at: [x, y], cls: "dota", from: 3, label: { text: pt(x, y), acc: true, prefer: ["ne", "e", "n"] } },
       ],
     }),

@@ -45,6 +45,8 @@ export function explainTriangleAngles(p: TriangleAnglesProblem, answers: AnswerM
       left: a, right: b,
       labels: { left: [{ text: `${a}°` }], right: [{ text: `${b}°` }], top: [{ text: "?", acc: true, until: 1 }, { text: `${c}°`, acc: true, from: 2 }] },
       accent: { top: 0 },
+      // labels clear of their arcs
+      labelGap: 20,
       notes: [{ text: `${a}° + ${b}° = ${sum}°`, from: 1, until: 1 }, { text: `180° − ${sum}° = ${c}°`, from: 2 }],
       alt: `A triangle drawn with angles of ${a}° and ${b}°; the third angle is ${c}°.`,
     }),

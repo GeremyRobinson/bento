@@ -37,7 +37,7 @@ export function generateTwoStep(rng: Rng, index: number): TwoStepProblem {
   const kind = rng.int(0, 2), who = rng.int(0, CAST.length - 1), early = index < 3;
   if (kind < 2) {
     const a = rng.int(2, early ? 5 : 9), b = early ? rng.pick([2, 5, 10]) : rng.int(3, 9);
-    const c = kind === 0 ? rng.int(1, Math.min(a * b - 1, early ? 9 : 20)) : rng.int(2, early ? 9 : 20);
+    const c = kind === 0 ? rng.int(2, Math.min(a * b - 1, early ? 9 : 20)) : rng.int(2, early ? 9 : 20);
     return createTwoStep(kind, a, b, c, who);
   }
   const b = early ? rng.pick([2, 5]) : rng.int(3, 8), q = rng.int(2, early ? 5 : 9), c = rng.int(2, early ? 9 : 15);

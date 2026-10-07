@@ -1,10 +1,13 @@
 import { num, op, text, type MathText } from "../../../schemas/math-text";
 import type { AnswerModel } from "../../../schemas/lesson";
-import { ns, P } from "../../_plane/kit";
+import { f, fP, ns, P } from "../../_plane/kit";
 import type { MidProblem } from "./problem";
 
-/** (−4 + (−2)) ÷ 2 */
-export const halfSum = (a: number, b: number): MathText => [text("("), num(a), op("+"), ...P(b), text(")"), op("÷"), num(2)];
+/** (−4 + (−2)) ÷ 2; a 0 is left out, so (6 + 0) ÷ 2 is just 6 ÷ 2 */
+export const halfSum = (a: number, b: number): MathText =>
+  a && b ? [text("("), num(a), op("+"), ...P(b), text(")"), op("÷"), num(2)] : [num(a + b), op("÷"), num(2)];
+/** the same in words, up to the sum: "(−4 + (−2)) ÷ 2 = −6 ÷ 2", or "6 ÷ 2" when one of them is 0 */
+export const halfSumText = (a: number, b: number) => `${a && b ? `(${f(a)} + ${fP(b)}) ÷ 2 = ` : ""}${f(a + b)} ÷ 2`;
 
 export function midAnswers({ x1, y1, x2, y2 }: MidProblem): AnswerModel {
   return {

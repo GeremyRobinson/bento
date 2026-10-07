@@ -18,7 +18,7 @@ export function eliminationPicture(o: { sum: number; difference: number; twoX: n
       note: `add them: y and −y cancel, 2x = ${f(twoX)}`,
     },
     { left: [xTiles(1), xTiles(1, true)], right: [[block(twoX, { off: true })], [block(x, { late: true, added: true })]], note: `halve both pans: x = ${f(x)}` },
-    { left: [[block(x, { off: true }), Y()]], right: [[block(sum, { off: true })], [block(y, { late: true, added: true })]], note: `take ${f(x)} off both pans: y = ${f(y)}` },
+    { left: [[block(x, { off: true }), Y()]], right: [[block(sum, { off: true })], [block(y, { late: true, added: true })]], note: `${x < 0 ? `add ${f(-x)} to` : `take ${f(x)} off`} both pans: y = ${f(y)}` },
     // the check: x and y put into the second balance keep it level
     { left: [[block(x), block(-y)]], right: [[block(difference)]], note: `check: ${f(x)} − ${y < 0 ? `(${f(y)})` : f(y)} = ${f(difference)}` },
   ], `Two balances, x + y = ${f(sum)} and x − y = ${f(difference)}. Put together, y and −y cancel: 2x = ${f(twoX)}, so x = ${f(x)}. Back in the first, y = ${f(y)}.`);

@@ -11,14 +11,16 @@ const CT = 0, CO = 1;
 
 export function divisionAreaPicture(o: { n: number; dv: number; T: number; O: number; left: number; q: number; r?: number }): SceneDiagram {
   const { n, dv, T, O, left, q, r } = o;
-  const hasR = r != null;
+  // r = 0 divides exactly: no remainder column, as the narration says "exactly" (lesson audit, g4-divide MINOR)
+  const hasR = (r ?? 0) > 0;
   // with a remainder, one unit square is 18 high, so the r squares can be measured against the column's height
   const unit = hasR ? 18 : Math.min(14, 160 / dv);
   const d = buildAreaGrid({
     family: "area-model",
-    cols: [{ label: `${T}`, size: T, cls: "p0" }, { label: `${O}`, size: O, from: 2, cls: "p1" }],
+    // the tens column waits for beat 1: on beat 0 the learner is still finding T (lesson audit, g4-divide Priority 1)
+    cols: [{ label: `${T}`, size: T, from: 1, cls: "p0" }, { label: `${O}`, size: O, from: 2, cls: "p1" }],
     rows: [{ label: `${dv}`, size: dv }],
-    cells: [[{ text: `${dv * T}`, from: 0, color: CT }, { text: `${dv * O}`, from: 2, color: CO }]],
+    cells: [[{ text: `${dv * T}`, from: 1, color: CT }, { text: `${dv * O}`, from: 2, color: CO }]],
     maxWidth: hasR ? 330 : 360,
     maxHeight: 240,
     minRow: Math.max(60, dv * unit),
@@ -50,11 +52,13 @@ export function divisionAreaPicture(o: { n: number; dv: number; T: number; O: nu
   // what each beat works out, one line under the picture
   const yl = yb + 34, cx = (x0 + xr) / 2;
   const lines: [string, number][] = [
-    [`${dv} × ${T} = ${dv * T}`, 0],
+    // beat 0 asks the question; its answer (the tens column and its product) shows from beat 1
+    [`${dv} × ? ≤ ${n}`, 0],
     [`${n} − ${dv * T} = ${left}`, 1],
     [`${dv} × ${O} = ${dv * O}`, 2],
     [`${T} + ${O} = ${q}`, 3],
-    ...(hasR ? [[r ? `${r} left over: ${q} R ${r}` : `0 left over: ${q} R 0`, 4] as [string, number]] : []),
+    // with r = 0 (g4 passes r; g5 does not), the last beat says it divides exactly, as the narration does
+    ...(hasR ? [[`${r} left over: ${q} R ${r}`, 4] as [string, number]] : r === 0 ? [[`${n} ÷ ${dv} = ${q} exactly`, 4] as [string, number]] : []),
   ];
   const last = lines.length - 1;
   lines.forEach(([text, b], k) => items.push(lbl(cx, yl, text, "lbl acc", b, b === 0 ? 0.6 : 0.4, k === last ? undefined : b)));

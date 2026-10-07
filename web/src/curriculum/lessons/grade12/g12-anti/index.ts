@@ -26,10 +26,11 @@ export function restoreAntiderivative(raw: unknown): Antiderivative | null {
   return r && attempt(() => createAntiderivative(r.a, r.n));
 }
 
-/** c·xᵉ as message text: "x⁶" and "−x⁶" for ±1. */
-const termText = (c: number, e: number) => `${c === 1 ? "" : c === -1 ? "−" : f(c)}x${supText(e)}`;
+/** c·xᵉ as message text: "x⁶" and "−x⁶" for ±1, and "4x", not "4x¹". */
+const termText = (c: number, e: number) => `${c === 1 ? "" : c === -1 ? "−" : f(c)}x${e === 1 ? "" : supText(e)}`;
 const coef = (a: number): MathText => (a === 1 ? [] : [num(a)]);
-const integral = ({ a, n }: Antiderivative, e: MathText = [num(n)]): MathText => [text("∫"), ...coef(a), v(), sup(e), text("dx")];
+/** ∫ 4x dx: an exponent of 1 isn't written */
+const integral = ({ a, n }: Antiderivative, e: MathText = [num(n)]): MathText => [text("∫"), ...coef(a), v(), ...(n === 1 ? [] : [sup(e)]), text("dx")];
 
 export function antiderivativeAnswers({ a, n }: Antiderivative): AnswerModel {
   return {

@@ -29,7 +29,8 @@ export function restoreVertex(raw: unknown): VertexProblem | null {
 const terms = ({ a, b, c }: VertexProblem): [number, string][] => [[a, "x²"], [b, "x"], [c, ""]];
 export const vertexMath = (p: VertexProblem): MathText => [text("y = "), ...poly(terms(p))];
 const xPrompt = (a: number, b: number) => [text("x = −("), num(b), text(") ÷ (2 · "), text(fP(a)), text(")")];
-const yPrompt = (a: number, b: number, c: number, h: number) => [text(`y = ${f(a)}(${f(h)})² + ${fP(b)}(${f(h)}) + ${fP(c)}`)];
+/** c = 0 is left out: no "+ 0" */
+const yPrompt = (a: number, b: number, c: number, h: number) => [text(`y = ${f(a)}(${f(h)})² + ${fP(b)}(${f(h)})${c ? ` + ${fP(c)}` : ""}`)];
 
 export function vertexAnswers({ a, b, c, h }: VertexProblem): AnswerModel {
   return {

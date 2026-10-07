@@ -15,8 +15,12 @@ export function createInverse(a: number, b: number, x: number): InverseProblem {
   return { kind: "function.inverse", a, b, x, y: a * x + b };
 }
 
-/** Same as the current app: a from 2..5, −2, −3; b −9..9 not 0; x −6..9. */
-export const generateInverse = (rng: Rng) => createInverse(rng.pick(AS), nz(rng, -9, 9), rng.int(-6, 9));
+/** Same as the current app: a from 2..5, −2, −3; b −9..9 not 0; x −6..9. Skips fixed points (y = x), which mirror onto themselves. */
+export function generateInverse(rng: Rng): InverseProblem {
+  let q: InverseProblem;
+  do q = createInverse(rng.pick(AS), nz(rng, -9, 9), rng.int(-6, 9)); while (q.y === q.x);
+  return q;
+}
 
 export function restoreInverse(raw: unknown): InverseProblem | null {
   const v = ints(raw, ["a", "b", "x"] as const);

@@ -137,7 +137,11 @@ export interface BarGraphSpec {
   alt: string;
 }
 
-const BW = 56, BG = 30, U = 22;
+// wide gaps so two long names ("cloudy", "windy") stay apart when the labels are held at 12px on a phone
+const BW = 56, BG = 48, U = 22;
+// an odd axis number fades out once the picture is drawn below 0.6 of its size (--px, the units per screen pixel,
+// above 1/0.6): its 12px floor would stack it on its neighbours, so the axis reads 0, 2, 4 and the grid keeps every line
+const ODD_AXIS = { opacity: "clamp(0, calc((1.667 - var(--px, 0)) * 1000), 1)" };
 
 export function buildBarGraph(spec: BarGraphSpec): SceneDiagram {
   const { values, beats } = spec;
@@ -147,7 +151,7 @@ export function buildBarGraph(spec: BarGraphSpec): SceneDiagram {
   const items: Draft[] = [];
   for (let v = 0; v <= top; v++) {
     if (v) items.push(line(0, y(v), W, y(v), "grid"));
-    items.push(t(-14, y(v), String(v), "xs"));
+    items.push(t(-14, y(v), String(v), "xs", v % 2 ? { vars: ODD_AXIS } : {}));
   }
   items.push(line(0, 0, W, 0, "ax"), line(0, 0, 0, y(top) - 8, "ax"));
   values.forEach((v, i) => {

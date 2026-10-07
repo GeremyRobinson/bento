@@ -15,8 +15,8 @@ export function createGeo(a: number, r: number, n: number): GeoProblem {
   return { kind: "sequence.geometric", a, r, n };
 }
 
-/** Same as the current app: a 1..5, r 2 or 3, n 4..7. */
-export const generateGeo = (rng: Rng) => createGeo(rng.int(1, 5), rng.pick([2, 3]), rng.int(4, 7));
+/** a 1..5, r 2 or 3, n 5..8 (the first four terms are already shown, so the asked-for term never is). */
+export const generateGeo = (rng: Rng) => createGeo(rng.int(1, 5), rng.pick([2, 3]), rng.int(5, 8));
 
 export function restoreGeo(raw: unknown): GeoProblem | null {
   const v = ints(raw, ["a", "r", "n"] as const);
@@ -60,7 +60,7 @@ export function explainGeo(p: GeoProblem, model: AnswerModel): Explanation {
         ...terms.map((t, i) => ({
           kind: "point" as const, at: [i + 1, t] as const, cls: i === n - 1 ? ("dota" as const) : ("dotp" as const),
           from: i < 4 ? 0 : 3, delay: i * 0.15,
-          label: { text: f(t), acc: i === n - 1, optional: i !== n - 1 && i !== 0, prefer: ["nw", "w", "n"] as ("nw" | "w" | "n")[] },
+          label: { text: f(t), acc: i === n - 1, optional: i !== n - 1 && i !== 0, prefer: ["n"] as "n"[] },
         })),
       ],
     }),

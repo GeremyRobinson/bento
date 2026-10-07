@@ -92,7 +92,7 @@ function contentBox(svg: SVGSVGElement, items: SceneItem[]): Box | null {
 
 /** The content with a little air round it, widened where filling the box would blow it up past MAX_ZOOM. */
 function framed(b: Box, [W, H]: [number, number]): Box {
-  const pad = Math.max(8, 0.04 * Math.max(b.w, b.h));
+  const pad = Math.max(4, 0.02 * Math.max(b.w, b.h));
   const w = Math.max(b.w + 2 * pad, W / MAX_ZOOM), h = Math.max(b.h + 2 * pad, H / MAX_ZOOM);
   return { x: b.x + b.w / 2 - w / 2, y: b.y + b.h / 2 - h / 2, w, h };
 }

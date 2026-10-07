@@ -22,12 +22,17 @@ const x = text("x");
 const binom = (a: number): MathText => [text("("), x, op(a < 0 ? "−" : "+"), num(Math.abs(a)), text(")")];
 /** a negative number in parentheses, as text */
 const pf = (v: number) => (v < 0 ? `(${f(v)})` : f(v));
+/** c·x as written: "x" for 1, "−x" for −1, else "3x"; after an operator a negative goes in brackets, as numP */
+const cx = (c: number, after = false): MathText => {
+  const t = c === 1 ? [x] : c === -1 ? [text("−x")] : [num(c), x];
+  return after && c < 0 ? [text("("), ...t, text(")")] : t;
+};
 const sideText = (a: number) => (a < 0 ? `−${Math.abs(a)}` : `+${a}`);
 
 export function foilAnswers({ a, b }: FoilProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "middle", label: "Outer + inner", prompt: s => [num(b), x, op("+"), ...numP(a), x, op("="), s, x], ans: a + b, hint: `Outer: x × ${f(b)}. Inner: ${f(a)} × x. Both are x terms, so add them.`, wrong: [[a * b, "Multiplied instead", "Outer and inner are two x terms side by side, so add them."]] }),
+      ns({ id: "middle", label: "Outer + inner", prompt: s => [...cx(b), op("+"), ...cx(a, true), op("="), s, x], ans: a + b, hint: `Outer: x × ${f(b)}. Inner: ${f(a)} × x. Both are x terms, so add them.`, wrong: [[a * b, "Multiplied instead", "Outer and inner are two x terms side by side, so add them."]] }),
       ns({ id: "last", label: "Last", prompt: s => [...numP(a), op("×"), ...numP(b), op("="), s], ans: a * b, hint: "Multiply the two numbers.",
         wrong: [[a + b, "Added instead of multiplied", "The last terms multiply."]] }),
       ms({ id: "answer", label: "Write the answer", prompt: s => [x, sup(2), op("+"), s.p!, x, op("+"), s.q!], ans: { p: a + b, q: a * b }, hint: "First gives x². Then outer + inner is the x term, and last is the number on its own.",
@@ -62,7 +67,7 @@ export function explainFoil(p: FoilProblem, answers: AnswerModel): Explanation {
     caption: `x² + ${polyText([[b, "x"]])} + ${polyText([[a, "x"]])} + ${f(last)}`.replace(/\+ −/g, "− ") + ` = ${result}`,
     timeline: beats(4),
     steps: [
-      { id: "middle", narration: `Outer: x × ${f(b)}. Inner: ${f(a)} × x. Together ${polyText([[mid, "x"]])}.`, math: [num(b), x, op("+"), ...numP(a), x, op("="), num(mid), x], state: 1, answerStep: "middle", result: mid },
+      { id: "middle", narration: `Outer: x × ${f(b)}. Inner: ${f(a)} × x. Together ${polyText([[mid, "x"]])}.`, math: [...cx(b), op("+"), ...cx(a, true), op("="), ...cx(mid)], state: 1, answerStep: "middle", result: mid },
       { id: "last", narration: `Last: ${pf(a)} × ${pf(b)} = ${f(last)}.`, math: [...numP(a), op("×"), ...numP(b), op("="), num(last)], state: 2, answerStep: "last", result: last },
       { id: "answer", narration: `First is x². So it's ${result}.`, math: [...binom(a), ...binom(b), op("="), text(result)], state: 3, answerStep: "answer", result: mid },
     ],

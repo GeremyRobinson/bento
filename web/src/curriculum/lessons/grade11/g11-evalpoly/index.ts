@@ -26,6 +26,10 @@ export function restoreEvaluatePolynomial(raw: unknown): EvaluatePolynomial | nu
 const fx = (p: EvaluatePolynomial): MathText => [text("f(x)"), op("="), ...poly([[p.a, xp(2)], [p.b, [v()]], [p.c, []]])];
 const at = (k: number): MathText => [text("f("), num(k), text(")")];
 
+/** "+ (−3)" for the number on its own; nothing when it is 0 */
+const plusC = (c: number): MathText => (c ? [op("+"), ...P(c)] : []);
+const plusCText = (c: number) => (c ? ` + ${fP(c)}` : "");
+
 export function evaluateAnswers({ a, b, c, k }: EvaluatePolynomial): AnswerModel {
   return {
     steps: [
@@ -33,8 +37,8 @@ export function evaluateAnswers({ a, b, c, k }: EvaluatePolynomial): AnswerModel
         w: [[-a * k * k, "Sign of the square", "A negative squared is positive."], [a * 2 * k, "Doubled instead of squared", "Squared means times itself."]] }),
       ns({ id: "linear", l: "x term", a: s => [num(b), op("·"), ...P(k), op("="), ...s], ans: b * k, h: `${f(b)} × ${fP(k)}: ${b * k < 0 ? "one negative makes it negative" : b < 0 ? "two negatives make a positive" : "two positives make a positive"}.`,
         w: [[-b * k, "Sign slip", `${b < 0 ? "Negative" : "Positive"} times ${k < 0 ? "negative" : "positive"} is ${b * k < 0 ? "negative" : "positive"}.`]] }),
-      ns({ id: "total", l: "Add it up", a: s => [num(a * k * k), op("+"), ...P(b * k), op("+"), ...P(c), op("="), ...s], ans: a * k * k + b * k + c, h: "f(k) is all three parts together: add them, keeping each one's sign.",
-        w: [[a * k * k - b * k + c, "Dropped a sign", `Keep each part's sign: ${f(a * k * k)} + ${fP(b * k)} + ${fP(c)}.`]] }),
+      ns({ id: "total", l: "Add it up", a: s => [num(a * k * k), op("+"), ...P(b * k), ...plusC(c), op("="), ...s], ans: a * k * k + b * k + c, h: "f(k) is all three parts together: add them, keeping each one's sign.",
+        w: [[a * k * k - b * k + c, "Dropped a sign", `Keep each part's sign: ${f(a * k * k)} + ${fP(b * k)}${plusCText(c)}.`]] }),
     ],
     finalParts: [-1],
   };
@@ -56,14 +60,14 @@ export function explainEvaluate(p: EvaluatePolynomial, model: AnswerModel) {
     statement: [...fx(p), text(",  "), ...at(k)],
     caption: `Put ${f(k)} in for every x, then work out each part.`,
     diagram: evaluatePolynomialPicture({ a, b, c, k, A, B, total }),
-    alt: `f(${f(k)}) = ${f(A)} + ${fP(B)} + ${fP(c)} = ${f(total)}.`,
+    alt: `f(${f(k)}) = ${f(A)} + ${fP(B)}${plusCText(c)} = ${f(total)}.`,
     steps: [
       { id: "plug", narration: `Put ${f(k)} in place of every x.`, math: [...at(k), op("="), ...plugged] },
       { id: "square", narration: `Square ${f(k)} first: ${f(k * k)}. Times ${f(a)} makes ${f(A)}.`, math: m(a, op("·"), ...P(k), sup(2), op("="), A),
         line: [num(A), op(b < 0 ? "−" : "+"), ...(Math.abs(b) === 1 ? [] : [num(Math.abs(b))]), ...K(), ...(c ? [op(c < 0 ? "−" : "+"), num(Math.abs(c))] : [])], answerStep: "square", result: A },
       { id: "linear", narration: `${f(b)} times ${fP(k)} is ${f(B)}: ${b * k < 0 ? "one negative makes it negative" : b < 0 ? "two negatives make a positive" : "two positives make a positive"}.`, math: m(b, op("·"), ...P(k), op("="), B),
-        line: m(A, op("+"), ...P(B), op("+"), ...P(c)), answerStep: "linear", result: B },
-      { id: "total", narration: `Add the three parts: f(${f(k)}) = ${f(total)}. So the point (${f(k)}, ${f(total)}) is on the graph of f.`, math: m(...at(k), op("="), total), answerStep: "total", result: total },
+        line: m(A, op("+"), ...P(B), ...plusC(c)), answerStep: "linear", result: B },
+      { id: "total", narration: `Add the ${c ? "three" : "two"} parts: f(${f(k)}) = ${f(total)}. So the point (${f(k)}, ${f(total)}) is on the graph of f.`, math: m(...at(k), op("="), total), answerStep: "total", result: total },
     ],
   });
 }

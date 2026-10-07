@@ -1,7 +1,7 @@
-import { formatNumber as f, m, mark, muted, num, op, sup, text, type MathText } from "../../../schemas/math-text";
+import { answer, formatNumber as f, m, mark, muted, num, op, sup, text, type MathText } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import type { Rng } from "../../../generators/rng";
-import { fP, ms, ns, P, poly, v, xp } from "../../algebra-kit/steps";
+import { fP, fpm, ms, ns, P, poly, v, xp } from "../../algebra-kit/steps";
 import { attempt, nz, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
 import { syntheticPicture } from "./picture";
@@ -52,10 +52,12 @@ export function syntheticAnswers({ r, b, c, e }: SyntheticDivision): AnswerModel
       ns({ id: "mul2", l: "Multiply", a: s => [num(q), op("×"), ...P(r), op("="), ...s], ans: q * r, h: `Multiply the new bottom number by the box number, ${f(r)}, and write it under the next column.`,
         w: [[-q * r, "Kept the divisor's sign", `The box holds ${f(r)}, so multiply by ${f(r)}.`]] }),
       ns({ id: "rem", l: "Remainder", a: s => [num(c), op("+"), ...P(q * r), op("="), ...s], ans: e, h: "Add the last column. If it's 0, it divides evenly.", w: [[c - q * r, "Subtracted the column", SUBTRACTED]] }),
+      // the worked line reads x − 2, not x + −2
       e === 0
-        ? ns({ id: "quot", l: "Quotient", a: s => [v(), op("+"), ...s], ans: q, h: quotHint, n: "Answer: x + (the middle number).", w: [[b - r, "Subtracted the column", SUBTRACTED]] })
-        : ms({ id: "quot", l: "Quotient", a: S => [v(), op("+"), ...S.q!, text(", remainder "), ...S.e!], ans: { q, e }, h: `${quotHint} The last number is the remainder.`,
+        ? { ...ns({ id: "quot", l: "Quotient", a: s => [v(), op("+"), ...s], ans: q, h: quotHint, n: "Answer: x + (the middle number).", w: [[b - r, "Subtracted the column", SUBTRACTED]] }), work: [v(), op(q < 0 ? "−" : "+"), answer("x", Math.abs(q))] }
+        : { ...ms({ id: "quot", l: "Quotient", a: S => [v(), op("+"), ...S.q!, text(", remainder "), ...S.e!], ans: { q, e }, h: `${quotHint} The last number is the remainder.`,
           n: "Answer: x + (the middle number), remainder (the last number).", w: [[{ q: b - r, e }, "Subtracted the column", SUBTRACTED], [{ q: e, e: q }, "Swapped them", "The middle number goes after x +, and the last number is the remainder."]] }),
+          work: [v(), op(q < 0 ? "−" : "+"), answer("q", Math.abs(q)), text(", remainder "), answer("e", e)] },
     ],
     finalParts: [-1],
   };
@@ -83,8 +85,10 @@ export function explainSynthetic(p: SyntheticDivision, model: AnswerModel) {
       { id: "add1", narration: `Add down the column: ${f(b)} + ${fP(r)} = ${f(q)}.`, math: m(b, op("+"), ...P(r), op("="), mark(q)), answerStep: "add1", result: q },
       { id: "mul2", narration: `Multiply ${f(q)} by ${f(r)}: ${f(qr)}.`, math: m(q, op("×"), ...P(r), op("="), qr), answerStep: "mul2", result: qr },
       { id: "rem", narration: `Add the last column: ${f(c)} + ${fP(qr)} = ${f(rem)}. ${rem === 0 ? "It divides evenly." : `${f(rem)} is left over: the remainder.`}`, math: m(c, op("+"), ...P(qr), op("="), mark(rem)), answerStep: "rem", result: rem },
-      { id: "check", narration: `Check: put ${f(r)} into the polynomial and you get ${f(fr(r))}, the same as the remainder.`, math: m(...P(r), sup(2), op("+"), ...P(b), op("·"), ...P(r), op("+"), ...P(c), op("="), fr(r)) },
-      { id: "quot", narration: `The bottom row 1, ${f(quot)} means x + ${fP(quot)}, remainder ${f(rem)}.`, math: [v(), op(quot < 0 ? "−" : "+"), num(Math.abs(quot)), text(", remainder "), num(rem)], answerStep: "quot", result: quot },
+      { id: "check", narration: `Check: put ${f(r)} into the polynomial and you get ${f(fr(r))}, the same as the remainder.`,
+        // a 0 term (b or c) is left out
+        math: m(...P(r), sup(2), ...(b ? [op("+"), ...P(b), op("·"), ...P(r)] : []), ...(c ? [op("+"), ...P(c)] : []), op("="), fr(r)) },
+      { id: "quot", narration: `The bottom row 1, ${f(quot)} means x ${fpm(quot)}, remainder ${f(rem)}.`, math: [v(), op(quot < 0 ? "−" : "+"), num(Math.abs(quot)), text(", remainder "), num(rem)], answerStep: "quot", result: quot },
     ],
   });
 }

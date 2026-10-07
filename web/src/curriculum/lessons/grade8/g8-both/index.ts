@@ -36,7 +36,7 @@ export function bothSidesAnswers({ a, b, c, d, x }: BothSidesEquation): AnswerMo
     steps: [
       ns({ id: "gather", l: "Get x on one side", n: `Subtract ${cxText(c)} from both sides.`, a: s => [...s, v(), op("+"), num(b), op("="), num(d)], ans: a - c,
         h: `Taking ${cxText(c)} off both sides leaves ${f(a)} − ${f(c)} x's on the left.`, w: [[a + c, "Added instead of subtracted", `Subtract ${cxText(c)} from both sides.`]] }),
-      ns({ id: "move", l: "Move the number", a: s => [num(a - c), v(), op("="), ...s], ans: d - b, h: `Subtract ${f(b)} from both sides.`,
+      ns({ id: "move", l: "Move the number", a: s => [...cx(a - c), op("="), ...s], ans: d - b, h: `Subtract ${f(b)} from both sides.`,
         w: [[d + b, "Added instead of subtracted", `To undo + ${f(b)}, subtract ${f(b)}.`]] }),
       ns({ id: "divide", l: "Divide", a: s => [v(), op("="), ...s], ans: x, h: a - c === 1 ? "Only one x is left, so x is the number on the other side." : `${cxText(a - c)} means ${f(a - c)} groups of x. Split both sides into ${f(a - c)} equal groups: ${f(d - b)} ÷ ${f(a - c)}.`,
         w: [[(d - b) * (a - c), "Multiplied instead of divided", `${cxText(a - c)} is ${f(a - c)} times x, so divide by ${f(a - c)} to undo it.`]] }),

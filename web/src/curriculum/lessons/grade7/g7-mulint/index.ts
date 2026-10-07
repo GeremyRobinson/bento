@@ -4,6 +4,7 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildNumberLine, fitRange, type Hop, type Mark } from "../../../../explanations/diagrams/number-line/build";
 import { expectedOf, numbersOf, oneBox, paren, sparseEvery, wholeIn } from "../../_number-line/steps";
+import { verb } from "../../../text";
 
 /** a × b, or (a × b) ÷ b when div; a and b nonzero, −12 to 12 */
 export interface MulIntegersProblem { a: number; b: number; div: boolean }
@@ -63,12 +64,12 @@ function explain(p: MulIntegersProblem, model: AnswerModel): Explanation {
     diagram: buildNumberLine({
       ...range, every: sparseEvery(range), labelAt: div ? [] : [size, ...(differ ? [-size] : [])],
       hops, marks,
-      alt: `Number line: ${jumps} reach ${reach}; the answer is ${f(ans)}.`,
+      alt: `Number line: ${jumps} ${verb(count, "lands", "land")} on ${reach}; the answer is ${f(ans)}.`,
     }),
-    caption: div ? `${jumps} make ${reach}, so the size is ${size}. ${sign}` : `${jumps} land on ${reach}. ${sign}`,
+    caption: div ? `${jumps} ${verb(count, "makes", "make")} ${reach}, so the size is ${size}. ${sign}` : `${jumps} ${verb(count, "lands", "land")} on ${reach}. ${sign}`,
     timeline: beats(2),
     steps: [
-      { id: "size", narration: div ? `Ignore the signs: ${Math.abs(a * b)} ÷ ${Math.abs(b)} = ${size}, because ${size} jump${size === 1 ? "" : "s"} of ${jump} make ${reach}.`
+      { id: "size", narration: div ? `Ignore the signs: ${Math.abs(a * b)} ÷ ${Math.abs(b)} = ${size}, because ${size} jump${size === 1 ? "" : "s"} of ${jump} ${verb(size, "makes", "make")} ${reach}.`
           : `Ignore the signs: ${Math.abs(a)} × ${Math.abs(b)} = ${size}, ${count} jump${count === 1 ? "" : "s"} of ${jump}.`,
         math: div ? [num(Math.abs(a * b)), op("÷"), num(Math.abs(b)), op("="), num(size)] : [num(Math.abs(a)), op("×"), num(Math.abs(b)), op("="), num(size)],
         state: 0, answerStep: "size", result: size },

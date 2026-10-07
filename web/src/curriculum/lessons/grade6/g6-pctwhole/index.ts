@@ -21,7 +21,7 @@ export const generatePercentWhole = (rng: Rng, index = 3) => (index < 3 ? create
 function answers({ p, P }: PercentWholeProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "parts", l: "How many parts make 100%?", a: s => [num(p), text("%"), op("×"), ...s, op("="), num(100), text("%")], ans: 100 / p, h: "How many of those parts make 100%? Count up by the percent you know.",
+      ns({ id: "parts", l: "Parts in 100%", a: s => [num(p), text("%"), op("×"), ...s, op("="), num(100), text("%")], ans: 100 / p, h: "How many of those parts make 100%? Count up by the percent you know.",
         w: [[100 - p, "Subtracted", `How many ${p}%s fit in 100%? Count them, don't take ${p} away.`]] }),
       ns({ id: "whole", l: "Find the whole", a: s => [num(P), op("×"), num(100 / p), op("="), ...s], ans: (P * 100) / p, h: `The whole is ${100 / p} of those parts.`,
         w: [[round6((P * p) / 100), "Took a percent again", `You want the whole, so it's bigger than ${P}.`]] }),

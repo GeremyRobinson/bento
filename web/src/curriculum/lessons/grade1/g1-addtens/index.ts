@@ -5,7 +5,7 @@ import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildAddTens } from "../../../../explanations/diagrams/early-g1/blocks";
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
 import { count, onesOf, plural, slips, tensOf } from "../_kit";
-import { count as countOf, verb } from "../../../text";
+import { count as countOf, noun, verb } from "../../../text";
 import { singularWork } from "../../gradeK/kit";
 
 /** n + k tens; the sum stays under 100 */
@@ -72,7 +72,7 @@ function explain({ n }: AddTensProblem, model: AnswerModel): Explanation {
     timeline: beats(4),
     steps: [
       { id: "start", narration: `Here is ${n}: ${plural(t, "ten", "tens")} and ${plural(o, "one", "ones")}.`, math: [num(n)], state: 0 },
-      { id: "k", narration: `${add} is **${k}** tens rods. Bring them in next to the other tens.`, math: [num(add), op("="), ...count(k, "ten", "tens")], state: 1, answerStep: "k", result: k },
+      { id: "k", narration: `${add} is **${k}** ${noun(k, "tens rod")}. ${verb(k, "Bring it", "Bring them")} in next to the other tens.`, math: [num(add), op("="), ...count(k, "ten", "tens")], state: 1, answerStep: "k", result: k },
       { id: "tens", narration: `Count the rods: ${t} + ${k} = **${tens}** tens.`, math: [num(t), op("+"), num(k), op("="), num(tens)], state: 2, answerStep: "tens", result: tens },
       { id: "sum", narration: `${plural(tens, "ten", "tens")} and the same ${plural(o, "one", "ones")} make **${sum}**.`, math: [num(n), op("+"), num(add), op("="), num(sum)], state: 3, answerStep: "sum", result: sum },
     ],

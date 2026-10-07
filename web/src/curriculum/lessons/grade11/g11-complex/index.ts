@@ -26,7 +26,10 @@ const factor = (re: number, im: number): MathText => [text("("), num(re), op(im 
 const show = ({ a, b, c, d }: ComplexProblem): MathText => [...factor(a, b), ...factor(c, d)];
 /** "1i" is written "i", and "−1i" is "−i". */
 const oneI = (t: string) => t.replace(/(^|[^\d.])1i(?![\d])/g, (_m, pre: string) => `${pre}i`);
-const complexText = (re: number, im: number) => oneI(`${f(re)} ${im < 0 ? "−" : "+"} ${Math.abs(im)}i`);
+/** n i, with 0i written 0 */
+const iText = (n: number) => (n === 0 ? "0" : oneI(`${f(n)}i`));
+/** re + im·i, leaving out a 0 part: "25", not "25 + 0i" */
+const complexText = (re: number, im: number) => (im === 0 ? f(re) : re === 0 ? iText(im) : oneI(`${f(re)} ${im < 0 ? "−" : "+"} ${Math.abs(im)}i`));
 const signed = (v: number, unit: string) => `${v < 0 ? "−" : "+"}${Math.abs(v)}${unit}`;
 
 export function complexAnswers({ a, b, c, d }: ComplexProblem): AnswerModel {
@@ -59,7 +62,7 @@ export function explainComplex(p: ComplexProblem, answers: AnswerModel): Explana
       ],
       lines: [
         { text: `real: ${f(ac)} + ${f(last)} = ${f(re)}`.replace("+ −", "− "), from: 3, until: 3 },
-        { text: oneI(`i terms: ${f(a * d)}i + ${f(b * c)}i = ${f(im)}i`.replace("+ −", "− ")), from: 4, until: 4, cls: "lbl" },
+        { text: oneI(`i terms: ${f(a * d)}i + ${f(b * c)}i = ${iText(im)}`.replace("+ −", "− ")), from: 4, until: 4, cls: "lbl" },
         // its own sentence, so it doesn't read as "−56i = 6 − 56i"
         { text: `product: ${complexText(re, im)}`, from: 4 },
       ],
@@ -71,7 +74,7 @@ export function explainComplex(p: ComplexProblem, answers: AnswerModel): Explana
       { id: "first", narration: `First × first: ${f(a)} · ${f(c)} = ${f(ac)}.`, math: [num(a), op("·"), ...numP(c), op("="), num(ac)], state: 1, answerStep: "first", result: ac },
       { id: "last", narration: `Last × last: ${oneI(`${f(b)}i`)} · ${d < 0 ? `(${oneI(`${f(d)}i`)})` : oneI(`${f(d)}i`)} = ${oneI(`${f(b * d)}i²`)}, and i² = −1, so it's ${f(last)}.`, math: [...iTerm(b), op("·"), ...iTermP(d), op("="), ...iTerm(b * d), sup(2), op("="), num(last)], state: 2, answerStep: "last", result: last },
       { id: "real", narration: `The plain numbers make the real part: ${f(re)}.`, math: [num(ac), op("+"), ...numP(last), op("="), num(re)], state: 3, answerStep: "real", result: re },
-      { id: "imag", narration: `Outer and inner are the i terms: ${oneI(`${f(im)}i`)}. So the product is ${complexText(re, im)}.`, math: [num(a), op("·"), ...numP(d), op("+"), ...numP(b), op("·"), ...numP(c), op("="), num(im)], state: 4, answerStep: "imag", result: im },
+      { id: "imag", narration: `Outer and inner are the i terms: ${im === 0 ? "they cancel to 0" : iText(im)}. So the product is ${complexText(re, im)}.`, math: [num(a), op("·"), ...numP(d), op("+"), ...numP(b), op("·"), ...numP(c), op("="), num(im)], state: 4, answerStep: "imag", result: im },
     ],
   };
 }

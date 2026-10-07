@@ -6,6 +6,7 @@ import { buildCompareBlocks } from "../../../../explanations/diagrams/early-g1/b
 import { manyBoxes, restoreVia, wholeIn } from "../../_number-line/steps";
 import { choiceStep, count, onesOf, plural, slipsMany, tensOf } from "../_kit";
 import { singularWork } from "../../gradeK/kit";
+import { noun } from "../../../text";
 
 /** two numbers from 10 to 99 to compare */
 export interface CompareProblem { a: number; b: number }
@@ -74,13 +75,13 @@ function explain({ a, b }: CompareProblem, model: AnswerModel): Explanation {
   const right = model.steps.at(-1)!.slots[0]!.expected!, sign = SIGNS[right]!;
   const n = hasOnes ? 3 : 2;
   const steps: ExplanationStep[] = [
-    { id: "tens", narration: ta === tb ? `Both have **${ta}** tens. That's a tie, so the tens can't decide.` : `${a} has **${ta}** tens and ${b} has **${tb}** tens.`,
-      math: [...count(ta, "ten", "tens"), text(ta === tb ? " and " : " vs "), ...count(tb, "ten", "tens")], state: 0, answerStep: "tens", result: ta },
+    { id: "tens", narration: ta === tb ? `Both have **${ta}** ${noun(ta, "ten")}. That's a tie, so the tens can't decide.` : `${a} has **${ta}** ${noun(ta, "ten")} and ${b} has **${tb}** ${noun(tb, "ten")}.`,
+      math: [...count(ta, "ten", "tens"), text(ta === tb ? " and " : " vs "), ...count(tb, "ten", "tens")], state: 1, answerStep: "tens", result: ta },
   ];
   if (hasOnes) steps.push({ id: "ones", narration: ao === bo ? `The ones match too: **${ao}** and **${bo}**.` : `Look at the ones: **${ao}** and **${bo}**.`,
-    math: [...count(ao, "one", "ones"), text(ao === bo ? " and " : " vs "), ...count(bo, "one", "ones")], state: 1, answerStep: "ones", result: ao });
+    math: [...count(ao, "one", "ones"), text(ao === bo ? " and " : " vs "), ...count(bo, "one", "ones")], state: 2, answerStep: "ones", result: ao });
   steps.push({ id: "sign", narration: a === b ? `Same number, so they are **equal**.` : `${Math.max(a, b)} is bigger, so the open side of the sign faces it.`,
-    math: [num(a), op(sign), num(b)], state: n - 1, answerStep: "sign" });
+    math: [num(a), op(sign), num(b)], state: n, answerStep: "sign" });
   return {
     heading: "Compare two-digit numbers",
     idea: ["Look at the tens first. More tens means a bigger number. Only when the tens are the same do you look at the ones."],
@@ -88,11 +89,12 @@ function explain({ a, b }: CompareProblem, model: AnswerModel): Explanation {
     diagram: buildCompareBlocks({
       a, b, sign,
       text: { aTens: plural(ta, "ten", "tens"), bTens: plural(tb, "ten", "tens"), aOnes: plural(ao, "one", "ones"), bOnes: plural(bo, "one", "ones") },
-      beats: { tens: 0, ones: hasOnes ? 1 : null, sign: n - 1 },
+      beats: { tens: 1, ones: hasOnes ? 2 : null, sign: n },
       alt: `${a} as ${plural(ta, "ten", "tens")} and ${plural(ao, "one", "ones")}, beside ${b} as ${plural(tb, "ten", "tens")} and ${plural(bo, "one", "ones")}: ${a} ${sign} ${b}.`,
     }),
     caption: `${a} ${sign} ${b}`,
-    timeline: beats(n),
+    // beat 0 is the bare blocks, so practice's first step doesn't show the tens it asks for
+    timeline: beats(n + 1),
     steps,
   };
 }

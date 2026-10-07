@@ -46,7 +46,7 @@ export function explainRational(p: RationalExponent, model: AnswerModel) {
   const root = n === 2 ? "square" : "cube";
   return beatExplanation({
     heading: "Bottom is the root, top is the power",
-    idea: ["Taking a root twice of the same size undoes squaring, so a power of 1/2 has to be the square root: (a to the 1/2) × (a to the 1/2) = a to the 1.", "A fraction power m/n splits into two moves: the bottom n takes the root, and the top m raises to a power. Root first keeps the numbers small."],
+    idea: ["Taking the square root undoes squaring. A power of 1/2 does the same: (a to the 1/2) × (a to the 1/2) = a to the 1, so a to the 1/2 is the square root of a.", "A fraction power m/n splits into two moves: the bottom n takes the root, and the top m raises to a power. Root first keeps the numbers small."],
     statement: [num(base), sup(exponent(top, n))],
     caption: `${rootSign(n)}${f(base)} = ${f(r)}, then ${f(r)}${supText(top)} = ${f(value)}.`,
     diagram: rationalExponentPicture({ n, m: top, r, base, value }),

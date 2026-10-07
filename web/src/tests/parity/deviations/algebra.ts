@@ -13,6 +13,7 @@ export const deviations: Record<string, Partial<Record<string, string>>> = {
   // g11-synth remainders (fixes-02: "remainder always 0"): every third problem now has a remainder e, with a two-box
   // quotient step. The recorded problems have e = 0 and restore with e = 0, so they ask the same numbers; no answers: entry.
   "g11-synth": {
+    work: "K–12 lesson check (Review 2026-10-07): worked lines are signed (\"x − 4\", not \"x + −4\") and drop zero terms",
     pre: "g11-evalpoly: the remainder is the value of the polynomial at r (g11-evalpoly); Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on",
     hint: "the Multiply and Quotient hints say what to do and why (\"Multiply the new bottom number by the box number …\") instead of restating the arithmetic (\"−4 times −1.\") or the answer (Curriculum fixes-02, g11-synth, 2026-10-06)",
     explain: "Show me repeats the new hint, then \"That makes …\" as before",

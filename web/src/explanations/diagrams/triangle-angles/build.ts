@@ -15,6 +15,8 @@ export interface TriangleAnglesSpec {
   exterior?: { from?: number; labels: CornerLabel[] };
   /** short lines of working shown above the triangle */
   notes?: CornerLabel[];
+  /** how far past its arc a corner's label starts, px (14 if left out) */
+  labelGap?: number;
   alt: string;
 }
 
@@ -40,7 +42,8 @@ export function buildTriangleAngles(s: TriangleAnglesSpec): SceneDiagram {
       items.push(path(arc(v, r, d0, d1), "ln2", { from: accentFrom, enter: "draw", delay: accentFrom ? 0 : 0.6 }));
     } else items.push(path(arc(v, r, d0, d1), "ln", { enter: "draw", delay: 0.6 }));
     for (const l of labels) {
-      const at = angleLabelAt(v, d0, d0 + span, l.text.length * 10.2, r + 14, Math.max(r + 14, maxR));
+      const gap = s.labelGap ?? 14;
+      const at = angleLabelAt(v, d0, d0 + span, l.text.length * 10.2, r + gap, Math.max(r + gap, maxR));
       items.push(t(at[0], at[1], l.text, `lbl${l.acc ? " acc" : ""}`, { ...shown(l), enter: "rise", delay: 0.8 }));
     }
   };

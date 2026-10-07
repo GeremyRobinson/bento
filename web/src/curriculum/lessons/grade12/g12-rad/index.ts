@@ -3,6 +3,7 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildRadians } from "../../../../explanations/diagrams/circle/build";
 import { asRecord, expected, fs, gcd, mt, ns, numberField, piText } from "../../_geometry/kit";
+import { count } from "../../../text";
 import { withEasyStart } from "../../easy-start";
 
 /** An angle in degrees to write in radians. */
@@ -45,7 +46,7 @@ export function explainDegreesToRadians({ t }: DegreesToRadiansProblem, answers:
     heading: "Multiply by π/180",
     idea: ["A half turn is 180°, and in radians it is π.", "So an angle is its share of 180, written in front of π."],
     statement: mt`${t}° × ${frac("π", 180)}`,
-    caption: `${t}° is ${n} of the ${d} equal pieces of a half turn: ${piText(n, d)}.`,
+    caption: `${t}° is ${count(n, "piece")} of ${g}°, and ${d} of those pieces make a half turn (π): ${piText(n, d)}.`,
     diagram: buildRadians({
       t, piece: g, pieceBeat: 1, angleBeat: 2,
       pieceNote: `${g}° pieces: ${180 / g} of them make π`,

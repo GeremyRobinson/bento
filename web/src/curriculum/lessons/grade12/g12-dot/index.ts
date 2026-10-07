@@ -15,8 +15,12 @@ export function createDot(a: number, b: number, c: number, d: number): DotProble
   return { kind: "vector.dot", a, b, c, d };
 }
 
-/** Same as the current app: every part −9..9, not 0. */
-export const generateDot = (rng: Rng) => createDot(nz(rng, -9, 9), nz(rng, -9, 9), nz(rng, -9, 9), nz(rng, -9, 9));
+/** Same as the current app: every part −9..9, not 0. Skips parallel arrows (a·d = b·c): one would cover the other, with no angle to mark. */
+export function generateDot(rng: Rng): DotProblem {
+  let q: DotProblem;
+  do q = createDot(nz(rng, -9, 9), nz(rng, -9, 9), nz(rng, -9, 9), nz(rng, -9, 9)); while (q.a * q.d === q.b * q.c);
+  return q;
+}
 
 export function restoreDot(raw: unknown): DotProblem | null {
   const v = ints(raw, ["a", "b", "c", "d"] as const);
