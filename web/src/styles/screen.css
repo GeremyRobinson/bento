@@ -63,9 +63,17 @@ html:has(.screen) body{overflow:hidden}
    (8px), sets every gap: between the list's rows, round the open panel's edge and between its lessons, so nothing ever
    touches. The open chapter is one panel (--surf-nest) holding its head and its lessons; it grows outward by the gap so
    the head's words never move, at the fold's speed. The current lesson is shaded darker inside it. */
-.slist{--list-gap:var(--sp-2)}
+.slist{--list-gap:var(--sp-2);--row-h:46px}
+/* nesting from the inside out (G 18:40, the chapter header's corners): the lessons are pills (--row-h); their panel is a
+   pill plus the gap; the list's own rows (Today, a chapter's title) are as tall as that panel, so they're pills of the same
+   round; the open chapter is that plus the gap and stands one gap in from the list's edge; and the list is that plus the gap
+   again, so every corner is concentric */
+.slist{--row-top:calc(var(--row-h) + var(--list-gap) * 2);border-radius:calc(var(--row-top) / 2 + var(--list-gap) * 2)!important}
+.slist>.srow,.slist>.sgroup>.srow.chap{min-height:var(--row-top)}
+.wrap .screen .slist.slist{padding:calc(var(--list-gap) * 2 - var(--panel-w))}
+.wrap .screen.gu .slist.slist{padding-bottom:calc(var(--sp-6) - var(--panel-w))}
 .slist>:is(.srow,.sgroup)+.sgroup,.slist>.sgroup+.srow{margin-top:var(--list-gap)}
-.sgroup{--row-h:46px;border-radius:calc(var(--row-h) / 2 + var(--list-gap) * 2);transition:background-color var(--m-close) var(--m-ease),padding var(--m-close) var(--m-ease),margin var(--m-close) var(--m-ease)}
+.sgroup{border-radius:calc(var(--row-h) / 2 + var(--list-gap) * 2);transition:background-color var(--m-close) var(--m-ease),padding var(--m-close) var(--m-ease),margin var(--m-close) var(--m-ease)}
 .sgroup.open{background:var(--surf-nest);margin-inline:calc(var(--list-gap) * -1);padding:var(--list-gap)}
 .sgroup-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--m-close) var(--m-ease),visibility 0s var(--m-close)}
 .sgroup.open>.sgroup-body{grid-template-rows:1fr;transition:grid-template-rows var(--m-close) var(--m-ease)}
