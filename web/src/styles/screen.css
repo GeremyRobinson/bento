@@ -141,13 +141,13 @@ html:has(.screen) body{overflow:hidden}
 .lintro .lsub{margin:0;font-size:var(--fz-lg);font-weight:var(--w-mid);color:var(--ink)}
 .lintro .lsub.formula{font-variant-numeric:tabular-nums}
 .lintro .idea{margin:0;color:var(--muted);font-size:var(--fz-lg);line-height:1.45}
-.lintro .beats{margin-top:6px;gap:6px}
-.lintro .beat>button{display:flex;align-items:flex-start;gap:var(--sp-3);width:100%;padding:10px 14px 10px var(--sp-2);border-radius:var(--r-2xl);text-align:left}
-.lintro .beat{background:none;border-radius:var(--r-2xl)}
+.lintro .beats{margin-top:2px;gap:6px}
+.lintro .beat>button{display:flex;align-items:flex-start;gap:var(--sp-3);width:100%;text-align:left}
+.lintro .beat{background:none}
 .lintro .beat[data-state="now"]{background:var(--float);box-shadow:var(--float-shadow)}
 /* steps still to come stay readable (4.5:1): muted text at full strength, not faded */
 .lintro .beat[data-state="later"]{opacity:1;color:var(--muted)}
-.lintro .beat .badge{--badge:30px;min-width:30px;height:30px;font-size:var(--fz-sm);background:var(--well);color:var(--ink)}
+.lintro .beat .badge{font-size:var(--fz-sm);background:var(--well);color:var(--ink)}
 .lintro .beat[data-state="now"] .badge{background:var(--ink);color:var(--on-tint)}
 .lintro .beat .say{gap:2px;font-size:var(--fz-md);line-height:1.4}
 .lintro .beat .say .mline{font-size:var(--fz-xl)}
@@ -243,9 +243,9 @@ html:has(.screen) body{overflow:hidden}
 .pprob .askline{font-size:var(--fz-sm)}
 .pprob .note{text-align:left}
 .pbeats{list-style:none;margin:0;padding:0;display:grid;gap:6px}
-.pbeats .beat{display:flex;align-items:flex-start;gap:var(--sp-3);padding:10px 14px 10px var(--sp-2);border-radius:var(--r-2xl);color:var(--muted)}
+.pbeats .beat{display:flex;align-items:flex-start;gap:var(--sp-3);color:var(--muted)}
 .pbeats .beat[data-state="now"]{background:var(--float);box-shadow:var(--float-shadow);color:var(--text)}
-.pbeats .badge{--badge:28px;flex:none;min-width:28px;height:28px;font-size:var(--fz-xs);background:var(--well);color:var(--ink)}
+.pbeats .badge{flex:none;font-size:var(--fz-xs);background:var(--well);color:var(--ink)}
 .pbeats .beat[data-state="done"] .badge{background:var(--tint);color:var(--on-tint)}
 .pbeats .beat[data-state="now"] .badge{background:var(--ink);color:var(--on-tint)}
 .pbeats .say{display:grid;gap:2px;min-width:0;font-size:var(--fz-md);line-height:1.35}
@@ -254,6 +254,13 @@ html:has(.screen) body{overflow:hidden}
 .pbeats .pline{font:var(--w-mid) var(--fz-lg)/1.3 var(--num);color:var(--ink);font-variant-numeric:tabular-nums}
 .pbeats .pline.shown{color:var(--muted)}
 .pbeats .pline .mline{justify-content:flex-start;max-width:100%}
+/* Step row (master, Learn's steps and practice's): the number sits as far in from the pill's left end as from its top
+   and bottom, so it's concentric with the rounded end, and the step's first line is centred on the number (G 2026-10-07,
+   "not aligned correctly") */
+.pbeats .beat,.lintro .beat{--badge:28px}
+.pbeats .beat,.lintro .beat>button{--beat-in:10px;padding:var(--beat-in) 14px var(--beat-in) var(--beat-in)}
+.pbeats .beat,.lintro .beat,.lintro .beat>button{border-radius:calc(var(--badge) / 2 + 10px)}
+:is(.pbeats .beat,.lintro .beat) .say>:first-child{min-height:var(--badge);display:flex;align-items:center}
 .pbeats .pline .mline .t{white-space:pre-wrap}
 .pextra{margin-top:auto;display:flex;flex-wrap:wrap;gap:var(--sp-2)}
 .pextra .ctl,.psteps .ctl{--pill-h:var(--h);background:var(--float);box-shadow:var(--float-shadow)}

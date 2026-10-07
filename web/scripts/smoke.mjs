@@ -22,7 +22,7 @@ const SIZES = [{ w: 390, h: 844, scheme: "dark" }, { w: 1180, h: 820, scheme: "l
 /** containers meant to scroll (a long list; the book's chapters, and its plan on a short landscape screen where the
  *  picture keeps its room); anything else that scrolls inside itself is cut */
 const SCROLLERS = ".fhome>.ftables, nav.slist.more, .sbento>.b-chaps, .sbento>.today";
-const ROUTES = ["home", "year", "learn", "facts", "me", "settings", "grown-up", "welcome"];
+const ROUTES = ["home", "year", "learn", "practice", "facts", "me", "settings", "grown-up", "welcome"];
 
 const fails = [], notes = [];
 const browser = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {});
@@ -55,11 +55,13 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
   const lesson = await p.evaluate(() => location.hash.startsWith("#/learn/") ? location.hash : null);
   let markAt = null;
   for (const route of ROUTES) {
-    const hash = route === "home" ? "#/" : route === "year" ? "#/year" : route === "learn" ? lesson : "#/" + route;
+    const hash = route === "home" ? "#/" : route === "year" ? "#/year" : route === "learn" || route === "practice" ? lesson : "#/" + route;
     if (!hash) { fails.push(`${tag}: no lesson link on home`); continue; }
     await p.goto(PAGE + hash); await p.waitForTimeout(700);
+    // practice: the lesson's own Try one
+    if (route === "practice") { await p.getByRole("button", { name: /Try one/ }).first().click(); await p.waitForTimeout(900); }
     if (contrast) await p.evaluate(() => { document.documentElement.dataset.contrast = "true"; });
-    await p.evaluate(() => document.getAnimations().forEach(a => a.finish())); await p.waitForTimeout(100);
+    await p.evaluate(() => document.getAnimations().forEach(a => { try { a.finish(); } catch {} })); await p.waitForTimeout(100);
     const at = `${tag} ${route}`;
     await p.addScriptTag({ content: AUDIT });
     const r = await p.evaluate((SCROLLERS) => {
@@ -109,7 +111,17 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
         const T = today.getBoundingClientRect(), F = first.getBoundingClientRect();
         startCut = Math.round(Math.max(0, F.bottom - (T.bottom - today.clientTop) + today.scrollTop));
       }
-      return { flags, tiny, corners, marks, picH, picEmpty, overlaps, startCut, scroll: Math.round(low - innerHeight) };
+      // a step row's number sits as far in from the pill's left end as from its top, and the step's first line is
+      // centred on it (G 2026-10-07, "not aligned correctly")
+      const steps = [];
+      for (const e of document.querySelectorAll(".beat")) {
+        const badge = e.querySelector(".badge"), first = e.querySelector(".say>:first-child");
+        if (!badge || !first || !shown(badge)) continue;
+        const P = (e.querySelector(":scope>button") ?? e).getBoundingClientRect(), B = badge.getBoundingClientRect(), F = first.getBoundingClientRect();
+        const left = B.left - P.left, top = B.top - P.top, mid = (F.top + F.bottom) / 2 - (B.top + B.bottom) / 2;
+        if (Math.abs(left - top) > 1 || (F.height <= B.height + 1 && Math.abs(mid) > 1)) steps.push(`"${e.textContent.trim().slice(0, 20)}" in ${left.toFixed(1)}/${top.toFixed(1)}, line off ${mid.toFixed(1)}`);
+      }
+      return { flags, tiny, corners, marks, picH, picEmpty, overlaps, startCut, steps, scroll: Math.round(low - innerHeight) };
     }, SCROLLERS);
     for (const f of r.flags)
       (CLIPS.has(f.kind) ? fails : notes).push(`${at}: ${f.kind} ${f.el}${f.path ? " in " + f.path : ""}`);
@@ -118,7 +130,8 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
     if (r.picH != null && (r.picH < 200 || r.picEmpty)) fails.push(`${at}: the book's picture is ${r.picEmpty ? "empty" : r.picH + "px tall"}`);
     for (const o of r.overlaps) fails.push(`${at}: tiles overlap: ${o}`);
     if (r.startCut > 1) fails.push(`${at}: the plan's first row is cut by ${r.startCut}px`);
-    if (route === "learn" && r.scroll > 1) fails.push(`${at}: the lesson page scrolls by ${r.scroll}px`);
+    for (const st of r.steps) fails.push(`${at}: step row not aligned: ${st}`);
+    if ((route === "learn" || route === "practice") && r.scroll > 1) fails.push(`${at}: the lesson page scrolls by ${r.scroll}px`);
     if (route !== "welcome") {
       if (r.marks.length !== 1) fails.push(`${at}: ${r.marks.length} wordmarks in the nav`);
       else if (markAt && r.marks[0] !== markAt) fails.push(`${at}: wordmark moved to ${r.marks[0]} (was ${markAt})`);
