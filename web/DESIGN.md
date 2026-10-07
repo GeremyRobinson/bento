@@ -29,6 +29,8 @@ New UI is built by putting these pieces together. When a piece can't do somethin
 - The panel around it is 30px.
 - The panel around that is 38px.
 Every corner then follows the one inside it.
+- Every main panel on every page, at every size, has that same corner: 46px (`--r-panel`), the Contents list's own.
+- Main panels sit 16px (`--screen-gap`) apart, the same as their distance from the screen edge.
 
 **3. The glass ladder.** Each layer is one step deeper in the grade's own colour (`--g1` to `--g4`). Going in means going deeper, and hovering lifts one step. The row you're on is one step deeper than its neighbours. There are no shadows; outlines and fills only.
 

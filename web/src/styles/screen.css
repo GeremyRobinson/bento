@@ -1,7 +1,7 @@
 /* Screen (master): the frame every app screen sits in. The page never scrolls on a split or fit screen: the screen
    fills what's left under the island, and only its list scrolls, with a thin scroll mark (Design, handoff 5).
    Instances (split, fit) override only what differs. */
-.wrap{--screen-list:340px;--screen-gap:var(--u);--screen-max:var(--page-max);--screen-bottom:16px}
+.wrap{--screen-list:340px;--screen-gap:var(--sp-4);--screen-max:var(--page-max);--screen-bottom:16px}
 @media (orientation:portrait){.wrap{--screen-list:300px}}
 .wrap:has(>.screen){max-width:var(--screen-max);padding-bottom:0}
 html:has(.screen) body{overflow:hidden}
@@ -63,7 +63,7 @@ html:has(.screen) body{overflow:hidden}
    (8px), sets every gap: between the list's rows, round the open panel's edge and between its lessons, so nothing ever
    touches. The open chapter is one panel (--surf-nest) holding its head and its lessons; it grows outward by the gap so
    the head's words never move, at the fold's speed. The current lesson is shaded darker inside it. */
-.slist{--list-gap:var(--sp-2);--row-h:46px}
+.slist{--list-gap:var(--sp-2);--row-h:var(--tap)}
 /* nesting from the inside out (G 18:40, the chapter header's corners): the lessons are pills (--row-h); their panel is a
    pill plus the gap; the list's own rows (Today, a chapter's title) are as tall as that panel, so they're pills of the same
    round; the open chapter is that plus the gap and stands one gap in from the list's edge; and the list is that plus the gap
@@ -178,7 +178,7 @@ html:has(.screen) body{overflow:hidden}
 /* ---- the lesson (G 2026-10-06): focused, but a real lesson. The picture is the hero; beside it a brief intro and the
    steps that explain it; the controls float underneath. The page never scrolls; only the intro may, inside itself. ---- */
 .screen.fit.lscreen{grid-template-columns:minmax(300px,380px) minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"intro hero" ". ctl";align-content:stretch}
-.lintro{background:var(--pane-glass,transparent);border-radius:var(--r-lg);grid-area:intro;min-height:0;overflow:auto;scrollbar-width:thin;display:flex;flex-direction:column;gap:var(--sp-3);padding:var(--sp-3) var(--sp-2) var(--sp-3) var(--sp-3)}
+.lintro{background:var(--pane-glass,transparent);border-radius:var(--r-panel);grid-area:intro;min-height:0;overflow:auto;scrollbar-width:thin;display:flex;flex-direction:column;gap:var(--sp-3);padding:var(--sp-4) var(--sp-2) var(--sp-4) var(--sp-4)}
 .lintro .k{margin:0;color:var(--muted);font-size:var(--fz-sm);font-weight:var(--w-mid);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .lintro h1{margin:0;font:var(--w-bold) 30px/1.12 var(--sans);letter-spacing:-.03em;color:var(--text)}
 .lintro .lsub{margin:0;font-size:var(--fz-lg);font-weight:var(--w-mid);color:var(--ink)}
@@ -258,7 +258,7 @@ html:has(.screen) body{overflow:hidden}
 .panel.split .tray button:hover,.panel.split .tray button:active{background:var(--btn-hover,color-mix(in oklab,var(--float) 90%,var(--tint)))}
 .panel.split .actions .ctl{--pill-h:var(--float-h);font-size:var(--fz-lg);background:var(--float);box-shadow:var(--float-shadow)}
 @media not ((min-width:900px) and (orientation:landscape)){.wpad{overflow:visible}.wpad .tray{max-width:520px}}
-@media (max-width:699px){.screen.solve{--key:44px;--screen-gap:var(--sp-2)}.panel.split .card{padding:var(--sp-3) var(--sp-4);gap:var(--sp-2)}.wpad .tray{gap:6px}}
+@media (max-width:699px){.screen.solve{--key:44px}.panel.split .card{padding:var(--sp-3) var(--sp-4);gap:var(--sp-2)}.wpad .tray{gap:6px}}
 
 /* ---- practice, picture first (instance of Learn's lesson grid; Design practice-spec, G 2026-10-06). The problem and
    its steps on the left (on top in portrait); the hero holds the step's equation with its answer box, the feedback
@@ -401,7 +401,7 @@ html:has(.screen) body{overflow:hidden}
 /* a phone ("Tuck away", option A): the problem moves into the island, the steps fold into one bar over the keypad,
    and the picture gets the room */
 @media (max-width:520px){
-  .screen.fit.lscreen.pscreen{--key:48px;--slot:48px;--ask:28px;--pfb-h:42px;grid-template-rows:minmax(0,1fr) auto auto;grid-template-areas:"hero" "bar" "pad";gap:var(--sp-2)}
+  .screen.fit.lscreen.pscreen{--key:48px;--slot:48px;--ask:28px;--pfb-h:42px;grid-template-rows:minmax(0,1fr) auto auto;grid-template-areas:"hero" "bar" "pad"}
   .screen.fit.lscreen.pscreen.pwordy{grid-template-rows:auto minmax(0,1fr) auto auto;grid-template-areas:"intro" "hero" "bar" "pad"}
   .pscreen:not(.pwordy)>.pintro{display:none}
   .pscreen.pwordy>.pintro>:not(.pprob){display:none}
@@ -621,7 +621,8 @@ html:has(.screen) body{overflow:hidden}
    full round, and each shape around it is that round plus the one --nest gap, so every corner is concentric. In the solve
    panel the step bar and the steps are rows --srow tall with a full round; the panel (and the picture beside it) is that
    plus the gap. The keys are pills --key tall; their panel is that plus the gap */
-.pscreen>.ppad{border-radius:calc(var(--key) / 2 + var(--nest))}
+/* the keypad is a main panel: the main corner, and the keys sit far enough in that their pill ends nest inside it */
+.pscreen>.ppad{border-radius:var(--r-panel);padding:max(var(--nest),calc(var(--r-panel) - var(--key) / 2))}
 .pscreen>.ppad .tray{gap:var(--nest)}
 .pscreen>.ppad .tray>*,.pscreen>.ppad .choice{border-radius:calc(var(--key) / 2)}
 /* the steps sit in their own nested panel a rung deeper, like a chapter's lessons in Contents; the step you're on is one

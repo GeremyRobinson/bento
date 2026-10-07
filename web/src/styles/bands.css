@@ -4,10 +4,12 @@
   --fs:18px; --lh:26px; --small:15px; --w-bold:650; --w-mid:550;
   --s:8px; --u:16px; --sec:24px; --h:48px; --row:64px; --inset:8px;
   --math:52px; --ask:40px; --slot:64px; --key:64px; --work:24px;
-  --r-panel:36px;
+  /* one main-panel corner on every page and at every size (G 20:12): a 44px row's round plus three 8px nests, the
+     same as the Contents list and the solve tile, so every main panel matches */
+  --r-panel:calc(var(--tap) / 2 + 8px * 3);
 }
 @media (max-width:480px){
-  .wrap{--fs:17px;--lh:24px;--u:12px;--sec:16px;--h:44px;--row:56px;--math:40px;--ask:32px;--slot:56px;--key:56px;--work:21px;--r-panel:28px;--bg-row:96px}
+  .wrap{--fs:17px;--lh:24px;--u:12px;--sec:16px;--h:44px;--row:56px;--math:40px;--ask:32px;--slot:56px;--key:56px;--work:21px;--bg-row:96px}
 }
 .wrap{--r-card:max(4px, calc(var(--r-panel) - var(--u))); --r-box:max(8px, calc(var(--r-card) - var(--u))); --badge:calc(var(--h) - 2*var(--inset)); --rbadge:calc(var(--row) - 2*var(--inset))}
 
@@ -187,7 +189,7 @@ html[data-line="middle"] body{background-image:
 }
 /* the counters stay behind what you read: text that sits straight on the canvas (Learn's intro and steps) gets a
    clean patch of the page under it, feathered at the edge, so no counter lands on a word (v44 sweep item 12) */
-html[data-line="early"] .lintro{background:var(--pane-glass,var(--canvas));box-shadow:none;border-radius:var(--r-lg);outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
+html[data-line="early"] .lintro{background:var(--pane-glass,var(--canvas));box-shadow:none;border-radius:var(--r-panel);outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
 :root[data-line="early"][data-theme="dark"]{--page:#14120f;--canvas:#14120f}
 /* one hue in shades (G 2026-10-07): the playful canvas takes the grade's hue too, its counters all
    shades of it */
