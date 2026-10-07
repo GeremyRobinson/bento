@@ -87,7 +87,7 @@ html:has(.screen) body{overflow:hidden}
 .srow.sles .sdot{background:var(--g4,var(--faint));transition:background var(--m-swap) var(--m-ease)}
 @media (hover:hover){.srow.sles:not([disabled]):hover .sdot{background:var(--tint)}}
 /* panels with buttons take the glass, picture panels stay plain (G 05:28) */
-.bhome .today{background:var(--pane-glass,var(--card))} .bhome .today .ctl:not(.go){background:var(--btn-panel,var(--card))}
+.bhome .today{background:var(--pane-glass,var(--card))} .bhome .today .ctl:not(.go){background:var(--btn-panel,var(--card))} .bhome .today .pitem:hover{background:var(--btn-panel,var(--tint-soft))}
 /* the current lesson keeps its dot lit (G 2026-10-07) */
 .srow.sles.on .sdot{background:var(--tint)}
 .sfoot{padding:var(--sp-3) var(--sp-2) calc(var(--sp-1) + var(--sp-3));position:sticky;bottom:calc(var(--panel-w,1px) - var(--sp-3));background:var(--surf-1,var(--well));z-index:var(--z-up)}
