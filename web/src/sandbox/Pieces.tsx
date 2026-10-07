@@ -11,6 +11,8 @@ import { PillRing } from "../components/primitives/PillRing";
 import { Keypad } from "../components/practice/Keypad";
 import { ListGroup } from "../components/screen/ListGroup";
 import { BentoGrid, type TileSize } from "../components/BentoGrid";
+import { BoxMark } from "../components/primitives/BoxMark";
+import { BentoMark } from "../components/primitives/BentoMark";
 
 /** the Book home's tiles on the grid in fit mode (chunk 2): at whatever width and height the sliders set */
 const BOOK: [TileSize, string][] = [["l", "Picture"], ["n", "Lessons done"], ["n", "Days in a row"], ["w", "Today"], ["s", "Chapters"]];
@@ -94,6 +96,10 @@ export function Pieces() {
         <p className="muted">Each piece is built and checked on its own, then nests into the bigger ones. These are the real components, so they work here the way they will in the app.</p>
       </header>
       <div className="sbpgrid">
+        <Piece name="Logo mark" status="building" chunk="BoxMark" nests="Nav, the app icon, the landing page">
+          <div className="sblogo"><BoxMark size={160} /><span className="sblogo-row"><BoxMark size={32} /><BentoMark /></span></div>
+          <small className="muted">An outlined bento box whose compartments keep rearranging: two squares and a rectangle, four squares, a rectangle with half squares. Each change settles with a soft rubber-band stretch, about every two and a half seconds. Less motion: it holds still.</small>
+        </Piece>
         <Piece name="BentoGrid" status="review" chunk="BentoGrid master" nests="Book home, My Bento, Settings, the grown-up page">
           <DemoGrid />
           <small className="muted">Six columns; each tile says only its size. Fit mode: the rows share the height they're given and the page never scrolls. Drag the width and height: tile edges line up across rows at every size.</small>

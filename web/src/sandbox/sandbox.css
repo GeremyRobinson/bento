@@ -97,3 +97,5 @@ html[data-motion="reduce"] .sbcascade .imark .bl{animation:fadeIn var(--m-swap) 
 .sbbento-w{display:flex;align-items:center;gap:var(--sp-3);font-size:var(--fz-sm)}
 .sbbento-w input{flex:1;max-width:360px}
 .sbbento-frame{flex:none}
+.sblogo{display:grid;justify-items:center;gap:var(--sp-5);padding:var(--sp-5) 0}
+.sblogo-row{display:inline-flex;align-items:center;gap:var(--sp-2);font:var(--w-bold) 26px/1 var(--sans);letter-spacing:-.05em}
