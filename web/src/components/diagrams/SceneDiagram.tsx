@@ -26,27 +26,11 @@ export function SceneDiagram({ diagram: d, at, fit = false }: { diagram: Scene; 
     ro.observe(el);
     return () => ro.disconnect();
   }, [d, fit, ref]);
-  // fit: what's drawn so far sits in the middle of the box (G 17:40 "check if diagrams are centered"); the frame keeps the
-  // finished picture's scale, and the drawing slides over to centre as later beats add to it
-  const [shift, setShift] = useState<{ d: Scene | null; at: [number, number]; slide: boolean }>({ d: null, at: [0, 0], slide: false });
-  // spacers hold the picture's size steady from problem to problem; they aren't drawing, so they don't move the centre
-  const showing = d.items.filter(it => (it.from ?? 0) <= at && (it.until == null || at <= it.until) && it.cls !== "spacer");
-  const showKey = showing.length + ":" + at;
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!fit || !el || frame?.d !== d) return;
-    const now = contentBox(el, showing);
-    if (!now) return;
-    const v = framed(frame.box, frame.size);
-    // a new picture lands centred; only a picture that grows slides
-    setShift(o => ({ d, at: [r1(v.x + v.w / 2 - (now.x + now.w / 2)), r1(v.y + v.h / 2 - (now.y + now.h / 2))], slide: o.d === d }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showKey, frame, d, fit, ref]);
-  const [sx, sy] = fit && shift.d === d ? shift.at : [0, 0];
+  // fit centres the finished picture once (the frame above); parts then appear where they stay, and nothing already
+  // drawn moves between beats (G 19:34: "random coming from the side animations")
   return (
     <svg ref={ref} className="viz-svg" viewBox={`${r1(vb.x)} ${r1(vb.y)} ${r1(vb.w)} ${r1(vb.h)}`} role="img" aria-label={d.alt}
       style={{ "--w": Math.round(d.width), "--h": Math.round(d.height) } as CSSProperties} data-family={d.family}>
-      <g className={`vcentre${shift.slide ? " slide" : ""}`} style={{ transform: `translate(${sx}px, ${sy}px)` }}>
       {dotsOnTop(d.items).map((it, i) => {
         const from = it.from ?? 0;
         if (from > at || (it.until != null && at > it.until)) return null;
@@ -64,7 +48,6 @@ export function SceneDiagram({ diagram: d, at, fit = false }: { diagram: Scene; 
           case "text": return <text key={key} className={cls} style={style} x={it.x} y={it.y}>{it.text}{it.sup && <tspan dy="-0.5em" fontSize="0.65em">{it.sup}</tspan>}</text>;
         }
       })}
-      </g>
     </svg>
   );
 }

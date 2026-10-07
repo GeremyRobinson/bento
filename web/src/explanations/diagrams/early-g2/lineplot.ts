@@ -53,7 +53,7 @@ export function buildLinePlot(s: LinePlotSpec): SceneDiagram {
     height.set(v, k + 1);
     const cx = x(v), cy = -18 - k * XP, h = XS / 2 - 2;
     const x2 = [M([cx - h, cy - h]), L([cx + h, cy + h]), M([cx + h, cy - h]), L([cx - h, cy + h])];
-    items.push(path(x2, "xmark", b ? { from: b.drop, enter: "drop", delay: 0.22 * i } : {}));
+    items.push(path(x2, "xmark", b ? { from: b.drop, enter: "rise", delay: 0.22 * i } : {}));
     // every X is the same kind of thing (blue); the stacks the question asks about turn amber when they light up
     if (b?.light != null && s.light?.includes(v)) items.push(path(x2, "xmark pq", { from: b.light, enter: "fade" }));
   });

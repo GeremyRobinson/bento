@@ -183,12 +183,13 @@ describe("expression-box lessons", () => {
       expect(opened).toContain(Array(p.n).fill(p.a).join(" × "));
     }
   });
-  it("g11-compose works inside out: g's value slides into f's slot, and f gives the answer", () => {
+  it("g11-compose works inside out: g's value is written into f's slot on the next line, and f gives the answer", () => {
     const l = lesson("g11-compose");
     for (const p of problemsOf(l, 30)) {
       const d = sceneOf(l, p), g = value(l, p, "inside"), out = value(l, p, "outside");
-      const slid = d.items.find(i => i.from === 1 && i.enter === "slide" && i.type === "text")!;
-      expect((slid as { text: string }).text).toBe(fmt(g));
+      const k = textsAt(d, 0).find(t => /\bxchip\b|acc/.test(t.cls ?? "") && t.from === 0 && !/muted/.test(t.cls ?? ""))!;
+      const written = d.items.find((i): i is Text => i.from === 1 && i.type === "text" && i.text === fmt(g) && !/dimmed/.test(i.cls ?? ""))!;
+      expect(written.y).toBeGreaterThan(k.y);
       expect(finalText(d, 2)).toContain(fmt(out));
     }
   });
@@ -199,7 +200,8 @@ describe("expression-box lessons", () => {
       for (let b = 0; b < 5; b++) expect(shownAt(d, b).some(i => /\bxbox p1 dash\b/.test(i.cls ?? ""))).toBe(true);
       // why: the inside's own rate is named on its box before it moves
       expect(textsAt(d, 2).map(t => t.text)).toContain(`moves ${p.a} per 1`);
-      expect(d.items.some(i => i.from === 3 && i.enter === "slide" && i.type === "text" && i.text === String(p.a))).toBe(true);
+      // the rate is written at the front of the next line (nothing slides across)
+      expect(d.items.some(i => i.from === 3 && i.enter === "rise" && i.type === "text" && i.text === String(p.a))).toBe(true);
       expect(finalText(d, 4)).toContain(String(p.a * p.n));
     }
   });

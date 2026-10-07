@@ -23,7 +23,7 @@ export function antiderivativePicture(o: { a: number; n: number; up: number; c: 
     ],
     notes: [
       { row: -0.55, col: 1, text: "↑", cls: "lbl acc", from: 0, until: 0, at: 0.6 },
-      { row: 1.1, col: 0, text: `÷ ${up}`, cls: "lbl big acc", from: 2, until: 2, at: 0.2, enter: "drop" },
+      { row: 1.1, col: 0, text: `÷ ${up}`, cls: "lbl big acc", from: 2, until: 2, at: 0.2, enter: "rise" },
       { row: 2, col: 1, text: "+ C", cls: "lbl big pw", from: 2, at: 1.6 },
     ],
     dropRoom: true,

@@ -54,17 +54,15 @@ export function AreaModelDiagram({ diagram: d, timeline, at, turn = true }: { di
   const T = turn && turned;
   const P = (x: number, y: number) => (T ? { x: y, y: x } : { x, y });
   const W = T ? d.height : d.width, H = T ? d.width : d.height;
-  // what's drawn so far sits in the middle of the canvas (G 18:09 "check if pictures are centered"): the canvas keeps
-  // room for product labels that only show later, so the picture slides into the centre until then
-  const [shift, setShift] = useState<{ k: string; dx: number; dy: number; slide: boolean }>({ k: "", dx: 0, dy: 0, slide: false });
-  const shownKey = [...v.shown].join(",") + (v.sum ? "+" : "");
+  // the finished picture (every part, shown yet or not) sits in the middle of the canvas (G 18:09 "check if pictures are
+  // centered"); it is centred once, so parts appear where they stay and nothing slides between beats (G 19:34)
+  const [shift, setShift] = useState<{ k: string; dx: number; dy: number }>({ k: "", dx: 0, dy: 0 });
   const pic = `${d.width}x${d.height}:${d.total.value}:${T}`;
   useLayoutEffect(() => {
     const g = ref.current?.querySelector<SVGGElement>(".vcentre");
     if (!g || typeof g.getBBox !== "function") return;
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
     g.querySelectorAll<SVGGraphicsElement>("text,rect,line").forEach(e => {
-      if (e.closest('[data-shown="false"]')) return;
       try {
         let b = e.getBBox();
         if (!(b.height > 0 || b.width > 0)) return;
@@ -73,15 +71,14 @@ export function AreaModelDiagram({ diagram: d, timeline, at, turn = true }: { di
         x0 = Math.min(x0, b.x); x1 = Math.max(x1, b.x + b.width); y0 = Math.min(y0, b.y); y1 = Math.max(y1, b.y + b.height);
       } catch { /* not measurable */ }
     });
-    // a new picture lands centred; only one that grows slides
-    if (y1 > y0) setShift(o => ({ k: pic, dx: Math.round(W / 2 - (x0 + x1) / 2), dy: Math.round(H / 2 - (y0 + y1) / 2), slide: o.k === pic }));
-  }, [pic, shownKey, ref, W, H]);
-  const sh = shift.k === pic ? shift : { dx: 0, dy: 0, slide: false };
+    if (y1 > y0) setShift({ k: pic, dx: Math.round(W / 2 - (x0 + x1) / 2), dy: Math.round(H / 2 - (y0 + y1) / 2) });
+  }, [pic, ref, W, H]);
+  const sh = shift.k === pic ? shift : { dx: 0, dy: 0 };
   const end = T ? "end" : "middle";
   return (
     <svg ref={ref} className="am" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={label}
       data-split={v.split} data-sum={v.sum} data-turned={T} style={{ "--w": W, "--h": H } as CSSProperties}>
-      <g className={`vcentre${sh.slide ? " slide" : ""}`} style={{ transform: `translate(${sh.dx}px, ${sh.dy}px)` }}>
+      <g className="vcentre" style={{ transform: `translate(${sh.dx}px, ${sh.dy}px)` }}>
       {/* the side labels sit just outside the rectangle and grow away from it, so a label held big on a phone never runs into it */}
       <text className={`axis-label${T ? " out-top" : ""}`} {...P(left - LABEL_GAP, top + height / 2)} style={{ textAnchor: T ? "middle" : "end" }}>{d.vertical.label}</text>
       <text className={`whole${T ? "" : " out-top"}`} {...P(left + width / 2, top - LABEL_GAP)} style={{ textAnchor: end }}>{d.horizontal.label}</text>

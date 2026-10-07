@@ -305,21 +305,22 @@ button.gcell:active{transform:scale(.96)}
 .a-draw{stroke-dasharray:1;animation:draw var(--dur-900) var(--ease) var(--d,0s) both} .a-draw.slow{animation-duration:var(--dur-1600)}
 .dash.a-draw{stroke-dasharray:none;animation:fadeIn var(--dur-600) ease var(--d,0s) both}
 @keyframes draw{from{stroke-dashoffset:1}}
-.a-fade{animation:fadeIn var(--dur-500) ease var(--d,0s) both}
+.a-fade{animation:fadeIn var(--dur-500) var(--m-ease) var(--d,0s) both}
 .a-rise{animation:rise var(--dur-500) var(--ease) var(--d,0s) both}
 .a-pop{transform-box:fill-box;transform-origin:center;animation:popIn var(--dur-500) var(--m-ease) var(--d,0s) both}
 .a-growx{transform-box:fill-box;transform-origin:left center;animation:growX var(--dur-700) var(--ease) var(--d,0s) both} @keyframes growX{from{transform:scaleX(0)}}
 .a-growy{transform-box:fill-box;transform-origin:center bottom;animation:growY var(--dur-900) var(--ease) var(--d,0s) both} @keyframes growY{from{transform:scaleY(0)}}
 .a-sweep{animation:sweep var(--dur-1200) var(--ease) var(--d,0s) both} @keyframes sweep{from{stroke-dasharray:0 1}}
 .a-level{transform-box:fill-box;transform-origin:center bottom;animation:level var(--dur-1000) var(--ease) var(--d,0s) both} @keyframes level{from{transform:scaleY(var(--from))}}
-.a-outsoon{animation:fadeOut var(--dur-400) ease var(--d,0s) forwards} @keyframes fadeOut{to{opacity:0}}
+.a-outsoon{animation:fadeOut var(--dur-400) var(--m-ease) var(--d,0s) forwards} @keyframes fadeOut{to{opacity:0}}
+.viz-svg .dimmed{opacity:.4}
 .a-slide{animation:slide var(--dur-1000) var(--ease) var(--d,0s) both} @keyframes slide{from{transform:translate(var(--dx,0px),var(--dy,0px))}}
 /* a slide that starts late in its beat is hidden until it starts, instead of waiting in plain sight at its start */
 .a-slide.late{animation:slide var(--dur-1000) var(--ease) var(--d,0s) both,fadeIn var(--dur-300) ease var(--d,0s) both}
 .a-move{animation:move var(--dur,var(--dur-1000)) var(--ease) var(--d,0s) both} @keyframes move{to{transform:translateX(var(--dx))}}
-.a-drop{animation:drop var(--dur-600) var(--m-ease) var(--d,0s) both} @keyframes drop{from{opacity:0;transform:translateY(-30px)}}
+/* no drop entrance: parts rise in where they stay (Review, G 19:34) */
 .a-grow{transform-box:view-box;animation:growS var(--dur-1200) var(--ease) var(--d,0s) both} @keyframes growS{from{transform:scale(var(--from))}}
-.a-flash{animation:fadeIn var(--dur-400) ease var(--d) both, fadeOut var(--dur-300) ease var(--d2) forwards}
+.a-flash{animation:fadeIn var(--dur-400) var(--m-ease) var(--d) both, fadeOut var(--dur-300) var(--m-ease) var(--d2) forwards}
 .rs{display:grid;justify-items:center;gap:var(--sp-1);font-family:var(--num);font-size:calc(var(--math) * .62);line-height:1.25;text-align:center}
 .rs-arrow{color:var(--muted);font-size:.7em}
 .rs-line,.rs-line>.mline{max-width:100%}
@@ -554,4 +555,3 @@ button.gcell:active{transform:scale(.96)}
 .viz-svg .misfit{fill:color-mix(in srgb,var(--c2) var(--d-f30),transparent);stroke:var(--c2);stroke-width:var(--d-line);stroke-dasharray:var(--d-dash-miss)} .viz-svg text.okmark{fill:var(--ka)}
 .a-fold{transform-box:view-box;transform-origin:var(--ox) var(--oy);animation:fold var(--dur-2400) var(--ease) var(--d,0s) both}
 @keyframes fold{0%{transform:rotate(var(--r)) scaleY(1) rotate(calc(-1 * var(--r)))} 38%,70%{transform:rotate(var(--r)) scaleY(-1) rotate(calc(-1 * var(--r)))} 100%{transform:rotate(var(--r)) scaleY(1) rotate(calc(-1 * var(--r)))}}
-:is(.viz-svg,.am)>.vcentre.slide{transition:transform var(--m-swap) var(--m-ease)}

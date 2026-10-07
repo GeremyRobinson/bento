@@ -13,9 +13,9 @@ export function polynomialDerivativePicture(o: { a: number; b: number; c: number
   const top: TermCell[] = [a, b, c, d].map((v, k) => ({ row: 0, col: k, text: f(v), from: 0, at: 0.2 + 0.2 * k, ...(k === 3 && v === 0 ? { tone: "faded" as const } : {}) }));
   const notes: TermNote[] = [
     // the exponent comes down onto its coefficient
-    { row: -0.55, col: 0, text: "3 ×", cls: "lbl acc", from: 1, until: 1, at: 0.2, enter: "drop" },
-    { row: -0.55, col: 1, text: "2 ×", cls: "lbl acc", from: 2, until: 2, at: 0.2, enter: "drop" },
-    { row: -0.55, col: 2, text: "1 ×", cls: "lbl acc", from: 3, until: 3, at: 0.2, enter: "drop" },
+    { row: -0.55, col: 0, text: "3 ×", cls: "lbl acc", from: 1, until: 1, at: 0.2, enter: "rise" },
+    { row: -0.55, col: 1, text: "2 ×", cls: "lbl acc", from: 2, until: 2, at: 0.2, enter: "rise" },
+    { row: -0.55, col: 2, text: "1 ×", cls: "lbl acc", from: 3, until: 3, at: 0.2, enter: "rise" },
   ];
   return buildTermTable({
     cols: [{ label: "x", sup: "3", part: "p0" }, { label: "x", sup: "2", part: "p1" }, { label: "x", part: "p2" }, { label: "1", part: "pw" }],
