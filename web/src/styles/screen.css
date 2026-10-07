@@ -69,6 +69,8 @@ html:has(.screen) body{overflow:hidden}
 /* the picked lesson's shade waits for its chapter to finish opening, then fades in; it never rides up with the panel (Review) */
 .sgroup:is(.opening,:not(.open)) .srow::before{opacity:0}
 .sgroup.opening .srow::before{transition:none}
+/* the open chapter's title keeps its highlight while its lessons show (G 2026-10-07) */
+.sgroup.open>.srow.chap,.sgroup.open>.srow.chap:hover{background:color-mix(in oklab,var(--tint) 12%,var(--surf-nest))}
 /* the lessons sit in their own panel nested inside the chapter's, a step darker (G 2026-10-07, "its own separate background nester") */
 .sgroup-panel{display:grid;gap:var(--list-gap);margin-top:var(--list-gap);padding:var(--list-gap);background:var(--surf-sub);border-radius:calc(var(--row-h) / 2 + var(--list-gap))}
 .sgroup .srow.sles{min-height:var(--row-h)}
