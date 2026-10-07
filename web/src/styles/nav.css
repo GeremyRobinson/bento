@@ -83,12 +83,11 @@ html[data-nav-dark="edge"] .itop.guest .imark{opacity:0;pointer-events:none}
 .iresume .rtext{display:grid;min-width:0;line-height:1.2}
 .iresume small{font-size:var(--fz-2xs);color:var(--muted);font-weight:var(--w-mid)}
 .iresume b{font-size:var(--fz-sm);font-weight:var(--w-bold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
-.iresume .rcount{font-size:var(--fz-xs);color:var(--muted);font-variant-numeric:tabular-nums}
-@media (max-width:1100px){.iresume .rtext b,.iresume .rcount{display:none}.iresume small{font-size:var(--fz-sm);color:var(--text);font-weight:var(--w-bold)}}
+@media (max-width:1100px){.iresume .rtext b{display:none}.iresume small{font-size:var(--fz-sm);color:var(--text);font-weight:var(--w-bold)}}
 @media (max-width:699px){
   .itop{grid-template-columns:auto minmax(0,1fr) auto}
   .island{width:100%}
-  .iresume{padding:0;width:var(--float-h);justify-content:center}.iresume .rtext,.iresume .rcount{display:none}
+  .iresume{padding:0;width:var(--float-h);justify-content:center}.iresume .rtext{display:none}
   /* one grade circle on a phone: the island's own; an unfinished lesson waits on Today instead (G 2026-10-06) */
   .itop:has(>.icorner.left){grid-template-columns:minmax(0,1fr) auto;gap:var(--sp-2)}
   .itop>.icorner.left{display:none}
@@ -363,7 +362,8 @@ html:has(.screen),html:has(.screen) body{overflow:hidden;overscroll-behavior:non
 .confirm .cq b{font-size:var(--fz-xl);font-weight:var(--w-bold);letter-spacing:-.01em}
 .confirm .cq span{color:var(--muted);font-size:var(--fz-md)}
 .confirm .ca{width:100%}
-.iresume-x{display:grid;place-items:center;width:var(--float-in);height:var(--float-in);border-radius:var(--r-pill);background:var(--float);box-shadow:var(--float-shadow);color:var(--muted)}
+/* the same height as the Resume pill beside it, like every nav button */
+.iresume-x{flex:none;display:grid;place-items:center;width:var(--float-h);height:var(--float-h);border-radius:var(--r-pill);background:var(--float);box-shadow:var(--float-shadow);color:var(--muted)}
 
 /* ---- the nav's wordmark: on every screen, plain "Bento" on the left, the same as the landing page's; it always
    takes you home (G 2026-10-06) ---- */

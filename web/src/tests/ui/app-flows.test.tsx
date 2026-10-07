@@ -159,7 +159,8 @@ describe("home", () => {
     tap(`Back to ${LESSON}`);
     // the unfinished lesson waits beside the island; each grade's plan keeps showing its own next lesson
     const resume = screen.getByRole("button", { name: new RegExp(`Resume ${LESSON}, 5th grade, problem 1 of 8`) });
-    expect(resume).toHaveTextContent(`5Resume${LESSON}1/8`);
+    expect(resume).toHaveTextContent(`5Resume${LESSON}`);
+    expect(resume).not.toHaveTextContent("1/8"); // progress is the lesson pill's own outline, not a counter (G)
     tap("Back to contents");
     pickGrade("Kindergarten");
     expect(screen.queryByRole("button", { name: new RegExp(`Up next.*${LESSON}`) })).toBeNull();
