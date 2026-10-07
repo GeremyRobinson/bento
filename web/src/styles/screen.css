@@ -566,9 +566,8 @@ html:has(.screen) body{overflow:hidden}
 
 /* ---- practice on a phone, bento'd (G 2026-10-07 "Tiles + docked keys", then "the problem and steps become one"):
    the hero opens into tiles with the bento gap. The problem tile holds the step's math and its box, a wrong answer or
-   hint line under it, and the step bar; the bar opens as an accordion inside the tile that pushes the picture down, and
-   once solved it carries "Solved." and the lesson's idea. The picture is its own tile; "Nice!" floats over its top as a
-   small pill and fades. The keys dock at the bottom and give way to a full-width "Next problem" when solved. The problem
+   hint line under it, and the step bar on top; the bar opens as an accordion inside the tile that pushes the picture down, and
+   once solved it carries "Solved." and the lesson's idea. The picture is its own tile; a right answer shows only as the bar's flash (no pop-up). The keys dock at the bottom and give way to a full-width "Next problem" when solved. The problem
    tile is drawn behind its rows (::before), so it wraps them as one. ---- */
 .phero>.pbar,.phero>.pacc{display:none}
 @media (max-width:520px){
@@ -578,13 +577,13 @@ html:has(.screen) body{overflow:hidden}
   .pscreen .lshero.phero::before,.pscreen .lshero.phero>.lpic{background:var(--pane-plain,var(--float));border-radius:var(--r-panel);outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
   .pscreen .lshero.phero::before{content:"";grid-row:1 / 5;grid-column:1;z-index:var(--z-flat)}
   .pscreen .lshero.phero>*{z-index:var(--z-up);grid-column:1}
-  .pscreen .lshero.phero>.pmath{grid-row:1;position:relative;padding:var(--sp-3) calc(var(--sp-3) + 36px) var(--sp-2)}
-  .pscreen .lshero.phero>.pmath .speak{top:var(--sp-3);right:var(--sp-2)}
+  .pscreen .lshero.phero>.pmath{grid-row:3;position:relative;padding:var(--sp-2) calc(var(--sp-3) + 36px) var(--sp-2)}
+  .pscreen .lshero.phero>.pmath .speak{top:var(--sp-2);right:var(--sp-2)}
   /* a wrong answer or a hint line: under the math, inside the tile */
-  .pscreen .lshero.phero>.pfb:is(.fb-bad,.fb-hint){grid-row:2;align-self:start;margin:0;padding:0 var(--sp-4) var(--sp-2);background:none;border-radius:0;height:auto;min-height:0}
+  .pscreen .lshero.phero>.pfb:is(.fb-bad,.fb-hint){grid-row:4;align-self:start;margin:0;padding:0 var(--sp-4) var(--sp-2);background:none;border-radius:0;height:auto;min-height:0}
   .pscreen .lshero.phero>.pfb.solved{display:none}
-  /* the step bar, inside the tile */
-  .pscreen .lshero.phero>.pbar{grid-row:3;display:flex;padding:0 var(--sp-2) var(--sp-2)}
+  /* the step bar, at the top of the tile (G 17:38 "steps on top") */
+  .pscreen .lshero.phero>.pbar{grid-row:1;display:flex;padding:var(--sp-2) var(--sp-2) 0}
   .pscreen .phero .stepbar{background:var(--btn-card,var(--well));box-shadow:none}
   .pscreen .phero .stepbar.solved{min-height:var(--tap);padding-block:var(--sp-2);align-items:center}
   .pscreen .phero .stepbar.solved .sbl{white-space:normal;font-weight:var(--w-regular);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
@@ -592,17 +591,18 @@ html:has(.screen) body{overflow:hidden}
   .pscreen .phero .stepbar.solved small{display:none}
   .pscreen .phero .stepbar[aria-expanded="true"] .chev{transform:rotate(180deg)}
   .pscreen .phero .stepbar .chev{transition:transform var(--m-swap) var(--m-ease)}
-  /* the steps accordion: opens under the bar and pushes the picture down */
-  .pscreen .lshero.phero>.pacc{grid-row:4;display:grid;gap:var(--sp-2);padding:0 var(--sp-2) var(--sp-3);animation:stackIn var(--m-in) var(--m-ease) both}
+  /* the steps accordion: opens under the bar and pushes the problem and picture down */
+  .pscreen .lshero.phero>.pacc{grid-row:2;display:grid;gap:var(--sp-2);padding:var(--sp-2) var(--sp-2) 0;animation:stackIn var(--m-in) var(--m-ease) both}
   .pscreen .pacc .pwhere{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);margin:0;padding:0 var(--sp-2);font-weight:var(--w-mid);color:var(--muted);font-size:var(--fz-sm)}
-  .pscreen .pacc .pbeats .beat{padding-block:6px}
+  /* the steps' ticks and words line up under the bar's own (G 17:44) */
+  .pscreen .pacc .pbeats .beat{padding:6px var(--sp-3) 6px 6px;gap:10px}
   .pscreen .pacc .hrow{display:flex;gap:var(--sp-2)}
   /* the picture tile */
   .pscreen .lshero.phero>.lpic{grid-row:5;margin-top:var(--u);padding:var(--sp-3)}
   .pscreen .lshero.phero>.lpic>.viz{inset:var(--sp-3)}
   .pscreen.nopic .lshero.phero{grid-template-rows:auto auto auto auto}
-  /* "Nice!": a small pill over the top of the picture */
-  .pscreen .lshero.phero>.pfb.fb-good:not(.solved){grid-row:5;justify-self:center;align-self:start;margin-top:calc(var(--u) + var(--sp-2));width:auto;max-width:calc(100% - var(--sp-4));height:auto;min-height:0;padding:var(--sp-1) var(--sp-4);border-radius:var(--r-pill);background:var(--pane-plain,var(--float));outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1);z-index:var(--z-up2)}
+  /* a right answer needs no pop-up: the step bar's flash and tick say it (G 17:38) */
+  .pscreen .lshero.phero>.pfb.fb-good{display:none}
   /* solved: the keys give way to "Next problem" */
   .pscreen.psolved .ppad .tray{grid-template-columns:minmax(0,1fr)}
   .pscreen.psolved .ppad .tray>:not(.k-go){display:none}

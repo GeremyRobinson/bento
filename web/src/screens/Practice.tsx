@@ -199,7 +199,7 @@ export function Practice() {
           <button className="speak" aria-label="Read it to me" onClick={() => speak([step?.question, document.querySelector("#app .pprob")?.textContent].filter(Boolean).join(". ").replace(/\*\*/g, ""))}><SpeakerIcon /></button>
         </div>
         <FeedbackBox key={fbKey} fb={fbAway || bulbHint ? null : fb} idea={idea} solved={s.solved && !fbAway && fb?.type !== "hint"} />
-        {/* a phone: the steps fold into one bar inside the problem's tile, under its math; it opens as an accordion that
+        {/* a phone: the steps fold into one bar at the top of the problem's tile, over its math (G 17:38: steps on top); it opens as an accordion that
           pushes the picture down, and when the problem is solved the bar is where "Solved." and its idea land (G 2026-10-07) */}
         <div className="pbar">
           <button key={fb?.type === "good" && !s.solved ? fbKey : "bar"} className={`fpill stepbar${s.solved ? " solved" : ""}${fb?.type === "good" && !s.solved && !fbAway ? " flash" : ""}`} onClick={() => setStepsOpen(o => !o)} aria-expanded={stepsOpen} aria-label={`Steps: ${now?.label ?? "done"}, ${Math.min(here + 1, steps.length)} of ${steps.length}`}>
@@ -211,7 +211,7 @@ export function Practice() {
           <div className="pacc" role="region" aria-label="Steps">
             <p className="pwhere">Problem {s.i + 1} of {n}{dots}</p>
             {beatList}
-            <div className="hrow">{extras}</div>
+            {skipAvailable(s) && <div className="hrow"><Pill onClick={() => act((st, _p, d) => toggleSkip(st, d))}>{s.skip ? "Show steps" : "Final answer only"}</Pill></div>}
           </div>
         )}
         {pic && (

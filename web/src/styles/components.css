@@ -554,3 +554,4 @@ button.gcell:active{transform:scale(.96)}
 .viz-svg .misfit{fill:color-mix(in srgb,var(--c2) var(--d-f30),transparent);stroke:var(--c2);stroke-width:var(--d-line);stroke-dasharray:var(--d-dash-miss)} .viz-svg text.okmark{fill:var(--ka)}
 .a-fold{transform-box:view-box;transform-origin:var(--ox) var(--oy);animation:fold var(--dur-2400) var(--ease) var(--d,0s) both}
 @keyframes fold{0%{transform:rotate(var(--r)) scaleY(1) rotate(calc(-1 * var(--r)))} 38%,70%{transform:rotate(var(--r)) scaleY(-1) rotate(calc(-1 * var(--r)))} 100%{transform:rotate(var(--r)) scaleY(1) rotate(calc(-1 * var(--r)))}}
+.viz-svg>.vcentre.slide{transition:transform var(--m-swap) var(--m-ease)}
