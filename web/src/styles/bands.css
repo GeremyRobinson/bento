@@ -96,34 +96,38 @@ html[data-hue][data-theme="dark"]{--page:oklch(from var(--page-hue) .165 .018 h)
 /* ---- picture colors (G 2026-10-06: "colorful, different across diagrams, like the live site") ----
    Every grade brings its own picture palette, and each lesson's picture takes one of its three colors (App's .t0/.t1/.t2).
    The lesson UI around the picture stays monochrome in the grade hue (--h*, above). Coins keep real coin colors. */
-/* Japanese colour pairings (G 2026-10-07): each grade's picture trio is a traditional Japanese colour harmony in the
-   manner of Sanzo Wada's Haishoku Soukan, named per line; the unknown is always yamabuki (amber). Still no green or red
-   parts. Early grades take the clear, bright colours; later grades the deeper, quieter ones. */
-:is(.wrap,.gpal)[data-grade="0"]{--l0:#00a3af;--l1:#e95295;--l2:#7058a3;--la:#f8b500} /* asagi, tsutsuji, sumire */
-:is(.wrap,.gpal)[data-grade="1"]{--l0:#4c6cb3;--l1:#e7609e;--l2:#ed6d3d;--la:#f8b500} /* gunjo, botan, kaki */
-:is(.wrap,.gpal)[data-grade="2"]{--l0:#00a3af;--l1:#745399;--l2:#ed6d3d;--la:#f8b500} /* asagi, edo-murasaki, kaki */
-:is(.wrap,.gpal)[data-grade="3"]{--l0:#1e50a2;--l1:#ee836f;--l2:#8a6bbe;--la:#f8b500} /* ruri, sango-shu, fuji-murasaki */
-:is(.wrap,.gpal)[data-grade="4"]{--l0:#2a83a2;--l1:#e95295;--l2:#5654a2;--la:#f8b500} /* hanada, tsutsuji, kikyo */
-:is(.wrap,.gpal)[data-grade="5"]{--l0:#3e62ad;--l1:#ed6d3d;--l2:#e7609e;--la:#f8b500} /* kakitsubata, kaki, botan */
-:is(.wrap,.gpal)[data-grade="6"]{--l0:#165e83;--l1:#c85179;--l2:#745399;--la:#f8b500} /* ai, nakabeni, edo-murasaki */
-:is(.wrap,.gpal)[data-grade="7"]{--l0:#4c6cb3;--l1:#96514d;--l2:#00a3af;--la:#f8b500} /* gunjo, azuki, asagi */
-:is(.wrap,.gpal)[data-grade="8"]{--l0:#5654a2;--l1:#5c9291;--l2:#95483f;--la:#f8b500} /* kikyo, sabi-asagi, tobi */
-:is(.wrap,.gpal)[data-grade="9"]{--l0:#165e83;--l1:#6d2e5b;--l2:#9f563a;--la:#f8b500} /* ai, ebizome, kakishibu */
-:is(.wrap,.gpal)[data-grade="10"]{--l0:#223a70;--l1:#5c9291;--l2:#895b8a;--la:#f8b500} /* kon, sabi-asagi, kodai-murasaki */
-:is(.wrap,.gpal)[data-grade="11"]{--l0:#19448e;--l1:#8a6bbe;--l2:#5c9291;--la:#f8b500} /* ruri-kon, fuji-murasaki, sabi-asagi */
-:is(.wrap,.gpal)[data-grade="12"]{--l0:#165e83;--l1:#895b8a;--l2:#95483f;--la:#f8b500} /* ai, kodai-murasaki, tobi */
+/* Picture colours by rule (G 06:02-06:03: "what contrast colour stands out most against the grade colour", two and three
+   colours "clear but super cool looking", "doesnt scream colors everywhere"). Pictures draw from one bright set of seven:
+   orange, teal, cyan, blue, violet, magenta, pink. Red and green are left out (right and wrong), and so are yellow and amber
+   (amber is the answer). Per grade: the three picture colours are the trio spread widest apart on the wheel while staying clear of the
+   grade's colour; the LEAD is the one farthest from the grade colour, so it stands out most on the grade's panels, then
+   the SECOND and THIRD. Each sits at its hue's own brightest point. Loudness is a hierarchy, not equal: lead full bright,
+   second a step softer, third quiet (--c0..2 below), so a picture has one loud colour and the rest support it. */
+:is(.wrap,.gpal)[data-grade="0"]{--l0:#04c5b5;--l1:#0083fc;--l2:#ff12f7;--la:#f8b500} /* grade 35: lead teal, second blue, third magenta */
+:is(.wrap,.gpal)[data-grade="1"]{--l0:#fa8906;--l1:#ff12f7;--l2:#04c5b5;--la:#f8b500} /* grade 255: lead orange, second magenta, third teal */
+:is(.wrap,.gpal)[data-grade="2"]{--l0:#0083fc;--l1:#04c5b5;--l2:#ff12f7;--la:#f8b500} /* grade 65: lead blue, second teal, third magenta */
+:is(.wrap,.gpal)[data-grade="3"]{--l0:#ff12f7;--l1:#fa8906;--l2:#07bfde;--la:#f8b500} /* grade 145: lead magenta, second orange, third cyan */
+:is(.wrap,.gpal)[data-grade="4"]{--l0:#0083fc;--l1:#ff12f7;--l2:#04c5b5;--la:#f8b500} /* grade 90: lead blue, second magenta, third teal */
+:is(.wrap,.gpal)[data-grade="5"]{--l0:#fa8906;--l1:#fd0397;--l2:#904ffe;--la:#f8b500} /* grade 222: lead orange, second pink, third violet */
+:is(.wrap,.gpal)[data-grade="6"]{--l0:#ff12f7;--l1:#fa8906;--l2:#0083fc;--la:#f8b500} /* grade 170: lead magenta, second orange, third blue */
+:is(.wrap,.gpal)[data-grade="7"]{--l0:#fa8906;--l1:#04c5b5;--l2:#ff12f7;--la:#f8b500} /* grade 266: lead orange, second teal, third magenta */
+:is(.wrap,.gpal)[data-grade="8"]{--l0:#fa8906;--l1:#fd0397;--l2:#904ffe;--la:#f8b500} /* grade 218: lead orange, second pink, third violet */
+:is(.wrap,.gpal)[data-grade="9"]{--l0:#0083fc;--l1:#04c5b5;--l2:#ff12f7;--la:#f8b500} /* grade 55: lead blue, second teal, third magenta */
+:is(.wrap,.gpal)[data-grade="10"]{--l0:#fa8906;--l1:#ff12f7;--l2:#0083fc;--la:#f8b500} /* grade 202: lead orange, second magenta, third blue */
+:is(.wrap,.gpal)[data-grade="11"]{--l0:#fa8906;--l1:#04c5b5;--l2:#fd0397;--la:#f8b500} /* grade 282: lead orange, second teal, third pink */
+:is(.wrap,.gpal)[data-grade="12"]{--l0:#fa8906;--l1:#fd0397;--l2:#904ffe;--la:#f8b500} /* grade 234: lead orange, second pink, third violet */
 /* Grade (master): every grade is an instance of this one. A grade's line above overrides only what it changes;
    anything it leaves out comes from here. */
 :is(.wrap,.gpal){--master-l0:#3b82f6;--master-l1:#ec4899;--master-l2:#8b5cf6;--master-la:#f59e0b;--master-k0:#2d69cc;--master-k1:#d63187;--master-k2:#7950d6}
 /* pictures are the bright part (G 05:41, 05:43: "make every one of them super bright no matter what the color is"): every picture
    colour keeps only its hue from the grade trio and is set to one bright lightness at full saturation (the browser keeps it
    in gamut), in every grade and both modes. Inks (the colour as text) are the same hue, deep enough to read on white. */
-:is(.wrap,.gpal){--l0:var(--master-l0);--l1:var(--master-l1);--l2:var(--master-l2);--la:var(--master-la);--c0:oklch(from var(--l0) 0.68 0.32 h);--c1:oklch(from var(--l1) 0.68 0.32 h);--c2:oklch(from var(--l2) 0.68 0.32 h);--acc:oklch(from var(--la) .82 .3 h)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal){--c0:oklch(from var(--l0) 0.78 0.3 h);--c1:oklch(from var(--l1) 0.78 0.3 h);--c2:oklch(from var(--l2) 0.78 0.3 h);--acc:oklch(from var(--la) .86 .3 h);--k0:var(--c0);--k1:var(--c1);--k2:var(--c2);--ka:var(--acc)}}
-:root[data-theme="dark"] :is(.wrap,.gpal){--c0:oklch(from var(--l0) 0.78 0.3 h);--c1:oklch(from var(--l1) 0.78 0.3 h);--c2:oklch(from var(--l2) 0.78 0.3 h);--acc:oklch(from var(--la) .86 .3 h);--k0:var(--c0);--k1:var(--c1);--k2:var(--c2);--ka:var(--acc)}
+:is(.wrap,.gpal){--l0:var(--master-l0);--l1:var(--master-l1);--l2:var(--master-l2);--la:var(--master-la);--c0:oklch(from var(--l0) l .3 h);--c1:oklch(from var(--l1) calc(l + .04) .2 h);--c2:oklch(from var(--l2) calc(l + .1) .11 h);--acc:oklch(from var(--la) .82 .3 h)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.wrap,.gpal){--c0:oklch(from var(--l0) max(l, .74) .28 h);--c1:oklch(from var(--l1) max(l, .74) .18 h);--c2:oklch(from var(--l2) .7 .1 h);--acc:oklch(from var(--la) .86 .3 h);--k0:var(--c0);--k1:var(--c1);--k2:var(--c2);--ka:var(--acc)}}
+:root[data-theme="dark"] :is(.wrap,.gpal){--c0:oklch(from var(--l0) max(l, .74) .28 h);--c1:oklch(from var(--l1) max(l, .74) .18 h);--c2:oklch(from var(--l2) .7 .1 h);--acc:oklch(from var(--la) .86 .3 h);--k0:var(--c0);--k1:var(--c1);--k2:var(--c2);--ka:var(--acc)}
 :is(.wrap,.gpal){--k0:var(--master-k0);--k1:var(--master-k1);--k2:var(--master-k2)}
 :is(.wrap,.gpal){--k0:oklch(from var(--l0) .56 .3 h);--k1:oklch(from var(--l1) .56 .3 h);--k2:oklch(from var(--l2) .56 .3 h)}
-:is(.wrap,.gpal){--ka:oklch(from var(--la) .68 .2 calc(h - 15))} /* the answer in text: bright amber, nudged toward orange so it stays bold on white (G 05:46) */
+:is(.wrap,.gpal){--ka:oklch(from var(--la) .7 .17 h)} /* the answer in text: bright amber, kept on its own hue so it never reads as the orange picture colour (G 05:46, 06:02) */
 /* inside a picture: the lesson's own picture color, as on the live site */
 :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--tint:var(--c0);--ink:var(--k0)}
 .t1 :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--tint:var(--c1);--ink:var(--k1)}
