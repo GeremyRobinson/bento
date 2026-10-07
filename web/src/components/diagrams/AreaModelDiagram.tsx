@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useLayoutEffect, useState, type CSSProperties } from "react";
 import type { AreaDiagram } from "../../explanations/diagrams/area-model/schema";
 import type { AnimationState } from "../../explanations/schema";
 import { formatNumber } from "../../curriculum/schemas/math-text";
@@ -30,9 +30,25 @@ export function AreaModelDiagram({ diagram: d, timeline, at }: { diagram: AreaDi
   const label = `${d.vertical.label} by ${d.horizontal.label} rectangle, split into ${d.regions
     .map(r => `${d.vertical.label} by ${r.partLabel} = ${r.productLabel}`).join(" and ")}. Total ${formatNumber(d.total.value)}.`;
   const ref = useLabelFloor(d.width);
+  // what's drawn so far sits in the middle of the canvas, top to bottom (G 18:09 "check if pictures are centered"): the
+  // canvas keeps room below for product labels that only show later, so the picture slides down into the centre until then
+  const [shift, setShift] = useState<{ d: AreaDiagram | null; dy: number; slide: boolean }>({ d: null, dy: 0, slide: false });
+  const shownKey = [...v.shown].join(",") + (v.sum ? "+" : "");
+  useLayoutEffect(() => {
+    const g = ref.current?.querySelector<SVGGElement>(".vcentre");
+    if (!g || typeof g.getBBox !== "function") return;
+    let y0 = Infinity, y1 = -Infinity;
+    g.querySelectorAll<SVGGraphicsElement>("text,rect,line").forEach(e => {
+      if (e.closest('[data-shown="false"]')) return;
+      try { const b = e.getBBox(); if (b.height > 0 || b.width > 0) { y0 = Math.min(y0, b.y); y1 = Math.max(y1, b.y + b.height); } } catch { /* not measurable */ }
+    });
+    // a new picture lands centred; only one that grows slides
+    if (y1 > y0) { const dy = Math.round(d.height / 2 - (y0 + y1) / 2); setShift(o => ({ d, dy, slide: o.d === d })); }
+  }, [d, shownKey, ref]);
   return (
     <svg ref={ref} className="am" viewBox={`0 0 ${d.width} ${d.height}`} role="img" aria-label={label}
       data-split={v.split} data-sum={v.sum} style={{ "--w": d.width, "--h": d.height } as CSSProperties}>
+      <g className={`vcentre${shift.slide ? " slide" : ""}`} style={{ transform: `translateY(${shift.d === d ? shift.dy : 0}px)` }}>
       <text className="axis-label" x={left - 28} y={top + height / 2}>{d.vertical.label}</text>
       <text className="whole" x={left + width / 2} y={top - LABEL_GAP}>{d.horizontal.label}</text>
       {d.regions.map(r => (
@@ -51,6 +67,7 @@ export function AreaModelDiagram({ diagram: d, timeline, at }: { diagram: AreaDi
         </g>
       ))}
       {d.splits.map(x => <line key={x} className="split-line" x1={x} y1={top - 6} x2={x} y2={top + height + 6} />)}
+      </g>
     </svg>
   );
 }
