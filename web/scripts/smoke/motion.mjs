@@ -47,6 +47,9 @@ export async function motionGuard({ browser, PAGE, fails, notes }) {
     for (const [name, act, page] of steps) {
       const at = `motion ${w}x${h} ${name}`;
       await p.evaluate(() => {
+        // everything the old page drew is marked: once the new page starts, none of it may still be on screen (G
+        // 2026-10-07: "the purple line", the last grade's colour left across the top of the new grade's book)
+        for (const e of document.querySelectorAll("#app *")) if (!e.closest(".itop")) e.setAttribute("data-was", "");
         window.__vt = 0;
         const f = window.__frames = [], t0 = performance.now();
         const look = () => {
@@ -57,7 +60,8 @@ export async function motionGuard({ browser, PAGE, fails, notes }) {
           // the page's pieces keep their width and the book's tiles their size (a page may still grow below the fold)
           const sizes = [...[...document.querySelectorAll("#app>:not(.itop)")].map(e => `${e.className.toString().split(" ")[0]}:${e.offsetWidth}`),
             ...[...document.querySelectorAll(".bg-in>.bg-t")].map(e => `${e.className.toString().split(" ")[0]}:${e.offsetWidth}x${e.offsetHeight}`)].join(" ");
-          f.push({ t: performance.now() - t0, zoom: !!document.querySelector(".zoom"), blur, sizes, stage: !!document.querySelector("#app>.stage"), hash: location.hash });
+          const was = [...document.querySelectorAll("#app [data-was]")].filter(e => shown(e) && !e.closest(".zoom") && e.getClientRects().length).length;
+          f.push({ t: performance.now() - t0, was, zoom: !!document.querySelector(".zoom"), blur, sizes, stage: !!document.querySelector("#app>.stage"), hash: location.hash });
           if (performance.now() - t0 < 1600) requestAnimationFrame(look);
         };
         requestAnimationFrame(look);
@@ -79,6 +83,8 @@ export async function motionGuard({ browser, PAGE, fails, notes }) {
         if (first < 0) { fails.push(`${at}: the page change never played`); continue; }
         const after = f.slice(first);
         if (after.some(x => x.zoom)) fails.push(`${at}: the contents still drawn over the new page`);
+        const old = after.find(x => x.was > 0);
+        if (old) fails.push(`${at}: ${old.was} pieces of the old page still drawn ${Math.round(old.t - after[0].t)}ms into the new one`);
         const blurred = [...new Set(after.flatMap(x => x.blur))];
         if (blurred.length) fails.push(`${at}: blurred over the new page: ${blurred.join(", ")}`);
         // (a scrollbar arriving as a long page grows below the fold may narrow it by its own width; nothing more)
