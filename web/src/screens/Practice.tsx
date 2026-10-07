@@ -1,6 +1,6 @@
 import { Pill } from "../components/primitives/Pill";
 import { Check, Chevron } from "../components/primitives/icons";
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { playTone, readAloudOn, readSettings, speak } from "../app/settings";
 import { useApp } from "../app/AppState";
 import { withTransition } from "../app/transition";
@@ -111,6 +111,24 @@ export function Practice() {
   const [hintOpen, setHintOpen] = useState(false), [stepsOpen, setStepsOpen] = useState(false), [asking, setAsking] = useState(false);
   useEffect(() => { setHintOpen(false); setStepsOpen(false); }, [s?.i, s?.step, s?.solved]);
   useEffect(() => { dispatchEvent(new CustomEvent("bento:hintopen", { detail: hintOpen })); }, [hintOpen]);
+  // the steps accordion opens and shuts on the motion system: it grows open over --m-in and folds shut faster, over
+  // --m-close, both on --m-ease ("close faster than open"; G 18:21 "use the animation system")
+  const accRef = useRef<HTMLDivElement>(null), shutting = useRef(false);
+  useLayoutEffect(() => {
+    const el = accRef.current;
+    if (!stepsOpen || !el || !el.animate || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const h = el.offsetHeight;
+    el.animate([{ height: "0px", opacity: 0 }, { height: `${h}px`, opacity: 1 }], motion(el, "--m-in"));
+  }, [stepsOpen]);
+  const toggleSteps = () => {
+    const el = accRef.current;
+    if (!stepsOpen) { setStepsOpen(true); return; }
+    if (shutting.current) return;
+    if (!el || !el.animate || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) { setStepsOpen(false); return; }
+    shutting.current = true;
+    const a = el.animate([{ height: `${el.offsetHeight}px`, opacity: 1 }, { height: "0px", opacity: 0, paddingTop: "0px" }], { ...motion(el, "--m-close"), fill: "forwards" });
+    a.onfinish = () => { shutting.current = false; setStepsOpen(false); };
+  };
   // feedback and quick settings never overlap: opening settings puts the feedback away, and new feedback closes settings
   const [fbAway, setFbAway] = useState(false);
   const fbKey = s?.feedback ? `${s.i}-${s.step}-${s.mistakes.length}-${s.hints}-${s.feedback.strong}-${s.feedback.text}-${s.feedback.left}` : "";
@@ -203,13 +221,13 @@ export function Practice() {
         {/* a phone: the steps fold into one bar at the top of the problem's tile, over its math (G 17:38: steps on top); it opens as an accordion that
           pushes the picture down, and when the problem is solved the bar is where "Solved." and its idea land (G 2026-10-07) */}
         <div className="pbar">
-          <button key={fb?.type === "good" && !s.solved ? fbKey : "bar"} className={`fpill stepbar${s.solved ? " solved" : ""}${fb?.type === "good" && !s.solved && !fbAway ? " flash" : ""}`} onClick={() => setStepsOpen(o => !o)} aria-expanded={stepsOpen} aria-label={`Steps: ${now?.label ?? "done"}, ${Math.min(here + 1, steps.length)} of ${steps.length}`}>
+          <button key={fb?.type === "good" && !s.solved ? fbKey : "bar"} className={`fpill stepbar${s.solved ? " solved" : ""}${fb?.type === "good" && !s.solved && !fbAway ? " flash" : ""}`} onClick={toggleSteps} aria-expanded={stepsOpen} aria-label={`Steps: ${now?.label ?? "done"}, ${Math.min(here + 1, steps.length)} of ${steps.length}`}>
             <span className="badge">{s.solved ? <Check /> : here + 1}{fb?.type === "good" && !s.solved && !fbAway && <span className="tick"><Check /></span>}</span><span className="sbl">{s.solved ? <><b>Solved.</b>{idea && <> <Rich text={idea} /></>}</> : now?.label}</span>
             <small>{Math.min(here + 1, steps.length)} of {steps.length}</small><span className="chev" aria-hidden><Chevron dir="down" /></span>
           </button>
         </div>
         {stepsOpen && (
-          <div className="pacc" role="region" aria-label="Steps">
+          <div ref={accRef} className="pacc" role="region" aria-label="Steps">
             <p className="pwhere">Problem {s.i + 1} of {n}{dots}</p>
             {beatList}
             {skipAvailable(s) && <div className="hrow"><Pill onClick={() => act((st, _p, d) => toggleSkip(st, d))}>{s.skip ? "Show steps" : "Final answer only"}</Pill></div>}
@@ -253,4 +271,11 @@ export function Practice() {
       )}
     </FitScreen>
   );
+}
+
+/** A Web Animations timing taken from the motion tokens: one of the --m-* durations, on --m-ease. */
+function motion(el: Element, dur: string): KeyframeAnimationOptions {
+  const css = getComputedStyle(el), v = css.getPropertyValue(dur).trim();
+  const ms = v.endsWith("ms") ? parseFloat(v) : parseFloat(v) * 1000;
+  return { duration: Number.isFinite(ms) ? ms : 300, easing: css.getPropertyValue("--m-ease").trim() || "ease" };
 }
