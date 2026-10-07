@@ -51,40 +51,27 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--on-tint:#14161b}}
 :root[data-theme="dark"] .wrap{--on-tint:#14161b}
 
-/* the greys lean into the hue too, so a blue grade is blue all the way through (never a flat grey). Light: */
-.wrap:not([data-grade="none"]){
-  --muted:color-mix(in oklab,var(--h1) 30%,#5a6070); --faint:color-mix(in oklab,var(--hue) 22%,#c9ccd4);
-  --rule:color-mix(in oklab,var(--hue) 14%,#e4e6eb); --well:color-mix(in oklab,var(--hue) 7%,#f3f4f7);
-  --hover:color-mix(in oklab,var(--hue) 10%,#eef0f4); --page:color-mix(in oklab,var(--hue) 4%,#fbfbfd)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap:not([data-grade="none"]){
-  --muted:color-mix(in oklab,var(--hd2) 30%,#979eae); --faint:color-mix(in oklab,var(--hue) 25%,#4a4f5c);
-  --rule:color-mix(in oklab,var(--hue) 16%,#2b2f38); --well:color-mix(in oklab,var(--hue) 9%,#15181e);
-  --card:color-mix(in oklab,var(--hue) 9%,#1e2129); --hover:color-mix(in oklab,var(--hue) 14%,#262a33); --page:color-mix(in oklab,var(--hue) 6%,#0c0e12)}}
-:root[data-theme="dark"] .wrap:not([data-grade="none"]){
-  --muted:color-mix(in oklab,var(--hd2) 30%,#979eae); --faint:color-mix(in oklab,var(--hue) 25%,#4a4f5c);
-  --rule:color-mix(in oklab,var(--hue) 16%,#2b2f38); --well:color-mix(in oklab,var(--hue) 9%,#15181e);
-  --card:color-mix(in oklab,var(--hue) 9%,#1e2129); --hover:color-mix(in oklab,var(--hue) 14%,#262a33); --page:color-mix(in oklab,var(--hue) 6%,#0c0e12)}
 /* the greys are shades of the grade's one hue (G 2026-10-07: "one hue for the ui color on that grade with different
-   shades"; 2nd grade first): every chrome colour is the hue at a set lightness and a low chroma, never a blue-grey mixed with it. Light: */
-.wrap[data-grade="2"]{
+   shades", every grade 04:46): every chrome colour is the hue at a set lightness and a low chroma, never a blue-grey mixed with it. Light: */
+.wrap:not([data-grade="none"]){
   --text:oklch(from var(--hue) .23 .03 h); --muted:oklch(from var(--hue) .49 .06 h); --faint:oklch(from var(--hue) .83 .045 h);
   --rule:oklch(from var(--hue) .91 .025 h); --hover:oklch(from var(--hue) .935 .025 h); --well:oklch(from var(--hue) .955 .016 h);
   --card:oklch(from var(--hue) .995 .003 h); --page:oklch(from var(--hue) .983 .007 h);
   --surf-nest:oklch(from var(--hue) .925 .028 h); --surf-sub:oklch(from var(--hue) .895 .038 h)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap[data-grade="2"]{
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap:not([data-grade="none"]){
   --text:oklch(from var(--hue) .95 .012 h); --muted:oklch(from var(--hue) .74 .05 h); --faint:oklch(from var(--hue) .42 .045 h);
   --rule:oklch(from var(--hue) .31 .035 h); --hover:oklch(from var(--hue) .29 .035 h); --well:oklch(from var(--hue) .215 .025 h);
   --card:oklch(from var(--hue) .255 .028 h); --page:oklch(from var(--hue) .165 .018 h);
   --surf-nest:oklch(from var(--hue) .19 .022 h); --surf-sub:oklch(from var(--hue) .165 .018 h); --on-tint:oklch(from var(--hue) .18 .02 h)}}
-:root[data-theme="dark"] .wrap[data-grade="2"]{
+:root[data-theme="dark"] .wrap:not([data-grade="none"]){
   --text:oklch(from var(--hue) .95 .012 h); --muted:oklch(from var(--hue) .74 .05 h); --faint:oklch(from var(--hue) .42 .045 h);
   --rule:oklch(from var(--hue) .31 .035 h); --hover:oklch(from var(--hue) .29 .035 h); --well:oklch(from var(--hue) .215 .025 h);
   --card:oklch(from var(--hue) .255 .028 h); --page:oklch(from var(--hue) .165 .018 h);
   --surf-nest:oklch(from var(--hue) .19 .022 h); --surf-sub:oklch(from var(--hue) .165 .018 h); --on-tint:oklch(from var(--hue) .18 .02 h)}
 /* the page behind the app takes the same wash (App puts the grade's hue on <html>) */
-html[data-hue]{--page:color-mix(in oklab,var(--page-hue) 4%,#fbfbfd)}
-@media (prefers-color-scheme: dark){html[data-hue]:not([data-theme="light"]){--page:color-mix(in oklab,var(--page-hue) 6%,#0c0e12)}}
-html[data-hue][data-theme="dark"]{--page:color-mix(in oklab,var(--page-hue) 6%,#0c0e12)}
+html[data-hue]{--page:oklch(from var(--page-hue) .983 .007 h);--rule:oklch(from var(--page-hue) .91 .025 h)}
+@media (prefers-color-scheme: dark){html[data-hue]:not([data-theme="light"]){--page:oklch(from var(--page-hue) .165 .018 h);--rule:oklch(from var(--page-hue) .31 .035 h)}}
+html[data-hue][data-theme="dark"]{--page:oklch(from var(--page-hue) .165 .018 h);--rule:oklch(from var(--page-hue) .31 .035 h)}
 
 /* ---- picture colors (G 2026-10-06: "colorful, different across diagrams, like the live site") ----
    Every grade brings its own picture palette, and each lesson's picture takes one of its three colors (App's .t0/.t1/.t2).
@@ -190,18 +177,18 @@ html[data-line="middle"] body{background-image:
    clean patch of the page under it, feathered at the edge, so no counter lands on a word (v44 sweep item 12) */
 html[data-line="early"] .lintro{background:var(--canvas);box-shadow:none;border-radius:var(--r-lg);outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
 :root[data-line="early"][data-theme="dark"]{--page:#14120f;--canvas:#14120f}
-/* 2nd grade first (G 2026-10-07, one hue in shades): the playful canvas takes the grade's hue too, its counters all
+/* one hue in shades (G 2026-10-07): the playful canvas takes the grade's hue too, its counters all
    shades of it */
-html[data-line="early"]:has(.wrap[data-grade="2"]){--page:oklch(from var(--page-hue) .983 .007 h);--canvas:oklch(from var(--page-hue) .983 .007 h)}
-html[data-line="early"]:has(.wrap[data-grade="2"]) body{background-image:
+html[data-line="early"][data-hue]{--page:oklch(from var(--page-hue) .983 .007 h);--canvas:oklch(from var(--page-hue) .983 .007 h)}
+html[data-line="early"][data-hue] body{background-image:
   radial-gradient(circle at 12% 18%,color-mix(in oklab,var(--page-hue) 14%,transparent) 0 7px,transparent 8px),
   radial-gradient(circle at 63% 9%,color-mix(in oklab,var(--page-hue) 9%,transparent) 0 5px,transparent 6px),
   radial-gradient(circle at 86% 54%,color-mix(in oklab,var(--page-hue) 12%,transparent) 0 8px,transparent 9px),
   radial-gradient(circle at 34% 72%,color-mix(in oklab,var(--page-hue) 8%,transparent) 0 6px,transparent 7px),
   radial-gradient(circle at 74% 88%,color-mix(in oklab,var(--page-hue) 13%,transparent) 0 4px,transparent 5px),
   radial-gradient(circle at 4% 92%,color-mix(in oklab,var(--page-hue) 10%,transparent) 0 5px,transparent 6px)}
-@media (prefers-color-scheme: dark){html[data-line="early"]:not([data-theme="light"]):has(.wrap[data-grade="2"]){--page:oklch(from var(--page-hue) .165 .018 h);--canvas:oklch(from var(--page-hue) .165 .018 h)}}
-html[data-line="early"][data-theme="dark"]:has(.wrap[data-grade="2"]){--page:oklch(from var(--page-hue) .165 .018 h);--canvas:oklch(from var(--page-hue) .165 .018 h)}
+@media (prefers-color-scheme: dark){html[data-line="early"][data-hue]:not([data-theme="light"]){--page:oklch(from var(--page-hue) .165 .018 h);--canvas:oklch(from var(--page-hue) .165 .018 h)}}
+html[data-line="early"][data-theme="dark"][data-hue]{--page:oklch(from var(--page-hue) .165 .018 h);--canvas:oklch(from var(--page-hue) .165 .018 h)}
 /* high contrast wants a plain page */
 html[data-contrast="true"] body{background-image:none}
 
