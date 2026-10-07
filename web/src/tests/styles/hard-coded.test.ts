@@ -152,6 +152,15 @@ describe("no hard-coded styles", () => {
     expect(bad).toEqual([]);
   });
 
+  // G 2026-10-07 22:08, "these kinds of things shouldn't happen if we have a system in place": a panel, row or button
+  // corner is the masters' (--r-panel, --r-row, --r-pill and the steps built on them), never typed in on one page.
+  // Hairline marks (a bar's 2px end, a 5px tick) may stay as they are, so only corners above 8px count.
+  it("panel, row and button corners come from the master tokens, never a page's own number", () => {
+    const bad = declarations().filter(d => d.file !== TOKENS && d.file !== "styles/bands.css" && /radius$/.test(d.prop)
+      && [...d.val.replace(/var\([^()]*(\([^()]*\))?[^()]*\)/g, "").matchAll(/(?<![\w.-])(\d*\.?\d+)px\b/g)].some(m => +m[1]! > 8 && +m[1]! < 999));
+    expect(bad.map(show)).toEqual([]);
+  });
+
   it("the stylesheets are tokenized: scripts/tokenize.mjs has nothing left to change", async () => {
     const script = new URL("../../../scripts/tokenize.mjs", import.meta.url).pathname;
     const { tokenize } = (await import(/* @vite-ignore */ script)) as { tokenize(css: string): string };

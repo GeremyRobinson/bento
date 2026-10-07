@@ -7,6 +7,8 @@
   /* one main-panel corner on every page and at every size (G 20:12): a 44px row's round plus three 8px nests, the
      same as the Contents list and the solve tile, so every main panel matches */
   --r-panel:calc(var(--tap) / 2 + 8px * 3);
+  /* the Row master's corner: a row 12px inside a main panel runs concentric with it; shorter rows clamp to a full pill */
+  --r-row:calc(var(--r-panel) - 12px);
 }
 @media (max-width:480px){
   .wrap{--fs:17px;--lh:24px;--u:12px;--sec:16px;--h:44px;--row:56px;--math:40px;--ask:32px;--slot:56px;--key:56px;--work:21px;--bg-row:96px}

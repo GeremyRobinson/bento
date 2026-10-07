@@ -123,7 +123,7 @@ function TodayDetail({ g }: { g: number }) {
   const found = usePreviewPick(picFrom), pic = found != null;
   // Today as a bento that fills the screen (G 2026-10-06, "needs better use of space"): the up-next problem drawn big,
   // the plan, how far the year is and the streak. No chapters tile: Contents beside it already lists them, so Today
-  // takes that room and runs the full height (G 21:27)
+  // runs the full width along the bottom, its plan side by side (G 21:27, 22:04)
   return (
     <BentoGrid fit className={`bhome sday sbento${pic ? "" : " nopic"}`}>
       {pic && <PreviewWell pick={found} next={nextLesson} size="l" />}
@@ -136,7 +136,7 @@ function TodayDetail({ g }: { g: number }) {
         <span className="bbig">{progress.streak}</span>
         <p><b>day{progress.streak === 1 ? "" : "s"}</b> in a row</p>
       </section>
-      <section className={`tile today ${bgClass(pic ? "t" : "l")}`}>
+      <section className={`tile today ${bgClass("f")}`}>
         <header className="thead"><h2>Today</h2>
           <p className="sub">{!plan.length ? "New lessons for this grade are almost ready." : first ? `About ${minutes} minutes.` : "That's everything for today."}</p></header>
         <div className="tbody">

@@ -1,3 +1,4 @@
+import { APP_NAME } from "./copy";
 import { Facts } from "../screens/Facts";
 import { Fragment, lazy, Suspense, useEffect } from "react";
 import { bandOf, gradeOf, lineOf } from "../curriculum/grades";
@@ -70,7 +71,7 @@ export function App() {
   }, [hue]);
 
   useEffect(() => {
-    document.title = route.name === "learn" && lesson ? `${lesson.title} · Bento` : "Bento";
+    document.title = route.name === "learn" && lesson ? `${lesson.title} · ${APP_NAME}` : APP_NAME;
   }, [route.name, lesson]);
 
   // every tap on a control leaves a soft halo, so a finger knows it landed (Less motion turns it off)

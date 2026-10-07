@@ -189,9 +189,9 @@ describe("home", () => {
     tap("Show all"); tap("Your turn ›");
     const esc = () => act(() => { dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", cancelable: true })); });
     act(() => { dispatchEvent(new Event("bento:hint")); });
-    expect(screen.getByRole("dialog", { name: "Hint" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Hint" })).toBeInTheDocument();
     esc();
-    expect(screen.queryByRole("dialog", { name: "Hint" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Hint" })).toBeNull();
     expect(screen.getByRole("button", { name: "Check" })).toBeInTheDocument();
     tap(`Back to ${LESSON}`);
     fireEvent.click(screen.getByRole("button", { name: `Quit ${LESSON}` }));
@@ -372,7 +372,7 @@ describe("My Bento", () => {
     expect(screen.getByRole("button", { name: "Open the report ›" })).toBeInTheDocument();
     expect(screen.queryByRole("switch")).toBeNull();
     // the nav's wordmark always means home: your book
-    fireEvent.click(screen.getByRole("button", { name: "Bento, home" }));
+    fireEvent.click(screen.getByRole("button", { name: "Obento, home" }));
     expect(screen.getByRole("button", { name: "Grade check-up" })).toBeInTheDocument();
   });
 });

@@ -39,14 +39,14 @@ export function ProblemLine({ lessonId, problem, solved }: { lessonId: string; p
  * The problem as the current app shows it: the story for word problems, otherwise the math, its counters and its note.
  * `part` splits it for a screen that puts the words and the picture in different places.
  */
-export function ProblemView({ lessonId, problem, story, solved, part = "all" }: { lessonId: string; problem: unknown; story: boolean; solved?: boolean; part?: "all" | "text" | "picture" }) {
+export function ProblemView({ lessonId, problem, story, solved, part = "all", step }: { lessonId: string; problem: unknown; story: boolean; solved?: boolean; part?: "all" | "text" | "picture"; step?: string }) {
   const lesson = requireLesson(lessonId);
   if (story && lesson.story) return part === "picture" ? null : <div className="story"><p><Rich text={lesson.story(problem).text} /></p></div>;
   const lead = lesson.lead?.(problem), shown = lesson.display(problem);
   // a question in words ("How many are in the other group?") reads as a sentence: it wraps inside the card at the
   // question size, rather than one unbreakable line at the size of an equation (G 2026-10-06, Kindergarten check-up)
   const wordy = shown.flatMap(k => (k.t === "text" ? k.v.match(/[a-z]{2,}/gi) ?? [] : [])).length >= 3;
-  const note = lead ? undefined : lesson.displayNote?.(problem), counters = lesson.displayCounters?.(problem), picture = lesson.picture?.(problem);
+  const note = lead ? undefined : lesson.displayNote?.(problem), counters = lesson.displayCounters?.(problem), picture = lesson.picture?.(problem, step);
   if (part === "picture") return picture ? <Diagram diagram={picture} timeline={beats(1)} at={0} fit /> : null;
   // the parts wear the colours the problem's picture gives them (statement.ts partsLook)
   const look = ((): PartsLook => { try { return partsLook(lesson.explain(problem, lesson.answers(problem)).diagram); } catch { return "one"; } })();

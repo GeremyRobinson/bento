@@ -6,7 +6,7 @@
    edge, as an inset outline painted over its contents, so a scroll area, a rounded corner or a fill reaching the
    edge never cuts it. Every outlined surface is listed here once; nothing draws its own ring. */
 .wrap{--panel-line:var(--rule);--panel-w:1px}
-:is(.tile,.screen .slist,.spreview,.bhome .today,.bhome .b-stats,.bhome>.b-weak,.units>.panel,.ftable.panel,.sbento .b-streak,.lhpic,.ltile,.lbatt,.lonelist li.on,.lonepic,.zchapter,.zcard,.book,.mhero.battery,.mygl li,.phint .htext){outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
+:is(.tile,.screen .slist,.spreview,.bhome .today,.bhome .b-stats,.bhome>.b-weak,.units>.panel,.ftable.panel,.sbento .b-streak,.lhpic,.ltile,.lbatt,.lonelist li.on,.lonepic,.zchapter,.zcard,.book,.mhero.battery,.mygl li){outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
 .wrap{--r-tile:calc(var(--r-panel) - 4px);--pad-md:calc(var(--u) * 1.25);--pad-lg:calc(var(--u) + 4px);--pad-xl:calc(var(--u) * 1.5);--ring:inset 0 0 0 1px var(--rule)}
 /* ---- controls ---- */
 /* Pill (master): every button is an instance of .ctl. Sizes and feel come from the --pill-* tokens; colors fall back to the
@@ -55,8 +55,8 @@
 @media (max-width:480px){.chip .w{display:none}.chip{padding-right:var(--sp-3)}}
 /* grade sheet */
 .sheet{position:fixed;inset:0;z-index:var(--z-sheet);display:grid;align-items:end;justify-items:center;background:var(--scrim);animation:fadeIn var(--dur-250) ease both;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
-.sheet .panel{width:min(720px,100%);border-radius:var(--r-sheet) var(--r-sheet) 0 0;padding:var(--sp-4) var(--sp-4) max(var(--sp-6),env(safe-area-inset-bottom));background:var(--page);animation:sheetUp var(--dur-450) var(--ease) both;max-height:88vh;overflow:auto;font:var(--w-bold) var(--fz-md)/22px var(--sans)}
-@media (min-width:700px){.sheet{align-items:center}.sheet .panel{border-radius:var(--r-sheet);width:min(640px,94vw)}}
+.sheet .panel{width:min(720px,100%);border-radius:var(--r-panel) var(--r-panel) 0 0;padding:var(--sp-4) var(--sp-4) max(var(--sp-6),env(safe-area-inset-bottom));background:var(--page);animation:sheetUp var(--dur-450) var(--ease) both;max-height:88vh;overflow:auto;font:var(--w-bold) var(--fz-md)/22px var(--sans)}
+@media (min-width:700px){.sheet{align-items:center}.sheet .panel{border-radius:var(--r-panel);width:min(640px,94vw)}}
 @keyframes sheetUp{from{transform:translateY(40px);opacity:0}}
 .gcell{display:flex;align-items:center;gap:10px;padding:6px var(--sp-3) 6px 6px;border-radius:var(--r-pill);background:var(--btn-card,var(--card));height:64px;text-align:left;transition:background var(--dur-150),transform var(--dur-200) var(--m-settle)}
 button.gcell:active{transform:scale(.96)}
@@ -434,7 +434,7 @@ button.gcell:active{transform:scale(.96)}
 .today>.ctl{margin-top:var(--sec)}
 .plan{list-style:none;margin:calc(var(--u) * 1.5) 0 0;padding:0;display:grid}
 .plan li+li{border-top:1px solid var(--rule)}
-.pitem{width:100%;display:flex;align-items:center;gap:var(--u);padding:14px 0;text-align:left;border-radius:14px;transition:opacity var(--dur-200)}
+.pitem{width:100%;display:flex;align-items:center;gap:var(--u);padding:14px 0;text-align:left;border-radius:var(--r-row);transition:opacity var(--dur-200)}
 .pitem:hover .ptext b,.pitem:active .ptext b{color:var(--ink)}
 .pmark{flex:none;width:28px;height:28px;border-radius:var(--r-round);box-shadow:inset 0 0 0 1.5px var(--faint);display:grid;place-items:center;color:var(--on-tint)}
 .pitem.now .pmark{box-shadow:inset 0 0 0 2px var(--tint)}
@@ -493,7 +493,7 @@ button.gcell:active{transform:scale(.96)}
 .pdots{display:flex;gap:6px}
 .pdots i{width:12px;height:12px;border-radius:var(--r-round);box-shadow:inset 0 0 0 1.5px var(--faint)}
 .pdots i.on{background:var(--tint);box-shadow:none}
-.pitem{padding:14px var(--sp-3);margin:0 -12px;width:calc(100% + 24px);border-radius:18px;transition:background var(--dur-150)}
+.pitem{padding:14px var(--sp-3);margin:0 -12px;width:calc(100% + 24px);border-radius:var(--r-row);transition:background var(--dur-150)}
 .pitem:hover,.pitem:active{background:var(--tint-soft)}
 .pitem:hover .ptext b,.pitem:active .ptext b{color:inherit}
 .plan li+li{border-top:0}

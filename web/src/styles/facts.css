@@ -26,7 +26,7 @@
 .fcell.twin,.fcell.on{background:var(--ink);color:var(--on-tint);font-weight:var(--w-bold);transform:scale(1.08);z-index:var(--z-up)}
 .fnote{text-align:center;font-weight:var(--w-mid);min-height:var(--lh);text-wrap:pretty}
 .frowlist{display:flex;flex-wrap:wrap;gap:var(--s);justify-content:center}
-.fchip{display:grid;gap:2px;justify-items:center;min-width:72px;min-height:64px;padding:var(--sp-2) var(--sp-3);border-radius:18px;background:color-mix(in srgb,var(--tint) calc(var(--lv,0) * 34%),var(--well));transition:background var(--dur-300),transform var(--dur-200) var(--m-settle)}
+.fchip{display:grid;gap:2px;justify-items:center;min-width:72px;min-height:64px;padding:var(--sp-2) var(--sp-3);border-radius:var(--r-lg);background:color-mix(in srgb,var(--tint) calc(var(--lv,0) * 34%),var(--well));transition:background var(--dur-300),transform var(--dur-200) var(--m-settle)}
 .fchip small{font-size:var(--small);color:var(--muted)}
 .fchip b{font:var(--w-bold) var(--fz-2xl)/1.1 var(--num)}
 .fchip.on{background:var(--ink);color:var(--on-tint)} .fchip.on small{color:inherit;opacity:.85}

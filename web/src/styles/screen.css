@@ -308,7 +308,7 @@ html:has(.screen) body{overflow:hidden}
    "not aligned correctly") */
 .pbeats .beat,.lintro .beat{--badge:28px}
 .pbeats .beat,.lintro .beat>button{--beat-in:10px;padding:var(--beat-in) 14px var(--beat-in) var(--beat-in)}
-.pbeats .beat,.lintro .beat,.lintro .beat>button{border-radius:calc(var(--badge) / 2 + 10px)}
+.pbeats .beat,.lintro .beat,.lintro .beat>button{border-radius:var(--r-row)}
 :is(.pbeats .beat,.lintro .beat) .say>:first-child{min-height:var(--badge);display:flex;align-items:center}
 /* the lesson intro's steps are the Contents list's lesson panel (ListGroup master, G 21:34 "needs the ladder"): one
    step deeper than the intro, 8px round and between its rows, rows the tap height with pill ends, the step being shown
@@ -374,15 +374,18 @@ html:has(.screen) body{overflow:hidden}
 .ppad>.k-go{--pill-h:var(--key);font-size:var(--fz-lg)}
 /* the hint, and on a phone the steps: Settings-style stacks; the hero stays sharp above the dim */
 .pscreen>.fdim{position:fixed}
-.pscreen.hinting>.phero{z-index:var(--z-stack)}
 .pscreen>.fstack{position:absolute;z-index:var(--z-stack);left:0;top:0;width:330px;align-items:flex-start}
-/* the hint bubble is a Panel line instance in the grade's own hue (UI chrome is never another hue) */
-.phint .htext{--panel-line:var(--tint);--panel-w:2px;white-space:normal;padding:14px 22px;border-radius:var(--r-2xl);max-width:300px;font-weight:var(--w-regular);box-shadow:var(--float-shadow)}
+/* the hint is a panel inside the solve panel, under the question, one rung down the glass like the open steps, its corner
+   concentric with the tile's (G 2026-10-07 22:31: "hints can be in a better location") */
+.pscreen .lshero.phero>.phint{grid-row:5;align-self:start;display:grid;gap:var(--sp-2);margin:0 var(--sp-4) var(--sp-4);padding:var(--sp-4) var(--sp-5);background:var(--g2,var(--well));border-radius:var(--r-card)}
+.phint .k{color:var(--muted);font-size:var(--fz-sm);font-weight:var(--w-mid)}
+.phint .htext{margin:0;font-size:var(--fz-lg);line-height:1.4}
+.phint .hrow{margin-top:var(--sp-1)}
+.pscreen.hinting .lshero.phero>.pfb.fb-hint{display:none}
 .pscreen .hrow{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
 .pscreen .fstack .fpill.go{background:var(--ink);color:var(--on-tint);box-shadow:none}
-.phint .flbl{color:var(--muted)}
 .psteps .pwhere{gap:var(--sp-3)}
-.psteps .pblist{display:block;padding:var(--sp-2);border-radius:var(--r-2xl);white-space:normal;width:100%}
+.psteps .pblist{display:block;padding:var(--sp-2);border-radius:var(--r-card);white-space:normal;width:100%}
 /* solved, in one motion (practice-spec §5): the box turns green, the picture finishes, the "?" fills, then the keys
    fade and Check becomes Next problem; the island's battery ticks up with one glow */
 /* solved: no box round the line; the answer itself lights up green, where its box was (G 18:16) */
@@ -418,10 +421,7 @@ html:has(.screen) body{overflow:hidden}
    and the picture gets the room */
 @media (max-width:520px){
   .screen.fit.lscreen.pscreen{--key:48px;--slot:48px;--ask:28px;--pfb-h:42px;grid-template-rows:minmax(0,1fr) auto auto;grid-template-areas:"hero" "bar" "pad"}
-  .screen.fit.lscreen.pscreen.pwordy{grid-template-rows:auto minmax(0,1fr) auto auto;grid-template-areas:"intro" "hero" "bar" "pad"}
-  .pscreen:not(.pwordy)>.pintro{display:none}
-  .pscreen.pwordy>.pintro>:not(.pprob){display:none}
-  .pscreen.pwordy .pprob .math.words>.mline,.pscreen.pwordy .pprob .story{font-size:var(--fz-lg)}
+  .pscreen .pprob .math.words>.mline,.pscreen .pprob .story{font-size:var(--fz-lg)}
   .pscreen>.pbar{display:flex}
   .pscreen.ptest:not(.pwordy)>.pbar{display:flex}
   .lshero.phero{padding:var(--sp-3) var(--sp-3) var(--sp-3)}
@@ -513,9 +513,10 @@ html:has(.screen) body{overflow:hidden}
 /* a phone's grid is too narrow for two chapter names side by side: one column, so no name is cut mid-word */
 /* a phone drops the chapters tile so Today has the room and its plan never scrolls (G 07:36); the chapters are one tap
    away in Contents */
-/* wider than a phone, Today runs the full height beside the picture and the two numbers sit under the picture (G 21:27:
-   no chapters tile, Contents already lists them) */
-@container (min-width:560px){.bgrid.fit.sbento .bg-t.today.t{--rs:3;order:1}.sbento :is(.b-stats,.b-streak){order:2}}
+/* wider than a phone, Today runs the full width along the bottom (G 22:04) and its plan's rows sit side by side, so
+   it never scrolls (no chapters tile, Contents already lists them, G 21:27) */
+/* a plan row sits 12px in from Today's edge, so its 34px ends run concentric with the panel's 46px corner (G 22:09) */
+@container (min-width:560px){.sbento .today .plan{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--nest);margin-inline:calc(var(--sp-3) - var(--u) * 1.75)}.sbento .today .plan .pitem{margin:0;width:100%}.sbento .today h2{font-size:28px}}
 @container (max-width:559px){@media (min-height:741px){.bgrid.fit.sbento .bg-t.l{--rs:2}.bgrid.fit.sbento .bg-t.today{--rs:3}}}
 @container (max-width:559px){.sbento :is(.b-stats,.b-streak){padding:var(--sp-3);gap:2px}.sbento .bbig{font-size:40px}.sbento :is(.b-stats,.b-streak) p{font-size:var(--fz-sm);line-height:1.3}}
 /* a short phone (375x667): a number row is 72px, so the numbers sit closer to their edges */
@@ -530,13 +531,13 @@ html:has(.screen) body{overflow:hidden}
 .sbento .tstart{grid-area:s;display:inline-flex;justify-content:center;width:auto;margin:0;align-self:center}
 .sbento .tbody>.plan{margin-top:0}
 .sbento .pitem.now>.ctl{display:none}
-@media (max-width:699px) and (max-height:740px){.sbento .today .sub{display:none}}
+@media (max-height:740px){.sbento .today .sub{display:none}@container (min-width:560px){.sbento .tbody{padding-bottom:0}}}
 /* Learn's portrait rule folds its steps away; practice keeps the step being answered */
 .pscreen .pintro .pbeats{display:grid}
 /* the feedback line is a line, not a box: colour only on the dot (and the answer box) */
 .pfb:is(.fb-bad,.fb-good,.fb-hint){background:none}
 /* while a stack is open, what it covers fades almost away; the hero stays sharp */
-.pscreen:is(.hinting,.stepping)>:is(.pintro,.ppad,.pbar){opacity:.06;transition:opacity var(--dur-250) var(--ease)}
+.pscreen.stepping>:is(.pintro,.ppad,.pbar){opacity:.06;transition:opacity var(--dur-250) var(--ease)}
 .pscreen.stepping>.phero{opacity:.35}
 
 /* Results with nothing finished: the next lesson, and its picture takes the rest of the screen */
@@ -645,12 +646,20 @@ html:has(.screen) body{overflow:hidden}
    the head row is --srow + 2 gaps tall, so it nests the same way shut or open. */
 .pscreen{--srow:var(--tap)}
 .pscreen .pbar{--list-gap:var(--nest);--row-h:var(--srow)}
+/* the practice screen has no intro column: the problem's words live in the solve panel, on top, and the steps follow */
+.pscreen>.pintro{display:none}
+.pscreen .lshero.phero>.pprob{grid-row:1;padding:var(--sp-5) var(--sp-6) 0}
+.pscreen.pwordy .lshero.phero>.pbar{grid-row:2}
+.pscreen:not(.pwordy) .lshero.phero>.pprob{display:none}
 .pscreen .lshero.phero>.pbar{grid-row:1;display:block;padding:calc(var(--nest) * 2) calc(var(--nest) * 2) 0}
 .pscreen .lshero.phero::before,.pscreen>.lpic{border-radius:calc(var(--srow) / 2 + var(--nest) * 3)}
+/* the solve panel is the list column, so it takes the Contents panel's glass (g1) and the steps step down the ladder exactly as
+   the lesson overview does (G 2026-10-07 22:00, "the color depth looks different") */
+.pscreen .lshero.phero::before{background:var(--g1,var(--pane-plain,var(--float)))}
 .pscreen .pbar>.sgroup{padding:0;margin:0}
 .pscreen .pbar>.sgroup.open{margin:calc(var(--list-gap) * -1) calc(var(--list-gap) * -1) 0;padding:var(--list-gap)}
 .pscreen .pbar .srow{--badge:28px;min-height:var(--srow);border-radius:calc(var(--srow) / 2);align-items:flex-start;gap:10px;padding:calc((var(--srow) - var(--badge)) / 2) var(--sp-2)}
-.pscreen .pbar .srow.chap{background:var(--g1,var(--well));--row-top:calc(var(--srow) + var(--nest) * 2);min-height:var(--row-top);border-radius:calc(var(--row-top) / 2);padding:calc((var(--row-top) - var(--badge)) / 2)}
+.pscreen .pbar .srow.chap{background:var(--g2,var(--well));--row-top:calc(var(--srow) + var(--nest) * 2);min-height:var(--row-top);border-radius:calc(var(--row-top) / 2);padding:calc((var(--row-top) - var(--badge)) / 2)}
 .pscreen .pbar .sgroup.open>.srow.chap{background:var(--g3,var(--surf-sub))}
 .pscreen .pbar .srow .sname b,.pscreen .pbar .srow>small{line-height:var(--badge)}
 .pscreen .pbar .srow.chap .sname b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -671,7 +680,7 @@ html:has(.screen) body{overflow:hidden}
 .pscreen .pbar .pstep.on .badge{background:var(--ink);color:var(--on-tint)}
 .pscreen .pbar .pstep .pline{font:var(--w-mid) var(--fz-lg)/1.3 var(--num);color:var(--ink);font-variant-numeric:tabular-nums}
 .pscreen .pbar .pstep .pline .mline{justify-content:flex-start;max-width:100%}
-.pscreen .pbar .pwhere{display:none;align-items:center;justify-content:space-between;gap:var(--sp-3);margin:0;padding:var(--sp-1) var(--sp-2);font-weight:var(--w-mid);color:var(--muted);font-size:var(--fz-sm)}
+.pscreen .pbar .pwhere{display:none;min-height:var(--row-h);align-items:center;justify-content:space-between;gap:var(--sp-3);margin:0;padding:var(--sp-1) var(--sp-2);font-weight:var(--w-mid);color:var(--muted);font-size:var(--fz-sm)}
 .pscreen .pbar .hrow{display:flex;gap:var(--sp-2)}
 /* a long list scrolls inside the steps' panel, so the keys stay on screen and the panel keeps its round corners */
 .pscreen .pbar .sgroup-panel{max-height:26dvh;overflow-y:auto;overscroll-behavior:contain}
@@ -687,25 +696,21 @@ html:has(.screen) body{overflow:hidden}
 /* where you are in the set shows in the left column; the panel only repeats it on a phone, where that column is tucked away */
 @media (max-width:520px){
   .screen.fit.lscreen.pscreen{grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"hero" "pic" "pad"}
-  .screen.fit.lscreen.pscreen.pwordy{grid-template-rows:auto auto minmax(0,1fr) auto;grid-template-areas:"intro" "hero" "pic" "pad"}
   .screen.fit.lscreen.pscreen{--slot:64px;--ask:40px;--pic-min:104px}
 }
 /* where you are in the set shows in the steps only on a phone, where the left column is tucked away */
 @media (max-width:520px){.pscreen .pbar .pwhere{display:flex}}
 /* on a phone the open steps take the picture's room: its tile gives way and fades, and comes back as they fold */
 @media (max-width:520px){
-  .screen.fit.lscreen.pscreen.stepsopen{--pic-min:0px}
+  .screen.fit.lscreen.pscreen:is(.stepsopen,.hinting){--pic-min:0px}
   .pscreen>.lpic{transition:opacity var(--m-close) var(--m-ease)}
-  .pscreen.stepsopen>.lpic{opacity:0;overflow:hidden;padding-block:0}
+  .pscreen:is(.stepsopen,.hinting)>.lpic{opacity:0;overflow:hidden;padding-block:0}
 }
 /* bigger than a phone: no left column either (G 20:08 "whats all this empty space on the left?"). The problem sits in
    the island as on a phone, where you are in the set shows in the steps, and a word problem's text sits on top. On a
    wide screen the picture stands beside the solve panel, the same height, and the keys run under both */
 @media (min-width:521px){
   .screen.fit.lscreen.pscreen{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"hero" "pic" "pad"}
-  .screen.fit.lscreen.pscreen.pwordy{grid-template-rows:auto auto minmax(0,1fr) auto;grid-template-areas:"intro" "hero" "pic" "pad"}
-  .pscreen:not(.pwordy)>.pintro{display:none}
-  .pscreen.pwordy>.pintro>:not(.pprob){display:none}
   .pscreen .pbar .pwhere{display:flex}
   html:has(.pscreen) .island:has(.iprob) .ititle{display:none}
   html:has(.pscreen) .island .iprob{display:block;font:var(--w-bold) var(--fz-lg)/1.2 var(--num);white-space:nowrap;overflow:hidden}
@@ -714,15 +719,14 @@ html:has(.screen) body{overflow:hidden}
 }
 /* wide: the solve panel takes the left half, full height; the picture and the keys share the right half */
 @media (min-width:900px) and (orientation:landscape){
+  /* the steps stay open here and the solve panel is full height, so every step shows without a scroll (G 22:00) */
+  .pscreen .pbar .sgroup-panel{max-height:none;overflow:visible}
   .screen.fit.lscreen.pscreen{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"hero pic" "hero pad"}
-  .screen.fit.lscreen.pscreen.pwordy{grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"intro intro" "hero pic" "hero pad"}
 }
 /* no picture: the solve panel takes its room */
 .screen.fit.lscreen.pscreen.nopic{grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"hero" "pad"}
-.screen.fit.lscreen.pscreen.nopic.pwordy{grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"intro" "hero" "pad"}
 @media (min-width:900px) and (orientation:landscape){
   .screen.fit.lscreen.pscreen.nopic{grid-template-rows:minmax(0,1fr);grid-template-areas:"hero pad"}
-  .screen.fit.lscreen.pscreen.nopic.pwordy{grid-template-rows:auto minmax(0,1fr);grid-template-areas:"intro intro" "hero pad"}
   .pscreen.nopic>.ppad{align-self:end}
 }
 /* Today's plan names wrap to two lines rather than cut, at every size (the tall Today column is narrow) */

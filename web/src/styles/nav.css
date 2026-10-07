@@ -269,9 +269,9 @@ button.book:hover,button.book:active{transform:translateY(-2px);box-shadow:none}
    radius minus that gap. So the Start pill (radius 20) sits 8px inside its row (radius 28), which sits 8px inside the
    Today card (radius 36). */
 .wrap{--nest:8px}
-.pitem{border-radius:var(--r-pill);padding:var(--nest) 14px var(--nest) 14px;margin:0 calc(var(--nest) - var(--u) * 1.75);width:calc(100% + (var(--u) * 1.75 - var(--nest)) * 2)}
+.pitem{border-radius:var(--r-row);padding:var(--nest) 14px var(--nest) 14px;margin:0 calc(var(--sp-3) - var(--u) * 1.75);width:calc(100% + (var(--u) * 1.75 - var(--sp-3)) * 2)}
 .pitem .ctl.go{--pill-h:40px}
-.bhome .today{border-radius:calc(20px + var(--nest) * 2)}
+.bhome .today{border-radius:var(--r-panel)}
 .bhome .today:has(.plan:last-child){padding-bottom:var(--nest)}
 
 /* anything that sticks while you scroll stops below the island, not under it */
@@ -288,7 +288,7 @@ button.book:hover,button.book:active{transform:translateY(-2px);box-shadow:none}
 .units>.panel>.cpic .viz-svg,.units>.panel>.cpic .am{height:var(--cpic);max-height:var(--cpic);width:100%}
 @media (max-width:699px){.units>.panel>.cpic{--cpic:168px}}
 /* phone Today plan: a long lesson name wraps to a second line instead of cutting off */
-@media (max-width:699px){.ptext b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.25}.pitem{border-radius:22px}}
+@media (max-width:699px){.ptext b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.25}}
 
 /* on a screen that never scrolls, the island is pinned to the same frame as the screen under it, so the two can
    never drift apart (G 2026-10-06: on a phone the bar sat low, over the list's heading) */

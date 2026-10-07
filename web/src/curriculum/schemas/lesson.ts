@@ -93,7 +93,9 @@ export interface LessonDefinition<P = unknown> {
   /** counters under the problem in practice, built from its numbers (the current app's dots, ten frames and base-ten blocks) */
   displayCounters?(problem: P): Counters;
   /** an optional picture shown with the problem, e.g. the dots to count (the current app's dots and ten frames) */
-  picture?(problem: P): DiagramModel;
+  /** an optional picture shown with the problem, e.g. the dots to count (the current app's dots and ten frames). In
+   *  practice it gets the id of the step being asked, so it can circle the part that step is about (G 2026-10-07) */
+  picture?(problem: P, step?: string): DiagramModel;
   answers(problem: P): AnswerModel;
   explain(problem: P, answers: AnswerModel): Explanation;
   /** some lessons tell every third problem as a story */

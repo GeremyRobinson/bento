@@ -102,7 +102,7 @@ export function Contents({ grade, lessonId, level: first, close, leave = close, 
               <li key={c.id}>
                 <button className={on ? "on" : ""} disabled={!live} onClick={() => open(c)} aria-current={on ? "page" : undefined}>
                   <span className="pn">{i + 1}</span><span className="name">{c.title}</span>
-                  {s != null ? <ScoreChip n={s} /> : on ? <span className="muted">You're here</span> : c === next?.entry ? <span className="dot busy" aria-label="up next" /> : live ? null : <span className="muted">soon</span>}
+                  {s != null ? <ScoreChip n={s} /> : on ? <span className="dot busy" aria-label="you're here" /> : c === next?.entry ? <span className="muted">Up next</span> : live ? null : <span className="muted">soon</span>}
                 </button>
               </li>
             );
