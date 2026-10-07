@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Slider } from "../components/primitives/Slider";
 import { useApp } from "../app/AppState";
 import { previewOf, statementBeat } from "../app/preview";
@@ -8,6 +8,7 @@ import { unitsInGrade } from "../app/curriculum";
 import { MathLine } from "../components/primitives/MathLine";
 import { placeKey } from "../engine/session/practice";
 import { PlayingDiagram } from "../components/diagrams/PlayingDiagram";
+import { useListKnob } from "../components/screen/ListGroup";
 import { SplitScreen } from "../components/screen/Screen";
 import { Pill } from "../components/primitives/Pill";
 import { GradeNum } from "../components/Shelf";
@@ -84,20 +85,7 @@ export function GradeQuestion() {
   const find = () => { if (picked == null) setAsk(true); else startTest(placeKey(picked)); };
 
   // the highlight glides to the row you tap
-  const knob = useRef<HTMLSpanElement>(null), placed = useRef(false);
-  const place = () => {
-    const el = knob.current, row = el?.parentElement?.querySelector<HTMLElement>(".srow.on");
-    if (!el) return;
-    if (!row) { el.style.opacity = "0"; return; }
-    if (!placed.current) el.style.transition = "none";
-    el.style.opacity = "1";
-    // measured from the list itself: the rows' entry motion makes each row its own offset parent
-    const list = el.parentElement!, top = row.getBoundingClientRect().top - list.getBoundingClientRect().top + list.scrollTop;
-    el.style.transform = `translateY(${top}px)`;
-    el.style.height = `${row.offsetHeight}px`;
-    if (!placed.current) { void el.offsetHeight; el.style.transition = ""; placed.current = true; }
-  };
-  useLayoutEffect(place);
+  const { knob, place, placed } = useListKnob();
   // opened with your grade already picked, the highlight is placed while the rows are still arriving and the list is
   // still settling, so for that first moment it settles with them (as their entry motion ends, as the list resizes),
   // and the picked row is brought into view at once: it was already chosen, so nothing glides to it

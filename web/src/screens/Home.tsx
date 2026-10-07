@@ -10,6 +10,7 @@ import { lastScore, timesDone } from "../engine/mastery/progress";
 import { ScoreChip } from "../components/primitives/Score";
 import { Fill, GradeNum } from "../components/Shelf";
 import { SplitScreen } from "../components/screen/Screen";
+import { ListGroup, useListKnob } from "../components/screen/ListGroup";
 import { PlayingDiagram } from "../components/diagrams/PlayingDiagram";
 import { MathLine, Rich } from "../components/primitives/MathLine";
 import { handOff, previewOf, statementBeat } from "../app/preview";
@@ -46,17 +47,7 @@ function GradeHome({ g }: { g: number }) {
   const select = (p: string) => go({ name: "home", pick: p }, typeof matchMedia !== "undefined" && matchMedia("(max-width: 699px)").matches ? "fwd" : "still");
   let k = 0;
   // the picked row's highlight glides to the row you tap, like the floating preview
-  const knob = useRef<HTMLSpanElement>(null), placed = useRef(false);
-  useLayoutEffect(() => {
-    const el = knob.current, row = el?.parentElement?.querySelector<HTMLElement>(".srow.on");
-    if (!el) return;
-    if (!row) { el.style.opacity = "0"; return; }
-    if (!placed.current) el.style.transition = "none";
-    el.style.opacity = "1";
-    el.style.transform = `translateY(${row.offsetTop}px)`;
-    el.style.height = `${row.offsetHeight}px`;
-    if (!placed.current) { void el.offsetHeight; el.style.transition = ""; placed.current = true; }
-  });
+  const { knob } = useListKnob();
 
   const listPane = (
     <>
@@ -73,12 +64,12 @@ function GradeHome({ g }: { g: number }) {
         const isOpen = u === openUnit && shut !== u.name, done = doneCount(progress, u.entries);
         const lessons = u.entries.map(c => ({ c, n: ++k }));
         return (
-          <div className={`schapter${isOpen ? " open" : ""}`} key={u.name}>
+          <ListGroup className="schapter" open={isOpen} key={u.name} head={
             <button className="srow chap" aria-expanded={isOpen}
               onClick={() => { if (isOpen) setShut(u.name); else { setShut(null); select((u.entries.find(c => c.id === next?.entry.id) ?? u.entries.find(c => isReady(c.id)) ?? u.entries[0]!).id); } }}>
               <span className="sname"><b>{u.name}</b></span><small className="smeta">{done === u.entries.length ? "Done" : !done && u.entries.includes(next?.entry as never) ? UP_NEXT : `${done} of ${u.entries.length}`}</small>
-            </button>
-            {isOpen && lessons.map(({ c }) => {
+            </button>}>
+            {lessons.map(({ c }) => {
               const sc = lastScore(progress, c.id), live = isReady(c.id);
               return (
                 <button key={c.id} className={`srow sles${pick === c.id ? " on" : ""}${live ? "" : " soon"}`} disabled={!live} aria-current={pick === c.id ? "true" : undefined}
@@ -89,7 +80,7 @@ function GradeHome({ g }: { g: number }) {
                 </button>
               );
             })}
-          </div>
+          </ListGroup>
         );
       })}
       {testReady(g) && <div className="sfoot"><Pill onClick={() => startTest(testKey(g))}>{GRADE_CHECKUP}</Pill></div>}

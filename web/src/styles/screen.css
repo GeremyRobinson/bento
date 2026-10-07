@@ -27,8 +27,8 @@ html:has(.screen) body{overflow:hidden}
 .vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px}
 .slist .shead h1{margin:0;font:var(--w-bold) var(--fz-xl)/24px var(--sans);letter-spacing:-.01em}
 .slist .shead .ysub{margin:0;color:var(--muted);font-size:var(--small);line-height:20px}
-.sknob{position:absolute;left:var(--sp-3);right:var(--sp-3);top:0;height:var(--float-h);border-radius:var(--r-pill);background:var(--float);box-shadow:var(--float-shadow);pointer-events:none;z-index:var(--z-flat);
-  transition:transform var(--dur-360) var(--glide),height var(--dur-360) var(--glide),opacity var(--dur-200)}
+.sknob{position:absolute;left:0;top:0;width:0;height:var(--float-h);border-radius:var(--r-pill);background:var(--float);box-shadow:var(--float-shadow);pointer-events:none;z-index:var(--z-flat);opacity:0;
+  transition:transform var(--dur-360) var(--glide),width var(--dur-360) var(--glide),height var(--dur-360) var(--glide),opacity var(--dur-200)}
 .srow{position:relative;z-index:var(--z-up);display:flex;align-items:center;gap:var(--sp-3);width:100%;min-height:var(--float-h);padding:var(--sp-2) 18px;border-radius:var(--r-pill);text-align:left;font-size:var(--fz-md);transition:background var(--dur-150),color var(--dur-200)}
 .srow:not([disabled]):not(.on):hover{background:color-mix(in oklab,var(--tint) 7%,transparent)}
 .srow .sname{flex:1;min-width:0;display:grid}
@@ -44,7 +44,16 @@ html:has(.screen) body{overflow:hidden}
 .srow .sdot{flex:none;width:10px;height:10px;border-radius:5px;background:var(--faint);transition:background var(--dur-300)}
 .srow .sdot.done{background:var(--tint)}
 .srow.soon{opacity:.5}
-.schapter.open{padding-bottom:var(--sp-1)}
+/* ListGroup (master): a chapter as an accordion. Its rows sit in a slightly darker panel nested under the head, corners
+   concentric with the rows' pills; the panel grows open and folds shut at the list highlight's speed (G 2026-10-07) */
+.sgroup{--nest-pad:var(--sp-1);--row-h:46px}
+.sgroup-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--m-close) var(--m-ease),visibility 0s var(--m-close)}
+.sgroup.open>.sgroup-body{grid-template-rows:1fr;transition:grid-template-rows var(--m-close) var(--m-ease)}
+.sgroup:not(.open)>.sgroup-body{visibility:hidden}
+.sgroup-in{min-height:0;overflow:hidden}
+.sgroup-panel{display:grid;padding:var(--nest-pad);background:var(--surf-nest);border-radius:calc(var(--row-h) / 2 + var(--nest-pad))}
+.sgroup.open{padding-bottom:var(--sp-1)}
+.sgroup .srow.sles{min-height:var(--row-h)}
 .sfoot{padding:var(--sp-3) var(--sp-2) calc(var(--sp-1) + var(--sp-3));position:sticky;bottom:calc(var(--panel-w,1px) - var(--sp-3));background:var(--surf-1,var(--well));z-index:var(--z-up)}
 /* the grade's book: the detail (a well with the preview, a floating card with the lesson) */
 .sdetail>.sday{align-content:start}

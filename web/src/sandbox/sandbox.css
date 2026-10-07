@@ -86,3 +86,7 @@ span.sbx{background:none}
 html[data-motion="reduce"] .sbcascade .imark .bl{animation:fadeIn var(--m-swap) var(--m-ease) var(--mark-wait) both}
 .sbring .pring{display:block}
 .sbring .island{box-shadow:none;width:100%}
+
+/* the chapter accordion piece: a list pane at its real width, not the full screen grid */
+.sbchapters.screen{position:static;display:block;width:100%;max-width:360px}
+.sbchapters .slist{max-height:none}
