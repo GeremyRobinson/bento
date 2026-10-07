@@ -62,7 +62,7 @@ function explain(_p: TensOnesProblem, model: AnswerModel): Explanation {
   const byTen = Array.from({ length: t }, (_, i) => String((i + 1) * 10));
   return {
     heading: "Tens and ones",
-    idea: ["A long rod is ten cubes stuck together. Count the rods by tens, then count on the ones."],
+    idea: ["A long rod is ten cubes stuck together, so you can count rods by tens."],
     statement: [text("? tens and ? ones")],
     diagram: buildTensOnes({
       tens: t, ones: o, tensCount: byTen,

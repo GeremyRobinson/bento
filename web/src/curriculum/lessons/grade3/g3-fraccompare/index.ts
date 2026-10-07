@@ -142,10 +142,7 @@ function explain(p: CompareProblem, model: AnswerModel): Explanation {
       : { narration: `Each 1/${Math.min(b, d)} piece is the same as ${count(expectedOf(model, "fit"), "piece")} of 1/${Math.max(b, d)}.`, math: [num(expectedOf(model, "fit")), op("×"), frac(1, Math.max(b, d)), op("="), frac(1, Math.min(b, d))] as MathText, result: expectedOf(model, "fit") };
   return {
     heading: kind === "bottom" ? "Same pieces: count them" : kind === "top" ? "Same count: compare the pieces" : "Same amount, different pieces",
-    idea: kind === "top"
-      ? ["When the tops match, look at the size of the pieces.", "The more pieces a whole is cut into, the smaller each piece is."]
-      : kind === "bottom" ? ["When the bottoms match, the pieces are the same size.", "Then more pieces means more."]
-      : ["Two fractions can name the same amount.", "Line up the bars and see where the shading ends."],
+    idea: ["To compare fractions, both the size of the pieces and how many there are matter."],
     statement: pair(p, [text(" ? ")]),
     diagram: comparePicture(p, s),
     caption: `Two bars, the same size. One shows ${ft(a, b)} and one shows ${ft(c, d)}.`,

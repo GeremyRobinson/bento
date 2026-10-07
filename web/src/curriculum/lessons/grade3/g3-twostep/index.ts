@@ -162,7 +162,7 @@ function explain(p: TwoStepProblem, model: AnswerModel): Explanation {
   const ops: ["×" | "−", "−" | "+" | "÷"] = kind === 0 ? ["×", "−"] : kind === 1 ? ["×", "+"] : ["−", "÷"];
   return {
     heading: "One step at a time",
-    idea: ["Read the story and find the two things that happen.", "Solve the first part, then use that answer for the second part."],
+    idea: ["The answer to the first part is the number you need for the second part."],
     statement: story(p).short,
     diagram: twoStepPicture(p, first, second),
     caption: `${story(p).text} ${story(p).ask}`,

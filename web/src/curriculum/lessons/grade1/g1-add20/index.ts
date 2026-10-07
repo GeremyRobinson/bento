@@ -53,7 +53,7 @@ function explain({ a, b }: Add20Problem, model: AnswerModel): Explanation {
   const hops: Hop[] = counted.map((v, i): Hop => ({ from: v - 1, to: v, label: String(v), beat: 1, delay: 0.5 * i, start: false }));
   return {
     heading: "Start big, count on",
-    idea: ["You can add in any order. Start with the bigger number and count on the smaller one. That's fewer hops."],
+    idea: ["You can add in any order, so starting with the bigger number means fewer hops."],
     statement: [num(a), op("+"), num(b)],
     diagram: buildNumberLine({
       min, max, hops, labelAt: [big],

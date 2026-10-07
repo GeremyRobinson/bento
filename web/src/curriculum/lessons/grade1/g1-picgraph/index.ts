@@ -70,7 +70,7 @@ function explain(p: PicGraphProblem, model: AnswerModel): Explanation {
   const read = rowsRead(p);
   return {
     heading: "Picture graphs",
-    idea: ["In a picture graph, each picture is one thing. The pictures line up, so the longest row has the most."],
+    idea: ["Each picture is one thing, so the longest row has the most."],
     statement: words(`This graph shows ${th.title.toLowerCase()}. ${last.question ?? ""}`),
     diagram: buildRows({
       kind: "pictures", title: th.title, names: th.names, counts: p.counts, icon: th.icon, read,

@@ -53,7 +53,7 @@ function explain(p: MakeTenProblem, model: AnswerModel): Explanation {
   const have = expectedOf(model, "have"), need = expectedOf(model, "need");
   return {
     heading: "Fill the ten frame",
-    idea: [`A ten frame holds ${TEN}. The empty boxes show how many more you need.`],
+    idea: ["A ten frame holds 10, so the empty boxes show how many more you need."],
     statement: [num(p.have), op("+"), text("?"), op("="), num(TEN)],
     diagram: fillTen(p.have, `A ten frame with ${count(have, "dot")}. ${need} more fill it: ${have} + ${need} = ${TEN}.`, { have: 0, fill: 1, whole: 2 }),
     caption: `${have} and ${need} make ${TEN}.`,

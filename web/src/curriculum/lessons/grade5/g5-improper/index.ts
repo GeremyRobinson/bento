@@ -57,7 +57,7 @@ function explain(p: MixedToImproperProblem, model: AnswerModel): Explanation {
   const pieces = (k: number) => `${k} ${pieceName(d, k !== 1)}`;
   return {
     heading: "Count all the pieces",
-    idea: ["Each whole is cut into the same size pieces as the fraction, so the wholes can be counted in pieces too.", "All the pieces together, over the size of one piece, make one fraction."],
+    idea: ["Each whole is cut into the same pieces as the fraction, so wholes can be counted in pieces."],
     statement: [num(w), frac(n, d), op("="), frac("?", d)],
     diagram: mixedToImproperPicture(p),
     caption: `Each whole is ${pieces(d)}.`,

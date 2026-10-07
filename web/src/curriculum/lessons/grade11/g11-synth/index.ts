@@ -71,10 +71,7 @@ export function explainSynthetic(p: SyntheticDivision, model: AnswerModel) {
   const fr = (x: number) => x * x + b * x + c;
   return beatExplanation({
     heading: "Multiply, add, repeat",
-    idea: [
-      "Synthetic division is long division with only the numbers kept. The box holds r, the number that makes x − r equal 0, so each subtraction becomes an addition.",
-      "The last number is the remainder. It equals the polynomial's value at r, so a remainder of 0 means x − r is a factor.",
-    ],
+    idea: ["Synthetic division is long division with only the numbers kept."],
     statement: problem(p),
     diagram: syntheticPicture({ r, b, c, rr, q, qr, rem }),
     caption: `${f(r)} makes x ${r < 0 ? "+" : "−"} ${f(Math.abs(r))} equal 0, so ${f(r)} goes in the box.`,

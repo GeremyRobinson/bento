@@ -44,7 +44,7 @@ export function explainMissingLeg(p: MissingLegProblem, answers: AnswerModel): E
   const C2 = expected(answers, "square-c"), A2 = expected(answers, "square-a"), B2 = expected(answers, "subtract"), leg = expected(answers, "root");
   return {
     heading: "Subtract to find a leg",
-    idea: ["c is the long side, so its square is the biggest.", "Take the known leg's square away from it, then find the square root."],
+    idea: ["The long side's square is the biggest, so a leg's square is what's left over."],
     statement: mt`${a}${sup("2")} + b${sup("2")} = ${c}${sup("2")}`,
     caption: `${C2} − ${A2} = ${B2}, and √${B2} = ${leg}.`,
     diagram: buildRightTriangle({

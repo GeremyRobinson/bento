@@ -42,7 +42,7 @@ export function explainMedian({ v }: MedianProblem, answers: AnswerModel): Expla
   const s2 = sorted(v);
   return {
     heading: "Sort, then take the middle",
-    idea: ["The median is the middle number once the list is in order.", "With n numbers, the middle spot is (n + 1) ÷ 2."],
+    idea: ["The median is the middle number once the list is in order."],
     statement: listOf(v),
     caption: `Sorted: ${s2.join(", ")}. The middle one is ${med}.`,
     diagram: buildMedianBars({

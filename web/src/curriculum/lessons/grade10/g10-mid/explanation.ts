@@ -15,7 +15,7 @@ export function explainMid(p: MidProblem, model: AnswerModel): Explanation {
   const steepUp = (y2 - y1) * (x2 - x1) > 0;
   return {
     heading: "Average each coordinate",
-    idea: ["The midpoint is halfway in x and halfway in y. Average each coordinate: add and divide by 2."],
+    idea: ["The midpoint is halfway across and halfway up."],
     statement: midMath(p),
     caption: `Halfway in x is ${f(mx)} and halfway in y is ${f(my)}: the midpoint is ${pt(mx, my)}.`,
     diagram: buildPlane({

@@ -116,7 +116,7 @@ function explain(p: Within1000Problem, model: AnswerModel): Explanation {
   const H = B.h * 100, T = B.t * 10;
   return {
     heading: sub ? "Hop back by place" : "Hop on by place",
-    idea: [sub ? "Break the second number into hundreds, tens and ones. Hop back by each one." : "Break the second number into hundreds, tens and ones. Hop on by each one."],
+    idea: ["Hundreds, tens and ones are easy hops, so the second number breaks into those."],
     statement: [num(a), op(sign), num(b)],
     diagram: buildOpenLine({
       start: a,

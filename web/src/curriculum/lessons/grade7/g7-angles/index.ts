@@ -41,7 +41,7 @@ export function explainAnglePair(p: AnglePairProblem, answers: AnswerModel): Exp
   const word = sup ? "supplementary" : "complementary";
   return {
     heading: "90 or 180",
-    idea: ["Complementary angles make a right angle: 90°.", "Supplementary angles make a straight line: 180°."],
+    idea: ["Complementary angles make a right angle, and supplementary angles make a straight line."],
     statement: mt`${a}° + ? = ${T}°`,
     caption: `${word[0]!.toUpperCase() + word.slice(1)}: ${a}° + ${rest}° = ${T}°.`,
     diagram: buildAngle({ total: sup ? 180 : 90, part: a, wholeBeat: 1, missingBeat: 2, wholeNote: `${sup ? "Supplementary" : "Complementary"} angles make ${T}°`, alt: `${a}° and ${rest}° are ${word}: together they make ${T}°.` }),

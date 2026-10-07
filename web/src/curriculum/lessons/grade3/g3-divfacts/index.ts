@@ -73,7 +73,7 @@ function explain(p: DivFactProblem, model: AnswerModel): Explanation {
   const { a, b } = p, q = expectedOf(model, "think"), d = expectedOf(model, "divide");
   return {
     heading: "Share into equal groups",
-    idea: ["Dividing shares a number into equal groups.", "Every division fact has a multiplication fact hiding inside it."],
+    idea: ["Dividing shares a number into equal groups, so every division fact has a times fact inside it."],
     statement: [num(a), op("÷"), num(b)],
     diagram: divPicture(p, q),
     caption: `Share ${count(a, "dot")} into ${b} equal groups.`,

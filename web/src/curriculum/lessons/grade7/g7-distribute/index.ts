@@ -46,7 +46,7 @@ export function explainDistribute(p: DistributeProblem, answers: AnswerModel): E
   const X = Math.max(b, a, c) + 3;
   return {
     heading: "Multiply everything inside",
-    idea: ["The number outside multiplies every term inside the parentheses. Then add the like terms."],
+    idea: ["The number outside multiplies every term inside the parentheses."],
     statement: show(p),
     diagram: buildAreaGrid({
       cols: [{ label: "x", size: X }, { label: String(b), size: b }],

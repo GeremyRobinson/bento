@@ -48,7 +48,7 @@ export function explainComposition(p: Composition, model: AnswerModel) {
   const [g, out] = model.steps.map(s => s.slots[0]!.expected!) as [number, number];
   return beatExplanation({
     heading: "Inside out",
-    idea: ["f(g(x)) is a chain of two machines: g works on x first, and whatever comes out goes into f.", "So work from the inside out: find g's answer, then put that number into f."],
+    idea: ["f(g(x)) is two machines in a row, so g goes first."],
     statement: [...fx(p), br(), ...gx(p), br(), ...call("f", call("g", [num(k)]))],
     caption: `g works on ${f(k)} first; f works on what g gives back.`,
     diagram: compositionPicture({ a, b, c, d, k, g, out }),

@@ -71,7 +71,7 @@ function explain(p: LikeFractionsProblem, model: AnswerModel): Explanation {
   const { a, c, d } = p, S = expectedOf(model.steps, "tops");
   return {
     heading: "Same pieces: add the tops",
-    idea: ["The bottom tells the size of the pieces, so it stays the same.", "Only the number of pieces, the top, grows."],
+    idea: ["The bottom is the size of the pieces, so it stays the same when you add."],
     statement: [frac(a, d), op("+"), frac(c, d)],
     diagram: likeFractionsPicture(p),
     caption: `${count(a, d)} and ${count(c, d)} make ${count(S, d)}.`,

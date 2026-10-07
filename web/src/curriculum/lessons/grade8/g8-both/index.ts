@@ -59,7 +59,7 @@ export function explainBothSides(p: BothSidesEquation, model: AnswerModel) {
   ], `A balance with ${f(a)} x tiles and ${f(b)} against ${f(c)} x tiles and ${f(d)}. Taking ${cxText(c)} and then ${f(b)} off both pans leaves ${f(k)} x's against ${f(rest)}, so x = ${f(x)}.`);
   return beatExplanation({
     heading: "Gather the x's, then solve",
-    idea: ["An equation is a balance: taking the same thing off both sides keeps it level.", "So take x's off one side until they're all on the other, then solve the one-step equation that's left."],
+    idea: ["Taking the same thing off both sides keeps the balance level."],
     statement: equation(p),
     diagram,
     alt: diagram.alt,

@@ -46,7 +46,7 @@ export function explainVecMag(p: VecMagProblem, model: AnswerModel): Explanation
   const { x, y } = p, S = expected(model, "sum"), m = expected(model, "m");
   return {
     heading: "√(x² + y²)",
-    idea: ["A vector's length is the long side of the right triangle its parts make: square both parts, add, and take the square root."],
+    idea: ["A vector's parts make a right triangle, and its length is the long side."],
     statement: vecMagMath(p),
     caption: `Legs ${f(Math.abs(x))} and ${f(Math.abs(y))}: |v| = ${f(m)}.`,
     diagram: buildPlane({

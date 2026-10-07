@@ -36,10 +36,7 @@ function explain(p: TrapezoidProblem, model: AnswerModel) {
   const { a, b, h } = p, S = expectedOf(model, "sum"), P = expectedOf(model, "times"), A = expectedOf(model, "half");
   return chainExplanation({
     heading: "Two copies make a parallelogram",
-    idea: [
-      "A second copy of the trapezoid, turned upside down next to it, makes a parallelogram as long as both bases together.",
-      "The trapezoid is half of that parallelogram.",
-    ],
+    idea: ["Two copies of a trapezoid make a parallelogram, so the trapezoid is half of it."],
     statement: [text("bases "), num(a), text(" and "), num(b), text(", height "), num(h)],
     caption: `Same as averaging the bases: (${a} + ${b}) ÷ 2 = ${f(S / 2)}, and ${f(S / 2)} × ${h} = ${A}.`,
     alt: `Trapezoid area: (${a} + ${b}) × ${h} ÷ 2 = ${A}.`,

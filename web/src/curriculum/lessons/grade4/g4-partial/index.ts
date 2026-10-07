@@ -64,7 +64,7 @@ export function explainPartial(p: PartialProblem, answers: AnswerModel): Explana
   const statement: MathText = [num(n), op("×"), num(m), ...(split ? [op("="), ...shown.flatMap(([v], k) => [...(k ? [op("+")] : []), num(v), op("×"), num(m)])] : [])];
   return {
     heading: "Multiply one place at a time",
-    idea: ["A big number is its hundreds, tens and ones put together, so each part can be multiplied on its own.", "The parts added together make the whole product."],
+    idea: ["A big number is its hundreds, tens and ones, so each part can be multiplied on its own."],
     statement,
     diagram: buildAreaGrid({
       cols, rows: [{ label: String(m), size: m }], cells: [cells], minRow: 80,

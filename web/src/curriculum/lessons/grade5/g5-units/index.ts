@@ -112,10 +112,7 @@ function explain(p: UnitConversionProblem, model: AnswerModel): Explanation {
   const { u: [one, many, small], n, up } = p, f = expectedOf(model.steps, "one"), all = expectedOf(model.steps, "multiply");
   return {
     heading: up ? "Small to big: divide" : "Big to small: multiply",
-    idea: [
-      "A big unit holds many small units, so the same length takes more small units and fewer big ones.",
-      "Big to small: multiply. Small to big: divide.",
-    ],
+    idea: ["A big unit holds many small ones, so the same length takes more small units."],
     statement: [...givenMath(p), op("="), text(`? ${up ? many : small}`)],
     diagram: unitConversionPicture(p),
     caption: up ? `1 ${one} is ${f} ${small}, so ${fm(n)} ${small} is ${fm(n)} ÷ ${f} = ${fm(all)} ${many}.`

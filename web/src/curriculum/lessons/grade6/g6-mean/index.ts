@@ -41,7 +41,7 @@ export function explainMean({ v }: MeanProblem, answers: AnswerModel): Explanati
   const T = expected(answers, "sum"), n = expected(answers, "count"), mean = expected(answers, "divide");
   return {
     heading: "Share it out equally",
-    idea: ["The mean is what each would get if the total were shared out equally.", "Add them all, then divide by how many there are."],
+    idea: ["The mean is what each would get if the total were shared out equally."],
     statement: mt`(${listOf(v, "+")}) ÷ ${n}`,
     caption: `${T} shared equally by ${n}: ${mean} each.`,
     diagram: buildMeanBars({

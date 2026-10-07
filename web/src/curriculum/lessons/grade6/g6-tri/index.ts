@@ -38,7 +38,7 @@ export function explainTriangle(p: TriangleProblem, answers: AnswerModel): Expla
   const { b, h } = p, R = expectedOf(answers.steps, "rect"), A = expectedOf(answers.steps, "half");
   return {
     heading: "Half a rectangle",
-    idea: ["A triangle is half of the rectangle around it: base × height, then divide by 2."],
+    idea: ["A triangle is half of the rectangle around it."],
     statement: [text("base "), num(b), text(", height "), num(h)],
     diagram: buildAreaGrid({
       cols: [{ label: `base ${b}`, size: b }],

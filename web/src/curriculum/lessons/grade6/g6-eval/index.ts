@@ -33,7 +33,7 @@ function explain(p: EvaluateProblem, model: AnswerModel) {
   const { a, b, x, y } = p, AX = expectedOf(model, "ax"), BY = expectedOf(model, "by"), S = expectedOf(model, "add");
   return chainExplanation({
     heading: "Swap in the numbers",
-    idea: ["A letter stands for a number, so once you know the number, it can go in the letter's place.", "A number written right next to a letter means multiply: 3x is 3 × x."],
+    idea: ["A letter stands for a number, so the number can take its place."],
     statement: [num(a), X, op("+"), num(b), Y, text(", "), X, op("="), num(x), text(", "), Y, op("="), num(y)],
     alt: `${a}x + ${b}y with x = ${x} and y = ${y}: ${AX} + ${BY} = ${S}.`,
     diagram: evaluatePicture({ a, b, x, y, AX, BY, S }),

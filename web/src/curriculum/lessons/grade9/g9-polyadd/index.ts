@@ -60,7 +60,7 @@ export function explainPolynomialSum(p: PolynomialSum, model: AnswerModel) {
   const word = p.sub ? "minus" : "plus";
   return beatExplanation({
     heading: "Combine like terms",
-    idea: ["Like terms are the same kind of thing: x² with x², x with x, numbers with numbers. 3x² + 5x² is 8x², like 3 apples and 5 apples, but x² and x never combine.", "A minus in front of parentheses takes away every term inside, not just the first one."],
+    idea: ["Only like terms combine, the same way 3 apples and 5 apples make 8 apples."],
     statement: problem(p),
     caption: `Only like terms combine: x² with x², x with x, numbers with numbers.`,
     diagram: polynomialSumPicture({ ...p, A, B, C, answer: toPlainText(quad(A, B, C)) }),

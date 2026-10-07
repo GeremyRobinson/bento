@@ -163,7 +163,7 @@ function picture(p: MassProblem) {
 
 function explain(p: MassProblem, model: AnswerModel): Explanation {
   const steps = model.steps.map((s, i) => ({ id: s.id, narration: s.explain, math: s.work ?? [], state: i + 1, answerStep: s.id, result: s.slots[0]!.expected! }));
-  const idea = ["Mass is how heavy something is. A paper clip is about 1 gram. A big bottle of water is about 1 kilogram, which is 1,000 grams."];
+  const idea = ["Mass is how heavy something is, and a paper clip is about 1 gram."];
   if (p.kind === 1) {
     return {
       heading: "Read a scale", idea, statement: words("What is the mass?"),

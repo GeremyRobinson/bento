@@ -42,7 +42,7 @@ function explain(p: PowerOfTenProblem, model: AnswerModel): Explanation {
   const [whole, frac = ""] = f(x).split(".");
   return {
     heading: "Each zero moves the point",
-    idea: ["Times 10 makes every digit worth ten times as much, so each digit shifts one place left and the point seems to hop one place right.", "Each zero in 10, 100 or 1000 is one hop."],
+    idea: ["Times 10 makes every digit worth ten times more, so each digit moves one place left."],
     statement: [num(x), op("×"), num(m), op("="), text("?")],
     diagram: buildDecimalShift({
       digits: whole! + frac, from: whole!.length, to: whole!.length + k, beat: 0, moveBeat: 1,

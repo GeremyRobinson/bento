@@ -44,7 +44,7 @@ export function explainSimilar(p: SimilarProblem, answers: AnswerModel): Explana
   const k = expected(answers, "factor"), side = expected(answers, "missing");
   return {
     heading: "Same shape, scaled",
-    idea: ["Similar shapes have the same angles; every side is multiplied by the same scale factor.", "Find the factor from a matching pair, then use it on the missing side."],
+    idea: ["Similar shapes have the same angles, and every side is scaled by the same factor."],
     statement: mt`${a} → ${big}, ${b} → ?`,
     caption: `${f(big)} ÷ ${a} = ${f(k)}, so everything is × ${f(k)}: ${b} × ${f(k)} = ${f(side)}.`,
     diagram: buildSimilar({

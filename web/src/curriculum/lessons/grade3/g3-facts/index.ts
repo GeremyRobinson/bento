@@ -93,7 +93,7 @@ function explain(p: FactProblem, model: AnswerModel): Explanation {
   const { a, b } = p, P = expectedOf(model, "count"), square = a === b, T = square ? P : expectedOf(model, "turn");
   return {
     heading: "Count equal groups",
-    idea: ["Multiplying counts equal groups. Count by the group size, once for each group.", "You can turn the array around. The total stays the same."],
+    idea: ["Multiplying counts equal groups, so you can count by the group size."],
     statement: [num(a), op("×"), num(b)],
     diagram: factPicture(p, P),
     caption: `${count(a, "row")} with ${count(b, "dot")} in each row.`,

@@ -41,7 +41,7 @@ export function explainCylinder({ r, h }: CylinderProblem, answers: AnswerModel)
   const r2 = expected(answers, "square"), base = expected(answers, "base"), v = expected(answers, "height");
   return {
     heading: "Base area × height",
-    idea: ["A cylinder is its circle base stacked up to the height.", "Volume = π × r² × h: find the base area first, then times the height."],
+    idea: ["A cylinder is its circle base stacked up to the height."],
     statement: mt`V = 3.14 × ${r}${sup("2")} × ${h}`,
     caption: `The base is a circle of ${base} square units. Stack it ${h} high: ${base} × ${h} = ${v}.`,
     diagram: buildCylinder({

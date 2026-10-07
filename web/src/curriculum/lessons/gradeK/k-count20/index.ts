@@ -52,7 +52,7 @@ function explain(p: CountProblem, model: AnswerModel): Explanation {
   const { n } = p, row = expectedOf(model, "row"), all = expectedOf(model, "count-on");
   return {
     heading: "Count on from 10",
-    idea: ["Count one row of ten. Then don't start over: keep counting from 10, one number for each dot."],
+    idea: ["After one full row of ten, you can keep counting on from 10."],
     statement: words("How many dots?"),
     diagram: countStrip(n, `${count(row, "dot")} in the top row and ${n - row} in the bottom row, counted 1 to ${all}.`, { firstBeat: 0, restBeat: 1 }),
     caption: `${row} and ${n - row} more make ${all}.`,

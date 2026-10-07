@@ -86,7 +86,7 @@ function explain(p: TimeProblem, model: AnswerModel): Explanation {
   const shown = `${expectedOf(model, "time", "h")}:${two(expectedOf(model, "time", "m"))}`;
   return {
     heading: "Read the clock",
-    idea: ["The short hand shows the hour. The long hand shows the minutes: count by 5s to it."],
+    idea: ["The long hand moves 5 minutes from one number to the next."],
     statement: [text("What time is it?")],
     diagram: buildClock({
       hour: p.h, minute: p.m, beats: { hour: 1, number: 2, count: 3, time: 4 },

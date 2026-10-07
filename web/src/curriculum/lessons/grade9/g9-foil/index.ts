@@ -48,7 +48,7 @@ export function explainFoil(p: FoilProblem, answers: AnswerModel): Explanation {
   const result = polyText([[1, "x²"], [mid, "x"], [last, ""]]);
   return {
     heading: "First, outer, inner, last",
-    idea: ["Multiply each term of one factor by each term of the other: first, outer, inner, last. Then add the like terms."],
+    idea: ["Every term of one factor multiplies every term of the other."],
     statement: [...binom(a), ...binom(b)],
     diagram: buildAreaGrid({
       cols: [{ label: "x", size: X }, { label: sideText(b), size: Math.abs(b) }],

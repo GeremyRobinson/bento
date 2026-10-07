@@ -51,7 +51,7 @@ export function explainMultiStep(p: MultiStepEquation, model: AnswerModel) {
   ], `A balance with ${count(f(a), "group")} of x and ${f(b)} against ${f(c)}. That is ${f(a)} x's and ${f(ab)}; taking ${f(ab)} off both pans and splitting into ${f(a)} shows x = ${f(x)}.`);
   return beatExplanation({
     heading: "Distribute, then undo",
-    idea: ["A number outside parentheses multiplies everything inside, so multiply it out first.", "Then undo the adding and the multiplying, doing the same thing to both sides so the balance stays level."],
+    idea: ["Both sides have to stay equal, so each step is undone on both sides."],
     statement: equation(p),
     diagram,
     alt: diagram.alt,

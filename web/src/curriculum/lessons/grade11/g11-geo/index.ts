@@ -49,7 +49,7 @@ export function explainGeo(p: GeoProblem, model: AnswerModel): Explanation {
   const terms = Array.from({ length: n }, (_, i) => a * r ** i);
   return {
     heading: "aₙ = a₁ · rⁿ⁻¹",
-    idea: ["A geometric sequence multiplies by the same ratio every time. To reach term n, start at the first term and make n − 1 jumps of × r."],
+    idea: ["The ratio is the same every time, so term n is the first term times the ratio, n − 1 times."],
     statement: geoMath(p),
     caption: `Each term is ${r === 2 ? "double" : "triple"} the one before: term ${n} is ${f(a)} × ${f(r)}${supText(n - 1)} = ${f(an)}.`,
     diagram: buildPlane({

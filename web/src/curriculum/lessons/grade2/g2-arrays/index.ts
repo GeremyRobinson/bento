@@ -73,7 +73,7 @@ function explain(p: ArrayProblem, model: AnswerModel): Explanation {
   const sum = `${Array.from({ length: rows }, () => cols).join(" + ")} = ${total}`;
   return {
     heading: "Rows of the same size",
-    idea: ["An array has rows that are all the same size. Add one row's count once for every row."],
+    idea: ["All the rows in an array are the same size, so one row's count repeats for every row."],
     statement: [num(p.rows), text(" rows of "), num(p.cols)],
     diagram: buildArray({
       rows: p.rows, cols: p.cols, beats: { rows: 1, cols: 2, total: 3 }, total: sum,

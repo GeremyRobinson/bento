@@ -110,7 +110,7 @@ function explain(p: ElapsedProblem, model: AnswerModel): Explanation {
   const totalText = `${hrs(th)}${tm ? ` ${tm} min` : ""}`;
   return {
     heading: "Jump to the hour",
-    idea: ["Jump from the start to the next o'clock, then count whole hours, then the minutes left.", "An hour is 60 minutes."],
+    idea: ["An hour is 60 minutes, so jumping to the next o'clock makes the counting easy."],
     statement: [text(`${clockAmPm(start)} to ${clockAmPm(end)}`)],
     diagram: buildTimeline({
       start, end, clock,

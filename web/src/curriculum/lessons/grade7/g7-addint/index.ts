@@ -44,7 +44,7 @@ function explain(p: AddIntegersProblem, model: AnswerModel): Explanation {
   const spans: Span[] = sum !== 0 ? [{ from: Math.min(0, sum), to: Math.max(0, sum), beat: 1, label: `${size} from 0` }] : [];
   return {
     heading: "Sizes and signs",
-    idea: ["A negative number steps left of 0 and a positive steps right, so steps the same way add up and steps opposite ways cancel.", "The answer takes the sign of whichever side has more steps."],
+    idea: ["Steps the same way add up, and steps in opposite ways cancel."],
     statement: [num(a), op("+"), ...paren(b), op("="), num(sum)],
     diagram: buildNumberLine({
       ...fitRange([a, sum, 0], { maxTicks: 34, pad: 1, minStep: 1 }),

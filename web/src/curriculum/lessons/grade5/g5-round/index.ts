@@ -69,7 +69,7 @@ function explain(pr: RoundProblem, model: AnswerModel): Explanation {
   if (!hops.length) marks.push({ v: R, beat: 2, cls: "dota" });
   return {
     heading: "Look one place to the right",
-    idea: ["Rounding picks the closer of the two numbers on either side, and the halfway point is where the next digit is 5.", "So 5 or more rounds up, and 4 or less stays the same."],
+    idea: ["Rounding picks the closer number, and a next digit of 5 marks halfway."],
     statement: [num(value), op("≈"), text("?"), muted(` (nearest ${name.slice(0, -1)})`)],
     diagram: buildNumberLine({
       min: T, max: up, step: tick, every: 10, labelAt: [half], marks, hops,

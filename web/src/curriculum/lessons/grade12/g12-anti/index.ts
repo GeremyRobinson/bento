@@ -49,7 +49,7 @@ export function explainAntiderivative(p: Antiderivative, model: AnswerModel) {
   const [up, c] = model.steps.map(s => s.slots[0]!.expected!) as [number, number];
   return beatExplanation({
     heading: "Up one, divide by the new power",
-    idea: ["An antiderivative runs the power rule backwards: find the function whose derivative is the one you have.", "The derivative lowers the power by 1 and multiplies by it, so going back you raise the power by 1 and divide by the new power. Check by taking the derivative."],
+    idea: ["An antiderivative runs the power rule backwards."],
     statement: integral(p),
     caption: `Check: the derivative of ${termText(c, up)} is ${f(up)} × ${termText(c, n)} = ${termText(a, n)}.`,
     alt: `∫ ${termText(a, n)} dx: the exponent goes up to ${f(up)}, and ${f(a)} ÷ ${f(up)} = ${f(c)}, so ${termText(c, up)} + C.`,

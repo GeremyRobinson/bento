@@ -44,7 +44,7 @@ export function explainDegreesToRadians({ t }: DegreesToRadiansProblem, answers:
   const g = expected(answers, "gcf"), n = expected(answers, "radians", "n"), d = expected(answers, "radians", "d");
   return {
     heading: "Multiply by π/180",
-    idea: ["A half turn is 180°, and in radians it is π.", "So an angle is its share of 180, written in front of π."],
+    idea: ["A half turn is 180°, and in radians it is π."],
     statement: mt`${t}° × ${frac("π", 180)}`,
     caption: `${t}° is ${count(n, "piece")} of ${g}°, and ${d} of those pieces make a half turn (π): ${piText(n, d)}.`,
     diagram: buildRadians({

@@ -67,7 +67,7 @@ function explain({ n, more }: TenMoreProblem, model: AnswerModel): Explanation {
   const sign = more ? "+" : "−";
   return {
     heading: "10 more, 10 less",
-    idea: ["Adding or taking 10 changes only the tens digit, by one. The ones stay the same. On the hundreds chart, that's one row down or one row up."],
+    idea: ["10 more or 10 less changes only the tens digit, by one."],
     statement: [num(n), op(sign), num(TEN)],
     diagram: buildHundredRows({
       from: n, to: res, jump: `${sign}${TEN}`,

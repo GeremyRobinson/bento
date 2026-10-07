@@ -55,7 +55,7 @@ function explain(p: TakeAwayProblem, model: AnswerModel): Explanation {
   const { b } = p, a = expectedOf(model, "all"), left = expectedOf(model, "left");
   return {
     heading: "Take away and count",
-    idea: ["Start with all of them. Cross out the ones that go away. Count the ones that are left."],
+    idea: ["Taking away leaves fewer, and the ones that are left are the answer."],
     statement: [num(a), op("−"), num(b)],
     diagram: changeDots({ start: p.a, change: b, kind: "take", beats: { start: 0, change: 1, end: 2 },
       alt: `${count(a, "dot")}. ${b} ${isAre(b)} crossed out and ${leftWords(left)}.` }),

@@ -42,7 +42,7 @@ export function explainRadical(p: RadicalEquation, model: AnswerModel) {
   const [sq, x] = model.steps.map(s => s.slots[0]!.expected!) as [number, number];
   return beatExplanation({
     heading: "Square to undo the root",
-    idea: ["Squaring undoes a square root, and doing the same thing to both sides keeps them equal.", "Squaring can sneak in an answer that doesn't work, so put your answer back into the root to check it."],
+    idea: ["Squaring undoes a square root, but it can add an answer that doesn't work."],
     statement: [...root(a), op("="), num(b)],
     caption: `Squaring both sides keeps them equal and removes the root.`,
     diagram: radicalEquationPicture({ a, b, sq, x }),

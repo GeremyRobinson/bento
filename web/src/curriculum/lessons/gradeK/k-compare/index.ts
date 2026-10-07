@@ -74,7 +74,7 @@ function explain(p: CompareProblem, model: AnswerModel): Explanation {
     : `The ${right === 0 ? "top" : "bottom"} row has ${extra} left over. So ${top} is ${CHOICES[right]!.toLowerCase()} ${bottom}.`;
   return {
     heading: "Match them up",
-    idea: ["Count each row. Then match the dots in pairs. The row with dots left over has more."],
+    idea: ["When you match the dots in pairs, the row with dots left over has more."],
     statement: words("Which row has more?"),
     diagram: pairRows({ top: p.top, bottom: p.bottom, beats: { top: 0, bottom: 1, match: 2 },
       alt: `${count(top, "dot")} on top and ${count(bottom, "dot")} below, matched in pairs. ${matched}` }),

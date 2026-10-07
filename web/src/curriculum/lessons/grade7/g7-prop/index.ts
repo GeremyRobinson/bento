@@ -67,10 +67,7 @@ function explain(p: ProportionProblem, model: AnswerModel): Explanation {
   const { a, b } = p, k = expectedOf(model.steps, "cross"), x = expectedOf(model.steps, "divide");
   return {
     heading: "Same scale, top and bottom",
-    idea: [
-      "Two fractions are equal when the top and the bottom were scaled by the same number.",
-      "Find how big one part is from the side you know, then build the other side.",
-    ],
+    idea: ["Two fractions are equal when the top and bottom are scaled by the same number."],
     statement: [frac(a, b), op("="), frac("x", b * k)],
     diagram: proportionPicture(p),
     caption: `${a}/${b} = ${f(x)}/${f(b * k)}: each box is ${f(k)}.`,

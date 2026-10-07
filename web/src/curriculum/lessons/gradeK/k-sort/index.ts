@@ -89,7 +89,7 @@ function explain(p: SortProblem, model: AnswerModel): Explanation {
   const kinds = kindsOf(p), right = model.steps.at(-1)!.slots[0]!.expected!, word = p.ask ? "fewest" : "most";
   return {
     heading: "Sort, then count",
-    idea: ["Put the things that match together. Then count each group and see which has more."],
+    idea: ["Putting matching things together makes each group easy to count."],
     statement: words(`Which group has the ${word}?`),
     diagram: buildSort({ glyphs: kinds.map(k => k.glyph), counts: p.counts, seed: seedOf(p), mark: right, beats: { rows: 1, count: 2, mark: 3 }, pick: { ...pickOf(p), until: 0 },
       alt: `${altOf(p)} They slide into rows, one row for each kind: ${p.counts.map((n, i) => count(n, kinds[i]!.one, kinds[i]!.many)).join(", ")}.` }),

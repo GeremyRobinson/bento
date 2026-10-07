@@ -14,7 +14,7 @@ export function explainSolveFactor(p: SolveFactorProblem, model: AnswerModel): E
   const lo = Math.min(m, n), hi = Math.max(m, n);
   return {
     heading: "Factor, then set each part to 0",
-    idea: ["If two numbers multiply to 0, one of them must be 0. So factor, then set each factor to 0. On the graph, the answers are where the curve crosses 0."],
+    idea: ["If two numbers multiply to 0, one of them must be 0."],
     statement: solveFactorMath(p),
     caption: `The graph crosses 0 at x = ${f(lo)} and x = ${f(hi)}.`,
     diagram: buildPlane({

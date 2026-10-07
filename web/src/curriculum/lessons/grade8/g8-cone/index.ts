@@ -41,7 +41,7 @@ export function explainCone({ r, h }: ConeProblem, answers: AnswerModel): Explan
   const base = expected(answers, "base"), cyl = expected(answers, "cylinder"), v = expected(answers, "third");
   return {
     heading: "A third of a cylinder",
-    idea: ["A cone holds a third of the cylinder around it.", "Volume = π × r² × h ÷ 3: the base area, times the height, then a third."],
+    idea: ["A cone holds a third of the cylinder around it."],
     statement: mt`V = 3.14 × ${r}${sup("2")} × ${h} ÷ 3`,
     caption: `The base is a circle of ${base} square units. The cylinder holds ${base} × ${h} = ${cyl}, and the cone a third of it: ${v}.`,
     diagram: buildCylinder({

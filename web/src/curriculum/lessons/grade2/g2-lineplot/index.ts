@@ -127,7 +127,7 @@ function explain(p: LinePlotProblem, model: AnswerModel): Explanation {
   const last = model.steps.at(-1)!;
   return {
     heading: "Line plots",
-    idea: ["A line plot puts an X above the number line for each thing measured. Tall stacks show the lengths that came up most."],
+    idea: ["Each X is one thing measured, so the tallest stack came up most."],
     statement: words(last.question ?? ""),
     diagram: buildLinePlot({ ...plot(p, true), beats: { drop: 0, light: 1 }, light: lit(p),
       alt: `${alt(p)} Each ${THINGS[p.thing]!.one} drops an X above its length, then the stacks the question is about light up.` }),

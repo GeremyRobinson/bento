@@ -67,7 +67,7 @@ export function explainSplitMultiplication(p: SplitMultiplicationProblem, answer
 
   return {
     heading: "Split the second number",
-    idea: ["The second number is tens plus ones, so the rectangle splits into strips that are easy to multiply one at a time.", "The strips together make the whole product."],
+    idea: ["The second number is tens plus ones, so each strip is an easy multiplication."],
     statement: [num(a), op("×"), num(b), op("="), num(a), op("×"), text("("), ...plusChain(p.parts), text(")")],
     diagram: buildSplitAreaDiagram(p, layout),
     timeline,

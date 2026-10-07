@@ -78,7 +78,7 @@ function explain(p: SkipProblem, model: AnswerModel): Explanation {
   const a = expectedOf(model, "next1"), b = expectedOf(model, "next2"), c = expectedOf(model, "next3");
   return {
     heading: `Count by ${by}s`,
-    idea: ["Find how much the numbers grow each time. Then keep making that same jump."],
+    idea: ["The numbers grow by the same jump every time."],
     statement: list([v[0]!, v[1]!, v[2]!, text("?"), text("?"), text("?")]),
     diagram: buildSkipLine({
       values: v, given: SHOWN, hop: `+${by}`, jumpBeat: 1, revealBeats: [2, 3, 4],

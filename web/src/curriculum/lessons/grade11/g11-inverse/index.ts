@@ -45,7 +45,7 @@ export function explainInverse(p: InverseProblem, model: AnswerModel): Explanati
   const fx = polyText([[a, "x"], [b, ""]]);
   return {
     heading: "Run it backwards",
-    idea: ["The inverse undoes f. f multiplies first and adds last, so the inverse undoes the adding first, then the multiplying.", "On a graph the inverse is the mirror image across y = x: the point (x, y) becomes (y, x)."],
+    idea: ["The inverse undoes f, so it runs f's steps backwards."],
     statement: [...inverseMath(p), text(",  f⁻¹("), num(y), text(")")],
     caption: `f takes ${f(x)} to ${f(y)}, so f⁻¹ takes ${f(y)} back to ${f(x)}: ${pt(x, y)} mirrors to ${pt(y, x)}.`,
     diagram: buildPlane({

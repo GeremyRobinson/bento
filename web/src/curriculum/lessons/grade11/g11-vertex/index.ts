@@ -48,7 +48,7 @@ export function explainVertex(p: VertexProblem, model: AnswerModel): Explanation
   const F = (x: number) => a * x * x + b * x + c;
   return {
     heading: "x = −b ÷ 2a",
-    idea: ["A parabola is symmetric, and its vertex sits on the line of symmetry x = −b ÷ 2a. Plug that x back in to get the vertex's y."],
+    idea: ["A parabola is symmetric, and its vertex sits on the line of symmetry."],
     statement: vertexMath(p),
     caption: `The vertex sits on the line of symmetry, x = ${f(h)}: it is ${pt(h, k)}.`,
     diagram: buildPlane({

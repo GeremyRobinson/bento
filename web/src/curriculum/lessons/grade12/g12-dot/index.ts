@@ -48,7 +48,7 @@ export function explainDot(p: DotProblem, model: AnswerModel): Explanation {
   const sense = D > 0 ? "less than a right angle apart" : D < 0 ? "more than a right angle apart" : "perpendicular";
   return {
     heading: "Multiply matching parts, then add",
-    idea: ["The dot product multiplies the x parts, multiplies the y parts, and adds. It is one number: positive when the arrows point roughly the same way, negative when they point apart, 0 when they are perpendicular."],
+    idea: ["The dot product is positive when the arrows point the same way and 0 when they're perpendicular."],
     statement: dotMath(p),
     caption: `${f(a)} × ${fP(c)} + ${fP(b)} × ${fP(d)} = ${f(D)}: the arrows are ${sense}.`,
     diagram: buildPlane({

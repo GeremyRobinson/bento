@@ -15,7 +15,7 @@ export function explainFunc(p: FuncProblem, model: AnswerModel): Explanation {
   const up = b > 0;
   return {
     heading: "Plug in x",
-    idea: ["f(x) is a rule: put the number in for x and work it out. The graph of the rule shows every answer at once."],
+    idea: ["f(x) is a rule, so any number can go in for x."],
     statement: [...funcMath(p), text(", find "), ...call("f", x)],
     caption: `Above x = ${f(x)}, ${coef(a, "x")} reaches ${f(ax)}; the ${up ? "+" : "−"} ${f(Math.abs(b))} moves it to f(${f(x)}) = ${f(v)}.`,
     diagram: buildPlane({

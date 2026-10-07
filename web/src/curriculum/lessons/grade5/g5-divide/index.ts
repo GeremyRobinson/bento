@@ -50,7 +50,7 @@ function explain(p: LongDivisionProblem, model: AnswerModel) {
   const T = expectedOf(model, "tens"), left = expectedOf(model, "subtract"), O = expectedOf(model, "ones"), qt = expectedOf(model, "sum");
   return chainExplanation({
     heading: "Divide in chunks",
-    idea: ["Dividing asks how many groups of the divisor fit, and taking out ten groups at a time gets there faster.", "Then share out what's left, and add the two parts."],
+    idea: ["Taking out ten groups at a time gets to the answer faster than going one by one."],
     statement: [num(n), op("÷"), num(dv)],
     caption: `Take out big chunks of ${dv} first.`,
     alt: `${n} ÷ ${dv}: ${dv} × ${T} = ${dv * T}, ${left} is left, ${left} ÷ ${dv} = ${O}, so ${T} + ${O} = ${qt}.`,

@@ -53,10 +53,7 @@ function explain(pr: PercentOfProblem, model: AnswerModel): Explanation {
   const { p, W } = pr, base = baseOf(p), part = expectedOf(model.steps, "base"), R = expectedOf(model.steps, "scale");
   return {
     heading: base === 10 ? "Start from 10%" : "Start from 25%",
-    idea: [
-      `Percent means out of 100: ${p}% of a number is ${p} of every 100 parts of it, the same as ${p}/100.`,
-      base === 10 ? "10% is one tenth, so find 10% and build the percent from it." : "25% is one quarter, so find 25% and build the percent from it.",
-    ],
+    idea: ["Percent means out of 100, so 10% is one tenth and 25% is one quarter."],
     statement: [num(p), text("% of "), num(W)],
     diagram: percentOfPicture(pr),
     caption: `Each block is ${base}%, which is ${part}.`,

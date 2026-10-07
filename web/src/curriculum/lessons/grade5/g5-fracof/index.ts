@@ -53,7 +53,7 @@ function explain(p: FractionOfNumberProblem, model: AnswerModel): Explanation {
   const { n, d, W } = p, g = expectedOf(model.steps, "groups"), R = expectedOf(model.steps, "take");
   return {
     heading: "Equal groups, then take some",
-    idea: ["The bottom of a fraction says how many equal groups to split into, and the top says how many of those groups you take.", "So 3/4 of 20 is 3 groups of 5."],
+    idea: ["The bottom says how many equal groups to make, and the top says how many to take."],
     statement: [frac(n, d), text(" of "), num(W)],
     diagram: fractionOfNumberPicture(p),
     caption: `Split ${W} into ${count(d, "group")}. Take ${n} of them.`,

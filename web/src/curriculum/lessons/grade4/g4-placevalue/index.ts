@@ -99,7 +99,7 @@ function explain(p: RoundProblem, model: AnswerModel): Explanation {
   const next = expectedOf(model, "next"), R = expectedOf(model, "round"), mid = lo + place / 2;
   return {
     heading: "Which round number is closer?",
-    idea: ["Rounding finds the round number that's closest.", "The digit just right of the place decides: 5 or more is at or past halfway, so round up; less than 5 rounds down."],
+    idea: ["Rounding finds the closest round number, and the next digit shows which side of halfway it's on."],
     statement: [text(N), op("≈"), text("?")],
     diagram: buildRounding({
       n, place, lo, hi, result: R, beats: { place: 1, line: 2, next: 3, round: 4 },

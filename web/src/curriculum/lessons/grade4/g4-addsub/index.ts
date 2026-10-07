@@ -156,9 +156,7 @@ function explain(p: AddSubProblem, model: AnswerModel): Explanation {
   const thSay = p.sub ? `${A}${carry ? " − 1" : ""} − ${B} = ${TH}` : `${A} + ${B}${carry ? " + 1" : ""} = ${TH}`;
   return {
     heading: p.sub ? "Subtract one place at a time" : "Add one place at a time",
-    idea: p.sub
-      ? ["10 ones make 1 ten, and 10 tens make 1 hundred, so you can trade 1 from the next place for 10 when a top digit is too small.", "That's why you line up the places and start with the ones."]
-      : ["Each place holds only 0 to 9: 10 ones make 1 ten, and 10 tens make 1 hundred.", "So when a column makes 10 or more, carry the 1 to the next place."],
+    idea: ["Each place holds only 0 to 9, so 10 in one place trades for 1 in the next."],
     statement: [text(commas(p.a)), op(s), text(commas(p.b))],
     diagram: buildColumns({
       a: p.a, b: p.b, sign: s, beats: { ones: 1, tens: 2, hundreds: 3, rest: 4 },

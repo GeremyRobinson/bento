@@ -46,10 +46,7 @@ export function explainAngleParts(p: AnglePartsProblem, answers: AnswerModel): E
   const name = st ? "A straight line" : "A right angle";
   return {
     heading: "Angle parts add up",
-    idea: [
-      "An angle measures a turn. A full turn is 360 tiny turns called degrees, so a straight line is 180° and a square corner is 90°.",
-      "Angles that share a corner and fill a bigger angle add up to it.",
-    ],
+    idea: ["Angles that share a corner and fill a bigger angle add up to it."],
     statement: mt`${a}° + ? = ${T}°`,
     caption: `${a}° and ${rest}° together make ${T}°.`,
     diagram: buildAngle({ total: st ? 180 : 90, part: a, wholeBeat: 1, missingBeat: 2, wholeNote: `${name} is ${T}°`, alt: `An angle of ${a}° and the missing ${rest}° together make ${st ? "a straight line" : "a right angle"}, ${T}°.` }),

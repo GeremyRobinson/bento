@@ -52,7 +52,7 @@ function explain(p: UnitRateProblem, model: AnswerModel): Explanation {
   const { n, m, item } = p, u = expectedOf(model.steps, "one"), total = expectedOf(model.steps, "many");
   return {
     heading: "Find the cost of one first",
-    idea: ["A rate says how much for one, and every one costs the same, so the cost of one is the bridge to any number of them.", "Divide to find the cost of one, then multiply."],
+    idea: ["Every one costs the same, so the cost of one gets you to any number of them."],
     statement: [num(n), text(` ${item} cost $`), num(u * n)],
     diagram: unitRatePicture(p),
     caption: `Each box is one of the ${item}: $${u}.`,

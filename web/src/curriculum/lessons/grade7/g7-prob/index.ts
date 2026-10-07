@@ -57,7 +57,7 @@ export function explainProbability(p: ProbabilityProblem, answers: AnswerModel):
   const chance = fracText(n, d);
   return {
     heading: "Winners over everything",
-    idea: ["The chance of a color is how many of that color, out of how many marbles in all.", "Write it as a fraction in lowest terms."],
+    idea: ["A chance is how many winners there are out of everything there is."],
     statement: mt`P(${name}) = ${name} ÷ all`,
     caption: `${want} of the ${T} ${want === 1 ? "is" : "are"} ${name}: P(${name}) = ${chance}.`,
     diagram: buildMarbleBag({

@@ -34,10 +34,7 @@ function explain(p: SubtractIntegersProblem, model: AnswerModel): Explanation {
   const dir = opp > 0 ? "right" : "left", B = Math.abs(b);
   return {
     heading: "Subtracting is adding the opposite",
-    idea: [
-      "Taking away a debt makes you richer: 5 − (−3) is the same as 5 + 3.",
-      "That's why subtracting a number gives the same answer as adding its opposite.",
-    ],
+    idea: ["Taking away a debt makes you richer, so subtracting a negative adds."],
     statement: [num(a), op("−"), ...paren(b), op("="), num(a), op("+"), ...paren(opp)],
     diagram: buildNumberLine({
       ...fitRange([a, b, opp, diff, 0], { maxTicks: 34, pad: 1, minStep: 1 }),

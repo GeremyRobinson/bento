@@ -66,10 +66,7 @@ function explain(p: MultDecimalsProblem, model: AnswerModel) {
   const P = expectedOf(model, "whole"), places = expectedOf(model, "places"), ans = expectedOf(model, "place");
   return chainExplanation({
     heading: "Multiply, then place the point",
-    idea: [
-      "A tenth of a tenth is a hundredth: 0.1 × 0.1 = 0.01.",
-      `So ${f(x)} × ${f(y)} has the same digits as ${A} × ${B}, but the answer counts ${PLACE[places]}.`,
-    ],
+    idea: ["A tenth of a tenth is a hundredth, so multiplying decimals moves the point."],
     statement: [num(x), op("×"), num(y)],
     caption: `${f(x)} × ${f(y)} has the same digits as ${A} × ${B}; the ${places} decimal places say where the point goes.`,
     alt: `${f(x)} × ${f(y)}: ${A} × ${B} = ${P}, ${places} decimal places, so ${f(ans)}.`,

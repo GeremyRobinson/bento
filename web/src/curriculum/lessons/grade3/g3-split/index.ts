@@ -48,7 +48,7 @@ export function explainSplitFact(p: SplitFactProblem, answers: AnswerModel): Exp
   const five = expectedOf(answers.steps, "five"), rest = expectedOf(answers.steps, "rest"), sum = expectedOf(answers.steps, "sum");
   return {
     heading: "Break a hard fact apart",
-    idea: ["A big array is two smaller arrays side by side. Find each small one with a fact you know, then put them back together."],
+    idea: ["A big array is two smaller ones side by side, so two easy facts make the hard one."],
     statement: [num(a), op("×"), num(b), op("="), num(a), op("×"), num(5), op("+"), num(a), op("×"), num(r)],
     diagram: buildAreaGrid({
       cols: [{ label: "5", size: 5 }, { label: String(r), size: r }],

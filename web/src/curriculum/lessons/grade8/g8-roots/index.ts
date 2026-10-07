@@ -61,7 +61,7 @@ export function explainRoot(p: RootProblem, answers: AnswerModel): Explanation {
     });
   return {
     heading: cube ? "Undo the cube" : "Undo the square",
-    idea: [cube ? "The cube root is the edge of a cube: the number that times itself, three times, makes the number." : "The square root is the side of a square: the number that times itself makes the number."],
+    idea: ["A root undoes a power, like the side of a square or the edge of a cube."],
     statement: radical(p),
     diagram,
     caption: cube ? `A cube with volume ${v} has edges of ${n}.` : `A square with area ${v} has sides of ${n}.`,

@@ -66,7 +66,7 @@ function explain(pr: DiscountProblem, model: AnswerModel): Explanation {
   const { P, p, off } = pr, amt = expectedOf(model.steps, "percent"), total = expectedOf(model.steps, "total");
   return {
     heading: "Find the percent, then add or subtract",
-    idea: ["Percent means out of 100, so 10% of a price is one tenth of it, and other percents build up from there.", "A discount takes that amount off; a tip or tax adds it on."],
+    idea: ["Percent means out of 100, so 10% of a price is one tenth of it."],
     statement: [...$(P), text(off ? `, ${p}% off` : `, ${p}% tip`)],
     diagram: discountPicture(pr),
     caption: off ? `${p}% off: $${f(amt)} comes off.` : `A ${p}% tip: $${f(amt)} goes on.`,

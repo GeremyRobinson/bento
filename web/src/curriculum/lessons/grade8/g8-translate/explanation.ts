@@ -14,7 +14,7 @@ export function explainTranslate(p: TranslateProblem, model: AnswerModel): Expla
   const [across, upDown] = moveWords(p);
   return {
     heading: "Slide the point",
-    idea: ["A translation slides a point without turning it. Right and left change x; up and down change y."],
+    idea: ["A translation slides a point without turning it."],
     statement: [...ptM(x, y), text(`: ${across} and ${upDown}`)],
     caption: `Slide ${across}, then ${upDown}: ${pt(x, y)} lands on ${pt(nx, ny)}.`,
     diagram: buildPlane({

@@ -37,7 +37,7 @@ export function explainRadiansToDegrees({ n, d }: RadiansToDegreesProblem, answe
   const piece = expected(answers, "piece"), deg = expected(answers, "degrees");
   return {
     heading: "π = 180°",
-    idea: ["π radians is a half turn: 180°.", "Split 180° into the bottom number of pieces, then take the top number of them."],
+    idea: ["π radians is a half turn, which is 180°."],
     statement: mt`${piText(n, d)} = ?°`,
     caption: `Each π/${d} is ${piece}°. ${n === 1 ? "One of them" : `${n} of them`}: ${deg}°.`,
     diagram: buildRadians({

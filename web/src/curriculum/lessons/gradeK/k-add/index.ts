@@ -60,7 +60,7 @@ function explain(p: CountOnProblem, model: AnswerModel): Explanation {
   ];
   return {
     heading: "Count on",
-    idea: ["Adding puts two groups together. You don't have to start over: count the first group, then keep counting, one number for each dot in the second group."],
+    idea: ["Adding puts two groups together, so you can keep counting from the first group."],
     statement: [num(a), op("+"), num(b)],
     diagram: buildNumberLine({ min: 0, max: 10, hops, alt: `Number line from 0 to 10: count ${a}, then hop on ${b} more to ${sum}.` }),
     caption: `Start at ${a} and count on ${b}: ${sum}.`,

@@ -78,7 +78,7 @@ const jugAlt = "A jug marked in liters, partly full.";
 
 function explain(p: LitersProblem, model: AnswerModel): Explanation {
   const steps = model.steps.map((s, i) => ({ id: s.id, narration: s.explain, math: s.work ?? [], state: i === model.steps.length - 1 ? 2 : 1, answerStep: s.id, result: s.slots[0]!.expected! }));
-  const idea = ["A liter is a fixed amount: a big water bottle holds about 1 liter. The marks on a jug count liters, like a ruler counts inches."];
+  const idea = ["A liter is a fixed amount, about one big bottle of water."];
   if (p.kind === 1) {
     const ans = apply(OPS[p.op]!, p.a, p.b);
     return {

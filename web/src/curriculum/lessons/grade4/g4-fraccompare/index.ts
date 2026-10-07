@@ -145,7 +145,7 @@ function explain(p: FracCompareProblem, model: AnswerModel): Explanation {
   const statement: MathText = [frac(a, b), text(" ? "), frac(c, d)];
   return {
     heading: "Same-size pieces first",
-    idea: ["To compare fractions, cut them into same-size pieces. Then the one with more pieces is bigger."],
+    idea: ["Same-size pieces are fair to compare, so more of them means bigger."],
     statement,
     diagram: compareBars(p, { cut: apart ? common : cmp, first, second, compare: cmp }),
     caption: `Both bars are the same whole, cut into ${pieceName(L)}.`,

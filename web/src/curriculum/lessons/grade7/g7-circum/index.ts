@@ -36,7 +36,7 @@ export function explainCircumference({ r }: CircumferenceProblem, answers: Answe
   const d = expected(answers, "diameter"), c = expected(answers, "times-pi");
   return {
     heading: "C = π × d",
-    idea: ["The distance around a circle is π times the diameter.", "π is about 3.14: the edge is a bit more than 3 diameters long."],
+    idea: ["The distance around a circle is always π, about 3.14, times the diameter."],
     statement: mt`C = 3.14 × d`,
     caption: `About 3.14 diameters of ${d} go around: ${c}.`,
     diagram: buildCircumference({ r, d, c, pi: "3.14", diameterBeat: 1, aroundBeat: 2, alt: `A circle of radius ${r} and diameter ${d}, unrolled into a line about 3.14 diameters long: ${c}.` }),

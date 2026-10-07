@@ -88,7 +88,7 @@ function explain(p: LinesProblem, model: AnswerModel): Explanation {
   const last = model.steps.at(-1)!;
   return {
     heading: "Lines, rays and angles",
-    idea: ["A line goes on forever both ways. A ray starts at a point and goes on forever one way. A segment has two endpoints. Two rays from one point make an angle."],
+    idea: ["A line goes on forever both ways, a ray goes on one way, and a segment stops at both ends."],
     statement: words(last.question ?? ""),
     diagram: picture(p, true),
     caption: `${last.explain}`,

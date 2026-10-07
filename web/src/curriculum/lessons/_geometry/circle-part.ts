@@ -68,9 +68,7 @@ function explain(p: CirclePartProblem, model: AnswerModel): Explanation {
   const fr = fracText(n, d);
   return {
     heading: sector ? "A fraction of the circle" : "A fraction of the circumference",
-    idea: sector
-      ? ["A slice with angle t takes t out of the 360 degrees of the circle.", "Its area is that fraction of the whole circle's area, π × r²."]
-      : ["An arc with angle t is t out of the 360 degrees around the circle.", "Its length is that fraction of the whole circumference, 2 × π × r."],
+    idea: sector ? ["A sector is a slice of the circle, so its area is that share of the whole circle."] : ["An arc is a slice of the edge, so its length is that share of the circumference."],
     statement: sector ? mt`${frac(t, 360)} × 3.14 × ${r}${sup("2")}` : mt`${frac(t, 360)} × 2 × 3.14 × ${r}`,
     caption: `${t}° is ${fr} of the circle, so the ${sector ? "slice" : "arc"} is ${fr} of ${f(whole)}: ${f(part)}.`,
     diagram: buildSector({

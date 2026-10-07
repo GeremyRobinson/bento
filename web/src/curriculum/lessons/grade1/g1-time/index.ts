@@ -72,7 +72,7 @@ function explain({ hour, minute }: TimeProblem, model: AnswerModel): Explanation
   const h = expectedOf(model, "hour"), m = expectedOf(model, "minute"), half = m === HALF, next = (h % 12) + 1, shown = timeText(h, m);
   return {
     heading: "Read the clock",
-    idea: ["The short hand tells the hour. The long hand tells the minutes. Long hand on 12 means o'clock, on 6 means half past."],
+    idea: ["The short hand tells the hour, and the long hand tells the minutes."],
     statement: [text("What time is it?")],
     diagram: buildClock({
       hour, minute,

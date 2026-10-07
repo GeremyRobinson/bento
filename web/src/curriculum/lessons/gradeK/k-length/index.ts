@@ -73,7 +73,7 @@ function explain(p: LengthProblem, model: AnswerModel): Explanation {
   const verdict = right === 2 ? "They end at the same place: the same length." : `The ${longer} sticks out ${cubes(extra)} more. It is longer.`;
   return {
     heading: "Line them up",
-    idea: ["Start both things at the same line. Count the cubes along each one. The one that sticks out further is longer."],
+    idea: ["When both start at the same line, the one that sticks out further is longer."],
     statement: words("Which is longer?"),
     diagram: lengthBars({
       top: { name: top, cubes: p.a }, bottom: { name: bottom, cubes: p.b }, beats: { top: 0, bottom: 1, compare: 2 },

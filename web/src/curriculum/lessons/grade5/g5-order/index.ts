@@ -112,10 +112,7 @@ function explain(p: OrderProblem, model: AnswerModel) {
   const leftToRight = t === 1 ? null : t === 2 ? (a * b - c) / d : (a + b) * (c - d);
   return chainExplanation({
     heading: "Parentheses, then × and ÷, then + and −",
-    idea: [
-      "Everyone uses the same order, so a problem has only one answer.",
-      "Multiplying is a short way to add equal groups, so it happens before adding: 3 + 4 × 2 is 3 plus four 2s, which is 11.",
-    ],
+    idea: ["Everyone uses the same order, so a problem has only one answer."],
     statement: expression(p),
     ...(leftToRight != null && Number.isInteger(leftToRight) && leftToRight !== r2 ? { caption: `Going left to right would give ${formatNumber(leftToRight)}, which is wrong.` } : {}),
     alt: `Order of operations, one step per line, ending at ${r2}.`,

@@ -26,7 +26,7 @@ export function explainTangent(p: TangentProblem, model: AnswerModel): Explanati
   const fit = tangentFit(p), reach = 0.32 * (Math.max(...fit.map(q => q[0])) - Math.min(...fit.map(q => q[0])));
   return {
     heading: "Slope = f′(x)",
-    idea: ["The tangent line just touches the curve at one point. Its slope is the derivative there: find f′(x), then plug in x."],
+    idea: ["A tangent line touches the curve at one point, and its slope is the derivative there."],
     statement: [text("f(x)"), op("="), ...poly([[a, "x²"], [b, "x"]]), text(`, at x = ${f(k)}`)],
     caption: `The tangent line touches at x = ${f(k)} with slope ${f(slope)}.`,
     diagram: buildPlane({

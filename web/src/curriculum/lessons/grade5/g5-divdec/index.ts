@@ -36,7 +36,7 @@ function explain(p: DivDecimalProblem, model: AnswerModel) {
   const d = expectedOf(model, "divisor"), n = expectedOf(model, "other"), qt = expectedOf(model, "divide");
   return chainExplanation({
     heading: "Make the divisor a whole number",
-    idea: ["Dividing asks how many of one number fit into the other, and that stays the same when both numbers are made ten times bigger.", "So multiply both by 10 to make the divisor a whole number."],
+    idea: ["Making both numbers ten times bigger doesn't change how many times one fits in the other."],
     statement: [num(x), op("÷"), num(y)],
     caption: `Move both points one place: ${f(x)} ÷ ${f(y)} and ${n} ÷ ${d} have the same answer.`,
     alt: `${f(x)} ÷ ${f(y)} becomes ${n} ÷ ${d} = ${qt}.`,

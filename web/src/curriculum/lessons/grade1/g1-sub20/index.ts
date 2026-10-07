@@ -63,7 +63,7 @@ function explain({ a, b }: Sub20Problem, model: AnswerModel): Explanation {
   const min = Math.max(0, res - 2), max = a + 2;
   return {
     heading: "Go back through 10",
-    idea: ["Take away in two hops. First hop back to 10, then take away the rest from 10."],
+    idea: ["10 is easy to take from, so hopping back to 10 splits it into two easy hops."],
     statement: [num(a), op("−"), num(b)],
     diagram: buildNumberLine({
       min, max, labelAt: [TEN],

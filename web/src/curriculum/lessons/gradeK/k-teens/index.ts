@@ -53,7 +53,7 @@ function explain(p: TeenProblem, model: AnswerModel): Explanation {
   const ones = expectedOf(model, "ones"), n = expectedOf(model, "teen");
   return {
     heading: "A ten and some ones",
-    idea: ["Every teen number is one full ten frame and some more ones."],
+    idea: ["Every teen number is one full ten and some more ones."],
     statement: words("What number is this?"),
     diagram: teenFrames(p.ones, `A full ten frame and a frame with ${ones}: ${TEN} + ${ones} = ${n}.`, { ten: 0, ones: 1, whole: 2 }),
     caption: `${TEN} and ${ones} more is ${n}.`,

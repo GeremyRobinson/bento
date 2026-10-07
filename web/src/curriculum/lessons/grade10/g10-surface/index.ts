@@ -36,7 +36,7 @@ export function explainSurface(p: SurfaceProblem, answers: AnswerModel): Explana
   const T = expectedOf(answers.steps, "top"), F = expectedOf(answers.steps, "front"), S = expectedOf(answers.steps, "side"), total = expectedOf(answers.steps, "total");
   return {
     heading: "Three pairs of faces",
-    idea: ["A box has three different faces, and each one has a twin on the other side. Add the three, then double."],
+    idea: ["A box has three different faces, and each one has a twin on the other side."],
     statement: [num(l), op("×"), num(w), op("×"), num(h)],
     diagram: buildBox3d({
       mode: "faces", l, w, h, beats: { top: 1, front: 2, side: 3 },

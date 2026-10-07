@@ -50,7 +50,7 @@ export function explainTwoStep(p: TwoStepEquation, model: AnswerModel) {
   ], `A balance with ${f(a)} x tiles and ${f(b)} on one pan and ${f(c)} on the other. Taking ${f(b)} off both pans leaves ${f(a)} x's against ${f(c - b)}; splitting both into ${count(f(a), "group")} shows x = ${f(x)}.`);
   return beatExplanation({
     heading: "Undo in reverse order",
-    idea: ["An equation is a balance, and x had two things done to it: first times, then plus.", "To get x alone, undo them in reverse order: the plus first, then the times."],
+    idea: ["x had two things done to it, so they come undone in reverse order."],
     statement: [...lhs(a), op("+"), num(b), op("="), num(c)],
     caption: `Undo the + ${f(b)} first, then the × ${f(a)}.`,
     diagram,

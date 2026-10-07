@@ -41,7 +41,7 @@ export function explainCircleArea({ r }: CircleAreaProblem, answers: AnswerModel
   const r2 = expected(answers, "square"), area = expected(answers, "times-pi");
   return {
     heading: "A = π × r × r",
-    idea: ["A square built on the radius covers just under a third of the circle: the circle holds about 3.14 of those squares.", "So the area is about 3.14 × r × r."],
+    idea: ["A circle holds about 3.14 squares built on its radius."],
     statement: mt`A = 3.14 × ${r}${sup("2")}`,
     caption: `The circle holds 3.14 squares of ${r2}: ${area}.`,
     diagram: buildCircleArea({ r, r2, area, pi: "3.14", squareBeat: 1, areaBeat: 2, alt: `A circle of radius ${r} with ${aNum(r)} by ${r} square on its radius. The circle holds about 3.14 of those squares: ${area}.` }),

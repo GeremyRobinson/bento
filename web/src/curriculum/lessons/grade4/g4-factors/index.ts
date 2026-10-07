@@ -91,7 +91,7 @@ function explain(p: FactorsProblem, model: AnswerModel): Explanation {
   const all = factorsOf(n), q = Math.floor(n / t), r = n % t;
   return {
     heading: "Make every rectangle",
-    idea: ["Factors are the numbers that multiply to make a number. Each rectangle of squares shows a factor pair."],
+    idea: ["Factors multiply to make a number, and each rectangle shows one pair."],
     statement: [text(`factors of ${n}`)],
     diagram: buildFactorRects({
       n, pairs: [{ a: 1, b: n, beat: 0 }, { a: a1, b: b1, beat: 1 }, { a: a2, b: b2, beat: 2 }],
