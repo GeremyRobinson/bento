@@ -49,7 +49,7 @@ html:has(.screen) body{overflow:hidden}
 .srow>small{color:var(--muted);font-size:var(--fz-xs);font-weight:var(--w-mid);white-space:nowrap;font-variant-numeric:tabular-nums}
 .srow.on>small,.srow .snext{color:var(--ink)}
 .srow.chap .sname b{font-weight:var(--w-bold)}
-.srow.sles{padding-left:22px;min-height:46px;font-size:var(--small)}
+.srow.sles{padding-left:22px;min-height:var(--tap);font-size:var(--small)}
 /* a lesson row is always one line, picked or not: the name ends in an ellipsis and its label (time, score, Up next)
    keeps its place, so no row grows or changes when it's picked (G 2026-10-07, "why is this happening?") */
 .srow.sles .sname b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -87,7 +87,7 @@ html:has(.screen) body{overflow:hidden}
 .sgroup.open>.srow.chap,.sgroup.open>.srow.chap:hover,.sgroup.open>.srow.chap:active{background:var(--g3)}
 /* the lessons sit in their own panel nested inside the chapter's, a step darker (G 2026-10-07, "its own separate background nester") */
 .sgroup-panel{display:grid;gap:var(--list-gap);margin-top:var(--list-gap);padding:var(--list-gap);background:var(--surf-sub);border-radius:calc(var(--row-h) / 2 + var(--list-gap))}
-.sgroup .srow.sles{min-height:var(--row-h)}
+.sgroup .srow.sles{min-height:var(--row-h);padding-block:0}
 /* the current lesson: a darker shade of the panel, never the floating pill (G: "so you know which one you're on") */
 .sgroup .srow.sles::before{background:var(--g4);box-shadow:none}
 /* the picked row on the list (Today) is a glass rung too, never a white card */
@@ -194,6 +194,10 @@ html:has(.screen) body{overflow:hidden}
 .lintro .beat[data-state="now"] .badge{background:var(--ink);color:var(--on-tint)}
 .lintro .beat .say{gap:2px;font-size:var(--fz-md);line-height:1.4}
 .lintro .beat .say .mline{font-size:var(--fz-xl)}
+/* the steps read like the Contents list: only the current step is open with its working; the others show their one line,
+   so the intro never runs past its panel */
+.lintro .beat:not([data-state="now"]) .say>:not(:first-child){display:none}
+@media (max-height:800px){.lintro .idea+.idea{display:none}}
 .lintro .lhelp{margin:0;color:var(--muted);font-size:var(--fz-sm)}
 .lintro .lhelp b{color:var(--ink)}
 .lintro .tlink{padding:var(--sp-1) 0;min-height:0}
