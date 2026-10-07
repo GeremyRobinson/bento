@@ -70,7 +70,7 @@ export function App() {
   }, [hue]);
 
   useEffect(() => {
-    document.title = route.name === "learn" && lesson ? `${lesson.title} · Bento` : "Bento";
+    document.title = route.name === "learn" && lesson ? `${lesson.title} · Obento` : "Obento";
   }, [route.name, lesson]);
 
   // every tap on a control leaves a soft halo, so a finger knows it landed (Less motion turns it off)

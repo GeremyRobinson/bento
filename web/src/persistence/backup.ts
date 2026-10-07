@@ -19,9 +19,9 @@ export const makeBackup = (progress: Progress, reports: Record<string, SessionRe
 /** Reads a backup file's text. Throws a readable error when the file isn't a Bento backup. */
 export function readBackup(json: string): { progress: Progress; reports: Record<string, SessionReport> } {
   let data: unknown;
-  try { data = JSON.parse(json); } catch { throw new Error("That file isn't a Bento backup."); }
+  try { data = JSON.parse(json); } catch { throw new Error("That file isn't an Obento backup."); }
   const d = data as Partial<Backup>;
-  if (!d || d.format !== BACKUP_FORMAT || typeof d.progress !== "object") throw new Error("That file isn't a Bento backup.");
-  if ((d.version ?? 0) > 1) throw new Error("That backup is from a newer version of Bento.");
+  if (!d || d.format !== BACKUP_FORMAT || typeof d.progress !== "object") throw new Error("That file isn't an Obento backup.");
+  if ((d.version ?? 0) > 1) throw new Error("That backup is from a newer version of Obento.");
   return { progress: migrateProgress(d.progress), reports: d.reports && typeof d.reports === "object" ? d.reports : {} };
 }

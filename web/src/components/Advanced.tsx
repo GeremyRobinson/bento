@@ -33,7 +33,7 @@ export function Advanced({ pics = true, ghost = pics }: { pics?: boolean; ghost?
   return (
     <section className="ladv" ref={box} aria-labelledby="adv-title">
       <h2 id="adv-title"><BentoMark className="advmark" squared /></h2>
-      <p className="adv-tag">Bento, maxed out.</p>
+      <p className="adv-tag">Obento, maxed out.</p>
       <p>Where 12th grade ends, the box opens up: the math that moves pictures, steers spacecraft and teaches computers to learn. A full set of tools comes with it.</p>
       <div className="adv-tease">
         {TEASER.map((h, k) => (

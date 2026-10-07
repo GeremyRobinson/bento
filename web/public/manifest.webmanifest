@@ -1,6 +1,6 @@
 {
-  "name": "Bento",
-  "short_name": "Bento",
+  "name": "Obento",
+  "short_name": "Obento",
   "description": "Math, one step at a time. Kindergarten to 12th grade.",
   "start_url": "./",
   "scope": "./",

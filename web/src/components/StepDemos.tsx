@@ -166,7 +166,7 @@ export function SlipTile({ tint, k, rng }: DemoTileProps) {
   // a fresh slip arrives with its wrong answer showing; the why and the fix wait faintly underneath, then light up
   const { demo, at, box, another, key, rest } = useDemo(SLIPS, rng, () => 3, 1);
   return (
-    <DemoTile box={box} tint={tint} k={k} rng={rng} another={another} title="Slips, explained" label="Get it wrong and Bento tells you exactly where, and why.">
+    <DemoTile box={box} tint={tint} k={k} rng={rng} another={another} title="Slips, explained" label="Get it wrong and Obento tells you exactly where, and why.">
       <div className={`lmiss${rest ? " rest" : ""}`} key={key}>
         <div className="q a-rise"><MathLine math={demo.q} /><Chip grade={demo.grade} /></div>
         <div className={`bad ${at >= 1 ? "on" : "off"}${at >= 2 ? " shook" : ""}`}><span>Your answer</span><b><MathLine math={demo.wrong} /></b></div>

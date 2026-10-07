@@ -6,10 +6,10 @@ import type { CSSProperties } from "react";
  * Bento² with a real superscript 2 (Inter's ² sits too low and light).
  */
 export function BentoMark({ className, squared }: { className?: string; squared?: boolean }) {
-  const letters = [..."Bento"];
+  const letters = [..."Obento"];
   return (
     <span className={`bmark${className ? ` ${className}` : ""}`}>
-      <span className="vh">{squared ? "Bento squared" : "Bento"}</span>
+      <span className="vh">{squared ? "Obento squared" : "Obento"}</span>
       <span aria-hidden="true">
         {letters.map((l, i) => <span key={i} className="bl" style={{ "--c": i } as CSSProperties}>{l}</span>)}
         {squared && <sup className="bl" style={{ "--c": letters.length } as CSSProperties}>2</sup>}
