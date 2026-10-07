@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { reduceMotion } from "../../app/transition";
+import { layoutRect } from "../../app/transition";
 
 /**
  * Screen (master): the frame every app screen sits in, under the island. Instances only say what differs:
@@ -102,7 +103,7 @@ const MIN_PX = 12;
 /** No line can run off its card: one that can't wrap (a limit, a long equation) steps its type down until it fits. */
 function fitLine(el: HTMLElement) {
   el.style.fontSize = "";
-  const over = () => el.scrollWidth > el.clientWidth + 1 || [...el.children].some(c => c.scrollWidth > c.clientWidth + 1 || c.getBoundingClientRect().width > el.clientWidth + 1);
+  const over = () => el.scrollWidth > el.clientWidth + 1 || [...el.children].some(c => c.scrollWidth > c.clientWidth + 1 || layoutRect(c).width > el.clientWidth + 1);
   let size = parseFloat(getComputedStyle(el).fontSize);
   for (let i = 0; i < 12 && size > MIN_PX && over(); i++) { size = Math.max(MIN_PX, size * 0.9); el.style.fontSize = `${size}px`; }
 }

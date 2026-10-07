@@ -50,7 +50,7 @@
 /* THE PAGE CHANGE (G 2026-10-07): the contents' All grades / year / chapter switch, used for every page. The old page
    is gone at once; the new one fades in with a little zoom (zFrom, zIn, zOut in nav.css) around one point a third of the
    way down the screen, on the one curve and speed. transition.ts adds .stage (and the way) to the page's pieces. */
-#app>.stage{animation:zFrom var(--m-page) var(--m-ease) both}
+#app>.stage{animation:zFrom var(--m-page) var(--m-ease) both;transition:none}
 #app>.stage.in{animation-name:zIn} #app>.stage.out{animation-name:zOut}
 #app>.stage.next{animation-name:zNext} #app>.stage.prev{animation-name:zPrev}
 @keyframes zNext{from{opacity:0;transform:translateX(var(--m-slide))}}

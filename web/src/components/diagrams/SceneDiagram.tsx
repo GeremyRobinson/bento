@@ -1,6 +1,7 @@
 import { useLayoutEffect, useState, type CSSProperties } from "react";
 import type { SceneDiagram as Scene, SceneItem } from "../../explanations/diagrams/scene/schema";
 import { useLabelFloor } from "./labelFloor";
+import { layoutRect } from "../../app/transition";
 
 const enterClass = (e: SceneItem["enter"]) => (e ? e.split(" ").map((w, i) => (i ? w : `a-${w}`)).join(" ") : "");
 
@@ -18,7 +19,7 @@ export function SceneDiagram({ diagram: d, at, fit = false }: { diagram: Scene; 
     if (!fit || !el) return;
     const box = contentBox(el, d.items);
     if (!box) return;
-    const measure = () => { const r = el.getBoundingClientRect(); setFrame({ d, box, size: [r.width, r.height] }); };
+    const measure = () => { const r = layoutRect(el); setFrame({ d, box, size: [r.width, r.height] }); };
     measure();
     if (typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(measure);

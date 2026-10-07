@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
+import { layoutRect } from "../../app/transition";
 
 /**
  * The pill's own edge is its progress (G 2026-10-06): the outline fills in the grade's colour around the rounded
@@ -12,7 +13,7 @@ export function PillRing({ p }: { p: number }) {
     const el = ref.current?.parentElement;
     if (!el) return;
     // the drawn box, unrounded: clientWidth rounds, which left the right end short of the edge (Review)
-    const size = () => { const r = el.getBoundingClientRect(); setBox(b => (b && b[0] === r.width && b[1] === r.height ? b : [r.width, r.height])); };
+    const size = () => { const r = layoutRect(el); setBox(b => (b && b[0] === r.width && b[1] === r.height ? b : [r.width, r.height])); };
     size();
     if (typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(size);

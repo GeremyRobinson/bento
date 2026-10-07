@@ -28,6 +28,9 @@ export function withTransition(update: () => void, dir: Dir = ""): void {
   if (!can || reduceMotion() || dir === "still") { update(); return; }
   // after the first page change the pieces no longer cascade in: the page arrives as one (motion.css)
   d!.documentElement.dataset.paged = "";
+  // a page opened from the contents never starts from the zoomed-out, blurred page behind it (G: "saw this area when
+  // coming into a grade"): the contents and its blur are gone in the same frame the new page is drawn
+  delete d!.documentElement.dataset.zoomed;
   try { flushSync(update); } catch { update(); return; }
   playStage(WAY[dir]);
 }
@@ -48,4 +51,18 @@ export function playStage(way = ""): void {
       el.removeEventListener("animationend", done);
     });
   }
+}
+
+/**
+ * An element's drawn size as laid out, without the page change's zoom: while a page comes forward its pieces are scaled
+ * (.86 to 1.14), so a measurement taken then must be divided back, or a fit (a math line, a picture's labels) is made for
+ * the wrong size and stays wrong once the page settles.
+ */
+export function layoutRect(el: Element): { width: number; height: number } {
+  const r = el.getBoundingClientRect();
+  const stage = el.closest("#app>.stage");
+  if (!stage) return { width: r.width, height: r.height };
+  const m = getComputedStyle(stage).transform.match(/^matrix\(([^,]+),\s*([^,]+)/);
+  const k = m ? Math.hypot(parseFloat(m[1]!), parseFloat(m[2]!)) : 1;
+  return k > 0 && Math.abs(k - 1) > 1e-3 ? { width: r.width / k, height: r.height / k } : { width: r.width, height: r.height };
 }

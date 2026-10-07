@@ -14,6 +14,7 @@ const { chromium } = require("playwright");
 const here = fileURLToPath(new URL(".", import.meta.url));
 const AUDIT = readFileSync(here + "smoke/audit.js", "utf8");
 const PAGE = "file://" + fileURLToPath(new URL("../dist-preview/index.html", import.meta.url));
+const { motionGuard } = await import("./smoke/motion.mjs");
 
 /** audit kinds that fail the run: anything cut off, text under an outline, and a nested surface whose corner isn't concentric */
 const CLIPS = new Set(["content-cut", "spill", "viewport", "poke-clipped", "box", "mask", "ring", "scroll-cut", "outline-over", "concentric"]);
@@ -171,6 +172,7 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
   }
   await ctx.close();
 }
+await motionGuard({ browser, PAGE, fails, notes });
 await browser.close();
 for (const n of [...new Set(notes)]) console.log("note  " + n);
 for (const f of [...new Set(fails)]) console.log("FAIL  " + f);
