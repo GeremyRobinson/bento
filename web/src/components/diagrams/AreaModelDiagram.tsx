@@ -38,6 +38,7 @@ export function AreaModelDiagram({ diagram: d, timeline, at }: { diagram: AreaDi
       {d.regions.map(r => (
         <g key={r.index} className={`region r${r.index % 3}`} data-shown={v.shown.has(r.index) || v.sum} data-active={v.active === r.index}>
           <rect x={r.x} y={r.y} width={r.width} height={r.height} />
+          {r.seats.map((l, k) => <line key={k} className={l.ten ? "seat ten" : "seat"} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} />)}
           <text className="part" x={r.x + r.width / 2} y={top - LABEL_GAP - r.partRow * ROW}>{r.partLabel}</text>
           {r.labelPlacement === "inside" ? (
             <text className="product" x={r.x + r.width / 2} y={r.y + r.height / 2}>{r.productLabel}</text>

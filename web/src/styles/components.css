@@ -260,6 +260,7 @@ button.gcell:active{transform:scale(.96)}
 .viz-svg .ax{stroke:var(--text);stroke-width:var(--d-line);fill:none;stroke-linecap:round}
 .viz-svg .ax.thin{stroke-width:var(--d-thin)} .viz-svg .dash{stroke-dasharray:var(--d-dash)}
 .viz-svg .grid{stroke:var(--rule);stroke-width:var(--d-hair)}
+.viz-svg .seat{stroke:var(--card);stroke-width:var(--d-hair)}.viz-svg .seat.ten{stroke-width:var(--d-stroke)}
 .viz-svg .tk{stroke:var(--muted);stroke-width:var(--d-thin)} .viz-svg .tk.on{stroke:var(--card)}
 .viz-svg .ln{stroke:var(--tint);stroke-width:var(--d-bold);fill:none;stroke-linecap:round;stroke-linejoin:round}
 .viz-svg .ln2{stroke:var(--acc);stroke-width:var(--d-bold);fill:none;stroke-linecap:round;stroke-linejoin:round}

@@ -1,3 +1,5 @@
+import type { SeatLine } from "./seats";
+
 /**
  * Geometry for an area model. Positions and sizes are plain numbers in SVG user units;
  * the renderer draws exactly this and makes no math decisions of its own.
@@ -31,6 +33,8 @@ export interface AreaRegion {
   /** which row a label sits in when neighbours would touch: 0 next to the rectangle, 1 a row further out */
   partRow: number;
   productRow: number;
+  /** the lines between its seats (or its blocks of ten, when seats are too small to see) */
+  seats: SeatLine[];
   /** the multiplication this region proves, e.g. 47 × 30 = 1410 */
   equation: { factors: [number, number]; product: number };
 }

@@ -3,6 +3,7 @@
 // complex FOIL) is one of these, with sizes, labels and beats all computed from the problem by the lesson.
 import type { SceneDiagram, SceneItem } from "../scene/schema";
 import { r1 } from "../scene/helpers";
+import { seatLines } from "./seats";
 
 /** One side piece: its label and its length in problem units. */
 export interface AreaSide {
@@ -39,6 +40,9 @@ export interface AreaGridSpec {
   cells: (AreaCell | null)[][];
   /** draw the unit squares from this beat (only when every side is a whole number and squares stay big enough) */
   units?: number;
+  /** draw every seat (or, when seats are too small to see, every block of ten) inside each cell from this beat, at each
+      cell's own scale, so a part held wider for its label still shows its seats */
+  seats?: number;
   /** the side of the squares `units` draws, in problem units (default 1; 0.1 cuts each unit square 10 by 10) */
   unitStep?: number;
   /** beat whole unit squares appear at as outlines behind everything, covering the rectangle rounded up to whole units */
@@ -180,6 +184,13 @@ export function buildAreaGrid(spec: AreaGridSpec): SceneDiagram & { geometry: Ar
       }
     }));
   }
+  if (spec.seats != null) spec.cells.forEach((row, j) => row.forEach((c, i) => {
+    if (!c) return;
+    const from = Math.max(spec.seats!, c.from ?? 0);
+    for (const l of seatLines(xs[i]! + 2, ys[j]! + 2, xs[i + 1]! - xs[i]! - 4, ys[j + 1]! - ys[j]! - 4, Math.abs(spec.cols[i]!.size), Math.abs(spec.rows[j]!.size))) {
+      items.push({ type: "line", x1: l.x1, y1: l.y1, x2: l.x2, y2: l.y2, cls: l.ten ? "seat ten" : "seat", from, enter: "fade", delay: 0.2 });
+    }
+  }));
   if (spec.outlineFrom != null) items.push({ type: "rect", x: r1(left), y: r1(top), w: r1(g.width), h: r1(g.height), cls: "ax thin", from: spec.outlineFrom, enter: "fade" });
 
   // which cell the beat is about

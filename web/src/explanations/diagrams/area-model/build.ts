@@ -2,6 +2,7 @@ import { formatNumber } from "../../../curriculum/schemas/math-text";
 import type { SplitMultiplicationProblem } from "../../../curriculum/lessons/grade5/g5-mult2/problem";
 import { DEFAULT_AREA_LAYOUT, type AreaDiagram, type AreaLayout, type AreaRegion } from "./schema";
 import { fitParts } from "./grid";
+import { seatLines } from "./seats";
 
 /** Rough width of a number label in the app's rounded number font. */
 /** how far apart two rows of labels sit */
@@ -42,6 +43,7 @@ export function buildSplitAreaDiagram(p: SplitMultiplicationProblem, layout: Are
       labelPlacement: width >= labelWidth(productLabel, labelFontSize) ? "inside" : "below",
       partRow: 0,
       productRow: 0,
+      seats: [],
       equation: { factors: [p.firstFactor, part], product: p.partialProducts[index]! },
     };
     x += width;
@@ -67,6 +69,7 @@ export function buildSplitAreaDiagram(p: SplitMultiplicationProblem, layout: Are
   below.forEach((r, i) => { r.productRow = productRows[i]!; });
   const extraTop = Math.max(0, ...partRows) * ROW, extraBottom = Math.max(0, ...productRows) * ROW;
   if (extraTop) for (const r of regions) r.y += extraTop;
+  for (const r of regions) r.seats = seatLines(r.x, r.y, r.width, r.height, r.part, p.firstFactor);
 
   return {
     kind: "areaModel",
