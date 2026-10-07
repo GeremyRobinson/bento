@@ -224,15 +224,15 @@ export function Practice() {
             {skipAvailable(s) && <div className="hrow"><Pill onClick={() => act((st, _p, d) => toggleSkip(st, d))}>{s.skip ? "Show steps" : "Final answer only"}</Pill></div>}
           </ListGroup>
         </div>
-        {pic && (
-          <div className={`lpic ppic${s.hinted ? " hinted" : ""}`} aria-label="Picture of this problem" role="img">
-            <div className="viz">{ex
-              ? <Diagram key={s.i} diagram={ex.diagram!} timeline={ex.timeline} fit turn={!it.story}
-                at={s.solved ? ex.timeline.length - 1 : Math.min(ex.timeline.length - 1, s.step > 0 ? ex.steps[s.step - 1]?.state ?? 0 : 0)} />
-              : <ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} part="picture" />}</div>
-          </div>
-        )}
       </figure>
+      {pic && (
+        <div className={`lpic ppic${s.hinted ? " hinted" : ""}`} aria-label="Picture of this problem" role="img">
+          <div className="viz">{ex
+            ? <Diagram key={s.i} diagram={ex.diagram!} timeline={ex.timeline} fit turn={!it.story}
+              at={s.solved ? ex.timeline.length - 1 : Math.min(ex.timeline.length - 1, s.step > 0 ? ex.steps[s.step - 1]?.state ?? 0 : 0)} />
+            : <ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} part="picture" />}</div>
+        </div>
+      )}
       <Keypad band={band} tap={step && tapOnly ? (
         <div className="tappad">
           <div className="tapnote muted">{s.pick ? "You plan this one: tap the step that comes next." : "Tap your answer."}</div>

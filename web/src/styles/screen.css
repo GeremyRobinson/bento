@@ -332,11 +332,20 @@ html:has(.screen) body{overflow:hidden}
 .lpic.ppic .viz-cap,.lpic.ppic .replay{display:none}
 .lpic.ppic.hinted{outline:3px solid color-mix(in srgb,var(--tint) 55%,transparent);outline-offset:0;animation:hintRing var(--dur-500) var(--ease) 2}
 @keyframes hintRing{50%{outline-offset:4px;outline-color:color-mix(in srgb,var(--tint) 25%,transparent)}}
-/* the keypad: the hero's width, two rows, Check tall on the right */
-.ppad .tray{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) minmax(0,2fr);grid-auto-rows:var(--key);gap:var(--sp-2);max-width:none;margin:0}
+/* the keypad (master, every size): a phone's number pad, in the order every phone and calculator uses (G 18:20, and
+   G 20:08 "lets update that key pad as well"): 1 2 3 on top, 0 at the bottom. With . and −: 1 2 3 ⌫ / 4 5 6 − /
+   7 8 9 . / 0 Check. Whole numbers only: 1 2 3 / 4 5 6 / 7 8 9 / ⌫ 0 Check */
+.ppad .tray{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:var(--key);gap:var(--sp-2);max-width:none;margin:0}
+.ppad .tray .k-d1{grid-area:1/1}.ppad .tray .k-d2{grid-area:1/2}.ppad .tray .k-d3{grid-area:1/3}.ppad .tray .k-back{grid-area:1/4}
+.ppad .tray .k-d4{grid-area:2/1}.ppad .tray .k-d5{grid-area:2/2}.ppad .tray .k-d6{grid-area:2/3}.ppad .tray .k-neg{grid-area:2/4}
+.ppad .tray .k-d7{grid-area:3/1}.ppad .tray .k-d8{grid-area:3/2}.ppad .tray .k-d9{grid-area:3/3}.ppad .tray .k-dot{grid-area:3/4}
+.ppad .tray .k-d0{grid-area:4/1/5/3}.ppad .tray .k-go{grid-area:4/3/5/5;border-radius:var(--r-pill)}
+.ppad .tray .k-next{display:none}
+.ppad .tray.nosign{grid-template-columns:repeat(3,minmax(0,1fr))}
+.ppad .tray.nosign .k-back{grid-area:4/1}.ppad .tray.nosign .k-d0{grid-area:4/2}.ppad .tray.nosign .k-go{grid-area:4/3}
 .ppad .tray button{height:auto;background:var(--btn,var(--float));box-shadow:none;font-size:calc(var(--key) * .42)}
 .ppad .tray button:not(.k-go):hover,.ppad .tray button:not(.k-go):active{background:var(--btn-hover,color-mix(in oklab,var(--float) 90%,var(--tint)))}
-.ppad .tray .k-go{grid-column:8;grid-row:1 / 3;height:auto;--pill-h:auto;border-radius:var(--r-2xl);font-size:var(--fz-lg);background:var(--ink);box-shadow:none}
+.ppad .tray .k-go{height:auto;--pill-h:auto;border-radius:var(--r-pill);font-size:var(--fz-lg);background:var(--ink);box-shadow:none}
 .ppad .tray .k-next,.ppad .tray .k-back{color:var(--ink)}
 .ppad.done .tray button:not(.k-go){opacity:.35;pointer-events:none;transition:opacity var(--dur-380) var(--ease) var(--dur-500)}
 .ppad.ptap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--sp-2);align-items:end}
@@ -385,16 +394,6 @@ html:has(.screen) body{overflow:hidden}
   .pintro .pbeats>:not([data-state="now"]){display:none}
   .pintro .pbeats .beat{padding:var(--sp-2) var(--sp-3)}
   .pprob .math{font-size:28px}
-  /* a phone's number pad, in the order every phone and calculator uses (G 18:20 "feels super unnatural"): 1 2 3 on top,
-     0 at the bottom. With . and −: 1 2 3 ⌫ / 4 5 6 − / 7 8 9 . / 0 Check. Whole numbers only: 1 2 3 / 4 5 6 / 7 8 9 / ⌫ 0 Check */
-  .ppad .tray{grid-template-columns:repeat(4,minmax(0,1fr))}
-  .ppad .tray .k-d1{grid-area:1/1}.ppad .tray .k-d2{grid-area:1/2}.ppad .tray .k-d3{grid-area:1/3}.ppad .tray .k-back{grid-area:1/4}
-  .ppad .tray .k-d4{grid-area:2/1}.ppad .tray .k-d5{grid-area:2/2}.ppad .tray .k-d6{grid-area:2/3}.ppad .tray .k-neg{grid-area:2/4}
-  .ppad .tray .k-d7{grid-area:3/1}.ppad .tray .k-d8{grid-area:3/2}.ppad .tray .k-d9{grid-area:3/3}.ppad .tray .k-dot{grid-area:3/4}
-  .ppad .tray .k-d0{grid-area:4/1/5/3}.ppad .tray .k-go{grid-area:4/3/5/5;border-radius:var(--r-pill)}
-  .ppad .tray .k-next{display:none}
-  .ppad .tray.nosign{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .ppad .tray.nosign .k-back{grid-area:4/1}.ppad .tray.nosign .k-d0{grid-area:4/2}.ppad .tray.nosign .k-go{grid-area:4/3}
   .pscreen>.fstack{top:auto;bottom:0;left:0;width:auto;right:0}
 }
 /* iPad landscape at its height: keys stay 52 */
@@ -541,9 +540,6 @@ html:has(.screen) body{overflow:hidden}
 @media (min-width:700px) and (min-aspect-ratio:1/1){.screen.fit.rnone{grid-template-columns:minmax(300px,380px) minmax(0,1fr);grid-template-rows:minmax(0,1fr)}.rnone>.panel{grid-area:1/1}.rnone>.spreview{grid-area:1/2}}
 /* Left-handed keypad (Settings): Check and the action keys move to the left, under the left thumb; the digits keep
    their order (1 2 3 reads left to right) */
-:root[data-hand="left"] .ppad .tray{grid-template-columns:minmax(0,2fr) repeat(7,minmax(0,1fr))}
-:root[data-hand="left"] .ppad .tray .k-go{grid-column:1}
-@media (max-aspect-ratio:1/1),(max-width:760px){
   /* left hand: the digits keep their order; the side keys and Check move to the left thumb */
   :root[data-hand="left"] .ppad .tray{grid-template-columns:repeat(4,minmax(0,1fr))}
   :root[data-hand="left"] .ppad .tray .k-back{grid-area:1/1}:root[data-hand="left"] .ppad .tray .k-neg{grid-area:2/1}:root[data-hand="left"] .ppad .tray .k-dot{grid-area:3/1}
@@ -556,7 +552,6 @@ html:has(.screen) body{overflow:hidden}
   :root[data-hand="left"] .ppad .tray.nosign .k-d4{grid-area:2/1}:root[data-hand="left"] .ppad .tray.nosign .k-d5{grid-area:2/2}:root[data-hand="left"] .ppad .tray.nosign .k-d6{grid-area:2/3}
   :root[data-hand="left"] .ppad .tray.nosign .k-d7{grid-area:3/1}:root[data-hand="left"] .ppad .tray.nosign .k-d8{grid-area:3/2}:root[data-hand="left"] .ppad .tray.nosign .k-d9{grid-area:3/3}
   :root[data-hand="left"] .ppad .tray.nosign .k-go{grid-area:4/1}:root[data-hand="left"] .ppad .tray.nosign .k-d0{grid-area:4/2}:root[data-hand="left"] .ppad .tray.nosign .k-back{grid-area:4/3}
-}
 
 /* ---- right, wrong and the steps sheet (G 2026-10-07, phone) ---- */
 /* a right step says so for a moment over the picture, then gets out of the way; a wrong one stays until typing starts
@@ -588,9 +583,9 @@ html:has(.screen) body{overflow:hidden}
    hint line under it, and the step bar on top; the bar opens as an accordion inside the tile that pushes the picture down, and
    once solved it carries "Solved." and the lesson's idea. The picture is its own tile; a right answer shows only as the bar's flash (no pop-up). The keys dock at the bottom and give way to a full-width "Next problem" when solved. The problem
    tile is drawn behind its rows (::before), so it wraps them as one. ---- */
-.pscreen .lshero.phero{background:none;box-shadow:none;outline:none;padding:0;gap:0;grid-template-rows:auto auto auto auto minmax(var(--pic-min),1fr)}
-.pscreen .lshero.phero::before,.pscreen .lshero.phero>.lpic{background:var(--pane-plain,var(--float));border-radius:var(--r-panel);outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
-.pscreen .lshero.phero::before{content:"";grid-row:1 / 5;grid-column:1;z-index:var(--z-flat)}
+.pscreen .lshero.phero{background:none;box-shadow:none;outline:none;padding:0;gap:0;grid-template-rows:auto auto auto auto minmax(0,1fr)}
+.pscreen .lshero.phero::before,.pscreen>.lpic{background:var(--pane-plain,var(--float));border-radius:var(--r-panel);outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
+.pscreen .lshero.phero::before{content:"";grid-row:1 / -1;grid-column:1;z-index:var(--z-flat)}
 .pscreen .lshero.phero>*{z-index:var(--z-up);grid-column:1}
 /* the solve panel gets room to breathe (G 18:08 "give the solve panel more space"): bigger box, more air round the math */
 .pscreen .lshero.phero>.pmath{grid-row:3;position:relative;padding:var(--sp-6) calc(var(--sp-3) + 36px) var(--sp-5)}
@@ -598,6 +593,9 @@ html:has(.screen) body{overflow:hidden}
 /* a wrong answer or a hint line: under the math, inside the tile */
 .pscreen .lshero.phero>.pfb:is(.fb-bad,.fb-hint){grid-row:4;align-self:start;margin:0;padding:0 var(--sp-5) var(--sp-4);background:none;border-radius:0;height:auto;min-height:0}
 .pscreen .lshero.phero>.pfb.solved{display:none}
+/* the empty feedback line takes no room, so the tile ends under the math */
+.pscreen .lshero.phero>.pfb{grid-row:4}
+.pscreen .lshero.phero>.pfb:not(.fb-bad,.fb-good,.fb-hint){display:none}
 /* the step bar, at the top of the tile (G 17:38 "steps on top") */
 /* the step bar (master, every size) */
 /* the chevron points down while the steps are shut and up while they're open, turning about its own centre (G 18:16) */
@@ -605,9 +603,8 @@ html:has(.screen) body{overflow:hidden}
 /* long step lists scroll inside the panel, so Next problem and the keys always stay on screen */
 /* the steps' ticks and words line up under the bar's own (G 17:44) */
 /* the picture tile */
-.pscreen .lshero.phero>.lpic{grid-row:5;margin-top:var(--u);padding:var(--sp-3)}
-.pscreen .lshero.phero>.lpic>.viz{inset:var(--sp-3)}
-.pscreen.nopic .lshero.phero{grid-template-rows:auto auto auto auto}
+.pscreen>.lpic{grid-area:pic;min-height:var(--pic-min);padding:var(--sp-3)}
+.pscreen>.lpic>.viz{inset:var(--sp-3)}
 /* a right answer needs no pop-up: the step bar's flash and tick say it (G 17:38) */
 .pscreen .lshero.phero>.pfb.fb-good{display:none}
 /* the keypad is a bento panel too, a glass step like the solve panel: the keys sit one rung in, and a pressed key lifts
@@ -641,7 +638,7 @@ html:has(.screen) body{overflow:hidden}
 .pscreen{--srow:var(--tap)}
 .pscreen .pbar{--list-gap:var(--nest);--row-h:var(--srow)}
 .pscreen .lshero.phero>.pbar{grid-row:1;display:block;padding:calc(var(--nest) * 2) calc(var(--nest) * 2) 0}
-.pscreen .lshero.phero::before,.pscreen .lshero.phero>.lpic{border-radius:calc(var(--srow) / 2 + var(--nest) * 3)}
+.pscreen .lshero.phero::before,.pscreen>.lpic{border-radius:calc(var(--srow) / 2 + var(--nest) * 3)}
 .pscreen .pbar>.sgroup{padding:0;margin:0}
 .pscreen .pbar>.sgroup.open{margin:calc(var(--list-gap) * -1) calc(var(--list-gap) * -1) 0;padding:var(--list-gap)}
 .pscreen .pbar .srow{--badge:28px;min-height:var(--srow);border-radius:calc(var(--srow) / 2);align-items:flex-start;gap:10px;padding:calc((var(--srow) - var(--badge)) / 2) var(--sp-2)}
@@ -681,15 +678,42 @@ html:has(.screen) body{overflow:hidden}
 .pscreen>.pintro>.pbeats{display:none}
 /* where you are in the set shows in the left column; the panel only repeats it on a phone, where that column is tucked away */
 @media (max-width:520px){
-  .screen.fit.lscreen.pscreen{grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"hero" "pad"}
-  .screen.fit.lscreen.pscreen.pwordy{grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"intro" "hero" "pad"}
+  .screen.fit.lscreen.pscreen{grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"hero" "pic" "pad"}
+  .screen.fit.lscreen.pscreen.pwordy{grid-template-rows:auto auto minmax(0,1fr) auto;grid-template-areas:"intro" "hero" "pic" "pad"}
   .screen.fit.lscreen.pscreen{--slot:64px;--ask:40px;--pic-min:104px}
 }
 /* where you are in the set shows in the steps only on a phone, where the left column is tucked away */
 @media (max-width:520px){.pscreen .pbar .pwhere{display:flex}}
 /* on a phone the open steps take the picture's room: its tile gives way and fades, and comes back as they fold */
 @media (max-width:520px){
-  .pscreen.stepsopen{--pic-min:0px}
-  .pscreen .lshero.phero>.lpic{transition:opacity var(--m-close) var(--m-ease)}
-  .pscreen.stepsopen .lshero.phero>.lpic{opacity:0;overflow:hidden}
+  .screen.fit.lscreen.pscreen.stepsopen{--pic-min:0px}
+  .pscreen>.lpic{transition:opacity var(--m-close) var(--m-ease)}
+  .pscreen.stepsopen>.lpic{opacity:0;overflow:hidden;padding-block:0}
+}
+/* bigger than a phone: no left column either (G 20:08 "whats all this empty space on the left?"). The problem sits in
+   the island as on a phone, where you are in the set shows in the steps, and a word problem's text sits on top. On a
+   wide screen the picture stands beside the solve panel, the same height, and the keys run under both */
+@media (min-width:521px){
+  .screen.fit.lscreen.pscreen{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"hero" "pic" "pad"}
+  .screen.fit.lscreen.pscreen.pwordy{grid-template-rows:auto auto minmax(0,1fr) auto;grid-template-areas:"intro" "hero" "pic" "pad"}
+  .pscreen:not(.pwordy)>.pintro{display:none}
+  .pscreen.pwordy>.pintro>:not(.pprob){display:none}
+  .pscreen .pbar .pwhere{display:flex}
+  html:has(.pscreen) .island:has(.iprob) .ititle{display:none}
+  html:has(.pscreen) .island .iprob{display:block;font:var(--w-bold) var(--fz-lg)/1.2 var(--num);white-space:nowrap;overflow:hidden}
+  html:has(.pscreen) .island .iprob .mline{flex-wrap:nowrap}
+  html:has(.pscreen) .island .iprob .slot{height:24px;min-width:32px;font-size:var(--fz-md)}
+}
+/* wide: the solve panel takes the left half, full height; the picture and the keys share the right half */
+@media (min-width:900px) and (orientation:landscape){
+  .screen.fit.lscreen.pscreen{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"hero pic" "hero pad"}
+  .screen.fit.lscreen.pscreen.pwordy{grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"intro intro" "hero pic" "hero pad"}
+}
+/* no picture: the solve panel takes its room */
+.screen.fit.lscreen.pscreen.nopic{grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"hero" "pad"}
+.screen.fit.lscreen.pscreen.nopic.pwordy{grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"intro" "hero" "pad"}
+@media (min-width:900px) and (orientation:landscape){
+  .screen.fit.lscreen.pscreen.nopic{grid-template-rows:minmax(0,1fr);grid-template-areas:"hero pad"}
+  .screen.fit.lscreen.pscreen.nopic.pwordy{grid-template-rows:auto minmax(0,1fr);grid-template-areas:"intro intro" "hero pad"}
+  .pscreen.nopic>.ppad{align-self:end}
 }
