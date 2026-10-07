@@ -149,16 +149,18 @@ export function simplifyStep(S: number, L: number, label: string, id = "simplify
     hint: S % L === 0 ? `${S} ÷ ${L} = ${S / L} exactly, so it's a whole number.`
       : S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}. The remainder goes on top.`
       : gcd(S, L) > 1 ? `Both ${S} and ${L} can be divided by ${gcd(S, L)}.` : `No number (other than 1) divides both ${S} and ${L}. It's already simplest.`,
-    explain: S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}, then simplify.` : gcd(S, L) > 1 ? `Divide top and bottom by ${gcd(S, L)}.` : "It was already as simple as it gets.",
+    explain: S % L === 0 ? `${S} ÷ ${L} = ${S / L} with nothing left over: a whole number.` : S > L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}, then simplify.` : gcd(S, L) > 1 ? `Divide top and bottom by ${gcd(S, L)}.` : "It was already as simple as it gets.",
     work: [frac(S, L), op("="), ...mixedMath(S, L, true)],
   };
 }
 
-/** Name of a piece size: halves, thirds, fourths, …, twelfths, 22nds. */
+/** Name of a piece size: halves, thirds, fourths, …, twentieths, 22nds. */
 export function pieceName(d: number, plural = true): string {
   const names: Record<number, [string, string]> = {
     2: ["half", "halves"], 3: ["third", "thirds"], 4: ["fourth", "fourths"], 5: ["fifth", "fifths"], 6: ["sixth", "sixths"], 7: ["seventh", "sevenths"],
     8: ["eighth", "eighths"], 9: ["ninth", "ninths"], 10: ["tenth", "tenths"], 11: ["eleventh", "elevenths"], 12: ["twelfth", "twelfths"],
+    13: ["thirteenth", "thirteenths"], 14: ["fourteenth", "fourteenths"], 15: ["fifteenth", "fifteenths"], 16: ["sixteenth", "sixteenths"],
+    17: ["seventeenth", "seventeenths"], 18: ["eighteenth", "eighteenths"], 19: ["nineteenth", "nineteenths"], 20: ["twentieth", "twentieths"],
     100: ["hundredth", "hundredths"],
   };
   const n = names[d];

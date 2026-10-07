@@ -6,6 +6,7 @@ import { buildLinePlot } from "../../../../explanations/diagrams/early-g2/linepl
 import { oneBox, wholeIn } from "../../_number-line/steps";
 import { words } from "../../gradeK/kit";
 import { slips } from "../_kit";
+import { count, noun } from "../../../text";
 
 /** what was measured, and the words for its size: sprouts are tall, the rest are long */
 const THINGS = [
@@ -53,7 +54,8 @@ function mixedStep(o: { id: string; label: string; question: string; value: numb
   return {
     id: o.id, label: o.label, question: o.question,
     prompt: prompt(slot("w", true), slot("n"), slot("d")),
-    slots: [{ id: "w", expected: w }, { id: "n", expected: n }, { id: "d", expected: dd }],
+    // below 1 the whole box stays empty (as the tape family's mixed step): "Final answer only" asks only for the fraction
+    slots: [{ id: "w", expected: w || null }, { id: "n", expected: n }, { id: "d", expected: dd }],
     known: [],
     check: v => {
       if (v.n == null || v.d == null) return { ok: false, soft: true, message: "Fill in the fraction: top and bottom." };
@@ -91,21 +93,21 @@ function answers(p: FracLineProblem): AnswerModel {
     const n = howMany(p.data, p.v);
     return {
       steps: [
-        oneBox({ id: "count", label: "How many at that length", question: `How many ${th.many} are ${inches(p.v, d)} ${th.long}?`, prompt: s => [s, text(` ${th.many}`)], ans: n,
+        oneBox({ id: "count", label: "How many at that length", question: `How many ${th.many} are ${inches(p.v, d)} ${th.long}?`, prompt: s => [s, text(` ${noun(n, th.one, th.many)}`)], ans: n,
           wrong: slips(n, [-1, 1].map(k => [howMany(p.data, p.v + k), "Read the next stack", `That's the stack above ${said(p.v + k, d)}. Find ${said(p.v, d)} first.`] as [number, string, string])),
-          hint: `Find ${said(p.v, d)} on the line and count the X's.`, explain: `${n} X's above ${said(p.v, d)}.` }),
+          hint: `Find ${said(p.v, d)} on the line and count the X's.`, explain: `${count(n, "X", "X's")} above ${said(p.v, d)}.` }),
         mixedStep({ id: "total", label: "Total length", question: `${th.together}, how ${th.long} are those ${th.many} in all?`, value: n * p.v, d, lead: [num(n), op("×")],
           wrong: [[n * d, "Gave the count", `That's how many. Each one is ${said(p.v, d)} ${th.long}: add ${said(p.v, d)} ${n} times.`],
             ...(n > 1 ? [[(n - 1) * p.v, "Left one out", `There are ${n} of them: add ${said(p.v, d)} ${n} times.`] as [number, string, string]] : [])],
-          hint: `Add ${said(p.v, d)} once for each ${th.one}.`, explain: `${n} × ${said(p.v, d)} = ${said(n * p.v, d)} inches.` }),
+          hint: `Add ${said(p.v, d)} once for each ${th.one}.`, explain: `${n} × ${said(p.v, d)} = ${inches(n * p.v, d)}.` }),
       ],
       finalParts: [-1],
     };
   }
   const n = p.data.filter(u => u > p.v).length, ge = p.data.filter(u => u >= p.v).length;
-  return { steps: [oneBox({ id: "longer", label: "Count", question: `How many ${th.many} are ${th.more} than ${inches(p.v, d)}?`, prompt: s => [s, text(` ${th.many}`)], ans: n,
+  return { steps: [oneBox({ id: "longer", label: "Count", question: `How many ${th.many} are ${th.more} than ${inches(p.v, d)}?`, prompt: s => [s, text(` ${noun(n, th.one, th.many)}`)], ans: n,
     wrong: slips(n, [[ge, `Counted ${said(p.v, d)} too`, `${cap(th.more)} than ${said(p.v, d)} doesn't include ${said(p.v, d)} itself.`]]),
-    hint: `Count the X's to the right of ${said(p.v, d)}.`, explain: `${n} X's to the right of ${said(p.v, d)}, so ${n} ${n === 1 ? `${th.one} is` : `${th.many} are`} ${th.more}.` })], finalParts: [-1] };
+    hint: `Count the X's to the right of ${said(p.v, d)}.`, explain: `${count(n, "X", "X's")} to the right of ${said(p.v, d)}, so ${n} ${n === 1 ? `${th.one} is` : `${th.many} are`} ${th.more}.` })], finalParts: [-1] };
 }
 
 const plot = (p: FracLineProblem) => ({ d: p.d, lo: p.lo, hi: p.lo + 2 * p.d, data: p.data, title: THINGS[p.thing]!.title });

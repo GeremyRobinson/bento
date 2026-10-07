@@ -55,7 +55,7 @@ export function explainPolynomialDerivative(p: PolynomialDerivative, model: Answ
       { id: "problem", narration: `Take the derivative one term at a time.${d ? ` The ${f(d)} on its own will drop out.` : ""}`, math: [text("f(x)"), op("="), ...poly([[a, xp(3)], [b, xp(2)], [p.c, X]]), ...(d ? [op(d < 0 ? "−" : "+"), mark(Math.abs(d))] : [])] },
       { id: "x3", narration: `x³ term: bring the 3 down, 3 × ${f(a)} = ${f(A)}, and x³ becomes x².`, math: m(3, op("×"), ...P(a), op("="), A), line: fprime([[A, xp(2)]]), answerStep: "x3", result: A },
       { id: "x2", narration: `x² term: 2 × ${f(b)} = ${f(B)}, and x² becomes x.`, math: m(2, op("×"), ...P(b), op("="), B), line: fprime([[A, xp(2)], [B, X]]), answerStep: "x2", result: B },
-      { id: "x1", narration: `The derivative of ${coef(C, "x")} is ${f(C)}.${d ? ` The constant ${f(d)} becomes 0.` : ""}`, math: [num(C), v(), op("→"), num(C)], line: fprime([[A, xp(2)], [B, X], [C, []]]), answerStep: "x1", result: C },
+      { id: "x1", narration: `The derivative of ${coef(C, "x")} is ${f(C)}.${d ? ` The constant ${f(d)} becomes 0.` : ""}`, math: [...poly([[C, X]]), op("→"), num(C)], line: fprime([[A, xp(2)], [B, X], [C, []]]), answerStep: "x1", result: C },
       { id: "at1", narration: `At x = 1 every power of x is 1, so f′(1) = ${f(total)}: ${total > 0 ? `the graph climbs ${f(total)} for each 1 across at that point` : total < 0 ? `the graph falls ${f(-total)} for each 1 across at that point` : "the graph is flat at that point"}.`, math: m(text("f′(1)"), op("="), A, op("+"), ...P(B), op("+"), ...P(C), op("="), total), answerStep: "at1", result: total },
     ],
   });

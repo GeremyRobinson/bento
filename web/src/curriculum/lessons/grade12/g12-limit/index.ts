@@ -1,4 +1,4 @@
-import { num, op, sub, text, type MathText } from "../../../schemas/math-text";
+import { answer, num, op, sub, text, type MathText } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import type { Rng } from "../../../generators/rng";
 import { beats, type Explanation } from "../../../../explanations/schema";
@@ -37,7 +37,9 @@ export function limitAnswers({ a, b }: LimitProblem): AnswerModel {
     steps: [
       ns({ id: "b", label: "Factor the top", prompt: s => [text(`${factor(a)}(x + `), ...s, text(")")], ans: b,
         hint: `Plugging x = ${f(a)} into the top gives 0, so ${factor(a)} is a factor. Find the other one: what times ${f(-a)} makes the number on its own?`, note: "Plugging in gives 0 ÷ 0, so factor first.",
-        wrong: [[-b, "Sign slip", `Multiply it back out: ${factor(a)} times (x + your number) has to give the top's number on its own, ${f(-a * b)}.`]] }),
+        wrong: [[-b, "Sign slip", `Multiply it back out: ${factor(a)} times (x + your number) has to give the top's number on its own, ${f(-a * b)}.`]],
+        // the worked line reads (x − 3), not (x + −3)
+        work: [text(`${factor(a)}(x ${b < 0 ? "−" : "+"} `), answer("x", Math.abs(b)), text(")")] }),
       ns({ id: "lim", label: "Cancel and plug in", prompt: s => [num(a), op("+"), ...P(b), op("="), ...s], ans: a + b,
         hint: "Away from the hole, the fraction is just the other factor. Plug x into it to see where the line is heading.", wrong: [[0, "Stopped at 0 ÷ 0", "0 ÷ 0 means simplify, not that the limit is 0."]] }),
     ],

@@ -61,10 +61,11 @@ export function buildShares(s: SharesSpec): SceneDiagram {
   if (b) {
     // every part lifts out and lands on the same spot to the right: each one covers the last exactly
     const p0 = main.g.parts[0]!, x0 = Math.min(...xsOf(p0.segs)), spot = right + 64 - x0;
+    // each part starts from its own place in the shape (across and up or down, so stacked strips move too)
     main.g.parts.forEach((p, i) => {
-      const dx = Math.min(...xsOf(p.segs)) - (x0 + spot);
-      items.push(path(shift(p0.segs, spot), i === main.g.parts.length - 1 ? "shadeB" : "fillsoft", { from: b.match, until: b.match, enter: "slide", delay: 0.5 * i, vars: { "--dx": `${Math.round(dx)}px` } }));
-      items.push(path(shift(p0.segs, spot), "ln2", { from: b.match, until: b.match, enter: "slide", delay: 0.5 * i, vars: { "--dx": `${Math.round(dx)}px` } }));
+      const vars = { "--dx": `${Math.round(p.c[0] - (p0.c[0] + spot))}px`, "--dy": `${Math.round(p.c[1] - p0.c[1])}px` };
+      items.push(path(shift(p0.segs, spot), i === main.g.parts.length - 1 ? "shadeB" : "fillsoft", { from: b.match, until: b.match, enter: "slide", delay: 0.5 * i, vars }));
+      items.push(path(shift(p0.segs, spot), "ln2", { from: b.match, until: b.match, enter: "slide", delay: 0.5 * i, vars }));
     });
     const sx = (Math.min(...xsOf(p0.segs)) + Math.max(...xsOf(p0.segs))) / 2 + spot;
     items.push(t(sx, Math.min(...ysOf(p0.segs)) - 22, "same size", "lbl acc", { from: b.match, until: b.match, enter: "rise", delay: 0.5 * main.g.parts.length }));

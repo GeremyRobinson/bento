@@ -5,6 +5,7 @@ import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildMeasure } from "../../../../explanations/diagrams/early-g1/measure";
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
 import { plural, slips } from "../_kit";
+import { cap } from "../../../text";
 
 export const THINGS = ["pencil", "crayon", "ribbon", "straw", "spoon", "leaf", "brush", "key"] as const;
 
@@ -30,7 +31,7 @@ function answers({ x, y, a, b }: MeasureProblem): AnswerModel {
     steps: [
       oneBox({
         id: "first", label: `Measure the ${one}`, question: `How many cubes long is the ${one}?`,
-        prompt: s => [text(`${one}: `), s, text(" cubes")], ans: a,
+        prompt: s => [text(`${cap(one)}: `), s, text(" cubes")], ans: a,
         wrong: slips(a, [
           [b, "Measured the other one", `That's the ${two}. Count the cubes under the **${one}**.`],
           [a + 1, "Counted one cube twice", "One too many. Touch each cube just once as you count."],
@@ -41,7 +42,7 @@ function answers({ x, y, a, b }: MeasureProblem): AnswerModel {
       }),
       oneBox({
         id: "second", label: `Measure the ${two}`, question: `How many cubes long is the ${two}?`,
-        prompt: s => [text(`${two}: `), s, text(" cubes")], ans: b,
+        prompt: s => [text(`${cap(two)}: `), s, text(" cubes")], ans: b,
         wrong: slips(b, [
           [a, "Measured the other one", `That's the ${one}. Count the cubes under the **${two}**.`],
           [b + 1, "Counted one cube twice", "One too many. Touch each cube just once as you count."],
@@ -82,8 +83,8 @@ function explain({ x, y }: MeasureProblem, model: AnswerModel): Explanation {
     caption: `The ${longer} is ${cubes(diff)} longer than the ${shorter}.`,
     timeline: beats(3),
     steps: [
-      { id: "first", narration: `Count the cubes under the ${one}: **${a}**.`, math: [text(`${one}: `), num(a), text(" cubes")], state: 0, answerStep: "first", result: a },
-      { id: "second", narration: `Count the cubes under the ${two}: **${b}**.`, math: [text(`${two}: `), num(b), text(" cubes")], state: 1, answerStep: "second", result: b },
+      { id: "first", narration: `Count the cubes under the ${one}: **${a}**.`, math: [text(`${cap(one)}: `), num(a), text(" cubes")], state: 0, answerStep: "first", result: a },
+      { id: "second", narration: `Count the cubes under the ${two}: **${b}**.`, math: [text(`${cap(two)}: `), num(b), text(" cubes")], state: 1, answerStep: "second", result: b },
       { id: "diff", narration: `Both start at the same line. The ${longer} goes on for **${diff}** more ${diff === 1 ? "cube" : "cubes"}.`, math: [num(Math.max(a, b)), op("−"), num(Math.min(a, b)), op("="), num(diff)], state: 2, answerStep: "diff", result: diff },
     ],
   };

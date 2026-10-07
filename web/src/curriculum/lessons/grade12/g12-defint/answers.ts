@@ -1,4 +1,4 @@
-import { num, op, sup, text, type MathText } from "../../../schemas/math-text";
+import { answer, num, op, sup, text, type MathText } from "../../../schemas/math-text";
 import type { AnswerModel } from "../../../schemas/lesson";
 import { ms, ns } from "../../_plane/kit";
 import type { DefIntProblem } from "./problem";
@@ -11,12 +11,14 @@ export function defIntAnswers(p: DefIntProblem): AnswerModel {
   const { n, a, j, k, c } = p;
   return {
     steps: [
-      ms({ id: "anti", label: "Antiderivative", prompt: S => [...S.c!, text("x"), sup(S.e!)], ans: { c, e: n + 1 }, small: ["e"], hint: "Run the power rule backwards: raise the power by 1, then divide the number in front by the new power, so the derivative gives it back.",
+      // the worked line writes 1x⁴ as x⁴
+      { ...ms({ id: "anti", label: "Antiderivative", prompt: S => [...S.c!, text("x"), sup(S.e!)], ans: { c, e: n + 1 }, small: ["e"], hint: "Run the power rule backwards: raise the power by 1, then divide the number in front by the new power, so the derivative gives it back.",
         wrong: [
           [{ c: a, e: n + 1 }, "Didn't divide", `Divide by the new power: ${a} ÷ ${n + 1}.`],
           [{ c: a * n, e: n - 1 }, "Took the derivative", "That's the derivative. Antiderivatives raise the power by 1."],
           [{ c, e: n - 1 }, "Lowered the power", "That's the derivative's power. Antiderivatives raise the power by 1."],
         ] }),
+        ...(c === 1 ? { work: [text("x"), sup([answer("e", n + 1)])] } : {}) },
       ns({ id: "area", label: "Top minus bottom", prompt: s => [...topMinusBottom(p), op("="), ...s], ans: p.area,
         hint: j === 0 ? `Plug in ${k}, then subtract the value at 0 (which is 0).` : `Plug in ${k}, then subtract the value at ${j}: the area from 0 to ${j} isn't part of it.`,
         wrong: j === 0 ? [] : [[c * k ** (n + 1), "Forgot the bottom", `That is the area from 0 to ${k}. Take away F(${j}) = ${c * j ** (n + 1)}, the part from 0 to ${j}.`]] }),

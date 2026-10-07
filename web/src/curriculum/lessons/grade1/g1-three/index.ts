@@ -33,8 +33,12 @@ const friendly = (v: number[], [i, j]: [number, number]) => v[i]! + v[j]! === 10
 function answers(p: ThreeProblem): AnswerModel {
   const v = [p.a, p.b, p.c], { pair: [i, j], why } = pairOf(p), k = 3 - i - j;
   const x = v[i]!, y = v[j]!, z = v[k]!, first = x + y, sum = p.a + p.b + p.c;
+  // choosing the easy pair: offered when exactly one pair makes 10 or a double, and the three pairs read differently
+  const labels = OFFER.map(([s, t]) => `${v[s]} and ${v[t]}`);
+  const choose = why !== "order" && OFFER.filter(q => friendly(v, q)).length === 1 && new Set(labels).size === 3;
   const add = oneBox({
-    id: "first", label: "Add two first", question: why === "order" ? "Add the first two." : "Add the two you picked.",
+    // "the two you picked" only when there was a pick step; otherwise name the two
+    id: "first", label: "Add two first", question: why === "order" ? "Add the first two." : choose ? "Add the two you picked." : `Add ${x} and ${y}.`,
     prompt: s => [num(x), op("+"), num(y), op("="), s], ans: first,
     wrong: slips(first, why === "ten"
       ? [[first - 1, "Counted one short", `${x} and ${y} fill a ten frame exactly: that's 10.`], [first + 1, "Counted one too many", `${x} and ${y} fill a ten frame exactly: that's 10.`]]
@@ -44,9 +48,6 @@ function answers(p: ThreeProblem): AnswerModel {
     hint: why === "ten" ? `Which number goes with ${x} to fill a ten frame?` : why === "double" ? `${x} and ${x} is a double. What is double ${x}?` : "Add the first two.",
     explain: why === "ten" ? `${x} and ${y} make 10.` : why === "double" ? `Double ${x} is ${first}.` : `${x} + ${y} = ${first}.`,
   });
-  // choosing the easy pair: offered when exactly one pair makes 10 or a double, and the three pairs read differently
-  const labels = OFFER.map(([s, t]) => `${v[s]} and ${v[t]}`);
-  const choose = why !== "order" && OFFER.filter(q => friendly(v, q)).length === 1 && new Set(labels).size === 3;
   const pick = choose ? [tapStep({
     id: "pick", label: "Pick two", question: "Which two make 10 or a double?", prompt: [num(p.a), op("+"), num(p.b), op("+"), num(p.c)],
     choices: labels, right: OFFER.findIndex(([s, t]) => s === i && t === j),

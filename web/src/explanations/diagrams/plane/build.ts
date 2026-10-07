@@ -196,6 +196,15 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
     if (run.length) runs.push(run);
     return runs.filter(r => r.length > 1);
   };
+  /** a straight line y = m·x + b, clipped to the window: one run from where it enters to where it leaves (a steep line enters and leaves through the top and bottom) */
+  const lineRuns = (m: number, b: number): [number, number][][] => {
+    let a = x0, c = x1;
+    if (m !== 0) {
+      const xa = (y0 - b) / m, xb = (y1 - b) / m;
+      a = Math.max(a, Math.min(xa, xb)); c = Math.min(c, Math.max(xa, xb));
+    } else if (!inY(b)) return [];
+    return a < c ? [[[a, m * a + b], [c, m * c + b]]] : [];
+  };
   const pathOf = (runs: [number, number][][]) => runs.map(r => r.map(([xv, yv], i) => `${i ? "L" : "M"}${r1(X(xv))} ${r1(Y(yv))}`).join(" ")).join(" ");
   const sampleRuns = (runs: [number, number][][], w: number) => runs.forEach(r => r.slice(1).forEach((p, i) => sampleLine([X(r[i]![0]), Y(r[i]![1])], [X(p[0]), Y(p[1])], w)));
   /** where a curve's label may go: near x = `at` when given, otherwise a few places along it, best first */
@@ -221,7 +230,7 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
         break;
       }
       case "curve": case "line": {
-        const runs = it.kind === "line" ? trace(v => it.m * v + it.b, x0, x1, 2) : trace(it.f, it.x0 ?? x0, it.x1 ?? x1);
+        const runs = it.kind === "line" ? lineRuns(it.m, it.b) : trace(it.f, it.x0 ?? x0, it.x1 ?? x1);
         if (!runs.length) break;
         shapes.push({ type: "path", d: pathOf(runs), cls: it.cls ?? "ln", enter: it.kind === "curve" ? "draw slow" : "draw", ...t });
         sampleRuns(runs, LINE);

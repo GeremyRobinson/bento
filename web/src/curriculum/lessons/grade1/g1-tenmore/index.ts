@@ -49,9 +49,9 @@ function answers({ n, more }: TenMoreProblem): AnswerModel {
         id: "number", label: "Find the number", note: "The ones stay the same.",
         prompt: s => [num(n), op(more ? "+" : "−"), num(TEN), op("="), s], ans: res,
         wrong: slips(res, [
-          [n + d, "Changed the ones", `That's 1 ${w}. For 10 ${w}, change the **tens** and keep the ${plural(o, "one", "ones")}.`],
+          [n + d, "Changed the ones", `That's 1 ${w}. For 10 ${w}, change the **tens** and keep ${o ? `the ${plural(o, "one", "ones")}` : "the ones the same"}.`],
           [n - d * TEN, "Went the wrong way", `That's 10 ${more ? "less" : "more"}. You want 10 ${w}.`],
-          [newT, "Left out the ones", `That's just the tens. Put the ${plural(o, "one", "ones")} back on the end.`],
+          [newT, "Left out the ones", `That's just the tens. ${o ? `Put the ${plural(o, "one", "ones")} back on the end.` : "Put the 0 back in the ones place."}`],
         ]),
         hint: `${plural(newT, "ten", "tens")} and ${plural(o, "one", "ones")}.`,
         explain: `${plural(newT, "ten", "tens")} and ${plural(o, "one", "ones")} is ${res}.`,

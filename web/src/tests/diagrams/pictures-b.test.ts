@@ -296,13 +296,15 @@ describe("area-model lessons", () => {
     const l = lesson("g4-divide");
     for (const p of problemsOf(l) as { dv: number; q: number; r: number }[]) {
       const d = sceneOf(l, p), T = p.q - (p.q % 10), O = p.q % 10;
-      expect(textsAt(d, 0).map(t => t.text)).toEqual(expect.arrayContaining([String(p.dv * T), `${p.dv} × ${T} = ${p.dv * T}`]));
+      // beat 0 only asks how many fit; the T column and its product arrive on beat 1
+      expect(textsAt(d, 0).map(t => t.text)).toContain(`${p.dv} × ? ≤ ${p.dv * p.q + p.r}`);
+      expect(textsAt(d, 1).map(t => t.text)).toContain(String(p.dv * T));
       expect(textsAt(d, 2).map(t => t.text)).toContain(String(p.dv * O));
       const stub = rects(d, 4, /\bxchip pq\b/) as Rect[], column = (rects(d, 4, /^pend$/) as Rect[]).at(-1)!;
       expect(stub).toHaveLength(p.r);
       // dv of the remainder's squares would fill the column next to them
       if (p.r) expect(column.h / (stub[0]!.h + 3)).toBeCloseTo(p.dv, 1);
-      expect(finalText(d, 4)).toContain(`${p.r} left over: ${p.q} R ${p.r}`);
+      expect(finalText(d, 4)).toContain(p.r ? `${p.r} left over: ${p.q} R ${p.r}` : `${p.dv * p.q} ÷ ${p.dv} = ${p.q} exactly`);
     }
   });
   it("g5-divide fills the rest exactly, with no remainder, and joins the two widths into the answer", () => {
@@ -375,8 +377,11 @@ describe("tape lessons", () => {
       expect(segs(0)).toHaveLength(p.a);
       expect(segs(1)).toHaveLength(p.b);
       const len = (rs: Rect[]) => Math.max(...rs.map(r => r.x + r.w)) - Math.min(...rs.map(r => r.x));
-      // within the parts' small insets (a few px at each end of a bar)
-      expect(Math.abs((len(segs(0)) + 3) / (len(segs(1)) + 3) / ((p.a * p.x) / (p.b * p.y)) - 1)).toBeLessThan(0.05);
+      // within the parts' small insets (a few px at each end of a bar); when one kind of box would be too small to read,
+      // it is drawn at the minimum size instead, so then every box is at least that wide
+      const widths = [...segs(0), ...segs(1)].map(r => r.w);
+      if (Math.min(...widths) > 20) expect(Math.abs((len(segs(0)) + 3) / (len(segs(1)) + 3) / ((p.a * p.x) / (p.b * p.y)) - 1)).toBeLessThan(0.05);
+      else expect(Math.min(...widths)).toBeGreaterThanOrEqual(14);
       expect(textsAt(d, 2).map(t => t.text)).toContain(String(p.a * p.x + p.b * p.y));
       // a letter in a box gives way to its number
       for (const t of d.items.filter((i): i is Text => i.type === "text" && (i.text === "x" || i.text === "y"))) expect(t.cls).toMatch(/a-outsoon/);

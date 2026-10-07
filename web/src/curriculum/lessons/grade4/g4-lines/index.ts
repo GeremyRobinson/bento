@@ -52,7 +52,9 @@ function answers(p: LinesProblem): AnswerModel {
       steps: [
         tapStep({ id: "compare", label: "Compare to a square corner", question: "Is it smaller than a square corner, a square corner, or bigger?", prompt: [text("Compared to a square corner: ?")],
           choices: ["Smaller", "Square corner", "Bigger"], right: cmp,
-          wrong: () => ["Judged by the arms", "Long arms don't make a bigger angle. Look at how wide it opens."],
+          // only an acute angle is drawn with the longer arms, so only there can the arms be what misled
+          wrong: i => (p.deg < 90 && i > cmp ? ["Judged by the arms", "Long arms don't make a bigger angle. Look at how wide it opens."]
+            : ["Compared the corner", `Put the corner of a page at the point. ${cmp === 0 ? "The angle fits inside it." : cmp === 1 ? "The angle fits it exactly." : "The angle opens past its edge."}`]),
           hint: "Picture the corner of a page at the point.", explain: cmp === 0 ? "It opens less than a square corner." : cmp === 1 ? "It's exactly a square corner." : "It opens wider than a square corner.", work: [text(["Smaller", "Square corner", "Bigger"][cmp]!)] }),
         tapStep({ id: "name", label: "Name it", question: "What kind of angle is it?", prompt: [text("It's ?")], choices: names, right: k,
           wrong: i => [`Picked ${names[i]!.toLowerCase()}`, ["Acute is smaller than a square corner.", "Right is exactly a square corner.", "Obtuse is bigger than a square corner but not a straight line.", "Straight is a straight line: 180°."][i]!],

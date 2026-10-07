@@ -55,7 +55,7 @@ export function divideFractionsPicture(o: { a: number; b: number; c: number; d: 
   const bar = items.find((i): i is Extract<SceneItem, { type: "rect" }> => i.type === "rect" && i.cls === "seg" && i.from === 3);
   if (part && bar) {
     const u = bar.w / A, x = bar.x + (n - 1) * C * u;
-    ticked.splice(ticked.indexOf(bar), 0, { type: "rect", x: Math.round(x * 10) / 10, y: bar.y, w: Math.round(C * u * 10) / 10, h: bar.h, rx: bar.rx ?? 0, cls: "pend", from: 3, enter: "fade", delay: 0.6 });
+    ticked.splice(ticked.indexOf(bar), 0, { type: "rect", x: Math.round(x * 10) / 10, y: bar.y, w: Math.round(Math.min(C * u, bar.x + u - x) * 10) / 10, h: bar.h, rx: bar.rx ?? 0, cls: "pend", from: 3, enter: "fade", delay: 0.6 });
   }
   return { ...d0, items: ticked };
 }

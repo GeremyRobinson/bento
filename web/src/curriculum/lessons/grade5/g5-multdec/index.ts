@@ -38,7 +38,7 @@ function answers(p: MultDecimalsProblem): AnswerModel {
         wrong: [pa, pb].filter((v, i, all) => v !== n && all.indexOf(v) === i).map((v): Slip => [v, "Counted one number", "Count the places in both numbers, not just one."]) }),
       oneBox({
         id: "place", label: "Place the point", prompt: s => [num(x), op("×"), num(y), op("="), s], ans,
-        hint: `The answer counts ${PLACE[n]}, so ${placeWord(n)} go after the point.`,
+        hint: `The answer counts ${PLACE[n]}, so ${placeWord(n)} ${n === 1 ? "goes" : "go"} after the point.`,
         explain: `Put the point ${placeWord(n)} from the right of ${P}: ${f(ans)}.`,
         wrong: [
           [big, "Point in the wrong place", pb ? `${f(big)} is too big. ${f(y)} is less than 1, so the answer must be less than ${f(x)}.`

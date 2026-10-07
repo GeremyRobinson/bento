@@ -25,7 +25,7 @@ export function explainQuadForm(p: QuadFormProblem, model: AnswerModel): Explana
       items: [
         { kind: "curve", f: F, label: { text: `y = ${eq}`, optional: true } },
         { kind: "vline", x: h, cls: "ln thin dash", from: 1, label: { text: `x = ${f(h)}`, optional: true } },
-        { kind: "segment", a: [lo, 0], b: [hi, 0], cls: "ln2", from: 2, label: { text: `${f(s)} apart`, acc: true, prefer: ["n", "s"] } },
+        { kind: "segment", a: [lo, 0], b: [hi, 0], cls: "ln2", from: 2, label: { text: `${f(s)} apart`, acc: true, prefer: ["ne", "nw", "se", "sw"] } },
         { kind: "point", at: [lo, 0], cls: "dota", from: 3, label: { text: f(lo), acc: true, prefer: ["sw", "nw", "w"] } },
         { kind: "point", at: [hi, 0], cls: "dota", from: 3, delay: 0.3, label: { text: f(hi), acc: true, prefer: ["se", "ne", "e"] } },
       ],

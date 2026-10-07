@@ -67,20 +67,21 @@ function explain({ a, b }: Sub20Problem, model: AnswerModel): Explanation {
     statement: [num(a), op("−"), num(b)],
     diagram: buildNumberLine({
       min, max, labelAt: [TEN],
-      marks: [{ v: a, label: `start ${a}`, beat: 0, until: 0 }, { v: res, label: String(res), beat: 2, cls: "dota" }],
+      marks: [{ v: a, label: `start ${a}`, beat: 0, until: 1 }, { v: res, label: String(res), beat: 3, cls: "dota" }],
       hops: [
-        { from: a, to: TEN, below: true, label: `−${first}`, beat: 0 },
-        { from: TEN, to: res, below: true, label: `−${rest}`, beat: 1, start: false },
+        { from: a, to: TEN, below: true, label: `−${first}`, beat: 1 },
+        { from: TEN, to: res, below: true, label: `−${rest}`, beat: 2, start: false },
       ],
-      spans: [{ from: res, to: a, beat: 2 }],
+      spans: [{ from: res, to: a, beat: 3 }],
       alt: `Number line from ${min} to ${max}: hop back ${first} from ${a} to 10, then ${rest} more to ${res}.`,
     }),
     caption: `${b} is ${first} and ${rest}. Back ${first} to 10, then back ${rest} more.`,
-    timeline: beats(3),
+    // beat 0 is the bare line, so practice's first step doesn't show the hop it asks for
+    timeline: beats(4),
     steps: [
-      { id: "to-ten", narration: `${a} is 10 and ${first} more. Hop back **${first}** to land on 10.`, math: [num(a), op("−"), num(first), op("="), num(TEN)], state: 0, answerStep: "to-ten", result: first },
-      { id: "rest", narration: `You still need to take ${b} in all. ${b} is ${first} and **${rest}**.`, math: [num(b), op("="), num(first), op("+"), num(rest)], state: 1, answerStep: "rest", result: rest },
-      { id: "from-ten", narration: `Hop back ${rest} from 10. You land on **${res}**.`, math: [num(TEN), op("−"), num(rest), op("="), num(res)], state: 2, answerStep: "from-ten", result: res },
+      { id: "to-ten", narration: `${a} is 10 and ${first} more. Hop back **${first}** to land on 10.`, math: [num(a), op("−"), num(first), op("="), num(TEN)], state: 1, answerStep: "to-ten", result: first },
+      { id: "rest", narration: `You still need to take ${b} in all. ${b} is ${first} and **${rest}**.`, math: [num(b), op("="), num(first), op("+"), num(rest)], state: 2, answerStep: "rest", result: rest },
+      { id: "from-ten", narration: `Hop back ${rest} from 10. You land on **${res}**.`, math: [num(TEN), op("−"), num(rest), op("="), num(res)], state: 3, answerStep: "from-ten", result: res },
     ],
   };
 }

@@ -6,6 +6,7 @@ const SLIPS = "new named slips from the fixes-02 draft; a wrong try that is none
 
 export const deviations: Record<string, Partial<Record<string, string>>> = {
   "g6-divide": {
+    story: "K–12 lesson check (Review 2026-10-07): the ribbon story asks how many times the piece fits, since the answer is often a fraction of a bow",
     pre: "g5-unitdiv: \"how many 1/4 fit in 3?\" is the meaning dividing builds on (fixes-02 draft)",
     "added:size": "a first tap step, \"Will more than one c/d fit in a/b?\", so the learner sizes the answer before any rule",
     hint: "the flip hint says why: how many c/d fit in one whole; the multiply hint no longer names the bottom (it was the answer when c = 1)",

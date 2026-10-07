@@ -7,6 +7,7 @@ import { buildFold, isSymmetry } from "../../../../explanations/diagrams/early-g
 import { oneBox, wholeIn } from "../../_number-line/steps";
 import { tapStep, words } from "../../gradeK/kit";
 import { slips } from "../_kit";
+import { noun } from "../../../text";
 
 const reg = (n: number, r: number, start: number): Pt[] => Array.from({ length: n }, (_, i) => { const a = ((start + (360 * i) / n) * Math.PI) / 180; return [r * Math.cos(a), -r * Math.sin(a)]; });
 const heart: Pt[] = Array.from({ length: 48 }, (_, i) => {
@@ -58,7 +59,7 @@ function answers(p: SymProblem): AnswerModel {
   }
   const n = sh.lines.length;
   return { steps: [oneBox({
-    id: "count", label: "Count the lines", question: "How many lines of symmetry?", prompt: s => [s, text(" lines of symmetry")], ans: n,
+    id: "count", label: "Count the lines", question: "How many lines of symmetry?", prompt: s => [s, text(` ${noun(n, "line")} of symmetry`)], ans: n,
     wrong: slips(n, [
       ...(p.shape === 1 ? [[4, "Counted the diagonals", "The diagonals don't work for a rectangle. Only the two through the middles of the sides: 2."] as [number, string, string]] : []),
       ...(p.shape === 0 ? [[2, "Missed the diagonals", "A square folds on its diagonals too: 4 in all."] as [number, string, string]] : []),

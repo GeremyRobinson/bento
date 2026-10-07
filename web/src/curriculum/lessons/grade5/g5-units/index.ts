@@ -5,6 +5,7 @@ import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildTape } from "../../../../explanations/diagrams/tape/build";
 import { expectedOf, ns } from "../../_tape-family/steps";
 import { slips, tapStep } from "../../grade4/_kit";
+import { aOrAnWord } from "../../../text";
 
 /** [one big unit, many big units, small units, small units in one big unit] */
 export type UnitPair = [string, string, string, number];
@@ -17,6 +18,8 @@ export const UNITS: UnitPair[] = [
 
 /** one small unit, and the mix-ups for "how many in one?" (g4-convert's, for the units it has) */
 const SMALL_ONE: Record<string, string> = { inches: "inch", feet: "foot", centimeters: "centimeter", grams: "gram", minutes: "minute", quarts: "quart", ounces: "ounce" };
+/** "a" or "an" before a unit: "an inch", "an hour" (said with a silent h) */
+const an = (w: string) => (w === "hour" ? "an" : aOrAnWord(w));
 const MIX_UPS: Record<string, [number, string, string][]> = {
   foot: [[10, "Used 10", "A foot is 12 inches, not 10. Look at a ruler: it goes up to 12."], [3, "Mixed up yards and feet", "3 is the feet in a yard. A foot is 12 inches."]],
   yard: [[12, "Mixed up feet and inches", "12 is the inches in a foot. A yard is 3 feet."], [36, "Counted inches", "36 is the inches in a yard. A yard is 3 feet."]],
@@ -70,7 +73,7 @@ function answers(p: UnitConversionProblem): AnswerModel {
       choices: ["More", "Fewer"], ans: up ? 1 : 0,
       wrong: up ? { 0: ["Bigger units, more of them", `${cap(many)} are bigger than ${small}, so you need fewer of them.`] }
         : { 1: ["Smaller units, fewer of them", `${cap(small)} are smaller than ${many}, so you need more of them.`] },
-      hint: `Which is bigger, a ${one} or a ${SMALL_ONE[small] ?? small}?`,
+      hint: `Which is bigger, ${an(one)} ${one} or ${an(SMALL_ONE[small] ?? small)} ${SMALL_ONE[small] ?? small}?`,
       explain: up ? `${cap(many)} are bigger, so it takes fewer of them.` : `${cap(small)} are smaller, so it takes more of them.`,
       work: [text(up ? `Fewer ${many}` : `More ${small}`)],
     }),

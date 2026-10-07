@@ -29,7 +29,7 @@ function answers(p: LengthProblem): AnswerModel {
   const right = a > b ? 0 : a < b ? 1 : 2, extra = Math.abs(a - b);
   const longer = a > b ? top : bottom, shorter = a > b ? bottom : top;
   const choices = [`The ${top}`, `The ${bottom}`, "Same length"];
-  const why = right === 2 ? `Both are ${cubes(a)} long.` : `The ${longer} is ${cubes(Math.max(a, b))} long. The ${shorter} is only ${Math.min(a, b)}.`;
+  const why = right === 2 ? `Both are ${cubes(a)} long.` : `The ${longer} is ${cubes(Math.max(a, b))} long. The ${shorter} is only ${cubes(Math.min(a, b))}.`;
   const sentence: MathText = right === 2
     ? [text(`The ${top} and the ${bottom} are the same length.`)]
     : [text(`The ${longer} is longer by `), num(extra), text(extra === 1 ? " cube." : " cubes.")];

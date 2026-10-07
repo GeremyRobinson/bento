@@ -10,7 +10,7 @@ export const THEMES: Theme[] = [
   { title: "Favorite fruit", names: ["Apples", "Bananas", "Grapes"], nouns: ["apples", "bananas", "grapes"], one: ["apple", "banana", "grape"], icon: "apple", things: "votes" },
   { title: "Our pets", names: ["Dogs", "Cats", "Fish"], nouns: ["dogs", "cats", "fish"], one: ["dog", "cat", "fish"], icon: "paw", things: "pets" },
   { title: "Weather this month", names: ["Sunny", "Rainy", "Cloudy"], nouns: ["sunny days", "rainy days", "cloudy days"], one: ["sunny day", "rainy day", "cloudy day"], icon: "star", things: "days" },
-  { title: "Favorite snacks", names: ["Crackers", "Popcorn", "Pretzels"], nouns: ["crackers", "popcorn", "pretzels"], one: ["cracker", "popcorn", "pretzel"], icon: "cookie", things: "votes" },
+  { title: "Favorite snacks", names: ["Crackers", "Popcorn", "Pretzels"], nouns: ["crackers", "bags of popcorn", "pretzels"], one: ["cracker", "bag of popcorn", "pretzel"], icon: "cookie", things: "votes" },
 ];
 
 /** counts, all different, each lo to hi */

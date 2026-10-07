@@ -20,8 +20,11 @@ export function createTwoPoint(m: number, b: number, x1: number, x2: number): Tw
 
 /** Same ranges as the current app: m ±1..4, b −8..8, x1 −4..2, x2 1..4 to the right of it. */
 export function generateTwoPoint(rng: Rng): TwoPointProblem {
-  const m = nz(rng, -4, 4), b = rng.int(-8, 8), x1 = rng.int(-4, 2);
-  return createTwoPoint(m, b, x1, x1 + rng.int(1, 4));
+  // neither point on the y-axis, where the rise would be drawn over the axis
+  const m = nz(rng, -4, 4), b = rng.int(-8, 8);
+  let x1: number, x2: number;
+  do { x1 = rng.int(-4, 2); x2 = x1 + rng.int(1, 4); } while (x1 === 0 || x2 === 0);
+  return createTwoPoint(m, b, x1, x2);
 }
 
 export function restoreTwoPoint(raw: unknown): TwoPointProblem | null {

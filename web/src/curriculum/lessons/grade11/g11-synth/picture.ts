@@ -45,7 +45,7 @@ export function syntheticPicture(o: { r: number; b: number; c: number; rr: numbe
       { text: `${f(b)} + ${P(rr)} = ${f(q)}`, from: 2, until: 2, at: 0.9, cls: "lbl pw" },
       { text: `${f(q)} × ${P(r)} = ${f(qr)}`, from: 3, until: 3, at: 1.2, cls: "lbl pw" },
       { text: `${f(c)} + ${P(qr)} = ${f(rem)}: ${rem === 0 ? "no remainder" : "the remainder"}`, from: 4, until: 4, at: 1, cls: "lbl pw" },
-      { text: `check: ${P(r)}² + ${P(b)}·${P(r)} + ${P(c)} = ${f(rem)}`, from: 5, until: 5, at: 0.3, cls: "lbl pw" },
+      { text: `check: ${P(r)}²${b ? ` + ${P(b)}·${P(r)}` : ""}${c ? ` + ${P(c)}` : ""} = ${f(rem)}`, from: 5, until: 5, at: 0.3, cls: "lbl pw" },
       { text: `x ${q < 0 ? "−" : "+"} ${f(Math.abs(q))}, remainder ${f(rem)}`, from: 6, at: 0.5 },
     ],
     alt: `Synthetic division with ${f(r)} in the box: the top row 1, ${f(b)}, ${f(c)}; bring down 1, multiply by ${f(r)} and add down each column, giving 1, ${f(q)} and ${f(rem)}: x ${q < 0 ? "−" : "+"} ${f(Math.abs(q))}, remainder ${f(rem)}.`,

@@ -63,8 +63,10 @@ export function fractionTimesWholePicture({ n, d, W }: FractionTimesWholeProblem
 
 function explain(p: FractionTimesWholeProblem, model: AnswerModel): Explanation {
   const { n, d, W } = p, S = expectedOf(model.steps, "top"), F = finalForm(S, d), g = gcd(S, d);
+  // a remainder that still simplifies shows its unsimplified step: 18 eighths is 2 2/8 = 2 1/4
+  const rem = S % d, unsimplified = rem && gcd(rem, d) > 1 ? `${Math.floor(S / d)} ${rem}/${d} = ` : "";
   const simple = S >= d
-    ? `${count(S, d)} is ${mixedLabel(S, d)}: every ${countOf(d, "piece")} make one whole.`
+    ? `${count(S, d)} is ${unsimplified}${mixedLabel(S, d)}: every ${countOf(d, "piece")} make one whole.`
     : g > 1 ? `Divide the top and the bottom by ${g}: ${S}/${d} = ${mixedLabel(S, d)}.`
     : `No number but 1 divides both ${S} and ${d}, so ${S}/${d} is already as simple as it gets.`;
   return {

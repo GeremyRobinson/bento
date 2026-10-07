@@ -62,7 +62,7 @@ export function unlikeAnswers(p: UnlikeFractionsProblem): AnswerModel {
   const big = Math.max(b, d), small = Math.min(b, d);
   const lcd: AnswerStep = {
     id: "lcd",
-    label: "Find a common denominator",
+    label: "Common denominator",
     question: `Smallest number that both ${b} and ${d} go into:`,
     note: "This is the least common denominator (LCD).",
     prompt: [slot("x")],

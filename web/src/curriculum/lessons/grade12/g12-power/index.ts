@@ -23,7 +23,9 @@ export function restorePowerRule(raw: unknown): PowerRule | null {
   return r && attempt(() => createPowerRule(r.a, r.n));
 }
 
-const term = (a: number, n: number | MathText): MathText => [num(a), v(), sup(n)];
+/** 8x³; an exponent of 1 isn't written (8x, not 8x¹) */
+const term = (a: number, n: number | MathText): MathText => [num(a), v(), ...(n === 1 ? [] : [sup(n)])];
+const supE = (e: number) => (e === 1 ? "" : supText(e));
 
 export function powerRuleAnswers({ a, n }: PowerRule): AnswerModel {
   const c = a * n, e = n - 1;
@@ -42,7 +44,7 @@ export function powerRuleAnswers({ a, n }: PowerRule): AnswerModel {
       return { ok: false, kind: "Power rule", message: `Coefficient ${f(a)} × ${f(n)}, exponent ${f(n)} − 1.`, generic: false };
     },
     hint: "Your first answer goes in front, and your second is the new exponent.",
-    explain: `f′(x) = ${f(c)}x${supText(e)}.`,
+    explain: `f′(x) = ${f(c)}x${supE(e)}.`,
     work: [text("f′(x)"), op("="), answer("c", c), v(), sup([answer("e", e)])],
   };
   return {
@@ -68,13 +70,13 @@ export function explainPowerRule(p: PowerRule, model: AnswerModel) {
     statement: [text("f(x)"), op("="), ...term(a, n)],
     caption: "Bring the exponent down, then lower it by 1.",
     diagram: powerRulePicture({ a, n, c, e }),
-    alt: `f(x) = ${f(a)}x${supText(n)}: ${f(n)} × ${f(a)} = ${f(c)} and ${f(n)} − 1 = ${f(e)}, so f′(x) = ${f(c)}x${supText(e)}.`,
+    alt: `f(x) = ${f(a)}x${supText(n)}: ${f(n)} × ${f(a)} = ${f(c)} and ${f(n)} − 1 = ${f(e)}, so f′(x) = ${f(c)}x${supE(e)}.`,
     steps: [
       { id: "problem", narration: `f′ tells how steep f is. For a power of x, the exponent ${f(n)} is what comes down.`, math: [num(a), v(), sup([mark(n)])] },
       { id: "coefficient", narration: `Bring the exponent down and multiply: ${f(n)} × ${f(a)} = ${f(c)}.`, math: m(n, op("×"), a, op("="), c),
         line: [mark(n), op("·"), num(a), v(), sup([num(n), op("−"), num(1)])], answerStep: "coefficient", result: c },
       { id: "exponent", narration: `Then lower the exponent by 1: ${f(n)} − 1 = ${f(e)}.`, math: m(n, op("−"), 1, op("="), e), line: term(c, e), answerStep: "exponent", result: e },
-      { id: "write", narration: `So f′(x) = ${f(c)}x${supText(e)}.`, math: [text("f′(x)"), op("="), ...term(c, e)], line: null, answerStep: "write", result: c },
+      { id: "write", narration: `So f′(x) = ${f(c)}x${supE(e)}.`, math: [text("f′(x)"), op("="), ...term(c, e)], line: null, answerStep: "write", result: c },
       { id: "slope", narration: `At x = 1, f′(1) = ${f(c)}: ${c > 0 ? `the graph of f climbs ${f(c)} for each 1 across there` : `the graph of f falls ${f(-c)} for each 1 across there`}.`, math: [text("f′(1)"), op("="), num(c)], line: null },
     ],
   });

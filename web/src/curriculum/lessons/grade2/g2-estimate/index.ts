@@ -7,6 +7,7 @@ import { buildEstimate, type EstimateThing } from "../../../../explanations/diag
 import { oneBox, wholeIn } from "../../_number-line/steps";
 import { tapStep } from "../../gradeK/kit";
 import { count, slips } from "../kit";
+import { aOrAnWord } from "../../../text";
 
 interface Thing { name: EstimateThing; lo: number; hi: number }
 const THINGS: Thing[][] = [
@@ -53,7 +54,7 @@ function answers(p: EstimateProblem): AnswerModel {
         prompt: [text(`The ${u.benchOne} is about 1 ${u.one}.`)], choices: labels, right: order.indexOf(L),
         wrong: i => order[i] === small
           ? ["Guessed too small", `${count(small, u.one, u.many)} is about ${count(small, u.benchOne, u.bench)}. The ${name} is much longer than that.`]
-          : ["Guessed too big", `${count(big, u.one, u.many)} is longer than ${big > u.far ? "a whole ruler" : "that"}.`],
+          : ["Guessed too big", `${count(big, u.one, u.many)} is ${big > u.far ? "longer than a whole ruler" : `much longer than the ${name}`}.`],
         hint: `How many ${u.bench} would fit along the ${name}?`,
         explain: `About ${L} ${u.bench} fit along it, so about ${count(L, u.one, u.many)}.`,
         work: [text(`about ${count(L, u.one, u.many)}`)],
@@ -76,7 +77,7 @@ function answers(p: EstimateProblem): AnswerModel {
 // a centimeter ruler only as long as the picture needs, so its numbers stay readable
 // the ruler runs just past the thing, not always to 12 inches, so the picture stays big enough to read on a phone (v43)
 const spec = (p: EstimateProblem) => ({ unit: UNITS[p.unit]!.abbr, max: p.unit ? Math.max(10, p.start + p.len + 2) : Math.min(UNITS[0]!.max, Math.max(6, p.start + p.len + 2)), start: p.start, len: p.len, thing: THINGS[p.unit]![p.thing]!.name });
-const alt = (p: EstimateProblem) => `A ${THINGS[p.unit]![p.thing]!.name} above ${p.unit ? "a centimeter ruler, with a centimeter cube" : "an inch ruler, with a paper clip"} beside it.`;
+const alt = (p: EstimateProblem) => `${aOrAnWord(THINGS[p.unit]![p.thing]!.name, true)} ${THINGS[p.unit]![p.thing]!.name} above ${p.unit ? "a centimeter ruler, with a centimeter cube" : "an inch ruler, with a paper clip"} beside it.`;
 
 function explain(p: EstimateProblem, model: AnswerModel): Explanation {
   const u = UNITS[p.unit]!;

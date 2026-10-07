@@ -27,12 +27,16 @@ const call = (name: string, arg: MathText): MathText => [text(`${name}(`), ...ar
 const fx = ({ a, b }: Composition): MathText => [text("f(x)"), op("="), ...poly([[a, [v()]], [b, []]])];
 const gx = ({ c, d }: Composition): MathText => [text("g(x)"), op("="), ...poly([[c, [v()]], [d, []]])];
 
+/** "+ (−3)" after a product; nothing for a 0 term (the reference's g(x) = 2x) */
+const plus = (v: number): MathText => (v ? [op("+"), ...P(v)] : []);
+const plusText = (v: number) => (v ? ` + ${fP(v)}` : "");
+
 export function compositionAnswers({ a, b, c, d, k }: Composition): AnswerModel {
   const g = c * k + d;
   return {
     steps: [
-      ns({ id: "inside", l: "Inside first", a: s => [...call("g", [num(k)]), op("="), num(c), op("·"), ...P(k), op("+"), ...P(d), op("="), ...s], ans: g, h: "Work from the inside out: g gets the number first, so find g's answer.", w: [[c * k - d, "Sign slip", `Keep the sign of ${fP(d)}: ${f(c * k)} + ${fP(d)}.`]] }),
-      ns({ id: "outside", l: "Then the outside", a: s => [...call("f", [num(g)]), op("="), num(a), op("·"), ...P(g), op("+"), ...P(b), op("="), ...s], ans: a * g + b, h: `What g gave back, ${f(g)}, is what goes into f.`,
+      ns({ id: "inside", l: "Inside first", a: s => [...call("g", [num(k)]), op("="), num(c), op("·"), ...P(k), ...plus(d), op("="), ...s], ans: g, h: "Work from the inside out: g gets the number first, so find g's answer.", w: [[c * k - d, "Sign slip", `Keep the sign of ${fP(d)}: ${f(c * k)} + ${fP(d)}.`]] }),
+      ns({ id: "outside", l: "Then the outside", a: s => [...call("f", [num(g)]), op("="), num(a), op("·"), ...P(g), ...plus(b), op("="), ...s], ans: a * g + b, h: `What g gave back, ${f(g)}, is what goes into f.`,
         w: [[c * (a * k + b) + d, "Wrong order", "f(g(x)) means g first, then f."]] }),
     ],
     finalParts: [-1],
@@ -51,8 +55,8 @@ export function explainComposition(p: Composition, model: AnswerModel) {
     alt: `g(${f(k)}) = ${f(g)}, then f(${f(g)}) = ${f(out)}.`,
     steps: [
       { id: "problem", narration: `f(g(${f(k)})) means: put ${f(k)} into g, then put that answer into f.`, math: call("f", call("g", [mark(k)])) },
-      { id: "inside", narration: `Inside first: g(${f(k)}) = ${f(c)} · ${fP(k)} + ${fP(d)} = ${f(g)}.`, math: m(...call("g", [num(k)]), op("="), c, op("·"), ...P(k), op("+"), ...P(d), op("="), mark(g)), answerStep: "inside", result: g },
-      { id: "outside", narration: `Then the outside: f(${f(g)}) = ${f(a)} · ${fP(g)} + ${fP(b)} = ${f(out)}.`, math: m(...call("f", [num(g)]), op("="), a, op("·"), ...P(g), op("+"), ...P(b), op("="), out), answerStep: "outside", result: out },
+      { id: "inside", narration: `Inside first: g(${f(k)}) = ${f(c)} · ${fP(k)}${plusText(d)} = ${f(g)}.`, math: m(...call("g", [num(k)]), op("="), c, op("·"), ...P(k), ...plus(d), op("="), mark(g)), answerStep: "inside", result: g },
+      { id: "outside", narration: `Then the outside: f(${f(g)}) = ${f(a)} · ${fP(g)}${plusText(b)} = ${f(out)}.`, math: m(...call("f", [num(g)]), op("="), a, op("·"), ...P(g), ...plus(b), op("="), out), answerStep: "outside", result: out },
     ],
   });
 }

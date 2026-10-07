@@ -22,7 +22,7 @@ function answers({ a, b }: LcmProblem): AnswerModel {
   return {
     steps: [
       oneBox({
-        id: "count", label: "Count by the bigger number", question: `Count by ${b}s: ${b}, ${2 * b}, ${3 * b}, … Which is the first one ${a} goes into?`,
+        id: "count", label: "Count by the bigger one", question: `Count by ${b}s: ${b}, ${2 * b}, ${3 * b}, … Which is the first one ${a} goes into?`,
         prompt: s => [s], ans: L, hint: `Check each number as you count: does ${a} divide it evenly?`,
         wrong: L !== a * b ? [[a * b, "Common multiple, but not the least", `${a * b} works, but there's a smaller one.`]] : [],
       }),

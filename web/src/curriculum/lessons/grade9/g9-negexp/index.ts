@@ -29,7 +29,7 @@ const pow = (a: number, e: number): MathText => [num(a), sup(e)];
 export function negativeExponentAnswers({ a, n }: NegativeExponent): AnswerModel {
   return {
     steps: [
-      ns({ id: "positive", l: "Make the exponent positive", a: s => [...pow(a, n), op("="), ...s], ans: a ** n, h: `The exponent counts how many ${f(a)}'s multiply together.`, w: [[a * n, "Multiplied by the exponent", `Multiply ${count(f(n), "copy", "copies")} of ${f(a)} together, not ${f(a)} × ${f(n)}.`]] }),
+      ns({ id: "positive", l: "Positive exponent", a: s => [...pow(a, n), op("="), ...s], ans: a ** n, h: `The exponent counts how many ${f(a)}'s multiply together.`, w: [[a * n, "Multiplied by the exponent", `Multiply ${count(f(n), "copy", "copies")} of ${f(a)} together, not ${f(a)} × ${f(n)}.`]] }),
       fs({ id: "flip", l: "Flip it", a: s => [...pow(a, -n), op("="), ...s], N: 1, D: a ** n, n: "A negative exponent means 1 over the power.", h: "Each step below 0 in the exponent divides by the base once more, so a negative exponent makes 1 over the power.",
         w: [[-(a ** n), 1, "Thought it was a negative number", "A negative exponent doesn't make the number negative. It flips it: 1 over the power."]] }),
     ],
@@ -52,7 +52,7 @@ export function explainNegativeExponent(p: NegativeExponent, model: AnswerModel)
     diagram: negativeExponentPicture({ a, n, power }),
     alt: `Powers of ${f(a)} counting down from ${f(a)}${supText(n)} = ${f(power)} to ${f(a)}⁰ = 1, then ${f(a)}${supText(-n)} = 1/${f(flip)}.`,
     steps: [
-      { id: "positive", narration: `Start with the positive power: ${f(n)} cop${n === 1 ? "y" : "ies"} of ${f(a)} make ${f(power)}.`, math: m(...pow(a, n), op("="), power), answerStep: "positive", result: power },
+      { id: "positive", narration: `Start with the positive power: ${f(n)} cop${n === 1 ? "y" : "ies"} of ${f(a)} ${n === 1 ? "makes" : "make"} ${f(power)}.`, math: m(...pow(a, n), op("="), power), answerStep: "positive", result: power },
       { id: "down", narration: `Each step down divides by ${f(a)}, all the way to ${f(a)}⁰ = 1.`, math: m(...pow(a, 0), op("="), 1), lines: down },
       { id: "flip", narration: `Keep dividing past 0: ${f(a)}${supText(-n)} is 1 over ${f(a)}${supText(n)}, which is 1/${f(flip)}.`, math: m(...pow(a, -n), op("="), frac(1, flip)), lines: below, answerStep: "flip", result: flip },
     ],

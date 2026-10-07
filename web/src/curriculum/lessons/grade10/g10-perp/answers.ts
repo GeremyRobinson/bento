@@ -14,7 +14,7 @@ export function perpAnswers(q: PerpProblem): AnswerModel {
     steps: [
       fs({ id: "flip", label: "Flip it", prompt: s => [text("flip "), ...sizeOf(q), op("→"), ...s], N: r, D: ap,
         note: "Ignore the sign for now and flip top and bottom.", hint: "A quarter turn swaps the rise and the run, so the top and bottom trade places.",
-        wrong: [[ap, r, "Didn't flip", "Turning a line a quarter turn swaps rise and run: the bottom goes on top."]] }),
+        wrong: ap !== r ? [[ap, r, "Didn't flip", "Turning a line a quarter turn swaps rise and run: the bottom goes on top."]] : [] }),
       fs({ id: "perp", label: "Change the sign", prompt: s => [text("perpendicular slope"), op("="), ...s], N: p > 0 ? -r : r, D: ap,
         hint: "Perpendicular slopes have opposite signs.", note: "Opposite sign, flipped. Put any minus sign on top.",
         wrong: [[p > 0 ? r : -r, ap, "Forgot to change the sign", "Perpendicular means flip **and** change the sign."]] }),
