@@ -148,6 +148,20 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
           const S = tstart.getBoundingClientRect(), T = tday.getBoundingClientRect();
           if (!shown(tstart) || S.top < T.top || S.bottom > T.bottom - tday.clientTop || S.bottom > innerHeight) phone.push("Today's Start is not fully visible");
         }
+        // the plan shows at least one whole row, and no row runs past the plan's sides (Review Book home #2)
+        const tbody = tday.querySelector(".tbody");
+        if (tbody && getComputedStyle(tbody).overflowY === "auto") {
+          const B = tbody.getBoundingClientRect(), rows = [...tbody.querySelectorAll(".pitem")].filter(shown).map(e => e.getBoundingClientRect());
+          if (rows.length && !rows.some(r => r.top >= B.top - 0.5 && r.bottom <= B.bottom + 0.5)) phone.push("Today's plan shows no whole row");
+          const side = rows.find(r => r.left < B.left - 0.5 || r.right > B.right + 0.5);
+          if (side) phone.push(`a plan row runs past Today's sides by ${Math.round(Math.max(B.left - side.left, side.right - B.right))}px`);
+        }
+      }
+      // Today comes after the two number tiles: its top is below both (Review Book home #3: DOM order alone passed)
+      if (tday && shown(tday)) {
+        const T = tday.getBoundingClientRect().top;
+        for (const n of document.querySelectorAll(".sbento :is(.b-stats,.b-streak)"))
+          if (shown(n) && T < n.getBoundingClientRect().top - 0.5) phone.push(`Today sits above the ${n.classList.contains("b-stats") ? "lessons done" : "days in a row"} tile`);
       }
       const chapCut = [...document.querySelectorAll(".bchap b")].filter(shown).filter(b => b.scrollWidth > b.clientWidth + 1).map(b => b.textContent);
       return { flags, tiny, corners, marks, picH, picEmpty, overlaps, startCut, steps, nests, chapCut, phone, scroll: Math.round(low - innerHeight) };

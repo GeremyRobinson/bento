@@ -85,7 +85,7 @@ export function Me() {
             return (
               <li key={n} className={`battery${n === g ? " on" : ""}`} style={tintStyle(gd) as CSSProperties}>
                 <Fill frac={all.length ? d / all.length : 0} />
-                <GradeNum grade={n} /><span><b>{gd.subtitle}</b><small>{d} of {all.length} lessons{avg != null && ` · average ${avg.toFixed(1)} of 4`}{gt && ` · check-up ${gt.last} of 4`}</small></span>
+                <GradeNum grade={n} /><span><b>{gd.subtitle}</b><small>{d} of {all.length} lessons{avg != null && ` · average ${avg.toFixed(1)} of 4`}{gt && ` · check‑up ${gt.last} of 4`}</small></span>
               </li>
             );
           })}</ul>

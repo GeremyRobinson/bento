@@ -254,7 +254,7 @@ describe("unit test and check-up", () => {
     tap("All lessons");
     // the check-up score lives on My Bento's grade row (Design 2026-10-07), not in the book's number tile
     fireEvent.click(screen.getByRole("button", { name: /^My Bento:/ }));
-    expect(document.querySelector(".mygl li.on b + small")).toHaveTextContent("check-up 4 of 4");
+    expect(document.querySelector(".mygl li.on b + small")).toHaveTextContent("check‑up 4 of 4");
   });
 
   it("a wrong answer in a test shows the answer and moves on", () => {
