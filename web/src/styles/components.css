@@ -269,7 +269,7 @@ button.gcell:active{transform:scale(.96)}
 .viz-svg .hl{stroke:var(--acc);stroke-width:var(--d-glow);stroke-linecap:round;opacity:.35}
 .viz-svg .hlline{stroke:var(--acc);stroke-width:var(--d-mark);stroke-linecap:round;opacity:.45;fill:none} .viz-svg .hlline.full{opacity:1}
 .viz-svg .fill{fill:var(--tint);opacity:.16} .viz-svg .fillsoft{fill:color-mix(in srgb,var(--tint) var(--d-f10),transparent)}
-.viz-svg .dotp{fill:var(--soft)} .viz-svg .was{opacity:.45} .viz-svg .dota{fill:var(--soft-acc)} .viz-svg .hole{fill:var(--card);stroke:var(--tint);stroke-width:var(--d-stroke)}
+.viz-svg .dotp{fill:var(--dot,var(--soft))} .viz-svg .was{opacity:.45} .viz-svg .dota{fill:var(--soft-acc)} .viz-svg .hole{fill:var(--card);stroke:var(--tint);stroke-width:var(--d-stroke)}
 .viz-svg .sq{fill:color-mix(in srgb,var(--tint) var(--d-f18),var(--card));stroke:var(--tint);stroke-width:var(--d-line)} .viz-svg .sq.big{fill:color-mix(in srgb,var(--acc) var(--d-f22),var(--card));stroke:var(--acc)}
 .viz-svg .cell{stroke-width:var(--d-line)} .viz-svg .pend{fill:var(--well);stroke:var(--faint);stroke-width:var(--d-line);stroke-dasharray:var(--d-dash)} .viz-svg .cell.c0{fill:color-mix(in srgb,var(--c0) var(--d-f18),var(--card));stroke:var(--c0)} .viz-svg .cell.c1{fill:color-mix(in srgb,var(--c1) var(--d-f18),var(--card));stroke:var(--c1)} .viz-svg .cell.c2{fill:color-mix(in srgb,var(--c2) var(--d-f18),var(--card));stroke:var(--c2)}
 .viz-svg .seg{fill:var(--well);stroke:var(--faint);stroke-width:var(--d-thin)}
