@@ -27,9 +27,14 @@ html:has(.screen) body{overflow:hidden}
 .vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px}
 .slist .shead h1{margin:0;font:var(--w-bold) var(--fz-xl)/24px var(--sans);letter-spacing:-.01em}
 .slist .shead .ysub{margin:0;color:var(--muted);font-size:var(--small);line-height:20px}
-.sknob{position:absolute;left:0;top:0;width:0;height:var(--float-h);border-radius:var(--r-pill);background:var(--float);box-shadow:var(--float-shadow);pointer-events:none;z-index:var(--z-flat);opacity:0;
-  transition:transform var(--dur-360) var(--glide),width var(--dur-360) var(--glide),height var(--dur-360) var(--glide),opacity var(--dur-200)}
-.srow{position:relative;z-index:var(--z-up);display:flex;align-items:center;gap:var(--sp-3);width:100%;min-height:var(--float-h);padding:var(--sp-2) 18px;border-radius:var(--r-pill);text-align:left;font-size:var(--fz-md);transition:background var(--dur-150),color var(--dur-200)}
+/* the picked row wears the white pill itself (Review, selection motion): picking fades it in on that row while the old
+   one fades out; it never travels, so it can't cross a chapter or land on the wrong row while the list reflows. Never
+   on a chapter's head: a folded chapter that holds the pick shows a quiet dot instead */
+.srow::before{content:"";position:absolute;inset:0;z-index:var(--z-under);border-radius:inherit;background:var(--float);box-shadow:var(--float-shadow);opacity:0;pointer-events:none;transition:opacity var(--m-swap) var(--m-ease)}
+.srow.on:not(.chap)::before{opacity:1}
+:root[data-motion="reduce"] .srow::before{transition-duration:var(--m-calm)!important}
+.srow.chap.holds .sname b::after{content:"";display:inline-block;width:6px;height:6px;margin-left:var(--sp-2);border-radius:var(--r-round);background:var(--ink);vertical-align:middle}
+.srow{position:relative;z-index:var(--z-up);display:flex;align-items:center;gap:var(--sp-3);width:100%;min-height:var(--float-h);padding:var(--sp-2) 18px;border-radius:var(--r-pill);text-align:left;font-size:var(--fz-md);transition:background var(--m-swap) var(--m-ease),color var(--m-swap) var(--m-ease)}
 .srow:not([disabled]):not(.on):hover{background:color-mix(in oklab,var(--tint) 7%,transparent)}
 .srow .sname{flex:1;min-width:0;display:grid}
 .srow .sname b{font-weight:var(--w-mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

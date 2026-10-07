@@ -7,7 +7,6 @@ import { createRng } from "../curriculum/generators/rng";
 import { LEVELS, type Level } from "../engine/mastery/levels";
 import { lastScore, type Progress } from "../engine/mastery/progress";
 import { chapterScores, firstDate, hasHistory, hintSummary, mistakePatterns, timeParts, weekStats, workedExample, type Pattern, type StepView } from "../app/grownup";
-import { useListKnob } from "../components/screen/ListGroup";
 import { SplitScreen } from "../components/screen/Screen";
 import { GradeNum } from "../components/Shelf";
 import { Pill } from "../components/primitives/Pill";
@@ -84,7 +83,6 @@ function GrownUp({ g }: { g: number }) {
   // on a phone nothing is picked until a row is tapped; beside the list, the first pattern shows
   const on = phone && !routePick ? null : pat;
   const show = routePick && pat ? "detail" : "list";
-  const { knob } = useListKnob();
   const select = (id: string) => go({ name: "parent", pick: id }, phone ? "fwd" : "still");
   const since = firstDate(progress);
 
@@ -94,7 +92,6 @@ function GrownUp({ g }: { g: number }) {
 
   const list = (
     <>
-      <span className="sknob" ref={knob} aria-hidden />
       <Head g={g} sub={since ? `${plural(progress.log.length, "session")} since ${when(since)}` : gradeOf(g).name} />
       {phone && stats}
       <div className="slbl"><span>Mistake patterns</span>{patterns.length > 0 && <span>wrong / tries</span>}</div>

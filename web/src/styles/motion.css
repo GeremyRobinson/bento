@@ -22,7 +22,7 @@
 
   /* aliases for today's names (remove once nothing reads them) */
   --m-page:var(--m-in); --m-fade:var(--m-in);
-  --glide:var(--m-settle);
+  --glide:var(--m-ease); /* travel never overshoots (Review, selection motion) */
   --ease-toss:var(--m-toss);
   --pill-press:var(--m-press-btn);
 }

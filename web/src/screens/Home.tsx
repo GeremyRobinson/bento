@@ -10,7 +10,7 @@ import { lastScore, timesDone } from "../engine/mastery/progress";
 import { ScoreChip } from "../components/primitives/Score";
 import { Fill, GradeNum } from "../components/Shelf";
 import { SplitScreen } from "../components/screen/Screen";
-import { ListGroup, useListKnob } from "../components/screen/ListGroup";
+import { ListGroup } from "../components/screen/ListGroup";
 import { PlayingDiagram } from "../components/diagrams/PlayingDiagram";
 import { MathLine, Rich } from "../components/primitives/MathLine";
 import { handOff, previewOf, statementBeat } from "../app/preview";
@@ -43,15 +43,12 @@ function GradeHome({ g }: { g: number }) {
   const show = routePick ? "detail" : "list";
   const openUnit = units.find(u => u.entries.some(c => c.id === pick)) ?? units.find(u => u.entries.some(c => c.id === next?.entry.id)) ?? units[0];
   const [shut, setShut] = useState<string | null>(null);
-  // beside the list, picking a row only glides the selection and swaps the detail; on a phone the detail is its own screen
+  // beside the list, picking a row only moves the white pill to it and swaps the detail; on a phone the detail is its own screen
   const select = (p: string) => go({ name: "home", pick: p }, typeof matchMedia !== "undefined" && matchMedia("(max-width: 699px)").matches ? "fwd" : "still");
   let k = 0;
-  // the picked row's highlight glides to the row you tap, like the floating preview
-  const { knob } = useListKnob();
 
   const listPane = (
     <>
-      <span className="sknob" ref={knob} aria-hidden />
       {/* the list opens on the grade's big number, like the UI notes preview */}
       <header className="shead">
         <GradeNum grade={g} />
@@ -65,7 +62,7 @@ function GradeHome({ g }: { g: number }) {
         const lessons = u.entries.map(c => ({ c, n: ++k }));
         return (
           <ListGroup className="schapter" open={isOpen} key={u.name} head={
-            <button className="srow chap" aria-expanded={isOpen}
+            <button className={`srow chap${!isOpen && u.entries.some(c => c.id === pick) ? " holds" : ""}`} aria-expanded={isOpen}
               onClick={() => { if (isOpen) setShut(u.name); else { setShut(null); select((u.entries.find(c => c.id === next?.entry.id) ?? u.entries.find(c => isReady(c.id)) ?? u.entries[0]!).id); } }}>
               <span className="sname"><b>{u.name}</b></span><small className="smeta">{done === u.entries.length ? "Done" : !done && u.entries.includes(next?.entry as never) ? UP_NEXT : `${done} of ${u.entries.length}`}</small>
             </button>}>
