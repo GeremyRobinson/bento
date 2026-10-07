@@ -56,7 +56,7 @@ html:has(.screen) body{overflow:hidden}
 .sgroup.open>.sgroup-body{grid-template-rows:1fr;transition:grid-template-rows var(--m-close) var(--m-ease)}
 .sgroup:not(.open)>.sgroup-body{visibility:hidden}
 .sgroup-in{min-height:0;overflow:hidden}
-.sgroup-panel{display:grid;padding:var(--nest-pad);background:var(--surf-nest);border-radius:calc(var(--row-h) / 2 + var(--nest-pad))}
+.sgroup-panel{display:grid;margin-top:var(--sp-1);padding:var(--nest-pad);background:var(--surf-nest);border-radius:calc(var(--row-h) / 2 + var(--nest-pad))}
 .sgroup.open{padding-bottom:var(--sp-1)}
 .sgroup .srow.sles{min-height:var(--row-h)}
 .sfoot{padding:var(--sp-3) var(--sp-2) calc(var(--sp-1) + var(--sp-3));position:sticky;bottom:calc(var(--panel-w,1px) - var(--sp-3));background:var(--surf-1,var(--well));z-index:var(--z-up)}
