@@ -78,10 +78,44 @@ export function stepsOf(s: PracticeSession): RuntimeStep[] {
 
 export const currentStep = (s: PracticeSession): RuntimeStep | undefined => (s.solved ? undefined : stepsOf(s)[s.step]);
 
-export function makeItem(lesson: AnyLesson, index: number, rng: Rng): RunItem {
-  const it: RunItem = { lessonId: lesson.id, problem: lesson.generate(rng, index) };
+/** how many fresh draws a lesson gets to find a problem the run hasn't had yet */
+const FRESH_TRIES = 24;
+
+/**
+ * One problem from a lesson. With `seen` (the run's problems so far), it is one the run hasn't had: some lessons have
+ * only a handful of different problems at a level (G 2026-10-07: "I did the same problem 4 times in a row"), so the
+ * lesson draws again until it finds a new one. When every problem it can make at this level is used up, it still never
+ * gives the one just before.
+ */
+export function makeItem(lesson: AnyLesson, index: number, rng: Rng, seen: readonly RunItem[] = []): RunItem {
+  const used = new Set(seen.filter(x => x.lessonId === lesson.id).map(x => JSON.stringify(x.problem)));
+  const last = seen.length ? JSON.stringify(seen[seen.length - 1]!.problem) : null;
+  let problem = lesson.generate(rng, index), fallback: unknown = null;
+  for (let k = 0; k < FRESH_TRIES && used.has(JSON.stringify(problem)); k++) {
+    if (fallback == null && JSON.stringify(problem) !== last) fallback = problem;
+    problem = lesson.generate(rng, index);
+  }
+  if (used.has(JSON.stringify(problem)) && fallback != null) problem = fallback;
+  const it: RunItem = { lessonId: lesson.id, problem };
   if (lesson.story && index % 3 === 2) it.story = true;
   return it;
+}
+
+/** n problems, each one the run hasn't had yet where the lesson can make one */
+function freshItems(n: number, make: (k: number, seen: RunItem[]) => RunItem): RunItem[] {
+  const out: RunItem[] = [];
+  for (let k = 0; k < n; k++) out.push(make(k, out));
+  return out;
+}
+
+/** a shuffle that never puts the same problem twice in a row when it can help it */
+function spread(items: RunItem[], rng: Rng): RunItem[] {
+  const out = rng.shuffle(items), same = (a?: RunItem, b?: RunItem) => !!a && !!b && a.lessonId === b.lessonId && JSON.stringify(a.problem) === JSON.stringify(b.problem);
+  for (let i = 1; i < out.length; i++) if (same(out[i], out[i - 1])) {
+    const j = out.findIndex((x, k) => k > i && !same(x, out[i - 1]) && !same(out[i], out[k - 1]) && !same(out[i], out[k + 1]));
+    if (j > 0) [out[i], out[j]] = [out[j]!, out[i]!];
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------- starting
@@ -89,7 +123,7 @@ export function makeItem(lesson: AnyLesson, index: number, rng: Rng): RunItem {
 export function startPractice(lessonId: string, progress: Progress, deps: Deps): PracticeSession {
   const lesson = requireLesson(lessonId);
   const n = lessonLength(lastScore(progress, lessonId));
-  const items = Array.from({ length: n }, (_, i) => makeItem(lesson, i, deps.rng));
+  const items = freshItems(n, (i, seen) => makeItem(lesson, i, deps.rng, seen));
   const startTier = tierFor(lastScore(progress, lessonId));
   return newRun({ mode: "practice", key: lesson.id, title: lesson.title, items, startTier }, progress, deps);
 }
@@ -104,7 +138,7 @@ export function startTest(key: string, progress: Progress, deps: Deps): Practice
   if (!list.length) throw new Error(`no lessons for test ${key}`);
   const n = Math.min(kind === "unit" ? 10 : 12, Math.max(6, list.length * 2));
   const order = deps.rng.shuffle(list);
-  const items = deps.rng.shuffle(Array.from({ length: n }, (_, k) => makeItem(order[k % order.length]!, k, deps.rng)));
+  const items = spread(freshItems(n, (k, seen) => makeItem(order[k % order.length]!, k, deps.rng, seen)), deps.rng);
   const title = kind === "unit" ? `${unit} test` : `${gradeOf(g).name} check-up`;
   return newRun({ mode: "test", key, title, items, startTier: 0, hintsLeft: 0 }, progress, deps);
 }
@@ -174,9 +208,9 @@ export function startReview(progress: Progress, deps: Deps): PracticeSession {
     let r = deps.rng.next() * tot, k = 0;
     while (k < live.length - 1 && r > live[k]!.weight) { r -= live[k]!.weight; k++; }
     live[k]!.n++;
-    items.push(makeItem(live[k]!.lesson, deps.rng.int(1, 8), deps.rng));
+    items.push(makeItem(live[k]!.lesson, deps.rng.int(1, 8), deps.rng, items));
   }
-  return newRun({ mode: "review", key: "review", title: TODAYS_REVIEW, items: deps.rng.shuffle(items), startTier: 0, hintsLeft: 4 }, progress, deps);
+  return newRun({ mode: "review", key: "review", title: TODAYS_REVIEW, items: spread(items, deps.rng), startTier: 0, hintsLeft: 4 }, progress, deps);
 }
 
 function newRun(o: { mode: PracticeSession["mode"]; key: string; title: string; items: RunItem[]; startTier: Tier; hintsLeft?: number },
@@ -406,7 +440,7 @@ function pass(s: PracticeSession, shown: boolean, progress: Progress, deps: Deps
   };
   const lines: string[] = [];
   if (!isTest(next) && (pr.wrong || pr.shown) && next.items.length < MAX_LESSON_LENGTH) {
-    next = { ...next, items: [...next.items, makeItem(lessonOfItem(it), next.items.length, deps.rng)], extra: next.extra + 1 };
+    next = { ...next, items: [...next.items, makeItem(lessonOfItem(it), next.items.length, deps.rng, next.items)], extra: next.extra + 1 };
     lines.push("One more like this is coming up, for practice.");
   }
   void progress;

@@ -1,3 +1,4 @@
+import { LESSONS } from "../../curriculum/registry";
 import { createRng } from "../../curriculum/generators/rng";
 import { formatNumber } from "../../curriculum/schemas/math-text";
 import { emptyProgress, type Progress } from "../../engine/mastery/progress";
@@ -156,5 +157,26 @@ describe("a practice run", () => {
     expect(canResume(JSON.parse(JSON.stringify(s)))).toBe(true);
     expect(canResume({ ...s, items: [{ lessonId: "nope", problem: {} }] })).toBe(false);
     expect(canResume(null)).toBe(false);
+  });
+});
+
+// G 2026-10-07: "I did the same problem 4 times in a row". A lesson never gives the same problem twice in a row, and
+// gives a run problems it hasn't had yet wherever the lesson can make enough different ones.
+describe("no repeated problems", () => {
+  const key = (p: unknown) => JSON.stringify(p);
+  it("no lesson repeats a problem back to back, and each run is as varied as the lesson allows", () => {
+    for (const l of LESSONS) for (let s = 1; s <= 12; s++) {
+      rng = createRng(s * 7919);
+      const run = startPractice(l.id, emptyProgress(), deps());
+      const ps = run.items.map(x => key(x.problem));
+      for (let i = 1; i < ps.length; i++) expect(ps[i], `${l.id} seed ${s} item ${i}`).not.toBe(ps[i - 1]);
+    }
+  });
+  it("the narrowest lessons still give a run all different problems", () => {
+    for (const id of ["k-tens", "k-make10", "g7-circum", "g3-unitfrac", "g10-polygon"]) for (let s = 1; s <= 12; s++) {
+      rng = createRng(s * 104729);
+      const run = startPractice(id, emptyProgress(), deps());
+      expect(new Set(run.items.map(x => key(x.problem))).size, `${id} seed ${s}`).toBe(run.items.length);
+    }
   });
 });
