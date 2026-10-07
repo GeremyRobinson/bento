@@ -600,28 +600,10 @@ html:has(.screen) body{overflow:hidden}
 .pscreen .lshero.phero>.pfb.solved{display:none}
 /* the step bar, at the top of the tile (G 17:38 "steps on top") */
 /* the step bar (master, every size) */
-.stepbar{flex:1;min-height:var(--tap);padding:0 var(--sp-3) 0 6px;gap:10px;justify-content:flex-start}
-.stepbar .badge{flex:none;width:28px;height:28px;border-radius:var(--r-round);background:var(--ink);color:var(--on-tint);display:grid;place-items:center;font-size:var(--fz-xs)}
-.stepbar .sbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:var(--w-bold)}
-.stepbar small{color:var(--muted);font-size:var(--fz-xs)}
-.pscreen .lshero.phero>.pbar{grid-row:1;display:flex;padding:var(--nest) var(--nest) 0}
-.pscreen .phero .stepbar{background:var(--btn-card,var(--well));box-shadow:none}
-.pscreen .phero .stepbar.solved{min-height:var(--tap);padding-block:var(--sp-2);align-items:center}
-.pscreen .phero .stepbar.solved .sbl{white-space:normal;font-weight:var(--w-regular);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.pscreen .phero .stepbar.solved .sbl b{font-weight:var(--w-bold)}
-.pscreen .phero .stepbar.solved small{display:none}
 /* the chevron points down while the steps are shut and up while they're open, turning about its own centre (G 18:16) */
-.pscreen .phero .stepbar .chev{width:20px;height:20px;flex:none;display:grid;place-items:center;transform-origin:50% 50%;transition:transform var(--m-swap) var(--m-ease)}
-.pscreen .phero .stepbar .chev>svg{width:20px;height:20px;display:block}
-.pscreen .phero .stepbar[aria-expanded="true"] .chev{transform:rotate(180deg)}
 /* the steps accordion: opens under the bar and pushes the problem and picture down */
-.pscreen .lshero.phero>.pacc{grid-row:2;display:grid;align-content:start;gap:var(--nest);padding:var(--nest) var(--nest) 0}
 /* long step lists scroll inside the panel, so Next problem and the keys always stay on screen */
-.pscreen .lshero.phero>.pacc{max-height:38dvh;overflow-y:auto;overscroll-behavior:contain}
-.pscreen .pacc .pwhere{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);margin:0;padding:0 var(--sp-2);font-weight:var(--w-mid);color:var(--muted);font-size:var(--fz-sm)}
 /* the steps' ticks and words line up under the bar's own (G 17:44) */
-.pscreen .pacc .pbeats .beat{padding:6px var(--sp-3) 6px 6px;gap:10px}
-.pscreen .pacc .hrow{display:flex;gap:var(--sp-2)}
 /* the picture tile */
 .pscreen .lshero.phero>.lpic{grid-row:5;margin-top:var(--u);padding:var(--sp-3)}
 .pscreen .lshero.phero>.lpic>.viz{inset:var(--sp-3)}
@@ -642,28 +624,52 @@ html:has(.screen) body{overflow:hidden}
    full round, and each shape around it is that round plus the one --nest gap, so every corner is concentric. In the solve
    panel the step bar and the steps are rows --srow tall with a full round; the panel (and the picture beside it) is that
    plus the gap. The keys are pills --key tall; their panel is that plus the gap */
-.pscreen{--srow:var(--tap)}
-.pscreen .phero .stepbar,.pscreen .pacc .pbeats .beat{border-radius:calc(var(--srow) / 2)}
-.pscreen .pacc .pbeats{gap:var(--nest)}
-.pscreen .lshero.phero::before,.pscreen .lshero.phero>.lpic{border-radius:calc(var(--srow) / 2 + var(--nest))}
 .pscreen>.ppad{border-radius:calc(var(--key) / 2 + var(--nest))}
 .pscreen>.ppad .tray{gap:var(--nest)}
 .pscreen>.ppad .tray>*,.pscreen>.ppad .choice{border-radius:calc(var(--key) / 2)}
 /* the steps sit in their own nested panel a rung deeper, like a chapter's lessons in Contents; the step you're on is one
    rung deeper again, the rest lie flat on the panel (G 18:55 "give the sub steps the ladder") */
-.pscreen .pacc .pbeats{padding:var(--nest);background:var(--g2,var(--surf-nest));border-radius:calc(var(--srow) / 2 + var(--nest))}
-.pscreen .pacc .pbeats .beat{background:none}
-.pscreen .pacc .pbeats .beat[data-state="now"]{background:var(--g3,var(--surf-sub));box-shadow:none}
 /* a long list scrolls inside its own panel, so the panel keeps its round corners */
-.pscreen .lshero.phero>.pacc{max-height:none;overflow:hidden}
-.pscreen .pacc .pbeats{max-height:30dvh;overflow-y:auto;overscroll-behavior:contain}
 /* the bar's tick and chevron sit on its first line, top-aligned like the steps' ticks, however many lines the words take;
    the chevron wears a circle one rung up, so it reads as the button it is (G 18:55) */
-.pscreen .phero .stepbar,.pscreen .phero .stepbar.solved{--badge:28px;align-items:flex-start;padding-block:calc((var(--srow) - var(--badge)) / 2)}
-.pscreen .phero .stepbar :is(.sbl,small){line-height:var(--badge)}
-.pscreen .phero .stepbar.solved .sbl{line-height:1.3;padding-top:calc((var(--badge) - 1.3em) / 2)}
-.pscreen .phero .stepbar .chev{width:var(--badge);height:var(--badge);border-radius:var(--r-round);background:var(--btn-card-hover,var(--hover));color:var(--ink)}
-.pscreen .phero .stepbar .chev>svg{width:18px;height:18px}
+/* the steps: an instance of the Contents accordion (ListGroup master: .sgroup, its head .srow.chap, its rows .srow.sles;
+   G 19:39 "use the same accordion from lesson overview ... work on masters"). It says only what differs: a row is --srow
+   tall, the gap is the one --nest, the head is a glass rung even while shut (it is the panel's only button), and a step
+   row holds a badge, its name and its math line. Corners nest from the inside out: row --srow/2, the steps' panel +gap,
+   the open group +gap again, and the solve panel (and the picture tile beside it) the same as the group, since the group
+   sits one gap inside it. */
+.pscreen{--srow:var(--tap)}
+.pscreen .pbar{--list-gap:var(--nest);--row-h:var(--srow)}
+.pscreen .lshero.phero>.pbar{grid-row:1;display:block;padding:calc(var(--nest) * 2) calc(var(--nest) * 2) 0}
+.pscreen .lshero.phero::before,.pscreen .lshero.phero>.lpic{border-radius:calc(var(--srow) / 2 + var(--nest) * 2)}
+.pscreen .pbar>.sgroup{padding:0;margin:0}
+.pscreen .pbar>.sgroup.open{margin:calc(var(--list-gap) * -1) calc(var(--list-gap) * -1) 0;padding:var(--list-gap)}
+.pscreen .pbar .srow{--badge:28px;min-height:var(--srow);border-radius:calc(var(--srow) / 2);align-items:flex-start;gap:10px;padding:calc((var(--srow) - var(--badge)) / 2) var(--sp-2)}
+.pscreen .pbar .srow.chap{background:var(--g1,var(--well))}
+.pscreen .pbar .sgroup.open>.srow.chap{background:var(--g3,var(--surf-sub))}
+.pscreen .pbar .srow .sname b,.pscreen .pbar .srow>small{line-height:var(--badge)}
+.pscreen .pbar .srow.chap .sname b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pscreen .pbar .srow.chap.solved .sname b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-weight:var(--w-regular);line-height:1.3;padding-top:calc((var(--badge) - 1.3em) / 2)}
+.pscreen .pbar .srow.chap .sname strong{font-weight:var(--w-bold)}
+.stepbar .badge{flex:none;background:var(--ink);color:var(--on-tint);font-size:var(--fz-xs)}
+.pscreen .pbar .chev{flex:none;width:var(--badge);height:var(--badge);display:grid;place-items:center;border-radius:var(--r-round);background:var(--btn-card-hover,var(--hover));color:var(--ink);transform-origin:50% 50%;transition:transform var(--m-swap) var(--m-ease)}
+.pscreen .pbar .chev>svg{width:18px;height:18px;display:block}
+.pscreen .pbar .srow.chap[aria-expanded="true"] .chev{transform:rotate(180deg)}
+/* a step row: its badge, then its name over its math; rows aren't buttons, so they never lift on hover */
+.pscreen .pbar .pstep{pointer-events:none;padding-right:var(--sp-3);color:var(--muted)}
+.pscreen .pbar .pstep.on{color:var(--text)}
+.pscreen .pbar .pstep .sname{gap:2px}
+.pscreen .pbar .pstep .sname b{white-space:normal;font-weight:var(--w-mid)}
+.pscreen .pbar .pstep.on .sname b{font-weight:var(--w-bold)}
+.pscreen .pbar .pstep .badge{background:var(--g1,var(--well));color:var(--ink);font-size:var(--fz-xs)}
+.pscreen .pbar .pstep[data-state="done"] .badge{background:var(--tint);color:var(--on-tint)}
+.pscreen .pbar .pstep.on .badge{background:var(--ink);color:var(--on-tint)}
+.pscreen .pbar .pstep .pline{font:var(--w-mid) var(--fz-lg)/1.3 var(--num);color:var(--ink);font-variant-numeric:tabular-nums}
+.pscreen .pbar .pstep .pline .mline{justify-content:flex-start;max-width:100%}
+.pscreen .pbar .pwhere{display:none;align-items:center;justify-content:space-between;gap:var(--sp-3);margin:0;padding:var(--sp-1) var(--sp-2);font-weight:var(--w-mid);color:var(--muted);font-size:var(--fz-sm)}
+.pscreen .pbar .hrow{display:flex;gap:var(--sp-2)}
+/* a long list scrolls inside the steps' panel, so the keys stay on screen and the panel keeps its round corners */
+.pscreen .pbar .sgroup-panel{max-height:26dvh;overflow-y:auto;overscroll-behavior:contain}
 /* solved: Next problem stands on its own, no panel round it */
 .pscreen.psolved>.ppad{padding:0;background:none;outline:none}
 :root .pscreen.psolved>.ppad .tray>.k-go{border-radius:var(--r-pill)}
@@ -674,10 +680,16 @@ html:has(.screen) body{overflow:hidden}
 /* the steps live in the solve panel now, so the left column keeps only the problem */
 .pscreen>.pintro>.pbeats{display:none}
 /* where you are in the set shows in the left column; the panel only repeats it on a phone, where that column is tucked away */
-.pscreen .pacc .pwhere{display:none}
 @media (max-width:520px){
   .screen.fit.lscreen.pscreen{grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"hero" "pad"}
   .screen.fit.lscreen.pscreen.pwordy{grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"intro" "hero" "pad"}
   .screen.fit.lscreen.pscreen{--slot:64px;--ask:40px;--pic-min:104px}
-  .pscreen .pacc .pwhere{display:flex}
+}
+/* where you are in the set shows in the steps only on a phone, where the left column is tucked away */
+@media (max-width:520px){.pscreen .pbar .pwhere{display:flex}}
+/* on a phone the open steps take the picture's room: its tile gives way and fades, and comes back as they fold */
+@media (max-width:520px){
+  .pscreen.stepsopen{--pic-min:0px}
+  .pscreen .lshero.phero>.lpic{transition:opacity var(--m-close) var(--m-ease)}
+  .pscreen.stepsopen .lshero.phero>.lpic{opacity:0;overflow:hidden}
 }
