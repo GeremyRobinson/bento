@@ -810,3 +810,17 @@ html:has(.screen) body{overflow:hidden}
 .pscreen.ptest .pbar .pstep[data-state="done"] .badge{background:var(--ok);color:var(--on-tint)}
 .pscreen.ptest .pbar .pstep[data-state="missed"] .badge{background:var(--err);color:var(--on-tint)}
 .pscreen .pbar .pstep .badge svg{width:16px;height:16px}
+/* phones and upright iPads read a test the same way as a wide screen (G 2026-10-08): where you are (Problem 2 of 6) first,
+   then the problem, then its steps, then the step's question. The step bar's box steps aside so its two parts take rows */
+@media not ((min-width:900px) and (orientation:landscape)){
+  .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero{grid-template-rows:auto auto auto auto auto auto minmax(0,1fr)}
+  .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pbar{display:contents}
+  .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pbar>*{grid-column:1;z-index:var(--z-up)}
+  .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pbar>.pwhere{grid-row:1;width:auto;margin:calc(var(--nest) * 2) calc(var(--nest) * 2) 0}
+  .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pprob{grid-row:2;padding:var(--sp-4) var(--sp-6)}
+  .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pbar>.sgroup{grid-row:3;margin:0 calc(var(--nest) * 2)}
+  .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pbar>.sgroup.open{margin:0 var(--nest);padding:var(--nest)}
+  .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pmath{grid-row:4}
+  .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pfb,.screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pfb:is(.fb-bad,.fb-hint){grid-row:5}
+  .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.phint{grid-row:6}
+}
