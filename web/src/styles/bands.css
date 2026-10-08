@@ -208,3 +208,33 @@ html[data-line="early"][data-theme="dark"][data-hue]{--page:oklch(from var(--pag
 /* high contrast wants a plain page */
 html[data-contrast="true"] body{background-image:none}
 
+
+/* Square corners, for now (G 2026-10-08 09:51 "lets get rid of the radius for a moment"). Every corner in the app goes
+   square here; true circles (the --r-round ones) stay round. Deleting this block brings all the rounding back. */
+.wrap,.wrap *,.wrap *::before,.wrap *::after{border-radius:0!important}
+.dot,
+.gbadge b,
+.chip i,
+.tf i.on::after,
+.speak,
+.switch i,
+.pmark,
+.pdots i,
+.gu .ibat,
+.gu .gu-stat .ic,
+.gu .gu-s .n,
+.gu .mk,
+.lmark,
+.island .iback,
+.island .ibat,
+.icon,
+.iresume .rdot,
+.fpill .sw::after,
+.halo,
+.zpages .pn,
+.cover .gpick,
+.srow.chap.holds .sname b::after,
+.gbtn,
+.gring,
+.pscreen :is(.stepbar,.beat) .badge,
+.pscreen .pbar .chev{border-radius:50%!important}
