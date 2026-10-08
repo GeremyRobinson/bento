@@ -35,6 +35,8 @@ export const MASTERS: Master[] = [
   // "Problem x of n" with its dots: the button that zooms out to every problem
   { name: "Problem button", classes: ["pzoom", "pwhere", "pdots", "sname", "ok"] },
   // a lesson in a list: its mark, its name, its minutes
+  // the grade's Contents: big pills grouped like the practice panel's Problem section (G 2026-10-08, Ring balance lab)
+  { name: "Big pill list", classes: ["schapters", "big", "stag", "scheck", "contents", "screen", "slist", "shead", "srow", "chap", "sgroup", "sgroup-body", "sgroup-in", "sgroup-panel"] },
   { name: "Lesson item", classes: ["pitem", "pmark"] },
   // the nav's round buttons: back, settings, me, hint
   { name: "Nav circle", classes: ["icon", "ihint", "spent"] },

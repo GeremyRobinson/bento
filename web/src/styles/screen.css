@@ -108,6 +108,30 @@ html:has(.screen) body{overflow:hidden}
 .bhome .today{background:var(--pane-glass,var(--card))} .bhome .today .ctl:not(.go){background:var(--btn-panel,var(--card))} .bhome .today .pitem:hover,.bhome .today .pitem:active{background:var(--btn-panel,var(--tint-soft))}
 /* the current lesson keeps its dot lit (G 2026-10-07) */
 .srow.sles.on .sdot{background:var(--tint)}
+/* Big pill list (master, G 2026-10-08 Ring balance lab, "all chapters in one group"): the grade's Contents grouped like
+   the practice panel's Problem section. Four rungs at most, one gap (--list-gap, 10px) everywhere, every corner the corner
+   inside it plus a gap: lessons are pills (26); Today, each chapter's title, each chapter's lessons rung and Grade
+   check-up are big pills (pill + 2 gaps tall, 36); every chapter sits in one group (46); the panel is 46 too, because only
+   Today and Grade check-up meet its corners. A big pill's status sits in it as a pill (.stag), one gap in, like the dots
+   in the Problem pill. */
+.screen.contents .slist{--pad-panel:var(--list-gap);--big:calc(var(--row-h) + var(--list-gap) * 2);display:flex;flex-direction:column;gap:var(--list-gap);border-radius:var(--r-panel)!important}
+.wrap .screen.contents .slist.slist{padding:calc(var(--list-gap) - var(--panel-w))}
+.screen.contents .slist>*{flex:none}
+.screen.contents .slist .shead,.screen.contents .slist .shead:has(.scheck){display:flex;align-items:center;justify-content:space-between;gap:var(--list-gap);padding:0 0 0 calc(var(--row-h) / 2)}
+.screen.contents .shead .srow.big{width:auto;flex:0 1 auto}
+.srow.big{min-height:var(--big,calc(var(--row-h) + var(--list-gap) * 2));border-radius:calc(var(--row-h) / 2 + var(--list-gap));padding:var(--list-gap) var(--list-gap) var(--list-gap) calc(var(--row-h) / 2);gap:var(--list-gap);background:var(--g2)}
+.srow.big .stag{flex:none;display:inline-flex;align-items:center;height:var(--row-h);padding-inline:calc(var(--row-h) / 2 - var(--sp-1));border-radius:var(--r-row);background:var(--g3);color:var(--muted);font-size:var(--fz-xs);font-weight:var(--w-mid);white-space:nowrap;font-variant-numeric:tabular-nums}
+.srow.big.on .stag{background:var(--g4);color:var(--ink)}
+.srow.big.scheck{justify-content:center;text-align:center;padding-inline:var(--list-gap)}
+.srow.big.scheck .sname{flex:none}
+.schapters{display:flex;flex-direction:column;gap:var(--list-gap);padding:var(--list-gap);background:var(--g2);border-radius:var(--r-panel)}
+.schapters>.sgroup,.schapters>.sgroup.open{margin:0;padding:0;background:none;border-radius:calc(var(--row-h) / 2 + var(--list-gap))}
+.schapters>.sgroup.open>.sgroup-body{margin-inline:0}
+.schapters .srow.big.chap,.schapters .sgroup.open>.srow.big.chap,.schapters .sgroup.open>.srow.big.chap:hover{background:var(--g3)}
+.schapters .srow.big.chap .stag{background:var(--g4)}
+.schapters .sgroup-in{border-radius:calc(var(--row-h) / 2 + var(--list-gap))}
+.schapters .sgroup-panel{background:var(--g3)}
+@media (hover:hover){.screen.contents .srow.big:not(.chap):not(.on):hover{background:var(--g3)} .screen.contents .srow.big:not(.chap):hover .stag{background:var(--g4)} .screen.contents .schapters .srow.big.chap:hover{background:var(--g4)} .schapters .srow.big.chap:hover .stag{background:var(--g3)}}
 .sfoot{padding:var(--sp-3) var(--sp-2) calc(var(--sp-1) + var(--sp-3));position:sticky;bottom:calc(var(--panel-w,1px) - var(--sp-3));background:var(--surf-1,var(--well));z-index:var(--z-up)}
 /* the grade's book: the detail (a well with the preview, a floating card with the lesson) */
 .sdetail>.sday{align-content:start}

@@ -53,24 +53,24 @@ function GradeHome({ g }: { g: number }) {
 
   const listPane = (
     <>
-      {/* the list opens on the grade's big number, like the UI notes preview */}
+      {/* the list opens on the grade's big number with Today beside it; every chapter sits in one group under them, and the
+          grade's check-up closes the list (G 2026-10-08, Ring balance lab "all chapters in one group") */}
       <header className="shead">
         <GradeNum grade={g} />
         <h1 className="vh">{grade.name}</h1>
-        {/* the grade's check-up sits beside its number, top right (G 2026-10-07) */}
-        {testReady(g) && <Pill small className="scheck" onClick={() => startTest(testKey(g))}>{GRADE_CHECKUP}</Pill>}
+        <button className={`srow big${pick === "today" ? " on" : ""}`} aria-current={pick === "today" ? "true" : undefined} onClick={() => select("today")}>
+          <span className="sname"><b>Today</b></span><small className="stag">{todayMeta(progress, g)}</small>
+        </button>
       </header>
-      <button className={`srow${pick === "today" ? " on" : ""}`} aria-current={pick === "today" ? "true" : undefined} onClick={() => select("today")}>
-        <span className="sname"><b>Today</b></span><small className="smeta">{todayMeta(progress, g)}</small>
-      </button>
+      <div className="schapters">
       {units.map(u => {
         const isOpen = (opened ? u.name === opened : u === openUnit) && shut !== u.name, done = doneCount(progress, u.entries);
         const lessons = u.entries.map(c => ({ c, n: ++k }));
         return (
           <ListGroup className="schapter" open={isOpen} key={u.name} head={
-            <button className={`srow chap${!isOpen && u.entries.some(c => c.id === pick) ? " holds" : ""}`} aria-expanded={isOpen}
+            <button className={`srow big chap${!isOpen && u.entries.some(c => c.id === pick) ? " holds" : ""}`} aria-expanded={isOpen}
               onClick={() => { if (isOpen) setShut(u.name); else { setShut(null); setOpened(null); if (phone()) { setOpened(u.name); return; } select((u.entries.find(c => c.id === next?.entry.id) ?? u.entries.find(c => isReady(c.id)) ?? u.entries[0]!).id); } }}>
-              <span className="sname"><b>{u.name}</b></span><small className="smeta">{done === u.entries.length ? "Done" : !done && u.entries.includes(next?.entry as never) ? UP_NEXT : `${done} of ${u.entries.length}`}</small>
+              <span className="sname"><b>{u.name}</b></span><small className="stag">{done === u.entries.length ? "Done" : !done && u.entries.includes(next?.entry as never) ? UP_NEXT : `${done} of ${u.entries.length}`}</small>
             </button>}>
             {lessons.map(({ c }) => {
               const sc = lastScore(progress, c.id), live = isReady(c.id);
@@ -79,19 +79,21 @@ function GradeHome({ g }: { g: number }) {
                   onClick={() => select(c.id)} aria-label={live ? `${c.title}${c === next?.entry ? ", up next" : ""}` : `${c.title}, coming soon`}>
                   <span className={`sdot${timesDone(progress, c.id) > 0 ? " done" : ""}`} aria-hidden />
                   <span className="sname"><b>{c.title}</b></span>
-                  {sc != null ? <ScoreChip n={sc} /> : c === next?.entry ? <small className="snext">{UP_NEXT}</small> : live ? <small className="smeta">{minLabel(LESSON_MINUTES)}</small> : <small>soon</small>}
+                  {sc != null ? <ScoreChip n={sc} /> : c === next?.entry ? null : live ? <small className="smeta">{minLabel(LESSON_MINUTES)}</small> : <small>soon</small>}
                 </button>
               );
             })}
           </ListGroup>
         );
       })}
+      </div>
+      {testReady(g) && <button className="srow big scheck" onClick={() => startTest(testKey(g))}><span className="sname"><b>{GRADE_CHECKUP}</b></span></button>}
     </>
   );
 
   const entry = pick === "today" ? null : entryById(pick)!;
   return (
-    <SplitScreen label={`${grade.name} chapters`} show={show} list={listPane}
+    <SplitScreen className="contents" label={`${grade.name} chapters`} show={show} list={listPane}
       detail={entry ? <LessonDetail key={entry.id} g={g} entry={entry} /> : <TodayDetail g={g} />} />
   );
 }
