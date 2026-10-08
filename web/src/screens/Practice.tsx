@@ -226,7 +226,7 @@ export function Practice() {
         <div className="pprob"><ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} solved={s.solved} part="text" /></div>
         <div className="pbar">
           {/* where you are in the set, always in view: tapping it zooms out to every problem (G 2026-10-08) */}
-          <button className="pwhere pzoom" onClick={() => setZoomOut(true)} aria-haspopup="dialog" aria-label={`Problem ${s.i + 1} of ${n}. See every problem`}>Problem {s.i + 1} of {n}{dots}</button>
+          <button className="pwhere pzoom" onClick={() => setZoomOut(true)} aria-haspopup="dialog" aria-label={`Problem ${s.i + 1} of ${n}. See every problem`}><span className="sname">Problem {s.i + 1} of {n}</span>{dots}<span className="chev" aria-hidden><Chevron dir="right" /></span></button>
           <ListGroup open={stepsOpen} head={
             <button key={fb?.type === "good" && !s.solved ? fbKey : "bar"} className={`srow chap stepbar${won ? " solved" : missed ? " missed" : ""}${fb?.type === "good" && !s.solved && !fbAway ? " flash" : ""}`} onClick={toggleSteps} aria-expanded={stepsOpen} aria-label={`Steps: ${now?.label ?? "done"}, ${Math.min(here + 1, steps.length)} of ${steps.length}`}>
               <span className="badge">{won ? <Check /> : s.solved ? steps.length : here + 1}{fb?.type === "good" && !s.solved && !fbAway && <span className="tick"><Check /></span>}</span>
