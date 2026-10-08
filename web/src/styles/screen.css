@@ -75,7 +75,7 @@ html:has(.screen) body{overflow:hidden}
 .wrap .screen .slist.slist{padding:calc(var(--list-gap) * 2 - var(--panel-w))}
 .wrap .screen.gu .slist.slist{padding-bottom:calc(var(--sp-6) - var(--panel-w))}
 .slist>:is(.srow,.sgroup)+.sgroup,.slist>.sgroup+.srow{margin-top:var(--list-gap)}
-.sgroup{border-radius:calc(var(--row-h) / 2 + var(--list-gap));transition:background-color var(--m-close) var(--m-ease),padding var(--m-close) var(--m-ease),margin var(--m-close) var(--m-ease)}
+.sgroup{border-radius:calc(var(--row-h) / 2 + var(--list-gap) * 2);transition:background-color var(--m-close) var(--m-ease),padding var(--m-close) var(--m-ease),margin var(--m-close) var(--m-ease)}
 .sgroup.open{background:var(--surf-nest);margin-inline:calc(var(--list-gap) * -1);padding:var(--list-gap)}
 .sgroup-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--m-close) var(--m-ease),visibility 0s var(--m-close)}
 .sgroup.open>.sgroup-body{grid-template-rows:1fr;transition:grid-template-rows var(--m-close) var(--m-ease)}
@@ -107,11 +107,15 @@ html:has(.screen) body{overflow:hidden}
 .sdetail>.sday{align-content:start}
 .sdl{flex:1;min-height:0;display:flex;flex-direction:column;gap:var(--screen-gap)}
 /* panels with buttons are the lighter level; panels you look at (pictures, examples) a level darker (G 2026-10-07) */
-.sdtext{flex:none;background:var(--pane-glass,var(--card));box-shadow:var(--float-shadow);padding:26px 30px;gap:10px;border-radius:var(--r-panel)}
+.sdtext{flex:none;background:var(--pane-glass,var(--card));box-shadow:var(--float-shadow);padding:var(--pad-panel);gap:var(--nest);border-radius:var(--r-panel)}
+/* the pills sit one pad in from the panel's edge, the same as everywhere (G 2026-10-08); the words line up with the
+   pills' own words, so they stand in by the pill's padding */
+.sdtext>:not(.sfootrow){padding-inline:var(--pill-pad)}
+.sdtext>.k{padding-top:var(--sp-2)}
 .sdtext .k{margin:0;color:var(--muted);font-size:var(--fz-sm);font-weight:var(--w-mid)}
 .sdtext h2{margin:0;font:var(--w-bold) 32px/38px var(--sans);letter-spacing:-.03em}
 .sdidea{margin:0;color:var(--muted);max-width:60ch;font-size:var(--fz-lg);line-height:1.45}
-.sfootrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px}
+.sfootrow{display:flex;align-items:center;gap:var(--nest);flex-wrap:wrap;margin-top:var(--nest)}
 .sfootrow .grow{flex:1}
 .sfootrow .slast{display:inline-flex;align-items:center;gap:var(--sp-2);color:var(--muted);font-size:var(--fz-sm);font-weight:var(--w-mid)}
 .sfootrow .ctl{--pill-h:var(--float-h);font-size:var(--fz-lg)}
@@ -133,7 +137,7 @@ html:has(.screen) body{overflow:hidden}
 .sdl>.bhome{flex:none}
 /* picking a row swaps the detail with a short fade; nothing else on the screen moves */
 
-@media (max-width:699px){.sdtext{padding:var(--sp-5) 22px}.sdtext h2{font-size:26px;line-height:32px}.sfootrow .grow{display:none}}
+@media (max-width:699px){.sdtext h2{font-size:26px;line-height:32px}.sfootrow .grow{display:none}}
 
 /* "Which grade are you in?" (floating preview: floating circles, a ring that glides to your pick) */
 .gq{grid-template-rows:auto auto minmax(0,1fr);gap:var(--sp-5)}
@@ -579,6 +583,8 @@ html:has(.screen) body{overflow:hidden}
 @keyframes sbTick{0%,70%{opacity:1}100%{opacity:0}}
 .stepbar.flash{animation:sbFlash var(--dur-1600) var(--ease) both}
 .stepbar .badge{position:relative}
+/* text at a round end sits one pill pad in, like the Pill master's label (G 2026-10-08) */
+.pscreen .pbar .stepbar.still>small{padding-right:calc(var(--pill-pad) - (var(--srow) - var(--badge)) / 2)}
 .stepbar .badge>.tick{position:absolute;inset:0;display:grid;place-items:center;border-radius:inherit;background:var(--ok);color:var(--on-tint);animation:sbTick var(--dur-1600) var(--ease) both}
 /* ticks are the one Check icon everywhere, never a ✓ glyph (G 18:16) */
 :is(.stepbar,.beat) .badge>svg,.stepbar .badge>.tick>svg{width:16px;height:16px;display:block}
@@ -759,7 +765,7 @@ html:has(.screen) body{overflow:hidden}
 }
 /* "Problem 2 of 6" is a button: it zooms out to every problem, to pick which comes next (G 2026-10-08); it shows at every size */
 /* a Row like the step bar under it: its words start where the step bar's badge does; its progress dots are what you tap (G 2026-10-08) */
-.pscreen .pbar .pwhere{display:flex;min-height:var(--srow);gap:var(--sp-3);margin:0 0 var(--list-gap);padding:calc((var(--srow) - var(--badge,var(--sp-7))) / 2) calc(var(--list-gap) + var(--sp-2));border-radius:var(--r-pill);color:var(--text);font-weight:var(--w-mid);font-size:var(--fz-md)}
+.pscreen .pbar .pwhere{display:flex;min-height:var(--srow);gap:var(--sp-3);margin:0 0 var(--list-gap);padding:calc((var(--srow) - var(--badge,var(--sp-7))) / 2) calc((var(--srow) - var(--badge,var(--sp-7))) / 2) calc((var(--srow) - var(--badge,var(--sp-7))) / 2) var(--pill-pad);border-radius:var(--r-pill);color:var(--text);font-weight:var(--w-mid);font-size:var(--fz-md)}
 .pscreen .pbar .pwhere .sname{flex:1 0 auto;white-space:nowrap}
 /* and it's a button (G 2026-10-08): the Pill master's plain fill for a button on a panel, a rung up on hover */
 .pwhere{background:var(--btn-panel,var(--card))}

@@ -269,7 +269,8 @@ button.book:hover,button.book:active{transform:translateY(-2px);box-shadow:none}
    radius minus that gap. So the Start pill (radius 20) sits 8px inside its row (radius 28), which sits 8px inside the
    Today card (radius 36). */
 .wrap{--nest:8px}
-.pitem{border-radius:var(--r-row);padding:var(--nest) 14px var(--nest) 14px;margin:0 calc(var(--sp-3) - var(--u) * 1.75);width:calc(100% + (var(--u) * 1.75 - var(--sp-3)) * 2)}
+/* the circle sits as far from the round end as from the top and bottom (G 2026-10-08) */
+.pitem{border-radius:var(--r-row);min-height:calc(var(--pill-size) + var(--nest) * 2);padding:var(--nest) calc((var(--pill-size) - var(--sp-7)) / 2 + var(--nest));margin:0 calc(var(--sp-3) - var(--u) * 1.75);width:calc(100% + (var(--u) * 1.75 - var(--sp-3)) * 2)}
 .pitem .ctl.go{--pill-h:40px}
 .bhome .today{border-radius:var(--r-panel)}
 .bhome .today:has(.plan:last-child){padding-bottom:var(--nest)}
@@ -442,7 +443,9 @@ html:not(:has(.screen)) .wrap{padding-top:calc(var(--nav-top) + var(--float-h) +
 .zplist>header{display:grid;justify-items:center;text-align:center;gap:6px}
 .zpgrid{display:grid;gap:var(--s);grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr))}
 /* the corner comes from the .zcard master (the card corner, G 2026-10-08 "too round"); instances never set their own */
-.zprob{gap:var(--sp-3);min-height:120px;background:var(--g1,var(--well));padding:var(--sp-5)}
+/* the badge sits in the corner like a pill row's badge, so the corner rounds around it (G 2026-10-08) */
+.zprob{gap:var(--sp-3);min-height:120px;background:var(--g1,var(--well));padding:calc((var(--pill-size) - var(--badge)) / 2);border-radius:var(--r-row)}
+.zpline{padding:0 var(--sp-2) var(--sp-2)}
 .zphead{display:flex;align-items:center;gap:var(--sp-2)}
 .zprob .badge{background:var(--btn-panel,var(--card));color:var(--ink)}
 .zprob.now .badge{background:var(--ink);color:var(--on-tint)}
@@ -452,7 +455,7 @@ html:not(:has(.screen)) .wrap{padding-top:calc(var(--nav-top) + var(--float-h) +
 .zprob:disabled:not(.done){opacity:.5}
 @media (max-width:560px){
   .zpgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .zprob{min-height:0;padding:var(--sp-4)}
+  .zprob{min-height:0}
   .zprobs .zbar-top>span:first-child{display:none}
   .zprobs .zcount{grid-column:1;justify-self:start}
   .zprobs .zclose{grid-column:2}
