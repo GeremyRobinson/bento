@@ -129,6 +129,8 @@ html:has(.screen) body{overflow:hidden}
 .srow.big.scheck .sname{flex:none}
 /* every layer is the same glass (G 2026-10-08): a picked or hovered row is one more layer of it */
 .screen.contents .srow::before{background:var(--glass)}
+/* an active pill (the picked row, the current lesson or step) is two layers deep (G 22:56); hover stays one */
+:is(.screen.contents,.pscreen .pbar) .srow.on::before{background:var(--glass-x2)}
 /* the chapters group: chapters sit one gap in. A corner is the corner inside it plus a gap, so when an open chapter's rung
    sits in the group's corner, that corner grows a gap */
 .schapters{display:flex;flex-direction:column;gap:var(--list-gap);padding:var(--list-gap);background:var(--glass);border-radius:var(--r-panel);transition:border-radius var(--m-close) var(--m-ease)}
@@ -345,7 +347,7 @@ html:has(.screen) body{overflow:hidden}
 .pprob .note{text-align:left}
 .pbeats{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .pbeats .beat{display:flex;align-items:flex-start;gap:var(--sp-3);color:var(--muted)}
-.pbeats .beat[data-state="now"]{background:var(--float);box-shadow:var(--float-shadow);color:var(--text)}
+.pbeats .beat[data-state="now"]{background:var(--pill-on,var(--float));box-shadow:var(--float-shadow);color:var(--text)}
 .pbeats .badge{flex:none;font-size:var(--fz-xs);background:var(--well);color:var(--ink)}
 .pbeats .beat[data-state="done"] .badge{background:var(--tint);color:var(--on-tint)}
 .pbeats .beat[data-state="now"] .badge{background:var(--ink);color:var(--on-tint)}
@@ -365,10 +367,10 @@ html:has(.screen) body{overflow:hidden}
 /* the lesson intro's steps are the Contents list's lesson panel (ListGroup master, G 21:34 "needs the ladder"): one
    step deeper than the intro, 8px round and between its rows, rows the tap height with pill ends, the step being shown
    one more step deeper. The panel stands 8px out from the intro's text, so it sits 16px in and its corners nest */
-.lintro .beats{--row-h:var(--pill-size);margin:0 calc(var(--nest) * -1);padding:var(--nest);gap:var(--nest);background:var(--g1,var(--well));border-radius:calc(var(--row-h) / 2 + var(--nest))}
+.lintro .beats{--row-h:var(--pill-size);margin:0 calc(var(--nest) * -1);padding:var(--nest);gap:var(--nest);background:var(--nest-bg,var(--g1,var(--well)));border-radius:calc(var(--row-h) / 2 + var(--nest))}
 .lintro .beat>button{--beat-in:calc((var(--row-h) - var(--badge)) / 2)}
 .lintro .beat,.lintro .beat>button{border-radius:calc(var(--row-h) / 2)}
-.lintro .beat[data-state="now"]{background:var(--g2,var(--hover))}
+.lintro .beat[data-state="now"]{background:var(--pill-on,var(--g2,var(--hover)))}
 .lintro .beat .badge{background:var(--g2,var(--well))}
 .lintro .beat[data-state="now"] .badge{background:var(--ink)}
 @media (hover:hover){.lintro .beat>button:not([disabled]):hover{background:var(--g2,var(--hover))}}
