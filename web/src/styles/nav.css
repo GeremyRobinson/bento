@@ -443,8 +443,8 @@ html:not(:has(.screen)) .wrap{padding-top:calc(var(--nav-top) + var(--float-h) +
 /* the corner comes from the .zcard master (the card corner, G 2026-10-08 "too round"); instances never set their own */
 .zprob{gap:var(--sp-3);min-height:120px;background:var(--g1,var(--well));padding:var(--sp-5)}
 .zphead{display:flex;align-items:center;gap:var(--sp-2)}
-.zprob .badge{background:var(--btn-panel,var(--card));color:var(--ink)}
-.zprob.now .badge{background:var(--ink);color:var(--on-tint)}
+.zprob .badge:not(.mark-ok,.mark-err){background:var(--btn-panel,var(--card));color:var(--ink)}
+.zprob.now .badge:not(.mark-ok,.mark-err){background:var(--ink);color:var(--on-tint)}
 .zpline{min-width:0;overflow-wrap:anywhere;font-size:var(--fz-md)}
 .zprob:disabled{cursor:default}
 .zprob:disabled:hover{transform:none}
@@ -457,8 +457,5 @@ html:not(:has(.screen)) .wrap{padding-top:calc(var(--nav-top) + var(--float-h) +
   .zprobs .zclose{grid-column:2}
 }
 /* a problem done in a test wears the steps' marks: green with a tick when right, red with a cross when missed (G 2026-10-08) */
-.zprob.done .badge{background:var(--ok);color:var(--on-tint)}
-.zprob.done.missed .badge{background:var(--err)}
-.zprob .badge svg{width:16px;height:16px}
 /* the card's answer sits in the line at the line's own size, not raised and larger */
 .zpline .ans{font:inherit;font-weight:var(--w-bold);vertical-align:baseline;padding:0;margin:0;min-height:0;min-width:0;height:auto;display:inline;background:none;box-shadow:none;outline:none}

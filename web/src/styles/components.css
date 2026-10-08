@@ -28,6 +28,10 @@
 .card .badge,.ctl .badge{background:var(--tint-soft);color:var(--ink)}
 /* a mark (tick or cross) sits in a true circle, never a pill (G 2026-10-08 "these should be circles") */
 .badge:has(>svg){padding:0;width:var(--badge);min-width:0}
+/* right and wrong: one mark everywhere (steps, problem cards, the feedback line), green with a tick, red with a cross */
+.badge.mark-ok{background:var(--ok);color:var(--on-tint)}
+.badge.mark-err{background:var(--err);color:var(--on-tint)}
+.badge.mark-ok svg,.badge.mark-err svg{width:16px;height:16px}
 .badge.on,.card .badge.on,.ctl .badge.on{background:var(--ink);color:var(--on-tint)}
 .bar{display:flex;align-items:center;gap:var(--s);padding:var(--inset);background:var(--surf-1,var(--well));border-radius:var(--r-pill);min-width:0}
 .ctl.circ{width:var(--pill-h);padding:0;flex:none;background:var(--btn-card,var(--card));color:var(--ink);box-shadow:none}

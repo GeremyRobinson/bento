@@ -27,6 +27,8 @@ export interface Feedback {
   pop?: "big" | "star";
   /** hints still left in the lesson, shown muted under a hint */
   left?: number;
+  /** a test step that was missed: the answer is shown, and it wears the incorrect mark */
+  missed?: boolean;
 }
 
 export interface Mistake {

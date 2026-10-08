@@ -266,7 +266,7 @@ export function Practice() {
             {/* a test lists the steps done and the one you're on; the rest would only say "Step 3" (G 2026-10-08) */}
             {(test ? beats.filter(b => b.state !== "later") : beats).map(b => (
               <div key={b.k} className={`srow sles pstep${b.state === "now" ? " on" : ""}`} data-state={b.state}>
-                <span className="badge">{b.state === "done" ? <Check /> : b.state === "missed" ? <CloseIcon /> : b.k + 1}</span>
+                <span className={`badge${test && b.state === "done" ? " mark-ok" : b.state === "missed" ? " mark-err" : ""}`}>{b.state === "done" ? <Check /> : b.state === "missed" ? <CloseIcon /> : b.k + 1}</span>
                 <span className="sname"><b>{b.label}</b>{b.line && <span className={`pline${b.line.shown ? " shown" : ""}`}><MathLine math={b.line.math} /></span>}</span>
               </div>
             ))}
