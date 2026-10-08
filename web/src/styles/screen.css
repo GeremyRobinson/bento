@@ -806,13 +806,13 @@ html:has(.screen) body{overflow:hidden}
      the same way. The problem panel: where you are (Problem 2 of 6) on top, the problem in the middle, its steps at the
      bottom. The answer panel: what this step asks on top, then the keys to answer it. */
   .screen.fit.lscreen.pscreen.paskpad .lshero.phero{grid-template-rows:auto minmax(0,1fr) auto}
-  /* corners run parallel (G 2026-10-08 "the radius needs fixing"): a row sits in from the panel's edge by the panel's
-     corner less its own, so its round end follows the panel's curve */
-  .screen.fit.lscreen.pscreen.paskpad .lshero.phero{--inset:calc(var(--r-panel) - var(--srow) / 2)}
+  /* the Contents spacing (G 2026-10-08 "gapping should look like this"): rows sit two nests in from the panel's edge,
+     an open group one nest, the same as an open chapter in the Contents */
+  .screen.fit.lscreen.pscreen.paskpad .lshero.phero{--inset:calc(var(--nest) * 2)}
   .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pbar>.pwhere{grid-row:1;margin:var(--inset) var(--inset) 0}
   .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pprob{grid-row:2;align-self:center;padding:var(--sp-5) var(--sp-6)}
   .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pbar>.sgroup{grid-row:3;margin:0 var(--inset) var(--inset)}
-  .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pbar>.sgroup.open{margin:0 calc(var(--inset) - var(--nest)) calc(var(--inset) - var(--nest))}
+  .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pbar>.sgroup.open{margin:0 var(--nest) var(--nest)}
   .screen.fit.lscreen.pscreen.paskpad>.ppad.phead{align-content:start}
   /* each panel keeps its own height (G 2026-10-08 "weird for the right side to expand because of the left side growing"):
      the screen's row is the whole height and each panel sits centred in it on its own, so opening the steps grows the
