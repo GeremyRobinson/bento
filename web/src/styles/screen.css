@@ -120,7 +120,7 @@ html:has(.screen) body{overflow:hidden}
 .screen.contents .slist .shead,.screen.contents .slist .shead:has(.scheck){display:flex;align-items:center;justify-content:space-between;gap:var(--list-gap);padding:0 0 0 calc(var(--row-h) / 2)}
 .screen.contents .shead .srow.big{width:auto;flex:0 1 auto}
 .srow.big{min-height:var(--big,calc(var(--row-h) + var(--list-gap) * 2));border-radius:calc(var(--row-h) / 2 + var(--list-gap));padding:var(--list-gap) var(--list-gap) var(--list-gap) calc(var(--row-h) / 2);gap:var(--list-gap);background:var(--glass)}
-.srow.big .stag{flex:none;display:inline-flex;align-items:center;height:var(--row-h);padding-inline:calc(var(--row-h) / 2 - var(--sp-1));border-radius:var(--r-row);background:var(--glass);color:var(--muted);font-size:var(--fz-xs);font-weight:var(--w-mid);white-space:nowrap;font-variant-numeric:tabular-nums}
+.srow.big .stag{flex:none;display:inline-flex;align-items:center;height:var(--row-h);padding-inline:calc(var(--row-h) / 2 - var(--sp-1));border-radius:var(--r-row);background:var(--glass-x2);color:var(--muted);font-size:var(--fz-xs);font-weight:var(--w-mid);white-space:nowrap;font-variant-numeric:tabular-nums}
 .srow.big.on .stag{color:var(--ink)}
 .srow.big.scheck{justify-content:center;text-align:center;padding-inline:var(--list-gap)}
 .srow.big.scheck .sname{flex:none}
