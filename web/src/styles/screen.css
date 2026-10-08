@@ -40,7 +40,7 @@ html:has(.screen) body{overflow:hidden}
 .srow.chap.holds .sname b::after{content:"";display:inline-block;width:6px;height:6px;margin-left:var(--sp-2);border-radius:var(--r-round);background:var(--ink);vertical-align:middle}
 .srow{position:relative;z-index:var(--z-up);display:flex;align-items:center;gap:var(--sp-3);width:100%;min-height:var(--float-h);padding:var(--sp-2) 18px;border-radius:var(--r-pill);text-align:left;font-size:var(--fz-md);transition:background var(--m-swap) var(--m-ease),color var(--m-swap) var(--m-ease)}
 /* hover lifts a row one glass layer above what it sits on: list rows to --g2, lessons (on --g3) to --g4 */
-@media (hover:hover){.srow:not([disabled]):not(.on):hover,.srow:not([disabled]):not(.on):active{background:var(--g2,var(--hover))} .sgroup .srow.sles:not([disabled]):not(.on):hover,.sgroup .srow.sles:not([disabled]):not(.on):active{background:var(--g4,var(--hover))}}
+@media (hover:hover){.srow:not([disabled]):not(.on):not(.still):hover,.srow:not([disabled]):not(.on):not(.still):active{background:var(--g2,var(--hover))} .sgroup .srow.sles:not([disabled]):not(.on):hover,.sgroup .srow.sles:not([disabled]):not(.on):active{background:var(--g4,var(--hover))}}
 @media (hover:none){.srow:not([disabled]):not(.on):active{background:var(--g2,var(--hover))} .sgroup .srow.sles:not([disabled]):not(.on):active{background:var(--g4,var(--hover))}}
 .srow .sname{flex:1;min-width:0;display:grid}
 .srow .sname b{font-weight:var(--w-mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -692,6 +692,9 @@ html:has(.screen) body{overflow:hidden}
 .pscreen .pbar .sgroup-panel{max-height:26dvh;overflow-y:auto;overscroll-behavior:contain}
 /* solved: Next problem stands on its own, no panel round it */
 .pscreen.psolved>.ppad{padding:0;background:none;outline:none}
+/* the answer panel keeps its glass once solved (G 2026-10-08 "background needs to stay"): the question's own panel and
+   Next problem stay inside it */
+.pscreen.psolved.paskpad>.ppad{padding:max(var(--nest),calc(var(--r-panel) - var(--key) / 2));background:var(--pane-plain);outline:var(--panel-w) solid var(--panel-line);outline-offset:calc(var(--panel-w) * -1)}
 :root .pscreen.psolved>.ppad .tray>.k-go{border-radius:var(--r-pill)}
 /* solved: the keys give way to "Next problem" */
 .pscreen.psolved .ppad .tray{grid-template-columns:minmax(0,1fr)}

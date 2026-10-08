@@ -170,7 +170,7 @@ export function Practice() {
   }
 
   const it = currentItem(s), lesson = lessonOfItem(it), step = currentStep(s), fb = s.feedback, n = s.items.length;
-  const test = s.mode === "test", mixed = s.mode !== "practice", band = bandOfSession(s);
+  const test = s.mode === "test", StepBar = test ? "div" : "button", mixed = s.mode !== "practice", band = bandOfSession(s);
   const tapOnly = !!s.pick || !!step?.choices;
   const at = `${s.i}-${s.step}`, mark = (i: number) => tapped?.at === at && tapped.i === i && fb ? (fb.type === "bad" ? " no" : " ok") : "";
   const nextLabel = !isLastProblem(s) ? "Next problem" : test ? "Finish test" : s.mode === "review" ? "Finish review" : "Finish lesson";
@@ -263,12 +263,14 @@ export function Practice() {
         <div className="pbar">
           {/* where you are in the set, always in view: tapping it zooms out to every problem (G 2026-10-08) */}
           <div className="pwhere"><span className="sname">Problem {s.i + 1} of {n}</span>{dots}</div>
-          <ListGroup open={stepsOpen} head={
-            <button key={fb?.type === "good" && !s.solved ? fbKey : "bar"} className={`srow chap stepbar${won ? " solved" : missed ? " missed" : ""}${fb?.type === "good" && !s.solved && !fbAway ? " flash" : ""}`} onClick={toggleSteps} aria-expanded={stepsOpen} aria-label={`Steps: ${now?.label ?? "done"}, ${Math.min(here + 1, steps.length)} of ${steps.length}`}>
+          {/* a test opens its steps itself, one at a time as you work (G 2026-10-08 "no need for someone to open and close
+              this accordion when doing a test"): the bar is a plain row there, not a button, and has no chevron */}
+          <ListGroup open={test ? (s.step ?? 0) > 0 || s.solved : stepsOpen} head={
+            <StepBar key={fb?.type === "good" && !s.solved ? fbKey : "bar"} role={test ? "group" : undefined} className={`srow chap stepbar${test ? " still" : ""}${won ? " solved" : missed ? " missed" : ""}${fb?.type === "good" && !s.solved && !fbAway ? " flash" : ""}`} {...(test ? {} : { onClick: toggleSteps, "aria-expanded": stepsOpen })} aria-label={`Steps: ${now?.label ?? "done"}, ${Math.min(here + 1, steps.length)} of ${steps.length}`}>
               <span className="badge">{won ? <Check /> : s.solved ? steps.length : here + 1}{fb?.type === "good" && !s.solved && !fbAway && <span className="tick"><Check /></span>}</span>
               <span className="sname"><b>{s.solved ? <><strong>{missed ? "Incorrect." : test ? "Correct." : "Solved."}</strong>{idea && <> <Rich text={idea} /></>}</> : now?.label}</b></span>
-              {!s.solved && <small className="smeta">{Math.min(here + 1, steps.length)} of {steps.length}</small>}<span className="chev" aria-hidden><Chevron dir="down" /></span>
-            </button>}>
+              {!s.solved && <small className="smeta">{Math.min(here + 1, steps.length)} of {steps.length}</small>}{!test && <span className="chev" aria-hidden><Chevron dir="down" /></span>}
+            </StepBar>}>
             {/* a test lists the steps done and the one you're on; the rest would only say "Step 3" (G 2026-10-08) */}
             {(test ? beats.filter(b => b.state !== "later") : beats).map(b => (
               <div key={b.k} className={`srow sles pstep${b.state === "now" ? " on" : ""}`} data-state={b.state}>

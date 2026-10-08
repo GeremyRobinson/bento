@@ -18,7 +18,7 @@ export interface Master {
 
 export const MASTERS: Master[] = [
   { name: "Panel", classes: ["panel"] },
-  { name: "Row", classes: ["srow", "sname", "sles", "chap", "sdot", "slist", "smeta", "chev", "badge", "tick", "stepbar"] },
+  { name: "Row", classes: ["srow", "sname", "sles", "chap", "sdot", "slist", "smeta", "chev", "badge", "tick", "stepbar", "still"] },
   { name: "Accordion", component: "components/screen/ListGroup.tsx", classes: ["sgroup", "sgroup-body", "sgroup-in", "sgroup-panel"] },
   { name: "Pill", component: "components/primitives/Pill.tsx", classes: ["ctl", "circ", "badged", "sm"] },
   { name: "Picture", component: "components/diagrams/Diagram.tsx", classes: ["viz", "viz-svg", "am", "rs"] },
