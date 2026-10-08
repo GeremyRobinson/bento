@@ -841,3 +841,6 @@ html:has(.screen) body{overflow:hidden}
 .ppad.phead>.pask>.pmath{gap:var(--sp-4)}
 .ppad.phead>.pask>.pfb{padding-top:var(--sp-2);gap:var(--sp-3)}
 .pfb .badge{--badge:24px;align-self:flex-start}
+/* in a test the Problem row is the same size pill as the steps bar under it (G 2026-10-08 "problem can be a bigger pill"),
+   the dots' pill sitting in it the way the step's number sits in the bar */
+.pscreen.ptest .pbar .pwhere{min-height:60px;padding:var(--sp-4)}
