@@ -25,11 +25,19 @@ export const MASTERS: Master[] = [
   { name: "Tile", component: "components/PageTile.tsx", classes: ["tile", "mtile", "mt-text", "mtoggle", "k"] },
   { name: "BentoGrid", component: "components/BentoGrid.tsx", classes: ["bgrid", "bg-in", "bg-t", "n", "s", "t", "w", "l", "f"] },
   { name: "Screen", component: "components/screen/Screen.tsx", classes: ["screen", "split", "sdetail", "whead", "wbody", "wkick", "wpad", "wprob", "col", "more"] },
-  { name: "Keypad", component: "components/practice/Keypad.tsx", classes: ["ppad", "tray", "k-go", "nosign", "ptap", "tappad", "tapnote", "choices", "choice"] },
+  { name: "Keypad", component: "components/practice/Keypad.tsx", classes: ["ppad", "tray", "k-go", "nosign", "ptap", "tappad", "tapnote", "choices", "choice", "phead", "pmath", "pfb"] },
   { name: "Slider", component: "components/primitives/Slider.tsx", classes: ["slider", "slider-thumb"] },
   { name: "Confirm", component: "components/Confirm.tsx", classes: ["confirm", "confirm-body", "cq", "ca", "keep", "fdim"] },
   { name: "FeatureTile", component: "components/FeatureTile.tsx", classes: ["ltile", "ldemo", "ltext", "lvis"] },
   { name: "Step row", classes: ["beat", "beats", "say", "pline", "badge"] },
+  // the zoom-out: the contents, My Obento and a lesson's or test's problems, each a card on the same stage (G 2026-10-08)
+  { name: "Zoom", component: "components/Contents.tsx", classes: ["zcard", "zoom", "zstage", "zbar-top", "zrooms", "zcount", "zplist", "zpgrid", "zprob", "zphead", "zpline", "zprobs", "zme", "zlevel", "zl-text", "zchap", "zgrown", "zgrade", "zfind", "battery", "badge", "ans"] },
+  // "Problem x of n" with its dots: the button that zooms out to every problem
+  { name: "Problem button", classes: ["pzoom", "pwhere", "pdots", "sname", "ok"] },
+  // a lesson in a list: its mark, its name, its minutes
+  { name: "Lesson item", classes: ["pitem", "pmark"] },
+  // the nav's round buttons: back, settings, me, hint
+  { name: "Nav circle", classes: ["icon", "ihint", "spent"] },
 ];
 
 /** states any master may be in: they never make a rule a one-off */

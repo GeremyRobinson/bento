@@ -432,8 +432,9 @@ html:not(:has(.screen)) .wrap{padding-top:calc(var(--nav-top) + var(--float-h) +
 }
 /* My Obento's cards wear the Settings tiles' glass, so the hub's two rooms match */
 .zme .zcard{background:var(--g1,var(--well));padding:var(--sp-5)}
-.zme .zcard .ctl:not(.go),.zme>.zfind{background:var(--btn-panel,var(--card))}
-.zme .zcard .ctl:not(.go):hover,.zme>.zfind:hover{background:var(--btn-panel-hover,var(--hover))}
+.zme .zcard{--pill-bg:var(--btn-panel,var(--card));--pill-hover:var(--btn-panel-hover,var(--hover))}
+.zme>.zfind{background:var(--btn-panel,var(--card))}
+.zme>.zfind:hover{background:var(--btn-panel-hover,var(--hover))}
 @media (max-width:699px){.zme .znum{padding:var(--sp-4)}}
 /* a lesson or test zoomed out to its problems (G 2026-10-08): the contents' zoom, one card per problem */
 .zcount{grid-column:2;font-weight:var(--w-mid);color:var(--muted);font-size:var(--fz-sm);font-variant-numeric:tabular-nums}

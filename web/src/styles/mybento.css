@@ -2,7 +2,7 @@
    list on the left, the book's bento on the right; only what differs from the book lives here ---- */
 .mine .srow .smeta svg{vertical-align:-1px;margin-right:2px}
 /* your level: the big tile, charging up with XP like the book's lessons-done tile */
-.mybook .mylevel{justify-items:start;text-align:left;align-content:space-between;gap:var(--sp-2)}
+.mybook .mylevel{justify-items:start;text-align:left;align-content:space-between;gap:var(--nest)}
 .mybook .mylevel .k{color:var(--muted);font-size:var(--small);font-weight:var(--w-mid)}
 .mybook .mylevel .bbig{font-size:clamp(48px,7vw,96px);letter-spacing:-.04em}
 .mybook .b-streak .bbig{font-variant-numeric:tabular-nums}

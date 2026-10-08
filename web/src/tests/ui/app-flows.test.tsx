@@ -263,9 +263,9 @@ describe("unit test and check-up", () => {
     tap("Whole numbers test");
     fireEvent.click(screen.getAllByRole("button", { name: /^Problem 1 of \d+\. See every problem/ })[0]!);
     const zoom = screen.getByRole("dialog", { name: "Problems" });
-    expect(within(zoom).getByText("0 of 6 done")).toBeInTheDocument();
+    expect(within(zoom).getByText("0 of 12 done")).toBeInTheDocument();
     fireEvent.click(within(zoom).getByRole("button", { name: "Problem 3, to do" }));
-    expect(screen.getAllByText(/^Problem 3 of 6/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/^Problem 3 of 12/).length).toBeGreaterThan(0);
   });
 
   it("a wrong answer in a test shows the answer and moves on", () => {
