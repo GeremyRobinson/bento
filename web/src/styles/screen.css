@@ -391,6 +391,9 @@ html:has(.screen) body{overflow:hidden}
 /* solved: no box round the line; the answer itself lights up green, where its box was (G 18:16) */
 .pmath .ask.ok{animation:fadeIn var(--dur-120) var(--ease) both}
 .pmath .ask.ok .ans{display:inline-flex;align-items:center;min-height:var(--slot);padding:0 .3em;border-radius:calc(var(--slot) / 4);background:var(--ok);color:var(--on-tint);font-weight:inherit}
+/* a test's wrong answer is shown, not solved: the given answer sits on the line without the green (G 2026-10-08) */
+.pmath .ask.given{animation:fadeIn var(--dur-120) var(--ease) both}
+.pmath .ask.given .ans{display:inline-flex;align-items:center;min-height:var(--slot);padding:0 .3em;font-weight:inherit;color:var(--text)}
 .psolved .pprob .math .slot,.psolved .pprob .math .qbox{transition:background var(--dur-400) var(--ease) var(--dur-350)}
 .island .ibat.tick{outline:0 solid transparent;animation:batTick var(--dur-400) var(--ease) var(--dur-500) both}
 @keyframes batTick{50%{outline-width:5px;outline-color:color-mix(in srgb,var(--tint) 22%,transparent)}}

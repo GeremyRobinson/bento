@@ -162,7 +162,12 @@ export function Practice() {
   // the steps: done ones with their finished line, the one being answered, the ones still to come by number only
   // (their names could give a plan-the-step choice away)
   const steps = stepsOf(s), here = s.solved ? steps.length : s.step;
-  const beats = steps.map((st, k) => ({ k, state: k < here ? "done" : k === here ? "now" : "later", label: k === here && s.pick ? "What comes next?" : k <= here ? st.base : `Step ${k + 1}`, line: s.work[k] }));
+  // in a test a wrong answer is shown, not solved: that step gets no tick, and the problem never says "Solved." or
+  // lights its answer green (G 2026-10-08 "it shouldnt mark green or solve this is clearly wrong")
+  const given = (k: number) => test && !!s.work[k]?.shown;
+  const missed = s.solved && s.work.some((_, k) => given(k));
+  const won = s.solved && !missed;
+  const beats = steps.map((st, k) => ({ k, state: k < here ? (given(k) ? "missed" : "done") : k === here ? "now" : "later", label: k === here && s.pick ? "What comes next?" : k <= here ? st.base : `Step ${k + 1}`, line: s.work[k] }));
   const now = beats.find(b => b.state === "now");
   // quitting asks only when answers would be lost
   const started = (s.done?.length ?? 0) > 0 || s.work.length > 0 || s.mistakes.length > 0 || s.solved;
@@ -209,7 +214,7 @@ export function Practice() {
             </div>
             {step.note && <span className="note"><Rich text={step.note} /></span>}
           </> : s.pick ? <span className="q">Step {s.step + 1} · What comes next?</span>
-            : <div className="ask ok"><MathLine math={s.work[s.work.length - 1]?.math ?? []} /></div>}
+            : <div className={`ask ${s.work[s.work.length - 1]?.shown ? "given" : "ok"}`}><MathLine math={s.work[s.work.length - 1]?.math ?? []} /></div>}
           <button className="speak" aria-label="Read it to me" onClick={() => speak([step?.question, document.querySelector("#app .pprob")?.textContent].filter(Boolean).join(". ").replace(/\*\*/g, ""))}><SpeakerIcon /></button>
         </div>
         <FeedbackBox key={fbKey} fb={fbAway || bulbHint ? null : fb} idea={idea} solved={s.solved && !fbAway && fb?.type !== "hint"} />
@@ -221,9 +226,9 @@ export function Practice() {
         <div className="pprob"><ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} solved={s.solved} part="text" /></div>
         <div className="pbar">
           <ListGroup open={stepsOpen} head={
-            <button key={fb?.type === "good" && !s.solved ? fbKey : "bar"} className={`srow chap stepbar${s.solved ? " solved" : ""}${fb?.type === "good" && !s.solved && !fbAway ? " flash" : ""}`} onClick={toggleSteps} aria-expanded={stepsOpen} aria-label={`Steps: ${now?.label ?? "done"}, ${Math.min(here + 1, steps.length)} of ${steps.length}`}>
-              <span className="badge">{s.solved ? <Check /> : here + 1}{fb?.type === "good" && !s.solved && !fbAway && <span className="tick"><Check /></span>}</span>
-              <span className="sname"><b>{s.solved ? <><strong>Solved.</strong>{idea && <> <Rich text={idea} /></>}</> : now?.label}</b></span>
+            <button key={fb?.type === "good" && !s.solved ? fbKey : "bar"} className={`srow chap stepbar${won ? " solved" : missed ? " missed" : ""}${fb?.type === "good" && !s.solved && !fbAway ? " flash" : ""}`} onClick={toggleSteps} aria-expanded={stepsOpen} aria-label={`Steps: ${now?.label ?? "done"}, ${Math.min(here + 1, steps.length)} of ${steps.length}`}>
+              <span className="badge">{won ? <Check /> : s.solved ? steps.length : here + 1}{fb?.type === "good" && !s.solved && !fbAway && <span className="tick"><Check /></span>}</span>
+              <span className="sname"><b>{s.solved ? <><strong>{missed ? "Not this time." : "Solved."}</strong>{idea && <> <Rich text={idea} /></>}</> : now?.label}</b></span>
               {!s.solved && <small className="smeta">{Math.min(here + 1, steps.length)} of {steps.length}</small>}<span className="chev" aria-hidden><Chevron dir="down" /></span>
             </button>}>
             <button className="pwhere pzoom" onClick={() => setZoomOut(true)} aria-haspopup="dialog" aria-label={`Problem ${s.i + 1} of ${n}. See every problem`}>Problem {s.i + 1} of {n}{dots}</button>

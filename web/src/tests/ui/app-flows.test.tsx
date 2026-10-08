@@ -263,6 +263,19 @@ describe("unit test and check-up", () => {
     answerWrong();
     expect(screen.getByRole("status")).toHaveTextContent(/Not this time\. The answer was/);
   });
+
+  it("a test problem with a wrong answer is never marked solved or green (G 2026-10-08)", () => {
+    renderApp();
+    tap("Grade check-up");
+    for (let i = 0; i < 12 && !document.querySelector(".pscreen.psolved"); i++) answerWrong();
+    expect(document.querySelector(".pscreen.psolved")).not.toBeNull();
+    const bar = document.querySelector(".stepbar")!;
+    expect(bar).not.toHaveClass("solved");
+    expect(bar).toHaveTextContent("Not this time.");
+    expect(bar).not.toHaveTextContent("Solved.");
+    expect(document.querySelector(".pmath .ask.ok")).toBeNull();
+    expect(document.querySelectorAll('.pstep[data-state="done"]')).toHaveLength(0);
+  });
 });
 
 /** every lesson row of the grade's list, opening each chapter in turn */
