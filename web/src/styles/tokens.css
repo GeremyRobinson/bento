@@ -29,8 +29,10 @@
   /* controls: the floating capsule (island, icon pills, big pills), the circle inside it, and the smallest tap target */
   /* ONE size for every pill, row, key and bar (G 2026-10-08 "a middle point of what we already have that can work
      everywhere"): the old 44 rows, 52 nav and 60 bars meet at 52. Panels sit their pills one --pad-panel in, so a panel's
-     corner is the pill's round plus that pad; anything nested one gap in takes the pill's round plus one gap. */
-  --pill-size:52px; --pad-panel:16px;
+     corner is the pill's round plus that pad; anything nested one gap in takes the pill's round plus one gap.
+     The pad is three gaps (G 2026-10-08 "based on math"), room for the deepest nesting: an open group, its lessons
+     panel and its rows, each one gap in, so every ring's corner is the one inside it plus one gap. */
+  --pill-size:52px; --pad-panel:calc(var(--sp-2) * 3);
   --float-h:var(--pill-size); --float-in:42px; --tap:44px;
   /* the page's widest edge: the app, its screens and the landing page all stop here (BentoGrid handoff) */
   --page-max:1180px;

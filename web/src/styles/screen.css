@@ -52,7 +52,7 @@ html:has(.screen) body{overflow:hidden}
 .srow.sles{padding-left:22px;min-height:var(--pill-size);font-size:var(--small)}
 /* a lesson row is always one line, picked or not: the name ends in an ellipsis and its label (time, score, Up next)
    keeps its place, so no row grows or changes when it's picked (G 2026-10-07, "why is this happening?") */
-.srow.sles .sname b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srow:is(.sles,.chap) .sname b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .srow.sles>small,.srow.sles>.score{flex:none}
 .srow.sles .sname b{font-weight:var(--w-regular)}
 .srow.sles.on .sname b{font-weight:var(--w-mid)}
@@ -72,11 +72,15 @@ html:has(.screen) body{overflow:hidden}
    plus the panel's pad, the same corner as every main panel */
 .slist{--row-top:var(--row-h);border-radius:var(--r-panel)!important}
 .slist>.srow,.slist>.sgroup>.srow.chap{min-height:var(--row-top)}
-.wrap .screen .slist.slist{padding:calc(var(--list-gap) * 2 - var(--panel-w))}
+.wrap .screen .slist.slist{padding:calc(var(--pad-panel) - var(--panel-w))}
 .wrap .screen.gu .slist.slist{padding-bottom:calc(var(--sp-6) - var(--panel-w))}
 .slist>:is(.srow,.sgroup)+.sgroup,.slist>.sgroup+.srow{margin-top:var(--list-gap)}
 .sgroup{border-radius:calc(var(--row-h) / 2 + var(--list-gap) * 2);transition:background-color var(--m-close) var(--m-ease),padding var(--m-close) var(--m-ease),margin var(--m-close) var(--m-ease)}
-.sgroup.open{background:var(--surf-nest);margin-inline:calc(var(--list-gap) * -1);padding:var(--list-gap)}
+/* corners by maths (G 2026-10-08 "a padding gap system that automatically calculates radius"): each ring is the ring
+   inside it plus the space between. Row 26, lessons panel 26 + gap, open group 26 + 2 gaps, main panel 26 + 3 gaps.
+   So the open group steps two gaps out from the rows' line, its head sits two gaps in, its lessons panel one */
+.sgroup.open{background:var(--surf-nest);margin-inline:calc(var(--list-gap) * -2);padding:calc(var(--list-gap) * 2) calc(var(--list-gap) * 2) var(--list-gap)}
+.sgroup.open>.sgroup-body{margin-inline:calc(var(--list-gap) * -1)}
 .sgroup-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--m-close) var(--m-ease),visibility 0s var(--m-close)}
 .sgroup.open>.sgroup-body{grid-template-rows:1fr;transition:grid-template-rows var(--m-close) var(--m-ease)}
 .sgroup:not(.open)>.sgroup-body{visibility:hidden}
@@ -664,13 +668,13 @@ html:has(.screen) body{overflow:hidden}
 .pscreen .lshero.phero>.pprob{grid-row:1;padding:var(--sp-5) var(--sp-6) 0}
 .pscreen.pwordy .lshero.phero>.pbar{grid-row:2}
 .pscreen:not(.pwordy) .lshero.phero>.pprob{display:none}
-.pscreen .lshero.phero>.pbar{grid-row:1;display:block;padding:calc(var(--nest) * 2) calc(var(--nest) * 2) 0}
+.pscreen .lshero.phero>.pbar{grid-row:1;display:block;padding:var(--pad-panel) var(--pad-panel) 0}
 .pscreen .lshero.phero::before,.pscreen>.lpic{border-radius:var(--r-panel)}
 /* the solve panel is the list column, so it takes the Contents panel's glass (g1) and the steps step down the ladder exactly as
    the lesson overview does (G 2026-10-07 22:00, "the color depth looks different") */
 .pscreen .lshero.phero::before{background:var(--g1,var(--pane-plain,var(--float)))}
 .pscreen .pbar>.sgroup{padding:0;margin:0}
-.pscreen .pbar>.sgroup.open{margin:calc(var(--list-gap) * -1) calc(var(--list-gap) * -1) 0;padding:var(--list-gap)}
+.pscreen .pbar>.sgroup.open{margin:calc(var(--list-gap) * -2) calc(var(--list-gap) * -2) 0;padding:calc(var(--list-gap) * 2) calc(var(--list-gap) * 2) var(--list-gap)}
 .pscreen .pbar .srow{--badge:28px;min-height:var(--srow);border-radius:calc(var(--srow) / 2);align-items:flex-start;gap:10px;padding:calc((var(--srow) - var(--badge)) / 2) var(--sp-2)}
 .pscreen .pbar .srow.chap{background:var(--g2,var(--well));--row-top:var(--srow);min-height:var(--row-top);border-radius:calc(var(--row-top) / 2);padding:calc((var(--row-top) - var(--badge)) / 2)}
 .pscreen .pbar .sgroup.open>.srow.chap{background:var(--g3,var(--surf-sub))}
@@ -777,7 +781,7 @@ html:has(.screen) body{overflow:hidden}
 /* the Problem button keeps the panel's own gap from the steps (G 2026-10-08 "too close"): the same space as the panel's edge
    to the steps' group, open or folded (the open group reaches up by one nest, so it takes one more) */
 .pscreen .pbar .pwhere{margin-bottom:var(--nest)}
-.pscreen .pbar:has(>.sgroup.open) .pwhere{margin-bottom:calc(var(--nest) * 2)}
+.pscreen .pbar:has(>.sgroup.open) .pwhere{margin-bottom:calc(var(--nest) * 3)}
 .pzoom{cursor:pointer;border-radius:var(--r-pill);transition:background var(--dur-150)}
 /* a computer or iPad on its side (G 2026-10-08): the problem on top, then its steps, then the Problem button right under
    them, one steps' gap away (G "looks weird when closed"); any spare room goes below.
@@ -790,9 +794,9 @@ html:has(.screen) body{overflow:hidden}
   .screen.fit.lscreen.pscreen .lshero.phero>.phint{grid-row:4}
   .screen.fit.lscreen.pscreen .lshero.phero>.pbar{display:contents}
   .screen.fit.lscreen.pscreen .lshero.phero>.pbar>*{grid-column:1;z-index:var(--z-up)}
-  .screen.fit.lscreen.pscreen .lshero.phero>.pbar>.sgroup{grid-row:5;margin:0 calc(var(--nest) * 2)}
-  .screen.fit.lscreen.pscreen .lshero.phero>.pbar>.sgroup.open{margin:0 var(--nest);padding:var(--nest)}
-  .screen.fit.lscreen.pscreen .lshero.phero>.pbar>.pwhere{width:auto;grid-row:6;margin:var(--nest) calc(var(--nest) * 2) calc(var(--nest) * 2)}
+  .screen.fit.lscreen.pscreen .lshero.phero>.pbar>.sgroup{grid-row:5;margin:0 var(--pad-panel)}
+  .screen.fit.lscreen.pscreen .lshero.phero>.pbar>.sgroup.open{margin:0 var(--nest);padding:calc(var(--nest) * 2) calc(var(--nest) * 2) var(--nest)}
+  .screen.fit.lscreen.pscreen .lshero.phero>.pbar>.pwhere{width:auto;grid-row:6;margin:var(--nest) var(--pad-panel) var(--pad-panel)}
 }
 /* a test shows the whole problem in the solve panel, over the step being answered (G 2026-10-08): the steps alone
    ("25 × 20 = ?") never said which problem they belong to */
@@ -816,11 +820,11 @@ html:has(.screen) body{overflow:hidden}
   .screen.fit.lscreen.pscreen.paskpad .lshero.phero{grid-template-rows:auto minmax(0,1fr) auto}
   /* the Contents spacing (G 2026-10-08 "gapping should look like this"): rows sit two nests in from the panel's edge,
      an open group one nest, the same as an open chapter in the Contents */
-  .screen.fit.lscreen.pscreen.paskpad .lshero.phero{--inset:calc(var(--nest) * 2)}
+  .screen.fit.lscreen.pscreen.paskpad .lshero.phero{--inset:var(--pad-panel)}
   .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pbar>.pwhere{grid-row:1;margin:var(--inset) var(--inset) 0}
   .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pprob{grid-row:2;align-self:center;padding:var(--sp-5) var(--sp-6)}
   .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pbar>.sgroup{grid-row:3;margin:0 var(--inset) var(--inset)}
-  .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pbar>.sgroup.open{margin:0 var(--nest) var(--nest)}
+  .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pbar>.sgroup.open{margin:0 var(--nest) var(--nest);padding:calc(var(--nest) * 2) calc(var(--nest) * 2) var(--nest)}
   .screen.fit.lscreen.pscreen.paskpad>.ppad.phead{align-content:start}
   /* each panel keeps its own height (G 2026-10-08 "weird for the right side to expand because of the left side growing"):
      the screen's row is the whole height and each panel sits centred in it on its own, so opening the steps grows the
@@ -837,10 +841,10 @@ html:has(.screen) body{overflow:hidden}
   .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero{grid-template-rows:auto auto auto auto auto auto minmax(0,1fr)}
   .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pbar{display:contents}
   .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pbar>*{grid-column:1;z-index:var(--z-up)}
-  .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pbar>.pwhere{grid-row:1;width:auto;margin:calc(var(--nest) * 2) calc(var(--nest) * 2) 0}
+  .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pbar>.pwhere{grid-row:1;width:auto;margin:var(--pad-panel) var(--pad-panel) 0}
   .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pprob{grid-row:2;padding:var(--sp-4) var(--sp-6)}
-  .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pbar>.sgroup{grid-row:3;margin:0 calc(var(--nest) * 2)}
-  .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pbar>.sgroup.open{margin:0 var(--nest);padding:var(--nest)}
+  .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pbar>.sgroup{grid-row:3;margin:0 var(--pad-panel)}
+  .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pbar>.sgroup.open{margin:0 var(--nest);padding:calc(var(--nest) * 2) calc(var(--nest) * 2) var(--nest)}
   .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pmath{grid-row:4}
   .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pfb,.screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.pfb:is(.fb-bad,.fb-hint){grid-row:5}
   .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.phint{grid-row:6}
