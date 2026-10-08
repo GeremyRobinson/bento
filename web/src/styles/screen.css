@@ -789,22 +789,30 @@ html:has(.screen) body{overflow:hidden}
 /* the pad as the panel you solve in: the step's question and answer line sit over the keys (a test on a wide screen) */
 .ppad.phead{display:grid;grid-template-columns:minmax(0,1fr);align-content:center;gap:var(--sp-4)}
 .ppad.phead.ptap{grid-template-columns:minmax(0,1fr) auto;align-items:end}
-.ppad.phead>:is(.pmath,.pfb){grid-column:1 / -1}
-.ppad.phead>.pmath{position:relative;padding:var(--sp-2) calc(var(--sp-3) + 36px) 0}
-.ppad.phead>.pmath .speak{top:0;right:0}
-.ppad.phead>.pfb:not(.fb-bad,.fb-hint){display:none}
-.ppad.phead>.pfb{height:auto;min-height:0;margin:0;padding:0 var(--sp-3);background:none}
+.ppad.phead>.pask{grid-column:1 / -1;display:grid;gap:var(--nest);padding:var(--sp-5) var(--sp-3) var(--sp-4);border-radius:calc(var(--key) / 2);background:var(--g1,var(--well))}
+.ppad.phead>.pask>.pmath{position:relative;padding:0 calc(var(--sp-3) + 36px)}
+.ppad.phead>.pask>.pmath .speak{top:0;right:0}
+.ppad.phead>.pask>.pfb:not(.fb-bad,.fb-hint){display:none}
+.ppad.phead>.pask>.pfb{height:auto;min-height:0;margin:0;padding:0 var(--sp-3);background:none}
 /* with the question in the pad, the left panel is the problem and its steps, centred in its height */
 @media (min-width:900px) and (orientation:landscape){
   /* a test's one system (G 2026-10-08 "there needs to be a system that makes sense"): two panels, each read top to bottom
      the same way. The problem panel: where you are (Problem 2 of 6) on top, the problem in the middle, its steps at the
      bottom. The answer panel: what this step asks on top, then the keys to answer it. */
   .screen.fit.lscreen.pscreen.paskpad .lshero.phero{grid-template-rows:auto minmax(0,1fr) auto}
-  .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pbar>.pwhere{grid-row:1;margin:calc(var(--nest) * 2) calc(var(--nest) * 2) 0}
+  /* corners run parallel (G 2026-10-08 "the radius needs fixing"): a row sits in from the panel's edge by the panel's
+     corner less its own, so its round end follows the panel's curve */
+  .screen.fit.lscreen.pscreen.paskpad .lshero.phero{--inset:calc(var(--r-panel) - var(--srow) / 2)}
+  .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pbar>.pwhere{grid-row:1;margin:var(--inset) var(--inset) 0}
   .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pprob{grid-row:2;align-self:center;padding:var(--sp-5) var(--sp-6)}
-  .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pbar>.sgroup{grid-row:3;margin-bottom:calc(var(--nest) * 2)}
-  .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pbar>.sgroup.open{margin-bottom:var(--nest)}
-  .screen.fit.lscreen.pscreen.paskpad>.ppad.phead{align-content:space-between}
+  .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pbar>.sgroup{grid-row:3;margin:0 var(--inset) var(--inset)}
+  .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pbar>.sgroup.open{margin:0 calc(var(--inset) - var(--nest)) calc(var(--inset) - var(--nest))}
+  .screen.fit.lscreen.pscreen.paskpad>.ppad.phead{align-content:start}
+  /* each panel keeps its own height (G 2026-10-08 "weird for the right side to expand because of the left side growing"):
+     the screen's row is the whole height and each panel sits centred in it on its own, so opening the steps grows the
+     problem panel and never moves or stretches the answer panel */
+  .screen.fit.lscreen.pscreen.nopic.paskpad{grid-template-rows:minmax(0,1fr);align-content:stretch}
+  .screen.fit.lscreen.pscreen.nopic.paskpad>.ppad,.screen.fit.lscreen.pscreen.nopic.paskpad .lshero.phero{align-self:center}
 }
 @media (min-width:900px) and (orientation:landscape){.screen.fit.lscreen.pscreen.paskpad>.ppad.phead.ptap{align-content:center}}
 /* a test marks each step it took: green with a tick when it came out right, red with a cross when it was missed (G 2026-10-08) */
@@ -823,6 +831,6 @@ html:has(.screen) body{overflow:hidden}
   .screen.fit.pscreen.ptest:is(.pshow,.pwordy) .lshero.phero>.phint{grid-row:6}
 }
 /* the answer panel breathes (G 2026-10-08 "crammed"): the question, its answer line and the message each get their own space */
-.ppad.phead>.pmath{gap:var(--sp-4)}
-.ppad.phead>.pfb{padding-top:var(--sp-2);gap:var(--sp-3)}
+.ppad.phead>.pask>.pmath{gap:var(--sp-4)}
+.ppad.phead>.pask>.pfb{padding-top:var(--sp-2);gap:var(--sp-3)}
 .pfb .badge{--badge:24px;align-self:flex-start}
