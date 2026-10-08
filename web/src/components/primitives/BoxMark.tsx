@@ -40,6 +40,8 @@ const one = [1, 2, 4];
 const fits = (c: Q4) => { const [w, h] = sz(c); return one.includes(w) && one.includes(h) && Math.max(w, h) <= 2 * Math.min(w, h); };
 /** tidy: fits, sits on a multiple of its own size, and is never the whole plate */
 const tidy = (c: Q4) => { const [w, h] = sz(c); return fits(c) && c[0] % w === 0 && c[1] % h === 0 && !(w === Q && h === Q); };
+/** at least one heavy block, a square or bigger, so it always reads as a bento box (G 2026-10-08 01:13) */
+const heavy = (cs: Q4[]) => cs.some(c => area(c) >= 4);
 const inside = (c: Q4, r: Q4) => c[0] >= r[0] && c[2] <= r[2] && c[1] >= r[1] && c[3] <= r[3];
 
 type Item = { c: Q4 };
@@ -107,7 +109,7 @@ function dist(cs: Q4[], noMini: boolean) {
     for (const f of frontier) {
       if (f.length > 7) continue;
       const its = f.map(c => ({ c }));
-      for (const m of rawMoves(its, noMini)) { const r = result(its, m), k = key(r); if (!seen.has(k)) { seen.add(k); nx.push(r); } }
+      for (const m of rawMoves(its, noMini)) { const r = result(its, m), k = key(r); if (heavy(r) && !seen.has(k)) { seen.add(k); nx.push(r); } }
     }
     frontier = nx;
   }
@@ -127,7 +129,7 @@ function makeSim(noMini: boolean, side: boolean) {
   const later = (fn: () => void, ms: number) => { S.timers.push(window.setTimeout(fn, ms)); };
   const moves = (t: number) => {
     const live = S.blocks.filter(b => !b.gone);
-    return rawMoves(live.filter(b => !busy(b, t)), noMini).map(m => ({ m, res: result(live, m) })).filter(({ m }) =>
+    return rawMoves(live.filter(b => !busy(b, t)), noMini).map(m => ({ m, res: result(live, m) })).filter(({ m, res }) => heavy(res) &&
       // never merge a block straight back with its own other half (on the way home, only if it was the last to move)
       !(m.kind === "absorb" && m.g.length === 1 && m.a.sib && m.a.sib === m.g[0]!.sib && (S.phase !== "home" || m.a === S.last || m.g[0] === S.last)));
   };
