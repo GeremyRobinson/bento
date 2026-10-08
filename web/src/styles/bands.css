@@ -62,6 +62,9 @@
 /* glass layering (G 2026-10-08, Ring balance lab): one see-through tint of the grade's colour for every rung, so the colour
    deepens only where rungs stack. --glass-a is its strength (G: 15%) */
 .wrap{--glass-a:15%;--glass-hue:var(--tint);--glass:color-mix(in oklab,var(--glass-hue) var(--glass-a),transparent)}
+/* each rung is a solid step of the same hue (G 22:23 "its not all the same hues"): see-through layers drift toward purple as
+   they stack, so rung N is the hue mixed N steps into the card in oklch, which never moves the hue */
+.wrap{--glass1:color-mix(in oklch,var(--glass-hue) var(--glass-a),var(--card));--glass2:color-mix(in oklch,var(--glass-hue) calc(var(--glass-a) * 2),var(--card));--glass3:color-mix(in oklch,var(--glass-hue) calc(var(--glass-a) * 3),var(--card));--glass4:color-mix(in oklch,var(--glass-hue) calc(var(--glass-a) * 4),var(--card));--glass5:color-mix(in oklch,var(--glass-hue) calc(var(--glass-a) * 5),var(--card))}
 /* trial (G 2026-10-08 22:19, grade 5): the glass takes a lighter, more vivid step of the hue so stacked rungs stay bright, not dark */
 .wrap[data-grade="5"]{--glass-hue:oklch(.74 .17 var(--gh));--glass-a:18%}
 .t0{--tint:oklch(from var(--h2) l calc(c * var(--calm)) h)} .t1{--tint:oklch(from var(--h1) l calc(c * var(--calm)) h)} .t2{--tint:oklch(from var(--h3) l calc(c * var(--calm)) h)} .t3{--tint:oklch(from var(--h2) l calc(c * var(--calm)) h)}

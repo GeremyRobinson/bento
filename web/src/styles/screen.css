@@ -119,27 +119,29 @@ html:has(.screen) body{overflow:hidden}
 .screen.contents .slist>*{flex:none}
 .screen.contents .slist .shead,.screen.contents .slist .shead:has(.scheck){display:flex;align-items:center;justify-content:space-between;gap:var(--list-gap);padding:0 0 0 calc(var(--row-h) / 2)}
 .screen.contents .shead .srow.big{width:auto;flex:0 1 auto}
-.srow.big{min-height:var(--big,calc(var(--row-h) + var(--list-gap) * 2));border-radius:calc(var(--row-h) / 2 + var(--list-gap));padding:var(--list-gap) var(--list-gap) var(--list-gap) calc(var(--row-h) / 2);gap:var(--list-gap);background:var(--glass)}
-.srow.big .stag{flex:none;display:inline-flex;align-items:center;height:var(--row-h);padding-inline:calc(var(--row-h) / 2 - var(--sp-1));border-radius:var(--r-row);background:var(--glass);color:var(--muted);font-size:var(--fz-xs);font-weight:var(--w-mid);white-space:nowrap;font-variant-numeric:tabular-nums}
-.srow.big.on .stag{color:var(--ink)}
+.srow.big{min-height:var(--big,calc(var(--row-h) + var(--list-gap) * 2));border-radius:calc(var(--row-h) / 2 + var(--list-gap));padding:var(--list-gap) var(--list-gap) var(--list-gap) calc(var(--row-h) / 2);gap:var(--list-gap);background:var(--glass1);--glass-up:var(--glass2);--glass-up2:var(--glass3)}
+.srow.big .stag{flex:none;display:inline-flex;align-items:center;height:var(--row-h);padding-inline:calc(var(--row-h) / 2 - var(--sp-1));border-radius:var(--r-row);background:var(--glass-up);color:var(--muted);font-size:var(--fz-xs);font-weight:var(--w-mid);white-space:nowrap;font-variant-numeric:tabular-nums}
+.srow.big.on .stag{color:var(--ink);background:var(--glass-up2)}
+@media (hover:hover){.srow.big:not([disabled]):hover .stag{background:var(--glass-up2)}}
 .srow.big.scheck{justify-content:center;text-align:center;padding-inline:var(--list-gap)}
 .srow.big.scheck .sname{flex:none}
 /* every layer is the same glass (G 2026-10-08): a picked or hovered row is one more layer of it */
-.screen.contents .srow::before{background:var(--glass)}
+.screen.contents .srow::before{background:var(--glass-up)}
 /* the chapters group: chapters sit one gap in. A corner is the corner inside it plus a gap, so when an open chapter's rung
    sits in the group's corner, that corner grows a gap */
-.schapters{display:flex;flex-direction:column;gap:var(--list-gap);padding:var(--list-gap);background:var(--glass);border-radius:var(--r-panel);transition:border-radius var(--m-close) var(--m-ease)}
+.schapters{display:flex;flex-direction:column;gap:var(--list-gap);padding:var(--list-gap);background:var(--glass1);border-radius:var(--r-panel);transition:border-radius var(--m-close) var(--m-ease)}
 .schapters:has(>.sgroup.open:first-child){border-top-left-radius:calc(var(--r-panel) + var(--list-gap));border-top-right-radius:calc(var(--r-panel) + var(--list-gap))}
 .schapters:has(>.sgroup.open:last-child){border-bottom-left-radius:calc(var(--r-panel) + var(--list-gap));border-bottom-right-radius:calc(var(--r-panel) + var(--list-gap))}
 /* a chapter (G 2026-10-08 "a rung when open adds 10px of padding"): nothing ever changes size. Closed, its title is a big pill
    one gap from the group's edge. Opening adds a rung round it, one gap of padding round the same title pill and the lessons'
    own rung; closing takes the rung away. Only that chapter changes, the chapters below are pushed down */
 .schapters>.sgroup{margin:0;padding:0;background:transparent;border-radius:var(--r-panel)}
-.schapters>.sgroup.open{margin:0;padding:var(--list-gap);background:var(--glass)}
+.schapters>.sgroup.open{margin:0;padding:var(--list-gap);background:var(--glass2)}
 .schapters>.sgroup.open>.sgroup-body{margin-inline:0}
-.schapters .srow.big.chap,.schapters .sgroup.open>.srow.big.chap,.schapters .sgroup.open>.srow.big.chap:hover{background:var(--glass)}
+.schapters .srow.big.chap{background:var(--glass2);--glass-up:var(--glass3);--glass-up2:var(--glass4)}
+.schapters .sgroup.open>.srow.big.chap,.schapters .sgroup.open>.srow.big.chap:hover{background:var(--glass3);--glass-up:var(--glass4);--glass-up2:var(--glass5)}
 .schapters .sgroup-in{border-radius:calc(var(--row-h) / 2 + var(--list-gap))}
-.schapters .sgroup-panel{background:var(--glass)}
+.schapters .sgroup-panel{background:var(--glass3);--glass-up:var(--glass4)}
 /* hover is one more glass layer on top (G 2026-10-08 22:20: "just add another layer"), never a lighter colour */
 @media (hover:hover){:is(.screen.contents,.pscreen .pbar) .srow:not([disabled]):not(.on):hover::before{opacity:1}}
 :is(.screen.contents,.pscreen .pbar) .srow:not([disabled]):not(.on):active::before{opacity:1}
@@ -714,15 +716,15 @@ html:has(.screen) body{overflow:hidden}
    and every corner is the one inside it plus one gap */
 .pscreen .lshero.phero::before{background:var(--g1)}
 /* the practice panel's layers are the same glass as Contents (G 2026-10-08): the current step is one more layer of it */
-.pscreen .pbar .srow::before{background:var(--glass)}
-.pscreen .pbar>.sgroup{padding:var(--nest);margin:0;background:var(--glass);border-radius:calc(var(--r-row) + var(--nest))}
+.pscreen .pbar .srow::before{background:var(--glass-up)}
+.pscreen .pbar>.sgroup{padding:var(--nest);margin:0;background:var(--glass1);--glass-up:var(--glass2);border-radius:calc(var(--r-row) + var(--nest))}
 .pscreen .pbar>.sgroup.open{margin:0;padding:var(--nest)}
 .pscreen .pbar .sgroup.open>.sgroup-body{margin-inline:0}
 .pscreen .pbar .sgroup-panel{background:none;padding:0;border-radius:var(--r-row)}
 .pscreen .pbar .sgroup-in{border-radius:var(--r-row)}
 .pscreen .pbar .srow{--badge:28px;min-height:var(--srow);border-radius:calc(var(--srow) / 2);align-items:flex-start;gap:10px;padding:calc((var(--srow) - var(--badge)) / 2) var(--sp-2)}
-.pscreen .pbar .srow.chap{background:var(--glass);--row-top:var(--srow);min-height:var(--row-top);border-radius:calc(var(--row-top) / 2);padding:calc((var(--row-top) - var(--badge)) / 2)}
-.pscreen .pbar .sgroup.open>.srow.chap{background:var(--glass)}
+.pscreen .pbar .srow.chap{background:var(--glass2);--glass-up:var(--glass3);--row-top:var(--srow);min-height:var(--row-top);border-radius:calc(var(--row-top) / 2);padding:calc((var(--row-top) - var(--badge)) / 2)}
+.pscreen .pbar .sgroup.open>.srow.chap{background:var(--glass2)}
 .pscreen .pbar .srow .sname b,.pscreen .pbar .srow>small{line-height:var(--badge)}
 .pscreen .pbar .srow.chap .sname b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pscreen .pbar .srow.chap.solved .sname b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-weight:var(--w-regular);line-height:1.3;padding-top:calc((var(--badge) - 1.3em) / 2)}
@@ -817,10 +819,10 @@ html:has(.screen) body{overflow:hidden}
 .pscreen .pbar .pwhere{display:flex;min-height:calc(var(--srow) + var(--nest) * 2);gap:var(--sp-3);margin:0 0 var(--list-gap);padding:var(--nest) var(--nest) var(--nest) calc(var(--nest) + var(--srow) / 2);border-radius:var(--r-pill);color:var(--text);font-weight:var(--w-mid);font-size:var(--fz-md)}
 .pscreen .pbar .pwhere .sname{flex:1 0 auto;white-space:nowrap}
 /* and it's a button (G 2026-10-08): the Pill master's plain fill for a button on a panel, a rung up on hover */
-.pwhere{background:var(--glass)}
+.pwhere{background:var(--glass1);--glass-up:var(--glass2)}
 /* the dots sit in their own pill one rung deeper, the way the step's number sits in its circle (G 2026-10-08 "ladder the
    dots"): the same height as that circle, the same space round it, so its round end follows the row's */
-.pscreen .pbar .pwhere .pdots.pzoom{height:var(--srow);padding-inline:calc(var(--srow) / 2 - var(--sp-2));background:var(--glass)}
+.pscreen .pbar .pwhere .pdots.pzoom{height:var(--srow);padding-inline:calc(var(--srow) / 2 - var(--sp-2));background:var(--glass2)}
 .pdots.pzoom{height:var(--badge,var(--sp-7));padding:0 calc((var(--badge,var(--sp-7)) - var(--sp-2)) / 2);border-radius:var(--r-pill);background:var(--btn-panel-hover,var(--hover))}
 .pdots.pzoom:hover,.pdots.pzoom:active{background:var(--g4,var(--hover))}
 /* the Problem button keeps the panel's own gap from the steps (G 2026-10-08 "too close"): the same space as the panel's edge
