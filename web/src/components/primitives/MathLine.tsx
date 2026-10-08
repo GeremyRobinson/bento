@@ -34,7 +34,10 @@ function room(el: HTMLElement): number {
  * Every equation fits its card (G 2026-10-06: a 12th grade polynomial ran past both edges). A line wider than the box
  * around it is zoomed down, as a whole, until it fits; it never runs off the card or makes the page scroll sideways.
  */
-function useFit(math: unknown) {
+/** a line with answer boxes stays on one line while it still reads at this size or more; past it, it wraps by sides */
+const ONE_LINE = 0.35;
+
+function useFit(math: unknown, oneLine = false) {
   const ref = useRef<HTMLSpanElement>(null);
   useLayoutEffect(() => {
     const el = ref.current;
@@ -44,6 +47,19 @@ function useFit(math: unknown) {
       if (busy) return;
       busy = true;
       el.style.zoom = "";
+      if (oneLine) {
+        // try it on one line first (G 2026-10-08: "× 10" fell away from its box); a little smaller beats a broken line
+        el.classList.add("one");
+        el.style.maxWidth = "none"; el.style.width = "max-content";
+        const one = Math.max(el.scrollWidth, layoutRect(el).width), room1 = room(el);
+        el.style.maxWidth = ""; el.style.width = "";
+        if (room1 > 0 && room1 / one >= ONE_LINE) {
+          if (one > room1 + 0.5) el.style.zoom = String(Math.floor((room1 / one) * 1000) / 1000);
+          requestAnimationFrame(() => { busy = false; });
+          return;
+        }
+        el.classList.remove("one");
+      }
       const need = Math.max(el.scrollWidth, layoutRect(el).width), have = room(el);
       if (need > have + 0.5 && have > 0) el.style.zoom = String(Math.max(MIN_FIT, Math.floor((have / need) * 1000) / 1000));
       requestAnimationFrame(() => { busy = false; });
@@ -98,7 +114,7 @@ export function breakLevels(m: MathText): { tok: MathToken; lvl: number }[] {
 
 /** Renders MathText. Numbers are formatted in one place; answer boxes become buttons when `onSlot` is given. */
 export function MathLine({ math, values = {}, active = null, onSlot, className = "", keep = false }: Props) {
-  const fitRef = useFit(math);
+  const fitRef = useFit(math, !!onSlot);
   // a written space next to an operator would double the operator's own spacing ("area  = ?")
   const tidy = (m: MathText): MathText => m.map((tok, i) => {
     if (tok.t !== "text") return tok;
@@ -114,7 +130,7 @@ export function MathLine({ math, values = {}, active = null, onSlot, className =
     if (tok.t === "sub" && next?.t === "sup") return [<span key={i} className="lims"><sup>{render(next.v)}</sup><sub>{render(tok.v)}</sub></span>];
     return [token(tok, i)];
   }); };
-  // keep: each side of a relation wraps as a whole; only a side too wide for the line wraps, at its + and −, then × and ÷
+  // keep (and every line with answer boxes, G 2026-10-08): each side of a relation wraps as a whole; only a side too wide for the line wraps, at its + and −, then × and ÷
   const grouped = (m: MathText): ReactNode[] => {
     type Piece = { tok: MathToken; lvl: number };
     const split = (ps: Piece[], lvl: number) =>
@@ -166,7 +182,7 @@ export function MathLine({ math, values = {}, active = null, onSlot, className =
   return (
     // interactive lines keep their boxes reachable; read-only lines are read out as plain text
     <span ref={fitRef} className={`mline ${className}`.trim()} data-plain={toPlainText(math, "blank")}>
-      {onSlot ? render(math) : <><span aria-hidden="true" className="mline-in">{keep ? grouped(math) : render(math)}</span><span className="visually-hidden">{toPlainText(math, "blank")}</span></>}
+      {onSlot ? grouped(math) : <><span aria-hidden="true" className="mline-in">{keep ? grouped(math) : render(math)}</span><span className="visually-hidden">{toPlainText(math, "blank")}</span></>}
     </span>
   );
 }
