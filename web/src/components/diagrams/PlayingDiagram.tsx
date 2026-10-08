@@ -48,9 +48,26 @@ export function PlayingDiagram({ ex, replay = 0, autoplay = true, hold, end }: {
   useEffect(() => {
     if (!playing) return;
     if (at >= last) { setPlaying(false); return; }
-    const t = setTimeout(() => setAt(a => Math.min(last, a + 1)), at === 0 ? 450 : BEAT_MS);
+    const t = setTimeout(() => setAt(a => Math.min(last, a + 1)), Math.max(at === 0 ? 450 : BEAT_MS, settleMs(ex.diagram, at)));
     return () => clearTimeout(t);
-  }, [playing, at, last]);
+  }, [playing, at, last, ex.diagram]);
 
   return <div className="viz" ref={box}><Diagram key={gen} diagram={ex.diagram} timeline={ex.timeline} at={at} /></div>;
+}
+
+/** seconds each entrance runs (the picture animation vocabulary in components.css) */
+const ENTER_S: Record<string, number> = { draw: 0.9, sweep: 1.2, grow: 1.2, growx: 0.7, growy: 0.9, level: 1, slide: 1, move: 1, swing: 0.9 };
+/**
+ * How long a beat must stay so the shapes that leave after it finish coming in and can be read: moving on sooner
+ * cuts a callout off halfway (it half draws, then blinks out), which reads as a glitch (G 2026-10-08).
+ */
+function settleMs(d: Explanation["diagram"], at: number): number {
+  if (!d || d.kind !== "scene") return 0;
+  let end = 0;
+  for (const it of d.items) {
+    if (it.until !== at || !it.enter) continue;
+    const word = it.enter.split(" ")[0]!;
+    end = Math.max(end, (it.delay ?? 0) + (word === "draw" && it.enter.includes("slow") ? 1.6 : ENTER_S[word] ?? 0.5));
+  }
+  return end ? Math.round(end * 1000) + 700 : 0;
 }

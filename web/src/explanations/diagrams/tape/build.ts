@@ -116,8 +116,9 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
     for (const lay of layers) {
       const pw = span(lay) * unit, ins = inset(pw), step = Math.min(0.06, 0.6 / lay.count);
       for (let i = 0; i < lay.count; i++) {
+        // a re-cut swaps in place (the dashed marks already showed where): popping every part again reads as the bar rebuilding
         push({ type: "rect", x: r1(X(start) + i * pw + ins), y: top, w: r1(pw - 2 * ins), h, rx: r1(Math.min(7, pw / 3, h / 4)), cls: "seg",
-          enter: "pop", delay: r1(i * step * 100) / 100, ...when(lay.from, lay.until) });
+          ...(lay === layers[0] ? { enter: "pop" as const, delay: r1(i * step * 100) / 100 } : {}), ...when(lay.from, lay.until) });
       }
     }
 
@@ -131,7 +132,8 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
         const until = run.until == null ? lay.until : lay.until == null ? run.until : Math.min(run.until, lay.until);
         if (until != null && until < from) continue;
         const pu = span(lay), pw = pu * unit, ins = inset(pw);
-        const enter = from === (row.from ?? 0) || from === lay.from ? "pop" : "fade";
+        // shading pops in with its bar, fades in when it arrives later, and swaps in place when only the cut under it changes
+        const enter = from === (row.from ?? 0) ? "pop" : from === lay.from && lay !== layers[0] ? undefined : "fade";
         let k = 0;
         for (let i = 0; i < lay.count; i++) {
           const p0 = start + i * pu, p1 = p0 + pu, lo = Math.max(fill.a, p0), hi = Math.min(fill.b, p1);
@@ -141,7 +143,7 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
           const xb = Math.max(X(hi) - (Math.abs(hi - p1) < EPS ? ins : 0), Math.min(xa + MIN_FILL, X(p1) - ins));
           push({ type: "rect", x: r1(xa), y: top, w: r1(Math.max(0.5, xb - xa)), h, rx: r1(Math.min(7, (xb - xa) / 3, h / 4)),
             cls: fill.tone === "cut" ? "seg on cut" : fill.tone === "two" ? "seg on p1" : "seg on", ...(fill.tone === "acc" ? { vars: { "--tint": "var(--acc)" } } : {}),
-            enter, delay: r1(k++ * Math.min(0.06, 0.6 / lay.count) * 100) / 100, ...when(from, until) });
+            ...(enter ? { enter } : {}), delay: r1(k++ * Math.min(0.06, 0.6 / lay.count) * 100) / 100, ...when(from, until) });
         }
       }
       if (fill.tone === "cut") {
