@@ -1,3 +1,6 @@
+/* a panel's words sit one inset in from its edge, the same on every panel: the lesson's title and a problem's question
+   (G 2026-10-08 10:02 "it needs the invisible padding to match") */
+.wrap{--pane-pad:28px}
 /* Screen (master): the frame every app screen sits in. The page never scrolls on a split or fit screen: the screen
    fills what's left under the island, and only its list scrolls, with a thin scroll mark (Design, handoff 5).
    Instances (split, fit) override only what differs. */
@@ -68,12 +71,13 @@ html:has(.screen) body{overflow:hidden}
    pill plus the gap; the list's own rows (Today, a chapter's title) are as tall as that panel, so they're pills of the same
    round; the open chapter is that plus the gap and stands one gap in from the list's edge; and the list is that plus the gap
    again, so every corner is concentric */
-.slist{--row-top:calc(var(--row-h) + var(--list-gap) * 2);border-radius:calc(var(--row-top) / 2 + var(--list-gap) * 2)!important}
+/* every row is one size, the lesson pill's (G 2026-10-08 09:59: "counting button height should match its sub button height") */
+.slist{--row-top:var(--row-h);border-radius:calc(var(--row-top) / 2 + var(--list-gap) * 2)!important}
 .slist>.srow,.slist>.sgroup>.srow.chap{min-height:var(--row-top)}
 .wrap .screen .slist.slist{padding:calc(var(--list-gap) * 2 - var(--panel-w))}
 .wrap .screen.gu .slist.slist{padding-bottom:calc(var(--sp-6) - var(--panel-w))}
 .slist>:is(.srow,.sgroup)+.sgroup,.slist>.sgroup+.srow{margin-top:var(--list-gap)}
-.sgroup{border-radius:calc(var(--row-h) / 2 + var(--list-gap) * 2);transition:background-color var(--m-close) var(--m-ease),padding var(--m-close) var(--m-ease),margin var(--m-close) var(--m-ease)}
+.sgroup{border-radius:calc(var(--row-top, var(--row-h)) / 2 + var(--list-gap));transition:background-color var(--m-close) var(--m-ease),padding var(--m-close) var(--m-ease),margin var(--m-close) var(--m-ease)}
 .sgroup.open{background:var(--surf-nest);margin-inline:calc(var(--list-gap) * -1);padding:var(--list-gap)}
 .sgroup-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--m-close) var(--m-ease),visibility 0s var(--m-close)}
 .sgroup.open>.sgroup-body{grid-template-rows:1fr;transition:grid-template-rows var(--m-close) var(--m-ease)}
@@ -180,7 +184,7 @@ html:has(.screen) body{overflow:hidden}
 .screen.fit.lscreen{grid-template-columns:minmax(300px,380px) minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"intro hero" ". ctl";align-content:stretch}
 /* the lesson intro is a Panel (master): the same fill, line and corner as the picture tile beside it (G 21:13). It
    scrolls, so its line is a border, not an inset outline */
-.lintro{background:var(--pane-plain,var(--float));border:var(--panel-w) solid var(--panel-line);border-radius:var(--r-panel);grid-area:intro;min-height:0;overflow:auto;scrollbar-width:thin;display:flex;flex-direction:column;gap:var(--sp-3);padding:var(--sp-6) var(--sp-6) var(--sp-4)}
+.lintro{background:var(--pane-plain,var(--float));border:var(--panel-w) solid var(--panel-line);border-radius:var(--r-panel);grid-area:intro;min-height:0;overflow:auto;scrollbar-width:thin;display:flex;flex-direction:column;gap:var(--sp-3);padding:var(--pane-pad) var(--pane-pad) var(--sp-4)}
 .lintro .k{margin:0;color:var(--muted);font-size:var(--fz-sm);font-weight:var(--w-mid);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .lintro h1{margin:0;font:var(--w-bold) 30px/1.12 var(--sans);letter-spacing:-.03em;color:var(--text)}
 .lintro .lsub{margin:0;font-size:var(--fz-lg);font-weight:var(--w-mid);color:var(--ink)}
@@ -199,7 +203,7 @@ html:has(.screen) body{overflow:hidden}
 /* the steps read like the Contents list: only the current step is open with its working; the others show their one line,
    so the intro never runs past its panel */
 .lintro .beat:not([data-state="now"]) .say>:not(:first-child){display:none}
-@media (max-height:800px){.lintro .idea+.idea{display:none}.lintro{padding:var(--sp-5) var(--sp-5) var(--sp-4)}}
+@media (max-height:800px){.lintro .idea+.idea{display:none}.lintro{padding:var(--pane-pad) var(--pane-pad) var(--sp-4)}}
 .lintro .lhelp{margin:0;color:var(--muted);font-size:var(--fz-sm)}
 .lintro .lhelp b{color:var(--ink)}
 .lintro .tlink{padding:var(--sp-1) 0;min-height:0}
@@ -235,7 +239,7 @@ html:has(.screen) body{overflow:hidden}
 .ldots i.now{width:24px;background:var(--tint)}
 @media (orientation:portrait),(max-width:899px){
   .screen.fit.lscreen{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"intro" "hero" "ctl"}
-  .lintro{overflow:visible;padding:var(--sp-5) var(--sp-6);gap:6px}
+  .lintro{overflow:visible;padding:var(--pane-pad);gap:6px}
   .lintro .beats,.lintro .lhelp,.lintro .tlink,.lintro .idea+.idea{display:none}
   .lintro h1{font-size:26px}
   /* the idea is read whole, never cut mid-sentence: the picture under it gives up the room (v44 sweep item 7) */
@@ -648,7 +652,7 @@ html:has(.screen) body{overflow:hidden}
 .pscreen .pbar{--list-gap:var(--nest);--row-h:var(--srow)}
 /* the practice screen has no intro column: the problem's words live in the solve panel, on top, and the steps follow */
 .pscreen>.pintro{display:none}
-.pscreen .lshero.phero>.pprob{grid-row:1;padding:var(--sp-5) var(--sp-6) 0}
+.pscreen .lshero.phero>.pprob{grid-row:1;padding:var(--pane-pad) var(--pane-pad) 0}
 .pscreen.pwordy .lshero.phero>.pbar{grid-row:2}
 .pscreen:not(.pwordy) .lshero.phero>.pprob{display:none}
 .pscreen .lshero.phero>.pbar{grid-row:1;display:block;padding:calc(var(--nest) * 2) calc(var(--nest) * 2) 0}
@@ -659,7 +663,7 @@ html:has(.screen) body{overflow:hidden}
 .pscreen .pbar>.sgroup{padding:0;margin:0}
 .pscreen .pbar>.sgroup.open{margin:calc(var(--list-gap) * -1) calc(var(--list-gap) * -1) 0;padding:var(--list-gap)}
 .pscreen .pbar .srow{--badge:28px;min-height:var(--srow);border-radius:calc(var(--srow) / 2);align-items:flex-start;gap:10px;padding:calc((var(--srow) - var(--badge)) / 2) var(--sp-2)}
-.pscreen .pbar .srow.chap{background:var(--g2,var(--well));--row-top:calc(var(--srow) + var(--nest) * 2);min-height:var(--row-top);border-radius:calc(var(--row-top) / 2);padding:calc((var(--row-top) - var(--badge)) / 2)}
+.pscreen .pbar .srow.chap{background:var(--g2,var(--well));--row-top:var(--srow);min-height:var(--row-top);border-radius:calc(var(--row-top) / 2);padding:calc((var(--row-top) - var(--badge)) / 2)}
 .pscreen .pbar .sgroup.open>.srow.chap{background:var(--g3,var(--surf-sub))}
 .pscreen .pbar .srow .sname b,.pscreen .pbar .srow>small{line-height:var(--badge)}
 .pscreen .pbar .srow.chap .sname b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

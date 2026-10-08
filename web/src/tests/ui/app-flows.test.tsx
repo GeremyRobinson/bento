@@ -365,9 +365,9 @@ describe("My Bento", () => {
     fireEvent.click(screen.getByRole("button", { name: "My Obento: 3 day streak, 1240 XP" }));
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(screen.getByRole("button", { name: /^My Obento:/ })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByRole("heading", { level: 1, name: /^Level \d+$/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: /^Level \d+$/ })).toBeInTheDocument();
     expect(screen.getByText("1,240")).toBeInTheDocument();
-    expect(screen.getByText("day streak")).toBeInTheDocument();
+    expect(screen.getByText("Day streak")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Switch grade" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Open the report ›" })).toBeInTheDocument();
     expect(screen.queryByRole("switch")).toBeNull();
