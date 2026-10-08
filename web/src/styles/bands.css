@@ -59,6 +59,9 @@
 .wrap[data-grade="11"]{--vib:.55;--calm:.62} .wrap[data-grade="12"]{--vib:.5;--calm:.56}
 /* the lesson's step of the hue: --tint fills and draws, --ink is text in the hue (the light steps read on white) */
 .wrap{--tint:oklch(from var(--h2) l calc(c * var(--calm)) h)}
+/* glass layering (G 2026-10-08, Ring balance lab): one see-through tint of the grade's colour for every rung, so the colour
+   deepens only where rungs stack. --glass-a is its strength (G: 15%) */
+.wrap{--glass-a:15%;--glass:color-mix(in oklab,var(--tint) var(--glass-a),transparent)}
 .t0{--tint:oklch(from var(--h2) l calc(c * var(--calm)) h)} .t1{--tint:oklch(from var(--h1) l calc(c * var(--calm)) h)} .t2{--tint:oklch(from var(--h3) l calc(c * var(--calm)) h)} .t3{--tint:oklch(from var(--h2) l calc(c * var(--calm)) h)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--tint:oklch(from var(--hd1) l calc(c * var(--calm)) h)} :root:not([data-theme="light"]) .t0{--tint:oklch(from var(--hd1) l calc(c * var(--calm)) h)} :root:not([data-theme="light"]) .t1{--tint:oklch(from var(--hd2) l calc(c * var(--calm)) h)} :root:not([data-theme="light"]) .t2{--tint:oklch(from var(--hd3) l calc(c * var(--calm)) h)} :root:not([data-theme="light"]) .t3{--tint:oklch(from var(--hd1) l calc(c * var(--calm)) h)}}
 :root[data-theme="dark"] .wrap{--tint:oklch(from var(--hd1) l calc(c * var(--calm)) h)} :root[data-theme="dark"] .t0{--tint:oklch(from var(--hd1) l calc(c * var(--calm)) h)} :root[data-theme="dark"] .t1{--tint:oklch(from var(--hd2) l calc(c * var(--calm)) h)} :root[data-theme="dark"] .t2{--tint:oklch(from var(--hd3) l calc(c * var(--calm)) h)} :root[data-theme="dark"] .t3{--tint:oklch(from var(--hd1) l calc(c * var(--calm)) h)}
