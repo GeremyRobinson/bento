@@ -40,8 +40,8 @@ html:has(.screen) body{overflow:hidden}
 .srow.chap.holds .sname b::after{content:"";display:inline-block;width:6px;height:6px;margin-left:var(--sp-2);border-radius:var(--r-round);background:var(--ink);vertical-align:middle}
 .srow{position:relative;z-index:var(--z-up);display:flex;align-items:center;gap:var(--sp-3);width:100%;min-height:var(--float-h);padding:var(--sp-2) 18px;border-radius:var(--r-pill);text-align:left;font-size:var(--fz-md);transition:background var(--m-swap) var(--m-ease),color var(--m-swap) var(--m-ease)}
 /* hover lifts a row one glass layer above what it sits on: list rows to --g2, lessons (on --g3) to --g4 */
-@media (hover:hover){.srow:not([disabled]):not(.on):not(.still):hover,.srow:not([disabled]):not(.on):not(.still):active{background:var(--g2,var(--hover))} .sgroup .srow.sles:not([disabled]):not(.on):hover,.sgroup .srow.sles:not([disabled]):not(.on):active{background:var(--g4,var(--hover))}}
-@media (hover:none){.srow:not([disabled]):not(.on):active{background:var(--g2,var(--hover))} .sgroup .srow.sles:not([disabled]):not(.on):active{background:var(--g4,var(--hover))}}
+@media (hover:hover){.srow:not([disabled]):not(.on):not(.still):not(:is(.screen.contents,.pscreen .pbar) *):hover,.srow:not([disabled]):not(.on):not(.still):not(:is(.screen.contents,.pscreen .pbar) *):active{background:var(--g2,var(--hover))} .sgroup .srow.sles:not([disabled]):not(.on):not(:is(.screen.contents,.pscreen .pbar) *):hover,.sgroup .srow.sles:not([disabled]):not(.on):not(:is(.screen.contents,.pscreen .pbar) *):active{background:var(--g4)}}
+@media (hover:none){.srow:not([disabled]):not(.on):not(:is(.screen.contents,.pscreen .pbar) *):active{background:var(--g2,var(--hover))} .sgroup .srow.sles:not([disabled]):not(.on):not(:is(.screen.contents,.pscreen .pbar) *):active{background:var(--g4)}}
 .srow .sname{flex:1;min-width:0;display:grid}
 .srow .sname b{font-weight:var(--w-mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* a long name wraps to a second line rather than losing its end (v44 sweep item 8) */
@@ -140,7 +140,9 @@ html:has(.screen) body{overflow:hidden}
 .schapters .srow.big.chap,.schapters .sgroup.open>.srow.big.chap,.schapters .sgroup.open>.srow.big.chap:hover{background:var(--glass)}
 .schapters .sgroup-in{border-radius:calc(var(--row-h) / 2 + var(--list-gap))}
 .schapters .sgroup-panel{background:var(--glass)}
-@media (hover:hover){.screen.contents .srow.big:not(.chap):not(.on):hover::before,.screen.contents .schapters .srow.big.chap:hover::before{opacity:1}}
+/* hover is one more glass layer on top (G 2026-10-08 22:20: "just add another layer"), never a lighter colour */
+@media (hover:hover){:is(.screen.contents,.pscreen .pbar) .srow:not([disabled]):not(.on):hover::before{opacity:1}}
+:is(.screen.contents,.pscreen .pbar) .srow:not([disabled]):not(.on):active::before{opacity:1}
 .sfoot{padding:var(--sp-3) var(--sp-2) calc(var(--sp-1) + var(--sp-3));position:sticky;bottom:calc(var(--panel-w,1px) - var(--sp-3));background:var(--surf-1,var(--well));z-index:var(--z-up)}
 /* the grade's book: the detail (a well with the preview, a floating card with the lesson) */
 .sdetail>.sday{align-content:start}
