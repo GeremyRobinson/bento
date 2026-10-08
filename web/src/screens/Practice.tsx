@@ -35,6 +35,9 @@ const SpeakerIcon = () => (
 // on a larger screen the solve panel has the room, so the steps stay open (G 2026-10-07 22:00); same query as the wide layout
 const wideSteps = () => typeof matchMedia !== "undefined" && matchMedia("(min-width: 900px) and (orientation: landscape)").matches;
 
+/** answers lie in even rows, never one left on its own (G 2026-10-08 "3 answers is kind of odd"): up to 3 in one row, 4 as two by two */
+const balanced = (n: number) => (n === 4 ? 2 : n > 4 ? 3 : n);
+
 /** whether the screen is wide (the same query as wideSteps), kept up to date as the window turns or resizes */
 function useWide() {
   const [wide, setWide] = useState(wideSteps);
@@ -289,7 +292,7 @@ export function Practice() {
       <Keypad band={band} tap={step && tapOnly ? (
         <div className="tappad">
           {!askInPad && <div className="tapnote muted">{s.pick ? "You plan this one: tap the step that comes next." : "Tap your answer."}</div>}
-          <div className="choices">{s.pick
+          <div className="choices" style={{ "--cols": balanced((s.pick ? s.pick.options : step.choices!).length) } as CSSProperties}>{s.pick
             ? s.pick.options.map((o, i) => <button key={`${i}-${o}`} className={`choice${mark(i)}`} onClick={() => { setTapped({ at, i }); act(st => pickPlan(st, i)); }}>{o}</button>)
             : step.choices!.map((o, i) => <button key={`${i}-${o}`} className={`choice${mark(i)}`} onClick={() => { setTapped({ at, i }); act((st, p, d) => choose(st, i, p, d)); }}>{o}</button>)}</div>
         </div>) : undefined}

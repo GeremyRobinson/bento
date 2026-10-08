@@ -367,7 +367,7 @@ html:has(.screen) body{overflow:hidden}
 .ppad.ptap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--sp-2);align-items:end}
 .ppad .tappad{display:grid;gap:var(--sp-2)}
 .ppad .tapnote{padding:0}
-.ppad .choices{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.ppad .choices{grid-template-columns:repeat(var(--cols,2),minmax(0,1fr))}
 .ppad .choice{min-height:var(--key);background:var(--float);box-shadow:var(--float-shadow);border-color:transparent}
 .ppad .choice.ok{background:var(--ok);color:var(--page)}
 .ppad .choice.no{background:var(--err);color:var(--page);animation:shake var(--dur-300) var(--ease)}
