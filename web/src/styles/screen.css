@@ -671,8 +671,8 @@ html:has(.screen) body{overflow:hidden}
 .stepbar .badge{flex:none;background:var(--ink);color:var(--on-tint);font-size:var(--fz-xs)}
 .pscreen .pbar .chev{flex:none;width:var(--badge);height:var(--badge);display:grid;place-items:center;border-radius:var(--r-round);background:var(--btn-card-hover,var(--hover));color:var(--ink);transform-origin:50% 50%;transition:transform var(--m-swap) var(--m-ease)}
 .pscreen .pbar .chev>svg{width:18px;height:18px;display:block}
-/* Apple's disclosure chevron (G 2026-10-08): it points right while folded and turns down to the steps it opened */
-.pscreen .pbar .srow.chap[aria-expanded="true"] .chev{transform:rotate(90deg)}
+/* the steps' chevron points down while folded and up when open (G 2026-10-08 "up when open") */
+.pscreen .pbar .srow.chap[aria-expanded="true"] .chev{transform:rotate(180deg)}
 /* a step row: its badge, then its name over its math; rows aren't buttons, so they never lift on hover */
 .pscreen .pbar .pstep{pointer-events:none;padding-right:var(--sp-3);color:var(--muted)}
 .pscreen .pbar .pstep.on{color:var(--text)}
@@ -758,5 +758,23 @@ html:has(.screen) body{overflow:hidden}
 /* and it's a button (G 2026-10-08): the Pill master's plain fill for a button on a panel, a rung up on hover */
 .pscreen .pbar .pwhere.pzoom{background:var(--btn-panel,var(--card))}
 .pscreen .pbar .pwhere.pzoom:hover,.pscreen .pbar .pwhere.pzoom:active{background:var(--btn-panel-hover,var(--hover))}
+/* the Problem button keeps the panel's own gap from the steps (G 2026-10-08 "too close"): the same space as the panel's edge
+   to the steps' group, open or folded (the open group reaches up by one nest, so it takes one more) */
+.pscreen .pbar .pwhere.pzoom{margin-bottom:calc(var(--nest) * 2)}
+.pscreen .pbar:has(>.sgroup.open) .pwhere.pzoom{margin-bottom:calc(var(--nest) * 3)}
 .pzoom{width:100%;text-align:left;cursor:pointer;border-radius:var(--r-pill);transition:background var(--dur-150)}
 .pzoom:hover,.pzoom:active{background:var(--tint-soft)}
+/* a computer or iPad on its side (G 2026-10-08): the problem on top, then its steps, then the Problem button at the bottom.
+   The step bar's box steps aside (display:contents) so the accordion and the button each take their own row of the panel */
+@media (min-width:900px) and (orientation:landscape){
+  .screen.fit.lscreen.pscreen .lshero.phero{grid-template-rows:auto auto auto auto auto minmax(0,1fr) auto}
+  .screen.fit.lscreen.pscreen .lshero.phero>.pprob{grid-row:1}
+  .screen.fit.lscreen.pscreen .lshero.phero>.pmath{grid-row:2}
+  .screen.fit.lscreen.pscreen .lshero.phero>.pfb,.screen.fit.lscreen.pscreen .lshero.phero>.pfb:is(.fb-bad,.fb-hint){grid-row:3}
+  .screen.fit.lscreen.pscreen .lshero.phero>.phint{grid-row:4}
+  .screen.fit.lscreen.pscreen .lshero.phero>.pbar{display:contents}
+  .screen.fit.lscreen.pscreen .lshero.phero>.pbar>*{grid-column:1;z-index:var(--z-up)}
+  .screen.fit.lscreen.pscreen .lshero.phero>.pbar>.sgroup{grid-row:5;margin:0 calc(var(--nest) * 2)}
+  .screen.fit.lscreen.pscreen .lshero.phero>.pbar>.sgroup.open{margin:0 var(--nest);padding:var(--nest)}
+  .screen.fit.lscreen.pscreen .lshero.phero>.pbar>.pwhere{width:auto;grid-row:7;margin:calc(var(--nest) * 2) calc(var(--nest) * 2)}
+}
