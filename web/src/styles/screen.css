@@ -331,7 +331,7 @@ html:has(.screen) body{overflow:hidden}
 .pdots{display:inline-flex;align-items:center;gap:5px;min-width:0;flex:0 1 auto}
 .pdots:has(>i:nth-child(13)){gap:3px}
 @media (max-width:360px){.pdots:has(>i:nth-child(13)){gap:2px} .pwhere .pdots.pzoom{padding:0 var(--sp-1)}}
-.pdots i{flex:0 1 8px;min-width:3px;height:8px;border-radius:var(--r-xs);background:var(--faint)}
+.pdots i{flex:0 1 8px;min-width:3px;height:8px;border-radius:var(--r-xs);background:var(--dot-off)}
 .pdots i.ok{background:color-mix(in oklab,var(--tint) 45%,var(--float))}
 .pdots i.now{flex-basis:20px;min-width:8px;background:var(--tint)}
 .ptestk{margin:0;color:var(--muted);font-size:var(--fz-sm);font-weight:var(--w-mid);line-height:1.35}
