@@ -773,7 +773,7 @@ html:has(.screen) body{overflow:hidden}
 }
 /* "Problem 2 of 6" is a button: it zooms out to every problem, to pick which comes next (G 2026-10-08); it shows at every size */
 /* a Row like the step bar under it: its words start where the step bar's badge does; its progress dots are what you tap (G 2026-10-08) */
-.pscreen .pbar .pwhere{display:flex;min-height:calc(var(--srow) + var(--nest) * 2);gap:var(--sp-3);margin:0 0 var(--list-gap);padding:var(--nest) var(--nest) var(--nest) calc(var(--nest) + var(--pill-pad));border-radius:var(--r-pill);color:var(--text);font-weight:var(--w-mid);font-size:var(--fz-md)}
+.pscreen .pbar .pwhere{display:flex;min-height:calc(var(--srow) + var(--nest) * 2);gap:var(--sp-3);margin:0 0 var(--list-gap);padding:var(--nest) var(--nest) var(--nest) calc(var(--nest) + var(--srow) / 2);border-radius:var(--r-pill);color:var(--text);font-weight:var(--w-mid);font-size:var(--fz-md)}
 .pscreen .pbar .pwhere .sname{flex:1 0 auto;white-space:nowrap}
 /* and it's a button (G 2026-10-08): the Pill master's plain fill for a button on a panel, a rung up on hover */
 .pwhere{background:var(--g2)}
