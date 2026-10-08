@@ -221,6 +221,8 @@ button.gcell:active{transform:scale(.96)}
 .slot.empty{border-style:dashed;border-color:var(--ink);background:color-mix(in srgb,var(--tint) 10%,var(--well))}
 .slot.empty.active{outline:3px solid color-mix(in srgb,var(--tint) 30%,transparent);outline-offset:0}
 .slot.small{min-width:var(--slot)}
+/* a box for a power sits raised and small, like the power it stands for (G 2026-10-08) */
+sup>.slot{--slot:1.6em;font-size:1em;min-width:var(--slot);padding:0 .15em;border-width:1.5px;vertical-align:baseline}
 .slot.typed{animation:pop var(--dur-250) var(--m-ease)}
 .fr .slot{margin:var(--sp-1) 0}
 .fr.slots>span:first-child{padding-bottom:6px}
