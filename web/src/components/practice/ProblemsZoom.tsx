@@ -78,7 +78,8 @@ export function ProblemsZoom({ s, pick, close }: { s: PracticeSession; pick: (in
             const solved = done.has(k), now = k === s.i, open = canPick(s, k), finished = solved || (now && s.solved);
             // in a test a step that had to be shown is a miss: no tick, never "Solved" (G 2026-10-08)
             const missed = finished && s.mode === "test" && !!s.probs[(s.done ?? []).indexOf(k)]?.work.some(w => w.shown);
-            const state = missed ? "Not this time" : finished ? "Solved" : now ? "Now" : "To do";
+            // a test says plainly how each one went: Correct or Incorrect (G 2026-10-08)
+            const state = missed ? "Incorrect" : finished ? (s.mode === "test" ? "Correct" : "Solved") : now ? "Now" : "To do";
             return (
               <button key={k} className={`zcard zprob${finished ? " done" : ""}${missed ? " missed" : ""}${now ? " now on" : ""}`} style={{ "--i": k } as CSSProperties}
                 disabled={!now && !open} aria-current={now ? "step" : undefined} aria-label={`Problem ${k + 1}, ${state.toLowerCase()}`}

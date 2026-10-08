@@ -260,7 +260,7 @@ export function Practice() {
           <ListGroup open={stepsOpen} head={
             <button key={fb?.type === "good" && !s.solved ? fbKey : "bar"} className={`srow chap stepbar${won ? " solved" : missed ? " missed" : ""}${fb?.type === "good" && !s.solved && !fbAway ? " flash" : ""}`} onClick={toggleSteps} aria-expanded={stepsOpen} aria-label={`Steps: ${now?.label ?? "done"}, ${Math.min(here + 1, steps.length)} of ${steps.length}`}>
               <span className="badge">{won ? <Check /> : s.solved ? steps.length : here + 1}{fb?.type === "good" && !s.solved && !fbAway && <span className="tick"><Check /></span>}</span>
-              <span className="sname"><b>{s.solved ? <><strong>{missed ? "Not this time." : "Solved."}</strong>{idea && <> <Rich text={idea} /></>}</> : now?.label}</b></span>
+              <span className="sname"><b>{s.solved ? <><strong>{missed ? "Incorrect." : test ? "Correct." : "Solved."}</strong>{idea && <> <Rich text={idea} /></>}</> : now?.label}</b></span>
               {!s.solved && <small className="smeta">{Math.min(here + 1, steps.length)} of {steps.length}</small>}<span className="chev" aria-hidden><Chevron dir="down" /></span>
             </button>}>
             {/* a test lists the steps done and the one you're on; the rest would only say "Step 3" (G 2026-10-08) */}

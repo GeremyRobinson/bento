@@ -26,6 +26,8 @@
 .ctl.go .badge{background:var(--white-a25);color:var(--on-tint)}
 .badge{min-width:var(--badge);height:var(--badge);border-radius:var(--r-pill);display:inline-flex;align-items:center;justify-content:center;padding:0 var(--s);font-family:var(--num);font-weight:var(--w-bold);background:var(--well);color:var(--text);flex:none;font-variant-numeric:tabular-nums}
 .card .badge,.ctl .badge{background:var(--tint-soft);color:var(--ink)}
+/* a mark (tick or cross) sits in a true circle, never a pill (G 2026-10-08 "these should be circles") */
+.badge:has(>svg){padding:0;width:var(--badge);min-width:0}
 .badge.on,.card .badge.on,.ctl .badge.on{background:var(--ink);color:var(--on-tint)}
 .bar{display:flex;align-items:center;gap:var(--s);padding:var(--inset);background:var(--surf-1,var(--well));border-radius:var(--r-pill);min-width:0}
 .ctl.circ{width:var(--pill-h);padding:0;flex:none;background:var(--btn-card,var(--card));color:var(--ink);box-shadow:none}

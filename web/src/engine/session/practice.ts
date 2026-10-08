@@ -369,7 +369,7 @@ export function check(s: PracticeSession, progress: Progress, deps: Deps): Pract
   if (isTest(next)) {
     const shownValues = Object.fromEntries(Object.entries(expected).map(([k, v]) => [k, formatNumber(v)]));
     const after = pass({ ...next, values: shownValues }, true, progress, deps);
-    return { ...after, feedback: { type: "hint", text: `Not this time. The answer was **${typedText(step, expected)}**.${currentStep(after) ? " Keep going." : ""}` } };
+    return { ...after, feedback: { type: "hint", text: `Incorrect. The answer was **${typedText(step, expected)}**.${currentStep(after) ? " Keep going." : ""}` } };
   }
   const band = bandOfSession(next);
   const msg = cat === "concept" ? r.message
