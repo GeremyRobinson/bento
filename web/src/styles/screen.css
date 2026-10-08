@@ -70,28 +70,31 @@ html:has(.screen) body{overflow:hidden}
    again, so every corner is concentric */
 /* one pill size (G 2026-10-08): the list's own rows are the same pill as its lessons, and the list is that pill's round
    plus the panel's pad, the same corner as every main panel */
-.slist{--row-top:var(--row-h);border-radius:var(--r-panel)!important}
+/* four levels at most (G 2026-10-08 "4 levels is max"): the list panel, an open chapter, its lessons rung, the rows. Each
+   level is one gap round the one inside, so the list pads three gaps and its corner is the row's round plus those three */
+.slist{--pad-panel:calc(var(--list-gap) * 3);--row-top:var(--row-h);border-radius:calc(var(--row-h) / 2 + var(--pad-panel))!important}
 .slist>.srow,.slist>.sgroup>.srow.chap{min-height:var(--row-top)}
 .wrap .screen .slist.slist{padding:calc(var(--pad-panel) - var(--panel-w))}
 .wrap .screen.gu .slist.slist{padding-bottom:calc(var(--sp-6) - var(--panel-w))}
 .slist>:is(.srow,.sgroup)+.sgroup,.slist>.sgroup+.srow{margin-top:var(--list-gap)}
-.sgroup{border-radius:calc(var(--row-h) / 2 + var(--list-gap));transition:background-color var(--m-close) var(--m-ease),padding var(--m-close) var(--m-ease),margin var(--m-close) var(--m-ease)}
+.sgroup{border-radius:calc(var(--row-h) / 2 + var(--list-gap) * 2);transition:background-color var(--m-close) var(--m-ease),padding var(--m-close) var(--m-ease),margin var(--m-close) var(--m-ease)}
 /* corners by maths (G 2026-10-08 "a padding gap system that automatically calculates radius"): each ring is the ring
    inside it plus the space between. Row 26, lessons panel 26 + gap, open group 26 + 2 gaps, main panel 26 + 3 gaps.
    So the open group steps two gaps out from the rows' line, its head sits two gaps in, its lessons panel one */
-.sgroup.open{background:var(--surf-nest);margin-inline:calc(var(--list-gap) * -1);padding:var(--list-gap)}
+.sgroup.open{background:var(--surf-nest);margin-inline:calc(var(--list-gap) * -2);padding:calc(var(--list-gap) * 2) calc(var(--list-gap) * 2) var(--list-gap)}
+.sgroup.open>.sgroup-body{margin-inline:calc(var(--list-gap) * -1)}
 .sgroup-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--m-close) var(--m-ease),visibility 0s var(--m-close)}
 .sgroup.open>.sgroup-body{grid-template-rows:1fr;transition:grid-template-rows var(--m-close) var(--m-ease)}
 .sgroup:not(.open)>.sgroup-body{visibility:hidden}
 /* the fold's clip is as round as the rows, so its corners stay round while it folds (Review) */
-.sgroup-in{min-height:0;overflow:hidden;border-radius:var(--r-row)}
+.sgroup-in{min-height:0;overflow:hidden;border-radius:calc(var(--row-h) / 2 + var(--list-gap))}
 /* the picked lesson's shade waits for its chapter to finish opening, then fades in; it never rides up with the panel (Review) */
 .sgroup:is(.opening,:not(.open)) .srow::before{opacity:0}
 .sgroup.opening .srow::before{transition:none}
 /* the open chapter's title keeps its highlight while its lessons show (G 2026-10-07) */
 .sgroup.open>.srow.chap,.sgroup.open>.srow.chap:hover,.sgroup.open>.srow.chap:active{background:var(--g3)}
 /* the lessons sit in their own panel nested inside the chapter's, a step darker (G 2026-10-07, "its own separate background nester") */
-.sgroup-panel{display:grid;gap:var(--list-gap);margin-top:var(--list-gap);border-radius:var(--r-row)}
+.sgroup-panel{display:grid;gap:var(--list-gap);margin-top:var(--list-gap);padding:var(--list-gap);background:var(--surf-sub);border-radius:calc(var(--row-h) / 2 + var(--list-gap))}
 .sgroup .srow.sles{min-height:var(--row-h);padding-block:0}
 /* the current lesson: a darker shade of the panel, never the floating pill (G: "so you know which one you're on") */
 .sgroup .srow.sles::before{background:var(--g4);box-shadow:none}
@@ -679,6 +682,7 @@ html:has(.screen) body{overflow:hidden}
 .pscreen .pbar>.sgroup.open{margin:0;padding:var(--nest)}
 .pscreen .pbar .sgroup.open>.sgroup-body{margin-inline:0}
 .pscreen .pbar .sgroup-panel{background:none;padding:0;border-radius:var(--r-row)}
+.pscreen .pbar .sgroup-in{border-radius:var(--r-row)}
 .pscreen .pbar .srow{--badge:28px;min-height:var(--srow);border-radius:calc(var(--srow) / 2);align-items:flex-start;gap:10px;padding:calc((var(--srow) - var(--badge)) / 2) var(--sp-2)}
 .pscreen .pbar .srow.chap{background:var(--g3,var(--well));--row-top:var(--srow);min-height:var(--row-top);border-radius:calc(var(--row-top) / 2);padding:calc((var(--row-top) - var(--badge)) / 2)}
 .pscreen .pbar .sgroup.open>.srow.chap{background:var(--g3,var(--surf-sub))}
