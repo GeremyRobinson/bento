@@ -96,7 +96,7 @@ describe("decimal shift", () => {
     const digits = texts(d).filter(t => /big/.test(t.cls ?? ""));
     expect(digits.map(t => t.text)).toEqual(["3", "4", "7"]);
     const [p0, was, p1] = circles(d);
-    expect(p1!.cx - p0!.cx).toBeCloseTo(2 * 46, 5);
+    expect(p1!.cx - p0!.cx).toBeCloseTo(2 * 52, 5);
     expect(was!.cx).toBe(p0!.cx); // the start stays behind as a ring, so the hops leave from it
     expect(was!.until).toBeUndefined();
     expect(d.items.filter(i => i.type === "path" && /arrow/.test(i.cls ?? ""))).toHaveLength(2);

@@ -371,8 +371,9 @@ describe("My Bento", () => {
     expect(screen.getByRole("button", { name: "Switch grade" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Open the report ›" })).toBeInTheDocument();
     expect(screen.queryByRole("switch")).toBeNull();
-    // the nav's wordmark always means home: your book
-    fireEvent.click(screen.getByRole("button", { name: "Obento, home" }));
+    // no wordmark inside the app (G 2026-10-08): the nav's back step leads home to your book
+    expect(screen.queryByRole("button", { name: "Obento, home" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /^Back to / }));
     expect(screen.getByRole("button", { name: "Grade check-up" })).toBeInTheDocument();
   });
 });

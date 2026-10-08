@@ -31,10 +31,10 @@ export function SceneDiagram({ diagram: d, at, fit = false }: { diagram: Scene; 
   return (
     <svg ref={ref} className="viz-svg" viewBox={`${r1(vb.x)} ${r1(vb.y)} ${r1(vb.w)} ${r1(vb.h)}`} role="img" aria-label={d.alt}
       style={{ "--w": Math.round(d.width), "--h": Math.round(d.height) } as CSSProperties} data-family={d.family}>
-      {dotsOnTop(d.items).map((it, i) => {
+      {dotsOnTop(d.items).map((it, i, all) => {
         const from = it.from ?? 0;
         if (from > at || (it.until != null && at > it.until)) return null;
-        const cls = [it.cls ?? "", enterClass(it.enter)].join(" ").trim();
+        const cls = [it.cls ?? "", continues(it, all) ? "" : enterClass(it.enter)].join(" ").trim();
         const style = { "--d": `${(it.delay ?? 0).toFixed(2)}s`, ...it.vars } as CSSProperties;
         const key = `${i}-${from}`;
         switch (it.type) {
@@ -51,6 +51,16 @@ export function SceneDiagram({ diagram: d, at, fit = false }: { diagram: Scene; 
     </svg>
   );
 }
+
+/** The same shape drawn again from the very next beat (a re-cut bar's unchanged parts, a label that stays the same) just
+ * stays put: replaying its entrance makes the picture blink out and rebuild (G 2026-10-08 "loading animation glitch"). */
+const look = ({ from: _f, until: _u, enter: _e, delay: _d, ...rest }: SceneItem) => JSON.stringify(rest);
+const continues = (it: SceneItem, all: SceneItem[]) => {
+  const from = it.from ?? 0;
+  if (!from || !it.enter) return false;
+  const me = look(it);
+  return all.some(o => o !== it && (o.from ?? 0) < from && o.until === from - 1 && look(o) === me);
+};
 
 interface Box { x: number; y: number; w: number; h: number }
 const r1 = (v: number) => Math.round(v * 10) / 10;

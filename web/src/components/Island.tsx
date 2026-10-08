@@ -277,8 +277,8 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   const back = place.back;
   return (
     <>
+    {/* no wordmark inside the app, only on the landing page (G 2026-10-08: "No apps I use show their logo") */}
     <Nav left={<>
-        {mark}
         {showResume && (
           <button className="iresume" onClick={() => go({ name: "practice" }, "fwd")}
             aria-label={`Resume ${run!.title}, ${runGrade!.name}, problem ${run!.i + 1} of ${run!.items.length}`}>
