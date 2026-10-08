@@ -905,4 +905,6 @@ html:has(.screen) body{overflow:hidden}
 .pfb .badge{--badge:24px;align-self:flex-start}
 /* in a test the Problem row is the same size pill as the steps bar under it (G 2026-10-08 "problem can be a bigger pill"),
    the dots' pill sitting in it the way the step's number sits in the bar */
-.pscreen.ptest .pbar .pwhere{min-height:var(--srow);padding:calc((var(--srow) - var(--badge,var(--sp-7))) / 2)}
+.pscreen.ptest .pbar .pwhere{min-height:var(--srow);padding:var(--nest) var(--nest) var(--nest) calc(var(--srow) / 2)}
+/* everything inside the Problem pill sits 10px from its edge (G 2026-10-08 "its not 10px") */
+.pscreen.ptest .pbar .pwhere .pdots.pzoom{height:calc(var(--srow) - var(--nest) * 2)}
