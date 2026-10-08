@@ -140,8 +140,9 @@ export function Practice() {
   // with no picture the question is the whole problem, so the steps start folded and the question leads (G 2026-10-08)
   const picRef = useRef(true);
   const askRef = useRef(false);
-  // the steps stay open where there's room for them: beside a picture, or in a test whose question sits in the pad
-  const openSteps = () => wideSteps() && (picRef.current || askRef.current);
+  // the steps stay open where there's room for them: beside a picture, or in a test whose question sits in the pad once
+  // there's work done to show (a test lists only the steps done and the one you're on)
+  const openSteps = () => wideSteps() && (picRef.current || (askRef.current && (s?.step ?? 0) > 0));
   useEffect(() => { setHintOpen(false); setStepsOpen(openSteps()); }, [s?.i, s?.step, s?.solved]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { dispatchEvent(new CustomEvent("bento:hintopen", { detail: hintOpen })); }, [hintOpen]);
   // the steps are the Contents accordion itself (the ListGroup master): it opens and folds on the master's own motion
@@ -262,7 +263,8 @@ export function Practice() {
               <span className="sname"><b>{s.solved ? <><strong>{missed ? "Not this time." : "Solved."}</strong>{idea && <> <Rich text={idea} /></>}</> : now?.label}</b></span>
               {!s.solved && <small className="smeta">{Math.min(here + 1, steps.length)} of {steps.length}</small>}<span className="chev" aria-hidden><Chevron dir="down" /></span>
             </button>}>
-            {beats.map(b => (
+            {/* a test lists the steps done and the one you're on; the rest would only say "Step 3" (G 2026-10-08) */}
+            {(test ? beats.filter(b => b.state !== "later") : beats).map(b => (
               <div key={b.k} className={`srow sles pstep${b.state === "now" ? " on" : ""}`} data-state={b.state}>
                 <span className="badge">{b.state === "done" ? <Check /> : b.k + 1}</span>
                 <span className="sname"><b>{b.label}</b>{b.line && <span className={`pline${b.line.shown ? " shown" : ""}`}><MathLine math={b.line.math} /></span>}</span>
