@@ -134,15 +134,6 @@ html:has(.screen) body{overflow:hidden}
 /* a chapter (G 2026-10-08 "a rung when open adds 10px of padding"): nothing ever changes size. Closed, its title is a big pill
    one gap from the group's edge. Opening adds a rung round it, one gap of padding round the same title pill and the lessons'
    own rung; closing takes the rung away. Only that chapter changes, the chapters below are pushed down */
-/* one colour over the whole group (G 2026-10-08 22:26-22:27): the layers are light grey glass and this overlay gives the group
-   its hue and saturation, keeping each layer's own lightness, so every layer, hover and dot is the grade's one hue */
-.schapters,.pscreen .pbar>.sgroup,.pwhere,.screen.contents .srow.big{position:relative}
-.schapters::after,.pscreen .pbar>.sgroup::after,.pwhere::after,.screen.contents .schapters~.srow.big::after,.screen.contents .shead .srow.big::after{content:"";position:absolute;inset:0;z-index:var(--z-up2);border-radius:inherit;background:var(--glass-hue);mix-blend-mode:color;opacity:var(--glass-tint-a);pointer-events:none}
-/* Today and Grade check-up take the overlay on themselves, so they must not be their own layer (it would tint them against
-   nothing): the hover glass and the words sit in page order instead */
-.screen.contents .srow.big:not(.chap){z-index:auto}
-.screen.contents .srow.big:not(.chap)::before{z-index:auto}
-.screen.contents .srow.big:not(.chap)>*{position:relative}
 .schapters>.sgroup{margin:0;padding:0;background:transparent;border-radius:var(--r-panel)}
 .schapters>.sgroup.open{margin:0;padding:var(--list-gap);background:var(--glass)}
 .schapters>.sgroup.open>.sgroup-body{margin-inline:0}
