@@ -69,8 +69,8 @@ const KINDS: { kind: string; prop: RegExp; ok: RegExp; use: string }[] = [
   },
   {
     kind: "fill", prop: /^background(-color)?$/,
-    ok: /^(none|transparent|inherit|initial|unset|0)$|^var\(--(g[1-4]|pane-plain|pane-glass|glass|page|tint|ok|err)\)$/,
-    use: "the glass ladder (--g1 to --g4, --pane-plain, --pane-glass, --glass), --tint, or --ok/--err for answers",
+    ok: /^(none|transparent|inherit|initial|unset|0)$|^var\(--(g[1-4]|pane-plain|pane-glass|glass|glass-hue|page|tint|ok|err)\)$/,
+    use: "the glass ladder (--g1 to --g4, --pane-plain, --pane-glass, --glass, --glass-hue), --tint, or --ok/--err for answers",
   },
 ];
 
