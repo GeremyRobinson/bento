@@ -817,8 +817,9 @@ html:has(.screen) body{overflow:hidden}
   /* each panel keeps its own height (G 2026-10-08 "weird for the right side to expand because of the left side growing"):
      the screen's row is the whole height and each panel sits centred in it on its own, so opening the steps grows the
      problem panel and never moves or stretches the answer panel */
-  .screen.fit.lscreen.pscreen.nopic.paskpad{grid-template-rows:minmax(0,1fr);align-content:stretch}
-  .screen.fit.lscreen.pscreen.nopic.paskpad>.ppad,.screen.fit.lscreen.pscreen.nopic.paskpad .lshero.phero{align-self:center}
+  .screen.fit.lscreen.pscreen.nopic.paskpad{grid-template-rows:auto;align-content:center}
+  /* their tops line up (G 2026-10-08 "align these at the top") */
+  .screen.fit.lscreen.pscreen.nopic.paskpad>.ppad,.screen.fit.lscreen.pscreen.nopic.paskpad .lshero.phero{align-self:start}
 }
 @media (min-width:900px) and (orientation:landscape){.screen.fit.lscreen.pscreen.paskpad>.ppad.phead.ptap{align-content:center}}
 /* a test marks each step it took: green with a tick when it came out right, red with a cross when it was missed (G 2026-10-08) */
