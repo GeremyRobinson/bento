@@ -134,6 +134,10 @@ html:has(.screen) body{overflow:hidden}
 /* a chapter (G 2026-10-08 "a rung when open adds 10px of padding"): nothing ever changes size. Closed, its title is a big pill
    one gap from the group's edge. Opening adds a rung round it, one gap of padding round the same title pill and the lessons'
    own rung; closing takes the rung away. Only that chapter changes, the chapters below are pushed down */
+/* one hue over the whole group (G 2026-10-08 22:26): see-through layers drift a little in hue as they stack, so a hue overlay
+   on top puts every layer, hover and dot under it back on the grade's one hue, keeping each layer's own lightness */
+.schapters,.pscreen .pbar>.sgroup{position:relative}
+.schapters::after,.pscreen .pbar>.sgroup::after{content:"";position:absolute;inset:0;z-index:var(--z-up2);border-radius:inherit;background:var(--tint);mix-blend-mode:hue;pointer-events:none}
 .schapters>.sgroup{margin:0;padding:0;background:transparent;border-radius:var(--r-panel)}
 .schapters>.sgroup.open{margin:0;padding:var(--list-gap);background:var(--glass)}
 .schapters>.sgroup.open>.sgroup-body{margin-inline:0}
