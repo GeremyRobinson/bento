@@ -35,10 +35,23 @@ const SpeakerIcon = () => (
 // on a larger screen the solve panel has the room, so the steps stay open (G 2026-10-07 22:00); same query as the wide layout
 const wideSteps = () => typeof matchMedia !== "undefined" && matchMedia("(min-width: 900px) and (orientation: landscape)").matches;
 
+/** whether the screen is wide (the same query as wideSteps), kept up to date as the window turns or resizes */
+function useWide() {
+  const [wide, setWide] = useState(wideSteps);
+  useEffect(() => {
+    if (typeof matchMedia === "undefined") return;
+    const m = matchMedia("(min-width: 900px) and (orientation: landscape)"), on = () => setWide(m.matches);
+    m.addEventListener("change", on);
+    return () => m.removeEventListener("change", on);
+  }, []);
+  return wide;
+}
+
 export function Practice() {
   const { progress, go, act, finish, quit } = useApp();
   const s = progress.run;
   const prefs = readSettings(progress.settings), aloud = readAloudOn(prefs, progress.grade);
+  const wide = useWide();
 
   // sounds: a soft tone when a step comes out right or a try is wrong
   const counts = useRef({ work: s?.work.length ?? 0, miss: s?.mistakes.length ?? 0, key: `${s?.i}` });
@@ -192,24 +205,10 @@ export function Practice() {
       ))}
     </ol>
   );
-  const extras = <>
-    {skipAvailable(s) && <Pill onClick={() => act((st, _p, d) => toggleSkip(st, d))}>{s.skip ? "Show steps" : "Final answer only"}</Pill>}
-    <Pill className="pquit" onClick={onQuit}>Quit</Pill>
-  </>;
-
-  return (
-    <FitScreen className={`lscreen pscreen${test ? " ptest" : ""}${pic ? "" : " nopic"}${shape.short ? "" : " pwordy"}${test && shape.short ? " pshow" : ""}${s.solved ? " psolved" : ""}${hintOpen ? " hinting" : ""}${stepsOpen ? " stepsopen" : ""}`}
-      style={{ "--steps": steps.length } as CSSProperties}>
-      {/* the problem and how it's going: where you are, the problem with its "?", and the steps */}
-      <section className="lintro pintro">
-        <p className="k"><button className="pzoom" onClick={() => setZoomOut(true)} aria-haspopup="dialog" aria-label={`Problem ${s.i + 1} of ${n}. See every problem`}><span>Problem {s.i + 1} of {n}</span>{dots}</button></p>
-        {test && <p className="ptestk">{s.title}: no hints, one try per step</p>}
-        {mixed && <div className="label plabel">{lesson.title}</div>}
-        {beatList}
-        <div className="pextra">{extras}</div>
-      </section>
-      {/* the hero: the step's equation with its answer box, its feedback line, and the picture */}
-      <figure className="lshero phero">
+  // a test on a wide screen asks in the pad's panel, where it's answered (G 2026-10-08 "put the questions inside the
+  // other panel since it's the panel used to solve the problem"); the left panel keeps the problem and its steps
+  const askInPad = test && wide;
+  const ask = <>
         <div className="lmath pmath">
           {step && !s.pick ? <>
             {step.question && <span className="q"><Rich text={step.question} /></span>}
@@ -222,6 +221,26 @@ export function Practice() {
           <button className="speak" aria-label="Read it to me" onClick={() => speak([step?.question, document.querySelector("#app .pprob")?.textContent].filter(Boolean).join(". ").replace(/\*\*/g, ""))}><SpeakerIcon /></button>
         </div>
         <FeedbackBox key={fbKey} fb={fbAway || bulbHint ? null : fb} idea={idea} solved={s.solved && !fbAway && fb?.type !== "hint"} />
+  </>;
+  const extras = <>
+    {skipAvailable(s) && <Pill onClick={() => act((st, _p, d) => toggleSkip(st, d))}>{s.skip ? "Show steps" : "Final answer only"}</Pill>}
+    <Pill className="pquit" onClick={onQuit}>Quit</Pill>
+  </>;
+
+  return (
+    <FitScreen className={`lscreen pscreen${test ? " ptest" : ""}${pic ? "" : " nopic"}${shape.short ? "" : " pwordy"}${test && shape.short ? " pshow" : ""}${askInPad ? " paskpad" : ""}${s.solved ? " psolved" : ""}${hintOpen ? " hinting" : ""}${stepsOpen ? " stepsopen" : ""}`}
+      style={{ "--steps": steps.length } as CSSProperties}>
+      {/* the problem and how it's going: where you are, the problem with its "?", and the steps */}
+      <section className="lintro pintro">
+        <p className="k"><button className="pzoom" onClick={() => setZoomOut(true)} aria-haspopup="dialog" aria-label={`Problem ${s.i + 1} of ${n}. See every problem`}><span>Problem {s.i + 1} of {n}</span>{dots}</button></p>
+        {test && <p className="ptestk">{s.title}: no hints, one try per step</p>}
+        {mixed && <div className="label plabel">{lesson.title}</div>}
+        {beatList}
+        <div className="pextra">{extras}</div>
+      </section>
+      {/* the hero: the step's equation with its answer box, its feedback line, and the picture */}
+      <figure className="lshero phero">
+        {!askInPad && ask}
         {/* a phone: the steps fold into one bar at the top of the problem's tile, over its math (G 17:38: steps on top); it opens as an accordion that
           pushes the picture down, and when the problem is solved the bar is where "Solved." and its idea land (G 2026-10-07) */}
         {/* the steps are the lesson list's accordion (ListGroup master, G 19:39 "use the same accordion"): the bar is its head row
@@ -269,12 +288,12 @@ export function Practice() {
       )}
       <Keypad band={band} tap={step && tapOnly ? (
         <div className="tappad">
-          <div className="tapnote muted">{s.pick ? "You plan this one: tap the step that comes next." : "Tap your answer."}</div>
+          {!askInPad && <div className="tapnote muted">{s.pick ? "You plan this one: tap the step that comes next." : "Tap your answer."}</div>}
           <div className="choices">{s.pick
             ? s.pick.options.map((o, i) => <button key={`${i}-${o}`} className={`choice${mark(i)}`} onClick={() => { setTapped({ at, i }); act(st => pickPlan(st, i)); }}>{o}</button>)
             : step.choices!.map((o, i) => <button key={`${i}-${o}`} className={`choice${mark(i)}`} onClick={() => { setTapped({ at, i }); act((st, p, d) => choose(st, i, p, d)); }}>{o}</button>)}</div>
         </div>) : undefined}
-        solved={s.solved} plain={plain} onKey={key => { if (fb?.type === "bad") setFbAway(true); act(st => pressKey(st, key)); }}
+        solved={s.solved} plain={plain} head={askInPad ? ask : undefined} onKey={key => { if (fb?.type === "bad") setFbAway(true); act(st => pressKey(st, key)); }}
         go={s.solved ? { label: nextLabel, run: onNext } : tapOnly ? undefined : { label: "Check", run: () => act((st, p, d) => check(st, p, d)) }} />
       {zoomOut && <ProblemsZoom s={s} close={() => setZoomOut(false)} pick={k => withTransition(() => act((st, p, d) => goToProblem(st, k, p, d)), "next")} />}
       {asking && (

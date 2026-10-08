@@ -785,3 +785,16 @@ html:has(.screen) body{overflow:hidden}
 .pscreen.pshow .lshero.phero>.pbar{grid-row:2}
 .pscreen.pshow .lshero.phero>.pprob,.pscreen.pshow .lshero.phero>.pprob .math>.mline{justify-items:center;justify-content:center;text-align:center}
 .pscreen.pshow .lshero.phero>.pprob .math{justify-self:center}
+/* the pad as the panel you solve in: the step's question and answer line sit over the keys (a test on a wide screen) */
+.ppad.phead{display:grid;grid-template-columns:minmax(0,1fr);align-content:center;gap:var(--sp-4)}
+.ppad.phead.ptap{grid-template-columns:minmax(0,1fr) auto;align-items:end}
+.ppad.phead>:is(.pmath,.pfb){grid-column:1 / -1}
+.ppad.phead>.pmath{position:relative;padding:var(--sp-2) calc(var(--sp-3) + 36px) 0}
+.ppad.phead>.pmath .speak{top:0;right:0}
+.ppad.phead>.pfb:not(.fb-bad,.fb-hint){display:none}
+.ppad.phead>.pfb{height:auto;min-height:0;margin:0;padding:0 var(--sp-3);background:none}
+/* with the question in the pad, the left panel is the problem and its steps, centred in its height */
+@media (min-width:900px) and (orientation:landscape){
+  .screen.fit.lscreen.pscreen.paskpad .lshero.phero{grid-template-rows:minmax(0,1fr) auto auto auto auto auto minmax(0,1fr)}
+  .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pprob{align-self:end;padding-bottom:var(--sp-4)}
+}
