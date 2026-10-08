@@ -130,13 +130,16 @@ export function startPractice(lessonId: string, progress: Progress, deps: Deps):
 
 export const testKey = (g: number, unit?: string) => (unit ? `unit:${g}:${unit}` : `grade:${g}`);
 
-/** A unit test (up to 10 problems) or a grade check-up (up to 12), mixed from the lessons, no hints, one try per step. */
+/** problems in a test (G 2026-10-08: "Tests need more problems no? 12-20"), shared evenly across its lessons */
+export const UNIT_TEST_LENGTH = 12, CHECKUP_LENGTH = 20;
+
+/** A unit test (12 problems) or a grade check-up (20), an even mix of the lessons, no hints, one try per step. */
 export function startTest(key: string, progress: Progress, deps: Deps): PracticeSession {
   const [kind, gs, unit] = key.split(":"), g = Number(gs);
   if (kind === "place") return startPlacement(g, progress, deps);
   const list = kind === "unit" ? lessonsInGrade(g).filter(l => (l.unit || NO_UNIT) === unit) : lessonsInGrade(g);
   if (!list.length) throw new Error(`no lessons for test ${key}`);
-  const n = Math.min(kind === "unit" ? 10 : 12, Math.max(6, list.length * 2));
+  const n = kind === "unit" ? UNIT_TEST_LENGTH : CHECKUP_LENGTH;
   const order = deps.rng.shuffle(list);
   const items = spread(freshItems(n, (k, seen) => makeItem(order[k % order.length]!, k, deps.rng, seen)), deps.rng);
   const title = kind === "unit" ? `${unit} test` : `${gradeOf(g).name} check-up`;

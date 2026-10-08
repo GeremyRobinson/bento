@@ -1,10 +1,11 @@
-import { LESSONS } from "../../curriculum/registry";
+import { LESSONS, lessonsInGrade } from "../../curriculum/registry";
+import { NO_UNIT } from "../../app/copy";
 import { createRng } from "../../curriculum/generators/rng";
 import { formatNumber } from "../../curriculum/schemas/math-text";
 import { emptyProgress, type Progress } from "../../engine/mastery/progress";
 import {
   canResume, check, choose, currentStep, finishRun, focusSlot, hint, isLastProblem, nextProblem, pickPlan, pressKey,
-  showMe, showMeAvailable, startPractice, toggleSkip, type Deps,
+  showMe, showMeAvailable, startPractice, startTest, testKey, toggleSkip, CHECKUP_LENGTH, UNIT_TEST_LENGTH, type Deps,
 } from "../../engine/session/practice";
 import { expectedValues } from "../../engine/evaluation/steps";
 import type { PracticeSession } from "../../engine/session/types";
@@ -177,6 +178,26 @@ describe("no repeated problems", () => {
       rng = createRng(s * 104729);
       const run = startPractice(id, emptyProgress(), deps());
       expect(new Set(run.items.map(x => key(x.problem))).size, `${id} seed ${s}`).toBe(run.items.length);
+    }
+  });
+});
+
+describe("tests", () => {
+  // G 2026-10-08: "Tests need more problems no? 12-20": a unit test is 12, a grade check-up 20, an even mix of the
+  // lessons, and never the same problem twice
+  it("every unit test has 12 problems and every check-up 20, shared evenly, none repeated", () => {
+    for (let g = 0; g <= 12; g++) {
+      const lessons = lessonsInGrade(g);
+      if (!lessons.length) continue;
+      const units = [...new Set(lessons.map(l => l.unit || NO_UNIT))];
+      for (const k of [testKey(g), ...units.map(u => testKey(g, u))]) for (let s = 1; s <= 3; s++) {
+        rng = createRng(s * 6151);
+        const run = startTest(k, emptyProgress(), deps());
+        expect(run.items, k).toHaveLength(k.startsWith("unit") ? UNIT_TEST_LENGTH : CHECKUP_LENGTH);
+        const per = [...run.items.reduce((m, x) => m.set(x.lessonId, (m.get(x.lessonId) ?? 0) + 1), new Map<string, number>()).values()];
+        expect(Math.max(...per) - Math.min(...per), `${k}: an even mix`).toBeLessThanOrEqual(1);
+        expect(new Set(run.items.map(x => x.lessonId + JSON.stringify(x.problem))).size, `${k} seed ${s}: no repeats`).toBe(run.items.length);
+      }
     }
   });
 });
