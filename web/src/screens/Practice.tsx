@@ -195,7 +195,13 @@ export function Practice() {
   // quitting asks only when answers would be lost
   const started = (s.done?.length ?? 0) > 0 || s.work.length > 0 || s.mistakes.length > 0 || s.solved;
   const onQuit = () => (started ? setAsking(true) : quit());
-  const dots = <span className="pdots" aria-hidden>{s.items.map((_, i) => <i key={i} className={i === s.i ? "now" : s.done?.includes(i) ? "ok" : ""} />)}</span>;
+  // the dots are the button that zooms out to every problem (G 2026-10-08 "that would act as the button instead of the
+  // whole pill"): their own pill, one rung deeper, in the plain "Problem x of n" row
+  const dots = (
+    <button type="button" className="pdots pzoom" onClick={() => setZoomOut(true)} aria-haspopup="dialog" aria-label={`Problem ${s.i + 1} of ${n}. See every problem`}>
+      {s.items.map((_, i) => <i key={i} className={i === s.i ? "now" : s.done?.includes(i) ? "ok" : ""} />)}
+    </button>
+  );
   function onNext() {
     if (s && isLastProblem(s)) finish();
     // the next problem is a step along the row, not a step deeper: it slides, the page never zooms (Review)
@@ -239,7 +245,7 @@ export function Practice() {
       style={{ "--steps": steps.length } as CSSProperties}>
       {/* the problem and how it's going: where you are, the problem with its "?", and the steps */}
       <section className="lintro pintro">
-        <p className="k"><button className="pzoom" onClick={() => setZoomOut(true)} aria-haspopup="dialog" aria-label={`Problem ${s.i + 1} of ${n}. See every problem`}><span>Problem {s.i + 1} of {n}</span>{dots}</button></p>
+        <p className="k"><span>Problem {s.i + 1} of {n}</span>{dots}</p>
         {test && <p className="ptestk">{s.title}: no hints, one try per step</p>}
         {mixed && <div className="label plabel">{lesson.title}</div>}
         {beatList}
@@ -256,7 +262,7 @@ export function Practice() {
         <div className="pprob"><ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} solved={s.solved} part="text" /></div>
         <div className="pbar">
           {/* where you are in the set, always in view: tapping it zooms out to every problem (G 2026-10-08) */}
-          <button className="pwhere pzoom" onClick={() => setZoomOut(true)} aria-haspopup="dialog" aria-label={`Problem ${s.i + 1} of ${n}. See every problem`}><span className="sname">Problem {s.i + 1} of {n}</span>{dots}</button>
+          <div className="pwhere"><span className="sname">Problem {s.i + 1} of {n}</span>{dots}</div>
           <ListGroup open={stepsOpen} head={
             <button key={fb?.type === "good" && !s.solved ? fbKey : "bar"} className={`srow chap stepbar${won ? " solved" : missed ? " missed" : ""}${fb?.type === "good" && !s.solved && !fbAway ? " flash" : ""}`} onClick={toggleSteps} aria-expanded={stepsOpen} aria-label={`Steps: ${now?.label ?? "done"}, ${Math.min(here + 1, steps.length)} of ${steps.length}`}>
               <span className="badge">{won ? <Check /> : s.solved ? steps.length : here + 1}{fb?.type === "good" && !s.solved && !fbAway && <span className="tick"><Check /></span>}</span>
