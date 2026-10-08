@@ -68,7 +68,7 @@
    glass hue, never a grey, and a resting dot sits halfway between the glass and the deep tint */
 .wrap{--dot-off:var(--faint);--dot-ring:var(--faint);--glass-text:var(--muted);--dot-rest:color-mix(in oklab,var(--glass-hue),var(--tint))}
 /* trial (G 2026-10-08 22:19, grade 5): the glass takes a lighter, more vivid step of the hue so stacked rungs stay bright, not dark */
-.wrap[data-grade="5"]{--glass-hue:oklch(.74 .17 var(--gh));--glass-a:18%}
+.wrap[data-grade="5"]{--glass-hue:oklch(.74 .17 var(--gh));--glass-a:20%}
 /* trial (G 22:42, grade 5): the deep colour (Start, current dot, ink) is a deeper step of that same sky blue, and the small
    text on the glass is a deep blue that keeps its contrast on every rung */
 .wrap[data-grade="5"]{--tint:oklch(.5 .19 var(--gh));--glass-text:oklch(.36 .12 var(--gh))}
