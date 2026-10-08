@@ -139,7 +139,9 @@ export function Practice() {
   }, []);
   // with no picture the question is the whole problem, so the steps start folded and the question leads (G 2026-10-08)
   const picRef = useRef(true);
-  const openSteps = () => wideSteps() && picRef.current;
+  const askRef = useRef(false);
+  // the steps stay open where there's room for them: beside a picture, or in a test whose question sits in the pad
+  const openSteps = () => wideSteps() && (picRef.current || askRef.current);
   useEffect(() => { setHintOpen(false); setStepsOpen(openSteps()); }, [s?.i, s?.step, s?.solved]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { dispatchEvent(new CustomEvent("bento:hintopen", { detail: hintOpen })); }, [hintOpen]);
   // the steps are the Contents accordion itself (the ListGroup master): it opens and folds on the master's own motion
@@ -211,6 +213,7 @@ export function Practice() {
   // a test on a wide screen asks in the pad's panel, where it's answered (G 2026-10-08 "put the questions inside the
   // other panel since it's the panel used to solve the problem"); the left panel keeps the problem and its steps
   const askInPad = test && wide;
+  askRef.current = askInPad;
   const ask = <>
         <div className="lmath pmath">
           {step && !s.pick ? <>

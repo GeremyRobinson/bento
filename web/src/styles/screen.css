@@ -795,6 +795,14 @@ html:has(.screen) body{overflow:hidden}
 .ppad.phead>.pfb{height:auto;min-height:0;margin:0;padding:0 var(--sp-3);background:none}
 /* with the question in the pad, the left panel is the problem and its steps, centred in its height */
 @media (min-width:900px) and (orientation:landscape){
-  .screen.fit.lscreen.pscreen.paskpad .lshero.phero{grid-template-rows:minmax(0,1fr) auto auto auto auto auto minmax(0,1fr)}
-  .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pprob{align-self:end;padding-bottom:var(--sp-4)}
+  /* a test's one system (G 2026-10-08 "there needs to be a system that makes sense"): two panels, each read top to bottom
+     the same way. The problem panel: where you are (Problem 2 of 6) on top, the problem in the middle, its steps at the
+     bottom. The answer panel: what this step asks on top, then the keys to answer it. */
+  .screen.fit.lscreen.pscreen.paskpad .lshero.phero{grid-template-rows:auto minmax(0,1fr) auto}
+  .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pbar>.pwhere{grid-row:1;margin:calc(var(--nest) * 2) calc(var(--nest) * 2) 0}
+  .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pprob{grid-row:2;align-self:center;padding:var(--sp-5) var(--sp-6)}
+  .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pbar>.sgroup{grid-row:3;margin-bottom:calc(var(--nest) * 2)}
+  .screen.fit.lscreen.pscreen.paskpad .lshero.phero>.pbar>.sgroup.open{margin-bottom:var(--nest)}
+  .screen.fit.lscreen.pscreen.paskpad>.ppad.phead{align-content:space-between}
 }
+@media (min-width:900px) and (orientation:landscape){.screen.fit.lscreen.pscreen.paskpad>.ppad.phead.ptap{align-content:center}}
