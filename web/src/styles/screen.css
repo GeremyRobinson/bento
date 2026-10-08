@@ -760,14 +760,15 @@ html:has(.screen) body{overflow:hidden}
 .pscreen .pbar .pwhere.pzoom:hover,.pscreen .pbar .pwhere.pzoom:active{background:var(--btn-panel-hover,var(--hover))}
 /* the Problem button keeps the panel's own gap from the steps (G 2026-10-08 "too close"): the same space as the panel's edge
    to the steps' group, open or folded (the open group reaches up by one nest, so it takes one more) */
-.pscreen .pbar .pwhere.pzoom{margin-bottom:calc(var(--nest) * 2)}
-.pscreen .pbar:has(>.sgroup.open) .pwhere.pzoom{margin-bottom:calc(var(--nest) * 3)}
+.pscreen .pbar .pwhere.pzoom{margin-bottom:var(--nest)}
+.pscreen .pbar:has(>.sgroup.open) .pwhere.pzoom{margin-bottom:calc(var(--nest) * 2)}
 .pzoom{width:100%;text-align:left;cursor:pointer;border-radius:var(--r-pill);transition:background var(--dur-150)}
 .pzoom:hover,.pzoom:active{background:var(--tint-soft)}
-/* a computer or iPad on its side (G 2026-10-08): the problem on top, then its steps, then the Problem button at the bottom.
+/* a computer or iPad on its side (G 2026-10-08): the problem on top, then its steps, then the Problem button right under
+   them, one steps' gap away (G "looks weird when closed"); any spare room goes below.
    The step bar's box steps aside (display:contents) so the accordion and the button each take their own row of the panel */
 @media (min-width:900px) and (orientation:landscape){
-  .screen.fit.lscreen.pscreen .lshero.phero{grid-template-rows:auto auto auto auto auto minmax(0,1fr) auto}
+  .screen.fit.lscreen.pscreen .lshero.phero{grid-template-rows:auto auto auto auto auto auto minmax(0,1fr)}
   .screen.fit.lscreen.pscreen .lshero.phero>.pprob{grid-row:1}
   .screen.fit.lscreen.pscreen .lshero.phero>.pmath{grid-row:2}
   .screen.fit.lscreen.pscreen .lshero.phero>.pfb,.screen.fit.lscreen.pscreen .lshero.phero>.pfb:is(.fb-bad,.fb-hint){grid-row:3}
@@ -776,5 +777,11 @@ html:has(.screen) body{overflow:hidden}
   .screen.fit.lscreen.pscreen .lshero.phero>.pbar>*{grid-column:1;z-index:var(--z-up)}
   .screen.fit.lscreen.pscreen .lshero.phero>.pbar>.sgroup{grid-row:5;margin:0 calc(var(--nest) * 2)}
   .screen.fit.lscreen.pscreen .lshero.phero>.pbar>.sgroup.open{margin:0 var(--nest);padding:var(--nest)}
-  .screen.fit.lscreen.pscreen .lshero.phero>.pbar>.pwhere{width:auto;grid-row:7;margin:calc(var(--nest) * 2) calc(var(--nest) * 2)}
+  .screen.fit.lscreen.pscreen .lshero.phero>.pbar>.pwhere{width:auto;grid-row:6;margin:var(--nest) calc(var(--nest) * 2) calc(var(--nest) * 2)}
 }
+/* a test shows the whole problem in the solve panel, over the step being answered (G 2026-10-08): the steps alone
+   ("25 × 20 = ?") never said which problem they belong to */
+.pscreen.pshow .lshero.phero>.pprob{display:grid}
+.pscreen.pshow .lshero.phero>.pbar{grid-row:2}
+.pscreen.pshow .lshero.phero>.pprob,.pscreen.pshow .lshero.phero>.pprob .math>.mline{justify-items:center;justify-content:center;text-align:center}
+.pscreen.pshow .lshero.phero>.pprob .math{justify-self:center}

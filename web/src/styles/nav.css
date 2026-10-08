@@ -183,7 +183,7 @@ html[data-zoomed] body{overflow:hidden}
 .zch{display:grid;gap:var(--s);grid-template-columns:repeat(2,minmax(0,1fr))}
 @media (min-width:700px){.zch{grid-template-columns:repeat(var(--cols,2),minmax(0,1fr))}}
 @media (max-width:699px){.zch>:last-child:nth-child(odd){grid-column:1/-1}}
-.zcard{display:grid;gap:var(--sp-1);align-content:start;text-align:left;padding:var(--pad-md);border-radius:var(--r-tile);background:var(--surf-2,var(--card));animation:rise var(--dur-500) var(--ease) both;animation-delay:calc(var(--i) * var(--dur-45));transition:transform var(--dur-250) var(--m-settle),box-shadow var(--dur-200)}
+.zcard{display:grid;gap:var(--sp-1);align-content:start;text-align:left;padding:var(--pad-md);border-radius:var(--r-card);background:var(--surf-2,var(--card));animation:rise var(--dur-500) var(--ease) both;animation-delay:calc(var(--i) * var(--dur-45));transition:transform var(--dur-250) var(--m-settle),box-shadow var(--dur-200)}
 .zcard:hover,.zcard:active{transform:translateY(-2px);box-shadow:none}
 .zcard.on{--panel-line:var(--tint);--panel-w:2px}
 .zcard b{min-height:2lh;font-size:calc(var(--fs) * 1.1);font-weight:var(--w-bold);letter-spacing:-.01em}
@@ -431,7 +431,7 @@ html:not(:has(.screen)) .wrap{padding-top:calc(var(--nav-top) + var(--float-h) +
   .zbar-top .zlevels{grid-row:2;max-width:none}
 }
 /* My Obento's cards wear the Settings tiles' glass, so the hub's two rooms match */
-.zme .zcard{background:var(--g1,var(--well));border-radius:var(--r-panel);padding:var(--sp-5)}
+.zme .zcard{background:var(--g1,var(--well));padding:var(--sp-5)}
 .zme .zcard .ctl:not(.go),.zme>.zfind{background:var(--btn-panel,var(--card))}
 .zme .zcard .ctl:not(.go):hover,.zme>.zfind:hover{background:var(--btn-panel-hover,var(--hover))}
 @media (max-width:699px){.zme .znum{padding:var(--sp-4)}}
@@ -440,7 +440,8 @@ html:not(:has(.screen)) .wrap{padding-top:calc(var(--nav-top) + var(--float-h) +
 .zplist{display:grid;gap:calc(var(--u) * 1.5)}
 .zplist>header{display:grid;justify-items:center;text-align:center;gap:6px}
 .zpgrid{display:grid;gap:var(--s);grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr))}
-.zprob{gap:var(--sp-3);min-height:120px;background:var(--g1,var(--well));border-radius:var(--r-panel);padding:var(--sp-5)}
+/* the corner comes from the .zcard master (the card corner, G 2026-10-08 "too round"); instances never set their own */
+.zprob{gap:var(--sp-3);min-height:120px;background:var(--g1,var(--well));padding:var(--sp-5)}
 .zphead{display:flex;align-items:center;gap:var(--sp-2)}
 .zprob .badge{background:var(--btn-panel,var(--card));color:var(--ink)}
 .zprob.now .badge{background:var(--ink);color:var(--on-tint)}

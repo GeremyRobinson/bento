@@ -198,7 +198,7 @@ export function Practice() {
   </>;
 
   return (
-    <FitScreen className={`lscreen pscreen${test ? " ptest" : ""}${pic ? "" : " nopic"}${shape.short ? "" : " pwordy"}${s.solved ? " psolved" : ""}${hintOpen ? " hinting" : ""}${stepsOpen ? " stepsopen" : ""}`}
+    <FitScreen className={`lscreen pscreen${test ? " ptest" : ""}${pic ? "" : " nopic"}${shape.short ? "" : " pwordy"}${test && shape.short ? " pshow" : ""}${s.solved ? " psolved" : ""}${hintOpen ? " hinting" : ""}${stepsOpen ? " stepsopen" : ""}`}
       style={{ "--steps": steps.length } as CSSProperties}>
       {/* the problem and how it's going: where you are, the problem with its "?", and the steps */}
       <section className="lintro pintro">
