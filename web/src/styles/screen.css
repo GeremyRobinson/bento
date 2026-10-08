@@ -671,7 +671,8 @@ html:has(.screen) body{overflow:hidden}
 .stepbar .badge{flex:none;background:var(--ink);color:var(--on-tint);font-size:var(--fz-xs)}
 .pscreen .pbar .chev{flex:none;width:var(--badge);height:var(--badge);display:grid;place-items:center;border-radius:var(--r-round);background:var(--btn-card-hover,var(--hover));color:var(--ink);transform-origin:50% 50%;transition:transform var(--m-swap) var(--m-ease)}
 .pscreen .pbar .chev>svg{width:18px;height:18px;display:block}
-.pscreen .pbar .srow.chap[aria-expanded="true"] .chev{transform:rotate(180deg)}
+/* Apple's disclosure chevron (G 2026-10-08): it points right while folded and turns down to the steps it opened */
+.pscreen .pbar .srow.chap[aria-expanded="true"] .chev{transform:rotate(90deg)}
 /* a step row: its badge, then its name over its math; rows aren't buttons, so they never lift on hover */
 .pscreen .pbar .pstep{pointer-events:none;padding-right:var(--sp-3);color:var(--muted)}
 .pscreen .pbar .pstep.on{color:var(--text)}
@@ -743,11 +744,19 @@ html:has(.screen) body{overflow:hidden}
 @media (min-width:900px) and (orientation:landscape){
   .screen.fit.lscreen.pscreen.nopic{grid-template-rows:minmax(0,1fr);grid-template-areas:"hero pad";align-items:center}
   .screen.fit.lscreen.pscreen.nopic>.ppad,.screen.fit.lscreen.pscreen.nopic .lshero.phero{align-self:center}
+  /* the solve panel and the pad are one pair (G 2026-10-08 "doesn't make sense"): the same height, side by side, centred on the screen */
+  .screen.fit.lscreen.pscreen.nopic{grid-template-rows:auto;align-content:center;align-items:stretch}
+  .screen.fit.lscreen.pscreen.nopic>.ppad,.screen.fit.lscreen.pscreen.nopic .lshero.phero{align-self:stretch}
+  .screen.fit.lscreen.pscreen.nopic .lshero.phero{align-content:start}
+  .screen.fit.lscreen.pscreen.nopic>.ppad{display:grid;align-content:center}
 }
 /* "Problem 2 of 6" is a button: it zooms out to every problem, to pick which comes next (G 2026-10-08); it shows at every size */
 /* a Row like the step bar under it: its words start where the step bar's badge does, its chevron sits over the bar's chevron */
 .pscreen .pbar .pwhere{display:flex;min-height:var(--srow);gap:var(--sp-3);margin:0 0 var(--list-gap);padding:calc((var(--srow) - var(--badge,var(--sp-7))) / 2) calc(var(--list-gap) + var(--sp-2));border-radius:calc(var(--srow) / 2);color:var(--text);font-weight:var(--w-mid);font-size:var(--fz-md)}
 .pscreen .pbar .pwhere .sname{flex:1;min-width:0}
 .pscreen .pbar .pwhere .chev{--badge:28px}
+/* and it's a button (G 2026-10-08): the Pill master's plain fill for a button on a panel, a rung up on hover */
+.pscreen .pbar .pwhere.pzoom{background:var(--btn-panel,var(--card))}
+.pscreen .pbar .pwhere.pzoom:hover,.pscreen .pbar .pwhere.pzoom:active{background:var(--btn-panel-hover,var(--hover))}
 .pzoom{width:100%;text-align:left;cursor:pointer;border-radius:var(--r-pill);transition:background var(--dur-150)}
 .pzoom:hover,.pzoom:active{background:var(--tint-soft)}

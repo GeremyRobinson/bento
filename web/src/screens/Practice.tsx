@@ -69,7 +69,7 @@ export function Practice() {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey || asking || zoomOut) return;
       // an open hint or steps stack takes Escape for itself, so the page underneath doesn't also step back (Review)
-      if (e.key === "Escape") { if (document.querySelector("#app :is(.fstack[role=dialog],.phint)")) e.preventDefault(); setHintOpen(false); setStepsOpen(wideSteps()); return; }
+      if (e.key === "Escape") { if (document.querySelector("#app :is(.fstack[role=dialog],.phint)")) e.preventDefault(); setHintOpen(false); setStepsOpen(openSteps()); return; }
       // tap-to-answer steps and planning: 1–4 pick a choice
       const st = currentStep(s);
       if (s.pick || st?.choices) {
@@ -121,7 +121,10 @@ export function Practice() {
     addEventListener("bento:problems", on);
     return () => removeEventListener("bento:problems", on);
   }, []);
-  useEffect(() => { setHintOpen(false); setStepsOpen(wideSteps()); }, [s?.i, s?.step, s?.solved]);
+  // with no picture the question is the whole problem, so the steps start folded and the question leads (G 2026-10-08)
+  const picRef = useRef(true);
+  const openSteps = () => wideSteps() && picRef.current;
+  useEffect(() => { setHintOpen(false); setStepsOpen(openSteps()); }, [s?.i, s?.step, s?.solved]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { dispatchEvent(new CustomEvent("bento:hintopen", { detail: hintOpen })); }, [hintOpen]);
   // the steps are the Contents accordion itself (the ListGroup master): it opens and folds on the master's own motion
   const toggleSteps = () => setStepsOpen(o => !o);
@@ -135,7 +138,7 @@ export function Practice() {
   useEffect(() => {
     const onPanel = (e: Event) => { if ((e as CustomEvent).detail === "settings") { setFbAway(true); setHintOpen(false); setStepsOpen(false); } };
     // the light bulb up top asks for a hint, and the hint opens as a stack (reopening it shows the same hint, free)
-    const onHint = () => { act((st, _p, d) => hint(st, d)); setStepsOpen(wideSteps()); setHintOpen(true); dispatchEvent(new CustomEvent("bento:panel", { detail: "feedback" })); };
+    const onHint = () => { act((st, _p, d) => hint(st, d)); setStepsOpen(openSteps()); setHintOpen(true); dispatchEvent(new CustomEvent("bento:panel", { detail: "feedback" })); };
     addEventListener("bento:panel", onPanel); addEventListener("bento:hint", onHint);
     return () => { removeEventListener("bento:panel", onPanel); removeEventListener("bento:hint", onHint); };
   }, [act]);
@@ -159,6 +162,7 @@ export function Practice() {
   const shape = problemShape(it.lessonId, problemOf(it), !!it.story);
   // tests go without the explanation's picture (ex is null), but a problem drawn as its own picture keeps it: it IS the problem
   const pic = !!ex || shape.picture;
+  picRef.current = pic;
   // the steps: done ones with their finished line, the one being answered, the ones still to come by number only
   // (their names could give a plan-the-step choice away)
   const steps = stepsOf(s), here = s.solved ? steps.length : s.step;
