@@ -257,6 +257,17 @@ describe("unit test and check-up", () => {
     expect(document.querySelector(".zme .zgrade.on .zl-text small")).toHaveTextContent("check‑up 4 of 4");
   });
 
+  it("zooms out to every problem and does them in the order picked (G 2026-10-08)", () => {
+    renderApp();
+    openRow(LESSON);
+    tap("Whole numbers test");
+    fireEvent.click(screen.getAllByRole("button", { name: /^Problem 1 of \d+\. See every problem/ })[0]!);
+    const zoom = screen.getByRole("dialog", { name: "Problems" });
+    expect(within(zoom).getByText("0 of 6 done")).toBeInTheDocument();
+    fireEvent.click(within(zoom).getByRole("button", { name: "Problem 3, to do" }));
+    expect(screen.getAllByText(/^Problem 3 of 6/).length).toBeGreaterThan(0);
+  });
+
   it("a wrong answer in a test shows the answer and moves on", () => {
     renderApp();
     tap("Grade check-up");

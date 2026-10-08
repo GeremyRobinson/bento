@@ -745,6 +745,6 @@ html:has(.screen) body{overflow:hidden}
   .screen.fit.lscreen.pscreen.nopic>.ppad,.screen.fit.lscreen.pscreen.nopic .lshero.phero{align-self:center}
 }
 /* "Problem 2 of 6" is a button: it zooms out to every problem, to pick which comes next (G 2026-10-08); it shows at every size */
-.pscreen .pbar .pwhere{display:flex}
+.pscreen .pbar .pwhere{display:flex;min-height:0;padding:var(--sp-1) var(--sp-3);margin-bottom:var(--sp-1)}
 .pzoom{width:100%;text-align:left;cursor:pointer;border-radius:var(--r-pill);transition:background var(--dur-150)}
 .pzoom:hover,.pzoom:active{background:var(--tint-soft)}

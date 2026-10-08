@@ -4,7 +4,7 @@ import { formatNumber } from "../../curriculum/schemas/math-text";
 import { emptyProgress, type Progress } from "../../engine/mastery/progress";
 import {
   canResume, check, choose, currentStep, finishRun, focusSlot, hint, isLastProblem, nextProblem, pickPlan, pressKey,
-  showMe, showMeAvailable, startPractice, toggleSkip, type Deps,
+  showMe, showMeAvailable, startPractice, toggleSkip, canPick, goToProblem, type Deps,
 } from "../../engine/session/practice";
 import { expectedValues } from "../../engine/evaluation/steps";
 import type { PracticeSession } from "../../engine/session/types";
@@ -178,5 +178,37 @@ describe("no repeated problems", () => {
       const run = startPractice(id, emptyProgress(), deps());
       expect(new Set(run.items.map(x => key(x.problem))).size, `${id} seed ${s}`).toBe(run.items.length);
     }
+  });
+});
+
+describe("picking which problem comes next (G 2026-10-08)", () => {
+  it("jumps to any problem before you start one, and comes back for the ones skipped", () => {
+    const p = emptyProgress();
+    let s = startPractice("g5-mult2", p, deps());
+    expect(canPick(s, 5)).toBe(true);
+    s = goToProblem(s, 5, p, deps());
+    expect(s.i).toBe(5);
+    s = solveProblem(s, p);
+    expect(s.done).toEqual([5]);
+    // next goes on from where you are, then wraps round to the start
+    s = nextProblem(s, p, deps())!;
+    expect(s.i).toBe(6);
+    for (let k = 0; k < 6; k++) { s = solveProblem(s, p); s = nextProblem(s, p, deps())!; }
+    expect(s.i).toBe(4);
+    expect(isLastProblem(s)).toBe(true);
+    s = solveProblem(s, p);
+    expect(nextProblem(s, p, deps())).toBeNull();
+    expect(s.done).toHaveLength(8);
+  });
+
+  it("keeps you on a problem you've started until it's solved", () => {
+    const p = emptyProgress();
+    let s = startPractice("g5-mult2", p, deps());
+    s = solveStep(s, p);
+    expect(canPick(s, 3)).toBe(false);
+    expect(goToProblem(s, 3, p, deps())).toBe(s);
+    s = solveProblem(s, p);
+    expect(canPick(s, 3)).toBe(true);
+    expect(canPick(s, 0)).toBe(false); // already done
   });
 });

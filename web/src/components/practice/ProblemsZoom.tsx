@@ -68,21 +68,23 @@ export function ProblemsZoom({ s, pick, close }: { s: PracticeSession; pick: (in
     <div className={`zoom zprobs${closing ? " closing" : ""}`} ref={box} role="dialog" aria-modal="true" aria-label="Problems" onClick={e => { if (e.target === e.currentTarget) shut(); }}>
       <div className="zbar-top">
         <span />
-        <span className="zcount">{done.size} of {n} solved</span>
+        <span className="zcount">{done.size} of {n} done</span>
         <Pill className="zclose" onClick={() => shut()}>Done</Pill>
       </div>
       <div className="zstage out">
         <section className="zplist">
           <header><span className="k">{s.title}</span><h2>{n} problem{n === 1 ? "" : "s"}</h2><p className="muted">{lead}</p></header>
           <div className="zpgrid">{s.items.map((item, k) => {
-            const solved = done.has(k), now = k === s.i, open = canPick(s, k);
-            const state = solved ? "Solved" : now ? (s.solved ? "Solved" : "Now") : "To do";
+            const solved = done.has(k), now = k === s.i, open = canPick(s, k), finished = solved || (now && s.solved);
+            // in a test a step that had to be shown is a miss: no tick, never "Solved" (G 2026-10-08)
+            const missed = finished && s.mode === "test" && !!s.probs[(s.done ?? []).indexOf(k)]?.work.some(w => w.shown);
+            const state = missed ? "Not this time" : finished ? "Solved" : now ? "Now" : "To do";
             return (
-              <button key={k} className={`zcard zprob${solved || (now && s.solved) ? " done" : ""}${now ? " now on" : ""}`} style={{ "--i": k } as CSSProperties}
+              <button key={k} className={`zcard zprob${finished ? " done" : ""}${missed ? " missed" : ""}${now ? " now on" : ""}`} style={{ "--i": k } as CSSProperties}
                 disabled={!now && !open} aria-current={now ? "step" : undefined} aria-label={`Problem ${k + 1}, ${state.toLowerCase()}`}
                 onClick={() => now ? shut() : shut(() => pick(k))}>
-                <span className="zphead"><span className="badge">{solved || (now && s.solved) ? <Check /> : k + 1}</span><span className="k">{state}</span></span>
-                <span className="zpline"><ProblemLine lessonId={item.lessonId} problem={problemOf(item)} solved={solved || (now && s.solved)} /></span>
+                <span className="zphead"><span className="badge">{finished && !missed ? <Check /> : k + 1}</span><span className="k">{state}</span></span>
+                <span className="zpline"><ProblemLine lessonId={item.lessonId} problem={problemOf(item)} solved={finished} /></span>
               </button>
             );
           })}</div>

@@ -225,13 +225,14 @@ export function Practice() {
         {/* a word problem's own words sit at the top of the solve panel, over its steps (G 2026-10-07 22:29) */}
         <div className="pprob"><ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} solved={s.solved} part="text" /></div>
         <div className="pbar">
+          {/* where you are in the set, always in view: tapping it zooms out to every problem (G 2026-10-08) */}
+          <button className="pwhere pzoom" onClick={() => setZoomOut(true)} aria-haspopup="dialog" aria-label={`Problem ${s.i + 1} of ${n}. See every problem`}>Problem {s.i + 1} of {n}{dots}</button>
           <ListGroup open={stepsOpen} head={
             <button key={fb?.type === "good" && !s.solved ? fbKey : "bar"} className={`srow chap stepbar${won ? " solved" : missed ? " missed" : ""}${fb?.type === "good" && !s.solved && !fbAway ? " flash" : ""}`} onClick={toggleSteps} aria-expanded={stepsOpen} aria-label={`Steps: ${now?.label ?? "done"}, ${Math.min(here + 1, steps.length)} of ${steps.length}`}>
               <span className="badge">{won ? <Check /> : s.solved ? steps.length : here + 1}{fb?.type === "good" && !s.solved && !fbAway && <span className="tick"><Check /></span>}</span>
               <span className="sname"><b>{s.solved ? <><strong>{missed ? "Not this time." : "Solved."}</strong>{idea && <> <Rich text={idea} /></>}</> : now?.label}</b></span>
               {!s.solved && <small className="smeta">{Math.min(here + 1, steps.length)} of {steps.length}</small>}<span className="chev" aria-hidden><Chevron dir="down" /></span>
             </button>}>
-            <button className="pwhere pzoom" onClick={() => setZoomOut(true)} aria-haspopup="dialog" aria-label={`Problem ${s.i + 1} of ${n}. See every problem`}>Problem {s.i + 1} of {n}{dots}</button>
             {beats.map(b => (
               <div key={b.k} className={`srow sles pstep${b.state === "now" ? " on" : ""}`} data-state={b.state}>
                 <span className="badge">{b.state === "done" ? <Check /> : b.k + 1}</span>
