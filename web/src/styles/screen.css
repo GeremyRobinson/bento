@@ -121,7 +121,10 @@ html:has(.screen) body{overflow:hidden}
 .screen.contents .shead .srow.big{width:auto;flex:0 1 auto}
 .srow.big{min-height:var(--big,calc(var(--row-h) + var(--list-gap) * 2));border-radius:calc(var(--row-h) / 2 + var(--list-gap));padding:var(--list-gap) var(--list-gap) var(--list-gap) calc(var(--row-h) / 2);gap:var(--list-gap);background:var(--glass)}
 .srow.big .stag{flex:none;display:inline-flex;align-items:center;height:var(--row-h);padding-inline:calc(var(--row-h) / 2 - var(--sp-1));border-radius:var(--r-row);background:var(--glass-x2);color:var(--muted);font-size:var(--fz-xs);font-weight:var(--w-mid);white-space:nowrap;font-variant-numeric:tabular-nums}
-.srow.big.on .stag{color:var(--ink)}
+.srow.big .stag,.srow.big.on .stag,:is(.screen.contents,.pscreen .pbar) .srow>small{color:var(--glass-text)}
+.screen.contents .srow.sles .sdot{background:var(--dot-rest)}
+@media (hover:hover){.screen.contents .srow.sles:not([disabled]):hover .sdot{background:var(--tint)}}
+.screen.contents .srow.sles.on .sdot,.screen.contents .srow.sles .sdot.done{background:var(--tint)}
 .srow.big.scheck{justify-content:center;text-align:center;padding-inline:var(--list-gap)}
 .srow.big.scheck .sname{flex:none}
 /* every layer is the same glass (G 2026-10-08): a picked or hovered row is one more layer of it */

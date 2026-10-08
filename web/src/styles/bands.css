@@ -64,8 +64,16 @@
 .wrap{--glass-a:15%;--glass-hue:var(--tint);--glass:color-mix(in oklab,var(--glass-hue) var(--glass-a),transparent)}
 /* two layers of the glass at once, for tags that sit deeper in their pill (G 22:39 "a layer or 2 deeper") */
 .wrap{--glass-x2:color-mix(in oklab,var(--glass-hue) calc(var(--glass-a) * 2),transparent)}
+/* text and dots on the glass (G 22:42 "visibility might be the biggest issue"): small text on glass is a deep step of the
+   glass hue, never a grey, and a resting dot sits halfway between the glass and the deep tint */
+.wrap{--glass-text:var(--muted);--dot-rest:color-mix(in oklab,var(--glass-hue),var(--tint))}
 /* trial (G 2026-10-08 22:19, grade 5): the glass takes a lighter, more vivid step of the hue so stacked rungs stay bright, not dark */
 .wrap[data-grade="5"]{--glass-hue:oklch(.74 .17 var(--gh));--glass-a:18%}
+/* trial (G 22:42, grade 5): the deep colour (Start, current dot, ink) is a deeper step of that same sky blue, and the small
+   text on the glass is a deep blue that keeps its contrast on every rung */
+.wrap[data-grade="5"]{--tint:oklch(.5 .19 var(--gh));--glass-text:oklch(.36 .12 var(--gh))}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap[data-grade="5"]{--tint:oklch(.8 .12 var(--gh));--glass-text:oklch(.9 .05 var(--gh))}}
+:root[data-theme="dark"] .wrap[data-grade="5"]{--tint:oklch(.8 .12 var(--gh));--glass-text:oklch(.9 .05 var(--gh))}
 /* trial (G 22:36, grade 5 "the base panel looks really grey"): the base panels are one layer of that same glass over the card,
    so the panel is the first rung of the glass, not a grey */
 .wrap[data-grade="5"]:not([data-grade="none"]){--surf-1:color-mix(in oklab,var(--glass-hue) var(--glass-a),var(--card));--pane-glass:var(--surf-1)}
