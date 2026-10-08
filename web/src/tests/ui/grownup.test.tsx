@@ -48,7 +48,7 @@ describe("the grown-up page", () => {
     // the island names the page and the grade, and steps back to My Bento
     expect(screen.getByRole("button", { name: "Contents. You're on For the grown-up" })).toHaveTextContent("My Obento · 5th grade");
     tap("Back to My Obento");
-    expect(screen.getByRole("button", { name: "Open the report ›" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /For the grown-up/ })).toBeInTheDocument();
   });
 
   it("with history: this week, the patterns, a worked example, scores by chapter, hints and a thing to try", () => {

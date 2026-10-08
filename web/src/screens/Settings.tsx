@@ -13,7 +13,10 @@ const SANDBOX = import.meta.env.MODE === "preview" || import.meta.env.MODE === "
  * Settings: every setting in one place, and only here (G 2026-10-06). The gear opens this page; there is no pop-over
  * version. Seeing and hearing, motion and sound, the keypad, backups, and what Bento is. Nothing leaves this device.
  */
-export function SettingsScreen() {
+export function SettingsScreen() { return <SettingsBody />; }
+
+/** the settings themselves: on the Settings page, and inside the nav hub (G 2026-10-08), where `leave` closes the hub first */
+export function SettingsBody({ leave }: { leave?: () => void }) {
   const { progress, go, setSettings, exportBackup, importBackup } = useApp();
   const st = readSettings(progress.settings);
   const set = (patch: Partial<Settings>) => setSettings(patch);
@@ -69,8 +72,8 @@ export function SettingsScreen() {
       <Tile title="About Obento" k="Obento" className="sabout">
         <p className="snote"><LockIcon />On this device. No account, no ads, no data collected.</p>
         <div className="actions">
-          <Pill onClick={() => go({ name: "welcome" }, "back")}>What Obento is ›</Pill>
-          {SANDBOX && <Pill onClick={() => dispatchEvent(new Event("bento:sandbox"))}>Sandbox ›</Pill>}
+          <Pill onClick={() => { leave?.(); go({ name: "welcome" }, "back"); }}>What Obento is ›</Pill>
+          {SANDBOX && <Pill onClick={() => { leave?.(); dispatchEvent(new Event("bento:sandbox")); }}>Sandbox ›</Pill>}
         </div>
       </Tile>
     </div>

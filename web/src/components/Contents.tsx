@@ -1,7 +1,6 @@
 import { Pill } from "./primitives/Pill";
 import { Slider } from "./primitives/Slider";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { NavMark } from "./Nav";
 import { useApp } from "../app/AppState";
 import { doneCount, isReady, testKey, testReady, unitsInGrade, type Entry } from "../app/curriculum";
 import { upNext } from "../app/today";
@@ -12,12 +11,19 @@ import { showcasePicture } from "../screens/Welcome";
 import { PlayingDiagram } from "./diagrams/PlayingDiagram";
 import { ScoreChip } from "./primitives/Score";
 import { Fill, Shelf } from "./Shelf";
-import { CONTENTS, lessonCount, NO_UNIT, THIS_YEAR } from "../app/copy";
+import { CONTENTS, lessonCount, NO_UNIT, THIS_YEAR, YOUR_BENTO } from "../app/copy";
+import { MeHub } from "../screens/Me";
+import { MeIcon, SettingsIcon } from "./primitives/icons";
+import { SettingsBody } from "../screens/Settings";
 
-/** How far out the contents are zoomed: one chapter's pages, the whole year, or every grade on the shelf. */
-export type Level = "chapter" | "year" | "shelf";
+/**
+ * Where the hub is: zoomed out to one chapter's pages, the whole year, or every grade on the shelf; or on you (My
+ * Obento) or Settings (G 2026-10-08: the nav is the hub for options, like the Dynamic Island).
+ */
+export type Level = "chapter" | "year" | "shelf" | "me" | "settings";
 const LEVELS: Level[] = ["chapter", "year", "shelf"];
-const NAMES: Record<Level, string> = { chapter: "Chapter", year: "Year", shelf: "All grades" };
+const NAMES: Record<Level, string> = { chapter: "Chapter", year: "Year", shelf: "All grades", me: YOUR_BENTO, settings: "Settings" };
+const zoomed = (l: Level) => LEVELS.includes(l);
 
 /** A chapter's picture, from a fresh problem of its first lesson that has one: finished at rest, a tap plays it. */
 export function ChapterPic({ entries, rng }: { entries: Entry[]; rng: Rng }) {
@@ -45,7 +51,7 @@ export function Contents({ grade, lessonId, level: first, close, leave = close, 
   // which way the last step went, so the new level grows in from the old one (out) or comes forward (in)
   const [way, setWay] = useState<"out" | "in" | "">("");
   // All grades is the outermost level, inside the contents (Review nav #5): the slider's thumb lands there, never out
-  const to = (l: Level) => { if (l === level) return; setWay(LEVELS.indexOf(l) > LEVELS.indexOf(level) ? "out" : "in"); setLevel(l); };
+  const to = (l: Level) => { if (l === level) return; setWay(!zoomed(l) || !zoomed(level) ? "" : LEVELS.indexOf(l) > LEVELS.indexOf(level) ? "out" : "in"); setLevel(l); };
   const box = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -53,6 +59,7 @@ export function Contents({ grade, lessonId, level: first, close, leave = close, 
     el.querySelector<HTMLElement>(".zlevels>button[aria-pressed=true]")?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") close();
+      else if (!zoomed(level)) return;
       else if (e.key === "-" || e.key === "_") to(LEVELS[Math.min(2, LEVELS.indexOf(level) + 1)]!);
       else if (e.key === "=" || e.key === "+") to(LEVELS[Math.max(0, LEVELS.indexOf(level) - 1)]!);
     };
@@ -61,7 +68,7 @@ export function Contents({ grade, lessonId, level: first, close, leave = close, 
     const dist = (t: TouchList) => Math.hypot(t[0]!.clientX - t[1]!.clientX, t[0]!.clientY - t[1]!.clientY);
     const onStart = (e: TouchEvent) => { d0 = e.touches.length === 2 ? dist(e.touches) : 0; };
     const onMove = (e: TouchEvent) => {
-      if (!d0 || e.touches.length !== 2) return;
+      if (!d0 || e.touches.length !== 2 || !zoomed(level)) return;
       e.preventDefault();
       const r = dist(e.touches) / d0;
       if (r < 0.7) { d0 = 0; to(LEVELS[Math.min(2, LEVELS.indexOf(level) + 1)]!); }
@@ -70,7 +77,7 @@ export function Contents({ grade, lessonId, level: first, close, leave = close, 
     // a trackpad pinch arrives as a wheel with ctrl held
     let acc = 0;
     const onWheel = (e: WheelEvent) => {
-      if (!e.ctrlKey) return;
+      if (!e.ctrlKey || !zoomed(level)) return;
       e.preventDefault();
       acc += e.deltaY;
       if (acc > 40) { acc = 0; to(LEVELS[Math.min(2, LEVELS.indexOf(level) + 1)]!); }
@@ -131,6 +138,10 @@ export function Contents({ grade, lessonId, level: first, close, leave = close, 
         })}</div>
       </section>
     );
+  } else if (level === "me") {
+    body = <MeHub leave={leave} toGrades={() => to("shelf")} />;
+  } else if (level === "settings") {
+    body = <SettingsBody leave={leave} />;
   } else {
     body = (
       <section className="zshelf">
@@ -141,16 +152,22 @@ export function Contents({ grade, lessonId, level: first, close, leave = close, 
   }
 
   return (
-    <div className={`zoom${closing ? " closing" : ""}`} ref={box} role="dialog" aria-modal="true" aria-label={CONTENTS} onClick={e => { if (e.target === e.currentTarget) close(); }}>
+    <div className={`zoom${closing ? " closing" : ""}`} ref={box} role="dialog" aria-modal="true" aria-label={zoomed(level) ? CONTENTS : NAMES[level]} onClick={e => { if (e.target === e.currentTarget) close(); }}>
       <div className="zbar-top">
-        <span className="zmark"><NavMark onHome={() => { leave(); go({ name: "home" }, "back"); }} /></span>
+        {/* no wordmark inside the app (G 2026-10-08), the hub's bar included */}
+        <span />
         {/* widest to narrowest, left to right (G 2026-10-06); a tap slider, the same master as Bento / Bento² */}
-        <Slider className="zlevels" label="Zoom" value={level} onPick={to}
+        <Slider className="zlevels" label="Zoom" value={level as "chapter" | "year" | "shelf"} onPick={to}
           options={[...LEVELS].reverse().map(l => ({ id: l, label: NAMES[l], disabled: l === "chapter" && !unit }))} />
-        <Pill className="zclose" onClick={close}>Done</Pill>
+        {/* the hub's other rooms sit where the nav keeps them: the gear and the person, filled when you're there */}
+        <span className="zrooms">
+          <button className={`icon${level === "settings" ? " on" : ""}`} aria-pressed={level === "settings"} aria-label="Settings" onClick={() => to("settings")}><SettingsIcon /></button>
+          <button className={`icon${level === "me" ? " on" : ""}`} aria-pressed={level === "me"} aria-label={YOUR_BENTO} onClick={() => to("me")}><MeIcon /></button>
+          <Pill className="zclose" onClick={close}>Done</Pill>
+        </span>
       </div>
       <div className={`zstage ${way}`} key={level + (level === "chapter" ? chapter : "")}>{body}</div>
-      <p className="zhint muted">Pinch to zoom in and out</p>
+      {zoomed(level) && <p className="zhint muted">Pinch to zoom in and out</p>}
     </div>
   );
 }

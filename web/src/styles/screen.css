@@ -731,3 +731,13 @@ html:has(.screen) body{overflow:hidden}
 }
 /* Today's plan names wrap to two lines rather than cut, at every size (the tall Today column is narrow) */
 .sbento .today .ptext b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.25}
+/* no picture (a test, or an all-equation problem; G 2026-10-08 "why does test have this layout?"): the question and its
+   math sit inside the solve panel under the steps, and the panel fits what it holds, no empty chin under it. The
+   panel's rows are the solve panel's own five; the older two-row nopic grid left the math outside the panel */
+.screen.fit.pscreen.nopic .lshero.phero{grid-template-rows:auto auto auto auto auto;align-content:start;align-self:start;max-height:100%;overflow:auto}
+/* wide: the solve panel and the keys side by side, both as tall as what they hold and centred together, so nothing
+   sits stranded in a corner of an empty half */
+@media (min-width:900px) and (orientation:landscape){
+  .screen.fit.lscreen.pscreen.nopic{grid-template-rows:minmax(0,1fr);grid-template-areas:"hero pad";align-items:center}
+  .screen.fit.lscreen.pscreen.nopic>.ppad,.screen.fit.lscreen.pscreen.nopic .lshero.phero{align-self:center}
+}

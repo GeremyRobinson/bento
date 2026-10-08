@@ -252,9 +252,9 @@ describe("unit test and check-up", () => {
     solveRun();
     expect(document.querySelector(".island")).toHaveTextContent("5th grade check-up");
     tap("All lessons");
-    // the check-up score lives on My Bento's grade row (Design 2026-10-07), not in the book's number tile
+    // the check-up score lives on My Obento's grade card, in the nav hub (G 2026-10-08), not in the book's number tile
     fireEvent.click(screen.getByRole("button", { name: /^My Obento:/ }));
-    expect(document.querySelector(".mygl li.on b + small")).toHaveTextContent("check‑up 4 of 4");
+    expect(document.querySelector(".zme .zgrade.on .zl-text small")).toHaveTextContent("check‑up 4 of 4");
   });
 
   it("a wrong answer in a test shows the answer and moves on", () => {
@@ -359,59 +359,50 @@ describe("report, grown-up page and back to basics", () => {
   }, 60000);
 });
 
-describe("My Bento", () => {
-  it("is its own page with no settings, reached from the person circle (G 2026-10-06: no pop-over)", () => {
+describe("My Obento", () => {
+  it("opens in the nav hub from the person circle, with no settings (G 2026-10-08: the nav is the hub)", () => {
     renderApp({ grade: 5, chosen: true, xp: 1240, streak: 3 });
     fireEvent.click(screen.getByRole("button", { name: "My Obento: 3 day streak, 1240 XP" }));
-    expect(screen.queryByRole("dialog")).toBeNull();
-    expect(screen.getByRole("button", { name: /^My Obento:/ })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByRole("heading", { level: 1, name: /^Level \d+$/ })).toBeInTheDocument();
-    expect(screen.getByText("1,240")).toBeInTheDocument();
-    expect(screen.getByText("day streak")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Switch grade" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Open the report ›" })).toBeInTheDocument();
-    expect(screen.queryByRole("switch")).toBeNull();
-    // no wordmark inside the app (G 2026-10-08): the nav's back step leads home to your book
+    const hub = screen.getByRole("dialog", { name: "My Obento" });
+    expect(within(hub).getByText(/^Level \d+$/)).toBeInTheDocument();
+    expect(within(hub).getByText("1,240")).toBeInTheDocument();
+    expect(within(hub).getByText("days in a row")).toBeInTheDocument();
+    expect(within(hub).getByRole("button", { name: "Open the report ›" })).toBeInTheDocument();
+    expect(within(hub).queryByRole("switch")).toBeNull();
+    // no wordmark inside the app (G 2026-10-08), the hub included
     expect(screen.queryByRole("button", { name: "Obento, home" })).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: /^Back to / }));
-    expect(screen.getByRole("button", { name: "Grade check-up" })).toBeInTheDocument();
+    // Switch grade moves the hub to All grades
+    fireEvent.click(within(hub).getByRole("button", { name: "Switch grade" }));
+    expect(within(hub).getByRole("button", { name: "All grades" })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(within(hub).getByRole("button", { name: "Done" }));
   });
 });
 
 describe("Settings", () => {
-  it("the gear opens the Settings page, which holds every setting and the backup (G 2026-10-06: no pop-over)", () => {
+  it("the gear opens Settings in the nav hub, which holds every setting and the backup (G 2026-10-08)", () => {
     renderApp({ grade: 5, chosen: true });
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
-    expect(screen.queryByRole("dialog")).toBeNull();
-    expect(screen.getByRole("button", { name: "Settings" })).toHaveAttribute("aria-current", "page");
-    fireEvent.click(screen.getByRole("switch", { name: /High contrast/ }));
+    const hub = screen.getByRole("dialog", { name: "Settings" });
+    fireEvent.click(within(hub).getByRole("switch", { name: /High contrast/ }));
     expect(document.documentElement.dataset.contrast).toBe("true");
-    fireEvent.click(screen.getByRole("switch", { name: /Left-handed keypad/ }));
+    fireEvent.click(within(hub).getByRole("switch", { name: /Left-handed keypad/ }));
     expect(document.documentElement.dataset.hand).toBe("left");
-    fireEvent.click(screen.getByRole("switch", { name: /Less motion/ }));
+    fireEvent.click(within(hub).getByRole("switch", { name: /Less motion/ }));
     expect(document.documentElement.dataset.motion).toBe("reduce");
-    fireEvent.click(screen.getByRole("radio", { name: "Largest" }));
+    fireEvent.click(within(hub).getByRole("radio", { name: "Largest" }));
     expect(document.documentElement.dataset.text).toBe("largest");
-    expect(screen.getByRole("button", { name: "Save a backup" })).toBeInTheDocument();
+    expect(within(hub).getByRole("button", { name: "Save a backup" })).toBeInTheDocument();
   });
-  it("the gear and My Bento are toggles: tapped again while open, they close back to where you were (G 2026-10-06)", () => {
+  it("the hub moves between Settings, My Obento and the contents in place, and Done closes it (G 2026-10-08)", () => {
     renderApp({ grade: 5, chosen: true });
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
-    expect(screen.getByRole("button", { name: "Settings" })).toHaveAttribute("aria-current", "page");
-    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
-    expect(screen.getByRole("button", { name: "Settings" })).not.toHaveAttribute("aria-current");
-    expect(screen.queryByRole("switch", { name: /High contrast/ })).toBeNull();
-    const me = () => screen.getByRole("button", { name: /^Your Bento|^My Obento/ });
-    fireEvent.click(me());
-    expect(me()).toHaveAttribute("aria-current", "page");
-    fireEvent.click(me());
-    // Settings and My Bento sit side by side: from one to the other and closed, you're back on the book, not Contents
-    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
-    fireEvent.click(me());
-    fireEvent.click(me());
-    expect(me()).not.toHaveAttribute("aria-current");
-    expect(screen.getByRole("button", { name: "Settings" })).not.toHaveAttribute("aria-current");
-    expect(screen.queryByRole("dialog")).toBeNull();
+    const hub = screen.getByRole("dialog");
+    fireEvent.click(within(hub).getByRole("button", { name: "My Obento" }));
+    expect(within(hub).getByRole("button", { name: "My Obento" })).toHaveAttribute("aria-pressed", "true");
+    expect(within(hub).queryByRole("switch", { name: /High contrast/ })).toBeNull();
+    fireEvent.click(within(hub).getByRole("button", { name: "Year" }));
+    expect(within(hub).getByRole("button", { name: "Year" })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(within(hub).getByRole("button", { name: "Done" }));
   });
 });
 

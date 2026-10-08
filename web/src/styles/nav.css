@@ -386,3 +386,52 @@ html:not(:has(.screen)) .wrap{padding-top:calc(var(--nav-top) + var(--float-h) +
 /* the contents' wordmark is the same NavMark, a little larger */
 /* the book is the top of the app, so its island has no back step; the words keep the pill's inner gutter */
 .island:not(:has(.iback)){padding-left:var(--sp-4)}
+
+/* the hub's My Obento (G 2026-10-08: the nav is the hub for options): the Year's cards, holding you */
+.zme{display:grid;gap:var(--s);grid-template-columns:repeat(6,minmax(0,1fr));align-items:stretch}
+.zme>*{grid-column:1 / -1}
+.zme>.znum{grid-column:span 2}
+.zme .zlevel{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:var(--u);row-gap:var(--sp-3)}
+.zme .zlevel>.ctl{grid-column:1 / -1;justify-self:start}
+.zme .zlevel .gnum{font:var(--w-bold) 64px/1 var(--sans);letter-spacing:-.04em}
+.zme .zlevel .gnum small{font-size:24px;vertical-align:top}
+.zme .zl-text{display:grid;gap:2px;min-width:0}
+.zme .zlevel .zl-text b{min-height:0;font-size:clamp(30px,4vw,44px);line-height:1.05;letter-spacing:-.03em}
+.zme small{color:var(--muted);font-size:var(--small);font-weight:var(--w-mid)}
+.zme .znum{align-content:center;justify-items:start}
+.zme .znum .bbig{font:var(--w-bold) clamp(32px,4vw,44px)/1 var(--sans);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.zme .znum>span:last-child{color:var(--muted);font-size:var(--small);font-weight:var(--w-mid)}
+.zme .zcard b{min-height:0}
+.zme .zchap,.zme .zgrown{gap:var(--sp-2)}
+.zme .zchap>.ctl,.zme .zgrown>.ctl{justify-self:start;margin-top:var(--sp-2);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zme .k svg{width:13px;height:13px;vertical-align:-2px;margin-right:var(--sp-1)}
+.zme-k{margin:var(--sp-2) 0 0 var(--sp-2)}
+.zme .zgrade{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:var(--sp-3)}
+.zme .zgrade .gnum{font:var(--w-bold) 36px/1 var(--sans);letter-spacing:-.03em}
+.zme .zfind{grid-column:1 / -1;justify-self:start}
+@media (min-width:700px){
+  .zme{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .zme>.zlevel{grid-column:span 3;grid-template-columns:auto minmax(0,1fr) auto}
+  .zme .zlevel>.ctl{grid-column:auto}
+  .zme>.znum{grid-column:span 1}
+  .zme>.zchap,.zme>.zgrown{grid-column:span 3}
+  .zme>.zgrade{grid-column:span 2}
+}
+/* the hub's Settings: the Settings page's tiles, as they are */
+.zstage>.bset{padding-bottom:0}
+/* the hub bar: the zoom slider in the middle, the gear, the person and Done on the right, where the nav keeps them */
+.zrooms{grid-column:3;justify-self:end;display:flex;align-items:center;gap:var(--sp-2)}
+.zrooms .zclose{grid-column:auto}
+.zrooms .icon{animation:none}
+.slider.none .slider-thumb{opacity:0}
+.slider.none>button[aria-pressed]{color:var(--text)}
+@media (max-width:560px){
+  .zbar-top{grid-template-columns:minmax(0,1fr);row-gap:var(--sp-2)}
+  .zrooms{grid-column:1;grid-row:1}
+  .zbar-top .zlevels{grid-row:2;max-width:none}
+}
+/* My Obento's cards wear the Settings tiles' glass, so the hub's two rooms match */
+.zme .zcard{background:var(--g1,var(--well));border-radius:var(--r-panel);padding:var(--sp-5)}
+.zme .zcard .ctl:not(.go),.zme>.zfind{background:var(--btn-panel,var(--card))}
+.zme .zcard .ctl:not(.go):hover,.zme>.zfind:hover{background:var(--btn-panel-hover,var(--hover))}
+@media (max-width:699px){.zme .znum{padding:var(--sp-4)}}

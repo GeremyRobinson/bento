@@ -13,7 +13,7 @@ import { reduceMotion } from "../app/transition";
 import { Confirm } from "./Confirm";
 import { PillRing } from "./primitives/PillRing";
 import { tableById } from "../engine/facts/tables";
-import { Chevron, LockIcon } from "./primitives/icons";
+import { Chevron, LockIcon, MeIcon, SettingsIcon } from "./primitives/icons";
 import { CONTENTS, GROWN_UP, NO_UNIT, PRACTICE, REPORT, REVIEW, YOUR_BENTO } from "../app/copy";
 
 /** A small cross: quit. */
@@ -21,10 +21,6 @@ const CrossIcon = () => (
   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden><path d="M7 7l10 10M17 7L7 17" /></svg>
 );
 
-/** A simple person: a head and shoulders. */
-const MeIcon = () => (
-  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="8.5" r="3.6" /><path d="M5 20c1.2-3.6 4-5.4 7-5.4s5.8 1.8 7 5.4" /></svg>
-);
 
 /** Where a lesson sits in its grade's book: its chapter, and which page of that chapter it is. */
 export function pageOf(lessonId: string): { grade: number; chapter: string; page: number; pages: number } | null {
@@ -116,9 +112,6 @@ const BulbIcon = () => (
   </svg>
 );
 
-const SettingsIcon = () => (
-  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></svg>
-);
 
 /** How far along the place is: the page in its chapter on a lesson, the lessons done in the year elsewhere. */
 function fillOf(place: Place, app: ReturnType<typeof useApp>, grade: number): number {
@@ -188,10 +181,6 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
     return () => removeEventListener("popstate", onPop);
   }, [open]);
   const start: Level = route.name === "home" ? "shelf" : place.lesson ? "chapter" : "year";
-  // My Bento is a page of its own (G 2026-10-06: no pop-over version); the person circle goes there
-  // Settings and My Bento are toggles (G 2026-10-06): tapped again while open, they close the page the way < does; the
-  // icon stays the same, its filled state already says it's open
-  const openMe = () => { if (route.name !== "me") go({ name: "me" }, "fwd"); else if (place.back) up(place.back.to); };
   // the wordmark always means home: your book once a grade is chosen, else the top of the landing page
   const home = () => {
     if (chosen != null && progress.chosen) { openSheet(false); go({ name: "home" }, "back"); }
@@ -315,9 +304,10 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
             aria-label={`Hint, ${run!.hintsLeft} left`} aria-expanded={hinting}><BulbIcon /><em className="ibadge" aria-hidden>{run!.hintsLeft}</em></button>
         )}
         {/* Settings is a page of its own (G 2026-10-06: no pop-over version); the gear goes there */}
-        <button className={`icon${route.name === "settings" ? " on" : ""}`} onClick={() => { if (route.name !== "settings") go({ name: "settings" }, "fwd"); else if (place.back) up(place.back.to); }}
-          aria-label="Settings" aria-current={route.name === "settings" ? "page" : undefined}><SettingsIcon /></button>
-        <button className={`icon ime${route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={openMe}
+        {/* the gear and the person open the hub at Settings and My Obento (G 2026-10-08: the nav is the hub for options) */}
+        <button className={`icon${open === "settings" || route.name === "settings" ? " on" : ""}`} onClick={() => setOpen("settings")}
+          aria-label="Settings" aria-haspopup="dialog"><SettingsIcon /></button>
+        <button className={`icon ime${open === "me" || route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={() => setOpen("me")} aria-haspopup="dialog"
           aria-label={`${YOUR_BENTO}: ${progress.streak} day streak, ${progress.xp} XP`} aria-current={route.name === "me" ? "page" : undefined}>
           <MeIcon />
         </button>
