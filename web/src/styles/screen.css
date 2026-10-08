@@ -806,3 +806,7 @@ html:has(.screen) body{overflow:hidden}
   .screen.fit.lscreen.pscreen.paskpad>.ppad.phead{align-content:space-between}
 }
 @media (min-width:900px) and (orientation:landscape){.screen.fit.lscreen.pscreen.paskpad>.ppad.phead.ptap{align-content:center}}
+/* a test marks each step it took: green with a tick when it came out right, red with a cross when it was missed (G 2026-10-08) */
+.pscreen.ptest .pbar .pstep[data-state="done"] .badge{background:var(--ok);color:var(--on-tint)}
+.pscreen.ptest .pbar .pstep[data-state="missed"] .badge{background:var(--err);color:var(--on-tint)}
+.pscreen .pbar .pstep .badge svg{width:16px;height:16px}
