@@ -11,7 +11,7 @@
 /* ---- controls ---- */
 /* Pill (master): every button is an instance of .ctl. Sizes and feel come from the --pill-* tokens; colors fall back to the
    grade roles, so a context (a card, the landing page) or a variant (go, circ) only overrides what it changes. */
-.wrap{--pill-h:var(--tap);--pill-pad:calc(var(--u) + 2px);--pill-radius:999px;--pill-weight:var(--w-mid);--pill-gap:var(--s);--pill-lift:1.06}
+.wrap{--pill-h:var(--h);--pill-pad:calc(var(--u) + 2px);--pill-radius:999px;--pill-weight:var(--w-mid);--pill-gap:var(--s);--pill-lift:1.06}
 .ctl{height:var(--pill-h);padding:0 var(--pill-pad);border-radius:var(--pill-radius);background:var(--pill-bg,var(--btn,var(--well)));display:inline-flex;align-items:center;justify-content:center;gap:var(--pill-gap);white-space:nowrap;font-weight:var(--pill-weight);transition:background var(--dur-150),transform var(--dur-200) var(--m-settle),box-shadow var(--dur-150)}
 .ctl:hover,.ctl:active{background:var(--pill-hover,var(--btn-hover,var(--hover)))}
 .ctl:active{transform:scale(var(--pill-press))}
