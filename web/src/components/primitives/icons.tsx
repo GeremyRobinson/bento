@@ -28,8 +28,3 @@ export const MeIcon = () => (
 export const SettingsIcon = () => (
   <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></svg>
 );
-
-/** Every problem: four dots, the set zoomed out, round like the app's other marks (G 2026-10-08). */
-export const GridIcon = () => (
-  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><circle cx="7.5" cy="7.5" r="3.4" /><circle cx="16.5" cy="7.5" r="3.4" /><circle cx="7.5" cy="16.5" r="3.4" /><circle cx="16.5" cy="16.5" r="3.4" /></svg>
-);
