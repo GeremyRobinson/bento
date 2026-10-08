@@ -27,7 +27,11 @@
   /* corners: a full pill, a circle, the grid steps, and the grade sheet. Panels nest from --r-panel (bands.css). */
   --r-pill:999px; --r-round:50%; --r-xs:4px; --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:20px; --r-2xl:24px; --r-sheet:36px;
   /* controls: the floating capsule (island, icon pills, big pills), the circle inside it, and the smallest tap target */
-  --float-h:52px; --float-in:42px; --tap:44px;
+  /* ONE size for every pill, row, key and bar (G 2026-10-08 "a middle point of what we already have that can work
+     everywhere"): the old 44 rows, 52 nav and 60 bars meet at 52. Panels sit their pills one --pad-panel in, so a panel's
+     corner is the pill's round plus that pad; anything nested one gap in takes the pill's round plus one gap. */
+  --pill-size:52px; --pad-panel:16px;
+  --float-h:var(--pill-size); --float-in:42px; --tap:44px;
   /* the page's widest edge: the app, its screens and the landing page all stop here (BentoGrid handoff) */
   --page-max:1180px;
   --bg-row:120px; /* a BentoGrid row in flow mode; 96px on a compact screen (bands.css) */

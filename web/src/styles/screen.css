@@ -49,7 +49,7 @@ html:has(.screen) body{overflow:hidden}
 .srow>small{color:var(--muted);font-size:var(--fz-xs);font-weight:var(--w-mid);white-space:nowrap;font-variant-numeric:tabular-nums}
 .srow.on>small,.srow .snext{color:var(--ink)}
 .srow.chap .sname b{font-weight:var(--w-bold)}
-.srow.sles{padding-left:22px;min-height:var(--tap);font-size:var(--small)}
+.srow.sles{padding-left:22px;min-height:var(--pill-size);font-size:var(--small)}
 /* a lesson row is always one line, picked or not: the name ends in an ellipsis and its label (time, score, Up next)
    keeps its place, so no row grows or changes when it's picked (G 2026-10-07, "why is this happening?") */
 .srow.sles .sname b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -63,17 +63,19 @@ html:has(.screen) body{overflow:hidden}
    (8px), sets every gap: between the list's rows, round the open panel's edge and between its lessons, so nothing ever
    touches. The open chapter is one panel (--surf-nest) holding its head and its lessons; it grows outward by the gap so
    the head's words never move, at the fold's speed. The current lesson is shaded darker inside it. */
-.slist{--list-gap:var(--sp-2);--row-h:var(--tap)}
+.slist{--list-gap:var(--sp-2);--row-h:var(--pill-size)}
 /* nesting from the inside out (G 18:40, the chapter header's corners): the lessons are pills (--row-h); their panel is a
    pill plus the gap; the list's own rows (Today, a chapter's title) are as tall as that panel, so they're pills of the same
    round; the open chapter is that plus the gap and stands one gap in from the list's edge; and the list is that plus the gap
    again, so every corner is concentric */
-.slist{--row-top:calc(var(--row-h) + var(--list-gap) * 2);border-radius:calc(var(--row-top) / 2 + var(--list-gap) * 2)!important}
+/* one pill size (G 2026-10-08): the list's own rows are the same pill as its lessons, and the list is that pill's round
+   plus the panel's pad, the same corner as every main panel */
+.slist{--row-top:var(--row-h);border-radius:var(--r-panel)!important}
 .slist>.srow,.slist>.sgroup>.srow.chap{min-height:var(--row-top)}
 .wrap .screen .slist.slist{padding:calc(var(--list-gap) * 2 - var(--panel-w))}
 .wrap .screen.gu .slist.slist{padding-bottom:calc(var(--sp-6) - var(--panel-w))}
 .slist>:is(.srow,.sgroup)+.sgroup,.slist>.sgroup+.srow{margin-top:var(--list-gap)}
-.sgroup{border-radius:calc(var(--row-h) / 2 + var(--list-gap) * 2);transition:background-color var(--m-close) var(--m-ease),padding var(--m-close) var(--m-ease),margin var(--m-close) var(--m-ease)}
+.sgroup{border-radius:calc(var(--row-h) / 2 + var(--list-gap));transition:background-color var(--m-close) var(--m-ease),padding var(--m-close) var(--m-ease),margin var(--m-close) var(--m-ease)}
 .sgroup.open{background:var(--surf-nest);margin-inline:calc(var(--list-gap) * -1);padding:var(--list-gap)}
 .sgroup-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--m-close) var(--m-ease),visibility 0s var(--m-close)}
 .sgroup.open>.sgroup-body{grid-template-rows:1fr;transition:grid-template-rows var(--m-close) var(--m-ease)}
@@ -271,7 +273,7 @@ html:has(.screen) body{overflow:hidden}
    line and the picture; the keypad docks under the hero. The hero's rows and the keypad share one column, so the
    equation, the answer box, the feedback line, the picture and the keys always line up on the same left and right
    edges, in every lesson, grade and size. Only the picture flexes; the page never scrolls. ---- */
-.screen.fit.lscreen.pscreen{--key:52px;--slot:58px;--ask:36px;--pfb-h:46px;--pic-min:120px;
+.screen.fit.lscreen.pscreen{--key:var(--pill-size);--slot:58px;--ask:36px;--pfb-h:46px;--pic-min:120px;
   grid-template-columns:minmax(300px,330px) minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"intro hero" "intro pad";align-content:stretch}
 .pscreen>.pbar{grid-area:bar;display:none}
 .pscreen>.ppad{grid-area:pad;min-width:0}
@@ -315,7 +317,7 @@ html:has(.screen) body{overflow:hidden}
 /* the lesson intro's steps are the Contents list's lesson panel (ListGroup master, G 21:34 "needs the ladder"): one
    step deeper than the intro, 8px round and between its rows, rows the tap height with pill ends, the step being shown
    one more step deeper. The panel stands 8px out from the intro's text, so it sits 16px in and its corners nest */
-.lintro .beats{--row-h:var(--tap);margin:0 calc(var(--nest) * -1);padding:var(--nest);gap:var(--nest);background:var(--g1,var(--well));border-radius:calc(var(--row-h) / 2 + var(--nest))}
+.lintro .beats{--row-h:var(--pill-size);margin:0 calc(var(--nest) * -1);padding:var(--nest);gap:var(--nest);background:var(--g1,var(--well));border-radius:calc(var(--row-h) / 2 + var(--nest))}
 .lintro .beat>button{--beat-in:calc((var(--row-h) - var(--badge)) / 2)}
 .lintro .beat,.lintro .beat>button{border-radius:calc(var(--row-h) / 2)}
 .lintro .beat[data-state="now"]{background:var(--g2,var(--hover))}
@@ -410,7 +412,7 @@ html:has(.screen) body{overflow:hidden}
 
 /* portrait and narrow: the problem and the current step on top, then the hero, then a four-column keypad */
 @media (max-aspect-ratio:1/1),(max-width:760px){
-  .screen.fit.lscreen.pscreen{--key:62px;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"intro" "hero" "pad"}
+  .screen.fit.lscreen.pscreen{--key:var(--pill-size);grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"intro" "hero" "pad"}
   .pintro{overflow:visible;padding:var(--sp-2) var(--sp-3);gap:var(--sp-2);display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}
   .pintro>*{grid-column:1 / -1}
   .pintro>.k{grid-column:1}
@@ -425,7 +427,7 @@ html:has(.screen) body{overflow:hidden}
 /* a phone ("Tuck away", option A): the problem moves into the island, the steps fold into one bar over the keypad,
    and the picture gets the room */
 @media (max-width:520px){
-  .screen.fit.lscreen.pscreen{--key:48px;--slot:48px;--ask:28px;--pfb-h:42px;grid-template-rows:minmax(0,1fr) auto auto;grid-template-areas:"hero" "bar" "pad"}
+  .screen.fit.lscreen.pscreen{--key:var(--pill-size);--slot:48px;--ask:28px;--pfb-h:42px;grid-template-rows:minmax(0,1fr) auto auto;grid-template-areas:"hero" "bar" "pad"}
   .pscreen .pprob .math.words>.mline,.pscreen .pprob .story{font-size:var(--fz-lg)}
   .pscreen>.pbar{display:flex}
   .pscreen.ptest:not(.pwordy)>.pbar{display:flex}
@@ -587,7 +589,7 @@ html:has(.screen) body{overflow:hidden}
 /* the problem dots: the one you're on is solid and darker, no ring */
 .pdots i.now{background:var(--ink);box-shadow:none;outline:none}
 /* a phone keypad with no "." or "−" is three rows, not four, so each key takes the room back and grows */
-@media (max-width:520px){.screen.fit.lscreen.pscreen:has(.tray.nosign){--key:54px}}
+@media (max-width:520px){.screen.fit.lscreen.pscreen:has(.tray.nosign){--key:var(--pill-size)}}
 @media (max-width:520px) and (max-height:760px){.screen.fit.lscreen.pscreen:has(.tray.nosign){--key:46px}}
 .pfb.solved .dot{display:none}
 
@@ -649,7 +651,7 @@ html:has(.screen) body{overflow:hidden}
    row holds a badge, its name and its math line. Corners nest from the inside out: row --srow/2, the steps' panel +gap,
    the open group +gap again, and the solve panel (and the picture tile beside it) +gap once more, exactly like Contents:
    the head row is --srow + 2 gaps tall, so it nests the same way shut or open. */
-.pscreen{--srow:var(--tap)}
+.pscreen{--srow:var(--pill-size)}
 .pscreen .pbar{--list-gap:var(--nest);--row-h:var(--srow)}
 /* the practice screen has no intro column: the problem's words live in the solve panel, on top, and the steps follow */
 .pscreen>.pintro{display:none}
@@ -657,14 +659,14 @@ html:has(.screen) body{overflow:hidden}
 .pscreen.pwordy .lshero.phero>.pbar{grid-row:2}
 .pscreen:not(.pwordy) .lshero.phero>.pprob{display:none}
 .pscreen .lshero.phero>.pbar{grid-row:1;display:block;padding:calc(var(--nest) * 2) calc(var(--nest) * 2) 0}
-.pscreen .lshero.phero::before,.pscreen>.lpic{border-radius:calc(var(--srow) / 2 + var(--nest) * 3)}
+.pscreen .lshero.phero::before,.pscreen>.lpic{border-radius:var(--r-panel)}
 /* the solve panel is the list column, so it takes the Contents panel's glass (g1) and the steps step down the ladder exactly as
    the lesson overview does (G 2026-10-07 22:00, "the color depth looks different") */
 .pscreen .lshero.phero::before{background:var(--g1,var(--pane-plain,var(--float)))}
 .pscreen .pbar>.sgroup{padding:0;margin:0}
 .pscreen .pbar>.sgroup.open{margin:calc(var(--list-gap) * -1) calc(var(--list-gap) * -1) 0;padding:var(--list-gap)}
 .pscreen .pbar .srow{--badge:28px;min-height:var(--srow);border-radius:calc(var(--srow) / 2);align-items:flex-start;gap:10px;padding:calc((var(--srow) - var(--badge)) / 2) var(--sp-2)}
-.pscreen .pbar .srow.chap{background:var(--g2,var(--well));--row-top:calc(var(--srow) + var(--nest) * 2);min-height:var(--row-top);border-radius:calc(var(--row-top) / 2);padding:calc((var(--row-top) - var(--badge)) / 2)}
+.pscreen .pbar .srow.chap{background:var(--g2,var(--well));--row-top:var(--srow);min-height:var(--row-top);border-radius:calc(var(--row-top) / 2);padding:calc((var(--row-top) - var(--badge)) / 2)}
 .pscreen .pbar .sgroup.open>.srow.chap{background:var(--g3,var(--surf-sub))}
 .pscreen .pbar .srow .sname b,.pscreen .pbar .srow>small{line-height:var(--badge)}
 .pscreen .pbar .srow.chap .sname b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -843,4 +845,4 @@ html:has(.screen) body{overflow:hidden}
 .pfb .badge{--badge:24px;align-self:flex-start}
 /* in a test the Problem row is the same size pill as the steps bar under it (G 2026-10-08 "problem can be a bigger pill"),
    the dots' pill sitting in it the way the step's number sits in the bar */
-.pscreen.ptest .pbar .pwhere{min-height:60px;padding:var(--sp-4)}
+.pscreen.ptest .pbar .pwhere{min-height:var(--srow);padding:calc((var(--srow) - var(--badge,var(--sp-7))) / 2)}
