@@ -365,6 +365,8 @@ html:has(.screen),html:has(.screen) body{overflow:hidden;overscroll-behavior:non
 .imark{display:grid;place-items:center;height:var(--float-h);padding:0 var(--sp-2);border-radius:var(--r-pill);color:var(--text);transition:transform var(--dur-180) var(--ease),color var(--m-page) var(--m-ease)}
 .imark:active{transform:scale(.96)}
 .imark .iword{font-size:var(--fz-lg)}
+.imark{grid-auto-flow:column;gap:var(--sp-2)}
+.imark .ibox{color:currentColor}
 /* on a phone the place pill needs the room: its fill circle becomes the pill's own fill, charging left to right */
 @media (max-width:699px){
   .itop,.itop:has(>.icorner.left){grid-template-columns:auto minmax(0,1fr) auto;gap:var(--sp-2)}

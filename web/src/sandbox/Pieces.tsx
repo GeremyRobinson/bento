@@ -96,9 +96,9 @@ export function Pieces() {
         <p className="muted">Each piece is built and checked on its own, then nests into the bigger ones. These are the real components, so they work here the way they will in the app.</p>
       </header>
       <div className="sbpgrid">
-        <Piece name="Logo mark" status="building" chunk="BoxMark" nests="Nav, the app icon, the landing page">
+        <Piece name="Logo mark" status="review" chunk="BoxMark" nests="Nav, the app icon, the landing page">
           <div className="sblogo"><BoxMark size={160} /><span className="sblogo-row"><BoxMark size={32} /><BentoMark /></span></div>
-          <small className="muted">An outlined bento box whose compartments keep rearranging: two squares and a rectangle, four squares, a rectangle with half squares. Each change settles with a soft rubber-band stretch, about every two and a half seconds. Less motion: it holds still.</small>
+          <small className="muted">Solid blocks on a flat plate. It rests on a little sum, a tall half, a square and two bars like an equals sign, then splits outwards round the box and finds its way home. Every gap is one grid cell. Less motion: it holds the resting pose.</small>
         </Piece>
         <Piece name="BentoGrid" status="review" chunk="BentoGrid master" nests="Book home, My Bento, Settings, the grown-up page">
           <DemoGrid />

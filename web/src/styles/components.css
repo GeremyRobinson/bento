@@ -571,8 +571,7 @@ button.gcell:active{transform:scale(.96)}
 .wrap .mtile>.ctl{margin-inline:var(--sp-2)}
 .wrap .mtile .ctl:not(.go){background:var(--g2,var(--card))}
 .wrap .mtile .actions{justify-content:flex-start}
-/* the logo mark (BoxMark): outline only, in ink, like the wordmark (G 2026-10-07 22:54) */
-.boxmark{display:block;flex:none;color:var(--ink);overflow:visible}
-.boxmark rect{fill:none;stroke:currentColor;stroke-linejoin:round}
-.boxmark .bx-box{stroke-width:5px}
-.boxmark .bx-cell{stroke-width:4px}
+/* the logo mark (BoxMark): solid blocks in ink on a flat plate of the same ink, no outline (G 2026-10-08 01:07) */
+.boxmark{display:block;flex:none;color:var(--ink)}
+.boxmark .bx-plate{fill:currentColor;opacity:.12}
+.boxmark .bx-blocks{fill:currentColor}
