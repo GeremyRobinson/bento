@@ -757,7 +757,7 @@ html:has(.screen) body{overflow:hidden}
 .pscreen .pbar .pwhere{display:flex;min-height:var(--srow);gap:var(--sp-3);margin:0 0 var(--list-gap);padding:calc((var(--srow) - var(--badge,var(--sp-7))) / 2) calc(var(--list-gap) + var(--sp-2));border-radius:var(--r-pill);color:var(--text);font-weight:var(--w-mid);font-size:var(--fz-md)}
 .pscreen .pbar .pwhere .sname{flex:1 0 auto;white-space:nowrap}
 /* and it's a button (G 2026-10-08): the Pill master's plain fill for a button on a panel, a rung up on hover */
-.pscreen .pbar .pwhere{background:var(--btn-panel,var(--card))}
+.pwhere{background:var(--btn-panel,var(--card))}
 /* the dots sit in their own pill one rung deeper, the way the step's number sits in its circle (G 2026-10-08 "ladder the
    dots"): the same height as that circle, the same space round it, so its round end follows the row's */
 .pscreen .pbar .pwhere{padding-right:calc((var(--srow) - var(--badge,var(--sp-7))) / 2)}
