@@ -117,7 +117,7 @@ const BulbIcon = () => (
 function fillOf(place: Place, app: ReturnType<typeof useApp>, grade: number): number {
   // in practice, the battery is the run: each solved problem ticks it up by its share (practice-spec §5)
   const run = app.progress.run;
-  if (app.route.name === "practice" && run) return (run.i + (run.solved ? 1 : 0)) / run.items.length;
+  if (app.route.name === "practice" && run) return ((run.done?.length ?? 0) + (run.solved && !run.done?.includes(run.i) ? 1 : 0)) / run.items.length;
   if (place.lesson) { const p = pageOf(place.lesson); if (p) return p.page / p.pages; }
   const all = entriesInGrade(grade);
   return all.length ? doneCount(app.progress, all) / all.length : 0;
@@ -197,12 +197,16 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
     const onStart = (e: TouchEvent) => { d0 = e.touches.length === 2 && (visualViewport?.scale ?? 1) <= 1.01 ? dist(e.touches) : 0; };
     const onMove = (e: TouchEvent) => {
       if (!d0 || e.touches.length !== 2) return;
-      if (dist(e.touches) / d0 < 0.7) { d0 = 0; setOpen(start); }
+      if (dist(e.touches) / d0 < 0.7) {
+        d0 = 0;
+        // in a lesson or test the pinch zooms out to its problems, not the contents (G 2026-10-08)
+        if (route.name === "practice" && progress.run) dispatchEvent(new Event("bento:problems")); else setOpen(start);
+      }
     };
     document.addEventListener("touchstart", onStart, { passive: true });
     document.addEventListener("touchmove", onMove, { passive: true });
     return () => { document.removeEventListener("touchstart", onStart); document.removeEventListener("touchmove", onMove); };
-  }, [welcome, open, start]);
+  }, [welcome, open, start, route.name, !!progress.run]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // on the landing, while the dark Bento² section is under the nav, the wordmark turns light
   useEffect(() => {

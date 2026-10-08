@@ -434,7 +434,7 @@ function pass(s: PracticeSession, shown: boolean, progress: Progress, deps: Deps
   const xp = problemXp({ test: isTest(next), ...pr });
   const it = currentItem(next);
   next = {
-    ...next, solved: true, pick: null, active: null,
+    ...next, solved: true, pick: null, active: null, done: [...(next.done ?? []), next.i],
     xpEarned: next.xpEarned + xp, clean: next.clean + (clean ? 1 : 0),
     probs: [...next.probs, { lessonId: it.lessonId, problem: it.problem, ...(it.story ? { story: true } : {}), work: next.work, hints: pr.hints, wrong: pr.wrong, shown: pr.shown, ms: deps.now - pr.t0 }],
   };
@@ -453,13 +453,34 @@ function pass(s: PracticeSession, shown: boolean, progress: Progress, deps: Deps
 
 // ---------------------------------------------------------------- moving on and finishing
 
-export const isLastProblem = (s: PracticeSession) => s.i >= s.items.length - 1;
+/** the problems still to do, after this one, in order round the set */
+const openAfter = (s: PracticeSession): number[] => {
+  const done = new Set(s.done ?? []), out: number[] = [];
+  for (let k = 1; k < s.items.length; k++) { const j = (s.i + k) % s.items.length; if (!done.has(j) && j !== s.i) out.push(j); }
+  return out;
+};
+/** nothing is left but this problem (a set can be done in any order, so it isn't always the last index) */
+export const isLastProblem = (s: PracticeSession) => openAfter(s).length === 0;
 
-/** Next problem, or null when the run is over (then call finishRun). */
+/** Next problem still to do, or null when the run is over (then call finishRun). */
 export function nextProblem(s: PracticeSession, progress: Progress, deps: Deps): PracticeSession | null {
   if (!s.solved) return s;
-  if (isLastProblem(s)) return null;
-  return startProblem({ ...s, i: s.i + 1 }, progress, deps);
+  const next = openAfter(s)[0];
+  if (next == null) return null;
+  return startProblem({ ...s, i: next }, progress, deps);
+}
+
+/**
+ * The problem picker (G 2026-10-08: "see how many questions they have on a test and pick and choose which ones they'd
+ * like to answer first"). You can move to any problem you haven't finished before you start answering this one, or
+ * once it's solved; a problem you've begun answering is finished first, so a test's one try per step can't be undone.
+ */
+export const canPick = (s: PracticeSession, index: number): boolean =>
+  index >= 0 && index < s.items.length && index !== s.i && !(s.done ?? []).includes(index) && (s.solved || !started(s));
+const started = (s: PracticeSession) => s.step > 0 || s.prob.wrong > 0 || s.prob.hints > 0 || s.prob.shown > 0 || s.work.length > 0;
+export function goToProblem(s: PracticeSession, index: number, progress: Progress, deps: Deps): PracticeSession {
+  if (!canPick(s, index)) return s;
+  return startProblem({ ...s, i: index }, progress, deps);
 }
 
 export function finishRun(s: PracticeSession, progress: Progress, now: number): { progress: Progress; report: SessionReport } {

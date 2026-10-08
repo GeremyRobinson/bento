@@ -12,11 +12,12 @@ import type { Explanation } from "../explanations/schema";
 import { FeedbackBox } from "../components/practice/FeedbackBox";
 import { Confirm } from "../components/Confirm";
 import { Keypad } from "../components/practice/Keypad";
+import { ProblemsZoom } from "../components/practice/ProblemsZoom";
 import { FitScreen } from "../components/screen/Screen";
 import { ListGroup } from "../components/screen/ListGroup";
 import { ALL_LESSONS, SHOW_ME } from "../app/copy";
 import {
-  bandOfSession, check, choose, currentItem, currentStep, focusSlot, hint, isLastProblem, lessonOfItem, nextProblem,
+  bandOfSession, check, choose, currentItem, currentStep, focusSlot, goToProblem, hint, isLastProblem, lessonOfItem, nextProblem,
   pickPlan, pressKey, problemOf, showMe, showMeAvailable, skipAvailable, stepsOf, toggleSkip,
 } from "../engine/session/practice";
 
@@ -66,7 +67,7 @@ export function Practice() {
   useEffect(() => {
     if (!s) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.altKey || asking) return;
+      if (e.metaKey || e.ctrlKey || e.altKey || asking || zoomOut) return;
       // an open hint or steps stack takes Escape for itself, so the page underneath doesn't also step back (Review)
       if (e.key === "Escape") { if (document.querySelector("#app :is(.fstack[role=dialog],.phint)")) e.preventDefault(); setHintOpen(false); setStepsOpen(wideSteps()); return; }
       // tap-to-answer steps and planning: 1–4 pick a choice
@@ -113,6 +114,13 @@ export function Practice() {
   const [tapped, setTapped] = useState<{ at: string; i: number } | null>(null);
   // the hint stack, the phone's steps stack and the quit question: one at a time
   const [hintOpen, setHintOpen] = useState(false), [stepsOpen, setStepsOpen] = useState(wideSteps), [asking, setAsking] = useState(false);
+  // every problem zoomed out, to pick which one comes next (G 2026-10-08): a pinch closed or a tap on "Problem 2 of 6"
+  const [zoomOut, setZoomOut] = useState(false);
+  useEffect(() => {
+    const on = () => { setHintOpen(false); setZoomOut(true); };
+    addEventListener("bento:problems", on);
+    return () => removeEventListener("bento:problems", on);
+  }, []);
   useEffect(() => { setHintOpen(false); setStepsOpen(wideSteps()); }, [s?.i, s?.step, s?.solved]);
   useEffect(() => { dispatchEvent(new CustomEvent("bento:hintopen", { detail: hintOpen })); }, [hintOpen]);
   // the steps are the Contents accordion itself (the ListGroup master): it opens and folds on the master's own motion
@@ -143,7 +151,7 @@ export function Practice() {
   const test = s.mode === "test", mixed = s.mode !== "practice", band = bandOfSession(s);
   const tapOnly = !!s.pick || !!step?.choices;
   const at = `${s.i}-${s.step}`, mark = (i: number) => tapped?.at === at && tapped.i === i && fb ? (fb.type === "bad" ? " no" : " ok") : "";
-  const nextLabel = s.i < n - 1 ? "Next problem" : test ? "Finish test" : s.mode === "review" ? "Finish review" : "Finish lesson";
+  const nextLabel = !isLastProblem(s) ? "Next problem" : test ? "Finish test" : s.mode === "review" ? "Finish review" : "Finish lesson";
   // "Solved." carries the lesson's last idea, in this problem's numbers
   const idea = s.solved && full?.steps.length ? full.steps[full.steps.length - 1]!.narration : undefined;
   // the light bulb's own answers open in the hint stack, not on the feedback line
@@ -157,9 +165,9 @@ export function Practice() {
   const beats = steps.map((st, k) => ({ k, state: k < here ? "done" : k === here ? "now" : "later", label: k === here && s.pick ? "What comes next?" : k <= here ? st.base : `Step ${k + 1}`, line: s.work[k] }));
   const now = beats.find(b => b.state === "now");
   // quitting asks only when answers would be lost
-  const started = s.i > 0 || s.work.length > 0 || s.mistakes.length > 0 || s.solved;
+  const started = (s.done?.length ?? 0) > 0 || s.work.length > 0 || s.mistakes.length > 0 || s.solved;
   const onQuit = () => (started ? setAsking(true) : quit());
-  const dots = <span className="pdots" aria-hidden>{s.items.map((_, i) => <i key={i} className={i < s.i ? "ok" : i === s.i ? "now" : ""} />)}</span>;
+  const dots = <span className="pdots" aria-hidden>{s.items.map((_, i) => <i key={i} className={i === s.i ? "now" : s.done?.includes(i) ? "ok" : ""} />)}</span>;
   function onNext() {
     if (s && isLastProblem(s)) finish();
     // the next problem is a step along the row, not a step deeper: it slides, the page never zooms (Review)
@@ -185,7 +193,7 @@ export function Practice() {
       style={{ "--steps": steps.length } as CSSProperties}>
       {/* the problem and how it's going: where you are, the problem with its "?", and the steps */}
       <section className="lintro pintro">
-        <p className="k"><span>Problem {s.i + 1} of {n}</span>{dots}</p>
+        <p className="k"><button className="pzoom" onClick={() => setZoomOut(true)} aria-haspopup="dialog" aria-label={`Problem ${s.i + 1} of ${n}. See every problem`}><span>Problem {s.i + 1} of {n}</span>{dots}</button></p>
         {test && <p className="ptestk">{s.title}: no hints, one try per step</p>}
         {mixed && <div className="label plabel">{lesson.title}</div>}
         {beatList}
@@ -218,7 +226,7 @@ export function Practice() {
               <span className="sname"><b>{s.solved ? <><strong>Solved.</strong>{idea && <> <Rich text={idea} /></>}</> : now?.label}</b></span>
               {!s.solved && <small className="smeta">{Math.min(here + 1, steps.length)} of {steps.length}</small>}<span className="chev" aria-hidden><Chevron dir="down" /></span>
             </button>}>
-            <p className="pwhere">Problem {s.i + 1} of {n}{dots}</p>
+            <button className="pwhere pzoom" onClick={() => setZoomOut(true)} aria-haspopup="dialog" aria-label={`Problem ${s.i + 1} of ${n}. See every problem`}>Problem {s.i + 1} of {n}{dots}</button>
             {beats.map(b => (
               <div key={b.k} className={`srow sles pstep${b.state === "now" ? " on" : ""}`} data-state={b.state}>
                 <span className="badge">{b.state === "done" ? <Check /> : b.k + 1}</span>
@@ -258,6 +266,7 @@ export function Practice() {
         </div>) : undefined}
         solved={s.solved} plain={plain} onKey={key => { if (fb?.type === "bad") setFbAway(true); act(st => pressKey(st, key)); }}
         go={s.solved ? { label: nextLabel, run: onNext } : tapOnly ? undefined : { label: "Check", run: () => act((st, p, d) => check(st, p, d)) }} />
+      {zoomOut && <ProblemsZoom s={s} close={() => setZoomOut(false)} pick={k => withTransition(() => act((st, p, d) => goToProblem(st, k, p, d)), "next")} />}
       {asking && (
         <Confirm title={`Quit ${s.title}?`} body="Your answers so far won't be kept." confirm="Quit"
           onCancel={() => setAsking(false)} onConfirm={() => { setAsking(false); quit(); }} />

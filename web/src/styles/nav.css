@@ -435,3 +435,23 @@ html:not(:has(.screen)) .wrap{padding-top:calc(var(--nav-top) + var(--float-h) +
 .zme .zcard .ctl:not(.go),.zme>.zfind{background:var(--btn-panel,var(--card))}
 .zme .zcard .ctl:not(.go):hover,.zme>.zfind:hover{background:var(--btn-panel-hover,var(--hover))}
 @media (max-width:699px){.zme .znum{padding:var(--sp-4)}}
+/* a lesson or test zoomed out to its problems (G 2026-10-08): the contents' zoom, one card per problem */
+.zcount{grid-column:2;font-weight:var(--w-mid);color:var(--muted);font-size:var(--fz-sm);font-variant-numeric:tabular-nums}
+.zplist{display:grid;gap:calc(var(--u) * 1.5)}
+.zplist>header{display:grid;justify-items:center;text-align:center;gap:6px}
+.zpgrid{display:grid;gap:var(--s);grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr))}
+.zprob{gap:var(--sp-3);min-height:120px;background:var(--g1,var(--well));border-radius:var(--r-panel);padding:var(--sp-5)}
+.zphead{display:flex;align-items:center;gap:var(--sp-2)}
+.zprob .badge{background:var(--btn-panel,var(--card));color:var(--ink)}
+.zprob.now .badge{background:var(--ink);color:var(--on-tint)}
+.zpline{min-width:0;overflow-wrap:anywhere;font-size:var(--fz-md)}
+.zprob:disabled{cursor:default}
+.zprob:disabled:hover{transform:none}
+.zprob:disabled:not(.done){opacity:.5}
+@media (max-width:560px){
+  .zpgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .zprob{min-height:0;padding:var(--sp-4)}
+  .zprobs .zbar-top>span:first-child{display:none}
+  .zprobs .zcount{grid-column:1;justify-self:start}
+  .zprobs .zclose{grid-column:2}
+}
