@@ -76,7 +76,10 @@
 :root[data-theme="dark"] .wrap[data-grade="5"]{--tint:oklch(.8 .12 var(--gh));--glass-text:oklch(.9 .05 var(--gh))}
 /* trial (G 22:36, grade 5 "the base panel looks really grey"): the base panels are one layer of that same glass over the card,
    so the panel is the first rung of the glass, not a grey */
-.wrap[data-grade="5"]:not([data-grade="none"]){--surf-1:color-mix(in oklab,var(--glass-hue) var(--glass-a),var(--card));--pane-glass:var(--surf-1)}
+/* G 22:43: every panel starts from that one base colour and everything stacks on top */
+.wrap[data-grade="5"]:not([data-grade="none"]){--surf-1:color-mix(in oklab,var(--glass-hue) var(--glass-a),var(--card));--pane-glass:var(--surf-1);--pane-plain:var(--surf-1)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap[data-grade="5"]:not([data-grade="none"]){--surf-1:color-mix(in oklab,var(--glass-hue) var(--glass-a),var(--card));--pane-glass:var(--surf-1);--pane-plain:var(--surf-1)}}
+:root[data-theme="dark"] .wrap[data-grade="5"]:not([data-grade="none"]){--surf-1:color-mix(in oklab,var(--glass-hue) var(--glass-a),var(--card));--pane-glass:var(--surf-1);--pane-plain:var(--surf-1)}
 .t0{--tint:oklch(from var(--h2) l calc(c * var(--calm)) h)} .t1{--tint:oklch(from var(--h1) l calc(c * var(--calm)) h)} .t2{--tint:oklch(from var(--h3) l calc(c * var(--calm)) h)} .t3{--tint:oklch(from var(--h2) l calc(c * var(--calm)) h)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--tint:oklch(from var(--hd1) l calc(c * var(--calm)) h)} :root:not([data-theme="light"]) .t0{--tint:oklch(from var(--hd1) l calc(c * var(--calm)) h)} :root:not([data-theme="light"]) .t1{--tint:oklch(from var(--hd2) l calc(c * var(--calm)) h)} :root:not([data-theme="light"]) .t2{--tint:oklch(from var(--hd3) l calc(c * var(--calm)) h)} :root:not([data-theme="light"]) .t3{--tint:oklch(from var(--hd1) l calc(c * var(--calm)) h)}}
 :root[data-theme="dark"] .wrap{--tint:oklch(from var(--hd1) l calc(c * var(--calm)) h)} :root[data-theme="dark"] .t0{--tint:oklch(from var(--hd1) l calc(c * var(--calm)) h)} :root[data-theme="dark"] .t1{--tint:oklch(from var(--hd2) l calc(c * var(--calm)) h)} :root[data-theme="dark"] .t2{--tint:oklch(from var(--hd3) l calc(c * var(--calm)) h)} :root[data-theme="dark"] .t3{--tint:oklch(from var(--hd1) l calc(c * var(--calm)) h)}

@@ -436,7 +436,7 @@ sup>.slot{--slot:1.6em;font-size:1em;min-width:var(--slot);padding:0 .15em;borde
 .phead h1{font-size:calc(var(--fs) * 1.6);letter-spacing:-.02em}
 
 /* ---- home, stripped back: today's plan, the year's progress, the units. Space does the work, not boxes. ---- */
-.bhome .today,.bhome .b-stats,.bhome .b-weak{background:var(--card);padding:calc(var(--u) * 1.75)}
+.bhome .today,.bhome .b-stats,.bhome .b-weak{background:var(--pane-plain,var(--card));padding:calc(var(--u) * 1.75)}
 .today{gap:0;align-content:start}
 .today .sub{color:var(--muted);margin-top:var(--s);font-weight:var(--w-regular)}
 /* the vertical rhythm of a card: title, subtitle a small step under it, then a clear gap before the action (G 2026-10-06) */

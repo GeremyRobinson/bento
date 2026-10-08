@@ -559,7 +559,7 @@ html:has(.screen) body{overflow:hidden}
 .sbento :is(.today,.tbody){scroll-padding:var(--sp-2)}
 /* Today's Start is pinned only on a phone; beside the list it sits in the plan's first row */
 .sbento .tstart{display:none}
-.sbento .b-streak{background:var(--card);padding:calc(var(--u) * 1.75);display:grid;justify-items:center;align-content:center;text-align:center;gap:6px}
+.sbento .b-streak{background:var(--pane-plain,var(--card));padding:calc(var(--u) * 1.75);display:grid;justify-items:center;align-content:center;text-align:center;gap:6px}
 .sbento .b-streak p{margin:0}
 .sbento .today .b-weak{margin-top:var(--s);padding:0;background:none;box-shadow:none}
 /* Today sits on the BentoGrid master in fit mode (Home.tsx): the picture l top left, the two numbers n stacked beside it,
