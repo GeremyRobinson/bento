@@ -81,7 +81,7 @@ function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): P
     }
     // pages you open from anywhere (the corner buttons) step back to where you were, a lesson or a problem included
     case "me": return { kicker: gradeOf(grade).name, title: YOUR_BENTO, back: cameFrom(route, app, grade) ?? contents };
-    case "settings": return { kicker: "Bento", title: "Settings", back: cameFrom(route, app, grade) ?? contents, lock: true };
+    case "settings": return { kicker: "Obento", title: "Settings", back: cameFrom(route, app, grade) ?? contents, lock: true };
     case "facts": {
       const t = route.table ? tableById(route.table) : undefined;
       return t ? { kicker: "Facts", title: t.name, back: { label: "facts", to: { name: "facts" } } } : { kicker: gradeOf(grade).name, title: "Facts", back: contents };
@@ -302,7 +302,13 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
         </button>
         {place.lock
           ? <span className="ilock"><LockIcon />On this device</span>
-          : <span className={`ibat${route.name === "practice" && run?.solved ? " tick" : ""}`} aria-hidden><i /></span>}
+          : <span className={`ibat${route.name === "practice" && run?.solved ? " tick" : ""}`} aria-hidden>
+              {/* the circle says which lesson this is, and its own edge is the progress (G 21:33): the ring fills round
+                  from the top, the PillRing's way, instead of the circle filling up */}
+              <svg viewBox="0 0 36 36"><circle className="pring-track" cx="18" cy="18" r="17" pathLength={1} />
+                <circle className={`pring-fill${fill > 0 ? "" : " empty"}`} cx="18" cy="18" r="17" pathLength={1} style={{ strokeDasharray: `${Math.min(1, fill)} 1` }} /></svg>
+              {place.lesson && pageOf(place.lesson) ? <b>{pageOf(place.lesson)!.page}</b> : null}
+            </span>}
       </header>} right={<>
         {hintable && (
           <button className={`icon ihint${run!.hintsLeft || run!.hinted ? "" : " spent"}${hinting ? " on" : ""}`} onClick={() => dispatchEvent(new Event("bento:hint"))}

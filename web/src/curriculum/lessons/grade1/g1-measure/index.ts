@@ -72,7 +72,7 @@ function explain({ x, y }: MeasureProblem, model: AnswerModel): Explanation {
   const one = THINGS[x]!, two = THINGS[y]!, longer = a > b ? one : two, shorter = a > b ? two : one;
   return {
     heading: "Measure with cubes",
-    idea: ["Line the cubes up end to end, with no gaps, starting right at the edge. The number of cubes is the length."],
+    idea: ["Cubes lined up with no gaps cover the whole length, so their count is the length."],
     statement: [text(`${one} and ${two}`)],
     diagram: buildMeasure({
       things: [{ name: one, length: a }, { name: two, length: b }],

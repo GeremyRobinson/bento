@@ -60,7 +60,7 @@ function explain(p: TwoByTwoProblem, model: AnswerModel): Explanation {
   const pr = parts(p);
   return {
     heading: "Split both numbers",
-    idea: ["Each number is tens plus ones, so the big rectangle cuts into four smaller ones that are easy to multiply.", "The four parts together make the whole area."],
+    idea: ["Each number is tens plus ones, so the big rectangle cuts into four easy pieces."],
     statement: [num(p.a), op("×"), num(p.b)],
     diagram: buildAreaGrid({
       cols: [{ label: String(10 * t), size: 10 * t }, { label: String(u), size: u }],

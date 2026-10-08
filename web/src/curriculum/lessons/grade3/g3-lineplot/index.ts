@@ -111,7 +111,7 @@ const plot = (p: FracPlotProblem) => ({ d: 4, lo: p.lo, hi: p.lo + 8, data: p.da
 const alt = (p: FracPlotProblem) => (p.kind === 0 ? "A crayon on an inch ruler with half and quarter marks." : `A line plot of ${THINGS[p.thing]!.one} lengths, marked in fourths of an inch.`);
 
 function explain(p: FracPlotProblem, model: AnswerModel): Explanation {
-  const idea = ["A ruler has marks for halves and fourths of an inch. Measure to the nearest one, then put an X on the line plot."];
+  const idea = ["A ruler marks halves and fourths of an inch, so a length can land between whole inches."];
   const last = model.steps.at(-1)!;
   if (p.kind === 0) {
     const len = 4 * p.whole + p.quarters;

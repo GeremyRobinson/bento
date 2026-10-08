@@ -12,7 +12,7 @@ export function explainSlope(p: SlopeProblem, model: AnswerModel): Explanation {
   const statement = [...ptM(x1, y1), text(" and "), ...ptM(x2, y2)];
   return {
     heading: "Rise over run",
-    idea: ["Slope is how steep a line is: how far it goes up (the rise) for each step across (the run). Use the same order for both: second point minus first."],
+    idea: ["Slope is how far a line goes up for each step across."],
     statement,
     caption: `Rise ${f(rise)} over run ${f(run)}: slope ${f(m)}.`,
     diagram: buildPlane({

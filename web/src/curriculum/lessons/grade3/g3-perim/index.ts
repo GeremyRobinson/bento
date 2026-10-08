@@ -143,7 +143,7 @@ function explain(p: PerimProblem, model: AnswerModel): Explanation {
   const r1 = first.slots[0]!.expected!, P = last.slots[0]!.expected!;
   return {
     heading: "Walk around the edge",
-    idea: ["Perimeter is the distance all the way around a shape.", "Add the length of every side. Don't skip any."],
+    idea: ["Perimeter is the whole distance around a shape, so every side counts."],
     statement: [text("perimeter "), op("="), text("?")],
     diagram: perimPicture(p, P),
     caption: kind === 0 ? `Only two sides are labeled. The sides across from them match.` : kind === 1 ? `A square: every side is ${a} cm.` : `A triangle has ${all.length} sides.`,

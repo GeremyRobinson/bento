@@ -42,10 +42,7 @@ function explain(p: ExponentOrderProblem, model: AnswerModel) {
   const { a, n, b, c } = p, E = expectedOf(model, "exp"), M = expectedOf(model, "mul"), S = expectedOf(model, "add");
   return chainExplanation({
     heading: "Exponents come before × and +",
-    idea: [
-      "An exponent counts how many times a number is multiplied by itself: 2³ = 2 × 2 × 2 = 8, not 2 × 3.",
-      "It is a short way to write repeated multiplying, so it is worked out before the other operations.",
-    ],
+    idea: ["An exponent is a short way to write repeated multiplying, so it goes first."],
     statement: [...pow(a, n), op("+"), num(b), op("×"), num(c)],
     alt: `${power(a, n)} + ${b} × ${c}: ${E} + ${M} = ${S}.`,
     diagram: exponentOrderPicture({ a, n, b, c, E, M, S }),

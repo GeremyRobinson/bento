@@ -96,7 +96,7 @@ function explain(pr: MoneyProblem, model: AnswerModel): Explanation {
   const total = expectedOf(model, groups[last - 1]!.key);
   return {
     heading: "Count on by coin",
-    idea: ["Start with the coins worth the most. Then count on by each coin's value."],
+    idea: ["Counting the coins worth the most first means fewer, easier steps."],
     statement: listCoins(pr),
     diagram: buildCoins({
       groups: groups.map((g, i) => ({ value: g.value, count: g.count, beat: i + 1 })),

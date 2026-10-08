@@ -1,8 +1,8 @@
-# Bento design
+# Bento design: Layered Glass Bento
 
 **Easy to use, easy to understand, good-looking where it counts. Function makes the design.**
 
-Bento is one thing. Every page is built from the same few pieces, and they look and behave the same everywhere.
+The style is **Layered Glass Bento** (G 2026-10-07): bento tiles on a grid, and inside them layers of tinted glass, each one step deeper. Bento is one thing. Every page is built from the same few pieces, and they look and behave the same everywhere.
 The model for all of it is the **lesson overview panel** (Contents): if a page doesn't look like it belongs next to
 that panel, it isn't finished.
 

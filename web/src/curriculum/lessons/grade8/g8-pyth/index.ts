@@ -60,7 +60,7 @@ export function explainPythagoras(p: PythagorasProblem, answers: AnswerModel): E
   const A = expected(answers, "square-a"), B = expected(answers, "square-b"), C2 = expected(answers, "add"), c = expected(answers, "root");
   return {
     heading: "a² + b² = c²",
-    idea: ["In a right triangle, square the two short sides and add.", "Then take the square root to find the long side."],
+    idea: ["In a right triangle, the squares on the two short sides add up to the square on the long side."],
     statement: mt`${a}${sup("2")} + ${b}${sup("2")} = c${sup("2")}`,
     caption: `${A} + ${B} = ${C2}: the two small squares fill the big one.`,
     diagram: buildRightTriangle({

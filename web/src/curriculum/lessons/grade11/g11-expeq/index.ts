@@ -46,7 +46,7 @@ export function explainExponential(p: ExponentialEquation, model: AnswerModel) {
   const [k, x] = model.steps.map(s => s.slots[0]!.expected!) as [number, number];
   return beatExplanation({
     heading: "Make the bases match",
-    idea: ["Each power of the base is a different number: every extra power multiplies by the base again. So if the base to one power equals the same base to another, the powers must be the same.", "Write both sides as powers of the same base, then set the exponents equal."],
+    idea: ["The same base to two powers is equal only when the powers are equal."],
     statement: [...lhs(p), op("="), text(big(value))],
     caption: `Write ${big(value)} as a power of ${f(b)}, then the exponents must be equal.`,
     diagram: exponentialPicture({ b, c, k, x, value }),

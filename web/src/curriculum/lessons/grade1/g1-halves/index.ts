@@ -70,7 +70,7 @@ function explain(p: HalvesProblem, model: AnswerModel): Explanation {
   const parts = expectedOf(model, "parts"), shaded = expectedOf(model, "shaded"), shape = SHAPE_NAMES[p.shape]!, name = nameOf(parts);
   return {
     heading: "Halves and fourths",
-    idea: ["Cut a shape into 2 equal parts and each part is a half. Cut it into 4 equal parts and each part is a fourth."],
+    idea: ["2 equal parts are halves, and 4 equal parts are fourths."],
     statement: [text("Halves or fourths?")],
     diagram: buildParts({
       ...picture(p), shaded,

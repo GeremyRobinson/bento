@@ -47,7 +47,7 @@ export function explainGcf(p: GcfProblem, answers: AnswerModel): Explanation {
   const fm = expectedOf(answers.steps, "factor", "m"), fn = expectedOf(answers.steps, "factor", "n");
   return {
     heading: "Pull out the biggest shared factor",
-    idea: ["Both numbers are the same factor times something, so that shared factor can be written once outside the parentheses.", "The greatest common factor leaves nothing more to pull out."],
+    idea: ["Both numbers share a factor, so it can be written once outside the parentheses."],
     statement: [num(A), op("+"), num(B), op("="), num(g), text("("), num(fm), op("+"), num(fn), text(")")],
     diagram: buildAreaGrid({
       cols: [{ label: String(fm), size: m, from: 2 }, { label: String(fn), size: n, from: 2 }],

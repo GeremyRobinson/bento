@@ -96,7 +96,7 @@ function explain(p: CoinProblem, model: AnswerModel): Explanation {
   const state: Record<string, number> = { name: 1, left: 1, right: 1, value: 2, more: 2 };
   return {
     heading: "Coins",
-    idea: ["Each coin has a size, a color and an edge. The dime is the smallest coin, but it's worth more than a penny or a nickel."],
+    idea: ["Each coin has its own size, color and edge, and a bigger coin isn't always worth more."],
     statement: words(p.kind === 0 ? "What coin is this?" : "Which is worth more?"),
     diagram: buildCoinPicture({ coins: coinsOf(p), side: p.side, beats: { edge: 1, value: 2 },
       alt: `${alt(p)} Then ${coinsOf(p).map(c => `the ${COIN_INFO[c]!.name} is worth ${cents(COIN_INFO[c]!.value)}`).join(" and ")}.` }),

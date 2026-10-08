@@ -13,7 +13,7 @@ export function explainTwoPoint(p: TwoPointProblem, model: AnswerModel): Explana
   const rise = y2 - y1, run = x2 - x1, up = rise > 0, line = lineText(m, b);
   return {
     heading: "Slope first, then b",
-    idea: ["Two points fix a line. Their rise over run is the slope m; then either point gives b = y − mx."],
+    idea: ["Two points fix a line, so they give both its slope and where it crosses."],
     statement: twoPointMath(p),
     caption: `Rise ${f(rise)} over run ${f(run)} gives m = ${f(m)}; the line crosses the y-axis at b = ${f(b)}.`,
     diagram: buildPlane({

@@ -50,7 +50,7 @@ describe("hints", () => {
     fireEvent.click(screen.getByRole("button", { name: /Today's review/ }));
     // wrong tries land on the feedback line under the equation; the bulb's hint opens as its own stack
     const line = () => document.querySelector(".pfb")?.textContent ?? "";
-    const stack = () => document.querySelector(".fstack.phint")?.textContent ?? "";
+    const stack = () => document.querySelector(".phint")?.textContent ?? "";
     expect(screen.queryByRole("button", { name: /^Hints?$/ })).toBeNull(); // no second hint button under the keypad
     // a wrong first try, then the hint
     fireEvent.keyDown(window, { key: "1" });

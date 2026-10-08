@@ -66,7 +66,7 @@ function explain(p: TenthsHundredthsProblem, model: AnswerModel): Explanation {
   const A = expectedOf(model.steps, "hundredths"), S = expectedOf(model.steps, "add"), D = expectedOf(model.steps, "decimal");
   return {
     heading: "Make the pieces match",
-    idea: ["A tenth is 1 of 10 equal parts and a hundredth is 1 of 100, so 1 tenth is the same as 10 hundredths.", "Once both are in hundredths, the pieces are the same size and can be added."],
+    idea: ["1 tenth is the same as 10 hundredths, so both can be written in hundredths."],
     statement: [frac(a, 10), op("+"), frac(b, 100)],
     diagram: tenthsHundredthsPicture(p),
     caption: `${a}/10 is the same as ${A}/100.`,

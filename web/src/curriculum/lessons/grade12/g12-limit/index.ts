@@ -51,7 +51,7 @@ export function explainLimit(p: LimitProblem, model: AnswerModel): Explanation {
   const { a } = p, b = expected(model, "b"), L = expected(model, "lim");
   return {
     heading: "0 ÷ 0 means factor",
-    idea: ["Plugging in gives 0 ÷ 0, which says nothing yet. Factor the top, cancel the matching factor, and the rest is a plain line you can plug into.", "The graph is that line with one hole in it: the limit is the height the line heads to at the hole."],
+    idea: ["0 ÷ 0 says nothing yet, so the matching factor has to cancel first."],
     statement: limitMath(p),
     caption: `A hole at x = ${f(a)}, but the line y = x ${b < 0 ? "−" : "+"} ${f(Math.abs(b))} heads to ${f(L)}.`,
     diagram: buildPlane({

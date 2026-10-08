@@ -90,7 +90,7 @@ export function explainOneStep(p: OneStepEquation, model: AnswerModel) {
   const diagram = buildBalance(frames(p), `A balance: ${f(rhs)} on one pan against the other side of the equation. Doing the opposite to both pans leaves x = ${f(x)}.`);
   return beatExplanation({
     heading: "Do the opposite",
-    idea: ["An equation is a balance: both sides weigh the same, so whatever you do to one side you do to the other.", "The opposite operation undoes what was done to x and leaves it alone."],
+    idea: ["An equation is a balance, so whatever happens to one side happens to the other."],
     statement: [...lhs(p), op("="), num(p.rhs)],
     diagram,
     alt: diagram.alt,

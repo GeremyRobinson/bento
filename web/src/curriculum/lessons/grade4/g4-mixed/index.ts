@@ -109,7 +109,7 @@ function explain(p: MixedProblem, model: AnswerModel): Explanation {
     narration: trade ? `${wholes(W)} and 1 more make ${total}, with ${R}/${d} left: ${label(total, R, d)}.` : `${wholes(W)} and ${S}/${d}: ${label(total, R, d)}.` });
   return {
     heading: "Wholes with wholes, pieces with pieces",
-    idea: ["Wholes and pieces are different sizes, so wholes add with wholes and pieces add with pieces.", "When the pieces make a whole or more, trade them for 1 whole."],
+    idea: ["Wholes and pieces are different sizes, so wholes go with wholes and pieces go with pieces."],
     statement: [...mixed(w1, n1, d), op("+"), ...mixed(w2, n2, d)],
     diagram: buildMixedBars({
       d, first: { w: w1, n: n1, label: label(w1, n1, d) }, second: { w: w2, n: n2, label: label(w2, n2, d) },

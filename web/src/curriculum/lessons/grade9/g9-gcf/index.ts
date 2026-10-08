@@ -47,7 +47,7 @@ export function explainPolyGcf(p: PolyGcfProblem, answers: AnswerModel): Explana
   const factored = `${g}x(${polyText([[m, "x"]])} + ${n})`;
   return {
     heading: "Take out what they share",
-    idea: ["Take out the biggest number that divides every coefficient, and the x that every term has."],
+    idea: ["What every term shares can be written once, outside the parentheses."],
     statement: show(p),
     diagram: buildAreaGrid({
       cols: [{ label: polyText([[m, "x"]]), size: m * X, from: 2 }, { label: String(n), size: n, from: 2 }],

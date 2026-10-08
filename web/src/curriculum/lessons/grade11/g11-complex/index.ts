@@ -51,7 +51,7 @@ export function explainComplex(p: ComplexProblem, answers: AnswerModel): Explana
   const ac = expectedOf(answers.steps, "first"), last = expectedOf(answers.steps, "last"), re = expectedOf(answers.steps, "real"), im = expectedOf(answers.steps, "imag");
   return {
     heading: "FOIL, then i² = −1",
-    idea: ["Multiply every part by every part, like two binomials. Then turn i² into −1 and gather the plain numbers and the i terms."],
+    idea: ["Complex numbers multiply like binomials, and i² is −1."],
     statement: show(p),
     diagram: buildAreaGrid({
       cols: [{ label: f(c), size: Math.abs(c) }, { label: oneI(signed(d, "i")), size: Math.abs(d) }],

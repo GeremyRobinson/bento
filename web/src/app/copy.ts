@@ -9,6 +9,8 @@ export const CHOOSE_GRADE = "Choose your grade";
 export const START_LEARNING = "Start learning";
 export const FIND_MY_LEVEL = "Find my level";
 export const GRADE_CHECKUP = "Grade check-up";
+/** the app's name, in one place: the wordmark, the nav's label and the tab title read it (G 2026-10-07 22:38, "Obento is better") */
+export const APP_NAME = "Obento";
 export const ALL_LESSONS = "All lessons";
 export const PRACTICE = "Practice";
 export const PRACTICE_AGAIN = "Practice again";
@@ -20,7 +22,7 @@ export const SHOW_ME = "Show me";
 export const CONTENTS = "Contents";
 export const THIS_YEAR = "This year";
 export const FINISHED = "Finished";
-export const YOUR_BENTO = "My Bento";
+export const YOUR_BENTO = "My Obento";
 export const GROWN_UP = "For the grown-up";
 export const REPORT = "Report";
 

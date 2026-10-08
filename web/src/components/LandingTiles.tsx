@@ -103,7 +103,7 @@ export function BookTile({ tint, k, size }: TileProps) {
   const { t, box } = useBeat(1500, 1);
   const zoom = t % 4; // 0 page, 1 chapter, 2 year, 3 back to the page
   return (
-    <Tile box={box} size={size} tint={tint} k={k} title="Bento is a book" label="Pinch a page to zoom out to its chapter, then the year, then every grade.">
+    <Tile box={box} size={size} tint={tint} k={k} title="Obento is a book" label="Pinch a page to zoom out to its chapter, then the year, then every grade.">
       <div className={`lbook z${zoom === 3 ? 0 : zoom}`}>
         {Array.from({ length: 9 }, (_, i) => <span key={i} className={i === 4 ? "page" : ""} />)}
       </div>

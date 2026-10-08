@@ -78,7 +78,7 @@ function explain(p: EquivProblem, model: AnswerModel): Explanation {
   const K = expectedOf(model.steps, "times"), top = expectedOf(model.steps, "top");
   return {
     heading: "Same amount, smaller pieces",
-    idea: ["When every piece is cut in 2, there are twice as many pieces, each half as big, so the amount stays the same.", "So multiply the top and the bottom by the same number."],
+    idea: ["Cutting every piece in two gives twice as many pieces, each half as big, so the amount stays the same."],
     statement: [frac(a, b), op("="), frac("?", b * k)],
     diagram: equivPicture(p),
     caption: `The same amount, cut into ${k} times as many pieces.`,

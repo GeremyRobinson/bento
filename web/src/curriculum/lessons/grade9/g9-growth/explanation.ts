@@ -15,7 +15,7 @@ export function explainGrowth(p: GrowthProblem, model: AnswerModel): Explanation
   const n = tickText;
   return {
     heading: "Multiply again and again",
-    idea: ["Growing by the same factor every hour means multiplying again and again. That is a power: the factor to the number of hours."],
+    idea: ["Growing by the same factor again and again is a power."],
     statement: [num(P), op("×"), num(r), sup(t)],
     caption: `${growWord(r) === "double" ? "Doubling" : "Tripling"}: ${hours.map(h => n(P * r ** h)).join(", ")}.`,
     diagram: buildPlane({

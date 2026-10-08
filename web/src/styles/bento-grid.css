@@ -14,6 +14,6 @@
 .bgrid.fit,.bgrid.fit>.bg-in{height:100%}
 .bgrid.fit>.bg-in{grid-auto-rows:minmax(0,1fr)}
 .bgrid.fit .bg-t{min-height:0}
-/* on a narrow fit grid a wide tile is full width, so one shared row is too short for what it holds: it takes two */
+/* on a narrow fit grid a wide or full tile is a whole row across, so one shared row is too short for what it holds: it takes two */
 /* and the large tile takes three, so it stays the biggest (Design 2026-10-07) */
-@container (max-width:559px){.bgrid.fit .bg-t.w{--rs:2}.bgrid.fit .bg-t.l{--rs:3}}
+@container (max-width:559px){.bgrid.fit :is(.bg-t.w,.bg-t.f){--rs:2}.bgrid.fit .bg-t.l{--rs:3}}

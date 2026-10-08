@@ -71,7 +71,7 @@ function explain(p: FractionTimesWholeProblem, model: AnswerModel): Explanation 
     : `No number but 1 divides both ${S} and ${d}, so ${S}/${d} is already as simple as it gets.`;
   return {
     heading: "Groups of pieces",
-    idea: ["Times a whole number means that many groups of the same pieces, so the pieces stay the same size.", "Only the number of pieces grows: multiply the top and keep the bottom."],
+    idea: ["Times a whole number means that many groups of the same pieces, so the pieces stay the same size."],
     statement: [num(W), op("×"), frac(n, d)],
     diagram: fractionTimesWholePicture(p),
     caption: `${countOf(W, "group")} of ${count(n, d)}.`,

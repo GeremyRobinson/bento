@@ -31,6 +31,9 @@ const SpeakerIcon = () => (
  * phone the problem moves into the island and the steps fold into one bar above the keypad. Hints open from the
  * island's light bulb as a Settings-style stack.
  */
+// on a larger screen the solve panel has the room, so the steps stay open (G 2026-10-07 22:00); same query as the wide layout
+const wideSteps = () => typeof matchMedia !== "undefined" && matchMedia("(min-width: 900px) and (orientation: landscape)").matches;
+
 export function Practice() {
   const { progress, go, act, finish, quit } = useApp();
   const s = progress.run;
@@ -65,7 +68,7 @@ export function Practice() {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey || asking) return;
       // an open hint or steps stack takes Escape for itself, so the page underneath doesn't also step back (Review)
-      if (e.key === "Escape") { if (document.querySelector("#app .fstack[role=dialog]")) e.preventDefault(); setHintOpen(false); setStepsOpen(false); return; }
+      if (e.key === "Escape") { if (document.querySelector("#app :is(.fstack[role=dialog],.phint)")) e.preventDefault(); setHintOpen(false); setStepsOpen(wideSteps()); return; }
       // tap-to-answer steps and planning: 1–4 pick a choice
       const st = currentStep(s);
       if (s.pick || st?.choices) {
@@ -109,8 +112,8 @@ export function Practice() {
   // the tapped answer wears right or wrong on itself (UI notes preview)
   const [tapped, setTapped] = useState<{ at: string; i: number } | null>(null);
   // the hint stack, the phone's steps stack and the quit question: one at a time
-  const [hintOpen, setHintOpen] = useState(false), [stepsOpen, setStepsOpen] = useState(false), [asking, setAsking] = useState(false);
-  useEffect(() => { setHintOpen(false); setStepsOpen(false); }, [s?.i, s?.step, s?.solved]);
+  const [hintOpen, setHintOpen] = useState(false), [stepsOpen, setStepsOpen] = useState(wideSteps), [asking, setAsking] = useState(false);
+  useEffect(() => { setHintOpen(false); setStepsOpen(wideSteps()); }, [s?.i, s?.step, s?.solved]);
   useEffect(() => { dispatchEvent(new CustomEvent("bento:hintopen", { detail: hintOpen })); }, [hintOpen]);
   // the steps are the Contents accordion itself (the ListGroup master): it opens and folds on the master's own motion
   const toggleSteps = () => setStepsOpen(o => !o);
@@ -124,7 +127,7 @@ export function Practice() {
   useEffect(() => {
     const onPanel = (e: Event) => { if ((e as CustomEvent).detail === "settings") { setFbAway(true); setHintOpen(false); setStepsOpen(false); } };
     // the light bulb up top asks for a hint, and the hint opens as a stack (reopening it shows the same hint, free)
-    const onHint = () => { act((st, _p, d) => hint(st, d)); setStepsOpen(false); setHintOpen(true); dispatchEvent(new CustomEvent("bento:panel", { detail: "feedback" })); };
+    const onHint = () => { act((st, _p, d) => hint(st, d)); setStepsOpen(wideSteps()); setHintOpen(true); dispatchEvent(new CustomEvent("bento:panel", { detail: "feedback" })); };
     addEventListener("bento:panel", onPanel); addEventListener("bento:hint", onHint);
     return () => { removeEventListener("bento:panel", onPanel); removeEventListener("bento:hint", onHint); };
   }, [act]);
@@ -185,7 +188,6 @@ export function Practice() {
         <p className="k"><span>Problem {s.i + 1} of {n}</span>{dots}</p>
         {test && <p className="ptestk">{s.title}: no hints, one try per step</p>}
         {mixed && <div className="label plabel">{lesson.title}</div>}
-        <div className="pprob"><ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} solved={s.solved} part="text" /></div>
         {beatList}
         <div className="pextra">{extras}</div>
       </section>
@@ -207,6 +209,8 @@ export function Practice() {
           pushes the picture down, and when the problem is solved the bar is where "Solved." and its idea land (G 2026-10-07) */}
         {/* the steps are the lesson list's accordion (ListGroup master, G 19:39 "use the same accordion"): the bar is its head row
           and the steps are its rows, the one you're on shaded like the current lesson */}
+        {/* a word problem's own words sit at the top of the solve panel, over its steps (G 2026-10-07 22:29) */}
+        <div className="pprob"><ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} solved={s.solved} part="text" /></div>
         <div className="pbar">
           <ListGroup open={stepsOpen} head={
             <button key={fb?.type === "good" && !s.solved ? fbKey : "bar"} className={`srow chap stepbar${s.solved ? " solved" : ""}${fb?.type === "good" && !s.solved && !fbAway ? " flash" : ""}`} onClick={toggleSteps} aria-expanded={stepsOpen} aria-label={`Steps: ${now?.label ?? "done"}, ${Math.min(here + 1, steps.length)} of ${steps.length}`}>
@@ -224,13 +228,25 @@ export function Practice() {
             {skipAvailable(s) && <div className="hrow"><Pill onClick={() => act((st, _p, d) => toggleSkip(st, d))}>{s.skip ? "Show steps" : "Final answer only"}</Pill></div>}
           </ListGroup>
         </div>
+        {/* the hint opens in the solve panel's own room under the question, not over the screen (G 2026-10-07 22:31) */}
+        {hintOpen && step && (
+          <section className="phint" role="region" aria-label="Hint">
+            {/* before a first try the hint waits, so say that, not "none left" (Review v45 #2) */}
+            <span className="k">{s.hintsLeft ? `Hint · ${s.hintsLeft} left` : "No hints left"}</span>
+            <p className="htext"><Rich text={s.hinted ? step.hint : s.hintsLeft ? (fb?.type === "hint" && fb.text ? fb.text : "Try it once first. Then the hint opens.") : "No hints left in this lesson. You can do it."} /></p>
+            <div className="hrow">
+              {showMeAvailable(s) && <Pill onClick={() => { setHintOpen(false); act((st, p, d) => showMe(st, p, d)); }}>{SHOW_ME} the step</Pill>}
+              <Pill go autoFocus onClick={() => setHintOpen(false)}>Got it</Pill>
+            </div>
+          </section>
+        )}
       </figure>
       {pic && (
         <div className={`lpic ppic${s.hinted ? " hinted" : ""}`} aria-label="Picture of this problem" role="img">
           <div className="viz">{ex
             ? <Diagram key={s.i} diagram={ex.diagram!} timeline={ex.timeline} fit turn={!it.story}
               at={s.solved ? ex.timeline.length - 1 : Math.min(ex.timeline.length - 1, s.step > 0 ? ex.steps[s.step - 1]?.state ?? 0 : 0)} />
-            : <ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} part="picture" />}</div>
+            : <ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} part="picture" step={s.solved ? undefined : steps[here]?.id} />}</div>
         </div>
       )}
       <Keypad band={band} tap={step && tapOnly ? (
@@ -242,20 +258,6 @@ export function Practice() {
         </div>) : undefined}
         solved={s.solved} plain={plain} onKey={key => { if (fb?.type === "bad") setFbAway(true); act(st => pressKey(st, key)); }}
         go={s.solved ? { label: nextLabel, run: onNext } : tapOnly ? undefined : { label: "Check", run: () => act((st, p, d) => check(st, p, d)) }} />
-      {hintOpen && step && (
-        <>
-          <div className="fdim phdim" onClick={() => setHintOpen(false)} />
-          <div className="fstack phint" role="dialog" aria-label="Hint" style={{ "--n": 4 } as CSSProperties}>
-            {/* before a first try the hint waits, so say that, not "none left" (Review v45 #2) */}
-            <span className="flbl" style={{ "--i": 0 } as CSSProperties}>{s.hinted ? `Hint · ${s.hintsLeft} left` : s.hintsLeft ? `Hint · ${s.hintsLeft} left` : "No hints left"}</span>
-            <span className="fpill htext" style={{ "--i": 1 } as CSSProperties}><span><Rich text={s.hinted ? step.hint : s.hintsLeft ? (fb?.type === "hint" && fb.text ? fb.text : "Try it once first. Then the hint opens.") : "No hints left in this lesson. You can do it."} /></span></span>
-            <span className="hrow" style={{ "--i": 2 } as CSSProperties}>
-              {showMeAvailable(s) && <button className="fpill" onClick={() => { setHintOpen(false); act((st, p, d) => showMe(st, p, d)); }}>{SHOW_ME} the step</button>}
-              <button className="fpill go" autoFocus onClick={() => setHintOpen(false)}>Got it</button>
-            </span>
-          </div>
-        </>
-      )}
       {asking && (
         <Confirm title={`Quit ${s.title}?`} body="Your answers so far won't be kept." confirm="Quit"
           onCancel={() => setAsking(false)} onConfirm={() => { setAsking(false); quit(); }} />

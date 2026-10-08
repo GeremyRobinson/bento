@@ -16,7 +16,7 @@ export function explainQuadForm(p: QuadFormProblem, model: AnswerModel): Explana
   const eq = polyText([[1, "x²"], [b, "x"], [c, ""]]);
   return {
     heading: "Discriminant first",
-    idea: ["x = (−b ± √(b² − 4ac)) ÷ 2a. Work out b² − 4ac first; its square root says how far apart the two answers are."],
+    idea: ["b² − 4ac decides how far apart the two answers are."],
     statement: quadFormMath(p),
     caption: `The two answers sit √${D} = ${f(s)} apart, centred on x = ${f(h)}: x = ${f(lo)} and x = ${f(hi)}.`,
     diagram: buildPlane({

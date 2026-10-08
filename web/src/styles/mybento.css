@@ -6,7 +6,7 @@
 .mytile .k svg{width:14px;height:14px;color:var(--ink)}
 .mytile h2{font:var(--w-bold) calc(var(--fs) * 1.3)/1.15 var(--sans);letter-spacing:-.02em}
 .mytile .ctl{justify-self:start}
-.mytile .ctl:not(.go){background:var(--btn-panel,var(--card))}
+.mytile .ctl:not(.go){background:var(--g2,var(--card))}
 
 /* the hero: your grade's number, your level charging up behind it, and the one way to switch */
 .myhero{grid-column:1 / -1;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:var(--u);padding:calc(var(--u) * 1.5);min-height:180px}
@@ -27,7 +27,7 @@
 .mych-score b{font-weight:var(--w-bold)}
 .mych-score small{color:var(--muted);font-size:var(--small);font-weight:var(--w-mid)}
 .mychap .ctl.go{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cbat{position:relative;flex:none;display:inline-flex;gap:3px;width:64px;height:30px;padding:var(--sp-1);border-radius:9px;box-shadow:inset 0 0 0 2px var(--faint);margin-right:var(--sp-1)}
+.cbat{position:relative;flex:none;display:inline-flex;gap:3px;width:64px;height:30px;padding:var(--sp-1);border-radius:var(--r-sm);box-shadow:inset 0 0 0 2px var(--faint);margin-right:var(--sp-1)}
 .cbat::after{content:"";position:absolute;right:-6px;top:10px;width:4px;height:10px;border-radius:0 2px 2px 0;background:var(--faint)}
 .cbat i{flex:1;border-radius:var(--r-xs);background:var(--well)}
 .cbat i.on{background:var(--tint)}
@@ -35,7 +35,7 @@
 /* your grades: only the ones you've worked in, each a small battery */
 .mygrades{grid-column:1 / -1}
 .mygl{list-style:none;margin:0;padding:0;display:grid;gap:var(--sp-2);grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
-.mygl li{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);border-radius:var(--r-card);background:var(--well);min-width:0}
+.mygl li{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);border-radius:var(--row-r,var(--r-card));background:var(--g2,var(--well));min-width:0}
 .mygl li.on{--panel-line:var(--tint);--panel-w:2px}
 .mygl .gnum{font-size:32px}
 .mygl li>span:last-child{display:grid;gap:1px;min-width:0}
@@ -51,7 +51,9 @@
   .mygrown{grid-area:grown}.mychap{grid-area:chap}.mygrades{grid-area:grades}
 }
 @media (min-width:1100px){
-  .bmine{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-areas:"hero hero streak xp" "hero hero done grown" "chap chap grades grades"}
+  /* each tile as big as what it holds (G 2026-10-07 22:48, "a lot of stuff is just huge panels"): the level and the
+     three numbers share one row, the chapter and the grown-up's report the next, your grades run the full width */
+  .bmine{grid-template-areas:"hero hero hero streak xp done" "chap chap chap grown grown grown" "grades grades grades grades grades grades"}
   .bmine>*{grid-column:auto}
   .myhero{grid-area:hero;align-content:center}.mystreak{grid-area:streak}.myxp{grid-area:xp}.mydone{grid-area:done}
   .mygrown{grid-area:grown}.mychap{grid-area:chap}.mygrades{grid-area:grades}

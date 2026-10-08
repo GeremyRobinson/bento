@@ -86,7 +86,7 @@ function explain(p: ThreeProblem, model: AnswerModel): Explanation {
   const x = v[pair[0]]!, y = v[pair[1]]!, z = v[3 - pair[0] - pair[1]]!;
   return {
     heading: "Add two first",
-    idea: ["You can add numbers in any order. Look for two that make 10, or a double, and add those first."],
+    idea: ["You can add in any order, so two numbers that make 10 can go first."],
     statement: [num(p.a), op("+"), num(p.b), op("+"), num(p.c)],
     diagram: buildThree({ nums: v, pair, beats: { groups: 0, pair: 1, last: 2 }, alt: `Three groups of dots: ${p.a}, ${p.b} and ${p.c}. ${x} and ${y} join first to make ${first}, then ${z} more make ${sum}.` }),
     caption: why === "ten" ? `${x} and ${y} make 10. 10 and ${z} make ${sum}.` : `${x} + ${y} = ${first}, then ${first} + ${z} = ${sum}.`,

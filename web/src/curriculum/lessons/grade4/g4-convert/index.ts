@@ -107,7 +107,7 @@ function explain(p: ConvertProblem, model: AnswerModel): Explanation {
     narration: `Then hop on the ${m} extra ${name(u.small, m)}: ${all} + ${m} = ${total} ${smalls}.` });
   return {
     heading: "Big unit to small unit: multiply",
-    idea: ["One big unit is always the same number of small units. Multiply by that number, then add any small units left over."],
+    idea: ["One big unit is always the same number of small units."],
     statement: [...shown(p), op("="), text(`? ${smalls}`)],
     diagram: buildDoubleLine({
       n, per: f, extra: m, top: u.big[1], bottom: smalls,

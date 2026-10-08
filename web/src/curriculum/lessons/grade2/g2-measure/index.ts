@@ -80,7 +80,7 @@ function explain(p: MeasureProblem, model: AnswerModel): Explanation {
   const sum = start ? `${end} − ${start} = ${L} ${u.abbr}` : `${L} ${u.abbr} long`;
   return {
     heading: `Measure in ${u.many}`,
-    idea: ["Find where the object starts and ends on the ruler. Count the units in between."],
+    idea: ["The units between where something starts and ends on the ruler make its length."],
     statement: [text(`How long is the ${name}?`)],
     diagram: buildRuler({
       unit: u.abbr, max: u.max, start: p.start, end: p.end, thing: p.thing,

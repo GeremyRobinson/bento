@@ -42,7 +42,8 @@ describe("every screen renders inside the Screen master", () => {
     expect(root).not.toBeNull();
     expect([...root.children].filter(c => !c.matches(".fdim,.fstack")).map(c => c.classList[0])).toEqual(["lintro", "lshero", "lpic", "ppad"]);
     const hero = root.querySelector(".lshero")!;
-    expect([...hero.children].map(c => c.classList[0])).toEqual(["lmath", "pfb", "pbar"]);
+    // a word problem's own words sit in the solve tile, over the steps (G 2026-10-07 22:29)
+    expect([...hero.children].map(c => c.classList[0])).toEqual(["lmath", "pfb", "pprob", "pbar"]);
     // the answer box sits in the equation, and the feedback line is there (empty) before anything is said
     expect(hero.querySelector(".lmath .ask .slot")).not.toBeNull();
     expect(hero.querySelector(".pfb")!.textContent).toBe("");

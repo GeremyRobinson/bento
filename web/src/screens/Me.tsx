@@ -90,7 +90,7 @@ export function Me() {
             );
           })}</ul>
         ) : <p className="muted">The grades you work in show up here.</p>}
-        {g != null && <button className="tlink" onClick={() => startTest(placeKey(g))}>{FIND_MY_LEVEL} ›</button>}
+        {g != null && <Pill onClick={() => startTest(placeKey(g))}>{FIND_MY_LEVEL} ›</Pill>}
       </Tile>
 
       <Tile className="mytile mygrown" k={<><LockIcon />On this device</>} title={GROWN_UP}>

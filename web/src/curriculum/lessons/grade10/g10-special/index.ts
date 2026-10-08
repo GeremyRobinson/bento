@@ -48,7 +48,7 @@ export function explainSpecialTriangle(p: SpecialTriangleProblem, answers: Answe
     ];
     return {
       heading: "Half a square, half an equilateral triangle",
-      idea: ["A 45-45-90 triangle is half a square. Its legs match, so leg² + leg² = 2 × leg², and the hypotenuse is leg × √2.", "A 30-60-90 triangle is half an equilateral triangle. The short leg is half a side, so the hypotenuse is twice it, and the Pythagorean theorem makes the long leg short leg × √3."],
+      idea: ["A 45-45-90 triangle is half a square, and a 30-60-90 triangle is half an equilateral triangle."],
       statement: mt`45°-45°-90°, leg ${s}`,
       caption: `Legs ${s} and ${s}: the hypotenuse is ${s}√2.`,
       diagram: buildRightTriangle({
@@ -66,7 +66,7 @@ export function explainSpecialTriangle(p: SpecialTriangleProblem, answers: Answe
   const long = expected(answers, "long", "c");
   return {
     heading: "Half a square, half an equilateral triangle",
-    idea: ["A 45-45-90 triangle is half a square. Its legs match, so leg² + leg² = 2 × leg², and the hypotenuse is leg × √2.", "A 30-60-90 triangle is half an equilateral triangle. The short leg is half a side, so the hypotenuse is twice it, and the Pythagorean theorem makes the long leg short leg × √3."],
+    idea: ["A 45-45-90 triangle is half a square, and a 30-60-90 triangle is half an equilateral triangle."],
     statement: mt`30°-60°-90°, short leg ${s}`,
     caption: `Short leg ${s}: the hypotenuse is ${hyp} and the long leg is ${s}√3.`,
     diagram: buildRightTriangle({

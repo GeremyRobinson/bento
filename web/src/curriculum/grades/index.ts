@@ -66,12 +66,12 @@ export interface Line {
 }
 
 export const LINES: Line[] = [
-  { id: "early", name: "Bento Early", tagline: "Count, touch and play. Kindergarten to 2nd grade.", grades: [0, 1, 2], color: "#f59e0b" },
-  { id: "core", name: "Bento Core", tagline: "Multiply, divide, fractions and decimals. 3rd to 5th grade.", grades: [3, 4, 5], color: "#3b82f6" },
-  { id: "middle", name: "Bento Middle", tagline: "Ratios, integers, equations and functions. 6th to 8th grade.", grades: [6, 7, 8], color: "#0f766e" },
-  { id: "high", name: "Bento High", tagline: "Algebra, geometry, precalculus and calculus. 9th to 12th grade.", grades: [9, 10, 11, 12], color: "#7c3aed" },
+  { id: "early", name: "Obento Early", tagline: "Count, touch and play. Kindergarten to 2nd grade.", grades: [0, 1, 2], color: "#f59e0b" },
+  { id: "core", name: "Obento Core", tagline: "Multiply, divide, fractions and decimals. 3rd to 5th grade.", grades: [3, 4, 5], color: "#3b82f6" },
+  { id: "middle", name: "Obento Middle", tagline: "Ratios, integers, equations and functions. 6th to 8th grade.", grades: [6, 7, 8], color: "#0f766e" },
+  { id: "high", name: "Obento High", tagline: "Algebra, geometry, precalculus and calculus. 9th to 12th grade.", grades: [9, 10, 11, 12], color: "#7c3aed" },
   // Bento² (Bento squared): the pro side, past 12th grade's precalculus and calculus, toward the math behind AI, space and physics
-  { id: "ap", name: "Bento²", tagline: "Bento, maxed out. Past calculus, to the math behind AI, space and physics.", grades: [], color: "#111827",
+  { id: "ap", name: "Obento²", tagline: "Obento, maxed out. Past calculus, to the math behind AI, space and physics.", grades: [], color: "#111827",
     soon: ["Linear algebra", "Multivariable calculus", "Probability", "Differential equations"] },
 ];
 

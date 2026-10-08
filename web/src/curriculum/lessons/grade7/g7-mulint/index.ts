@@ -59,7 +59,7 @@ function explain(p: MulIntegersProblem, model: AnswerModel): Explanation {
   const sign = differ ? "The signs are different, so it's negative." : "The signs match, so it's positive.";
   return {
     heading: "Same signs: positive. Different: negative.",
-    idea: ["Multiplying by a negative flips a number to the other side of 0, so one negative makes the answer negative and a second one flips it back.", "So work with the sizes, then pick the sign: same signs positive, different signs negative."],
+    idea: ["A negative flips a number across 0, so a second negative flips it back."],
     statement: [...shown(p), op("="), num(ans)],
     diagram: buildNumberLine({
       ...range, every: sparseEvery(range), labelAt: div ? [] : [size, ...(differ ? [-size] : [])],

@@ -86,7 +86,7 @@ function explain(p: SolidProblem, model: AnswerModel): Explanation {
   const s = SOLIDS[p.shape]!, roll = expectedOf(model, "roll", "c"), flat = expectedOf(model, "flat", "c"), name = expectedOf(model, "name", "c");
   return {
     heading: "Solid shapes",
-    idea: ["Flat shapes lie on paper. Solid shapes you can hold. Cubes, spheres, cylinders and cones are solid."],
+    idea: ["Flat shapes lie on paper, but solid shapes are ones you can hold."],
     statement: words("What is this shape called?"),
     diagram: buildSolid({ kind: s.kind, turn: p.turn, ...(p.thing >= 0 ? { thing: p.thing } : {}), name: s.name, beats: { faces: 1, move: 2, name: 3 },
       alt: `${altOf(p)} Its flat faces light up, it ${s.rolls ? "rolls" : "slides"}, and its name appears: ${s.name}.` }),

@@ -84,7 +84,7 @@ function explain({ a, b }: CompareProblem, model: AnswerModel): Explanation {
     math: [num(a), op(sign), num(b)], state: n, answerStep: "sign" });
   return {
     heading: "Compare two-digit numbers",
-    idea: ["Look at the tens first. More tens means a bigger number. Only when the tens are the same do you look at the ones."],
+    idea: ["Tens are worth more than ones, so the number with more tens is bigger."],
     statement: [num(a), text(" ? "), num(b)],
     diagram: buildCompareBlocks({
       a, b, sign,

@@ -60,7 +60,7 @@ export function explainRegroup(p: RegroupProblem, answers: AnswerModel): Explana
   const O = expectedOf(answers.steps, "ones"), left = expectedOf(answers.steps, "regroup"), T = expectedOf(answers.steps, "tens"), sum = expectedOf(answers.steps, "answer");
   return {
     heading: "Trade ten ones for a ten",
-    idea: ["Add the ones first. If they make 10 or more, trade ten ones for one ten rod and move it to the tens.", "That works because ten ones and one ten are the same amount: nothing is lost in the trade."],
+    idea: ["Ten ones are the same as one ten, so trading them loses nothing."],
     statement: [num(a), op("+"), num(b)],
     diagram: buildRegroupBlocks({
       a, b, beats: { blocks: 0, ones: 1, regroup: 2, tens: 3, total: 4 },

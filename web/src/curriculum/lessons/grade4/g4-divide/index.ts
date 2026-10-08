@@ -59,7 +59,7 @@ function explain(p: RemainderProblem, model: AnswerModel) {
   const q = expectedOf(model, "answer"), r = expectedOf(model, "remainder");
   return chainExplanation({
     heading: "Share, then see what's left",
-    idea: ["Dividing shares a number into equal groups, and taking out tens of a group at a time is faster than counting one by one.", "What's too small to make one more group is the remainder."],
+    idea: ["Taking out tens of groups at a time is faster than taking one group at a time."],
     statement: [num(n), op("÷"), num(dv)],
     caption: `Take out ${T / 10} ${T === 10 ? "ten" : "tens"}, then ${O} ${O === 1 ? "one" : "ones"}. ${r ? `What's left, ${r}, is the remainder.` : "Nothing is left over."}`,
     alt: `${n} ÷ ${dv}: ${dv} × ${T} = ${dv * T}, ${dv} × ${O} = ${dv * O}, so ${r ? `${q} R ${r}` : `${q} exactly`}.`,

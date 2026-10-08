@@ -50,7 +50,7 @@ function explain(p: SequenceProblem, model: AnswerModel): Explanation {
   if (jumps > 12) hops.splice(3, 0, { from: a1 + 3 * d, to: a1 + (jumps - 2) * d, beat: 1, start: false, label: `${middle} more jumps` });
   return {
     heading: "aₙ = a₁ + (n − 1)d",
-    idea: ["Start at the first term and jump by the same amount each time. To reach term n you make n − 1 jumps."],
+    idea: ["The jump is the same every time, so term n is n − 1 jumps from the start."],
     statement: [...term(n), op("="), num(a1), op("+"), text("("), num(n), op("−"), num(1), text(")"), op("×"), num(d)],
     diagram: buildNumberLine({
       ...fitRange([a1, an], { maxTicks: 20, pad: 0, minStep: 1 }),

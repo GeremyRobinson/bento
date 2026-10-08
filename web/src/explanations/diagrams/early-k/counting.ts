@@ -11,7 +11,7 @@ const ROW = 10;
  * the first row at `firstBeat`, the rest at `restBeat`, and the last number is ringed at `restBeat`.
  * Without it, plain dots (the picture shown with a practice problem).
  */
-export function countStrip(n: number, alt: string, counted?: { firstBeat: number; restBeat: number }): SceneDiagram {
+export function countStrip(n: number, alt: string, counted?: { firstBeat: number; restBeat: number }, focus?: "top" | "rest"): SceneDiagram {
   if (!Number.isInteger(n) || n < 1 || n > 20) throw new Error("a count strip holds 1 to 20 dots");
   const GAP = 42, R = 13, ROWGAP = counted ? 76 : 40;
   const items: Draft[] = [];
@@ -26,6 +26,11 @@ export function countStrip(n: number, alt: string, counted?: { firstBeat: number
     if (!counted) continue;
     items.push(t(cx, cy + 30, String(i + 1), last ? "lbl acc" : "sm", { from: beat, enter: "rise", delay: delay + 0.1 }));
     if (last) items.push({ type: "circle", cx, cy, r: R + 6, cls: "ln2", from: counted.restBeat, enter: "pop", delay: delay + 0.4 } as Draft);
+  }
+  // the row the step is asking about gets circled (G 2026-10-07 22:29, "top row should be circled")
+  if (focus && (focus === "top" || n > ROW)) {
+    const row = focus === "top" ? 0 : 1, cols = row === 0 ? Math.min(n, ROW) : n - ROW, PAD = R + 8;
+    items.push({ type: "rect", x: -PAD, y: row * ROWGAP - PAD, w: (cols - 1) * GAP + 2 * PAD, h: 2 * PAD, rx: PAD, cls: "ln2", from: 0, enter: "fade" } as Draft);
   }
   return frame("early-count", items, alt, 16, WIDE);
 }

@@ -47,7 +47,7 @@ function explain(p: ScaleProblem, model: AnswerModel): Explanation {
   const { c, km } = p, g = expectedOf(model.steps, "groups"), real = expectedOf(model.steps, "real");
   return {
     heading: "Count the groups",
-    idea: ["A scale says every few cm on the map stand for the same real distance, so a longer line is just more of those groups.", "Count the groups, then multiply by what each group stands for."],
+    idea: ["Every scale length stands for the same real distance, so a longer line is just more of them."],
     statement: [num(c), text(" cm"), op("="), num(km), text(" km")],
     diagram: scalePicture(p),
     caption: `Each ${c} cm on the map is ${km} km for real.`,

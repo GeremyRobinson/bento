@@ -66,7 +66,7 @@ function explain(p: MissingProblem, model: AnswerModel): Explanation {
   const min = Math.max(0, a - 2), max = c + 2;
   return {
     heading: "Count up to find it",
-    idea: ["To find a missing part, count up from the part you know to the total. Stop at 10 on the way, it makes the counting easy."],
+    idea: ["Counting up from the part you know to the total finds the missing part."],
     statement: equation(p),
     diagram: buildNumberLine({
       min, max, labelAt: [TEN],

@@ -88,7 +88,7 @@ function explain(p: AddSubProblem, model: AnswerModel): Explanation {
   const { a, b, s } = p, js = jumps(p);
   return {
     heading: s === 1 ? "Add in jumps" : "Take away in jumps",
-    idea: ["Break the second number into hundreds, tens and ones.", `Start at the first number and jump ${s === 1 ? "forward" : "back"} one place at a time.`],
+    idea: ["Hundreds, tens and ones are easy jumps, so the second number breaks into those."],
     statement: [num(a), op(s === 1 ? "+" : "−"), num(b)],
     diagram: addSubPicture(p, model),
     caption: `${b} is ${js.map(j => j.v).join(" + ")}.`,

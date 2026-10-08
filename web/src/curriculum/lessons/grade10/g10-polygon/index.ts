@@ -42,7 +42,7 @@ export function explainPolygonAngles({ n }: PolygonAnglesProblem, answers: Answe
   const tri = expected(answers, "triangles"), total = expected(answers, "total"), each = expected(answers, "each");
   return {
     heading: "(n − 2) × 180°",
-    idea: ["Cut a polygon into triangles from one corner: there are always 2 fewer triangles than sides.", "Each triangle holds 180°. In a regular polygon every angle gets an equal share."],
+    idea: ["A polygon cuts into 2 fewer triangles than it has sides, and each triangle holds 180°."],
     statement: mt`(${n} − 2) × 180° ÷ ${n}`,
     caption: `${tri} triangles × 180° = ${total}°, shared by ${n} equal angles.`,
     diagram: buildPolygonSplit({

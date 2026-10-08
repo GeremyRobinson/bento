@@ -75,7 +75,7 @@ function explain(p: EvenOddProblem, model: AnswerModel): Explanation {
   const word = CHOICES[pick]!.toLowerCase();
   return {
     heading: "Even or odd",
-    idea: ["Put things in pairs. If none are left over, the number is even. If one is left over, it is odd."],
+    idea: ["A number is even when it splits into pairs with none left over."],
     statement: [text("Is "), num(n), text(" even or odd?")],
     diagram: buildPairs({
       n, beats: { pairs: 1, left: 2, verdict: 3 },

@@ -77,7 +77,7 @@ function explain(p: SymProblem, model: AnswerModel): Explanation {
   const sh = SHAPES[p.shape]!, s = model.steps[0]!;
   return {
     heading: "Lines of symmetry",
-    idea: ["A line of symmetry folds a shape into two halves that match exactly."],
+    idea: ["A line of symmetry folds a shape into two halves that match."],
     statement: words(s.question ?? ""),
     diagram: p.kind === 0
       ? buildFold({ poly: sh.poly, line: candidates(p.shape)[p.line]!, rotate: TURNS[p.turn]!, beats: { fold: 1 }, alt: `${alt(p)} One half folds over the line: ${s.explain}` })

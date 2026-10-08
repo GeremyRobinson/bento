@@ -107,6 +107,18 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
         const x = Math.min(A.right, B.right) - Math.max(A.left, B.left), y = Math.min(A.bottom, B.bottom) - Math.max(A.top, B.top);
         if (x > 1 && y > 1) overlaps.push(`${a.className} and ${b.className} by ${Math.round(Math.min(x, y))}px`);
       }
+      // Today's plan rows never overlap either: a row's highlight stays inside its own cell (G 2026-10-07 22:08)
+      const prows = [...document.querySelectorAll(".sbento .today .pitem")].filter(shown);
+      for (const [i, a] of prows.entries()) for (const b of prows.slice(i + 1)) {
+        const A = a.getBoundingClientRect(), B = b.getBoundingClientRect();
+        const x = Math.min(A.right, B.right) - Math.max(A.left, B.left), y = Math.min(A.bottom, B.bottom) - Math.max(A.top, B.top);
+        if (x > 1 && y > 1) overlaps.push(`Today's plan rows ${i + 1} and ${prows.indexOf(b) + 1} by ${Math.round(Math.min(x, y))}px`);
+      }
+      // and where a row reaches Today's side, its end runs concentric with the panel's corner: inset + row radius = corner
+      { const td = document.querySelector(".sbento .today");
+        if (td && prows.length) { const T = td.getBoundingClientRect(), tr = parseFloat(getComputedStyle(td).borderTopRightRadius);
+          for (const a of prows) { const A = a.getBoundingClientRect(), inset = Math.round(T.right - A.right), rr = Math.min(parseFloat(getComputedStyle(a).borderTopRightRadius), A.height / 2);
+            if (inset < tr - rr - 2.5 && T.bottom - A.bottom < tr) overlaps.push(`a Today plan row sits ${inset}px from the panel's ${tr}px corner with a ${Math.round(rr)}px end (wants ${Math.round(tr - rr)}px)`); } } }
       const today = document.querySelector(".sbento .today"), first = today?.querySelector(".plan li");
       let startCut = 0;
       // (on a phone Start is pinned at Today's edge and the plan scrolls above it; the phone guard checks Start there)
@@ -136,7 +148,7 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
         // every lesson row the same height, picked or not, each with its trailing label
         const hs = R.map(r => Math.round(r.height));
         if (Math.max(...hs) - Math.min(...hs) > 1) nests.push(`row heights ${hs.join("/")}`);
-        for (const r of rows) if (!r.disabled && ![...r.children].slice(2).some(shown)) nests.push(`"${r.textContent.trim().slice(0, 20)}" has no label`);
+        for (const r of rows) if (!r.disabled && !r.matches(".pstep,.pwhere") && ![...r.children].slice(2).some(shown)) nests.push(`"${r.textContent.trim().slice(0, 20)}" has no label`);
       }
       // the accordion's one spacing (G 2026-10-07, ListGroup v41): the open chapter is one panel, its head and its lessons'
       // panel set in from its edge by --list-gap, the same gap as between the list's rows
@@ -173,8 +185,9 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
           if (side) phone.push(`a plan row runs past Today's sides by ${Math.round(Math.max(B.left - side.left, side.right - B.right))}px`);
         }
       }
-      // Today comes after the two number tiles: its top is below both (Review Book home #3: DOM order alone passed)
-      if (tday && shown(tday)) {
+      // Today comes after the two number tiles: its top is below both (Review Book home #3: DOM order alone passed). Only
+      // where Today runs the full width; wider, it is its own full-height column beside them (G 2026-10-07 21:27)
+      if (tday && shown(tday) && tday.getBoundingClientRect().width > tday.parentElement.getBoundingClientRect().width * 0.9) {
         const T = tday.getBoundingClientRect().top;
         for (const n of document.querySelectorAll(".sbento :is(.b-stats,.b-streak)"))
           if (shown(n) && T < n.getBoundingClientRect().top - 0.5) phone.push(`Today sits above the ${n.classList.contains("b-stats") ? "lessons done" : "days in a row"} tile`);

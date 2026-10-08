@@ -50,7 +50,7 @@ function explain(p: MakeTenProblem, model: AnswerModel) {
   const { a, b } = p, need = expectedOf(model, "ten"), left = expectedOf(model, "break"), sum = expectedOf(model, "add");
   return chainExplanation({
     heading: "Make a ten first",
-    idea: ["10 is easy to add to. So fill the first ten frame: move some dots from the second number until the frame is full. Now it is 10 and the dots that are left."],
+    idea: ["10 is easy to add to, so filling a ten first makes the rest simple."],
     statement: [num(a), op("+"), num(b)],
     caption: `Borrow ${need} from the ${b} to fill the ten.`,
     alt: `${a} + ${b} becomes ${a} + ${need} + ${left}, then 10 + ${left} = ${sum}.`,

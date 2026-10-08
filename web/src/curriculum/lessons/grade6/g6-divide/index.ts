@@ -137,10 +137,7 @@ function explain(p: DivideFractionsProblem) {
   const same = F.whole === 0 && F.num === S && F.den === L;
   return chainExplanation({
     heading: "How many fit?",
-    idea: [
-      "Dividing asks how many of the second amount fit into the first. 1 ÷ 1/4 = 4, because 4 quarters fit in one whole.",
-      `So dividing by ${c}/${d} is the same as multiplying by ${d}/${c}: that's how many ${c}/${d} fit in each whole.`,
-    ],
+    idea: ["Dividing asks how many of the second amount fit into the first."],
     statement: [frac(a, b), op("÷"), frac(c, d)],
     alt: `${a}/${b} ÷ ${c}/${d} becomes ${a}/${b} × ${d}/${c} = ${S}/${L}.`,
     diagram: divideFractionsPicture({ a, b, c, d, S, L, mixed: F.num ? `${F.whole ? `${F.whole} ` : ""}${F.num}/${F.den}` : `${F.whole}` }),

@@ -97,7 +97,7 @@ function explain(p: StoryProblem, model: AnswerModel): Explanation {
   const what = THINGS[p.what]!, a = expectedOf(model, "start"), more = expectedOf(model, "more", "c"), end = expectedOf(model, "end");
   return {
     heading: "Act out the story",
-    idea: ["Find how many there are at the start. Do more come, or do some go away? Then add or take away."],
+    idea: ["The story tells you if more come or some go away, so you know to add or take away."],
     statement: storyMath(p),
     diagram: changeDots({ start: p.a, change: p.b, kind: p.take ? "take" : "join", beats: { start: 0, change: 1, end: 2 },
       alt: `${count(a, "dot")} for the ${what}. ${p.take ? `${p.b} ${isAre(p.b)} crossed out` : `${p.b} more join them`}, and ${end} ${isAre(end)} counted at the end.` }),

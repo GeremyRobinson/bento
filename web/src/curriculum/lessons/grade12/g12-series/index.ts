@@ -49,7 +49,7 @@ export function explainSeries(p: ArithmeticSeries, model: AnswerModel) {
     : `${f(n)} terms make ${f(n)} ÷ 2 pairs (the middle term is half a pair), each worth ${f(pair)}: ${f(pair)} × ${f(n)} ÷ 2 = ${f(sum)}.`;
   return beatExplanation({
     heading: "Pair them up",
-    idea: ["Pair the first term with the last, the second with the second-to-last, and so on: each pair adds to the same total, because one term goes up by the step while the other goes down by it.", "So the sum is the number of pairs times one pair's total: n × (first + last) ÷ 2."],
+    idea: ["The first and last terms add to the same total as every other pair."],
     statement: [...firstTerms(p), op("+"), text("…"), op("+"), num(last)],
     caption: `The second and second-to-last terms make ${f(pair)} too: one goes up by ${f(d)} while the other goes down by ${f(d)}.`,
     diagram,

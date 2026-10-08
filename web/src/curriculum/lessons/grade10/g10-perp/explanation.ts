@@ -14,7 +14,7 @@ export function explainPerp(q: PerpProblem, model: AnswerModel): Explanation {
   const rotated = p > 0 ? "left" : "right";
   return {
     heading: "Flip and change the sign",
-    idea: ["Perpendicular lines meet at a right angle. Turning a line a quarter turn swaps its run and rise and changes the sign, so the slopes multiply to −1."],
+    idea: ["A quarter turn swaps rise and run and changes a sign, so the slopes multiply to −1."],
     statement: [text("m"), op("="), ...slopeMath(q)],
     caption: `Turn the slope triangle a quarter turn: ${r} right and ${ap} ${p > 0 ? "up" : "down"} becomes ${r} up and ${ap} ${rotated}. Slope ${m1} becomes ${m2}.`,
     diagram: buildPlane({

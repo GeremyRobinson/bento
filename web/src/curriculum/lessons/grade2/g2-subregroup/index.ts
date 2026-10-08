@@ -91,7 +91,7 @@ function explain(p: SubRegroupProblem, model: AnswerModel): Explanation {
   const O = expectedOf(model, "trade"), ones = expectedOf(model, "ones"), tens = expectedOf(model, "tens"), diff = expectedOf(model, "answer");
   return {
     heading: "Trade a ten",
-    idea: ["If there are not enough ones to take away, trade one ten for ten ones. Then take away the ones, then the tens."],
+    idea: ["One ten is the same as ten ones, so a trade gives you enough ones to take away."],
     statement: [num(a), op("−"), num(b)],
     diagram: buildTradeBlocks({
       a, b, beats: { blocks: 0, trade: 1, ones: 2, tens: 3, total: 4 },

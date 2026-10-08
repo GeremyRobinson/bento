@@ -53,7 +53,7 @@ export function explainUnitCircle(p: UnitCircleProblem, answers: AnswerModel): E
   const where = f === "sin" ? (pos ? "above the x-axis" : "below the x-axis") : pos ? "right of the y-axis" : "left of the y-axis";
   return {
     heading: "Reference angle, then sign",
-    idea: ["Find the quadrant and the angle back to the x-axis.", "The size comes from the reference angle; the sign comes from where the point sits."],
+    idea: ["The reference angle gives the size, and the quadrant gives the sign."],
     statement: mt`${f} ${t}°`,
     caption: `Quadrant ${quad}, reference ${ref}°: ${f} ${t}° = ${value}.`,
     diagram: buildUnitCircle({

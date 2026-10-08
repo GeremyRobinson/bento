@@ -99,7 +99,7 @@ function explain(p: RoundProblem, model: AnswerModel): Explanation {
   const m = expectedOf(model, "mid"), R = expectedOf(model, "round");
   return {
     heading: `Round to the nearest ${place(to, false)}`,
-    idea: ["Find the two numbers it sits between, and the halfway mark.", "Round to the one it is closer to. Exactly halfway rounds up."],
+    idea: ["Rounding picks whichever ten or hundred is closer, and exactly halfway rounds up."],
     statement: [num(n), op("≈"), text("?")],
     diagram: roundPicture(p, R),
     caption: `${n} on a number line from ${lo} to ${hi}.`,

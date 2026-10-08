@@ -83,7 +83,7 @@ function explain(p: EstimateProblem, model: AnswerModel): Explanation {
   const u = UNITS[p.unit]!;
   return {
     heading: "Estimate, then measure",
-    idea: ["Before you measure, make a smart guess. Use something you know: a paper clip is about 1 inch, your finger is about 1 centimeter wide. A ruler is 30 cm."],
+    idea: ["Things you know, like a paper clip being about 1 inch, help you make a smart guess."],
     statement: [text(`About how long is the ${THINGS[p.unit]![p.thing]!.name}?`)],
     diagram: buildEstimate({ ...spec(p), beats: { lay: 1, ruler: 2 },
       alt: `${alt(p)} ${p.len} ${u.bench} lay end to end along it, then the ruler shows it is ${count(p.len, u.one, u.many)} long.` }),

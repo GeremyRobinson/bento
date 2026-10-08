@@ -84,7 +84,7 @@ function explain(p: HundredsProblem, model: AnswerModel): Explanation {
   const total = `${H} + ${T} + ${o} = ${n}`;
   return {
     heading: "Hundreds, tens and ones",
-    idea: ["Each digit tells how many blocks of its size. A flat is a hundred, a rod is a ten and a cube is a one."],
+    idea: ["Each digit tells how many blocks of its size there are: hundreds, tens or ones."],
     statement: [num(n)],
     diagram: buildPlaceBlocks({
       hundreds: h, tens: t, ones: o,

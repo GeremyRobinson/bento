@@ -45,7 +45,7 @@ export function explainFracTimes(p: FracTimesProblem, answers: AnswerModel): Exp
   const simplifyResult = answers.steps[1]!.slots.find(s => s.expected != null)!.expected!;
   return {
     heading: "Top times top, bottom times bottom",
-    idea: ["Taking a fraction of a fraction cuts the pieces smaller: half of a third is a sixth.", "On the grid, top × top counts the overlap squares and bottom × bottom counts all the squares."],
+    idea: ["Taking part of a part makes smaller pieces: half of a third is a sixth."],
     statement: [frac(a, b), op("×"), frac(c, d)],
     diagram: buildFracGrid({
       rows: b, cols: d, r: a, c,

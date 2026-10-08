@@ -64,7 +64,7 @@ function explain(p: AreaProblem, model: AnswerModel): Explanation {
   const { l, w } = p, L = expectedOf(model, "row"), W = expectedOf(model, "rows"), A = expectedOf(model, "area");
   return {
     heading: "Count the squares inside",
-    idea: ["Area is how many unit squares cover a shape.", "Count one row, count the rows, then multiply."],
+    idea: ["Area is how many squares cover a shape, and equal rows of squares can be multiplied."],
     statement: [text("area "), op("="), text("?")],
     diagram: buildSquares({
       cols: l, rows: w, rowBeat: 1, colBeat: 2, fillBeat: 3,

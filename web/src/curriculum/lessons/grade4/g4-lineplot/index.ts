@@ -118,10 +118,7 @@ function explain(p: FracLineProblem, model: AnswerModel): Explanation {
   const lit = p.ask === 0 ? [Math.max(...p.data), Math.min(...p.data)] : p.ask === 1 ? [p.v] : [...new Set(p.data.filter(u => u > p.v))];
   return {
     heading: "Line plots with fractions",
-    idea: [
-      "Each X is one thing measured, sitting above its length. A taller stack means more things are that long.",
-      `The marks between whole inches are ${p.d === 4 ? "fourths" : "eighths"}: count marks from the last whole inch.`,
-    ],
+    idea: ["Each X is one thing above its length, so a taller stack means more things were that long."],
     statement: words(last.question ?? ""),
     diagram: buildLinePlot({ ...plot(p), beats: { drop: 0, light: 1 }, light: lit, alt: `${alt(p)} The X's drop in, then the stacks the question is about light up.` }),
     caption: `${last.explain}`,

@@ -60,7 +60,7 @@ function explain(p: TensProblem, model: AnswerModel): Explanation {
   const said = Array.from({ length: rows }, (_, i) => (i + 1) * TEN);
   return {
     heading: "Count by tens",
-    idea: [`Every row has ${TEN}. Instead of counting every dot, say one ten for each row.`],
+    idea: ["Every row has 10, so each row is one ten."],
     statement: words("How many dots?"),
     diagram: tensRows(p.rows, `${count(rows, "row")} of ${count(TEN, "dot")}, counted by tens: ${said.join(", ")}.`, { rowBeat: 0, tensBeat: 1 }),
     caption: `${count(rows, "row")} of ${TEN} make ${total}.`,

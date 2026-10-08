@@ -55,7 +55,7 @@ function explain(p: AddDecimalsProblem, model: AnswerModel) {
   const rewrite = padded.map(x => `${f(x)} as ${x.toFixed(2)}`).join(" and ");
   return chainExplanation({
     heading: "Line up the decimal points",
-    idea: ["Each place after the point is a size of piece, so only same-size pieces add: tenths with tenths, hundredths with hundredths.", "That's why the points line up, with a 0 where a number has no hundredths."],
+    idea: ["Each place after the point is a size of piece, so only same-size pieces add."],
     statement: [num(a), op("+"), num(b)],
     ...(padded.length ? { caption: `Write ${rewrite} so both have hundredths.` } : {}),
     alt: `${f(a)} + ${f(b)}: whole parts ${W}, decimal parts ${f(D)}, total ${f(sum)}.`,

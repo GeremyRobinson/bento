@@ -83,7 +83,7 @@ function explain(p: FacesProblem, model: AnswerModel): Explanation {
   const state: Record<string, number> = { faces: 1, edges: 2, corners: 3, name: 4 };
   return {
     heading: "Faces, edges and corners",
-    idea: ["A solid shape has flat faces. Two faces meet at an edge. Edges meet at a corner."],
+    idea: ["Faces meet at edges, and edges meet at corners."],
     statement: words("Count its faces, edges and corners."),
     diagram: buildSolid({ kind: s.kind, turn: p.turn, hidden: true, running: true, name: s.name, beats: { faces: 1, edges: 2, corners: 3, name: 4 },
       alt: `${ALT} Its ${c.faces} faces light one by one, its ${c.edges} edges trace and its ${c.corners} corners pop: a ${s.name.toLowerCase()}.` }),

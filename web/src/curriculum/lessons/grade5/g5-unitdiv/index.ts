@@ -45,7 +45,7 @@ function explain(p: UnitDivisionProblem, model: AnswerModel): Explanation {
   const { W, d } = p, one = expectedOf(model.steps, "one"), all = expectedOf(model.steps, "all");
   return {
     heading: "How many pieces fit?",
-    idea: ["Dividing by 1/4 asks how many quarters fit, and 4 quarters fit in every whole.", "So the answer is the number of wholes times the pieces in each whole."],
+    idea: ["Dividing by a unit fraction asks how many of those pieces fit in the wholes."],
     statement: [num(W), op("÷"), frac(1, d)],
     diagram: unitDivisionPicture(p),
     caption: `${count(W, "whole")}, ${d} ${pieceName(d)} in each: ${W * d} ${pieceName(d)}.`,

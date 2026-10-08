@@ -37,7 +37,7 @@ export function explainRect(p: RectProblem, answers: AnswerModel): Explanation {
   const area = expectedOf(answers.steps, "area"), half = expectedOf(answers.steps, "half"), per = expectedOf(answers.steps, "perimeter");
   return {
     heading: "Inside and around",
-    idea: ["Area counts the squares inside. Perimeter walks around the edge."],
+    idea: ["Area counts the squares inside, and perimeter is the distance around the edge."],
     statement: [num(l), text(" m by "), num(w), text(" m")],
     diagram: buildAreaGrid({
       cols: [{ label: `${l} m`, size: l }],

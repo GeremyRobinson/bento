@@ -77,7 +77,7 @@ function explain(p: TallyProblem, model: AnswerModel): Explanation {
   const th = THEMES[p.theme]!, last = model.steps.at(-1)!, ans = last.slots[0]!.expected!;
   return {
     heading: "Tally marks",
-    idea: ["A tally mark is one line for each thing. Every fifth line goes across the four before it, so you can count by 5s."],
+    idea: ["Every fifth tally mark crosses the other four, so you can count by 5s."],
     statement: words(last.question ?? ""),
     diagram: buildRows({ kind: "tally", title: th.title, names: th.names, counts: p.counts, icon: th.icon, read: rowsRead(p), beats: { fill: 0, read: 1 },
       alt: `${alt(p)} The marks go up one at a time, then ${rowsRead(p).map(i => `${th.names[i]} is counted: ${p.counts[i]}`).join(", ")}.` }),

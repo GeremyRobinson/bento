@@ -61,7 +61,7 @@ function explain(p: BondProblem, model: AnswerModel): Explanation {
   const w = expectedOf(model, "whole"), a = expectedOf(model, "part"), r = expectedOf(model, "rest");
   return {
     heading: "Break apart a number",
-    idea: ["A number can break into two parts. The two parts put together make the whole."],
+    idea: ["A number can break into two parts that make the whole again."],
     statement: words(w, "is", a, "and how many?"),
     diagram: numberBond({ whole: p.whole, part: p.part, beats: { whole: 0, first: 1, other: 2, sentence: 3 },
       alt: `A number bond: ${w} on top, ${a} and ${r} below. ${count(w, "dot")}: ${a} in the first group, ${r} in the other group.` }),

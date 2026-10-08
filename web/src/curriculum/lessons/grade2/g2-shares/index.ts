@@ -101,7 +101,7 @@ function explain(p: SharesProblem, model: AnswerModel): Explanation {
   const state: Record<string, number> = { same: 1, parts: 1, name: 2, shaded: 3, whole: 3 };
   return {
     heading: "Equal shares",
-    idea: ["Equal shares are the same size. 2 halves, 3 thirds or 4 fourths make one whole. Equal shares of the same shape can look different."],
+    idea: ["Equal shares are the same size, and together they make one whole."],
     statement: [text(`A ${shape} cut into ${name}.`)],
     diagram: buildShares({
       ...spec(p), beats: { count: 0, match: 1, one: 2, shaded: 3 },

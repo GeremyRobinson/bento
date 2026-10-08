@@ -89,7 +89,7 @@ function explain(p: UnitFracProblem, model: AnswerModel): Explanation {
   const one = model.steps.find(s => s.id === "one")!, d = one.slots.find(s => s.id === "d")!.expected!;
   return {
     heading: "Equal parts of a whole",
-    idea: ["The bottom number says how many equal parts make the whole.", "The top number says how many of those parts you have."],
+    idea: ["The bottom says how many equal parts make the whole, and the top says how many you have."],
     statement: [text("shaded "), op("="), text("?")],
     diagram: unitFracPicture(p),
     caption: `${k === 1 ? "One part" : `${count(k, "part")}`} of the bar ${k === 1 ? "is" : "are"} shaded.`,

@@ -39,7 +39,7 @@ export function explainExteriorAngle(p: ExteriorAngleProblem, answers: AnswerMod
   const { a, b } = p, c = expected(answers, "inside"), out = expected(answers, "outside");
   return {
     heading: "Exterior = the two far angles added",
-    idea: ["An outside angle and the inside angle next to it make a straight line: 180°.", "So the outside angle equals the two far inside angles added together."],
+    idea: ["An outside angle and the inside angle next to it make a straight line."],
     // the problem asks for the outside angle, the one angle the picture marks "?"
     statement: mt`outside angle = ?`,
     caption: `The outside angle is ${a} + ${b} = ${out}°.`,

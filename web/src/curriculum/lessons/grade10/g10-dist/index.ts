@@ -59,7 +59,7 @@ export function explainDist(p: DistProblem, model: AnswerModel): Explanation {
   const dx = expected(model, "dx"), dy = expected(model, "dy"), S = expected(model, "sum"), d = expected(model, "d");
   return {
     heading: "It's a hidden right triangle",
-    idea: ["Go across, then up. Those two moves are the legs of a right triangle, and the distance is its long side: square the legs, add, and take the square root."],
+    idea: ["Going across and up makes a right triangle, and the distance is its long side."],
     statement: distMath(p),
     caption: `Legs ${f(dx)} and ${f(dy)}: the distance is ${f(d)}.`,
     diagram: buildPlane({

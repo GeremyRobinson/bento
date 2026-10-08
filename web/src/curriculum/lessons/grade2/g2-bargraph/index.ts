@@ -109,7 +109,7 @@ function explain(p: BarGraphProblem, model: AnswerModel): Explanation {
   const sum = more ? `${a} − ${b} = ${r}` : `${a} + ${b} = ${r}`;
   return {
     heading: more ? "Compare two bars" : "Add two bars",
-    idea: ["Read each bar by looking straight across from its top to the numbers. Then compare or add."],
+    idea: ["The top of each bar lines up with its number on the side."],
     statement: [text(questionOf(p))],
     diagram: buildBarGraph({
       title: th.title, names: th.names, values: valuesOf(p), first: p.x, second: p.y, kind: more ? "more" : "total",

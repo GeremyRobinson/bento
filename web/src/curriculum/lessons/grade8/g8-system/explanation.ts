@@ -14,7 +14,7 @@ export function explainSystem(p: SystemProblem, model: AnswerModel): Explanation
   const c = expected(model, "sub"), x = expected(model, "x"), y = expected(model, "y");
   return {
     heading: "Swap one equation into the other",
-    idea: ["When one equation already says what y is, put that in place of y in the other. Then there is only x left to solve."],
+    idea: ["When one equation says what y is, that can stand in for y in the other one."],
     statement: systemMath(p),
     caption: `The answer is where the lines cross: ${pt(x, y)}.`,
     diagram: buildPlane({

@@ -43,7 +43,7 @@ describe("storage", () => {
   it("round-trips a backup and rejects other files", () => {
     const b = JSON.stringify(makeBackup({ ...emptyProgress(), xp: 5 }, {}, 1));
     expect(readBackup(b).progress.xp).toBe(5);
-    expect(() => readBackup("{}")).toThrow("That file isn't a Bento backup.");
+    expect(() => readBackup("{}")).toThrow("That file isn't an Obento backup.");
     expect(() => readBackup("not json")).toThrow();
   });
 });

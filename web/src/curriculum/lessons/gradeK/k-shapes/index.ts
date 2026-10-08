@@ -105,7 +105,7 @@ function explain(p: ShapeProblem, model: AnswerModel): Explanation {
   const round = sides === 0;
   return {
     heading: "Sides and corners",
-    idea: ["Count the straight sides and the corners. They tell you the name of the shape."],
+    idea: ["A shape's sides and corners tell you its name."],
     statement: words("What shape is this?"),
     diagram: picture(p, { sides: 0, corners: 1, name: 2 }),
     caption: round ? "Round, with no sides and no corners: a circle." : `${sides} sides and ${corners} corners: ${an(s.name)}.`,

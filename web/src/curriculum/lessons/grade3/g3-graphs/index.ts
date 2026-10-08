@@ -112,7 +112,7 @@ function explain(p: GraphProblem, model: AnswerModel): Explanation {
   const last = model.steps.at(-1)!;
   return {
     heading: "Scaled graphs",
-    idea: ["In a scaled graph, one picture or one square can stand for more than one thing. Read the key first."],
+    idea: ["In a scaled graph, one picture can stand for more than one thing."],
     statement: words(last.question ?? ""),
     diagram: diagram(p, true),
     caption: `${last.explain}`,

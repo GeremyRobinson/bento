@@ -177,11 +177,9 @@ export function unlikePicture(p: UnlikeFractionsProblem) {
 
 const HEADINGS = { add: "Cut them into same-size pieces", sub: "Subtracting works the same way", mix: "Watch the sign" };
 const IDEAS = {
-  add: ["The bottom number tells you the size of the pieces. Different sizes can't be added yet.",
-    "Every problem takes the same 5 steps: find the LCD, rewrite both fractions, add, then simplify."],
-  sub: ["Before you can take away, the pieces have to be the same size.",
-    "Never subtract the bottoms: you can't cut something into 0 pieces."],
-  mix: ["Adding and taking away both need same-size pieces, so the first steps are the same either way.", "At the step that adds or takes away, look at the sign first."],
+  add: ["The bottom is the size of the pieces, and only same-size pieces can be added."],
+  sub: ["Only same-size pieces can be taken away, so the bottoms have to match first."],
+  mix: ["Adding and taking away both need same-size pieces, so the first steps never change."],
 };
 
 export function explainUnlike(lesson: "add" | "sub" | "mix") {

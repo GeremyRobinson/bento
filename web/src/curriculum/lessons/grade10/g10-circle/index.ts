@@ -42,7 +42,7 @@ export function explainCircle(p: CircleProblem, model: AnswerModel): Explanation
   const { h, k } = p, r = expected(model, "r");
   return {
     heading: "(x − h)² + (y − k)² = r²",
-    idea: ["Every point on a circle is the same distance r from the center (h, k). The equation hides the center with opposite signs, and the right side is r²."],
+    idea: ["Every point on a circle is the same distance r from the center."],
     statement: circleMath(p),
     caption: `Center ${pt(h, k)}, radius √${f(r * r)} = ${f(r)}.`,
     diagram: buildPlane({

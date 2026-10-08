@@ -77,7 +77,7 @@ function explain(p: WriteProblem, model: AnswerModel): Explanation {
   const { n } = p, c = expectedOf(model, "count"), right = expectedOf(model, "write", "c");
   return {
     heading: "Write the number",
-    idea: ["Count the dots. Then write the number. Each number has its own shape."],
+    idea: ["Each number has its own shape, and it tells how many dots there are."],
     statement: words("How many dots?"),
     diagram: writeNumber({ n, beats: { count: 0, write: 1, done: 2 }, alt: `Ten frames with ${count(n, "dot")}, and the number ${n} written stroke by stroke beside them.` }),
     caption: `${count(n, "dot")} is written ${n}.`,

@@ -13,7 +13,7 @@ export function explainIntercept(p: InterceptProblem, model: AnswerModel): Expla
   const line = lineText(m, b);
   return {
     heading: "Find b with the point",
-    idea: ["In y = mx + b, b is where the line crosses the y-axis. The point is on the line, so y = m × x + b there: b = y − mx."],
+    idea: ["b is where the line crosses the y-axis, and the point you know sits on the line."],
     statement: interceptMath(p),
     caption: `From the y-axis to x = ${f(x0)}, the line changes by ${f(m)} × ${fP(x0)} = ${f(mx)}, so it crosses the y-axis at b = ${f(b)}.`,
     diagram: buildPlane({

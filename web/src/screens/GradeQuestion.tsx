@@ -26,10 +26,10 @@ const notifyList = () => (remember.get("bento2-notify") ?? "").split(",").filter
 
 /** the four parts of Bento, as the grade list groups them (Design's grade picker D) */
 const PARTS = [
-  { name: "Bento Early", grades: [0, 1, 2] },
-  { name: "Bento Core", grades: [3, 4, 5] },
-  { name: "Bento Middle", grades: [6, 7, 8] },
-  { name: "Bento High", grades: [9, 10, 11, 12] },
+  { name: "Obento Early", grades: [0, 1, 2] },
+  { name: "Obento Core", grades: [3, 4, 5] },
+  { name: "Obento Middle", grades: [6, 7, 8] },
+  { name: "Obento High", grades: [9, 10, 11, 12] },
 ];
 
 /** a grade's first lesson that draws a picture, with fresh random numbers */
@@ -134,7 +134,7 @@ export function GradeQuestion() {
     if (!t) return (
       <div className="gdl gneutral b2d">
         <div className="gdtext">
-          <h2>Bento²</h2>
+          <h2>Obento²</h2>
           <p>Ten tracks past 12th grade: the math thinking machines are built from, then the sciences that use it. It's part of the membership, and it's on the way.</p>
         </div>
         <figure className="gdpic b2pic"><TeaserPic id="ai" play /></figure>
@@ -148,7 +148,7 @@ export function GradeQuestion() {
           <div className="gdtext">
             <small className="b2kick">Track {n} of {TRACKS.length} · {t.part === "spine" ? "The spine" : "A branch"}</small>
             <h2>{t.name}</h2>
-            <p>{t.about} Bento² is part of the membership.</p>
+            <p>{t.about} Obento² is part of the membership.</p>
           </div>
         )}
         <figure className="gdpic b2pic"><TeaserPic id={t.id} play /></figure>
@@ -161,8 +161,8 @@ export function GradeQuestion() {
   };
 
   const sideSwitch = (
-    <Slider className="sideswitch" label="Bento or Bento²" value={side} onPick={flip}
-      options={[{ id: "bento", label: "Bento" }, { id: "b2", label: "Bento²", ariaLabel: "Bento squared" }]} />
+    <Slider className="sideswitch" label="Obento or Obento²" value={side} onPick={flip}
+      options={[{ id: "bento", label: "Obento" }, { id: "b2", label: "Obento²", ariaLabel: "Obento squared" }]} />
   );
 
   let row = 0;
@@ -173,7 +173,7 @@ export function GradeQuestion() {
         <div className="gqline"><h1>Where do you want to go?</h1>{sideSwitch}</div>
         <span className="b2note">A preview: every track is coming later.</span>
       </header>
-      <div role="radiogroup" aria-label="Bento² tracks" className="sideset" key="b2">
+      <div role="radiogroup" aria-label="Obento² tracks" className="sideset" key="b2">
         {TRACK_PARTS.map(part => (
           <div key={part.part} className="gpart">
             <span className="slbl" style={{ "--i": row++ } as CSSProperties}>{part.label}</span>
@@ -231,6 +231,6 @@ export function GradeQuestion() {
   );
 
   return side === "b2"
-    ? <SplitScreen list={b2list} detail={trackDetail(TRACKS.find(t => t.id === track))} show="list" label="Bento² tracks" />
+    ? <SplitScreen list={b2list} detail={trackDetail(TRACKS.find(t => t.id === track))} show="list" label="Obento² tracks" />
     : <SplitScreen list={list} detail={detail(picked)} show="list" label="Grades" />;
 }

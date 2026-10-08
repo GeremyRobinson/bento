@@ -55,7 +55,7 @@ function explain(p: RatioProblem, model: AnswerModel): Explanation {
   const { a, b } = p, k = expectedOf(model.steps, "factor"), ak = expectedOf(model.steps, "scale");
   return {
     heading: "Multiply both parts the same",
-    idea: ["A ratio compares two amounts, so when one part grows 3 times bigger, the other must grow 3 times bigger too, or the mix changes.", "Find what the known part was multiplied by, and multiply the other part by the same number."],
+    idea: ["A ratio compares two amounts, so both parts have to grow by the same factor."],
     statement: [num(a), text(" : "), num(b), op("="), text("? : "), num(b * k)],
     diagram: ratioPicture(p),
     caption: `Every box is the same size: ${k}.`,

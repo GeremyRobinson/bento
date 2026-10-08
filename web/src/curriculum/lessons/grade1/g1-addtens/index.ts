@@ -60,7 +60,7 @@ function explain({ n }: AddTensProblem, model: AnswerModel): Explanation {
   const t = tensOf(n), o = onesOf(n), add = k * 10;
   return {
     heading: "Add tens to tens",
-    idea: ["Adding tens only changes the tens. Put the tens rods together, and the ones stay just as they were."],
+    idea: ["Adding tens changes only the tens, so the ones stay the same."],
     statement: [num(n), op("+"), num(add)],
     diagram: buildAddTens({
       n, k,

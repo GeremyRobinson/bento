@@ -76,8 +76,8 @@ describe("no grade until one is chosen", () => {
   });
   it("the Bento / Bento² switch swaps the grades for the ten tracks, all coming later", () => {
     renderApp({ grade: null, chosen: false }, {}, "#/learn/no-such-lesson");
-    expect(screen.getByRole("button", { name: "Bento" })).toHaveAttribute("aria-pressed", "true");
-    fireEvent.click(screen.getByRole("button", { name: "Bento squared" }));
+    expect(screen.getByRole("button", { name: "Obento" })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Obento squared" }));
     expect(screen.getByRole("heading", { level: 1, name: "Where do you want to go?" })).toBeInTheDocument();
     expect(document.documentElement.dataset.side).toBe("b2");
     expect(screen.getAllByRole("radio")).toHaveLength(10);
@@ -88,7 +88,7 @@ describe("no grade until one is chosen", () => {
     expect(screen.getByRole("button", { name: /We'll tell you/ })).toHaveAttribute("aria-pressed", "true");
     // no lesson can start from Bento² yet
     expect(screen.queryByRole("button", { name: /^Start/ })).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Bento" }));
+    fireEvent.click(screen.getByRole("button", { name: "Obento" }));
     expect(screen.getByRole("heading", { level: 1, name: "Which grade are you in?" })).toBeInTheDocument();
     expect(document.documentElement.dataset.side).toBeUndefined();
     expect(screen.getAllByRole("radio")).toHaveLength(13);
@@ -132,7 +132,7 @@ describe("home", () => {
     }
     expect(screen.getByRole("button", { name: "Grade check-up" })).toBeInTheDocument();
     // the grown-up page lives in My Bento; every setting and the backup live on the Settings page
-    expect(screen.getByRole("button", { name: /^My Bento:/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^My Obento:/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
     // no review until two lessons are scored
     expect(screen.queryByText("Today's review")).toBeNull();
@@ -189,9 +189,9 @@ describe("home", () => {
     tap("Show all"); tap("Your turn ›");
     const esc = () => act(() => { dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", cancelable: true })); });
     act(() => { dispatchEvent(new Event("bento:hint")); });
-    expect(screen.getByRole("dialog", { name: "Hint" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Hint" })).toBeInTheDocument();
     esc();
-    expect(screen.queryByRole("dialog", { name: "Hint" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Hint" })).toBeNull();
     expect(screen.getByRole("button", { name: "Check" })).toBeInTheDocument();
     tap(`Back to ${LESSON}`);
     fireEvent.click(screen.getByRole("button", { name: `Quit ${LESSON}` }));
@@ -253,7 +253,7 @@ describe("unit test and check-up", () => {
     expect(document.querySelector(".island")).toHaveTextContent("5th grade check-up");
     tap("All lessons");
     // the check-up score lives on My Bento's grade row (Design 2026-10-07), not in the book's number tile
-    fireEvent.click(screen.getByRole("button", { name: /^My Bento:/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^My Obento:/ }));
     expect(document.querySelector(".mygl li.on b + small")).toHaveTextContent("check‑up 4 of 4");
   });
 
@@ -325,7 +325,7 @@ describe("report, grown-up page and back to basics", () => {
       mistakes: [{ n: 1, step: 1, label: "Multiply by the tens", lessonId: "g5-mult2", typed: "141", want: "1410", kind: "Lost the place value", cat: "concept", msg: "The tens digit stands for 30, so add a zero.", rushed: true }],
     };
     renderApp(progress, { "g5-mult2": report });
-    fireEvent.click(screen.getByRole("button", { name: /^My Bento:/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^My Obento:/ }));
     tap("Open the report ›");
     expect(screen.getByRole("heading", { level: 1, name: "For the grown-up" })).toBeInTheDocument();
     // the pattern, picked, with what went wrong and the lesson's own explanation of it
@@ -362,9 +362,9 @@ describe("report, grown-up page and back to basics", () => {
 describe("My Bento", () => {
   it("is its own page with no settings, reached from the person circle (G 2026-10-06: no pop-over)", () => {
     renderApp({ grade: 5, chosen: true, xp: 1240, streak: 3 });
-    fireEvent.click(screen.getByRole("button", { name: "My Bento: 3 day streak, 1240 XP" }));
+    fireEvent.click(screen.getByRole("button", { name: "My Obento: 3 day streak, 1240 XP" }));
     expect(screen.queryByRole("dialog")).toBeNull();
-    expect(screen.getByRole("button", { name: /^My Bento:/ })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: /^My Obento:/ })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("heading", { level: 1, name: /^Level \d+$/ })).toBeInTheDocument();
     expect(screen.getByText("1,240")).toBeInTheDocument();
     expect(screen.getByText("day streak")).toBeInTheDocument();
@@ -372,7 +372,7 @@ describe("My Bento", () => {
     expect(screen.getByRole("button", { name: "Open the report ›" })).toBeInTheDocument();
     expect(screen.queryByRole("switch")).toBeNull();
     // the nav's wordmark always means home: your book
-    fireEvent.click(screen.getByRole("button", { name: "Bento, home" }));
+    fireEvent.click(screen.getByRole("button", { name: "Obento, home" }));
     expect(screen.getByRole("button", { name: "Grade check-up" })).toBeInTheDocument();
   });
 });
@@ -400,7 +400,7 @@ describe("Settings", () => {
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
     expect(screen.getByRole("button", { name: "Settings" })).not.toHaveAttribute("aria-current");
     expect(screen.queryByRole("switch", { name: /High contrast/ })).toBeNull();
-    const me = () => screen.getByRole("button", { name: /^Your Bento|^My Bento/ });
+    const me = () => screen.getByRole("button", { name: /^Your Bento|^My Obento/ });
     fireEvent.click(me());
     expect(me()).toHaveAttribute("aria-current", "page");
     fireEvent.click(me());
@@ -428,7 +428,7 @@ describe("the website from inside the app", () => {
   it("Settings has About Bento, which opens the landing page", () => {
     renderApp();
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
-    tap("What Bento is ›");
+    tap("What Obento is ›");
     expect(screen.getByRole("heading", { level: 1, name: "Math that clicks." })).toBeInTheDocument();
     // Start learning goes into the app and its grade picker, even with a grade chosen
     fireEvent.click(screen.getAllByRole("button", { name: "Start learning" })[0]!);

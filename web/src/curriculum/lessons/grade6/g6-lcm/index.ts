@@ -45,7 +45,7 @@ function explain(p: LcmProblem, model: AnswerModel): Explanation {
   ];
   return {
     heading: "The first number both go into",
-    idea: ["A common multiple is a number both counts land on, so the first one they share is the least common multiple.", "Count by the bigger number and check each one."],
+    idea: ["The least common multiple is the first number both counts land on."],
     statement: [text("LCM("), num(a), text(", "), num(b), text(")"), op("="), num(L)],
     diagram: buildNumberLine({
       ...range, every: sparseEvery(range),

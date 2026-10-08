@@ -74,7 +74,7 @@ function explain(p: FracLineProblem, model: AnswerModel): Explanation {
   const { a, b, w } = p, B = expectedOf(model, "spaces"), A = expectedOf(model, "jumps");
   return {
     heading: "Count the jumps from 0",
-    idea: ["Each whole is cut into equal spaces. The number of spaces is the bottom.", "Count the jumps from 0 to the point. That's the top."],
+    idea: ["Each whole is cut into equal spaces, and the bottom number tells how many."],
     statement: [text("point "), op("="), text("?")],
     diagram: buildFracLine({
       den: b, wholes: w, at: a, spacesBeat: 1, hopsBeat: 2, nameBeat: 3,

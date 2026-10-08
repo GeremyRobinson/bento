@@ -69,7 +69,7 @@ export function explainExponentRule(p: ExponentRule, model: AnswerModel) {
   ][t]!;
   return beatExplanation({
     heading: "Three exponent rules",
-    idea: ["x³ · x² is three x's times two more x's, five in all.", "Count the x's and the rules follow: add to multiply, subtract to divide, multiply for a power of a power."],
+    idea: ["Exponents count how many x's are multiplied, so every rule comes from counting them."],
     statement: shown(p),
     caption: count,
     diagram: exponentRulePicture({ t, a, b, e, value, shown: [`x${supText(a)} · x${supText(b)}`, `x${supText(a + b)} ÷ x${supText(b)}`, `(x${supText(a)})${supText(b)}`][t]! }),

@@ -86,7 +86,7 @@ function explain(p: QuadProblem, model: AnswerModel): Explanation {
   const name = QUAD_NAMES[p.shape]!, state: Record<string, number> = { sides: 1, corners: 2, equal: 3, parallel: 4, name: 5, also: 5 };
   return {
     heading: "Quadrilaterals",
-    idea: ["A quadrilateral has 4 sides. Some have special names because of their sides and corners. A square is a special rectangle and a special rhombus."],
+    idea: ["Every quadrilateral has 4 sides, and its sides and corners can give it a special name."],
     statement: words("What is its most special name?"),
     diagram: buildQuad({ corners: cornersOf(p), name, beats: { sides: 1, corners: 2, equal: 3, parallel: 4, name: 5 }, alt: `${ALT} Its sides count to 4, its square corners and equal sides are marked, its parallel sides run on: a ${name.toLowerCase()}.` }),
     caption: `It's a ${name.toLowerCase()}.`,

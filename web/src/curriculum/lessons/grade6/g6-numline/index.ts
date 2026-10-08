@@ -35,7 +35,7 @@ function explain(p: DistanceProblem, model: AnswerModel): Explanation {
   const { a, b } = p, left = expectedOf(model, "neg"), right = expectedOf(model, "pos"), total = expectedOf(model, "sum");
   return {
     heading: "Cross zero, add the distances",
-    idea: ["Distance counts steps, so it is never negative: |−5| means the 5 steps from −5 to 0.", "A trip from a negative to a positive crosses 0, so add the steps on each side."],
+    idea: ["Distance counts steps, so it is never negative."],
     statement: [num(a), text(" to "), num(b)],
     diagram: buildNumberLine({
       ...fitRange([a, b], { maxTicks: 26, pad: 1, minStep: 1 }), labelAt: [a, 0, b],

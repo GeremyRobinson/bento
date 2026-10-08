@@ -46,7 +46,7 @@ export function explainCombination(p: CombinationProblem, answers: AnswerModel):
   const what = k === 2 ? "pairs" : "groups of 3";
   return {
     heading: "Count, then remove repeats",
-    idea: ["First count the picks as if order mattered.", "Each group shows up once for every way to order it, so divide those repeats out."],
+    idea: ["Each group shows up once for every way to order it, so the repeats divide out."],
     statement: mt`C(${n}, ${k})`,
     caption: `${top} ordered picks, each group counted ${f} times: ${ways} ${what}.`,
     diagram: buildChoose({

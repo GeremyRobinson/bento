@@ -33,8 +33,11 @@
 .pring-fill{stroke:var(--gn,var(--ink));stroke-linecap:round;transition:stroke-dasharray var(--m-in) var(--m-ease)}
 .pring-fill.empty{stroke-opacity:0}
 html[data-motion="reduce"] .pring-fill{transition:none}
-.island .ibat{flex:none;position:relative;width:var(--float-in);height:var(--float-in);border-radius:var(--r-round);background:var(--btn-float,var(--well));overflow:hidden;display:grid;place-items:center}
-.island .ibat>i{position:absolute;inset:auto 0 0;height:calc(var(--p) * 100%);background:var(--gn,var(--ink));transition:height var(--dur-500) var(--glide)}
+.island .ibat{flex:none;position:relative;width:var(--float-in);height:var(--float-in);border-radius:var(--r-round);background:var(--btn-float,var(--well));display:grid;place-items:center}
+.island .ibat>svg{position:absolute;inset:0;width:100%;height:100%;rotate:-90deg;overflow:visible}
+.island .ibat circle{fill:none;stroke-width:3px;vector-effect:non-scaling-stroke}
+.island .ibat .pring-track{stroke-width:3px!important;stroke:var(--g2,var(--rule))}
+.island .ibat>b{position:relative;font:var(--w-bold) var(--fz-md)/1 var(--num);color:var(--gn,var(--ink));font-variant-numeric:tabular-nums}
 
 
 .island .iplace .ign{font:inherit;letter-spacing:inherit}
@@ -266,9 +269,9 @@ button.book:hover,button.book:active{transform:translateY(-2px);box-shadow:none}
    radius minus that gap. So the Start pill (radius 20) sits 8px inside its row (radius 28), which sits 8px inside the
    Today card (radius 36). */
 .wrap{--nest:8px}
-.pitem{border-radius:var(--r-pill);padding:var(--nest) 14px var(--nest) 14px;margin:0 calc(var(--nest) - var(--u) * 1.75);width:calc(100% + (var(--u) * 1.75 - var(--nest)) * 2)}
+.pitem{border-radius:var(--r-row);padding:var(--nest) 14px var(--nest) 14px;margin:0 calc(var(--sp-3) - var(--u) * 1.75);width:calc(100% + (var(--u) * 1.75 - var(--sp-3)) * 2)}
 .pitem .ctl.go{--pill-h:40px}
-.bhome .today{border-radius:calc(20px + var(--nest) * 2)}
+.bhome .today{border-radius:var(--r-panel)}
 .bhome .today:has(.plan:last-child){padding-bottom:var(--nest)}
 
 /* anything that sticks while you scroll stops below the island, not under it */
@@ -285,7 +288,7 @@ button.book:hover,button.book:active{transform:translateY(-2px);box-shadow:none}
 .units>.panel>.cpic .viz-svg,.units>.panel>.cpic .am{height:var(--cpic);max-height:var(--cpic);width:100%}
 @media (max-width:699px){.units>.panel>.cpic{--cpic:168px}}
 /* phone Today plan: a long lesson name wraps to a second line instead of cutting off */
-@media (max-width:699px){.ptext b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.25}.pitem{border-radius:22px}}
+@media (max-width:699px){.ptext b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.25}}
 
 /* on a screen that never scrolls, the island is pinned to the same frame as the screen under it, so the two can
    never drift apart (G 2026-10-06: on a phone the bar sat low, over the list's heading) */

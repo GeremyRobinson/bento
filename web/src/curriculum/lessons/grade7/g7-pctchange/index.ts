@@ -67,7 +67,7 @@ function explain(pr: PercentChangeProblem, model: AnswerModel): Explanation {
   const c = expectedOf(model.steps, "change"), r = expectedOf(model.steps, "divide"), p = expectedOf(model.steps, "percent");
   return {
     heading: "Change ÷ original",
-    idea: ["Percent change compares the change with where you started, so the same change is a bigger percent of a smaller start.", "Change ÷ original, written as hundredths, is the percent."],
+    idea: ["Percent change compares the change with where you started."],
     statement: [num(O), op("→"), num(N)],
     diagram: percentChangePicture(pr),
     caption: `Each block is ${g}% of ${O}, which is ${f((O * g) / 100)}.`,
