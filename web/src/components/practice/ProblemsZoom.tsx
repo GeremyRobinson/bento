@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { Pill } from "../primitives/Pill";
-import { Check } from "../primitives/icons";
+import { Check, CloseIcon } from "../primitives/icons";
 import { ProblemLine } from "./ProblemView";
 import { reduceMotion } from "../../app/transition";
 import { canPick, problemOf } from "../../engine/session/practice";
@@ -83,7 +83,7 @@ export function ProblemsZoom({ s, pick, close }: { s: PracticeSession; pick: (in
               <button key={k} className={`zcard zprob${finished ? " done" : ""}${missed ? " missed" : ""}${now ? " now on" : ""}`} style={{ "--i": k } as CSSProperties}
                 disabled={!now && !open} aria-current={now ? "step" : undefined} aria-label={`Problem ${k + 1}, ${state.toLowerCase()}`}
                 onClick={() => now ? shut() : shut(() => pick(k))}>
-                <span className="zphead"><span className="badge">{finished && !missed ? <Check /> : k + 1}</span><span className="k">{state}</span></span>
+                <span className="zphead"><span className="badge">{finished ? (missed ? <CloseIcon /> : <Check />) : k + 1}</span><span className="k">{state}</span></span>
                 <span className="zpline"><ProblemLine lessonId={item.lessonId} problem={problemOf(item)} solved={finished} /></span>
               </button>
             );

@@ -456,3 +456,9 @@ html:not(:has(.screen)) .wrap{padding-top:calc(var(--nav-top) + var(--float-h) +
   .zprobs .zcount{grid-column:1;justify-self:start}
   .zprobs .zclose{grid-column:2}
 }
+/* a problem done in a test wears the steps' marks: green with a tick when right, red with a cross when missed (G 2026-10-08) */
+.zprob.done .badge{background:var(--ok);color:var(--on-tint)}
+.zprob.done.missed .badge{background:var(--err)}
+.zprob .badge svg{width:16px;height:16px}
+/* the card's answer sits in the line at the line's own size, not raised and larger */
+.zpline .ans{font:inherit;font-weight:var(--w-bold);vertical-align:baseline;padding:0;margin:0;min-height:0;min-width:0;height:auto;display:inline;background:none;box-shadow:none;outline:none}
