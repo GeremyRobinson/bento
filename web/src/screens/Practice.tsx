@@ -143,6 +143,15 @@ export function Practice() {
   // the scratch pad: open or not stays as the learner left it; its ink stays until the next problem (G 2026-10-09)
   const [scratch, setScratch] = useState(false), [ink, setInk] = useState<Stroke[]>([]);
   useEffect(() => { setInk([]); }, [s?.i, s?.t0]);
+  // the pad and the picture swap with a fade of their own tile only, out then in; the page around them stays still (G 2026-10-09
+  // "the blink animation it does is too much just fade that box")
+  const [padFade, setPadFade] = useState(false);
+  const swapPad = () => {
+    const still = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (still) { setScratch(o => !o); return; }
+    setPadFade(true);
+    setTimeout(() => { setScratch(o => !o); requestAnimationFrame(() => setPadFade(false)); }, 250);
+  };
   useEffect(() => {
     const on = () => { setHintOpen(false); setZoomOut(true); };
     addEventListener("bento:problems", on);
@@ -276,7 +285,7 @@ export function Practice() {
         <div className="pbar">
           {/* where you are in the set, always in view: tapping it zooms out to every problem (G 2026-10-08) */}
           <div className="pwhere"><span className="sname">Problem {s.i + 1} of {n}</span>{dots}
-            {canScratch && <Pill circ className="pscratchbtn" aria-label="Scratch pad" aria-pressed={scratchOn} onClick={() => withTransition(() => setScratch(o => !o))}><PadIcon /></Pill>}</div>
+            {canScratch && <Pill circ className="pscratchbtn" aria-label="Scratch pad" aria-pressed={scratchOn} onClick={swapPad}><PadIcon /></Pill>}</div>
           {/* a test opens its steps itself, one at a time as you work (G 2026-10-08 "no need for someone to open and close
               this accordion when doing a test"): the bar is a plain row there, not a button, and has no chevron */}
           <ListGroup open={test ? (s.step ?? 0) > 0 || s.solved : stepsOpen} head={
@@ -308,8 +317,8 @@ export function Practice() {
           </section>
         )}
       </figure>
-      {scratchOn ? <ScratchPad className="lpic ppic pscratch" ink={ink} setInk={setInk} /> : pic && (
-        <div className={`lpic ppic${s.hinted ? " hinted" : ""}`} aria-label="Picture of this problem" role="img">
+      {scratchOn ? <ScratchPad className={`lpic ppic pscratch${padFade ? " pfade" : ""}`} ink={ink} setInk={setInk} /> : pic && (
+        <div className={`lpic ppic${s.hinted ? " hinted" : ""}${padFade ? " pfade" : ""}`} aria-label="Picture of this problem" role="img">
           <div className="viz">{ex
             ? <Diagram key={s.i} diagram={ex.diagram!} timeline={ex.timeline} fit turn={!it.story}
               at={s.solved ? ex.timeline.length - 1 : Math.min(ex.timeline.length - 1, s.step > 0 ? ex.steps[s.step - 1]?.state ?? 0 : 0)} />

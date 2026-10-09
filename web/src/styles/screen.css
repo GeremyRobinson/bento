@@ -927,3 +927,6 @@ html:has(.screen) body{overflow:hidden}
 .pscreen .pbar .pwhere>.pscratchbtn[aria-pressed="true"],.pscreen .pbar .pwhere>.pscratchbtn:active{background:var(--glass-on)}
 .pscreen .pbar .pwhere>.pscratchbtn svg{width:20px;height:20px}
 .pscreen .pbar .pwhere:has(>.pscratchbtn){gap:var(--nest)}
+/* the scratch pad and the picture swap by fading their own tile out, then the other in (G 2026-10-09) */
+.pscreen>.lpic.ppic{transition:opacity var(--m-swap) var(--m-ease)}
+.pscreen>.lpic.ppic.pfade{opacity:0}
