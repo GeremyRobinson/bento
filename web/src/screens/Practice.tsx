@@ -13,6 +13,7 @@ import { FeedbackBox } from "../components/practice/FeedbackBox";
 import { Confirm } from "../components/Confirm";
 import { Keypad } from "../components/practice/Keypad";
 import { ProblemsZoom } from "../components/practice/ProblemsZoom";
+import { ScratchPad, type Stroke } from "../components/practice/ScratchPad";
 import { FitScreen } from "../components/screen/Screen";
 import { ListGroup } from "../components/screen/ListGroup";
 import { ALL_LESSONS, SHOW_ME } from "../app/copy";
@@ -34,6 +35,13 @@ const SpeakerIcon = () => (
  */
 // on a larger screen the solve panel has the room, so the steps stay open (G 2026-10-07 22:00); same query as the wide layout
 const wideSteps = () => typeof matchMedia !== "undefined" && matchMedia("(min-width: 900px) and (orientation: landscape)").matches;
+
+/** the lessons that offer the scratch pad so far: a first try on one lesson (G 2026-10-09, "Show your work") */
+const SCRATCH = new Set(["g5-mult2"]);
+
+const PadIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20l1-4.5L15.5 5a2.1 2.1 0 0 1 3 3L8 18.5z" /><path d="M13.5 7l3 3" /></svg>
+);
 
 /** answers lie in even rows, never one left on its own (G 2026-10-08 "3 answers is kind of odd"): up to 3 in one row, 4 as two by two */
 const balanced = (n: number) => (n === 4 ? 2 : n > 4 ? 3 : n);
@@ -132,6 +140,9 @@ export function Practice() {
   const [hintOpen, setHintOpen] = useState(false), [stepsOpen, setStepsOpen] = useState(wideSteps), [asking, setAsking] = useState(false);
   // every problem zoomed out, to pick which one comes next (G 2026-10-08): a pinch closed or a tap on "Problem 2 of 6"
   const [zoomOut, setZoomOut] = useState(false);
+  // the scratch pad: open or not stays as the learner left it; its ink stays until the next problem (G 2026-10-09)
+  const [scratch, setScratch] = useState(false), [ink, setInk] = useState<Stroke[]>([]);
+  useEffect(() => { setInk([]); }, [s?.i, s?.t0]);
   useEffect(() => {
     const on = () => { setHintOpen(false); setZoomOut(true); };
     addEventListener("bento:problems", on);
@@ -180,7 +191,9 @@ export function Practice() {
   const bulbHint = fb?.type === "hint" && (fb.strong === "Hint:" || /^No hints left/.test(fb.text ?? ""));
   const shape = problemShape(it.lessonId, problemOf(it), !!it.story);
   // tests go without the explanation's picture (ex is null), but a problem drawn as its own picture keeps it: it IS the problem
-  const pic = !!ex || shape.picture;
+  const canScratch = SCRATCH.has(it.lessonId), scratchOn = canScratch && scratch;
+  // the scratch pad takes the picture's tile (or that room, where there's no picture)
+  const pic = !!ex || shape.picture || scratchOn;
   picRef.current = pic;
   // the steps: done ones with their finished line, the one being answered, the ones still to come by number only
   // (their names could give a plan-the-step choice away)
@@ -262,7 +275,8 @@ export function Practice() {
         <div className="pprob"><ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} solved={s.solved} part="text" /></div>
         <div className="pbar">
           {/* where you are in the set, always in view: tapping it zooms out to every problem (G 2026-10-08) */}
-          <div className="pwhere"><span className="sname">Problem {s.i + 1} of {n}</span>{dots}</div>
+          <div className="pwhere"><span className="sname">Problem {s.i + 1} of {n}</span>{dots}
+            {canScratch && <Pill circ className="pscratchbtn" aria-label="Scratch pad" aria-pressed={scratchOn} onClick={() => withTransition(() => setScratch(o => !o))}><PadIcon /></Pill>}</div>
           {/* a test opens its steps itself, one at a time as you work (G 2026-10-08 "no need for someone to open and close
               this accordion when doing a test"): the bar is a plain row there, not a button, and has no chevron */}
           <ListGroup open={test ? (s.step ?? 0) > 0 || s.solved : stepsOpen} head={
@@ -294,7 +308,7 @@ export function Practice() {
           </section>
         )}
       </figure>
-      {pic && (
+      {scratchOn ? <ScratchPad className="lpic ppic pscratch" ink={ink} setInk={setInk} /> : pic && (
         <div className={`lpic ppic${s.hinted ? " hinted" : ""}`} aria-label="Picture of this problem" role="img">
           <div className="viz">{ex
             ? <Diagram key={s.i} diagram={ex.diagram!} timeline={ex.timeline} fit turn={!it.story}
