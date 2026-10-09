@@ -72,6 +72,10 @@ export const SURFACE_TOKENS: Token[] = [
   { v: "--nest", label: "Nesting gap", kind: "px", min: 2, max: 20 },
   { v: "--surf-1", label: "Level 1 (panel)", kind: "color", fallback: "--well" },
   { v: "--surf-2", label: "Level 2 (card)", kind: "color", fallback: "--card" },
+  // the glass (G 2026-10-08): every panel is one see-through layer; hover and active only raise a part's own opacity
+  { v: "--glass-a", label: "Glass opacity", kind: "pct", min: 0, max: 60 },
+  { v: "--glass-hover-a", label: "Hover opacity", kind: "pct", min: 0, max: 80 },
+  { v: "--glass-on-a", label: "Active opacity", kind: "pct", min: 0, max: 80 },
 ];
 
 export type Theme = "light" | "dark";
@@ -98,7 +102,7 @@ const block = (sel: string, vals: Record<string, string>) => {
 
 /** The CSS that applies the edits. Doubled selectors outrank the stylesheets' own rules, phone sizes included. */
 export function overrideCss(o: Overrides): string {
-  let css = block(".wrap.wrap", masterVals(o)) + block(':root:root[data-theme="light"]', o.shared.light) + block(':root:root[data-theme="dark"]', o.shared.dark) + block(".wrap.wrap", o.sizes);
+  let css = block(".wrap.wrap", masterVals(o)) + block(':root:root[data-theme="light"]', o.shared.light) + block(':root:root[data-theme="dark"]', o.shared.dark) + block(".wrap.wrap.wrap", o.sizes);
   for (const [g, vals] of Object.entries(o.grades)) css += block(`.wrap.wrap[data-grade="${g}"]`, resolve(vals));
   return css;
 }
@@ -111,7 +115,7 @@ export function handoffCss(o: Overrides): string {
   if (Object.keys(o.shared.light).length) out += `/* tokens.css, :root */\n:root{${lines(o.shared.light)}}\n`;
   if (Object.keys(o.shared.dark).length) out += `/* tokens.css, dark */\n:root[data-theme="dark"]{${lines(o.shared.dark)}}\n`;
   const pick = (f: (k: string) => boolean) => Object.fromEntries(Object.entries(o.sizes).filter(([k]) => f(k)));
-  const dia = pick(k => k.startsWith("--d-")), pill = pick(k => k.startsWith("--pill-")), surf = pick(k => k === "--nest" || k === "--r-panel"), sz = pick(k => !k.startsWith("--d-") && !k.startsWith("--pill-") && k !== "--nest" && k !== "--r-panel");
+  const dia = pick(k => k.startsWith("--d-")), pill = pick(k => k.startsWith("--pill-")), surf = pick(k => k === "--nest" || k === "--r-panel" || k.startsWith("--glass-")), sz = pick(k => !k.startsWith("--d-") && !k.startsWith("--pill-") && k !== "--nest" && k !== "--r-panel" && !k.startsWith("--glass-"));
   if (Object.keys(sz).length) out += `/* bands.css, sizes */\n.wrap{${lines(sz)}}\n`;
   if (Object.keys(surf).length) out += `/* components.css, Surface (master) */\n.wrap{${lines(surf)}}\n`;
   if (Object.keys(pill).length) out += `/* components.css, Pill (master) */\n.wrap{${lines(pill)}}\n`;

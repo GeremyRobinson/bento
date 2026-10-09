@@ -37,7 +37,7 @@ const SpeakerIcon = () => (
 const wideSteps = () => typeof matchMedia !== "undefined" && matchMedia("(min-width: 900px) and (orientation: landscape)").matches;
 
 /** the lessons that offer the scratch pad so far: a first try on one lesson (G 2026-10-09, "Show your work") */
-const SCRATCH = new Set(["g5-mult2"]);
+const SCRATCH = new Set<string>([]); // g5-mult2 once the pad is styled
 
 const PadIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20l1-4.5L15.5 5a2.1 2.1 0 0 1 3 3L8 18.5z" /><path d="M13.5 7l3 3" /></svg>
