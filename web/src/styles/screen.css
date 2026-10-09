@@ -908,3 +908,22 @@ html:has(.screen) body{overflow:hidden}
 .pscreen.ptest .pbar .pwhere{min-height:var(--srow);padding:var(--nest) var(--nest) var(--nest) calc(var(--srow) / 2)}
 /* everything inside the Problem pill sits 10px from its edge (G 2026-10-08 "its not 10px") */
 .pscreen.ptest .pbar .pwhere .pdots.pzoom{height:calc(var(--srow) - var(--nest) * 2)}
+/* Scratch Pad (master, G 2026-10-09 "Show your work"): a blank glass panel to write on. It takes the picture's tile with the
+   picture's size and corner; the ink fills it and its tools sit along its foot, every part one --nest in from the edge.
+   The tools are circle Pills whose round nests inside the panel's corner (pill/2 + nest = panel corner) */
+.scratch{position:relative;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+.pscreen>.lpic.pscratch{padding:0}
+.scratch>.scratch-ink{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair;color:var(--ink)}
+.scratch>.scratch-note{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;color:var(--glass-text);font-size:var(--fz-md);font-weight:var(--w-mid)}
+.scratch>.scratch-tools{position:absolute;left:var(--nest);bottom:var(--nest);display:flex;gap:var(--nest)}
+.scratch>.scratch-tools>.ctl.circ{background:var(--glass);color:var(--ink)}
+@media (hover:hover){.scratch>.scratch-tools>.ctl.circ:not([disabled]):hover{background:var(--glass-hover)}}
+.scratch>.scratch-tools>.ctl.circ[aria-pressed="true"],.scratch>.scratch-tools>.ctl.circ:not([disabled]):active{background:var(--glass-on)}
+.scratch>.scratch-tools>.ctl.circ[disabled]{background:var(--glass);color:var(--faint)}
+/* the pad's own button, in the Problem pill beside the dots: the same height as the dots' pill, lit while the pad is out */
+.pscreen .pbar .pwhere>.pscratchbtn{--pill-h:var(--srow);flex:none;background:var(--glass);color:var(--ink)}
+.pscreen.ptest .pbar .pwhere>.pscratchbtn{--pill-h:calc(var(--srow) - var(--nest) * 2)}
+@media (hover:hover){.pscreen .pbar .pwhere>.pscratchbtn:hover{background:var(--glass-hover)}}
+.pscreen .pbar .pwhere>.pscratchbtn[aria-pressed="true"],.pscreen .pbar .pwhere>.pscratchbtn:active{background:var(--glass-on)}
+.pscreen .pbar .pwhere>.pscratchbtn svg{width:20px;height:20px}
+.pscreen .pbar .pwhere:has(>.pscratchbtn){gap:var(--nest)}
