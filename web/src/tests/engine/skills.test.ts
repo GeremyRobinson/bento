@@ -202,7 +202,7 @@ describe("rings", () => {
 });
 const ready5 = () => entriesInGrade(5).filter(c => isReady(c.id));
 
-describe.each([2, 5])("grade %i's check recipes", g => {
+describe.each([...new Set(Object.keys(CHECKS).map(id => CATALOG.find(c => c.id === id)!.grade))])("grade %i's check recipes", g => {
   const lessons = lessonsInGrade(g);
   it("cover every lesson in the grade", () => expect(lessons.filter(l => CHECKS[l.id]).map(l => l.id)).toEqual(lessons.map(l => l.id)));
 
@@ -250,6 +250,7 @@ describe("depends-on lists", () => {
     }
   });
   it("start with the catalog's build-up lesson", () => {
-    for (const [id, deps] of Object.entries(DEPENDS)) if (deps.length && CATALOG.find(c => c.id === id)!.grade === 2) expect(CATALOG.find(c => c.id === id)!.pre, id).toBe(deps[0]);
+    for (const [id, deps] of Object.entries(DEPENDS)) if (deps.length && CATALOG.find(c => c.id === id)!.grade !== 5) // 5th grade's pre is pinned by the parity recordings
+       expect(CATALOG.find(c => c.id === id)!.pre, id).toBe(deps[0]);
   });
 });
