@@ -268,6 +268,23 @@ html[data-line] body{background-image:none!important}
    its room and Watch one never spills (guidelines §7, spec L2) */
 @media (max-width:820px) and (max-height:720px){
   .v-wl li{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:var(--gap)}
+  .v-idea{font-size:var(--fz-lg)}
+}
+/* short phones in practice and the skill check (spec §4 "Short phones"): the picture keeps a floor and the solve panel gives up room
+   first. The stage pads one gap; the round tools stand in a column beside the keypad instead of a row above it; keys
+   and tools are one gap shorter than the pill */
+@media (max-width:820px) and (max-height:720px){
+  .v-stage{padding:var(--gap);row-gap:calc(var(--gap) / 2)}
+  .v-ppic{min-height:calc(var(--pill-size) * 2 - var(--gap))}
+  .v-keys{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-auto-flow:row dense;align-content:end}
+  .v-keys .v-ask{--ans-h:calc(var(--pill-size) - var(--gap))}
+  .v-prob .math{font-size:36px}
+  .v-keys .tray{gap:calc(var(--gap) / 2)}
+  .v-keys>*{grid-column:1/-1}
+  .v-keys .v-steps{padding-top:0}
+  .v-keys .v-tools{grid-column:2;flex-direction:column;justify-content:space-between;align-self:stretch;gap:0}
+  .v-keys .v-tool{width:calc(var(--pill-size) - var(--gap));height:calc(var(--pill-size) - var(--gap))}
+  .v-keys .ppad{grid-column:1;--key:calc(var(--pill-size) - var(--gap))}
 }
 @keyframes vpop{from{opacity:0;transform:translateY(4px)}}
 .v-lbtns{display:flex;gap:var(--gap);justify-content:flex-end;flex-wrap:wrap}

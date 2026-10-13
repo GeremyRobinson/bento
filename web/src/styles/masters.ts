@@ -50,7 +50,7 @@ export const MASTERS: Master[] = [
   { name: "Icon button", classes: ["v-ib"] },
   { name: "Tool", classes: ["v-tool", "v-tools"] },
   { name: "Workspace", classes: ["screen", "v-work", "v-home", "v-prac", "v-done", "v-today", "v-todaypic", "v-box", "v-bh", "v-sw", "v-wide", "v-yr", "v-path", "v-pstep", "v-gbig", "v-sc", "v-result", "v-recap", "v-rp", "v-stage", "v-prob", "v-ppic", "v-pad", "v-plist", "v-lside", "v-idea", "v-wl", "v-learn", "later", "all", "pprob", "pfade"] },
-  { name: "Solve panel", classes: ["v-solve", "v-ans", "q2", "v-steps", "v-lines", "v-ask", "v-say", "slip", "good", "hint", "slot", "empty", "no", "ask", "tray", "ctl", "choice", "choices", "ok"] },
+  { name: "Solve panel", classes: ["v-solve", "v-keys", "v-ans", "q2", "v-steps", "v-lines", "v-ask", "v-say", "slip", "good", "hint", "slot", "empty", "no", "ask", "tray", "ctl", "choice", "choices", "ok"] },
   { name: "Grade ring", classes: ["ibat", "igrade", "island", "pring-track"] },
   // the v2 segmented control (Lessons · Test · Grade): the Slider with a key-grey thumb, never the accent (v2 model)
   { name: "Segmented", classes: ["v-sw", "slider", "slider-thumb"] },
