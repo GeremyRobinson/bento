@@ -449,20 +449,12 @@ export function hint(s: PracticeSession, deps: Deps): PracticeSession {
 }
 
 export const showMeAvailable = (s: PracticeSession) => canShowMe({ test: isTest(s), misses: s.misses, hinted: s.hinted });
-export const skipAvailable = (s: PracticeSession) => canSkip({ test: isTest(s), tier: s.tier });
 
 export function showMe(s: PracticeSession, progress: Progress, deps: Deps): PracticeSession {
   const step = currentStep(s);
   if (!step || !showMeAvailable(s)) return s;
   const values = Object.fromEntries(Object.entries(expectedValues(step)).map(([k, v]) => [k, formatNumber(v)]));
   return pass({ ...s, values, shown: s.shown + 1, prob: { ...s.prob, shown: s.prob.shown + 1 } }, true, progress, deps);
-}
-
-/** "Final answer only" ↔ "Show steps", at the top help tier. Applies from the start of the problem. */
-export function toggleSkip(s: PracticeSession, deps: Deps): PracticeSession {
-  if (!skipAvailable(s)) return s;
-  const skip = !s.skip;
-  return loadStep({ ...s, skip, skipThis: true, collapsed: false, step: 0, work: [] }, deps);
 }
 
 function pass(s: PracticeSession, shown: boolean, progress: Progress, deps: Deps): PracticeSession {

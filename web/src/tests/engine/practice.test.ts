@@ -5,7 +5,7 @@ import { formatNumber } from "../../curriculum/schemas/math-text";
 import { emptyProgress, type Progress } from "../../engine/mastery/progress";
 import {
   canPick, canResume, check, choose, currentStep, finishRun, focusSlot, goToProblem, hint, isLastProblem, nextProblem, pickPlan, pressKey,
-  showMe, showMeAvailable, startPractice, startTest, testKey, toggleSkip, CHECKUP_LENGTH, UNIT_TEST_LENGTH, type Deps,
+  showMe, showMeAvailable, startPractice, startTest, testKey, CHECKUP_LENGTH, UNIT_TEST_LENGTH, type Deps,
 } from "../../engine/session/practice";
 import { checkKey } from "../../engine/mastery/skills";
 import { expectedValues } from "../../engine/evaluation/steps";
@@ -127,11 +127,6 @@ describe("a practice run", () => {
     expect(s.collapsed).toBe(false);
     expect(s.feedback?.text).toBe("This one needs the steps. Here they are.");
     expect(currentStep(s)!.label).toBe("Step 1 · Multiply by the tens");
-    // and "Show steps" turns the shortcut off by choice
-    let s2 = startPractice("g5-mult2", p, deps());
-    s2 = toggleSkip(s2, deps());
-    expect(s2.collapsed).toBe(false);
-    expect(s2.skip).toBe(false);
   });
 
   it("finishes with a score, XP, a streak and a log entry", () => {
