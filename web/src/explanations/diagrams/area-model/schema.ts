@@ -60,6 +60,9 @@ export interface AreaDiagram {
   rows: AreaBand[];
   regions: AreaRegion[];
   total: { terms: number[]; value: number };
+  /** division (g5-divide): the strips' widths are found one at a time, so a top label waits until its strip is done
+   * ("?" while it is asked, nothing before) */
+  find?: boolean;
 }
 
 export interface AreaLayout {

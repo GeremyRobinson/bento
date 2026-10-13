@@ -14,6 +14,7 @@ export function areaView(timeline: AnimationState[], at: number) {
     split: reached.some(s => s.phase !== "factors"),
     shown: new Set(reached.flatMap(s => (s.phase === "region" ? [s.index] : []))),
     active: now?.phase === "region" ? now.index : null,
+    left: new Set(reached.flatMap(s => (s.phase === "left" ? [s.index] : []))),
     sum: reached.some(s => s.phase === "sum"),
   };
 }
@@ -61,7 +62,7 @@ export function AreaModelDiagram({ diagram: d, timeline, at, ask }: { diagram: A
   const view = areaView(timeline, at);
   // practice lights the part it is asking about (no answer yet)
   const asked = ask != null ? timeline[ask] : undefined;
-  const v = { ...view, active: asked?.phase === "region" ? asked.index : view.active };
+  const v = { ...view, active: asked?.phase === "region" || asked?.phase === "left" ? asked.index : view.active };
   const lit = v.active != null ? d.regions[v.active] : undefined;
   const label = `${d.vertical.label} by ${d.horizontal.label} rectangle, split into ${d.regions
     .map(r => `${r.equation.factors[0]} by ${r.equation.factors[1]} = ${r.productLabel}`).join(" and ")}. Total ${formatNumber(d.total.value)}.`;
@@ -75,9 +76,12 @@ export function AreaModelDiagram({ diagram: d, timeline, at, ask }: { diagram: A
     <svg ref={ref} className="am" viewBox={`0 0 ${fit.width} ${fit.height}`} preserveAspectRatio="xMinYMin meet" role="img" aria-label={label}
       data-split={v.split} data-sum={v.sum} style={{ "--w": fit.width, "--h": fit.height } as CSSProperties}>
       <g transform={`translate(0 ${fit.dy})`} fill="none">
-      {d.cols.map((c, i) => (
-        <text key={`c${i}`} className="part out-top" data-lit={!lit || lit.col === i} x={fit.starts[i]! + fit.widths[i]! / 2} y={top - fit.lg - fit.lu * 0.36} style={{ textAnchor: "middle" }}>{c.label}</text>
-      ))}
+      {d.cols.map((c, i) => {
+        // division finds the widths: a label shows once its strip is done, "?" while its width is asked (spec g5-divide)
+        const found = !d.find || v.sum || d.regions.some(r => r.col === i && v.shown.has(r.index));
+        const text = found ? c.label : v.active != null && d.regions[v.active]?.col === i && asked?.phase !== "left" ? "?" : null;
+        return text == null ? null : <text key={`c${i}`} className="part out-top" data-lit={!lit || lit.col === i} x={fit.starts[i]! + fit.widths[i]! / 2} y={top - fit.lg - fit.lu * 0.36} style={{ textAnchor: "middle" }}>{text}</text>;
+      })}
       {d.rows.map((r, i) => (
         <text key={`r${i}`} className="part" data-lit={!lit || lit.row === i} x={0} y={r.start + r.length / 2} style={{ textAnchor: "start" }}>{r.label}</text>
       ))}
@@ -85,7 +89,7 @@ export function AreaModelDiagram({ diagram: d, timeline, at, ask }: { diagram: A
         const x = fit.starts[r.col]!, w = fit.widths[r.col]!;
         const seats = w === r.width ? r.seats.map(l => ({ ...l, x1: l.x1 - r.x + x, x2: l.x2 - r.x + x })) : seatLines(x, r.y, w, r.height, r.part, r.equation.factors[0], 0, STRIP_SEAT_MIN);
         return (
-        <g key={r.index} className="region" data-shown={v.shown.has(r.index) || v.sum} data-active={v.active === r.index}>
+        <g key={r.index} className="region" data-shown={v.shown.has(r.index) || v.sum} data-active={v.active === r.index} data-left={v.left.has(r.index)}>
           {/* one shape per part: the fill, with its outline just outside it so every seat shows whole (G1, G2) */}
           <rect className="fill edge" x={x - 1.5} y={r.y - 1.5} width={w + 3} height={r.height + 3} rx={5.5} />
           {seats.map((l, k) => <line key={k} className="seat" x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} />)}

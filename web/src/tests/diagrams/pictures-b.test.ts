@@ -75,7 +75,6 @@ const PICTURED = {
   "g12-power": "term-table",
   "g12-anti": "term-table",
   "g4-divide": "area-model",
-  "g5-divide": "area-model",
   "g5-multdec": "area-model",
   "g9-radical": "area-model",
   "g11-radical": "area-model",
@@ -307,14 +306,6 @@ describe("area-model lessons", () => {
       // dv of the remainder's squares would fill the column next to them
       if (p.r) expect(column.h / (stub[0]!.h + 3)).toBeCloseTo(p.dv, 1);
       expect(finalText(d, 4)).toContain(p.r ? `${p.r} left over: ${p.q} R ${p.r}` : `${p.dv * p.q} ÷ ${p.dv} = ${p.q} exactly`);
-    }
-  });
-  it("g5-divide fills the rest exactly, with no remainder, and joins the two widths into the answer", () => {
-    const l = lesson("g5-divide");
-    for (const p of problemsOf(l) as { dv: number; qt: number }[]) {
-      const d = sceneOf(l, p), T = p.qt - (p.qt % 10), O = p.qt % 10;
-      expect(rects(d, 3, /\bxchip\b/)).toHaveLength(0);
-      expect(finalText(d, 3)).toContain(`${T} + ${O} = ${p.qt}`);
     }
   });
   it("g5-multdec lays an A by B block of small pieces on whole unit squares, and names the place they count", () => {

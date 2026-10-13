@@ -14,8 +14,8 @@ const tick = (k: number) => { const x = 6 + k * 14.8; return L(x, k % 10 ? 52 : 
 
 export const LESSON5: Record<string, string> = {
   "g5-mult2": AREA,
-  // sharing into equal groups, a little left over
-  "g5-divide": svg("0 0 150 96", bar(2, 14, 118, 68, 4, 4) + R(126, 58, 22, 24, 6, "rest")),
+  // long division finds the strips of the area model one at a time: the tens strip found, the ones strip still to find (spec §4 g5-divide)
+  "g5-divide": svg("0 0 130 96", R(2, 2, 86, 92, 4, "take") + R(100, 2, 28, 92, 4)),
   // brackets first: what's inside them is worked out before the rest
   "g5-order": svg("0 0 170 96", `<path class="brk" d="M14 10 Q2 48 14 86"/><path class="brk" d="M100 10 Q112 48 100 86"/>${R(20, 26, 34, 44, 8, "take")}${R(62, 26, 34, 44, 8, "take")}${R(126, 26, 40, 44, 8)}`),
   // two quarters joined

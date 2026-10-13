@@ -15,6 +15,8 @@ export type AnimationState =
   | { phase: "factors" }
   | { phase: "split" }
   | { phase: "region"; index: number }
+  /** division: a strip not yet found shows what is left inside it (its result), still soft */
+  | { phase: "left"; index: number }
   | { phase: "sum" }
   | { phase: "beat"; index: number };
 

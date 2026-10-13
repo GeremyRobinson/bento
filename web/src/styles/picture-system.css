@@ -108,6 +108,8 @@
 #app .am .region{fill:none}
 #app .am .region .product,#app .am .region .product text{fill:var(--v-ink)}
 #app .am .region:is([data-shown="true"],[data-active="true"]) :is(.product,.product text){fill:var(--pic-on-mid)}
+/* division: a strip not yet found already holds what is left, shown as its result (spec g5-divide, step 3) */
+#app .am .region[data-left="true"] .product{opacity:1}
 #app .am .region .product{font-size:max(calc(min(var(--fs),26) * 1px),calc(var(--pic-text-min) * var(--px,0)))}
 
 /* Today's picture on home: the lesson's picture at rest. Still, every part soft, no results (spec: Today on home) */
