@@ -20,7 +20,7 @@ const { motionGuard } = await import("./smoke/motion.mjs");
 
 /** audit kinds that fail the run: anything cut off, text under an outline, and a nested surface whose corner isn't concentric */
 const CLIPS = new Set(["content-cut", "spill", "viewport", "poke-clipped", "box", "mask", "ring", "scroll-cut", "outline-over", "concentric"]);
-const SIZES = [{ w: 390, h: 844, scheme: "dark" }, { w: 375, h: 667, scheme: "light" }, { w: 1180, h: 820, scheme: "light" }, { w: 1366, h: 768, scheme: "dark" }, { w: 1366, h: 1024, scheme: "light" },
+const SIZES = [{ w: 390, h: 844, scheme: "dark" }, { w: 375, h: 667, scheme: "light" }, { w: 360, h: 780, scheme: "dark" }, { w: 1180, h: 820, scheme: "light" }, { w: 1366, h: 768, scheme: "dark" }, { w: 1366, h: 1024, scheme: "light" },
   { w: 1024, h: 768, scheme: "light" }, { w: 1280, h: 720, scheme: "dark" }];
 /** containers meant to scroll (a long list; the book's chapters, and its plan on a short landscape screen where the
  *  picture keeps its room); anything else that scrolls inside itself is cut */
