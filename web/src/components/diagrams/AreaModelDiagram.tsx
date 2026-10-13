@@ -124,7 +124,7 @@ export function AreaModelDiagram({ diagram: d, timeline, at, ask }: { diagram: A
         const x = fit.starts[r.col]!, w = fit.widths[r.col]!;
         const seats = w === r.width ? r.seats.map(l => ({ ...l, x1: l.x1 - r.x + x, x2: l.x2 - r.x + x })) : seatLines(x, r.y, w, r.height, r.part, r.equation.factors[0], 0, STRIP_SEAT_MIN);
         return (
-        <g key={r.index} className="region" data-shown={v.shown.has(r.index) || v.sum} data-active={v.active === r.index} data-left={v.left.has(r.index)}>
+        <g key={r.index} className="region" style={{ "--i": r.index } as CSSProperties} data-shown={v.shown.has(r.index) || v.sum} data-active={v.active === r.index} data-left={v.left.has(r.index)}>
           {/* one shape per part: the fill, with its outline just outside it so every seat shows whole (G1, G2) */}
           <rect className="fill edge" x={x - 1.5} y={r.y - 1.5} width={w + 3} height={r.height + 3} rx={5.5} />
           {seats.map((l, k) => <line key={k} className="seat" x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} />)}

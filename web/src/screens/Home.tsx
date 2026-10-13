@@ -206,7 +206,7 @@ function GradeList({ g, close }: { g: number; close: () => void }) {
     <div className="v-bh"><button className="v-ib" onClick={close} aria-label="Back to your box"><Chevron dir="left" /></button><b>Every grade</b><span className="v-meta">Pick one</span></div>
     {GRADES.map(d => {
       const list = entriesInGrade(d.grade), n = learnedCount(progress, list);
-      return <Cover key={d.grade} pick={d.grade === g} className="v-gtile" pic={<span className="v-gbig">{d.short}</span>} name={d.name} p={list.length ? n / list.length : 0}
+      return <Cover key={d.grade} data-grade={d.grade} pick={d.grade === g} className="v-gtile" pic={<span className="v-gbig">{d.short}</span>} name={d.name} p={list.length ? n / list.length : 0}
         word={d.grade === g ? "Your grade" : n ? `${n} of ${list.length} done` : d.subtitle}
         onClick={() => { close(); if (d.grade !== g) chooseGrade(d.grade); }} aria-label={`${d.name}, ${n} of ${list.length} lessons done`} />;
     })}

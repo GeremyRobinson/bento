@@ -53,7 +53,8 @@ describe("the picture system", () => {
     expect(two.length).toBeGreaterThan(0);
     for (const r of two) for (const [k, v] of Object.entries(r.decls)) if (/^--(c1|k1|fill1|soft1)$/.test(k)) expect(v).toMatch(/picb-/);
     // nowhere else in the system does a role go violet
-    for (const r of rules(SYSTEM).filter(r => !/\.two\b/.test(r.sel))) for (const v of Object.values(r.decls)) expect(v, r.sel).not.toMatch(/picb-/);
+    // (a grade setting its own partner hue, --picb-* = --gN-picb-*, is the token itself, not a role going violet)
+    for (const r of rules(SYSTEM).filter(r => !/\.two\b/.test(r.sel))) for (const [k, v] of Object.entries(r.decls)) if (!/^--picb-/.test(k)) expect(v, r.sel).not.toMatch(/picb-/);
   });
 
   it("paints parts and text only with picture tokens", () => {

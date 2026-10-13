@@ -4,8 +4,34 @@
 :root:root:root{--page:var(--v-page)}
 html[data-line] body{background-image:none!important}
 .wrap{--v-acc:var(--tint);--v-acc-on:var(--on-tint);--v-acc-soft:color-mix(in oklab,var(--tint) 14%,var(--v-card))}
-/* 5th grade (the model's grade) takes its accent straight from the tokens, so every use is the exact token, never a mix */
-.wrap[data-grade="5"]{--v-acc:var(--g5-acc);--v-acc-on:var(--g5-acc-on);--v-acc-soft:var(--g5-acc-soft);--v-acc-fade:var(--g5-acc-fade)}
+/* the page behind the panels takes a faint wash of the grade colour (goals: "each grade has its own world") */
+:root:has(#app.wrap[data-grade="0"]){--v-page:var(--g0-page)}
+:root:has(#app.wrap[data-grade="1"]){--v-page:var(--g1-page)}
+:root:has(#app.wrap[data-grade="2"]){--v-page:var(--g2-page)}
+:root:has(#app.wrap[data-grade="3"]){--v-page:var(--g3-page)}
+:root:has(#app.wrap[data-grade="4"]){--v-page:var(--g4-page)}
+:root:has(#app.wrap[data-grade="5"]){--v-page:var(--g5-page)}
+:root:has(#app.wrap[data-grade="6"]){--v-page:var(--g6-page)}
+:root:has(#app.wrap[data-grade="7"]){--v-page:var(--g7-page)}
+:root:has(#app.wrap[data-grade="8"]){--v-page:var(--g8-page)}
+:root:has(#app.wrap[data-grade="9"]){--v-page:var(--g9-page)}
+:root:has(#app.wrap[data-grade="10"]){--v-page:var(--g10-page)}
+:root:has(#app.wrap[data-grade="11"]){--v-page:var(--g11-page)}
+:root:has(#app.wrap[data-grade="12"]){--v-page:var(--g12-page)}
+/* every grade takes its accent straight from its tokens (scripts/grade-colours.mjs), so every use is the exact token */
+:is(.wrap,.v-cover)[data-grade="0"]{--v-acc:var(--g0-acc);--v-acc-on:var(--g0-acc-on);--v-acc-soft:var(--g0-acc-soft);--v-acc-fade:var(--g0-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="1"]{--v-acc:var(--g1-acc);--v-acc-on:var(--g1-acc-on);--v-acc-soft:var(--g1-acc-soft);--v-acc-fade:var(--g1-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="2"]{--v-acc:var(--g2-acc);--v-acc-on:var(--g2-acc-on);--v-acc-soft:var(--g2-acc-soft);--v-acc-fade:var(--g2-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="3"]{--v-acc:var(--g3-acc);--v-acc-on:var(--g3-acc-on);--v-acc-soft:var(--g3-acc-soft);--v-acc-fade:var(--g3-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="4"]{--v-acc:var(--g4-acc);--v-acc-on:var(--g4-acc-on);--v-acc-soft:var(--g4-acc-soft);--v-acc-fade:var(--g4-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="5"]{--v-acc:var(--g5-acc);--v-acc-on:var(--g5-acc-on);--v-acc-soft:var(--g5-acc-soft);--v-acc-fade:var(--g5-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="6"]{--v-acc:var(--g6-acc);--v-acc-on:var(--g6-acc-on);--v-acc-soft:var(--g6-acc-soft);--v-acc-fade:var(--g6-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="7"]{--v-acc:var(--g7-acc);--v-acc-on:var(--g7-acc-on);--v-acc-soft:var(--g7-acc-soft);--v-acc-fade:var(--g7-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="8"]{--v-acc:var(--g8-acc);--v-acc-on:var(--g8-acc-on);--v-acc-soft:var(--g8-acc-soft);--v-acc-fade:var(--g8-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="9"]{--v-acc:var(--g9-acc);--v-acc-on:var(--g9-acc-on);--v-acc-soft:var(--g9-acc-soft);--v-acc-fade:var(--g9-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="10"]{--v-acc:var(--g10-acc);--v-acc-on:var(--g10-acc-on);--v-acc-soft:var(--g10-acc-soft);--v-acc-fade:var(--g10-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="11"]{--v-acc:var(--g11-acc);--v-acc-on:var(--g11-acc-on);--v-acc-soft:var(--g11-acc-soft);--v-acc-fade:var(--g11-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="12"]{--v-acc:var(--g12-acc);--v-acc-on:var(--g12-acc-on);--v-acc-soft:var(--g12-acc-soft);--v-acc-fade:var(--g12-acc-fade)}
 /* every go button (Check, Next problem, Start) is the accent: action colour from the grade accent, never the old tint */
 .wrap{--pill-go-bg:var(--v-acc);--pill-go-fg:var(--v-acc-on)}
 /* The ring (G 2026-10-08, kept for v2): every size comes from the pill and the gap. A pill is --pill-size tall and fully
@@ -71,8 +97,9 @@ html[data-line] body{background-image:none!important}
 .v-ring.lg{width:96px;height:96px;font-size:var(--fz-2xl);letter-spacing:-.02em} .v-ring.lg circle{stroke-width:3}
 
 /* Cover tile (master): picture on top, name, then a small ring and one word */
-.v-cover{display:grid;grid-template-rows:minmax(0,1fr) auto;gap:var(--sp-3);padding:var(--sp-5);border-radius:var(--r-in);background:var(--v-page);text-align:left;min-height:0;min-width:0;color:var(--v-ink)}
-.v-cover:hover:not(:disabled){background:var(--v-key)}
+/* every tile wears its grade: a soft tint of the grade colour behind it, the deeper step on hover (goals: "tiles with character") */
+.v-cover{display:grid;grid-template-rows:minmax(0,1fr) auto;gap:var(--sp-3);padding:var(--sp-5);border-radius:var(--r-in);background:var(--v-acc-soft);text-align:left;min-height:0;min-width:0;color:var(--v-ink)}
+.v-cover:hover:not(:disabled){background:var(--v-acc-fade)}
 .v-cover:disabled{cursor:default;opacity:.55}
 .v-cover.pick{box-shadow:inset 0 0 0 2px var(--v-acc)}
 .v-top{display:grid;min-height:0}
@@ -81,7 +108,7 @@ html[data-line] body{background-image:none!important}
 .v-prog{display:flex;align-items:center;gap:var(--sp-2);min-width:0}
 .v-st{font-size:var(--fz-sm);font-weight:var(--w-mid);color:var(--v-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .v-st.next{color:var(--v-acc)} .v-st.rev{color:var(--v-ink)}
-.v-gbig{align-self:center;font-size:44px;font-weight:var(--w-bold);letter-spacing:-.03em;line-height:1;color:var(--v-ink)}
+.v-gbig{align-self:center;font-size:44px;font-weight:var(--w-bold);letter-spacing:-.03em;line-height:1;color:var(--v-acc)}
 .v-cover.pick .v-gbig{color:var(--v-acc)}
 
 /* tile pictures: a still version of the lesson's own picture */
@@ -374,3 +401,20 @@ html[data-line] body{background-image:none!important}
 /* once solved, the keys give way to one wide Next problem key (v2 spec P11) */
 .screen.solved .v-solve .tray>:not(.k-go){display:none}
 .screen.solved .v-solve .tray>.k-go{grid-area:auto/1/auto/-1}
+
+/* ==== Lesson and home motion (goals doc: "micro animations everywhere", G 2026-10-13). Taps press down and spring
+   back; answers, work pills and the say line pop in; the box's tiles arrive in a short ripple. All on the motion tokens,
+   all off under Less motion. */
+@keyframes vSpring{0%{opacity:0;transform:scale(.85)}100%{opacity:1;transform:scale(1)}}
+@keyframes vRise{from{opacity:0;transform:translateY(var(--m-lift))}}
+.v-solve .tray button,.v-cover,.v-tool,.pill{transition:transform var(--m-swap) var(--m-spring),background-color var(--m-swap) var(--m-ease)}
+.v-solve .tray button:active{transform:scale(var(--m-press-key));transition-duration:var(--m-tap)}
+:is(.v-cover,.v-tool,.pill):active:not(:disabled){transform:scale(var(--m-press-btn));transition-duration:var(--m-tap)}
+.v-cover:hover:not(:disabled){transform:translateY(calc(var(--m-lift) / -2))}
+.v-lines li{animation:vSpring var(--m-pop) var(--m-spring) both}
+.v-say:not(:empty){animation:vRise var(--m-pop) var(--m-spring) both}
+.v-ans .slot:not(.empty){animation:vSpring var(--m-pop) var(--m-spring)}
+.v-box .v-cover{animation:vSpring var(--m-pop) var(--m-spring) backwards}
+.v-box .v-cover:nth-child(2){animation-delay:var(--m-ripple)} .v-box .v-cover:nth-child(3){animation-delay:calc(var(--m-ripple) * 2)}
+.v-box .v-cover:nth-child(4){animation-delay:calc(var(--m-ripple) * 3)} .v-box .v-cover:nth-child(5){animation-delay:calc(var(--m-ripple) * 4)}
+.v-box .v-cover:nth-child(n+6){animation-delay:calc(var(--m-ripple) * 5)}
