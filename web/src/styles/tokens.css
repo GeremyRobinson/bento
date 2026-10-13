@@ -16,6 +16,13 @@
   --c0:#3b82f6; --c1:#ec4899; --c2:#8b5cf6; --acc:#f59e0b;
   color-scheme:light;
 
+  /* ---- v2 (G 2026-10-13, Obento v2 model): a neutral base, the grade's one colour only on what you press, where you are and
+     progress; pictures in their own warm palette, a second (violet) only to tell two things apart; red and green only mean
+     wrong and right ---- */
+  --v-page:#f6f6f4; --v-card:#ffffff; --v-key:#ececea; --v-line:#e2e2df; --v-ink:#1b1c1f; --v-muted:#6c6d72; --v-done:#9fa0a5;
+  --pic-deep:#b06a00; --pic-mid:#f0a21a; --pic-soft:#fbe3b4; --pic-line:#ffffff; --picb-deep:#6a3fc4; --picb-mid:#a47cf3; --picb-soft:#e8defc;
+  --slip:#c62828; --slip-bg:#fde7e7; --right:#1e8e4a; --right-bg:#e2f5e9;
+
   /* ---- the system scales. Stylesheets use these instead of typing values (scripts/tokenize.mjs rewrites any that
      slip in, and src/tests/styles/hard-coded.test.ts fails on a raw z-index, duration, curve, weight or colour). ---- */
   /* weights: one typeface, three weights, plus a medium for the keypad's digits. bands.css repeats bold and mid on .wrap. */
@@ -69,6 +76,10 @@
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --text:#eef0f4; --muted:#979eae; --faint:#4a4f5c; --rule:#2b2f38; --page:#0e1014; --well:#181b22; --card:#21252e; --hover:#2b303b; --ok-ink:#4ade80; --err-ink:#f87171; --sw-off:#5c6271; color-scheme:dark;
+
+  --v-page:#111213; --v-card:#1c1d1f; --v-key:#2a2b2e; --v-line:#2f3033; --v-ink:#f2f2f0; --v-muted:#a2a3a8; --v-done:#6e6f74;
+  --pic-deep:#ffb35c; --pic-mid:#e8901f; --pic-soft:#4a3214; --pic-line:#111213; --picb-deep:#c9adff; --picb-mid:#8b5fe0; --picb-soft:#33264f;
+  --slip:#ff7070; --slip-bg:#3a1717; --right:#5ad68a; --right-bg:#13301f;
   /* unchanged in dark */
   --black-a04:rgba(0,0,0,.04); --black-a06:rgba(0,0,0,.06); --black-a08:rgba(0,0,0,.08); --black-a12:rgba(0,0,0,.12); --black-a25:rgba(0,0,0,.25);
   --ink-a18:rgba(15,20,30,.18); --ink-a25:rgba(15,20,30,.25); --ink-a30:rgba(15,20,30,.3); --ink-a35:rgba(15,20,30,.35);
@@ -77,6 +88,10 @@
   --adv-sky:#1d1b2e; --adv-night:#0a0a0c; --adv-lilac:#c4b5fd; --adv-pink:#f0abfc;
   --adv-card:rgb(255 255 255 / .04); --adv-hair:rgb(255 255 255 / .08); --adv-faint-line:rgb(255 255 255 / .16); --adv-ring:rgb(255 255 255 / .22);}}
 :root[data-theme="dark"]{--text:#eef0f4; --muted:#979eae; --faint:#4a4f5c; --rule:#2b2f38; --page:#0e1014; --well:#181b22; --card:#21252e; --hover:#2b303b; --ok-ink:#4ade80; --err-ink:#f87171; --sw-off:#5c6271; color-scheme:dark;
+
+  --v-page:#111213; --v-card:#1c1d1f; --v-key:#2a2b2e; --v-line:#2f3033; --v-ink:#f2f2f0; --v-muted:#a2a3a8; --v-done:#6e6f74;
+  --pic-deep:#ffb35c; --pic-mid:#e8901f; --pic-soft:#4a3214; --pic-line:#111213; --picb-deep:#c9adff; --picb-mid:#8b5fe0; --picb-soft:#33264f;
+  --slip:#ff7070; --slip-bg:#3a1717; --right:#5ad68a; --right-bg:#13301f;
   /* unchanged in dark */
   --black-a04:rgba(0,0,0,.04); --black-a06:rgba(0,0,0,.06); --black-a08:rgba(0,0,0,.08); --black-a12:rgba(0,0,0,.12); --black-a25:rgba(0,0,0,.25);
   --ink-a18:rgba(15,20,30,.18); --ink-a25:rgba(15,20,30,.25); --ink-a30:rgba(15,20,30,.3); --ink-a35:rgba(15,20,30,.35);

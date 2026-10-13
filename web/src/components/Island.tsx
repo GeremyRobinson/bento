@@ -137,6 +137,13 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   const [asking, setAsking] = useState(false);
   // Practice's hint stack is open: the bulb turns ink-filled while it is
   const [hinting, setHinting] = useState(false);
+  // the box is showing every grade (opened from the ring)
+  const [gradesOpen, setGradesOpen] = useState(false);
+  useEffect(() => {
+    const on = (e: Event) => setGradesOpen(!!(e as CustomEvent).detail);
+    addEventListener("bento:gradesopen", on);
+    return () => removeEventListener("bento:gradesopen", on);
+  }, []);
   useEffect(() => {
     const on = (e: Event) => setHinting(!!(e as CustomEvent).detail);
     addEventListener("bento:hintopen", on);
@@ -200,7 +207,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
       if (dist(e.touches) / d0 < 0.7) {
         d0 = 0;
         // in a lesson or test the pinch zooms out to its problems, not the contents (G 2026-10-08)
-        if (route.name === "practice" && progress.run) dispatchEvent(new Event("bento:problems")); else setOpen(start);
+        if (route.name === "practice" && progress.run) dispatchEvent(new Event("bento:problems"));
       }
     };
     document.addEventListener("touchstart", onStart, { passive: true });
@@ -245,7 +252,8 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
 
   const run = progress.run, runGrade = run ? gradeOf(lessonOfItem(currentItem(run)).grade) : null;
   // the pages about you (Me, the grown-up page, facts) keep one island at the top (Review v43 item 17)
-  const showResume = !!run && !!runGrade && !welcome && !["practice", "me", "parent", "facts"].includes(route.name);
+  // v2: an unfinished lesson waits in Today as "Carry on", so the corner stays empty (G 2026-10-13 model)
+  const showResume = false && !!run && !!runGrade && !welcome;
   // in a lesson's practice, a light bulb sits beside Settings (UI notes preview); tests have no hints
   const hintable = route.name === "practice" && !!run && run.mode !== "test" && !!currentStep(run) && !run.pick;
   // on a phone, practice's island shows the problem itself in place of the lesson's name (practice-spec §2c A)
@@ -288,13 +296,20 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
         {back
           ? <button className="iback" onClick={() => up(back.to)} aria-label={`Back to ${back.label}`}><Chevron dir="left" /></button>
           : null /* the book is the top: no step back from it, and grade changes live in All grades (Review nav #4) */}
-        <button className="iplace" onClick={() => setOpen(start === "shelf" ? "year" : start)} aria-label={`Contents. You're on ${place.title}`} aria-haspopup="dialog">
+        {/* v2: the island only says where you are; nothing opens from it (G 2026-10-13) */}
+        <div className="iplace">
           <small>{place.kicker}</small>
           {place.title === gradeOf(grade).name ? <GradeTitle grade={grade} /> : <b className={shortProblem ? "ititle" : undefined}>{place.title}</b>}
           {shortProblem && <b className="iprob"><ProblemLine lessonId={shortProblem.lessonId} problem={problemOf(shortProblem)} solved={run!.solved} /></b>}
-        </button>
+        </div>
         {place.lock
           ? <span className="ilock"><LockIcon />On this device</span>
+          : route.name === "home"
+          ? <button className={`ibat igrade${gradesOpen ? " on" : ""}`} onClick={() => dispatchEvent(new Event("bento:grades"))} aria-label={`${g.name}, ${Math.round(fill * 100)}% of lessons done. Change grade`} aria-pressed={gradesOpen}>
+              <svg viewBox="0 0 36 36"><circle className="pring-track" cx="18" cy="18" r="17" pathLength={1} />
+                <circle className={`pring-fill${fill > 0 ? "" : " empty"}`} cx="18" cy="18" r="17" pathLength={1} style={{ strokeDasharray: `${Math.min(1, fill)} 1` }} /></svg>
+              <b>{g.short}</b>
+            </button>
           : <span className={`ibat${route.name === "practice" && run?.solved ? " tick" : ""}`} aria-hidden>
               {/* the circle says which lesson this is, and its own edge is the progress (G 21:33): the ring fills round
                   from the top, the PillRing's way, instead of the circle filling up */}
@@ -309,9 +324,9 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
         )}
         {/* Settings is a page of its own (G 2026-10-06: no pop-over version); the gear goes there */}
         {/* the gear and the person open the hub at Settings and My Obento (G 2026-10-08: the nav is the hub for options) */}
-        <button className={`icon${open === "settings" || route.name === "settings" ? " on" : ""}`} onClick={() => setOpen("settings")}
-          aria-label="Settings" aria-haspopup="dialog"><SettingsIcon /></button>
-        <button className={`icon ime${open === "me" || route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={() => setOpen("me")} aria-haspopup="dialog"
+        <button className={`icon${open === "settings" || route.name === "settings" ? " on" : ""}`} onClick={() => go({ name: "settings" }, "fwd")}
+          aria-label="Settings"><SettingsIcon /></button>
+        <button className={`icon ime${open === "me" || route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={() => go({ name: "me" }, "fwd")}
           aria-label={`${YOUR_BENTO}: ${progress.streak} day streak, ${progress.xp} XP`} aria-current={route.name === "me" ? "page" : undefined}>
           <MeIcon />
         </button>
