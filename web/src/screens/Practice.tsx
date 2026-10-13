@@ -255,7 +255,7 @@ export function Practice() {
         </>}
       </section>
       {/* the working side: where you are in the steps, what you've worked out, the question, the say line, the tools, the keys */}
-      <section className={`v-panel v-solve${!s.solved && !(step && tapOnly) ? " v-keys" : ""}`} aria-label="Solve">
+      <section className={`v-panel v-solve${!s.solved && !(step && tapOnly) ? " v-keys" : ""}${s.solved ? " v-solved" : ""}`} aria-label="Solve">
         <div className="v-steps">
           {skill ? <>
             <span className="n">{SKILL_CHECK}</span>

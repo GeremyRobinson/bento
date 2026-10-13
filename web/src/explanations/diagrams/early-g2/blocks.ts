@@ -15,7 +15,7 @@ export interface PlaceBlocksSpec {
   alt: string;
 }
 
-const S = 11, F = 10 * S, RG = 5, CG = 3, COL_GAP = 30, STEP = 12;
+const S = 11, F = 10 * S, RG = 5, CG = 3, COL_GAP = 30, STEP = 12, LINE = 30;
 
 /** A three-digit number as blocks in three labelled columns; each column is ringed and counted on its beat. */
 export function buildPlaceBlocks(spec: PlaceBlocksSpec): SceneDiagram {
@@ -27,8 +27,12 @@ export function buildPlaceBlocks(spec: PlaceBlocksSpec): SceneDiagram {
   const blocksH = Math.max(stack, 10 * S);
   const base = top + blocksH;
   const contentW = [stack, tn * (S + RG) - RG, Math.ceil(o / 5) * (S + CG) - CG];
-  const names = ["hundreds", "tens", "ones"], texts = [spec.text.hundreds, spec.text.tens, spec.text.ones];
-  const widths = contentW.map((w, i) => Math.max(w, tw(names[i]!), tw(texts[i]!), 40));
+  const names = ["hundreds", "tens", "ones"];
+  // a column's line breaks before its "=", so "5 hundreds = 500" never runs past the picture's edge or into the next
+  // column on a phone, where the picture is drawn small but its labels at a readable size (Review, landing at 375×667)
+  const texts = [spec.text.hundreds, spec.text.tens, spec.text.ones].map(s => s.split(/ (?== )/));
+  const two = texts.some(l => l.length > 1);
+  const widths = contentW.map((w, i) => Math.max(w, tw(names[i]!), ...texts[i]!.map(l => tw(l)), 40));
   const xs: number[] = [];
   widths.reduce((x, w) => (xs.push(x), x + w + COL_GAP), 0);
   const items: Draft[] = [];
@@ -39,7 +43,7 @@ export function buildPlaceBlocks(spec: PlaceBlocksSpec): SceneDiagram {
     if (i) items.push(line(xs[i]! - COL_GAP / 2, 0, xs[i]! - COL_GAP / 2, base + 8, "grid"));
     // the column being counted gets a ring for its beat
     items.push(rect(xs[i]! - 8, top - 8, w + 16, blocksH + 16, "hlline", { from: colBeats[i]!, until: colBeats[i]!, enter: "fade" }, 10));
-    items.push(t(cx, base + 26, texts[i]!, `lbl p${i}`, { from: colBeats[i]!, enter: "rise", delay: 0.3 }));
+    texts[i]!.forEach((l, k) => items.push(t(cx, base + 26 + k * LINE, l, `lbl p${i}`, { from: colBeats[i]!, enter: "rise", delay: 0.3 })));
   });
   // flats from the back of the stack to the front, the front one on the same floor as the rods
   const left0 = xs[0]! + (widths[0]! - contentW[0]!) / 2;
@@ -56,7 +60,7 @@ export function buildPlaceBlocks(spec: PlaceBlocksSpec): SceneDiagram {
     items.push(...cube(left2 + col * (S + CG), base - (row + 1) * (S + CG) + CG, S, "cell c2", { enter: "pop", delay: 0.35 + 0.04 * k }));
   }
   const W = xs[2]! + widths[2]!;
-  items.push(t(W / 2, base + 64, spec.text.total, "lbl big acc", { from: beats.total, enter: "rise" }));
+  items.push(t(W / 2, base + 64 + (two ? LINE : 0), spec.text.total, "lbl big acc", { from: beats.total, enter: "rise" }));
   return frame("early-g2-blocks", items, spec.alt, 14, { w: 340 });
 }
 

@@ -281,7 +281,14 @@ html[data-line] body{background-image:none!important}
   .v-prob .math{font-size:36px}
   .v-keys .tray{gap:calc(var(--gap) / 2)}
   .v-keys>*{grid-column:1/-1}
-  .v-keys .v-steps{padding-top:0}
+  .v-steps{padding-top:0}
+  /* Watch one: the island already says "Watch one", so the panel's own label gives its room to the picture */
+  .v-lside .v-steps{display:none}
+  .v-wl li{padding:0}
+  /* solved: the step bar already reads "Solved", so the line above the green pill gives its room to the picture */
+  .v-solved .v-ask .q2{display:none}
+  /* the say line pads half a gap top and bottom, so a two-line message never pushes the picture under its floor */
+  .v-say{padding-block:calc(var(--gap) / 2)}
   .v-keys .v-tools{grid-column:2;flex-direction:column;justify-content:space-between;align-self:stretch;gap:0}
   .v-keys .v-tool{width:calc(var(--pill-size) - var(--gap));height:calc(var(--pill-size) - var(--gap))}
   .v-keys .ppad{grid-column:1;--key:calc(var(--pill-size) - var(--gap))}
