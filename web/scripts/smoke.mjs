@@ -24,7 +24,9 @@ const SIZES = [{ w: 390, h: 844, scheme: "dark" }, { w: 375, h: 667, scheme: "li
   { w: 1024, h: 768, scheme: "light" }, { w: 1280, h: 720, scheme: "dark" }];
 /** containers meant to scroll (a long list; the book's chapters, and its plan on a short landscape screen where the
  *  picture keeps its room); anything else that scrolls inside itself is cut */
-const SCROLLERS = ".fhome>.ftables, .v-box, .v-home"; // home may scroll on a phone (v2 spec H0)
+const SCROLLERS = ".fhome>.ftables, nav.slist.more, .sbento .b-chaps, .sbento .today, .sbento .tbody, .v-box, .v-home"; // home may scroll on a phone (v2 spec H0)
+/** on a phone, screens other than lessons scroll as one piece (v2 spec H0b): My Obento */
+const PHONE_SCROLLERS = ", .mine";
 const ROUTES = ["home", "learn", "practice", "facts", "me", "settings", "grown-up", "welcome"];
 
 const fails = [], notes = [];
@@ -56,10 +58,18 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
   // today's lesson, opened the way a learner would: Today's Start (a returning learner's lesson may open in practice,
   // so the lesson comes from Today's pick either way)
   await p.evaluate(() => document.querySelector(".v-today .v-go")?.click()); await p.waitForTimeout(500);
+  // (the app keeps progress in IndexedDB "bento"; the "stepmath" localStorage key is only the old save it imports)
   const lesson = await p.evaluate(() => {
     if (location.hash.startsWith("#/learn/")) return location.hash;
-    const pick = JSON.parse(localStorage.getItem("stepmath") ?? "{}").run?.key;
-    return pick ? "#/learn/" + pick : null;
+    return new Promise(done => {
+      const r = indexedDB.open("bento");
+      r.onerror = () => done(null);
+      r.onsuccess = () => {
+        const get = r.result.transaction("progress").objectStore("progress").get("main");
+        get.onerror = () => done(null);
+        get.onsuccess = () => { const id = get.result?.run?.items?.[0]?.lessonId; done(id ? "#/learn/" + id : null); };
+      };
+    });
   });
   for (const route of ROUTES) {
     const hash = route === "home" ? "#/" : route === "learn" || route === "practice" ? lesson : "#/" + route;
@@ -102,7 +112,7 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
       // (scrollHeight alone reads a few px over on a fitted lesson with nothing actually below the edge)
       const low = Math.max(0, ...[...document.querySelectorAll("#app *")].filter(shown).filter(e => !e.closest(SCROLLERS)).map(e => e.getBoundingClientRect().bottom));
       return { flags, tiny, corners, marks, scroll: Math.round(low - innerHeight) };
-    }, SCROLLERS);
+    }, SCROLLERS + (w < 600 ? PHONE_SCROLLERS : ""));
     for (const f of r.flags)
       (CLIPS.has(f.kind) ? fails : notes).push(`${at}: ${f.kind} ${f.el}${f.path ? " in " + f.path : ""}`);
     for (const t of r.tiny.slice(0, 5)) fails.push(`${at}: text under 11px ${t}`);
