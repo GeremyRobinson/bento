@@ -5,13 +5,22 @@ import { MathLine, Rich } from "../primitives/MathLine";
 import { AskLine } from "../primitives/AskLine";
 import { dressStatement, fillUnknown, hideUnknown, partsLook, type PartsLook } from "../primitives/statement";
 import { CounterRow } from "./CounterRow";
-import { formatNumber, toPlainText } from "../../curriculum/schemas/math-text";
+import { answer as answerTok, toPlainText, type MathText } from "../../curriculum/schemas/math-text";
+import { answerGroups, fillBoxes } from "../../engine/evaluation/steps";
 
-/** The problem's one answer, when it is a single number (the last step's only box); else null. */
-function finalAnswer(lesson: ReturnType<typeof requireLesson>, problem: unknown): number | null {
+/**
+ * The problem's answer as the last step's boxes show it, each box written as a found answer: one number, or a fraction
+ * or mixed number (Review g5 full pass, item 7: "= ?" must not stay once solved). Null for a tap answer or boxes that sit
+ * apart, which have no one place in the problem line.
+ */
+function finalAnswer(lesson: ReturnType<typeof requireLesson>, problem: unknown): MathText | null {
   try {
     const steps = lesson.answers(problem).steps, last = steps[steps.length - 1];
-    return last && last.slots.length === 1 && !last.choices ? last.slots[0]!.expected : null;
+    if (!last || last.choices) return null;
+    const values = Object.fromEntries(last.slots.map(s => [s.id, s.expected])), groups = answerGroups(last.prompt);
+    if (groups.length === 1) return fillBoxes(groups[0]!, values, v => answerTok("solved", v));
+    const one = last.slots.length === 1 ? last.slots[0]!.expected : null;
+    return one == null ? null : [answerTok("solved", one)];
   } catch { return null; }
 }
 
@@ -19,7 +28,7 @@ function finalAnswer(lesson: ReturnType<typeof requireLesson>, problem: unknown)
 export function plainProblem(lessonId: string, problem: unknown, solved?: boolean): string {
   const lesson = requireLesson(lessonId), shown = lesson.display(problem);
   const ask = toPlainText(shown).replace(/\s*=\s*\?\s*$/, ""), ans = solved ? finalAnswer(lesson, problem) : null;
-  return ans == null ? ask : /=/.test(ask) ? toPlainText(fillUnknown(shown, ans)) : `${ask} = ${formatNumber(ans)}`;
+  return ans == null ? ask : /=/.test(ask) ? toPlainText(fillUnknown(shown, ans)) : `${ask} = ${toPlainText(ans)}`;
 }
 
 /**

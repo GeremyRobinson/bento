@@ -1,4 +1,4 @@
-import { frac, slot, text, type MathText } from "../../curriculum/schemas/math-text";
+import { formatNumber, frac, slot, slotsIn, text, toPlainText, type MathText, type MathToken } from "../../curriculum/schemas/math-text";
 import type { AnswerModel, AnswerSlot, AnswerStep, StepCheck } from "../../curriculum/schemas/lesson";
 import { eq } from "./numbers";
 
@@ -26,6 +26,43 @@ export interface RuntimeStep {
 }
 
 export type CheckResult = StepCheck;
+
+/** The prompt's runs of answer boxes ("? ?/?" for a mixed number is one run); a run that is only an exponent box is its inside. */
+export function answerGroups(prompt: MathText): MathText[] {
+  const groups: MathText[] = [];
+  let open = false;
+  for (const tok of prompt) {
+    const boxed = slotsIn([tok]).length > 0;
+    if (boxed && open) groups[groups.length - 1]!.push(tok);
+    else if (boxed) groups.push([tok]);
+    open = boxed;
+  }
+  return groups.map(g => (g.length === 1 && (g[0]!.t === "sup" || g[0]!.t === "sub") ? g[0]!.v : g));
+}
+
+/** Boxes filled with values (a box with no value is left out), each value written by `as`. */
+export function fillBoxes(m: MathText, values: Record<string, number | null>, as: (v: number) => MathToken = v => ({ t: "num", v })): MathText {
+  return m.map((tok): MathToken => {
+    switch (tok.t) {
+      case "slot": { const v = values[tok.id]; return v == null ? text("") : as(v); }
+      case "frac": return { ...tok, n: fillBoxes(tok.n, values, as), d: fillBoxes(tok.d, values, as) };
+      case "sup": case "sub": case "sqrt": case "mark": case "muted": case "bold": case "part": return { ...tok, v: fillBoxes(tok.v, values, as) };
+      default: return tok;
+    }
+  });
+}
+
+/**
+ * An answer said the way the step shows it (Review g5 full pass, blocker 3): the step's boxes, filled with these values,
+ * read as plain text, so a mixed number reads "1 1/18" and a fraction "5/6", never "1, 1, 18". Boxes that sit apart in
+ * the prompt are listed with commas; an exponent box says its number; a choice step says its choice.
+ */
+export function sayAnswer(step: Pick<RuntimeStep, "prompt" | "choices">, values: Record<string, number | null>): string {
+  if (step.choices && values.c != null) return step.choices[values.c] ?? String(values.c);
+  const said = answerGroups(step.prompt).map(g => toPlainText(fillBoxes(g, values))).filter(Boolean);
+  if (said.length) return said.join(", ");
+  return Object.values(values).filter((x): x is number => x != null).map(formatNumber).join(", ");
+}
 
 /** Box ids the student types into (boxes expected to stay empty still exist, but aren't asked for). */
 export const answerIds = (slots: AnswerSlot[]) => slots.filter(s => s.expected != null).map(s => s.id);

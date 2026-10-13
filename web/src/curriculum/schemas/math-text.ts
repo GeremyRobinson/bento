@@ -52,6 +52,10 @@ export function formatNumber(x: number): string {
 
 const SUPS: Record<string, string> = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "−": "⁻", "-": "⁻" };
 
+/** a fraction, also one wrapped in a mark or the like */
+const isFrac = (tok: MathToken): boolean =>
+  tok.t === "frac" || ((tok.t === "mark" || tok.t === "muted" || tok.t === "bold" || tok.t === "part") && !!tok.v[0] && isFrac(tok.v[0]));
+
 /** Plain-text reading of a math line, used for narration, accessibility labels and tests. */
 export function toPlainText(m: MathText, slotText = "?"): string {
   const one = (tok: MathToken): string => {
@@ -65,12 +69,15 @@ export function toPlainText(m: MathText, slotText = "?"): string {
       case "sup": { const s = inner(tok.v); return [...s].every(c => SUPS[c]) ? [...s].map(c => SUPS[c]).join("") : `^${s}`; }
       case "sub": return inner(tok.v);
       case "sqrt": return `√${inner(tok.v)}`;
-      case "mark": case "muted": case "bold": case "part": return tok.v.map(one).join("");
+      case "mark": case "muted": case "bold": case "part": return join(tok.v);
       case "br": return "; ";
     }
   };
-  const inner = (x: MathText) => x.map(one).join("").replace(/\s+/g, " ").trim();
-  return m.map(one).join("").replace(/\s+/g, " ").trim();
+  // a whole number then a fraction is a mixed number: "3 4/9", never "34/9"
+  const join = (x: MathText) => x.map(one).reduce((out, s, i) =>
+    out + (i > 0 && isFrac(x[i]!) && /[\d?]$/.test(out) ? " " : "") + s, "");
+  const inner = (x: MathText) => join(x).replace(/\s+/g, " ").trim();
+  return join(m).replace(/\s+/g, " ").trim();
 }
 
 /** Numbers that appear in a math line, in order (answers included). */
