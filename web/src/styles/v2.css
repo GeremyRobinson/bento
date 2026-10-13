@@ -249,12 +249,15 @@ html[data-line] body{background-image:none!important}
 .v-ask .ask{display:flex;justify-content:flex-start}
 .v-ppic{overflow:hidden}
 .v-ppic .viz>*{max-height:100%}
+/* the picture's row is the box's height, not the drawing's, so a wide drawing on a short phone shrinks to fit instead of
+   being cut (smoke: g3-facts' "4 rows of 2" at 375×667) */
+.v-ppic .viz{grid-template-rows:minmax(0,1fr)}
 .v-solve .tray button:not(.ctl){background:var(--v-key);font-size:var(--fz-2xl);font-weight:var(--w-regular)}
 .v-solve .k-go{font-size:var(--fz-lg);font-weight:var(--w-bold)}
 .v-solve .tray button:not(.ctl):hover{background:var(--v-line)}
 
 /* ---- learn: watch one solved, in the same workspace ---- */
-.v-lside{display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;gap:var(--gap)}
+.v-lside{display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;grid-template-columns:minmax(0,1fr);gap:var(--gap)}
 /* v2 spec L2: the idea line 22/650, worked lines 20px (two gaps) with a 14px muted why, a 1px line between */
 .v-idea{padding:var(--sp-3) var(--text-in) 0;font-size:var(--fz-2xl);font-weight:var(--w-bold);line-height:1.2}
 .v-wl{list-style:none;margin:0;padding:0 var(--text-in);display:flex;flex-direction:column;overflow:auto;min-height:0}

@@ -1,4 +1,4 @@
-import { useCallback, useState, type CSSProperties } from "react";
+import { useCallback, useMemo, useState, type CSSProperties } from "react";
 import type { AreaDiagram, AreaRegion } from "../../explanations/diagrams/area-model/schema";
 import type { AnimationState } from "../../explanations/schema";
 import { formatNumber } from "../../curriculum/schemas/math-text";
@@ -53,6 +53,23 @@ export function areaFit(d: AreaDiagram, px: number, room = Infinity) {
 }
 
 /**
+ * The layout for a box on screen (`w` × `h` screen pixels; none yet = the plain layout). The scale and the stretch depend on
+ * each other, so they are settled here, in a fixed number of steps: the scale only ever grows, and stops once it moves less
+ * than 1%. Same box, same answer, so the picture lays out once and stays.
+ */
+export function settleFit(d: AreaDiagram, box: { w: number; h: number } | null) {
+  if (!box || box.w <= 0) return areaFit(d, 0);
+  let px = 0, fit = areaFit(d, 0);
+  for (let i = 0; i < 12; i++) {
+    const next = Math.max(px, fit.width / box.w, box.h > 0 ? fit.height / box.h : 0);
+    if (next - px <= px * 0.01) break;
+    px = next;
+    fit = areaFit(d, px, box.w * px);
+  }
+  return fit;
+}
+
+/**
  * Draws an area model exactly as its diagram model says (v2 lesson spec G1-G9). Every position, size and label comes from
  * the model; this component only decides which parts are lit and which results show at the current animation state.
  * Each column and row is labelled once, outside the picture: column labels centred over their column, row labels at the
@@ -66,15 +83,17 @@ export function AreaModelDiagram({ diagram: d, timeline, at, ask }: { diagram: A
   const lit = v.active != null ? d.regions[v.active] : undefined;
   const label = `${d.vertical.label} by ${d.horizontal.label} rectangle, split into ${d.regions
     .map(r => `${r.equation.factors[0]} by ${r.equation.factors[1]} = ${r.productLabel}`).join(" and ")}. Total ${formatNumber(d.total.value)}.`;
-  // the picture's scale (units per screen pixel); only a real change re-lays it out, so it settles in one or two passes
-  const [scale, setScale] = useState({ px: 0, room: Infinity });
-  const onPx = useCallback((px: number, room: number) => setScale(o => (Math.abs(px - o.px) > o.px * 0.03 || Math.abs(room - o.room) > o.room * 0.03 ? { px, room } : o)), []);
-  const fit = areaFit(d, scale.px, scale.room);
-  const ref = useLabelFloor(fit.width, onPx);
+  // the box the picture has on screen; its scale is worked out from the box in one go (settleFit), so laying it out never
+  // feeds back into the box (Review: React #185 on phones when the scale chased the stretch). A box that keeps moving
+  // (a picture sized by its own width) stops being followed after a few changes
+  const [box, setBox] = useState<{ w: number; h: number; n: number } | null>(null);
+  const onBox = useCallback((w: number, h: number) => setBox(o => (!o || (o.n < 6 && (Math.abs(w - o.w) > 1 || Math.abs(h - o.h) > 1)) ? { w, h, n: (o?.n ?? 0) + 1 } : o)), []);
+  const fit = useMemo(() => settleFit(d, box), [d, box]);
+  const ref = useLabelFloor(fit.width, onBox);
   const top = d.vertical.start;
   return (
     <svg ref={ref} className="am" viewBox={`0 0 ${fit.width} ${fit.height}`} preserveAspectRatio="xMinYMin meet" role="img" aria-label={label}
-      data-split={v.split} data-sum={v.sum} style={{ "--w": fit.width, "--h": fit.height } as CSSProperties}>
+      data-split={v.split} data-sum={v.sum} data-find={d.find || undefined} style={{ "--w": fit.width, "--h": fit.height } as CSSProperties}>
       <g transform={`translate(0 ${fit.dy})`} fill="none">
       {d.cols.map((c, i) => {
         // division finds the widths: a label shows once its strip is done, "?" while its width is asked (spec g5-divide)

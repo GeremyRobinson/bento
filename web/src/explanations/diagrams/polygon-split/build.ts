@@ -41,6 +41,8 @@ export function buildPolygonSplit(s: PolygonSplitSpec): SceneDiagram {
   items.push(path(arc(v, r, d0, d1), "ln2", { from: s.angleBeat, enter: "draw" }));
   const at = angleLabelAt(v, d0, d1, s.angleText.length * 10.2, r + 18, 80);
   items.push(t(at[0], at[1], s.angleText, "lbl acc", { from: s.angleBeat, enter: "rise", delay: 0.3 }));
-  s.notes.forEach((note, i) => items.push(t(R + 30, -40 + i * 32, note.text, `lbl start${note.acc ? " acc" : ""}`, { from: note.from, enter: "rise" })));
+  // the notes stand under the polygon, centred: beside it, a phone's readable label size ran them past the picture's edge
+  // (Review: the landing card's "6 × 180° = 1080°" at 390×844)
+  s.notes.forEach((note, i) => items.push(t(0, R + 44 + i * 32, note.text, `lbl${note.acc ? " acc" : ""}`, { from: note.from, enter: "rise" })));
   return frame("polygon-split", items, s.alt, 14);
 }

@@ -117,3 +117,5 @@
 #app .v-todaypic .am .region .fill,#app .v-todaypic .am .region[data-shown="true"] .fill,#app .v-todaypic .am .region[data-active="true"] .fill{fill:var(--pic-soft)}
 #app .v-todaypic .viz-svg .cell{fill:var(--pic-soft)}
 #app .v-todaypic :is(.am .region .product,.viz-svg text.res,.viz-svg text.onmid){display:none}
+/* a picture that finds its widths (division) would give the answer away with its top labels, so Today shows none (spec g5-divide) */
+#app .v-todaypic .am[data-find="true"] text.out-top{display:none}
