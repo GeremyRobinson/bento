@@ -8,6 +8,7 @@ import { ProblemLine, problemShape, ProblemView } from "../components/practice/P
 import { Diagram } from "../components/diagrams/Diagram";
 import { requireLesson } from "../curriculum/registry";
 import type { Explanation } from "../explanations/schema";
+import { formatNumber, type MathText, type MathToken } from "../curriculum/schemas/math-text";
 import { Keypad } from "../components/practice/Keypad";
 import { Cover } from "../components/Cover";
 import type { PracticeSession } from "../engine/session/types";
@@ -196,6 +197,9 @@ export function Practice() {
   // the steps: done ones with their finished line, the one being answered, the ones still to come by number only
   // (their names could give a plan-the-step choice away)
   const steps = stepsOf(s), here = s.solved ? steps.length : s.step;
+  const solo = !s.solved && steps[here] ? soloAsk(steps[here]!.prompt) : null;
+  const lastWork = s.work[s.work.length - 1]?.math ?? [], lastTok = lastWork[lastWork.length - 1];
+  const solvedAns = s.solved && lastTok?.t === "answer" ? lastTok.v : null;
   // in a test a wrong answer is shown, not solved: that step gets no tick, and the problem never says "Solved." or
   // lights its answer green (G 2026-10-08 "it shouldnt mark green or solve this is clearly wrong")
   const given = (k: number) => test && !!s.work[k]?.shown;
@@ -246,11 +250,19 @@ export function Practice() {
         <div className={`v-ask${fb?.type === "bad" && !fbAway ? " no" : ""}${s.fx === "shake" ? " shake" : ""}`}>
           {step && !s.pick ? <>
             {step.question && <span className="q"><Rich text={step.question} /></span>}
-            <div className="ask" key={`${at}-${s.mistakes.length}`}>
+            {solo ? <>
+              {/* one number to find: the question in words, then the answer pill (v2 spec P7, P8) */}
+              {!step.question && <span className="q2">What is <MathLine math={solo.expr} />?</span>}
+              <div className="v-ans" key={`${at}-${s.mistakes.length}`}>
+                <MathLine math={[solo.slot]} values={s.values} active={s.active} onSlot={id => act(st => focusSlot(st, id))} />
+              </div>
+            </> : <div className="ask" key={`${at}-${s.mistakes.length}`}>
               <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={id => act(st => focusSlot(st, id))} />
-            </div>
+            </div>}
             {step.note && <span className="note"><Rich text={step.note} /></span>}
           </> : s.pick ? <span className="q">You plan this one: tap the step that comes next.</span>
+            : solvedAns != null ? <><span className="q2">{missed ? "Here's the answer." : "Solved."}</span>
+              <div className={`v-ans ${missed ? "given" : "ok"}`}><span className="slot">{formatNumber(solvedAns)}</span></div></>
             : <div className={`ask ${missed ? "given" : "ok"}`}><MathLine math={s.work[s.work.length - 1]?.math ?? []} /></div>}
         </div>
         <div className={`v-say${say ? ` ${say.cls}` : ""}`} role="status" aria-live="polite">
@@ -312,4 +324,11 @@ export function pictureAt(ex: Explanation, ids: string[], here: number, solved: 
   const stateOf = (id: string | undefined) => ex.steps.find(e => e.answerStep === id)?.state;
   const done = ids.slice(0, here).map(stateOf).filter((x): x is number => x != null);
   return { at: Math.min(last, Math.max(0, ...done)), ask: stateOf(ids[here]) };
+}
+
+/** A step that asks for one number at the end ("13 × 10 = □") reads as a question and an answer pill, like the model. */
+export function soloAsk(prompt: MathText): { expr: MathText; slot: MathToken } | null {
+  const n = prompt.length, last = prompt[n - 1], eq = prompt[n - 2];
+  if (n < 3 || last?.t !== "slot" || eq?.t !== "op" || eq.v !== "=" || prompt.slice(0, -1).some(t => t.t === "slot" || t.t === "answer")) return null;
+  return { expr: prompt.slice(0, -2), slot: last };
 }

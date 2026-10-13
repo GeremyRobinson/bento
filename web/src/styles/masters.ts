@@ -51,7 +51,7 @@ export const MASTERS: Master[] = [
   { name: "Link button", classes: ["v-link"] },
   { name: "Tool", classes: ["v-tool", "v-tools"] },
   { name: "Workspace", classes: ["screen", "v-work", "v-home", "v-prac", "v-done", "v-today", "v-todaypic", "v-box", "v-bh", "v-sw", "v-wide", "v-yr", "v-path", "v-pstep", "v-gbig", "v-sc", "v-result", "v-recap", "v-stage", "v-prob", "v-ppic", "v-pad", "v-plist", "v-lside", "v-idea", "v-wl", "all", "pprob", "pfade"] },
-  { name: "Solve panel", classes: ["v-solve", "v-steps", "v-lines", "v-ask", "v-say", "slip", "good", "hint", "slot", "empty", "no", "ask", "tray", "ctl", "choice", "choices", "ok"] },
+  { name: "Solve panel", classes: ["v-solve", "v-ans", "q2", "v-steps", "v-lines", "v-ask", "v-say", "slip", "good", "hint", "slot", "empty", "no", "ask", "tray", "ctl", "choice", "choices", "ok"] },
   { name: "Grade ring", classes: ["ibat", "igrade", "island", "pring-track"] },
 ];
 

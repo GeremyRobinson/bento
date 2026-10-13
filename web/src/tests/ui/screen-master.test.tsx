@@ -49,7 +49,7 @@ describe("every screen renders inside the Screen master", () => {
     // nothing worked out yet, so no done lines: the step bar, the ask line, the say line, the tools, then the keys
     expect([...solve!.children].map(c => c.classList[0])).toEqual(["v-steps", "v-ask", "v-say", "v-tools", "ppad"]);
     // the answer box sits in the ask line, and the say line is there (empty) before anything is said
-    expect(solve!.querySelector(".v-ask .ask .slot")).not.toBeNull();
+    expect(solve!.querySelector(".v-ask .slot")).not.toBeNull();
     expect(solve!.querySelector(".v-say")!.textContent).toBe("");
     expect(solve!.querySelector(".ppad .tray")).not.toBeNull();
     expect(solve!.querySelector(".v-steps .v-meta")).toBeNull(); // the test rules only show in a test

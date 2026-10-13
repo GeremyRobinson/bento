@@ -76,7 +76,7 @@ export function AreaModelDiagram({ diagram: d, timeline, at, ask, turn = true }:
     });
     if (y1 > y0) setShift({ k: pic, dx: Math.round(W / 2 - (x0 + x1) / 2), dy: Math.round(H / 2 - (y0 + y1) / 2) });
   }, [pic, ref, W, H]);
-  const sh = shift.k === pic ? shift : { dx: 0, dy: 0 };
+  const sh = { dx: 0, dy: shift.k === pic ? shift.dy : 0 };
   const end = T ? "end" : "middle";
   return (
     <svg ref={ref} className="am" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMinYMin meet" role="img" aria-label={label}
@@ -86,8 +86,6 @@ export function AreaModelDiagram({ diagram: d, timeline, at, ask, turn = true }:
       <text className={`axis-label${T ? " out-top" : ""}`} {...P(T ? left - LABEL_GAP : 0, top + height / 2)} style={{ textAnchor: T ? "middle" : "start" }}>{d.vertical.label}</text>
       <text className={`whole${T ? "" : " out-top"}`} {...P(left + width / 2, top - LABEL_GAP)} style={{ textAnchor: end }}>{d.horizontal.label}</text>
       {d.regions.map(r => {
-        const below = r.labelPlacement !== "inside";
-        const lead = { a: P(r.x + r.width / 2, r.y + r.height - 6), b: P(r.x + r.width / 2, r.y + r.height + 8 + r.productRow * ROW) };
         return (
           <g key={r.index} className={`region r${r.index % 3}`} data-shown={v.shown.has(r.index) || v.sum} data-active={v.active === r.index}>
             <g className={T ? "turned" : undefined} transform={T ? "matrix(0 1 1 0 0 0)" : undefined}>
@@ -97,14 +95,8 @@ export function AreaModelDiagram({ diagram: d, timeline, at, ask, turn = true }:
               <rect className="edge" x={r.x - 1.5} y={r.y - 1.5} width={r.width + 3} height={r.height + 3} rx={5.5} />
             </g>
             <text className={`part${T ? "" : " out-top"}`} {...P(r.x + r.width / 2, T ? 0 : top - LABEL_GAP - r.partRow * ROW)} style={{ textAnchor: T ? "start" : "middle" }}>{r.partLabel}</text>
-            {!below ? (
-              <text className="product" {...P(r.x + r.width / 2, r.y + r.height / 2)}>{r.productLabel}</text>
-            ) : (
-              <g className="product">
-                <line className="leader" x1={lead.a.x} y1={lead.a.y} x2={lead.b.x} y2={lead.b.y} />
-                <text {...P(r.x + r.width / 2, r.y + r.height + 22 + r.productRow * ROW)} style={{ textAnchor: T ? "start" : "middle" }}>{r.productLabel}</text>
-              </g>
-            )}
+            {/* the part's result sits inside it, sized to the part, never outside where it could be cut (v2 spec G6) */}
+            <text className="product" {...P(r.x + r.width / 2, r.y + r.height / 2)} style={{ "--fs": Math.round(Math.max(12, Math.min(26, r.height * 0.45, r.width * 0.35))) } as CSSProperties}>{r.productLabel}</text>
           </g>
         );
       })}

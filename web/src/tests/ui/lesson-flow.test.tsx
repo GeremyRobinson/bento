@@ -16,7 +16,8 @@ function renderApp() {
 
 /** Works out the answer from the step on screen, like a student would. */
 function answerOnScreen(): string {
-  const ask = document.querySelector(".ask .mline")!.getAttribute("data-plain")!.replace(/−/g, "-");
+  const q2 = document.querySelector(".v-ask .q2 .mline");
+  const ask = (q2 ? `${q2.getAttribute("data-plain")} = blank` : document.querySelector(".ask .mline")!.getAttribute("data-plain")!).replace(/−/g, "-");
   const m = ask.match(/^(-?\d+) ([×+]) (-?\d+)(?: \+ (-?\d+))? = blank$/);
   if (!m) throw new Error(`can't read step: ${ask}`);
   const nums = [m[1], m[3], m[4]].filter(Boolean).map(Number);
