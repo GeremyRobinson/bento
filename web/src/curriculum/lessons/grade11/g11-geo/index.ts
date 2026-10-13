@@ -66,12 +66,12 @@ export function explainGeo(p: GeoProblem, model: AnswerModel): Explanation {
     }),
     timeline: beats(4),
     steps: [
-      { id: "terms", narration: `The sequence starts ${first4(p).map(f).join(", ")}. Find term ${n}.`, math: geoMath(p), state: 0 },
-      { id: "r", narration: `Divide a term by the one before it: ${f(a * r)} ÷ ${f(a)} = ${f(r)}. Each jump multiplies by ${f(r)}.`,
+      { id: "terms", narration: `Find term ${n}. Each term is the one before times the same number.`, math: geoMath(p), state: 0 },
+      { id: "r", narration: `Divide a term by the one before: each term is ${r === 2 ? "double" : "triple"} the last.`,
         math: [text("r"), op("="), num(a * r), op("÷"), num(a), op("="), num(r)], state: 1, answerStep: "r", result: r },
-      { id: "pow", narration: `From term 1 to term ${n} is ${count(n - 1, "jump")}, so multiply by ${f(r)} ${n - 1} times: ${f(r)}${supText(n - 1)} = ${f(pw)}.`,
+      { id: "pow", narration: `From term 1 to term ${n} is ${count(n - 1, "jump")}, each one × ${f(r)}.`,
         math: [num(r), sup(n - 1), op("="), num(pw)], state: 2, answerStep: "pow", result: pw },
-      { id: "term", narration: `Start at ${f(a)} and multiply: ${f(a)} × ${f(pw)} = ${f(an)}.`,
+      { id: "term", narration: "Start at the first term and multiply by the growth from all the jumps.",
         math: [...term(n), op("="), num(a), op("×"), num(pw), op("="), num(an)], state: 3, answerStep: "term", result: an },
     ],
   };

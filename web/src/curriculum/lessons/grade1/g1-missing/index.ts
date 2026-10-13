@@ -66,7 +66,7 @@ function explain(p: MissingProblem, model: AnswerModel): Explanation {
   const min = Math.max(0, a - 2), max = c + 2;
   return {
     heading: "Count up to find it",
-    idea: ["Counting up from the part you know to the total finds the missing part."],
+    idea: ["Count up from the number you know to the total."],
     statement: equation(p),
     diagram: buildNumberLine({
       min, max, labelAt: [TEN],
@@ -82,9 +82,9 @@ function explain(p: MissingProblem, model: AnswerModel): Explanation {
     // beat 0 is the bare line, so practice's first step doesn't show the hop it asks for
     timeline: beats(4),
     steps: [
-      { id: "to-ten", narration: `Start at ${a}. Hop **${up}** to get to 10.`, math: [num(a), op("+"), num(up), op("="), num(TEN)], state: 1, answerStep: "to-ten", result: up },
-      { id: "past-ten", narration: `From 10, hop **${rest}** more to get to ${c}.`, math: [num(TEN), op("+"), num(rest), op("="), num(c)], state: 2, answerStep: "past-ten", result: rest },
-      { id: "missing", narration: `The hops are ${up} and ${rest}. Together that's **${miss}**, the missing number.`, math: equation(p, [num(miss)]), state: 3, answerStep: "missing", result: miss },
+      { id: "to-ten", narration: `Start at ${a} and hop up to 10.`, math: [num(a), op("+"), num(up), op("="), num(TEN)], state: 1, answerStep: "to-ten", result: up },
+      { id: "past-ten", narration: `From 10, hop up to ${c}.`, math: [num(TEN), op("+"), num(rest), op("="), num(c)], state: 2, answerStep: "past-ten", result: rest },
+      { id: "missing", narration: "Put the hops together. That's the missing number.", math: equation(p, [num(miss)]), state: 3, answerStep: "missing", result: miss },
     ],
   };
 }
@@ -94,7 +94,7 @@ export const lesson: LessonDefinition<MissingProblem> = {
   grade: 1,
   unit: "Adding and subtracting",
   title: "Missing numbers",
-  pre: "g1-sub20",
+  pre: "g1-ten",
   reference: createMissing(8, 13, 0),
   generate: (rng, index) => {
     const a = rng.int(index < 3 ? 6 : 2, 9);

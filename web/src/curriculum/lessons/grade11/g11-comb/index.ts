@@ -59,9 +59,9 @@ export function explainCombination(p: CombinationProblem, answers: AnswerModel):
     timeline: beats(4),
     steps: [
       { id: "things", narration: `There are ${n} things to choose from, and you take ${k}.`, math: mt`C(${n}, ${k})`, state: 0 },
-      { id: "ordered", narration: `Pick one at a time: ${n} choices first, then ${n - 1}${k === 3 ? `, then ${n - 2}` : ""}. That's ${top} ordered picks.`, math: mt`${picks(p)} = ${top}`, state: 1, answerStep: "ordered", result: top },
-      { id: "orders", narration: `But the same ${k} things can come out in ${f} different orders, and they are still one group.`, math: mt`${k}! = ${f}`, state: 2, answerStep: "orders", result: f },
-      { id: "divide", narration: `So divide out the repeats: ${top} ÷ ${f} = ${ways}.`, math: mt`${top} ÷ ${f} = ${ways}`, state: 3, answerStep: "divide", result: ways },
+      { id: "ordered", narration: `Pick one at a time: ${n} choices first, then one fewer each pick.`, math: mt`${picks(p)} = ${top}`, state: 1, answerStep: "ordered", result: top },
+      { id: "orders", narration: `The same ${k} things in any order are still one group.`, math: mt`${k}! = ${f}`, state: 2, answerStep: "orders", result: f },
+      { id: "divide", narration: `Each group was counted ${f} times, so divide out the repeats.`, math: mt`${top} ÷ ${f} = ${ways}`, state: 3, answerStep: "divide", result: ways },
     ],
   };
 }
@@ -71,11 +71,12 @@ export const lesson: LessonDefinition<CombinationProblem> = withEasyStart({
   grade: 11,
   unit: "Probability",
   title: "Combinations",
+  pre: "g4-partial",
   reference: createCombination(5, 2),
   generate: (rng, i) => createCombination(rng.int(5, 12), i % 2 ? 3 : 2),
   restore: restoreCombination,
   display: p => mt`C(${p.n}, ${p.k})`,
-  displayNote: p => `How many ways to choose ${p.k} from ${p.n} when order doesn't matter?`,
+  displayNote: () => "C(n, k) counts the groups of k you can choose from n. Order doesn't matter.",
   answers: combinationAnswers,
   explain: explainCombination,
 });

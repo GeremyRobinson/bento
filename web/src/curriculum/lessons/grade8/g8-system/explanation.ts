@@ -31,11 +31,11 @@ export function explainSystem(p: SystemProblem, model: AnswerModel): Explanation
     timeline: beats(4),
     steps: [
       { id: "lines", narration: `Each equation is a line. The answer is the point on both lines.`, math: systemMath(p), state: 0 },
-      { id: "sub", narration: `y is ${k}x, so put ${k}x in place of y: x + ${k}x. One x plus ${k} x's makes ${c}x.`,
-        math: [text("x"), op("+"), num(k), text("x"), op("="), num(c), text("x"), op("="), num(s)], state: 1, answerStep: "sub", result: c },
-      { id: "x", narration: `${c}x = ${s}, so x = ${s} ÷ ${c} = ${f(x)}. That is where the lines cross, left to right.`,
+      { id: "sub", narration: `y is ${k}x, so put ${k}x in place of y, then count the x's.`,
+        math: [text("x"), op("+"), num(k), text("x"), op("="), num(s), text(", so "), num(c), text("x"), op("="), num(s)], state: 1, answerStep: "sub", result: c },
+      { id: "x", narration: `Divide by ${c} to find x: how far across the lines cross.`,
         math: [num(c), text("x"), op("="), num(s), text(", so x"), op("="), num(x)], state: 2, answerStep: "x", result: x },
-      { id: "y", narration: `Put x = ${f(x)} back into y = ${k}x: y = ${k} × ${f(x)} = ${f(y)}. The lines cross at ${pt(x, y)}.`,
+      { id: "y", narration: `Put x back into y = ${k}x. The lines cross at ${pt(x, y)}.`,
         math: [text("y"), op("="), num(k), op("×"), num(x), op("="), num(y)], state: 3, answerStep: "y", result: y },
     ],
   };

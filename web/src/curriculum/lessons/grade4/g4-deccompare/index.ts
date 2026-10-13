@@ -127,9 +127,9 @@ function explain(p: DecCompareProblem, model: AnswerModel): Explanation {
   const note = (h: number) => (w ? `${w} and ${hund(h)}` : hund(h));
   const cols = (n: number) => `${n} full ${n === 1 ? "column" : "columns"}`, sq = (n: number) => `${n} ${n === 1 ? "square" : "squares"}`;
   const say = (X: string, h: number, places: number) => places === 1
-    ? `${partIs(w, X)} ${tenths(h / 10)}: ${cols(h / 10)}, which is ${hund(h)}.`
-    : h < 10 ? `${partIs(w, X)} just ${sq(h)} of the grid: ${hund(h)}.`
-      : `${partIs(w, X)} ${cols(Math.floor(h / 10))}${h % 10 ? ` and ${sq(h % 10)} more` : ""}: ${hund(h)}.`;
+    ? `${partIs(w, X)} ${tenths(h / 10)}: ${cols(h / 10)} of the grid.`
+    : h < 10 ? `${partIs(w, X)} just ${sq(h)} of the grid.`
+      : `${partIs(w, X)} ${cols(Math.floor(h / 10))}${h % 10 ? ` and ${sq(h % 10)} more` : ""}.`;
   return {
     heading: "Count the same-size pieces",
     idea: ["Hundredths are all the same size, so more hundredths means bigger."],
@@ -146,7 +146,7 @@ function explain(p: DecCompareProblem, model: AnswerModel): Explanation {
       { id: "first", state: 1, answerStep: "first", result: A, math: [text(X), op("="), text(note(A))], narration: say(X, A, pa) },
       { id: "second", state: 2, answerStep: "second", result: B, math: [text(Y), op("="), text(note(B))], narration: say(Y, B, pb) },
       { id: "compare", state: 3, answerStep: "compare", math: [text(X), op(sign), text(Y)],
-        narration: k === 1 ? `${hund(A)} and ${hund(B)}: the same amount. ${X} = ${Y}.` : `${hund(A)} ${signName[k]} ${hund(B)}, so ${X} ${sign} ${Y}.` },
+        narration: k === 1 ? "The same number of hundredths, so they are equal." : `${hund(A)} ${signName[k]} ${hund(B)}.` },
     ],
   };
 }

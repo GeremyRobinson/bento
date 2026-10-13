@@ -65,11 +65,11 @@ export function explainBothSides(p: BothSidesEquation, model: AnswerModel) {
     alt: diagram.alt,
     steps: [
       { id: "equation", narration: `There are x's on both sides. The pans balance.`, math: equation(p) },
-      { id: "gather", narration: `Subtract ${cxText(c)} from both sides: ${f(a)} − ${f(c)} = ${f(k)}, so ${cxText(k)} + ${f(b)} = ${f(d)}.`, math: m(...cx(k), op("+"), b, op("="), d), answerStep: "gather", result: k },
-      { id: "move", narration: `Subtract ${f(b)} from both sides: ${cxText(k)} = ${f(rest)}.`, math: m(...cx(k), op("="), d, op("−"), b, op("="), rest), answerStep: "move", result: rest },
+      { id: "gather", narration: `Take ${cxText(c)} off both sides, so the x's are on one side.`, math: m(...cx(k), op("+"), b, op("="), d), answerStep: "gather", result: k },
+      { id: "move", narration: `Take ${f(b)} off both sides to leave the x's alone.`, math: m(...cx(k), op("="), d, op("−"), b, op("="), rest), answerStep: "move", result: rest },
       k > 1
-        ? { id: "divide", narration: `Divide both sides by ${f(k)}: x = ${f(x)}.`, math: m(v(), op("="), rest, op("÷"), k, op("="), x), answerStep: "divide", result: x }
-        : { id: "divide", narration: `Only one x is left, so x = ${f(x)}.`, math: m(v(), op("="), x), answerStep: "divide", result: x },
+        ? { id: "divide", narration: `Split both sides into ${f(k)} equal groups.`, math: m(v(), op("="), rest, op("÷"), k, op("="), x), answerStep: "divide", result: x }
+        : { id: "divide", narration: "Only one x is left, so that's the answer.", math: m(v(), op("="), x), answerStep: "divide", result: x },
     ],
   });
 }

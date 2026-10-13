@@ -63,8 +63,8 @@ export function explainVertex(p: VertexProblem, model: AnswerModel): Explanation
     timeline: beats(3),
     steps: [
       { id: "eq", narration: `Here a = ${f(a)} and b = ${f(b)}.`, math: vertexMath(p), state: 0 },
-      { id: "x", narration: `x = −b ÷ 2a = −(${f(b)}) ÷ ${f(2 * a)} = ${f(h)}. That is the line of symmetry.`, math: [...xPrompt(a, b), op("="), num(h)], state: 1, answerStep: "x", result: h },
-      { id: "y", narration: `Plug x = ${f(h)} back in: y = ${f(k)}. The vertex is ${pt(h, k)}.`, math: [...yPrompt(a, b, c, h), op("="), num(k)], state: 2, answerStep: "y", result: k },
+      { id: "x", narration: "Use x = −b ÷ 2a. That is the line of symmetry.", math: [...xPrompt(a, b), op("="), num(h)], state: 1, answerStep: "x", result: h },
+      { id: "y", narration: `Put x = ${f(h)} back in for the height. The vertex is ${pt(h, k)}.`, math: [...yPrompt(a, b, c, h), op("="), num(k)], state: 2, answerStep: "y", result: k },
     ],
   };
 }
@@ -74,7 +74,7 @@ export const lesson: LessonDefinition<VertexProblem> = withEasyStart({
   grade: 11,
   unit: "Functions",
   title: "Vertex of a parabola",
-  pre: "g9-solvefactor",
+  pre: "g11-evalpoly",
   reference: createVertex(1, 3, 5),
   generate: rng => generateVertex(rng),
   restore: restoreVertex,

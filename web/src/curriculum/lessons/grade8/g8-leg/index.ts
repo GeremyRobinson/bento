@@ -59,11 +59,11 @@ export function explainMissingLeg(p: MissingLegProblem, answers: AnswerModel): E
     }),
     timeline: beats(5),
     steps: [
-      { id: "triangle", narration: `A right triangle with one leg ${a} and the long side ${c}. The other leg, b, is missing.`, math: mt`a = ${a}, c = ${c}, b = ?`, state: 0 },
-      { id: "square-c", narration: `The square on the long side holds ${c} × ${c} = ${C2}.`, math: mt`${c}${sup("2")} = ${C2}`, state: 1, answerStep: "square-c", result: C2 },
-      { id: "square-a", narration: `The square on the leg of ${a} holds ${a} × ${a} = ${A2}.`, math: mt`${a}${sup("2")} = ${A2}`, state: 2, answerStep: "square-a", result: A2 },
-      { id: "subtract", narration: `The two leg squares fill the big one, so the missing square is what's left: ${C2} − ${A2} = ${B2}.`, math: mt`b${sup("2")} = ${C2} − ${A2} = ${B2}`, state: 3, answerStep: "subtract", result: B2 },
-      { id: "root", narration: `${leg} × ${leg} = ${B2}, so the missing leg is ${leg}.`, math: mt`b = √${B2} = ${leg}`, state: 4, answerStep: "root", result: leg },
+      { id: "triangle", narration: "c is the long side. The other leg, b, is missing.", math: mt`a = ${a}, c = ${c}, b = ?`, state: 0 },
+      { id: "square-c", narration: "Build a square on the long side.", math: mt`${c}${sup("2")} = ${C2}`, state: 1, answerStep: "square-c", result: C2 },
+      { id: "square-a", narration: `Build one on the leg of ${a} too.`, math: mt`${a}${sup("2")} = ${A2}`, state: 2, answerStep: "square-a", result: A2 },
+      { id: "subtract", narration: "The leg squares fill the big one, so subtract.", math: mt`b${sup("2")} = ${C2} − ${A2} = ${B2}`, state: 3, answerStep: "subtract", result: B2 },
+      { id: "root", narration: `Find the number that times itself makes ${B2}.`, math: mt`b = √${B2} = ${leg}`, state: 4, answerStep: "root", result: leg },
     ],
   };
 }

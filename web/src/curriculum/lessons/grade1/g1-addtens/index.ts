@@ -71,10 +71,10 @@ function explain({ n }: AddTensProblem, model: AnswerModel): Explanation {
     caption: `The tens go from ${t} to ${tens}. The ${countOf(o, "one")} ${verb(o, "stays", "stay")}.`,
     timeline: beats(4),
     steps: [
-      { id: "start", narration: `Here is ${n}: ${plural(t, "ten", "tens")} and ${plural(o, "one", "ones")}.`, math: [num(n)], state: 0 },
-      { id: "k", narration: `${add} is **${k}** ${noun(k, "tens rod")}. ${verb(k, "Bring it", "Bring them")} in next to the other tens.`, math: [num(add), op("="), ...count(k, "ten", "tens")], state: 1, answerStep: "k", result: k },
-      { id: "tens", narration: `Count the rods: ${t} + ${k} = **${tens}** tens.`, math: [num(t), op("+"), num(k), op("="), num(tens)], state: 2, answerStep: "tens", result: tens },
-      { id: "sum", narration: `${plural(tens, "ten", "tens")} and the same ${plural(o, "one", "ones")} make **${sum}**.`, math: [num(n), op("+"), num(add), op("="), num(sum)], state: 3, answerStep: "sum", result: sum },
+      { id: "start", narration: `It has ${plural(t, "ten", "tens")} and ${plural(o, "one", "ones")}.`, math: [num(n)], state: 0 },
+      { id: "k", narration: `Bring the new ${noun(k, "rod")} in next to the other tens.`, math: [num(add), op("="), ...count(k, "ten", "tens")], state: 1, answerStep: "k", result: k },
+      { id: "tens", narration: "Count all the tens rods.", math: [num(t), op("+"), num(k), op("="), num(tens)], state: 2, answerStep: "tens", result: tens },
+      { id: "sum", narration: `The ${countOf(o, "one")} ${verb(o, "stays", "stay")} the same.`, math: [num(n), op("+"), num(add), op("="), num(sum)], state: 3, answerStep: "sum", result: sum },
     ],
   };
 }

@@ -66,8 +66,8 @@ function explain(p: TensProblem, model: AnswerModel): Explanation {
     caption: `${count(rows, "row")} of ${TEN} make ${total}.`,
     timeline: beats(2),
     steps: [
-      { id: "rows", narration: `Count the rows: there are **${rows}**. Each row has ${count(TEN, "dot")}.`, math: [text("Rows: "), num(rows)], state: 0, answerStep: "rows", result: rows },
-      { id: "tens", narration: `Say one ten for each row: ${said.join(", ")}. That's **${total}** dots.`, math: tensUpTo(rows, num(total)), state: 1, answerStep: "tens", result: total },
+      { id: "rows", narration: `Count the rows. Each row has ${count(TEN, "dot")}.`, math: [text("Rows: "), num(rows)], state: 0, answerStep: "rows", result: rows },
+      { id: "tens", narration: "Point at each row and say one ten.", math: tensUpTo(rows, num(total)), state: 1, answerStep: "tens", result: total },
     ],
   };
 }

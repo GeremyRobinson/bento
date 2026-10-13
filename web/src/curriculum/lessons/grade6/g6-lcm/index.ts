@@ -36,7 +36,6 @@ function answers({ a, b }: LcmProblem): AnswerModel {
 function explain(p: LcmProblem, model: AnswerModel): Explanation {
   const { a, b } = p, L = expectedOf(model, "count"), k = expectedOf(model, "check");
   const big = Array.from({ length: L / b }, (_, i) => (i + 1) * b);
-  const misses = big.slice(0, -1);
   // labels on round values only, so counting in 4s to 60 doesn't crowd a phone (review v43 item 9)
   const range = fitRange([0, L], { maxTicks: 30, pad: 0, minStep: 1 });
   const hops: Hop[] = [
@@ -57,10 +56,10 @@ function explain(p: LcmProblem, model: AnswerModel): Explanation {
     caption: `Both land on ${L} first.`,
     timeline: beats(3),
     steps: [
-      { id: "count-big", narration: `Count by ${b}s: ${big.join(", ")}.`, math: big.flatMap((v, i) => (i ? [text(", "), num(v)] : [num(v)])), state: 0 },
-      { id: "count", narration: misses.length ? `${a} doesn't go into ${misses.join(" or ")}, but it does go into ${L}: counting by ${a}s lands there too.` : `${a} goes into ${L} already: counting by ${a}s lands there too.`,
+      { id: "count-big", narration: `Count by ${b}s, the bigger number.`, math: big.flatMap((v, i) => (i ? [text(", "), num(v)] : [num(v)])), state: 0 },
+      { id: "count", narration: `${L} is the first one that ${a} goes into.`,
         math: [text("LCM("), num(a), text(", "), num(b), text(")"), op("="), num(L)], state: 1, answerStep: "count", result: L },
-      { id: "check", narration: `Check it: ${L} ÷ ${a} = ${k}. It comes out even.`, math: [num(L), op("÷"), num(a), op("="), num(k)], state: 2, answerStep: "check", result: k },
+      { id: "check", narration: `Check with ${a}: it comes out even.`, math: [num(L), op("÷"), num(a), op("="), num(k)], state: 2, answerStep: "check", result: k },
     ],
   };
 }
@@ -70,6 +69,7 @@ export const lesson: LessonDefinition<LcmProblem> = {
   grade: 6,
   unit: "Number system",
   title: "Least common multiple",
+  pre: "g4-factors",
   reference: createLcm(4, 6), // LCM(4, 6) = 12, the current app's example
   generate: rng => {
     let a: number, b: number;

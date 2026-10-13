@@ -73,9 +73,9 @@ function explain(_p: TensOnesProblem, model: AnswerModel): Explanation {
     caption: `${plural(t, "ten", "tens")} and ${plural(o, "one", "ones")} make ${n}.`,
     timeline: beats(3),
     steps: [
-      { id: "tens", narration: `Count the long rods by tens: ${byTen.join(", ")}. That's **${t}** tens.`, math: count(t, "ten", "tens"), state: 0, answerStep: "tens", result: t },
-      { id: "ones", narration: o ? `Now the little cubes: **${o}** ones.` : "There are no little cubes on their own: **0** ones.", math: count(o, "one", "ones"), state: 1, answerStep: "ones", result: o },
-      { id: "number", narration: `${t * 10} and ${o} more makes **${n}**. The tens digit is ${t}, the ones digit is ${o}.`, math: [num(t * 10), op("+"), num(o), op("="), num(n)], state: 2, answerStep: "number", result: n },
+      { id: "tens", narration: `Count the long rods by tens: ${byTen.join(", ")}.`, math: count(t, "ten", "tens"), state: 0, answerStep: "tens", result: t },
+      { id: "ones", narration: o ? "Now count the little cubes on their own." : "No little cubes are on their own.", math: count(o, "one", "ones"), state: 1, answerStep: "ones", result: o },
+      { id: "number", narration: `The tens digit is ${t}, the ones digit is ${o}.`, math: [num(t * 10), op("+"), num(o), op("="), num(n)], state: 2, answerStep: "number", result: n },
     ],
   };
 }

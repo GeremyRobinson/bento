@@ -101,13 +101,13 @@ function explain(p: FactorsProblem, model: AnswerModel): Explanation {
     caption: `${count(n, "square")}, in every rectangle they can make.`,
     timeline: beats(5),
     steps: [
-      { id: "start", state: 0, math: [num(1), op("×"), num(n), op("="), num(n)], narration: `Every number makes a long row: 1 × ${n}. So 1 and ${n} are factors.` },
+      { id: "start", state: 0, math: [num(1), op("×"), num(n), op("="), num(n)], narration: `Every number makes one long row, so 1 and ${n} are factors.` },
       { id: "pair1", state: 1, answerStep: "pair1", result: b1, math: [num(a1), op("×"), num(b1), op("="), num(n)], narration: `Put the squares in ${count(a1, "row")}: ${b1} in each. ${a1} and ${b1} are a pair.` },
       { id: "pair2", state: 2, answerStep: "pair2", result: b2, math: [num(a2), op("×"), num(b2), op("="), num(n)],
         narration: a2 === b2 ? `${count(a2, "row")} of ${b2} make a square. ${a2} pairs with itself.` : `In ${count(a2, "row")} there are ${b2} in each. ${a2} and ${b2} are a pair.` },
       { id: "multiple", state: 3, answerStep: "multiple", math: [text(r ? `${n} = ${t} × ${q} + ${r}` : `${n} = ${t} × ${q}`)],
         narration: r ? `Try ${count(t, "row")}: ${r} ${r === 1 ? "square is" : "squares are"} left over. ${n} is not a multiple of ${t}.` : `Try ${count(t, "row")}: they come out even, ${q} in each. ${n} is a multiple of ${t}.` },
-      { id: "count", state: 4, answerStep: "count", result: total, math: [text(all.join(", "))], narration: `List both numbers of every pair: ${all.join(", ")}. That's ${total} factors.` },
+      { id: "count", state: 4, answerStep: "count", result: total, math: [text(all.join(", "))], narration: `List both numbers of every pair. That's ${count(total, "factor")}.` },
     ],
   };
 }

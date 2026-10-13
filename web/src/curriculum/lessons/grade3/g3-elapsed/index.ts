@@ -90,7 +90,7 @@ function answers(p: ElapsedProblem): AnswerModel {
         ans: { h: th, m: tm },
         wrong: [
           ...(m1 + m3 >= 60 ? [
-            [{ h, m: m1 + m3 }, "Kept 60 or more minutes", `${count(m1 + m3, "minute")} is more than an hour. Trade 60 of them for 1 more hour.`],
+            [{ h, m: m1 + m3 }, "Kept 60 or more minutes", `${count(m1 + m3, "minute")} is ${m1 + m3 === 60 ? "a whole hour" : "more than an hour"}. Trade 60 of them for 1 more hour.`],
             [{ h, m: m1 + m3 - 60 }, "Lost the traded hour", `You traded 60 minutes for an hour. Add that hour to the ${hrs(h)}.`],
           ] as [Record<string, number>, string, string][] : []),
           [{ h, m: Math.abs(m3 - m1) }, "Subtracted the minutes", `Add the minutes before and after: ${m1} + ${m3}.`],
@@ -126,13 +126,13 @@ function explain(p: ElapsedProblem, model: AnswerModel): Explanation {
     timeline: beats(5),
     steps: [
       { id: "to-hour", state: 1, answerStep: "to-hour", result: m1, math: [text(`${clock(start)} → ${clock(H1 * 60)}: `), num(m1), text(" min")],
-        narration: `First jump to the next o'clock: ${clock(start)} to ${clock(H1 * 60)} is ${count(m1, "minute")}.` },
+        narration: "First jump up to the next o'clock." },
       { id: "hours", state: 2, answerStep: "hours", result: h, math: [text(`${clock(H1 * 60)} → ${clock(H2 * 60)}: `), num(h), text(" h")],
-        narration: `Then whole hours: ${clock(H1 * 60)} to ${clock(H2 * 60)} is ${hrs(h)}.${H1 <= 12 && H2 > 12 ? " After 12 comes 1." : ""}` },
+        narration: `Then count the whole hours.${H1 <= 12 && H2 > 12 ? " After 12 comes 1." : ""}` },
       { id: "after", state: 3, answerStep: "after", result: m3, math: [text(`${clock(H2 * 60)} → ${clock(end)}: `), num(m3), text(" min")],
-        narration: `Last, the minutes past the hour: ${clock(H2 * 60)} to ${clock(end)} is ${count(m3, "minute")}.` },
+        narration: "Last, count the minutes past the hour." },
       { id: "total", state: 4, answerStep: "total", result: th, math: [num(th), text(" h "), num(tm), text(" min")],
-        narration: m1 + m3 >= 60 ? `${m1} + ${m3} = ${count(m1 + m3, "minute")}, which is 1 hour and ${count(m1 + m3 - 60, "minute")}. In all: ${totalText}.` : `${hrs(h)} and ${m1} + ${m3} = ${count(m1 + m3, "minute")}. In all: ${totalText}.` },
+        narration: m1 + m3 >= 60 ? `${count(m1 + m3, "minute")} is ${m1 + m3 === 60 ? "a whole hour" : "more than an hour"}, so trade 60 minutes for 1 hour.` : "Add the whole hours, then the minutes before and after." },
     ],
   };
 }

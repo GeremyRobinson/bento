@@ -74,10 +74,10 @@ function explain(p: AreaProblem, model: AnswerModel): Explanation {
     caption: `A rectangle made of unit squares.`,
     timeline: beats(4),
     steps: [
-      { id: "row", state: 1, answerStep: "row", result: L, math: [text("one row "), op("="), num(L)], narration: `Count across the top row: ${count(L, "square")}.` },
-      { id: "rows", state: 2, answerStep: "rows", result: W, math: [text("rows "), op("="), num(W)], narration: `Count down the side: ${count(W, "row")}, each just like the first.` },
+      { id: "row", state: 1, answerStep: "row", result: L, math: [text("one row "), op("="), num(L)], narration: "Count across the top row, one square at a time." },
+      { id: "rows", state: 2, answerStep: "rows", result: W, math: [text("rows "), op("="), num(W)], narration: "Count down the side. Every row is just like the first." },
       { id: "area", state: 3, answerStep: "area", result: A, math: [num(W), op("×"), num(L), op("="), num(A)],
-        narration: `${count(W, "row")} of ${count(L, "square")} is ${W} × ${L} = ${A}. The area is ${A} square units.` },
+        narration: `${count(W, "row")} of ${count(L, "square")}, so multiply. Area is in square units.` },
     ],
   };
 }
@@ -92,7 +92,7 @@ export const lesson: LessonDefinition<AreaProblem> = {
   generate: generateArea,
   restore: raw => restoreVia(raw, ["l", "w"] as const, v => createArea(v.l, v.w)),
   display: () => [text("area "), op("="), text("?")],
-  displayNote: () => "Each square is one square unit. What is the area?",
+  displayNote: () => "Each square is one square unit.",
   picture: p => buildSquares({ cols: p.l, rows: p.w, alt: `A rectangle of unit squares, ${p.l} across and ${p.w} down.` }),
   answers,
   explain,

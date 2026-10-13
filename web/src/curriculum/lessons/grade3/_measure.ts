@@ -85,4 +85,14 @@ export function solveStep(o: Op, a: number, b: number, unit: string): AnswerStep
   });
 }
 
+/** Watch one's line for the solve step: what the operation does, leaving the sum to the math line */
+export function solveSaid(o: number, a: number, b: number, unit: string): string {
+  switch (OPS[o]) {
+    case "+": return "Put the two amounts together.";
+    case "−": return "Take that amount away.";
+    case "×": return `${a} equal groups of ${withCommas(b)} ${unit}.`;
+    default: return `Share it into ${b} equal parts.`;
+  }
+}
+
 export { aOrAn };

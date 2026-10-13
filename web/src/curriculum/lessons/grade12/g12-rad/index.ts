@@ -56,8 +56,8 @@ export function explainDegreesToRadians({ t }: DegreesToRadiansProblem, answers:
     timeline: beats(3),
     steps: [
       { id: "half-turn", narration: `A half turn is 180°, which is π radians. Write ${t}° as a share of it.`, math: mt`${t}° × ${frac("π", 180)}`, state: 0 },
-      { id: "gcf", narration: `The biggest number that divides both ${t} and 180 is ${g}. Cut the half turn into ${g}° pieces: there are ${180 / g}.`, math: mt`180 ÷ ${g} = ${180 / g}`, state: 1, answerStep: "gcf", result: g },
-      { id: "radians", narration: `${t}° is ${n} of those pieces, so it is ${n}/${d} of π: ${piText(n, d)}.`, math: mt`${frac(t, 180)} = ${frac(n, d)}`, state: 2, answerStep: "radians", result: n },
+      { id: "gcf", narration: `${g} is the biggest number dividing ${t} and 180, so use ${g}° pieces.`, math: mt`180 ÷ ${g} = ${180 / g}`, state: 1, answerStep: "gcf", result: g },
+      { id: "radians", narration: `${t}° is ${count(n, "piece")}, out of ${d} in a half turn: ${piText(n, d)}.`, math: mt`${frac(t, 180)} = ${frac(n, d)}`, state: 2, answerStep: "radians", result: n },
     ],
   };
 }
@@ -67,6 +67,7 @@ export const lesson: LessonDefinition<DegreesToRadiansProblem> = withEasyStart({
   grade: 12,
   unit: "Trigonometry",
   title: "Degrees to radians",
+  pre: "g10-arc",
   reference: createDegreesToRadians(120),
   generate: rng => createDegreesToRadians(rng.pick(RADIAN_ANGLES)),
   restore: restoreDegreesToRadians,

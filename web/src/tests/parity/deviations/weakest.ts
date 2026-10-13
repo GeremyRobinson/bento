@@ -24,6 +24,7 @@ export const deviations: Record<string, Partial<Record<string, string>>> = {
     checks: SLIPS,
   },
   "g6-expo": {
+    pre: "g5-order: this lesson adds a new first rung to the order of operations (curriculum/specs/v2/grade6.md §1)",
     "added:count": "a first step, \"how many 2s are multiplied together?\", for what an exponent means (fixes-02 draft)",
     prompt: "the add step shows the whole expression aⁿ + b × c, so the add-before-multiply slip can happen there",
     work: "the add step's worked line is the whole expression with its answer",
@@ -55,6 +56,7 @@ export const deviations: Record<string, Partial<Record<string, string>>> = {
     checks: `${SLIPS}: g4-convert's mix-ups ("Used 10", "Mixed up a day" …) and "Divided instead of multiplied"`,
   },
   "g4-angles": {
+    note: "v2 shows the problem once: the note and the display's \"= 90°\" moved into a lead, which no longer gives away the first step (curriculum/specs/v2/grade4.md §2)",
     unit: "\"Lines and shapes\", right after g4-lines, which first says what an angle is (fixes-02 Order 1)",
     pre: "g4-lines (fixes-02 Order 1)",
     prompt: "the missing part is asked as a° + [ ]° = T°, so the step doesn't hand over the operation (fixes-02 draft)",

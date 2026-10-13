@@ -11,6 +11,7 @@ export const lesson: LessonDefinition<SlopeProblem> = withEasyStart({
   grade: 8,
   unit: "Functions and slope",
   title: "Slope from two points",
+  pre: "g7-subint",
   reference: createSlope(1, 2, 3, 8),
   generate: rng => generateSlope(rng),
   restore: restoreSlope,

@@ -59,9 +59,9 @@ function explain(p: UnitRateProblem, model: AnswerModel): Explanation {
     timeline: beats(3),
     steps: [
       { id: "one", state: 1, answerStep: "one", result: u, math: [...$([num(u * n)]), op("÷"), num(n), op("="), ...$([num(u)])],
-        narration: `Share $${u * n} over ${n} ${item}: one costs $${u}.` },
+        narration: `Share the cost equally over the ${n} ${item}.` },
       { id: "many", state: 2, answerStep: "many", result: total, math: [num(m), op("×"), ...$([num(u)]), op("="), ...$([num(total)])],
-        narration: `${m} of them at $${u} each: ${m} × $${u} = $${total}.` },
+        narration: `Then take ${m} of them at that price.` },
     ],
   };
 }
@@ -71,7 +71,7 @@ export const lesson: LessonDefinition<UnitRateProblem> = {
   grade: 6,
   unit: "Ratios and percents",
   title: "Unit rates",
-  pre: "g5-divide",
+  pre: "g4-divide",
   // the current app's card and picture: 4 apples cost $12, so 7 apples cost $21
   reference: createUnitRate(3, 4, 7, "apples"),
   generate: (rng, index) => generateUnitRate(rng, index),

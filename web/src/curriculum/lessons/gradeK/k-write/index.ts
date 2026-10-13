@@ -83,11 +83,11 @@ function explain(p: WriteProblem, model: AnswerModel): Explanation {
     caption: `${count(n, "dot")} is written ${n}.`,
     timeline: beats(3),
     steps: [
-      { id: "count", narration: n === 0 ? "Look for dots. There are none. None is **0**." : `Count the dots: ${countUp(1, n)}. That's **${c}**.`,
+      { id: "count", narration: n === 0 ? "Look for dots. There are none. None is **0**." : `Count the dots: ${countUp(1, n)}.`,
         math: [text("Dots: "), num(c)], state: 0, answerStep: "count", result: c },
       { id: "write", narration: n === 20 ? "Write 20: a 2 for the two tens, then a 0 for no ones." : n > 10 ? `Write ${n}: first the 1 for the ten, then ${n - 10} for the ones.` : `Write ${n}. Start at the dot and follow each stroke.`,
         math: [text("It's written "), num(n)], state: 1, answerStep: "write", result: right },
-      { id: "done", narration: `${count(n, "dot")}. The number is **${n}**.`, math: [num(n)], state: 2 },
+      { id: "done", narration: "The number tells how many dots.", math: [num(n)], state: 2 },
     ],
   };
 }

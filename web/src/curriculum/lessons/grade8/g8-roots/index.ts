@@ -30,10 +30,10 @@ export function rootAnswers(p: RootProblem): AnswerModel {
   const { cube, n } = p, k = cube ? 3 : 2, v = power(p);
   return {
     steps: [
-      ns({ id: "root", label: "Find the root", question: `What number times itself${cube ? ", three times," : ""} makes ${v}?`, prompt: x => [...radical(p), op("="), x], ans: n,
-        hint: cube ? `Try a number times itself three times, and get closer: is it more or less than ${v}?` : `Try a number times itself, and get closer: is it more or less than ${v}?`,
+      ns({ id: "root", label: "Find the root", question: `What number times itself${cube ? " times itself" : ""} makes ${v}?`, prompt: x => [...radical(p), op("="), x], ans: n,
+        hint: cube ? `Try a number times itself times itself, and get closer: is it more or less than ${v}?` : `Try a number times itself, and get closer: is it more or less than ${v}?`,
         wrong: [[v / k, "The root isn't a division", `${cube ? "Cube" : "Square"} root means the number that multiplies by itself.`]] }),
-      ns({ id: "check", label: "Check it", prompt: x => [...Array.from({ length: k }, (_, i) => (i ? [op("×"), num(n)] : [num(n)])).flat(), op("="), x], ans: v, hint: `Multiply ${n} by itself${cube ? " three times" : ""}: you should get back the number under the root.`,
+      ns({ id: "check", label: "Check it", prompt: x => [...Array.from({ length: k }, (_, i) => (i ? [op("×"), num(n)] : [num(n)])).flat(), op("="), x], ans: v, hint: cube ? `Multiply three ${n}s together: you should get back the number under the root.` : `Multiply ${n} by itself: you should get back the number under the root.`,
         wrong: [[n * k, `Multiplied by ${k}`, `${cube ? "Cubed" : "Squared"} means ${n} times itself, not ${n} × ${k}.`]] }),
     ],
     finalParts: [0],
@@ -68,7 +68,7 @@ export function explainRoot(p: RootProblem, answers: AnswerModel): Explanation {
     timeline: beats(3),
     steps: [
       { id: "root", narration: cube ? `${count(v, "cube")} make a cube with ${n} along each edge.` : `${count(v, "square")} make a square with ${n} along each side.`, math: [...radical(p), op("="), num(n)], state: 1, answerStep: "root", result: n },
-      { id: "check", narration: `Check it: ${times} = ${check}.`, math: [...times.split(" × ").flatMap((t, i) => (i ? [op("×"), num(Number(t))] : [num(Number(t))])), op("="), num(check)], state: 2, answerStep: "check", result: check },
+      { id: "check", narration: cube ? `Check it: the edge times itself times itself gives back ${v}.` : `Check it: the side times itself gives back ${v}.`, math: [...times.split(" × ").flatMap((t, i) => (i ? [op("×"), num(Number(t))] : [num(Number(t))])), op("="), num(check)], state: 2, answerStep: "check", result: check },
     ],
   };
 }
@@ -78,6 +78,7 @@ export const lesson: LessonDefinition<RootProblem> = withEasyStart({
   grade: 8,
   unit: "Exponents and roots",
   title: "Square and cube roots",
+  pre: "g6-expo",
   reference: createRoot(false, 9),
   generate: rng => generateRoot(rng),
   restore: raw => {

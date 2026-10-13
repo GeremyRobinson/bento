@@ -28,12 +28,12 @@ export function explainSlope(p: SlopeProblem, model: AnswerModel): Explanation {
     }),
     timeline: beats(4),
     steps: [
-      { id: "plot", narration: `Plot the two points. The second one is ${pt(x2, y2)}.`, math: statement, state: 0 },
-      { id: "rise", narration: `From the first point to the second, y goes ${up ? "up" : "down"} ${f(Math.abs(rise))}: the rise is ${f(rise)}.`,
+      { id: "plot", narration: "Plot both points, then go from the first to the second.", math: statement, state: 0 },
+      { id: "rise", narration: `y goes ${up ? "up" : "down"} from the first point to the second: that's the rise.`,
         math: [num(y2), op("−"), ...P(y1), op("="), num(rise)], state: 1, answerStep: "rise", result: rise },
-      { id: "run", narration: `In the same order, x goes across ${f(run)}: the run is ${f(run)}.`,
+      { id: "run", narration: "In the same order, x goes across: that's the run.",
         math: [num(x2), op("−"), ...P(x1), op("="), num(run)], state: 2, answerStep: "run", result: run },
-      { id: "slope", narration: `Rise over run: ${f(rise)} ÷ ${f(run)} = ${f(m)}. The line goes ${up ? "up" : "down"} ${f(Math.abs(m))} for every 1 across.`,
+      { id: "slope", narration: `Rise over run: the line goes ${up ? "up" : "down"} ${f(Math.abs(m))} for every 1 across.`,
         math: [text("m"), op("="), num(rise), op("÷"), num(run), op("="), num(m)], state: 3, answerStep: "slope", result: m },
     ],
   };

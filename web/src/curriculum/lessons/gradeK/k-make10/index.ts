@@ -59,9 +59,9 @@ function explain(p: MakeTenProblem, model: AnswerModel): Explanation {
     caption: `${have} and ${need} make ${TEN}.`,
     timeline: beats(3),
     steps: [
-      { id: "have", narration: `Count the dots: ${countUp(1, have)}. There ${have === 1 ? "is" : "are"} **${have}**.`, math: [text("Dots: "), num(have)], state: 0, answerStep: "have", result: have },
-      { id: "need", narration: `Put a dot in each empty box and count them: ${countUp(1, need)}. That's **${need}** more.`, math: [num(have), op("+"), num(need)], state: 1, answerStep: "need", result: need },
-      { id: "ten", narration: `Now the frame is full. ${have} and ${need} make ${TEN}.`, math: [num(have), op("+"), num(need), op("="), num(TEN)], state: 2 },
+      { id: "have", narration: `Count the dots: ${countUp(1, have)}.`, math: [text("Dots: "), num(have)], state: 0, answerStep: "have", result: have },
+      { id: "need", narration: `Put a dot in each empty box and count them: ${countUp(1, need)}.`, math: [num(have), op("+"), num(need)], state: 1, answerStep: "need", result: need },
+      { id: "ten", narration: "Now every box has a dot, so the frame is full.", math: [num(have), op("+"), num(need), op("="), num(TEN)], state: 2 },
     ],
   };
 }

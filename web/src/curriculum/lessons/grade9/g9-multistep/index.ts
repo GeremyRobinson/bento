@@ -51,15 +51,15 @@ export function explainMultiStep(p: MultiStepEquation, model: AnswerModel) {
   ], `A balance with ${count(f(a), "group")} of x and ${f(b)} against ${f(c)}. That is ${f(a)} x's and ${f(ab)}; taking ${f(ab)} off both pans and splitting into ${f(a)} shows x = ${f(x)}.`);
   return beatExplanation({
     heading: "Distribute, then undo",
-    idea: ["Both sides have to stay equal, so each step is undone on both sides."],
+    idea: ["Whatever you do to one side, do to the other, so the sides stay equal."],
     statement: equation(p),
     diagram,
     alt: diagram.alt,
     steps: [
-      { id: "equation", narration: `${count(f(a), "group")} of x + ${f(b)} balance ${f(c)}.`, math: equation(p) },
-      { id: "distribute", narration: `Distribute: ${f(a)} × x and ${f(a)} × ${f(b)} = ${f(ab)}, so ${f(a)}x + ${f(ab)} = ${f(c)}.`, math: m(a, v(), op("+"), ab, op("="), c), answerStep: "distribute", result: ab },
-      { id: "subtract", narration: `Subtract ${f(ab)} from both sides: ${f(a)}x = ${f(ax)}.`, math: m(a, v(), op("="), c, op("−"), ab, op("="), ax), answerStep: "subtract", result: ax },
-      { id: "divide", narration: `Divide by ${f(a)}: x = ${f(x)}.`, math: m(v(), op("="), ax, op("÷"), a, op("="), x), answerStep: "divide", result: x },
+      { id: "equation", narration: `Each of the ${f(a)} groups holds one x and ${f(b)} more.`, math: equation(p) },
+      { id: "distribute", narration: `Multiply ${f(a)} by both x and ${f(b)}.`, math: m(a, v(), op("+"), ab, op("="), c), answerStep: "distribute", result: ab },
+      { id: "subtract", narration: `Undo the + ${f(ab)} on both sides.`, math: m(a, v(), op("="), c, op("−"), ab, op("="), ax), answerStep: "subtract", result: ax },
+      { id: "divide", narration: `Split both sides into ${f(a)} equal groups.`, math: m(v(), op("="), ax, op("÷"), a, op("="), x), answerStep: "divide", result: x },
     ],
   });
 }
@@ -69,7 +69,7 @@ export const lesson: LessonDefinition<MultiStepEquation> = withEasyStart({
   grade: 9,
   unit: "Equations",
   title: "Multi-step equations",
-  pre: "g8-both",
+  pre: "g7-eq",
   reference: createMultiStep(3, 4, 5),
   generate: rng => generateMultiStep(rng),
   restore: restoreMultiStep,

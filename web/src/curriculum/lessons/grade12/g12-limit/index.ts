@@ -67,9 +67,9 @@ export function explainLimit(p: LimitProblem, model: AnswerModel): Explanation {
     timeline: beats(3),
     steps: [
       { id: "zero", narration: `At x = ${f(a)} the top and the bottom are both 0. 0 ÷ 0 means: simplify first.`, math: limitMath(p), state: 0 },
-      { id: "b", narration: `Factor the top: ${polyText(top(p))} = ${factor(a)}(x ${signed(b)}). Cancel ${factor(a)}, leaving x ${signed(b)}, a line with a hole at x = ${f(a)}.`,
+      { id: "b", narration: `${factor(a)} is a factor of the top, so cancel it from both.`,
         math: [text(`${factor(a)}(x ${signed(b)})`)], state: 1, answerStep: "b", result: b },
-      { id: "lim", narration: `Plug in: ${f(a)} ${signed(b)} = ${f(L)}. The line heads to ${f(L)}, so the limit is ${f(L)}.`,
+      { id: "lim", narration: `Put x = ${f(a)} into what's left: the line heads there, past the hole.`,
         math: [num(a), op("+"), ...P(b), op("="), num(L)], state: 2, answerStep: "lim", result: L },
     ],
   };

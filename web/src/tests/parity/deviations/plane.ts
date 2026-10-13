@@ -1,11 +1,13 @@
 // Coordinate plane lessons: where the rebuild intentionally differs from the current app, and why.
 import { CHECKS, EXPLAIN, HINT } from "./fixes02-8-12";
 export const deviations: Record<string, Partial<Record<string, string>>> = {
-  "g11-seq": { hint: HINT, explain: EXPLAIN, checks: `${CHECKS}. Also: the off-by-one slip says \"22 minus 1, which is 21 jumps\" instead of \"22 − 1 jumps\", which read aloud as \"1 jumps\" (Curriculum fixes-01, 2026-10-03)` },
+  "g10-mid": { pre: "g6-mean: the heading is \"Average each coordinate\" and each step is the mean of two numbers (curriculum/specs/v2/grade10.md §1)" },
+  "g11-seq": { pre: "g8-func: term n is a rule in n, start plus a step times a count, like f(x) = mx + b (curriculum/specs/v2/grade11.md §1)", hint: HINT, explain: EXPLAIN, checks: `${CHECKS}. Also: the off-by-one slip says \"22 minus 1, which is 21 jumps\" instead of \"22 − 1 jumps\", which read aloud as \"1 jumps\" (Curriculum fixes-01, 2026-10-03)` },
   "g11-geo": { pre: "g11-seq: geometric sequences multiply where arithmetic ones (g11-seq) add; Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on", hint: HINT, explain: EXPLAIN, checks: `${CHECKS}. Also: the off-by-one slip says \"22 minus 1, which is 21 jumps\" instead of \"22 − 1 jumps\", which read aloud as \"1 jumps\" (Curriculum fixes-01, 2026-10-03)` },
   "g12-series": { pre: "g11-seq: the series adds the terms of an arithmetic sequence (g11-seq); Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on", hint: HINT, explain: EXPLAIN, checks: `${CHECKS}. Also: the off-by-one slip says \"22 minus 1, which is 21 jumps\" instead of \"22 − 1 jumps\", which read aloud as \"1 jumps\" (Curriculum fixes-01, 2026-10-03)` },
   "g12-limit": { work: "K–12 lesson check (Review 2026-10-07): worked line is signed (\"(x − 3)\", not \"(x + −3)\")", pre: "g9-factor: the hole cancels by factoring (g9-factor); Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on", hint: `plug into x − 3, not x + −3 (Curriculum fixes-01, 2026-10-03); then ${HINT}`, explain: EXPLAIN, checks: `the same hint text appears in the slip message; ${CHECKS}` },
   "g12-defint": {
+    prompt: "when c = 1 the top-minus-bottom line drops \"1 ·\" (3³ − 0³), matching the antiderivative written as x³ (curriculum/specs/v2/grade12.md §4, Review 2026-10-13)",
     work: "K–12 lesson check (Review 2026-10-07): no coefficient 1 (\"x³\", not \"1x³\")",
     pre: "g12-anti: the area is an antiderivative (g12-anti) evaluated at the ends; Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on",
     hint: HINT,

@@ -60,8 +60,8 @@ export function explainGcf(p: GcfProblem, answers: AnswerModel): Explanation {
     caption: `${A} and ${B} are both ${count(g, "row")} tall: ${count(g, "row")} of ${fm} and ${count(g, "row")} of ${fn}.`,
     timeline: beats(3),
     steps: [
-      { id: "gcf", narration: `${g} is the biggest number that divides both ${A} and ${B}.`, math: [text("GCF("), num(A), text(", "), num(B), text(")"), op("="), num(g)], state: 1, answerStep: "gcf", result: g },
-      { id: "factor", narration: `${A} ÷ ${g} = ${fm} and ${B} ÷ ${g} = ${fn}, so ${A} + ${B} = ${g}(${fm} + ${fn}).`, math: [num(A), op("+"), num(B), op("="), num(g), text("("), num(fm), op("+"), num(fn), text(")")], state: 2, answerStep: "factor", result: fm },
+      { id: "gcf", narration: "Try the smaller number's factors, biggest first, until one divides both.", math: [text("GCF("), num(A), text(", "), num(B), text(")"), op("="), num(g)], state: 1, answerStep: "gcf", result: g },
+      { id: "factor", narration: `Both rectangles are ${g} tall, so divide each by ${g} for its width.`, math: [num(A), op("+"), num(B), op("="), num(g), text("("), num(fm), op("+"), num(fn), text(")")], state: 2, answerStep: "factor", result: fm },
     ],
   };
 }

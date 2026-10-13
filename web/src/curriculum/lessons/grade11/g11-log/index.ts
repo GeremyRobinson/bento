@@ -52,7 +52,7 @@ export function logAnswers({ b, m, k }: LogProblem): AnswerModel {
 
 export function explainLog(p: LogProblem, model: AnswerModel): Explanation {
   const { b } = p, m = expected(model, "m"), k = expected(model, "k"), s = expected(model, "sum");
-  const hi = Math.max(m, k), lo = Math.min(m, k);
+  const hi = Math.max(m, k);
   return {
     heading: "A log is an exponent",
     idea: ["A log is an exponent: the power of the base that makes the number."],
@@ -74,11 +74,11 @@ export function explainLog(p: LogProblem, model: AnswerModel): Explanation {
     timeline: beats(4),
     steps: [
       { id: "ask", narration: `Each log asks for an exponent of ${f(b)}.`, math: logMath(p), state: 0 },
-      { id: "m", narration: `${f(b)} to what power makes ${big(b ** m)}? ${f(b)}${supText(m)} = ${big(b ** m)}, so it is ${f(m)}.`,
+      { id: "m", narration: `${f(b)} to what power makes ${big(b ** m)}? ${f(b)}${supText(m)} = ${big(b ** m)}.`,
         math: [...log(b, b ** m), op("="), num(m)], state: 1, answerStep: "m", result: m },
-      { id: "k", narration: `${f(b)}${supText(k)} = ${big(b ** k)}, so the second log is ${f(k)}.`,
+      { id: "k", narration: `Same question for ${big(b ** k)}: ${f(b)}${supText(k)} = ${big(b ** k)}.`,
         math: [...log(b, b ** k), op("="), num(k)], state: 2, answerStep: "k", result: k },
-      { id: "sum", narration: `Add the exponents: ${f(m)} + ${f(k)} = ${f(s)}. That is log${subText(b)} of ${big(b ** m)} × ${big(b ** k)}, since ${f(b)}${supText(lo)} × ${f(b)}${supText(hi)} = ${f(b)}${supText(s)}.`,
+      { id: "sum", narration: `Add the exponents. It's log${subText(b)} of ${big(b ** m)} × ${big(b ** k)}, since ${f(b)}${supText(m)} × ${f(b)}${supText(k)} = ${f(b)}${supText(s)}.`,
         math: [num(m), op("+"), num(k), op("="), num(s)], state: 3, answerStep: "sum", result: s },
     ],
   };

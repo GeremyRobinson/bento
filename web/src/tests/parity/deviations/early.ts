@@ -1,6 +1,7 @@
 // The early grades now have full years, so their single lessons moved from "Skills" into real units (G, 2026-10-03).
 export const deviations: Record<string, Partial<Record<string, string>>> = {
-  "k-add": { unit: "kindergarten has units now; this lesson lives in Adding and subtracting", hint: "\"There is 1 dot\", not \"There are 1 dot\" (Curriculum fixes-01, 2026-10-03)", explain: "same wording fix as the hint",
+  "k-add": { unit: "kindergarten has units now; this lesson lives in Adding and subtracting",
+    pre: "builds up from k-count20: counting on from a number is what k-count20 teaches (Curriculum v2 gradeK-1.md §1, Review 2026-10-13)", hint: "\"There is 1 dot\", not \"There are 1 dot\" (Curriculum fixes-01, 2026-10-03)", explain: "same wording fix as the hint",
     checks: "\"Count the first group\" names three more slips (counted both groups, one too many, one short) instead of the generic nudge (Curriculum fixes-02 Part C, K-3 pattern 3: steps with no named slip, 2026-10-06)" },
   "g1-ten": { unit: "1st grade has units now; this lesson lives in Adding and subtracting",
     pre: "builds up from k-make10: filling a ten frame is the step this lesson leans on (Curriculum fixes-02, K-3 g1-ten and Order 2, 2026-10-06)",

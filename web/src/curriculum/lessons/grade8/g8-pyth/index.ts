@@ -75,11 +75,11 @@ export function explainPythagoras(p: PythagorasProblem, answers: AnswerModel): E
     }),
     timeline: beats(5),
     steps: [
-      { id: "triangle", narration: `A right triangle with legs ${a} and ${b}. The long side c is across from the square corner.`, math: mt`a = ${a}, b = ${b}, c = ?`, state: 0 },
-      { id: "square-a", narration: `Build a square on the side of ${a}. It holds ${a} × ${a} = ${A}.`, math: mt`${a}${sup("2")} = ${A}`, state: 1, answerStep: "square-a", result: A },
-      { id: "square-b", narration: `The square on the side of ${b} holds ${b} × ${b} = ${B}.`, math: mt`${b}${sup("2")} = ${B}`, state: 2, answerStep: "square-b", result: B },
-      { id: "add", narration: `Together the two small squares fill the square on c: ${A} + ${B} = ${C2}.`, math: mt`${A} + ${B} = c${sup("2")} = ${C2}`, state: 3, answerStep: "add", result: C2 },
-      { id: "root", narration: `The big square's side is the number that times itself makes ${C2}. ${c} × ${c} = ${C2}, so c = ${c}.`, math: mt`c = √${C2} = ${c}`, state: 4, answerStep: "root", result: c },
+      { id: "triangle", narration: "a and b are the legs. The long side c is across from the square corner.", math: mt`a = ${a}, b = ${b}, c = ?`, state: 0 },
+      { id: "square-a", narration: `Build a square on the side of ${a}.`, math: mt`${a}${sup("2")} = ${A}`, state: 1, answerStep: "square-a", result: A },
+      { id: "square-b", narration: `Build one on the side of ${b} too.`, math: mt`${b}${sup("2")} = ${B}`, state: 2, answerStep: "square-b", result: B },
+      { id: "add", narration: "Together the two small squares fill the square on c.", math: mt`${A} + ${B} = c${sup("2")} = ${C2}`, state: 3, answerStep: "add", result: C2 },
+      { id: "root", narration: `The big square's side is the number that times itself makes ${C2}.`, math: mt`c = √${C2} = ${c}`, state: 4, answerStep: "root", result: c },
     ],
   };
 }
@@ -94,7 +94,7 @@ export const lesson: LessonDefinition<PythagorasProblem> = withEasyStart({
   generate: rng => generatePythagoras(rng),
   restore: restorePythagoras,
   display: p => mt`a = ${p.a}, b = ${p.b}, c = ?`,
-  displayNote: p => `Right triangle with legs ${p.a} and ${p.b}. Find the long side, c.\na² + b² = c²`,
+  displayNote: () => "Right triangle: a and b are the legs, c is the long side.\na² + b² = c²",
   answers: pythagorasAnswers,
   explain: explainPythagoras,
 });

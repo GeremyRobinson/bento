@@ -141,12 +141,9 @@ function explain(p: AddSubProblem, model: AnswerModel): Explanation {
   const TH = Math.floor(R / 1000);
   const say = (i: number) => {
     const c = cols[i]!, name = PLURAL[i]!, v = vals[i]!;
-    if (!p.sub) {
-      const sum = `${c.top} + ${c.bottom}${c.carryIn ? " + 1" : ""} = ${v}`;
-      return v >= 10 ? `The ${name}: ${sum}. Write ${v % 10} and carry 1 to the ${PLURAL[i + 1]}.` : `The ${name}: ${sum}. Write ${v}.`;
-    }
-    if (c.regroup) return `The ${name}: ${c.top} is less than ${c.bottom}, so trade 1 ${ONE[i + 1]} for 10 ${name}. ${c.top + 10} − ${c.bottom} = ${v}.`;
-    return `The ${name}: ${c.top} − ${c.bottom} = ${v}.`;
+    if (!p.sub) return `Add the ${name}${c.carryIn ? " and the carried 1" : ""}.${v >= 10 ? ` Write ${v % 10} and carry 1 to the ${PLURAL[i + 1]}.` : " No carry this time."}`;
+    if (c.regroup) return `${c.top} is less than ${c.bottom}, so trade 1 ${ONE[i + 1]} for 10 ${name}.`;
+    return `Subtract the ${name}. No trade needed.`;
   };
   const mathOf = (i: number): MathText => {
     const c = cols[i]!, v = vals[i]!;
@@ -165,10 +162,10 @@ function explain(p: AddSubProblem, model: AnswerModel): Explanation {
     caption: p.sub ? "Ones first. Trade when the top digit is too small." : "Ones first. Carry when a column makes 10 or more.",
     timeline: beats(5),
     steps: [
-      { id: "start", state: 0, narration: `Line up ${commas(p.a)} and ${commas(p.b)} so the ones are under the ones.`, math: [text(commas(p.a)), op(s), text(commas(p.b))] },
+      { id: "start", state: 0, narration: "Line them up by place, and start with the ones.", math: [text(commas(p.a)), op(s), text(commas(p.b))] },
       ...[0, 1, 2].map(i => ({ id: PLURAL[i]!, state: i + 1, answerStep: PLURAL[i]!, result: vals[i]!, narration: say(i), math: mathOf(i) })),
       { id: "answer", state: 4, answerStep: "answer", result: R, math: [text(commas(p.a)), op(s), text(commas(p.b)), op("="), text(commas(R))],
-        narration: `The thousands: ${thSay}. Read it all together: ${commas(R)}.` },
+        narration: `The thousands are ${thSay}. Read all the digits together.` },
     ],
   };
 }

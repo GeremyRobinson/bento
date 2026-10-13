@@ -1,4 +1,4 @@
-import { formatNumber as f, m, num, op, toPlainText, type MathText } from "../../../schemas/math-text";
+import { formatNumber as f, m, num, op, type MathText } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import type { Rng } from "../../../generators/rng";
 import { ns, v } from "../../algebra-kit/steps";
@@ -90,14 +90,14 @@ export function explainOneStep(p: OneStepEquation, model: AnswerModel) {
   const diagram = buildBalance(frames(p), `A balance: ${f(rhs)} on one pan against the other side of the equation. Doing the opposite to both pans leaves x = ${f(x)}.`);
   return beatExplanation({
     heading: "Do the opposite",
-    idea: ["An equation is a balance, so whatever happens to one side happens to the other."],
+    idea: ["An equation is a balance, so do the same thing to both sides."],
     statement: [...lhs(p), op("="), num(p.rhs)],
     diagram,
     alt: diagram.alt,
     steps: [
-      { id: "equation", narration: `x has ${undoes} ${f(p.a)} done to it, and the pans balance at ${f(p.rhs)}.`, math: [...lhs(p), op("="), num(p.rhs)] },
-      { id: "undo", narration: `To undo ${undoes} ${f(p.a)}, ${opp} ${f(p.a)} on both sides: x = ${f(x)}.`, math: [v(), op("="), num(x)], answerStep: "undo", result: x },
-      { id: "check", narration: `Check: put ${f(x)} back in for x. ${toPlainText(checkSide(p, x))} = ${f(rhs)}, the same as the other side. ✓`, math: [...checkSide(p, x), op("="), num(rhs)], answerStep: "check", result: rhs },
+      { id: "equation", narration: `${[`${f(p.a)} is added to x`, `${f(p.a)} is taken away from x`, `x is multiplied by ${f(p.a)}`, `x is divided by ${f(p.a)}`][p.t]}, and the two sides balance.`, math: [...lhs(p), op("="), num(p.rhs)] },
+      { id: "undo", narration: `To undo ${undoes} ${f(p.a)}, ${opp} ${f(p.a)} on both sides.`, math: [v(), op("="), num(x)], answerStep: "undo", result: x },
+      { id: "check", narration: `Put ${f(x)} back in for x: it matches the other side.`, math: [...checkSide(p, x), op("="), num(rhs)], answerStep: "check", result: rhs },
     ],
   });
 }

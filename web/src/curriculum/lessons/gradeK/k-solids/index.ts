@@ -1,4 +1,4 @@
-// Solid shapes: does it roll, does it have a flat face, and what is it called.
+// Solid shapes: does it have a flat face, does it roll, and what is it called.
 import { text } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
@@ -41,16 +41,6 @@ function answers(p: SolidProblem): AnswerModel {
   return {
     steps: [
       tapStep({
-        id: "roll", label: "Roll or stack?", question: "Can it roll?", prompt: words("Can it roll?"),
-        choices: yesNo, right: s.rolls ? 0 : 1,
-        wrong: () => s.kind === "cube" ? ["Thought a cube rolls", "A cube has flat faces and corners. It slides, but it can't roll."]
-          : s.kind === "sphere" ? ["Thought a sphere can't roll", "A sphere is round all over. It rolls every way."]
-          : ["Missed the round side", `A ${s.name} has a round side. Lay it down and it rolls.`],
-        hint: "Is any part of it round?",
-        explain: s.rolls ? `It has a round part, so it rolls.` : "It has only flat faces and corners, so it slides but doesn't roll.",
-        work: [text(s.rolls ? "It rolls." : "It doesn't roll.")],
-      }),
-      tapStep({
         id: "flat", label: "Flat faces", question: "Does it have a flat face?", prompt: words("Does it have a flat face?"),
         choices: yesNo, right: s.faces ? 0 : 1,
         wrong: () => s.kind === "sphere" ? ["Found a flat face", "A sphere is round all over. It has no flat face."]
@@ -60,6 +50,16 @@ function answers(p: SolidProblem): AnswerModel {
         hint: "Could it stand still on a table on one side?",
         explain: s.faces ? `It has ${s.faces === 1 ? "a flat face" : `${s.faces} flat faces`}: ${s.where}.` : `It has no flat face: ${s.where}.`,
         work: [text(s.faces ? "It has a flat face." : "No flat face.")],
+      }),
+      tapStep({
+        id: "roll", label: "Roll or stack?", question: "Can it roll?", prompt: words("Can it roll?"),
+        choices: yesNo, right: s.rolls ? 0 : 1,
+        wrong: () => s.kind === "cube" ? ["Thought a cube rolls", "A cube has flat faces and corners. It slides, but it can't roll."]
+          : s.kind === "sphere" ? ["Thought a sphere can't roll", "A sphere is round all over. It rolls every way."]
+          : ["Missed the round side", `A ${s.name} has a round side. Lay it down and it rolls.`],
+        hint: "Is any part of it round?",
+        explain: s.rolls ? `It has a round part, so it rolls.` : "It has only flat faces and corners, so it slides but doesn't roll.",
+        work: [text(s.rolls ? "It rolls." : "It doesn't roll.")],
       }),
       tapStep({
         id: "name", label: "Name it", question: "What is this shape called?", prompt: words("What is this shape called?"),
@@ -94,9 +94,9 @@ function explain(p: SolidProblem, model: AnswerModel): Explanation {
     timeline: beats(4),
     steps: [
       { id: "look", narration: p.thing >= 0 ? `This ${s.things[p.thing]} is a solid shape. You could hold it.` : "This is a solid shape. You could hold it.", math: words("Look at it."), state: 0 },
-      { id: "flat", narration: s.faces ? `It has ${s.faces === 1 ? "**1** flat face" : `**${s.faces}** flat faces`}.` : "It has **no** flat face.", math: [text(s.faces ? "It has a flat face." : "No flat face.")], state: 1, answerStep: "flat", result: flat },
-      { id: "roll", narration: s.rolls ? "Give it a push. It **rolls**." : "Give it a push. It **slides**, but it doesn't roll.", math: [text(s.rolls ? "It rolls." : "It doesn't roll.")], state: 2, answerStep: "roll", result: roll },
-      { id: "name", narration: `It ${s.is}. It's ${aOrAnWord(s.name)} **${s.name}**.`, math: [text(`It's ${aOrAnWord(s.name)} ${s.name}.`)], state: 3, answerStep: "name", result: name },
+      { id: "flat", narration: s.faces ? `Find the flat parts: ${s.where}.` : "It is round all over, so no part is flat.", math: [text(s.faces ? "It has a flat face." : "No flat face.")], state: 1, answerStep: "flat", result: flat },
+      { id: "roll", narration: s.rolls ? "Give it a push. Its round part lets it roll away." : "Give it a push. Flat faces and corners make it slide.", math: [text(s.rolls ? "It rolls." : "It doesn't roll.")], state: 2, answerStep: "roll", result: roll },
+      { id: "name", narration: `It ${s.is}.`, math: [text(`It's ${aOrAnWord(s.name)} ${s.name}.`)], state: 3, answerStep: "name", result: name },
     ],
   };
 }

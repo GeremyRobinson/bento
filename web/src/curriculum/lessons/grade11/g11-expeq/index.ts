@@ -53,10 +53,10 @@ export function explainExponential(p: ExponentialEquation, model: AnswerModel) {
     alt: `${f(b)} to the power (x ${fpm(c)}) = ${big(value)} = ${f(b)} to the ${f(k)}, so x ${fpm(c)} = ${f(k)} and x = ${f(x)}.`,
     steps: [
       { id: "problem", narration: `The left side is a power of ${f(b)}. Can ${big(value)} be one too?`, math: [...lhs(p), op("="), mark(big(value))] },
-      { id: "base", narration: `${f(k)} ${f(b)}'s multiply to ${big(value)}, so ${big(value)} = ${f(b)} to the ${f(k)}.`, math: [text(big(value)), op("="), num(b), sup(k)],
+      { id: "base", narration: `Multiply ${f(b)}'s until you reach ${big(value)}, and count them.`, math: [text(big(value)), op("="), num(b), sup(k)],
         line: [...lhs(p), op("="), num(b), sup([mark(k)])], answerStep: "base", result: k },
-      { id: "match", narration: `Same base, and different powers of ${f(b)} are different numbers, so the exponents must be equal.`, math: [...exponent(c), op("="), num(k)] },
-      { id: "solve", narration: `Undo the ${fpm(c)}: x = ${f(x)}.`, math: m(v(), op("="), k, op(c < 0 ? "+" : "−"), Math.abs(c), op("="), x), answerStep: "solve", result: x },
+      { id: "match", narration: "Same base on both sides, so the exponents must be equal.", math: [...exponent(c), op("="), num(k)] },
+      { id: "solve", narration: `Undo the ${fpm(c)} to get x on its own.`, math: m(v(), op("="), k, op(c < 0 ? "+" : "−"), Math.abs(c), op("="), x), answerStep: "solve", result: x },
     ],
   });
 }
@@ -66,6 +66,7 @@ export const lesson: LessonDefinition<ExponentialEquation> = withEasyStart({
   grade: 11,
   unit: "Exponents and logs",
   title: "Exponential equations",
+  pre: "g6-expo",
   reference: createExponentialEquation(2, 4, 1),
   generate: rng => generateExponentialEquation(rng),
   restore: restoreExponentialEquation,

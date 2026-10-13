@@ -9,6 +9,7 @@ export const lesson: LessonDefinition<MidProblem> = withEasyStart({
   grade: 10,
   unit: "Coordinate geometry",
   title: "Midpoint",
+  pre: "g6-mean",
   reference: createMid(2, 3, 6, 9),
   generate: rng => generateMid(rng),
   restore: restoreMid,

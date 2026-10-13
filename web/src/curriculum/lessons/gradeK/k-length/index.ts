@@ -82,9 +82,9 @@ function explain(p: LengthProblem, model: AnswerModel): Explanation {
     caption: verdict,
     timeline: beats(3),
     steps: [
-      { id: "top", narration: `Count the cubes along the ${top}: ${countUp(1, a)}. It's **${a}** cubes long.`, math: [text(`${cap(top)}: `), num(a), text(" cubes")], state: 0, answerStep: "top", result: a },
-      { id: "bottom", narration: `Now the ${bottom}: ${countUp(1, b)}. It's **${b}** cubes long.`, math: [text(`${cap(bottom)}: `), num(b), text(" cubes")], state: 1, answerStep: "bottom", result: b },
-      { id: "longer", narration: verdict, math: right === 2 ? [text("Same length")] : [text(`The ${longer} is longer.`)], state: 2, answerStep: "longer", result: right },
+      { id: "top", narration: `Count the cubes along the ${top}: ${countUp(1, a)}.`, math: [text(`${cap(top)}: `), num(a), text(" cubes")], state: 0, answerStep: "top", result: a },
+      { id: "bottom", narration: `Now the ${bottom}: ${countUp(1, b)}.`, math: [text(`${cap(bottom)}: `), num(b), text(" cubes")], state: 1, answerStep: "bottom", result: b },
+      { id: "longer", narration: right === 2 ? "They end at the same place." : `The ${longer} sticks out ${cubes(extra)} further.`, math: right === 2 ? [text("Same length")] : [text(`The ${longer} is longer.`)], state: 2, answerStep: "longer", result: right },
     ],
   };
 }
@@ -109,4 +109,5 @@ export const lesson: LessonDefinition<LengthProblem> = {
   picture: p => lengthBars({ top: { name: THINGS[p.top]!, cubes: p.a }, bottom: { name: THINGS[p.bottom]!, cubes: p.b }, alt: `A ${THINGS[p.top]!} and a ${THINGS[p.bottom]!} lined up` }),
   answers,
   explain,
+  pre: "k-compare",
 };

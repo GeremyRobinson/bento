@@ -14,9 +14,8 @@ const antiTerm = (c: number, n: number): MathText => (c === 1 ? [text("x"), ...(
 
 export function explainDefInt(p: DefIntProblem, model: AnswerModel): Explanation {
   const { n, a, j, k } = p;
-  const c = expected(model, "anti", "c"), area = expected(model, "area"), top = c * k ** (n + 1);
+  const c = expected(model, "anti", "c"), area = expected(model, "area");
   const F = (x: number) => a * x ** n;
-  const anti = c === 1 ? `x${supText(n + 1)}` : powerText(c, n + 1);
   return {
     heading: "F(top) − F(bottom)",
     idea: ["F(top) is all the area up to the top, so F(bottom) takes off the part before the start."],
@@ -34,12 +33,12 @@ export function explainDefInt(p: DefIntProblem, model: AnswerModel): Explanation
     }),
     timeline: beats(3),
     steps: [
-      { id: "curve", narration: `The integral from ${f(j)} to ${f(k)} is the area under y = ${powerText(a, n)} between those two x values.`,
+      { id: "curve", narration: `It is the area under y = ${powerText(a, n)} from x = ${f(j)} to ${f(k)}.`,
         math: [text("∫"), sub(j), sup(k), text(" "), ...powerTerm(a, n), text(" dx")], state: 0 },
-      { id: "anti", narration: `Antiderivative: raise the power ${n} to ${n + 1}, then ${f(a)} ÷ ${n + 1} = ${f(c)}. So F(x) = ${anti}.`,
+      { id: "anti", narration: "Run the power rule backwards: raise the power, then divide by it.",
         math: [text("F(x)"), op("="), ...antiTerm(c, n + 1)], state: 1, answerStep: "anti", result: c },
-      { id: "area", narration: j === 0 ? `Top minus bottom: F(${f(k)}) − F(0) = ${f(area)} − 0 = ${f(area)}. That is the shaded area.`
-          : `Top minus bottom: F(${f(k)}) − F(${f(j)}) = ${f(top)} − ${f(top - area)} = ${f(area)}. Taking away F(${f(j)}) removes the area from 0 to ${f(j)}, leaving the shaded part.`,
+      { id: "area", narration: j === 0 ? `F(${f(k)}) is the area from 0 up to ${f(k)}, and F(0) is 0.`
+          : `F(${f(k)}) − F(${f(j)}): take away the area from 0 to ${f(j)}.`,
         math: [...topMinusBottom(p), op("="), num(area)], state: 2, answerStep: "area", result: area },
     ],
   };

@@ -68,9 +68,9 @@ export function explainDistribute(p: DistributeProblem, answers: AnswerModel): E
     caption: `${a}(x + ${b}) is ${a}x and ${ab}. The ${coef(c, "x")} strip lines up with the x part: ${sum}x in all.`,
     timeline: beats(4),
     steps: [
-      { id: "distribute", narration: `${a} times x is ${a}x and ${a} times ${b} is ${ab}.`, math: [num(a), text("("), x, op("+"), num(b), text(")"), op("="), num(a), x, op("+"), num(ab)], state: 1, answerStep: "distribute", result: ab },
-      { id: "combine", narration: `${a}x and ${coef(c, "x")} are both x strips: ${sum}x.`, math: [num(a), x, op("+"), ...cx(c), op("="), num(sum), x], state: 2, answerStep: "combine", result: sum },
-      { id: "simple", narration: `So it's ${sum}x + ${ab}.`, math: [num(sum), x, op("+"), num(ab)], state: 3, answerStep: "simple", result: sum },
+      { id: "distribute", narration: `Multiply the ${a} outside by both x and ${b}.`, math: [num(a), text("("), x, op("+"), num(b), text(")"), op("="), num(a), x, op("+"), num(ab)], state: 1, answerStep: "distribute", result: ab },
+      { id: "combine", narration: `${a}x and ${coef(c, "x")} are both x strips, so add them.`, math: [num(a), x, op("+"), ...cx(c), op("="), num(sum), x], state: 2, answerStep: "combine", result: sum },
+      { id: "simple", narration: "The x terms first, then the plain number.", math: [num(sum), x, op("+"), num(ab)], state: 3, answerStep: "simple", result: sum },
     ],
   };
 }
@@ -80,7 +80,7 @@ export const lesson: LessonDefinition<DistributeProblem> = {
   grade: 7,
   unit: "Expressions and equations",
   title: "Distribute and combine",
-  pre: "g6-gcf",
+  pre: "g3-split",
   reference: createDistribute(3, 4, 2),
   generate: rng => generateDistribute(rng),
   restore: raw => { const r = readNumbers(raw, ["a", "b", "c"] as const); try { return r && createDistribute(r.a, r.b, r.c); } catch { return null; } },

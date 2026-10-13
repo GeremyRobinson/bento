@@ -66,16 +66,16 @@ function explain(pr: DiscountProblem, model: AnswerModel): Explanation {
   const { P, p, off } = pr, amt = expectedOf(model.steps, "percent"), total = expectedOf(model.steps, "total");
   return {
     heading: "Find the percent, then add or subtract",
-    idea: ["Percent means out of 100, so 10% of a price is one tenth of it."],
+    idea: ["A discount takes part of the price away, and a tip adds part on."],
     statement: [...$(P), text(off ? `, ${p}% off` : `, ${p}% tip`)],
     diagram: discountPicture(pr),
     caption: off ? `${p}% off: $${f(amt)} comes off.` : `A ${p}% tip: $${f(amt)} goes on.`,
     timeline: beats(3),
     steps: [
       { id: "percent", state: 1, answerStep: "percent", result: amt, math: [num(p), text("% of "), ...$(P), op("="), ...$(amt)],
-        narration: `10% of $${P} is $${f(P / 10)}, so ${p}% of $${P} is $${f(amt)}.` },
+        narration: p === 10 ? "10% is one tenth of the price." : `Find 10% first: $${f(P / 10)}. Then build up to ${p}%.` },
       { id: "total", state: 2, answerStep: "total", result: total, math: [...$(P), op(off ? "−" : "+"), ...$(amt), op("="), ...$(total)],
-        narration: off ? `A discount takes money off: $${P} − $${f(amt)} = $${f(total)}.` : `A tip adds money on: $${P} + $${f(amt)} = $${f(total)}.` },
+        narration: off ? "A discount takes money off the price." : "A tip adds money on to the price." },
     ],
   };
 }

@@ -34,9 +34,9 @@ export function explainPerp(q: PerpProblem, model: AnswerModel): Explanation {
     timeline: beats(3),
     steps: [
       { id: "slope", narration: `Slope ${m1}: ${r} across and ${ap} ${p > 0 ? "up" : "down"}.`, math: [text("m"), op("="), ...slopeMath(q)], state: 0 },
-      { id: "flip", narration: `Flip it: ${ap} and ${r} swap places, giving ${fracText(fn, fd)}.`,
+      { id: "flip", narration: "Turn the slope triangle a quarter turn: rise and run swap.",
         math: [text("flip "), ...sizeOf(q), op("→"), ...(fd === 1 ? [num(fn)] : [frac(fn, fd)])], state: 1, answerStep: "flip", result: fn },
-      { id: "perp", narration: `Change the sign: ${m1} becomes ${m2}. Check: ${m1} × ${m2} = −1.`,
+      { id: "perp", narration: `The turned line ${p > 0 ? "falls" : "rises"}, so the sign changes.`,
         math: [text("perpendicular slope"), op("="), ...(pd === 1 ? [num(pn)] : [frac(pn, pd)])], state: 2, answerStep: "perp", result: pn },
     ],
   };

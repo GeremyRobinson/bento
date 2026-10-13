@@ -50,18 +50,18 @@ function explain(p: MakeTenProblem, model: AnswerModel) {
   const { a, b } = p, need = expectedOf(model, "ten"), left = expectedOf(model, "break"), sum = expectedOf(model, "add");
   return chainExplanation({
     heading: "Make a ten first",
-    idea: ["10 is easy to add to, so filling a ten first makes the rest simple."],
+    idea: ["Fill a ten first, because adding to 10 is easy."],
     statement: [num(a), op("+"), num(b)],
     caption: `Borrow ${need} from the ${b} to fill the ten.`,
     alt: `${a} + ${b} becomes ${a} + ${need} + ${left}, then 10 + ${left} = ${sum}.`,
     // grade 1's first picture colour is green (right), so the two numbers take its other two part colours
     diagram: makeTenFrames({ a, b, beats: { ten: 0, break: 1, add: 2 }, parts: ["p1", "p2"], alt: `Two ten frames: ${a} dots and ${b} dots. ${need === 1 ? "1 dot moves" : `${need} dots move`} over to fill the first frame, so ${a} + ${b} = 10 + ${left} = ${sum}.` }),
     beats: [
-      { id: "ten", narration: `${a} needs ${need} more to make 10.`, math: [num(a), op("+"), num(need), op("="), num(10)],
+      { id: "ten", narration: "Fill the first frame to make a ten.", math: [num(a), op("+"), num(need), op("="), num(10)],
         lines: [[num(a), op("+"), num(b)]], answerStep: "ten", result: need },
-      { id: "break", narration: `Break ${b} into ${need} and ${left}.`, math: [num(b), op("="), num(need), op("+"), num(left)],
+      { id: "break", narration: `Move ${need} of the ${b} into the first frame.`, math: [num(b), op("="), num(need), op("+"), num(left)],
         lines: [[num(a), op("+"), mark(need), op("+"), num(left)]], answerStep: "break", result: left },
-      { id: "add", narration: `Now it's 10 + ${left} = ${sum}.`, math: [num(10), op("+"), num(left), op("="), num(sum)],
+      { id: "add", narration: "Now add what's left to the full ten.", math: [num(10), op("+"), num(left), op("="), num(sum)],
         lines: [[mark(10), op("+"), num(left), op("="), num(sum)]], answerStep: "add", result: sum },
     ],
   });

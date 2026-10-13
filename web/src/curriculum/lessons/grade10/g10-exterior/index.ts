@@ -39,10 +39,10 @@ export function explainExteriorAngle(p: ExteriorAngleProblem, answers: AnswerMod
   const { a, b } = p, c = expected(answers, "inside"), out = expected(answers, "outside");
   return {
     heading: "Exterior = the two far angles added",
-    idea: ["An outside angle and the inside angle next to it make a straight line."],
+    idea: ["A triangle's outside angle equals the two inside angles far from it, added."],
     // the problem asks for the outside angle, the one angle the picture marks "?"
     statement: mt`outside angle = ?`,
-    caption: `The outside angle is ${a} + ${b} = ${out}°.`,
+    caption: `The outside angle is ${a}° + ${b}° = ${out}°.`,
     diagram: buildTriangleAngles({
       // the third corner sits bottom right, so its outside angle opens along the base
       left: a, right: c,
@@ -55,10 +55,10 @@ export function explainExteriorAngle(p: ExteriorAngleProblem, answers: AnswerMod
     }),
     timeline: beats(4),
     steps: [
-      { id: "triangle", narration: `Two inside angles are ${a}° and ${b}°. The side runs on past the third corner, making an outside angle.`, math: mt`${a}° and ${b}°`, state: 0 },
-      { id: "inside", narration: `The inside angles add to 180°, so the third one is 180° − ${a}° − ${b}° = ${c}°.`, math: mt`180° − ${a}° − ${b}° = ${c}°`, state: 1, answerStep: "inside", result: c },
-      { id: "outside", narration: `The outside angle and the ${c}° make a straight line: 180° − ${c}° = ${out}°. `, math: mt`180° − ${c}° = ${out}°`, state: 2, answerStep: "outside", result: out },
-      { id: "check", narration: `Now add the two far angles: ${a}° + ${b}° = ${out}°, the same as the outside angle. That's the shortcut.`, math: mt`${a}° + ${b}° = ${out}°`, state: 3, answerStep: "check", result: out },
+      { id: "triangle", narration: "The side runs on past the third corner, making an outside angle.", math: mt`${a}° and ${b}°`, state: 0 },
+      { id: "inside", narration: "The three inside angles add to 180°, so take both off.", math: mt`180° − ${a}° − ${b}° = ${c}°`, state: 1, answerStep: "inside", result: c },
+      { id: "outside", narration: "The outside angle and the third inside angle make a straight line.", math: mt`180° − ${c}° = ${out}°`, state: 2, answerStep: "outside", result: out },
+      { id: "check", narration: "The two far angles add to the same. That's the shortcut.", math: mt`${a}° + ${b}° = ${out}°`, state: 3, answerStep: "check", result: out },
     ],
   };
 }

@@ -142,15 +142,15 @@ function explain(p: DivideFractionsProblem) {
     alt: `${a}/${b} ÷ ${c}/${d} becomes ${a}/${b} × ${d}/${c} = ${S}/${L}.`,
     diagram: divideFractionsPicture({ a, b, c, d, S, L, mixed: F.num ? `${F.whole ? `${F.whole} ` : ""}${F.num}/${F.den}` : `${F.whole}` }),
     beats: [
-      { id: "size", narration: S > L ? `${c}/${d} is smaller than ${a}/${b}, so more than one ${c}/${d} fits. Expect an answer bigger than 1.`
-          : S === L ? `${c}/${d} is the same size as ${a}/${b}, so exactly one fits.` : `${c}/${d} is bigger than ${a}/${b}, so not even one whole ${c}/${d} fits. Expect an answer less than 1.`,
+      { id: "size", narration: S > L ? `${c}/${d} is smaller than ${a}/${b}, so expect more than 1.`
+          : S === L ? "They are the same size, so the answer is 1." : `${c}/${d} is bigger than ${a}/${b}, so expect less than 1.`,
         math: [frac(a, b), op("÷"), frac(c, d)], lines: [], answerStep: "size" },
-      { id: "flip", narration: `${d}/${c} of ${c}/${d} fit in each whole, so dividing by ${c}/${d} is the same as multiplying by ${d}/${c}.`, math: [frac(c, d), op("→"), frac(d, c)],
+      { id: "flip", narration: `One whole holds ${c === 1 ? d : `${d}/${c}`} pieces of ${c}/${d}, so multiply by the flip.`, math: [frac(c, d), op("→"), frac(d, c)],
         lines: [[frac(a, b), op("÷"), mark([frac(c, d)])], [frac(a, b), mark([op("×")]), mark([frac(d, c)])]], answerStep: "flip" },
-      { id: "multiply", narration: `Top times top, bottom times bottom: ${a} × ${d} = ${S} and ${b} × ${c} = ${L}.`, math: [frac(a, b), op("×"), frac(d, c), op("="), frac(S, L)],
+      { id: "multiply", narration: "Top times top, bottom times bottom.", math: [frac(a, b), op("×"), frac(d, c), op("="), frac(S, L)],
         lines: [[frac(S, L)]], answerStep: "multiply" },
-      { id: "simplify", narration: (same ? `No number but 1 divides both ${S} and ${L}, so ${S}/${L} is already as simple as it gets.` : S % L === 0 ? `${S} ÷ ${L} = ${S / L} exactly, so ${S}/${L} is the whole number ${S / L}.` : S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}, so ${S}/${L} is ${F.num ? `${F.whole ? `${F.whole} and ` : ""}${F.num}/${F.den}` : F.whole}.`
-          : `Divide the top and the bottom by ${gcd(S, L)}: ${F.num}/${F.den}.`) + (F.whole && F.num ? ` So ${F.whole} whole ${c}/${d}${F.whole === 1 ? "" : "s"} fit, and ${F.num}/${F.den} of another.` : ""),
+      { id: "simplify", narration: (same ? "It's already as simple as it gets." : S % L === 0 ? "The bottom goes into the top exactly, so it's a whole number."
+          : S >= L ? `Pull out the wholes and put the rest on top${gcd(S, L) > 1 ? ", then simplify" : ""}.` : `Divide the top and the bottom by ${gcd(S, L)}.`) + (F.whole && F.num ? ` So ${F.whole} whole ${c}/${d}${F.whole === 1 ? "" : "s"} fit, and ${F.num}/${F.den} of another.` : ""),
         math: same ? [frac(S, L)] : [frac(S, L), op("="), ...simplified], lines: same ? [] : [[frac(S, L), op("="), ...simplified]], answerStep: "simplify",
         ...(F.num === 0 ? { result: F.whole } : {}) },
     ],

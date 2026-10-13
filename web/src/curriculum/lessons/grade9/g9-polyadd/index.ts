@@ -57,7 +57,6 @@ export function explainPolynomialSum(p: PolynomialSum, model: AnswerModel) {
   const o = sign(p);
   const [A, B, C] = model.steps.map(s => s.slots[0]!.expected!) as [number, number, number];
   const pending = (x: number, y: number, vp: MathText): MathText => [text("("), num(x), op(o), ...P(y), text(")"), ...vp];
-  const word = p.sub ? "minus" : "plus";
   return beatExplanation({
     heading: "Combine like terms",
     idea: ["Only like terms combine, the same way 3 apples and 5 apples make 8 apples."],
@@ -66,12 +65,12 @@ export function explainPolynomialSum(p: PolynomialSum, model: AnswerModel) {
     diagram: polynomialSumPicture({ ...p, A, B, C, answer: toPlainText(quad(A, B, C)) }),
     alt: `${coef(p.a, "x²")} ${o} ${term(p.d, "x²")} = ${coef(A, "x²")}, ${coef(p.b, "x")} ${o} ${term(p.e, "x")} = ${coef(B, "x")}, ${f(p.c)} ${o} ${fP(p.f)} = ${f(C)}.`,
     steps: [
-      { id: "problem", narration: `Two polynomials, ${word}. Line up the matching kinds: x² under x², x under x, numbers under numbers.`, math: problem(p, true) },
-      { id: "x2", narration: `x² terms: ${f(p.a)} ${o} ${fP(p.d)} = ${f(A)}.`, math: m(p.a, op(o), ...P(p.d), op("="), A),
+      { id: "problem", narration: `Line up like terms: x² with x², x with x, numbers with numbers.${p.sub ? " The minus flips every sign in the second." : ""}`, math: problem(p, true) },
+      { id: "x2", narration: `Combine the x² terms.`, math: m(p.a, op(o), ...P(p.d), op("="), A),
         line: [...(A ? poly([[A, X2]]) : [num(0)]), op("+"), ...pending(p.b, p.e, X1), op("+"), ...pending(p.c, p.f, [])], answerStep: "x2", result: A },
-      { id: "x1", narration: `x terms: ${f(p.b)} ${o} ${fP(p.e)} = ${f(B)}.`, math: m(p.b, op(o), ...P(p.e), op("="), B),
+      { id: "x1", narration: `Now the x terms.`, math: m(p.b, op(o), ...P(p.e), op("="), B),
         line: [...(A || B ? poly([[A, X2], [B, X1]]) : [num(0)]), op("+"), ...pending(p.c, p.f, [])], answerStep: "x1", result: B },
-      { id: "x0", narration: `Numbers: ${f(p.c)} ${o} ${fP(p.f)} = ${f(C)}. So the answer is ${toPlainText(quad(A, B, C))}.`, math: m(p.c, op(o), ...P(p.f), op("="), C),
+      { id: "x0", narration: `Last, the numbers. That gives ${toPlainText(quad(A, B, C))}.`, math: m(p.c, op(o), ...P(p.f), op("="), C),
         line: quad(A, B, C), answerStep: "x0", result: C },
     ],
   });
@@ -82,6 +81,7 @@ export const lesson: LessonDefinition<PolynomialSum> = withEasyStart({
   grade: 9,
   unit: "Polynomials and quadratics",
   title: "Add and subtract polynomials",
+  pre: "g7-distribute",
   reference: createPolynomialSum(2, 3, -1, 1, -5, 4, false),
   generate: rng => generatePolynomialSum(rng),
   restore: restorePolynomialSum,

@@ -76,11 +76,11 @@ export function explainDist(p: DistProblem, model: AnswerModel): Explanation {
     }),
     timeline: beats(5),
     steps: [
-      { id: "points", narration: `How far is it from ${pt(x1, y1)} to ${pt(x2, y2)} in a straight line?`, math: distMath(p), state: 0 },
-      { id: "dx", narration: `Across: ${f(x2)} − ${f(x1)} = ${f(dx)}.`, math: [num(x2), op("−"), num(x1), op("="), num(dx)], state: 1, answerStep: "dx", result: dx },
-      { id: "dy", narration: `Up: ${f(y2)} − ${f(y1)} = ${f(dy)}. Across and up make a right angle.`, math: [num(y2), op("−"), num(y1), op("="), num(dy)], state: 2, answerStep: "dy", result: dy },
-      { id: "sum", narration: `Square both legs and add: ${f(dx * dx)} + ${f(dy * dy)} = ${f(S)}.`, math: [...sq(dx), op("+"), ...sq(dy), op("="), num(S)], state: 3, answerStep: "sum", result: S },
-      { id: "d", narration: `The distance is the square root: √${f(S)} = ${f(d)}.`, math: [text("d"), op("="), text("√"), num(S), op("="), num(d)], state: 4, answerStep: "d", result: d },
+      { id: "points", narration: "How far apart are they, in a straight line?", math: distMath(p), state: 0 },
+      { id: "dx", narration: "How far across: the second x take away the first.", math: [num(x2), op("−"), num(x1), op("="), num(dx)], state: 1, answerStep: "dx", result: dx },
+      { id: "dy", narration: "How far up, the same way. Across and up make a right angle.", math: [num(y2), op("−"), num(y1), op("="), num(dy)], state: 2, answerStep: "dy", result: dy },
+      { id: "sum", narration: "They're the legs of a right triangle: square each and add.", math: [...sq(dx), op("+"), ...sq(dy), op("="), num(S)], state: 3, answerStep: "sum", result: S },
+      { id: "d", narration: "The distance is the long side, so take the square root.", math: [text("d"), op("="), text("√"), num(S), op("="), num(d)], state: 4, answerStep: "d", result: d },
     ],
   };
 }

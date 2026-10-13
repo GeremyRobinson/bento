@@ -61,10 +61,10 @@ export function explainSimplifyRoot(p: SimplifyRoot, model: AnswerModel) {
     alt: `√${f(n)} = √(${f(square)} × ${f(rest)}) = ${f(k)}√${f(rest)}.`,
     steps: [
       { id: "start", narration: `Look for the biggest perfect square that divides ${f(n)}.`, math: [sqrt(n)] },
-      { id: "square", narration: `${f(n)} = ${f(square)} × ${f(rest)}, and ${f(square)} is a perfect square.`, math: m(n, op("="), square, op("×"), rest), line: [sqrt([text("("), mark(square), op("×"), num(rest), text(")")])], answerStep: "square", result: square },
-      { id: "root", narration: `√${f(square)} = ${f(k)}, because ${f(k)} × ${f(k)} = ${f(square)}.`, math: m(sqrt(square), op("="), k), line: [sqrt(square), op("×"), sqrt(rest)], answerStep: "root", result: k },
-      { id: "simple", narration: `${f(k)} comes out, and ${f(rest)} stays under the root: ${f(k)}√${f(rest)}.`, math: [sqrt(n), op("="), num(k), sqrt(rest)], line: [mark(k), sqrt(rest)], answerStep: "simple", result: k },
-      { id: "check", narration: `Check: (${f(k)}√${f(rest)})² = ${f(square)} × ${f(rest)} = ${f(n)}.`, math: [text("("), num(k), sqrt(rest), text(")"), sup(2), op("="), num(square), op("×"), num(rest), op("="), num(n)], line: null },
+      { id: "square", narration: `${f(square)} is the biggest perfect square that goes in.`, math: m(n, op("="), square, op("×"), rest), line: [sqrt([text("("), mark(square), op("×"), num(rest), text(")")])], answerStep: "square", result: square },
+      { id: "root", narration: `${f(k)} times itself makes ${f(square)}.`, math: m(sqrt(square), op("="), k), line: [sqrt(square), op("×"), sqrt(rest)], answerStep: "root", result: k },
+      { id: "simple", narration: `${f(k)} comes out, and ${f(rest)} stays under the root.`, math: [sqrt(n), op("="), num(k), sqrt(rest)], line: [mark(k), sqrt(rest)], answerStep: "simple", result: k },
+      { id: "check", narration: `Check: squaring the answer gives back the number.`, math: [text("("), num(k), sqrt(rest), text(")"), sup(2), op("="), num(square), op("×"), num(rest), op("="), num(n)], line: null },
     ],
   });
 }
@@ -74,6 +74,7 @@ export const lesson: LessonDefinition<SimplifyRoot> = withEasyStart({
   grade: 9,
   unit: "Exponents",
   title: "Simplify square roots",
+  pre: "g8-roots",
   reference: createSimplifyRoot(6, 2),
   generate: rng => generateSimplifyRoot(rng),
   restore: restoreSimplifyRoot,

@@ -45,19 +45,19 @@ export function explainSeries(p: ArithmeticSeries, model: AnswerModel) {
   const [last, pair, sum] = model.steps.map(s => s.slots[0]!.expected!) as [number, number, number];
   const diagram = buildPairs({ first: a, step: d, count: n, beats: { terms: 0, last: 1, pair: 2, total: 3 } });
   const pairs = n % 2 === 0
-    ? `There are ${f(n / 2)} pairs, each worth ${f(pair)}: ${f(pair)} × ${f(n)} ÷ 2 = ${f(sum)}.`
-    : `${f(n)} terms make ${f(n)} ÷ 2 pairs (the middle term is half a pair), each worth ${f(pair)}: ${f(pair)} × ${f(n)} ÷ 2 = ${f(sum)}.`;
+    ? `${f(n)} terms make ${f(n / 2)} pairs, each worth ${f(pair)}.`
+    : `${f(n)} terms make ${f(n)} ÷ 2 pairs: the middle term is half a pair.`;
   return beatExplanation({
     heading: "Pair them up",
-    idea: ["The first and last terms add to the same total as every other pair."],
+    idea: ["Pair the terms from both ends, and every pair adds to the same total."],
     statement: [...firstTerms(p), op("+"), text("…"), op("+"), num(last)],
     caption: `The second and second-to-last terms make ${f(pair)} too: one goes up by ${f(d)} while the other goes down by ${f(d)}.`,
     diagram,
     alt: diagram.alt,
     steps: [
       { id: "terms", narration: `Start at ${f(a)} and go up by ${f(d)} each time. Add the first ${f(n)} terms.`, math: [...firstTerms(p), op("+"), text("…")] },
-      { id: "last", narration: `Term ${f(n)} is ${f(n - 1)} ${noun(n - 1, "jump")} of ${f(d)} from the first: ${f(last)}.`, math: m(a, op("+"), n - 1, op("×"), d, op("="), last), answerStep: "last", result: last },
-      { id: "pair", narration: `Pair the first and last terms: ${f(a)} + ${f(last)} = ${f(pair)}.`, math: m(a, op("+"), last, op("="), pair), answerStep: "pair", result: pair },
+      { id: "last", narration: `Term ${f(n)} is ${f(n - 1)} ${noun(n - 1, "jump")} on from the first, not ${f(n)}.`, math: m(a, op("+"), n - 1, op("×"), d, op("="), last), answerStep: "last", result: last },
+      { id: "pair", narration: `Pair the ends. Moving in, one goes up ${f(d)} and one down ${f(d)}.`, math: m(a, op("+"), last, op("="), pair), answerStep: "pair", result: pair },
       { id: "sum", narration: pairs, math: m(pair, op("×"), n, op("÷"), 2, op("="), sum), answerStep: "sum", result: sum },
     ],
   });

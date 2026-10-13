@@ -111,11 +111,11 @@ function explain(p: ShapeProblem, model: AnswerModel): Explanation {
     caption: round ? "Round, with no sides and no corners: a circle." : `${sides} sides and ${corners} corners: ${an(s.name)}.`,
     timeline: beats(3),
     steps: [
-      { id: "sides", narration: round ? "Trace the edge. It is round all the way, so there are **0** straight sides." : `Trace each side: ${countUp(1, sides)}. **${sides}** straight sides.`,
+      { id: "sides", narration: round ? "Trace the edge. It is round all the way, with nothing straight." : `Trace each side: ${countUp(1, sides)}.`,
         math: [text("Straight sides: "), num(sides)], state: 0, answerStep: "sides", result: sides },
-      { id: "corners", narration: round ? "Look for a point where sides meet. There isn't one: **0** corners." : `Touch each corner: ${countUp(1, corners)}. **${corners}** corners.`,
+      { id: "corners", narration: round ? "Look for a point where sides meet. There isn't one." : `Touch each corner: ${countUp(1, corners)}.`,
         math: [text("Corners: "), num(corners)], state: 1, answerStep: "corners", result: corners },
-      { id: "name", narration: round ? "Round, with no sides and no corners. It's a **circle**." : `${sides} sides and ${corners} corners. It's ${an(s.name).split(" ")[0]} **${s.name}**.`,
+      { id: "name", narration: round ? "Round, with no sides and no corners." : `${sides} sides and ${corners} corners${s.kind === "square" ? ", all the same length" : s.kind === "rectangle" ? ", two long and two short" : ""}.`,
         math: [text(`It's ${an(s.name)}.`)], state: 2, answerStep: "name", result: right },
     ],
   };

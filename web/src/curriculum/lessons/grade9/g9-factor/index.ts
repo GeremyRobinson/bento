@@ -66,8 +66,8 @@ export function explainFactor(prob: FactorProblem, answers: AnswerModel): Explan
     caption: `${p} × ${q} = ${p * q} and ${p} + ${q} = ${p + q}.`,
     timeline: beats(3),
     steps: [
-      { id: "pair", narration: `${p} and ${q} multiply to ${p * q} and add to ${p + q}.`, math: [num(p), op("×"), num(q), op("="), num(p * q)], state: 1, answerStep: "pair", result: p },
-      { id: "factors", narration: `The sides are x + ${p} and x + ${q}.`, math: [x, sup(2), op("+"), num(p + q), x, op("+"), num(p * q), op("="), text("("), x, op("+"), num(p), text(")("), x, op("+"), num(q), text(")")], state: 2, answerStep: "factors", result: p },
+      { id: "pair", narration: `They also add to ${p + q}, the middle number.`, math: [num(p), op("×"), num(q), op("="), num(p * q)], state: 1, answerStep: "pair", result: p },
+      { id: "factors", narration: `Each number joins an x to make one side of the rectangle.`, math: [x, sup(2), op("+"), num(p + q), x, op("+"), num(p * q), op("="), text("("), x, op("+"), num(p), text(")("), x, op("+"), num(q), text(")")], state: 2, answerStep: "factors", result: p },
     ],
   };
 }

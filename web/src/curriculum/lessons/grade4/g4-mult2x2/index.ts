@@ -58,6 +58,12 @@ function answers(p: TwoByTwoProblem): AnswerModel {
 function explain(p: TwoByTwoProblem, model: AnswerModel): Explanation {
   const { t, u, s, v } = split(p), P = IDS.map(id => expectedOf(model.steps, id)), total = expectedOf(model.steps, "sum");
   const pr = parts(p);
+  const said = [
+    `${t} × ${s} = ${t * s}, and tens times tens makes hundreds.`,
+    `${cap(tens(t))} times ${v} is ${tens(t * v)}.`,
+    `${u} times ${tens(s)} is ${tens(u * s)}.`,
+    "Last, the ones times the ones.",
+  ];
   return {
     heading: "Split both numbers",
     idea: ["Each number is tens plus ones, so the big rectangle cuts into four easy pieces."],
@@ -74,8 +80,8 @@ function explain(p: TwoByTwoProblem, model: AnswerModel): Explanation {
     timeline: beats(6),
     steps: [
       { id: "split", narration: `Split both: ${p.a} is ${10 * t} + ${u}, ${p.b} is ${10 * s} + ${v}.`, math: [num(p.a), op("×"), num(p.b)], state: 0 },
-      ...IDS.map((id, i) => ({ id, narration: model.steps[i]!.explain, math: model.steps[i]!.work!, state: i + 1, answerStep: id, result: P[i]! })),
-      { id: "sum", narration: `Add the four parts: ${withCommas(total)}.`, math: [...plusChain(P), op("="), num(total)], state: 5, answerStep: "sum", result: total },
+      ...IDS.map((id, i) => ({ id, narration: said[i]!, math: model.steps[i]!.work!, state: i + 1, answerStep: id, result: P[i]! })),
+      { id: "sum", narration: "Add the four pieces to fill the whole rectangle.", math: [...plusChain(P), op("="), num(total)], state: 5, answerStep: "sum", result: total },
     ],
   };
 }

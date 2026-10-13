@@ -73,16 +73,16 @@ function explain(p: DivFactProblem, model: AnswerModel): Explanation {
   const { a, b } = p, q = expectedOf(model, "think"), d = expectedOf(model, "divide");
   return {
     heading: "Share into equal groups",
-    idea: ["Dividing shares a number into equal groups, so every division fact has a times fact inside it."],
+    idea: ["Dividing shares into equal groups, and a times fact tells you how many in each."],
     statement: [num(a), op("÷"), num(b)],
     diagram: divPicture(p, q),
     caption: `Share ${count(a, "dot")} into ${b} equal groups.`,
     timeline: beats(3),
     steps: [
       { id: "think", state: 1, answerStep: "think", result: q, math: [num(b), op("×"), num(q), op("="), num(a)],
-        narration: `Put the ${count(a, "dot")} in ${b} equal rows. Each row gets ${q}, because ${b} × ${q} = ${a}.` },
+        narration: `Put the ${count(a, "dot")} in ${b} equal rows. Each row gets ${q}.` },
       { id: "divide", state: 2, answerStep: "divide", result: d, math: [num(a), op("÷"), num(b), op("="), num(d)],
-        narration: `So ${a} ÷ ${b} = ${d}. Each group has ${d}.` },
+        narration: "Dividing is the times fact turned backwards." },
     ],
   };
 }

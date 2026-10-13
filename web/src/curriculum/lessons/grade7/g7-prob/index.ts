@@ -57,7 +57,7 @@ export function explainProbability(p: ProbabilityProblem, answers: AnswerModel):
   const chance = fracText(n, d);
   return {
     heading: "Winners over everything",
-    idea: ["A chance is how many winners there are out of everything there is."],
+    idea: ["A chance is the ways to win out of all the ways there are."],
     statement: mt`P(${name}) = ${name} ÷ all`,
     caption: `${want} of the ${T} ${want === 1 ? "is" : "are"} ${name}: P(${name}) = ${chance}.`,
     diagram: buildMarbleBag({
@@ -69,10 +69,10 @@ export function explainProbability(p: ProbabilityProblem, answers: AnswerModel):
     }),
     timeline: beats(4),
     steps: [
-      { id: "bag", narration: `The bag holds ${p.r} red, ${p.b} blue and ${p.g} green marbles. You pick one without looking.`, math: mt`${p.r} red, ${p.b} blue, ${p.g} green`, state: 0 },
-      { id: "want", narration: `${want} of them ${want === 1 ? "is" : "are"} ${name}: those are the ways to win.`, math: mt`${want}`, state: 1, answerStep: "want", result: want },
-      { id: "all", narration: `There are ${p.r} + ${p.b} + ${p.g} = ${count(T, "marble")} in all.`, math: mt`${p.r} + ${p.b} + ${p.g} = ${T}`, state: 2, answerStep: "all", result: T },
-      { id: "chance", narration: `The chance is ${want} out of ${T}${chance === `${want}/${T}` ? "" : `, which simplifies to ${chance}`}.`, math: n === want && d === T ? mt`P(${name}) = ${frac(want, T)}` : mt`P(${name}) = ${frac(want, T)} = ${frac(n, d)}`, state: 3, answerStep: "chance", result: n },
+      { id: "bag", narration: "You pick one without looking.", math: mt`${p.r} red, ${p.b} blue, ${p.g} green`, state: 0 },
+      { id: "want", narration: `The ${name} ones are the ways to win.`, math: mt`${want}`, state: 1, answerStep: "want", result: want },
+      { id: "all", narration: "Every marble counts, whatever its color.", math: mt`${p.r} + ${p.b} + ${p.g} = ${T}`, state: 2, answerStep: "all", result: T },
+      { id: "chance", narration: `Ways to win on top, all the marbles on the bottom.${chance === `${want}/${T}` ? "" : " Then simplify."}`, math: n === want && d === T ? mt`P(${name}) = ${frac(want, T)}` : mt`P(${name}) = ${frac(want, T)} = ${frac(n, d)}`, state: 3, answerStep: "chance", result: n },
     ],
   };
 }
@@ -82,6 +82,7 @@ export const lesson: LessonDefinition<ProbabilityProblem> = {
   grade: 7,
   unit: "Probability",
   title: "Probability",
+  pre: "g4-equiv",
   reference: createProbability(3, 5, 2, 0),
   // the first three: a small bag, up to 4 of each color
   generate: (rng, index) => { const t = index < 3 ? 4 : 8; return createProbability(rng.int(1, t), rng.int(1, t), rng.int(1, t), rng.int(0, 2)); },

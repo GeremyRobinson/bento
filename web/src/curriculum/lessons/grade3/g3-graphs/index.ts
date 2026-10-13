@@ -108,19 +108,31 @@ function diagram(p: GraphProblem, learn: boolean) {
     ...(learn ? { beats: { fill: 0, read: 1 }, read: rows(p) } : {}), alt: alt(p) });
 }
 
+/** Watch one's line for each answer step (the steps' own explain text stays "Show me" in practice) */
+function said(p: GraphProblem, id: string): string {
+  const th = THEMES[p.theme]!, s = p.scale;
+  if (id === "key") return "Read the key under the graph first.";
+  if (id === "scale") return "Read the numbers up the side first.";
+  if (id === "more") return "How many more means subtract.";
+  if (id === "both") return "Together means add.";
+  const i = id.startsWith("x") ? p.x : p.y, name = th.names[i]!, c = p.counts[i]!, half = c % s !== 0;
+  if (id.endsWith("-pics")) return half ? "Count the whole pictures. The last one is only half." : `Count the pictures in the ${name} row.`;
+  return p.type === 0
+    ? `Each picture is ${s}${half ? `, and half a picture is ${s / 2}` : ""}.`
+    : `Follow the top of the ${name} bar across to the side.${half ? " It ends halfway between two lines." : ""}`;
+}
+
 function explain(p: GraphProblem, model: AnswerModel): Explanation {
   const last = model.steps.at(-1)!;
   return {
     heading: "Scaled graphs",
-    idea: ["In a scaled graph, one picture can stand for more than one thing."],
+    idea: ["In a scaled graph, one picture, or one line up the side, can stand for more than 1."],
     statement: words(last.question ?? ""),
     diagram: diagram(p, true),
     caption: `${last.explain}`,
-    timeline: beats(2),
-    steps: [
-      { id: "look", narration: p.type ? `The side goes up by ${p.scale}.` : `The key: each picture is ${p.scale}.`, math: words(THEMES[p.theme]!.title), state: 0 },
-      ...model.steps.map(s => ({ id: s.id, narration: s.explain, math: s.work ?? [], state: 1, answerStep: s.id, result: s.slots[0]!.expected! })),
-    ],
+    timeline: beats(model.steps.length + 1),
+    // one beat per step; the graph's read highlight comes in on beat 1 and holds to the end
+    steps: model.steps.map((s, i) => ({ id: s.id, narration: said(p, s.id), math: s.work ?? [], state: i + 1, answerStep: s.id, result: s.slots[0]!.expected! })),
   };
 }
 

@@ -113,27 +113,31 @@ const alt = (p: FracPlotProblem) => (p.kind === 0 ? "A crayon on an inch ruler w
 function explain(p: FracPlotProblem, model: AnswerModel): Explanation {
   const idea = ["A ruler marks halves and fourths of an inch, so a length can land between whole inches."];
   const last = model.steps.at(-1)!;
+  // Watch one's line for each answer step (the steps' own explain text stays "Show me" in practice)
+  const line: Record<string, string> = {
+    whole: "Long marks are whole inches. Find the last one it passes.",
+    extra: `${p.to === 4 ? "Middle marks are halves, short ones fourths." : "The middle mark is the half."} Count the spaces past ${p.whole}.`,
+    write: `Whole inches go in front. The ${p.to === 2 ? "halves" : "fourths"} make the fraction.`,
+    stack: `Each X is one ${THINGS[p.thing]!.one}. Count the X's above ${said(p.v)}.`,
+    mode: `Each X is one ${THINGS[p.thing]!.one}. The tallest stack came up most.`,
+  };
+  const steps = model.steps.map((s, i) => ({ id: s.id, narration: line[s.id]!, math: s.work ?? [], state: i + 1, answerStep: s.id, result: s.slots[0]!.expected! }));
   if (p.kind === 0) {
     const len = 4 * p.whole + p.quarters;
     return {
       heading: "Measure to a fourth", idea, statement: words("How long is it?"),
       diagram: buildFracRuler({ len, max: Math.max(4, p.whole + 1), to: p.to, beats: { whole: 1, extra: 2 }, text: `${plotLabel(len, 4)} in`, alt: `${alt(p)} It is ${said(len)} inches long.` }),
-      caption: `${said(len)} inches.`, timeline: beats(3),
-      steps: [
-        { id: "look", narration: "Long marks are inches, middle ones halves, short ones fourths.", math: words("Look at the marks."), state: 0 },
-        ...model.steps.map((s, i) => ({ id: s.id, narration: s.explain, math: s.work ?? [], state: Math.min(i + 1, 2), answerStep: s.id, result: s.slots[0]!.expected! })),
-      ],
+      // one beat per step: the ruler holds its last picture on the "write" beat
+      caption: `${said(len)} inches.`, timeline: beats(steps.length + 1),
+      steps,
     };
   }
   const lit = p.ask === 0 ? [p.v] : modes(p.data);
   return {
     heading: "Line plots in fourths", idea, statement: words(last.question ?? ""),
     diagram: buildLinePlot({ ...plot(p), beats: { drop: 0, light: 1 }, light: lit, alt: `${alt(p)} The X's drop in, then the stack the question is about lights up.` }),
-    caption: `${last.explain}`, timeline: beats(2),
-    steps: [
-      { id: "drop", narration: "Each thing measured drops an X above its length.", math: words(THINGS[p.thing]!.title), state: 0 },
-      ...model.steps.map(s => ({ id: s.id, narration: s.explain, math: s.work ?? [], state: 1, answerStep: s.id, result: s.slots[0]!.expected! })),
-    ],
+    caption: `${last.explain}`, timeline: beats(steps.length + 1),
+    steps,
   };
 }
 

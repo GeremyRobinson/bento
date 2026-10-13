@@ -48,7 +48,7 @@ export function explainDot(p: DotProblem, model: AnswerModel): Explanation {
   const sense = D > 0 ? "less than a right angle apart" : D < 0 ? "more than a right angle apart" : "perpendicular";
   return {
     heading: "Multiply matching parts, then add",
-    idea: ["The dot product is positive when the arrows point the same way and 0 when they're perpendicular."],
+    idea: ["The sign tells the angle: positive under 90°, 0 at 90°, negative over 90°."],
     statement: dotMath(p),
     caption: `${f(a)} × ${fP(c)} + ${fP(b)} × ${fP(d)} = ${f(D)}: the arrows are ${sense}.`,
     diagram: buildPlane({
@@ -71,10 +71,10 @@ export function explainDot(p: DotProblem, model: AnswerModel): Explanation {
     }),
     timeline: beats(4),
     steps: [
-      { id: "vs", narration: `Two arrows: ${vt(a, b)} and ${vt(c, d)}.`, math: dotMath(p), state: 0 },
-      { id: "x", narration: `Multiply the x parts: ${f(a)} × ${fP(c)} = ${f(X)}.`, math: [num(a), op("×"), ...P(c), op("="), num(X)], state: 1, answerStep: "x", result: X },
-      { id: "y", narration: `Multiply the y parts: ${f(b)} × ${fP(d)} = ${f(Y)}.`, math: [num(b), op("×"), ...P(d), op("="), num(Y)], state: 2, answerStep: "y", result: Y },
-      { id: "dot", narration: `Add: ${f(X)} + ${fP(Y)} = ${f(D)}. ${D === 0 ? "0 means the arrows are perpendicular." : D > 0 ? "Positive: the arrows point roughly the same way." : "Negative: the arrows point apart."}`,
+      { id: "vs", narration: "Two arrows from the origin. Match their x parts and their y parts.", math: dotMath(p), state: 0 },
+      { id: "x", narration: "Multiply the x parts, the first number of each arrow.", math: [num(a), op("×"), ...P(c), op("="), num(X)], state: 1, answerStep: "x", result: X },
+      { id: "y", narration: "Multiply the y parts, the second number of each arrow.", math: [num(b), op("×"), ...P(d), op("="), num(Y)], state: 2, answerStep: "y", result: Y },
+      { id: "dot", narration: `Add the two products. ${D === 0 ? "0: the arrows are perpendicular." : D > 0 ? "Positive: less than a right angle apart." : "Negative: more than a right angle apart."}`,
         math: [num(X), op("+"), ...P(Y), op("="), num(D)], state: 3, answerStep: "dot", result: D },
     ],
   };

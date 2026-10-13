@@ -66,7 +66,7 @@ export function explainSplitMultiplication(p: SplitMultiplicationProblem, answer
 
   return {
     heading: "Split the second number",
-    idea: ["A two-digit number is just tens and ones, so multiplying each part and adding the parts gives the whole answer."],
+    idea: ["Tens and ones can be multiplied one at a time, then added back together."],
     statement: [num(a), op("×"), num(b), op("="), num(a), op("×"), text("("), ...plusChain(p.parts), text(")")],
     diagram: buildSplitAreaDiagram(p, layout),
     timeline,

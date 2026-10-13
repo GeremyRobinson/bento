@@ -7,7 +7,6 @@ import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildRounding, commas } from "../../../../explanations/diagrams/early-g4/place-value";
 import { expectedOf, manyBoxes, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
 import { boxSlips, slips } from "../_kit";
-import { aNum } from "../../../text";
 
 /** n rounded to the nearest `place` (10, 100, 1,000, 10,000 or 100,000). */
 export interface RoundProblem { n: number; place: number }
@@ -108,16 +107,16 @@ function explain(p: RoundProblem, model: AnswerModel): Explanation {
     caption: `Halfway between ${commas(lo)} and ${commas(hi)} is ${commas(mid)}.`,
     timeline: beats(5),
     steps: [
-      { id: "start", state: 0, narration: `Here is ${N}, one digit in each place. We'll round it to the nearest ${ONE[place]}.`, math: [text(N)] },
+      { id: "start", state: 0, narration: `One digit in each place. We'll round to the nearest ${ONE[place]}.`, math: [text(N)] },
       { id: "digit", state: 1, answerStep: "digit", result: d, math: [text(`${ONE[place]}s digit`), op("="), text(String(d))],
-        narration: `The ${name} holds ${aNum(d)}.` },
+        narration: `Count places from the right until you reach the ${name}.` },
       { id: "between", state: 2, answerStep: "between", result: lo, math: [text(commas(lo)), op("<"), text(N), op("<"), text(commas(hi))],
-        narration: `So ${N} sits between ${commas(lo)} and ${commas(hi)} on the number line.` },
+        narration: `These are the round ${ONE[place]}s on either side.` },
       { id: "next", state: 3, answerStep: "next", result: next, math: [text("next digit"), op("="), text(String(next))],
-        narration: `The digit next door is ${next}. ${up ? `That's 5 or more, so ${N} is at or past the halfway mark, ${commas(mid)}.` : `That's less than 5, so ${N} is before the halfway mark, ${commas(mid)}.`}` },
+        narration: up ? `That's 5 or more, so it's at or past halfway, ${commas(mid)}.` : `That's less than 5, so it's before halfway, ${commas(mid)}.` },
       { id: "round", state: 4, answerStep: "round", result: R, math: [text(N), op("≈"), text(commas(R))],
-        narration: n === mid ? `It's exactly halfway, and halfway rounds up, so ${N} rounds up to ${commas(R)}.`
-          : `It's closer to ${commas(R)}, so ${N} rounds ${up ? "up" : "down"} to ${commas(R)}.` },
+        narration: n === mid ? "It's exactly halfway, and halfway rounds up."
+          : up ? "It's closer to the higher one, so it rounds up." : "It's closer to the lower one, so it rounds down." },
     ],
   };
 }

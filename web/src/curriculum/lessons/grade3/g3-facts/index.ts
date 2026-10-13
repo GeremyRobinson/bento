@@ -100,7 +100,7 @@ function explain(p: FactProblem, model: AnswerModel): Explanation {
     timeline: beats(square ? 2 : 3),
     steps: [
       { id: "count", state: 1, answerStep: "count", result: P, math: [num(a), op("×"), num(b), op("="), num(P)],
-        narration: `Count by ${b}s, one row at a time: ${Array.from({ length: Math.min(a, 3) }, (_, i) => (i + 1) * b).join(", ")}${a > 3 ? `, and on to ${P}` : ""}. That's ${count(a, "row")}, so ${a} × ${b} = ${P}.` },
+        narration: `Count by ${b}s, one row at a time: ${Array.from({ length: Math.min(a, 3) }, (_, i) => (i + 1) * b).join(", ")}${a > 3 ? `, and on to ${P}` : ""}.` },
       ...(square ? [] : [{ id: "turn", state: 2, answerStep: "turn", result: T, math: [num(b), op("×"), num(a), op("="), num(T)],
         narration: `Now look down the columns. There are ${count(b, "column")} of ${a}, and still ${count(T, "dot")}.` }]),
     ],

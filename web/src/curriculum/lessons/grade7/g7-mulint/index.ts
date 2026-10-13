@@ -69,8 +69,7 @@ function explain(p: MulIntegersProblem, model: AnswerModel): Explanation {
     caption: div ? `${jumps} ${verb(count, "makes", "make")} ${reach}, so the size is ${size}. ${sign}` : `${jumps} ${verb(count, "lands", "land")} on ${reach}. ${sign}`,
     timeline: beats(2),
     steps: [
-      { id: "size", narration: div ? `Ignore the signs: ${Math.abs(a * b)} ÷ ${Math.abs(b)} = ${size}, because ${size} jump${size === 1 ? "" : "s"} of ${jump} ${verb(size, "makes", "make")} ${reach}.`
-          : `Ignore the signs: ${Math.abs(a)} × ${Math.abs(b)} = ${size}, ${count} jump${count === 1 ? "" : "s"} of ${jump}.`,
+      { id: "size", narration: div ? `Ignore the signs: ${jumps} ${verb(count, "makes", "make")} ${reach}.` : `Ignore the signs: ${jumps}.`,
         math: div ? [num(Math.abs(a * b)), op("÷"), num(Math.abs(b)), op("="), num(size)] : [num(Math.abs(a)), op("×"), num(Math.abs(b)), op("="), num(size)],
         state: 0, answerStep: "size", result: size },
       { id: "sign", narration: (differ ? `${f(div ? a * b : a)} and ${f(b)} have different signs, so the answer is negative: ${f(ans)}.`

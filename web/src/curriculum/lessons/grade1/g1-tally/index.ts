@@ -70,6 +70,28 @@ function answers(p: TallyProblem): AnswerModel {
   };
 }
 
+/** Watch one's line for each step: what to do, in words (the step's own explain stays for "Show me") */
+function narrationOf(p: TallyProblem, id: string): string {
+  const th = THEMES[p.theme]!;
+  const row = (i: number) => (p.counts[i]! >= 5 ? `Find the ${th.names[i]} row. Count the bundles by 5s, then count on.` : `Find the ${th.names[i]} row and count the marks.`);
+  switch (id) {
+    case "bundles": return "Find the bundles. Each one is 5 marks.";
+    case "rest": return "Now count the marks that aren't in a bundle.";
+    case "all": {
+      const n = p.counts[p.x]!, five = Math.floor(n / 5), rest = n % 5;
+      if (n < 5) return "Touch each mark once and count.";
+      const seq = `${Array.from({ length: five }, (_, i) => 5 * (i + 1)).join(", ")}${rest ? `, then ${Array.from({ length: rest }, (_, i) => five * 5 + i + 1).join(", ")}` : ""}`;
+      return rest ? `Count by 5s, then count on: ${seq}.` : `Count by 5s: ${seq}.`;
+    }
+    case "x": return row(p.x);
+    case "y": return row(p.y);
+    case "row0": case "row1": case "row2": return row(Number(id.slice(3)));
+    case "more": return "Line up the rows. The extra marks are how many more.";
+    case "total": return "Add all three rows.";
+    default: throw new Error(`no narration for step ${id}`);
+  }
+}
+
 const rowsRead = (p: TallyProblem) => (p.ask === 0 ? [p.x] : p.ask === 1 ? [p.x, p.y] : [0, 1, 2]);
 const alt = (p: TallyProblem) => `A tally chart of ${THEMES[p.theme]!.title.toLowerCase()}: ${THEMES[p.theme]!.names.join(", ")}.`;
 
@@ -85,7 +107,7 @@ function explain(p: TallyProblem, model: AnswerModel): Explanation {
     timeline: beats(2),
     steps: [
       { id: "fill", narration: "Each thing adds one mark. The fifth mark goes across the other four.", math: words(th.title), state: 0 },
-      ...model.steps.map(s => ({ id: s.id, narration: s.explain, math: s.work, state: 1, answerStep: s.id, result: s.slots[0]!.expected! })),
+      ...model.steps.map(s => ({ id: s.id, narration: narrationOf(p, s.id), math: s.work, state: 1, answerStep: s.id, result: s.slots[0]!.expected! })),
     ].map((s, i, all) => (i === all.length - 1 ? { ...s, result: ans } : s)),
   };
 }

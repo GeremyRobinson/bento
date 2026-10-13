@@ -74,9 +74,9 @@ function explain(p: ProportionProblem, model: AnswerModel): Explanation {
     timeline: beats(3),
     steps: [
       { id: "cross", state: 1, answerStep: "cross", result: k, math: [num(b * k), op("÷"), num(b), op("="), num(k)],
-        narration: `The bottom's ${b} boxes now make ${f(b * k)}, so one box is ${f(b * k)} ÷ ${b} = ${f(k)}.` },
+        narration: `${b} equal boxes make ${f(b * k)}, so divide to find one box.` },
       { id: "divide", state: 2, answerStep: "divide", result: x, math: [text("x"), op("="), num(a), op("×"), num(k), op("="), num(x)],
-        narration: `The top is ${a} box${a === 1 ? "" : "es"} of the same size: x = ${a} × ${f(k)} = ${f(x)}. Check: ${a} × ${f(b * k)} and ${b} × ${f(x)} both make ${f(a * b * k)}.` },
+        narration: `The top is ${count(a, "box", "boxes")} of the same size.` },
     ],
   };
 }

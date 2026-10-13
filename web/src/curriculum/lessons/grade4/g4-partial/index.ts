@@ -52,7 +52,7 @@ export function partialAnswers({ n, m }: PartialProblem): AnswerModel {
 
 export function explainPartial(p: PartialProblem, answers: AnswerModel): Explanation {
   const { n, m } = p, { H, T, O } = places(n);
-  const ids = ["hundreds", "tens", "ones"] as const, names = ["hundreds", "tens", "ones"];
+  const ids = ["hundreds", "tens", "ones"] as const, names = ["hundreds", "tens", "ones"], ONE = ["hundred", "ten"];
   const partsOf = [H * 100, T * 10, O];
   const P = ids.map(id => expectedOf(answers.steps, id)), total = expectedOf(answers.steps, "sum");
   // a place worth nothing gets no strip in the picture; its beat still says so
@@ -75,11 +75,12 @@ export function explainPartial(p: PartialProblem, answers: AnswerModel): Explana
     timeline: beats(5),
     steps: [
       ...ids.map((id, i) => ({
-        id, narration: partsOf[i] ? `The ${names[i]}: ${partsOf[i]} × ${m} = ${P[i]}.` : `There are no ${names[i]}, so that part is 0.`,
+        id, narration: !partsOf[i] ? `There are no ${names[i]}, so that part is 0.`
+          : i === 2 ? "Last, the ones strip." : `${count([H, T][i]!, ONE[i]!)} times ${m} is ${count([H, T][i]! * m, ONE[i]!)}.`,
         math: [num(partsOf[i]!), op("×"), num(m), op("="), num(P[i]!)], state: i + 1, answerStep: id, result: P[i]!,
       })),
       // a place worth 0 adds nothing, so the worked line leaves out "+ 0" (review v43 item 10)
-      { id: "sum", narration: `Add the parts: ${total}.`, math: [...(split ? plusChain(P.filter(x => x > 0)) : [num(n), op("×"), num(m)]), op("="), num(total)], state: 4, answerStep: "sum", result: total },
+      { id: "sum", narration: "Add the strips to fill the whole rectangle.", math: [...(split ? plusChain(P.filter(x => x > 0)) : [num(n), op("×"), num(m)]), op("="), num(total)], state: 4, answerStep: "sum", result: total },
     ],
   };
 }

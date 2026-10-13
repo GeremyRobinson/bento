@@ -138,11 +138,11 @@ function explain(p: CompareProblem, model: AnswerModel): Explanation {
   const firstBeat = kind === "bottom"
     ? { narration: `Both bars are cut into ${b} equal pieces. Count the shaded ones: ${a} and ${c}.`, math: [num(a), op(a > c ? ">" : "<"), num(c)] as MathText, result: expectedOf(model, "more", "c") }
     : kind === "top"
-      ? { narration: `Both have ${a} shaded ${a === 1 ? "piece" : "pieces"}. A whole cut into ${Math.min(b, d)} has bigger pieces than one cut into ${Math.max(b, d)}.`, math: [frac(1, Math.min(b, d)), op(">"), frac(1, Math.max(b, d))] as MathText, result: expectedOf(model, "size", "c") }
-      : { narration: `Each 1/${Math.min(b, d)} piece is the same as ${count(expectedOf(model, "fit"), "piece")} of 1/${Math.max(b, d)}.`, math: [num(expectedOf(model, "fit")), op("×"), frac(1, Math.max(b, d)), op("="), frac(1, Math.min(b, d))] as MathText, result: expectedOf(model, "fit") };
+      ? { narration: `Both have ${a} shaded ${a === 1 ? "piece" : "pieces"}. Fewer pieces in a whole means bigger pieces.`, math: [frac(1, Math.min(b, d)), op(">"), frac(1, Math.max(b, d))] as MathText, result: expectedOf(model, "size", "c") }
+      : { narration: `Look under one 1/${Math.min(b, d)} piece and count the small pieces.`, math: [num(expectedOf(model, "fit")), op("×"), frac(1, Math.max(b, d)), op("="), frac(1, Math.min(b, d))] as MathText, result: expectedOf(model, "fit") };
   return {
     heading: kind === "bottom" ? "Same pieces: count them" : kind === "top" ? "Same count: compare the pieces" : "Same amount, different pieces",
-    idea: ["To compare fractions, both the size of the pieces and how many there are matter."],
+    idea: ["To compare fractions, look at how big the pieces are and how many there are."],
     statement: pair(p, [text(" ? ")]),
     diagram: comparePicture(p, s),
     caption: `Two bars, the same size. One shows ${ft(a, b)} and one shows ${ft(c, d)}.`,
@@ -150,7 +150,7 @@ function explain(p: CompareProblem, model: AnswerModel): Explanation {
     steps: [
       { id: first.id, state: 1, answerStep: first.id, ...firstBeat },
       { id: "compare", state: 2, answerStep: "compare", result: s + 1, math: pair(p, [op(sign)]),
-        narration: s === 0 ? `The shading ends in the same place, so ${ft(a, b)} = ${ft(c, d)}.` : `${big} reaches further, so ${ft(a, b)} ${sign} ${ft(c, d)}.` },
+        narration: s === 0 ? "The shading ends in the same place, so they are equal." : `${big} reaches further, so it is bigger.` },
     ],
   };
 }
@@ -165,7 +165,7 @@ export const lesson: LessonDefinition<CompareProblem> = {
   generate: generateCompare,
   restore: raw => restoreVia(raw, ["a", "b", "c", "d"] as const, v => createCompare(v.a, v.b, v.c, v.d)),
   display: p => pair(p, [text(" ? ")]),
-  displayNote: () => "Which is bigger?",
+  displayNote: () => "Which is bigger, or are they the same?",
   answers,
   explain,
 };

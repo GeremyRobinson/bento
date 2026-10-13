@@ -99,12 +99,12 @@ function explain(p: ConvertProblem, model: AnswerModel): Explanation {
   const steps: ExplanationStep[] = [
     { id: "start", state: 0, math: [...shown(p), op("="), text(`? ${smalls}`)], narration: `The top line counts ${u.big[1]}. The bottom line counts ${smalls} for the same amount.` },
     { id: "one", state: 1, answerStep: "one", result: f, math: [num(1), text(` ${one}`), op("="), num(f), text(` ${smalls}`)],
-      narration: `Start with one: 1 ${one} lines up with ${f} ${smalls}.` },
+      narration: `Start with just one ${one}.` },
     { id: "multiply", state: 2, answerStep: "multiply", result: all, math: [num(n), op("×"), num(f), op("="), num(all)],
-      narration: `Every ${one} adds ${f} more ${smalls}. ${n} ${name(u.big, n)} line up with ${n} × ${f} = ${all} ${smalls}.` },
+      narration: `Every ${one} adds ${f} more ${smalls}, so multiply.` },
   ];
   if (m) steps.push({ id: "extra", state: 3, answerStep: "extra", result: total, math: [num(all), op("+"), num(m), op("="), num(total)],
-    narration: `Then hop on the ${m} extra ${name(u.small, m)}: ${all} + ${m} = ${total} ${smalls}.` });
+    narration: `Then hop on the ${m} extra ${name(u.small, m)}.` });
   return {
     heading: "Big unit to small unit: multiply",
     idea: ["One big unit is always the same number of small units."],
@@ -126,6 +126,7 @@ export const lesson: LessonDefinition<ConvertProblem> = {
   grade: 4,
   unit: "Measurement",
   title: "Converting measurements",
+  pre: "g3-split",
   reference: createConvert(0, 3, 5),
   generate: (rng, index) => generateConvert(rng, index),
   restore: raw => restoreVia(raw, ["k", "n", "m"] as const, v => createConvert(v.k, v.n, v.m)),

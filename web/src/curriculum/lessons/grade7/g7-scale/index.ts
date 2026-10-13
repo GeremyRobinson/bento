@@ -21,7 +21,7 @@ export const generateScale = (rng: Rng, index = 3) => (index < 3 ? createScale(r
 function answers({ c, km, g }: ScaleProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "groups", l: "How many map units?", a: s => [num(c * g), op("÷"), num(c), op("="), ...s], ans: g, h: `Each group is ${c} cm long. How many groups fit along the line?`,
+      ns({ id: "groups", l: "How many groups?", a: s => [num(c * g), op("÷"), num(c), op("="), ...s], ans: g, h: `Each group is ${c} cm long. How many groups fit along the line?`,
         w: [[c * g * c, "Multiplied", `Count how many ${c} cm groups fit: that's dividing.`]] }),
       ns({ id: "real", l: "Real distance", a: s => [num(g), op("×"), num(km), op("="), ...s, text(" km")], ans: g * km, h: `Each group is ${km} km.`,
         w: [[c * g * km, "Skipped a step", `Each ${c} cm (not each 1 cm) is ${km} km.`]] }),
@@ -54,9 +54,9 @@ function explain(p: ScaleProblem, model: AnswerModel): Explanation {
     timeline: beats(3),
     steps: [
       { id: "groups", state: 1, answerStep: "groups", result: g, math: [num(c * g), op("÷"), num(c), op("="), num(g)],
-        narration: `Cut the ${c * g} cm into groups of ${c} cm: ${c * g} ÷ ${c} = ${count(g, "group")}.` },
+        narration: `Cut the map line into groups of ${c} cm.` },
       { id: "real", state: 2, answerStep: "real", result: real, math: [num(g), op("×"), num(km), op("="), num(real), text(" km")],
-        narration: `Each group is ${km} km for real: ${g} × ${km} = ${real} km.` },
+        narration: `Each group is ${km} km for real.` },
     ],
   };
 }
@@ -66,7 +66,7 @@ export const lesson: LessonDefinition<ScaleProblem> = {
   grade: 7,
   unit: "Proportions and percents",
   title: "Scale drawings",
-  pre: "g7-prop",
+  pre: "g6-ratio",
   // the current app's card and picture: 2 cm = 5 km, 8 cm is 20 km
   reference: createScale(2, 5, 4),
   generate: (rng, index) => generateScale(rng, index),

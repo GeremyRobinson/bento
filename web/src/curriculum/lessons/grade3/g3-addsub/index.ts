@@ -88,7 +88,7 @@ function explain(p: AddSubProblem, model: AnswerModel): Explanation {
   const { a, b, s } = p, js = jumps(p);
   return {
     heading: s === 1 ? "Add in jumps" : "Take away in jumps",
-    idea: ["Hundreds, tens and ones are easy jumps, so the second number breaks into those."],
+    idea: ["Break the second number into hundreds, tens and ones, and jump one place at a time."],
     statement: [num(a), op(s === 1 ? "+" : "−"), num(b)],
     diagram: addSubPicture(p, model),
     caption: `${b} is ${js.map(j => j.v).join(" + ")}.`,
@@ -96,10 +96,13 @@ function explain(p: AddSubProblem, model: AnswerModel): Explanation {
     steps: js.map((j, k) => {
       const st = model.steps[k]!, to = st.slots[0]!.expected!;
       const [many, one] = NAMES[j.place]!;
+      const digit = j.from % (j.place * 10) - (j.from % j.place); // as in jumpStep
+      const regroup = s === 1 && j.place < 100 && digit + j.v >= j.place * 10 ? ` That makes a new ${NAMES[j.place * 10]![1]}.`
+        : s === -1 && j.place < 100 && digit < j.v ? ` Trade 1 ${NAMES[j.place * 10]![1]} for 10 ${many}.` : "";
       return {
         id: st.id, state: k + 1, answerStep: st.id, result: to,
         math: [num(j.from), op(s === 1 ? "+" : "−"), num(j.v), op("="), num(to)],
-        narration: `${k === 0 ? `Start at ${a}. ` : ""}${s === 1 ? "Add" : "Take away"} ${j.d} ${j.d === 1 ? one : many}: ${j.from} ${sign(s)} ${j.v} = ${to}.${k === js.length - 1 ? ` So ${a} ${sign(s)} ${b} = ${to}.` : ""}`,
+        narration: `${k === 0 ? `Start at ${a}. ` : ""}${s === 1 ? "Add" : "Take away"} the ${j.d} ${j.d === 1 ? one : many} in ${b}.${regroup}${k === js.length - 1 ? ` So ${a} ${sign(s)} ${b} = ${to}.` : ""}`,
       };
     }),
   };

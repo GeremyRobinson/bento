@@ -54,9 +54,9 @@ export function explainSimilar(p: SimilarProblem, answers: AnswerModel): Explana
     }),
     timeline: beats(3),
     steps: [
-      { id: "triangles", narration: `The small triangle has sides ${a} and ${b}. The big one has the same shape; its side matching ${a} is ${f(big)}.`, math: mt`${a} → ${big}`, state: 0 },
-      { id: "factor", narration: `Big side ÷ matching small side: ${f(big)} ÷ ${a} = ${f(k)}. Every side is ${f(k)} times as long.`, math: mt`${big} ÷ ${a} = ${k}`, state: 1, answerStep: "factor", result: k },
-      { id: "missing", narration: `So the side matching ${b} is ${b} × ${f(k)} = ${f(side)}.`, math: mt`${b} × ${k} = ${side}`, state: 2, answerStep: "missing", result: side },
+      { id: "triangles", narration: "Same shape, so each big side matches a small side.", math: mt`${a} → ${big}`, state: 0 },
+      { id: "factor", narration: "Divide a big side by its small partner: that's the scale factor.", math: mt`${big} ÷ ${a} = ${k}`, state: 1, answerStep: "factor", result: k },
+      { id: "missing", narration: `Every side is ${f(k)} times as long, so scale the ${b} side too.`, math: mt`${b} × ${k} = ${side}`, state: 2, answerStep: "missing", result: side },
     ],
   };
 }
@@ -66,6 +66,7 @@ export const lesson: LessonDefinition<SimilarProblem> = withEasyStart({
   grade: 10,
   unit: "Angles and triangles",
   title: "Similar triangles",
+  pre: "g7-scale",
   reference: createSimilar(4, 6, 2),
   generate: rng => {
     const k = rng.pick(SCALE_FACTORS);

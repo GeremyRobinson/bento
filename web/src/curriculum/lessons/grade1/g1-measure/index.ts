@@ -72,7 +72,7 @@ function explain({ x, y }: MeasureProblem, model: AnswerModel): Explanation {
   const one = THINGS[x]!, two = THINGS[y]!, longer = a > b ? one : two, shorter = a > b ? two : one;
   return {
     heading: "Measure with cubes",
-    idea: ["Cubes lined up with no gaps cover the whole length, so their count is the length."],
+    idea: ["Line up cubes with no gaps, and the number of cubes is the length."],
     statement: [text(`${one} and ${two}`)],
     diagram: buildMeasure({
       things: [{ name: one, length: a }, { name: two, length: b }],
@@ -83,9 +83,9 @@ function explain({ x, y }: MeasureProblem, model: AnswerModel): Explanation {
     caption: `The ${longer} is ${cubes(diff)} longer than the ${shorter}.`,
     timeline: beats(3),
     steps: [
-      { id: "first", narration: `Count the cubes under the ${one}: **${a}**.`, math: [text(`${cap(one)}: `), num(a), text(" cubes")], state: 0, answerStep: "first", result: a },
-      { id: "second", narration: `Count the cubes under the ${two}: **${b}**.`, math: [text(`${cap(two)}: `), num(b), text(" cubes")], state: 1, answerStep: "second", result: b },
-      { id: "diff", narration: `Both start at the same line. The ${longer} goes on for **${diff}** more ${diff === 1 ? "cube" : "cubes"}.`, math: [num(Math.max(a, b)), op("−"), num(Math.min(a, b)), op("="), num(diff)], state: 2, answerStep: "diff", result: diff },
+      { id: "first", narration: `Start at the dashed line. Count the cubes under the ${one}.`, math: [text(`${cap(one)}: `), num(a), text(" cubes")], state: 0, answerStep: "first", result: a },
+      { id: "second", narration: `Now count the cubes under the ${two}.`, math: [text(`${cap(two)}: `), num(b), text(" cubes")], state: 1, answerStep: "second", result: b },
+      { id: "diff", narration: `Both start at the same line. Count the extra cubes on the ${longer}.`, math: [num(Math.max(a, b)), op("−"), num(Math.min(a, b)), op("="), num(diff)], state: 2, answerStep: "diff", result: diff },
     ],
   };
 }
@@ -105,7 +105,6 @@ export const lesson: LessonDefinition<MeasureProblem> = {
   },
   restore: raw => restoreVia(raw, ["x", "y", "a", "b"] as const, v => createMeasure(v.x, v.y, v.a, v.b)),
   display: p => [text(`${THINGS[p.x]} and ${THINGS[p.y]}`)],
-  displayNote: () => "Count the cubes under each one.",
   lead: p => `How long are the ${THINGS[p.x]} and the ${THINGS[p.y]}? Count the cubes under each one.`,
   picture: p => buildMeasure({ things: [{ name: THINGS[p.x]!, length: p.a }, { name: THINGS[p.y]!, length: p.b }], alt: `A ${THINGS[p.x]} and a ${THINGS[p.y]}, each with cubes under it` }),
   answers,

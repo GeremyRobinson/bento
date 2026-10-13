@@ -47,7 +47,7 @@ function answers({ whole, part }: BondProblem): AnswerModel {
         wrong: slips(rest, [
           [part, "Counted the first group", "That's the first group again. Count the other group."],
           [whole, "Counted the whole", "That's the whole. The other group is smaller."],
-          [whole + part, "Added the parts", "The parts are smaller than the whole. Count only the other group."],
+          [whole + part, "Added the whole and a part", "The parts are smaller than the whole. Count only the other group."],
         ]),
         hint: "Cover the first group. Count the rest.",
         explain: `${whole} is ${part} and ${rest}.`,
@@ -68,10 +68,10 @@ function explain(p: BondProblem, model: AnswerModel): Explanation {
     caption: `${w} is ${a} and ${r}.`,
     timeline: beats(4),
     steps: [
-      { id: "whole", narration: `Count all the dots: ${countUp(1, w)}. The whole is **${w}**.`, math: [text("In all: "), num(w)], state: 0, answerStep: "whole", result: w },
-      { id: "part", narration: a ? `The first group has **${a}**.` : "The first group is empty: **0**.", math: [text("First group: "), num(a)], state: 1, answerStep: "part", result: a },
-      { id: "rest", narration: `The other group has **${r}**.`, math: [text("Other group: "), num(r)], state: 2, answerStep: "rest", result: r },
-      { id: "sentence", narration: `Put the parts together: ${w} is ${a} and ${r}.`, math: [num(w), text(" is "), num(a), text(" and "), num(r)], state: 3 },
+      { id: "whole", narration: `Count all the dots: ${countUp(1, w)}. That's the whole.`, math: [text("In all: "), num(w)], state: 0, answerStep: "whole", result: w },
+      { id: "part", narration: a ? `Count the first group: ${countUp(1, a)}.` : "The first group is empty.", math: [text("First group: "), num(a)], state: 1, answerStep: "part", result: a },
+      { id: "rest", narration: r ? `Count the other group: ${countUp(1, r)}.` : "The other group is empty.", math: [text("Other group: "), num(r)], state: 2, answerStep: "rest", result: r },
+      { id: "sentence", narration: "The two parts make the whole again.", math: [num(w), text(" is "), num(a), text(" and "), num(r)], state: 3 },
     ],
   };
 }

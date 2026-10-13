@@ -61,9 +61,9 @@ export function explainRect(p: RectProblem, answers: AnswerModel): Explanation {
     caption: `Area: ${l} × ${w} = ${area} square meters. Perimeter: ${l} + ${w} + ${l} + ${w} = ${per} meters.`,
     timeline: beats(4),
     steps: [
-      { id: "area", narration: `${count(w, "row")} of ${count(l, "square")} fill the inside: ${area} square meters.`, math: [num(l), op("×"), num(w), op("="), num(area), text(" m"), sup(2)], state: 1, answerStep: "area", result: area },
-      { id: "half", narration: `One long side and one short side: ${l} + ${w} = ${half} m.`, math: [num(l), op("+"), num(w), op("="), num(half)], state: 2, answerStep: "half", result: half },
-      { id: "perimeter", narration: `All the way around is that twice: ${per} m.`, math: [num(2), op("×"), num(half), op("="), num(per), text(" m")], state: 3, answerStep: "perimeter", result: per },
+      { id: "area", narration: `${count(w, "row")} of ${count(l, "square")} fill the inside.`, math: [num(l), op("×"), num(w), op("="), num(area), text(" m"), sup(2)], state: 1, answerStep: "area", result: area },
+      { id: "half", narration: "Go along one long side and one short side.", math: [num(l), op("+"), num(w), op("="), num(half)], state: 2, answerStep: "half", result: half },
+      { id: "perimeter", narration: "All the way around is that twice.", math: [num(2), op("×"), num(half), op("="), num(per), text(" m")], state: 3, answerStep: "perimeter", result: per },
     ],
   };
 }
@@ -73,6 +73,7 @@ export const lesson: LessonDefinition<RectProblem> = {
   grade: 4,
   unit: "Measurement",
   title: "Area and perimeter",
+  pre: "g3-area",
   reference: createRect(5, 3),
   generate: rng => generateRect(rng),
   restore: raw => { const r = readNumbers(raw, ["l", "w"] as const); try { return r && createRect(r.l, r.w); } catch { return null; } },

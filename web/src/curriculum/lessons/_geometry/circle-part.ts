@@ -78,11 +78,11 @@ function explain(p: CirclePartProblem, model: AnswerModel): Explanation {
     timeline: beats(4),
     steps: [
       { id: "circle", narration: `A circle with radius ${r}, and a ${sector ? "slice" : "piece of the edge"} with an angle of ${t}°.`, math: mt`r = ${r}, ${t}°`, state: 0 },
-      { id: "fraction", narration: `A full turn is 360°, so ${t}° is ${t}/360 = ${fr} of the circle.`, math: mt`${frac(t, 360)} = ${frac(n, d)}`, state: 1, answerStep: "fraction", result: n },
+      { id: "fraction", narration: `A full turn is 360°, so ${t}° is this share of it.`, math: mt`${frac(t, 360)} = ${frac(n, d)}`, state: 1, answerStep: "fraction", result: n },
       sector
-        ? { id: "whole", narration: `The whole circle's area is 3.14 × ${r} × ${r} = ${f(whole)}.`, math: mt`3.14 × ${r}${sup("2")} = ${whole}`, state: 2, answerStep: "whole", result: whole }
-        : { id: "whole", narration: `The whole way around is 2 × 3.14 × ${r} = ${f(whole)}.`, math: mt`2 × 3.14 × ${r} = ${whole}`, state: 2, answerStep: "whole", result: whole },
-      { id: "part", narration: `Take ${fr} of it: ${f(part)}.`, math: mt`${frac(n, d)} × ${whole} = ${part}`, state: 3, answerStep: "part", result: part },
+        ? { id: "whole", narration: "First the whole circle's area, using 3.14 for π.", math: mt`3.14 × ${r}${sup("2")} = ${whole}`, state: 2, answerStep: "whole", result: whole }
+        : { id: "whole", narration: "First the whole way around, using 3.14 for π.", math: mt`2 × 3.14 × ${r} = ${whole}`, state: 2, answerStep: "whole", result: whole },
+      { id: "part", narration: `The ${sector ? "slice" : "arc"} is that share of the whole.`, math: mt`${frac(n, d)} × ${whole} = ${part}`, state: 3, answerStep: "part", result: part },
     ],
   };
 }

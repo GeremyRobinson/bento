@@ -149,13 +149,13 @@ function explain(p: PerimProblem, model: AnswerModel): Explanation {
     caption: kind === 0 ? `Only two sides are labeled. The sides across from them match.` : kind === 1 ? `A square: every side is ${a} cm.` : `A triangle has ${all.length} sides.`,
     timeline: beats(3),
     steps: [
-      kind === 0 ? { id: "two", state: 1, answerStep: "two", result: r1, math: [num(a), op("+"), num(b), op("="), num(r1)], narration: `Walk along the top and down the side: ${a} + ${b} = ${r1} cm.` }
-        : kind === 1 ? { id: "count", state: 1, answerStep: "count", result: r1, math: [text("sides "), op("="), num(r1)], narration: `A square has ${r1} sides, and they are all ${a} cm long.` }
-        : { id: "two", state: 1, answerStep: "two", result: r1, math: [num(a), op("+"), num(b), op("="), num(r1)], narration: `Walk along the bottom and up the right side: ${a} + ${b} = ${r1} cm.` },
+      kind === 0 ? { id: "two", state: 1, answerStep: "two", result: r1, math: [num(a), op("+"), num(b), op("="), num(r1)], narration: "Walk along the top and down the side." }
+        : kind === 1 ? { id: "count", state: 1, answerStep: "count", result: r1, math: [text("sides "), op("="), num(r1)], narration: `Every side of a square is ${a} cm long.` }
+        : { id: "two", state: 1, answerStep: "two", result: r1, math: [num(a), op("+"), num(b), op("="), num(r1)], narration: "Walk along the bottom and up the right side." },
       { id: "around", state: 2, answerStep: "around", result: P, math: [...plusLine(all), op("="), num(P)],
-        narration: kind === 0 ? `The other two sides match the first two, so add another ${r1}: ${r1} + ${r1} = ${P} cm all the way around.`
-          : kind === 1 ? `Go around all ${all.length} sides: ${all.join(" + ")} = ${P} cm.`
-          : `Finish with the last side: ${r1} + ${c} = ${P} cm all the way around.` },
+        narration: kind === 0 ? `The other two sides match the first two: another ${r1} cm.`
+          : kind === 1 ? `Add ${a} cm once for each of the ${all.length} sides.`
+          : `Finish with the last side, ${c} cm.` },
     ],
   };
 }
@@ -165,6 +165,7 @@ export const lesson: LessonDefinition<PerimProblem> = {
   grade: 3,
   unit: "Measurement",
   title: "Perimeter",
+  pre: "g2-measure",
   reference: createPerim(0, 7, 4, 0),
   generate: generatePerim,
   restore: raw => restoreVia(raw, ["kind", "a", "b", "c"] as const, v => createPerim(v.kind, v.a, v.b, v.c)),

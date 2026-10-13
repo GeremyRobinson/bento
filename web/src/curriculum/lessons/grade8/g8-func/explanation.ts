@@ -33,9 +33,9 @@ export function explainFunc(p: FuncProblem, model: AnswerModel): Explanation {
     }),
     timeline: beats(3),
     steps: [
-      { id: "rule", narration: `The rule is f(x) = ${fx}. Find its value at x = ${f(x)}.`, math: funcMath(p), state: 0 },
-      { id: "ax", narration: `Put ${f(x)} in for x: ${f(a)} × ${fP(x)} = ${f(ax)}.`, math: [...P(a), op("×"), ...P(x), op("="), num(ax)], state: 1, answerStep: "ax", result: ax },
-      { id: "value", narration: `Add the constant: ${f(ax)} + ${fP(b)} = ${f(v)}. The point ${pt(x, v)} is on the graph.`,
+      { id: "rule", narration: `Find the rule's value when x is ${f(x)}.`, math: funcMath(p), state: 0 },
+      { id: "ax", narration: `Put ${f(x)} in for x and multiply.`, math: [...P(a), op("×"), ...P(x), op("="), num(ax)], state: 1, answerStep: "ax", result: ax },
+      { id: "value", narration: `Then add the number on its own. So ${pt(x, v)} is on the graph.`,
         math: [...call("f", x), op("="), num(ax), op("+"), ...P(b), op("="), num(v)], state: 2, answerStep: "value", result: v },
     ],
   };
