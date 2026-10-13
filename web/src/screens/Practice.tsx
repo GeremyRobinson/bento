@@ -18,7 +18,7 @@ import { ALL_LESSONS, SKILL_CHECK } from "../app/copy";
 import { isCheckKey } from "../engine/mastery/skills";
 import {
   bandOfSession, canPick, check, choose, currentItem, currentStep, focusSlot, goToProblem, hint, isLastProblem, lessonOfItem, nextProblem,
-  pickPlan, pressKey, problemOf, skipAvailable, stepsOf, toggleSkip,
+  pickPlan, pressKey, problemOf, stepsOf,
 } from "../engine/session/practice";
 
 const SpeakerIcon = () => (
@@ -306,7 +306,6 @@ export function Practice() {
           {canScratch && <button className="v-tool" aria-pressed={scratchOn} aria-label="Scratch pad" onClick={() => { setZoomOut(false); swapPad(); }}><PadIcon /></button>}
           {!test && n > 1 && <button className="v-tool" aria-pressed={listOn} aria-label="Problems" onClick={() => { if (scratchOn) setScratch(false); setZoomOut(o => !o); }}><ListIcon /></button>}
           <button className="v-tool" aria-label="Read it to me" onClick={() => speak([step?.question, document.querySelector("#app .pprob")?.textContent].filter(Boolean).join(". ").replace(/\*\*/g, ""))}><SpeakerIcon /></button>
-          {skipAvailable(s) && <button className="v-plain v-skip" onClick={() => act((st, _p, d) => toggleSkip(st, d))}>{s.skip ? "Show steps" : "Final answer only"}</button>}
         </div>
         <Keypad band={band} tap={step && tapOnly ? (
           <div className="tappad">
