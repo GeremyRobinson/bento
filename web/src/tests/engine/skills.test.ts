@@ -1,12 +1,14 @@
 import { createRng } from "../../curriculum/generators/rng";
+import { lessonsInGrade } from "../../curriculum/registry";
+import { CHECKS } from "../../curriculum/checks";
 import { formatNumber } from "../../curriculum/schemas/math-text";
 import { entriesInGrade, isReady } from "../../app/curriculum";
 import { upNext } from "../../app/today";
 import { chapterRings, gradeRing } from "../../app/rings";
 import { emptyProgress, type Progress } from "../../engine/mastery/progress";
 import type { Level } from "../../engine/mastery/levels";
-import { CHECK_LENGTH, checkKey, dependsOn, learned, recordCheck, REVIEW_DAYS, stepBack, type CheckRecord } from "../../engine/mastery/skills";
-import { check, choose, currentStep, finishRun, focusSlot, nextProblem, pressKey, reviewPool, startReview, startTest, type Deps } from "../../engine/session/practice";
+import { CHECK_LENGTH, checkKey, dependsOn, learned, ready, recordCheck, REVIEW_DAYS, stepBack, type CheckRecord } from "../../engine/mastery/skills";
+import { checkItems, check, choose, currentStep, finishRun, focusSlot, nextProblem, pressKey, reviewPool, startReview, startTest, type Deps } from "../../engine/session/practice";
 import { expectedValues } from "../../engine/evaluation/steps";
 import type { PracticeSession } from "../../engine/session/types";
 
@@ -112,15 +114,24 @@ describe("learned", () => {
   });
 
   it("reads what a lesson builds on from the catalog until Curriculum lists it", () => {
-    expect(dependsOn("g5-order")).toEqual(["g5-mult2"]);
+    expect(dependsOn("g4-mixed")).toEqual(entriesInGrade(4).find(c => c.id === "g4-mixed")!.pre ? [entriesInGrade(4).find(c => c.id === "g4-mixed")!.pre!] : []);
   });
 
-  it("steps back only after a 0 or 1, and only to a lesson underneath that was tried and isn't solid", () => {
-    const low = base({ checks: { "g5-order": rec(1, 0) } });
-    expect(stepBack(low, "g5-order")).toBeNull(); // g5-mult2 never tried
-    const shaky = base({ checks: { "g5-order": rec(1, 0) }, scores: { "g5-mult2": score(2) } });
-    expect(stepBack(shaky, "g5-order")).toBe("g5-mult2");
-    expect(stepBack({ ...shaky, checks: { "g5-order": rec(2, 0) } }, "g5-order")).toBeNull();
+  it("reads Curriculum's list first, across grades", () => {
+    expect(dependsOn("g5-divdec")).toEqual(["g5-pow10", "g3-divfacts"]);
+  });
+
+  it("steps back only after a 0 or 1, to the first lesson underneath that isn't learned, tried or not", () => {
+    expect(stepBack(base({ checks: { "g5-divdec": rec(1, 0) } }), "g5-divdec")).toBe("g5-pow10");
+    expect(stepBack(base({ checks: { "g5-divdec": rec(1, 0), "g5-pow10": rec(4, 0) } }), "g5-divdec")).toBe("g3-divfacts");
+    expect(stepBack(base({ checks: { "g5-divdec": rec(2, 0) } }), "g5-divdec")).toBeNull();
+  });
+
+  it("counts an earlier grade's lessons as learned for starting, until one of their checks comes back low", () => {
+    expect(ready(base(), "g5-order")).toBe(true); // g3 lessons never done
+    expect(ready(base({ checks: { "g3-facts": rec(1, 0) } }), "g5-order")).toBe(false);
+    expect(ready(base(), "g5-divdec")).toBe(false); // g5-pow10, same grade, not learned
+    expect(ready(base({ checks: { "g5-pow10": rec(3, 0) } }), "g5-divdec")).toBe(true);
   });
 });
 
@@ -143,8 +154,16 @@ describe("Today's pick", () => {
   });
 
   it("steps back to the lesson underneath after a 0 or 1", () => {
-    const p = base({ checks: { "g5-order": rec(0, t) }, scores: { "g5-mult2": score(1) } });
-    expect(upNext(p, 5)).toMatchObject({ entry: { id: "g5-mult2" }, why: "step-back" });
+    const p = base({ checks: { "g5-divdec": rec(0, t) } });
+    expect(upNext(p, 5)).toMatchObject({ entry: { id: "g5-pow10" }, why: "step-back" });
+  });
+
+  it("skips a lesson whose lesson underneath came back low, when another is ready", () => {
+    const before = ready5().slice(0, ready5().findIndex(c => c.id === "g5-order"));
+    const after = ready5()[ready5().findIndex(c => c.id === "g5-order") + 1]!;
+    const checks = { ...Object.fromEntries(before.map(c => [c.id, rec(4, t)])), "g3-facts": rec(1, t) };
+    expect(upNext(base({ checks }), 5)).toMatchObject({ entry: { id: after.id }, why: "next" });
+    expect(upNext(base({ checks: { ...checks, "g3-facts": rec(3, t) } }), 5)).toMatchObject({ entry: { id: "g5-order" }, why: "next" });
   });
 
   it("once everything is learned, offers the one checked longest ago", () => {
@@ -165,3 +184,35 @@ describe("rings", () => {
   });
 });
 const ready5 = () => entriesInGrade(5).filter(c => isReady(c.id));
+
+describe("Curriculum's check recipes", () => {
+  const lessons = lessonsInGrade(5).filter(l => CHECKS[l.id]);
+  it("cover every 5th grade lesson", () => expect(lessons.map(l => l.id).sort()).toEqual(lessonsInGrade(5).map(l => l.id).sort()));
+
+  it("draw each item so its condition holds, story items last, mix in order, every problem valid", () => {
+    const misses: string[] = [];
+    for (const l of lessons) {
+      const recipe = CHECKS[l.id]!;
+      let held = 0, wanted = 0;
+      for (let seed = 1; seed <= 60; seed++) {
+        const items = checkItems(l, createRng(seed));
+        expect(items).toHaveLength(recipe.items.length);
+        expect(items.every(x => x.lessonId === l.id && l.restore(x.problem) != null)).toBe(true);
+        const stories = recipe.items.filter(c => c.story).length;
+        if (l.story) expect(items.slice(items.length - stories).every(x => x.story)).toBe(true);
+        expect(items.slice(0, items.length - stories).some(x => x.story)).toBe(false);
+        if (recipe.inOrder) recipe.items.forEach((c, k) => { if (c.where) { wanted++; if (c.where(items[k]!.problem)) held++; } });
+        else for (const c of recipe.items.filter(c => c.where)) { wanted++; if (items.some(x => c.where!(x.problem))) held++; }
+      }
+      if (held < wanted * 0.95) misses.push(`${l.id}: ${held}/${wanted}`);
+    }
+    expect(misses).toEqual([]);
+  });
+
+  it("g5-volume's third item always has the height tallest", () => {
+    for (let seed = 1; seed <= 100; seed++) {
+      const items = checkItems(lessonsInGrade(5).find(l => l.id === "g5-volume")!, createRng(seed));
+      expect(items.some(x => { const b = x.problem as { l: number; w: number; h: number }; return b.h >= b.l && b.h >= b.w; })).toBe(true);
+    }
+  });
+});

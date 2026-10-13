@@ -12,6 +12,7 @@ import { parseNumber } from "../evaluation/numbers";
 import { answerIds, checkStep, expectedValues, finalPartsOf, finalStep, runtimeSteps, type RuntimeStep } from "../evaluation/steps";
 import { levelOf, problemXp, stepPoints } from "../mastery/levels";
 import { lastScore, type Progress } from "../mastery/progress";
+import { CHECKS, WHERE_TRIES } from "../../curriculum/checks";
 import { CHECK_FROM, CHECK_LENGTH, checkKey, dueBack, isCheckKey, lessonOfCheck, PASS, recordCheck } from "../mastery/skills";
 import { PRAISE } from "./praise";
 import type { Mistake, PracticeSession, RunItem, SessionReport } from "./types";
@@ -154,8 +155,22 @@ export function startTest(key: string, progress: Progress, deps: Deps): Practice
  */
 function startCheck(lessonId: string, progress: Progress, deps: Deps): PracticeSession {
   const lesson = requireLesson(lessonId);
-  const items = freshItems(CHECK_LENGTH, (k, seen) => makeItem(lesson, CHECK_FROM + k, deps.rng, seen));
+  const items = checkItems(lesson, deps.rng);
   return newRun({ mode: "test", key: checkKey(lesson.grade, lesson.id), title: `${lesson.title}: ${SKILL_CHECK}`, items, startTier: 0, hintsLeft: 0 }, progress, deps);
+}
+
+/** a lesson's check problems: Curriculum's recipe (curriculum/checks.ts), else its harder problems */
+export function checkItems(lesson: AnyLesson, rng: Rng): RunItem[] {
+  const recipe = CHECKS[lesson.id];
+  if (!recipe) return freshItems(CHECK_LENGTH, (k, seen) => ({ lessonId: lesson.id, problem: makeItem(lesson, CHECK_FROM + k, rng, seen).problem }));
+  const out: RunItem[] = [];
+  for (const c of recipe.items) {
+    let problem = makeItem(lesson, c.i, rng, out).problem;
+    for (let k = 1; k < WHERE_TRIES && c.where && !c.where(problem); k++) problem = makeItem(lesson, c.i, rng, out).problem;
+    if (c.where && !c.where(problem) && c.fix) problem = lesson.restore(c.fix(problem)) ?? problem;
+    out.push({ lessonId: lesson.id, problem, ...(c.story && lesson.story ? { story: true } : {}) });
+  }
+  return recipe.inOrder ? out : [...rng.shuffle(out.filter(x => !x.story)), ...out.filter(x => x.story)];
 }
 
 export const placeKey = (g: number) => `place:${g}`;
@@ -389,7 +404,7 @@ export function check(s: PracticeSession, progress: Progress, deps: Deps): Pract
   }
   const band = bandOfSession(next);
   const msg = cat === "concept" ? r.message
-    : SAY[cat] ?? `${nudge(expected, values, band)} ${next.hinted ? step.hint : `Read the step again${next.hintsLeft ? ", or tap the light bulb for a hint" : ""}.`}`.trim();
+    : SAY[cat] ?? `${nudge(expected, values, band)} ${next.hinted ? step.hint : `Read the step again${next.hintsLeft ? ", or tap Hint" : ""}.`}`.trim();
   const lines: string[] = [];
   if (rushed) lines.push("Slow down a little and read the step again.");
   if (canShowMe({ test: false, misses: next.misses, hinted: next.hinted })) lines.push("Stuck? Tap **Show me**.");

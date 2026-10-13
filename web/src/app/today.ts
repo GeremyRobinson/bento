@@ -3,7 +3,7 @@
 // the plan is worked out from progress, so it's the same on every screen and resets each day.
 import type { Progress } from "../engine/mastery/progress";
 import { timesDone } from "../engine/mastery/progress";
-import { learned, stepBack, toGoOver } from "../engine/mastery/skills";
+import { learned, ready as readyFor, stepBack, toGoOver } from "../engine/mastery/skills";
 import { lessonById } from "../curriculum/registry";
 import { entriesInGrade, entryById, isReady, testKey, unitsInGrade, type Entry } from "./curriculum";
 import { tablesForGrade } from "../engine/facts/tables";
@@ -22,7 +22,8 @@ const sameDay = (a: number, b: number) => new Date(a).toDateString() === new Dat
  * The lesson Today suggests (v2-backend-plan.md, "Today's pick"), first match wins:
  * 1. to go over: the last skill check came back 2 or lower (the oldest first); after a 0 or 1, the lesson underneath
  *    comes first when it isn't solid;
- * 2. next: the first lesson in order not yet learned;
+ * 2. next: the first lesson in order not yet learned whose lessons underneath are (earlier grades count until a check
+ *    of theirs comes back low), else the first not learned;
  * 3. all learned: the one checked longest ago.
  * Learned lessons that are due back go into the review, not here. The child can always pick something else.
  */
@@ -33,7 +34,7 @@ export function upNext(progress: Progress, g: number): { entry: Entry; again: bo
     const back = stepBack(progress, over.id), e = back && isReady(back) ? entryById(back) : undefined;
     return e ? { entry: e, again: true, why: "step-back" } : { entry: over, again: true, why: "go-over" };
   }
-  const fresh = ready.find(c => !learned(progress, c.id));
+  const open = ready.filter(c => !learned(progress, c.id)), fresh = open.find(c => readyFor(progress, c.id)) ?? open[0];
   if (fresh) return { entry: fresh, again: timesDone(progress, fresh.id) > 0, why: "next" };
   const at = (c: Entry) => progress.checks?.[c.id]?.date ?? progress.scores[c.id]?.date ?? 0;
   const old = [...ready].sort((a, b) => at(a) - at(b))[0];

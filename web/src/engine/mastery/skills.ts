@@ -62,14 +62,25 @@ export function dependsOn(id: string): string[] {
   return pre ? [pre] : [];
 }
 
+const gradeOf = (id: string) => CATALOG.find(c => c.id === id)?.grade;
+
 /**
- * Step back: after a check of 0 or 1, the first lesson underneath that isn't solid. A lesson underneath the child
- * never tried (say, from a grade they skipped) doesn't count against them; only one they tried and haven't learned.
+ * Step back: after a check of 0 or 1, the first lesson underneath that isn't learned, tried or not (a lesson from an
+ * earlier grade the child never did is exactly the gap a low check points to).
  */
 export function stepBack(p: Progress, id: string): string | null {
   const c = p.checks?.[id];
   if (!c || c.last > 1) return null;
-  return dependsOn(id).find(d => (p.checks?.[d] || p.scores[d]) && !learned(p, d)) ?? null;
+  return dependsOn(id).find(d => !learned(p, d)) ?? null;
+}
+
+/**
+ * Ready to start: every lesson underneath is learned. A lesson from an earlier grade counts as learned until one of
+ * its checks comes back low, so a child who starts in 5th grade isn't sent back to 4th (Curriculum, Review 2026-10-13).
+ */
+export function ready(p: Progress, id: string): boolean {
+  const g = gradeOf(id) ?? 0;
+  return dependsOn(id).every(d => ((gradeOf(d) ?? g) < g ? !toGoOver(p, d) : learned(p, d)));
 }
 
 /** lessons learned out of the ones given: the one number every ring and box shows */
