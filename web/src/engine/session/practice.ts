@@ -271,7 +271,9 @@ function startProblem(s: PracticeSession, progress: Progress, deps: Deps): Pract
 function loadStep(s: PracticeSession, deps: Deps): PracticeSession {
   let next = { ...s };
   const it = currentItem(next), lead = leadOf(it), full = fullSteps(it);
-  if (!next.collapsed && next.skip && next.skipThis && canSkip({ test: isTest(next), tier: next.tier }) && next.step === lead && full.length - lead > 1) {
+  // a skill check asks each problem in one go, the final answer only (v2 model: "What is 24 × 13?")
+  const oneGo = isCheckKey(next.key) || (next.skip && next.skipThis && canSkip({ test: isTest(next), tier: next.tier }));
+  if (!next.collapsed && oneGo && next.step === lead && full.length - lead > 1) {
     next = { ...next, collapsed: true };
   }
   next = { ...next, values: {}, misses: 0, hinted: false, lastTry: 0, stepT0: deps.now, feedback: null };
@@ -393,14 +395,15 @@ export function check(s: PracticeSession, progress: Progress, deps: Deps): Pract
     mistakes: [...s.mistakes, mistake],
   };
 
-  if (step.skipped) { // the shortcut missed: do this one the long way
+  if (step.skipped && !isTest(next)) { // the shortcut missed: do this one the long way
     next = loadStep({ ...next, skipThis: false, collapsed: false, maxPts: next.maxPts + 1, step: leadOf(currentItem(next)) }, deps);
     return { ...next, fx: "shake", feedback: { type: "bad", strong: "Not quite.", text: "This one needs the steps. Here they are." } };
   }
   if (isTest(next)) {
     const shownValues = Object.fromEntries(Object.entries(expected).map(([k, v]) => [k, formatNumber(v)]));
     const after = pass({ ...next, values: shownValues }, true, progress, deps);
-    return { ...after, feedback: { type: "hint", missed: true, text: `Incorrect. The answer was **${typedText(step, expected)}**.${currentStep(after) ? " Keep going." : ""}` } };
+    // one wording for every miss on a check or test (v2 model): "✕ Not this time." and the answer
+    return { ...after, feedback: { type: "bad", missed: true, strong: "Not this time.", text: `It\u2019s **${typedText(step, expected)}**.${currentStep(after) ? " Keep going." : ""}` } };
   }
   const band = bandOfSession(next);
   const msg = cat === "concept" ? r.message

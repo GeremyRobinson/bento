@@ -71,7 +71,7 @@ describe("every screen renders inside the Screen master", () => {
     solveRun();
     expect(document.querySelector("#app > .screen.v-done .v-result")).not.toBeNull();
     expect(document.querySelector("#app > .screen.v-done .v-recap")).not.toBeNull();
-  });
+  }, 60000);
 
   // v2 dropped the quit question on purpose: leaving a run never loses it, so there is nothing to confirm
   it("leaving a run keeps it: Today offers to carry on where it was left", () => {

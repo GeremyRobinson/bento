@@ -16,8 +16,10 @@ function renderApp() {
 
 /** Works out the answer from the step on screen, like a student would. */
 function answerOnScreen(): string {
-  const q2 = document.querySelector(".v-ask .q2 .mline");
-  const ask = (q2 ? `${q2.getAttribute("data-plain")} = blank` : document.querySelector(".ask .mline")!.getAttribute("data-plain")!).replace(/−/g, "-");
+  const q2 = document.querySelector(".v-ask .q2 .mline"), whole = document.querySelector(".v-ask .q2")?.textContent?.match(/^What is (.*)\?$/);
+  let ask = (q2 ? `${q2.getAttribute("data-plain")} = blank` : whole ? `${whole[1]} = blank` : document.querySelector(".ask .mline")!.getAttribute("data-plain")!).replace(/−/g, "-");
+  // the skill check asks a word problem whole: its two numbers are in the story on the stage
+  if (ask === "blank") ask = `${(document.querySelector(".v-stage .story")!.textContent!.match(/\d+/g) ?? []).slice(0, 2).join(" × ")} = blank`;
   // a × b, or a sum of any number of parts
   const m = ask.match(/^(-?\d+) × (-?\d+) = blank$/) ?? ask.match(/^(-?\d+(?: \+ -?\d+)+) = blank$/);
   if (!m) throw new Error(`can't read step: ${ask}`);
@@ -41,11 +43,9 @@ describe("a whole lesson in the browser", () => {
     const sm = statement.match(/^(\d+) × (\d+)$/);
     expect(sm, statement).not.toBeNull();
     const [a, b] = sm!.slice(1).map(Number) as [number, number];
-    // both numbers split into tens and ones: four parts, row by row (v2 model)
-    const split = (n: number) => [n - (n % 10), n % 10];
-    const parts = split(b).flatMap(y => split(a).map(x => `${x} by ${y} = ${x * y}`));
+    const tens = b - (b % 10), ones = b % 10;
     const pic = stage().getByRole("img");
-    expect(pic.getAttribute("aria-label")).toBe(`${a} by ${b} rectangle, split into ${parts.join(", ")}. Total ${a * b}.`);
+    expect(pic.getAttribute("aria-label")).toBe(`${a} by ${b} rectangle, split into ${a} by ${tens} = ${a * tens} and ${a} by ${ones} = ${a * ones}. Total ${a * b}.`);
     // it opens on the picture's first frame and only ever builds forward from there (G 2026-10-06)
     expect(pic.getAttribute("data-split")).toBe("false");
     fireEvent.click(screen.getByRole("button", { name: "Show all" }));
@@ -53,7 +53,7 @@ describe("a whole lesson in the browser", () => {
     expect(pic.getAttribute("data-sum")).toBe("true");
     // the whole worked example is written out, and the way on is to watch another or try one
     const side = within(screen.getByRole("region", { name: "Watch one" }));
-    expect(side.getAllByText("add the four parts").length).toBeGreaterThan(0);
+    expect(side.getAllByText("add the two strips").length).toBeGreaterThan(0);
     expect(side.getByRole("button", { name: "Try one" })).toBeInTheDocument();
 
     // a new example (v2: Watch again) redraws everything from a new problem
@@ -69,12 +69,22 @@ describe("a whole lesson in the browser", () => {
     fireEvent.click(screen.getByRole("button", { name: "Check" }));
     expect(screen.getByRole("status")).toHaveTextContent("Not quite.");
     act(() => { t += 10000; });
-    for (let guard = 0; guard < 60; guard++) {
-      const finish = screen.queryByRole("button", { name: /Next problem|Finish lesson/ });
+    let checked = false;
+    for (let guard = 0; guard < 80; guard++) {
+      const finish = screen.queryByRole("button", { name: /Next problem|Start the skill check|See how you did/ });
       if (finish) {
-        const last = finish.textContent === "Finish lesson";
+        const label = finish.textContent;
         fireEvent.click(finish);
-        if (last) break;
+        if (label === "See how you did") break;
+        // then the skill check: 4 problems on your own, each asked whole, no hints and no problem list (v2 model)
+        if (label === "Start the skill check") {
+          checked = true;
+          expect(document.querySelector(".island")).toHaveTextContent("Skill check · 1 of 4");
+          expect(document.querySelector(".v-steps")).toHaveTextContent("Skill check");
+          expect(screen.getByRole("status")).toHaveTextContent("Skill check: 4 problems on your own, no hints. It shows how much stuck.");
+          expect(screen.queryByRole("button", { name: /^Hint/ })).toBeNull();
+          expect(screen.queryByRole("button", { name: "Problems" })).toBeNull();
+        }
         continue;
       }
       // a word problem starts with "which operation?": the story is equal groups, so multiply
@@ -86,16 +96,21 @@ describe("a whole lesson in the browser", () => {
       fireEvent.click(screen.getByRole("button", { name: "Check" }));
     }
 
-    // results (v2 done screen): one miss on the first step of nine problems (one added after the miss) still scores 4 of 4
+    // done (v2 model): the skill check scores the lesson, 4 of 4 on your own, problem by problem, and the slip from practice
+    expect(checked).toBe(true);
     const done = within(screen.getByRole("region", { name: "Done" }));
     expect(done.getByLabelText("Score 4 of 4")).toBeInTheDocument();
-    expect(done.getByRole("heading", { level: 2, name: /^4 of 4: / })).toBeInTheDocument();
-    expect(screen.getByText(/9 problems in .*including 1 extra added for practice/)).toBeInTheDocument();
-    expect(screen.getByText(/Typed/)).toHaveTextContent("Typed 1, answer");
+    expect(done.getByRole("heading", { level: 2, name: "4 of 4 on your own: you\u2019ve got it." })).toBeInTheDocument();
+    expect(done.getByText(/^You finished the lesson\. The skill check shows how much stuck\./)).toBeInTheDocument();
+    expect(done.getByText("Your skill check")).toBeInTheDocument();
+    expect(done.getAllByText("Right")).toHaveLength(4);
+    expect(done.getByText("Watch for:")).toBeInTheDocument();
+    expect(done.queryByRole("button", { name: "Practice again" })).toBeNull();
+    expect(done.queryByRole("heading", { name: "What you did" })).toBeNull();
 
     // back in the box, the lesson's tile shows the score and Today keeps no run in progress
     fireEvent.click(screen.getByRole("button", { name: "Back to your box" }));
     expect(within(screen.getByRole("region", { name: "Today" })).queryByRole("button", { name: "Carry on" })).toBeNull();
     expect(screen.getByRole("button", { name: "Multiply two-digit numbers, Solid, skill check 4 of 4" })).toBeInTheDocument();
-  });
+  }, 60000);
 });

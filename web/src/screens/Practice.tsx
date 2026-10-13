@@ -4,7 +4,7 @@ import { playTone, readAloudOn, readSettings, speak } from "../app/settings";
 import { useApp } from "../app/AppState";
 import { withTransition } from "../app/transition";
 import { MathLine, Rich } from "../components/primitives/MathLine";
-import { ProblemLine, problemShape, ProblemView } from "../components/practice/ProblemView";
+import { plainProblem, ProblemLine, problemShape, ProblemView } from "../components/practice/ProblemView";
 import { Diagram } from "../components/diagrams/Diagram";
 import { requireLesson } from "../curriculum/registry";
 import type { Explanation } from "../explanations/schema";
@@ -14,7 +14,8 @@ import { Cover } from "../components/Cover";
 import type { PracticeSession } from "../engine/session/types";
 import { ScratchPad, type Stroke } from "../components/practice/ScratchPad";
 import { FitScreen } from "../components/screen/Screen";
-import { ALL_LESSONS, SHOW_ME } from "../app/copy";
+import { ALL_LESSONS, SHOW_ME, SKILL_CHECK } from "../app/copy";
+import { isCheckKey } from "../engine/mastery/skills";
 import {
   bandOfSession, canPick, check, choose, currentItem, currentStep, focusSlot, goToProblem, hint, isLastProblem, lessonOfItem, nextProblem,
   pickPlan, pressKey, problemOf, showMe, showMeAvailable, skipAvailable, stepsOf, toggleSkip,
@@ -109,7 +110,7 @@ export function Practice() {
   // the problem's own picture, as the lesson drew it: it starts on the set-up and grows one step behind the learner,
   // so it helps without giving the answer away (Review v39 item 15). Tests go without, so they stay fair.
   const [full, ownPic] = useMemo<[Explanation | null, boolean]>(() => {
-    if (!s || s.mode === "test") return [null, false];
+    if (!s || (s.mode === "test" && !isCheckKey(s.key))) return [null, false];
     const item = currentItem(s), l = requireLesson(item.lessonId), p = problemOf(item);
     try { return [l.explain(p, l.answers(p)), !!l.picture?.(p)]; } catch { return [null, false]; }
   }, [s?.i, s?.mode, s?.t0]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -137,6 +138,9 @@ export function Practice() {
   // the scratch pad: open or not stays as the learner left it; its ink stays until the next problem (G 2026-10-09)
   const [scratch, setScratch] = useState(false), [ink, setInk] = useState<Stroke[]>([]);
   useEffect(() => { setInk([]); }, [s?.i, s?.t0]);
+  // a new problem (or the skill check starting) opens the solve panel at its top, its step bar showing, wherever the
+  // focused key had scrolled it to on a phone
+  useEffect(() => { const el = document.querySelector("#app .v-solve"); if (el) el.scrollTop = 0; }, [s?.i, s?.t0]);
   // the pad and the picture swap with a fade of their own tile only, out then in; the page around them stays still (G 2026-10-09
   // "the blink animation it does is too much just fade that box")
   const [padFade, setPadFade] = useState(false);
@@ -182,10 +186,12 @@ export function Practice() {
   }
 
   const it = currentItem(s), lesson = lessonOfItem(it), step = currentStep(s), fb = s.feedback, n = s.items.length;
-  const test = s.mode === "test", mixed = s.mode !== "practice", band = bandOfSession(s);
+  const test = s.mode === "test", mixed = s.mode !== "practice" && !isCheckKey(s.key), band = bandOfSession(s);
+  // the skill check after a lesson: 4 problems on your own, each asked in one go (v2 model)
+  const skill = isCheckKey(s.key);
   const tapOnly = !!s.pick || !!step?.choices;
   const at = `${s.i}-${s.step}`, mark = (i: number) => tapped?.at === at && tapped.i === i && fb ? (fb.type === "bad" ? " no" : " ok") : "";
-  const nextLabel = !isLastProblem(s) ? "Next problem" : test ? "Finish test" : s.mode === "review" ? "Finish review" : "Finish lesson";
+  const nextLabel = !isLastProblem(s) ? "Next problem" : skill ? "See how you did" : test ? "Finish test" : s.mode === "review" ? "Finish review" : "Start the skill check";
   // "Solved." carries the lesson's last idea, in this problem's numbers
   const idea = !s.solved ? undefined : full?.solved ?? (full?.steps.length ? full.steps[full.steps.length - 1]!.narration : undefined);
   const shape = problemShape(it.lessonId, problemOf(it), !!it.story);
@@ -215,9 +221,14 @@ export function Practice() {
   // what the say line carries: wrong and right always with their cross or tick (G 2026-10-13: red and green only mean
   // wrong and right, never on their own); hints in the plain hint look
   const say = fbAway ? null : s.solved && fb?.type !== "hint"
-    ? { cls: missed ? "slip" : "good", lead: missed ? "\u2715 Not this time." : test ? "\u2713 Correct." : full?.solved ? "\u2713 Right." : "\u2713 Solved.", text: missed ? undefined : idea }
+    ? { cls: missed ? "slip" : "good", lead: missed ? "\u2715 Not this time." : test || full?.solved ? "\u2713 Right." : "\u2713 Solved.",
+      text: missed ? (fb?.missed ? fb.text : undefined) : skill ? `${problemText(it)} = ${solvedAns != null ? formatNumber(solvedAns) : ""}.` : idea }
     : fb ? { cls: fb.type === "bad" ? "slip" : fb.type === "good" ? "good" : "hint",
-      lead: fb.type === "bad" ? `\u2715 ${fb.strong ?? "Not quite."}` : fb.type === "good" ? `\u2713 ${fb.strong ?? "Right."}` : fb.strong, text: fb.text, lines: fb.lines } : null;
+      lead: fb.type === "bad" ? `\u2715 ${fb.strong ?? "Not quite."}` : fb.type === "good" ? `\u2713 ${fb.strong ?? "Right."}` : fb.strong, text: fb.text, lines: fb.lines }
+    : skill && s.i === 0 && !s.prob.wrong && !s.work.length ? { cls: "hint", lead: undefined, text: `${SKILL_CHECK}: ${n} problems on your own, no hints. It shows how much stuck.`, lines: undefined } : null;
+  // a wrong try wears red; a test's missed step only on a skill check's one answer, which keeps what was typed (v2 model)
+  const askNo = !fbAway && fb?.type === "bad" && (!fb.missed || (skill && s.solved));
+  const typedMiss = skill && missed ? s.mistakes[s.mistakes.length - 1]?.typed : undefined;
   const doneLines = steps.map((_, k) => s.work[k]).filter((w, k) => !!w && (k < here));
   return (
     <div className={`screen v-work v-prac${test ? " test" : ""}${s.solved ? " solved" : ""}`}>
@@ -238,17 +249,26 @@ export function Practice() {
       {/* the working side: where you are in the steps, what you've worked out, the question, the say line, the tools, the keys */}
       <section className="v-panel v-solve" aria-label="Solve">
         <div className="v-steps">
-          {s.solved ? <span className="n">{missed ? "Done" : "Solved"}</span> : <>
+          {skill ? <>
+            <span className="n">{SKILL_CHECK}</span>
+            <span className="v-seg" aria-hidden>{s.items.map((_, k) => <i key={k} className={(s.done ?? []).includes(k) || (k === s.i && s.solved) ? "on" : undefined} />)}</span>
+          </> : s.solved ? <span className="n">{missed ? "Done" : "Solved"}</span> : <>
             <span className="n">{s.pick ? "What comes next?" : `Step ${Math.min(here + 1, steps.length)} of ${steps.length}`}</span>
             <span className="v-seg" aria-hidden>{steps.map((_, k) => <i key={k} className={k < here ? "on" : undefined} />)}</span>
           </>}
-          {test && <span className="v-meta">{s.title}: no hints, one try per step</span>}
+          {test && !skill && <span className="v-meta">{s.title}: no hints, one try per step</span>}
         </div>
-        {doneLines.length > 0 && <ol className="v-lines" aria-label="Your work so far">{doneLines.map((w, k) => (
+        {doneLines.length > 0 && !skill && <ol className="v-lines" aria-label="Your work so far">{doneLines.map((w, k) => (
           <li key={k} className={w!.shown ? "shown" : undefined}><MathLine math={w!.math} />{!w!.shown && <b aria-hidden>{"\u2713"}</b>}</li>
         ))}</ol>}
-        <div className={`v-ask${fb?.type === "bad" && !fbAway ? " no" : ""}${s.fx === "shake" ? " shake" : ""}`}>
+        <div className={`v-ask${askNo ? " no" : ""}${s.fx === "shake" ? " shake" : ""}`}>
           {step && !s.pick ? <>
+            {skill && step.id === "final" && !it.story ? <>
+              <span className="q2">What is {problemText(it)}?</span>
+              <div className="v-ans" key={`${at}-${s.mistakes.length}`}>
+                <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={id => act(st => focusSlot(st, id))} />
+              </div>
+            </> : <>
             {step.question && <span className="q"><Rich text={step.question} /></span>}
             {solo ? <>
               {/* one number to find: the question in words, then the answer pill (v2 spec P7, P8) */}
@@ -259,10 +279,11 @@ export function Practice() {
             </> : <div className="ask" key={`${at}-${s.mistakes.length}`}>
               <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={id => act(st => focusSlot(st, id))} />
             </div>}
-            {step.note && <span className="note"><Rich text={step.note} /></span>}
+            {step.note && !skill && <span className="note"><Rich text={step.note} /></span>}
+            </>}
           </> : s.pick ? <span className="q">You plan this one: tap the step that comes next.</span>
-            : solvedAns != null ? <><span className="q2">{missed ? "Here's the answer." : "Solved."}</span>
-              <div className={`v-ans ${missed ? "given" : "ok"}`}><span className="slot">{formatNumber(solvedAns)}</span></div></>
+            : solvedAns != null ? <><span className="q2">{missed ? (skill ? "Not this time." : "Here's the answer.") : skill ? "Right." : "Solved."}</span>
+              <div className={`v-ans ${missed ? "given" : "ok"}`}><span className="slot">{typedMiss ?? formatNumber(solvedAns)}</span></div></>
             : <div className={`ask ${missed ? "given" : "ok"}`}><MathLine math={s.work[s.work.length - 1]?.math ?? []} /></div>}
         </div>
         <div className={`v-say${say ? ` ${say.cls}` : ""}`} role="status" aria-live="polite">
@@ -325,6 +346,9 @@ export function pictureAt(ex: Explanation, ids: string[], here: number, solved: 
   const done = ids.slice(0, here).map(stateOf).filter((x): x is number => x != null);
   return { at: Math.min(last, Math.max(0, ...done)), ask: stateOf(ids[here]) };
 }
+
+/** a problem as one plain line ("24 × 13"), for the skill check's question and its say line */
+const problemText = (it: ReturnType<typeof currentItem>) => plainProblem(it.lessonId, problemOf(it));
 
 /** A step that asks for one number at the end ("13 × 10 = □") reads as a question and an answer pill, like the model. */
 export function soloAsk(prompt: MathText): { expr: MathText; slot: MathToken } | null {

@@ -75,7 +75,9 @@ export function answerWrong(): void {
   tap("Check");
 }
 
-const FINISH = /^(Next problem|Finish lesson|Finish test|Finish review)$/;
+const FINISH = /^(Next problem|Start the skill check|See how you did|Finish test|Finish review)$/;
+/** a lesson's practice goes on into its skill check; the run is over after the check, a test or a review */
+const goesOn = (label: string | null) => label === "Next problem" || label === "Start the skill check";
 
 /** Solves every problem of the run on screen and presses the finish button. Returns how many problems were solved. */
 export function solveRun(): number {
@@ -83,7 +85,7 @@ export function solveRun(): number {
   for (let guard = 0; guard < 400; guard++) {
     const next = screen.queryByRole("button", { name: FINISH });
     if (next) {
-      const last = next.textContent !== "Next problem";
+      const last = !goesOn(next.textContent);
       solved++;
       fireEvent.click(next);
       if (last) return solved;
@@ -99,7 +101,7 @@ export function failRun(): void {
   for (let guard = 0; guard < 800; guard++) {
     const next = screen.queryByRole("button", { name: FINISH });
     if (next) {
-      const last = next.textContent !== "Next problem";
+      const last = !goesOn(next.textContent);
       fireEvent.click(next);
       if (last) return;
       continue;

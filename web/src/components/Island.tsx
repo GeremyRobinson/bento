@@ -14,7 +14,8 @@ import { Confirm } from "./Confirm";
 import { PillRing } from "./primitives/PillRing";
 import { tableById } from "../engine/facts/tables";
 import { Chevron, LockIcon, MeIcon, SettingsIcon } from "./primitives/icons";
-import { CONTENTS, GROWN_UP, NO_UNIT, PRACTICE, REPORT, REVIEW, YOUR_BENTO } from "../app/copy";
+import { CONTENTS, GROWN_UP, NO_UNIT, PRACTICE, REPORT, REVIEW, SKILL_CHECK, YOUR_BENTO } from "../app/copy";
+import { isCheckKey, lessonOfCheck } from "../engine/mastery/skills";
 
 /** A small cross: quit. */
 const CrossIcon = () => (
@@ -55,12 +56,21 @@ function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): P
     case "practice": {
       const run = app.progress.run;
       if (!run) return { kicker: gradeOf(grade).name, title: PRACTICE, back: contents };
+      // the skill check after a lesson: "Skill check · 1 of 4" over the lesson's name (v2 model)
+      if (isCheckKey(run.key)) {
+        const l = lessonById(lessonOfCheck(run.key));
+        return { kicker: `${SKILL_CHECK} \u00b7 ${run.i + 1} of ${run.items.length}`, title: l?.title ?? run.title, back: contents, lesson: l?.id };
+      }
       if (run.mode !== "practice") return { kicker: run.mode === "test" ? "Test" : REVIEW, title: run.title, back: contents };
       const l = lessonOfItem(currentItem(run));
       return { kicker: `Problem ${run.i + 1} of ${run.items.length}`, title: l.title, back: contents, lesson: l.id };
     }
     case "results": {
       const rep = app.lastReport, l = rep ? lessonById(rep.key) : undefined;
+      if (rep && isCheckKey(rep.key)) {
+        const cl = lessonById(lessonOfCheck(rep.key));
+        return { kicker: `Done \u00b7 ${SKILL_CHECK.toLowerCase()} ${rep.level} of 4`, title: cl?.title ?? rep.title, back: contents, lesson: cl?.id };
+      }
       return { kicker: l ? chapterLine(l.id, "done") : "Done", title: rep?.title ?? "Done", back: contents, lesson: l?.id };
     }
     case "report": {
@@ -118,6 +128,8 @@ function fillOf(place: Place, app: ReturnType<typeof useApp>, grade: number): nu
   // in practice, the battery is the run: each solved problem ticks it up by its share (practice-spec §5)
   const run = app.progress.run;
   if (app.route.name === "practice" && run) return ((run.done?.length ?? 0) + (run.solved && !run.done?.includes(run.i) ? 1 : 0)) / run.items.length;
+  // done with a lesson and its skill check: the ring is full
+  if (app.route.name === "results" && app.lastReport && isCheckKey(app.lastReport.key)) return 1;
   if (place.lesson) { const p = pageOf(place.lesson); if (p) return p.page / p.pages; }
   const all = entriesInGrade(grade);
   return all.length ? doneCount(app.progress, all) / all.length : 0;

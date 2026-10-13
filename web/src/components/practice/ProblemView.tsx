@@ -5,6 +5,7 @@ import { MathLine, Rich } from "../primitives/MathLine";
 import { AskLine } from "../primitives/AskLine";
 import { dressStatement, fillUnknown, hideUnknown, partsLook, type PartsLook } from "../primitives/statement";
 import { CounterRow } from "./CounterRow";
+import { formatNumber, toPlainText } from "../../curriculum/schemas/math-text";
 
 /** The problem's one answer, when it is a single number (the last step's only box); else null. */
 function finalAnswer(lesson: ReturnType<typeof requireLesson>, problem: unknown): number | null {
@@ -12,6 +13,13 @@ function finalAnswer(lesson: ReturnType<typeof requireLesson>, problem: unknown)
     const steps = lesson.answers(problem).steps, last = steps[steps.length - 1];
     return last && last.slots.length === 1 && !last.choices ? last.slots[0]!.expected : null;
   } catch { return null; }
+}
+
+/** a problem as one plain line: "24 × 13" to ask it, "24 × 13 = 312" once it's done (skill check and its recap) */
+export function plainProblem(lessonId: string, problem: unknown, solved?: boolean): string {
+  const lesson = requireLesson(lessonId), shown = lesson.display(problem);
+  const ask = toPlainText(shown).replace(/\s*=\s*\?\s*$/, ""), ans = solved ? finalAnswer(lesson, problem) : null;
+  return ans == null ? ask : /=/.test(ask) ? toPlainText(fillUnknown(shown, ans)) : `${ask} = ${formatNumber(ans)}`;
 }
 
 /**

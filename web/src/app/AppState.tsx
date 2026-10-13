@@ -4,6 +4,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { createRng, randomSeed, type Rng } from "../curriculum/generators/rng";
 import { emptyProgress, type Progress } from "../engine/mastery/progress";
 import { canReview, finishRun, startPractice, startReview, startTest, type Deps } from "../engine/session/practice";
+import { checkKey } from "../engine/mastery/skills";
+import { requireLesson } from "../curriculum/registry";
 import type { PracticeSession, SessionReport } from "../engine/session/types";
 import { makeBackup, readBackup } from "../persistence/backup";
 import { loadAll } from "../persistence/load";
@@ -229,6 +231,12 @@ export function AppProvider(props: {
         if (!run) return;
         const r = finishRun(run, data.progress, now());
         void store.current?.putReport(r.report).catch(() => {});
+        // a good day: the lesson, then its skill check (4 problems on your own); Done scores the check
+        if (run.mode === "practice") {
+          const l = requireLesson(run.key), check = startTest(checkKey(l.grade, l.id), r.progress, deps());
+          withTransition(() => setData(d => (d ? { progress: { ...r.progress, run: check }, reports: { ...d.reports, [r.report.key]: r.report } } : d)), "next");
+          return;
+        }
         withTransition(() => {
           setData(d => (d ? { progress: r.progress, reports: { ...d.reports, [r.report.key]: r.report } } : d));
           setLastReport(r.report);

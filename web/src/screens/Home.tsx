@@ -14,7 +14,7 @@ import { Cover, Stat } from "../components/Cover";
 import { chapterPic, lessonPic, TilePic } from "../components/TilePics";
 import { Slider, type SliderOption } from "../components/primitives/Slider";
 import { Chevron } from "../components/primitives/icons";
-import { LESSON_MINUTES, UP_NEXT } from "../app/copy";
+import { LESSON_CHECK_MINUTES, LESSON_MINUTES, UP_NEXT } from "../app/copy";
 
 /** the preview only shows when it fits at least this tall without shrinking any text (handoff 5) */
 const PREVIEW_MIN = 150;
@@ -31,8 +31,8 @@ export function Home() {
 }
 
 /** what a lesson's tile and Today say about it, from its last skill check (one word, never a grade) */
-function statusOf(progress: ReturnType<typeof useApp>["progress"], g: number, id: string): { word: string; tone?: "next" | "rev"; done: boolean; score: number | null } {
-  const sc = lastScore(progress, id), done = timesDone(progress, id) > 0;
+export function statusOf(progress: ReturnType<typeof useApp>["progress"], g: number, id: string): { word: string; tone?: "next" | "rev"; done: boolean; score: number | null } {
+  const sc = progress.checks?.[id]?.last ?? lastScore(progress, id), done = timesDone(progress, id) > 0;
   if (!isReady(id)) return { word: "Coming soon", done, score: sc };
   if (upNext(progress, g)?.entry.id === id && !done) return { word: UP_NEXT, tone: "next", done, score: sc };
   if (!done) return { word: "Not started", done, score: sc };
@@ -107,7 +107,7 @@ function TodayPanel({ g, id }: { g: number; id: string }) {
       <p className="v-why">{why}</p>
       <div className="v-row">
         <button className="v-go" disabled={!lesson} onClick={start}>{carry ? "Carry on" : st.done ? "Practise" : "Start"}</button>
-        <span className="v-meta">{carry && run ? `Problem ${run.i + 1} of ${run.items.length}` : st.done ? `Practice \u00b7 about ${LESSON_MINUTES} minutes` : `Lesson and practice \u00b7 about ${LESSON_MINUTES} minutes`}</span>
+        <span className="v-meta">{carry && run ? `Problem ${run.i + 1} of ${run.items.length}` : st.done ? `Practice and skill check \u00b7 about ${LESSON_MINUTES} minutes` : `Lesson and skill check \u00b7 about ${LESSON_CHECK_MINUTES} minutes`}</span>
       </div>
       <div className="v-todaypic">{found && <PlayingDiagram ex={{ ...found.pic.ex, diagram: found.pic.ex.diagram! }} end={statementBeat(found.pic.ex)} />}</div>
     </section>

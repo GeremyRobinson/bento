@@ -5,19 +5,21 @@ import { when } from "../app/format";
 import { reduceMotion } from "../app/transition";
 import { gradeOf, tintStyle } from "../curriculum/grades";
 import { placeKey, placementResult } from "../engine/session/practice";
-import { lessonById, lessonsInGrade } from "../curriculum/registry";
+import { lessonById } from "../curriculum/registry";
 import { BuildUp } from "../components/BuildUp";
 import type { SessionReport } from "../engine/session/types";
 import { SessionReportView } from "../components/reports/SessionReportView";
 import { FitScreen } from "../components/screen/Screen";
-import { ALL_LESSONS, PRACTICE_AGAIN } from "../app/copy";
+import { ALL_LESSONS, SKILL_CHECK } from "../app/copy";
 import { upNext } from "../app/today";
-import { PreviewWell } from "./Home";
+import { PreviewWell, statusOf } from "./Home";
+import { isCheckKey, lessonOfCheck } from "../engine/mastery/skills";
+import { plainProblem } from "../components/practice/ProblemView";
 import { Cover } from "../components/Cover";
 import { Rich } from "../components/primitives/MathLine";
 import { lessonPic, TilePic } from "../components/TilePics";
-import { unitsInGrade } from "../app/curriculum";
-import { lastScore, timesDone } from "../engine/mastery/progress";
+import { isReady, unitsInGrade } from "../app/curriculum";
+import { timesDone } from "../engine/mastery/progress";
 
 /** Counts up from 0 over a moment, like the current app's XP figure. */
 export function CountUp({ to, pre = "" }: { to: number; pre?: string }) {
@@ -64,7 +66,7 @@ function Placed({ rep }: { rep: SessionReport }) {
 
 /** The screen after a run: score ring, XP, time, what to do next, then the full report. */
 export function Results() {
-  const { lastReport: rep, progress, go, startLesson, startTest } = useApp();
+  const { lastReport: rep, progress, reports, go, startTest } = useApp();
   if (!rep) {
     // nothing finished yet: the grade's next lesson, with its own first picture, instead of an empty page (Review v43 #19)
     const next = progress.grade == null ? null : upNext(progress, progress.grade);
@@ -83,51 +85,61 @@ export function Results() {
     );
   }
   if (rep.key.startsWith("place:")) return <Placed rep={rep} />;
-  const lesson = lessonById(rep.key), test = rep.mode === "test", review = rep.mode === "review";
-  const grade = lesson ? lessonsInGrade(lesson.grade) : [], k = lesson ? grade.indexOf(lesson) : -1, next = grade[k + 1];
+  // the skill check after a lesson scores the lesson (v2 model): "n of 4 on your own"
+  const skill = isCheckKey(rep.key);
+  const lesson = lessonById(skill ? lessonOfCheck(rep.key) : rep.key), test = rep.mode === "test" && !skill, review = rep.mode === "review";
   const lastLesson = lessonById(rep.probs[rep.probs.length - 1]?.lessonId ?? "");
-  const low = rep.mode === "practice" && rep.level <= 1;
+  const g = lesson?.grade ?? lastLesson?.grade ?? progress.grade ?? 5;
+  // what comes next is what Today will bring
+  const up = lesson ? upNext(progress, g) : null, next = up && up.entry.id !== lesson?.id && lessonById(up.entry.id) ? up.entry : undefined;
+  const low = !test && !review && rep.level <= 1;
   // v2 (G 2026-10-13): what the score means in words, what Today does next, and the lesson's tile filling in its chapter
   const words = ["not there yet", "just starting", "getting there", "nearly there", "you\u2019ve got it"][rep.level];
   const then = test ? "Today keeps track of how the test went." : rep.level >= 3
     ? (next ? `Next time, Today brings the next lesson: ${next.title}.` : "Next time, Today moves on to something new.")
     : "Next time, Today brings this back for another go, so it sticks.";
-  const slip = rep.mistakes[0];
-  const g = lesson?.grade ?? lastLesson?.grade ?? progress.grade ?? 5;
+  const why = skill ? `You finished the lesson. The skill check shows how much stuck. ${then}`
+    : test ? `${rep.clean} of ${rep.total} problems had every step right. ${then}` : `${rep.clean} of ${rep.total} problems with no mistakes. ${then}`;
+  // one thing to watch for: the check's own slip, else the lesson's from just before it
+  const practice = skill && lesson ? reports[lesson.id] : undefined;
+  const slip = rep.mistakes[0] ?? (practice && rep.date - practice.date < 36e5 ? practice.mistakes[0] : undefined);
   return (
     <div className="screen v-work v-done">
       <section className="v-panel v-result" aria-label="Done">
-        <span className="v-label">{`Done \u00b7 ${rep.title}`}</span>
+        <span className="v-label">{`Done \u00b7 ${lesson?.title ?? rep.title}`}</span>
         <span className="v-seg" aria-label={`Score ${rep.level} of 4`}>{[1, 2, 3, 4].map(k => <i key={k} className={k <= rep.level ? "on" : undefined} />)}</span>
-        <h2>{rep.level} of 4: {words}.</h2>
-        <p className="v-why">{test ? `${rep.clean} of ${rep.total} problems had every step right.` : `${rep.clean} of ${rep.total} problems with no mistakes.`} {then}</p>
+        <h2>{rep.level} of 4{skill ? " on your own" : ""}: {words}.</h2>
+        <p className="v-why">{why}</p>
         <div className="v-row">
-          {rep.mode === "practice" && next && rep.level >= 3 && <button className="v-go" onClick={() => go({ name: "learn", lessonId: next.id }, "next")}>Next: {next.title}</button>}
-          {test ? <button className="v-plain" onClick={() => startTest(rep.key)}>Take it again</button>
-            : !review && lesson && <button className={rep.level >= 3 && next ? "v-plain" : "v-go"} onClick={() => startLesson(lesson.id)}>{PRACTICE_AGAIN}</button>}
+          {!test && !review && next && rep.level >= 3 && <button className="v-go" onClick={() => go({ name: "learn", lessonId: next.id }, "next")}>Next: {next.title}</button>}
+          {test && <button className="v-plain" onClick={() => startTest(rep.key)}>Take it again</button>}
           <button className="v-plain" onClick={() => go({ name: "home", ...(lesson ? { pick: lesson.id } : {}) }, "back")}>Back to your box</button>
         </div>
-        {low && <BuildUp lessonId={rep.key} />}
+        {low && lesson && <BuildUp lessonId={lesson.id} />}
+        {rep.mode !== "practice" && rep.probs.length > 0 && <div className="v-recap">
+          <span className="v-label">{skill ? `Your ${SKILL_CHECK.toLowerCase()}` : review ? "Your review" : "Your test"}</span>
+          {rep.probs.map((x, k) => <div key={k} className="v-rp"><b>{plainProblem(x.lessonId, x.problem, true)}</b><span>{!x.wrong && !x.shown ? "Right" : "Not this time"}</span></div>)}
+        </div>}
         {slip && <p className="v-why"><b>Watch for:</b> {slip.msg ? <Rich text={slip.msg} /> : `step ${slip.step} of problem ${slip.n}, you put ${slip.typed} where it was ${slip.want}.`}</p>}
-        <div className="v-recap"><SessionReportView rep={rep} /></div>
       </section>
       <section className="v-panel v-box" aria-label="Your box">{lesson ? <DoneBox g={g} id={lesson.id} /> : null}</section>
     </div>
   );
 }
 
-/** The lesson's chapter, its tile now showing the new skill check. */
+/** The lesson's chapter, its tile now showing the new skill check; a tap goes to the box with that lesson picked. */
 function DoneBox({ g, id }: { g: number; id: string }) {
-  const { progress } = useApp();
+  const { progress, go } = useApp();
   const unit = unitsInGrade(g).find(u => u.entries.some(c => c.id === id));
   if (!unit) return null;
   const n = unit.entries.filter(c => timesDone(progress, c.id) > 0).length;
   return (<>
     <div className="v-bh"><b>{unit.name}</b><span className="v-meta">{n} of {unit.entries.length} done</span></div>
     {unit.entries.map(c => {
-      const sc = lastScore(progress, c.id), done = timesDone(progress, c.id) > 0;
-      return <Cover key={c.id} pick={c.id === id} className="still" tabIndex={-1} pic={<TilePic svg={lessonPic(c.id)} />} name={c.title} p={(sc ?? 0) / 4}
-        word={!done ? "Not started" : sc === 4 ? "Solid" : "Keep going"} />;
+      const st = statusOf(progress, g, c.id);
+      return <Cover key={c.id} pick={c.id === id} disabled={!isReady(c.id)} pic={<TilePic svg={lessonPic(c.id)} />} name={c.title} p={(st.score ?? 0) / 4} tone={st.tone}
+        word={<>{st.word}{st.done && st.score != null && <span className="v-sc">{` \u00b7 ${st.score}/4`}</span>}</>}
+        onClick={() => go({ name: "home", pick: c.id }, "back")} aria-label={`${c.title}, ${st.word}${st.done && st.score != null ? `, skill check ${st.score} of 4` : ""}`} />;
     })}
   </>);
 }

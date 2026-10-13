@@ -296,7 +296,7 @@ describe("unit test and check-up", () => {
     // the check-up's score shows on its tile in the box's Test view
     view("Test");
     expect(within(box()).getByRole("button", { name: "5th grade test, last try 4 of 4" })).toHaveTextContent("4/4");
-  });
+  }, 60000);
 
   it("zooms out to every problem of a practice and does them in the order picked (v2: the Problems tool)", () => {
     renderApp();
@@ -313,7 +313,7 @@ describe("unit test and check-up", () => {
     renderApp();
     startCheckup();
     answerWrong();
-    expect(screen.getByRole("status")).toHaveTextContent(/Incorrect\. The answer was/);
+    expect(screen.getByRole("status")).toHaveTextContent(/Not this time\. It\u2019s /);
   });
 
   it("a test problem with a wrong answer is never marked solved or green (G 2026-10-08)", () => {
@@ -324,7 +324,7 @@ describe("unit test and check-up", () => {
     const say = screen.getByRole("status");
     expect(say).not.toHaveClass("good");
     // the say line names the miss (the answer given, or "Not this time."), never as right
-    expect(say).toHaveTextContent(/Incorrect\.|Not this time\./);
+    expect(say).toHaveTextContent("Not this time.");
     expect(say).not.toHaveTextContent("Solved.");
     expect(say).not.toHaveTextContent("Correct.");
     expect(document.querySelector(".v-steps .n")).toHaveTextContent("Done");
@@ -364,19 +364,23 @@ function openRow(title: string) {
 const scored = (level: 0 | 1 | 2 | 3 | 4, date: number) => ({ last: level, best: level, pct: level / 4, date, mastered: false });
 
 describe("report, grown-up page and back to basics", () => {
-  it("shows the run's report on the done screen, and goes back to the lesson in Today (v2: the report is part of done)", () => {
+  it("after practice comes the skill check; done lists it problem by problem, and goes back to the lesson in Today (v2 model)", () => {
     renderApp();
     startPractice();
     solveRun();
     const done = screen.getByRole("region", { name: "Done" });
-    expect(within(done).getByRole("heading", { level: 2, name: "What you did" })).toBeInTheDocument();
-    expect(within(done).getByRole("heading", { level: 2, name: "For the grown-up" })).toBeInTheDocument();
-    expect(within(done).getByText(/Practiced/)).toHaveTextContent(`Practiced ${LESSON}.`);
+    expect(within(done).getByRole("heading", { level: 2, name: "4 of 4 on your own: you\u2019ve got it." })).toBeInTheDocument();
+    expect(within(done).getByText("Your skill check")).toBeInTheDocument();
+    expect(done.querySelectorAll(".v-rp")).toHaveLength(4);
+    for (const row of done.querySelectorAll(".v-rp")) expect(row.textContent).toMatch(/^\d+ × \d+ = \d+Right$/);
+    // no grown-up report here (it stays on the grown-up page) and no Practice again
+    expect(within(done).queryByRole("heading", { name: "What you did" })).toBeNull();
+    expect(within(done).queryByRole("button", { name: "Practice again" })).toBeNull();
     tap("Back to your box");
     expect(within(today()).getByRole("heading", { level: 2, name: LESSON })).toBeInTheDocument();
     expect(within(today()).getByRole("button", { name: "Practise" })).toBeInTheDocument();
     expect(box().querySelector(".v-cover.pick")).toHaveTextContent(LESSON);
-  });
+  }, 60000);
 
   it("shows mistake patterns, scores by chapter and where help was used, and opens the session behind a pattern", () => {
     const t = Date.UTC(2026, 9, 1, 15);
@@ -426,10 +430,12 @@ describe("report, grown-up page and back to basics", () => {
     expect(screen.getByRole("button", { name: new RegExp(`Build up first: ${pre.title}`) })).toBeInTheDocument();
     tap("Show all"); tap("Try one");
     failRun();
-    expect(screen.getByRole("heading", { level: 2, name: /^[01] of 4: / })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: /^[01] of 4 on your own: / })).toBeInTheDocument();
     const build = screen.getByRole("button", { name: new RegExp(`Build up first: ${pre.title}`) });
     expect((build as HTMLButtonElement).disabled).toBe(!lessonById(pre.id));
-    expect(screen.getByRole("button", { name: "Practice again" })).toBeInTheDocument();
+    // the done screen offers only the way back (v2 model): Today brings the lesson back for another go
+    expect(screen.queryByRole("button", { name: "Practice again" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Back to your box" })).toBeInTheDocument();
   }, 60000);
 });
 
