@@ -149,12 +149,12 @@ button.gcell:active{transform:scale(.96)}
 .bento>div+div{border-left:1px solid var(--rule)}
 .bento .k{color:var(--muted);font-size:var(--small);line-height:18px}
 .bento .v{font-family:var(--num);font-size:calc(var(--fs) * 1.75);line-height:1.1;color:var(--ink)}
-.ring{display:grid;place-items:center;position:relative;width:92px;height:92px;margin:0 auto}
-.ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
-.ring circle{fill:none;stroke-width:8}
-.ring .trk{stroke:var(--rule)} .ring .val{stroke:var(--sc,var(--tint));stroke-linecap:round;animation:ringIn var(--dur-1200) var(--ease) var(--dur-300) both}
+div.ring{display:grid;place-items:center;position:relative;width:92px;height:92px;margin:0 auto}
+div.ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
+div.ring circle{fill:none;stroke-width:8}
+div.ring .trk{stroke:var(--rule)} div.ring .val{stroke:var(--sc,var(--tint));stroke-linecap:round;animation:ringIn var(--dur-1200) var(--ease) var(--dur-300) both}
 @keyframes ringIn{from{stroke-dashoffset:1}}
-.ring b{font:var(--w-bold) 34px/1 var(--num);color:var(--sc,var(--tint));text-box:trim-both cap alphabetic}
+div.ring b{font:var(--w-bold) 34px/1 var(--num);color:var(--sc,var(--tint));text-box:trim-both cap alphabetic}
 .score{display:inline-flex;align-items:center;gap:6px;flex:none;white-space:nowrap}
 .score b{min-width:30px;height:30px;padding:0 6px;border-radius:var(--r-pill);display:inline-flex;align-items:center;justify-content:center;font:var(--w-bold) var(--fz-md)/1 var(--num);color:var(--sc-fg);background:var(--sc)}
 .score span{font-weight:var(--w-bold);font-size:var(--small);color:var(--ink)}
