@@ -5,11 +5,15 @@
 // Lessons that already had an entry keep theirs in their family file (tape.ts, early.ts).
 const HINT = "the hint points at where to look instead of stating the answer or just the operation (fixes-02 Part C patterns 3 and 4)";
 const SHOW = "Show me starts from the new hint, or now says the result where it only repeated the hint";
+const V2_MULT2 = "v2 model (G 2026-10-13, \"the preview doesn't look like the model\"): both numbers split into tens and ones, four parts asked row by row, then their sum (math-app/design/v2-lesson-spec.md, g5-mult2)";
 const SLIPS = "new named slips (fixes-02 Part C pattern 3); a wrong try that is none of them repeats the hint";
 
 export const deviations: Record<string, Partial<Record<string, string>>> = {
   "g4-dec": { pre: "g4-equiv: tenths become hundredths by renaming (Order 2)", checks: `${SLIPS}: "Used the tenths as they were"` },
-  "g5-mult2": { story: "Curriculum fix-03 (2026-10-07): the picture is firstFactor seats tall, so the story calls firstFactor the rows and secondFactor the seats in each row; the recorded app had them swapped", pre: "g4-mult2x2: same area model, now one factor's tens and ones (Order 4)", checks: `${SLIPS}: "Added instead of multiplied", "Left out a part"` },
+  "g5-mult2": { story: "Curriculum fix-03 (2026-10-07): the picture is firstFactor seats tall, so the story calls firstFactor the rows and secondFactor the seats in each row; the recorded app had them swapped", pre: "g4-mult2x2: same area model, now one factor's tens and ones (Order 4)",
+    steps: V2_MULT2, prompt: `${V2_MULT2}: each step asks one part, e.g. 40 × 30`, hint: V2_MULT2, explain: V2_MULT2, work: V2_MULT2,
+    checks: `${V2_MULT2}: the slips are the new parts' ("Lost the place value", "Added instead of multiplied") and "Left out a part"; any other wrong try says what to look at in the picture`,
+    "answers:partial-0": V2_MULT2, "answers:partial-1": V2_MULT2, "answers:partial-2": V2_MULT2, "answers:partial-3": V2_MULT2 },
   "g5-pow10": { pre: "g4-dec: place value after the point (Order 4)", checks: `${SLIPS}: "Counted the 1 too", "Wrote the number"` },
   "g5-adddec": { checks: `${SLIPS}: "Forgot to carry" or "Subtracted", "Lost a whole" or "Left off the decimal part"` },
   "g5-divdec": { checks: `${SLIPS}: "Moved the point too far", "Moved the point the wrong way", "Put the point back", "Multiplied"` },

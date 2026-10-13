@@ -321,7 +321,7 @@ export function pickPlan(s: PracticeSession, index: number): PracticeSession {
   }
   const isLater = stepsOf(s).slice(s.step + 1).some(t => t.base === choice);
   return { ...s, pick: { ...pk, misses }, fx: "shake", mistakes: [...s.mistakes, mistake],
-    feedback: { type: "bad", strong: "Look again.", text: isLater ? "That step comes later. What has to happen first?" : "That step isn't part of this problem." } };
+    feedback: { type: "bad", strong: "Not quite.", text: isLater ? "That step comes later. What has to happen first?" : "That step isn't part of this problem." } };
 }
 
 // ---------------------------------------------------------------- typing
@@ -395,7 +395,7 @@ export function check(s: PracticeSession, progress: Progress, deps: Deps): Pract
 
   if (step.skipped) { // the shortcut missed: do this one the long way
     next = loadStep({ ...next, skipThis: false, collapsed: false, maxPts: next.maxPts + 1, step: leadOf(currentItem(next)) }, deps);
-    return { ...next, fx: "shake", feedback: { type: "bad", strong: "Look again.", text: "This one needs the steps. Here they are." } };
+    return { ...next, fx: "shake", feedback: { type: "bad", strong: "Not quite.", text: "This one needs the steps. Here they are." } };
   }
   if (isTest(next)) {
     const shownValues = Object.fromEntries(Object.entries(expected).map(([k, v]) => [k, formatNumber(v)]));
@@ -404,11 +404,13 @@ export function check(s: PracticeSession, progress: Progress, deps: Deps): Pract
   }
   const band = bandOfSession(next);
   const msg = cat === "concept" ? r.message
-    : SAY[cat] ?? `${nudge(expected, values, band)} ${next.hinted ? step.hint : `Read the step again${next.hintsLeft ? ", or tap Hint" : ""}.`}`.trim();
+    : step.look ?? SAY[cat] ?? `${nudge(expected, values, band)} ${next.hinted ? step.hint : `Read the step again${next.hintsLeft ? ", or tap Hint" : ""}.`}`.trim();
   const lines: string[] = [];
   if (rushed) lines.push("Slow down a little and read the step again.");
   if (canShowMe({ test: false, misses: next.misses, hinted: next.hinted })) lines.push("Stuck? Tap **Show me**.");
-  return { ...next, feedback: { type: "bad", strong: "Look again.", text: msg, lines } };
+  // one box: it empties for the next try, so the "?" comes back (v2 spec P8); a step with several keeps what was typed
+  const kept = Object.keys(expected).length === 1 ? {} : next.values;
+  return { ...next, values: kept, feedback: { type: "bad", strong: "Not quite.", text: msg, lines } };
 }
 
 /** Hints are limited: about one for every two problems, and only after a first try. */

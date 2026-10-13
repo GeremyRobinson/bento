@@ -18,10 +18,10 @@ function renderApp() {
 function answerOnScreen(): string {
   const q2 = document.querySelector(".v-ask .q2 .mline");
   const ask = (q2 ? `${q2.getAttribute("data-plain")} = blank` : document.querySelector(".ask .mline")!.getAttribute("data-plain")!).replace(/−/g, "-");
-  const m = ask.match(/^(-?\d+) ([×+]) (-?\d+)(?: \+ (-?\d+))? = blank$/);
+  // a × b, or a sum of any number of parts
+  const m = ask.match(/^(-?\d+) × (-?\d+) = blank$/) ?? ask.match(/^(-?\d+(?: \+ -?\d+)+) = blank$/);
   if (!m) throw new Error(`can't read step: ${ask}`);
-  const nums = [m[1], m[3], m[4]].filter(Boolean).map(Number);
-  return String(m[2] === "×" ? nums[0]! * nums[1]! : nums.reduce((a, b) => a + b, 0));
+  return String(m.length === 3 ? Number(m[1]) * Number(m[2]) : m[1]!.split(" + ").map(Number).reduce((a, b) => a + b, 0));
 }
 
 describe("a whole lesson in the browser", () => {
@@ -41,9 +41,11 @@ describe("a whole lesson in the browser", () => {
     const sm = statement.match(/^(\d+) × (\d+)$/);
     expect(sm, statement).not.toBeNull();
     const [a, b] = sm!.slice(1).map(Number) as [number, number];
-    const tens = b - (b % 10), ones = b % 10;
+    // both numbers split into tens and ones: four parts, row by row (v2 model)
+    const split = (n: number) => [n - (n % 10), n % 10];
+    const parts = split(b).flatMap(y => split(a).map(x => `${x} by ${y} = ${x * y}`));
     const pic = stage().getByRole("img");
-    expect(pic.getAttribute("aria-label")).toBe(`${a} by ${b} rectangle, split into ${a} by ${tens} = ${a * tens} and ${a} by ${ones} = ${a * ones}. Total ${a * b}.`);
+    expect(pic.getAttribute("aria-label")).toBe(`${a} by ${b} rectangle, split into ${parts.join(", ")}. Total ${a * b}.`);
     // it opens on the picture's first frame and only ever builds forward from there (G 2026-10-06)
     expect(pic.getAttribute("data-split")).toBe("false");
     fireEvent.click(screen.getByRole("button", { name: "Show all" }));
@@ -51,7 +53,7 @@ describe("a whole lesson in the browser", () => {
     expect(pic.getAttribute("data-sum")).toBe("true");
     // the whole worked example is written out, and the way on is to watch another or try one
     const side = within(screen.getByRole("region", { name: "Watch one" }));
-    expect(side.getAllByText("Add the strips to fill the whole rectangle.").length).toBeGreaterThan(0);
+    expect(side.getAllByText("add the four parts").length).toBeGreaterThan(0);
     expect(side.getByRole("button", { name: "Try one" })).toBeInTheDocument();
 
     // a new example (v2: Watch again) redraws everything from a new problem
@@ -65,7 +67,7 @@ describe("a whole lesson in the browser", () => {
     const pad = () => document.querySelector(".tray") as HTMLElement;
     fireEvent.click(within(pad()).getByRole("button", { name: "1" }));
     fireEvent.click(screen.getByRole("button", { name: "Check" }));
-    expect(screen.getByRole("status")).toHaveTextContent("Look again.");
+    expect(screen.getByRole("status")).toHaveTextContent("Not quite.");
     act(() => { t += 10000; });
     for (let guard = 0; guard < 60; guard++) {
       const finish = screen.queryByRole("button", { name: /Next problem|Finish lesson/ });

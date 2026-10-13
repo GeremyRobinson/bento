@@ -1,4 +1,5 @@
-// G's seven required invariants, on the reference problem 47 × 36 and on thousands of seeded problems.
+// G's seven required invariants, on the reference problem 47 × 36 and on thousands of seeded problems. v2 (G 2026-10-13,
+// the approved model): both numbers split into tens and ones, the first across the top, the second down the side.
 import { PART_GAP } from "../../explanations/diagrams/area-model/build";
 import { createRng } from "../../curriculum/generators/rng";
 import { splitMultiplication as lesson } from "../../curriculum/lessons/grade5/g5-mult2";
@@ -16,30 +17,32 @@ function seeded(n: number): SplitMultiplicationProblem[] {
   const rng = createRng(20261002);
   return Array.from({ length: n }, () => generateSplitMultiplication(rng));
 }
-// also every pair in range, including multiples of ten on the second factor and three-part splits
+// also every pair in range, including multiples of ten and three-part splits
 const edge = [[47, 36], [12, 12], [98, 99], [99, 7], [5, 105], [13, 340], [47, 30]].map(([a, b]) => createSplitMultiplication(a!, b!));
 const ALL = [...edge, ...seeded(5000)];
 
 const reference = createSplitMultiplication(47, 36);
 
-describe("the reference case 47 × 36 = 47 × (30 + 6)", () => {
+describe("the reference case 47 × 36 = (40 + 7) × (30 + 6)", () => {
   it("has the right model", () => {
-    expect(reference).toMatchObject({ firstFactor: 47, secondFactor: 36, strategy: "splitSecondFactor", parts: [30, 6], partialProducts: [1410, 282], product: 1692 });
+    expect(reference).toMatchObject({
+      firstFactor: 47, secondFactor: 36, strategy: "splitBoth", firstParts: [40, 7], secondParts: [30, 6],
+      cells: [{ first: 40, second: 30 }, { first: 7, second: 30 }, { first: 40, second: 6 }, { first: 7, second: 6 }],
+      partialProducts: [1200, 210, 240, 42], product: 1692,
+    });
     expect(checkInvariants(reference)).toEqual([]);
   });
   it("reads correctly everywhere", () => {
     const ex = explainSplitMultiplication(reference, lesson.answers(reference));
-    expect(toPlainText(ex.statement)).toBe("47 × 36 = 47 × (30 + 6)");
-    expect(ex.steps.map(s => s.narration)).toEqual([
-      "Split 36 into tens and ones.",
-      "The tens strip is 47 tall and 30 wide.",
-      "The ones strip is 47 tall and 6 wide.",
-      "Add the strips to fill the whole rectangle.",
-    ]);
-    expect(ex.steps.map(s => toPlainText(s.math))).toEqual(["36 = 30 + 6", "47 × 30 = 1410", "47 × 6 = 282", "1410 + 282 = 1692"]);
-    expect(ex.diagram.vertical).toMatchObject({ factor: "first", value: 47, label: "47" });
-    expect(ex.diagram.horizontal).toMatchObject({ factor: "second", value: 36, label: "36" });
-    expect(ex.diagram.regions.map(r => [r.partLabel, r.productLabel])).toEqual([["30", "1410"], ["6", "282"]]);
+    expect(toPlainText(ex.statement)).toBe("47 × 36");
+    expect(ex.steps.map(s => s.narration)).toEqual(["the tens by the tens", "the ones by the tens", "the tens by the ones", "the ones by the ones", "add the four parts"]);
+    expect(ex.steps.map(s => toPlainText(s.math))).toEqual(["40 × 30 = 1200", "7 × 30 = 210", "40 × 6 = 240", "7 × 6 = 42", "1200 + 210 + 240 + 42 = 1692"]);
+    expect(ex.solved).toBe("The four parts make 1,692.");
+    expect(ex.diagram.horizontal).toMatchObject({ factor: "first", value: 47, label: "47" });
+    expect(ex.diagram.vertical).toMatchObject({ factor: "second", value: 36, label: "36" });
+    expect(ex.diagram.cols.map(c => c.label)).toEqual(["40", "7"]);
+    expect(ex.diagram.rows.map(r => r.label)).toEqual(["30", "6"]);
+    expect(ex.diagram.regions.map(r => [r.col, r.row, r.productLabel])).toEqual([[0, 0, "1200"], [1, 0, "210"], [0, 1, "240"], [1, 1, "42"]]);
   });
 });
 
@@ -47,47 +50,48 @@ describe.each([
   ["47 × 36", [reference]],
   [`${ALL.length} generated and edge problems`, ALL],
 ])("invariants: %s", (_name, problems) => {
-  it("1. split parts always add to the multiplier", () => {
-    for (const p of problems) expect(sum(p.parts)).toBe(p.secondFactor);
+  it("1. split parts always add to their factor", () => {
+    for (const p of problems) { expect(sum(p.firstParts)).toBe(p.firstFactor); expect(sum(p.secondParts)).toBe(p.secondFactor); }
   });
 
-  it("2. region widths always add to 100% of the total width", () => {
+  it("2. the columns and rows tile the picture, one gap apart (v2 spec G1: each part its own shape)", () => {
     for (const p of problems) {
       const d = explainSplitMultiplication(p, lesson.answers(p)).diagram;
-      // the parts plus one fixed gap between each pair fill the width (v2 spec G1: each part its own shape)
-      expect(near(sum(d.regions.map(r => r.width)) + PART_GAP * (d.regions.length - 1), d.horizontal.length)).toBe(true);
-      expect(near(sum(d.regions.map(r => r.widthFraction)), 1)).toBe(true);
-      // and they tile it: exactly one gap between neighbours, no overlaps
-      d.regions.forEach((r, i) => {
-        const start = i === 0 ? d.horizontal.start : d.regions[i - 1]!.x + d.regions[i - 1]!.width + PART_GAP;
-        expect(near(r.x, start)).toBe(true);
-      });
-    }
-  });
-
-  it("3. each region width is proportional to its split value, on one scale for both axes, but no part is a hairline", () => {
-    for (const p of problems) {
-      const d = explainSplitMultiplication(p, lesson.answers(p)).diagram;
-      // a part too thin for its label is held at a readable width; the others share one scale
-      const held = d.regions.filter(r => r.width > r.part * d.unit + 0.01), free = d.regions.filter(r => !held.includes(r));
-      for (const r of held) expect(r.width).toBeGreaterThanOrEqual(26);
-      for (const r of free) expect(near(r.width / r.part, free[0]!.width / free[0]!.part)).toBe(true);
-      for (const r of d.regions) {
-        expect(near(r.widthFraction, r.part / p.secondFactor)).toBe(true);
-        expect(near(r.height, p.firstFactor * d.unit)).toBe(true);
+      for (const [bands, axis] of [[d.cols, d.horizontal], [d.rows, d.vertical]] as const) {
+        expect(near(sum(bands.map(b => b.length)) + PART_GAP * (bands.length - 1), axis.length)).toBe(true);
+        bands.forEach((b, i) => expect(near(b.start, i === 0 ? axis.start : bands[i - 1]!.start + bands[i - 1]!.length + PART_GAP)).toBe(true));
       }
-      // the drawn parts (without the gaps between them) keep the problem's proportions
-      if (!held.length) expect(near((d.horizontal.length - PART_GAP * (d.regions.length - 1)) / d.vertical.length, p.secondFactor / p.firstFactor)).toBe(true);
+      // every part sits exactly in its column and row
+      for (const r of d.regions) {
+        expect(r.x).toBe(d.cols[r.col]!.start); expect(r.width).toBe(d.cols[r.col]!.length);
+        expect(r.y).toBe(d.rows[r.row]!.start); expect(r.height).toBe(d.rows[r.row]!.length);
+      }
     }
   });
 
-  it("4. partial products equal firstFactor × splitPart", () => {
+  it("3. columns and rows are in proportion on one scale for both axes, but no part is a hairline", () => {
     for (const p of problems) {
-      p.parts.forEach((part, i) => expect(p.partialProducts[i]).toBe(p.firstFactor * part));
+      const d = explainSplitMultiplication(p, lesson.answers(p)).diagram;
+      const all = [...d.cols.map((b, i) => [b, p.firstParts[i]!] as const), ...d.rows.map((b, i) => [b, p.secondParts[i]!] as const)];
+      const held = all.filter(([b, n]) => b.length > n * d.unit + 0.01), free = all.filter(x => !held.includes(x));
+      for (const [b] of held) expect(b.length).toBeGreaterThanOrEqual(30);
+      for (const [b, n] of free) expect(b.length / n).toBeLessThanOrEqual(d.unit + 1e-9);
+      // within one side, the free parts share one scale
+      for (const side of [d.cols.map((b, i) => [b, p.firstParts[i]!] as const), d.rows.map((b, i) => [b, p.secondParts[i]!] as const)]) {
+        const f = side.filter(x => free.some(y => y[0] === x[0]));
+        for (const [b, n] of f) expect(near(b.length / n, f[0]![0].length / f[0]![1])).toBe(true);
+      }
+    }
+  });
+
+  it("4. each partial product is its column's part × its row's part", () => {
+    for (const p of problems) {
+      p.cells.forEach((c, i) => expect(p.partialProducts[i]).toBe(c.first * c.second));
       const d = explainSplitMultiplication(p, lesson.answers(p)).diagram;
       d.regions.forEach(r => {
-        expect(r.product).toBe(p.firstFactor * r.part);
-        expect(r.equation).toEqual({ factors: [p.firstFactor, r.part], product: r.product });
+        const [a, b] = [p.firstParts[r.col]!, p.secondParts[r.row]!];
+        expect(r.product).toBe(a * b);
+        expect(r.equation).toEqual({ factors: [a, b], product: r.product });
       });
     }
   });
@@ -102,68 +106,59 @@ describe.each([
     }
   });
 
-  it("6. axis ownership cannot reverse when the strategy is splitSecondFactor", () => {
+  it("6. axis ownership cannot reverse: the first factor runs across the top, the second down the side", () => {
     for (const p of problems) {
       const d = explainSplitMultiplication(p, lesson.answers(p)).diagram;
-      expect(p.strategy).toBe("splitSecondFactor");
-      expect(d.vertical.factor).toBe("first");
-      expect(d.vertical.value).toBe(p.firstFactor);
-      expect(d.horizontal.factor).toBe("second");
-      expect(d.horizontal.value).toBe(p.secondFactor);
-      // the split runs along the horizontal axis only: every region is the full height
-      for (const r of d.regions) { expect(r.y).toBe(d.vertical.start); expect(r.height).toBe(d.vertical.length); }
+      expect(p.strategy).toBe("splitBoth");
+      expect(d.horizontal).toMatchObject({ factor: "first", value: p.firstFactor });
+      expect(d.vertical).toMatchObject({ factor: "second", value: p.secondFactor });
+      expect(d.cols.map(c => c.label)).toEqual(p.firstParts.map(String));
+      expect(d.rows.map(r => r.label)).toEqual(p.secondParts.map(String));
+      // the parts go row by row, as the steps ask them
+      expect(d.regions.map(r => [r.row, r.col])).toEqual(p.secondParts.flatMap((_, j) => p.firstParts.map((_, i) => [j, i])));
     }
   });
 
   it("7. labels, equations, narration, answers and animation states all come from the same model", () => {
     for (const p of problems) {
       const answers = lesson.answers(p), ex = explainSplitMultiplication(p, answers), d = ex.diagram;
+      const n = p.cells.length;
       // answers: one step per part, then the sum, each expecting the model's own value
       const expected = answers.steps.map(s => s.slots[0]!.expected);
-      expect(expected).toEqual(p.parts.length > 1 ? [...p.partialProducts, p.product] : [...p.partialProducts]);
-      // prompts and finished work lines carry the model's numbers
+      expect(expected).toEqual(n > 1 ? [...p.partialProducts, p.product] : [...p.partialProducts]);
       answers.steps.forEach((s, i) => {
-        if (i < p.parts.length) {
-          expect(numbersIn(s.prompt)).toEqual([p.firstFactor, p.parts[i]]);
-          expect(numbersIn(s.work)).toEqual([p.firstFactor, p.parts[i], p.partialProducts[i]]);
+        if (i < n) {
+          expect(numbersIn(s.prompt)).toEqual([p.cells[i]!.first, p.cells[i]!.second]);
+          expect(numbersIn(s.work)).toEqual([p.cells[i]!.first, p.cells[i]!.second, p.partialProducts[i]]);
         } else {
           expect(numbersIn(s.prompt)).toEqual(p.partialProducts);
           expect(numbersIn(s.work)).toEqual([...p.partialProducts, p.product]);
         }
       });
-      // labels on the picture
-      expect(d.vertical.label).toBe(String(p.firstFactor));
-      expect(d.horizontal.label).toBe(String(p.secondFactor));
-      d.regions.forEach((r, i) => { expect(r.partLabel).toBe(String(p.parts[i])); expect(r.productLabel).toBe(String(p.partialProducts[i])); });
-      // narration and equations: each beat's result is the answer model's value, and the numbers it says are the model's
+      d.regions.forEach((r, i) => expect(r.productLabel).toBe(String(p.partialProducts[i])));
       for (const step of ex.steps) {
         if (step.answerStep) {
           const a = answers.steps.find(s => s.id === step.answerStep)!;
           expect(step.result).toBe(a.slots[0]!.expected);
           expect(numbersIn(step.math)).toEqual(numbersIn(a.work));
         }
-        // the result is said by the beat's math line; the narration says what the step does (grade5.md §3)
         expect(toPlainText(step.math)).toContain(String(step.result));
-        // narration never says a number the model doesn't have
-        const known = new Set([p.firstFactor, p.secondFactor, ...p.parts, ...p.partialProducts, p.product]);
-        for (const n of step.narration.match(/\d+/g) ?? []) expect(known.has(Number(n))).toBe(true);
+        // narration says no numbers at all: the math line carries them
+        expect(step.narration).not.toMatch(/\d/);
       }
-      // animation: the timeline visits the factors, the split, each region in order, then the sum
+      // animation: the timeline visits the factors, the split, each part in order, then the sum
       expect(ex.timeline[0]).toEqual({ phase: "factors" });
       expect(ex.timeline[1]).toEqual({ phase: "split" });
-      p.parts.forEach((_, i) => expect(ex.timeline[2 + i]).toEqual({ phase: "region", index: i }));
-      // each beat's state points at the matching place in the timeline, and the picture shows that region then
+      p.cells.forEach((_, i) => expect(ex.timeline[2 + i]).toEqual({ phase: "region", index: i }));
       ex.steps.forEach(step => {
-        const state = ex.timeline[step.state]!;
         if (step.id.startsWith("partial-")) {
           const i = Number(step.id.split("-")[1]);
-          expect(state).toEqual({ phase: "region", index: i });
+          expect(ex.timeline[step.state]).toEqual({ phase: "region", index: i });
           const view = areaView(ex.timeline, step.state);
           expect(view.active).toBe(i);
           expect([...view.shown]).toEqual(Array.from({ length: i + 1 }, (_, k) => k));
         }
       });
-      // the beats arrive in timeline order
       const states = ex.steps.map(s => s.state);
       expect([...states].sort((a, b) => a - b)).toEqual(states);
     }
@@ -171,9 +166,11 @@ describe.each([
 });
 
 describe("the problem model", () => {
-  it("never generates a multiple of ten for the split factor and stays in the current app's ranges", () => {
+  it("never generates a multiple of ten, so every problem has four parts, and stays in range", () => {
     for (const p of seeded(5000)) {
+      expect(p.firstFactor % 10).not.toBe(0);
       expect(p.secondFactor % 10).not.toBe(0);
+      expect(p.cells).toHaveLength(4);
       expect(p.firstFactor).toBeGreaterThanOrEqual(12); expect(p.firstFactor).toBeLessThanOrEqual(98);
       expect(p.secondFactor).toBeGreaterThanOrEqual(12); expect(p.secondFactor).toBeLessThanOrEqual(98);
       expect(checkInvariants(p)).toEqual([]);
@@ -191,12 +188,5 @@ describe("the problem model", () => {
   });
   it("is reproducible from a seed", () => {
     expect(generateSplitMultiplication(createRng(7))).toEqual(generateSplitMultiplication(createRng(7)));
-  });
-});
-
-describe("labels never collide", () => {
-  it("puts a product below its region when it doesn't fit inside", () => {
-    const d = explainSplitMultiplication(reference, lesson.answers(reference)).diagram;
-    expect(d.regions.map(r => r.labelPlacement)).toEqual(["inside", "below"]);
   });
 });

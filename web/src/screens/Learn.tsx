@@ -121,7 +121,6 @@ export function Learn({ lessonId }: { lessonId: string }) {
       </section>
       <section className="v-panel v-solve v-lside" aria-label="Watch one">
         <div className="v-steps"><span className="n">Watch one</span>
-          <span className="v-seg" aria-hidden>{ex.steps.map(st => <i key={st.id} className={st.state <= at ? "on" : undefined} />)}</span>
           {sc != null && <span className="v-meta">Last skill check {sc} of 4</span>}</div>
         {ex.idea?.[0] && <p className="v-idea"><Rich text={ex.idea[0]} /></p>}
         <ol className="v-wl" aria-live="polite">

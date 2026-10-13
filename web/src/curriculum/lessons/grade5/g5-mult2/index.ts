@@ -16,7 +16,8 @@ export const lesson: LessonDefinition<SplitMultiplicationProblem> = {
   display: p => [num(p.firstFactor), op("×"), num(p.secondFactor)],
   answers: splitMultiplicationAnswers,
   explain: explainSplitMultiplication,
-  story: p => ({ op: "×", text: `A theater has **${p.firstFactor}** rows. Each row has **${p.secondFactor}** seats. How many seats are there?` }),
+  // the picture's rows are the second factor and each row is the first factor's seats across (v2: first factor on top)
+  story: p => ({ op: "×", text: `A theater has **${p.secondFactor}** rows. Each row has **${p.firstFactor}** seats. How many seats are there?` }),
 };
 
 export const splitMultiplication = lesson;

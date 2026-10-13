@@ -35,10 +35,10 @@ export function answerOnScreen(): string {
   let ask = (q2 ? `${q2.getAttribute("data-plain")} = blank` : document.querySelector(".ask .mline")!.getAttribute("data-plain")!).replace(/−/g, "-");
   // "Final answer only": the answer to the whole problem shown above the step
   if (ask === "blank") ask = `${document.querySelector(".pprob .math .mline")!.getAttribute("data-plain")} = blank`;
-  const m = ask.match(/^(-?\d+) ([×+]) (-?\d+)(?: \+ (-?\d+))? = blank$/);
+  // a × b, or a sum of any number of parts
+  const m = ask.match(/^(-?\d+) × (-?\d+) = blank$/) ?? ask.match(/^(-?\d+(?: \+ -?\d+)+) = blank$/);
   if (!m) throw new Error(`can't read step: ${ask}`);
-  const nums = [m[1], m[3], m[4]].filter(Boolean).map(Number);
-  return String(m[2] === "×" ? nums[0]! * nums[1]! : nums.reduce((a, b) => a + b, 0));
+  return String(m.length === 3 ? Number(m[1]) * Number(m[2]) : m[1]!.split(" + ").map(Number).reduce((a, b) => a + b, 0));
 }
 
 /** Answers the step on screen correctly, whatever the lesson: taps the right choice, or types each box's answer. */

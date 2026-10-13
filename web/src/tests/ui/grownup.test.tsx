@@ -19,7 +19,7 @@ const report: SessionReport = {
     { lessonId: "g5-mult2", problem: { a: 64, b: 27 }, work: [], hints: 0, wrong: 1, shown: 0, ms: 60000 },
   ],
   mistakes: [
-    { n: 1, step: 1, label: "Multiply by the tens", lessonId: "g5-mult2", typed: "141", want: "1410", kind: "Lost the place value", cat: "concept", msg: "The tens digit stands for 30, so add a zero.", rushed: false },
+    { n: 1, step: 1, label: "Tens × tens", lessonId: "g5-mult2", typed: "12", want: "1200", kind: "Lost the place value", cat: "concept", msg: "That's 4 × 3. The part is 40 by 30, so add 2 zeros.", rushed: false },
     { n: 3, step: 1, label: "Multiply by the tens", lessonId: "g5-mult2", typed: "156", want: "1560", kind: "Lost the place value", cat: "concept", msg: "The tens digit stands for 30, so add a zero.", rushed: false },
     { n: 4, step: 3, label: "Add the parts", lessonId: "g5-mult2", typed: "1729", want: "1728", kind: "Off by one", cat: "off1", msg: "The answer was exactly 1 off, usually a counting slip.", rushed: false },
   ],
@@ -72,7 +72,7 @@ describe("the grown-up page", () => {
     expect(within(detail).getByText("2 of 4 problems")).toBeInTheDocument();
     expect(within(detail).getAllByRole("img", { name: "Wrong" })).toHaveLength(1);
     expect(within(detail).getAllByRole("img", { name: "Right" }).length).toBeGreaterThanOrEqual(1);
-    expect(detail.querySelector(".gu-s.bad strong")).toHaveTextContent("141");
+    expect(detail.querySelector(".gu-s.bad strong")).toHaveTextContent("12");
 
     // picking another pattern swaps the detail
     fireEvent.click(rows[1]!);
@@ -105,12 +105,14 @@ describe("what the page works out", () => {
 
   it("the worked example sets their first tries beside the right steps, from the saved work", () => {
     const withWork: SessionReport = { ...report, probs: report.probs.map((p, i) => i ? p : { ...p, work: [
-      { math: [{ t: "text", v: "47 × 30 = 1410" }], shown: false },
-      { math: [{ t: "text", v: "47 × 6 = 282" }], shown: true },
-      { math: [{ t: "text", v: "1410 + 282 = 1692" }], shown: false },
+      { math: [{ t: "text", v: "40 × 30 = 1200" }], shown: false },
+      { math: [{ t: "text", v: "7 × 30 = 210" }], shown: true },
+      { math: [{ t: "text", v: "40 × 6 = 240" }], shown: false },
+      { math: [{ t: "text", v: "7 × 6 = 42" }], shown: false },
+      { math: [{ t: "text", v: "1200 + 210 + 240 + 42 = 1692" }], shown: false },
     ] }) };
     const ex = workedExample(mistakePatterns({ x: withWork })[0]!)!;
     expect(ex.steps.map(s => [s.n, s.their.state, s.picked])).toEqual([[1, "wrong", true], [2, "shown", false], [3, "ok", false]]);
-    expect(ex.steps[0]!.their.typed).toBe("141");
+    expect(ex.steps[0]!.their.typed).toBe("12");
   });
 });

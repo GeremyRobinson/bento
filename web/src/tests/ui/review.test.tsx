@@ -70,12 +70,12 @@ describe("hints", () => {
     // a wrong first try lands on the say line with its cross
     fireEvent.keyDown(window, { key: "1" });
     fireEvent.keyDown(window, { key: "Enter" });
-    expect(say()).toMatch(/^\u2715 Look again\./);
+    expect(say()).toMatch(/^\u2715 Not quite\./);
     // at a score of 3 the first try may have been the shortcut, which opens the steps; one wrong try on a real step
     if (/needs the steps/.test(say())) { fireEvent.keyDown(window, { key: "1" }); fireEvent.keyDown(window, { key: "Enter" }); }
     fireEvent.click(tools.getByRole("button", { name: "Hint, 4 left" }));
     expect(say()).toMatch(/^Hint:/);
-    expect(say()).not.toMatch(/Look again/);
+    expect(say()).not.toMatch(/Not quite/);
     expect(tools.getByRole("button", { name: "Hint, 3 left" })).toBeInTheDocument();
     // asking again shows the same hint and costs nothing
     const first = say();

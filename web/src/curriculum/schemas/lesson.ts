@@ -51,6 +51,8 @@ export interface AnswerStep {
   known: KnownMistake[];
   check?: (values: Record<string, number | null>) => StepCheck;
   hint: RichText;
+  /** what to look at after a wrong answer no known slip explains, e.g. "Look again at the lit part: it's 10 across and 10 down." */
+  look?: RichText;
   /** what "Show me" says after filling the answer in */
   explain: RichText;
   /** the finished line that stays on screen once the step is done */

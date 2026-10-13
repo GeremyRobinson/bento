@@ -1,9 +1,10 @@
-import { formatNumber as f, num, op, text, type MathText } from "../../../schemas/math-text";
+import { num, op, type MathText } from "../../../schemas/math-text";
 import type { AnswerModel } from "../../../schemas/lesson";
 import type { AnimationState, Explanation, ExplanationStep } from "../../../../explanations/schema";
 import { buildSplitAreaDiagram } from "../../../../explanations/diagrams/area-model/build";
 import type { AreaDiagram, AreaLayout } from "../../../../explanations/diagrams/area-model/schema";
 import type { SplitMultiplicationProblem } from "./problem";
+import { withCommas } from "../../_number-line/steps";
 import { placeName } from "../../../generators/place-value";
 
 const plusChain = (values: number[]): MathText => values.flatMap((v, i) => (i ? [op("+"), num(v)] : [num(v)]));
@@ -22,41 +23,34 @@ function expectedFor(answers: AnswerModel, stepId: string): number {
  */
 export function explainSplitMultiplication(p: SplitMultiplicationProblem, answers: AnswerModel, layout?: AreaLayout): Explanation & { diagram: AreaDiagram } {
   const a = p.firstFactor, b = p.secondFactor;
-  const many = p.parts.length > 1;
+  const many = p.cells.length > 1;
 
   const timeline: AnimationState[] = [
     { phase: "factors" },
     { phase: "split" },
-    ...p.parts.map((_, index) => ({ phase: "region" as const, index })),
+    ...p.cells.map((_, index) => ({ phase: "region" as const, index })),
     ...(many ? [{ phase: "sum" as const }] : []),
   ];
   const stateOf = (match: (s: AnimationState) => boolean) => timeline.findIndex(match);
+  const count = ["", "one", "two", "three", "four"][p.cells.length] ?? String(p.cells.length);
 
-  const steps: ExplanationStep[] = [
-    {
-      id: "split",
-      narration: many ? `Split ${f(b)} into tens and ones.` : `${f(b)} has only one part, so there's nothing to split.`,
-      math: [num(b), op("="), ...plusChain(p.parts)],
-      state: stateOf(s => s.phase === "split"),
-      result: b,
-    },
-    ...p.parts.map((part, i): ExplanationStep => {
-      const result = expectedFor(answers, `partial-${i}`);
-      return {
-        id: `partial-${i}`,
-        narration: `The ${placeName(part)} strip is ${f(a)} tall and ${f(part)} wide.`,
-        math: [num(a), op("×"), num(part), op("="), num(result)],
-        state: stateOf(s => s.phase === "region" && s.index === i),
-        answerStep: `partial-${i}`,
-        result,
-      };
-    }),
-  ];
+  // one worked line per part, with a short why under it (v2 model: "30 × 20 = 600 / the tens by the tens")
+  const steps: ExplanationStep[] = p.cells.map(({ first, second }, i): ExplanationStep => {
+    const result = expectedFor(answers, `partial-${i}`);
+    return {
+      id: `partial-${i}`,
+      narration: `the ${placeName(first)} by the ${placeName(second)}`,
+      math: [num(first), op("×"), num(second), op("="), num(result)],
+      state: stateOf(s => s.phase === "region" && s.index === i),
+      answerStep: `partial-${i}`,
+      result,
+    };
+  });
   if (many) {
     const result = expectedFor(answers, "sum");
     steps.push({
       id: "sum",
-      narration: "Add the strips to fill the whole rectangle.",
+      narration: `add the ${count} parts`,
       math: [...plusChain(p.partialProducts), op("="), num(result)],
       state: stateOf(s => s.phase === "sum"),
       answerStep: "sum",
@@ -65,11 +59,12 @@ export function explainSplitMultiplication(p: SplitMultiplicationProblem, answer
   }
 
   return {
-    heading: "Split the second number",
-    idea: ["A two-digit number is just tens and ones, so multiplying each part and adding the parts gives the whole answer."],
-    statement: [num(a), op("×"), num(b), op("="), num(a), op("×"), text("("), ...plusChain(p.parts), text(")")],
+    heading: "Split both numbers",
+    idea: ["Both numbers split into tens and ones, so each part is an easy multiplication. Then add the parts."],
+    statement: [num(a), op("×"), num(b)],
     diagram: buildSplitAreaDiagram(p, layout),
     timeline,
     steps,
+    solved: `The ${count} parts make ${withCommas(p.product)}.`,
   };
 }
