@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { AreaDiagram, AreaRegion } from "../../explanations/diagrams/area-model/schema";
 import type { AnimationState } from "../../explanations/schema";
 import { formatNumber } from "../../curriculum/schemas/math-text";
@@ -88,6 +88,13 @@ export function AreaModelDiagram({ diagram: d, timeline, at, ask }: { diagram: A
   // (a picture sized by its own width) stops being followed after a few changes
   const [box, setBox] = useState<{ w: number; h: number; n: number } | null>(null);
   const onBox = useCallback((w: number, h: number) => setBox(o => (!o || (o.n < 6 && (Math.abs(w - o.w) > 1 || Math.abs(h - o.h) > 1)) ? { w, h, n: (o?.n ?? 0) + 1 } : o)), []);
+  // a new window size is a new start: the box may be followed again (Review: after several iPad-to-phone resizes the
+  // stretch went stale once the limit was spent)
+  useEffect(() => {
+    const again = () => setBox(o => (o ? { ...o, n: 0 } : o));
+    addEventListener("resize", again);
+    return () => removeEventListener("resize", again);
+  }, []);
   const fit = useMemo(() => settleFit(d, box), [d, box]);
   const ref = useLabelFloor(fit.width, onBox);
   const top = d.vertical.start;

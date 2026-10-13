@@ -63,10 +63,13 @@ export function buildChoose(s: ChooseSpec): SceneDiagram {
   // the chosen group written in every order: they are all the same group
   const group = Array.from({ length: s.k }, (_, i) => letter(i));
   const perms = s.k === 2 ? [group.join(""), [...group].reverse().join("")] : ["ABC", "ACB", "BAC", "BCA", "CAB", "CBA"];
-  const x0 = R + 46;
-  items.push(t(x0, -60, s.orderedNote, "lbl start", { from: s.orderedBeat, enter: "rise" }));
-  perms.forEach((p, i) => items.push(t(x0 + (i % 3) * 52, -22 + Math.floor(i / 3) * 26, p, "sm start", { from: s.ordersBeat, enter: "rise", delay: i * 0.1 })));
-  items.push(t(x0, 38, s.ordersNote, "lbl start", { from: s.ordersBeat, enter: "rise", delay: 0.6 }));
-  items.push(t(x0, 72, s.groupsNote, "lbl acc start", { from: s.groupsBeat, enter: "rise" }));
+  // the notes stand under the circle, centred: beside it, a phone's readable label size ran "2! = 2 orders, one group"
+  // past the picture's edge (Review, landing at 390×844)
+  const y0 = R + 46, cols = Math.min(3, perms.length), rows = Math.ceil(perms.length / cols);
+  items.push(t(0, y0, s.orderedNote, "lbl", { from: s.orderedBeat, enter: "rise" }));
+  perms.forEach((p, i) => items.push(t(((i % cols) - (cols - 1) / 2) * 52, y0 + 36 + Math.floor(i / cols) * 26, p, "sm", { from: s.ordersBeat, enter: "rise", delay: i * 0.1 })));
+  const y1 = y0 + 36 + rows * 26 + 8;
+  items.push(t(0, y1, s.ordersNote, "lbl", { from: s.ordersBeat, enter: "rise", delay: 0.6 }));
+  items.push(t(0, y1 + 34, s.groupsNote, "lbl acc", { from: s.groupsBeat, enter: "rise" }));
   return frame("marbles", items, s.alt);
 }
