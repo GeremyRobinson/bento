@@ -12,9 +12,11 @@ import { parseNumber } from "../evaluation/numbers";
 import { answerIds, checkStep, expectedValues, finalPartsOf, finalStep, runtimeSteps, type RuntimeStep } from "../evaluation/steps";
 import { levelOf, problemXp, stepPoints } from "../mastery/levels";
 import { lastScore, type Progress } from "../mastery/progress";
+import { CHECKS, WHERE_TRIES } from "../../curriculum/checks";
+import { CHECK_FROM, CHECK_LENGTH, checkKey, dueBack, isCheckKey, lessonOfCheck, PASS, recordCheck, reviewMissed } from "../mastery/skills";
 import { PRAISE } from "./praise";
 import type { Mistake, PracticeSession, RunItem, SessionReport } from "./types";
-import { FIND_MY_LEVEL, NO_UNIT, TODAYS_REVIEW } from "../../app/copy";
+import { FIND_MY_LEVEL, NO_UNIT, SKILL_CHECK, TODAYS_REVIEW } from "../../app/copy";
 
 /** Clock and randomness are passed in, so every rule can be tested exactly. */
 export interface Deps {
@@ -137,6 +139,7 @@ export const UNIT_TEST_LENGTH = 12, CHECKUP_LENGTH = 20;
 export function startTest(key: string, progress: Progress, deps: Deps): PracticeSession {
   const [kind, gs, unit] = key.split(":"), g = Number(gs);
   if (kind === "place") return startPlacement(g, progress, deps);
+  if (kind === "check") return startCheck(lessonOfCheck(key), progress, deps);
   const list = kind === "unit" ? lessonsInGrade(g).filter(l => (l.unit || NO_UNIT) === unit) : lessonsInGrade(g);
   if (!list.length) throw new Error(`no lessons for test ${key}`);
   const n = kind === "unit" ? UNIT_TEST_LENGTH : CHECKUP_LENGTH;
@@ -144,6 +147,30 @@ export function startTest(key: string, progress: Progress, deps: Deps): Practice
   const items = spread(freshItems(n, (k, seen) => makeItem(order[k % order.length]!, k, deps.rng, seen)), deps.rng);
   const title = kind === "unit" ? `${unit} test` : `${gradeOf(g).name} check-up`;
   return newRun({ mode: "test", key, title, items, startTier: 0, hintsLeft: 0 }, progress, deps);
+}
+
+/**
+ * The skill check after practice: a few of the lesson's harder problems, no hints, one try per step, like a test. Its
+ * score is the lesson's check, kept apart from the practice score; a 3 or 4 means learned (engine/mastery/skills.ts).
+ */
+function startCheck(lessonId: string, progress: Progress, deps: Deps): PracticeSession {
+  const lesson = requireLesson(lessonId);
+  const items = checkItems(lesson, deps.rng);
+  return newRun({ mode: "test", key: checkKey(lesson.grade, lesson.id), title: `${lesson.title}: ${SKILL_CHECK}`, items, startTier: 0, hintsLeft: 0 }, progress, deps);
+}
+
+/** a lesson's check problems: Curriculum's recipe (curriculum/checks.ts), else its harder problems */
+export function checkItems(lesson: AnyLesson, rng: Rng): RunItem[] {
+  const recipe = CHECKS[lesson.id];
+  if (!recipe) return freshItems(CHECK_LENGTH, (k, seen) => ({ lessonId: lesson.id, problem: makeItem(lesson, CHECK_FROM + k, rng, seen).problem }));
+  const out: RunItem[] = [];
+  for (const c of recipe.items) {
+    let problem = makeItem(lesson, c.i, rng, out).problem;
+    for (let k = 1; k < WHERE_TRIES && c.where && !c.where(problem); k++) problem = makeItem(lesson, c.i, rng, out).problem;
+    if (c.where && !c.where(problem) && c.fix) problem = lesson.restore(c.fix(problem)) ?? problem;
+    out.push({ lessonId: lesson.id, problem, ...(c.story && lesson.story ? { story: true } : {}) });
+  }
+  return recipe.inOrder ? out : [...rng.shuffle(out.filter(x => !x.story)), ...out.filter(x => x.story)];
 }
 
 export const placeKey = (g: number) => `place:${g}`;
@@ -192,11 +219,12 @@ export function placementResult(probs: { lessonId: string; wrong: number; shown:
   return { grade, next, rows };
 }
 
-/** Lessons already scored, weighted to low scores and long gaps since last practice. */
+/** Lessons already scored, weighted to low scores and long gaps since last practice; a learned lesson that's due back
+ *  (engine/mastery/skills.ts) counts three times over, so the review is where it gets checked again. */
 export function reviewPool(progress: Progress, now: number): { lesson: AnyLesson; weight: number }[] {
   return LESSONS.filter(l => progress.scores[l.id]).map(l => {
     const sc = progress.scores[l.id]!, days = (now - (progress.seen[l.id] || sc.date || now)) / 864e5;
-    return { lesson: l, weight: (5 - sc.last) * (1 + days / 3) };
+    return { lesson: l, weight: (5 - sc.last) * (1 + days / 3) * (dueBack(progress, l.id, now) ? 3 : 1) };
   });
 }
 
@@ -376,7 +404,7 @@ export function check(s: PracticeSession, progress: Progress, deps: Deps): Pract
   }
   const band = bandOfSession(next);
   const msg = cat === "concept" ? r.message
-    : SAY[cat] ?? `${nudge(expected, values, band)} ${next.hinted ? step.hint : `Read the step again${next.hintsLeft ? ", or tap the light bulb for a hint" : ""}.`}`.trim();
+    : SAY[cat] ?? `${nudge(expected, values, band)} ${next.hinted ? step.hint : `Read the step again${next.hintsLeft ? ", or tap Hint" : ""}.`}`.trim();
   const lines: string[] = [];
   if (rushed) lines.push("Slow down a little and read the step again.");
   if (canShowMe({ test: false, misses: next.misses, hinted: next.hinted })) lines.push("Stuck? Tap **Show me**.");
@@ -500,13 +528,24 @@ export function finishRun(s: PracticeSession, progress: Progress, now: number): 
   if (p.last !== today) p.streak = p.last === yesterday ? p.streak + 1 : 1;
   p.last = today;
   const book = s.mode === "test" ? p.tests : s.mode === "practice" ? p.scores : null;
-  if (book) {
+  p.checks ??= {};
+  if (isCheckKey(s.key)) { const id = lessonOfCheck(s.key); p.checks[id] = recordCheck(p.checks[id], level, now); }
+  else if (book) {
     const old = book[s.key];
     book[s.key] = { last: level, best: Math.max(level, old?.best ?? 0) as typeof level, pct, date: now,
       mastered: !!old?.mastered || (level === 4 && s.startTier === 2) };
   }
   if (s.mode === "practice") { p.done += 1; p.lessons[s.key] = (p.lessons[s.key] ?? 0) + 1; }
-  if (s.mode === "review") p.reviews[today] = level;
+  if (s.mode === "review") {
+    p.reviews[today] = level;
+    // a learned lesson whose problems all came out right first time has been checked again, so it goes further out;
+    // a miss brings it back tomorrow, still learned
+    for (const id of new Set(s.probs.map(x => x.lessonId))) {
+      if (!p.checks[id] || p.checks[id]!.last < PASS) continue;
+      const mine = s.probs.filter(x => x.lessonId === id);
+      p.checks[id] = mine.every(x => !x.wrong && !x.shown) ? recordCheck(p.checks[id], 4, now) : reviewMissed(p.checks[id]!, now);
+    }
+  }
   for (const it of s.items) p.seen[it.lessonId] = now;
   const cats: Record<string, number> = {};
   for (const m of s.mistakes) cats[m.kind] = (cats[m.kind] ?? 0) + 1;

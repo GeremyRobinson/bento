@@ -56,13 +56,13 @@ function explain(p: LongDivisionProblem, model: AnswerModel) {
     alt: `${n} ÷ ${dv}: ${dv} × ${T} = ${dv * T}, ${left} is left, ${left} ÷ ${dv} = ${O}, so ${T} + ${O} = ${qt}.`,
     diagram: divisionAreaPicture({ n, dv, T, O, left, q: qt }),
     beats: [
-      { id: "tens", narration: `How many tens of ${dv} fit? ${dv} × ${T} = ${dv * T}.`, math: [num(dv), op("×"), num(T), op("="), num(dv * T)],
+      { id: "tens", narration: `Take out as many tens of ${dv} as fit.`, math: [num(dv), op("×"), num(T), op("="), num(dv * T)],
         lines: [[num(n), op("÷"), num(dv)], [num(dv), op("×"), mark(T), op("="), num(dv * T)]], answerStep: "tens", result: T },
-      { id: "subtract", narration: `That leaves ${n} − ${dv * T} = ${left}.`, math: [num(n), op("−"), num(dv * T), op("="), num(left)],
+      { id: "subtract", narration: "Take those away to see what's left.", math: [num(n), op("−"), num(dv * T), op("="), num(left)],
         lines: [[num(n), op("−"), num(dv * T), op("="), num(left)]], answerStep: "subtract", result: left },
-      { id: "ones", narration: `${count(O, "group")} of ${dv} make ${left}, so ${O} more fit: ${left} ÷ ${dv} = ${O}.`, math: [num(left), op("÷"), num(dv), op("="), num(O)],
+      { id: "ones", narration: `Now count how many ${dv}s fit in what's left.`, math: [num(left), op("÷"), num(dv), op("="), num(O)],
         lines: [[num(dv), op("×"), mark(O), op("="), num(left)]], answerStep: "ones", result: O },
-      { id: "sum", narration: `So the answer is ${T} + ${O} = ${qt}.`, math: [num(T), op("+"), num(O), op("="), num(qt)],
+      { id: "sum", narration: "The tens and the ones together are the answer.", math: [num(T), op("+"), num(O), op("="), num(qt)],
         lines: [[num(T), op("+"), num(O), op("="), num(qt)]], answerStep: "sum", result: qt },
     ],
   });

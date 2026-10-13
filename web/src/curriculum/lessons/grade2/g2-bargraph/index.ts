@@ -120,9 +120,9 @@ function explain(p: BarGraphProblem, model: AnswerModel): Explanation {
     caption: more ? `The shaded part of the ${X} bar is how many more.` : "Put both bars together.",
     timeline: beats(4),
     steps: [
-      { id: "first", narration: `Look across from the top of the ${X} bar: ${a}.`, math: [text(`${X}: `), num(a)], state: 1, answerStep: "first", result: a },
-      { id: "second", narration: `Look across from the top of the ${Y} bar: ${b}.`, math: [text(`${Y}: `), num(b)], state: 2, answerStep: "second", result: b },
-      { id: "combine", narration: more ? `The ${X} bar is taller by ${a} − ${b} = ${r}.` : `Put them together: ${a} + ${b} = ${r}.`, math: [num(a), op(more ? "−" : "+"), num(b), op("="), num(r)], state: 3, answerStep: "combine", result: r },
+      { id: "first", narration: `Look across from the top of the ${X} bar.`, math: [text(`${X}: `), num(a)], state: 1, answerStep: "first", result: a },
+      { id: "second", narration: `Look across from the top of the ${Y} bar.`, math: [text(`${Y}: `), num(b)], state: 2, answerStep: "second", result: b },
+      { id: "combine", narration: more ? "The part sticking up is how many more." : "Put both bars together.", math: [num(a), op(more ? "−" : "+"), num(b), op("="), num(r)], state: 3, answerStep: "combine", result: r },
     ],
   };
 }
@@ -132,12 +132,12 @@ export const lesson: LessonDefinition<BarGraphProblem> = {
   grade: 2,
   unit: "Measurement and data",
   title: "Bar graphs",
+  pre: "g1-picgraph",
   reference: createBarGraph(0, 7, 4, 6, 3, 0, 1, 0),
   generate,
   restore: raw => restoreVia(raw, ["theme", "v0", "v1", "v2", "v3", "x", "y", "kind"] as const,
     v => createBarGraph(v.theme, v.v0, v.v1, v.v2, v.v3, v.x, v.y, v.kind)),
   display: p => words(questionOf(p)),
-  displayNote: questionOf,
   lead: questionOf,
   picture: p => {
     const th = THEMES[p.theme]!;

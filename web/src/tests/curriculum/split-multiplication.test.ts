@@ -30,10 +30,10 @@ describe("the reference case 47 × 36 = 47 × (30 + 6)", () => {
     const ex = explainSplitMultiplication(reference, lesson.answers(reference));
     expect(toPlainText(ex.statement)).toBe("47 × 36 = 47 × (30 + 6)");
     expect(ex.steps.map(s => s.narration)).toEqual([
-      "Split 36 by place value: 30 + 6.",
-      "The tens part is 47 by 30, so it holds 1410.",
-      "The ones part is 47 by 6, so it holds 282.",
-      "Add the parts to fill the whole rectangle: 1692.",
+      "Split 36 into tens and ones.",
+      "The tens strip is 47 tall and 30 wide.",
+      "The ones strip is 47 tall and 6 wide.",
+      "Add the strips to fill the whole rectangle.",
     ]);
     expect(ex.steps.map(s => toPlainText(s.math))).toEqual(["36 = 30 + 6", "47 × 30 = 1410", "47 × 6 = 282", "1410 + 282 = 1692"]);
     expect(ex.diagram.vertical).toMatchObject({ factor: "first", value: 47, label: "47" });
@@ -139,7 +139,8 @@ describe.each([
           expect(step.result).toBe(a.slots[0]!.expected);
           expect(numbersIn(step.math)).toEqual(numbersIn(a.work));
         }
-        expect(step.narration).toContain(String(step.result));
+        // the result is said by the beat's math line; the narration says what the step does (grade5.md §3)
+        expect(toPlainText(step.math)).toContain(String(step.result));
         // narration never says a number the model doesn't have
         const known = new Set([p.firstFactor, p.secondFactor, ...p.parts, ...p.partialProducts, p.product]);
         for (const n of step.narration.match(/\d+/g) ?? []) expect(known.has(Number(n))).toBe(true);

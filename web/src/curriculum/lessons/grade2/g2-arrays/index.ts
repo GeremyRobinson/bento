@@ -73,7 +73,7 @@ function explain(p: ArrayProblem, model: AnswerModel): Explanation {
   const sum = `${Array.from({ length: rows }, () => cols).join(" + ")} = ${total}`;
   return {
     heading: "Rows of the same size",
-    idea: ["All the rows in an array are the same size, so one row's count repeats for every row."],
+    idea: ["Every row has the same number, so add it once for each row."],
     statement: [num(p.rows), text(" rows of "), num(p.cols)],
     diagram: buildArray({
       rows: p.rows, cols: p.cols, beats: { rows: 1, cols: 2, total: 3 }, total: sum,
@@ -82,8 +82,8 @@ function explain(p: ArrayProblem, model: AnswerModel): Explanation {
     caption: `Each row has ${cols}.`,
     timeline: beats(4),
     steps: [
-      { id: "rows", narration: `Count the rows going down: ${rows}.`, math: [text("Rows: "), num(rows)], state: 1, answerStep: "rows", result: rows },
-      { id: "cols", narration: `Count across one row: ${cols}. Every row is the same.`, math: [text("In each row: "), num(cols)], state: 2, answerStep: "cols", result: cols },
+      { id: "rows", narration: "Rows go across. Count them from top to bottom.", math: [text("Rows: "), num(rows)], state: 1, answerStep: "rows", result: rows },
+      { id: "cols", narration: "Count across one row. Every row is the same.", math: [text("In each row: "), num(cols)], state: 2, answerStep: "cols", result: cols },
       { id: "total", narration: `Add ${cols} for every row: ${Array.from({ length: rows }, (_, i) => cols * (i + 1)).join(", ")}.`, math: repeated(rows, cols, num(total)), state: 3, answerStep: "total", result: total },
     ],
   };

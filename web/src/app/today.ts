@@ -2,9 +2,10 @@
 // review problems from what you've already done, and a unit test once a whole unit is finished. Nothing is stored;
 // the plan is worked out from progress, so it's the same on every screen and resets each day.
 import type { Progress } from "../engine/mastery/progress";
-import { lastScore, timesDone } from "../engine/mastery/progress";
+import { timesDone } from "../engine/mastery/progress";
+import { learned, ready as readyFor, stepBack, toGoOver } from "../engine/mastery/skills";
 import { lessonById } from "../curriculum/registry";
-import { entriesInGrade, isReady, testKey, unitsInGrade, type Entry } from "./curriculum";
+import { entriesInGrade, entryById, isReady, testKey, unitsInGrade, type Entry } from "./curriculum";
 import { tablesForGrade } from "../engine/facts/tables";
 import { sprintDoneToday, sprintTableFor } from "../engine/facts/mastery";
 import { TODAYS_REVIEW } from "./copy";
@@ -17,13 +18,27 @@ export type TodayItem =
 
 const sameDay = (a: number, b: number) => new Date(a).toDateString() === new Date(b).toDateString();
 
-/** The lesson the grade is up to: the first one not done yet, or, once all are done, the one scored lowest. */
-export function upNext(progress: Progress, g: number): { entry: Entry; again: boolean } | null {
+/**
+ * The lesson Today suggests (v2-backend-plan.md, "Today's pick"), first match wins:
+ * 1. to go over: the last skill check came back 2 or lower (the oldest first); after a 0 or 1, the lesson underneath
+ *    comes first when it isn't solid;
+ * 2. next: the first lesson in order not yet learned whose lessons underneath are (earlier grades count until a check
+ *    of theirs comes back low), else the first not learned;
+ * 3. all learned: the one checked longest ago.
+ * Learned lessons that are due back go into the review, not here. The child can always pick something else.
+ */
+export function upNext(progress: Progress, g: number): { entry: Entry; again: boolean; why: "go-over" | "step-back" | "next" | "oldest" } | null {
   const ready = entriesInGrade(g).filter(c => isReady(c.id));
-  const fresh = ready.find(c => timesDone(progress, c.id) === 0);
-  if (fresh) return { entry: fresh, again: false };
-  const low = [...ready].sort((a, b) => (lastScore(progress, a.id) ?? 9) - (lastScore(progress, b.id) ?? 9))[0];
-  return low ? { entry: low, again: true } : null;
+  const over = ready.filter(c => toGoOver(progress, c.id)).sort((a, b) => progress.checks[a.id]!.date - progress.checks[b.id]!.date)[0];
+  if (over) {
+    const back = stepBack(progress, over.id), e = back && isReady(back) ? entryById(back) : undefined;
+    return e ? { entry: e, again: true, why: "step-back" } : { entry: over, again: true, why: "go-over" };
+  }
+  const open = ready.filter(c => !learned(progress, c.id)), fresh = open.find(c => readyFor(progress, c.id)) ?? open[0];
+  if (fresh) return { entry: fresh, again: timesDone(progress, fresh.id) > 0, why: "next" };
+  const at = (c: Entry) => progress.checks?.[c.id]?.date ?? progress.scores[c.id]?.date ?? 0;
+  const old = [...ready].sort((a, b) => at(a) - at(b))[0];
+  return old ? { entry: old, again: true, why: "oldest" } : null;
 }
 
 export function todayPlan(progress: Progress, g: number, now: number, reviewReady: boolean): TodayItem[] {

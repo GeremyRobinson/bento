@@ -17,6 +17,8 @@ export const PRACTICE_AGAIN = "Practice again";
 export const UP_NEXT = "Up next";
 export const REVIEW = "Review";
 export const TODAYS_REVIEW = "Today's review";
+/** the short check after a lesson that says whether it's learned */
+export const SKILL_CHECK = "Skill check";
 export const FACT_SPRINT = "Fact sprint";
 export const SHOW_ME = "Show me";
 export const CONTENTS = "Contents";

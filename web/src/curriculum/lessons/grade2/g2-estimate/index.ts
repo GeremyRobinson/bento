@@ -81,18 +81,19 @@ const alt = (p: EstimateProblem) => `${aOrAnWord(THINGS[p.unit]![p.thing]!.name,
 
 function explain(p: EstimateProblem, model: AnswerModel): Explanation {
   const u = UNITS[p.unit]!;
+  const said: Record<string, string> = {
+    estimate: `One ${u.benchOne} is about 1 ${u.one}, and ${p.len} fit along it.`,
+    measure: p.start ? `It starts at ${p.start}, so count the spaces from there.` : "It starts at 0, so read the number at its end.",
+  };
   return {
     heading: "Estimate, then measure",
-    idea: ["Things you know, like a paper clip being about 1 inch, help you make a smart guess."],
+    idea: ["Use something you know the size of to make a smart guess."],
     statement: [text(`About how long is the ${THINGS[p.unit]![p.thing]!.name}?`)],
     diagram: buildEstimate({ ...spec(p), beats: { lay: 1, ruler: 2 },
       alt: `${alt(p)} ${p.len} ${u.bench} lay end to end along it, then the ruler shows it is ${count(p.len, u.one, u.many)} long.` }),
     caption: `About ${p.len} ${u.bench}, so about ${count(p.len, u.one, u.many)}. The ruler says exactly ${p.len}.`,
     timeline: beats(3),
-    steps: [
-      { id: "look", narration: `One ${u.benchOne} is about 1 ${u.one}.`, math: [text(`1 ${u.benchOne} ≈ 1 ${u.abbr}`)], state: 0 },
-      ...model.steps.map((s, i) => ({ id: s.id, narration: s.explain, math: s.work ?? [num(s.slots[0]!.expected as number), text(` ${u.abbr}`)], state: i + 1, answerStep: s.id, result: s.slots[0]!.expected! })),
-    ],
+    steps: model.steps.map((s, i) => ({ id: s.id, narration: said[s.id]!, math: s.work ?? [num(s.slots[0]!.expected as number), text(` ${u.abbr}`)], state: i + 1, answerStep: s.id, result: s.slots[0]!.expected! })),
   };
 }
 

@@ -112,7 +112,7 @@ function explain(p: UnitConversionProblem, model: AnswerModel): Explanation {
   const { u: [one, many, small], n, up } = p, f = expectedOf(model.steps, "one"), all = expectedOf(model.steps, "multiply");
   return {
     heading: up ? "Small to big: divide" : "Big to small: multiply",
-    idea: ["A big unit holds many small ones, so the same length takes more small units."],
+    idea: ["A big unit holds many small ones, so the same amount takes more small units."],
     statement: [...givenMath(p), op("="), text(`? ${up ? many : small}`)],
     diagram: unitConversionPicture(p),
     caption: up ? `1 ${one} is ${f} ${small}, so ${fm(n)} ${small} is ${fm(n)} ÷ ${f} = ${fm(all)} ${many}.`
@@ -120,14 +120,14 @@ function explain(p: UnitConversionProblem, model: AnswerModel): Explanation {
     timeline: beats(4),
     steps: [
       { id: "one", state: 1, answerStep: "one", result: f, math: [num(1), text(` ${one}`), op("="), num(f), text(` ${small}`)],
-        narration: `Start with one: 1 ${one} is ${f} ${small}.` },
+        narration: `Start with just one ${one}.` },
       { id: "more", state: 2, answerStep: "more", math: [...givenMath(p), op("="), text(`? ${up ? many : small}`)],
         narration: up ? `${cap(many)} are bigger, so there will be fewer of them than ${fm(n)}.` : `${cap(small)} are smaller, so there will be more of them than ${fm(n)}.` },
       up
         ? { id: "multiply", state: 3, answerStep: "multiply", result: all, math: [num(n), op("÷"), num(f), op("="), num(all)],
-          narration: `Every ${f} ${small} make one ${one}, so divide: ${fm(n)} ÷ ${f} = ${fm(all)} ${many}.` }
+          narration: `Every ${f} ${small} make one ${one}, so divide.` }
         : { id: "multiply", state: 3, answerStep: "multiply", result: all, math: [num(n), op("×"), num(f), op("="), num(all)],
-          narration: `Every ${one} is another ${f} ${small}, so multiply: ${fm(n)} × ${f} = ${fm(all)} ${small}.` },
+          narration: `Every ${one} is another ${f} ${small}, so multiply.` },
     ],
   };
 }

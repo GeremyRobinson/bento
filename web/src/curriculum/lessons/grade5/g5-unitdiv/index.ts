@@ -45,16 +45,16 @@ function explain(p: UnitDivisionProblem, model: AnswerModel): Explanation {
   const { W, d } = p, one = expectedOf(model.steps, "one"), all = expectedOf(model.steps, "all");
   return {
     heading: "How many pieces fit?",
-    idea: ["Dividing by a unit fraction asks how many of those pieces fit in the wholes."],
+    idea: ["Dividing by a unit fraction asks how many of those pieces fit."],
     statement: [num(W), op("÷"), frac(1, d)],
     diagram: unitDivisionPicture(p),
     caption: `${count(W, "whole")}, ${d} ${pieceName(d)} in each: ${W * d} ${pieceName(d)}.`,
     timeline: beats(3),
     steps: [
       { id: "one", state: 1, answerStep: "one", result: one, math: [num(1), op("="), num(one), op("×"), frac(1, d)],
-        narration: `Cut one whole into ${pieceName(d)}: it holds ${count(one, "piece")} of 1/${d}.` },
+        narration: `Cut one whole into ${pieceName(d)}.` },
       { id: "all", state: 2, answerStep: "all", result: all, math: [num(W), op("×"), num(one), op("="), num(all)],
-        narration: `${count(W, "whole")} hold ${W} × ${one} = ${count(all, "piece")}, so ${W} ÷ 1/${d} = ${all}.` },
+        narration: `Every whole holds ${one}, so count them all.` },
     ],
   };
 }
@@ -73,7 +73,6 @@ export const lesson: LessonDefinition<UnitDivisionProblem> = {
     try { return r && createUnitDivision(r.W, r.d); } catch { return null; }
   },
   display: (p): MathText => [num(p.W), op("÷"), frac(1, p.d)],
-  displayNote: p => `How many 1/${count(p.d, "piece")} fit in ${p.W}?`,
   answers,
   explain,
   story: ({ W, d }) => ({ op: "÷", text: `You have **${W}** cups of flour. Each batch of cookies uses 1/${d} cup. How many batches can you make?` }),

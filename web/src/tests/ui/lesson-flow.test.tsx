@@ -49,7 +49,7 @@ describe("a whole lesson in the browser", () => {
     expect(pic.getAttribute("data-sum")).toBe("true");
     // the whole worked example is written out, and the way on is to watch another or try one
     const side = within(screen.getByRole("region", { name: "Watch one" }));
-    expect(side.getAllByText(`Add the parts to fill the whole rectangle: ${a * b}.`).length).toBeGreaterThan(0);
+    expect(side.getAllByText("Add the strips to fill the whole rectangle.").length).toBeGreaterThan(0);
     expect(side.getByRole("button", { name: "Try one" })).toBeInTheDocument();
 
     // a new example (v2: Watch again) redraws everything from a new problem

@@ -52,8 +52,8 @@ export function explainBox(p: BoxProblem, answers: AnswerModel): Explanation {
     caption: `${count(base, "cube")} in a layer, ${h} layers: ${V}.`,
     timeline: beats(3),
     steps: [
-      { id: "base", narration: `The bottom layer is ${l} by ${w}: ${count(base, "cube")}.`, math: [num(l), op("×"), num(w), op("="), num(base)], state: 1, answerStep: "base", result: base },
-      { id: "volume", narration: `Stack ${h} layers of ${base}: ${V} cubic cm.`, math: [num(base), op("×"), num(h), op("="), num(V)], state: 2, answerStep: "volume", result: V },
+      { id: "base", narration: `The bottom layer is ${l} by ${w}.`, math: [num(l), op("×"), num(w), op("="), num(base)], state: 1, answerStep: "base", result: base },
+      { id: "volume", narration: `Stack ${h} layers to fill the box, in cubic cm.`, math: [num(base), op("×"), num(h), op("="), num(V)], state: 2, answerStep: "volume", result: V },
     ],
   };
 }
@@ -68,7 +68,7 @@ export const lesson: LessonDefinition<BoxProblem> = {
   generate: (rng, index) => generateBox(rng, index),
   restore: raw => { const r = readNumbers(raw, ["l", "w", "h"] as const); try { return r && createBox(r.l, r.w, r.h); } catch { return null; } },
   display: p => [num(p.l), op("×"), num(p.w), op("×"), num(p.h)],
-  displayNote: ({ l, w, h }) => `A box ${l} cm long, ${w} cm wide and ${h} cm tall. How many cubic cm?`,
+  lead: ({ l, w, h }) => `A box is **${l}** cm long, **${w}** cm wide and **${h}** cm tall. How many 1 cm cubes fill it?`,
   answers: boxAnswers,
   explain: explainBox,
 };

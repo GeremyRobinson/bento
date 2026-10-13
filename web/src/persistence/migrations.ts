@@ -2,6 +2,7 @@
 // The current app saves to localStorage under "stepmath" and "stepmath-reports".
 import { lessonById } from "../curriculum/registry";
 import { emptyProgress, type Progress, type ScoreRecord } from "../engine/mastery/progress";
+import { checksFromScores } from "../engine/mastery/skills";
 import type { Level } from "../engine/mastery/levels";
 import type { SessionReport } from "../engine/session/types";
 
@@ -38,6 +39,7 @@ export function fromLegacySave(raw: unknown): Progress {
   p.lessons = numberMap(raw.lessons);
   p.scores = scoreBook(raw.scores);
   p.tests = scoreBook(raw.tests);
+  p.checks = checksFromScores(p.scores);
   p.seen = numberMap(raw.seen);
   p.reviews = Object.fromEntries(Object.entries(numberMap(raw.reviews)).map(([k, v]) => [k, level(v)]));
   p.log = Array.isArray(raw.log) ? (raw.log.filter(isObj) as unknown as Progress["log"]).slice(0, 60) : [];
@@ -63,6 +65,10 @@ export function fromLegacyReports(raw: unknown): Record<string, SessionReport> {
 
 /** Brings any stored Progress up to the current version. Version 1 is the first. */
 export function migrateProgress(raw: unknown): Progress {
-  if (isObj(raw) && raw.version === 1) return { ...emptyProgress(), ...(raw as unknown as Progress) };
+  if (isObj(raw) && raw.version === 1) {
+    const p = { ...emptyProgress(), ...(raw as unknown as Progress) };
+    // a save from before skill checks: its practice scores of 3+ become checks, once
+    return raw.checks === undefined ? { ...p, checks: checksFromScores(p.scores) } : p;
+  }
   return fromLegacySave(raw);
 }

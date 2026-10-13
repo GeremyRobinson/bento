@@ -55,7 +55,7 @@ function explain(p: AddDecimalsProblem, model: AnswerModel) {
   const rewrite = padded.map(x => `${f(x)} as ${x.toFixed(2)}`).join(" and ");
   return chainExplanation({
     heading: "Line up the decimal points",
-    idea: ["Each place after the point is a size of piece, so only same-size pieces add."],
+    idea: ["With the points lined up, tenths add to tenths and hundredths to hundredths."],
     statement: [num(a), op("+"), num(b)],
     ...(padded.length ? { caption: `Write ${rewrite} so both have hundredths.` } : {}),
     alt: `${f(a)} + ${f(b)}: whole parts ${W}, decimal parts ${f(D)}, total ${f(sum)}.`,
@@ -65,13 +65,13 @@ function explain(p: AddDecimalsProblem, model: AnswerModel) {
       alt: `${f(a)} and ${f(b)} lined up by their points${padded.length ? `, with ${rewrite}` : ""}: the whole columns make ${W}, the decimal columns make ${D.toFixed(2)}, together ${f(sum)}.`,
     }),
     beats: [
-      { id: "line-up", narration: padded.length ? `Line up the decimal points: write ${rewrite} so both numbers have hundredths.` : "Both numbers already have hundredths, so the points line up.",
+      { id: "line-up", narration: padded.length ? `Write ${rewrite} so both numbers have hundredths.` : "Both already have hundredths, so the points line up.",
         math: [...hundredths(a), op("+"), ...hundredths(b)], lines: [[...hundredths(a), op("+"), ...hundredths(b)]] },
-      { id: "whole", narration: `Whole parts: ${wa} + ${wb} = ${W}.`, math: [num(wa), op("+"), num(wb), op("="), num(W)],
+      { id: "whole", narration: "Add the whole numbers.", math: [num(wa), op("+"), num(wb), op("="), num(W)],
         lines: [[num(wa), op("+"), num(wb), op("="), num(W)]], answerStep: "whole", result: W },
-      { id: "decimal", narration: `Decimal parts: ${da.toFixed(2)} + ${db.toFixed(2)} = ${D.toFixed(2)}.`, math: [num(da), op("+"), num(db), op("="), num(D)],
+      { id: "decimal", narration: `Add the parts after the point.${D >= 1 ? " That's more than 1 whole." : ""}`, math: [num(da), op("+"), num(db), op("="), num(D)],
         lines: [[text(da.toFixed(2)), op("+"), text(db.toFixed(2)), op("="), num(D)]], answerStep: "decimal", result: D },
-      { id: "total", narration: `Put them together: ${W} + ${f(D)} = ${f(sum)}.`, math: [num(W), op("+"), num(D), op("="), num(sum)],
+      { id: "total", narration: "Put the two answers together.", math: [num(W), op("+"), num(D), op("="), num(sum)],
         lines: [[num(W), op("+"), num(D), op("="), num(sum)]], answerStep: "total", result: sum },
     ],
   });

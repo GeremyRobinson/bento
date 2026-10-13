@@ -57,18 +57,18 @@ function explain(p: MixedToImproperProblem, model: AnswerModel): Explanation {
   const pieces = (k: number) => `${k} ${pieceName(d, k !== 1)}`;
   return {
     heading: "Count all the pieces",
-    idea: ["Each whole is cut into the same pieces as the fraction, so wholes can be counted in pieces."],
+    idea: ["When every whole is cut into the same pieces, all the pieces can be counted as one fraction."],
     statement: [num(w), frac(n, d), op("="), frac("?", d)],
     diagram: mixedToImproperPicture(p),
     caption: `Each whole is ${pieces(d)}.`,
     timeline: beats(4),
     steps: [
       { id: "wholes", state: 1, answerStep: "wholes", result: W, math: [num(w), op("×"), num(d), op("="), num(W)],
-        narration: `Each whole is ${pieces(d)}, so ${w} ${w === 1 ? "whole is" : "wholes are"} ${w} × ${d} = ${pieces(W)}.` },
+        narration: `Each whole is ${pieces(d)}.` },
       { id: "extra", state: 2, answerStep: "extra", result: S, math: [num(W), op("+"), num(n), op("="), num(S)],
-        narration: `Add the ${n} extra ${n === 1 ? "piece" : "pieces"}: ${W} + ${n} = ${S}.` },
+        narration: `Add the ${n} extra ${n === 1 ? "piece" : "pieces"}.` },
       { id: "fraction", state: 3, answerStep: "fraction", math: [num(w), frac(n, d), op("="), frac(S, d)],
-        narration: `${count(S, "piece")}, each one ${pieceName(d, false)}. The bottom stays ${d}: ${w} ${n}/${d} = ${S}/${d}.` },
+        narration: `The pieces are still ${pieceName(d)}, so the bottom stays ${d}.` },
     ],
   };
 }

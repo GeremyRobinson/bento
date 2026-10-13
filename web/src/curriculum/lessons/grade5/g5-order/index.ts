@@ -84,37 +84,37 @@ function explain(p: OrderProblem, model: AnswerModel) {
   const r0 = expectedOf(model, "s0"), r1 = expectedOf(model, "s1"), r2 = expectedOf(model, "s2");
   const beat = (i: number, narration: string, math: MathText, lines: MathText[], result: number): ChainBeat =>
     ({ id: `s${i}`, narration, math, lines, answerStep: `s${i}`, result });
-  const first: ChainBeat = { id: "first", narration: t === 2 ? `No parentheses here, and × comes before −, so ${a} × ${b} goes first.` : `Parentheses first: they make ${t === 1 ? `${a} + ${b}` : `${c} − ${d}`} one number.`,
-    math: expression(p), lines: [], answerStep: "first" };
-  const beats: ChainBeat[] = [first, ...(t === 1 ? [
-    beat(0, `Parentheses first: ${a} + ${b} = ${r0}.`, [num(a), op("+"), num(b), op("="), num(r0)],
-      [[mark(P(num(a), op("+"), num(b))), op("×"), num(c), op("−"), num(d)]], r0),
-    beat(1, `Then multiply: ${r0} × ${c} = ${r1}. Multiplying comes before subtracting.`, [num(r0), op("×"), num(c), op("="), num(r1)],
-      [[mark([num(r0), op("×"), num(c)]), op("−"), num(d)]], r1),
-    beat(2, `Then subtract: ${r1} − ${d} = ${r2}.`, [num(r1), op("−"), num(d), op("="), num(r2)],
-      [[mark([num(r1), op("−"), num(d)])], [num(r2)]], r2),
-  ] : t === 2 ? [
-    beat(0, `Multiply first: ${a} × ${b} = ${r0}.`, [num(a), op("×"), num(b), op("="), num(r0)],
-      [[mark([num(a), op("×"), num(b)]), op("−"), num(c), op("÷"), num(d)]], r0),
-    beat(1, `Divide before you subtract: ${c} ÷ ${d} = ${r1}.`, [num(c), op("÷"), num(d), op("="), num(r1)],
-      [[num(r0), op("−"), mark([num(c), op("÷"), num(d)])]], r1),
-    beat(2, `Then subtract: ${r0} − ${r1} = ${r2}.`, [num(r0), op("−"), num(r1), op("="), num(r2)],
-      [[mark([num(r0), op("−"), num(r1)])], [num(r2)]], r2),
-  ] : [
-    beat(0, `Parentheses first: ${c} − ${d} = ${r0}.`, [num(c), op("−"), num(d), op("="), num(r0)],
-      [[num(a), op("+"), num(b), op("×"), mark(P(num(c), op("−"), num(d)))]], r0),
-    beat(1, `Then multiply: ${b} × ${r0} = ${r1}.`, [num(b), op("×"), num(r0), op("="), num(r1)],
-      [[num(a), op("+"), mark([num(b), op("×"), num(r0)])]], r1),
-    beat(2, `Then add: ${a} + ${r1} = ${r2}.`, [num(a), op("+"), num(r1), op("="), num(r2)],
-      [[mark([num(a), op("+"), num(r1)])], [num(r2)]], r2),
-  ])];
   // the slip the current app's card warns about, worked out for this problem
   const leftToRight = t === 1 ? null : t === 2 ? (a * b - c) / d : (a + b) * (c - d);
+  const wrongWay = leftToRight != null && Number.isInteger(leftToRight) && leftToRight !== r2 ? ` Left to right would give ${formatNumber(leftToRight)}, which is wrong.` : "";
+  const first: ChainBeat = { id: "first", narration: t === 2 ? "No parentheses, and × comes before −." : "Find the parentheses: they go first.",
+    math: expression(p), lines: [], answerStep: "first" };
+  const beats: ChainBeat[] = [first, ...(t === 1 ? [
+    beat(0, "Work out the inside of the parentheses.", [num(a), op("+"), num(b), op("="), num(r0)],
+      [[mark(P(num(a), op("+"), num(b))), op("×"), num(c), op("−"), num(d)]], r0),
+    beat(1, "Multiply before subtracting.", [num(r0), op("×"), num(c), op("="), num(r1)],
+      [[mark([num(r0), op("×"), num(c)]), op("−"), num(d)]], r1),
+    beat(2, "Subtract last.", [num(r1), op("−"), num(d), op("="), num(r2)],
+      [[mark([num(r1), op("−"), num(d)])], [num(r2)]], r2),
+  ] : t === 2 ? [
+    beat(0, "Multiply first.", [num(a), op("×"), num(b), op("="), num(r0)],
+      [[mark([num(a), op("×"), num(b)]), op("−"), num(c), op("÷"), num(d)]], r0),
+    beat(1, "Divide next, still before subtracting.", [num(c), op("÷"), num(d), op("="), num(r1)],
+      [[num(r0), op("−"), mark([num(c), op("÷"), num(d)])]], r1),
+    beat(2, `Subtract last.${wrongWay}`, [num(r0), op("−"), num(r1), op("="), num(r2)],
+      [[mark([num(r0), op("−"), num(r1)])], [num(r2)]], r2),
+  ] : [
+    beat(0, "Work out the inside of the parentheses.", [num(c), op("−"), num(d), op("="), num(r0)],
+      [[num(a), op("+"), num(b), op("×"), mark(P(num(c), op("−"), num(d)))]], r0),
+    beat(1, "Multiply next, before adding.", [num(b), op("×"), num(r0), op("="), num(r1)],
+      [[num(a), op("+"), mark([num(b), op("×"), num(r0)])]], r1),
+    beat(2, `Add last.${wrongWay}`, [num(a), op("+"), num(r1), op("="), num(r2)],
+      [[mark([num(a), op("+"), num(r1)])], [num(r2)]], r2),
+  ])];
   return chainExplanation({
     heading: "Parentheses, then × and ÷, then + and −",
     idea: ["Everyone uses the same order, so a problem has only one answer."],
     statement: expression(p),
-    ...(leftToRight != null && Number.isInteger(leftToRight) && leftToRight !== r2 ? { caption: `Going left to right would give ${formatNumber(leftToRight)}, which is wrong.` } : {}),
     alt: `Order of operations, one step per line, ending at ${r2}.`,
     diagram: orderPicture({ t, a, b, c, d, r0, r1, r2 }),
     beats,
