@@ -261,7 +261,7 @@ describe("unit test and check-up", () => {
     renderApp();
     tap("Grade check-up");
     answerWrong();
-    expect(screen.getByRole("status")).toHaveTextContent(/Not this time\. The answer was/);
+    expect(screen.getByRole("status")).toHaveTextContent(/Incorrect\. The answer was/);
   });
 
   it("a test problem with a wrong answer is never marked solved or green (G 2026-10-08)", () => {

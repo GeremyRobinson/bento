@@ -27,6 +27,8 @@ export interface Feedback {
   pop?: "big" | "star";
   /** hints still left in the lesson, shown muted under a hint */
   left?: number;
+  /** a test step that was missed: the answer is shown, and it wears the incorrect mark */
+  missed?: boolean;
 }
 
 export interface Mistake {
@@ -67,6 +69,8 @@ export interface PracticeSession {
   title: string;
   items: RunItem[];
   i: number;
+  /** the problems already finished, by index: a set can be done in any order (G 2026-10-08, the problem picker) */
+  done?: number[];
   step: number;
   work: WorkLine[];
   /** this problem is being done as one final answer */
