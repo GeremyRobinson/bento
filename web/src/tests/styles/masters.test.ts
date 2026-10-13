@@ -105,7 +105,8 @@ function offButtons() {
 }
 
 /** registered masters nothing renders yet (2026-10-08); delete the master or use it, then its name here */
-const UNUSED_KNOWN: string[] = [];
+// v2 (2026-10-13) retired the old Contents and its problem button; their screen.css rules go in the v2 clean-up
+const UNUSED_KNOWN: string[] = ["Accordion", "Problem button", "Big pill list"];
 
 const fmt = (o: { key: string; val: string; use: string }) => `${o.key}: ${o.val.slice(0, 50)}  →  use ${o.use}`;
 

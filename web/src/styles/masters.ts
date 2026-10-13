@@ -40,6 +40,19 @@ export const MASTERS: Master[] = [
   { name: "Lesson item", classes: ["pitem", "pmark"] },
   // the nav's round buttons: back, settings, me, hint
   { name: "Nav circle", classes: ["icon", "ihint", "spent"] },
+  // v2 (G 2026-10-13, model artifact): one workspace, the box of Cover tiles, the solve panel. Rules in styles/v2.css.
+  { name: "Cover", component: "components/Cover.tsx", classes: ["v-cover", "v-top", "v-tx", "v-nm", "v-prog", "v-st", "v-pic", "v-picbox", "v-pq", "v-ring", "pick", "still", "next", "rev"] },
+  { name: "Ring", classes: ["v-ring", "sm", "md", "lg", "t", "f"] },
+  { name: "Stat", classes: ["v-stat", "v-nm", "v-st", "v-ring", "still"] },
+  { name: "Card panel", classes: ["v-panel", "v-label", "v-meta", "v-why", "v-row", "v-seg", "v-lbtns", "v-go", "v-plain"] },
+  { name: "Go button", classes: ["v-go"] },
+  { name: "Plain button", classes: ["v-plain", "v-skip"] },
+  { name: "Icon button", classes: ["v-ib"] },
+  { name: "Link button", classes: ["v-link"] },
+  { name: "Tool", classes: ["v-tool", "v-tools"] },
+  { name: "Workspace", classes: ["screen", "v-work", "v-home", "v-prac", "v-done", "v-today", "v-todaypic", "v-box", "v-bh", "v-sw", "v-wide", "v-yr", "v-path", "v-pstep", "v-gbig", "v-sc", "v-result", "v-recap", "v-stage", "v-prob", "v-ppic", "v-pad", "v-plist", "v-lside", "v-idea", "v-wl", "all", "pprob", "pfade"] },
+  { name: "Solve panel", classes: ["v-solve", "v-steps", "v-lines", "v-ask", "v-say", "slip", "good", "hint", "slot", "empty", "no", "ask", "tray", "ctl", "choice", "choices", "ok"] },
+  { name: "Grade ring", classes: ["ibat", "igrade", "island", "pring-track"] },
 ];
 
 /** states any master may be in: they never make a rule a one-off */
