@@ -4,9 +4,10 @@ import { createRng } from "../../curriculum/generators/rng";
 import { formatNumber } from "../../curriculum/schemas/math-text";
 import { emptyProgress, type Progress } from "../../engine/mastery/progress";
 import {
-  canResume, check, choose, currentStep, finishRun, focusSlot, hint, isLastProblem, nextProblem, pickPlan, pressKey,
+  canPick, canResume, check, choose, currentStep, finishRun, focusSlot, goToProblem, hint, isLastProblem, nextProblem, pickPlan, pressKey,
   showMe, showMeAvailable, startPractice, startTest, testKey, toggleSkip, CHECKUP_LENGTH, UNIT_TEST_LENGTH, type Deps,
 } from "../../engine/session/practice";
+import { checkKey } from "../../engine/mastery/skills";
 import { expectedValues } from "../../engine/evaluation/steps";
 import type { PracticeSession } from "../../engine/session/types";
 
@@ -179,6 +180,61 @@ describe("no repeated problems", () => {
       const run = startPractice(id, emptyProgress(), deps());
       expect(new Set(run.items.map(x => key(x.problem))).size, `${id} seed ${s}`).toBe(run.items.length);
     }
+  });
+});
+
+describe("the problem picker's memory (v2-backend-plan.md)", () => {
+  it("in practice a problem left part-way is kept, and going back finds it where it was", () => {
+    const p = emptyProgress();
+    let s = solveStep(startPractice("g5-mult2", p, deps()), p);
+    expect(s.solved).toBe(false);
+    const { step, work } = s;
+    expect(canPick(s, 3)).toBe(true);
+    s = goToProblem(s, 3, p, deps());
+    expect(s.i).toBe(3);
+    expect(s.step).toBe(0);
+    expect(s.parked?.[0]?.step).toBe(step);
+    s = goToProblem(s, 0, p, deps());
+    expect(s.i).toBe(0);
+    expect(s.step).toBe(step);
+    expect(s.work).toEqual(work);
+    expect(s.parked?.[0]).toBeUndefined();
+    expect(solveProblem(s, p).solved).toBe(true);
+  });
+
+  it("an untouched problem isn't parked", () => {
+    const p = emptyProgress();
+    const s = goToProblem(startPractice("g5-mult2", p, deps()), 2, p, deps());
+    expect(s.parked?.[0]).toBeUndefined();
+  });
+
+  it("Next problem comes back round to a problem left part-way", () => {
+    const p = emptyProgress();
+    let s = solveStep(startPractice("g5-mult2", p, deps()), p);
+    const step = s.step;
+    s = goToProblem(s, s.items.length - 1, p, deps());
+    s = solveProblem(s, p);
+    s = nextProblem(s, p, deps())!;
+    expect(s.i).toBe(0);
+    expect(s.step).toBe(step);
+  });
+
+  it("a finished problem can't be picked again", () => {
+    const p = emptyProgress();
+    let s = solveProblem(startPractice("g5-mult2", p, deps()), p);
+    s = nextProblem(s, p, deps())!;
+    expect(canPick(s, 0)).toBe(false);
+    expect(goToProblem(s, 0, p, deps())).toBe(s);
+  });
+
+  it("in a skill check a problem you've begun is finished first", () => {
+    const p = emptyProgress();
+    let s = startTest(checkKey(5, "g5-mult2"), p, deps());
+    expect(canPick(s, 1)).toBe(true);
+    s = solveStep(s, p);
+    if (s.solved) return; // a one-step item: nothing to hold
+    expect(canPick(s, 1)).toBe(false);
+    expect(goToProblem(s, 1, p, deps())).toBe(s);
   });
 });
 

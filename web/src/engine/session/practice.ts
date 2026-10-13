@@ -15,7 +15,7 @@ import { lastScore, type Progress } from "../mastery/progress";
 import { CHECKS, WHERE_TRIES } from "../../curriculum/checks";
 import { CHECK_FROM, CHECK_LENGTH, checkKey, dueBack, isCheckKey, lessonOfCheck, PASS, recordCheck, reviewMissed } from "../mastery/skills";
 import { PRAISE } from "./praise";
-import type { Mistake, PracticeSession, RunItem, SessionReport } from "./types";
+import type { Mistake, Parked, PracticeSession, RunItem, SessionReport } from "./types";
 import { FIND_MY_LEVEL, NO_UNIT, SKILL_CHECK, TODAYS_REVIEW } from "../../app/copy";
 
 /** Clock and randomness are passed in, so every rule can be tested exactly. */
@@ -498,20 +498,38 @@ export function nextProblem(s: PracticeSession, progress: Progress, deps: Deps):
   if (!s.solved) return s;
   const next = openAfter(s)[0];
   if (next == null) return null;
-  return startProblem({ ...s, i: next }, progress, deps);
+  return openProblem(s, next, progress, deps);
 }
 
 /**
  * The problem picker (G 2026-10-08: "see how many questions they have on a test and pick and choose which ones they'd
- * like to answer first"). You can move to any problem you haven't finished before you start answering this one, or
- * once it's solved; a problem you've begun answering is finished first, so a test's one try per step can't be undone.
+ * like to answer first"). You can move to any problem you haven't finished. In practice and review a problem left
+ * part-way is kept as it was and picked up again when you come back to it (v2-backend-plan.md, "Problem picker
+ * memory"); in a test or skill check a problem you've begun answering is finished first, so one try per step can't be
+ * undone.
  */
 export const canPick = (s: PracticeSession, index: number): boolean =>
-  index >= 0 && index < s.items.length && index !== s.i && !(s.done ?? []).includes(index) && (s.solved || !started(s));
+  index >= 0 && index < s.items.length && index !== s.i && !(s.done ?? []).includes(index) && (s.solved || !isTest(s) || !started(s));
 const started = (s: PracticeSession) => s.step > 0 || s.prob.wrong > 0 || s.prob.hints > 0 || s.prob.shown > 0 || s.work.length > 0;
 export function goToProblem(s: PracticeSession, index: number, progress: Progress, deps: Deps): PracticeSession {
   if (!canPick(s, index)) return s;
-  return startProblem({ ...s, i: index }, progress, deps);
+  const parked = { ...(s.parked ?? {}) };
+  if (!s.solved && started(s)) parked[s.i] = park(s);
+  return openProblem({ ...s, parked }, index, progress, deps);
+}
+
+const park = (s: PracticeSession): Parked => ({
+  step: s.step, work: s.work, collapsed: s.collapsed, skipThis: s.skipThis, tier: s.tier, values: s.values, active: s.active,
+  pick: s.pick, misses: s.misses, hinted: s.hinted, prob: s.prob, feedback: s.feedback,
+});
+
+/** problem `index`: where it was left, or fresh */
+function openProblem(s: PracticeSession, index: number, progress: Progress, deps: Deps): PracticeSession {
+  const kept = s.parked?.[index];
+  if (!kept) return startProblem({ ...s, i: index }, progress, deps);
+  const { [index]: _, ...rest } = s.parked!;
+  void _;
+  return { ...s, ...kept, i: index, parked: rest, solved: false, fx: null, lastTry: 0, stepT0: deps.now };
 }
 
 export function finishRun(s: PracticeSession, progress: Progress, now: number): { progress: Progress; report: SessionReport } {

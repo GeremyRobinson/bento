@@ -63,6 +63,9 @@ export interface Plan {
   misses: number;
 }
 
+/** one problem's own state, kept while the child works on another (the problem picker's memory) */
+export type Parked = Pick<PracticeSession, "step" | "work" | "collapsed" | "skipThis" | "tier" | "values" | "active" | "pick" | "misses" | "hinted" | "prob" | "feedback">;
+
 export interface PracticeSession {
   mode: "practice" | "test" | "review";
   key: string;
@@ -71,6 +74,8 @@ export interface PracticeSession {
   i: number;
   /** the problems already finished, by index: a set can be done in any order (G 2026-10-08, the problem picker) */
   done?: number[];
+  /** problems left part-way through, by index, so going back finds them where they were (practice and review only) */
+  parked?: Record<number, Parked>;
   step: number;
   work: WorkLine[];
   /** this problem is being done as one final answer */
