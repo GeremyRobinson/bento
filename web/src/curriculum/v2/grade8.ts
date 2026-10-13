@@ -28,7 +28,7 @@ export const checks: Record<string, CheckRecipe> = {
   "g8-exp": {
     items: [
       i(3, { where: p => p.t === 0 && tellsApart(p) }), i(3, { where: p => p.t === 1 && p.a >= 3 }),
-      i(3, { where: p => p.t === 2 && tellsApart(p) }), i(3, { where: tellsApart }),
+      i(3, { where: p => p.t === 2 && tellsApart(p) }), i(3, { where: p => tellsApart(p) && p.exponent >= 3 }),
     ],
   },
   // a whole front number (c a multiple of 10) is rare, so when the draws miss it, round c to one (Review note 2)
