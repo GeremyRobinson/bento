@@ -36,7 +36,7 @@ export async function motionGuard({ browser, PAGE, fails, notes }) {
     const ring = tap(p.locator(".igrade"));
     const grade = re => [["open every grade", ring, false], [`pick ${re.source.replace(/\W/g, "")}`, tap(p.getByRole("button", { name: re })), true]];
     const steps = [
-      ...grade(/^3rd grade,/), ...grade(/^1st grade,/), ...grade(/^10th grade,/), ...grade(/^5th grade,/),
+      ...grade(/^3rd grade,/), ...grade(/^1st grade,/), ...grade(/^10th grade( ·[^,]*)?,/), ...grade(/^5th grade,/),
       ["open every grade", ring, false], ["close every grade", ring, false],
       ["My Obento", tap(p.locator(".ime")), true], ["Back", tap(p.locator(".iback")), true],
       ["open a lesson", lesson, true], ["Back from the lesson", tap(p.locator(".iback")), true],
