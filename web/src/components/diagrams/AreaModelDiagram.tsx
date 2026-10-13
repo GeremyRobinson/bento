@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { AreaDiagram, AreaRegion } from "../../explanations/diagrams/area-model/schema";
 import type { AnimationState } from "../../explanations/schema";
 import { formatNumber } from "../../curriculum/schemas/math-text";
@@ -75,6 +75,8 @@ export function settleFit(d: AreaDiagram, box: { w: number; h: number } | null) 
  * Each column and row is labelled once, outside the picture: column labels centred over their column, row labels at the
  * picture's left edge, in line with the problem. A label is lit while its part is the one being worked on.
  */
+const BURST = 6, QUIET = 300;
+
 export function AreaModelDiagram({ diagram: d, timeline, at, ask }: { diagram: AreaDiagram; timeline: AnimationState[]; at: number; ask?: number; /** kept for callers; the v2 picture never turns */ turn?: boolean }) {
   const view = areaView(timeline, at);
   // practice lights the part it is asking about (no answer yet)
@@ -84,17 +86,24 @@ export function AreaModelDiagram({ diagram: d, timeline, at, ask }: { diagram: A
   const label = `${d.vertical.label} by ${d.horizontal.label} rectangle, split into ${d.regions
     .map(r => `${r.equation.factors[0]} by ${r.equation.factors[1]} = ${r.productLabel}`).join(" and ")}. Total ${formatNumber(d.total.value)}.`;
   // the box the picture has on screen; its scale is worked out from the box in one go (settleFit), so laying it out never
-  // feeds back into the box (Review: React #185 on phones when the scale chased the stretch). A box that keeps moving
-  // (a picture sized by its own width) stops being followed after a few changes
-  const [box, setBox] = useState<{ w: number; h: number; n: number } | null>(null);
-  const onBox = useCallback((w: number, h: number) => setBox(o => (!o || (o.n < 6 && (Math.abs(w - o.w) > 1 || Math.abs(h - o.h) > 1)) ? { w, h, n: (o?.n ?? 0) + 1 } : o)), []);
-  // a new window size is a new start: the box may be followed again (Review: after several iPad-to-phone resizes the
-  // stretch went stale once the limit was spent)
-  useEffect(() => {
-    const again = () => setBox(o => (o ? { ...o, n: 0 } : o));
-    addEventListener("resize", again);
-    return () => removeEventListener("resize", again);
+  // feeds back into the box (Review: React #185 on phones when the scale chased the stretch). Every real change of the box
+  // is followed. Only a burst of changes (more than BURST inside QUIET ms: a picture sized by its own width chasing
+  // itself) is held, and then the last box seen is taken once the burst is over, so a real change is never lost
+  // (Review: after a second miss the say line grew and shrank, the old fixed count ran out and the picture went flat)
+  const [box, setBox] = useState<{ w: number; h: number } | null>(null);
+  const burst = useRef({ n: 0, t: 0, cur: null as { w: number; h: number } | null, last: null as { w: number; h: number } | null, timer: 0 as ReturnType<typeof setTimeout> | 0 });
+  const onBox = useCallback((w: number, h: number) => {
+    const b = burst.current, now = Date.now(), same = (o: { w: number; h: number } | null) => !!o && Math.abs(w - o.w) <= 1 && Math.abs(h - o.h) <= 1;
+    if (now - b.t > QUIET) b.n = 0;
+    b.t = now; b.last = { w, h };
+    if (same(b.cur)) return;
+    if (b.n >= BURST) {
+      if (!b.timer) b.timer = setTimeout(() => { b.timer = 0; b.n = 0; const l = b.last; if (l && !(b.cur && Math.abs(l.w - b.cur.w) <= 1 && Math.abs(l.h - b.cur.h) <= 1)) { b.cur = l; setBox(l); } }, QUIET);
+      return;
+    }
+    b.n++; b.cur = { w, h }; setBox(b.cur);
   }, []);
+  useEffect(() => () => { if (burst.current.timer) clearTimeout(burst.current.timer); }, []);
   const fit = useMemo(() => settleFit(d, box), [d, box]);
   const ref = useLabelFloor(fit.width, onBox);
   const top = d.vertical.start;
