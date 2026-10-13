@@ -24,7 +24,7 @@ const SIZES = [{ w: 390, h: 844, scheme: "dark" }, { w: 375, h: 667, scheme: "li
   { w: 1024, h: 768, scheme: "light" }, { w: 1280, h: 720, scheme: "dark" }];
 /** containers meant to scroll (a long list; the book's chapters, and its plan on a short landscape screen where the
  *  picture keeps its room); anything else that scrolls inside itself is cut */
-const SCROLLERS = ".fhome>.ftables, .v-box, .v-home"; // home may scroll on a phone (v2 spec H0)
+const SCROLLERS = ".fhome>.ftables, nav.slist.more, .sbento .b-chaps, .sbento .today, .sbento .tbody, .v-box, .v-home"; // home may scroll on a phone (v2 spec H0)
 const ROUTES = ["home", "learn", "practice", "facts", "me", "settings", "grown-up", "welcome"];
 
 const fails = [], notes = [];
@@ -56,10 +56,18 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
   // today's lesson, opened the way a learner would: Today's Start (a returning learner's lesson may open in practice,
   // so the lesson comes from Today's pick either way)
   await p.evaluate(() => document.querySelector(".v-today .v-go")?.click()); await p.waitForTimeout(500);
+  // (the app keeps progress in IndexedDB "bento"; the "stepmath" localStorage key is only the old save it imports)
   const lesson = await p.evaluate(() => {
     if (location.hash.startsWith("#/learn/")) return location.hash;
-    const pick = JSON.parse(localStorage.getItem("stepmath") ?? "{}").run?.key;
-    return pick ? "#/learn/" + pick : null;
+    return new Promise(done => {
+      const r = indexedDB.open("bento");
+      r.onerror = () => done(null);
+      r.onsuccess = () => {
+        const get = r.result.transaction("progress").objectStore("progress").get("main");
+        get.onerror = () => done(null);
+        get.onsuccess = () => { const id = get.result?.run?.items?.[0]?.lessonId; done(id ? "#/learn/" + id : null); };
+      };
+    });
   });
   for (const route of ROUTES) {
     const hash = route === "home" ? "#/" : route === "learn" || route === "practice" ? lesson : "#/" + route;
