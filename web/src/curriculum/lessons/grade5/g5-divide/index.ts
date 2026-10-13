@@ -63,5 +63,7 @@ export const lesson: LessonDefinition<LongDivisionProblem> = {
   display: p => [num(p.n), op("÷"), num(p.dv)],
   answers,
   explain: explainLongDivision,
+  // skill check miss (v2 spec C2, g5-divide): the answer's own tens and ones
+  checkWhy: ({ qt }) => `Take out the tens, then the ones: ${qt - (qt % 10)} + ${qt % 10}.`,
   story: p => ({ op: "÷", text: `**${p.n}** marbles are packed equally into **${p.dv}** jars. How many marbles go in each jar?` }),
 };
