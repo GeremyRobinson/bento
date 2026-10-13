@@ -4,7 +4,7 @@ import { playTone, readAloudOn, readSettings, speak } from "../app/settings";
 import { useApp } from "../app/AppState";
 import { withTransition } from "../app/transition";
 import { MathLine, Rich } from "../components/primitives/MathLine";
-import { plainProblem, ProblemLine, problemShape, ProblemView } from "../components/practice/ProblemView";
+import { plainProblem, problemShape, ProblemView } from "../components/practice/ProblemView";
 import { Diagram } from "../components/diagrams/Diagram";
 import { requireLesson } from "../curriculum/registry";
 import type { Explanation } from "../explanations/schema";
@@ -22,7 +22,7 @@ import {
 } from "../engine/session/practice";
 
 const SpeakerIcon = () => (
-  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" /></svg>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z" /><path d="M16 9a4 4 0 0 1 0 6" /></svg>
 );
 
 /**
@@ -45,7 +45,7 @@ const ListIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="2" /><rect x="13.5" y="4" width="6.5" height="6.5" rx="2" /><rect x="4" y="13.5" width="6.5" height="6.5" rx="2" /><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2" /></svg>
 );
 const PadIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20l1-4.5L15.5 5a2.1 2.1 0 0 1 3 3L8 18.5z" /><path d="M13.5 7l3 3" /></svg>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20l1-4.5L15.5 5a2.1 2.1 0 0 1 3 3L8 18.5z" /></svg>
 );
 
 /** answers lie in even rows, never one left on its own (G 2026-10-08 "3 answers is kind of odd"): up to 3 in one row, 4 as two by two */
@@ -223,11 +223,15 @@ export function Practice() {
   const say = fbAway ? null : s.solved && fb?.type !== "hint"
     ? { cls: missed ? "slip" : "good", lead: missed ? "\u2715 Not this time." : test || full?.solved ? "\u2713 Right." : "\u2713 Solved.",
       text: missed ? (fb?.missed ? fb.text : undefined) : skill ? `${problemText(it)} = ${solvedAns != null ? formatNumber(solvedAns) : ""}.` : idea }
-    : fb ? { cls: fb.type === "bad" ? "slip" : fb.type === "good" ? "good" : "hint",
+    // the skill check doesn't cheer a step on the way (a word problem's operation): the say line stays clear for the answer
+    : fb && !(skill && fb.type === "good") ? { cls: fb.type === "bad" ? "slip" : fb.type === "good" ? "good" : "hint",
       lead: fb.type === "bad" ? `\u2715 ${fb.strong ?? "Not quite."}` : fb.type === "good" ? `\u2713 ${fb.strong ?? "Right."}` : fb.strong, text: fb.text, lines: fb.lines }
     : skill && s.i === 0 && !s.prob.wrong && !s.work.length ? { cls: "hint", lead: undefined, text: `${SKILL_CHECK}: ${n} problems on your own, no hints. It shows how much stuck.`, lines: undefined } : null;
   // a wrong try wears red; a test's missed step only on a skill check's one answer, which keeps what was typed (v2 model)
-  const askNo = !fbAway && fb?.type === "bad" && (!fb.missed || (skill && s.solved));
+  // a hint opened after a wrong try keeps the pill red until something new is typed (v2 model, P8/P9)
+  const hintShown = !fbAway && fb?.type === "hint";
+  const askNo = (!fbAway && fb?.type === "bad" && (!fb.missed || (skill && s.solved)))
+    || (hintShown && !s.solved && s.misses > 0 && !Object.values(s.values).some(v => v));
   const typedMiss = skill && missed ? s.mistakes[s.mistakes.length - 1]?.typed : undefined;
   const doneLines = steps.map((_, k) => s.work[k]).filter((w, k) => !!w && (k < here));
   return (
@@ -263,8 +267,9 @@ export function Practice() {
         ))}</ol>}
         <div className={`v-ask${askNo ? " no" : ""}${s.fx === "shake" ? " shake" : ""}`}>
           {step && !s.pick ? <>
-            {skill && step.id === "final" && !it.story ? <>
-              <span className="q2">What is {problemText(it)}?</span>
+            {skill && step.id === "final" ? <>
+              {/* the check asks what to do, never "Type the final answer." (R-W1); a word problem asks its own question */}
+              <span className="q2">{it.story ? storyAsk(it) : `What is ${problemText(it)}?`}</span>
               <div className="v-ans" key={`${at}-${s.mistakes.length}`}>
                 <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={id => act(st => focusSlot(st, id))} />
               </div>
@@ -289,10 +294,10 @@ export function Practice() {
         <div className={`v-say${say ? ` ${say.cls}` : ""}`} role="status" aria-live="polite">
           {say && <>{say.lead && <b><Rich text={say.lead} /></b>}{say.lead && say.text ? " " : ""}{say.text && <Rich text={say.text} />}
             {say.lines?.filter(l => !/Show me/.test(l)).map((l, i) => <span key={i}> <Rich text={l} /></span>)}
-            {!s.solved && fb?.type !== "good" && showMeAvailable(s) && <button className="v-link" onClick={() => act((st, p, d) => showMe(st, p, d))}>{SHOW_ME} the step</button>}</>}
+            {!s.solved && fb?.type === "bad" && showMeAvailable(s) && <button className="v-link" onClick={() => act((st, p, d) => showMe(st, p, d))}>{SHOW_ME} the step</button>}</>}
         </div>
         <div className="v-tools" role="toolbar" aria-label="Tools">
-          {!test && <button className="v-tool" disabled={!hintable || (!s.hintsLeft && !s.hinted)} aria-label={`Hint, ${s.hintsLeft} left`} onClick={() => { setZoomOut(false); act((st, _p, d) => hint(st, d)); }}>
+          {!test && <button className="v-tool" disabled={!hintable || (!s.hintsLeft && !s.hinted)} aria-pressed={hintable && hintShown} aria-label={`Hint, ${s.hintsLeft} left`} onClick={() => { setZoomOut(false); act((st, _p, d) => hint(st, d)); }}>
             <BulbIcon /><em aria-hidden>{s.hintsLeft}</em></button>}
           {canScratch && <button className="v-tool" aria-pressed={scratchOn} aria-label="Scratch pad" onClick={() => { setZoomOut(false); swapPad(); }}><PadIcon /></button>}
           {!test && n > 1 && <button className="v-tool" aria-pressed={listOn} aria-label="Problems" onClick={() => { if (scratchOn) setScratch(false); setZoomOut(o => !o); }}><ListIcon /></button>}
@@ -323,9 +328,9 @@ function ProblemList({ s, pick }: { s: PracticeSession; pick: (k: number) => voi
     {s.items.map((item, k) => {
       const finished = done.has(k) || (k === s.i && s.solved), now = k === s.i, open = now || canPick(s, k);
       const word = finished ? "Done" : now ? "Now" : "To do";
-      return <Cover key={k} pick={now} disabled={!open} className="v-ptile" pic={<span className="v-pq"><ProblemLine lessonId={item.lessonId} problem={problemOf(item)} solved={finished} /></span>}
+      return <Cover key={k} pick={now} aria-disabled={!open || undefined} className="v-ptile" pic={<span className="v-pq">{plainProblem(item.lessonId, problemOf(item))}</span>}
         p={finished ? 1 : now ? s.step / Math.max(1, stepsOf(s).length) : 0} word={word} tone={now && !finished ? "next" : undefined}
-        onClick={() => pick(k)} aria-label={`Problem ${k + 1}, ${word}`} />;
+        onClick={() => { if (open) pick(k); }} aria-label={`Problem ${k + 1}, ${word}`} />;
     })}
   </div>);
 }
@@ -349,6 +354,12 @@ export function pictureAt(ex: Explanation, ids: string[], here: number, solved: 
 
 /** a problem as one plain line ("24 × 13"), for the skill check's question and its say line */
 const problemText = (it: ReturnType<typeof currentItem>) => plainProblem(it.lessonId, problemOf(it));
+
+/** a word problem's own question ("How many seats are there?"), for the skill check's answer line */
+function storyAsk(it: ReturnType<typeof currentItem>): string {
+  const text = requireLesson(it.lessonId).story?.(problemOf(it)).text.replace(/\*\*/g, "") ?? "";
+  return text.match(/[^.?!]*\?\s*$/)?.[0].trim() ?? `What is ${problemText(it)}?`;
+}
 
 /** A step that asks for one number at the end ("13 × 10 = □") reads as a question and an answer pill, like the model. */
 export function soloAsk(prompt: MathText): { expr: MathText; slot: MathToken } | null {

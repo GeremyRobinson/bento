@@ -1,5 +1,5 @@
 // G's seven required invariants, on the reference problem 47 × 36 and on thousands of seeded problems.
-import { PART_GAP } from "../../explanations/diagrams/area-model/build";
+import { PART_GAP, MAX_FLAT } from "../../explanations/diagrams/area-model/build";
 import { createRng } from "../../curriculum/generators/rng";
 import { splitMultiplication as lesson } from "../../curriculum/lessons/grade5/g5-mult2";
 import {
@@ -74,10 +74,12 @@ describe.each([
       for (const r of free) expect(near(r.width / r.part, free[0]!.width / free[0]!.part)).toBe(true);
       for (const r of d.regions) {
         expect(near(r.widthFraction, r.part / p.secondFactor)).toBe(true);
-        expect(near(r.height, p.firstFactor * d.unit)).toBe(true);
+        // a very flat picture is held at 4 wide for 1 tall so it stays readable (G9); otherwise height is on the same scale
+        expect(near(r.height, Math.max(p.firstFactor * d.unit, d.horizontal.length / MAX_FLAT))).toBe(true);
       }
       // the drawn parts (without the gaps between them) keep the problem's proportions
-      if (!held.length) expect(near((d.horizontal.length - PART_GAP * (d.regions.length - 1)) / d.vertical.length, p.secondFactor / p.firstFactor)).toBe(true);
+      const flat = d.horizontal.length / MAX_FLAT > p.firstFactor * d.unit + 0.01;
+      if (!held.length && !flat) expect(near((d.horizontal.length - PART_GAP * (d.regions.length - 1)) / d.vertical.length, p.secondFactor / p.firstFactor)).toBe(true);
     }
   });
 

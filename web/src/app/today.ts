@@ -22,8 +22,9 @@ const sameDay = (a: number, b: number) => new Date(a).toDateString() === new Dat
  * The lesson Today suggests (v2-backend-plan.md, "Today's pick"), first match wins:
  * 1. to go over: the last skill check came back 2 or lower (the oldest first); after a 0 or 1, the lesson underneath
  *    comes first when it isn't solid;
- * 2. next: the first lesson in order not yet learned whose lessons underneath are (earlier grades count until a check
- *    of theirs comes back low), else the first not learned;
+ * 2. next: the lesson that builds on the one learned last (its catalog build-up, what Today's "needs it, so it comes
+ *    first" names), when it is ready; else the first lesson in order not yet learned whose lessons underneath are
+ *    (earlier grades count until a check of theirs comes back low), else the first not learned;
  * 3. all learned: the one checked longest ago.
  * Learned lessons that are due back go into the review, not here. The child can always pick something else.
  */
@@ -34,7 +35,12 @@ export function upNext(progress: Progress, g: number): { entry: Entry; again: bo
     const back = stepBack(progress, over.id), e = back && isReady(back) ? entryById(back) : undefined;
     return e ? { entry: e, again: true, why: "step-back" } : { entry: over, again: true, why: "go-over" };
   }
-  const open = ready.filter(c => !learned(progress, c.id)), fresh = open.find(c => readyFor(progress, c.id)) ?? open[0];
+  // what the box promised: the lesson that builds on the one just learned comes first (Today said "Order of operations
+  // needs it, so it comes first", and the model's Done moves on to it), then the first ready one in order
+  const open = ready.filter(c => !learned(progress, c.id));
+  const latest = ready.filter(c => learned(progress, c.id)).sort((a, b) => progress.checks[b.id]!.date - progress.checks[a.id]!.date)[0];
+  const builds = latest && open.find(c => c.pre === latest.id), promised = builds && readyFor(progress, builds.id) ? builds : undefined;
+  const fresh = promised ?? open.find(c => readyFor(progress, c.id)) ?? open[0];
   if (fresh) return { entry: fresh, again: timesDone(progress, fresh.id) > 0, why: "next" };
   const at = (c: Entry) => progress.checks?.[c.id]?.date ?? progress.scores[c.id]?.date ?? 0;
   const old = [...ready].sort((a, b) => at(a) - at(b))[0];

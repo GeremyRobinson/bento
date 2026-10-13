@@ -383,7 +383,8 @@ describe("tape lessons", () => {
       // it is drawn at the minimum size instead, so then every box is at least that wide
       const widths = [...segs(0), ...segs(1)].map(r => r.w);
       if (Math.min(...widths) > 20) expect(Math.abs((len(segs(0)) + 3) / (len(segs(1)) + 3) / ((p.a * p.x) / (p.b * p.y)) - 1)).toBeLessThan(0.05);
-      else expect(Math.min(...widths)).toBeGreaterThanOrEqual(14);
+      // narrow boxes keep at least 11 units once the picture system's 6-unit gap is taken out (was 14 with a 3-unit gap)
+      else expect(Math.min(...widths)).toBeGreaterThanOrEqual(11);
       expect(textsAt(d, 2).map(t => t.text)).toContain(String(p.a * p.x + p.b * p.y));
       // a letter in a box gives way to its number
       for (const t of d.items.filter((i): i is Text => i.type === "text" && (i.text === "x" || i.text === "y"))) expect(t.cls).toMatch(/a-outsoon/);

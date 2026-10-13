@@ -110,7 +110,9 @@ export function Learn({ lessonId }: { lessonId: string }) {
   const shownAt = reduceMotion() && playing ? last : at;
   // v2 (G 2026-10-13): the same workspace as practice. The picture builds on the stage while the steps write themselves
   // on the right, one worked line at a time; then Watch again or Try one
-  const shownLines = ex.steps.filter(st => st.state <= at); // a state-0 line is part of the starting picture: shown from the start
+  // every worked line is there from the start, the ones still to come faint (v2 spec L3, like the model); each lights up
+  // on its beat, and a state-0 line is part of the starting picture
+  const lines = ex.steps;
   return (
     <div className={`screen v-work v-prac v-learn parts-${look}`}>
       <section className="v-panel v-stage" aria-label="Problem">
@@ -124,15 +126,15 @@ export function Learn({ lessonId }: { lessonId: string }) {
           {sc != null && <span className="v-meta">Last skill check {sc} of 4</span>}</div>
         {ex.idea?.[0] && <p className="v-idea"><Rich text={ex.idea[0]} /></p>}
         <ol className="v-wl" aria-live="polite">
-          {shownLines.map(st => (
-            <li key={st.id}><MathLine math={toneMath(st.math, tones)} /><small><Rich text={st.narration} tones={tones} /></small></li>
+          {lines.map(st => (
+            <li key={st.id} className={st.state > shownAt ? "later" : undefined} aria-hidden={st.state > shownAt || undefined}>
+              <MathLine math={toneMath(st.math, tones)} /><small><Rich text={st.narration} tones={tones} /></small></li>
           ))}
         </ol>
         {low && <BuildUp lessonId={lesson.id} />}
         <div className="v-lbtns">
-          {finished
-            ? <button className="v-plain" onClick={() => { setExample(fresh()); setAt(0); setTimeout(() => { setAt(1); setPlaying(true); }, 50); }}>Watch again</button>
-            : <button className="v-plain" onClick={() => { setPlaying(false); setAt(last); }}>Show all</button>}
+          {/* the model's two buttons, from the start (no Show all): Watch again plays a fresh one from its first beat */}
+          <button className="v-plain" onClick={() => { setExample(fresh()); setAt(0); setPlaying(true); }}>Watch again</button>
           <button className="v-go" onClick={() => startLesson(lesson.id)}>Try one</button>
         </div>
       </section>

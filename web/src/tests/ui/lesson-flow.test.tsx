@@ -17,8 +17,10 @@ function renderApp() {
 /** Works out the answer from the step on screen, like a student would. */
 function answerOnScreen(): string {
   const q2 = document.querySelector(".v-ask .q2 .mline"), whole = document.querySelector(".v-ask .q2")?.textContent?.match(/^What is (.*)\?$/);
-  let ask = (q2 ? `${q2.getAttribute("data-plain")} = blank` : whole ? `${whole[1]} = blank` : document.querySelector(".ask .mline")!.getAttribute("data-plain")!).replace(/−/g, "-");
-  // the skill check asks a word problem whole: its two numbers are in the story on the stage
+  // the skill check asks a word problem in its own words ("How many seats are there?", R-W1)
+  const story = !q2 && !whole && !!document.querySelector(".v-ask .q2");
+  let ask = (q2 ? `${q2.getAttribute("data-plain")} = blank` : whole ? `${whole[1]} = blank` : story ? "blank" : document.querySelector(".ask .mline")!.getAttribute("data-plain")!).replace(/−/g, "-");
+  // its two numbers are in the story on the stage
   if (ask === "blank") ask = `${(document.querySelector(".v-stage .story")!.textContent!.match(/\d+/g) ?? []).slice(0, 2).join(" × ")} = blank`;
   // a × b, or a sum of any number of parts
   const m = ask.match(/^(-?\d+) × (-?\d+) = blank$/) ?? ask.match(/^(-?\d+(?: \+ -?\d+)+) = blank$/);
@@ -48,7 +50,14 @@ describe("a whole lesson in the browser", () => {
     expect(pic.getAttribute("aria-label")).toBe(`${a} by ${b} rectangle, split into ${a} by ${tens} = ${a * tens} and ${a} by ${ones} = ${a * ones}. Total ${a * b}.`);
     // it opens on the picture's first frame and only ever builds forward from there (G 2026-10-06)
     expect(pic.getAttribute("data-split")).toBe("false");
-    fireEvent.click(screen.getByRole("button", { name: "Show all" }));
+    // every worked line is there from the start, the ones to come faint (v2 spec L3); the buttons are the model's two
+    const lines = document.querySelectorAll(".v-wl li");
+    expect(lines.length).toBeGreaterThan(1);
+    expect(document.querySelectorAll(".v-wl li.later").length).toBe(lines.length - document.querySelectorAll(".v-wl li:not(.later)").length);
+    expect(screen.queryByRole("button", { name: "Show all" })).toBeNull();
+    // the arrow key steps through to the end
+    for (let k = 0; k < 10; k++) fireEvent.keyDown(window, { key: "ArrowRight" });
+    expect(document.querySelectorAll(".v-wl li.later").length).toBe(0);
     expect(pic.getAttribute("data-split")).toBe("true");
     expect(pic.getAttribute("data-sum")).toBe("true");
     // the whole worked example is written out, and the way on is to watch another or try one
@@ -60,7 +69,6 @@ describe("a whole lesson in the browser", () => {
     fireEvent.click(screen.getByRole("button", { name: "Watch again" }));
     expect(statementNow()).not.toBe(statement);
 
-    fireEvent.click(screen.getByRole("button", { name: "Show all" }));
     fireEvent.click(screen.getByRole("button", { name: "Try one" }));
 
     // practice: a wrong answer gets a reason, then solve every step of every problem with the keypad
@@ -105,6 +113,8 @@ describe("a whole lesson in the browser", () => {
     expect(done.getByText("Your skill check")).toBeInTheDocument();
     expect(done.getAllByText("Right")).toHaveLength(4);
     expect(done.getByText("Watch for:")).toBeInTheDocument();
+    // in the child's words, what practice said to look at, never the grown-up's category (v2 model)
+    expect(done.getByText("Watch for:").parentElement!.textContent).toMatch(/^Watch for: Look again at the lit strip: it's \d+ across and \d+ down\.$/);
     expect(done.queryByRole("button", { name: "Practice again" })).toBeNull();
     expect(done.queryByRole("heading", { name: "What you did" })).toBeNull();
 

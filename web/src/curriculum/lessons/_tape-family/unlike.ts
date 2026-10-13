@@ -171,6 +171,8 @@ export function unlikePicture(p: UnlikeFractionsProblem) {
   }
   return buildTape({
     rows,
+    // the second fraction is told apart from the first (picture system: violet only for a second quantity)
+    two: true,
     alt: `Fraction bars for ${a}/${b} ${p.op} ${c}/${d}: both cut into ${pieceName(L)}, ${A}/${L} ${p.op} ${C}/${L} = ${S}/${L}${changes ? ` = ${mixedLabel(S, L)}` : ""}.`,
   });
 }

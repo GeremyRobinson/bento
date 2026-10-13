@@ -3,6 +3,7 @@
 import type { SceneDiagram, SceneItem } from "../scene/schema";
 import { r1 } from "../scene/helpers";
 import { lineRows, type PictureLine } from "../area-model/grid";
+import { PIC } from "../scene/picture-system";
 
 export interface FracGridSpec {
   /** the whole is rows × cols squares */
@@ -25,7 +26,7 @@ export interface FracGridGeometry { left: number; top: number; cell: number }
 
 export function fracGridGeometry(spec: Pick<FracGridSpec, "rows" | "cols">): FracGridGeometry {
   const cell = Math.min(46, 320 / spec.cols, 260 / spec.rows);
-  return { left: 64, top: 34, cell };
+  return { left: 64, top: 44, cell };
 }
 
 export function buildFracGrid(spec: FracGridSpec): SceneDiagram {
@@ -34,21 +35,27 @@ export function buildFracGrid(spec: FracGridSpec): SceneDiagram {
   const { left, top, cell } = fracGridGeometry(spec);
   const items: SceneItem[] = [];
   const box = (i: number, j: number, inset: number) => ({ x: r1(left + j * cell + inset), y: r1(top + i * cell + inset), w: r1(cell - 2 * inset), h: r1(cell - 2 * inset) });
-  for (let i = 0; i < rows; i++) for (let j = 0; j < cols; j++) items.push({ type: "rect", ...box(i, j, 2), rx: 6, cls: "seg", from: beats.grid, enter: "fade", delay: (i * cols + j) * 0.01 });
-  for (let i = 0; i < r; i++) for (let j = 0; j < cols; j++) items.push({ type: "rect", ...box(i, j, 2), rx: 6, cls: "shadeA", from: beats.rows, enter: "fade", delay: 0.2 + i * 0.15 });
-  for (let j = 0; j < c; j++) for (let i = 0; i < rows; i++) items.push({ type: "rect", ...box(i, j, 2), rx: 6, cls: "shadeA p1", from: beats.cols, enter: "fade", delay: 0.2 + j * 0.15 });
-  for (let i = 0; i < r; i++) for (let j = 0; j < c; j++) items.push({ type: "rect", ...box(i, j, 6), rx: 4, cls: "both pq", from: beats.both, enter: "pop", delay: 0.2 + (i * c + j) * 0.06 });
+  // each square is its own part, one area-model gap apart (picture system)
+  const g = PIC.gap.area / 2, rx = PIC.corner.part;
+  for (let i = 0; i < rows; i++) for (let j = 0; j < cols; j++) items.push({ type: "rect", ...box(i, j, g), rx, cls: "seg", from: beats.grid, enter: "fade", delay: (i * cols + j) * 0.01 });
+  for (let i = 0; i < r; i++) for (let j = 0; j < cols; j++) items.push({ type: "rect", ...box(i, j, g), rx, cls: "shadeA", from: beats.rows, enter: "fade", delay: 0.2 + i * 0.15 });
+  for (let j = 0; j < c; j++) for (let i = 0; i < rows; i++) items.push({ type: "rect", ...box(i, j, g), rx, cls: "shadeA p1", from: beats.cols, enter: "fade", delay: 0.2 + j * 0.15 });
+  // shaded twice: the square splits corner to corner, the first fraction's half amber over the second's violet
+  for (let i = 0; i < r; i++) for (let j = 0; j < c; j++) {
+    const b = box(i, j, g + 1.5);
+    items.push({ type: "polygon", points: [[b.x, b.y], [r1(b.x + b.w), b.y], [b.x, r1(b.y + b.h)]], cls: "both pq", from: beats.both, enter: "fade", delay: 0.2 + (i * c + j) * 0.06 });
+  }
   // roles (handoff-6): the first fraction (rows) blue, the second (columns) orange, the overlap being found amber
   // brackets along the shaded rows (left) and the shaded columns (top), with their fractions
   if (r > 0) {
     const y0 = top + 2, y1 = top + r * cell - 2, x = left - 10;
     items.push({ type: "path", d: `M${r1(x + 6)} ${r1(y0)} H${r1(x)} V${r1(y1)} H${r1(x + 6)}`, cls: "ln", from: beats.rows, enter: "draw" });
-    items.push({ type: "text", x: r1(x - 8), y: r1((y0 + y1) / 2), text: spec.rowLabel, cls: "lbl end", from: beats.rows, enter: "rise", delay: 0.3 });
+    items.push({ type: "text", x: r1(x - PIC.labelGap), y: r1((y0 + y1) / 2), text: spec.rowLabel, cls: "lbl end", from: beats.rows, enter: "rise", delay: 0.3 });
   }
   if (c > 0) {
     const x0 = left + 2, x1 = left + c * cell - 2, y = top - 10;
     items.push({ type: "path", d: `M${r1(x0)} ${r1(y + 6)} V${r1(y)} H${r1(x1)} V${r1(y + 6)}`, cls: "ln p1", from: beats.cols, enter: "draw" });
-    items.push({ type: "text", x: r1((x0 + x1) / 2), y: r1(y - 12), text: spec.colLabel, cls: "lbl p1", from: beats.cols, enter: "rise", delay: 0.3 });
+    items.push({ type: "text", x: r1((x0 + x1) / 2), y: r1(y - PIC.labelGap - PIC.label / 2), text: spec.colLabel, cls: "lbl p1", from: beats.cols, enter: "rise", delay: 0.3 });
   }
   const gridH = rows * cell, notes = spec.notes ?? [];
   const noteW = Math.max(0, ...notes.map(n => n.text.length * 10.2));
@@ -61,5 +68,7 @@ export function buildFracGrid(spec: FracGridSpec): SceneDiagram {
     width: r1(width),
     height: r1(top + gridH + (count ? 12 + count * 26 : 16)),
     items, alt: spec.alt,
+    // two fractions must be told apart, and their overlap is the answer
+    two: true,
   };
 }

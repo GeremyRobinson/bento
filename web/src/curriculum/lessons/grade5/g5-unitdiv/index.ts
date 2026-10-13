@@ -38,7 +38,7 @@ export function unitDivisionPicture({ W, d }: UnitDivisionProblem) {
     each: [{ text: () => `1/${d}`, from: j === 0 ? 1 : 2 }], label: [{ text: "1" }],
     total: j === 0 ? [{ text: `${d}`, from: 1, acc: W === 1 }] : [{ text: `${(j + 1) * d}`, from: 2, acc: j === W - 1 }],
   }));
-  return buildTape({ rows, alt: `${W} whole bars, each cut into ${count(d, "piece")} of 1/${d}: ${count(W * d, "piece")} in all.` });
+  return buildTape({ rows, gap: "mixed", alt: `${W} whole bars, each cut into ${count(d, "piece")} of 1/${d}: ${count(W * d, "piece")} in all.` });
 }
 
 function explain(p: UnitDivisionProblem, model: AnswerModel): Explanation {

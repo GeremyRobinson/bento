@@ -45,10 +45,9 @@ export function AreaModelDiagram({ diagram: d, timeline, at, ask }: { diagram: A
       ))}
       {d.regions.map(r => (
         <g key={r.index} className="region" data-shown={v.shown.has(r.index) || v.sum} data-active={v.active === r.index}>
-          <rect className="fill" x={r.x} y={r.y} width={r.width} height={r.height} rx={4} />
+          {/* one shape per part: the fill, with its outline just outside it so every seat shows whole (G1, G2) */}
+          <rect className="fill edge" x={r.x - 1.5} y={r.y - 1.5} width={r.width + 3} height={r.height + 3} rx={5.5} />
           {r.seats.map((l, k) => <line key={k} className="seat" x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} />)}
-          {/* the outline sits just outside the part, so every seat shows whole (G2) */}
-          <rect className="edge" x={r.x - 1.5} y={r.y - 1.5} width={r.width + 3} height={r.height + 3} rx={5.5} />
           {/* the part's result sits inside it, sized to the part (G6) */}
           <text className="product" x={r.x + r.width / 2} y={r.y + r.height / 2} style={{ "--fs": Math.round(Math.max(12, Math.min(48, r.height * 0.42, r.width * 0.3))) } as CSSProperties}>{r.productLabel}</text>
         </g>

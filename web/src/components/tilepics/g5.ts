@@ -2,8 +2,8 @@ import { bar, L, R, svg } from "./draw";
 
 const tenths = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(k => L(2 + k * 9.2, 2, 2 + k * 9.2, 94, "thin")).join("");
 
-// area model: one rectangle split into tens and ones both ways
-const AREA = svg("0 0 130 96", R(2, 2, 84, 66, 10) + R(92, 2, 36, 66, 10) + R(2, 74, 84, 20, 8) + R(92, 74, 36, 20, 8));
+// two strips: the first number whole down the side, the second cut into tens and ones (G chose 2 strips, 2026-10-13)
+const AREA = svg("0 0 130 96", R(2, 2, 86, 92, 4) + R(100, 2, 28, 92, 4));
 // equal groups: a bar cut into equal groups, one group taken
 const GROUPS = svg("0 0 156 96", `<g transform="translate(0 26)">${R(2, 2, 46, 40, 10, "take")}${R(55, 2, 46, 40, 10, "rest")}${R(108, 2, 46, 40, 10, "rest")}${L(4, 54, 46, 54)}${L(4, 48, 4, 54)}${L(46, 48, 46, 54)}</g>`);
 // tenths: a whole cut into 10 strips, some shaded

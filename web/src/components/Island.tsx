@@ -6,7 +6,8 @@ import { gradeOf, inkOf } from "../curriculum/grades";
 import { lessonById } from "../curriculum/registry";
 import { currentItem, lessonOfItem, problemOf } from "../engine/session/practice";
 import { problemShape, ProblemLine } from "./practice/ProblemView";
-import { upNext } from "../app/today";
+import { lastScore } from "../engine/mastery/progress";
+import { lessonLength } from "../engine/adaptive-help/policy";
 import { Contents, type Level } from "./Contents";
 import { Nav, NavMark } from "./Nav";
 import { reduceMotion } from "../app/transition";
@@ -14,7 +15,7 @@ import { Confirm } from "./Confirm";
 import { PillRing } from "./primitives/PillRing";
 import { tableById } from "../engine/facts/tables";
 import { Chevron, LockIcon, MeIcon, SettingsIcon } from "./primitives/icons";
-import { CONTENTS, GROWN_UP, NO_UNIT, PRACTICE, REPORT, REVIEW, SKILL_CHECK, YOUR_BENTO } from "../app/copy";
+import { GROWN_UP, NO_UNIT, PRACTICE, REPORT, REVIEW, SKILL_CHECK, YOUR_BENTO } from "../app/copy";
 import { isCheckKey, lessonOfCheck } from "../engine/mastery/skills";
 
 /** A small cross: quit. */
@@ -52,7 +53,8 @@ function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): P
     return p ? `${p.chapter === NO_UNIT ? gradeOf(p.grade).name : p.chapter} · ${extra ?? `${p.page} of ${p.pages}`}` : gradeOf(grade).name;
   };
   switch (route.name) {
-    case "learn": return { kicker: chapterLine(route.lessonId), title: lessonById(route.lessonId)?.title ?? "Lesson", back: contents, lesson: route.lessonId };
+    // Watch one: what this step is and what comes after it (v2 model "Watch one · then try 3")
+    case "learn": return { kicker: `Watch one \u00b7 then try ${lessonLength(lastScore(app.progress, route.lessonId))}`, title: lessonById(route.lessonId)?.title ?? "Lesson", back: contents, lesson: route.lessonId };
     case "practice": {
       const run = app.progress.run;
       if (!run) return { kicker: gradeOf(grade).name, title: PRACTICE, back: contents };
@@ -92,28 +94,15 @@ function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): P
       const t = route.table ? tableById(route.table) : undefined;
       return t ? { kicker: "Facts", title: t.name, back: { label: "facts", to: { name: "facts" } } } : { kicker: gradeOf(grade).name, title: "Facts", back: contents };
     }
-    default: {
-      // on a phone the picked row's detail is its own screen, and back returns to the list
-      const phone = typeof matchMedia !== "undefined" && matchMedia("(max-width: 699px)").matches;
-      return route.name === "home" && route.pick && phone
-        ? { kicker: gradeOf(grade).name, title: route.pick === "today" ? "Today" : lessonById(route.pick)?.title ?? "Lesson", back: { label: "chapters", to: { name: "home" } } }
-        : { kicker: homeChapter(route, app, grade), title: gradeOf(grade).name };
-    }
+    // the box (v2): Today and the box share one screen on every size, so the island always says the year (v2 model)
+    default: return { kicker: lessonsLine(app, grade), title: gradeOf(grade).name };
   }
 }
 
-/** On the book, the small line names the chapter you're in: the picked lesson's, else the one up next. */
-function homeChapter(route: Route, app: ReturnType<typeof useApp>, grade: number): string {
-  const id = route.name === "home" && route.pick && route.pick !== "today" ? route.pick : upNext(app.progress, grade)?.entry.id;
-  const p = id ? pageOf(id) : null;
-  return p && p.grade === grade && p.chapter !== NO_UNIT ? p.chapter : CONTENTS;
-}
-
-/** "5th grade" with its number in the grade's colour, the way the UI notes preview names the grade. */
-function GradeTitle({ grade }: { grade: number }) {
-  const g = gradeOf(grade), style = { "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties;
-  const m = /^(\d+\w*)( grade)$/.exec(g.name);
-  return m ? <b><span className="gnum ign" style={style}>{m[1]}</span>{m[2]}</b> : <b><span className="gnum ign" style={style}>{g.name}</span></b>;
+/** On the box, the small line is how far through the year you are: "9 of 17 lessons done" (v2 model). */
+function lessonsLine(app: ReturnType<typeof useApp>, grade: number): string {
+  const all = entriesInGrade(grade);
+  return `${doneCount(app.progress, all)} of ${all.length} lessons done`;
 }
 
 const BulbIcon = () => (
@@ -312,7 +301,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
         {/* v2: the island only says where you are; nothing opens from it (G 2026-10-13) */}
         <div className="iplace">
           <small>{place.kicker}</small>
-          {place.title === gradeOf(grade).name ? <GradeTitle grade={grade} /> : <b className={shortProblem ? "ititle" : undefined}>{place.title}</b>}
+          <b className={shortProblem ? "ititle" : undefined}>{place.title}</b>
           {shortProblem && <b className="iprob"><ProblemLine lessonId={shortProblem.lessonId} problem={problemOf(shortProblem)} solved={run!.solved} /></b>}
         </div>
         {place.lock

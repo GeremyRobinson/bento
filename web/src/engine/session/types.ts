@@ -43,6 +43,8 @@ export interface Mistake {
   kind: string;
   cat: MistakeCategory | "concept";
   msg: string;
+  /** what the child was told to look at, in their words ("Look again at the lit strip: ..."); Done's Watch for line */
+  say?: string;
   rushed: boolean;
 }
 

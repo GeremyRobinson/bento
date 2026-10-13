@@ -133,7 +133,7 @@ function openChapter(unit: string) {
 /** Today's one button: Start (the lesson), Practise (done before) or Carry on (a run left part way) */
 const goToday = () => fireEvent.click(within(today()).getByRole("button", { name: /^(Start|Practise|Carry on)$/ }));
 /** from home into the lesson up next, past its worked example, into practice */
-function startPractice() { goToday(); tap("Show all"); tap("Try one"); }
+function startPractice() { goToday(); tap("Try one"); }
 /** Changing grade has one way (v2): the island's ring swaps the box for every grade, then a grade. */
 function pickGrade(name: string) {
   fireEvent.click(screen.getByRole("button", { name: /Change grade$/ }));
@@ -242,7 +242,7 @@ describe("home", () => {
   it("zooms out from a lesson to its chapter, the year and every grade, and opens whatever is tapped", () => {
     renderApp();
     goToday();
-    expect(document.querySelector(".island")).toHaveTextContent(`Whole numbers · 1 of`);
+    expect(document.querySelector(".island")).toHaveTextContent("Watch one · then try");
     tap("Back to contents");
     // the chapter: its lessons, with this one picked
     openChapter("Whole numbers");
@@ -417,7 +417,7 @@ describe("report, grown-up page and back to basics", () => {
     tap("See that session ›");
     expect(screen.getByText(/Typed/)).toHaveTextContent("Typed 141, answer 1410. Lost the place value (quick retry).");
     tap(`Back to ${LESSON}`);
-    expect(screen.getByRole("button", { name: "Show all" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Watch again" })).toBeInTheDocument();
   });
 
   it("suggests building up first after a low score, in the lesson and on the results", () => {
@@ -428,7 +428,7 @@ describe("report, grown-up page and back to basics", () => {
     act(() => { location.hash = "#/learn/g5-mult2"; dispatchEvent(new HashChangeEvent("hashchange")); });
     const pre = CATALOG.find(c => c.id === CATALOG.find(l => l.id === "g5-mult2")!.pre)!;
     expect(screen.getByRole("button", { name: new RegExp(`Build up first: ${pre.title}`) })).toBeInTheDocument();
-    tap("Show all"); tap("Try one");
+    tap("Try one");
     failRun();
     expect(screen.getByRole("heading", { level: 2, name: /^[01] of 4 on your own: / })).toBeInTheDocument();
     const build = screen.getByRole("button", { name: new RegExp(`Build up first: ${pre.title}`) });

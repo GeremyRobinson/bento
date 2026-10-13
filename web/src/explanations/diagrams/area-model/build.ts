@@ -10,6 +10,11 @@ export const ROW = 26;
 /** the gap between two parts (v2 lesson spec G1): each part is its own shape, never one block cut by a line */
 export const PART_GAP = 12;
 
+/** g5-mult2 draws every seat (v2 spec G8: counts match the numbers); at 98 × 98 a seat is still 3 units */
+export const STRIP_SEAT_MIN = 3;
+/** a very flat picture (13 × 96) is stretched to at most 4 wide for 1 tall, so its strips stay readable on a phone (G9) */
+export const MAX_FLAT = 4;
+
 export const labelWidth = (label: string, fontSize: number) => label.length * fontSize * 0.62 + 12;
 
 /**
@@ -24,7 +29,8 @@ export function buildSplitAreaDiagram(p: SplitMultiplicationProblem, layout: Are
   const unit = Math.min((maxWidth - gaps) / p.secondFactor, maxHeight / p.firstFactor);
   const mins = p.parts.map(part => Math.max(30, labelWidth(formatNumber(part), labelFontSize)));
   const widths = fitParts(p.parts, mins, Math.max(p.secondFactor * unit, mins.reduce((a, b) => a + b, 0)), unit).lengths;
-  const left = margin.left, top = margin.top, height = p.firstFactor * unit;
+  const drawn = widths.reduce((a, b) => a + b, 0) + gaps;
+  const left = margin.left, top = margin.top, height = Math.max(p.firstFactor * unit, drawn / MAX_FLAT);
   let at = left;
   const cols: AreaBand[] = widths.map((length, i) => { const b = { label: formatNumber(p.parts[i]!), start: at, length }; at += length + PART_GAP; return b; });
   const rows: AreaBand[] = [{ label: formatNumber(p.firstFactor), start: top, length: height }];
@@ -44,13 +50,13 @@ export function buildSplitAreaDiagram(p: SplitMultiplicationProblem, layout: Are
       labelPlacement: "inside",
       partRow: 0,
       productRow: 0,
-      seats: seatLines(c.start, top, c.length, height, part, p.firstFactor),
+      seats: seatLines(c.start, top, c.length, height, part, p.firstFactor, 0, STRIP_SEAT_MIN),
       equation: { factors: [p.firstFactor, part], product },
       col: index,
       row: 0,
     };
   });
-  const drawnWidth = widths.reduce((a, b) => a + b, 0) + gaps;
+  const drawnWidth = drawn;
   return {
     kind: "areaModel",
     width: left + drawnWidth + margin.right,

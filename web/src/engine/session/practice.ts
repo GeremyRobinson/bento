@@ -389,6 +389,7 @@ export function check(s: PracticeSession, progress: Progress, deps: Deps): Pract
     n: s.i + 1, step: s.step + 1, label: step.base, lessonId: currentItem(s).lessonId,
     typed: typedText(step, values), want: typedText(step, expected),
     kind: cat === "concept" ? r.kind : CATEGORIES[cat][0], cat, msg: cat === "concept" ? r.message : CATEGORIES[cat][1], rushed,
+    ...(cat === "concept" || step.look || SAY[cat] ? { say: cat === "concept" ? r.message : step.look ?? SAY[cat] } : {}),
   };
   let next: PracticeSession = {
     ...s, lastTry: deps.now, misses: s.misses + 1, prob: { ...s.prob, wrong: s.prob.wrong + 1 }, fx: "shake",
@@ -423,7 +424,7 @@ export function hint(s: PracticeSession, deps: Deps): PracticeSession {
   if (s.hinted) return { ...s, fx: "feedback", feedback: { type: "hint", strong: "Hint:", text: step.hint, left: s.hintsLeft } };
   // the last hint says so kindly (UI notes preview)
   if (!s.hintsLeft) return { ...s, fx: "feedback", feedback: { type: "hint", text: "No hints left in this lesson. You can do it.", lines: showMeAvailable(s) ? ["Stuck? Tap **Show me**."] : [] } };
-  if (!s.misses && deps.now - s.stepT0 < HINT_WAIT_MS) return { ...s, fx: "feedback", feedback: { type: "hint", text: "Try it once first. Then the hint opens." } };
+  if (!s.misses && deps.now - s.stepT0 < HINT_WAIT_MS) return { ...s, fx: "feedback", feedback: { type: "hint", text: "Try it once first. Then a hint opens." } };
   return {
     ...s, hinted: true, hintsLeft: s.hintsLeft - 1, hints: s.hints + 1, prob: { ...s.prob, hints: s.prob.hints + 1 }, fx: "feedback",
     feedback: { type: "hint", strong: "Hint:", text: step.hint, left: s.hintsLeft - 1 },
@@ -460,9 +461,11 @@ function pass(s: PracticeSession, shown: boolean, progress: Progress, deps: Deps
     fx: "line",
   };
   if (next.step < steps.length) {
-    const praise = deps.rng.pick(PRAISE[band]);
+    // one praise, always with its reason: "✓ Right." and the line just worked out (v2 model). The pick stays so the
+    // problems that follow come out the same.
+    deps.rng.pick(PRAISE[band]);
     next = loadStep(next, deps);
-    return { ...next, feedback: shown ? { type: "hint", strong: `Here's how: ${step.explain}` } : { type: "good", strong: praise } };
+    return { ...next, feedback: shown ? { type: "hint", strong: `Here's how: ${step.explain}` } : { type: "good", strong: "Right.", text: `${toPlainText(step.work)}.` } };
   }
 
   // the problem is finished

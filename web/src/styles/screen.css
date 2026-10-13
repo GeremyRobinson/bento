@@ -415,7 +415,7 @@ html:has(.screen) body{overflow:hidden}
 .ppad .tray.nosign .k-back{grid-area:4/1}.ppad .tray.nosign .k-d0{grid-area:4/2}.ppad .tray.nosign .k-go{grid-area:4/3}
 .ppad .tray button{height:auto;background:var(--btn,var(--float));box-shadow:none;font-size:calc(var(--key) * .42)}
 .ppad .tray button:not(.k-go):hover,.ppad .tray button:not(.k-go):active{background:var(--btn-hover,color-mix(in oklab,var(--float) 90%,var(--tint)))}
-.ppad .tray .k-go{height:auto;--pill-h:auto;border-radius:var(--r-pill);font-size:var(--fz-lg);background:var(--ink);box-shadow:none}
+.ppad .tray .k-go{height:auto;--pill-h:auto;border-radius:var(--r-pill);font-size:var(--fz-lg);background:var(--pill-go-bg,var(--ink));color:var(--pill-go-fg,var(--on-tint));box-shadow:none}
 .ppad .tray .k-next,.ppad .tray .k-back{color:var(--ink)}
 .ppad.done .tray button:not(.k-go){opacity:.35;pointer-events:none;transition:opacity var(--dur-380) var(--ease) var(--dur-500)}
 .ppad.ptap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--sp-2);align-items:end}

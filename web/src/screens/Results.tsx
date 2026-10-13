@@ -5,7 +5,8 @@ import { when } from "../app/format";
 import { reduceMotion } from "../app/transition";
 import { gradeOf, tintStyle } from "../curriculum/grades";
 import { placeKey, placementResult } from "../engine/session/practice";
-import { lessonById } from "../curriculum/registry";
+import { lessonById, requireLesson } from "../curriculum/registry";
+import { toPlainText } from "../curriculum/schemas/math-text";
 import { BuildUp } from "../components/BuildUp";
 import type { SessionReport } from "../engine/session/types";
 import { SessionReportView } from "../components/reports/SessionReportView";
@@ -13,7 +14,7 @@ import { FitScreen } from "../components/screen/Screen";
 import { ALL_LESSONS, SKILL_CHECK } from "../app/copy";
 import { upNext } from "../app/today";
 import { PreviewWell, statusOf } from "./Home";
-import { isCheckKey, lessonOfCheck } from "../engine/mastery/skills";
+import { isCheckKey, learned, lessonOfCheck } from "../engine/mastery/skills";
 import { plainProblem } from "../components/practice/ProblemView";
 import { Cover } from "../components/Cover";
 import { Rich } from "../components/primitives/MathLine";
@@ -102,7 +103,7 @@ export function Results() {
     : test ? `${rep.clean} of ${rep.total} problems had every step right. ${then}` : `${rep.clean} of ${rep.total} problems with no mistakes. ${then}`;
   // one thing to watch for: the check's own slip, else the lesson's from just before it
   const practice = skill && lesson ? reports[lesson.id] : undefined;
-  const slip = rep.mistakes[0] ?? (practice && rep.date - practice.date < 36e5 ? practice.mistakes[0] : undefined);
+  const watch = watchFor(rep, practice && rep.date - practice.date < 36e5 ? practice : undefined);
   return (
     <div className="screen v-work v-done">
       <section className="v-panel v-result" aria-label="Done">
@@ -119,12 +120,31 @@ export function Results() {
         {rep.mode !== "practice" && rep.probs.length > 0 && <div className="v-recap">
           <span className="v-label">{skill ? `Your ${SKILL_CHECK.toLowerCase()}` : review ? "Your review" : "Your test"}</span>
           {rep.probs.map((x, k) => <div key={k} className="v-rp"><b>{plainProblem(x.lessonId, x.problem, true)}</b><span>{!x.wrong && !x.shown ? "Right" : "Not this time"}</span></div>)}
+          {watch && <p className="v-why"><b>Watch for:</b> <Rich text={watch} /></p>}
         </div>}
-        {slip && <p className="v-why"><b>Watch for:</b> {slip.msg ? <Rich text={slip.msg} /> : `step ${slip.step} of problem ${slip.n}, you put ${slip.typed} where it was ${slip.want}.`}</p>}
+        {watch && !(rep.mode !== "practice" && rep.probs.length > 0) && <p className="v-why"><b>Watch for:</b> <Rich text={watch} /></p>}
       </section>
       <section className="v-panel v-box" aria-label="Your box">{lesson ? <DoneBox g={g} id={lesson.id} /> : null}</section>
     </div>
   );
+}
+
+/**
+ * Done's one Watch for line, in the child's own words (v2 model): a skill check's missed answer is shown worked ("For
+ * 52 × 26 you put 1300. Step by step: 52 × 20 = 1040, 52 × 6 = 312, 1040 + 312 = 1352."); else what the lesson said to
+ * look at when a step went wrong ("Look again at the lit strip: it's 20 across and 52 down."), never the grown-up's
+ * category.
+ */
+function watchFor(rep: SessionReport, practice?: SessionReport): string | undefined {
+  const m = rep.mistakes[0], pr = m && isCheckKey(rep.key) && m.label === "Final answer" ? rep.probs[m.n - 1] : undefined;
+  if (m && pr) {
+    try {
+      const works = requireLesson(pr.lessonId).answers(pr.problem).steps.map(st => toPlainText(st.work));
+      return `For ${plainProblem(pr.lessonId, pr.problem)} you put ${m.typed}. Step by step: ${works.join(", ")}.`;
+    } catch { /* a lesson without worked steps: what it said below */ }
+  }
+  const all = [...rep.mistakes, ...(practice?.mistakes ?? [])], w = all.find(x => x.say) ?? all[0];
+  return w && (w.say ?? w.msg);
 }
 
 /** The lesson's chapter, its tile now showing the new skill check; a tap goes to the box with that lesson picked. */
@@ -136,8 +156,9 @@ function DoneBox({ g, id }: { g: number; id: string }) {
   return (<>
     <div className="v-bh"><b>{unit.name}</b><span className="v-meta">{n} of {unit.entries.length} done</span></div>
     {unit.entries.map(c => {
+      // a check of 3 or 4 is learned and fills the ring (v2 spec C3); the status wraps rather than being cut
       const st = statusOf(progress, g, c.id);
-      return <Cover key={c.id} pick={c.id === id} disabled={!isReady(c.id)} pic={<TilePic svg={lessonPic(c.id)} />} name={c.title} p={(st.score ?? 0) / 4} tone={st.tone}
+      return <Cover key={c.id} pick={c.id === id} disabled={!isReady(c.id)} pic={<TilePic svg={lessonPic(c.id)} />} name={c.title} p={learned(progress, c.id) ? 1 : (st.score ?? 0) / 4} tone={st.tone}
         word={<>{st.word}{st.done && st.score != null && <span className="v-sc">{` \u00b7 ${st.score}/4`}</span>}</>}
         onClick={() => go({ name: "home", pick: c.id }, "back")} aria-label={`${c.title}, ${st.word}${st.done && st.score != null ? `, skill check ${st.score} of 4` : ""}`} />;
     })}

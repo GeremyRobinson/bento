@@ -1,6 +1,7 @@
 // The general area model: a rectangle cut into rows and columns, as a scene.
 // Every use of the current app's areaModel (cell grids, algebra areas, factor rectangles, a triangle as half a rectangle,
 // complex FOIL) is one of these, with sizes, labels and beats all computed from the problem by the lesson.
+import { PIC } from "../scene/picture-system";
 import type { SceneDiagram, SceneItem } from "../scene/schema";
 import { r1 } from "../scene/helpers";
 import { seatLines } from "./seats";
@@ -145,8 +146,10 @@ export function buildAreaGrid(spec: AreaGridSpec): SceneDiagram & { geometry: Ar
   const label = (x: number, y: number, s: AreaSide, cls: string, delay: number): SceneItem =>
     ({ type: "text", x: r1(x), y: r1(y), text: s.label, ...(s.sup ? { sup: s.sup } : {}), cls: `${cls}${s.cls ? ` ${s.cls}` : ""}`, from: s.from ?? 0, enter: "rise", delay });
 
-  spec.cols.forEach((c, i) => items.push(label((xs[i]! + xs[i + 1]!) / 2, top - 16, c, "lbl", 0.1 + i * 0.15)));
-  spec.rows.forEach((r, j) => items.push(label(left - 12, (ys[j]! + ys[j + 1]!) / 2, r, "lbl end", 0.1 + j * 0.15)));
+  // labels one label gap from their part (parts sit half an area gap inside the grid lines)
+  const lg = PIC.gap.area / 2 - PIC.labelGap;
+  spec.cols.forEach((c, i) => items.push(label((xs[i]! + xs[i + 1]!) / 2, top + lg - PIC.label / 2, c, "lbl", 0.1 + i * 0.15)));
+  spec.rows.forEach((r, j) => items.push(label(left + lg, (ys[j]! + ys[j + 1]!) / 2, r, "lbl end", 0.1 + j * 0.15)));
 
   // whole unit squares behind everything, when the sides are not whole (a strip of tenths laid on whole squares)
   const wholeCols = Math.ceil(spec.cols.reduce((a, c) => a + Math.abs(c.size), 0) - 1e-9), wholeRows = Math.ceil(spec.rows.reduce((a, r) => a + Math.abs(r.size), 0) - 1e-9);
@@ -156,14 +159,16 @@ export function buildAreaGrid(spec: AreaGridSpec): SceneDiagram & { geometry: Ar
     }
   }
 
+  // parts one area-model gap apart (picture system): each cell sits half a gap inside its column and row
+  const IN = PIC.gap.area / 2;
   // cells
   spec.cells.forEach((row, j) => row.forEach((c, i) => {
     if (!c) return;
     const w = xs[i + 1]! - xs[i]!, h = ys[j + 1]! - ys[j]!;
     // until its turn, each part waits as a faint empty box, so the picture opens on the whole rectangle to fill
     // rather than on labels floating over nothing (Review v39 item 1)
-    if ((c.from ?? 0) > 0) items.push({ type: "rect", x: r1(xs[i]! + 2), y: r1(ys[j]! + 2), w: r1(w - 4), h: r1(h - 4), rx: r1(Math.min(8, w / 4, h / 4)), cls: "pend", from: 0, until: c.from! - 1, enter: "fade" });
-    items.push({ type: "rect", x: r1(xs[i]! + 2), y: r1(ys[j]! + 2), w: r1(w - 4), h: r1(h - 4), rx: r1(Math.min(8, w / 4, h / 4)), cls: `cell c${c.color ?? (i + j) % 3}`, from: c.from ?? 0, enter: "pop", delay: 0.1 });
+    if ((c.from ?? 0) > 0) items.push({ type: "rect", x: r1(xs[i]! + IN), y: r1(ys[j]! + IN), w: r1(w - 2 * IN), h: r1(h - 2 * IN), rx: r1(Math.min(PIC.corner.part, w / 4, h / 4)), cls: "pend", from: 0, until: c.from! - 1, enter: "fade" });
+    items.push({ type: "rect", x: r1(xs[i]! + IN), y: r1(ys[j]! + IN), w: r1(w - 2 * IN), h: r1(h - 2 * IN), rx: r1(Math.min(PIC.corner.part, w / 4, h / 4)), cls: `cell c${c.color ?? (i + j) % 3}`, from: c.from ?? 0, enter: "pop", delay: 0.1 });
   }));
 
   // unit squares, when the picture is to scale and each square is big enough to see
@@ -176,18 +181,18 @@ export function buildAreaGrid(spec: AreaGridSpec): SceneDiagram & { geometry: Ar
       const from = Math.max(spec.units!, c.from ?? 0);
       for (let k = 1; k < steps(spec.cols[i]!.size); k++) {
         const x = r1(xs[i]! + k * step * g.unitX);
-        items.push({ type: "line", x1: x, y1: r1(ys[j]! + 2), x2: x, y2: r1(ys[j + 1]! - 2), cls: "grid", from, enter: "fade", delay: 0.3 });
+        items.push({ type: "line", x1: x, y1: r1(ys[j]! + IN), x2: x, y2: r1(ys[j + 1]! - IN), cls: "grid", from, enter: "fade", delay: 0.3 });
       }
       for (let k = 1; k < steps(spec.rows[j]!.size); k++) {
         const y = r1(ys[j]! + k * step * g.unitY);
-        items.push({ type: "line", x1: r1(xs[i]! + 2), y1: y, x2: r1(xs[i + 1]! - 2), y2: y, cls: "grid", from, enter: "fade", delay: 0.3 });
+        items.push({ type: "line", x1: r1(xs[i]! + IN), y1: y, x2: r1(xs[i + 1]! - IN), y2: y, cls: "grid", from, enter: "fade", delay: 0.3 });
       }
     }));
   }
   if (spec.seats != null) spec.cells.forEach((row, j) => row.forEach((c, i) => {
     if (!c) return;
     const from = Math.max(spec.seats!, c.from ?? 0);
-    for (const l of seatLines(xs[i]! + 2, ys[j]! + 2, xs[i + 1]! - xs[i]! - 4, ys[j + 1]! - ys[j]! - 4, Math.abs(spec.cols[i]!.size), Math.abs(spec.rows[j]!.size))) {
+    for (const l of seatLines(xs[i]! + IN, ys[j]! + IN, xs[i + 1]! - xs[i]! - 2 * IN, ys[j + 1]! - ys[j]! - 2 * IN, Math.abs(spec.cols[i]!.size), Math.abs(spec.rows[j]!.size))) {
       items.push({ type: "line", x1: l.x1, y1: l.y1, x2: l.x2, y2: l.y2, cls: l.ten ? "seat ten" : "seat", from, enter: "fade", delay: 0.2 });
     }
   }));
@@ -205,7 +210,7 @@ export function buildAreaGrid(spec: AreaGridSpec): SceneDiagram & { geometry: Ar
   // cell texts last, so nothing covers them
   spec.cells.forEach((row, j) => row.forEach((c, i) => {
     if (!c?.text) return;
-    items.push({ type: "text", x: r1((xs[i]! + xs[i + 1]!) / 2), y: r1((ys[j]! + ys[j + 1]!) / 2), text: c.text, ...(c.sup ? { sup: c.sup } : {}), cls: "lbl", from: Math.max(c.from ?? 0, c.textFrom ?? 0), enter: "rise", delay: 0.3 });
+    items.push({ type: "text", x: r1((xs[i]! + xs[i + 1]!) / 2), y: r1((ys[j]! + ys[j + 1]!) / 2), text: c.text, ...(c.sup ? { sup: c.sup } : {}), cls: "lbl res onmid", from: Math.max(c.from ?? 0, c.textFrom ?? 0), enter: "rise", delay: 0.3 });
   }));
 
   const outlineW = spec.wholeOutlines != null && g.toScale ? wholeCols * g.unitX : g.width;

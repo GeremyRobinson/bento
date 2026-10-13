@@ -162,7 +162,15 @@ describe("Today's pick", () => {
   it("moves on once a lesson is learned, and offers a finished lesson again until it is", () => {
     const [a, b] = ready;
     expect(upNext(base({ lessons: { [a!.id]: 1 }, scores: { [a!.id]: score(2) } }), 5)).toMatchObject({ entry: { id: a!.id }, again: true, why: "next" });
-    expect(upNext(base({ lessons: { [a!.id]: 1 }, checks: { [a!.id]: rec(3, t) } }), 5)).toMatchObject({ entry: { id: b!.id }, why: "next" });
+    // the lesson that builds on it comes first when there is one (what Today promised), else the next in order
+    const builds = ready.find(c => c.pre === a!.id);
+    expect(upNext(base({ lessons: { [a!.id]: 1 }, checks: { [a!.id]: rec(3, t) } }), 5)).toMatchObject({ entry: { id: (builds ?? b)!.id }, why: "next" });
+  });
+
+  it("after Multiply two-digit numbers, brings Order of operations (it builds on it), not Long division", () => {
+    expect(upNext(base({ lessons: { "g5-mult2": 1 }, checks: { "g5-mult2": rec(3, t) } }), 5)).toMatchObject({ entry: { id: "g5-order" }, why: "next" });
+    // its build-up still has to be ready: a low g3 check underneath keeps it back
+    expect(upNext(base({ lessons: { "g5-mult2": 1 }, checks: { "g5-mult2": rec(4, t), "g3-facts": rec(1, t - DAY) } }), 5)?.entry.id).not.toBe("g5-order");
   });
 
   it("goes over a low check first, the oldest first", () => {
