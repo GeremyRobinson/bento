@@ -109,7 +109,7 @@ export function Learn({ lessonId }: { lessonId: string }) {
   const shownAt = reduceMotion() && playing ? last : at;
   // v2 (G 2026-10-13): the same workspace as practice. The picture builds on the stage while the steps write themselves
   // on the right, one worked line at a time; then Watch again or Try one
-  const shownLines = ex.steps.filter(st => st.state <= at && st.state > 0 || (finished && st.state <= at));
+  const shownLines = ex.steps.filter(st => st.state <= at); // a state-0 line is part of the starting picture: shown from the start
   return (
     <div className={`screen v-work v-prac v-learn parts-${look}`}>
       <section className="v-panel v-stage" aria-label="Problem">
