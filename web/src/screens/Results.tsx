@@ -1,12 +1,11 @@
 import { Pill } from "../components/primitives/Pill";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { useApp } from "../app/AppState";
-import { mins, when } from "../app/format";
+import { when } from "../app/format";
 import { reduceMotion } from "../app/transition";
-import { bandOf, gradeOf, tintStyle } from "../curriculum/grades";
+import { gradeOf, tintStyle } from "../curriculum/grades";
 import { placeKey, placementResult } from "../engine/session/practice";
 import { lessonById, lessonsInGrade } from "../curriculum/registry";
-import { LEVELS } from "../engine/mastery/levels";
 import { BuildUp } from "../components/BuildUp";
 import type { SessionReport } from "../engine/session/types";
 import { SessionReportView } from "../components/reports/SessionReportView";
@@ -14,14 +13,11 @@ import { FitScreen } from "../components/screen/Screen";
 import { ALL_LESSONS, PRACTICE_AGAIN } from "../app/copy";
 import { upNext } from "../app/today";
 import { PreviewWell } from "./Home";
-
-function Confetti() {
-  const bits = useMemo(() => {
-    const cols = ["var(--c0)", "var(--c1)", "var(--c2)", "var(--acc)"], r = (lo: number, hi: number) => lo + Math.floor(Math.random() * (hi - lo + 1));
-    return Array.from({ length: 28 }, (_, i) => ({ "--x": `${r(-160, 160)}px`, "--y": `${r(-220, -80)}px`, "--r": `${r(-300, 300)}deg`, "--c": cols[i % 4], "--d": `${(i % 7) * 0.03}s` }) as CSSProperties);
-  }, []);
-  return <div className="confetti" aria-hidden="true">{bits.map((s, i) => <i key={i} style={s} />)}</div>;
-}
+import { Cover } from "../components/Cover";
+import { Rich } from "../components/primitives/MathLine";
+import { lessonPic, TilePic } from "../components/TilePics";
+import { unitsInGrade } from "../app/curriculum";
+import { lastScore, timesDone } from "../engine/mastery/progress";
 
 /** Counts up from 0 over a moment, like the current app's XP figure. */
 export function CountUp({ to, pre = "" }: { to: number; pre?: string }) {
@@ -90,34 +86,50 @@ export function Results() {
   const lesson = lessonById(rep.key), test = rep.mode === "test", review = rep.mode === "review";
   const grade = lesson ? lessonsInGrade(lesson.grade) : [], k = lesson ? grade.indexOf(lesson) : -1, next = grade[k + 1];
   const lastLesson = lessonById(rep.probs[rep.probs.length - 1]?.lessonId ?? "");
-  const band = bandOf(lesson?.grade ?? lastLesson?.grade ?? progress.grade ?? 9);
   const low = rep.mode === "practice" && rep.level <= 1;
+  // v2 (G 2026-10-13): what the score means in words, what Today does next, and the lesson's tile filling in its chapter
+  const words = ["not there yet", "just starting", "getting there", "nearly there", "you\u2019ve got it"][rep.level];
+  const then = test ? "Today keeps track of how the test went." : rep.level >= 3
+    ? (next ? `Next time, Today brings the next lesson: ${next.title}.` : "Next time, Today moves on to something new.")
+    : "Next time, Today brings this back for another go, so it sticks.";
+  const slip = rep.mistakes[0];
+  const g = lesson?.grade ?? lastLesson?.grade ?? progress.grade ?? 5;
   return (
-    <FitScreen className="rscreen">
-      <section className="panel rsum">
-        <div className={`donehead s${rep.level}`}>
-          {rep.level >= 3 && band !== "high" && <Confetti />}
-          <div className="ring"><svg viewBox="0 0 92 92"><circle className="trk" cx="46" cy="46" r="40" /><circle className="val" cx="46" cy="46" r="40" pathLength={1} style={{ strokeDasharray: 1, strokeDashoffset: 1 - rep.level / 4 }} /></svg><b>{rep.level}</b></div>
-          <div className="donetext"><h2>{LEVELS[rep.level]}</h2><p className="muted">Score {rep.level} of 4 · {Math.round(rep.pct * 100)}% of steps right the first time</p></div>
-        </div>
-        <div className="bento">
-          <div><span className="k">XP earned</span><span className="v"><CountUp to={rep.xp} pre="+" /></span></div>
-          <div><span className="k">{test ? "All steps right" : "No mistakes"}</span><span className="v">{rep.clean}/{rep.total}</span></div>
-          <div><span className="k">Time</span><span className="v">{mins(rep.ms)}<small className="muted"> min</small></span></div>
+    <div className="screen v-work v-done">
+      <section className="v-panel v-result" aria-label="Done">
+        <span className="v-label">Done \u00b7 {rep.title}</span>
+        <span className="v-seg" aria-label={`Score ${rep.level} of 4`}>{[1, 2, 3, 4].map(k => <i key={k} className={k <= rep.level ? "on" : undefined} />)}</span>
+        <h2>{rep.level} of 4: {words}.</h2>
+        <p className="v-why">{test ? `${rep.clean} of ${rep.total} problems had every step right.` : `${rep.clean} of ${rep.total} problems with no mistakes.`} {then}</p>
+        <div className="v-row">
+          {rep.mode === "practice" && next && rep.level >= 3 && <button className="v-go" onClick={() => go({ name: "learn", lessonId: next.id }, "next")}>Next: {next.title}</button>}
+          {test ? <button className="v-plain" onClick={() => startTest(rep.key)}>Take it again</button>
+            : !review && lesson && <button className={rep.level >= 3 && next ? "v-plain" : "v-go"} onClick={() => startLesson(lesson.id)}>{PRACTICE_AGAIN}</button>}
+          <button className="v-plain" onClick={() => go({ name: "home", ...(lesson ? { pick: lesson.id } : {}) }, "back")}>Back to your box</button>
         </div>
         {low && <BuildUp lessonId={rep.key} />}
-        <div className="actions">
-          {rep.mode === "practice" && next && <Pill go onClick={() => go({ name: "learn", lessonId: next.id }, "next")}>Next lesson</Pill>}
-          {test ? <Pill go onClick={() => startTest(rep.key)}>Take it again</Pill>
-            : !review && lesson && <Pill onClick={() => startLesson(lesson.id)}>{PRACTICE_AGAIN}</Pill>}
-          <Pill onClick={() => go({ name: "home" }, "back")}>{ALL_LESSONS}</Pill>
-        </div>
+        {slip && <p className="v-why"><b>Watch for:</b> {slip.msg ? <Rich text={slip.msg} /> : `step ${slip.step} of problem ${slip.n}, you put ${slip.typed} where it was ${slip.want}.`}</p>}
+        <div className="v-recap"><SessionReportView rep={rep} /></div>
       </section>
-      <div className="bcol rreport">
-        <SessionReportView rep={rep} />
-      </div>
-    </FitScreen>
+      <section className="v-panel v-box" aria-label="Your box">{lesson ? <DoneBox g={g} id={lesson.id} /> : null}</section>
+    </div>
   );
+}
+
+/** The lesson's chapter, its tile now showing the new skill check. */
+function DoneBox({ g, id }: { g: number; id: string }) {
+  const { progress } = useApp();
+  const unit = unitsInGrade(g).find(u => u.entries.some(c => c.id === id));
+  if (!unit) return null;
+  const n = unit.entries.filter(c => timesDone(progress, c.id) > 0).length;
+  return (<>
+    <div className="v-bh"><b>{unit.name}</b><span className="v-meta">{n} of {unit.entries.length} done</span></div>
+    {unit.entries.map(c => {
+      const sc = lastScore(progress, c.id), done = timesDone(progress, c.id) > 0;
+      return <Cover key={c.id} pick={c.id === id} disabled pic={<TilePic svg={lessonPic(c.id)} />} name={c.title} p={(sc ?? 0) / 4}
+        word={!done ? "Not started" : sc === 4 ? "Solid" : "Keep going"} />;
+    })}
+  </>);
 }
 
 /** A saved report, opened from the lesson's "Last time" tile or from the grown-up page. */

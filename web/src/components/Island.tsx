@@ -4,7 +4,7 @@ import { parseRoute, type Route } from "../app/routes";
 import { doneCount, entriesInGrade, entryById, unitsInGrade } from "../app/curriculum";
 import { gradeOf, inkOf } from "../curriculum/grades";
 import { lessonById } from "../curriculum/registry";
-import { currentItem, currentStep, lessonOfItem, problemOf } from "../engine/session/practice";
+import { currentItem, lessonOfItem, problemOf } from "../engine/session/practice";
 import { problemShape, ProblemLine } from "./practice/ProblemView";
 import { upNext } from "../app/today";
 import { Contents, type Level } from "./Contents";
@@ -57,7 +57,7 @@ function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): P
       if (!run) return { kicker: gradeOf(grade).name, title: PRACTICE, back: contents };
       if (run.mode !== "practice") return { kicker: run.mode === "test" ? "Test" : REVIEW, title: run.title, back: contents };
       const l = lessonOfItem(currentItem(run));
-      return { kicker: chapterLine(l.id, "practice"), title: l.title, back: { label: l.title, to: { name: "learn", lessonId: l.id } }, lesson: l.id };
+      return { kicker: `Problem ${run.i + 1} of ${run.items.length}`, title: l.title, back: contents, lesson: l.id };
     }
     case "results": {
       const rep = app.lastReport, l = rep ? lessonById(rep.key) : undefined;
@@ -255,7 +255,8 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   // v2: an unfinished lesson waits in Today as "Carry on", so the corner stays empty (G 2026-10-13 model)
   const showResume = false && !!run && !!runGrade && !welcome;
   // in a lesson's practice, a light bulb sits beside Settings (UI notes preview); tests have no hints
-  const hintable = route.name === "practice" && !!run && run.mode !== "test" && !!currentStep(run) && !run.pick;
+  // v2: the hint is a tool beside the scratch pad, not in the nav
+  const hintable = false as boolean;
   // on a phone, practice's island shows the problem itself in place of the lesson's name (practice-spec §2c A)
   const item = route.name === "practice" && run ? currentItem(run) : null;
   const shortProblem = item && problemShape(item.lessonId, problemOf(item), !!item.story).short ? item : null;
