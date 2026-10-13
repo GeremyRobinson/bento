@@ -288,8 +288,9 @@ html[data-line] body{background-image:none!important}
   /* Watch one: the island already says "Watch one", so the panel's own label gives its room to the picture */
   .v-lside .v-steps{display:none}
   .v-wl li{padding:0}
-  /* solved: the step bar already reads "Solved", so the line above the green pill gives its room to the picture */
-  .v-solved .v-ask .q2{display:none}
+  /* practice solved: the step bar already reads "Solved", so the line above the green pill gives its room to the picture.
+     A skill check keeps it: "Right." or "Not this time." is the check's answer (C2) */
+  .v-prac:not(.test) .v-solved .v-ask .q2{display:none}
   /* the say line pads half a gap top and bottom, so a two-line message never pushes the picture under its floor */
   .v-say{padding-block:calc(var(--gap) / 2)}
   .v-keys .v-tools{grid-column:2;flex-direction:column;justify-content:space-between;align-self:stretch;gap:0}
