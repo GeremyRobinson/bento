@@ -46,6 +46,8 @@ function explain(p: PowerOfTenProblem, model: AnswerModel): Explanation {
     statement: [num(x), op("×"), num(m), op("="), text("?")],
     diagram: buildDecimalShift({
       digits: whole! + frac, from: whole!.length, to: whole!.length + k, beat: 0, moveBeat: 1,
+      // the card row is the answer's own digits: a 0 written in where the point runs past the last digit is a new card
+      lead: `${m} has ${plural(k, "zero")}: ${WORDS[k]} ${k > 1 ? "hops" : "hop"}`,
       label: `× ${m}: ${WORDS[k]} ${k > 1 ? "hops" : "hop"} right → ${f(ans)}`,
       alt: `The decimal point in ${f(x)} moves ${plural(k, "place")} to the right, making ${f(ans)}.`,
     }),
@@ -66,8 +68,10 @@ export const lesson: LessonDefinition<PowerOfTenProblem> = {
   title: "Multiply by 10, 100, 1000",
   pre: "g4-dec",
   reference: createPowerOfTen(3.47, 2), // 3.47 × 100 = 347, the current app's example
-  // the first three: a one-digit whole part times 10
-  generate: (rng, index) => (index < 3 ? createPowerOfTen(rng.int(101, 999) / 100, 1) : createPowerOfTen(rng.int(101, 9999) / 100, rng.int(1, 3))),
+  // the first (the one Watch one plays): a one-digit whole part with tenths, times 100, so the point runs past the last
+  // digit and a 0 has to be written in, the tricky part of the lesson (Review g5 #5); the next two: times 10
+  generate: (rng, index) => (index === 0 ? createPowerOfTen((n => (n % 10 ? n : n + 1))(rng.int(11, 99)) / 10, 2)
+    : index < 3 ? createPowerOfTen(rng.int(101, 999) / 100, 1) : createPowerOfTen(rng.int(101, 9999) / 100, rng.int(1, 3))),
   restore: raw => restoreVia(raw, ["x", "k"] as const, v => createPowerOfTen(v.x, v.k)),
   display: p => [num(p.x), op("×"), num(10 ** p.k)],
   answers,

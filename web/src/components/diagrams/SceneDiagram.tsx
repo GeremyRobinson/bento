@@ -10,8 +10,10 @@ const enterClass = (e: SceneItem["enter"]) => (e ? e.split(" ").map((w, i) => (i
  * (and until its last beat); it plays its entrance when it first appears.
  */
 export function SceneDiagram({ diagram: d, at, fit = false }: { diagram: Scene; at: number; fit?: boolean }) {
-  const [frame, setFrame] = useState<{ d: Scene; box: Box; size: [number, number] } | null>(null);
-  const vb = fit && frame?.d === d ? framed(frame.box, frame.size) : { x: 0, y: 0, w: d.width, h: d.height };
+  const [frame, setFrame] = useState<{ d: Scene; box: Box; size: [number, number]; text: Record<string, number>; panel: boolean } | null>(null);
+  const fitted = fit && frame?.d === d;
+  const vb = fitted ? framed(frame.box, frame.size) : { x: 0, y: 0, w: d.width, h: d.height };
+  const zoom = fitted ? Math.min(frame.size[0] / vb.w, frame.size[1] / vb.h) : 1;
   const ref = useLabelFloor(vb.w);
   // fit: frame the finished picture (every beat drawn) instead of the builder's canvas, so it fills the room it gets
   useLayoutEffect(() => {
@@ -19,18 +21,22 @@ export function SceneDiagram({ diagram: d, at, fit = false }: { diagram: Scene; 
     if (!fit || !el) return;
     const box = contentBox(el, d.items);
     if (!box) return;
-    const measure = () => { const r = layoutRect(el); setFrame({ d, box, size: [r.width, r.height] }); };
+    const text = textTokens(el.parentElement ?? el);
+    // in the lesson's picture panel the picture takes the whole panel and frames itself inside it (the viewBox below)
+    // and the room it gets is its holder's box, measured before it first fills it, so the first frame is already right
+    const panel = !!el.closest(PANEL), room = panel && el.parentElement ? el.parentElement : el;
+    const measure = () => { const r = layoutRect(room); if (r.width > 0 && r.height > 0) setFrame({ d, box, size: [r.width, r.height], text, panel }); };
     measure();
     if (typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(measure);
-    ro.observe(el);
+    ro.observe(room);
     return () => ro.disconnect();
   }, [d, fit, ref]);
   // fit centres the finished picture once (the frame above); parts then appear where they stay, and nothing already
   // drawn moves between beats (G 19:34: "random coming from the side animations")
   return (
     <svg ref={ref} className={d.two ? "viz-svg two" : "viz-svg"} viewBox={`${r1(vb.x)} ${r1(vb.y)} ${r1(vb.w)} ${r1(vb.h)}`} role="img" aria-label={d.alt}
-      style={{ "--w": Math.round(d.width), "--h": Math.round(d.height) } as CSSProperties} data-family={d.family}>
+      style={{ "--w": Math.round(d.width), "--h": Math.round(d.height), ...(fitted ? textHold(zoom, frame.text) : {}), ...(fitted && frame.panel ? FILL : {}) } as CSSProperties} data-family={d.family}>
       {dotsOnTop(d.items).map((it, i, all) => {
         const from = it.from ?? 0;
         if (from > at || (it.until != null && at > it.until)) return null;
@@ -64,8 +70,41 @@ const continues = (it: SceneItem, all: SceneItem[]) => {
 
 interface Box { x: number; y: number; w: number; h: number }
 const r1 = (v: number) => Math.round(v * 10) / 10;
-/** a fitted picture grows to its box, but never past this many screen pixels per drawing unit */
-const MAX_ZOOM = 1.8;
+/**
+ * A fitted picture grows to its box, but never past this many screen pixels per drawing unit. Scene pictures are drawn
+ * in small units (a digit card is 52), so the old cap of 1.8 left them a small island in a big panel (Review g5 #11:
+ * the live site drew the same pictures 1.5 to 2 times bigger). Shapes may now grow to 3; text stops at TEXT_ZOOM.
+ */
+const MAX_ZOOM = 3;
+/** past this zoom the picture's text stops growing with its shapes, so labels stay label-sized, never shouting */
+const TEXT_ZOOM = 1.5;
+/** the lesson's picture panel (Watch one, practice, the skill check): a fitted picture there fills it, held only by MAX_ZOOM */
+const PANEL = ".v-ppic";
+/** the whole panel: the old width rule (the drawing's own width times 1.15, 400px tall at most) kept every scene small */
+const FILL = { width: "100%", height: "100%", maxWidth: "none" } as const;
+/** the picture text sizes (tokens.css, diagram-master.css) that are held at TEXT_ZOOM on a big picture */
+const TEXT_TOKENS = ["--pic-label", "--d-text", "--d-text-sm", "--d-text-xs", "--d-text-lg", "--d-text-xl"] as const;
+/** the big digits written inside a part (a digit card, a column) keep in step with their part a little longer */
+const DIGIT_ZOOM = 2.2;
+
+/** The text tokens scaled down so they read no bigger on screen than at TEXT_ZOOM (empty when the zoom is below it). */
+function textHold(zoom: number, base: Record<string, number>): Record<string, string> {
+  if (!(zoom > TEXT_ZOOM)) return {};
+  return Object.fromEntries(Object.entries(base).map(([name, v]) => {
+    const cap = name === "--d-text-xl" ? DIGIT_ZOOM : TEXT_ZOOM;
+    return [name, `${r1(v * Math.min(1, cap / zoom))}px`];
+  }));
+}
+
+/** The text tokens' values where the picture sits (read off the page, so the tokens stay the one source). */
+function textTokens(el: Element): Record<string, number> {
+  const cs = getComputedStyle(el), out: Record<string, number> = {};
+  for (const name of TEXT_TOKENS) {
+    const v = parseFloat(cs.getPropertyValue(name));
+    if (Number.isFinite(v) && v > 0) out[name] = v;
+  }
+  return out;
+}
 
 /** The bounds of every shape in the scene, measured off screen with the picture's own styles (null where SVG can't measure). */
 const isDot = (it: SceneItem) => it.type === "circle" && /\bdot[pa]\b/.test(it.cls ?? "");
@@ -92,6 +131,10 @@ function contentBox(svg: SVGSVGElement, items: SceneItem[]): Box | null {
     g.appendChild(e);
   }
   svg.appendChild(g);
+  // measured at the drawing's own text sizes: with the phone floor (--px) in, a small picture's labels measured huge,
+  // the frame widened for them, the picture shrank and the floor grew them again (pow10 on a phone: tiny cards)
+  const px = svg.style.getPropertyValue("--px");
+  svg.style.setProperty("--px", "0");
   try {
     const b = g.getBBox();
     return b.width > 0 && b.height > 0 ? { x: b.x, y: b.y, w: b.width, h: b.height } : null;
@@ -99,6 +142,7 @@ function contentBox(svg: SVGSVGElement, items: SceneItem[]): Box | null {
     return null;
   } finally {
     svg.removeChild(g);
+    if (px) svg.style.setProperty("--px", px); else svg.style.removeProperty("--px");
   }
 }
 

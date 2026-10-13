@@ -4,6 +4,8 @@ import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { chainExplanation } from "../../../../explanations/diagrams/chain/build";
 import { expectedOf, oneBox, restoreVia, round6, wholeIn } from "../../_number-line/steps";
 import { buildDoubleLine } from "../../../../explanations/diagrams/early-g4/double-line";
+import type { SceneDiagram, SceneItem } from "../../../../explanations/diagrams/scene/schema";
+import { lightSteps, pathXs } from "../../../../explanations/diagrams/scene/helpers";
 
 /** (d × qt)/10 ÷ d/10, so the answer is the whole number qt */
 export interface DivDecimalProblem { d: number; qt: number }
@@ -31,6 +33,44 @@ function answers({ d, qt }: DivDecimalProblem): AnswerModel {
   };
 }
 
+/** the picture's beats: one tenth matched, every tick matched (the ends found), the hops counted */
+const BEATS = { one: 0, all: 1, extra: null, total: 2 } as const;
+
+/**
+ * What this lesson's picture must show (Review g5 #10, as the live site did): the two end points (6 and 60) are marked
+ * in the picture's colour once both lines reach them, their dots and their numbers together, and the hops that count
+ * how many times the divisor fits are drawn in the picture's colour, not the ink grey of a plain line.
+ */
+function markEnds(d: SceneDiagram, all: number, last: number): SceneDiagram {
+  const dots = d.items.filter((i): i is Extract<SceneItem, { type: "circle" }> => i.type === "circle" && i.cls === "dotp");
+  const top = dots.reduce<typeof dots[number] | undefined>((a, c) => (!a || c.cy < a.cy ? c : a), undefined);
+  const bottom = dots.reduce<typeof dots[number] | undefined>((a, c) => (!a || c.cy > a.cy ? c : a), undefined);
+  if (!top || !bottom || top === bottom) return d;
+  const items = d.items.flatMap((it): SceneItem[] => {
+    if (it.type === "path" && it.cls === "ln thin pq") return [{ ...it, cls: "ln thin" }];
+    if (it.type !== "text" || Math.abs(it.x - top.cx) > 0.5) return [it];
+    // the top end's number: plain until the lines are matched, then marked with its dot
+    if (it.y < top.cy && (it.from ?? 0) < all) return [{ ...it, until: all - 1 }, { ...it, cls: "lbl", from: all, enter: "pop", delay: top.delay ?? 0 }];
+    // the bottom end's number: marked from the beat it is found, and it stays marked (the same look carries on)
+    if (it.y > bottom.cy) {
+      if ((it.from ?? 0) <= all) return [{ ...it, cls: "lbl", enter: "pop", delay: bottom.delay ?? 0 }];
+      const { enter: _e, delay: _d, ...stays } = it;
+      return [{ ...stays, cls: "lbl" }];
+    }
+    return [it];
+  });
+  // the worked step lit (the shared `lit` role), beat by beat: the divisor and its whole-number twin (0.5 and 5) while
+  // the divisor is made whole, then the two ends (6 and 60) while the other number is
+  const one = items.find((i): i is Extract<SceneItem, { type: "path" }> => i.type === "path" && /\bhl\b/.test(i.cls ?? "") && i.until === 0);
+  const tick1 = one ? Math.max(...pathXs(one.d)) : null;
+  return {
+    ...d,
+    items: lightSteps(items, it => it.type !== "text" ? null
+      : tick1 != null && Math.abs(it.x - tick1) < 0.5 && (it.from ?? 0) === 0 ? [0]
+      : it.cls === "lbl" && it.from === all ? [all] : null, last),
+  };
+}
+
 function explain(p: DivDecimalProblem, model: AnswerModel) {
   const x = (p.d * p.qt) / 10, y = p.d / 10;
   const d = expectedOf(model, "divisor"), n = expectedOf(model, "other"), qt = expectedOf(model, "divide");
@@ -40,14 +80,14 @@ function explain(p: DivDecimalProblem, model: AnswerModel) {
     statement: [num(x), op("÷"), num(y)],
     caption: `Move both points one place: ${f(x)} ÷ ${f(y)} and ${n} ÷ ${d} have the same answer.`,
     alt: `${f(x)} ÷ ${f(y)} becomes ${n} ÷ ${d} = ${qt}.`,
-    diagram: buildDoubleLine({
+    diagram: markEnds(buildDoubleLine({
       n: qt, per: d, extra: 0, top: "", bottom: "", between: "× 10",
       topText: j => f(round6(j * y)), bottomText: j => String(j * d),
-      beats: { one: 0, all: 1, extra: null, total: 2 }, hops: { from: 2 },
+      beats: BEATS, hops: { from: BEATS.total },
       lines: [{ text: `${f(y)} × 10 = ${d}`, from: 0, until: 0 }, { text: `${f(x)} × 10 = ${n}`, from: 1, until: 1 }],
       total: `${n} ÷ ${d} = ${qt}, and ${f(x)} ÷ ${f(y)} = ${qt}`,
       alt: `A double number line: the top counts by ${f(y)} up to ${f(x)}, the bottom by ${d} up to ${n}, tick for tick. ${qt} hops on each line, so both divisions are ${qt}.`,
-    }),
+    }), BEATS.all, BEATS.total),
     beats: [
       { id: "divisor", narration: "Make the divisor a whole number.", math: [num(y), op("×"), num(10), op("="), num(d)],
         lines: [[num(x), op("÷"), num(y)], [num(y), op("×"), num(10), op("="), num(d)]], answerStep: "divisor", result: d },

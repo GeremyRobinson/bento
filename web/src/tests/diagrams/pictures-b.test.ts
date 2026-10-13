@@ -393,7 +393,17 @@ describe("columns, double line, balance and plane lessons", () => {
     for (const p of problemsOf(l) as { a: number; b: number }[]) {
       const d = sceneOf(l, p), sum = Math.round((p.a + p.b) * 100);
       const pads = [p.a, p.b].reduce((s, v) => s + 2 - (String(v).split(".")[1]?.length ?? 0), 0);
-      expect(textsAt(d, 0).filter(t => t.cls === "lbl big acc")).toHaveLength(pads);
+      // the written-in zeros are new: they wear the picture's colour (a plain lbl), not the ink of the other digits
+      // (lit while the points are lined up: that is the step)
+      expect(textsAt(d, 0).filter(t => t.cls === "lbl big lit" && t.enter === "pop")).toHaveLength(pads);
+      expect(textsAt(d, 1).filter(t => t.cls === "lbl big")).toHaveLength(pads);
+      // each beat lights the digits it works on: the whole digits, then the digits after the point
+      expect(textsAt(d, 1).filter(t => / lit$/.test(t.cls ?? "")).length).toBeGreaterThan(0);
+      expect(textsAt(d, 2).filter(t => / lit$/.test(t.cls ?? "")).length).toBeGreaterThan(0);
+      // the carry ring comes in with its 1, never empty before it
+      const ring = d.items.find(i => i.type === "rect" && i.from === 2 && i.until === 2 && i.cls === "ln2");
+      const one = d.items.find(i => i.type === "text" && i.cls === "lbl big acc" && i.from === 2 && i.enter === "pop");
+      if (one) expect(ring?.delay).toBe(one.delay);
       const answer = textsAt(d, 3).filter(t => t.cls === "lbl big acc" && t.from === 3 && t.text !== ".").sort((x, y) => x.x - y.x).map(t => t.text).join("");
       expect(answer).toBe(String(sum));
     }
@@ -402,8 +412,14 @@ describe("columns, double line, balance and plane lessons", () => {
     const l = lesson("g5-divdec");
     for (const p of problemsOf(l) as { d: number; qt: number }[]) {
       const d = sceneOf(l, p);
-      const hops = d.items.filter(i => i.type === "path" && i.cls === "ln thin pq" && i.from === 2);
+      // the hops are drawn in the picture's colour (a plain .ln), not the ink of .pq
+      const hops = d.items.filter(i => i.type === "path" && i.cls === "ln thin" && i.from === 2);
       expect(hops).toHaveLength(2 * p.qt);
+      // both end points (6 and 60) are marked from the beat the lines are matched: dot and number together
+      // (and lit on that beat: finding them is the step)
+      const ends = textsAt(d, 1).filter(t => t.cls === "lbl lit" && (t.from ?? 0) === 1).map(t => t.text);
+      expect(ends).toEqual(expect.arrayContaining([String(p.d * p.qt)]));
+      expect(ends).toHaveLength(2);
       expect(textsAt(d, 2).map(t => t.text)).toEqual(expect.arrayContaining([String(p.qt), String(p.d * p.qt)]));
     }
   });
