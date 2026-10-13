@@ -94,7 +94,22 @@
 #app .viz-svg .shadeA{fill:var(--tint);stroke:var(--deep);stroke-width:var(--pic-outline)}
 /* shaded twice (a fraction of a fraction): the first quantity's amber half over the second's violet */
 #app .viz-svg :is(.shadeB,.both){fill:var(--pic-mid);stroke:none}
-#app .viz-svg .lit{fill:var(--pic-mid)}
+/* ---- the WORKED STEP role: `lit` (every picture family; the model's logic, G 2026-10-13 22:10) ----
+   The part the current step works on wears class `lit`; so do its labels. A builder marks them through the scene item's
+   cls (e.g. cls: "seg lit", cls: "lbl lit"), on the beat(s) that step plays, by giving the lit copy `from`/`until` for
+   that step; the area model sets it itself from its timeline.
+   - a part (rect, path, polygon, circle) with `lit`: soft fill turns mid and its outline is the part's deep, 3px
+   - a label (text.lbl) with `lit`: deep; while any part of the picture is lit, the side/edge labels without it go muted
+     (results that carry .lbl for size, .res .pw .acc .onmid .onlbl, never mute)
+   - everything without `lit` stays as it is (finished parts stay mid, waiting ones soft)
+   - the change is a fill/stroke transition, --dur-350 on --m-ease, the same as the area model; nothing grows or pulses
+   - a miss uses the same role: while the miss shows, the lit part stays and everything else steps back (below) */
+#app .viz-svg :is(rect,path,polygon,circle).lit{fill:var(--tint);stroke:var(--deep);stroke-width:var(--pic-outline)}
+#app .viz-svg :is(rect,path,polygon,circle){transition:fill var(--dur-350) var(--m-ease),stroke var(--dur-350) var(--m-ease),opacity var(--dur-350) var(--m-ease)}
+/* only side and edge labels step back: results that wear .lbl for its size (.res, .pw, .acc, .onmid) keep ink / on-mid */
+#app .viz-svg:has(:not(text).lit) text.lbl:not(.lit,.res,.pw,.acc,.onmid,.onlbl){fill:var(--v-muted)}
+#app .viz-svg text.lbl.lit{fill:var(--deep)}
+#app .viz-svg text{transition:fill var(--dur-350) var(--m-ease),opacity var(--dur-350) var(--m-ease)}
 /* solids: faces in the three strengths, edges deep */
 #app .viz-svg .cf{stroke:var(--pic-line)}
 #app .viz-svg .cf.cube{stroke:var(--pic-deep);stroke-width:var(--pic-seat)}
@@ -131,33 +146,48 @@
 /* division: a strip not yet found already holds what is left, shown as its result (spec g5-divide, step 3) */
 #app .am .region[data-left="true"] .product{opacity:1}
 #app .am .region .product{font-size:max(calc(min(var(--fs),26) * 1px),calc(var(--pic-text-min) * var(--px,0)))}
+/* a part's outline reads at its 3px on screen at any picture size, so an empty (soft) strip is never lost on a dark card
+   (Review #18: navy on near-black) */
+#app .am .region .edge{stroke-width:max(var(--pic-outline),calc(var(--pic-outline) * var(--px,0)))}
+/* a result too wide for its thin strip sits just outside it, on the card, joined to it by a short leader in the part's
+   outline colour (Review #13); it shows when the result would */
+#app .am .region[data-out="true"] :is(.product,.product text){fill:var(--v-ink)}
+#app .am .region .leader{stroke:var(--pic-deep);stroke-width:max(var(--pic-outline),calc(var(--pic-outline) * var(--px,0)));stroke-linecap:round;opacity:0}
+#app .am .region:is([data-shown="true"],[data-left="true"]) .leader{opacity:1}
+/* the last beat: a bracket closes the strips (ink, like the whole) and the sum is written under it */
+#app .am .sum .bracket{fill:none;stroke:var(--v-ink);stroke-width:max(var(--pic-outline),calc(var(--pic-outline) * var(--px,0)));stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
+#app .am .sum .sumtext{fill:var(--v-ink);opacity:0;font-size:max(calc(var(--fs) * 1px),calc(var(--pic-text-min) * var(--px,0)))}
+#app .am .sum[data-on="true"] .bracket{stroke-dashoffset:0;transition:stroke-dashoffset var(--m-grow) var(--m-ease)}
+#app .am .sum[data-on="true"] .sumtext{opacity:1}
+#app .v-todaypic .am :is(.sum,.region .leader){display:none}
 
 /* Today's picture on home: the lesson's picture, built in the grade's bright colour, no results (goals doc; spec: Today on home) */
-/* it builds once when home opens (parts grow in, like the lesson), then rests in the grade's bright colour: no results,
-   so it never gives the answer away */
+/* it builds once when home opens, step by step like the lesson, then stays still in the grade's bright colour (no loop,
+   G 2026-10-13: "the breathing on diagrams is unnecessary"): no results, so it never gives the answer away */
 #app .v-todaypic .am .region .fill,#app .v-todaypic .am .region[data-shown="true"] .fill,#app .v-todaypic .am .region[data-active="true"] .fill{fill:var(--pic-mid)}
 #app .v-todaypic .viz-svg .cell{fill:var(--pic-mid)}
 #app .v-todaypic :is(.am .region .product,.viz-svg text.res,.viz-svg text.onmid){display:none}
 /* a picture that finds its widths (division) would give the answer away with its top labels, so Today shows none (spec g5-divide) */
 #app .v-todaypic .am[data-find="true"] text.out-top{display:none}
 
-/* ==== Picture motion (goals doc: "micro animations everywhere", G 2026-10-13). Every picture builds in front of the
-   child: parts grow in one after another on the spring, the part being worked on glows once as it lights, a result pops
-   into its part, and the solved picture gives one happy bounce. Less motion turns all of it off (motion.css). */
-@keyframes picGrow{from{transform:scaleX(0);opacity:.4}}
-@keyframes picLit{0%{stroke-width:var(--pic-outline)}40%{stroke-width:calc(var(--pic-outline) * 2.4)}100%{stroke-width:var(--pic-outline)}}
-@keyframes picPop{0%{opacity:0;transform:scale(.3)}100%{opacity:1;transform:scale(1)}}
-@keyframes picJoy{0%,100%{transform:scale(1)}45%{transform:scale(1.04)}}
-@keyframes picBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.015)}}
-/* the area model: strips grow across from the left edge, one after another */
-#app .am .region{transform-box:fill-box;transform-origin:left center;animation:picGrow var(--m-grow) var(--m-ease) calc(var(--i,0) * var(--m-ripple) * 3) backwards}
-/* the strip being worked on glows once as it lights */
-#app .am .region[data-active="true"] .fill{animation:picLit var(--m-in) var(--m-ease)}
-/* a result pops into its strip once it is found */
-#app .am .region:is([data-shown="true"],[data-left="true"]) .product{transform-box:fill-box;transform-origin:center;animation:picPop var(--m-pop) var(--m-spring) both}
-/* scene pictures: the part in focus glows once as it lights (the same as the area model) */
-#app .viz-svg :is(.xring,.hl,.seg.on){animation:picLit var(--m-in) var(--m-ease)}
-/* solved: the whole picture gives one happy bounce */
-#app .screen.solved .v-ppic :is(.viz-svg,.am){transform-origin:center;animation:picJoy var(--m-in) var(--m-spring)}
-/* Today's picture on home breathes gently, so home is never still */
-#app .v-todaypic :is(.viz-svg,.am){transform-origin:center;animation:picBreathe calc(var(--m-beat) * 6) ease-in-out infinite}
+/* ==== Picture motion: the motion IS the maths step (G 2026-10-13 22:10, "animations are specific to their function"; the
+   model's svg() and playLearn()). One step per beat, and each change says what that step did. Nothing grows, bounces,
+   pulses or loops. Less motion turns all of it off (motion.css).
+   - the part being worked on turns from soft to mid, and its column and row labels light from muted to deep (the others
+     stay muted): "this part now". A finished part stays mid.
+   - a part's result fades in inside it once it is worked out (outside it, on its leader, when the part is too thin)
+   - division: what's left fades into the leftover strip on the subtract step, before its width is found
+   - the last step: the bracket draws along under the strips (closing them into one sum), then the sum fades in under it
+   - the problem's answer comes in the problem line only once the last part is added (the Learn timeline) */
+#app .am .region .fill{transition:fill var(--dur-350) var(--m-ease)}
+#app .am .part{transition:fill var(--dur-350) var(--m-ease)}
+#app .am .region .product,#app .am .region .leader{transition:opacity var(--dur-300) var(--m-ease)}
+#app .am .sum[data-on="true"] .sumtext{transition:opacity var(--dur-300) var(--m-ease) var(--dur-350)}
+/* a miss: the picture shows where to look (Review #9), through the worked-step role. The say line names the lit part
+   ("Look again at the lit strip"), so while the miss shows, every part without `lit` steps back and the lit part (fill
+   and labels) is all that stays lit: one change in, one change out, no wobble. It hangs on the miss state the solve panel
+   already shows (.v-ask.no: on with each miss, off as soon as the child types), so it never loops. Any family whose
+   builder marks its step's part `lit` gets it; the area model marks its asked strip itself. */
+#app .am .region{transition:opacity var(--dur-350) var(--m-ease)}
+#app .screen.v-prac:not(.solved):has(.v-ask.no) .v-ppic .am:has(.region.lit) .region:not(.lit),
+#app .screen.v-prac:not(.solved):has(.v-ask.no) .v-ppic .viz-svg:has(>:not(text).lit)>:not(text,.lit){opacity:.35}
