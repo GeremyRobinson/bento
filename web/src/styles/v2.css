@@ -242,6 +242,11 @@ html[data-line] body{background-image:none!important}
 .v-solve .choice:hover{background:var(--v-line)}
 .v-solve .choice.no{background:var(--slip-bg);color:var(--slip);outline:3px solid var(--slip);outline-offset:-3px}
 .v-solve .choice.ok{background:var(--right-bg);color:var(--right);outline:3px solid var(--right);outline-offset:-3px}
+/* the mark always comes with the colour (K6), as on the answer pill: a round ✕ / ✓ disc after the word */
+.v-solve .choice:is(.no,.ok){display:inline-flex;align-items:center;justify-content:center;gap:var(--gap)}
+.v-solve .choice:is(.no,.ok)::after{display:inline-grid;place-items:center;width:calc(var(--key) / 2);height:calc(var(--key) / 2);border-radius:var(--r-round);color:var(--v-card);font-size:var(--fz-md)}
+.v-solve .choice.no::after{content:"\2715";background:var(--slip)}
+.v-solve .choice.ok::after{content:"\2713";background:var(--right)}
 .v-solve .ppad{margin:auto 0 0}
 .v-ask .ask{display:flex;justify-content:flex-start}
 .v-ppic{overflow:hidden}
