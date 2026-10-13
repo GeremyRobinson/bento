@@ -80,7 +80,7 @@ function explain(p: MeasureProblem, model: AnswerModel): Explanation {
   const sum = start ? `${end} − ${start} = ${L} ${u.abbr}` : `${L} ${u.abbr} long`;
   return {
     heading: `Measure in ${u.many}`,
-    idea: ["The units between where something starts and ends on the ruler make its length."],
+    idea: ["The length is how many units fit from one end to the other."],
     statement: [text(`How long is the ${name}?`)],
     diagram: buildRuler({
       unit: u.abbr, max: u.max, start: p.start, end: p.end, thing: p.thing,
@@ -91,9 +91,9 @@ function explain(p: MeasureProblem, model: AnswerModel): Explanation {
     caption: `Count the spaces between the marks, not the marks.`,
     timeline: beats(4),
     steps: [
-      { id: "start", narration: start ? `The ${name} starts at ${start}, not at 0.` : `The ${name} starts right at 0.`, math: [text("Starts at "), num(start)], state: 1, answerStep: "start", result: start },
-      { id: "end", narration: `Its tip lines up with ${end}.`, math: [text("Ends at "), num(end)], state: 2, answerStep: "end", result: end },
-      { id: "length", narration: `Count the ${u.many} from ${start} to ${end}: ${count(L, u.one, u.many)}.`, math: start ? [num(end), op("−"), num(start), op("="), num(L), text(` ${u.abbr}`)] : [text("Length: "), num(L), text(` ${u.abbr}`)], state: 3, answerStep: "length", result: L },
+      { id: "start", narration: start ? `The ${name} doesn't start at 0 this time.` : `The ${name} starts right at the 0 edge.`, math: [text("Starts at "), num(start)], state: 1, answerStep: "start", result: start },
+      { id: "end", narration: "Look straight down from its tip.", math: [text("Ends at "), num(end)], state: 2, answerStep: "end", result: end },
+      { id: "length", narration: start ? "Count the spaces between, not the marks." : "It starts at 0, so the end is the length.", math: start ? [num(end), op("−"), num(start), op("="), num(L), text(` ${u.abbr}`)] : [text("Length: "), num(L), text(` ${u.abbr}`)], state: 3, answerStep: "length", result: L },
     ],
   };
 }

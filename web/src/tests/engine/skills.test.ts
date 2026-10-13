@@ -1,11 +1,14 @@
 import { createRng } from "../../curriculum/generators/rng";
 import { lessonsInGrade } from "../../curriculum/registry";
 import { CHECKS } from "../../curriculum/checks";
+import { DEPENDS } from "../../curriculum/depends";
+import { CATALOG } from "../../curriculum/catalog";
 import { formatNumber } from "../../curriculum/schemas/math-text";
 import { entriesInGrade, isReady } from "../../app/curriculum";
 import { upNext } from "../../app/today";
 import { chapterRings, gradeRing } from "../../app/rings";
 import { emptyProgress, type Progress } from "../../engine/mastery/progress";
+import { migrateProgress } from "../../persistence/migrations";
 import type { Level } from "../../engine/mastery/levels";
 import { CHECK_LENGTH, checkKey, dependsOn, learned, ready, recordCheck, REVIEW_DAYS, stepBack, type CheckRecord } from "../../engine/mastery/skills";
 import { checkItems, check, choose, currentStep, finishRun, focusSlot, nextProblem, pressKey, reviewPool, startReview, startTest, type Deps } from "../../engine/session/practice";
@@ -96,21 +99,33 @@ describe("spacing", () => {
     expect((p.checks["g5-mult2"]!.due - p.checks["g5-mult2"]!.date) / DAY).toBe(7);
   });
 
-  it("a miss in the review brings a learned lesson back tomorrow", () => {
+  it("a miss in the review brings a learned lesson back tomorrow, still learned", () => {
     const now = t;
     const p0 = base({ scores: { "g5-mult2": score(3), "g5-divide": score(3) }, checks: { "g5-mult2": rec(4, now - 10 * DAY, now - DAY) } });
     const p = run(startReview(p0, deps()), p0, id => id !== "g5-mult2");
-    expect(p.checks["g5-mult2"]).toMatchObject({ last: 2, passes: 0 });
+    expect(p.checks["g5-mult2"]).toMatchObject({ last: 4, passes: 0 });
+    expect((p.checks["g5-mult2"]!.due - t) / DAY).toBeCloseTo(1, 1);
+    expect(learned(p, "g5-mult2")).toBe(true);
     expect(p.checks["g5-divide"]).toBeUndefined(); // only lessons with a check are counted
   });
 });
 
 describe("learned", () => {
-  it("counts a check of 3 or 4; before checks existed, a practice score of 3 or 4", () => {
-    const p = base({ scores: { a: score(3), b: score(2), c: score(4) }, checks: { c: rec(2, 0) } });
+  it("counts only a check of 3 or 4, never practice alone", () => {
+    const p = base({ scores: { a: score(4), c: score(4) }, checks: { b: rec(3, 0), c: rec(2, 0) } });
+    expect(learned(p, "a")).toBe(false);
+    expect(learned(p, "b")).toBe(true);
+    expect(learned(p, "c")).toBe(false);
+  });
+
+  it("turns an old save's practice scores of 3+ into checks once, when it loads", () => {
+    const old = { ...base({ scores: { a: { ...score(3), date: t }, b: score(2) } }) } as Partial<Progress>;
+    delete old.checks;
+    const p = migrateProgress(old);
+    expect(p.checks).toEqual({ a: { last: 3, best: 3, date: t, due: t + 3 * DAY, passes: 1 } });
     expect(learned(p, "a")).toBe(true);
-    expect(learned(p, "b")).toBe(false);
-    expect(learned(p, "c")).toBe(false); // the check wins over the old practice score
+    // a save that already has checks is left alone, so new practice never counts
+    expect(migrateProgress({ ...p, scores: { ...p.scores, c: score(4) } }).checks).toEqual(p.checks);
   });
 
   it("reads what a lesson builds on from the catalog until Curriculum lists it", () => {
@@ -121,9 +136,11 @@ describe("learned", () => {
     expect(dependsOn("g5-divdec")).toEqual(["g5-pow10", "g3-divfacts"]);
   });
 
-  it("steps back only after a 0 or 1, to the first lesson underneath that isn't learned, tried or not", () => {
+  it("steps back only after a 0 or 1: to the main lesson underneath, tried or not, else to one whose check was low", () => {
     expect(stepBack(base({ checks: { "g5-divdec": rec(1, 0) } }), "g5-divdec")).toBe("g5-pow10");
-    expect(stepBack(base({ checks: { "g5-divdec": rec(1, 0), "g5-pow10": rec(4, 0) } }), "g5-divdec")).toBe("g3-divfacts");
+    // the main one is learned and g3-divfacts was never tried: no further back
+    expect(stepBack(base({ checks: { "g5-divdec": rec(1, 0), "g5-pow10": rec(4, 0) } }), "g5-divdec")).toBeNull();
+    expect(stepBack(base({ checks: { "g5-divdec": rec(1, 0), "g5-pow10": rec(4, 0), "g3-divfacts": rec(2, 0) } }), "g5-divdec")).toBe("g3-divfacts");
     expect(stepBack(base({ checks: { "g5-divdec": rec(2, 0) } }), "g5-divdec")).toBeNull();
   });
 
@@ -185,11 +202,11 @@ describe("rings", () => {
 });
 const ready5 = () => entriesInGrade(5).filter(c => isReady(c.id));
 
-describe("Curriculum's check recipes", () => {
-  const lessons = lessonsInGrade(5).filter(l => CHECKS[l.id]);
-  it("cover every 5th grade lesson", () => expect(lessons.map(l => l.id).sort()).toEqual(lessonsInGrade(5).map(l => l.id).sort()));
+describe.each([2, 5])("grade %i's check recipes", g => {
+  const lessons = lessonsInGrade(g);
+  it("cover every lesson in the grade", () => expect(lessons.filter(l => CHECKS[l.id]).map(l => l.id)).toEqual(lessons.map(l => l.id)));
 
-  it("draw each item so its condition holds, story items last, mix in order, every problem valid", () => {
+  it("draw each item so its condition holds, story items last, in order where asked, every problem valid", () => {
     const misses: string[] = [];
     for (const l of lessons) {
       const recipe = CHECKS[l.id]!;
@@ -198,8 +215,8 @@ describe("Curriculum's check recipes", () => {
         const items = checkItems(l, createRng(seed));
         expect(items).toHaveLength(recipe.items.length);
         expect(items.every(x => x.lessonId === l.id && l.restore(x.problem) != null)).toBe(true);
-        const stories = recipe.items.filter(c => c.story).length;
-        if (l.story) expect(items.slice(items.length - stories).every(x => x.story)).toBe(true);
+        const stories = l.story ? recipe.items.filter(c => c.story).length : 0;
+        expect(items.slice(items.length - stories).every(x => x.story)).toBe(true);
         expect(items.slice(0, items.length - stories).some(x => x.story)).toBe(false);
         if (recipe.inOrder) recipe.items.forEach((c, k) => { if (c.where) { wanted++; if (c.where(items[k]!.problem)) held++; } });
         else for (const c of recipe.items.filter(c => c.where)) { wanted++; if (items.some(x => c.where!(x.problem))) held++; }
@@ -209,10 +226,30 @@ describe("Curriculum's check recipes", () => {
     expect(misses).toEqual([]);
   });
 
-  it("g5-volume's third item always has the height tallest", () => {
-    for (let seed = 1; seed <= 100; seed++) {
-      const items = checkItems(lessonsInGrade(5).find(l => l.id === "g5-volume")!, createRng(seed));
-      expect(items.some(x => { const b = x.problem as { l: number; w: number; h: number }; return b.h >= b.l && b.h >= b.w; })).toBe(true);
+  it("an item built directly when the draws miss fits whenever it makes a valid problem (g5-volume, g2 rare items)", () => {
+    for (const l of lessons) for (const c of CHECKS[l.id]!.items.filter(c => c.fix)) {
+      let made = 0;
+      for (let seed = 1; seed <= 300; seed++) {
+        const fixed = l.restore(c.fix!(l.generate(createRng(seed), c.i)));
+        if (fixed == null) continue;
+        made++;
+        if (c.where!(l.generate(createRng(seed), c.i))) continue; // already fit: the fix isn't used
+        expect(c.where!(fixed), `${l.id} i${c.i} seed ${seed}`).toBe(true);
+      }
+      expect(made, `${l.id} i${c.i}`).toBeGreaterThan(150);
     }
+  });
+});
+
+describe("depends-on lists", () => {
+  it("name real lessons from the same grade or earlier", () => {
+    for (const [id, deps] of Object.entries(DEPENDS)) {
+      const g = CATALOG.find(c => c.id === id)?.grade;
+      expect(g, id).toBeDefined();
+      for (const d of deps) expect(CATALOG.find(c => c.id === d)?.grade, `${id} → ${d}`).toBeLessThanOrEqual(g!);
+    }
+  });
+  it("start with the catalog's build-up lesson", () => {
+    for (const [id, deps] of Object.entries(DEPENDS)) if (deps.length && CATALOG.find(c => c.id === id)!.grade === 2) expect(CATALOG.find(c => c.id === id)!.pre, id).toBe(deps[0]);
   });
 });

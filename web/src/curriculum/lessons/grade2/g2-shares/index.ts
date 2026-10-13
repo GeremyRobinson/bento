@@ -99,6 +99,13 @@ const spec = (p: SharesProblem) => ({ shape: p.shape as ShapeKind, parts: p.part
 function explain(p: SharesProblem, model: AnswerModel): Explanation {
   const { parts, shaded } = p, shape = SHAPE_NAMES[p.shape]!, name = many(parts);
   const state: Record<string, number> = { same: 1, parts: 1, name: 2, shaded: 3, whole: 3 };
+  const said: Record<string, string> = {
+    same: `Cut another way, each part is still one ${one(parts)}.`,
+    parts: "Touch each part once. They are all the same size.",
+    name: `Each part is one ${one(parts)}.`,
+    shaded: "Count only the colored parts.",
+    whole: `All the ${name} together make the whole ${shape}.`,
+  };
   return {
     heading: "Equal shares",
     idea: ["Equal shares are the same size, and together they make one whole."],
@@ -110,10 +117,7 @@ function explain(p: SharesProblem, model: AnswerModel): Explanation {
     }),
     caption: `${parts} equal parts are ${name}. ${shaded} ${word(shaded, parts)} shaded.`,
     timeline: beats(4),
-    steps: [
-      { id: "cut", narration: `The whole ${shape}, cut into parts.`, math: [text(`1 whole ${shape}`)], state: 0 },
-      ...model.steps.map(s => ({ id: s.id, narration: s.explain, math: s.work ?? [num(s.slots[0]!.expected as number)], state: state[s.id]!, answerStep: s.id, result: s.slots[0]!.expected! })),
-    ],
+    steps: model.steps.map(s => ({ id: s.id, narration: said[s.id]!, math: s.work ?? [num(s.slots[0]!.expected as number)], state: state[s.id]!, answerStep: s.id, result: s.slots[0]!.expected! })),
   };
 }
 

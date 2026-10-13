@@ -87,10 +87,10 @@ function explain(p: SkipProblem, model: AnswerModel): Explanation {
     caption: `Every hop is ${by}.`,
     timeline: beats(5),
     steps: [
-      { id: "jump", narration: `From ${v[0]} to ${v[1]} is a jump of ${by}. So is ${v[1]} to ${v[2]}.`, math: [num(v[0]!), text(" to "), num(v[1]!), text(" is "), text("+"), num(by)], state: 1, answerStep: "jump", result: by },
-      { id: "next1", narration: `Hop ${by} more from ${v[2]}: ${a}.`, math: list([v[1]!, v[2]!, a]), state: 2, answerStep: "next1", result: a },
-      { id: "next2", narration: `Another hop of ${by}: ${b}.`, math: list([v[2]!, a, b]), state: 3, answerStep: "next2", result: b },
-      { id: "next3", narration: `One more hop of ${by}: ${c}.`, math: list([a, b, c]), state: 4, answerStep: "next3", result: c },
+      { id: "jump", narration: `${v[1]} to ${v[2]} is the same jump.`, math: [num(v[0]!), text(" to "), num(v[1]!), text(" is "), text("+"), num(by)], state: 1, answerStep: "jump", result: by },
+      { id: "next1", narration: `Hop ${by} more.`, math: list([v[1]!, v[2]!, a]), state: 2, answerStep: "next1", result: a },
+      { id: "next2", narration: "Same jump again.", math: list([v[2]!, a, b]), state: 3, answerStep: "next2", result: b },
+      { id: "next3", narration: `One more hop of ${by}.`, math: list([a, b, c]), state: 4, answerStep: "next3", result: c },
     ],
   };
 }

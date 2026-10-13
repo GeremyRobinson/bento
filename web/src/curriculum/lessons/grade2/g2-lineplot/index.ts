@@ -122,21 +122,31 @@ const lit = (p: LinePlotProblem) => {
 /** the plot; on the lesson page of a read-a-stack problem it has the learner's new X in it too */
 const plot = (p: LinePlotProblem, withNew = false) => ({ d: 1, lo: p.lo - 1, hi: p.lo + 6, data: withNew && p.ask === 0 ? [...p.data, p.v] : p.data, title: THINGS[p.thing]!.title });
 const alt = (p: LinePlotProblem) => `A line plot of ${THINGS[p.thing]!.one} lengths in inches.`;
+/** the question as the problem shows it: a read-a-stack problem says the new one comes first */
+const questionOf = (p: LinePlotProblem) => (p.ask === 0
+  ? `Add a ${THINGS[p.thing]!.one} that is ${p.v} inches long. Then how many ${THINGS[p.thing]!.many} are ${p.v} inches long?`
+  : answers(p).steps.at(-1)!.question ?? "");
 
 function explain(p: LinePlotProblem, model: AnswerModel): Explanation {
   const last = model.steps.at(-1)!;
+  const said: Record<string, string> = {
+    plot: "Each X sits above its own length.",
+    stack: "Count the X's in that stack, the new one too.",
+    mode: "The tallest stack came up most.",
+    longer: `Count the X's to the right of ${p.v}.`,
+    max: "The longest is the X farthest right.",
+    min: "The shortest is the X farthest left.",
+    diff: "Take the shortest away from the longest.",
+  };
   return {
     heading: "Line plots",
-    idea: ["Each X is one thing measured, so the tallest stack came up most."],
-    statement: words(last.question ?? ""),
+    idea: ["Each X stands for one thing, placed above how long it is."],
+    statement: words(questionOf(p)),
     diagram: buildLinePlot({ ...plot(p, true), beats: { drop: 0, light: 1 }, light: lit(p),
       alt: `${alt(p)} Each ${THINGS[p.thing]!.one} drops an X above its length, then the stacks the question is about light up.` }),
     caption: `${last.explain}`,
     timeline: beats(2),
-    steps: [
-      { id: "drop", narration: `Each ${THINGS[p.thing]!.one} is measured, and an X goes above its length.${p.ask === 0 ? ` The new one is ${p.v} inches, so its X goes above ${p.v}.` : ""}`, math: words(THINGS[p.thing]!.title), state: 0 },
-      ...model.steps.map(s => ({ id: s.id, narration: s.explain, math: s.work ?? [num(s.slots[0]!.expected as number)], state: 1, answerStep: s.id, result: s.slots[0]!.expected! })),
-    ],
+    steps: model.steps.map(s => ({ id: s.id, narration: said[s.id]!, math: s.work ?? [num(s.slots[0]!.expected as number)], state: 1, answerStep: s.id, result: s.slots[0]!.expected! })),
   };
 }
 
@@ -162,11 +172,9 @@ export const lesson: LessonDefinition<LinePlotProblem> = {
     if (!r || typeof r !== "object") return null;
     try { return createLinePlot(r.thing as number, r.lo as number, r.data as number[], r.ask as number, r.v as number); } catch { return null; }
   },
-  display: p => words(p.ask === 0
-    ? `Add a ${THINGS[p.thing]!.one} that is ${p.v} inches long. Then how many ${THINGS[p.thing]!.many} are ${p.v} inches long?`
-    : answers(p).steps.at(-1)!.question ?? ""),
+  display: p => words(questionOf(p)),
   picture: p => buildLinePlot({ ...plot(p), alt: alt(p) }),
   answers: p => singularWork(answers(p)),
   explain,
-  pre: "g2-measure",
+  pre: "g2-bargraph",
 };

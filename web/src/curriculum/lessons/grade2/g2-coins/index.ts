@@ -94,18 +94,22 @@ const alt = (p: CoinProblem) => (p.kind === 0 ? `${coinLook(p.coin)[0]!.toUpperC
 
 function explain(p: CoinProblem, model: AnswerModel): Explanation {
   const state: Record<string, number> = { name: 1, left: 1, right: 1, value: 2, more: 2 };
+  const look = (c: number) => `${coinLook(c)[0]!.toUpperCase()}${coinLook(c).slice(1)}.`;
+  const v = COIN_INFO[p.coin]!.value;
+  const narration: Record<string, string> = {
+    name: look(p.coin), left: look(p.coin), right: look(p.other),
+    value: v === 1 ? "It's the coin worth the least." : `That's as much as ${v} pennies.`,
+    more: "Go by the cents, not by the size.",
+  };
   return {
     heading: "Coins",
-    idea: ["Each coin has its own size, color and edge, and a bigger coin isn't always worth more."],
+    idea: ["Size, color and edge tell coins apart, but not what they're worth."],
     statement: words(p.kind === 0 ? "What coin is this?" : "Which is worth more?"),
     diagram: buildCoinPicture({ coins: coinsOf(p), side: p.side, beats: { edge: 1, value: 2 },
       alt: `${alt(p)} Then ${coinsOf(p).map(c => `the ${COIN_INFO[c]!.name} is worth ${cents(COIN_INFO[c]!.value)}`).join(" and ")}.` }),
     caption: p.kind === 0 ? `A ${COIN_INFO[p.coin]!.name} is worth ${cents(COIN_INFO[p.coin]!.value)}.` : `${model.steps.at(-1)!.explain}`,
     timeline: beats(3),
-    steps: [
-      { id: "look", narration: "Look at the size, the color and the edge.", math: words("Look closely."), state: 0 },
-      ...model.steps.map(s => ({ id: s.id, narration: s.explain, math: s.work ?? [text(cents(s.slots[0]!.expected as number))], state: state[s.id]!, answerStep: s.id, result: s.slots[0]!.expected! })),
-    ],
+    steps: model.steps.map(s => ({ id: s.id, narration: narration[s.id]!, math: s.work ?? [text(cents(s.slots[0]!.expected as number))], state: state[s.id]!, answerStep: s.id, result: s.slots[0]!.expected! })),
   };
 }
 

@@ -39,15 +39,21 @@ export function recordCheck(old: CheckRecord | undefined, level: Level, now: num
   return { last: level, best: Math.max(level, old?.best ?? 0) as Level, date: now, due: now + days * DAY, passes };
 }
 
+/** Learned: the last check was 3 or 4. Practice alone never counts ("completing all parts ≠ learned"). */
+export const learned = (p: Progress, id: string) => (p.checks?.[id]?.last ?? -1) >= PASS;
+
 /**
- * Learned: the last check was 3 or 4. Before checks existed a practice score of 3+ counts, so no one's progress
- * goes back to zero when checks arrive.
+ * Saves from before checks existed: a practice score of 3 or 4 becomes the lesson's check, once, when the save is
+ * loaded, so no one's ring goes back to zero; from then on only checks count (Review, engine-453ec4b R1).
  */
-export function learned(p: Progress, id: string): boolean {
-  const c = p.checks?.[id];
-  if (c) return c.last >= PASS;
-  return (p.scores[id]?.last ?? -1) >= PASS;
+export function checksFromScores(scores: Progress["scores"]): Record<string, CheckRecord> {
+  return Object.fromEntries(Object.entries(scores).filter(([, s]) => s.last >= PASS)
+    .map(([id, s]) => [id, { last: s.last, best: s.best, date: s.date, due: s.date + REVIEW_DAYS[0] * DAY, passes: 1 }]));
 }
+
+/** A miss in the mixed review: one slip is weak evidence, so the lesson stays learned but comes back tomorrow and
+ *  starts its gaps again; its next real check decides (Review R13). */
+export const reviewMissed = (c: CheckRecord, now: number): CheckRecord => ({ ...c, due: now + DAY, passes: 0 });
 
 /** the last check came back low: the lesson is to go over */
 export const toGoOver = (p: Progress, id: string) => { const c = p.checks?.[id]; return !!c && c.last < PASS; };
@@ -65,13 +71,16 @@ export function dependsOn(id: string): string[] {
 const gradeOf = (id: string) => CATALOG.find(c => c.id === id)?.grade;
 
 /**
- * Step back: after a check of 0 or 1, the first lesson underneath that isn't learned, tried or not (a lesson from an
- * earlier grade the child never did is exactly the gap a low check points to).
+ * Step back: after a check of 0 or 1, the main lesson underneath when it isn't learned (tried or not: that's the gap
+ * a low check points to), else any lesson underneath whose own check came back low. A lesson further down the list
+ * that was simply never tried isn't a reason to go further back (Review R4).
  */
 export function stepBack(p: Progress, id: string): string | null {
   const c = p.checks?.[id];
   if (!c || c.last > 1) return null;
-  return dependsOn(id).find(d => !learned(p, d)) ?? null;
+  const [main, ...rest] = dependsOn(id);
+  if (main && !learned(p, main)) return main;
+  return rest.find(d => toGoOver(p, d)) ?? null;
 }
 
 /**

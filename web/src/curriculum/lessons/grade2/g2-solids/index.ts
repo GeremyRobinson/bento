@@ -55,7 +55,7 @@ function answers(p: FacesProblem): AnswerModel {
         wrong: slips(c.corners, [
           c.faces !== c.corners && [c.faces, "Counted the faces", "That's the faces. Corners are the points where edges meet."],
           [c.edges, "Counted the edges", "That's the edges, the lines. Corners are the points where the lines meet."],
-          [c.corners - 1, "Missed a hidden corner", "One corner is round the back. Look where the dashed edges meet."],
+          [c.corners - 1, "Missed a hidden corner", "One corner is around the back. Look where the dashed edges meet."],
         ]),
         hint: "A corner is a point where edges meet.",
         explain: `${c.corners} corners.`,
@@ -81,6 +81,18 @@ const ALT = "A solid shape, with its hidden edges dashed.";
 function explain(p: FacesProblem, model: AnswerModel): Explanation {
   const s = SOLIDS[p.solid]!, c = POLY_COUNTS[s.kind];
   const state: Record<string, number> = { faces: 1, edges: 2, corners: 3, name: 4 };
+  const NAMED: Record<string, string> = {
+    cube: "Every face is a square.",
+    box: "Its faces are rectangles, not all squares.",
+    pyramid: "Its side faces meet at one point at the top.",
+    triPrism: "It has a triangle at each end.",
+  };
+  const said: Record<string, string> = {
+    faces: "Dashed lines show the back. Count those faces too.",
+    edges: "Count the solid lines and the dashed ones.",
+    corners: "A corner is where edges meet. Some are at the back.",
+    name: NAMED[s.kind]!,
+  };
   return {
     heading: "Faces, edges and corners",
     idea: ["Faces meet at edges, and edges meet at corners."],
@@ -89,10 +101,7 @@ function explain(p: FacesProblem, model: AnswerModel): Explanation {
       alt: `${ALT} Its ${c.faces} faces light one by one, its ${c.edges} edges trace and its ${c.corners} corners pop: a ${s.name.toLowerCase()}.` }),
     caption: `${c.faces} faces, ${c.edges} edges, ${c.corners} corners.`,
     timeline: beats(5),
-    steps: [
-      { id: "look", narration: "Dashed lines are edges hidden at the back.", math: words("Look at it."), state: 0 },
-      ...model.steps.map(st => ({ id: st.id, narration: st.explain, math: st.work ?? [num(st.slots[0]!.expected as number)], state: state[st.id]!, answerStep: st.id, result: st.slots[0]!.expected! })),
-    ],
+    steps: model.steps.map(st => ({ id: st.id, narration: said[st.id]!, math: st.work ?? [num(st.slots[0]!.expected as number)], state: state[st.id]!, answerStep: st.id, result: st.slots[0]!.expected! })),
   };
 }
 

@@ -13,7 +13,7 @@ import { answerIds, checkStep, expectedValues, finalPartsOf, finalStep, runtimeS
 import { levelOf, problemXp, stepPoints } from "../mastery/levels";
 import { lastScore, type Progress } from "../mastery/progress";
 import { CHECKS, WHERE_TRIES } from "../../curriculum/checks";
-import { CHECK_FROM, CHECK_LENGTH, checkKey, dueBack, isCheckKey, lessonOfCheck, PASS, recordCheck } from "../mastery/skills";
+import { CHECK_FROM, CHECK_LENGTH, checkKey, dueBack, isCheckKey, lessonOfCheck, PASS, recordCheck, reviewMissed } from "../mastery/skills";
 import { PRAISE } from "./praise";
 import type { Mistake, PracticeSession, RunItem, SessionReport } from "./types";
 import { FIND_MY_LEVEL, NO_UNIT, SKILL_CHECK, TODAYS_REVIEW } from "../../app/copy";
@@ -518,11 +518,11 @@ export function finishRun(s: PracticeSession, progress: Progress, now: number): 
   if (s.mode === "review") {
     p.reviews[today] = level;
     // a learned lesson whose problems all came out right first time has been checked again, so it goes further out;
-    // a miss brings it back tomorrow as one to go over
+    // a miss brings it back tomorrow, still learned
     for (const id of new Set(s.probs.map(x => x.lessonId))) {
       if (!p.checks[id] || p.checks[id]!.last < PASS) continue;
       const mine = s.probs.filter(x => x.lessonId === id);
-      p.checks[id] = recordCheck(p.checks[id], mine.every(x => !x.wrong && !x.shown) ? 4 : 2, now);
+      p.checks[id] = mine.every(x => !x.wrong && !x.shown) ? recordCheck(p.checks[id], 4, now) : reviewMissed(p.checks[id]!, now);
     }
   }
   for (const it of s.items) p.seen[it.lessonId] = now;

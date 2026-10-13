@@ -5,6 +5,7 @@ import type { Rng } from "../../../generators/rng";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildCoins, COINS, type CoinValue } from "../../../../explanations/diagrams/early-g2/counting";
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
+import { words } from "../../gradeK/kit";
 import { slips, type Slip } from "../kit";
 
 /** How many quarters, dimes, nickels and pennies. */
@@ -96,7 +97,7 @@ function explain(pr: MoneyProblem, model: AnswerModel): Explanation {
   const total = expectedOf(model, groups[last - 1]!.key);
   return {
     heading: "Count on by coin",
-    idea: ["Counting the coins worth the most first means fewer, easier steps."],
+    idea: ["Start with the coins worth the most, then count on."],
     statement: listCoins(pr),
     diagram: buildCoins({
       groups: groups.map((g, i) => ({ value: g.value, count: g.count, beat: i + 1 })),
@@ -109,8 +110,8 @@ function explain(pr: MoneyProblem, model: AnswerModel): Explanation {
       const after = expectedOf(model, g.key);
       return {
         id: g.key,
-        narration: `${g.before ? `From ${g.before}¢, count on` : "Count"} the ${nameOf(g.value, g.count)} by ${g.value}s: ${g.seq.join(", ")}.`,
-        math: [...(g.before ? [num(g.before), text("¢ + ")] : []), num(g.count * g.value), text("¢ = "), num(after), text("¢")],
+        narration: `${g.before ? `From ${g.before}¢, count on` : "Count"} the ${nameOf(g.value, g.count)}${g.count > 1 ? ` by ${g.value}s` : ""}: ${g.seq.join(", ")}.`,
+        math: g.before ? [num(g.before), text("¢ + "), num(g.count * g.value), text("¢ = "), num(after), text("¢")] : [num(g.count), text(` ${nameOf(g.value, g.count)} = `), num(after), text("¢")],
         state: i + 1, answerStep: g.key, result: after,
       };
     }),
@@ -126,8 +127,7 @@ export const lesson: LessonDefinition<MoneyProblem> = {
   reference: createMoney(2, 1, 1, 3),
   generate,
   restore: raw => restoreVia(raw, ["q", "d", "n", "p"] as const, v => createMoney(v.q, v.d, v.n, v.p)),
-  display: listCoins,
-  displayNote: () => "How much money is this?",
+  display: () => words("How much money is this?"),
   picture: pr => buildCoins({
     groups: groupsOf(pr).map(g => ({ value: g.value, count: g.count, beat: 0 })), total: "", totalBeat: 0, bare: true,
     alt: `Coins: ${groupsOf(pr).map(g => `${g.count} ${nameOf(g.value, g.count)}`).join(", ")}.`,

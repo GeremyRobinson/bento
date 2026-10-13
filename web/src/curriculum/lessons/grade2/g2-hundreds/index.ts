@@ -37,7 +37,7 @@ function answers({ n }: HundredsProblem): AnswerModel {
           [t, "Read the tens digit", `${t} is the middle digit, the tens. The hundreds digit is the first one on the left.`],
           [o, "Read the ones digit", `${o} is the last digit, the ones. The hundreds digit is the first one on the left.`],
         ]),
-        hint: "Each big flat is one hundred. Count the flats: the hundreds digit, first on the left, says how many.",
+        hint: "The hundreds digit is the first one on the left.",
         explain: `${n} starts with ${h}, so it has ${count(h, "hundred")}.`,
       }),
       oneBox({
@@ -48,7 +48,7 @@ function answers({ n }: HundredsProblem): AnswerModel {
           [h, "Read the hundreds digit", `${h} is the first digit, the hundreds. The tens digit is in the middle.`],
           [o, "Read the ones digit", `${o} is the last digit, the ones. The tens digit is in the middle.`],
         ]),
-        hint: "Each long rod is one ten. Count the rods: the tens digit, in the middle, says how many.",
+        hint: "The tens digit is the one in the middle.",
         explain: `The middle digit of ${n} is ${t}, so it has ${count(t, "ten")}.`,
       }),
       oneBox({
@@ -58,7 +58,7 @@ function answers({ n }: HundredsProblem): AnswerModel {
           [h, "Read the hundreds digit", `${h} is the first digit, the hundreds. The ones digit is the last one.`],
           [t, "Read the tens digit", `${t} is the middle digit, the tens. The ones digit is the last one.`],
         ]),
-        hint: "Each small cube is one. Count the cubes: the ones digit, last on the right, says how many.",
+        hint: "The ones digit is the last one, on the right.",
         explain: `The last digit of ${n} is ${o}, so it has ${count(o, "one")}.`,
       }),
       manyBoxes({
@@ -69,7 +69,7 @@ function answers({ n }: HundredsProblem): AnswerModel {
           [{ h: h * 100, t, o }, "Tens as ones", `The ${t} is in the tens place, so it is worth ${t * 10}.`],
           [{ h, t: t * 10, o }, "Hundreds as ones", `The ${h} is in the hundreds place, so it is worth ${h * 100}.`],
         ] as [Record<string, number>, string, string][]).filter(([v]) => !same(v)),
-        hint: "A flat is worth 100, a rod is worth 10 and a cube is worth 1. What are all the flats worth? All the rods?",
+        hint: "A hundred is worth 100 and a ten is worth 10. What are all the hundreds worth? All the tens?",
         explain: `${count(h, "hundred")} is ${h * 100}, ${count(t, "ten")} is ${t * 10}, and ${count(o, "one")} is ${o}.`,
       }),
     ],
@@ -84,7 +84,7 @@ function explain(p: HundredsProblem, model: AnswerModel): Explanation {
   const total = `${H} + ${T} + ${o} = ${n}`;
   return {
     heading: "Hundreds, tens and ones",
-    idea: ["Each digit tells how many blocks of its size there are: hundreds, tens or ones."],
+    idea: ["Each digit tells how many hundreds, tens or ones there are."],
     statement: [num(n)],
     diagram: buildPlaceBlocks({
       hundreds: h, tens: t, ones: o,
@@ -95,10 +95,10 @@ function explain(p: HundredsProblem, model: AnswerModel): Explanation {
     caption: `${n} is ${count(h, "hundred")}, ${count(t, "ten")} and ${count(o, "one")}.`,
     timeline: beats(5),
     steps: [
-      { id: "hundreds", narration: `The first digit is ${h}. That's ${h} flat${h === 1 ? "" : "s"}, ${count(h, "hundred")}.`, math: [text("Hundreds: "), num(h)], state: 1, answerStep: "hundreds", result: h },
-      { id: "tens", narration: `The middle digit is ${t}. That's ${t} rod${t === 1 ? "" : "s"}, ${count(t, "ten")}.`, math: [text("Tens: "), num(t)], state: 2, answerStep: "tens", result: t },
-      { id: "ones", narration: `The last digit is ${o}. That's ${o} cube${o === 1 ? "" : "s"}, ${count(o, "one")}.`, math: [text("Ones: "), num(o)], state: 3, answerStep: "ones", result: o },
-      { id: "expanded", narration: `Put the values together: ${total}.`, math: [num(n), op("="), num(H), op("+"), num(T), op("+"), num(o)], state: 4, answerStep: "expanded", result: H },
+      { id: "hundreds", narration: "The first digit counts the flats. Each flat is 100.", math: [text("Hundreds: "), num(h)], state: 1, answerStep: "hundreds", result: h },
+      { id: "tens", narration: "The middle digit counts the rods. Each rod is 10.", math: [text("Tens: "), num(t)], state: 2, answerStep: "tens", result: t },
+      { id: "ones", narration: "The last digit counts the cubes. Each cube is 1.", math: [text("Ones: "), num(o)], state: 3, answerStep: "ones", result: o },
+      { id: "expanded", narration: "Add up what each part is worth.", math: [num(n), op("="), num(H), op("+"), num(T), op("+"), num(o)], state: 4, answerStep: "expanded", result: H },
     ],
   };
 }

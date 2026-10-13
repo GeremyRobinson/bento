@@ -80,7 +80,7 @@ describe("kindergarten to grade 3 hints lead to the step instead of giving it (f
   // a number in these hints is the counting unit or a fact the step practises, not the step's answer (reviewed 2026-10-06)
   const UNIT_IN_HINT: Record<string, Record<string, string>> = {
     "k-tens": { tens: "\"say 10, 20, 30...\" shows how to count by tens" },
-    "g2-hundreds": { expanded: "\"a flat is worth 100, a rod 10\" is the place value the step uses" },
+    "g2-hundreds": { expanded: "\"a hundred is worth 100 and a ten is worth 10\" is the place value the step uses" },
     "g2-coins": { value: "the coin values are the facts being learned" },
     "g3-round": { between: "\"count by 10s\" or \"by 100s\" names the jump" },
   };
