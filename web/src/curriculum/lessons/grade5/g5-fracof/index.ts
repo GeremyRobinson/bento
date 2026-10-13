@@ -40,6 +40,8 @@ export function fractionOfNumberPicture({ n, d, W }: FractionOfNumberProblem) {
   const g = W / d, R = g * n;
   return buildTape({
     rows: [{
+      // lit: the bar as it is split into groups, and the groups taken
+      lit: [{ from: 1 }],
       length: 1, parts: [{ count: 1, from: 0 }, { count: d, from: 1 }], fills: [{ a: 0, b: n / d, tone: "on", from: 2 }],
       each: [{ text: () => `${g}`, from: 1 }], label: [{ text: `${W}` }],
       total: [{ text: `${n} × ${g} = ${R}`, from: 2, acc: true }],

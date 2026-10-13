@@ -12,6 +12,8 @@ export interface TapeText {
   until?: number;
   /** amber, for the thing being found (a "?" is always amber) */
   acc?: boolean;
+  /** seconds into its beat before it comes in (a running count lands after the pieces it counts) */
+  delay?: number;
 }
 
 /**
@@ -28,6 +30,8 @@ export interface TapeFill {
   tone: TapeTone;
   from?: number;
   until?: number;
+  /** seconds between one piece's shading and the next, so a stretch fills piece by piece as it is counted */
+  stagger?: number;
 }
 
 export interface TapeRow {
@@ -35,20 +39,32 @@ export interface TapeRow {
   start?: number;
   /** bar length in units */
   length: number;
-  /** equal parts the bar is cut into; a list re-cuts it at later beats (each entry shows until the next one starts) */
-  parts: number | { count: number; from: number }[];
+  /** equal parts the bar is cut into; a list re-cuts it at later beats (each entry shows until the next one starts).
+   *  A re-cut splits the parts apart; `delay` holds the split back within its beat (while the knife draws the cuts) */
+  parts: number | { count: number; from: number; delay?: number }[];
   /** outline every whole unit (for bars longer than one whole) */
   wholes?: boolean;
-  /** thin lines cutting each part into smaller pieces without redrawing it (e.g. hundredths inside tenths) */
-  ticks?: { count: number; from?: number; until?: number; dashed?: boolean }[];
+  /** thin lines cutting each part into smaller pieces without redrawing it (e.g. hundredths inside tenths). `cut`: the
+   *  knife before a re-cut, deep lines drawn in one after another where the bar is about to split (`all`: along the
+   *  gaps between parts too, to show a bar that is already cut that way) */
+  ticks?: { count: number; from?: number; until?: number; dashed?: boolean; cut?: boolean; all?: boolean }[];
   fills?: TapeFill[];
   /** text inside each part; `text(i)` for part i (0-based) of the cut that is showing at that beat */
-  each?: { text: (i: number) => string; from?: number; until?: number; only?: (i: number) => boolean }[];
+  each?: { text: (i: number) => string; from?: number; until?: number; only?: (i: number) => boolean;
+    /** seconds between one part's text and the next, so the parts are counted one by one (default 0.04) */
+    stagger?: number;
+    /** seconds before the first part's text (a count carried on from the row above) */
+    lead?: number }[];
   label?: TapeText[];
   total?: TapeText[];
   from?: number;
   until?: number;
+  /** the beats this row is the one the step is about: its label and its shaded pieces wear the picture's `lit` role */
+  lit?: Beats[];
 }
+
+/** a run of beats, from one beat to another (or to the end) */
+export interface Beats { from: number; until?: number }
 
 export interface TapeBracket {
   row: number;

@@ -191,3 +191,5 @@
 #app .am .region{transition:opacity var(--dur-350) var(--m-ease)}
 #app .screen.v-prac:not(.solved):has(.v-ask.no) .v-ppic .am:has(.region.lit) .region:not(.lit),
 #app .screen.v-prac:not(.solved):has(.v-ask.no) .v-ppic .viz-svg:has(>:not(text).lit)>:not(text,.lit){opacity:.35}
+/* a re-cut fraction bar splits: a shaded piece slides apart from its brothers along the cut (tape master) */
+#app .viz-svg .seg.on.a-slide{animation:slide var(--dur-1000) var(--ease) var(--d,0s) both}
