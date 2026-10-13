@@ -21,7 +21,7 @@
      wrong and right ---- */
   --v-page:#f6f6f4; --v-card:#ffffff; --v-key:#ececea; --v-line:#e2e2df; --v-ink:#1b1c1f; --v-muted:#6c6d72; --v-done:#9fa0a5;
   --pic-deep:#b06a00; --pic-mid:#f0a21a; --pic-soft:#fbe3b4; --pic-line:#ffffff; --picb-deep:#6a3fc4; --picb-mid:#a47cf3; --picb-soft:#e8defc; --pic-on-mid:var(--v-ink);
-  --slip:#c62828; --slip-bg:#fde7e7; --right:#1e8e4a; --right-bg:#e2f5e9;
+  --slip:#c62828; --slip-bg:#fde7e7; --right:#187a3f; --right-bg:#e2f5e9;
   /* 5th grade's one accent (v2 model "acc"): what you press, where you are, progress; text on it; its soft ground; its faded step */
   --g5-acc:#2456d6; --g5-acc-on:#ffffff; --g5-acc-soft:#e3eafb; --g5-acc-fade:#b9c8ef;
 
