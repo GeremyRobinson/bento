@@ -97,7 +97,7 @@ export function Results() {
   return (
     <div className="screen v-work v-done">
       <section className="v-panel v-result" aria-label="Done">
-        <span className="v-label">Done \u00b7 {rep.title}</span>
+        <span className="v-label">{`Done \u00b7 ${rep.title}`}</span>
         <span className="v-seg" aria-label={`Score ${rep.level} of 4`}>{[1, 2, 3, 4].map(k => <i key={k} className={k <= rep.level ? "on" : undefined} />)}</span>
         <h2>{rep.level} of 4: {words}.</h2>
         <p className="v-why">{test ? `${rep.clean} of ${rep.total} problems had every step right.` : `${rep.clean} of ${rep.total} problems with no mistakes.`} {then}</p>
@@ -126,7 +126,7 @@ function DoneBox({ g, id }: { g: number; id: string }) {
     <div className="v-bh"><b>{unit.name}</b><span className="v-meta">{n} of {unit.entries.length} done</span></div>
     {unit.entries.map(c => {
       const sc = lastScore(progress, c.id), done = timesDone(progress, c.id) > 0;
-      return <Cover key={c.id} pick={c.id === id} disabled pic={<TilePic svg={lessonPic(c.id)} />} name={c.title} p={(sc ?? 0) / 4}
+      return <Cover key={c.id} pick={c.id === id} className="still" tabIndex={-1} pic={<TilePic svg={lessonPic(c.id)} />} name={c.title} p={(sc ?? 0) / 4}
         word={!done ? "Not started" : sc === 4 ? "Solid" : "Keep going"} />;
     })}
   </>);

@@ -211,3 +211,19 @@ html[data-line] body{background-image:none!important}
   .screen.v-done{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-auto-rows:auto;overflow:auto;align-content:start}
   .v-result{overflow:visible}
 }
+.v-cover.still{cursor:default;pointer-events:none}
+
+/* ---- pictures (v2 model, G 2026-10-13 "amazing thickness, color"): one warm hue in three strengths first (soft fill,
+   mid for what's taken or worked, deep for outlines and labels); violet only when two things must be told apart; grey for
+   what isn't counted. The UI's grade colour never goes in a picture. ---- */
+#app{--c0:var(--pic-mid);--c1:var(--picb-mid);--c2:var(--pic-deep);--k0:var(--pic-deep);--k1:var(--picb-deep);--k2:var(--pic-deep)}
+#app :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--tint:var(--pic-mid);--ink:var(--pic-deep);--fill0:var(--pic-soft);--fill1:var(--picb-soft);--fill2:var(--pic-soft);--tint-soft:var(--pic-soft);--soft:var(--pic-soft);--soft0:var(--pic-soft);--soft1:var(--picb-soft);--soft2:var(--pic-soft);--d-line:3px}
+/* the area model: every part the one hue; waiting parts soft, worked parts mid, the part you're on outlined bold */
+#app .am .region rect,#app .am .region[data-shown="true"] rect{fill:var(--pic-soft);stroke:var(--pic-deep);stroke-width:3px}
+#app .am .region[data-shown="true"] rect,#app .am .region[data-active="true"] rect{fill:var(--pic-mid)}
+#app .am .region[data-active="true"] rect{stroke-width:5px}
+#app .am .region .product,#app .am .region .product text{fill:var(--v-ink)}
+#app .am .region .part,#app .am .whole{fill:var(--pic-deep)}
+#app .am .axis-label{fill:var(--pic-deep)}
+#app .am .seat{stroke:var(--pic-line);opacity:.55}
+#app .am .split-line{stroke:var(--pic-deep)}
