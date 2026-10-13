@@ -90,7 +90,7 @@ export const lesson: LessonDefinition<RoundProblem> = {
   grade: 5,
   unit: "Decimals",
   title: "Rounding decimals",
-  pre: "g4-dec",
+  pre: "g4-placevalue",
   reference: createRound(3476, 2), // 3.476 ≈ 3.48, the current app's example
   // a number with nothing past the place (69.320 to hundredths) is already rounded; give it a digit there
   generate: (rng, index) => {

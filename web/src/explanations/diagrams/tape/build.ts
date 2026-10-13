@@ -4,10 +4,14 @@
 import type { SceneDiagram, SceneItem } from "../scene/schema";
 import { r1 } from "../scene/helpers";
 import type { TapeRow, TapeSpec, TapeText } from "./schema";
+import { PIC } from "../scene/picture-system";
 
 const M = 10; // outer margin
 const BRACKET = 28; // room for a bracket and its text
-const FS = { label: 15, total: 17, each: 12, bracket: 15 };
+// labels and totals at the picture system's label size; text in a part as big as fits (FS.each), else small (FS.small)
+const FS = { label: PIC.label, total: PIC.label, each: PIC.label, small: 12, bracket: 15 };
+/** the gap between pieces, and between rows, for a spec */
+export const tapeGap = (spec: TapeSpec) => (spec.gap === "mixed" ? PIC.gap.mixed : PIC.gap.bar);
 const EPS = 1e-9;
 /** narrowest a shaded piece is drawn, in px */
 const MIN_FILL = 9;
@@ -52,21 +56,22 @@ export interface TapeLayout {
 export function layoutTape(spec: TapeSpec): TapeLayout {
   const W = spec.width ?? 480, rows = spec.rows, n = rows.length;
   const rowHeight = Math.min(spec.maxRowHeight ?? 46, Math.max(22, Math.floor(280 / n) - 14));
-  const gap = rowHeight < 30 ? 8 : 14; // between rows
-  const stacked = rowHeight >= 40;
+  const gap = tapeGap(spec); // between rows: the same gap as between pieces (picture system)
+  // labels read on one line ("2/3"), as in the model: a stacked fraction is taller than the gap between rows
+  const stacked = false;
   const wOf = (t: TapeText, size: number) => {
     const m = stacked ? t.text.match(FRAC) : null;
     return m ? Math.max(m[1]!.length, m[2]!.length) * size * 0.6 + 8 : textWidth(t.text, size);
   };
   const labelMax = Math.max(0, ...rows.flatMap(r => (r.label ?? []).map(t => wOf(t, FS.label))));
-  const labelW = labelMax ? labelMax + 12 : 0;
+  const labelW = labelMax ? labelMax + PIC.labelGap : 0;
   const x0 = M + labelW;
   const unitsWide = Math.max(...rows.map(r => (r.start ?? 0) + r.length));
   // one scale for every row: each bar plus its total must fit
   let unit = (W - M - x0) / unitsWide;
   for (const r of rows) {
     const tw = Math.max(0, ...(r.total ?? []).map(t => wOf(t, FS.total)));
-    if (tw) unit = Math.min(unit, (W - M - x0 - 14 - tw) / ((r.start ?? 0) + r.length));
+    if (tw) unit = Math.min(unit, (W - M - x0 - PIC.labelGap - tw) / ((r.start ?? 0) + r.length));
   }
   const rowTops: number[] = [];
   let y = M;
@@ -110,14 +115,15 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
   spec.rows.forEach((row, ri) => {
     const top = L.rowTops[ri]!, start = row.start ?? 0, layers = layersOf(row);
     const span = (lay: Layer) => row.length / lay.count;
-    const inset = (pw: number) => Math.min(1.5, pw * 0.12);
+    // half the picture system's gap each side of a piece, so pieces sit one gap apart (narrow pieces keep most of their width)
+    const inset = (pw: number) => Math.min(tapeGap(spec) / 2, pw * 0.2);
 
     // the parts of each cut
     for (const lay of layers) {
       const pw = span(lay) * unit, ins = inset(pw), step = Math.min(0.06, 0.6 / lay.count);
       for (let i = 0; i < lay.count; i++) {
         // a re-cut swaps in place (the dashed marks already showed where): popping every part again reads as the bar rebuilding
-        push({ type: "rect", x: r1(X(start) + i * pw + ins), y: top, w: r1(pw - 2 * ins), h, rx: r1(Math.min(7, pw / 3, h / 4)), cls: "seg",
+        push({ type: "rect", x: r1(X(start) + i * pw + ins), y: top, w: r1(pw - 2 * ins), h, rx: r1(Math.min(PIC.corner.bar, pw / 3, h / 4)), cls: "seg",
           ...(lay === layers[0] ? { enter: "pop" as const, delay: r1(i * step * 100) / 100 } : {}), ...when(lay.from, lay.until) });
       }
     }
@@ -141,7 +147,7 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
           const xa = X(lo) + (Math.abs(lo - p0) < EPS ? ins : 0);
           // a sliver (one hundredth past the tenths) keeps a readable minimum width inside its part, not a hairline
           const xb = Math.max(X(hi) - (Math.abs(hi - p1) < EPS ? ins : 0), Math.min(xa + MIN_FILL, X(p1) - ins));
-          push({ type: "rect", x: r1(xa), y: top, w: r1(Math.max(0.5, xb - xa)), h, rx: r1(Math.min(7, (xb - xa) / 3, h / 4)),
+          push({ type: "rect", x: r1(xa), y: top, w: r1(Math.max(0.5, xb - xa)), h, rx: r1(Math.min(PIC.corner.bar, (xb - xa) / 3, h / 4)),
             cls: fill.tone === "cut" ? "seg on cut" : fill.tone === "two" ? "seg on p1" : "seg on", ...(fill.tone === "acc" ? { vars: { "--tint": "var(--acc)" } } : {}),
             ...(enter ? { enter } : {}), delay: r1(k++ * Math.min(0.06, 0.6 / lay.count) * 100) / 100, ...when(from, until) });
         }
@@ -178,7 +184,8 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
       if (!run) continue;
       const lay = layerAt(layers, run.from), pu = span(lay), pw = pu * unit;
       const shown = Array.from({ length: lay.count }, (_, i) => i).filter(i => !e.only || e.only(i));
-      const fits = h >= 18 && shown.every(i => textWidth(e.text(i), FS.each) + 8 <= pw);
+      const big = h >= 30 && shown.every(i => textWidth(e.text(i), FS.each) + 8 <= pw);
+      const fits = big || (h >= 18 && shown.every(i => textWidth(e.text(i), FS.small) + 8 <= pw));
       if (!fits) continue;
       for (const i of shown) {
         const c = start + (i + 0.5) * pu;
@@ -193,18 +200,19 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
         cuts.forEach((b, k) => {
           const end = k + 1 < cuts.length ? cuts[k + 1]! - 1 : run.until;
           const shaded = (row.fills ?? []).some(f => f.tone !== "cut" && f.a <= c && f.b >= c && (f.from ?? 0) <= b && (f.until == null || f.until >= b));
-          push({ type: "text", x: r1(X(c)), y: r1(top + h / 2), text: e.text(i), cls: shaded ? "xs onlbl" : "xs", ...(k === 0 ? { enter: "rise" as const, delay: r1(i * 0.04 * 100) / 100 } : {}), ...when(b, end) });
+          push({ type: "text", x: r1(X(c)), y: r1(top + h / 2), text: e.text(i), cls: big ? (shaded ? "lbl res onmid" : "lbl res") : shaded ? "xs onlbl" : "xs", ...(k === 0 ? { enter: "rise" as const, delay: r1(i * 0.04 * 100) / 100 } : {}), ...when(b, end) });
         });
       }
     }
 
     for (const t of row.label ?? []) {
       const run = within(t.from ?? 0, t.until, row);
-      if (run) textAt(t, x0 - 10, top + h / 2, "sm", "end", run);
+      // side labels share the picture's left edge (spec G5); the widest sits one label gap from its bar
+      if (run) textAt(t, M, top + h / 2, "lbl", "start", run);
     }
     for (const t of row.total ?? []) {
       const run = within(t.from ?? 0, t.until, row);
-      if (run) textAt(t, X(start + row.length) + 10, top + h / 2, "lbl pw", "start", run);
+      if (run) textAt(t, X(start + row.length) + PIC.labelGap, top + h / 2, "lbl pw", "start", run);
     }
   });
 
@@ -225,5 +233,5 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
     push({ type: "line", x1: X(g.at), y1: L.rowTops[r0]! - 4, x2: X(g.at), y2: L.rowTops[r1_]! + h + 4, cls: "wire", enter: "draw", ...when(g.from ?? 0) });
   }
 
-  return { kind: "scene", family: "tape", width: L.width, height: L.height, items, alt: spec.alt };
+  return { kind: "scene", family: "tape", width: L.width, height: L.height, items, alt: spec.alt, ...(spec.two ? { two: true } : {}) };
 }

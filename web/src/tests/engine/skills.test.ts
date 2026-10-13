@@ -11,7 +11,7 @@ import { emptyProgress, type Progress } from "../../engine/mastery/progress";
 import { migrateProgress } from "../../persistence/migrations";
 import type { Level } from "../../engine/mastery/levels";
 import { CHECK_LENGTH, checkKey, dependsOn, learned, ready, recordCheck, REVIEW_DAYS, stepBack, type CheckRecord } from "../../engine/mastery/skills";
-import { checkItems, check, choose, currentStep, finishRun, focusSlot, nextProblem, pressKey, reviewPool, startReview, startTest, type Deps } from "../../engine/session/practice";
+import { checkItems, check, choose, currentStep, finishRun, focusSlot, nextProblem, pressKey, reviewDue, reviewPlan, reviewPool, startReview, startTest, type Deps } from "../../engine/session/practice";
 import { expectedValues } from "../../engine/evaluation/steps";
 import type { PracticeSession } from "../../engine/session/types";
 
@@ -57,6 +57,14 @@ describe("the skill check", () => {
     expect(s.items).toHaveLength(CHECK_LENGTH);
     expect(s.items.every(i => i.lessonId === "g5-mult2")).toBe(true);
     expect(s).toMatchObject({ mode: "test", key: "check:5:g5-mult2", hintsLeft: 0, tier: 0 });
+  });
+
+  it("a miss gives the answer and how it's worked out, without repeating \"Not this time.\" (v2 spec C2)", () => {
+    let s = startTest(checkKey(5, "g5-mult2"), emptyProgress(), deps());
+    s = answer(s, emptyProgress(), false);
+    const pr = s.items[0]!.problem as { partialProducts: number[]; product: number };
+    expect(s.feedback).toMatchObject({ type: "bad", missed: true, strong: `It\u2019s **${formatNumber(pr.product)}**.` });
+    expect(s.feedback?.text).toBe(`Split it into tens and ones: ${pr.partialProducts.map(formatNumber).join(" + ")}.`);
   });
 
   it("is saved apart from the practice score and the tests", () => {
@@ -162,7 +170,18 @@ describe("Today's pick", () => {
   it("moves on once a lesson is learned, and offers a finished lesson again until it is", () => {
     const [a, b] = ready;
     expect(upNext(base({ lessons: { [a!.id]: 1 }, scores: { [a!.id]: score(2) } }), 5)).toMatchObject({ entry: { id: a!.id }, again: true, why: "next" });
-    expect(upNext(base({ lessons: { [a!.id]: 1 }, checks: { [a!.id]: rec(3, t) } }), 5)).toMatchObject({ entry: { id: b!.id }, why: "next" });
+    // the lesson that builds on it comes first when there is one (what Today promised), else the next in order
+    const builds = ready.find(c => dependsOn(c.id).includes(a!.id));
+    expect(upNext(base({ lessons: { [a!.id]: 1 }, checks: { [a!.id]: rec(3, t) } }), 5)).toMatchObject({ entry: { id: (builds ?? b)!.id }, why: "next" });
+  });
+
+  it("after a lesson is learned, brings one that builds on it (Curriculum's depends-on list), else the next in order", () => {
+    // nothing in 5th grade lists Multiply two-digit numbers, so Today goes on in order: Long division
+    expect(upNext(base({ lessons: { "g5-mult2": 1 }, checks: { "g5-mult2": rec(3, t) } }), 5)).toMatchObject({ entry: { id: "g5-divide" }, why: "next" });
+    // Subtracting fractions builds on Adding fractions, so it comes straight after, ahead of the order
+    const before = ready.slice(0, ready.findIndex(c => c.id === "add")).map(c => c.id);
+    const done = Object.fromEntries([...before, "add"].map(id => [id, rec(3, t - DAY)]));
+    expect(upNext(base({ checks: { ...done, add: rec(4, t) } }), 5)).toMatchObject({ entry: { id: "sub" }, why: "next" });
   });
 
   it("goes over a low check first, the oldest first", () => {
@@ -249,8 +268,22 @@ describe("depends-on lists", () => {
       for (const d of deps) expect(CATALOG.find(c => c.id === d)?.grade, `${id} → ${d}`).toBeLessThanOrEqual(g!);
     }
   });
+  // one source of truth (coordinator 2026-10-13): the catalog's pre is each list's first id, in every grade, so they can't drift
   it("start with the catalog's build-up lesson", () => {
-    for (const [id, deps] of Object.entries(DEPENDS)) if (deps.length && CATALOG.find(c => c.id === id)!.grade !== 5) // 5th grade's pre is pinned by the parity recordings
+    for (const [id, deps] of Object.entries(DEPENDS)) if (deps.length)
        expect(CATALOG.find(c => c.id === id)!.pre, id).toBe(deps[0]);
+  });
+});
+
+
+describe("Today's review on home", () => {
+  it("is offered when a learned lesson is due back, says which and how many problems, and goes once it's done today", () => {
+    const p = base({ checks: { "g5-mult2": rec(4, t - 20 * DAY, t - DAY), "g5-divide": rec(3, t - 2 * DAY) },
+      scores: { "g5-mult2": score(4), "g5-divide": score(3) } });
+    expect(reviewDue(p, t)).toBe(true);
+    expect(reviewPlan(p, t)).toEqual({ due: ["g5-mult2"], problems: 8 });
+    expect(reviewDue({ ...p, reviews: { [new Date(t).toDateString()]: 4 } } as Progress, t)).toBe(false);
+    // nothing due back: no review offered
+    expect(reviewDue(base({ checks: { "g5-mult2": rec(4, t) }, scores: { "g5-mult2": score(4), "g5-divide": score(3) } }), t)).toBe(false);
   });
 });

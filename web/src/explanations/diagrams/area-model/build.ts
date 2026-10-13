@@ -1,85 +1,72 @@
 import { formatNumber } from "../../../curriculum/schemas/math-text";
 import type { SplitMultiplicationProblem } from "../../../curriculum/lessons/grade5/g5-mult2/problem";
-import { DEFAULT_AREA_LAYOUT, type AreaDiagram, type AreaLayout, type AreaRegion } from "./schema";
+import { DEFAULT_AREA_LAYOUT, type AreaBand, type AreaDiagram, type AreaLayout, type AreaRegion } from "./schema";
 import { fitParts } from "./grid";
 import { seatLines } from "./seats";
 
 /** Rough width of a number label in the app's rounded number font. */
 /** how far apart two rows of labels sit */
 export const ROW = 26;
+/** the gap between two parts (v2 lesson spec G1): each part is its own shape, never one block cut by a line */
+export const PART_GAP = 12;
+
+/** g5-mult2 draws every seat (v2 spec G8: counts match the numbers); at 98 × 98 a seat is still 3 units */
+export const STRIP_SEAT_MIN = 3;
+/** a very flat picture (13 × 96) is stretched to at most 4 wide for 1 tall, so its strips stay readable on a phone (G9) */
+export const MAX_FLAT = 4;
 
 export const labelWidth = (label: string, fontSize: number) => label.length * fontSize * 0.62 + 12;
 
 /**
- * Builds the area model for a split multiplication straight from the canonical problem.
- * One scale for both axes: the rectangle is firstFactor tall and secondFactor wide, in proportion.
+ * Builds the area model for a split multiplication straight from the canonical problem: the first factor down the side
+ * (one row, labelled whole), the second across the top, cut into its tens and ones (one column, one strip, per part).
+ * One scale for both axes, so the strips are in proportion; a tiny part (the 2 of 42) keeps room for its label.
+ * Each strip is its own shape, one gap apart (v2 spec G1); every label sits outside the picture (G5).
  */
 export function buildSplitAreaDiagram(p: SplitMultiplicationProblem, layout: AreaLayout = DEFAULT_AREA_LAYOUT): AreaDiagram {
   const { margin, maxWidth, maxHeight, labelFontSize } = layout;
-  const unit = Math.min(maxWidth / p.secondFactor, maxHeight / p.firstFactor);
-  const totalWidth = p.secondFactor * unit;
-  const totalHeight = p.firstFactor * unit;
-  const left = margin.left, top = margin.top;
-
-  // a tiny part (the 2 of 40 + 2) keeps room for its label instead of a hairline; the other parts give up the space
-  const mins = p.parts.map(part => Math.max(26, labelWidth(formatNumber(part), labelFontSize)));
-  const { lengths } = fitParts(p.parts, mins, Math.max(totalWidth, mins.reduce((a, b) => a + b, 0)), unit);
-  const drawnWidth = lengths.reduce((a, b) => a + b, 0);
-  let x = left;
+  const gaps = PART_GAP * (p.parts.length - 1);
+  const unit = Math.min((maxWidth - gaps) / p.secondFactor, maxHeight / p.firstFactor);
+  const mins = p.parts.map(part => Math.max(30, labelWidth(formatNumber(part), labelFontSize)));
+  const widths = fitParts(p.parts, mins, Math.max(p.secondFactor * unit, mins.reduce((a, b) => a + b, 0)), unit).lengths;
+  const drawn = widths.reduce((a, b) => a + b, 0) + gaps;
+  const left = margin.left, top = margin.top, height = Math.max(p.firstFactor * unit, drawn / MAX_FLAT);
+  let at = left;
+  const cols: AreaBand[] = widths.map((length, i) => { const b = { label: formatNumber(p.parts[i]!), start: at, length }; at += length + PART_GAP; return b; });
+  const rows: AreaBand[] = [{ label: formatNumber(p.firstFactor), start: top, length: height }];
   const regions: AreaRegion[] = p.parts.map((part, index) => {
-    const width = lengths[index]!;
-    const productLabel = formatNumber(p.partialProducts[index]!);
-    const region: AreaRegion = {
+    const c = cols[index]!, product = p.partialProducts[index]!;
+    return {
       index,
       part,
-      product: p.partialProducts[index]!,
-      x,
+      product,
+      x: c.start,
       y: top,
-      width,
-      height: totalHeight,
+      width: c.length,
+      height,
       widthFraction: part / p.secondFactor,
-      partLabel: formatNumber(part),
-      productLabel,
-      labelPlacement: width >= labelWidth(productLabel, labelFontSize) ? "inside" : "below",
+      partLabel: c.label,
+      productLabel: formatNumber(product),
+      labelPlacement: "inside",
       partRow: 0,
       productRow: 0,
-      seats: [],
-      equation: { factors: [p.firstFactor, part], product: p.partialProducts[index]! },
+      seats: seatLines(c.start, top, c.length, height, part, p.firstFactor, 0, STRIP_SEAT_MIN),
+      equation: { factors: [p.firstFactor, part], product },
+      col: index,
+      row: 0,
     };
-    x += width;
-    return region;
   });
-
-  // a narrow rectangle can leave neighbouring labels touching: those step one row further out
-  const stagger = (labels: { x: number; label: string }[]) => {
-    const rows: number[] = [], ends: number[] = [];
-    for (const { x: cx, label } of labels) {
-      const w = labelWidth(label, labelFontSize);
-      let row = 0;
-      while (ends[row] != null && cx - w / 2 < ends[row]! + 4) row++;
-      ends[row] = cx + w / 2;
-      rows.push(row);
-    }
-    return rows;
-  };
-  const partRows = stagger(regions.map(r => ({ x: r.x + r.width / 2, label: r.partLabel })));
-  const below = regions.filter(r => r.labelPlacement === "below");
-  const productRows = stagger(below.map(r => ({ x: r.x + r.width / 2, label: r.productLabel })));
-  regions.forEach((r, i) => { r.partRow = partRows[i]!; });
-  below.forEach((r, i) => { r.productRow = productRows[i]!; });
-  const extraTop = Math.max(0, ...partRows) * ROW, extraBottom = Math.max(0, ...productRows) * ROW;
-  if (extraTop) for (const r of regions) r.y += extraTop;
-  for (const r of regions) r.seats = seatLines(r.x, r.y, r.width, r.height, r.part, p.firstFactor);
-
+  const drawnWidth = drawn;
   return {
     kind: "areaModel",
     width: left + drawnWidth + margin.right,
-    height: top + extraTop + totalHeight + margin.bottom + extraBottom,
+    height: top + height + 4,
     unit,
-    vertical: { factor: "first", value: p.firstFactor, label: formatNumber(p.firstFactor), start: top + extraTop, length: totalHeight },
+    vertical: { factor: "first", value: p.firstFactor, label: formatNumber(p.firstFactor), start: top, length: height },
     horizontal: { factor: "second", value: p.secondFactor, label: formatNumber(p.secondFactor), start: left, length: drawnWidth },
+    cols,
+    rows,
     regions,
-    splits: regions.slice(1).map(r => r.x),
     total: { terms: [...p.partialProducts], value: p.product },
   };
 }

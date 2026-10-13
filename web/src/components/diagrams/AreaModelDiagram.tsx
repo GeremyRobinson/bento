@@ -1,10 +1,10 @@
-import { useLayoutEffect, useState, type CSSProperties } from "react";
-import type { AreaDiagram } from "../../explanations/diagrams/area-model/schema";
+import { useCallback, useState, type CSSProperties } from "react";
+import type { AreaDiagram, AreaRegion } from "../../explanations/diagrams/area-model/schema";
 import type { AnimationState } from "../../explanations/schema";
 import { formatNumber } from "../../curriculum/schemas/math-text";
-import { ROW } from "../../explanations/diagrams/area-model/build";
 import { useLabelFloor } from "./labelFloor";
-import { layoutRect } from "../../app/transition";
+import { PART_GAP, STRIP_SEAT_MIN } from "../../explanations/diagrams/area-model/build";
+import { seatLines } from "../../explanations/diagrams/area-model/seats";
 
 /** What the picture shows at one point of the timeline. Pure, so tests can check it without rendering. */
 export function areaView(timeline: AnimationState[], at: number) {
@@ -19,93 +19,81 @@ export function areaView(timeline: AnimationState[], at: number) {
 }
 
 const LABEL_GAP = 10;
+/** on screen, whatever the picture's scale (v2 spec G1, G5, G6): parts at least 8px apart between their outlines, labels
+ * 20px and 10px from their part, results 14px and inside their part. The outline is 3 units wide on each side of a gap. */
+const SCREEN = { gap: 8, label: 20, labelGap: 10, result: 14, pad: 4 };
+const LABEL_MIN = 28, RESULT_MAX = 26, OUTLINE = 3, DIGIT = 0.7, CAP = 0.72;
+
+/** a result's size in picture units before the on-screen floor: fits its part, 12 to 26 (G6) */
+export const resultSize = (w: number, h: number) => Math.round(Math.max(12, Math.min(RESULT_MAX, h * 0.42, w * 0.3)));
+
+/** Where the parts and labels go once the picture's scale is known (`px`, units per screen pixel): gaps, label room and a
+ * part's width never shrink below what reads on screen, so a small phone picture spreads its parts, makes room for its
+ * labels and widens its strips (all by one stretch, so they keep their proportions) until the thinnest holds its result. Counts and seats still come from the numbers. */
+export function areaFit(d: AreaDiagram, px: number, room = Infinity) {
+  const lu = Math.max(LABEL_MIN, SCREEN.label * px), lg = Math.max(LABEL_GAP, SCREEN.labelGap * px);
+  const gap = Math.max(PART_GAP, SCREEN.gap * px + 2 * OUTLINE);
+  const side = Math.max(0, ...d.rows.map(r => r.label.length * lu * DIGIT)) + lg;
+  const first = d.cols[0]?.start ?? d.horizontal.start, top = d.vertical.start;
+  const dx = Math.max(0, side - first), dy = Math.max(0, lg + lu * CAP - top);
+  const need = (r: AreaRegion) => r.productLabel.length * Math.max(resultSize(r.width, r.height), SCREEN.result * px) * DIGIT + 2 * Math.max(4, SCREEN.pad * px);
+  // one stretch for every column, so the strips keep their proportions to each other (20 stays five times 4)
+  // only as far as the panel has room at this scale: past that the picture would shrink and its text with it
+  const fixedW = first + dx + gap * (d.cols.length - 1) + (d.width - (d.horizontal.start + d.horizontal.length));
+  const total = d.cols.reduce((a, c) => a + c.length, 0);
+  const want = Math.max(...d.cols.map((c, i) => Math.max(0, ...d.regions.filter(r => r.col === i).map(need)) / c.length));
+  const k = Math.max(1, Math.min(want, (room - fixedW) / total));
+  const widths = d.cols.map(c => c.length * k);
+  const starts: number[] = [];
+  widths.reduce((at, w, i) => (starts[i] = at, at + w + gap), first + dx);
+  const right = starts.length ? starts[starts.length - 1]! + widths[widths.length - 1]! : first + dx;
+  const width = Math.max(d.width, right + (d.width - (d.horizontal.start + d.horizontal.length)));
+  return { lu, lg, dy, starts, widths, width, height: d.height + dy };
+}
 
 /**
- * Draws an area model exactly as its diagram model says. Every position, size and label comes from the model;
- * this component only decides which parts are visible at the current animation state, and which way round it lies:
- * when its tile is wide and the rectangle tall (or the other way), it turns a quarter so the longer side runs along
- * the longer side of the tile and the picture draws bigger (G 19:29 "changing the priority for numbers based on screen
- * size"). A story's picture never turns, so its rows stay the story's rows.
+ * Draws an area model exactly as its diagram model says (v2 lesson spec G1-G9). Every position, size and label comes from
+ * the model; this component only decides which parts are lit and which results show at the current animation state.
+ * Each column and row is labelled once, outside the picture: column labels centred over their column, row labels at the
+ * picture's left edge, in line with the problem. A label is lit while its part is the one being worked on.
  */
-export function AreaModelDiagram({ diagram: d, timeline, at, turn = true }: { diagram: AreaDiagram; timeline: AnimationState[]; at: number; /** may lie the other way round to fit its tile */ turn?: boolean }) {
-  const v = areaView(timeline, at);
-  const top = d.vertical.start, height = d.vertical.length;
-  const left = d.horizontal.start, width = d.horizontal.length;
+export function AreaModelDiagram({ diagram: d, timeline, at, ask }: { diagram: AreaDiagram; timeline: AnimationState[]; at: number; ask?: number; /** kept for callers; the v2 picture never turns */ turn?: boolean }) {
+  const view = areaView(timeline, at);
+  // practice lights the part it is asking about (no answer yet)
+  const asked = ask != null ? timeline[ask] : undefined;
+  const v = { ...view, active: asked?.phase === "region" ? asked.index : view.active };
+  const lit = v.active != null ? d.regions[v.active] : undefined;
   const label = `${d.vertical.label} by ${d.horizontal.label} rectangle, split into ${d.regions
-    .map(r => `${d.vertical.label} by ${r.partLabel} = ${r.productLabel}`).join(" and ")}. Total ${formatNumber(d.total.value)}.`;
-  const ref = useLabelFloor(d.width);
-  // which way round fits the tile bigger; a little hysteresis keeps it from flipping back and forth at the edge
-  const [turned, setTurned] = useState(false);
-  useLayoutEffect(() => {
-    const box = ref.current?.parentElement;
-    if (!turn || !box) { setTurned(false); return; }
-    const pick = () => {
-      const r = layoutRect(box);
-      if (r.width <= 0 || r.height <= 0) return;
-      const flat = Math.min(r.width / d.width, r.height / d.height), side = Math.min(r.width / d.height, r.height / d.width);
-      setTurned(t => (t ? side >= flat / 1.1 : side > flat * 1.1));
-    };
-    pick();
-    if (typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(pick);
-    ro.observe(box);
-    return () => ro.disconnect();
-  }, [d, turn, ref]);
-  const T = turn && turned;
-  const P = (x: number, y: number) => (T ? { x: y, y: x } : { x, y });
-  const W = T ? d.height : d.width, H = T ? d.width : d.height;
-  // the finished picture (every part, shown yet or not) sits in the middle of the canvas (G 18:09 "check if pictures are
-  // centered"); it is centred once, so parts appear where they stay and nothing slides between beats (G 19:34)
-  const [shift, setShift] = useState<{ k: string; dx: number; dy: number }>({ k: "", dx: 0, dy: 0 });
-  const pic = `${d.width}x${d.height}:${d.total.value}:${T}`;
-  useLayoutEffect(() => {
-    const g = ref.current?.querySelector<SVGGElement>(".vcentre");
-    if (!g || typeof g.getBBox !== "function") return;
-    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-    g.querySelectorAll<SVGGraphicsElement>("text,rect,line").forEach(e => {
-      try {
-        let b = e.getBBox();
-        if (!(b.height > 0 || b.width > 0)) return;
-        // shapes in the turned group measure in their own (unturned) units
-        if (e.closest(".turned")) b = { x: b.y, y: b.x, width: b.height, height: b.width } as DOMRect;
-        x0 = Math.min(x0, b.x); x1 = Math.max(x1, b.x + b.width); y0 = Math.min(y0, b.y); y1 = Math.max(y1, b.y + b.height);
-      } catch { /* not measurable */ }
-    });
-    if (y1 > y0) setShift({ k: pic, dx: Math.round(W / 2 - (x0 + x1) / 2), dy: Math.round(H / 2 - (y0 + y1) / 2) });
-  }, [pic, ref, W, H]);
-  const sh = shift.k === pic ? shift : { dx: 0, dy: 0 };
-  const end = T ? "end" : "middle";
+    .map(r => `${r.equation.factors[0]} by ${r.equation.factors[1]} = ${r.productLabel}`).join(" and ")}. Total ${formatNumber(d.total.value)}.`;
+  // the picture's scale (units per screen pixel); only a real change re-lays it out, so it settles in one or two passes
+  const [scale, setScale] = useState({ px: 0, room: Infinity });
+  const onPx = useCallback((px: number, room: number) => setScale(o => (Math.abs(px - o.px) > o.px * 0.03 || Math.abs(room - o.room) > o.room * 0.03 ? { px, room } : o)), []);
+  const fit = areaFit(d, scale.px, scale.room);
+  const ref = useLabelFloor(fit.width, onPx);
+  const top = d.vertical.start;
   return (
-    <svg ref={ref} className="am" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={label}
-      data-split={v.split} data-sum={v.sum} data-turned={T} style={{ "--w": W, "--h": H } as CSSProperties}>
-      <g className="vcentre" style={{ transform: `translate(${sh.dx}px, ${sh.dy}px)` }}>
-      {/* the side labels sit just outside the rectangle and grow away from it, so a label held big on a phone never runs into it */}
-      <text className={`axis-label${T ? " out-top" : ""}`} {...P(left - LABEL_GAP, top + height / 2)} style={{ textAnchor: T ? "middle" : "end" }}>{d.vertical.label}</text>
-      <text className={`whole${T ? "" : " out-top"}`} {...P(left + width / 2, top - LABEL_GAP)} style={{ textAnchor: end }}>{d.horizontal.label}</text>
+    <svg ref={ref} className="am" viewBox={`0 0 ${fit.width} ${fit.height}`} preserveAspectRatio="xMinYMin meet" role="img" aria-label={label}
+      data-split={v.split} data-sum={v.sum} style={{ "--w": fit.width, "--h": fit.height } as CSSProperties}>
+      <g transform={`translate(0 ${fit.dy})`} fill="none">
+      {d.cols.map((c, i) => (
+        <text key={`c${i}`} className="part out-top" data-lit={!lit || lit.col === i} x={fit.starts[i]! + fit.widths[i]! / 2} y={top - fit.lg - fit.lu * 0.36} style={{ textAnchor: "middle" }}>{c.label}</text>
+      ))}
+      {d.rows.map((r, i) => (
+        <text key={`r${i}`} className="part" data-lit={!lit || lit.row === i} x={0} y={r.start + r.length / 2} style={{ textAnchor: "start" }}>{r.label}</text>
+      ))}
       {d.regions.map(r => {
-        const below = r.labelPlacement !== "inside";
-        const lead = { a: P(r.x + r.width / 2, r.y + r.height - 6), b: P(r.x + r.width / 2, r.y + r.height + 8 + r.productRow * ROW) };
+        const x = fit.starts[r.col]!, w = fit.widths[r.col]!;
+        const seats = w === r.width ? r.seats.map(l => ({ ...l, x1: l.x1 - r.x + x, x2: l.x2 - r.x + x })) : seatLines(x, r.y, w, r.height, r.part, r.equation.factors[0], 0, STRIP_SEAT_MIN);
         return (
-          <g key={r.index} className={`region r${r.index % 3}`} data-shown={v.shown.has(r.index) || v.sum} data-active={v.active === r.index}>
-            <g className={T ? "turned" : undefined} transform={T ? "matrix(0 1 1 0 0 0)" : undefined}>
-              <rect x={r.x} y={r.y} width={r.width} height={r.height} />
-              {r.seats.map((l, k) => <line key={k} className={l.ten ? "seat ten" : "seat"} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} />)}
-            </g>
-            <text className={`part${T ? "" : " out-top"}`} {...P(r.x + r.width / 2, top - LABEL_GAP - (T ? 0 : r.partRow * ROW))} style={{ textAnchor: end }}>{r.partLabel}</text>
-            {!below ? (
-              <text className="product" {...P(r.x + r.width / 2, r.y + r.height / 2)}>{r.productLabel}</text>
-            ) : (
-              <g className="product">
-                <line className="leader" x1={lead.a.x} y1={lead.a.y} x2={lead.b.x} y2={lead.b.y} />
-                <text {...P(r.x + r.width / 2, r.y + r.height + 22 + r.productRow * ROW)} style={{ textAnchor: T ? "start" : "middle" }}>{r.productLabel}</text>
-              </g>
-            )}
-          </g>
+        <g key={r.index} className="region" data-shown={v.shown.has(r.index) || v.sum} data-active={v.active === r.index}>
+          {/* one shape per part: the fill, with its outline just outside it so every seat shows whole (G1, G2) */}
+          <rect className="fill edge" x={x - 1.5} y={r.y - 1.5} width={w + 3} height={r.height + 3} rx={5.5} />
+          {seats.map((l, k) => <line key={k} className="seat" x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} />)}
+          {/* the part's result sits inside it, sized to the part (G6) */}
+          <text className="product" x={x + w / 2} y={r.y + r.height / 2} style={{ "--fs": resultSize(r.width, r.height) } as CSSProperties}>{r.productLabel}</text>
+        </g>
         );
       })}
-      <g className={T ? "turned" : undefined} transform={T ? "matrix(0 1 1 0 0 0)" : undefined}>
-        {d.splits.map(x => <line key={x} className="split-line" x1={x} y1={top - 6} x2={x} y2={top + height + 6} />)}
-      </g>
       </g>
     </svg>
   );

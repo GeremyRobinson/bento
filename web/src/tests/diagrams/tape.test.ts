@@ -73,8 +73,9 @@ describe("pictures follow the problem", () => {
       const shaded = shownAt(d, 2).filter((i): i is Rect => i.type === "rect" && i.cls === "seg on");
       expect(shaded.filter(r => r.y === tops.at(-1))).toHaveLength(a * k);
       expect(span(shaded.filter(r => r.y === tops.at(-1))) / span(last)).toBeCloseTo(a / b, 1);
-      expect(texts(d, 2)).toContain(String(a * k));
-      expect(texts(d, 1)).toContain("?");
+      // labels read on one line now (picture system): the count is the top of "4/8"
+      expect(texts(d, 2).some(t => t === String(a * k) || t.startsWith(`${a * k}/`))).toBe(true);
+      expect(texts(d, 1).some(t => t === "?" || t.startsWith("?/"))).toBe(true);
     }
     expect(cutChain(4)).toEqual([2, 2]);
     expect(cutChain(5)).toEqual([5]);

@@ -1,4 +1,4 @@
-import { num, op } from "../../../schemas/math-text";
+import { formatNumber, num, op } from "../../../schemas/math-text";
 import type { LessonDefinition } from "../../../schemas/lesson";
 import { splitMultiplicationAnswers } from "./answers";
 import { explainSplitMultiplication } from "./explanation";
@@ -16,6 +16,8 @@ export const lesson: LessonDefinition<SplitMultiplicationProblem> = {
   display: p => [num(p.firstFactor), op("×"), num(p.secondFactor)],
   answers: splitMultiplicationAnswers,
   explain: explainSplitMultiplication,
+  // v2 spec C2: "✕ It's 2040. Split it into tens and ones: 1700 + 340."
+  checkWhy: p => `Split it into tens and ones: ${p.partialProducts.map(formatNumber).join(" + ")}.`,
   story: p => ({ op: "×", text: `A theater has **${p.firstFactor}** rows. Each row has **${p.secondFactor}** seats. How many seats are there?` }),
 };
 

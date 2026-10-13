@@ -15,6 +15,8 @@ export interface RuntimeStep {
   slots: AnswerSlot[];
   choices?: string[];
   hint: string;
+  /** what to look at after a wrong answer no known slip explains */
+  look?: string;
   explain: string;
   work: MathText;
   /** true for the final-answer shortcut that stands in for several steps */
@@ -39,6 +41,7 @@ export function runtimeSteps(model: AnswerModel): RuntimeStep[] {
     prompt: s.prompt,
     slots: s.slots,
     hint: s.hint,
+    ...(s.look ? { look: s.look } : {}),
     explain: s.explain,
     work: s.work,
     parts: [{ step: s, suffix: "" }],

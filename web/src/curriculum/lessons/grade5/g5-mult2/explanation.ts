@@ -6,6 +6,7 @@ import type { AreaDiagram, AreaLayout } from "../../../../explanations/diagrams/
 import type { SplitMultiplicationProblem } from "./problem";
 import { placeName } from "../../../generators/place-value";
 
+const COUNT = ["", "one", "two", "three", "four"];
 const plusChain = (values: number[]): MathText => values.flatMap((v, i) => (i ? [op("+"), num(v)] : [num(v)]));
 
 /** Value the answer model expects for a step; the explanation must arrive at the same number. */
@@ -35,7 +36,7 @@ export function explainSplitMultiplication(p: SplitMultiplicationProblem, answer
   const steps: ExplanationStep[] = [
     {
       id: "split",
-      narration: many ? `Split ${f(b)} into tens and ones.` : `${f(b)} has only one part, so there's nothing to split.`,
+      narration: many ? "split into tens and ones" : "only one part, nothing to split",
       math: [num(b), op("="), ...plusChain(p.parts)],
       state: stateOf(s => s.phase === "split"),
       result: b,
@@ -44,7 +45,7 @@ export function explainSplitMultiplication(p: SplitMultiplicationProblem, answer
       const result = expectedFor(answers, `partial-${i}`);
       return {
         id: `partial-${i}`,
-        narration: `The ${placeName(part)} strip is ${f(a)} tall and ${f(part)} wide.`,
+        narration: `the ${placeName(part)} strip`,
         math: [num(a), op("×"), num(part), op("="), num(result)],
         state: stateOf(s => s.phase === "region" && s.index === i),
         answerStep: `partial-${i}`,
@@ -56,7 +57,7 @@ export function explainSplitMultiplication(p: SplitMultiplicationProblem, answer
     const result = expectedFor(answers, "sum");
     steps.push({
       id: "sum",
-      narration: "Add the strips to fill the whole rectangle.",
+      narration: `add the ${COUNT[p.parts.length] ?? p.parts.length} strips`,
       math: [...plusChain(p.partialProducts), op("="), num(result)],
       state: stateOf(s => s.phase === "sum"),
       answerStep: "sum",
@@ -71,5 +72,6 @@ export function explainSplitMultiplication(p: SplitMultiplicationProblem, answer
     diagram: buildSplitAreaDiagram(p, layout),
     timeline,
     steps,
+    solved: many ? `The ${COUNT[p.parts.length] ?? p.parts.length} strips make ${f(p.product)}.` : undefined,
   };
 }

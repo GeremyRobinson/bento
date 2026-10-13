@@ -1,0 +1,117 @@
+/* ==== The picture system (v2 lesson spec §1 and §3, Review's colour gate K1-K7). ONE place says what every lesson
+   picture looks like: every role a picture builder can name (a cls in scene/schema.ts, a role variable in
+   diagram-master.css) resolves here to a picture token. A builder picks roles; it never picks colours or gaps.
+
+   COLOUR: the role                          what it means                                 token
+   part fill, not reached                    .seg, .cell waiting, .xbox, --fill*, --soft*  pic-soft
+   part fill, active or done                 .seg.on, .cell, .xchip, --tint, --c0..--c2    pic-mid
+   part outline (3px, just outside)          every part, --k0..--k2, --acc, --ink          pic-deep
+   label                                     text.lbl (and text.sm row labels)             pic-deep (muted when another part is active)
+   result, sum, caption, "?"                 text.res, text.acc, .pq text, --ka            ink
+   result ON a mid part                      text.onmid, text.onlbl                        pic-on-mid (tokens.css): ink in light,
+                                                                                          pic-line in dark, where ink on mid is
+                                                                                          only 2.2:1 (pic-line reads 7.6:1)
+   seats, inner lines                        .seat, .tk inside parts                       pic-line
+   axes, brackets, the whole                 .ax, .pw, --text                              ink
+   not counted                               .seg.cut, .pend, --well / --faint             key fill, done outline
+   second quantity (opt in: .two)            .p1 / --c1, --k1, --fill1, --soft1            picb-mid / picb-deep / picb-soft
+   never in a picture                        the accent (acc, blue), red, green, cyan, teal
+
+   A picture shows violet only when its lesson must tell two quantities apart (thirds vs quarters, the second fraction):
+   its scene sets `two: true` and the renderer adds class "two". Without it --c1 is amber like everything else.
+
+   SPACING (model units; the TS twin is explanations/diagrams/scene/picture-system.ts, kept equal by
+   tests/styles/picture-system.test.ts):
+   gap between parts: area model 12, fraction bar segments 6, mixed-number and unit-division bars 4;
+   rows of a bar picture: the same gap as its pieces; label to its part 10; labels 20/650; outline 3; seats 1 at .55.
+   On screen: labels never under 20px, other picture text never under 14px. */
+
+#app{--pic-gap-area:12px;--pic-gap-bar:6px;--pic-gap-mixed:4px;--pic-label-gap:10px;--pic-label:20px;--pic-outline:3px;--pic-seat:1px;--pic-text-min:14px;
+  /* the part colours the problem line wears (statement.ts partsLook) follow the picture: one hue unless it's a two */
+  --c0:var(--pic-mid);--c1:var(--pic-mid);--c2:var(--pic-mid);--k0:var(--pic-deep);--k1:var(--pic-deep);--k2:var(--pic-deep)}
+#app :is(.screen,.v-today):has(.viz-svg.two){--c1:var(--picb-mid);--k1:var(--picb-deep)}
+/* the first quantity in the problem line is always the picture's amber, whatever the lesson's old tone (.t0-.t3) */
+#app :is(.t0,.t1,.t2,.t3) :is(.mline .pt.p0,.tone.p0){color:var(--k0)}
+
+/* every role a picture reads, mapped on the picture itself so nothing from the page (the grade accent, the old palette's
+   cyan --ka and --acc, the lifted --lbl) reaches inside */
+#app :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){
+  --tint:var(--pic-mid);--deep:var(--pic-deep);--ink:var(--pic-deep);--lbl:var(--deep);
+  --c0:var(--pic-mid);--c1:var(--pic-mid);--c2:var(--pic-mid);--k0:var(--pic-deep);--k1:var(--pic-deep);--k2:var(--pic-deep);
+  --fill0:var(--pic-soft);--fill1:var(--pic-soft);--fill2:var(--pic-soft);--soft:var(--pic-soft);--soft0:var(--pic-soft);--soft1:var(--pic-soft);--soft2:var(--pic-soft);
+  --tint-soft:var(--pic-soft);--dot:var(--pic-mid);
+  --acc:var(--pic-deep);--soft-acc:var(--pic-mid);--ka:var(--v-ink);
+  --text:var(--v-ink);--muted:var(--v-muted);--rule:var(--v-line);--faint:var(--v-done);--well:var(--v-key);--card:var(--v-card);
+  --on-pic:var(--pic-on-mid);--on-tint:var(--pic-on-mid);--d-line:var(--pic-outline)}
+#app :is(.viz-svg,.am,.viz).two{--c1:var(--picb-mid);--k1:var(--picb-deep);--fill1:var(--picb-soft);--soft1:var(--picb-soft)}
+/* a part class retints everything in it, outline, fill and label together (a part never mixes amber and violet, M5) */
+#app .viz-svg .p0{--tint:var(--c0);--deep:var(--k0);--soft:var(--soft0)}
+#app .viz-svg .p1{--tint:var(--c1);--deep:var(--k1);--soft:var(--soft1)}
+#app .viz-svg .p2{--tint:var(--c2);--deep:var(--k2);--soft:var(--soft2)}
+#app .viz-svg .pw{--tint:var(--v-ink);--deep:var(--v-ink)}
+#app .viz-svg .pq{--tint:var(--v-ink);--deep:var(--v-ink)}
+#app .viz-svg text{--lbl:var(--deep)}
+
+/* text: labels deep at 20/650, results and captions ink, small notes muted */
+#app .viz-svg text{fill:var(--v-ink)}
+/* on screen a label never reads under 20px and any other text never under 14px (--px: model units per screen pixel) */
+#app .viz-svg text:not(.big,.sm,.xs,.lbl){font-size:max(var(--d-text),calc(var(--pic-text-min) * var(--px,0)))}
+#app .viz-svg text.sm{font-size:max(var(--d-text-sm),calc(var(--pic-text-min) * var(--px,0)))}
+#app .viz-svg text.xs{font-size:max(var(--d-text-xs),calc(var(--pic-text-min) * var(--px,0)))}
+#app .viz-svg text.big:not(.lbl){font-size:max(var(--d-text-xl),calc(var(--pic-label) * var(--px,0)))}
+#app .viz-svg text.lbl{fill:var(--deep);font-size:max(var(--pic-label),calc(var(--pic-label) * var(--px,0)));font-weight:var(--w-bold)}
+#app .viz-svg text.lbl.big{font-size:max(var(--d-text-lg),calc(var(--pic-label) * var(--px,0)))}
+#app .viz-svg :is(text.acc,text.pq,.pq text,text.okmark,text.lbl.pw,text.res){fill:var(--v-ink)}
+#app .viz-svg :is(text.xs,text.muted,text.lbl.muted){fill:var(--v-muted)}
+/* text sitting on a mid part (after the muted rule: a small count on a shaded piece is a result, not a note) */
+#app .viz-svg :is(text.onlbl,text.onmid,text.xs.onlbl){fill:var(--pic-on-mid)}
+
+/* parts: soft until reached, mid once active or done, a 3px deep outline */
+#app .viz-svg :is(.seg,.xbox,.sq,.tile.x,.foldshape){fill:var(--pic-soft);stroke:var(--deep);stroke-width:var(--pic-outline)}
+#app .viz-svg :is(.seg.on,.cell,.xchip,.sq.big,.bar,.foldhalf){fill:var(--tint);stroke:var(--deep);stroke-width:var(--pic-outline)}
+#app .viz-svg .xbox.pw{fill:none;stroke:var(--v-done)}
+#app .viz-svg .xchip.pq{fill:var(--pic-mid);stroke:var(--pic-deep)}
+/* not counted: grey fill, grey outline (M5) */
+#app .viz-svg :is(.seg.cut,.seg.on.cut,.pend,.xchip.ghost){fill:var(--v-key);stroke:var(--v-done);opacity:1}
+/* shading inside a whole (fraction grids, columns): the part's own soft or mid, never a see-through mix */
+#app .viz-svg :is(.fill,.fillsoft,.shadeA){fill:var(--soft);opacity:1}
+#app .viz-svg .shadeA{fill:var(--tint);stroke:var(--deep);stroke-width:var(--pic-outline)}
+/* shaded twice (a fraction of a fraction): the first quantity's amber half over the second's violet */
+#app .viz-svg :is(.shadeB,.both){fill:var(--pic-mid);stroke:none}
+#app .viz-svg .lit{fill:var(--pic-mid)}
+/* solids: faces in the three strengths, edges deep */
+#app .viz-svg .cf{stroke:var(--pic-line)}
+#app .viz-svg .cf.cube{stroke:var(--pic-deep);stroke-width:var(--pic-seat)}
+#app .viz-svg .cf.cube.left,#app .viz-svg .cf.left{fill:var(--pic-soft)}
+#app .viz-svg :is(.cf.cube.top,.cf.top){fill:var(--pic-mid)}
+#app .viz-svg :is(.cf.cube.right,.cf.right){fill:var(--pic-mid)}
+#app .viz-svg :is(.edge,.litedge){stroke:var(--pic-deep)}
+/* seats and inner lines */
+#app :is(.viz-svg,.am) .seat{stroke:var(--pic-line);stroke-width:var(--pic-seat);opacity:.55}
+#app .viz-svg .grid{stroke:var(--pic-line);opacity:.55}
+/* lines, marks and points: amber, the one to look at deep; the whole and its brackets ink */
+#app .viz-svg :is(.ln2,.hl,.hlline,.ring,.xring,.arcline.thin){stroke:var(--pic-deep)}
+#app .viz-svg .dotp{fill:var(--pic-mid);stroke:var(--pic-deep);stroke-width:var(--d-stroke)}
+#app .viz-svg .dota{fill:var(--pic-mid)}
+
+/* tile pictures (TilePics, .v-pic): the same roles, still. Outlines deep, taken parts mid, the rest grey (not counted) */
+#app .v-pic :is(rect,polygon){stroke:var(--pic-deep)}
+#app .v-pic .rest{fill:var(--v-key);stroke:var(--v-done)}
+#app .v-pic .frame{stroke:var(--v-done)}
+/* the picked tile wears ONE accent ring, inset on the tile card (spec D2), never a second one round it or its picture:
+   keyboard focus on a tile shows as that same ring */
+#app .v-cover:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--v-acc)}
+#app .v-cover :is(.v-picbox,.v-pic){outline:none;box-shadow:none}
+
+/* the area model's results (g5-mult2 and every .am): on its mid parts, in the on-mid text token, and sized 12 to 26
+   picture units like every other result (spec G6), never under 12px on screen */
+#app .am .region{fill:none}
+#app .am .region .product,#app .am .region .product text{fill:var(--v-ink)}
+#app .am .region:is([data-shown="true"],[data-active="true"]) :is(.product,.product text){fill:var(--pic-on-mid)}
+#app .am .region .product{font-size:max(calc(min(var(--fs),26) * 1px),calc(var(--pic-text-min) * var(--px,0)))}
+
+/* Today's picture on home: the lesson's picture at rest. Still, every part soft, no results (spec: Today on home) */
+#app .v-todaypic :is(.viz-svg,.am) *{animation:none;transition:none}
+#app .v-todaypic .am .region .fill,#app .v-todaypic .am .region[data-shown="true"] .fill,#app .v-todaypic .am .region[data-active="true"] .fill{fill:var(--pic-soft)}
+#app .v-todaypic .viz-svg .cell{fill:var(--pic-soft)}
+#app .v-todaypic :is(.am .region .product,.viz-svg text.res,.viz-svg text.onmid){display:none}

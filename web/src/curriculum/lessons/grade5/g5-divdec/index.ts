@@ -64,7 +64,7 @@ export const lesson: LessonDefinition<DivDecimalProblem> = {
   grade: 5,
   unit: "Decimals",
   title: "Dividing by a decimal",
-  pre: "g5-divide",
+  pre: "g5-pow10",
   reference: createDivDecimal(6, 8), // 4.8 ÷ 0.6 = 8, the current app's example
   generate: rng => { const d = rng.int(2, 9), qt = rng.int(2, 12); return createDivDecimal(d, qt); },
   restore: raw => restoreVia(raw, ["d", "qt"] as const, v => createDivDecimal(v.d, v.qt)),

@@ -49,7 +49,7 @@ export function mixedToImproperPicture({ w, n, d }: MixedToImproperProblem) {
   }));
   rows.push({ length: 1, parts: d, fills: [{ a: 0, b: n / d, tone: "two" }], label: [{ text: `${n}/${d}` }],
     total: [{ text: `${S}`, from: 2, until: 2, acc: true }, { text: `${S}/${d}`, from: 3, acc: true }] });
-  return buildTape({ rows, alt: `${w} whole bars of ${count(d, "piece")} and a bar with ${n} of ${count(d, "piece")}: ${count(S, "piece")} in all, so ${w} ${n}/${d} = ${S}/${d}.` });
+  return buildTape({ rows, gap: "mixed", alt: `${w} whole bars of ${count(d, "piece")} and a bar with ${n} of ${count(d, "piece")}: ${count(S, "piece")} in all, so ${w} ${n}/${d} = ${S}/${d}.` });
 }
 
 function explain(p: MixedToImproperProblem, model: AnswerModel): Explanation {

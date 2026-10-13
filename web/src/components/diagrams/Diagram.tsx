@@ -4,9 +4,9 @@ import { ChainDiagram } from "./ChainDiagram";
 import { SceneDiagram } from "./SceneDiagram";
 
 /** Picks the renderer for a diagram model. */
-export function Diagram({ diagram, timeline, at, fit = false, turn = true }: { diagram: DiagramModel; timeline: AnimationState[]; at: number; /** scene pictures fill their box */ fit?: boolean; /** an area model may lie the other way round to fit its box (never a story's) */ turn?: boolean }) {
+export function Diagram({ diagram, timeline, at, ask, fit = false, turn = true }: { diagram: DiagramModel; timeline: AnimationState[]; at: number; /** practice: the beat being asked about now, lit without its answer */ ask?: number; /** scene pictures fill their box */ fit?: boolean; /** an area model may lie the other way round to fit its box (never a story's) */ turn?: boolean }) {
   switch (diagram.kind) {
-    case "areaModel": return <AreaModelDiagram diagram={diagram} timeline={timeline} at={at} turn={turn} />;
+    case "areaModel": return <AreaModelDiagram diagram={diagram} timeline={timeline} at={at} ask={ask} turn={turn} />;
     case "scene": return <SceneDiagram diagram={diagram} at={at} fit={fit} />;
     case "chain": return <ChainDiagram diagram={diagram} at={at} />;
   }

@@ -1,27 +1,26 @@
 import { Pill } from "../components/primitives/Pill";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { useApp } from "../app/AppState";
-import { mins, when } from "../app/format";
+import { when } from "../app/format";
 import { reduceMotion } from "../app/transition";
-import { bandOf, gradeOf, tintStyle } from "../curriculum/grades";
+import { gradeOf, tintStyle } from "../curriculum/grades";
 import { placeKey, placementResult } from "../engine/session/practice";
-import { lessonById, lessonsInGrade } from "../curriculum/registry";
-import { LEVELS } from "../engine/mastery/levels";
+import { lessonById, requireLesson } from "../curriculum/registry";
+import { toPlainText } from "../curriculum/schemas/math-text";
 import { BuildUp } from "../components/BuildUp";
 import type { SessionReport } from "../engine/session/types";
 import { SessionReportView } from "../components/reports/SessionReportView";
 import { FitScreen } from "../components/screen/Screen";
-import { ALL_LESSONS, PRACTICE_AGAIN } from "../app/copy";
+import { ALL_LESSONS, SKILL_CHECK } from "../app/copy";
 import { upNext } from "../app/today";
-import { PreviewWell } from "./Home";
-
-function Confetti() {
-  const bits = useMemo(() => {
-    const cols = ["var(--c0)", "var(--c1)", "var(--c2)", "var(--acc)"], r = (lo: number, hi: number) => lo + Math.floor(Math.random() * (hi - lo + 1));
-    return Array.from({ length: 28 }, (_, i) => ({ "--x": `${r(-160, 160)}px`, "--y": `${r(-220, -80)}px`, "--r": `${r(-300, 300)}deg`, "--c": cols[i % 4], "--d": `${(i % 7) * 0.03}s` }) as CSSProperties);
-  }, []);
-  return <div className="confetti" aria-hidden="true">{bits.map((s, i) => <i key={i} style={s} />)}</div>;
-}
+import { PreviewWell, statusOf } from "./Home";
+import { isCheckKey, learned, lessonOfCheck } from "../engine/mastery/skills";
+import { plainProblem } from "../components/practice/ProblemView";
+import { Cover } from "../components/Cover";
+import { Rich } from "../components/primitives/MathLine";
+import { lessonPic, TilePic } from "../components/TilePics";
+import { isReady, unitsInGrade } from "../app/curriculum";
+import { learnedCount } from "../app/rings";
 
 /** Counts up from 0 over a moment, like the current app's XP figure. */
 export function CountUp({ to, pre = "" }: { to: number; pre?: string }) {
@@ -68,7 +67,7 @@ function Placed({ rep }: { rep: SessionReport }) {
 
 /** The screen after a run: score ring, XP, time, what to do next, then the full report. */
 export function Results() {
-  const { lastReport: rep, progress, go, startLesson, startTest } = useApp();
+  const { lastReport: rep, progress, reports, go, startTest } = useApp();
   if (!rep) {
     // nothing finished yet: the grade's next lesson, with its own first picture, instead of an empty page (Review v43 #19)
     const next = progress.grade == null ? null : upNext(progress, progress.grade);
@@ -87,37 +86,83 @@ export function Results() {
     );
   }
   if (rep.key.startsWith("place:")) return <Placed rep={rep} />;
-  const lesson = lessonById(rep.key), test = rep.mode === "test", review = rep.mode === "review";
-  const grade = lesson ? lessonsInGrade(lesson.grade) : [], k = lesson ? grade.indexOf(lesson) : -1, next = grade[k + 1];
+  // the skill check after a lesson scores the lesson (v2 model): "n of 4 on your own"
+  const skill = isCheckKey(rep.key);
+  const lesson = lessonById(skill ? lessonOfCheck(rep.key) : rep.key), test = rep.mode === "test" && !skill, review = rep.mode === "review";
   const lastLesson = lessonById(rep.probs[rep.probs.length - 1]?.lessonId ?? "");
-  const band = bandOf(lesson?.grade ?? lastLesson?.grade ?? progress.grade ?? 9);
-  const low = rep.mode === "practice" && rep.level <= 1;
+  const g = lesson?.grade ?? lastLesson?.grade ?? progress.grade ?? 5;
+  // what comes next is what Today will bring
+  const up = lesson ? upNext(progress, g) : null, next = up && up.entry.id !== lesson?.id && lessonById(up.entry.id) ? up.entry : undefined;
+  const low = !test && !review && rep.level <= 1;
+  // v2 (G 2026-10-13): what the score means in words, what Today does next, and the lesson's tile filling in its chapter
+  const words = ["not there yet", "just starting", "getting there", "nearly there", "you\u2019ve got it"][rep.level];
+  const then = test ? "Today keeps track of how the test went." : rep.level >= 3
+    ? (next ? `Next time, Today brings the next lesson: ${next.title}.` : "Next time, Today moves on to something new.")
+    : "Next time, Today brings this back for another go, so it sticks.";
+  const why = skill ? `You finished the lesson. The skill check shows how much stuck. ${then}`
+    : test ? `${rep.clean} of ${rep.total} problems had every step right. ${then}` : `${rep.clean} of ${rep.total} problems with no mistakes. ${then}`;
+  // one thing to watch for: the check's own slip, else the lesson's from just before it
+  const practice = skill && lesson ? reports[lesson.id] : undefined;
+  const watch = watchFor(rep, practice && rep.date - practice.date < 36e5 ? practice : undefined);
   return (
-    <FitScreen className="rscreen">
-      <section className="panel rsum">
-        <div className={`donehead s${rep.level}`}>
-          {rep.level >= 3 && band !== "high" && <Confetti />}
-          <div className="ring"><svg viewBox="0 0 92 92"><circle className="trk" cx="46" cy="46" r="40" /><circle className="val" cx="46" cy="46" r="40" pathLength={1} style={{ strokeDasharray: 1, strokeDashoffset: 1 - rep.level / 4 }} /></svg><b>{rep.level}</b></div>
-          <div className="donetext"><h2>{LEVELS[rep.level]}</h2><p className="muted">Score {rep.level} of 4 · {Math.round(rep.pct * 100)}% of steps right the first time</p></div>
+    <div className="screen v-work v-done">
+      <section className="v-panel v-result" aria-label="Done">
+        <span className="v-label">{`Done \u00b7 ${lesson?.title ?? rep.title}`}</span>
+        <span className="v-seg" aria-label={`Score ${rep.level} of 4`}>{[1, 2, 3, 4].map(k => <i key={k} className={k <= rep.level ? "on" : undefined} />)}</span>
+        <h2>{rep.level} of 4{skill ? " on your own" : ""}: {words}.</h2>
+        <p className="v-why">{why}</p>
+        <div className="v-row">
+          {!test && !review && next && rep.level >= 3 && <button className="v-go" onClick={() => go({ name: "learn", lessonId: next.id }, "next")}>Next: {next.title}</button>}
+          {test && <button className="v-plain" onClick={() => startTest(rep.key)}>Take it again</button>}
+          <button className="v-plain" onClick={() => go({ name: "home", ...(lesson ? { pick: lesson.id } : {}) }, "back")}>Back to your box</button>
         </div>
-        <div className="bento">
-          <div><span className="k">XP earned</span><span className="v"><CountUp to={rep.xp} pre="+" /></span></div>
-          <div><span className="k">{test ? "All steps right" : "No mistakes"}</span><span className="v">{rep.clean}/{rep.total}</span></div>
-          <div><span className="k">Time</span><span className="v">{mins(rep.ms)}<small className="muted"> min</small></span></div>
-        </div>
-        {low && <BuildUp lessonId={rep.key} />}
-        <div className="actions">
-          {rep.mode === "practice" && next && <Pill go onClick={() => go({ name: "learn", lessonId: next.id }, "next")}>Next lesson</Pill>}
-          {test ? <Pill go onClick={() => startTest(rep.key)}>Take it again</Pill>
-            : !review && lesson && <Pill onClick={() => startLesson(lesson.id)}>{PRACTICE_AGAIN}</Pill>}
-          <Pill onClick={() => go({ name: "home" }, "back")}>{ALL_LESSONS}</Pill>
-        </div>
+        {low && lesson && <BuildUp lessonId={lesson.id} />}
+        {rep.mode !== "practice" && rep.probs.length > 0 && <div className="v-recap">
+          <span className="v-label">{skill ? `Your ${SKILL_CHECK.toLowerCase()}` : review ? "Your review" : "Your test"}</span>
+          {rep.probs.map((x, k) => <div key={k} className="v-rp"><b>{plainProblem(x.lessonId, x.problem, true)}</b><span>{!x.wrong && !x.shown ? "Right" : "Not this time"}</span></div>)}
+          {watch && <p className="v-why"><b>Watch for:</b> <Rich text={watch} /></p>}
+        </div>}
+        {watch && !(rep.mode !== "practice" && rep.probs.length > 0) && <p className="v-why"><b>Watch for:</b> <Rich text={watch} /></p>}
       </section>
-      <div className="bcol rreport">
-        <SessionReportView rep={rep} />
-      </div>
-    </FitScreen>
+      <section className="v-panel v-box" aria-label="Your box">{lesson ? <DoneBox g={g} id={lesson.id} /> : null}</section>
+    </div>
   );
+}
+
+/**
+ * Done's one Watch for line, in the child's own words (v2 model): a skill check's missed answer is shown worked ("For
+ * 52 × 26 you put 1300. Step by step: 52 × 20 = 1040, 52 × 6 = 312, 1040 + 312 = 1352."); else what the lesson said to
+ * look at when a step went wrong ("Look again at the lit strip: it's 20 across and 52 down."), never the grown-up's
+ * category.
+ */
+function watchFor(rep: SessionReport, practice?: SessionReport): string | undefined {
+  const m = rep.mistakes[0], pr = m && isCheckKey(rep.key) && m.label === "Final answer" ? rep.probs[m.n - 1] : undefined;
+  if (m && pr) {
+    try {
+      const works = requireLesson(pr.lessonId).answers(pr.problem).steps.map(st => toPlainText(st.work));
+      return `For ${plainProblem(pr.lessonId, pr.problem)} you put ${m.typed}. Step by step: ${works.join(", ")}.`;
+    } catch { /* a lesson without worked steps: what it said below */ }
+  }
+  const all = [...rep.mistakes, ...(practice?.mistakes ?? [])], w = all.find(x => x.say) ?? all[0];
+  return w && (w.say ?? w.msg);
+}
+
+/** The lesson's chapter, its tile now showing the new skill check; a tap goes to the box with that lesson picked. */
+function DoneBox({ g, id }: { g: number; id: string }) {
+  const { progress, go, now } = useApp();
+  const unit = unitsInGrade(g).find(u => u.entries.some(c => c.id === id));
+  if (!unit) return null;
+  const n = learnedCount(progress, unit.entries);
+  return (<>
+    <div className="v-bh"><b>{unit.name}</b><span className="v-meta">{n} of {unit.entries.length} done</span></div>
+    {unit.entries.map(c => {
+      // a check of 3 or 4 is learned and fills the ring (v2 spec C3); the status wraps rather than being cut
+      const st = statusOf(progress, g, c.id, now());
+      return <Cover key={c.id} pick={c.id === id} disabled={!isReady(c.id)} pic={<TilePic svg={lessonPic(c.id)} />} name={c.title} p={learned(progress, c.id) ? 1 : (st.score ?? 0) / 4} tone={st.tone}
+        word={<>{st.word}{st.checked && st.score != null && <span className="v-sc">{` \u00b7 ${st.score}/4`}</span>}</>}
+        onClick={() => go({ name: "home", pick: c.id }, "back")} aria-label={`${c.title}, ${st.word}${st.checked && st.score != null ? `, skill check ${st.score} of 4` : ""}`} />;
+    })}
+  </>);
 }
 
 /** A saved report, opened from the lesson's "Last time" tile or from the grown-up page. */

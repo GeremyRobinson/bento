@@ -1,6 +1,7 @@
 // The area-and-grids family: area grids, place-value blocks, fraction grids and boxes follow the problem's values,
 // and every lesson's picture stays on its canvas for any problem the generator makes.
 import { createRng } from "../../curriculum/generators/rng";
+import { PIC } from "../../explanations/diagrams/scene/picture-system";
 import { buildSplitAreaDiagram, labelWidth } from "../../explanations/diagrams/area-model/build";
 import { createSplitMultiplication } from "../../curriculum/lessons/grade5/g5-mult2/problem";
 import { lessonById } from "../../curriculum/registry";
@@ -59,7 +60,8 @@ describe("lesson pictures follow the problem", () => {
       const d = scene("g3-split", { a, b });
       expect(texts(d).map(t => t.text)).toEqual(expect.arrayContaining(["5", String(b - 5), String(a), String(a * 5), String(a * (b - 5)), `${a} × ${b} = ${a * 5} + ${a * (b - 5)} = ${a * b}`]));
       const cells = d.items.filter(i => i.type === "rect" && i.cls?.startsWith("cell")) as Extract<SceneItem, { type: "rect" }>[];
-      expect((cells[0]!.w + 4) / (cells[1]!.w + 4)).toBeCloseTo(5 / (b - 5), 1);
+      // each part sits half the picture system's area gap inside its column
+      expect((cells[0]!.w + PIC.gap.area) / (cells[1]!.w + PIC.gap.area)).toBeCloseTo(5 / (b - 5), 1);
     }
   });
   it("g4-area: the perimeter path goes round a rectangle in the ratio length : width", () => {
@@ -163,19 +165,17 @@ describe.each(AREA_LESSONS)("%s picture fits its canvas", id => {
 });
 
 describe("split area model labels", () => {
-  const boxes = (rows: { x: number; label: string; row: number }[]) => rows.map(r => ({ ...r, w: labelWidth(r.label, 20) }));
-  const apart = (ls: ReturnType<typeof boxes>) => ls.every((a, i) => ls.slice(i + 1).every(b => a.row !== b.row || Math.abs(a.x - b.x) >= (a.w + b.w) / 2));
-  it("never lets two labels in the same row touch, for any problem", () => {
+  it("never lets two strip labels touch, and every strip's result fits inside it, for any problem", () => {
     for (let a = 12; a <= 98; a += 5) for (let b = 12; b <= 98; b++) {
       if (b % 10 === 0) continue;
       const d = buildSplitAreaDiagram(createSplitMultiplication(a, b));
-      expect(apart(boxes(d.regions.map(r => ({ x: r.x + r.width / 2, label: r.partLabel, row: r.partRow }))))).toBe(true);
-      expect(apart(boxes(d.regions.filter(r => r.labelPlacement === "below").map(r => ({ x: r.x + r.width / 2, label: r.productLabel, row: r.productRow }))))).toBe(true);
-      expect(d.regions.every(r => r.y === d.vertical.start)).toBe(true);
+      d.cols.forEach((c, i) => { if (i) expect(c.start + c.length / 2 - (d.cols[i - 1]!.start + d.cols[i - 1]!.length / 2)).toBeGreaterThanOrEqual((labelWidth(c.label, 20) + labelWidth(d.cols[i - 1]!.label, 20)) / 2); });
+      // the renderer sizes a result to its strip: max(12, min(48, h × .42, w × .3))
+      for (const r of d.regions) {
+        const fs = Math.max(12, Math.min(48, r.height * 0.42, r.width * 0.3));
+        expect(r.productLabel.length * fs * 0.62).toBeLessThanOrEqual(r.width);
+        expect(r.y).toBe(d.vertical.start);
+      }
     }
-  });
-  it("steps the second label of a narrow 77 × 17 down a row", () => {
-    const d = buildSplitAreaDiagram(createSplitMultiplication(77, 17));
-    expect(d.regions.map(r => r.productRow)).toEqual([0, 1]);
   });
 });

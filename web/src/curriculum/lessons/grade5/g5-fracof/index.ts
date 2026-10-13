@@ -72,7 +72,7 @@ export const lesson: LessonDefinition<FractionOfNumberProblem> = {
   grade: 5,
   unit: "Fractions",
   title: "Fraction of a number",
-  pre: "g4-fracwhole",
+  pre: "g3-divfacts",
   // the current app's card and picture: 3/4 of 20 = 15
   reference: createFractionOfNumber(3, 4, 20),
   generate: (rng, index) => generateFractionOfNumber(rng, index),

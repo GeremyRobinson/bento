@@ -13,8 +13,8 @@ const r1 = (v: number) => Math.round(v * 10) / 10;
  * The lines that cut a part `cols` seats wide and `rows` seats tall into its seats.
  * Every seat when each one is big enough to see; otherwise only the blocks of ten, so a big part still counts in hundreds.
  */
-export function seatLines(x: number, y: number, w: number, h: number, cols: number, rows: number, inset = 0): SeatLine[] {
-  const sw = w / cols, sh = h / rows, every = sw >= SEAT_MIN && sh >= SEAT_MIN;
+export function seatLines(x: number, y: number, w: number, h: number, cols: number, rows: number, inset = 0, min = SEAT_MIN): SeatLine[] {
+  const sw = w / cols, sh = h / rows, every = sw >= min && sh >= min;
   const out: SeatLine[] = [];
   for (let k = 1; k < cols; k++) {
     const ten = k % 10 === 0;

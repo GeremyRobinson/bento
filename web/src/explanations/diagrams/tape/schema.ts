@@ -72,4 +72,9 @@ export interface TapeSpec {
   width?: number;
   /** tallest a bar may be (default 46) */
   maxRowHeight?: number;
+  /** the gap between pieces and between rows (picture system, PIC.gap): "bar" for fraction bars (6), "mixed" for
+   *  mixed-number and unit-division bars, one per whole (4) */
+  gap?: "bar" | "mixed";
+  /** two quantities must be told apart (the second fraction): "two" fills turn violet. Otherwise every part is amber */
+  two?: boolean;
 }

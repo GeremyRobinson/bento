@@ -2,7 +2,9 @@
  * The smoke run: Review's manual sweep as one command. Opens the preview build (npm run build:preview first) on the
  * main routes at a phone, iPads and laptops (1024x768 to 1366x1024), each with More contrast off and on, and fails on:
  * anything cut off or spilling (Review's edge audit, scripts/smoke/audit.js), text under 11px, a lesson page that
- * scrolls, a Panel line without its corner, or the nav's wordmark missing, doubled or moving between pages.
+ * scrolls, a Panel line without its corner, or a wordmark in the app (only the landing page has one; G 2026-10-08).
+ * v2 (2026-10-13): home is the Today panel and the box (.v-today, .v-box); the old book's layout checks went with it.
+ * Review's gate (math-app/review/v2/tools/gate-run.mjs) checks each lesson against the v2 spec.
  *   node scripts/smoke.mjs            (playwright from node_modules or NODE_PATH)
  */
 import { createRequire } from "node:module";
@@ -22,8 +24,8 @@ const SIZES = [{ w: 390, h: 844, scheme: "dark" }, { w: 375, h: 667, scheme: "li
   { w: 1024, h: 768, scheme: "light" }, { w: 1280, h: 720, scheme: "dark" }];
 /** containers meant to scroll (a long list; the book's chapters, and its plan on a short landscape screen where the
  *  picture keeps its room); anything else that scrolls inside itself is cut */
-const SCROLLERS = ".fhome>.ftables, nav.slist.more, .sbento .b-chaps, .sbento .today, .sbento .tbody";
-const ROUTES = ["home", "year", "today", "learn", "practice", "facts", "me", "settings", "grown-up", "welcome"];
+const SCROLLERS = ".fhome>.ftables, .v-box";
+const ROUTES = ["home", "learn", "practice", "facts", "me", "settings", "grown-up", "welcome"];
 
 const fails = [], notes = [];
 const browser = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {});
@@ -42,21 +44,25 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
   await p.addInitScript(() => { let s = 42; Math.random = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; });
   if (learner === "returning") {
     await p.addInitScript(save => { try { if (!localStorage.getItem("stepmath")) localStorage.setItem("stepmath", JSON.stringify(save)); } catch {} }, RETURNING);
-    await p.goto(PAGE + "#/"); await p.locator(".pitem.now").first().waitFor({ timeout: 8000 }).catch(() => {});
+    await p.goto(PAGE + "#/"); await p.locator(".v-today .v-go").first().waitFor({ timeout: 8000 }).catch(() => {});
   } else {
     // a learner who picked 5th grade
     await p.goto(PAGE + "#/welcome"); await p.waitForTimeout(500);
     await p.getByRole("button", { name: /Start learning/ }).first().click(); await p.waitForTimeout(400);
     await p.getByRole("radio", { name: /5th grade/ }).first().click(); await p.waitForTimeout(300);
     const go = p.locator(".gdgo button").first(); if (await go.count()) await go.click();
-    await p.locator(".pitem.now").first().waitFor({ timeout: 8000 }).catch(() => {});
+    await p.locator(".v-today .v-go").first().waitFor({ timeout: 8000 }).catch(() => {});
   }
-  // today's lesson, opened the way a learner would
-  await p.evaluate(() => document.querySelector(".pitem.now")?.click()); await p.waitForTimeout(500);
-  const lesson = await p.evaluate(() => location.hash.startsWith("#/learn/") ? location.hash : null);
-  let markAt = null;
+  // today's lesson, opened the way a learner would: Today's Start (a returning learner's lesson may open in practice,
+  // so the lesson comes from Today's pick either way)
+  await p.evaluate(() => document.querySelector(".v-today .v-go")?.click()); await p.waitForTimeout(500);
+  const lesson = await p.evaluate(() => {
+    if (location.hash.startsWith("#/learn/")) return location.hash;
+    const pick = JSON.parse(localStorage.getItem("stepmath") ?? "{}").run?.key;
+    return pick ? "#/learn/" + pick : null;
+  });
   for (const route of ROUTES) {
-    const hash = route === "home" ? "#/" : route === "year" ? "#/year" : route === "today" ? "#/year/today" : route === "learn" || route === "practice" ? lesson : "#/" + route;
+    const hash = route === "home" ? "#/" : route === "learn" || route === "practice" ? lesson : "#/" + route;
     if (!hash) { fails.push(`${tag}: no lesson link on home`); continue; }
     await p.goto(PAGE + hash); await p.waitForTimeout(700);
     // practice: the lesson's own Try one
@@ -95,123 +101,14 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
       // the page never scrolls: html and body hide overflow, so measure how far any box reaches below the screen
       // (scrollHeight alone reads a few px over on a fitted lesson with nothing actually below the edge)
       const low = Math.max(0, ...[...document.querySelectorAll("#app *")].filter(shown).filter(e => !e.closest(SCROLLERS)).map(e => e.getBoundingClientRect().bottom));
-      // the book's picture is the hero: on a wide screen it never shrinks to a sliver or an empty frame
-      const pic = document.querySelector(".sbento .spreview");
-      // (a phone keeps it too: never under the well's own 150px floor, never an empty frame)
-      const picH = pic && shown(pic) ? Math.round(pic.getBoundingClientRect().height) : null;
-      const picEmpty = picH != null && pic.classList.contains("empty");
-      // bento tiles never overlap, and the plan's first row (Start) is fully inside Today, unscrolled
-      const overlaps = [], tiles = [...document.querySelectorAll(".sbento>.bg-in>*")].filter(shown);
-      for (const [i, a] of tiles.entries()) for (const b of tiles.slice(i + 1)) {
-        const A = a.getBoundingClientRect(), B = b.getBoundingClientRect();
-        const x = Math.min(A.right, B.right) - Math.max(A.left, B.left), y = Math.min(A.bottom, B.bottom) - Math.max(A.top, B.top);
-        if (x > 1 && y > 1) overlaps.push(`${a.className} and ${b.className} by ${Math.round(Math.min(x, y))}px`);
-      }
-      // Today's plan rows never overlap either: a row's highlight stays inside its own cell (G 2026-10-07 22:08)
-      const prows = [...document.querySelectorAll(".sbento .today .pitem")].filter(shown);
-      for (const [i, a] of prows.entries()) for (const b of prows.slice(i + 1)) {
-        const A = a.getBoundingClientRect(), B = b.getBoundingClientRect();
-        const x = Math.min(A.right, B.right) - Math.max(A.left, B.left), y = Math.min(A.bottom, B.bottom) - Math.max(A.top, B.top);
-        if (x > 1 && y > 1) overlaps.push(`Today's plan rows ${i + 1} and ${prows.indexOf(b) + 1} by ${Math.round(Math.min(x, y))}px`);
-      }
-      // and where a row reaches Today's side, its end runs concentric with the panel's corner: inset + row radius = corner
-      { const td = document.querySelector(".sbento .today");
-        if (td && prows.length) { const T = td.getBoundingClientRect(), tr = parseFloat(getComputedStyle(td).borderTopRightRadius);
-          for (const a of prows) { const A = a.getBoundingClientRect(), inset = Math.round(T.right - A.right), rr = Math.min(parseFloat(getComputedStyle(a).borderTopRightRadius), A.height / 2);
-            if (inset < tr - rr - 2.5 && T.bottom - A.bottom < tr) overlaps.push(`a Today plan row sits ${inset}px from the panel's ${tr}px corner with a ${Math.round(rr)}px end (wants ${Math.round(tr - rr)}px)`); } } }
-      const today = document.querySelector(".sbento .today"), first = today?.querySelector(".plan li");
-      let startCut = 0;
-      // (on a phone Start is pinned at Today's edge and the plan scrolls above it; the phone guard checks Start there)
-      const pinned = document.querySelector(".sbento .tstart"), isPinned = pinned && getComputedStyle(pinned).display !== "none";
-      if (today && first && shown(first) && !isPinned) {
-        const T = today.getBoundingClientRect(), F = first.getBoundingClientRect();
-        startCut = Math.round(Math.max(0, F.bottom - (T.bottom - today.clientTop) + today.scrollTop));
-      }
-      // a step row's number sits as far in from the pill's left end as from its top, and the step's first line is
-      // centred on it (G 2026-10-07, "not aligned correctly")
-      const steps = [];
-      for (const e of document.querySelectorAll(".beat")) {
-        const badge = e.querySelector(".badge"), first = e.querySelector(".say>:first-child");
-        if (!badge || !first || !shown(badge)) continue;
-        const P = (e.querySelector(":scope>button") ?? e).getBoundingClientRect(), B = badge.getBoundingClientRect(), F = first.getBoundingClientRect();
-        const left = B.left - P.left, top = B.top - P.top, mid = (F.top + F.bottom) / 2 - (B.top + B.bottom) / 2;
-        if (Math.abs(left - top) > 1 || (F.height <= B.height + 1 && Math.abs(mid) > 1)) steps.push(`"${e.textContent.trim().slice(0, 20)}" in ${left.toFixed(1)}/${top.toFixed(1)}, line off ${mid.toFixed(1)}`);
-      }
-      // a chapter's lesson panel: the same gap between rows as round its edge, so a highlighted row never touches its
-      // neighbour or the panel (G 2026-10-07)
-      const nests = [];
-      for (const pn of document.querySelectorAll(".sgroup.open .sgroup-panel")) {
-        const rows = [...pn.children].filter(shown); if (!rows.length) continue;
-        const P = pn.getBoundingClientRect(), R = rows.map(r => r.getBoundingClientRect());
-        const gaps = [R[0].left - P.left, P.right - R[0].right, R[0].top - P.top, P.bottom - R.at(-1).bottom, ...R.slice(1).map((r, i) => r.top - R[i].bottom)];
-        if (Math.max(...gaps) - Math.min(...gaps) > 1) nests.push(gaps.map(g => g.toFixed(1)).join("/"));
-        // every lesson row the same height, picked or not, each with its trailing label
-        const hs = R.map(r => Math.round(r.height));
-        if (Math.max(...hs) - Math.min(...hs) > 1) nests.push(`row heights ${hs.join("/")}`);
-        for (const r of rows) if (!r.disabled && !r.matches(".pstep,.pwhere") && ![...r.children].slice(2).some(shown)) nests.push(`"${r.textContent.trim().slice(0, 20)}" has no label`);
-      }
-      // the accordion's one spacing (G 2026-10-07, ListGroup v41): the open chapter is one panel, its head and its lessons'
-      // panel set in from its edge by --list-gap, the same gap as between the list's rows
-      for (const g of document.querySelectorAll(".slist>.sgroup.open:not(.opening)")) {
-        const gap = parseFloat(getComputedStyle(g).getPropertyValue("--list-gap")) || 8;
-        const head = g.querySelector(":scope>.srow"), panel = g.querySelector(".sgroup-panel");
-        if (!head || !panel || !shown(panel)) continue;
-        const G = g.getBoundingClientRect(), H = head.getBoundingClientRect(), Pn = panel.getBoundingClientRect();
-        const ins = [H.left - G.left, G.right - H.right, H.top - G.top, Pn.top - H.bottom, Pn.left - G.left, G.right - Pn.right, G.bottom - Pn.bottom];
-        if (ins.some(x => Math.abs(x - gap) > 1)) nests.push(`open chapter "${head.textContent.trim().slice(0, 20)}" insets ${ins.map(x => x.toFixed(1)).join("/")} (want ${gap})`);
-      }
-      for (const l of document.querySelectorAll(".slist")) {
-        const gap = parseFloat(getComputedStyle(l).getPropertyValue("--list-gap")) || 8;
-        const items = [...l.children].filter(e => e.matches(".srow,.sgroup") && shown(e)).map(e => e.getBoundingClientRect());
-        const bad = items.slice(1).map((r, i) => r.top - items[i].bottom).filter(x => Math.abs(x - gap) > 1);
-        if (l.querySelector(":scope>.sgroup") && bad.length) nests.push(`chapter gaps ${bad.map(x => x.toFixed(1)).join("/")} (want ${gap})`);
-      }
-      // a chapter's name on the book home is never cut mid-word (its own line clamp only ever ends a whole line)
-      // on a phone Today gets the room (G 2026-10-07 07:36, which replaced "the picture stays the biggest tile"), the
-      // picture never shrinks under 200px, and Today's pinned Start is whole
-      const phone = [], tday = document.querySelector(".sbento .today"), tstart = document.querySelector(".sbento .tstart");
-      if (innerWidth < 700 && tday && shown(tday)) {
-        if (picH != null && picH < 200) phone.push(`the picture is only ${picH}px tall`);
-        if (tstart) {
-          const S = tstart.getBoundingClientRect(), T = tday.getBoundingClientRect();
-          if (!shown(tstart) || S.top < T.top || S.bottom > T.bottom - tday.clientTop || S.bottom > innerHeight) phone.push("Today's Start is not fully visible");
-        }
-        // the plan shows at least one whole row, and no row runs past the plan's sides (Review Book home #2)
-        const tbody = tday.querySelector(".tbody");
-        if (tbody && getComputedStyle(tbody).overflowY === "auto") {
-          const B = tbody.getBoundingClientRect(), rows = [...tbody.querySelectorAll(".pitem")].filter(shown).map(e => e.getBoundingClientRect());
-          if (rows.length && !rows.some(r => r.top >= B.top - 0.5 && r.bottom <= B.bottom + 0.5)) phone.push("Today's plan shows no whole row");
-          const side = rows.find(r => r.left < B.left - 0.5 || r.right > B.right + 0.5);
-          if (side) phone.push(`a plan row runs past Today's sides by ${Math.round(Math.max(B.left - side.left, side.right - B.right))}px`);
-        }
-      }
-      // Today comes after the two number tiles: its top is below both (Review Book home #3: DOM order alone passed). Only
-      // where Today runs the full width; wider, it is its own full-height column beside them (G 2026-10-07 21:27)
-      if (tday && shown(tday) && tday.getBoundingClientRect().width > tday.parentElement.getBoundingClientRect().width * 0.9) {
-        const T = tday.getBoundingClientRect().top;
-        for (const n of document.querySelectorAll(".sbento :is(.b-stats,.b-streak)"))
-          if (shown(n) && T < n.getBoundingClientRect().top - 0.5) phone.push(`Today sits above the ${n.classList.contains("b-stats") ? "lessons done" : "days in a row"} tile`);
-      }
-      const chapCut = [...document.querySelectorAll(".bchap b")].filter(shown).filter(b => b.scrollWidth > b.clientWidth + 1).map(b => b.textContent);
-      return { flags, tiny, corners, marks, picH, picEmpty, overlaps, startCut, steps, nests, chapCut, phone, scroll: Math.round(low - innerHeight) };
+      return { flags, tiny, corners, marks, scroll: Math.round(low - innerHeight) };
     }, SCROLLERS);
     for (const f of r.flags)
       (CLIPS.has(f.kind) ? fails : notes).push(`${at}: ${f.kind} ${f.el}${f.path ? " in " + f.path : ""}`);
     for (const t of r.tiny.slice(0, 5)) fails.push(`${at}: text under 11px ${t}`);
     for (const c of [...new Set(r.corners)]) fails.push(`${at}: Panel line without a corner ${c}`);
-    if (r.picH != null && (r.picH < (w >= 900 ? 200 : 150) || r.picEmpty)) fails.push(`${at}: the book's picture is ${r.picEmpty ? "empty" : r.picH + "px tall"}`);
-    for (const o of r.overlaps) fails.push(`${at}: tiles overlap: ${o}`);
-    if (r.startCut > 1) fails.push(`${at}: the plan's first row is cut by ${r.startCut}px`);
-    for (const ph of r.phone) fails.push(`${at}: ${ph}`);
-    if (r.chapCut.length) fails.push(`${at}: chapter names cut mid-word: ${r.chapCut.join(", ")}`);
-    for (const st of r.steps) fails.push(`${at}: step row not aligned: ${st}`);
-    for (const n of r.nests) fails.push(`${at}: chapter rows uneven (gaps left/right/top/bottom/between, heights, labels): ${n}`);
     if ((route === "learn" || route === "practice") && r.scroll > 1) fails.push(`${at}: the lesson page scrolls by ${r.scroll}px`);
-    if (route !== "welcome") {
-      if (r.marks.length !== 1) fails.push(`${at}: ${r.marks.length} wordmarks in the nav`);
-      else if (markAt && r.marks[0] !== markAt) fails.push(`${at}: wordmark moved to ${r.marks[0]} (was ${markAt})`);
-      else markAt = r.marks[0];
-    }
+    if (route !== "welcome" && r.marks.length) fails.push(`${at}: ${r.marks.length} wordmarks in the app nav (the landing page only)`);
   }
   await ctx.close();
 }

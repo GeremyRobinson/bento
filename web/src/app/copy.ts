@@ -41,6 +41,8 @@ export const SETTING = {
 
 /** how long a lesson takes, as the plan and the book show it */
 export const LESSON_MINUTES = 8;
+/** a new lesson with its skill check after it (v2 model: "Lesson and skill check · about 10 minutes") */
+export const LESSON_CHECK_MINUTES = 10;
 export const minLabel = (n: number) => `${n} min`;
 
 /** a chapter or grade's progress line: "6 lessons", "2 of 6 done", "Finished" */

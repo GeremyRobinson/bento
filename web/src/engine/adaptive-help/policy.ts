@@ -9,10 +9,9 @@ export type Tier = 0 | 1 | 2;
 export const tierFor = (lastScore: number | null | undefined): Tier =>
   lastScore == null || lastScore <= 1 ? 0 : lastScore === 2 ? 1 : 2;
 
-/** A lesson is 8 problems; after a low score it starts at 10. Each missed problem adds one, up to 12. */
-export const LESSON_LENGTH = 8;
-export const LESSON_LENGTH_AFTER_LOW_SCORE = 10;
-export const MAX_LESSON_LENGTH = 12;
+/** A lesson is 6 problems (v2 model); after a low score it is 8. A miss adds no problems. */
+export const LESSON_LENGTH = 6;
+export const LESSON_LENGTH_AFTER_LOW_SCORE = 8;
 export const lessonLength = (lastScore: number | null | undefined) =>
   lastScore != null && lastScore <= 1 ? LESSON_LENGTH_AFTER_LOW_SCORE : LESSON_LENGTH;
 

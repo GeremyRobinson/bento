@@ -69,8 +69,8 @@ const KINDS: { kind: string; prop: RegExp; ok: RegExp; use: string }[] = [
   },
   {
     kind: "fill", prop: /^background(-color)?$/,
-    ok: /^(none|transparent|inherit|initial|unset|0)$|^var\(--(g[1-4]|pane-plain|pane-glass|page|tint|ok|err)\)$/,
-    use: "the glass ladder (--g1 to --g4, --pane-plain, --pane-glass), --tint, or --ok/--err for answers",
+    ok: /^(none|transparent|inherit|initial|unset|0)$|^var\(--(g[1-4]|pane-plain|pane-glass|glass|glass-x2|glass-hover|glass-on|dot-rest|dot-off|page|tint|ok|err)\)$/,
+    use: "the glass ladder (--g1 to --g4, --pane-plain, --pane-glass, --glass), --tint, or --ok/--err for answers",
   },
 ];
 
@@ -105,7 +105,9 @@ function offButtons() {
 }
 
 /** registered masters nothing renders yet (2026-10-08); delete the master or use it, then its name here */
-const UNUSED_KNOWN: string[] = [];
+// v2 (2026-10-13) retired the old Contents and its problem button; their screen.css rules go in the v2 clean-up
+// "Link button": its only use was Practice's "Show me the step", gone in v2 (spec P10); Design deletes it with the retired CSS
+const UNUSED_KNOWN: string[] = ["Accordion", "Problem button", "Big pill list", "Link button"];
 
 const fmt = (o: { key: string; val: string; use: string }) => `${o.key}: ${o.val.slice(0, 50)}  →  use ${o.use}`;
 

@@ -126,7 +126,7 @@ export const lesson: LessonDefinition<OrderProblem> = {
   grade: 5,
   unit: "Whole numbers",
   title: "Order of operations",
-  pre: "g5-mult2",
+  pre: "g3-facts",
   reference: createOrder(0, 3, 4, 6, 2), // 3 + 4 × (6 − 2), the current app's example
   generate: (rng, i) => {
     if (i < 3) {

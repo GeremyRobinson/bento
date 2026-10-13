@@ -87,7 +87,7 @@ export const lesson: LessonDefinition<MultDecimalsProblem> = {
   grade: 5,
   unit: "Decimals",
   title: "Multiplying decimals",
-  pre: "g5-mult2",
+  pre: "g4-partial",
   reference: createMultDecimals(24, 3), // 2.4 × 0.3 = 0.72, the current app's example
   generate: (rng, index = 3) => {
     // tenths × a whole number first, then tenths × tenths, then hundredths × tenths, so the places answer changes

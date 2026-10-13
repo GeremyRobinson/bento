@@ -12,12 +12,12 @@ export const deviations: Record<string, Partial<Record<string, string>>> = {
     hint: "the flip hint says why: how many c/d fit in one whole; the multiply hint no longer names the bottom (it was the answer when c = 1)",
     checks: "a wrong try that names no slip repeats the new hint",
   },
-  "g5-multdec": {
+  "g5-multdec": { pre: "g4-partial: the first lesson in Curriculum\u2019s v2 depends-on list (curriculum/specs/v2/pre-vs-depends.md; coordinator 2026-10-13, one source of truth)",
     hint: "the hints point at counting the places in both numbers and at what the answer counts, instead of stating 1 + 1 (fixes-02 draft)",
     explain: "Show me says the result where it only repeated the hint",
     checks: `${SLIPS}: "Added instead of multiplied", "Counted one number", and the point slips use number sense ("too big: 0.3 is less than 1")`,
   },
-  "g5-order": {
+  "g5-order": { pre: "g3-facts: the first lesson in Curriculum\u2019s v2 depends-on list (curriculum/specs/v2/pre-vs-depends.md; coordinator 2026-10-13, one source of truth)",
     "added:first": "a first tap step, \"Which part do you work out first?\", where the left-to-right slip can really happen (fixes-02 draft)",
     hint: "the hints say why each part is next instead of repeating the label (\"Now add.\")",
     explain: "Show me says the result where it only repeated the hint",

@@ -35,9 +35,15 @@ export interface AreaRegion {
   productRow: number;
   /** the lines between its seats (or its blocks of ten, when seats are too small to see) */
   seats: SeatLine[];
-  /** the multiplication this region proves, e.g. 47 × 30 = 1410 */
+  /** the multiplication this region proves, e.g. 40 × 30 = 1200 */
   equation: { factors: [number, number]; product: number };
+  /** which column (part of the top factor) and row (part of the side factor) it sits in */
+  col: number;
+  row: number;
 }
+
+/** One part of a side: its label and where it runs, along that side's own direction. */
+export interface AreaBand { label: string; start: number; length: number }
 
 export interface AreaDiagram {
   kind: "areaModel";
@@ -47,11 +53,12 @@ export interface AreaDiagram {
   unit: number;
   /** the factor along the left side */
   vertical: AreaAxis;
-  /** the factor along the top, split into the regions */
+  /** the factor along the top */
   horizontal: AreaAxis;
+  /** the parts of the top factor (columns) and of the side factor (rows); each is labelled once, outside the picture */
+  cols: AreaBand[];
+  rows: AreaBand[];
   regions: AreaRegion[];
-  /** x positions of the split lines between regions */
-  splits: number[];
   total: { terms: number[]; value: number };
 }
 

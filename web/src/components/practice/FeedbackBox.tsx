@@ -1,4 +1,5 @@
 import { Rich } from "../primitives/MathLine";
+import { Check, CloseIcon } from "../primitives/icons";
 import type { Feedback } from "../../engine/session/types";
 
 const DOT = { good: "ok", bad: "err", hint: "busy" } as const;
@@ -21,7 +22,10 @@ export function FeedbackBox({ fb, idea, solved }: { fb: Feedback | null; idea?: 
   return (
     <div className={`pfb${on ? ` fb-${solved ? "good solved" : shown!.type}` : ""}`} role="status" aria-live="polite">
       {on && <>
-        <span className={`dot ${solved ? "ok" : DOT[shown!.type]}`} />
+        {/* right and wrong wear the app's one mark (the badge master's tick and cross); a hint keeps its dot */}
+        {solved || shown?.type === "good" ? <span className="badge mark-ok"><Check /></span>
+          : shown?.type === "bad" || shown?.missed ? <span className="badge mark-err"><CloseIcon /></span>
+          : <span className={`dot ${DOT[shown!.type]}`} />}
         <span className="pfbt">
           {shown?.pop === "big" && <><Burst big /> </>}
           {shown?.pop === "star" && <><Burst /> </>}

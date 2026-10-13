@@ -42,4 +42,7 @@ export interface SceneDiagram {
   items: SceneItem[];
   /** what the picture shows, for screen readers */
   alt: string;
+  /** the lesson must tell two quantities apart (thirds vs quarters, the second fraction): its .p1 parts turn violet.
+   *  Without it every part is the one amber (styles/picture-system.css) */
+  two?: boolean;
 }

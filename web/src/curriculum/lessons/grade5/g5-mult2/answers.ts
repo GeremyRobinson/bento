@@ -32,6 +32,7 @@ export function splitMultiplicationAnswers(p: SplitMultiplicationProblem): Answe
         message: `That's ${f(a)} × ${f(digit)}. The ${placeName(part)} digit stands for ${f(part)}, so add ${zeros === 1 ? "a zero" : `${zeros} zeros`}.`,
       }],
       hint,
+      look: `Look again at the lit strip: it's ${f(part)} across and ${f(a)} down.`,
       explain: `${hint} That makes ${f(expected)}.`,
       work: [num(a), op("×"), num(part), op("="), answer("x", expected)],
     };
@@ -48,6 +49,7 @@ export function splitMultiplicationAnswers(p: SplitMultiplicationProblem): Answe
         // not where the current app's place-value or off-by-one tries land, so those keep their recorded messages
         .filter((k, i, all) => k.values.x !== p.product + 1 && !p.parts.some(part => k.values.x === a * leadingDigit(part)) && all.findIndex(o => o.values.x === k.values.x) === i),
       hint,
+      look: `Look again: add ${p.parts.length === 2 ? "both strips" : "every strip"} in the picture.`,
       explain: `${hint} That makes ${f(p.product)}.`,
       work: [...plusChain(p.partialProducts), op("="), answer("x", p.product)],
     });

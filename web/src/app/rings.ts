@@ -12,3 +12,6 @@ export const gradeRing = (p: Progress, g: number): Ring => ringOf(p, entriesInGr
 export function chapterRings(p: Progress, g: number): { name: string; ring: Ring }[] {
   return unitsInGrade(g).map(u => ({ name: u.name, ring: ringOf(p, u.entries.map(c => c.id)) }));
 }
+
+/** how many of these lessons are learned (their skill check is 3 or 4): the count every progress ring shows */
+export const learnedCount = (p: Progress, entries: readonly { id: string }[]): number => ringOf(p, entries.map(c => c.id)).learned;

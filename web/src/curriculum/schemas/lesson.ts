@@ -51,6 +51,8 @@ export interface AnswerStep {
   known: KnownMistake[];
   check?: (values: Record<string, number | null>) => StepCheck;
   hint: RichText;
+  /** what to look at after a wrong answer no known slip explains, e.g. "Look again at the lit part: it's 10 across and 10 down." */
+  look?: RichText;
   /** what "Show me" says after filling the answer in */
   explain: RichText;
   /** the finished line that stays on screen once the step is done */
@@ -100,6 +102,8 @@ export interface LessonDefinition<P = unknown> {
   explain(problem: P, answers: AnswerModel): Explanation;
   /** some lessons tell every third problem as a story */
   story?(problem: P): Story;
+  /** a skill check miss: one sentence on how it's worked out, said after "It's <answer>." (v2 spec C2) */
+  checkWhy?(problem: P): RichText;
   /** the lesson underneath this one, suggested after a score of 0 or 1 */
   pre?: string;
 }

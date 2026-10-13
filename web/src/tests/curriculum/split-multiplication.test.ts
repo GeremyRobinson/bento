@@ -1,4 +1,5 @@
 // G's seven required invariants, on the reference problem 47 × 36 and on thousands of seeded problems.
+import { PART_GAP, MAX_FLAT } from "../../explanations/diagrams/area-model/build";
 import { createRng } from "../../curriculum/generators/rng";
 import { splitMultiplication as lesson } from "../../curriculum/lessons/grade5/g5-mult2";
 import {
@@ -30,10 +31,10 @@ describe("the reference case 47 × 36 = 47 × (30 + 6)", () => {
     const ex = explainSplitMultiplication(reference, lesson.answers(reference));
     expect(toPlainText(ex.statement)).toBe("47 × 36 = 47 × (30 + 6)");
     expect(ex.steps.map(s => s.narration)).toEqual([
-      "Split 36 into tens and ones.",
-      "The tens strip is 47 tall and 30 wide.",
-      "The ones strip is 47 tall and 6 wide.",
-      "Add the strips to fill the whole rectangle.",
+      "split into tens and ones",
+      "the tens strip",
+      "the ones strip",
+      "add the two strips",
     ]);
     expect(ex.steps.map(s => toPlainText(s.math))).toEqual(["36 = 30 + 6", "47 × 30 = 1410", "47 × 6 = 282", "1410 + 282 = 1692"]);
     expect(ex.diagram.vertical).toMatchObject({ factor: "first", value: 47, label: "47" });
@@ -53,11 +54,12 @@ describe.each([
   it("2. region widths always add to 100% of the total width", () => {
     for (const p of problems) {
       const d = explainSplitMultiplication(p, lesson.answers(p)).diagram;
-      expect(near(sum(d.regions.map(r => r.width)), d.horizontal.length)).toBe(true);
+      // the parts plus one fixed gap between each pair fill the width (v2 spec G1: each part its own shape)
+      expect(near(sum(d.regions.map(r => r.width)) + PART_GAP * (d.regions.length - 1), d.horizontal.length)).toBe(true);
       expect(near(sum(d.regions.map(r => r.widthFraction)), 1)).toBe(true);
-      // and they tile it: no gaps, no overlaps
+      // and they tile it: exactly one gap between neighbours, no overlaps
       d.regions.forEach((r, i) => {
-        const start = i === 0 ? d.horizontal.start : d.regions[i - 1]!.x + d.regions[i - 1]!.width;
+        const start = i === 0 ? d.horizontal.start : d.regions[i - 1]!.x + d.regions[i - 1]!.width + PART_GAP;
         expect(near(r.x, start)).toBe(true);
       });
     }
@@ -72,9 +74,12 @@ describe.each([
       for (const r of free) expect(near(r.width / r.part, free[0]!.width / free[0]!.part)).toBe(true);
       for (const r of d.regions) {
         expect(near(r.widthFraction, r.part / p.secondFactor)).toBe(true);
-        expect(near(r.height, p.firstFactor * d.unit)).toBe(true);
+        // a very flat picture is held at 4 wide for 1 tall so it stays readable (G9); otherwise height is on the same scale
+        expect(near(r.height, Math.max(p.firstFactor * d.unit, d.horizontal.length / MAX_FLAT))).toBe(true);
       }
-      if (!held.length) expect(near(d.horizontal.length / d.vertical.length, p.secondFactor / p.firstFactor)).toBe(true);
+      // the drawn parts (without the gaps between them) keep the problem's proportions
+      const flat = d.horizontal.length / MAX_FLAT > p.firstFactor * d.unit + 0.01;
+      if (!held.length && !flat) expect(near((d.horizontal.length - PART_GAP * (d.regions.length - 1)) / d.vertical.length, p.secondFactor / p.firstFactor)).toBe(true);
     }
   });
 
@@ -191,9 +196,10 @@ describe("the problem model", () => {
   });
 });
 
-describe("labels never collide", () => {
-  it("puts a product below its region when it doesn't fit inside", () => {
+describe("results never fall outside", () => {
+  it("puts every product inside its strip (v2 spec G6)", () => {
     const d = explainSplitMultiplication(reference, lesson.answers(reference)).diagram;
-    expect(d.regions.map(r => r.labelPlacement)).toEqual(["inside", "below"]);
+    expect(d.regions.map(r => r.labelPlacement)).toEqual(["inside", "inside"]);
+    expect(explainSplitMultiplication(reference, lesson.answers(reference)).solved).toBe("The two strips make 1692.");
   });
 });

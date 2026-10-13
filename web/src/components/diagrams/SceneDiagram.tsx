@@ -29,7 +29,7 @@ export function SceneDiagram({ diagram: d, at, fit = false }: { diagram: Scene; 
   // fit centres the finished picture once (the frame above); parts then appear where they stay, and nothing already
   // drawn moves between beats (G 19:34: "random coming from the side animations")
   return (
-    <svg ref={ref} className="viz-svg" viewBox={`${r1(vb.x)} ${r1(vb.y)} ${r1(vb.w)} ${r1(vb.h)}`} role="img" aria-label={d.alt}
+    <svg ref={ref} className={d.two ? "viz-svg two" : "viz-svg"} viewBox={`${r1(vb.x)} ${r1(vb.y)} ${r1(vb.w)} ${r1(vb.h)}`} role="img" aria-label={d.alt}
       style={{ "--w": Math.round(d.width), "--h": Math.round(d.height) } as CSSProperties} data-family={d.family}>
       {dotsOnTop(d.items).map((it, i, all) => {
         const from = it.from ?? 0;

@@ -26,6 +26,13 @@
 .ctl.go .badge{background:var(--white-a25);color:var(--on-tint)}
 .badge{min-width:var(--badge);height:var(--badge);border-radius:var(--r-pill);display:inline-flex;align-items:center;justify-content:center;padding:0 var(--s);font-family:var(--num);font-weight:var(--w-bold);background:var(--well);color:var(--text);flex:none;font-variant-numeric:tabular-nums}
 .card .badge,.ctl .badge{background:var(--tint-soft);color:var(--ink)}
+/* a mark (tick or cross) sits in a true circle, never a pill (G 2026-10-08 "these should be circles") */
+.badge:has(>svg){padding:0;width:var(--badge);min-width:0}
+/* right and wrong: one mark everywhere (steps, problem cards, the feedback line), green with a tick, red with a cross */
+/* the marks always win over a place's own badge colours: right and wrong never take a row's tint (G 2026-10-08) */
+.badge.mark-ok{background:var(--ok)!important;color:var(--on-tint)!important}
+.badge.mark-err{background:var(--err)!important;color:var(--on-tint)!important}
+.badge.mark-ok svg,.badge.mark-err svg{width:16px;height:16px}
 .badge.on,.card .badge.on,.ctl .badge.on{background:var(--ink);color:var(--on-tint)}
 .bar{display:flex;align-items:center;gap:var(--s);padding:var(--inset);background:var(--surf-1,var(--well));border-radius:var(--r-pill);min-width:0}
 .ctl.circ{width:var(--pill-h);padding:0;flex:none;background:var(--btn-card,var(--card));color:var(--ink);box-shadow:none}
@@ -160,9 +167,6 @@ button.gcell:active{transform:scale(.96)}
 .donehead .ring{margin:0;flex:none}
 .donetext{display:grid;gap:2px;min-width:0}
 .donetext h2{font-size:calc(var(--fs) * 1.45);line-height:1.2;color:var(--sc)}
-.confetti{position:absolute;left:54px;top:54px;pointer-events:none;z-index:var(--z-up2)}
-.confetti i{position:absolute;width:8px;height:13px;border-radius:2px;background:var(--c);opacity:0;animation:conf var(--dur-1600) var(--ease-toss) calc(var(--d) + var(--dur-500)) both}
-@keyframes conf{0%{transform:translate(0,0) rotate(0);opacity:1}45%{transform:translate(calc(var(--x) * .7),var(--y)) rotate(calc(var(--r) * .5));opacity:1}100%{transform:translate(var(--x),calc(var(--y) * -.3 + 160px)) rotate(var(--r));opacity:0}}
 .lesson.resume{background:var(--card);box-shadow:inset 0 0 0 2px var(--tint-soft)}
 .lesson.resume .badge{font-size:calc(var(--rbadge) * .34)}
 
@@ -214,6 +218,8 @@ button.gcell:active{transform:scale(.96)}
 .slot.empty{border-style:dashed;border-color:var(--ink);background:color-mix(in srgb,var(--tint) 10%,var(--well))}
 .slot.empty.active{outline:3px solid color-mix(in srgb,var(--tint) 30%,transparent);outline-offset:0}
 .slot.small{min-width:var(--slot)}
+/* a box for a power sits raised and small, like the power it stands for (G 2026-10-08) */
+sup>.slot{--slot:1.6em;font-size:1em;min-width:var(--slot);padding:0 .15em;border-width:1.5px;vertical-align:baseline}
 .slot.typed{animation:pop var(--dur-250) var(--m-ease)}
 .fr .slot{margin:var(--sp-1) 0}
 .fr.slots>span:first-child{padding-bottom:6px}
@@ -427,7 +433,7 @@ button.gcell:active{transform:scale(.96)}
 .phead h1{font-size:calc(var(--fs) * 1.6);letter-spacing:-.02em}
 
 /* ---- home, stripped back: today's plan, the year's progress, the units. Space does the work, not boxes. ---- */
-.bhome .today,.bhome .b-stats,.bhome .b-weak{background:var(--card);padding:calc(var(--u) * 1.75)}
+.bhome .today,.bhome .b-stats,.bhome .b-weak{background:var(--pane-plain,var(--card));padding:calc(var(--u) * 1.75)}
 .today{gap:0;align-content:start}
 .today .sub{color:var(--muted);margin-top:var(--s);font-weight:var(--w-regular)}
 /* the vertical rhythm of a card: title, subtitle a small step under it, then a clear gap before the action (G 2026-10-06) */
@@ -491,7 +497,7 @@ button.gcell:active{transform:scale(.96)}
 .prows li+li{border-top:1px solid var(--rule)}
 .prows li.ok{color:var(--text);font-weight:var(--w-mid)}
 .pdots{display:flex;gap:6px}
-.pdots i{width:12px;height:12px;border-radius:var(--r-round);box-shadow:inset 0 0 0 1.5px var(--faint)}
+.pdots i{width:12px;height:12px;border-radius:var(--r-round);box-shadow:inset 0 0 0 1.5px var(--dot-ring)}
 .pdots i.on{background:var(--tint);box-shadow:none}
 .pitem{padding:14px var(--sp-3);margin:0 -12px;width:calc(100% + 24px);border-radius:var(--r-row);transition:background var(--dur-150)}
 .pitem:hover,.pitem:active{background:var(--tint-soft)}

@@ -3,7 +3,9 @@ import { applySettings, readSettings, type Settings } from "./settings";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createRng, randomSeed, type Rng } from "../curriculum/generators/rng";
 import { emptyProgress, type Progress } from "../engine/mastery/progress";
-import { canReview, finishRun, startPractice, startReview, startTest, type Deps } from "../engine/session/practice";
+import { canReview, finishRun, reviewDue, reviewPlan, startPractice, startReview, startTest, type Deps } from "../engine/session/practice";
+import { checkKey } from "../engine/mastery/skills";
+import { requireLesson } from "../curriculum/registry";
 import type { PracticeSession, SessionReport } from "../engine/session/types";
 import { makeBackup, readBackup } from "../persistence/backup";
 import { loadAll } from "../persistence/load";
@@ -34,6 +36,11 @@ interface AppState extends AppData {
   /** today's review, mixed from lessons already scored */
   startReview(): void;
   canReview(): boolean;
+  /** a learned lesson is due back and today's review isn't done: Today offers it */
+  reviewDue(): boolean;
+  /** the lessons due back and the review's size, for Today's words (spec H3) */
+  reviewPlan(): { due: string[]; problems: number };
+  now(): number;
   /** apply one engine step to the run in progress */
   act(step: (s: PracticeSession, progress: Progress, deps: Deps) => PracticeSession | null): void;
   finish(): void;
@@ -217,6 +224,9 @@ export function AppProvider(props: {
         });
       },
       canReview: () => canReview(data.progress, now()),
+      reviewDue: () => reviewDue(data.progress, now()),
+      reviewPlan: () => reviewPlan(data.progress, now()),
+      now,
       act: step => setProgress(p => {
         if (!p.run) return p;
         const next = step(p.run, p, deps());
@@ -229,6 +239,12 @@ export function AppProvider(props: {
         if (!run) return;
         const r = finishRun(run, data.progress, now());
         void store.current?.putReport(r.report).catch(() => {});
+        // a good day: the lesson, then its skill check (4 problems on your own); Done scores the check
+        if (run.mode === "practice") {
+          const l = requireLesson(run.key), check = startTest(checkKey(l.grade, l.id), r.progress, deps());
+          withTransition(() => setData(d => (d ? { progress: { ...r.progress, run: check }, reports: { ...d.reports, [r.report.key]: r.report } } : d)), "next");
+          return;
+        }
         withTransition(() => {
           setData(d => (d ? { progress: r.progress, reports: { ...d.reports, [r.report.key]: r.report } } : d));
           setLastReport(r.report);

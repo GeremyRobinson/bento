@@ -6,7 +6,7 @@ import type { Rng } from "../../curriculum/generators/rng";
 import { formatNumber, toPlainText } from "../../curriculum/schemas/math-text";
 import { lessonById, lessonsInGrade, requireLesson, LESSONS } from "../../curriculum/registry";
 import type { AnswerStep, AnyLesson } from "../../curriculum/schemas/lesson";
-import { canShowMe, canSkip, hintBudget, HINT_WAIT_MS, lessonLength, MAX_LESSON_LENGTH, RUSHED_MS, tierFor, type Tier } from "../adaptive-help/policy";
+import { canShowMe, canSkip, hintBudget, HINT_WAIT_MS, lessonLength, RUSHED_MS, tierFor, type Tier } from "../adaptive-help/policy";
 import { CATEGORIES, diagnose, nudge, SAY } from "../diagnosis/diagnose";
 import { parseNumber } from "../evaluation/numbers";
 import { answerIds, checkStep, expectedValues, finalPartsOf, finalStep, runtimeSteps, type RuntimeStep } from "../evaluation/steps";
@@ -229,11 +229,21 @@ export function reviewPool(progress: Progress, now: number): { lesson: AnyLesson
 }
 
 export const canReview = (progress: Progress, now: number) => reviewPool(progress, now).length >= 2;
+/** Today offers the review (v2-backend-plan.md, "Today's review"): a learned lesson is due back, and today's isn't done yet */
+export const reviewDue = (progress: Progress, now: number) =>
+  canReview(progress, now) && progress.reviews?.[new Date(now).toDateString()] == null && LESSONS.some(l => dueBack(progress, l.id, now));
+
+const reviewEach = (lessons: number) => (lessons >= 4 ? 2 : 4);
+/** what Today says about the review before it starts: the learned lessons due back, and how many problems it will be */
+export function reviewPlan(progress: Progress, now: number): { due: string[]; problems: number } {
+  const pool = reviewPool(progress, now).length;
+  return { due: LESSONS.filter(l => dueBack(progress, l.id, now)).map(l => l.id), problems: Math.min(8, pool * reviewEach(pool)) };
+}
 
 /** Today's review: up to 8 problems from scored lessons, at most 2 from each (4 when there are only a few lessons). */
 export function startReview(progress: Progress, deps: Deps): PracticeSession {
   const pool = reviewPool(progress, deps.now).map(x => ({ ...x, n: 0 }));
-  const each = pool.length >= 4 ? 2 : 4, n = Math.min(8, pool.length * each), items: RunItem[] = [];
+  const each = reviewEach(pool.length), n = Math.min(8, pool.length * each), items: RunItem[] = [];
   while (items.length < n) {
     const live = pool.filter(x => x.n < each), tot = live.reduce((a, x) => a + x.weight, 0);
     let r = deps.rng.next() * tot, k = 0;
@@ -271,7 +281,9 @@ function startProblem(s: PracticeSession, progress: Progress, deps: Deps): Pract
 function loadStep(s: PracticeSession, deps: Deps): PracticeSession {
   let next = { ...s };
   const it = currentItem(next), lead = leadOf(it), full = fullSteps(it);
-  if (!next.collapsed && next.skip && next.skipThis && canSkip({ test: isTest(next), tier: next.tier }) && next.step === lead && full.length - lead > 1) {
+  // a skill check asks each problem in one go, the final answer only (v2 model: "What is 24 × 13?")
+  const oneGo = isCheckKey(next.key) || (next.skip && next.skipThis && canSkip({ test: isTest(next), tier: next.tier }));
+  if (!next.collapsed && oneGo && next.step === lead && full.length - lead > 1) {
     next = { ...next, collapsed: true };
   }
   next = { ...next, values: {}, misses: 0, hinted: false, lastTry: 0, stepT0: deps.now, feedback: null };
@@ -321,7 +333,7 @@ export function pickPlan(s: PracticeSession, index: number): PracticeSession {
   }
   const isLater = stepsOf(s).slice(s.step + 1).some(t => t.base === choice);
   return { ...s, pick: { ...pk, misses }, fx: "shake", mistakes: [...s.mistakes, mistake],
-    feedback: { type: "bad", strong: "Look again.", text: isLater ? "That step comes later. What has to happen first?" : "That step isn't part of this problem." } };
+    feedback: { type: "bad", strong: "Not quite.", text: isLater ? "That step comes later. What has to happen first?" : "That step isn't part of this problem." } };
 }
 
 // ---------------------------------------------------------------- typing
@@ -387,28 +399,39 @@ export function check(s: PracticeSession, progress: Progress, deps: Deps): Pract
     n: s.i + 1, step: s.step + 1, label: step.base, lessonId: currentItem(s).lessonId,
     typed: typedText(step, values), want: typedText(step, expected),
     kind: cat === "concept" ? r.kind : CATEGORIES[cat][0], cat, msg: cat === "concept" ? r.message : CATEGORIES[cat][1], rushed,
+    ...(cat === "concept" || step.look || SAY[cat] ? { say: cat === "concept" ? r.message : step.look ?? SAY[cat] } : {}),
   };
   let next: PracticeSession = {
     ...s, lastTry: deps.now, misses: s.misses + 1, prob: { ...s.prob, wrong: s.prob.wrong + 1 }, fx: "shake",
     mistakes: [...s.mistakes, mistake],
   };
 
-  if (step.skipped) { // the shortcut missed: do this one the long way
+  if (step.skipped && !isTest(next)) { // the shortcut missed: do this one the long way
     next = loadStep({ ...next, skipThis: false, collapsed: false, maxPts: next.maxPts + 1, step: leadOf(currentItem(next)) }, deps);
-    return { ...next, fx: "shake", feedback: { type: "bad", strong: "Look again.", text: "This one needs the steps. Here they are." } };
+    return { ...next, fx: "shake", feedback: { type: "bad", strong: "Not quite.", text: "This one needs the steps. Here they are." } };
   }
   if (isTest(next)) {
     const shownValues = Object.fromEntries(Object.entries(expected).map(([k, v]) => [k, formatNumber(v)]));
     const after = pass({ ...next, values: shownValues }, true, progress, deps);
-    return { ...after, feedback: { type: "hint", missed: true, text: `Incorrect. The answer was **${typedText(step, expected)}**.${currentStep(after) ? " Keep going." : ""}` } };
+    // one wording for every miss on a check or test (v2 model): "✕ Not this time." and the answer
+    // a skill check's one answer: the question line already says "Not this time.", so the say line gives the answer and
+    // how it's worked out, without repeating it (v2 spec C2)
+    if (isCheckKey(next.key) && !currentStep(after)) {
+      const it = currentItem(after), why = lessonOfItem(it).checkWhy?.(it.problem);
+      return { ...after, feedback: { type: "bad", missed: true, strong: `It\u2019s **${typedText(step, expected)}**.`, ...(why ? { text: why } : {}) } };
+    }
+    return { ...after, feedback: { type: "bad", missed: true, strong: "Not this time.", text: `It\u2019s **${typedText(step, expected)}**.${currentStep(after) ? " Keep going." : ""}` } };
   }
   const band = bandOfSession(next);
   const msg = cat === "concept" ? r.message
-    : SAY[cat] ?? `${nudge(expected, values, band)} ${next.hinted ? step.hint : `Read the step again${next.hintsLeft ? ", or tap Hint" : ""}.`}`.trim();
+    : step.look ?? SAY[cat] ?? `${nudge(expected, values, band)} ${next.hinted ? step.hint : `Read the step again${next.hintsLeft ? ", or tap Hint" : ""}.`}`.trim();
   const lines: string[] = [];
   if (rushed) lines.push("Slow down a little and read the step again.");
-  if (canShowMe({ test: false, misses: next.misses, hinted: next.hinted })) lines.push("Stuck? Tap **Show me**.");
-  return { ...next, feedback: { type: "bad", strong: "Look again.", text: msg, lines } };
+  // no Show me in v2 (spec P10, guidelines §7): after two misses, while hints are left, point at the bulb
+  if (next.misses >= 2 && next.hintsLeft > 0) lines.push("Stuck? Tap the bulb for a hint.");
+  // one box: it empties for the next try, so the "?" comes back (v2 spec P8); a step with several keeps what was typed
+  const kept = Object.keys(expected).length === 1 ? {} : next.values;
+  return { ...next, values: kept, feedback: { type: "bad", strong: "Not quite.", text: msg, lines } };
 }
 
 /** Hints are limited: about one for every two problems, and only after a first try. */
@@ -417,8 +440,8 @@ export function hint(s: PracticeSession, deps: Deps): PracticeSession {
   if (!step || isTest(s)) return s;
   if (s.hinted) return { ...s, fx: "feedback", feedback: { type: "hint", strong: "Hint:", text: step.hint, left: s.hintsLeft } };
   // the last hint says so kindly (UI notes preview)
-  if (!s.hintsLeft) return { ...s, fx: "feedback", feedback: { type: "hint", text: "No hints left in this lesson. You can do it.", lines: showMeAvailable(s) ? ["Stuck? Tap **Show me**."] : [] } };
-  if (!s.misses && deps.now - s.stepT0 < HINT_WAIT_MS) return { ...s, fx: "feedback", feedback: { type: "hint", text: "Try it once first. Then the hint opens." } };
+  if (!s.hintsLeft) return { ...s, fx: "feedback", feedback: { type: "hint", text: "No hints left in this lesson. You can do it.", lines: [] } };
+  if (!s.misses && deps.now - s.stepT0 < HINT_WAIT_MS) return { ...s, fx: "feedback", feedback: { type: "hint", text: "Try it once first. Then a hint opens." } };
   return {
     ...s, hinted: true, hintsLeft: s.hintsLeft - 1, hints: s.hints + 1, prob: { ...s.prob, hints: s.prob.hints + 1 }, fx: "feedback",
     feedback: { type: "hint", strong: "Hint:", text: step.hint, left: s.hintsLeft - 1 },
@@ -455,9 +478,11 @@ function pass(s: PracticeSession, shown: boolean, progress: Progress, deps: Deps
     fx: "line",
   };
   if (next.step < steps.length) {
-    const praise = deps.rng.pick(PRAISE[band]);
+    // one praise, always with its reason: "✓ Right." and the line just worked out (v2 model). The pick stays so the
+    // problems that follow come out the same.
+    deps.rng.pick(PRAISE[band]);
     next = loadStep(next, deps);
-    return { ...next, feedback: shown ? { type: "hint", strong: `Here's how: ${step.explain}` } : { type: "good", strong: praise } };
+    return { ...next, feedback: shown ? { type: "hint", strong: `Here's how: ${step.explain}` } : { type: "good", strong: "Right.", text: `${toPlainText(step.work)}.` } };
   }
 
   // the problem is finished
@@ -470,10 +495,7 @@ function pass(s: PracticeSession, shown: boolean, progress: Progress, deps: Deps
     probs: [...next.probs, { lessonId: it.lessonId, problem: it.problem, ...(it.story ? { story: true } : {}), work: next.work, hints: pr.hints, wrong: pr.wrong, shown: pr.shown, ms: deps.now - pr.t0 }],
   };
   const lines: string[] = [];
-  if (!isTest(next) && (pr.wrong || pr.shown) && next.items.length < MAX_LESSON_LENGTH) {
-    next = { ...next, items: [...next.items, makeItem(lessonOfItem(it), next.items.length, deps.rng, next.items)], extra: next.extra + 1 };
-    lines.push("One more like this is coming up, for practice.");
-  }
+  // the set stays the size it started (v2 model: 6, no extra problems after a miss; coordinator 2026-10-13)
   void progress;
   if (isTest(next)) return { ...next, feedback: { type: "good", strong: `Problem done. +${xp} XP` } };
   if (shown) return { ...next, feedback: { type: "hint", text: `Here's how: ${step.explain}`, lines: [`**+${xp} XP.** That one was tricky, and you finished it.`, ...lines] } };
