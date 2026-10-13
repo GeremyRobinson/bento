@@ -107,6 +107,10 @@
 #app .viz-svg .grid{stroke:var(--pic-line);opacity:.55}
 /* lines, marks and points: amber, the one to look at deep; the whole and its brackets ink */
 #app .viz-svg :is(.ln2,.hl,.hlline,.ring,.xring,.arcline.thin){stroke:var(--pic-deep)}
+/* order of operations: the parentheses and the ring round the lit group are the same 3px line as every outline (G: match the model) */
+#app .viz-svg[data-family="order-tiles"] .ln2{stroke-width:var(--pic-outline)}
+/* its numbers and signs are the problem itself, so they read at twice a label, never under a label on screen */
+#app .viz-svg[data-family="order-tiles"] text.lbl{font-size:max(calc(var(--pic-label) * 2),calc(var(--pic-label) * var(--px,0)))}
 #app .viz-svg .dotp{fill:var(--pic-mid);stroke:var(--pic-deep);stroke-width:var(--d-stroke)}
 #app .viz-svg .dota{fill:var(--pic-mid)}
 

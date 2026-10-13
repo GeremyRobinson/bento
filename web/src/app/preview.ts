@@ -28,6 +28,7 @@ export const spendHandOff = (lessonId: string) => { handed.delete(lessonId); };
  * past it (3rd grade facts turn the array around, b × a); a preview stops at a × b so its picture and header agree.
  */
 export function statementBeat(ex: Explanation): number {
+  if (ex.rest != null) return ex.rest;
   const last = ex.timeline.length - 1, want = JSON.stringify(ex.statement);
   for (const st of ex.steps) {
     const m = st.math;

@@ -61,7 +61,7 @@ const badText = (d: SceneDiagram) => d.items.filter((i): i is Text => i.type ===
 const PICTURED = {
   "g1-ten": "early-frames",
   "g6-trap": "area-model",
-  "g5-order": "expression-boxes",
+  "g5-order": "order-tiles",
   "g6-expo": "expression-boxes",
   "g11-compose": "expression-boxes",
   "g12-chain": "expression-boxes",
@@ -164,15 +164,19 @@ const value = (l: AnyLesson, p: unknown, id: string) => l.answers(p).steps.find(
 const fmt = (n: number) => (n < 0 ? `−${-n}` : String(n));
 
 describe("expression-box lessons", () => {
-  it("g5-order lights the box that goes first, then collapses the boxes in order, each into the value its step finds, ending on the answer", () => {
+  it("g5-order shows the row as written, lights each group in turn, turns it into the value its step finds, and ends on one tile, the answer", () => {
     const l = lesson("g5-order");
+    const ring = (d: SceneDiagram, b: number) => shownAt(d, b).filter(i => i.type === "rect" && /\bxring\b/.test(i.cls ?? ""));
     for (const p of problemsOf(l, 30)) {
       const d = sceneOf(l, p);
-      expect(shownAt(d, 0).some(i => i.type === "rect" && /\bhlline\b/.test(i.cls ?? ""))).toBe(true);
-      expect(chipsAt(d, 0)).toHaveLength(0);
-      ["s0", "s1"].forEach((id, k) => expect(finalText(d, k + 1)).toContain(String(value(l, p, id))));
-      expect(finalText(d, 3)).toEqual(expect.arrayContaining([String(value(l, p, "s2"))]));
-      expect(chipsAt(d, 3, /\bxchip pq\b/)).toHaveLength(1);
+      // as written: nothing lit, nothing worked out (the first step asks what goes first)
+      expect(ring(d, 0)).toHaveLength(0); expect(chipsAt(d, 0)).toHaveLength(0);
+      // beats 1 to 3 each light one group
+      for (const b of [1, 2, 3]) expect(ring(d, b)).toHaveLength(1);
+      ["s0", "s1"].forEach((id, k) => expect(finalText(d, k + 2)).toContain(String(value(l, p, id))));
+      // the end: one tile, the answer, nothing lit
+      expect(chipsAt(d, 4)).toHaveLength(1); expect(ring(d, 4)).toHaveLength(0);
+      expect(finalText(d, 4)).toEqual([String(value(l, p, "s2"))]);
     }
   });
   it("g6-expo opens the power into exactly n copies of a, never a × n", () => {

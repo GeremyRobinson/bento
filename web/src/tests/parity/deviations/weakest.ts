@@ -17,7 +17,7 @@ export const deviations: Record<string, Partial<Record<string, string>>> = {
     explain: "Show me says the result where it only repeated the hint",
     checks: `${SLIPS}: "Added instead of multiplied", "Counted one number", and the point slips use number sense ("too big: 0.3 is less than 1")`,
   },
-  "g5-order": { pre: "g3-facts: the first lesson in Curriculum\u2019s v2 depends-on list (curriculum/specs/v2/pre-vs-depends.md; coordinator 2026-10-13, one source of truth)",
+  "g5-order": { show: "ends in \"= ?\", so the v2 stage fills in \"= answer\" once the problem is solved, as g5-mult2 does (v2 spec P3 and g5-order, Design 2026-10-13)", pre: "g3-facts: the first lesson in Curriculum\u2019s v2 depends-on list (curriculum/specs/v2/pre-vs-depends.md; coordinator 2026-10-13, one source of truth)",
     "added:first": "a first tap step, \"Which part do you work out first?\", where the left-to-right slip can really happen (fixes-02 draft)",
     hint: "the hints say why each part is next instead of repeating the label (\"Now add.\")",
     explain: "Show me says the result where it only repeated the hint",
