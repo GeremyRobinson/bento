@@ -67,7 +67,7 @@ export function explainSplitMultiplication(p: SplitMultiplicationProblem, answer
 
   return {
     heading: "Split the second number",
-    idea: ["Tens and ones can be multiplied one at a time, then added back together."],
+    idea: ["Splitting one number into tens and ones turns one hard multiplication into two easy ones, added back together."],
     statement: [num(a), op("×"), num(b), op("="), num(a), op("×"), text("("), ...plusChain(p.parts), text(")")],
     diagram: buildSplitAreaDiagram(p, layout),
     timeline,
