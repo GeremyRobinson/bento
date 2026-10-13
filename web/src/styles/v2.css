@@ -293,6 +293,9 @@ html[data-line] body{background-image:none!important}
   .v-prac:not(.test) .v-solved .v-ask .q2{display:none}
   /* the say line pads half a gap top and bottom, so a two-line message never pushes the picture under its floor */
   .v-say{padding-block:calc(var(--gap) / 2)}
+  /* and keeps to the step's own line: the extra nudges ("Slow down…", "Stuck? Tap the bulb…") give their room to the
+     picture; the bulb's count already shows a hint is there */
+  .v-say>span{display:none}
   .v-keys .v-tools{grid-column:2;flex-direction:column;justify-content:space-between;align-self:stretch;gap:0}
   .v-keys .v-tool{width:calc(var(--pill-size) - var(--gap));height:calc(var(--pill-size) - var(--gap))}
   .v-keys .ppad{grid-column:1;--key:calc(var(--pill-size) - var(--gap))}
