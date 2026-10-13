@@ -38,7 +38,7 @@ html[data-line] body{background-image:none!important}
 .v-bh b{font-size:20px;line-height:1.2}
 .v-bh .v-meta{flex:1;white-space:nowrap}
 .v-sw{--sl-h:36px;--sl-bg:var(--v-page);--sl-ring:none;--sl-pad:4px;--sl-x:var(--sp-4)}
-.v-box{grid-template-rows:auto}
+.v-box{grid-template-rows:max-content}
 
 /* Ring (master) */
 .v-ring{flex:none;position:relative;display:grid;place-items:center;width:20px;height:20px;font-weight:var(--w-bold)}
@@ -97,7 +97,7 @@ html[data-line] body{background-image:none!important}
   .v-cover{padding:var(--sp-4)} .v-cover .v-top{height:84px} .v-nm{font-size:var(--fz-md)} .v-st{white-space:normal} .v-sc{display:none}
   .v-pstep{grid-template-columns:1fr auto;gap:var(--sp-1) var(--gap)} .v-pstep .v-st{grid-column:1/-1;text-align:left}
   .v-wide{padding:16px 18px} .v-yr{font-size:var(--fz-xl)} .v-ring.lg{width:80px;height:80px;font-size:var(--fz-xl)} .v-stat{grid-template-rows:80px minmax(0,1fr) auto}
-  .v-bh{flex-wrap:wrap}
+  .v-bh{display:grid;grid-template-columns:auto auto minmax(0,1fr);padding-left:var(--sp-2)} .v-bh .v-sw{grid-column:1/-1} .v-bh:not(:has(.v-ib)){grid-template-columns:auto minmax(0,1fr)}
 }
 
 /* the island and the corner circles: plain cards with a hairline; only the ring and the grade's number take the colour */
@@ -163,7 +163,7 @@ html[data-line] body{background-image:none!important}
 .v-skip{height:var(--pill-size);margin-left:auto;padding:0 var(--sp-5);font-size:var(--fz-sm)}
 
 /* every problem, in place */
-.v-plist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto;grid-auto-rows:140px;gap:var(--gap);align-content:start;overflow:auto;min-height:0}
+.v-plist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:max-content;grid-auto-rows:140px;gap:var(--gap);align-content:start;overflow:auto;min-height:0}
 .v-pq{align-self:center;font-size:28px;font-weight:var(--w-bold);letter-spacing:-.02em;font-variant-numeric:tabular-nums;min-width:0;overflow:hidden}
 
 @media (max-width:820px){

@@ -254,8 +254,8 @@ export function Practice() {
         </div>
         <div className={`v-say${say ? ` ${say.cls}` : ""}`} role="status" aria-live="polite">
           {say && <>{say.lead && <b><Rich text={say.lead} /></b>}{say.lead && say.text ? " " : ""}{say.text && <Rich text={say.text} />}
-            {say.lines?.map((l, i) => <span key={i}> <Rich text={l} /></span>)}
-            {fb?.type === "hint" && showMeAvailable(s) && <button className="v-link" onClick={() => act((st, p, d) => showMe(st, p, d))}>{SHOW_ME} the step</button>}</>}
+            {say.lines?.filter(l => !/Show me/.test(l)).map((l, i) => <span key={i}> <Rich text={l} /></span>)}
+            {!s.solved && fb?.type !== "good" && showMeAvailable(s) && <button className="v-link" onClick={() => act((st, p, d) => showMe(st, p, d))}>{SHOW_ME} the step</button>}</>}
         </div>
         <div className="v-tools" role="toolbar" aria-label="Tools">
           {!test && <button className="v-tool" disabled={!hintable || (!s.hintsLeft && !s.hinted)} aria-label={`Hint, ${s.hintsLeft} left`} onClick={() => { setZoomOut(false); act((st, _p, d) => hint(st, d)); }}>
