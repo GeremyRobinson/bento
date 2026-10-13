@@ -11,6 +11,22 @@ import { unlikePicture, createUnlikeFractions } from "../../curriculum/lessons/_
 import { ratioPicture, createRatio } from "../../curriculum/lessons/grade6/g6-ratio";
 
 type Rect = Extract<SceneItem, { type: "rect" }>;
+
+describe("g5-unitdiv counts one whole at a time (Review g5 #6)", () => {
+  it("each running count lands after the one before it, the first three on beats of their own, the answer step last", () => {
+    const l = lessonById("g5-unitdiv")!;
+    for (const [W, d] of [[2, 3], [3, 4], [5, 2], [10, 8]] as const) {
+      const p = { W, d }, ex = l.explain(p, l.answers(p)), sc = ex.diagram as SceneDiagram, last = ex.timeline.length - 1;
+      const counts = Array.from({ length: W }, (_, j) => sc.items.find(i => i.type === "text" && i.text === String((j + 1) * d) && (i.from ?? 0) > 0)!);
+      // when each count lands: its beat, then its delay inside the beat
+      const when = counts.map(c => (c.from ?? 0) * 100 + (c.delay ?? 0));
+      for (let j = 1; j < W; j++) expect(when[j]!).toBeGreaterThan(when[j - 1]!);
+      expect(new Set(counts.slice(0, 3).map(c => c.from)).size).toBe(Math.min(W, 3));
+      expect(ex.steps.at(-1)!.state).toBe(last);
+      expect(counts.at(-1)!.from).toBe(last);
+    }
+  });
+});
 const shownAt = (d: SceneDiagram, at: number) => d.items.filter(i => (i.from ?? 0) <= at && (i.until == null || at <= i.until));
 const rects = (d: SceneDiagram, at: number, cls: string) => shownAt(d, at).filter((i): i is Rect => i.type === "rect" && i.cls === cls);
 const rowOf = (y: number) => (r: Rect) => r.y === y;

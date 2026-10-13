@@ -93,6 +93,32 @@ describe("decimal shift", () => {
     expect(shiftDigits("5", 1, -1)).toEqual({ digits: "005", from: 3, to: 1, added: [1, 0] });
   });
 
+  it("g5-pow10: the finished cards are the answer's digits, each written-in 0 popping in as the point hops under it", () => {
+    const l = lessonById("g5-pow10")!;
+    const rng = createRng(7);
+    for (let i = 0; i < 60; i++) {
+      const p = l.generate(rng, i) as { x: number; k: number };
+      const ex = l.explain(p, l.answers(p)), d = ex.diagram as SceneDiagram, last = ex.timeline.length - 1;
+      const cards = texts(d).filter(t => /\bbig\b/.test(t.cls ?? "") && (t.from ?? 0) <= last).sort((a, b) => a.x - b.x);
+      const ans = Math.round(p.x * 10 ** p.k * 100) / 100, [whole, frac = ""] = String(ans).split(".");
+      expect(cards.map(t => t.text).join("")).toBe(whole! + frac);
+      // the point lands after the answer's whole part: as many cards left of it as the answer has whole digits
+      const land = circles(d).find(c => c.cls === "dota")!;
+      expect(cards.filter(t => t.x < land.cx)).toHaveLength(whole!.length);
+      // every hop lands on a card: no hop ends past the last card
+      const hops = d.items.filter((it): it is Extract<SceneItem, { type: "path" }> => it.type === "path" && /arrow/.test(it.cls ?? ""));
+      expect(hops).toHaveLength(p.k);
+      const rects = d.items.filter((it): it is Extract<SceneItem, { type: "rect" }> => it.type === "rect");
+      const right = Math.max(...rects.map(r => r.x + r.w));
+      for (const h of hops) expect(Math.max(...h.d.match(/-?[\d.]+/g)!.map(Number).filter((_, k) => k % 2 === 0))).toBeLessThanOrEqual(right + 6);
+      // the new 0s are cards of their own, filled in the picture's colour, and they come in with the hop under them
+      const fresh = cards.filter(t => t.from === 1);
+      expect(fresh.every(t => t.text === "0" && /onmid/.test(t.cls ?? ""))).toBe(true);
+      expect(fresh).toHaveLength(Math.max(0, p.k - (String(p.x).split(".")[1]?.length ?? 0)));
+      for (const t of fresh) expect(t.delay!).toBeLessThan(0.2 + p.k * 0.45);
+    }
+  });
+
   it("moves the point one box per hop, from where it starts to where it lands", () => {
     const d = buildDecimalShift({ digits: "347", from: 1, to: 3, beat: 0, moveBeat: 1, label: "× 100", alt: "x" });
     const digits = texts(d).filter(t => /big/.test(t.cls ?? ""));

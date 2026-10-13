@@ -4,7 +4,7 @@
 // digits of A × B count those pieces and the point goes that many places from the right. Built on the area grid.
 import { buildAreaGrid } from "../../../../explanations/diagrams/area-model/grid";
 import type { SceneDiagram, SceneItem } from "../../../../explanations/diagrams/scene/schema";
-import { r1 } from "../../../../explanations/diagrams/scene/helpers";
+import { lightSteps, r1 } from "../../../../explanations/diagrams/scene/helpers";
 import { formatNumber as f } from "../../../schemas/math-text";
 
 const PLACE = ["ones", "tenths", "hundredths", "thousandths"];
@@ -59,7 +59,15 @@ export function multiplyDecimalsPicture(o: { A: number; B: number; pa: number; p
   // the count of pieces across
   items.push({ type: "text", x: r1(xs + g.width / 2), y: r1(bottom + 14), text: `${A} ${PLACE[pa]}`, cls: "lbl sm p0", from: 0, enter: "rise", delay: 0.6 });
   const width = Math.max(d.width, bx + Math.max(bs, piece.length * 9) + 14);
-  return { ...d, width: r1(width), height: r1(d.height + 10), items: shiftLines(items, 10) };
+  // the worked step lit (the shared `lit` role), beat by beat: the strip and the count under it while its pieces are
+  // counted (beat 0), the one piece blown up while its size is found (beat 1), the strip again as its pieces are read as
+  // the answer (beat 2)
+  const across = `${A} ${PLACE[pa]}`;
+  const litOn = (it: SceneItem): number[] | null =>
+    it.type === "rect" && /\bcell\b/.test(it.cls ?? "") ? [0, 2]
+      : it.type === "rect" && /\bxchip\b/.test(it.cls ?? "") ? [1]
+      : it.type === "text" && it.text === across ? [0] : null;
+  return { ...d, width: r1(width), height: r1(d.height + 10), items: lightSteps(shiftLines(items, 10), litOn, 2) };
 }
 
 /** moves the lines under the picture down, to make room for the count under the strip */
