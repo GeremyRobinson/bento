@@ -218,7 +218,15 @@ export function buildNumberLine(spec: NumberLineSpec): SceneDiagram {
       }
       case "line": return { ...it, y1: r1(it.y1 + dy), y2: r1(it.y2 + dy) };
       case "circle": return { ...it, cy: r1(it.cy + dy) };
-      case "text": return { ...it, y: r1(it.y + dy) };
+      // a label that would run past either end of the picture is pinned to that edge instead of centred, so it stays
+      // inside at any font size (a phone draws the picture smaller but its labels at a readable size; smoke: g6-lcm's
+      // "60 ÷ 4 = 15 jumps" spilled its landing card)
+      case "text": {
+        const half = textWidth(it.text, 17) / 2, y = r1(it.y + dy);
+        if (it.x + half > W - 4) return { ...it, x: W - 4, y, cls: `${it.cls ?? ""} end`.trim() };
+        if (it.x - half < 4) return { ...it, x: 4, y, cls: `${it.cls ?? ""} start`.trim() };
+        return { ...it, y };
+      }
       default: return it;
     }
   });
