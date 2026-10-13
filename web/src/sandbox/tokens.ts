@@ -72,10 +72,6 @@ export const SURFACE_TOKENS: Token[] = [
   { v: "--nest", label: "Nesting gap", kind: "px", min: 2, max: 20 },
   { v: "--surf-1", label: "Level 1 (panel)", kind: "color", fallback: "--well" },
   { v: "--surf-2", label: "Level 2 (card)", kind: "color", fallback: "--card" },
-  // the glass (G 2026-10-08): every panel is one see-through layer; hover and active only raise a part's own opacity
-  { v: "--glass-a", label: "Glass opacity", kind: "pct", min: 0, max: 60 },
-  { v: "--glass-hover-a", label: "Hover opacity", kind: "pct", min: 0, max: 80 },
-  { v: "--glass-on-a", label: "Active opacity", kind: "pct", min: 0, max: 80 },
 ];
 
 export type Theme = "light" | "dark";
