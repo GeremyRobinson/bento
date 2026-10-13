@@ -69,18 +69,17 @@ function explain(pr: RoundProblem, model: AnswerModel): Explanation {
   if (!hops.length) marks.push({ v: R, beat: 2, cls: "dota" });
   return {
     heading: "Look one place to the right",
-    idea: ["Rounding picks the closer number, and a next digit of 5 marks halfway."],
+    idea: ["Rounding picks the closer number, and the digit just to the right tells you which."],
     statement: [num(value), op("≈"), text("?"), muted(` (nearest ${name.slice(0, -1)})`)],
     diagram: buildNumberLine({
       min: T, max: up, step: tick, every: 10, labelAt: [half], marks, hops,
       alt: `Number line from ${f(T)} to ${f(up)} with ${f(value)} marked; it rounds to ${f(R)}.`,
     }),
-    caption: halfway ? `${f(value)} is exactly halfway, and halfway rounds up to ${f(R)}.` : `${f(value)} is closer to ${f(R)}.`,
     timeline: beats(3),
     steps: [
-      { id: "digit", narration: `${f(value)} sits between ${f(T)} and ${f(up)}. Its ${name} digit is ${digit}.`, math: [text(`${name} digit: `), num(digit)], state: 0, answerStep: "digit", result: digit },
-      { id: "next", narration: `The digit just to its right is ${next}. Halfway between is ${f(half)}.`, math: [text("next digit: "), num(next)], state: 1, answerStep: "next", result: next },
-      { id: "round", narration: stays ? `${next} is 4 or less, so the ${name} digit stays: ${f(R)}.` : `${next} is 5 or more, so round up: ${f(R)}.`,
+      { id: "digit", narration: `${f(value)} sits between ${f(T)} and ${f(up)}.`, math: [text(`${name} digit: `), num(digit)], state: 0, answerStep: "digit", result: digit },
+      { id: "next", narration: `Halfway between them is ${f(half)}.`, math: [text("next digit: "), num(next)], state: 1, answerStep: "next", result: next },
+      { id: "round", narration: (stays ? `${next} is 4 or less, so the digit stays.` : `${next} is 5 or more, so round up.`) + (halfway ? " Halfway rounds up." : ""),
         math: [num(value), op("≈"), num(R)], state: 2, answerStep: "round", result: R },
     ],
   };

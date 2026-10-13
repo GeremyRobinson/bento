@@ -187,9 +187,9 @@ export function explainUnlike(lesson: "add" | "sub" | "mix") {
     const { a, b, c, d, L, A, C, S } = p, sub = p.op === "−";
     const Lx = expectedOf(model.steps, "lcd"), A2 = expectedOf(model.steps, "first"), C2 = expectedOf(model.steps, "second");
     const g = gcd(S, L), F = finalForm(S, L);
-    const simple = S >= L ? `${count(S, L)} is ${mixedLabel(S, L)}: every ${countOf(L, "piece")} make one whole.`
-      : g > 1 ? `Divide the top and the bottom by ${g}: ${S}/${L} = ${mixedLabel(S, L)}.`
-      : `${S}/${L} is already as simple as it gets.`;
+    const simple = S >= L ? `Every ${countOf(L, "piece")} make one whole.`
+      : g > 1 ? `Divide the top and the bottom by ${g}.`
+      : "It's already as simple as it gets.";
     return {
       heading: HEADINGS[lesson],
       idea: IDEAS[lesson],
@@ -199,14 +199,14 @@ export function explainUnlike(lesson: "add" | "sub" | "mix") {
       timeline: beats(6),
       steps: [
         { id: "lcd", state: 1, answerStep: "lcd", result: Lx, math: [text("LCD of "), num(b), text(" and "), num(d), text(" is "), num(Lx)],
-          narration: `The pieces are different sizes. ${Lx} is the smallest number both ${b} and ${d} go into, so cut both bars into ${pieceName(Lx)}.` },
+          narration: `Both ${b} and ${d} go into ${Lx}, so cut both bars into ${pieceName(Lx)}.` },
         { id: "first", state: 2, answerStep: "first", result: A2, math: [frac(a, b), op("="), frac(A2, L), muted(`(× ${L / b})`)],
-          narration: `${b} × ${L / b} = ${L}, so ${a} × ${L / b} = ${A2}: ${a}/${b} is the same amount as ${A2}/${L}.` },
+          narration: `Each ${pieceName(b, false)} is ${count(L / b, L)}.` },
         { id: "second", state: 3, answerStep: "second", result: C2, math: [frac(c, d), op("="), frac(C2, L), muted(`(× ${L / d})`)],
-          narration: `${d} × ${L / d} = ${L}, so ${c} × ${L / d} = ${C2}: ${c}/${d} is the same amount as ${C2}/${L}.` },
+          narration: `Each ${pieceName(d, false)} is ${count(L / d, L)}.` },
         { id: sub ? "subtract" : "add", state: 4, answerStep: sub ? "subtract" : "add", math: [frac(A, L), op(p.op), frac(C, L), op("="), frac(S, L)],
-          narration: sub ? `Same-size pieces now: take ${C} away from ${A}. ${S === 1 ? `1/${L} is` : `${count(S, L)} are`} left, and the bottom stays ${L}.`
-            : `Same-size pieces now: ${A} + ${C} = ${count(S, L)}. The bottom stays ${L}.` },
+          narration: sub ? `Same-size pieces now, so take away. The bottom stays ${L}.`
+            : `Same-size pieces now, so add the tops. The bottom stays ${L}.` },
         { id: "simplify", state: 5, answerStep: "simplify", ...(F.num === 0 ? { result: F.whole } : {}), math: [frac(S, L), op("="), ...mixedMath(S, L)], narration: simple },
       ],
     };

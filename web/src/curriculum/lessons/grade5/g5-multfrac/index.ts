@@ -1,4 +1,4 @@
-import { answer, frac, op } from "../../../schemas/math-text";
+import { answer, frac, op, text } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import type { Rng } from "../../../generators/rng";
 import { beats, type Explanation } from "../../../../explanations/schema";
@@ -62,10 +62,10 @@ export function explainFracTimes(p: FracTimesProblem, answers: AnswerModel): Exp
     caption: `${a}/${b} of the rows and ${c}/${d} of the columns overlap in ${N} of ${count(D, "square")}.`,
     timeline: beats(5),
     steps: [
-      { id: "rows", narration: `Cut the whole into ${count(b, "row")} and shade ${a} of them: ${a}/${b}.`, math: [frac(a, b)], state: 1 },
-      { id: "cols", narration: `Cut it into ${count(d, "column")} too and shade ${c} of them: ${c}/${d} of that part.`, math: [frac(c, d), op("×"), frac(a, b)], state: 2 },
-      { id: "across", narration: `The overlap is ${a} × ${c} = ${N} of the ${b} × ${d} = ${count(D, "square")}.`, math: [frac(a, b), op("×"), frac(c, d), op("="), frac(N, D)], state: 3, answerStep: "across", result: N },
-      { id: "simplify", narration: simplified ? `Divide top and bottom by ${gcd(N, D)}: ${simple}.` : `${N}/${D} can't be simplified.`, math: [frac(N, D), op("="), ...(F.num === 0 ? [answer("x", F.whole)] : [frac([answer("x", F.num)], [answer("x", F.den)])])], state: 4, answerStep: "simplify", result: simplifyResult },
+      { id: "rows", narration: `Cut the square into ${b} rows and shade ${a}.`, math: [frac(a, b)], state: 1 },
+      { id: "cols", narration: `Cut it into ${d} columns and shade ${c}.`, math: [frac(c, d), text(" of "), frac(a, b)], state: 2 },
+      { id: "across", narration: "The squares shaded twice are the answer.", math: [frac(a, b), op("×"), frac(c, d), op("="), frac(N, D)], state: 3, answerStep: "across", result: N },
+      { id: "simplify", narration: simplified ? `Divide the top and the bottom by ${gcd(N, D)}.` : "It can't be made simpler.", math: [frac(N, D), op("="), ...(F.num === 0 ? [answer("x", F.whole)] : [frac([answer("x", F.num)], [answer("x", F.den)])])], state: 4, answerStep: "simplify", result: simplifyResult },
     ],
   };
 }

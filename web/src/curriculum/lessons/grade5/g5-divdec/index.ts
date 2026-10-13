@@ -49,11 +49,11 @@ function explain(p: DivDecimalProblem, model: AnswerModel) {
       alt: `A double number line: the top counts by ${f(y)} up to ${f(x)}, the bottom by ${d} up to ${n}, tick for tick. ${qt} hops on each line, so both divisions are ${qt}.`,
     }),
     beats: [
-      { id: "divisor", narration: `Make the divisor whole: ${f(y)} × 10 = ${d}.`, math: [num(y), op("×"), num(10), op("="), num(d)],
+      { id: "divisor", narration: "Make the divisor a whole number.", math: [num(y), op("×"), num(10), op("="), num(d)],
         lines: [[num(x), op("÷"), num(y)], [num(y), op("×"), num(10), op("="), num(d)]], answerStep: "divisor", result: d },
-      { id: "other", narration: `Do the same to ${f(x)}: ${f(x)} × 10 = ${n}.`, math: [num(x), op("×"), num(10), op("="), num(n)],
+      { id: "other", narration: `Do the same to ${f(x)}, so the answer doesn't change.`, math: [num(x), op("×"), num(10), op("="), num(n)],
         lines: [[mark(n), op("÷"), mark(d)]], answerStep: "other", result: n },
-      { id: "divide", narration: `${n} ÷ ${d} = ${qt}.`, math: [num(n), op("÷"), num(d), op("="), num(qt)],
+      { id: "divide", narration: "Now it's whole numbers: divide.", math: [num(n), op("÷"), num(d), op("="), num(qt)],
         lines: [[num(qt)]], answerStep: "divide", result: qt },
     ],
   });

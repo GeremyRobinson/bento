@@ -7,7 +7,6 @@ import type { SplitMultiplicationProblem } from "./problem";
 import { placeName } from "../../../generators/place-value";
 
 const plusChain = (values: number[]): MathText => values.flatMap((v, i) => (i ? [op("+"), num(v)] : [num(v)]));
-const words = (values: number[]) => values.map(f).join(" + ");
 
 /** Value the answer model expects for a step; the explanation must arrive at the same number. */
 function expectedFor(answers: AnswerModel, stepId: string): number {
@@ -36,7 +35,7 @@ export function explainSplitMultiplication(p: SplitMultiplicationProblem, answer
   const steps: ExplanationStep[] = [
     {
       id: "split",
-      narration: many ? `Split ${f(b)} by place value: ${words(p.parts)}.` : `${f(b)} is one place value, so there is nothing to split.`,
+      narration: many ? `Split ${f(b)} into tens and ones.` : `${f(b)} has only one part, so there's nothing to split.`,
       math: [num(b), op("="), ...plusChain(p.parts)],
       state: stateOf(s => s.phase === "split"),
       result: b,
@@ -45,7 +44,7 @@ export function explainSplitMultiplication(p: SplitMultiplicationProblem, answer
       const result = expectedFor(answers, `partial-${i}`);
       return {
         id: `partial-${i}`,
-        narration: `The ${placeName(part)} part is ${f(a)} by ${f(part)}, so it holds ${f(result)}.`,
+        narration: `The ${placeName(part)} strip is ${f(a)} tall and ${f(part)} wide.`,
         math: [num(a), op("×"), num(part), op("="), num(result)],
         state: stateOf(s => s.phase === "region" && s.index === i),
         answerStep: `partial-${i}`,
@@ -57,7 +56,7 @@ export function explainSplitMultiplication(p: SplitMultiplicationProblem, answer
     const result = expectedFor(answers, "sum");
     steps.push({
       id: "sum",
-      narration: `Add the parts to fill the whole rectangle: ${f(result)}.`,
+      narration: "Add the strips to fill the whole rectangle.",
       math: [...plusChain(p.partialProducts), op("="), num(result)],
       state: stateOf(s => s.phase === "sum"),
       answerStep: "sum",
@@ -67,7 +66,7 @@ export function explainSplitMultiplication(p: SplitMultiplicationProblem, answer
 
   return {
     heading: "Split the second number",
-    idea: ["The second number is tens plus ones, so each strip is an easy multiplication."],
+    idea: ["A two-digit number is just tens and ones, so multiplying each part and adding the parts gives the whole answer."],
     statement: [num(a), op("×"), num(b), op("="), num(a), op("×"), text("("), ...plusChain(p.parts), text(")")],
     diagram: buildSplitAreaDiagram(p, layout),
     timeline,

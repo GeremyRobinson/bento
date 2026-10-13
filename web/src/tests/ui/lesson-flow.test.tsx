@@ -44,7 +44,7 @@ describe("a whole lesson in the browser", () => {
     expect(pic.getAttribute("data-split")).toBe("true");
     expect(pic.getAttribute("data-sum")).toBe("true");
     expect(screen.getByText("That's the whole problem. Your turn.")).toBeInTheDocument();
-    expect(screen.getAllByText(`Add the parts to fill the whole rectangle: ${a * b}.`).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Add the strips to fill the whole rectangle.").length).toBeGreaterThan(0);
 
     // a new example redraws everything from a new problem
     fireEvent.click(screen.getByRole("button", { name: "Show another" }));

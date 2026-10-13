@@ -60,9 +60,9 @@ function explain(p: FractionOfNumberProblem, model: AnswerModel): Explanation {
     timeline: beats(3),
     steps: [
       { id: "groups", state: 1, answerStep: "groups", result: g, math: [num(W), op("÷"), num(d), op("="), num(g)],
-        narration: `The bottom says ${d} equal groups: ${W} ÷ ${d} = ${g} in each.` },
+        narration: `The bottom says ${d} equal groups.` },
       { id: "take", state: 2, answerStep: "take", result: R, math: [num(g), op("×"), num(n), op("="), num(R)],
-        narration: `The top says take ${n} of them: ${g} × ${n} = ${R}.` },
+        narration: `The top says take ${n} of them.` },
     ],
   };
 }

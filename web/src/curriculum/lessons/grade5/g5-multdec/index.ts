@@ -66,17 +66,17 @@ function explain(p: MultDecimalsProblem, model: AnswerModel) {
   const P = expectedOf(model, "whole"), places = expectedOf(model, "places"), ans = expectedOf(model, "place");
   return chainExplanation({
     heading: "Multiply, then place the point",
-    idea: ["A tenth of a tenth is a hundredth, so multiplying decimals moves the point."],
+    idea: ["A tenth of a tenth is a hundredth, so the answer has as many decimal places as both numbers together."],
     statement: [num(x), op("×"), num(y)],
     caption: `${f(x)} × ${f(y)} has the same digits as ${A} × ${B}; the ${places} decimal places say where the point goes.`,
     alt: `${f(x)} × ${f(y)}: ${A} × ${B} = ${P}, ${places} decimal places, so ${f(ans)}.`,
     diagram: multiplyDecimalsPicture({ A, B, pa, pb, P, ans }),
     beats: [
-      { id: "whole", narration: `Ignore the points: ${A} × ${B} = ${P}.`, math: [num(A), op("×"), num(B), op("="), num(P)],
+      { id: "whole", narration: "Leave the points out and multiply.", math: [num(A), op("×"), num(B), op("="), num(P)],
         lines: [[num(x), op("×"), num(y)], [num(A), op("×"), num(B), op("="), mark(P)]], answerStep: "whole", result: P },
-      { id: "places", narration: `${f(x)} has ${pa} decimal place${pa === 1 ? "" : "s"} and ${f(y)} has ${pb}, so ${places} in all.`, math: [num(pa), op("+"), num(pb), op("="), num(places)],
+      { id: "places", narration: "Count the digits after each point.", math: [num(pa), op("+"), num(pb), op("="), num(places)],
         lines: [[num(pa), op("+"), num(pb), op("="), num(places), text(places === 1 ? " decimal place" : " decimal places")]], answerStep: "places", result: places },
-      { id: "place", narration: `The answer counts ${PLACE[places]}, so put the point ${placeWord(places)} from the right of ${P}: ${f(ans)}.`, math: [num(x), op("×"), num(y), op("="), num(ans)],
+      { id: "place", narration: `Put the point ${placeWord(places)} from the right.`, math: [num(x), op("×"), num(y), op("="), num(ans)],
         lines: [placePoint(P, places)], answerStep: "place", result: ans },
     ],
   });

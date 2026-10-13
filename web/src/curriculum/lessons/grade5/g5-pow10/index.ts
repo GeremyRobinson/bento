@@ -42,7 +42,7 @@ function explain(p: PowerOfTenProblem, model: AnswerModel): Explanation {
   const [whole, frac = ""] = f(x).split(".");
   return {
     heading: "Each zero moves the point",
-    idea: ["Times 10 makes every digit worth ten times more, so each digit moves one place left."],
+    idea: ["Times 10 makes each digit worth ten times more, so the point hops one place right."],
     statement: [num(x), op("×"), num(m), op("="), text("?")],
     diagram: buildDecimalShift({
       digits: whole! + frac, from: whole!.length, to: whole!.length + k, beat: 0, moveBeat: 1,
@@ -51,9 +51,9 @@ function explain(p: PowerOfTenProblem, model: AnswerModel): Explanation {
     }),
     timeline: beats(2),
     steps: [
-      { id: "zeros", narration: `${m} has ${plural(k, "zero")}, so the decimal point moves ${plural(k, "place")} to the right.`,
+      { id: "zeros", narration: "Each zero hops the point one place right.",
         math: [num(m), text(` has ${plural(k, "zero")}`)], state: 0, answerStep: "zeros", result: k },
-      { id: "move", narration: `Hop the point ${plural(k, "place")} right${frac.length < k ? ", writing a 0 in each empty place" : ""}: ${f(x)} × ${m} = ${f(ans)}.`,
+      { id: "move", narration: `Hop the point ${plural(k, "place")} right.${frac.length < k ? " Write a 0 in each empty place." : ""}`,
         math: [num(x), op("×"), num(m), op("="), num(ans)], state: 1, answerStep: "move", result: ans },
     ],
   };
