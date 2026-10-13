@@ -152,7 +152,8 @@ function Box({ g, view, setView, pick, choose }: { g: number; view: string | nul
   const unit = view ? units.find(u => u.name === view) : undefined;
   // progress is the ring everywhere: a lesson counts once its skill check is 3 or 4 (app/rings.ts)
   const list = unit ? unit.entries : all, done = learnedCount(progress, list), m = list.length;
-  const solid = done;
+  // "Got it" is the model's second ring: lessons whose last skill check was 4 of 4 (spec H2), a subset of learned
+  const solid = list.filter(c => progress.checks?.[c.id]?.last === 4).length;
   const goOver = list.filter(c => toGoOver(progress, c.id)).length;
   const testTile = (key: string, name: string) => {
     const t = progress.tests[key], ready = testReady(g, key.startsWith("grade:") ? undefined : unit?.name ?? key.split(":").slice(2).join(":"));
@@ -161,7 +162,7 @@ function Box({ g, view, setView, pick, choose }: { g: number; view: string | nul
   };
   const stats = <>
     <Stat p={m ? done / m : 0} big={`${done}/${m}`} name="Lessons done" line={m - done ? `${m - done} still to do` : "All done"} />
-    <Stat p={m ? solid / m : 0} big={`${solid}/${m}`} name="Got it" line="Skill check 3 or 4" />
+    <Stat p={m ? solid / m : 0} big={`${solid}/${m}`} name="Got it" line="Checks at 4 of 4" />
     <Stat p={m ? goOver / m : 0} big={String(goOver)} name="To go over" line={goOver ? "Back in Today" : "Nothing yet"} />
   </>;
   return (<>
