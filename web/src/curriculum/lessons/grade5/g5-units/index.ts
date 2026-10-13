@@ -90,14 +90,19 @@ function answers(p: UnitConversionProblem): AnswerModel {
   return { steps, finalParts: [-1] };
 }
 
-/** A bar of big units (the last one part full for a half). Beat 1 fills the first with f small units; beat 3 fills them all. */
+/** A bar of big units (the last one part full for a half). Beat 1 fills the first with f small units, beat 2 asks of the
+ * rest, and beat 3 fills them all, one after another. */
 export function unitConversionPicture(p: UnitConversionProblem) {
   const { u: [one, many, small, f], up } = p, W = bigCount(p), P = Math.ceil(W), smalls = W * f;
   const piece = (i: number) => (i < Math.floor(W) ? f : (W - Math.floor(W)) * f);
   return buildTape({
     rows: [{
-      length: 1, parts: P, fills: [{ a: 0, b: 1 / P, tone: "on", from: 1 }, { a: 1 / P, b: W / P, tone: "on", from: 3 }],
-      each: [{ text: () => `1`, until: 0 }, { text: () => `${f}`, from: 1, until: 2, only: i => i === 0 }, { text: i => fm(piece(i)), from: 3 }],
+      // lit: the one big unit as it is filled, then all of them
+      lit: [{ from: 1, until: 1 }, { from: 3 }],
+      length: 1, parts: P, fills: [{ a: 0, b: 1 / P, tone: "on", from: 1 }, { a: 1 / P, b: W / P, tone: "on", from: 3, stagger: Math.min(0.12, 1.2 / P) }],
+      // beat 2 (more or fewer?): every other unit asks "?" one after another, each still to be turned into small units
+      each: [{ text: () => `1`, until: 0 }, { text: () => `${f}`, from: 1, until: 2, only: i => i === 0 },
+        { text: () => "?", from: 2, until: 2, only: i => i > 0, stagger: Math.min(0.12, 1.2 / P) }, { text: i => fm(piece(i)), from: 3, stagger: Math.min(0.12, 1.2 / P) }],
     }],
     brackets: [
       { row: 0, a: 0, b: W / P, text: up ? `${fm(smalls)} ${small}` : `${fm(W)} ${W === 1 ? one : many}`, side: "above" },

@@ -102,6 +102,35 @@ describe("pictures follow the problem", () => {
     expect(rects(d, 5, "seg on cut")).toHaveLength(2);
   });
 
+  it("unlike fractions: the LCD step cuts the third into sixths (knife lines, then the pieces split), not a swap", () => {
+    const d = unlikePicture(createUnlikeFractions(2, 3, 1, 6, "+"));
+    const knives = d.items.filter(i => i.type === "line" && i.cls === "ln2" && i.from === 1);
+    expect(knives).toHaveLength(3); // through the middle of each third
+    const split = d.items.filter(i => i.type === "rect" && i.from === 1 && i.enter === "slide");
+    expect(split.length).toBeGreaterThanOrEqual(6);
+    expect(split.every(i => i.vars?.["--dx"] != null && (i.delay ?? 0) > 0)).toBe(true);
+    for (let beat = 1; beat <= 4; beat++) expect(d.items.some(i => i.from === beat), `beat ${beat}`).toBe(true);
+  });
+
+  it("mixed numbers: one whole is counted per beat, its pieces numbered, and the fraction lands last", () => {
+    const ex = lessonById("g5-improper")!, p = { w: 2, n: 2, d: 3 } as never, e = ex.explain(p, ex.answers(p)), d = e.diagram as SceneDiagram;
+    expect(e.timeline).toHaveLength(5);
+    expect(texts(d, 1)).toEqual(expect.arrayContaining(["1", "2", "3"]));
+    expect(texts(d, 2)).toEqual(expect.arrayContaining(["4", "5", "6"]));
+    expect(texts(d, 3)).toEqual(expect.arrayContaining(["7", "8"]));
+    expect(texts(d, 4)).toContain("8/3");
+    expect(texts(d, 3)).not.toContain("8/3");
+  });
+
+  it("text too big for its part never shrinks under 14px: one or two parts lead it outside, more leave it to the bracket", () => {
+    const one = buildTape({ rows: [{ length: 1, parts: 12, each: [{ text: () => "1000", only: i => i === 0 }] }], alt: "t" });
+    const out = one.items.find(i => i.type === "text" && i.text === "1000");
+    expect(out?.cls).toBe("sm res");
+    expect(one.items.some(i => i.type === "line" && i.cls === "ax thin")).toBe(true);
+    const many = buildTape({ rows: [{ length: 1, parts: 12, each: [{ text: () => "1000" }] }], alt: "t" });
+    expect(texts(many, 0)).not.toContain("1000");
+  });
+
   it("ratio tape: a boxes over b boxes of one size", () => {
     const d = ratioPicture(createRatio(2, 7, 3));
     const segs = rects(d, 0, "seg");

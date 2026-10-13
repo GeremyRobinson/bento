@@ -161,3 +161,5 @@
 #app .screen.solved .v-ppic :is(.viz-svg,.am){transform-origin:center;animation:picJoy var(--m-in) var(--m-spring)}
 /* Today's picture on home breathes gently, so home is never still */
 #app .v-todaypic :is(.viz-svg,.am){transform-origin:center;animation:picBreathe calc(var(--m-beat) * 6) ease-in-out infinite}
+/* a re-cut fraction bar splits: a shaded piece slides apart from its brothers along the cut (tape master) */
+#app .viz-svg .seg.on.a-slide{animation:slide var(--dur-1000) var(--ease) var(--d,0s) both}

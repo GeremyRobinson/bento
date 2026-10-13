@@ -103,15 +103,22 @@ describe("place-value blocks", () => {
 });
 
 describe("fraction grid", () => {
-  it("shades r of the rows, c of the columns, and the overlap is r × c squares", () => {
+  it("shades r of the rows, c of the columns, and the overlap is r × c squares in one darker colour", () => {
     const d = buildFracGrid({ rows: 3, cols: 4, r: 2, c: 3, beats: { grid: 0, rows: 1, cols: 2, both: 3 }, rowLabel: "2/3", colLabel: "3/4", alt: "" });
     const count = (cls: string) => d.items.filter(i => i.cls === cls).length;
-    expect([count("seg"), count("shadeA"), count("shadeA p1"), count("both pq")]).toEqual([12, 8, 9, 6]);
-    expect(d.items.filter(i => i.cls === "both pq").every(i => i.from === 3)).toBe(true);
+    expect([count("seg"), count("shadeA"), count("shadeA p1"), count("shadeA lap")]).toEqual([12, 8, 9, 6]);
+    // the overlap is one solid square of the grade's deep each (Review #10: no half-and-half diagonals), so it can be counted
+    const lap = d.items.filter(i => i.cls === "shadeA lap");
+    expect(lap.every(i => i.from === 3 && i.type === "rect" && i.vars?.["--tint"] === "var(--pic-deep)")).toBe(true);
+    expect(d.items.some(i => i.type === "polygon")).toBe(false);
   });
   it("g5-multfrac follows the problem", () => {
     const d = scene("g5-multfrac", { a: 3, b: 4, c: 1, d: 4 });
-    expect(d.items.filter(i => i.cls === "both pq")).toHaveLength(3);
+    expect(d.items.filter(i => i.cls === "shadeA lap" || i.cls === "shadeA lap lit")).toHaveLength(3 * 2);
+    // practice's first step (beat 0) already shows both fractions and their overlap (Review #18)
+    expect(d.items.filter(i => i.cls?.startsWith("shadeA") && (i.from ?? 0) === 0)).toHaveLength(3 * 4 + 1 * 4 + 3);
+    // the overlap is counted 1, 2, 3 at the step that asks for it
+    expect(texts(d).filter(t => t.from === 3).map(t => t.text)).toEqual(expect.arrayContaining(["1", "2", "3"]));
     expect(texts(d).map(t => t.text)).toEqual(expect.arrayContaining(["3/4", "1/4", "3 of 16 squares", "3/16 is already simplest"]));
   });
 });
