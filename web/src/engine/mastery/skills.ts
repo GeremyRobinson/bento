@@ -1,0 +1,79 @@
+// What the child has shown they know (v2-backend-plan.md). Finishing a lesson only means they got through it with
+// help; the skill check at the end (a few problems, no hints, one try per step) says "learned". A learned lesson comes
+// back for a quick check after 3, 7, 21 and then 60 days, each pass pushing it further out; a miss brings it back
+// tomorrow. Plain rules a parent could follow, all worked out from what's saved on this device.
+import { CATALOG } from "../../curriculum/catalog";
+import { DEPENDS } from "../../curriculum/depends";
+import type { Level } from "./levels";
+import type { Progress } from "./progress";
+
+export interface CheckRecord {
+  last: Level;
+  best: Level;
+  /** when the last check (or the review that counted as one) was done */
+  date: number;
+  /** when it should come back */
+  due: number;
+  /** checks passed in a row: picks the next gap */
+  passes: number;
+}
+
+/** problems in a skill check, until a lesson's own check says otherwise */
+export const CHECK_LENGTH = 4;
+/** the run index the check's problems start at: lessons make their first problems easier */
+export const CHECK_FROM = 4;
+/** a check of 3 or 4 means learned */
+export const PASS: Level = 3;
+/** days until a passed lesson comes back, by how many passes in a row */
+export const REVIEW_DAYS = [3, 7, 21, 60] as const;
+const DAY = 864e5;
+
+export const checkKey = (g: number, id: string) => `check:${g}:${id}`;
+export const isCheckKey = (key: string) => key.startsWith("check:");
+export const lessonOfCheck = (key: string) => key.split(":").slice(2).join(":");
+
+/** a check's (or a counted review's) result, and when the lesson comes back */
+export function recordCheck(old: CheckRecord | undefined, level: Level, now: number): CheckRecord {
+  const passed = level >= PASS, passes = passed ? (old?.passes ?? 0) + 1 : 0;
+  const days = passed ? REVIEW_DAYS[Math.min(passes, REVIEW_DAYS.length) - 1]! : 1;
+  return { last: level, best: Math.max(level, old?.best ?? 0) as Level, date: now, due: now + days * DAY, passes };
+}
+
+/**
+ * Learned: the last check was 3 or 4. Before checks existed a practice score of 3+ counts, so no one's progress
+ * goes back to zero when checks arrive.
+ */
+export function learned(p: Progress, id: string): boolean {
+  const c = p.checks?.[id];
+  if (c) return c.last >= PASS;
+  return (p.scores[id]?.last ?? -1) >= PASS;
+}
+
+/** the last check came back low: the lesson is to go over */
+export const toGoOver = (p: Progress, id: string) => { const c = p.checks?.[id]; return !!c && c.last < PASS; };
+
+/** learned, and its time to come back has come */
+export const dueBack = (p: Progress, id: string, now: number) => { const c = p.checks?.[id]; return !!c && c.last >= PASS && c.due <= now; };
+
+/** the lessons this one builds on: Curriculum's list, else the one build-up lesson the catalog names */
+export function dependsOn(id: string): string[] {
+  if (DEPENDS[id]) return DEPENDS[id]!;
+  const pre = CATALOG.find(c => c.id === id)?.pre;
+  return pre ? [pre] : [];
+}
+
+/**
+ * Step back: after a check of 0 or 1, the first lesson underneath that isn't solid. A lesson underneath the child
+ * never tried (say, from a grade they skipped) doesn't count against them; only one they tried and haven't learned.
+ */
+export function stepBack(p: Progress, id: string): string | null {
+  const c = p.checks?.[id];
+  if (!c || c.last > 1) return null;
+  return dependsOn(id).find(d => (p.checks?.[d] || p.scores[d]) && !learned(p, d)) ?? null;
+}
+
+/** lessons learned out of the ones given: the one number every ring and box shows */
+export function ringOf(p: Progress, ids: readonly string[]): { learned: number; total: number; pct: number } {
+  const n = ids.filter(id => learned(p, id)).length;
+  return { learned: n, total: ids.length, pct: ids.length ? n / ids.length : 0 };
+}
