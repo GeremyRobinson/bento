@@ -30,8 +30,8 @@ export function AreaModelDiagram({ diagram: d, timeline, at, ask }: { diagram: A
   const asked = ask != null ? timeline[ask] : undefined;
   const v = { ...view, active: asked?.phase === "region" ? asked.index : view.active };
   const lit = v.active != null ? d.regions[v.active] : undefined;
-  const label = `${d.horizontal.label} by ${d.vertical.label} rectangle, split into ${d.regions
-    .map(r => `${r.equation.factors[0]} by ${r.equation.factors[1]} = ${r.productLabel}`).join(", ")}. Total ${formatNumber(d.total.value)}.`;
+  const label = `${d.vertical.label} by ${d.horizontal.label} rectangle, split into ${d.regions
+    .map(r => `${r.equation.factors[0]} by ${r.equation.factors[1]} = ${r.productLabel}`).join(" and ")}. Total ${formatNumber(d.total.value)}.`;
   const ref = useLabelFloor(d.width);
   const top = d.vertical.start;
   return (

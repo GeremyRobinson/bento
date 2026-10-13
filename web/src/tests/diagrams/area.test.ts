@@ -163,15 +163,16 @@ describe.each(AREA_LESSONS)("%s picture fits its canvas", id => {
 });
 
 describe("split area model labels", () => {
-  it("never lets two column labels touch, and every part's result fits inside it, for any problem", () => {
+  it("never lets two strip labels touch, and every strip's result fits inside it, for any problem", () => {
     for (let a = 12; a <= 98; a += 5) for (let b = 12; b <= 98; b++) {
-      if (a % 10 === 0 || b % 10 === 0) continue;
+      if (b % 10 === 0) continue;
       const d = buildSplitAreaDiagram(createSplitMultiplication(a, b));
       d.cols.forEach((c, i) => { if (i) expect(c.start + c.length / 2 - (d.cols[i - 1]!.start + d.cols[i - 1]!.length / 2)).toBeGreaterThanOrEqual((labelWidth(c.label, 20) + labelWidth(d.cols[i - 1]!.label, 20)) / 2); });
-      // the renderer sizes a result to its part: max(12, min(48, h × .42, w × .3))
+      // the renderer sizes a result to its strip: max(12, min(48, h × .42, w × .3))
       for (const r of d.regions) {
         const fs = Math.max(12, Math.min(48, r.height * 0.42, r.width * 0.3));
         expect(r.productLabel.length * fs * 0.62).toBeLessThanOrEqual(r.width);
+        expect(r.y).toBe(d.vertical.start);
       }
     }
   });
