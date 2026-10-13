@@ -7,6 +7,8 @@ import { seatLines } from "./seats";
 /** Rough width of a number label in the app's rounded number font. */
 /** how far apart two rows of labels sit */
 export const ROW = 26;
+/** the gap between two parts (v2 lesson spec G1): each part is its own shape, never one block cut by a line */
+export const PART_GAP = 12;
 
 export const labelWidth = (label: string, fontSize: number) => label.length * fontSize * 0.62 + 12;
 
@@ -24,7 +26,7 @@ export function buildSplitAreaDiagram(p: SplitMultiplicationProblem, layout: Are
   // a tiny part (the 2 of 40 + 2) keeps room for its label instead of a hairline; the other parts give up the space
   const mins = p.parts.map(part => Math.max(26, labelWidth(formatNumber(part), labelFontSize)));
   const { lengths } = fitParts(p.parts, mins, Math.max(totalWidth, mins.reduce((a, b) => a + b, 0)), unit);
-  const drawnWidth = lengths.reduce((a, b) => a + b, 0);
+  const drawnWidth = lengths.reduce((a, b) => a + b, 0) + PART_GAP * (p.parts.length - 1);
   let x = left;
   const regions: AreaRegion[] = p.parts.map((part, index) => {
     const width = lengths[index]!;
@@ -46,7 +48,7 @@ export function buildSplitAreaDiagram(p: SplitMultiplicationProblem, layout: Are
       seats: [],
       equation: { factors: [p.firstFactor, part], product: p.partialProducts[index]! },
     };
-    x += width;
+    x += width + PART_GAP;
     return region;
   });
 
@@ -79,7 +81,7 @@ export function buildSplitAreaDiagram(p: SplitMultiplicationProblem, layout: Are
     vertical: { factor: "first", value: p.firstFactor, label: formatNumber(p.firstFactor), start: top + extraTop, length: totalHeight },
     horizontal: { factor: "second", value: p.secondFactor, label: formatNumber(p.secondFactor), start: left, length: drawnWidth },
     regions,
-    splits: regions.slice(1).map(r => r.x),
+    splits: regions.slice(1).map(r => r.x - PART_GAP / 2),
     total: { terms: [...p.partialProducts], value: p.product },
   };
 }

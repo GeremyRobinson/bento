@@ -27,8 +27,11 @@ const LABEL_GAP = 10;
  * the longer side of the tile and the picture draws bigger (G 19:29 "changing the priority for numbers based on screen
  * size"). A story's picture never turns, so its rows stay the story's rows.
  */
-export function AreaModelDiagram({ diagram: d, timeline, at, turn = true }: { diagram: AreaDiagram; timeline: AnimationState[]; at: number; /** may lie the other way round to fit its tile */ turn?: boolean }) {
-  const v = areaView(timeline, at);
+export function AreaModelDiagram({ diagram: d, timeline, at, ask, turn = true }: { diagram: AreaDiagram; timeline: AnimationState[]; at: number; ask?: number; /** may lie the other way round to fit its tile */ turn?: boolean }) {
+  const view = areaView(timeline, at);
+  // practice lights the part it is asking about (no answer yet), and the parts are split from the first step on
+  const asked = ask != null ? timeline[ask] : undefined;
+  const v = { ...view, split: view.split || (ask != null && ask > 0), active: asked?.phase === "region" ? asked.index : view.active };
   const top = d.vertical.start, height = d.vertical.length;
   const left = d.horizontal.start, width = d.horizontal.length;
   const label = `${d.vertical.label} by ${d.horizontal.label} rectangle, split into ${d.regions
@@ -76,11 +79,11 @@ export function AreaModelDiagram({ diagram: d, timeline, at, turn = true }: { di
   const sh = shift.k === pic ? shift : { dx: 0, dy: 0 };
   const end = T ? "end" : "middle";
   return (
-    <svg ref={ref} className="am" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={label}
+    <svg ref={ref} className="am" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMinYMin meet" role="img" aria-label={label}
       data-split={v.split} data-sum={v.sum} data-turned={T} style={{ "--w": W, "--h": H } as CSSProperties}>
       <g className="vcentre" style={{ transform: `translate(${sh.dx}px, ${sh.dy}px)` }}>
       {/* the side labels sit just outside the rectangle and grow away from it, so a label held big on a phone never runs into it */}
-      <text className={`axis-label${T ? " out-top" : ""}`} {...P(left - LABEL_GAP, top + height / 2)} style={{ textAnchor: T ? "middle" : "end" }}>{d.vertical.label}</text>
+      <text className={`axis-label${T ? " out-top" : ""}`} {...P(T ? left - LABEL_GAP : 0, top + height / 2)} style={{ textAnchor: T ? "middle" : "start" }}>{d.vertical.label}</text>
       <text className={`whole${T ? "" : " out-top"}`} {...P(left + width / 2, top - LABEL_GAP)} style={{ textAnchor: end }}>{d.horizontal.label}</text>
       {d.regions.map(r => {
         const below = r.labelPlacement !== "inside";
@@ -88,10 +91,12 @@ export function AreaModelDiagram({ diagram: d, timeline, at, turn = true }: { di
         return (
           <g key={r.index} className={`region r${r.index % 3}`} data-shown={v.shown.has(r.index) || v.sum} data-active={v.active === r.index}>
             <g className={T ? "turned" : undefined} transform={T ? "matrix(0 1 1 0 0 0)" : undefined}>
-              <rect x={r.x} y={r.y} width={r.width} height={r.height} />
+              <rect className="fill" x={r.x} y={r.y} width={r.width} height={r.height} rx={4} />
               {r.seats.map((l, k) => <line key={k} className={l.ten ? "seat ten" : "seat"} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} />)}
+              {/* the outline sits just outside the part, so every seat shows whole (v2 spec G2) */}
+              <rect className="edge" x={r.x - 1.5} y={r.y - 1.5} width={r.width + 3} height={r.height + 3} rx={5.5} />
             </g>
-            <text className={`part${T ? "" : " out-top"}`} {...P(r.x + r.width / 2, top - LABEL_GAP - (T ? 0 : r.partRow * ROW))} style={{ textAnchor: end }}>{r.partLabel}</text>
+            <text className={`part${T ? "" : " out-top"}`} {...P(r.x + r.width / 2, T ? 0 : top - LABEL_GAP - r.partRow * ROW)} style={{ textAnchor: T ? "start" : "middle" }}>{r.partLabel}</text>
             {!below ? (
               <text className="product" {...P(r.x + r.width / 2, r.y + r.height / 2)}>{r.productLabel}</text>
             ) : (

@@ -36,10 +36,11 @@ describe("a whole lesson in the browser", () => {
     const stage = () => within(screen.getByRole("region", { name: "Problem" }));
     const statementNow = () => document.querySelector(".v-stage .v-prob .math .mline")!.getAttribute("data-plain")!;
     const statement = statementNow();
-    const sm = statement.match(/^(\d+) × (\d+) = \1 × \((\d+) \+ (\d+)\)$/);
+    // the stage shows the problem alone, like practice (v2 spec P2, P3); its split is in the first worked line
+    const sm = statement.match(/^(\d+) × (\d+)$/);
     expect(sm, statement).not.toBeNull();
-    const [a, b, tens, ones] = sm!.slice(1).map(Number) as [number, number, number, number];
-    expect(tens + ones).toBe(b);
+    const [a, b] = sm!.slice(1).map(Number) as [number, number];
+    const tens = b - (b % 10), ones = b % 10;
     const pic = stage().getByRole("img");
     expect(pic.getAttribute("aria-label")).toBe(`${a} by ${b} rectangle, split into ${a} by ${tens} = ${a * tens} and ${a} by ${ones} = ${a * ones}. Total ${a * b}.`);
     // it opens on the picture's first frame and only ever builds forward from there (G 2026-10-06)

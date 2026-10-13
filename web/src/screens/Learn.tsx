@@ -1,3 +1,4 @@
+import { ProblemView } from "../components/practice/ProblemView";
 import { useEffect, useMemo, useState } from "react";
 import { useApp } from "../app/AppState";
 import { gradeOf } from "../curriculum/grades";
@@ -8,7 +9,6 @@ import { BuildUp } from "../components/BuildUp";
 import type { Rng } from "../curriculum/generators/rng";
 import type { AnyLesson } from "../curriculum/schemas/lesson";
 import { MathLine, Rich } from "../components/primitives/MathLine";
-import { AskLine } from "../components/primitives/AskLine";
 import { dressStatement, partsLook, toneMath, tonesOf } from "../components/primitives/statement";
 import type { Explanation } from "../explanations/schema";
 
@@ -114,7 +114,7 @@ export function Learn({ lessonId }: { lessonId: string }) {
   return (
     <div className={`screen v-work v-prac v-learn parts-${look}`}>
       <section className="v-panel v-stage" aria-label="Problem">
-        <div className="v-prob"><AskLine math={ex.statement} /><div className="math"><MathLine math={statement} keep /></div></div>
+        <div className="v-prob"><ProblemView lessonId={lesson.id} problem={example} story={false} solved={finished} part="text" /></div>
         {ex.diagram && (
           <div className="v-ppic"><div className="viz"><Diagram diagram={ex.diagram} timeline={ex.timeline} at={shownAt} fit /></div></div>
         )}

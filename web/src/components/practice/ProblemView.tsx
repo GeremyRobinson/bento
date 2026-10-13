@@ -3,7 +3,7 @@ import { beats } from "../../explanations/schema";
 import { Diagram } from "../diagrams/Diagram";
 import { MathLine, Rich } from "../primitives/MathLine";
 import { AskLine } from "../primitives/AskLine";
-import { dressStatement, fillUnknown, partsLook, type PartsLook } from "../primitives/statement";
+import { dressStatement, fillUnknown, hideUnknown, partsLook, type PartsLook } from "../primitives/statement";
 import { CounterRow } from "./CounterRow";
 
 /** The problem's one answer, when it is a single number (the last step's only box); else null. */
@@ -52,7 +52,7 @@ export function ProblemView({ lessonId, problem, story, solved, part = "all", st
   const look = ((): PartsLook => { try { return partsLook(lesson.explain(problem, lesson.answers(problem)).diagram); } catch { return "one"; } })();
   return (
     <>
-      {lead ? <div className="story"><p><Rich text={lead} /></p></div> : <><AskLine math={shown} /><div className={`math parts-${look}${wordy ? " words" : ""}`}><MathLine math={solved ? fillUnknown(dressStatement(shown, look), finalAnswer(lesson, problem)) : dressStatement(shown, look)} /></div></>}
+      {lead ? <div className="story"><p><Rich text={lead} /></p></div> : <><AskLine math={shown} /><div className={`math parts-${look}${wordy ? " words" : ""}`}><MathLine math={solved ? fillUnknown(dressStatement(shown, look), finalAnswer(lesson, problem)) : part === "text" ? hideUnknown(dressStatement(shown, look)) : dressStatement(shown, look)} /></div></>}
       {counters && <CounterRow counters={counters} />}
       {picture && part === "all" && <div className="dotrow"><Diagram diagram={picture} timeline={beats(1)} at={0} /></div>}
       {note && <p className="note"><Rich text={note} /></p>}

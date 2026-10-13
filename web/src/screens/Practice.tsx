@@ -225,8 +225,7 @@ export function Practice() {
           {scratchOn ? <ScratchPad className={`v-pad${padFade ? " pfade" : ""}`} ink={ink} setInk={setInk} /> : pic && (
             <div className={`v-ppic${padFade ? " pfade" : ""}`} aria-label="Picture of this problem" role="img">
               <div className="viz">{ex
-                ? <Diagram key={s.i} diagram={ex.diagram!} timeline={ex.timeline} fit turn={!it.story}
-                  at={s.solved ? ex.timeline.length - 1 : Math.min(ex.timeline.length - 1, s.step > 0 ? ex.steps[s.step - 1]?.state ?? 0 : 0)} />
+                ? <Diagram key={s.i} diagram={ex.diagram!} timeline={ex.timeline} fit turn={!it.story} {...pictureAt(ex, steps.map(st => st.id), here, s.solved)} />
                 : <ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} part="picture" step={s.solved ? undefined : steps[here]?.id} />}</div>
             </div>
           )}
@@ -299,3 +298,18 @@ function ProblemList({ s, pick }: { s: PracticeSession; pick: (k: number) => voi
 }
 
 /** A Web Animations timing taken from the motion tokens: one of the --m-* durations, on --m-ease. */
+
+/**
+ * Where the lesson's picture stands on this step (v2 spec G3, G5): every part already worked out is shown with its
+ * result, and the part being asked about now is lit (filled, its labels deep) without its answer. Steps are matched to
+ * the picture by their answer step id, since a worked example can have steps the child doesn't answer (the split).
+ */
+export function pictureAt(ex: Explanation, ids: string[], here: number, solved: boolean): { at: number; ask?: number } {
+  const last = ex.timeline.length - 1;
+  if (solved) return { at: last };
+  // a worked example that doesn't name its answer steps lines up with them one to one, as before
+  if (!ex.steps.some(e => e.answerStep)) return { at: Math.min(last, here > 0 ? ex.steps[here - 1]?.state ?? 0 : 0) };
+  const stateOf = (id: string | undefined) => ex.steps.find(e => e.answerStep === id)?.state;
+  const done = ids.slice(0, here).map(stateOf).filter((x): x is number => x != null);
+  return { at: Math.min(last, Math.max(0, ...done)), ask: stateOf(ids[here]) };
+}

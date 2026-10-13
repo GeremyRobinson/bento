@@ -132,3 +132,9 @@ export function fillUnknown(m: MathText, answer: number | null | undefined): Mat
   if (i < 1 || m[i - 1]?.t !== "op" || (m[i - 1] as { v: string }).v !== "=") return m;
   return [...m.slice(0, i), answerTok("solved", answer), ...m.slice(i + 1)];
 }
+
+/** The stage's problem before it's solved (v2 spec P3): a trailing "= ?" is left off, and fillUnknown adds "= answer" once solved. */
+export function hideUnknown(m: MathText): MathText {
+  const n = m.length, last = m[n - 1], eq = m[n - 2];
+  return n > 2 && last?.t === "text" && last.v.trim() === "?" && eq?.t === "op" && eq.v === "=" ? m.slice(0, n - 2) : m;
+}

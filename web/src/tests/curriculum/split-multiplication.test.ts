@@ -1,4 +1,5 @@
 // G's seven required invariants, on the reference problem 47 × 36 and on thousands of seeded problems.
+import { PART_GAP } from "../../explanations/diagrams/area-model/build";
 import { createRng } from "../../curriculum/generators/rng";
 import { splitMultiplication as lesson } from "../../curriculum/lessons/grade5/g5-mult2";
 import {
@@ -53,11 +54,12 @@ describe.each([
   it("2. region widths always add to 100% of the total width", () => {
     for (const p of problems) {
       const d = explainSplitMultiplication(p, lesson.answers(p)).diagram;
-      expect(near(sum(d.regions.map(r => r.width)), d.horizontal.length)).toBe(true);
+      // the parts plus one fixed gap between each pair fill the width (v2 spec G1: each part its own shape)
+      expect(near(sum(d.regions.map(r => r.width)) + PART_GAP * (d.regions.length - 1), d.horizontal.length)).toBe(true);
       expect(near(sum(d.regions.map(r => r.widthFraction)), 1)).toBe(true);
-      // and they tile it: no gaps, no overlaps
+      // and they tile it: exactly one gap between neighbours, no overlaps
       d.regions.forEach((r, i) => {
-        const start = i === 0 ? d.horizontal.start : d.regions[i - 1]!.x + d.regions[i - 1]!.width;
+        const start = i === 0 ? d.horizontal.start : d.regions[i - 1]!.x + d.regions[i - 1]!.width + PART_GAP;
         expect(near(r.x, start)).toBe(true);
       });
     }
@@ -74,7 +76,8 @@ describe.each([
         expect(near(r.widthFraction, r.part / p.secondFactor)).toBe(true);
         expect(near(r.height, p.firstFactor * d.unit)).toBe(true);
       }
-      if (!held.length) expect(near(d.horizontal.length / d.vertical.length, p.secondFactor / p.firstFactor)).toBe(true);
+      // the drawn parts (without the gaps between them) keep the problem's proportions
+      if (!held.length) expect(near((d.horizontal.length - PART_GAP * (d.regions.length - 1)) / d.vertical.length, p.secondFactor / p.firstFactor)).toBe(true);
     }
   });
 
