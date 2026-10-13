@@ -68,8 +68,9 @@ export function Learn({ lessonId }: { lessonId: string }) {
   const readAloud = readAloudOn(readSettings(progress.settings), lesson.grade);
   useEffect(() => {
     if (!readAloud) return;
-    const beat = ex.steps.find(s => s.state === at);
-    const text = at === 0 ? `${ex.heading}. ${toPlainText(ex.statement)}` : beat ? `${toPlainText(beat.math)}. ${beat.narration.replace(/[*_]/g, "")}` : "";
+    // every line that appears on this beat (several can share one, and state-0 lines show with the problem)
+    const lines = ex.steps.filter(s => s.state === at).map(b => `${toPlainText(b.math)}. ${b.narration.replace(/[*_]/g, "")}`);
+    const text = [at === 0 ? `${ex.heading}. ${toPlainText(ex.statement)}` : "", ...lines].filter(Boolean).join(" ");
     if (text) speak(text);
   }, [at, ex, readAloud]);
 

@@ -26,32 +26,38 @@ function answerOnScreen(): string {
 describe("a whole lesson in the browser", () => {
   it("learns, practices and finishes with a saved score", () => {
     renderApp();
-    // home: up next is the rebuilt lesson
-    fireEvent.click(screen.getByRole("button", { name: /Up next.*Multiply two-digit numbers/ }));
+    // home (v2): Today suggests the rebuilt lesson as the one to do now, and Start opens it
+    const today = within(screen.getByRole("region", { name: "Today" }));
+    expect(today.getByRole("heading", { level: 2, name: "Multiply two-digit numbers" })).toBeInTheDocument();
+    fireEvent.click(today.getByRole("button", { name: "Start" }));
 
-    // learn: a freshly generated problem (the owner's choice: every picture is random), its picture, and narration
-    // from the same model. The statement, the picture and the narration must all describe the same numbers.
-    const statement = document.querySelector(".lmath .mline")!.getAttribute("data-plain")!;
+    // learn (v2 "Watch one"): a freshly generated problem (the owner's choice: every picture is random), its picture, and
+    // narration from the same model. The statement, the picture and the narration must all describe the same numbers.
+    const stage = () => within(screen.getByRole("region", { name: "Problem" }));
+    const statementNow = () => document.querySelector(".v-stage .v-prob .math .mline")!.getAttribute("data-plain")!;
+    const statement = statementNow();
     const sm = statement.match(/^(\d+) × (\d+) = \1 × \((\d+) \+ (\d+)\)$/);
     expect(sm, statement).not.toBeNull();
     const [a, b, tens, ones] = sm!.slice(1).map(Number) as [number, number, number, number];
     expect(tens + ones).toBe(b);
-    const pic = screen.getByRole("img");
+    const pic = stage().getByRole("img");
     expect(pic.getAttribute("aria-label")).toBe(`${a} by ${b} rectangle, split into ${a} by ${tens} = ${a * tens} and ${a} by ${ones} = ${a * ones}. Total ${a * b}.`);
-    // before Play the picture rests on its first frame, so Play only ever builds forward (G 2026-10-06)
+    // it opens on the picture's first frame and only ever builds forward from there (G 2026-10-06)
     expect(pic.getAttribute("data-split")).toBe("false");
     fireEvent.click(screen.getByRole("button", { name: "Show all" }));
     expect(pic.getAttribute("data-split")).toBe("true");
     expect(pic.getAttribute("data-sum")).toBe("true");
-    expect(screen.getByText("That's the whole problem. Your turn.")).toBeInTheDocument();
-    expect(screen.getAllByText(`Add the parts to fill the whole rectangle: ${a * b}.`).length).toBeGreaterThan(0);
+    // the whole worked example is written out, and the way on is to watch another or try one
+    const side = within(screen.getByRole("region", { name: "Watch one" }));
+    expect(side.getAllByText(`Add the parts to fill the whole rectangle: ${a * b}.`).length).toBeGreaterThan(0);
+    expect(side.getByRole("button", { name: "Try one" })).toBeInTheDocument();
 
-    // a new example redraws everything from a new problem
-    fireEvent.click(screen.getByRole("button", { name: "Show another" }));
-    expect(document.querySelector(".lmath .mline")!.getAttribute("data-plain")).not.toBe(statement);
+    // a new example (v2: Watch again) redraws everything from a new problem
+    fireEvent.click(screen.getByRole("button", { name: "Watch again" }));
+    expect(statementNow()).not.toBe(statement);
 
     fireEvent.click(screen.getByRole("button", { name: "Show all" }));
-    fireEvent.click(screen.getByRole("button", { name: "Your turn ›" }));
+    fireEvent.click(screen.getByRole("button", { name: "Try one" }));
 
     // practice: a wrong answer gets a reason, then solve every step of every problem with the keypad
     const pad = () => document.querySelector(".tray") as HTMLElement;
@@ -76,14 +82,16 @@ describe("a whole lesson in the browser", () => {
       fireEvent.click(screen.getByRole("button", { name: "Check" }));
     }
 
-    // results: one miss on the first step of nine problems (one added after the miss)
-    expect(screen.getByRole("heading", { level: 2, name: "Advanced" })).toBeInTheDocument();
+    // results (v2 done screen): one miss on the first step of nine problems (one added after the miss) still scores 4 of 4
+    const done = within(screen.getByRole("region", { name: "Done" }));
+    expect(done.getByLabelText("Score 4 of 4")).toBeInTheDocument();
+    expect(done.getByRole("heading", { level: 2, name: /^4 of 4: / })).toBeInTheDocument();
     expect(screen.getByText(/9 problems in .*including 1 extra added for practice/)).toBeInTheDocument();
     expect(screen.getByText(/Typed/)).toHaveTextContent("Typed 1, answer");
 
-    // home now shows the score and keeps no run in progress
-    fireEvent.click(screen.getByRole("button", { name: "All lessons" }));
-    expect(screen.queryByText(/Keep going/)).toBeNull();
-    expect(document.querySelector(".srow.sles .score b")!.textContent).toBe("4");
+    // back in the box, the lesson's tile shows the score and Today keeps no run in progress
+    fireEvent.click(screen.getByRole("button", { name: "Back to your box" }));
+    expect(within(screen.getByRole("region", { name: "Today" })).queryByRole("button", { name: "Carry on" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Multiply two-digit numbers, Solid, skill check 4 of 4" })).toBeInTheDocument();
   });
 });

@@ -243,7 +243,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   useEffect(() => {
     if (welcome || open || asking || sheetOpen || !place.back) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || e.defaultPrevented || document.querySelector(".zoom,.fstack,.confirm,.sheet,dialog[open]")) return;
+      if (e.key !== "Escape" || e.defaultPrevented || document.querySelector(".zoom,.fstack,.confirm,.sheet,dialog[open],.v-plist")) return;
       up(place.back!.to);
     };
     addEventListener("keydown", onKey);

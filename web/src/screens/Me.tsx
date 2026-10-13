@@ -2,6 +2,7 @@ import { Pill, PillLabel } from "../components/primitives/Pill";
 import { useApp } from "../app/AppState";
 import { doneCount, entriesInGrade, gradeAverage, isReady, testKey, unitsInGrade } from "../app/curriculum";
 import { upNext } from "../app/today";
+import { gradesNext } from "./Home";
 import { GRADES, gradeOf } from "../curriculum/grades";
 import { LEVEL_XP } from "../engine/mastery/levels";
 import { placeKey } from "../engine/session/practice";
@@ -37,7 +38,8 @@ export function Me() {
 
   // the grades you've worked in, and the one you're on
   const yours = GRADES.map(d => d.grade).filter(n => n === g || doneCount(progress, entriesInGrade(n)) > 0);
-  const switchGrade = () => dispatchEvent(new CustomEvent("bento:contents", { detail: "shelf" }));
+  // v2: the same grade list the island's ring opens, on home
+  const switchGrade = () => { gradesNext.open = true; go({ name: "home" }); };
 
   const list = (
     <>

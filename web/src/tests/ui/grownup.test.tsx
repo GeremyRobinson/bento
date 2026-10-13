@@ -33,7 +33,8 @@ const progress: Partial<Progress> = {
   ],
 };
 
-const openPage = () => { fireEvent.click(screen.getByRole("button", { name: /^My Obento:/ })); tap("Open the report ›"); };
+// v2: the person button goes straight to the My Obento page, whose Contents list ends with the grown-up's report
+const openPage = () => { fireEvent.click(screen.getByRole("button", { name: /^My Obento:/ })); tap(/^For the grown-up/); };
 
 describe("the grown-up page", () => {
   it("with no history: a calm page that says what will show, and that it stays on this device", () => {
@@ -45,8 +46,10 @@ describe("the grown-up page", () => {
     expect(screen.getByText("Everything here stays on this device.")).toBeInTheDocument();
     expect(screen.getByText("On this device")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /problems$/ })).toBeNull();
-    // the island names the page and the grade, and steps back to My Bento
-    expect(screen.getByRole("button", { name: "Contents. You're on For the grown-up" })).toHaveTextContent("My Obento · 5th grade");
+    // the island names the page and the grade (v2: it only says where you are, it is not a button), and steps back to My Bento
+    const place = within(screen.getAllByRole("banner").find(b => b.classList.contains("island"))!);
+    expect(place.getByText("My Obento · 5th grade")).toBeInTheDocument();
+    expect(place.getByText("For the grown-up")).toBeInTheDocument();
     tap("Back to My Obento");
     expect(screen.getByRole("button", { name: /For the grown-up/ })).toBeInTheDocument();
   });

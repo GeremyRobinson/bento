@@ -48,14 +48,20 @@ const TABS: SliderOption<Tab>[] = [{ id: "lessons", label: "Lessons" }, { id: "t
  * is the child's progress: a cover tile per chapter, each opening to a tile per lesson. Tapping a lesson puts it in
  * Today, so the child can always choose. The island's ring opens every grade in the box, in place.
  */
+/** set before going home to open the grade list there (My Obento's "Switch grade") */
+export const gradesNext = { open: false };
+
 function GradeHome({ g }: { g: number }) {
   const { progress, route, go } = useApp();
   const next = upNext(progress, g);
   const routePick = route.name === "home" ? route.pick : undefined;
-  // the lesson Today shows: the one tapped in the box, else the one the app suggests
-  const pick = routePick && entryById(routePick)?.grade === g ? routePick : next?.entry.id ?? entriesInGrade(g)[0]?.id;
+  // the lesson Today shows: the one tapped in the box, else a lesson left mid-practice (so Carry on is always one tap
+  // away), else the one the app suggests
+  const run = progress.run, runLesson = run?.mode === "practice" ? run.items[run.i]?.lessonId : undefined;
+  const pick = routePick && entryById(routePick)?.grade === g ? routePick
+    : runLesson && entryById(runLesson)?.grade === g ? runLesson : next?.entry.id ?? entriesInGrade(g)[0]?.id;
   const [view, setView] = useState<string | null>(() => (routePick ? entryById(routePick)?.unit ?? null : null));
-  const [grades, setGrades] = useState(false);
+  const [grades, setGrades] = useState(() => { const o = gradesNext.open; gradesNext.open = false; return o; });
   useEffect(() => {
     const on = () => setGrades(o => !o);
     addEventListener("bento:grades", on);

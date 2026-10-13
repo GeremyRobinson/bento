@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { renderApp, solveRun, tap } from "./helpers";
 
 // stylesheets straight from disk (Vitest doesn't load CSS)
@@ -35,55 +35,68 @@ describe("every screen renders inside the Screen master", () => {
     expect(document.querySelector("#app > .screen.solve .wpad .tray")).not.toBeNull();
   });
 
-  it("practice sits on Learn's grid master: the hero is the solve tile (equation, feedback line, step bar, picture), then the keypad", () => {
+  // v2 (G 2026-10-13): practice is the one workspace, a stage beside the solve panel, still inside the Screen master
+  it("practice sits in the v2 workspace: the stage (problem, picture), then the solve panel (step bar, ask line, say line, tools, keypad)", () => {
     renderApp({ grade: 3, chosen: true }, {}, "#/learn/g3-split");
     tap("Try one");
-    const root = document.querySelector("#app > .screen.fit.lscreen.pscreen")!;
+    const root = document.querySelector("#app > .screen.v-work.v-prac")!;
     expect(root).not.toBeNull();
-    expect([...root.children].filter(c => !c.matches(".fdim,.fstack")).map(c => c.classList[0])).toEqual(["lintro", "lshero", "lpic", "ppad"]);
-    const hero = root.querySelector(".lshero")!;
-    // a word problem's own words sit in the solve tile, over the steps (G 2026-10-07 22:29)
-    expect([...hero.children].map(c => c.classList[0])).toEqual(["lmath", "pfb", "pprob", "pbar"]);
-    // the answer box sits in the equation, and the feedback line is there (empty) before anything is said
-    expect(hero.querySelector(".lmath .ask .slot")).not.toBeNull();
-    expect(hero.querySelector(".pfb")!.textContent).toBe("");
-    expect(root.querySelector(".ppad .tray")).not.toBeNull();
-    expect(root.querySelector(".pintro .ptestk")).toBeNull();
-    // every mode has a way out
-    expect(screen.getAllByRole("button", { name: "Quit" }).length).toBeGreaterThan(0);
+    expect([...root.children].map(c => c.classList[0])).toEqual(["v-panel", "v-panel"]);
+    const [stage, solve] = [...root.children];
+    expect(stage).toHaveClass("v-stage");
+    expect(stage!.querySelector(".v-prob.pprob")).not.toBeNull();
+    expect(solve).toHaveClass("v-solve");
+    // nothing worked out yet, so no done lines: the step bar, the ask line, the say line, the tools, then the keys
+    expect([...solve!.children].map(c => c.classList[0])).toEqual(["v-steps", "v-ask", "v-say", "v-tools", "ppad"]);
+    // the answer box sits in the ask line, and the say line is there (empty) before anything is said
+    expect(solve!.querySelector(".v-ask .ask .slot")).not.toBeNull();
+    expect(solve!.querySelector(".v-say")!.textContent).toBe("");
+    expect(solve!.querySelector(".ppad .tray")).not.toBeNull();
+    expect(solve!.querySelector(".v-steps .v-meta")).toBeNull(); // the test rules only show in a test
+    // every mode has a way out: the island's step back
+    expect(screen.getByRole("button", { name: /^Back to / })).toBeInTheDocument();
   });
 
-  it("a check-up says its rules over the problem, not in a bar of its own, then results sit in a fit screen", () => {
+  it("a check-up says its rules over the problem, not in a bar of its own, then results sit in the Screen master", () => {
     renderApp();
-    tap("Grade check-up");
-    const kick = screen.getByText("5th grade check-up: no hints, one try per step");
-    expect(kick).toHaveClass("ptestk");
-    expect(kick.closest(".screen.pscreen.ptest")).not.toBeNull();
+    // v2: the box's Test view holds the grade's test
+    fireEvent.click(within(screen.getByRole("group", { name: "5th grade views" })).getByRole("button", { name: "Test" }));
+    fireEvent.click(screen.getByRole("button", { name: "5th grade test, not taken yet" }));
+    const kick = screen.getByText(/: no hints, one try per step$/);
+    expect(kick).toHaveClass("v-meta");
+    expect(kick.closest(".v-steps")).not.toBeNull();
+    expect(kick.closest("#app > .screen.v-prac.test")).not.toBeNull();
     expect(document.querySelector("#app > .bar")).toBeNull();
     expect(screen.queryByRole("button", { name: /^Hint, / })).toBeNull();
     solveRun();
-    expect(document.querySelector("#app > .screen.fit.rscreen .rsum")).not.toBeNull();
-    expect(document.querySelector("#app > .screen.fit.rscreen .rreport")).not.toBeNull();
+    expect(document.querySelector("#app > .screen.v-done .v-result")).not.toBeNull();
+    expect(document.querySelector("#app > .screen.v-done .v-recap")).not.toBeNull();
   });
 
-  it("quitting asks first only once answers would be lost", () => {
-    renderApp({ grade: 3, chosen: true }, {}, "#/learn/g3-split");
-    tap("Try one");
-    tap("Quit");
-    expect(screen.queryByRole("alertdialog")).toBeNull();
-    expect(document.querySelector(".pscreen")).toBeNull();
-    renderApp({ grade: 3, chosen: true }, {}, "#/learn/g3-split");
+  // v2 dropped the quit question on purpose: leaving a run never loses it, so there is nothing to confirm
+  it("leaving a run keeps it: Today offers to carry on where it was left", () => {
+    // the lesson Today suggests, so Today is where it waits (home with no pick shows the suggested lesson)
+    renderApp({ grade: 5, chosen: true });
+    fireEvent.click(within(screen.getByRole("region", { name: "Today" })).getByRole("button", { name: "Start" }));
     tap("Try one");
     fireEvent.keyDown(window, { key: "1" });
     fireEvent.keyDown(window, { key: "Enter" });
-    tap("Quit");
-    expect(screen.getByRole("alertdialog", { name: /^Quit / })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Keep going" }));
-    expect(document.querySelector(".pscreen")).not.toBeNull();
+    const problem = document.querySelector(".v-stage .v-prob")!.textContent;
+    tap(/^Back to /);
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(document.querySelector(".v-prac")).toBeNull();
+    const today = within(screen.getByRole("region", { name: "Today" }));
+    expect(today.getByText("In progress")).toBeInTheDocument();
+    expect(today.getByText(/^Problem 1 of \d+$/)).toBeInTheDocument();
+    fireEvent.click(today.getByRole("button", { name: "Carry on" }));
+    expect(document.querySelector("#app > .screen.v-prac")).not.toBeNull();
+    expect(document.querySelector(".v-stage .v-prob")!.textContent).toBe(problem);
   });
 
   it("Find my level's answer sits in a fit screen", () => {
     renderApp({ grade: 5, chosen: true });
+    // v2: Find my level is a row on the My Obento page
+    fireEvent.click(screen.getByRole("button", { name: /^My Obento:/ }));
     fireEvent.click(screen.getByRole("button", { name: /Find my level/ }));
     solveRun();
     expect(document.querySelector("#app > .screen.fit.placed")).not.toBeNull();

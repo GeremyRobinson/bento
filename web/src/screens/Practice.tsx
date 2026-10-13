@@ -82,6 +82,8 @@ export function Practice() {
   useEffect(() => {
     if (!s) return;
     const onKey = (e: KeyboardEvent) => {
+      // the problem list open in place takes Escape for itself: it closes, and the page stays (Review)
+      if (e.key === "Escape" && zoomOut) { e.preventDefault(); setZoomOut(false); return; }
       if (e.metaKey || e.ctrlKey || e.altKey || asking || zoomOut) return;
       // an open hint or steps stack takes Escape for itself, so the page underneath doesn't also step back (Review)
       if (e.key === "Escape") { if (document.querySelector("#app :is(.fstack[role=dialog],.phint)")) e.preventDefault(); setHintOpen(false); setStepsOpen(openSteps()); return; }
@@ -209,7 +211,7 @@ export function Practice() {
   // what the say line carries: wrong and right always with their cross or tick (G 2026-10-13: red and green only mean
   // wrong and right, never on their own); hints in the plain hint look
   const say = fbAway ? null : s.solved && fb?.type !== "hint"
-    ? { cls: "good", lead: missed ? "\u2715 Not this time." : test ? "\u2713 Correct." : "\u2713 Solved.", text: missed ? undefined : idea }
+    ? { cls: missed ? "slip" : "good", lead: missed ? "\u2715 Not this time." : test ? "\u2713 Correct." : "\u2713 Solved.", text: missed ? undefined : idea }
     : fb ? { cls: fb.type === "bad" ? "slip" : fb.type === "good" ? "good" : "hint",
       lead: fb.type === "bad" ? `\u2715 ${fb.strong ?? "Not quite."}` : fb.type === "good" ? `\u2713 ${fb.strong ?? "Right."}` : fb.strong, text: fb.text, lines: fb.lines } : null;
   const doneLines = steps.map((_, k) => s.work[k]).filter((w, k) => !!w && (k < here));

@@ -64,10 +64,12 @@ export function answerWrong(): void {
   if (run.pick) { tap(run.pick.options.find(o => o !== run.pick!.right)!); return; }
   const step = currentStep(run)!, want = expectedValues(step);
   if (step.choices) { tap(step.choices.find((_, i) => i !== want.c)!); return; }
-  const [id, v] = Object.entries(want)[0]!;
-  fireEvent.click(document.querySelector(`.ask [data-slot="${id}"]`)!);
-  for (let i = 0; i < 12; i++) fireEvent.click(within(pad()).getByRole("button", { name: "Erase" }));
-  for (const ch of formatNumber(v + 1)) fireEvent.click(within(pad()).getByRole("button", { name: ch === "−" ? "Negative" : ch === "." ? "Decimal point" : ch }));
+  // every box filled (a step with two boxes asks for both before it checks), the first one off by one
+  Object.entries(want).forEach(([id, v], k) => {
+    fireEvent.click(document.querySelector(`.ask [data-slot="${id}"]`)!);
+    for (let i = 0; i < 12; i++) fireEvent.click(within(pad()).getByRole("button", { name: "Erase" }));
+    for (const ch of formatNumber(k === 0 ? v + 1 : v)) fireEvent.click(within(pad()).getByRole("button", { name: ch === "−" || ch === "-" ? "Negative" : ch === "." ? "Decimal point" : ch }));
+  });
   tap("Check");
 }
 
@@ -100,15 +102,9 @@ export function failRun(): void {
       if (last) return;
       continue;
     }
-    // Show me lives in the hint stack, which the light bulb opens (practice-spec §2b)
-    if (document.querySelector(".pfb")?.textContent?.includes("Show me")) {
-      const bulb = screen.queryByRole("button", { name: /^Hint, / });
-      if (bulb) fireEvent.click(bulb);
-      const show = screen.queryByRole("button", { name: "Show me the step" });
-      if (show) { fireEvent.click(show); continue; }
-      const got = screen.queryByRole("button", { name: "Got it" });
-      if (got) fireEvent.click(got);
-    }
+    // Show me sits in the say line once it's available (v2)
+    const show = screen.queryByRole("button", { name: "Show me the step" });
+    if (show) { fireEvent.click(show); continue; }
     answerWrong();
     act(() => { clock.t += 10000; });
   }
