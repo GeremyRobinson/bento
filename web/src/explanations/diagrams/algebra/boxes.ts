@@ -55,7 +55,7 @@ interface Placed { id?: string; cx: number; cy: number }
 type Chip = Extract<XNode, { t: "chip" }>;
 /** Draws one stage's tree with its left edge at x and its middle line at y; returns the items (each chip's items tagged
     with its chip) and where each id went. */
-function place(nodes: XNode[], x: number, y: number, part: string): { items: SceneItem[]; tags: (Chip | undefined)[]; at: Placed[] } {
+function place(nodes: XNode[], x: number, y: number, part: string, inName = false): { items: SceneItem[]; tags: (Chip | undefined)[]; at: Placed[] } {
   const items: SceneItem[] = [], tags: (Chip | undefined)[] = [], at: Placed[] = [];
   let cx = x;
   for (const n of nodes) {
@@ -75,10 +75,12 @@ function place(nodes: XNode[], x: number, y: number, part: string): { items: Sce
       const inner = ks.reduce((t, k) => t + k.w, 0) + GAP * Math.max(0, ks.length - 1);
       if (n.lit) items.push({ type: "rect", x: r1(cx - 5), y: r1(y - up - 5), w: r1(w + 10), h: r1(up + down + 10), rx: 16, cls: "hlline" });
       items.push({ type: "rect", x: r1(cx), y: r1(y - up), w: r1(w), h: r1(up + down), rx: 12, cls: `xbox ${p}${n.dash ? " dash" : ""}` });
-      if (n.name) items.push({ type: "text", x: r1(cx + 6), y: r1(y - up - TAB / 2 - 1), text: n.name, cls: `lbl start ${p}` });
+      // a box inside a named box puts its name at its right end, so on a phone, where the names grow to the label floor,
+      // it never sits under the outer box's name at the left (Review 1c74c20, g11-compose at 280×123)
+      if (n.name) items.push({ type: "text", x: r1(inName ? cx + w - 6 : cx + 6), y: r1(y - up - TAB / 2 - 1), text: n.name, cls: `lbl ${inName ? "end" : "start"} ${p}` });
       if (n.sup) items.push({ type: "text", x: r1(cx + w + 3), y: r1(y - up + 4), text: n.sup, cls: `lbl start ${p}` });
       if (n.under) items.push({ type: "text", x: r1(cx + w / 2), y: r1(y + down + UNDER / 2 + 3), text: n.under, cls: `sm ${p}` });
-      const kid = place(n.kids, cx + (w - inner) / 2, y, p);
+      const kid = place(n.kids, cx + (w - inner) / 2, y, p, inName || !!n.name);
       kid.tags.forEach((c, k) => { if (c) tags[items.length + k] = c; });
       items.push(...kid.items);
       at.push({ id: n.id, cx: cx + w / 2, cy: y }, ...kid.at);

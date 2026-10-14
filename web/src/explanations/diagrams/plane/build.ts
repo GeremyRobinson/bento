@@ -364,10 +364,14 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
     if (!chosen || (q.label.optional && chosen.s >= 40)) continue;
     if (placed.some(p => overlap(chosen.b, p))) { clashes++; if (clash < 0) clash = qi; }
     placed.push(chosen.b);
+    const long = q.label.long, cls = `lbl${q.label.acc ? " acc" : q.label.part != null ? ` p${q.label.part}` : ""}${chosen.cls}`;
+    // a beat number: the label gives way in a phone's short box from that beat on, to the label that beat brings
+    const late = typeof long === "number" && long > q.from && (q.until == null || long <= q.until);
     out.push({
-      type: "text", x: r1(chosen.x), y: r1(chosen.y), text: q.label.text, cls: `lbl${q.label.acc ? " acc" : q.label.part != null ? ` p${q.label.part}` : ""}${chosen.cls}${q.label.long ? " shortgo" : ""}`, enter: "rise",
-      ...(q.from ? { from: q.from } : {}), ...(q.until != null ? { until: q.until } : {}), delay: q.delay,
+      type: "text", x: r1(chosen.x), y: r1(chosen.y), text: q.label.text, cls: `${cls}${long === true ? " shortgo" : ""}`, enter: "rise",
+      ...(q.from ? { from: q.from } : {}), ...(late ? { until: (long as number) - 1 } : q.until != null ? { until: q.until } : {}), delay: q.delay,
     });
+    if (late) out.push({ type: "text", x: r1(chosen.x), y: r1(chosen.y), text: q.label.text, cls: `${cls} shortgo`, from: long as number, ...(q.until != null ? { until: q.until } : {}) });
   }
   return { out, boxes: [...placed], clash, clashes };
   };

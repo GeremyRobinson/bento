@@ -4,8 +4,9 @@ import { layoutRect } from "../../app/transition";
 /**
  * Keeps picture labels readable when an SVG shrinks (phones): sets `--px`, the drawing's units per screen pixel,
  * so the CSS can hold every label at 12px or more on screen (Design handoff 3).
- */
-export function useLabelFloor<T extends SVGSVGElement>(width: number, onBox?: (w: number, h: number) => void) {
+ * `height` is the drawing's height: a frame that only grows taller (a short box's labels) changes the scale too, so it
+ * sets --px again (Review 1c74c20: text read 13.4px in a 280×123 box when it was left from the frame before) */
+export function useLabelFloor<T extends SVGSVGElement>(width: number, onBox?: (w: number, h: number) => void, height?: number) {
   const ref = useRef<T>(null);
   useLayoutEffect(() => {
     const el = ref.current;
@@ -24,6 +25,6 @@ export function useLabelFloor<T extends SVGSVGElement>(width: number, onBox?: (w
     const ro = new ResizeObserver(set);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [width, onBox]);
+  }, [width, onBox, height]);
   return ref;
 }

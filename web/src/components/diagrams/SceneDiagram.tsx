@@ -17,7 +17,7 @@ export function SceneDiagram({ diagram: given, at, fit = false }: { diagram: Sce
   const fitted = fit && frame?.d === d;
   const vb = fitted ? framed(frame.box, frame.size) : { x: 0, y: 0, w: d.width, h: d.height };
   const zoom = fitted ? Math.min(frame.size[0] / vb.w, frame.size[1] / vb.h) : 1;
-  const ref = useLabelFloor(vb.w);
+  const ref = useLabelFloor(vb.w, undefined, vb.h);
   // fit: frame the finished picture (every beat drawn) instead of the builder's canvas, so it fills the room it gets
   useLayoutEffect(() => {
     const el = ref.current;
