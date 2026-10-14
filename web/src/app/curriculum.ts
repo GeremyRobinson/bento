@@ -4,7 +4,8 @@
 import { CATALOG, type CatalogEntry } from "../curriculum/catalog";
 import { DEPENDS } from "../curriculum/depends";
 import { lessonById } from "../curriculum/registry";
-import { lastScore, timesDone, type Progress } from "../engine/mastery/progress";
+import { timesDone, type Progress } from "../engine/mastery/progress";
+import { checkScore } from "../engine/mastery/skills";
 import { backFor, testKey } from "../engine/session/practice";
 import { NO_UNIT } from "./copy";
 
@@ -28,7 +29,7 @@ export function unitsInGrade(g: number): { name: string; entries: Entry[] }[] {
 
 /** Average of the last scores in a grade, or null when nothing is scored yet (the current app's gradeLevel). */
 export function gradeAverage(p: Progress, g: number): number | null {
-  const s: number[] = entriesInGrade(g).flatMap(c => { const v = lastScore(p, c.id); return v == null ? [] : [v]; });
+  const s: number[] = entriesInGrade(g).flatMap(c => { const v = checkScore(p, c.id); return v == null ? [] : [v]; });
   return s.length ? s.reduce((a, b) => a + b, 0) / s.length : null;
 }
 

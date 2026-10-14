@@ -2,11 +2,11 @@
 import { lessonById } from "../curriculum/registry";
 import { text, type MathText } from "../curriculum/schemas/math-text";
 import type { Explanation } from "../explanations/schema";
-import { lastScore, type Progress } from "../engine/mastery/progress";
+import type { Progress } from "../engine/mastery/progress";
 import type { Level } from "../engine/mastery/levels";
 import type { Mistake, ProblemRecord, SessionReport } from "../engine/session/types";
 import { titleOf, unitsInGrade } from "./curriculum";
-import { isCheckKey, lessonOfCheck, PASS } from "../engine/mastery/skills";
+import { checkScore, isCheckKey, lessonOfCheck, PASS } from "../engine/mastery/skills";
 
 /** Monday 00:00 of the week `now` falls in, and the Monday after (local time). */
 export function weekOf(now: number): { from: number; to: number } {
@@ -57,7 +57,7 @@ export interface ChapterScore {
 /** Every chapter of the grade, scored from its lessons' latest scores. */
 export function chapterScores(p: Progress, g: number): ChapterScore[] {
   return unitsInGrade(g).map(u => {
-    const lessons = u.entries.flatMap(c => { const s = lastScore(p, c.id); return s == null ? [] : [{ id: c.id, title: c.title, score: s }]; });
+    const lessons = u.entries.flatMap(c => { const s = checkScore(p, c.id); return s == null ? [] : [{ id: c.id, title: c.title, score: s }]; });
     const score = lessons.length ? (Math.floor(lessons.reduce((a, l) => a + l.score, 0) / lessons.length) as Level) : null;
     return { name: u.name, score, lessons };
   });

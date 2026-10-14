@@ -97,7 +97,7 @@ describe("what the page works out", () => {
   });
 
   it("a chapter's score is its lessons' average rounded down, and untouched chapters have none", () => {
-    const ch = chapterScores({ ...(progress as Progress), scores: { "g5-mult2": scored(4, t), "g5-order": scored(3, t) } }, 5);
+    const ch = chapterScores({ ...(progress as Progress), checks: { "g5-mult2": { last: 4, best: 4, date: t, due: t, passes: 1 }, "g5-order": { last: 3, best: 3, date: t, due: t, passes: 1 } } }, 5);
     const withScores = ch.filter(c => c.score != null);
     expect(withScores.length).toBeGreaterThan(0);
     for (const c of withScores) expect(c.score).toBe(Math.floor(c.lessons.reduce((a, l) => a + l.score, 0) / c.lessons.length));

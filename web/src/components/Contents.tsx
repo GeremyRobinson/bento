@@ -6,7 +6,7 @@ import { doneCount, isReady, testKey, testReady, unitsInGrade, type Entry } from
 import { upNext } from "../app/today";
 import { gradeOf } from "../curriculum/grades";
 import type { Rng } from "../curriculum/generators/rng";
-import { lastScore } from "../engine/mastery/progress";
+import { checkScore } from "../engine/mastery/skills";
 import { showcasePicture } from "../screens/Welcome";
 import { PlayingDiagram } from "./diagrams/PlayingDiagram";
 import { ScoreChip } from "./primitives/Score";
@@ -104,7 +104,7 @@ export function Contents({ grade, lessonId, level: first, close, leave = close, 
           <span className="k">{units.length > 1 ? `Chapter ${k + 1} of ${units.length}` : THIS_YEAR} · {g.name}</span>
           <h2>{unit.name === NO_UNIT ? g.name : unit.name}</h2>
           <ol className="zpages">{unit.entries.map((c, i) => {
-            const s = lastScore(progress, c.id), live = isReady(c.id), on = c.id === lessonId;
+            const s = checkScore(progress, c.id), live = isReady(c.id), on = c.id === lessonId;
             return (
               <li key={c.id}>
                 <button className={on ? "on" : ""} disabled={!live} onClick={() => open(c)} aria-current={on ? "page" : undefined}>
