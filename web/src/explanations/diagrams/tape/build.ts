@@ -4,7 +4,7 @@
 import type { SceneDiagram, SceneItem } from "../scene/schema";
 import { r1 } from "../scene/helpers";
 import type { Beats, TapeRow, TapeSpec, TapeText } from "./schema";
-import { PIC, fitIn, roomLeft, spreadRows, thinOut } from "../scene/picture-system";
+import { PIC, SQUARE, cells, fitIn, roomLeft, spreadRows, thinOut } from "../scene/picture-system";
 
 const M = 10; // outer margin
 const BRACKET = 28; // room for a bracket and its text
@@ -103,11 +103,14 @@ export interface TapeLayout {
   stacked: boolean;
   /** the tall arrangement: labels and totals on a line over each bar */
   over: boolean;
+  /** square, wrapped: a bar's total hangs under its last line (from overYs) */
+  under?: boolean;
   /** tall: the line each row's label and total stand on */
   overYs: number[];
 }
 
 export function layoutTape(spec: TapeSpec): TapeLayout {
+  if (spec.square) return squareTape(spec);
   const W = spec.width ?? 480, rows = spec.rows, n = rows.length, over = !!spec.over;
   // tall: the labels move over the bars, so the bars take the whole width and may stand half again as thick
   const rowHeight = Math.round(Math.min(spec.maxRowHeight ?? 46, Math.max(22, Math.floor(280 / n) - 14)) * (over ? 1.5 : 1));
@@ -146,8 +149,135 @@ export function layoutTape(spec: TapeSpec): TapeLayout {
   return { width: W, height: Math.round(y - gap + M), unit, rowHeight, x0, rowTops, stacked, over, overYs };
 }
 
+/**
+ * The bars on the master square's grid (G 2026-10-14): the label column, every part, every row, the gaps between rows and
+ * the room for brackets are whole cells, and the picture sits centred in the square by whole cells. A bar's parts are
+ * each a whole number of cells where the square has room for it (halves to twelfths always do), else exact and centred.
+ */
+function squareTape(spec: TapeSpec): TapeLayout {
+  const { side: W, cell, pad } = SQUARE, rows = spec.rows, over = !!spec.over;
+  const room = W - 2 * pad, wrapped = rows.some(r => r.cont);
+  const wOf = (t: TapeText, size: number) => textWidth(t.text, size);
+  const labelMax = Math.max(0, ...rows.flatMap(r => (r.label ?? []).map(t => wOf(t, FS.label))));
+  const totalMax = Math.max(0, ...rows.flatMap(r => (r.total ?? []).map(t => wOf(t, FS.total))));
+  // a wrapped bar's total stands under its last line, at its right end, so the lines keep the width for their parts
+  const under = wrapped && !over;
+  const labelW = labelMax && !over ? cells(labelMax + PIC.labelGap) : 0, totalW = totalMax && !over && !under ? cells(totalMax + PIC.labelGap) : 0;
+  const unitsWide = Math.max(...rows.map(r => (r.start ?? 0) + r.length));
+  // each part takes a whole number of cells and the gap after it one more cell (G 2026-10-14: "spacing should be at
+  // least one row or column"), so a part's pitch is whole cells, at least two. Cells per whole: the most that fits that
+  // makes every part of every row whole; a bar cut too finely for that (more than about 16 parts across) is split
+  // exactly instead, still one cell apart
+  const roomBar = room - labelW - totalW + cell;
+  const most = Math.max(1, Math.floor(roomBar / (unitsWide * cell) + 1e-9));
+  const spans = rows.flatMap(r => layersOf(r).map(l => r.length / l.count));
+  // two cells a part where they fit (G 23:08), else one
+  const whole = (u: number, pitch: number) => spans.every(sp => Math.abs(u * sp - Math.round(u * sp)) < 1e-6 && u * sp >= pitch - 1e-6);
+  let u = most;
+  while (u > 0 && !whole(u, 3)) u--;
+  if (!u) { u = most; while (u > 0 && !whole(u, 2)) u--; }
+  const unit = (u > 0 ? u : roomBar / (unitsWide * cell)) * cell;
+  // a bar is as thick as the old rule asks, rounded to whole cells, and a cell thinner at a time while the rows don't fit
+  const stackRows = (rowHeight: number) => {
+    const rowTops: number[] = [], overYs: number[] = [];
+    let y = 0;
+    rows.forEach((row, i) => {
+      const br = spec.brackets ?? [];
+      const free = { below: !br.some(b => b.row === i && b.side === "below"), above: !br.some(b => b.row === i && b.side === "above") && i === 0 };
+      const out = (row.each ?? []).map(e => eachFit(e, (row.length / layersAt(row, e.from ?? row.from ?? 0).count) * unit, rowHeight, layersAt(row, e.from ?? row.from ?? 0).count, free));
+      // the lines of one wrapped bar sit a cell apart, different bars two (G 2026-10-14)
+      if (i > 0 && wrapped && !row.cont) y += cell;
+      if (over && (row.label?.length || row.total?.length)) y += cells(OVER);
+      overYs.push(y - 6);
+      if (br.some(b => b.row === i && b.side === "above") || out.includes("above")) y += cells(BRACKET);
+      rowTops.push(y);
+      y += rowHeight;
+      if (br.some(b => b.row === i && b.side === "below") || out.includes("below")) y += cells(BRACKET);
+      if (under && row.total?.length) { overYs[i] = y + 6; y += cells(OVER); }
+      y += cell;
+    });
+    return { rowTops, overYs, y };
+  };
+  let rowHeight = cells(Math.min(spec.maxRowHeight ?? 46, Math.max(22, Math.floor(280 / rows.length) - 14)) * (over ? 1.5 : 1));
+  let stacked = stackRows(rowHeight);
+  while (stacked.y - cell > room && rowHeight > 2 * cell) stacked = stackRows((rowHeight -= cell));
+  // and a cell thicker at a time, up to 6 cells, while the rows still fit: a picture of one or two bars fills more of
+  // the square instead of leaving it empty above and below (G 2026-10-14: the picture fills its box)
+  // (a bar of a few wide parts may stand as tall as its parts are wide, up to 12 cells, so the parts read as blocks)
+  const widest = Math.max(6 * cell, Math.min(12 * cell, Math.min(...spans) * unit - cell));
+  while (rowHeight < widest && stackRows(rowHeight + cell).y - cell <= room) stacked = stackRows((rowHeight += cell));
+  const { rowTops, overYs, y } = stacked;
+  const tall = y - cell, wide = labelW + unitsWide * unit - cell + totalW;
+  // centred by whole cells, so everything stays on the grid; a picture taller than the square grows it
+  const H = Math.max(W, cells(tall) + 2 * pad);
+  const dx = pad + Math.floor((room - wide) / 2 / cell) * cell, dy = pad + Math.floor((H - 2 * pad - tall) / 2 / cell) * cell;
+  return { width: W, height: H, unit, rowHeight, x0: dx + labelW - cell / 2, rowTops: rowTops.map(t => t + dy), stacked: false, over, under, overYs: overYs.map(t => t + dy) };
+}
+
 /** Builds the scene. Every coordinate comes from the spec, which the lesson computed from its problem. */
+/**
+ * In the master square a part is at least two cells wide with a cell after it (G 2026-10-14). A bar cut too finely for
+ * that on one line (twelfths) wraps onto two lines, each holding half its parts, one under the other: every row becomes
+ * its lines, with the parts, shading, counts and knife lines of each, the label on the first line and the total on the
+ * last (G 23:08: "wrap the bar"). Null when nothing needs wrapping, or the cuts don't halve evenly.
+ */
+function wrapTape(spec: TapeSpec): TapeSpec | null {
+  if (!spec.square || spec.rows.some(r => r.cont)) return null;
+  const narrowIn = (s: TapeSpec) => { const L = layoutTape(s); return s.rows.some(r => layersOf(r).some(l => (r.length / l.count) * L.unit < 3 * SQUARE.cell - 1e-6)); };
+  const narrow = narrowIn(spec);
+  // labels over the bars free the width; when that alone gives every part two cells, the bars stay on one line
+  if (narrow && spec.tall && !spec.over) { const O = { ...spec, over: true }; if (!narrowIn(O) && layoutTape(O).height <= SQUARE.side) return null; }
+  const n = 2;
+  if (!narrow || spec.rows.some(r => (r.start ?? 0) !== 0 || layersOf(r).some(l => l.count % n))) return null;
+  const map: number[] = [];
+  const rows: TapeRow[] = [];
+  spec.rows.forEach(row => {
+    map.push(rows.length);
+    const len = row.length / n, layers = layersOf(row);
+    const countAt = (beat: number) => (layers.find(l => l.from <= beat && (l.until == null || beat <= l.until)) ?? layers[0]!).count;
+    for (let k = 0; k < n; k++) {
+      const a0 = k * len, b0 = a0 + len;
+      const off = (beat: number) => (k * countAt(beat)) / n;
+      rows.push({
+        ...row, length: len, cont: k > 0,
+        parts: typeof row.parts === "number" ? row.parts / n : row.parts.map(l => ({ ...l, count: l.count / n })),
+        fills: (row.fills ?? []).filter(f => f.b > a0 && f.a < b0).map(f => ({ ...f, a: Math.max(f.a, a0) - a0, b: Math.min(f.b, b0) - a0 })),
+        ticks: row.ticks?.map(t => ({ ...t, count: t.count / n })),
+        each: row.each?.map(e => ({ ...e, text: (i: number) => e.text(i + off(e.from ?? row.from ?? 0)),
+          ...(e.only ? { only: (i: number) => e.only!(i + off(e.from ?? row.from ?? 0)) } : {}),
+          ...(k ? { lead: (e.lead ?? 0) + (countAt(e.from ?? row.from ?? 0) / n) * (e.stagger ?? 0.04) } : {}) })),
+        label: k === 0 ? row.label : undefined,
+        // over the bars the total stands on the label's line, so a wrapped bar's lines stay one cell apart
+        total: k === (spec.over ? 0 : n - 1) ? row.total : undefined,
+      });
+    }
+  });
+  const len = (r: number) => spec.rows[r]!.length / n;
+  const out: TapeSpec = {
+    ...spec, rows,
+    brackets: spec.brackets?.map(b => { const k = Math.min(n - 1, Math.floor(b.a / len(b.row) + 1e-9)); return { ...b, row: map[b.row]! + k, a: b.a - k * len(b.row), b: Math.min(b.b - k * len(b.row), len(b.row)) }; }),
+    guides: undefined,
+  };
+  // only when the lines still fit the square (a stack of mixed-number wholes in twelfths stays on one line each)
+  return layoutTape(out).height <= SQUARE.side ? out : null;
+}
+
 export function buildTape(spec: TapeSpec): SceneDiagram {
+  // over the bars, the total of a bar laid out as several wholes stands on its label's line, not between its wholes
+  if (spec.square && spec.over && spec.rows.some((r, i) => i > 0 && r.total?.length && !r.label?.length)) {
+    const rows = spec.rows.map(r => ({ ...r }));
+    rows.forEach((r, i) => {
+      if (!i || !r.total?.length || r.label?.length) return;
+      let k = i - 1;
+      while (k > 0 && !rows[k]!.label?.length) k--;
+      if (rows[k]!.total?.length) return;
+      rows[k] = { ...rows[k]!, total: r.total };
+      rows[i] = { ...r, total: undefined };
+    });
+    return buildTape({ ...spec, rows });
+  }
+  const wrapped = wrapTape(spec);
+  if (wrapped) return buildTape(wrapped);
   const L = layoutTape(spec);
   const { unit, rowHeight: h, x0 } = L;
   const X = (u: number) => r1(x0 + u * unit);
@@ -179,7 +309,8 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
     const top = L.rowTops[ri]!, start = row.start ?? 0, layers = layersOf(row);
     const span = (lay: Layer) => row.length / lay.count;
     // half the picture system's gap each side of a piece, so pieces sit one gap apart (narrow pieces keep most of their width)
-    const inset = (pw: number) => Math.min(tapeGap(spec) / 2, pw * 0.2);
+    // in the master square half a cell each side, so parts sit one cell apart with their edges on grid lines
+    const inset = (pw: number) => (spec.square && pw >= 2 * SQUARE.cell - 1e-6 ? SQUARE.cell / 2 : Math.min(tapeGap(spec) / 2, pw * 0.2));
 
     // a re-cut splits: each new piece starts packed against its brothers inside the part it was cut from (where the
     // knife lines were) and slides apart to its place, so the cut opens up. Popping every part again would read as the
@@ -323,6 +454,7 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
     for (const t of row.total ?? []) {
       const run = within(t.from ?? 0, t.until, row);
       if (run && L.over) textAt(t, X(start + row.length), overY(ri), "lbl pw up", "end", run);
+      else if (run && L.under) textAt(t, X(start + row.length) - SQUARE.cell / 2, overY(ri), "lbl pw down", "end", run);
       else if (run) { const at = items.length; textAt(t, X(start + row.length) + PIC.labelGap, top + h / 2, "lbl pw", "start", run); items.splice(at, items.length - at, ...items.slice(at).map(thinRowTotal)); }
     }
   });
@@ -346,6 +478,14 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
     push({ type: "line", x1: X(g.at), y1: L.rowTops[r0]! - 4, x2: X(g.at), y2: L.rowTops[r1_]! + h + 4, cls: "wire", enter: "draw", ...when(g.from ?? 0) });
   }
 
-  return { kind: "scene", family: "tape", width: L.width, height: L.height, items, alt: spec.alt, ...(spec.two ? { two: true } : {}),
-    ...(spec.tall && !spec.over ? { layouts: [buildTape({ ...spec, over: true })] } : {}) };
+  const scene: SceneDiagram = { kind: "scene", family: "tape", width: L.width, height: L.height, items, alt: spec.alt, ...(spec.two ? { two: true } : {}), ...(spec.square ? { square: true } : {}),
+    ...(spec.tall && !spec.over && !spec.square ? { layouts: [buildTape({ ...spec, over: true })] } : {}) };
+  // in the master square the box is always the same shape, so of the two arrangements the one with the bigger bars is
+  // the picture (labels beside the bars, or over them)
+  if (spec.square && spec.tall && !spec.over) {
+    const tall = buildTape({ ...spec, over: true });
+    const T = layoutTape({ ...spec, over: true });
+    if (T.unit > L.unit && T.height <= L.height) return tall;
+  }
+  return scene;
 }

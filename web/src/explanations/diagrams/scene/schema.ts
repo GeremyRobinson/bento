@@ -42,6 +42,9 @@ export interface SceneDiagram {
   items: SceneItem[];
   /** what the picture shows, for screen readers */
   alt: string;
+  /** drawn inside the master square (SQUARE, picture-system.ts): width and height are the square's side and every
+   *  shape sits on its grid, so the renderer shows the whole square as it is instead of framing the shapes (G 2026-10-14) */
+  square?: boolean;
   /** the lesson must tell two quantities apart (thirds vs quarters, the second fraction): its .p1 parts turn violet.
    *  Without it every part is the one amber (styles/picture-system.css) */
   two?: boolean;

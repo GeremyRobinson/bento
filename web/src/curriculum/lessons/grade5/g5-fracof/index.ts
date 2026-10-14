@@ -38,7 +38,7 @@ function answers({ n, d, W }: FractionOfNumberProblem): AnswerModel {
 /** One bar for W; beat 1 splits it into d groups of W/d, beat 2 shades n of them. */
 export function fractionOfNumberPicture({ n, d, W }: FractionOfNumberProblem) {
   const g = W / d, R = g * n;
-  return buildTape({ tall: true,
+  return buildTape({ tall: true, square: true,
     rows: [{
       // lit: the bar as it is split into groups, and the groups taken
       lit: [{ from: 1 }],

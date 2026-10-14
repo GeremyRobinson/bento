@@ -15,7 +15,8 @@ export function SceneDiagram({ diagram: given, at, fit = false }: { diagram: Sce
   const d = (fit && picked && given.layouts?.[picked - 1]) || given;
   const [frame, setFrame] = useState<{ d: Scene; box: Box; size: [number, number]; text: Record<string, number>; panel: boolean } | null>(null);
   const fitted = fit && frame?.d === d;
-  const vb = fitted ? framed(frame.box, frame.size) : { x: 0, y: 0, w: d.width, h: d.height };
+  // a picture drawn in the master square shows the whole square, centred in its box; any other is framed to its shapes
+  const vb = fitted && !d.square ? framed(frame.box, frame.size) : { x: 0, y: 0, w: d.width, h: d.height };
   const zoom = fitted ? Math.min(frame.size[0] / vb.w, frame.size[1] / vb.h) : 1;
   const ref = useLabelFloor(vb.w, undefined, vb.h);
   // fit: frame the finished picture (every beat drawn) instead of the builder's canvas, so it fills the room it gets
@@ -34,6 +35,7 @@ export function SceneDiagram({ diagram: given, at, fit = false }: { diagram: Sce
       // the box's height goes to the picture's CSS before it is measured (see BOX_H), so a picture that lays itself
       // out more compactly in a short box is framed as it draws there
       el.style.setProperty("--box-h", String(Math.round(r.height)));
+      if (d.square) { setFrame({ d, box: { x: 0, y: 0, w: d.width, h: d.height }, size: [r.width, r.height], text, panel }); return; }
       const box0 = contentBox(el, d.items, 0);
       if (box0) setFrame({ d, box: aroundEnd(el, d.items, floorBox(el, d.items, box0, [r.width, r.height], d.grow ?? GROW)), size: [r.width, r.height], text, panel });
     };

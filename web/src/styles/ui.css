@@ -242,6 +242,13 @@
 .v-ppic{transition:opacity var(--o-change) var(--m-ease)}
 .v-ppic .viz{min-height:0;min-width:0;width:100%;height:100%;display:grid;grid-template-rows:minmax(0,1fr)}
 .v-ppic .viz>*{max-height:100%}
+/* the master square's grid (G 2026-10-14 23:00), under a picture drawn in the square: same viewBox and fit as the picture */
+.v-ppic .viz:has(>.o-sqgrid){position:relative}
+.v-ppic .viz>.o-sqgrid{position:absolute;inset:0;width:100%;height:100%;max-height:none;pointer-events:none}
+.o-sqgrid pattern path{fill:none;stroke:color-mix(in srgb,var(--pic-mid) 22%,transparent);stroke-width:1}
+/* the picture box IS the master square: it takes the square's shape, with no padding (the square keeps its own 2-cell pad) */
+.o-art.v-ppic:has(.o-sqgrid){padding:0;aspect-ratio:1;width:auto;max-width:100%;justify-self:center}
+.o-sqgrid .edge{display:none}
 /* Watch one draws in a square container, as big as the room allows, set at the bottom; practice draws in the full-width strip */
 .v-learn .v-stage{container-type:inline-size}
 .v-learn .v-ppic{container-type:size;align-self:end;height:min(calc(100cqw - var(--gap) * 2),100%)}

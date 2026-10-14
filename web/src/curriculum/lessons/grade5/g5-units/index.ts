@@ -91,23 +91,30 @@ function answers(p: UnitConversionProblem): AnswerModel {
 }
 
 /** A bar of big units (the last one part full for a half). Beat 1 fills the first with f small units, beat 2 asks of the
- * rest, and beat 3 fills them all, one after another. */
+ * rest, and beat 3 fills them all, one after another. Four or more units stack in two rows, so the picture fills its
+ * square (G 2026-10-14: "stacking is fine"). */
 export function unitConversionPicture(p: UnitConversionProblem) {
   const { u: [one, many, small, f], up } = p, W = bigCount(p), P = Math.ceil(W), smalls = W * f;
   const piece = (i: number) => (i < Math.floor(W) ? f : (W - Math.floor(W)) * f);
-  return buildTape({ tall: true,
-    rows: [{
-      // lit: the one big unit as it is filled, then all of them
-      lit: [{ from: 1, until: 1 }, { from: 3 }],
-      length: 1, parts: P, fills: [{ a: 0, b: 1 / P, tone: "on", from: 1 }, { a: 1 / P, b: W / P, tone: "on", from: 3, stagger: Math.min(0.12, 1.2 / P) }],
-      // beat 2 (more or fewer?): every other unit asks "?" one after another, each still to be turned into small units
-      each: [{ text: () => `1`, until: 0 }, { text: () => `${f}`, from: 1, until: 2, only: i => i === 0 },
-        { text: () => "?", from: 2, until: 2, only: i => i > 0, stagger: Math.min(0.12, 1.2 / P) }, { text: i => fm(piece(i)), from: 3, stagger: Math.min(0.12, 1.2 / P) }],
-    }],
+  const r0 = P >= 4 ? Math.ceil(P / 2) : P, r1 = P - r0, st = Math.min(0.12, 1.2 / P);
+  // a row of units starting at unit k0 (row 0 holds the first, row 1 the rest, unit for unit under them)
+  const row = (k0: number, len: number) => ({
+    lit: [{ from: 1, until: 1 }, { from: 3 }],
+    length: len, parts: len,
+    fills: [...(k0 === 0 ? [{ a: 0, b: 1, tone: "on" as const, from: 1 }] : []),
+      ...(Math.min(W - k0, len) > (k0 === 0 ? 1 : 0) ? [{ a: k0 === 0 ? 1 : 0, b: Math.min(W - k0, len), tone: "on" as const, from: 3, stagger: st }] : [])],
+    // beat 2 (more or fewer?): every other unit asks "?" one after another, each still to be turned into small units
+    each: [{ text: () => `1`, until: 0 }, ...(k0 === 0 ? [{ text: () => `${f}`, from: 1, until: 2, only: (i: number) => i === 0 }] : []),
+      { text: () => "?", from: 2, until: 2, only: (i: number) => k0 + i > 0, stagger: st, ...(k0 ? { lead: r0 * st } : {}) },
+      { text: (i: number) => fm(piece(k0 + i)), from: 3, stagger: st, ...(k0 ? { lead: r0 * st } : {}) }],
+  });
+  const total = up ? `${fm(smalls)} ÷ ${f} = ${fm(W)} ${many}` : `${fm(W)} × ${f} = ${fm(smalls)} ${small}`;
+  return buildTape({ tall: true, square: true,
+    rows: r1 ? [row(0, r0), row(r0, r1)] : [row(0, P)],
     brackets: [
-      { row: 0, a: 0, b: W / P, text: up ? `${fm(smalls)} ${small}` : `${fm(W)} ${W === 1 ? one : many}`, side: "above" },
-      { row: 0, a: 0, b: 1 / P, text: `1 ${one} = ${f} ${small}`, side: "below", from: 1, until: 2 },
-      { row: 0, a: 0, b: W / P, text: up ? `${fm(smalls)} ÷ ${f} = ${fm(W)} ${many}` : `${fm(W)} × ${f} = ${fm(smalls)} ${small}`, side: "below", from: 3, acc: true },
+      { row: 0, a: 0, b: r0, text: up ? `${fm(smalls)} ${small}` : `${fm(W)} ${W === 1 ? one : many}`, side: "above" },
+      { row: 0, a: 0, b: 1, text: `1 ${one} = ${f} ${small}`, side: "below", from: 1, until: 2 },
+      { row: r1 ? 1 : 0, a: 0, b: r0, text: total, side: "below", from: 3, acc: true },
     ],
     alt: `A bar of ${fm(W)} ${many}, each ${f} ${small}: ${fm(smalls)} ${small} in all.`,
   });

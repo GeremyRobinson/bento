@@ -8,6 +8,7 @@ import { withTransition } from "../app/transition";
 import { MathLine, Rich } from "../components/primitives/MathLine";
 import { plainProblem, problemShape, ProblemView } from "../components/practice/ProblemView";
 import { Diagram } from "../components/diagrams/Diagram";
+import { PictureGrid } from "../components/diagrams/PictureGrid";
 import { requireLesson } from "../curriculum/registry";
 import type { Explanation } from "../explanations/schema";
 import { formatNumber, type MathText, type MathToken } from "../curriculum/schemas/math-text";
@@ -259,7 +260,7 @@ export function Practice() {
           </div>
           {scratchOn ? <ScratchPad className={`v-pad${padFade ? " pfade" : ""}`} ink={ink} setInk={setInk} /> : pic && (
             <div className={`o-art v-ppic${padFade ? " pfade" : ""}`} aria-label="Picture of this problem" role="img">
-              <div className="viz">{ex
+              <div className="viz"><PictureGrid diagram={ex?.diagram} />{ex
                 ? <Diagram key={s.i} diagram={ex.diagram!} timeline={ex.timeline} fit turn={!it.story} {...pictureAt(ex, steps.map(st => st.id), here, s.solved)} />
                 : <ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} part="picture" step={s.solved ? undefined : steps[here]?.id} />}</div>
             </div>
