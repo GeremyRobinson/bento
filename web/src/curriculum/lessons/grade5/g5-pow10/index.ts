@@ -47,7 +47,8 @@ function explain(p: PowerOfTenProblem, model: AnswerModel): Explanation {
     diagram: buildDecimalShift({
       digits: whole! + frac, from: whole!.length, to: whole!.length + k, beat: 0, moveBeat: 1,
       // the card row is the answer's own digits: a 0 written in where the point runs past the last digit is a new card
-      lead: `${m} has ${plural(k, "zero")}: ${WORDS[k]} ${k > 1 ? "hops" : "hop"}`,
+      // the first beat names the multiplier only: in practice it shows while the child is asked how many zeros it has
+      lead: `× ${m}`,
       label: `× ${m}: ${WORDS[k]} ${k > 1 ? "hops" : "hop"} right → ${f(ans)}`,
       alt: `The decimal point in ${f(x)} moves ${plural(k, "place")} to the right, making ${f(ans)}.`,
     }),

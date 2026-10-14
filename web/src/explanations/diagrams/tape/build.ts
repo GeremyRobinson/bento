@@ -283,8 +283,9 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
 
     for (const t of row.label ?? []) {
       const run = within(t.from ?? 0, t.until, row);
-      // side labels share the picture's left edge (spec G5); the widest sits one label gap from its bar
-      if (run) { const at = items.length; textAt(t, M, top + h / 2, "lbl", "start", run); items.splice(at, items.length - at, ...items.slice(at).flatMap(x => litRuns(x, row.lit))); }
+      // side labels end one label gap before the bars, so a label held at its on-screen floor (phones) grows away
+      // from its bar, never into it
+      if (run) { const at = items.length; textAt(t, X(0) - PIC.labelGap, top + h / 2, "lbl", "end", run); items.splice(at, items.length - at, ...items.slice(at).flatMap(x => litRuns(x, row.lit))); }
     }
     for (const t of row.total ?? []) {
       const run = within(t.from ?? 0, t.until, row);
