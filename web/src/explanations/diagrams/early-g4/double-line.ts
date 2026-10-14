@@ -15,6 +15,8 @@ export interface DoubleLineSpec {
   beats: { one: number; all: number; extra: number | null; total: number };
   /** the finished sentence under the lines, e.g. "3 feet = 36 inches" */
   total: string;
+  /** the total sentence leaves a phone's short box, where it is wider than the picture (the accent end number answers) */
+  shortTotal?: boolean;
   /** what the ticks read; by default the top counts 0, 1, 2 … and the bottom j × per */
   topText?: (j: number) => string;
   bottomText?: (j: number) => string;
@@ -46,15 +48,15 @@ export function buildDoubleLine(s: DoubleLineSpec): SceneDiagram {
   // and none crowds the end, which always shows (it is the number the lesson is about)
   const topLen = Math.max(...Array.from({ length: units + 1 }, (_, j) => topText(j).length));
   const bottomLen = Math.max(...Array.from({ length: units + 1 }, (_, j) => bottomText(j).length));
-  const thin = (j: number, chars: number, size: number) => j === 0 || j === units ? {}
-    : { vars: thinOut(roomLeft((j & -j) * step, chars, size), roomLeft((units - j) * step, chars, PIC.label)) };
+  const thin = (j: number, chars: number, size: number, endFloor = 14) => j === 0 || j === units ? {}
+    : { vars: thinOut(roomLeft((j & -j) * step, chars, size), roomLeft((units - j) * step, chars, PIC.label, endFloor)) };
   for (let j = 0; j <= units; j++) {
     const x = X(j), at = j === 0 ? 0 : j === 1 ? s.beats.one : s.beats.all, k = Math.max(0, j - 2);
     items.push(seg([x, y0 - 7], [x, y0 + 7], "tk"), seg([x, y1 - 7], [x, y1 + 7], "tk"));
     items.push(t(x, y0 - 12, topText(j), `${topCls} up`, thin(j, topLen, topCls === "xs" ? 12 : 15)));
     // the matching small-unit count appears as the ticks are counted up
     const isTotal = !s.extra && j === s.n;
-    items.push(t(x, y1 + 12, bottomText(j), "sm down", { from: at, enter: "rise", delay: Math.round(k * 0.12 * 100) / 100, ...(isTotal ? { until: s.beats.total - 1 } : {}), ...thin(j, bottomLen, 15) }));
+    items.push(t(x, y1 + 12, bottomText(j), "sm down", { from: at, enter: "rise", delay: Math.round(k * 0.12 * 100) / 100, ...(isTotal ? { until: s.beats.total - 1 } : {}), ...thin(j, bottomLen, 15, PIC.label) }));
     if (isTotal) items.push(t(x, y1 + 12, bottomText(j), "lbl acc down", { from: s.beats.total, enter: "pop" }));
     if (j > 0 && j <= s.n) items.push(seg([x, y0 + 10], [x, y1 - 10], "wire", { from: at, enter: "draw", delay: Math.round(k * 0.12 * 100) / 100 }));
   }
@@ -92,6 +94,8 @@ export function buildDoubleLine(s: DoubleLineSpec): SceneDiagram {
   // the lines hang from their top edge under the bottom numbers and move down by what that row grew on a phone; they are
   // captions (.cap), which practice leaves out (the work list shows each worked line)
   for (const l of s.lines ?? []) items.push(t(X(units) / 2, yText - 12, l.text, "lbl acc down cap", { from: l.from, ...(l.until != null ? { until: l.until } : {}), enter: "rise", vars: growDown(1) }));
-  if (s.total) items.push(t(X(units) / 2, yText - 12, s.total, "lbl acc down cap", { from: s.beats.total, enter: "rise", vars: growDown(1) }));
+  // in a phone's short box the finished sentence is wider than the picture at the label floor: there the accent number on
+  // the bottom line is the answer, and the sentence is the problem's own line over the picture (Review b4fa4b3)
+  if (s.total) items.push(t(X(units) / 2, yText - 12, s.total, `lbl acc down cap${s.shortTotal ? " shortgo" : ""}`, { from: s.beats.total, enter: "rise", vars: growDown(1) }));
   return frame("double-line", items, s.alt, 14, { w: 320 });
 }

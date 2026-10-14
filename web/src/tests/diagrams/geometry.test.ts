@@ -33,7 +33,8 @@ describe.each(FAMILY)("%s pictures", id => {
       const d = ex.diagram as SceneDiagram;
       expect(d.kind).toBe("scene");
       for (let b = 0; b < ex.timeline.length; b++) {
-        const texts = d.items.filter(i => i.type === "text" && shownAt(i, b)) as Extract<SceneItem, { type: "text" }>[];
+        // the box drawn here is a tablet's: a phone's short-box stand-ins (.shortonly) never show beside what they replace
+        const texts = d.items.filter(i => i.type === "text" && shownAt(i, b) && !/\bshortonly\b/.test(i.cls ?? "")) as Extract<SceneItem, { type: "text" }>[];
         const boxes = texts.map(t => ({ t: t.text, ...textBox(t) }));
         for (const x of boxes) {
           expect(x.x0, `${id} ${JSON.stringify(p)} "${x.t}" left`).toBeGreaterThanOrEqual(0);

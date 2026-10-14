@@ -1,7 +1,8 @@
 // A triangle drawn with its real angles: the two base corners are given, the top corner is whatever is left.
 // Each corner gets an arc and labels that can change by beat; an exterior angle can open at the right corner.
 import type { SceneDiagram } from "../scene/schema";
-import { angleLabelAt, arc, dist, frame, path, poly, polar, seg, t, type Draft, type Pt } from "../geo/kit";
+import { angleLabelAt, arc, dist, frame, path, poly, polar, r1, seg, t, type Draft, type Pt } from "../geo/kit";
+import { PIC } from "../scene/picture-system";
 
 export interface CornerLabel { text: string; from?: number; until?: number; acc?: boolean }
 export interface TriangleAnglesSpec {
@@ -35,7 +36,11 @@ export function buildTriangleAngles(s: TriangleAnglesSpec): SceneDiagram {
   const P1: Pt = [0, 0], P2: Pt = [u, 0], P3: Pt = [apex1[0] * u, apex1[1] * u];
   const items: Draft[] = [poly([P1, P2, P3], "ln fillsoft", { enter: "draw" })];
 
-  const corner = (v: Pt, d0: number, d1: number, labels: CornerLabel[], accentFrom: number | undefined, arcR: number, maxR: number) => {
+  // on a phone a label grows with the floor about its own middle, so at the outside angle's corner the inside and outside
+  // labels grow into each other: there each steps away by what it grew, the outside one along its angle's middle and the
+  // inside one up along the side it shares with the top corner, clear of the left corner's label (Review b4fa4b3)
+  const out = (deg: number) => ({ translate: ["cos", "sin"].map((f, k) => `calc(${r1((f === "cos" ? Math.cos : Math.sin)((deg * Math.PI) / 180) * (k ? -1 : 1))} * (max(${PIC.label}, ${PIC.label} * var(--px, 0)) - ${PIC.label}) * 1px)`).join(" ") });
+  const corner = (v: Pt, d0: number, d1: number, labels: CornerLabel[], accentFrom: number | undefined, arcR: number, maxR: number, step = false) => {
     const span = d1 - d0;
     const r = Math.min(arcR, maxR * 0.6);
     if (accentFrom != null) {
@@ -45,12 +50,12 @@ export function buildTriangleAngles(s: TriangleAnglesSpec): SceneDiagram {
     for (const l of labels) {
       const gap = s.labelGap ?? 14;
       const at = angleLabelAt(v, d0, d0 + span, l.text.length * 10.2, r + gap, Math.max(r + gap, maxR));
-      items.push(t(at[0], at[1], l.text, `lbl${l.acc ? " acc" : ""}`, { ...shown(l), enter: "rise", delay: 0.8 }));
+      items.push(t(at[0], at[1], l.text, `lbl${l.acc ? " acc" : ""}`, { ...shown(l), enter: "rise", delay: 0.8, ...(step ? { vars: out(d0 + span / 4) } : {}) }));
     }
   };
   const a = dist(P1, P2), b = dist(P2, P3), c = dist(P1, P3);
   corner(P1, 0, A, s.labels.left, s.accent?.left, 30, Math.min(a, c) * 0.7);
-  corner(P2, 180 - B, 180, s.labels.right, s.accent?.right, 30, Math.min(a, b) * 0.7);
+  corner(P2, 180 - B, 180, s.labels.right, s.accent?.right, 30, Math.min(a, b) * 0.7, !!s.exterior);
   corner(P3, 180 + A, 360 - B, s.labels.top, s.accent?.top, 26, Math.min(b, c) * 0.7);
 
   if (s.exterior) {
@@ -60,7 +65,7 @@ export function buildTriangleAngles(s: TriangleAnglesSpec): SceneDiagram {
     items.push(path(arc(P2, 24, 0, 180 - B), "ln2", { ...shown(ext), enter: "draw", delay: 0.4 }));
     for (const l of ext.labels) {
       const at = angleLabelAt(P2, 0, 180 - B, l.text.length * 10.2, 44, 160);
-      items.push(t(at[0], at[1], l.text, "lbl acc", { ...shown({ from: Math.max(from, l.from ?? 0), ...(l.until != null ? { until: l.until } : {}) }), enter: "rise", delay: 0.6 }));
+      items.push(t(at[0], at[1], l.text, "lbl acc", { ...shown({ from: Math.max(from, l.from ?? 0), ...(l.until != null ? { until: l.until } : {}) }), enter: "rise", delay: 0.6, vars: out((180 - B) / 2) }));
     }
   }
   const top = Math.min(P1[1], P2[1], P3[1]);

@@ -45,7 +45,10 @@ export function buildThree(s: ThreeSpec): SceneDiagram {
     const y2 = 2 * CELL + 64;
     const a = frames(first, 0, y2, d => `dotp ${P(d < s.nums[i]! ? i : j)}`, { from: b.pair, enter: "pop" });
     items.push(...a.items);
-    items.push(t(a.w / 2, y2 + 2 * CELL + 18, `${s.nums[i]} + ${s.nums[j]} = ${first}`, "lbl acc", { from: b.pair, enter: "rise" }));
+    // in a phone's short box the two sums under this row would run into each other at the label floor: the first is
+    // written as just the number it makes, which the last sum starts from (Review b4fa4b3)
+    items.push(t(a.w / 2, y2 + 2 * CELL + 18, `${s.nums[i]} + ${s.nums[j]} = ${first}`, "lbl acc shortgo", { from: b.pair, enter: "rise" }));
+    items.push(t(a.w / 2, y2 + 2 * CELL + 18, String(first), "lbl acc shortonly", { from: b.pair, enter: "rise" }));
     const x3 = a.w + GAP;
     items.push(t(x3 - GAP / 2, y2 + CELL, "+", "big", { from: b.last, enter: "fade" }));
     items.push(...frames(z, x3, y2, `dotp ${P(k)}`, { from: b.last, enter: "pop" }).items);
