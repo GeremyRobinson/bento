@@ -2,6 +2,7 @@
 // Frames are computed from the equation's values; each frame is one beat, and the same operation is done to both pans.
 import { formatNumber } from "../../../curriculum/schemas/math-text";
 import type { SceneDiagram, SceneItem } from "../scene/schema";
+import { fitIn, PIC } from "../scene/picture-system";
 
 /** One thing on a pan. `off` marks what is being taken off both sides this beat (drawn struck out). */
 export type Weight =
@@ -29,7 +30,7 @@ export const BALANCE = {
   tile: 40,
   gap: 6,
   groupGap: 14,
-  noteY: 22,
+  noteY: 34,
   /** room above the tallest stack for the note */
   top: 44,
 } as const;
@@ -115,7 +116,9 @@ export function buildBalance(frames: BalanceFrame[], alt: string): SceneDiagram 
     };
     side(packed[i]!.left, cxL);
     side(packed[i]!.right, cxR);
-    items.push({ type: "text", x: W / 2, y: noteY, text: f.note, cls: "lbl acc", ...when, enter: "fade" });
+    // the note stands on its bottom edge (.up) just above the stacks, so on a phone it grows up, away from the tiles
+    // (a long note narrows to the picture's width on a phone, never under 14px)
+    items.push({ type: "text", x: W / 2, y: noteY, text: f.note, cls: "lbl acc up", vars: fitIn(W - 8, [...f.note].length, PIC.label, PIC.label), ...when, enter: "fade" });
   });
   return { kind: "scene", family: "balance", width: W, height: H, items, alt };
 }

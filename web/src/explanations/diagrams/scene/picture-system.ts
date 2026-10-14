@@ -33,6 +33,45 @@ export const growDown = (rows: number): Record<string, string> =>
   rows > 0 ? { transform: `translateY(calc(${Math.round(rows * 125) / 100} * (max(${PIC.label}, ${PIC.label} * var(--px, 0)) - ${PIC.label}) * 1px))` } : {};
 
 /**
+ * In a short box (--short, styles/picture-system.css: a phone's Watch one or practice strip) a stack of worked lines is
+ * written as one line: a line `up` units below the first moves into its place. Spread into `vars`; pair it with the
+ * .shortgo / .shortout classes on the line it replaces. It uses translate, so the item's entrance (transform) still plays.
+ */
+export const shortUp = (up: number): Record<string, string> => (up ? { translate: `0 calc(var(--short, 0) * ${-Math.round(up * 10) / 10}px)` } : {});
+
+/**
+ * A worked line that, in a short box, gives way to the next line written in its place (shortUp): it is drawn as it is
+ * until that line's beat, then goes `at` seconds into it (.shortout) and stays gone after (.shortgo). Anywhere else it
+ * stays as before. Returns the line's items; `beat`/`at` say when the next line comes, `last` is the picture's last beat.
+ */
+export function giveWay<T extends { from?: number; until?: number; cls?: string; enter?: string; delay?: number; vars?: Record<string, string | number> }>(it: T, beat: number, at: number, last: number): T[] {
+  const from = it.from ?? 0;
+  if (it.until != null && it.until < beat) return [it];
+  // drawn only after the next line came (a dimmed copy): gone from the start in a short box
+  if (beat < from) return [{ ...it, cls: `${it.cls ?? ""} shortgo`.trim() }];
+  const { enter: _e, delay: _d, until: _u, ...still } = it;
+  const cls = `${it.cls ?? ""}`.trim(), vars = { ...it.vars, "--d2": `${at.toFixed(2)}s` };
+  // on the next line's beat it goes `at` seconds in; on the last beat (or its own last) that copy simply stays to the end
+  const ends = it.until === beat || beat >= last;
+  const outCopy = { ...still, cls: `${cls} shortout`, vars, ...(ends ? (it.until != null ? { until: beat } : {}) : { until: beat }) };
+  const after = ends ? [] : [{ ...still, cls: `${cls} shortgo`, from: beat + 1, ...(it.until != null ? { until: it.until } : {}) }];
+  // the next line comes in the beat this one comes in: it comes in and goes in one beat (keeping its entrance)
+  if (beat === from) return [{ ...it, ...outCopy, enter: it.enter, delay: it.delay } as T, ...(after as unknown as T[])];
+  return [{ ...it, until: beat - 1 }, { ...outCopy, from: beat } as unknown as T, ...(after as unknown as T[])];
+}
+
+/**
+ * growDown for a picture laid out on a grid of rows (factor chips): what sits on row `rows` moves down by what the label
+ * rows above it grew on a phone. It uses translate, so a part's own entrance or slide (transform) still plays.
+ */
+export const growRows = (rows: number): Record<string, string> =>
+  rows > 0 ? { translate: `0 calc(${Math.round(rows * 125) / 100} * (max(${PIC.label}, ${PIC.label} * var(--px, 0)) - ${PIC.label}) * 1px)` } : {};
+
+/** growDown's mirror: a line above `rows` label rows that stand up off their part (.up) moves up by what they grew. */
+export const growUp = (rows: number): Record<string, string> =>
+  rows > 0 ? { transform: `translateY(calc(${-Math.round(rows * 125) / 100} * (max(${PIC.label}, ${PIC.label} * var(--px, 0)) - ${PIC.label}) * 1px))` } : {};
+
+/**
  * Row labels on a phone whose rows are thinner than a label at its floor: row `i` of `n` moves away from the middle by
  * its share of the overlap, so two labels side by side never touch (a 2-row tape's 2/6 and 5/6). Spread into `vars`.
  */

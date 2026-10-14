@@ -20,7 +20,7 @@ export function exponentRulePicture(o: { t: 0 | 1 | 2; a: number; b: number; e: 
   const cols = spots.map(s => s[1]), mid = (Math.min(...cols) + Math.max(...cols)) / 2;
   head.col = mid;
   const lastRow = Math.max(...spots.map(s => s[0]));
-  const under = lastRow + (t === 0 ? 1.25 : 0.95);
+  const under = lastRow + (t === 0 ? 1.5 : 0.95);
   const xs = (extra: (s: [number, number, string, boolean], k: number) => Partial<FChip> = () => ({})): FChip[] =>
     spots.map((s, k) => ({ row: s[0], col: s[1], text: "x", part: s[2], ...extra(s, k) }));
   // the x's that are left once pairs cancel, in reading order
