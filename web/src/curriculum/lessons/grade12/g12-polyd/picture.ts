@@ -38,10 +38,15 @@ export function polynomialDerivativePicture(o: { a: number; b: number; c: number
       ...(d ? [{ row: 0, col: 3, kind: "strike" as const, from: 3, at: 1.6 }] : []),
     ],
     dropRoom: true,
+    // in a phone's short box each worked line keeps only its sum: the long one is wider than the table at the label floor,
+    // and framing it would shrink the table under its own labels (Review 4746e11)
     lines: [
-      { text: `3 × ${P(a)} = ${f(A)}, and x³ becomes x²`, from: 1, until: 1, at: 1, cls: "lbl pw" },
-      { text: `2 × ${P(b)} = ${f(B)}, and x² becomes x`, from: 2, until: 2, at: 1, cls: "lbl pw" },
-      { text: d ? `${coef(c, "x")} becomes ${f(C)}; the ${f(d)} becomes 0` : `${coef(c, "x")} becomes ${f(C)}`, from: 3, until: 3, at: 1, cls: "lbl pw" },
+      { text: `3 × ${P(a)} = ${f(A)}, and x³ becomes x²`, from: 1, until: 1, at: 1, cls: "lbl pw shortgo" },
+      { text: `3 × ${P(a)} = ${f(A)}`, from: 1, until: 1, at: 1, cls: "lbl pw shortonly" },
+      { text: `2 × ${P(b)} = ${f(B)}, and x² becomes x`, from: 2, until: 2, at: 1, cls: "lbl pw shortgo" },
+      { text: `2 × ${P(b)} = ${f(B)}`, from: 2, until: 2, at: 1, cls: "lbl pw shortonly" },
+      { text: d ? `${coef(c, "x")} becomes ${f(C)}; the ${f(d)} becomes 0` : `${coef(c, "x")} becomes ${f(C)}`, from: 3, until: 3, at: 1, cls: "lbl pw shortgo" },
+      { text: `${coef(c, "x")} → ${f(C)}`, from: 3, until: 3, at: 1, cls: "lbl pw shortonly" },
       { text: `f′(1) = ${f(A)} + ${P(B)} + ${P(C)} = ${f(total)}`, from: 4, at: 1.4 },
     ],
     alt: `A table with x³, x², x and number columns. Each term's exponent comes down and the term moves one column right: ${f(A)}, ${f(B)}, ${f(C)}${d ? `; the constant ${f(d)} drops out` : ""}. At x = 1 they add to ${f(total)}.`,
