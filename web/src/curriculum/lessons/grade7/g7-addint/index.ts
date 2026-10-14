@@ -26,7 +26,7 @@ function answers(p: AddIntegersProblem): AnswerModel {
           wrong: A !== B ? [[Math.abs(A - B), "Subtracted the sizes", "Both numbers step the same way, so their sizes add."]] : [] })
         : oneBox({ id: "size", label: "Subtract the sizes", prompt: s => [num(Math.max(A, B)), op("−"), num(Math.min(A, B)), op("="), s], ans: Math.abs(A - B),
           hint: "Take the smaller size from the bigger one.",
-          wrong: [[A + B, "Added the sizes", "One steps up and one steps down: the steps toward 0 cancel, so subtract the sizes."]] }),
+          wrong: [[A + B, "Added the sizes", "One goes up and one goes down, so they cancel. Subtract the sizes."]] }),
       oneBox({
         id: "sign", label: "Pick the sign", prompt: s => [num(a), op("+"), ...paren(b), op("="), s], ans: a + b,
         hint: same ? "Both numbers are negative, so the answer is negative." : "The answer takes the sign of the number farther from 0.",

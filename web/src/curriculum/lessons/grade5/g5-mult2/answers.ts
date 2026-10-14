@@ -32,7 +32,7 @@ export function splitMultiplicationAnswers(p: SplitMultiplicationProblem): Answe
         message: `That's ${f(a)} × ${f(digit)}. The ${placeName(part)} digit stands for ${f(part)}, so add ${zeros === 1 ? "a zero" : `${zeros} zeros`}.`,
       }],
       hint,
-      look: `Look again at the lit strip: it's ${f(part)} across and ${f(a)} down.`,
+      look: `Look again at the lit-up strip: it's ${f(part)} wide and ${f(a)} tall.`,
       explain: `${hint} That makes ${f(expected)}.`,
       work: [num(a), op("×"), num(part), op("="), answer("x", expected)],
     };

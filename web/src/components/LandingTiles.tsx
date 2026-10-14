@@ -159,7 +159,7 @@ export function CountTile({ tint, k, size }: TileProps) {
   const { t, box } = useBeat(40, 30);
   const n = Math.round(total * Math.min(1, t / 30));
   return (
-    <Tile box={box} size={size} tint={tint} k={k} title="K through 12" label="Counting to calculus, with unit tests and a check-up for every grade.">
+    <Tile box={box} size={size} tint={tint} k={k} title="K through 12" label="Counting to calculus, with a test for every chapter and every grade.">
       <div className="lcount"><b>{n}</b><span>lessons</span></div>
     </Tile>
   );

@@ -42,7 +42,7 @@ function answers({ hour, minute }: TimeProblem): AnswerModel {
         prompt: s => [text("Hour: "), s], ans: hour,
         wrong: slips(hour, [
           [longAt, "Read the long hand", `That's the long hand. The **short** hand tells the hour.`],
-          ...(half ? [[next, "Read the next number", `The short hand is on its way to ${next} but hasn't got there. It's still ${hour}.`] as Slip] : []),
+          ...(half ? [[next, "Read the next number", `The short hand is on its way to ${next} but isn't there yet. It's still ${hour}.`] as Slip] : []),
         ]),
         hint: half ? `Halfway between two numbers, the hour is the smaller one it just passed.` : "Find the short, thick hand. Which number is it on?",
         explain: half ? `The short hand is halfway between ${hour} and ${next}. It has passed ${hour}, so the hour is ${hour}.` : `The short hand points at ${hour}.`,
@@ -85,7 +85,7 @@ function explain({ hour, minute }: TimeProblem, model: AnswerModel): Explanation
     steps: [
       { id: "hour", narration: half ? `The short hand is between ${h} and ${next}. It has passed ${h}.` : "Find the short hand. It points right at the hour.", math: [text("Hour: "), num(h)], state: 0, answerStep: "hour", result: h },
       { id: "minute", narration: half ? "The long hand has gone halfway around, to 6." : "The long hand is at the top, on 12.", math: [text("Minutes: "), num(m)], state: 1, answerStep: "minute", result: m },
-      { id: "time", narration: half ? `We say half past ${h}.` : `We say ${h} o'clock.`, math: [num(h), text(`:${twoDigits(m)}`)], state: 2, answerStep: "time", result: h },
+      { id: "time", narration: half ? `It's half past ${h}.` : `It's ${h} o'clock.`, math: [num(h), text(`:${twoDigits(m)}`)], state: 2, answerStep: "time", result: h },
     ],
   };
 }

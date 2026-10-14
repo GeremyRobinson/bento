@@ -1,6 +1,6 @@
 import { Pill } from "../components/primitives/Pill";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { playTone, readAloudOn, readSettings, speak } from "../app/settings";
+import { playTone, readAloudOn, readSettings, speak, spokenOf } from "../app/settings";
 import { useApp } from "../app/AppState";
 import { withTransition } from "../app/transition";
 import { MathLine, Rich } from "../components/primitives/MathLine";
@@ -72,7 +72,7 @@ export function Practice() {
   // read aloud: each new problem is read out, as on screen
   useEffect(() => {
     if (!s || !aloud) return;
-    const t = setTimeout(() => speak(document.querySelector("#app .pprob")?.textContent ?? ""), 350);
+    const t = setTimeout(() => speak(spokenOf(document.querySelector("#app .pprob"))), 350);
     return () => clearTimeout(t);
   }, [s?.i, aloud]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -230,7 +230,7 @@ export function Practice() {
     // the skill check doesn't cheer a step on the way (a word problem's operation): the say line stays clear for the answer
     : fb && !(skill && fb.type === "good") ? { cls: fb.type === "bad" ? "slip" : fb.type === "good" ? "good" : "hint",
       lead: fb.type === "bad" ? `\u2715 ${fb.strong ?? "Not quite."}` : fb.type === "good" ? `\u2713 ${fb.strong ?? "Right."}` : fb.strong, text: fb.text, lines: fb.lines }
-    : skill && s.i === 0 && !s.prob.wrong && !s.work.length ? { cls: "hint", lead: undefined, text: `${SKILL_CHECK}: ${n} problems on your own, no hints. It shows how much stuck.`, lines: undefined } : null;
+    : skill && s.i === 0 && !s.prob.wrong && !s.work.length ? { cls: "hint", lead: undefined, text: `${SKILL_CHECK}: ${n} problems on your own, no hints. It shows what you remember.`, lines: undefined } : null;
   // a wrong try wears red; a test's missed step only on a skill check's one answer, which keeps what was typed (v2 model)
   // a hint opened after a wrong try keeps the pill red until something new is typed (v2 model, P8/P9)
   const hintShown = !fbAway && fb?.type === "hint";
@@ -316,7 +316,7 @@ export function Practice() {
               <BulbIcon /><em className="o-badge" aria-hidden>{s.hintsLeft}</em></button>}
             {canScratch && <button className="o-tool" aria-pressed={scratchOn} aria-label="Scratch pad" onClick={() => { setZoomOut(false); swapPad(); }}><PadIcon /></button>}
             {!test && n > 1 && <button className="o-tool" aria-pressed={listOn} aria-label="Problems" onClick={() => { if (scratchOn) setScratch(false); setZoomOut(o => !o); }}><ListIcon /></button>}
-            <button className="o-tool" aria-label="Read it to me" onClick={() => speak([step?.question, document.querySelector("#app .pprob")?.textContent].filter(Boolean).join(". ").replace(/\*\*/g, ""))}><SpeakerIcon /></button>
+            <button className="o-tool" aria-label="Read aloud" onClick={() => speak([step?.question, spokenOf(document.querySelector("#app .pprob"))].filter(Boolean).join(". ").replace(/\*\*/g, ""))}><SpeakerIcon /></button>
           </div>
         </div>
       </section>

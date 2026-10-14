@@ -18,7 +18,7 @@ export function explainQuadForm(p: QuadFormProblem, model: AnswerModel): Explana
     heading: "Discriminant first",
     idea: ["b² − 4ac decides how far apart the two answers are."],
     statement: quadFormMath(p),
-    caption: `The two answers sit √${D} = ${f(s)} apart, centred on x = ${f(h)}: x = ${f(lo)} and x = ${f(hi)}.`,
+    caption: `The two answers sit √${D} = ${f(s)} apart, centered on x = ${f(h)}: x = ${f(lo)} and x = ${f(hi)}.`,
     diagram: buildPlane({
       alt: `Graph of y = ${eq}, crossing the x-axis at ${f(lo)} and ${f(hi)}, which are ${f(s)} apart around x = ${f(h)}.`,
       fit: parabolaFit(1, b, c, [lo, hi]),

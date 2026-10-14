@@ -94,7 +94,7 @@ export function GradeQuestion() {
     if (g == null) return (
       <div className="gdl gneutral">
         <div className="gdtext">
-          <h2>{ask ? "Tap the grade you think you're in" : "Pick your grade"}</h2>
+          <h2>{ask ? "Tap the grade you think you're in" : "Choose your grade"}</h2>
           <p>{ask ? "Then Find my level checks it with a few problems." : "Every grade starts with a picture like this one, drawn from a real problem."}</p>
         </div>
         {teaser?.ex.diagram && (
@@ -135,7 +135,7 @@ export function GradeQuestion() {
       <div className="gdl gneutral b2d">
         <div className="gdtext">
           <h2>Obento²</h2>
-          <p>Ten tracks past 12th grade: the math thinking machines are built from, then the sciences that use it. It's part of the membership, and it's on the way.</p>
+          <p>Ten tracks past 12th grade: the math AI is built from, then the sciences that use it. It's part of the membership, and it's on the way.</p>
         </div>
         <figure className="gdpic b2pic"><TeaserPic id="ai" play /></figure>
       </div>
@@ -153,7 +153,7 @@ export function GradeQuestion() {
         )}
         <figure className="gdpic b2pic"><TeaserPic id={t.id} play /></figure>
         <div className="gdgo">
-          <Pill onClick={toggle} aria-pressed={on}>{on ? "We'll tell you on this device ✓" : "Tell me when it's ready"}</Pill>
+          <Pill onClick={toggle} aria-pressed={on}>{on ? "Obento will tell you here ✓" : "Tell me when it's ready"}</Pill>
           <small>Coming later</small>
         </div>
       </div>

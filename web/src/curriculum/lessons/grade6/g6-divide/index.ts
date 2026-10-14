@@ -36,26 +36,26 @@ export function simplifyStep(S: number, L: number, label: string, id = "simplify
   const F = finalForm(S, L), hasWhole = F.whole > 0, fracPart = F.num > 0;
   const check = (v: Record<string, number | null>): StepCheck => {
     const w = v.w || 0, n = v.n || 0, dd = v.d;
-    if (v.n != null && dd == null) return { ok: false, soft: true, message: "Fill in the bottom number too." };
-    if (dd === 0) return { ok: false, soft: true, message: "The bottom can't be 0." };
+    if (v.n != null && dd == null) return { ok: false, soft: true, message: "Fill in the denominator too." };
+    if (dd === 0) return { ok: false, soft: true, message: "The denominator can't be 0." };
     const den = dd || 1;
     if ((w * den + n) * L !== S * den) {
       return { ok: false, kind: "Simplifying", generic: false, message: S > L
-        ? `That's not equal to ${S}/${L}. How many whole ${L}s fit into ${S}? That's the whole number. What's left over goes on top.`
-        : `That's not equal to ${S}/${L}. Divide the top **and** the bottom by the same number.` };
+        ? `That's not equal to ${S}/${L}. How many whole ${L}s fit into ${S}? That's the whole number. What's left over is the numerator.`
+        : `That's not equal to ${S}/${L}. Divide the numerator **and** the denominator by the same number.` };
     }
-    if (dd && n >= dd) return { ok: false, soft: true, message: `That's the right amount! Now write it as a mixed number: how many whole ${dd}s fit into ${n}?` };
-    if (dd && n > 0 && gcd(n, dd) > 1) return { ok: false, kind: "Not fully simplified", generic: false, message: `Same amount, good! But ${n}/${dd} can still be simplified: both ${n} and ${dd} divide by ${gcd(n, dd)}.` };
+    if (dd && n >= dd) return { ok: false, soft: true, message: `That's the right amount. Now write it as a mixed number: how many whole ${dd}s fit into ${n}?` };
+    if (dd && n > 0 && gcd(n, dd) > 1) return { ok: false, kind: "Not fully simplified", generic: false, message: `Same amount. ${n}/${dd} can still be simplified: ${n} and ${dd} both divide by ${gcd(n, dd)}.` };
     return { ok: true };
   };
   return {
     id,
     label,
     prompt: [frac(S, L), op("="), slot("w", true), frac([slot("n")], [slot("d")])],
-    note: S > L ? "The top is bigger than the bottom, so pull out the wholes. Use the small box for the whole number."
-      : S === L ? "Top and bottom are the same. What whole number is that?"
+    note: S > L ? "The numerator is bigger than the denominator, so pull out the wholes. Use the small box for the whole number."
+      : S === L ? "The numerator and denominator are the same. What whole number is that?"
       : gcd(S, L) > 1 ? "Can both numbers be divided by the same number?"
-      : "If it can't be simplified, just copy it. Leave the whole-number box empty.",
+      : "If it can't be simplified, copy it. Leave the whole-number box empty.",
     slots: [
       { id: "w", expected: hasWhole ? F.whole : null },
       { id: "n", expected: fracPart ? F.num : null },
@@ -64,10 +64,10 @@ export function simplifyStep(S: number, L: number, label: string, id = "simplify
     known: [],
     check,
     hint: S % L === 0 ? `${S} ÷ ${L} = ${S / L} exactly, so it's a whole number.`
-      : S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}. The remainder goes on top.`
+      : S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}. The remainder is the numerator.`
       : gcd(S, L) > 1 ? `Both ${S} and ${L} can be divided by ${gcd(S, L)}.` : `No number (other than 1) divides both ${S} and ${L}. It's already simplest.`,
     explain: S % L === 0 ? `${S} ÷ ${L} = ${S / L} exactly, so it's the whole number ${S / L}.`
-      : S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}, then simplify.` : gcd(S, L) > 1 ? `Divide top and bottom by ${gcd(S, L)}.` : "It was already as simple as it gets.",
+      : S >= L ? `${S} ÷ ${L} = ${Math.floor(S / L)} remainder ${S % L}, then simplify.` : gcd(S, L) > 1 ? `Divide the numerator and denominator by ${gcd(S, L)}.` : "It was already simplified.",
     work: [frac(S, L), op("="), ...finalMath(S, L, true)],
   };
 }
@@ -100,29 +100,29 @@ function answers(p: DivideFractionsProblem): AnswerModel {
       sizeStep(p),
       {
         id: "flip", label: "Flip the second fraction",
-        prompt: [frac(c, d), op("→"), fracBoxes()], note: "Flip means the top and bottom trade places.",
+        prompt: [frac(c, d), op("→"), fracBoxes()], note: "Flip means the numerator and denominator trade places.",
         slots: [{ id: "n", expected: d }, { id: "d", expected: c }], known: [],
         check: v => {
-          if (both(v)) return { ok: false, soft: true, message: "Fill in both boxes, the top and the bottom." };
+          if (both(v)) return { ok: false, soft: true, message: "Fill in both boxes, the numerator and the denominator." };
           if (v.n === d && v.d === c) return { ok: true };
-          if (v.n === c && v.d === d) return { ok: false, kind: "Didn't flip", message: "That's the same fraction. Swap the top and the bottom.", generic: false };
+          if (v.n === c && v.d === d) return { ok: false, kind: "Didn't flip", message: "That's the same fraction. Swap the numerator and the denominator.", generic: false };
           if (v.n === b && v.d === a) return { ok: false, kind: "Flipped the wrong fraction", message: "Keep the first fraction. Flip the **second** one.", generic: false };
-          return { ok: false, kind: "Flipping", message: `Swap them: the ${d} goes on top, the ${c} on the bottom.`, generic: false };
+          return { ok: false, kind: "Flipping", message: `Swap them: ${d} is the new numerator, ${c} the new denominator.`, generic: false };
         },
         hint: `How many ${c}/${d} fit in 1 whole? ${d}/${c} of them. That's the flipped fraction.`, explain: `${c}/${d} flipped is ${d}/${c}.`,
         work: [op("÷"), frac(c, d), { t: "text", v: " becomes " }, op("×"), frac([answer("n", d)], [answer("d", c)])],
       },
       {
         id: "multiply", label: "Multiply",
-        prompt: [frac(a, b), op("×"), frac(d, c), op("="), fracBoxes()], note: "Top times top, bottom times bottom.",
+        prompt: [frac(a, b), op("×"), frac(d, c), op("="), fracBoxes()], note: "Numerator times numerator, denominator times denominator.",
         slots: [{ id: "n", expected: a * d }, { id: "d", expected: b * c }], known: [],
         check: v => {
-          if (both(v)) return { ok: false, soft: true, message: "Fill in both boxes, the top and the bottom." };
+          if (both(v)) return { ok: false, soft: true, message: "Fill in both boxes, the numerator and the denominator." };
           if (v.n === a * d && v.d === b * c) return { ok: true };
-          if (v.n === a * c && v.d === b * d) return { ok: false, kind: "Multiplied without flipping", message: "Use the flipped fraction from step 1.", generic: false };
-          return { ok: false, kind: "Multiplying fractions", message: `Top: ${a} × ${d}. Bottom: ${b} × ${c}.`, generic: false };
+          if (v.n === a * c && v.d === b * d) return { ok: false, kind: "Multiplied without flipping", message: "Use the flipped fraction from the step before.", generic: false };
+          return { ok: false, kind: "Multiplying fractions", message: `Numerator: ${a} × ${d}. Denominator: ${b} × ${c}.`, generic: false };
         },
-        hint: "Multiply the two tops together, then the two bottoms.", explain: `${a} × ${d} = ${a * d} and ${b} × ${c} = ${b * c}.`,
+        hint: "Multiply the two numerators, then the two denominators.", explain: `${a} × ${d} = ${a * d} and ${b} × ${c} = ${b * c}.`,
         work: [frac(a, b), op("×"), frac(d, c), op("="), frac([answer("n", a * d)], [answer("d", b * c)])],
       },
       simplifyStep(a * d, b * c, "Simplify"),
@@ -145,12 +145,12 @@ function explain(p: DivideFractionsProblem) {
       { id: "size", narration: S > L ? `${c}/${d} is smaller than ${a}/${b}, so expect more than 1.`
           : S === L ? "They are the same size, so the answer is 1." : `${c}/${d} is bigger than ${a}/${b}, so expect less than 1.`,
         math: [frac(a, b), op("÷"), frac(c, d)], lines: [], answerStep: "size" },
-      { id: "flip", narration: `One whole holds ${c === 1 ? d : `${d}/${c}`} pieces of ${c}/${d}, so multiply by the flip.`, math: [frac(c, d), op("→"), frac(d, c)],
+      { id: "flip", narration: `One whole holds ${c === 1 ? d : `${d}/${c}`} pieces of ${c}/${d}, so multiply by the flipped fraction.`, math: [frac(c, d), op("→"), frac(d, c)],
         lines: [[frac(a, b), op("÷"), mark([frac(c, d)])], [frac(a, b), mark([op("×")]), mark([frac(d, c)])]], answerStep: "flip" },
-      { id: "multiply", narration: "Top times top, bottom times bottom.", math: [frac(a, b), op("×"), frac(d, c), op("="), frac(S, L)],
+      { id: "multiply", narration: "Numerator times numerator, denominator times denominator.", math: [frac(a, b), op("×"), frac(d, c), op("="), frac(S, L)],
         lines: [[frac(S, L)]], answerStep: "multiply" },
-      { id: "simplify", narration: (same ? "It's already as simple as it gets." : S % L === 0 ? "The bottom goes into the top exactly, so it's a whole number."
-          : S >= L ? `Pull out the wholes and put the rest on top${gcd(S, L) > 1 ? ", then simplify" : ""}.` : `Divide the top and the bottom by ${gcd(S, L)}.`) + (F.whole && F.num ? ` So ${F.whole} whole ${c}/${d}${F.whole === 1 ? "" : "s"} fit, and ${F.num}/${F.den} of another.` : ""),
+      { id: "simplify", narration: (same ? "It's already simplified." : S % L === 0 ? "The denominator goes into the numerator exactly, so it's a whole number."
+          : S >= L ? `Pull out the wholes and make the rest the numerator${gcd(S, L) > 1 ? ", then simplify" : ""}.` : `Divide the numerator and the denominator by ${gcd(S, L)}.`) + (F.whole && F.num ? ` So ${F.whole} whole ${c}/${d}${F.whole === 1 ? "" : "s"} fit, and ${F.num}/${F.den} of another.` : ""),
         math: same ? [frac(S, L)] : [frac(S, L), op("="), ...simplified], lines: same ? [] : [[frac(S, L), op("="), ...simplified]], answerStep: "simplify",
         ...(F.num === 0 ? { result: F.whole } : {}) },
     ],

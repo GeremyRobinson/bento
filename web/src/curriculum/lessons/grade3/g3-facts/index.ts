@@ -62,7 +62,7 @@ function answers(p: FactProblem): AnswerModel {
           [a + b, "Added instead of multiplied", `× means groups. ${count(b, "group")} of ${a} is ${P}, not ${a + b}.`],
           [b * b, "Used the same number twice", `That's ${b} × ${b}. Here it is ${count(b, "group")} of ${a}.`],
         ],
-        hint: `Turn the array on its side. The rows become columns, but no dots are added or taken away, so the total is the same as the ${a} × ${b} you just counted.`,
+        hint: `Turn the array on its side. No dots are added or taken away. So the total is the same as the ${a} × ${b} you counted.`,
         explain: `${b} × ${a} = ${P}, the same as ${a} × ${b}.`,
       }),
     ],

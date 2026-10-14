@@ -34,7 +34,7 @@ export const dotMath = ({ a, b, c, d }: DotProblem): MathText => [...vec(a, b), 
 export function dotAnswers({ a, b, c, d }: DotProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "x", label: "x parts", prompt: s => [num(a), op("×"), ...P(c), op("="), ...s], ans: a * c, hint: "The x parts are the first numbers of each arrow: multiply them.", wrong: [[a + c, "Added", "Multiply the x parts; adding comes last."]] }),
+      ns({ id: "x", label: "x parts", prompt: s => [num(a), op("×"), ...P(c), op("="), ...s], ans: a * c, hint: "The x parts are the first numbers of each arrow: multiply them.", wrong: [[a + c, "Added", "Multiply the x parts. Adding comes last."]] }),
       ns({ id: "y", label: "y parts", prompt: s => [num(b), op("×"), ...P(d), op("="), ...s], ans: b * d, hint: "The y parts are the second numbers of each arrow: multiply them.", wrong: [[a * d, "Mixed the parts", "Match x with x and y with y: the second number times the second number."]] }),
       ns({ id: "dot", label: "Add", prompt: s => [num(a * c), op("+"), ...P(b * d), op("="), ...s], ans: a * c + b * d,
         hint: "The dot product is one number: add the two products.", wrong: [[a * c * b * d, "Multiplied", "Multiply within each part, then add the parts."]], note: "If it's 0, the vectors are perpendicular." }),

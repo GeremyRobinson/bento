@@ -145,7 +145,7 @@ export function startTest(key: string, progress: Progress, deps: Deps): Practice
   const n = kind === "unit" ? UNIT_TEST_LENGTH : CHECKUP_LENGTH;
   const order = deps.rng.shuffle(list);
   const items = spread(freshItems(n, (k, seen) => makeItem(order[k % order.length]!, k, deps.rng, seen)), deps.rng);
-  const title = kind === "unit" ? `${unit} test` : `${gradeOf(g).name} check-up`;
+  const title = kind === "unit" ? `${unit} test` : `${gradeOf(g).name} test`;
   return newRun({ mode: "test", key, title, items, startTier: 0, hintsLeft: 0 }, progress, deps);
 }
 
@@ -415,7 +415,7 @@ export function check(s: PracticeSession, progress: Progress, deps: Deps): Pract
   }
   const band = bandOfSession(next);
   const msg = cat === "concept" ? r.message
-    : step.look ?? SAY[cat] ?? `${nudge(expected, values, band)} ${next.hinted ? step.hint : `Read the step again${next.hintsLeft ? ", or tap Hint" : ""}.`}`.trim();
+    : step.look ?? SAY[cat] ?? `${nudge(expected, values, band)} ${next.hinted ? step.hint : `Read the step again.`}`.trim();
   const lines: string[] = [];
   if (rushed) lines.push("Slow down a little and read the step again.");
   // no Show me in v2 (spec P10, guidelines §7): after two misses, while hints are left, point at the bulb

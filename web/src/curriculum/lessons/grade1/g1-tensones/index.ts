@@ -26,7 +26,7 @@ function answers({ n }: TensOnesProblem): AnswerModel {
         wrong: slips(t, [
           [o, "Counted the ones", "Those are the little cubes. Count only the **long rods**."],
           [tensValue, "Counted the cubes in the rods", `You counted every cube in the rods. Count each rod as one ten.`],
-          [n, "Typed the whole number", "Just the rods for now. How many long rods are there?"],
+          [n, "Typed the whole number", "Count only the rods for now. How many long rods are there?"],
         ]),
         hint: "Touch each long rod and count: 1, 2, 3...",
         explain: `There ${t === 1 ? "is" : "are"} ${plural(t, "rod", "rods")}, so ${plural(t, "ten", "tens")}.`,
@@ -36,7 +36,7 @@ function answers({ n }: TensOnesProblem): AnswerModel {
         prompt: s => [s, text(" ones")], ans: o,
         wrong: slips(o, [
           [t, "Counted the tens", "That's how many rods. Now count the **little cubes** on the side."],
-          [n, "Typed the whole number", "Just the little cubes for now. How many are there?"],
+          [n, "Typed the whole number", "Count only the little cubes for now. How many are there?"],
         ]),
         hint: o ? "Count the little cubes on their own, one at a time." : "Look beside the rods. Are there any cubes on their own?",
         explain: `There ${o === 1 ? "is" : "are"} ${plural(o, "cube", "cubes")} on ${o === 1 ? "its" : "their"} own, so ${plural(o, "one", "ones")}.`,
@@ -46,7 +46,7 @@ function answers({ n }: TensOnesProblem): AnswerModel {
         wrong: slips(n, [
           [t + o, "Added the digits", `Each rod is worth 10, not 1. ${plural(t, "ten", "tens")} is ${tensValue}.`],
           [o * 10 + t, "Swapped tens and ones", `The tens come first. Write ${t}, then ${o}.`],
-          [tensValue, "Left out the ones", `That's just the tens. Add the ${plural(o, "one", "ones")} too.`],
+          [tensValue, "Left out the ones", `That's only the tens. Add the ${plural(o, "one", "ones")} too.`],
         ]),
         hint: o ? "Count the rods by 10s. Then count on the cubes by 1s." : "Count the rods by 10s. Are there any cubes to count on?",
         explain: `${tensValue} and ${o} more is ${n}.`,

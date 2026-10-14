@@ -88,9 +88,9 @@ describe("every screen renders inside the Screen master", () => {
     expect(screen.queryByRole("alertdialog")).toBeNull();
     expect(document.querySelector(".v-prac")).toBeNull();
     const today = within(screen.getByRole("region", { name: "Today" }));
-    expect(today.getByText("In progress")).toBeInTheDocument();
+    expect(today.getByText("Not finished")).toBeInTheDocument();
     expect(today.getByText(/^Problem 1 of \d+ · your work is kept$/)).toBeInTheDocument();
-    fireEvent.click(today.getByRole("button", { name: "Carry on" }));
+    fireEvent.click(today.getByRole("button", { name: "Keep going" }));
     expect(document.querySelector("#app > .o-state.v-prac")).not.toBeNull();
     expect(document.querySelector(".v-stage .v-prob")!.textContent).toBe(problem);
   });

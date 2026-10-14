@@ -45,7 +45,7 @@ function answers(p: SharesProblem): AnswerModel {
         id: "parts", label: "Count the parts", question: "How many equal parts?",
         prompt: s => [s, text(" equal parts")], ans: parts,
         wrong: slips(parts, [
-          [lines, "Counted the cut lines", "That's the cut lines. Count the pieces between them."],
+          [lines, "Counted the cut lines", "Those are the cut lines. Count the pieces between them."],
           shaded < parts && [shaded, "Counted only the shaded parts", "Count **every** part, shaded or not."],
           [parts + 1, "Counted a piece twice", "One too many. Touch each piece once, and count it once."],
           [parts - 1, "Missed a piece", "One short. Every piece counts, even the one at the edge."],

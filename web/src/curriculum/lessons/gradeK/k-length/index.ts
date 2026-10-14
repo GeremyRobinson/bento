@@ -57,7 +57,7 @@ function answers(p: LengthProblem): AnswerModel {
           : right === 2
             ? ["Missed that they match", `Look again: both are ${cubes(a)} long. They end at the same place.`]
             : ["Picked the shorter one", `${why} The ${longer} sticks out past the end of the ${shorter}.`],
-        hint: "Both start at the same line. Which one sticks out further at the end?",
+        hint: "Both start at the same line. Which one sticks out farther at the end?",
         explain: right === 2 ? `${why} They are the same length.` : `${why} ${Math.max(a, b)} is more than ${Math.min(a, b)}, so the ${longer} is longer.`,
         work: sentence,
       }),
@@ -73,7 +73,7 @@ function explain(p: LengthProblem, model: AnswerModel): Explanation {
   const verdict = right === 2 ? "They end at the same place: the same length." : `The ${longer} sticks out ${cubes(extra)} more. It is longer.`;
   return {
     heading: "Line them up",
-    idea: ["When both start at the same line, the one that sticks out further is longer."],
+    idea: ["When both start at the same line, the one that sticks out farther is longer."],
     statement: words("Which is longer?"),
     diagram: lengthBars({
       top: { name: top, cubes: p.a }, bottom: { name: bottom, cubes: p.b }, beats: { top: 0, bottom: 1, compare: 2 },
@@ -84,7 +84,7 @@ function explain(p: LengthProblem, model: AnswerModel): Explanation {
     steps: [
       { id: "top", narration: `Count the cubes along the ${top}: ${countUp(1, a)}.`, math: [text(`${cap(top)}: `), num(a), text(" cubes")], state: 0, answerStep: "top", result: a },
       { id: "bottom", narration: `Now the ${bottom}: ${countUp(1, b)}.`, math: [text(`${cap(bottom)}: `), num(b), text(" cubes")], state: 1, answerStep: "bottom", result: b },
-      { id: "longer", narration: right === 2 ? "They end at the same place." : `The ${longer} sticks out ${cubes(extra)} further.`, math: right === 2 ? [text("Same length")] : [text(`The ${longer} is longer.`)], state: 2, answerStep: "longer", result: right },
+      { id: "longer", narration: right === 2 ? "They end at the same place." : `The ${longer} sticks out ${cubes(extra)} farther.`, math: right === 2 ? [text("Same length")] : [text(`The ${longer} is longer.`)], state: 2, answerStep: "longer", result: right },
     ],
   };
 }

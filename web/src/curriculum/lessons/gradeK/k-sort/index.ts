@@ -45,8 +45,8 @@ function answers(p: SortProblem): AnswerModel {
   return {
     steps: [
       tapStep({
-        id: "sort", label: "Sort one", question: "Which group does the ringed one go in?",
-        prompt: words("The ringed one goes with the ?"), choices: kinds.map(k => cap(k.many)), right: g,
+        id: "sort", label: "Sort one", question: "Which group does the circled one go in?",
+        prompt: words("The circled one goes with the ?"), choices: kinds.map(k => cap(k.many)), right: g,
         wrong: () => ["Put it in the wrong group", `${k0.looks}, like the ${k0.many}.`],
         hint: "Look at its shape. Which things look just like it?",
         explain: `${k0.looks}, so it goes with the ${k0.many}.`,

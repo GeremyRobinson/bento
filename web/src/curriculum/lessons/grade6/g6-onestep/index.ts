@@ -47,7 +47,7 @@ export function oneStepAnswers(p: OneStepEquation): AnswerModel {
     steps: [
       ns({ id: "undo", l: "Undo it", n: undoText(p), a: s => [v(), op("="), ...s], ans: p.x, h: undoText(p)!, w: [[sameOperation(p), "Used the same operation", "Do the opposite to undo it."]] }),
       ns({ id: "check", l: "Check", a: s => [...checkSide(p, p.x), op("="), ...s], ans: p.rhs, h: "Put your x back in the equation.",
-        w: [[p.x, "Wrote x again", "Work out the left side with your x in it. It should match the other side."]] }),
+        w: [[p.x, "Wrote x again", "Do the math on the left side with your x in it. It should match the right side."]] }),
     ],
     finalParts: [0],
   };

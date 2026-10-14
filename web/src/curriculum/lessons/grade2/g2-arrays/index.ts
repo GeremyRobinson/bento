@@ -47,7 +47,7 @@ function answers({ rows, cols }: ArrayProblem): AnswerModel {
         prompt: s => [text("In each row: "), s], ans: cols,
         wrong: slips(cols, [
           [rows, "Counted the rows", "That's how many rows there are. Count the dots across one row."],
-          [total, "Counted every dot", "Count just one row, from left to right."],
+          [total, "Counted every dot", "Count only one row, from left to right."],
         ]),
         hint: "Count the dots in the top row, left to right.",
         explain: `Each row has ${count(cols, "dot")}.`,

@@ -86,7 +86,7 @@ function columnStep(p: AddSubProblem, i: number): AnswerStep {
   return oneBox({
     id: name, label: `Subtract the ${name}`, question, prompt, ans: w,
     wrong: slips(w, [
-      ...(c.regroup ? [[c.bottom - c.top, "Took the smaller from the bigger", `You can't take ${c.bottom} from ${c.top}. Trade first, then work out ${top} − ${c.bottom}.`] as [number, string, string]] : []),
+      ...(c.regroup ? [[c.bottom - c.top, "Took the smaller from the bigger", `You can't take ${c.bottom} from ${c.top}. Trade first, then find ${top} − ${c.bottom}.`] as [number, string, string]] : []),
       ...(c.carryIn && digit(p.a, i) + (c.regroup ? 10 : 0) - c.bottom >= 0
         ? [[digit(p.a, i) + (c.regroup ? 10 : 0) - c.bottom, "Forgot the ten you traded", `The ${digit(p.a, i)} gave 1 to the ${prev}, so it is ${c.top} now.`] as [number, string, string]] : []),
     ]),

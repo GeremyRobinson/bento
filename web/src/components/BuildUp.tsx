@@ -10,8 +10,8 @@ export function BuildUp({ lessonId }: { lessonId: string }) {
   const live = isReady(back.id);
   return (
     <button className="lesson t1 backup" disabled={!live} onClick={() => go({ name: "learn", lessonId: back.id }, "back")}>
-      <span className="badge">↩</span><span className="name">Build up first: {back.title}</span>
-      <span className="muted">{live ? gradeOf(back.grade).name : "soon"}</span>
+      <span className="badge">↩</span><span className="name">Do this one first: {back.title}</span>
+      <span className="muted">{live ? gradeOf(back.grade).name : "Coming soon"}</span>
     </button>
   );
 }

@@ -43,8 +43,8 @@ export function probabilityAnswers(p: ProbabilityProblem): AnswerModel {
       ns({ id: "all", label: "All the ways", question: "How many marbles in all?", prompt: s => [s], ans: T, hint: "Add all three colors.",
         wrong: [[T - want, `Left out the ${name} ones`, `All the marbles means every color, the ${name} ones too.`]] }),
       { ...fs({ id: "chance", label: "Write the chance", prompt: s => mt`P(${name}) = ${s}`, N: want, D: T, hint: `How many are ${name}, out of how many in all? Write it in lowest terms.`,
-        wrong: [[want, T - want, "Used the losers on the bottom", "The bottom is **all** the marbles."]] }),
-        known: [{ values: { n: want, d: T - want }, kind: "Used the losers on the bottom", message: "The bottom is **all** the marbles." }],
+        wrong: [[want, T - want, "Used only the other marbles", "The denominator is **all** the marbles."]] }),
+        known: [{ values: { n: want, d: T - want }, kind: "Used only the other marbles", message: "The denominator is **all** the marbles." }],
         explain: `${want} ${name} out of ${T} in all: ${want}/${T}${simp(want, T)}.` },
     ],
     finalParts: [-1],
@@ -56,7 +56,7 @@ export function explainProbability(p: ProbabilityProblem, answers: AnswerModel):
   const n = expected(answers, "chance", "n"), d = expected(answers, "chance", "d");
   const chance = fracText(n, d);
   return {
-    heading: "Winners over everything",
+    heading: "Ways to win over all the ways",
     idea: ["A chance is the ways to win out of all the ways there are."],
     statement: mt`P(${name}) = ${name} ÷ all`,
     caption: `${want} of the ${T} ${want === 1 ? "is" : "are"} ${name}: P(${name}) = ${chance}.`,
@@ -72,7 +72,7 @@ export function explainProbability(p: ProbabilityProblem, answers: AnswerModel):
       { id: "bag", narration: "You pick one without looking.", math: mt`${p.r} red, ${p.b} blue, ${p.g} green`, state: 0 },
       { id: "want", narration: `The ${name} ones are the ways to win.`, math: mt`${want}`, state: 1, answerStep: "want", result: want },
       { id: "all", narration: "Every marble counts, whatever its color.", math: mt`${p.r} + ${p.b} + ${p.g} = ${T}`, state: 2, answerStep: "all", result: T },
-      { id: "chance", narration: `Ways to win on top, all the marbles on the bottom.${chance === `${want}/${T}` ? "" : " Then simplify."}`, math: n === want && d === T ? mt`P(${name}) = ${frac(want, T)}` : mt`P(${name}) = ${frac(want, T)} = ${frac(n, d)}`, state: 3, answerStep: "chance", result: n },
+      { id: "chance", narration: `Ways to win in the numerator, all the marbles in the denominator.${chance === `${want}/${T}` ? "" : " Then simplify."}`, math: n === want && d === T ? mt`P(${name}) = ${frac(want, T)}` : mt`P(${name}) = ${frac(want, T)} = ${frac(n, d)}`, state: 3, answerStep: "chance", result: n },
     ],
   };
 }

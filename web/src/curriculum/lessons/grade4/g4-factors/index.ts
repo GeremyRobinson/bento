@@ -49,7 +49,7 @@ function answers({ n, t }: FactorsProblem): AnswerModel {
     id, label: `Pair with ${a}`, question: `${count(a, "row")} of how many squares make ${n}?`,
     prompt: s => [num(a), op("×"), s, op("="), num(n)], ans: n / a,
     wrong: slips(n / a, [
-      [n - a, "Subtracted instead", `That's ${n} − ${a}. Look for the number that ${a} times makes ${n}.`],
+      [n - a, "Subtracted instead", `That's ${n} − ${a}. What times ${a} makes ${n}?`],
       [a, "Used the same number", `${a} × ${a} = ${a * a}, not ${n}.`],
     ]),
     hint: `Count by ${a}s until you reach ${n}. How many ${a}s did you count?`,

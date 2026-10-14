@@ -27,7 +27,7 @@ const trinomial = ({ p, qn }: FactorProblem): MathText => [x, sup(2), op("+"), n
 export function factorAnswers({ p, qn }: FactorProblem): AnswerModel {
   return {
     steps: [
-      { id: "pair", label: "Find the two numbers", question: `They multiply to ${p * qn} and add to ${p + qn}:`, prompt: [slot("m"), text(" and "), slot("n")],
+      { id: "pair", label: "Find the two numbers", question: `Which two numbers multiply to ${p * qn} and add to ${p + qn}?`, prompt: [slot("m"), text(" and "), slot("n")],
         note: "Order doesn't matter.", slots: [{ id: "m", expected: p }, { id: "n", expected: qn }], known: [],
         check: twoNums(p, qn, "Right product, wrong sum", "Right sum, wrong product"),
         hint: `Which pair of factors of ${p * qn} adds up to ${p + qn}?`, explain: `${p} × ${qn} = ${p * qn} and ${p} + ${qn} = ${p + qn}.`,
@@ -66,7 +66,7 @@ export function explainFactor(prob: FactorProblem, answers: AnswerModel): Explan
     caption: `${p} × ${q} = ${p * q} and ${p} + ${q} = ${p + q}.`,
     timeline: beats(3),
     steps: [
-      { id: "pair", narration: `They also add to ${p + q}, the middle number.`, math: [num(p), op("×"), num(q), op("="), num(p * q)], state: 1, answerStep: "pair", result: p },
+      { id: "pair", narration: `${p} and ${q} also add to ${p + q}, the middle number.`, math: [num(p), op("×"), num(q), op("="), num(p * q)], state: 1, answerStep: "pair", result: p },
       { id: "factors", narration: `Each number joins an x to make one side of the rectangle.`, math: [x, sup(2), op("+"), num(p + q), x, op("+"), num(p * q), op("="), text("("), x, op("+"), num(p), text(")("), x, op("+"), num(q), text(")")], state: 2, answerStep: "factors", result: p },
     ],
   };

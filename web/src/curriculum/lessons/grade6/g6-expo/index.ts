@@ -49,7 +49,7 @@ function explain(p: ExponentOrderProblem, model: AnswerModel) {
     beats: [
       { id: "count", narration: `The small ${n} says how many ${a}s to multiply together.`, math: [...pow(a, n), op("="), text(Array(n).fill(a).join(" × "))],
         lines: [], answerStep: "count", result: n },
-      { id: "exp", narration: "Work out the exponent first.", math: [...pow(a, n), op("="), num(E)],
+      { id: "exp", narration: "Do the exponent first.", math: [...pow(a, n), op("="), num(E)],
         lines: [[mark(pow(a, n)), op("+"), num(b), op("×"), num(c)]], answerStep: "exp", result: E },
       { id: "mul", narration: "Multiply next, before adding.", math: [num(b), op("×"), num(c), op("="), num(M)],
         lines: [[num(E), op("+"), mark([num(b), op("×"), num(c)])]], answerStep: "mul", result: M },

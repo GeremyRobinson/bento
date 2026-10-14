@@ -63,7 +63,7 @@ function mixedStep(o: { id: string; label: string; question: string; value: numb
       const got = (v.w ?? 0) + v.n / v.d;
       if (Math.abs(got - target) < 1e-9) return { ok: true };
       for (const [x, kind, message] of o.wrong ?? []) if (Math.abs(got - x / o.d) < 1e-9) return { ok: false, kind, message, generic: false };
-      return { ok: false, kind: o.label, message: `Not quite. ${o.hint}`, generic: true };
+      return { ok: false, kind: o.label, message: `${o.hint}`, generic: true };
     },
     hint: o.hint, explain: o.explain,
     // no "0 3/4 in": a whole part of 0 is left off the worked line
@@ -120,7 +120,7 @@ function explain(p: FracLineProblem, model: AnswerModel): Explanation {
   const lines: Record<string, string> = {
     max: `The ${th.most} is the X farthest to the right.`,
     min: `The ${th.least} is the X farthest to the left.`,
-    diff: `Subtract ${said(hi, d)} − ${said(lo, d)}, or count the jumps between.`,
+    diff: `Find ${said(hi, d)} − ${said(lo, d)}, or count the jumps between them.`,
     count: `Count the X's above ${said(p.v, d)}.`,
     total: `Add ${said(p.v, d)} once for each ${th.one}.`,
     longer: `Count only the X's to the right of ${said(p.v, d)}.`,
@@ -135,7 +135,7 @@ function explain(p: FracLineProblem, model: AnswerModel): Explanation {
     // a beat for each step, so the line under the picture ends on the answer, not on the first reading
     timeline: beats(1 + model.steps.length),
     steps: [
-      { id: "drop", narration: "Each thing measured drops an X above its length.", math: words(THINGS[p.thing]!.title), state: 0 },
+      { id: "drop", narration: "Each thing you measured gets an X above its length.", math: words(THINGS[p.thing]!.title), state: 0 },
       ...model.steps.map((s, i) => ({ id: s.id, narration: lines[s.id]!, math: s.work, state: i + 1, answerStep: s.id, result: s.slots.at(-1)!.expected! })),
     ],
   };

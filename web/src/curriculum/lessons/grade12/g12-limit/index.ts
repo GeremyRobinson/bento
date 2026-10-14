@@ -41,7 +41,7 @@ export function limitAnswers({ a, b }: LimitProblem): AnswerModel {
         // the worked line reads (x − 3), not (x + −3)
         work: [text(`${factor(a)}(x ${b < 0 ? "−" : "+"} `), answer("x", Math.abs(b)), text(")")] }),
       ns({ id: "lim", label: "Cancel and plug in", prompt: s => [num(a), op("+"), ...P(b), op("="), ...s], ans: a + b,
-        hint: "Away from the hole, the fraction is just the other factor. Plug x into it to see where the line is heading.", wrong: [[0, "Stopped at 0 ÷ 0", "0 ÷ 0 means simplify, not that the limit is 0."]] }),
+        hint: "Away from the hole, the fraction equals the other factor. Plug x into it to see where the line is heading.", wrong: [[0, "Stopped at 0 ÷ 0", "0 ÷ 0 means simplify, not that the limit is 0."]] }),
     ],
     finalParts: [-1],
   };

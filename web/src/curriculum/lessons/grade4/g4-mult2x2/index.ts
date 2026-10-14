@@ -42,7 +42,7 @@ function answers(p: TwoByTwoProblem): AnswerModel {
         wrong: slips(P[2]!, [[u * s, "Lost the place value", `${10 * s} is ${tens(s)}. ${u} × ${tens(s)} is ${tens(u * s)}: ${P[2]}.`]]),
         hint: `${u} × ${s}, then one zero.`, explain: `${u} × ${10 * s} = ${P[2]}.`, work: [num(u), op("×"), num(10 * s), op("="), num(P[2]!)] }),
       numStep({ id: "oo", label: "Ones × ones", prompt: x => [num(u), op("×"), num(v), op("="), x], ans: P[3]!,
-        wrong: slips(P[3]!, [[u + v, "Added instead", "This one is times, not plus."], [P[3]! - 1, "Fact slip", `Close. Skip-count by ${v}s, ${u} times.`], [P[3]! + 1, "Fact slip", `Close. Skip-count by ${v}s, ${u} times.`], [u * (v - 1), "One group short", `That's ${u} × ${v - 1}. Skip-count by ${v}s, ${u} times.`], [u * (v + 1), "One group too many", `That's ${u} × ${v + 1}. Skip-count by ${v}s, ${u} times.`]]),
+        wrong: slips(P[3]!, [[u + v, "Added instead", "This one is times, not plus."], [P[3]! - 1, "Fact slip", `You're 1 away. Skip-count by ${v}s, ${u} times.`], [P[3]! + 1, "Fact slip", `You're 1 away. Skip-count by ${v}s, ${u} times.`], [u * (v - 1), "One group short", `That's ${u} × ${v - 1}. Skip-count by ${v}s, ${u} times.`], [u * (v + 1), "One group too many", `That's ${u} × ${v + 1}. Skip-count by ${v}s, ${u} times.`]]),
         hint: u === 1 ? "Times 1 leaves a number as it is." : `${u} groups of ${v}: skip-count by ${v}s.`, explain: `${u} × ${v} = ${P[3]}.`, work: [num(u), op("×"), num(v), op("="), num(P[3]!)] }),
       numStep({ id: "sum", label: "Add the parts", prompt: x => [...plusChain(P), op("="), x], ans: total,
         wrong: slips(total, [

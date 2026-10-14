@@ -85,7 +85,7 @@ function answers(p: ConvertProblem): AnswerModel {
     prompt: s => [num(all), op("+"), num(m), op("="), s], ans: all + m,
     wrong: slips(all + m, [
       [all, "Left off the extra", `${amount(p)} has ${m} more ${name(u.small, m)}. Add them on.`],
-      [all + m * f, "Multiplied the extra too", `The ${m} ${name(u.small, m)} are already small units. Just add them.`],
+      [all + m * f, "Multiplied the extra too", `The ${m} ${name(u.small, m)} are already small units. Add them on.`],
     ]),
     hint: `${all} + ${m}.`, explain: `${all} + ${m} = ${all + m} ${smalls}.`,
   }));
@@ -99,12 +99,12 @@ function explain(p: ConvertProblem, model: AnswerModel): Explanation {
   const steps: ExplanationStep[] = [
     { id: "start", state: 0, math: [...shown(p), op("="), text(`? ${smalls}`)], narration: `The top line counts ${u.big[1]}. The bottom line counts ${smalls} for the same amount.` },
     { id: "one", state: 1, answerStep: "one", result: f, math: [num(1), text(` ${one}`), op("="), num(f), text(` ${smalls}`)],
-      narration: `Start with just one ${one}.` },
+      narration: `Start with one ${one}.` },
     { id: "multiply", state: 2, answerStep: "multiply", result: all, math: [num(n), op("×"), num(f), op("="), num(all)],
       narration: `Every ${one} adds ${f} more ${smalls}, so multiply.` },
   ];
   if (m) steps.push({ id: "extra", state: 3, answerStep: "extra", result: total, math: [num(all), op("+"), num(m), op("="), num(total)],
-    narration: `Then hop on the ${m} extra ${name(u.small, m)}.` });
+    narration: `Then add the ${m} extra ${name(u.small, m)}.` });
   return {
     heading: "Big unit to small unit: multiply",
     idea: ["One big unit is always the same number of small units."],

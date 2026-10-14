@@ -29,7 +29,7 @@ function answers({ a, b, k }: RatioProblem): AnswerModel {
       ns({ id: "factor", l: "Find the scale factor", a: s => [num(b), op("×"), ...s, op("="), num(b * k)], ans: k, h: `What times ${b} makes ${b * k}?`,
         w: [[b * k - b, "Added instead of multiplied", "Ratios grow by multiplying, not adding."]] }),
       ns({ id: "scale", l: "Scale the other number", a: s => [num(a), op("×"), num(k), op("="), ...s], ans: a * k, h: `Multiply ${a} by the same number you found for the other part.`,
-        w: [[a + b * k - b, "Added instead of multiplied", "Use the same multiply on both numbers."]] }),
+        w: [[a + b * k - b, "Added instead of multiplied", "Multiply both numbers by the same number."]] }),
     ],
     finalParts: [-1],
   };

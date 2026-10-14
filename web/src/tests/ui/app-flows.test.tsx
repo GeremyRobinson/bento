@@ -15,7 +15,7 @@ describe("first launch: landing → grade → home", () => {
   it("shows the landing page, then the chosen grade's home", () => {
     renderApp({ grade: null, chosen: false });
     expect(screen.getByRole("heading", { level: 1, name: "Math that clicks." })).toBeInTheDocument();
-    expect(screen.getByText("Counting to calculus, with unit tests and a check-up for every grade.")).toBeInTheDocument();
+    expect(screen.getByText("Counting to calculus, with a test for every chapter and every grade.")).toBeInTheDocument();
 
     // the hero box plays three real lesson pictures, one big and two small, each with its grade, all from different grades
     const pics = [...document.querySelectorAll(".lhbox .lhpic")];
@@ -89,7 +89,7 @@ describe("no grade until one is chosen", () => {
     fireEvent.click(screen.getByRole("radio", { name: "Linear algebra" }));
     expect(screen.getByRole("heading", { level: 2, name: "Linear algebra" })).toBeInTheDocument();
     tap("Tell me when it's ready");
-    expect(screen.getByRole("button", { name: /We'll tell you/ })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: /Obento will tell you/ })).toHaveAttribute("aria-pressed", "true");
     // no lesson can start from Bento² yet
     expect(screen.queryByRole("button", { name: /^Start/ })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Obento" }));
@@ -198,14 +198,14 @@ describe("home", () => {
     startPractice();
     tap("Back");
     // the unfinished lesson waits in Today as "Carry on"; each grade's Today keeps showing its own lesson
-    expect(within(today()).getByText("In progress")).toBeInTheDocument();
+    expect(within(today()).getByText("Not finished")).toBeInTheDocument();
     expect(within(today()).getByRole("heading", { level: 2, name: LESSON })).toBeInTheDocument();
     expect(today()).toHaveTextContent("Problem 1 of 6");
     pickGrade("Kindergarten");
-    expect(within(today()).queryByText("In progress")).toBeNull();
+    expect(within(today()).queryByText("Not finished")).toBeNull();
     expect(within(today()).queryByRole("heading", { name: LESSON })).toBeNull();
     pickGrade("5th grade");
-    fireEvent.click(within(today()).getByRole("button", { name: "Carry on" }));
+    fireEvent.click(within(today()).getByRole("button", { name: "Keep going" }));
     expect(screen.getByRole("button", { name: "Check" })).toBeInTheDocument();
   });
 
@@ -218,12 +218,12 @@ describe("home", () => {
     expect(screen.queryByRole("alertdialog")).toBeNull();
     expectGradeHome("5th grade");
     // carrying on comes back to the same step, with the work done so far
-    fireEvent.click(within(today()).getByRole("button", { name: "Carry on" }));
+    fireEvent.click(within(today()).getByRole("button", { name: "Keep going" }));
     expect(document.querySelector(".v-steps .n")).toHaveTextContent(where!);
     solveRun();
     tap("Back to your box");
-    expect(within(today()).queryByText("In progress")).toBeNull();
-    expect(within(today()).queryByRole("button", { name: "Carry on" })).toBeNull();
+    expect(within(today()).queryByText("Not finished")).toBeNull();
+    expect(within(today()).queryByRole("button", { name: "Keep going" })).toBeNull();
   });
 
   it("Escape closes only what's on top: the problem list, then the page steps back to the box, keeping the run (Review)", () => {
@@ -238,7 +238,7 @@ describe("home", () => {
     // with nothing on top, Escape is the island's <: back to the box, the run waiting in Today
     esc();
     expectGradeHome("5th grade");
-    expect(within(today()).getByRole("button", { name: "Carry on" })).toBeInTheDocument();
+    expect(within(today()).getByRole("button", { name: "Keep going" })).toBeInTheDocument();
   });
 
   it("zooms out from a lesson to its chapter, the year and every grade, and opens whatever is tapped", () => {
@@ -296,9 +296,9 @@ describe("unit test and check-up", () => {
   it("runs the grade check-up and records it", () => {
     renderApp();
     startCheckup();
-    expect(screen.getByText("5th grade check-up: no hints, one try per step")).toBeInTheDocument();
+    expect(screen.getByText("5th grade test: no hints, one try per step")).toBeInTheDocument();
     solveRun();
-    expect(document.querySelector(".o-island")).toHaveTextContent("5th grade check-up");
+    expect(document.querySelector(".o-island")).toHaveTextContent("5th grade test");
     tap("Back to your box");
     // the check-up's score shows on its tile in the box's Test view
     view("Test");
@@ -386,7 +386,7 @@ describe("report, grown-up page and back to basics", () => {
     expect(within(done).queryByRole("button", { name: "Practice again" })).toBeNull();
     tap("Back to your box");
     expect(within(today()).getByRole("heading", { level: 2, name: LESSON })).toBeInTheDocument();
-    expect(within(today()).getByRole("button", { name: "Practise" })).toBeInTheDocument();
+    expect(within(today()).getByRole("button", { name: "Practice" })).toBeInTheDocument();
     expect(box().querySelector(".o-cover.sel")).toHaveTextContent(LESSON);
   }, 60000);
 
@@ -432,11 +432,11 @@ describe("report, grown-up page and back to basics", () => {
     expect(today()).toHaveTextContent("Your last skill check scored 1 of 4.");
     act(() => { location.hash = "#/learn/g5-mult2"; dispatchEvent(new HashChangeEvent("hashchange")); });
     const pre = CATALOG.find(c => c.id === CATALOG.find(l => l.id === "g5-mult2")!.pre)!;
-    expect(screen.getByRole("button", { name: new RegExp(`Build up first: ${pre.title}`) })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: new RegExp(`Do this one first: ${pre.title}`) })).toBeInTheDocument();
     tap("Try one");
     failRun();
     expect(screen.getByRole("heading", { level: 2, name: /^[01] of 4 on your own: / })).toBeInTheDocument();
-    const build = screen.getByRole("button", { name: new RegExp(`Build up first: ${pre.title}`) });
+    const build = screen.getByRole("button", { name: new RegExp(`Do this one first: ${pre.title}`) });
     expect((build as HTMLButtonElement).disabled).toBe(!lessonById(pre.id));
     // the done screen offers only the way back (v2 model): Today brings the lesson back for another go
     expect(screen.queryByRole("button", { name: "Practice again" })).toBeNull();

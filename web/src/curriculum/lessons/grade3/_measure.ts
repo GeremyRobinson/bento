@@ -58,7 +58,7 @@ export function operationStep(o: Op, line: string, a: number, unit: string): Ans
     choices: OPS.map(x => `${x} ${OP_NAME[x]}`),
     slots: [{ id: "c", expected: k }],
     known: OPS.flatMap((x, i) => (i === k ? [] : [{ values: { c: i }, kind: OP_SLIP[x][0], message: OP_SLIP[x][1] }])),
-    hint: "What happens in the story? Are amounts put together, is some taken away, are there equal groups, or is an amount shared out?",
+    hint: "What happens in the story? Put together, take away, equal groups, or share?",
     explain: OP_WHY(o, a, unit),
     work: [text(`${line} (${OP_NAME[o].toLowerCase()})`)],
   };

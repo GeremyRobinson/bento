@@ -8,7 +8,7 @@ export const CHOOSE_GRADE = "Choose your grade";
 /** the landing page's one button: it opens the grade picker, like walking into the app (G 2026-10-06) */
 export const START_LEARNING = "Start learning";
 export const FIND_MY_LEVEL = "Find my level";
-export const GRADE_CHECKUP = "Grade check-up";
+export const GRADE_CHECKUP = "Grade test";
 /** the app's name, in one place: the wordmark, the nav's label and the tab title read it (G 2026-10-07 22:38, "Obento is better") */
 export const APP_NAME = "Obento";
 export const ALL_LESSONS = "All lessons";

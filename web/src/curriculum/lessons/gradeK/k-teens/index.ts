@@ -24,7 +24,7 @@ function answers({ ones }: TeenProblem): AnswerModel {
         prompt: s => [text("Extra ones: "), s], ans: ones,
         wrong: slips(ones, [
           [TEN, "Counted the full frame", "That's the full frame. Count the dots in the **second** frame."],
-          [n, "Counted every dot", `That's all the dots. Just count the second frame this time.`],
+          [n, "Counted every dot", `That's all the dots. Count only the second frame this time.`],
           [ones - 1, "Skipped a dot", "One short. Touch each dot in the second frame."],
           [ones + 1, "Counted a dot twice", "One too many. Touch each dot only once."],
         ]),
@@ -38,7 +38,7 @@ function answers({ ones }: TeenProblem): AnswerModel {
           [10 * ones + 1, "Mixed up the digits", `You have the right digits, but the 1 for the ten comes first: ${n}.`],
           [ones, "Forgot the ten", `Don't forget the full frame. Start at ${TEN} and count on ${ones}.`],
           [n - 1, "Counted on one short", `Start at ${TEN}, then say ${TEN + 1} for the first extra dot.`],
-          [n + 1, "Counted on one too many", `One too many. Start at ${TEN} and count on just ${ones}.`],
+          [n + 1, "Counted on one too many", `One too many. Start at ${TEN} and count on only ${ones}.`],
         ]),
         hint: `Say ${TEN} for the full frame. Then count on, one number for each dot in the second frame.`,
         explain: `${TEN} and ${ones} more make ${n}. A teen number is a ten and some ones.`,
@@ -61,7 +61,7 @@ function explain(p: TeenProblem, model: AnswerModel): Explanation {
     steps: [
       { id: "ten", narration: "The first frame is full.", math: [num(TEN)], state: 0 },
       { id: "ones", narration: `Count the second frame: ${countUp(1, ones)}.`, math: [text("Extra ones: "), num(ones)], state: 1, answerStep: "ones", result: ones },
-      { id: "teen", narration: `See the ${ones} in ${n}? That's the extra ones.`, math: [num(TEN), op("+"), num(ones), op("="), num(n)], state: 2, answerStep: "teen", result: n },
+      { id: "teen", narration: `See the ${ones} in ${n}? Those are the extra ones.`, math: [num(TEN), op("+"), num(ones), op("="), num(n)], state: 2, answerStep: "teen", result: n },
     ],
   };
 }

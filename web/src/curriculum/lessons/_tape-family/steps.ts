@@ -76,7 +76,7 @@ export function fs(o: { id?: string; l: string; q?: RichText; a: (s: MathText) =
     if (d === 0) return { ok: false, soft: true, message: "The bottom can't be 0." };
     for (const [bn, bd, kind, message] of o.w ?? []) if (eq(n, bn) && eq(d, bd)) return { ok: false, kind, message, generic: false };
     if (!eq(n * RD, RN * d)) return { ok: false, kind: o.l, message: `Not quite. ${o.h}`, generic: true };
-    if (d < 0) return { ok: false, soft: true, message: "Right amount! Put the minus sign on the top number." };
+    if (d < 0) return { ok: false, soft: true, message: "Right amount. Put the minus sign on the top number." };
     const k = gcd(Math.abs(n), d);
     if (k > 1) return { ok: false, kind: "Not fully simplified", message: `Same amount, but it can be simplified: both numbers divide by ${k}.`, generic: false };
     return { ok: true };
@@ -130,9 +130,9 @@ export function simplifyStep(S: number, L: number, label: string, id = "simplify
         ? `That's not equal to ${S}/${L}. How many whole ${L}s fit into ${S}? That's the whole number. What's left over goes on top.`
         : `That's not equal to ${S}/${L}. Divide the top **and** the bottom by the same number.` };
     }
-    if (dd && n >= dd) return { ok: false, soft: true, message: `That's the right amount! Now write it as a mixed number: how many whole ${dd}s fit into ${n}?` };
+    if (dd && n >= dd) return { ok: false, soft: true, message: `That's the right amount. Now write it as a mixed number. How many whole ${dd}s fit into ${n}?` };
     if (dd && n > 0 && gcd(n, dd) > 1) return { ok: false, kind: "Not fully simplified", generic: false,
-      message: `Same amount, good! But ${n}/${dd} can still be simplified: both ${n} and ${dd} divide by ${gcd(n, dd)}.` };
+      message: `Same amount. ${n}/${dd} can still be simplified. Both ${n} and ${dd} divide by ${gcd(n, dd)}.` };
     return { ok: true };
   };
   return {
@@ -141,7 +141,7 @@ export function simplifyStep(S: number, L: number, label: string, id = "simplify
     note: S > L ? "The top is bigger than the bottom, so pull out the wholes. Use the small box for the whole number."
       : S === L ? "Top and bottom are the same. What whole number is that?"
       : gcd(S, L) > 1 ? "Can both numbers be divided by the same number?"
-      : "If it can't be simplified, just copy it. Leave the whole-number box empty.",
+      : "If it can't be simplified, copy it. Leave the whole-number box empty.",
     prompt: [frac(S, L), op("="), slot("w", true), frac([slot("n")], [slot("d")])],
     slots: [{ id: "w", expected: hasWhole ? F.whole : null }, { id: "n", expected: fracPart ? F.num : null }, { id: "d", expected: fracPart ? F.den : null }],
     known: [],

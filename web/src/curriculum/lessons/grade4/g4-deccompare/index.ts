@@ -66,8 +66,8 @@ function hundredthsStep(id: string, label: string, w: number, h: number, places:
   const wrong: [number, string, string][] = places === 1
     ? [[t, "Read tenths as hundredths", `${partIs(w, X)} ${tenths(t)}. Each tenth is 10 hundredths, so that's ${hund(h)}. Think of it as ${X}0.`]]
     : t === 0
-      ? [[u * 10, "Read hundredths as tenths", `The ${u} is in the hundredths place, two after the point. So it's just ${hund(u)}.`]]
-      : [[t, "Counted only the tenths", `That's just the tenths. ${X} has ${tenths(t)} and ${hund(u)}, which is ${hund(h)}.`]];
+      ? [[u * 10, "Read hundredths as tenths", `The ${u} is in the hundredths place, two after the point. So it's only ${hund(u)}.`]]
+      : [[t, "Counted only the tenths", `That's only the tenths. ${X} has ${tenths(t)} and ${hund(u)}, which is ${hund(h)}.`]];
   return oneBox({
     id, label, question: `How many hundredths are after the point in ${X}?`,
     prompt: s => [text(X), op("="), ...front, s, text(" hundredths")], ans: h,
@@ -128,7 +128,7 @@ function explain(p: DecCompareProblem, model: AnswerModel): Explanation {
   const cols = (n: number) => `${n} full ${n === 1 ? "column" : "columns"}`, sq = (n: number) => `${n} ${n === 1 ? "square" : "squares"}`;
   const say = (X: string, h: number, places: number) => places === 1
     ? `${partIs(w, X)} ${tenths(h / 10)}: ${cols(h / 10)} of the grid.`
-    : h < 10 ? `${partIs(w, X)} just ${sq(h)} of the grid.`
+    : h < 10 ? `${partIs(w, X)} ${sq(h)} of the grid.`
       : `${partIs(w, X)} ${cols(Math.floor(h / 10))}${h % 10 ? ` and ${sq(h % 10)} more` : ""}.`;
   return {
     heading: "Count the same-size pieces",
