@@ -46,13 +46,13 @@ export function buildClock(spec: ClockSpec): SceneDiagram {
       const [x, y] = at(CR + 30, i * 30);
       items.push(t(x, y, String(i * 5), i === k ? "lbl acc" : "sm", { from: beats.count, enter: "pop", delay: 0.12 * i }));
     }
-    // the line under the clock hangs below the count at the bottom (30), by however tall the phone floor draws that count,
-    // so "6:30" never runs into "30" (Review 26fe1f8, g2-time5)
-    const y = CR + 30, under = { transform: `translateY(calc((0.65 * max(20, 20 * var(--px, 0)) + 8) * 1px))` };
-    items.push(t(0, y, spec.text.hour, "lbl down", { from: beats.hour, until: beats.number - 1, enter: "rise", delay: 0.4, vars: under }));
-    items.push(t(0, y, spec.text.number, "lbl down", { from: beats.number, until: beats.count - 1, enter: "rise", delay: 0.4, vars: under }));
-    items.push(t(0, y, spec.text.count, "lbl down", { from: beats.count, until: beats.time - 1, enter: "rise", delay: 0.6, vars: under }));
-    items.push(t(0, y, spec.text.time, "lbl big acc down", { from: beats.time, enter: "rise", vars: under }));
+    // the line under the clock keeps 56 clear of the count at the bottom (30): enough for both at a phone's label floor,
+    // held in the drawing's own units so the clock never shrinks to make room for it (Review 26fe1f8, g2-time5)
+    const y = CR + 86, under = {};
+    items.push(t(0, y, spec.text.hour, "lbl", { from: beats.hour, until: beats.number - 1, enter: "rise", delay: 0.4, vars: under }));
+    items.push(t(0, y, spec.text.number, "lbl", { from: beats.number, until: beats.count - 1, enter: "rise", delay: 0.4, vars: under }));
+    items.push(t(0, y, spec.text.count, "lbl", { from: beats.count, until: beats.time - 1, enter: "rise", delay: 0.6, vars: under }));
+    items.push(t(0, y, spec.text.time, "lbl big acc", { from: beats.time, enter: "rise", vars: under }));
   }
   // room for the count labels even before they show, so the clock never jumps
   return frame("early-g2-clock", items, spec.alt, 14, spec.bare ? {} : { w: 2 * (CR + 44) + 28 });
