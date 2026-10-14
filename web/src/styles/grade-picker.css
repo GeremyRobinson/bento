@@ -95,3 +95,19 @@ body{transition:background-color var(--dur-300) var(--ease) var(--dur-120)}
 .trow .ticon svg{width:68px;height:41px}
 .trow .ticon .tp text,.trow .ticon .tp-panel{display:none}
 .b2pic .tp{width:100%;height:100%}
+
+/* the picked grade's first problem is drawn in that grade's picture colours, like every picture inside the grade
+   (Review g5-full-pass #18: 5th grade is blue, its picture was the base amber). Values: scripts/grade-colours.mjs */
+.gdl:not(.gneutral) .gdpic[data-grade="0"]{--pic-mid:var(--g0-pic-mid);--pic-soft:var(--g0-pic-soft);--pic-deep:var(--g0-pic-deep);--picb-mid:var(--g0-picb-mid);--picb-soft:var(--g0-picb-soft);--picb-deep:var(--g0-picb-deep);--pic-on-mid:var(--g0-pic-on-mid)}
+.gdl:not(.gneutral) .gdpic[data-grade="1"]{--pic-mid:var(--g1-pic-mid);--pic-soft:var(--g1-pic-soft);--pic-deep:var(--g1-pic-deep);--picb-mid:var(--g1-picb-mid);--picb-soft:var(--g1-picb-soft);--picb-deep:var(--g1-picb-deep);--pic-on-mid:var(--g1-pic-on-mid)}
+.gdl:not(.gneutral) .gdpic[data-grade="2"]{--pic-mid:var(--g2-pic-mid);--pic-soft:var(--g2-pic-soft);--pic-deep:var(--g2-pic-deep);--picb-mid:var(--g2-picb-mid);--picb-soft:var(--g2-picb-soft);--picb-deep:var(--g2-picb-deep);--pic-on-mid:var(--g2-pic-on-mid)}
+.gdl:not(.gneutral) .gdpic[data-grade="3"]{--pic-mid:var(--g3-pic-mid);--pic-soft:var(--g3-pic-soft);--pic-deep:var(--g3-pic-deep);--picb-mid:var(--g3-picb-mid);--picb-soft:var(--g3-picb-soft);--picb-deep:var(--g3-picb-deep);--pic-on-mid:var(--g3-pic-on-mid)}
+.gdl:not(.gneutral) .gdpic[data-grade="4"]{--pic-mid:var(--g4-pic-mid);--pic-soft:var(--g4-pic-soft);--pic-deep:var(--g4-pic-deep);--picb-mid:var(--g4-picb-mid);--picb-soft:var(--g4-picb-soft);--picb-deep:var(--g4-picb-deep);--pic-on-mid:var(--g4-pic-on-mid)}
+.gdl:not(.gneutral) .gdpic[data-grade="5"]{--pic-mid:var(--g5-pic-mid);--pic-soft:var(--g5-pic-soft);--pic-deep:var(--g5-pic-deep);--picb-mid:var(--g5-picb-mid);--picb-soft:var(--g5-picb-soft);--picb-deep:var(--g5-picb-deep);--pic-on-mid:var(--g5-pic-on-mid)}
+.gdl:not(.gneutral) .gdpic[data-grade="6"]{--pic-mid:var(--g6-pic-mid);--pic-soft:var(--g6-pic-soft);--pic-deep:var(--g6-pic-deep);--picb-mid:var(--g6-picb-mid);--picb-soft:var(--g6-picb-soft);--picb-deep:var(--g6-picb-deep);--pic-on-mid:var(--g6-pic-on-mid)}
+.gdl:not(.gneutral) .gdpic[data-grade="7"]{--pic-mid:var(--g7-pic-mid);--pic-soft:var(--g7-pic-soft);--pic-deep:var(--g7-pic-deep);--picb-mid:var(--g7-picb-mid);--picb-soft:var(--g7-picb-soft);--picb-deep:var(--g7-picb-deep);--pic-on-mid:var(--g7-pic-on-mid)}
+.gdl:not(.gneutral) .gdpic[data-grade="8"]{--pic-mid:var(--g8-pic-mid);--pic-soft:var(--g8-pic-soft);--pic-deep:var(--g8-pic-deep);--picb-mid:var(--g8-picb-mid);--picb-soft:var(--g8-picb-soft);--picb-deep:var(--g8-picb-deep);--pic-on-mid:var(--g8-pic-on-mid)}
+.gdl:not(.gneutral) .gdpic[data-grade="9"]{--pic-mid:var(--g9-pic-mid);--pic-soft:var(--g9-pic-soft);--pic-deep:var(--g9-pic-deep);--picb-mid:var(--g9-picb-mid);--picb-soft:var(--g9-picb-soft);--picb-deep:var(--g9-picb-deep);--pic-on-mid:var(--g9-pic-on-mid)}
+.gdl:not(.gneutral) .gdpic[data-grade="10"]{--pic-mid:var(--g10-pic-mid);--pic-soft:var(--g10-pic-soft);--pic-deep:var(--g10-pic-deep);--picb-mid:var(--g10-picb-mid);--picb-soft:var(--g10-picb-soft);--picb-deep:var(--g10-picb-deep);--pic-on-mid:var(--g10-pic-on-mid)}
+.gdl:not(.gneutral) .gdpic[data-grade="11"]{--pic-mid:var(--g11-pic-mid);--pic-soft:var(--g11-pic-soft);--pic-deep:var(--g11-pic-deep);--picb-mid:var(--g11-picb-mid);--picb-soft:var(--g11-picb-soft);--picb-deep:var(--g11-picb-deep);--pic-on-mid:var(--g11-pic-on-mid)}
+.gdl:not(.gneutral) .gdpic[data-grade="12"]{--pic-mid:var(--g12-pic-mid);--pic-soft:var(--g12-pic-soft);--pic-deep:var(--g12-pic-deep);--picb-mid:var(--g12-picb-mid);--picb-soft:var(--g12-picb-soft);--picb-deep:var(--g12-picb-deep);--pic-on-mid:var(--g12-pic-on-mid)}

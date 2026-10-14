@@ -84,6 +84,8 @@ export function finalPartsOf(steps: AnswerStep[], finalParts: number[]): AnswerS
 function boxesOf(step: AnswerStep, suffix: string): MathText {
   const ids = answerIds(step.slots);
   if (ids.length === 2 && ids.includes("n") && ids.includes("d")) return [frac([slot("n" + suffix)], [slot("d" + suffix)])];
+  // a mixed number: the small whole-number box, then the fraction, as practice lays out the step (never "?, ?, ?")
+  if (ids.length === 3 && ids.includes("w") && ids.includes("n") && ids.includes("d")) return [slot("w" + suffix, true), frac([slot("n" + suffix)], [slot("d" + suffix)])];
   return ids.flatMap((id, i) => (i ? [text(", "), slot(id + suffix)] : [slot(id + suffix)]));
 }
 
