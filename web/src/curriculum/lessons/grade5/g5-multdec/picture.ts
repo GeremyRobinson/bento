@@ -23,6 +23,8 @@ export function multiplyDecimalsPicture(o: { A: number; B: number; pa: number; p
     cells: y < tall ? [[null], [{ from: 0, color: 0 }]] : [[{ from: 0, color: 0 }]],
     wholeOutlines: 0,
     minRow: 1,
+    // the count under the strip is one label row between the picture and its lines
+    linesLead: 1,
     maxWidth: (360 * x) / wholes,
     maxHeight: tall > 1 ? 260 : 180,
     lines: [
@@ -57,7 +59,7 @@ export function multiplyDecimalsPicture(o: { A: number; B: number; pa: number; p
     { type: "text", x: r1(bx + bs / 2), y: r1(by + bs + 14), text: piece, cls: "sm acc", from: 1, until: 1, enter: "rise", delay: 1 },
   );
   // the count of pieces across
-  items.push({ type: "text", x: r1(xs + g.width / 2), y: r1(bottom + 14), text: `${A} ${PLACE[pa]}`, cls: "lbl sm p0", from: 0, enter: "rise", delay: 0.6 });
+  items.push({ type: "text", x: r1(xs + g.width / 2), y: r1(bottom + 4), text: `${A} ${PLACE[pa]}`, cls: "lbl sm p0 down", from: 0, enter: "rise", delay: 0.6 });
   const width = Math.max(d.width, bx + Math.max(bs, piece.length * 9) + 14);
   // the worked step lit (the shared `lit` role), beat by beat: the strip and the count under it while its pieces are
   // counted (beat 0), the one piece blown up while its size is found (beat 1), the strip again as its pieces are read as
@@ -72,5 +74,5 @@ export function multiplyDecimalsPicture(o: { A: number; B: number; pa: number; p
 
 /** moves the lines under the picture down, to make room for the count under the strip */
 function shiftLines(items: SceneItem[], dy: number): SceneItem[] {
-  return items.map(i => (i.type === "text" && /^lbl acc$/.test(i.cls ?? "") ? { ...i, y: r1(i.y + dy) } : i));
+  return items.map(i => (i.type === "text" && /^lbl acc down$/.test(i.cls ?? "") ? { ...i, y: r1(i.y + dy) } : i));
 }

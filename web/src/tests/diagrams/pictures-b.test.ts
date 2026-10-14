@@ -416,8 +416,8 @@ describe("columns, double line, balance and plane lessons", () => {
       const hops = d.items.filter(i => i.type === "path" && i.cls === "ln thin" && i.from === 2);
       expect(hops).toHaveLength(2 * p.qt);
       // both end points (6 and 60) are marked from the beat the lines are matched: dot and number together
-      // (and lit on that beat: finding them is the step)
-      const ends = textsAt(d, 1).filter(t => t.cls === "lbl lit" && (t.from ?? 0) === 1).map(t => t.text);
+      // (and lit on that beat: finding them is the step) (a number above its line grows up, one below grows down: .up / .down)
+      const ends = textsAt(d, 1).filter(t => /^lbl (up |down )?lit$/.test(t.cls ?? "") && (t.from ?? 0) === 1).map(t => t.text);
       expect(ends).toEqual(expect.arrayContaining([String(p.d * p.qt)]));
       expect(ends).toHaveLength(2);
       expect(textsAt(d, 2).map(t => t.text)).toEqual(expect.arrayContaining([String(p.qt), String(p.d * p.qt)]));

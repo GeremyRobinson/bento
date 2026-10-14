@@ -41,6 +41,9 @@ const BEATS = { one: 0, all: 1, extra: null, total: 2 } as const;
  * in the picture's colour once both lines reach them, their dots and their numbers together, and the hops that count
  * how many times the divisor fits are drawn in the picture's colour, not the ink grey of a plain line.
  */
+/** a tick number marked as a label, still growing away from its line on a phone (.up / .down) */
+const asLabel = (cls?: string) => (cls ?? "").replace(/\b(sm|xs)\b/, "lbl");
+
 function markEnds(d: SceneDiagram, all: number, last: number): SceneDiagram {
   const dots = d.items.filter((i): i is Extract<SceneItem, { type: "circle" }> => i.type === "circle" && i.cls === "dotp");
   const top = dots.reduce<typeof dots[number] | undefined>((a, c) => (!a || c.cy < a.cy ? c : a), undefined);
@@ -50,12 +53,12 @@ function markEnds(d: SceneDiagram, all: number, last: number): SceneDiagram {
     if (it.type === "path" && it.cls === "ln thin pq") return [{ ...it, cls: "ln thin" }];
     if (it.type !== "text" || Math.abs(it.x - top.cx) > 0.5) return [it];
     // the top end's number: plain until the lines are matched, then marked with its dot
-    if (it.y < top.cy && (it.from ?? 0) < all) return [{ ...it, until: all - 1 }, { ...it, cls: "lbl", from: all, enter: "pop", delay: top.delay ?? 0 }];
+    if (it.y < top.cy && (it.from ?? 0) < all) return [{ ...it, until: all - 1 }, { ...it, cls: asLabel(it.cls), from: all, enter: "pop", delay: top.delay ?? 0 }];
     // the bottom end's number: marked from the beat it is found, and it stays marked (the same look carries on)
     if (it.y > bottom.cy) {
-      if ((it.from ?? 0) <= all) return [{ ...it, cls: "lbl", enter: "pop", delay: bottom.delay ?? 0 }];
+      if ((it.from ?? 0) <= all) return [{ ...it, cls: asLabel(it.cls), enter: "pop", delay: bottom.delay ?? 0 }];
       const { enter: _e, delay: _d, ...stays } = it;
-      return [{ ...stays, cls: "lbl" }];
+      return [{ ...stays, cls: asLabel(it.cls) }];
     }
     return [it];
   });
@@ -67,7 +70,7 @@ function markEnds(d: SceneDiagram, all: number, last: number): SceneDiagram {
     ...d,
     items: lightSteps(items, it => it.type !== "text" ? null
       : tick1 != null && Math.abs(it.x - tick1) < 0.5 && (it.from ?? 0) === 0 ? [0]
-      : it.cls === "lbl" && it.from === all ? [all] : null, last),
+      : /^lbl\b/.test(it.cls ?? "") && it.from === all ? [all] : null, last),
   };
 }
 

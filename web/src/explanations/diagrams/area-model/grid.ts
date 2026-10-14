@@ -1,7 +1,7 @@
 // The general area model: a rectangle cut into rows and columns, as a scene.
 // Every use of the current app's areaModel (cell grids, algebra areas, factor rectangles, a triangle as half a rectangle,
 // complex FOIL) is one of these, with sizes, labels and beats all computed from the problem by the lesson.
-import { PIC } from "../scene/picture-system";
+import { PIC, growDown } from "../scene/picture-system";
 import type { SceneDiagram, SceneItem } from "../scene/schema";
 import { r1 } from "../scene/helpers";
 import { seatLines } from "./seats";
@@ -50,6 +50,8 @@ export interface AreaGridSpec {
   wholeOutlines?: number;
   /** lines of text under the picture */
   lines?: PictureLine[];
+  /** label rows a builder puts between the picture and its lines (they grow on a phone too, so the lines move past them) */
+  linesLead?: number;
   /** extra shapes drawn over the grid, placed with the computed layout */
   extras?: (g: AreaGeometry) => SceneItem[];
   /** beat a plain outline of the whole rectangle appears at. Off unless a lesson needs the edge itself (a perimeter, the
@@ -148,7 +150,8 @@ export function buildAreaGrid(spec: AreaGridSpec): SceneDiagram & { geometry: Ar
 
   // labels one label gap from their part (parts sit half an area gap inside the grid lines)
   const lg = PIC.gap.area / 2 - PIC.labelGap;
-  spec.cols.forEach((c, i) => items.push(label((xs[i]! + xs[i + 1]!) / 2, top + lg - PIC.label / 2, c, "lbl", 0.1 + i * 0.15)));
+  // top labels stand on their edge, so a label held at its phone floor grows up, away from its part
+  spec.cols.forEach((c, i) => items.push(label((xs[i]! + xs[i + 1]!) / 2, top + lg + 2, c, "lbl up", 0.1 + i * 0.15)));
   spec.rows.forEach((r, j) => items.push(label(left + lg, (ys[j]! + ys[j + 1]!) / 2, r, "lbl end", 0.1 + j * 0.15)));
 
   // whole unit squares behind everything, when the sides are not whole (a strip of tenths laid on whole squares)
@@ -217,7 +220,9 @@ export function buildAreaGrid(spec: AreaGridSpec): SceneDiagram & { geometry: Ar
   const width = Math.max(left + Math.max(g.width, outlineW) + 14, lineW + 24);
   const cx = Math.min(Math.max(left + g.width / 2, lineW / 2 + 12), width - lineW / 2 - 12);
   const { rowOf, count } = lineRows(lines);
-  lines.forEach((l, k) => items.push({ type: "text", x: r1(cx), y: r1(top + g.height + 28 + rowOf[k]! * 26), text: l.text, cls: l.cls ?? "lbl acc", from: l.from, ...(l.until != null ? { until: l.until } : {}), enter: "rise" }));
+  // each line hangs from its top edge and moves down by what the rows above it grew on a phone (growDown)
+  const lead = spec.linesLead ?? 0;
+  lines.forEach((l, k) => items.push({ type: "text", x: r1(cx), y: r1(top + g.height + 16 + rowOf[k]! * 26), text: l.text, cls: `${l.cls ?? "lbl acc"} down`, from: l.from, ...(l.until != null ? { until: l.until } : {}), enter: "rise", ...(lead + rowOf[k]! ? { vars: growDown(lead + rowOf[k]!) } : {}) }));
 
   return {
     kind: "scene", family: spec.family ?? "area-model",

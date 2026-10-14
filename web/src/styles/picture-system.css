@@ -77,6 +77,10 @@
 #app .viz-svg text.big:not(.lbl){font-size:max(var(--d-text-xl),calc(var(--pic-label) * var(--px,0)))}
 #app .viz-svg text.lbl{fill:var(--deep);font-size:max(var(--pic-label),calc(var(--pic-label) * var(--px,0)));font-weight:var(--w-bold)}
 #app .viz-svg text.lbl.big{font-size:max(var(--d-text-lg),calc(var(--pic-label) * var(--px,0)))}
+/* a label above its part stands on its bottom edge (.up) and one below hangs from its top edge (.down), so a label held
+   at its phone floor grows away from what it names, never into it */
+#app .viz-svg text.up{dominant-baseline:text-after-edge}
+#app .viz-svg text.down{dominant-baseline:text-before-edge}
 #app .viz-svg :is(text.acc,text.pq,.pq text,text.okmark,text.lbl.pw,text.res){fill:var(--v-ink)}
 #app .viz-svg :is(text.xs,text.muted,text.lbl.muted){fill:var(--v-muted)}
 /* text sitting on a mid part (after the muted rule: a small count on a shaded piece is a result, not a note) */
