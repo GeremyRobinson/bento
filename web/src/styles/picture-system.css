@@ -191,12 +191,12 @@
   #app .v-pic.cv [data-a="rise"]{animation-name:cv-rise;animation-timing-function:var(--m-ease)}
   #app .v-pic.cv [data-a="slide"]{animation-name:cv-slide;animation-duration:var(--m-grow);animation-timing-function:var(--m-ease)}
   #app .v-pic.cv [data-a="grow"]{transform-origin:center bottom;animation-name:cv-grow;animation-duration:var(--m-in);animation-timing-function:var(--m-ease)}
-  #app .v-pic.cv [data-a="fill"],#app .v-pic.cv [data-a="shrink"]{transform-origin:center bottom;animation-name:cv-fill;animation-duration:1.1s;animation-timing-function:var(--m-ease)}
+  #app .v-pic.cv [data-a="fill"],#app .v-pic.cv [data-a="shrink"]{transform-origin:center bottom;animation-name:cv-fill;animation-duration:calc(var(--m-beat) + var(--m-close));animation-timing-function:var(--m-ease)}
   #app .v-pic.cv [data-a="shrink"]{animation-name:cv-shrink}
-  #app .v-pic.cv [data-a="pour"]{transform-origin:center top;animation-name:cv-pour;animation-duration:1.2s;animation-timing-function:linear}
-  #app .v-pic.cv [data-a="spin"]{transform-origin:center;animation-name:cv-spin;animation-duration:1.2s;animation-timing-function:var(--m-ease)}
-  #app .v-pic.cv [data-a="sweep"]{transform-box:view-box;animation-name:cv-sweep;animation-duration:1s;animation-timing-function:var(--m-settle)}
-  #app .v-pic.cv .cv-out{animation:cv-out var(--m-grow) var(--m-ease) .3s both}
+  #app .v-pic.cv [data-a="pour"]{transform-origin:center top;animation-name:cv-pour;animation-duration:calc(var(--m-beat) + var(--m-out));animation-timing-function:linear}
+  #app .v-pic.cv [data-a="spin"]{transform-origin:center;animation-name:cv-spin;animation-duration:calc(var(--m-beat) + var(--m-out));animation-timing-function:var(--m-ease)}
+  #app .v-pic.cv [data-a="sweep"]{transform-box:view-box;animation-name:cv-sweep;animation-duration:calc(var(--m-beat) + var(--m-swap));animation-timing-function:var(--m-settle)}
+  #app .v-pic.cv .cv-out{animation:cv-out var(--m-grow) var(--m-ease) var(--m-close) both}
 }
 @keyframes cv-pop{from{opacity:0;transform:scale(.4)}}
 @keyframes cv-drop{from{opacity:0;transform:translateY(-14px)}}

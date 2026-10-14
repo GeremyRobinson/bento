@@ -38,10 +38,17 @@ export function SceneDiagram({ diagram: given, at, fit = false }: { diagram: Sce
       if (box0) setFrame({ d, box: floorBox(el, d.items, box0, [r.width, r.height], d.grow ?? GROW), size: [r.width, r.height], text, panel });
     };
     measure();
-    if (typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(measure);
-    ro.observe(room);
-    return () => ro.disconnect();
+    // the frame is the text measured at its own size, so text measured in the fallback font (a cold first load, before
+    // Inter is in) frames the picture too wide and it stays that way: measure again once the fonts are in
+    // (Review 4746e11: polyd framed 667.8 wide on a first load, 374.5 after)
+    let alive = true;
+    const again = () => { if (alive) measure(); };
+    const fonts = typeof document !== "undefined" ? document.fonts : undefined;
+    fonts?.ready.then(again);
+    fonts?.addEventListener?.("loadingdone", again);
+    const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+    ro?.observe(room);
+    return () => { alive = false; fonts?.removeEventListener?.("loadingdone", again); ro?.disconnect(); };
   }, [d, given, picked, fit, ref]);
   // fit centres the finished picture once (the frame above); parts then appear where they stay, and nothing already
   // drawn moves between beats (G 19:34: "random coming from the side animations")
