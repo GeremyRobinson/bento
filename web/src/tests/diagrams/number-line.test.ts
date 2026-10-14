@@ -19,7 +19,9 @@ export function layoutProblems(d: SceneDiagram, beatsCount: number): string[] {
     const size = sizeOf(t.cls), w = textWidth(t.text + (t.sup ?? ""), size);
     // a label pinned to an edge ("end" / "start") runs from its anchor inward
     const x0 = /\bend\b/.test(t.cls ?? "") ? t.x - w : /\bstart\b/.test(t.cls ?? "") ? t.x : t.x - w / 2;
-    return { t, x0, x1: x0 + w, y0: t.y - size / 2, y1: t.y + size / 2, from: t.from ?? 0, until: t.until ?? beatsCount };
+    // one standing on its anchor (.up) runs up from it, one hanging (.down) runs down
+    const y0 = /\bup\b/.test(t.cls ?? "") ? t.y - size : /\bdown\b/.test(t.cls ?? "") ? t.y : t.y - size / 2;
+    return { t, x0, x1: x0 + w, y0, y1: y0 + size, from: t.from ?? 0, until: t.until ?? beatsCount };
   });
   for (const b of boxes) {
     if (b.x0 < -1 || b.x1 > d.width + 1 || b.y0 < -1 || b.y1 > d.height + 1) out.push(`"${b.t.text}" runs off the ${d.width}×${d.height} canvas`);

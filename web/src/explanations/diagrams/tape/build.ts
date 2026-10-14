@@ -4,7 +4,7 @@
 import type { SceneDiagram, SceneItem } from "../scene/schema";
 import { r1 } from "../scene/helpers";
 import type { Beats, TapeRow, TapeSpec, TapeText } from "./schema";
-import { PIC, roomLeft, thinOut } from "../scene/picture-system";
+import { PIC, fitIn, roomLeft, spreadRows, thinOut } from "../scene/picture-system";
 
 const M = 10; // outer margin
 const BRACKET = 28; // room for a bracket and its text
@@ -86,7 +86,8 @@ const layersAt = (row: TapeRow, beat: number) => layerAt(layersOf(row), beat);
 const thinCount = (k: number, pw: number, h: number, chars: number, big: boolean) => {
   const size = big ? FS.each : FS.small, floor = big ? PIC.label : 14;
   // across: room for the number in its piece (every other one first); up: room for its height in the bar (1.2 of its size)
-  return { vars: thinOut(roomLeft((k & -k) * pw, chars, size, floor), roomLeft(h + 4, 1.94, size, floor)) };
+  // it shrinks to fit its piece first (fitIn), so only what can't fit even at 14 on screen thins out
+  return { vars: { ...fitIn(pw, chars, size, floor), ...thinOut(roomLeft((k & -k) * pw, chars, 14), roomLeft(h + 4, 1.94, 14)) } };
 };
 
 export interface TapeLayout {
@@ -291,12 +292,16 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
       }
     }
 
-    // many rows on a short phone: a one-line side label fades where the floor would grow it into the next row's, every
-    // other row first, so the top row always keeps its label (Review g5 re-walk: unit-divide's stacked 1s)
-    const pitch = (L.rowTops[1] ?? top + h) - (L.rowTops[0] ?? top);
-    const thinRowLabel = (x: SceneItem): SceneItem =>
-      ri > 0 && spec.rows.length > 2 && x.type === "text" && !/\//.test(x.text)
-        ? { ...x, vars: { ...x.vars, ...thinOut(roomLeft((ri & -ri) * pitch, 1.94, FS.label, PIC.label)) } } : x;
+    // rows thinner than a label at its floor (phones): fractions, and any two rows' labels, spread apart (add's 2/6 and
+    // 5/6); more rows' whole-number labels fade every other row, the top row's label and the bottom row's total always kept (unit-divide's 1s
+    // and its 3, 6, 9, 12, 15)
+    const n = spec.rows.length, pitch = (L.rowTops[1] ?? top + h) - (L.rowTops[0] ?? top);
+    const frac = spec.rows.some(r => (r.label ?? []).concat(r.total ?? []).some(t => t.text.includes("/")));
+    const fitRow = (k: number) => (x: SceneItem): SceneItem =>
+      n > 1 && (n === 2 || frac) && (x.type === "text" || x.type === "line") ? { ...x, vars: { ...x.vars, ...spreadRows(ri, n, pitch) } }
+        : n > 2 && k > 0 && x.type === "text" ? { ...x, vars: { ...x.vars, ...thinOut(roomLeft((k & -k) * pitch, 1.94, FS.label, PIC.label)) } }
+        : x;
+    const thinRowLabel = fitRow(ri), thinRowTotal = fitRow(n - 1 - ri);
     for (const t of row.label ?? []) {
       const run = within(t.from ?? 0, t.until, row);
       // side labels end one label gap before the bars, so a label held at its on-screen floor (phones) grows away
@@ -305,7 +310,7 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
     }
     for (const t of row.total ?? []) {
       const run = within(t.from ?? 0, t.until, row);
-      if (run) textAt(t, X(start + row.length) + PIC.labelGap, top + h / 2, "lbl pw", "start", run);
+      if (run) { const at = items.length; textAt(t, X(start + row.length) + PIC.labelGap, top + h / 2, "lbl pw", "start", run); items.splice(at, items.length - at, ...items.slice(at).map(thinRowTotal)); }
     }
   });
 

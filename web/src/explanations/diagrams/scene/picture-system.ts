@@ -32,6 +32,22 @@ export const PIC = {
 export const growDown = (rows: number): Record<string, string> =>
   rows > 0 ? { transform: `translateY(calc(${Math.round(rows * 125) / 100} * (max(${PIC.label}, ${PIC.label} * var(--px, 0)) - ${PIC.label}) * 1px))` } : {};
 
+/**
+ * Row labels on a phone whose rows are thinner than a label at its floor: row `i` of `n` moves away from the middle by
+ * its share of the overlap, so two labels side by side never touch (a 2-row tape's 2/6 and 5/6). Spread into `vars`.
+ */
+export const spreadRows = (i: number, n: number, pitch: number): Record<string, string> => ({
+  transform: `translateY(calc(${Math.round((i - (n - 1) / 2) * 100) / 100} * max(0, 1.3 * max(${PIC.label}, ${PIC.label} * var(--px, 0)) - ${Math.round(pitch * 10) / 10}) * 1px))`,
+});
+
+/**
+ * A number inside a piece keeps its size while it fits there, then shrinks to fit, never under the 14px floor on screen
+ * (units' 100s on a 360 phone). Spread into `vars` with thinOut for what still can't fit.
+ */
+export const fitIn = (room: number, chars: number, size: number, floor = 14): Record<string, string> => ({
+  fontSize: `calc(max(14 * var(--px, 0), min(max(${size}, ${floor} * var(--px, 0)), (${Math.round(room * 10) / 10} - 4 * var(--px, 0)) / ${Math.round(chars * 0.62 * 100) / 100})) * 1px)`,
+});
+
 /** How many picture units are left once `chars` characters at their on-screen size (`size` units, never under 14px on
  * screen; a label's floor is 20) and 4px of air are taken out of `room` picture units (a CSS expression; under 0 means they touch). */
 export const roomLeft = (room: number, chars: number, size: number, floor = 14): string =>

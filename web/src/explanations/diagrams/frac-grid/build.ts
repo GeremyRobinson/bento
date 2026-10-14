@@ -3,7 +3,7 @@
 import type { SceneDiagram, SceneItem } from "../scene/schema";
 import { r1 } from "../scene/helpers";
 import { lineRows, type PictureLine } from "../area-model/grid";
-import { PIC, growDown } from "../scene/picture-system";
+import { PIC, fitIn, growDown, roomLeft, thinOut } from "../scene/picture-system";
 import { litRuns } from "../tape/build";
 import type { Beats } from "../tape/schema";
 
@@ -65,7 +65,9 @@ export function buildFracGrid(spec: FracGridSpec): SceneDiagram {
     const tick = Math.min(0.2, 1.4 / Math.max(1, r * c));
     for (let i = 0; i < r; i++) for (let j = 0; j < c; j++) {
       const b = box(i, j, g);
-      items.push({ type: "text", x: r1(b.x + b.w / 2), y: r1(b.y + b.h / 2), text: String(i * c + j + 1), cls: "lbl lit", vars: { "--deep": "var(--v-card)" }, from: beats.count, enter: "rise", delay: r1((i * c + j) * tick) });
+      // on a phone a count shrinks to fit its square, then every other one fades (1/6 × 3/8's 48 small squares)
+      const k = i * c + j + 1, fit = { ...fitIn(b.w, nums, PIC.label, PIC.label), ...thinOut(roomLeft((k & -k) * cell, nums, 14), roomLeft(b.h + 4, 1.94, 14)) };
+      items.push({ type: "text", x: r1(b.x + b.w / 2), y: r1(b.y + b.h / 2), text: String(k), cls: "lbl lit", vars: { "--deep": "var(--v-card)", ...fit }, from: beats.count, enter: "rise", delay: r1((i * c + j) * tick) });
     }
   }
   // roles (handoff-6): the first fraction (rows) blue, the second (columns) orange, the overlap being found amber
@@ -78,7 +80,7 @@ export function buildFracGrid(spec: FracGridSpec): SceneDiagram {
   if (c > 0) {
     const x0 = left + 2, x1 = left + c * cell - 2, y = top - 10;
     items.push({ type: "path", d: `M${r1(x0)} ${r1(y + 6)} V${r1(y)} H${r1(x1)} V${r1(y + 6)}`, cls: "ln p1", from: beats.cols, enter: "draw", delay: r1(colsAt) });
-    items.push(...litRuns({ type: "text", x: r1((x0 + x1) / 2), y: r1(y - PIC.labelGap - PIC.label / 2), text: spec.colLabel, cls: "lbl p1", from: beats.cols, enter: "rise", delay: r1(colsAt + 0.3) }, lit.cols));
+    items.push(...litRuns({ type: "text", x: r1((x0 + x1) / 2), y: r1(y - PIC.labelGap + 4), text: spec.colLabel, cls: "lbl p1 up", from: beats.cols, enter: "rise", delay: r1(colsAt + 0.3) }, lit.cols));
   }
   const gridH = rows * cell, notes = spec.notes ?? [];
   const noteW = Math.max(0, ...notes.map(n => n.text.length * 10.2));

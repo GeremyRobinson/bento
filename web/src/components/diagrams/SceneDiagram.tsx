@@ -174,8 +174,19 @@ function contentBox(svg: SVGSVGElement, items: SceneItem[], atPx: number): Box |
   const px = svg.style.getPropertyValue("--px");
   svg.style.setProperty("--px", String(atPx));
   try {
-    const b = g.getBBox();
-    return b.width > 0 && b.height > 0 ? { x: b.x, y: b.y, w: b.width, h: b.height } : null;
+    // each part where it is drawn: its own CSS move (a label spread off its row on a phone, spreadRows) is not in a
+    // group's bounding box, so it is added here
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const e of Array.from(g.children) as SVGGraphicsElement[]) {
+      const cs = getComputedStyle(e);
+      if (cs.display === "none") continue;
+      const b = e.getBBox();
+      if (!(b.width > 0 || b.height > 0)) continue;
+      const m = cs.transform && cs.transform !== "none" ? new DOMMatrix(cs.transform) : null;
+      const dx = m?.e ?? 0, dy = m?.f ?? 0;
+      x0 = Math.min(x0, b.x + dx); y0 = Math.min(y0, b.y + dy); x1 = Math.max(x1, b.x + b.width + dx); y1 = Math.max(y1, b.y + b.height + dy);
+    }
+    return x1 > x0 && y1 > y0 ? { x: x0, y: y0, w: x1 - x0, h: y1 - y0 } : null;
   } catch {
     return null;
   } finally {

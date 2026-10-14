@@ -4,6 +4,7 @@
 import { formatNumber } from "../../../curriculum/schemas/math-text";
 import type { SceneDiagram, SceneItem } from "../scene/schema";
 import { r1 } from "../scene/helpers";
+import { PIC } from "../scene/picture-system";
 
 /** A jump along the line, drawn as an arc. Hops below the line count the other way: what's taken away, part orange. */
 export interface Hop {
@@ -148,6 +149,21 @@ export function buildNumberLine(spec: NumberLineSpec): SceneDiagram {
     ...(o.delay != null || extra ? { delay: r1((o.delay ?? 0) + extra) } : {}),
   });
 
+  // which side of its point a mark's label sits: above any arc that passes over the mark, so the label never sits on a
+  // hop; when hops only end at the mark, beside the point on the side away from them instead of floating over the arc
+  const besideOf = (m: Mark): -1 | 0 | 1 => {
+    if (!m.label || m.below) return 0;
+    const up = hops.filter(h => !h.below && h.from !== h.to && Math.min(h.from, h.to) <= m.v && m.v <= Math.max(h.from, h.to));
+    const ends = up.filter(h => Math.abs(h.from - m.v) < 1e-9 || Math.abs(h.to - m.v) < 1e-9);
+    const away = new Set(ends.map(h => (Math.max(h.from, h.to) - m.v < 1e-9 ? 1 : -1)));
+    const beside = up.length > 0 && ends.length === up.length && away.size === 1 ? [...away][0]! : 0;
+    const lw = textWidth(m.label, 17), bx = x(m.v) + beside * (lw / 2 + 6);
+    return bx - lw / 2 < 2 || bx + lw / 2 > W - 2 ? 0 : (beside as -1 | 1); // no room beside it at the end of the line: back over the arcs
+  };
+  // a label beside its point sits on the line's own height, its bottom BESIDE above the axis, and grows away from the point
+  const stacked = new Set<Mark>();
+  const BESIDE = 10, LIFT = { transform: `translateY(calc(-1.25 * (max(${PIC.label}, ${PIC.label} * var(--px, 0)) - ${PIC.label}) * 1px))` };
+
   // hops: arcs and dots, then labels; in a run of short hops a label that would hit its neighbour's is left off.
   // Arcs below the line hang from under the tick numbers, so they never run through them.
   const UNDER = 34;
@@ -160,9 +176,22 @@ export function buildNumberLine(spec: NumberLineSpec): SceneDiagram {
     raw.push({ type: "arc", arc: { x1, x2, mx, c: dir * hh * 2, y0: h.below ? UNDER : 0 }, cls: p1 ? "ln p1" : "ln", enter: "draw", ...timing(h, 0.1) });
     if (h.land !== false) raw.push({ type: "circle", cx: r1(x2), cy: 0, r: 7, cls: p1 ? "dotp p1" : "dotp", enter: "pop", ...timing(h, 0.55) });
     if (!h.label) continue;
-    const w = textWidth(h.label, 17), ly = h.below ? UNDER + hh + 14 : -hh - 14;
+    const w = textWidth(h.label, 17);
+    // a short hop with a mark's label beside one of its ends (round's 46.499 → 46.5): its label stacks over that one,
+    // lifted by what that label grows on a phone, so the two never meet at any size
+    const nextTo = marks.find(m => besideOf(m) && (Math.abs(m.v - h.from) < 1e-9 || Math.abs(m.v - h.to) < 1e-9)
+      && Math.abs(x(m.v) + besideOf(m) * (textWidth(m.label!, 17) / 2 + BESIDE) - mx) < (w + textWidth(m.label!, 17)) * 0.9);
+    if (nextTo) stacked.add(nextTo);
+    const ly = h.below ? UNDER + hh + 14 : -hh - 14;
     const probe: Box = { x: clampX(mx, w), y: ly, w, h: 60, ...windowOf(h) };
     if (hopLabels.some(o => meets(o, probe))) continue;
+    if (nextTo) {
+      // standing on its arc and above that label, growing up (.up)
+      const box = place(h.label, mx, Math.min(-hh - 4, -BESIDE - 25) - 11, -1, 17, windowOf(h));
+      hopLabels.push(box);
+      raw.push({ type: "text", x: r1(box.x), y: r1(box.y + 11), text: h.label, cls: `${p1 ? "lbl p1" : "lbl"} up`, vars: LIFT, enter: "rise", ...timing(h, 0.35) });
+      continue;
+    }
     const box = place(h.label, mx, ly, h.below ? 1 : -1, 17, windowOf(h));
     hopLabels.push(box);
     raw.push({ type: "text", x: r1(box.x), y: r1(box.y), text: h.label, cls: p1 ? "lbl p1" : "lbl", enter: "rise", ...timing(h, 0.35) });
@@ -184,14 +213,14 @@ export function buildNumberLine(spec: NumberLineSpec): SceneDiagram {
       raw.push({ type: "text", x: r1(box.x), y: r1(box.y), text: m.label, cls: "lbl p1", enter: "rise", ...timing(m, 0.2) });
       continue;
     }
-    // above any arc that passes over the mark, so the label never sits on a hop; when hops only end at the mark,
-    // the label sits beside the point on the side away from them instead of floating over the arc
+    const beside = besideOf(m), lw = textWidth(m.label, 17);
+    if (beside && stacked.has(m)) {
+      // beside its point: anchored at the point's edge, so a label held at its phone floor grows away from the dot
+      placed.push({ x: x(m.v) + beside * (lw / 2 + BESIDE), y: -BESIDE - 11, w: lw, h: 21, ...windowOf(m) });
+      raw.push({ type: "text", x: r1(x(m.v) + beside * BESIDE), y: -BESIDE, text: m.label, cls: `lbl up ${beside < 0 ? "end" : "start"}`, enter: "rise", ...timing(m, 0.2) });
+      continue;
+    }
     const up = hops.filter(h => !h.below && h.from !== h.to && Math.min(h.from, h.to) <= m.v && m.v <= Math.max(h.from, h.to));
-    const ends = up.filter(h => Math.abs(h.from - m.v) < 1e-9 || Math.abs(h.to - m.v) < 1e-9);
-    const away = new Set(ends.map(h => (Math.max(h.from, h.to) - m.v < 1e-9 ? 1 : -1)));
-    let beside = up.length > 0 && ends.length === up.length && away.size === 1 ? [...away][0]! : 0;
-    const lw = textWidth(m.label, 17), bx = x(m.v) + beside * (lw / 2 + 6);
-    if (bx - lw / 2 < 2 || bx + lw / 2 > W - 2) beside = 0; // no room beside it at the end of the line: back over the arcs
     const over = beside ? [] : up.map(h => hopHeight(Math.abs(x(h.to) - x(h.from))) + 30);
     const box = place(m.label, x(m.v) + beside * (lw / 2 + 6), -Math.max(22, ...over), -1, 17, windowOf(m));
     raw.push({ type: "text", x: r1(box.x), y: r1(box.y), text: m.label, cls: "lbl", enter: "rise", ...timing(m, 0.2) });
@@ -201,7 +230,7 @@ export function buildNumberLine(spec: NumberLineSpec): SceneDiagram {
   const extent = (it: Draft): [number, number] => {
     switch (it.type) {
       case "arc": return [it.arc.y0 + Math.min(0, it.arc.c / 2), it.arc.y0 + Math.max(0, it.arc.c / 2)];
-      case "text": return [it.y - 11, it.y + 11];
+      case "text": return /\bup\b/.test(it.cls ?? "") ? [it.y - 22, it.y] : /\bdown\b/.test(it.cls ?? "") ? [it.y, it.y + 22] : [it.y - 11, it.y + 11];
       case "circle": return [it.cy - it.r, it.cy + it.r];
       case "line": return [Math.min(it.y1, it.y2), Math.max(it.y1, it.y2)];
       default: return [0, 0];
@@ -223,6 +252,7 @@ export function buildNumberLine(spec: NumberLineSpec): SceneDiagram {
       // "60 ÷ 4 = 15 jumps" spilled its landing card)
       case "text": {
         const half = textWidth(it.text, 17) / 2, y = r1(it.y + dy);
+        if (/\b(end|start)\b/.test(it.cls ?? "")) return { ...it, y };
         if (it.x + half > W - 4) return { ...it, x: W - 4, y, cls: `${it.cls ?? ""} end`.trim() };
         if (it.x - half < 4) return { ...it, x: 4, y, cls: `${it.cls ?? ""} start`.trim() };
         return { ...it, y };
