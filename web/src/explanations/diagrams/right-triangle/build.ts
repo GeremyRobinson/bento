@@ -3,6 +3,7 @@
 // each appearing at the beat the lesson gives.
 import type { SceneDiagram } from "../scene/schema";
 import { add, angleLabelAt, arc, dist, frame, mid, path, poly, seg, t, type Draft, type Pt } from "../geo/kit";
+import { fitClass } from "../scene/picture-system";
 
 export type Side = "a" | "b" | "c";
 interface Shown { from?: number; until?: number }
@@ -34,11 +35,13 @@ const beat = (s: Shown): Partial<Draft> => ({ ...(s.from ? { from: s.from } : {}
 export function buildRightTriangle(spec: RightTriangleSpec): SceneDiagram {
   const { a, b } = spec;
   if (!(a > 0 && b > 0)) throw new Error("legs must be positive");
-  const box = spec.box ?? 380;
+  // drawn at about a phone's picture size (a strip 143-187 tall), so its labels, laid out here at their phone size, land
+  // where they are drawn; on a tablet the picture grows to its box and its text grows less
+  const box = spec.box ?? 180;
   const sq = spec.squares ?? {};
   const anySquare = !!(sq.a || sq.b || sq.c);
-  // with squares the drawing spans (2a + b) across and (a + 2b) down; without, just the triangle
-  const u = anySquare ? Math.min(box / (2 * a + b), box / (a + 2 * b)) : Math.min(box / b, (box * 0.7) / a);
+  // with squares the drawing spans (2a + b) across and (a + 2b) down; without, just the triangle (a wide strip's shape)
+  const u = anySquare ? Math.min(box / (2 * a + b), box / (a + 2 * b)) : Math.min((box * 1.2) / b, (box * 0.8) / a);
   const A: Pt = [0, 0], B: Pt = [b * u, 0], C: Pt = [0, -a * u];
   const sides: Record<Side, [Pt, Pt]> = { a: [A, C], b: [A, B], c: [B, C] };
   // outward square on each side (away from the triangle)
@@ -58,17 +61,20 @@ export function buildRightTriangle(spec: RightTriangleSpec): SceneDiagram {
     const side = dist(pts[0]!, pts[1]!);
     // roles (handoff-6): a² is part 1 (blue), b² part 2 (orange), c² the square being found (amber, dashed)
     items.push(poly(pts, k === "c" ? "sq big dash" : `cell c${k === "a" ? 0 : 1}`, { ...beat(s), enter: "pop" }));
-    // two lines inside: the side squared, then the area. A square too small for both keeps the area inside
-    // and puts the side squared just outside, on the side away from the triangle.
-    const roomy = side >= 66;
-    const gap = 16;
+    // two lines inside: the side squared, then the area, meeting at the middle and each held by the edge facing the
+    // other (up / down), so the phone's floor grows them apart toward the square's edges. A square too small for both
+    // keeps the area inside and puts the side squared just outside, on the side away from the triangle.
+    const roomy = side >= 46;
     for (const top of s.top) {
       const shown = { ...(top.sup ? { sup: top.sup } : {}), ...beat({ from: top.from ?? s.from, ...(top.until != null ? { until: top.until } : {}) }), enter: "rise" as const };
-      if (roomy) items.push(t(centre[0], centre[1] - gap, top.text, top.cls ?? "sm", shown));
+      // a word too wide for its square on a phone (b = 8 on a thin square) shrinks to fit it, never under 14px
+      const fit = fitClass(side - 6, top.text.length + (top.sup ? 0.7 : 0), top.cls ?? "sm");
+      if (roomy) items.push(t(centre[0], centre[1] - 1, top.text, `${top.cls ?? "sm"} up`, { ...shown, vars: fit }));
       else if (k === "a") items.push(t(centre[0] - side / 2 - 8, centre[1], top.text, `${top.cls ?? "sm"} end`, shown));
-      else items.push(t(centre[0], centre[1] + side / 2 + 14, top.text, top.cls ?? "sm", shown));
+      else items.push(t(centre[0], centre[1] + side / 2 + 6, top.text, `${top.cls ?? "sm"} down`, shown));
     }
-    items.push(t(centre[0], roomy ? centre[1] + gap * 0.75 : centre[1], s.area, `lbl${side >= 40 ? " big" : ""}${k === "c" ? " acc" : k === "a" ? " p0" : " p1"}`, { from: s.areaFrom, enter: "rise" }));
+    const areaCls = `lbl${side >= 40 ? " big" : ""}${k === "c" ? " acc" : k === "a" ? " p0" : " p1"}${roomy ? " down" : ""}`;
+    items.push(t(centre[0], roomy ? centre[1] + 1 : centre[1], s.area, areaCls, { from: s.areaFrom, enter: "rise", vars: fitClass(side - 6, s.area.length, areaCls) }));
   });
 
   items.push(poly([A, B, C], "ln fillsoft", { enter: "draw" }));
@@ -78,7 +84,7 @@ export function buildRightTriangle(spec: RightTriangleSpec): SceneDiagram {
   // side labels sit outside the triangle; a side whose square is showing is labelled by the square instead
   const outside: Record<Side, { at: Pt; cls: string }> = {
     a: { at: [-12, -(a * u) / 2], cls: "end" },
-    b: { at: [(b * u) / 2, 20], cls: "" },
+    b: { at: [(b * u) / 2, 7], cls: "down" },
     c: { at: add(mid(B, C), [(a / Math.hypot(a, b)) * 14, -(b / Math.hypot(a, b)) * 14]), cls: "start" },
   };
   (["a", "b", "c"] as Side[]).forEach(s => {

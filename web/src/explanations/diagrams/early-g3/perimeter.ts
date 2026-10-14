@@ -3,6 +3,7 @@
 // and draws the trace of each side at the beat it is added.
 import type { SceneDiagram } from "../scene/schema";
 import { frame, M, L as Lto, path, t, type Draft, type Pt } from "../geo/kit";
+import { growDown } from "../scene/picture-system";
 
 export interface PerimeterSide {
   /** label beside the side, e.g. "7 cm" (empty: no label) */
@@ -28,7 +29,8 @@ export function buildPerimeter(s: PerimeterSpec): SceneDiagram {
   if (s.corners.length !== s.sides.length) throw new Error("one label per side");
   const xs = s.corners.map(p => p[0]), ys = s.corners.map(p => p[1]);
   const w = Math.max(...xs) - Math.min(...xs), h = Math.max(...ys) - Math.min(...ys);
-  const k = Math.min(300 / w, 190 / h);
+  // drawn at about a phone strip's size, so its labels, laid out at their phone size, land where they are drawn
+  const k = Math.min(210 / w, 110 / h);
   const P = s.corners.map(([x, y]): Pt => [(x - Math.min(...xs)) * k, (y - Math.min(...ys)) * k]);
   const cx = P.reduce((a, p) => a + p[0], 0) / P.length, cy = P.reduce((a, p) => a + p[1], 0) / P.length;
   const items: Draft[] = [];
@@ -40,18 +42,23 @@ export function buildPerimeter(s: PerimeterSpec): SceneDiagram {
     const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
     let nx = -(b[1] - a[1]) / len, ny = (b[0] - a[0]) / len;
     if (nx * (mx - cx) + ny * (my - cy) < 0) { nx = -nx; ny = -ny; }
-    const off = 14 + Math.abs(nx) * side.text.length * 4.6;
-    if (side.text) items.push(t(mx + nx * off, my + ny * (off + 2), side.text, side.acc ? "lbl acc" : "lbl", { from: side.from ?? 0, enter: "rise", delay: 0.2 }));
+    // a side's label is held by its edge nearest the side (start / end / up / down), so the phone's floor grows it
+    // away from the shape and the lines under it, and on a tablet it still sits right beside its side
+    const hold = Math.abs(nx) > 0.7 ? (nx > 0 ? " start" : " end") : Math.abs(ny) > 0.7 ? (ny > 0 ? " down" : " up") : "";
+    const off = hold ? 9 : 14 + Math.abs(nx) * side.text.length * 4.6;
+    if (side.text) items.push(t(mx + nx * off, my + ny * (off + (hold ? 0 : 2)), side.text, `${side.acc ? "lbl acc" : "lbl"}${hold}`, { from: side.from ?? 0, enter: "rise", delay: 0.2 }));
     if (side.trace != null) items.push(path([M(a), Lto(b)], "ln2", { from: side.trace, enter: "draw", delay: Math.round(s.sides.slice(0, i).filter(o => o.trace === side.trace).length * 0.45 * 100) / 100 }));
   });
-  const bottom = Math.max(...P.map(p => p[1])) + 52;
+  // the working hangs under the bottom side's label and moves down by what that label (and the rows above) grew on a
+  // phone; it is a caption (.cap): practice leaves it out, since the work list already shows each worked line
+  const bottom = Math.max(...P.map(p => p[1])) + 38;
   const rows: { from: number; until: number }[][] = [];
   for (const l of s.lines ?? []) {
     const span = { from: l.from, until: l.until ?? Infinity };
     let r = rows.findIndex(rw => rw.every(o => span.until < o.from || o.until < span.from));
     if (r < 0) { r = rows.length; rows.push([]); }
     rows[r]!.push(span);
-    items.push(t(cx, bottom + r * 28, l.text, "lbl acc", { from: l.from, ...(l.until != null ? { until: l.until } : {}), enter: "rise", delay: 0.6 }));
+    items.push(t(cx, bottom + r * 26, l.text, "lbl acc down cap", { from: l.from, ...(l.until != null ? { until: l.until } : {}), enter: "rise", delay: 0.6, vars: growDown(1 + r) }));
   }
-  return frame("perimeter", items, s.alt, 14, { w: 540 });
+  return frame("perimeter", items, s.alt, 14, { w: 240 });
 }

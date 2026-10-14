@@ -30,7 +30,8 @@ export function buildTriangleAngles(s: TriangleAnglesSpec): SceneDiagram {
   const apex1 = polar([0, 0], side, A);
   const xs = [0, 1, apex1[0]], ys = [0, apex1[1]];
   // a tall thin triangle still gets a base wide enough for the two corner labels
-  const u = Math.max(130, Math.min(340 / (Math.max(...xs) - Math.min(...xs)), 240 / (Math.max(...ys) - Math.min(...ys))));
+  // drawn at about a phone strip's size, so labels laid out at their phone size land where they are drawn
+  const u = Math.max(150, Math.min(340 / (Math.max(...xs) - Math.min(...xs)), 140 / (Math.max(...ys) - Math.min(...ys))));
   const P1: Pt = [0, 0], P2: Pt = [u, 0], P3: Pt = [apex1[0] * u, apex1[1] * u];
   const items: Draft[] = [poly([P1, P2, P3], "ln fillsoft", { enter: "draw" })];
 
@@ -54,7 +55,7 @@ export function buildTriangleAngles(s: TriangleAnglesSpec): SceneDiagram {
 
   if (s.exterior) {
     const ext = s.exterior, from = ext.from ?? 0;
-    const end: Pt = [P2[0] + Math.max(110, u * 0.4), 0];
+    const end: Pt = [P2[0] + Math.max(80, u * 0.35), 0];
     items.push(seg(P2, end, "ax dash", { ...shown(ext), enter: "draw" }));
     items.push(path(arc(P2, 24, 0, 180 - B), "ln2", { ...shown(ext), enter: "draw", delay: 0.4 }));
     for (const l of ext.labels) {
@@ -64,6 +65,8 @@ export function buildTriangleAngles(s: TriangleAnglesSpec): SceneDiagram {
   }
   const top = Math.min(P1[1], P2[1], P3[1]);
   const cx = (Math.min(P1[0], P3[0]) + Math.max(P2[0], P3[0])) / 2;
-  for (const n of s.notes ?? []) items.push(t(cx, top - 30, n.text, `lbl${n.acc === false ? "" : " acc"}`, { ...shown(n), enter: "rise" }));
-  return frame("triangle-angles", items, s.alt, 14, { w: 300 });
+  // the working stands on its bottom edge above the triangle, so on a phone it grows up, away from the top corner;
+  // in practice it leaves for the work list (.cap)
+  for (const n of s.notes ?? []) items.push(t(cx, top - 12, n.text, `lbl up cap${n.acc === false ? "" : " acc"}`, { ...shown(n), enter: "rise" }));
+  return frame("triangle-angles", items, s.alt, 14, { w: 240 });
 }
