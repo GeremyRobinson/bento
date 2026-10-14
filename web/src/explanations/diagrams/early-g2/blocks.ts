@@ -145,7 +145,8 @@ export function buildTradeBlocks(spec: TradeBlocksSpec): SceneDiagram {
   }
   // the lines under the blocks hang from them, and the total hangs under those, pushed down as the phone floor grows them
   const textY = base + 14;
-  items.push(t(onesX + onesW / 2, textY, spec.text.start, "lbl down", { from: beats.blocks, until: beats.trade - 1, enter: "rise", delay: 0.5, vars: at1 }));
+  // "2 ones, need 7" is wider than a phone's short box: the step under the picture says it there (Review 1c74c20)
+  items.push(t(onesX + onesW / 2, textY, spec.text.start, "lbl down shortgo", { from: beats.blocks, until: beats.trade - 1, enter: "rise", delay: 0.5, vars: at1 }));
   items.push(t(onesX + onesW / 2, textY, spec.text.trade, "lbl down", { from: beats.trade, until: beats.ones - 1, enter: "rise", delay: 0.6, vars: at1 }));
   items.push(t(onesX + onesW / 2, textY, spec.text.ones, "lbl down", { from: beats.ones, enter: "rise", delay: 0.6, vars: at1 }));
   items.push(t(tensX + tensW / 2, textY, spec.text.tens, "lbl down", { from: beats.tens, enter: "rise", delay: 0.5 }));

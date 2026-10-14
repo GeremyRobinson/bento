@@ -58,7 +58,9 @@ export function buildLinePlot(s: LinePlotSpec): SceneDiagram {
     if (b?.light != null && s.light?.includes(v)) items.push(path(x2, "xmark pq", { from: b.light, enter: "fade" }));
   });
   items.push(t(W / 2, -24 - top * XP - 18, s.title, "sm"));
-  items.push(t(W / 2, 54, "inches", "xs"));
+  // the unit moves down by what the tick numbers over it and its own line grow at a phone's text floor, so "inches"
+  // never sits on "1¼" (Review 1c74c20, g4-lineplot at 280×123)
+  items.push(t(W / 2, 54, "inches", "xs", { vars: { transform: `translateY(calc(max(0, 13 * var(--px, 0) - 13) * 1px))` } }));
   return frame("line-plot", items, s.alt, 14, { w: 360 });
 }
 
