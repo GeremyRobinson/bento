@@ -168,47 +168,13 @@
 #app .v-cover:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--v-acc)}
 #app .v-cover :is(.v-picbox,.v-pic){outline:none;box-shadow:none}
 
-/* chapter covers, style B "a real thing" (tilepics/covers.ts). Every line is 3px on screen at any tile size (non-scaling),
-   2px for a tick; anything thicker is a filled shape. Colours are the picture tokens, so the covers follow dark mode */
-#app .v-pic.cv *{vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round}
-#app .v-pic.cv :is(.s,.m,.e,.o){stroke:var(--pic-deep);stroke-width:var(--pic-outline)}
-#app .v-pic.cv .s{fill:var(--pic-soft)}
-#app .v-pic.cv .m{fill:var(--pic-mid)}
-#app .v-pic.cv .e{fill:var(--v-card)}
-#app .v-pic.cv .o{fill:none}
-#app .v-pic.cv .g{fill:var(--v-key);stroke:var(--v-done);stroke-width:var(--pic-outline)}
-#app .v-pic.cv .k{stroke:var(--pic-deep);stroke-width:2}
-#app .v-pic.cv .k2{stroke:var(--pic-mid);stroke-width:var(--pic-outline)}
-#app .v-pic.cv .gl{stroke:var(--v-done);stroke-width:2}
-#app .v-pic.cv .f{fill:var(--pic-deep);stroke:none}
-#app .v-pic.cv .mf{fill:var(--pic-mid);stroke:none}
-#app .v-pic.cv .dots{fill:none;stroke:var(--pic-mid);stroke-width:var(--pic-outline);stroke-dasharray:0.1 9}
-/* each cover moves once as it comes in, and the move is its idea (covers.ts); never a loop */
+/* chapter covers as icons (tilepics/icon-covers.ts): one outline colour and one soft fill, both the grade's deep picture
+   colour, so the covers follow dark mode. Each comes in once with a pop; never a loop */
+#app .cvi{display:block;width:100%;height:100%;max-height:84px;color:var(--pic-deep);overflow:visible}
 @media (prefers-reduced-motion:no-preference){
-  #app .v-pic.cv [data-a]{transform-box:fill-box;animation:var(--m-pop) var(--m-settle) var(--d,0s) both}
-  #app .v-pic.cv [data-a="pop"]{transform-origin:center;animation-name:cv-pop}
-  #app .v-pic.cv [data-a="drop"]{transform-origin:center bottom;animation-name:cv-drop;animation-duration:var(--m-in)}
-  #app .v-pic.cv [data-a="rise"]{animation-name:cv-rise;animation-timing-function:var(--m-ease)}
-  #app .v-pic.cv [data-a="slide"]{animation-name:cv-slide;animation-duration:var(--m-grow);animation-timing-function:var(--m-ease)}
-  #app .v-pic.cv [data-a="grow"]{transform-origin:center bottom;animation-name:cv-grow;animation-duration:var(--m-in);animation-timing-function:var(--m-ease)}
-  #app .v-pic.cv [data-a="fill"],#app .v-pic.cv [data-a="shrink"]{transform-origin:center bottom;animation-name:cv-fill;animation-duration:calc(var(--m-beat) + var(--m-close));animation-timing-function:var(--m-ease)}
-  #app .v-pic.cv [data-a="shrink"]{animation-name:cv-shrink}
-  #app .v-pic.cv [data-a="pour"]{transform-origin:center top;animation-name:cv-pour;animation-duration:calc(var(--m-beat) + var(--m-out));animation-timing-function:linear}
-  #app .v-pic.cv [data-a="spin"]{transform-origin:center;animation-name:cv-spin;animation-duration:calc(var(--m-beat) + var(--m-out));animation-timing-function:var(--m-ease)}
-  #app .v-pic.cv [data-a="sweep"]{transform-box:view-box;animation-name:cv-sweep;animation-duration:calc(var(--m-beat) + var(--m-swap));animation-timing-function:var(--m-settle)}
-  #app .v-pic.cv .cv-out{animation:cv-out var(--m-grow) var(--m-ease) var(--m-close) both}
+  #app .cvi>g{transform-box:fill-box;transform-origin:center;animation:cv-pop var(--m-pop) var(--m-settle) both}
 }
 @keyframes cv-pop{from{opacity:0;transform:scale(.4)}}
-@keyframes cv-drop{from{opacity:0;transform:translateY(-14px)}}
-@keyframes cv-rise{from{opacity:0;transform:translateY(6px)}}
-@keyframes cv-slide{from{opacity:0;transform:translateX(-30px)}}
-@keyframes cv-grow{from{opacity:0;transform:scale(.2)}}
-@keyframes cv-fill{from{transform:scaleY(0)}}
-@keyframes cv-shrink{from{transform:scaleY(2)}}
-@keyframes cv-pour{from{transform:scaleY(0)}}
-@keyframes cv-spin{from{transform:rotate(-360deg)}}
-@keyframes cv-sweep{from{rotate:-80deg}}
-@keyframes cv-out{from{transform:translate(var(--dx),var(--dy))}}
 
 /* the area model's results (g5-mult2 and every .am): on its mid parts, in the on-mid text token, and sized 12 to 26
    picture units like every other result (spec G6), never under 12px on screen */
