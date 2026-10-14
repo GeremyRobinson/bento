@@ -15,7 +15,7 @@ const wedge = (cx: number, cy: number, r: number, a: number, b: number) =>
 
 // a plate of three cookies, and two more join them, each clear of the next so they can be counted
 const cookie = (x: number, y: number, a = "", d = 0) => group(circ("m", x, y, 11) + circ("f", x - 4, y - 3, 2) + circ("f", x + 4, y + 1, 2) + circ("f", x - 1, y + 5, 2), a, d);
-const K_ADD = cover("4 22 152 72", ell("s", 80, 76, 74, 16) + ell("o", 80, 74, 56, 10) + cookie(24, 62) + cookie(50, 62) + cookie(76, 62) + cookie(108, 62, "drop", 0.3) + cookie(134, 62, "drop", 0.55));
+const K_ADD = cover("4 22 152 72", ell("s", 80, 76, 74, 16) + ell("o", 80, 79, 56, 8) + cookie(24, 58) + cookie(50, 58) + cookie(76, 58) + cookie(108, 58, "drop", 0.3) + cookie(134, 58, "drop", 0.55));
 
 // building blocks: a cube, a cylinder and a triangle block stack into a tower
 const K_SHAPES = cover("20 4 120 94", rect("m", 40, 62, 34, 34, 4) + rect("s", 76, 62, 44, 34, 4, "drop", 0.15) +
