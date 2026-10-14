@@ -1,6 +1,6 @@
 // The g11-radical picture (Curriculum fixes-02, Part B): a square root is the side of a square. √(x + a) = b says the
 // square with side b has area x + a, so its b × b unit squares are the + a and the x together. Built on the area grid.
-import { buildAreaGrid } from "../../../../explanations/diagrams/area-model/grid";
+import { buildAreaGrid, fitPart } from "../../../../explanations/diagrams/area-model/grid";
 import type { SceneDiagram, SceneItem } from "../../../../explanations/diagrams/scene/schema";
 import { r1 } from "../../../../explanations/diagrams/scene/helpers";
 import { formatNumber as f } from "../../../schemas/math-text";
@@ -35,11 +35,15 @@ export function radicalEquationPicture(o: { a: number; b: number; sq: number; x:
     maxWidth: s * b,
     maxHeight: s * b,
     lines,
+    // six worked lines, two at a time under a small square: the text may take more of a phone box
+    grow: 2,
     alt: `A square with side ${b} has area ${sq}, which is x ${pm}. ${a > 0 ? `Take away ${count(a, "square")} for the + ${a}` : `Add ${count(-a, "square")} for the − ${-a}`}: x = ${f(x)}.`,
   });
   const g = d.geometry, x0 = g.left, y0 = g.top, u = g.width / b;
+  // "area" over "x + a" in the middle of the square, each fitted to it, so a small square on a phone still holds them
   const items: SceneItem[] = [
-    { type: "text", x: r1(x0 + g.width / 2), y: r1(y0 + g.height / 2), text: `area x ${pm}`, cls: "lbl p0", from: 0, until: 0, enter: "rise", delay: 0.3 },
+    { type: "text", x: r1(x0 + g.width / 2), y: r1(y0 + g.height / 2), text: "area", cls: "lbl p0 up", from: 0, until: 0, enter: "rise", delay: 0.3, vars: fitPart(g.width - 8, 5) },
+    { type: "text", x: r1(x0 + g.width / 2), y: r1(y0 + g.height / 2), text: `x ${pm}`, cls: "lbl p0 down", from: 0, until: 0, enter: "rise", delay: 0.3, vars: fitPart(g.width - 8, 5) },
   ];
   const sqAt = (k: number, ox: number, rows: number): [number, number] => [ox + Math.floor(k / rows) * u, y0 + (k % rows) * u];
   // beat 1: the unit squares sweep in, row by row

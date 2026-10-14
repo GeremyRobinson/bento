@@ -3,7 +3,7 @@ import type { SceneDiagram } from "../scene/schema";
 import { arc, frame, path, polar, seg, t, type Draft, type Pt } from "../geo/kit";
 import { circle, line, rect } from "./kit";
 import { tw } from "./blocks";
-import { roomLeft } from "../scene/picture-system";
+import { growDown, roomLeft } from "../scene/picture-system";
 
 // ---------------------------------------------------------------- clock
 
@@ -111,12 +111,14 @@ export function buildRuler(spec: RulerSpec): SceneDiagram {
     for (let v = s; v < e; v++) {
       const d = gap * (v - s);
       items.push(path([{ c: "M", p: [x(v), 60] }, { c: "Q", q: [x(v + 0.5), 60 + 26], p: [x(v + 1), 60] }], "ln", { from: beats.count, enter: "draw", delay: d }));
-      items.push(t(x(v + 0.5), 88, String(v - s + 1), v === e - 1 ? "lbl acc" : "sm", { from: beats.count, enter: "rise", delay: d + 0.2 }));
+      // each count hangs under its hop, so on a phone it grows down, away from the arc
+      items.push(t(x(v + 0.5), 77, String(v - s + 1), v === e - 1 ? "lbl acc down" : "sm down", { from: beats.count, enter: "rise", delay: d + 0.2 }));
     }
-    const y = 128, mid = x(max) / 2;
-    items.push(t(mid, y, spec.text.start, "lbl", { from: beats.start, until: beats.end - 1, enter: "rise", delay: 0.4 }));
-    items.push(t(mid, y, spec.text.end, "lbl", { from: beats.end, until: beats.count - 1, enter: "rise", delay: 0.4 }));
-    items.push(t(mid, y, spec.text.count, "lbl big acc", { from: beats.count, enter: "rise", delay: gap * (e - s) }));
+    // the line under it all hangs below the counts' row, moving down by what that row grows on a phone
+    const y = 106, mid = x(max) / 2, below = { vars: growDown(1) };
+    items.push(t(mid, y, spec.text.start, "lbl down", { from: beats.start, until: beats.end - 1, enter: "rise", delay: 0.4, ...below }));
+    items.push(t(mid, y, spec.text.end, "lbl down", { from: beats.end, until: beats.count - 1, enter: "rise", delay: 0.4, ...below }));
+    items.push(t(mid, y, spec.text.count, "lbl big acc down", { from: beats.count, enter: "rise", delay: gap * (e - s), ...below }));
   }
   return frame("early-g2-ruler", items, spec.alt, 14, {});
 }

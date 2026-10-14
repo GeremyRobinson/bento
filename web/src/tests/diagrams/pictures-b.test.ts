@@ -23,11 +23,18 @@ const shownAt = (d: SceneDiagram, beat: number) => d.items.filter(i => (i.from ?
 type Text = Extract<SceneItem, { type: "text" }>;
 const textsAt = (d: SceneDiagram, beat: number) => shownAt(d, beat).filter((i): i is Text => i.type === "text");
 const sizeOf = (cls = "") => (/\bbig\b/.test(cls) ? (/\blbl\b/.test(cls) ? 22 : 28) : /\bsm\b/.test(cls) ? 15 : /\bxs\b/.test(cls) ? 12 : 17);
+/** How far a text's own CSS moves it at the drawing's own size (--px 0): a row of lines under a picture steps down one
+ * line of text per row (area grid lineStep, 1.25 × the 20px label), while a phone-floor move (growDown) is 0 here. */
+const movedBy = (t: Text) => {
+  const m = String(t.vars?.transform ?? "").match(/translateY\(calc\(([\d.]+) \* 1\.25 \* max\(var\(--pic-label/);
+  return m ? Number(m[1]) * 25 : 0;
+};
 const boxOf = (t: Text) => {
   const size = sizeOf(t.cls), w = (t.text.length + (t.sup ? t.sup.length * 0.65 : 0)) * size * 0.6;
   const x0 = /\bend\b/.test(t.cls ?? "") ? t.x - w : /\bstart\b/.test(t.cls ?? "") ? t.x : t.x - w / 2;
   // one standing on its anchor (.up) runs up from it, one hanging (.down) runs down
-  const y0 = /\bup\b/.test(t.cls ?? "") ? t.y - size : /\bdown\b/.test(t.cls ?? "") ? t.y : t.y - size / 2;
+  const y = t.y + movedBy(t);
+  const y0 = /\bup\b/.test(t.cls ?? "") ? y - size : /\bdown\b/.test(t.cls ?? "") ? y : y - size / 2;
   return { x0, x1: x0 + w, y0, y1: y0 + size };
 };
 

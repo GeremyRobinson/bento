@@ -56,17 +56,17 @@ describe("buildNumberLine", () => {
     const ticks = line.items.filter(i => i.type === "line" && i.cls === "tk") as Extract<SceneItem, { type: "line" }>[];
     expect(ticks).toHaveLength(11);
     const gaps = ticks.slice(1).map((t, i) => t.x1 - ticks[i]!.x1);
-    for (const g of gaps) expect(g).toBeCloseTo(46, 0);
+    for (const g of gaps) expect(g).toBeCloseTo(28.2, 0);
     expect(texts(line).filter(t => t.cls === "sm").map(t => t.text)).toEqual(["−4", "−3", "−2", "−1", "0", "1", "2", "3", "4", "5", "6"]);
   });
 
   it("starts and ends each hop on its values, on its beat", () => {
-    const xOf = (v: number) => 30 + ((v + 4) / 10) * 460;
+    const xOf = (v: number) => 24 + ((v + 4) / 10) * 282;
     const paths = line.items.filter(i => i.type === "path") as Extract<SceneItem, { type: "path" }>[];
     expect(paths.map(p => p.from)).toEqual([0, 1]);
     const ends = paths.map(p => p.d.match(/^M([\d.]+) [\d.]+ Q[\d.]+ -?[\d.]+ ([\d.]+)/)!.slice(1).map(Number));
     expect(ends).toEqual([[xOf(-3), xOf(0)], [xOf(0), xOf(5)]].map(e => e.map(v => Math.round(v * 10) / 10)));
-    expect(texts(line).filter(t => t.cls === "lbl").map(t => t.text)).toEqual(["3", "5"]);
+    expect(texts(line).filter(t => /^lbl( up| down)?$/.test(t.cls ?? "")).map(t => t.text)).toEqual(["3", "5"]);
   });
 
   it("refuses values off the line", () => {
@@ -81,7 +81,7 @@ describe("buildNumberLine", () => {
   it("labels only some hops in a long run of short ones", () => {
     const hops = Array.from({ length: 29 }, (_, i) => ({ from: i, to: i + 1, label: "+9", beat: 0 }));
     const d = buildNumberLine({ min: 0, max: 29, hops, alt: "x" });
-    const n = texts(d).filter(t => t.cls === "lbl").length;
+    const n = texts(d).filter(t => /^lbl( up| down)?$/.test(t.cls ?? "")).length;
     expect(n).toBeGreaterThan(3);
     expect(n).toBeLessThan(29);
     expect(layoutProblems(d, 1)).toEqual([]);
@@ -196,7 +196,7 @@ describe("pictures follow the problem", () => {
   it("k-add counts the first group from 0, then hops on from a to a + b, every hop above the line", () => {
     const l = lessonById("k-add")!, p = l.generate(createRng(3), 0) as { a: number; b: number };
     const d = l.explain(p, l.answers(p)).diagram as SceneDiagram;
-    const top = texts(d).filter(t => t.cls === "lbl").map(t => Number(t.text));
+    const top = texts(d).filter(t => /^lbl( up| down)?$/.test(t.cls ?? "")).map(t => Number(t.text));
     expect(top).toEqual(Array.from({ length: p.a + p.b }, (_, i) => i + 1));
     // a hop below the line means taking away (v44 sweep #3): none here, so no arc is drawn in the second part colour
     const arcs = d.items.filter(it => it.type === "path" && /\bln\b/.test((it as { cls?: string }).cls ?? ""));

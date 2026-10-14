@@ -24,7 +24,10 @@ const LABEL_GAP = 10;
 /** on screen, whatever the picture's scale (v2 spec G1, G5, G6): parts at least 8px apart between their outlines, labels
  * 20px and 10px from their part, results 14px and inside their part. The outline is 3 units wide on each side of a gap. */
 const SCREEN = { gap: 8, label: 20, labelGap: 10, result: 14, pad: 4 };
-const LABEL_MIN = 28, RESULT_MAX = 26, OUTLINE = 3, DIGIT = 0.7, CAP = 0.72;
+const LABEL_MIN = 28, RESULT_MAX = 26, OUTLINE = 3, DIGIT = 0.7;
+/** a top label stands LIFT of its size over its baseline gap; its text box reaches ASCENT of its size above its baseline
+ * (the font's ascent, not just the digits' cap height), so the room over the picture holds the whole box */
+const LIFT = 0.36, ASCENT = 0.96;
 /** a result that can't fit its strip, and the sum under the bracket, in picture units before the 14px floor */
 const OUT_SIZE = 20, SUM_SIZE = 22, SUM_CHAR = 0.62;
 const r1 = (v: number) => Math.round(v * 10) / 10;
@@ -55,7 +58,7 @@ export function areaFit(d: AreaDiagram, px: number, room = Infinity, place: Area
   const pad = Math.max(4, SCREEN.pad * px), floor = SCREEN.result * px;
   const side = Math.max(0, ...d.rows.map(r => r.label.length * lu * DIGIT)) + lg;
   const first = d.cols[0]?.start ?? d.horizontal.start, top = d.vertical.start, bottom = top + d.vertical.length;
-  const dx = Math.max(0, side - first), dy = Math.max(0, lg + lu * CAP - top);
+  const dx = Math.max(0, side - first), dy = Math.max(0, lg + lu * (LIFT + ASCENT) - top);
   const need = (r: AreaRegion) => r.productLabel.length * Math.max(resultSize(r.width, r.height), floor) * DIGIT + 2 * pad;
   const last = d.cols.length - 1, right0 = d.width - (d.horizontal.start + d.horizontal.length);
   // what can sit beside the strips, whatever the stretch: a result moved out of the last strip, the sum's bracket
@@ -191,7 +194,7 @@ export function AreaModelDiagram({ diagram: d, timeline, at, ask }: { diagram: A
         const text = !split ? (i === 0 ? d.horizontal.label : null) : found(i) ? c.label
           : v.active != null && d.regions[v.active]?.col === i && (asked ?? timeline[at])?.phase !== "left" && d.cols.some((_, j) => j !== i && found(j)) ? "?" : null;
         const x = !split ? (x0 + xr) / 2 : fit.starts[i]! + fit.widths[i]! / 2;
-        return text == null ? null : <text key={`c${i}-${split}`} className={lit && split && lit.col === i ? "part out-top lit" : "part out-top"} data-lit={!lit || lit.col === i} x={x} y={top - fit.lg - fit.lu * 0.36} style={{ textAnchor: "middle" }}>{text}</text>;
+        return text == null ? null : <text key={`c${i}-${split}`} className={lit && split && lit.col === i ? "part out-top lit" : "part out-top"} data-lit={!lit || lit.col === i} x={x} y={top - fit.lg - fit.lu * LIFT} style={{ textAnchor: "middle" }}>{text}</text>;
       })}
       {d.rows.map((r, i) => (
         <text key={`r${i}`} className={lit && lit.row === i ? "part lit" : "part"} data-lit={!lit || lit.row === i} x={0} y={r.start + r.length / 2} style={{ textAnchor: "start" }}>{r.label}</text>
