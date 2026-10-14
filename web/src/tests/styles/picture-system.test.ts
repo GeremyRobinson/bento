@@ -24,14 +24,15 @@ const rules = (t: string) => [...strip(t).matchAll(/([^{}]*)\{([^{}]*)\}/g)].map
 const ON_PICTURE = "#app :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf)";
 
 /** the tokens a picture may paint with: the picture palette, the neutral base, and the system's own names for them */
-const PICTURE_TOKEN = /^var\(--(pic-deep|pic-mid|pic-soft|pic-line|pic-on-mid|v-ink|v-muted|v-line|v-done|v-key|v-card|deep|tint|soft|pic-outline)\)$/; // --tint, --soft and --deep are the part's own (mapped above)
-/** every role a picture rule reads (diagram-master.css), and what it must resolve to on a picture */
+const PICTURE_TOKEN = /^var\(--(pic-deep|pic-mid|pic-soft|pic-seatc|pic-line|pic-on-mid|pic-on-part|pic-on-step|v-ink|v-muted|v-line|v-done|v-key|v-card|deep|tint|soft|pic-outline)\)$/; // --tint, --soft and --deep are the part's own (mapped above)
+/** every role a picture rule reads (diagram-master.css), and what it must resolve to on a picture. Fills are the 30% soft
+    fill whether a part is done or waiting; only the step's part (.lit) is mid (lesson picture style guide, G 2026-10-14) */
 const ROLES: Record<string, RegExp> = {
-  "--tint": /pic-mid/, "--c0": /pic-mid/, "--c1": /pic-mid/, "--c2": /pic-mid/,
+  "--tint": /pic-soft/, "--c0": /pic-soft/, "--c1": /pic-soft/, "--c2": /pic-soft/,
   "--k0": /pic-deep/, "--k1": /pic-deep/, "--k2": /pic-deep/, "--ink": /pic-deep/, "--deep": /pic-deep/, "--lbl": /--deep/,
-  "--acc": /pic-deep/, "--soft-acc": /pic-mid/, "--ka": /v-ink/, "--text": /v-ink/, "--on-pic": /pic-on-mid/, "--on-tint": /pic-on-mid/,
+  "--acc": /pic-deep/, "--soft-acc": /pic-soft/, "--ka": /v-ink/, "--text": /v-ink/, "--on-pic": /pic-deep/, "--on-tint": /pic-deep/,
   "--fill0": /pic-soft/, "--fill1": /pic-soft/, "--fill2": /pic-soft/, "--soft": /pic-soft/, "--soft0": /pic-soft/, "--soft1": /pic-soft/, "--soft2": /pic-soft/,
-  "--tint-soft": /pic-soft/, "--dot": /pic-mid/, "--muted": /v-muted/, "--rule": /v-line/, "--faint": /v-done/, "--well": /v-key/, "--card": /v-card/,
+  "--tint-soft": /pic-soft/, "--dot": /pic-soft/, "--muted": /v-muted/, "--rule": /v-line/, "--faint": /v-done/, "--well": /v-key/, "--card": /v-card/,
 };
 /** real-world colours (coins, water, marbles): allowed in their own lessons, never in 5th grade's */
 const REAL_WORLD = /var\(--d-(water|marble|copper|silver|coin)/;
@@ -48,10 +49,15 @@ describe("the picture system", () => {
     for (const v of Object.values(pic!.decls)) if (v.startsWith("var(--") && !/--(lbl|deep)\b/.test(v)) expect(v).toMatch(/^var\(--(pic|v)-/);
   });
 
-  it("turns --c1 violet only on a picture that opts in with .two", () => {
+  it("draws a second amount in stripes of the same colour, only on a picture that opts in with .two", () => {
+    // style guide rule 5 (G 2026-10-14): one colour; the second amount is striped, its outline the same deep
     const two = rules(SYSTEM).filter(r => /\.two\b/.test(r.sel));
     expect(two.length).toBeGreaterThan(0);
-    for (const r of two) for (const [k, v] of Object.entries(r.decls)) if (/^--(c1|k1|fill1|soft1)$/.test(k)) expect(v).toMatch(/picb-/);
+    for (const r of two) for (const [k, v] of Object.entries(r.decls)) {
+      // (the problem line above a .two picture writes its second amount in the deep text colour: words can't be striped)
+      if (/^--(c1|fill1|soft1)$/.test(k) && !r.sel.includes(":has(")) expect(v).toBe("url(#pic-stripe)");
+      if (k === "--k1") expect(v).toMatch(/pic-deep/);
+    }
     // nowhere else in the system does a role go violet
     // (a grade setting its own partner hue, --picb-* = --gN-picb-*, is the token itself, not a role going violet)
     for (const r of rules(SYSTEM).filter(r => !/\.two\b/.test(r.sel))) for (const [k, v] of Object.entries(r.decls)) if (!/^--picb-/.test(k)) expect(v, r.sel).not.toMatch(/picb-/);
@@ -65,7 +71,7 @@ describe("the picture system", () => {
   });
 
   it("every colour rule a picture can hit reads only roles the system maps", () => {
-    const known = new Set([...Object.keys(ROLES), "--pic-deep", "--pic-mid", "--pic-soft", "--pic-line", "--picb-deep", "--picb-mid", "--picb-soft", "--pic-on-mid",
+    const known = new Set([...Object.keys(ROLES), "--pic-deep", "--pic-mid", "--pic-soft", "--pic-seatc", "--pic-line", "--picb-deep", "--picb-mid", "--picb-soft", "--pic-on-mid", "--pic-on-part", "--pic-on-step",
       "--v-ink", "--v-muted", "--v-line", "--v-done", "--v-key", "--v-card", "--v-acc", "--mix-lift", /* a solid's dark side, overridden by the system */ "--d-shadow", "--l0", "--l1", "--l2", "--la"]);
     const bad: string[] = [];
     for (const [f, t] of css) for (const r of rules(t)) {

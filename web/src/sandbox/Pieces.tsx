@@ -119,7 +119,7 @@ export function Pieces() {
         </Piece>
         <Piece name="Confirm" status="review" chunk="Confirm master" nests="Quit a lesson, Quit practice">
           <Pill go onClick={() => setAsk(true)}>Ask before quitting</Pill>
-          {ask && <Confirm title="Quit Equivalent ratios?" body="Your answers so far won't be kept." confirm="Quit" onConfirm={() => setAsk(false)} onCancel={() => setAsk(false)} />}
+          {ask && <Confirm title="Quit Equivalent ratios?" body="Your answers won't be saved." confirm="Quit" onConfirm={() => setAsk(false)} onCancel={() => setAsk(false)} />}
         </Piece>
         <Piece name="No shadows" status="review" chunk="Shadow sweep" nests="everything that floats or is picked">
           <div className="sbpills"><Pill>A floating pill</Pill><Pill go>Picked</Pill></div>

@@ -14,7 +14,7 @@ export const CATEGORIES: Record<MistakeCategory, [name: string, meaning: string,
   swap: ["Boxes swapped", "The right numbers in the wrong boxes.", "Check which box is which before typing."],
   flip: ["Fraction flipped", "Top and bottom of the fraction were switched.", "The part goes on top and the whole on the bottom."],
   plan: ["Picked the wrong next step", "Knew how to do the steps but not which one comes next.", "Before solving, say the plan out loud: what has to happen first?"],
-  method: ["Didn't know the step yet", "The answer wasn't close and didn't match a common slip.", "Go back over the lesson cards for this step together."],
+  method: ["Didn't know the step yet", "The answer wasn't close and didn't match a common slip.", "Watch the lesson again together, then try this step."],
 };
 
 /** What the student is told for each recognised slip. */

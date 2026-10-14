@@ -66,7 +66,7 @@ function answers(p: LinesProblem): AnswerModel {
   const meet = p.item !== 0;
   const steps: AnswerStep[] = [tapStep({ id: "meet", label: "Do they meet?", question: "If the lines kept going, would they meet?", prompt: [text("Would they meet?")], choices: ["Yes", "No"], right: meet ? 0 : 1,
     wrong: () => (meet ? ["Said no", "Keep them going: they get closer and cross."] : ["Said yes", "They stay the same distance apart, so they never meet."]),
-    hint: "Picture both lines running on past the arrowheads.", explain: meet ? "Yes, they meet." : "No, they stay the same distance apart.", work: [text(meet ? "Yes" : "No")] })];
+    hint: "Picture both lines going on past the arrowheads.", explain: meet ? "Yes, they meet." : "No, they stay the same distance apart.", work: [text(meet ? "Yes" : "No")] })];
   if (meet) steps.push(tapStep({ id: "square", label: "Square corners?", question: "Do they make square corners where they meet?", prompt: [text("Square corners?")], choices: ["Yes", "No"], right: p.item === 1 ? 0 : 1,
     wrong: () => (p.item === 1 ? ["Said no", "Check with the corner of a page: it fits."] : ["Said yes", "Check with the corner of a page: the corners are too narrow and too wide."]),
     hint: "Picture the corner of a page where they cross.", explain: p.item === 1 ? "Yes: square corners." : "No: not square corners.", work: [text(p.item === 1 ? "Yes" : "No")] }));
@@ -90,7 +90,7 @@ const IDEA = [
   "An angle is named by how wide it opens, compared with a square corner.",
   "Two lines can never meet, meet at square corners, or cross another way.",
 ];
-const LOOK = ["Look at both ends: a dot or an arrowhead?", "Look at how wide it opens, not how long the arms are.", "Picture both lines running on past the arrowheads."];
+const LOOK = ["Look at both ends: a dot or an arrowhead?", "Look at how wide it opens, not how long the arms are.", "Picture both lines going on past the arrowheads."];
 
 function explain(p: LinesProblem, model: AnswerModel): Explanation {
   const last = model.steps.at(-1)!, cmp = p.deg < 90 ? 0 : p.deg === 90 ? 1 : 2;
@@ -98,7 +98,7 @@ function explain(p: LinesProblem, model: AnswerModel): Explanation {
   const lines: Record<string, string> = {
     ends: "A dot is an endpoint. An arrowhead means it keeps going.",
     compare: `Put a page corner at the point: the angle ${["fits inside it", "fits it exactly", "opens past it"][cmp]}.`,
-    meet: p.item !== 0 ? "Run them on: they get closer and cross." : "They stay the same distance apart, so they never cross.",
+    meet: p.item !== 0 ? "Keep them going: they get closer and cross." : "They stay the same distance apart, so they never cross.",
     square: p.item === 1 ? "A page corner fits where they cross." : "A page corner doesn't fit where they cross.",
     name: [
       "No endpoints is a line, 1 is a ray, 2 is a segment.",

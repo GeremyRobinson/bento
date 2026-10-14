@@ -48,7 +48,7 @@ function cameFrom(route: Route, app: ReturnType<typeof useApp>, grade: number): 
 
 /** What the island says on each screen: a small line for where you are in the book, and the page you're on. */
 function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): Place {
-  const contents = { label: "contents", to: { name: "home" } as Route };
+  const contents = { label: "your lessons", to: { name: "home" } as Route };
   const chapterLine = (id: string, extra?: string) => {
     const p = pageOf(id);
     return p ? `${p.chapter === NO_UNIT ? gradeOf(p.grade).name : p.chapter} · ${extra ?? `${p.page} of ${p.pages}`}` : gradeOf(grade).name;
@@ -331,12 +331,12 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
         <button className={`icon${open === "settings" || route.name === "settings" ? " on" : ""}`} onClick={() => go({ name: "settings" }, "fwd")}
           aria-label="Settings"><SettingsIcon /></button>
         <button className={`icon ime${open === "me" || route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={() => go({ name: "me" }, "fwd")}
-          aria-label={`${YOUR_BENTO}: ${progress.streak} day streak, ${progress.xp} XP`} aria-current={route.name === "me" ? "page" : undefined}>
+          aria-label={`${YOUR_BENTO}: ${progress.streak} days in a row, ${progress.xp} points`} aria-current={route.name === "me" ? "page" : undefined}>
           <MeIcon />
         </button>
       </>} />
       {asking && run && (
-        <Confirm title={`Quit ${run.title}?`} body="Your answers so far won't be kept." confirm="Quit"
+        <Confirm title={`Quit ${run.title}?`} body="Your answers won't be saved." confirm="Quit"
           onCancel={() => setAsking(false)} onConfirm={() => { setAsking(false); quit({ stay: true }); }} />
       )}
       {open && <Contents grade={place.lesson ? pageOf(place.lesson)?.grade ?? grade : grade} lessonId={place.lesson} level={open} close={dismiss} leave={leave} closing={closing} />}

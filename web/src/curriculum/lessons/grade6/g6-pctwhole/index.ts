@@ -49,7 +49,7 @@ function explain(pr: PercentWholeProblem, model: AnswerModel): Explanation {
   const { p, P } = pr, k = expectedOf(model.steps, "parts"), W = expectedOf(model.steps, "whole");
   return {
     heading: "Count up to 100%",
-    idea: ["Some number of that percent makes 100%, so the whole is that many of the part."],
+    idea: ["Equal blocks of that percent fill 100%, so the whole is that many blocks."],
     statement: [num(P), text(" is "), num(p), text("% of ?")],
     diagram: percentWholePicture(pr),
     caption: `${count(k, "block")} of ${p}% make 100%.`,

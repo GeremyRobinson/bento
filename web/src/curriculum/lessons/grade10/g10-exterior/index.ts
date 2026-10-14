@@ -38,7 +38,7 @@ export function exteriorAngleAnswers({ a, b }: ExteriorAngleProblem): AnswerMode
 export function explainExteriorAngle(p: ExteriorAngleProblem, answers: AnswerModel): Explanation {
   const { a, b } = p, c = expected(answers, "inside"), out = expected(answers, "outside");
   return {
-    heading: "Exterior = the two far angles added",
+    heading: "Outside angle = the two far angles added",
     idea: ["A triangle's outside angle equals the two inside angles far from it, added."],
     // the problem asks for the outside angle, the one angle the picture marks "?"
     statement: mt`outside angle = ?`,

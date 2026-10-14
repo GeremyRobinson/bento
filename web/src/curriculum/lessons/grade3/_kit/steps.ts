@@ -44,7 +44,7 @@ export function fracBoxes(o: {
     if (n == null || d == null) return { ok: false, soft: true, message: "Fill in the top and the bottom." };
     if (eq(n, o.N) && eq(d, o.D)) return { ok: true };
     for (const [bn, bd, kind, message] of wrong) if (eq(n, bn) && eq(d, bd)) return { ok: false, kind, message, generic: false };
-    if (d !== 0 && eq(n * o.D, o.N * d)) return { ok: false, soft: true, message: `That's the same amount! Count the pieces in the picture: write it with ${o.D} on the bottom.` };
+    if (d !== 0 && eq(n * o.D, o.N * d)) return { ok: false, soft: true, message: `That's the same amount. Count the pieces in the picture. Write it with ${o.D} on the bottom.` };
     return { ok: false, kind: o.label, message: `Not quite. ${o.hint}`, generic: true };
   };
   return {

@@ -2,7 +2,7 @@
 // of the turn, angles measured in pieces of a half turn (radians), and an angle on the unit circle.
 // Angles are drawn at their real size, counterclockwise from the right as in math class; labels come from the problem.
 import type { SceneDiagram } from "../scene/schema";
-import { angleLabelAt, arc, frame, path, polar, seg, t, M, L, type Draft, type Pt } from "../geo/kit";
+import { angleLabelAt, arc, frame, path, polar, seg, t, M, L, Z, type Draft, type Pt } from "../geo/kit";
 import { stackRows } from "../scene/picture-system";
 
 const O: Pt = [0, 0];
@@ -66,13 +66,16 @@ export function buildCircleArea(s: CircleAreaSpec): SceneDiagram {
     circle(R, "fill", { enter: "pop" }),
     // the square goes under the circle's edge and the radius, so the whole circle and the radius (its side) stay in view
     { type: "rect", x: 0, y: -R, w: R, h: R, cls: "sq", from: s.squareBeat, enter: "pop" } as Draft,
+    // where the square overlaps the circle (a quarter of it) takes the stronger fill, as any overlap does (G 2026-10-14)
+    path([M(O), ...arc(O, R, 0, 90, true), Z], "overlap", { from: s.squareBeat, enter: "pop" }),
+    { type: "rect", x: 0, y: -R, w: R, h: R, cls: "sq lineonly", from: s.squareBeat, enter: "pop" } as Draft,
     circle(R, "ln", { enter: "draw" }),
     seg(O, [R, 0], "ln2", { enter: "draw", delay: 0.6 }),
     t(R / 2, 5, `r = ${s.r}`, "lbl acc down", { enter: "rise", delay: 0.8 }),
     // the square's sum and its area meet at the square's middle, each held by the edge facing the other (up / down),
     // so the floor grows them apart, toward the square's own edges
-    t(R / 2, -R / 2 - 2, `${s.r} × ${s.r}`, "sm up", { from: s.squareBeat, enter: "rise", delay: 0.3 }),
-    t(R / 2, -R / 2 + 2, String(s.r2), "lbl big down", { from: s.squareBeat, enter: "rise", delay: 0.4 }),
+    t(R / 2, -R / 2 - 2, `${s.r} × ${s.r}`, "sm up onstep", { from: s.squareBeat, enter: "rise", delay: 0.3 }),
+    t(R / 2, -R / 2 + 2, String(s.r2), "lbl big down onstep", { from: s.squareBeat, enter: "rise", delay: 0.4 }),
     ...column(R + 26, [
       { text: "The circle holds", cls: "sm", from: s.areaBeat },
       { text: `${s.pi} squares`, cls: "lbl", from: s.areaBeat },

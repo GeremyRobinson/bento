@@ -57,7 +57,7 @@ function answers(p: MixedProblem): AnswerModel {
     oneBox({
       id: "wholes", label: "Add the wholes", prompt: s => [num(w1), op("+"), num(w2), op("="), s], ans: W,
       wrong: slips(W, [[w1 * w2, "Multiplied the wholes", `This is adding: ${w1} + ${w2}.`]]),
-      hint: `Just the big numbers: ${w1} + ${w2}.`, explain: `${wholes(w1)} and ${wholes(w2)} make ${wholes(W)}.`,
+      hint: `Only the whole numbers: ${w1} + ${w2}.`, explain: `${wholes(w1)} and ${wholes(w2)} make ${wholes(W)}.`,
     }),
     manyBoxes({
       id: "pieces", label: "Add the pieces", note: `The pieces are all ${piece}.`,
@@ -104,7 +104,7 @@ function explain(p: MixedProblem, model: AnswerModel): Explanation {
     { id: "wholes", state: 1, answerStep: "wholes", result: W, math: [num(w1), op("+"), num(w2), op("="), num(W)],
       narration: "Put the wholes together." },
     { id: "pieces", state: 2, answerStep: "pieces", result: S, math: [frac(n1, d), op("+"), frac(n2, d), op("="), frac(S, d)],
-      narration: `Now put the ${piece} together.${trade ? " That's more than one bar's worth." : ""}` },
+      narration: `Now put the ${piece} together.${trade ? " That's more than one whole bar." : ""}` },
   ];
   if (trade) steps.push({ id: "trade", state: 3, answerStep: "trade", result: expectedOf(model, "trade", "n"), math: [frac(S, d), op("="), num(1), frac(R, d)],
     narration: `${d} ${piece} fill a bar, so trade them for 1 whole.` });

@@ -41,7 +41,7 @@ export function powerRuleAnswers({ a, n }: PowerRule): AnswerModel {
       if (vals.c === c && vals.e === e) return { ok: true };
       if (vals.c === a) return { ok: false, kind: "Forgot to multiply", message: `Multiply ${f(a)} by the exponent ${f(n)} first.`, generic: false };
       if (vals.e === n) return { ok: false, kind: "Kept the exponent", message: "Lower the exponent by 1.", generic: false };
-      return { ok: false, kind: "Power rule", message: `Coefficient ${f(a)} × ${f(n)}, exponent ${f(n)} − 1.`, generic: false };
+      return { ok: false, kind: "Power rule", message: `The coefficient is ${f(a)} × ${f(n)}. The exponent is ${f(n)} − 1.`, generic: false };
     },
     hint: "Your first answer goes in front, and your second is the new exponent.",
     explain: `f′(x) = ${f(c)}x${supE(e)}.`,

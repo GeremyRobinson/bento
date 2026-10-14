@@ -36,7 +36,7 @@ export function foilAnswers({ a, b }: FoilProblem): AnswerModel {
       ns({ id: "last", label: "Last", prompt: s => [...numP(a), op("×"), ...numP(b), op("="), s], ans: a * b, hint: "Multiply the two numbers.",
         wrong: [[a + b, "Added instead of multiplied", "The last terms multiply."]] }),
       ms({ id: "answer", label: "Write the answer", prompt: s => [x, sup(2), op("+"), s.p!, x, op("+"), s.q!], ans: { p: a + b, q: a * b }, hint: "First gives x². Then outer + inner is the x term, and last is the number on its own.",
-        wrong: [[{ p: a * b, q: a + b }, "Swapped them", "Outer + inner goes with x; last × last is the number on its own."]] }),
+        wrong: [[{ p: a * b, q: a + b }, "Swapped them", "Outer + inner goes with x. Last × last is the number on its own."]] }),
     ],
     finalParts: [-1],
   };

@@ -36,8 +36,8 @@ export function trigRatioAnswers(p: TrigRatioProblem): AnswerModel {
   return {
     steps: [
       ns({ id: "top", label: "Top of the ratio", question: `In ${f} A, which side goes on top? Type its length.`,
-        prompt: s => [s], ans: top, hint: "SOH CAH TOA: sin = opposite/hyp, cos = adjacent/hyp, tan = opposite/adjacent.",
-        wrong: [[f === "cos" ? a : b, "Mixed up opposite and adjacent", "Opposite is across from the angle. Adjacent is next to it (not the hypotenuse)."]] }),
+        prompt: s => [s], ans: top, hint: "SOH CAH TOA: sin = opposite/hypotenuse, cos = adjacent/hypotenuse, tan = opposite/adjacent.",
+        wrong: [[f === "cos" ? a : b, "Mixed up opposite and adjacent", "Opposite is across from the angle. Adjacent is the side next to it that isn't the hypotenuse."]] }),
       ns({ id: "bottom", label: "Bottom of the ratio", question: `In ${f} A, which side goes on the bottom? Type its length.`,
         prompt: s => [s], ans: bot,
         hint: f === "tan" ? "Tangent is opposite over adjacent, so the adjacent side goes on the bottom: the side next to A that isn't the hypotenuse."

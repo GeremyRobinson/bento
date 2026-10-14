@@ -67,11 +67,11 @@ export function explainRegroup(p: RegroupProblem, answers: AnswerModel): Explana
       text: { ones: `${ao} + ${bo} = ${O}`, regroup: `${O} = 10 + ${left}`, tens: `${at} + ${bt} + 1 = ${count(T, "ten")}`, total: `${a} + ${b} = ${sum}` },
       alt: `${a} as ${count(at, "ten")} and ${count(ao, "one")}, ${b} as ${count(bt, "ten")} and ${count(bo, "one")}. ${count(O, "one")} make a ten and ${count(left, "one")}; ${count(T, "ten")} and ${count(left, "one")} make ${sum}.`,
     }),
-    caption: `${count(O, "one")} are too many for one place: trade ten of them for a ten.`,
+    caption: `${count(O, "one")} are too many for one place. Trade 10 of them for 1 ten.`,
     timeline: beats(5),
     steps: [
       { id: "ones", narration: "Add the ones first.", math: [num(ao), op("+"), num(bo), op("="), num(O)], state: 1, answerStep: "ones", result: O },
-      { id: "regroup", narration: "Too many ones! Trade 10 of them for 1 ten.", math: [num(O), op("="), num(10), op("+"), num(left)], state: 2, answerStep: "regroup", result: left },
+      { id: "regroup", narration: "Too many ones. Trade 10 of them for 1 ten.", math: [num(O), op("="), num(10), op("+"), num(left)], state: 2, answerStep: "regroup", result: left },
       { id: "tens", narration: "Add the tens, and the new ten too.", math: [num(at), op("+"), num(bt), op("+"), num(1), op("="), num(T)], state: 3, answerStep: "tens", result: T },
       { id: "answer", narration: `${count(T, "ten")} and ${left} one${left === 1 ? "" : "s"} is ${sum}.`, math: [num(a), op("+"), num(b), op("="), num(sum)], state: 4, answerStep: "answer", result: sum },
     ],

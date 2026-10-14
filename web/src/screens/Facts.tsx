@@ -29,7 +29,7 @@ function FactsHome() {
       <header className="cover">
         <h1>Facts</h1>
         <p className="ysub">Know them by heart.</p>
-        <p className="muted">Each grade leans on its own facts: counting on, times tables, squares, powers. Choose your grade to see yours.</p>
+        <p className="muted">Each grade uses its own facts: counting on, times tables, squares, powers. Choose your grade to see yours.</p>
       </header>
       <div className="actions"><Pill go onClick={() => go({ name: "home" }, "fwd")}>{CHOOSE_GRADE}</Pill></div>
     </FitScreen>
@@ -48,13 +48,13 @@ function GradeFacts({ g }: { g: number }) {
       <header className="cover">
         <h1>Facts</h1>
         <p className="ysub">Know them by heart.</p>
-        <p className="muted">The facts {(gradeOf(g).name.split(" · ")[0] ?? "").toLowerCase()} leans on. Each one fills in as you get it quick and sure, and comes back just before you'd forget it.</p>
+        <p className="muted">The facts {(gradeOf(g).name.split(" · ")[0] ?? "").toLowerCase()} uses. Each one fills in once you answer it fast and right. It comes back before you forget it.</p>
       </header>
       <div className="bhome">
         {today && (
           <section className="tile today">
             <h2>Today's sprint</h2>
-            <p className="sub">{done ? "Done for today. Another one never hurts." : `About 2 minutes of ${today.name.toLowerCase()}.`}</p>
+            <p className="sub">{done ? "Done for today. You can do another one." : `About 2 minutes of ${today.name.toLowerCase()}.`}</p>
             <Pill go className="fstart" onClick={() => setSprint(today)}>{done ? "Go again" : "Start"}</Pill>
           </section>
         )}
@@ -207,7 +207,7 @@ function Sprint({ t, onDone }: { t: FactTable; onDone: () => void }) {
   const done = i >= queue.length, f = queue[i];
   const neg = t.facts.some(x => x.answer < 0);
 
-  useEffect(() => { t0.current = performance.now(); if (f && aloud) speak(f.ask.replace("×", "times").replace("÷", "divided by").replace("−", "minus").replace("?", "what")); }, [i]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { t0.current = performance.now(); if (f && aloud) speak(f.ask.trimEnd().endsWith("?") && !/[=+−×÷]\s*\?$/.test(f.ask.trimEnd()) ? f.ask : f.ask.replaceAll("?", "what")); }, [i]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (done && answers.length) saveSprint(t.id, answers); }, [done]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const next = (right: boolean) => {

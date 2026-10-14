@@ -125,7 +125,7 @@ function explain(p: UnitConversionProblem, model: AnswerModel): Explanation {
     timeline: beats(4),
     steps: [
       { id: "one", state: 1, answerStep: "one", result: f, math: [num(1), text(` ${one}`), op("="), num(f), text(` ${small}`)],
-        narration: `Start with just one ${one}.` },
+        narration: `Start with one ${one}.` },
       { id: "more", state: 2, answerStep: "more", math: [...givenMath(p), op("="), text(`? ${up ? many : small}`)],
         narration: up ? `${cap(many)} are bigger, so there will be fewer of them than ${fm(n)}.` : `${cap(small)} are smaller, so there will be more of them than ${fm(n)}.` },
       up

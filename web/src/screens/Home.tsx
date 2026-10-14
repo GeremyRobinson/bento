@@ -14,7 +14,7 @@ import { chapterPic, lessonPic, TilePic } from "../components/TilePics";
 import { ORing, OSlider, type Tab } from "../components/Masters";
 import { LESSON_CHECK_MINUTES, LESSON_MINUTES, TODAYS_REVIEW, UP_NEXT } from "../app/copy";
 import { checkedCount } from "../app/rings";
-import { checkScore, dependsOn, dueBack, learned, toGoOver } from "../engine/mastery/skills";
+import { checkScore, dependsOn, dueBack, learned, learnedNow, toGoOver } from "../engine/mastery/skills";
 import { boxView, boxZoom, GRADES_VIEW, setBoxView, useBoxView } from "../app/box";
 import { motionOff } from "../app/settings";
 import type { Progress } from "../engine/mastery/progress";
@@ -42,7 +42,7 @@ export function statusOf(progress: Progress, g: number, id: string, now: number)
   if (upNext(progress, g)?.entry.id === id && !learned(progress, id)) return { word: UP_NEXT, tone: "next", done, score: sc, checked };
   if (dueBack(progress, id, now) || toGoOver(progress, id)) return { word: "Go over", tone: "rev", done, score: sc, checked };
   if (learned(progress, id)) return { word: "Got it", tone: "done", done, score: sc, checked };
-  if (done) return { word: "Keep going", done, score: sc, checked };
+  if (done) return { word: "Practicing", done, score: sc, checked };
   return { word: "Not started", done, score: sc, checked };
 }
 
@@ -93,11 +93,11 @@ function TodayPanel({ g, id }: { g: number; id: string }) {
   // v2 spec H4: name a lesson only when Curriculum lists this one in what it builds on (the first, in chapter order)
   const unlocks = entriesInGrade(g).find(c => c.id !== id && dependsOn(c.id).includes(id));
   const why = !lesson ? "This lesson is being rebuilt. It opens here soon."
-    : carry ? "You left this one part way. Your work is kept."
+    : carry ? "You started this one. Your answers are saved."
     : suggested && !st.done ? `Next in ${entry.unit || gradeOf(g).name}.${unlocks ? ` ${unlocks.title} needs it, so it comes first.` : ""}`
     : fade ? "Your last skill check on this was a while ago. A quick go over keeps it."
-    : st.score === 4 ? "Your skill check says you’ve got this. Practise any time to keep it."
-    : st.done ? `Your last skill check scored ${st.score ?? 0} of 4. Another go makes it stick.`
+    : st.score === 4 ? "Your skill check says you’ve got this. Practice any time to keep it."
+    : st.done ? `Your last skill check scored ${st.score ?? 0} of 4. Practice again to learn it.`
     : "Not started yet. Every lesson is open, so you can start here.";
   const start = () => {
     if (carry) return go({ name: "practice" }, "fwd");
@@ -107,11 +107,11 @@ function TodayPanel({ g, id }: { g: number; id: string }) {
   };
   return (
     <section className="o-panel o-today" aria-label="Today">
-      <span className="o-label o-in">{carry ? "In progress" : suggested ? "Today" : entry.unit || gradeOf(g).name}</span>
+      <span className="o-label o-in">{carry ? "Not finished" : suggested ? "Today" : entry.unit || gradeOf(g).name}</span>
       <h2 className="o-title o-in">{entry.title}</h2>
       <p className="o-why o-in">{why}</p>
       <div className="o-row o-in">
-        <button className="o-btn fill" disabled={!lesson} onClick={start}>{carry ? "Carry on" : !st.done ? "Start" : fade || st.tone === "rev" ? "Go over" : "Practise"}</button>
+        <button className="o-btn fill" disabled={!lesson} onClick={start}>{carry ? "Keep going" : !st.done ? "Start" : fade || st.tone === "rev" ? "Go over" : "Practice"}</button>
         <span className="o-small">{carry && run ? `Problem ${run.i + 1} of ${run.items.length} · your work is kept` : st.done ? `Practice and skill check · about ${LESSON_MINUTES} minutes` : `Lesson and skill check · about ${LESSON_CHECK_MINUTES} minutes`}</span>
       </div>
       <div className="o-art">{found && <PlayingDiagram ex={{ ...found.pic.ex, diagram: found.pic.ex.diagram! }} end={statementBeat(found.pic.ex)} />}</div>
@@ -141,8 +141,8 @@ function ReviewToday() {
   const { due, problems } = reviewPlan(), one = due.length === 1 ? lessonById(due[0]!) : undefined;
   const days = one ? Math.floor((now() - (progress.checks[one.id]?.date ?? now())) / 864e5) : 0;
   const ago = days >= 14 ? `${Math.floor(days / 7)} weeks ago` : `${days} ${days === 1 ? "day" : "days"} ago`;
-  const why = one ? `Your last skill check on ${one.title} was ${ago}. A quick review keeps it.`
-    : `${due.length} lessons you’ve learned are due back. A quick review keeps them.`;
+  const why = one ? `Your last skill check on ${one.title} was ${ago}. A quick review helps you remember it.`
+    : `${due.length} lessons you’ve learned are due back. A quick review helps you remember them.`;
   const meta = problems ? `${problems} problems · about ${Math.max(1, Math.round(problems * REVIEW_MIN_PER_PROBLEM))} minutes` : "A few problems · about 5 minutes";
   return (
     <section className="o-panel o-today" aria-label={TODAYS_REVIEW}>
@@ -155,9 +155,9 @@ function ReviewToday() {
 }
 
 /** Tile, the cover kind: a picture on top, the name, then a small ring and one word */
-export function Cover({ pic, name, p, word, tone, sel, disabled, onClick, label }: { pic?: string; name: string; p: number; word: string; tone?: string; sel?: boolean; disabled?: boolean; onClick: () => void; label: string }) {
+export function Cover({ pic, name, p, word, tone, sel, current, disabled, onClick, label }: { pic?: string; name: string; p: number; word: string; tone?: string; sel?: boolean; current?: boolean; disabled?: boolean; onClick: () => void; label: string }) {
   return (
-    <button className={`o-tile o-cover${sel ? " sel" : ""}`} disabled={disabled} onClick={onClick} aria-label={label}>
+    <button className={`o-tile o-cover${sel ? " sel" : ""}`} disabled={disabled} onClick={onClick} aria-label={label} aria-current={current || undefined}>
       <span className="o-cpw"><TilePic svg={pic} /></span>
       <span className="o-tx"><span className="o-nm">{name}</span><span className="o-foot"><ORing p={p} /><span className={`o-st${tone ? ` ${tone}` : ""}`}>{word}</span></span></span>
     </button>
@@ -170,16 +170,16 @@ function Stat({ p, big, name, line, tone, sel, onClick, disabled, label }: { p: 
   return onClick ? <button className={`o-tile o-stat${sel ? " sel" : ""}`} onClick={onClick} disabled={disabled} aria-label={label}>{inner}</button> : <div className="o-tile o-stat">{inner}</div>;
 }
 
-/** how a set of lessons is going: done, got it, to go over (the Grade view's three stat tiles) */
+/** how a set of lessons is going: done, learned, go over (the Grade view's three stat tiles; one name everywhere, G 2026-10-14) */
 function YearStats({ list }: { list: Entry[] }) {
   const { progress, now } = useApp();
   const m = list.length, n = checkedCount(progress, list), t = now();
-  const so = list.filter(c => learned(progress, c.id) && !dueBack(progress, c.id, t)).length;
+  const so = list.filter(c => learnedNow(progress, c.id, t)).length;
   const rv = list.filter(c => toGoOver(progress, c.id) || dueBack(progress, c.id, t)).length;
   return <>
     <Stat p={m ? n / m : 0} big={`${n}/${m}`} name="Lessons done" line={m - n ? `${m - n} still to do` : "All done"} />
-    <Stat p={m ? so / m : 0} big={`${so}/${m}`} name="Got it" line="Scored 3 or 4" />
-    <Stat p={m ? rv / m : 0} big={String(rv)} name="To go over" line={rv ? "Back in Today" : "Nothing yet"} />
+    <Stat p={m ? so / m : 0} big={`${so}/${m}`} name="Learned" line="Scored 3 or 4" />
+    <Stat p={m ? rv / m : 0} big={String(rv)} name="Go over" line={rv ? "Today brings them back" : "Nothing yet"} />
   </>;
 }
 
@@ -263,7 +263,9 @@ function Box({ g, pick, choose }: { g: number; pick?: string; choose: (id: strin
       })
       : units.map(u => {
         const n = checkedCount(progress, u.entries), m = u.entries.length;
-        return <Cover key={u.name} pic={chapterPic(g, u.name)} name={u.name} p={m ? n / m : 0} word={n === m ? "All done" : `${n}/${m} done`} tone={n === m ? "done" : undefined}
+        // the chapter that holds the picked lesson or chapter test keeps the outline, so you can see where you are (v67.2)
+        const here = u.entries.some(c => c.id === pick) || pick === TEST_PICK + testKey(g, u.name);
+        return <Cover key={u.name} sel={here} current={here} pic={chapterPic(g, u.name)} name={u.name} p={m ? n / m : 0} word={n === m ? "All done" : `${n}/${m} done`} tone={n === m ? "done" : undefined}
           onClick={() => setBoxView(u.name, "zin")} label={`${u.name}, ${n} of ${m} lessons done`} />;
       });
     else if (tab === "test") tiles = unit ? testTile(testKey(g, unit.name), `${unit.name} test`) : <>

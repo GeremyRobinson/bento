@@ -70,7 +70,7 @@ function answers(p: RoundProblem): AnswerModel {
         explain: `Keep the digits up to the ${name} and make the rest zeros: ${commas(lo)}. One ${ONE[place]} more is ${commas(hi)}.`,
       }),
       oneBox({
-        id: "next", label: "Look next door", question: `The digit just right of the ${name} decides. What is it?`,
+        id: "next", label: "Look next door", question: `The digit to the right of the ${name} decides. What is it?`,
         prompt: s => [text("next digit"), op("="), s], ans: next,
         wrong: slips(next, [[d, "Read the place itself", `${d} is the ${ONE[place]}s digit. Look one place to its right, in the ${lower}.`]]),
         hint: `Look one place to the right of the ${name}.`,
@@ -84,7 +84,7 @@ function answers(p: RoundProblem): AnswerModel {
           [R + (n % place), "Kept the digits after the place", `A rounded number ends in zeros. Every digit after the ${name} becomes 0.`],
           [finer, "Rounded to the wrong place", `That's ${N} to the nearest ${ONE[small]}. Round to the nearest ${ONE[place]} instead.`],
         ]),
-        hint: "Is the next digit 5 or more, or less than 5? That decides which of your two round numbers it goes to.",
+        hint: "Is the next digit 5 or more? Round up. Less than 5? Round down.",
         explain: `The next digit is ${next}, so ${N} rounds ${up ? "up" : "down"} to ${commas(R)}.`,
       }),
     ],
@@ -107,7 +107,7 @@ function explain(p: RoundProblem, model: AnswerModel): Explanation {
     caption: `Halfway between ${commas(lo)} and ${commas(hi)} is ${commas(mid)}.`,
     timeline: beats(5),
     steps: [
-      { id: "start", state: 0, narration: `One digit in each place. We'll round to the nearest ${ONE[place]}.`, math: [text(N)] },
+      { id: "start", state: 0, narration: `One digit in each place. Round to the nearest ${ONE[place]}.`, math: [text(N)] },
       { id: "digit", state: 1, answerStep: "digit", result: d, math: [text(`${ONE[place]}s digit`), op("="), text(String(d))],
         narration: `Count places from the right until you reach the ${name}.` },
       { id: "between", state: 2, answerStep: "between", result: lo, math: [text(commas(lo)), op("<"), text(N), op("<"), text(commas(hi))],

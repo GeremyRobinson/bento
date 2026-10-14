@@ -77,7 +77,7 @@ function answers(p: FracPlotProblem): AnswerModel {
           id: "write", label: "Write it", question: "How long is it, as a mixed number?",
           prompt: b => [b.w!, frac([b.n!], [b.d!]), text(" inches")], ans: { w: p.whole, n: extra, d: p.to }, small: ["w"],
           wrong: [[{ w: p.whole, n: extra, d: p.to === 2 ? 4 : 2 }, "Used the wrong size of piece", `The pieces are ${name}, so the bottom number is ${p.to}.`]],
-          hint: "The whole inches you found go in front. Under the line: how many pieces make one inch. On top: how many pieces past the whole inches.",
+          hint: "Whole inches go in front. Bottom: pieces in one inch. Top: pieces past the whole inches.",
           explain: `${p.whole} whole ${p.whole === 1 ? "inch" : "inches"} and ${extra} ${extra === 1 ? one : name}.`,
         }),
       ],
@@ -100,7 +100,7 @@ function answers(p: FracPlotProblem): AnswerModel {
   }
   const { vals, right } = choicesOf(p);
   return { steps: [tapStep({
-    id: "mode", label: "Tallest stack", question: "Which length came up most?", prompt: [text("The most common length is ?")],
+    id: "mode", label: "Tallest stack", question: "Which length shows up the most?", prompt: [text("The most common length is ?")],
     choices: vals.map(v => `${said(v)} in`), right,
     wrong: () => ["Picked a shorter stack", "Find the tallest stack and read the length under it."],
     hint: "Find the tallest stack.", explain: `The tallest stack is at ${said(vals[right]!)} inches.`, work: [text(`${said(vals[right]!)} inches`)],
@@ -119,7 +119,7 @@ function explain(p: FracPlotProblem, model: AnswerModel): Explanation {
     extra: `${p.to === 4 ? "Middle marks are halves, short ones fourths." : "The middle mark is the half."} Count the spaces past ${p.whole}.`,
     write: `Whole inches go in front. The ${p.to === 2 ? "halves" : "fourths"} make the fraction.`,
     stack: `Each X is one ${THINGS[p.thing]!.one}. Count the X's above ${said(p.v)}.`,
-    mode: `Each X is one ${THINGS[p.thing]!.one}. The tallest stack came up most.`,
+    mode: `Each X is one ${THINGS[p.thing]!.one}. The tallest stack is the length that shows up the most.`,
   };
   const steps = model.steps.map((s, i) => ({ id: s.id, narration: line[s.id]!, math: s.work ?? [], state: i + 1, answerStep: s.id, result: s.slots[0]!.expected! }));
   if (p.kind === 0) {

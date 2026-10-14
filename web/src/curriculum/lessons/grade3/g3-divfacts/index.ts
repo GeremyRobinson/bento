@@ -28,7 +28,7 @@ function answers({ a, b }: DivFactProblem): AnswerModel {
   return {
     steps: [
       box({
-        id: "think", label: "Think multiplication", question: `${count(b, "group")} of what make ${a}?`,
+        id: "think", label: "Use a times fact", question: `${count(b, "group")} of what make ${a}?`,
         prompt: x => [num(b), op("×"), x, op("="), num(a)], ans: q,
         wrong: [
           [a - b, "Subtracted", `Taking ${b} away once leaves ${a - b}. You want ${b} equal groups that make ${a}.`],

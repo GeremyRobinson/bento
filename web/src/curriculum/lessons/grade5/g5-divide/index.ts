@@ -41,7 +41,7 @@ function answers({ dv, qt, n }: LongDivisionProblem): AnswerModel {
         wrong: [[T / 10 + O, "Forgot it's tens", `The first part was ${T}, not ${T / 10}.`]],
       }),
     // a miss without a named slip points at the picture, as in g5-mult2 (spec §4 g5-divide, Wrong)
-    ].map(st => ({ ...st, look: `Look again at the lit strip: it's ${dv} down.` })),
+    ].map(st => ({ ...st, look: `Look again at the lit-up strip: it's ${dv} tall.` })),
     finalParts: [-1],
   };
 }

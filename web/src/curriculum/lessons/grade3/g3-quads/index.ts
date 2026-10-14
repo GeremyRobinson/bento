@@ -62,7 +62,7 @@ function answers(p: QuadProblem): AnswerModel {
     tapStep({
       id: "parallel", label: "Parallel sides", question: "How many pairs of sides go the same direction and never meet?", prompt: [text("Pairs of parallel sides: ?")], choices: ["0", "1", "2"], right: c.nPar,
       wrong: i => (i > c.nPar
-        ? ["Counted a pair that meets", "Run the sides on in your head: some of those pairs lean toward each other and would meet."]
+        ? ["Counted a pair that meets", "Picture the sides going on and on. Some of those pairs lean toward each other and would meet."]
         : ["Missed a parallel pair", `${c.nPar === 2 ? "Both pairs" : "One pair"} of opposite sides ${c.nPar === 2 ? "go" : "goes"} the same way, like train tracks, and would never meet.`]),
       hint: "Look at opposite sides. Would they ever meet if they kept going?", explain: `${c.nPar} ${c.nPar === 1 ? "pair" : "pairs"} of parallel sides.`, work: [text(String(c.nPar))],
     }),

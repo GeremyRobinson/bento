@@ -29,7 +29,7 @@ function expression({ t, a, b, c, d }: OrderProblem): MathText {
     : [num(a), op("+"), num(b), op("×"), ...P(num(c), op("−"), num(d))];
 }
 
-const LEFT_TO_RIGHT = "Left to right only decides between + and −, or between × and ÷. Parentheses, then × and ÷, come before + and −.";
+const LEFT_TO_RIGHT = "Parentheses go first, then × and ÷, then + and −. Left to right is only for signs of the same kind.";
 
 /** Before any working out: which part comes first? The choices are the parts of the expression, left to right. */
 function firstStep({ t, a, b, c, d }: OrderProblem): AnswerStep {
@@ -39,9 +39,9 @@ function firstStep({ t, a, b, c, d }: OrderProblem): AnswerStep {
     ? [[`${a} × ${b}`, `${b} − ${c}`], 0, { 1: ["Subtracted first", "× and ÷ come before −, so the − waits."] }]
     : [[`${a} + ${b}`, `${b} × ${c}`, `${c} − ${d}`], 2, { 0: ["Worked left to right", LEFT_TO_RIGHT], 1: ["Skipped the parentheses", `The parentheses make ${c} − ${d} one number, so it comes even before ×.`] }];
   return tapStep({
-    id: "first", label: "What goes first?", question: "Which part do you work out first?", prompt: [],
+    id: "first", label: "What goes first?", question: "Which part do you do first?", prompt: [],
     choices, ans, wrong,
-    hint: t === 2 ? "There are no parentheses here. Which comes first, × or −?" : "Look for parentheses: they say \"work me out first\".",
+    hint: t === 2 ? "There are no parentheses here. Which comes first, × or −?" : "Look for parentheses: they say \"do me first\".",
     explain: t === 2 ? `× comes before −, so ${a} × ${b} goes first.` : `The parentheses go first: ${choices[ans]}.`,
     work: [text(`First: ${choices[ans]}`)],
   });
@@ -97,9 +97,9 @@ function explain(p: OrderProblem, model: AnswerModel): Explanation {
   // beat 1 lights the first group once "what goes first" is answered; each later beat turns one group into its value
   const step = (i: number, narration: string, math: MathText, result: number): ExplanationStep =>
     ({ id: `s${i}`, narration, math, state: i + 2, answerStep: `s${i}`, result });
-  const words = t === 1 ? ["Work out the inside of the parentheses.", "Multiply before subtracting.", "Subtract last."]
+  const words = t === 1 ? ["Do the part inside the parentheses first.", "Multiply before subtracting.", "Subtract last."]
     : t === 2 ? ["Multiply first.", "Divide next, still before subtracting.", `Subtract last.${wrongWay}`]
-    : ["Work out the inside of the parentheses.", "Multiply next, before adding.", `Add last.${wrongWay}`];
+    : ["Do the part inside the parentheses first.", "Multiply next, before adding.", `Add last.${wrongWay}`];
   const maths: MathText[] = t === 1 ? [[num(a), op("+"), num(b), op("="), num(r0)], [num(r0), op("×"), num(c), op("="), num(r1)], [num(r1), op("−"), num(d), op("="), num(r2)]]
     : t === 2 ? [[num(a), op("×"), num(b), op("="), num(r0)], [num(c), op("÷"), num(d), op("="), num(r1)], [num(r0), op("−"), num(r1), op("="), num(r2)]]
     : [[num(c), op("−"), num(d), op("="), num(r0)], [num(b), op("×"), num(r0), op("="), num(r1)], [num(a), op("+"), num(r1), op("="), num(r2)]];

@@ -105,7 +105,7 @@ export const lesson: LessonDefinition<CompareProblem> = {
   },
   restore: raw => restoreVia(raw, ["top", "bottom"] as const, v => createCompare(v.top, v.bottom)),
   display: () => words("Which row has more?"),
-  displayNote: () => "Count each row. They might be the same!",
+  displayNote: () => "Count each row. They might be the same.",
   picture: p => pairRows({ top: p.top, bottom: p.bottom, alt: `${count(p.top, "dot")} on top and ${count(p.bottom, "dot")} below` }),
   answers,
   explain,

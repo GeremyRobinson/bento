@@ -12,6 +12,7 @@ import { tableById } from "../engine/facts/tables";
 import { checkedCount } from "../app/rings";
 import { GRADES_VIEW, setBoxView, useBoxView } from "../app/box";
 import { REVIEW } from "../app/copy";
+import { SETTINGS_PAGE_NAME } from "../screens/Settings";
 import { BackIcon, GridIcon, ORing, PersonIcon, SunIcon } from "./Masters";
 
 /** what the island says: a small line over where you are, how far along the ring is, and where back goes */
@@ -56,7 +57,8 @@ function whereOf(app: ReturnType<typeof useApp>, grade: number, view: string | n
     }
     case "me": return { kick: g.name, title: "Me", p: year, back: cameFrom(route) ?? HOME };
     case "parent": return { kick: "Me · on this device", title: "For the grown‑up", p: year, back: { name: "me" } };
-    case "settings": return { kick: g.name, title: "Settings", p: year, back: cameFrom(route) ?? HOME };
+    case "settings": return route.page ? { kick: "Settings", title: SETTINGS_PAGE_NAME[route.page], p: year, back: { name: "settings" } }
+      : { kick: g.name, title: "Settings", p: year, back: cameFrom(route) ?? HOME };
     case "facts": {
       const t = route.table ? tableById(route.table) : undefined;
       return t ? { kick: "Facts", title: t.name, p: year, back: { name: "facts" } } : { kick: g.name, title: "Facts", p: year, back: HOME };
@@ -113,7 +115,7 @@ export function AppNav({ grade }: { grade: number }) {
   const g = gradeOf(grade);
   return (
     <div className="o-nav">
-      <button className={`o-tool${route.name === "settings" ? " sel" : ""}`} onClick={() => { if (route.name !== "settings") go({ name: "settings" }, "fwd"); }} aria-label="Settings"><SunIcon /></button>
+      <button className={`o-tool${route.name === "settings" ? " sel" : ""}`} onClick={() => { if (route.name !== "settings") go({ name: "settings" }, "fwd"); else if (route.page) go({ name: "settings" }, "back"); }} aria-label="Settings"><SunIcon /></button>
       <header className="o-island">
         {hasBack
           ? <button className="o-tool" onClick={back} aria-label="Back"><BackIcon /></button>

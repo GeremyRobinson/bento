@@ -1,11 +1,10 @@
 // The area-and-grids family: area grids, place-value blocks, fraction grids and boxes follow the problem's values,
 // and every lesson's picture stays on its canvas for any problem the generator makes.
 import { createRng } from "../../curriculum/generators/rng";
-import { PIC } from "../../explanations/diagrams/scene/picture-system";
 import { buildSplitAreaDiagram, labelWidth } from "../../explanations/diagrams/area-model/build";
 import { createSplitMultiplication } from "../../curriculum/lessons/grade5/g5-mult2/problem";
 import { lessonById } from "../../curriculum/registry";
-import { buildAreaGrid, fitParts, layoutAreaGrid, lineRows, textWidth } from "../../explanations/diagrams/area-model/grid";
+import { AM_GAP, buildAreaGrid, fitParts, layoutAreaGrid, lineRows, textWidth } from "../../explanations/diagrams/area-model/grid";
 import { buildRegroupBlocks } from "../../explanations/diagrams/area-model/blocks";
 import { buildFracGrid } from "../../explanations/diagrams/frac-grid/build";
 import { boxUnit, buildBox3d } from "../../explanations/diagrams/box3d/build";
@@ -60,8 +59,8 @@ describe("lesson pictures follow the problem", () => {
       const d = scene("g3-split", { a, b });
       expect(texts(d).map(t => t.text)).toEqual(expect.arrayContaining(["5", String(b - 5), String(a), String(a * 5), String(a * (b - 5)), `${a} × ${b} = ${a * 5} + ${a * (b - 5)} = ${a * b}`]));
       const cells = d.items.filter(i => i.type === "rect" && i.cls?.startsWith("cell")) as Extract<SceneItem, { type: "rect" }>[];
-      // each part sits half the picture system's area gap inside its column
-      expect((cells[0]!.w + PIC.gap.area) / (cells[1]!.w + PIC.gap.area)).toBeCloseTo(5 / (b - 5), 1);
+      // each part sits half the area model's gap inside its column
+      expect((cells[0]!.w + AM_GAP) / (cells[1]!.w + AM_GAP)).toBeCloseTo(5 / (b - 5), 1);
     }
   });
   it("g4-area: the perimeter path goes round a rectangle in the ratio length : width", () => {

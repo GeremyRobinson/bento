@@ -57,7 +57,7 @@ describe("today's review", () => {
     expect(screen.queryByRole("button", { name: "Take it again" })).toBeNull();
     // back in the box nothing is left in progress (v2 home has no review tile to mark done; see openReview)
     tap("Back to your box");
-    expect(within(screen.getByRole("region", { name: "Today" })).queryByRole("button", { name: "Carry on" })).toBeNull();
+    expect(within(screen.getByRole("region", { name: "Today" })).queryByRole("button", { name: "Keep going" })).toBeNull();
   });
 });
 

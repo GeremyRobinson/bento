@@ -101,7 +101,7 @@ function answers(p: CompareProblem): AnswerModel {
     first = box({
       id: "fit", label: "Fit the small pieces", question: `How many 1/${count(D, "piece")} fit in one 1/${B} piece?`,
       prompt: x => [x, op("×"), frac(1, D), op("="), frac(1, B)], ans: k,
-      wrong: [[D, "Counted all the small pieces", `There are ${D} small pieces in the whole bar. How many fit in just one 1/${B} piece?`], [B, "Used the big pieces", `Look at one 1/${B} piece and count the 1/${count(D, "piece")} under it.`]],
+      wrong: [[D, "Counted all the small pieces", `There are ${D} small pieces in the whole bar. How many fit in one 1/${B} piece?`], [B, "Used the big pieces", `Look at one 1/${B} piece and count the 1/${count(D, "piece")} under it.`]],
       hint: `${D} ÷ ${B} = ${k}. Look at the bars to check.`, explain: `${count(k, "piece")} of 1/${D} fit in each 1/${B}.`,
     });
   }
@@ -126,7 +126,7 @@ export function comparePicture(p: CompareProblem, s: number) {
       { at: a / b, rows: [0, 1], from: 2 }, ...(a / b !== c / d ? [{ at: c / d, rows: [0, 1] as [number, number], from: 2 }] : []),
     ],
     width: 540, maxRowHeight: 56,
-    alt: `Two bars the same length: ${ft(a, b)} shaded on top and ${ft(c, d)} shaded below. ${s === 0 ? "The shading ends in the same place." : `${s > 0 ? ft(a, b) : ft(c, d)} reaches further.`}`,
+    alt: `Two bars the same length: ${ft(a, b)} shaded on top and ${ft(c, d)} shaded below. ${s === 0 ? "The shading ends in the same place." : `${s > 0 ? ft(a, b) : ft(c, d)} reaches farther.`}`,
   });
 }
 
@@ -150,7 +150,7 @@ function explain(p: CompareProblem, model: AnswerModel): Explanation {
     steps: [
       { id: first.id, state: 1, answerStep: first.id, ...firstBeat },
       { id: "compare", state: 2, answerStep: "compare", result: s + 1, math: pair(p, [op(sign)]),
-        narration: s === 0 ? "The shading ends in the same place, so they are equal." : `${big} reaches further, so it is bigger.` },
+        narration: s === 0 ? "The shading ends in the same place, so they are equal." : `${big} reaches farther, so it is bigger.` },
     ],
   };
 }

@@ -34,7 +34,7 @@ function answers({ a, b, k }: EquivProblem): AnswerModel {
   return {
     steps: [
       ns({ id: "times", l: "Times what?", q: `The bottom went from ${b} to ${b * k}. What was it multiplied by?`, a: s => [num(b), op("×"), ...s, op("="), num(b * k)], ans: k,
-        h: `Count by ${b}s up to ${b * k}.`, w: [[b * k - b, "Added instead of multiplied", "Fractions grow by multiplying, not adding."]] }),
+        h: `Count by ${b}s up to ${b * k}.`, w: [[b * k - b, "Added instead of multiplied", "The bottom was multiplied, not added to."]] }),
       ns({ id: "top", l: "Same to the top", a: s => [num(a), op("×"), num(k), op("="), ...s], ans: a * k, h: "Whatever the bottom was multiplied by, multiply the top by the same number.",
         w: [[a, "Changed only the bottom", "Whatever you multiply the bottom by, multiply the top by too."], [a + b * k - b, "Added instead of multiplied", `Multiply the top by ${k}.`]] }),
     ],

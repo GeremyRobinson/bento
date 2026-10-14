@@ -88,17 +88,18 @@ describe("every screen renders inside the Screen master", () => {
     expect(screen.queryByRole("alertdialog")).toBeNull();
     expect(document.querySelector(".v-prac")).toBeNull();
     const today = within(screen.getByRole("region", { name: "Today" }));
-    expect(today.getByText("In progress")).toBeInTheDocument();
+    expect(today.getByText("Not finished")).toBeInTheDocument();
     expect(today.getByText(/^Problem 1 of \d+ · your work is kept$/)).toBeInTheDocument();
-    fireEvent.click(today.getByRole("button", { name: "Carry on" }));
+    fireEvent.click(today.getByRole("button", { name: "Keep going" }));
     expect(document.querySelector("#app > .o-state.v-prac")).not.toBeNull();
     expect(document.querySelector(".v-stage .v-prob")!.textContent).toBe(problem);
   });
 
   it("Find my level's answer sits in a fit screen", () => {
     renderApp({ grade: 5, chosen: true });
-    // v63: Find my level is a row in Settings
+    // v67.1: Find my level is a Settings tile that opens its own page
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Find my level/ }));
     fireEvent.click(screen.getByRole("button", { name: "Start" }));
     solveRun();
     expect(document.querySelector("#app > .screen.fit.placed")).not.toBeNull();

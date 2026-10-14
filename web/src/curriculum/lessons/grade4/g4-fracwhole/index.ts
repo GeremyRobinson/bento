@@ -68,7 +68,7 @@ function explain(p: FractionTimesWholeProblem, model: AnswerModel): Explanation 
   const simple = S >= d
     ? `Every ${countOf(d, "piece")} make one whole.${unsimplified ? ` Then simplify the ${rem}/${d}.` : ""}`
     : g > 1 ? `Divide the top and the bottom by ${g}.`
-    : `No number but 1 divides both ${S} and ${d}, so it's as simple as it gets.`;
+    : `Only 1 divides both ${S} and ${d}, so it can't be simplified.`;
   return {
     heading: "Groups of pieces",
     idea: ["Times a whole number means that many groups of the same pieces, so the pieces stay the same size."],

@@ -43,7 +43,7 @@ export function simplifyRootAnswers({ k, m: rest, n }: SimplifyRoot): AnswerMode
         w: [...smallerSquares(k, rest), [{ sq: rest, rest: k * k }, "Square second", "Put the perfect square first, then what is left."]] }),
       ns({ id: "root", l: "Its square root", a: s => [sqrt(k * k), op("="), ...s], ans: k, h: `Which whole number times itself makes ${f(k * k)}?`, w: [[k * k / 2, "Halved it", `The root is the number that times itself makes ${f(k * k)}, not half of it.`]] }),
       ms({ id: "simple", l: "Write it simply", a: S => [sqrt(n), op("="), ...S.c!, sqrt(S.r!)], ans: { c: k, r: rest }, h: `√(${f(k * k)} × ${f(rest)}) = √${f(k * k)} × √${f(rest)}. Which part is a whole number?`,
-        w: [[{ c: k * k, r: rest }, "The square came out", `The square itself doesn't come out, its root does: √${f(k * k)} = ${f(k)}.`], [{ c: k, r: n }, "Left it all inside", `Once ${f(k)} is outside, only ${f(rest)} stays under the root.`]] }),
+        w: [[{ c: k * k, r: rest }, "The square came out", `The square doesn't come out. Its root does: √${f(k * k)} = ${f(k)}.`], [{ c: k, r: n }, "Left it all inside", `Once ${f(k)} is outside, only ${f(rest)} stays under the root.`]] }),
     ],
     finalParts: [-1],
   };
@@ -61,7 +61,7 @@ export function explainSimplifyRoot(p: SimplifyRoot, model: AnswerModel) {
     alt: `√${f(n)} = √(${f(square)} × ${f(rest)}) = ${f(k)}√${f(rest)}.`,
     steps: [
       { id: "start", narration: `Look for the biggest perfect square that divides ${f(n)}.`, math: [sqrt(n)] },
-      { id: "square", narration: `${f(square)} is the biggest perfect square that goes in.`, math: m(n, op("="), square, op("×"), rest), line: [sqrt([text("("), mark(square), op("×"), num(rest), text(")")])], answerStep: "square", result: square },
+      { id: "square", narration: `${f(square)} is the biggest perfect square that divides ${f(n)}.`, math: m(n, op("="), square, op("×"), rest), line: [sqrt([text("("), mark(square), op("×"), num(rest), text(")")])], answerStep: "square", result: square },
       { id: "root", narration: `${f(k)} times itself makes ${f(square)}.`, math: m(sqrt(square), op("="), k), line: [sqrt(square), op("×"), sqrt(rest)], answerStep: "root", result: k },
       { id: "simple", narration: `${f(k)} comes out, and ${f(rest)} stays under the root.`, math: [sqrt(n), op("="), num(k), sqrt(rest)], line: [mark(k), sqrt(rest)], answerStep: "simple", result: k },
       { id: "check", narration: `Check: squaring the answer gives back the number.`, math: [text("("), num(k), sqrt(rest), text(")"), sup(2), op("="), num(square), op("×"), num(rest), op("="), num(n)], line: null },

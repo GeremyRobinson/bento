@@ -68,7 +68,7 @@ function answers(p: LinePlotProblem): AnswerModel {
   if (p.ask === 1) {
     const m = modeOf(d)[0]!, n = howMany(d, m);
     return { steps: [oneBox({
-      id: "mode", label: "Tallest stack", question: "Which length came up most?",
+      id: "mode", label: "Tallest stack", question: "Which length shows up the most?",
       prompt: s => [s, text(" inches")], ans: m,
       wrong: slips(m, [
         [n, "Gave the number of X's", "That's how many X's. The question asks which length: read the number under the stack."],
@@ -76,7 +76,7 @@ function answers(p: LinePlotProblem): AnswerModel {
         [m + 1, "Read the number beside it", `That number is next to the tallest stack. Read the number right under it.`],
       ]),
       hint: "Find the tallest stack. Read the number under it.",
-      explain: `The tallest stack, ${count(n, "X", "X's")}, is above ${m}. ${m} inches came up most.`,
+      explain: `The tallest stack, ${count(n, "X", "X's")}, is above ${m}. ${m} inches shows up the most.`,
     })], finalParts: [-1] };
   }
   if (p.ask === 2) {
@@ -132,7 +132,7 @@ function explain(p: LinePlotProblem, model: AnswerModel): Explanation {
   const said: Record<string, string> = {
     plot: "Each X sits above its own length.",
     stack: "Count the X's in that stack, the new one too.",
-    mode: "The tallest stack came up most.",
+    mode: "The tallest stack is the length that shows up the most.",
     longer: `Count the X's to the right of ${p.v}.`,
     max: "The longest is the X farthest right.",
     min: "The shortest is the X farthest left.",

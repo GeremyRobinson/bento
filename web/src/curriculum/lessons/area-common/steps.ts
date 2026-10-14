@@ -77,7 +77,7 @@ export function simplifyStep(S: number, L: number, label: string, id = "simplify
     note: S > L ? "The top is bigger than the bottom, so pull out the wholes. Use the small box for the whole number."
       : S === L ? "Top and bottom are the same. What whole number is that?"
       : g > 1 ? "Can both numbers be divided by the same number?"
-      : "If it can't be simplified, just copy it. Leave the whole-number box empty.",
+      : "If it can't be simplified, copy it. Leave the whole-number box empty.",
     slots: [{ id: "w", expected: hasWhole ? F.whole : null }, { id: "n", expected: fracPart ? F.num : null }, { id: "d", expected: fracPart ? F.den : null }],
     known: [],
     check: (v): StepCheck => {
@@ -90,8 +90,8 @@ export function simplifyStep(S: number, L: number, label: string, id = "simplify
           message: S > L ? `That's not equal to ${S}/${L}. How many whole ${L}s fit into ${S}? That's the whole number. What's left over goes on top.`
             : `That's not equal to ${S}/${L}. Divide the top **and** the bottom by the same number.` };
       }
-      if (dd && n >= dd) return { ok: false, soft: true, message: `That's the right amount! Now write it as a mixed number: how many whole ${dd}s fit into ${n}?` };
-      if (dd && n > 0 && gcd(n, dd) > 1) return { ok: false, kind: "Not fully simplified", generic: false, message: `Same amount, good! But ${n}/${dd} can still be simplified: both ${n} and ${dd} divide by ${gcd(n, dd)}.` };
+      if (dd && n >= dd) return { ok: false, soft: true, message: `That's the right amount. Now write it as a mixed number. How many whole ${dd}s fit into ${n}?` };
+      if (dd && n > 0 && gcd(n, dd) > 1) return { ok: false, kind: "Not fully simplified", generic: false, message: `Same amount. ${n}/${dd} can still be simplified. Both ${n} and ${dd} divide by ${gcd(n, dd)}.` };
       return { ok: true };
     },
     hint,

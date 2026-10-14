@@ -29,7 +29,7 @@ const system = (p: EliminationSystem): MathText => [...first(p.sum), br(), ...se
 export function eliminationAnswers({ x, y, sum, difference }: EliminationSystem): AnswerModel {
   return {
     steps: [
-      ns({ id: "add", l: "Add the equations", n: "The y's cancel.", a: s => [num(2), v(), op("="), ...s], ans: 2 * x, h: `Add the left sides and the right sides: x + x, + y and − y, ${f(sum)} + ${fP(difference)}.`,
+      ns({ id: "add", l: "Add the equations", n: "The y's cancel.", a: s => [num(2), v(), op("="), ...s], ans: 2 * x, h: `Add left to left and right to right: x + x, then + y and − y, then ${f(sum)} + ${fP(difference)}.`,
         w: [[sum - difference, "Subtracted the equations", "Subtracting cancels x, not y. Add so that + y and − y make 0."]] }),
       ns({ id: "x", l: "Solve for x", a: s => [v(), op("="), ...s], ans: x, h: "2x is 2 times x. Divide both sides by 2.", w: [[2 * x, "Didn't divide", "That is 2x. Divide by 2 to get one x."]] }),
       ns({ id: "y", l: "Find y", a: s => [num(x), op("+"), v("y"), op("="), num(sum), text(", "), v("y"), op("="), ...s], ans: y, h: `Put x = ${f(x)} into x + y = ${f(sum)}, then undo the + ${fP(x)}.`, w: [[sum + x, "Added x", `x + y = ${f(sum)}, so y is ${f(sum)} take away ${fP(x)}.`]] }),

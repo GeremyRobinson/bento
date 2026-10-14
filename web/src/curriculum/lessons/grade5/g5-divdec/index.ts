@@ -21,13 +21,13 @@ function answers({ d, qt }: DivDecimalProblem): AnswerModel {
   return {
     steps: [
       oneBox({ id: "divisor", label: "Make the divisor whole", prompt: s => [num(y), op("×"), num(10), op("="), s], ans: d, hint: "Move its decimal point one place right.",
-        wrong: [[d * 10, "Moved the point too far", "Times 10 moves the point just one place."], [round6(y / 10), "Moved the point the wrong way", "Times 10 makes it bigger: the point moves right."]] }),
+        wrong: [[d * 10, "Moved the point too far", "Times 10 moves the point one place."], [round6(y / 10), "Moved the point the wrong way", "Times 10 makes it bigger: the point moves right."]] }),
       oneBox({
         id: "other", label: "Do the same to the other number", prompt: s => [num(x), op("×"), num(10), op("="), s], ans: d * qt,
         hint: "Multiply it by 10 too, so the answer doesn't change.", wrong: [[round6(x), "Changed only one number", "Multiply both numbers by 10."]],
       }),
       oneBox({ id: "divide", label: "Divide", prompt: s => [num(d * qt), op("÷"), num(d), op("="), s], ans: qt, hint: `How many ${d}s make ${d * qt}?`,
-        wrong: [[round6(qt / 10), "Put the point back", "Both numbers grew ten times, so the answer didn't change: there's no point to put back."], [d * qt * d, "Multiplied", `How many ${d}s fit in ${d * qt}? That's dividing.`]] }),
+        wrong: [[round6(qt / 10), "Put the point back", "Both numbers got 10 times bigger, so the answer is the same. Don't move the point back."], [d * qt * d, "Multiplied", `How many ${d}s fit in ${d * qt}? That's dividing.`]] }),
     ],
     finalParts: [-1],
   };

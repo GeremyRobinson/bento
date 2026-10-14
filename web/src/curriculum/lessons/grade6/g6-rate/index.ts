@@ -26,7 +26,7 @@ const $ = (s: MathText): MathText => [text("$"), ...s];
 function answers({ u, n, m }: UnitRateProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "one", l: "Cost of one", a: s => [...$([num(u * n)]), op("÷"), num(n), op("="), ...$(s)], ans: u, h: `Share the cost over ${n}.`,
+      ns({ id: "one", l: "Cost of one", a: s => [...$([num(u * n)]), op("÷"), num(n), op("="), ...$(s)], ans: u, h: `Share the cost equally among ${n}.`,
         w: [[u * n * n, "Multiplied instead of divided", "To find the cost of one, divide."]] }),
       ns({ id: "many", l: `Cost of ${m}`, a: s => [num(m), op("×"), ...$([num(u)]), op("="), ...$(s)], ans: m * u, h: `${m} of them at $${u} each.`,
         w: [[u * n * m, "Used the cost of all of them", `Use the cost of one, $${u}, not $${u * n}.`], [m + u, "Added", `${m} of them, $${u} each: that's ${m} groups of $${u}.`]] }),
@@ -59,7 +59,7 @@ function explain(p: UnitRateProblem, model: AnswerModel): Explanation {
     timeline: beats(3),
     steps: [
       { id: "one", state: 1, answerStep: "one", result: u, math: [...$([num(u * n)]), op("÷"), num(n), op("="), ...$([num(u)])],
-        narration: `Share the cost equally over the ${n} ${item}.` },
+        narration: `Share the cost equally among the ${n} ${item}.` },
       { id: "many", state: 2, answerStep: "many", result: total, math: [num(m), op("×"), ...$([num(u)]), op("="), ...$([num(total)])],
         narration: `Then take ${m} of them at that price.` },
     ],

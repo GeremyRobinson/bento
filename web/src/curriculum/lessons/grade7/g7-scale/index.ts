@@ -47,16 +47,16 @@ function explain(p: ScaleProblem, model: AnswerModel): Explanation {
   const { c, km } = p, g = expectedOf(model.steps, "groups"), real = expectedOf(model.steps, "real");
   return {
     heading: "Count the groups",
-    idea: ["Every scale length stands for the same real distance, so a longer line is just more of them."],
+    idea: ["Every scale length stands for the same real distance, so a longer line is more of them."],
     statement: [num(c), text(" cm"), op("="), num(km), text(" km")],
     diagram: scalePicture(p),
-    caption: `Each ${c} cm on the map is ${km} km for real.`,
+    caption: `Each ${c} cm on the map is ${km} km in real life.`,
     timeline: beats(3),
     steps: [
       { id: "groups", state: 1, answerStep: "groups", result: g, math: [num(c * g), op("÷"), num(c), op("="), num(g)],
         narration: `Cut the map line into groups of ${c} cm.` },
       { id: "real", state: 2, answerStep: "real", result: real, math: [num(g), op("×"), num(km), op("="), num(real), text(" km")],
-        narration: `Each group is ${km} km for real.` },
+        narration: `Each group is ${km} km in real life.` },
     ],
   };
 }
@@ -75,7 +75,7 @@ export const lesson: LessonDefinition<ScaleProblem> = {
     try { return r && createScale(r.c, r.km, r.g); } catch { return null; }
   },
   display: (p): MathText => [num(p.c), text(" cm"), op("="), num(p.km), text(" km")],
-  displayNote: p => `On the map, two towns are ${p.c * p.g} cm apart. How far is that really?`,
+  displayNote: p => `On the map, two towns are ${p.c * p.g} cm apart. How far apart are they in real life?`,
   answers,
   explain,
 };

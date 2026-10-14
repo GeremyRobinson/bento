@@ -52,9 +52,11 @@ export const MASTERS: Master[] = [
   { name: "O ring", component: "components/Masters.tsx", classes: ["o-ring", "m", "l", "t", "f"] },
   { name: "O marks", classes: ["o-marks"] },
   { name: "O slider", classes: ["o-sw", "thumb"] },
-  { name: "O tile", classes: ["o-tile", "o-tx", "o-nm", "o-cover", "o-cpw", "o-stat", "o-wide", "o-foot", "o-st", "next", "rev", "o-ring", "o-marks", "sel", "o-gt", "o-gnum", "o-grades"] },
+  { name: "O tile", classes: ["o-tile", "o-tx", "o-nm", "o-cover", "o-cpw", "o-stat", "o-wide", "o-foot", "o-st", "next", "rev", "o-ring", "o-marks", "sel", "o-gt", "o-gnum", "o-grades", "o-stile", "o-sic", "o-sv", "o-sw"] },
   { name: "O picture", classes: ["o-art"] },
-  { name: "O settings", classes: ["settings", "o-setrows", "o-setrow", "o-tsize"] },
+  // Settings B (model v67.1): the tiles' grid, a page's rows, and the iPad preview with its keypad
+  { name: "O settings", classes: ["settings", "o-sets", "o-sgrid", "o-shead", "o-nsx", "o-setrows", "o-setrow", "o-nm", "o-btn", "o-sb", "o-spv", "o-pv", "o-pvq", "o-pvprob", "o-pvpic", "pa", "pb", "pc", "pbh", "o-pvw", "o-pva", "v", "o-pvk", "o-key", "o-stile", "o-tile", "o-wide", "o-sgrid"] },
+  { name: "O key", classes: ["o-key"] },
   { name: "O report", classes: ["report", "open", "o-qcard", "o-ansbig", "o-bignum", "o-qpic", "two", "o-short", "o-long", "o-repd", "o-rsec", "o-cols2", "o-cols3", "o-rows", "o-line2", "o-wbars", "sm", "o-wb", "o-wlab", "cur", "o-inline"] },
   { name: "O motion", classes: ["o-arrive", "o-grid", "zin", "zout", "o-sw", "thumb", "o-btn", "o-tool", "o-tile"] },
   { name: "O me", classes: ["o-shelfp", "o-shh", "o-shelf", "o-count", "fill", "o-lrow", "o-cpw", "o-tx", "o-tile", "o-lk", "o-gulink", "o-why"] },

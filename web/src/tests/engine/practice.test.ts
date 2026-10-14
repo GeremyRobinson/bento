@@ -275,3 +275,28 @@ describe("tests", () => {
     }
   });
 });
+
+describe("a fast miss (Review copy-05)", () => {
+  /** two quick wrong answers on the first step of a lesson's practice: what does the second one say? */
+  const fastMiss = (id: string) => {
+    const p = emptyProgress();
+    let s = startPractice(id, p, deps());
+    const want = expectedValues(currentStep(s)!);
+    const off = (d: number) => Object.fromEntries(Object.entries(want).map(([k, v]) => [k, v + d]));
+    s = check(type(s, off(1)), p, deps());
+    s = check(type({ ...s, values: {} }, off(3)), p, { now: t + 200, rng });
+    return s.feedback!;
+  };
+  it.each(LESSONS.map(l => l.id))("%s never says \"read the step again\" twice", id => {
+    const fb = fastMiss(id);
+    if (fb.type !== "bad") return; // a choice step or a nudge to fill the boxes: not a miss
+    const said = [fb.text, ...(fb.lines ?? [])].join(" ");
+    expect((said.match(/read the step again/gi) ?? []).length).toBeLessThanOrEqual(1);
+    expect(said).toMatch(/slow down a little/i);
+  });
+  it("a plain miss already says \"Read the step again.\", so the fast-miss line only asks to slow down", () => {
+    const plain = LESSONS.map(l => fastMiss(l.id)).filter(fb => fb.type === "bad" && /read the step again/i.test(fb.text ?? ""));
+    expect(plain.length).toBeGreaterThan(0);
+    for (const fb of plain) expect(fb.lines).toContain("Slow down a little.");
+  });
+});

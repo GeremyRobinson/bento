@@ -35,7 +35,7 @@ export function gcfAnswers({ g, m, n }: GcfProblem): AnswerModel {
         wrong: [...smaller, [1, "Settled for 1", "1 divides every number. Look for a bigger number that divides both."]] }),
       { ...ms({ id: "factor", label: "Factor it out", prompt: s => [num(A), op("+"), num(B), op("="), num(g), text("("), s.m!, op("+"), s.n!, text(")")], ans: { m, n },
         hint: "Divide each number by the factor you pulled out.",
-        wrong: [[{ m: A, n: B }, "Left the numbers whole", `Inside goes what's left after taking out ${g}: divide each number by ${g}.`], [{ m: A - g, n: B - g }, "Subtracted the factor", `Factoring out ${g} divides by it: ${A} ÷ ${g} and ${B} ÷ ${g}.`]] }),
+        wrong: [[{ m: A, n: B }, "Left the numbers whole", `Divide each number by ${g}. The answers go inside the parentheses.`], [{ m: A - g, n: B - g }, "Subtracted the factor", `Factoring out ${g} divides by it: ${A} ÷ ${g} and ${B} ÷ ${g}.`]] }),
         explain: `${A} ÷ ${g} = ${m} and ${B} ÷ ${g} = ${n}, so ${A} + ${B} = ${g}(${m} + ${n}).` },
     ],
     finalParts: [-1],

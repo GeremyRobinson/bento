@@ -28,11 +28,11 @@ export function restorePolygonAngles(raw: unknown): PolygonAnglesProblem | null 
 export function polygonAnglesAnswers({ n }: PolygonAnglesProblem): AnswerModel {
   return {
     steps: [
-      ns({ id: "triangles", label: "Triangles inside", prompt: s => mt`${n} − 2 = ${s}`, ans: n - 2, hint: "Lines from one corner split the polygon into triangles: the two sides next to that corner don't make one of their own, so it's sides − 2.",
+      ns({ id: "triangles", label: "Triangles inside", prompt: s => mt`${n} − 2 = ${s}`, ans: n - 2, hint: "Lines from one corner split the polygon into triangles. The 2 sides next to that corner don't make one of their own, so it's sides − 2.",
         wrong: [[n, "One per side", "From one corner, the two sides next to it don't make triangles of their own: it's sides − 2."]] }),
       ns({ id: "total", label: "Total degrees", prompt: s => mt`${n - 2} × 180° = ${s}°`, ans: (n - 2) * 180, hint: "Each triangle has 180°.",
         wrong: [[n * 180, "Used n instead of n − 2", `It's ${n} − 2 triangles, not ${n}.`]] }),
-      ns({ id: "each", label: "Each angle", prompt: s => mt`${(n - 2) * 180}° ÷ ${n} = ${s}°`, ans: ((n - 2) * 180) / n, hint: "Regular means all angles are equal, so share the total out equally among the corners.", wrong: [[(n - 2) * 180 / (n - 2), "Divided by the triangles", `Share the total among the ${n} corners, not the ${n - 2} triangles.`]] }),
+      ns({ id: "each", label: "Each angle", prompt: s => mt`${(n - 2) * 180}° ÷ ${n} = ${s}°`, ans: ((n - 2) * 180) / n, hint: "Regular means all angles are equal, so split the total equally among the corners.", wrong: [[(n - 2) * 180 / (n - 2), "Divided by the triangles", `Share the total among the ${n} corners, not the ${n - 2} triangles.`]] }),
     ],
     finalParts: [-1],
   };
@@ -59,7 +59,7 @@ export function explainPolygonAngles({ n }: PolygonAnglesProblem, answers: Answe
       { id: "polygon", narration: `A regular polygon with ${n} equal sides and ${n} equal angles.`, math: mt`${n} sides`, state: 0 },
       { id: "triangles", narration: "Lines from one corner cut it into triangles: two fewer than the sides.", math: mt`${n} − 2 = ${tri}`, state: 1, answerStep: "triangles", result: tri },
       { id: "total", narration: "Each triangle holds 180°.", math: mt`${tri} × 180° = ${total}°`, state: 2, answerStep: "total", result: total },
-      { id: "each", narration: `The ${n} angles are equal, so share the total out.`, math: mt`${total}° ÷ ${n} = ${each}°`, state: 3, answerStep: "each", result: each },
+      { id: "each", narration: `The ${n} angles are equal, so split the total equally.`, math: mt`${total}° ÷ ${n} = ${each}°`, state: 3, answerStep: "each", result: each },
     ],
   };
 }

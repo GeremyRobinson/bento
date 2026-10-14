@@ -26,12 +26,12 @@ export function restoreSpecialTriangle(raw: unknown): SpecialTriangleProblem | n
 
 export function specialTriangleAnswers({ t, s }: SpecialTriangleProblem): AnswerModel {
   const steps = t === 45 ? [
-    ms({ id: "hyp", label: "Hypotenuse", prompt: S => mt`${S.c!}√${S.r!}`, ans: { c: s, r: 2 }, hint: "Half a square: leg² + leg² is two leg²'s. Take the square root: the leg comes out in front, and what stays under the root?",
+    ms({ id: "hyp", label: "Hypotenuse", prompt: S => mt`${S.c!}√${S.r!}`, ans: { c: s, r: 2 }, hint: "This is half a square: leg² + leg² is twice leg². Take the square root. The leg comes out in front. What stays under the root?",
       wrong: [[{ c: 2 * s, r: 1 }, "Doubled the leg", "Doubling is for the 30-60-90 hypotenuse. These legs are equal, so use √2."], [{ c: s, r: 3 }, "Used √3", "√3 belongs to 30-60-90."]] }),
   ] : [
     ns({ id: "hyp", label: "Hypotenuse", prompt: x => mt`2 × ${s} = ${x}`, ans: 2 * s, hint: `This triangle is half of an equilateral triangle, so the hypotenuse is a whole side: 2 × ${s}.`,
-      wrong: [[s, "Used the short leg", "The short leg is half a side of the equilateral triangle; the hypotenuse is a whole side."]] }),
-    ms({ id: "long", label: "Long leg", prompt: S => mt`${S.c!}√${S.r!}`, ans: { c: s, r: 3 }, hint: `Long leg² = hypotenuse² − short leg² = (2 × ${s})² − ${s}², which is three of ${s}². Take the square root: ${s} comes out in front.`,
+      wrong: [[s, "Used the short leg", "The short leg is half a side of the equilateral triangle. The hypotenuse is a whole side."]] }),
+    ms({ id: "long", label: "Long leg", prompt: S => mt`${S.c!}√${S.r!}`, ans: { c: s, r: 3 }, hint: `Long leg² = hypotenuse² − short leg² = (2 × ${s})² − ${s}², which is three times ${s}². Take the square root: ${s} comes out in front.`,
       wrong: [[{ c: s, r: 2 }, "Used √2", "√2 is for 45-45-90 triangles. 30-60-90 uses √3."], [{ c: 2 * s, r: 3 }, "Used the hypotenuse", `Use the short leg, not the hypotenuse: ${s}√3.`]] }),
   ];
   return { steps, finalParts: [-1] };
@@ -43,7 +43,7 @@ export function explainSpecialTriangle(p: SpecialTriangleProblem, answers: Answe
     const c = expected(answers, "hyp", "c"), r = expected(answers, "hyp", "r");
     const steps: ExplanationStep[] = [
       { id: "triangle", narration: "Both legs are equal. Two of these triangles make a square.", math: mt`45°-45°-90°, leg ${s}`, state: 0 },
-      { id: "hyp", narration: "It's the square's diagonal. Leg² + leg² is 2 leg², so times √2.", math: mt`${s} × √${r} = ${c}√${r}`, state: 1, answerStep: "hyp" },
+      { id: "hyp", narration: "It's the square's diagonal. Leg² + leg² = 2 × leg², so multiply by √2.", math: mt`${s} × √${r} = ${c}√${r}`, state: 1, answerStep: "hyp" },
     ];
     return {
       heading: "Half a square, half an equilateral triangle",
@@ -84,7 +84,7 @@ export function explainSpecialTriangle(p: SpecialTriangleProblem, answers: Answe
     steps: [
       { id: "triangle", narration: `The short leg faces 30°. Two copies make an equilateral triangle, all sides ${hyp}.`, math: mt`30°-60°-90°, short leg ${s}`, state: 0 },
       { id: "hyp", narration: "The short leg is half a side, the hypotenuse a whole side.", math: mt`2 × ${s} = ${hyp}`, state: 1, answerStep: "hyp", result: hyp },
-      { id: "long", narration: `By Pythagoras, long leg² is ${hyp}² − ${s}², which is three ${s}²'s.`, math: mt`${s} × √3 = ${long}√3`, state: 2, answerStep: "long" },
+      { id: "long", narration: `By the Pythagorean theorem, long leg² = ${hyp}² − ${s}², which is 3 × ${s}².`, math: mt`${s} × √3 = ${long}√3`, state: 2, answerStep: "long" },
     ],
   };
 }

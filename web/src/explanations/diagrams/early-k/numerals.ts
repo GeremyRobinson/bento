@@ -43,7 +43,7 @@ export function dotFrames(n: number, o: { counted?: number } = {}): Draft[] {
   if (!Number.isInteger(n) || n < 0 || n > 2 * TEN) throw new Error("ten frames hold 0 to 20 dots");
   const frames = n > TEN ? 2 : 1, items: Draft[] = [];
   for (let f = 0; f < frames; f++) {
-    for (let i = 0; i < TEN; i++) items.push({ type: "rect", x: (i % 5) * CELL, y: f * (2 * CELL + 18) + Math.floor(i / 5) * CELL, w: CELL, h: CELL, cls: "seg", from: 0 } as Draft);
+    for (let i = 0; i < TEN; i++) items.push({ type: "rect", x: (i % 5) * CELL, y: f * (2 * CELL + 18) + Math.floor(i / 5) * CELL, w: CELL, h: CELL, cls: "seg frame", from: 0 } as Draft);
   }
   for (let i = 0; i < n; i++) {
     const f = Math.floor(i / TEN), j = i % TEN;

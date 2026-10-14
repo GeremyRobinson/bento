@@ -34,10 +34,10 @@ function answers({ n }: CountProblem): AnswerModel {
         id: "count-on", label: "Keep counting", question: `Start at ${TEN}. Keep counting the bottom row.`,
         prompt: s => [text("All the dots: "), s], ans: n,
         wrong: slips(n, [
-          [rest, "Started over", `That's just the bottom row. Don't start again at 1. Say ${TEN}, then keep going: ${TEN + 1}, ${TEN + 2}...`],
+          [rest, "Started over", `That's only the bottom row. Don't start again at 1. Say ${TEN}, then keep going: ${TEN + 1}, ${TEN + 2}...`],
           [n - 1, "Skipped a dot", "One short. Make sure you count every dot in the bottom row."],
           [n + 1, "Counted a dot twice", `One too many. The first dot in the bottom row is ${TEN + 1}.`],
-          [10 * rest + 1, "Mixed up the digits", `Close! You have the right digits, but write ${n} with the 1 first.`],
+          [10 * rest + 1, "Mixed up the digits", `You have the right digits. Write ${n} with the 1 first.`],
         ]),
         hint: `Say ${TEN}. Then count on, one number for each dot in the bottom row.`,
         explain: `${TEN}, then ${countUp(TEN + 1, n)}. There are ${count(n, "dot")}.`,

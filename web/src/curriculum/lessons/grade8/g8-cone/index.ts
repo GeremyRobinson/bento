@@ -30,7 +30,7 @@ export function coneAnswers({ r, h }: ConeProblem): AnswerModel {
       ns({ id: "base", label: "Base area", prompt: s => mt`3.14 × ${r}${sup("2")} = ${s}`, ans: base, hint: `The base is a circle. A circle's area is π × r × r: 3.14 × ${r} × ${r}.`,
         wrong: [[r * r, "Left out π", `${r} × ${r} is a square. The base is a circle: multiply by 3.14.`], [round6(2 * 3.14 * r), "Used the circumference", "2 × π × r is the distance around. The base area is π × r × r."]] }),
       ns({ id: "cylinder", label: "Times the height", prompt: s => mt`${base} × ${h} = ${s}`, ans: cyl, hint: `The cylinder around the cone is the base stacked ${h} high.` }),
-      ns({ id: "third", label: "Take a third", prompt: s => mt`${cyl} ÷ 3 = ${s}`, ans: round6(cyl / 3), hint: "A cone holds a third of the cylinder that just fits around it.",
+      ns({ id: "third", label: "Take a third", prompt: s => mt`${cyl} ÷ 3 = ${s}`, ans: round6(cyl / 3), hint: "A cone holds a third of the cylinder that fits exactly around it.",
         wrong: [[cyl, "Forgot the ÷ 3", "A cone holds a third of a cylinder: divide by 3."]] }),
     ],
     finalParts: [-1],
@@ -51,7 +51,7 @@ export function explainCone({ r, h }: ConeProblem, answers: AnswerModel): Explan
     }),
     timeline: beats(4),
     steps: [
-      { id: "solid", narration: "The cone sits inside the cylinder that just fits around it.", math: mt`r = ${r}, h = ${h}`, state: 0 },
+      { id: "solid", narration: "The cone sits inside the cylinder that fits exactly around it.", math: mt`r = ${r}, h = ${h}`, state: 0 },
       { id: "base", narration: "The base is a circle, so multiply by 3.14 for its area.", math: mt`3.14 × ${r}${sup("2")} = ${base}`, state: 1, answerStep: "base", result: base },
       { id: "cylinder", narration: `Stack the base ${h} high to fill the cylinder.`, math: mt`${base} × ${h} = ${cyl}`, state: 2, answerStep: "cylinder", result: cyl },
       { id: "third", narration: "The cone holds a third of that cylinder.", math: mt`${cyl} ÷ 3 = ${v}`, state: 3, answerStep: "third", result: v },

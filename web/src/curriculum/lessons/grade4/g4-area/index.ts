@@ -63,7 +63,7 @@ export function explainRect(p: RectProblem, answers: AnswerModel): Explanation {
     steps: [
       { id: "area", narration: `${count(w, "row")} of ${count(l, "square")} fill the inside.`, math: [num(l), op("×"), num(w), op("="), num(area), text(" m"), sup(2)], state: 1, answerStep: "area", result: area },
       { id: "half", narration: "Go along one long side and one short side.", math: [num(l), op("+"), num(w), op("="), num(half)], state: 2, answerStep: "half", result: half },
-      { id: "perimeter", narration: "All the way around is that twice.", math: [num(2), op("×"), num(half), op("="), num(per), text(" m")], state: 3, answerStep: "perimeter", result: per },
+      { id: "perimeter", narration: "All the way around is twice that.", math: [num(2), op("×"), num(half), op("="), num(per), text(" m")], state: 3, answerStep: "perimeter", result: per },
     ],
   };
 }

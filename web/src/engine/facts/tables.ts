@@ -50,7 +50,7 @@ function list(id: string, name: string, blurb: string, grades: [number, number],
 }
 
 export const TABLES: FactTable[] = [
-  list("bonds10", "Make 10", "Pairs that make 10. Every bigger sum leans on these.", [0, 2],
+  list("bonds10", "Make 10", "Pairs that make 10. Every bigger sum uses these.", [0, 2],
     range(0, 10).map(a => ({ key: String(a), head: String(a), ask: `${a} + ? = 10`, answer: 10 - a })), "add"),
   grid("add10", "Adding to 10", "Every sum up to 10.", [0, 1], range(0, 10), range(0, 10),
     (a, b) => (a + b <= 10 ? { ask: `${a} + ${b}`, answer: a + b } : null), "add"),

@@ -5,7 +5,7 @@
 const SLIPS = "new named slips from the fixes-02 draft; a wrong try that is none of them repeats the new hint";
 
 export const deviations: Record<string, Partial<Record<string, string>>> = {
-  "g6-divide": {
+  "g6-divide": { explain: "Copy rewrites-05 (G 2026-10-14): words only, same steps and answers", stepNote: "Copy rewrites-05 (G 2026-10-14): words only, same steps and answers",
     story: "K–12 lesson check (Review 2026-10-07): the ribbon story asks how many times the piece fits, since the answer is often a fraction of a bow",
     pre: "g5-unitdiv: \"how many 1/4 fit in 3?\" is the meaning dividing builds on (fixes-02 draft)",
     "added:size": "a first tap step, \"Will more than one c/d fit in a/b?\", so the learner sizes the answer before any rule",
@@ -18,7 +18,7 @@ export const deviations: Record<string, Partial<Record<string, string>>> = {
     checks: `${SLIPS}: "Added instead of multiplied", "Counted one number", and the point slips use number sense ("too big: 0.3 is less than 1")`,
   },
   "g5-order": { show: "ends in \"= ?\", so the v2 stage fills in \"= answer\" once the problem is solved, as g5-mult2 does (v2 spec P3 and g5-order, Design 2026-10-13)", pre: "g3-facts: the first lesson in Curriculum\u2019s v2 depends-on list (curriculum/specs/v2/pre-vs-depends.md; coordinator 2026-10-13, one source of truth)",
-    "added:first": "a first tap step, \"Which part do you work out first?\", where the left-to-right slip can really happen (fixes-02 draft)",
+    "added:first": "a first tap step, \"Which part do you do first?\", where the left-to-right slip can really happen (fixes-02 draft)",
     hint: "the hints say why each part is next instead of repeating the label (\"Now add.\")",
     explain: "Show me says the result where it only repeated the hint",
     checks: SLIPS,
@@ -40,7 +40,7 @@ export const deviations: Record<string, Partial<Record<string, string>>> = {
   "g7-prop": {
     pre: "g6-ratio: equal ratios by scaling (fixes-02 draft)",
     "answers:cross": "step \"cross\" now finds one part (b·k ÷ b = k) instead of the cross product, so the learner practises the scale the picture shows; x is unchanged",
-    steps: "the steps are \"One part\" and \"Build x\"; cross multiplying stays as the check in the last beat",
+    steps: "the steps are \"One part\" and \"Find x\"; cross multiplying stays as the check in the last beat",
     prompt: "one part = b·k ÷ b, then x = a × k",
     hint: "the hints follow the one-part method",
     explain: "Show me follows the one-part method",
