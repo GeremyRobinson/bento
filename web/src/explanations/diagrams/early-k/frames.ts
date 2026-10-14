@@ -9,7 +9,7 @@ const CELL = 46, DOT = 16, TEN = 10;
 /** One empty frame (two rows of five) at x0, shown from `beat`. */
 function grid(x0: number, beat: number): Draft[] {
   return Array.from({ length: TEN }, (_, i) =>
-    ({ type: "rect", x: x0 + (i % 5) * CELL, y: Math.floor(i / 5) * CELL, w: CELL, h: CELL, cls: "seg", from: beat, enter: "fade" } as Draft));
+    ({ type: "rect", x: x0 + (i % 5) * CELL, y: Math.floor(i / 5) * CELL, w: CELL, h: CELL, cls: "seg frame", from: beat, enter: "fade" } as Draft));
 }
 
 const center = (x0: number, i: number): [number, number] => [x0 + (i % 5) * CELL + CELL / 2, Math.floor(i / 5) * CELL + CELL / 2];
@@ -76,7 +76,7 @@ export function makeTenFrames(o: { a: number; b: number; beats: { ten: number; b
   if (!Number.isInteger(b) || b > TEN || left < 1) throw new Error("the second number goes past ten");
   const GAP = 40, x1 = 5 * CELL + GAP;
   // each frame is outlined in its own number's colour (in dark mode the empty boxes take it too)
-  const items: Draft[] = [...grid(0, 0).map(d => ({ ...d, cls: `seg ${pa}` }) as Draft), ...grid(x1, 0).map(d => ({ ...d, cls: `seg ${pb}` }) as Draft)];
+  const items: Draft[] = [...grid(0, 0).map(d => ({ ...d, cls: `seg frame ${pa}` }) as Draft), ...grid(x1, 0).map(d => ({ ...d, cls: `seg frame ${pb}` }) as Draft)];
   for (let i = 0; i < a; i++) {
     const [cx, cy] = center(0, i);
     items.push({ type: "circle", cx, cy, r: DOT, cls: `dotp ${pa}`, from: 0, enter: "pop", delay: 0.06 * i } as Draft);

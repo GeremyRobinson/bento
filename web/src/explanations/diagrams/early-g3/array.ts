@@ -30,7 +30,11 @@ export interface ArraySpec {
 
 export function buildArray(s: ArraySpec): SceneDiagram {
   const chip = s.chip != null;
-  const px = chip ? 46 : 32, py = chip ? 32 : 32, R = 11, cw = 38, ch = 22;
+  const R = 11, cw = 38, ch = 22, hw = chip ? cw / 2 : R, hh = chip ? ch / 2 : R;
+  // one gap everywhere (style guide: padding = gap): item to item, item to its outline, and outline to outline. A row
+  // or column that gets an outline leaves room for two paddings and the gap between outlines (G 2026-10-14)
+  const G = 7.5; // drawn up to 3x: the same gap on screen as the area model and the 5th grade grids
+  const px = 2 * hw + (s.colBoxes ? 3 : 1) * G, py = 2 * hh + (s.rowBoxes ? 3 : 1) * G;
   const items: Draft[] = [];
   const W = (s.cols - 1) * px, H = (s.rows - 1) * py;
   const when = (from: number, until?: number) => ({ from, ...(until != null ? { until } : {}) });
@@ -49,17 +53,18 @@ export function buildArray(s: ArraySpec): SceneDiagram {
   for (const a of s.accent ?? []) {
     for (let r = 0; r < s.rows; r++) for (let c = 0; c < s.cols; c++) if (a.only(r, c)) itemAt(r, c, "dota", a.from, a.until, Math.round(c * 0.03 * 100) / 100);
   }
-  const padX = (chip ? cw / 2 : R) + 7, padY = (chip ? ch / 2 : R) + 6;
+  const padX = hw + G, padY = hh + G;
   if (s.rowBoxes) {
     const b = s.rowBoxes;
     for (let r = 0; r < s.rows; r++) {
-      items.push({ type: "rect", x: -padX, y: r * py - padY + 2, w: W + 2 * padX, h: 2 * padY - 4, rx: 12, cls: "ax thin", enter: "fade", delay: r * 0.12, ...when(b.from, b.until) } as Draft);
+      // a pill: its round ends are concentric with the end items (corner = item corner + gap)
+      items.push({ type: "rect", x: -padX, y: r * py - padY, w: W + 2 * padX, h: 2 * padY, rx: padY, cls: "ax thin", enter: "fade", delay: r * 0.12, ...when(b.from, b.until) } as Draft);
     }
   }
   if (s.colBoxes) {
     const b = s.colBoxes;
     for (let c = 0; c < s.cols; c++) {
-      items.push({ type: "rect", x: c * px - padX + 3, y: -padY, w: 2 * padX - 6, h: H + 2 * padY, rx: 12, cls: "ax thin", enter: "fade", delay: c * 0.08, ...when(b.from, b.until) } as Draft);
+      items.push({ type: "rect", x: c * px - padX, y: -padY, w: 2 * padX, h: H + 2 * padY, rx: padX, cls: "ax thin", enter: "fade", delay: c * 0.08, ...when(b.from, b.until) } as Draft);
       if (b.text) items.push(t(c * px, H + padY + 5, b.text(c), "sm down", { enter: "rise", delay: c * 0.08, ...when(b.from, b.until) }));
     }
   }

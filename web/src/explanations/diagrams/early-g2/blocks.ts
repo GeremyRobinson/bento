@@ -33,7 +33,7 @@ function spreadColumns(texts: string[][], names: string[], widths: number[]) {
 const move = (x: string, down = 0): Record<string, string> =>
   x === "0" && !down ? {} : { transform: `translate(calc((${x}) * 1px), calc(${Math.round(down * 125) / 100} * (max(${PIC.label}, ${PIC.label} * var(--px, 0)) - ${PIC.label}) * 1px))` };
 
-const S = 11, F = 10 * S, RG = 5, CG = 3, COL_GAP = 30, STEP = 12, LINE = 30;
+const S = 11, F = 10 * S, RG = 8, CG = 3, COL_GAP = 30, STEP = 12, LINE = 30;
 
 /** A three-digit number as blocks in three labelled columns; each column is ringed and counted on its beat. */
 export function buildPlaceBlocks(spec: PlaceBlocksSpec): SceneDiagram {

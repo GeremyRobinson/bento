@@ -55,6 +55,8 @@ export function SceneDiagram({ diagram: given, at, fit = false }: { diagram: Sce
   return (
     <svg ref={ref} className={d.two ? "viz-svg two" : "viz-svg"} viewBox={`${r1(vb.x)} ${r1(vb.y)} ${r1(vb.w)} ${r1(vb.h)}`} role="img" aria-label={d.alt}
       style={{ "--w": Math.round(d.width), "--h": Math.round(d.height), ...(fitted ? { [BOX_H]: Math.round(frame.size[1]) } : {}), ...(fitted ? textHold(zoom, frame.text) : {}), ...(fitted && frame.panel ? FILL : {}) } as CSSProperties} data-family={d.family}>
+      {/* a second amount is the same colour in stripes (style guide rule 5) */}
+      {d.two && <defs><pattern id="pic-stripe" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect className="stripe-bg" width="8" height="8" /><rect className="stripe" width="3.5" height="8" /></pattern></defs>}
       {dotsOnTop(d.items).map((it, i, all) => {
         const from = it.from ?? 0;
         if (from > at || (it.until != null && at > it.until)) return null;

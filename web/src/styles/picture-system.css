@@ -3,18 +3,16 @@
    diagram-master.css) resolves here to a picture token. A builder picks roles; it never picks colours or gaps.
 
    COLOUR: the role                          what it means                                 token
-   part fill, not reached                    .seg, .cell waiting, .xbox, --fill*, --soft*  pic-soft
-   part fill, active or done                 .seg.on, .cell, .xchip, --tint, --c0..--c2    pic-mid
+   part fill, waiting or done (30%)          .seg, .cell, .xbox, --tint, --c*, --fill*      pic-soft
+   the step's part (60%), a two-amount lap   .lit, .dota, .shadeA.lap                       pic-mid
    part outline (3px, just outside)          every part, --k0..--k2, --acc, --ink          pic-deep
    label                                     text.lbl (and text.sm row labels)             pic-deep (muted when another part is active)
-   result, sum, caption, "?"                 text.res, text.acc, .pq text, --ka            ink
-   result ON a mid part                      text.onmid, text.onlbl                        pic-on-mid (tokens.css): ink in light,
-                                                                                          pic-line in dark, where ink on mid is
-                                                                                          only 2.2:1 (pic-line reads 7.6:1)
-   seats, inner lines                        .seat, .tk inside parts                       pic-line
+   result, sum, caption, on a part           text.res, text.onmid, text.onlbl, text.acc    pic-deep (style guide: labels and results
+                                                                                          in the grade colour)
+   seats (unit squares)                      .seat; .seat.ten marks blocks of ten          45% mix; ten lines pic-deep
    axes, brackets, the whole                 .ax, .pw, --text                              ink
    not counted                               .seg.cut, .pend, --well / --faint             key fill, done outline
-   second quantity (opt in: .two)            .p1 / --c1, --k1, --fill1, --soft1            picb-mid / picb-deep / picb-soft
+   second quantity (opt in: .two)            .p1 / --c1, --k1, --fill1, --soft1            stripes of pic-mid, deep outline
    never in a picture                        the accent (acc, blue), red, green, cyan, teal
 
    A picture shows violet only when its lesson must tell two quantities apart (thirds vs quarters, the second fraction):
@@ -45,30 +43,48 @@
 :is(.wrap,.v-cover)[data-grade="10"]{--pic-mid:var(--g10-pic-mid);--pic-soft:var(--g10-pic-soft);--pic-deep:var(--g10-pic-deep);--picb-mid:var(--g10-picb-mid);--picb-soft:var(--g10-picb-soft);--picb-deep:var(--g10-picb-deep);--pic-on-mid:var(--g10-pic-on-mid)}
 :is(.wrap,.v-cover)[data-grade="11"]{--pic-mid:var(--g11-pic-mid);--pic-soft:var(--g11-pic-soft);--pic-deep:var(--g11-pic-deep);--picb-mid:var(--g11-picb-mid);--picb-soft:var(--g11-picb-soft);--picb-deep:var(--g11-picb-deep);--pic-on-mid:var(--g11-pic-on-mid)}
 :is(.wrap,.v-cover)[data-grade="12"]{--pic-mid:var(--g12-pic-mid);--pic-soft:var(--g12-pic-soft);--pic-deep:var(--g12-pic-deep);--picb-mid:var(--g12-picb-mid);--picb-soft:var(--g12-picb-soft);--picb-deep:var(--g12-picb-deep);--pic-on-mid:var(--g12-pic-on-mid)}
-#app :is(.screen,.v-today):has(.viz-svg.two){--c1:var(--picb-mid);--k1:var(--picb-deep)}
+/* the lesson picture style (G 2026-10-14, math-app/pictures/style-guide): the grade's bright colour, kept as --pic-hue so a
+   picture can mix its fills from it */
+#app,:is(.wrap,.v-cover)[data-grade]{--pic-hue:var(--pic-mid)}
+/* one colour per picture: a second amount is told apart by stripes, not by a second hue, so the problem line keeps one hue too */
+#app :is(.screen,.v-today):has(.viz-svg.two){--c1:var(--pic-deep);--k1:var(--pic-deep)}
 /* the first quantity in the problem line is always the picture's amber, whatever the lesson's old tone (.t0-.t3) */
 #app :is(.t0,.t1,.t2,.t3) :is(.mline .pt.p0,.tone.p0){color:var(--k0)}
 
 /* every role a picture reads, mapped on the picture itself so nothing from the page (the grade accent, the old palette's
    cyan --ka and --acc, the lifted --lbl) reaches inside */
 #app :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){
-  --tint:var(--pic-mid);--deep:var(--pic-deep);--ink:var(--pic-deep);--lbl:var(--deep);
-  --c0:var(--pic-mid);--c1:var(--pic-mid);--c2:var(--pic-mid);--k0:var(--pic-deep);--k1:var(--pic-deep);--k2:var(--pic-deep);
+  /* fills (style guide rule 3): every shape the bright colour at 30% on the card, done or waiting; only the part the step
+     is about (.lit) and an overlap of two amounts get 60%.
+     Mixed with the card, not see-through, so overlapping parts never stack darker */
+  --pic-soft:color-mix(in srgb,var(--pic-hue) 30%,var(--v-card));--pic-mid:color-mix(in srgb,var(--pic-hue) 60%,var(--v-card));
+  /* unit-square lines sit between the two fills, so they show on a 30% part and on the 60% step part alike */
+  --pic-seatc:color-mix(in srgb,var(--pic-hue) 45%,var(--v-card));
+  /* one line weight (rule 1): every outline, divider, axis and arrow is the 3px outline; only marks, glows and numerals keep theirs */
+  --dw-hair:3;--dw-ridge:3;--dw-cube:3;--dw-thin:3;--dw-line:3;--dw-edge:3;--dw-stroke:3;--dw-bold:3;--dw-heavy:3;--dw-beam:3;--pic-seat-w:3px;
+  --tint:var(--pic-soft);--deep:var(--pic-deep);--ink:var(--pic-deep);--lbl:var(--deep);
+  --c0:var(--pic-soft);--c1:var(--pic-soft);--c2:var(--pic-soft);--k0:var(--pic-deep);--k1:var(--pic-deep);--k2:var(--pic-deep);
   --fill0:var(--pic-soft);--fill1:var(--pic-soft);--fill2:var(--pic-soft);--soft:var(--pic-soft);--soft0:var(--pic-soft);--soft1:var(--pic-soft);--soft2:var(--pic-soft);
-  --tint-soft:var(--pic-soft);--dot:var(--pic-mid);
-  --acc:var(--pic-deep);--soft-acc:var(--pic-mid);--ka:var(--v-ink);
+  --tint-soft:var(--pic-soft);--dot:var(--pic-soft);
+  --acc:var(--pic-deep);--soft-acc:var(--pic-soft);--ka:var(--v-ink);
   --text:var(--v-ink);--muted:var(--v-muted);--rule:var(--v-line);--faint:var(--v-done);--well:var(--v-key);--card:var(--v-card);
-  --on-pic:var(--pic-on-mid);--on-tint:var(--pic-on-mid);--d-line:var(--pic-outline)}
+  --on-pic:var(--pic-deep);--on-tint:var(--pic-deep);--d-line:var(--pic-outline)}
 /* line weight is held on screen (Review 26fe1f8): a picture drawn bigger than its own size (a tablet zooms it up to 3x) keeps
    every line at its written weight instead of zooming it with the shapes; a picture drawn smaller (a phone) keeps its lines
    as they are. --sw is how much a line is drawn at: 1, or the picture's units per screen pixel (--px) when that is under 1 */
 #app svg:is(.viz-svg,.am){--sw:min(1, var(--px, 1));
   --pic-outline:calc(var(--pic-outline-w) * var(--sw));--pic-seat:calc(var(--pic-seat-w) * var(--sw));
   --d-hair:calc(var(--dw-hair) * var(--sw));--d-ridge:calc(var(--dw-ridge) * var(--sw));--d-cube:calc(var(--dw-cube) * var(--sw));
-  --d-thin:calc(var(--dw-thin) * var(--sw));--d-edge:calc(var(--dw-edge) * var(--sw));--d-stroke:calc(var(--dw-stroke) * var(--sw));
+  --d-thin:calc(var(--dw-thin) * var(--sw));--d-line:calc(var(--dw-line) * var(--sw));--d-edge:calc(var(--dw-edge) * var(--sw));--d-stroke:calc(var(--dw-stroke) * var(--sw));
   --d-bold:calc(var(--dw-bold) * var(--sw));--d-heavy:calc(var(--dw-heavy) * var(--sw));--d-beam:calc(var(--dw-beam) * var(--sw));
   --d-mark:calc(var(--dw-mark) * var(--sw));--d-glow:calc(var(--dw-glow) * var(--sw));--d-numeral:calc(var(--dw-numeral) * var(--sw))}
-#app :is(.viz-svg,.am,.viz).two{--c1:var(--picb-mid);--k1:var(--picb-deep);--fill1:var(--picb-soft);--soft1:var(--picb-soft)}
+/* a second amount (rule 5): the same colour in stripes (SceneDiagram's #pic-stripe); the first amount keeps the 30% fill and
+   where they overlap is the 60% fill */
+#app :is(.viz-svg,.am,.viz).two{--c1:url(#pic-stripe);--k1:var(--pic-deep);--fill1:url(#pic-stripe);--soft1:url(#pic-stripe)}
+#app .viz-svg .stripe-bg{fill:var(--v-card)}
+#app .viz-svg .stripe{fill:var(--pic-mid)}
+#app .viz-svg.two .shadeA:not(.p1){fill:var(--pic-soft)}
+#app .viz-svg .shadeA.lap{fill:var(--pic-mid)}
 /* a part class retints everything in it, outline, fill and label together (a part never mixes amber and violet, M5) */
 #app .viz-svg .p0{--tint:var(--c0);--deep:var(--k0);--soft:var(--soft0)}
 #app .viz-svg .p1{--tint:var(--c1);--deep:var(--k1);--soft:var(--soft1)}
@@ -134,7 +150,7 @@
    - everything without `lit` stays as it is (finished parts stay mid, waiting ones soft)
    - the change is a fill/stroke transition, --dur-350 on --m-ease, the same as the area model; nothing grows or pulses
    - a miss uses the same role: while the miss shows, the lit part stays and everything else steps back (below) */
-#app .viz-svg :is(rect,path,polygon,circle).lit{fill:var(--tint);stroke:var(--deep);stroke-width:var(--pic-outline)}
+#app .viz-svg :is(rect,path,polygon,circle).lit{fill:var(--pic-mid);stroke:var(--deep);stroke-width:var(--pic-outline)}
 #app .viz-svg :is(rect,path,polygon,circle){transition:fill var(--dur-350) var(--m-ease),stroke var(--dur-350) var(--m-ease),opacity var(--dur-350) var(--m-ease)}
 /* only side and edge labels step back: results that wear .lbl for its size (.res, .pw, .acc, .onmid) keep ink / on-mid */
 #app .viz-svg:has(:not(text).lit) text.lbl:not(.lit,.res,.pw,.acc,.onmid,.onlbl){fill:var(--v-muted)}
@@ -148,7 +164,8 @@
 #app .viz-svg :is(.cf.cube.right,.cf.right){fill:var(--pic-mid)}
 #app .viz-svg :is(.edge,.litedge){stroke:var(--pic-deep)}
 /* seats and inner lines */
-#app :is(.viz-svg,.am) .seat{stroke:var(--pic-line);stroke-width:var(--pic-seat);opacity:.55}
+#app :is(.viz-svg,.am) .seat{stroke:var(--pic-seatc);stroke-width:var(--pic-seat);stroke-linecap:round}
+#app :is(.viz-svg,.am) .seat.ten{stroke:var(--pic-deep)}
 #app .viz-svg .grid{stroke:var(--pic-line);opacity:.55}
 /* lines, marks and points: amber, the one to look at deep; the whole and its brackets ink */
 #app .viz-svg :is(.ln2,.hl,.hlline,.ring,.xring,.arcline.thin){stroke:var(--pic-deep)}
@@ -156,8 +173,11 @@
 #app .viz-svg[data-family="order-tiles"] .ln2{stroke-width:var(--pic-outline)}
 /* its numbers and signs are the problem itself, so they read at twice a label, never under a label on screen */
 #app .viz-svg[data-family="order-tiles"] text.lbl{font-size:max(calc(var(--pic-label) * 2),calc(var(--pic-label) * var(--px,0)))}
-#app .viz-svg .dotp{fill:var(--pic-mid);stroke:var(--pic-deep);stroke-width:var(--d-stroke)}
-#app .viz-svg .dota{fill:var(--pic-mid)}
+#app .viz-svg .dotp{fill:var(--pic-soft);stroke:var(--pic-deep);stroke-width:var(--pic-outline)}
+/* the dot the step adds is the step's part: 60%, with the same outline */
+#app .viz-svg .dota{fill:var(--pic-mid);stroke:var(--pic-deep);stroke-width:var(--pic-outline)}
+/* a ten frame's boxes are empty boxes (style guide K sample): the dots carry the fill */
+#app .viz-svg .seg.frame{fill:var(--v-card)}
 
 /* tile pictures (TilePics, .v-pic): the same roles, still. Outlines deep, taken parts mid, the rest grey (not counted) */
 #app .v-pic :is(rect,polygon){stroke:var(--pic-deep)}
@@ -178,7 +198,7 @@
    picture units like every other result (spec G6), never under 12px on screen */
 #app .am .region{fill:none}
 #app .am .region .product,#app .am .region .product text{fill:var(--v-ink)}
-#app .am .region:is([data-shown="true"],[data-active="true"]) :is(.product,.product text){fill:var(--pic-on-mid)}
+#app .am .region:is([data-shown="true"],[data-active="true"]) :is(.product,.product text){fill:var(--pic-deep)}
 /* division: a strip not yet found already holds what is left, shown as its result (spec g5-divide, step 3) */
 #app .am .region[data-left="true"] .product{opacity:1}
 #app .am .region .product{font-size:max(calc(min(var(--fs),26) * 1px),calc(var(--pic-text-min) * var(--px,0)))}
@@ -229,3 +249,29 @@
 #app .screen.v-prac:not(.solved):has(.v-ask.no) .v-ppic .viz-svg:has(>:not(text).lit)>:not(text,.lit){opacity:.35}
 /* a re-cut fraction bar splits: a shaded piece slides apart from its brothers along the cut (tape master) */
 #app .viz-svg .seg.on.a-slide{animation:slide var(--dur-1000) var(--ease) var(--d,0s) both}
+
+/* lesson picture style (G 2026-10-14): round ends and joins on every line (rule 4), and axes in the picture's one colour (rule 2) */
+#app .viz-svg :is(rect,path,polygon,circle,line,polyline,ellipse){stroke-linecap:round;stroke-linejoin:round}
+#app .viz-svg .ax{stroke:var(--pic-deep)}
+/* every drawn line is the picture's one deep colour at the one weight (rules 1 and 2); fills stay the 30% / 60% mixes */
+#app .viz-svg :is(.ln,.edge,.hole,.sq,.arcline,.xbox,.xchip,.numst,.tally,.glyph-line,.xmark,.figline,.foldshape,.foldhalf,.symline,.dotpath,.tk,.wire,.hid,.floor,.jugline,.foldline,.detail,.cell,.tile,.seg,.pend,.dialface,.needle,.beam){stroke:var(--deep)}
+#app .viz-svg :is(.ln,.edge,.arcline.thin,.figline,.symline,.glyph-line,.tally,.xmark,.needle,.detail,.wire,.hid,.floor,.jugline,.foldline,.tk){stroke-width:var(--pic-outline)}
+#app .viz-svg :is(rect,circle,ellipse,polygon,path):not(.grid,.pie,.hl,.hlline,.numst,.numghost){stroke-width:var(--pic-outline)}
+/* the graph-paper grid is the one exception: a 1px background texture, not a line of the picture */
+#app .viz-svg .grid{stroke-width:calc(1px * var(--sw))}
+/* labels, results and captions are the picture's colour too (rule 8); text on a 60% part keeps the on-mid token */
+#app .viz-svg text,#app .viz-svg :is(text.acc,text.pq,.pq text,text.okmark,text.lbl.pw,text.res,text.xs,text.muted,text.lbl.muted){fill:var(--pic-deep)}
+#app .viz-svg :is(text.onlbl,text.onmid,text.xs.onlbl){fill:var(--pic-deep)}
+#app .viz-svg:has(:not(text).lit) text.lbl:not(.lit,.res,.pw,.acc,.onmid,.onlbl){fill:var(--v-muted)}
+#app .am .region .product,#app .am .region .product text,#app .am .sum .sumtext{fill:var(--pic-deep)}
+#app .am .sum .bracket{stroke:var(--pic-deep)}
+/* rule 4: squares and bars have round corners */
+#app .viz-svg rect:not([rx]):not(.grid){rx:calc(6px * var(--sw))}
+/* an overlap of two shapes (a square laid on a circle): the stronger 60% fill, no outline of its own (G 2026-10-14) */
+#app .viz-svg .overlap{fill:var(--pic-mid);stroke:none}
+#app .viz-svg .sq.lineonly{fill:none}
+/* a graph reads line first (G 2026-10-14): the axes and the helper lines (the line carried on past the points, the axis
+   of symmetry) step back to the 60% colour, so the graph's own line, its points and the measured rise/run stay deep */
+#app .viz-svg :is(path,line).ax,#app .viz-svg:has(path.ax) :is(.ln.thin,.ln2){stroke:var(--pic-mid)}
+/* the area model part a beat is about: the step's 60% fill for that beat (not `lit`, which would mute the side labels) */
+#app .viz-svg .cell.focus{fill:var(--pic-mid)}
