@@ -38,8 +38,9 @@ export function buildTriangleAngles(s: TriangleAnglesSpec): SceneDiagram {
 
   // on a phone a label grows with the floor about its own middle, so at the outside angle's corner the inside and outside
   // labels grow into each other: there each steps away by what it grew, the outside one along its angle's middle and the
-  // inside one up along the side it shares with the top corner, clear of the left corner's label (Review b4fa4b3)
+  // inside one away from the labels round it (Review b4fa4b3, 84583e8)
   const out = (deg: number) => ({ translate: ["cos", "sin"].map((f, k) => `calc(${r1((f === "cos" ? Math.cos : Math.sin)((deg * Math.PI) / 180) * (k ? -1 : 1))} * (max(${PIC.label}, ${PIC.label} * var(--px, 0)) - ${PIC.label}) * 1px)`).join(" ") });
+  const stepped: { it: Draft; at: Pt; d0: number; span: number }[] = [];
   const corner = (v: Pt, d0: number, d1: number, labels: CornerLabel[], accentFrom: number | undefined, arcR: number, maxR: number, step = false) => {
     const span = d1 - d0;
     const r = Math.min(arcR, maxR * 0.6);
@@ -50,7 +51,9 @@ export function buildTriangleAngles(s: TriangleAnglesSpec): SceneDiagram {
     for (const l of labels) {
       const gap = s.labelGap ?? 14;
       const at = angleLabelAt(v, d0, d0 + span, l.text.length * 10.2, r + gap, Math.max(r + gap, maxR));
-      items.push(t(at[0], at[1], l.text, `lbl${l.acc ? " acc" : ""}`, { ...shown(l), enter: "rise", delay: 0.8, ...(step ? { vars: out(d0 + span / 4) } : {}) }));
+      const it = t(at[0], at[1], l.text, `lbl${l.acc ? " acc" : ""}`, { ...shown(l), enter: "rise", delay: 0.8 });
+      items.push(it);
+      if (step) stepped.push({ it, at, d0, span });
     }
   };
   const a = dist(P1, P2), b = dist(P2, P3), c = dist(P1, P3);
@@ -67,6 +70,18 @@ export function buildTriangleAngles(s: TriangleAnglesSpec): SceneDiagram {
       const at = angleLabelAt(P2, 0, 180 - B, l.text.length * 10.2, 44, 160);
       items.push(t(at[0], at[1], l.text, "lbl acc", { ...shown({ from: Math.max(from, l.from ?? 0), ...(l.until != null ? { until: l.until } : {}) }), enter: "rise", delay: 0.6, vars: out((180 - B) / 2) }));
     }
+  }
+  // the inside label steps away from every other corner's label: the way the pushes from each (nearer pushing harder) add up
+  for (const { it, at, d0, span } of stepped) {
+    let dx = 0, dy = 0;
+    for (const o of items) {
+      if (o === it || o.type !== "text" || (o as { text: string }).text === (it as { text: string }).text) continue;
+      const ox = at[0] - (o as { x: number }).x, oy = at[1] - (o as { y: number }).y, d2 = ox * ox + oy * oy;
+      if (d2 > 0 && d2 < 160 * 160) { dx += ox / d2; dy += oy / d2; }
+    }
+    // it never steps down into the base: hemmed in on both sides it climbs the side it shares with the top corner
+    const deg = (Math.atan2(-dy, dx) * 180) / Math.PI;
+    if (dx || dy) (it as { vars?: Record<string, string> }).vars = out(Math.sin((deg * Math.PI) / 180) > 0.3 ? deg : d0 + span / 4);
   }
   const top = Math.min(P1[1], P2[1], P3[1]);
   const cx = (Math.min(P1[0], P3[0]) + Math.max(P2[0], P3[0])) / 2;
