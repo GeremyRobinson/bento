@@ -11,7 +11,7 @@ import { handOff, previewOf, statementBeat } from "../app/preview";
 import { GradeQuestion } from "./GradeQuestion";
 import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { chapterPic, lessonPic, TilePic } from "../components/TilePics";
-import { Marks, ORing, OSlider, type Tab } from "../components/Masters";
+import { ORing, OSlider, type Tab } from "../components/Masters";
 import { LESSON_CHECK_MINUTES, LESSON_MINUTES, TODAYS_REVIEW, UP_NEXT } from "../app/copy";
 import { checkedCount } from "../app/rings";
 import { dependsOn, dueBack, learned, toGoOver } from "../engine/mastery/skills";
@@ -51,6 +51,8 @@ export const gradesNext = { set open(v: boolean) { if (v) setBoxView(GRADES_VIEW
 
 type View = "lessons" | "test" | "grade";
 const TABS: Tab<View>[] = [{ id: "lessons", label: "Lessons" }, { id: "test", label: "Test" }, { id: "grade", label: "Grade" }];
+/** the grade's own top: its third tab is Grades, the grade so far and each chapter's (UI model v61) */
+const TOP_TABS: Tab<View>[] = [TABS[0]!, TABS[1]!, { id: "grade", label: "Grades" }];
 const TEST_PICK = "test:";
 
 function GradeHome({ g }: { g: number }) {
@@ -153,7 +155,7 @@ function ReviewToday() {
 }
 
 /** Tile, the cover kind: a picture on top, the name, then a small ring and one word */
-function Cover({ pic, name, p, word, tone, sel, disabled, onClick, label }: { pic?: string; name: string; p: number; word: string; tone?: string; sel?: boolean; disabled?: boolean; onClick: () => void; label: string }) {
+export function Cover({ pic, name, p, word, tone, sel, disabled, onClick, label }: { pic?: string; name: string; p: number; word: string; tone?: string; sel?: boolean; disabled?: boolean; onClick: () => void; label: string }) {
   return (
     <button className={`o-tile o-cover${sel ? " sel" : ""}`} disabled={disabled} onClick={onClick} aria-label={label}>
       <span className="o-cpw"><TilePic svg={pic} /></span>
@@ -252,7 +254,7 @@ function Box({ g, pick, choose }: { g: number; pick?: string; choose: (id: strin
   } else {
     const list = unit ? unit.entries : all;
     head = <><h2 className="o-head">{unit ? unit.name : grade.name}</h2>
-      <OSlider tabs={TABS} value={tab} onPick={pickTab} label={`${unit ? unit.name : grade.name} views`} /></>;
+      <OSlider tabs={unit ? TABS : TOP_TABS} value={tab} onPick={pickTab} label={`${unit ? unit.name : grade.name} views`} /></>;
     if (tab === "lessons") tiles = unit
       ? unit.entries.map(c => {
         const st = statusOf(progress, g, c.id, now());
@@ -268,15 +270,8 @@ function Box({ g, pick, choose }: { g: number; pick?: string; choose: (id: strin
       {testTile(testKey(g), `${grade.name} test`)}
       {units.length > 1 && units.map(u => testTile(testKey(g, u.name), `${u.name} test`))}
     </>;
-    else tiles = unit ? <YearStats list={list} /> : <>
-      <div className="o-tile o-wide"><span className="o-tx"><span className="o-label">Your {grade.name} year</span><span className="o-nm">{grade.subtitle}.</span></span></div>
-      <div className="o-tile o-wide"><div className="o-ptrack"><span className="o-label">The path</span>{units.map(u => {
-        const n = checkedCount(progress, u.entries), m = u.entries.length, here = u.entries.some(c => c.id === pick);
-        return <div key={u.name} className="o-prow"><span className="o-nm">{u.name}</span><Marks n={m} on={n} />
-          <span className={`o-st${here ? " next" : n === m ? " done" : ""}`}>{n === m ? "Done" : here ? "Today" : n ? `${n} of ${m} done` : "Not started"}</span></div>;
-      })}</div></div>
-      <YearStats list={all} />
-    </>;
+    else if (unit) tiles = <YearStats list={list} />;
+    else { gridClass = "o-gyear"; tiles = <GradeScores g={g} />; }
   }
   return (
     <section className="o-panel o-box" ref={box} aria-label={view === GRADES_VIEW ? "Every grade" : `${grade.name} box`}
@@ -285,6 +280,34 @@ function Box({ g, pick, choose }: { g: number; pick?: string; choose: (id: strin
       <div key={`${view}|${tab}`} ref={grid} className={`${gridClass}${zoom ? ` ${zoom}` : ""}`} onAnimationEnd={() => setZoom(null)}>{tiles}</div>
     </section>
   );
+}
+
+/** the grown-up page's proficiency words, by score (0 to 4) */
+const LEVELS = ["Not yet", "Beginning", "Approaching", "Proficient", "Advanced"];
+/** a set of lessons' score: each checked lesson's latest skill check, averaged and rounded down; null before any check */
+function scoreOf(progress: ReturnType<typeof useApp>["progress"], list: Entry[]): number | null {
+  const d = list.flatMap(c => { const l = progress.checks?.[c.id]?.last; return l == null ? [] : [Number(l)]; });
+  return d.length ? Math.floor(d.reduce((a, x) => a + x, 0) / d.length) : null;
+}
+
+/** Grades (UI model v61): your grade so far, big, then each chapter's grade in rows, two across where there's room */
+function GradeScores({ g }: { g: number }) {
+  const { progress } = useApp();
+  const sc = scoreOf(progress, entriesInGrade(g));
+  return <>
+    <div className="o-tile o-wide o-gnow">
+      <ORing p={sc == null ? 0 : sc / 4} label={sc == null ? "\u2013" : String(sc)} size="l" />
+      <span className="o-tx"><span className="o-label">Your grade so far</span><span className="o-big">{sc == null ? "Not started yet" : LEVELS[sc]}</span>
+        <span className="o-st">{sc == null ? "Take a lesson to get a score" : `${sc} of 4 so far`}</span></span>
+    </div>
+    <div className="o-tile o-wide o-gch"><span className="o-label">By chapter</span>
+      <div className="o-grows">{unitsInGrade(g).map(u => {
+        const c = scoreOf(progress, u.entries);
+        return <div key={u.name} className="o-grow"><ORing p={c == null ? 0 : c / 4} label={c == null ? "\u2013" : String(c)} size="m" />
+          <span className="o-tx"><span className="o-nm">{u.name}</span><span className="o-st">{c == null ? "Not started yet" : <><b>{LEVELS[c]}</b> · {c} of 4</>}</span></span></div>;
+      })}</div>
+    </div>
+  </>;
 }
 
 /** the model's ordinal after a grade's number: 1st, 2nd, 3rd, 4th... (K has none) */

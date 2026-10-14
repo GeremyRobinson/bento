@@ -5,6 +5,7 @@ import { lessonById } from "../../curriculum/registry";
 import type { Progress } from "../../engine/mastery/progress";
 import type { SessionReport } from "../../engine/session/types";
 import { GRADES_VIEW, boxView } from "../../app/box";
+import { entriesInGrade, isReady } from "../../app/curriculum";
 import { answerCurrentStep, answerWrong, failRun, renderApp, solveRun, tap } from "./helpers";
 
 const LESSON = "Multiply two-digit numbers";
@@ -230,9 +231,9 @@ describe("home", () => {
     startPractice();
     const esc = () => act(() => { dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", cancelable: true })); });
     fireEvent.click(screen.getByRole("button", { name: "Problems" }));
-    expect(screen.getByText("This practice")).toBeInTheDocument();
+    expect(document.querySelector(".v-plist")).not.toBeNull();
     esc();
-    expect(screen.queryByText("This practice")).toBeNull();
+    expect(document.querySelector(".v-plist")).toBeNull();
     expect(screen.getByRole("button", { name: "Check" })).toBeInTheDocument();
     // with nothing on top, Escape is the island's <: back to the box, the run waiting in Today
     esc();
@@ -309,9 +310,9 @@ describe("unit test and check-up", () => {
     startPractice();
     fireEvent.click(screen.getByRole("button", { name: "Problems" }));
     const stage = screen.getByRole("region", { name: "Problem" });
-    expect(within(stage).getByText("0 of 6 done")).toBeInTheDocument();
+    expect(within(stage).getAllByRole("button", { name: /^Problem \d+, / })).toHaveLength(6);
     fireEvent.click(within(stage).getByRole("button", { name: "Problem 3, To do" }));
-    expect(screen.queryByText("This practice")).toBeNull();
+    expect(document.querySelector(".v-plist")).toBeNull();
     expect(document.querySelector(".o-island")).toHaveTextContent("Problem 3 of 6");
   });
 
@@ -379,7 +380,7 @@ describe("report, grown-up page and back to basics", () => {
     expect(within(done).getByRole("heading", { level: 2, name: "4 of 4 on your own: you\u2019ve got it." })).toBeInTheDocument();
     expect(within(done).getByText("Your skill check")).toBeInTheDocument();
     expect(done.querySelectorAll(".v-rp")).toHaveLength(4);
-    for (const row of done.querySelectorAll(".v-rp")) expect(row.textContent).toMatch(/^\d+ × \d+ = \d+Right$/);
+    for (const row of done.querySelectorAll(".v-rp")) expect(row.textContent).toMatch(/^\d+ × \d+ = \d+\u2713Right$/);
     // no grown-up report here (it stays on the grown-up page) and no Practice again
     expect(within(done).queryByRole("heading", { name: "What you did" })).toBeNull();
     expect(within(done).queryByRole("button", { name: "Practice again" })).toBeNull();
@@ -447,17 +448,23 @@ describe("report, grown-up page and back to basics", () => {
 });
 
 describe("My Obento", () => {
-  it("the person button goes straight to the My Obento page, with no settings (v2: no hub)", () => {
-    renderApp({ grade: 5, chosen: true, xp: 1240, streak: 3 });
+  // Me (model v63): three shelves only. One learned rule everywhere: the last check was 3 or 4 and it isn't due back
+  it("the person button opens Me's three shelves, sorted by the learned rule (v2: no hub)", () => {
+    const [a, b, c] = entriesInGrade(5).filter(e => isReady(e.id));
+    const t = Date.UTC(2026, 9, 2, 15), day = 864e5;
+    const check = (last: number, passes: number) => ({ last, best: last, date: t - day, due: t + 5 * day, passes });
+    renderApp({ grade: 5, chosen: true, checks: { [a!.id]: check(1, 0), [b!.id]: check(3, 1), [c!.id]: check(4, 4) } } as Partial<Progress>);
     fireEvent.click(screen.getByRole("button", { name: "Me" }));
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(screen.getByRole("button", { name: "Me" })).toHaveAttribute("aria-current", "page");
     expect(document.querySelector(".o-island")).toHaveTextContent("Me");
-    expect(screen.getByText(/^Level \d+$/)).toBeInTheDocument();
-    expect(screen.getByText("1,240")).toBeInTheDocument();
-    expect(screen.getByText(/in a row/).closest("p")).toHaveTextContent("days in a row");
+    const shelf = (name: string) => within(screen.getByRole("region", { name }));
+    expect(shelf("Go over").getByRole("button", { name: `${a!.title}, Last check 1 of 4` })).toBeInTheDocument();
+    expect(shelf("Getting stronger").getByRole("button", { name: `${b!.title}, Next check in 5 days` })).toBeInTheDocument();
+    expect(shelf("Stuck").getByRole("button", { name: `${c!.title}, Stuck for good` })).toBeInTheDocument();
+    expect(shelf("Go over").getByRole("button", { name: `Go over: ${a!.title}` })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^For the grown-up/ })).toBeInTheDocument();
-    expect(screen.queryByRole("switch")).toBeNull();
+    expect(screen.queryByRole("tablist", { name: "Look" })).toBeNull();
     // no wordmark inside the app (G 2026-10-08)
     expect(screen.queryByRole("button", { name: "Obento, home" })).toBeNull();
     // the island's < goes back to the box
@@ -467,38 +474,46 @@ describe("My Obento", () => {
 });
 
 describe("Settings", () => {
-  it("the gear goes straight to the Settings page, which holds every setting and the backup (v2: no hub)", () => {
+  it("the gear goes straight to the Settings page: Look, Motion and Grade, then every other setting and the backup (v63)", () => {
     renderApp({ grade: 5, chosen: true });
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(document.querySelector(".o-island")).toHaveTextContent("Settings");
-    fireEvent.click(screen.getByRole("switch", { name: /High contrast/ }));
-    expect(document.documentElement.dataset.contrast).toBe("true");
-    fireEvent.click(screen.getByRole("switch", { name: /Left-handed keypad/ }));
-    expect(document.documentElement.dataset.hand).toBe("left");
-    fireEvent.click(screen.getByRole("switch", { name: /Less motion/ }));
+    const pick = (group: string, name: string) => fireEvent.click(within(screen.getByRole("tablist", { name: group })).getByRole("tab", { name }));
+    pick("Look", "Dark");
+    expect(document.documentElement.dataset.theme).toBe("dark");
+    pick("Look", "Auto");
+    expect(document.documentElement.dataset.theme).toBeUndefined();
+    pick("Motion", "Less");
     expect(document.documentElement.dataset.motion).toBe("reduce");
-    fireEvent.click(screen.getByRole("radio", { name: "Largest" }));
+    pick("High contrast", "On");
+    expect(document.documentElement.dataset.contrast).toBe("true");
+    pick("Keypad", "Left-handed");
+    expect(document.documentElement.dataset.hand).toBe("left");
+    pick("Text size", "Largest");
     expect(document.documentElement.dataset.text).toBe("largest");
     expect(screen.getByRole("button", { name: "Save a backup" })).toBeInTheDocument();
+    // Grade opens the grade picker on the box
+    tap("5th grade");
+    expect(boxView()).toBe(GRADES_VIEW);
   });
   it("moves between Settings and My Obento from the corner buttons, and the island's < goes back to the box (v2)", () => {
     renderApp({ grade: 5, chosen: true });
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
-    expect(screen.getByRole("switch", { name: /High contrast/ })).toBeInTheDocument();
+    expect(screen.getByRole("tablist", { name: "High contrast" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Me" }));
     expect(screen.getByRole("button", { name: "Me" })).toHaveAttribute("aria-current", "page");
-    expect(screen.queryByRole("switch", { name: /High contrast/ })).toBeNull();
+    expect(screen.queryByRole("tablist", { name: "High contrast" })).toBeNull();
     tap("Back");
     expectGradeHome("5th grade");
   });
 });
 
 describe("find my level", () => {
-  it("runs a short placement from My Obento and offers the grade to start in", () => {
+  it("runs a short placement from Settings and offers the grade to start in", () => {
     renderApp({ grade: 5, chosen: true });
-    fireEvent.click(screen.getByRole("button", { name: "Me" }));
-    tap(/^Find my level/);
+    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+    tap("Start");
     solveRun();
     expect(screen.getByRole("heading", { level: 1, name: /^Start in .+ grade\.$/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^Start .+ grade ›$/ })).toBeInTheDocument();
@@ -509,7 +524,7 @@ describe("the website from inside the app", () => {
   it("Settings has About Bento, which opens the landing page", () => {
     renderApp();
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
-    tap("What Obento is ›");
+    tap("What Obento is");
     expect(screen.getByRole("heading", { level: 1, name: "Math that clicks." })).toBeInTheDocument();
     // Start learning goes into the app and its grade picker, even with a grade chosen
     fireEvent.click(screen.getAllByRole("button", { name: "Start learning" })[0]!);

@@ -41,6 +41,8 @@ export function recordCheck(old: CheckRecord | undefined, level: Level, now: num
 
 /** Learned: the last check was 3 or 4. Practice alone never counts ("completing all parts ≠ learned"). */
 export const learned = (p: Progress, id: string) => (p.checks?.[id]?.last ?? -1) >= PASS;
+/** learned as the child sees it (UI model v61): the last check scored 3 or 4 and it isn't slipping (not due back yet) */
+export const learnedNow = (p: Progress, id: string, now: number) => learned(p, id) && !dueBack(p, id, now);
 
 /**
  * Saves from before checks existed: a practice score of 3 or 4 becomes the lesson's check, once, when the save is

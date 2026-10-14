@@ -10,7 +10,7 @@ import { requireLesson } from "../curriculum/registry";
 import type { Explanation } from "../explanations/schema";
 import { formatNumber, type MathText, type MathToken } from "../curriculum/schemas/math-text";
 import { Keypad } from "../components/practice/Keypad";
-import { Cover } from "../components/Cover";
+import { Marks, ORing } from "../components/Masters";
 import type { PracticeSession } from "../engine/session/types";
 import { ScratchPad, type Stroke } from "../components/practice/ScratchPad";
 import { FitScreen } from "../components/screen/Screen";
@@ -238,15 +238,21 @@ export function Practice() {
     || (hintShown && !s.solved && s.misses > 0 && !Object.values(s.values).some(v => v));
   const typedMiss = skill && missed ? s.mistakes[s.mistakes.length - 1]?.typed : undefined;
   const doneLines = steps.map((_, k) => s.work[k]).filter((w, k) => !!w && (k < here));
+  // the step bar's marks: one per step (one per problem in a skill check), the one you're on solid and long
+  const marks = skill ? { n, on: (s.done ?? []).length + (s.solved && !(s.done ?? []).includes(s.i) ? 1 : 0), now: s.solved ? -1 : s.i }
+    : { n: steps.length, on: here, now: s.solved ? -1 : here };
+  const onSlot = (id: string) => act(st => focusSlot(st, id));
   return (
-    <div className={`screen v-work v-prac${test ? " test" : ""}${s.solved ? " solved" : ""}`}>
+    <div className={`o-state prac v-prac${test ? " test" : ""}${s.solved ? " solved" : ""}`}>
       {/* the stage: the problem big, and its picture (or the scratch pad, or every problem in place) */}
-      <section className={`v-panel v-stage${listOn ? " all" : ""}`} aria-label="Problem">
+      <section className={`o-panel v-stage${listOn ? " all" : ""}`} aria-label="Problem">
         {listOn ? <ProblemList s={s} pick={k => { setZoomOut(false); if (k !== s.i) withTransition(() => act((st, p, d) => goToProblem(st, k, p, d)), "next"); }} /> : <>
-          {mixed && <span className="v-label">{lesson.title}</span>}
-          <div className="v-prob pprob"><ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} solved={s.solved} part="text" /></div>
+          <div className="v-prob pprob">
+            {mixed && <span className="o-label">{lesson.title}</span>}
+            <ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} solved={s.solved} part="text" />
+          </div>
           {scratchOn ? <ScratchPad className={`v-pad${padFade ? " pfade" : ""}`} ink={ink} setInk={setInk} /> : pic && (
-            <div className={`v-ppic${padFade ? " pfade" : ""}`} aria-label="Picture of this problem" role="img">
+            <div className={`o-art v-ppic${padFade ? " pfade" : ""}`} aria-label="Picture of this problem" role="img">
               <div className="viz">{ex
                 ? <Diagram key={s.i} diagram={ex.diagram!} timeline={ex.timeline} fit turn={!it.story} {...pictureAt(ex, steps.map(st => st.id), here, s.solved)} />
                 : <ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} part="picture" step={s.solved ? undefined : steps[here]?.id} />}</div>
@@ -254,17 +260,13 @@ export function Practice() {
           )}
         </>}
       </section>
-      {/* the working side: where you are in the steps, what you've worked out, the question, the say line, the tools, the keys */}
-      <section className={`v-panel v-solve${!s.solved && !(step && tapOnly) ? " v-keys" : ""}${s.solved ? " v-solved" : ""}`} aria-label="Solve">
+      {/* the solve panel, top to bottom (UI model v57): where you are in the steps, the question, the free room (your
+          work at its top, the say line at its foot), the answer box, then the keys with the four tools beside them */}
+      <section className={`o-panel v-solve${!s.solved && !(step && tapOnly) ? " v-keys" : ""}${s.solved ? " v-solved" : ""}`} aria-label="Solve">
         <div className="v-steps">
-          {skill ? <>
-            <span className="n">{SKILL_CHECK}</span>
-            <span className="v-seg" aria-hidden>{s.items.map((_, k) => <i key={k} className={(s.done ?? []).includes(k) || (k === s.i && s.solved) ? "on" : undefined} />)}</span>
-          </> : s.solved ? <span className="n">{missed ? "Done" : "Solved"}</span> : <>
-            <span className="n">{s.pick ? "What comes next?" : `Step ${Math.min(here + 1, steps.length)} of ${steps.length}`}</span>
-            <span className="v-seg" aria-hidden>{steps.map((_, k) => <i key={k} className={k < here ? "on" : undefined} />)}</span>
-          </>}
+          <span className="n">{skill ? SKILL_CHECK : s.solved ? (missed ? "Done" : "Solved") : s.pick ? "What comes next?" : `Step ${Math.min(here + 1, steps.length)} of ${steps.length}`}</span>
           {test && !skill && <span className="v-meta">{s.title}: no hints, one try per step</span>}
+          <Marks {...marks} />
         </div>
         {doneLines.length > 0 && !skill && <ol className="v-lines" aria-label="Your work so far">{doneLines.map((w, k) => (
           <li key={k} className={w!.shown ? "shown" : undefined}><MathLine math={w!.math} />{!w!.shown && <b aria-hidden>{"\u2713"}</b>}</li>
@@ -273,67 +275,69 @@ export function Practice() {
           {step && !s.pick ? <>
             {skill && step.id === "final" ? <>
               {/* the check asks what to do, never "Type the final answer." (R-W1); a word problem asks its own question */}
-              <span className="q2">{it.story ? storyAsk(it) : `What is ${problemText(it)}?`}</span>
+              <div className="v-q"><span className="q2">{it.story ? storyAsk(it) : `What is ${problemText(it)}?`}</span></div>
               <div className="v-ans" key={`${at}-${s.mistakes.length}`}>
-                <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={id => act(st => focusSlot(st, id))} />
+                <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={onSlot} />
               </div>
             </> : <>
-            {step.question && <span className="q"><Rich text={step.question} /></span>}
-            {solo ? <>
-              {/* one number to find: the question in words, then the answer pill (v2 spec P7, P8) */}
-              {!step.question && <span className="q2">What is <MathLine math={solo.expr} />?</span>}
-              <div className="v-ans" key={`${at}-${s.mistakes.length}`}>
-                <MathLine math={[solo.slot]} values={s.values} active={s.active} onSlot={id => act(st => focusSlot(st, id))} />
+              <div className="v-q">
+                {step.question && <span className="q"><Rich text={step.question} /></span>}
+                {/* one number to find: the question in words, then the answer box (v2 spec P7, P8) */}
+                {solo && !step.question && <span className="q2">What is <MathLine math={solo.expr} />?</span>}
+                {step.note && !skill && <span className="note"><Rich text={step.note} /></span>}
               </div>
-            </> : <div className="ask" key={`${at}-${s.mistakes.length}`}>
-              <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={id => act(st => focusSlot(st, id))} />
-            </div>}
-            {step.note && !skill && <span className="note"><Rich text={step.note} /></span>}
+              {solo ? <div className="v-ans" key={`${at}-${s.mistakes.length}`}>
+                <MathLine math={[solo.slot]} values={s.values} active={s.active} onSlot={onSlot} />
+              </div> : <div className="ask" key={`${at}-${s.mistakes.length}`}>
+                <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={onSlot} />
+              </div>}
             </>}
-          </> : s.pick ? <span className="q">You plan this one: tap the step that comes next.</span>
-            : solvedAns != null ? <><span className="q2">{missed ? (skill ? "Not this time." : "Here's the answer.") : skill ? "Right." : "Solved."}</span>
+          </> : s.pick ? <div className="v-q"><span className="q">You plan this one: tap the step that comes next.</span></div>
+            : solvedAns != null ? <><div className="v-q"><span className="q2">{missed ? (skill ? "Not this time." : "Here's the answer.") : skill ? "Right." : "Solved."}</span></div>
               <div className={`v-ans ${missed ? "given" : "ok"}`}><span className="slot">{typedMiss ?? formatNumber(solvedAns)}</span></div></>
             : <div className={`ask ${missed ? "given" : "ok"}`}><MathLine math={s.work[s.work.length - 1]?.math ?? []} /></div>}
         </div>
         <div className={`v-say${say ? ` ${say.cls}` : ""}`} role="status" aria-live="polite">
-          {say && <>{say.lead && <b><Rich text={say.lead} /></b>}{say.lead && say.text ? " " : ""}{say.text && <Rich text={say.text} />}
+          {say && <span>{say.lead && <b><Rich text={say.lead} /></b>}{say.lead && say.text ? " " : ""}{say.text && <Rich text={say.text} />}
             {say.lines?.map((l, i) => <span key={i}> <Rich text={l} /></span>)}
-            </>}
+            </span>}
         </div>
-        <div className="v-tools" role="toolbar" aria-label="Tools">
-          {!test && <button className="v-tool" disabled={!hintable || (!s.hintsLeft && !s.hinted)} aria-pressed={hintable && hintShown} aria-label={`Hint, ${s.hintsLeft} left`} onClick={() => { setZoomOut(false); act((st, _p, d) => hint(st, d)); }}>
-            <BulbIcon /><em aria-hidden>{s.hintsLeft}</em></button>}
-          {canScratch && <button className="v-tool" aria-pressed={scratchOn} aria-label="Scratch pad" onClick={() => { setZoomOut(false); swapPad(); }}><PadIcon /></button>}
-          {!test && n > 1 && <button className="v-tool" aria-pressed={listOn} aria-label="Problems" onClick={() => { if (scratchOn) setScratch(false); setZoomOut(o => !o); }}><ListIcon /></button>}
-          <button className="v-tool" aria-label="Read it to me" onClick={() => speak([step?.question, document.querySelector("#app .pprob")?.textContent].filter(Boolean).join(". ").replace(/\*\*/g, ""))}><SpeakerIcon /></button>
+        <div className="v-kp">
+          <Keypad band={band} tap={step && tapOnly ? (
+            <div className="tappad">
+              <div className="choices" style={{ "--cols": balanced((s.pick ? s.pick.options : step.choices!).length) } as CSSProperties}>{s.pick
+                ? s.pick.options.map((o, i) => <button key={`${i}-${o}`} className={`choice${mark(i)}`} onClick={() => { setTapped({ at, i }); act(st => pickPlan(st, i)); }}>{o}</button>)
+                : step.choices!.map((o, i) => <button key={`${i}-${o}`} className={`choice${mark(i)}`} onClick={() => { setTapped({ at, i }); act((st, p, d) => choose(st, i, p, d)); }}>{o}</button>)}</div>
+            </div>) : undefined}
+            solved={s.solved} plain={plain} onKey={key => { if (fb?.type === "bad") setFbAway(true); act(st => pressKey(st, key)); }}
+            go={s.solved ? { label: nextLabel, run: onNext } : tapOnly ? undefined : { label: "Check", run: () => act((st, p, d) => check(st, p, d)) }} />
+          <div className="v-tools" role="toolbar" aria-label="Tools">
+            {!test && <button className="o-tool" disabled={!hintable || (!s.hintsLeft && !s.hinted)} aria-pressed={hintable && hintShown} aria-label={`Hint, ${s.hintsLeft} left`} onClick={() => { setZoomOut(false); act((st, _p, d) => hint(st, d)); }}>
+              <BulbIcon /><em className="o-badge" aria-hidden>{s.hintsLeft}</em></button>}
+            {canScratch && <button className="o-tool" aria-pressed={scratchOn} aria-label="Scratch pad" onClick={() => { setZoomOut(false); swapPad(); }}><PadIcon /></button>}
+            {!test && n > 1 && <button className="o-tool" aria-pressed={listOn} aria-label="Problems" onClick={() => { if (scratchOn) setScratch(false); setZoomOut(o => !o); }}><ListIcon /></button>}
+            <button className="o-tool" aria-label="Read it to me" onClick={() => speak([step?.question, document.querySelector("#app .pprob")?.textContent].filter(Boolean).join(". ").replace(/\*\*/g, ""))}><SpeakerIcon /></button>
+          </div>
         </div>
-        <Keypad band={band} tap={step && tapOnly ? (
-          <div className="tappad">
-            <div className="choices" style={{ "--cols": balanced((s.pick ? s.pick.options : step.choices!).length) } as CSSProperties}>{s.pick
-              ? s.pick.options.map((o, i) => <button key={`${i}-${o}`} className={`choice${mark(i)}`} onClick={() => { setTapped({ at, i }); act(st => pickPlan(st, i)); }}>{o}</button>)
-              : step.choices!.map((o, i) => <button key={`${i}-${o}`} className={`choice${mark(i)}`} onClick={() => { setTapped({ at, i }); act((st, p, d) => choose(st, i, p, d)); }}>{o}</button>)}</div>
-          </div>) : undefined}
-          solved={s.solved} plain={plain} onKey={key => { if (fb?.type === "bad") setFbAway(true); act(st => pressKey(st, key)); }}
-          go={s.solved ? { label: nextLabel, run: onNext } : tapOnly ? undefined : { label: "Check", run: () => act((st, p, d) => check(st, p, d)) }} />
       </section>
     </div>
   );
 }
 
 /**
- * Every problem in place (G 2026-10-13): the stage swaps its picture for a tile per problem, the box's own cover tile with
- * the problem big on top, a small ring for its steps and one word. Tap one to go there; Problems again to go back.
+ * Every problem in place (UI model v57): the stage swaps its picture for a tile per problem, the problem big, a small
+ * ring for its steps and one word. Tap one to go there; Problems again (or the one you're on) to go back.
  */
 function ProblemList({ s, pick }: { s: PracticeSession; pick: (k: number) => void }) {
-  const done = new Set(s.done ?? []), n = s.items.length;
+  const done = new Set(s.done ?? []), m = stepsOf(s).length;
   return (<div className="v-plist">
-    <div className="v-bh"><b>This practice</b><span className="v-meta">{done.size} of {n} done</span></div>
     {s.items.map((item, k) => {
       const finished = done.has(k) || (k === s.i && s.solved), now = k === s.i, open = now || canPick(s, k);
-      const word = finished ? "Done" : now ? "Now" : "To do";
-      return <Cover key={k} pick={now} aria-disabled={!open || undefined} className="v-ptile" pic={<span className="v-pq">{plainProblem(item.lessonId, problemOf(item))}</span>}
-        p={finished ? 1 : now ? s.step / Math.max(1, stepsOf(s).length) : 0} word={word} tone={now && !finished ? "next" : undefined}
-        onClick={() => { if (open) pick(k); }} aria-label={`Problem ${k + 1}, ${word}`} />;
+      const at = now ? s.step : 0, word = finished ? "Done" : now ? "Now" : at ? "Started" : "To do";
+      return <button key={k} className={`o-tile v-ptile${now ? " sel" : ""}`} aria-disabled={!open || undefined} onClick={() => { if (open) pick(k); }} aria-label={`Problem ${k + 1}, ${word}`}>
+        <span className="v-pq">{plainProblem(item.lessonId, problemOf(item))}</span>
+        <span className="o-foot"><ORing p={finished ? 1 : at / Math.max(1, m)} /><span className={`o-st${finished ? " done" : now ? " next" : ""}`}>{word}</span></span>
+      </button>;
     })}
   </div>);
 }

@@ -13,14 +13,14 @@ import { SessionReportView } from "../components/reports/SessionReportView";
 import { FitScreen } from "../components/screen/Screen";
 import { ALL_LESSONS, SKILL_CHECK } from "../app/copy";
 import { upNext } from "../app/today";
-import { PreviewWell, statusOf } from "./Home";
-import { isCheckKey, learned, lessonOfCheck } from "../engine/mastery/skills";
+import { Cover, PreviewWell, statusOf } from "./Home";
+import { Marks } from "../components/Masters";
+import { checkedCount } from "../app/rings";
+import { isCheckKey, lessonOfCheck } from "../engine/mastery/skills";
 import { plainProblem } from "../components/practice/ProblemView";
-import { Cover } from "../components/Cover";
 import { Rich } from "../components/primitives/MathLine";
-import { lessonPic, TilePic } from "../components/TilePics";
+import { lessonPic } from "../components/TilePics";
 import { isReady, unitsInGrade } from "../app/curriculum";
-import { learnedCount } from "../app/rings";
 
 /** Counts up from 0 over a moment, like the current app's XP figure. */
 export function CountUp({ to, pre = "" }: { to: number; pre?: string }) {
@@ -104,27 +104,36 @@ export function Results() {
   // one thing to watch for: the check's own slip, else the lesson's from just before it
   const practice = skill && lesson ? reports[lesson.id] : undefined;
   const watch = watchFor(rep, practice && rep.date - practice.date < 36e5 ? practice : undefined);
+  const typed = (k: number) => rep.mistakes.filter(m => m.n === k + 1).pop()?.typed;
+  // Back to your box is the one filled button, unless the next lesson waits: then that is (UI model v57)
+  const nextBtn = !test && !review && next && rep.level >= 3;
   return (
-    <div className="screen v-work v-done">
-      <section className="v-panel v-result" aria-label="Done">
-        <span className="v-label">{`Done \u00b7 ${lesson?.title ?? rep.title}`}</span>
-        <span className="v-seg" aria-label={`Score ${rep.level} of 4`}>{[1, 2, 3, 4].map(k => <i key={k} className={k <= rep.level ? "on" : undefined} />)}</span>
-        <h2>{rep.level} of 4{skill ? " on your own" : ""}: {words}.</h2>
-        <p className="v-why">{why}</p>
-        <div className="v-row">
-          {!test && !review && next && rep.level >= 3 && <button className="v-go" onClick={() => go({ name: "learn", lessonId: next.id }, "next")}>Next: {next.title}</button>}
-          {test && <button className="v-plain" onClick={() => startTest(rep.key)}>Take it again</button>}
-          <button className="v-plain" onClick={() => go({ name: "home", ...(lesson ? { pick: lesson.id } : {}) }, "back")}>Back to your box</button>
+    <div className="o-state done v-done">
+      <section className="o-panel v-result" aria-label="Done">
+        <span className="o-label o-in">{`Done \u00b7 ${lesson?.title ?? rep.title}`}</span>
+        <span className="o-in" role="img" aria-label={`Score ${rep.level} of 4`}><Marks n={4} on={rep.level} /></span>
+        <h2 className="o-title o-in">{rep.level} of 4{skill ? " on your own" : ""}: {words}.</h2>
+        <p className="o-why o-in">{why}</p>
+        <div className="o-row o-in">
+          {nextBtn && <button className="o-btn fill" onClick={() => go({ name: "learn", lessonId: next.id }, "next")}>Next: {next.title}</button>}
+          {test && <button className="o-btn" onClick={() => startTest(rep.key)}>Take it again</button>}
+          <button className={`o-btn${nextBtn ? "" : " fill"}`} onClick={() => go({ name: "home", ...(lesson ? { pick: lesson.id } : {}) }, "back")}>Back to your box</button>
         </div>
         {low && lesson && <BuildUp lessonId={lesson.id} />}
-        {rep.mode !== "practice" && rep.probs.length > 0 && <div className="v-recap">
-          <span className="v-label">{skill ? `Your ${SKILL_CHECK.toLowerCase()}` : review ? "Your review" : "Your test"}</span>
-          {rep.probs.map((x, k) => <div key={k} className="v-rp"><b>{plainProblem(x.lessonId, x.problem, true)}</b><span>{!x.wrong && !x.shown ? "Right" : "Not this time"}</span></div>)}
-          {watch && <p className="v-why"><b>Watch for:</b> <Rich text={watch} /></p>}
+        {rep.mode !== "practice" && rep.probs.length > 0 && <div className="v-recap o-in">
+          <span className="o-label">{skill ? `Your ${SKILL_CHECK.toLowerCase()}` : review ? "Your review" : "Your test"}</span>
+          {/* problem by problem: the sum with its answer, what was typed when it missed, and the tick or cross */}
+          <ul className="v-chips">{rep.probs.map((x, k) => {
+            const right = !x.wrong && !x.shown, put = right ? undefined : typed(k);
+            return <li key={k} className={`v-rp ${right ? "right" : "wrong"}`}><span>{plainProblem(x.lessonId, x.problem, true)}</span>
+              {put != null && <small>you put {put}</small>}<span className="mk" aria-hidden="true">{right ? "\u2713" : "\u2715"}</span>
+              <span className="visually-hidden">{right ? "Right" : "Not this time"}</span></li>;
+          })}</ul>
+          {watch && <p className="o-why"><b>Watch for:</b> <Rich text={watch} /></p>}
         </div>}
-        {watch && !(rep.mode !== "practice" && rep.probs.length > 0) && <p className="v-why"><b>Watch for:</b> <Rich text={watch} /></p>}
+        {watch && !(rep.mode !== "practice" && rep.probs.length > 0) && <p className="o-why o-in"><b>Watch for:</b> <Rich text={watch} /></p>}
       </section>
-      <section className="v-panel v-box" aria-label="Your box">{lesson ? <DoneBox g={g} id={lesson.id} /> : null}</section>
+      {lesson ? <DoneBox g={g} id={lesson.id} /> : <section className="o-panel o-box" aria-label="Your box" />}
     </div>
   );
 }
@@ -147,22 +156,23 @@ function watchFor(rep: SessionReport, practice?: SessionReport): string | undefi
   return w && (w.say ?? w.msg);
 }
 
-/** The lesson's chapter, its tile now showing the new skill check; a tap goes to the box with that lesson picked. */
+/** The lesson's chapter, as the box shows it: its tile now showing the new skill check, picked. A tap goes to the box
+ *  with that lesson picked. */
 function DoneBox({ g, id }: { g: number; id: string }) {
   const { progress, go, now } = useApp();
   const unit = unitsInGrade(g).find(u => u.entries.some(c => c.id === id));
-  if (!unit) return null;
-  const n = learnedCount(progress, unit.entries);
-  return (<>
-    <div className="v-bh"><b>{unit.name}</b><span className="v-meta">{n} of {unit.entries.length} done</span></div>
-    {unit.entries.map(c => {
-      // a check of 3 or 4 is learned and fills the ring (v2 spec C3); the status wraps rather than being cut
-      const st = statusOf(progress, g, c.id, now());
-      return <Cover key={c.id} pick={c.id === id} disabled={!isReady(c.id)} pic={<TilePic svg={lessonPic(c.id)} />} name={c.title} p={learned(progress, c.id) ? 1 : (st.score ?? 0) / 4} tone={st.tone === "done" ? undefined : st.tone}
-        word={<>{st.word}{st.checked && st.score != null && <span className="v-sc">{` \u00b7 ${st.score}/4`}</span>}</>}
-        onClick={() => go({ name: "home", pick: c.id }, "back")} aria-label={`${c.title}, ${st.word}${st.checked && st.score != null ? `, skill check ${st.score} of 4` : ""}`} />;
-    })}
-  </>);
+  if (!unit) return <section className="o-panel o-box" aria-label="Your box" />;
+  const n = checkedCount(progress, unit.entries);
+  return (
+    <section className="o-panel o-box" aria-label="Your box">
+      <div className="o-bh"><h2 className="o-head">{unit.name}</h2><span className="o-st">{n} of {unit.entries.length} done</span></div>
+      <div className="o-grid">{unit.entries.map(c => {
+        const st = statusOf(progress, g, c.id, now()), last = progress.checks?.[c.id]?.last;
+        return <Cover key={c.id} sel={c.id === id} disabled={!isReady(c.id)} pic={lessonPic(c.id)} name={c.title} p={(last ?? 0) / 4} word={st.word} tone={st.tone}
+          onClick={() => go({ name: "home", pick: c.id }, "back")} label={`${c.title}, ${st.word}${last != null ? `, skill check ${last} of 4` : ""}`} />;
+      })}</div>
+    </section>
+  );
 }
 
 /** A saved report, opened from the lesson's "Last time" tile or from the grown-up page. */

@@ -1,122 +1,77 @@
-import { Pill, PillLabel } from "../components/primitives/Pill";
+import type { ReactNode } from "react";
+import { Pill } from "../components/primitives/Pill";
+import { Marks } from "../components/Masters";
+import { lessonPic, TilePic } from "../components/TilePics";
+import { dueBack, learnedNow, REVIEW_DAYS, toGoOver } from "../engine/mastery/skills";
 import { useApp } from "../app/AppState";
-import { doneCount, entriesInGrade, gradeAverage, isReady, testKey, unitsInGrade } from "../app/curriculum";
+import { doneCount, entriesInGrade, gradeAverage, isReady, testKey, unitsInGrade, type Entry } from "../app/curriculum";
 import { upNext } from "../app/today";
-import { gradesNext } from "./Home";
 import { GRADES, gradeOf } from "../curriculum/grades";
 import { LEVEL_XP } from "../engine/mastery/levels";
 import { placeKey } from "../engine/session/practice";
-import { lastScore, timesDone } from "../engine/mastery/progress";
-import { gradeLevel, ScoreChip } from "../components/primitives/Score";
+import { gradeLevel } from "../components/primitives/Score";
 import { Fill, GradeNum } from "../components/Shelf";
-import { Check, LockIcon } from "../components/primitives/icons";
+import { LockIcon } from "../components/primitives/icons";
 import type { CSSProperties } from "react";
-import { SplitScreen } from "../components/screen/Screen";
-import { BentoGrid, bgClass } from "../components/BentoGrid";
-import { CHOOSE_GRADE, FIND_MY_LEVEL, GROWN_UP, LESSON_MINUTES, minLabel, NO_UNIT, UP_NEXT, YOUR_BENTO } from "../app/copy";
+import { CHOOSE_GRADE, FIND_MY_LEVEL, GROWN_UP, NO_UNIT, YOUR_BENTO } from "../app/copy";
+
+/** days in words: "1 day", "5 days" */
+const days = (n: number) => (n === 1 ? "1 day" : `${n} days`);
 
 /**
- * My Obento (G 2026-10-06; rebuilt G 2026-10-08 "doesn't look or feel like the rest of the app ... make better use of
- * its space"): the same screen as the grade's book, so it reads as one app. On the left, the Contents list: your grade's
- * big number, the grades you've worked in as rows, Find my level and the grown-up's report. On the right, the book's
- * bento: your level charging up, your streak and XP as number tiles, and the chapter you're in as a plan like Today.
- * No settings (those live on the Settings page). Nothing leaves this device.
+ * Me (UI model v61, G 2026-10-14): the child's own page, three shelves. Go over: what slipped or scored under 3, the
+ * first one the button's. Getting stronger: learned lessons on their way through the four checks (3, 7, 21 and 60 days).
+ * Stuck: lessons that passed all four. A lesson moves right as its checks pass. The grown-up's page sits behind the lock.
  */
 export function Me() {
-  const { progress, go, openSheet, startTest, chooseGrade } = useApp();
-  // before a grade is chosen the page stays neutral and asks for one; nothing assumes a grade
-  const g = progress.chosen ? progress.grade : null, grade = g == null ? null : gradeOf(g);
-  const gxp = g == null ? 0 : progress.gxp[g] ?? 0, { lvl, into } = gradeLevel(gxp);
-  const lessonsDone = Object.keys(progress.lessons).length;
-
-  const chapters = g == null ? [] : unitsInGrade(g).filter(u => u.name !== NO_UNIT);
-  const next = g == null ? undefined : upNext(progress, g)?.entry;
-  const ci = Math.max(0, chapters.findIndex(u => u.name === (next?.unit || NO_UNIT)));
-  const chapter = chapters[ci];
-  const score = chapter && g != null ? progress.tests[testKey(g, chapter.name)]?.best ?? 0 : 0;
-  const chDone = chapter ? doneCount(progress, chapter.entries) : 0;
-
-  // the grades you've worked in, and the one you're on
-  const yours = GRADES.map(d => d.grade).filter(n => n === g || doneCount(progress, entriesInGrade(n)) > 0);
-  // v2: the same grade list the island's ring opens, on home
-  const switchGrade = () => { gradesNext.open = true; go({ name: "home" }); };
-
-  const list = (
-    <>
-      <header className="shead">
-        {grade ? <GradeNum grade={g!} /> : <h1>{YOUR_BENTO}</h1>}
-        {grade
-          ? <Pill small className="scheck" onClick={switchGrade}>Switch grade</Pill>
-          : <Pill small go className="scheck" onClick={() => openSheet(true)}>{CHOOSE_GRADE}</Pill>}
-      </header>
-      {yours.map(n => {
-        const all = entriesInGrade(n), d = doneCount(progress, all), avg = gradeAverage(progress, n);
-        return (
-          <button key={n} className={`srow mgrade${n === g ? " on" : ""}`} aria-current={n === g ? "true" : undefined}
-            onClick={() => n === g ? go({ name: "home" }, "fwd") : chooseGrade(n)}>
-            <span className="sname"><b>{gradeOf(n).name}</b></span>
-            <small className="smeta">{avg != null ? `average ${avg.toFixed(1)} · ` : ""}{d} of {all.length}</small>
-          </button>
-        );
-      })}
-      {g != null && (
-        <button className="srow" onClick={() => startTest(placeKey(g))}>
-          <span className="sname"><b>{FIND_MY_LEVEL}</b></span><small className="smeta">›</small>
-        </button>
-      )}
-      <button className="srow mgrown" onClick={() => go({ name: "parent" }, "fwd")}>
-        <span className="sname"><b>{GROWN_UP}</b></span><small className="smeta"><LockIcon size={12} /> Report ›</small>
-      </button>
-    </>
-  );
-
-  const detail = grade ? (
-    <BentoGrid fit className="bhome sbento mybook">
-      <section className={`tile b-stats mylevel battery ${bgClass("l")}`}>
-        <Fill frac={into / LEVEL_XP} />
-        <small className="k">{YOUR_BENTO} · {grade.name}</small>
-        <span className="bbig">Level {lvl}</span>
-        <p><b>{into} of {LEVEL_XP} XP</b> to level {lvl + 1}</p>
-      </section>
-      <section className={`tile b-streak ${bgClass("n")}`}>
-        <span className="bbig">{progress.streak}</span>
-        <p><b>day{progress.streak === 1 ? "" : "s"}</b> in a row</p>
-      </section>
-      <section className={`tile b-streak ${bgClass("n")}`}>
-        <span className="bbig">{progress.xp.toLocaleString("en-US")}</span>
-        <p><b>XP</b> · {lessonsDone} lesson{lessonsDone === 1 ? "" : "s"} done</p>
-      </section>
-      {chapter && (
-        <section className={`tile today ${bgClass("f")}`}>
-          <header className="thead"><h2>{chapter.name}</h2>
-            <p className="sub">Chapter {ci + 1} of {chapters.length} · {chDone} of {chapter.entries.length} lessons · test {score} of 4</p></header>
-          <div className="tbody">
-            <ol className="plan">{chapter.entries.filter(c => isReady(c.id)).map(c => {
-              const done = timesDone(progress, c.id) > 0, now = c === next, sc = lastScore(progress, c.id);
-              return (
-                <li key={c.id}>
-                  <button className={`pitem${done ? " done" : ""}${now ? " now" : ""}`} onClick={() => go({ name: "learn", lessonId: c.id }, "fwd")}>
-                    <span className="pmark" aria-hidden>{done ? <Check /> : null}</span>
-                    <span className="ptext">{now && <small>{UP_NEXT}</small>}<b>{c.title}</b></span>
-                    {now ? <PillLabel go>Start</PillLabel> : sc != null ? <ScoreChip n={sc} /> : <span className="pmin">{minLabel(LESSON_MINUTES)}</span>}
-                  </button>
-                </li>
-              );
-            })}</ol>
-          </div>
-          {next && chapter.entries.includes(next) && <Pill go className="tstart" onClick={() => go({ name: "learn", lessonId: next.id }, "fwd")} aria-label={`Start: ${next.title}`}>Start</Pill>}
+  const { progress, go, openSheet, now } = useApp();
+  const g = progress.chosen ? progress.grade : null;
+  if (g == null) {
+    // before a grade is chosen the page stays neutral and asks for one; nothing assumes a grade
+    return (
+      <div className="o-state me">
+        <section className="o-panel" aria-label={YOUR_BENTO}>
+          <h2 className="o-head o-in">Choose your grade</h2>
+          <p className="o-why o-in">Your lessons show up here once you start. You can change grade any time.</p>
+          <div className="o-row o-in"><button className="o-btn fill" onClick={() => openSheet(true)}>{CHOOSE_GRADE}</button></div>
         </section>
-      )}
-    </BentoGrid>
-  ) : (
-    <section className="tile today mychoose">
-      <header className="thead"><h2>Choose your grade</h2>
-        <p className="sub">Your level, streak and chapters show up here once you start. You can change grade any time.</p></header>
-      <Pill go onClick={() => openSheet(true)}>{CHOOSE_GRADE}</Pill>
+      </div>
+    );
+  }
+  const t = now(), all = entriesInGrade(g).filter(c => isReady(c.id));
+  const passes = (id: string) => progress.checks?.[id]?.passes ?? 0;
+  const over = all.filter(c => dueBack(progress, c.id, t) || toGoOver(progress, c.id));
+  const grow = all.filter(c => learnedNow(progress, c.id, t) && passes(c.id) < REVIEW_DAYS.length);
+  const stuck = all.filter(c => learnedNow(progress, c.id, t) && passes(c.id) >= REVIEW_DAYS.length);
+  const first = over[0] ?? upNext(progress, g)?.entry;
+  const open = (id: string) => go({ name: "learn", lessonId: id }, "fwd");
+  const row = (c: Entry, word: string, sel = false) => (
+    <button key={c.id} className={`o-tile o-lrow${sel ? " sel" : ""}`} onClick={() => open(c.id)} aria-label={`${c.title}, ${word}`}>
+      <span className="o-cpw"><TilePic svg={lessonPic(c.id)} /></span>
+      <span className="o-tx"><span className="o-nm">{c.title}</span><Marks n={REVIEW_DAYS.length} on={passes(c.id)} /><span className={`o-st${sel ? " next" : ""}`}>{word}</span></span>
+    </button>
+  );
+  const shelf = (name: string, list: Entry[], fill: boolean, body: ReactNode, foot?: ReactNode) => (
+    <section className="o-panel o-shelfp" aria-label={name}>
+      <div className="o-shh"><h2 className="o-head">{name}</h2><span className={`o-count${fill ? " fill" : ""}`}>{list.length}</span></div>
+      <div className="o-shelf">{body}</div>
+      {foot ?? <span />}
     </section>
   );
-
-  return <SplitScreen className="mine" label={YOUR_BENTO} show="list" list={list} detail={detail} />;
+  return (
+    <div className="o-state me">
+      {shelf("Go over", over, over.length > 0,
+        over.length ? over.map((c, i) => row(c, dueBack(progress, c.id, t) ? "Time to go over it" : `Last check ${progress.checks[c.id]!.last} of 4`, i === 0))
+          : <p className="o-why">Nothing to go over. Nice.</p>,
+        first && <button className="o-btn fill o-in" onClick={() => open(first.id)}>{over.length ? "Go over: " : "Up next: "}{first.title}</button>)}
+      {shelf("Getting stronger", grow, false,
+        grow.length ? grow.map(c => row(c, `Next check in ${days(Math.max(1, Math.ceil((progress.checks[c.id]!.due - t) / 864e5)))}`))
+          : <p className="o-why">Learn a lesson and it comes here.</p>)}
+      {shelf("Stuck", stuck, false,
+        <>{stuck.map(c => row(c, "Stuck for good"))}<p className="o-why">Pass all four checks and a lesson moves here.</p></>,
+        <button className="o-btn o-gulink" onClick={() => go({ name: "parent" }, "fwd")}><span className="o-lk"><LockIcon /> {GROWN_UP}</span></button>)}
+    </div>
+  );
 }
 
 /**

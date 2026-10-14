@@ -100,8 +100,6 @@
 #app .v-pic .frame{stroke:var(--v-done)}
 /* the picked tile wears ONE accent ring, inset on the tile card (spec D2), never a second one round it or its picture:
    keyboard focus on a tile shows as that same ring */
-#app .v-cover:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--v-acc)}
-#app .v-cover :is(.v-picbox,.v-pic){outline:none;box-shadow:none}
 
 /* the area model's results (g5-mult2 and every .am): on its mid parts, in the on-mid text token, and sized 12 to 26
    picture units like every other result (spec G6), never under 12px on screen */

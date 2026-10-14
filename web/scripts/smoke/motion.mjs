@@ -31,22 +31,22 @@ export async function motionGuard({ browser, PAGE, fails, notes }) {
     const cdp = await ctx.newCDPSession(p);
     await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
     const tap = l => async () => { await l.first().tap(); };
-    // v2 (2026-10-13): the island's grade ring opens every grade in the box, in place; a grade tile changes grade
-    const lesson = async () => { const c = p.locator(".v-today .v-go").first(); if (await c.isVisible()) await c.tap(); else await p.evaluate(() => { location.hash = "#/learn/g5-mult2"; }); };
-    const ring = tap(p.locator(".igrade"));
+    // UI model v57: the island's grid opens every grade in the box, in place; a grade tile changes grade; back closes it
+    const lesson = async () => { const c = p.locator(".o-today .o-btn.fill").first(); if (await c.isVisible()) await c.tap(); else await p.evaluate(() => { location.hash = "#/learn/g5-mult2"; }); };
+    const ring = tap(p.locator('.o-island button[aria-label="Every grade"]')), back = tap(p.locator('.o-island button[aria-label="Back"]'));
     const grade = re => [["open every grade", ring, false], [`pick ${re.source.replace(/\W/g, "")}`, tap(p.getByRole("button", { name: re })), true]];
     const steps = [
       ...grade(/^3rd grade,/), ...grade(/^1st grade,/), ...grade(/^10th grade( ·[^,]*)?,/), ...grade(/^5th grade,/),
-      ["open every grade", ring, false], ["close every grade", ring, false],
-      ["My Obento", tap(p.locator(".ime")), true], ["Back", tap(p.locator(".iback")), true],
-      ["open a lesson", lesson, true], ["Back from the lesson", tap(p.locator(".iback")), true],
+      ["open every grade", ring, false], ["close every grade", back, false],
+      ["Me", tap(p.locator('.o-nav>button[aria-label="Me"]')), true], ["Back", back, true],
+      ["open a lesson", lesson, true], ["Back from the lesson", back, true],
     ];
     for (const [name, act, page] of steps) {
       const at = `motion ${w}x${h} ${name}`;
       await p.evaluate(() => {
         // everything the old page drew is marked: once the new page starts, none of it may still be on screen (G
         // 2026-10-07: "the purple line", the last grade's colour left across the top of the new grade's book)
-        for (const e of document.querySelectorAll("#app *")) if (!e.closest(".itop")) e.setAttribute("data-was", "");
+        for (const e of document.querySelectorAll("#app *")) if (!e.closest(".itop,.o-nav")) e.setAttribute("data-was", "");
         window.__vt = 0;
         const f = window.__frames = [], t0 = performance.now();
         const look = () => {
@@ -55,7 +55,7 @@ export async function motionGuard({ browser, PAGE, fails, notes }) {
           const big = e => { const b = e.getBoundingClientRect(); return b.width * b.height > innerWidth * innerHeight * 0.25; };
           const blur = [...document.querySelectorAll("#app *, #app")].filter(e => /blur/.test(getComputedStyle(e).backdropFilter + getComputedStyle(e).filter) && shown(e) && big(e)).map(e => e.className.toString().split(" ")[0]);
           // the page's pieces keep their width and the book's tiles their size (a page may still grow below the fold)
-          const sizes = [...[...document.querySelectorAll("#app>:not(.itop)")].map(e => `${e.className.toString().split(" ")[0]}:${e.offsetWidth}`),
+          const sizes = [...[...document.querySelectorAll("#app>:not(.itop):not(.o-nav)")].map(e => `${e.className.toString().split(" ")[0]}:${e.offsetWidth}`),
             ...[...document.querySelectorAll(".bg-in>.bg-t")].map(e => `${e.className.toString().split(" ")[0]}:${e.offsetWidth}x${e.offsetHeight}`)].join(" ");
           const was = [...document.querySelectorAll("#app [data-was]")].filter(e => shown(e) && !e.closest(".zoom") && e.getClientRects().length).length;
           f.push({ t: performance.now() - t0, was, zoom: !!document.querySelector(".zoom"), blur, sizes, stage: !!document.querySelector("#app>.stage"), hash: location.hash });

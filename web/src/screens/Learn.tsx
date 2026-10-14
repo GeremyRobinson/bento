@@ -9,6 +9,7 @@ import { BuildUp } from "../components/BuildUp";
 import type { Rng } from "../curriculum/generators/rng";
 import type { AnyLesson } from "../curriculum/schemas/lesson";
 import { MathLine, Rich } from "../components/primitives/MathLine";
+import { Marks } from "../components/Masters";
 import { dressStatement, partsLook, toneMath, tonesOf } from "../components/primitives/statement";
 import type { Explanation } from "../explanations/schema";
 
@@ -113,18 +114,20 @@ export function Learn({ lessonId }: { lessonId: string }) {
   // every worked line is there from the start, the ones still to come faint (v2 spec L3, like the model); each lights up
   // on its beat, and a state-0 line is part of the starting picture
   const lines = ex.steps;
+  // the step bar's marks: one per worked line, the newest solid and long
+  const shown = lines.filter(st => st.state <= shownAt).length;
   return (
-    <div className={`screen v-work v-prac v-learn parts-${look}`}>
-      <section className="v-panel v-stage" aria-label="Problem">
-        <div className="v-prob"><ProblemView lessonId={lesson.id} problem={example} story={false} solved={finished} part="text" /></div>
+    <div className={`o-state prac v-prac v-learn parts-${look}`}>
+      <section className="o-panel v-stage" aria-label="Problem">
+        <div className="v-prob pprob"><ProblemView lessonId={lesson.id} problem={example} story={false} solved={finished} part="text" /></div>
         {ex.diagram && (
-          <div className="v-ppic"><div className="viz"><Diagram diagram={ex.diagram} timeline={ex.timeline} at={shownAt} fit /></div></div>
+          <div className="o-art v-ppic"><div className="viz"><Diagram diagram={ex.diagram} timeline={ex.timeline} at={shownAt} fit /></div></div>
         )}
       </section>
-      <section className="v-panel v-solve v-lside" aria-label="Watch one">
-        <div className="v-steps"><span className="n">Watch one</span>
-          {sc != null && <span className="v-meta">Last skill check {sc} of 4</span>}</div>
+      <section className="o-panel v-solve v-lside" aria-label="Watch one">
+        <div className="v-steps"><span className="n">Watch one</span><Marks n={lines.length} on={Math.max(0, shown - 1)} now={shown - 1} /></div>
         {ex.idea?.[0] && <p className="v-idea"><Rich text={ex.idea[0]} /></p>}
+        {/* every worked line is laid out from the start; each one rises in on its beat (the model's chips) */}
         <ol className="v-wl" aria-live="polite">
           {lines.map(st => (
             <li key={st.id} className={st.state > shownAt ? "later" : undefined} aria-hidden={st.state > shownAt || undefined}>
@@ -132,10 +135,10 @@ export function Learn({ lessonId }: { lessonId: string }) {
           ))}
         </ol>
         {low && <BuildUp lessonId={lesson.id} />}
-        <div className="v-lbtns">
+        <div className="o-row v-lbtns">
           {/* the model's two buttons, from the start (no Show all): Watch again plays a fresh one from its first beat */}
-          <button className="v-plain" onClick={() => { setExample(fresh()); setAt(0); setPlaying(true); }}>Watch again</button>
-          <button className="v-go" onClick={() => startLesson(lesson.id)}>Try one</button>
+          <button className="o-btn" onClick={() => { setExample(fresh()); setAt(0); setPlaying(true); }}>Watch again</button>
+          <button className="o-btn fill" onClick={() => startLesson(lesson.id)}>Try one</button>
         </div>
       </section>
       <span className="visually-hidden">{gradeOf(lesson.grade).name}</span>

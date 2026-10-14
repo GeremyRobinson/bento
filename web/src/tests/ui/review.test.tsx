@@ -45,7 +45,7 @@ describe("today's review", () => {
     openReview();
     // a mixed run: each problem names its lesson over the problem, and the review's 4 hints sit in the tools
     const stage = screen.getByRole("region", { name: "Problem" });
-    expect(stage.querySelector(".v-label")!.textContent).toMatch(/^(Multiply two-digit numbers|Twin of two-digit multiplying)$/);
+    expect(stage.querySelector(".v-prob .o-label")!.textContent).toMatch(/^(Multiply two-digit numbers|Twin of two-digit multiplying)$/);
     expect(within(screen.getByRole("toolbar", { name: "Tools" })).getByRole("button", { name: "Hint, 4 left" })).toBeInTheDocument();
     expect(solveRun()).toBe(8);
     // done: the island and the done panel name the review, and a review offers no practice-again or retake

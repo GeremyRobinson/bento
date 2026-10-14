@@ -270,8 +270,6 @@ button.book:hover,button.book:active{transform:translateY(-2px);box-shadow:none}
    Today card (radius 36). */
 .wrap{--nest:var(--gap)}
 /* the circle sits as far from the round end as from the top and bottom (G 2026-10-08) */
-.pitem{border-radius:var(--r-row);min-height:calc(var(--pill-size) + var(--nest) * 2);padding:var(--nest) calc((var(--pill-size) - var(--sp-7)) / 2 + var(--nest));margin:0 calc(var(--sp-3) - var(--u) * 1.75);width:calc(100% + (var(--u) * 1.75 - var(--sp-3)) * 2)}
-.pitem .ctl.go{--pill-h:40px}
 .bhome .today{border-radius:var(--r-panel)}
 .bhome .today:has(.plan:last-child){padding-bottom:var(--nest)}
 

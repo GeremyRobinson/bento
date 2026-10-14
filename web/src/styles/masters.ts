@@ -37,19 +37,11 @@ export const MASTERS: Master[] = [
   // a lesson in a list: its mark, its name, its minutes
   // the grade's Contents: big pills grouped like the practice panel's Problem section (G 2026-10-08, Ring balance lab)
   { name: "Big pill list", classes: ["schapters", "big", "stag", "scheck", "contents", "screen", "slist", "shead", "srow", "chap", "sgroup", "sgroup-body", "sgroup-in", "sgroup-panel"] },
-  { name: "Lesson item", classes: ["pitem", "pmark"] },
   // the nav's round buttons: back, settings, me, hint
   { name: "Nav circle", classes: ["icon", "ihint", "spent"] },
   // v2 (G 2026-10-13, model artifact): one workspace, the box of Cover tiles, the solve panel. Rules in styles/v2.css.
-  { name: "Cover", component: "components/Cover.tsx", classes: ["v-cover", "v-top", "v-tx", "v-nm", "v-prog", "v-st", "v-pic", "v-picbox", "v-pq", "v-ring", "pick", "still", "next", "rev"] },
-  { name: "Ring", classes: ["v-ring", "sm", "md", "lg", "t", "f"] },
-  { name: "Stat", classes: ["v-stat", "v-nm", "v-st", "v-ring", "still"] },
-  { name: "Card panel", classes: ["v-panel", "v-label", "v-meta", "v-why", "v-row", "v-seg", "v-lbtns", "v-go", "v-plain"] },
-  { name: "Go button", classes: ["v-go"] },
-  { name: "Plain button", classes: ["v-plain"] },
-  { name: "Tool", classes: ["v-tool", "v-tools"] },
-  { name: "Workspace", classes: ["screen", "v-work", "v-home", "v-prac", "v-done", "v-today", "v-todaypic", "v-box", "v-bh", "v-sw", "v-wide", "v-yr", "v-path", "v-pstep", "v-gbig", "v-sc", "v-result", "v-recap", "v-rp", "v-stage", "v-prob", "v-ppic", "v-pad", "v-plist", "v-lside", "v-idea", "v-wl", "v-learn", "later", "all", "pprob", "pfade"] },
-  { name: "Solve panel", classes: ["v-solve", "v-keys", "v-solved", "v-ans", "q2", "v-steps", "v-lines", "v-ask", "v-say", "slip", "good", "hint", "slot", "empty", "no", "ask", "tray", "ctl", "choice", "choices", "ok"] },
+  { name: "Workspace", classes: ["v-prac", "v-done", "v-result", "v-recap", "v-rp", "v-ptile", "v-stage", "v-prob", "v-ppic", "v-pad", "v-plist", "v-lside", "v-idea", "v-wl", "v-learn", "later", "all", "pprob", "pfade", "v-lbtns"] },
+  { name: "Solve panel", classes: ["v-solve", "v-keys", "v-solved", "v-ans", "q2", "q", "note", "n", "v-meta", "v-q", "v-kp", "v-tools", "v-steps", "v-lines", "v-ask", "v-say", "slip", "good", "hint", "slot", "empty", "no", "ask", "tray", "ctl", "choice", "choices", "ok", "given", "active", "shown", "ppad", "k-go", "solved", "mline", "mk"] },
   { name: "Grade ring", classes: ["ibat", "igrade", "island", "pring-track"] },
   // the UI model (Design, v57, 2026-10-14): the shell and its masters, styles/ui.css. Class names are the model's with "o-" in front
   { name: "App", classes: ["o-app", "flow", "fit", "stage"] },
@@ -60,10 +52,13 @@ export const MASTERS: Master[] = [
   { name: "O ring", component: "components/Masters.tsx", classes: ["o-ring", "m", "l", "t", "f"] },
   { name: "O marks", classes: ["o-marks"] },
   { name: "O slider", classes: ["o-sw", "thumb"] },
-  { name: "O tile", classes: ["o-tile", "o-tx", "o-nm", "o-cover", "o-cpw", "o-stat", "o-wide", "o-foot", "o-st", "next", "rev", "o-prow", "o-ptrack", "o-ring", "o-marks", "sel", "o-gt", "o-gnum", "o-grades"] },
+  { name: "O tile", classes: ["o-tile", "o-tx", "o-nm", "o-cover", "o-cpw", "o-stat", "o-wide", "o-foot", "o-st", "next", "rev", "o-ring", "o-marks", "sel", "o-gt", "o-gnum", "o-grades"] },
   { name: "O picture", classes: ["o-art"] },
+  { name: "O settings", classes: ["settings", "o-setrows", "o-setrow", "o-tsize"] },
   { name: "O motion", classes: ["o-arrive", "o-grid", "zin", "zout", "o-sw", "thumb", "o-btn", "o-tool", "o-tile"] },
-  { name: "O screens", classes: ["o-state", "home", "o-today", "o-art", "o-box", "o-bh", "o-head", "o-sw", "o-grid", "o-grades", "o-tile", "o-prow", "o-marks", "o-app", "o-nav"] },
+  { name: "O me", classes: ["o-shelfp", "o-shh", "o-shelf", "o-count", "fill", "o-lrow", "o-cpw", "o-tx", "o-tile", "o-lk", "o-gulink", "o-why"] },
+  { name: "O chips", classes: ["v-chips", "right", "wrong", "mk"] },
+  { name: "O screens", classes: ["o-state", "home", "o-today", "o-art", "o-box", "o-bh", "o-head", "o-sw", "o-grid", "o-grades", "o-tile", "o-marks", "o-app", "o-nav", "o-gyear", "o-gnow", "o-gch", "o-grows", "o-grow", "o-big", "o-tx", "o-nm", "o-st", "o-wide", "o-label"] },
 ];
 
 /** states any master may be in: they never make a rule a one-off */
