@@ -5,6 +5,7 @@
 // Every tree, value and stage comes from the lesson's problem; this only lays them out and times them.
 import type { SceneDiagram, SceneItem } from "../scene/schema";
 import { r1 } from "../scene/helpers";
+import { giveWay, shortUp } from "../scene/picture-system";
 
 /** One piece of an expression. */
 export type XNode =
@@ -91,8 +92,10 @@ const width = (nodes: XNode[]) => nodes.map(size).reduce((s, k) => s + k.w, 0) +
 
 /**
  * Builds the picture as written working: a stack of lines (G 19:34 "most problems should either be in a stack or a grid").
- * A stage that changes the expression writes it on a new line under the last, rising in; a stage that only lights a
  * different box lights it on its own line. Lines never move once drawn; earlier lines dim when a later beat starts.
+ * * Lines never move once drawn; earlier lines dim when a later beat starts.
+ * In a phone's short box (--short) five lines can't stand at the label floor, so there the working is written on one
+ * line: each line takes the first line's place (shortUp) and the line before gives way as it comes (giveWay).
  */
 export function buildExprBoxes(o: { stages: XStage[]; alt: string; family?: string; minWidth?: number; /** the expression as written, shown muted above the boxes the whole time */ header?: string; /** a second muted line under it, e.g. the rules the boxes use */ rules?: string }): SceneDiagram {
   const { stages } = o;
@@ -100,8 +103,9 @@ export function buildExprBoxes(o: { stages: XStage[]; alt: string; family?: stri
   const HEAD = (o.header ? 40 : 0) + (o.rules ? 26 : 0);
   const W = Math.max(o.minWidth ?? 300, ...stages.map(s => width(s.tree) + 24), ...[o.header, o.rules].map(t => (t ? t.length * 17 * 0.6 + 24 : 0)));
   const items: SceneItem[] = [];
-  if (o.header) items.push({ type: "text", x: r1(W / 2), y: 18, text: o.header, cls: "lbl muted", enter: "fade" });
-  if (o.rules) items.push({ type: "text", x: r1(W / 2), y: (o.header ? 40 : 0) + 18, text: o.rules, cls: "lbl muted", enter: "fade" });
+  // the muted lines stand on their bottom edge (.up), so on a phone they grow up, away from the boxes under them
+  if (o.header) items.push({ type: "text", x: r1(W / 2), y: 30, text: o.header, cls: "lbl muted up", enter: "fade" });
+  if (o.rules) items.push({ type: "text", x: r1(W / 2), y: (o.header ? 40 : 0) + 30, text: o.rules, cls: "lbl muted up", enter: "fade" });
   // which stages share a line: the same expression, whatever box is lit
   const bare = (t: XNode[]) => JSON.stringify(t, (k, v) => (k === "lit" || k === "from" || k === "pop" || k === "id" || k === "under" || k === "room" ? undefined : v));
   const rows: { first: number; stages: number[] }[] = [];
@@ -111,11 +115,17 @@ export function buildExprBoxes(o: { stages: XStage[]; alt: string; family?: stri
   });
   const extent = (t: XNode[]) => { const k = t.map(size); return { up: Math.max(FS / 2, ...k.map(z => z.up)), down: Math.max(FS / 2, ...k.map(z => z.down)) }; };
   const lastBeat = Math.max(...stages.map(s => s.beat));
-  let y = HEAD + 10, last = 0;
+  let y = HEAD + 10, last = 0, firstY = 0;
   rows.forEach((row, r) => {
     const first = stages[row.first]!, e = extent(fit(first.tree, roomFor(row.stages.map(j => stages[j]!.tree)), false));
     y += (r ? ROW_GAP : 0) + e.up;
+    if (!r) firstY = y;
+    const up = shortUp(y - firstY);
     const B = first.beat, A = first.at ?? 0, next = rows[r + 1] ? stages[rows[r + 1]!.first]! : undefined;
+    // in a short box this line gives way as the next one comes
+    const gone = next ? { beat: next.beat, at: next.at ?? 0 } : undefined;
+    const withUp = (it: SceneItem): SceneItem => (r ? { ...it, vars: { ...it.vars, ...up } } : it);
+    const push = (it: SceneItem) => items.push(...(gone ? giveWay(withUp(it), gone.beat, gone.at, lastBeat) : [withUp(it)]));
     // a line dims once a later beat starts with a newer line already written
     const dimAt = next ? Math.max(B + 1, next.beat + ((next.at ?? 0) > 0 ? 1 : 0)) : undefined;
     const dimFrom = dimAt != null && dimAt <= lastBeat ? dimAt : undefined;
@@ -127,8 +137,8 @@ export function buildExprBoxes(o: { stages: XStage[]; alt: string; family?: stri
     plain.items.forEach((it, k) => {
       const chip = plain.tags[k];
       const enter: Partial<SceneItem> = chip?.pop ? { enter: "pop", delay: A + 0.15 } : { enter: "rise", delay: A };
-      items.push({ ...it, ...enter, from: B, ...(dimFrom != null ? { until: dimFrom - 1 } : {}) } as SceneItem);
-      if (dimFrom != null) items.push({ ...it, cls: `${it.cls ?? ""} dimmed`.trim(), from: dimFrom } as SceneItem);
+      push({ ...it, ...enter, from: B, ...(dimFrom != null ? { until: dimFrom - 1 } : {}) } as SceneItem);
+      if (dimFrom != null) push({ ...it, cls: `${it.cls ?? ""} dimmed`.trim(), from: dimFrom } as SceneItem);
     });
     // each stage's lit box: on from its moment until the next stage's
     row.stages.forEach(j => {
@@ -136,11 +146,12 @@ export function buildExprBoxes(o: { stages: XStage[]; alt: string; family?: stri
       // its lit box and its under lines (a rule, or a note like "unchanged") come and go on their own
       const lit = place(shape(s.tree, true), x0, y, "pw").items.filter(it => /\bhlline\b/.test(it.cls ?? "") || /^sm\b/.test(it.cls ?? ""));
       for (const it of lit) {
-        if (!after) { items.push({ ...it, from: s.beat, enter: "fade", delay: at }); continue; }
+        if (!after) { push({ ...it, from: s.beat, enter: "fade", delay: at }); continue; }
         const out = after.at ?? 0;
-        if (after.beat === s.beat) { items.push({ ...it, from: s.beat, until: s.beat, enter: "flash", delay: at, vars: { "--d2": `${out.toFixed(2)}s` } }); continue; }
-        items.push({ ...it, from: s.beat, until: after.beat - 1, enter: "fade", delay: at });
-        if (out > 0) items.push({ ...it, cls: `${it.cls} a-outsoon`, from: after.beat, until: after.beat, delay: out });
+        // (a flash on a line that the next line replaces in this beat goes with it in a short box, even with motion off)
+        if (after.beat === s.beat) { items.push(withUp({ ...it, ...(gone?.beat === s.beat ? { cls: `${it.cls ?? ""} shortout` } : {}), from: s.beat, until: s.beat, enter: "flash", delay: at, vars: { "--d2": `${out.toFixed(2)}s` } })); continue; }
+        push({ ...it, from: s.beat, until: after.beat - 1, enter: "fade", delay: at });
+        if (out > 0) items.push(withUp({ ...it, cls: `${it.cls} a-outsoon`, from: after.beat, until: after.beat, delay: out }));
       }
     });
     y += e.down;

@@ -81,6 +81,18 @@
    at its phone floor grows away from what it names, never into it */
 #app .viz-svg text.up{dominant-baseline:text-after-edge}
 #app .viz-svg text.down{dominant-baseline:text-before-edge}
+/* a short box (--box-h, SceneDiagram: a phone's Watch one or practice strip, 300px tall or less; --short is 1 there and 0
+   everywhere else). A picture whose working is a tall stack of lines writes it as one line there: each line moves into
+   the first line's place (shortUp) and gives way once the next line is written, from that beat (.shortgo) or at --d2
+   seconds into it (.shortout). They go by fill and stroke opacity, so a part's own entrance still plays on opacity. */
+#app .viz-svg{--short:clamp(0,calc((300 - var(--box-h,999)) * 1000),1)}
+#app .viz-svg :is(.shortgo,.shortout){fill-opacity:calc(1 - var(--short));stroke-opacity:calc(1 - var(--short))}
+#app .viz-svg .shortout{animation:shortOut var(--dur-300) var(--m-ease) var(--d2,0s) both}
+#app .viz-svg .shortout.a-rise{animation:rise var(--m-pop) var(--m-spring) var(--d,0s) both,shortOut var(--dur-300) var(--m-ease) var(--d2,0s) both}
+#app .viz-svg .shortout.a-pop{animation:popIn var(--m-pop) var(--m-spring) var(--d,0s) both,shortOut var(--dur-300) var(--m-ease) var(--d2,0s) both}
+#app .viz-svg .shortout.a-fade{animation:fadeIn var(--dur-500) var(--m-ease) var(--d,0s) both,shortOut var(--dur-300) var(--m-ease) var(--d2,0s) both}
+#app .viz-svg .shortout.a-flash{animation:fadeIn var(--dur-400) var(--m-ease) var(--d) both,fadeOut var(--dur-300) var(--m-ease) var(--d2) forwards,shortOut var(--dur-300) var(--m-ease) var(--d2,0s) both}
+@keyframes shortOut{from{fill-opacity:1;stroke-opacity:1}}
 /* a caption under the picture (.cap: the worked line written out) is left out of practice, where the work list already
    shows each worked line and the picture keeps the strip's height for itself (G 2026-10-14, the wide practice strip) */
 #app .v-prac:not(.v-learn) .v-ppic .viz-svg text.cap{display:none}

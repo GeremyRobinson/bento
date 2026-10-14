@@ -193,7 +193,7 @@ describe("expression-box lessons", () => {
     for (const p of problemsOf(l, 30)) {
       const d = sceneOf(l, p), g = value(l, p, "inside"), out = value(l, p, "outside");
       const k = textsAt(d, 0).find(t => /\bxchip\b|acc/.test(t.cls ?? "") && t.from === 0 && !/muted/.test(t.cls ?? ""))!;
-      const written = d.items.find((i): i is Text => i.from === 1 && i.type === "text" && i.text === fmt(g) && !/dimmed/.test(i.cls ?? ""))!;
+      const written = d.items.find((i): i is Text => i.from === 1 && i.type === "text" && i.text === fmt(g) && !/\b(dimmed|shortout|shortgo)\b/.test(i.cls ?? ""))!;
       expect(written.y).toBeGreaterThan(k.y);
       expect(finalText(d, 2)).toContain(fmt(out));
     }

@@ -54,7 +54,9 @@ export function textBox(t: { x: number; y: number; text: string; sup?: string; c
   const w = [...t.text].length * s * 0.6 + (t.sup ? [...t.sup].length * s * 0.42 : 0);
   const c = ` ${t.cls ?? ""} `;
   const x0 = c.includes(" end ") ? t.x - w : c.includes(" start ") ? t.x : t.x - w / 2;
-  return { x0, y0: t.y - s * 0.55 - (t.sup ? s * 0.25 : 0), x1: x0 + w, y1: t.y + s * 0.55 };
+  // a label standing on its bottom edge (.up) or hanging from its top edge (.down) takes its room on that side
+  const top = c.includes(" up ") ? t.y - s * 1.1 : c.includes(" down ") ? t.y : t.y - s * 0.55;
+  return { x0, y0: top - (t.sup ? s * 0.25 : 0), x1: x0 + w, y1: top + s * 1.1 };
 }
 
 function pointsOf(it: Draft): Pt[] {

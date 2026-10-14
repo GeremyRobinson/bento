@@ -19,15 +19,18 @@ export function SceneDiagram({ diagram: d, at, fit = false }: { diagram: Scene; 
   useLayoutEffect(() => {
     const el = ref.current;
     if (!fit || !el) return;
-    const box0 = contentBox(el, d.items, 0);
-    if (!box0) return;
     const text = textTokens(el.parentElement ?? el);
     // in the lesson's picture panel the picture takes the whole panel and frames itself inside it (the viewBox below)
     // and the room it gets is its holder's box, measured before it first fills it, so the first frame is already right
     const panel = !!el.closest(PANEL), room = panel && el.parentElement ? el.parentElement : el;
     const measure = () => {
       const r = layoutRect(room);
-      if (r.width > 0 && r.height > 0) setFrame({ d, box: floorBox(el, d.items, box0, [r.width, r.height], d.grow ?? GROW), size: [r.width, r.height], text, panel });
+      if (!(r.width > 0 && r.height > 0)) return;
+      // the box's height goes to the picture's CSS before it is measured (see BOX_H), so a picture that lays itself
+      // out more compactly in a short box is framed as it draws there
+      el.style.setProperty("--box-h", String(Math.round(r.height)));
+      const box0 = contentBox(el, d.items, 0);
+      if (box0) setFrame({ d, box: floorBox(el, d.items, box0, [r.width, r.height], d.grow ?? GROW), size: [r.width, r.height], text, panel });
     };
     measure();
     if (typeof ResizeObserver === "undefined") return;
@@ -39,7 +42,7 @@ export function SceneDiagram({ diagram: d, at, fit = false }: { diagram: Scene; 
   // drawn moves between beats (G 19:34: "random coming from the side animations")
   return (
     <svg ref={ref} className={d.two ? "viz-svg two" : "viz-svg"} viewBox={`${r1(vb.x)} ${r1(vb.y)} ${r1(vb.w)} ${r1(vb.h)}`} role="img" aria-label={d.alt}
-      style={{ "--w": Math.round(d.width), "--h": Math.round(d.height), ...(fitted ? textHold(zoom, frame.text) : {}), ...(fitted && frame.panel ? FILL : {}) } as CSSProperties} data-family={d.family}>
+      style={{ "--w": Math.round(d.width), "--h": Math.round(d.height), ...(fitted ? { [BOX_H]: Math.round(frame.size[1]) } : {}), ...(fitted ? textHold(zoom, frame.text) : {}), ...(fitted && frame.panel ? FILL : {}) } as CSSProperties} data-family={d.family}>
       {dotsOnTop(d.items).map((it, i, all) => {
         const from = it.from ?? 0;
         if (from > at || (it.until != null && at > it.until)) return null;
@@ -137,6 +140,13 @@ function floorBox(svg: SVGSVGElement, items: SceneItem[], box0: Box, size: [numb
   return box;
 }
 const GROW = 1.5;
+/**
+ * The fitted box's height in screen px, as the CSS number --box-h (unset outside a fitted picture). A picture whose
+ * working is a tall stack reads it through --short (styles/picture-system.css: 1 in a phone's short box, else 0) to
+ * draw the stack as one line that each step rewrites, since five rows can't stand in a 160px box at the label floor.
+ * It is the box's size, not the zoom, so the choice is the same however the frame settles.
+ */
+const BOX_H = "--box-h";
 const cap = (b: Box, b0: Box, grow: number): Box => {
   const w = Math.min(b.w, b0.w * grow), h = Math.min(b.h, b0.h * grow);
   // keep the plain frame centred in the capped one, but never show empty room on a side the text didn't grow into
@@ -189,7 +199,9 @@ function contentBox(svg: SVGSVGElement, items: SceneItem[], atPx: number): Box |
       const b = e.getBBox();
       if (!(b.width > 0 || b.height > 0)) continue;
       const m = cs.transform && cs.transform !== "none" ? new DOMMatrix(cs.transform) : null;
-      const dx = m?.e ?? 0, dy = m?.f ?? 0;
+      // and its own translate (a line moved into the first line's place in a short box, shortUp)
+      const [tx = 0, ty = 0] = cs.translate && cs.translate !== "none" ? cs.translate.split(" ").map(v => parseFloat(v) || 0) : [];
+      const dx = (m?.e ?? 0) + tx, dy = (m?.f ?? 0) + ty;
       x0 = Math.min(x0, b.x + dx); y0 = Math.min(y0, b.y + dy); x1 = Math.max(x1, b.x + b.width + dx); y1 = Math.max(y1, b.y + b.height + dy);
     }
     return x1 > x0 && y1 > y0 ? { x: x0, y: y0, w: x1 - x0, h: y1 - y0 } : null;
