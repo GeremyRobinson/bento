@@ -332,7 +332,14 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
     for (const tb of tickBoxes) if (overlap(b, tb)) s += 4;
     return s;
   };
-  for (const q of [...pending].sort((a, b) => a.rank - b.rank)) {
+  // place in rank order; if a label is left with nowhere but on top of another, try again with that label placed
+  // first (a point label that took the only free spot by a segment gives way to the segment's label), and keep the
+  // order that leaves the fewest labels touching
+  const placeAll = (order: typeof pending) => {
+  placed.length = 0;
+  const out: SceneItem[] = [];
+  let clash = -1, clashes = 0;
+  for (const [qi, q] of order.entries()) {
     const size = FONT.lbl * GROWS, w = textWidth(q.label.text, size), h = size * 1.15;
     const prefer = q.label.prefer ?? [];
     const sides = [...prefer, ...ORDER.filter(s => !prefer.includes(s))];
@@ -355,12 +362,22 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
     }
     const chosen = best as { b: Box; x: number; y: number; cls: string; s: number } | null;
     if (!chosen || (q.label.optional && chosen.s >= 40)) continue;
+    if (placed.some(p => overlap(chosen.b, p))) { clashes++; if (clash < 0) clash = qi; }
     placed.push(chosen.b);
-    texts.push({
+    out.push({
       type: "text", x: r1(chosen.x), y: r1(chosen.y), text: q.label.text, cls: `lbl${q.label.acc ? " acc" : q.label.part != null ? ` p${q.label.part}` : ""}${chosen.cls}`, enter: "rise",
       ...(q.from ? { from: q.from } : {}), ...(q.until != null ? { until: q.until } : {}), delay: q.delay,
     });
   }
+  return { out, boxes: [...placed], clash, clashes };
+  };
+  let order = [...pending].sort((a, b) => a.rank - b.rank), run = placeAll(order), keep = run;
+  for (let tries = 0; run.clash >= 0 && tries < 3; tries++) {
+    order = [order[run.clash]!, ...order.filter((_, i) => i !== run.clash)];
+    run = placeAll(order);
+    if (run.clashes < keep.clashes) keep = run;
+  }
+  placed.length = 0; placed.push(...keep.boxes); texts.push(...keep.out);
 
   // tick labels that would sit under a label or a dot are left out
   // (with more room round the labels than they keep from each other: a tick number is the first thing to give way)
