@@ -55,13 +55,17 @@ export function buildRounding(s: RoundingSpec): SceneDiagram {
   // the place names stand on the chart (.up) and stack upwards by their size on screen, so the phone floor never runs one
   // line into the next. The place being rounded to stands above the others, so its name may run wider than its column;
   // the name of the place after it stays; any other name fades on a phone where it would run into its neighbour's
-  const lift = (xs: number, lbl: number) => ({ transform: `translateY(calc(-1 * (${xs} * 1.25 * max(14, 14 * var(--px, 0)) + ${lbl} * 1.25 * max(${PIC.label}, ${PIC.label} * var(--px, 0))) * 1px))` });
+  const lift = (xs: number | string, lbl: number) => ({ transform: `translateY(calc(-1 * (${xs} * 1.25 * max(14, 14 * var(--px, 0)) + ${lbl} * 1.25 * max(${PIC.label}, ${PIC.label} * var(--px, 0))) * 1px))` });
   digits.forEach((d, i) => {
     const v = valueOf(i), name = placeName(v), mine = v === s.place, involved = mine || v * 10 === s.place;
     name.forEach((w, k) => {
       const below = name.length - 1 - k;
       // (above its neighbours' names only: the columns further off are a whole column away)
-      const near = Math.max(...[i - 1, i + 1].filter(j => j >= 0 && j < L).map(j => placeName(valueOf(j)).length));
+      // a neighbour's name that is not part of the rounding fades in a phone's short box (thinOut), so there the place's name
+      // stands only over the names still showing and stays inside the picture (Review 1c74c20, g4-placevalue at 280×123)
+      const lines = (j: number) => placeName(valueOf(j)).length, nb = [i - 1, i + 1].filter(j => j >= 0 && j < L);
+      const kept = Math.max(0, ...nb.filter(j => valueOf(j) * 10 === s.place).map(lines)), all = Math.max(...nb.map(lines));
+      const near = kept === all ? `${all}` : `max(${kept}, ${all} * (1 - var(--short, 0)))`;
       const vars = mine ? lift(near, below) : { ...lift(below, 0), ...(involved ? {} : thinOut(roomLeft(CW - 4, Math.max(...name.map(n => n.length)), 12))) };
       items.push(t(cx(i), -8, w, mine ? "xs lbl up" : "xs up", { enter: "fade", delay: i * 0.05, vars }));
     });
