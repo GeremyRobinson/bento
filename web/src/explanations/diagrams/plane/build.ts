@@ -365,7 +365,7 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
     if (placed.some(p => overlap(chosen.b, p))) { clashes++; if (clash < 0) clash = qi; }
     placed.push(chosen.b);
     out.push({
-      type: "text", x: r1(chosen.x), y: r1(chosen.y), text: q.label.text, cls: `lbl${q.label.acc ? " acc" : q.label.part != null ? ` p${q.label.part}` : ""}${chosen.cls}`, enter: "rise",
+      type: "text", x: r1(chosen.x), y: r1(chosen.y), text: q.label.text, cls: `lbl${q.label.acc ? " acc" : q.label.part != null ? ` p${q.label.part}` : ""}${chosen.cls}${q.label.long ? " shortgo" : ""}`, enter: "rise",
       ...(q.from ? { from: q.from } : {}), ...(q.until != null ? { until: q.until } : {}), delay: q.delay,
     });
   }

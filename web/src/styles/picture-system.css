@@ -96,6 +96,8 @@
    seconds into it (.shortout). They go by fill and stroke opacity, so a part's own entrance still plays on opacity. */
 #app .viz-svg{--short:clamp(0,calc((300 - var(--box-h,999)) * 1000),1)}
 #app .viz-svg :is(.shortgo,.shortout){fill-opacity:calc(1 - var(--short));stroke-opacity:calc(1 - var(--short))}
+/* the short wording that stands in for a .shortgo label there ("300" for "3 hundreds = 300"): only in a short box */
+#app .viz-svg .shortonly{fill-opacity:var(--short);stroke-opacity:var(--short)}
 #app .viz-svg .shortout{animation:shortOut var(--dur-300) var(--m-ease) var(--d2,0s) both}
 #app .viz-svg .shortout.a-rise{animation:rise var(--m-pop) var(--m-spring) var(--d,0s) both,shortOut var(--dur-300) var(--m-ease) var(--d2,0s) both}
 #app .viz-svg .shortout.a-pop{animation:popIn var(--m-pop) var(--m-spring) var(--d,0s) both,shortOut var(--dur-300) var(--m-ease) var(--d2,0s) both}

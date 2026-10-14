@@ -32,6 +32,8 @@ export interface Mark {
   cls?: "dotp" | "dota" | "hole";
   /** the label goes under the line, below the hops drawn there, in their part colour: for a label that counts those hops */
   below?: boolean;
+  /** working the step under the picture already says: a phone's short box leaves the label out (.shortgo) */
+  long?: boolean;
 }
 
 /** A highlighted stretch of the line (the original's `seg`), with an optional label under the tick numbers. */
@@ -244,7 +246,7 @@ export function buildNumberLine(spec: NumberLineSpec): SceneDiagram {
     if (m.below) {
       // with the hops it counts: under the line, past the arcs and labels hanging there (review v45 blocker 4)
       const box = place(m.label, x(m.v), underEdge, 1, windowOf(m));
-      raw.push({ ...textAt(box, 1, m.label, "lbl p1", underVars(box)), ...timing(m, 0.2) });
+      raw.push({ ...textAt(box, 1, m.label, `lbl p1${m.long ? " shortgo" : ""}`, underVars(box)), ...timing(m, 0.2) });
       continue;
     }
     const beside = besideOf(m), lw = textWidth(m.label, LBL);

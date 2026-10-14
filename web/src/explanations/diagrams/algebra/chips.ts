@@ -31,9 +31,13 @@ export interface FChip extends Timed {
   enter?: Enter;
 }
 /** A bracket under (or over) chips `from`..`to` of a row, with a label. */
-export interface FBracket extends Timed { row: number; from: number; to: number; label: string; sup?: string; part?: string; above?: boolean }
+export interface FBracket extends Timed { row: number; from: number; to: number; label: string; sup?: string; part?: string; above?: boolean;
+  /** the label is working the step under the picture already says: a phone's short box leaves it out (.shortgo) */
+  long?: boolean }
 /** Text at a grid spot: a count, a value, an operation. */
-export interface FLabel extends Timed { row: number; col: number; text: string; sup?: string; cls?: string; anchor?: "start" | "end" }
+export interface FLabel extends Timed { row: number; col: number; text: string; sup?: string; cls?: string; anchor?: "start" | "end";
+  /** a phone's short box leaves it out (.shortgo) */
+  long?: boolean }
 /** A fraction bar across columns `from`..`to`, between `row` and the row under it. */
 export interface FBar extends Timed { row: number; from: number; to: number }
 
@@ -87,7 +91,7 @@ export function buildFactorChips(frames: ChipFrame[], alt: string, family = "fac
       // a label wider than its bracket starts at the bracket's left end and runs right, so at a phone's label size it never
       // pushes the picture out past its left edge
       const wide = (b.label.length + (b.sup?.length ?? 0) * 0.65) * 12 > x1 - x0;
-      items.push({ type: "text", x: r1(wide ? x0 : (x0 + x1) / 2), y: r1(y + s * 9), text: b.label, ...(b.sup ? { sup: b.sup } : {}), ...when(b, "rise", `lbl ${part} ${b.above ? "up" : "down"}${wide ? " start" : ""}`) } as SceneItem);
+      items.push({ type: "text", x: r1(wide ? x0 : (x0 + x1) / 2), y: r1(y + s * 9), text: b.label, ...(b.sup ? { sup: b.sup } : {}), ...when(b, "rise", `lbl ${part} ${b.above ? "up" : "down"}${wide ? " start" : ""}${b.long ? " shortgo" : ""}`) } as SceneItem);
       onRow(b.row);
     }
     for (const b of f.bars ?? []) {
@@ -96,7 +100,7 @@ export function buildFactorChips(frames: ChipFrame[], alt: string, family = "fac
       onRow(b.row + 0.5);
     }
     for (const l of f.labels ?? []) {
-      const cls = `${l.cls ?? "lbl pw"}${l.anchor ? ` ${l.anchor}` : ""}`;
+      const cls = `${l.cls ?? "lbl pw"}${l.anchor ? ` ${l.anchor}` : ""}${l.long ? " shortgo" : ""}`;
       items.push({ type: "text", x: r1(X(l.col)), y: r1(Y(l.row)), text: l.text, ...(l.sup ? { sup: l.sup } : {}), ...when(l, "rise", cls) } as SceneItem);
       onRow(l.row);
     }

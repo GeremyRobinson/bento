@@ -22,8 +22,9 @@ export function explainSlope(p: SlopeProblem, model: AnswerModel): Explanation {
         { kind: "segment", a: [x1, y1], b: [x2, y2] },
         { kind: "segment", a: [x2, y1], b: [x2, y2], cls: "ln p1 dash", from: 1, label: { text: `rise ${f(rise)}`, part: 1, prefer: ["e", "w"] } },
         { kind: "segment", a: [x1, y1], b: [x2, y1], cls: "ln p0 dash", from: 2, label: { text: `run ${f(run)}`, part: 0, prefer: up ? ["s", "n"] : ["n", "s"] } },
-        { kind: "point", at: [x1, y1], label: { text: pt(x1, y1), prefer: up ? ["w", "nw", "sw", "s"] : ["w", "sw", "nw", "n"], clearAxes: true } },
-        { kind: "point", at: [x2, y2], label: { text: pt(x2, y2), prefer: up ? ["n", "nw", "w"] : ["s", "sw", "w"], clearAxes: true } },
+        // on a phone the two points go unlabelled: the problem above names them, and rise, run and slope need the room
+        { kind: "point", at: [x1, y1], label: { text: pt(x1, y1), prefer: up ? ["w", "nw", "sw", "s"] : ["w", "sw", "nw", "n"], clearAxes: true, long: true } },
+        { kind: "point", at: [x2, y2], label: { text: pt(x2, y2), prefer: up ? ["n", "nw", "w"] : ["s", "sw", "w"], clearAxes: true, long: true } },
       ],
     }),
     timeline: beats(4),

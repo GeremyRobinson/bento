@@ -54,6 +54,7 @@ export function buildFactorRects(s: FactorRectsSpec): SceneDiagram {
   y += s.test.t * cs + gap;
   pushes.push(`max(0, 0.65 * max(${PIC.label}, ${PIC.label} * var(--px, 0)) - ${Math.round(((s.test.t * cs) / 2 + gap) * 10) / 10})`);
 
-  items.push(t(0, y, s.list.text, "lbl acc start down", { from: s.list.beat, enter: "rise", vars: shift() }));
+  // a phone's short box has no row left for the list: the step under the picture names the factors there (Review 1c74c20)
+  items.push(t(0, y, s.list.text, "lbl acc start down shortgo", { from: s.list.beat, enter: "rise", vars: shift() }));
   return frame("factor-rects", items, s.alt, 14, { w: 320 });
 }

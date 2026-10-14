@@ -214,6 +214,8 @@ function contentBox(svg: SVGSVGElement, items: SceneItem[], atPx: number): Box |
     for (const e of Array.from(g.children) as SVGGraphicsElement[]) {
       const cs = getComputedStyle(e);
       if (cs.display === "none") continue;
+      // a part that is gone in this box (.shortgo in a phone's short box) takes no room
+      if (+cs.fillOpacity === 0 && (+cs.strokeOpacity === 0 || cs.stroke === "none")) continue;
       const b = e.getBBox();
       if (!(b.width > 0 || b.height > 0)) continue;
       const m = cs.transform && cs.transform !== "none" ? new DOMMatrix(cs.transform) : null;

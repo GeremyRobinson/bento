@@ -55,7 +55,10 @@ export function buildPlaceBlocks(spec: PlaceBlocksSpec): SceneDiagram {
   widths.reduce((x, w) => (xs.push(x), x + w + COL_GAP), 0);
   // on a phone the labels are drawn bigger than the column they were measured for: each column moves right by what the
   // labels before it outgrow, so "3 hundreds" never runs into "4 tens"
-  const { colX, gapOver } = spreadColumns(texts, names, widths);
+  // a phone's short box writes each column's value alone ("300" for "3 hundreds = 300", the column's name is over it),
+  // so three columns fit its width and the sum fits under them (Review 1c74c20, g2-hundreds at 280×123)
+  const values = texts.map(l => [l[1] ? l[1].replace(/^= /, "") : l[0]!.split(" ")[0]!]);
+  const { colX, gapOver } = spreadColumns(values, names, widths);
   const items: Draft[] = [];
   const colBeats = [beats.hundreds, beats.tens, beats.ones];
   widths.forEach((w, i) => {
@@ -65,7 +68,8 @@ export function buildPlaceBlocks(spec: PlaceBlocksSpec): SceneDiagram {
     // the column being counted gets a ring for its beat
     items.push(rect(xs[i]! - 8, top - 8, w + 16, blocksH + 16, "hlline", { from: colBeats[i]!, until: colBeats[i]!, enter: "fade", vars: at }, 10));
     // the lines under the blocks hang from them, each line pushed down by the ones above as the phone floor grows them
-    texts[i]!.forEach((l, k) => items.push(t(cx, base + 14 + k * LINE, l, `lbl p${i} down`, { from: colBeats[i]!, enter: "rise", delay: 0.3, vars: move(colX(i), k) })));
+    texts[i]!.forEach((l, k) => items.push(t(cx, base + 14 + k * LINE, l, `lbl p${i} down shortgo`, { from: colBeats[i]!, enter: "rise", delay: 0.3, vars: move(colX(i), k) })));
+    items.push(t(cx, base + 14, values[i]![0]!, `lbl p${i} down shortonly`, { from: colBeats[i]!, enter: "rise", delay: 0.3, vars: move(colX(i)) }));
   });
   // flats from the back of the stack to the front, the front one on the same floor as the rods
   const left0 = xs[0]! + (widths[0]! - contentW[0]!) / 2;
@@ -83,7 +87,9 @@ export function buildPlaceBlocks(spec: PlaceBlocksSpec): SceneDiagram {
   }
   const W = xs[2]! + widths[2]!;
   const lines = two ? 2 : 1;
-  items.push(t(W / 2, base + 22 + lines * LINE, spec.text.total, "lbl big acc down", { from: beats.total, enter: "rise", vars: move(`(${colX(2)}) / 2`, lines) }));
+  // the sum: under the columns' lines, and in a short box (one line each) one line higher
+  const up = (lines - 1) * LINE;
+  items.push(t(W / 2, base + 22 + lines * LINE, spec.text.total, "lbl big acc down", { from: beats.total, enter: "rise", vars: { ...move(`(${colX(2)}) / 2`, lines), ...(up ? { translate: `0 calc(var(--short, 0) * (${-up} - ${Math.round((lines - 1) * 125) / 100} * (max(${PIC.label}, ${PIC.label} * var(--px, 0)) - ${PIC.label})) * 1px)` } : {}) } }));
   return frame("early-g2-blocks", items, spec.alt, 14, { w: 340, grow: 2.2 });
 }
 

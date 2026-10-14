@@ -27,7 +27,7 @@ export function negativeExponentPicture(o: { a: number; n: number; power: number
     {
       chips: [one(), ...Array.from({ length: n }, (_, k): FChip => ({ row: 2, col: k, text: A, part: "p1", at: S(k) }))],
       bars: [{ row: 1, from: Math.min(0, mid), to: Math.max(n - 1, mid), at: 0.3 }],
-      labels: [{ row: 0.35, col: mid, text: "past 0: under the bar", cls: "sm pw", at: 0.3 }, ...up],
+      labels: [{ row: 0.35, col: mid, text: "past 0: under the bar", cls: "sm pw", at: 0.3, long: true }, ...up],
     },
   ];
   return buildFactorChips(frames, `${pw(n)} as ${n} chip${n === 1 ? "" : "s"} of ${A} makes ${power}. Each step down takes one ${A} away, down to ${pw(0)} = 1; then the ${A}'s come back under a fraction bar: ${A}${supText(-n)} = 1/${power}.`);

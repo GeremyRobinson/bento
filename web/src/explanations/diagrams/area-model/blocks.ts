@@ -59,13 +59,19 @@ export function buildRegroupBlocks(spec: RegroupBlocksSpec): SceneDiagram {
 
   // each count hangs under its column, one line of text per row at its size on screen; the sum hangs under both
   const textY = top + rodH + 12;
-  const count = (x: number, text: string, from: number, until?: number) => wrapLine(text, COUNT_CHARS).forEach((t, k) =>
-    items.push({ type: "text", x: r1(x), y: textY, text: t, cls: "lbl down", from, ...(until != null ? { until } : {}), enter: "rise", ...(k ? { vars: lineStep(k) } : {}) }));
+  // a phone's short box writes only each count's result ("15", "10 + 5", "8 tens"), on one row, so the two columns'
+  // counts never meet and the sum fits under them (Review 1c74c20, g2-regroup at 280×123)
+  const count = (x: number, text: string, from: number, until?: number) => {
+    const lines = wrapLine(text, COUNT_CHARS);
+    lines.forEach((t, k) =>
+      items.push({ type: "text", x: r1(x), y: textY, text: t, cls: "lbl down shortgo", from, ...(until != null ? { until } : {}), enter: "rise", ...(k ? { vars: lineStep(k) } : {}) }));
+    items.push({ type: "text", x: r1(x), y: textY, text: lines[lines.length - 1]!.replace(/^= /, ""), cls: "lbl down shortonly", from, ...(until != null ? { until } : {}), enter: "rise" });
+  };
   count(onesX + onesW / 2, spec.text.ones, beats.ones, beats.regroup - 1);
   count(onesX + onesW / 2, spec.text.regroup, beats.regroup);
   count(tensX + tensW / 2, spec.text.tens, beats.tens);
   const rows = Math.max(...[spec.text.ones, spec.text.regroup, spec.text.tens].map(t => wrapLine(t, COUNT_CHARS).length));
   const width = Math.max(onesX + onesW + 12, textWidth(spec.text.total) + 24);
-  items.push({ type: "text", x: r1(width / 2), y: textY + 6, text: spec.text.total, cls: "lbl acc down", from: beats.total, enter: "rise", vars: { transform: `${lineStep(rows).transform} ${growDown(0.2).transform ?? ""}`.trim() } });
+  items.push({ type: "text", x: r1(width / 2), y: textY + 6, text: spec.text.total, cls: "lbl acc down", from: beats.total, enter: "rise", vars: { transform: `${lineStep(rows).transform} ${growDown(0.2).transform ?? ""}`.trim(), ...(rows > 1 ? { translate: `0 calc(var(--short, 0) * ${-(rows - 1)} * 1.25 * max(var(--pic-label, 20px), calc(20px * var(--px, 0))))` } : {}) } });
   return { kind: "scene", family: "area-model", width: r1(width), height: textY + 6 + (rows + 1) * 26, items, alt: spec.alt };
 }
