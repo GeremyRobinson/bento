@@ -5,7 +5,7 @@
 // Inside a beat a piece can come in at `at` seconds and go at `leave`, so one beat can count up or count down.
 import type { Enter, SceneDiagram, SceneItem } from "../scene/schema";
 import { r1 } from "../scene/helpers";
-import { growRows } from "../scene/picture-system";
+import { fitIn, growRows } from "../scene/picture-system";
 
 interface Timed {
   /** seconds into the beat it comes in (with its entrance); without it, it is simply there */
@@ -70,7 +70,11 @@ export function buildFactorChips(frames: ChipFrame[], alt: string, family = "fac
       const box = when(t, c.enter ?? "pop", `xchip ${part}${c.ghost ? " ghost" : ""}${c.cut ? " cut" : ""}`);
       const txt = when(t, c.enter ?? "pop", `${c.ghost || part === "pq" ? `lbl big ${part === "pq" ? "acc" : part}` : "lbl big onlbl"}${c.cut ? " cut" : ""}`);
       items.push({ type: "rect", x: r1(x), y: r1(y), w: r1(w), h: chip, rx: 8, ...box, ...(slide && t.leave == null ? { enter: "slide", vars: slide.vars } : {}) } as SceneItem);
-      items.push({ type: "text", x: r1(x + w / 2), y: r1(Y(c.row)), text: c.text, ...(c.sup ? { sup: c.sup } : {}), ...txt, ...(slide && t.leave == null ? { enter: "slide", vars: slide.vars } : {}) } as SceneItem);
+      // the chip's digit keeps its size while it fits the chip, then shrinks with it (never under 14px), so a phone's
+      // small chips never run their digits into each other (g11-ratexp's 2 2 2)
+      const fit = fitIn(w, c.text.length + (c.sup ? c.sup.length * 0.65 : 0), 22);
+      const tv = slide && t.leave == null ? { enter: "slide" as Enter, vars: { ...slide.vars, ...fit } } : { vars: { ...(txt.vars ?? {}), ...fit } };
+      items.push({ type: "text", x: r1(x + w / 2), y: r1(Y(c.row)), text: c.text, ...(c.sup ? { sup: c.sup } : {}), ...txt, ...tv } as SceneItem);
       if (c.strike != null) items.push({ type: "line", x1: r1(x - 4), y1: r1(y + chip + 4), x2: r1(x + w + 4), y2: r1(y - 4), ...when({ at: c.strike, leave: c.leave }, "draw", "ln2") } as SceneItem);
       onRow(c.row);
     }
