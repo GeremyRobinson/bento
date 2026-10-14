@@ -83,7 +83,7 @@
 #app .viz-svg text.down{dominant-baseline:text-before-edge}
 /* a caption under the picture (.cap: the worked line written out) is left out of practice, where the work list already
    shows each worked line and the picture keeps the strip's height for itself (G 2026-10-14, the wide practice strip) */
-#app .v-prac .v-ppic .viz-svg text.cap{display:none}
+#app .v-prac:not(.v-learn) .v-ppic .viz-svg text.cap{display:none}
 #app .viz-svg :is(text.acc,text.pq,.pq text,text.okmark,text.lbl.pw,text.res){fill:var(--v-ink)}
 #app .viz-svg :is(text.xs,text.muted,text.lbl.muted){fill:var(--v-muted)}
 /* text sitting on a mid part (after the muted rule: a small count on a shaded piece is a result, not a note) */
