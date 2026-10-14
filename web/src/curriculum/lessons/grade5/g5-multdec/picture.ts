@@ -70,8 +70,9 @@ function drawStrip(o: MultDec, asked: MultDec): SceneDiagram {
     { type: "rect", x: r1(bx), y: r1(by), w: bs, h: bs, rx: 4, cls: "xchip p0", from: 1, until: 1, enter: "pop", delay: 0.8 },
     { type: "text", x: r1(bx + bs / 2), y: r1(by + bs + 14), text: piece, cls: "sm acc", from: 1, until: 1, enter: "rise", delay: 1 },
   );
-  // the count of pieces across
-  items.push({ type: "text", x: r1(xs + g.width / 2), y: r1(bottom + 4), text: `${A} ${PLACE[pa]}`, cls: "lbl sm p0 down cap", from: 0, enter: "rise", delay: 0.6 });
+  // the count of pieces across, under the strip from its left end, so on a phone it grows along the strip and clear of
+  // the strip's height label beside that end
+  items.push({ type: "text", x: r1(xs + 2), y: r1(bottom + 4), text: `${A} ${PLACE[pa]}`, cls: "lbl sm p0 down start cap", from: 0, enter: "rise", delay: 0.6 });
   const width = Math.max(d.width, bx + Math.max(bs, piece.length * 9) + 14);
   // the worked step lit (the shared `lit` role), beat by beat: the strip and the count under it while its pieces are
   // counted (beat 0), the one piece blown up while its size is found (beat 1), the strip again as its pieces are read as
@@ -81,7 +82,7 @@ function drawStrip(o: MultDec, asked: MultDec): SceneDiagram {
     it.type === "rect" && /\bcell\b/.test(it.cls ?? "") ? [0, 2]
       : it.type === "rect" && /\bxchip\b/.test(it.cls ?? "") ? [1]
       : it.type === "text" && it.text === across ? [0] : null;
-  return { ...d, width: r1(width), height: r1(d.height + 10), items: lightSteps(shiftLines(items, 10), litOn, 2) };
+  return { ...d, width: r1(width), height: r1(d.height + 16), items: lightSteps(shiftLines(items, 16), litOn, 2) };
 }
 
 /** moves the lines under the picture down, to make room for the count under the strip */

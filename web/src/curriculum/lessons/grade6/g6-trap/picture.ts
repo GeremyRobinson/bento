@@ -1,6 +1,7 @@
 // The g6-trap picture (Curriculum fixes-02, Part B): a right trapezoid and its copy turned half way round make an
 // (a + b) by h rectangle, so the trapezoid is half of it. Built on the area grid, like g6-tri.
 import { buildAreaGrid } from "../../../../explanations/diagrams/area-model/grid";
+import { growDown } from "../../../../explanations/diagrams/scene/picture-system";
 import type { SceneDiagram, SceneItem } from "../../../../explanations/diagrams/scene/schema";
 import { r1 } from "../../../../explanations/diagrams/scene/helpers";
 import { aNum } from "../../../text";
@@ -36,23 +37,24 @@ export function trapezoidPicture(o: { a: number; b: number; h: number; S: number
     for (let k = 1; k < S; k++) items.push({ type: "line", x1: r1(x0 + k * u), y1: r1(y0), x2: r1(x0 + k * u), y2: r1(y1), cls: "grid", from: 1, until: 1, enter: "fade", delay: 0.3 });
     for (let k = 1; k < h; k++) items.push({ type: "line", x1: r1(x0), y1: r1(y0 + k * g.unitY), x2: r1(xr), y2: r1(y0 + k * g.unitY), cls: "grid", from: 1, until: 1, enter: "fade", delay: 0.3 });
   }
-  const lbl = (x: number, y: number, text: string, cls: string, from: number, delay: number, until?: number): SceneItem =>
-    ({ type: "text", x: r1(x), y: r1(y), text, cls, from, ...(until != null ? { until } : {}), enter: "rise", delay });
-  // each piece's bases, on the side it lies on: the blue one first, the turned copy's once it lands
+  const lbl = (x: number, y: number, text: string, cls: string, from: number, delay: number, until?: number, vars?: Record<string, string>): SceneItem =>
+    ({ type: "text", x: r1(x), y: r1(y), text, cls, from, ...(until != null ? { until } : {}), enter: "rise", delay, ...(vars ? { vars } : {}) });
+  // each piece's bases, on the side it lies on: the blue one first, the turned copy's once it lands. A base stands on (or
+  // hangs from) its edge, so the label floor on a phone grows it away from the shape
   items.push(
-    lbl(x0 + (a * u) / 2, y1 + 16, `${a}`, "lbl p0", 0, 0.2),
-    lbl(x0 + (b * u) / 2, y0 - 16, `${b}`, "lbl p0", 0, 0.3),
-    lbl(x0 + a * u + (b * u) / 2, y1 + 16, `${b}`, "lbl p2", 0, 1.8, 1),
-    lbl(x0 + b * u + (a * u) / 2, y0 - 16, `${a}`, "lbl p2", 0, 1.8, 1),
+    lbl(x0 + (a * u) / 2, y1 + 4, `${a}`, "lbl p0 down", 0, 0.2),
+    lbl(x0 + (b * u) / 2, y0 - 4, `${b}`, "lbl p0 up", 0, 0.3),
+    lbl(x0 + a * u + (b * u) / 2, y1 + 4, `${b}`, "lbl p2 down", 0, 1.8, 1),
+    lbl(x0 + b * u + (a * u) / 2, y0 - 4, `${a}`, "lbl p2 up", 0, 1.8, 1),
     // the trapezoid's area sits in its own middle once the copy is gone
     lbl(x0 + ((a + b) * u) / 4, ym, `${A}`, "lbl big acc", 2, 0.5),
   );
-  // what the beat works out, under the picture
-  const yLine = y1 + 46;
+  // what the beat works out, under the picture: past the bases' row, moving down by what that row grows on a phone
+  const yLine = y1 + 32, below = growDown(1);
   items.push(
-    lbl(x0 + (S * u) / 2, yLine, `${a} + ${b} = ${S}`, "lbl acc", 0, 2, 0),
-    lbl(x0 + (S * u) / 2, yLine, `${S} × ${h} = ${P}`, "lbl acc", 1, 0.4, 1),
-    lbl(x0 + (S * u) / 2, yLine, `${P} ÷ 2 = ${A}`, "lbl acc", 2, 0.6),
+    lbl(x0 + (S * u) / 2, yLine, `${a} + ${b} = ${S}`, "lbl acc down", 0, 2, 0, below),
+    lbl(x0 + (S * u) / 2, yLine, `${S} × ${h} = ${P}`, "lbl acc down", 1, 0.4, 1, below),
+    lbl(x0 + (S * u) / 2, yLine, `${P} ÷ 2 = ${A}`, "lbl acc down", 2, 0.6, undefined, below),
   );
-  return { ...d, items: [...d.items.filter(i => !(i.type === "text" && i.text === "")), ...items], height: r1(yLine + 20) };
+  return { ...d, items: [...d.items.filter(i => !(i.type === "text" && i.text === "")), ...items], height: r1(yLine + 30) };
 }
