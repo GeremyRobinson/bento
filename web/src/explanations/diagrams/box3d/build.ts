@@ -2,6 +2,7 @@
 // a box's three different faces, or a pyramid inside its box. Sizes and labels come from the problem.
 import type { SceneDiagram, SceneItem } from "../scene/schema";
 import { r1 } from "../scene/helpers";
+import { growDown } from "../scene/picture-system";
 import { lineRows, type PictureLine } from "../area-model/grid";
 import { litRuns } from "../tape/build";
 import type { Beats } from "../tape/schema";
@@ -116,6 +117,8 @@ export function buildBox3d(spec: Box3dSpec): SceneDiagram {
 
   const picH = Math.max(...pts.map(p => p[1])) - miny + pad;
   const { rowOf, count } = lineRows(lines);
-  lines.forEach((x, k) => items.push({ type: "text", x: r1(width / 2), y: r1(picH + 4 + rowOf[k]! * 26), text: x.text, cls: x.cls ?? "lbl acc", from: x.from, ...(x.until != null ? { until: x.until } : {}), enter: "rise" }));
+  // each line hangs from its top edge, below the edge labels, and moves down by what the rows above it grew on a phone;
+  // it is a caption (.cap): practice leaves it out, since the work list already shows each worked line
+  lines.forEach((x, k) => items.push({ type: "text", x: r1(width / 2), y: r1(picH - 8 + rowOf[k]! * 26), text: x.text, cls: `${x.cls ?? "lbl acc"} down cap`, from: x.from, ...(x.until != null ? { until: x.until } : {}), enter: "rise", vars: growDown(1 + rowOf[k]!) }));
   return { kind: "scene", family: "box3d", width: r1(width), height: r1(picH + (count ? count * 26 + 6 : 0)), items, alt: spec.alt };
 }

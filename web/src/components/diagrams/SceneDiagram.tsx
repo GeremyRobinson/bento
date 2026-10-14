@@ -19,13 +19,16 @@ export function SceneDiagram({ diagram: d, at, fit = false }: { diagram: Scene; 
   useLayoutEffect(() => {
     const el = ref.current;
     if (!fit || !el) return;
-    const box = contentBox(el, d.items);
-    if (!box) return;
+    const box0 = contentBox(el, d.items, 0);
+    if (!box0) return;
     const text = textTokens(el.parentElement ?? el);
     // in the lesson's picture panel the picture takes the whole panel and frames itself inside it (the viewBox below)
     // and the room it gets is its holder's box, measured before it first fills it, so the first frame is already right
     const panel = !!el.closest(PANEL), room = panel && el.parentElement ? el.parentElement : el;
-    const measure = () => { const r = layoutRect(room); if (r.width > 0 && r.height > 0) setFrame({ d, box, size: [r.width, r.height], text, panel }); };
+    const measure = () => {
+      const r = layoutRect(room);
+      if (r.width > 0 && r.height > 0) setFrame({ d, box: floorBox(el, d.items, box0, [r.width, r.height]), size: [r.width, r.height], text, panel });
+    };
     measure();
     if (typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(measure);
@@ -111,7 +114,40 @@ const isDot = (it: SceneItem) => it.type === "circle" && /\bdot[pa]\b/.test(it.c
 /** Point dots draw over every line, tick and hop that meets them, in every family (G 2026-10-06: no line showing through a dot). */
 export const dotsOnTop = (items: SceneItem[]): SceneItem[] => [...items.filter(i => !isDot(i)), ...items.filter(isDot)];
 
-function contentBox(svg: SVGSVGElement, items: SceneItem[]): Box | null {
+/**
+ * The frame for a small box: when the picture draws smaller than its own size, its text is held at the phone floor (--px)
+ * and takes more of the drawing, so the frame is measured again with the text at that size until it settles. The text
+ * keeps its screen size and the shapes get the room that is left, so no label is ever cut by the box's edge
+ * (Review g5 re-walk blocker 2). A few rounds settle it; the frame never shrinks below the plain one.
+ */
+function floorBox(svg: SVGSVGElement, items: SceneItem[], box0: Box, size: [number, number]): Box {
+  let box = box0;
+  for (let k = 0; k < 4; k++) {
+    const f = framed(box, size), zoom = Math.min(size[0] / f.w, size[1] / f.h);
+    if (zoom >= 1) return box;
+    const next = contentBox(svg, items, 1 / zoom);
+    if (!next) return box;
+    // text that alone outgrows the box (a column of big digits in a short strip) would chase its own growth and shrink
+    // the shapes to nothing, so the frame never grows past GROW times the plain one: past that the text overlaps a
+    // little instead of the picture vanishing
+    const grown = cap(union(box0, next), box0);
+    if (Math.abs(grown.w - box.w) < 0.5 && Math.abs(grown.h - box.h) < 0.5) return grown;
+    box = grown;
+  }
+  return box;
+}
+const GROW = 1.35;
+const cap = (b: Box, b0: Box): Box => {
+  const w = Math.min(b.w, b0.w * GROW), h = Math.min(b.h, b0.h * GROW);
+  // keep the plain frame centred in the capped one
+  return { x: b.w > w ? b0.x - (w - b0.w) / 2 : b.x, y: b.h > h ? b0.y - (h - b0.h) / 2 : b.y, w, h };
+};
+const union = (a: Box, b: Box): Box => {
+  const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y);
+  return { x, y, w: Math.max(a.x + a.w, b.x + b.w) - x, h: Math.max(a.y + a.h, b.y + b.h) - y };
+};
+
+function contentBox(svg: SVGSVGElement, items: SceneItem[], atPx: number): Box | null {
   const ns = "http://www.w3.org/2000/svg";
   const g = document.createElementNS(ns, "g") as SVGGElement;
   if (typeof g.getBBox !== "function") return null;
@@ -128,13 +164,15 @@ function contentBox(svg: SVGSVGElement, items: SceneItem[]): Box | null {
       { x: it.x, y: it.y };
     for (const [k, v] of Object.entries(attrs)) if (v != null) e.setAttribute(k, String(v));
     if (it.type === "text") e.textContent = it.text + (it.sup ?? "");
+    // its own style too (a line moved down by the rows above it, growDown), so it is measured where it is drawn
+    if (it.vars) for (const [k, v] of Object.entries(it.vars)) e.style.setProperty(k.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`), String(v));
     g.appendChild(e);
   }
   svg.appendChild(g);
-  // measured at the drawing's own text sizes: with the phone floor (--px) in, a small picture's labels measured huge,
-  // the frame widened for them, the picture shrank and the floor grew them again (pow10 on a phone: tiny cards)
+  // measured at the text size asked for (atPx: 0 is the drawing's own sizes; floorBox asks for the phone floor at the
+  // zoom it will draw at, and settles in a few rounds instead of chasing its own growth)
   const px = svg.style.getPropertyValue("--px");
-  svg.style.setProperty("--px", "0");
+  svg.style.setProperty("--px", String(atPx));
   try {
     const b = g.getBBox();
     return b.width > 0 && b.height > 0 ? { x: b.x, y: b.y, w: b.width, h: b.height } : null;

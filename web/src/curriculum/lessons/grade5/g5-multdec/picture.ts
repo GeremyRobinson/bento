@@ -11,9 +11,21 @@ const PLACE = ["ones", "tenths", "hundredths", "thousandths"];
 /** a cut is drawn as lines only while they stay this far apart, in px */
 const MIN_GAP = 3;
 
-export function multiplyDecimalsPicture(o: { A: number; B: number; pa: number; pb: number; P: number; ans: number }): SceneDiagram {
+type MultDec = { A: number; B: number; pa: number; pb: number; P: number; ans: number };
+
+/**
+ * The strip lies with its long side across: a picture box is nearly always wider than tall (the practice strip, a phone's
+ * Watch one), so 1.3 × 5 is drawn 5 across and 1.3 up instead of a thin column (G 2026-10-14, the wide practice strip:
+ * tall pictures lie down). The area and its pieces are the same either way; the worked lines keep the problem's order.
+ */
+export function multiplyDecimalsPicture(o: MultDec): SceneDiagram {
+  return o.B * 10 ** -o.pb > o.A * 10 ** -o.pa ? drawStrip({ ...o, A: o.B, B: o.A, pa: o.pb, pb: o.pa }, o) : drawStrip(o, o);
+}
+
+function drawStrip(o: MultDec, asked: MultDec): SceneDiagram {
   const { A, B, pa, pb, P, ans } = o;
   const sx = 10 ** -pa, sy = 10 ** -pb, x = A * sx, y = B * sy, n = pa + pb, piece = f(10 ** -n);
+  const ask = { sx: f(10 ** -asked.pa), sy: f(10 ** -asked.pb) };
   const wholes = Math.ceil(x - 1e-9), tall = Math.ceil(y - 1e-9);
   const d = buildAreaGrid({
     family: "area-model",
@@ -28,8 +40,8 @@ export function multiplyDecimalsPicture(o: { A: number; B: number; pa: number; p
     maxWidth: (360 * x) / wholes,
     maxHeight: tall > 1 ? 260 : 180,
     lines: [
-      { text: `${A} × ${B} = ${P} small pieces`, from: 0, until: 0 },
-      { text: `${f(sx)} × ${f(sy)} = ${piece}, ${n === 1 ? "one decimal place" : n === 2 ? "two decimal places" : "three decimal places"}`, from: 1, until: 1 },
+      { text: `${asked.A} × ${asked.B} = ${P} small pieces`, from: 0, until: 0 },
+      { text: `${ask.sx} × ${ask.sy} = ${piece}, ${n === 1 ? "one decimal place" : n === 2 ? "two decimal places" : "three decimal places"}`, from: 1, until: 1 },
       { text: `${P} ${PLACE[n]} = ${f(ans)}`, from: 2 },
     ],
     alt: `A strip ${f(x)} wide and ${f(y)} tall on whole unit squares, each cut into pieces of ${piece}. The strip covers ${A} by ${B} pieces: ${P} ${PLACE[n]}, ${f(ans)}.`,
@@ -59,7 +71,7 @@ export function multiplyDecimalsPicture(o: { A: number; B: number; pa: number; p
     { type: "text", x: r1(bx + bs / 2), y: r1(by + bs + 14), text: piece, cls: "sm acc", from: 1, until: 1, enter: "rise", delay: 1 },
   );
   // the count of pieces across
-  items.push({ type: "text", x: r1(xs + g.width / 2), y: r1(bottom + 4), text: `${A} ${PLACE[pa]}`, cls: "lbl sm p0 down", from: 0, enter: "rise", delay: 0.6 });
+  items.push({ type: "text", x: r1(xs + g.width / 2), y: r1(bottom + 4), text: `${A} ${PLACE[pa]}`, cls: "lbl sm p0 down cap", from: 0, enter: "rise", delay: 0.6 });
   const width = Math.max(d.width, bx + Math.max(bs, piece.length * 9) + 14);
   // the worked step lit (the shared `lit` role), beat by beat: the strip and the count under it while its pieces are
   // counted (beat 0), the one piece blown up while its size is found (beat 1), the strip again as its pieces are read as
@@ -74,5 +86,5 @@ export function multiplyDecimalsPicture(o: { A: number; B: number; pa: number; p
 
 /** moves the lines under the picture down, to make room for the count under the strip */
 function shiftLines(items: SceneItem[], dy: number): SceneItem[] {
-  return items.map(i => (i.type === "text" && /^lbl acc down$/.test(i.cls ?? "") ? { ...i, y: r1(i.y + dy) } : i));
+  return items.map(i => (i.type === "text" && /\bcap\b/.test(i.cls ?? "") && !/\bp0\b/.test(i.cls ?? "") ? { ...i, y: r1(i.y + dy) } : i));
 }

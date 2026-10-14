@@ -4,7 +4,7 @@
 import type { SceneDiagram, SceneItem } from "../scene/schema";
 import { r1 } from "../scene/helpers";
 import type { Beats, TapeRow, TapeSpec, TapeText } from "./schema";
-import { PIC } from "../scene/picture-system";
+import { PIC, roomLeft, thinOut } from "../scene/picture-system";
 
 const M = 10; // outer margin
 const BRACKET = 28; // room for a bracket and its text
@@ -44,6 +44,9 @@ export function litRuns(it: SceneItem, lit: Beats[] | undefined): SceneItem[] {
 /** Rough width of text in the picture fonts. */
 export const textWidth = (s: string, size: number) => s.length * size * 0.62;
 const FRAC = /^(\d+|\?|x)\/(\d+)$/;
+/** a mixed number on one line keeps a clear gap between its whole and its fraction: SVG draws a plain space so thin
+ * that "1 1/6" read as "11/6" (Review g5 re-walk). An en space never collapses. */
+const mixedGap = (text: string) => text.replace(/(\d) (?=\d+\/\d+$)/, "$1\u2002");
 
 type Layer = { count: number; from: number; until?: number; delay?: number };
 
@@ -78,6 +81,13 @@ function eachFit(e: Each, pw: number, h: number, count: number, side: { above: b
   return side.below ? "below" : side.above ? "above" : null;
 }
 const layersAt = (row: TapeRow, beat: number) => layerAt(layersOf(row), beat);
+/** A count in a piece fades where the phone floor would grow it past its piece, every other count first (2, 4, 6 …), so
+ *  the pieces still count up and no two numbers ever touch (Review g5 re-walk: improper's 1-31, add's 1 2 3). */
+const thinCount = (k: number, pw: number, h: number, chars: number, big: boolean) => {
+  const size = big ? FS.each : FS.small, floor = big ? PIC.label : 14;
+  // across: room for the number in its piece (every other one first); up: room for its height in the bar (1.2 of its size)
+  return { vars: thinOut(roomLeft((k & -k) * pw, chars, size, floor), roomLeft(h + 4, 1.94, size, floor)) };
+};
 
 export interface TapeLayout {
   width: number;
@@ -143,7 +153,7 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
     // a "?" is the unknown, so it's amber; a total that isn't is ink (the whole), never a part color
     const c = `${cls}${t.acc || t.text === "?" ? " acc" : ""}`;
     if (!m) {
-      push({ type: "text", x: r1(cx), y: r1(cy), text: t.text, cls: `${c}${anchor === "middle" ? "" : ` ${anchor}`}`, enter: "rise", ...(t.delay ? { delay: t.delay } : {}), ...when(run.from, run.until) });
+      push({ type: "text", x: r1(cx), y: r1(cy), text: mixedGap(t.text), cls: `${c}${anchor === "middle" ? "" : ` ${anchor}`}`, enter: "rise", ...(t.delay ? { delay: t.delay } : {}), ...when(run.from, run.until) });
       return;
     }
     const size = cls.includes("lbl") ? FS.total : FS.label;
@@ -276,16 +286,22 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
         cuts.forEach((b, k) => {
           const end = k + 1 < cuts.length ? cuts[k + 1]! - 1 : run.until;
           const shaded = (row.fills ?? []).some(f => f.tone !== "cut" && f.a <= c && f.b >= c && (f.from ?? 0) <= b && (f.until == null || f.until >= b));
-          push({ type: "text", x: r1(X(c)), y: r1(top + h / 2), text: e.text(i), cls: big ? (shaded ? "lbl res onmid" : "lbl res") : shaded ? "xs onlbl" : "xs", ...(k === 0 ? { enter: "rise" as const, delay: r1(((e.lead ?? 0) + shown.indexOf(i) * (e.stagger ?? 0.04)) * 100) / 100 } : {}), ...when(b, end) });
+          push({ type: "text", x: r1(X(c)), y: r1(top + h / 2), text: e.text(i), cls: big ? (shaded ? "lbl res onmid" : "lbl res") : shaded ? "xs onlbl" : "xs", ...thinCount(shown.indexOf(i) + 1, pw, h, e.text(i).length, big), ...(k === 0 ? { enter: "rise" as const, delay: r1(((e.lead ?? 0) + shown.indexOf(i) * (e.stagger ?? 0.04)) * 100) / 100 } : {}), ...when(b, end) });
         });
       }
     }
 
+    // many rows on a short phone: a one-line side label fades where the floor would grow it into the next row's, every
+    // other row first, so the top row always keeps its label (Review g5 re-walk: unit-divide's stacked 1s)
+    const pitch = (L.rowTops[1] ?? top + h) - (L.rowTops[0] ?? top);
+    const thinRowLabel = (x: SceneItem): SceneItem =>
+      ri > 0 && spec.rows.length > 2 && x.type === "text" && !/\//.test(x.text)
+        ? { ...x, vars: { ...x.vars, ...thinOut(roomLeft((ri & -ri) * pitch, 1.94, FS.label, PIC.label)) } } : x;
     for (const t of row.label ?? []) {
       const run = within(t.from ?? 0, t.until, row);
       // side labels end one label gap before the bars, so a label held at its on-screen floor (phones) grows away
       // from its bar, never into it
-      if (run) { const at = items.length; textAt(t, X(0) - PIC.labelGap, top + h / 2, "lbl", "end", run); items.splice(at, items.length - at, ...items.slice(at).flatMap(x => litRuns(x, row.lit))); }
+      if (run) { const at = items.length; textAt(t, X(0) - PIC.labelGap, top + h / 2, "lbl", "end", run); items.splice(at, items.length - at, ...items.slice(at).flatMap(x => litRuns(x, row.lit)).map(x => thinRowLabel(x))); }
     }
     for (const t of row.total ?? []) {
       const run = within(t.from ?? 0, t.until, row);

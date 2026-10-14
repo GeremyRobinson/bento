@@ -3,7 +3,7 @@
 import type { SceneDiagram, SceneItem } from "../scene/schema";
 import { r1 } from "../scene/helpers";
 import { lineRows, type PictureLine } from "../area-model/grid";
-import { PIC } from "../scene/picture-system";
+import { PIC, growDown } from "../scene/picture-system";
 import { litRuns } from "../tape/build";
 import type { Beats } from "../tape/schema";
 
@@ -85,7 +85,9 @@ export function buildFracGrid(spec: FracGridSpec): SceneDiagram {
   const width = Math.max(left + cols * cell + 20, noteW + 24);
   const { rowOf, count } = lineRows(notes);
   const cx = Math.min(Math.max(left + (cols * cell) / 2, noteW / 2 + 12), width - noteW / 2 - 12);
-  notes.forEach((n, k) => items.push({ type: "text", x: r1(cx), y: r1(top + gridH + 24 + rowOf[k]! * 26), text: n.text, cls: n.cls ?? "lbl", from: n.from, ...(n.until != null ? { until: n.until } : {}), enter: "rise", delay: 0.4 }));
+  // notes hang from their top edge and move down by what the rows above them grew on a phone; they are captions (.cap),
+  // which practice leaves out (the work list shows each worked line)
+  notes.forEach((n, k) => items.push({ type: "text", x: r1(cx), y: r1(top + gridH + 12 + rowOf[k]! * 26), text: n.text, cls: `${n.cls ?? "lbl"} down cap`, from: n.from, ...(n.until != null ? { until: n.until } : {}), enter: "rise", delay: 0.4, vars: growDown(1 + rowOf[k]!) }));
   return {
     kind: "scene", family: "frac-grid",
     width: r1(width),

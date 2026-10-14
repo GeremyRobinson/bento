@@ -318,10 +318,12 @@ describe("area-model lessons", () => {
       const pa = p.pa ?? 1, pb = p.pb ?? 1, x = p.A / 10 ** pa, y = p.B / 10 ** pb;
       const d = sceneOf(l, p), lines = shownAt(d, 0).filter(i => i.type === "line" && i.cls === "grid");
       const vertical = lines.filter(i => i.type === "line" && i.x1 === i.x2).length, flat = lines.length - vertical;
-      // every cut is drawn whole, or left out where its lines would run together; tenths by tenths always shows
-      expect([0, p.A - 1]).toContain(vertical);
-      expect([0, p.B - 1]).toContain(flat);
-      if (pa === 1 && pb === 1) expect([vertical, flat]).toEqual([p.A - 1, p.B - 1]);
+      // every cut is drawn whole, or left out where its lines would run together; tenths by tenths always shows. A strip
+      // taller than it is wide lies on its side (the long side runs across), so its cuts swap
+      const [across, up] = y > x ? [p.B, p.A] : [p.A, p.B];
+      expect([0, across - 1]).toContain(vertical);
+      expect([0, up - 1]).toContain(flat);
+      if (pa === 1 && pb === 1) expect([vertical, flat]).toEqual([across - 1, up - 1]);
       expect(rects(d, 0, /^ax$/)).toHaveLength(Math.ceil(x - 1e-9) * Math.ceil(y - 1e-9));
       expect(finalText(d, 0)).toContain(`${p.A} × ${p.B} = ${p.A * p.B} small pieces`);
       expect(finalText(d, 2).join(" ")).toContain(`${p.A * p.B} ${PLACE[pa + pb]} = `);

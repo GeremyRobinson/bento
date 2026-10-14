@@ -222,7 +222,7 @@ export function buildAreaGrid(spec: AreaGridSpec): SceneDiagram & { geometry: Ar
   const { rowOf, count } = lineRows(lines);
   // each line hangs from its top edge and moves down by what the rows above it grew on a phone (growDown)
   const lead = spec.linesLead ?? 0;
-  lines.forEach((l, k) => items.push({ type: "text", x: r1(cx), y: r1(top + g.height + 16 + rowOf[k]! * 26), text: l.text, cls: `${l.cls ?? "lbl acc"} down`, from: l.from, ...(l.until != null ? { until: l.until } : {}), enter: "rise", ...(lead + rowOf[k]! ? { vars: growDown(lead + rowOf[k]!) } : {}) }));
+  lines.forEach((l, k) => items.push({ type: "text", x: r1(cx), y: r1(top + g.height + 16 + rowOf[k]! * 26), text: l.text, cls: `${l.cls ?? "lbl acc"} down cap`, from: l.from, ...(l.until != null ? { until: l.until } : {}), enter: "rise", ...(lead + rowOf[k]! ? { vars: growDown(lead + rowOf[k]!) } : {}) }));
 
   return {
     kind: "scene", family: spec.family ?? "area-model",

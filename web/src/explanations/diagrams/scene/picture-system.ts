@@ -33,9 +33,9 @@ export const growDown = (rows: number): Record<string, string> =>
   rows > 0 ? { transform: `translateY(calc(${Math.round(rows * 125) / 100} * (max(${PIC.label}, ${PIC.label} * var(--px, 0)) - ${PIC.label}) * 1px))` } : {};
 
 /** How many picture units are left once `chars` characters at their on-screen size (`size` units, never under 14px on
- * screen) and 4px of air are taken out of `room` picture units (a CSS expression; under 0 means they touch). */
-export const roomLeft = (room: number, chars: number, size: number): string =>
-  `(${Math.round(room * 10) / 10} - ${Math.round(chars * 0.62 * 100) / 100} * max(${size}, 14 * var(--px, 0)) - 4 * var(--px, 0))`;
+ * screen; a label's floor is 20) and 4px of air are taken out of `room` picture units (a CSS expression; under 0 means they touch). */
+export const roomLeft = (room: number, chars: number, size: number, floor = 14): string =>
+  `(${Math.round(room * 10) / 10} - ${Math.round(chars * 0.62 * 100) / 100} * max(${size}, ${floor} * var(--px, 0)) - 4 * var(--px, 0))`;
 
 /**
  * Tick numbers that would touch once the phone floor grows them fade out, every other one first: a number shows only
