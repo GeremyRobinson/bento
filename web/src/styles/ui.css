@@ -1,0 +1,207 @@
+/* The UI model (Design, v57, 2026-10-14; "How Obento looks"): the app's shell and every master it is built from.
+   Five logics: size, type, colour, motion, states. Every value below comes from a token: the pill and the gap
+   (tokens.css), and the steps built on them here. Screens arrange the masters; they never restyle them.
+   Built to the model's own rules one for one; the model's class names carry an "o-" in front. */
+
+/* ---------- the steps the model builds on the pill (52) and the gap (10) ---------- */
+.wrap{
+  --o-half:calc(var(--gap) / 2);--o-pad2:var(--pad-panel);
+  /* a corner is the corner inside it plus the padding: tile 26, panel 36 */
+  --o-r1:calc(var(--pill-size) / 2);--o-r2:calc(var(--o-r1) + var(--gap));
+  --o-key-h:var(--pill-size);--o-ans-h:64px;
+  --o-pic-floor:calc(var(--pill-size) * 2 - var(--gap));
+  --o-ring-s:var(--o-pad2);--o-ring-m:calc(var(--pill-size) - var(--gap));--o-ring-l:var(--o-pic-floor);
+  --o-tile-h:calc(var(--pill-size) * 4);--o-tile-w:calc(var(--pill-size) * 3.5);
+  --o-cover-pic:96px;
+  --o-line-1:1px;--o-line-2:2px;
+  /* type: 13, 15, 17, 22, 28, 32, 40. The problem and the question in the solve panel share one size */
+  --o-t-label:var(--fz-xs);--o-t-small:var(--small);--o-t-body:var(--fz-lg);--o-t-q:var(--fz-2xl);--o-t-title:28px;--o-t-ans:32px;--o-t-prob:40px;
+  /* motion: each at the speed of its job */
+  --o-tap:var(--dur-120);--o-change:var(--dur-250);--o-arrive:var(--dur-500);--o-beat:var(--dur-1300);--o-calm:var(--dur-200);--o-zoom:var(--dur-700);
+  --o-press:.96;--o-z-in:.94;--o-z-out:1.06;--o-dim:.45;--o-shake:6px;
+}
+/* phones drop one type step and the answer box */
+@media (max-width:820px),(max-height:500px){.wrap{--o-t-q:var(--fz-lg);--o-t-title:var(--fz-2xl);--o-t-ans:28px;--o-t-prob:32px;--o-ans-h:54px;--o-cover-pic:84px}}
+/* short phones: keys and tools are a pill less a gap */
+@media (max-height:720px),(max-width:370px){.wrap{--o-key-h:calc(var(--pill-size) - var(--gap))}}
+
+/* ---------- colour: the grade's one accent on what you press next, what is picked, where you are and progress ---------- */
+.wrap{--v-acc-on:var(--on-tint);--v-acc-fade:color-mix(in oklab,var(--v-acc) 35%,var(--v-card));--v-acc-hi:color-mix(in oklab,var(--v-acc) 80%,var(--v-ink));
+  --v-soft-hi:color-mix(in oklab,var(--v-acc-soft) 85%,var(--v-acc));--v-mark-now:var(--v-acc);--v-mark-done:var(--v-acc-fade);
+  --v-wash-on:color-mix(in oklab,var(--v-acc-soft) 40%,var(--v-page))}
+.wrap[data-grade="0"]{--v-acc:var(--g0-acc);--v-acc-soft:var(--g0-soft)} .wrap[data-grade="1"]{--v-acc:var(--g1-acc);--v-acc-soft:var(--g1-soft)}
+.wrap[data-grade="2"]{--v-acc:var(--g2-acc);--v-acc-soft:var(--g2-soft)} .wrap[data-grade="3"]{--v-acc:var(--g3-acc);--v-acc-soft:var(--g3-soft)}
+.wrap[data-grade="4"]{--v-acc:var(--g4-acc);--v-acc-soft:var(--g4-soft)} .wrap[data-grade="6"]{--v-acc:var(--g6-acc);--v-acc-soft:var(--g6-soft)}
+.wrap[data-grade="7"]{--v-acc:var(--g7-acc);--v-acc-soft:var(--g7-soft)} .wrap[data-grade="8"]{--v-acc:var(--g8-acc);--v-acc-soft:var(--g8-soft)}
+.wrap[data-grade="9"]{--v-acc:var(--g9-acc);--v-acc-soft:var(--g9-soft)} .wrap[data-grade="10"]{--v-acc:var(--g10-acc);--v-acc-soft:var(--g10-soft)}
+.wrap[data-grade="11"]{--v-acc:var(--g11-acc);--v-acc-soft:var(--g11-soft)} .wrap[data-grade="12"]{--v-acc:var(--g12-acc);--v-acc-soft:var(--g12-soft)}
+/* 5th grade is the model's own grade: every step is its exact token */
+.wrap[data-grade="5"]{--v-acc:var(--g5-acc);--v-acc-on:var(--g5-acc-on);--v-acc-soft:var(--g5-acc-soft);--v-acc-fade:var(--g5-acc-fade);
+  --v-acc-hi:var(--g5-acc-hi);--v-soft-hi:var(--g5-soft-hi);--v-mark-now:var(--g5-mark-now);--v-wash-on:var(--v-wash)}
+
+/* ---------- the app: the island on top, the screen under it; the whole window, no cap ---------- */
+#app.o-app{max-width:none;width:100%;margin:0;min-height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr);gap:var(--gap);align-content:stretch;
+  padding:max(var(--o-pad2),env(safe-area-inset-top)) max(var(--o-pad2),env(safe-area-inset-right)) max(var(--o-pad2),env(safe-area-inset-bottom)) max(var(--o-pad2),env(safe-area-inset-left));
+  background:var(--v-wash-on);color:var(--v-ink);font:var(--w-regular) var(--o-t-body)/1.4 var(--sans)}
+@media (min-width:821px){#app.o-app{height:100dvh}}
+#app.o-app.fit{height:100dvh}
+
+/* type roles */
+.o-label{font-size:var(--o-t-label);font-weight:var(--w-mid);letter-spacing:.06em;text-transform:uppercase;color:var(--v-muted)}
+.o-small,.o-why{font-size:var(--o-t-small);font-weight:var(--w-regular);color:var(--v-muted)}
+.o-head{font-size:var(--o-t-q);font-weight:var(--w-bold);line-height:1.25}
+.o-title{font-size:var(--o-t-title);font-weight:var(--w-bold);letter-spacing:-.02em;line-height:1.15;text-wrap:balance}
+/* text sits two gaps from a panel's edge: the panel's gap, plus this one */
+.o-in{padding-inline:var(--gap)}
+.o-panel>.o-in:first-child{padding-top:var(--gap)}
+.o-row{display:flex;gap:var(--gap);align-items:center;flex-wrap:wrap}
+
+/* ---------- STATES: one look each, shared by every master ---------- */
+.o-btn,.o-tool,.o-tile,.o-sw button{transition:background-color var(--o-change) var(--m-ease),color var(--o-change) var(--m-ease),outline-color var(--o-change) var(--m-ease),opacity var(--o-change) var(--m-ease),transform var(--o-tap) var(--m-ease)}
+:is(.o-btn,.o-tool,button.o-tile):active:not(:disabled){transform:scale(var(--o-press))}
+.o-btn.fill{background:var(--v-acc);color:var(--v-acc-on)}
+.o-tool[aria-pressed="true"],.o-tool.sel{background:var(--v-acc);color:var(--v-acc-on)}
+/* a picked tile keeps its own fill and gets the 2px grade outline: a solid tile would bury its picture */
+.o-tile.sel{outline:var(--o-line-2) solid var(--v-acc);outline-offset:calc(var(--o-line-2) * -1)}
+:is(.o-btn,.o-tool,.o-tile):disabled{opacity:var(--o-dim);cursor:default}
+@media (hover:hover){
+  .o-btn:not(.fill):not(:disabled):hover,.o-tool:not(.sel):not([aria-pressed="true"]):not(:disabled):hover{background:var(--v-key-hi)}
+  .o-btn.fill:not(:disabled):hover{background:var(--v-acc-hi)}
+  button.o-tile:not(:disabled):hover{background:var(--v-page-hi)}
+  .o-tool.sel:not(:disabled):hover,.o-tool[aria-pressed="true"]:not(:disabled):hover{background:var(--v-acc-hi)}
+}
+.o-app :focus-visible{outline:var(--o-line-2) solid var(--v-acc);outline-offset:var(--o-line-2)}
+
+/* ---------- MASTERS ---------- */
+/* Panel: corner 36 = tile corner 26 + padding 10. Outlined, never shadowed. */
+.o-panel{background:var(--v-card);outline:var(--o-line-1) solid var(--v-line);outline-offset:calc(var(--o-line-1) * -1);border-radius:var(--o-r2);padding:var(--gap);min-width:0;min-height:0;display:grid;gap:var(--gap);align-content:start}
+
+/* Pill button: grey = everything else, filled = the one next thing. 52 tall, the room of a tab (40) each side */
+.o-btn{height:var(--pill-size);padding:0 calc(var(--o-pad2) * 2);border-radius:var(--o-r1);background:var(--v-key);color:var(--v-ink);font-size:var(--o-t-body);font-weight:var(--w-mid);display:inline-grid;place-items:center;white-space:nowrap}
+.o-btn.link{height:auto;padding:var(--o-half) 0;background:none;font-size:var(--o-t-small);color:var(--v-muted)}
+
+/* Tool: icon only, round, grey; a count badge */
+.o-tool{--sz:var(--o-key-h);position:relative;flex:none;width:var(--sz);height:var(--sz);border-radius:var(--o-r1);background:var(--v-key);color:var(--v-ink);display:grid;place-items:center}
+.o-tool svg{width:var(--o-t-q);height:var(--o-t-q)}
+.o-badge{position:absolute;top:calc(var(--o-half) * -1);right:calc(var(--o-half) * -1);min-width:var(--o-pad2);height:var(--o-pad2);padding:0 var(--o-half);border-radius:var(--gap);background:var(--v-ink);color:var(--v-card);font-size:var(--o-t-label);font-weight:var(--w-bold);line-height:var(--o-pad2);text-align:center;font-style:normal}
+
+/* Island: back (or the grade picker), where you are, the ring. The only navigation; Settings and Me in the corners */
+.o-nav{display:grid;grid-template-columns:var(--o-key-h) minmax(0,1fr) var(--o-key-h);align-items:center;gap:var(--gap);min-width:0}
+/* it hugs its content and sits centred, growing only as far as the text needs */
+.o-island{justify-self:center;width:max-content;max-width:100%;height:var(--pill-size);display:flex;align-items:center;gap:var(--gap);padding:var(--o-half);border-radius:var(--o-r1);background:var(--v-card);outline:var(--o-line-1) solid var(--v-line);outline-offset:calc(var(--o-line-1) * -1);min-width:0}
+.o-island .o-tool{--sz:var(--o-ring-m)}
+.o-place{flex:0 1 auto;min-width:0;display:grid;line-height:1.2}
+.o-island>.o-place:first-child{padding-left:var(--gap)}
+.o-place small,.o-place b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.o-place small{font-size:var(--o-t-small);font-weight:var(--w-mid);color:var(--v-muted)}
+.o-place b{font-size:var(--o-t-body);font-weight:var(--w-bold)}
+/* a long name never gets cut: one type step down, then two lines with the kicker stepping aside */
+.o-place.fit1 b,.o-place.fit2 b{font-size:var(--o-t-small)}
+.o-place.fit2 small{display:none}
+.o-place.kfit small{font-size:var(--o-t-label)}
+.o-place.fit2 b{white-space:normal;overflow:visible;line-height:1.2;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+
+/* Ring: one drawing at three sizes (20 tile foot, 42 island, 94 stat tile) */
+.o-ring{--rs:var(--o-ring-s);position:relative;flex:none;width:var(--rs);height:var(--rs);display:grid;place-items:center}
+.o-ring.m{--rs:var(--o-ring-m)}.o-ring.l{--rs:var(--o-ring-l)}
+.o-ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.o-ring circle{fill:none;stroke-width:4}
+/* empty tracks: one grey that reads on a panel and on a tile */
+.o-ring .t{stroke:var(--v-track)}
+.o-ring .f{stroke:var(--v-acc);stroke-linecap:round;transition:stroke-dasharray var(--o-change) var(--m-ease)}
+.o-ring b{position:relative;font-size:var(--o-t-small);font-weight:var(--w-bold);font-variant-numeric:tabular-nums}
+.o-ring.l b{font-size:var(--o-t-q);letter-spacing:-.02em}
+
+/* Progress mark: the current one solid and twice as long, done light, still to come grey (G 2026-10-14) */
+.o-marks{display:flex;gap:var(--o-half);flex:0 1 auto;min-width:0}
+.o-marks i{width:var(--o-pad2);flex-shrink:1;min-width:var(--gap);height:var(--gap);border-radius:var(--o-half);background:var(--v-track);transition:background-color var(--o-change) var(--m-ease),width var(--o-change) var(--m-ease)}
+.o-marks i.on{background:var(--v-mark-done)}
+.o-marks i.now{background:var(--v-mark-now);width:calc(var(--o-pad2) * 2);min-width:var(--o-pad2)}
+
+/* Slider: Lessons / Test / Grade. The thumb (the selected look) moves at change speed */
+.o-sw{--n:3;--i:0;position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;height:var(--pill-size);padding:var(--o-half);border-radius:var(--o-r1);background:var(--v-key);flex:none}
+.o-sw .thumb{position:absolute;top:var(--o-half);bottom:var(--o-half);left:var(--o-half);width:calc((100% - var(--o-half) * 2) / var(--n));border-radius:var(--o-r1);background:var(--v-acc);transform:translateX(calc(100% * var(--i)));transition:transform var(--o-change) var(--m-ease)}
+.o-sw button{position:relative;border-radius:var(--o-r1);padding:0 var(--gap);font-size:var(--o-t-body);font-weight:var(--w-mid);color:var(--v-muted);white-space:nowrap;text-align:center}
+.o-sw button[aria-selected="true"]{color:var(--v-acc-on)}
+
+/* Tile: corner 26, sits in a panel like a pill. One master; content variants */
+.o-tile{display:grid;grid-template-rows:minmax(0,1fr) auto;gap:var(--gap);padding:var(--o-pad2);border-radius:var(--o-r1);background:var(--v-page);color:var(--v-ink);text-align:left;min-width:0;min-height:0;overflow:hidden;align-items:end}
+.o-tile .o-tx{display:grid;gap:var(--o-half);min-width:0}
+.o-tile .o-nm{font-size:var(--o-t-body);font-weight:var(--w-bold);line-height:1.25;text-wrap:balance;hyphens:auto;overflow-wrap:break-word}
+/* the name and foot take what they need, whole; the picture gets what is left, up to 96 (phones 84) */
+.o-tile.o-cover{grid-template-rows:var(--o-cover-pic) auto;align-items:stretch;align-content:end}
+.o-tile.o-cover .o-tx{grid-template-rows:auto auto;align-content:end}
+/* the tile picture box: full width inside the tile's padding, 96 tall (phones 84); every small picture is drawn to it, centred */
+.o-cpw{display:grid;place-items:center;min-height:0;height:var(--o-cover-pic);width:100%}
+.o-cpw>*{max-width:100%;max-height:100%}
+.o-tile.o-stat{align-items:start}
+.o-tile.o-stat .o-ring{align-self:start}
+.o-tile.o-wide{grid-column:1/-1;grid-template-rows:none;align-content:center;align-items:center}
+.o-foot{display:flex;align-items:center;gap:var(--gap);min-width:0}
+.o-st{font-size:var(--o-t-small);font-weight:var(--w-mid);color:var(--v-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.o-st.next{color:var(--v-acc)}.o-st.rev{color:var(--v-ink)}.o-st.done{color:var(--v-done)}
+.o-prow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,auto);gap:var(--gap);align-items:center}
+.o-prow .o-nm{font-size:var(--o-t-body)}
+.o-ptrack{display:grid;gap:var(--o-half)}
+
+/* the pictures a tile and Today carry (Lesson pictures' drawings, kept as they are) */
+.o-art{min-height:0;min-width:0;display:grid;place-items:start;overflow:hidden;padding:var(--gap) var(--gap) 0}
+.o-art>*{min-height:0;min-width:0;width:100%;height:100%}
+
+/* ---------- motion ---------- */
+@keyframes oArrive{from{opacity:0}}
+@keyframes oZin{from{opacity:0;transform:scale(var(--o-z-in))}}
+@keyframes oZout{from{opacity:0;transform:scale(var(--o-z-out))}}
+.o-grid.zin{transform-origin:50% 30%;animation:oZin var(--o-zoom) var(--ease-zoom) both}
+.o-grid.zout{transform-origin:50% 30%;animation:oZout var(--o-zoom) var(--ease-zoom) both}
+.o-arrive{animation:oArrive var(--o-arrive) var(--m-ease) both}
+/* Less motion: nothing moves; every change is a 200ms fade */
+:root[data-motion="reduce"] .o-app *{transition-duration:var(--o-calm)!important;transition-property:opacity,background-color,color,outline-color!important}
+:root[data-motion="reduce"] .o-app :is(.o-arrive,.o-grid.zin,.o-grid.zout){animation:oArrive var(--o-calm) var(--m-ease) both!important}
+:root[data-motion="reduce"] .o-app :is(.o-btn,.o-tool,button.o-tile):active{transform:none}
+:root[data-motion="reduce"] .o-app .o-sw .thumb{display:none}
+:root[data-motion="reduce"] .o-app .o-sw button[aria-selected="true"]{background:var(--v-acc)}
+
+/* ---------- SCREENS: arrangements only ---------- */
+.o-state{display:grid;gap:var(--gap);min-height:0;min-width:0}
+.o-state.home{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr)}
+
+/* home: Today beside the box */
+.o-today{grid-template-rows:auto auto auto auto minmax(0,1fr)}
+.o-today>.o-art{margin-top:var(--gap)}
+.o-box{grid-template-rows:auto minmax(0,1fr);position:relative;overflow:hidden}
+.o-box .o-grid{touch-action:pan-y;-webkit-user-select:none;user-select:none}
+.o-bh{display:flex;align-items:center;gap:var(--gap);padding-left:var(--gap);min-height:var(--pill-size);min-width:0}
+.o-bh .o-head{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.o-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--o-tile-w),1fr));grid-template-rows:repeat(3,minmax(0,var(--o-tile-h)));grid-auto-rows:minmax(0,var(--o-tile-h));align-content:start;gap:var(--gap);min-height:0;overflow:auto;scrollbar-width:none}
+/* every grade: thirteen short tiles, no pictures; the list scrolls inside the box if it must, never the page */
+.o-grid.o-grades{grid-template-rows:none;grid-auto-rows:max-content;align-content:start}
+.o-grid.o-grades .o-tile{min-height:0;height:var(--gt-h,auto)}.o-grid.o-grades .o-st{white-space:normal}
+
+/* each grade wears its own colour: its number, its ring, and its outline when picked */
+.o-tile.o-gt{background:var(--gs);grid-template-rows:auto minmax(0,1fr);align-items:stretch;align-content:stretch}
+.o-tile.o-gt .o-tx{display:flex;flex-direction:column;gap:var(--gap)}.o-tile.o-gt .o-foot{margin-top:auto}
+.o-gnum{font-size:var(--o-t-prob);font-weight:var(--w-bold);letter-spacing:-.02em;line-height:1;color:var(--gc)}
+.o-gnum small{font-size:var(--o-t-body);vertical-align:top;margin-left:2px}
+.o-tile.o-gt .o-ring .f{stroke:var(--gc)}
+.o-tile.o-gt.sel{outline-color:var(--gc)}
+
+/* ---------- phone: panels stack, the page scrolls on home ---------- */
+@media (max-width:820px),(max-height:500px){
+  #app.o-app{padding:max(var(--gap),env(safe-area-inset-top)) max(var(--o-pad2),env(safe-area-inset-right)) max(var(--gap),env(safe-area-inset-bottom)) max(var(--o-pad2),env(safe-area-inset-left))}
+  .o-state.home{grid-template-columns:minmax(0,1fr);align-content:start}
+  .o-today{grid-template-rows:none}.o-today>.o-art{display:none}
+  .o-bh{flex-wrap:wrap;padding-top:var(--o-half)}.o-bh .o-sw{flex:1 1 100%}
+  .o-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none;grid-auto-rows:auto;overflow:visible}
+  /* a phone row grows for a three-line name, so the picture keeps its 84 */
+  .o-grid .o-tile{min-height:var(--o-tile-h)}.o-grid .o-tile.o-wide{min-height:0}
+  .o-box{overflow:visible}
+  .o-prow{grid-template-columns:minmax(0,1fr) minmax(0,auto)}.o-prow .o-marks{grid-row:2;grid-column:1/-1}
+  /* in a lesson (and its Done) the island takes the whole top row: back is the only way out */
+  .o-app.flow .o-nav{grid-template-columns:minmax(0,1fr)}
+  .o-app.flow .o-nav>.o-tool{display:none}
+}
+@media (orientation:landscape) and (max-height:500px){#app.o-app{height:auto}.o-app.fit{height:100dvh}}
+
+/* one fade per page change: the new screen arrives; nothing slides or zooms between pages */
+#app.o-app>.stage{animation:oArrive var(--o-arrive) var(--m-ease) both}

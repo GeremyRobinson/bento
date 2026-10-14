@@ -4,6 +4,7 @@ import { CATALOG } from "../../curriculum/catalog";
 import { lessonById } from "../../curriculum/registry";
 import type { Progress } from "../../engine/mastery/progress";
 import type { SessionReport } from "../../engine/session/types";
+import { GRADES_VIEW, boxView } from "../../app/box";
 import { answerCurrentStep, answerWrong, failRun, renderApp, solveRun, tap } from "./helpers";
 
 const LESSON = "Multiply two-digit numbers";
@@ -107,10 +108,10 @@ describe("no grade until one is chosen", () => {
   });
 });
 
-/** the grade's home (v2): the box beside Today is that grade's, and the island's ring names it */
+/** the grade's home (UI model v57): the box beside Today is that grade's, and the island names it */
 function expectGradeHome(name: string) {
   expect(screen.getByRole("region", { name: new RegExp(`^${name}( ·[^,]*)? box$`) })).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: new RegExp(`^${name}( ·[^,]*)?, \\d+% of lessons done\\. Change grade$`) })).toBeInTheDocument();
+  expect(document.querySelector(".o-island")).toHaveTextContent(name);
 }
 /** the box: the grade's chapters and lessons, or every grade */
 const box = () => screen.getByRole("region", { name: / box$|^Every grade$/ });
@@ -118,11 +119,10 @@ const today = () => screen.getByRole("region", { name: "Today" });
 /** the chapter cover tiles in the box */
 const chapterCovers = () => within(box()).getAllByRole("button", { name: /, \d+ of \d+ lessons? done$/ });
 /** the box's Lessons / Test / Grade slider */
-const view = (name: "Lessons" | "Test" | "Grade") => fireEvent.click(within(box()).getByRole("button", { name }));
-/** back out of a chapter to every chapter's cover */
+const view = (name: "Lessons" | "Test" | "Grade") => fireEvent.click(within(box()).getByRole("tab", { name }));
+/** back out of a chapter (or every grade) to every chapter's cover: the island's back */
 function allChapters() {
-  const back = within(box()).queryByRole("button", { name: "All chapters" });
-  if (back) fireEvent.click(back);
+  if (boxView() != null) tap("Back");
 }
 /** opens a chapter's cover in the box */
 function openChapter(unit: string) {
@@ -134,10 +134,11 @@ function openChapter(unit: string) {
 const goToday = () => fireEvent.click(within(today()).getByRole("button", { name: /^(Start|Practise|Carry on)$/ }));
 /** from home into the lesson up next, past its worked example, into practice */
 function startPractice() { goToday(); tap("Try one"); }
-/** Changing grade has one way (v2): the island's ring swaps the box for every grade, then a grade. */
+/** Changing grade has one way (UI model v57): the island's grid swaps the box for every grade, then a grade. */
 function pickGrade(name: string) {
-  fireEvent.click(screen.getByRole("button", { name: /Change grade$/ }));
-  fireEvent.click(within(screen.getByRole("region", { name: "Every grade" })).getByRole("button", { name: new RegExp(`^${name}( ·[^,]*)?, \\d+ of \\d+ lessons? done$`) }));
+  allChapters();
+  tap("Every grade");
+  fireEvent.click(within(screen.getByRole("region", { name: "Every grade" })).getByRole("button", { name: new RegExp(`^${name}( ·[^,]*)?, `) }));
 }
 
 describe("home", () => {
@@ -161,7 +162,7 @@ describe("home", () => {
     view("Test");
     expect(within(box()).getByRole("button", { name: "5th grade test, not taken yet" })).toBeInTheDocument();
     // the grown-up page lives in My Obento; every setting and the backup live on the Settings page
-    expect(screen.getByRole("button", { name: /^My Obento:/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Me" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
     // no review until two lessons are scored
     expect(screen.queryByText("Today's review")).toBeNull();
@@ -175,7 +176,7 @@ describe("home", () => {
     expect(within(today()).getByRole("heading", { level: 2, name: other.title })).toBeInTheDocument();
     expect(within(today()).getByRole("button", { name: "Start" })).toBeEnabled();
     goToday();
-    expect(document.querySelector(".island")).toHaveTextContent(other.title);
+    expect(document.querySelector(".o-island")).toHaveTextContent(other.title);
   });
 
   it("shows the whole year for 2nd grade, and switches grades from the island's ring", () => {
@@ -194,7 +195,7 @@ describe("home", () => {
   it("keeps going with a run left mid-lesson", () => {
     renderApp();
     startPractice();
-    tap("Back to contents");
+    tap("Back");
     // the unfinished lesson waits in Today as "Carry on"; each grade's Today keeps showing its own lesson
     expect(within(today()).getByText("In progress")).toBeInTheDocument();
     expect(within(today()).getByRole("heading", { level: 2, name: LESSON })).toBeInTheDocument();
@@ -212,7 +213,7 @@ describe("home", () => {
     startPractice();
     answerCurrentStep();
     const where = document.querySelector(".v-steps .n")!.textContent;
-    tap("Back to contents");
+    tap("Back");
     expect(screen.queryByRole("alertdialog")).toBeNull();
     expectGradeHome("5th grade");
     // carrying on comes back to the same step, with the work done so far
@@ -242,21 +243,24 @@ describe("home", () => {
   it("zooms out from a lesson to its chapter, the year and every grade, and opens whatever is tapped", () => {
     renderApp();
     goToday();
-    expect(document.querySelector(".island")).toHaveTextContent("Watch one · then try");
-    tap("Back to contents");
+    expect(document.querySelector(".o-island")).toHaveTextContent("Watch one · then try");
+    tap("Back");
     // the chapter: its lessons, with this one picked
     openChapter("Whole numbers");
-    expect(box().querySelector(".v-cover.pick")).toHaveTextContent(LESSON);
+    expect(box().querySelector(".o-cover.sel")).toHaveTextContent(LESSON);
     // the year: a cover per chapter; tapping one opens it
     allChapters();
     expect(chapterCovers()).toHaveLength(4);
     fireEvent.click(chapterCovers()[1]!);
-    expect(within(box()).getByRole("button", { name: "All chapters" })).toBeInTheDocument();
+    expect(boxView()).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument();
     // every grade is the outermost level, from the island's ring; tapping one opens its home
-    fireEvent.click(screen.getByRole("button", { name: /Change grade$/ }));
-    expect(screen.getByRole("button", { name: /Change grade$/ })).toHaveAttribute("aria-pressed", "true");
+    allChapters();
+    tap("Every grade");
+    expect(boxView()).toBe(GRADES_VIEW);
+    expect(document.querySelector(".o-island")).toHaveTextContent("Every grade");
     const every = screen.getByRole("region", { name: "Every grade" });
-    expect(within(every).getAllByRole("button", { name: /, \d+ of \d+ lessons? done$/ })).toHaveLength(13);
+    expect(within(every).getAllByRole("button")).toHaveLength(13);
     fireEvent.click(within(every).getByRole("button", { name: /^7th grade,/ }));
     expect(screen.queryByRole("region", { name: "Every grade" })).toBeNull();
     expectGradeHome("7th grade");
@@ -269,18 +273,20 @@ describe("unit test and check-up", () => {
     openChapter("Whole numbers");
     view("Test");
     fireEvent.click(within(box()).getByRole("button", { name: "Whole numbers test, not taken yet" }));
+    // a picked test waits in Today, like a lesson; Start begins it
+    fireEvent.click(within(today()).getByRole("button", { name: "Start" }));
     expect(screen.getByText("Whole numbers test: no hints, one try per step")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Hint/ })).toBeNull();
     // a test goes in its own order: no problem list to pick from
     expect(screen.queryByRole("button", { name: "Problems" })).toBeNull();
-    expect(screen.getByRole("button", { name: "Back to contents" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument();
     expect(solveRun()).toBeGreaterThanOrEqual(6);
-    expect(document.querySelector(".island")).toHaveTextContent("Whole numbers test");
+    expect(document.querySelector(".o-island")).toHaveTextContent("Whole numbers test");
     expect(screen.getByText(/^\d+ of \d+ problems had every step right\./)).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: "4 of 4: you’ve got it." })).toBeInTheDocument();
     tap("Take it again");
     expect(screen.getByText("Whole numbers test: no hints, one try per step")).toBeInTheDocument();
-    tap("Back to contents");
+    tap("Back");
     openChapter("Whole numbers");
     view("Test");
     expect(within(box()).getByRole("button", { name: "Whole numbers test, last try 4 of 4" })).toBeInTheDocument();
@@ -291,7 +297,7 @@ describe("unit test and check-up", () => {
     startCheckup();
     expect(screen.getByText("5th grade check-up: no hints, one try per step")).toBeInTheDocument();
     solveRun();
-    expect(document.querySelector(".island")).toHaveTextContent("5th grade check-up");
+    expect(document.querySelector(".o-island")).toHaveTextContent("5th grade check-up");
     tap("Back to your box");
     // the check-up's score shows on its tile in the box's Test view
     view("Test");
@@ -306,7 +312,7 @@ describe("unit test and check-up", () => {
     expect(within(stage).getByText("0 of 6 done")).toBeInTheDocument();
     fireEvent.click(within(stage).getByRole("button", { name: "Problem 3, To do" }));
     expect(screen.queryByText("This practice")).toBeNull();
-    expect(document.querySelector(".island")).toHaveTextContent("Problem 3 of 6");
+    expect(document.querySelector(".o-island")).toHaveTextContent("Problem 3 of 6");
   });
 
   it("a wrong answer in a test shows the answer and moves on", () => {
@@ -339,6 +345,7 @@ function startCheckup() {
   allChapters();
   view("Test");
   fireEvent.click(within(box()).getByRole("button", { name: /^5th grade test, / }));
+  fireEvent.click(within(today()).getByRole("button", { name: "Start" }));
 }
 
 /** every lesson tile of the grade's box, opening each chapter's cover in turn */
@@ -349,7 +356,7 @@ function everyRow(): { name: string; disabled: boolean }[] {
   const count = chapterCovers().length;
   for (let i = 0; i < count; i++) {
     fireEvent.click(chapterCovers()[i]!);
-    for (const t of box().querySelectorAll<HTMLButtonElement>(".v-cover")) out.push({ name: t.querySelector(".v-nm")!.textContent!, disabled: t.disabled });
+    for (const t of box().querySelectorAll<HTMLButtonElement>(".o-cover")) out.push({ name: t.querySelector(".o-nm")!.textContent!, disabled: t.disabled });
     allChapters();
   }
   return out;
@@ -379,7 +386,7 @@ describe("report, grown-up page and back to basics", () => {
     tap("Back to your box");
     expect(within(today()).getByRole("heading", { level: 2, name: LESSON })).toBeInTheDocument();
     expect(within(today()).getByRole("button", { name: "Practise" })).toBeInTheDocument();
-    expect(box().querySelector(".v-cover.pick")).toHaveTextContent(LESSON);
+    expect(box().querySelector(".o-cover.sel")).toHaveTextContent(LESSON);
   }, 60000);
 
   it("shows mistake patterns, scores by chapter and where help was used, and opens the session behind a pattern", () => {
@@ -401,7 +408,7 @@ describe("report, grown-up page and back to basics", () => {
     };
     renderApp(progress, { "g5-mult2": report });
     // the grown-up page opens from My Obento, which the person button goes straight to (v2)
-    fireEvent.click(screen.getByRole("button", { name: /^My Obento:/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Me" }));
     tap(/^For the grown-up/);
     expect(screen.getByRole("heading", { level: 1, name: "For the grown-up" })).toBeInTheDocument();
     // the pattern, picked, with what went wrong and the lesson's own explanation of it
@@ -416,7 +423,7 @@ describe("report, grown-up page and back to basics", () => {
     // the session behind the pattern opens, and Back returns to the lesson
     tap("See that session ›");
     expect(screen.getByText(/Typed/)).toHaveTextContent("Typed 141, answer 1410. Lost the place value (quick retry).");
-    tap(`Back to ${LESSON}`);
+    tap("Back");
     expect(screen.getByRole("button", { name: "Watch again" })).toBeInTheDocument();
   });
 
@@ -442,10 +449,10 @@ describe("report, grown-up page and back to basics", () => {
 describe("My Obento", () => {
   it("the person button goes straight to the My Obento page, with no settings (v2: no hub)", () => {
     renderApp({ grade: 5, chosen: true, xp: 1240, streak: 3 });
-    fireEvent.click(screen.getByRole("button", { name: "My Obento: 3 day streak, 1240 XP" }));
+    fireEvent.click(screen.getByRole("button", { name: "Me" }));
     expect(screen.queryByRole("dialog")).toBeNull();
-    expect(screen.getByRole("button", { name: /^My Obento:/ })).toHaveAttribute("aria-current", "page");
-    expect(document.querySelector(".island")).toHaveTextContent("My Obento");
+    expect(screen.getByRole("button", { name: "Me" })).toHaveAttribute("aria-current", "page");
+    expect(document.querySelector(".o-island")).toHaveTextContent("Me");
     expect(screen.getByText(/^Level \d+$/)).toBeInTheDocument();
     expect(screen.getByText("1,240")).toBeInTheDocument();
     expect(screen.getByText(/in a row/).closest("p")).toHaveTextContent("days in a row");
@@ -454,7 +461,7 @@ describe("My Obento", () => {
     // no wordmark inside the app (G 2026-10-08)
     expect(screen.queryByRole("button", { name: "Obento, home" })).toBeNull();
     // the island's < goes back to the box
-    tap(/^Back to /);
+    tap("Back");
     expectGradeHome("5th grade");
   });
 });
@@ -464,7 +471,7 @@ describe("Settings", () => {
     renderApp({ grade: 5, chosen: true });
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
     expect(screen.queryByRole("dialog")).toBeNull();
-    expect(document.querySelector(".island")).toHaveTextContent("Settings");
+    expect(document.querySelector(".o-island")).toHaveTextContent("Settings");
     fireEvent.click(screen.getByRole("switch", { name: /High contrast/ }));
     expect(document.documentElement.dataset.contrast).toBe("true");
     fireEvent.click(screen.getByRole("switch", { name: /Left-handed keypad/ }));
@@ -479,10 +486,10 @@ describe("Settings", () => {
     renderApp({ grade: 5, chosen: true });
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
     expect(screen.getByRole("switch", { name: /High contrast/ })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /^My Obento:/ }));
-    expect(screen.getByRole("button", { name: /^My Obento:/ })).toHaveAttribute("aria-current", "page");
+    fireEvent.click(screen.getByRole("button", { name: "Me" }));
+    expect(screen.getByRole("button", { name: "Me" })).toHaveAttribute("aria-current", "page");
     expect(screen.queryByRole("switch", { name: /High contrast/ })).toBeNull();
-    tap(/^Back to /);
+    tap("Back");
     expectGradeHome("5th grade");
   });
 });
@@ -490,7 +497,7 @@ describe("Settings", () => {
 describe("find my level", () => {
   it("runs a short placement from My Obento and offers the grade to start in", () => {
     renderApp({ grade: 5, chosen: true });
-    fireEvent.click(screen.getByRole("button", { name: /^My Obento:/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Me" }));
     tap(/^Find my level/);
     solveRun();
     expect(screen.getByRole("heading", { level: 1, name: /^Start in .+ grade\.$/ })).toBeInTheDocument();

@@ -158,7 +158,7 @@ function DoneBox({ g, id }: { g: number; id: string }) {
     {unit.entries.map(c => {
       // a check of 3 or 4 is learned and fills the ring (v2 spec C3); the status wraps rather than being cut
       const st = statusOf(progress, g, c.id, now());
-      return <Cover key={c.id} pick={c.id === id} disabled={!isReady(c.id)} pic={<TilePic svg={lessonPic(c.id)} />} name={c.title} p={learned(progress, c.id) ? 1 : (st.score ?? 0) / 4} tone={st.tone}
+      return <Cover key={c.id} pick={c.id === id} disabled={!isReady(c.id)} pic={<TilePic svg={lessonPic(c.id)} />} name={c.title} p={learned(progress, c.id) ? 1 : (st.score ?? 0) / 4} tone={st.tone === "done" ? undefined : st.tone}
         word={<>{st.word}{st.checked && st.score != null && <span className="v-sc">{` \u00b7 ${st.score}/4`}</span>}</>}
         onClick={() => go({ name: "home", pick: c.id }, "back")} aria-label={`${c.title}, ${st.word}${st.checked && st.score != null ? `, skill check ${st.score} of 4` : ""}`} />;
     })}

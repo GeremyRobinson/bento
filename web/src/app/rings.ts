@@ -15,3 +15,6 @@ export function chapterRings(p: Progress, g: number): { name: string; ring: Ring
 
 /** how many of these lessons are learned (their skill check is 3 or 4): the count every progress ring shows */
 export const learnedCount = (p: Progress, entries: readonly { id: string }[]): number => ringOf(p, entries.map(c => c.id)).learned;
+
+/** how many of these lessons have had their skill check, whatever it scored: the model's "8 of 17 done" (UI model v57) */
+export const checkedCount = (p: Progress, entries: readonly { id: string }[]): number => entries.filter(c => !!p.checks?.[c.id]).length;

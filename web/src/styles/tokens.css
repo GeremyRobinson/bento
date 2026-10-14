@@ -25,6 +25,12 @@
   /* 5th grade's one accent (v2 model "acc"): what you press, where you are, progress; text on it; its soft ground; its faded step */
   --g5-acc:#2456d6; --g5-acc-on:#ffffff; --g5-acc-soft:#e3eafb; --g5-acc-fade:#b9c8ef;
 
+  /* ---- UI model v57 (Design, 2026-10-14): the neutral steps it adds, and every grade's accent and soft fill (the model's
+     GRADES list, light and dark). The accent is what you press next, what is picked, where you are and progress. ---- */
+  --v-wash:#eef1f8; --v-track:#d3d4d0; --v-card-hi:#f6f6f4; --v-page-hi:#ececea; --v-key-hi:#e2e2df;
+  --g5-mark-now:#2456d6; --g5-acc-hi:#1c47b8; --g5-soft-hi:#d6e0f8;
+  --g0-acc:#a46805; --g0-soft:#feebd6; --g1-acc:#01893a; --g1-soft:#dff6e2; --g2-acc:#06819f; --g2-soft:#d8f4ff; --g3-acc:#d43577; --g3-soft:#fee8ed; --g4-acc:#336deb; --g4-soft:#e6efff; --g5-acc:#2456d6; --g5-soft:#e3eafb; --g6-acc:#02837a; --g6-soft:#d5f7f2; --g7-acc:#6165ed; --g7-soft:#eaedfe; --g8-acc:#cc4a00; --g8-soft:#fee9e2; --g9-acc:#336deb; --g9-soft:#e6efff; --g10-acc:#037bbc; --g10-soft:#e1f1fe; --g11-acc:#8359e3; --g11-soft:#efecfe; --g12-acc:#b248c0; --g12-soft:#fae7fd;
+
   /* ---- the system scales. Stylesheets use these instead of typing values (scripts/tokenize.mjs rewrites any that
      slip in, and src/tests/styles/hard-coded.test.ts fails on a raw z-index, duration, curve, weight or colour). ---- */
   /* weights: one typeface, three weights, plus a medium for the keypad's digits. bands.css repeats bold and mid on .wrap. */
@@ -54,9 +60,11 @@
   --dur-22:22ms; --dur-30:30ms; --dur-42:42ms; --dur-45:45ms; --dur-50:50ms; --dur-60:60ms; --dur-70:70ms; --dur-100:100ms; --dur-120:120ms; --dur-140:140ms; --dur-150:.15s;
   --dur-180:.18s; --dur-200:.2s; --dur-220:.22s; --dur-240:.24s; --dur-250:.25s; --dur-300:.3s; --dur-350:.35s; --dur-360:.36s; --dur-380:.38s; --dur-420:.42s;
   --dur-400:.4s; --dur-450:.45s; --dur-500:.5s; --dur-550:.55s; --dur-600:.6s; --dur-700:.7s; --dur-800:.8s; --dur-900:.9s;
-  --dur-1000:1s; --dur-1200:1.2s; --dur-1600:1.6s; --dur-2400:2.4s; --dur-2600:2.6s; --dur-4000:4s; --dur-5000:5s; --dur-6000:6s;
+  --dur-1000:1s; --dur-1200:1.2s; --dur-1300:1.3s; --dur-1600:1.6s; --dur-2400:2.4s; --dur-2600:2.6s; --dur-4000:4s; --dur-5000:5s; --dur-6000:6s;
   --dur-40000:40s; --dur-off:.001ms;
   --ease-toss:cubic-bezier(.2,.7,.4,1);
+  /* the UI model's curves: settle for putting a thing down, zoom for going a level deeper or back out */
+  --ease-settle:cubic-bezier(.34,1.22,.5,1); --ease-zoom:cubic-bezier(.25,.6,.3,1);
 
   /* ---- colours that are the same in both themes (listed again in the dark blocks below, unchanged, so every colour
      token says what it is in dark) ---- */
@@ -83,6 +91,10 @@
   --pic-deep:#ffb35c; --pic-mid:#e8901f; --pic-soft:#4a3214; --pic-line:#111213; --picb-deep:#c9adff; --picb-mid:#8b5fe0; --picb-soft:#33264f; --pic-on-mid:var(--pic-line);
   --slip:#ff7070; --slip-bg:#3a1717; --right:#5ad68a; --right-bg:#13301f;
   --g5-acc:#8fb0ff; --g5-acc-on:#0c1630; --g5-acc-soft:#1d2a4a; --g5-acc-fade:#36456b;
+
+  --v-wash:#121419; --v-track:#45464a; --v-card-hi:#232427; --v-page-hi:#232427; --v-key-hi:#35363a;
+  --g5-mark-now:#4d7cf0; --g5-acc-hi:#a8c2ff; --g5-soft-hi:#263559;
+  --g0-acc:#f7a324; --g0-soft:#412805; --g1-acc:#62d37d; --g1-soft:#15361d; --g2-acc:#11cbf8; --g2-soft:#023441; --g3-acc:#fe90b3; --g3-soft:#46202c; --g4-acc:#92b7fe; --g4-soft:#1d2d4c; --g5-acc:#8fb0ff; --g5-soft:#1d2a4a; --g6-acc:#06d3c5; --g6-soft:#013632; --g7-acc:#a5b1ff; --g7-soft:#262a4b; --g8-acc:#ff9972; --g8-soft:#472215; --g9-acc:#92b7fe; --g9-soft:#1d2d4c; --g10-acc:#6cc0ff; --g10-soft:#0d3149; --g11-acc:#baa8fe; --g11-soft:#2f2749; --g12-acc:#e892f2; --g12-soft:#3c233f;
   /* unchanged in dark */
   --black-a04:rgba(0,0,0,.04); --black-a06:rgba(0,0,0,.06); --black-a08:rgba(0,0,0,.08); --black-a12:rgba(0,0,0,.12); --black-a25:rgba(0,0,0,.25);
   --ink-a18:rgba(15,20,30,.18); --ink-a25:rgba(15,20,30,.25); --ink-a30:rgba(15,20,30,.3); --ink-a35:rgba(15,20,30,.35);
@@ -96,6 +108,10 @@
   --pic-deep:#ffb35c; --pic-mid:#e8901f; --pic-soft:#4a3214; --pic-line:#111213; --picb-deep:#c9adff; --picb-mid:#8b5fe0; --picb-soft:#33264f; --pic-on-mid:var(--pic-line);
   --slip:#ff7070; --slip-bg:#3a1717; --right:#5ad68a; --right-bg:#13301f;
   --g5-acc:#8fb0ff; --g5-acc-on:#0c1630; --g5-acc-soft:#1d2a4a; --g5-acc-fade:#36456b;
+
+  --v-wash:#121419; --v-track:#45464a; --v-card-hi:#232427; --v-page-hi:#232427; --v-key-hi:#35363a;
+  --g5-mark-now:#4d7cf0; --g5-acc-hi:#a8c2ff; --g5-soft-hi:#263559;
+  --g0-acc:#f7a324; --g0-soft:#412805; --g1-acc:#62d37d; --g1-soft:#15361d; --g2-acc:#11cbf8; --g2-soft:#023441; --g3-acc:#fe90b3; --g3-soft:#46202c; --g4-acc:#92b7fe; --g4-soft:#1d2d4c; --g5-acc:#8fb0ff; --g5-soft:#1d2a4a; --g6-acc:#06d3c5; --g6-soft:#013632; --g7-acc:#a5b1ff; --g7-soft:#262a4b; --g8-acc:#ff9972; --g8-soft:#472215; --g9-acc:#92b7fe; --g9-soft:#1d2d4c; --g10-acc:#6cc0ff; --g10-soft:#0d3149; --g11-acc:#baa8fe; --g11-soft:#2f2749; --g12-acc:#e892f2; --g12-soft:#3c233f;
   /* unchanged in dark */
   --black-a04:rgba(0,0,0,.04); --black-a06:rgba(0,0,0,.06); --black-a08:rgba(0,0,0,.08); --black-a12:rgba(0,0,0,.12); --black-a25:rgba(0,0,0,.25);
   --ink-a18:rgba(15,20,30,.18); --ink-a25:rgba(15,20,30,.25); --ink-a30:rgba(15,20,30,.3); --ink-a35:rgba(15,20,30,.35);

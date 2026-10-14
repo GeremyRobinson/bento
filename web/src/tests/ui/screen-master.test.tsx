@@ -12,7 +12,7 @@ const cwd = (globalThis as unknown as { process: { cwd(): string } }).process.cw
  * in one place and a per-screen layout bug can't happen (G 2026-10-06: "isnt this all being fixed in the master?").
  * Only the landing page is its own thing.
  */
-const root = () => document.querySelector("#app > .screen");
+const root = () => document.querySelector("#app > :is(.screen,.o-state)");
 
 describe("every screen renders inside the Screen master", () => {
   it.each([
@@ -54,14 +54,15 @@ describe("every screen renders inside the Screen master", () => {
     expect(solve!.querySelector(".ppad .tray")).not.toBeNull();
     expect(solve!.querySelector(".v-steps .v-meta")).toBeNull(); // the test rules only show in a test
     // every mode has a way out: the island's step back
-    expect(screen.getByRole("button", { name: /^Back to / })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument();
   });
 
   it("a check-up says its rules over the problem, not in a bar of its own, then results sit in the Screen master", () => {
     renderApp();
     // v2: the box's Test view holds the grade's test
-    fireEvent.click(within(screen.getByRole("group", { name: "5th grade views" })).getByRole("button", { name: "Test" }));
+    fireEvent.click(within(screen.getByRole("tablist", { name: "5th grade views" })).getByRole("tab", { name: "Test" }));
     fireEvent.click(screen.getByRole("button", { name: "5th grade test, not taken yet" }));
+    fireEvent.click(within(screen.getByRole("region", { name: "Today" })).getByRole("button", { name: "Start" }));
     const kick = screen.getByText(/: no hints, one try per step$/);
     expect(kick).toHaveClass("v-meta");
     expect(kick.closest(".v-steps")).not.toBeNull();
@@ -82,12 +83,12 @@ describe("every screen renders inside the Screen master", () => {
     fireEvent.keyDown(window, { key: "1" });
     fireEvent.keyDown(window, { key: "Enter" });
     const problem = document.querySelector(".v-stage .v-prob")!.textContent;
-    tap(/^Back to /);
+    tap("Back");
     expect(screen.queryByRole("alertdialog")).toBeNull();
     expect(document.querySelector(".v-prac")).toBeNull();
     const today = within(screen.getByRole("region", { name: "Today" }));
     expect(today.getByText("In progress")).toBeInTheDocument();
-    expect(today.getByText(/^Problem 1 of \d+$/)).toBeInTheDocument();
+    expect(today.getByText(/^Problem 1 of \d+ · your work is kept$/)).toBeInTheDocument();
     fireEvent.click(today.getByRole("button", { name: "Carry on" }));
     expect(document.querySelector("#app > .screen.v-prac")).not.toBeNull();
     expect(document.querySelector(".v-stage .v-prob")!.textContent).toBe(problem);
@@ -96,7 +97,7 @@ describe("every screen renders inside the Screen master", () => {
   it("Find my level's answer sits in a fit screen", () => {
     renderApp({ grade: 5, chosen: true });
     // v2: Find my level is a row on the My Obento page
-    fireEvent.click(screen.getByRole("button", { name: /^My Obento:/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Me" }));
     fireEvent.click(screen.getByRole("button", { name: /Find my level/ }));
     solveRun();
     expect(document.querySelector("#app > .screen.fit.placed")).not.toBeNull();

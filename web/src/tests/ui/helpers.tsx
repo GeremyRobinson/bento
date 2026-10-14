@@ -1,3 +1,4 @@
+import { setBoxView } from "../../app/box";
 // Shared helpers for the UI flow tests: start the app on a given save, and solve whatever is on screen like a student.
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { App } from "../../app/App";
@@ -17,6 +18,7 @@ const now = () => (clock.t += 3000);
 
 export function renderApp(progress: Partial<Progress> = { grade: 5, chosen: true }, reports: Record<string, SessionReport> = {}, hash = "#/") {
   history.replaceState(null, "", hash);
+  setBoxView(null); // a fresh launch opens the box on its own top
   clock.t = Date.UTC(2026, 9, 2, 15);
   return render(
     <AppProvider initial={{ progress: { ...emptyProgress(), ...progress }, reports }} store={null} now={now} rng={createRng(42)} onData={onData}>

@@ -24,7 +24,7 @@ const SIZES = [{ w: 390, h: 844, scheme: "dark" }, { w: 375, h: 667, scheme: "li
   { w: 1024, h: 768, scheme: "light" }, { w: 1280, h: 720, scheme: "dark" }];
 /** containers meant to scroll (a long list; the book's chapters, and its plan on a short landscape screen where the
  *  picture keeps its room); anything else that scrolls inside itself is cut */
-const SCROLLERS = ".fhome>.ftables, nav.slist.more, .sbento .b-chaps, .sbento .today, .sbento .tbody, .v-box, .v-home"; // home may scroll on a phone (v2 spec H0)
+const SCROLLERS = ".fhome>.ftables, nav.slist.more, .sbento .b-chaps, .sbento .today, .sbento .tbody, .o-grid, .o-state.home"; // the box's tiles scroll; home may scroll on a phone (v2 spec H0)
 /** on a phone, screens other than lessons scroll as one piece (v2 spec H0b): My Obento */
 const PHONE_SCROLLERS = ", .mine";
 const ROUTES = ["home", "learn", "practice", "facts", "me", "settings", "grown-up", "welcome"];
@@ -46,18 +46,18 @@ for (const { w, h, scheme } of SIZES) for (const contrast of [false, true]) for 
   await p.addInitScript(() => { let s = 42; Math.random = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; });
   if (learner === "returning") {
     await p.addInitScript(save => { try { if (!localStorage.getItem("stepmath")) localStorage.setItem("stepmath", JSON.stringify(save)); } catch {} }, RETURNING);
-    await p.goto(PAGE + "#/"); await p.locator(".v-today .v-go").first().waitFor({ timeout: 8000 }).catch(() => {});
+    await p.goto(PAGE + "#/"); await p.locator(".o-today .o-btn.fill").first().waitFor({ timeout: 8000 }).catch(() => {});
   } else {
     // a learner who picked 5th grade
     await p.goto(PAGE + "#/welcome"); await p.waitForTimeout(500);
     await p.getByRole("button", { name: /Start learning/ }).first().click(); await p.waitForTimeout(400);
     await p.getByRole("radio", { name: /5th grade/ }).first().click(); await p.waitForTimeout(300);
     const go = p.locator(".gdgo button").first(); if (await go.count()) await go.click();
-    await p.locator(".v-today .v-go").first().waitFor({ timeout: 8000 }).catch(() => {});
+    await p.locator(".o-today .o-btn.fill").first().waitFor({ timeout: 8000 }).catch(() => {});
   }
   // today's lesson, opened the way a learner would: Today's Start (a returning learner's lesson may open in practice,
   // so the lesson comes from Today's pick either way)
-  await p.evaluate(() => document.querySelector(".v-today .v-go")?.click()); await p.waitForTimeout(500);
+  await p.evaluate(() => document.querySelector(".o-today .o-btn.fill")?.click()); await p.waitForTimeout(500);
   // (the app keeps progress in IndexedDB "bento"; the "stepmath" localStorage key is only the old save it imports)
   const lesson = await p.evaluate(() => {
     if (location.hash.startsWith("#/learn/")) return location.hash;

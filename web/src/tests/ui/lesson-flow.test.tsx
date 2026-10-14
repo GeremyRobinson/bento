@@ -87,7 +87,7 @@ describe("a whole lesson in the browser", () => {
         // then the skill check: 4 problems on your own, each asked whole, no hints and no problem list (v2 model)
         if (label === "Start the skill check") {
           checked = true;
-          expect(document.querySelector(".island")).toHaveTextContent("Skill check · 1 of 4");
+          expect(document.querySelector(".o-island")).toHaveTextContent("Skill check · 1 of 4");
           expect(document.querySelector(".v-steps")).toHaveTextContent("Skill check");
           expect(screen.getByRole("status")).toHaveTextContent("Skill check: 4 problems on your own, no hints. It shows how much stuck.");
           expect(screen.queryByRole("button", { name: /^Hint/ })).toBeNull();
@@ -121,6 +121,6 @@ describe("a whole lesson in the browser", () => {
     // back in the box, the lesson's tile shows the score and Today keeps no run in progress
     fireEvent.click(screen.getByRole("button", { name: "Back to your box" }));
     expect(within(screen.getByRole("region", { name: "Today" })).queryByRole("button", { name: "Carry on" })).toBeNull();
-    expect(screen.getByRole("button", { name: "Multiply two-digit numbers, Solid, skill check 4 of 4" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Multiply two-digit numbers, Got it, skill check 4 of 4" })).toBeInTheDocument();
   }, 60000);
 });

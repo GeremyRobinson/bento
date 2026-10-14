@@ -28,8 +28,6 @@ html[data-line] body{background-image:none!important}
 .v-go:hover:not(:disabled){filter:brightness(1.08)}
 .v-go:disabled{opacity:.4;cursor:default}
 .v-plain{background:var(--v-key);font-weight:var(--w-mid);padding:0 var(--sp-6)}
-.v-ib{flex:none;width:44px;height:44px;border-radius:var(--r-round);background:var(--v-key);display:grid;place-items:center}
-.v-ib svg{width:18px;height:18px}
 
 /* the workspace: Today beside the box */
 .screen.v-work{grid-template-rows:minmax(0,1fr);gap:var(--gap)}
@@ -52,14 +50,8 @@ html[data-line] body{background-image:none!important}
 .v-box{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:212px;gap:var(--gap);align-content:start;overflow:auto;scrollbar-width:thin}
 .v-bh{grid-column:1/-1;display:flex;align-items:center;gap:var(--gap);min-height:var(--tap);padding-left:var(--gap);grid-row:auto;height:auto}
 .v-box>.v-bh{align-self:start}
-.v-bh .v-ib{margin-left:calc(var(--gap) * -1)}
 .v-bh b{font-size:20px;line-height:1.2}
 .v-bh .v-meta{flex:1;white-space:nowrap}
-.v-sw{--sl-h:36px;--sl-bg:var(--v-page);--sl-ring:none;--sl-pad:4px;--sl-x:var(--sp-4);--sl-fz:var(--small)}
-/* the segmented control (v2 model): a key-grey thumb under ink words; the others muted. Never the accent: it is a view, not an action */
-.v-sw .slider-thumb{background:var(--v-key)}
-.v-sw>button{color:var(--v-muted)}
-.v-sw>button:hover:not(:disabled):not([aria-pressed="true"]),.v-sw>button:active:not(:disabled):not([aria-pressed="true"]),.v-sw>button[aria-pressed="true"]{color:var(--v-ink)}
 .v-box{grid-template-rows:max-content}
 
 /* Ring (master) */
@@ -119,7 +111,7 @@ html[data-line] body{background-image:none!important}
   .v-cover{padding:var(--sp-4)} .v-cover .v-top{height:84px} .v-nm{font-size:var(--fz-md)} .v-st{white-space:normal} .v-sc{display:none}
   .v-pstep{grid-template-columns:1fr auto;gap:var(--sp-1) var(--gap)} .v-pstep .v-st{grid-column:1/-1;text-align:left}
   .v-wide{padding:var(--sp-4) 18px} .v-yr{font-size:var(--fz-xl)} .v-ring.lg{width:80px;height:80px;font-size:var(--fz-xl)} .v-stat{grid-template-rows:80px minmax(0,1fr) auto}
-  .v-bh{display:grid;grid-template-columns:auto auto minmax(0,1fr);padding-left:var(--sp-2)} .v-bh .v-sw{grid-column:1/-1;justify-self:start} .v-bh:not(:has(.v-ib)){grid-template-columns:auto minmax(0,1fr)}
+  .v-bh{display:grid;grid-template-columns:auto auto minmax(0,1fr);padding-left:var(--sp-2)}
 }
 
 /* the island and the corner circles: plain cards with a hairline; only the ring and the grade's number take the colour */

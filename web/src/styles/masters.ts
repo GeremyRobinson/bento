@@ -47,13 +47,23 @@ export const MASTERS: Master[] = [
   { name: "Card panel", classes: ["v-panel", "v-label", "v-meta", "v-why", "v-row", "v-seg", "v-lbtns", "v-go", "v-plain"] },
   { name: "Go button", classes: ["v-go"] },
   { name: "Plain button", classes: ["v-plain"] },
-  { name: "Icon button", classes: ["v-ib"] },
   { name: "Tool", classes: ["v-tool", "v-tools"] },
   { name: "Workspace", classes: ["screen", "v-work", "v-home", "v-prac", "v-done", "v-today", "v-todaypic", "v-box", "v-bh", "v-sw", "v-wide", "v-yr", "v-path", "v-pstep", "v-gbig", "v-sc", "v-result", "v-recap", "v-rp", "v-stage", "v-prob", "v-ppic", "v-pad", "v-plist", "v-lside", "v-idea", "v-wl", "v-learn", "later", "all", "pprob", "pfade"] },
   { name: "Solve panel", classes: ["v-solve", "v-keys", "v-solved", "v-ans", "q2", "v-steps", "v-lines", "v-ask", "v-say", "slip", "good", "hint", "slot", "empty", "no", "ask", "tray", "ctl", "choice", "choices", "ok"] },
   { name: "Grade ring", classes: ["ibat", "igrade", "island", "pring-track"] },
-  // the v2 segmented control (Lessons · Test · Grade): the Slider with a key-grey thumb, never the accent (v2 model)
-  { name: "Segmented", classes: ["v-sw", "slider", "slider-thumb"] },
+  // the UI model (Design, v57, 2026-10-14): the shell and its masters, styles/ui.css. Class names are the model's with "o-" in front
+  { name: "App", classes: ["o-app", "flow", "fit", "stage"] },
+  { name: "Island", component: "components/AppNav.tsx", classes: ["o-nav", "o-island", "o-place", "o-tool", "fit1", "fit2", "kfit"] },
+  { name: "O panel", classes: ["o-panel", "o-in", "o-label", "o-small", "o-why", "o-head", "o-title", "o-row"] },
+  { name: "O button", classes: ["o-btn", "fill", "link"] },
+  { name: "O tool", classes: ["o-tool", "o-badge", "sel"] },
+  { name: "O ring", component: "components/Masters.tsx", classes: ["o-ring", "m", "l", "t", "f"] },
+  { name: "O marks", classes: ["o-marks"] },
+  { name: "O slider", classes: ["o-sw", "thumb"] },
+  { name: "O tile", classes: ["o-tile", "o-tx", "o-nm", "o-cover", "o-cpw", "o-stat", "o-wide", "o-foot", "o-st", "next", "rev", "o-prow", "o-ptrack", "o-ring", "o-marks", "sel", "o-gt", "o-gnum", "o-grades"] },
+  { name: "O picture", classes: ["o-art"] },
+  { name: "O motion", classes: ["o-arrive", "o-grid", "zin", "zout", "o-sw", "thumb", "o-btn", "o-tool", "o-tile"] },
+  { name: "O screens", classes: ["o-state", "home", "o-today", "o-art", "o-box", "o-bh", "o-head", "o-sw", "o-grid", "o-grades", "o-tile", "o-prow", "o-marks", "o-app", "o-nav"] },
 ];
 
 /** states any master may be in: they never make a rule a one-off */

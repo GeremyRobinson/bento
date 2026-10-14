@@ -49,7 +49,7 @@ describe("today's review", () => {
     expect(within(screen.getByRole("toolbar", { name: "Tools" })).getByRole("button", { name: "Hint, 4 left" })).toBeInTheDocument();
     expect(solveRun()).toBe(8);
     // done: the island and the done panel name the review, and a review offers no practice-again or retake
-    expect(document.querySelector(".island")).toHaveTextContent("Today's review");
+    expect(document.querySelector(".o-island")).toHaveTextContent("Today's review");
     const done = within(screen.getByRole("region", { name: "Done" }));
     expect(done.getByText("Done \u00b7 Today's review")).toBeInTheDocument();
     expect(done.getByLabelText("Score 4 of 4")).toBeInTheDocument();
