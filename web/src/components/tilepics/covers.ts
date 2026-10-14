@@ -13,22 +13,22 @@
  * `d` is a part's delay in seconds; `a` its move (styles: .cv-pop, .cv-rise, .cv-drop, .cv-grow, .cv-spin, .cv-sweep).
  */
 
-const r1 = (n: number) => Math.round(n * 10) / 10;
+export const r1 = (n: number) => Math.round(n * 10) / 10;
 type Part = string;
 /** an svg part with its role, move and delay */
-const at = (a: string, d: number) => (a ? ` data-a="${a}" style="--d:${d}s"` : "");
-const rect = (c: string, x: number, y: number, w: number, h: number, rx: number, a = "", d = 0): Part =>
+export const at = (a: string, d: number) => (a ? ` data-a="${a}" style="--d:${d}s"` : "");
+export const rect = (c: string, x: number, y: number, w: number, h: number, rx: number, a = "", d = 0): Part =>
   `<rect class="${c}" x="${r1(x)}" y="${r1(y)}" width="${r1(w)}" height="${r1(h)}" rx="${r1(rx)}"${at(a, d)}/>`;
-const circ = (c: string, cx: number, cy: number, r: number, a = "", d = 0): Part => `<circle class="${c}" cx="${r1(cx)}" cy="${r1(cy)}" r="${r1(r)}"${at(a, d)}/>`;
-const path = (c: string, dd: string, a = "", d = 0): Part => `<path class="${c}" d="${dd}"${at(a, d)}/>`;
-const line = (c: string, x1: number, y1: number, x2: number, y2: number, a = "", d = 0): Part =>
+export const circ = (c: string, cx: number, cy: number, r: number, a = "", d = 0): Part => `<circle class="${c}" cx="${r1(cx)}" cy="${r1(cy)}" r="${r1(r)}"${at(a, d)}/>`;
+export const path = (c: string, dd: string, a = "", d = 0): Part => `<path class="${c}" d="${dd}"${at(a, d)}/>`;
+export const line = (c: string, x1: number, y1: number, x2: number, y2: number, a = "", d = 0): Part =>
   `<line class="${c}" x1="${r1(x1)}" y1="${r1(y1)}" x2="${r1(x2)}" y2="${r1(y2)}"${at(a, d)}/>`;
-const poly = (c: string, pts: [number, number][], a = "", d = 0): Part => `<polygon class="${c}" points="${pts.map(p => p.map(r1).join(",")).join(" ")}"${at(a, d)}/>`;
-const group = (inner: string, a = "", d = 0, extra = "") => `<g${extra}${at(a, d)}>${inner}</g>`;
-const cover = (vb: string, inner: string) => `<svg class="v-pic cv" viewBox="${vb}" preserveAspectRatio="xMinYMid meet" aria-hidden="true">${inner}</svg>`;
+export const poly = (c: string, pts: [number, number][], a = "", d = 0): Part => `<polygon class="${c}" points="${pts.map(p => p.map(r1).join(",")).join(" ")}"${at(a, d)}/>`;
+export const group = (inner: string, a = "", d = 0, extra = "") => `<g${extra}${at(a, d)}>${inner}</g>`;
+export const cover = (vb: string, inner: string) => `<svg class="v-pic cv" viewBox="${vb}" preserveAspectRatio="xMinYMid meet" aria-hidden="true">${inner}</svg>`;
 
 /** A thick stroke drawn as a filled band of width w along the points (so the 3px outline rule holds at any size). */
-function band(pts: [number, number][], w: number): string {
+export function band(pts: [number, number][], w: number): string {
   const L: [number, number][] = [], R: [number, number][] = [];
   pts.forEach((p, i) => {
     const a = pts[Math.max(0, i - 1)]!, b = pts[Math.min(pts.length - 1, i + 1)]!;
@@ -38,12 +38,12 @@ function band(pts: [number, number][], w: number): string {
   return `M${[...L, ...R.reverse()].map(p => p.map(r1).join(" ")).join(" L")} Z`;
 }
 /** points along a cubic Bézier */
-const cubic = (p0: number[], p1: number[], p2: number[], p3: number[], n = 24): [number, number][] =>
+export const cubic = (p0: number[], p1: number[], p2: number[], p3: number[], n = 24): [number, number][] =>
   Array.from({ length: n + 1 }, (_, i) => {
     const t = i / n, u = 1 - t;
     return [u * u * u * p0[0]! + 3 * u * u * t * p1[0]! + 3 * u * t * t * p2[0]! + t * t * t * p3[0]!, u * u * u * p0[1]! + 3 * u * u * t * p1[1]! + 3 * u * t * t * p2[1]! + t * t * t * p3[1]!];
   });
-const quad = (p0: number[], p1: number[], p2: number[], n = 24): [number, number][] =>
+export const quad = (p0: number[], p1: number[], p2: number[], n = 24): [number, number][] =>
   Array.from({ length: n + 1 }, (_, i) => {
     const t = i / n, u = 1 - t;
     return [u * u * p0[0]! + 2 * u * t * p1[0]! + t * t * p2[0]!, u * u * p0[1]! + 2 * u * t * p1[1]! + t * t * p2[1]!];
@@ -52,7 +52,7 @@ const quad = (p0: number[], p1: number[], p2: number[], n = 24): [number, number
  * A part that travels along a path to where it is drawn (the last point): its own keyframes, as translates from each
  * point to the end, played once. Plain transforms, so every browser plays it.
  */
-function along(name: string, pts: [number, number][], secs: number, delay: number, inner: string, ease = "var(--m-ease)"): string {
+export function along(name: string, pts: [number, number][], secs: number, delay: number, inner: string, ease = "var(--m-ease)"): string {
   const [ex, ey] = pts[pts.length - 1]!, step = Math.max(1, Math.floor(pts.length / 12));
   const keys = pts.filter((_, i) => i % step === 0 || i === pts.length - 1)
     .map((p, i, a) => `${r1((i / (a.length - 1)) * 100)}%{transform:translate(${r1(p[0] - ex)}px,${r1(p[1] - ey)}px)}`).join("");
