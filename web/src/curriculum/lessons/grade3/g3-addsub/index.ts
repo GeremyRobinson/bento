@@ -77,7 +77,7 @@ export function addSubPicture(p: AddSubProblem, model: AnswerModel) {
   const { min, max, step } = fitRange([p.a, end], { maxTicks: 14, pad: 0, minStep: 10 });
   const hops: Hop[] = js.map((j, k) => ({ from: j.from, to: model.steps[k]!.slots[0]!.expected!, label: `${sign(p.s)}${j.v}`, beat: k + 1, start: k === 0 }));
   return buildNumberLine({
-    min, max, step, width: 540,
+    min, max, step,
     hops,
     marks: [{ v: p.a, label: String(p.a), beat: 0 }, { v: end, label: String(end), beat: js.length, cls: "dota" }],
     alt: `An open number line. Start at ${p.a}, then jump ${js.map(j => `${sign(p.s)}${j.v}`).join(", ")} to land on ${end}.`,

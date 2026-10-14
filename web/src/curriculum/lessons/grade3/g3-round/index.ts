@@ -82,7 +82,7 @@ function answers(p: RoundProblem): AnswerModel {
 export function roundPicture(p: RoundProblem, ans: number) {
   const { n, to } = p, { lo, hi, mid } = roundParts(p);
   return buildNumberLine({
-    min: lo, max: hi, step: to / 10, every: 5, width: 540,
+    min: lo, max: hi, step: to / 10, every: 5,
     marks: [
       { v: n, label: String(n), beat: 0, cls: "dota" },
       { v: lo, beat: 1 }, { v: hi, beat: 1 },
