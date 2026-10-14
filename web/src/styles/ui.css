@@ -281,19 +281,19 @@
 .v-ans .slot.empty.active{outline:var(--o-line-2) solid var(--v-acc);outline-offset:calc(var(--o-line-2) * -1)}
 .v-ask.no .v-ans .slot.empty.active{outline-color:var(--slip)}
 .v-ans .slot.empty .caret{display:none}
-.v-ask.no .v-ans .slot{outline-color:var(--slip);color:var(--slip)}
+.v-ask.no .v-ans .slot:not(.kept){outline-color:var(--slip);color:var(--slip)}
 .v-ask.shake .v-ans{animation:shake var(--o-change) var(--m-ease)}
 .v-ans.ok .slot{outline-color:var(--right);color:var(--right)}
 .v-ans.given .slot{outline-color:var(--v-line);color:var(--v-muted)}
-.v-ask.no .v-ans .slot::after,.v-ans.ok .slot::after{margin-left:auto;width:calc(var(--pill-size) - var(--o-pad2));height:calc(var(--pill-size) - var(--o-pad2));border-radius:var(--o-r1);display:grid;place-items:center;font-size:var(--o-t-body);color:var(--v-card)}
-.v-ask.no .v-ans .slot::after{content:"\2715";background:var(--slip)}
+.v-ask.no .v-ans .slot:not(.kept)::after,.v-ans.ok .slot::after{margin-left:auto;width:calc(var(--pill-size) - var(--o-pad2));height:calc(var(--pill-size) - var(--o-pad2));border-radius:var(--o-r1);display:grid;place-items:center;font-size:var(--o-t-body);color:var(--v-card)}
+.v-ask.no .v-ans .slot:not(.kept)::after{content:"\2715";background:var(--slip)}
 .v-ans.ok .slot::after{content:"\2713";background:var(--right)}
 /* a step with boxes inside its sum keeps them in the sum, on the answer box's row */
 .v-ask>.ask{--slot:var(--o-ans-h);--ask:var(--o-t-ans);display:flex;justify-content:flex-start;padding:0 var(--gap);font-size:var(--o-t-ans);font-weight:var(--w-bold);font-variant-numeric:tabular-nums}
 .v-ask .ask .slot{border-radius:var(--o-r1);border:var(--o-line-2) solid var(--v-acc);background:var(--v-card);color:var(--v-ink);min-width:96px}
 .v-ask .ask .slot.empty{border-color:var(--v-line);background:var(--v-page)}
 .v-ask .ask .slot.active{border-color:var(--v-acc);background:var(--v-card)}
-.v-ask.no .ask .slot{border-color:var(--slip);color:var(--slip)}
+.v-ask.no .ask .slot:not(.kept){border-color:var(--slip);color:var(--slip)}
 .v-ask .ask.ok{color:var(--right)}
 .v-ask .ask.given{color:var(--v-muted)}
 /* the keys and the four round tools beside them, one key tall each */

@@ -99,10 +99,12 @@ export function spoken(text: string): string {
     .replace(/d\/dx/g, " the derivative with respect to x of ")
     .replace(new RegExp(`log(${SUBS})`, "g"), (_, b: string) => `log base ${map(b, SUB)} of `)
     .replace(new RegExp(`([A-Za-z])(${SUBS})`, "g"), (_, a: string, b: string) => `${a} sub ${map(b, SUB)}`)
+    // ⁻¹ after a function's name is its inverse, never a power: "f inverse", "sine inverse"
+    .replace(/\b(sin|cos|tan|[fgh])⁻¹/g, (_, f: string) => `${({ sin: "sine", cos: "cosine", tan: "tangent" } as Record<string, string>)[f] ?? f} inverse`)
     .replace(/²/g, " squared").replace(/³/g, " cubed")
     .replace(new RegExp(SUPS, "g"), b => ` to the power ${map(b, SUP)}`)
     .replace(/\^\(?(-?[\w.]+)\)?/g, " to the power $1")
-    .replace(/′/g, " prime")
+    .replace(/′\(/g, " prime of (").replace(/′/g, " prime")
     .replace(/√/g, "the square root of ")
     .replace(/π/g, "pi").replace(/°/g, " degrees")
     .replace(/\b(sin|cos|tan)\b/g, w => ({ sin: "sine", cos: "cosine", tan: "tangent" })[w]!)

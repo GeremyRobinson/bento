@@ -1,3 +1,5 @@
+import { eq, parseNumber } from "../engine/evaluation/numbers";
+import { expectedValues } from "../engine/evaluation/steps";
 import { Pill } from "../components/primitives/Pill";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { playTone, readAloudOn, readSettings, speak, spokenOf } from "../app/settings";
@@ -236,6 +238,10 @@ export function Practice() {
   const hintShown = !fbAway && fb?.type === "hint";
   const askNo = (!fbAway && fb?.type === "bad" && (!fb.missed || (skill && s.solved)))
     || (hintShown && !s.solved && s.misses > 0 && !Object.values(s.values).some(v => v));
+  // a miss on a step with several boxes: the boxes already right are not marked wrong (Review copy-05: "One box is right" with both red)
+  // (the same rule as the nudge's words, so the colours and the words always agree)
+  const want = askNo && step && !step.choices ? expectedValues(step) : {};
+  const kept = Object.keys(want).length > 1 ? Object.keys(want).filter(k => eq(parseNumber(s.values[k]), want[k])) : [];
   const typedMiss = skill && missed ? s.mistakes[s.mistakes.length - 1]?.typed : undefined;
   const doneLines = steps.map((_, k) => s.work[k]).filter((w, k) => !!w && (k < here));
   // the step bar's marks: one per step (one per problem in a skill check), the one you're on solid and long
@@ -277,7 +283,7 @@ export function Practice() {
               {/* the check asks what to do, never "Type the final answer." (R-W1); a word problem asks its own question */}
               <div className="v-q"><span className="q2">{it.story ? storyAsk(it) : `What is ${problemText(it)}?`}</span></div>
               <div className="v-ans" key={`${at}-${s.mistakes.length}`}>
-                <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={onSlot} />
+                <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={onSlot} kept={kept} />
               </div>
             </> : <>
               <div className="v-q">
@@ -287,9 +293,9 @@ export function Practice() {
                 {step.note && !skill && <span className="note"><Rich text={step.note} /></span>}
               </div>
               {solo ? <div className="v-ans" key={`${at}-${s.mistakes.length}`}>
-                <MathLine math={[solo.slot]} values={s.values} active={s.active} onSlot={onSlot} />
+                <MathLine math={[solo.slot]} values={s.values} active={s.active} onSlot={onSlot} kept={kept} />
               </div> : <div className="ask" key={`${at}-${s.mistakes.length}`}>
-                <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={onSlot} />
+                <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={onSlot} kept={kept} />
               </div>}
             </>}
           </> : s.pick ? <div className="v-q"><span className="q">You plan this one: tap the step that comes next.</span></div>

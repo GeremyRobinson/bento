@@ -417,7 +417,8 @@ export function check(s: PracticeSession, progress: Progress, deps: Deps): Pract
   const msg = cat === "concept" ? r.message
     : step.look ?? SAY[cat] ?? `${nudge(expected, values, band)} ${next.hinted ? step.hint : `Read the step again.`}`.trim();
   const lines: string[] = [];
-  if (rushed) lines.push("Slow down a little and read the step again.");
+  // a fast miss asks to slow down; it never says "read the step again" twice (Review copy-05)
+  if (rushed) lines.push(/read the step again/i.test(msg) ? "Slow down a little." : "Slow down a little and read the step again.");
   // no Show me in v2 (spec P10, guidelines §7): after two misses, while hints are left, point at the bulb
   if (next.misses >= 2 && next.hintsLeft > 0) lines.push("Stuck? Tap the bulb for a hint.");
   // one box: it empties for the next try, so the "?" comes back (v2 spec P8); a step with several keeps what was typed
