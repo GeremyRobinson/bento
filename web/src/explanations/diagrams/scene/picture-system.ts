@@ -61,3 +61,41 @@ export const roomLeft = (room: number, chars: number, size: number, floor = 14):
 export const thinOut = (...rooms: string[]): Record<string, string> => ({
   fillOpacity: `clamp(0, calc(min(${rooms.join(", ")}) * 1000), 1)`,
 });
+
+/** A text class's drawing size and its floor on screen (styles/picture-system.css): a label 20 and never under 20px,
+ * other text never under 14px. */
+export const textSize = (cls = ""): [number, number] => {
+  const c = ` ${cls} `, lbl = c.includes(" lbl "), big = c.includes(" big ");
+  return lbl ? [big ? 22 : PIC.label, PIC.label] : big ? [28, PIC.label] : c.includes(" sm ") ? [15, 14] : c.includes(" xs ") ? [12, 14] : [17, 14];
+};
+
+/**
+ * fitIn for a text that keeps its class's own size token (so a tablet still holds it at the text zoom): it draws at its
+ * class's size while `chars` characters fit `room` units, then shrinks to fit, never under 14px on screen.
+ */
+export const fitClass = (room: number, chars: number, cls = ""): Record<string, string> => {
+  const c = ` ${cls} `, lbl = c.includes(" lbl "), big = c.includes(" big ");
+  const token = lbl ? (big ? "--d-text-lg" : "--pic-label") : big ? "--d-text-xl" : c.includes(" sm ") ? "--d-text-sm" : c.includes(" xs ") ? "--d-text-xs" : "--d-text";
+  const floor = textSize(cls)[1];
+  return {
+    fontSize: `max(calc(14px * var(--px, 0)), min(max(var(${token}), calc(${floor}px * var(--px, 0))), calc((${Math.round(room * 10) / 10} - 4 * var(--px, 0)) / ${Math.round(chars * 0.62 * 100) / 100} * 1px)))`,
+  };
+};
+
+/**
+ * Lines of text stacked `pitch` apart (one pitch, or one per gap) that stay apart on a phone: where the floor grows two
+ * neighbours past their pitch, the lines below move down by what they lack, and the stack keeps its `hold` point still
+ * (its first line "top", its middle "mid", its last line "bottom"), so a column beside a picture stays centred on it.
+ * Returns each line's `vars` (one per class in `cls`). On a tablet nothing moves.
+ */
+export const stackRows = (cls: string[], pitch: number | number[], hold: "top" | "mid" | "bottom" = "top"): Record<string, string>[] => {
+  const H = (c: string) => { const [s, f] = textSize(c); return `max(${s}, ${f} * var(--px, 0))`; };
+  const lack = cls.slice(1).map((c, k) => `max(0, 0.6 * (${H(cls[k]!)} + ${H(c)}) - ${Array.isArray(pitch) ? pitch[k]! : pitch})`);
+  const share = hold === "top" ? 0 : hold === "mid" ? 0.5 : 1;
+  return cls.map((_, i): Record<string, string> => {
+    const terms = lack.map((l, k) => ({ w: (k < i ? 1 : 0) - share, l })).filter(x => x.w);
+    if (!terms.length) return {};
+    const sum = terms.map((x, k) => `${x.w < 0 ? (k ? " - " : "-") : k ? " + " : ""}${Math.abs(x.w)} * ${x.l}`).join("");
+    return { transform: `translateY(calc((${sum}) * 1px))` };
+  });
+};
