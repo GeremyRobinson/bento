@@ -155,9 +155,9 @@ function ReviewToday() {
 }
 
 /** Tile, the cover kind: a picture on top, the name, then a small ring and one word */
-export function Cover({ pic, name, p, word, tone, sel, disabled, onClick, label }: { pic?: string; name: string; p: number; word: string; tone?: string; sel?: boolean; disabled?: boolean; onClick: () => void; label: string }) {
+export function Cover({ pic, name, p, word, tone, sel, current, disabled, onClick, label }: { pic?: string; name: string; p: number; word: string; tone?: string; sel?: boolean; current?: boolean; disabled?: boolean; onClick: () => void; label: string }) {
   return (
-    <button className={`o-tile o-cover${sel ? " sel" : ""}`} disabled={disabled} onClick={onClick} aria-label={label}>
+    <button className={`o-tile o-cover${sel ? " sel" : ""}`} disabled={disabled} onClick={onClick} aria-label={label} aria-current={current || undefined}>
       <span className="o-cpw"><TilePic svg={pic} /></span>
       <span className="o-tx"><span className="o-nm">{name}</span><span className="o-foot"><ORing p={p} /><span className={`o-st${tone ? ` ${tone}` : ""}`}>{word}</span></span></span>
     </button>
@@ -263,7 +263,9 @@ function Box({ g, pick, choose }: { g: number; pick?: string; choose: (id: strin
       })
       : units.map(u => {
         const n = checkedCount(progress, u.entries), m = u.entries.length;
-        return <Cover key={u.name} pic={chapterPic(g, u.name)} name={u.name} p={m ? n / m : 0} word={n === m ? "All done" : `${n}/${m} done`} tone={n === m ? "done" : undefined}
+        // the chapter that holds the picked lesson or chapter test keeps the outline, so you can see where you are (v67.2)
+        const here = u.entries.some(c => c.id === pick) || pick === TEST_PICK + testKey(g, u.name);
+        return <Cover key={u.name} sel={here} current={here} pic={chapterPic(g, u.name)} name={u.name} p={m ? n / m : 0} word={n === m ? "All done" : `${n}/${m} done`} tone={n === m ? "done" : undefined}
           onClick={() => setBoxView(u.name, "zin")} label={`${u.name}, ${n} of ${m} lessons done`} />;
       });
     else if (tab === "test") tiles = unit ? testTile(testKey(g, unit.name), `${unit.name} test`) : <>

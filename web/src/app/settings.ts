@@ -4,8 +4,8 @@
 export interface Settings {
   /** light, dark, or follow the device (UI model v63: Look) */
   look: "auto" | "light" | "dark";
-  /** larger text and controls, for anyone who finds the standard size small */
-  text: "standard" | "large" | "largest";
+  /** text size (UI model v67.1): small, medium ("standard") or large; it moves the body and small text steps app-wide */
+  text: "small" | "standard" | "large";
   /** stronger lines and darker grey text */
   contrast: boolean;
   /** no sliding, popping or auto-playing pictures */
@@ -33,7 +33,8 @@ export function readSettings(raw: unknown): Settings {
   const r = raw as Partial<Record<keyof Settings, unknown>>;
   return {
     look: r.look === "light" || r.look === "dark" ? r.look : "auto",
-    text: r.text === "large" || r.text === "largest" ? r.text : "standard",
+    // "largest" came from the old three sizes; it is the new Large
+    text: r.text === "small" ? "small" : r.text === "large" || r.text === "largest" ? "large" : "standard",
     contrast: r.contrast === true,
     motion: r.motion === "reduce" ? "reduce" : "system",
     colorSafe: r.colorSafe === true,

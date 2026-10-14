@@ -97,8 +97,9 @@ describe("every screen renders inside the Screen master", () => {
 
   it("Find my level's answer sits in a fit screen", () => {
     renderApp({ grade: 5, chosen: true });
-    // v63: Find my level is a row in Settings
+    // v67.1: Find my level is a Settings tile that opens its own page
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Find my level/ }));
     fireEvent.click(screen.getByRole("button", { name: "Start" }));
     solveRun();
     expect(document.querySelector("#app > .screen.fit.placed")).not.toBeNull();
