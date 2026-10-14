@@ -4,10 +4,11 @@ import "./src/styles/index.css";
 import { COVERS } from "./src/components/tilepics/covers";
 import { COVERS2 } from "./src/components/tilepics/covers2";
 import { PHOS, HAND, KEEP } from "./coversheet-phos";
+import { ICONS } from "./coversheet-icons";
 
 const q = new URLSearchParams(location.search), keys = q.get("keys")?.split("|");
 const src = q.get("src"), FEW = { ...KEEP, "1:Place value": HAND["1:Place value"]!, "10:Circles": HAND["10:Circles"]!, "11:Probability": HAND["11:Probability"]!, "3:Fractions": PHOS["3:Fractions"]!, "7:Probability": PHOS["7:Probability"]!, "6:Expressions and equations": PHOS["6:Expressions and equations"]! };
-const which = src === "few" ? FEW : src === "keep" ? KEEP : src === "phos" ? PHOS : src === "hand" ? HAND : keys ? Object.fromEntries(Object.entries({ ...COVERS, ...COVERS2 }).filter(([k]) => keys.includes(k))) : q.get("set") === "1" ? COVERS : COVERS2;
+const which = src === "icons" ? Object.fromEntries(Object.entries({ ...ICONS, "0:Counting": KEEP["0:Counting"]!, "3:Multiplication and division": KEEP["3:Multiplication and division"]!, "12:Integrals": KEEP["12:Integrals"]!, "1:Place value": HAND["1:Place value"]!, "2:Place value": HAND["1:Place value"]!, "3:Place value": HAND["1:Place value"]!, "10:Circles": HAND["10:Circles"]!, "11:Probability": HAND["11:Probability"]! }).sort(([a], [b]) => +a.split(":")[0]! - +b.split(":")[0]! || a.localeCompare(b))) : src === "few" ? FEW : src === "keep" ? KEEP : src === "phos" ? PHOS : src === "hand" ? HAND : keys ? Object.fromEntries(Object.entries({ ...COVERS, ...COVERS2 }).filter(([k]) => keys.includes(k))) : q.get("set") === "1" ? COVERS : COVERS2;
 const gname = (g: number) => (g === 0 ? "Kindergarten" : `${g}${g === 1 ? "st" : g === 2 ? "nd" : g === 3 ? "rd" : "th"} grade`);
 function Sheet() {
   return (
