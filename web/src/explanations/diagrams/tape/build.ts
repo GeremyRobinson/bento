@@ -323,7 +323,9 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
     push({ type: "path", d: `M${r1(xa)} ${r1(y + tick)} L${r1(xa)} ${r1(y)} L${r1(xb)} ${r1(y)} L${r1(xb)} ${r1(y + tick)}`, cls: "ax thin", enter: "draw", ...when(run.from, run.until) });
     const tw = textWidth(b.text, FS.bracket);
     const cx = Math.min(Math.max((xa + xb) / 2, M + tw / 2), L.width - M - tw / 2);
-    push({ type: "text", x: r1(cx), y: r1(above ? y - 11 : y + 12), text: b.text, cls: b.acc ? "sm acc" : "sm", enter: "rise", delay: 0.2, ...when(run.from, run.until) });
+    // the text stands on a bracket above its row and hangs from one below, so the phone floor grows it away from the
+    // bars and the row's own labels (g7-pctchange's "15 ÷ 50 = 0.3" under its "+30%")
+    push({ type: "text", x: r1(cx), y: r1(above ? y - 3 : y + 3), text: b.text, cls: `${b.acc ? "sm acc" : "sm"} ${above ? "up" : "down"}`, enter: "rise", delay: 0.2, ...when(run.from, run.until) });
   }
 
   for (const g of spec.guides ?? []) {

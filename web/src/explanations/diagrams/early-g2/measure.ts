@@ -3,6 +3,7 @@ import type { SceneDiagram } from "../scene/schema";
 import { arc, frame, path, polar, seg, t, type Draft, type Pt } from "../geo/kit";
 import { circle, line, rect } from "./kit";
 import { tw } from "./blocks";
+import { roomLeft } from "../scene/picture-system";
 
 // ---------------------------------------------------------------- clock
 
@@ -142,6 +143,7 @@ const BW = 56, BG = 48, U = 22;
 // an odd axis number fades out once the picture is drawn below 0.6 of its size (--px, the units per screen pixel,
 // above 1/0.6): its 12px floor would stack it on its neighbours, so the axis reads 0, 2, 4 and the grid keeps every line
 const ODD_AXIS = { opacity: "clamp(0, calc((1.667 - var(--px, 0)) * 1000), 1)" };
+const EVEN_AXIS = { opacity: "clamp(0, calc((2.5 - var(--px, 0)) * 1000), 1)" };
 
 export function buildBarGraph(spec: BarGraphSpec): SceneDiagram {
   const { values, beats } = spec;
@@ -151,14 +153,22 @@ export function buildBarGraph(spec: BarGraphSpec): SceneDiagram {
   const items: Draft[] = [];
   for (let v = 0; v <= top; v++) {
     if (v) items.push(line(0, y(v), W, y(v), "grid"));
-    items.push(t(-14, y(v), String(v), "xs", v % 2 ? { vars: ODD_AXIS } : {}));
+    // on a phone every other number goes first, then all but every fourth; 0 sits by the first name, so it goes with the odd ones
+    items.push(t(-14, y(v), String(v), "xs", v % 2 || v === 0 ? { vars: ODD_AXIS } : v % 4 ? { vars: EVEN_AXIS } : {}));
   }
   items.push(line(0, 0, W, 0, "ax"), line(0, 0, 0, y(top) - 8, "ax"));
+  // the names hang under their bars; on a phone where two neighbours would touch, every other name drops a line, and
+  // the sentence under the graph drops with them
+  const most = Math.max(...spec.names.map(n => [...n].length));
+  const line14 = "1.25 * max(15, 14 * var(--px, 0))";
+  const drop = `clamp(0, -1000 * ${roomLeft(BW + BG, most, 15)}, 1) * ${line14}`;
   values.forEach((v, i) => {
     items.push(rect(bx(i), y(v), BW, v * U, "bar", { enter: "growy", delay: 0.1 * i }, 4));
-    items.push(t(bx(i) + BW / 2, 22, spec.names[i]!, "sm"));
+    items.push(t(bx(i) + BW / 2, 10, spec.names[i]!, "sm down", i % 2 ? { vars: { transform: `translateY(calc(${drop} * 1px))` } } : {}));
   });
-  items.push(t(W / 2, y(top) - 30, spec.title, "lbl pw"));
+  const under = { transform: `translateY(calc((${drop} + ${line14} - 18.75) * 1px))` };
+  // the title stands clear of the top axis number at whatever size the phone floor draws it
+  items.push(t(W / 2, y(top) - 6, spec.title, "lbl pw up", { vars: { transform: "translateY(calc(-0.6 * max(14, 14 * var(--px, 0)) * 1px))" } }));
   if (!spec.bare) {
     const read = (i: number, beat: number, until?: number) => {
       const v = values[i]!;
@@ -179,10 +189,10 @@ export function buildBarGraph(spec: BarGraphSpec): SceneDiagram {
       items.push(rect(bx(spec.first) - 5, y(a) - 5, BW + 10, a * U + 5, "hlline", { from: beats.combine, enter: "fade" }, 6));
       items.push(rect(bx(spec.second) - 5, y(b) - 5, BW + 10, b * U + 5, "hlline", { from: beats.combine, enter: "fade" }, 6));
     }
-    const ty = 62;
-    items.push(t(W / 2, ty, spec.text.first, "lbl", { from: beats.first, until: beats.second - 1, enter: "rise", delay: 0.5 }));
-    items.push(t(W / 2, ty, spec.text.second, "lbl", { from: beats.second, until: beats.combine - 1, enter: "rise", delay: 0.5 }));
-    items.push(t(W / 2, ty, spec.text.combine, "lbl big acc", { from: beats.combine, enter: "rise", delay: 0.4 }));
+    const ty = 44;
+    items.push(t(W / 2, ty, spec.text.first, "lbl down", { from: beats.first, until: beats.second - 1, enter: "rise", delay: 0.5, vars: under }));
+    items.push(t(W / 2, ty, spec.text.second, "lbl down", { from: beats.second, until: beats.combine - 1, enter: "rise", delay: 0.5, vars: under }));
+    items.push(t(W / 2, ty, spec.text.combine, "lbl big acc down", { from: beats.combine, enter: "rise", delay: 0.4, vars: under }));
   }
-  return frame("early-g2-bar-graph", items, spec.alt, 14, { w: Math.max(320, tw(spec.title) + 30) });
+  return frame("early-g2-bar-graph", items, spec.alt, 14, { w: Math.max(320, tw(spec.title) + 30), grow: 2 });
 }

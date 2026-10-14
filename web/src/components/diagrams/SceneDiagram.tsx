@@ -27,7 +27,7 @@ export function SceneDiagram({ diagram: d, at, fit = false }: { diagram: Scene; 
     const panel = !!el.closest(PANEL), room = panel && el.parentElement ? el.parentElement : el;
     const measure = () => {
       const r = layoutRect(room);
-      if (r.width > 0 && r.height > 0) setFrame({ d, box: floorBox(el, d.items, box0, [r.width, r.height]), size: [r.width, r.height], text, panel });
+      if (r.width > 0 && r.height > 0) setFrame({ d, box: floorBox(el, d.items, box0, [r.width, r.height], d.grow ?? GROW), size: [r.width, r.height], text, panel });
     };
     measure();
     if (typeof ResizeObserver === "undefined") return;
@@ -120,9 +120,9 @@ export const dotsOnTop = (items: SceneItem[]): SceneItem[] => [...items.filter(i
  * keeps its screen size and the shapes get the room that is left, so no label is ever cut by the box's edge
  * (Review g5 re-walk blocker 2). A few rounds settle it; the frame never shrinks below the plain one.
  */
-function floorBox(svg: SVGSVGElement, items: SceneItem[], box0: Box, size: [number, number]): Box {
+function floorBox(svg: SVGSVGElement, items: SceneItem[], box0: Box, size: [number, number], grow: number): Box {
   let box = box0;
-  for (let k = 0; k < 4; k++) {
+  for (let k = 0; k < 6; k++) {
     const f = framed(box, size), zoom = Math.min(size[0] / f.w, size[1] / f.h);
     if (zoom >= 1) return box;
     const next = contentBox(svg, items, 1 / zoom);
@@ -130,17 +130,23 @@ function floorBox(svg: SVGSVGElement, items: SceneItem[], box0: Box, size: [numb
     // text that alone outgrows the box (a column of big digits in a short strip) would chase its own growth and shrink
     // the shapes to nothing, so the frame never grows past GROW times the plain one: past that the text overlaps a
     // little instead of the picture vanishing
-    const grown = cap(union(box0, next), box0);
+    const grown = cap(union(box0, next), box0, grow);
     if (Math.abs(grown.w - box.w) < 0.5 && Math.abs(grown.h - box.h) < 0.5) return grown;
     box = grown;
   }
   return box;
 }
-const GROW = 1.35;
-const cap = (b: Box, b0: Box): Box => {
-  const w = Math.min(b.w, b0.w * GROW), h = Math.min(b.h, b0.h * GROW);
-  // keep the plain frame centred in the capped one
-  return { x: b.w > w ? b0.x - (w - b0.w) / 2 : b.x, y: b.h > h ? b0.y - (h - b0.h) / 2 : b.y, w, h };
+const GROW = 1.5;
+const cap = (b: Box, b0: Box, grow: number): Box => {
+  const w = Math.min(b.w, b0.w * grow), h = Math.min(b.h, b0.h * grow);
+  // keep the plain frame centred in the capped one, but never show empty room on a side the text didn't grow into
+  // (labels that hang down grow the picture downwards only)
+  const fit = (c: number, lo: number, hi: number) => Math.min(Math.max(c, lo), hi);
+  return {
+    x: b.w > w ? fit(b0.x - (w - b0.w) / 2, b.x, b.x + b.w - w) : b.x,
+    y: b.h > h ? fit(b0.y - (h - b0.h) / 2, b.y, b.y + b.h - h) : b.y,
+    w, h,
+  };
 };
 const union = (a: Box, b: Box): Box => {
   const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y);

@@ -3,6 +3,7 @@
 // which the lesson computes from its problem.
 import type { SceneDiagram } from "../scene/schema";
 import { frame, t, type Draft } from "../geo/kit";
+import { PIC, roomLeft, thinOut } from "../scene/picture-system";
 
 /** "47,382": a whole number with thousands commas. */
 export const commas = (n: number) => n.toLocaleString("en-US");
@@ -51,15 +52,24 @@ export function buildRounding(s: RoundingSpec): SceneDiagram {
     if (v === s.place) items.push({ type: "rect", x, y: 0, w: BOX, h: CH, rx: 8, cls: "sq", from: s.beats.place, enter: "pop" } as Draft);
     if (v * 10 === s.place) items.push({ type: "rect", x, y: 0, w: BOX, h: CH, rx: 8, cls: "sq big", from: s.beats.next, enter: "pop" } as Draft);
   });
+  // the place names stand on the chart (.up) and stack upwards by their size on screen, so the phone floor never runs one
+  // line into the next. The place being rounded to stands above the others, so its name may run wider than its column;
+  // the name of the place after it stays; any other name fades on a phone where it would run into its neighbour's
+  const lift = (xs: number, lbl: number) => ({ transform: `translateY(calc(-1 * (${xs} * 1.25 * max(14, 14 * var(--px, 0)) + ${lbl} * 1.25 * max(${PIC.label}, ${PIC.label} * var(--px, 0))) * 1px))` });
   digits.forEach((d, i) => {
-    const v = valueOf(i), name = placeName(v);
-    const head = v === s.place ? "xs lbl" : "xs";
-    name.forEach((w, k) => items.push(t(cx(i), -12 - (name.length - 1 - k) * 14, w, head, { enter: "fade", delay: i * 0.05 })));
+    const v = valueOf(i), name = placeName(v), mine = v === s.place, involved = mine || v * 10 === s.place;
+    name.forEach((w, k) => {
+      const below = name.length - 1 - k;
+      // (above its neighbours' names only: the columns further off are a whole column away)
+      const near = Math.max(...[i - 1, i + 1].filter(j => j >= 0 && j < L).map(j => placeName(valueOf(j)).length));
+      const vars = mine ? lift(near, below) : { ...lift(below, 0), ...(involved ? {} : thinOut(roomLeft(CW - 4, Math.max(...name.map(n => n.length)), 12))) };
+      items.push(t(cx(i), -8, w, mine ? "xs lbl up" : "xs up", { enter: "fade", delay: i * 0.05, vars }));
+    });
     items.push(t(cx(i), CH / 2, d, "big", { enter: "rise", delay: i * 0.05 }));
   });
 
   // the number line under the chart: lo to hi in tenths of the place
-  const y = CH + 92, x0 = 24, x1 = W - 24;
+  const y = CH + 76, x0 = 24, x1 = W - 24;
   const X = (v: number) => x0 + ((v - s.lo) / (s.hi - s.lo)) * (x1 - x0);
   const at = { from: s.beats.line, enter: "fade" as const };
   items.push({ type: "line", x1: x0 - 14, y1: y, x2: x1 + 14, y2: y, cls: "ax", ...at } as Draft);
@@ -70,17 +80,18 @@ export function buildRounding(s: RoundingSpec): SceneDiagram {
   }
   const mid = s.lo + s.place / 2;
   items.push({ type: "line", x1: X(mid), y1: y - 12, x2: X(mid), y2: y + 12, cls: "ln2", from: s.beats.next, enter: "draw" } as Draft);
-  items.push(t(X(mid), y + 26, commas(mid), "xs acc", { from: s.beats.next, enter: "rise" }));
+  // numbers under the line hang from it and numbers over it stand on it, so the phone floor grows them away from it
+  items.push(t(X(mid), y + 14, commas(mid), "xs acc down", { from: s.beats.next, enter: "rise" }));
   for (const v of [s.lo, s.hi]) {
     const isResult = v === s.result;
-    items.push(t(X(v), y + 26, commas(v), "sm", { ...at, ...(isResult ? { until: s.beats.round - 1 } : {}) }));
-    if (isResult) items.push(t(X(v), y + 26, commas(v), "lbl acc", { from: s.beats.round, enter: "pop" }));
+    items.push(t(X(v), y + 14, commas(v), "sm down", { ...at, ...(isResult ? { until: s.beats.round - 1 } : {}) }));
+    if (isResult) items.push(t(X(v), y + 14, commas(v), "lbl acc down", { from: s.beats.round, enter: "pop" }));
   }
   // the number itself, then its trip to the nearer end
   items.push({ type: "line", x1: X(s.n), y1: y, x2: X(s.result), y2: y, cls: "hl", from: s.beats.round, enter: "growx" } as Draft);
   items.push({ type: "circle", cx: X(s.result), cy: y, r: 8, cls: "dota", from: s.beats.round, enter: "pop", delay: 0.4 } as Draft);
   items.push({ type: "circle", cx: X(s.n), cy: y, r: 7, cls: "dotp", from: s.beats.line, enter: "pop", delay: 0.3 } as Draft);
-  items.push(t(X(s.n), y - 24, commas(s.n), "lbl", { from: s.beats.line, enter: "rise", delay: 0.4 }));
+  items.push(t(X(s.n), y - 12, commas(s.n), "lbl up", { from: s.beats.line, enter: "rise", delay: 0.4 }));
 
   return frame("place-value", items, s.alt, 14, { w: W + 28 });
 }

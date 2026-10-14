@@ -94,7 +94,7 @@ function move(it: Draft, dx: number, dy: number): SceneItem {
 }
 
 /** Frames a drafted picture: everything moves so the outermost shape or label sits `pad` from the edge. */
-export function frame(family: string, items: Draft[], alt: string, pad = 14, min: { w?: number; h?: number } = {}): SceneDiagram {
+export function frame(family: string, items: Draft[], alt: string, pad = 14, min: { w?: number; h?: number; grow?: number } = {}): SceneDiagram {
   const pts = items.flatMap(pointsOf);
   let x0 = Math.min(...pts.map(p => p[0])), x1 = Math.max(...pts.map(p => p[0]));
   let y0 = Math.min(...pts.map(p => p[1])), y1 = Math.max(...pts.map(p => p[1]));
@@ -102,7 +102,7 @@ export function frame(family: string, items: Draft[], alt: string, pad = 14, min
   if (min.w && x1 - x0 + 2 * pad < min.w) { const extra = (min.w - (x1 - x0 + 2 * pad)) / 2; x0 -= extra; x1 += extra; }
   if (min.h && y1 - y0 + 2 * pad < min.h) { const extra = (min.h - (y1 - y0 + 2 * pad)) / 2; y0 -= extra; y1 += extra; }
   const dx = pad - x0, dy = pad - y0;
-  return { kind: "scene", family, width: Math.ceil(x1 - x0 + 2 * pad), height: Math.ceil(y1 - y0 + 2 * pad), items: items.map(it => move(it, dx, dy)), alt };
+  return { kind: "scene", family, width: Math.ceil(x1 - x0 + 2 * pad), height: Math.ceil(y1 - y0 + 2 * pad), items: items.map(it => move(it, dx, dy)), alt, ...(min.grow ? { grow: min.grow } : {}) };
 }
 
 /** Text helper: `t(x, y, "70°", "lbl acc", { from: 2, enter: "rise" })`. */
