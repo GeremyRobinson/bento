@@ -103,9 +103,9 @@ const G4_MEASURE = cover("4 20 152 68", rect("s", 70, 54, 84, 18, 3, "slide", 0.
   rect("m", 8, 24, 68, 62, 14) + circ("s", 42, 55, 14) + rect("f", 150, 50, 6, 26, 2, "slide", 0.1));
 
 // railway tracks: two parallel rails, and a road crossing them
-const G4_LINES = cover("4 6 152 90", path("e", band([[4, 70], [156, 30]], 30)) +
+const G4_LINES = cover("4 6 152 90", path("e", band([[8, 68.9], [152, 31.1]], 30)) +
   Array.from({ length: 7 }, (_, i) => { const x = 18 + i * 21; const y = 70 - (x - 4) * 40 / 152; return path("s", band([[x - 6, y - 22], [x + 6, y + 22]], 6)); }).join("") +
-  line("o", 4, 58, 156, 18, "rise", 0) + line("o", 4, 82, 156, 42, "rise", 0.2));
+  line("o", 6, 57.5, 154, 18.5, "rise", 0) + line("o", 6, 81.5, 154, 42.5, "rise", 0.2));
 
 // ---- 6th grade -------------------------------------------------------------------------------------------------------
 
@@ -119,7 +119,7 @@ const G6_EXPR = cover("8 10 144 86", poly("s", [[80, 30], [66, 90], [94, 90]]) +
   path("o", "M20 30 L10 56 H42 Z") + path("o", "M140 30 L118 56 H150 Z") + rect("m", 14, 42, 22, 14, 3, "drop", 0.1) + rect("m", 124, 42, 10, 14, 3, "drop", 0.3) + rect("m", 136, 42, 10, 14, 3, "drop", 0.45));
 
 // a box, open: the faces you measure
-const G6_GEO = cover("14 6 132 90", poly("s", [[24, 40], [104, 40], [104, 92], [24, 92]]) + poly("m", [[104, 40], [136, 22], [136, 74], [104, 92]]) +
+const G6_GEO = cover("11 4 138 94", poly("s", [[24, 40], [104, 40], [104, 92], [24, 92]]) + poly("m", [[104, 40], [136, 22], [136, 74], [104, 92]]) +
   poly("e", [[24, 40], [104, 40], [136, 22], [56, 22]]) + poly("s", [[24, 40], [56, 22], [44, 8], [12, 26]], "grow", 0.1) + poly("s", [[104, 40], [136, 22], [146, 36], [114, 54]], "grow", 0.3));
 
 // water bottles filled to different levels, and the level they'd all share
