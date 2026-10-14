@@ -42,18 +42,18 @@ function explain(p: ExponentOrderProblem, model: AnswerModel) {
   const { a, n, b, c } = p, E = expectedOf(model, "exp"), M = expectedOf(model, "mul"), S = expectedOf(model, "add");
   return chainExplanation({
     heading: "Exponents come before × and +",
-    idea: ["An exponent is a short way to write repeated multiplying, so it goes first."],
+    idea: ["An exponent means multiply the number by itself, and it comes before × and +."],
     statement: [...pow(a, n), op("+"), num(b), op("×"), num(c)],
     alt: `${power(a, n)} + ${b} × ${c}: ${E} + ${M} = ${S}.`,
     diagram: exponentOrderPicture({ a, n, b, c, E, M, S }),
     beats: [
-      { id: "count", narration: `The small ${n} counts the ${a}s: ${power(a, n)} is ${n} ${a}s multiplied together.`, math: [...pow(a, n), op("="), text(Array(n).fill(a).join(" × "))],
+      { id: "count", narration: `The small ${n} says how many ${a}s to multiply together.`, math: [...pow(a, n), op("="), text(Array(n).fill(a).join(" × "))],
         lines: [], answerStep: "count", result: n },
-      { id: "exp", narration: `Exponent first: ${power(a, n)} = ${Array(n).fill(a).join(" × ")} = ${E}.`, math: [...pow(a, n), op("="), num(E)],
+      { id: "exp", narration: "Work out the exponent first.", math: [...pow(a, n), op("="), num(E)],
         lines: [[mark(pow(a, n)), op("+"), num(b), op("×"), num(c)]], answerStep: "exp", result: E },
-      { id: "mul", narration: `Then multiply: ${b} × ${c} = ${M}.`, math: [num(b), op("×"), num(c), op("="), num(M)],
+      { id: "mul", narration: "Multiply next, before adding.", math: [num(b), op("×"), num(c), op("="), num(M)],
         lines: [[num(E), op("+"), mark([num(b), op("×"), num(c)])]], answerStep: "mul", result: M },
-      { id: "add", narration: `Add last: ${E} + ${M} = ${S}.`, math: [num(E), op("+"), num(M), op("="), num(S)],
+      { id: "add", narration: "Add last.", math: [num(E), op("+"), num(M), op("="), num(S)],
         lines: [[num(E), op("+"), num(M), op("="), num(S)]], answerStep: "add", result: S },
     ],
   });
@@ -64,10 +64,15 @@ export const lesson: LessonDefinition<ExponentOrderProblem> = {
   grade: 6,
   unit: "Expressions and equations",
   title: "Exponents and order",
+  pre: "g5-order",
   reference: createExponentOrder(2, 3, 4, 3), // 2³ + 4 × 3 = 20, the current app's example
-  // small squares and small products first, so the order is what's new, not the arithmetic
-  generate: (rng, index = 3) => index < 3 ? createExponentOrder(rng.int(2, 3), 2, rng.int(2, 5), rng.int(2, 5))
-    : createExponentOrder(rng.int(2, 5), rng.int(2, 3), rng.int(2, 9), rng.int(2, 9)),
+  // small squares and small products first, so the order is what's new, not the arithmetic. Never 2²: there the slip
+  // "base × exponent" (2 × 2) gives the right answer (Curriculum grade6.md section 4), so 2 is always cubed.
+  generate: (rng, index = 3) => {
+    if (index < 3) return createExponentOrder(rng.int(3, 4), 2, rng.int(2, 5), rng.int(2, 5));
+    const a = rng.int(2, 5);
+    return createExponentOrder(a, a === 2 ? 3 : rng.int(2, 3), rng.int(2, 9), rng.int(2, 9));
+  },
   restore: raw => restoreVia(raw, ["a", "n", "b", "c"] as const, v => createExponentOrder(v.a, v.n, v.b, v.c)),
   display: p => [...pow(p.a, p.n), op("+"), num(p.b), op("×"), num(p.c)],
   answers,

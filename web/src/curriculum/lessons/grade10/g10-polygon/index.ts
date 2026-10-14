@@ -57,9 +57,9 @@ export function explainPolygonAngles({ n }: PolygonAnglesProblem, answers: Answe
     timeline: beats(4),
     steps: [
       { id: "polygon", narration: `A regular polygon with ${n} equal sides and ${n} equal angles.`, math: mt`${n} sides`, state: 0 },
-      { id: "triangles", narration: `Draw lines from one corner to every other corner. That makes ${n} − 2 = ${tri} triangles.`, math: mt`${n} − 2 = ${tri}`, state: 1, answerStep: "triangles", result: tri },
-      { id: "total", narration: `Each triangle holds 180°, so all the angles add to ${tri} × 180° = ${total}°.`, math: mt`${tri} × 180° = ${total}°`, state: 2, answerStep: "total", result: total },
-      { id: "each", narration: `The ${n} angles are equal, so each gets ${total}° ÷ ${n} = ${f(each)}°.`, math: mt`${total}° ÷ ${n} = ${each}°`, state: 3, answerStep: "each", result: each },
+      { id: "triangles", narration: "Lines from one corner cut it into triangles: two fewer than the sides.", math: mt`${n} − 2 = ${tri}`, state: 1, answerStep: "triangles", result: tri },
+      { id: "total", narration: "Each triangle holds 180°.", math: mt`${tri} × 180° = ${total}°`, state: 2, answerStep: "total", result: total },
+      { id: "each", narration: `The ${n} angles are equal, so share the total out.`, math: mt`${total}° ÷ ${n} = ${each}°`, state: 3, answerStep: "each", result: each },
     ],
   };
 }

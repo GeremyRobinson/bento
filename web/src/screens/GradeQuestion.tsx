@@ -116,7 +116,7 @@ export function GradeQuestion() {
           </div>
         )}
         {shown?.ex.diagram && (
-          <figure className="gdpic">
+          <figure className="gdpic" data-grade={g}>
             <figcaption>Your first problem: <b><MathLine math={shown.ex.statement} /></b></figcaption>
             <div className="gyviz" style={aspectOf(shown.ex.diagram)}><PlayingDiagram key={g} ex={{ ...shown.ex, diagram: shown.ex.diagram }} end={statementBeat(shown.ex)} /></div>
           </figure>

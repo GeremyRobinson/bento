@@ -49,16 +49,16 @@ function explain(pr: PercentWholeProblem, model: AnswerModel): Explanation {
   const { p, P } = pr, k = expectedOf(model.steps, "parts"), W = expectedOf(model.steps, "whole");
   return {
     heading: "Count up to 100%",
-    idea: ["A percent is a part out of 100, so one part you know can count up to 100%."],
+    idea: ["Some number of that percent makes 100%, so the whole is that many of the part."],
     statement: [num(P), text(" is "), num(p), text("% of ?")],
     diagram: percentWholePicture(pr),
     caption: `${count(k, "block")} of ${p}% make 100%.`,
     timeline: beats(3),
     steps: [
       { id: "parts", state: 1, answerStep: "parts", result: k, math: [num(p), text("%"), op("×"), num(k), op("="), num(100), text("%")],
-        narration: `${p}% ${k === 1 ? "once" : `${k} times`} makes 100%: 100 ÷ ${p} = ${k}.` },
+        narration: `Count how many ${p}% blocks make 100%.` },
       { id: "whole", state: 2, answerStep: "whole", result: W, math: [num(P), op("×"), num(k), op("="), num(W)],
-        narration: `Each ${p}% block is ${P}, so the whole is ${P} × ${k} = ${W}.` },
+        narration: `Each block is ${P}, so the whole is ${k} of them.` },
     ],
   };
 }

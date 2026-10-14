@@ -84,18 +84,38 @@ function picture(p: LinesProblem, learn = false) {
   return buildPair({ item: p.item, deg: p.deg, turn, ...(learn ? { beats: { run: 1, name: 2 }, name } : {}), alt: altOf(p) });
 }
 
+/** the idea and the first look, for each kind of problem */
+const IDEA = [
+  "A line goes on both ways, a ray goes one way, and a segment stops.",
+  "An angle is named by how wide it opens, compared with a square corner.",
+  "Two lines can never meet, meet at square corners, or cross another way.",
+];
+const LOOK = ["Look at both ends: a dot or an arrowhead?", "Look at how wide it opens, not how long the arms are.", "Picture both lines running on past the arrowheads."];
+
 function explain(p: LinesProblem, model: AnswerModel): Explanation {
-  const last = model.steps.at(-1)!;
+  const last = model.steps.at(-1)!, cmp = p.deg < 90 ? 0 : p.deg === 90 ? 1 : 2;
+  // each step says how to tell, in words; the name lines say the rule, so they hold the word that is picked
+  const lines: Record<string, string> = {
+    ends: "A dot is an endpoint. An arrowhead means it keeps going.",
+    compare: `Put a page corner at the point: the angle ${["fits inside it", "fits it exactly", "opens past it"][cmp]}.`,
+    meet: p.item !== 0 ? "Run them on: they get closer and cross." : "They stay the same distance apart, so they never cross.",
+    square: p.item === 1 ? "A page corner fits where they cross." : "A page corner doesn't fit where they cross.",
+    name: [
+      "No endpoints is a line, 1 is a ray, 2 is a segment.",
+      p.deg === 180 ? "Opened all the way into a straight line, it's a straight angle." : "Smaller than a square corner is acute, exactly is right, bigger is obtuse.",
+      "Never meet: parallel. Square corners: perpendicular. Otherwise: intersecting.",
+    ][p.kind]!,
+  };
   return {
     heading: "Lines, rays and angles",
-    idea: ["A line goes on forever both ways, a ray goes on one way, and a segment stops at both ends."],
+    idea: [IDEA[p.kind]!],
     statement: words(last.question ?? ""),
     diagram: picture(p, true),
     caption: `${last.explain}`,
     timeline: beats(3),
     steps: [
-      { id: "look", narration: "Look at the ends and where the lines go.", math: words("Look at it."), state: 0 },
-      ...model.steps.map((s, i, all) => ({ id: s.id, narration: s.explain, math: s.work, state: i === all.length - 1 ? 2 : 1, answerStep: s.id, result: s.slots[0]!.expected! })),
+      { id: "look", narration: LOOK[p.kind]!, math: words("Look at it."), state: 0 },
+      ...model.steps.map((s, i, all) => ({ id: s.id, narration: lines[s.id]!, math: s.work, state: i === all.length - 1 ? 2 : 1, answerStep: s.id, result: s.slots[0]!.expected! })),
     ],
   };
 }

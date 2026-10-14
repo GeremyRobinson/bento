@@ -19,7 +19,8 @@ export function polynomialSumPicture(o: { a: number; b: number; c: number; d: nu
   const notes: TermNote[] = [
     { row: 1, col: -1, text: sub ? "−" : "+", cls: "lbl big pw", from: 0, ...(sub ? { until: 0, at: 0.9, leave: 2 } : { at: 0.9 }) },
     ...(sub ? [{ row: 1, col: -1, text: "+", cls: "lbl big acc", from: 0, at: 2.05 } as TermNote] : []),
-    ...(sub ? [{ row: 1, col: 1, text: "flip every sign", cls: "sm acc", from: 0, until: 0, at: 2.05 } as TermNote].map(n => ({ ...n, row: 1.62 })) : []),
+    // in the answer row's place, which is empty until the first sum: between the rows it ran into the numbers on a phone (Review 26fe1f8)
+    ...(sub ? [{ row: 2, col: 1, text: "flip every sign", cls: "sm acc", from: 0, until: 0, at: 2.05 } as TermNote] : []),
   ];
   return buildTermTable({
     cols: [{ label: "x", sup: "2", part: "p0" }, { label: "x", part: "p1" }, { label: "1", part: "p2" }],

@@ -3,6 +3,7 @@ import type { SceneDiagram } from "../scene/schema";
 import { arc, frame, path, polar, seg, t, type Draft, type Pt } from "../geo/kit";
 import { circle, line, rect } from "./kit";
 import { tw } from "./blocks";
+import { growDown, roomLeft } from "../scene/picture-system";
 
 // ---------------------------------------------------------------- clock
 
@@ -45,11 +46,13 @@ export function buildClock(spec: ClockSpec): SceneDiagram {
       const [x, y] = at(CR + 30, i * 30);
       items.push(t(x, y, String(i * 5), i === k ? "lbl acc" : "sm", { from: beats.count, enter: "pop", delay: 0.12 * i }));
     }
-    const y = CR + 66;
-    items.push(t(0, y, spec.text.hour, "lbl", { from: beats.hour, until: beats.number - 1, enter: "rise", delay: 0.4 }));
-    items.push(t(0, y, spec.text.number, "lbl", { from: beats.number, until: beats.count - 1, enter: "rise", delay: 0.4 }));
-    items.push(t(0, y, spec.text.count, "lbl", { from: beats.count, until: beats.time - 1, enter: "rise", delay: 0.6 }));
-    items.push(t(0, y, spec.text.time, "lbl big acc", { from: beats.time, enter: "rise" }));
+    // the line under the clock keeps 56 clear of the count at the bottom (30): enough for both at a phone's label floor,
+    // held in the drawing's own units so the clock never shrinks to make room for it (Review 26fe1f8, g2-time5)
+    const y = CR + 86, under = {};
+    items.push(t(0, y, spec.text.hour, "lbl", { from: beats.hour, until: beats.number - 1, enter: "rise", delay: 0.4, vars: under }));
+    items.push(t(0, y, spec.text.number, "lbl", { from: beats.number, until: beats.count - 1, enter: "rise", delay: 0.4, vars: under }));
+    items.push(t(0, y, spec.text.count, "lbl", { from: beats.count, until: beats.time - 1, enter: "rise", delay: 0.6, vars: under }));
+    items.push(t(0, y, spec.text.time, "lbl big acc", { from: beats.time, enter: "rise", vars: under }));
   }
   // room for the count labels even before they show, so the clock never jumps
   return frame("early-g2-clock", items, spec.alt, 14, spec.bare ? {} : { w: 2 * (CR + 44) + 28 });
@@ -110,12 +113,14 @@ export function buildRuler(spec: RulerSpec): SceneDiagram {
     for (let v = s; v < e; v++) {
       const d = gap * (v - s);
       items.push(path([{ c: "M", p: [x(v), 60] }, { c: "Q", q: [x(v + 0.5), 60 + 26], p: [x(v + 1), 60] }], "ln", { from: beats.count, enter: "draw", delay: d }));
-      items.push(t(x(v + 0.5), 88, String(v - s + 1), v === e - 1 ? "lbl acc" : "sm", { from: beats.count, enter: "rise", delay: d + 0.2 }));
+      // each count hangs under its hop, so on a phone it grows down, away from the arc
+      items.push(t(x(v + 0.5), 77, String(v - s + 1), v === e - 1 ? "lbl acc down" : "sm down", { from: beats.count, enter: "rise", delay: d + 0.2 }));
     }
-    const y = 128, mid = x(max) / 2;
-    items.push(t(mid, y, spec.text.start, "lbl", { from: beats.start, until: beats.end - 1, enter: "rise", delay: 0.4 }));
-    items.push(t(mid, y, spec.text.end, "lbl", { from: beats.end, until: beats.count - 1, enter: "rise", delay: 0.4 }));
-    items.push(t(mid, y, spec.text.count, "lbl big acc", { from: beats.count, enter: "rise", delay: gap * (e - s) }));
+    // the line under it all hangs below the counts' row, moving down by what that row grows on a phone
+    const y = 106, mid = x(max) / 2, below = { vars: growDown(1) };
+    items.push(t(mid, y, spec.text.start, "lbl down", { from: beats.start, until: beats.end - 1, enter: "rise", delay: 0.4, ...below }));
+    items.push(t(mid, y, spec.text.end, "lbl down", { from: beats.end, until: beats.count - 1, enter: "rise", delay: 0.4, ...below }));
+    items.push(t(mid, y, spec.text.count, "lbl big acc down", { from: beats.count, enter: "rise", delay: gap * (e - s), ...below }));
   }
   return frame("early-g2-ruler", items, spec.alt, 14, {});
 }
@@ -142,6 +147,7 @@ const BW = 56, BG = 48, U = 22;
 // an odd axis number fades out once the picture is drawn below 0.6 of its size (--px, the units per screen pixel,
 // above 1/0.6): its 12px floor would stack it on its neighbours, so the axis reads 0, 2, 4 and the grid keeps every line
 const ODD_AXIS = { opacity: "clamp(0, calc((1.667 - var(--px, 0)) * 1000), 1)" };
+const EVEN_AXIS = { opacity: "clamp(0, calc((2.5 - var(--px, 0)) * 1000), 1)" };
 
 export function buildBarGraph(spec: BarGraphSpec): SceneDiagram {
   const { values, beats } = spec;
@@ -151,14 +157,22 @@ export function buildBarGraph(spec: BarGraphSpec): SceneDiagram {
   const items: Draft[] = [];
   for (let v = 0; v <= top; v++) {
     if (v) items.push(line(0, y(v), W, y(v), "grid"));
-    items.push(t(-14, y(v), String(v), "xs", v % 2 ? { vars: ODD_AXIS } : {}));
+    // on a phone every other number goes first, then all but every fourth; 0 sits by the first name, so it goes with the odd ones
+    items.push(t(-14, y(v), String(v), "xs", v % 2 || v === 0 ? { vars: ODD_AXIS } : v % 4 ? { vars: EVEN_AXIS } : {}));
   }
   items.push(line(0, 0, W, 0, "ax"), line(0, 0, 0, y(top) - 8, "ax"));
+  // the names hang under their bars; on a phone where two neighbours would touch, every other name drops a line, and
+  // the sentence under the graph drops with them
+  const most = Math.max(...spec.names.map(n => [...n].length));
+  const line14 = "1.25 * max(15, 14 * var(--px, 0))";
+  const drop = `clamp(0, -1000 * ${roomLeft(BW + BG, most, 15)}, 1) * ${line14}`;
   values.forEach((v, i) => {
     items.push(rect(bx(i), y(v), BW, v * U, "bar", { enter: "growy", delay: 0.1 * i }, 4));
-    items.push(t(bx(i) + BW / 2, 22, spec.names[i]!, "sm"));
+    items.push(t(bx(i) + BW / 2, 10, spec.names[i]!, "sm down", i % 2 ? { vars: { transform: `translateY(calc(${drop} * 1px))` } } : {}));
   });
-  items.push(t(W / 2, y(top) - 30, spec.title, "lbl pw"));
+  const under = { transform: `translateY(calc((${drop} + ${line14} - 18.75) * 1px))` };
+  // the title stands clear of the top axis number at whatever size the phone floor draws it
+  items.push(t(W / 2, y(top) - 6, spec.title, "lbl pw up", { vars: { transform: "translateY(calc(-0.6 * max(14, 14 * var(--px, 0)) * 1px))" } }));
   if (!spec.bare) {
     const read = (i: number, beat: number, until?: number) => {
       const v = values[i]!;
@@ -179,10 +193,10 @@ export function buildBarGraph(spec: BarGraphSpec): SceneDiagram {
       items.push(rect(bx(spec.first) - 5, y(a) - 5, BW + 10, a * U + 5, "hlline", { from: beats.combine, enter: "fade" }, 6));
       items.push(rect(bx(spec.second) - 5, y(b) - 5, BW + 10, b * U + 5, "hlline", { from: beats.combine, enter: "fade" }, 6));
     }
-    const ty = 62;
-    items.push(t(W / 2, ty, spec.text.first, "lbl", { from: beats.first, until: beats.second - 1, enter: "rise", delay: 0.5 }));
-    items.push(t(W / 2, ty, spec.text.second, "lbl", { from: beats.second, until: beats.combine - 1, enter: "rise", delay: 0.5 }));
-    items.push(t(W / 2, ty, spec.text.combine, "lbl big acc", { from: beats.combine, enter: "rise", delay: 0.4 }));
+    const ty = 44;
+    items.push(t(W / 2, ty, spec.text.first, "lbl down", { from: beats.first, until: beats.second - 1, enter: "rise", delay: 0.5, vars: under }));
+    items.push(t(W / 2, ty, spec.text.second, "lbl down", { from: beats.second, until: beats.combine - 1, enter: "rise", delay: 0.5, vars: under }));
+    items.push(t(W / 2, ty, spec.text.combine, "lbl big acc down", { from: beats.combine, enter: "rise", delay: 0.4, vars: under }));
   }
-  return frame("early-g2-bar-graph", items, spec.alt, 14, { w: Math.max(320, tw(spec.title) + 30) });
+  return frame("early-g2-bar-graph", items, spec.alt, 14, { w: Math.max(320, tw(spec.title) + 30), grow: 2 });
 }

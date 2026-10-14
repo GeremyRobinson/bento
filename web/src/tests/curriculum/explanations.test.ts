@@ -63,7 +63,7 @@ describe("pictures and words agree (review v39)", () => {
     for (let i = 0; i < 60; i++) {
       const p = l.generate(rng, i) as { shape: number }, ex = explain("k-solids", p), said = ex.steps.find(s => s.id === "roll")!.narration;
       const drawn = texts("k-solids", p).find(t => t === "it rolls" || t === "it slides")!;
-      expect(said.includes("**rolls**")).toBe(drawn === "it rolls");
+      expect(said.includes("roll away")).toBe(drawn === "it rolls");
       if (toPlainText(ex.steps.at(-1)!.math).includes("cube")) expect(drawn).toBe("it slides");
       if (toPlainText(ex.steps.at(-1)!.math).includes("sphere")) expect(drawn).toBe("it rolls");
     }

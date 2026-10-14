@@ -60,9 +60,9 @@ function explain(pr: PercentOfProblem, model: AnswerModel): Explanation {
     timeline: beats(3),
     steps: [
       { id: "base", state: 1, answerStep: "base", result: part, math: [num(base), text("% of "), num(W), op("="), num(part)],
-        narration: base === 10 ? `Cut ${W} into 10 equal blocks: each is 10%, which is ${W} ÷ 10 = ${part}.` : `Cut ${W} into 4 equal blocks: each is 25%, which is ${W} ÷ 4 = ${part}.` },
+        narration: base === 10 ? `Cut ${W} into 10 equal blocks; each block is 10%.` : `Cut ${W} into 4 equal blocks; each block is 25%.` },
       { id: "scale", state: 2, answerStep: "scale", result: R, math: [num(p / base), op("×"), num(part), op("="), num(R)],
-        narration: `${p}% is ${p / base} of those blocks: ${p / base} × ${part} = ${R}.` },
+        narration: `${p}% is ${count(p / base, "block")}.` },
     ],
   };
 }

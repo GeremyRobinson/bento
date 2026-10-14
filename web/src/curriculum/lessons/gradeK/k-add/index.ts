@@ -5,7 +5,7 @@ import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildNumberLine, type Hop } from "../../../../explanations/diagrams/number-line/build";
 import { dotGroups } from "../../../../explanations/diagrams/number-line/counters";
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
-import { count, isAre, noun } from "../../../text";
+import { count, isAre } from "../../../text";
 import { slips } from "../kit";
 
 /** a dots and b more; the sum stays within 10 */
@@ -60,13 +60,13 @@ function explain(p: CountOnProblem, model: AnswerModel): Explanation {
   ];
   return {
     heading: "Count on",
-    idea: ["Adding puts two groups together, so you can keep counting from the first group."],
+    idea: ["To add, start with the first group and count on."],
     statement: [num(a), op("+"), num(b)],
     diagram: buildNumberLine({ min: 0, max: 10, hops, alt: `Number line from 0 to 10: count ${a}, then hop on ${b} more to ${sum}.` }),
     caption: `Start at ${a} and count on ${b}: ${sum}.`,
     timeline: beats(2),
     steps: [
-      { id: "first", narration: `Count the first group: **${first}** ${noun(first, "dot")}. That brings you to ${first}.`, math: [text("First group: "), num(first)], state: 0, answerStep: "first", result: first },
+      { id: "first", narration: "Hop once for each dot in the first group.", math: [text("First group: "), num(first)], state: 0, answerStep: "first", result: first },
       { id: "count-on", narration: `Count on ${b} more, one hop for each dot: ${counted.join(", ")}.`, math: [num(a), op("+"), num(b), op("="), num(sum)], state: 1, answerStep: "count-on", result: sum },
     ],
   };
@@ -85,4 +85,5 @@ export const lesson: LessonDefinition<CountOnProblem> = {
   picture: p => dotGroups([p.a, p.b], `${count(p.a, "dot")} plus ${count(p.b, "dot")}`),
   answers,
   explain,
+  pre: "k-count20",
 };

@@ -3,9 +3,11 @@ import type { AnswerModel } from "../../../schemas/lesson";
 import { ms, ns } from "../../_plane/kit";
 import type { DefIntProblem } from "./problem";
 
-/** c·k^(n+1) − c·j^(n+1) */
-export const topMinusBottom = ({ c, j, k, n }: DefIntProblem): MathText =>
-  [num(c), op("·"), num(k), sup(n + 1), op("−"), num(c), op("·"), num(j), sup(n + 1)];
+/** c·k^(n+1) − c·j^(n+1); with c = 1 it reads k^(n+1) − j^(n+1), as the antiderivative is written x^(n+1) */
+export const topMinusBottom = ({ c, j, k, n }: DefIntProblem): MathText => {
+  const times: MathText = c === 1 ? [] : [num(c), op("·")];
+  return [...times, num(k), sup(n + 1), op("−"), ...times, num(j), sup(n + 1)];
+};
 
 export function defIntAnswers(p: DefIntProblem): AnswerModel {
   const { n, a, j, k, c } = p;

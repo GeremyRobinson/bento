@@ -53,9 +53,9 @@ export function explainRational(p: RationalExponent, model: AnswerModel) {
     alt: `${f(base)} to the ${f(top)}/${f(n)} is the ${root} root of ${f(base)}, ${f(r)}, to the power ${f(top)}: ${f(value)}.`,
     steps: [
       { id: "problem", narration: `The exponent is a fraction: the bottom ${f(n)} is a ${root} root, the top ${f(top)} is a power.`, math: [num(base), sup([mark(exponent(top, n))])] },
-      { id: "root", narration: `Take the ${root} root first: ${rootSign(n)}${f(base)} = ${f(r)}, because ${Array.from({ length: n }, () => f(r)).join(" × ")} = ${f(base)}.`,
+      { id: "root", narration: `Take the ${root} root first, because ${Array.from({ length: n }, () => f(r)).join(" × ")} = ${f(base)}.`,
         math: m(rootSign(n), base, op("="), r), line: [text("("), mark([text(rootSign(n)), num(base)]), text(")"), sup(top)], answerStep: "root", result: r },
-      { id: "power", narration: `Then raise it to the top ${f(top)}: ${f(r)}${supText(top)} = ${f(value)}.`, math: m(r, sup(top), op("="), value), answerStep: "power", result: value },
+      { id: "power", narration: `Then raise it to the top number, ${f(top)}.`, math: m(r, sup(top), op("="), value), answerStep: "power", result: value },
     ],
   });
 }

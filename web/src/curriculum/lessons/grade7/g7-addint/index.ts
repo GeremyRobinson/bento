@@ -29,7 +29,7 @@ function answers(p: AddIntegersProblem): AnswerModel {
           wrong: [[A + B, "Added the sizes", "One steps up and one steps down: the steps toward 0 cancel, so subtract the sizes."]] }),
       oneBox({
         id: "sign", label: "Pick the sign", prompt: s => [num(a), op("+"), ...paren(b), op("="), s], ans: a + b,
-        hint: same ? "Two negatives make a negative." : "The answer takes the sign of the number farther from 0.",
+        hint: same ? "Both numbers are negative, so the answer is negative." : "The answer takes the sign of the number farther from 0.",
         wrong: a + b !== 0 ? [[-(a + b), "Wrong sign", same ? "Both numbers are negative, so the answer is negative." : "Use the sign of the number with the bigger size."]] : [],
       }),
     ],
@@ -57,11 +57,11 @@ function explain(p: AddIntegersProblem, model: AnswerModel): Explanation {
     timeline: beats(3),
     steps: [
       { id: "start", narration: `Start at ${f(a)}. Adding ${f(b)} moves ${B} to the ${b > 0 ? "right" : "left"}.`, math: [num(a), op("+"), ...paren(b)], state: 0 },
-      { id: "size", narration: same ? `Same signs: add the sizes, ${A} + ${B} = ${size}.`
-          : `Different signs: the steps toward 0 cancel, so subtract the sizes: ${Math.max(A, B)} − ${Math.min(A, B)} = ${size}.`,
+      { id: "size", narration: same ? "Same signs: the steps pile up, so add the sizes."
+          : "Different signs: the steps toward 0 cancel, so subtract the sizes.",
         math: same ? [num(A), op("+"), num(B), op("="), num(size)] : [num(Math.max(A, B)), op("−"), num(Math.min(A, B)), op("="), num(size)],
         state: 1, answerStep: "size", result: size },
-      { id: "sign", narration: same ? `Two negatives make a negative: ${f(sum)}.`
+      { id: "sign", narration: same ? "Both are negative, so the answer is negative."
           : sum === 0 ? `The sizes are equal, so they cancel: ${f(sum)}.`
           : `${f(far)} is farther from 0 and it's ${far > 0 ? "positive" : "negative"}, so the answer is ${f(sum)}.`,
         math: [num(a), op("+"), ...paren(b), op("="), num(sum)], state: 2, answerStep: "sign", result: sum },

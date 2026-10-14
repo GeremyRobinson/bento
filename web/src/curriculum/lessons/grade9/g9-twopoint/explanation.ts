@@ -2,7 +2,7 @@ import { num, op, text } from "../../../schemas/math-text";
 import type { AnswerModel } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildPlane } from "../../../../explanations/diagrams/plane/build";
-import { expected, f, fP, lineText, P, pt, ptM } from "../../_plane/kit";
+import { expected, f, lineText, P, pt, ptM } from "../../_plane/kit";
 import type { TwoPointProblem } from "./problem";
 
 export const twoPointMath = ({ x1, y1, x2, y2 }: TwoPointProblem) => [...ptM(x1, y1), text(" and "), ...ptM(x2, y2)];
@@ -13,7 +13,7 @@ export function explainTwoPoint(p: TwoPointProblem, model: AnswerModel): Explana
   const rise = y2 - y1, run = x2 - x1, up = rise > 0, line = lineText(m, b);
   return {
     heading: "Slope first, then b",
-    idea: ["Two points fix a line, so they give both its slope and where it crosses."],
+    idea: ["Two points fix a line, so they give its slope and where it crosses the y-axis."],
     statement: twoPointMath(p),
     caption: `Rise ${f(rise)} over run ${f(run)} gives m = ${f(m)}; the line crosses the y-axis at b = ${f(b)}.`,
     diagram: buildPlane({
@@ -30,12 +30,12 @@ export function explainTwoPoint(p: TwoPointProblem, model: AnswerModel): Explana
     }),
     timeline: beats(4),
     steps: [
-      { id: "points", narration: `Plot ${pt(x1, y1)} and ${pt(x2, y2)}. One line goes through both.`, math: twoPointMath(p), state: 0 },
-      { id: "m", narration: `Rise over run: (${f(y2)} − ${fP(y1)}) ÷ (${f(x2)} − ${fP(x1)}) = ${f(rise)} ÷ ${f(run)} = ${f(m)}.`,
+      { id: "points", narration: `Plot both points. Exactly one line goes through them.`, math: twoPointMath(p), state: 0 },
+      { id: "m", narration: `Slope is the change in y over the change in x.`,
         math: [text("m"), op("="), num(rise), op("÷"), num(run), op("="), num(m)], state: 1, answerStep: "m", result: m },
-      { id: "b", narration: `Use the first point: b = y − mx = ${f(y1)} − ${fP(m)} × ${fP(x1)} = ${f(b)}. That is where the line crosses the y-axis.`,
+      { id: "b", narration: `Put the first point in: b is where the line crosses the y-axis.`,
         math: [text("b"), op("="), num(y1), op("−"), ...P(m), op("×"), ...P(x1), op("="), num(b)], state: 2, answerStep: "b", result: b },
-      { id: "line", narration: `Put them together: ${line}.`, math: [text(line)], state: 3, answerStep: "line", result: m },
+      { id: "line", narration: `The slope goes with x, and b is the number on its own.`, math: [text(line)], state: 3, answerStep: "line", result: m },
     ],
   };
 }

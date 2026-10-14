@@ -48,8 +48,8 @@ export function explainAnglePair(p: AnglePairProblem, answers: AnswerModel): Exp
     timeline: beats(3),
     steps: [
       { id: "pair", narration: `The angles are ${word}. One is ${a}°.`, math: mt`${a}° and ?`, state: 0 },
-      { id: "total", narration: sup ? "Supplementary angles make a straight line: 180°." : "Complementary angles make a right angle: 90°.", math: mt`${T}°`, state: 1, answerStep: "total", result: T },
-      { id: "missing", narration: `The other angle is what's left: ${T}° − ${a}° = ${rest}°.`, math: mt`${T}° − ${a}° = ${rest}°`, state: 2, answerStep: "missing", result: rest },
+      { id: "total", narration: sup ? "Supplementary angles make a straight line." : "Complementary angles make a right angle.", math: mt`${T}°`, state: 1, answerStep: "total", result: T },
+      { id: "missing", narration: "The other angle is what's left.", math: mt`${T}° − ${a}° = ${rest}°`, state: 2, answerStep: "missing", result: rest },
     ],
   };
 }

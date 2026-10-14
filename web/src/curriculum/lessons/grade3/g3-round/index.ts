@@ -82,7 +82,7 @@ function answers(p: RoundProblem): AnswerModel {
 export function roundPicture(p: RoundProblem, ans: number) {
   const { n, to } = p, { lo, hi, mid } = roundParts(p);
   return buildNumberLine({
-    min: lo, max: hi, step: to / 10, every: 5, width: 540,
+    min: lo, max: hi, step: to / 10, every: 5,
     marks: [
       { v: n, label: String(n), beat: 0, cls: "dota" },
       { v: lo, beat: 1 }, { v: hi, beat: 1 },
@@ -106,12 +106,12 @@ function explain(p: RoundProblem, model: AnswerModel): Explanation {
     timeline: beats(4),
     steps: [
       { id: "between", state: 1, answerStep: "between", result: lo, math: [num(lo), op("<"), num(n), op("<"), num(hi)],
-        narration: `${n} sits between ${lo} and ${hi}.` },
+        narration: `Count by ${to}s to find the ${place(to)} on each side.` },
       { id: "mid", state: 2, answerStep: "mid", result: m, math: [num(lo), op("+"), num(to / 2), op("="), num(m)],
         narration: `Halfway between them is ${m}.` },
       { id: "round", state: 3, answerStep: "round", result: R, math: [num(n), op("≈"), num(R)],
-        narration: n === mid ? `${n} is right on halfway. Halfway rounds up, so ${n} rounds to ${R}.`
-          : `${n} is ${n > mid ? "past" : "before"} halfway, only ${Math.abs(R - n)} away from ${R}. So ${n} rounds to ${R}.` },
+        narration: n === mid ? `${n} is right on halfway, and halfway rounds up.`
+          : `${n} is ${n > mid ? "past" : "before"} halfway, only ${Math.abs(R - n)} away from ${R}.` },
     ],
   };
 }

@@ -6,6 +6,9 @@
   --m-ease:cubic-bezier(.2,.8,.2,1);
   --m-settle:cubic-bezier(.34,1.22,.5,1);
   --m-toss:cubic-bezier(.2,.7,.4,1);
+  /* spring: a lively pop that overshoots a little and lands (pictures, results, answers, tiles: goals doc, "micro
+     animations everywhere", G 2026-10-13) */
+  --m-spring:cubic-bezier(.34,1.56,.64,1);
   /* durations */
   --m-tap:120ms;   /* press down */
   --m-swap:250ms;  /* small state change, press release, top-bar text */
@@ -15,6 +18,9 @@
   --m-step:40ms;   /* cascade gap, at most 4 steps */
   --m-beat:750ms;  /* one picture beat (first beat 450ms) */
   --m-calm:200ms;  /* every pattern under Less motion */
+  --m-pop:420ms;   /* a result, an answer or a tile popping in on the spring */
+  --m-grow:650ms;  /* a picture part growing or drawing in */
+  --m-ripple:60ms; /* gap between tiles or parts arriving one after another */
   /* distances */
   --m-lift:8px; --m-slide:24px; --m-deeper:.97;
   /* the page change's zoom (the contents' switch): deeper from smaller, back from larger, a neutral move in between */

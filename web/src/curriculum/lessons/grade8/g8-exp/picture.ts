@@ -10,7 +10,10 @@ const PA = "p0", PB = "p2";
 
 export function exponentRulePicture(o: { t: 0 | 1 | 2; a: number; b: number; e: number; value: number; shown: string }): SceneDiagram {
   const { t, a, b, e, value, shown } = o;
-  const head: FLabel = { row: 0, col: 0, text: shown, cls: "lbl big pw" };
+  // the power is the problem itself, written over the picture: a phone's short box leaves it out for the chips (Review 1c74c20)
+  const head: FLabel = { row: 0, col: 0, text: shown, cls: "lbl big pw", long: true };
+  // the result line under the chips is the step's own line too: a phone's short box leaves it to the step, where at the
+  // label floor it ran over the chips (Review 1c74c20, g8-exp at 280×123)
   // where each x sits: [row, col, part, struck]
   const spots: [number, number, string, boolean][] =
     t === 0 ? [...Array.from({ length: a }, (_, k) => [1, k, PA, false] as [number, number, string, boolean]), ...Array.from({ length: b }, (_, k) => [1, a + 0.4 + k, PB, false] as [number, number, string, boolean])]
@@ -20,7 +23,7 @@ export function exponentRulePicture(o: { t: 0 | 1 | 2; a: number; b: number; e: 
   const cols = spots.map(s => s[1]), mid = (Math.min(...cols) + Math.max(...cols)) / 2;
   head.col = mid;
   const lastRow = Math.max(...spots.map(s => s[0]));
-  const under = lastRow + (t === 0 ? 1.25 : 0.95);
+  const under = lastRow + (t === 0 ? 1.5 : 0.95);
   const xs = (extra: (s: [number, number, string, boolean], k: number) => Partial<FChip> = () => ({})): FChip[] =>
     spots.map((s, k) => ({ row: s[0], col: s[1], text: "x", part: s[2], ...extra(s, k) }));
   // the x's that are left once pairs cancel, in reading order
@@ -35,20 +38,20 @@ export function exponentRulePicture(o: { t: 0 | 1 | 2; a: number; b: number; e: 
 
   const frames: ChipFrame[] = [
     // 0: the problem as written
-    { labels: [head] },
+    { labels: [{ ...head, long: false }] }, // before any chips, the power is all there is to show
     // 1: the x's written out, group by group (over the bar and under it, or a row per copy)
     { labels: [head, ...rowLabels.map(l => ({ ...l, at: 0.2 }))], chips: xs((_, k) => ({ at: 0.15 + step * k })), brackets: brackets.map(br => ({ ...br, at: 0.8 })), bars: bar.map(br => ({ ...br, at: 0 })) },
     // 2: pairs cancel first (t = 1), then the x's that are left are counted; the count is the new exponent
     {
       labels: [head, ...rowLabels,
         ...kept.map(([s], i) => ({ row: s[0] - 0.58, col: s[1], text: String(i + 1), cls: "sm pq", at: (t === 1 ? 0.3 + 0.35 * b + 0.3 : 0.2) + 0.28 * i })),
-        { row: under, col: mid, text: `${shown} = x${supText(e)}`, cls: "lbl big acc", at: (t === 1 ? 0.6 + 0.35 * b : 0.2) + 0.28 * kept.length + 0.2 }],
+        { row: under, col: mid, text: `${shown} = x${supText(e)}`, cls: "lbl big acc", long: true, at: (t === 1 ? 0.6 + 0.35 * b : 0.2) + 0.28 * kept.length + 0.2 }],
       chips: xs((s, k) => (t === 1 && s[3] ? { strike: strikeAt(k < a + b ? k - a : k - (a + b)) } : {})),
       brackets, bars: bar,
     },
     // 3: try x = 2: every x left turns into a 2
     {
-      labels: [head, ...rowLabels, { row: under, col: mid, text: `2${supText(e)} = ${big(value)}`, cls: "lbl big acc", at: 0.3 + 0.18 * kept.length }],
+      labels: [head, ...rowLabels, { row: under, col: mid, text: `2${supText(e)} = ${big(value)}`, cls: "lbl big acc", long: true, at: 0.3 + 0.18 * kept.length }],
       chips: [
         ...xs((s, k) => (s[3] ? { strike: 0, cut: true } : { leave: 0.1 + 0.18 * kept.findIndex(([, j]) => j === k) })),
         ...kept.map(([s], i) => ({ row: s[0], col: s[1], text: "2", part: s[2], at: 0.1 + 0.18 * i })),

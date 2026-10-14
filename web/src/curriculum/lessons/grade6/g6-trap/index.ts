@@ -1,5 +1,5 @@
 // Area of a trapezoid (the current app's g6-trap): add the bases, times the height, then half.
-import { formatNumber as f, num, op, text } from "../../../schemas/math-text";
+import { num, op, text } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { chainExplanation } from "../../../../explanations/diagrams/chain/build";
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
@@ -22,7 +22,7 @@ function answers({ a, b, h }: TrapezoidProblem): AnswerModel {
         hint: `The two copies lie end to end along the bottom: ${a} + ${b}.`, explain: `End to end, the bottom is ${a} + ${b} = ${a + b} long.`,
         wrong: [[a * b, "Multiplied the bases", "Put the bases end to end: add them."]] }),
       oneBox({ id: "times", label: "Times the height", prompt: s => [num(a + b), op("×"), num(h), op("="), s], ans: (a + b) * h,
-        hint: `A parallelogram's area is length × height: ${a + b} × ${h}.`, explain: `The parallelogram is ${a + b} × ${h} = ${(a + b) * h}.`,
+        hint: `The two copies make a rectangle: length × height, ${a + b} × ${h}.`, explain: `The rectangle is ${a + b} × ${h} = ${(a + b) * h}.`,
         wrong: [[a + b + h, "Added the height", "Area is length times height."]] }),
       oneBox({ id: "half", label: "Half of it", prompt: s => [num((a + b) * h), op("÷"), num(2), op("="), s], ans: ((a + b) * h) / 2,
         hint: "That area holds two trapezoids. Take half.", explain: `One trapezoid is half: ${(a + b) * h} ÷ 2 = ${((a + b) * h) / 2}.`,
@@ -38,15 +38,14 @@ function explain(p: TrapezoidProblem, model: AnswerModel) {
     heading: "Two copies make a parallelogram",
     idea: ["Two copies of a trapezoid make a parallelogram, so the trapezoid is half of it."],
     statement: [text("bases "), num(a), text(" and "), num(b), text(", height "), num(h)],
-    caption: `Same as averaging the bases: (${a} + ${b}) ÷ 2 = ${f(S / 2)}, and ${f(S / 2)} × ${h} = ${A}.`,
     alt: `Trapezoid area: (${a} + ${b}) × ${h} ÷ 2 = ${A}.`,
     diagram: trapezoidPicture({ a, b, h, S, P, A }),
     beats: [
-      { id: "sum", narration: `Lay a flipped copy next to it: along the bottom, the bases ${a} and ${b} sit end to end, ${a} + ${b} = ${S}.`, math: [num(a), op("+"), num(b), op("="), num(S)],
+      { id: "sum", narration: "Lay a turned copy next to it, so the bases sit end to end.", math: [num(a), op("+"), num(b), op("="), num(S)],
         lines: [[num(a), op("+"), num(b), op("="), num(S)]], answerStep: "sum", result: S },
-      { id: "times", narration: `The two copies make a parallelogram ${S} long and ${h} high: ${S} × ${h} = ${P}.`, math: [num(S), op("×"), num(h), op("="), num(P)],
+      { id: "times", narration: `The two copies make a rectangle ${S} long and ${h} high.`, math: [num(S), op("×"), num(h), op("="), num(P)],
         lines: [[num(S), op("×"), num(h), op("="), num(P)]], answerStep: "times", result: P },
-      { id: "half", narration: `That's two trapezoids, so one is half: ${P} ÷ 2 = ${A}.`, math: [num(P), op("÷"), num(2), op("="), num(A)],
+      { id: "half", narration: "That's two trapezoids, so one is half.", math: [num(P), op("÷"), num(2), op("="), num(A)],
         lines: [[num(P), op("÷"), num(2), op("="), num(A)]], answerStep: "half", result: A },
     ],
   });

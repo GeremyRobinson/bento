@@ -63,6 +63,20 @@ function answers(p: PicGraphProblem): AnswerModel {
 }
 
 const alt = (p: PicGraphProblem) => `A picture graph of ${THEMES[p.theme]!.title.toLowerCase()}: ${THEMES[p.theme]!.names.join(", ")}.`;
+/** Watch one's line for each step: what to do, in words (the step's own explain stays for "Show me") */
+function narrationOf(p: PicGraphProblem, id: string): string {
+  const th = THEMES[p.theme]!;
+  switch (id) {
+    case "read": case "x": return `Count the pictures in the ${th.names[p.x]} row.`;
+    case "y": return `Count the pictures in the ${th.names[p.y]} row.`;
+    case "line-up": return "The pictures line up, so look where each row ends.";
+    case "compare": return `The ${p.few ? "shortest" : "longest"} row has the ${p.few ? "fewest" : "most"}.`;
+    case "more": return `Line up the rows. Count the extra ${th.names[p.x]} pictures.`;
+    case "both": return "Together means add the two rows.";
+    default: throw new Error(`no narration for step ${id}`);
+  }
+}
+
 const rowsRead = (p: PicGraphProblem) => (p.ask === 0 ? [p.x] : p.ask === 1 ? [0, 1, 2] : [p.x, p.y]);
 
 function explain(p: PicGraphProblem, model: AnswerModel): Explanation {
@@ -82,7 +96,7 @@ function explain(p: PicGraphProblem, model: AnswerModel): Explanation {
     steps: [
       { id: "fill", narration: "Each picture is one thing. The rows line up so you can compare them.", math: words(th.title), state: 0 },
       ...model.steps.map((s, i, all) => ({
-        id: s.id, narration: s.explain, math: s.work, answerStep: s.id, result: s.slots[0]!.expected!,
+        id: s.id, narration: narrationOf(p, s.id), math: s.work, answerStep: s.id, result: s.slots[0]!.expected!,
         state: more && i === all.length - 1 ? 2 : 1,
       })),
     ],

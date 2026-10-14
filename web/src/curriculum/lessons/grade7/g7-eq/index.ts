@@ -56,10 +56,10 @@ export function explainTwoStep(p: TwoStepEquation, model: AnswerModel) {
     diagram,
     alt: diagram.alt,
     steps: [
-      { id: "balance", narration: `The pans balance: ${f(a)} x's and ${f(b)} on one side, ${f(c)} on the other.`, math: [...lhs(a), op("+"), num(b), op("="), num(c)] },
-      { id: "undo-add", narration: `Undo the + ${f(b)} first by subtracting ${f(b)} from both sides: ${f(a)}x = ${f(undoAdd)}.`, math: m(...lhs(a), op("="), c, op("−"), b, op("="), undoAdd), answerStep: "undo-add", result: undoAdd },
-      { id: "undo-mul", narration: `Then undo the × ${f(a)} by dividing both sides by ${f(a)}: x = ${f(undoMul)}.`, math: m(v(), op("="), c - b, op("÷"), a, op("="), undoMul), answerStep: "undo-mul", result: undoMul },
-      { id: "check", narration: `Check: ${f(a)} × ${f(x)} + ${f(b)} = ${f(c)}, so the pans still balance.`, math: m(a, op("×"), x, op("+"), b, op("="), c) },
+      { id: "balance", narration: `The pans balance. Undo the + ${f(b)} first, then the × ${f(a)}.`, math: [...lhs(a), op("+"), num(b), op("="), num(c)] },
+      { id: "undo-add", narration: `Take ${f(b)} off both pans.`, math: m(...lhs(a), op("="), c, op("−"), b, op("="), undoAdd), answerStep: "undo-add", result: undoAdd },
+      { id: "undo-mul", narration: `Split both pans into ${f(a)} equal groups.`, math: m(v(), op("="), c - b, op("÷"), a, op("="), undoMul), answerStep: "undo-mul", result: undoMul },
+      { id: "check", narration: `Put ${f(x)} back in for x: the pans still balance.`, math: m(a, op("×"), x, op("+"), b, op("="), c) },
     ],
   });
 }

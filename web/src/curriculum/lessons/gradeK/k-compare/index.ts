@@ -81,9 +81,9 @@ function explain(p: CompareProblem, model: AnswerModel): Explanation {
     caption: matched,
     timeline: beats(3),
     steps: [
-      { id: "top", narration: `Count the top row: ${countUp(1, top)}. That's **${top}**.`, math: [text("Top: "), num(top)], state: 0, answerStep: "top", result: top },
-      { id: "bottom", narration: `Count the bottom row: ${countUp(1, bottom)}. That's **${bottom}**.`, math: [text("Bottom: "), num(bottom)], state: 1, answerStep: "bottom", result: bottom },
-      { id: "compare", narration: `Match each top dot with a bottom dot. ${matched}`, math: sentence(top, bottom), state: 2, answerStep: "compare", result: right },
+      { id: "top", narration: `Count the top row: ${countUp(1, top)}.`, math: [text("Top: "), num(top)], state: 0, answerStep: "top", result: top },
+      { id: "bottom", narration: `Count the bottom row: ${countUp(1, bottom)}.`, math: [text("Bottom: "), num(bottom)], state: 1, answerStep: "bottom", result: bottom },
+      { id: "compare", narration: right === 2 ? "Match the dots in pairs. Every dot has a partner." : `Match the dots in pairs. The ${right === 0 ? "top" : "bottom"} row has ${extra} left over.`, math: sentence(top, bottom), state: 2, answerStep: "compare", result: right },
     ],
   };
 }

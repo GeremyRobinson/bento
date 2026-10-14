@@ -7,7 +7,7 @@ import { buildStoryBoxes } from "../../../../explanations/diagrams/early-g3/stor
 import { oneBox, wholeIn } from "../../_number-line/steps";
 import { words } from "../../gradeK/kit";
 import { slips } from "../../grade2/kit";
-import { OPS, WHO, apply, checkStory, operationStep, solveStep, storyNumbers, type Op } from "../_measure";
+import { OPS, WHO, apply, checkStory, operationStep, solveSaid, solveStep, storyNumbers, type Op } from "../_measure";
 
 /** kind 0: a jug holding `cap` liters, a mark every `step`, water at `value`; kind 1: a story (op 0 + … 3 ÷) on a and b */
 export interface LitersProblem { kind: number; cap: number; step: number; value: number; op: number; a: number; b: number; who: number }
@@ -40,7 +40,7 @@ export function litersStory(p: LitersProblem): string {
 }
 
 function answers(p: LitersProblem): AnswerModel {
-  if (p.kind === 1) { const o = OPS[p.op]! as Op; return { steps: [operationStep(o, litersStory(p), p.a, "L"), solveStep(o, p.a, p.b, "L")], finalParts: [-1] }; }
+  if (p.kind === 1) { const o = OPS[p.op]! as Op; return { steps: [operationStep(o, `${p.a} ${o} ${p.b}`, p.a, "L"), solveStep(o, p.a, p.b, "L")], finalParts: [-1] }; }
   const n = p.cap / p.step, every = n <= 10 ? 1 : n <= 20 ? 2 : 5, labelStep = every * p.step;
   const marks = p.value / p.step, below = Math.floor(p.value / labelStep) * labelStep;
   return {
@@ -77,22 +77,26 @@ function answers(p: LitersProblem): AnswerModel {
 const jugAlt = "A jug marked in liters, partly full.";
 
 function explain(p: LitersProblem, model: AnswerModel): Explanation {
-  const steps = model.steps.map((s, i) => ({ id: s.id, narration: s.explain, math: s.work ?? [], state: i === model.steps.length - 1 ? 2 : 1, answerStep: s.id, result: s.slots[0]!.expected! }));
-  const idea = ["A liter is a fixed amount, about one big bottle of water."];
+  // the answer steps' own explain text is "Show me" in practice, so Watch one says its lines here, by step id
+  const said: Record<string, string> = p.kind === 1
+    ? { solve: solveSaid(p.op, p.a, p.b, "L") }
+    : { step: "Read the labels to see what each mark is worth.", read: `Find the top of the water and read the mark.${p.step !== 1 ? ` Count up by ${p.step}s.` : ""}` };
+  const steps = model.steps.map((s, i) => ({ id: s.id, narration: said[s.id] ?? s.explain, math: s.work ?? [], state: i === model.steps.length - 1 ? 2 : 1, answerStep: s.id, result: s.slots[0]!.expected! }));
+  const idea = ["A liter is about as much as one big bottle of water."];
   if (p.kind === 1) {
     const ans = apply(OPS[p.op]!, p.a, p.b);
     return {
       heading: "Liter stories", idea, statement: [text(litersStory(p))],
       diagram: buildStoryBoxes({ op: OPS[p.op]!, a: p.a, b: p.b, unit: "L", answer: 2, alt: `Boxes showing the story's amounts. The answer is ${ans} liters.` }),
       caption: `${ans} liters.`, timeline: beats(3),
-      steps: [{ id: "readit", narration: "Read the story. Draw the amounts.", math: words("Read it."), state: 0 }, ...steps],
+      steps,
     };
   }
   return {
     heading: "Read a jug", idea, statement: words("How many liters of water are in the jug?"),
     diagram: buildJug({ cap: p.cap, step: p.step, value: p.value, beats: { fill: 0, count: 2 }, alt: `${jugAlt} It fills, then the marks count up by ${p.step} to ${lit(p.value)}.` }),
     caption: `Each mark is ${p.step} L. The water is at ${p.value} L.`, timeline: beats(3),
-    steps: [{ id: "fill", narration: "Water pours in.", math: words("Watch it fill."), state: 0 }, ...steps],
+    steps,
   };
 }
 

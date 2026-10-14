@@ -63,11 +63,11 @@ export function explainEvaluate(p: EvaluatePolynomial, model: AnswerModel) {
     alt: `f(${f(k)}) = ${f(A)} + ${fP(B)}${plusCText(c)} = ${f(total)}.`,
     steps: [
       { id: "plug", narration: `Put ${f(k)} in place of every x.`, math: [...at(k), op("="), ...plugged] },
-      { id: "square", narration: `Square ${f(k)} first: ${f(k * k)}. Times ${f(a)} makes ${f(A)}.`, math: m(a, op("·"), ...P(k), sup(2), op("="), A),
+      { id: "square", narration: `Powers come first: square ${f(k)}, then multiply by ${f(a)}.`, math: m(a, op("·"), ...P(k), sup(2), op("="), A),
         line: [num(A), op(b < 0 ? "−" : "+"), ...(Math.abs(b) === 1 ? [] : [num(Math.abs(b))]), ...K(), ...(c ? [op(c < 0 ? "−" : "+"), num(Math.abs(c))] : [])], answerStep: "square", result: A },
-      { id: "linear", narration: `${f(b)} times ${fP(k)} is ${f(B)}: ${b * k < 0 ? "one negative makes it negative" : b < 0 ? "two negatives make a positive" : "two positives make a positive"}.`, math: m(b, op("·"), ...P(k), op("="), B),
+      { id: "linear", narration: `Multiply the x term: ${b * k < 0 ? "one negative makes it negative" : b < 0 ? "two negatives make a positive" : "two positives make a positive"}.`, math: m(b, op("·"), ...P(k), op("="), B),
         line: m(A, op("+"), ...P(B), ...plusC(c)), answerStep: "linear", result: B },
-      { id: "total", narration: `Add the ${c ? "three" : "two"} parts: f(${f(k)}) = ${f(total)}. So the point (${f(k)}, ${f(total)}) is on the graph of f.`, math: m(...at(k), op("="), total), answerStep: "total", result: total },
+      { id: "total", narration: `Add the ${c ? "three" : "two"} parts. So (${f(k)}, ${f(total)}) is on the graph.`, math: m(...at(k), op("="), total), answerStep: "total", result: total },
     ],
   });
 }
@@ -77,6 +77,7 @@ export const lesson: LessonDefinition<EvaluatePolynomial> = withEasyStart({
   grade: 11,
   unit: "Polynomials",
   title: "Evaluate a polynomial",
+  pre: "g8-func",
   reference: createEvaluatePolynomial(2, -3, 1, -2),
   generate: rng => generateEvaluatePolynomial(rng),
   restore: restoreEvaluatePolynomial,

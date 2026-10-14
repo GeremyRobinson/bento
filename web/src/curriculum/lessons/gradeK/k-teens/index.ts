@@ -59,9 +59,9 @@ function explain(p: TeenProblem, model: AnswerModel): Explanation {
     caption: `${TEN} and ${ones} more is ${n}.`,
     timeline: beats(3),
     steps: [
-      { id: "ten", narration: `The first frame is full. That's **${TEN}**.`, math: [num(TEN)], state: 0 },
-      { id: "ones", narration: `Count the second frame: ${countUp(1, ones)}. That's **${ones}** more.`, math: [text("Extra ones: "), num(ones)], state: 1, answerStep: "ones", result: ones },
-      { id: "teen", narration: `${TEN} and ${ones} more make **${n}**. See the ${ones} in ${n}?`, math: [num(TEN), op("+"), num(ones), op("="), num(n)], state: 2, answerStep: "teen", result: n },
+      { id: "ten", narration: "The first frame is full.", math: [num(TEN)], state: 0 },
+      { id: "ones", narration: `Count the second frame: ${countUp(1, ones)}.`, math: [text("Extra ones: "), num(ones)], state: 1, answerStep: "ones", result: ones },
+      { id: "teen", narration: `See the ${ones} in ${n}? That's the extra ones.`, math: [num(TEN), op("+"), num(ones), op("="), num(n)], state: 2, answerStep: "teen", result: n },
     ],
   };
 }

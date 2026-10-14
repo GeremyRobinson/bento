@@ -10,6 +10,7 @@ export const lesson: LessonDefinition<TranslateProblem> = withEasyStart({
   grade: 8,
   unit: "Geometry",
   title: "Translations",
+  pre: "g7-addint",
   reference: createTranslate(2, 3, 4, -5),
   generate: rng => generateTranslate(rng),
   restore: restoreTranslate,

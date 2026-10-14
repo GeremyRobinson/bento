@@ -12,18 +12,19 @@ export const deviations: Record<string, Partial<Record<string, string>>> = {
     hint: "the flip hint says why: how many c/d fit in one whole; the multiply hint no longer names the bottom (it was the answer when c = 1)",
     checks: "a wrong try that names no slip repeats the new hint",
   },
-  "g5-multdec": {
+  "g5-multdec": { pre: "g4-partial: the first lesson in Curriculum\u2019s v2 depends-on list (curriculum/specs/v2/pre-vs-depends.md; coordinator 2026-10-13, one source of truth)",
     hint: "the hints point at counting the places in both numbers and at what the answer counts, instead of stating 1 + 1 (fixes-02 draft)",
     explain: "Show me says the result where it only repeated the hint",
     checks: `${SLIPS}: "Added instead of multiplied", "Counted one number", and the point slips use number sense ("too big: 0.3 is less than 1")`,
   },
-  "g5-order": {
+  "g5-order": { show: "ends in \"= ?\", so the v2 stage fills in \"= answer\" once the problem is solved, as g5-mult2 does (v2 spec P3 and g5-order, Design 2026-10-13)", pre: "g3-facts: the first lesson in Curriculum\u2019s v2 depends-on list (curriculum/specs/v2/pre-vs-depends.md; coordinator 2026-10-13, one source of truth)",
     "added:first": "a first tap step, \"Which part do you work out first?\", where the left-to-right slip can really happen (fixes-02 draft)",
     hint: "the hints say why each part is next instead of repeating the label (\"Now add.\")",
     explain: "Show me says the result where it only repeated the hint",
     checks: SLIPS,
   },
   "g6-expo": {
+    pre: "g5-order: this lesson adds a new first rung to the order of operations (curriculum/specs/v2/grade6.md §1)",
     "added:count": "a first step, \"how many 2s are multiplied together?\", for what an exponent means (fixes-02 draft)",
     prompt: "the add step shows the whole expression aⁿ + b × c, so the add-before-multiply slip can happen there",
     work: "the add step's worked line is the whole expression with its answer",
@@ -55,6 +56,7 @@ export const deviations: Record<string, Partial<Record<string, string>>> = {
     checks: `${SLIPS}: g4-convert's mix-ups ("Used 10", "Mixed up a day" …) and "Divided instead of multiplied"`,
   },
   "g4-angles": {
+    note: "v2 shows the problem once: the note and the display's \"= 90°\" moved into a lead, which no longer gives away the first step (curriculum/specs/v2/grade4.md §2)",
     unit: "\"Lines and shapes\", right after g4-lines, which first says what an angle is (fixes-02 Order 1)",
     pre: "g4-lines (fixes-02 Order 1)",
     prompt: "the missing part is asked as a° + [ ]° = T°, so the step doesn't hand over the operation (fixes-02 draft)",

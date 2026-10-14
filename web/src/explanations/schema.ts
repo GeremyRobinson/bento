@@ -15,6 +15,8 @@ export type AnimationState =
   | { phase: "factors" }
   | { phase: "split" }
   | { phase: "region"; index: number }
+  /** division: a strip not yet found shows what is left inside it (its result), still soft */
+  | { phase: "left"; index: number }
   | { phase: "sum" }
   | { phase: "beat"; index: number };
 
@@ -44,4 +46,8 @@ export interface Explanation {
   caption?: RichText;
   timeline: AnimationState[];
   steps: ExplanationStep[];
+  /** what the say line adds once the problem is solved, in this problem's numbers: "The four parts make 180." */
+  solved?: RichText;
+  /** the beat a picture shows at rest (Today, teasers) when its finished picture would give the answer away */
+  rest?: number;
 }

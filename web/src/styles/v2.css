@@ -1,0 +1,116 @@
+/* v2 (G 2026-10-13, the Obento v2 model): one workspace on a neutral base. The grade's one colour (--tint) is only on what
+   you press, where you are and progress; everything done goes grey. Panels are plain cards with a hairline, one gap
+   apart; tiles sit one gap inside them. Pictures keep their own warm palette (--pic-*). */
+:root:root:root{--page:var(--v-page)}
+html[data-line] body{background-image:none!important}
+.wrap{--v-acc:var(--tint);--v-acc-on:var(--on-tint);--v-acc-soft:color-mix(in oklab,var(--tint) 14%,var(--v-card))}
+/* the page behind the panels takes a faint wash of the grade colour (goals: "each grade has its own world") */
+:root:has(#app.wrap[data-grade="0"]){--v-page:var(--g0-page)}
+:root:has(#app.wrap[data-grade="1"]){--v-page:var(--g1-page)}
+:root:has(#app.wrap[data-grade="2"]){--v-page:var(--g2-page)}
+:root:has(#app.wrap[data-grade="3"]){--v-page:var(--g3-page)}
+:root:has(#app.wrap[data-grade="4"]){--v-page:var(--g4-page)}
+:root:has(#app.wrap[data-grade="5"]){--v-page:var(--g5-page)}
+:root:has(#app.wrap[data-grade="6"]){--v-page:var(--g6-page)}
+:root:has(#app.wrap[data-grade="7"]){--v-page:var(--g7-page)}
+:root:has(#app.wrap[data-grade="8"]){--v-page:var(--g8-page)}
+:root:has(#app.wrap[data-grade="9"]){--v-page:var(--g9-page)}
+:root:has(#app.wrap[data-grade="10"]){--v-page:var(--g10-page)}
+:root:has(#app.wrap[data-grade="11"]){--v-page:var(--g11-page)}
+:root:has(#app.wrap[data-grade="12"]){--v-page:var(--g12-page)}
+/* every grade takes its accent straight from its tokens (scripts/grade-colours.mjs), so every use is the exact token */
+:is(.wrap,.v-cover)[data-grade="0"]{--v-acc:var(--g0-acc);--v-acc-on:var(--g0-acc-on);--v-acc-soft:var(--g0-acc-soft);--v-acc-fade:var(--g0-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="1"]{--v-acc:var(--g1-acc);--v-acc-on:var(--g1-acc-on);--v-acc-soft:var(--g1-acc-soft);--v-acc-fade:var(--g1-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="2"]{--v-acc:var(--g2-acc);--v-acc-on:var(--g2-acc-on);--v-acc-soft:var(--g2-acc-soft);--v-acc-fade:var(--g2-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="3"]{--v-acc:var(--g3-acc);--v-acc-on:var(--g3-acc-on);--v-acc-soft:var(--g3-acc-soft);--v-acc-fade:var(--g3-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="4"]{--v-acc:var(--g4-acc);--v-acc-on:var(--g4-acc-on);--v-acc-soft:var(--g4-acc-soft);--v-acc-fade:var(--g4-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="5"]{--v-acc:var(--g5-acc);--v-acc-on:var(--g5-acc-on);--v-acc-soft:var(--g5-acc-soft);--v-acc-fade:var(--g5-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="6"]{--v-acc:var(--g6-acc);--v-acc-on:var(--g6-acc-on);--v-acc-soft:var(--g6-acc-soft);--v-acc-fade:var(--g6-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="7"]{--v-acc:var(--g7-acc);--v-acc-on:var(--g7-acc-on);--v-acc-soft:var(--g7-acc-soft);--v-acc-fade:var(--g7-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="8"]{--v-acc:var(--g8-acc);--v-acc-on:var(--g8-acc-on);--v-acc-soft:var(--g8-acc-soft);--v-acc-fade:var(--g8-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="9"]{--v-acc:var(--g9-acc);--v-acc-on:var(--g9-acc-on);--v-acc-soft:var(--g9-acc-soft);--v-acc-fade:var(--g9-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="10"]{--v-acc:var(--g10-acc);--v-acc-on:var(--g10-acc-on);--v-acc-soft:var(--g10-acc-soft);--v-acc-fade:var(--g10-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="11"]{--v-acc:var(--g11-acc);--v-acc-on:var(--g11-acc-on);--v-acc-soft:var(--g11-acc-soft);--v-acc-fade:var(--g11-acc-fade)}
+:is(.wrap,.v-cover)[data-grade="12"]{--v-acc:var(--g12-acc);--v-acc-on:var(--g12-acc-on);--v-acc-soft:var(--g12-acc-soft);--v-acc-fade:var(--g12-acc-fade)}
+/* every go button (Check, Next problem, Start) is the accent: action colour from the grade accent, never the old tint */
+.wrap{--pill-go-bg:var(--v-acc);--pill-go-fg:var(--v-acc-on)}
+/* The ring (G 2026-10-08, kept for v2): every size comes from the pill and the gap. A pill is --pill-size tall and fully
+   round, so its corner is half its height; each ring around it adds one gap of padding and one gap of corner.
+     ring 0  pill, key, tool, answer pill, say line   corner: fully round
+     ring 1  tile inside a panel (scratch pad, cards)  corner --r-in    = pill/2          (26)
+     ring 2  panel                                     corner --r-panel = pill/2 + gap    (36), padding one gap
+   Inside a panel, a block (answer pill, say line, tools, keypad, picture tile) spans the panel's full content width, so
+   siblings always line up; a line of text (step bar, question, work pills, idea, worked lines) sits one more gap in.
+   The answer pill is one gap taller than a pill. No other sizes, corners or gaps are set by hand in a lesson. */
+.wrap{--r-in:calc(var(--pill-size) / 2);--r-panel:calc(var(--r-in) + var(--gap));--text-in:var(--gap)}
+
+
+/* tile pictures: a still version of the lesson's own picture */
+.v-picbox{display:grid;min-height:0}
+.v-pic{display:block;width:100%;height:100%;min-height:0;overflow:visible}
+.v-pic rect,.v-pic polygon{fill:var(--pic-soft);stroke:var(--pic-mid);stroke-width:3;stroke-linejoin:round}
+.v-pic .take{fill:var(--pic-mid)} .v-pic .rest{fill:var(--v-key)}
+.v-pic .brk{fill:none;stroke:var(--pic-deep);stroke-width:3;stroke-linecap:round}
+.v-pic .dot{fill:var(--pic-mid);stroke:var(--pic-deep);stroke-width:3}
+.v-pic .frame{fill:none;stroke:var(--v-muted);stroke-width:2}
+.v-pic g,.v-pic line{fill:none;stroke:var(--pic-mid);stroke-width:2.5;stroke-linecap:round} .v-pic .thin{stroke:var(--v-muted);stroke-width:1.5}
+
+
+/* the island and the corner circles: plain cards with a hairline; only the ring and the grade's number take the colour */
+#app.wrap{--float:var(--v-card);--float-shadow:inset 0 0 0 1px var(--v-line);--btn-float:var(--v-key);--btn-float-hover:var(--v-line)}
+.island .ibat .pring-track{stroke:var(--v-key)}
+.icon{color:var(--v-ink)}
+.icon:hover,.icon:active{background:var(--v-key)}
+.island .iplace{cursor:default}
+.island .ibat.igrade:hover{background:var(--v-line)}
+.island .ibat.igrade.on{background:var(--v-acc-soft)}
+/* the island (v2 model): the back circle, a muted kicker over the title in ink, and the ring: a key track, the accent
+   arc, the number in ink. 40px circles six in from the pill's edge; the words 12 in (2 beside the back circle) */
+#app .island:not(.guest){gap:var(--gap);padding:0 6px}
+#app .island .iback{width:40px;height:40px;color:var(--v-ink)}
+#app .island .iplace{flex:0 1 auto;height:auto;padding:0 6px 0 var(--sp-3)}
+#app .island:has(.iback) .iplace{padding-left:2px}
+#app .island .iplace small{display:block;font-size:var(--fz-xs);line-height:16px;color:var(--v-muted)}
+#app .island .iplace b{font-size:var(--fz-md);line-height:19px;letter-spacing:0;color:var(--v-ink)}
+#app .island .ibat{display:grid;width:40px;height:40px;background:none}
+#app .pring-fill{stroke:var(--v-acc)}
+#app .island .ibat>b{font-size:var(--small);color:var(--v-ink)}
+#app .island .pring{display:none}
+/* a phone: the same island, at the left, its kicker and ring kept (R-S1); the corner circles go to 44 */
+@media (max-width:699px){
+  #app .itop{grid-template-columns:minmax(0,1fr) auto}
+  #app .itop>.icorner.left{display:none}
+  #app .island:not(.guest){width:100%;max-width:none}
+  #app .icorner.right .icon{width:var(--tap);height:var(--tap)}
+  /* a long lesson name wraps to a second line under the kicker instead of ending in "…" (Review g5-full-pass #16):
+     "Multiply two-digit / numbers"; the kicker and the two lines together keep inside the island's height */
+  #app .island .iplace small{line-height:14px}
+  #app .island .iplace b:not(.iprob){white-space:normal;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-size:var(--fz-sm);line-height:16px;text-wrap:balance}
+  /* a name too long for two lines takes the kicker's line as well: three lines of 13px fill the island's height */
+  #app .island .iplace[data-long] small{display:none}
+  #app .island .iplace[data-long] b:not(.iprob){-webkit-line-clamp:3;font-size:var(--fz-xs);line-height:15px}
+}
+/* a narrow screen's Today has no picture (v2 model); this outranks the picture's own display rule above */
+@media (max-width:820px){#app .v-today .v-todaypic{display:none}}
+
+
+
+/* ---- pictures (v2 model, G 2026-10-13 "amazing thickness, color"): one warm hue in three strengths first (soft fill,
+   mid for what's taken or worked, deep for outlines and labels); violet only when two things must be told apart; grey for
+   what isn't counted. The UI's grade colour never goes in a picture. ---- */
+/* the picture roles (--c*, --k*, --tint, --acc, --ka, ...) are mapped once, in picture-system.css */
+/* the area model: every part the one hue; waiting parts soft, worked parts mid, the part you're on outlined bold */
+/* the area model, the model's way (v2 lesson spec G1-G6): separate rounded parts, a 3px deep outline just outside each,
+   soft until reached, mid once worked on; even 1px seats; labels deep when their part is the one asked about */
+#app .am .region .fill{fill:var(--pic-soft);transition:fill var(--dur-500) var(--ease),opacity var(--dur-500) ease}
+#app .am .region[data-shown="true"] .fill,#app .am .region[data-active="true"] .fill{fill:var(--pic-mid)}
+.v-prac:not(.v-learn) .am .region:not([data-shown="true"]):not([data-active="true"]) .fill{fill-opacity:.75}
+#app .am .region .edge{stroke:var(--pic-deep);stroke-width:3px}
+#app .am .region .product,#app .am .region .product text{fill:var(--v-ink)}
+#app .am .part{fill:var(--pic-deep);opacity:1;font-size:max(28px,calc(20px * var(--px,0)));transition:fill var(--dur-400) ease}
+#app .am .part[data-lit="false"]{fill:var(--v-muted)}
+#app .am .seat,#app .am .seat.ten{stroke:var(--pic-line);stroke-width:1px;opacity:.55}
+/* the stage's picture fills the room under the problem, from its top left, like the model (v2 spec P2) */
+#app .v-ppic .viz:has(> .am){position:relative}
+#app .v-ppic .am{position:absolute;inset:0;width:100%;height:100%;max-width:100%;margin:0}
+#app .v-prob .ans{color:var(--pic-deep)}

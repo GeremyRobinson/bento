@@ -1,0 +1,231 @@
+/* ==== The picture system (v2 lesson spec §1 and §3, Review's colour gate K1-K7). ONE place says what every lesson
+   picture looks like: every role a picture builder can name (a cls in scene/schema.ts, a role variable in
+   diagram-master.css) resolves here to a picture token. A builder picks roles; it never picks colours or gaps.
+
+   COLOUR: the role                          what it means                                 token
+   part fill, not reached                    .seg, .cell waiting, .xbox, --fill*, --soft*  pic-soft
+   part fill, active or done                 .seg.on, .cell, .xchip, --tint, --c0..--c2    pic-mid
+   part outline (3px, just outside)          every part, --k0..--k2, --acc, --ink          pic-deep
+   label                                     text.lbl (and text.sm row labels)             pic-deep (muted when another part is active)
+   result, sum, caption, "?"                 text.res, text.acc, .pq text, --ka            ink
+   result ON a mid part                      text.onmid, text.onlbl                        pic-on-mid (tokens.css): ink in light,
+                                                                                          pic-line in dark, where ink on mid is
+                                                                                          only 2.2:1 (pic-line reads 7.6:1)
+   seats, inner lines                        .seat, .tk inside parts                       pic-line
+   axes, brackets, the whole                 .ax, .pw, --text                              ink
+   not counted                               .seg.cut, .pend, --well / --faint             key fill, done outline
+   second quantity (opt in: .two)            .p1 / --c1, --k1, --fill1, --soft1            picb-mid / picb-deep / picb-soft
+   never in a picture                        the accent (acc, blue), red, green, cyan, teal
+
+   A picture shows violet only when its lesson must tell two quantities apart (thirds vs quarters, the second fraction):
+   its scene sets `two: true` and the renderer adds class "two". Without it --c1 is amber like everything else.
+
+   SPACING (model units; the TS twin is explanations/diagrams/scene/picture-system.ts, kept equal by
+   tests/styles/picture-system.test.ts):
+   gap between parts: area model 12, fraction bar segments 6, mixed-number and unit-division bars 4;
+   rows of a bar picture: the same gap as its pieces; label to its part 10; labels 20/650; outline 3; seats 1 at .55.
+   On screen: labels never under 20px, other picture text never under 14px. */
+
+#app{--pic-gap-area:12px;--pic-gap-bar:6px;--pic-gap-mixed:4px;--pic-label-gap:10px;--pic-label:20px;--pic-outline-w:3px;--pic-seat-w:1px;--pic-outline:var(--pic-outline-w);--pic-seat:var(--pic-seat-w);--pic-text-min:14px;
+  /* the part colours the problem line wears (statement.ts partsLook) follow the picture: one hue unless it's a two */
+  --c0:var(--pic-mid);--c1:var(--pic-mid);--c2:var(--pic-mid);--k0:var(--pic-deep);--k1:var(--pic-deep);--k2:var(--pic-deep)}
+/* the pictures are the grade's colour (G 2026-10-13: "the colors for diagrams should be based on the grade color"): its
+   soft / mid / deep, and its partner hue (picb) for a second amount. Outside a grade (landing, every-grade picker) they keep
+   the base palette. Values: scripts/grade-colours.mjs */
+:is(.wrap,.v-cover)[data-grade="0"]{--pic-mid:var(--g0-pic-mid);--pic-soft:var(--g0-pic-soft);--pic-deep:var(--g0-pic-deep);--picb-mid:var(--g0-picb-mid);--picb-soft:var(--g0-picb-soft);--picb-deep:var(--g0-picb-deep);--pic-on-mid:var(--g0-pic-on-mid)}
+:is(.wrap,.v-cover)[data-grade="1"]{--pic-mid:var(--g1-pic-mid);--pic-soft:var(--g1-pic-soft);--pic-deep:var(--g1-pic-deep);--picb-mid:var(--g1-picb-mid);--picb-soft:var(--g1-picb-soft);--picb-deep:var(--g1-picb-deep);--pic-on-mid:var(--g1-pic-on-mid)}
+:is(.wrap,.v-cover)[data-grade="2"]{--pic-mid:var(--g2-pic-mid);--pic-soft:var(--g2-pic-soft);--pic-deep:var(--g2-pic-deep);--picb-mid:var(--g2-picb-mid);--picb-soft:var(--g2-picb-soft);--picb-deep:var(--g2-picb-deep);--pic-on-mid:var(--g2-pic-on-mid)}
+:is(.wrap,.v-cover)[data-grade="3"]{--pic-mid:var(--g3-pic-mid);--pic-soft:var(--g3-pic-soft);--pic-deep:var(--g3-pic-deep);--picb-mid:var(--g3-picb-mid);--picb-soft:var(--g3-picb-soft);--picb-deep:var(--g3-picb-deep);--pic-on-mid:var(--g3-pic-on-mid)}
+:is(.wrap,.v-cover)[data-grade="4"]{--pic-mid:var(--g4-pic-mid);--pic-soft:var(--g4-pic-soft);--pic-deep:var(--g4-pic-deep);--picb-mid:var(--g4-picb-mid);--picb-soft:var(--g4-picb-soft);--picb-deep:var(--g4-picb-deep);--pic-on-mid:var(--g4-pic-on-mid)}
+:is(.wrap,.v-cover)[data-grade="5"]{--pic-mid:var(--g5-pic-mid);--pic-soft:var(--g5-pic-soft);--pic-deep:var(--g5-pic-deep);--picb-mid:var(--g5-picb-mid);--picb-soft:var(--g5-picb-soft);--picb-deep:var(--g5-picb-deep);--pic-on-mid:var(--g5-pic-on-mid)}
+:is(.wrap,.v-cover)[data-grade="6"]{--pic-mid:var(--g6-pic-mid);--pic-soft:var(--g6-pic-soft);--pic-deep:var(--g6-pic-deep);--picb-mid:var(--g6-picb-mid);--picb-soft:var(--g6-picb-soft);--picb-deep:var(--g6-picb-deep);--pic-on-mid:var(--g6-pic-on-mid)}
+:is(.wrap,.v-cover)[data-grade="7"]{--pic-mid:var(--g7-pic-mid);--pic-soft:var(--g7-pic-soft);--pic-deep:var(--g7-pic-deep);--picb-mid:var(--g7-picb-mid);--picb-soft:var(--g7-picb-soft);--picb-deep:var(--g7-picb-deep);--pic-on-mid:var(--g7-pic-on-mid)}
+:is(.wrap,.v-cover)[data-grade="8"]{--pic-mid:var(--g8-pic-mid);--pic-soft:var(--g8-pic-soft);--pic-deep:var(--g8-pic-deep);--picb-mid:var(--g8-picb-mid);--picb-soft:var(--g8-picb-soft);--picb-deep:var(--g8-picb-deep);--pic-on-mid:var(--g8-pic-on-mid)}
+:is(.wrap,.v-cover)[data-grade="9"]{--pic-mid:var(--g9-pic-mid);--pic-soft:var(--g9-pic-soft);--pic-deep:var(--g9-pic-deep);--picb-mid:var(--g9-picb-mid);--picb-soft:var(--g9-picb-soft);--picb-deep:var(--g9-picb-deep);--pic-on-mid:var(--g9-pic-on-mid)}
+:is(.wrap,.v-cover)[data-grade="10"]{--pic-mid:var(--g10-pic-mid);--pic-soft:var(--g10-pic-soft);--pic-deep:var(--g10-pic-deep);--picb-mid:var(--g10-picb-mid);--picb-soft:var(--g10-picb-soft);--picb-deep:var(--g10-picb-deep);--pic-on-mid:var(--g10-pic-on-mid)}
+:is(.wrap,.v-cover)[data-grade="11"]{--pic-mid:var(--g11-pic-mid);--pic-soft:var(--g11-pic-soft);--pic-deep:var(--g11-pic-deep);--picb-mid:var(--g11-picb-mid);--picb-soft:var(--g11-picb-soft);--picb-deep:var(--g11-picb-deep);--pic-on-mid:var(--g11-pic-on-mid)}
+:is(.wrap,.v-cover)[data-grade="12"]{--pic-mid:var(--g12-pic-mid);--pic-soft:var(--g12-pic-soft);--pic-deep:var(--g12-pic-deep);--picb-mid:var(--g12-picb-mid);--picb-soft:var(--g12-picb-soft);--picb-deep:var(--g12-picb-deep);--pic-on-mid:var(--g12-pic-on-mid)}
+#app :is(.screen,.v-today):has(.viz-svg.two){--c1:var(--picb-mid);--k1:var(--picb-deep)}
+/* the first quantity in the problem line is always the picture's amber, whatever the lesson's old tone (.t0-.t3) */
+#app :is(.t0,.t1,.t2,.t3) :is(.mline .pt.p0,.tone.p0){color:var(--k0)}
+
+/* every role a picture reads, mapped on the picture itself so nothing from the page (the grade accent, the old palette's
+   cyan --ka and --acc, the lifted --lbl) reaches inside */
+#app :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){
+  --tint:var(--pic-mid);--deep:var(--pic-deep);--ink:var(--pic-deep);--lbl:var(--deep);
+  --c0:var(--pic-mid);--c1:var(--pic-mid);--c2:var(--pic-mid);--k0:var(--pic-deep);--k1:var(--pic-deep);--k2:var(--pic-deep);
+  --fill0:var(--pic-soft);--fill1:var(--pic-soft);--fill2:var(--pic-soft);--soft:var(--pic-soft);--soft0:var(--pic-soft);--soft1:var(--pic-soft);--soft2:var(--pic-soft);
+  --tint-soft:var(--pic-soft);--dot:var(--pic-mid);
+  --acc:var(--pic-deep);--soft-acc:var(--pic-mid);--ka:var(--v-ink);
+  --text:var(--v-ink);--muted:var(--v-muted);--rule:var(--v-line);--faint:var(--v-done);--well:var(--v-key);--card:var(--v-card);
+  --on-pic:var(--pic-on-mid);--on-tint:var(--pic-on-mid);--d-line:var(--pic-outline)}
+/* line weight is held on screen (Review 26fe1f8): a picture drawn bigger than its own size (a tablet zooms it up to 3x) keeps
+   every line at its written weight instead of zooming it with the shapes; a picture drawn smaller (a phone) keeps its lines
+   as they are. --sw is how much a line is drawn at: 1, or the picture's units per screen pixel (--px) when that is under 1 */
+#app svg:is(.viz-svg,.am){--sw:min(1, var(--px, 1));
+  --pic-outline:calc(var(--pic-outline-w) * var(--sw));--pic-seat:calc(var(--pic-seat-w) * var(--sw));
+  --d-hair:calc(var(--dw-hair) * var(--sw));--d-ridge:calc(var(--dw-ridge) * var(--sw));--d-cube:calc(var(--dw-cube) * var(--sw));
+  --d-thin:calc(var(--dw-thin) * var(--sw));--d-edge:calc(var(--dw-edge) * var(--sw));--d-stroke:calc(var(--dw-stroke) * var(--sw));
+  --d-bold:calc(var(--dw-bold) * var(--sw));--d-heavy:calc(var(--dw-heavy) * var(--sw));--d-beam:calc(var(--dw-beam) * var(--sw));
+  --d-mark:calc(var(--dw-mark) * var(--sw));--d-glow:calc(var(--dw-glow) * var(--sw));--d-numeral:calc(var(--dw-numeral) * var(--sw))}
+#app :is(.viz-svg,.am,.viz).two{--c1:var(--picb-mid);--k1:var(--picb-deep);--fill1:var(--picb-soft);--soft1:var(--picb-soft)}
+/* a part class retints everything in it, outline, fill and label together (a part never mixes amber and violet, M5) */
+#app .viz-svg .p0{--tint:var(--c0);--deep:var(--k0);--soft:var(--soft0)}
+#app .viz-svg .p1{--tint:var(--c1);--deep:var(--k1);--soft:var(--soft1)}
+#app .viz-svg .p2{--tint:var(--c2);--deep:var(--k2);--soft:var(--soft2)}
+#app .viz-svg .pw{--tint:var(--v-ink);--deep:var(--v-ink)}
+#app .viz-svg .pq{--tint:var(--v-ink);--deep:var(--v-ink)}
+#app .viz-svg text{--lbl:var(--deep)}
+
+/* text: labels deep at 20/650, results and captions ink, small notes muted */
+#app .viz-svg text{fill:var(--v-ink)}
+/* on screen a label never reads under 20px and any other text never under 14px (--px: model units per screen pixel) */
+#app .viz-svg text:not(.big,.sm,.xs,.lbl){font-size:max(var(--d-text),calc(var(--pic-text-min) * var(--px,0)))}
+#app .viz-svg text.sm{font-size:max(var(--d-text-sm),calc(var(--pic-text-min) * var(--px,0)))}
+#app .viz-svg text.xs{font-size:max(var(--d-text-xs),calc(var(--pic-text-min) * var(--px,0)))}
+#app .viz-svg text.big:not(.lbl){font-size:max(var(--d-text-xl),calc(var(--pic-label) * var(--px,0)))}
+#app .viz-svg text.lbl{fill:var(--deep);font-size:max(var(--pic-label),calc(var(--pic-label) * var(--px,0)));font-weight:var(--w-bold)}
+#app .viz-svg text.lbl.big{font-size:max(var(--d-text-lg),calc(var(--pic-label) * var(--px,0)))}
+/* a label above its part stands on its bottom edge (.up) and one below hangs from its top edge (.down), so a label held
+   at its phone floor grows away from what it names, never into it */
+#app .viz-svg text.up{dominant-baseline:text-after-edge}
+#app .viz-svg text.down{dominant-baseline:text-before-edge}
+/* a short box (--box-h, SceneDiagram: a phone's Watch one or practice strip, 300px tall or less; --short is 1 there and 0
+   everywhere else). A picture whose working is a tall stack of lines writes it as one line there: each line moves into
+   the first line's place (shortUp) and gives way once the next line is written, from that beat (.shortgo) or at --d2
+   seconds into it (.shortout). They go by fill and stroke opacity, so a part's own entrance still plays on opacity. */
+#app .viz-svg{--short:clamp(0,calc((300 - var(--box-h,999)) * 1000),1)}
+#app .viz-svg :is(.shortgo,.shortout){fill-opacity:calc(1 - var(--short));stroke-opacity:calc(1 - var(--short))}
+/* the short wording that stands in for a .shortgo label there ("300" for "3 hundreds = 300"): only in a short box */
+#app .viz-svg .shortonly{fill-opacity:var(--short);stroke-opacity:var(--short)}
+#app .viz-svg .shortout{animation:shortOut var(--dur-300) var(--m-ease) var(--d2,0s) both}
+#app .viz-svg .shortout.a-rise{animation:rise var(--m-pop) var(--m-spring) var(--d,0s) both,shortOut var(--dur-300) var(--m-ease) var(--d2,0s) both}
+#app .viz-svg .shortout.a-pop{animation:popIn var(--m-pop) var(--m-spring) var(--d,0s) both,shortOut var(--dur-300) var(--m-ease) var(--d2,0s) both}
+#app .viz-svg .shortout.a-fade{animation:fadeIn var(--dur-500) var(--m-ease) var(--d,0s) both,shortOut var(--dur-300) var(--m-ease) var(--d2,0s) both}
+#app .viz-svg .shortout.a-flash{animation:fadeIn var(--dur-400) var(--m-ease) var(--d) both,fadeOut var(--dur-300) var(--m-ease) var(--d2) forwards,shortOut var(--dur-300) var(--m-ease) var(--d2,0s) both}
+@keyframes shortOut{from{fill-opacity:1;stroke-opacity:1}}
+/* a caption under the picture (.cap: the worked line written out) is left out of practice, where the work list already
+   shows each worked line and the picture keeps the strip's height for itself (G 2026-10-14, the wide practice strip) */
+#app .v-prac:not(.v-learn) .v-ppic .viz-svg text.cap{display:none}
+#app .viz-svg :is(text.acc,text.pq,.pq text,text.okmark,text.lbl.pw,text.res){fill:var(--v-ink)}
+#app .viz-svg :is(text.xs,text.muted,text.lbl.muted){fill:var(--v-muted)}
+/* text sitting on a mid part (after the muted rule: a small count on a shaded piece is a result, not a note) */
+#app .viz-svg :is(text.onlbl,text.onmid,text.xs.onlbl){fill:var(--pic-on-mid)}
+
+/* parts: soft until reached, mid once active or done, a 3px deep outline */
+#app .viz-svg :is(.seg,.xbox,.sq,.tile.x,.foldshape){fill:var(--pic-soft);stroke:var(--deep);stroke-width:var(--pic-outline)}
+#app .viz-svg :is(.seg.on,.cell,.xchip,.sq.big,.bar,.foldhalf){fill:var(--tint);stroke:var(--deep);stroke-width:var(--pic-outline)}
+#app .viz-svg .xbox.pw{fill:none;stroke:var(--v-done)}
+#app .viz-svg .xchip.pq{fill:var(--pic-mid);stroke:var(--pic-deep)}
+/* not counted: grey fill, grey outline (M5) */
+#app .viz-svg :is(.seg.cut,.seg.on.cut,.pend,.xchip.ghost){fill:var(--v-key);stroke:var(--v-done);opacity:1}
+/* shading inside a whole (fraction grids, columns): the part's own soft or mid, never a see-through mix */
+#app .viz-svg :is(.fill,.fillsoft,.shadeA){fill:var(--soft);opacity:1}
+#app .viz-svg .shadeA{fill:var(--tint);stroke:var(--deep);stroke-width:var(--pic-outline)}
+/* shaded twice (a fraction of a fraction): the first quantity's amber half over the second's violet */
+#app .viz-svg :is(.shadeB,.both){fill:var(--pic-mid);stroke:none}
+/* ---- the WORKED STEP role: `lit` (every picture family; the model's logic, G 2026-10-13 22:10) ----
+   The part the current step works on wears class `lit`; so do its labels. A builder marks them through the scene item's
+   cls (e.g. cls: "seg lit", cls: "lbl lit"), on the beat(s) that step plays, by giving the lit copy `from`/`until` for
+   that step; the area model sets it itself from its timeline.
+   - a part (rect, path, polygon, circle) with `lit`: soft fill turns mid and its outline is the part's deep, 3px
+   - a label (text.lbl) with `lit`: deep; while any part of the picture is lit, the side/edge labels without it go muted
+     (results that carry .lbl for size, .res .pw .acc .onmid .onlbl, never mute)
+   - everything without `lit` stays as it is (finished parts stay mid, waiting ones soft)
+   - the change is a fill/stroke transition, --dur-350 on --m-ease, the same as the area model; nothing grows or pulses
+   - a miss uses the same role: while the miss shows, the lit part stays and everything else steps back (below) */
+#app .viz-svg :is(rect,path,polygon,circle).lit{fill:var(--tint);stroke:var(--deep);stroke-width:var(--pic-outline)}
+#app .viz-svg :is(rect,path,polygon,circle){transition:fill var(--dur-350) var(--m-ease),stroke var(--dur-350) var(--m-ease),opacity var(--dur-350) var(--m-ease)}
+/* only side and edge labels step back: results that wear .lbl for its size (.res, .pw, .acc, .onmid) keep ink / on-mid */
+#app .viz-svg:has(:not(text).lit) text.lbl:not(.lit,.res,.pw,.acc,.onmid,.onlbl){fill:var(--v-muted)}
+#app .viz-svg text.lbl.lit{fill:var(--deep)}
+#app .viz-svg text{transition:fill var(--dur-350) var(--m-ease),opacity var(--dur-350) var(--m-ease)}
+/* solids: faces in the three strengths, edges deep */
+#app .viz-svg .cf{stroke:var(--pic-line)}
+#app .viz-svg .cf.cube{stroke:var(--pic-deep);stroke-width:var(--pic-seat)}
+#app .viz-svg .cf.cube.left,#app .viz-svg .cf.left{fill:var(--pic-soft)}
+#app .viz-svg :is(.cf.cube.top,.cf.top){fill:var(--pic-mid)}
+#app .viz-svg :is(.cf.cube.right,.cf.right){fill:var(--pic-mid)}
+#app .viz-svg :is(.edge,.litedge){stroke:var(--pic-deep)}
+/* seats and inner lines */
+#app :is(.viz-svg,.am) .seat{stroke:var(--pic-line);stroke-width:var(--pic-seat);opacity:.55}
+#app .viz-svg .grid{stroke:var(--pic-line);opacity:.55}
+/* lines, marks and points: amber, the one to look at deep; the whole and its brackets ink */
+#app .viz-svg :is(.ln2,.hl,.hlline,.ring,.xring,.arcline.thin){stroke:var(--pic-deep)}
+/* order of operations: the parentheses and the ring round the lit group are the same 3px line as every outline (G: match the model) */
+#app .viz-svg[data-family="order-tiles"] .ln2{stroke-width:var(--pic-outline)}
+/* its numbers and signs are the problem itself, so they read at twice a label, never under a label on screen */
+#app .viz-svg[data-family="order-tiles"] text.lbl{font-size:max(calc(var(--pic-label) * 2),calc(var(--pic-label) * var(--px,0)))}
+#app .viz-svg .dotp{fill:var(--pic-mid);stroke:var(--pic-deep);stroke-width:var(--d-stroke)}
+#app .viz-svg .dota{fill:var(--pic-mid)}
+
+/* tile pictures (TilePics, .v-pic): the same roles, still. Outlines deep, taken parts mid, the rest grey (not counted) */
+#app .v-pic :is(rect,polygon){stroke:var(--pic-deep)}
+#app .v-pic .rest{fill:var(--v-key);stroke:var(--v-done)}
+#app .v-pic .frame{stroke:var(--v-done)}
+/* the picked tile wears ONE accent ring, inset on the tile card (spec D2), never a second one round it or its picture:
+   keyboard focus on a tile shows as that same ring */
+
+/* chapter covers as icons (tilepics/icon-covers.ts): one outline colour and one soft fill, both the grade's deep picture
+   colour, so the covers follow dark mode. Each comes in once with a pop; never a loop */
+#app .cvi{display:block;width:100%;height:100%;max-height:84px;color:var(--pic-deep);overflow:visible}
+@media (prefers-reduced-motion:no-preference){
+  #app .cvi>g{transform-box:fill-box;transform-origin:center;animation:cv-pop var(--m-pop) var(--m-settle) both}
+}
+@keyframes cv-pop{from{opacity:0;transform:scale(.4)}}
+
+/* the area model's results (g5-mult2 and every .am): on its mid parts, in the on-mid text token, and sized 12 to 26
+   picture units like every other result (spec G6), never under 12px on screen */
+#app .am .region{fill:none}
+#app .am .region .product,#app .am .region .product text{fill:var(--v-ink)}
+#app .am .region:is([data-shown="true"],[data-active="true"]) :is(.product,.product text){fill:var(--pic-on-mid)}
+/* division: a strip not yet found already holds what is left, shown as its result (spec g5-divide, step 3) */
+#app .am .region[data-left="true"] .product{opacity:1}
+#app .am .region .product{font-size:max(calc(min(var(--fs),26) * 1px),calc(var(--pic-text-min) * var(--px,0)))}
+/* a part's outline reads at its 3px on screen at any picture size, so an empty (soft) strip is never lost on a dark card
+   (Review #18: navy on near-black) */
+#app .am .region .edge{stroke-width:max(var(--pic-outline),calc(var(--pic-outline) * var(--px,0)))}
+/* a result too wide for its thin strip sits just outside it, on the card, joined to it by a short leader in the part's
+   outline colour (Review #13); it shows when the result would */
+#app .am .region[data-out="true"] :is(.product,.product text){fill:var(--v-ink)}
+#app .am .region .leader{stroke:var(--pic-deep);stroke-width:max(var(--pic-outline),calc(var(--pic-outline) * var(--px,0)));stroke-linecap:round;opacity:0}
+#app .am .region:is([data-shown="true"],[data-left="true"]) .leader{opacity:1}
+/* the last beat: a bracket closes the strips (ink, like the whole) and the sum is written under it */
+#app .am .sum .bracket{fill:none;stroke:var(--v-ink);stroke-width:max(var(--pic-outline),calc(var(--pic-outline) * var(--px,0)));stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
+#app .am .sum .sumtext{fill:var(--v-ink);opacity:0;font-size:max(calc(var(--fs) * 1px),calc(var(--pic-text-min) * var(--px,0)))}
+#app .am .sum[data-on="true"] .bracket{stroke-dashoffset:0;transition:stroke-dashoffset var(--m-grow) var(--m-ease)}
+#app .am .sum[data-on="true"] .sumtext{opacity:1}
+#app .v-todaypic .am :is(.sum,.region .leader){display:none}
+
+/* Today's picture on home: the lesson's picture, built in the grade's bright colour, no results (goals doc; spec: Today on home) */
+/* it builds once when home opens, step by step like the lesson, then stays still in the grade's bright colour (no loop,
+   G 2026-10-13: "the breathing on diagrams is unnecessary"): no results, so it never gives the answer away */
+#app .v-todaypic .am .region .fill,#app .v-todaypic .am .region[data-shown="true"] .fill,#app .v-todaypic .am .region[data-active="true"] .fill{fill:var(--pic-mid)}
+#app .v-todaypic .viz-svg .cell{fill:var(--pic-mid)}
+#app .v-todaypic :is(.am .region .product,.viz-svg text.res,.viz-svg text.onmid){display:none}
+/* a picture that finds its widths (division) would give the answer away with its top labels, so Today shows none (spec g5-divide) */
+#app .v-todaypic .am[data-find="true"] text.out-top{display:none}
+
+/* ==== Picture motion: the motion IS the maths step (G 2026-10-13 22:10, "animations are specific to their function"; the
+   model's svg() and playLearn()). One step per beat, and each change says what that step did. Nothing grows, bounces,
+   pulses or loops. Less motion turns all of it off (motion.css).
+   - the part being worked on turns from soft to mid, and its column and row labels light from muted to deep (the others
+     stay muted): "this part now". A finished part stays mid.
+   - a part's result fades in inside it once it is worked out (outside it, on its leader, when the part is too thin)
+   - division: what's left fades into the leftover strip on the subtract step, before its width is found
+   - the last step: the bracket draws along under the strips (closing them into one sum), then the sum fades in under it
+   - the problem's answer comes in the problem line only once the last part is added (the Learn timeline) */
+#app .am .region .fill{transition:fill var(--dur-350) var(--m-ease)}
+#app .am .part{transition:fill var(--dur-350) var(--m-ease)}
+#app .am .region .product,#app .am .region .leader{transition:opacity var(--dur-300) var(--m-ease)}
+#app .am .sum[data-on="true"] .sumtext{transition:opacity var(--dur-300) var(--m-ease) var(--dur-350)}
+/* a miss: the picture shows where to look (Review #9), through the worked-step role. The say line names the lit part
+   ("Look again at the lit strip"), so while the miss shows, every part without `lit` steps back and the lit part (fill
+   and labels) is all that stays lit: one change in, one change out, no wobble. It hangs on the miss state the solve panel
+   already shows (.v-ask.no: on with each miss, off as soon as the child types), so it never loops. Any family whose
+   builder marks its step's part `lit` gets it; the area model marks its asked strip itself. */
+#app .am .region{transition:opacity var(--dur-350) var(--m-ease)}
+#app .screen.v-prac:not(.solved):has(.v-ask.no) .v-ppic .am:has(.region.lit) .region:not(.lit),
+#app .screen.v-prac:not(.solved):has(.v-ask.no) .v-ppic .viz-svg:has(>:not(text).lit)>:not(text,.lit){opacity:.35}
+/* a re-cut fraction bar splits: a shaded piece slides apart from its brothers along the cut (tape master) */
+#app .viz-svg .seg.on.a-slide{animation:slide var(--dur-1000) var(--ease) var(--d,0s) both}

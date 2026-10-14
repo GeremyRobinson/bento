@@ -53,8 +53,8 @@ export function explainAngleParts(p: AnglePartsProblem, answers: AnswerModel): E
     timeline: beats(3),
     steps: [
       { id: "parts", narration: `Two angles share a corner. One of them is ${a}°.`, math: mt`${a}° + ? = ${T}°`, state: 0 },
-      { id: "whole", narration: `Together they make ${st ? "a straight line" : "a right angle"}, which is ${T}°.`, math: mt`${T}°`, state: 1, answerStep: "whole", result: T },
-      { id: "missing", narration: `The missing part is what's left: ${T} − ${a} = ${rest}°.`, math: mt`${T} − ${a} = ${rest}°`, state: 2, answerStep: "missing", result: rest },
+      { id: "whole", narration: `Together they make ${st ? "a straight line, two square corners" : "a right angle, a square corner"}.`, math: mt`${T}°`, state: 1, answerStep: "whole", result: T },
+      { id: "missing", narration: "Take away the part you know to find what's left.", math: mt`${T} − ${a} = ${rest}°`, state: 2, answerStep: "missing", result: rest },
     ],
   };
 }
@@ -74,7 +74,8 @@ export const lesson: LessonDefinition<AnglePartsProblem> = {
   },
   restore: restoreAngleParts,
   display: p => mt`${p.a}° + ? = ${p.st ? 180 : 90}°`,
-  displayNote: p => (p.st ? "Two angles make a straight line." : "Two angles make a right angle."),
+  // the question in words: "= 90°" on the math line gave away the first step (grade4.md section 2)
+  lead: p => `Two angles make ${p.st ? "a straight line" : "a right angle"}. One is **${p.a}°**. How big is the other one?`,
   answers: anglePartsAnswers,
   explain: explainAngleParts,
 };

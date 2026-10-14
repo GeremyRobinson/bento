@@ -52,14 +52,14 @@ function explain(p: CountProblem, model: AnswerModel): Explanation {
   const { n } = p, row = expectedOf(model, "row"), all = expectedOf(model, "count-on");
   return {
     heading: "Count on from 10",
-    idea: ["After one full row of ten, you can keep counting on from 10."],
+    idea: ["A full row is 10, so keep counting on from 10."],
     statement: words("How many dots?"),
     diagram: countStrip(n, `${count(row, "dot")} in the top row and ${n - row} in the bottom row, counted 1 to ${all}.`, { firstBeat: 0, restBeat: 1 }),
     caption: `${row} and ${n - row} more make ${all}.`,
     timeline: beats(2),
     steps: [
-      { id: "row", narration: `Count the top row: ${countUp(1, row)}. That's **${row}**.`, math: [text("Top row: "), num(row)], state: 0, answerStep: "row", result: row },
-      { id: "count-on", narration: `Keep going from ${row}: ${countUp(row + 1, all)}. There are **${all}** dots.`, math: [text("All the dots: "), num(all)], state: 1, answerStep: "count-on", result: all },
+      { id: "row", narration: `Count the top row: ${countUp(1, row)}.`, math: [text("Top row: "), num(row)], state: 0, answerStep: "row", result: row },
+      { id: "count-on", narration: `Keep going from ${row}: ${countUp(row + 1, all)}.`, math: [text("All the dots: "), num(all)], state: 1, answerStep: "count-on", result: all },
     ],
   };
 }

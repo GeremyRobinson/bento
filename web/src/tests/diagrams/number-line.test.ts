@@ -17,7 +17,11 @@ export function layoutProblems(d: SceneDiagram, beatsCount: number): string[] {
   const out: string[] = [];
   const boxes = texts(d).map(t => {
     const size = sizeOf(t.cls), w = textWidth(t.text + (t.sup ?? ""), size);
-    return { t, x0: t.x - w / 2, x1: t.x + w / 2, y0: t.y - size / 2, y1: t.y + size / 2, from: t.from ?? 0, until: t.until ?? beatsCount };
+    // a label pinned to an edge ("end" / "start") runs from its anchor inward
+    const x0 = /\bend\b/.test(t.cls ?? "") ? t.x - w : /\bstart\b/.test(t.cls ?? "") ? t.x : t.x - w / 2;
+    // one standing on its anchor (.up) runs up from it, one hanging (.down) runs down
+    const y0 = /\bup\b/.test(t.cls ?? "") ? t.y - size : /\bdown\b/.test(t.cls ?? "") ? t.y : t.y - size / 2;
+    return { t, x0, x1: x0 + w, y0, y1: y0 + size, from: t.from ?? 0, until: t.until ?? beatsCount };
   });
   for (const b of boxes) {
     if (b.x0 < -1 || b.x1 > d.width + 1 || b.y0 < -1 || b.y1 > d.height + 1) out.push(`"${b.t.text}" runs off the ${d.width}×${d.height} canvas`);
@@ -52,17 +56,17 @@ describe("buildNumberLine", () => {
     const ticks = line.items.filter(i => i.type === "line" && i.cls === "tk") as Extract<SceneItem, { type: "line" }>[];
     expect(ticks).toHaveLength(11);
     const gaps = ticks.slice(1).map((t, i) => t.x1 - ticks[i]!.x1);
-    for (const g of gaps) expect(g).toBeCloseTo(46, 0);
+    for (const g of gaps) expect(g).toBeCloseTo(28.2, 0);
     expect(texts(line).filter(t => t.cls === "sm").map(t => t.text)).toEqual(["−4", "−3", "−2", "−1", "0", "1", "2", "3", "4", "5", "6"]);
   });
 
   it("starts and ends each hop on its values, on its beat", () => {
-    const xOf = (v: number) => 30 + ((v + 4) / 10) * 460;
+    const xOf = (v: number) => 24 + ((v + 4) / 10) * 282;
     const paths = line.items.filter(i => i.type === "path") as Extract<SceneItem, { type: "path" }>[];
     expect(paths.map(p => p.from)).toEqual([0, 1]);
     const ends = paths.map(p => p.d.match(/^M([\d.]+) [\d.]+ Q[\d.]+ -?[\d.]+ ([\d.]+)/)!.slice(1).map(Number));
     expect(ends).toEqual([[xOf(-3), xOf(0)], [xOf(0), xOf(5)]].map(e => e.map(v => Math.round(v * 10) / 10)));
-    expect(texts(line).filter(t => t.cls === "lbl").map(t => t.text)).toEqual(["3", "5"]);
+    expect(texts(line).filter(t => /^lbl( up| down)?$/.test(t.cls ?? "")).map(t => t.text)).toEqual(["3", "5"]);
   });
 
   it("refuses values off the line", () => {
@@ -77,7 +81,7 @@ describe("buildNumberLine", () => {
   it("labels only some hops in a long run of short ones", () => {
     const hops = Array.from({ length: 29 }, (_, i) => ({ from: i, to: i + 1, label: "+9", beat: 0 }));
     const d = buildNumberLine({ min: 0, max: 29, hops, alt: "x" });
-    const n = texts(d).filter(t => t.cls === "lbl").length;
+    const n = texts(d).filter(t => /^lbl( up| down)?$/.test(t.cls ?? "")).length;
     expect(n).toBeGreaterThan(3);
     expect(n).toBeLessThan(29);
     expect(layoutProblems(d, 1)).toEqual([]);
@@ -89,6 +93,32 @@ describe("decimal shift", () => {
     expect(shiftDigits("837", 1, 4)).toEqual({ digits: "8370", from: 1, to: 4, added: [3] });
     expect(shiftDigits("45000", 5, 1)).toEqual({ digits: "45000", from: 5, to: 1, added: [] });
     expect(shiftDigits("5", 1, -1)).toEqual({ digits: "005", from: 3, to: 1, added: [1, 0] });
+  });
+
+  it("g5-pow10: the finished cards are the answer's digits, each written-in 0 popping in as the point hops under it", () => {
+    const l = lessonById("g5-pow10")!;
+    const rng = createRng(7);
+    for (let i = 0; i < 60; i++) {
+      const p = l.generate(rng, i) as { x: number; k: number };
+      const ex = l.explain(p, l.answers(p)), d = ex.diagram as SceneDiagram, last = ex.timeline.length - 1;
+      const cards = texts(d).filter(t => /\bbig\b/.test(t.cls ?? "") && (t.from ?? 0) <= last).sort((a, b) => a.x - b.x);
+      const ans = Math.round(p.x * 10 ** p.k * 100) / 100, [whole, frac = ""] = String(ans).split(".");
+      expect(cards.map(t => t.text).join("")).toBe(whole! + frac);
+      // the point lands after the answer's whole part: as many cards left of it as the answer has whole digits
+      const land = circles(d).find(c => c.cls === "dota")!;
+      expect(cards.filter(t => t.x < land.cx)).toHaveLength(whole!.length);
+      // every hop lands on a card: no hop ends past the last card
+      const hops = d.items.filter((it): it is Extract<SceneItem, { type: "path" }> => it.type === "path" && /arrow/.test(it.cls ?? ""));
+      expect(hops).toHaveLength(p.k);
+      const rects = d.items.filter((it): it is Extract<SceneItem, { type: "rect" }> => it.type === "rect");
+      const right = Math.max(...rects.map(r => r.x + r.w));
+      for (const h of hops) expect(Math.max(...h.d.match(/-?[\d.]+/g)!.map(Number).filter((_, k) => k % 2 === 0))).toBeLessThanOrEqual(right + 6);
+      // the new 0s are cards of their own, filled in the picture's colour, and they come in with the hop under them
+      const fresh = cards.filter(t => t.from === 1);
+      expect(fresh.every(t => t.text === "0" && /onmid/.test(t.cls ?? ""))).toBe(true);
+      expect(fresh).toHaveLength(Math.max(0, p.k - (String(p.x).split(".")[1]?.length ?? 0)));
+      for (const t of fresh) expect(t.delay!).toBeLessThan(0.2 + p.k * 0.45);
+    }
   });
 
   it("moves the point one box per hop, from where it starts to where it lands", () => {
@@ -166,7 +196,7 @@ describe("pictures follow the problem", () => {
   it("k-add counts the first group from 0, then hops on from a to a + b, every hop above the line", () => {
     const l = lessonById("k-add")!, p = l.generate(createRng(3), 0) as { a: number; b: number };
     const d = l.explain(p, l.answers(p)).diagram as SceneDiagram;
-    const top = texts(d).filter(t => t.cls === "lbl").map(t => Number(t.text));
+    const top = texts(d).filter(t => /^lbl( up| down)?$/.test(t.cls ?? "")).map(t => Number(t.text));
     expect(top).toEqual(Array.from({ length: p.a + p.b }, (_, i) => i + 1));
     // a hop below the line means taking away (v44 sweep #3): none here, so no arc is drawn in the second part colour
     const arcs = d.items.filter(it => it.type === "path" && /\bln\b/.test((it as { cls?: string }).cls ?? ""));

@@ -63,9 +63,9 @@ export function explainInverse(p: InverseProblem, model: AnswerModel): Explanati
     }),
     timeline: beats(3),
     steps: [
-      { id: "ask", narration: `f(x) = ${fx}. Which input gives ${f(y)}? Undo f's steps in reverse order.`, math: [...inverseMath(p)], state: 0 },
-      { id: "sub", narration: `f adds ${fP(b)} last, so undo it first: ${f(y)} − ${fP(b)} = ${f(ax)}.`, math: [num(y), op("−"), ...P(b), op("="), num(ax)], state: 1, answerStep: "sub", result: ax },
-      { id: "x", narration: `Then undo × ${fP(a)}: ${f(ax)} ÷ ${fP(a)} = ${f(x)}. Check: f(${f(x)}) = ${f(y)}.`, math: [num(ax), op("÷"), ...P(a), op("="), num(x)], state: 2, answerStep: "x", result: x },
+      { id: "ask", narration: `Which input gives ${f(y)}? Undo f's steps in reverse order.`, math: [...inverseMath(p)], state: 0 },
+      { id: "sub", narration: `f adds ${fP(b)} last, so undo that first.`, math: [num(y), op("−"), ...P(b), op("="), num(ax)], state: 1, answerStep: "sub", result: ax },
+      { id: "x", narration: `Then undo the × ${fP(a)}. Check: f(${f(x)}) = ${f(y)}, so ${pt(x, y)} mirrors to ${pt(y, x)}.`, math: [num(ax), op("÷"), ...P(a), op("="), num(x)], state: 2, answerStep: "x", result: x },
     ],
   };
 }
@@ -75,7 +75,7 @@ export const lesson: LessonDefinition<InverseProblem> = withEasyStart({
   grade: 11,
   unit: "Functions",
   title: "Inverse functions",
-  pre: "g11-compose",
+  pre: "g7-eq",
   reference: createInverse(3, 2, 4),
   generate: rng => generateInverse(rng),
   restore: restoreInverse,

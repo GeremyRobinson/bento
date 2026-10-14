@@ -91,7 +91,7 @@ function explain(p: SubRegroupProblem, model: AnswerModel): Explanation {
   const O = expectedOf(model, "trade"), ones = expectedOf(model, "ones"), tens = expectedOf(model, "tens"), diff = expectedOf(model, "answer");
   return {
     heading: "Trade a ten",
-    idea: ["One ten is the same as ten ones, so a trade gives you enough ones to take away."],
+    idea: ["When there aren't enough ones, trade a ten for ten ones."],
     statement: [num(a), op("−"), num(b)],
     diagram: buildTradeBlocks({
       a, b, beats: { blocks: 0, trade: 1, ones: 2, tens: 3, total: 4 },
@@ -101,9 +101,9 @@ function explain(p: SubRegroupProblem, model: AnswerModel): Explanation {
     caption: `${count(ao, "one")} can't give away ${bo}, so one ten becomes 10 ones.`,
     timeline: beats(5),
     steps: [
-      { id: "trade", narration: `${count(ao, "one")} is not enough to take away ${bo}. Trade 1 ten for 10 ones: now there are ${countOf(O, "one")} and ${countOf(at - 1, "ten")}.`, math: [num(10), op("+"), num(ao), op("="), num(O)], state: 1, answerStep: "trade", result: O },
-      { id: "ones", narration: `Take away ${countOf(bo, "one")}: ${O} − ${bo} = ${ones}.`, math: [num(O), op("−"), num(bo), op("="), num(ones)], state: 2, answerStep: "ones", result: ones },
-      { id: "tens", narration: `Take away ${count(bt, "ten")} from the ${at - 1} left: ${tens}.`, math: [num(at - 1), op("−"), num(bt), op("="), num(tens)], state: 3, answerStep: "tens", result: tens },
+      { id: "trade", narration: `${count(ao, "one")} can't give away ${bo}, so trade 1 ten for 10 ones.`, math: [num(10), op("+"), num(ao), op("="), num(O)], state: 1, answerStep: "trade", result: O },
+      { id: "ones", narration: "Now take away the ones.", math: [num(O), op("−"), num(bo), op("="), num(ones)], state: 2, answerStep: "ones", result: ones },
+      { id: "tens", narration: "Take away the tens. One ten was traded.", math: [num(at - 1), op("−"), num(bt), op("="), num(tens)], state: 3, answerStep: "tens", result: tens },
       { id: "answer", narration: `${count(tens, "ten")} and ${count(ones, "one")} is ${diff}.`, math: [num(a), op("−"), num(b), op("="), num(diff)], state: 4, answerStep: "answer", result: diff },
     ],
   };

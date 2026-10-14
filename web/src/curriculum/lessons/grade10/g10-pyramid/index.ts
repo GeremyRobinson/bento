@@ -38,7 +38,7 @@ export function explainPyramid(p: PyramidProblem, answers: AnswerModel): Explana
   const { s, h } = p, B = expectedOf(answers.steps, "base"), box = expectedOf(answers.steps, "box"), V = expectedOf(answers.steps, "third");
   return {
     heading: "A third of a box",
-    idea: ["Three pyramids fill the box around them, so one pyramid holds a third."],
+    idea: ["A pyramid holds exactly a third of the box with the same base and height."],
     statement: [text("square base "), num(s), text(", height "), num(h)],
     diagram: buildBox3d({
       // the base is drawn from the start, so its side labels never float over an empty card (review v43 item 8);
@@ -55,9 +55,9 @@ export function explainPyramid(p: PyramidProblem, answers: AnswerModel): Explana
     caption: "A pyramid fills a third of its box.",
     timeline: beats(4),
     steps: [
-      { id: "base", narration: `The base is ${aNum(s)} by ${s} square: ${B}.`, math: [num(s), op("×"), num(s), op("="), num(B)], state: 1, answerStep: "base", result: B },
-      { id: "box", narration: `A box on that base, ${h} tall, holds ${box}.`, math: [num(B), op("×"), num(h), op("="), num(box)], state: 2, answerStep: "box", result: box },
-      { id: "third", narration: `The pyramid holds a third of the box: ${V}.`, math: [num(box), op("÷"), num(3), op("="), num(V)], state: 3, answerStep: "third", result: V },
+      { id: "base", narration: "The base is a square: the side times itself.", math: [num(s), op("×"), num(s), op("="), num(B)], state: 1, answerStep: "base", result: B },
+      { id: "box", narration: "Stack the base as high as the pyramid to make its box.", math: [num(B), op("×"), num(h), op("="), num(box)], state: 2, answerStep: "box", result: box },
+      { id: "third", narration: "The pyramid holds a third of that box.", math: [num(box), op("÷"), num(3), op("="), num(V)], state: 3, answerStep: "third", result: V },
     ],
   };
 }

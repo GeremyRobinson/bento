@@ -136,12 +136,12 @@ function explain(p: FracCompareProblem, model: AnswerModel): Explanation {
   if (apart) steps.push({ id: "common", state: common, answerStep: "common", result: expectedOf(model, "common"), math: [text(`${b} × ${L / b} = ${L},  ${d} × ${L / d} = ${L}`)],
     narration: `${b} and ${d} both go into ${L}. Cut both wholes into ${pieceName(L)}.` });
   if (L !== b) steps.push({ id: "first", state: first, answerStep: "first", result: A, math: [frac(a, b), op("="), frac(A, L)],
-    narration: `Each ${pieceName(b, false)} is ${L / b} ${pieceName(L)}, so ${a}/${b} is ${each(A, L)}.` });
+    narration: `Each ${pieceName(b, false)} is ${L / b} ${pieceName(L)}.` });
   if (L !== d) steps.push({ id: "second", state: second, answerStep: "second", result: C, math: [frac(c, d), op("="), frac(C, L)],
-    narration: `Each ${pieceName(d, false)} is ${L / d} ${pieceName(L)}, so ${c}/${d} is ${each(C, L)}.` });
+    narration: `Each ${pieceName(d, false)} is ${L / d} ${pieceName(L)}.` });
   steps.push({ id: "compare", state: cmp, answerStep: "compare", math: [frac(a, b), op(sign), frac(c, d)],
-    narration: k === 1 ? `${A}/${L} and ${C}/${L}: the same number of pieces. ${a}/${b} = ${c}/${d}.`
-      : `${each(A, L)} is ${k === 0 ? "less" : "more"} than ${each(C, L)}, so ${a}/${b} ${sign} ${c}/${d}.` });
+    narration: k === 1 ? `Both are ${each(A, L)}: the same amount.`
+      : `${each(A, L)} is ${k === 0 ? "less" : "more"} than ${each(C, L)}.` });
   const statement: MathText = [frac(a, b), text(" ? "), frac(c, d)];
   return {
     heading: "Same-size pieces first",

@@ -47,9 +47,9 @@ export function explainCircleArea({ r }: CircleAreaProblem, answers: AnswerModel
     diagram: buildCircleArea({ r, r2, area, pi: "3.14", squareBeat: 1, areaBeat: 2, alt: `A circle of radius ${r} with ${aNum(r)} by ${r} square on its radius. The circle holds about 3.14 of those squares: ${area}.` }),
     timeline: beats(3),
     steps: [
-      { id: "circle", narration: `A circle with radius ${r}.`, math: mt`r = ${r}`, state: 0 },
-      { id: "square", narration: `Build a square on the radius: ${r} × ${r} = ${r2}.`, math: mt`${r}${sup("2")} = ${r2}`, state: 1, answerStep: "square", result: r2 },
-      { id: "times-pi", narration: `The circle holds about 3.14 of those squares: ${r2} × 3.14 = ${area}.`, math: mt`${r2} × 3.14 = ${area}`, state: 2, answerStep: "times-pi", result: area },
+      { id: "circle", narration: "The radius runs from the middle to the edge.", math: mt`r = ${r}`, state: 0 },
+      { id: "square", narration: `Build a square on the radius, ${r} by ${r}.`, math: mt`${r}${sup("2")} = ${r2}`, state: 1, answerStep: "square", result: r2 },
+      { id: "times-pi", narration: "The circle holds about 3.14 of those squares.", math: mt`${r2} × 3.14 = ${area}`, state: 2, answerStep: "times-pi", result: area },
     ],
   };
 }
@@ -62,7 +62,7 @@ export const lesson: LessonDefinition<CircleAreaProblem> = {
   pre: "g7-circum",
   reference: createCircleArea(3),
   // the first three: small circles
-  generate: (rng, index) => createCircleArea(index < 3 ? rng.int(2, 5) : rng.int(2, 12)),
+  generate: (rng, index) => createCircleArea(index < 3 ? rng.int(3, 5) : rng.int(3, 12)),
   restore: restoreCircleArea,
   display: p => mt`radius ${p.r}`,
   displayNote: () => "Area = π × r². Use 3.14 for π.",

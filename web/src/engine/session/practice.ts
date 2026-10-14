@@ -6,15 +6,17 @@ import type { Rng } from "../../curriculum/generators/rng";
 import { formatNumber, toPlainText } from "../../curriculum/schemas/math-text";
 import { lessonById, lessonsInGrade, requireLesson, LESSONS } from "../../curriculum/registry";
 import type { AnswerStep, AnyLesson } from "../../curriculum/schemas/lesson";
-import { canShowMe, canSkip, hintBudget, HINT_WAIT_MS, lessonLength, MAX_LESSON_LENGTH, RUSHED_MS, tierFor, type Tier } from "../adaptive-help/policy";
+import { canShowMe, canSkip, hintBudget, HINT_WAIT_MS, lessonLength, RUSHED_MS, tierFor, type Tier } from "../adaptive-help/policy";
 import { CATEGORIES, diagnose, nudge, SAY } from "../diagnosis/diagnose";
 import { parseNumber } from "../evaluation/numbers";
-import { answerIds, checkStep, expectedValues, finalPartsOf, finalStep, runtimeSteps, type RuntimeStep } from "../evaluation/steps";
+import { answerIds, checkStep, sayAnswer, expectedValues, finalPartsOf, finalStep, runtimeSteps, type RuntimeStep } from "../evaluation/steps";
 import { levelOf, problemXp, stepPoints } from "../mastery/levels";
 import { lastScore, type Progress } from "../mastery/progress";
+import { CHECKS, WHERE_TRIES } from "../../curriculum/checks";
+import { CHECK_FROM, CHECK_LENGTH, checkKey, dueBack, isCheckKey, lessonOfCheck, PASS, recordCheck, reviewMissed } from "../mastery/skills";
 import { PRAISE } from "./praise";
-import type { Mistake, PracticeSession, RunItem, SessionReport } from "./types";
-import { FIND_MY_LEVEL, NO_UNIT, TODAYS_REVIEW } from "../../app/copy";
+import type { Mistake, Parked, PracticeSession, RunItem, SessionReport } from "./types";
+import { FIND_MY_LEVEL, NO_UNIT, SKILL_CHECK, TODAYS_REVIEW } from "../../app/copy";
 
 /** Clock and randomness are passed in, so every rule can be tested exactly. */
 export interface Deps {
@@ -130,17 +132,45 @@ export function startPractice(lessonId: string, progress: Progress, deps: Deps):
 
 export const testKey = (g: number, unit?: string) => (unit ? `unit:${g}:${unit}` : `grade:${g}`);
 
-/** A unit test (up to 10 problems) or a grade check-up (up to 12), mixed from the lessons, no hints, one try per step. */
+/** problems in a test (G 2026-10-08: "Tests need more problems no? 12-20"), shared evenly across its lessons */
+export const UNIT_TEST_LENGTH = 12, CHECKUP_LENGTH = 20;
+
+/** A unit test (12 problems) or a grade check-up (20), an even mix of the lessons, no hints, one try per step. */
 export function startTest(key: string, progress: Progress, deps: Deps): PracticeSession {
   const [kind, gs, unit] = key.split(":"), g = Number(gs);
   if (kind === "place") return startPlacement(g, progress, deps);
+  if (kind === "check") return startCheck(lessonOfCheck(key), progress, deps);
   const list = kind === "unit" ? lessonsInGrade(g).filter(l => (l.unit || NO_UNIT) === unit) : lessonsInGrade(g);
   if (!list.length) throw new Error(`no lessons for test ${key}`);
-  const n = Math.min(kind === "unit" ? 10 : 12, Math.max(6, list.length * 2));
+  const n = kind === "unit" ? UNIT_TEST_LENGTH : CHECKUP_LENGTH;
   const order = deps.rng.shuffle(list);
   const items = spread(freshItems(n, (k, seen) => makeItem(order[k % order.length]!, k, deps.rng, seen)), deps.rng);
   const title = kind === "unit" ? `${unit} test` : `${gradeOf(g).name} check-up`;
   return newRun({ mode: "test", key, title, items, startTier: 0, hintsLeft: 0 }, progress, deps);
+}
+
+/**
+ * The skill check after practice: a few of the lesson's harder problems, no hints, one try per step, like a test. Its
+ * score is the lesson's check, kept apart from the practice score; a 3 or 4 means learned (engine/mastery/skills.ts).
+ */
+function startCheck(lessonId: string, progress: Progress, deps: Deps): PracticeSession {
+  const lesson = requireLesson(lessonId);
+  const items = checkItems(lesson, deps.rng);
+  return newRun({ mode: "test", key: checkKey(lesson.grade, lesson.id), title: `${lesson.title}: ${SKILL_CHECK}`, items, startTier: 0, hintsLeft: 0 }, progress, deps);
+}
+
+/** a lesson's check problems: Curriculum's recipe (curriculum/checks.ts), else its harder problems */
+export function checkItems(lesson: AnyLesson, rng: Rng): RunItem[] {
+  const recipe = CHECKS[lesson.id];
+  if (!recipe) return freshItems(CHECK_LENGTH, (k, seen) => ({ lessonId: lesson.id, problem: makeItem(lesson, CHECK_FROM + k, rng, seen).problem }));
+  const out: RunItem[] = [];
+  for (const c of recipe.items) {
+    let problem = makeItem(lesson, c.i, rng, out).problem;
+    for (let k = 1; k < WHERE_TRIES && c.where && !c.where(problem); k++) problem = makeItem(lesson, c.i, rng, out).problem;
+    if (c.where && !c.where(problem) && c.fix) problem = lesson.restore(c.fix(problem)) ?? problem;
+    out.push({ lessonId: lesson.id, problem, ...(c.story && lesson.story ? { story: true } : {}) });
+  }
+  return recipe.inOrder ? out : [...rng.shuffle(out.filter(x => !x.story)), ...out.filter(x => x.story)];
 }
 
 export const placeKey = (g: number) => `place:${g}`;
@@ -189,20 +219,31 @@ export function placementResult(probs: { lessonId: string; wrong: number; shown:
   return { grade, next, rows };
 }
 
-/** Lessons already scored, weighted to low scores and long gaps since last practice. */
+/** Lessons already scored, weighted to low scores and long gaps since last practice; a learned lesson that's due back
+ *  (engine/mastery/skills.ts) counts three times over, so the review is where it gets checked again. */
 export function reviewPool(progress: Progress, now: number): { lesson: AnyLesson; weight: number }[] {
   return LESSONS.filter(l => progress.scores[l.id]).map(l => {
     const sc = progress.scores[l.id]!, days = (now - (progress.seen[l.id] || sc.date || now)) / 864e5;
-    return { lesson: l, weight: (5 - sc.last) * (1 + days / 3) };
+    return { lesson: l, weight: (5 - sc.last) * (1 + days / 3) * (dueBack(progress, l.id, now) ? 3 : 1) };
   });
 }
 
 export const canReview = (progress: Progress, now: number) => reviewPool(progress, now).length >= 2;
+/** Today offers the review (v2-backend-plan.md, "Today's review"): a learned lesson is due back, and today's isn't done yet */
+export const reviewDue = (progress: Progress, now: number) =>
+  canReview(progress, now) && progress.reviews?.[new Date(now).toDateString()] == null && LESSONS.some(l => dueBack(progress, l.id, now));
+
+const reviewEach = (lessons: number) => (lessons >= 4 ? 2 : 4);
+/** what Today says about the review before it starts: the learned lessons due back, and how many problems it will be */
+export function reviewPlan(progress: Progress, now: number): { due: string[]; problems: number } {
+  const pool = reviewPool(progress, now).length;
+  return { due: LESSONS.filter(l => dueBack(progress, l.id, now)).map(l => l.id), problems: Math.min(8, pool * reviewEach(pool)) };
+}
 
 /** Today's review: up to 8 problems from scored lessons, at most 2 from each (4 when there are only a few lessons). */
 export function startReview(progress: Progress, deps: Deps): PracticeSession {
   const pool = reviewPool(progress, deps.now).map(x => ({ ...x, n: 0 }));
-  const each = pool.length >= 4 ? 2 : 4, n = Math.min(8, pool.length * each), items: RunItem[] = [];
+  const each = reviewEach(pool.length), n = Math.min(8, pool.length * each), items: RunItem[] = [];
   while (items.length < n) {
     const live = pool.filter(x => x.n < each), tot = live.reduce((a, x) => a + x.weight, 0);
     let r = deps.rng.next() * tot, k = 0;
@@ -240,7 +281,9 @@ function startProblem(s: PracticeSession, progress: Progress, deps: Deps): Pract
 function loadStep(s: PracticeSession, deps: Deps): PracticeSession {
   let next = { ...s };
   const it = currentItem(next), lead = leadOf(it), full = fullSteps(it);
-  if (!next.collapsed && next.skip && next.skipThis && canSkip({ test: isTest(next), tier: next.tier }) && next.step === lead && full.length - lead > 1) {
+  // a skill check asks each problem in one go, the final answer only (v2 model: "What is 24 × 13?")
+  const oneGo = isCheckKey(next.key) || (next.skip && next.skipThis && canSkip({ test: isTest(next), tier: next.tier }));
+  if (!next.collapsed && oneGo && next.step === lead && full.length - lead > 1) {
     next = { ...next, collapsed: true };
   }
   next = { ...next, values: {}, misses: 0, hinted: false, lastTry: 0, stepT0: deps.now, feedback: null };
@@ -290,7 +333,7 @@ export function pickPlan(s: PracticeSession, index: number): PracticeSession {
   }
   const isLater = stepsOf(s).slice(s.step + 1).some(t => t.base === choice);
   return { ...s, pick: { ...pk, misses }, fx: "shake", mistakes: [...s.mistakes, mistake],
-    feedback: { type: "bad", strong: "Look again.", text: isLater ? "That step comes later. What has to happen first?" : "That step isn't part of this problem." } };
+    feedback: { type: "bad", strong: "Not quite.", text: isLater ? "That step comes later. What has to happen first?" : "That step isn't part of this problem." } };
 }
 
 // ---------------------------------------------------------------- typing
@@ -326,15 +369,6 @@ export function choose(s: PracticeSession, index: number, progress: Progress, de
 // ---------------------------------------------------------------- checking
 
 /** How a set of answers reads in reports: a choice's words, a fraction, or numbers. */
-function typedText(step: RuntimeStep, values: Record<string, number | null>): string {
-  if (step.choices && values.c != null) return step.choices[values.c] ?? String(values.c);
-  const keys = Object.keys(values);
-  if (keys.length === 2 && values.n != null && values.d != null) {
-    return values.d === 1 ? formatNumber(values.n) : `${formatNumber(values.n)}/${formatNumber(values.d)}`;
-  }
-  return Object.values(values).filter((x): x is number => x != null).map(formatNumber).join(", ");
-}
-
 export function check(s: PracticeSession, progress: Progress, deps: Deps): PracticeSession {
   const step = currentStep(s);
   if (!step) return s;
@@ -354,30 +388,41 @@ export function check(s: PracticeSession, progress: Progress, deps: Deps): Pract
   const cat = r.generic ? diagnose(expected, values, earlier) : "concept";
   const mistake: Mistake = {
     n: s.i + 1, step: s.step + 1, label: step.base, lessonId: currentItem(s).lessonId,
-    typed: typedText(step, values), want: typedText(step, expected),
+    typed: sayAnswer(step, values), want: sayAnswer(step, expected),
     kind: cat === "concept" ? r.kind : CATEGORIES[cat][0], cat, msg: cat === "concept" ? r.message : CATEGORIES[cat][1], rushed,
+    ...(cat === "concept" || step.look || SAY[cat] ? { say: cat === "concept" ? r.message : step.look ?? SAY[cat] } : {}),
   };
   let next: PracticeSession = {
     ...s, lastTry: deps.now, misses: s.misses + 1, prob: { ...s.prob, wrong: s.prob.wrong + 1 }, fx: "shake",
     mistakes: [...s.mistakes, mistake],
   };
 
-  if (step.skipped) { // the shortcut missed: do this one the long way
+  if (step.skipped && !isTest(next)) { // the shortcut missed: do this one the long way
     next = loadStep({ ...next, skipThis: false, collapsed: false, maxPts: next.maxPts + 1, step: leadOf(currentItem(next)) }, deps);
-    return { ...next, fx: "shake", feedback: { type: "bad", strong: "Look again.", text: "This one needs the steps. Here they are." } };
+    return { ...next, fx: "shake", feedback: { type: "bad", strong: "Not quite.", text: "This one needs the steps. Here they are." } };
   }
   if (isTest(next)) {
     const shownValues = Object.fromEntries(Object.entries(expected).map(([k, v]) => [k, formatNumber(v)]));
     const after = pass({ ...next, values: shownValues }, true, progress, deps);
-    return { ...after, feedback: { type: "hint", text: `Not this time. The answer was **${typedText(step, expected)}**.${currentStep(after) ? " Keep going." : ""}` } };
+    // one wording for every miss on a check or test (v2 model): "✕ Not this time." and the answer
+    // a skill check's one answer: the question line already says "Not this time.", so the say line gives the answer and
+    // how it's worked out, without repeating it (v2 spec C2)
+    if (isCheckKey(next.key) && !currentStep(after)) {
+      const it = currentItem(after), why = lessonOfItem(it).checkWhy?.(it.problem);
+      return { ...after, feedback: { type: "bad", missed: true, strong: `It\u2019s **${sayAnswer(step, expected)}**.`, ...(why ? { text: why } : {}) } };
+    }
+    return { ...after, feedback: { type: "bad", missed: true, strong: "Not this time.", text: `It\u2019s **${sayAnswer(step, expected)}**.${currentStep(after) ? " Keep going." : ""}` } };
   }
   const band = bandOfSession(next);
   const msg = cat === "concept" ? r.message
-    : SAY[cat] ?? `${nudge(expected, values, band)} ${next.hinted ? step.hint : `Read the step again${next.hintsLeft ? ", or tap the light bulb for a hint" : ""}.`}`.trim();
+    : step.look ?? SAY[cat] ?? `${nudge(expected, values, band)} ${next.hinted ? step.hint : `Read the step again${next.hintsLeft ? ", or tap Hint" : ""}.`}`.trim();
   const lines: string[] = [];
   if (rushed) lines.push("Slow down a little and read the step again.");
-  if (canShowMe({ test: false, misses: next.misses, hinted: next.hinted })) lines.push("Stuck? Tap **Show me**.");
-  return { ...next, feedback: { type: "bad", strong: "Look again.", text: msg, lines } };
+  // no Show me in v2 (spec P10, guidelines §7): after two misses, while hints are left, point at the bulb
+  if (next.misses >= 2 && next.hintsLeft > 0) lines.push("Stuck? Tap the bulb for a hint.");
+  // one box: it empties for the next try, so the "?" comes back (v2 spec P8); a step with several keeps what was typed
+  const kept = Object.keys(expected).length === 1 ? {} : next.values;
+  return { ...next, values: kept, feedback: { type: "bad", strong: "Not quite.", text: msg, lines } };
 }
 
 /** Hints are limited: about one for every two problems, and only after a first try. */
@@ -386,8 +431,8 @@ export function hint(s: PracticeSession, deps: Deps): PracticeSession {
   if (!step || isTest(s)) return s;
   if (s.hinted) return { ...s, fx: "feedback", feedback: { type: "hint", strong: "Hint:", text: step.hint, left: s.hintsLeft } };
   // the last hint says so kindly (UI notes preview)
-  if (!s.hintsLeft) return { ...s, fx: "feedback", feedback: { type: "hint", text: "No hints left in this lesson. You can do it.", lines: showMeAvailable(s) ? ["Stuck? Tap **Show me**."] : [] } };
-  if (!s.misses && deps.now - s.stepT0 < HINT_WAIT_MS) return { ...s, fx: "feedback", feedback: { type: "hint", text: "Try it once first. Then the hint opens." } };
+  if (!s.hintsLeft) return { ...s, fx: "feedback", feedback: { type: "hint", text: "No hints left in this lesson. You can do it.", lines: [] } };
+  if (!s.misses && deps.now - s.stepT0 < HINT_WAIT_MS) return { ...s, fx: "feedback", feedback: { type: "hint", text: "Try it once first. Then a hint opens." } };
   return {
     ...s, hinted: true, hintsLeft: s.hintsLeft - 1, hints: s.hints + 1, prob: { ...s.prob, hints: s.prob.hints + 1 }, fx: "feedback",
     feedback: { type: "hint", strong: "Hint:", text: step.hint, left: s.hintsLeft - 1 },
@@ -395,20 +440,12 @@ export function hint(s: PracticeSession, deps: Deps): PracticeSession {
 }
 
 export const showMeAvailable = (s: PracticeSession) => canShowMe({ test: isTest(s), misses: s.misses, hinted: s.hinted });
-export const skipAvailable = (s: PracticeSession) => canSkip({ test: isTest(s), tier: s.tier });
 
 export function showMe(s: PracticeSession, progress: Progress, deps: Deps): PracticeSession {
   const step = currentStep(s);
   if (!step || !showMeAvailable(s)) return s;
   const values = Object.fromEntries(Object.entries(expectedValues(step)).map(([k, v]) => [k, formatNumber(v)]));
   return pass({ ...s, values, shown: s.shown + 1, prob: { ...s.prob, shown: s.prob.shown + 1 } }, true, progress, deps);
-}
-
-/** "Final answer only" ↔ "Show steps", at the top help tier. Applies from the start of the problem. */
-export function toggleSkip(s: PracticeSession, deps: Deps): PracticeSession {
-  if (!skipAvailable(s)) return s;
-  const skip = !s.skip;
-  return loadStep({ ...s, skip, skipThis: true, collapsed: false, step: 0, work: [] }, deps);
 }
 
 function pass(s: PracticeSession, shown: boolean, progress: Progress, deps: Deps): PracticeSession {
@@ -424,9 +461,11 @@ function pass(s: PracticeSession, shown: boolean, progress: Progress, deps: Deps
     fx: "line",
   };
   if (next.step < steps.length) {
-    const praise = deps.rng.pick(PRAISE[band]);
+    // one praise, always with its reason: "✓ Right." and the line just worked out (v2 model). The pick stays so the
+    // problems that follow come out the same.
+    deps.rng.pick(PRAISE[band]);
     next = loadStep(next, deps);
-    return { ...next, feedback: shown ? { type: "hint", strong: `Here's how: ${step.explain}` } : { type: "good", strong: praise } };
+    return { ...next, feedback: shown ? { type: "hint", strong: `Here's how: ${step.explain}` } : { type: "good", strong: "Right.", text: `${toPlainText(step.work)}.` } };
   }
 
   // the problem is finished
@@ -434,15 +473,12 @@ function pass(s: PracticeSession, shown: boolean, progress: Progress, deps: Deps
   const xp = problemXp({ test: isTest(next), ...pr });
   const it = currentItem(next);
   next = {
-    ...next, solved: true, pick: null, active: null,
+    ...next, solved: true, pick: null, active: null, done: [...(next.done ?? []), next.i],
     xpEarned: next.xpEarned + xp, clean: next.clean + (clean ? 1 : 0),
     probs: [...next.probs, { lessonId: it.lessonId, problem: it.problem, ...(it.story ? { story: true } : {}), work: next.work, hints: pr.hints, wrong: pr.wrong, shown: pr.shown, ms: deps.now - pr.t0 }],
   };
   const lines: string[] = [];
-  if (!isTest(next) && (pr.wrong || pr.shown) && next.items.length < MAX_LESSON_LENGTH) {
-    next = { ...next, items: [...next.items, makeItem(lessonOfItem(it), next.items.length, deps.rng, next.items)], extra: next.extra + 1 };
-    lines.push("One more like this is coming up, for practice.");
-  }
+  // the set stays the size it started (v2 model: 6, no extra problems after a miss; coordinator 2026-10-13)
   void progress;
   if (isTest(next)) return { ...next, feedback: { type: "good", strong: `Problem done. +${xp} XP` } };
   if (shown) return { ...next, feedback: { type: "hint", text: `Here's how: ${step.explain}`, lines: [`**+${xp} XP.** That one was tricky, and you finished it.`, ...lines] } };
@@ -453,13 +489,52 @@ function pass(s: PracticeSession, shown: boolean, progress: Progress, deps: Deps
 
 // ---------------------------------------------------------------- moving on and finishing
 
-export const isLastProblem = (s: PracticeSession) => s.i >= s.items.length - 1;
+/** the problems still to do, after this one, in order round the set */
+const openAfter = (s: PracticeSession): number[] => {
+  const done = new Set(s.done ?? []), out: number[] = [];
+  for (let k = 1; k < s.items.length; k++) { const j = (s.i + k) % s.items.length; if (!done.has(j) && j !== s.i) out.push(j); }
+  return out;
+};
+/** nothing is left but this problem (a set can be done in any order, so it isn't always the last index) */
+export const isLastProblem = (s: PracticeSession) => openAfter(s).length === 0;
 
-/** Next problem, or null when the run is over (then call finishRun). */
+/** Next problem still to do, or null when the run is over (then call finishRun). */
 export function nextProblem(s: PracticeSession, progress: Progress, deps: Deps): PracticeSession | null {
   if (!s.solved) return s;
-  if (isLastProblem(s)) return null;
-  return startProblem({ ...s, i: s.i + 1 }, progress, deps);
+  const next = openAfter(s)[0];
+  if (next == null) return null;
+  return openProblem(s, next, progress, deps);
+}
+
+/**
+ * The problem picker (G 2026-10-08: "see how many questions they have on a test and pick and choose which ones they'd
+ * like to answer first"). You can move to any problem you haven't finished. In practice and review a problem left
+ * part-way is kept as it was and picked up again when you come back to it (v2-backend-plan.md, "Problem picker
+ * memory"); in a test or skill check a problem you've begun answering is finished first, so one try per step can't be
+ * undone.
+ */
+export const canPick = (s: PracticeSession, index: number): boolean =>
+  index >= 0 && index < s.items.length && index !== s.i && !(s.done ?? []).includes(index) && (s.solved || !isTest(s) || !started(s));
+const started = (s: PracticeSession) => s.step > 0 || s.prob.wrong > 0 || s.prob.hints > 0 || s.prob.shown > 0 || s.work.length > 0;
+export function goToProblem(s: PracticeSession, index: number, progress: Progress, deps: Deps): PracticeSession {
+  if (!canPick(s, index)) return s;
+  const parked = { ...(s.parked ?? {}) };
+  if (!s.solved && started(s)) parked[s.i] = park(s);
+  return openProblem({ ...s, parked }, index, progress, deps);
+}
+
+const park = (s: PracticeSession): Parked => ({
+  step: s.step, work: s.work, collapsed: s.collapsed, skipThis: s.skipThis, tier: s.tier, values: s.values, active: s.active,
+  pick: s.pick, misses: s.misses, hinted: s.hinted, prob: s.prob, feedback: s.feedback,
+});
+
+/** problem `index`: where it was left, or fresh */
+function openProblem(s: PracticeSession, index: number, progress: Progress, deps: Deps): PracticeSession {
+  const kept = s.parked?.[index];
+  if (!kept) return startProblem({ ...s, i: index }, progress, deps);
+  const { [index]: _, ...rest } = s.parked!;
+  void _;
+  return { ...s, ...kept, i: index, parked: rest, solved: false, fx: null, lastTry: 0, stepT0: deps.now };
 }
 
 export function finishRun(s: PracticeSession, progress: Progress, now: number): { progress: Progress; report: SessionReport } {
@@ -476,18 +551,29 @@ export function finishRun(s: PracticeSession, progress: Progress, now: number): 
   if (p.last !== today) p.streak = p.last === yesterday ? p.streak + 1 : 1;
   p.last = today;
   const book = s.mode === "test" ? p.tests : s.mode === "practice" ? p.scores : null;
-  if (book) {
+  p.checks ??= {};
+  if (isCheckKey(s.key)) { const id = lessonOfCheck(s.key); p.checks[id] = recordCheck(p.checks[id], level, now); }
+  else if (book) {
     const old = book[s.key];
     book[s.key] = { last: level, best: Math.max(level, old?.best ?? 0) as typeof level, pct, date: now,
       mastered: !!old?.mastered || (level === 4 && s.startTier === 2) };
   }
   if (s.mode === "practice") { p.done += 1; p.lessons[s.key] = (p.lessons[s.key] ?? 0) + 1; }
-  if (s.mode === "review") p.reviews[today] = level;
+  if (s.mode === "review") {
+    p.reviews[today] = level;
+    // a learned lesson whose problems all came out right first time has been checked again, so it goes further out;
+    // a miss brings it back tomorrow, still learned
+    for (const id of new Set(s.probs.map(x => x.lessonId))) {
+      if (!p.checks[id] || p.checks[id]!.last < PASS) continue;
+      const mine = s.probs.filter(x => x.lessonId === id);
+      p.checks[id] = mine.every(x => !x.wrong && !x.shown) ? recordCheck(p.checks[id], 4, now) : reviewMissed(p.checks[id]!, now);
+    }
+  }
   for (const it of s.items) p.seen[it.lessonId] = now;
   const cats: Record<string, number> = {};
   for (const m of s.mistakes) cats[m.kind] = (cats[m.kind] ?? 0) + 1;
   p.log = [{ key: s.key, mode: s.mode, title: s.title, date: now, level, total: report.total, hints: report.hints, shown: report.shown, cats,
-    rushed: s.mistakes.filter(m => m.rushed).length }, ...p.log].slice(0, 60);
+    rushed: s.mistakes.filter(m => m.rushed).length, ms: report.ms }, ...p.log].slice(0, 60);
   p.run = null;
   return { progress: p, report };
 }

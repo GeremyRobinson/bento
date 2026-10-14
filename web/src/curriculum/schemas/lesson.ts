@@ -1,5 +1,5 @@
 import type { Rng } from "../generators/rng";
-import type { MathText } from "./math-text";
+import type { MathText, Operator } from "./math-text";
 import type { DiagramModel, Explanation } from "../../explanations/schema";
 
 export type GradeNumber = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
@@ -51,6 +51,8 @@ export interface AnswerStep {
   known: KnownMistake[];
   check?: (values: Record<string, number | null>) => StepCheck;
   hint: RichText;
+  /** what to look at after a wrong answer no known slip explains, e.g. "Look again at the lit part: it's 10 across and 10 down." */
+  look?: RichText;
   /** what "Show me" says after filling the answer in */
   explain: RichText;
   /** the finished line that stays on screen once the step is done */
@@ -86,6 +88,8 @@ export interface LessonDefinition<P = unknown> {
   restore(raw: unknown): P | null;
   /** the problem as the student sees it, above the steps */
   display(problem: P): MathText;
+  /** how the answer joins a problem line that has no "=" once it is solved, e.g. "≈" for rounding ("3.476 ≈ 3.48") */
+  answerOp?: Operator;
   /** an optional line under the problem, e.g. "Factor it." */
   displayNote?(problem: P): RichText;
   /** word problems: the whole question at reading size, shown in place of the short math line */
@@ -100,6 +104,8 @@ export interface LessonDefinition<P = unknown> {
   explain(problem: P, answers: AnswerModel): Explanation;
   /** some lessons tell every third problem as a story */
   story?(problem: P): Story;
+  /** a skill check miss: one sentence on how it's worked out, said after "It's <answer>." (v2 spec C2) */
+  checkWhy?(problem: P): RichText;
   /** the lesson underneath this one, suggested after a score of 0 or 1 */
   pre?: string;
 }

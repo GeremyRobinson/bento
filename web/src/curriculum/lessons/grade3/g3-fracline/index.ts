@@ -84,11 +84,11 @@ function explain(p: FracLineProblem, model: AnswerModel): Explanation {
     timeline: beats(4),
     steps: [
       { id: "spaces", state: 1, answerStep: "spaces", result: B, math: [text("spaces "), op("="), num(B)],
-        narration: `From 0 to 1 there are ${B} equal spaces, so each space is 1/${B}.` },
+        narration: `Count the spaces from 0 to 1, not the ticks. Each is 1/${B}.` },
       { id: "jumps", state: 2, answerStep: "jumps", result: A, math: [text("jumps "), op("="), num(A)],
-        narration: `Jump from 0 to the point, one space at a time. That's ${plural(A, "jump")}.` },
+        narration: "Jump from 0 to the point, one space at a time." },
       { id: "name", state: 3, answerStep: "name", result: a, math: [text("point "), op("="), frac(A, B)],
-        narration: `${plural(A, "jump")} of 1/${B} is ${A}/${B}.${A > B ? ` It's past 1, because ${A} is more than ${B}.` : ""}` },
+        narration: `The jumps go on top. The spaces in one whole go on the bottom.${A > B ? ` It's past 1, because ${A} is more than ${B}.` : ""}` },
     ],
   };
 }
@@ -103,7 +103,7 @@ export const lesson: LessonDefinition<FracLineProblem> = {
   generate: generateFracLine,
   restore: raw => restoreVia(raw, ["a", "b", "w"] as const, v => createFracLine(v.a, v.b, v.w)),
   display: () => [text("point "), op("="), text("?")],
-  displayNote: () => "What fraction is at the point?",
+  lead: () => "What fraction is at the point?",
   picture: p => buildFracLine({ den: p.b, wholes: p.w, at: p.a, alt: `A number line from 0 to ${p.w}, each whole cut into ${p.b} equal spaces, with a point on it.` }),
   answers,
   explain,

@@ -48,8 +48,11 @@
 .mline .mk.w{flex-wrap:nowrap}
 .math>.mline:has(.br){flex-wrap:wrap}
 .math>.mline{flex-wrap:nowrap}
+.mline.one,.mline.one .mk{flex-wrap:nowrap}
 .mline .ans{font-weight:var(--w-bold)}
-/* the solved problem's "?" becomes its answer, settling in where the box was */
+/* the solved problem's "?" becomes its answer, settling in where the box was. It lands on the picture's last beat, not
+   the steps' timeline: MathLine (useAnswerBeat) delays this entrance until every part of the picture beside it has
+   finished entering (Review g5 #6) */
 .math .mline .ans{color:var(--ink);animation:ansIn var(--dur-420) var(--m-ease) both}
 @keyframes ansIn{from{opacity:0;transform:scale(.7)}}
 /* the problem's two parts wear their picture's colours, in the statement, the steps' math and the steps' words alike

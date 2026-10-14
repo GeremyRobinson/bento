@@ -51,10 +51,10 @@ export function explainElimination(p: EliminationSystem, model: AnswerModel) {
     steps: [
       { id: "first", narration: `The first equation has + y.`, math: first(sum, [mark("y")]) },
       { id: "second", narration: `The second has − y. Added together, + y and − y make 0.`, math: second(difference, [mark("y")]) },
-      { id: "add", narration: `Add the equations: x + x = 2x and ${f(sum)} + ${fP(difference)} = ${f(twoX)}.`, math: m(2, v(), op("="), sum, op("+"), ...P(difference), op("="), twoX), answerStep: "add", result: twoX },
-      { id: "x", narration: `Divide by 2: x = ${f(x)}.`, math: m(v(), op("="), twoX, op("÷"), 2, op("="), x), answerStep: "x", result: x },
-      { id: "y", narration: `Put x = ${f(x)} back into x + y = ${f(sum)}: y = ${f(sum)} − ${fP(x)} = ${f(y)}.`, math: m(x, op("+"), v("y"), op("="), sum, text(", so "), v("y"), op("="), y), answerStep: "y", result: y },
-      { id: "check", narration: `Check in the second equation: ${f(x)} − ${fP(y)} = ${f(difference)}. Both equations are true.`, math: m(x, op("−"), ...P(y), op("="), difference) },
+      { id: "add", narration: `Add left to left and right to right.`, math: m(2, v(), op("="), sum, op("+"), ...P(difference), op("="), twoX), answerStep: "add", result: twoX },
+      { id: "x", narration: `Divide both sides by 2 to get one x.`, math: m(v(), op("="), twoX, op("÷"), 2, op("="), x), answerStep: "x", result: x },
+      { id: "y", narration: `Put x back into the first equation to find y.`, math: m(x, op("+"), v("y"), op("="), sum, text(", so "), v("y"), op("="), y), answerStep: "y", result: y },
+      { id: "check", narration: `Check that x and y make the second equation true too.`, math: m(x, op("−"), ...P(y), op("="), difference) },
     ],
   });
 }

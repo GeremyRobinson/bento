@@ -38,7 +38,7 @@ export function explainTriangleAngles(p: TriangleAnglesProblem, answers: AnswerM
   const { a, b } = p, sum = expected(answers, "add"), c = expected(answers, "third");
   return {
     heading: "Triangles add up to 180°",
-    idea: ["The three corners of any triangle line up to make a straight line."],
+    idea: ["The three angles of any triangle add up to 180°, a straight line."],
     statement: mt`${a}° + ${b}° + ? = 180°`,
     caption: `${a}° + ${b}° + ${c}° = 180°.`,
     diagram: buildTriangleAngles({
@@ -52,9 +52,9 @@ export function explainTriangleAngles(p: TriangleAnglesProblem, answers: AnswerM
     }),
     timeline: beats(3),
     steps: [
-      { id: "triangle", narration: `A triangle with angles of ${a}° and ${b}°. The third corner is missing.`, math: mt`${a}°, ${b}°, ?`, state: 0 },
-      { id: "add", narration: `Put the two known angles together: ${a}° + ${b}° = ${sum}°.`, math: mt`${a}° + ${b}° = ${sum}°`, state: 1, answerStep: "add", result: sum },
-      { id: "third", narration: `All three make 180°, so the third angle is 180° − ${sum}° = ${c}°.`, math: mt`180° − ${sum}° = ${c}°`, state: 2, answerStep: "third", result: c },
+      { id: "triangle", narration: "Two corners are known. The third corner is missing.", math: mt`${a}°, ${b}°, ?`, state: 0 },
+      { id: "add", narration: "Put the two known angles together.", math: mt`${a}° + ${b}° = ${sum}°`, state: 1, answerStep: "add", result: sum },
+      { id: "third", narration: "All three make 180°, so the third is what's left.", math: mt`180° − ${sum}° = ${c}°`, state: 2, answerStep: "third", result: c },
     ],
   };
 }
@@ -64,6 +64,7 @@ export const lesson: LessonDefinition<TriangleAnglesProblem> = withEasyStart({
   grade: 8,
   unit: "Geometry",
   title: "Angles in a triangle",
+  pre: "g7-angles",
   reference: createTriangleAngles(50, 60),
   generate: rng => { const a = rng.int(20, 100); return createTriangleAngles(a, rng.int(20, 150 - a)); },
   restore: restoreTriangleAngles,

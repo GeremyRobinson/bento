@@ -27,7 +27,8 @@ export function divideFractionsPicture(o: { a: number; b: number; c: number; d: 
     brackets: [
       { row: 1, a: 0, b: 1, text: `1 ÷ ${c}/${d} = ${d}/${c}`, side: "above", from: 1, until: 1 },
       { row: 0, a: 0, b: A, text: `${a * d} small pieces`, side: "below", from: 2, until: 2 },
-      { row: 1, a: 0, b: C, text: `${b * c} small pieces`, side: "above", from: 2, until: 2 },
+      // under its own row, so it never shares the gap with the first row's count
+      { row: 1, a: 0, b: C, text: `${b * c} small pieces`, side: "below", from: 2, until: 2 },
       { row: 2, a: 0, b: A, text: `${S}/${L} = ${mixed} ${S < L ? "of a copy" : S === L ? "copy" : "copies"}`, side: "below", from: 3, acc: true },
     ],
     // beat 0 compares the sizes: the end of a/b against the c/d bar

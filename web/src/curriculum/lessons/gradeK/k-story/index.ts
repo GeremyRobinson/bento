@@ -97,17 +97,17 @@ function explain(p: StoryProblem, model: AnswerModel): Explanation {
   const what = THINGS[p.what]!, a = expectedOf(model, "start"), more = expectedOf(model, "more", "c"), end = expectedOf(model, "end");
   return {
     heading: "Act out the story",
-    idea: ["The story tells you if more come or some go away, so you know to add or take away."],
+    idea: ["More coming means add, and some going away means take away."],
     statement: storyMath(p),
     diagram: changeDots({ start: p.a, change: p.b, kind: p.take ? "take" : "join", beats: { start: 0, change: 1, end: 2 },
       alt: `${count(a, "dot")} for the ${what}. ${p.take ? `${p.b} ${isAre(p.b)} crossed out` : `${p.b} more join them`}, and ${end} ${isAre(end)} counted at the end.` }),
     caption: `${a} ${sign(p)} ${p.b} = ${end}`,
     timeline: beats(3),
     steps: [
-      { id: "start", narration: `The story starts with **${a}** ${what}. Each dot is one.`, math: [text("At the start: "), num(a)], state: 0, answerStep: "start", result: a },
+      { id: "start", narration: `Find the start in the first sentence. Each dot is one ${what.slice(0, -1)}.`, math: [text("At the start: "), num(a)], state: 0, answerStep: "start", result: a },
       { id: "more", narration: p.take ? `${goes(p.b)}. Cross ${p.b === 1 ? "it" : "them"} out. There will be **fewer**.` : `${comes(p.b)}. Add ${p.b === 1 ? "its dot" : "their dots"}. There will be **more**.`,
         math: [num(a), op(sign(p)), num(p.b)], state: 1, answerStep: "more", result: more },
-      { id: "end", narration: `Count what is there now: ${countUp(1, end)}. **${end}** ${end === 1 ? what.slice(0, -1) : what}.`, math: sentence(p, [num(end)]), state: 2, answerStep: "end", result: end },
+      { id: "end", narration: `Count what is there now: ${countUp(1, end)}.`, math: sentence(p, [num(end)]), state: 2, answerStep: "end", result: end },
     ],
   };
 }

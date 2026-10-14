@@ -71,10 +71,10 @@ export function explainComplex(p: ComplexProblem, answers: AnswerModel): Explana
     caption: `${oneI(`${f(b * d)}i²`)} = ${f(last)}, so the corner joins the plain numbers: ${complexText(re, im)}.`,
     timeline: beats(5),
     steps: [
-      { id: "first", narration: `First × first: ${f(a)} · ${f(c)} = ${f(ac)}.`, math: [num(a), op("·"), ...numP(c), op("="), num(ac)], state: 1, answerStep: "first", result: ac },
-      { id: "last", narration: `Last × last: ${oneI(`${f(b)}i`)} · ${d < 0 ? `(${oneI(`${f(d)}i`)})` : oneI(`${f(d)}i`)} = ${oneI(`${f(b * d)}i²`)}, and i² = −1, so it's ${f(last)}.`, math: [...iTerm(b), op("·"), ...iTermP(d), op("="), ...iTerm(b * d), sup(2), op("="), num(last)], state: 2, answerStep: "last", result: last },
-      { id: "real", narration: `The plain numbers make the real part: ${f(re)}.`, math: [num(ac), op("+"), ...numP(last), op("="), num(re)], state: 3, answerStep: "real", result: re },
-      { id: "imag", narration: `Outer and inner are the i terms: ${im === 0 ? "they cancel to 0" : iText(im)}. So the product is ${complexText(re, im)}.`, math: [num(a), op("·"), ...numP(d), op("+"), ...numP(b), op("·"), ...numP(c), op("="), num(im)], state: 4, answerStep: "imag", result: im },
+      { id: "first", narration: "First × first: the two plain numbers.", math: [num(a), op("·"), ...numP(c), op("="), num(ac)], state: 1, answerStep: "first", result: ac },
+      { id: "last", narration: "Last × last: i times i is −1, so the sign flips.", math: [...iTerm(b), op("·"), ...iTermP(d), op("="), ...iTerm(b * d), sup(2), op("="), num(last)], state: 2, answerStep: "last", result: last },
+      { id: "real", narration: "The plain numbers together make the real part.", math: [num(ac), op("+"), ...numP(last), op("="), num(re)], state: 3, answerStep: "real", result: re },
+      { id: "imag", narration: `Outer and inner are the i terms. So the product is ${complexText(re, im)}.`, math: [num(a), op("·"), ...numP(d), op("+"), ...numP(b), op("·"), ...numP(c), op("="), num(im)], state: 4, answerStep: "imag", result: im },
     ],
   };
 }

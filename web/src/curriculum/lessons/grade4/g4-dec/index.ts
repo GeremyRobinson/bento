@@ -4,7 +4,7 @@ import type { Rng } from "../../../generators/rng";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildTape } from "../../../../explanations/diagrams/tape/build";
 import type { TapeRow } from "../../../../explanations/diagrams/tape/schema";
-import { expectedOf, ints, ns, pieceName } from "../../_tape-family/steps";
+import { expectedOf, ints, ns } from "../../_tape-family/steps";
 
 /** a/10 + b/100, written as a decimal. */
 export interface TenthsHundredthsProblem { a: number; b: number }
@@ -16,8 +16,6 @@ export function createTenthsHundredths(a: number, b: number): TenthsHundredthsPr
 
 /** Same ranges as the current app: 1–9 tenths and 1–99 hundredths. */
 export const generateTenthsHundredths = (rng: Rng) => createTenthsHundredths(rng.int(1, 9), rng.int(1, 99));
-
-const count = (k: number, d: number) => `${k} ${pieceName(d, k !== 1)}`;
 
 function answers({ a, b }: TenthsHundredthsProblem): AnswerModel {
   const S = 10 * a + b;
@@ -73,11 +71,11 @@ function explain(p: TenthsHundredthsProblem, model: AnswerModel): Explanation {
     timeline: beats(4),
     steps: [
       { id: "hundredths", state: 1, answerStep: "hundredths", result: A, math: [frac(a, 10), op("="), frac(A, 100)],
-        narration: `Cut every tenth into 10 hundredths: ${count(a, 10)} is the same as ${count(A, 100)}.` },
+        narration: "Cut every tenth into 10 hundredths." },
       { id: "add", state: 2, answerStep: "add", result: S, math: [frac(A, 100), op("+"), frac(b, 100), op("="), frac(S, 100)],
-        narration: `Same-size pieces now: ${A} + ${b} = ${count(S, 100)}.` },
+        narration: "Same-size pieces now, so add the tops." },
       { id: "decimal", state: 3, answerStep: "decimal", result: D, math: [frac(S, 100), op("="), num(D)],
-        narration: `Hundredths go two places after the point: ${count(S, 100)} is written ${f(D)}.` },
+        narration: `Hundredths go two places after the point.${S >= 100 ? " 100 hundredths make 1 whole." : ""}` },
     ],
   };
 }

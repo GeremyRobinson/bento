@@ -1,10 +1,10 @@
 // Order of operations (the current app's g5-order), in three shapes that take turns:
 // t = 0: a + b × (c − d),  t = 1: (a + b) × c − d,  t = 2: a × b − c ÷ d.
-import { formatNumber, mark, num, op, text, type MathText } from "../../../schemas/math-text";
+import { formatNumber, num, op, text, type MathText } from "../../../schemas/math-text";
 import type { AnswerModel, AnswerStep, LessonDefinition } from "../../../schemas/lesson";
-import { chainExplanation, type ChainBeat } from "../../../../explanations/diagrams/chain/build";
+import { beats, type Explanation, type ExplanationStep } from "../../../../explanations/schema";
+import { buildOrderTiles, type OrderGroup, type OrderToken } from "../../../../explanations/diagrams/order/build";
 import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
-import { orderPicture } from "./picture";
 import { tapStep } from "../../grade4/_kit";
 
 export interface OrderProblem { t: 0 | 1 | 2; a: number; b: number; c: number; d: number }
@@ -39,7 +39,7 @@ function firstStep({ t, a, b, c, d }: OrderProblem): AnswerStep {
     ? [[`${a} × ${b}`, `${b} − ${c}`], 0, { 1: ["Subtracted first", "× and ÷ come before −, so the − waits."] }]
     : [[`${a} + ${b}`, `${b} × ${c}`, `${c} − ${d}`], 2, { 0: ["Worked left to right", LEFT_TO_RIGHT], 1: ["Skipped the parentheses", `The parentheses make ${c} − ${d} one number, so it comes even before ×.`] }];
   return tapStep({
-    id: "first", label: "What goes first?", question: "Which part do you work out first?", prompt: expression({ t, a, b, c, d }),
+    id: "first", label: "What goes first?", question: "Which part do you work out first?", prompt: [],
     choices, ans, wrong,
     hint: t === 2 ? "There are no parentheses here. Which comes first, × or −?" : "Look for parentheses: they say \"work me out first\".",
     explain: t === 2 ? `× comes before −, so ${a} × ${b} goes first.` : `The parentheses go first: ${choices[ans]}.`,
@@ -79,54 +79,55 @@ function answers(p: OrderProblem): AnswerModel {
   return { steps: [firstStep(p), ...steps], finalParts: [-1] };
 }
 
-function explain(p: OrderProblem, model: AnswerModel) {
+/** the expression as tiles, and the three groups worked out in order (v2 spec g5-order) */
+function tiles({ t, a, b, c, d }: OrderProblem, r: [number, number, number]): { tokens: OrderToken[]; groups: OrderGroup[] } {
+  const n = (v: number): OrderToken => ({ n: v }), o = (v: string): OrderToken => ({ op: v });
+  const open: OrderToken = { paren: "(" }, close: OrderToken = { paren: ")" };
+  return t === 1 ? { tokens: [open, n(a), o("+"), n(b), close, o("×"), n(c), o("−"), n(d)], groups: [{ from: 0, to: 4, value: r[0] }, { from: 0, to: 6, value: r[1] }, { from: 0, to: 8, value: r[2] }] }
+    : t === 2 ? { tokens: [n(a), o("×"), n(b), o("−"), n(c), o("÷"), n(d)], groups: [{ from: 0, to: 2, value: r[0] }, { from: 4, to: 6, value: r[1] }, { from: 0, to: 6, value: r[2] }] }
+    : { tokens: [n(a), o("+"), n(b), o("×"), open, n(c), o("−"), n(d), close], groups: [{ from: 4, to: 8, value: r[0] }, { from: 2, to: 8, value: r[1] }, { from: 0, to: 8, value: r[2] }] };
+}
+
+function explain(p: OrderProblem, model: AnswerModel): Explanation {
   const { t, a, b, c, d } = p;
   const r0 = expectedOf(model, "s0"), r1 = expectedOf(model, "s1"), r2 = expectedOf(model, "s2");
-  const beat = (i: number, narration: string, math: MathText, lines: MathText[], result: number): ChainBeat =>
-    ({ id: `s${i}`, narration, math, lines, answerStep: `s${i}`, result });
-  const first: ChainBeat = { id: "first", narration: t === 2 ? `No parentheses here, and × comes before −, so ${a} × ${b} goes first.` : `Parentheses first: they make ${t === 1 ? `${a} + ${b}` : `${c} − ${d}`} one number.`,
-    math: expression(p), lines: [], answerStep: "first" };
-  const beats: ChainBeat[] = [first, ...(t === 1 ? [
-    beat(0, `Parentheses first: ${a} + ${b} = ${r0}.`, [num(a), op("+"), num(b), op("="), num(r0)],
-      [[mark(P(num(a), op("+"), num(b))), op("×"), num(c), op("−"), num(d)]], r0),
-    beat(1, `Then multiply: ${r0} × ${c} = ${r1}. Multiplying comes before subtracting.`, [num(r0), op("×"), num(c), op("="), num(r1)],
-      [[mark([num(r0), op("×"), num(c)]), op("−"), num(d)]], r1),
-    beat(2, `Then subtract: ${r1} − ${d} = ${r2}.`, [num(r1), op("−"), num(d), op("="), num(r2)],
-      [[mark([num(r1), op("−"), num(d)])], [num(r2)]], r2),
-  ] : t === 2 ? [
-    beat(0, `Multiply first: ${a} × ${b} = ${r0}.`, [num(a), op("×"), num(b), op("="), num(r0)],
-      [[mark([num(a), op("×"), num(b)]), op("−"), num(c), op("÷"), num(d)]], r0),
-    beat(1, `Divide before you subtract: ${c} ÷ ${d} = ${r1}.`, [num(c), op("÷"), num(d), op("="), num(r1)],
-      [[num(r0), op("−"), mark([num(c), op("÷"), num(d)])]], r1),
-    beat(2, `Then subtract: ${r0} − ${r1} = ${r2}.`, [num(r0), op("−"), num(r1), op("="), num(r2)],
-      [[mark([num(r0), op("−"), num(r1)])], [num(r2)]], r2),
-  ] : [
-    beat(0, `Parentheses first: ${c} − ${d} = ${r0}.`, [num(c), op("−"), num(d), op("="), num(r0)],
-      [[num(a), op("+"), num(b), op("×"), mark(P(num(c), op("−"), num(d)))]], r0),
-    beat(1, `Then multiply: ${b} × ${r0} = ${r1}.`, [num(b), op("×"), num(r0), op("="), num(r1)],
-      [[num(a), op("+"), mark([num(b), op("×"), num(r0)])]], r1),
-    beat(2, `Then add: ${a} + ${r1} = ${r2}.`, [num(a), op("+"), num(r1), op("="), num(r2)],
-      [[mark([num(a), op("+"), num(r1)])], [num(r2)]], r2),
-  ])];
   // the slip the current app's card warns about, worked out for this problem
   const leftToRight = t === 1 ? null : t === 2 ? (a * b - c) / d : (a + b) * (c - d);
-  return chainExplanation({
+  const wrongWay = leftToRight != null && Number.isInteger(leftToRight) && leftToRight !== r2 ? ` Left to right would give ${formatNumber(leftToRight)}, which is wrong.` : "";
+  // beat 1 lights the first group once "what goes first" is answered; each later beat turns one group into its value
+  const step = (i: number, narration: string, math: MathText, result: number): ExplanationStep =>
+    ({ id: `s${i}`, narration, math, state: i + 2, answerStep: `s${i}`, result });
+  const words = t === 1 ? ["Work out the inside of the parentheses.", "Multiply before subtracting.", "Subtract last."]
+    : t === 2 ? ["Multiply first.", "Divide next, still before subtracting.", `Subtract last.${wrongWay}`]
+    : ["Work out the inside of the parentheses.", "Multiply next, before adding.", `Add last.${wrongWay}`];
+  const maths: MathText[] = t === 1 ? [[num(a), op("+"), num(b), op("="), num(r0)], [num(r0), op("×"), num(c), op("="), num(r1)], [num(r1), op("−"), num(d), op("="), num(r2)]]
+    : t === 2 ? [[num(a), op("×"), num(b), op("="), num(r0)], [num(c), op("÷"), num(d), op("="), num(r1)], [num(r0), op("−"), num(r1), op("="), num(r2)]]
+    : [[num(c), op("−"), num(d), op("="), num(r0)], [num(b), op("×"), num(r0), op("="), num(r1)], [num(a), op("+"), num(r1), op("="), num(r2)]];
+  const { tokens, groups } = tiles(p, [r0, r1, r2]);
+  return {
     heading: "Parentheses, then × and ÷, then + and −",
     idea: ["Everyone uses the same order, so a problem has only one answer."],
     statement: expression(p),
-    ...(leftToRight != null && Number.isInteger(leftToRight) && leftToRight !== r2 ? { caption: `Going left to right would give ${formatNumber(leftToRight)}, which is wrong.` } : {}),
-    alt: `Order of operations, one step per line, ending at ${r2}.`,
-    diagram: orderPicture({ t, a, b, c, d, r0, r1, r2 }),
-    beats,
-  });
+    diagram: buildOrderTiles({ tokens, groups, alt: `${plain(p)} as a row of tiles; the part worked next lights up, then becomes one tile: ${r0}, then ${r1}, then ${r2}.` }),
+    timeline: beats(5),
+    steps: [
+      { id: "first", narration: t === 2 ? "No parentheses, and × comes before −." : "Find the parentheses: they go first.", math: expression(p), state: 1, answerStep: "first" },
+      ...[0, 1, 2].map(i => step(i, words[i]!, maths[i]!, [r0, r1, r2][i]!)),
+    ],
+    solved: `${t === 2 ? "× and ÷ first, then −," : `Parentheses, then ×, then ${t === 1 ? "−" : "+"},`} makes ${formatNumber(r2)}.`,
+    // at rest (Today) the row as written: the finished picture is the answer
+    rest: 0,
+  };
 }
+
+const plain = ({ t, a, b, c, d }: OrderProblem) => t === 1 ? `(${a} + ${b}) × ${c} − ${d}` : t === 2 ? `${a} × ${b} − ${c} ÷ ${d}` : `${a} + ${b} × (${c} − ${d})`;
 
 export const lesson: LessonDefinition<OrderProblem> = {
   id: "g5-order",
   grade: 5,
   unit: "Whole numbers",
   title: "Order of operations",
-  pre: "g5-mult2",
+  pre: "g3-facts",
   reference: createOrder(0, 3, 4, 6, 2), // 3 + 4 × (6 − 2), the current app's example
   generate: (rng, i) => {
     if (i < 3) {
@@ -145,7 +146,7 @@ export const lesson: LessonDefinition<OrderProblem> = {
     return createOrder(t, rng.int(2, 9), rng.int(2, 9), c, rng.int(1, c - 1));
   },
   restore: raw => restoreVia(raw, ["t", "a", "b", "c", "d"] as const, v => createOrder(v.t, v.a, v.b, v.c, v.d)),
-  display: expression,
+  display: p => [...expression(p), op("="), text("?")],
   answers,
   explain,
 };

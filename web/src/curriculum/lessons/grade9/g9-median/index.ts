@@ -52,10 +52,10 @@ export function explainMedian({ v }: MedianProblem, answers: AnswerModel): Expla
     }),
     timeline: beats(4),
     steps: [
-      { id: "bars", narration: `Each number is a bar: ${v.join(", ")}.`, math: listOf(v), state: 0 },
-      { id: "count", narration: `There are ${n} numbers.`, math: mt`${n}`, state: 1, answerStep: "count", result: n },
-      { id: "spot", narration: `Put them in order. With ${n} numbers the middle spot is (${n} + 1) ÷ 2 = ${mid}.`, math: mt`(${n} + 1) ÷ 2 = ${mid}`, state: 2, answerStep: "spot", result: mid },
-      { id: "median", narration: `Spot ${mid} of ${s2.join(", ")} holds ${med}. That's the median.`, math: mt`median = ${med}`, state: 3, answerStep: "median", result: med },
+      { id: "bars", narration: `Each number is a bar, as tall as the number.`, math: listOf(v), state: 0 },
+      { id: "count", narration: `Count every number, repeats too.`, math: mt`${n}`, state: 1, answerStep: "count", result: n },
+      { id: "spot", narration: `Put them in order. The middle spot has as many before it as after.`, math: mt`(${n} + 1) ÷ 2 = ${mid}`, state: 2, answerStep: "spot", result: mid },
+      { id: "median", narration: `In order, ${s2.join(", ")}: spot ${mid} is the middle.`, math: mt`median = ${med}`, state: 3, answerStep: "median", result: med },
     ],
   };
 }

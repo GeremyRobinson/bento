@@ -11,6 +11,22 @@ import { unlikePicture, createUnlikeFractions } from "../../curriculum/lessons/_
 import { ratioPicture, createRatio } from "../../curriculum/lessons/grade6/g6-ratio";
 
 type Rect = Extract<SceneItem, { type: "rect" }>;
+
+describe("g5-unitdiv counts one whole at a time (Review g5 #6)", () => {
+  it("each running count lands after the one before it, the first three on beats of their own, the answer step last", () => {
+    const l = lessonById("g5-unitdiv")!;
+    for (const [W, d] of [[2, 3], [3, 4], [5, 2], [10, 8]] as const) {
+      const p = { W, d }, ex = l.explain(p, l.answers(p)), sc = ex.diagram as SceneDiagram, last = ex.timeline.length - 1;
+      const counts = Array.from({ length: W }, (_, j) => sc.items.find(i => i.type === "text" && i.text === String((j + 1) * d) && (i.from ?? 0) > 0)!);
+      // when each count lands: its beat, then its delay inside the beat
+      const when = counts.map(c => (c.from ?? 0) * 100 + (c.delay ?? 0));
+      for (let j = 1; j < W; j++) expect(when[j]!).toBeGreaterThan(when[j - 1]!);
+      expect(new Set(counts.slice(0, 3).map(c => c.from)).size).toBe(Math.min(W, 3));
+      expect(ex.steps.at(-1)!.state).toBe(last);
+      expect(counts.at(-1)!.from).toBe(last);
+    }
+  });
+});
 const shownAt = (d: SceneDiagram, at: number) => d.items.filter(i => (i.from ?? 0) <= at && (i.until == null || at <= i.until));
 const rects = (d: SceneDiagram, at: number, cls: string) => shownAt(d, at).filter((i): i is Rect => i.type === "rect" && i.cls === cls);
 const rowOf = (y: number) => (r: Rect) => r.y === y;
@@ -73,8 +89,9 @@ describe("pictures follow the problem", () => {
       const shaded = shownAt(d, 2).filter((i): i is Rect => i.type === "rect" && i.cls === "seg on");
       expect(shaded.filter(r => r.y === tops.at(-1))).toHaveLength(a * k);
       expect(span(shaded.filter(r => r.y === tops.at(-1))) / span(last)).toBeCloseTo(a / b, 1);
-      expect(texts(d, 2)).toContain(String(a * k));
-      expect(texts(d, 1)).toContain("?");
+      // labels read on one line now (picture system): the count is the top of "4/8"
+      expect(texts(d, 2).some(t => t === String(a * k) || t.startsWith(`${a * k}/`))).toBe(true);
+      expect(texts(d, 1).some(t => t === "?" || t.startsWith("?/"))).toBe(true);
     }
     expect(cutChain(4)).toEqual([2, 2]);
     expect(cutChain(5)).toEqual([5]);
@@ -99,6 +116,35 @@ describe("pictures follow the problem", () => {
     expect(rects(d, 0, "seg")).toHaveLength(4 + 6);
     expect(rects(d, 5, "seg")).toHaveLength(12 * 3);
     expect(rects(d, 5, "seg on cut")).toHaveLength(2);
+  });
+
+  it("unlike fractions: the LCD step cuts the third into sixths (knife lines, then the pieces split), not a swap", () => {
+    const d = unlikePicture(createUnlikeFractions(2, 3, 1, 6, "+"));
+    const knives = d.items.filter(i => i.type === "line" && i.cls === "ln2" && i.from === 1);
+    expect(knives).toHaveLength(3); // through the middle of each third
+    const split = d.items.filter(i => i.type === "rect" && i.from === 1 && i.enter === "slide");
+    expect(split.length).toBeGreaterThanOrEqual(6);
+    expect(split.every(i => i.vars?.["--dx"] != null && (i.delay ?? 0) > 0)).toBe(true);
+    for (let beat = 1; beat <= 4; beat++) expect(d.items.some(i => i.from === beat), `beat ${beat}`).toBe(true);
+  });
+
+  it("mixed numbers: one whole is counted per beat, its pieces numbered, and the fraction lands last", () => {
+    const ex = lessonById("g5-improper")!, p = { w: 2, n: 2, d: 3 } as never, e = ex.explain(p, ex.answers(p)), d = e.diagram as SceneDiagram;
+    expect(e.timeline).toHaveLength(5);
+    expect(texts(d, 1)).toEqual(expect.arrayContaining(["1", "2", "3"]));
+    expect(texts(d, 2)).toEqual(expect.arrayContaining(["4", "5", "6"]));
+    expect(texts(d, 3)).toEqual(expect.arrayContaining(["7", "8"]));
+    expect(texts(d, 4)).toContain("8/3");
+    expect(texts(d, 3)).not.toContain("8/3");
+  });
+
+  it("text too big for its part never shrinks under 14px: one or two parts lead it outside, more leave it to the bracket", () => {
+    const one = buildTape({ rows: [{ length: 1, parts: 12, each: [{ text: () => "1000", only: i => i === 0 }] }], alt: "t" });
+    const out = one.items.find(i => i.type === "text" && i.text === "1000");
+    expect(out?.cls).toBe("sm res");
+    expect(one.items.some(i => i.type === "line" && i.cls === "ax thin")).toBe(true);
+    const many = buildTape({ rows: [{ length: 1, parts: 12, each: [{ text: () => "1000" }] }], alt: "t" });
+    expect(texts(many, 0)).not.toContain("1000");
   });
 
   it("ratio tape: a boxes over b boxes of one size", () => {

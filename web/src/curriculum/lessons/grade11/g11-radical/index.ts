@@ -50,9 +50,9 @@ export function explainRadical(p: RadicalEquation, model: AnswerModel) {
     steps: [
       { id: "problem", narration: `x is stuck under a square root.`, math: [...root(a), op("="), num(b)] },
       { id: "both", narration: `Square both sides. Squaring undoes the square root.`, math: [mark("("), ...root(a), mark(")"), sup(2), op("="), num(b), sup([mark(2)])] },
-      { id: "square", narration: `${f(b)} × ${f(b)} = ${f(sq)}, so x ${fpm(a)} = ${f(sq)}.`, math: [...inside(a), op("="), num(sq)], answerStep: "square", result: sq },
-      { id: "solve", narration: `Undo the ${fpm(a)}: x = ${f(x)}.`, math: m(v(), op("="), sq, op(a < 0 ? "+" : "−"), Math.abs(a), op("="), x), answerStep: "solve", result: x },
-      { id: "check", narration: `Check: √(${f(x)} ${fpm(a)}) = √${f(sq)} = ${f(b)}. ✓`, math: m(sqrt([text("("), num(x), ...pm(a), text(")")]), op("="), sqrt(sq), op("="), b) },
+      { id: "square", narration: `${f(b)} × ${f(b)} on the right, and the root is gone on the left.`, math: [...inside(a), op("="), num(sq)], answerStep: "square", result: sq },
+      { id: "solve", narration: `Undo the ${fpm(a)} to get x on its own.`, math: m(v(), op("="), sq, op(a < 0 ? "+" : "−"), Math.abs(a), op("="), x), answerStep: "solve", result: x },
+      { id: "check", narration: "Check in the first equation, since squaring can add answers that don't work.", math: m(sqrt([text("("), num(x), ...pm(a), text(")")]), op("="), sqrt(sq), op("="), b) },
     ],
   });
 }
@@ -62,6 +62,7 @@ export const lesson: LessonDefinition<RadicalEquation> = withEasyStart({
   grade: 11,
   unit: "Functions",
   title: "Radical equations",
+  pre: "g8-roots",
   reference: createRadicalEquation(3, 5),
   generate: rng => generateRadicalEquation(rng),
   restore: restoreRadicalEquation,

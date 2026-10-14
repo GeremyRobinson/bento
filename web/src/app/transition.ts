@@ -13,7 +13,7 @@ export const canCrossFade = () => false;
 const WAY: Record<Exclude<Dir, "still">, string> = { "": "", fwd: "in", back: "out", next: "next", prev: "prev" };
 
 /** the pieces of the page under the nav: everything the screen drew, never the nav itself or an overlay */
-const PAGE = "#app>:not(.itop):not(.zoom):not(.confirm):not(.fdim)";
+const PAGE = "#app>:not(.itop):not(.o-nav):not(.zoom):not(.confirm):not(.fdim)";
 
 /**
  * The one page change (G 2026-10-07: the contents' switcher is "so buttery smooth, use those transition mechanics across

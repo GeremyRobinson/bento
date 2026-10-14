@@ -2,6 +2,7 @@
 // with every pair joined (choosing 2) or one chosen group shown in all its orders (choosing 3).
 import type { SceneDiagram } from "../scene/schema";
 import { frame, poly, polar, seg, t, type Draft, type Pt } from "../geo/kit";
+import { giveWay, shortUp, spreadRows } from "../scene/picture-system";
 
 const STEP = 34, RAD = 14;
 
@@ -44,7 +45,7 @@ export interface ChooseSpec {
 const letter = (i: number) => String.fromCharCode(65 + i);
 
 export function buildChoose(s: ChooseSpec): SceneDiagram {
-  const R = 86, O: Pt = [0, 0];
+  const R = 60, O: Pt = [0, 0];
   const pt = (i: number) => polar(O, R, 90 - (i * 360) / s.n);
   const items: Draft[] = [];
   // every pair joined once the repeats are removed (only drawn for pairs: groups of three would be a tangle)
@@ -63,10 +64,18 @@ export function buildChoose(s: ChooseSpec): SceneDiagram {
   // the chosen group written in every order: they are all the same group
   const group = Array.from({ length: s.k }, (_, i) => letter(i));
   const perms = s.k === 2 ? [group.join(""), [...group].reverse().join("")] : ["ABC", "ACB", "BAC", "BCA", "CAB", "CBA"];
-  const x0 = R + 46;
-  items.push(t(x0, -60, s.orderedNote, "lbl start", { from: s.orderedBeat, enter: "rise" }));
-  perms.forEach((p, i) => items.push(t(x0 + (i % 3) * 52, -22 + Math.floor(i / 3) * 26, p, "sm start", { from: s.ordersBeat, enter: "rise", delay: i * 0.1 })));
-  items.push(t(x0, 38, s.ordersNote, "lbl start", { from: s.ordersBeat, enter: "rise", delay: 0.6 }));
-  items.push(t(x0, 72, s.groupsNote, "lbl acc start", { from: s.groupsBeat, enter: "rise" }));
+  // the orders stand beside the circle and the notes under it, centred, one row each: a picture wider than tall like the
+  // box it sits in (beside it, a note at a phone's label size ran past the edge: Review, landing at 390×844). Each note
+  // hangs from its top (.down). They are the worked lines, so practice leaves them to the work list (.cap); in a phone's
+  // short box the three are written on one line, each taking the last one's place as it comes (shortUp)
+  const cols = s.k === 2 ? 1 : 2, rows = Math.ceil(perms.length / cols);
+  perms.forEach((p, i) => items.push(t(R + 30 + (i % cols) * 44, (Math.floor(i / cols) - (rows - 1) / 2) * 26, p, "sm start", { from: s.ordersBeat, enter: "rise", delay: i * 0.1, vars: spreadRows(Math.floor(i / cols), rows, 26) })));
+  const y0 = R + 26;
+  const notes: [string, string, number, number][] = [[s.orderedNote, "lbl", s.orderedBeat, 0], [s.ordersNote, "lbl", s.ordersBeat, 0.6], [s.groupsNote, "lbl acc", s.groupsBeat, 0]];
+  notes.forEach(([note, cls, beat, delay], i) => {
+    const it = t(0, y0 + i * 30, note, `${cls} down cap`, { from: beat, enter: "rise", delay, vars: shortUp(i * 30) }), next = notes[i + 1];
+    // in a short box it gives way as the next note comes
+    items.push(...(next ? giveWay(it, next[2], next[3], s.groupsBeat) : [it]));
+  });
   return frame("marbles", items, s.alt);
 }

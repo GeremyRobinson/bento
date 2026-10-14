@@ -2,6 +2,8 @@
 // and work by setting attributes on <html> that the styles and a few behaviours read.
 
 export interface Settings {
+  /** light, dark, or follow the device (UI model v63: Look) */
+  look: "auto" | "light" | "dark";
   /** larger text and controls, for anyone who finds the standard size small */
   text: "standard" | "large" | "largest";
   /** stronger lines and darker grey text */
@@ -21,7 +23,7 @@ export interface Settings {
 }
 
 export const defaultSettings = (): Settings => ({
-  text: "standard", contrast: false, motion: "system", colorSafe: false, readable: false, sounds: false, readAloud: null, leftHanded: false,
+  look: "auto", text: "standard", contrast: false, motion: "system", colorSafe: false, readable: false, sounds: false, readAloud: null, leftHanded: false,
 });
 
 /** Settings from a save, with anything missing or unknown back at its default. */
@@ -30,6 +32,7 @@ export function readSettings(raw: unknown): Settings {
   if (!raw || typeof raw !== "object") return d;
   const r = raw as Partial<Record<keyof Settings, unknown>>;
   return {
+    look: r.look === "light" || r.look === "dark" ? r.look : "auto",
     text: r.text === "large" || r.text === "largest" ? r.text : "standard",
     contrast: r.contrast === true,
     motion: r.motion === "reduce" ? "reduce" : "system",
@@ -48,6 +51,7 @@ export const readAloudOn = (s: Settings, grade: number | null | undefined): bool
 export function applySettings(s: Settings): void {
   if (typeof document === "undefined") return;
   const el = document.documentElement.dataset;
+  if (s.look === "auto") delete el.theme; else el.theme = s.look;
   el.text = s.text;
   el.contrast = String(s.contrast);
   el.motion = s.motion;

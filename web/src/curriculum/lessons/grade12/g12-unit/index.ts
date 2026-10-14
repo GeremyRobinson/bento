@@ -35,7 +35,7 @@ export function unitCircleAnswers(p: UnitCircleProblem): AnswerModel {
   const { f, t } = p, { quad, ref, pos } = facts(p);
   return {
     steps: [
-      ns({ id: "quadrant", label: "Quadrant", prompt: s => mt`${t}° is in quadrant ${s}`, ans: quad, hint: "I is 0–90°, II is 90–180°, III is 180–270°, IV is 270–360°.", wrong: [[5 - quad, "Turned clockwise", "Angles turn counterclockwise from the right, through I, II, III, IV."]] }),
+      ns({ id: "quadrant", label: "Quadrant", prompt: s => mt`${t}° is in quadrant ${s}`, ans: quad, hint: "Quadrant 1 is 0–90°, and each 90° turned counterclockwise moves on one quadrant.", wrong: [[5 - quad, "Turned clockwise", "Angles turn counterclockwise from the right, through 1, 2, 3, 4."]] }),
       ns({ id: "reference", label: "Reference angle", prompt: s => mt`reference angle = ${s}°`, ans: ref, hint: "The angle back to the nearest x-axis, whichever side is closer.", wrong: [[90 - ref, "Measured to the y-axis", "The reference angle goes back to the x-axis, not the y-axis."]] }),
       fs({ id: "value", label: "Value", prompt: s => mt`${f} ${t}° = ${s}`, N: pos ? 1 : -1, D: 2, note: "Put any minus sign on the top.",
         hint: `${f} ${ref}° = 1/2. ${f === "sin" ? "Sine" : "Cosine"} is ${pos ? "positive" : "negative"} in quadrant ${quad}.`,
@@ -63,9 +63,9 @@ export function explainUnitCircle(p: UnitCircleProblem, answers: AnswerModel): E
     timeline: beats(4),
     steps: [
       { id: "angle", narration: `Start on the right of the x-axis and turn ${t}° counterclockwise.`, math: mt`${f} ${t}°`, state: 0 },
-      { id: "quadrant", narration: `${t}° lands in quadrant ${quad}.`, math: mt`quadrant ${quad}`, state: 1, answerStep: "quadrant", result: quad },
-      { id: "reference", narration: `The angle back to the nearest x-axis is ${ref}°.`, math: mt`reference angle = ${ref}°`, state: 2, answerStep: "reference", result: ref },
-      { id: "value", narration: `${f} ${ref}° = 1/2, and the point is ${where}, so ${f} ${t}° = ${value}.`, math: mt`${f} ${t}° = ${frac(n, d)}`, state: 3, answerStep: "value", result: n },
+      { id: "quadrant", narration: `${t}° is past ${(quad - 1) * 90}° but not yet ${quad * 90}°.`, math: mt`quadrant ${quad}`, state: 1, answerStep: "quadrant", result: quad },
+      { id: "reference", narration: "Measure back to the nearest side of the x-axis, never the y-axis.", math: mt`reference angle = ${ref}°`, state: 2, answerStep: "reference", result: ref },
+      { id: "value", narration: `${f} ${ref}° is 1/2. The point is ${where}, so it's ${pos ? "positive" : "negative"}.`, math: mt`${f} ${t}° = ${frac(n, d)}`, state: 3, answerStep: "value", result: n },
     ],
   };
 }

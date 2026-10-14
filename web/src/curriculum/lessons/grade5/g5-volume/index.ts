@@ -1,4 +1,4 @@
-import { num, op } from "../../../schemas/math-text";
+import { num, op, text } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import type { Rng } from "../../../generators/rng";
 import { beats, type Explanation } from "../../../../explanations/schema";
@@ -42,7 +42,8 @@ export function explainBox(p: BoxProblem, answers: AnswerModel): Explanation {
     statement: [num(l), op("×"), num(w), op("×"), num(h)],
     diagram: buildBox3d({
       mode: "cubes", l, w, h, layerBeats: [1, ...Array.from({ length: h - 1 }, () => 2)],
-      labels: { l: String(l), w: String(w), h: String(h), from: 0 },
+      // lit (picture system): length and width for the base layer, then the height as the layers stack
+      labels: { l: String(l), w: String(w), h: String(h), from: 0, lit: { l: [{ from: 1, until: 1 }], w: [{ from: 1, until: 1 }], h: [{ from: 2 }] } },
       lines: [
         { text: `${l} × ${w} = ${count(base, "cube")} in a layer`, from: 1, until: 1 },
         { text: `${h} layers: ${base} × ${h} = ${V}`, from: 2 },
@@ -52,8 +53,8 @@ export function explainBox(p: BoxProblem, answers: AnswerModel): Explanation {
     caption: `${count(base, "cube")} in a layer, ${h} layers: ${V}.`,
     timeline: beats(3),
     steps: [
-      { id: "base", narration: `The bottom layer is ${l} by ${w}: ${count(base, "cube")}.`, math: [num(l), op("×"), num(w), op("="), num(base)], state: 1, answerStep: "base", result: base },
-      { id: "volume", narration: `Stack ${h} layers of ${base}: ${V} cubic cm.`, math: [num(base), op("×"), num(h), op("="), num(V)], state: 2, answerStep: "volume", result: V },
+      { id: "base", narration: `The bottom layer is ${l} by ${w}.`, math: [num(l), op("×"), num(w), op("="), num(base)], state: 1, answerStep: "base", result: base },
+      { id: "volume", narration: `Stack ${h} layers to fill the box, in cubic cm.`, math: [num(base), op("×"), num(h), op("="), num(V)], state: 2, answerStep: "volume", result: V },
     ],
   };
 }
@@ -67,8 +68,9 @@ export const lesson: LessonDefinition<BoxProblem> = {
   reference: createBox(4, 3, 2),
   generate: (rng, index) => generateBox(rng, index),
   restore: raw => { const r = readNumbers(raw, ["l", "w", "h"] as const); try { return r && createBox(r.l, r.w, r.h); } catch { return null; } },
-  display: p => [num(p.l), op("×"), num(p.w), op("×"), num(p.h)],
-  displayNote: ({ l, w, h }) => `A box ${l} cm long, ${w} cm wide and ${h} cm tall. How many cubic cm?`,
+  // the problem line "3 × 5 × 5" stays the hero (its "= ?" fills with the answer once solved), the box's story under it
+  display: p => [num(p.l), op("×"), num(p.w), op("×"), num(p.h), op("="), text("?")],
+  displayNote: ({ l, w, h }) => `A box is **${l}** cm long, **${w}** cm wide and **${h}** cm tall. How many 1 cm cubes fill it?`,
   answers: boxAnswers,
   explain: explainBox,
 };

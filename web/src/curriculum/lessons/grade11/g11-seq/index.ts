@@ -1,5 +1,5 @@
 // Arithmetic sequences (the current app's G11_SEQ): aₙ = a₁ + (n − 1)d, told as jumps along a number line.
-import { answer, formatNumber as f, num, op, sub, text, type MathText } from "../../../schemas/math-text";
+import { answer, num, op, sub, text, type MathText } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildNumberLine, fitRange, type Hop } from "../../../../explanations/diagrams/number-line/build";
@@ -62,10 +62,10 @@ function explain(p: SequenceProblem, model: AnswerModel): Explanation {
     caption: `Jump by ${d} each time: ${count(jumps, "jump")} from ${a1} reach ${an}.`,
     timeline: beats(4),
     steps: [
-      { id: "d", narration: `Each term goes up by the same amount: ${a1 + d} − ${a1} = ${d}.`, math: [text("d"), op("="), num(d)], state: 0, answerStep: "d", result: d },
-      { id: "jumps", narration: `Term 1 is where you start, so reaching term ${n} takes ${n} − 1 = ${count(jumps, "jump")}.`, math: [num(n), op("−"), num(1), op("="), num(jumps)], state: 1, answerStep: "jumps", result: jumps },
-      { id: "climb", narration: `${count(jumps, "jump")} of ${d} climb ${jumps} × ${d} = ${climb}.`, math: [num(jumps), op("×"), num(d), op("="), num(climb)], state: 2, answerStep: "climb", result: climb },
-      { id: "term", narration: `Start at the first term and add the climb: ${a1} + ${climb} = ${f(an)}.`, math: [...term(n), op("="), num(a1), op("+"), num(climb), op("="), num(an)], state: 3, answerStep: "term", result: an },
+      { id: "d", narration: `Each term goes up by the same amount: ${a1 + d} − ${a1}.`, math: [text("d"), op("="), num(d)], state: 0, answerStep: "d", result: d },
+      { id: "jumps", narration: `Term 1 is where you start, so it's one jump fewer than ${n}.`, math: [num(n), op("−"), num(1), op("="), num(jumps)], state: 1, answerStep: "jumps", result: jumps },
+      { id: "climb", narration: `Each of the ${count(jumps, "jump")} climbs ${d}.`, math: [num(jumps), op("×"), num(d), op("="), num(climb)], state: 2, answerStep: "climb", result: climb },
+      { id: "term", narration: "Start at the first term and add the climb.", math: [...term(n), op("="), num(a1), op("+"), num(climb), op("="), num(an)], state: 3, answerStep: "term", result: an },
     ],
   };
 }
@@ -75,6 +75,7 @@ export const lesson: LessonDefinition<SequenceProblem> = withEasyStart({
   grade: 11,
   unit: "Sequences",
   title: "Arithmetic sequences",
+  pre: "g8-func",
   reference: createSequence(5, 4, 20), // 5, 9, 13, 17, … term 20 = 81, the current app's example
   generate: rng => createSequence(rng.int(1, 20), rng.int(2, 9), rng.int(10, 30)),
   restore: raw => restoreVia(raw, ["a1", "d", "n"] as const, v => createSequence(v.a1, v.d, v.n)),

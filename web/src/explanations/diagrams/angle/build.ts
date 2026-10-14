@@ -15,7 +15,8 @@ export interface AngleSpec {
   alt: string;
 }
 
-const R = 140;
+/** the arms: drawn at about a phone strip's size, so labels laid out at their phone size land where they are drawn */
+const R = 100;
 
 export function buildAngle(s: AngleSpec): SceneDiagram {
   const { total, part } = s;
@@ -37,12 +38,14 @@ export function buildAngle(s: AngleSpec): SceneDiagram {
     const k = 16;
     items.push(path([{ c: "M", p: [k, 0] }, { c: "L", p: [k, -k] }, { c: "L", p: [0, -k] }], "ax thin", { from: s.wholeBeat, enter: "fade" }));
   }
-  const noteAt: Pt = total === 180 ? [0, -R - 74] : [R * 0.45, -R - 74];
-  items.push(t(noteAt[0], noteAt[1], s.wholeNote, "sm", { from: s.wholeBeat, until: s.missingBeat - 1, enter: "rise" }));
-  items.push(t(noteAt[0], noteAt[1], `${part}° + ${rest}° = ${total}°`, "lbl acc", { from: s.missingBeat, enter: "rise", delay: 0.6 }));
   items.push(path(arc(O, 58, part, total), "ln2", { from: s.missingBeat, enter: "draw" }));
   const ml = label(part, total, `${rest}°`, 82);
   items.push(t(ml[0], ml[1], `${rest}°`, "lbl acc", { from: s.missingBeat, enter: "rise", delay: 0.3 }));
   items.push(t(ml[0], ml[1], "?", "lbl acc", { until: s.missingBeat - 1, enter: "fade" }));
-  return frame("angle", items, s.alt, 14, { w: 300 });
+  // the note stands on its bottom edge just above the arms and their labels, so on a phone it grows up, away from them
+  const top = Math.min(polar(O, R, total)[1], polar(O, R, part)[1], pl[1] - 14, ml[1] - 14) - 14;
+  const noteAt: Pt = total === 180 ? [0, top] : [R * 0.45, top];
+  items.push(t(noteAt[0], noteAt[1], s.wholeNote, "sm up cap", { from: s.wholeBeat, until: s.missingBeat - 1, enter: "rise" }));
+  items.push(t(noteAt[0], noteAt[1], `${part}° + ${rest}° = ${total}°`, "lbl acc up cap", { from: s.missingBeat, enter: "rise", delay: 0.6 }));
+  return frame("angle", items, s.alt, 14, { w: 240 });
 }

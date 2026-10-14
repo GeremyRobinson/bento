@@ -48,9 +48,9 @@ export function explainRadiansToDegrees({ n, d }: RadiansToDegreesProblem, answe
     }),
     timeline: beats(3),
     steps: [
-      { id: "half-turn", narration: `π is a half turn, 180°. The angle ${piText(n, d)} is ${n} piece${n === 1 ? "" : "s"} of π/${d}.`, math: mt`π = 180°`, state: 0 },
-      { id: "piece", narration: `Split the half turn into ${d} equal pieces: 180° ÷ ${d} = ${piece}°.`, math: mt`180° ÷ ${d} = ${piece}°`, state: 1, answerStep: "piece", result: piece },
-      { id: "degrees", narration: `Take ${n} of those pieces: ${n} × ${piece}° = ${deg}°.`, math: mt`${n} × ${piece}° = ${deg}°`, state: 2, answerStep: "degrees", result: deg },
+      { id: "half-turn", narration: `${piText(n, d)} is ${count(n, "piece")} of π/${d}, and π is a half turn.`, math: mt`π = 180°`, state: 0 },
+      { id: "piece", narration: `One piece is the half turn cut into ${d} equal parts.`, math: mt`180° ÷ ${d} = ${piece}°`, state: 1, answerStep: "piece", result: piece },
+      { id: "degrees", narration: `Take ${count(n, "piece")} of that size.`, math: mt`${n} × ${piece}° = ${deg}°`, state: 2, answerStep: "degrees", result: deg },
     ],
   };
 }

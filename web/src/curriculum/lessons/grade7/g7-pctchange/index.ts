@@ -74,11 +74,11 @@ function explain(pr: PercentChangeProblem, model: AnswerModel): Explanation {
     timeline: beats(4),
     steps: [
       { id: "change", state: 1, answerStep: "change", result: c, math: [text("|"), num(N), op("−"), num(O), text("|"), op("="), num(c)],
-        narration: `It went ${up ? "up" : "down"} from ${O} to ${f(N)}: a change of ${f(c)}.` },
+        narration: `It went ${up ? "up" : "down"}: find the gap between the two.` },
       { id: "divide", state: 2, answerStep: "divide", result: r, math: [num(c), op("÷"), num(O), op("="), num(r)],
-        narration: `Compare the change with where you started, ${O}: ${f(c)} ÷ ${O} = ${f(r)}.` },
+        narration: `Compare the change with where you started, ${O}.` },
       { id: "percent", state: 3, answerStep: "percent", result: p, math: [num(r), op("="), num(p), text("%")],
-        narration: `Move the point two places right: ${f(r)} = ${p}%, a ${p}% ${up ? "increase" : "decrease"}.` },
+        narration: `Move the point two places right: a ${p}% ${up ? "increase" : "decrease"}.` },
     ],
   };
 }

@@ -63,7 +63,7 @@ export function explainPolyGcf(p: PolyGcfProblem, answers: AnswerModel): Explana
     timeline: beats(3),
     steps: [
       { id: "number", narration: `${g} is the biggest number that divides ${g * m} and ${g * n}.`, math: [num(g * m), op("÷"), num(g), op("="), num(m), text(",  "), num(g * n), op("÷"), num(g), op("="), num(n)], state: 1, answerStep: "number", result: g },
-      { id: "factor", narration: `Both terms have an x too, so take out ${g}x: ${factored}.`, math: [...show(p), op("="), text(factored)], state: 2, answerStep: "factor", result: m },
+      { id: "factor", narration: `Both terms have an x too, so ${g}x comes out.`, math: [...show(p), op("="), text(factored)], state: 2, answerStep: "factor", result: m },
     ],
   };
 }
@@ -73,6 +73,7 @@ export const lesson: LessonDefinition<PolyGcfProblem> = withEasyStart({
   grade: 9,
   unit: "Polynomials and quadratics",
   title: "Factor out the GCF",
+  pre: "g6-gcf",
   reference: createPolyGcf(3, 2, 3),
   generate: rng => generatePolyGcf(rng),
   restore: raw => { const r = readNumbers(raw, ["g", "m", "n"] as const); try { return r && createPolyGcf(r.g, r.m, r.n); } catch { return null; } },

@@ -81,9 +81,9 @@ function explain(p: HalvesProblem, model: AnswerModel): Explanation {
     caption: `${parts} equal parts are ${name}.`,
     timeline: beats(3),
     steps: [
-      { id: "parts", narration: `Count the pieces: **${parts}** equal parts, all the same size.`, math: [num(parts), text(" equal parts")], state: 0, answerStep: "parts", result: parts },
-      { id: "name", narration: `${parts} equal parts are **${name}**. Each one is one ${oneName(parts)} of the ${shape}.`, math: [text(`one ${oneName(parts)}`)], state: 1, answerStep: "name" },
-      { id: "shaded", narration: `**${shaded}** of the ${parts} ${name} ${shaded === 1 ? "is" : "are"} shaded.`, math: [num(shaded), text(` ${partWord(shaded, parts)} shaded`)], state: 2, answerStep: "shaded", result: shaded },
+      { id: "parts", narration: "Count the pieces. They are all the same size.", math: [num(parts), text(" equal parts")], state: 0, answerStep: "parts", result: parts },
+      { id: "name", narration: `${parts} equal parts are ${name}.`, math: [text(`one ${oneName(parts)}`)], state: 1, answerStep: "name" },
+      { id: "shaded", narration: "Count only the shaded parts.", math: [num(shaded), text(` ${partWord(shaded, parts)} shaded`)], state: 2, answerStep: "shaded", result: shaded },
     ],
   };
 }

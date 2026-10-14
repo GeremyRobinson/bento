@@ -44,7 +44,8 @@ function explain(p: MulIntegersProblem, model: AnswerModel): Explanation {
   if (div) {
     // the count of jumps is the size; the real jump, b, points toward the real dividend (positive) or away (negative)
     const n = a * b;
-    marks.push({ v: reach, beat: 0, label: jumps, delay: 0.3 });
+    // the count of jumps is the step's own line: a phone's short box leaves it to the step (Review 1c74c20, g7-mulint at 280×123)
+    marks.push({ v: reach, beat: 0, label: jumps, delay: 0.3, long: true });
     hops.push({ from: 0, to: b, label: `jump ${f(b)}`, below: true, beat: 1 });
     if (n < 0) marks.push({ v: n, beat: 1, cls: "dota", label: f(n) });
     values = [0, reach, n, b];
@@ -69,8 +70,7 @@ function explain(p: MulIntegersProblem, model: AnswerModel): Explanation {
     caption: div ? `${jumps} ${verb(count, "makes", "make")} ${reach}, so the size is ${size}. ${sign}` : `${jumps} ${verb(count, "lands", "land")} on ${reach}. ${sign}`,
     timeline: beats(2),
     steps: [
-      { id: "size", narration: div ? `Ignore the signs: ${Math.abs(a * b)} ÷ ${Math.abs(b)} = ${size}, because ${size} jump${size === 1 ? "" : "s"} of ${jump} ${verb(size, "makes", "make")} ${reach}.`
-          : `Ignore the signs: ${Math.abs(a)} × ${Math.abs(b)} = ${size}, ${count} jump${count === 1 ? "" : "s"} of ${jump}.`,
+      { id: "size", narration: div ? `Ignore the signs: ${jumps} ${verb(count, "makes", "make")} ${reach}.` : `Ignore the signs: ${jumps}.`,
         math: div ? [num(Math.abs(a * b)), op("÷"), num(Math.abs(b)), op("="), num(size)] : [num(Math.abs(a)), op("×"), num(Math.abs(b)), op("="), num(size)],
         state: 0, answerStep: "size", result: size },
       { id: "sign", narration: (differ ? `${f(div ? a * b : a)} and ${f(b)} have different signs, so the answer is negative: ${f(ans)}.`

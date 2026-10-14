@@ -40,16 +40,26 @@ function answers({ w, n, d }: MixedToImproperProblem): AnswerModel {
   };
 }
 
-/** One full bar per whole and a bar with n of d pieces; the running count of pieces grows down the right side. */
+/**
+ * One bar per whole and a bar with n of d pieces, all waiting to be counted. Whole j fills at beat j + 1, its
+ * pieces filling one by one as they are counted and the running count beside it; the extra pieces are counted next
+ * (the count reaches S); the last beat writes S/d.
+ */
 export function mixedToImproperPicture({ w, n, d }: MixedToImproperProblem) {
-  const S = w * d + n;
+  const S = w * d + n, extra = w + 1, last = w + 2, tick = Math.min(0.35, 1.2 / d), r2 = (x: number) => Math.round(x * 100) / 100;
   const rows: TapeRow[] = Array.from({ length: w }, (_, j): TapeRow => ({
-    length: 1, parts: d, fills: [{ a: 0, b: 1, tone: "on" }], label: [{ text: "1" }],
-    total: [{ text: `${(j + 1) * d}`, from: 1, acc: j === w - 1 }],
+    // lit while it is counted, and again when the last step counts every piece
+    lit: [{ from: j + 1, until: j + 1 }, { from: last }],
+    length: 1, parts: d, fills: [{ a: 0, b: 1, tone: "on", from: j + 1, stagger: tick }], label: [{ text: "1" }],
+    // its pieces counted one by one, the count carrying on from the whole before
+    each: [{ text: i => `${j * d + i + 1}`, from: j + 1, stagger: tick }],
+    total: [{ text: `${(j + 1) * d}`, from: j + 1, acc: j === w - 1, delay: r2(d * tick) }],
   }));
-  rows.push({ length: 1, parts: d, fills: [{ a: 0, b: n / d, tone: "two" }], label: [{ text: `${n}/${d}` }],
-    total: [{ text: `${S}`, from: 2, until: 2, acc: true }, { text: `${S}/${d}`, from: 3, acc: true }] });
-  return buildTape({ rows, alt: `${w} whole bars of ${count(d, "piece")} and a bar with ${n} of ${count(d, "piece")}: ${count(S, "piece")} in all, so ${w} ${n}/${d} = ${S}/${d}.` });
+  rows.push({ lit: [{ from: extra }], length: 1, parts: d, fills: [{ a: 0, b: n / d, tone: "two", from: extra, stagger: tick }], label: [{ text: `${n}/${d}` }],
+    each: [{ text: i => `${w * d + i + 1}`, from: extra, only: i => i < n, stagger: tick }],
+    total: [{ text: `${S}`, from: extra, until: extra, acc: true, delay: r2(n * tick) }, { text: `${S}/${d}`, from: last, acc: true }] });
+  return buildTape({ tall: true, rows, gap: "mixed",
+    alt: `${w} whole bars of ${count(d, "piece")} and a bar with ${n} of ${count(d, "piece")}: ${count(S, "piece")} in all, so ${w} ${n}/${d} = ${S}/${d}.` });
 }
 
 function explain(p: MixedToImproperProblem, model: AnswerModel): Explanation {
@@ -57,18 +67,19 @@ function explain(p: MixedToImproperProblem, model: AnswerModel): Explanation {
   const pieces = (k: number) => `${k} ${pieceName(d, k !== 1)}`;
   return {
     heading: "Count all the pieces",
-    idea: ["Each whole is cut into the same pieces as the fraction, so wholes can be counted in pieces."],
+    idea: ["When every whole is cut into the same pieces, all the pieces can be counted as one fraction."],
     statement: [num(w), frac(n, d), op("="), frac("?", d)],
     diagram: mixedToImproperPicture(p),
     caption: `Each whole is ${pieces(d)}.`,
-    timeline: beats(4),
+    // a beat per whole, counted one at a time, then the extra pieces and the fraction
+    timeline: beats(w + 3),
     steps: [
-      { id: "wholes", state: 1, answerStep: "wholes", result: W, math: [num(w), op("×"), num(d), op("="), num(W)],
-        narration: `Each whole is ${pieces(d)}, so ${w} ${w === 1 ? "whole is" : "wholes are"} ${w} × ${d} = ${pieces(W)}.` },
-      { id: "extra", state: 2, answerStep: "extra", result: S, math: [num(W), op("+"), num(n), op("="), num(S)],
-        narration: `Add the ${n} extra ${n === 1 ? "piece" : "pieces"}: ${W} + ${n} = ${S}.` },
-      { id: "fraction", state: 3, answerStep: "fraction", math: [num(w), frac(n, d), op("="), frac(S, d)],
-        narration: `${count(S, "piece")}, each one ${pieceName(d, false)}. The bottom stays ${d}: ${w} ${n}/${d} = ${S}/${d}.` },
+      { id: "wholes", state: w, answerStep: "wholes", result: W, math: [num(w), op("×"), num(d), op("="), num(W)],
+        narration: `Each whole is ${pieces(d)}.` },
+      { id: "extra", state: w + 1, answerStep: "extra", result: S, math: [num(W), op("+"), num(n), op("="), num(S)],
+        narration: `Add the ${n} extra ${n === 1 ? "piece" : "pieces"}.` },
+      { id: "fraction", state: w + 2, answerStep: "fraction", math: [num(w), frac(n, d), op("="), frac(S, d)],
+        narration: `The pieces are still ${pieceName(d)}, so the bottom stays ${d}.` },
     ],
   };
 }

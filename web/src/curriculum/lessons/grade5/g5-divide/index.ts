@@ -1,10 +1,9 @@
 // Long division in chunks (the current app's g5-divide): tens of the divisor first, then what's left.
-import { mark, num, op } from "../../../schemas/math-text";
+import { answer, num, op, text } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
-import { chainExplanation } from "../../../../explanations/diagrams/chain/build";
-import { expectedOf, oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
+import { oneBox, restoreVia, wholeIn } from "../../_number-line/steps";
 import { count } from "../../../text";
-import { divisionAreaPicture } from "../../grade4/g4-divide/picture";
+import { explainLongDivision } from "./explanation";
 import { slips } from "../../grade4/_kit";
 
 /** n ÷ dv with n = dv × qt; the quotient qt is never a multiple of 10 */
@@ -23,8 +22,9 @@ function answers({ dv, qt, n }: LongDivisionProblem): AnswerModel {
   return {
     steps: [
       oneBox({
-        id: "tens", label: "Tens first", question: `What is the biggest tens number (10, 20, 30, …) where ${dv} × it is still ${n} or less?`,
-        prompt: s => [num(dv), op("×"), s, op("≤"), num(n)], ans: T,
+        // one question line over one answer pill, like every v2 step (spec §4 g5-divide); "as many as fit" keeps one right answer
+        id: "tens", label: "Tens first", question: `Take out as many tens of ${dv} as fit in ${n}. How many is that?`,
+        prompt: s => [text("tens"), op("="), s], ans: T, work: [num(dv), op("×"), answer("x", T), op("≤"), num(n)],
         hint: `Try ${dv} × 10, ${dv} × 20, … and stop before you go past ${n}.`,
         wrong: [
           [T - 10, "Not the most tens", `${dv} × ${T} still fits, so you can use more tens.`],
@@ -40,32 +40,10 @@ function answers({ dv, qt, n }: LongDivisionProblem): AnswerModel {
         id: "sum", label: "Add the parts", prompt: s => [num(n), op("÷"), num(dv), op("="), s], ans: qt, hint: `${T} + ${O}.`,
         wrong: [[T / 10 + O, "Forgot it's tens", `The first part was ${T}, not ${T / 10}.`]],
       }),
-    ],
+    // a miss without a named slip points at the picture, as in g5-mult2 (spec §4 g5-divide, Wrong)
+    ].map(st => ({ ...st, look: `Look again at the lit strip: it's ${dv} down.` })),
     finalParts: [-1],
   };
-}
-
-function explain(p: LongDivisionProblem, model: AnswerModel) {
-  const { dv, n } = p;
-  const T = expectedOf(model, "tens"), left = expectedOf(model, "subtract"), O = expectedOf(model, "ones"), qt = expectedOf(model, "sum");
-  return chainExplanation({
-    heading: "Divide in chunks",
-    idea: ["Taking out ten groups at a time gets to the answer faster than going one by one."],
-    statement: [num(n), op("÷"), num(dv)],
-    caption: `Take out big chunks of ${dv} first.`,
-    alt: `${n} ÷ ${dv}: ${dv} × ${T} = ${dv * T}, ${left} is left, ${left} ÷ ${dv} = ${O}, so ${T} + ${O} = ${qt}.`,
-    diagram: divisionAreaPicture({ n, dv, T, O, left, q: qt }),
-    beats: [
-      { id: "tens", narration: `How many tens of ${dv} fit? ${dv} × ${T} = ${dv * T}.`, math: [num(dv), op("×"), num(T), op("="), num(dv * T)],
-        lines: [[num(n), op("÷"), num(dv)], [num(dv), op("×"), mark(T), op("="), num(dv * T)]], answerStep: "tens", result: T },
-      { id: "subtract", narration: `That leaves ${n} − ${dv * T} = ${left}.`, math: [num(n), op("−"), num(dv * T), op("="), num(left)],
-        lines: [[num(n), op("−"), num(dv * T), op("="), num(left)]], answerStep: "subtract", result: left },
-      { id: "ones", narration: `${count(O, "group")} of ${dv} make ${left}, so ${O} more fit: ${left} ÷ ${dv} = ${O}.`, math: [num(left), op("÷"), num(dv), op("="), num(O)],
-        lines: [[num(dv), op("×"), mark(O), op("="), num(left)]], answerStep: "ones", result: O },
-      { id: "sum", narration: `So the answer is ${T} + ${O} = ${qt}.`, math: [num(T), op("+"), num(O), op("="), num(qt)],
-        lines: [[num(T), op("+"), num(O), op("="), num(qt)]], answerStep: "sum", result: qt },
-    ],
-  });
 }
 
 export const lesson: LessonDefinition<LongDivisionProblem> = {
@@ -84,6 +62,8 @@ export const lesson: LessonDefinition<LongDivisionProblem> = {
   restore: raw => restoreVia(raw, ["dv", "qt"] as const, v => createLongDivision(v.dv, v.qt)),
   display: p => [num(p.n), op("÷"), num(p.dv)],
   answers,
-  explain,
+  explain: explainLongDivision,
+  // skill check miss (v2 spec C2, g5-divide): the answer's own tens and ones
+  checkWhy: ({ qt }) => `Take out the tens, then the ones: ${qt - (qt % 10)} + ${qt % 10}.`,
   story: p => ({ op: "÷", text: `**${p.n}** marbles are packed equally into **${p.dv}** jars. How many marbles go in each jar?` }),
 };

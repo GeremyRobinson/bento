@@ -2,8 +2,10 @@
 // Scores carried over from the current app belong to catalog ids, so lists, counts and averages use the catalog;
 // only rebuilt lessons can be opened.
 import { CATALOG, type CatalogEntry } from "../curriculum/catalog";
+import { DEPENDS } from "../curriculum/depends";
 import { lessonById } from "../curriculum/registry";
-import { lastScore, timesDone, type Progress } from "../engine/mastery/progress";
+import { timesDone, type Progress } from "../engine/mastery/progress";
+import { checkScore } from "../engine/mastery/skills";
 import { backFor, testKey } from "../engine/session/practice";
 import { NO_UNIT } from "./copy";
 
@@ -27,7 +29,7 @@ export function unitsInGrade(g: number): { name: string; entries: Entry[] }[] {
 
 /** Average of the last scores in a grade, or null when nothing is scored yet (the current app's gradeLevel). */
 export function gradeAverage(p: Progress, g: number): number | null {
-  const s: number[] = entriesInGrade(g).flatMap(c => { const v = lastScore(p, c.id); return v == null ? [] : [v]; });
+  const s: number[] = entriesInGrade(g).flatMap(c => { const v = checkScore(p, c.id); return v == null ? [] : [v]; });
   return s.length ? s.reduce((a, b) => a + b, 0) / s.length : null;
 }
 
@@ -35,9 +37,11 @@ export const doneCount = (p: Progress, entries: Entry[]) => entries.filter(c => 
 
 /**
  * "Build up first": the engine's backFor rule (the lesson's `pre`, else the lesson before it in the same unit),
- * read over the whole catalog so the suggestion is the current app's even while that lesson is being rebuilt.
+ * read over the whole catalog (Curriculum's main build-up in curriculum/depends.ts comes first) so the suggestion is the current app's even while that lesson is being rebuilt.
  */
 export function buildUpFor(id: string): Entry | null {
+  const main = DEPENDS[id]?.[0];
+  if (main && entryById(main)) return entryById(main)!;
   const ported = backFor(id);
   const c = entryById(id);
   if (!c) return ported ? entryById(ported.id) ?? null : null;

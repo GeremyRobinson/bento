@@ -1,11 +1,13 @@
-import { LESSONS } from "../../curriculum/registry";
+import { LESSONS, lessonsInGrade } from "../../curriculum/registry";
+import { NO_UNIT } from "../../app/copy";
 import { createRng } from "../../curriculum/generators/rng";
 import { formatNumber } from "../../curriculum/schemas/math-text";
 import { emptyProgress, type Progress } from "../../engine/mastery/progress";
 import {
-  canResume, check, choose, currentStep, finishRun, focusSlot, hint, isLastProblem, nextProblem, pickPlan, pressKey,
-  showMe, showMeAvailable, startPractice, toggleSkip, type Deps,
+  canPick, canResume, check, choose, currentStep, finishRun, focusSlot, goToProblem, hint, isLastProblem, nextProblem, pickPlan, pressKey,
+  showMe, showMeAvailable, startPractice, startTest, testKey, CHECKUP_LENGTH, UNIT_TEST_LENGTH, type Deps,
 } from "../../engine/session/practice";
+import { checkKey } from "../../engine/mastery/skills";
 import { expectedValues } from "../../engine/evaluation/steps";
 import type { PracticeSession } from "../../engine/session/types";
 
@@ -32,17 +34,17 @@ function solveProblem(s: PracticeSession, p: Progress) {
 const withScore = (score: 0 | 1 | 2 | 3 | 4): Progress => ({ ...emptyProgress(), scores: { "g5-mult2": { last: score, best: score, pct: 0, date: 0, mastered: false } } });
 
 describe("a practice run", () => {
-  it("starts with 8 problems, every step shown, and half as many hints", () => {
+  it("starts with 6 problems, every step shown, and half as many hints (v2 model: 6 and 3)", () => {
     const s = startPractice("g5-mult2", emptyProgress(), deps());
-    expect(s.items).toHaveLength(8);
+    expect(s.items).toHaveLength(6);
     expect(s.tier).toBe(0);
-    expect(s.hintsLeft).toBe(4);
+    expect(s.hintsLeft).toBe(3);
     expect(currentStep(s)!.label).toBe("Step 1 · Multiply by the tens");
     expect(s.active).toBe("x");
   });
 
-  it("starts with 10 after a low score", () => {
-    expect(startPractice("g5-mult2", withScore(1), deps()).items).toHaveLength(10);
+  it("starts with 8 after a low score", () => {
+    expect(startPractice("g5-mult2", withScore(1), deps()).items).toHaveLength(8);
   });
 
   it("goes through every step and records the worked lines", () => {
@@ -63,20 +65,22 @@ describe("a practice run", () => {
     let s = startPractice("g5-mult2", p, deps());
     const want = expectedValues(currentStep(s)!).x!;
     s = check(type(s, { x: want / 10 }), p, deps());
-    expect(s.feedback).toMatchObject({ type: "bad", strong: "Look again." });
+    expect(s.feedback).toMatchObject({ type: "bad", strong: "Not quite." });
     expect(s.feedback?.text).toMatch(/The tens digit stands for \d+0, so add a zero\./);
     expect(s.mistakes[0]).toMatchObject({ kind: "Lost the place value", cat: "concept" });
     expect(showMeAvailable(s)).toBe(false);
     s = check(type({ ...s, values: {} }, { x: want + 1 }), p, deps());
     expect(s.mistakes[1]!.cat).toBe("off1");
+    // no Show me in v2: after two misses, with hints left, the say line points at the bulb (spec P10)
+    expect(s.feedback?.lines).toContain("Stuck? Tap the bulb for a hint.");
     expect(showMeAvailable(s)).toBe(true);
     s = showMe(s, p, deps());
     expect(s.work[0]).toMatchObject({ shown: true });
     expect(s.shown).toBe(1);
     s = solveProblem(s, p);
-    // a missed problem earns one more like it
-    expect(s.items).toHaveLength(9);
-    expect(s.extra).toBe(1);
+    // the set stays the size it started: a miss adds no problem (v2 model)
+    expect(s.items).toHaveLength(6);
+    expect(s.extra).toBe(0);
   });
 
   it("holds the hint until a first try", () => {
@@ -87,9 +91,9 @@ describe("a practice run", () => {
     expect(s.feedback?.text).toMatch(/Try it once first/);
     s = hint(s, { now: s.stepT0 + 16000, rng });
     expect(s.hinted).toBe(true);
-    expect(s.hintsLeft).toBe(3);
+    expect(s.hintsLeft).toBe(2);
     expect(s.feedback?.text).toMatch(/then add a zero/);
-    expect(s.feedback?.left).toBe(3);
+    expect(s.feedback?.left).toBe(2);
   });
 
   it("says kindly when the hints are used up", () => {
@@ -107,7 +111,7 @@ describe("a practice run", () => {
     expect(s.pick?.options).toContain("Multiply by the tens");
     const wrong = s.pick!.options.findIndex(o => o !== s.pick!.right);
     s = pickPlan(s, wrong);
-    expect(s.feedback?.strong).toBe("Look again.");
+    expect(s.feedback?.strong).toBe("Not quite.");
     expect(s.mistakes[0]!.cat).toBe("plan");
     s = pickPlan(s, s.pick!.options.indexOf(s.pick!.right));
     expect(s.pick).toBeNull();
@@ -123,11 +127,6 @@ describe("a practice run", () => {
     expect(s.collapsed).toBe(false);
     expect(s.feedback?.text).toBe("This one needs the steps. Here they are.");
     expect(currentStep(s)!.label).toBe("Step 1 · Multiply by the tens");
-    // and "Show steps" turns the shortcut off by choice
-    let s2 = startPractice("g5-mult2", p, deps());
-    s2 = toggleSkip(s2, deps());
-    expect(s2.collapsed).toBe(false);
-    expect(s2.skip).toBe(false);
   });
 
   it("finishes with a score, XP, a streak and a log entry", () => {
@@ -141,12 +140,12 @@ describe("a practice run", () => {
     expect(nextProblem(s, p, deps())).toBeNull();
     const r = finishRun(s, p, t);
     p = r.progress;
-    expect(r.report).toMatchObject({ level: 4, pct: 1, total: 8, clean: 8, xp: 120 });
+    expect(r.report).toMatchObject({ level: 4, pct: 1, total: 6, clean: 6, xp: 90 });
     expect(p.scores["g5-mult2"]).toMatchObject({ last: 4, best: 4, mastered: false });
-    expect(p).toMatchObject({ xp: 120, streak: 1, done: 1, run: null });
-    expect(p.gxp[5]).toBe(120);
+    expect(p).toMatchObject({ xp: 90, streak: 1, done: 1, run: null });
+    expect(p.gxp[5]).toBe(90);
     expect(p.lessons["g5-mult2"]).toBe(1);
-    expect(p.log[0]).toMatchObject({ key: "g5-mult2", level: 4, total: 8 });
+    expect(p.log[0]).toMatchObject({ key: "g5-mult2", level: 4, total: 6 });
     // the next day keeps the streak going
     const next = finishRun(s, p, t + 864e5);
     expect(next.progress.streak).toBe(2);
@@ -177,6 +176,102 @@ describe("no repeated problems", () => {
       rng = createRng(s * 104729);
       const run = startPractice(id, emptyProgress(), deps());
       expect(new Set(run.items.map(x => key(x.problem))).size, `${id} seed ${s}`).toBe(run.items.length);
+    }
+  });
+});
+
+describe("the problem picker's memory (v2-backend-plan.md)", () => {
+  it("in practice a problem left part-way is kept, and going back finds it where it was", () => {
+    const p = emptyProgress();
+    let s = solveStep(startPractice("g5-mult2", p, deps()), p);
+    expect(s.solved).toBe(false);
+    const { step, work } = s;
+    expect(canPick(s, 3)).toBe(true);
+    s = goToProblem(s, 3, p, deps());
+    expect(s.i).toBe(3);
+    expect(s.step).toBe(0);
+    expect(s.parked?.[0]?.step).toBe(step);
+    s = goToProblem(s, 0, p, deps());
+    expect(s.i).toBe(0);
+    expect(s.step).toBe(step);
+    expect(s.work).toEqual(work);
+    expect(s.parked?.[0]).toBeUndefined();
+    expect(solveProblem(s, p).solved).toBe(true);
+  });
+
+  it("an untouched problem isn't parked", () => {
+    const p = emptyProgress();
+    const s = goToProblem(startPractice("g5-mult2", p, deps()), 2, p, deps());
+    expect(s.parked?.[0]).toBeUndefined();
+  });
+
+  it("Next problem comes back round to a problem left part-way", () => {
+    const p = emptyProgress();
+    let s = solveStep(startPractice("g5-mult2", p, deps()), p);
+    const step = s.step;
+    s = goToProblem(s, s.items.length - 1, p, deps());
+    s = solveProblem(s, p);
+    s = nextProblem(s, p, deps())!;
+    expect(s.i).toBe(0);
+    expect(s.step).toBe(step);
+  });
+
+  it("a finished problem can't be picked again", () => {
+    const p = emptyProgress();
+    let s = solveProblem(startPractice("g5-mult2", p, deps()), p);
+    s = nextProblem(s, p, deps())!;
+    expect(canPick(s, 0)).toBe(false);
+    expect(goToProblem(s, 0, p, deps())).toBe(s);
+  });
+
+  it("in a skill check a problem you've begun is finished first", () => {
+    const p = emptyProgress();
+    let s = startTest(checkKey(5, "g5-mult2"), p, deps());
+    expect(canPick(s, 1)).toBe(true);
+    s = solveStep(s, p);
+    if (s.solved) return; // a one-step item: nothing to hold
+    expect(canPick(s, 1)).toBe(false);
+    expect(goToProblem(s, 1, p, deps())).toBe(s);
+  });
+});
+
+describe("picking which problem comes next (G 2026-10-08)", () => {
+  it("jumps to any problem before you start one, and comes back for the ones skipped", () => {
+    const p = emptyProgress();
+    let s = startPractice("g5-mult2", p, deps());
+    expect(canPick(s, 3)).toBe(true);
+    s = goToProblem(s, 3, p, deps());
+    expect(s.i).toBe(3);
+    s = solveProblem(s, p);
+    expect(s.done).toEqual([3]);
+    // next goes on from where you are, then wraps round to the start
+    s = nextProblem(s, p, deps())!;
+    expect(s.i).toBe(4);
+    for (let k = 0; k < 4; k++) { s = solveProblem(s, p); s = nextProblem(s, p, deps())!; }
+    expect(s.i).toBe(2);
+    expect(isLastProblem(s)).toBe(true);
+    s = solveProblem(s, p);
+    expect(nextProblem(s, p, deps())).toBeNull();
+    expect(s.done).toHaveLength(6);
+  });
+});
+
+describe("tests", () => {
+  // G 2026-10-08: "Tests need more problems no? 12-20": a unit test is 12, a grade check-up 20, an even mix of the
+  // lessons, and never the same problem twice
+  it("every unit test has 12 problems and every check-up 20, shared evenly, none repeated", () => {
+    for (let g = 0; g <= 12; g++) {
+      const lessons = lessonsInGrade(g);
+      if (!lessons.length) continue;
+      const units = [...new Set(lessons.map(l => l.unit || NO_UNIT))];
+      for (const k of [testKey(g), ...units.map(u => testKey(g, u))]) for (let s = 1; s <= 3; s++) {
+        rng = createRng(s * 6151);
+        const run = startTest(k, emptyProgress(), deps());
+        expect(run.items, k).toHaveLength(k.startsWith("unit") ? UNIT_TEST_LENGTH : CHECKUP_LENGTH);
+        const per = [...run.items.reduce((m, x) => m.set(x.lessonId, (m.get(x.lessonId) ?? 0) + 1), new Map<string, number>()).values()];
+        expect(Math.max(...per) - Math.min(...per), `${k}: an even mix`).toBeLessThanOrEqual(1);
+        expect(new Set(run.items.map(x => x.lessonId + JSON.stringify(x.problem))).size, `${k} seed ${s}: no repeats`).toBe(run.items.length);
+      }
     }
   });
 });

@@ -83,18 +83,33 @@ function answers(p: QuadProblem): AnswerModel {
 const ALT = "A four-sided shape.";
 
 function explain(p: QuadProblem, model: AnswerModel): Explanation {
-  const name = QUAD_NAMES[p.shape]!, state: Record<string, number> = { sides: 1, corners: 2, equal: 3, parallel: 4, name: 5, also: 5 };
+  const name = QUAD_NAMES[p.shape]!, state: Record<string, number> = { sides: 1, corners: 2, equal: 3, parallel: 4, name: 5, also: 6 };
+  // Watch one's line for each step; "equal" keeps the answer step's own text. No line says its own math line (the
+  // name, "4 sides", "Yes" or "No"), which Learn would then hide.
+  const NAMED = [
+    "Every corner fits a page corner, and all 4 sides are equal.",
+    "4 square corners, but the sides aren't all equal.",
+    "4 equal sides, but no square corners.",
+    "2 pairs of parallel sides, but no square corners and not all sides equal.",
+    "Exactly 1 pair of parallel sides.",
+    "No special name fits: it's just a 4-sided shape.",
+  ];
+  const said: Record<string, string> = {
+    sides: "Any shape with 4 straight sides is a quadrilateral.",
+    also: p.shape === 0 ? "Every square is a rectangle." : "Its sides aren't all equal.",
+    corners: "Check each corner against the corner of a page.",
+    parallel: "Opposite sides that would never meet are parallel.",
+    name: NAMED[p.shape]!,
+  };
   return {
     heading: "Quadrilaterals",
     idea: ["Every quadrilateral has 4 sides, and its sides and corners can give it a special name."],
     statement: words("What is its most special name?"),
     diagram: buildQuad({ corners: cornersOf(p), name, beats: { sides: 1, corners: 2, equal: 3, parallel: 4, name: 5 }, alt: `${ALT} Its sides count to 4, its square corners and equal sides are marked, its parallel sides run on: a ${name.toLowerCase()}.` }),
     caption: `It's a ${name.toLowerCase()}.`,
-    timeline: beats(6),
-    steps: [
-      { id: "look", narration: "Look at its sides and corners.", math: words("Look at it."), state: 0 },
-      ...model.steps.map(s => ({ id: s.id, narration: s.explain, math: s.work ?? [], state: state[s.id]!, answerStep: s.id, result: s.slots[0]!.expected! })),
-    ],
+    // the name stays on the shape through the "also" beat
+    timeline: beats(p.also ? 7 : 6),
+    steps: model.steps.map(s => ({ id: s.id, narration: said[s.id] ?? s.explain, math: s.work ?? [], state: state[s.id]!, answerStep: s.id, result: s.slots[0]!.expected! })),
   };
 }
 

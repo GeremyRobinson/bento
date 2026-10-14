@@ -38,11 +38,11 @@ function explain(p: EvaluateProblem, model: AnswerModel) {
     alt: `${a}x + ${b}y with x = ${x} and y = ${y}: ${AX} + ${BY} = ${S}.`,
     diagram: evaluatePicture({ a, b, x, y, AX, BY, S }),
     beats: [
-      { id: "ax", narration: `Swap in x = ${x}: ${a}x means ${a} × ${x} = ${AX}.`, math: [num(a), op("×"), num(x), op("="), num(AX)],
+      { id: "ax", narration: `Swap in x = ${x}: ${a}x means ${a} times x.`, math: [num(a), op("×"), num(x), op("="), num(AX)],
         lines: [[num(a), mark([X]), op("+"), num(b), mark([Y])], [mark([num(a), op("×"), num(x)]), op("+"), num(b), op("×"), num(y)]], answerStep: "ax", result: AX },
-      { id: "by", narration: `Swap in y = ${y}: ${b}y means ${b} × ${y} = ${BY}.`, math: [num(b), op("×"), num(y), op("="), num(BY)],
+      { id: "by", narration: `Swap in y = ${y}: ${b}y means ${b} times y.`, math: [num(b), op("×"), num(y), op("="), num(BY)],
         lines: [[num(AX), op("+"), mark([num(b), op("×"), num(y)])]], answerStep: "by", result: BY },
-      { id: "add", narration: `Add the two parts: ${AX} + ${BY} = ${S}.`, math: [num(AX), op("+"), num(BY), op("="), num(S)],
+      { id: "add", narration: "Add the two parts.", math: [num(AX), op("+"), num(BY), op("="), num(S)],
         lines: [[num(AX), op("+"), num(BY), op("="), num(S)]], answerStep: "add", result: S },
     ],
   });
@@ -53,6 +53,7 @@ export const lesson: LessonDefinition<EvaluateProblem> = {
   grade: 6,
   unit: "Expressions and equations",
   title: "Evaluate expressions",
+  pre: "g5-order",
   reference: createEvaluate(3, 2, 4, 5), // 3x + 2y with x = 4, y = 5, the current app's example
   // the first three: small numbers all round
   generate: (rng, index) => { const t = index < 3 ? 5 : 9; return createEvaluate(rng.int(2, t), rng.int(2, t), rng.int(1, t), rng.int(1, t)); },

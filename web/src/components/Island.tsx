@@ -1,30 +1,29 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useApp } from "../app/AppState";
 import { parseRoute, type Route } from "../app/routes";
-import { doneCount, entriesInGrade, entryById, unitsInGrade } from "../app/curriculum";
+import { entriesInGrade, entryById, unitsInGrade } from "../app/curriculum";
 import { gradeOf, inkOf } from "../curriculum/grades";
 import { lessonById } from "../curriculum/registry";
-import { currentItem, currentStep, lessonOfItem, problemOf } from "../engine/session/practice";
+import { currentItem, lessonOfItem, problemOf } from "../engine/session/practice";
 import { problemShape, ProblemLine } from "./practice/ProblemView";
-import { upNext } from "../app/today";
+import { lastScore } from "../engine/mastery/progress";
+import { lessonLength } from "../engine/adaptive-help/policy";
 import { Contents, type Level } from "./Contents";
 import { Nav, NavMark } from "./Nav";
 import { reduceMotion } from "../app/transition";
 import { Confirm } from "./Confirm";
 import { PillRing } from "./primitives/PillRing";
+import { learnedCount } from "../app/rings";
 import { tableById } from "../engine/facts/tables";
-import { Chevron, LockIcon } from "./primitives/icons";
-import { CONTENTS, GROWN_UP, NO_UNIT, PRACTICE, REPORT, REVIEW, YOUR_BENTO } from "../app/copy";
+import { Chevron, LockIcon, MeIcon, SettingsIcon } from "./primitives/icons";
+import { GROWN_UP, NO_UNIT, PRACTICE, REPORT, REVIEW, SKILL_CHECK, YOUR_BENTO } from "../app/copy";
+import { isCheckKey, lessonOfCheck } from "../engine/mastery/skills";
 
 /** A small cross: quit. */
 const CrossIcon = () => (
   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden><path d="M7 7l10 10M17 7L7 17" /></svg>
 );
 
-/** A simple person: a head and shoulders. */
-const MeIcon = () => (
-  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="8.5" r="3.6" /><path d="M5 20c1.2-3.6 4-5.4 7-5.4s5.8 1.8 7 5.4" /></svg>
-);
 
 /** Where a lesson sits in its grade's book: its chapter, and which page of that chapter it is. */
 export function pageOf(lessonId: string): { grade: number; chapter: string; page: number; pages: number } | null {
@@ -55,16 +54,26 @@ function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): P
     return p ? `${p.chapter === NO_UNIT ? gradeOf(p.grade).name : p.chapter} · ${extra ?? `${p.page} of ${p.pages}`}` : gradeOf(grade).name;
   };
   switch (route.name) {
-    case "learn": return { kicker: chapterLine(route.lessonId), title: lessonById(route.lessonId)?.title ?? "Lesson", back: contents, lesson: route.lessonId };
+    // Watch one: what this step is and what comes after it (v2 model "Watch one · then try 3")
+    case "learn": return { kicker: `Watch one \u00b7 then try ${lessonLength(lastScore(app.progress, route.lessonId))}`, title: lessonById(route.lessonId)?.title ?? "Lesson", back: contents, lesson: route.lessonId };
     case "practice": {
       const run = app.progress.run;
       if (!run) return { kicker: gradeOf(grade).name, title: PRACTICE, back: contents };
+      // the skill check after a lesson: "Skill check · 1 of 4" over the lesson's name (v2 model)
+      if (isCheckKey(run.key)) {
+        const l = lessonById(lessonOfCheck(run.key));
+        return { kicker: `${SKILL_CHECK} \u00b7 ${run.i + 1} of ${run.items.length}`, title: l?.title ?? run.title, back: contents, lesson: l?.id };
+      }
       if (run.mode !== "practice") return { kicker: run.mode === "test" ? "Test" : REVIEW, title: run.title, back: contents };
       const l = lessonOfItem(currentItem(run));
-      return { kicker: chapterLine(l.id, "practice"), title: l.title, back: { label: l.title, to: { name: "learn", lessonId: l.id } }, lesson: l.id };
+      return { kicker: `Problem ${run.i + 1} of ${run.items.length}`, title: l.title, back: contents, lesson: l.id };
     }
     case "results": {
       const rep = app.lastReport, l = rep ? lessonById(rep.key) : undefined;
+      if (rep && isCheckKey(rep.key)) {
+        const cl = lessonById(lessonOfCheck(rep.key));
+        return { kicker: `Done \u00b7 ${SKILL_CHECK.toLowerCase()} ${rep.level} of 4`, title: cl?.title ?? rep.title, back: contents, lesson: cl?.id };
+      }
       return { kicker: l ? chapterLine(l.id, "done") : "Done", title: rep?.title ?? "Done", back: contents, lesson: l?.id };
     }
     case "report": {
@@ -86,28 +95,15 @@ function placeOf(route: Route, app: ReturnType<typeof useApp>, grade: number): P
       const t = route.table ? tableById(route.table) : undefined;
       return t ? { kicker: "Facts", title: t.name, back: { label: "facts", to: { name: "facts" } } } : { kicker: gradeOf(grade).name, title: "Facts", back: contents };
     }
-    default: {
-      // on a phone the picked row's detail is its own screen, and back returns to the list
-      const phone = typeof matchMedia !== "undefined" && matchMedia("(max-width: 699px)").matches;
-      return route.name === "home" && route.pick && phone
-        ? { kicker: gradeOf(grade).name, title: route.pick === "today" ? "Today" : lessonById(route.pick)?.title ?? "Lesson", back: { label: "chapters", to: { name: "home" } } }
-        : { kicker: homeChapter(route, app, grade), title: gradeOf(grade).name };
-    }
+    // the box (v2): Today and the box share one screen on every size, so the island always says the year (v2 model)
+    default: return { kicker: lessonsLine(app, grade), title: gradeOf(grade).name };
   }
 }
 
-/** On the book, the small line names the chapter you're in: the picked lesson's, else the one up next. */
-function homeChapter(route: Route, app: ReturnType<typeof useApp>, grade: number): string {
-  const id = route.name === "home" && route.pick && route.pick !== "today" ? route.pick : upNext(app.progress, grade)?.entry.id;
-  const p = id ? pageOf(id) : null;
-  return p && p.grade === grade && p.chapter !== NO_UNIT ? p.chapter : CONTENTS;
-}
-
-/** "5th grade" with its number in the grade's colour, the way the UI notes preview names the grade. */
-function GradeTitle({ grade }: { grade: number }) {
-  const g = gradeOf(grade), style = { "--gn": inkOf(g.color), "--gn-d": g.color } as CSSProperties;
-  const m = /^(\d+\w*)( grade)$/.exec(g.name);
-  return m ? <b><span className="gnum ign" style={style}>{m[1]}</span>{m[2]}</b> : <b><span className="gnum ign" style={style}>{g.name}</span></b>;
+/** On the box, the small line is how far through the year you are: "9 of 17 lessons done" (v2 model). */
+function lessonsLine(app: ReturnType<typeof useApp>, grade: number): string {
+  const all = entriesInGrade(grade);
+  return `${learnedCount(app.progress, all)} of ${all.length} lessons done`;
 }
 
 const BulbIcon = () => (
@@ -116,18 +112,17 @@ const BulbIcon = () => (
   </svg>
 );
 
-const SettingsIcon = () => (
-  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></svg>
-);
 
 /** How far along the place is: the page in its chapter on a lesson, the lessons done in the year elsewhere. */
 function fillOf(place: Place, app: ReturnType<typeof useApp>, grade: number): number {
   // in practice, the battery is the run: each solved problem ticks it up by its share (practice-spec §5)
   const run = app.progress.run;
-  if (app.route.name === "practice" && run) return (run.i + (run.solved ? 1 : 0)) / run.items.length;
+  if (app.route.name === "practice" && run) return ((run.done?.length ?? 0) + (run.solved && !run.done?.includes(run.i) ? 1 : 0)) / run.items.length;
+  // done with a lesson and its skill check: the ring is full
+  if (app.route.name === "results" && app.lastReport && isCheckKey(app.lastReport.key)) return 1;
   if (place.lesson) { const p = pageOf(place.lesson); if (p) return p.page / p.pages; }
   const all = entriesInGrade(grade);
-  return all.length ? doneCount(app.progress, all) / all.length : 0;
+  return all.length ? learnedCount(app.progress, all) / all.length : 0;
 }
 
 /**
@@ -144,6 +139,13 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   const [asking, setAsking] = useState(false);
   // Practice's hint stack is open: the bulb turns ink-filled while it is
   const [hinting, setHinting] = useState(false);
+  // the box is showing every grade (opened from the ring)
+  const [gradesOpen, setGradesOpen] = useState(false);
+  useEffect(() => {
+    const on = (e: Event) => setGradesOpen(!!(e as CustomEvent).detail);
+    addEventListener("bento:gradesopen", on);
+    return () => removeEventListener("bento:gradesopen", on);
+  }, []);
   useEffect(() => {
     const on = (e: Event) => setHinting(!!(e as CustomEvent).detail);
     addEventListener("bento:hintopen", on);
@@ -188,10 +190,6 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
     return () => removeEventListener("popstate", onPop);
   }, [open]);
   const start: Level = route.name === "home" ? "shelf" : place.lesson ? "chapter" : "year";
-  // My Bento is a page of its own (G 2026-10-06: no pop-over version); the person circle goes there
-  // Settings and My Bento are toggles (G 2026-10-06): tapped again while open, they close the page the way < does; the
-  // icon stays the same, its filled state already says it's open
-  const openMe = () => { if (route.name !== "me") go({ name: "me" }, "fwd"); else if (place.back) up(place.back.to); };
   // the wordmark always means home: your book once a grade is chosen, else the top of the landing page
   const home = () => {
     if (chosen != null && progress.chosen) { openSheet(false); go({ name: "home" }, "back"); }
@@ -208,12 +206,16 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
     const onStart = (e: TouchEvent) => { d0 = e.touches.length === 2 && (visualViewport?.scale ?? 1) <= 1.01 ? dist(e.touches) : 0; };
     const onMove = (e: TouchEvent) => {
       if (!d0 || e.touches.length !== 2) return;
-      if (dist(e.touches) / d0 < 0.7) { d0 = 0; setOpen(start); }
+      if (dist(e.touches) / d0 < 0.7) {
+        d0 = 0;
+        // in a lesson or test the pinch zooms out to its problems, not the contents (G 2026-10-08)
+        if (route.name === "practice" && progress.run) dispatchEvent(new Event("bento:problems"));
+      }
     };
     document.addEventListener("touchstart", onStart, { passive: true });
     document.addEventListener("touchmove", onMove, { passive: true });
     return () => { document.removeEventListener("touchstart", onStart); document.removeEventListener("touchmove", onMove); };
-  }, [welcome, open, start]);
+  }, [welcome, open, start, route.name, !!progress.run]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // on the landing, while the dark Bento² section is under the nav, the wordmark turns light
   useEffect(() => {
@@ -243,7 +245,7 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
   useEffect(() => {
     if (welcome || open || asking || sheetOpen || !place.back) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || e.defaultPrevented || document.querySelector(".zoom,.fstack,.confirm,.sheet,dialog[open]")) return;
+      if (e.key !== "Escape" || e.defaultPrevented || document.querySelector(".zoom,.fstack,.confirm,.sheet,dialog[open],.v-plist")) return;
       up(place.back!.to);
     };
     addEventListener("keydown", onKey);
@@ -252,9 +254,11 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
 
   const run = progress.run, runGrade = run ? gradeOf(lessonOfItem(currentItem(run)).grade) : null;
   // the pages about you (Me, the grown-up page, facts) keep one island at the top (Review v43 item 17)
-  const showResume = !!run && !!runGrade && !welcome && !["practice", "me", "parent", "facts"].includes(route.name);
+  // v2: an unfinished lesson waits in Today as "Carry on", so the corner stays empty (G 2026-10-13 model)
+  const showResume = false && !!run && !!runGrade && !welcome;
   // in a lesson's practice, a light bulb sits beside Settings (UI notes preview); tests have no hints
-  const hintable = route.name === "practice" && !!run && run.mode !== "test" && !!currentStep(run) && !run.pick;
+  // v2: the hint is a tool beside the scratch pad, not in the nav
+  const hintable = false as boolean;
   // on a phone, practice's island shows the problem itself in place of the lesson's name (practice-spec §2c A)
   const item = route.name === "practice" && run ? currentItem(run) : null;
   const shortProblem = item && problemShape(item.lessonId, problemOf(item), !!item.story).short ? item : null;
@@ -295,13 +299,21 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
         {back
           ? <button className="iback" onClick={() => up(back.to)} aria-label={`Back to ${back.label}`}><Chevron dir="left" /></button>
           : null /* the book is the top: no step back from it, and grade changes live in All grades (Review nav #4) */}
-        <button className="iplace" onClick={() => setOpen(start === "shelf" ? "year" : start)} aria-label={`Contents. You're on ${place.title}`} aria-haspopup="dialog">
+        {/* v2: the island only says where you are; nothing opens from it (G 2026-10-13) */}
+        {/* a long lesson name ("Adding and subtracting fractions") needs a third line on a phone (Review g5-full-pass #16) */}
+        <div className="iplace" data-long={place.title.length > 28 || undefined}>
           <small>{place.kicker}</small>
-          {place.title === gradeOf(grade).name ? <GradeTitle grade={grade} /> : <b className={shortProblem ? "ititle" : undefined}>{place.title}</b>}
+          <b className={shortProblem ? "ititle" : undefined}>{place.title}</b>
           {shortProblem && <b className="iprob"><ProblemLine lessonId={shortProblem.lessonId} problem={problemOf(shortProblem)} solved={run!.solved} /></b>}
-        </button>
+        </div>
         {place.lock
           ? <span className="ilock"><LockIcon />On this device</span>
+          : route.name === "home"
+          ? <button className={`ibat igrade${gradesOpen ? " on" : ""}`} onClick={() => dispatchEvent(new Event("bento:grades"))} aria-label={`${g.name}, ${Math.round(fill * 100)}% of lessons done. Change grade`} aria-pressed={gradesOpen}>
+              <svg viewBox="0 0 36 36"><circle className="pring-track" cx="18" cy="18" r="17" pathLength={1} />
+                <circle className={`pring-fill${fill > 0 ? "" : " empty"}`} cx="18" cy="18" r="17" pathLength={1} style={{ strokeDasharray: `${Math.min(1, fill)} 1` }} /></svg>
+              <b>{g.short}</b>
+            </button>
           : <span className={`ibat${route.name === "practice" && run?.solved ? " tick" : ""}`} aria-hidden>
               {/* the circle says which lesson this is, and its own edge is the progress (G 21:33): the ring fills round
                   from the top, the PillRing's way, instead of the circle filling up */}
@@ -315,9 +327,10 @@ export function Island({ grade: chosen, guest }: { grade: number | null; guest?:
             aria-label={`Hint, ${run!.hintsLeft} left`} aria-expanded={hinting}><BulbIcon /><em className="ibadge" aria-hidden>{run!.hintsLeft}</em></button>
         )}
         {/* Settings is a page of its own (G 2026-10-06: no pop-over version); the gear goes there */}
-        <button className={`icon${route.name === "settings" ? " on" : ""}`} onClick={() => { if (route.name !== "settings") go({ name: "settings" }, "fwd"); else if (place.back) up(place.back.to); }}
-          aria-label="Settings" aria-current={route.name === "settings" ? "page" : undefined}><SettingsIcon /></button>
-        <button className={`icon ime${route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={openMe}
+        {/* the gear and the person open the hub at Settings and My Obento (G 2026-10-08: the nav is the hub for options) */}
+        <button className={`icon${open === "settings" || route.name === "settings" ? " on" : ""}`} onClick={() => go({ name: "settings" }, "fwd")}
+          aria-label="Settings"><SettingsIcon /></button>
+        <button className={`icon ime${open === "me" || route.name === "me" || route.name === "parent" ? " on" : ""}`} onClick={() => go({ name: "me" }, "fwd")}
           aria-label={`${YOUR_BENTO}: ${progress.streak} day streak, ${progress.xp} XP`} aria-current={route.name === "me" ? "page" : undefined}>
           <MeIcon />
         </button>

@@ -2,6 +2,7 @@ import { defaultSettings, type Settings } from "../../app/settings";
 import type { Level } from "./levels";
 import type { PracticeSession } from "../session/types";
 import type { FactRecord, SprintRecord } from "../facts/mastery";
+import type { CheckRecord } from "./skills";
 
 export interface ScoreRecord {
   last: Level;
@@ -24,6 +25,8 @@ export interface LogEntry {
   /** mistake kind → count */
   cats: Record<string, number>;
   rushed: number;
+  /** time on the run; missing on runs saved before it was kept */
+  ms?: number;
 }
 
 /** Everything saved on this device, apart from the per-run reports (stored separately). */
@@ -43,6 +46,8 @@ export interface Progress {
   /** lesson id → times finished */
   lessons: Record<string, number>;
   scores: Record<string, ScoreRecord>;
+  /** lesson id → its skill check, kept apart from the practice score (v2-backend-plan.md) */
+  checks: Record<string, CheckRecord>;
   tests: Record<string, ScoreRecord>;
   log: LogEntry[];
   /** lesson id → last time practiced (for daily review spacing) */
@@ -63,7 +68,7 @@ export interface Progress {
 
 export const emptyProgress = (): Progress => ({
   version: 1, grade: null, chosen: false, xp: 0, gxp: {}, streak: 0, last: "", done: 0,
-  lessons: {}, scores: {}, tests: {}, log: [], seen: {}, reviews: {}, run: null, intros: [], settings: defaultSettings(),
+  lessons: {}, scores: {}, checks: {}, tests: {}, log: [], seen: {}, reviews: {}, run: null, intros: [], settings: defaultSettings(),
   facts: {}, sprints: [],
 });
 

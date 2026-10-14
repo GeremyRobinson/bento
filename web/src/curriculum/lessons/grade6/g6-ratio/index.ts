@@ -62,9 +62,9 @@ function explain(p: RatioProblem, model: AnswerModel): Explanation {
     timeline: beats(3),
     steps: [
       { id: "factor", state: 1, answerStep: "factor", result: k, math: [num(b), op("×"), num(k), op("="), num(b * k)],
-        narration: `${b} equal parts make ${b * k}, so each part is ${k}: ${b} × ${k} = ${b * k}.` },
+        narration: `${b} equal boxes make ${b * k}, so each box is ${k}.` },
       { id: "scale", state: 2, answerStep: "scale", result: ak, math: [num(a), op("×"), num(k), op("="), num(ak)],
-        narration: `The other side has ${a} of the same parts: ${a} × ${k} = ${ak}. So ${a} : ${b} = ${ak} : ${b * k}.` },
+        narration: `The other side is ${count(a, "box", "boxes")} of the same size.` },
     ],
   };
 }
@@ -74,6 +74,7 @@ export const lesson: LessonDefinition<RatioProblem> = {
   grade: 6,
   unit: "Ratios and percents",
   title: "Equivalent ratios",
+  pre: "g4-equiv",
   // the current app's card and picture: 2 : 3 = 8 : 12
   reference: createRatio(2, 3, 4),
   generate: (rng, index) => generateRatio(rng, index),

@@ -30,7 +30,7 @@ describe("adaptive help", () => {
     expect([null, 0, 1, 2, 3, 4].map(tierFor)).toEqual([0, 0, 0, 1, 2, 2]);
   });
   it("starts longer after a low score, and budgets hints", () => {
-    expect([null, 0, 1, 2, 4].map(lessonLength)).toEqual([8, 10, 10, 8, 8]);
+    expect([null, 0, 1, 2, 4].map(lessonLength)).toEqual([6, 8, 8, 6, 6]);
     expect([8, 9, 10, 12].map(hintBudget)).toEqual([4, 5, 5, 6]);
   });
   it("opens Show me after two misses, or a miss after a hint, never in tests", () => {

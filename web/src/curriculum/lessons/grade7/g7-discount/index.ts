@@ -56,7 +56,8 @@ export function discountPicture({ P, p, off }: DiscountProblem) {
           { length: 1 + cut, parts: (100 + p) / g, from: 1, fills: [{ a: 0, b: 1, tone: "on" }, { a: 1, b: 1 + cut, tone: "acc" }], each: [{ text: () => `$${f(each)}` }],
             label: [{ text: "total" }], total: [{ text: `$${f(P + amt)}`, from: 2, acc: true }] },
         ],
-        brackets: [{ row: 1, a: 1, b: 1 + cut, text: `${p}% = $${f(amt)}`, side: "above", from: 1, acc: true }],
+        // under the added blocks: above them it would share the gap with the price's total, right where they stick out (Review 26fe1f8)
+        brackets: [{ row: 1, a: 1, b: 1 + cut, text: `${p}% = $${f(amt)}`, side: "below", from: 1, acc: true }],
         alt: `$${P} cut into ${count(blocks, "block")} of ${g}%; a ${p}% tip adds ${p / g} more blocks, $${f(amt)}, for $${f(P + amt)}.`,
       };
   return buildTape(spec);
@@ -66,16 +67,16 @@ function explain(pr: DiscountProblem, model: AnswerModel): Explanation {
   const { P, p, off } = pr, amt = expectedOf(model.steps, "percent"), total = expectedOf(model.steps, "total");
   return {
     heading: "Find the percent, then add or subtract",
-    idea: ["Percent means out of 100, so 10% of a price is one tenth of it."],
+    idea: ["A discount takes part of the price away, and a tip adds part on."],
     statement: [...$(P), text(off ? `, ${p}% off` : `, ${p}% tip`)],
     diagram: discountPicture(pr),
     caption: off ? `${p}% off: $${f(amt)} comes off.` : `A ${p}% tip: $${f(amt)} goes on.`,
     timeline: beats(3),
     steps: [
       { id: "percent", state: 1, answerStep: "percent", result: amt, math: [num(p), text("% of "), ...$(P), op("="), ...$(amt)],
-        narration: `10% of $${P} is $${f(P / 10)}, so ${p}% of $${P} is $${f(amt)}.` },
+        narration: p === 10 ? "10% is one tenth of the price." : `Find 10% first: $${f(P / 10)}. Then build up to ${p}%.` },
       { id: "total", state: 2, answerStep: "total", result: total, math: [...$(P), op(off ? "−" : "+"), ...$(amt), op("="), ...$(total)],
-        narration: off ? `A discount takes money off: $${P} − $${f(amt)} = $${f(total)}.` : `A tip adds money on: $${P} + $${f(amt)} = $${f(total)}.` },
+        narration: off ? "A discount takes money off the price." : "A tip adds money on to the price." },
     ],
   };
 }

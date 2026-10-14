@@ -77,8 +77,12 @@ export function explainExponentRule(p: ExponentRule, model: AnswerModel) {
     steps: [
       { id: "problem", narration: ["Two powers of x multiplied.", "A power of x divided by another.", "A power of x raised to a power."][t]!, math: shown(p) },
       { id: "written", narration: ["Write out the x's.", "Write out the x's: matching x's on the top and bottom cancel.", `Write out the x's: ${countOf(f(b), "copy", "copies")} of x${supText(a)}.`][t]!, math: out },
-      { id: "exponent", narration: `${count} So it is x${supText(e)}.`, math: [...shown(p), op("="), ...xp(e)], answerStep: "exponent", result: e },
-      { id: "try", narration: `Try x = 2: ${f(e)} twos multiplied make ${f(value)}.`, math: m(2, sup(e), op("="), value), answerStep: "try", result: value },
+      { id: "exponent", narration: [
+        `Count the x's: ${f(a)} + ${f(b)}. Multiplying adds the exponents.`,
+        `${f(b)} x's cancel, leaving ${f(a + b)} − ${f(b)}. Dividing subtracts the exponents.`,
+        `${countOf(f(b), "group")} of ${f(a)} x's. A power of a power multiplies the exponents.`,
+      ][t]!, math: [...shown(p), op("="), ...xp(e)], answerStep: "exponent", result: e },
+      { id: "try", narration: `Check with x = 2: multiply ${countOf(f(e), "two")} together.`, math: m(2, sup(e), op("="), value), answerStep: "try", result: value },
     ],
   });
 }
@@ -88,6 +92,7 @@ export const lesson: LessonDefinition<ExponentRule> = withEasyStart({
   grade: 8,
   unit: "Exponents and roots",
   title: "Exponent rules",
+  pre: "g6-expo",
   reference: createExponentRule(0, 2, 3),
   generate: rng => generateExponentRule(rng),
   restore: restoreExponentRule,

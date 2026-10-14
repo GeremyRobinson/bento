@@ -78,16 +78,17 @@ function explain(p: EquivProblem, model: AnswerModel): Explanation {
   const K = expectedOf(model.steps, "times"), top = expectedOf(model.steps, "top");
   return {
     heading: "Same amount, smaller pieces",
-    idea: ["Cutting every piece in two gives twice as many pieces, each half as big, so the amount stays the same."],
+    // Curriculum's "Cut each piece into …" reworded to say why, not what to do (teaching lint)
+    idea: ["Cutting each piece into equal smaller pieces makes more pieces, but the same amount."],
     statement: [frac(a, b), op("="), frac("?", b * k)],
     diagram: equivPicture(p),
     caption: `The same amount, cut into ${k} times as many pieces.`,
     timeline: beats(3),
     steps: [
       { id: "times", state: 1, answerStep: "times", result: K, math: [num(b), op("×"), num(K), op("="), num(b * k)],
-        narration: `The bottom went from ${b} to ${b * k}: ${b} × ${K} = ${b * k}. Every piece is cut into ${K} smaller pieces.` },
+        narration: `Every piece is cut into ${K}, so there are ${K} times as many.` },
       { id: "top", state: 2, answerStep: "top", result: top, math: [num(a), op("×"), num(K), op("="), num(top)],
-        narration: `Do the same to the top: ${a} × ${K} = ${top}. The shaded part has not changed, so ${a}/${b} = ${top}/${b * k}.` },
+        narration: "Do the same to the top. The shaded part has not changed." },
     ],
   };
 }
@@ -97,6 +98,7 @@ export const lesson: LessonDefinition<EquivProblem> = {
   grade: 4,
   unit: "Fractions",
   title: "Equivalent fractions",
+  pre: "g3-fraccompare",
   // the current app's card and picture: 1/2 = 2/4 = 4/8
   reference: createEquiv(1, 2, 4),
   generate: rng => generateEquiv(rng),

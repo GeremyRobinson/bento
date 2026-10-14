@@ -90,13 +90,14 @@ function answers(p: FracLineProblem): AnswerModel {
     };
   }
   if (p.ask === 1) {
-    const n = howMany(p.data, p.v);
+    const n = howMany(p.data, p.v), [w0, vn, vd] = mixedOf(p.v, d), vw = w0 ? [num(w0)] : [];
     return {
       steps: [
         oneBox({ id: "count", label: "How many at that length", question: `How many ${th.many} are ${inches(p.v, d)} ${th.long}?`, prompt: s => [s, text(` ${noun(n, th.one, th.many)}`)], ans: n,
           wrong: slips(n, [-1, 1].map(k => [howMany(p.data, p.v + k), "Read the next stack", `That's the stack above ${said(p.v + k, d)}. Find ${said(p.v, d)} first.`] as [number, string, string])),
           hint: `Find ${said(p.v, d)} on the line and count the X's.`, explain: `${count(n, "X", "X's")} above ${said(p.v, d)}.` }),
-        mixedStep({ id: "total", label: "Total length", question: `${th.together}, how ${th.long} are those ${th.many} in all?`, value: n * p.v, d, lead: [num(n), op("×")],
+        // the line reads "2 × 1 1/8 = 2 1/4 in": the length is in the lead (v is never whole inches)
+        mixedStep({ id: "total", label: "Total length", question: `${th.together}, how ${th.long} are those ${th.many} in all?`, value: n * p.v, d, lead: [num(n), op("×"), ...vw, frac(vn, vd), op("=")],
           wrong: [[n * d, "Gave the count", `That's how many. Each one is ${said(p.v, d)} ${th.long}: add ${said(p.v, d)} ${n} times.`],
             ...(n > 1 ? [[(n - 1) * p.v, "Left one out", `There are ${n} of them: add ${said(p.v, d)} ${n} times.`] as [number, string, string]] : [])],
           hint: `Add ${said(p.v, d)} once for each ${th.one}.`, explain: `${n} × ${said(p.v, d)} = ${inches(n * p.v, d)}.` }),
@@ -115,10 +116,19 @@ const alt = (p: FracLineProblem) => `A line plot of ${THINGS[p.thing]!.one} leng
 
 function explain(p: FracLineProblem, model: AnswerModel): Explanation {
   const last = model.steps.at(-1)!;
+  const th = THINGS[p.thing]!, d = p.d, hi = Math.max(...p.data), lo = Math.min(...p.data);
+  const lines: Record<string, string> = {
+    max: `The ${th.most} is the X farthest to the right.`,
+    min: `The ${th.least} is the X farthest to the left.`,
+    diff: `Subtract ${said(hi, d)} − ${said(lo, d)}, or count the jumps between.`,
+    count: `Count the X's above ${said(p.v, d)}.`,
+    total: `Add ${said(p.v, d)} once for each ${th.one}.`,
+    longer: `Count only the X's to the right of ${said(p.v, d)}.`,
+  };
   const lit = p.ask === 0 ? [Math.max(...p.data), Math.min(...p.data)] : p.ask === 1 ? [p.v] : [...new Set(p.data.filter(u => u > p.v))];
   return {
     heading: "Line plots with fractions",
-    idea: ["Each X is one thing above its length, so a taller stack means more things were that long."],
+    idea: ["Each X is one thing, placed above its length."],
     statement: words(last.question ?? ""),
     diagram: buildLinePlot({ ...plot(p), beats: { drop: 0, light: 1 }, light: lit, alt: `${alt(p)} The X's drop in, then the stacks the question is about light up.` }),
     caption: `${last.explain}`,
@@ -126,7 +136,7 @@ function explain(p: FracLineProblem, model: AnswerModel): Explanation {
     timeline: beats(1 + model.steps.length),
     steps: [
       { id: "drop", narration: "Each thing measured drops an X above its length.", math: words(THINGS[p.thing]!.title), state: 0 },
-      ...model.steps.map((s, i) => ({ id: s.id, narration: s.explain, math: s.work, state: i + 1, answerStep: s.id, result: s.slots.at(-1)!.expected! })),
+      ...model.steps.map((s, i) => ({ id: s.id, narration: lines[s.id]!, math: s.work, state: i + 1, answerStep: s.id, result: s.slots.at(-1)!.expected! })),
     ],
   };
 }

@@ -78,9 +78,9 @@ function explain(p: LikeFractionsProblem, model: AnswerModel): Explanation {
     timeline: beats(3),
     steps: [
       { id: "tops", state: 1, answerStep: "tops", result: S, math: [num(a), op("+"), num(c), op("="), num(S)],
-        narration: `Count the pieces: ${count(a, d)} and ${count(c, d)} make ${count(S, d)}.` },
+        narration: "Count the shaded pieces in both bars." },
       { id: "bottom", state: 2, answerStep: "bottom", math: [frac(a, d), op("+"), frac(c, d), op("="), frac(S, d)],
-        narration: `The pieces are still ${pieceName(d)}, so the bottom stays ${d}: ${S}/${d}.` },
+        narration: `The pieces are still ${pieceName(d)}, so the bottom stays ${d}.${S > d ? " More than 1 whole is fine." : ""}` },
     ],
   };
 }
@@ -90,7 +90,7 @@ export const lesson: LessonDefinition<LikeFractionsProblem> = {
   grade: 4,
   unit: "Fractions",
   title: "Adding like fractions",
-  pre: "g4-equiv",
+  pre: "g3-unitfrac",
   // the current app's card and picture: 2/8 + 3/8 = 5/8
   reference: createLikeFractions(2, 3, 8),
   generate: (rng, index) => generateLikeFractions(rng, index),

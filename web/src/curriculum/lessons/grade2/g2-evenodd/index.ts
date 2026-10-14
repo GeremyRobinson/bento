@@ -26,7 +26,6 @@ function answers({ n }: EvenOddProblem): AnswerModel {
   const choose: AnswerStep = {
     id: "evenodd",
     label: "Even or odd",
-    question: "Did every dot get a partner?",
     prompt: [text("Is "), num(n), text(" even or odd?")],
     slots: [{ id: "c", expected: right }],
     choices: CHOICES,
@@ -85,9 +84,9 @@ function explain(p: EvenOddProblem, model: AnswerModel): Explanation {
     caption: left ? "One dot has no partner." : "Every dot has a partner.",
     timeline: beats(4),
     steps: [
-      { id: "pairs", narration: `Put the ${countOf(n, "dot")} in twos: ${count(pairs, "pair")}.`, math: [text("Pairs: "), num(pairs)], state: 1, answerStep: "pairs", result: pairs },
+      { id: "pairs", narration: "Put the dots in twos.", math: [text("Pairs: "), num(pairs)], state: 1, answerStep: "pairs", result: pairs },
       { id: "left", narration: left ? "One dot is left all alone." : "No dots are left over.", math: [text("Left over: "), num(left)], state: 2, answerStep: "left", result: left },
-      { id: "evenodd", narration: left ? `So ${n} is **odd**.` : `So ${n} is **even**.`, math: [num(n), text(` is ${word}`)], state: 3, answerStep: "evenodd", result: pick },
+      { id: "evenodd", narration: left ? "A dot with no partner makes it odd." : "Every dot has a partner, so it's even.", math: [num(n), text(` is ${word}`)], state: 3, answerStep: "evenodd", result: pick },
     ],
   };
 }
@@ -97,6 +96,7 @@ export const lesson: LessonDefinition<EvenOddProblem> = {
   grade: 2,
   unit: "Place value",
   title: "Even and odd",
+  pre: "k-count20",
   reference: createEvenOdd(13),
   generate,
   restore: raw => restoreVia(raw, ["n"] as const, v => createEvenOdd(v.n)),

@@ -26,12 +26,15 @@ export function createMixed(w1: number, n1: number, w2: number, n2: number, d: n
   return { w1, n1, w2, n2, d };
 }
 
-/** Early problems need a trade half the time; later ones mostly do. Wholes are 1 to 3. */
+/**
+ * Early problems need a trade half the time; later ones mostly do. Wholes are 1 to 3. Only the answer's fraction has
+ * to be in lowest terms (createMixed), so fourths, sixths and eighths come up too: 2 2/6 + 1 5/6 = 4 1/6 (Review v2 note 1b).
+ */
 export function generateMixed(rng: Rng, index: number): MixedProblem {
   const trade = rng.next() < (index < 3 ? 0.5 : 0.75);
   for (;;) {
     const d = rng.pick(BOTTOMS), n1 = rng.int(1, d - 1), n2 = rng.int(1, d - 1), S = n1 + n2;
-    if (gcd(n1, d) !== 1 || gcd(n2, d) !== 1 || S === d || (S > d) !== trade) continue;
+    if (S === d || (S > d) !== trade) continue;
     try { return createMixed(rng.int(1, 3), n1, rng.int(1, 3), n2, d); } catch { /* try again */ }
   }
 }
@@ -99,14 +102,14 @@ function explain(p: MixedProblem, model: AnswerModel): Explanation {
     { id: "start", state: 0, math: [...mixed(w1, n1, d), op("+"), ...mixed(w2, n2, d)],
       narration: `Each number is some whole bars and some ${piece}.` },
     { id: "wholes", state: 1, answerStep: "wholes", result: W, math: [num(w1), op("+"), num(w2), op("="), num(W)],
-      narration: `Put the wholes together: ${w1} + ${w2} = ${W}.` },
+      narration: "Put the wholes together." },
     { id: "pieces", state: 2, answerStep: "pieces", result: S, math: [frac(n1, d), op("+"), frac(n2, d), op("="), frac(S, d)],
-      narration: `Now the pieces: ${n1} + ${n2} = ${pieces(S, d)}.${trade ? ` That's more than one bar's worth.` : ""}` },
+      narration: `Now put the ${piece} together.${trade ? " That's more than one bar's worth." : ""}` },
   ];
   if (trade) steps.push({ id: "trade", state: 3, answerStep: "trade", result: expectedOf(model, "trade", "n"), math: [frac(S, d), op("="), num(1), frac(R, d)],
-    narration: `${d} ${piece} fill a bar, and that's 1 whole. ${S} − ${d} leaves ${pieces(R, d)}.` });
+    narration: `${d} ${piece} fill a bar, so trade them for 1 whole.` });
   steps.push({ id: "answer", state: last, answerStep: "answer", result: R, math: [...mixed(w1, n1, d), op("+"), ...mixed(w2, n2, d), op("="), ...mixed(total, R, d)],
-    narration: trade ? `${wholes(W)} and 1 more make ${total}, with ${R}/${d} left: ${label(total, R, d)}.` : `${wholes(W)} and ${S}/${d}: ${label(total, R, d)}.` });
+    narration: trade ? `Add the new whole to the ${wholes(W)}.` : "Put the wholes and the pieces back together." });
   return {
     heading: "Wholes with wholes, pieces with pieces",
     idea: ["Wholes and pieces are different sizes, so wholes go with wholes and pieces go with pieces."],

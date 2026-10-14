@@ -49,8 +49,8 @@ function explain(p: SubtractIntegersProblem, model: AnswerModel): Explanation {
     timeline: beats(3),
     steps: [
       { id: "start", narration: `Start at ${f(a)}. Subtracting ${f(b)} is the same as adding its opposite.`, math: [num(a), op("−"), ...paren(b)], state: 0 },
-      { id: "opp", narration: `The opposite of ${f(b)} is ${f(opp)}: the same distance from 0, on the other side.`, math: [num(b), op("→"), num(opp)], state: 1, answerStep: "opp", result: opp },
-      { id: "add", narration: `Now add: ${f(a)} + ${opp < 0 ? `(${f(opp)})` : opp} = ${f(diff)}. Move ${B} ${dir}.`, math: [num(a), op("+"), ...paren(opp), op("="), num(diff)], state: 2, answerStep: "add", result: diff },
+      { id: "opp", narration: "Flip the sign: the same distance from 0, on the other side.", math: [num(b), op("→"), num(opp)], state: 1, answerStep: "opp", result: opp },
+      { id: "add", narration: `Now add: from ${f(a)}, move ${B} ${dir}.`, math: [num(a), op("+"), ...paren(opp), op("="), num(diff)], state: 2, answerStep: "add", result: diff },
     ],
   };
 }

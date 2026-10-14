@@ -42,9 +42,9 @@ export function explainCircumference({ r }: CircumferenceProblem, answers: Answe
     diagram: buildCircumference({ r, d, c, pi: "3.14", diameterBeat: 1, aroundBeat: 2, alt: `A circle of radius ${r} and diameter ${d}, unrolled into a line about 3.14 diameters long: ${c}.` }),
     timeline: beats(3),
     steps: [
-      { id: "circle", narration: `A circle with radius ${r}.`, math: mt`r = ${r}`, state: 0 },
-      { id: "diameter", narration: `The diameter goes all the way across: twice the radius, 2 × ${r} = ${d}.`, math: mt`2 × ${r} = ${d}`, state: 1, answerStep: "diameter", result: d },
-      { id: "times-pi", narration: `Unroll the edge: it is about 3.14 diameters long. ${d} × 3.14 = ${c}.`, math: mt`${d} × 3.14 = ${c}`, state: 2, answerStep: "times-pi", result: c },
+      { id: "circle", narration: "The radius runs from the middle to the edge.", math: mt`r = ${r}`, state: 0 },
+      { id: "diameter", narration: "The diameter goes all the way across: two radii.", math: mt`2 × ${r} = ${d}`, state: 1, answerStep: "diameter", result: d },
+      { id: "times-pi", narration: "Unroll the edge: it's about 3.14 diameters long.", math: mt`${d} × 3.14 = ${c}`, state: 2, answerStep: "times-pi", result: c },
     ],
   };
 }
@@ -54,9 +54,10 @@ export const lesson: LessonDefinition<CircumferenceProblem> = {
   grade: 7,
   unit: "Geometry",
   title: "Circumference",
+  pre: "g5-multdec",
   reference: createCircumference(5),
   // the first three: small circles
-  generate: (rng, index) => createCircumference(index < 3 ? rng.int(2, 5) : rng.int(2, 12)),
+  generate: (rng, index) => createCircumference(index < 3 ? rng.int(3, 5) : rng.int(3, 12)),
   restore: restoreCircumference,
   display: p => mt`radius ${p.r}`,
   displayNote: () => "Circumference = π × diameter. Use 3.14 for π.",

@@ -3,7 +3,7 @@ import type { AnswerModel } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildPlane, tickText } from "../../../../explanations/diagrams/plane/build";
 import type { PlaneItem } from "../../../../explanations/diagrams/plane/schema";
-import { expected, supText } from "../../_plane/kit";
+import { expected } from "../../_plane/kit";
 import { growWord } from "./answers";
 import type { GrowthProblem } from "./problem";
 import { count } from "../../../text";
@@ -34,14 +34,14 @@ export function explainGrowth(p: GrowthProblem, model: AnswerModel): Explanation
     }),
     timeline: beats(3),
     steps: [
-      { id: "start", narration: `Start with ${n(P)} bacteria. Every hour they ${growWord(r)}: × ${r}.`, math: [num(P)], state: 0 },
-      { id: "factor", narration: `${count(t, "hour")} means × ${r}, ${t} times: ${Array(t).fill(r).join(" × ")} = ${r}${supText(t)} = ${n(factor)}.`,
+      { id: "start", narration: `Start with this many bacteria. Every hour they ${growWord(r)}: × ${r}.`, math: [num(P)], state: 0 },
+      { id: "factor", narration: `${count(t, "hour")} of × ${r} is ${Array(t).fill(r).join(" × ")}.`,
         math: [num(r), sup(t), op("="), num(factor)], state: 1, answerStep: "factor", result: factor },
-      { id: "total", narration: `Multiply the start by the growth factor: ${n(P)} × ${n(factor)} = ${n(total)} bacteria after ${count(t, "hour")}.`,
+      { id: "total", narration: `Multiply the start by the growth factor to get the count after ${count(t, "hour")}.`,
         math: [num(P), op("×"), num(factor), op("="), num(total)], state: 2, answerStep: "total", result: total },
     ],
   };
 }
 
 export const growthDisplay = ({ P, r, t }: GrowthProblem) => [num(P), op("×"), num(r), sup(t)];
-export const growthNote = ({ P, r, t }: GrowthProblem) => `${P} bacteria ${growWord(r)} every hour. How many after ${count(t, "hour")}?`;
+export const growthLead = ({ P, r, t }: GrowthProblem) => `**${P}** bacteria ${growWord(r)} every hour. How many are there after **${count(t, "hour")}**?`;

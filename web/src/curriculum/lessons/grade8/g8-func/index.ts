@@ -10,6 +10,7 @@ export const lesson: LessonDefinition<FuncProblem> = withEasyStart({
   grade: 8,
   unit: "Functions and slope",
   title: "Evaluate a function",
+  pre: "g6-eval",
   reference: createFunc(3, -5, 4),
   generate: rng => generateFunc(rng),
   restore: restoreFunc,

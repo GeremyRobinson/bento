@@ -53,18 +53,18 @@ export function explainSplitFact(p: SplitFactProblem, answers: AnswerModel): Exp
     diagram: buildAreaGrid({
       cols: [{ label: "5", size: 5 }, { label: String(r), size: r }],
       rows: [{ label: String(a), size: a }],
-      cells: [[{ text: String(five), from: 1, focus: [1] }, { text: String(rest), from: 2, focus: [2] }]],
+      cells: [[{ text: String(five), from: 2, focus: [2] }, { text: String(rest), from: 3, focus: [3] }]],
       units: 0,
-      lines: [{ text: `${a} × ${b} = ${five} + ${rest} = ${sum}`, from: 3 }],
+      lines: [{ text: `${a} × ${b} = ${five} + ${rest} = ${sum}`, from: 4 }],
       alt: `${cap(aNum(a))} by ${b} rectangle cut into ${a} by 5 = ${five} and ${a} by ${r} = ${rest}. Together ${sum}.`,
     }),
     caption: `${b} is 5 + ${r}, so the ${a} by ${b} rectangle splits into two easy parts.`,
-    timeline: beats(4),
+    timeline: beats(5),
     steps: [
-      { id: "split", narration: `${count(a, "row")} of ${b} is hard to count. Cut each row after 5: ${b} is 5 and ${r}.`, math: [num(b), op("="), num(5), op("+"), num(r)], state: 0, answerStep: "split", result: r },
-      { id: "five", narration: `${count(a, "row")} of 5: ${a} × 5 = ${five}.`, math: [num(a), op("×"), num(5), op("="), num(five)], state: 1, answerStep: "five", result: five },
-      { id: "rest", narration: `${count(a, "row")} of ${r}: ${a} × ${r} = ${rest}.`, math: [num(a), op("×"), num(r), op("="), num(rest)], state: 2, answerStep: "rest", result: rest },
-      { id: "sum", narration: `Put the parts back together: ${five} + ${rest} = ${sum}.`, math: [num(five), op("+"), num(rest), op("="), num(sum)], state: 3, answerStep: "sum", result: sum },
+      { id: "split", narration: `${count(a, "row")} of ${b} is hard to count, so cut each row after 5.`, math: [num(b), op("="), num(5), op("+"), num(r)], state: 1, answerStep: "split", result: r },
+      { id: "five", narration: `The first part is ${count(a, "row")} of 5.`, math: [num(a), op("×"), num(5), op("="), num(five)], state: 2, answerStep: "five", result: five },
+      { id: "rest", narration: `The other part is ${count(a, "row")} of ${r}.`, math: [num(a), op("×"), num(r), op("="), num(rest)], state: 3, answerStep: "rest", result: rest },
+      { id: "sum", narration: "Put the two parts back together.", math: [num(five), op("+"), num(rest), op("="), num(sum)], state: 4, answerStep: "sum", result: sum },
     ],
   };
 }

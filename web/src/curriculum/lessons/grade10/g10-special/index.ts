@@ -1,4 +1,3 @@
-import { formatNumber as f } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import { beats, type Explanation, type ExplanationStep } from "../../../../explanations/schema";
 import { buildRightTriangle } from "../../../../explanations/diagrams/right-triangle/build";
@@ -43,8 +42,8 @@ export function explainSpecialTriangle(p: SpecialTriangleProblem, answers: Answe
   if (t === 45) {
     const c = expected(answers, "hyp", "c"), r = expected(answers, "hyp", "r");
     const steps: ExplanationStep[] = [
-      { id: "triangle", narration: `Both legs of a 45°-45°-90° triangle are the same: ${s} and ${s}. Two of these triangles make a square, cut along its diagonal.`, math: mt`45°-45°-90°, leg ${s}`, state: 0 },
-      { id: "hyp", narration: `The hypotenuse is the square's diagonal: ${s}² + ${s}² = 2 × ${s}², so it is ${s} × √${r} = ${f(c)}√${r}.`, math: mt`${s} × √${r} = ${c}√${r}`, state: 1, answerStep: "hyp" },
+      { id: "triangle", narration: "Both legs are equal. Two of these triangles make a square.", math: mt`45°-45°-90°, leg ${s}`, state: 0 },
+      { id: "hyp", narration: "It's the square's diagonal. Leg² + leg² is 2 leg², so times √2.", math: mt`${s} × √${r} = ${c}√${r}`, state: 1, answerStep: "hyp" },
     ];
     return {
       heading: "Half a square, half an equilateral triangle",
@@ -83,9 +82,9 @@ export function explainSpecialTriangle(p: SpecialTriangleProblem, answers: Answe
     }),
     timeline: beats(3),
     steps: [
-      { id: "triangle", narration: `In a 30°-60°-90° triangle the short leg, ${s}, is across from the 30° angle. Flip it over the long leg: together they make an equilateral triangle, all sides ${hyp}.`, math: mt`30°-60°-90°, short leg ${s}`, state: 0 },
-      { id: "hyp", narration: `The short leg is half of a side of that equilateral triangle, and the hypotenuse is a whole side: 2 × ${s} = ${hyp}.`, math: mt`2 × ${s} = ${hyp}`, state: 1, answerStep: "hyp", result: hyp },
-      { id: "long", narration: `By the Pythagorean theorem, long leg² = ${hyp}² − ${s}² = 3 × ${s}², so the long leg is ${long}√3.`, math: mt`${s} × √3 = ${long}√3`, state: 2, answerStep: "long" },
+      { id: "triangle", narration: `The short leg faces 30°. Two copies make an equilateral triangle, all sides ${hyp}.`, math: mt`30°-60°-90°, short leg ${s}`, state: 0 },
+      { id: "hyp", narration: "The short leg is half a side, the hypotenuse a whole side.", math: mt`2 × ${s} = ${hyp}`, state: 1, answerStep: "hyp", result: hyp },
+      { id: "long", narration: `By Pythagoras, long leg² is ${hyp}² − ${s}², which is three ${s}²'s.`, math: mt`${s} × √3 = ${long}√3`, state: 2, answerStep: "long" },
     ],
   };
 }

@@ -6,7 +6,7 @@ export const lesson: LessonDefinition<UnlikeFractionsProblem> = {
   grade: 5,
   unit: "Fractions",
   title: "Subtracting fractions",
-  pre: "g4-likefrac",
+  pre: "add",
   // the current app's cards: 1/2 − 1/3 = 3/6 − 2/6 = 1/6
   reference: createUnlikeFractions(1, 2, 1, 3, "−"),
   generate: (rng, i) => generateUnlikeFractions(rng, i, "−"),

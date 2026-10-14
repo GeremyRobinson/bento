@@ -9,6 +9,7 @@ export const lesson: LessonDefinition<InterceptProblem> = withEasyStart({
   grade: 8,
   unit: "Functions and slope",
   title: "Slope-intercept form",
+  pre: "g8-slope",
   reference: createIntercept(2, 3, 7),
   generate: rng => generateIntercept(rng),
   restore: restoreIntercept,

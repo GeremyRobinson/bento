@@ -72,12 +72,12 @@ export function explainPowerRule(p: PowerRule, model: AnswerModel) {
     diagram: powerRulePicture({ a, n, c, e }),
     alt: `f(x) = ${f(a)}x${supText(n)}: ${f(n)} × ${f(a)} = ${f(c)} and ${f(n)} − 1 = ${f(e)}, so f′(x) = ${f(c)}x${supE(e)}.`,
     steps: [
-      { id: "problem", narration: `f′ tells how steep f is. For a power of x, the exponent ${f(n)} is what comes down.`, math: [num(a), v(), sup([mark(n)])] },
-      { id: "coefficient", narration: `Bring the exponent down and multiply: ${f(n)} × ${f(a)} = ${f(c)}.`, math: m(n, op("×"), a, op("="), c),
+      { id: "problem", narration: `f′ tells how steep f is. The exponent ${f(n)} is what comes down.`, math: [num(a), v(), sup([mark(n)])] },
+      { id: "coefficient", narration: `Bring the exponent down to multiply the ${f(a)} in front.`, math: m(n, op("×"), a, op("="), c),
         line: [mark(n), op("·"), num(a), v(), sup([num(n), op("−"), num(1)])], answerStep: "coefficient", result: c },
-      { id: "exponent", narration: `Then lower the exponent by 1: ${f(n)} − 1 = ${f(e)}.`, math: m(n, op("−"), 1, op("="), e), line: term(c, e), answerStep: "exponent", result: e },
-      { id: "write", narration: `So f′(x) = ${f(c)}x${supE(e)}.`, math: [text("f′(x)"), op("="), ...term(c, e)], line: null, answerStep: "write", result: c },
-      { id: "slope", narration: `At x = 1, f′(1) = ${f(c)}: ${c > 0 ? `the graph of f climbs ${f(c)} for each 1 across there` : `the graph of f falls ${f(-c)} for each 1 across there`}.`, math: [text("f′(1)"), op("="), num(c)], line: null },
+      { id: "exponent", narration: `Then lower the exponent by 1, so x${supText(n)} becomes x${supE(e)}.`, math: m(n, op("−"), 1, op("="), e), line: term(c, e), answerStep: "exponent", result: e },
+      { id: "write", narration: "Put the new number in front of the new power.", math: [text("f′(x)"), op("="), ...term(c, e)], line: null, answerStep: "write", result: c },
+      { id: "slope", narration: `At x = 1, the graph of f climbs ${f(c)} for each 1 across.`, math: [text("f′(1)"), op("="), num(c)], line: null },
     ],
   });
 }
@@ -87,6 +87,7 @@ export const lesson: LessonDefinition<PowerRule> = withEasyStart({
   grade: 12,
   unit: "Derivatives",
   title: "Power rule",
+  pre: "g8-slope",
   reference: createPowerRule(3, 4),
   generate: rng => generatePowerRule(rng),
   restore: restorePowerRule,

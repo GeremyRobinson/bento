@@ -29,12 +29,12 @@ export function explainIntercept(p: InterceptProblem, model: AnswerModel): Expla
     }),
     timeline: beats(4),
     steps: [
-      { id: "point", narration: `The line has slope ${f(m)} and goes through ${pt(x0, y0)}.`, math: interceptMath(p), state: 0 },
-      { id: "mx", narration: `Going from the y-axis to x = ${f(x0)}, the line changes by slope × x: ${f(m)} × ${fP(x0)} = ${f(mx)}.`,
+      { id: "point", narration: "Find where this line crosses the y-axis. That is b.", math: interceptMath(p), state: 0 },
+      { id: "mx", narration: `From the y-axis to x = ${f(x0)}, the line changes by slope times x.`,
         math: [...P(m), op("×"), ...P(x0), op("="), num(mx)], state: 1, answerStep: "mx", result: mx },
-      { id: "b", narration: `So the line crosses the y-axis ${f(mx)} away from ${f(y0)}: b = ${f(y0)} − ${fP(mx)} = ${f(b)}.`,
+      { id: "b", narration: `Take that change back off ${f(y0)} to land on the y-axis.`,
         math: [text("b"), op("="), num(y0), op("−"), ...P(mx), op("="), num(b)], state: 2, answerStep: "b", result: b },
-      { id: "line", narration: `Slope ${f(m)} and b = ${f(b)}: the line is ${line}.`, math: [text(line)], state: 3, answerStep: "line", result: m },
+      { id: "line", narration: "The slope goes in front of x, and b goes on its own.", math: [text(line)], state: 3, answerStep: "line", result: m },
     ],
   };
 }

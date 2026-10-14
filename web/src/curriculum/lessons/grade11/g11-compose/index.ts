@@ -29,7 +29,6 @@ const gx = ({ c, d }: Composition): MathText => [text("g(x)"), op("="), ...poly(
 
 /** "+ (−3)" after a product; nothing for a 0 term (the reference's g(x) = 2x) */
 const plus = (v: number): MathText => (v ? [op("+"), ...P(v)] : []);
-const plusText = (v: number) => (v ? ` + ${fP(v)}` : "");
 
 export function compositionAnswers({ a, b, c, d, k }: Composition): AnswerModel {
   const g = c * k + d;
@@ -55,8 +54,8 @@ export function explainComposition(p: Composition, model: AnswerModel) {
     alt: `g(${f(k)}) = ${f(g)}, then f(${f(g)}) = ${f(out)}.`,
     steps: [
       { id: "problem", narration: `f(g(${f(k)})) means: put ${f(k)} into g, then put that answer into f.`, math: call("f", call("g", [mark(k)])) },
-      { id: "inside", narration: `Inside first: g(${f(k)}) = ${f(c)} · ${fP(k)}${plusText(d)} = ${f(g)}.`, math: m(...call("g", [num(k)]), op("="), c, op("·"), ...P(k), ...plus(d), op("="), mark(g)), answerStep: "inside", result: g },
-      { id: "outside", narration: `Then the outside: f(${f(g)}) = ${f(a)} · ${fP(g)}${plusText(b)} = ${f(out)}.`, math: m(...call("f", [num(g)]), op("="), a, op("·"), ...P(g), ...plus(b), op("="), out), answerStep: "outside", result: out },
+      { id: "inside", narration: "Inside first: work out what g gives back.", math: m(...call("g", [num(k)]), op("="), c, op("·"), ...P(k), ...plus(d), op("="), mark(g)), answerStep: "inside", result: g },
+      { id: "outside", narration: `Then the outside: what g gave back, ${f(g)}, goes into f.`, math: m(...call("f", [num(g)]), op("="), a, op("·"), ...P(g), ...plus(b), op("="), out), answerStep: "outside", result: out },
     ],
   });
 }
@@ -66,6 +65,7 @@ export const lesson: LessonDefinition<Composition> = withEasyStart({
   grade: 11,
   unit: "Functions",
   title: "Composing functions",
+  pre: "g8-func",
   reference: createComposition(1, 1, 2, 0, 3),
   generate: rng => generateComposition(rng),
   restore: restoreComposition,

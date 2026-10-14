@@ -5,6 +5,21 @@ import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildNumberLine, type Hop, type Mark } from "../../../../explanations/diagrams/number-line/build";
 import { expectedOf, oneBox, restoreVia, round6, wholeIn } from "../../_number-line/steps";
 import { slips } from "../../grade4/_kit";
+import { lightSteps } from "../../../../explanations/diagrams/scene/helpers";
+import type { SceneDiagram } from "../../../../explanations/diagrams/scene/schema";
+
+/**
+ * The worked step lit (the shared `lit` role), beat by beat: the two ends the number sits between and the number itself
+ * on the first beat; after that, what each beat draws (the halfway mark, then the hop to the rounded number) is the
+ * step, lit on its own beat.
+ */
+function litSteps(d: SceneDiagram, first: string[]): SceneDiagram {
+  return {
+    ...d,
+    items: lightSteps(d.items, it => ((it.from ?? 0) > 0 ? (!it.enter ? null : [it.from!])
+      : it.type === "text" && first.includes(it.text) ? [0] : null), 2),
+  };
+}
 
 /** the number N / 1000 (three decimal places), rounded to p places (1: tenths, 2: hundredths) */
 export interface RoundProblem { N: number; p: number }
@@ -69,18 +84,17 @@ function explain(pr: RoundProblem, model: AnswerModel): Explanation {
   if (!hops.length) marks.push({ v: R, beat: 2, cls: "dota" });
   return {
     heading: "Look one place to the right",
-    idea: ["Rounding picks the closer number, and a next digit of 5 marks halfway."],
+    idea: ["Rounding picks the closer number, and the digit just to the right tells you which."],
     statement: [num(value), op("≈"), text("?"), muted(` (nearest ${name.slice(0, -1)})`)],
-    diagram: buildNumberLine({
+    diagram: litSteps(buildNumberLine({
       min: T, max: up, step: tick, every: 10, labelAt: [half], marks, hops,
       alt: `Number line from ${f(T)} to ${f(up)} with ${f(value)} marked; it rounds to ${f(R)}.`,
-    }),
-    caption: halfway ? `${f(value)} is exactly halfway, and halfway rounds up to ${f(R)}.` : `${f(value)} is closer to ${f(R)}.`,
+    }), [f(T), f(up), f(value)]),
     timeline: beats(3),
     steps: [
-      { id: "digit", narration: `${f(value)} sits between ${f(T)} and ${f(up)}. Its ${name} digit is ${digit}.`, math: [text(`${name} digit: `), num(digit)], state: 0, answerStep: "digit", result: digit },
-      { id: "next", narration: `The digit just to its right is ${next}. Halfway between is ${f(half)}.`, math: [text("next digit: "), num(next)], state: 1, answerStep: "next", result: next },
-      { id: "round", narration: stays ? `${next} is 4 or less, so the ${name} digit stays: ${f(R)}.` : `${next} is 5 or more, so round up: ${f(R)}.`,
+      { id: "digit", narration: `${f(value)} sits between ${f(T)} and ${f(up)}.`, math: [text(`${name} digit: `), num(digit)], state: 0, answerStep: "digit", result: digit },
+      { id: "next", narration: `Halfway between them is ${f(half)}.`, math: [text("next digit: "), num(next)], state: 1, answerStep: "next", result: next },
+      { id: "round", narration: (stays ? `${next} is 4 or less, so the digit stays.` : `${next} is 5 or more, so round up.`) + (halfway ? " Halfway rounds up." : ""),
         math: [num(value), op("≈"), num(R)], state: 2, answerStep: "round", result: R },
     ],
   };
@@ -91,7 +105,7 @@ export const lesson: LessonDefinition<RoundProblem> = {
   grade: 5,
   unit: "Decimals",
   title: "Rounding decimals",
-  pre: "g4-dec",
+  pre: "g4-placevalue",
   reference: createRound(3476, 2), // 3.476 ≈ 3.48, the current app's example
   // a number with nothing past the place (69.320 to hundredths) is already rounded; give it a digit there
   generate: (rng, index) => {
@@ -107,6 +121,7 @@ export const lesson: LessonDefinition<RoundProblem> = {
   },
   restore: raw => restoreVia(raw, ["N", "p"] as const, v => createRound(v.N, v.p)),
   display: p => [num(p.N / 1000)],
+  answerOp: "≈", // solved, the line reads "3.476 ≈ 3.48" (Review g5 full pass, item 7)
   displayNote: p => `Round to the nearest ${p.p === 1 ? "tenth" : "hundredth"}.`,
   answers,
   explain,

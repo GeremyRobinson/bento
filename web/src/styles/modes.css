@@ -51,3 +51,8 @@
 /* from screen.css: a list's nested panel (ListGroup) goes a step deeper in dark too, toward the page */
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--surf-nest:color-mix(in oklab,var(--page) 45%,var(--surf-1,var(--well)));--surf-sub:color-mix(in oklab,var(--page) 55%,var(--surf-nest))}}
 :root[data-theme="dark"] .wrap{--surf-nest:color-mix(in oklab,var(--page) 45%,var(--surf-1,var(--well)));--surf-sub:color-mix(in oklab,var(--page) 55%,var(--surf-nest))}
+
+/* the UI model in dark (ui.css): done marks take the accent itself; text on the accent is dark; the page's wash is
+   nearly neutral. 5th grade keeps its exact tokens */
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--v-mark-done:var(--v-acc)} :root:not([data-theme="light"]) .wrap:not([data-grade="5"]){--v-acc-on:var(--v-page);--v-mark-now:color-mix(in oklab,var(--v-acc) 72%,var(--v-page));--v-wash-on:color-mix(in oklab,var(--v-acc-soft) 15%,var(--v-page))}}
+:root[data-theme="dark"] .wrap{--v-mark-done:var(--v-acc)} :root[data-theme="dark"] .wrap:not([data-grade="5"]){--v-acc-on:var(--v-page);--v-mark-now:color-mix(in oklab,var(--v-acc) 72%,var(--v-page));--v-wash-on:color-mix(in oklab,var(--v-acc-soft) 15%,var(--v-page))}

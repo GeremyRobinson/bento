@@ -9,7 +9,7 @@ import { oneBox, wholeIn } from "../../_number-line/steps";
 import { tapStep, words } from "../../gradeK/kit";
 import { slips } from "../../grade2/kit";
 import { count } from "../../../text";
-import { OPS, WHO, apply, checkStory, operationStep, solveStep, storyNumbers, withCommas, type Op } from "../_measure";
+import { OPS, WHO, apply, checkStory, operationStep, solveSaid, solveStep, storyNumbers, withCommas, type Op } from "../_measure";
 
 /** the things to weigh, with a sensible mass: light ones in grams, heavy ones in kilograms */
 export const MASS_THINGS = [
@@ -151,7 +151,7 @@ function answers(p: MassProblem): AnswerModel {
     };
   }
   const o = OPS[p.op]! as Op;
-  return { steps: [operationStep(o, massStory(p), p.a, UNIT(p.unit)), solveStep(o, p.a, p.b, UNIT(p.unit))], finalParts: [-1] };
+  return { steps: [operationStep(o, `${withCommas(p.a)} ${o} ${withCommas(p.b)}`, p.a, UNIT(p.unit)), solveStep(o, p.a, p.b, UNIT(p.unit))], finalParts: [-1] };
 }
 
 const scaleAlt = (p: MassProblem) => `A scale in ${unitWord(p.unit)} with labels ${[0, 1, 2, 3, 4].map(k => withCommas(k * 5 * p.step)).join(", ")}.`;
@@ -162,7 +162,14 @@ function picture(p: MassProblem) {
 }
 
 function explain(p: MassProblem, model: AnswerModel): Explanation {
-  const steps = model.steps.map((s, i) => ({ id: s.id, narration: s.explain, math: s.work ?? [], state: i + 1, answerStep: s.id, result: s.slots[0]!.expected! }));
+  // the answer steps' own explain text is "Show me" in practice, so Watch one says its lines here, by step id
+  const th0 = MASS_THINGS[p.thing]!, label = Math.floor(p.value / p.step / 5) * 5 * p.step;
+  const said: Record<string, string> = p.kind === 0
+    ? { unit: `Imagine holding a ${th0.name}: it feels ${th0.kg ? "heavy" : "light"}.`, guess: `The other two guesses are far too ${th0.kg ? "light or too heavy" : "heavy"}.` }
+    : p.kind === 1
+      ? { step: "There are 5 small spaces from one label to the next.", read: label === p.value ? "The needle points straight at a label." : `Start at ${withCommas(label)} and count on by ${p.step}.` }
+      : { solve: solveSaid(p.op, p.a, p.b, UNIT(p.unit)) };
+  const steps = model.steps.map((s, i) => ({ id: s.id, narration: said[s.id] ?? s.explain, math: s.work ?? [], state: i + 1, answerStep: s.id, result: s.slots[0]!.expected! }));
   const idea = ["Mass is how heavy something is, and a paper clip is about 1 gram."];
   if (p.kind === 1) {
     return {
@@ -171,7 +178,7 @@ function explain(p: MassProblem, model: AnswerModel): Explanation {
         alt: `${scaleAlt(p)} The marks count up by ${p.step}, the needle swings to ${withCommas(p.value)} ${UNIT(p.unit)}.` }),
       caption: `Each mark is ${p.step} ${UNIT(p.unit)}. The needle shows ${withCommas(p.value)} ${UNIT(p.unit)}.`,
       timeline: beats(3),
-      steps: [{ id: "labels", narration: "Find the labels first.", math: words("Read the labels."), state: 0 }, ...steps],
+      steps,
     };
   }
   if (p.kind === 2) {
@@ -181,7 +188,7 @@ function explain(p: MassProblem, model: AnswerModel): Explanation {
       diagram: buildStoryBoxes({ op: OPS[p.op]!, a: p.a, b: p.b, unit: UNIT(p.unit), answer: 2, alt: `Boxes showing the story's amounts. The answer is ${withCommas(ans)} ${UNIT(p.unit)}.` }),
       caption: `${withCommas(ans)} ${unitWord(p.unit, ans)}.`,
       timeline: beats(3),
-      steps: [{ id: "read", narration: "Read the story. Draw the amounts.", math: words("Read it."), state: 0 }, ...steps],
+      steps,
     };
   }
   const th = MASS_THINGS[p.thing]!, right = guesses(p.thing);
@@ -193,7 +200,7 @@ function explain(p: MassProblem, model: AnswerModel): Explanation {
     }),
     caption: `${model.steps[1]!.explain}`,
     timeline: beats(3),
-    steps: [{ id: "look", narration: `Imagine holding a ${th.name} in your hand. Is it light or heavy?`, math: words("Light or heavy?"), state: 0 }, ...steps],
+    steps,
   };
 }
 
@@ -225,7 +232,7 @@ export const lesson: LessonDefinition<MassProblem> = {
     if (!r || typeof r !== "object") return null;
     try { return createMass(r as MassProblem); } catch { return null; }
   },
-  display: p => (p.kind === 0 ? [text(`Would you weigh a ${MASS_THINGS[p.thing]!.name} in grams or kilograms?`)] : p.kind === 1 ? words("What is the mass?") : [text(massStory(p))]),
+  display: p => (p.kind === 0 ? [text(`How heavy is a ${MASS_THINGS[p.thing]!.name}?`)] : p.kind === 1 ? words("What is the mass?") : [text(massStory(p))]),
   picture,
   answers,
   explain,

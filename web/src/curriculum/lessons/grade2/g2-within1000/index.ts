@@ -116,7 +116,7 @@ function explain(p: Within1000Problem, model: AnswerModel): Explanation {
   const H = B.h * 100, T = B.t * 10;
   return {
     heading: sub ? "Hop back by place" : "Hop on by place",
-    idea: ["Hundreds, tens and ones are easy hops, so the second number breaks into those."],
+    idea: ["Break the second number into hundreds, tens and ones, then hop by each."],
     statement: [num(a), op(sign), num(b)],
     diagram: buildOpenLine({
       start: a,
@@ -127,10 +127,10 @@ function explain(p: Within1000Problem, model: AnswerModel): Explanation {
     caption: `${b} = ${H} + ${T} + ${B.o}`,
     timeline: beats(5),
     steps: [
-      { id: "hundreds", narration: `${sub ? "Hop back" : "Hop on"} ${H}: ${a} ${sign} ${H} = ${p1}.`, math: [num(a), op(sign), num(H), op("="), num(p1)], state: 1, answerStep: "hundreds", result: p1 },
-      { id: "tens", narration: `${sub ? "Hop back" : "Hop on"} ${T}: ${p1} ${sign} ${T} = ${p2}.`, math: [num(p1), op(sign), num(T), op("="), num(p2)], state: 2, answerStep: "tens", result: p2 },
-      { id: "ones", narration: `${sub ? "Hop back" : "Hop on"} ${B.o}: ${p2} ${sign} ${B.o} = ${r}.`, math: [num(p2), op(sign), num(B.o), op("="), num(r)], state: 3, answerStep: "ones", result: r },
-      { id: "answer", narration: `The last hop lands on the answer: ${total}.`, math: [num(a), op(sign), num(b), op("="), num(total)], state: 4, answerStep: "answer", result: total },
+      { id: "hundreds", narration: `Break ${b} into ${H}, ${T} and ${B.o}. ${sub ? "Hop back" : "Hop on"} ${H} first.`, math: [num(a), op(sign), num(H), op("="), num(p1)], state: 1, answerStep: "hundreds", result: p1 },
+      { id: "tens", narration: `${sub ? "Hop back" : "Hop on"} the tens.`, math: [num(p1), op(sign), num(T), op("="), num(p2)], state: 2, answerStep: "tens", result: p2 },
+      { id: "ones", narration: `${sub ? "Hop back" : "Hop on"} the ones.`, math: [num(p2), op(sign), num(B.o), op("="), num(r)], state: 3, answerStep: "ones", result: r },
+      { id: "answer", narration: "The last hop lands on the answer.", math: [num(a), op(sign), num(b), op("="), num(total)], state: 4, answerStep: "answer", result: total },
     ],
   };
 }
@@ -140,7 +140,7 @@ export const lesson: LessonDefinition<Within1000Problem> = {
   grade: 2,
   unit: "Adding and subtracting",
   title: "Add and subtract within 1000",
-  pre: "g2-regroup",
+  pre: "g2-hundreds",
   reference: createWithin1000(245, 132, 0),
   generate,
   restore: raw => restoreVia(raw, ["a", "b", "sub"] as const, v => createWithin1000(v.a, v.b, v.sub)),

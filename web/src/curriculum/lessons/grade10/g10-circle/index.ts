@@ -58,8 +58,8 @@ export function explainCircle(p: CircleProblem, model: AnswerModel): Explanation
     timeline: beats(3),
     steps: [
       { id: "eq", narration: "Read the circle's center and radius straight from its equation.", math: circleMath(p), state: 0 },
-      { id: "center", narration: `Flip the signs inside the parentheses: the center is ${pt(h, k)}.`, math: [text(`(${f(h)}, ${f(k)})`)], state: 1 },
-      { id: "r", narration: `The right side is r² = ${f(r * r)}, so the radius is √${f(r * r)} = ${f(r)}.`, math: [text("r"), op("="), text("√"), num(r * r), op("="), num(r)], state: 2, answerStep: "r", result: r },
+      { id: "center", narration: "Each squared part is 0 at the center, so flip the signs.", math: [text(`(${f(h)}, ${f(k)})`)], state: 1 },
+      { id: "r", narration: "The right side is r², so take its square root.", math: [text("r"), op("="), text("√"), num(r * r), op("="), num(r)], state: 2, answerStep: "r", result: r },
     ],
   };
 }

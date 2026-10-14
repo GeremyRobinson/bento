@@ -1,4 +1,4 @@
-import { answer, frac, op } from "../../../schemas/math-text";
+import { answer, frac, op, text } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import type { Rng } from "../../../generators/rng";
 import { beats, type Explanation } from "../../../../explanations/schema";
@@ -49,23 +49,27 @@ export function explainFracTimes(p: FracTimesProblem, answers: AnswerModel): Exp
     statement: [frac(a, b), op("×"), frac(c, d)],
     diagram: buildFracGrid({
       rows: b, cols: d, r: a, c,
-      beats: { grid: 0, rows: 1, cols: 2, both: 3 },
+      // both fractions and their overlap build from the start, so practice's first step has them to count from; the
+      // steps then name the rows and the columns, and count the overlap square by square
+      beats: { grid: 0, rows: 0, cols: 0, both: 0, count: 3 },
+      // lit (picture system): the rows, then the columns, then the overlap, as each step names them
+      lit: { rows: [{ from: 1, until: 1 }], cols: [{ from: 2, until: 2 }], both: [{ from: 3 }] },
       rowLabel: `${a}/${b}`, colLabel: `${c}/${d}`,
       notes: [
-        { text: `${a} of ${count(b, "row")}`, from: 1, until: 1, cls: "lbl" },
-        { text: `${c} of ${count(d, "column")}`, from: 2, until: 2, cls: "lbl acc" },
-        { text: `${N} of ${count(D, "square")}`, from: 3, until: 3, cls: "lbl" },
-        { text: simplified ? `${N}/${D} = ${simple}` : `${N}/${D} is already simplest`, from: 4, cls: "lbl acc" },
+        { text: `${a} of ${count(b, "row")}`, from: 1, until: 1, cls: "lbl pw" },
+        { text: `${c} of ${count(d, "column")}`, from: 2, until: 2, cls: "lbl pw" },
+        { text: `${N} of ${count(D, "square")}`, from: 3, until: 3, cls: "lbl pw" },
+        { text: simplified ? `${N}/${D} = ${simple}` : `${N}/${D} is already simplest`, from: 4, cls: "lbl pw" },
       ],
       alt: `A grid of ${count(b, "row")} and ${count(d, "column")}: ${count(a, "row")} and ${count(c, "column")} shaded overlap in ${N} of ${count(D, "square")}.`,
     }),
     caption: `${a}/${b} of the rows and ${c}/${d} of the columns overlap in ${N} of ${count(D, "square")}.`,
     timeline: beats(5),
     steps: [
-      { id: "rows", narration: `Cut the whole into ${count(b, "row")} and shade ${a} of them: ${a}/${b}.`, math: [frac(a, b)], state: 1 },
-      { id: "cols", narration: `Cut it into ${count(d, "column")} too and shade ${c} of them: ${c}/${d} of that part.`, math: [frac(c, d), op("×"), frac(a, b)], state: 2 },
-      { id: "across", narration: `The overlap is ${a} × ${c} = ${N} of the ${b} × ${d} = ${count(D, "square")}.`, math: [frac(a, b), op("×"), frac(c, d), op("="), frac(N, D)], state: 3, answerStep: "across", result: N },
-      { id: "simplify", narration: simplified ? `Divide top and bottom by ${gcd(N, D)}: ${simple}.` : `${N}/${D} can't be simplified.`, math: [frac(N, D), op("="), ...(F.num === 0 ? [answer("x", F.whole)] : [frac([answer("x", F.num)], [answer("x", F.den)])])], state: 4, answerStep: "simplify", result: simplifyResult },
+      { id: "rows", narration: `Cut the square into ${b} rows and shade ${a}.`, math: [frac(a, b)], state: 1 },
+      { id: "cols", narration: `Cut it into ${d} columns and shade ${c}.`, math: [frac(c, d), text(" of "), frac(a, b)], state: 2 },
+      { id: "across", narration: "The squares shaded twice are the answer.", math: [frac(a, b), op("×"), frac(c, d), op("="), frac(N, D)], state: 3, answerStep: "across", result: N },
+      { id: "simplify", narration: simplified ? `Divide the top and the bottom by ${gcd(N, D)}.` : "It can't be made simpler.", math: [frac(N, D), op("="), ...(F.num === 0 ? [answer("x", F.whole)] : [frac([answer("x", F.num)], [answer("x", F.den)])])], state: 4, answerStep: "simplify", result: simplifyResult },
     ],
   };
 }

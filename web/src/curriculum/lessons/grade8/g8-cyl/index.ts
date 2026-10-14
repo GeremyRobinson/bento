@@ -51,10 +51,10 @@ export function explainCylinder({ r, h }: CylinderProblem, answers: AnswerModel)
     }),
     timeline: beats(4),
     steps: [
-      { id: "solid", narration: `A cylinder with radius ${r} and height ${h}.`, math: mt`r = ${r}, h = ${h}`, state: 0 },
-      { id: "square", narration: `Square the radius: ${r} × ${r} = ${r2}.`, math: mt`${r}${sup("2")} = ${r2}`, state: 1, answerStep: "square", result: r2 },
-      { id: "base", narration: `The base is a circle: 3.14 × ${r} × ${r} = ${base} square units.`, math: mt`3.14 × ${r2} = ${base}`, state: 2, answerStep: "base", result: base },
-      { id: "height", narration: `Stack ${h} layers of that base: ${base} × ${h} = ${v}.`, math: mt`${base} × ${h} = ${v}`, state: 3, answerStep: "height", result: v },
+      { id: "solid", narration: "r is the radius of the circle base, and h is the height.", math: mt`r = ${r}, h = ${h}`, state: 0 },
+      { id: "square", narration: "Square the radius: multiply it by itself.", math: mt`${r}${sup("2")} = ${r2}`, state: 1, answerStep: "square", result: r2 },
+      { id: "base", narration: "The base is a circle, so multiply by 3.14 for its area.", math: mt`3.14 × ${r2} = ${base}`, state: 2, answerStep: "base", result: base },
+      { id: "height", narration: `Stack ${h} layers of that base to fill the cylinder.`, math: mt`${base} × ${h} = ${v}`, state: 3, answerStep: "height", result: v },
     ],
   };
 }
@@ -64,6 +64,7 @@ export const lesson: LessonDefinition<CylinderProblem> = withEasyStart({
   grade: 8,
   unit: "Geometry",
   title: "Volume of a cylinder",
+  pre: "g7-circarea",
   reference: createCylinder(2, 5),
   generate: rng => createCylinder(rng.int(1, 6), rng.int(2, 10)),
   restore: restoreCylinder,

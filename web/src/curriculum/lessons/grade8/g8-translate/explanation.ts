@@ -14,7 +14,7 @@ export function explainTranslate(p: TranslateProblem, model: AnswerModel): Expla
   const [across, upDown] = moveWords(p);
   return {
     heading: "Slide the point",
-    idea: ["A translation slides a point without turning it."],
+    idea: ["A translation slides a point: across changes x, and up or down changes y."],
     statement: [...ptM(x, y), text(`: ${across} and ${upDown}`)],
     caption: `Slide ${across}, then ${upDown}: ${pt(x, y)} lands on ${pt(nx, ny)}.`,
     diagram: buildPlane({
@@ -30,10 +30,10 @@ export function explainTranslate(p: TranslateProblem, model: AnswerModel): Expla
     }),
     timeline: beats(3),
     steps: [
-      { id: "start", narration: `Start at ${pt(x, y)}.`, math: ptM(x, y), state: 0 },
-      { id: "x", narration: `${dx > 0 ? "Right adds to x" : "Left subtracts from x"}: slide ${across}, so x becomes ${f(nx)}.`,
+      { id: "start", narration: "Start at the point. x is across, y is up.", math: ptM(x, y), state: 0 },
+      { id: "x", narration: `${dx > 0 ? "Right adds to x" : "Left subtracts from x"}: slide ${across}.`,
         math: [num(x), op(dx > 0 ? "+" : "−"), num(Math.abs(dx)), op("="), num(nx)], state: 1, answerStep: "x", result: nx },
-      { id: "y", narration: `${dy > 0 ? "Up adds to y" : "Down subtracts from y"}: slide ${upDown}, so y becomes ${f(ny)}. The new point is ${pt(nx, ny)}.`,
+      { id: "y", narration: `${dy > 0 ? "Up adds to y" : "Down subtracts from y"}: slide ${upDown}. It lands on ${pt(nx, ny)}.`,
         math: [num(y), op(dy > 0 ? "+" : "−"), num(Math.abs(dy)), op("="), num(ny)], state: 2, answerStep: "y", result: ny },
     ],
   };

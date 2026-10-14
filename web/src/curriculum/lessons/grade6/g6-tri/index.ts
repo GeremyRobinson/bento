@@ -66,8 +66,8 @@ export function explainTriangle(p: TriangleProblem, answers: AnswerModel): Expla
     caption: `The triangle is half of its ${b} by ${h} rectangle.`,
     timeline: beats(3),
     steps: [
-      { id: "rect", narration: `Draw the rectangle around it: ${b} × ${h} = ${R}.`, math: [num(b), op("×"), num(h), op("="), num(R)], state: 1, answerStep: "rect", result: R },
-      { id: "half", narration: `Two copies of the triangle fill the rectangle, so the triangle is half: ${A}.`, math: [num(R), op("÷"), num(2), op("="), num(A)], state: 2, answerStep: "half", result: A },
+      { id: "rect", narration: "Draw the rectangle around the triangle.", math: [num(b), op("×"), num(h), op("="), num(R)], state: 1, answerStep: "rect", result: R },
+      { id: "half", narration: "Two copies of the triangle fill it, so take half.", math: [num(R), op("÷"), num(2), op("="), num(A)], state: 2, answerStep: "half", result: A },
     ],
   };
 }

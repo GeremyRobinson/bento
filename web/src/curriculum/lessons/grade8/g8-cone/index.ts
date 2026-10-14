@@ -51,10 +51,10 @@ export function explainCone({ r, h }: ConeProblem, answers: AnswerModel): Explan
     }),
     timeline: beats(4),
     steps: [
-      { id: "solid", narration: `A cone with radius ${r} and height ${h}, inside the cylinder that just fits it.`, math: mt`r = ${r}, h = ${h}`, state: 0 },
-      { id: "base", narration: `The base is a circle: 3.14 × ${r} × ${r} = ${base} square units.`, math: mt`3.14 × ${r}${sup("2")} = ${base}`, state: 1, answerStep: "base", result: base },
-      { id: "cylinder", narration: `Stack the base ${h} high for the cylinder: ${base} × ${h} = ${cyl}.`, math: mt`${base} × ${h} = ${cyl}`, state: 2, answerStep: "cylinder", result: cyl },
-      { id: "third", narration: `The cone holds a third of that: ${cyl} ÷ 3 = ${v}.`, math: mt`${cyl} ÷ 3 = ${v}`, state: 3, answerStep: "third", result: v },
+      { id: "solid", narration: "The cone sits inside the cylinder that just fits around it.", math: mt`r = ${r}, h = ${h}`, state: 0 },
+      { id: "base", narration: "The base is a circle, so multiply by 3.14 for its area.", math: mt`3.14 × ${r}${sup("2")} = ${base}`, state: 1, answerStep: "base", result: base },
+      { id: "cylinder", narration: `Stack the base ${h} high to fill the cylinder.`, math: mt`${base} × ${h} = ${cyl}`, state: 2, answerStep: "cylinder", result: cyl },
+      { id: "third", narration: "The cone holds a third of that cylinder.", math: mt`${cyl} ÷ 3 = ${v}`, state: 3, answerStep: "third", result: v },
     ],
   };
 }
@@ -64,6 +64,7 @@ export const lesson: LessonDefinition<ConeProblem> = withEasyStart({
   grade: 8,
   unit: "Geometry",
   title: "Volume of a cone",
+  pre: "g8-cyl",
   reference: createCone(3, 4),
   generate: rng => { let r: number, h: number; do { r = rng.int(1, 6); h = rng.int(2, 12); } while ((r * r * h) % 3); return createCone(r, h); },
   restore: restoreCone,

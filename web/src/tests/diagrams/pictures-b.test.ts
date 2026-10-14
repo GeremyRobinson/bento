@@ -23,10 +23,19 @@ const shownAt = (d: SceneDiagram, beat: number) => d.items.filter(i => (i.from ?
 type Text = Extract<SceneItem, { type: "text" }>;
 const textsAt = (d: SceneDiagram, beat: number) => shownAt(d, beat).filter((i): i is Text => i.type === "text");
 const sizeOf = (cls = "") => (/\bbig\b/.test(cls) ? (/\blbl\b/.test(cls) ? 22 : 28) : /\bsm\b/.test(cls) ? 15 : /\bxs\b/.test(cls) ? 12 : 17);
+/** How far a text's own CSS moves it at the drawing's own size (--px 0): a row of lines under a picture steps down one
+ * line of text per row (area grid lineStep, 1.25 × the 20px label), while a phone-floor move (growDown) is 0 here. */
+const movedBy = (t: Text) => {
+  const m = String(t.vars?.transform ?? "").match(/translateY\(calc\(([\d.]+) \* 1\.25 \* max\(var\(--pic-label/);
+  return m ? Number(m[1]) * 25 : 0;
+};
 const boxOf = (t: Text) => {
   const size = sizeOf(t.cls), w = (t.text.length + (t.sup ? t.sup.length * 0.65 : 0)) * size * 0.6;
   const x0 = /\bend\b/.test(t.cls ?? "") ? t.x - w : /\bstart\b/.test(t.cls ?? "") ? t.x : t.x - w / 2;
-  return { x0, x1: x0 + w, y0: t.y - size / 2, y1: t.y + size / 2 };
+  // one standing on its anchor (.up) runs up from it, one hanging (.down) runs down
+  const y = t.y + movedBy(t);
+  const y0 = /\bup\b/.test(t.cls ?? "") ? y - size : /\bdown\b/.test(t.cls ?? "") ? y : y - size / 2;
+  return { x0, x1: x0 + w, y0, y1: y0 + size };
 };
 
 /** When within beat `b` a shape is on screen, in seconds: it comes in at its delay (on its own beat) and goes when it fades out. */
@@ -61,7 +70,7 @@ const badText = (d: SceneDiagram) => d.items.filter((i): i is Text => i.type ===
 const PICTURED = {
   "g1-ten": "early-frames",
   "g6-trap": "area-model",
-  "g5-order": "expression-boxes",
+  "g5-order": "order-tiles",
   "g6-expo": "expression-boxes",
   "g11-compose": "expression-boxes",
   "g12-chain": "expression-boxes",
@@ -75,7 +84,6 @@ const PICTURED = {
   "g12-power": "term-table",
   "g12-anti": "term-table",
   "g4-divide": "area-model",
-  "g5-divide": "area-model",
   "g5-multdec": "area-model",
   "g9-radical": "area-model",
   "g11-radical": "area-model",
@@ -165,15 +173,19 @@ const value = (l: AnyLesson, p: unknown, id: string) => l.answers(p).steps.find(
 const fmt = (n: number) => (n < 0 ? `−${-n}` : String(n));
 
 describe("expression-box lessons", () => {
-  it("g5-order lights the box that goes first, then collapses the boxes in order, each into the value its step finds, ending on the answer", () => {
+  it("g5-order shows the row as written, lights each group in turn, turns it into the value its step finds, and ends on one tile, the answer", () => {
     const l = lesson("g5-order");
+    const ring = (d: SceneDiagram, b: number) => shownAt(d, b).filter(i => i.type === "rect" && /\bxring\b/.test(i.cls ?? ""));
     for (const p of problemsOf(l, 30)) {
       const d = sceneOf(l, p);
-      expect(shownAt(d, 0).some(i => i.type === "rect" && /\bhlline\b/.test(i.cls ?? ""))).toBe(true);
-      expect(chipsAt(d, 0)).toHaveLength(0);
-      ["s0", "s1"].forEach((id, k) => expect(finalText(d, k + 1)).toContain(String(value(l, p, id))));
-      expect(finalText(d, 3)).toEqual(expect.arrayContaining([String(value(l, p, "s2"))]));
-      expect(chipsAt(d, 3, /\bxchip pq\b/)).toHaveLength(1);
+      // as written: nothing lit, nothing worked out (the first step asks what goes first)
+      expect(ring(d, 0)).toHaveLength(0); expect(chipsAt(d, 0)).toHaveLength(0);
+      // beats 1 to 3 each light one group
+      for (const b of [1, 2, 3]) expect(ring(d, b)).toHaveLength(1);
+      ["s0", "s1"].forEach((id, k) => expect(finalText(d, k + 2)).toContain(String(value(l, p, id))));
+      // the end: one tile, the answer, nothing lit
+      expect(chipsAt(d, 4)).toHaveLength(1); expect(ring(d, 4)).toHaveLength(0);
+      expect(finalText(d, 4)).toEqual([String(value(l, p, "s2"))]);
     }
   });
   it("g6-expo opens the power into exactly n copies of a, never a × n", () => {
@@ -188,7 +200,7 @@ describe("expression-box lessons", () => {
     for (const p of problemsOf(l, 30)) {
       const d = sceneOf(l, p), g = value(l, p, "inside"), out = value(l, p, "outside");
       const k = textsAt(d, 0).find(t => /\bxchip\b|acc/.test(t.cls ?? "") && t.from === 0 && !/muted/.test(t.cls ?? ""))!;
-      const written = d.items.find((i): i is Text => i.from === 1 && i.type === "text" && i.text === fmt(g) && !/dimmed/.test(i.cls ?? ""))!;
+      const written = d.items.find((i): i is Text => i.from === 1 && i.type === "text" && i.text === fmt(g) && !/\b(dimmed|shortout|shortgo)\b/.test(i.cls ?? ""))!;
       expect(written.y).toBeGreaterThan(k.y);
       expect(finalText(d, 2)).toContain(fmt(out));
     }
@@ -309,24 +321,18 @@ describe("area-model lessons", () => {
       expect(finalText(d, 4)).toContain(p.r ? `${p.r} left over: ${p.q} R ${p.r}` : `${p.dv * p.q} ÷ ${p.dv} = ${p.q} exactly`);
     }
   });
-  it("g5-divide fills the rest exactly, with no remainder, and joins the two widths into the answer", () => {
-    const l = lesson("g5-divide");
-    for (const p of problemsOf(l) as { dv: number; qt: number }[]) {
-      const d = sceneOf(l, p), T = p.qt - (p.qt % 10), O = p.qt % 10;
-      expect(rects(d, 3, /\bxchip\b/)).toHaveLength(0);
-      expect(finalText(d, 3)).toContain(`${T} + ${O} = ${p.qt}`);
-    }
-  });
   it("g5-multdec lays an A by B block of small pieces on whole unit squares, and names the place they count", () => {
     const l = lesson("g5-multdec"), PLACE = ["ones", "tenths", "hundredths", "thousandths"];
     for (const p of problemsOf(l) as { A: number; B: number; pa?: number; pb?: number }[]) {
       const pa = p.pa ?? 1, pb = p.pb ?? 1, x = p.A / 10 ** pa, y = p.B / 10 ** pb;
       const d = sceneOf(l, p), lines = shownAt(d, 0).filter(i => i.type === "line" && i.cls === "grid");
       const vertical = lines.filter(i => i.type === "line" && i.x1 === i.x2).length, flat = lines.length - vertical;
-      // every cut is drawn whole, or left out where its lines would run together; tenths by tenths always shows
-      expect([0, p.A - 1]).toContain(vertical);
-      expect([0, p.B - 1]).toContain(flat);
-      if (pa === 1 && pb === 1) expect([vertical, flat]).toEqual([p.A - 1, p.B - 1]);
+      // every cut is drawn whole, or left out where its lines would run together; tenths by tenths always shows. A strip
+      // taller than it is wide lies on its side (the long side runs across), so its cuts swap
+      const [across, up] = y > x ? [p.B, p.A] : [p.A, p.B];
+      expect([0, across - 1]).toContain(vertical);
+      expect([0, up - 1]).toContain(flat);
+      if (pa === 1 && pb === 1) expect([vertical, flat]).toEqual([across - 1, up - 1]);
       expect(rects(d, 0, /^ax$/)).toHaveLength(Math.ceil(x - 1e-9) * Math.ceil(y - 1e-9));
       expect(finalText(d, 0)).toContain(`${p.A} × ${p.B} = ${p.A * p.B} small pieces`);
       expect(finalText(d, 2).join(" ")).toContain(`${p.A * p.B} ${PLACE[pa + pb]} = `);
@@ -383,7 +389,8 @@ describe("tape lessons", () => {
       // it is drawn at the minimum size instead, so then every box is at least that wide
       const widths = [...segs(0), ...segs(1)].map(r => r.w);
       if (Math.min(...widths) > 20) expect(Math.abs((len(segs(0)) + 3) / (len(segs(1)) + 3) / ((p.a * p.x) / (p.b * p.y)) - 1)).toBeLessThan(0.05);
-      else expect(Math.min(...widths)).toBeGreaterThanOrEqual(14);
+      // narrow boxes keep at least 11 units once the picture system's 6-unit gap is taken out (was 14 with a 3-unit gap)
+      else expect(Math.min(...widths)).toBeGreaterThanOrEqual(11);
       expect(textsAt(d, 2).map(t => t.text)).toContain(String(p.a * p.x + p.b * p.y));
       // a letter in a box gives way to its number
       for (const t of d.items.filter((i): i is Text => i.type === "text" && (i.text === "x" || i.text === "y"))) expect(t.cls).toMatch(/a-outsoon/);
@@ -397,7 +404,17 @@ describe("columns, double line, balance and plane lessons", () => {
     for (const p of problemsOf(l) as { a: number; b: number }[]) {
       const d = sceneOf(l, p), sum = Math.round((p.a + p.b) * 100);
       const pads = [p.a, p.b].reduce((s, v) => s + 2 - (String(v).split(".")[1]?.length ?? 0), 0);
-      expect(textsAt(d, 0).filter(t => t.cls === "lbl big acc")).toHaveLength(pads);
+      // the written-in zeros are new: they wear the picture's colour (a plain lbl), not the ink of the other digits
+      // (lit while the points are lined up: that is the step)
+      expect(textsAt(d, 0).filter(t => t.cls === "lbl big lit" && t.enter === "pop")).toHaveLength(pads);
+      expect(textsAt(d, 1).filter(t => t.cls === "lbl big")).toHaveLength(pads);
+      // each beat lights the digits it works on: the whole digits, then the digits after the point
+      expect(textsAt(d, 1).filter(t => / lit$/.test(t.cls ?? "")).length).toBeGreaterThan(0);
+      expect(textsAt(d, 2).filter(t => / lit$/.test(t.cls ?? "")).length).toBeGreaterThan(0);
+      // the carry ring comes in with its 1, never empty before it
+      const ring = d.items.find(i => i.type === "rect" && i.from === 2 && i.until === 2 && i.cls === "ln2");
+      const one = d.items.find(i => i.type === "text" && i.cls === "lbl big acc" && i.from === 2 && i.enter === "pop");
+      if (one) expect(ring?.delay).toBe(one.delay);
       const answer = textsAt(d, 3).filter(t => t.cls === "lbl big acc" && t.from === 3 && t.text !== ".").sort((x, y) => x.x - y.x).map(t => t.text).join("");
       expect(answer).toBe(String(sum));
     }
@@ -406,8 +423,14 @@ describe("columns, double line, balance and plane lessons", () => {
     const l = lesson("g5-divdec");
     for (const p of problemsOf(l) as { d: number; qt: number }[]) {
       const d = sceneOf(l, p);
-      const hops = d.items.filter(i => i.type === "path" && i.cls === "ln thin pq" && i.from === 2);
+      // the hops are drawn in the picture's colour (a plain .ln), not the ink of .pq
+      const hops = d.items.filter(i => i.type === "path" && i.cls === "ln thin" && i.from === 2);
       expect(hops).toHaveLength(2 * p.qt);
+      // both end points (6 and 60) are marked from the beat the lines are matched: dot and number together
+      // (and lit on that beat: finding them is the step) (a number above its line grows up, one below grows down: .up / .down)
+      const ends = textsAt(d, 1).filter(t => /^lbl (up |down )?lit$/.test(t.cls ?? "") && (t.from ?? 0) === 1).map(t => t.text);
+      expect(ends).toEqual(expect.arrayContaining([String(p.d * p.qt)]));
+      expect(ends).toHaveLength(2);
       expect(textsAt(d, 2).map(t => t.text)).toEqual(expect.arrayContaining([String(p.qt), String(p.d * p.qt)]));
     }
   });

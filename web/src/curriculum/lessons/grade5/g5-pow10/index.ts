@@ -42,18 +42,22 @@ function explain(p: PowerOfTenProblem, model: AnswerModel): Explanation {
   const [whole, frac = ""] = f(x).split(".");
   return {
     heading: "Each zero moves the point",
-    idea: ["Times 10 makes every digit worth ten times more, so each digit moves one place left."],
+    // follows the example's power of 10 (Curriculum, grade5.md §3, 2026-10-14)
+    idea: [`Times ${m} makes each digit worth ${["ten", "a hundred", "a thousand"][k - 1]} times more, so the point hops ${WORDS[k]} ${k > 1 ? "places" : "place"} right.`],
     statement: [num(x), op("×"), num(m), op("="), text("?")],
     diagram: buildDecimalShift({
       digits: whole! + frac, from: whole!.length, to: whole!.length + k, beat: 0, moveBeat: 1,
+      // the card row is the answer's own digits: a 0 written in where the point runs past the last digit is a new card
+      // the first beat names the multiplier only: in practice it shows while the child is asked how many zeros it has
+      lead: `× ${m}`,
       label: `× ${m}: ${WORDS[k]} ${k > 1 ? "hops" : "hop"} right → ${f(ans)}`,
       alt: `The decimal point in ${f(x)} moves ${plural(k, "place")} to the right, making ${f(ans)}.`,
     }),
     timeline: beats(2),
     steps: [
-      { id: "zeros", narration: `${m} has ${plural(k, "zero")}, so the decimal point moves ${plural(k, "place")} to the right.`,
+      { id: "zeros", narration: "Each zero hops the point one place right.",
         math: [num(m), text(` has ${plural(k, "zero")}`)], state: 0, answerStep: "zeros", result: k },
-      { id: "move", narration: `Hop the point ${plural(k, "place")} right${frac.length < k ? ", writing a 0 in each empty place" : ""}: ${f(x)} × ${m} = ${f(ans)}.`,
+      { id: "move", narration: `Hop the point ${plural(k, "place")} right.${frac.length < k ? " Write a 0 in each empty place." : ""}`,
         math: [num(x), op("×"), num(m), op("="), num(ans)], state: 1, answerStep: "move", result: ans },
     ],
   };
@@ -66,8 +70,10 @@ export const lesson: LessonDefinition<PowerOfTenProblem> = {
   title: "Multiply by 10, 100, 1000",
   pre: "g4-dec",
   reference: createPowerOfTen(3.47, 2), // 3.47 × 100 = 347, the current app's example
-  // the first three: a one-digit whole part times 10
-  generate: (rng, index) => (index < 3 ? createPowerOfTen(rng.int(101, 999) / 100, 1) : createPowerOfTen(rng.int(101, 9999) / 100, rng.int(1, 3))),
+  // the first (the one Watch one plays): a one-digit whole part with tenths, times 100, so the point runs past the last
+  // digit and a 0 has to be written in, the tricky part of the lesson (Review g5 #5); the next two: times 10
+  generate: (rng, index) => (index === 0 ? createPowerOfTen((n => (n % 10 ? n : n + 1))(rng.int(11, 99)) / 10, 2)
+    : index < 3 ? createPowerOfTen(rng.int(101, 999) / 100, 1) : createPowerOfTen(rng.int(101, 9999) / 100, rng.int(1, 3))),
   restore: raw => restoreVia(raw, ["x", "k"] as const, v => createPowerOfTen(v.x, v.k)),
   display: p => [num(p.x), op("×"), num(10 ** p.k)],
   answers,

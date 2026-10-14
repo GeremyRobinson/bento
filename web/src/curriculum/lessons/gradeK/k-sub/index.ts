@@ -55,16 +55,16 @@ function explain(p: TakeAwayProblem, model: AnswerModel): Explanation {
   const { b } = p, a = expectedOf(model, "all"), left = expectedOf(model, "left");
   return {
     heading: "Take away and count",
-    idea: ["Taking away leaves fewer, and the ones that are left are the answer."],
+    idea: ["To take away, cross some out and count the rest."],
     statement: [num(a), op("−"), num(b)],
     diagram: changeDots({ start: p.a, change: b, kind: "take", beats: { start: 0, change: 1, end: 2 },
       alt: `${count(a, "dot")}. ${b} ${isAre(b)} crossed out and ${leftWords(left)}.` }),
     caption: `${a} take away ${b} leaves ${left}.`,
     timeline: beats(3),
     steps: [
-      { id: "all", narration: `Count them all: ${countUp(1, a)}. You start with **${a}**.`, math: [text("To start: "), num(a)], state: 0, answerStep: "all", result: a },
-      { id: "cross", narration: `Take away ${b}: cross out ${b === 1 ? "1 dot" : `${count(b, "dot")}`}.`, math: [num(a), op("−"), num(b)], state: 1 },
-      { id: "left", narration: left ? `Count the dots that are left: ${countUp(1, left)}. **${left}** left.` : "Every dot is crossed out. **0** left.",
+      { id: "all", narration: `Count them all: ${countUp(1, a)}.`, math: [text("To start: "), num(a)], state: 0, answerStep: "all", result: a },
+      { id: "cross", narration: `Cross out ${count(b, "dot")}.`, math: [num(a), op("−"), num(b)], state: 1 },
+      { id: "left", narration: left ? `Count the dots that are left: ${countUp(1, left)}.` : "Every dot is crossed out, so none are left.",
         math: [num(a), op("−"), num(b), op("="), num(left)], state: 2, answerStep: "left", result: left },
     ],
   };

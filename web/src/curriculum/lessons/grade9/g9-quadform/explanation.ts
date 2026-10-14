@@ -2,7 +2,7 @@ import { frac, num, op, sqrt, text } from "../../../schemas/math-text";
 import type { AnswerModel } from "../../../schemas/lesson";
 import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildPlane } from "../../../../explanations/diagrams/plane/build";
-import { expected, f, fP, parabolaFit, poly, polyText } from "../../_plane/kit";
+import { expected, f, parabolaFit, poly, polyText } from "../../_plane/kit";
 import { discriminantMath } from "./answers";
 import type { QuadFormProblem } from "./problem";
 
@@ -32,12 +32,12 @@ export function explainQuadForm(p: QuadFormProblem, model: AnswerModel): Explana
     }),
     timeline: beats(4),
     steps: [
-      { id: "eq", narration: `Here a = 1, b = ${f(b)} and c = ${f(c)}. The answers are where the graph crosses 0.`, math: quadFormMath(p), state: 0 },
-      { id: "D", narration: `Discriminant: b² − 4ac = ${b * b} − ${fP(4 * c)} = ${f(D)}. It is positive, so there are two answers.`,
+      { id: "eq", narration: `Here a = 1, b = ${f(b)} and c = ${f(c)}. The answers are where the graph crosses the x-axis.`, math: quadFormMath(p), state: 0 },
+      { id: "D", narration: `Find b² − 4ac first. It's positive, so there are two answers.`,
         math: [...discriminantMath(p), op("="), num(D)], state: 1, answerStep: "D", result: D },
-      { id: "root", narration: `√${D} = ${f(s)}. The two answers are ${f(s)} apart, one on each side of x = −b ÷ 2 = ${f(h)}.`,
+      { id: "root", narration: `The answers sit ${f(s)} apart, centered on x = ${f(h)}.`,
         math: [sqrt(D), op("="), num(s)], state: 2, answerStep: "root", result: s },
-      { id: "roots", narration: `(${f(-b)} + ${f(s)}) ÷ 2 = ${f(hi)} and (${f(-b)} − ${f(s)}) ÷ 2 = ${f(lo)}.`,
+      { id: "roots", narration: `Add the root to −b, then take it away, and halve each.`,
         math: [text("x"), op("="), frac([num(-b), op("±"), num(s)], [num(2)]), op("="), num(hi), text(" or "), num(lo)], state: 3, answerStep: "roots", result: p.r1 },
     ],
   };

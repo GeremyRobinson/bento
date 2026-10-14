@@ -74,7 +74,11 @@ function answers(p: SymProblem): AnswerModel {
 const alt = (p: SymProblem) => (p.kind === 0 ? `A ${SHAPES[p.shape]!.name} with a dashed line across it.` : `A ${SHAPES[p.shape]!.name}.`);
 
 function explain(p: SymProblem, model: AnswerModel): Explanation {
-  const sh = SHAPES[p.shape]!, s = model.steps[0]!;
+  const sh = SHAPES[p.shape]!, s = model.steps[0]!, ok = s.slots[0]!.expected === 0, n = sh.lines.length;
+  // the fold or the count in words; the math line is the one word or number picked
+  const said = s.id === "fold"
+    ? ok ? "Every corner lands on a corner." : p.shape === 1 ? "Folded on a diagonal, the corners stick out." : "Parts stick out past the other half."
+    : n > 0 ? "Try every fold: across, up and down, corner to corner." : "No fold makes the two halves match.";
   return {
     heading: "Lines of symmetry",
     idea: ["A line of symmetry folds a shape into two halves that match."],
@@ -86,7 +90,7 @@ function explain(p: SymProblem, model: AnswerModel): Explanation {
     timeline: beats(2),
     steps: [
       { id: "look", narration: p.kind === 0 ? "Fold the paper on the dashed line." : "Find every way to fold it so the halves match.", math: words("Look at it."), state: 0 },
-      { id: s.id, narration: s.explain, math: s.work, state: 1, answerStep: s.id, result: s.slots[0]!.expected! },
+      { id: s.id, narration: said, math: s.work, state: 1, answerStep: s.id, result: s.slots[0]!.expected! },
     ],
   };
 }
@@ -114,5 +118,5 @@ export const lesson: LessonDefinition<SymProblem> = {
   picture: p => buildFold({ poly: SHAPES[p.shape]!.poly, ...(p.kind === 0 ? { line: candidates(p.shape)[p.line]! } : {}), rotate: TURNS[p.turn]!, alt: alt(p) }),
   answers,
   explain,
-  pre: "g4-lines",
+  pre: "g3-quads",
 };

@@ -63,8 +63,8 @@ export function explainVecMag(p: VecMagProblem, model: AnswerModel): Explanation
     timeline: beats(3),
     steps: [
       { id: "v", narration: `v goes ${f(Math.abs(x))} ${x > 0 ? "right" : "left"} and ${f(Math.abs(y))} ${y > 0 ? "up" : "down"}.`, math: vecMagMath(p), state: 0 },
-      { id: "sum", narration: `Those are the legs of a right triangle. Square and add: ${f(x * x)} + ${f(y * y)} = ${f(S)}.`, math: [...sq(x), op("+"), ...sq(y), op("="), num(S)], state: 1, answerStep: "sum", result: S },
-      { id: "m", narration: `The length is the square root: √${f(S)} = ${f(m)}.`, math: [text("√"), num(S), op("="), num(m)], state: 2, answerStep: "m", result: m },
+      { id: "sum", narration: "Those are the legs of a right triangle, so square each and add.", math: [...sq(x), op("+"), ...sq(y), op("="), num(S)], state: 1, answerStep: "sum", result: S },
+      { id: "m", narration: "The arrow is the long side, so take the square root.", math: [text("√"), num(S), op("="), num(m)], state: 2, answerStep: "m", result: m },
     ],
   };
 }

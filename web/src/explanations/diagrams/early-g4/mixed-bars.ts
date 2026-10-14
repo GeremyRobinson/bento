@@ -2,6 +2,7 @@
 // Below, the wholes come together, then the pieces; a bar the pieces fill up is traded for one more whole.
 import type { SceneDiagram } from "../scene/schema";
 import { frame, t, type Draft } from "../geo/kit";
+import { growRows } from "../scene/picture-system";
 
 export interface MixedBarsSpec {
   d: number;
@@ -47,7 +48,8 @@ export function buildMixedBars(s: MixedBarsSpec): SceneDiagram {
 
   // together: the wholes, then the pieces, then a full bar of pieces becomes a whole
   const y = 2 * ROW + 40, W = s.first.w + s.second.w;
-  items.push({ type: "line", x1: -70, y1: y - 30, x2: (W + 2) * (U + GAP), y2: y - 30, cls: "ax thin", from: s.beats.wholes, enter: "draw" } as Draft);
+  // the rule sits just under the two numbers, so "1 whole" over the traded bar has the room above that bar to itself
+  items.push({ type: "line", x1: -70, y1: ROW + H + 10, x2: (W + 2) * (U + GAP), y2: ROW + H + 10, cls: "ax thin", from: s.beats.wholes, enter: "draw" } as Draft);
   for (let k = 0; k < W; k++) whole(k * (U + GAP), y, k >= s.first.w, s.beats.wholes, k * 0.06);
   label(y, "together", s.beats.wholes, "sm");
   const S = s.first.n + s.second.n, x = W * (U + GAP);
@@ -55,10 +57,19 @@ export function buildMixedBars(s: MixedBarsSpec): SceneDiagram {
   if (S > d) bar(x + U + GAP, y, 0, S - d, s.beats.pieces);
   if (s.beats.regroup != null && S >= d) {
     items.push({ type: "rect", x: x - 4, y: y - 4, w: U + 8, h: H + 8, rx: 9, cls: "ln2", from: s.beats.regroup, enter: "pop" } as Draft);
-    items.push(t(x + U / 2, y - 17, "1 whole", "sm acc", { from: s.beats.regroup, enter: "rise", delay: 0.2 }));
+    items.push(t(x + U / 2, y - 8, "1 whole", "sm acc up", { from: s.beats.regroup, enter: "rise", delay: 0.2 }));
   }
   // the answer sits centred under the bars it adds up
   const end = x + (S > d ? 2 * U + GAP : U);
   items.push(t(end / 2, y + H + 34, s.total, "lbl acc", { from: s.beats.total, enter: "rise" }));
+  // on a phone the row labels grow with the label floor and would sit on each other ("2 7/8" on "3 6/8"): each row moves
+  // down by part of what the labels above it grew, the answer under the bars by a little more (Review b4fa4b3)
+  const rowOf = (yy: number) => (yy < ROW - 10 ? 0 : yy < y - 40 ? 0.5 : yy < y + H + 20 ? 1 : 1.5);
+  for (const it of items) {
+    const yy = "y1" in it ? (it as { y1: number }).y1 : (it as { y: number }).y;
+    // the rule keeps to the middle of the room between the second number's label and "1 whole" as both grow
+    const k = it.type === "line" ? 0.8 : rowOf(yy);
+    if (k) (it as { vars?: Record<string, string> }).vars = { ...((it as { vars?: Record<string, string> }).vars ?? {}), ...growRows(k) };
+  }
   return frame("mixed-bars", items, s.alt, 14, { w: 320 });
 }

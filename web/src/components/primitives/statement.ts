@@ -123,12 +123,31 @@ export function partsLook(d?: DiagramModel): PartsLook {
 
 /**
  * The statement once the problem is solved (Review v43 item 11): its unknown, the "?" after "=", fills with the
- * answer, which then reads as part of the equation. Only a single number fills it; anything else stays as it was.
+ * answer, which then reads as part of the equation: a number, or the answer as its boxes show it (a fraction, a mixed
+ * number). Anything else stays as it was.
  */
-export function fillUnknown(m: MathText, answer: number | null | undefined): MathText {
-  if (answer == null || !Number.isFinite(answer)) return m;
-  let i = -1;
-  m.forEach((t, k) => { if (t.t === "text" && t.v.trim() === "?") i = k; });
-  if (i < 1 || m[i - 1]?.t !== "op" || (m[i - 1] as { v: string }).v !== "=") return m;
-  return [...m.slice(0, i), answerTok("solved", answer), ...m.slice(i + 1)];
+export function fillUnknown(m: MathText, answer: number | MathText | null | undefined): MathText {
+  if (answer == null || (typeof answer === "number" && !Number.isFinite(answer))) return m;
+  const ans = typeof answer === "number" ? [answerTok("solved", answer)] : answer;
+  const after = m.findIndex(t => t.t === "op" && t.v === "=");
+  if (after < 0) return m;
+  // the "?" after "=": on its own ("= ?"), leading a unit ("= ? inches", "= ? : 12"), or over a fraction bar ("= ?/8")
+  for (let i = m.length - 1; i > after; i--) {
+    const t = m[i]!;
+    if (t.t === "text" && t.v.trim() === "?") return [...m.slice(0, i), ...ans, ...m.slice(i + 1)];
+    if (t.t === "text" && /^\s*\?\s/.test(t.v)) {
+      const [, lead, rest] = /^(\s*)\?(.*)$/s.exec(t.v)!;
+      return [...m.slice(0, i), ...(lead ? [text(lead!)] : []), ...ans, text(rest!), ...m.slice(i + 1)];
+    }
+    if (t.t === "frac" && ans.length === 1 && ans[0]!.t === "answer" && t.n.length === 1 && t.n[0]!.t === "text" && t.n[0]!.v.trim() === "?") {
+      return [...m.slice(0, i), { ...t, n: ans }, ...m.slice(i + 1)];
+    }
+  }
+  return m;
+}
+
+/** The stage's problem before it's solved (v2 spec P3): a trailing "= ?" is left off, and fillUnknown adds "= answer" once solved. */
+export function hideUnknown(m: MathText): MathText {
+  const n = m.length, last = m[n - 1], eq = m[n - 2];
+  return n > 2 && last?.t === "text" && last.v.trim() === "?" && eq?.t === "op" && eq.v === "=" ? m.slice(0, n - 2) : m;
 }

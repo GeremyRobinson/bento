@@ -169,11 +169,11 @@ function explain(p: TwoStepProblem, model: AnswerModel): Explanation {
     timeline: beats(3),
     steps: [
       { id: s1.id, state: 1, answerStep: s1.id, result: first, math: [num(a), op(ops[0]), num(kind < 2 ? b : c), op("="), num(first)],
-        narration: kind < 2 ? `First the ${w.groups}: ${a} ${w.groups} of ${b} is ${a} × ${b} = ${first} ${w.things}.` : `First take away: ${a} − ${c} = ${first} ${w.things} left.` },
+        narration: kind < 2 ? `${w.name} has ${a} ${w.groups} of ${b} ${w.things}. Equal groups, so multiply.` : `${w.name} has ${a} ${w.things} and ${w.lose} ${c}. Take those away first.` },
       { id: s2.id, state: 2, answerStep: s2.id, result: second, math: [num(first), op(ops[1]), num(kind < 2 ? c : b), op("="), num(second)],
-        narration: kind === 0 ? `Then ${c} go away: ${first} − ${c} = ${second}. ${w.name} has ${second === 1 ? `1 ${w.thing}` : `${second} ${w.things}`} left.`
-          : kind === 1 ? `Then add the ${c} more: ${first} + ${c} = ${second}. ${w.name} has ${second === 1 ? `1 ${w.thing}` : `${second} ${w.things}`} in all.`
-          : `Then share them into ${b} equal ${w.groups}: ${first} ÷ ${b} = ${second} in each ${w.group}.` },
+        narration: kind === 0 ? `${w.they} gives ${c} away, so subtract.`
+          : kind === 1 ? `${w.they} has ${c} more too, so add.`
+          : `Share the rest equally into ${b} ${w.groups}.` },
     ],
   };
 }
@@ -188,7 +188,6 @@ export const lesson: LessonDefinition<TwoStepProblem> = {
   generate: generateTwoStep,
   restore: raw => restoreVia(raw, ["kind", "a", "b", "c", "who"] as const, v => createTwoStep(v.kind, v.a, v.b, v.c, v.who)),
   display: p => story(p).short,
-  displayNote: p => `${story(p).text} ${story(p).ask}`,
   lead: p => `${story(p).text} ${story(p).ask}`,
   answers,
   explain,

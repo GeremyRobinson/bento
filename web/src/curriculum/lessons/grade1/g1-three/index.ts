@@ -92,10 +92,10 @@ function explain(p: ThreeProblem, model: AnswerModel): Explanation {
     caption: why === "ten" ? `${x} and ${y} make 10. 10 and ${z} make ${sum}.` : `${x} + ${y} = ${first}, then ${first} + ${z} = ${sum}.`,
     timeline: beats(3),
     steps: [
-      { id: "groups", narration: `Three groups: ${p.a}, ${p.b} and ${p.c}.`, math: [num(p.a), op("+"), num(p.b), op("+"), num(p.c)], state: 0 },
-      { id: "first", narration: why === "ten" ? `${x} and ${y} make **10**. Add those first.` : why === "double" ? `${x} and ${y} is a double: **${first}**.` : `${x} + ${y} = **${first}**.`,
+      { id: "groups", narration: "Look for two numbers that make 10, or a double.", math: [num(p.a), op("+"), num(p.b), op("+"), num(p.c)], state: 0 },
+      { id: "first", narration: why === "ten" ? "These two make 10, so add them first." : why === "double" ? "These two are a double, so add them first." : "No ten and no double, so add the first two.",
         math: [num(x), op("+"), num(y), op("="), num(first)], state: 1, answerStep: "first", result: first },
-      { id: "last", narration: `${first} and ${z} more make **${sum}**.`, math: [num(first), op("+"), num(z), op("="), num(sum)], state: 2, answerStep: "last", result: sum },
+      { id: "last", narration: "Now add the number that's left.", math: [num(first), op("+"), num(z), op("="), num(sum)], state: 2, answerStep: "last", result: sum },
     ],
   };
 }

@@ -67,9 +67,9 @@ export function explainFoil(p: FoilProblem, answers: AnswerModel): Explanation {
     caption: `x² + ${polyText([[b, "x"]])} + ${polyText([[a, "x"]])} + ${f(last)}`.replace(/\+ −/g, "− ") + ` = ${result}`,
     timeline: beats(4),
     steps: [
-      { id: "middle", narration: `Outer: x × ${f(b)}. Inner: ${f(a)} × x. Together ${polyText([[mid, "x"]])}.`, math: [...cx(b), op("+"), ...cx(a, true), op("="), ...cx(mid)], state: 1, answerStep: "middle", result: mid },
-      { id: "last", narration: `Last: ${pf(a)} × ${pf(b)} = ${f(last)}.`, math: [...numP(a), op("×"), ...numP(b), op("="), num(last)], state: 2, answerStep: "last", result: last },
-      { id: "answer", narration: `First is x². So it's ${result}.`, math: [...binom(a), ...binom(b), op("="), text(result)], state: 3, answerStep: "answer", result: mid },
+      { id: "middle", narration: `Outer is x × ${pf(b)}, inner is ${pf(a)} × x. Both are x terms.`, math: [...cx(b), op("+"), ...cx(a, true), op("="), ...(mid === 0 ? [num(0)] : cx(mid))], state: 1, answerStep: "middle", result: mid },
+      { id: "last", narration: `Last: multiply the two numbers.`, math: [...numP(a), op("×"), ...numP(b), op("="), num(last)], state: 2, answerStep: "last", result: last },
+      { id: "answer", narration: `First is x × x = x². Put all the parts together.`, math: [...binom(a), ...binom(b), op("="), text(result)], state: 3, answerStep: "answer", result: mid },
     ],
   };
 }
@@ -79,6 +79,7 @@ export const lesson: LessonDefinition<FoilProblem> = withEasyStart({
   grade: 9,
   unit: "Polynomials and quadratics",
   title: "Multiply binomials",
+  pre: "g7-distribute",
   reference: createFoil(3, 4),
   generate: rng => generateFoil(rng),
   restore: raw => { const r = readNumbers(raw, ["a", "b"] as const); try { return r && createFoil(r.a, r.b); } catch { return null; } },

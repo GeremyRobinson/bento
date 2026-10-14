@@ -17,6 +17,8 @@ export const PRACTICE_AGAIN = "Practice again";
 export const UP_NEXT = "Up next";
 export const REVIEW = "Review";
 export const TODAYS_REVIEW = "Today's review";
+/** the short check after a lesson that says whether it's learned */
+export const SKILL_CHECK = "Skill check";
 export const FACT_SPRINT = "Fact sprint";
 export const SHOW_ME = "Show me";
 export const CONTENTS = "Contents";
@@ -39,6 +41,8 @@ export const SETTING = {
 
 /** how long a lesson takes, as the plan and the book show it */
 export const LESSON_MINUTES = 8;
+/** a new lesson with its skill check after it (v2 model: "Lesson and skill check · about 10 minutes") */
+export const LESSON_CHECK_MINUTES = 10;
 export const minLabel = (n: number) => `${n} min`;
 
 /** a chapter or grade's progress line: "6 lessons", "2 of 6 done", "Finished" */

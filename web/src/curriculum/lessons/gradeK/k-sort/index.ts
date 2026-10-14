@@ -96,10 +96,10 @@ function explain(p: SortProblem, model: AnswerModel): Explanation {
     caption: `The ${kinds[right]!.many} have the ${word}.`,
     timeline: beats(4),
     steps: [
-      { id: "sort", narration: `Everything is mixed up. Look at the ringed one: ${kinds[pickOf(p).group]!.looks.toLowerCase()}, so it goes with the ${kinds[pickOf(p).group]!.many}.`, math: words("Mixed up"), state: 0, answerStep: "sort", result: pickOf(p).group },
+      { id: "sort", narration: `${kinds[pickOf(p).group]!.looks}, like the ${kinds[pickOf(p).group]!.many}.`, math: words("Mixed up"), state: 0, answerStep: "sort", result: pickOf(p).group },
       { id: "rows", narration: "Put the things that match together, one row for each kind.", math: words("Sorted"), state: 1 },
-      ...p.counts.map((n, i) => ({ id: `count${i}`, narration: `${countUp(1, n)}: **${count(n, kinds[i]!.one, kinds[i]!.many)}**.`, math: [text(`${cap(kinds[i]!.many)}: `), num(n)], state: 2, answerStep: `count${i}`, result: n })),
-      { id: "compare", narration: `The ${p.ask ? "shortest" : "longest"} row has the ${word}: the **${kinds[right]!.many}**.`, math: [text(`The ${kinds[right]!.many} have the ${word}.`)], state: 3, answerStep: "compare", result: right },
+      ...p.counts.map((n, i) => ({ id: `count${i}`, narration: `Touch each ${kinds[i]!.one}: ${countUp(1, n)}.`, math: [text(`${cap(kinds[i]!.many)}: `), num(n)], state: 2, answerStep: `count${i}`, result: n })),
+      { id: "compare", narration: `The ${p.ask ? "shortest" : "longest"} row has the ${word}.`, math: [text(`The ${kinds[right]!.many} have the ${word}.`)], state: 3, answerStep: "compare", result: right },
     ],
   };
 }

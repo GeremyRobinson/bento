@@ -82,9 +82,9 @@ function explain({ n, more }: TenMoreProblem, model: AnswerModel): Explanation {
     caption: `Only the tens change: ${t} becomes ${newT}. The ${countOf(o, "one")} ${verb(o, "stays", "stay")}.`,
     timeline: beats(3),
     steps: [
-      { id: "tens", narration: `Find ${n} on the chart. It has **${t}** tens.`, math: count(t, "ten", "tens"), state: 0, answerStep: "tens", result: t },
-      { id: "newtens", narration: `10 ${w} is one ten ${w}: ${t} ${sign} 1 = **${newT}** tens. On the chart, jump one row ${more ? "down" : "up"}.`, math: [num(t), op(sign), num(1), op("="), num(newT)], state: 1, answerStep: "newtens", result: newT },
-      { id: "number", narration: `You land on **${res}**. The ones digit stayed ${o}.`, math: [num(n), op(sign), num(TEN), op("="), num(res)], state: 2, answerStep: "number", result: res },
+      { id: "tens", narration: `Find ${n} on the chart. Its first digit is the tens.`, math: count(t, "ten", "tens"), state: 0, answerStep: "tens", result: t },
+      { id: "newtens", narration: `10 ${w} is one ten ${w}. Jump one row ${more ? "down" : "up"}.`, math: [num(t), op(sign), num(1), op("="), num(newT)], state: 1, answerStep: "newtens", result: newT },
+      { id: "number", narration: `The ones digit stays ${o}. Only the tens change.`, math: [num(n), op(sign), num(TEN), op("="), num(res)], state: 2, answerStep: "number", result: res },
     ],
   };
 }
@@ -106,7 +106,6 @@ export const lesson: LessonDefinition<TenMoreProblem> = {
   },
   restore: raw => restoreVia(raw, ["n", "more"] as const, v => createTenMore(v.n, v.more)),
   display: p => [num(p.n), op(p.more ? "+" : "−"), num(TEN)],
-  displayNote: p => `What is 10 ${words(p.more)} than ${p.n}?`,
   picture: p => buildTensOnes({ tens: tensOf(p.n), ones: onesOf(p.n), alt: `${p.n} as tens rods and ones cubes` }),
   answers: p => singularWork(answers(p)),
   explain,

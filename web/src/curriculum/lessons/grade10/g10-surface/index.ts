@@ -48,10 +48,10 @@ export function explainSurface(p: SurfaceProblem, answers: AnswerModel): Explana
     caption: "Three different faces, each one twice.",
     timeline: beats(5),
     steps: [
-      { id: "top", narration: `Top and bottom are ${l} by ${w}: ${T} each.`, math: [num(l), op("×"), num(w), op("="), num(T)], state: 1, answerStep: "top", result: T },
-      { id: "front", narration: `Front and back are ${l} by ${h}: ${F} each.`, math: [num(l), op("×"), num(h), op("="), num(F)], state: 2, answerStep: "front", result: F },
-      { id: "side", narration: `The two sides are ${w} by ${h}: ${S} each.`, math: [num(w), op("×"), num(h), op("="), num(S)], state: 3, answerStep: "side", result: S },
-      { id: "total", narration: `Each face has a twin you can't see, so double the three: ${total}.`, math: [num(2), op("×"), text("("), ...plusChain([T, F, S]), text(")"), op("="), num(total)], state: 4, answerStep: "total", result: total },
+      { id: "top", narration: "Top and bottom: length times width.", math: [num(l), op("×"), num(w), op("="), num(T)], state: 1, answerStep: "top", result: T },
+      { id: "front", narration: "Front and back: length times height.", math: [num(l), op("×"), num(h), op("="), num(F)], state: 2, answerStep: "front", result: F },
+      { id: "side", narration: "The two sides: width times height.", math: [num(w), op("×"), num(h), op("="), num(S)], state: 3, answerStep: "side", result: S },
+      { id: "total", narration: "Each face has a twin you can't see, so double the three.", math: [num(2), op("×"), text("("), ...plusChain([T, F, S]), text(")"), op("="), num(total)], state: 4, answerStep: "total", result: total },
     ],
   };
 }
@@ -61,11 +61,12 @@ export const lesson: LessonDefinition<SurfaceProblem> = withEasyStart({
   grade: 10,
   unit: "Area and volume",
   title: "Surface area of a box",
+  pre: "g5-volume",
   reference: createSurface(2, 3, 4),
   generate: rng => generateSurface(rng),
   restore: raw => { const r = readNumbers(raw, ["l", "w", "h"] as const); try { return r && createSurface(r.l, r.w, r.h); } catch { return null; } },
   display: p => [num(p.l), op("×"), num(p.w), op("×"), num(p.h)],
-  displayNote: () => "Find the surface area: the total area of all 6 faces.",
+  lead: ({ l, w, h }) => `A box is **${l}** by **${w}** by **${h}**. What is the total area of its 6 faces?`,
   answers: surfaceAnswers,
   explain: explainSurface,
 });

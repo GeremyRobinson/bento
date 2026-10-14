@@ -96,10 +96,10 @@ function explain(p: TimeProblem, model: AnswerModel): Explanation {
     caption: "Short hand: hours. Long hand: minutes.",
     timeline: beats(5),
     steps: [
-      { id: "hour", narration: m ? `The short hand has passed ${h} but not reached the next number. The hour is ${h}.` : `The short hand points right at ${h}.`, math: [text("Hour: "), num(h)], state: 1, answerStep: "hour", result: h },
-      { id: "number", narration: `The long hand points to ${K}.`, math: [text("Long hand: "), num(K)], state: 2, answerStep: "number", result: K },
-      { id: "minutes", narration: m ? `Count by 5s up to ${K}: ${Array.from({ length: K }, (_, i) => 5 * (i + 1)).join(", ")}. That's ${count(m, "minute")}.` : "On 12 it is 0 minutes past the hour, so it is o'clock.", math: [text("Minutes: "), num(m)], state: 3, answerStep: "minutes", result: m },
-      { id: "time", narration: `The time is **${shown}**.`, math: [text(shown)], state: 4, answerStep: "time", result: h },
+      { id: "hour", narration: m ? `The short hand is past ${h}, but not yet at the next number.` : `The short hand points right at ${h}.`, math: [text("Hour: "), num(h)], state: 1, answerStep: "hour", result: h },
+      { id: "number", narration: "Follow the long hand out to the edge.", math: [text("Long hand: "), num(K)], state: 2, answerStep: "number", result: K },
+      { id: "minutes", narration: m ? `Count by 5s up to it: ${Array.from({ length: K }, (_, i) => 5 * (i + 1)).join(", ")}.` : "On 12, a new hour has just begun.", math: [text("Minutes: "), num(m)], state: 3, answerStep: "minutes", result: m },
+      { id: "time", narration: "Hour first, then minutes.", math: [text(shown)], state: 4, answerStep: "time", result: h },
     ],
   };
 }

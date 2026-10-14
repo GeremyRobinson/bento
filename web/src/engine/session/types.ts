@@ -27,6 +27,8 @@ export interface Feedback {
   pop?: "big" | "star";
   /** hints still left in the lesson, shown muted under a hint */
   left?: number;
+  /** a test step that was missed: the answer is shown, and it wears the incorrect mark */
+  missed?: boolean;
 }
 
 export interface Mistake {
@@ -41,6 +43,8 @@ export interface Mistake {
   kind: string;
   cat: MistakeCategory | "concept";
   msg: string;
+  /** what the child was told to look at, in their words ("Look again at the lit strip: ..."); Done's Watch for line */
+  say?: string;
   rushed: boolean;
 }
 
@@ -61,12 +65,19 @@ export interface Plan {
   misses: number;
 }
 
+/** one problem's own state, kept while the child works on another (the problem picker's memory) */
+export type Parked = Pick<PracticeSession, "step" | "work" | "collapsed" | "skipThis" | "tier" | "values" | "active" | "pick" | "misses" | "hinted" | "prob" | "feedback">;
+
 export interface PracticeSession {
   mode: "practice" | "test" | "review";
   key: string;
   title: string;
   items: RunItem[];
   i: number;
+  /** the problems already finished, by index: a set can be done in any order (G 2026-10-08, the problem picker) */
+  done?: number[];
+  /** problems left part-way through, by index, so going back finds them where they were (practice and review only) */
+  parked?: Record<number, Parked>;
   step: number;
   work: WorkLine[];
   /** this problem is being done as one final answer */

@@ -42,7 +42,7 @@ function answers({ a, t }: Mult10Problem): AnswerModel {
           [a + t, "Added instead of multiplied", `${count(a, "group")} of ${t} is much more than ${a} + ${t}.`],
         ],
         hint: `Each ten is 10 ones. How much are ${count(f, "ten")}? Count by 10s, or think of ${f} in the tens place.`,
-        explain: `${count(f, "ten")} = ${f * 10}: ${f} moves to the tens place, and 0 ones fill the ones place.`,
+        explain: `${count(f, "ten")} = ${f * 10}: write ${f}, then a 0 for the ones.`,
       }),
     ],
     finalParts: [-1],
@@ -77,7 +77,7 @@ function explain(p: Mult10Problem, model: AnswerModel): Explanation {
       { id: "fact", state: 1, answerStep: "fact", result: f, math: [num(a), op("×"), num(m), op("="), num(f)],
         narration: `Count the tens: ${count(a, "row")} of ${m} make ${count(f, "ten")}.` },
       { id: "tens", state: 2, answerStep: "tens", result: P, math: [num(a), op("×"), num(t), op("="), num(P)],
-        narration: `Each ten is worth 10, so ${count(f, "ten")} is ${P}. Count by ${t}s down the rows to check.` },
+        narration: `Each ten is worth 10. Count by ${t}s down the rows to check.` },
     ],
   };
 }

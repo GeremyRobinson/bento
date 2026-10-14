@@ -53,7 +53,7 @@ function explain({ a, b }: Add20Problem, model: AnswerModel): Explanation {
   const hops: Hop[] = counted.map((v, i): Hop => ({ from: v - 1, to: v, label: String(v), beat: 1, delay: 0.5 * i, start: false }));
   return {
     heading: "Start big, count on",
-    idea: ["You can add in any order, so starting with the bigger number means fewer hops."],
+    idea: ["Start at the bigger number, so you have fewer to count."],
     statement: [num(a), op("+"), num(b)],
     diagram: buildNumberLine({
       min, max, hops, labelAt: [big],
@@ -63,8 +63,8 @@ function explain({ a, b }: Add20Problem, model: AnswerModel): Explanation {
     caption: `${big} and ${small} more is ${sum}.`,
     timeline: beats(2),
     steps: [
-      { id: "start", narration: a === big ? `${big} is the bigger number. Start there.` : `${b} + ${a} is the same as ${a} + ${b}, so start with the bigger number, **${big}**.`, math: [text("Start at "), num(big)], state: 0, answerStep: "start", result: big },
-      { id: "count-on", narration: `Hop ${small} times, one for each: ${counted.join(", ")}. You land on **${sum}**.`, math: [num(a), op("+"), num(b), op("="), num(sum)], state: 1, answerStep: "count-on", result: sum },
+      { id: "start", narration: a === big ? `${big} is the bigger number. Start there.` : `${b} + ${a} is the same, so start with the bigger number.`, math: [text("Start at "), num(big)], state: 0, answerStep: "start", result: big },
+      { id: "count-on", narration: `Hop ${small} times: ${counted.join(", ")}.`, math: [num(a), op("+"), num(b), op("="), num(sum)], state: 1, answerStep: "count-on", result: sum },
     ],
   };
 }

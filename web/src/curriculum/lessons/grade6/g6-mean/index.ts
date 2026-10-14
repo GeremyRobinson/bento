@@ -51,10 +51,10 @@ export function explainMean({ v }: MeanProblem, answers: AnswerModel): Explanati
     }),
     timeline: beats(4),
     steps: [
-      { id: "bars", narration: `Each number is a bar: ${v.join(", ")}.`, math: listOf(v), state: 0 },
-      { id: "sum", narration: `Put them all together: ${v.join(" + ")} = ${T}.`, math: mt`${listOf(v, "+")} = ${T}`, state: 1, answerStep: "sum", result: T },
+      { id: "bars", narration: "Each number is a bar.", math: listOf(v), state: 0 },
+      { id: "sum", narration: "Put them all together.", math: mt`${listOf(v, "+")} = ${T}`, state: 1, answerStep: "sum", result: T },
       { id: "count", narration: `There are ${n} numbers to share it between.`, math: mt`${n}`, state: 2, answerStep: "count", result: n },
-      { id: "divide", narration: `Share ${T} out equally: ${T} ÷ ${n} = ${mean}. Every bar ends up the same height.`, math: mt`${T} ÷ ${n} = ${mean}`, state: 3, answerStep: "divide", result: mean },
+      { id: "divide", narration: "Share the total out equally. Every bar ends up the same height.", math: mt`${T} ÷ ${n} = ${mean}`, state: 3, answerStep: "divide", result: mean },
     ],
   };
 }
@@ -64,6 +64,7 @@ export const lesson: LessonDefinition<MeanProblem> = {
   grade: 6,
   unit: "Statistics",
   title: "Find the mean",
+  pre: "g4-divide",
   reference: createMean([4, 6, 8]),
   generate: rng => {
     const n = rng.int(4, 6);

@@ -48,9 +48,9 @@ function explain(p: SciProblem, model: AnswerModel): Explanation {
     }),
     timeline: beats(3),
     steps: [
-      { id: "start", narration: `A whole number's decimal point sits at its end: ${withCommas(n)} is ${digits}.`, math: [text(withCommas(n))], state: 0 },
-      { id: "places", narration: `Move the point to just after the first digit, ${digits[0]}. It moves ${e} places.`, math: [num(e), text(" places")], state: 1, answerStep: "places", result: e },
-      { id: "write", narration: `The front number is ${f(front)}, between 1 and 10, and the power of 10 is the ${e} places: ${f(front)} × 10${"⁰¹²³⁴⁵⁶⁷⁸⁹"[e]}.`,
+      { id: "start", narration: "A whole number's point sits at its end, after the last digit.", math: [text(withCommas(n))], state: 0 },
+      { id: "places", narration: `Move the point left until it sits just after the ${digits[0]}.`, math: [num(e), text(" places")], state: 1, answerStep: "places", result: e },
+      { id: "write", narration: "The front number is between 1 and 10. Each place moved is one × 10.",
         math: [num(front), op("×"), num(10), sup(e)], state: 2, answerStep: "write", result: front },
     ],
   };
@@ -61,6 +61,7 @@ export const lesson: LessonDefinition<SciProblem> = withEasyStart({
   grade: 8,
   unit: "Exponents and roots",
   title: "Scientific notation",
+  pre: "g5-pow10",
   reference: createSci(45, 4), // 45,000 = 4.5 × 10⁴, the current app's example
   generate: rng => createSci(rng.int(11, 99), rng.int(3, 7)),
   restore: raw => restoreVia(raw, ["c", "e"] as const, v => createSci(v.c, v.e)),

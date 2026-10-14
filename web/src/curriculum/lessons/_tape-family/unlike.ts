@@ -139,24 +139,29 @@ export function unlikeAnswers(p: UnlikeFractionsProblem): AnswerModel {
 const count = (k: number, d: number) => `${k} ${pieceName(d, k !== 1)}`;
 
 /**
- * Two fraction bars, a/b and c/d. Beat 1 marks where both would be cut into L pieces; beats 2 and 3 re-cut each bar
- * into L pieces (the shaded amount does not move); beat 4 puts the pieces together (or takes C of them away);
- * beat 5 names the answer in lowest terms.
+ * Two fraction bars, a/b and c/d. Beat 1 (the LCD) cuts both into L pieces: the knife draws the cuts, then the pieces
+ * come apart along them. Beats 2 and 3 count each bar's shaded pieces as its fraction is rewritten over L (a bar
+ * already in L pieces has the knife run down the cuts it already has). Beat 4 puts the pieces together (or takes C of
+ * them away), counting what is left; beat 5 names the answer in lowest terms.
  */
 export function unlikePicture(p: UnlikeFractionsProblem) {
   const { a, b, c, d, L, A, C, S } = p, sub = p.op === "−";
-  const rows: TapeRow[] = [
-    { length: 1, parts: [{ count: b, from: 0 }, { count: L, from: 2 }], ticks: [{ count: L, from: 1, until: 1, dashed: true }],
-      fills: [{ a: 0, b: a / b, tone: "on", until: 1 }, { a: 0, b: a / b, tone: "on", from: 2 }],
-      label: [{ text: `${a}/${b}`, until: 1 }, { text: `${A}/${L}`, from: 2 }] },
-    { length: 1, parts: [{ count: d, from: 0 }, { count: L, from: 3 }], ticks: [{ count: L, from: 1, until: 2, dashed: true }],
-      fills: [{ a: 0, b: c / d, tone: "two", until: 2 }, { a: 0, b: c / d, tone: "two", from: 3 }],
-      label: [{ text: `${c}/${d}`, until: 2 }, { text: `${C}/${L}`, from: 3 }] },
-  ];
+  // counted one by one, spread over most of a beat
+  const tick = (n: number) => Math.round(Math.min(0.3, 1.2 / Math.max(1, n)) * 100) / 100;
+  // lit (picture system): both bars at the LCD, then each bar as its own step rewrites it
+  const bar = (n: number, den: number, N: number, at: number, tone: "on" | "two"): TapeRow => ({
+    lit: [{ from: 1, until: 1 }, { from: at, until: at }], length: 1, parts: den === L ? den : [{ count: den, from: 0 }, { count: L, from: 1, delay: 0.7 }],
+    ticks: [den === L ? { count: L, from: at, until: at, cut: true, all: true } : { count: L, from: 1, until: 1, cut: true }],
+    fills: [{ a: 0, b: n / den, tone }],
+    each: [{ text: i => `${i + 1}`, from: at, only: i => i < N, stagger: tick(N) }],
+    label: [{ text: `${n}/${den}`, until: at - 1 }, { text: `${N}/${L}`, from: at }],
+  });
+  const rows: TapeRow[] = [bar(a, b, A, 2, "on"), bar(c, d, C, 3, "two")];
   const F = finalForm(S, L), changes = !(F.whole === 0 && F.den === L);
   const answerTotal = changes ? [{ text: `= ${mixedLabel(S, L)}`, from: 5, acc: true }] : [];
   if (sub) {
-    rows.push({ length: 1, parts: L, from: 4, fills: [{ a: 0, b: S / L, tone: "on" }, { a: S / L, b: A / L, tone: "cut" }],
+    rows.push({ lit: [{ from: 4 }], length: 1, parts: L, from: 4, fills: [{ a: 0, b: S / L, tone: "on" }, { a: S / L, b: A / L, tone: "cut" }],
+      each: [{ text: i => `${i + 1}`, from: 4, only: i => i < S, stagger: tick(S) }],
       label: [{ text: `${S}/${L}`, acc: true }], total: answerTotal });
   } else {
     const wholes = Math.ceil(S / L);
@@ -166,11 +171,13 @@ export function unlikePicture(p: UnlikeFractionsProblem) {
         ...(on[1]! > on[0]! ? [{ a: on[0]! / L, b: on[1]! / L, tone: "on" as const }] : []),
         ...(acc[1]! > acc[0]! ? [{ a: acc[0]! / L, b: acc[1]! / L, tone: "two" as const }] : []),
       ];
-      rows.push({ length: 1, parts: L, from: 4, fills, label: w === 0 ? [{ text: `${S}/${L}`, acc: true }] : [], total: w === wholes - 1 ? answerTotal : [] });
+      rows.push({ lit: [{ from: 4 }], length: 1, parts: L, from: 4, fills, each: [{ text: i => `${w * L + i + 1}`, from: 4, only: i => w * L + i < S, stagger: tick(S), lead: w * L * tick(S) }], label: w === 0 ? [{ text: `${S}/${L}`, acc: true }] : [], total: w === wholes - 1 ? answerTotal : [] });
     }
   }
-  return buildTape({
+  return buildTape({ tall: true,
     rows,
+    // the second fraction is told apart from the first (picture system: violet only for a second quantity)
+    two: true,
     alt: `Fraction bars for ${a}/${b} ${p.op} ${c}/${d}: both cut into ${pieceName(L)}, ${A}/${L} ${p.op} ${C}/${L} = ${S}/${L}${changes ? ` = ${mixedLabel(S, L)}` : ""}.`,
   });
 }
@@ -187,9 +194,9 @@ export function explainUnlike(lesson: "add" | "sub" | "mix") {
     const { a, b, c, d, L, A, C, S } = p, sub = p.op === "−";
     const Lx = expectedOf(model.steps, "lcd"), A2 = expectedOf(model.steps, "first"), C2 = expectedOf(model.steps, "second");
     const g = gcd(S, L), F = finalForm(S, L);
-    const simple = S >= L ? `${count(S, L)} is ${mixedLabel(S, L)}: every ${countOf(L, "piece")} make one whole.`
-      : g > 1 ? `Divide the top and the bottom by ${g}: ${S}/${L} = ${mixedLabel(S, L)}.`
-      : `${S}/${L} is already as simple as it gets.`;
+    const simple = S >= L ? `Every ${countOf(L, "piece")} make one whole.`
+      : g > 1 ? `Divide the top and the bottom by ${g}.`
+      : "It's already as simple as it gets.";
     return {
       heading: HEADINGS[lesson],
       idea: IDEAS[lesson],
@@ -199,14 +206,14 @@ export function explainUnlike(lesson: "add" | "sub" | "mix") {
       timeline: beats(6),
       steps: [
         { id: "lcd", state: 1, answerStep: "lcd", result: Lx, math: [text("LCD of "), num(b), text(" and "), num(d), text(" is "), num(Lx)],
-          narration: `The pieces are different sizes. ${Lx} is the smallest number both ${b} and ${d} go into, so cut both bars into ${pieceName(Lx)}.` },
+          narration: `Both ${b} and ${d} go into ${Lx}, so cut both bars into ${pieceName(Lx)}.` },
         { id: "first", state: 2, answerStep: "first", result: A2, math: [frac(a, b), op("="), frac(A2, L), muted(`(× ${L / b})`)],
-          narration: `${b} × ${L / b} = ${L}, so ${a} × ${L / b} = ${A2}: ${a}/${b} is the same amount as ${A2}/${L}.` },
+          narration: `Each ${pieceName(b, false)} is ${count(L / b, L)}.` },
         { id: "second", state: 3, answerStep: "second", result: C2, math: [frac(c, d), op("="), frac(C2, L), muted(`(× ${L / d})`)],
-          narration: `${d} × ${L / d} = ${L}, so ${c} × ${L / d} = ${C2}: ${c}/${d} is the same amount as ${C2}/${L}.` },
+          narration: `Each ${pieceName(d, false)} is ${count(L / d, L)}.` },
         { id: sub ? "subtract" : "add", state: 4, answerStep: sub ? "subtract" : "add", math: [frac(A, L), op(p.op), frac(C, L), op("="), frac(S, L)],
-          narration: sub ? `Same-size pieces now: take ${C} away from ${A}. ${S === 1 ? `1/${L} is` : `${count(S, L)} are`} left, and the bottom stays ${L}.`
-            : `Same-size pieces now: ${A} + ${C} = ${count(S, L)}. The bottom stays ${L}.` },
+          narration: sub ? `Same-size pieces now, so take away. The bottom stays ${L}.`
+            : `Same-size pieces now, so add the tops. The bottom stays ${L}.` },
         { id: "simplify", state: 5, answerStep: "simplify", ...(F.num === 0 ? { result: F.whole } : {}), math: [frac(S, L), op("="), ...mixedMath(S, L)], narration: simple },
       ],
     };

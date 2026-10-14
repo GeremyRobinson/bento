@@ -2,6 +2,7 @@
 // tests/diagrams/algebra.test.ts still replays every recorded try for these lessons and allows only the change named here.
 export const deviations: Record<string, Partial<Record<string, string>>> = {
   "g8-exp": {
+    pre: "g6-expo: the rules count how many x's are multiplied, so they need what an exponent means (curriculum/specs/v2/grade8.md §1, Review 2026-10-13)",
     checks: "For x^(a+b) ÷ x^b the current app used −1 as a stand-in slip when (a+b) ÷ b isn't whole, so typing −1 said \"Divided the exponents\". The rebuild only names that slip when dividing the exponents really gives a whole number; −1 now gets the ordinary \"Not quite\" hint. Every other try is judged the same.",
   },
   "g11-ratexp": {

@@ -62,7 +62,7 @@ function answers({ hour, minute }: TimeProblem): AnswerModel {
         hint: half ? "The long hand has gone halfway around. An hour is 60 minutes: what is half of that?" : "Long hand at the top, on 12, means 0 minutes: o'clock.",
         explain: half ? `The long hand at ${longAt} is halfway around: ${count(HALF, "minute")}.` : "The long hand at 12 means 0 minutes.",
       }),
-      { ...time, explain: `${count(hour, "hour")}${half ? ` and ${count(minute, "minute")}` : ""} is written ${timeText(hour, minute)}.`, work: timeWork },
+      { ...time, explain: `${half ? `Half past ${hour}` : `${hour} o'clock`} is written ${timeText(hour, minute)}.`, work: timeWork },
     ],
     finalParts: [-1],
   };
@@ -83,9 +83,9 @@ function explain({ hour, minute }: TimeProblem, model: AnswerModel): Explanation
     caption: half ? `Half past ${h} is ${shown}.` : `${h} o'clock is ${shown}.`,
     timeline: beats(3),
     steps: [
-      { id: "hour", narration: half ? `The short hand is halfway between ${h} and ${next}. It has passed **${h}**, so the hour is ${h}.` : `The short hand points right at **${h}**.`, math: [text("Hour: "), num(h)], state: 0, answerStep: "hour", result: h },
-      { id: "minute", narration: half ? `The long hand has gone halfway around, to 6. That's **${m}** minutes.` : `The long hand is at the top, on 12. That's **${m}** minutes.`, math: [text("Minutes: "), num(m)], state: 1, answerStep: "minute", result: m },
-      { id: "time", narration: half ? `${count(h, "hour")} and ${count(m, "minute")}: **${shown}**, half past ${h}.` : `${count(h, "hour")} and no minutes: **${shown}**, ${h} o'clock.`, math: [num(h), text(`:${twoDigits(m)}`)], state: 2, answerStep: "time", result: h },
+      { id: "hour", narration: half ? `The short hand is between ${h} and ${next}. It has passed ${h}.` : "Find the short hand. It points right at the hour.", math: [text("Hour: "), num(h)], state: 0, answerStep: "hour", result: h },
+      { id: "minute", narration: half ? "The long hand has gone halfway around, to 6." : "The long hand is at the top, on 12.", math: [text("Minutes: "), num(m)], state: 1, answerStep: "minute", result: m },
+      { id: "time", narration: half ? `We say half past ${h}.` : `We say ${h} o'clock.`, math: [num(h), text(`:${twoDigits(m)}`)], state: 2, answerStep: "time", result: h },
     ],
   };
 }

@@ -5,6 +5,7 @@
 import { buildAreaGrid } from "../../../../explanations/diagrams/area-model/grid";
 import type { SceneDiagram, SceneItem } from "../../../../explanations/diagrams/scene/schema";
 import { r1 } from "../../../../explanations/diagrams/scene/helpers";
+import { PIC } from "../../../../explanations/diagrams/scene/picture-system";
 
 /** Grade 4's third part colour is rose (too close to "wrong"), so the two columns take its first two. */
 const CT = 0, CO = 1;
@@ -36,12 +37,12 @@ export function divisionAreaPicture(o: { n: number; dv: number; T: number; O: nu
   // beat 1: the part still to fill is labelled with what is left
   items.push(lbl((xm + xr) / 2, (y0 + y1) / 2, `${left}`, "lbl muted", 1, 0.4, 1));
   // beat 3: the two widths join under the rectangle into the answer
-  const yb = y1 + 10;
+  const yb = y1 + PIC.gap.area / 2; // the bracket sits one area gap under the parts
   items.push({ type: "path", d: `M${r1(x0 + 2)} ${r1(yb)} v8 H${r1(xr - 2)} v-8`, cls: "ln thin pq", from: 3, enter: "draw" });
   // the remainder: r unit squares stacked beside the rectangle, against a dashed column of dv that they cannot fill
   let right = xr;
   if (hasR) {
-    const s = g.height / dv, xs = xr + 14;
+    const s = g.height / dv, xs = xr + PIC.gap.area / 2; // one area gap from the last part (parts sit half a gap inside)
     right = xs + s;
     items.push({ type: "rect", x: r1(xs), y: r1(y0), w: r1(s), h: r1(g.height), rx: 3, cls: "pend", from: 4, enter: "fade" });
     for (let k = 0; k < r!; k++) {

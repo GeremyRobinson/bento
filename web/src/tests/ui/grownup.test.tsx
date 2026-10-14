@@ -27,60 +27,64 @@ const report: SessionReport = {
 const progress: Partial<Progress> = {
   grade: 5, chosen: true, done: 2, lessons: { "g5-mult2": 2 },
   scores: { "g5-mult2": scored(2, t) },
+  checks: { "g5-mult2": { last: 2, best: 2, date: t, due: t + 864e5, passes: 0 } },
   log: [
     { key: "g5-mult2", mode: "practice", title: LESSON, date: t, level: 2, total: 4, hints: 1, shown: 0, cats: { "Lost the place value": 2, "Off by one": 1 }, rushed: 0 },
     { key: "g5-mult2", mode: "practice", title: LESSON, date: lastWeek, level: 1, total: 6, hints: 3, shown: 2, cats: {}, rushed: 0 },
   ],
 };
 
-const openPage = () => { fireEvent.click(screen.getByRole("button", { name: /^My Obento:/ })); tap("Open the report ›"); };
+// the person button opens Me, whose Stuck shelf ends with the way to the grown-up page
+const openPage = () => { fireEvent.click(screen.getByRole("button", { name: "Me" })); tap(/^For the grown-up/); };
 
 describe("the grown-up page", () => {
-  it("with no history: a calm page that says what will show, and that it stays on this device", () => {
+  it("with no history: three calm cards, and Back steps to Me", () => {
     renderApp();
     openPage();
-    expect(screen.getByRole("heading", { level: 1, name: "For the grown-up" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 2, name: "Nothing to show yet." })).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "Nothing to show yet." })).toBeInTheDocument();
-    expect(screen.getByText("Everything here stays on this device.")).toBeInTheDocument();
-    expect(screen.getByText("On this device")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /problems$/ })).toBeNull();
-    // the island names the page and the grade, and steps back to My Bento
-    expect(screen.getByRole("button", { name: "Contents. You're on For the grown-up" })).toHaveTextContent("My Obento · 5th grade");
-    tap("Back to My Obento");
-    expect(screen.getByRole("button", { name: "Open the report ›" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Are they doing the work\? 0 min, this week$/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Is it sticking\? 0 learned, out of \d+ lessons$/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Where can I help? Nothing yet, Finished lessons show up here" })).toBeInTheDocument();
+    // the island names the page and steps back to Me
+    const place = within(screen.getAllByRole("banner").find(b => b.classList.contains("o-island"))!);
+    expect(place.getByText("Me · on this device")).toBeInTheDocument();
+    expect(place.getByText("For the grown\u2011up")).toBeInTheDocument();
+    tap("Back");
+    expect(screen.getByRole("button", { name: /For the grown-up/ })).toBeInTheDocument();
   });
 
-  it("with history: this week, the patterns, a worked example, scores by chapter, hints and a thing to try", () => {
+  it("with history: open a question, then switch along the bar to the others", () => {
     renderApp(progress, { "g5-mult2": report });
     openPage();
-    // this week: time from the saved run, lessons from the log (last week's run counts for neither)
-    const week = within(screen.getByRole("list", { name: "This week" }));
-    expect(week.getAllByRole("listitem").map(li => li.textContent)).toEqual(["10m Time this week", "1Lessons this week", "0 of 4 chaptersAt Proficient 3+"]);
+    // this week's time comes from the saved run; a usual week from the weeks before it that had time
+    fireEvent.click(screen.getByRole("button", { name: /^Are they doing the work\? 10 min, this week/ }));
+    expect(screen.getByRole("heading", { level: 2, name: "10 minutes this week" })).toBeInTheDocument();
+    const bar = within(screen.getByRole("tablist", { name: "Three questions" }));
+    expect(bar.getByRole("tab", { name: "Doing the work, 10 min" })).toHaveAttribute("aria-selected", "true");
 
-    // patterns, most problems wrong first, with wrong / tries counted in problems
-    const rows = screen.getAllByRole("button", { name: /problems$/ });
-    expect(rows.map(r => r.getAttribute("aria-label"))).toEqual([
-      `Lost the place value, ${LESSON}: 2 of 4 problems`, `Off by one, ${LESSON}: 1 of 4 problems`]);
-    expect(rows[0]).toHaveAttribute("aria-current", "true");
-
-    // the worked example: the detail is labelled by its heading; the wrong step wears ✗, the right steps ✓
-    const detail = screen.getByRole("region", { name: "Lost the place value" });
-    expect(within(detail).getByText("2 of 4 problems")).toBeInTheDocument();
-    expect(within(detail).getAllByRole("img", { name: "Wrong" })).toHaveLength(1);
-    expect(within(detail).getAllByRole("img", { name: "Right" }).length).toBeGreaterThanOrEqual(1);
-    expect(detail.querySelector(".gu-s.bad strong")).toHaveTextContent("141");
-
-    // picking another pattern swaps the detail
-    fireEvent.click(rows[1]!);
-    expect(screen.getByRole("heading", { level: 2, name: "Off by one" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: `Off by one, ${LESSON}: 1 of 4 problems` })).toHaveAttribute("aria-current", "true");
-
-    // scores by chapter with the app's words, hints over every saved session, one thing to try, privacy
-    expect(screen.getAllByText("2 · Approaching").length).toBeGreaterThan(0);
-    expect(screen.getByText("4 hints in 2 sessions. 2 steps filled in with Show me.")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 3, name: "Do one like it together." })).toBeInTheDocument();
+    // where to help: the most common mistake, wrong beside right, hints, and privacy
+    fireEvent.click(bar.getByRole("tab", { name: "Where to help, 1 thing" }));
+    expect(screen.getByRole("heading", { level: 2, name: LESSON })).toBeInTheDocument();
+    const mistakes = within(screen.getByRole("region", { name: "Mistakes they keep making" }));
+    expect(mistakes.getByText("141")).toBeInTheDocument();
+    expect(mistakes.getByText("1410")).toBeInTheDocument();
+    expect(within(screen.getByRole("region", { name: "Hints and checks" })).getByText("4 hints")).toBeInTheDocument();
     expect(screen.getByText("Everything here stays on this device.")).toBeInTheDocument();
+
+    // is it sticking: scores by chapter in the app's words
+    fireEvent.click(bar.getByRole("tab", { name: /^Is it sticking, / }));
+    expect(screen.getAllByText("Approaching · 2 of 4").length).toBeGreaterThan(0);
+  });
+});
+
+describe("one score everywhere", () => {
+  // Review 81e53ef: the grown-up page read the practice score while Grades and Done read the skill check
+  it("the grown-up page's chapter score is the latest skill check, the same as the Grades tab", () => {
+    const check = { last: 3, best: 4, date: t, due: t + 7 * 864e5, passes: 1 };
+    renderApp({ ...progress, scores: { "g5-mult2": scored(4, t) }, checks: { "g5-mult2": check } } as Partial<Progress>, { "g5-mult2": report });
+    openPage();
+    fireEvent.click(screen.getByRole("button", { name: /^Is it sticking\? / }));
+    expect(screen.getAllByText("Proficient · 3 of 4").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Advanced · 4 of 4")).toBeNull();
   });
 });
 
@@ -93,7 +97,7 @@ describe("what the page works out", () => {
   });
 
   it("a chapter's score is its lessons' average rounded down, and untouched chapters have none", () => {
-    const ch = chapterScores({ ...(progress as Progress), scores: { "g5-mult2": scored(4, t), "g5-order": scored(3, t) } }, 5);
+    const ch = chapterScores({ ...(progress as Progress), checks: { "g5-mult2": { last: 4, best: 4, date: t, due: t, passes: 1 }, "g5-order": { last: 3, best: 3, date: t, due: t, passes: 1 } } }, 5);
     const withScores = ch.filter(c => c.score != null);
     expect(withScores.length).toBeGreaterThan(0);
     for (const c of withScores) expect(c.score).toBe(Math.floor(c.lessons.reduce((a, l) => a + l.score, 0) / c.lessons.length));

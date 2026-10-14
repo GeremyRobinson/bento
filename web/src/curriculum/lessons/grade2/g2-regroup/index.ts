@@ -70,9 +70,9 @@ export function explainRegroup(p: RegroupProblem, answers: AnswerModel): Explana
     caption: `${count(O, "one")} are too many for one place: trade ten of them for a ten.`,
     timeline: beats(5),
     steps: [
-      { id: "ones", narration: `Ones first: ${ao} + ${bo} = ${O}.`, math: [num(ao), op("+"), num(bo), op("="), num(O)], state: 1, answerStep: "ones", result: O },
-      { id: "regroup", narration: `${O} ones is too many for the ones place. Trade 10 of them for 1 ten rod: ${left} one${left === 1 ? " is" : "s are"} left, and the new ten moves to the tens.`, math: [num(O), op("="), num(10), op("+"), num(left)], state: 2, answerStep: "regroup", result: left },
-      { id: "tens", narration: `Tens: ${at} + ${bt} + the new ten = ${T}.`, math: [num(at), op("+"), num(bt), op("+"), num(1), op("="), num(T)], state: 3, answerStep: "tens", result: T },
+      { id: "ones", narration: "Add the ones first.", math: [num(ao), op("+"), num(bo), op("="), num(O)], state: 1, answerStep: "ones", result: O },
+      { id: "regroup", narration: "Too many ones! Trade 10 of them for 1 ten.", math: [num(O), op("="), num(10), op("+"), num(left)], state: 2, answerStep: "regroup", result: left },
+      { id: "tens", narration: "Add the tens, and the new ten too.", math: [num(at), op("+"), num(bt), op("+"), num(1), op("="), num(T)], state: 3, answerStep: "tens", result: T },
       { id: "answer", narration: `${count(T, "ten")} and ${left} one${left === 1 ? "" : "s"} is ${sum}.`, math: [num(a), op("+"), num(b), op("="), num(sum)], state: 4, answerStep: "answer", result: sum },
     ],
   };

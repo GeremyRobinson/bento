@@ -1,25 +1,22 @@
-import { Pill } from "../components/primitives/Pill";
+import { ProblemView } from "../components/practice/ProblemView";
 import { useEffect, useMemo, useState } from "react";
 import { useApp } from "../app/AppState";
 import { gradeOf } from "../curriculum/grades";
 import { requireLesson } from "../curriculum/registry";
-import { HELP_TIERS, tierFor } from "../engine/adaptive-help/policy";
-import { LEVELS } from "../engine/mastery/levels";
 import { lastScore } from "../engine/mastery/progress";
-import { when } from "../app/format";
 import { Diagram } from "../components/diagrams/Diagram";
 import { BuildUp } from "../components/BuildUp";
 import type { Rng } from "../curriculum/generators/rng";
 import type { AnyLesson } from "../curriculum/schemas/lesson";
-import { Chevron } from "../components/primitives/icons";
-import { FitScreen } from "../components/screen/Screen";
-import { MathLine, Rich } from "../components/primitives/MathLine";
-import { AskLine } from "../components/primitives/AskLine";
+import { MathLine, pictureSettlesIn, Rich } from "../components/primitives/MathLine";
+import { Marks } from "../components/Masters";
 import { dressStatement, partsLook, toneMath, tonesOf } from "../components/primitives/statement";
-import { ScoreChip } from "../components/primitives/Score";
 import type { Explanation } from "../explanations/schema";
 
-const PLAY_MS = 1800;
+/** the model's Watch one beat */
+const PLAY_MS = 1300;
+/** once a beat's picture has come in, how long it stays to be read before the next beat */
+const READ_MS = 500;
 import { reduceMotion } from "../app/transition";
 import { spendHandOff, takeHandOff } from "../app/preview";
 import { readAloudOn, readSettings, speak } from "../app/settings";
@@ -51,7 +48,7 @@ export const beatState = (beatAt: number, at: number) => (beatAt < at ? "done" :
  * Each "Next" moves one state along the timeline; the picture, the highlighted beat and the dots follow it.
  */
 export function Learn({ lessonId }: { lessonId: string }) {
-  const { progress, reports, go, startLesson, deps } = useApp();
+  const { progress, startLesson, deps } = useApp();
   const lesson = requireLesson(lessonId);
   // every visit opens on a fresh problem; the reference problem is only the fallback
   const fresh = () => firstExample(lesson, deps().rng);
@@ -61,7 +58,8 @@ export function Learn({ lessonId }: { lessonId: string }) {
   useEffect(() => spendHandOff(lesson.id), [lesson.id]);
   const [shownFor, setShownFor] = useState(lesson.id);
   const [at, setAt] = useState(0);
-  const [playing, setPlaying] = useState(false);
+  // it plays on its own as soon as it opens (v2): a child watches one solved before trying
+  const [playing, setPlaying] = useState(true);
   if (shownFor !== lesson.id) { setShownFor(lesson.id); setExample(opening()); setAt(0); setPlaying(false); }
 
   const ex: Explanation = useMemo(() => lesson.explain(example, lesson.answers(example)), [lesson, example]);
@@ -74,19 +72,24 @@ export function Learn({ lessonId }: { lessonId: string }) {
   const readAloud = readAloudOn(readSettings(progress.settings), lesson.grade);
   useEffect(() => {
     if (!readAloud) return;
-    const beat = ex.steps.find(s => s.state === at);
-    const text = at === 0 ? `${ex.heading}. ${toPlainText(ex.statement)}` : beat ? `${toPlainText(beat.math)}. ${beat.narration.replace(/[*_]/g, "")}` : "";
+    // every line that appears on this beat (several can share one, and state-0 lines show with the problem)
+    const lines = ex.steps.filter(s => s.state === at).map(b => `${toPlainText(b.math)}. ${b.narration.replace(/[*_]/g, "")}`);
+    const text = [at === 0 ? `${ex.heading}. ${toPlainText(ex.statement)}` : "", ...lines].filter(Boolean).join(" ");
     if (text) speak(text);
   }, [at, ex, readAloud]);
 
   useEffect(() => {
     if (!playing) return;
     if (finished) { setPlaying(false); return; }
-    const t = setTimeout(() => setAt(a => Math.min(last, a + 1)), PLAY_MS);
+    // a beat lasts the model's beat, or until the picture's parts for it have all come in and can be read (a beat cut short
+    // would blink its hops or its ring out half drawn), whichever is longer
+    const stage = document.querySelector(".v-learn .v-stage");
+    const settle = stage ? pictureSettlesIn(stage) : 0;
+    const t = setTimeout(() => setAt(a => Math.min(last, a + 1)), Math.max(PLAY_MS, settle ? settle + READ_MS : 0));
     return () => clearTimeout(t);
   }, [playing, at, finished, last]);
 
-  const sc = lastScore(progress, lesson.id), rep = reports[lesson.id], tier = tierFor(sc);
+  const sc = lastScore(progress, lesson.id);
   const low = sc != null && sc <= 1;
 
   const step = (d: 1 | -1) => { setPlaying(false); setAt(a => Math.max(0, Math.min(last, a + d))); };
@@ -109,82 +112,43 @@ export function Learn({ lessonId }: { lessonId: string }) {
     return () => { removeEventListener("keydown", onKey); document.removeEventListener("touchstart", onStart); document.removeEventListener("touchend", onEnd); };
   });
 
-  const now = ex.steps.find(st => st.state === at);
   // the picture starts from its first beat and only ever builds forward on Play; showing the finished picture first
   // made every Play un-build it in reverse before building it again (G 2026-10-06: the glitch at the start of most
   // diagrams). Without motion, playing jumps straight to the end.
   const shownAt = reduceMotion() && playing ? last : at;
+  // v2 (G 2026-10-13): the same workspace as practice. The picture builds on the stage while the steps write themselves
+  // on the right, one worked line at a time; then Watch again or Try one
+  // every worked line is there from the start, the ones still to come faint (v2 spec L3, like the model); each lights up
+  // on its beat, and a state-0 line is part of the starting picture
+  const lines = ex.steps;
+  // the step bar's marks: one per worked line, the newest solid and long
+  const shown = lines.filter(st => st.state <= shownAt).length;
   return (
-    <FitScreen className={`lscreen parts-${look}`}>
-      {/* the brief intro: what this picture is about, then the steps that explain it, each one tied to the picture */}
-      <section className="lintro">
-        {/* one name per lesson (Review v43 item 12): the island carries the chapter and page; the heading is the
-            lesson's name, and the explanation's own heading becomes the line under it */}
-        {sc != null && <p className="k">Last time <ScoreChip n={sc} /></p>}
-        <h1>{lesson.title}</h1>
-        {ex.heading && ex.heading !== lesson.title && <p className={`lsub${/[=²³√ⁿ₀-₉]/.test(ex.heading) ? " formula" : ""}`}>{ex.heading}</p>}
-        {ex.idea?.slice(0, 2).map((t, i) => <p key={i} className="idea"><Rich text={t} /></p>)}
-        <ol className="beats" aria-live="polite">
-          {ex.steps.map((st, i) => (
-            <li key={st.id} className="beat" data-state={beatState(st.state, at)}>
-              <button disabled={st.state === at} onClick={() => { setPlaying(false); setAt(st.state); }} aria-label={`Go to step ${i + 1}`}>
-                <span className="badge">{i + 1}</span>
-                <span className="say"><MathLine math={toneMath(st.math, tones)} /><span><Rich text={st.narration} tones={tones} /></span></span>
-              </button>
-            </li>
+    <div className={`o-state prac v-prac v-learn parts-${look}`}>
+      <section className="o-panel v-stage" aria-label="Problem">
+        <div className="v-prob pprob"><ProblemView lessonId={lesson.id} problem={example} story={false} solved={finished} part="text" /></div>
+        {ex.diagram && (
+          <div className="o-art v-ppic"><div className="viz"><Diagram diagram={ex.diagram} timeline={ex.timeline} at={shownAt} fit /></div></div>
+        )}
+      </section>
+      <section className="o-panel v-solve v-lside" aria-label="Watch one">
+        <div className="v-steps"><span className="n">Watch one</span><Marks n={lines.length} on={Math.max(0, shown - 1)} now={shown - 1} /></div>
+        {ex.idea?.[0] && <p className="v-idea"><Rich text={ex.idea[0]} /></p>}
+        {/* every worked line is laid out from the start; each one rises in on its beat (the model's chips) */}
+        <ol className="v-wl" aria-live="polite">
+          {lines.map(st => (
+            <li key={st.id} className={st.state > shownAt ? "later" : undefined} aria-hidden={st.state > shownAt || undefined}>
+              <MathLine math={toneMath(st.math, tones)} /><small><Rich text={st.narration} tones={tones} /></small></li>
           ))}
         </ol>
-        {finished && <p className="lhelp">That's the whole problem. Your turn.</p>}
         {low && <BuildUp lessonId={lesson.id} />}
-        {sc != null && <p className="lhelp">Help in practice: <b>{HELP_TIERS[tier]}</b></p>}
-        {rep && <button className="tlink" onClick={() => go({ name: "report", key: rep.key })}>Last time: {LEVELS[rep.level]}, {when(rep.date)} ›</button>}
-      </section>
-      {/* the hero: the problem and its picture, as big as the screen allows */}
-      <figure className="lshero">
-        <div className="lmath"><AskLine math={ex.statement} /><MathLine math={statement} keep /></div>
-        {ex.diagram && (
-          <div className={ex.diagram.kind === "chain" ? "lpic flow" : "lpic"}>
-            <div className="viz"><Diagram diagram={ex.diagram} timeline={ex.timeline} at={shownAt} fit /></div>
-          </div>
-        )}
-        {/* on a narrow screen only the step being shown sits under the picture: its math on one line, the words under it
-            (the math left out when the words already say it). Every step is laid out in the same cell, so the box is as
-            tall as the longest one and the picture doesn't resize from step to step. */}
-        <div className="lnow" aria-hidden>
-          {ex.caption && <p className={now ? undefined : "on"}><span><Rich text={ex.caption} /></span></p>}
-          {/* at rest, with no caption to show, the first step waits there muted, so the row always has a purpose */}
-          {ex.steps.map((st, i) => (
-            <p key={st.id} className={st === now ? "on" : !now && !ex.caption && i === 0 ? "on ahead" : undefined}>
-              {!saysMath(st.narration, st.math) && <MathLine math={toneMath(st.math, tones)} />}
-              <span><Rich text={st.narration} tones={tones} /></span>
-            </p>
-          ))}
+        <div className="o-row v-lbtns">
+          {/* the model's two buttons, from the start (no Show all): Watch again plays a fresh one from its first beat */}
+          <button className="o-btn" onClick={() => { setExample(fresh()); setAt(0); setPlaying(true); }}>Watch again</button>
+          <button className="o-btn fill" onClick={() => startLesson(lesson.id)}>Try one</button>
         </div>
-        {ex.caption && <figcaption className="caption muted"><Rich text={ex.caption} /></figcaption>}
-      </figure>
-      {/* the controls float under it all: back a step, where you are, and the one thing to do next */}
-      <div className="lctl">
-        <button className="icon" disabled={at === 0} onClick={() => step(-1)} aria-label="Back a step"><Chevron dir="left" /></button>
-        <span className="ldots" aria-label={`Step ${Math.max(1, ex.steps.findIndex(st => st.state === at) + 1)} of ${ex.steps.length}`}>
-          {ex.steps.map(st => <i key={st.id} className={beatState(st.state, at)} />)}
-        </span>
-        {finished ? (
-          <>
-            <Pill onClick={() => { setExample(fresh()); setAt(0); }}>Show another</Pill>
-            <Pill go onClick={() => startLesson(lesson.id)}>Your turn ›</Pill>
-          </>
-        ) : (
-          <>
-            <Pill onClick={() => { setPlaying(false); setAt(last); }}>Show all</Pill>
-            {/* straight to the first practice problem, without watching to the end (the end's "Your turn ›" does the same) */}
-            <Pill className="try" onClick={() => startLesson(lesson.id)}>Try one</Pill>
-            {!playing && at === 0
-              ? <Pill go onClick={() => { setAt(1); setPlaying(true); }}>Play</Pill>
-              : <Pill go onClick={() => { setPlaying(false); setAt(a => Math.min(last, a + 1)); }}>Next</Pill>}
-          </>
-        )}
-      </div>
+      </section>
       <span className="visually-hidden">{gradeOf(lesson.grade).name}</span>
-    </FitScreen>
+    </div>
   );
 }

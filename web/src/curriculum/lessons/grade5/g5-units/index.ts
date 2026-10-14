@@ -90,14 +90,19 @@ function answers(p: UnitConversionProblem): AnswerModel {
   return { steps, finalParts: [-1] };
 }
 
-/** A bar of big units (the last one part full for a half). Beat 1 fills the first with f small units; beat 3 fills them all. */
+/** A bar of big units (the last one part full for a half). Beat 1 fills the first with f small units, beat 2 asks of the
+ * rest, and beat 3 fills them all, one after another. */
 export function unitConversionPicture(p: UnitConversionProblem) {
   const { u: [one, many, small, f], up } = p, W = bigCount(p), P = Math.ceil(W), smalls = W * f;
   const piece = (i: number) => (i < Math.floor(W) ? f : (W - Math.floor(W)) * f);
-  return buildTape({
+  return buildTape({ tall: true,
     rows: [{
-      length: 1, parts: P, fills: [{ a: 0, b: 1 / P, tone: "on", from: 1 }, { a: 1 / P, b: W / P, tone: "on", from: 3 }],
-      each: [{ text: () => `1`, until: 0 }, { text: () => `${f}`, from: 1, until: 2, only: i => i === 0 }, { text: i => fm(piece(i)), from: 3 }],
+      // lit: the one big unit as it is filled, then all of them
+      lit: [{ from: 1, until: 1 }, { from: 3 }],
+      length: 1, parts: P, fills: [{ a: 0, b: 1 / P, tone: "on", from: 1 }, { a: 1 / P, b: W / P, tone: "on", from: 3, stagger: Math.min(0.12, 1.2 / P) }],
+      // beat 2 (more or fewer?): every other unit asks "?" one after another, each still to be turned into small units
+      each: [{ text: () => `1`, until: 0 }, { text: () => `${f}`, from: 1, until: 2, only: i => i === 0 },
+        { text: () => "?", from: 2, until: 2, only: i => i > 0, stagger: Math.min(0.12, 1.2 / P) }, { text: i => fm(piece(i)), from: 3, stagger: Math.min(0.12, 1.2 / P) }],
     }],
     brackets: [
       { row: 0, a: 0, b: W / P, text: up ? `${fm(smalls)} ${small}` : `${fm(W)} ${W === 1 ? one : many}`, side: "above" },
@@ -112,7 +117,7 @@ function explain(p: UnitConversionProblem, model: AnswerModel): Explanation {
   const { u: [one, many, small], n, up } = p, f = expectedOf(model.steps, "one"), all = expectedOf(model.steps, "multiply");
   return {
     heading: up ? "Small to big: divide" : "Big to small: multiply",
-    idea: ["A big unit holds many small ones, so the same length takes more small units."],
+    idea: ["A big unit holds many small ones, so the same amount takes more small units."],
     statement: [...givenMath(p), op("="), text(`? ${up ? many : small}`)],
     diagram: unitConversionPicture(p),
     caption: up ? `1 ${one} is ${f} ${small}, so ${fm(n)} ${small} is ${fm(n)} ÷ ${f} = ${fm(all)} ${many}.`
@@ -120,14 +125,14 @@ function explain(p: UnitConversionProblem, model: AnswerModel): Explanation {
     timeline: beats(4),
     steps: [
       { id: "one", state: 1, answerStep: "one", result: f, math: [num(1), text(` ${one}`), op("="), num(f), text(` ${small}`)],
-        narration: `Start with one: 1 ${one} is ${f} ${small}.` },
+        narration: `Start with just one ${one}.` },
       { id: "more", state: 2, answerStep: "more", math: [...givenMath(p), op("="), text(`? ${up ? many : small}`)],
         narration: up ? `${cap(many)} are bigger, so there will be fewer of them than ${fm(n)}.` : `${cap(small)} are smaller, so there will be more of them than ${fm(n)}.` },
       up
         ? { id: "multiply", state: 3, answerStep: "multiply", result: all, math: [num(n), op("÷"), num(f), op("="), num(all)],
-          narration: `Every ${f} ${small} make one ${one}, so divide: ${fm(n)} ÷ ${f} = ${fm(all)} ${many}.` }
+          narration: `Every ${f} ${small} make one ${one}, so divide.` }
         : { id: "multiply", state: 3, answerStep: "multiply", result: all, math: [num(n), op("×"), num(f), op("="), num(all)],
-          narration: `Every ${one} is another ${f} ${small}, so multiply: ${fm(n)} × ${f} = ${fm(all)} ${small}.` },
+          narration: `Every ${one} is another ${f} ${small}, so multiply.` },
     ],
   };
 }

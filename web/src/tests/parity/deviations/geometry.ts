@@ -3,6 +3,7 @@
 // are no text or checking deviations. Picture differences are not recorded here: every picture is now computed from
 // the problem instead of being a fixed illustration.
 export const deviations: Record<string, Partial<Record<string, string>>> = {
+  "g10-similar": { pre: "g7-scale: the lesson finds a scale factor and multiplies by it (curriculum/specs/v2/grade10.md §1)" },
   "g10-exterior": {
     pre: "g8-tri: the exterior angle uses only the triangle sum (g8-tri); Curriculum fixes-02 \"Missing pre links\", so \"Build up first\" after a low score points at the lesson this one builds on",
     hint: "the Third inside angle hint says why (the three share 180°) (fixes-02 Part C, pattern 3)",

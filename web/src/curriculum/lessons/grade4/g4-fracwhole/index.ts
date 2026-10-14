@@ -29,7 +29,7 @@ function answers({ n, d, W }: FractionTimesWholeProblem): AnswerModel {
     steps: [
       ns({ id: "top", l: "Multiply the top", a: s => [num(W), op("×"), num(n), op("="), ...s], ans: W * n, h: `Each group has ${countOf(n, "piece")}. How many pieces are in all the groups?`,
         w: [[W * d, "Multiplied the bottom", "The pieces stay the same size. Only the number of pieces changes."]] }),
-      simplifyStep(W * n, d, "Write as a mixed number"),
+      simplifyStep(W * n, d, W * n > d && (W * n) % d ? "Write as a mixed number" : "Simplify"),
     ],
     finalParts: [-1],
   };
@@ -64,11 +64,11 @@ export function fractionTimesWholePicture({ n, d, W }: FractionTimesWholeProblem
 function explain(p: FractionTimesWholeProblem, model: AnswerModel): Explanation {
   const { n, d, W } = p, S = expectedOf(model.steps, "top"), F = finalForm(S, d), g = gcd(S, d);
   // a remainder that still simplifies shows its unsimplified step: 18 eighths is 2 2/8 = 2 1/4
-  const rem = S % d, unsimplified = rem && gcd(rem, d) > 1 ? `${Math.floor(S / d)} ${rem}/${d} = ` : "";
+  const rem = S % d, unsimplified = !!rem && gcd(rem, d) > 1;
   const simple = S >= d
-    ? `${count(S, d)} is ${unsimplified}${mixedLabel(S, d)}: every ${countOf(d, "piece")} make one whole.`
-    : g > 1 ? `Divide the top and the bottom by ${g}: ${S}/${d} = ${mixedLabel(S, d)}.`
-    : `No number but 1 divides both ${S} and ${d}, so ${S}/${d} is already as simple as it gets.`;
+    ? `Every ${countOf(d, "piece")} make one whole.${unsimplified ? ` Then simplify the ${rem}/${d}.` : ""}`
+    : g > 1 ? `Divide the top and the bottom by ${g}.`
+    : `No number but 1 divides both ${S} and ${d}, so it's as simple as it gets.`;
   return {
     heading: "Groups of pieces",
     idea: ["Times a whole number means that many groups of the same pieces, so the pieces stay the same size."],
@@ -78,7 +78,7 @@ function explain(p: FractionTimesWholeProblem, model: AnswerModel): Explanation 
     timeline: beats(3),
     steps: [
       { id: "top", state: 1, answerStep: "top", result: S, math: [num(W), op("×"), num(n), op("="), num(S)],
-        narration: `${countOf(W, "group")} of ${count(n, d)} make ${count(S, d)}. The pieces stay the same size.` },
+        narration: `${countOf(W, "group")} of ${count(n, d)}. The pieces stay the same size.` },
       { id: "simplify", state: 2, answerStep: "simplify", ...(F.num === 0 ? { result: F.whole } : {}), math: S < d && g === 1 ? [frac(S, d)] : [frac(S, d), op("="), ...mixedMath(S, d)], narration: simple },
     ],
   };

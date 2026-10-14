@@ -35,7 +35,7 @@ function explain(p: DistanceProblem, model: AnswerModel): Explanation {
   const { a, b } = p, left = expectedOf(model, "neg"), right = expectedOf(model, "pos"), total = expectedOf(model, "sum");
   return {
     heading: "Cross zero, add the distances",
-    idea: ["Distance counts steps, so it is never negative."],
+    idea: ["From a negative to a positive, add the steps to 0 and the steps after 0."],
     statement: [num(a), text(" to "), num(b)],
     diagram: buildNumberLine({
       ...fitRange([a, b], { maxTicks: 26, pad: 1, minStep: 1 }), labelAt: [a, 0, b],
@@ -49,7 +49,7 @@ function explain(p: DistanceProblem, model: AnswerModel): Explanation {
     steps: [
       { id: "neg", narration: `From ${f(a)} to 0 is ${left} ${left === 1 ? "step" : "steps"}.`, math: [...abs(a), op("="), num(left)], state: 0, answerStep: "neg", result: left },
       { id: "pos", narration: `From 0 to ${b} is ${right} ${right === 1 ? "step" : "steps"}.`, math: [...abs(b), op("="), num(right)], state: 1, answerStep: "pos", result: right },
-      { id: "sum", narration: `You cross 0, so add the two distances: ${left} + ${right} = ${total}.`, math: [num(left), op("+"), num(right), op("="), num(total)], state: 2, answerStep: "sum", result: total },
+      { id: "sum", narration: "You cross 0, so add the two distances.", math: [num(left), op("+"), num(right), op("="), num(total)], state: 2, answerStep: "sum", result: total },
     ],
   };
 }

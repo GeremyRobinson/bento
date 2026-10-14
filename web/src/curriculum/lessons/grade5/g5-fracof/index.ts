@@ -38,8 +38,10 @@ function answers({ n, d, W }: FractionOfNumberProblem): AnswerModel {
 /** One bar for W; beat 1 splits it into d groups of W/d, beat 2 shades n of them. */
 export function fractionOfNumberPicture({ n, d, W }: FractionOfNumberProblem) {
   const g = W / d, R = g * n;
-  return buildTape({
+  return buildTape({ tall: true,
     rows: [{
+      // lit: the bar as it is split into groups, and the groups taken
+      lit: [{ from: 1 }],
       length: 1, parts: [{ count: 1, from: 0 }, { count: d, from: 1 }], fills: [{ a: 0, b: n / d, tone: "on", from: 2 }],
       each: [{ text: () => `${g}`, from: 1 }], label: [{ text: `${W}` }],
       total: [{ text: `${n} × ${g} = ${R}`, from: 2, acc: true }],
@@ -60,9 +62,9 @@ function explain(p: FractionOfNumberProblem, model: AnswerModel): Explanation {
     timeline: beats(3),
     steps: [
       { id: "groups", state: 1, answerStep: "groups", result: g, math: [num(W), op("÷"), num(d), op("="), num(g)],
-        narration: `The bottom says ${d} equal groups: ${W} ÷ ${d} = ${g} in each.` },
+        narration: `The bottom says ${d} equal groups.` },
       { id: "take", state: 2, answerStep: "take", result: R, math: [num(g), op("×"), num(n), op("="), num(R)],
-        narration: `The top says take ${n} of them: ${g} × ${n} = ${R}.` },
+        narration: `The top says take ${n} of them.` },
     ],
   };
 }
@@ -72,7 +74,7 @@ export const lesson: LessonDefinition<FractionOfNumberProblem> = {
   grade: 5,
   unit: "Fractions",
   title: "Fraction of a number",
-  pre: "g4-fracwhole",
+  pre: "g3-divfacts",
   // the current app's card and picture: 3/4 of 20 = 15
   reference: createFractionOfNumber(3, 4, 20),
   generate: (rng, index) => generateFractionOfNumber(rng, index),

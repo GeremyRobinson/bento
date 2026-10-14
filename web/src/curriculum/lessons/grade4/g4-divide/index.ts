@@ -65,17 +65,17 @@ function explain(p: RemainderProblem, model: AnswerModel) {
     alt: `${n} ÷ ${dv}: ${dv} × ${T} = ${dv * T}, ${dv} × ${O} = ${dv * O}, so ${r ? `${q} R ${r}` : `${q} exactly`}.`,
     diagram: divisionAreaPicture({ n, dv, T, O, left, q, r }),
     beats: [
-      { id: "tens", narration: `${dv} × ${T} = ${dv * T} fits into ${n}, and ${dv} × ${T + 10} = ${dv * (T + 10)} would not.`,
+      { id: "tens", narration: `That fits in ${n}, but ${dv} × ${T + 10} = ${dv * (T + 10)} would not.`,
         math: [num(dv), op("×"), num(T), op("="), num(dv * T)],
         lines: [[num(n), op("÷"), num(dv)], [num(dv), op("×"), mark(T), op("="), num(dv * T)]], answerStep: "tens", result: T },
-      { id: "subtract", narration: `That leaves ${n} − ${dv * T} = ${left}.`, math: [num(n), op("−"), num(dv * T), op("="), num(left)],
+      { id: "subtract", narration: "Take away what's shared to see what's left.", math: [num(n), op("−"), num(dv * T), op("="), num(left)],
         lines: [[num(n), op("−"), num(dv * T), op("="), num(left)]], answerStep: "subtract", result: left },
-      { id: "ones", narration: `${dv} × ${O} = ${dv * O} fits in ${left}.`, math: [num(dv), op("×"), num(O), op("="), num(dv * O)],
+      { id: "ones", narration: `Now fit as many ${dv}s as you can into ${left}.`, math: [num(dv), op("×"), num(O), op("="), num(dv * O)],
         lines: [[num(dv), op("×"), mark(O), op("="), num(dv * O)]], answerStep: "ones", result: O },
-      { id: "answer", narration: `Add the tens and the ones: ${T} + ${O} = ${q}.`, math: [num(T), op("+"), num(O), op("="), num(q)],
+      { id: "answer", narration: "Add the tens and the ones.", math: [num(T), op("+"), num(O), op("="), num(q)],
         lines: [[num(T), op("+"), num(O), op("="), num(q)]], answerStep: "answer", result: q },
-      { id: "remainder", narration: r ? `${left} − ${dv * O} = ${r} is left over. So ${n} ÷ ${dv} = ${q} with ${r} left over: ${q} R ${r}.`
-          : `${left} − ${dv * O} = 0: nothing is left over, so ${dv} goes into ${n} exactly ${q} times.`,
+      { id: "remainder", narration: r ? `${r} is less than ${dv}, so it's the remainder: ${q} R ${r}.`
+          : `Nothing is left, so ${dv} goes into ${n} exactly ${q} times.`,
         math: [num(left), op("−"), num(dv * O), op("="), num(r)],
         lines: [[num(left), op("−"), num(dv * O), op("="), mark(r)], [num(n), op("÷"), num(dv), op("="), num(q), ...(r ? [text(" R "), num(r)] : [])]],
         answerStep: "remainder", result: r },

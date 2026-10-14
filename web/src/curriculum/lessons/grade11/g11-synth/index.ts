@@ -1,7 +1,7 @@
 import { answer, formatNumber as f, m, mark, muted, num, op, sup, text, type MathText } from "../../../schemas/math-text";
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import type { Rng } from "../../../generators/rng";
-import { fP, fpm, ms, ns, P, poly, v, xp } from "../../algebra-kit/steps";
+import { ms, ns, P, poly, v, xp } from "../../algebra-kit/steps";
 import { attempt, nz, readInts, rule } from "../../algebra-kit/restore";
 import { beatExplanation } from "../../../../explanations/diagrams/algebra/chain";
 import { syntheticPicture } from "./picture";
@@ -77,15 +77,15 @@ export function explainSynthetic(p: SyntheticDivision, model: AnswerModel) {
     caption: `${f(r)} makes x ${r < 0 ? "+" : "−"} ${f(Math.abs(r))} equal 0, so ${f(r)} goes in the box.`,
     alt: `Synthetic division by ${f(r)}: the row 1, ${f(b)}, ${f(c)} becomes 1, ${f(quot)}, ${f(rem)}, so the answer is x ${quot < 0 ? "−" : "+"} ${f(Math.abs(quot))}, remainder ${f(rem)}.`,
     steps: [
-      { id: "setup", narration: `Put ${f(r)} in the box and the numbers of the polynomial in a row: 1, ${f(b)}, ${f(c)}.`, math: [num(r), text("|"), num(1), gap, num(b), gap, num(c)] },
-      { id: "mul1", narration: `Bring down the 1. Multiply it by ${f(r)}: ${f(rr)}.`, math: m(muted("bring down 1"), op("→"), 1, op("×"), ...P(r), op("="), rr), answerStep: "mul1", result: rr },
-      { id: "add1", narration: `Add down the column: ${f(b)} + ${fP(r)} = ${f(q)}.`, math: m(b, op("+"), ...P(r), op("="), mark(q)), answerStep: "add1", result: q },
-      { id: "mul2", narration: `Multiply ${f(q)} by ${f(r)}: ${f(qr)}.`, math: m(q, op("×"), ...P(r), op("="), qr), answerStep: "mul2", result: qr },
-      { id: "rem", narration: `Add the last column: ${f(c)} + ${fP(qr)} = ${f(rem)}. ${rem === 0 ? "It divides evenly." : `${f(rem)} is left over: the remainder.`}`, math: m(c, op("+"), ...P(qr), op("="), mark(rem)), answerStep: "rem", result: rem },
+      { id: "setup", narration: `${f(r)} goes in the box, since it makes x ${r < 0 ? "+" : "−"} ${f(Math.abs(r))} equal 0.`, math: [num(r), text("|"), num(1), gap, num(b), gap, num(c)] },
+      { id: "mul1", narration: "Bring down the 1, then multiply it by the box number.", math: m(muted("bring down 1"), op("→"), 1, op("×"), ...P(r), op("="), rr), answerStep: "mul1", result: rr },
+      { id: "add1", narration: "Add down the column. The flipped sign already did the subtracting.", math: m(b, op("+"), ...P(r), op("="), mark(q)), answerStep: "add1", result: q },
+      { id: "mul2", narration: "Multiply the new bottom number by the box number.", math: m(q, op("×"), ...P(r), op("="), qr), answerStep: "mul2", result: qr },
+      { id: "rem", narration: `Add the last column.${rem === 0 ? " 0 left over means it divides evenly." : " What's left over is the remainder."}`, math: m(c, op("+"), ...P(qr), op("="), mark(rem)), answerStep: "rem", result: rem },
       { id: "check", narration: `Check: put ${f(r)} into the polynomial and you get ${f(fr(r))}, the same as the remainder.`,
         // a 0 term (b or c) is left out
         math: m(...P(r), sup(2), ...(b ? [op("+"), ...P(b), op("·"), ...P(r)] : []), ...(c ? [op("+"), ...P(c)] : []), op("="), fr(r)) },
-      { id: "quot", narration: `The bottom row 1, ${f(quot)} means x ${fpm(quot)}, remainder ${f(rem)}.`, math: [v(), op(quot < 0 ? "−" : "+"), num(Math.abs(quot)), text(", remainder "), num(rem)], answerStep: "quot", result: quot },
+      { id: "quot", narration: "Read the bottom row: the 1 goes with x, and the last number is the remainder.", math: [v(), op(quot < 0 ? "−" : "+"), num(Math.abs(quot)), ...(rem ? [text(", remainder "), num(rem)] : [])], answerStep: "quot", result: quot },
     ],
   });
 }

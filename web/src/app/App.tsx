@@ -18,6 +18,7 @@ import { Welcome } from "../screens/Welcome";
 import { useApp } from "./AppState";
 import { isTopLevel } from "./routes";
 import { Island } from "../components/Island";
+import { AppNav } from "../components/AppNav";
 import { motionOff } from "./settings";
 
 // the design sandbox loads only in the preview and dev builds; the live site never carries it
@@ -102,13 +103,18 @@ export function App() {
     default: screen = <Home />;
   }
   if (sheetOpen) screen = <GradeQuestion />;
+  // the app itself (UI model v57): the island and its corners over one screen; the landing page and the grade question
+  // keep their own frame. A lesson fills the window and never scrolls; in a lesson on a phone, back is the only way out
+  const shell = !choosing && grade != null && route.name !== "sandbox";
+  const flow = route.name === "learn" || route.name === "practice" || route.name === "results";
+  const fit = route.name === "learn" || route.name === "practice";
   // a new screen (or a new grade on a top-level screen) re-enters; with view transitions the browser cross-fades instead
   const viewKey = [sheetOpen ? "grades" : route.name, route.name === "learn" ? route.lessonId : route.name === "report" ? route.key : route.name === "facts" ? route.table ?? "" : "", top ? chosenGrade : "", SANDBOX ? sbSeed : ""].join("|");
   return (<>
     {/* the island stays put across screens (UI notes preview); only the screen under it is new, and its pieces
         stagger in (motion.css, "one motion master") */}
-    <main id="app" className={`wrap t${tint}`} data-band={grade == null || neutral ? "middle" : bandOf(grade)} data-grade={neutral ? "none" : grade ?? "none"}>
-      <Island grade={grade} guest={choosing} />
+    <main id="app" className={`wrap t${tint}${shell ? ` o-app${flow ? " flow" : ""}${fit ? " fit" : ""}` : ""}`} data-band={grade == null || neutral ? "middle" : bandOf(grade)} data-grade={neutral ? "none" : grade ?? "none"}>
+      {shell ? <AppNav grade={grade!} /> : <Island grade={grade} guest={choosing} />}
       <Fragment key={viewKey}>{screen}</Fragment>
     </main>
     {SANDBOX && <Suspense fallback={null}><Sandbox /></Suspense>}

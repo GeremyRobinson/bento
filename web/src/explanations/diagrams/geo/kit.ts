@@ -54,7 +54,9 @@ export function textBox(t: { x: number; y: number; text: string; sup?: string; c
   const w = [...t.text].length * s * 0.6 + (t.sup ? [...t.sup].length * s * 0.42 : 0);
   const c = ` ${t.cls ?? ""} `;
   const x0 = c.includes(" end ") ? t.x - w : c.includes(" start ") ? t.x : t.x - w / 2;
-  return { x0, y0: t.y - s * 0.55 - (t.sup ? s * 0.25 : 0), x1: x0 + w, y1: t.y + s * 0.55 };
+  // a label held by its bottom edge (.up) stands on y, one held by its top edge (.down) hangs from it
+  const cy = c.includes(" up ") ? t.y - s * 0.55 : c.includes(" down ") ? t.y + s * 0.55 : t.y;
+  return { x0, y0: cy - s * 0.55 - (t.sup ? s * 0.25 : 0), x1: x0 + w, y1: cy + s * 0.55 };
 }
 
 function pointsOf(it: Draft): Pt[] {
@@ -94,7 +96,7 @@ function move(it: Draft, dx: number, dy: number): SceneItem {
 }
 
 /** Frames a drafted picture: everything moves so the outermost shape or label sits `pad` from the edge. */
-export function frame(family: string, items: Draft[], alt: string, pad = 14, min: { w?: number; h?: number } = {}): SceneDiagram {
+export function frame(family: string, items: Draft[], alt: string, pad = 14, min: { w?: number; h?: number; grow?: number } = {}): SceneDiagram {
   const pts = items.flatMap(pointsOf);
   let x0 = Math.min(...pts.map(p => p[0])), x1 = Math.max(...pts.map(p => p[0]));
   let y0 = Math.min(...pts.map(p => p[1])), y1 = Math.max(...pts.map(p => p[1]));
@@ -102,7 +104,7 @@ export function frame(family: string, items: Draft[], alt: string, pad = 14, min
   if (min.w && x1 - x0 + 2 * pad < min.w) { const extra = (min.w - (x1 - x0 + 2 * pad)) / 2; x0 -= extra; x1 += extra; }
   if (min.h && y1 - y0 + 2 * pad < min.h) { const extra = (min.h - (y1 - y0 + 2 * pad)) / 2; y0 -= extra; y1 += extra; }
   const dx = pad - x0, dy = pad - y0;
-  return { kind: "scene", family, width: Math.ceil(x1 - x0 + 2 * pad), height: Math.ceil(y1 - y0 + 2 * pad), items: items.map(it => move(it, dx, dy)), alt };
+  return { kind: "scene", family, width: Math.ceil(x1 - x0 + 2 * pad), height: Math.ceil(y1 - y0 + 2 * pad), items: items.map(it => move(it, dx, dy)), alt, ...(min.grow ? { grow: min.grow } : {}) };
 }
 
 /** Text helper: `t(x, y, "70°", "lbl acc", { from: 2, enter: "rise" })`. */
