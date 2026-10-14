@@ -253,14 +253,14 @@ export function buildNumberLine(spec: NumberLineSpec): SceneDiagram {
     if (beside && stacked.has(m)) {
       // beside its point: anchored at the point's edge, so a label held at its phone floor grows away from the dot
       placed.push({ x: x(m.v) + beside * (lw * GROWS / 2 + BESIDE), y: -BESIDE - ROW / 2, w: lw * GROWS, h: ROW, ...windowOf(m) });
-      raw.push({ type: "text", x: r1(x(m.v) + beside * BESIDE), y: -BESIDE, text: m.label, cls: `lbl up ${beside < 0 ? "end" : "start"}`, enter: "rise", ...timing(m, 0.2) });
+      raw.push({ type: "text", x: r1(x(m.v) + beside * BESIDE), y: -BESIDE, text: m.label, cls: `lbl up ${beside < 0 ? "end" : "start"}${m.long ? " shortgo" : ""}`, enter: "rise", ...timing(m, 0.2) });
       continue;
     }
     const up = hops.filter(h => !h.below && h.from !== h.to && Math.min(h.from, h.to) <= m.v && m.v <= Math.max(h.from, h.to));
     // over the arcs that pass over it (clear of their own labels), else just over its dot
     const over = beside ? [] : up.map(h => hopHeight(Math.abs(x(h.to) - x(h.from))) + 6);
     const box = place(m.label, x(m.v) + beside * (lw / 2 + 6), -Math.max(11, ...over), -1, windowOf(m));
-    raw.push({ ...textAt(box, -1, m.label, "lbl"), ...timing(m, 0.2) });
+    raw.push({ ...textAt(box, -1, m.label, `lbl${m.long ? " shortgo" : ""}`), ...timing(m, 0.2) });
   }
 
   // fit the canvas around everything: an arc reaches half its control height, a label half its size

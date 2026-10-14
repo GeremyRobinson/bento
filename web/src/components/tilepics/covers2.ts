@@ -1,6 +1,6 @@
 /**
  * Chapter covers, style B "a real thing": the rest of the chapters (K to 4th, 6th to 12th; 5th grade keeps its own).
- * The same kit, roles and one-move rule as covers.ts.
+ * The same kit, roles and one-move rule as covers.ts. Review passed sheet 2 (math-app/review/v2/covers-test).
  */
 import { band, circ, cover, group, line, path, poly, r1, rect } from "./covers";
 
@@ -13,9 +13,9 @@ const wedge = (cx: number, cy: number, r: number, a: number, b: number) =>
 
 // ---- Kindergarten ----------------------------------------------------------------------------------------------------
 
-// a plate of three cookies, and two more join them
-const cookie = (x: number, y: number, a = "", d = 0) => group(circ("m", x, y, 13) + circ("f", x - 4, y - 3, 2) + circ("f", x + 5, y + 1, 2) + circ("f", x - 1, y + 6, 2), a, d);
-const K_ADD = cover("4 22 152 72", ell("s", 80, 76, 74, 16) + ell("o", 80, 74, 56, 10) + cookie(38, 62) + cookie(64, 58) + cookie(90, 62) + cookie(112, 54, "drop", 0.3) + cookie(130, 64, "drop", 0.55));
+// a plate of three cookies, and two more join them, each clear of the next so they can be counted
+const cookie = (x: number, y: number, a = "", d = 0) => group(circ("m", x, y, 11) + circ("f", x - 4, y - 3, 2) + circ("f", x + 4, y + 1, 2) + circ("f", x - 1, y + 5, 2), a, d);
+const K_ADD = cover("4 22 152 72", ell("s", 80, 76, 74, 16) + ell("o", 80, 74, 56, 10) + cookie(24, 62) + cookie(50, 62) + cookie(76, 62) + cookie(108, 62, "drop", 0.3) + cookie(134, 62, "drop", 0.55));
 
 // building blocks: a cube, a cylinder and a triangle block stack into a tower
 const K_SHAPES = cover("20 4 120 94", rect("m", 40, 62, 34, 34, 4) + rect("s", 76, 62, 44, 34, 4, "drop", 0.15) +
@@ -93,9 +93,9 @@ const G4_WHOLE = cover("6 14 148 74", rect("m", 10, 18, 120, 68, 6) +
   [1, 2, 3].map(i => line("o", 10, 18 + i * 17, 130, 18 + i * 17)).join("") + [1, 2, 3, 4, 5].map(i => line("o", 10 + i * 20, 18, 10 + i * 20, 86)).join("") +
   group(rect("s", 70, 16, 82, 72, 6) + line("k", 82, 16, 82, 88), "", 0, ` class="cv-wrap"`));
 
-// measuring cups: a whole, a half and a quarter, nested by size
+// measuring cups: a whole, a half and a quarter, by size, each handle clear of the next cup
 const cup = (x: number, w: number, h: number, c: string, d: number) => group(path(c, `M${x} ${92 - h} H${x + w} L${x + w - 4} 92 H${x + 4} Z`) + path("o", `M${x + w} ${92 - h + 6} h${w * 0.35} v8 h-${w * 0.35 + 2}`), "drop", d);
-const G4_FRAC = cover("6 22 150 74", cup(10, 48, 54, "m", 0) + cup(74, 34, 40, "m", 0.2) + cup(122, 22, 28, "s", 0.4));
+const G4_FRAC = cover("2 22 158 74", cup(6, 46, 54, "m", 0) + cup(78, 34, 40, "m", 0.2) + cup(130, 20, 28, "s", 0.4));
 
 // a tape measure: the tape pulls out of its case
 const G4_MEASURE = cover("4 20 152 68", rect("s", 70, 54, 84, 18, 3, "slide", 0.1) +
@@ -129,9 +129,9 @@ const G6_STATS = cover("8 10 144 86", [[44], [30], [58], [36], [52]].map(([h], i
 
 // ---- 7th grade -------------------------------------------------------------------------------------------------------
 
-// a picture and its enlargement: every length grows by the same factor
+// a picture and its enlargement: every length grows by the same factor; both trees sit inside their frames
 const tree = (x: number, s: number, c: string, a = "", d = 0) => group(rect("s", x - 3 * s, 92 - 16 * s, 6 * s, 16 * s, 2) + circ(c, x, 92 - 26 * s, 14 * s), a, d);
-const G7_PROP = cover("8 4 148 92", rect("o", 10, 56, 44, 40, 4) + tree(32, 1, "m") + rect("o", 70, 8, 84, 88, 6) + tree(112, 2.2, "m", "grow", 0.2));
+const G7_PROP = cover("8 4 148 92", rect("o", 10, 56, 44, 40, 4) + tree(32, 0.8, "m") + rect("o", 70, 8, 84, 88, 6) + tree(112, 1.76, "m", "grow", 0.2));
 
 // a hanging mobile: it balances when both sides weigh the same
 const G7_EXPR = cover("14 4 132 92", line("k", 80, 4, 80, 18) + path("f", band([[30, 20], [130, 20]], 4)) + line("k", 36, 20, 36, 46) + line("k", 124, 20, 124, 46) +
@@ -186,10 +186,10 @@ const G9_DATA = cover("6 4 150 92", ([[16, 82], [28, 70], [38, 74], [50, 60], [6
 
 // ---- 10th grade ------------------------------------------------------------------------------------------------------
 
-// a street map on a grid, and a pin dropped on one corner
-const G10_COORD = cover("6 2 148 96", rect("s", 10, 10, 140, 84, 6) + [1, 2, 3].map(i => path("e", band([[10, 10 + i * 21], [150, 10 + i * 21]], 7))).join("") +
-  [1, 2, 3, 4, 5].map(i => path("e", band([[10 + i * 23.3, 10], [10 + i * 23.3, 94]], 7))).join("") +
-  group(path("m", "M103 52 C92 40 92 22 103 22 C114 22 114 40 103 52 Z") + circ("e", 103, 31, 4), "drop", 0.2));
+// a street map on a grid, and a pin dropped on one corner (Review: a big pin, few streets)
+const G10_COORD = cover("6 2 148 96", rect("s", 10, 10, 140, 84, 6) + [1, 2].map(i => path("e", band([[10, 10 + i * 28], [150, 10 + i * 28]], 8))).join("") +
+  [1, 2, 3].map(i => path("e", band([[10 + i * 35, 10], [10 + i * 35, 94]], 8))).join("") +
+  group(path("m", "M115 66 C98 48 98 20 115 20 C132 20 132 48 115 66 Z") + circ("e", 115, 34, 6), "drop", 0.2));
 
 // a coat hanger: a triangle you know
 const G10_ANGLES = cover("8 4 144 92", path("o", "M80 30 V20 C80 10 92 10 92 18") + poly("s", [[80, 30], [146, 82], [14, 82]]) + poly("e", [[80, 42], [128, 76], [32, 76]]) +

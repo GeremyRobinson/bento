@@ -12,6 +12,8 @@ export function exponentRulePicture(o: { t: 0 | 1 | 2; a: number; b: number; e: 
   const { t, a, b, e, value, shown } = o;
   // the power is the problem itself, written over the picture: a phone's short box leaves it out for the chips (Review 1c74c20)
   const head: FLabel = { row: 0, col: 0, text: shown, cls: "lbl big pw", long: true };
+  // the result line under the chips is the step's own line too: a phone's short box leaves it to the step, where at the
+  // label floor it ran over the chips (Review 1c74c20, g8-exp at 280×123)
   // where each x sits: [row, col, part, struck]
   const spots: [number, number, string, boolean][] =
     t === 0 ? [...Array.from({ length: a }, (_, k) => [1, k, PA, false] as [number, number, string, boolean]), ...Array.from({ length: b }, (_, k) => [1, a + 0.4 + k, PB, false] as [number, number, string, boolean])]
@@ -43,13 +45,13 @@ export function exponentRulePicture(o: { t: 0 | 1 | 2; a: number; b: number; e: 
     {
       labels: [head, ...rowLabels,
         ...kept.map(([s], i) => ({ row: s[0] - 0.58, col: s[1], text: String(i + 1), cls: "sm pq", at: (t === 1 ? 0.3 + 0.35 * b + 0.3 : 0.2) + 0.28 * i })),
-        { row: under, col: mid, text: `${shown} = x${supText(e)}`, cls: "lbl big acc", at: (t === 1 ? 0.6 + 0.35 * b : 0.2) + 0.28 * kept.length + 0.2 }],
+        { row: under, col: mid, text: `${shown} = x${supText(e)}`, cls: "lbl big acc", long: true, at: (t === 1 ? 0.6 + 0.35 * b : 0.2) + 0.28 * kept.length + 0.2 }],
       chips: xs((s, k) => (t === 1 && s[3] ? { strike: strikeAt(k < a + b ? k - a : k - (a + b)) } : {})),
       brackets, bars: bar,
     },
     // 3: try x = 2: every x left turns into a 2
     {
-      labels: [head, ...rowLabels, { row: under, col: mid, text: `2${supText(e)} = ${big(value)}`, cls: "lbl big acc", at: 0.3 + 0.18 * kept.length }],
+      labels: [head, ...rowLabels, { row: under, col: mid, text: `2${supText(e)} = ${big(value)}`, cls: "lbl big acc", long: true, at: 0.3 + 0.18 * kept.length }],
       chips: [
         ...xs((s, k) => (s[3] ? { strike: 0, cut: true } : { leave: 0.1 + 0.18 * kept.findIndex(([, j]) => j === k) })),
         ...kept.map(([s], i) => ({ row: s[0], col: s[1], text: "2", part: s[2], at: 0.1 + 0.18 * i })),

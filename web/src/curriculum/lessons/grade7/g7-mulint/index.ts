@@ -44,7 +44,8 @@ function explain(p: MulIntegersProblem, model: AnswerModel): Explanation {
   if (div) {
     // the count of jumps is the size; the real jump, b, points toward the real dividend (positive) or away (negative)
     const n = a * b;
-    marks.push({ v: reach, beat: 0, label: jumps, delay: 0.3 });
+    // the count of jumps is the step's own line: a phone's short box leaves it to the step (Review 1c74c20, g7-mulint at 280×123)
+    marks.push({ v: reach, beat: 0, label: jumps, delay: 0.3, long: true });
     hops.push({ from: 0, to: b, label: `jump ${f(b)}`, below: true, beat: 1 });
     if (n < 0) marks.push({ v: n, beat: 1, cls: "dota", label: f(n) });
     values = [0, reach, n, b];

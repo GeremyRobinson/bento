@@ -131,7 +131,7 @@ const HOOP = cover("4 2 152 98", path("dots", `M18 84 Q72 -24 126 44`) + rect("s
 const WHEEL = cover("34 6 92 92", group(circ("s", 80, 52, 44) + circ("e", 80, 52, 34) +
   Array.from({ length: 8 }, (_, i) => { const a = (i * Math.PI) / 4; return line("k", 80, 52, 80 + 34 * Math.cos(a), 52 + 34 * Math.sin(a)); }).join("") + circ("m", 80, 52, 8), "spin", 0));
 
-// a branch that doubles at every fork: 1, 2, 4, 8 (Review: the leaves sit inside the picture)
+// a branch that doubles at every fork: 1, 2, 4, 8 (Review: the leaves and branches sit inside the picture box)
 const BRANCH = (() => {
   let o = "";
   const tips: [number, number][] = [];
@@ -144,8 +144,8 @@ const BRANCH = (() => {
     }
   };
   o += path("f", band([[80, 98], [80, 84]], 7));
-  go(80, 84, 36, 0);
-  return cover("28 6 104 94", o + tips.map(([x, y]) => circ("m", x, y - 4, 6, "pop", 0.85)).join(""));
+  go(80, 84, 28, 0);
+  return cover("18 4 124 96", o + tips.map(([x, y]) => circ("m", x, y - 4, 5, "pop", 0.85)).join(""));
 })();
 
 // a roller coaster: up, down, up; the car climbs to the top (Review: every post ends on the track)

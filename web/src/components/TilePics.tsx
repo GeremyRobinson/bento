@@ -9,10 +9,11 @@ import { CHAPTER_34, LESSON_34 } from "./tilepics/g34";
 import { CHAPTER_68, LESSON_68 } from "./tilepics/g68";
 import { CHAPTER_912, LESSON_912 } from "./tilepics/g912";
 import { COVERS } from "./tilepics/covers";
+import { COVERS2 } from "./tilepics/covers2";
 
 const LESSON: Record<string, string> = { ...LESSON_k2, ...LESSON_34, ...LESSON5, ...LESSON_68, ...LESSON_912 };
 // the style B covers ("a real thing", G 2026-10-14) stand in for the earlier samples where both exist
-const CHAPTER: Record<string, string> = { ...CHAPTER_k2, ...CHAPTER_34, ...CHAPTER5, ...CHAPTER_68, ...CHAPTER_912, ...COVERS };
+const CHAPTER: Record<string, string> = { ...CHAPTER_k2, ...CHAPTER_34, ...CHAPTER5, ...CHAPTER_68, ...CHAPTER_912, ...COVERS, ...COVERS2 };
 
 export const lessonPic = (id: string): string | undefined => LESSON[id];
 export const chapterPic = (grade: number, unit: string): string | undefined => CHAPTER[`${grade}:${unit}`];

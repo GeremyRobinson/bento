@@ -117,7 +117,9 @@ export function buildRightTriangle(spec: RightTriangleSpec): SceneDiagram {
     // (review v45 blocker 5, g10-special: magenta over orange gave rgb 192,64,64)
     items.push(seg(p, q, "hlline full", { from: h.from, ...(h.until != null ? { until: h.until } : {}), enter: "draw" }));
   }
-  return frame("right-triangle", items, spec.alt, 14);
+  // its side names are long ("hypotenuse 13"): on a phone the frame may grow to hold them at the label floor, so none
+  // is cut by the box (Review 1c74c20, g10-trig at 280×123)
+  return frame("right-triangle", items, spec.alt, 14, { grow: 2.5 });
 }
 
 /** The triangle's three corners as drawn (right angle, end of b, top of a), for tests. */
