@@ -123,7 +123,7 @@ function TodayPanel({ g, id }: { g: number; id: string }) {
 function TestToday({ g, tkey }: { g: number; tkey: string }) {
   const { startTest } = useApp();
   return (
-    <section className="o-panel o-today" aria-label="Today">
+    <section className="o-panel o-today short" aria-label="Today">
       <span className="o-label o-in">Test</span>
       <h2 className="o-title o-in">{testName(g, tkey)}</h2>
       <p className="o-why o-in">4 problems on your own. No hints. It shows what stuck.</p>
