@@ -7,7 +7,10 @@ import { fitClass } from "../scene/picture-system";
 
 export type Side = "a" | "b" | "c";
 interface Shown { from?: number; until?: number }
-export interface SideLabel extends Shown { text: string; acc?: boolean }
+export interface SideLabel extends Shown { text: string; acc?: boolean;
+  /** what a phone's short box shows instead (.shortonly), when the problem above already names the side ("13" for
+   *  "hypotenuse 13"): the full label can't stand beside the triangle at the label floor there */
+  short?: string }
 export interface SquareSpec extends Shown {
   /** small line on top, e.g. "8²"; it can change at a later beat */
   top: { text: string; sup?: string; from?: number; until?: number; cls?: string }[];
@@ -85,7 +88,9 @@ export function buildRightTriangle(spec: RightTriangleSpec): SceneDiagram {
   const outside: Record<Side, { at: Pt; cls: string }> = {
     a: { at: [-12, -(a * u) / 2], cls: "end" },
     b: { at: [(b * u) / 2, 7], cls: "down" },
-    c: { at: add(mid(B, C), [(a / Math.hypot(a, b)) * 14, -(b / Math.hypot(a, b)) * 14]), cls: "start" },
+    // the hypotenuse's label stands on its bottom edge (.up), so at a phone's label floor it grows up, away from the
+    // slope and the angle under it (Review 1c74c20, g10-trig at 280×123)
+    c: { at: add(mid(B, C), [(a / Math.hypot(a, b)) * 14, -(b / Math.hypot(a, b)) * 14]), cls: "start up" },
   };
   (["a", "b", "c"] as Side[]).forEach(s => {
     const given = spec.sides?.[s];
@@ -96,7 +101,9 @@ export function buildRightTriangle(spec: RightTriangleSpec): SceneDiagram {
       const until = l.until ?? (sqFrom != null ? sqFrom - 1 : undefined);
       // a leg's label takes its part color (a blue, b orange) whenever squares show them; c and any unknown are amber
       const role = l.acc ? " acc" : anySquare && s !== "c" ? (s === "a" ? " p0" : " p1") : "";
-      items.push(t(o.at[0], o.at[1], l.text, `lbl ${o.cls}${role}`.trim(), { ...beat({ ...(l.from ? { from: l.from } : {}), ...(until != null ? { until } : {}) }), enter: "rise", delay: 0.3 }));
+      const when = { ...beat({ ...(l.from ? { from: l.from } : {}), ...(until != null ? { until } : {}) }), enter: "rise" as const, delay: 0.3 };
+      items.push(t(o.at[0], o.at[1], l.text, `lbl ${o.cls}${role}${l.short != null ? " shortgo" : ""}`.trim(), when));
+      if (l.short != null) items.push(t(o.at[0], o.at[1], l.short, `lbl ${o.cls}${role} shortonly`.trim(), when));
     }
   });
 
