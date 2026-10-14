@@ -14,7 +14,7 @@ import { chapterPic, lessonPic, TilePic } from "../components/TilePics";
 import { ORing, OSlider, type Tab } from "../components/Masters";
 import { LESSON_CHECK_MINUTES, LESSON_MINUTES, TODAYS_REVIEW, UP_NEXT } from "../app/copy";
 import { checkedCount } from "../app/rings";
-import { dependsOn, dueBack, learned, toGoOver } from "../engine/mastery/skills";
+import { checkScore, dependsOn, dueBack, learned, toGoOver } from "../engine/mastery/skills";
 import { boxView, boxZoom, GRADES_VIEW, setBoxView, useBoxView } from "../app/box";
 import { motionOff } from "../app/settings";
 import type { Progress } from "../engine/mastery/progress";
@@ -286,7 +286,7 @@ function Box({ g, pick, choose }: { g: number; pick?: string; choose: (id: strin
 const LEVELS = ["Not yet", "Beginning", "Approaching", "Proficient", "Advanced"];
 /** a set of lessons' score: each checked lesson's latest skill check, averaged and rounded down; null before any check */
 function scoreOf(progress: ReturnType<typeof useApp>["progress"], list: Entry[]): number | null {
-  const d = list.flatMap(c => { const l = progress.checks?.[c.id]?.last; return l == null ? [] : [Number(l)]; });
+  const d = list.flatMap(c => { const l = checkScore(progress, c.id); return l == null ? [] : [Number(l)]; });
   return d.length ? Math.floor(d.reduce((a, x) => a + x, 0) / d.length) : null;
 }
 

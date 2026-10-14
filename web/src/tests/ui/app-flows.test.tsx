@@ -397,6 +397,7 @@ describe("report, grown-up page and back to basics", () => {
       lessons: { "g5-mult2": 1, add: 1 },
       scores: { "g5-mult2": scored(1, t), add: scored(2, t) },
       tests: { "grade:5": scored(3, t) },
+      checks: { "g5-mult2": { last: 1, best: 1, date: t, due: t + 864e5, passes: 0 } },
       log: [
         { key: "g5-mult2", mode: "practice", title: LESSON, date: t, level: 1, total: 9, hints: 2, shown: 1, cats: { "Lost the place value": 3 }, rushed: 1 },
         { key: "grade:5", mode: "test", title: "5th grade check-up", date: t, level: 3, total: 12, hints: 0, shown: 0, cats: {}, rushed: 0 },

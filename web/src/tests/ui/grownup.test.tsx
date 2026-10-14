@@ -27,6 +27,7 @@ const report: SessionReport = {
 const progress: Partial<Progress> = {
   grade: 5, chosen: true, done: 2, lessons: { "g5-mult2": 2 },
   scores: { "g5-mult2": scored(2, t) },
+  checks: { "g5-mult2": { last: 2, best: 2, date: t, due: t + 864e5, passes: 0 } },
   log: [
     { key: "g5-mult2", mode: "practice", title: LESSON, date: t, level: 2, total: 4, hints: 1, shown: 0, cats: { "Lost the place value": 2, "Off by one": 1 }, rushed: 0 },
     { key: "g5-mult2", mode: "practice", title: LESSON, date: lastWeek, level: 1, total: 6, hints: 3, shown: 2, cats: {}, rushed: 0 },
@@ -72,6 +73,18 @@ describe("the grown-up page", () => {
     // is it sticking: scores by chapter in the app's words
     fireEvent.click(bar.getByRole("tab", { name: /^Is it sticking, / }));
     expect(screen.getAllByText("Approaching · 2 of 4").length).toBeGreaterThan(0);
+  });
+});
+
+describe("one score everywhere", () => {
+  // Review 81e53ef: the grown-up page read the practice score while Grades and Done read the skill check
+  it("the grown-up page's chapter score is the latest skill check, the same as the Grades tab", () => {
+    const check = { last: 3, best: 4, date: t, due: t + 7 * 864e5, passes: 1 };
+    renderApp({ ...progress, scores: { "g5-mult2": scored(4, t) }, checks: { "g5-mult2": check } } as Partial<Progress>, { "g5-mult2": report });
+    openPage();
+    fireEvent.click(screen.getByRole("button", { name: /^Is it sticking\? / }));
+    expect(screen.getAllByText("Proficient · 3 of 4").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Advanced · 4 of 4")).toBeNull();
   });
 });
 

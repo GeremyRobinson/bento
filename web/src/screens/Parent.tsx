@@ -5,8 +5,8 @@ import { entriesInGrade, isReady, unitsInGrade } from "../app/curriculum";
 import { lessonById } from "../curriculum/registry";
 import { createRng } from "../curriculum/generators/rng";
 import { LEVELS, type Level } from "../engine/mastery/levels";
-import { lastScore, type Progress } from "../engine/mastery/progress";
-import { dueBack, learnedNow, REVIEW_DAYS, toGoOver } from "../engine/mastery/skills";
+import type { Progress } from "../engine/mastery/progress";
+import { checkScore, dueBack, learnedNow, REVIEW_DAYS, toGoOver } from "../engine/mastery/skills";
 import { checksAhead, hintSummary, mistakePatterns, usualWeek, weekRows, type Pattern, type WeekRow } from "../app/grownup";
 import { LockIcon } from "../components/primitives/icons";
 import { MathLine, Rich } from "../components/primitives/MathLine";
@@ -117,7 +117,7 @@ function gather(p: Progress, reports: Parameters<typeof mistakePatterns>[0], g: 
     focus: focusId ? { id: focusId, lesson: lessonById(focusId)?.title ?? focusId, pat } : null,
     hints: hintSummary(p), ahead: checksAhead(p, now).slice(0, 3),
     units: unitsInGrade(g).map(u => {
-      const done = u.entries.flatMap(c => { const s = lastScore(p, c.id); return s == null ? [] : [{ id: c.id, title: c.title, s, over: dueBack(p, c.id, now) }]; });
+      const done = u.entries.flatMap(c => { const s = checkScore(p, c.id); return s == null ? [] : [{ id: c.id, title: c.title, s, over: dueBack(p, c.id, now) }]; });
       const score = done.length ? (Math.floor(done.reduce((a, x) => a + x.s, 0) / done.length) as Level) : null;
       return { name: u.name, n: u.entries.length, done, score };
     }),
@@ -258,6 +258,6 @@ function Help({ d }: { d: Data }) {
 
 /** the lowest-scored lesson of the grade, else the latest one finished */
 function lowest(p: Progress, g: number): string | undefined {
-  const scored = Object.keys(p.scores).filter(id => lessonById(id)?.grade === g).sort((a, b) => (lastScore(p, a) ?? 4) - (lastScore(p, b) ?? 4));
+  const scored = Object.keys(p.checks ?? {}).filter(id => lessonById(id)?.grade === g).sort((a, b) => (checkScore(p, a) ?? 4) - (checkScore(p, b) ?? 4));
   return scored[0] ?? p.log.find(e => e.mode === "practice" && lessonById(e.key))?.key;
 }
