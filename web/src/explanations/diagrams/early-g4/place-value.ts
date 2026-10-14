@@ -91,7 +91,9 @@ export function buildRounding(s: RoundingSpec): SceneDiagram {
   items.push({ type: "line", x1: X(s.n), y1: y, x2: X(s.result), y2: y, cls: "hl", from: s.beats.round, enter: "growx" } as Draft);
   items.push({ type: "circle", cx: X(s.result), cy: y, r: 8, cls: "dota", from: s.beats.round, enter: "pop", delay: 0.4 } as Draft);
   items.push({ type: "circle", cx: X(s.n), cy: y, r: 7, cls: "dotp", from: s.beats.line, enter: "pop", delay: 0.3 } as Draft);
-  items.push(t(X(s.n), y - 12, commas(s.n), "lbl up", { from: s.beats.line, enter: "rise", delay: 0.4 }));
+  // the number is the problem itself: a phone's short box leaves its label off the dot, where it ran into the chart
+  // over it (Review 1c74c20, g4-placevalue at 280×123)
+  items.push(t(X(s.n), y - 12, commas(s.n), "lbl up shortgo", { from: s.beats.line, enter: "rise", delay: 0.4 }));
 
   return frame("place-value", items, s.alt, 14, { w: W + 28 });
 }
