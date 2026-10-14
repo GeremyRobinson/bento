@@ -1,5 +1,5 @@
 import type { Rng } from "../generators/rng";
-import type { MathText } from "./math-text";
+import type { MathText, Operator } from "./math-text";
 import type { DiagramModel, Explanation } from "../../explanations/schema";
 
 export type GradeNumber = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
@@ -88,6 +88,8 @@ export interface LessonDefinition<P = unknown> {
   restore(raw: unknown): P | null;
   /** the problem as the student sees it, above the steps */
   display(problem: P): MathText;
+  /** how the answer joins a problem line that has no "=" once it is solved, e.g. "≈" for rounding ("3.476 ≈ 3.48") */
+  answerOp?: Operator;
   /** an optional line under the problem, e.g. "Factor it." */
   displayNote?(problem: P): RichText;
   /** word problems: the whole question at reading size, shown in place of the short math line */

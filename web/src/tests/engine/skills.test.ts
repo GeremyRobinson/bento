@@ -67,6 +67,14 @@ describe("the skill check", () => {
     expect(s.feedback?.text).toBe(`Split it into tens and ones: ${pr.partialProducts.map(formatNumber).join(" + ")}.`);
   });
 
+  it("a long division miss names the answer's tens and ones (v2 spec C2, g5-divide)", () => {
+    let s = startTest(checkKey(5, "g5-divide"), emptyProgress(), deps());
+    s = answer(s, emptyProgress(), false);
+    const { qt } = s.items[0]!.problem as { qt: number };
+    expect(s.feedback).toMatchObject({ type: "bad", missed: true, strong: `It\u2019s **${qt}**.` });
+    expect(s.feedback?.text).toBe(`Take out the tens, then the ones: ${qt - (qt % 10)} + ${qt % 10}.`);
+  });
+
   it("is saved apart from the practice score and the tests", () => {
     const p0 = base({ scores: { "g5-mult2": score(2) } });
     const p = run(startTest(checkKey(5, "g5-mult2"), p0, deps()), p0, () => true);

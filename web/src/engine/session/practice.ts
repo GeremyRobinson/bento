@@ -9,7 +9,7 @@ import type { AnswerStep, AnyLesson } from "../../curriculum/schemas/lesson";
 import { canShowMe, canSkip, hintBudget, HINT_WAIT_MS, lessonLength, RUSHED_MS, tierFor, type Tier } from "../adaptive-help/policy";
 import { CATEGORIES, diagnose, nudge, SAY } from "../diagnosis/diagnose";
 import { parseNumber } from "../evaluation/numbers";
-import { answerIds, checkStep, expectedValues, finalPartsOf, finalStep, runtimeSteps, type RuntimeStep } from "../evaluation/steps";
+import { answerIds, checkStep, sayAnswer, expectedValues, finalPartsOf, finalStep, runtimeSteps, type RuntimeStep } from "../evaluation/steps";
 import { levelOf, problemXp, stepPoints } from "../mastery/levels";
 import { lastScore, type Progress } from "../mastery/progress";
 import { CHECKS, WHERE_TRIES } from "../../curriculum/checks";
@@ -369,15 +369,6 @@ export function choose(s: PracticeSession, index: number, progress: Progress, de
 // ---------------------------------------------------------------- checking
 
 /** How a set of answers reads in reports: a choice's words, a fraction, or numbers. */
-function typedText(step: RuntimeStep, values: Record<string, number | null>): string {
-  if (step.choices && values.c != null) return step.choices[values.c] ?? String(values.c);
-  const keys = Object.keys(values);
-  if (keys.length === 2 && values.n != null && values.d != null) {
-    return values.d === 1 ? formatNumber(values.n) : `${formatNumber(values.n)}/${formatNumber(values.d)}`;
-  }
-  return Object.values(values).filter((x): x is number => x != null).map(formatNumber).join(", ");
-}
-
 export function check(s: PracticeSession, progress: Progress, deps: Deps): PracticeSession {
   const step = currentStep(s);
   if (!step) return s;
@@ -397,7 +388,7 @@ export function check(s: PracticeSession, progress: Progress, deps: Deps): Pract
   const cat = r.generic ? diagnose(expected, values, earlier) : "concept";
   const mistake: Mistake = {
     n: s.i + 1, step: s.step + 1, label: step.base, lessonId: currentItem(s).lessonId,
-    typed: typedText(step, values), want: typedText(step, expected),
+    typed: sayAnswer(step, values), want: sayAnswer(step, expected),
     kind: cat === "concept" ? r.kind : CATEGORIES[cat][0], cat, msg: cat === "concept" ? r.message : CATEGORIES[cat][1], rushed,
     ...(cat === "concept" || step.look || SAY[cat] ? { say: cat === "concept" ? r.message : step.look ?? SAY[cat] } : {}),
   };
@@ -418,9 +409,9 @@ export function check(s: PracticeSession, progress: Progress, deps: Deps): Pract
     // how it's worked out, without repeating it (v2 spec C2)
     if (isCheckKey(next.key) && !currentStep(after)) {
       const it = currentItem(after), why = lessonOfItem(it).checkWhy?.(it.problem);
-      return { ...after, feedback: { type: "bad", missed: true, strong: `It\u2019s **${typedText(step, expected)}**.`, ...(why ? { text: why } : {}) } };
+      return { ...after, feedback: { type: "bad", missed: true, strong: `It\u2019s **${sayAnswer(step, expected)}**.`, ...(why ? { text: why } : {}) } };
     }
-    return { ...after, feedback: { type: "bad", missed: true, strong: "Not this time.", text: `It\u2019s **${typedText(step, expected)}**.${currentStep(after) ? " Keep going." : ""}` } };
+    return { ...after, feedback: { type: "bad", missed: true, strong: "Not this time.", text: `It\u2019s **${sayAnswer(step, expected)}**.${currentStep(after) ? " Keep going." : ""}` } };
   }
   const band = bandOfSession(next);
   const msg = cat === "concept" ? r.message

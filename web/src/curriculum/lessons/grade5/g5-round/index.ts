@@ -121,6 +121,7 @@ export const lesson: LessonDefinition<RoundProblem> = {
   },
   restore: raw => restoreVia(raw, ["N", "p"] as const, v => createRound(v.N, v.p)),
   display: p => [num(p.N / 1000)],
+  answerOp: "≈", // solved, the line reads "3.476 ≈ 3.48" (Review g5 full pass, item 7)
   displayNote: p => `Round to the nearest ${p.p === 1 ? "tenth" : "hundredth"}.`,
   answers,
   explain,
