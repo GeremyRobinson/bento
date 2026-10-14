@@ -26,7 +26,9 @@ const sizeOf = (cls = "") => (/\bbig\b/.test(cls) ? (/\blbl\b/.test(cls) ? 22 : 
 const boxOf = (t: Text) => {
   const size = sizeOf(t.cls), w = (t.text.length + (t.sup ? t.sup.length * 0.65 : 0)) * size * 0.6;
   const x0 = /\bend\b/.test(t.cls ?? "") ? t.x - w : /\bstart\b/.test(t.cls ?? "") ? t.x : t.x - w / 2;
-  return { x0, x1: x0 + w, y0: t.y - size / 2, y1: t.y + size / 2 };
+  // one standing on its anchor (.up) runs up from it, one hanging (.down) runs down
+  const y0 = /\bup\b/.test(t.cls ?? "") ? t.y - size : /\bdown\b/.test(t.cls ?? "") ? t.y : t.y - size / 2;
+  return { x0, x1: x0 + w, y0, y1: y0 + size };
 };
 
 /** When within beat `b` a shape is on screen, in seconds: it comes in at its delay (on its own beat) and goes when it fades out. */
