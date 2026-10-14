@@ -35,7 +35,7 @@ export function SceneDiagram({ diagram: given, at, fit = false }: { diagram: Sce
       // out more compactly in a short box is framed as it draws there
       el.style.setProperty("--box-h", String(Math.round(r.height)));
       const box0 = contentBox(el, d.items, 0);
-      if (box0) setFrame({ d, box: floorBox(el, d.items, box0, [r.width, r.height], d.grow ?? GROW), size: [r.width, r.height], text, panel });
+      if (box0) setFrame({ d, box: aroundEnd(el, d.items, floorBox(el, d.items, box0, [r.width, r.height], d.grow ?? GROW)), size: [r.width, r.height], text, panel });
     };
     measure();
     // the frame is the text measured at its own size, so text measured in the fallback font (a cold first load, before
@@ -185,6 +185,19 @@ const cap = (b: Box, b0: Box, grow: number): Box => {
     w, h,
   };
 };
+/**
+ * The frame, widened evenly so the picture as it ends sits in the middle of its box (G 2026-10-14: "make sure they're
+ * centered in the box"). The frame still holds every beat, so nothing moves between beats; a shape shown only on an
+ * earlier beat just leaves room on its side.
+ */
+function aroundEnd(svg: SVGSVGElement, items: SceneItem[], box: Box): Box {
+  const last = Math.max(0, ...items.map(it => it.from ?? 0));
+  const end = contentBox(svg, items.filter(it => (it.from ?? 0) <= last && (it.until == null || it.until >= last)), 0);
+  if (!end) return box;
+  const cx = end.x + end.w / 2, cy = end.y + end.h / 2;
+  const hw = Math.max(cx - box.x, box.x + box.w - cx), hh = Math.max(cy - box.y, box.y + box.h - cy);
+  return { x: cx - hw, y: cy - hh, w: 2 * hw, h: 2 * hh };
+}
 const union = (a: Box, b: Box): Box => {
   const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y);
   return { x, y, w: Math.max(a.x + a.w, b.x + b.w) - x, h: Math.max(a.y + a.h, b.y + b.h) - y };
