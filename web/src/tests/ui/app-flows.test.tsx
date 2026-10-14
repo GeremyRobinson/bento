@@ -390,7 +390,7 @@ describe("report, grown-up page and back to basics", () => {
     expect(box().querySelector(".o-cover.sel")).toHaveTextContent(LESSON);
   }, 60000);
 
-  it("shows mistake patterns, scores by chapter and where help was used, and opens the session behind a pattern", () => {
+  it("shows the mistake they keep making, where help was used and scores by chapter (model v63)", () => {
     const t = Date.UTC(2026, 9, 1, 15);
     const progress: Partial<Progress> = {
       grade: 5, chosen: true, xp: 120, done: 2,
@@ -411,21 +411,17 @@ describe("report, grown-up page and back to basics", () => {
     // the grown-up page opens from My Obento, which the person button goes straight to (v2)
     fireEvent.click(screen.getByRole("button", { name: "Me" }));
     tap(/^For the grown-up/);
-    expect(screen.getByRole("heading", { level: 1, name: "For the grown-up" })).toBeInTheDocument();
-    // the pattern, picked, with what went wrong and the lesson's own explanation of it
-    const row = screen.getByRole("button", { name: `Lost the place value, ${LESSON}: 1 of 1 problems` });
-    expect(row).toHaveAttribute("aria-current", "true");
-    expect(screen.getByRole("heading", { level: 2, name: "Lost the place value" })).toBeInTheDocument();
-    const notes = [...document.querySelectorAll(".gu-why")].map(n => n.textContent);
-    expect(notes).toEqual(["Step 1: typed 141 first.", "Step 1: Multiply by the tens: The tens digit stands for 30, so add a zero."]);
-    expect(screen.getByText("2 hints in 2 sessions. 1 step filled in with Show me. 1 quick retry looked like guessing.")).toBeInTheDocument();
-    // scores by chapter: the lesson's battery says its score in words
-    expect(screen.getAllByRole("img", { name: "1, Beginning" }).length).toBeGreaterThan(0);
-    // the session behind the pattern opens, and Back returns to the lesson
-    tap("See that session ›");
-    expect(screen.getByText(/Typed/)).toHaveTextContent("Typed 141, answer 1410. Lost the place value (quick retry).");
-    tap("Back");
-    expect(screen.getByRole("button", { name: "Watch again" })).toBeInTheDocument();
+    // the three questions; Where can I help opens on the mistake, wrong beside right, with the lesson's own words on it
+    fireEvent.click(screen.getByRole("button", { name: /^Where can I help\? 1 thing/ }));
+    const mistakes = within(screen.getByRole("region", { name: "Mistakes they keep making" }));
+    expect(mistakes.getByText(`${LESSON} · most often`)).toBeInTheDocument();
+    expect(mistakes.getByText("141")).toBeInTheDocument();
+    expect(mistakes.getByText("1410")).toBeInTheDocument();
+    expect(mistakes.getByText(/^Lost the place value: Multiply by the tens: The tens digit stands for 30, so add a zero\. 1 of 1 problem\.$/)).toBeInTheDocument();
+    expect(within(screen.getByRole("region", { name: "Hints and checks" })).getByText("2 hints")).toBeInTheDocument();
+    // scores by chapter in words, on the sticking question
+    fireEvent.click(screen.getByRole("tab", { name: /^Is it sticking, / }));
+    expect(screen.getAllByText("Beginning · 1 of 4").length).toBeGreaterThan(0);
   });
 
   it("suggests building up first after a low score, in the lesson and on the results", () => {

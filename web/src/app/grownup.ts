@@ -6,6 +6,7 @@ import { lastScore, type Progress } from "../engine/mastery/progress";
 import type { Level } from "../engine/mastery/levels";
 import type { Mistake, ProblemRecord, SessionReport } from "../engine/session/types";
 import { titleOf, unitsInGrade } from "./curriculum";
+import { isCheckKey, lessonOfCheck, PASS } from "../engine/mastery/skills";
 
 /** Monday 00:00 of the week `now` falls in, and the Monday after (local time). */
 export function weekOf(now: number): { from: number; to: number } {
@@ -183,3 +184,50 @@ export const hasHistory = (p: Progress, reports: Record<string, SessionReport>) 
 
 /** the oldest saved session, for "since" */
 export const firstDate = (p: Progress) => (p.log.length ? Math.min(...p.log.map(e => e.date)) : null);
+
+export interface WeekRow {
+  /** Monday 00:00 */
+  from: number;
+  /** whole minutes on runs that week */
+  min: number;
+  /** days with at least one run */
+  days: number;
+  /** lessons whose skill check passed that week */
+  learned: string[];
+  /** lessons practised that week without a passed check yet */
+  working: string[];
+}
+
+/**
+ * The last `n` weeks, oldest first, the current week last. Time comes from each run's own time, or for older saves
+ * from the run's report when it is still kept.
+ */
+export function weekRows(p: Progress, reports: Record<string, SessionReport>, now: number, n = 6): WeekRow[] {
+  const byDate = new Map(Object.values(reports).map(r => [r.date, r.ms]));
+  const rows: WeekRow[] = [], day = 864e5;
+  for (let i = n - 1; i >= 0; i--) {
+    const { from, to } = weekOf(now - i * 7 * day);
+    const runs = p.log.filter(e => e.date >= from && e.date < to);
+    const ms = runs.reduce((a, e) => a + Math.max(0, e.ms ?? byDate.get(e.date) ?? 0), 0);
+    const days = new Set(runs.map(e => new Date(e.date).toDateString())).size;
+    const learned = [...new Set(runs.filter(e => isCheckKey(e.key) && e.level >= PASS).map(e => titleOf(lessonOfCheck(e.key))))];
+    const working = [...new Set(runs.filter(e => e.mode === "practice" && !learned.includes(e.title)).map(e => e.title))];
+    rows.push({ from, min: Math.round(ms / 60000), days, learned, working });
+  }
+  return rows;
+}
+
+/** a usual week: the average of the earlier weeks with any time in them, to the nearest 5 minutes; null before there are any */
+export function usualWeek(rows: WeekRow[]): { min: number; days: [number, number] } | null {
+  const past = rows.slice(0, -1).filter(r => r.min > 0);
+  if (!past.length) return null;
+  const min = Math.max(5, Math.round(past.reduce((a, r) => a + r.min, 0) / past.length / 5) * 5);
+  const d = past.map(r => r.days);
+  return { min, days: [Math.min(...d), Math.max(...d)] };
+}
+
+/** learned lessons whose next check is still ahead, soonest first */
+export function checksAhead(p: Progress, now: number): { id: string; title: string; due: number }[] {
+  return Object.entries(p.checks ?? {}).filter(([, c]) => c.last >= PASS && c.due > now)
+    .sort((a, b) => a[1].due - b[1].due).map(([id, c]) => ({ id, title: titleOf(id), due: c.due }));
+}

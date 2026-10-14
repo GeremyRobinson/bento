@@ -70,7 +70,8 @@ export function SettingsBody({ leave }: { leave?: () => void }) {
           <OnOff name={SETTING.sounds} on={st.sounds} set={v => { set({ sounds: v }); if (v) playTone("right"); }} />
           <Row name="Keypad"><OSlider tabs={[{ id: "right", label: "Right" }, { id: "left", label: "Left", aria: "Left-handed" }]} value={st.leftHanded ? "left" : "right"} onPick={v => set({ leftHanded: v === "left" })} label="Keypad" /></Row>
           {g != null && <Row name={FIND_MY_LEVEL}><button className="o-btn" onClick={() => { leave?.(); startTest(placeKey(g)); }}>Start</button></Row>}
-          <Row name="Backup"><span className="o-row"><button className="o-btn" onClick={save} aria-label="Save a backup">Save</button><button className="o-btn" onClick={() => file.current?.click()} aria-label="Restore a backup">Restore</button></span></Row>
+          <Row name="Backup"><button className="o-btn" onClick={save} aria-label="Save a backup">Save</button></Row>
+          <Row name="Restore a backup"><button className="o-btn" onClick={() => file.current?.click()}>Restore</button></Row>
           <Row name="What Obento is"><button className="o-btn" onClick={() => { leave?.(); go({ name: "welcome" }, "back"); }} aria-label="What Obento is">Open</button></Row>
           {SANDBOX && <Row name="Sandbox"><button className="o-btn" onClick={() => { leave?.(); dispatchEvent(new Event("bento:sandbox")); }} aria-label="Sandbox">Open</button></Row>}
         </div>

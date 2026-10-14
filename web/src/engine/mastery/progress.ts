@@ -25,6 +25,8 @@ export interface LogEntry {
   /** mistake kind → count */
   cats: Record<string, number>;
   rushed: number;
+  /** time on the run; missing on runs saved before it was kept */
+  ms?: number;
 }
 
 /** Everything saved on this device, apart from the per-run reports (stored separately). */

@@ -55,10 +55,11 @@ export const MASTERS: Master[] = [
   { name: "O tile", classes: ["o-tile", "o-tx", "o-nm", "o-cover", "o-cpw", "o-stat", "o-wide", "o-foot", "o-st", "next", "rev", "o-ring", "o-marks", "sel", "o-gt", "o-gnum", "o-grades"] },
   { name: "O picture", classes: ["o-art"] },
   { name: "O settings", classes: ["settings", "o-setrows", "o-setrow", "o-tsize"] },
+  { name: "O report", classes: ["report", "open", "o-qcard", "o-ansbig", "o-bignum", "o-qpic", "two", "o-short", "o-long", "o-repd", "o-rsec", "o-cols2", "o-cols3", "o-rows", "o-line2", "o-wbars", "sm", "o-wb", "o-wlab", "cur", "o-inline"] },
   { name: "O motion", classes: ["o-arrive", "o-grid", "zin", "zout", "o-sw", "thumb", "o-btn", "o-tool", "o-tile"] },
   { name: "O me", classes: ["o-shelfp", "o-shh", "o-shelf", "o-count", "fill", "o-lrow", "o-cpw", "o-tx", "o-tile", "o-lk", "o-gulink", "o-why"] },
   { name: "O chips", classes: ["v-chips", "right", "wrong", "mk"] },
-  { name: "O screens", classes: ["o-state", "home", "o-today", "o-art", "o-box", "o-bh", "o-head", "o-sw", "o-grid", "o-grades", "o-tile", "o-marks", "o-app", "o-nav", "o-gyear", "o-gnow", "o-gch", "o-grows", "o-grow", "o-big", "o-tx", "o-nm", "o-st", "o-wide", "o-label"] },
+  { name: "O screens", classes: ["o-state", "home", "o-today", "o-art", "o-box", "o-bh", "o-head", "o-sw", "o-grid", "o-grades", "o-tile", "o-marks", "o-app", "o-nav", "o-gyear", "o-gnow", "o-gch", "o-grows", "o-grow", "o-big", "o-tx", "o-nm", "o-st", "o-wide", "o-label", "o-plain"] },
 ];
 
 /** states any master may be in: they never make a rule a one-off */

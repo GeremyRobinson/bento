@@ -573,7 +573,7 @@ export function finishRun(s: PracticeSession, progress: Progress, now: number): 
   const cats: Record<string, number> = {};
   for (const m of s.mistakes) cats[m.kind] = (cats[m.kind] ?? 0) + 1;
   p.log = [{ key: s.key, mode: s.mode, title: s.title, date: now, level, total: report.total, hints: report.hints, shown: report.shown, cats,
-    rushed: s.mistakes.filter(m => m.rushed).length }, ...p.log].slice(0, 60);
+    rushed: s.mistakes.filter(m => m.rushed).length, ms: report.ms }, ...p.log].slice(0, 60);
   p.run = null;
   return { progress: p, report };
 }

@@ -24,9 +24,10 @@ const SIZES = [{ w: 390, h: 844, scheme: "dark" }, { w: 375, h: 667, scheme: "li
   { w: 1024, h: 768, scheme: "light" }, { w: 1280, h: 720, scheme: "dark" }];
 /** containers meant to scroll (a long list; the book's chapters, and its plan on a short landscape screen where the
  *  picture keeps its room); anything else that scrolls inside itself is cut */
-const SCROLLERS = ".fhome>.ftables, nav.slist.more, .sbento .b-chaps, .sbento .today, .sbento .tbody, .o-grid, .o-state.home"; // the box's tiles scroll; home may scroll on a phone (v2 spec H0)
-/** on a phone, screens other than lessons scroll as one piece (v2 spec H0b): My Obento */
-const PHONE_SCROLLERS = ", .mine";
+const SCROLLERS = ".fhome>.ftables, nav.slist.more, .sbento .b-chaps, .sbento .today, .sbento .tbody, .o-grid, .o-state.home, .o-repd"; // the box's tiles scroll; home may scroll on a phone (v2 spec H0); an open grown-up question scrolls under its bar (model v64 .repd)
+/** on a phone, screens other than lessons scroll as one piece (v2 spec H0b; model v64 .me/.report/.settings): Me, Settings
+ *  and the grown-up page. Lessons never do. */
+const PHONE_SCROLLERS = ", .o-state.me, .o-state.settings, .o-state.report";
 const ROUTES = ["home", "learn", "practice", "facts", "me", "settings", "grown-up", "welcome"];
 
 const fails = [], notes = [];
