@@ -93,4 +93,9 @@ export interface TapeSpec {
   gap?: "bar" | "mixed";
   /** two quantities must be told apart (the second fraction): "two" fills turn violet. Otherwise every part is amber */
   two?: boolean;
+  /** also lay the bars out tall, each row's label and total on a line over its bar instead of beside it, so a square box
+   *  draws the bars full width and thicker (5th grade trial, G 2026-10-14); the picture draws whichever is bigger */
+  tall?: boolean;
+  /** this is the tall arrangement itself (set by the builder) */
+  over?: boolean;
 }

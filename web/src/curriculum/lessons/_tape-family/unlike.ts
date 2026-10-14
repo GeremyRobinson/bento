@@ -174,7 +174,7 @@ export function unlikePicture(p: UnlikeFractionsProblem) {
       rows.push({ lit: [{ from: 4 }], length: 1, parts: L, from: 4, fills, each: [{ text: i => `${w * L + i + 1}`, from: 4, only: i => w * L + i < S, stagger: tick(S), lead: w * L * tick(S) }], label: w === 0 ? [{ text: `${S}/${L}`, acc: true }] : [], total: w === wholes - 1 ? answerTotal : [] });
     }
   }
-  return buildTape({
+  return buildTape({ tall: true,
     rows,
     // the second fraction is told apart from the first (picture system: violet only for a second quantity)
     two: true,

@@ -8,6 +8,7 @@ import { PIC, fitIn, roomLeft, spreadRows, thinOut } from "../scene/picture-syst
 
 const M = 10; // outer margin
 const BRACKET = 28; // room for a bracket and its text
+const OVER = 30; // tall layout: the line over a bar that holds its label and total
 // labels and totals at the picture system's label size; text in a part as big as fits (FS.each), else small (FS.small)
 const FS = { label: PIC.label, total: PIC.label, each: PIC.label, small: 12, bracket: 15 };
 /** the gap between pieces, and between rows, for a spec */
@@ -100,11 +101,16 @@ export interface TapeLayout {
   x0: number;
   rowTops: number[];
   stacked: boolean;
+  /** the tall arrangement: labels and totals on a line over each bar */
+  over: boolean;
+  /** tall: the line each row's label and total stand on */
+  overYs: number[];
 }
 
 export function layoutTape(spec: TapeSpec): TapeLayout {
-  const W = spec.width ?? 480, rows = spec.rows, n = rows.length;
-  const rowHeight = Math.min(spec.maxRowHeight ?? 46, Math.max(22, Math.floor(280 / n) - 14));
+  const W = spec.width ?? 480, rows = spec.rows, n = rows.length, over = !!spec.over;
+  // tall: the labels move over the bars, so the bars take the whole width and may stand half again as thick
+  const rowHeight = Math.round(Math.min(spec.maxRowHeight ?? 46, Math.max(22, Math.floor(280 / n) - 14)) * (over ? 1.5 : 1));
   const gap = tapeGap(spec); // between rows: the same gap as between pieces (picture system)
   // labels read on one line ("2/3"), as in the model: a stacked fraction is taller than the gap between rows
   const stacked = false;
@@ -113,29 +119,31 @@ export function layoutTape(spec: TapeSpec): TapeLayout {
     return m ? Math.max(m[1]!.length, m[2]!.length) * size * 0.6 + 8 : textWidth(t.text, size);
   };
   const labelMax = Math.max(0, ...rows.flatMap(r => (r.label ?? []).map(t => wOf(t, FS.label))));
-  const labelW = labelMax ? labelMax + PIC.labelGap : 0;
+  const labelW = labelMax && !over ? labelMax + PIC.labelGap : 0;
   const x0 = M + labelW;
   const unitsWide = Math.max(...rows.map(r => (r.start ?? 0) + r.length));
   // one scale for every row: each bar plus its total must fit
   let unit = (W - M - x0) / unitsWide;
   for (const r of rows) {
     const tw = Math.max(0, ...(r.total ?? []).map(t => wOf(t, FS.total)));
-    if (tw) unit = Math.min(unit, (W - M - x0 - PIC.labelGap - tw) / ((r.start ?? 0) + r.length));
+    if (tw && !over) unit = Math.min(unit, (W - M - x0 - PIC.labelGap - tw) / ((r.start ?? 0) + r.length));
   }
-  const rowTops: number[] = [];
+  const rowTops: number[] = [], overYs: number[] = [];
   let y = M;
   rows.forEach((row, i) => {
     const br = spec.brackets ?? [];
     // part text too big for its part goes outside under a leader: the room for it is kept like a bracket's
     const free = { below: !br.some(b => b.row === i && b.side === "below"), above: !br.some(b => b.row === i && b.side === "above") && i === 0 };
     const out = (row.each ?? []).map(e => eachFit(e, (row.length / layersAt(row, e.from ?? row.from ?? 0).count) * unit, rowHeight, layersAt(row, e.from ?? row.from ?? 0).count, free));
+    if (over && (row.label?.length || row.total?.length)) y += OVER;
+    overYs.push(y - 6);
     if (br.some(b => b.row === i && b.side === "above") || out.includes("above")) y += BRACKET;
     rowTops.push(y);
     y += rowHeight;
     if (br.some(b => b.row === i && b.side === "below") || out.includes("below")) y += BRACKET;
     y += gap;
   });
-  return { width: W, height: Math.round(y - gap + M), unit, rowHeight, x0, rowTops, stacked };
+  return { width: W, height: Math.round(y - gap + M), unit, rowHeight, x0, rowTops, stacked, over, overYs };
 }
 
 /** Builds the scene. Every coordinate comes from the spec, which the lesson computed from its problem. */
@@ -147,6 +155,8 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
   const push = (it: SceneItem | null) => { if (it) items.push(it); };
   const pushLit = (lit: Beats[] | undefined, it: SceneItem) => { items.push(...litRuns(it, lit)); };
   const when = (from: number, until?: number) => ({ ...(from ? { from } : {}), ...(until != null ? { until } : {}) });
+  // tall: the line a row's label and total stand on, over its bar (and over its bracket or leader, when it has one above)
+  const overY = (ri: number) => L.overYs[ri]!;
 
   // a label or total: a stacked fraction when there is room, otherwise one line
   const textAt = (t: TapeText, cx: number, cy: number, cls: string, anchor: "end" | "start" | "middle", run: { from: number; until?: number }) => {
@@ -306,11 +316,14 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
       const run = within(t.from ?? 0, t.until, row);
       // side labels end one label gap before the bars, so a label held at its on-screen floor (phones) grows away
       // from its bar, never into it
-      if (run) { const at = items.length; textAt(t, X(0) - PIC.labelGap, top + h / 2, "lbl", "end", run); items.splice(at, items.length - at, ...items.slice(at).flatMap(x => litRuns(x, row.lit)).map(x => thinRowLabel(x))); }
+      // tall: on the line over its bar, from the bar's left end
+      if (run && L.over) { const at = items.length; textAt(t, X(start), overY(ri), "lbl up", "start", run); items.splice(at, items.length - at, ...items.slice(at).flatMap(x => litRuns(x, row.lit))); }
+      else if (run) { const at = items.length; textAt(t, X(0) - PIC.labelGap, top + h / 2, "lbl", "end", run); items.splice(at, items.length - at, ...items.slice(at).flatMap(x => litRuns(x, row.lit)).map(x => thinRowLabel(x))); }
     }
     for (const t of row.total ?? []) {
       const run = within(t.from ?? 0, t.until, row);
-      if (run) { const at = items.length; textAt(t, X(start + row.length) + PIC.labelGap, top + h / 2, "lbl pw", "start", run); items.splice(at, items.length - at, ...items.slice(at).map(thinRowTotal)); }
+      if (run && L.over) textAt(t, X(start + row.length), overY(ri), "lbl pw up", "end", run);
+      else if (run) { const at = items.length; textAt(t, X(start + row.length) + PIC.labelGap, top + h / 2, "lbl pw", "start", run); items.splice(at, items.length - at, ...items.slice(at).map(thinRowTotal)); }
     }
   });
 
@@ -333,5 +346,6 @@ export function buildTape(spec: TapeSpec): SceneDiagram {
     push({ type: "line", x1: X(g.at), y1: L.rowTops[r0]! - 4, x2: X(g.at), y2: L.rowTops[r1_]! + h + 4, cls: "wire", enter: "draw", ...when(g.from ?? 0) });
   }
 
-  return { kind: "scene", family: "tape", width: L.width, height: L.height, items, alt: spec.alt, ...(spec.two ? { two: true } : {}) };
+  return { kind: "scene", family: "tape", width: L.width, height: L.height, items, alt: spec.alt, ...(spec.two ? { two: true } : {}),
+    ...(spec.tall && !spec.over ? { layouts: [buildTape({ ...spec, over: true })] } : {}) };
 }

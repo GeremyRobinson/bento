@@ -95,7 +95,7 @@ function answers(p: UnitConversionProblem): AnswerModel {
 export function unitConversionPicture(p: UnitConversionProblem) {
   const { u: [one, many, small, f], up } = p, W = bigCount(p), P = Math.ceil(W), smalls = W * f;
   const piece = (i: number) => (i < Math.floor(W) ? f : (W - Math.floor(W)) * f);
-  return buildTape({
+  return buildTape({ tall: true,
     rows: [{
       // lit: the one big unit as it is filled, then all of them
       lit: [{ from: 1, until: 1 }, { from: 3 }],

@@ -9,7 +9,10 @@ const enterClass = (e: SceneItem["enter"]) => (e ? e.split(" ").map((w, i) => (i
  * Draws a scene exactly as its model says. A shape is drawn once the timeline reaches its beat
  * (and until its last beat); it plays its entrance when it first appears.
  */
-export function SceneDiagram({ diagram: d, at, fit = false }: { diagram: Scene; at: number; fit?: boolean }) {
+export function SceneDiagram({ diagram: given, at, fit = false }: { diagram: Scene; at: number; fit?: boolean }) {
+  // a picture with other arrangements draws the one that is biggest in its box (picked when the box is measured)
+  const [picked, setPicked] = useState(0);
+  const d = (fit && picked && given.layouts?.[picked - 1]) || given;
   const [frame, setFrame] = useState<{ d: Scene; box: Box; size: [number, number]; text: Record<string, number>; panel: boolean } | null>(null);
   const fitted = fit && frame?.d === d;
   const vb = fitted ? framed(frame.box, frame.size) : { x: 0, y: 0, w: d.width, h: d.height };
@@ -26,6 +29,8 @@ export function SceneDiagram({ diagram: d, at, fit = false }: { diagram: Scene; 
     const measure = () => {
       const r = layoutRect(room);
       if (!(r.width > 0 && r.height > 0)) return;
+      const best = biggest(given, r.width, r.height);
+      if (best !== picked) { setPicked(best); return; }
       // the box's height goes to the picture's CSS before it is measured (see BOX_H), so a picture that lays itself
       // out more compactly in a short box is framed as it draws there
       el.style.setProperty("--box-h", String(Math.round(r.height)));
@@ -37,7 +42,7 @@ export function SceneDiagram({ diagram: d, at, fit = false }: { diagram: Scene; 
     const ro = new ResizeObserver(measure);
     ro.observe(room);
     return () => ro.disconnect();
-  }, [d, fit, ref]);
+  }, [d, given, picked, fit, ref]);
   // fit centres the finished picture once (the frame above); parts then appear where they stay, and nothing already
   // drawn moves between beats (G 19:34: "random coming from the side animations")
   return (
@@ -75,6 +80,19 @@ const continues = (it: SceneItem, all: SceneItem[]) => {
 };
 
 interface Box { x: number; y: number; w: number; h: number }
+/** boxes this tall or less are short (phones; the same line as --short in the picture CSS) */
+const SHORT_BOX = 300;
+
+/** Of a picture and its other arrangements, the one that covers most of a w × h box (0: the picture itself, k: its k-th
+ *  other layout), keeping the first one unless another is clearly bigger, so a box near the turning point doesn't flip */
+function biggest(d: Scene, w: number, h: number): number {
+  // a short box (a phone) holds its text at the label floor, which needs the room beside the bars: it keeps the first one
+  if (h <= SHORT_BOX) return 0;
+  const scale = (s: Scene) => Math.min(w / s.width, h / s.height) ** 2 * s.width * s.height;
+  let best = 0;
+  (d.layouts ?? []).forEach((o, i) => { if (scale(o) > scale(best ? d.layouts![best - 1]! : d) * 1.08) best = i + 1; });
+  return best;
+}
 const r1 = (v: number) => Math.round(v * 10) / 10;
 /**
  * A fitted picture grows to its box, but never past this many screen pixels per drawing unit. Scene pictures are drawn
