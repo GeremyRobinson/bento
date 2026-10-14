@@ -14,7 +14,7 @@ import { chapterPic, lessonPic, TilePic } from "../components/TilePics";
 import { ORing, OSlider, type Tab } from "../components/Masters";
 import { LESSON_CHECK_MINUTES, LESSON_MINUTES, TODAYS_REVIEW, UP_NEXT } from "../app/copy";
 import { checkedCount } from "../app/rings";
-import { checkScore, dependsOn, dueBack, learned, toGoOver } from "../engine/mastery/skills";
+import { checkScore, dependsOn, dueBack, learned, learnedNow, toGoOver } from "../engine/mastery/skills";
 import { boxView, boxZoom, GRADES_VIEW, setBoxView, useBoxView } from "../app/box";
 import { motionOff } from "../app/settings";
 import type { Progress } from "../engine/mastery/progress";
@@ -170,16 +170,16 @@ function Stat({ p, big, name, line, tone, sel, onClick, disabled, label }: { p: 
   return onClick ? <button className={`o-tile o-stat${sel ? " sel" : ""}`} onClick={onClick} disabled={disabled} aria-label={label}>{inner}</button> : <div className="o-tile o-stat">{inner}</div>;
 }
 
-/** how a set of lessons is going: done, got it, to go over (the Grade view's three stat tiles) */
+/** how a set of lessons is going: done, learned, go over (the Grade view's three stat tiles; one name everywhere, G 2026-10-14) */
 function YearStats({ list }: { list: Entry[] }) {
   const { progress, now } = useApp();
   const m = list.length, n = checkedCount(progress, list), t = now();
-  const so = list.filter(c => learned(progress, c.id) && !dueBack(progress, c.id, t)).length;
+  const so = list.filter(c => learnedNow(progress, c.id, t)).length;
   const rv = list.filter(c => toGoOver(progress, c.id) || dueBack(progress, c.id, t)).length;
   return <>
     <Stat p={m ? n / m : 0} big={`${n}/${m}`} name="Lessons done" line={m - n ? `${m - n} still to do` : "All done"} />
-    <Stat p={m ? so / m : 0} big={`${so}/${m}`} name="Perfect checks" line="Scored 3 or 4" />
-    <Stat p={m ? rv / m : 0} big={String(rv)} name="Needs practice" line={rv ? "Today brings them back" : "Nothing yet"} />
+    <Stat p={m ? so / m : 0} big={`${so}/${m}`} name="Learned" line="Scored 3 or 4" />
+    <Stat p={m ? rv / m : 0} big={String(rv)} name="Go over" line={rv ? "Today brings them back" : "Nothing yet"} />
   </>;
 }
 

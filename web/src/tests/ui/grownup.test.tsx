@@ -73,6 +73,9 @@ describe("the grown-up page", () => {
     // is it sticking: scores by chapter in the app's words
     fireEvent.click(bar.getByRole("tab", { name: /^Is it sticking, / }));
     expect(screen.getAllByText("Approaching · 2 of 4").length).toBeGreaterThan(0);
+    // the shelves carry the app's one name for each (G 2026-10-14: "Go over" everywhere)
+    expect(screen.getByRole("heading", { level: 3, name: /^Go over · \d+$/ })).toBeInTheDocument();
+    expect(screen.queryByText(/to go over|needs practice|perfect checks/i)).toBeNull();
   });
 });
 

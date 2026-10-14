@@ -143,6 +143,14 @@ function pickGrade(name: string) {
 }
 
 describe("home", () => {
+  it("a chapter's Grade view uses the app's one set of names: Learned and Go over (G 2026-10-14)", () => {
+    renderApp();
+    openChapter(grade5[0]!.unit);
+    view("Grade");
+    expect(within(box()).getByText("Learned")).toBeInTheDocument();
+    expect(within(box()).getByText("Go over")).toBeInTheDocument();
+    expect(within(box()).queryByText(/Perfect checks|Needs practice|To go over/i)).toBeNull();
+  });
   it("lists every lesson of the grade, with unit tests, the check-up and the grown-up page", () => {
     renderApp();
     const rows = everyRow();
