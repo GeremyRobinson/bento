@@ -24,7 +24,7 @@ const rules = (t: string) => [...strip(t).matchAll(/([^{}]*)\{([^{}]*)\}/g)].map
 const ON_PICTURE = "#app :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf)";
 
 /** the tokens a picture may paint with: the picture palette, the neutral base, and the system's own names for them */
-const PICTURE_TOKEN = /^var\(--(pic-deep|pic-mid|pic-soft|pic-seatc|pic-line|pic-on-mid|v-ink|v-muted|v-line|v-done|v-key|v-card|deep|tint|soft|pic-outline)\)$/; // --tint, --soft and --deep are the part's own (mapped above)
+const PICTURE_TOKEN = /^var\(--(pic-deep|pic-mid|pic-soft|pic-seatc|pic-line|pic-on-mid|pic-on-part|pic-on-step|v-ink|v-muted|v-line|v-done|v-key|v-card|deep|tint|soft|pic-outline)\)$/; // --tint, --soft and --deep are the part's own (mapped above)
 /** every role a picture rule reads (diagram-master.css), and what it must resolve to on a picture. Fills are the 30% soft
     fill whether a part is done or waiting; only the step's part (.lit) is mid (lesson picture style guide, G 2026-10-14) */
 const ROLES: Record<string, RegExp> = {
@@ -71,7 +71,7 @@ describe("the picture system", () => {
   });
 
   it("every colour rule a picture can hit reads only roles the system maps", () => {
-    const known = new Set([...Object.keys(ROLES), "--pic-deep", "--pic-mid", "--pic-soft", "--pic-seatc", "--pic-line", "--picb-deep", "--picb-mid", "--picb-soft", "--pic-on-mid",
+    const known = new Set([...Object.keys(ROLES), "--pic-deep", "--pic-mid", "--pic-soft", "--pic-seatc", "--pic-line", "--picb-deep", "--picb-mid", "--picb-soft", "--pic-on-mid", "--pic-on-part", "--pic-on-step",
       "--v-ink", "--v-muted", "--v-line", "--v-done", "--v-key", "--v-card", "--v-acc", "--mix-lift", /* a solid's dark side, overridden by the system */ "--d-shadow", "--l0", "--l1", "--l2", "--la"]);
     const bad: string[] = [];
     for (const [f, t] of css) for (const r of rules(t)) {

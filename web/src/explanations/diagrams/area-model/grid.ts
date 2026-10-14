@@ -276,11 +276,25 @@ export function buildAreaGrid(spec: AreaGridSpec): SceneDiagram & { geometry: Ar
       }
     }));
   }
+  // the last beat this picture uses (a copy can't start after it: the lesson has no beat there)
+  const beats = [spec.units, spec.seats, spec.wholeOutlines, spec.outlineFrom, ...[...spec.cols, ...spec.rows].map(s => s.from),
+    ...(spec.lines ?? []).flatMap(l => [l.from, l.until]), ...spec.cells.flat().flatMap(c => (c ? [c.from, c.textFrom, ...(c.focus ?? [])] : []))];
+  const lastBeat = Math.max(0, ...beats.filter((b): b is number => typeof b === "number" && Number.isFinite(b)));
   if (spec.seats != null) spec.cells.forEach((row, j) => row.forEach((c, i) => {
     if (!c) return;
     const from = Math.max(spec.seats!, c.from ?? 0);
+    // the number's own box: its size at the label size (fitPart may shrink it, never grow it past this much)
+    const cx = (xs[i]! + xs[i + 1]!) / 2, cy = (ys[j]! + ys[j + 1]!) / 2;
+    const chars = c.text ? c.text.length + (c.sup ? 0.6 * c.sup.length : 0) : 0;
+    const hw = (chars * 0.62 * PIC.label) / 2, hh = PIC.label * 0.42;
     for (const l of seatLines(xs[i]! + IN, ys[j]! + IN, xs[i + 1]! - xs[i]! - 2 * IN, ys[j + 1]! - ys[j]! - 2 * IN, Math.abs(spec.cols[i]!.size), Math.abs(spec.rows[j]!.size))) {
-      items.push({ type: "line", x1: l.x1, y1: l.y1, x2: l.x2, y2: l.y2, cls: l.ten ? "seat ten" : "seat", from, enter: "fade", delay: 0.2 });
+      const cls = l.ten ? "seat ten" : "seat";
+      const line = (x1: number, y1: number, x2: number, y2: number) => { if (x2 - x1 + (y2 - y1) > 1) items.push({ type: "line", x1: r1(x1), y1: r1(y1), x2: r1(x2), y2: r1(y2), cls, from, enter: "fade", delay: 0.2 }); };
+      // a ten line skips just the strip the part's number sits on, so it doesn't cut through it (G 2026-10-14, Review
+      // 3af93b6); the pale unit seats stay whole
+      if (l.ten && chars && l.x1 === l.x2 && Math.abs(l.x1 - cx) < hw && l.y1 < cy + hh && l.y2 > cy - hh) { line(l.x1, l.y1, l.x1, Math.min(l.y2, cy - hh)); line(l.x1, Math.max(l.y1, cy + hh), l.x1, l.y2); }
+      else if (l.ten && chars && l.y1 === l.y2 && Math.abs(l.y1 - cy) < hh && l.x1 < cx + hw && l.x2 > cx - hw) { line(l.x1, l.y1, Math.min(l.x2, cx - hw), l.y1); line(Math.max(l.x1, cx + hw), l.y1, l.x2, l.y1); }
+      else line(l.x1, l.y1, l.x2, l.y2);
     }
   }));
   if (spec.outlineFrom != null) items.push({ type: "rect", x: r1(left), y: r1(top), w: r1(g.width), h: r1(g.height), cls: "ax thin", from: spec.outlineFrom, enter: "fade" });
@@ -299,7 +313,20 @@ export function buildAreaGrid(spec: AreaGridSpec): SceneDiagram & { geometry: Ar
     // the same number in many small tiles (6 × 6 tiles of 2) shows only while it fits its tile at the floor (the lines
     // under the picture say it too)
     const fade = repeated ? thinOut(roomLeft(xs[i + 1]! - xs[i]! - 2 * IN, chars, 0), roomLeft(ys[j + 1]! - ys[j]! - 2 * IN, 1.94, 0)) : {};
-    items.push({ type: "text", x: r1((xs[i]! + xs[i + 1]!) / 2), y: r1((ys[j]! + ys[j + 1]!) / 2), text: c.text, ...(c.sup ? { sup: c.sup } : {}), cls: "lbl res onmid", from: Math.max(c.from ?? 0, c.textFrom ?? 0), enter: "rise", delay: 0.3, vars: { ...fitPart(room, chars), ...fade } });
+    const tf = Math.max(c.from ?? 0, c.textFrom ?? 0);
+    const base = { type: "text" as const, x: r1((xs[i]! + xs[i + 1]!) / 2), y: r1((ys[j]! + ys[j + 1]!) / 2), text: c.text, ...(c.sup ? { sup: c.sup } : {}), vars: { ...fitPart(room, chars), ...fade } };
+    // on its focus beat the part is the 60% step fill, so its number takes the step's text colour for that beat (Review
+    // 3af93b6, AA): the number is cut into copies at those beats, and only the first comes in, so it doesn't jump. After
+    // the picture's last beat there is no copy to hand back to, so the step copy just stays
+    const focus = [...new Set(c.focus ?? [])].filter(b => b >= tf).sort((a, b) => a - b);
+    let at = tf;
+    const copy = (cls: string, from: number, until?: number) => items.push({ ...base, cls, from, ...(until != null ? { until } : {}), ...(from === tf ? { enter: "rise" as const, delay: 0.3 } : {}) });
+    for (const b of focus) {
+      if (b > at) copy("lbl res onmid", at, b - 1);
+      copy("lbl res onmid onstep", b, b < lastBeat ? b : undefined);
+      at = b + 1;
+    }
+    if (at <= lastBeat || !focus.length) copy("lbl res onmid", at);
   }));
 
   const outlineW = spec.wholeOutlines != null && g.toScale ? wholeCols * g.unitX : g.width;

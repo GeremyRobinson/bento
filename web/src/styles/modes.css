@@ -56,3 +56,8 @@
    nearly neutral. 5th grade keeps its exact tokens */
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wrap{--v-mark-done:var(--v-acc)} :root:not([data-theme="light"]) .wrap:not([data-grade="5"]){--v-acc-on:var(--v-page);--v-mark-now:color-mix(in oklab,var(--v-acc) 72%,var(--v-page));--v-wash-on:color-mix(in oklab,var(--v-acc-soft) 15%,var(--v-page))}}
 :root[data-theme="dark"] .wrap{--v-mark-done:var(--v-acc)} :root[data-theme="dark"] .wrap:not([data-grade="5"]){--v-acc-on:var(--v-page);--v-mark-now:color-mix(in oklab,var(--v-acc) 72%,var(--v-page));--v-wash-on:color-mix(in oklab,var(--v-acc-soft) 15%,var(--v-page))}
+
+/* from picture-system.css: text on a part in dark (Review 3af93b6): deep reads 4.8:1+ on a 30% part; on the 60% step part
+   the dark on-mid text (7.6:1) */
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #app :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--pic-on-part:var(--pic-deep);--pic-on-step:color-mix(in srgb,var(--pic-hue) 20%,var(--v-ink))}}
+:root[data-theme="dark"] #app :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--pic-on-part:var(--pic-deep);--pic-on-step:color-mix(in srgb,var(--pic-hue) 20%,var(--v-ink))}

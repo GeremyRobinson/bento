@@ -9,8 +9,10 @@ import { CHAPTER_34, LESSON_34 } from "./tilepics/g34";
 import { CHAPTER_68, LESSON_68 } from "./tilepics/g68";
 import { CHAPTER_912, LESSON_912 } from "./tilepics/g912";
 import { ICON_COVERS } from "./tilepics/icon-covers";
+import { ICON_LESSONS } from "./tilepics/icon-lessons";
 
-const LESSON: Record<string, string> = { ...LESSON_k2, ...LESSON_34, ...LESSON5, ...LESSON_68, ...LESSON_912 };
+// lesson icons (G 2026-10-14, 5th grade first) stand in for the earlier pictures where both exist
+const LESSON: Record<string, string> = { ...LESSON_k2, ...LESSON_34, ...LESSON5, ...LESSON_68, ...LESSON_912, ...ICON_LESSONS };
 // the icon covers (G 2026-10-14) stand in for the earlier samples where both exist
 const CHAPTER: Record<string, string> = { ...CHAPTER_k2, ...CHAPTER_34, ...CHAPTER5, ...CHAPTER_68, ...CHAPTER_912, ...ICON_COVERS };
 

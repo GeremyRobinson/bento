@@ -74,8 +74,8 @@ export function buildCircleArea(s: CircleAreaSpec): SceneDiagram {
     t(R / 2, 5, `r = ${s.r}`, "lbl acc down", { enter: "rise", delay: 0.8 }),
     // the square's sum and its area meet at the square's middle, each held by the edge facing the other (up / down),
     // so the floor grows them apart, toward the square's own edges
-    t(R / 2, -R / 2 - 2, `${s.r} × ${s.r}`, "sm up", { from: s.squareBeat, enter: "rise", delay: 0.3 }),
-    t(R / 2, -R / 2 + 2, String(s.r2), "lbl big down", { from: s.squareBeat, enter: "rise", delay: 0.4 }),
+    t(R / 2, -R / 2 - 2, `${s.r} × ${s.r}`, "sm up onstep", { from: s.squareBeat, enter: "rise", delay: 0.3 }),
+    t(R / 2, -R / 2 + 2, String(s.r2), "lbl big down onstep", { from: s.squareBeat, enter: "rise", delay: 0.4 }),
     ...column(R + 26, [
       { text: "The circle holds", cls: "sm", from: s.areaBeat },
       { text: `${s.pi} squares`, cls: "lbl", from: s.areaBeat },
