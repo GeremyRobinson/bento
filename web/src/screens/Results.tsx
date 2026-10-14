@@ -49,7 +49,7 @@ function Placed({ rep }: { rep: SessionReport }) {
     <FitScreen className="placed" style={tintStyle(gd) as CSSProperties}>
       <span className="k">Your level</span>
       <h1>Start in {gd.name}.</h1>
-      <p className="muted">{grade > from ? "You're ahead. The work here will stretch you." : grade < from ? "A few things to firm up first. You'll move fast." : "Right where you should be."}</p>
+      <p className="muted">{grade > from ? "You're ahead. This grade will be a challenge." : grade < from ? "A few things to practice first. You'll move fast." : "Right where you should be."}</p>
       <ol className="prows">{rows.map(r => (
         <li key={r.grade} className={r.grade <= grade ? "ok" : ""}>
           <span>{gradeOf(r.grade).name}</span>
@@ -98,8 +98,8 @@ export function Results() {
   const words = ["not there yet", "just starting", "getting there", "nearly there", "you\u2019ve got it"][rep.level];
   const then = test ? "Today keeps track of how the test went." : rep.level >= 3
     ? (next ? `Next time, Today brings the next lesson: ${next.title}.` : "Next time, Today moves on to something new.")
-    : "Next time, Today brings this back for another go, so it sticks.";
-  const why = skill ? `You finished the lesson. The skill check shows how much stuck. ${then}`
+    : "Next time, Today brings this back so you can try again.";
+  const why = skill ? `You finished the lesson. The skill check shows what you remember. ${then}`
     : test ? `${rep.clean} of ${rep.total} problems had every step right. ${then}` : `${rep.clean} of ${rep.total} problems with no mistakes. ${then}`;
   // one thing to watch for: the check's own slip, else the lesson's from just before it
   const practice = skill && lesson ? reports[lesson.id] : undefined;

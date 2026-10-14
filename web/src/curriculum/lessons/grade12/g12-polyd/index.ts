@@ -32,7 +32,7 @@ export function polynomialDerivativeAnswers({ a, b, c, d }: PolynomialDerivative
     steps: [
       ns({ id: "x3", l: "x³ term", a: s => [...s, ...xp(2)], ans: 3 * a, h: `Power rule: the exponent comes down and multiplies the ${f(a)} in front, and x³ becomes x².`, w: [[a, "Didn't bring the 3 down", `Bring the 3 down: 3 × ${f(a)}.`]] }),
       ns({ id: "x2", l: "x² term", a: s => [...s, v()], ans: 2 * b, h: `The exponent comes down and multiplies the ${f(b)} in front, and x² becomes x.`, w: [[b, "Didn't bring the 2 down", `Bring the 2 down: 2 × ${f(b)}.`]] }),
-      ns({ id: "x1", l: "x term", a: s => s, ans: c, h: "cx is a line with slope c, so its derivative is c. The constant is flat, so it disappears.", w: [[0, "Dropped the x term", "cx is a line with slope c; it does not vanish. Only the constant does."]] }),
+      ns({ id: "x1", l: "x term", a: s => s, ans: c, h: "cx is a line with slope c, so its derivative is c. The constant is flat, so it disappears.", w: [[0, "Dropped the x term", "cx is a line with slope c, so it does not vanish. Only the constant does."]] }),
       ns({ id: "at1", l: "f′(1)", a: s => [num(3 * a), op("+"), ...P(2 * b), op("+"), ...P(c), op("="), ...s], ans: 3 * a + 2 * b + c, h: "f′(1) is how steep the graph is at x = 1. Every power of 1 is 1, so add the derivative's numbers.",
         w: [[a + b + c + d, "Used f instead of f′", `That is f(1), the height. f′(1) uses the derivative's numbers: ${f(3 * a)}, ${fP(2 * b)}, ${fP(c)}.`]] }),
     ],

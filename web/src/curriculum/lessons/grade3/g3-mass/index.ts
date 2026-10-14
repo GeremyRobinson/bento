@@ -139,7 +139,7 @@ function answers(p: MassProblem): AnswerModel {
           prompt: s => [s, text(` ${u}`)], ans: p.value,
           wrong: slips(p.value, [
             label !== p.value && [label, "Read the label before", `The needle is past ${withCommas(label)}. Count on the small marks.`],
-            [p.value - p.step, "One mark short", `The needle is one mark further on. Count the spaces from the label ${withCommas(label)} right up to the needle.`],
+            [p.value - p.step, "One mark short", `The needle is one mark past that. Count the spaces from the label ${withCommas(label)} right up to the needle.`],
             [p.value + p.step, "One mark too many", `That mark is past the needle. Count the spaces from the label ${withCommas(label)} and stop at the needle.`],
             p.step !== 1 && [label + (marks % 5), "Counted the marks by 1", `Each mark is ${p.step} ${u}. Count on by ${p.step} from ${withCommas(label)}.`],
           ]),

@@ -106,7 +106,7 @@ export function fs(o: {
     if (d === 0) return { ok: false, soft: true, message: "The bottom can't be 0." };
     for (const [bn, bd, kind, message] of o.wrong ?? []) if (eq(n, bn) && eq(d, bd)) return { ok: false, kind, message, generic: false };
     if (!eq(n * RD, RN * d)) return { ok: false, kind: o.label, message: `Not quite. ${o.hint}`, generic: true };
-    if (d < 0) return { ok: false, soft: true, message: "Right amount! Put the minus sign on the top number." };
+    if (d < 0) return { ok: false, soft: true, message: "Right amount. Put the minus sign on the top number." };
     const k = gcd(Math.abs(n), d);
     if (k > 1) return { ok: false, kind: "Not fully simplified", message: `Same amount, but it can be simplified: both numbers divide by ${k}.`, generic: false };
     return { ok: true };

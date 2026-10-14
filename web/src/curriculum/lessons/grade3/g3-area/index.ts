@@ -75,7 +75,7 @@ function explain(p: AreaProblem, model: AnswerModel): Explanation {
     timeline: beats(4),
     steps: [
       { id: "row", state: 1, answerStep: "row", result: L, math: [text("one row "), op("="), num(L)], narration: "Count across the top row, one square at a time." },
-      { id: "rows", state: 2, answerStep: "rows", result: W, math: [text("rows "), op("="), num(W)], narration: "Count down the side. Every row is just like the first." },
+      { id: "rows", state: 2, answerStep: "rows", result: W, math: [text("rows "), op("="), num(W)], narration: "Count down the side. Every row is the same as the first." },
       { id: "area", state: 3, answerStep: "area", result: A, math: [num(W), op("×"), num(L), op("="), num(A)],
         narration: `${count(W, "row")} of ${count(L, "square")}, so multiply. Area is in square units.` },
     ],

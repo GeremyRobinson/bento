@@ -68,7 +68,7 @@ function explain(p: Mult10Problem, model: AnswerModel): Explanation {
   const { a, t } = p, m = t / 10, f = expectedOf(model, "fact"), P = expectedOf(model, "tens");
   return {
     heading: "Multiply tens like ones",
-    idea: ["Tens count just like ones, so a fact you know gives the answer in tens."],
+    idea: ["Tens count the same way ones do, so a fact you know gives the answer in tens."],
     statement: [num(a), op("×"), num(t), op("="), num(a), op("×"), num(m), text(" tens")],
     diagram: mult10Picture(p, f, P),
     caption: `${count(a, "row")} with ${count(m, "ten")} in each row.`,

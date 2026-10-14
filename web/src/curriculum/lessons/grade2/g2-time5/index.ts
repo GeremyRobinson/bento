@@ -46,7 +46,7 @@ function answers({ h, m }: TimeProblem): AnswerModel {
         prompt: s => [text("The long hand points to "), s], ans: K,
         wrong: slips(K, [
           [h, "Read the short hand", "That's the short hand. Now look at the long hand."],
-          [m, "Jumped ahead to the minutes", `That's the minutes. First just find the number the long hand is on.`],
+          [m, "Jumped ahead to the minutes", `That's the minutes. First find the number the long hand is on.`],
         ]),
         hint: "Follow the long hand out to the edge of the clock.",
         explain: `The long hand points to ${K}.`,

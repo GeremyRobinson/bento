@@ -33,8 +33,8 @@ export function splitFactAnswers({ a, b }: SplitFactProblem): AnswerModel {
         hint: `${count(a, "group")} of ${r}.`, explain: `${count(a, "row")} of ${r} is the other small array: ${a} × ${r} = ${a * r}.`, work: [num(a), op("×"), num(r), op("="), num(a * r)] }),
       numStep({ id: "sum", label: "Add the parts", question: "Put the two small arrays back together.", prompt: x => [num(a * 5), op("+"), num(a * r), op("="), x], ans: a * b,
         wrong: [
-          [a * 5, "Kept only the first part", `That's just the first part. Add the ${count(a, "row")} of ${r} too.`],
-          [a * r, "Kept only the second part", `That's just the second part. Add the ${count(a, "row")} of 5 too.`],
+          [a * 5, "Kept only the first part", `That's only the first part. Add the ${count(a, "row")} of ${r} too.`],
+          [a * r, "Kept only the second part", `That's only the second part. Add the ${count(a, "row")} of 5 too.`],
           [a * b + a, "Added a part wrong", `Check each part again: ${count(a, "row")} of ${r} is ${a * r}.`],
         ],
         hint: `${b} is 5 + ${r}, so add the two answers.`, explain: `The two small arrays make the whole ${a} by ${b} array: ${a * 5} + ${a * r} = ${a * b}.`, work: [num(a), op("×"), num(b), op("="), answer("x", a * b)] }),

@@ -29,7 +29,7 @@ function answers({ rows }: TensProblem): AnswerModel {
         id: "rows", label: "Count the rows", question: `How many rows of ${TEN} are there?`,
         prompt: s => [text("Rows: "), s], ans: rows,
         wrong: slips(rows, [
-          [total, "Counted the dots", "That's how many dots there are. First count just the **rows**."],
+          [total, "Counted the dots", "That's how many dots there are. First count only the **rows**."],
           [TEN, "Counted one row's dots", `Each row has ${count(TEN, "dot")}. Count the rows from top to bottom.`],
           [rows - 1, "Missed a row", "You missed a row. Put your finger on each row as you count."],
           [rows + 1, "Counted a row twice", "One too many. Count each row only once."],

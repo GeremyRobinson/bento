@@ -34,7 +34,7 @@ function answers({ x, y, a, b }: MeasureProblem): AnswerModel {
         prompt: s => [text(`${cap(one)}: `), s, text(" cubes")], ans: a,
         wrong: slips(a, [
           [b, "Measured the other one", `That's the ${two}. Count the cubes under the **${one}**.`],
-          [a + 1, "Counted one cube twice", "One too many. Touch each cube just once as you count."],
+          [a + 1, "Counted one cube twice", "One too many. Touch each cube once as you count."],
           [a - 1, "Missed a cube", "One short. Start with the very first cube at the dashed line."],
         ]),
         hint: `Count the cubes under the ${one}, starting at the dashed line.`,
@@ -45,7 +45,7 @@ function answers({ x, y, a, b }: MeasureProblem): AnswerModel {
         prompt: s => [text(`${cap(two)}: `), s, text(" cubes")], ans: b,
         wrong: slips(b, [
           [a, "Measured the other one", `That's the ${one}. Count the cubes under the **${two}**.`],
-          [b + 1, "Counted one cube twice", "One too many. Touch each cube just once as you count."],
+          [b + 1, "Counted one cube twice", "One too many. Touch each cube once as you count."],
           [b - 1, "Missed a cube", "One short. Start with the very first cube at the dashed line."],
         ]),
         hint: `Count the cubes under the ${two}, starting at the dashed line.`,

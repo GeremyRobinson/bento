@@ -43,7 +43,7 @@ const SUBTRACTED = "Add down each column. The flipped sign in the box already do
 
 export function syntheticAnswers({ r, b, c, e }: SyntheticDivision): AnswerModel {
   const q = b + r, sign = r < 0 ? "+" : "−";
-  const quotHint = "The bottom row is the answer's numbers: the 1 goes with x, and the number you got by adding is the number on its own.";
+  const quotHint = "The bottom row holds the answer's numbers. The 1 goes with x. The number you got by adding is the number on its own.";
   return {
     steps: [
       ns({ id: "mul1", l: "Multiply", a: s => [num(1), op("×"), ...P(r), op("="), ...s], ans: r, h: `Multiply the number you brought down by ${f(r)}.`, n: "Use the number from the divisor with its sign flipped.",

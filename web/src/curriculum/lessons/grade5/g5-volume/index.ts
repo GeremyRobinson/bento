@@ -54,7 +54,7 @@ export function explainBox(p: BoxProblem, answers: AnswerModel): Explanation {
     timeline: beats(3),
     steps: [
       { id: "base", narration: `The bottom layer is ${l} by ${w}.`, math: [num(l), op("×"), num(w), op("="), num(base)], state: 1, answerStep: "base", result: base },
-      { id: "volume", narration: `Stack ${h} layers to fill the box, in cubic cm.`, math: [num(base), op("×"), num(h), op("="), num(V)], state: 2, answerStep: "volume", result: V },
+      { id: "volume", narration: `Stack ${h} layers to fill the box. The answer is in cubic centimeters.`, math: [num(base), op("×"), num(h), op("="), num(V)], state: 2, answerStep: "volume", result: V },
     ],
   };
 }

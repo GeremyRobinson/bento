@@ -75,10 +75,10 @@ function explain({ a, b }: CompareProblem, model: AnswerModel): Explanation {
   const n = hasOnes ? 3 : 2;
   const steps: ExplanationStep[] = [
     { id: "tens", narration: ta === tb ? "Both have the same tens, so the tens can't decide." : "The tens are different, so the tens decide.",
-      math: [...count(ta, "ten", "tens"), text(ta === tb ? " and " : " vs "), ...count(tb, "ten", "tens")], state: 1, answerStep: "tens", result: ta },
+      math: [...count(ta, "ten", "tens"), text(ta === tb ? " and " : " and "), ...count(tb, "ten", "tens")], state: 1, answerStep: "tens", result: ta },
   ];
   if (hasOnes) steps.push({ id: "ones", narration: ao === bo ? "The ones match too." : "Same tens, so the ones decide.",
-    math: [...count(ao, "one", "ones"), text(ao === bo ? " and " : " vs "), ...count(bo, "one", "ones")], state: 2, answerStep: "ones", result: ao });
+    math: [...count(ao, "one", "ones"), text(ao === bo ? " and " : " and "), ...count(bo, "one", "ones")], state: 2, answerStep: "ones", result: ao });
   steps.push({ id: "sign", narration: a === b ? `Same number, so they are **equal**.` : `${Math.max(a, b)} is bigger, so the open side of the sign faces it.`,
     math: [num(a), op(sign), num(b)], state: n, answerStep: "sign" });
   return {

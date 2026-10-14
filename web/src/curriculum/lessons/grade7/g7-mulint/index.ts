@@ -23,7 +23,7 @@ function answers(p: MulIntegersProblem): AnswerModel {
     steps: [
       oneBox({ id: "size", label: "Ignore the signs", prompt: s => (div ? [num(Math.abs(a * b)), op("÷"), num(Math.abs(b)), op("="), s] : [num(Math.abs(a)), op("×"), num(Math.abs(b)), op("="), s]),
         ans: Math.abs(ans), hint: div ? "Divide the sizes." : "Multiply the sizes.",
-        wrong: div ? [[Math.abs(a * b) * Math.abs(b), "Multiplied", "This one divides: how many jumps make the size?"]] : [[Math.abs(a) + Math.abs(b), "Added", "This one is times, not plus."]] }),
+        wrong: div ? [[Math.abs(a * b) * Math.abs(b), "Multiplied", "This one divides, not multiplies."]] : [[Math.abs(a) + Math.abs(b), "Added", "This one is times, not plus."]] }),
       oneBox({ id: "sign", label: "Pick the sign", prompt: s => [...shown(p), op("="), s], ans, hint: "Same signs make a positive. Different signs make a negative.",
         wrong: [[-ans, "Wrong sign", "Same signs give a positive answer. Different signs give a negative one."]] }),
     ],

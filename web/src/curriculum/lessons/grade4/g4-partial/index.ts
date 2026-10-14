@@ -71,7 +71,7 @@ export function explainPartial(p: PartialProblem, answers: AnswerModel): Explana
       lines: [{ text: split ? `${n} × ${m} = ${P.filter(x => x > 0).join(" + ")} = ${total}` : `${n} × ${m} = ${total}`, from: 4 }],
       alt: `${cap(aNum(m))} by ${n} rectangle cut by place value: ${shown.map(([v, i]) => `${m} × ${v} = ${P[i]}`).join(", ")}. Together ${total}.`,
     }),
-    caption: split ? `${n} is ${shown.map(([v]) => v).join(" + ")}: one strip for each place.` : `${n} is just ${count(H, "hundred")}, so it is one strip.`,
+    caption: split ? `${n} is ${shown.map(([v]) => v).join(" + ")}: one strip for each place.` : `${n} is only ${count(H, "hundred")}, so it is one strip.`,
     timeline: beats(5),
     steps: [
       ...ids.map((id, i) => ({

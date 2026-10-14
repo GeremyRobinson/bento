@@ -53,7 +53,7 @@ function answers(p: ThreeProblem): AnswerModel {
     choices: labels, right: OFFER.findIndex(([s, t]) => s === i && t === j),
     wrong: n => {
       const [s, t] = OFFER[n]!;
-      return ["Picked a pair that isn't easy", `${v[s]} and ${v[t]} make ${v[s]! + v[t]!}. Look for two that ${why === "ten" ? "make 10" : "are the same"}: then the last add is easy.`];
+      return ["Picked a pair that isn't easy", `${v[s]} and ${v[t]} make ${v[s]! + v[t]!}. Look for two that ${why === "ten" ? "make 10" : "are the same"}. Then the last step is easy.`];
     },
     hint: "Check each pair: do they fill a ten frame, or are they the same number?",
     explain: why === "ten" ? `${x} and ${y} make 10.` : `${x} and ${y} are the same: a double.`,

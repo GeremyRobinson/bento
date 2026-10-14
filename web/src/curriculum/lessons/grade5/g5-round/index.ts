@@ -53,12 +53,12 @@ function answers(pr: RoundProblem): AnswerModel {
         hint: `The ${name} place is ${p} digit${p > 1 ? "s" : ""} after the point.`,
         wrong: slips(digit, [
           [at(3 - p), `Read the ${other} place`, `That's the ${other} digit. The ${name} place is ${p} digit${p > 1 ? "s" : ""} after the point.`],
-          [at(p - 1), "Looked one place too far left", `Start just after the point and count ${p} digit${p > 1 ? "s" : ""}.`],
+          [at(p - 1), "Looked one place too far left", `Start right after the point and count ${p} digit${p > 1 ? "s" : ""}.`],
         ]) }),
-      oneBox({ id: "next", label: "Look next door", question: "Which digit is just to its right?", prompt: s => [s], ans: next, hint: "Look one place further right.",
-        wrong: slips(next, [[digit, "Read the place itself", `${digit} is the ${name} digit. The one that decides sits just to its right.`]]) }),
+      oneBox({ id: "next", label: "Look next door", question: "Which digit comes right after it?", prompt: s => [s], ans: next, hint: "Look one place further right.",
+        wrong: slips(next, [[digit, "Read the place itself", `${digit} is the ${name} digit. The digit after it decides.`]]) }),
       oneBox({
-        id: "round", label: "Round", question: "5 or more rounds up. 4 or less stays.", prompt: s => [num(value), op("≈"), s], ans: R, hint: `The next digit is ${next}.`,
+        id: "round", label: "Round", question: "5 or more rounds up. 4 or less stays the same.", prompt: s => [num(value), op("≈"), s], ans: R, hint: `The next digit is ${next}.`,
         wrong: [
           ...(R === T ? [[round6(T + 10 ** -p), "Rounded up when it should stay", `${next} is 4 or less, so the digit stays the same.`] as [number, string, string]]
             : [[T, "Didn't round up", `${next} is 5 or more, so round up.`] as [number, string, string]]),
@@ -84,7 +84,7 @@ function explain(pr: RoundProblem, model: AnswerModel): Explanation {
   if (!hops.length) marks.push({ v: R, beat: 2, cls: "dota" });
   return {
     heading: "Look one place to the right",
-    idea: ["Rounding picks the closer number, and the digit just to the right tells you which."],
+    idea: ["Rounding picks the closer number, and the next digit to the right tells you which."],
     statement: [num(value), op("≈"), text("?"), muted(` (nearest ${name.slice(0, -1)})`)],
     diagram: litSteps(buildNumberLine({
       min: T, max: up, step: tick, every: 10, labelAt: [half], marks, hops,

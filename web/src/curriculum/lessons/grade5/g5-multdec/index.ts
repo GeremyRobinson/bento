@@ -35,7 +35,7 @@ function answers(p: MultDecimalsProblem): AnswerModel {
       oneBox({ id: "places", label: "Count the decimal places", question: "How many digits come after the points, in both numbers together?", prompt: s => [s], ans: n,
         hint: `How many digits are after the point in ${f(x)}? And in ${f(y)}? Add them.`,
         explain: `${f(x)} has ${pa} and ${f(y)} has ${pb}, so ${n} in all.`,
-        wrong: [pa, pb].filter((v, i, all) => v !== n && all.indexOf(v) === i).map((v): Slip => [v, "Counted one number", "Count the places in both numbers, not just one."]) }),
+        wrong: [pa, pb].filter((v, i, all) => v !== n && all.indexOf(v) === i).map((v): Slip => [v, "Counted one number", "Count the places in both numbers."]) }),
       oneBox({
         id: "place", label: "Place the point", prompt: s => [num(x), op("×"), num(y), op("="), s], ans,
         hint: `The answer counts ${PLACE[n]}, so ${placeWord(n)} ${n === 1 ? "goes" : "go"} after the point.`,
@@ -68,7 +68,7 @@ function explain(p: MultDecimalsProblem, model: AnswerModel) {
     heading: "Multiply, then place the point",
     idea: ["A tenth of a tenth is a hundredth, so the answer has as many decimal places as both numbers together."],
     statement: [num(x), op("×"), num(y)],
-    caption: `${f(x)} × ${f(y)} has the same digits as ${A} × ${B}; the ${places} decimal places say where the point goes.`,
+    caption: `${f(x)} × ${f(y)} has the same digits as ${A} × ${B}. The ${places} decimal places say where the point goes.`,
     alt: `${f(x)} × ${f(y)}: ${A} × ${B} = ${P}, ${places} decimal places, so ${f(ans)}.`,
     diagram: multiplyDecimalsPicture({ A, B, pa, pb, P, ans }),
     beats: [

@@ -30,7 +30,7 @@ export function negativeExponentAnswers({ a, n }: NegativeExponent): AnswerModel
   return {
     steps: [
       ns({ id: "positive", l: "Positive exponent", a: s => [...pow(a, n), op("="), ...s], ans: a ** n, h: `The exponent counts how many ${f(a)}'s multiply together.`, w: [[a * n, "Multiplied by the exponent", `Multiply ${count(f(n), "copy", "copies")} of ${f(a)} together, not ${f(a)} × ${f(n)}.`]] }),
-      fs({ id: "flip", l: "Flip it", a: s => [...pow(a, -n), op("="), ...s], N: 1, D: a ** n, n: "A negative exponent means 1 over the power.", h: "Each step below 0 in the exponent divides by the base once more, so a negative exponent makes 1 over the power.",
+      fs({ id: "flip", l: "Flip it", a: s => [...pow(a, -n), op("="), ...s], N: 1, D: a ** n, n: "A negative exponent means 1 over the power.", h: "Each step below 0 in the exponent divides by the base once more. So a negative exponent makes 1 over the power.",
         w: [[-(a ** n), 1, "Thought it was a negative number", "A negative exponent doesn't make the number negative. It flips it: 1 over the power."]] }),
     ],
     finalParts: [-1],

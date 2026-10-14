@@ -33,7 +33,7 @@ function answers(p: PicGraphProblem): AnswerModel {
         id: "line-up", label: "Compare it", question: `Is the ${X} row longer or shorter than the ${Y} row?`,
         prompt: [text(`${X} row: longer or shorter than ${Y}?`)], choices: ["Longer", "Shorter"], right: longer ? 0 : 1,
         wrong: () => [longer ? "Said shorter" : "Said longer", `The pictures line up. Look where each row ends: the ${X} row ${longer ? "goes past" : "stops before"} the end of the ${Y} row.`],
-        hint: "The pictures line up, one under the other. Which row reaches further?",
+        hint: "The pictures line up, one under the other. Which row reaches farther?",
         explain: `${X} has ${c[p.x]} and ${Y} has ${c[p.y]}, so the ${X} row is ${longer ? "longer" : "shorter"}: ${longer ? "more" : "fewer"} ${th.things === "days" ? "days" : "pictures"}.`,
         work: [text(`The ${X} row is ${longer ? "longer" : "shorter"}.`)],
       })],

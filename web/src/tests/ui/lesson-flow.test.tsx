@@ -89,7 +89,7 @@ describe("a whole lesson in the browser", () => {
           checked = true;
           expect(document.querySelector(".o-island")).toHaveTextContent("Skill check · 1 of 4");
           expect(document.querySelector(".v-steps")).toHaveTextContent("Skill check");
-          expect(screen.getByRole("status")).toHaveTextContent("Skill check: 4 problems on your own, no hints. It shows how much stuck.");
+          expect(screen.getByRole("status")).toHaveTextContent("Skill check: 4 problems on your own, no hints. It shows what you remember.");
           expect(screen.queryByRole("button", { name: /^Hint/ })).toBeNull();
           expect(screen.queryByRole("button", { name: "Problems" })).toBeNull();
         }
@@ -109,18 +109,18 @@ describe("a whole lesson in the browser", () => {
     const done = within(screen.getByRole("region", { name: "Done" }));
     expect(done.getByLabelText("Score 4 of 4")).toBeInTheDocument();
     expect(done.getByRole("heading", { level: 2, name: "4 of 4 on your own: you\u2019ve got it." })).toBeInTheDocument();
-    expect(done.getByText(/^You finished the lesson\. The skill check shows how much stuck\./)).toBeInTheDocument();
+    expect(done.getByText(/^You finished the lesson\. The skill check shows what you remember\./)).toBeInTheDocument();
     expect(done.getByText("Your skill check")).toBeInTheDocument();
     expect(done.getAllByText("Right")).toHaveLength(4);
     expect(done.getByText("Watch for:")).toBeInTheDocument();
     // in the child's words, what practice said to look at, never the grown-up's category (v2 model)
-    expect(done.getByText("Watch for:").parentElement!.textContent).toMatch(/^Watch for: Look again at the lit strip: it's \d+ across and \d+ down\.$/);
+    expect(done.getByText("Watch for:").parentElement!.textContent).toMatch(/^Watch for: Look again at the lit-up strip: it's \d+ wide and \d+ tall\.$/);
     expect(done.queryByRole("button", { name: "Practice again" })).toBeNull();
     expect(done.queryByRole("heading", { name: "What you did" })).toBeNull();
 
     // back in the box, the lesson's tile shows the score and Today keeps no run in progress
     fireEvent.click(screen.getByRole("button", { name: "Back to your box" }));
-    expect(within(screen.getByRole("region", { name: "Today" })).queryByRole("button", { name: "Carry on" })).toBeNull();
+    expect(within(screen.getByRole("region", { name: "Today" })).queryByRole("button", { name: "Keep going" })).toBeNull();
     expect(screen.getByRole("button", { name: "Multiply two-digit numbers, Got it, skill check 4 of 4" })).toBeInTheDocument();
   }, 60000);
 });

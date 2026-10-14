@@ -18,6 +18,6 @@ export const TRACKS: Track[] = [
 ];
 
 export const TRACK_PARTS = [
-  { part: "spine", label: "The spine · the math thinking machines are built from" },
+  { part: "spine", label: "The spine · the math AI is built from" },
   { part: "branch", label: "The branches · the sciences that use it" },
 ] as const;

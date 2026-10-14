@@ -88,7 +88,7 @@ function answers(p: Within1000Problem): AnswerModel {
           onesCross && [digitwise(p2, B.o, sub, 1), sub ? "Smaller from bigger" : "Forgot to carry",
             sub ? `${count(O, "one")} is not enough to take away ${B.o}. Trade a ten for 10 ones, so the tens go down by 1.`
               : `${O} + ${B.o} = ${O + B.o}. That makes a new ten, so the tens go up by 1.`],
-          [p2 + s * B.o * 10, "Used tens, not ones", `The ${B.o} is in the ones place, so it means just ${B.o}.`],
+          [p2 + s * B.o * 10, "Used tens, not ones", `The ${B.o} is in the ones place, so it means only ${B.o}.`],
         ]),
         hint: sub ? `Count back ${B.o} from ${p2}.` : `Count on ${B.o} from ${p2}.`,
         explain: `${p2} ${sign} ${B.o} = ${r}.`,

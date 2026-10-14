@@ -24,7 +24,7 @@ function answers({ whole, part }: BondProblem): AnswerModel {
         id: "whole", label: "The whole", question: "How many dots in all?",
         prompt: x => [text("In all: "), x], ans: whole,
         wrong: slips(whole, [
-          [part, "Counted one group", "That's just the first group. Count them all."],
+          [part, "Counted one group", "That's only the first group. Count them all."],
           [whole - 1, "Skipped a dot", "One short. Touch each dot as you count."],
           [whole + 1, "Counted a dot twice", "One too many. Touch each dot only once."],
         ]),

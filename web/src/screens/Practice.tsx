@@ -1,6 +1,8 @@
+import { eq, parseNumber } from "../engine/evaluation/numbers";
+import { expectedValues } from "../engine/evaluation/steps";
 import { Pill } from "../components/primitives/Pill";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { playTone, readAloudOn, readSettings, speak } from "../app/settings";
+import { playTone, readAloudOn, readSettings, speak, spokenOf } from "../app/settings";
 import { useApp } from "../app/AppState";
 import { withTransition } from "../app/transition";
 import { MathLine, Rich } from "../components/primitives/MathLine";
@@ -72,7 +74,7 @@ export function Practice() {
   // read aloud: each new problem is read out, as on screen
   useEffect(() => {
     if (!s || !aloud) return;
-    const t = setTimeout(() => speak(document.querySelector("#app .pprob")?.textContent ?? ""), 350);
+    const t = setTimeout(() => speak(spokenOf(document.querySelector("#app .pprob"))), 350);
     return () => clearTimeout(t);
   }, [s?.i, aloud]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -230,12 +232,16 @@ export function Practice() {
     // the skill check doesn't cheer a step on the way (a word problem's operation): the say line stays clear for the answer
     : fb && !(skill && fb.type === "good") ? { cls: fb.type === "bad" ? "slip" : fb.type === "good" ? "good" : "hint",
       lead: fb.type === "bad" ? `\u2715 ${fb.strong ?? "Not quite."}` : fb.type === "good" ? `\u2713 ${fb.strong ?? "Right."}` : fb.strong, text: fb.text, lines: fb.lines }
-    : skill && s.i === 0 && !s.prob.wrong && !s.work.length ? { cls: "hint", lead: undefined, text: `${SKILL_CHECK}: ${n} problems on your own, no hints. It shows how much stuck.`, lines: undefined } : null;
+    : skill && s.i === 0 && !s.prob.wrong && !s.work.length ? { cls: "hint", lead: undefined, text: `${SKILL_CHECK}: ${n} problems on your own, no hints. It shows what you remember.`, lines: undefined } : null;
   // a wrong try wears red; a test's missed step only on a skill check's one answer, which keeps what was typed (v2 model)
   // a hint opened after a wrong try keeps the pill red until something new is typed (v2 model, P8/P9)
   const hintShown = !fbAway && fb?.type === "hint";
   const askNo = (!fbAway && fb?.type === "bad" && (!fb.missed || (skill && s.solved)))
     || (hintShown && !s.solved && s.misses > 0 && !Object.values(s.values).some(v => v));
+  // a miss on a step with several boxes: the boxes already right are not marked wrong (Review copy-05: "One box is right" with both red)
+  // (the same rule as the nudge's words, so the colours and the words always agree)
+  const want = askNo && step && !step.choices ? expectedValues(step) : {};
+  const kept = Object.keys(want).length > 1 ? Object.keys(want).filter(k => eq(parseNumber(s.values[k]), want[k])) : [];
   const typedMiss = skill && missed ? s.mistakes[s.mistakes.length - 1]?.typed : undefined;
   const doneLines = steps.map((_, k) => s.work[k]).filter((w, k) => !!w && (k < here));
   // the step bar's marks: one per step (one per problem in a skill check), the one you're on solid and long
@@ -277,7 +283,7 @@ export function Practice() {
               {/* the check asks what to do, never "Type the final answer." (R-W1); a word problem asks its own question */}
               <div className="v-q"><span className="q2">{it.story ? storyAsk(it) : `What is ${problemText(it)}?`}</span></div>
               <div className="v-ans" key={`${at}-${s.mistakes.length}`}>
-                <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={onSlot} />
+                <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={onSlot} kept={kept} />
               </div>
             </> : <>
               <div className="v-q">
@@ -287,9 +293,9 @@ export function Practice() {
                 {step.note && !skill && <span className="note"><Rich text={step.note} /></span>}
               </div>
               {solo ? <div className="v-ans" key={`${at}-${s.mistakes.length}`}>
-                <MathLine math={[solo.slot]} values={s.values} active={s.active} onSlot={onSlot} />
+                <MathLine math={[solo.slot]} values={s.values} active={s.active} onSlot={onSlot} kept={kept} />
               </div> : <div className="ask" key={`${at}-${s.mistakes.length}`}>
-                <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={onSlot} />
+                <MathLine math={step.prompt} values={s.values} active={s.active} onSlot={onSlot} kept={kept} />
               </div>}
             </>}
           </> : s.pick ? <div className="v-q"><span className="q">You plan this one: tap the step that comes next.</span></div>
@@ -316,7 +322,7 @@ export function Practice() {
               <BulbIcon /><em className="o-badge" aria-hidden>{s.hintsLeft}</em></button>}
             {canScratch && <button className="o-tool" aria-pressed={scratchOn} aria-label="Scratch pad" onClick={() => { setZoomOut(false); swapPad(); }}><PadIcon /></button>}
             {!test && n > 1 && <button className="o-tool" aria-pressed={listOn} aria-label="Problems" onClick={() => { if (scratchOn) setScratch(false); setZoomOut(o => !o); }}><ListIcon /></button>}
-            <button className="o-tool" aria-label="Read it to me" onClick={() => speak([step?.question, document.querySelector("#app .pprob")?.textContent].filter(Boolean).join(". ").replace(/\*\*/g, ""))}><SpeakerIcon /></button>
+            <button className="o-tool" aria-label="Read aloud" onClick={() => speak([step?.question, spokenOf(document.querySelector("#app .pprob"))].filter(Boolean).join(". ").replace(/\*\*/g, ""))}><SpeakerIcon /></button>
           </div>
         </div>
       </section>

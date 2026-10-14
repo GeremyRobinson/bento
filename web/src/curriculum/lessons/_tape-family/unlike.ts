@@ -76,7 +76,7 @@ export function unlikeAnswers(p: UnlikeFractionsProblem): AnswerModel {
       if (sub && x === Math.abs(b - d)) return { ok: false, generic: false, kind: "Subtracted the denominators",
         message: `You subtracted ${big} − ${small}. The bottom number is the **size of the pieces**, so it doesn't get subtracted. Find a number that ${b} and ${d} both go into evenly.` };
       if (x != null && x > 0 && x % b === 0 && x % d === 0) return { ok: false, generic: false, kind: "Common denominator, but not the least",
-        message: `${x} works, since ${b} and ${d} both go into it. There's a **smaller** one, though, and it keeps the numbers easier.` };
+        message: `${x} works, since ${b} and ${d} both go into it. Find a **smaller** one. It keeps the numbers easier.` };
       if (x == null || !(x > 0)) return { ok: false, generic: false, kind: "Finding the LCD", message: "Type a number first." };
       const bad = x % b !== 0 ? b : d;
       return { ok: false, generic: false, kind: "Finding the LCD", message: `${bad} doesn't go into ${x} evenly (${x} ÷ ${bad} has a remainder). Both bottom numbers must divide into it.` };
@@ -101,7 +101,7 @@ export function unlikeAnswers(p: UnlikeFractionsProblem): AnswerModel {
           message: `You changed the bottom from ${den} to ${L}, but kept the top as ${n}. Whatever you multiply the bottom by, multiply the top by the same number.` };
         if (x === n + (L - den)) return { ok: false, generic: false, kind: "Added instead of multiplied",
           message: `You added ${L - den} to the top because the bottom went up by ${L - den}. A fraction stays the same only when you **multiply** top and bottom by the same number. What times ${den} makes ${L}?` };
-        return { ok: false, generic: false, kind: "Rewriting a fraction", message: `Ask yourself: ${den} × **?** = ${L}. Then multiply the top, ${n}, by that number.` };
+        return { ok: false, generic: false, kind: "Rewriting a fraction", message: `${den} × **?** = ${L}. Then multiply the top, ${n}, by that number.` };
       },
       hint: `${den} × ? = ${L}. Whatever you multiply the bottom by, do the same to the top.`,
       explain: `${den} × ${k} = ${L}, so ${n} × ${k} = ${N}.`,
@@ -202,7 +202,7 @@ export function explainUnlike(lesson: "add" | "sub" | "mix") {
       idea: IDEAS[lesson],
       statement: showUnlike(p),
       diagram: unlikePicture(p),
-      caption: `${pieceName(b)[0]!.toUpperCase() + pieceName(b).slice(1)} and ${pieceName(d)} are different sizes; ${pieceName(L)} fit both.`,
+      caption: `${pieceName(b)[0]!.toUpperCase() + pieceName(b).slice(1)} and ${pieceName(d)} are different sizes, but ${pieceName(L)} fit both.`,
       timeline: beats(6),
       steps: [
         { id: "lcd", state: 1, answerStep: "lcd", result: Lx, math: [text("LCD of "), num(b), text(" and "), num(d), text(" is "), num(Lx)],

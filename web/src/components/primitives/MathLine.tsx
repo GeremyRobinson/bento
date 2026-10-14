@@ -14,6 +14,8 @@ interface Props {
   /** a title that may wrap: keep each group together (brackets, an operator and what follows it) and break only
    *  between sides of "=" first, then between terms or words */
   keep?: boolean;
+  /** after a miss on a step with several boxes, the boxes already right: they stay unmarked while the others show the slip */
+  kept?: readonly string[];
 }
 
 /** the smallest a line may shrink to fit its card; past this it is still readable, and wrapping lines wrap instead */
@@ -167,7 +169,7 @@ export function breakLevels(m: MathText): { tok: MathToken; lvl: number }[] {
 }
 
 /** Renders MathText. Numbers are formatted in one place; answer boxes become buttons when `onSlot` is given. */
-export function MathLine({ math, values = {}, active = null, onSlot, className = "", keep = false }: Props) {
+export function MathLine({ math, values = {}, active = null, onSlot, className = "", keep = false, kept = [] }: Props) {
   const fitRef = useFit(math, !!onSlot);
   useAnswerBeat(fitRef);
   // a written space next to an operator would double the operator's own spacing ("area  = ?")
@@ -224,7 +226,7 @@ export function MathLine({ math, values = {}, active = null, onSlot, className =
       case "part": return <span key={i} className={`pt p${tok.k}`}>{render(tok.v)}</span>;
       case "br": return <span key={i} className="br" />;
       case "slot": {
-        const v = values[tok.id] ?? "", on = active === tok.id, cls = `slot${tok.small ? " small" : ""}${on ? " active" : ""}${v ? "" : " empty"}`;
+        const v = values[tok.id] ?? "", on = active === tok.id, cls = `slot${tok.small ? " small" : ""}${on ? " active" : ""}${v ? "" : " empty"}${kept.includes(tok.id) ? " kept" : ""}`;
         return onSlot ? (
           <button key={i} type="button" className={cls} aria-pressed={on} data-slot={tok.id}
             aria-label={`Answer box${v ? `, ${v}` : ", empty"}`} onClick={() => onSlot(tok.id)}>

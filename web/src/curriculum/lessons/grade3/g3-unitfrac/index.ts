@@ -43,7 +43,7 @@ function answers({ b, k }: UnitFracProblem): AnswerModel {
       prompt: f => [text("one part "), op("="), f], N: 1, D: b,
       wrong: [
         [b, 1, "Flipped the fraction", `The bottom number says how many equal parts make the whole: ${b}. The top says how many you take: 1.`],
-        [1, b - 1, "Counted the other parts", `The bottom counts all ${count(b, "part")} of the whole, not just the other ${b - 1}.`],
+        [1, b - 1, "Counted the other parts", `The bottom counts all ${count(b, "part")} of the whole, not only the other ${b - 1}.`],
       ],
       hint: `The whole is cut into ${count(b, "part")} and you take 1. That's 1 on top, ${b} on the bottom.`,
       explain: `One of ${b} equal parts is 1/${b}, one ${pieceName(b, false)}.`,
@@ -54,7 +54,7 @@ function answers({ b, k }: UnitFracProblem): AnswerModel {
       id: "shaded", label: "Name the shaded part", question: `${count(k, "part")} ${isAre(k)} shaded. Each part is 1/${b}.`,
       prompt: f => [text("shaded "), op("="), f], N: k, D: b,
       wrong: [
-        [k, b - k, "Compared shaded to not shaded", `The bottom counts all ${count(b, "part")} of the whole, not just the ${b - k} that ${isAre(b - k)} not shaded.`],
+        [k, b - k, "Compared shaded to not shaded", `The bottom counts all ${count(b, "part")} of the whole, not only the ${b - k} that ${isAre(b - k)} not shaded.`],
         [b - k, b, "Counted the parts not shaded", `${count(b - k, "part")} ${isAre(b - k)} not shaded. Count the shaded parts for the top.`],
         [b, k, "Flipped the fraction", `The bottom says how many parts make the whole: ${b}. The top counts the shaded parts: ${k}.`],
         [1, b, "Named only one part", `That's one part. ${count(k, "part")} ${isAre(k)} shaded, so count ${count(k, "piece")} of 1/${b}.`],

@@ -72,7 +72,7 @@ export function Parent() {
         {card(1, stick, <>
           <ORing p={d.all ? d.learned / d.all : 0} label={`${d.learned}/${d.all}`} size="l" />
           <span className="o-rows">
-            <span className="o-line2"><span>To go over</span><b>{d.over.length}</b></span>
+            <span className="o-line2"><span>Go over</span><b>{d.over.length}</b></span>
             <span className="o-line2"><span>Getting stronger</span><b>{d.grow.length}</b></span>
             <span className="o-line2"><span>Stuck for good</span><b>{d.stuck.length}</b></span>
           </span>
@@ -186,9 +186,9 @@ function Sticking({ d }: { d: Data }) {
         <span className="o-ansbig"><h2 className="o-bignum">{d.learned} of {plural(d.all, "lesson")} learned</h2>
           <span className="o-st">Learned means the lesson’s last check scored 3 or 4. The app checks again after 3, 7, 21 and 60 days. After all four, a lesson is stuck for good.</span></span>
         <div className="o-cols3">
-          <div className="o-rows"><h3 className="o-head">{d.over.length} to go over</h3>{list(d.over, id => dueBack(d.p, id, d.now) ? "Time for its next check" : `Last check: ${d.p.checks?.[id]?.last ?? 0} of 4`)}</div>
-          <div className="o-rows"><h3 className="o-head">{d.grow.length} getting stronger</h3>{list(d.grow, id => `Passed ${d.passes(id)} of 4 checks · next in ${days(next(id))}`)}</div>
-          <div className="o-rows"><h3 className="o-head">{d.stuck.length} stuck for good</h3>{list(d.stuck, () => "Passed all 4 checks")}</div>
+          <div className="o-rows"><h3 className="o-head">Go over · {d.over.length}</h3>{list(d.over, id => dueBack(d.p, id, d.now) ? "Time for its next check" : `Last check: ${d.p.checks?.[id]?.last ?? 0} of 4`)}</div>
+          <div className="o-rows"><h3 className="o-head">Getting stronger · {d.grow.length}</h3>{list(d.grow, id => `Passed ${d.passes(id)} of 4 checks · next in ${days(next(id))}`)}</div>
+          <div className="o-rows"><h3 className="o-head">Stuck for good · {d.stuck.length}</h3>{list(d.stuck, () => "Passed all 4 checks")}</div>
         </div>
       </Sec>
       <Sec label="Scores by chapter">
@@ -198,7 +198,7 @@ function Sticking({ d }: { d: Data }) {
           <div key={u.name} className="o-tile o-plain">
             <div className="o-setrow"><span className="o-nm">{u.name}</span><b>{u.score == null ? "Not started yet" : `${LEVELS[u.score]} · ${u.score} of 4`}</b></div>
             {u.done.length ? u.done.map(x => (
-              <div key={x.id} className="o-setrow"><span>{x.title}</span><span className="o-st">Scored {x.s}{x.over ? " · to go over" : ""}</span></div>
+              <div key={x.id} className="o-setrow"><span>{x.title}</span><span className="o-st">Scored {x.s}{x.over ? " · go over" : ""}</span></div>
             )) : <span className="o-st">{plural(u.n, "lesson")}, none started</span>}
           </div>
         ))}</div>

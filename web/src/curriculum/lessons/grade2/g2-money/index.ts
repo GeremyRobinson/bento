@@ -60,7 +60,7 @@ function slipsFor(v: CoinValue, c: number, before: number): (Slip | false)[] {
     v === 5 && [before + 10 * c, "Counted a nickel as 10¢", "A nickel is 5¢. It's bigger than a dime, but worth less."],
     v === 10 && [before + 5 * c, "Counted a dime as 5¢", "A dime is 10¢, even though it's the smallest coin."],
     v === 25 && [before + 10 * c, "Counted a quarter as 10¢", "A quarter is 25¢. Count 25, 50, 75."],
-    v === 1 && [before + 5 * c, "Counted a penny as 5¢", "A penny is just 1¢. Count on by ones."],
+    v === 1 && [before + 5 * c, "Counted a penny as 5¢", "A penny is only 1¢. Count on by ones."],
     before > 0 && [c * v, "Started over", `Keep the ${before}¢ you already counted and count on from there.`],
     [before + (c + 1) * v, "Counted one coin too many", `There ${c === 1 ? "is" : "are"} ${c} ${nameOf(v, c)}. Count one ${v} for each.`],
   ];

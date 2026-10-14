@@ -28,7 +28,7 @@ function answers(p: RemainderProblem): AnswerModel {
   return {
     steps: [
       oneBox({
-        id: "tens", label: "Tens first", question: `What is the biggest tens number (10, 20, 30, …) where ${dv} × it is still ${n} or less?`,
+        id: "tens", label: "Tens first", question: `Which tens number (10, 20, 30, …) times ${dv} gets closest to ${n} without going over?`,
         prompt: s => [num(dv), op("×"), s, op("≤"), num(n)], ans: T,
         hint: `Try ${dv} × 10, ${dv} × 20, … and stop before you go past ${n}.`,
         wrong: [[T - 10, "Not the most tens", `${dv} × ${T} still fits, so you can use more tens.`], [T / 10, "Forgot it's tens", `${count(T / 10, "ten")} is written ${T}.`], [T + 10, "Too many tens", `${dv} × ${T + 10} = ${dv * (T + 10)}, which is more than ${n}.`]],
@@ -36,7 +36,7 @@ function answers(p: RemainderProblem): AnswerModel {
       oneBox({ id: "subtract", label: "Subtract", prompt: s => [num(n), op("−"), num(dv * T), op("="), s], ans: left, hint: `${dv} × ${T} = ${dv * T}. Take that away from ${n}.`,
         wrong: [[n + dv * T, "Added instead of took away", `Those ${dv * T} have been shared out, so take them away from ${n}.`]] }),
       oneBox({
-        id: "ones", label: "Divide what's left", question: `What is the most whole ${dv}s that fit into ${left}?`,
+        id: "ones", label: "Divide what's left", question: `How many whole ${dv}s fit into ${left}?`,
         prompt: s => [num(dv), op("×"), s, op("≤"), num(left)], ans: O, hint: `Count by ${dv}s and stop before you pass ${left}.`,
         wrong: slips(O, [[O + 1, "One too many", `${dv} × ${O + 1} = ${dv * (O + 1)}, which is more than ${left}.`], [O - 1, "Not the most", `One more ${dv} still fits in ${left}.`]]).filter(([v]) => v >= 0),
       }),
@@ -65,7 +65,7 @@ function explain(p: RemainderProblem, model: AnswerModel) {
     alt: `${n} ÷ ${dv}: ${dv} × ${T} = ${dv * T}, ${dv} × ${O} = ${dv * O}, so ${r ? `${q} R ${r}` : `${q} exactly`}.`,
     diagram: divisionAreaPicture({ n, dv, T, O, left, q, r }),
     beats: [
-      { id: "tens", narration: `That fits in ${n}, but ${dv} × ${T + 10} = ${dv * (T + 10)} would not.`,
+      { id: "tens", narration: `${dv} × ${T} fits in ${n}, but ${dv} × ${T + 10} = ${dv * (T + 10)} would not.`,
         math: [num(dv), op("×"), num(T), op("="), num(dv * T)],
         lines: [[num(n), op("÷"), num(dv)], [num(dv), op("×"), mark(T), op("="), num(dv * T)]], answerStep: "tens", result: T },
       { id: "subtract", narration: "Take away what's shared to see what's left.", math: [num(n), op("−"), num(dv * T), op("="), num(left)],
@@ -74,7 +74,7 @@ function explain(p: RemainderProblem, model: AnswerModel) {
         lines: [[num(dv), op("×"), mark(O), op("="), num(dv * O)]], answerStep: "ones", result: O },
       { id: "answer", narration: "Add the tens and the ones.", math: [num(T), op("+"), num(O), op("="), num(q)],
         lines: [[num(T), op("+"), num(O), op("="), num(q)]], answerStep: "answer", result: q },
-      { id: "remainder", narration: r ? `${r} is less than ${dv}, so it's the remainder: ${q} R ${r}.`
+      { id: "remainder", narration: r ? `${r} is less than ${dv}, so ${r} is left over: ${q} remainder ${r}.`
           : `Nothing is left, so ${dv} goes into ${n} exactly ${q} times.`,
         math: [num(left), op("−"), num(dv * O), op("="), num(r)],
         lines: [[num(left), op("−"), num(dv * O), op("="), mark(r)], [num(n), op("÷"), num(dv), op("="), num(q), ...(r ? [text(" R "), num(r)] : [])]],

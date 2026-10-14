@@ -92,8 +92,8 @@ export function MeHub({ leave, toGrades }: { leave: () => void; toGrades: () => 
   const chDone = chapter ? doneCount(progress, chapter.entries) : 0;
   const yours = GRADES.map(d => d.grade).filter(n => n === g || doneCount(progress, entriesInGrade(n)) > 0);
   const numbers: [string | number, string][] = [
-    [progress.streak, progress.streak === 1 ? "day streak" : "days in a row"],
-    [progress.xp.toLocaleString("en-US"), "XP in all"],
+    [progress.streak, progress.streak === 1 ? "day in a row" : "days in a row"],
+    [progress.xp.toLocaleString("en-US"), "points in all"],
     [lessonsDone, lessonsDone === 1 ? "lesson done" : "lessons done"],
   ];
 
@@ -104,8 +104,8 @@ export function MeHub({ leave, toGrades }: { leave: () => void; toGrades: () => 
           <Fill frac={into / LEVEL_XP} />
           <GradeNum grade={g!} />
           <span className="zl-text"><span className="k">{YOUR_BENTO} · {grade.name}</span><b>Level {lvl}</b>
-            <small>{into} of {LEVEL_XP} XP to level {lvl + 1}</small></span>
-          <Pill onClick={toGrades}>Switch grade</Pill>
+            <small>{into} of {LEVEL_XP} points to level {lvl + 1}</small></span>
+          <Pill onClick={toGrades}>Change grade</Pill>
         </> : <>
           <span className="zl-text"><span className="k">{YOUR_BENTO}</span><b>Choose your grade</b>
             <small>Your level, streak and chapters show up here once you start.</small></span>
@@ -118,7 +118,7 @@ export function MeHub({ leave, toGrades }: { leave: () => void; toGrades: () => 
       {chapter && (
         <article className="zcard zchap" style={{ "--i": 4 } as CSSProperties}>
           <span className="k">Chapter {ci + 1} of {chapters.length}</span><b>{chapter.name}</b>
-          <small className="muted">{chDone} of {chapter.entries.length} lessons · test {score} of 4</small>
+          <small className="muted">{chDone} of {chapter.entries.length} lessons · chapter test {score} of 4</small>
           {next && <Pill go onClick={() => { leave(); go({ name: "learn", lessonId: next.id }, "fwd"); }}>Up next: {next.title} ›</Pill>}
         </article>
       )}
@@ -136,7 +136,7 @@ export function MeHub({ leave, toGrades }: { leave: () => void; toGrades: () => 
               onClick={() => { leave(); if (n === g) go({ name: "home" }, "back"); else chooseGrade(n); }}>
               <Fill frac={all.length ? d / all.length : 0} />
               <GradeNum grade={n} /><span className="zl-text"><b>{gradeOf(n).subtitle}</b>
-                <small>{d} of {all.length} lessons{avg != null ? ` · average ${avg.toFixed(1)} of 4` : ""}{gt ? ` · check‑up ${gt.last} of 4` : ""}</small></span>
+                <small>{d} of {all.length} lessons{avg != null ? ` · average score ${avg.toFixed(1)} of 4` : ""}{gt ? ` · test ${gt.last} of 4` : ""}</small></span>
             </button>
           );
         })}

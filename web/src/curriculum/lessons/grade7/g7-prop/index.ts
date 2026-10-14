@@ -38,7 +38,7 @@ function answers({ a, b, k }: ProportionProblem): AnswerModel {
         h: `${b} equal parts share ${B}. How much does each one get?`,
         w: [[B - b, "Added instead of scaled", "Equal ratios grow by multiplying, not adding."], [B * b, "Multiplied instead of divided", `${B} is shared by ${b} parts, so divide.`]] }),
       explain: `${B} ÷ ${b} = ${f(k)}, so each part is ${f(k)}.` },
-      { ...ns({ id: "divide", l: "Build x", q: `The top has ${a} of those parts.`, a: s => [text("x"), op("="), num(a), op("×"), num(k), op("="), ...s], ans: x,
+      { ...ns({ id: "divide", l: "Find x", q: `The numerator has ${a} of those parts.`, a: s => [text("x"), op("="), num(a), op("×"), num(k), op("="), ...s], ans: x,
         h: `x is ${a} part${a === 1 ? "" : "s"}, each ${f(k)}.`,
         w: [[a + k, "Added the part", `x is ${a} part${a === 1 ? "" : "s"}, each ${f(k)}: multiply.`], [a + B - b, "Added instead of scaled", "Equal ratios grow by multiplying, not adding."]] }),
       explain: `${a} × ${f(k)} = ${f(x)}.` },
@@ -54,9 +54,9 @@ function answers({ a, b, k }: ProportionProblem): AnswerModel {
 export function proportionPicture({ a, b, k }: ProportionProblem) {
   return buildTape({
     rows: [
-      { length: a, parts: a, fills: [{ a: 0, b: a, tone: "on", from: 2 }], each: [{ text: () => f(k), from: 2 }], label: [{ text: "top" }],
+      { length: a, parts: a, fills: [{ a: 0, b: a, tone: "on", from: 2 }], each: [{ text: () => f(k), from: 2 }], label: [{ text: "numerator" }],
         total: [{ text: `${a}`, until: 0 }, { text: "x", from: 1, until: 1 }, { text: `x = ${a * k}`, from: 2, acc: true }] },
-      { length: b, parts: b, fills: [{ a: 0, b, tone: "two", from: 2 }], each: [{ text: () => f(k), from: 2 }], label: [{ text: "bottom" }],
+      { length: b, parts: b, fills: [{ a: 0, b, tone: "two", from: 2 }], each: [{ text: () => f(k), from: 2 }], label: [{ text: "denominator" }],
         total: [{ text: `${b}`, until: 0 }, { text: `${b * k}`, from: 1 }] },
     ],
     alt: `${count(a, "box", "boxes")} over ${count(b, "box", "boxes")} of the same size. When the ${count(b, "box", "boxes")} ${verb(b, "makes", "make")} ${b * k}, each box is ${f(k)}, so the ${count(a, "box", "boxes")} ${verb(a, "makes", "make")} ${a * k}.`,
@@ -66,8 +66,8 @@ export function proportionPicture({ a, b, k }: ProportionProblem) {
 function explain(p: ProportionProblem, model: AnswerModel): Explanation {
   const { a, b } = p, k = expectedOf(model.steps, "cross"), x = expectedOf(model.steps, "divide");
   return {
-    heading: "Same scale, top and bottom",
-    idea: ["Two fractions are equal when the top and bottom are scaled by the same number."],
+    heading: "Scale both parts the same",
+    idea: ["Two fractions are equal when the numerator and denominator are scaled by the same number."],
     statement: [frac(a, b), op("="), frac("x", b * k)],
     diagram: proportionPicture(p),
     caption: `${a}/${b} = ${f(x)}/${f(b * k)}: each box is ${f(k)}.`,
@@ -76,7 +76,7 @@ function explain(p: ProportionProblem, model: AnswerModel): Explanation {
       { id: "cross", state: 1, answerStep: "cross", result: k, math: [num(b * k), op("÷"), num(b), op("="), num(k)],
         narration: `${b} equal boxes make ${f(b * k)}, so divide to find one box.` },
       { id: "divide", state: 2, answerStep: "divide", result: x, math: [text("x"), op("="), num(a), op("×"), num(k), op("="), num(x)],
-        narration: `The top is ${count(a, "box", "boxes")} of the same size.` },
+        narration: `The numerator is ${count(a, "box", "boxes")} of the same size.` },
     ],
   };
 }
