@@ -71,7 +71,8 @@ export function explainTrigRatio(p: TrigRatioProblem, answers: AnswerModel): Exp
     caption: `From angle A: opposite ${a}, adjacent ${b}, hypotenuse ${c}.`,
     diagram: buildRightTriangle({
       a, b,
-      sides: { a: { text: `opposite ${a}` }, b: { text: `adjacent ${b}` }, c: { text: `hypotenuse ${c}` } },
+      // the problem above names each side, so a phone's short box shows just the lengths (Review 1c74c20: "hypotenuse 13" cut)
+      sides: { a: { text: `opposite ${a}`, short: `${a}` }, b: { text: `adjacent ${b}`, short: `${b}` }, c: { text: `hypotenuse ${c}`, short: `${c}` } },
       angles: [{ at: "B", text: "A" }],
       hl: [{ side: sideOf(topName), from: 1 }, { side: sideOf(botName), from: 2 }],
       alt: `A right triangle with angle A: the side opposite A is ${a}, the side next to it is ${b}, and the hypotenuse is ${c}.`,

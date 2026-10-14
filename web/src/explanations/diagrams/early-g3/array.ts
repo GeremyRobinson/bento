@@ -2,6 +2,7 @@
 // outlines around each row (a group) or each column, and lines of text under it. Every count comes from the lesson.
 import type { SceneDiagram } from "../scene/schema";
 import { frame, t, type Draft } from "../geo/kit";
+const r1 = (n: number) => Math.round(n * 10) / 10;
 
 export interface ArrayText { text: string; from: number; until?: number; cls?: string }
 
@@ -59,13 +60,18 @@ export function buildArray(s: ArraySpec): SceneDiagram {
     const b = s.colBoxes;
     for (let c = 0; c < s.cols; c++) {
       items.push({ type: "rect", x: c * px - padX + 3, y: -padY, w: 2 * padX - 6, h: H + 2 * padY, rx: 12, cls: "ax thin", enter: "fade", delay: c * 0.08, ...when(b.from, b.until) } as Draft);
-      if (b.text) items.push(t(c * px, H + padY + 14, b.text(c), "sm", { enter: "rise", delay: c * 0.08, ...when(b.from, b.until) }));
+      if (b.text) items.push(t(c * px, H + padY + 5, b.text(c), "sm down", { enter: "rise", delay: c * 0.08, ...when(b.from, b.until) }));
     }
   }
   if (s.rowTotals) {
     const b = s.rowTotals;
+    // the counts down the side keep their row's height on a phone: they shrink to it (never under 14px), and if even that
+    // runs one into the next, every other count fades, the last (the total) always kept (Review 26fe1f8, g3-facts)
+    const fitRow = { fontSize: `calc(max(14 * var(--px, 0), min(max(20, 20 * var(--px, 0)), ${r1(py / 1.25)} - 3 * var(--px, 0))) * 1px)` };
+    const thin = { fillOpacity: `clamp(0, calc((${py} - 18 * var(--px, 0)) * 1000), 1)` };
     for (let r = 0; r < s.rows; r++) {
-      items.push(t(W + padX + 12, r * py, b.text(r), `lbl start${b.acc?.(r) ? " acc" : ""}`, { enter: "rise", delay: Math.round(r * 0.25 * 100) / 100, ...when(b.from, b.until) }));
+      const vars = { ...fitRow, ...((s.rows - 1 - r) % 2 ? thin : {}) };
+      items.push(t(W + padX + 12, r * py, b.text(r), `lbl start${b.acc?.(r) ? " acc" : ""}`, { enter: "rise", delay: Math.round(r * 0.25 * 100) / 100, ...when(b.from, b.until), vars }));
     }
   }
   if (s.rowLabels) {
@@ -80,7 +86,10 @@ export function buildArray(s: ArraySpec): SceneDiagram {
     let k = rowsUsed.findIndex(rw => rw.every(o => span.until < o.from || o.until < span.from));
     if (k < 0) { k = rowsUsed.length; rowsUsed.push([]); }
     rowsUsed[k]!.push(span);
-    items.push(t(W / 2, base + k * 28, l.text, l.cls ?? "lbl acc", { enter: "rise", delay: 0.3, ...when(l.from, l.until) }));
+    // each line hangs from its top (.down) and moves down by what the column counts and the lines over it grow at a
+    // phone's text floor, so "5 columns of 6" never sits on the 6s (Review 1c74c20, g3-facts at 280×123)
+    const grown = `${s.colBoxes?.text ? "max(0, 14 * var(--px, 0) - 14) * 1.25" : "0"} + ${k} * max(0, 20 * var(--px, 0) - 20) * 1.25`;
+    items.push(t(W / 2, base + k * 28 - 11, l.text, `${l.cls ?? "lbl acc"} down`, { enter: "rise", delay: 0.3, ...when(l.from, l.until), vars: { transform: `translateY(calc((${grown}) * 1px))` } }));
   }
   return frame("array", items, s.alt, 14, { w: 540 });
 }

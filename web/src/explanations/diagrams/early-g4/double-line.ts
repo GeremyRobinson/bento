@@ -1,6 +1,7 @@
 // Converting measurements (4th grade): a double number line, big units on top and small units below,
 // tick for tick. One big unit is matched first, then every tick is counted up; extra small units hop on at the end.
 import type { SceneDiagram } from "../scene/schema";
+import { PIC, growDown, roomLeft, thinOut } from "../scene/picture-system";
 import { frame, path, seg, t, M, type Draft } from "../geo/kit";
 
 export interface DoubleLineSpec {
@@ -14,6 +15,8 @@ export interface DoubleLineSpec {
   beats: { one: number; all: number; extra: number | null; total: number };
   /** the finished sentence under the lines, e.g. "3 feet = 36 inches" */
   total: string;
+  /** the total sentence leaves a phone's short box, where it is wider than the picture (the accent end number answers) */
+  shortTotal?: boolean;
   /** what the ticks read; by default the top counts 0, 1, 2 … and the bottom j × per */
   topText?: (j: number) => string;
   bottomText?: (j: number) => string;
@@ -41,14 +44,20 @@ export function buildDoubleLine(s: DoubleLineSpec): SceneDiagram {
   const topText = s.topText ?? String, bottomText = s.bottomText ?? ((j: number) => String(j * s.per));
   // long top labels (10.8) take the smaller size when the ticks are close
   const topCls = Math.max(...Array.from({ length: units + 1 }, (_, j) => topText(j).length)) * 15 * 0.6 > step - 6 ? "xs" : "sm";
+  // on a phone the numbers are held at their floor; where they would touch, every other one fades (then every fourth),
+  // and none crowds the end, which always shows (it is the number the lesson is about)
+  const topLen = Math.max(...Array.from({ length: units + 1 }, (_, j) => topText(j).length));
+  const bottomLen = Math.max(...Array.from({ length: units + 1 }, (_, j) => bottomText(j).length));
+  const thin = (j: number, chars: number, size: number, endFloor = 14) => j === 0 || j === units ? {}
+    : { vars: thinOut(roomLeft((j & -j) * step, chars, size), roomLeft((units - j) * step, chars, PIC.label, endFloor)) };
   for (let j = 0; j <= units; j++) {
     const x = X(j), at = j === 0 ? 0 : j === 1 ? s.beats.one : s.beats.all, k = Math.max(0, j - 2);
     items.push(seg([x, y0 - 7], [x, y0 + 7], "tk"), seg([x, y1 - 7], [x, y1 + 7], "tk"));
-    items.push(t(x, y0 - 20, topText(j), topCls));
+    items.push(t(x, y0 - 12, topText(j), `${topCls} up`, thin(j, topLen, topCls === "xs" ? 12 : 15)));
     // the matching small-unit count appears as the ticks are counted up
     const isTotal = !s.extra && j === s.n;
-    items.push(t(x, y1 + 22, bottomText(j), "sm", { from: at, enter: "rise", delay: Math.round(k * 0.12 * 100) / 100, ...(isTotal ? { until: s.beats.total - 1 } : {}) }));
-    if (isTotal) items.push(t(x, y1 + 22, bottomText(j), "lbl acc", { from: s.beats.total, enter: "pop" }));
+    items.push(t(x, y1 + 12, bottomText(j), "sm down", { from: at, enter: "rise", delay: Math.round(k * 0.12 * 100) / 100, ...(isTotal ? { until: s.beats.total - 1 } : {}), ...thin(j, bottomLen, 15, PIC.label) }));
+    if (isTotal) items.push(t(x, y1 + 12, bottomText(j), "lbl acc down", { from: s.beats.total, enter: "pop" }));
     if (j > 0 && j <= s.n) items.push(seg([x, y0 + 10], [x, y1 - 10], "wire", { from: at, enter: "draw", delay: Math.round(k * 0.12 * 100) / 100 }));
   }
   // one big unit, matched
@@ -72,15 +81,21 @@ export function buildDoubleLine(s: DoubleLineSpec): SceneDiagram {
   let yText = y1 + 62;
   if (s.hops) {
     const hh = Math.min(22, step * 0.45), b = s.hops.from, yt = y0 - 34, yb = y1 + 36;
+    // the counts sit over the top numbers, so they rise by what that row grew on a phone (its end number is a label)
+    const growUp = { transform: growDown(1).transform?.replace("translateY(calc(", "translateY(calc(-1 * ") ?? "none" };
     for (let j = 1; j <= s.n; j++) {
       const xa = X(j - 1), xb = X(j), delay = Math.round((0.2 + 0.25 * (j - 1)) * 100) / 100;
       items.push(path([M([xa + 2, yt]), { c: "Q", q: [(xa + xb) / 2, yt - 2 * hh], p: [xb - 2, yt] }], "ln thin pq", { from: b, enter: "draw", delay }));
       items.push(path([M([xa + 2, yb]), { c: "Q", q: [(xa + xb) / 2, yb + 2 * hh], p: [xb - 2, yb] }], "ln thin pq", { from: b, enter: "draw", delay }));
-      items.push(t((xa + xb) / 2, yt - hh - 12, String(j), j === s.n ? "sm acc" : "xs", { from: b, enter: "rise", delay: Math.round((delay + 0.2) * 100) / 100 }));
+      items.push(t((xa + xb) / 2, yt - hh - 12, String(j), j === s.n ? "sm acc" : "xs", { from: b, enter: "rise", delay: Math.round((delay + 0.2) * 100) / 100, ...(j === s.n ? { vars: growUp } : { vars: { ...growUp, ...thinOut(roomLeft((j & -j) * step, String(s.n).length, 12), roomLeft((s.n - j) * step, String(s.n).length, 15)) } }) }));
     }
     yText = yb + hh + 30;
   }
-  for (const l of s.lines ?? []) items.push(t(X(units) / 2, yText, l.text, "lbl acc", { from: l.from, ...(l.until != null ? { until: l.until } : {}), enter: "rise" }));
-  if (s.total) items.push(t(X(units) / 2, yText, s.total, "lbl acc", { from: s.beats.total, enter: "rise" }));
+  // the lines hang from their top edge under the bottom numbers and move down by what that row grew on a phone; they are
+  // captions (.cap), which practice leaves out (the work list shows each worked line)
+  for (const l of s.lines ?? []) items.push(t(X(units) / 2, yText - 12, l.text, "lbl acc down cap", { from: l.from, ...(l.until != null ? { until: l.until } : {}), enter: "rise", vars: growDown(1) }));
+  // in a phone's short box the finished sentence is wider than the picture at the label floor: there the accent number on
+  // the bottom line is the answer, and the sentence is the problem's own line over the picture (Review b4fa4b3)
+  if (s.total) items.push(t(X(units) / 2, yText - 12, s.total, `lbl acc down cap${s.shortTotal ? " shortgo" : ""}`, { from: s.beats.total, enter: "rise", vars: growDown(1) }));
   return frame("double-line", items, s.alt, 14, { w: 320 });
 }

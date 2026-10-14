@@ -15,6 +15,8 @@ export function simplifyRootPicture(o: { k: number; m: number; n: number; square
     cells: Array.from({ length: k }, () => Array.from({ length: k }, () => ({ text: `${m}`, from: 1, color: 0 }))),
     maxWidth: 260,
     maxHeight: 260,
+    // a 6 × 6 square of tiles and three rows of working: the text may take more of a phone box
+    grow: 2,
     lines: [
       { text: `${n} = ${square} × ${m}`, from: 1, until: 1 },
       { text: `√${square} = ${k} tiles along a side`, from: 2, until: 2 },

@@ -22,7 +22,8 @@ export function compositionPicture(o: { a: number; b: number; c: number; d: numb
   const K: XNode = { t: "chip", id: "k", text: f(k), part: "pq" };
   return buildExprBoxes({
     header: `f(g(${f(k)}))`,
-    rules: `${ruleG}   ${ruleF}`,
+    // a comma between the two rules: spaces alone collapse in the picture and run them together (Review 26fe1f8)
+    rules: `${ruleG},  ${ruleF}`,
     stages: [
       { beat: 0, at: 0, tree: F([G([K])]) },
       { beat: 1, at: 0, tree: F([G([K], true)]) },

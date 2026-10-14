@@ -29,6 +29,9 @@ export interface PlaneLabel {
   from?: number;
   /** keep out of the axes' tick-number bands, for a point sitting on or beside an axis */
   clearAxes?: boolean;
+  /** working the step under the picture already says (or the problem shows): a phone's short box leaves it out
+   *  (.shortgo), so the few labels left have room at the label floor; a beat number leaves it out from that beat on */
+  long?: boolean | number;
 }
 
 export type PlaneItem =

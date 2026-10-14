@@ -1,7 +1,7 @@
 // The general area model: a rectangle cut into rows and columns, as a scene.
 // Every use of the current app's areaModel (cell grids, algebra areas, factor rectangles, a triangle as half a rectangle,
 // complex FOIL) is one of these, with sizes, labels and beats all computed from the problem by the lesson.
-import { PIC } from "../scene/picture-system";
+import { PIC, growDown, roomLeft, spreadRows, thinOut } from "../scene/picture-system";
 import type { SceneDiagram, SceneItem } from "../scene/schema";
 import { r1 } from "../scene/helpers";
 import { seatLines } from "./seats";
@@ -50,6 +50,8 @@ export interface AreaGridSpec {
   wholeOutlines?: number;
   /** lines of text under the picture */
   lines?: PictureLine[];
+  /** label rows a builder puts between the picture and its lines (they grow on a phone too, so the lines move past them) */
+  linesLead?: number;
   /** extra shapes drawn over the grid, placed with the computed layout */
   extras?: (g: AreaGeometry) => SceneItem[];
   /** beat a plain outline of the whole rectangle appears at. Off unless a lesson needs the edge itself (a perimeter, the
@@ -57,6 +59,9 @@ export interface AreaGridSpec {
   outlineFrom?: number | null;
   maxWidth?: number;
   maxHeight?: number;
+  /** how far a small box may grow the frame for this picture's text at the phone floor (SceneDiagram; default 1.7 with lines
+      of text under it, else 1.5) */
+  grow?: number;
   /** smallest row height, for strips far longer than they are tall (default 34) */
   minRow?: number;
   alt: string;
@@ -79,6 +84,26 @@ export interface AreaGeometry {
 
 /** A line of text under a picture, shown from one beat (until another). */
 export interface PictureLine { text: string; from: number; until?: number; cls?: string }
+
+/**
+ * A line of text under a picture is held at the 20px label floor on a phone, so one longer than a phone's picture box
+ * holds at that size (about LINE_CHARS characters) is broken in two at its most natural place: after a comma or colon,
+ * else before its "=", else before a + or ×; whichever of those leaves the two halves most even.
+ */
+export const LINE_CHARS = 23;
+/** how wide a run of text reads, in characters of an average digit (spaces and signs are narrower than digits) */
+const reads = (t: string) => [...t].reduce((a, ch) => a + (ch === " " ? 0.5 : /[.,:;()²³]/.test(ch) ? 0.6 : /[mw]/.test(ch) ? 1.4 : 1), 0) * 0.92;
+export function wrapLine(text: string, most = LINE_CHARS): string[] {
+  if (reads(text) <= most) return [text];
+  const cuts: { at: number; skip: number; rank: number }[] = [];
+  for (const m of text.matchAll(/[,:;] /g)) cuts.push({ at: m.index! + 1, skip: 1, rank: 0 });
+  for (const m of text.matchAll(/ = /g)) cuts.push({ at: m.index!, skip: 1, rank: 1 });
+  for (const m of text.matchAll(/ [+×−] /g)) cuts.push({ at: m.index!, skip: 1, rank: 2 });
+  const fits = (c: { at: number; skip: number }) => Math.max(reads(text.slice(0, c.at)), reads(text.slice(c.at + c.skip)));
+  const best = cuts.sort((a, b) => (fits(a) <= most ? 0 : 1) - (fits(b) <= most ? 0 : 1) || a.rank - b.rank || fits(a) - fits(b))[0];
+  if (!best || fits(best) > reads(text) - 2) return [text];
+  return [text.slice(0, best.at), text.slice(best.at + best.skip)];
+}
 
 /** Puts lines that are never on screen together in the same row; returns each line's row and how many rows there are. */
 export function lineRows(lines: PictureLine[]): { rowOf: number[]; count: number } {
@@ -117,16 +142,50 @@ export function fitParts(sizes: number[], mins: number[], max: number, scale: nu
   return { lengths: sizes.map((s, i) => (held[i] ? mins[i]! : s * unit)), unit };
 }
 
+/**
+ * A number inside a part: the label's size (as the picture's text tokens set it, so a tablet holds it like every other
+ * label) while it fits its part, then shrunk to fit, never under the 14px floor on screen.
+ */
+export const fitPart = (room: number, chars: number): Record<string, string> => ({
+  fontSize: `max(calc(14px * var(--px, 0)), min(max(var(--pic-label, 20px), calc(20px * var(--px, 0))), calc((${r1(room)} - 4 * var(--px, 0)) / ${Math.round(chars * 62) / 100} * 1px)))`,
+});
+/** Each row of lines under the picture sits one line of text (at its size on screen) under the one above it. */
+export const lineStep = (rows: number): Record<string, string> =>
+  rows > 0 ? { transform: `translateY(calc(${rows} * 1.25 * max(var(--pic-label, 20px), calc(20px * var(--px, 0)))))` } : {};
+/** A label's width at the 20px label floor. */
+const labelWidth = (s: string) => s.length * PIC.label * 0.62;
+/**
+ * The picture is drawn at about a phone's picture size (a box 280-310 by 143-187, its labels at the 20px floor), so the
+ * labels laid out here land where they are drawn and the parts keep the room that is left; on a tablet the picture grows
+ * to its box and its text grows less (SceneDiagram). A lesson's maxWidth / maxHeight set the picture's proportions; the
+ * whole picture (labels and lines included) is brought down to PHONE.
+ */
+const PHONE = { w: 360, h: 210 };
+function phoneLayout(spec: AreaGridSpec, lineW: number, lineCount: number): AreaGeometry {
+  const maxW = spec.maxWidth ?? 380, maxH = spec.maxHeight ?? 240, minRow = spec.minRow ?? 34;
+  let k = 1, lay = layoutAreaGrid(spec);
+  for (let n = 0; n < 4; n++) {
+    // a row of text under it is a line of text at its size on a phone (lineStep), a little over 26
+    const rows = lineCount + (spec.linesLead ?? 0);
+    const w = Math.max(lay.left + lay.width + 14, lineW + 24), h = lay.top + lay.height + (rows ? 14 + rows * 30 : 12);
+    const f = Math.min(1, PHONE.w / w, PHONE.h / h);
+    if (f > 0.97) break;
+    k *= f;
+    lay = layoutAreaGrid({ ...spec, maxWidth: maxW * k, maxHeight: maxH * k, minRow: Math.min(minRow, Math.max(30, minRow * k)) });
+  }
+  return lay;
+}
+
 /** Where everything goes: one scale for both axes when it fits, larger parts shrinking so small parts can hold their labels. */
 export function layoutAreaGrid(spec: AreaGridSpec): AreaGeometry {
   const maxW = spec.maxWidth ?? 380, maxH = spec.maxHeight ?? 240;
   const colSizes = spec.cols.map(c => Math.abs(c.size)), rowSizes = spec.rows.map(r => Math.abs(r.size));
   const sw = colSizes.reduce((a, b) => a + b, 0), sh = rowSizes.reduce((a, b) => a + b, 0);
   const scale = Math.min(maxW / sw, maxH / sh);
-  const colMins = spec.cols.map((c, i) => Math.max(30, textWidth(sideText(c)) + 10, ...spec.rows.map((_, j) => textWidth(cellText(spec.cells[j]?.[i] ?? null)) + 22)));
+  const colMins = spec.cols.map((c, i) => Math.max(30, labelWidth(sideText(c)) + 10, ...spec.rows.map((_, j) => Math.min(labelWidth(cellText(spec.cells[j]?.[i] ?? null)), cellText(spec.cells[j]?.[i] ?? null).length * 0.62 * 14 * 1.4) + 22)));
   const rowMins = spec.rows.map(() => spec.minRow ?? 34);
   const cw = fitParts(colSizes, colMins, maxW, scale), rh = fitParts(rowSizes, rowMins, maxH, scale);
-  const left = Math.max(40, ...spec.rows.map(r => textWidth(sideText(r)) + 22)), top = 34;
+  const left = Math.max(40, ...spec.rows.map(r => labelWidth(sideText(r)) + 22)), top = 34;
   const xs = [left], ys = [top];
   cw.lengths.forEach(w => xs.push(xs[xs.length - 1]! + w));
   rh.lengths.forEach(h => ys.push(ys[ys.length - 1]! + h));
@@ -136,9 +195,10 @@ export function layoutAreaGrid(spec: AreaGridSpec): AreaGeometry {
 
 /** The picture: labels on the sides, a coloured cell per product, optional unit squares, lines of text under it. */
 export function buildAreaGrid(spec: AreaGridSpec): SceneDiagram & { geometry: AreaGeometry } {
-  const lay = layoutAreaGrid(spec), items: SceneItem[] = [];
-  const lines = spec.lines ?? [];
-  const lineW = Math.max(0, ...lines.map(l => textWidth(l.text)));
+  const items: SceneItem[] = [];
+  const lines = (spec.lines ?? []).flatMap(l => wrapLine(l.text).map(text => ({ ...l, text })));
+  const lineW = Math.max(0, ...lines.map(l => labelWidth(l.text)));
+  const lay = phoneLayout(spec, lineW, lineRows(lines).count);
   // when the text under it is wider, the grid moves to the middle
   const shift = Math.max(0, (lineW + 24 - (lay.left + lay.width + 14)) / 2);
   const g: AreaGeometry = { ...lay, left: lay.left + shift, xs: lay.xs.map(x => x + shift) };
@@ -148,8 +208,23 @@ export function buildAreaGrid(spec: AreaGridSpec): SceneDiagram & { geometry: Ar
 
   // labels one label gap from their part (parts sit half an area gap inside the grid lines)
   const lg = PIC.gap.area / 2 - PIC.labelGap;
-  spec.cols.forEach((c, i) => items.push(label((xs[i]! + xs[i + 1]!) / 2, top + lg - PIC.label / 2, c, "lbl", 0.1 + i * 0.15)));
-  spec.rows.forEach((r, j) => items.push(label(left + lg, (ys[j]! + ys[j + 1]!) / 2, r, "lbl end", 0.1 + j * 0.15)));
+  // top labels stand on their edge, so a label held at its phone floor grows up, away from its part
+  // a side cut into many equal pieces with the same label (6 tiles of √2): where the floor grows them into each other,
+  // every other one fades: the top's first always showing, the side's last, so the two never meet at the corner
+  const thin = (sides: AreaSide[], edges: number[], i: number, chars: number, fromEnd = false) => {
+    const same = sides.length > 2 && sides.every(o => sideText(o) === sideText(sides[0]!));
+    const at = fromEnd ? sides.length - 1 - i : i;
+    if (!same || at === 0) return {};
+    const level = at & -at;
+    return { vars: thinOut(roomLeft(Math.min(...sides.map((_, k) => edges[k + 1]! - edges[k]!)) * level, chars, PIC.label, PIC.label)) };
+  };
+  spec.cols.forEach((c, i) => items.push({ ...label((xs[i]! + xs[i + 1]!) / 2, top + lg + 2, c, "lbl up", 0.1 + i * 0.15), ...thin(spec.cols, xs, i, sideText(c).length) }));
+  // a row's height holds a label about 2 characters wide
+  // different labels on rows thinner than a label at its floor spread apart (2 and +3i beside a short row), so they never touch
+  const rowsSame = spec.rows.length > 2 && spec.rows.every(o => sideText(o) === sideText(spec.rows[0]!));
+  const pitch = Math.min(...spec.rows.map((_, j) => ys[j + 1]! - ys[j]!));
+  const spread = (j: number) => (!rowsSame && spec.rows.filter(r => sideText(r)).length > 1 ? { vars: spreadRows(j, spec.rows.length, pitch) } : {});
+  spec.rows.forEach((r, j) => items.push({ ...label(left + lg, (ys[j]! + ys[j + 1]!) / 2, r, "lbl end", 0.1 + j * 0.15), ...thin(spec.rows, ys, j, 2, true), ...spread(j) }));
 
   // whole unit squares behind everything, when the sides are not whole (a strip of tenths laid on whole squares)
   const wholeCols = Math.ceil(spec.cols.reduce((a, c) => a + Math.abs(c.size), 0) - 1e-9), wholeRows = Math.ceil(spec.rows.reduce((a, r) => a + Math.abs(r.size), 0) - 1e-9);
@@ -208,19 +283,35 @@ export function buildAreaGrid(spec: AreaGridSpec): SceneDiagram & { geometry: Ar
   items.push(...(spec.extras?.(g) ?? []));
 
   // cell texts last, so nothing covers them
+  const cellTexts = spec.cells.flat().filter(c => c?.text).map(c => cellText(c));
+  const repeated = cellTexts.length > 4 && cellTexts.every(t => t === cellTexts[0]);
   spec.cells.forEach((row, j) => row.forEach((c, i) => {
     if (!c?.text) return;
-    items.push({ type: "text", x: r1((xs[i]! + xs[i + 1]!) / 2), y: r1((ys[j]! + ys[j + 1]!) / 2), text: c.text, ...(c.sup ? { sup: c.sup } : {}), cls: "lbl res onmid", from: Math.max(c.from ?? 0, c.textFrom ?? 0), enter: "rise", delay: 0.3 });
+    // held at the label floor while it fits its part, then shrunk to fit it (never under 14px on screen)
+    const chars = c.text.length + (c.sup ? 0.6 * c.sup.length : 0);
+    const room = Math.min(xs[i + 1]! - xs[i]! - 2 * IN - 4, ((ys[j + 1]! - ys[j]! - 2 * IN) / 1.2) * chars * 0.62);
+    // the same number in many small tiles (6 × 6 tiles of 2) shows only while it fits its tile at the floor (the lines
+    // under the picture say it too)
+    const fade = repeated ? thinOut(roomLeft(xs[i + 1]! - xs[i]! - 2 * IN, chars, 0), roomLeft(ys[j + 1]! - ys[j]! - 2 * IN, 1.94, 0)) : {};
+    items.push({ type: "text", x: r1((xs[i]! + xs[i + 1]!) / 2), y: r1((ys[j]! + ys[j + 1]!) / 2), text: c.text, ...(c.sup ? { sup: c.sup } : {}), cls: "lbl res onmid", from: Math.max(c.from ?? 0, c.textFrom ?? 0), enter: "rise", delay: 0.3, vars: { ...fitPart(room, chars), ...fade } });
   }));
 
   const outlineW = spec.wholeOutlines != null && g.toScale ? wholeCols * g.unitX : g.width;
   const width = Math.max(left + Math.max(g.width, outlineW) + 14, lineW + 24);
   const cx = Math.min(Math.max(left + g.width / 2, lineW / 2 + 12), width - lineW / 2 - 12);
   const { rowOf, count } = lineRows(lines);
-  lines.forEach((l, k) => items.push({ type: "text", x: r1(cx), y: r1(top + g.height + 28 + rowOf[k]! * 26), text: l.text, cls: l.cls ?? "lbl acc", from: l.from, ...(l.until != null ? { until: l.until } : {}), enter: "rise" }));
+  // each line hangs from its top edge and moves down by what the rows above it grew on a phone (growDown)
+  // (and by what the last row's label grows below its row's middle, or what spreading rows moved it)
+  const lead = (spec.linesLead ?? 0) + 0.5;
+  // (rows past the first: one line of text each at its size on screen, so a line broken in two reads as one at any size)
+  lines.forEach((l, k) => {
+    const lift = lead ? growDown(lead).transform! : "", step = lineStep(rowOf[k]!).transform ?? "";
+    const transform = [lift, step].filter(Boolean).join(" ");
+    items.push({ type: "text", x: r1(cx), y: r1(top + g.height + 16), text: l.text, cls: `${l.cls ?? "lbl acc"} down cap`, from: l.from, ...(l.until != null ? { until: l.until } : {}), enter: "rise", ...(transform ? { vars: { transform } } : {}) });
+  });
 
   return {
-    kind: "scene", family: spec.family ?? "area-model",
+    kind: "scene", family: spec.family ?? "area-model", ...(spec.grow || lines.length ? { grow: spec.grow ?? 1.7 } : {}),
     width: r1(width), height: r1(top + g.height + (count ? 14 + count * 26 : 12)),
     items, alt: spec.alt, geometry: g,
   };

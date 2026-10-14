@@ -2,7 +2,10 @@
 // a box's three different faces, or a pyramid inside its box. Sizes and labels come from the problem.
 import type { SceneDiagram, SceneItem } from "../scene/schema";
 import { r1 } from "../scene/helpers";
+import { growDown } from "../scene/picture-system";
 import { lineRows, type PictureLine } from "../area-model/grid";
+import { litRuns } from "../tape/build";
+import type { Beats } from "../tape/schema";
 
 type P3 = [number, number, number];
 
@@ -12,7 +15,9 @@ interface Common {
   w: number;
   h: number;
   /** edge labels and the beat they show at */
-  labels?: { l?: string; w?: string; h?: string; from?: number };
+  labels?: { l?: string; w?: string; h?: string; from?: number;
+    /** the beats each edge's number is the one the step is about (picture system `lit`) */
+    lit?: { l?: Beats[]; w?: Beats[]; h?: Beats[] } };
   /** lines of text under the picture */
   lines?: PictureLine[];
   alt: string;
@@ -105,13 +110,15 @@ export function buildBox3d(spec: Box3dSpec): SceneDiagram {
   if (lab) {
     const from = lab.from ?? 0;
     const mid = (a: P3, b: P3) => { const p = at(a), q = at(b); return [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2] as const; };
-    if (lab.l) { const [x, y] = mid([0, w, 0], [l, w, 0]); items.push({ type: "text", x: r1(x - 12), y: r1(y + 16), text: lab.l, cls: "lbl", from, enter: "rise" }); }
-    if (lab.w) { const [x, y] = mid([l, 0, 0], [l, w, 0]); items.push({ type: "text", x: r1(x + 14), y: r1(y + 16), text: lab.w, cls: "lbl", from, enter: "rise" }); }
-    if (lab.h) { const [x, y] = mid([0, w, 0], [0, w, h]); items.push({ type: "text", x: r1(x - 10), y: r1(y), text: lab.h, cls: "lbl end", from, enter: "rise" }); }
+    if (lab.l) { const [x, y] = mid([0, w, 0], [l, w, 0]); items.push(...litRuns({ type: "text", x: r1(x - 12), y: r1(y + 16), text: lab.l, cls: "lbl", from, enter: "rise" }, lab.lit?.l)); }
+    if (lab.w) { const [x, y] = mid([l, 0, 0], [l, w, 0]); items.push(...litRuns({ type: "text", x: r1(x + 14), y: r1(y + 16), text: lab.w, cls: "lbl", from, enter: "rise" }, lab.lit?.w)); }
+    if (lab.h) { const [x, y] = mid([0, w, 0], [0, w, h]); items.push(...litRuns({ type: "text", x: r1(x - 10), y: r1(y), text: lab.h, cls: "lbl end", from, enter: "rise" }, lab.lit?.h)); }
   }
 
   const picH = Math.max(...pts.map(p => p[1])) - miny + pad;
   const { rowOf, count } = lineRows(lines);
-  lines.forEach((x, k) => items.push({ type: "text", x: r1(width / 2), y: r1(picH + 4 + rowOf[k]! * 26), text: x.text, cls: x.cls ?? "lbl acc", from: x.from, ...(x.until != null ? { until: x.until } : {}), enter: "rise" }));
+  // each line hangs from its top edge, below the edge labels, and moves down by what the rows above it grew on a phone;
+  // it is a caption (.cap): practice leaves it out, since the work list already shows each worked line
+  lines.forEach((x, k) => items.push({ type: "text", x: r1(width / 2), y: r1(picH - 8 + rowOf[k]! * 26), text: x.text, cls: `${x.cls ?? "lbl acc"} down cap`, from: x.from, ...(x.until != null ? { until: x.until } : {}), enter: "rise", vars: growDown(1 + rowOf[k]!) }));
   return { kind: "scene", family: "box3d", width: r1(width), height: r1(picH + (count ? count * 26 + 6 : 0)), items, alt: spec.alt };
 }

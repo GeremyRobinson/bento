@@ -8,12 +8,15 @@ import { Diagram } from "../components/diagrams/Diagram";
 import { BuildUp } from "../components/BuildUp";
 import type { Rng } from "../curriculum/generators/rng";
 import type { AnyLesson } from "../curriculum/schemas/lesson";
-import { MathLine, Rich } from "../components/primitives/MathLine";
+import { MathLine, pictureSettlesIn, Rich } from "../components/primitives/MathLine";
 import { Marks } from "../components/Masters";
 import { dressStatement, partsLook, toneMath, tonesOf } from "../components/primitives/statement";
 import type { Explanation } from "../explanations/schema";
 
-const PLAY_MS = 1800;
+/** the model's Watch one beat */
+const PLAY_MS = 1300;
+/** once a beat's picture has come in, how long it stays to be read before the next beat */
+const READ_MS = 500;
 import { reduceMotion } from "../app/transition";
 import { spendHandOff, takeHandOff } from "../app/preview";
 import { readAloudOn, readSettings, speak } from "../app/settings";
@@ -78,7 +81,11 @@ export function Learn({ lessonId }: { lessonId: string }) {
   useEffect(() => {
     if (!playing) return;
     if (finished) { setPlaying(false); return; }
-    const t = setTimeout(() => setAt(a => Math.min(last, a + 1)), PLAY_MS);
+    // a beat lasts the model's beat, or until the picture's parts for it have all come in and can be read (a beat cut short
+    // would blink its hops or its ring out half drawn), whichever is longer
+    const stage = document.querySelector(".v-learn .v-stage");
+    const settle = stage ? pictureSettlesIn(stage) : 0;
+    const t = setTimeout(() => setAt(a => Math.min(last, a + 1)), Math.max(PLAY_MS, settle ? settle + READ_MS : 0));
     return () => clearTimeout(t);
   }, [playing, at, finished, last]);
 

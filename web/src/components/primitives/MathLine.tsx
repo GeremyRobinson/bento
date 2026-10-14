@@ -1,7 +1,7 @@
-import { Fragment, useLayoutEffect, useRef, type ReactNode } from "react";
+import { Fragment, useLayoutEffect, useRef, type ReactNode, type RefObject } from "react";
 import type { Tone } from "./statement";
 import { formatNumber, slotsIn, toPlainText, type MathText, type MathToken } from "../../curriculum/schemas/math-text";
-import { layoutRect } from "../../app/transition";
+import { layoutRect, reduceMotion } from "../../app/transition";
 
 interface Props {
   math: MathText;
@@ -72,6 +72,60 @@ function useFit(math: unknown, oneLine = false) {
   return ref;
 }
 
+/** the pictures an answer in the problem line waits for: the picture beside it on the same stage */
+const PICTURES = ".viz-svg, .am";
+/** the stage that holds the problem line and its picture together (Watch one, practice, the skill check) */
+const STAGE = ".v-stage";
+
+/**
+ * The answer beat (Review g5 #6): the answer lands in the problem line only once the picture has shown why. When an
+ * answer token first appears, every part of the picture still entering (the last beat's hops, counts, new cards) is
+ * measured off the page's running animations, and the answer's own entrance waits until the last of them has landed.
+ * One rule for every lesson: the picture's last beat decides, never the steps' timeline. Returns the wait in ms.
+ */
+export function pictureSettlesIn(stage: Element): number {
+  let wait = 0;
+  for (const pic of stage.querySelectorAll(PICTURES)) {
+    if (typeof (pic as Element & { getAnimations?: unknown }).getAnimations !== "function") continue;
+    for (const a of pic.getAnimations({ subtree: true })) {
+      // the picture's own whole-picture bounce (solved) is the celebration the answer lands with, not a part entering
+      if (a.effect && "target" in a.effect && a.effect.target === pic) continue;
+      const t = a.effect?.getComputedTiming();
+      if (!t || a.playState === "finished" || t.endTime == null || !Number.isFinite(Number(t.endTime))) continue;
+      wait = Math.max(wait, Number(t.endTime) - Number(a.currentTime ?? 0));
+    }
+  }
+  return Math.max(0, Math.round(wait));
+}
+
+/** a CSS time ("650ms", ".65s") in ms; 0 when it isn't one */
+const cssMs = (v: string) => { const n = parseFloat(v); return !Number.isFinite(n) ? 0 : /ms\s*$/.test(v) ? n : /s\s*$/.test(v) ? n * 1000 : 0; };
+
+/** Holds each answer token that has just appeared until the picture beside it settles (pictureSettlesIn). */
+function useAnswerBeat(ref: RefObject<HTMLSpanElement | null>) {
+  const seen = useRef(new WeakSet<Element>());
+  useLayoutEffect(() => {
+    const el = ref.current, stage = el?.closest(STAGE);
+    if (!el) return;
+    const fresh = [...el.querySelectorAll<HTMLElement>(".ans")].filter(a => !seen.current.has(a));
+    if (!fresh.length) return;
+    fresh.forEach(a => seen.current.add(a));
+    // read after the commit: the picture's new beat is in the page by now, so its entrances are already running
+    // and never sooner than one picture beat (--m-grow) after the picture's last beat starts, for a last beat whose
+    // parts change without an entrance the page can measure (the area model's bracket, then its sum)
+    if (!stage || reduceMotion() || !stage.querySelector(PICTURES)) return;
+    const wait = Math.max(pictureSettlesIn(stage), cssMs(getComputedStyle(stage).getPropertyValue("--m-grow")));
+    if (wait <= 0) return;
+    fresh.forEach(a => {
+      a.style.animationDelay = `${wait}ms`;
+      // the "=" that the answer completes waits with it, so the line never hangs on a bare "=" (the solved line's "?"
+      // was hidden until now)
+      const eq = a.previousElementSibling as HTMLElement | null;
+      if (eq?.classList.contains("o") && eq.textContent === "=") eq.style.animation = `ansIn var(--dur-420) var(--m-ease) ${wait}ms both`;
+    });
+  });
+}
+
 const REL = new Set(["=", "<", ">", "≤", "≥", "≈"]);
 const SUM = new Set(["+", "−", "±"]);
 const PRODUCT = new Set(["×", "÷", "·"]);
@@ -115,6 +169,7 @@ export function breakLevels(m: MathText): { tok: MathToken; lvl: number }[] {
 /** Renders MathText. Numbers are formatted in one place; answer boxes become buttons when `onSlot` is given. */
 export function MathLine({ math, values = {}, active = null, onSlot, className = "", keep = false }: Props) {
   const fitRef = useFit(math, !!onSlot);
+  useAnswerBeat(fitRef);
   // a written space next to an operator would double the operator's own spacing ("area  = ?")
   const tidy = (m: MathText): MathText => m.map((tok, i) => {
     if (tok.t !== "text") return tok;

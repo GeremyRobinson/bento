@@ -5,6 +5,21 @@ import { beats, type Explanation } from "../../../../explanations/schema";
 import { buildNumberLine, type Hop, type Mark } from "../../../../explanations/diagrams/number-line/build";
 import { expectedOf, oneBox, restoreVia, round6, wholeIn } from "../../_number-line/steps";
 import { slips } from "../../grade4/_kit";
+import { lightSteps } from "../../../../explanations/diagrams/scene/helpers";
+import type { SceneDiagram } from "../../../../explanations/diagrams/scene/schema";
+
+/**
+ * The worked step lit (the shared `lit` role), beat by beat: the two ends the number sits between and the number itself
+ * on the first beat; after that, what each beat draws (the halfway mark, then the hop to the rounded number) is the
+ * step, lit on its own beat.
+ */
+function litSteps(d: SceneDiagram, first: string[]): SceneDiagram {
+  return {
+    ...d,
+    items: lightSteps(d.items, it => ((it.from ?? 0) > 0 ? (!it.enter ? null : [it.from!])
+      : it.type === "text" && first.includes(it.text) ? [0] : null), 2),
+  };
+}
 
 /** the number N / 1000 (three decimal places), rounded to p places (1: tenths, 2: hundredths) */
 export interface RoundProblem { N: number; p: number }
@@ -71,10 +86,10 @@ function explain(pr: RoundProblem, model: AnswerModel): Explanation {
     heading: "Look one place to the right",
     idea: ["Rounding picks the closer number, and the digit just to the right tells you which."],
     statement: [num(value), op("≈"), text("?"), muted(` (nearest ${name.slice(0, -1)})`)],
-    diagram: buildNumberLine({
+    diagram: litSteps(buildNumberLine({
       min: T, max: up, step: tick, every: 10, labelAt: [half], marks, hops,
       alt: `Number line from ${f(T)} to ${f(up)} with ${f(value)} marked; it rounds to ${f(R)}.`,
-    }),
+    }), [f(T), f(up), f(value)]),
     timeline: beats(3),
     steps: [
       { id: "digit", narration: `${f(value)} sits between ${f(T)} and ${f(up)}.`, math: [text(`${name} digit: `), num(digit)], state: 0, answerStep: "digit", result: digit },

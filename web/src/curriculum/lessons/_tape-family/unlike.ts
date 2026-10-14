@@ -139,24 +139,29 @@ export function unlikeAnswers(p: UnlikeFractionsProblem): AnswerModel {
 const count = (k: number, d: number) => `${k} ${pieceName(d, k !== 1)}`;
 
 /**
- * Two fraction bars, a/b and c/d. Beat 1 marks where both would be cut into L pieces; beats 2 and 3 re-cut each bar
- * into L pieces (the shaded amount does not move); beat 4 puts the pieces together (or takes C of them away);
- * beat 5 names the answer in lowest terms.
+ * Two fraction bars, a/b and c/d. Beat 1 (the LCD) cuts both into L pieces: the knife draws the cuts, then the pieces
+ * come apart along them. Beats 2 and 3 count each bar's shaded pieces as its fraction is rewritten over L (a bar
+ * already in L pieces has the knife run down the cuts it already has). Beat 4 puts the pieces together (or takes C of
+ * them away), counting what is left; beat 5 names the answer in lowest terms.
  */
 export function unlikePicture(p: UnlikeFractionsProblem) {
   const { a, b, c, d, L, A, C, S } = p, sub = p.op === "−";
-  const rows: TapeRow[] = [
-    { length: 1, parts: [{ count: b, from: 0 }, { count: L, from: 2 }], ticks: [{ count: L, from: 1, until: 1, dashed: true }],
-      fills: [{ a: 0, b: a / b, tone: "on", until: 1 }, { a: 0, b: a / b, tone: "on", from: 2 }],
-      label: [{ text: `${a}/${b}`, until: 1 }, { text: `${A}/${L}`, from: 2 }] },
-    { length: 1, parts: [{ count: d, from: 0 }, { count: L, from: 3 }], ticks: [{ count: L, from: 1, until: 2, dashed: true }],
-      fills: [{ a: 0, b: c / d, tone: "two", until: 2 }, { a: 0, b: c / d, tone: "two", from: 3 }],
-      label: [{ text: `${c}/${d}`, until: 2 }, { text: `${C}/${L}`, from: 3 }] },
-  ];
+  // counted one by one, spread over most of a beat
+  const tick = (n: number) => Math.round(Math.min(0.3, 1.2 / Math.max(1, n)) * 100) / 100;
+  // lit (picture system): both bars at the LCD, then each bar as its own step rewrites it
+  const bar = (n: number, den: number, N: number, at: number, tone: "on" | "two"): TapeRow => ({
+    lit: [{ from: 1, until: 1 }, { from: at, until: at }], length: 1, parts: den === L ? den : [{ count: den, from: 0 }, { count: L, from: 1, delay: 0.7 }],
+    ticks: [den === L ? { count: L, from: at, until: at, cut: true, all: true } : { count: L, from: 1, until: 1, cut: true }],
+    fills: [{ a: 0, b: n / den, tone }],
+    each: [{ text: i => `${i + 1}`, from: at, only: i => i < N, stagger: tick(N) }],
+    label: [{ text: `${n}/${den}`, until: at - 1 }, { text: `${N}/${L}`, from: at }],
+  });
+  const rows: TapeRow[] = [bar(a, b, A, 2, "on"), bar(c, d, C, 3, "two")];
   const F = finalForm(S, L), changes = !(F.whole === 0 && F.den === L);
   const answerTotal = changes ? [{ text: `= ${mixedLabel(S, L)}`, from: 5, acc: true }] : [];
   if (sub) {
-    rows.push({ length: 1, parts: L, from: 4, fills: [{ a: 0, b: S / L, tone: "on" }, { a: S / L, b: A / L, tone: "cut" }],
+    rows.push({ lit: [{ from: 4 }], length: 1, parts: L, from: 4, fills: [{ a: 0, b: S / L, tone: "on" }, { a: S / L, b: A / L, tone: "cut" }],
+      each: [{ text: i => `${i + 1}`, from: 4, only: i => i < S, stagger: tick(S) }],
       label: [{ text: `${S}/${L}`, acc: true }], total: answerTotal });
   } else {
     const wholes = Math.ceil(S / L);
@@ -166,10 +171,10 @@ export function unlikePicture(p: UnlikeFractionsProblem) {
         ...(on[1]! > on[0]! ? [{ a: on[0]! / L, b: on[1]! / L, tone: "on" as const }] : []),
         ...(acc[1]! > acc[0]! ? [{ a: acc[0]! / L, b: acc[1]! / L, tone: "two" as const }] : []),
       ];
-      rows.push({ length: 1, parts: L, from: 4, fills, label: w === 0 ? [{ text: `${S}/${L}`, acc: true }] : [], total: w === wholes - 1 ? answerTotal : [] });
+      rows.push({ lit: [{ from: 4 }], length: 1, parts: L, from: 4, fills, each: [{ text: i => `${w * L + i + 1}`, from: 4, only: i => w * L + i < S, stagger: tick(S), lead: w * L * tick(S) }], label: w === 0 ? [{ text: `${S}/${L}`, acc: true }] : [], total: w === wholes - 1 ? answerTotal : [] });
     }
   }
-  return buildTape({
+  return buildTape({ tall: true,
     rows,
     // the second fraction is told apart from the first (picture system: violet only for a second quantity)
     two: true,

@@ -3,12 +3,26 @@
 // Angles are drawn at their real size, counterclockwise from the right as in math class; labels come from the problem.
 import type { SceneDiagram } from "../scene/schema";
 import { angleLabelAt, arc, frame, path, polar, seg, t, M, L, type Draft, type Pt } from "../geo/kit";
+import { stackRows } from "../scene/picture-system";
 
 const O: Pt = [0, 0];
 const circle = (r: number, cls: string, extra: Partial<Draft> = {}): Draft => ({ type: "circle", cx: 0, cy: 0, r, cls, ...extra }) as Draft;
-/** Lines of text in a column beside the picture, each from its own beat. */
-const column = (x: number, y0: number, lines: { text: string; cls: string; from: number; until?: number }[]): Draft[] =>
-  lines.map((l, i) => t(x, y0 + i * 30, l.text, `${l.cls} start`, { from: l.from, ...(l.until != null ? { until: l.until } : {}), enter: "rise", delay: 0.2 }));
+/** Lines of working in a column beside the picture, each from its own beat, centred on the circle's middle (y 0). On a
+ * phone the label floor spreads them from the middle (stackRows); in practice they leave for the work list (.cap). */
+const PITCH = 25;
+const column = (x: number, lines: { text: string; cls: string; from: number; until?: number }[]): Draft[] => {
+  const vars = stackRows(lines.map(l => l.cls), PITCH, "mid"), y0 = -((lines.length - 1) * PITCH) / 2;
+  return lines.map((l, i) => t(x, y0 + i * PITCH, l.text, `${l.cls} start cap`, { from: l.from, ...(l.until != null ? { until: l.until } : {}), enter: "rise", delay: 0.2, ...(vars[i]!.transform ? { vars: vars[i]! } : {}) }));
+};
+/** A worked line broken before its last "=": the column stays narrow enough on a phone to leave the circle the room
+ * ("3.14 × 9" / "= 28.26"). */
+const broken = (text: string, cls: string, from: number) => {
+  const k = text.lastIndexOf(" = ");
+  return k < 0 ? [{ text, cls, from }] : [{ text: text.slice(0, k), cls, from }, { text: text.slice(k + 1), cls, from }];
+};
+/** The circle's radius: drawn at about a phone's picture size, so the column of working beside it (at the label floor)
+ * leaves the circle the most of a phone's strip; on a tablet the circle grows past its text. */
+const RC = 70;
 
 export interface CircumferenceSpec {
   r: number; d: number; c: number;
@@ -47,20 +61,22 @@ export interface CircleAreaSpec {
 
 /** The r × r square on the radius; the circle holds about 3.14 of them. */
 export function buildCircleArea(s: CircleAreaSpec): SceneDiagram {
-  const R = 90;
+  const R = RC;
   const items: Draft[] = [
     circle(R, "fill", { enter: "pop" }),
     // the square goes under the circle's edge and the radius, so the whole circle and the radius (its side) stay in view
     { type: "rect", x: 0, y: -R, w: R, h: R, cls: "sq", from: s.squareBeat, enter: "pop" } as Draft,
     circle(R, "ln", { enter: "draw" }),
     seg(O, [R, 0], "ln2", { enter: "draw", delay: 0.6 }),
-    t(R / 2, 14, `r = ${s.r}`, "lbl acc", { enter: "rise", delay: 0.8 }),
-    t(R / 2, -R / 2 - 12, `${s.r} × ${s.r}`, "sm", { from: s.squareBeat, enter: "rise", delay: 0.3 }),
-    t(R / 2, -R / 2 + 12, String(s.r2), "lbl big", { from: s.squareBeat, enter: "rise", delay: 0.4 }),
-    ...column(R + 34, -30, [
+    t(R / 2, 5, `r = ${s.r}`, "lbl acc down", { enter: "rise", delay: 0.8 }),
+    // the square's sum and its area meet at the square's middle, each held by the edge facing the other (up / down),
+    // so the floor grows them apart, toward the square's own edges
+    t(R / 2, -R / 2 - 2, `${s.r} × ${s.r}`, "sm up", { from: s.squareBeat, enter: "rise", delay: 0.3 }),
+    t(R / 2, -R / 2 + 2, String(s.r2), "lbl big down", { from: s.squareBeat, enter: "rise", delay: 0.4 }),
+    ...column(R + 26, [
       { text: "The circle holds", cls: "sm", from: s.areaBeat },
-      { text: `${s.pi} of these squares`, cls: "lbl", from: s.areaBeat },
-      { text: `${s.pi} × ${s.r2} = ${s.area}`, cls: "lbl acc", from: s.areaBeat },
+      { text: `${s.pi} squares`, cls: "lbl", from: s.areaBeat },
+      ...broken(`${s.pi} × ${s.r2} = ${s.area}`, "lbl acc", s.areaBeat),
     ]),
   ];
   return frame("circle", items, s.alt);
@@ -81,28 +97,29 @@ export interface SectorSpec {
 
 /** A slice of the circle (its area) or a piece of its edge (its length), as a fraction of the full turn. */
 export function buildSector(s: SectorSpec): SceneDiagram {
-  const R = 90;
+  const R = RC;
   const items: Draft[] = [circle(R, "ln faint")];
   if (s.mode === "sector") {
     items.push(circle(R, "fill", { from: s.wholeBeat, until: s.partBeat - 1, enter: "fade" }));
-    // a thick stroke on a half-radius arc fills the slice and can sweep open
-    items.push(path(arc(O, R / 2, 0, s.t), "pie", { from: s.fractionBeat, enter: "sweep", vars: { "--f": 1 } }));
+    // a thick stroke on a half-radius arc fills the slice and can sweep open (as thick as the radius)
+    items.push(path(arc(O, R / 2, 0, s.t), "pie", { from: s.fractionBeat, enter: "sweep", vars: { "--f": 1, strokeWidth: R } }));
   } else {
     items.push(circle(R, "ln", { from: s.wholeBeat, until: s.partBeat - 1, enter: "draw slow" }));
     items.push(path(arc(O, R, 0, s.t), "arcline", { from: s.fractionBeat, enter: "sweep", vars: { "--f": 1 } }));
   }
   items.push(seg(O, [R, 0], "ln2", { enter: "draw" }));
-  items.push(t(R / 2, 14, `r = ${s.r}`, "lbl acc", { enter: "rise", delay: 0.3 }));
+  items.push(t(R / 2, 5, `r = ${s.r}`, "lbl acc down", { enter: "rise", delay: 0.3 }));
   items.push(seg(O, polar(O, R, s.t), "ln2", { from: s.fractionBeat, enter: "draw", delay: 0.6 }));
   items.push(path(arc(O, 20, 0, s.t), "ax thin", { from: s.fractionBeat, enter: "draw", delay: 0.9 }));
-  const at = angleLabelAt(O, 0, s.t, `${s.t}°`.length * 10.2, 38, 70);
+  const at = angleLabelAt(O, 0, s.t, `${s.t}°`.length * 10.2, 42, R - 12);
   items.push(t(at[0], at[1], `${s.t}°`, "lbl", { from: s.fractionBeat, enter: "rise", delay: 1 }));
   const what = s.mode === "sector" ? "area" : "edge";
-  items.push(...column(R + 34, -45, [
+  items.push(...column(R + 26, [
     { text: `${s.t}° out of 360°`, cls: "lbl", from: s.fractionBeat },
-    { text: `= ${s.fraction} of the circle`, cls: "lbl acc", from: s.fractionBeat },
-    { text: s.mode === "sector" ? `whole area: ${s.whole}` : `whole edge: ${s.whole}`, cls: "sm", from: s.wholeBeat },
-    { text: `${s.fraction} of the ${what}: ${s.part}`, cls: "lbl acc", from: s.partBeat },
+    { text: `= ${s.fraction} of the circle`, cls: "sm", from: s.fractionBeat },
+    { text: `whole ${what}: ${s.whole}`, cls: "sm", from: s.wholeBeat },
+    { text: `${s.fraction} of the ${what}:`, cls: "sm", from: s.partBeat },
+    { text: String(s.part), cls: "lbl acc", from: s.partBeat },
   ]));
   return frame("circle", items, s.alt);
 }
@@ -121,7 +138,7 @@ export interface RadianSpec {
 
 /** The half turn is π. Cut it into equal pieces; the angle is so many pieces of π. */
 export function buildRadians(s: RadianSpec): SceneDiagram {
-  const R = 90;
+  const R = RC;
   const items: Draft[] = [
     circle(R, "ln faint"),
     seg(O, [R, 0], "ax"),
@@ -135,13 +152,13 @@ export function buildRadians(s: RadianSpec): SceneDiagram {
   }
   items.push(path(arc(O, R, 0, s.t), "arcline", { from: s.angleBeat, enter: "sweep", vars: { "--f": 1 } }));
   items.push(seg(O, polar(O, R, s.t), "ln", { from: s.angleBeat, enter: "draw", delay: 0.6 }));
-  const at = angleLabelAt(O, 0, s.t, `${s.t}°`.length * 10.2, 36, 56);
+  const at = angleLabelAt(O, 0, s.t, `${s.t}°`.length * 10.2, 34, R - 10);
   items.push(t(at[0], at[1], `${s.t}°`, "lbl", { from: s.angleBeat, enter: "rise", delay: 0.8 }));
   // the piece note breaks after its colon ("30° pieces:" / "6 of them make π"): on one line it ran past the card at phone size
   const notes = s.pieceNote.split(/(?<=:) /);
-  items.push(...column(R + 34, -15 - (notes.length - 1) * 15, [
+  items.push(...column(R + 26, [
     ...notes.map(text => ({ text, cls: "sm", from: s.pieceBeat })),
-    { text: s.answerNote, cls: "lbl acc", from: s.angleBeat },
+    ...broken(s.answerNote, "lbl acc", s.angleBeat),
   ]));
   return frame("circle", items, s.alt);
 }
@@ -161,7 +178,7 @@ const ROMAN = ["I", "II", "III", "IV"];
 
 /** An angle on the unit circle with its reference angle; sine is the point's height, cosine its distance across. */
 export function buildUnitCircle(s: UnitCircleSpec): SceneDiagram {
-  const R = 100, P = polar(O, R, s.t), foot: Pt = [P[0], 0];
+  const R = 66, P = polar(O, R, s.t), foot: Pt = [P[0], 0];
   const toward = s.quadrant === 2 || s.quadrant === 3 ? 180 : s.quadrant === 4 ? 360 : 0;
   const items: Draft[] = [
     seg([-R - 16, 0], [R + 16, 0], "ax"), seg([0, R + 16], [0, -R - 16], "ax"),
@@ -169,22 +186,23 @@ export function buildUnitCircle(s: UnitCircleSpec): SceneDiagram {
   ];
   // quadrant names in the corners outside the circle, the asked one lit at its beat
   for (let q = 1; q <= 4; q++) {
-    const c = polar(O, R * 1.5, 45 + (q - 1) * 90);
+    const c = polar(O, R * 1.35, 45 + (q - 1) * 90);
     if (q === s.quadrant) items.push(t(c[0], c[1], ROMAN[q - 1]!, "lbl acc", { from: s.quadrantBeat, enter: "rise" }));
     items.push(t(c[0], c[1], ROMAN[q - 1]!, "xs", q === s.quadrant ? { until: s.quadrantBeat - 1 } : {}));
   }
   items.push(path(arc(O, 18, 0, s.t), "arcline thin", { from: s.quadrantBeat, enter: "sweep", vars: { "--f": 1 } }));
   items.push(seg(O, P, "ln", { from: s.quadrantBeat, enter: "draw", delay: 0.6 }));
   items.push({ type: "circle", cx: P[0], cy: P[1], r: 7, cls: "dotp", from: s.quadrantBeat, enter: "pop", delay: 1 } as Draft);
-  // the turn's label sits out along its small arc, clear of the value written by the axis near the centre;
-  // in quadrant I that is the reference angle's spot, so it goes past the point
-  const tl = s.quadrant === 1 ? polar(O, R + 28, s.t) : polar(O, 62, s.t / 2);
-  items.push(t(tl[0], tl[1], `${s.t}°`, "lbl", { from: s.quadrantBeat, enter: "rise", delay: 1 }));
+  // the turn's label sits out along its small arc, clear of the value written by the axis near the centre; in
+  // quadrant I the turn is its own reference angle, so its label sits in the reference angle's spot and the lit
+  // reference label takes over there (outside the circle it met the quadrant's name and the value on a phone)
+  const rl: Pt = [(2 * P[0]) / 3, P[1] / 3];
+  const tl = s.quadrant === 1 ? rl : polar(O, R * 0.8, s.t / 2);
+  items.push(t(tl[0], tl[1], `${s.t}°`, "lbl", { from: s.quadrantBeat, ...(s.quadrant === 1 ? { until: s.refBeat - 1 } : {}), enter: "rise", delay: 1 }));
   // the reference angle: back to the nearest side of the x-axis, labelled inside its triangle
   items.push(seg(P, foot, "ln2 dash", { from: s.refBeat, enter: "draw" }));
   const [r0, r1] = [Math.min(s.t, toward), Math.max(s.t, toward)];
   items.push(path(arc(O, 26, r0, r1), "ln2", { from: s.refBeat, enter: "draw", delay: 0.3 }));
-  const rl: Pt = [(2 * P[0]) / 3, P[1] / 3];
   items.push(t(rl[0], rl[1], `${s.ref}°`, "lbl acc", { from: s.refBeat, enter: "rise", delay: 0.5 }));
   // the value: a height for sine, a distance across for cosine
   const right = P[0] > 0, up = P[1] < 0;
@@ -196,10 +214,10 @@ export function buildUnitCircle(s: UnitCircleSpec): SceneDiagram {
     // toward the foot, so it clears the two small arcs round the centre
     items.push(t(P[0] * 0.72, up ? 20 : -20, s.value, "lbl acc", { from: s.valueBeat, enter: "rise", delay: 0.4 }));
   }
-  items.push(...column(R * 1.5 + 30, -30, [
+  items.push(...column(R * 1.35 + 20, [
     { text: `quadrant ${ROMAN[s.quadrant - 1]}`, cls: "lbl", from: s.quadrantBeat },
     { text: `reference ${s.ref}°`, cls: "lbl acc", from: s.refBeat },
-    { text: `${s.f} ${s.t}° = ${s.value}`, cls: "lbl acc", from: s.valueBeat },
+    ...broken(`${s.f} ${s.t}° = ${s.value}`, "lbl acc", s.valueBeat),
   ]));
   return frame("circle", items, s.alt);
 }

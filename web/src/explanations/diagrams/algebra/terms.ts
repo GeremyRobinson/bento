@@ -4,6 +4,7 @@
 // "add down" and "multiply across" (synthetic division). Every value comes from the lesson; this only places and times.
 import type { Enter, SceneDiagram, SceneItem } from "../scene/schema";
 import { arrowHead, r1 } from "../scene/helpers";
+import { giveWay, growDown, shortUp } from "../scene/picture-system";
 
 /** When a piece shows: from beat `from` (until beat `until`), coming in `at` seconds into its beat, going at `leave`. */
 export interface When { from: number; until?: number; at?: number; leave?: number }
@@ -42,10 +43,20 @@ export interface TermTableSpec {
   alt: string;
 }
 
-export const TERMS = { cw: 86, rh: 58, cell: 44, head: 40, left: 64, pad: 14 } as const;
+/**
+ * Drawn at about a phone's picture size (units ≈ px in a phone's 160px box), so the label floor barely grows the text
+ * there and the rows keep apart; a tablet draws it up to 3 times bigger, its text up to 1.5 times.
+ */
+export const TERMS = { cw: 50, rh: 30, cell: 24, head: 28, left: 42, pad: 10 } as const;
+
+const CELL_FONT = "max(var(--d-text-lg), calc(16px * var(--px, 0)))";
+/** a worked line under the table is a caption, not a label: held at 16px on a phone so a long one still fits across */
+const LINE_FONT = "max(var(--d-text-lg), calc(16px * var(--px, 0)))";
 
 export function buildTermTable(s: TermTableSpec): SceneDiagram {
-  const { cw, rh, cell, left, pad } = TERMS, head = TERMS.head + (s.dropRoom ? 26 : 0);
+  // the label column takes its longest row label (a 20px label: about 12 units a character)
+  const { cw, rh, cell, pad } = TERMS, head = TERMS.head + (s.dropRoom ? 24 : 0);
+  const left = Math.max(TERMS.left, 14 + Math.max(0, ...s.rows.map(r => (r.label ?? "").length * 12)));
   const nCols = s.cols.length, nRows = s.rows.length;
   // one spare column on the right for a constant falling off or a "+ C"
   const X = (c: number) => left + c * cw + cw / 2, Y = (r: number) => head + r * rh + rh / 2;
@@ -59,53 +70,60 @@ export function buildTermTable(s: TermTableSpec): SceneDiagram {
   };
   // headers: the power each column holds, in its colour, over a faint column wash
   s.cols.forEach((c, i) => {
-    items.push({ type: "rect", x: r1(X(i) - cw / 2 + 4), y: r1(TERMS.head - 6), w: cw - 8, h: r1(head - TERMS.head + nRows * rh + 8), rx: 12, cls: `fillsoft ${c.part}` });
-    items.push({ type: "text", x: r1(X(i)), y: r1(TERMS.head / 2), text: c.label, ...(c.sup ? { sup: c.sup } : {}), cls: `lbl big ${c.part}` });
+    items.push({ type: "rect", x: r1(X(i) - cw / 2 + 3), y: r1(TERMS.head - 4), w: cw - 6, h: r1(head - TERMS.head + nRows * rh + 6), rx: 8, cls: `fillsoft ${c.part}` });
+    items.push({ type: "text", x: r1(X(i)), y: r1(TERMS.head / 2 - 1), text: c.label, ...(c.sup ? { sup: c.sup } : {}), cls: `lbl big ${c.part}` });
   });
-  s.rows.forEach((r, j) => { if (r.label) items.push({ type: "text", x: r1(left - 10), y: r1(Y(j)), text: r.label, cls: "lbl end pw", from: r.from ?? 0, enter: "fade" }); });
+  s.rows.forEach((r, j) => { if (r.label) items.push({ type: "text", x: r1(left - 8), y: r1(Y(j)), text: r.label, cls: "lbl end pw", from: r.from ?? 0, enter: "fade" }); });
   for (const u of s.ruleAbove ?? []) items.push({ type: "line", x1: r1(left - 4), y1: r1(head + u.row * rh), x2: r1(left + nCols * cw), y2: r1(head + u.row * rh), cls: "ax", from: u.from, enter: "draw" });
   for (const m of s.marks ?? []) {
-    const to = m.toCol ?? m.col, x0 = X(m.col) - cell / 2 - 8, x1 = X(to) + cell / 2 + 8;
+    const to = m.toCol ?? m.col, x0 = X(m.col) - cell / 2 - 5, x1 = X(to) + cell / 2 + 5;
     const ym = m.row === "head" ? TERMS.head / 2 : Y(m.row);
     if (m.kind === "strike") {
       items.push({ type: "line", x1: r1(X(m.col) - cell / 2 - 4), y1: r1(ym + cell / 2 + 4), x2: r1(X(to) + cell / 2 + 4), y2: r1(ym - cell / 2 - 4), ...time(m, "ln2", "draw") } as SceneItem);
       continue;
     }
-    const mh = m.row === "head" ? TERMS.head - 4 : cell + 12;
-    items.push({ type: "rect", x: r1(x0), y: r1(ym - mh / 2), w: r1(x1 - x0), h: mh, rx: 14, ...time(m, m.kind === "ring" ? "xring" : "hlline") } as SceneItem);
+    const mh = m.row === "head" ? TERMS.head - 2 : cell + 8;
+    items.push({ type: "rect", x: r1(x0), y: r1(ym - mh / 2), w: r1(x1 - x0), h: mh, rx: 10, ...time(m, m.kind === "ring" ? "xring" : "hlline") } as SceneItem);
   }
   for (const c of s.cells) {
     const part = s.cols[c.col]?.part ?? "pw";
     const box = `xbox ${part}${c.tone === "faded" ? " cut" : ""}`, txt = c.tone === "acc" ? "lbl big acc" : `lbl big pw${c.tone === "faded" ? " cut" : ""}`;
-    const w = Math.max(cell, c.text.length * 13 + 16);
+    const w = Math.max(cell, c.text.length * 13 + 8);
     const slide = c.slideFrom ? { enter: "slide" as Enter, vars: { "--dx": `${r1(X(c.slideFrom[1]) - X(c.col))}px`, "--dy": `${r1(Y(c.slideFrom[0]) - Y(c.row))}px` } } : null;
     const t = slide && c.at == null ? { ...c, at: 0 } : c;
     const sl = slide && t.leave == null ? slide : {};
-    items.push({ type: "rect", x: r1(X(c.col) - w / 2), y: r1(Y(c.row) - cell / 2), w: r1(w), h: cell, rx: 10, ...time(t, box, c.enter ?? "pop"), ...sl } as SceneItem);
-    items.push({ type: "text", x: r1(X(c.col)), y: r1(Y(c.row)), text: c.text, ...time(t, txt, c.enter ?? "pop"), ...sl } as SceneItem);
+    items.push({ type: "rect", x: r1(X(c.col) - w / 2), y: r1(Y(c.row) - cell / 2), w: r1(w), h: cell, rx: 7, ...time(t, box, c.enter ?? "pop"), ...sl } as SceneItem);
+    // a coefficient is a number in its cell, like a digit on its card: held at 16px on a phone (not the 20px label floor),
+    // so a table's rows still stand apart in a phone's short box
+    const tt = time(t, txt, c.enter ?? "pop"), tv = { ...(tt.vars ?? {}), ...((sl as { vars?: Record<string, string> }).vars ?? {}), fontSize: CELL_FONT };
+    items.push({ type: "text", x: r1(X(c.col)), y: r1(Y(c.row)), text: c.text, ...tt, ...sl, vars: tv } as SceneItem);
   }
   for (const a of s.arrows ?? []) {
     const [r0, c0] = a.a, [r2, c2] = a.b;
     let x0 = X(c0), y0 = Y(r0), x1 = X(c2), y1 = Y(r2);
     if (a.kind === "down") {
       // "add down" runs beside the column, past the cells it adds, to the row it lands in
-      x0 = x1 = X(c0) + (cw - 8) / 2 - 7; y0 = Y(r0) - cell / 2; y1 = Y(r2) + 4;
+      x0 = x1 = X(c0) + (cw - 6) / 2 - 5; y0 = Y(r0) - cell / 2; y1 = Y(r2) + 4;
     }
     // start and stop at the cells' edges, not their middles
-    const len = Math.hypot(x1 - x0, y1 - y0), ux = (x1 - x0) / len, uy = (y1 - y0) / len, cut = a.kind === "down" ? 0 : cell / 2 + 6;
+    const len = Math.hypot(x1 - x0, y1 - y0), ux = (x1 - x0) / len, uy = (y1 - y0) / len, cut = a.kind === "down" ? 0 : cell / 2 + 4;
     x0 += ux * cut; y0 += uy * cut; x1 -= ux * cut; y1 -= uy * cut;
     const cls = a.kind === "back" ? "ln faint" : "ln thin pq";
     items.push({ type: "line", x1: r1(x0), y1: r1(y0), x2: r1(x1), y2: r1(y1), ...time(a, cls, "draw") } as SceneItem);
-    items.push({ ...arrowHead(r1(x1), r1(y1), Math.atan2(y1 - y0, x1 - x0), 10), ...time({ ...a, at: (a.at ?? 0) + 0.5 }, a.kind === "back" ? "dotp pw cut" : "dota", "fade") } as SceneItem);
+    items.push({ ...arrowHead(r1(x1), r1(y1), Math.atan2(y1 - y0, x1 - x0), 8), ...time({ ...a, at: (a.at ?? 0) + 0.5 }, a.kind === "back" ? "dotp pw cut" : "dota", "fade") } as SceneItem);
     if (a.label) {
-      // the label sits beside the arrow's middle, on its outer side
-      const mx = (x0 + x1) / 2, my = (y0 + y1) / 2, nx = -uy, ny = ux, side = 1;
-      items.push({ type: "text", x: r1(mx + nx * 22 * side), y: r1(my + ny * 22 * side), text: a.label, ...time({ ...a, at: (a.at ?? 0) + 0.3 }, a.kind === "back" ? "sm muted" : "sm acc", "fade") } as SceneItem);
+      // the label sits beside the arrow's middle, on its outer side (a check arrow back: on the side away from the cell it leaves for)
+      const mx = (x0 + x1) / 2, my = (y0 + y1) / 2, nx = -uy, ny = ux, side = a.kind === "back" ? -1 : 1;
+      items.push({ type: "text", x: r1(mx + nx * 16 * side), y: r1(my + ny * 16 * side), text: a.label, ...time({ ...a, at: (a.at ?? 0) + 0.3 }, a.kind === "back" ? "sm muted" : "sm acc", "fade") } as SceneItem);
     }
   }
   for (const n of s.notes ?? []) {
-    const x = n.col < 0 ? left - 10 : X(n.col);
-    items.push({ type: "text", x: r1(x + (n.anchor === "start" ? -cw / 2 + 6 : 0)), y: r1(Y(n.row)), text: n.text, ...(n.sup ? { sup: n.sup } : {}), ...time(n, `${n.cls ?? "lbl acc"}${n.anchor ? ` ${n.anchor}` : n.col < 0 ? " end" : ""}`, n.enter ?? "rise") } as SceneItem);
+    const x = n.col < 0 ? left - 8 : X(n.col);
+    // a note dropping onto the first row stands on that row's cells (.up): on a phone it grows up into the drop room,
+    // away from the cell it multiplies, and on a tablet it still sits just above it
+    // (in the small note size: a phone's short box has no room for a label row between the headers and the cells)
+    const drop = n.row < 0 && n.row > -1, y = drop ? Y(0) - cell / 2 - 2 : Y(n.row);
+    items.push({ type: "text", x: r1(x + (n.anchor === "start" ? -cw / 2 + 6 : 0)), y: r1(y), text: n.text, ...(n.sup ? { sup: n.sup } : {}), ...time(n, `${drop ? (n.cls ?? "lbl acc").replace(/\blbl\b/, "sm") : n.cls ?? "lbl acc"}${n.anchor ? ` ${n.anchor}` : n.col < 0 ? " end" : ""}${drop ? " up" : ""}`, n.enter ?? "rise") } as SceneItem);
   }
   // lines under the table share rows when they are never on screen together
   const lines = s.lines ?? [], rows: { from: number; until: number }[][] = [], rowOf: number[] = [];
@@ -119,8 +137,19 @@ export function buildTermTable(s: TermTableSpec): SceneDiagram {
   const tableW = left + (nCols + extraCol) * cw;
   const lineSize = (l: TermLine) => (/\bbig\b/.test(l.cls ?? "lbl big") ? 22 : /\bsm\b/.test(l.cls ?? "") ? 15 : 17);
   const lineW = Math.max(0, ...lines.map(l => l.text.length * lineSize(l) * 0.6));
-  const W = Math.max(tableW + pad, lineW + 2 * pad, 300), cx = Math.max(lineW / 2 + pad, (left + nCols * cw) / 2);
-  const top = head + nRows * rh + 8;
-  lines.forEach((l, k) => items.push({ type: "text", x: r1(cx), y: r1(top + 20 + rowOf[k]! * 28), text: l.text, ...time(l, l.cls ?? "lbl big acc", "rise") } as SceneItem));
-  return { kind: "scene", family: "term-table", width: r1(W), height: r1(top + (rows.length ? 12 + rows.length * 28 : 4)), items, alt: s.alt };
+  const W = Math.max(tableW + pad, lineW + 2 * pad, 200), cx = Math.max(lineW / 2 + pad, (left + nCols * cw) / 2);
+  const top = head + nRows * rh + 6;
+  // each line hangs from its top (.down) and moves down by what the lines above it grew on a phone; they are the worked
+  // lines, so practice leaves them to the work list (.cap)
+  // lines, and in a phone's short box they are written on one line, each giving way to the next as it comes (shortUp)
+  const start = (l: TermLine) => l.from + (l.at ?? 0) / 100;
+  const lastBeat = Math.max(...items.map(i => Math.max(i.from ?? 0, i.until ?? 0)), ...lines.map(l => Math.max(l.from, l.until ?? 0)));
+  lines.forEach((l, k) => {
+    const it = time(l, `${l.cls ?? "lbl big acc"} down cap`, "rise");
+    const line = { type: "text", x: r1(cx), y: r1(top + 4 + rowOf[k]! * 26), text: l.text, ...it, vars: { ...(it.vars ?? {}), ...growDown(rowOf[k]!), ...shortUp(rowOf[k]! * 26), fontSize: LINE_FONT } } as SceneItem;
+    // the first line written after this one while this one still shows
+    const next = l.leave == null ? lines.filter(o => start(o) > start(l) && (l.until == null || o.from <= l.until)).sort((a, b) => start(a) - start(b))[0] : undefined;
+    items.push(...(next ? giveWay(line, next.from, next.at ?? 0, lastBeat) : [line]));
+  });
+  return { kind: "scene", family: "term-table", width: r1(W), height: r1(top + (rows.length ? 8 + rows.length * 26 : 4)), items, alt: s.alt };
 }

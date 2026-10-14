@@ -2,6 +2,11 @@
 // so a child can count them. Every rod and cube is one of the problem's tens or ones.
 import type { SceneDiagram } from "../scene/schema";
 import { frame, t, type Draft } from "../geo/kit";
+import { growDown } from "../scene/picture-system";
+
+/** label rows under the blocks hang from them (.down) and a second row moves down by what the first grew on a phone
+ * (growDown); counts over the rods stand on them (.up), every other one a row higher by its own size on screen */
+const LIFT = { transform: "translateY(calc(-1.25 * max(14, 14 * var(--px, 0)) * 1px))" };
 
 export const CUBE = 14;
 const ROD_GAP = 8, ONE_GAP = 4;
@@ -65,23 +70,20 @@ export function buildTensOnes(s: TensOnesSpec): SceneDiagram {
   const items: Draft[] = [...set.items];
   const b = s.beats;
   if (b && s.text) {
-    // the two labels sit under their blocks, pushed apart when the blocks are too close for both
-    const w = (x: string) => x.length * 17 * 0.6;
-    let tx = set.rodsX + set.rodsW / 2, ox = set.onesX + set.onesW / 2;
-    const need = (w(s.text.tens) + w(s.text.ones)) / 2 + 14;
-    if (s.tens && s.ones && ox - tx < need) { const m = (tx + ox) / 2; tx = m - need / 2; ox = m + need / 2; }
+    // the two labels sit beside their blocks, out to either side, held by the edge facing them: the picture is wide and
+    // short, so on a phone the floor grows them outward into the room there, never into each other
     if (s.tens) {
       items.push(ring(set.rodsX, 0, set.rodsW, ROD_H, { from: b.tens, until: b.tens }));
       // rods sit one cube apart, closer than two labels at phone size ("10" "20" read as "1020"): every other count
       // steps up a line, so neighbours never touch however small the picture is drawn
-      s.tensCount?.forEach((c, i) => items.push(t(set.rodsX + i * (CUBE + ROD_GAP) + CUBE / 2, i % 2 ? -40 : -18, c, "xs", { from: b.tens, enter: "rise", delay: 0.3 + 0.25 * i })));
-      items.push(t(tx, bottom + 26, s.text.tens, "lbl", { from: b.tens, enter: "rise", delay: 0.2 }));
+      s.tensCount?.forEach((c, i) => items.push(t(set.rodsX + i * (CUBE + ROD_GAP) + CUBE / 2, -8, c, "xs up", { from: b.tens, enter: "rise", delay: 0.3 + 0.25 * i, ...(i % 2 ? { vars: LIFT } : {}) })));
+      items.push(t(set.rodsX - 16, bottom - ROD_H / 2, s.text.tens, "lbl end", { from: b.tens, enter: "rise", delay: 0.2 }));
     }
     if (s.ones) {
       items.push(ring(set.onesX, bottom - 5 * CUBE, set.onesW, 5 * CUBE, { from: b.ones, until: b.ones }));
-      items.push(t(ox, bottom + 26, s.text.ones, "lbl", { from: b.ones, enter: "rise", delay: 0.2 }));
+      items.push(t(set.onesX + set.onesW + 16, bottom - 2.5 * CUBE, s.text.ones, "lbl start", { from: b.ones, enter: "rise", delay: 0.2 }));
     }
-    items.push(t(set.width / 2, bottom + 64, s.text.total, "lbl big acc", { from: b.total, enter: "rise", delay: 0.2 }));
+    items.push(t(set.width / 2, bottom + 10, s.text.total, "lbl big acc down", { from: b.total, enter: "rise", delay: 0.2 }));
   }
   return frame("place-value", items, s.alt, 14, { w: 520 });
 }
@@ -106,11 +108,11 @@ export function buildCompareBlocks(s: CompareBlocksSpec): SceneDiagram {
     const set = blockSet(x, bottom, Math.floor(n / 10), n % 10, `cell c${k}`, { enter: "pop" });
     items.push(...set.items);
     const cx = x + set.width / 2;
-    items.push(t(cx, bottom + 30, String(n), `lbl big p${k}`));
+    items.push(t(cx, bottom + 10, String(n), `lbl big p${k} down`));
     items.push(ring(set.rodsX, 0, Math.max(set.rodsW, 1), ROD_H, { from: s.beats.tens, until: s.beats.ones ?? s.beats.tens }));
-    items.push(t(cx, bottom + 62, tensText, `lbl p${k}`, { from: s.beats.tens, until: s.beats.ones != null ? s.beats.tens : undefined, enter: "rise", delay: 0.2 }));
+    items.push(t(cx, bottom + 40, tensText, `lbl p${k} down`, { from: s.beats.tens, until: s.beats.ones != null ? s.beats.tens : undefined, enter: "rise", delay: 0.2, vars: growDown(1) }));
     if (s.beats.ones != null && n % 10) items.push(ring(set.onesX, bottom - 5 * CUBE, set.onesW, 5 * CUBE, { from: s.beats.ones, until: s.beats.ones }));
-    if (s.beats.ones != null) items.push(t(cx, bottom + 62, onesText, `lbl p${k}`, { from: s.beats.ones, enter: "rise", delay: 0.2 }));
+    if (s.beats.ones != null) items.push(t(cx, bottom + 40, onesText, `lbl p${k} down`, { from: s.beats.ones, enter: "rise", delay: 0.2, vars: growDown(1) }));
     return set.width;
   };
   const wa = side(s.a, 0, 0, s.text.aTens, s.text.aOnes);
@@ -141,10 +143,10 @@ export function buildAddTens(s: AddTensSpec): SceneDiagram {
   const onesX = allRods + 22;
   items.push(...onesCubes(onesX, bottom, o, "cell c0", { delay: 0.1 * t0 + 0.1 }));
   const mid = (onesX + onesWidth(o)) / 2;
-  items.push(t(mid, bottom + 28, s.text.start, "lbl", { until: s.beats.added - 1 }));
-  items.push(t(mid, bottom + 28, s.text.added, "lbl", { from: s.beats.added, until: s.beats.tens - 1, enter: "rise", delay: 0.4 }));
+  items.push(t(mid, bottom + 10, s.text.start, "lbl down", { until: s.beats.added - 1 }));
+  items.push(t(mid, bottom + 10, s.text.added, "lbl down", { from: s.beats.added, until: s.beats.tens - 1, enter: "rise", delay: 0.4 }));
   items.push(ring(0, 0, allRods, ROD_H, { from: s.beats.tens, until: s.beats.tens }));
-  items.push(t(mid, bottom + 28, s.text.tens, "lbl", { from: s.beats.tens, enter: "rise", delay: 0.2 }));
-  items.push(t(mid, bottom + 64, s.text.total, "lbl big acc", { from: s.beats.total, enter: "rise", delay: 0.2 }));
+  items.push(t(mid, bottom + 10, s.text.tens, "lbl down", { from: s.beats.tens, enter: "rise", delay: 0.2 }));
+  items.push(t(mid, bottom + 38, s.text.total, "lbl big acc down", { from: s.beats.total, enter: "rise", delay: 0.2, vars: growDown(1) }));
   return frame("place-value", items, s.alt, 14, { w: 520 });
 }

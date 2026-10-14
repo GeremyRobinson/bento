@@ -23,7 +23,7 @@ export function antiderivativePicture(o: { a: number; n: number; up: number; c: 
     ],
     notes: [
       { row: -0.55, col: 1, text: "↑", cls: "lbl acc", from: 0, until: 0, at: 0.6 },
-      { row: 1.1, col: 0, text: `÷ ${up}`, cls: "lbl big acc", from: 2, until: 2, at: 0.2, enter: "rise" },
+      { row: 1, col: 0, text: `÷ ${up}`, cls: "lbl big acc", from: 2, until: 2, at: 0.2, enter: "rise" },
       { row: 2, col: 1, text: "+ C", cls: "lbl big pw", from: 2, at: 1.6 },
     ],
     dropRoom: true,
@@ -33,7 +33,7 @@ export function antiderivativePicture(o: { a: number; n: number; up: number; c: 
     lines: [
       { text: `${n} + 1 = ${up}`, from: 1, until: 1, at: 0.9 },
       { text: `${f(a)} ÷ ${up} = ${f(c)}: ${termText(c, up)} + C`, from: 2, at: 1.3 },
-      { text: `check: its derivative is ${termText(a, n)} again`, from: 3, at: 0.9, cls: "lbl pw" },
+      { text: `check: its derivative is ${termText(a, n)} again`, from: 3, at: 0.9, cls: "sm pw" },
     ],
     alt: `${termText(a, n)} in the x${n === 1 ? "" : supText(n)} column moves one column left to x${supText(up)}, and ${f(a)} ÷ ${up} = ${f(c)}: ${termText(c, up)} + C. Its derivative gives ${termText(a, n)} back.`,
   });

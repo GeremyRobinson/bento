@@ -113,6 +113,7 @@ function explain(p: ConvertProblem, model: AnswerModel): Explanation {
       n, per: f, extra: m, top: u.big[1], bottom: smalls,
       beats: { one: 1, all: 2, extra: m ? 3 : null, total: last },
       total: `${amount(p)} = ${total} ${smalls}`,
+      shortTotal: true,
       alt: `A double number line: ${u.big[1]} on top, ${smalls} below. 1 ${one} matches ${f} ${smalls}, so ${amount(p)} is ${total} ${smalls}.`,
     }),
     caption: `1 ${one} = ${f} ${smalls}`,

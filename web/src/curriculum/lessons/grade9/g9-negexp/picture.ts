@@ -19,7 +19,7 @@ export function negativeExponentPicture(o: { a: number; n: number; power: number
   const S = (k: number) => 0.8 + 1.0 * k;
   const up: FLabel[] = Array.from({ length: n }, (_, k) => {
     const e = k + 1, last = k === n - 1;
-    return { row: 3.1, col: mid, text: `${A}${supText(-e)} = 1/${a ** e}`, cls: last ? "lbl big acc" : "lbl big pw", at: S(k) + 0.2, ...(last ? {} : { leave: S(k + 1) + 0.1 }) };
+    return { row: 3.1, col: mid, text: `${A}${supText(-e)} = 1/${a ** e}`, cls: last ? "lbl big acc" : "lbl big pw", long: true, at: S(k) + 0.2, ...(last ? {} : { leave: S(k + 1) + 0.1 }) };
   });
   const frames: ChipFrame[] = [
     { chips: chips(k => ({ at: 0.2 + 0.3 * k })), labels: [{ row: 2.15, col: mid, text: `${pw(n)} = ${power}`, cls: "lbl big pw", at: 0.4 + 0.3 * n }] },
@@ -27,7 +27,7 @@ export function negativeExponentPicture(o: { a: number; n: number; power: number
     {
       chips: [one(), ...Array.from({ length: n }, (_, k): FChip => ({ row: 2, col: k, text: A, part: "p1", at: S(k) }))],
       bars: [{ row: 1, from: Math.min(0, mid), to: Math.max(n - 1, mid), at: 0.3 }],
-      labels: [{ row: 0.35, col: mid, text: "past 0: under the bar", cls: "sm pw", at: 0.3 }, ...up],
+      labels: [{ row: 0.35, col: mid, text: "past 0: under the bar", cls: "sm pw", at: 0.3, long: true }, ...up],
     },
   ];
   return buildFactorChips(frames, `${pw(n)} as ${n} chip${n === 1 ? "" : "s"} of ${A} makes ${power}. Each step down takes one ${A} away, down to ${pw(0)} = 1; then the ${A}'s come back under a fraction bar: ${A}${supText(-n)} = 1/${power}.`);

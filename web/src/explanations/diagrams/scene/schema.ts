@@ -45,4 +45,11 @@ export interface SceneDiagram {
   /** the lesson must tell two quantities apart (thirds vs quarters, the second fraction): its .p1 parts turn violet.
    *  Without it every part is the one amber (styles/picture-system.css) */
   two?: boolean;
+  /** how far a small box may grow the frame for its text at the phone floor (default 1.5 times the plain frame): a
+   *  picture whose labels are most of its width (place-value blocks) settles further out, so it asks for more */
+  grow?: number;
+  /** the same picture laid out another way (labels over each bar instead of beside it), with the same beats: a fitted
+   *  picture draws whichever arrangement lets it be biggest in its box, so a square box gets the drawing, not empty room
+   *  (G 2026-10-14, 5th grade trial) */
+  layouts?: SceneDiagram[];
 }
