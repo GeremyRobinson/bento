@@ -12,7 +12,7 @@ import type { PlaneItem, PlaneLabel, PlaneSpec, Pt, Side } from "./schema";
 const PLOT = 180, PLOT_SHORT = 144;
 /** On the shortest phone boxes a label still draws up to this much bigger than its drawing units (the label floor), so
  * labels and tick numbers keep that much room from each other and from the lines. */
-const GROWS = 1.5;
+const GROWS = 2;
 /** A picture drawn with one scale is never narrower than this ratio (so it stays readable when small). */
 const MAX_RATIO = 1.3;
 /** a label at the picture system's label floor (20), tick numbers at the text floor (14) */
@@ -324,7 +324,8 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
     if (out > MAX_GROW) s += 1000;
     else if (out > 0) s += 6 + out * 0.5;
     // labels keep a little air between them: two labels touching near the origin read as one
-    for (const p of placed) if (overlap(b, p)) s += 500; else if (overlap(b, grow(p, 5))) s += 60;
+    // text on text is never chosen while any spot is left, even one past the plot's edge (the frame grows to hold it)
+    for (const p of placed) if (overlap(b, p)) s += 5000; else if (overlap(b, grow(p, 5))) s += 60;
     for (const d of dotsAt) if (overlap(b, { x0: d.x - d.r, y0: d.y - d.r, x1: d.x + d.r, y1: d.y + d.r })) s += 300;
     // a line just under or over a label reads as crossing it, so lines keep a little room above and below
     for (const p of samples) if (p.x > b.x0 - 2 && p.x < b.x1 + 2 && p.y > b.y0 - 3 && p.y < b.y1 + 3) s += p.w;
@@ -338,7 +339,7 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
     // a label is held by its edge nearest what it names (start / end / up / down), so the label floor on a phone grows
     // it away from its point, never onto it, and on a tablet it still sits right beside it
     let best: { b: Box; x: number; y: number; cls: string; s: number } | null = null;
-    for (const [ai, anchor] of q.anchors.entries()) for (const ring of [0, 14, 30]) {
+    for (const [ai, anchor] of q.anchors.entries()) for (const ring of [0, 14, 30, 50]) {
       sides.forEach((side, k) => {
         const [ux, uy] = SIDES[side];
         if (side === "c" && ring) return;

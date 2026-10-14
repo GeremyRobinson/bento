@@ -56,7 +56,8 @@ export function discountPicture({ P, p, off }: DiscountProblem) {
           { length: 1 + cut, parts: (100 + p) / g, from: 1, fills: [{ a: 0, b: 1, tone: "on" }, { a: 1, b: 1 + cut, tone: "acc" }], each: [{ text: () => `$${f(each)}` }],
             label: [{ text: "total" }], total: [{ text: `$${f(P + amt)}`, from: 2, acc: true }] },
         ],
-        brackets: [{ row: 1, a: 1, b: 1 + cut, text: `${p}% = $${f(amt)}`, side: "above", from: 1, acc: true }],
+        // under the added blocks: above them it would share the gap with the price's total, right where they stick out (Review 26fe1f8)
+        brackets: [{ row: 1, a: 1, b: 1 + cut, text: `${p}% = $${f(amt)}`, side: "below", from: 1, acc: true }],
         alt: `$${P} cut into ${count(blocks, "block")} of ${g}%; a ${p}% tip adds ${p / g} more blocks, $${f(amt)}, for $${f(P + amt)}.`,
       };
   return buildTape(spec);

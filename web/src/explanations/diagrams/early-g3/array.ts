@@ -2,6 +2,7 @@
 // outlines around each row (a group) or each column, and lines of text under it. Every count comes from the lesson.
 import type { SceneDiagram } from "../scene/schema";
 import { frame, t, type Draft } from "../geo/kit";
+const r1 = (n: number) => Math.round(n * 10) / 10;
 
 export interface ArrayText { text: string; from: number; until?: number; cls?: string }
 
@@ -64,8 +65,13 @@ export function buildArray(s: ArraySpec): SceneDiagram {
   }
   if (s.rowTotals) {
     const b = s.rowTotals;
+    // the counts down the side keep their row's height on a phone: they shrink to it (never under 14px), and if even that
+    // runs one into the next, every other count fades, the last (the total) always kept (Review 26fe1f8, g3-facts)
+    const fitRow = { fontSize: `calc(max(14 * var(--px, 0), min(max(20, 20 * var(--px, 0)), ${r1(py / 1.25)} - 3 * var(--px, 0))) * 1px)` };
+    const thin = { fillOpacity: `clamp(0, calc((${py} - 18 * var(--px, 0)) * 1000), 1)` };
     for (let r = 0; r < s.rows; r++) {
-      items.push(t(W + padX + 12, r * py, b.text(r), `lbl start${b.acc?.(r) ? " acc" : ""}`, { enter: "rise", delay: Math.round(r * 0.25 * 100) / 100, ...when(b.from, b.until) }));
+      const vars = { ...fitRow, ...((s.rows - 1 - r) % 2 ? thin : {}) };
+      items.push(t(W + padX + 12, r * py, b.text(r), `lbl start${b.acc?.(r) ? " acc" : ""}`, { enter: "rise", delay: Math.round(r * 0.25 * 100) / 100, ...when(b.from, b.until), vars }));
     }
   }
   if (s.rowLabels) {

@@ -26,7 +26,7 @@
    rows of a bar picture: the same gap as its pieces; label to its part 10; labels 20/650; outline 3; seats 1 at .55.
    On screen: labels never under 20px, other picture text never under 14px. */
 
-#app{--pic-gap-area:12px;--pic-gap-bar:6px;--pic-gap-mixed:4px;--pic-label-gap:10px;--pic-label:20px;--pic-outline:3px;--pic-seat:1px;--pic-text-min:14px;
+#app{--pic-gap-area:12px;--pic-gap-bar:6px;--pic-gap-mixed:4px;--pic-label-gap:10px;--pic-label:20px;--pic-outline-w:3px;--pic-seat-w:1px;--pic-outline:var(--pic-outline-w);--pic-seat:var(--pic-seat-w);--pic-text-min:14px;
   /* the part colours the problem line wears (statement.ts partsLook) follow the picture: one hue unless it's a two */
   --c0:var(--pic-mid);--c1:var(--pic-mid);--c2:var(--pic-mid);--k0:var(--pic-deep);--k1:var(--pic-deep);--k2:var(--pic-deep)}
 /* the pictures are the grade's colour (G 2026-10-13: "the colors for diagrams should be based on the grade color"): its
@@ -59,6 +59,15 @@
   --acc:var(--pic-deep);--soft-acc:var(--pic-mid);--ka:var(--v-ink);
   --text:var(--v-ink);--muted:var(--v-muted);--rule:var(--v-line);--faint:var(--v-done);--well:var(--v-key);--card:var(--v-card);
   --on-pic:var(--pic-on-mid);--on-tint:var(--pic-on-mid);--d-line:var(--pic-outline)}
+/* line weight is held on screen (Review 26fe1f8): a picture drawn bigger than its own size (a tablet zooms it up to 3x) keeps
+   every line at its written weight instead of zooming it with the shapes; a picture drawn smaller (a phone) keeps its lines
+   as they are. --sw is how much a line is drawn at: 1, or the picture's units per screen pixel (--px) when that is under 1 */
+#app svg:is(.viz-svg,.am){--sw:min(1, var(--px, 1));
+  --pic-outline:calc(var(--pic-outline-w) * var(--sw));--pic-seat:calc(var(--pic-seat-w) * var(--sw));
+  --d-hair:calc(var(--dw-hair) * var(--sw));--d-ridge:calc(var(--dw-ridge) * var(--sw));--d-cube:calc(var(--dw-cube) * var(--sw));
+  --d-thin:calc(var(--dw-thin) * var(--sw));--d-edge:calc(var(--dw-edge) * var(--sw));--d-stroke:calc(var(--dw-stroke) * var(--sw));
+  --d-bold:calc(var(--dw-bold) * var(--sw));--d-heavy:calc(var(--dw-heavy) * var(--sw));--d-beam:calc(var(--dw-beam) * var(--sw));
+  --d-mark:calc(var(--dw-mark) * var(--sw));--d-glow:calc(var(--dw-glow) * var(--sw));--d-numeral:calc(var(--dw-numeral) * var(--sw))}
 #app :is(.viz-svg,.am,.viz).two{--c1:var(--picb-mid);--k1:var(--picb-deep);--fill1:var(--picb-soft);--soft1:var(--picb-soft)}
 /* a part class retints everything in it, outline, fill and label together (a part never mixes amber and violet, M5) */
 #app .viz-svg .p0{--tint:var(--c0);--deep:var(--k0);--soft:var(--soft0)}

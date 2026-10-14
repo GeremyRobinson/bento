@@ -78,9 +78,21 @@ describe("the picture system", () => {
     expect([...new Set(bad)]).toEqual([]);
   });
 
+  it("holds every line weight on screen inside a picture, so a tablet's zoom never thickens lines (Review 26fe1f8)", () => {
+    const master = css.find(([f]) => f === "styles/diagram-master.css")?.[1] ?? "";
+    const weights = [...strip(master).matchAll(/--dw-([\w-]+):/g)].map(m => m[1]!);
+    expect(weights.length).toBeGreaterThan(5);
+    const held = rules(SYSTEM).find(r => r.sel.includes("svg:is(.viz-svg,.am)"))?.decls ?? {};
+    expect(held["--sw"]).toBe("min(1, var(--px, 1))");
+    // --d-line is the outline inside a picture, held through --pic-outline
+    for (const w of weights.filter(w => w !== "line")) expect(held[`--d-${w}`], w).toBe(`calc(var(--dw-${w}) * var(--sw))`);
+    expect(held["--pic-outline"]).toBe("calc(var(--pic-outline-w) * var(--sw))");
+  });
+
+  // the outline is written once (--pic-outline-w); --pic-outline is that weight held on screen inside a picture
   it("keeps the CSS spacing tokens and the builders' numbers the same", () => {
     const app = rules(SYSTEM).find(r => r.sel === "#app")!.decls;
-    expect([app["--pic-gap-area"], app["--pic-gap-bar"], app["--pic-gap-mixed"], app["--pic-label-gap"], app["--pic-label"], app["--pic-outline"]])
+    expect([app["--pic-gap-area"], app["--pic-gap-bar"], app["--pic-gap-mixed"], app["--pic-label-gap"], app["--pic-label"], app["--pic-outline-w"]])
       .toEqual([`${PIC.gap.area}px`, `${PIC.gap.bar}px`, `${PIC.gap.mixed}px`, `${PIC.labelGap}px`, `${PIC.label}px`, `${PIC.outline}px`]);
   });
 

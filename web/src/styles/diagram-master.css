@@ -8,9 +8,12 @@
   /* fill steps: how much of a role color goes into a fill (the rest is the card) */
   --d-f10:10%; --d-f12:12%; --d-f18:18%; --d-f20:20%; --d-f22:22%; --d-f26:26%; --d-f30:30%; --d-f35:35%;
   --d-f40:40%; --d-f45:45%; --d-f50:50%; --d-f55:55%; --d-f70:70%;
-  /* line weights */
-  --d-hair:1; --d-ridge:1.2; --d-cube:1.25; --d-thin:1.5; --d-line:2; --d-edge:2.5; --d-stroke:3; --d-bold:3.5;
-  --d-heavy:4; --d-beam:5; --d-mark:7; --d-glow:8; --d-numeral:12;
+  /* line weights, as written (--dw-*); a picture reads them as --d-*, held at this weight on screen (picture-system.css) */
+  --dw-hair:1; --dw-ridge:1.2; --dw-cube:1.25; --dw-thin:1.5; --dw-line:2; --dw-edge:2.5; --dw-stroke:3; --dw-bold:3.5;
+  --dw-heavy:4; --dw-beam:5; --dw-mark:7; --dw-glow:8; --dw-numeral:12;
+  --d-hair:var(--dw-hair); --d-ridge:var(--dw-ridge); --d-cube:var(--dw-cube); --d-thin:var(--dw-thin); --d-line:var(--dw-line);
+  --d-edge:var(--dw-edge); --d-stroke:var(--dw-stroke); --d-bold:var(--dw-bold); --d-heavy:var(--dw-heavy); --d-beam:var(--dw-beam);
+  --d-mark:var(--dw-mark); --d-glow:var(--dw-glow); --d-numeral:var(--dw-numeral);
   /* labels (pictures also scale up with --px) */
   --d-text:17px; --d-text-sm:15px; --d-text-xs:12px; --d-text-lg:22px; --d-text-xl:28px; --d-text-area:20px;
   /* dashes */

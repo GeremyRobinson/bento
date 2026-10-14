@@ -1,5 +1,6 @@
 // The decimal-shift picture (the current app's decimalShift()): a row of digit boxes and the decimal point
 // hopping one place per hop. Digits, the point's start and end, and the zeros it has to write in all come from the values.
+import { growDown } from "../scene/picture-system";
 import type { SceneDiagram, SceneItem } from "../scene/schema";
 import { lightSteps, r1 } from "../scene/helpers";
 import { textWidth } from "./build";
@@ -90,11 +91,13 @@ export function buildDecimalShift(spec: DecimalShiftSpec): SceneDiagram {
   // the label sits close under the arcs, so the picture and its words read as one
   const ly = r1(dip + 30);
   // the first beat has its own line (how many hops), so the picture answers the first step too
-  if (spec.lead && spec.moveBeat > spec.beat) items.push(mark({ type: "text", x: r1(W / 2), y: ly, text: spec.lead, cls: "lbl", enter: "rise", from: spec.beat, until: spec.moveBeat - 1, delay: 0.5 }, spec.beat));
-  items.push({ type: "text", x: r1(W / 2), y: ly, text: spec.label, cls: "lbl acc", enter: "rise", from: spec.moveBeat, delay: r1(0.2 + steps * HOP) });
+  // the lines hang from the arcs (.down) and the result hangs under the label by the label's height on a phone, with room
+  // for its power's raised digit, so "2.7 × 10⁷" never runs into "7 hops left" (Review 26fe1f8, g8-sci)
+  if (spec.lead && spec.moveBeat > spec.beat) items.push(mark({ type: "text", x: r1(W / 2), y: r1(ly - 12), text: spec.lead, cls: "lbl down", enter: "rise", from: spec.beat, until: spec.moveBeat - 1, delay: 0.5 }, spec.beat));
+  items.push({ type: "text", x: r1(W / 2), y: r1(ly - 12), text: spec.label, cls: "lbl acc down", enter: "rise", from: spec.moveBeat, delay: r1(0.2 + steps * HOP) });
   let H = ly + 14;
   if (spec.result) {
-    items.push({ type: "text", x: r1(W / 2), y: ly + 32, text: spec.result.text, ...(spec.result.sup ? { sup: spec.result.sup } : {}), cls: "lbl big", enter: "rise", from: spec.result.beat });
+    items.push({ type: "text", x: r1(W / 2), y: r1(ly + 20), text: spec.result.text, ...(spec.result.sup ? { sup: spec.result.sup } : {}), cls: "lbl big down", enter: "rise", from: spec.result.beat, vars: growDown(1.3) });
     H = ly + 50;
   }
   return { kind: "scene", family: "decimal-shift", width: r1(W), height: H, items: lightSteps(items, it => (lit.has(it) ? [lit.get(it)!] : null), Math.max(spec.moveBeat, spec.result?.beat ?? 0)), alt: spec.alt };
