@@ -41,6 +41,14 @@ export function OSlider<T extends string>({ tabs, value, onPick, label, classNam
   );
 }
 
+/**
+ * The switch (UI model v66): one master for every on/off. Off is an outlined track with a grey thumb, on is the accent
+ * track with a light thumb; the thumb slides. It is a real switch to a screen reader, named by its setting.
+ */
+export function OSwitch({ on, onChange, label }: { on: boolean; onChange: (on: boolean) => void; label: string }) {
+  return <button className="o-tg" role="switch" aria-checked={on} aria-label={label} onClick={() => onChange(!on)}><i aria-hidden="true" /></button>;
+}
+
 /** the round grid that opens Every grade (the island's first button on the box's top) */
 export const GridIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

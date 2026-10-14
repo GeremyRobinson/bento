@@ -407,17 +407,33 @@
 .o-gulink{justify-self:start}
 @media (max-width:820px),(max-height:500px){.o-state.me{grid-template-columns:minmax(0,1fr);align-content:start;overflow:auto}.o-shelfp{overflow:visible}.o-shelf{overflow:visible}}
 
-/* settings (model v63): one panel; each row is a name on the left and its control on the right, the control 10 in so its corner nests in the panel's */
+/* settings (model v66, layout C, G 2026-10-14): the list of groups beside the picked group's settings. The page never
+   scrolls: the list or the group scrolls inside its own panel when the screen is short or the text is large */
 .o-state.settings{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr)}
+.o-state.settings>.o-panel{min-height:0;overflow:auto;align-content:start}
+.o-glist{display:grid;gap:var(--gap)}
+.o-gli{display:flex;align-items:center;justify-content:space-between;gap:var(--gap);min-height:var(--pill-size);padding:0 var(--o-pad2);border-radius:var(--o-r1);background:var(--v-page);color:var(--v-ink);font-size:var(--o-t-body);font-weight:var(--w-mid);text-align:left}
+.o-gli svg{width:var(--o-pad2);height:var(--o-pad2);flex:none;fill:none;stroke:var(--v-muted);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+/* the picked group: the current-item outline, the same as a picked tile */
+.o-gli[aria-current="true"]{outline:var(--o-line-2) solid var(--v-acc);outline-offset:calc(var(--o-line-2) * -1)}
+.o-gli[aria-current="true"] svg{stroke:var(--v-acc)}
 .o-setrows{display:grid;gap:var(--gap)}
-.o-setrow{display:flex;align-items:center;justify-content:space-between;gap:var(--gap);min-height:var(--pill-size);padding-left:var(--gap)}
+.o-setrow{display:flex;flex-wrap:nowrap;align-items:center;justify-content:space-between;gap:var(--gap);min-height:var(--pill-size);padding-left:var(--gap)}
 .o-setrow>.o-nm{min-width:0;line-height:1.25}
 .o-setrow>:last-child{flex:none}
-.o-tsize button:nth-of-type(1){font-size:var(--fz-sm)}.o-tsize button:nth-of-type(2){font-size:var(--fz-lg)}.o-tsize button:nth-of-type(3){font-size:var(--fz-2xl)}
-.o-state.settings>.o-panel>.o-why{padding-left:var(--gap)}
-/* beside the first panel, the longer list of settings runs in two columns so it fits without scrolling */
-.o-state.settings>.o-panel+.o-panel>.o-setrows{grid-template-columns:repeat(2,minmax(0,1fr))}
-@media (max-width:820px),(max-height:500px){.o-state.settings{grid-template-columns:minmax(0,1fr);align-content:start;overflow:auto}.o-state.settings>.o-panel+.o-panel>.o-setrows{grid-template-columns:minmax(0,1fr)}}
+/* one button width throughout */
+.o-setrow>.o-btn{width:calc(var(--pill-size) * 3)}
+.o-snote{padding:0 var(--gap)}
+.o-tsize button:nth-of-type(1){font-size:var(--o-t-small)}.o-tsize button:nth-of-type(2){font-size:var(--o-t-body)}.o-tsize button:nth-of-type(3){font-size:var(--o-t-q)}
+/* the switch master: off = an outlined track and a grey thumb (3:1 or more on the card), on = the accent track and a light thumb; the thumb slides */
+.o-tg{flex:none;display:flex;width:calc(var(--pill-size) * 2 - var(--gap));height:var(--pill-size);padding:var(--o-half);border-radius:var(--o-r1);background:var(--v-card);outline:var(--o-line-2) solid var(--v-muted);outline-offset:calc(var(--o-line-2) * -1);transition:background-color var(--o-change) var(--m-ease),outline-color var(--o-change) var(--m-ease)}
+.o-tg i{display:block;width:calc(var(--pill-size) - var(--gap));height:calc(var(--pill-size) - var(--gap));border-radius:var(--o-r1);background:var(--v-muted);transition:transform var(--o-change) var(--m-ease),background-color var(--o-change) var(--m-ease)}
+.o-tg[aria-checked="true"]{background:var(--v-acc);outline-color:var(--v-acc)}
+.o-tg[aria-checked="true"] i{background:var(--v-acc-on);transform:translateX(calc(var(--pill-size) - var(--gap)))}
+/* phones and short screens: panels stack; from 601 wide the list and its group still sit side by side */
+@media (max-width:820px),(max-height:500px){.o-state.settings{align-content:stretch}}
+/* one pane (phones): the list fills the page, and a group opens as its own page */
+@media (max-width:600px){.o-state.settings{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,max-content);align-content:start}}
 
 /* For the grown-up (model v63): three cards to start; open one and the three become a bar you switch along. Plain words, no marks. */
 .o-state.report{grid-template-columns:repeat(3,minmax(0,1fr));align-content:start}

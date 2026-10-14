@@ -163,7 +163,7 @@ export function AppProvider(props: {
         const entry = { prev: location.hash, i: at.current + 1 };
         // Settings and My Bento sit side by side over the page you were on: moving between them replaces the step and
         // keeps that page as the one to return to (Review: Practice → gear → My Bento → My Bento landed on Contents)
-        const side = (x: string) => x === "#/settings" || x === "#/me";
+        const side = (x: string) => x === "#/settings" || x.startsWith("#/settings/") || x === "#/me";
         // (the contents' own step sits one above the page it opened over, so the page replacing it does too)
         const over = !!(history.state as { overlay?: boolean } | null)?.overlay;
         if (over || (side(location.hash) && side(h))) {

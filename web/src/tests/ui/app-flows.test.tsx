@@ -471,36 +471,57 @@ describe("My Obento", () => {
 });
 
 describe("Settings", () => {
-  it("the gear goes straight to the Settings page: Look, Motion and Grade, then every other setting and the backup (v63)", () => {
+  it("the gear goes straight to the Settings page: seven groups beside the picked group's settings (v66, layout C)", () => {
     renderApp({ grade: 5, chosen: true });
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(document.querySelector(".o-island")).toHaveTextContent("Settings");
+    expect([...document.querySelectorAll(".o-gli")].map(b => b.textContent)).toEqual(["Look and motion", "Reading and sound", "Keypad", "Grade", "Seeing better", "Backup", "About"]);
+    // the first group is open, and marked as the picked one
+    expect(screen.getByRole("button", { name: "Look and motion" })).toHaveAttribute("aria-current", "true");
     const pick = (group: string, name: string) => fireEvent.click(within(screen.getByRole("tablist", { name: group })).getByRole("tab", { name }));
+    const group = (name: string) => fireEvent.click(screen.getByRole("button", { name }));
     pick("Look", "Dark");
     expect(document.documentElement.dataset.theme).toBe("dark");
     pick("Look", "Auto");
     expect(document.documentElement.dataset.theme).toBeUndefined();
     pick("Motion", "Less");
     expect(document.documentElement.dataset.motion).toBe("reduce");
-    pick("High contrast", "On");
+    group("Seeing better");
+    expect(screen.getByRole("button", { name: "Seeing better" })).toHaveAttribute("aria-current", "true");
+    expect(screen.queryByRole("tablist", { name: "Look" })).toBeNull();
+    // every on/off is the switch master
+    const contrast = screen.getByRole("switch", { name: "High contrast" });
+    expect(contrast).toHaveAttribute("aria-checked", "false");
+    fireEvent.click(contrast);
     expect(document.documentElement.dataset.contrast).toBe("true");
-    pick("Keypad", "Left-handed");
+    expect(screen.getByRole("switch", { name: "High contrast" })).toHaveAttribute("aria-checked", "true");
+    group("Keypad");
+    pick("Keypad side", "Left-handed");
     expect(document.documentElement.dataset.hand).toBe("left");
-    pick("Text size", "Largest");
+    group("Reading and sound");
+    // the A A A buttons say their size
+    pick("Text size", "Large");
     expect(document.documentElement.dataset.text).toBe("largest");
-    expect(screen.getByRole("button", { name: "Save a backup" })).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: "Sounds" })).toBeInTheDocument();
+    group("Backup");
+    expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
+    expect(screen.getByText(/Everything stays on this device/)).toBeInTheDocument();
+    group("About");
+    expect(screen.getByRole("button", { name: "Open" })).toBeInTheDocument();
+    expect(screen.queryByText("Sandbox")).toBeNull();
     // Grade opens the grade picker on the box
+    group("Grade");
     tap("5th grade");
     expect(boxView()).toBe(GRADES_VIEW);
   });
   it("moves between Settings and My Obento from the corner buttons, and the island's < goes back to the box (v2)", () => {
     renderApp({ grade: 5, chosen: true });
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
-    expect(screen.getByRole("tablist", { name: "High contrast" })).toBeInTheDocument();
+    expect(screen.getByRole("tablist", { name: "Look" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Me" }));
     expect(screen.getByRole("button", { name: "Me" })).toHaveAttribute("aria-current", "page");
-    expect(screen.queryByRole("tablist", { name: "High contrast" })).toBeNull();
+    expect(screen.queryByRole("tablist", { name: "Look" })).toBeNull();
     tap("Back");
     expectGradeHome("5th grade");
   });
@@ -510,6 +531,7 @@ describe("find my level", () => {
   it("runs a short placement from Settings and offers the grade to start in", () => {
     renderApp({ grade: 5, chosen: true });
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+    tap("Grade");
     tap("Start");
     solveRun();
     expect(screen.getByRole("heading", { level: 1, name: /^Start in .+ grade\.$/ })).toBeInTheDocument();
@@ -521,7 +543,8 @@ describe("the website from inside the app", () => {
   it("Settings has About Bento, which opens the landing page", () => {
     renderApp();
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
-    tap("What Obento is");
+    tap("About");
+    tap("Open");
     expect(screen.getByRole("heading", { level: 1, name: "Math that clicks." })).toBeInTheDocument();
     // Start learning goes into the app and its grade picker, even with a grade chosen
     fireEvent.click(screen.getAllByRole("button", { name: "Start learning" })[0]!);

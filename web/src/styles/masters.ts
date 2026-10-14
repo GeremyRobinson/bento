@@ -54,7 +54,11 @@ export const MASTERS: Master[] = [
   { name: "O slider", classes: ["o-sw", "thumb"] },
   { name: "O tile", classes: ["o-tile", "o-tx", "o-nm", "o-cover", "o-cpw", "o-stat", "o-wide", "o-foot", "o-st", "next", "rev", "o-ring", "o-marks", "sel", "o-gt", "o-gnum", "o-grades"] },
   { name: "O picture", classes: ["o-art"] },
-  { name: "O settings", classes: ["settings", "o-setrows", "o-setrow", "o-tsize"] },
+  { name: "O settings", classes: ["settings", "o-setrows", "o-setrow", "o-tsize", "o-snote"] },
+  // v66 (G 2026-10-14, Settings layout C): the list of groups, the picked one outlined like a picked tile
+  { name: "O group list", classes: ["o-gli", "o-glist"] },
+  // v66: one switch for every on/off (Review settings-c: off 3:1 or more on the card, role=switch)
+  { name: "O switch", component: "components/Masters.tsx", classes: ["o-tg"] },
   { name: "O report", classes: ["report", "open", "o-qcard", "o-ansbig", "o-bignum", "o-qpic", "two", "o-short", "o-long", "o-repd", "o-rsec", "o-cols2", "o-cols3", "o-rows", "o-line2", "o-wbars", "sm", "o-wb", "o-wlab", "cur", "o-inline"] },
   { name: "O motion", classes: ["o-arrive", "o-grid", "zin", "zout", "o-sw", "thumb", "o-btn", "o-tool", "o-tile"] },
   { name: "O me", classes: ["o-shelfp", "o-shh", "o-shelf", "o-count", "fill", "o-lrow", "o-cpw", "o-tx", "o-tile", "o-lk", "o-gulink", "o-why"] },

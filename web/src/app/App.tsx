@@ -107,7 +107,7 @@ export function App() {
   // keep their own frame. A lesson fills the window and never scrolls; in a lesson on a phone, back is the only way out
   const shell = !choosing && grade != null && route.name !== "sandbox";
   const flow = route.name === "learn" || route.name === "practice" || route.name === "results";
-  const fit = route.name === "learn" || route.name === "practice";
+  const fit = route.name === "learn" || route.name === "practice" || route.name === "settings";
   // a new screen (or a new grade on a top-level screen) re-enters; with view transitions the browser cross-fades instead
   const viewKey = [sheetOpen ? "grades" : route.name, route.name === "learn" ? route.lessonId : route.name === "report" ? route.key : route.name === "facts" ? route.table ?? "" : "", top ? chosenGrade : "", SANDBOX ? sbSeed : ""].join("|");
   return (<>

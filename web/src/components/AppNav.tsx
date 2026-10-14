@@ -12,6 +12,8 @@ import { tableById } from "../engine/facts/tables";
 import { checkedCount } from "../app/rings";
 import { GRADES_VIEW, setBoxView, useBoxView } from "../app/box";
 import { REVIEW } from "../app/copy";
+import { useOnePane } from "../app/media";
+import { groupName } from "../screens/Settings";
 import { BackIcon, GridIcon, ORing, PersonIcon, SunIcon } from "./Masters";
 
 /** what the island says: a small line over where you are, how far along the ring is, and where back goes */
@@ -28,7 +30,7 @@ function cameFrom(route: Route): Route | undefined {
   return to.name === route.name || to.name === "welcome" || to.name === "settings" ? undefined : to;
 }
 
-function whereOf(app: ReturnType<typeof useApp>, grade: number, view: string | null): Where {
+function whereOf(app: ReturnType<typeof useApp>, grade: number, view: string | null, onePane = false): Where {
   const { route, progress } = app;
   const g = gradeOf(grade), all = entriesInGrade(grade), year = all.length ? checkedCount(progress, all) / all.length : 0;
   switch (route.name) {
@@ -56,7 +58,10 @@ function whereOf(app: ReturnType<typeof useApp>, grade: number, view: string | n
     }
     case "me": return { kick: g.name, title: "Me", p: year, back: cameFrom(route) ?? HOME };
     case "parent": return { kick: "Me · on this device", title: "For the grown‑up", p: year, back: { name: "me" } };
-    case "settings": return { kick: g.name, title: "Settings", p: year, back: cameFrom(route) ?? HOME };
+    case "settings":
+      // on a phone a group is its own page: the island names it under Settings, and back returns to the list
+      if (onePane && route.group) return { kick: "Settings", title: groupName(route.group), p: year, back: { name: "settings" } };
+      return { kick: g.name, title: "Settings", p: year, back: cameFrom(route) ?? HOME };
     case "facts": {
       const t = route.table ? tableById(route.table) : undefined;
       return t ? { kick: "Facts", title: t.name, p: year, back: { name: "facts" } } : { kick: g.name, title: "Facts", p: year, back: HOME };
@@ -81,7 +86,8 @@ export function AppNav({ grade }: { grade: number }) {
   const { route, go, back: up } = app;
   const view = useBoxView();
   const onHome = route.name === "home";
-  const w = whereOf(app, grade, onHome ? view : null);
+  const onePane = useOnePane();
+  const w = whereOf(app, grade, onHome ? view : null, onePane);
   const inBox = onHome && view != null;
   const back = () => {
     if (inBox) { setBoxView(null, view === GRADES_VIEW ? "zin" : "zout"); return; }
