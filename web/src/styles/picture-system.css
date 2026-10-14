@@ -165,6 +165,13 @@
 #app .v-pic .frame{stroke:var(--v-done)}
 /* the picked tile wears ONE accent ring, inset on the tile card (spec D2), never a second one round it or its picture:
    keyboard focus on a tile shows as that same ring */
+/* chapter covers as icons (tilepics/icon-covers.ts): one outline colour and one soft fill, both the grade's
+   colour, so the covers follow dark mode. Each comes in once with a pop; never a loop */
+#app .cvi{display:block;width:100%;height:100%;max-height:84px;color:var(--v-acc);overflow:visible}
+@media (prefers-reduced-motion:no-preference){
+  #app .cvi>g{transform-box:fill-box;transform-origin:center;animation:cv-pop var(--m-in) var(--m-settle) both}
+}
+@keyframes cv-pop{from{opacity:0;transform:scale(.4)}}
 
 /* chapter covers as icons (tilepics/icon-covers.ts): one outline colour and one soft fill, both the grade's deep picture
    colour, so the covers follow dark mode. Each comes in once with a pop; never a loop */
