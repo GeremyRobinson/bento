@@ -2,11 +2,11 @@
 import { createRoot } from "react-dom/client";
 import "./src/styles/index.css";
 import { ICON_COVERS } from "./src/components/tilepics/icon-covers";
-import { PACK } from "./pairsheet";
+import { PACK, FIX } from "./pairsheet";
 const packIcon = (b: string) => `<svg class="cvi" viewBox="0 0 256 256" preserveAspectRatio="xMinYMin meet" fill="currentColor" aria-hidden="true"><g>${b}</g></svg>`;
 
 const q = new URLSearchParams(location.search), keys = q.get("keys")?.split("|");
-const which = q.has("pairs") ? Object.fromEntries(Object.keys(PACK).flatMap(k => [[k + "|Ours", ICON_COVERS[k]!], [k + "|Pack", packIcon(PACK[k]!)]])) : keys ? Object.fromEntries(Object.entries(ICON_COVERS).filter(([k]) => keys.includes(k))) : ICON_COVERS;
+const which = q.has("fix") ? Object.fromEntries([["3:Multiplication and division|now", ICON_COVERS["3:Multiplication and division"]!], ...Object.entries(FIX).slice(0, 2).map(([k, b]) => [k, packIcon(b)]), ["1:Place value|now", ICON_COVERS["1:Place value"]!], ...Object.entries(FIX).slice(2).map(([k, b]) => [k, packIcon(b)])]) : q.has("pairs") ? Object.fromEntries(Object.keys(PACK).flatMap(k => [[k + "|Ours", ICON_COVERS[k]!], [k + "|Pack", packIcon(PACK[k]!)]])) : keys ? Object.fromEntries(Object.entries(ICON_COVERS).filter(([k]) => keys.includes(k))) : ICON_COVERS;
 const gname = (g: number) => (g === 0 ? "Kindergarten" : `${g}${g === 1 ? "st" : g === 2 ? "nd" : g === 3 ? "rd" : "th"} grade`);
 function Sheet() {
   return (
@@ -15,7 +15,7 @@ function Sheet() {
         const [g, rest] = k.split(":"), [name, tag] = rest!.split("|");
         return (
           <div key={k}>
-            <div style={{ font: "550 12px Inter, sans-serif", color: "var(--v-muted)", margin: "0 0 5px 4px" }}>{gname(+g!)}{tag ? ` · ${tag === "Ours" ? "ours" : "from the pack"}` : ""}</div>
+            <div style={{ font: "550 12px Inter, sans-serif", color: "var(--v-muted)", margin: "0 0 5px 4px" }}>{gname(+g!)}{tag ? ` · ${tag === "Ours" ? "ours" : tag === "Pack" ? "from the pack" : tag}` : ""}</div>
             <div className="v-cover" data-grade={g} style={{ width: 190, height: 170 }}>
               <span className="v-top"><span className="v-picbox" dangerouslySetInnerHTML={{ __html: svg }} /></span>
               <span className="v-tx"><span className="v-nm">{name}</span></span>
