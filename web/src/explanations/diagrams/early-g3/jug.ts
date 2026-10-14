@@ -3,6 +3,7 @@
 // fills from empty, then the marks count up to the surface.
 import type { SceneDiagram } from "../scene/schema";
 import { frame, path, t, M, L, Z, type Draft } from "../geo/kit";
+import { thinOut } from "../scene/picture-system";
 
 export interface JugSpec {
   cap: number;
@@ -12,7 +13,8 @@ export interface JugSpec {
   alt: string;
 }
 
-const H = 260, W = H * 0.6;
+/** drawn at about a phone strip's height, so its numbers, laid out at their phone size, land where they are drawn */
+const H = 150, W = H * 0.6;
 
 export function buildJug(s: JugSpec): SceneDiagram {
   const { cap, step, value } = s, b = s.beats, items: Draft[] = [];
@@ -26,19 +28,24 @@ export function buildJug(s: JugSpec): SceneDiagram {
   }
   // the jug: a spout notch top left, a flat base with round corners, an open handle on the right
   items.push(path([M([-14, top - 10]), L([0, top + 18]), L([0, base - 12]), { c: "Q", q: [0, base], p: [12, base] }, L([W - 12, base]), { c: "Q", q: [W, base], p: [W, base - 12] }, L([W, top])], "jugline"));
-  items.push(path([M([W, top + 40]), { c: "C", c1: [W + 62, top + 40], c2: [W + 62, top + 150], p: [W, top + 150] }], "jugline"));
+  items.push(path([M([W, top + H * 0.15]), { c: "C", c1: [W + H * 0.24, top + H * 0.15], c2: [W + H * 0.24, top + H * 0.58], p: [W, top + H * 0.58] }], "jugline"));
   const fmt = (v: number) => String(v);
   const n = cap / step, labelEvery = n <= 10 ? 1 : n <= 20 ? 2 : 5;
+  // on a phone the floor grows the numbers taller than the marks are apart: every other one fades (odd ones first),
+  // so the scale still reads and no two numbers touch (the room each needs, in marks: the lowest bit of its count)
+  const pitch = (base - markTop) / n, low = (k: number) => k & -k;
+  const room = (marks: number, size: number) => ({ vars: thinOut(`(${Math.round(pitch * marks * 10) / 10} - 1.15 * max(${size}, 14 * var(--px, 0)))`) });
   for (let k = 1; k <= n; k++) {
     const long = k % labelEvery === 0 || k === n, yy = y(k * step);
     items.push(path([M([0, yy]), L([long ? 14 : 7, yy])], long ? "ax" : "tk"));
-    if (long) items.push(t(-12, yy, fmt(k * step), "sm end muted"));
+    if (long) items.push(t(-12, yy, fmt(k * step), "sm end muted", room(labelEvery * low(Math.ceil(k / labelEvery)), 15)));
   }
-  items.push(t(-12, y(cap) - 22, "L", "sm end muted"));
+  items.push(t(-12, y(cap) - 12, "L", "sm end muted up"));
   if (b) {
     const marks = value / step;
-    for (let k = 1; k <= marks; k++) items.push(t(26, y(k * step), fmt(k * step), k === marks ? "xs acc start" : "xs start", { from: b.count, enter: "pop", delay: 0.15 * k }));
-    items.push(t(W / 2, base + 36, `${value} ${value === 1 ? "liter" : "liters"}`, "lbl big acc", { from: b.count, enter: "rise", delay: 0.15 * marks + 0.3 }));
+    // the count keeps the surface's number; the ones below it give way first
+    for (let k = 1; k <= marks; k++) items.push(t(26, y(k * step), fmt(k * step), k === marks ? "xs acc start" : "xs start", { from: b.count, enter: "pop", delay: 0.15 * k, ...(k === marks ? {} : room(Math.min(low(k), marks - k), 12)) }));
+    items.push(t(W / 2, base + 10, `${value} ${value === 1 ? "liter" : "liters"}`, "lbl big acc down", { from: b.count, enter: "rise", delay: 0.15 * marks + 0.3 }));
   }
   return frame("jug", items, s.alt, 14, { w: 300 });
 }

@@ -5,6 +5,11 @@ import { chainExplanation } from "../../../../explanations/diagrams/chain/build"
 import { expectedOf, oneBox, restoreVia, round6, wholeIn } from "../../_number-line/steps";
 import { count } from "../../../text";
 import { buildDecimalColumns } from "../../../../explanations/diagrams/early-g4/columns";
+import type { SceneDiagram, SceneItem } from "../../../../explanations/diagrams/scene/schema";
+import { lightSteps, pathXs } from "../../../../explanations/diagrams/scene/helpers";
+
+/** the picture's beats, one per worked step */
+const BEATS = { lineUp: 0, whole: 1, decimal: 2, total: 3 } as const;
 
 /** a has tenths (1.1 to 99.9), b has hundredths (1.01 to 99.99) */
 export interface AddDecimalsProblem { a: number; b: number }
@@ -24,6 +29,33 @@ const split = ({ a, b }: AddDecimalsProblem) => {
 function hundredths(x: number): MathText {
   const s = f(x), full = x.toFixed(2);
   return s === full ? [num(x)] : [text(s), mark(full.slice(s.length))];
+}
+
+/**
+ * What this lesson's picture must show (Review g5 #10, as the live site did): the 0 written in to make 5.40 is new, so it
+ * wears the picture's colour (pic-deep) instead of the ink every other digit has; and the ring round the carried 1
+ * comes in with its 1, never before it. (The columns master draws the ring as an .xring, whose glow animation in the
+ * picture system replaces its entrance and so drops its delay; an .ln2 outline is the same deep line and keeps both.
+ * A plain .ring can't be used: the score ring's own .ring rule sizes any element with that class.)
+ */
+function markNew(d: SceneDiagram, b: { lineUp: number; whole: number; decimal: number; total: number }): SceneDiagram {
+  const carry = d.items.find(i => i.type === "text" && i.cls === "lbl big acc" && (i.from ?? 0) > 0 && i.enter === "pop");
+  const items = d.items.map((it): SceneItem => {
+    if (it.type === "text" && it.cls === "lbl big acc" && (it.from ?? 0) === 0 && it.enter === "pop") return { ...it, cls: "lbl big" };
+    if (it.type === "rect" && it.cls === "xring") return { ...it, cls: "ln2", delay: carry?.delay ?? it.delay };
+    return it;
+  });
+  // the worked step lit (the shared `lit` role), beat by beat: the written-in 0s while the points are lined up, then the
+  // two numbers' whole digits while they are added, then their digits after the point
+  const wire = items.find((i): i is Extract<SceneItem, { type: "path" }> => i.type === "path" && i.cls === "wire");
+  const point = wire ? pathXs(wire.d)[0] : undefined;
+  const litOn = (it: SceneItem): number[] | null => {
+    if (it.type !== "text" || point == null || it.text === ".") return null;
+    if (it.cls === "lbl big" && it.enter === "pop" && (it.from ?? 0) === b.lineUp) return [b.lineUp];
+    if (it.cls === "lbl big pw" && !it.from) return [it.x < point ? b.whole : b.decimal];
+    return null;
+  };
+  return { ...d, items: lightSteps(items, litOn, b.total) };
 }
 
 /** digits after the point as the number is written (12.5 → 1) */
@@ -59,11 +91,11 @@ function explain(p: AddDecimalsProblem, model: AnswerModel) {
     statement: [num(a), op("+"), num(b)],
     ...(padded.length ? { caption: `Write ${rewrite} so both have hundredths.` } : {}),
     alt: `${f(a)} + ${f(b)}: whole parts ${W}, decimal parts ${f(D)}, total ${f(sum)}.`,
-    diagram: buildDecimalColumns({
+    diagram: markNew(buildDecimalColumns({
       a: Math.round(a * 100), b: Math.round(b * 100), shown: [decimalsShown(a), decimalsShown(b)], point: 2,
-      beats: { lineUp: 0, whole: 1, decimal: 2, total: 3 },
+      beats: BEATS,
       alt: `${f(a)} and ${f(b)} lined up by their points${padded.length ? `, with ${rewrite}` : ""}: the whole columns make ${W}, the decimal columns make ${D.toFixed(2)}, together ${f(sum)}.`,
-    }),
+    }), BEATS),
     beats: [
       { id: "line-up", narration: padded.length ? `Write ${rewrite} so both numbers have hundredths.` : "Both already have hundredths, so the points line up.",
         math: [...hundredths(a), op("+"), ...hundredths(b)], lines: [[...hundredths(a), op("+"), ...hundredths(b)]] },

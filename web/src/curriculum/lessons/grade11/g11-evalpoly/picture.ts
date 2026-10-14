@@ -28,9 +28,10 @@ export function evaluatePolynomialPicture(o: { a: number; b: number; c: number; 
   return buildPlane({
     items: [
       { kind: "curve", f: fx, cls: "ln pw" },
-      { kind: "vline", x: k, cls: "wire", label: { text: `x = ${f(k)}`, prefer: ["e", "w"] } },
       { kind: "label", at: [k, total], label: { text: "?", acc: true, prefer: ["ne", "nw", "e", "w"] }, until: 2 },
       ...pieces,
+      // the line's name goes where the pieces' labels leave room, and gives way on a crowded phone (the problem names it)
+      { kind: "vline", x: k, cls: "wire", label: { text: `x = ${f(k)}`, prefer: ["e", "w"], optional: true } },
       { kind: "point", at: [k, total], cls: "dota", from: 3, delay: 0.9, label: { text: `f(${f(k)}) = ${f(total)}`, acc: true, prefer: ["e", "w", "ne", "nw"] } },
     ],
     fit: [[-reach, 0], [reach, 0], [k, A], [k, A + B], [k, total]],

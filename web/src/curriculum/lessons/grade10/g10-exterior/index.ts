@@ -50,7 +50,7 @@ export function explainExteriorAngle(p: ExteriorAngleProblem, answers: AnswerMod
       // the last beat lights the two far angles and the outside angle together
       accent: { left: 3, top: 3 },
       exterior: { labels: [{ text: "?", until: 1 }, { text: `${out}°`, from: 2 }] },
-      notes: [{ text: `180° − ${a}° − ${b}° = ${c}°`, from: 1, until: 1 }, { text: `outside = 180° − ${c}° = ${out}°`, from: 2, until: 2 }, { text: `${a}° + ${b}° = ${out}°, the outside angle`, from: 3 }],
+      notes: [{ text: `180° − ${a}° − ${b}° = ${c}°`, from: 1, until: 1 }, { text: `outside = 180° − ${c}° = ${out}°`, from: 2, until: 2 }, { text: `outside: ${a}° + ${b}° = ${out}°`, from: 3 }],
       alt: `A triangle with inside angles ${a}°, ${b}° and ${c}°. The base runs on past the ${c}° corner, making an outside angle of ${out}°.`,
     }),
     timeline: beats(4),

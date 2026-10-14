@@ -5,6 +5,7 @@
 // Inside a beat a piece can come in at `at` seconds and go at `leave`, so one beat can count up or count down.
 import type { Enter, SceneDiagram, SceneItem } from "../scene/schema";
 import { r1 } from "../scene/helpers";
+import { fitIn, growRows } from "../scene/picture-system";
 
 interface Timed {
   /** seconds into the beat it comes in (with its entrance); without it, it is simply there */
@@ -30,22 +31,31 @@ export interface FChip extends Timed {
   enter?: Enter;
 }
 /** A bracket under (or over) chips `from`..`to` of a row, with a label. */
-export interface FBracket extends Timed { row: number; from: number; to: number; label: string; sup?: string; part?: string; above?: boolean }
+export interface FBracket extends Timed { row: number; from: number; to: number; label: string; sup?: string; part?: string; above?: boolean;
+  /** the label is working the step under the picture already says: a phone's short box leaves it out (.shortgo) */
+  long?: boolean }
 /** Text at a grid spot: a count, a value, an operation. */
-export interface FLabel extends Timed { row: number; col: number; text: string; sup?: string; cls?: string; anchor?: "start" | "end" }
+export interface FLabel extends Timed { row: number; col: number; text: string; sup?: string; cls?: string; anchor?: "start" | "end";
+  /** a phone's short box leaves it out (.shortgo) */
+  long?: boolean }
 /** A fraction bar across columns `from`..`to`, between `row` and the row under it. */
 export interface FBar extends Timed { row: number; from: number; to: number }
 
 export interface ChipFrame { chips?: FChip[]; brackets?: FBracket[]; labels?: FLabel[]; bars?: FBar[] }
 
-export const CHIPS = { pitch: 46, chip: 38, row: 66, pad: 16 } as const;
+/** drawn at about a phone's picture size (units ≈ px in a phone's box), so a chip there stays bigger than its digit; a tablet
+ * draws it up to 3 times bigger */
+export const CHIPS = { pitch: 36, chip: 30, row: 52, pad: 12 } as const;
 const CH = 17 * 0.6;
 const sizeOf = (cls = "") => (/\bbig\b/.test(cls) ? (/\blbl\b/.test(cls) ? 22 : 28) : /\bsm\b/.test(cls) ? 15 : /\bxs\b/.test(cls) ? 12 : 17);
 
 /** Builds the picture from its frames. */
 export function buildFactorChips(frames: ChipFrame[], alt: string, family = "factor-chips"): SceneDiagram {
   const { pitch, chip, row: RH, pad } = CHIPS;
-  const items: SceneItem[] = [], brackets: [number, number, number, number][] = [];
+  // each item's grid row: on a phone every row moves down by what the label rows above it grew (growRows), so a bracket's
+  // label never runs into the chips under it
+  const items: SceneItem[] = [], brackets: [number, number, number, number][] = [], rowOf: number[] = [];
+  const onRow = (row: number) => { while (rowOf.length < items.length) rowOf.push(row); };
   frames.forEach((f, i) => {
     const last = i === frames.length - 1;
     const when = (t: Timed, enter: Enter, cls: string): Partial<SceneItem> => {
@@ -63,24 +73,36 @@ export function buildFactorChips(frames: ChipFrame[], alt: string, family = "fac
       const t = slide && c.at == null ? { ...c, at: 0 } : c;
       const box = when(t, c.enter ?? "pop", `xchip ${part}${c.ghost ? " ghost" : ""}${c.cut ? " cut" : ""}`);
       const txt = when(t, c.enter ?? "pop", `${c.ghost || part === "pq" ? `lbl big ${part === "pq" ? "acc" : part}` : "lbl big onlbl"}${c.cut ? " cut" : ""}`);
-      items.push({ type: "rect", x: r1(x), y: r1(y), w: r1(w), h: chip, rx: 10, ...box, ...(slide && t.leave == null ? { enter: "slide", vars: slide.vars } : {}) } as SceneItem);
-      items.push({ type: "text", x: r1(x + w / 2), y: r1(Y(c.row)), text: c.text, ...(c.sup ? { sup: c.sup } : {}), ...txt, ...(slide && t.leave == null ? { enter: "slide", vars: slide.vars } : {}) } as SceneItem);
+      items.push({ type: "rect", x: r1(x), y: r1(y), w: r1(w), h: chip, rx: 8, ...box, ...(slide && t.leave == null ? { enter: "slide", vars: slide.vars } : {}) } as SceneItem);
+      // the chip's digit keeps its size while it fits the chip, then shrinks with it (never under 14px), so a phone's
+      // small chips never run their digits into each other (g11-ratexp's 2 2 2)
+      const fit = fitIn(w, c.text.length + (c.sup ? c.sup.length * 0.65 : 0), 22);
+      const tv = slide && t.leave == null ? { enter: "slide" as Enter, vars: { ...slide.vars, ...fit } } : { vars: { ...(txt.vars ?? {}), ...fit } };
+      items.push({ type: "text", x: r1(x + w / 2), y: r1(Y(c.row)), text: c.text, ...(c.sup ? { sup: c.sup } : {}), ...txt, ...tv } as SceneItem);
       if (c.strike != null) items.push({ type: "line", x1: r1(x - 4), y1: r1(y + chip + 4), x2: r1(x + w + 4), y2: r1(y - 4), ...when({ at: c.strike, leave: c.leave }, "draw", "ln2") } as SceneItem);
+      onRow(c.row);
     }
     for (const b of f.brackets ?? []) {
-      const x0 = X(b.from) - chip / 2, x1 = X(b.to) + chip / 2, s = b.above ? -1 : 1, y = Y(b.row) + s * (chip / 2 + 8);
+      const x0 = X(b.from) - chip / 2, x1 = X(b.to) + chip / 2, s = b.above ? -1 : 1, y = Y(b.row) + s * (chip / 2 + 6);
       const part = b.part ?? "pw";
-      brackets.push([x0, x1, Math.min(y, y + s * 8), Math.max(y, y + s * 8)]);
-      items.push({ type: "path", d: `M${r1(x0)} ${r1(y)} v${s * 8} H${r1(x1)} v${-s * 8}`, ...when(b, "draw", `ln thin ${part}`) } as SceneItem);
-      items.push({ type: "text", x: r1((x0 + x1) / 2), y: r1(y + s * 22), text: b.label, ...(b.sup ? { sup: b.sup } : {}), ...when(b, "rise", `lbl ${part}`) } as SceneItem);
+      brackets.push([x0, x1, Math.min(y, y + s * 6), Math.max(y, y + s * 6)]);
+      items.push({ type: "path", d: `M${r1(x0)} ${r1(y)} v${s * 6} H${r1(x1)} v${-s * 6}`, ...when(b, "draw", `ln thin ${part}`) } as SceneItem);
+      // the label hangs from its bracket (.down; .up over it), so on a phone it grows away from the chips it names
+      // a label wider than its bracket starts at the bracket's left end and runs right, so at a phone's label size it never
+      // pushes the picture out past its left edge
+      const wide = (b.label.length + (b.sup?.length ?? 0) * 0.65) * 12 > x1 - x0;
+      items.push({ type: "text", x: r1(wide ? x0 : (x0 + x1) / 2), y: r1(y + s * 9), text: b.label, ...(b.sup ? { sup: b.sup } : {}), ...when(b, "rise", `lbl ${part} ${b.above ? "up" : "down"}${wide ? " start" : ""}${b.long ? " shortgo" : ""}`) } as SceneItem);
+      onRow(b.row);
     }
     for (const b of f.bars ?? []) {
       const y = Y(b.row + 0.5);
       items.push({ type: "line", x1: r1(X(b.from) - chip / 2 - 6), y1: r1(y), x2: r1(X(b.to) + chip / 2 + 6), y2: r1(y), ...when(b, "draw", "ax") } as SceneItem);
+      onRow(b.row + 0.5);
     }
     for (const l of f.labels ?? []) {
-      const cls = `${l.cls ?? "lbl pw"}${l.anchor ? ` ${l.anchor}` : ""}`;
+      const cls = `${l.cls ?? "lbl pw"}${l.anchor ? ` ${l.anchor}` : ""}${l.long ? " shortgo" : ""}`;
       items.push({ type: "text", x: r1(X(l.col)), y: r1(Y(l.row)), text: l.text, ...(l.sup ? { sup: l.sup } : {}), ...when(l, "rise", cls) } as SceneItem);
+      onRow(l.row);
     }
   });
   // frame the content: every shape and label, with room round it
@@ -96,9 +118,14 @@ export function buildFactorChips(frames: ChipFrame[], alt: string, family = "fac
     }
   }
   for (const b of brackets) grow(...b);
+  const firstRow = Math.min(...rowOf);
   const W = Math.max(320, x1 - x0 + 2 * pad), dx = (W - (x1 - x0)) / 2 - x0, dy = pad - y0;
-  const moved = items.map(it => shift(it, dx, dy));
-  return { kind: "scene", family, width: r1(W), height: r1(y1 - y0 + 2 * pad), items: moved, alt };
+  const moved = items.map((it, k) => {
+    const g = growRows((rowOf[k]! - firstRow) * 1.3);
+    return shift(g.translate ? { ...it, vars: { ...it.vars, ...g } } : it, dx, dy);
+  });
+  // its rows move apart on a phone (growRows), so its frame may grow twice its plain height there
+  return { kind: "scene", family, width: r1(W), height: r1(y1 - y0 + 2 * pad), items: moved, alt, grow: 2 };
 }
 
 function shift(it: SceneItem, dx: number, dy: number): SceneItem {

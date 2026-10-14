@@ -2,8 +2,11 @@
 // or slide into order so the middle one is the median.
 import type { SceneDiagram } from "../scene/schema";
 import { frame, seg, t, type Draft } from "../geo/kit";
+import { growUp } from "../scene/picture-system";
 
-const BW = 46, GAP = 16, H = 170;
+// the bars stand at about a phone's picture size (G 2026-10-14: pictures lie wider than tall), so a phone draws their
+// labels near their own size; each value stands on its bar's top (.up) and the note stands above the tallest value
+const BW = 46, GAP = 16, H = 110, NOTE = H + 40;
 const x = (i: number) => i * (BW + GAP);
 
 export interface MeanBarsSpec {
@@ -20,18 +23,18 @@ export function buildMeanBars(s: MeanBarsSpec): SceneDiagram {
   const items: Draft[] = [seg([-10, 0], [W + 10, 0], "ax")];
   s.values.forEach((v, i) => {
     items.push({ type: "rect", x: x(i), y: -v * sc, w: BW, h: v * sc, rx: 8, cls: "bar", until: s.shareBeat - 1, enter: "growy", delay: i * 0.08 } as Draft);
-    items.push(t(x(i) + BW / 2, -v * sc - 14, String(v), "lbl", { until: s.shareBeat - 1, enter: "rise", delay: 0.3 + i * 0.08 }));
+    items.push(t(x(i) + BW / 2, -v * sc - 6, String(v), "lbl up", { until: s.shareBeat - 1, enter: "rise", delay: 0.3 + i * 0.08 }));
     // each bar shares out to the mean height
     items.push({ type: "rect", x: x(i), y: -s.mean * sc, w: BW, h: s.mean * sc, rx: 8, cls: "bar", from: s.shareBeat, enter: "level", vars: { "--from": Math.round((v / s.mean) * 1000) / 1000 } } as Draft);
-    items.push(t(x(i) + BW / 2, 16, String(i + 1), "xs", { from: s.countBeat, enter: "fade", delay: i * 0.12 }));
+    items.push(t(x(i) + BW / 2, 8, String(i + 1), "xs down", { from: s.countBeat, enter: "fade", delay: i * 0.12 }));
   });
   items.push(seg([-10, -s.mean * sc], [W + 10, -s.mean * sc], "ln2 dash", { from: s.shareBeat, enter: "draw", delay: 1 }));
   // the level line says what level it is
   items.push(t(W + 18, -s.mean * sc, String(s.mean), "lbl acc start", { from: s.shareBeat, enter: "rise", delay: 1.2 }));
-  const top = -H - 40;
-  items.push(t(W / 2, top, s.sumNote, "lbl", { from: s.sumBeat, until: s.countBeat - 1, enter: "rise" }));
-  items.push(t(W / 2, top, s.countNote, "lbl", { from: s.countBeat, until: s.shareBeat - 1, enter: "rise" }));
-  items.push(t(W / 2, top, s.shareNote, "lbl acc", { from: s.shareBeat, enter: "rise", delay: 1.2 }));
+  const top = -NOTE;
+  items.push(t(W / 2, top, s.sumNote, "lbl up cap", { vars: growUp(1), from: s.sumBeat, until: s.countBeat - 1, enter: "rise" }));
+  items.push(t(W / 2, top, s.countNote, "lbl up cap", { vars: growUp(1), from: s.countBeat, until: s.shareBeat - 1, enter: "rise" }));
+  items.push(t(W / 2, top, s.shareNote, "lbl acc up cap", { vars: growUp(1), from: s.shareBeat, enter: "rise", delay: 1.2 }));
   return frame("bars", items, s.alt, 14, { w: 320 });
 }
 
@@ -50,23 +53,23 @@ export function buildMedianBars(s: MedianBarsSpec): SceneDiagram {
   const items: Draft[] = [seg([-10, 0], [W + 10, 0], "ax")];
   s.values.forEach((v, i) => {
     items.push({ type: "rect", x: x(i), y: -v * sc, w: BW, h: v * sc, rx: 8, cls: "bar", until: s.sortBeat - 1, enter: "growy", delay: i * 0.08 } as Draft);
-    items.push(t(x(i) + BW / 2, -v * sc - 14, String(v), "lbl", { until: s.sortBeat - 1, enter: "rise", delay: 0.3 + i * 0.08 }));
+    items.push(t(x(i) + BW / 2, -v * sc - 6, String(v), "lbl up", { until: s.sortBeat - 1, enter: "rise", delay: 0.3 + i * 0.08 }));
   });
   order.forEach(([v, from], to) => {
     const slide = { enter: "slide" as const, vars: { "--dx": `${x(from) - x(to)}px` } };
     const mid = to === middle;
     items.push({ type: "rect", x: x(to), y: -v * sc, w: BW, h: v * sc, rx: 8, cls: "bar", from: s.sortBeat, ...(mid ? { until: s.medianBeat - 1 } : {}), ...slide } as Draft);
     if (mid) items.push({ type: "rect", x: x(to), y: -v * sc, w: BW, h: v * sc, rx: 8, cls: "bar mid", from: s.medianBeat } as Draft);
-    items.push(t(x(to) + BW / 2, -v * sc - 14, String(v), mid ? "lbl acc" : "lbl", { from: s.sortBeat, ...slide }));
+    items.push(t(x(to) + BW / 2, -v * sc - 6, String(v), mid ? "lbl acc up" : "lbl up", { from: s.sortBeat, ...slide }));
   });
   // spot numbers under the bars, the middle one marked once the list is sorted
   for (let i = 0; i < n; i++) {
-    items.push(t(x(i) + BW / 2, 16, String(i + 1), "xs", { from: s.countBeat, ...(i === middle ? { until: s.sortBeat - 1 } : {}), enter: "fade", delay: i * 0.1 }));
-    if (i === middle) items.push(t(x(i) + BW / 2, 18, String(i + 1), "lbl acc", { from: s.sortBeat, enter: "pop", delay: 1 }));
+    items.push(t(x(i) + BW / 2, 8, String(i + 1), "xs down", { from: s.countBeat, ...(i === middle ? { until: s.sortBeat - 1 } : {}), enter: "fade", delay: i * 0.1 }));
+    if (i === middle) items.push(t(x(i) + BW / 2, 8, String(i + 1), "lbl acc down", { from: s.sortBeat, enter: "pop", delay: 1 }));
   }
-  const top = -H - 40;
-  items.push(t(W / 2, top, s.countNote, "lbl", { from: s.countBeat, until: s.sortBeat - 1, enter: "rise" }));
-  items.push(t(W / 2, top, s.spotNote, "lbl", { from: s.sortBeat, until: s.medianBeat - 1, enter: "rise", delay: 1 }));
-  items.push(t(W / 2, top, s.medianNote, "lbl acc", { from: s.medianBeat, enter: "rise" }));
+  const top = -NOTE;
+  items.push(t(W / 2, top, s.countNote, "lbl up cap", { vars: growUp(1), from: s.countBeat, until: s.sortBeat - 1, enter: "rise" }));
+  items.push(t(W / 2, top, s.spotNote, "lbl up cap", { vars: growUp(1), from: s.sortBeat, until: s.medianBeat - 1, enter: "rise", delay: 1 }));
+  items.push(t(W / 2, top, s.medianNote, "lbl acc up cap", { vars: growUp(1), from: s.medianBeat, enter: "rise" }));
   return frame("bars", items, s.alt, 14, { w: 320 });
 }

@@ -8,9 +8,11 @@ import { CHAPTER_k2, LESSON_k2 } from "./tilepics/gk2";
 import { CHAPTER_34, LESSON_34 } from "./tilepics/g34";
 import { CHAPTER_68, LESSON_68 } from "./tilepics/g68";
 import { CHAPTER_912, LESSON_912 } from "./tilepics/g912";
+import { ICON_COVERS } from "./tilepics/icon-covers";
 
 const LESSON: Record<string, string> = { ...LESSON_k2, ...LESSON_34, ...LESSON5, ...LESSON_68, ...LESSON_912 };
-const CHAPTER: Record<string, string> = { ...CHAPTER_k2, ...CHAPTER_34, ...CHAPTER5, ...CHAPTER_68, ...CHAPTER_912 };
+// the icon covers (G 2026-10-14) stand in for the earlier samples where both exist
+const CHAPTER: Record<string, string> = { ...CHAPTER_k2, ...CHAPTER_34, ...CHAPTER5, ...CHAPTER_68, ...CHAPTER_912, ...ICON_COVERS };
 
 export const lessonPic = (id: string): string | undefined => LESSON[id];
 export const chapterPic = (grade: number, unit: string): string | undefined => CHAPTER[`${grade}:${unit}`];

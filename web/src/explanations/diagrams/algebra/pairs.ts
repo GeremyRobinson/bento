@@ -2,6 +2,7 @@
 // arcs joining first with last, second with second-to-last, ..., each pair making the same total.
 import { formatNumber } from "../../../curriculum/schemas/math-text";
 import type { SceneDiagram, SceneItem } from "../scene/schema";
+import { growDown } from "../scene/picture-system";
 
 export interface PairsInput {
   first: number;
@@ -32,9 +33,10 @@ export function buildPairs({ first, step, count, beats: b }: PairsInput): SceneD
 
   slots.forEach((k, i) => {
     const isLast = k === count - 1 && count > 1;
-    items.push({ type: "text", x: x(i), y: 150, text: k == null ? "…" : formatNumber(term(k)), cls: isLast ? "lbl acc" : "lbl", from: isLast ? b.last : b.terms, enter: "rise", delay: isLast ? 0 : 0.05 * i });
+    // the terms stand on their row (.up) and the term's name hangs under it (.down), so on a phone each grows away from the other
+    items.push({ type: "text", x: x(i), y: 160, text: k == null ? "…" : formatNumber(term(k)), cls: isLast ? "lbl acc up" : "lbl up", from: isLast ? b.last : b.terms, enter: "rise", delay: isLast ? 0 : 0.05 * i });
   });
-  items.push({ type: "text", x: x(lastLabel), y: 176, text: `term ${count}`, cls: "xs", from: b.last, enter: "fade" });
+  items.push({ type: "text", x: x(lastLabel), y: 165, text: `term ${count}`, cls: "xs down", from: b.last, enter: "fade" });
 
   // pairs from the outside in: index i on screen with index (last − i)
   const pairs = Math.floor(slots.length / 2);
@@ -47,7 +49,7 @@ export function buildPairs({ first, step, count, beats: b }: PairsInput): SceneD
   const total = count % 2 === 0
     ? `${formatNumber(count / 2)} pairs × ${fmtBig(pairTotal)} = ${fmtBig(sum)}`
     : `${formatNumber(count)} × ${fmtBig(pairTotal)} ÷ 2 = ${fmtBig(sum)}`;
-  items.push({ type: "text", x: W / 2, y: 206, text: total, cls: "lbl acc", from: b.total, enter: "rise", delay: 0.8 });
+  items.push({ type: "text", x: W / 2, y: 186, text: total, cls: "lbl acc down", vars: growDown(0.8), from: b.total, enter: "rise", delay: 0.8 });
   return {
     kind: "scene",
     family: "pairs",

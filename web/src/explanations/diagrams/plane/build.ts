@@ -3,16 +3,23 @@
 import { formatNumber } from "../../../curriculum/schemas/math-text";
 import type { SceneDiagram, SceneItem } from "../scene/schema";
 import { arrowHead, r1 } from "../scene/helpers";
+import { roomLeft, thinOut } from "../scene/picture-system";
 import type { PlaneItem, PlaneLabel, PlaneSpec, Pt, Side } from "./schema";
 
-/** Longest side of the plot area (px) and the short side when the two axes have their own scales. */
-const PLOT = 296, PLOT_SHORT = 232;
+/** Longest side of the plot area (px) and the short side when the two axes have their own scales. Drawn at about a
+ * phone's picture size (a strip 143-187 tall), so labels laid out here at their phone size (FONT) land where they are
+ * drawn; on a tablet the picture grows to its box and its text grows less (SceneDiagram's TEXT_ZOOM). */
+const PLOT = 180, PLOT_SHORT = 144;
+/** On the shortest phone boxes a label still draws up to this much bigger than its drawing units (the label floor), so
+ * labels and tick numbers keep that much room from each other and from the lines. */
+const GROWS = 2;
 /** A picture drawn with one scale is never narrower than this ratio (so it stays readable when small). */
 const MAX_RATIO = 1.3;
-const FONT = { lbl: 17, xs: 12 } as const;
-const DOT = 6.5;
+/** a label at the picture system's label floor (20), tick numbers at the text floor (14) */
+const FONT = { lbl: 20, xs: 14 } as const;
+const DOT = 5.5;
 /** How far (px) the canvas may grow on one side to fit a label. */
-const MAX_GROW = 70;
+const MAX_GROW = 110;
 /** How much a label should avoid covering a drawn line, per sampled point (axes count less). */
 const LINE = 16, AXIS = 6;
 /** What a label that asks to stay clear of the axes pays for touching one or its tick-number band. */
@@ -301,10 +308,10 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
   const placed: Box[] = [];
   const tickBoxes: Box[] = [];
   const xTicks = multiples(x0, x1, F.labelStep[0]).filter(v => v !== 0), yTicks = multiples(y0, y1, F.labelStep[1]).filter(v => v !== 0);
-  const xTick = xTicks.map(v => ({ v, s: tickText(v), cx: X(v), cy: Y(ay) + 14 }));
+  const xTick = xTicks.map(v => ({ v, s: tickText(v), cx: X(v), cy: Y(ay) + 15 }));
   const yTick = yTicks.map(v => ({ v, s: tickText(v), cx: X(ax) - 7, cy: Y(v) }));
-  xTick.forEach(t => tickBoxes.push(boxAt(t.cx, t.cy, textWidth(t.s, FONT.xs), FONT.xs * 1.1)));
-  yTick.forEach(t => { const w = textWidth(t.s, FONT.xs); tickBoxes.push(boxAt(t.cx - w / 2, t.cy, w, FONT.xs * 1.1)); });
+  xTick.forEach(t => tickBoxes.push(boxAt(t.cx, t.cy, textWidth(t.s, FONT.xs) * GROWS, FONT.xs * 1.1 * GROWS)));
+  yTick.forEach(t => { const w = textWidth(t.s, FONT.xs) * GROWS; tickBoxes.push(boxAt(t.cx - w / 2, t.cy, w, FONT.xs * 1.1 * GROWS)); });
 
   // the band under the x-axis where its tick numbers go: a label there reads as a tick sitting on the axis.
   // Labels that ask to stay clear of the axes pay for landing in it, or for touching either axis line.
@@ -317,44 +324,84 @@ function layout(spec: PlaneSpec, extra: Pads): { scene: SceneDiagram; over: Pads
     if (out > MAX_GROW) s += 1000;
     else if (out > 0) s += 6 + out * 0.5;
     // labels keep a little air between them: two labels touching near the origin read as one
-    for (const p of placed) if (overlap(b, p)) s += 500; else if (overlap(b, grow(p, 5))) s += 60;
+    // text on text is never chosen while any spot is left, even one past the plot's edge (the frame grows to hold it)
+    for (const p of placed) if (overlap(b, p)) s += 5000; else if (overlap(b, grow(p, 5))) s += 60;
     for (const d of dotsAt) if (overlap(b, { x0: d.x - d.r, y0: d.y - d.r, x1: d.x + d.r, y1: d.y + d.r })) s += 300;
     // a line just under or over a label reads as crossing it, so lines keep a little room above and below
     for (const p of samples) if (p.x > b.x0 - 2 && p.x < b.x1 + 2 && p.y > b.y0 - 3 && p.y < b.y1 + 3) s += p.w;
     for (const tb of tickBoxes) if (overlap(b, tb)) s += 4;
     return s;
   };
-  for (const q of [...pending].sort((a, b) => a.rank - b.rank)) {
-    const size = FONT.lbl, w = textWidth(q.label.text, size), h = size * 1.15;
+  // place in rank order; if a label is left with nowhere but on top of another, try again with that label placed
+  // first (a point label that took the only free spot by a segment gives way to the segment's label), and keep the
+  // order that leaves the fewest labels touching
+  const placeAll = (order: typeof pending) => {
+  placed.length = 0;
+  const out: SceneItem[] = [];
+  let clash = -1, clashes = 0;
+  for (const [qi, q] of order.entries()) {
+    const size = FONT.lbl * GROWS, w = textWidth(q.label.text, size), h = size * 1.15;
     const prefer = q.label.prefer ?? [];
     const sides = [...prefer, ...ORDER.filter(s => !prefer.includes(s))];
-    let best: { b: Box; cx: number; cy: number; s: number } | null = null;
-    for (const [ai, anchor] of q.anchors.entries()) for (const ring of [0, 14, 30]) {
+    // a label is held by its edge nearest what it names (start / end / up / down), so the label floor on a phone grows
+    // it away from its point, never onto it, and on a tablet it still sits right beside it
+    let best: { b: Box; x: number; y: number; cls: string; s: number } | null = null;
+    for (const [ai, anchor] of q.anchors.entries()) for (const ring of [0, 14, 30, 50]) {
       sides.forEach((side, k) => {
         const [ux, uy] = SIDES[side];
         if (side === "c" && ring) return;
         const diag = ux !== 0 && uy !== 0;
-        const cx = anchor[0] + ux * ((diag ? q.gap * 0.7 : q.gap) + 4 + ring + w / 2);
-        const cy = anchor[1] + uy * ((diag ? q.gap * 0.7 : q.gap) + 3 + ring + h / 2);
-        const b = boxAt(cx, cy, w, h);
+        const x = anchor[0] + ux * ((diag ? q.gap * 0.7 : q.gap) + 4 + ring);
+        const y = anchor[1] + uy * ((diag ? q.gap * 0.7 : q.gap) + 3 + ring);
+        const x0 = ux > 0 ? x : ux < 0 ? x - w : x - w / 2, y0 = uy > 0 ? y : uy < 0 ? y - h : y - h / 2;
+        const b = { x0, y0, x1: x0 + w, y1: y0 + h };
+        const cls = `${ux > 0 ? " start" : ux < 0 ? " end" : ""}${uy > 0 ? " down" : uy < 0 ? " up" : ""}`;
         const s = score(b, q.label.clearAxes) + (k < prefer.length ? k : 10 + k) + ring + ai * 3;
-        if (!best || s < best.s) best = { b, cx, cy, s };
+        if (!best || s < best.s) best = { b, x, y, cls, s };
       });
     }
-    const chosen = best as { b: Box; cx: number; cy: number; s: number } | null;
+    const chosen = best as { b: Box; x: number; y: number; cls: string; s: number } | null;
     if (!chosen || (q.label.optional && chosen.s >= 40)) continue;
+    if (placed.some(p => overlap(chosen.b, p))) { clashes++; if (clash < 0) clash = qi; }
     placed.push(chosen.b);
-    texts.push({
-      type: "text", x: r1(chosen.cx), y: r1(chosen.cy), text: q.label.text, cls: `lbl${q.label.acc ? " acc" : q.label.part != null ? ` p${q.label.part}` : ""}`, enter: "rise",
-      ...(q.from ? { from: q.from } : {}), ...(q.until != null ? { until: q.until } : {}), delay: q.delay,
+    const long = q.label.long, cls = `lbl${q.label.acc ? " acc" : q.label.part != null ? ` p${q.label.part}` : ""}${chosen.cls}`;
+    // a beat number: the label gives way in a phone's short box from that beat on, to the label that beat brings
+    const late = typeof long === "number" && long > q.from && (q.until == null || long <= q.until);
+    out.push({
+      type: "text", x: r1(chosen.x), y: r1(chosen.y), text: q.label.text, cls: `${cls}${long === true ? " shortgo" : ""}`, enter: "rise",
+      ...(q.from ? { from: q.from } : {}), ...(late ? { until: (long as number) - 1 } : q.until != null ? { until: q.until } : {}), delay: q.delay,
     });
+    if (late) out.push({ type: "text", x: r1(chosen.x), y: r1(chosen.y), text: q.label.text, cls: `${cls} shortgo`, from: long as number, ...(q.until != null ? { until: q.until } : {}) });
   }
+  return { out, boxes: [...placed], clash, clashes };
+  };
+  let order = [...pending].sort((a, b) => a.rank - b.rank), run = placeAll(order), keep = run;
+  for (let tries = 0; run.clash >= 0 && tries < 3; tries++) {
+    order = [order[run.clash]!, ...order.filter((_, i) => i !== run.clash)];
+    run = placeAll(order);
+    if (run.clashes < keep.clashes) keep = run;
+  }
+  placed.length = 0; placed.push(...keep.boxes); texts.push(...keep.out);
 
   // tick labels that would sit under a label or a dot are left out
-  const free = (b: Box) => !placed.some(p => overlap(b, p)) && !dotsAt.some(d => overlap(b, { x0: d.x - d.r, y0: d.y - d.r, x1: d.x + d.r, y1: d.y + d.r }))
+  // (with more room round the labels than they keep from each other: a tick number is the first thing to give way)
+  const free = (b: Box) => !placed.some(p => overlap(b, grow(p, FONT.xs * 0.4))) && !dotsAt.some(d => overlap(b, { x0: d.x - d.r, y0: d.y - d.r, x1: d.x + d.r, y1: d.y + d.r }))
     && !samples.some(p => p.w >= LINE && p.x > b.x0 - 1 && p.x < b.x1 + 1 && p.y > b.y0 - 1 && p.y < b.y1 + 1);
-  xTick.forEach((t, i) => { if (free(tickBoxes[i]!)) ticks.push({ type: "text", x: r1(t.cx), y: r1(t.cy), text: t.s, cls: "xs", enter: "fade", delay: 0.3 }); });
-  yTick.forEach((t, i) => { if (free(tickBoxes[xTick.length + i]!)) ticks.push({ type: "text", x: r1(t.cx), y: r1(t.cy), text: t.s, cls: "xs end", enter: "fade", delay: 0.3 }); });
+  // on a short phone box the floor grows tick numbers into each other: every other one fades (odd multiples of the
+  // labelled step first), so the scale still reads and no two numbers touch
+  const thin = (v: number, step: number, room: number, chars: number) => { const k = Math.round(Math.abs(v) / step); return k ? { vars: thinOut(roomLeft((k & -k) * room, chars, FONT.xs)) } : {}; };
+  const xRoom = F.labelStep[0] * F.sx, yRoom = F.labelStep[1] * F.sy;
+  const xShown: Box[] = [];
+  xTick.forEach((t, i) => {
+    if (!free(tickBoxes[i]!)) return;
+    xShown.push(tickBoxes[i]!);
+    ticks.push({ type: "text", x: r1(t.cx), y: r1(t.cy), text: t.s, cls: "xs", enter: "fade", delay: 0.3, ...thin(t.v, F.labelStep[0], xRoom, Math.max(...xTick.map(o => o.s.length))) });
+  });
+  // a y number that would meet an x number by the origin is left out (both are −1 just under and left of it)
+  yTick.forEach((t, i) => {
+    const b = tickBoxes[xTick.length + i]!;
+    if (free(b) && !xShown.some(x => overlap(b, x))) ticks.push({ type: "text", x: r1(t.cx), y: r1(t.cy), text: t.s, cls: "xs end", enter: "fade", delay: 0.3, ...thin(t.v, F.labelStep[1], yRoom, 1.94) });
+  });
 
   const over: Pads = { l: 0, r: 0, t: 0, b: 0 };
   for (const b of placed) {

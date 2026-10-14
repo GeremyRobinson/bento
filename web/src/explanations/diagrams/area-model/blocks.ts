@@ -2,7 +2,8 @@
 // Ten ones become one rod that moves over to the tens. Every block is one of the problem's tens or ones.
 import type { SceneDiagram, SceneItem } from "../scene/schema";
 import { r1 } from "../scene/helpers";
-import { textWidth } from "./grid";
+import { PIC, growDown } from "../scene/picture-system";
+import { lineStep, textWidth, wrapLine } from "./grid";
 
 export interface RegroupBlocksSpec {
   /** the two numbers being added (two digits each, ones adding to 10 or more) */
@@ -14,17 +15,22 @@ export interface RegroupBlocksSpec {
   alt: string;
 }
 
-export const BLOCK = 16;
-const GAP = 8;
+/** Drawn at about a phone's picture size, so the counts under the columns are laid out at their phone size. */
+export const BLOCK = 10;
+const GAP = 5;
+/** a column's count is broken before its "=" into two short lines, each laid out at the label floor and the little more it
+ * grows on the smallest boxes */
+const COUNT_CHARS = 7, GROWS = 1.5;
+const countWidth = (s: string) => Math.max(0, ...wrapLine(s, COUNT_CHARS).map(t => t.length * PIC.label * 0.62 * GROWS));
 
 export function buildRegroupBlocks(spec: RegroupBlocksSpec): SceneDiagram {
   const { a, b, beats } = spec;
   const at = Math.floor(a / 10), ao = a % 10, bt = Math.floor(b / 10), bo = b % 10, O = ao + bo;
   if (O < 10) throw new Error("regroup blocks: the ones must make a ten");
-  const s = BLOCK, top = 44, rodH = 10 * s;
+  const s = BLOCK, top = 34, rodH = 10 * s;
   const rods = at + bt + 1;
-  const tensW = Math.max(rods * (s + GAP) + GAP, textWidth(spec.text.tens) + 20);
-  const onesW = Math.max(2 * (s + GAP) + GAP, textWidth(spec.text.ones) + 20, textWidth(spec.text.regroup) + 20);
+  const tensW = Math.max(rods * (s + GAP) + GAP, countWidth(spec.text.tens) + 8);
+  const onesW = Math.max(2 * (s + GAP) + GAP, countWidth(spec.text.ones) + 8, countWidth(spec.text.regroup) + 8);
   const tensX = 12, onesX = tensX + tensW + 10;
   const items: SceneItem[] = [];
   items.push({ type: "text", x: r1(tensX + tensW / 2), y: 20, text: "tens", cls: "sm", from: beats.blocks, enter: "rise" });
@@ -51,11 +57,21 @@ export function buildRegroupBlocks(spec: RegroupBlocksSpec): SceneDiagram {
   // what is left drops into the first column
   for (let k = 0; k < O - 10; k++) unit(k, `cell ${10 + k < ao ? "c0" : "c1"}`, beats.regroup, undefined, 0.3 + k * 0.04);
 
-  const textY = top + rodH + 26;
-  items.push({ type: "text", x: r1(onesX + onesW / 2), y: textY, text: spec.text.ones, cls: "lbl", from: beats.ones, until: beats.regroup - 1, enter: "rise" });
-  items.push({ type: "text", x: r1(onesX + onesW / 2), y: textY, text: spec.text.regroup, cls: "lbl", from: beats.regroup, enter: "rise" });
-  items.push({ type: "text", x: r1(tensX + tensW / 2), y: textY, text: spec.text.tens, cls: "lbl", from: beats.tens, enter: "rise" });
+  // each count hangs under its column, one line of text per row at its size on screen; the sum hangs under both
+  const textY = top + rodH + 12;
+  // a phone's short box writes only each count's result ("15", "10 + 5", "8 tens"), on one row, so the two columns'
+  // counts never meet and the sum fits under them (Review 1c74c20, g2-regroup at 280×123)
+  const count = (x: number, text: string, from: number, until?: number) => {
+    const lines = wrapLine(text, COUNT_CHARS);
+    lines.forEach((t, k) =>
+      items.push({ type: "text", x: r1(x), y: textY, text: t, cls: "lbl down shortgo", from, ...(until != null ? { until } : {}), enter: "rise", ...(k ? { vars: lineStep(k) } : {}) }));
+    items.push({ type: "text", x: r1(x), y: textY, text: lines[lines.length - 1]!.replace(/^= /, ""), cls: "lbl down shortonly", from, ...(until != null ? { until } : {}), enter: "rise" });
+  };
+  count(onesX + onesW / 2, spec.text.ones, beats.ones, beats.regroup - 1);
+  count(onesX + onesW / 2, spec.text.regroup, beats.regroup);
+  count(tensX + tensW / 2, spec.text.tens, beats.tens);
+  const rows = Math.max(...[spec.text.ones, spec.text.regroup, spec.text.tens].map(t => wrapLine(t, COUNT_CHARS).length));
   const width = Math.max(onesX + onesW + 12, textWidth(spec.text.total) + 24);
-  items.push({ type: "text", x: r1(width / 2), y: textY + 32, text: spec.text.total, cls: "lbl acc", from: beats.total, enter: "rise" });
-  return { kind: "scene", family: "area-model", width: r1(width), height: textY + 48, items, alt: spec.alt };
+  items.push({ type: "text", x: r1(width / 2), y: textY + 6, text: spec.text.total, cls: "lbl acc down", from: beats.total, enter: "rise", vars: { transform: `${lineStep(rows).transform} ${growDown(0.2).transform ?? ""}`.trim(), ...(rows > 1 ? { translate: `0 calc(var(--short, 0) * ${-(rows - 1)} * 1.25 * max(var(--pic-label, 20px), calc(20px * var(--px, 0))))` } : {}) } });
+  return { kind: "scene", family: "area-model", width: r1(width), height: textY + 6 + (rows + 1) * 26, items, alt: spec.alt };
 }

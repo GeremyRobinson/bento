@@ -49,8 +49,9 @@ function explain(p: LcmProblem, model: AnswerModel): Explanation {
     diagram: buildNumberLine({
       ...range, every: sparseEvery(range),
       hops,
-      // the check counts the jumps of a, so its label sits under the line with those arcs, in their colour (review v45 blocker 4)
-      marks: [{ v: L, beat: 2, cls: "dota", label: `${L} ÷ ${a} = ${count(k, "jump")}`, below: true }],
+      // the check counts the jumps of a, so its label sits under the line with those arcs, in their colour (review v45 blocker 4);
+      // a phone's short box has no row for it under the jumps' labels, and the step says it (Review 1c74c20)
+      marks: [{ v: L, beat: 2, cls: "dota", label: `${L} ÷ ${a} = ${count(k, "jump")}`, below: true, long: true }],
       alt: `Number line from 0 to ${L}: jumps of ${b} above and jumps of ${a} below both land on ${L}.`,
     }),
     caption: `Both land on ${L} first.`,
