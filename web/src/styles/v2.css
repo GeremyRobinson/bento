@@ -54,6 +54,9 @@ html[data-line] body{background-image:none!important}
 .v-go:hover:not(:disabled){filter:brightness(1.08)}
 .v-go:disabled{opacity:.4;cursor:default}
 .v-plain{background:var(--v-key);font-weight:var(--w-mid);padding:0 var(--sp-6)}
+/* a long name ("Next: Multiply two-digit numbers") wraps inside its pill instead of running off the screen; the pill
+   grows one line taller and stays fully round (Review g5-full-pass #17) */
+.v-go,.v-plain{max-width:100%;height:auto;min-height:var(--pill-size);padding-block:var(--sp-2);white-space:normal;text-wrap:balance;text-align:center;line-height:1.25}
 .v-ib{flex:none;width:44px;height:44px;border-radius:var(--r-round);background:var(--v-key);display:grid;place-items:center}
 .v-ib svg{width:18px;height:18px}
 
@@ -69,10 +72,12 @@ html[data-line] body{background-image:none!important}
 .v-row{display:flex;gap:var(--gap);align-items:center;flex-wrap:wrap;margin-top:var(--sp-1)}
 .v-todaypic{min-height:0;display:grid;overflow:hidden;padding-top:var(--gap)}
 .v-todaypic>*{min-height:0}
-/* the area model fills the room it has, from the left edge (in line with the title) and down to the bottom, as in the model */
-#app .v-todaypic:has(.am){display:flex;flex-direction:column;justify-content:flex-end;flex:1}
-#app .v-todaypic:has(.am) *:has(> .am){min-height:0;width:100%;display:flex;flex-direction:column;justify-content:flex-end;margin:0}
-#app .v-todaypic .am{width:100%;height:auto;max-height:100%;margin:0}
+/* the area model: the whole picture, its labels and its outline, framed inside the panel (Review g5-full-pass #15: it
+   was pinned to the bottom and cut, a lone "5" strip, strips running into the panel's edge). It fits the room it has
+   both ways, from the left edge in line with the title, with one gap kept clear under it for the outline */
+#app .v-todaypic:has(.am){display:flex;flex-direction:column;flex:1;padding-bottom:var(--gap)}
+#app .v-todaypic:has(.am) *:has(> .am){flex:1;min-height:0;width:100%;display:flex;flex-direction:column;margin:0}
+#app .v-todaypic .am{flex:1;width:100%;height:100%;min-height:0;max-height:100%;margin:0;overflow:visible}
 
 /* the box: one fixed grid, 3 tiles across, every tile the same size; more tiles add rows, nothing stretches */
 .v-box{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:212px;gap:var(--gap);align-content:start;overflow:auto;scrollbar-width:thin}
@@ -175,6 +180,13 @@ html[data-line] body{background-image:none!important}
   #app .itop>.icorner.left{display:none}
   #app .island:not(.guest){width:100%;max-width:none}
   #app .icorner.right .icon{width:var(--tap);height:var(--tap)}
+  /* a long lesson name wraps to a second line under the kicker instead of ending in "…" (Review g5-full-pass #16):
+     "Multiply two-digit / numbers"; the kicker and the two lines together keep inside the island's height */
+  #app .island .iplace small{line-height:14px}
+  #app .island .iplace b:not(.iprob){white-space:normal;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-size:var(--fz-sm);line-height:16px;text-wrap:balance}
+  /* a name too long for two lines takes the kicker's line as well: three lines of 13px fill the island's height */
+  #app .island .iplace[data-long] small{display:none}
+  #app .island .iplace[data-long] b:not(.iprob){-webkit-line-clamp:3;font-size:var(--fz-xs);line-height:15px}
 }
 /* a narrow screen's Today has no picture (v2 model); this outranks the picture's own display rule above */
 @media (max-width:820px){#app .v-today .v-todaypic{display:none}}
@@ -326,9 +338,124 @@ html[data-line] body{background-image:none!important}
   /* and keeps to the step's own line: the extra nudges ("Slow down…", "Stuck? Tap the bulb…") give their room to the
      picture; the bulb's count already shows a hint is there */
   .v-say>span{display:none}
-  .v-keys .v-tools{grid-column:2;flex-direction:column;justify-content:space-between;align-self:stretch;gap:0}
+  .v-keys .ppad{--key:calc(var(--pill-size) - var(--gap))}
+}
+/* the work so far, on every screen, is ONE row (Review g5-full-pass #1: a 6-step story's pills piled up until Check left
+   the screen). The newest lines stand whole; older ones fold down to a small pill holding just their ✓, so the row
+   still counts every finished step; the oldest leave when even that has no room. Nothing is squeezed (a squeezed line
+   would shrink its digits under the floor). The keypad keeps its room; the solve panel never scrolls */
+.v-prac .v-lines{flex-wrap:nowrap;overflow:hidden;align-items:center}
+.v-prac .v-lines li{flex:none;max-width:100%;white-space:nowrap}
+.v-prac .v-lines li .mline{flex-wrap:nowrap}
+.v-prac .v-lines li:nth-last-child(n+3){padding-inline:calc(var(--gap) / 2 + var(--sp-1))}
+.v-prac .v-lines li:nth-last-child(n+3)>:not(b){display:none}
+.v-prac .v-lines li:nth-last-child(n+5){display:none}
+/* a phone's row (beside "Step n of m") has room for the newest line whole and two folded ones */
+@media (max-width:820px){
+  .v-prac .v-lines li:nth-last-child(2){padding-inline:calc(var(--gap) / 2 + var(--sp-1))}
+  .v-prac .v-lines li:nth-last-child(2)>:not(b){display:none}
+  .v-prac .v-lines li:nth-last-child(n+4){display:none}
+}
+.v-prac .v-solve>.ppad{flex:none}
+/* ---- every phone, practice and the skill check (Review g5-full-pass #1, #12): three fixed rooms, top to bottom.
+   1. The stage: the problem, then the picture at one fixed height for this screen (--pic-h, never under the 94px floor),
+      so the picture keeps its size through practice, a miss, a hint, every step and Solved.
+   2. The keypad's room, pinned to the bottom and never given away: the keys with the round tools in a column beside
+      them, so Check, 0 and ⌫ are always on screen.
+   3. Between them, what changes: the step bar with the work so far beside it in ONE row (the newest line whole, the
+      two before it folded to their ✓), the question and its answer, and one message line (the say line when there
+      is one, else the step's note). If that ever runs out of room the message gives way, never the keys or the picture. */
+@media (max-width:820px){
+  .v-prac:not(.v-learn){--pic-floor:calc(var(--pill-size) * 2 - var(--gap));--pic-h:max(var(--pic-floor),min(26vh,calc(100dvh - 680px)));grid-template-rows:max-content minmax(0,1fr)}
+  .v-prac:not(.v-learn) .v-stage:not(.all){grid-template-rows:none;grid-auto-rows:auto}
+  .v-prac:not(.v-learn) :is(.v-ppic,.v-pad){height:var(--pic-h);min-height:var(--pic-floor);max-height:none}
+  .v-prac:not(.v-learn) .v-stage.all{height:calc(var(--pic-h) + var(--pill-size) * 2)}
+  .v-prac:not(.v-learn) .v-solve{overflow:hidden}
+  /* a problem two lines tall (a fraction, a story) gives its picture less room on every phone */
+  .v-prac:not(.v-learn):has(.v-prob :is(.fr,.story)){--pic-h:max(var(--pic-floor),min(26vh,calc(100dvh - 722px)))}
+  /* the say line pads half a gap and keeps to the step's own line on every phone (spec §4 "Short phones"): the extra
+     nudges give their room to the picture; the bulb's count already shows a hint is there */
+  .v-prac:not(.v-learn) .v-say{padding-block:calc(var(--gap) / 2)}
+  .v-prac:not(.v-learn) .v-say>span{display:none}
+  /* rows: the step bar with the work beside it, the question, the message, room to spare, the keypad */
+  .v-keys{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto auto minmax(0,auto) minmax(0,1fr) auto;row-gap:0;column-gap:var(--gap)}
+  .v-keys>*{grid-column:1/-1}
+  .v-keys>.v-steps{grid-row:1;align-self:center}
+  .v-keys>.v-ask{grid-row:2;margin-top:var(--gap)}
+  .v-keys>.v-say{grid-row:3;margin-top:var(--gap);overflow:hidden} .v-keys>.v-say:empty{margin-top:0}
+  .v-keys>.v-tools{grid-row:5;grid-column:3;flex-direction:column;justify-content:space-between;align-self:stretch;gap:0;margin-top:var(--gap)}
+  .v-keys>.ppad{grid-row:5;grid-column:1/3;margin-top:var(--gap)}
   .v-keys .v-tool{width:calc(var(--pill-size) - var(--gap));height:calc(var(--pill-size) - var(--gap))}
-  .v-keys .ppad{grid-column:1;--key:calc(var(--pill-size) - var(--gap))}
+  /* the work so far sits in the step bar's row, after "Step n of m"; the lines themselves are the progress then, so
+     the dashes give them the room */
+  .v-keys:has(>.v-lines)>.v-steps{grid-column:1;padding-right:0}
+  .v-keys:has(>.v-lines)>.v-steps .v-seg{display:none}
+  .v-keys>.v-lines{grid-row:1;grid-column:2/-1;padding:var(--gap) 0 0;align-self:center}
+  /* one message line: the say line, when there is one, speaks for the step, so the step's note gives it its room */
+  .v-solve:has(>.v-say:not(:empty)) .v-ask .note{display:none}
+  /* a miss, a hint or a note speaks in full, never cut: while it does, the step bar and the work row give it their
+     room (the question still says what the step asks; the bar comes back with the next step) */
+  .v-keys:has(>.v-say:not(:empty):not(.good))>:is(.v-steps,.v-lines){display:none}
+  .v-keys:has(>.v-say:not(:empty):not(.good))>.v-ask{margin-top:0}
+  .v-prac:not(.v-learn) .v-say{line-height:1.25}
+  /* a fraction's answer boxes one step smaller, so the question with its boxes keeps to the room it has */
+  .v-prac:not(.v-learn) .v-ask .ask{--slot:calc(var(--pill-size) - var(--gap))}
+}
+/* Watch one on every phone (Review g5-full-pass, fractions stream): no keypad, and its lines are all there from the
+   start (the ones to come faint), so the side panel is one height for the whole Watch one and the picture takes every
+   pixel left over, never under its floor: a stable size that is as big as the screen allows. To give it that room the
+   worked lines keep to theirs: each narration sits beside its sum, wrapping under it only when it doesn't fit; the
+   panel's "Watch one" label gives its room (the island already says it); the problem line is 36px. The buttons keep the
+   bottom; if the lines ever ran out of room they give way, never Try one */
+@media (max-width:820px){
+  .screen.v-prac.v-learn{--pic-floor:calc(var(--pill-size) * 2 - var(--gap));grid-template-rows:minmax(min-content,1fr) minmax(0,max-content)}
+  .v-learn .v-stage{grid-template-rows:auto minmax(var(--pic-floor),1fr)}
+  .v-learn .v-ppic{height:auto;min-height:var(--pic-floor);max-height:none;contain:size}
+  .v-learn .v-lside{grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden}
+  .v-learn .v-lside:has(>.v-steps .v-meta){grid-template-rows:auto auto minmax(0,1fr) auto}
+  .v-learn .v-lside .v-steps:not(:has(.v-meta)){display:none}
+  .v-learn .v-wl{overflow:hidden}
+  .v-learn .v-wl li{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:var(--gap);font-size:var(--fz-lg);padding-block:var(--sp-1)}
+  .v-learn .v-idea{font-size:var(--fz-lg)}
+  #app .v-learn .v-prob .math{font-size:36px}
+}
+/* Watch one on a short or narrow phone: the narration speaks one beat at a time, the line just worked keeps its words
+   and the lines before it keep only their sums, so a five-line fraction Watch one keeps its picture and its buttons */
+@media (max-width:820px) and (max-height:720px),(max-width:370px){
+  .v-learn .v-wl li:is(.later,:has(+ li:not(.later))) small{display:none}
+  /* the words change length beat by beat, so here the picture keeps one fixed room of its own (the lines take the
+     rest) instead of the leftover, and keeps its size through the whole Watch one */
+  .screen.v-prac.v-learn{--learn-pic:max(var(--pic-floor),calc(100dvh - 515px));grid-template-rows:max-content minmax(0,1fr)}
+  .screen.v-prac.v-learn:has(.v-prob .fr){--learn-pic:max(var(--pic-floor),calc(100dvh - 651px))}
+  .v-learn .v-ppic{height:var(--learn-pic)}
+}
+/* and on a short phone a fraction problem stands beside its picture, as in practice */
+@media (max-width:820px) and (max-height:720px){
+  .v-learn .v-stage:has(.v-prob .fr){grid-template-columns:minmax(0,2fr) minmax(0,3fr);grid-template-rows:minmax(var(--pic-floor),1fr);align-items:center;column-gap:var(--gap)}
+  .screen.v-prac.v-learn:has(.v-prob .fr){--learn-pic:max(var(--pic-floor),calc(100dvh - 549px))}
+  #app .v-learn .v-stage:has(.v-prob .fr) .v-prob .math{font-size:28px}
+  .v-learn .v-stage:has(.v-prob .fr) .v-prob .math>.mline{flex-wrap:wrap;row-gap:var(--nest)}
+  .v-learn .v-stage:has(.v-prob .fr) .v-ppic{padding-top:0;align-self:stretch}
+}
+/* short phones (height 720 or less). A problem with a fraction or a story is two lines tall, and so are its answer
+   boxes: there the problem and its picture stand side by side, half the stage each, so the picture keeps its floor
+   beside the problem instead of under it (a long problem wraps in its half; Solved has the room). While a miss or a
+   hint speaks, the step bar and work row step back for it (every phone), and a right step's say line is
+   only read aloud: the newest work pill springs in with its ✓ and shows the line */
+@media (max-width:820px) and (max-height:720px){
+  .v-prac:not(.v-learn){--pic-h:max(var(--pic-floor),calc(100dvh - 600px))}
+  .v-prac:not(.v-learn):has(.v-prob :is(.fr,.story)){--pic-h:max(var(--pic-floor),calc(100dvh - 575px))}
+  .v-prac:not(.v-learn) .v-stage:not(.all):has(.v-prob :is(.fr,.story)){grid-template-columns:minmax(0,2fr) minmax(0,3fr);align-items:center;column-gap:var(--gap)}
+  .v-prac:not(.v-learn) .v-stage:not(.all):has(.v-prob .story){grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .v-prac:not(.v-learn) .v-stage:has(.v-prob .fr) .v-prob .math{font-size:28px}
+  .v-prac:not(.v-learn) .v-stage:has(.v-prob :is(.fr,.story))>.v-label{grid-column:1/-1}
+  .v-prac:not(.v-learn) .v-stage:has(.v-prob :is(.fr,.story)) :is(.v-ppic,.v-pad){padding-top:0}
+  /* a picture label set just past its drawing's edge (a bar's "= 11/18") keeps to the stage's padding instead of being cut */
+  .v-prac:not(.v-learn) .v-stage:has(.v-prob :is(.fr,.story)) .v-ppic{overflow:visible}
+  .v-prac:not(.v-learn) .v-stage:has(.v-prob .fr) .v-prob .math>.mline{flex-wrap:wrap;row-gap:var(--nest)}
+  .v-prac:not(.v-learn) .v-ask :is(.q,.q2){font-size:var(--fz-lg)}
+  .v-prac:not(.v-learn) .v-prob .story p{font-size:var(--small);line-height:1.25}
+  .v-keys:has(>.v-lines)>.v-say.good{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 }
 @keyframes vpop{from{opacity:0;transform:translateY(4px)}}
 .v-lbtns{display:flex;gap:var(--gap);justify-content:flex-end;flex-wrap:wrap}
@@ -393,6 +520,16 @@ html[data-line] body{background-image:none!important}
 .v-ans.ok .slot::after{content:"\2713";background:var(--right)}
 @media (max-width:820px){.v-ask :is(.q,.q2){font-size:var(--fz-xl);min-height:0}.v-prob .story p{font-size:var(--fz-xl)}.v-solve{--ans-h:54px;--ans-fz:26px}}
 .v-ans{display:flex}
+/* a skill check answer that is a fraction or a mixed number (Review g5-full-pass #14): its boxes stand as practice lays
+   out the step, the small whole-number box then top over bottom, each one the practice ask's box with the answer pill's
+   outline; a miss puts one ✕ disc after the whole answer, so the colour never shows without its mark (K6) */
+.v-ans:has(.fr){align-items:center;gap:var(--gap);--slot:56px;--ask:30px;font-size:28px}
+.v-ans:has(.fr) .mline{flex:0 1 auto}
+.v-ans:has(.fr) .mline .mk{flex:none}
+.v-ans:has(.fr) .slot{width:auto;min-width:96px;height:var(--slot);padding:0 var(--sp-3);justify-content:center;font-size:var(--ask)}
+.v-ans:has(.fr) .slot::after{content:none!important}
+.v-ask.no .v-ans:has(.fr)::after{content:"\2715";flex:none;width:32px;height:32px;border-radius:var(--r-round);display:grid;place-items:center;font-size:18px;color:var(--v-card);background:var(--slip)}
+@media (max-width:820px){.v-ans:has(.fr){--slot:calc(var(--pill-size) - var(--gap));--ask:24px;font-size:24px}}
 /* the answer pill and the say line under it are one width and one corner (G 2026-10-13 "solved should match width and radius") */
 .v-ask .v-ans .slot.empty{border:0;background:transparent;outline-color:var(--v-acc)}
 .v-ask.no .v-ans .slot.empty{outline-color:var(--slip)}
@@ -402,19 +539,15 @@ html[data-line] body{background-image:none!important}
 .screen.solved .v-solve .tray>:not(.k-go){display:none}
 .screen.solved .v-solve .tray>.k-go{grid-area:auto/1/auto/-1}
 
-/* ==== Lesson and home motion (goals doc: "micro animations everywhere", G 2026-10-13). Taps press down and spring
-   back; answers, work pills and the say line pop in; the box's tiles arrive in a short ripple. All on the motion tokens,
-   all off under Less motion. */
+/* ==== Lesson and home motion (goals doc: "micro animations everywhere", G 2026-10-13; G 22:10 "every animation specific
+   to its function"). Only what answers a tap or shows a change: keys, tiles and tools press down and spring back; a new
+   work pill, the say line and a typed answer arrive. No hover lift, no tile ripple on arrival (decoration). All on the
+   motion tokens, all off under Less motion. */
 @keyframes vSpring{0%{opacity:0;transform:scale(.85)}100%{opacity:1;transform:scale(1)}}
 @keyframes vRise{from{opacity:0;transform:translateY(var(--m-lift))}}
 .v-solve .tray button,.v-cover,.v-tool,.pill{transition:transform var(--m-swap) var(--m-spring),background-color var(--m-swap) var(--m-ease)}
 .v-solve .tray button:active{transform:scale(var(--m-press-key));transition-duration:var(--m-tap)}
 :is(.v-cover,.v-tool,.pill):active:not(:disabled){transform:scale(var(--m-press-btn));transition-duration:var(--m-tap)}
-.v-cover:hover:not(:disabled){transform:translateY(calc(var(--m-lift) / -2))}
 .v-lines li{animation:vSpring var(--m-pop) var(--m-spring) both}
 .v-say:not(:empty){animation:vRise var(--m-pop) var(--m-spring) both}
 .v-ans .slot:not(.empty){animation:vSpring var(--m-pop) var(--m-spring)}
-.v-box .v-cover{animation:vSpring var(--m-pop) var(--m-spring) backwards}
-.v-box .v-cover:nth-child(2){animation-delay:var(--m-ripple)} .v-box .v-cover:nth-child(3){animation-delay:calc(var(--m-ripple) * 2)}
-.v-box .v-cover:nth-child(4){animation-delay:calc(var(--m-ripple) * 3)} .v-box .v-cover:nth-child(5){animation-delay:calc(var(--m-ripple) * 4)}
-.v-box .v-cover:nth-child(n+6){animation-delay:calc(var(--m-ripple) * 5)}
