@@ -5,7 +5,7 @@ import { MathLine, Rich } from "../primitives/MathLine";
 import { AskLine } from "../primitives/AskLine";
 import { dressStatement, fillUnknown, hideUnknown, partsLook, type PartsLook } from "../primitives/statement";
 import { CounterRow } from "./CounterRow";
-import { answer as answerTok, toPlainText, type MathText } from "../../curriculum/schemas/math-text";
+import { answer as answerTok, op, toPlainText, type MathText } from "../../curriculum/schemas/math-text";
 import { answerGroups, fillBoxes } from "../../engine/evaluation/steps";
 
 /**
@@ -24,11 +24,19 @@ function finalAnswer(lesson: ReturnType<typeof requireLesson>, problem: unknown)
   } catch { return null; }
 }
 
+/** The problem line once solved: the "?" filled with the answer, or, on a line with no "=", the answer after the lesson's answerOp. */
+function solvedLine(lesson: ReturnType<typeof requireLesson>, problem: unknown, shown: MathText): MathText {
+  const ans = finalAnswer(lesson, problem);
+  if (!ans) return shown;
+  if (!shown.some(t => t.t === "op" && t.v === "=") && lesson.answerOp) return [...shown, op(lesson.answerOp), ...ans];
+  return fillUnknown(shown, ans);
+}
+
 /** a problem as one plain line: "24 × 13" to ask it, "24 × 13 = 312" once it's done (skill check and its recap) */
 export function plainProblem(lessonId: string, problem: unknown, solved?: boolean): string {
   const lesson = requireLesson(lessonId), shown = lesson.display(problem);
   const ask = toPlainText(shown).replace(/\s*=\s*\?\s*$/, ""), ans = solved ? finalAnswer(lesson, problem) : null;
-  return ans == null ? ask : /=/.test(ask) ? toPlainText(fillUnknown(shown, ans)) : `${ask} = ${toPlainText(ans)}`;
+  return ans == null ? ask : /=/.test(ask) || lesson.answerOp ? toPlainText(solvedLine(lesson, problem, shown)) : `${ask} = ${toPlainText(ans)}`;
 }
 
 /**
@@ -49,7 +57,7 @@ export function problemShape(lessonId: string, problem: unknown, story: boolean)
 export function ProblemLine({ lessonId, problem, solved }: { lessonId: string; problem: unknown; solved?: boolean }) {
   const lesson = requireLesson(lessonId), shown = lesson.display(problem);
   const look = ((): PartsLook => { try { return partsLook(lesson.explain(problem, lesson.answers(problem)).diagram); } catch { return "one"; } })();
-  return <MathLine math={solved ? fillUnknown(dressStatement(shown, look), finalAnswer(lesson, problem)) : dressStatement(shown, look)} />;
+  return <MathLine math={solved ? solvedLine(lesson, problem, dressStatement(shown, look)) : dressStatement(shown, look)} />;
 }
 
 /**
@@ -69,7 +77,7 @@ export function ProblemView({ lessonId, problem, story, solved, part = "all", st
   const look = ((): PartsLook => { try { return partsLook(lesson.explain(problem, lesson.answers(problem)).diagram); } catch { return "one"; } })();
   return (
     <>
-      {lead ? <div className="story"><p><Rich text={lead} /></p></div> : <><AskLine math={shown} /><div className={`math parts-${look}${wordy ? " words" : ""}`}><MathLine math={solved ? fillUnknown(dressStatement(shown, look), finalAnswer(lesson, problem)) : part === "text" ? hideUnknown(dressStatement(shown, look)) : dressStatement(shown, look)} /></div></>}
+      {lead ? <div className="story"><p><Rich text={lead} /></p></div> : <><AskLine math={shown} /><div className={`math parts-${look}${wordy ? " words" : ""}`}><MathLine math={solved ? solvedLine(lesson, problem, dressStatement(shown, look)) : part === "text" ? hideUnknown(dressStatement(shown, look)) : dressStatement(shown, look)} /></div></>}
       {counters && <CounterRow counters={counters} />}
       {picture && part === "all" && <div className="dotrow"><Diagram diagram={picture} timeline={beats(1)} at={0} /></div>}
       {note && <p className="note"><Rich text={note} /></p>}
