@@ -235,16 +235,21 @@ function squareTape(spec: TapeSpec): TapeLayout {
  */
 function wrapTape(spec: TapeSpec): TapeSpec | null {
   if (!spec.square || spec.rows.some(r => r.cont)) return null;
-  const narrowIn = (s: TapeSpec) => { const L = layoutTape(s); return s.rows.some(r => layersOf(r).some(l => (r.length / l.count) * L.unit < 3 * SQUARE.cell - 1e-6)); };
+  // a part that holds a count needs a cell more, or on a phone (text held at its floor) the count fills it edge to edge
+  // (Review 31ee827: g6-pctwhole's "10"s)
+  const narrowIn = (s: TapeSpec) => { const L = layoutTape(s); return s.rows.some(r => layersOf(r).some(l => (r.length / l.count) * L.unit < (r.each?.length ? 4 : 3) * SQUARE.cell - 1e-6)); };
   const narrow = narrowIn(spec);
   // labels over the bars free the width; when that alone gives every part two cells, the bars stay on one line
   if (narrow && spec.tall && !spec.over) { const O = { ...spec, over: true }; if (!narrowIn(O) && layoutTape(O).height <= MASTERS[spec.shape ?? "square"].h) return null; }
   const n = 2;
-  if (!narrow || spec.rows.some(r => (r.start ?? 0) !== 0 || layersOf(r).some(l => l.count % n))) return null;
+  // a bar already no longer than one line (g6-pctwhole's 10% block over its 100%) stays as it is, over the first line
+  const longest = Math.max(...spec.rows.map(r => (r.start ?? 0) + r.length)), short = (r: TapeRow) => (r.start ?? 0) + r.length <= longest / n + 1e-9;
+  if (!narrow || spec.rows.some(r => !short(r) && ((r.start ?? 0) !== 0 || layersOf(r).some(l => l.count % n)))) return null;
   const map: number[] = [];
   const rows: TapeRow[] = [];
   spec.rows.forEach(row => {
     map.push(rows.length);
+    if (short(row)) { rows.push(row); return; }
     const len = row.length / n, layers = layersOf(row);
     const countAt = (beat: number) => (layers.find(l => l.from <= beat && (l.until == null || beat <= l.until)) ?? layers[0]!).count;
     for (let k = 0; k < n; k++) {
@@ -267,8 +272,9 @@ function wrapTape(spec: TapeSpec): TapeSpec | null {
   const len = (r: number) => spec.rows[r]!.length / n;
   const out: TapeSpec = {
     ...spec, rows,
-    brackets: spec.brackets?.map(b => { const k = Math.min(n - 1, Math.floor(b.a / len(b.row) + 1e-9)); return { ...b, row: map[b.row]! + k, a: b.a - k * len(b.row), b: Math.min(b.b - k * len(b.row), len(b.row)) }; }),
-    guides: undefined,
+    brackets: spec.brackets?.map(b => { if (short(spec.rows[b.row]!)) return { ...b, row: map[b.row]! }; const k = Math.min(n - 1, Math.floor(b.a / len(b.row) + 1e-9)); return { ...b, row: map[b.row]! + k, a: b.a - k * len(b.row), b: Math.min(b.b - k * len(b.row), len(b.row)) }; }),
+    // a guide down from a bar that stays whole to the first line of a wrapped one keeps its place
+    guides: spec.guides?.filter(g => g.at <= longest / n + 1e-9 && g.rows.every(r => short(spec.rows[r]!) || r === Math.max(...g.rows))).map(g => ({ ...g, rows: g.rows.map(r => map[r]!) as [number, number] })),
   };
   // only when the lines still fit the square (a stack of mixed-number wholes in twelfths stays on one line each)
   return layoutTape(out).height <= MASTERS[spec.shape ?? "square"].h ? out : null;
@@ -303,6 +309,7 @@ function buildOne(spec: TapeSpec): SceneDiagram {
   const L = layoutTape(spec);
   const { unit, rowHeight: h, x0 } = L;
   const X = (u: number) => r1(x0 + u * unit);
+  const longest = Math.max(...spec.rows.map(r => (r.start ?? 0) + r.length));
   const items: SceneItem[] = [];
   const push = (it: SceneItem | null) => { if (it) items.push(it); };
   const pushLit = (lit: Beats[] | undefined, it: SceneItem) => { items.push(...litRuns(it, lit)); };
@@ -480,7 +487,11 @@ function buildOne(spec: TapeSpec): SceneDiagram {
       // over a short bar the total keeps clear of the label on its line: it moves right until a label gap after it
       const labelEnd = Math.max(0, ...(row.label ?? []).map(l => textWidth(l.text, FS.label)));
       const clear = labelEnd ? X(start) + labelEnd + PIC.labelGap + textWidth(t.text, FS.total) : 0;
-      if (run && L.over) textAt(t, Math.max(X(start + row.length), clear), overY(ri), "lbl pw up", "end", run);
+      // and a bar shorter than the longest, with room after it, takes its total beside its end instead: on a phone the
+      // label and total are held at their floor and outgrow the line over a short bar (Review 31ee827: "numeratorx = 40")
+      const after = (longest - start - row.length) * L.unit;
+      if (run && L.over && after >= PIC.labelGap + 2 * textWidth(t.text, FS.total)) { const at = items.length; textAt(t, X(start + row.length) + PIC.labelGap, top + h / 2, "lbl pw", "start", run); items.splice(at, items.length - at, ...items.slice(at).map(thinRowTotal)); }
+      else if (run && L.over) textAt(t, Math.max(X(start + row.length), clear), overY(ri), "lbl pw up", "end", run);
       else if (run && L.under) textAt(t, X(start + row.length) - SQUARE.cell / 2, overY(ri), "lbl pw down", "end", run);
       else if (run) { const at = items.length; textAt(t, X(start + row.length) + PIC.labelGap, top + h / 2, "lbl pw", "start", run); items.splice(at, items.length - at, ...items.slice(at).map(thinRowTotal)); }
     }
@@ -502,7 +513,11 @@ function buildOne(spec: TapeSpec): SceneDiagram {
 
   for (const g of spec.guides ?? []) {
     const [r0, r1_] = g.rows;
-    push({ type: "line", x1: X(g.at), y1: L.rowTops[r0]! - 4, x2: X(g.at), y2: L.rowTops[r1_]! + h + 4, cls: "wire", enter: "draw", ...when(g.from ?? 0) });
+    // over the bars it stops for each bar's label line and picks up again on the bar (Review 31ee827: it ran through
+    // "100%"); on the grid it runs down the middle of the cell between two parts
+    const gx = X(g.at);
+    const runs: [number, number][] = L.over ? Array.from({ length: r1_ - r0 + 1 }, (_, k) => [L.rowTops[r0 + k]! - 4, L.rowTops[r0 + k]! + h + 4]) : [[L.rowTops[r0]! - 4, L.rowTops[r1_]! + h + 4]];
+    for (const [y1, y2] of runs) push({ type: "line", x1: gx, y1, x2: gx, y2, cls: "wire", enter: "draw", ...when(g.from ?? 0) });
   }
 
   const scene: SceneDiagram = { kind: "scene", family: "tape", width: L.width, height: L.height, items, alt: spec.alt, camera: true, ...(spec.two ? { two: true } : {}), ...(spec.square ? { square: true } : {}),
@@ -514,7 +529,8 @@ function buildOne(spec: TapeSpec): SceneDiagram {
     const T = layoutTape({ ...spec, over: true });
     // the arrangement whose parts are the bigger blocks: the narrower of a part's width and its bar's height
     const block = (A: TapeLayout) => Math.min(Math.min(...spec.rows.flatMap(r => layersOf(r).map(l => (r.length / l.count) * A.unit))) - SQUARE.cell, A.rowHeight);
-    if (block(T) > block(L) && T.height <= L.height) return tall;
+    if (block(T) > block(L) && T.height <= L.height) return { ...tall, block: block(T) };
+    return { ...scene, block: block(L) };
   }
   return scene;
 }

@@ -49,6 +49,9 @@ export interface SceneDiagram {
   shape?: import("./picture-system").MasterShape;
   /** the same picture laid out in each master shape, for the box to take the one nearest its own shape */
   shapes?: Partial<Record<import("./picture-system").MasterShape, SceneDiagram>>;
+  /** how big its smallest part is drawn, in its own units (the narrower of its width and its bar's height): the box
+   *  takes the shape whose parts come out biggest on screen */
+  block?: number;
   /** the lesson must tell two quantities apart (thirds vs quarters, the second fraction): its .p1 parts turn violet.
    *  Without it every part is the one amber (styles/picture-system.css) */
   two?: boolean;

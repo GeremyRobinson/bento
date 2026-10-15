@@ -36,7 +36,7 @@ export function SceneDiagram({ diagram: given, at, fit = false }: { diagram: Sce
     const measure = () => {
       const r = layoutRect(room);
       if (!(r.width > 0 && r.height > 0)) return;
-      const near = given.shapes ? nearestShape(r.width, r.height) : null;
+      const near = given.shapes ? bestShape(given.shapes, r.width, r.height) : null;
       if (near !== shape) { setShape(near); return; }
       const best = biggest(shaped, r.width, r.height);
       if (best !== picked) { setPicked(best); return; }
@@ -158,6 +158,25 @@ function nearestShape(w: number, h: number): MasterShape {
   const r = w / h;
   // a short box (a phone) holds its labels at the floor, which only the strip leaves room for
   return r >= 2.2 || (h <= SHORT_BOX && r >= 1.4) ? "strip" : r >= 1.25 ? "wide" : "square";
+}
+/**
+ * The master shape for a box: the one whose smallest part comes out biggest on screen, so a picture of two long bars on
+ * a phone takes the wide master instead of the strip's thin rows (Review 31ee827, g7-prop at 375). The shape nearest
+ * the box's own wins unless its parts are thinner than three cells and another's come out clearly bigger.
+ */
+function bestShape(shapes: NonNullable<Scene["shapes"]>, w: number, h: number): MasterShape {
+  const near = nearestShape(w, h);
+  const scale = (k: MasterShape) => { const s = shapes[k]!; return Math.min(w / s.width, h / s.height); };
+  const size = (k: MasterShape) => (shapes[k]?.block ?? 0) * scale(k);
+  const all = (["square", "wide", "strip"] as const).filter(k => shapes[k]);
+  if (!all.every(k => shapes[k]!.block)) return near;
+  // only a shape whose parts come out thinner than three cells gives way, and only to one whose parts come out at least
+  // a quarter bigger on screen while it draws nearly as big (text is held at its floor, so a much smaller drawing
+  // crowds its labels: in the smallest strips every other shape does)
+  const thin = (k: MasterShape) => shapes[k]!.block! < 3 * SQUARE.cell;
+  if (!thin(near)) return near;
+  const best = all.filter(k => !thin(k) && scale(k) >= 0.85 * scale(near)).reduce<MasterShape | null>((a, b) => (!a || size(b) > size(a) ? b : a), null);
+  return best && size(best) >= 1.25 * size(near) ? best : near;
 }
 /** A box widened evenly to the box's own shape, so it fills it with its middle in the middle. */
 function fitBox(b: Box, [W, H]: [number, number]): Box {
