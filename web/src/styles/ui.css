@@ -242,6 +242,9 @@
 .v-ppic{transition:opacity var(--o-change) var(--m-ease)}
 .v-ppic .viz{min-height:0;min-width:0;width:100%;height:100%;display:grid;grid-template-rows:minmax(0,1fr)}
 .v-ppic .viz>*{max-height:100%}
+/* the master grid (G 2026-10-14 23:00), under a picture drawn in a master shape: same viewBox and fit as the picture */
+.v-ppic .viz>.o-sqgrid{position:absolute;inset:0;width:100%;height:100%;max-height:none;pointer-events:none}
+.o-sqgrid pattern path{fill:none;stroke:color-mix(in srgb,var(--pic-mid) 22%,transparent);stroke-width:1}
 /* Watch one draws in a square container, as big as the room allows, set at the bottom; practice draws in the full-width strip */
 .v-learn .v-stage{container-type:inline-size}
 .v-learn .v-ppic{container-type:size;align-self:end;height:min(calc(100cqw - var(--gap) * 2),100%)}
@@ -545,3 +548,18 @@ p.o-lk{align-items:flex-start}p.o-lk svg{flex:none;margin-top:3px}
 }
 /* a test in Today has no picture: the card is only as tall as its words and Start (G 2026-10-14) */
 .o-today.short{align-self:start;grid-template-rows:none}
+
+/* a picture drawn in a master shape (square, wide 3:2, strip 3:1; G 2026-10-15 with Design and Assets): its box is exactly
+   that shape (PictureBox), with no inner inset (its 2-cell pad is inside the shape), at the foot of the stage. The room the
+   shape doesn't need goes to the solve panel: stacked, the picture row is the box's height; side by side, the stage column
+   narrows to the box */
+.o-art.v-ppic.shaped{padding:0;background:none;border-radius:0;display:grid;place-items:end center;overflow:visible}
+.v-learn .v-ppic.shaped{height:100%;align-self:stretch}
+.o-sqbox{position:relative;border-radius:var(--o-r1);background:var(--v-page);overflow:hidden}
+.o-sqbox>.viz{width:100%;height:100%;position:relative}
+.o-sqgrid .edge{display:none}
+.o-state.prac.shaped-stack{grid-template-rows:auto minmax(0,1fr)}
+.o-state.prac.shaped-stack>.v-stage:not(.all){grid-template-rows:auto var(--o-pic-h)}
+.o-state.prac.shaped-side{grid-template-columns:var(--o-stage-w) minmax(0,1fr)}
+/* stacked Watch one: the room the picture's shape leaves goes above Watch again / Try one, which stay at the panel's foot */
+.o-state.prac.shaped-stack .v-lside{grid-template-rows:var(--o-steps-h) auto minmax(0,1fr) auto;align-content:stretch}

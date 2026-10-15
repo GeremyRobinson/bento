@@ -8,6 +8,7 @@ import { withTransition } from "../app/transition";
 import { MathLine, Rich } from "../components/primitives/MathLine";
 import { plainProblem, problemShape, ProblemView } from "../components/practice/ProblemView";
 import { Diagram } from "../components/diagrams/Diagram";
+import { PictureBox } from "../components/diagrams/PictureBox";
 import { requireLesson } from "../curriculum/registry";
 import type { Explanation } from "../explanations/schema";
 import { formatNumber, type MathText, type MathToken } from "../curriculum/schemas/math-text";
@@ -258,11 +259,10 @@ export function Practice() {
             <ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} solved={s.solved} part="text" />
           </div>
           {scratchOn ? <ScratchPad className={`v-pad${padFade ? " pfade" : ""}`} ink={ink} setInk={setInk} /> : pic && (
-            <div className={`o-art v-ppic${padFade ? " pfade" : ""}`} aria-label="Picture of this problem" role="img">
-              <div className="viz">{ex
-                ? <Diagram key={s.i} diagram={ex.diagram!} timeline={ex.timeline} fit turn={!it.story} {...pictureAt(ex, steps.map(st => st.id), here, s.solved)} />
-                : <ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} part="picture" step={s.solved ? undefined : steps[here]?.id} />}</div>
-            </div>
+            <PictureBox key={s.i} className={`o-art v-ppic${padFade ? " pfade" : ""}`} label="Picture of this problem" diagram={ex?.diagram}
+              render={d => (ex && d
+                ? <Diagram key={s.i} diagram={d} timeline={ex.timeline} fit turn={!it.story} {...pictureAt(ex, steps.map(st => st.id), here, s.solved)} />
+                : <ProblemView lessonId={it.lessonId} problem={problemOf(it)} story={!!it.story} part="picture" step={s.solved ? undefined : steps[here]?.id} />)} />
           )}
         </>}
       </section>

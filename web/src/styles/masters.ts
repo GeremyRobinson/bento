@@ -53,7 +53,7 @@ export const MASTERS: Master[] = [
   { name: "O marks", classes: ["o-marks"] },
   { name: "O slider", classes: ["o-sw", "thumb"] },
   { name: "O tile", classes: ["o-tile", "o-tx", "o-nm", "o-cover", "o-cpw", "o-stat", "o-wide", "o-foot", "o-st", "next", "rev", "o-ring", "o-marks", "sel", "o-gt", "o-gnum", "o-grades", "o-stile", "o-sic", "o-sv", "o-sw"] },
-  { name: "O picture", classes: ["o-art"] },
+  { name: "O picture", classes: ["o-art", "o-sqbox", "o-sqgrid"] },
   // Settings B (model v67.1): the tiles' grid, a page's rows, and the iPad preview with its keypad
   { name: "O settings", classes: ["settings", "o-sets", "o-sgrid", "o-shead", "o-nsx", "o-setrows", "o-setrow", "o-nm", "o-btn", "o-sb", "o-spv", "o-pv", "o-pvq", "o-pvprob", "o-pvpic", "pa", "pb", "pc", "pbh", "o-pvw", "o-pva", "v", "o-pvk", "o-key", "o-stile", "o-tile", "o-wide", "o-sgrid"] },
   { name: "O key", classes: ["o-key"] },

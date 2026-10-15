@@ -49,7 +49,7 @@ export function unitDivisionPicture({ W, d }: UnitDivisionProblem) {
     each: [{ text: () => `1/${d}`, from: wholeBeat(j) }], label: [{ text: "1" }],
     total: [{ text: `${(j + 1) * d}`, from: wholeBeat(j), acc: j === W - 1 }],
   }));
-  const tape = buildTape({ rows, gap: "mixed", alt: `${W} whole bars, each cut into ${count(d, "piece")} of 1/${d}: ${count(W * d, "piece")} in all.` });
+  const tape = buildTape({ square: true, rows, gap: "mixed", alt: `${W} whole bars, each cut into ${count(d, "piece")} of 1/${d}: ${count(W * d, "piece")} in all.` });
   // the wholes that share the last beat are counted one after another, top to bottom: each part of a bar waits its turn
   const rowLabels = tape.items.filter((i): i is Extract<SceneItem, { type: "text" }> => i.type === "text" && i.text === "1" && !i.from).map(i => i.y);
   // the worked step lit (the shared `lit` role): the whole being cut and its running count, on the beat it is counted

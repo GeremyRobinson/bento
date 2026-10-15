@@ -5,6 +5,7 @@ import { gradeOf } from "../curriculum/grades";
 import { requireLesson } from "../curriculum/registry";
 import { lastScore } from "../engine/mastery/progress";
 import { Diagram } from "../components/diagrams/Diagram";
+import { PictureBox } from "../components/diagrams/PictureBox";
 import { BuildUp } from "../components/BuildUp";
 import type { Rng } from "../curriculum/generators/rng";
 import type { AnyLesson } from "../curriculum/schemas/lesson";
@@ -128,7 +129,7 @@ export function Learn({ lessonId }: { lessonId: string }) {
       <section className="o-panel v-stage" aria-label="Problem">
         <div className="v-prob pprob"><ProblemView lessonId={lesson.id} problem={example} story={false} solved={finished} part="text" /></div>
         {ex.diagram && (
-          <div className="o-art v-ppic"><div className="viz"><Diagram diagram={ex.diagram} timeline={ex.timeline} at={shownAt} fit /></div></div>
+          <PictureBox className="o-art v-ppic" diagram={ex.diagram} render={d => d && <Diagram diagram={d} timeline={ex.timeline} at={shownAt} fit />} />
         )}
       </section>
       <section className="o-panel v-solve v-lside" aria-label="Watch one">

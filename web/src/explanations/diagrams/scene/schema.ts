@@ -42,6 +42,13 @@ export interface SceneDiagram {
   items: SceneItem[];
   /** what the picture shows, for screen readers */
   alt: string;
+  /** drawn inside the master square (SQUARE, picture-system.ts): width and height are the square's side and every
+   *  shape sits on its grid, so the renderer shows the whole square as it is instead of framing the shapes (G 2026-10-14) */
+  square?: boolean;
+  /** which master shape this scene is laid out in (square when unset) */
+  shape?: import("./picture-system").MasterShape;
+  /** the same picture laid out in each master shape, for the box to take the one nearest its own shape */
+  shapes?: Partial<Record<import("./picture-system").MasterShape, SceneDiagram>>;
   /** the lesson must tell two quantities apart (thirds vs quarters, the second fraction): its .p1 parts turn violet.
    *  Without it every part is the one amber (styles/picture-system.css) */
   two?: boolean;
