@@ -558,7 +558,7 @@ p.o-lk{align-items:flex-start}p.o-lk svg{flex:none;margin-top:3px}
 .o-sqbox{position:relative;border-radius:var(--o-r1);background:var(--v-page);overflow:hidden}
 .o-sqbox>.viz{width:100%;height:100%;position:relative}
 .o-sqgrid .edge{display:none}
-.o-state.prac.shaped-stack{grid-template-rows:auto minmax(0,1fr)}
+.o-state.prac.shaped-stack{grid-template-rows:auto minmax(var(--o-solve-h),1fr)}
 .o-state.prac.shaped-stack>.v-stage:not(.all){grid-template-rows:auto var(--o-pic-h)}
 .o-state.prac.shaped-side{grid-template-columns:var(--o-stage-w) minmax(0,1fr)}
 /* stacked Watch one: the room the picture's shape leaves goes above Watch again / Try one, which stay at the panel's foot */

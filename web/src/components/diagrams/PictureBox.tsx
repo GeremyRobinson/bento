@@ -41,7 +41,9 @@ export function PictureBox({ diagram, className, render, label }: { diagram: Dia
       const room = art.getBoundingClientRect(), st = stage.getBoundingClientRect(), solve = state.querySelector(".v-solve")?.getBoundingClientRect();
       if (!(room.width > 0 && room.height > 0)) return;
       const stacked = !!solve && solve.top >= st.bottom - 1;
-      const f = pickShape(keys, room.width, room.height, stacked);
+      // the old picture floor can push the picture past the stage's foot: the room is only what fits inside the stage
+      const foot = st.bottom - parseFloat(getComputedStyle(stage).paddingBottom || "0");
+      const f = pickShape(keys, room.width, Math.min(room.height, foot - room.top), stacked);
       if (!f) return;
       if (stacked) { state.style.setProperty("--o-pic-h", `${f.h}px`); state.classList.add("shaped-stack"); }
       else if (f.w < room.width - 1) { state.style.setProperty("--o-stage-w", `${Math.ceil(st.width - (room.width - f.w))}px`); state.classList.add("shaped-side"); }
