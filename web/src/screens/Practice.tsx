@@ -275,7 +275,7 @@ export function Practice() {
           <Marks {...marks} />
         </div>
         {doneLines.length > 0 && !skill && <ol className="v-lines" aria-label="Your work so far">{doneLines.map((w, k) => (
-          <li key={k} className={w!.shown ? "shown" : undefined}><MathLine math={w!.math} />{!w!.shown && <b aria-hidden>{"\u2713"}</b>}</li>
+          <li key={k} className={w!.shown ? "shown" : undefined}><MathLine math={w!.math} keep />{!w!.shown && <b aria-hidden>{"\u2713"}</b>}</li>
         ))}</ol>}
         <div className={`v-ask${askNo ? " no" : ""}${s.fx === "shake" ? " shake" : ""}`}>
           {step && !s.pick ? <>
