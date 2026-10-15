@@ -16,7 +16,9 @@ export function evaluatePicture(o: { a: number; b: number; x: number; y: number;
   const { a, b, x, y, AX, BY, S } = o;
   // one scale for both rows, except that no box shrinks below MIN_BOX: when x is small and y large (or the other way
   // round) the small value is drawn a little longer, so its boxes keep their numbers instead of becoming slivers
-  const spec = (X: number, Y: number): TapeSpec => ({
+  // off the master grid for now: its boxes are sized to their values (layoutTape's free scale), which the grid's whole
+  // cells can't hold; it gets the camera all the same, and its own grid redraw with the other masters (picture plan)
+  const spec = (X: number, Y: number): TapeSpec => ({ square: false,
     rows: [
       { length: a * X, parts: a, fills: [{ a: 0, b: a * X, tone: "on" }], each: [{ text: () => "x" }], label: [{ text: `x = ${x}` }], total: [{ text: `${AX}` }] },
       { length: b * Y, parts: b, fills: [{ a: 0, b: b * Y, tone: "two" }], each: [{ text: () => "y" }], label: [{ text: `y = ${y}` }], total: [{ text: `${BY}` }], from: 1 },

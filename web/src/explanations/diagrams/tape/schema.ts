@@ -61,6 +61,8 @@ export interface TapeRow {
   until?: number;
   /** the beats this row is the one the step is about: its label and its shaded pieces wear the picture's `lit` role */
   lit?: Beats[];
+  /** set by the builder when it wraps a bar onto more lines in the master square: this row goes on the line before it */
+  cont?: boolean;
 }
 
 /** a run of beats, from one beat to another (or to the end) */
@@ -86,6 +88,12 @@ export interface TapeSpec {
   alt: string;
   /** canvas width (default 480) */
   width?: number;
+  /** drawn inside the master square on its grid (picture-system SQUARE; G 2026-10-14, 5th grade trial) */
+  square?: boolean;
+  /** the master shape to lay out in (set by the builder, which lays a square spec out in every shape) */
+  shape?: import("../scene/picture-system").MasterShape;
+  /** what changes when the picture is laid out in the strip (a short, wide box): e.g. units on one row, not stacked */
+  strip?: Partial<TapeSpec>;
   /** tallest a bar may be (default 46) */
   maxRowHeight?: number;
   /** the gap between pieces and between rows (picture system, PIC.gap): "bar" for fraction bars (6), "mixed" for
@@ -93,7 +101,7 @@ export interface TapeSpec {
   gap?: "bar" | "mixed";
   /** two quantities must be told apart (the second fraction): "two" fills turn violet. Otherwise every part is amber */
   two?: boolean;
-  /** also lay the bars out tall, each row's label and total on a line over its bar instead of beside it, so a square box
+  /** (default true) also lay the bars out tall, each row's label and total on a line over its bar instead of beside it, so a square box
    *  draws the bars full width and thicker (5th grade trial, G 2026-10-14); the picture draws whichever is bigger */
   tall?: boolean;
   /** this is the tall arrangement itself (set by the builder) */

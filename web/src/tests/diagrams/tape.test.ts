@@ -35,7 +35,8 @@ const texts = (d: SceneDiagram, at: number) => shownAt(d, at).flatMap(i => (i.ty
 
 describe("buildTape", () => {
   it("uses one scale for every row, so lengths are in proportion", () => {
-    const d = buildTape({ rows: [{ length: 1, parts: 4 }, { length: 0.25, parts: 1 }, { length: 2, parts: 8, wholes: true }], alt: "t" });
+    // the free arrangement (off the master grid), where the rows' tops are layoutTape's
+    const d = buildTape({ square: false, rows: [{ length: 1, parts: 4 }, { length: 0.25, parts: 1 }, { length: 2, parts: 8, wholes: true }], alt: "t" });
     const L = layoutTape({ rows: [{ length: 1, parts: 4 }, { length: 0.25, parts: 1 }, { length: 2, parts: 8, wholes: true }], alt: "t" });
     const segs = rects(d, 0, "seg");
     const [a, b, c] = L.rowTops.map(y => segs.filter(rowOf(y)));
@@ -48,7 +49,7 @@ describe("buildTape", () => {
   });
 
   it("shades exactly the stretch it is given, cut at the parts", () => {
-    const spec = { rows: [{ length: 1, parts: 8, fills: [{ a: 0, b: 3 / 8, tone: "on" as const }] }], alt: "t" };
+    const spec = { square: false, rows: [{ length: 1, parts: 8, fills: [{ a: 0, b: 3 / 8, tone: "on" as const }] }], alt: "t" };
     const d = buildTape(spec), L = layoutTape(spec);
     const on = rects(d, 0, "seg on");
     expect(on).toHaveLength(3);
@@ -81,14 +82,13 @@ describe("pictures follow the problem", () => {
   it("equivalent fractions: every bar shades a/b of its length, cut into b·m pieces", () => {
     for (const [a, b, k] of [[1, 2, 4], [3, 4, 2], [5, 6, 5], [2, 5, 3]] as const) {
       const p = createEquiv(a, b, k), d = equivPicture(p);
-      const tops = [...new Set(rects(d, 2, "seg").map(r => r.y))];
-      expect(tops).toHaveLength(1 + cutChain(k).length);
-      const first = rects(d, 2, "seg").filter(r => r.y === tops[0]), last = rects(d, 2, "seg").filter(r => r.y === tops.at(-1));
-      expect(first).toHaveLength(b);
-      expect(last).toHaveLength(b * k);
-      const shaded = shownAt(d, 2).filter((i): i is Rect => i.type === "rect" && i.cls === "seg on");
-      expect(shaded.filter(r => r.y === tops.at(-1))).toHaveLength(a * k);
-      expect(span(shaded.filter(r => r.y === tops.at(-1))) / span(last)).toBeCloseTo(a / b, 1);
+      // on the master grid a bar cut too finely for one line wraps onto two (G 2026-10-14), so pieces are counted by bar,
+      // not by line: bar k holds b·(the cuts so far) pieces, a·(the same) of them shaded
+      const counts = [1, ...cutChain(k)].reduce<number[]>((acc, c, i) => [...acc, (i ? acc[i - 1]! : 1) * c], []);
+      const segs = rects(d, 2, "seg"), shaded = shownAt(d, 2).filter((i): i is Rect => i.type === "rect" && i.cls === "seg on");
+      expect(segs).toHaveLength(counts.reduce((t, c) => t + b * c, 0));
+      expect(shaded).toHaveLength(counts.reduce((t, c) => t + a * c, 0));
+      expect(counts.at(-1)).toBe(k);
       // labels read on one line now (picture system): the count is the top of "4/8"
       expect(texts(d, 2).some(t => t === String(a * k) || t.startsWith(`${a * k}/`))).toBe(true);
       expect(texts(d, 1).some(t => t === "?" || t.startsWith("?/"))).toBe(true);

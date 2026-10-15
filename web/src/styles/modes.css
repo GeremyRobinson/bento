@@ -61,3 +61,7 @@
    the dark on-mid text (7.6:1) */
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #app :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--pic-on-part:var(--pic-deep);--pic-on-step:color-mix(in srgb,var(--pic-hue) 20%,var(--v-ink))}}
 :root[data-theme="dark"] #app :is(.viz-svg,.am,.viz,.dotrow,.bb,.tf){--pic-on-part:var(--pic-deep);--pic-on-step:color-mix(in srgb,var(--pic-hue) 20%,var(--v-ink))}
+/* dark: the piece a step is about (the bright accent tint) is light, so its count is the picture's dark line colour, or it vanishes
+   into the piece (found 2026-10-15: g3-unitfrac's 1/4 on its shaded piece) */
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #app .viz-svg[data-family="tape"] text.onacc{fill:var(--pic-line)}}
+:root[data-theme="dark"] #app .viz-svg[data-family="tape"] text.onacc{fill:var(--pic-line)}
