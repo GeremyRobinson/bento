@@ -293,3 +293,7 @@
 /* on the grid an empty part is blank paper; shading is what fills it (G 2026-10-15 mock) */
 #app .viz-svg:has(> .pic-grid) rect.seg:not(.on,.cut,.lit){fill:var(--v-card)}
 #app .viz-svg .cellln{stroke:var(--deep);stroke-width:1px;vector-effect:non-scaling-stroke;opacity:.22}
+#app .viz-svg .pic-grid line.major{stroke:var(--deep);opacity:.3;stroke-width:1.5px}
+#app .viz-svg .cellln.ten{opacity:.45;stroke-width:1.5px}
+#app .viz-svg .seg.flat{stroke:none}
+#app .viz-svg .box100{fill:none;stroke:var(--deep);stroke-width:var(--pic-outline)}

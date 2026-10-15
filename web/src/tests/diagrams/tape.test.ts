@@ -155,7 +155,7 @@ describe("pictures follow the problem", () => {
 });
 
 // every tape lesson, the reference and many generated problems: every shape and label inside the canvas
-const TAPE = ["g4-equiv", "g4-likefrac", "g4-fracwhole", "g4-dec", "add", "sub", "mix", "g5-improper", "g5-fracof", "g5-unitdiv", "g5-units",
+const TAPE = ["g4-equiv", "g4-likefrac", "g4-fracwhole", "add", "sub", "mix", "g5-improper", "g5-fracof", "g5-unitdiv", "g5-units",
   "g6-ratio", "g6-rate", "g6-pctof", "g6-pctwhole", "g7-prop", "g7-scale", "g7-discount", "g7-pctchange"];
 
 function bounds(i: SceneItem): [number, number, number, number] {

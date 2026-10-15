@@ -65,4 +65,7 @@ export interface SceneDiagram {
   /** drawn for the camera (G 2026-10-15): each beat is framed on what it shows and the view widens as new parts come in,
    *  so the picture builds outward from its first part and ends in a layout that fills the box */
   camera?: boolean;
+  /** the grid's bold every-ten lines run through this point (G 2026-10-15: a cell is 1, ten cells 10, a square of
+   *  them 100); without it the grid is all one weight */
+  major?: [number, number];
 }
