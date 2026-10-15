@@ -367,6 +367,11 @@
   .v-solve.v-solved .v-lines{animation:oCome 0s var(--o-change) both}
   .v-solve.v-solved .v-lines li{min-height:var(--o-key-h)}
 }
+/* reduced motion turns those two animations off, so the settled state is set straight away */
+@media (orientation:landscape) and (max-height:500px) and (prefers-reduced-motion:reduce){
+  .v-solve.v-solved .v-say{visibility:hidden}
+  .v-solve.v-solved:has(.v-say:not(:empty)) .v-lines{visibility:visible}
+}
 /* short screens: while the say line speaks, it takes the work row's place */
 @media (max-width:820px) and (max-height:720px),(max-height:500px){.v-solve:has(.v-say:not(:empty)) .v-lines{visibility:hidden}}
 /* short phones: the say line takes the question's row too while it speaks; the problem stays on the stage */
