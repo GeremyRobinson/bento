@@ -199,6 +199,8 @@ function squareTape(spec: TapeSpec): TapeLayout {
       const out = (row.each ?? []).map(e => eachFit(e, (row.length / layersAt(row, e.from ?? row.from ?? 0).count) * unit, rowHeight, layersAt(row, e.from ?? row.from ?? 0).count, free));
       // the lines of one wrapped bar sit a cell apart, different bars two (G 2026-10-14)
       if (i > 0 && wrapped && !row.cont) y += cell;
+      // wholes sit on trays half a cell bigger than their parts all round, so their rows need a cell more between them
+      if (i > 0 && (row.wholes || rows[i - 1]!.wholes)) y += cell;
       if (over && (row.label?.length || row.total?.length)) y += cells(OVER);
       overYs.push(y - 6);
       if (br.some(b => b.row === i && b.side === "above") || out.includes("above")) y += cells(BRACKET);
@@ -309,6 +311,15 @@ function buildOne(spec: TapeSpec): SceneDiagram {
   const L = layoutTape(spec);
   const { unit, rowHeight: h, x0 } = L;
   const X = (u: number) => r1(x0 + u * unit);
+  // on the grid a row of wholes draws its parts a little in from each whole's ends, so every whole's tray shows round its
+  // parts and two wholes sit apart (G 2026-10-15); `end` reads a point on a whole's line as the end of the whole before it
+  const WG = SQUARE.cell / 2 + 2;
+  const XR = (row: TapeRow, u: number, end = false) => {
+    if (!row.wholes || !spec.square) return X(u);
+    const s0 = row.start ?? 0, n = Math.ceil(row.length - EPS);
+    const k = Math.max(0, Math.min(n - 1, end ? Math.ceil(u - s0 - EPS) - 1 : Math.floor(u - s0 + EPS))), wl = Math.min(1, row.length - k);
+    return r1(X(s0 + k) + WG + ((u - s0 - k) / wl) * (wl * unit - 2 * WG));
+  };
   const longest = Math.max(...spec.rows.map(r => (r.start ?? 0) + r.length));
   const items: SceneItem[] = [];
   const push = (it: SceneItem | null) => { if (it) items.push(it); };
@@ -357,11 +368,20 @@ function buildOne(spec: TapeSpec): SceneDiagram {
       const dx = splitDx(li, i);
       return dx ? { enter: "slide" as const, vars: { "--dx": `${dx}px` }, delay: layers[li]!.delay ?? 0 } : {};
     };
+    // on the grid each whole is a soft tray under its parts, two trays a little apart, instead of an outline hugging the
+    // parts' own outlines (G 2026-10-15: the doubled lines round 4/5 + 4/5); the tray's corner is the part's plus its gap
+    if (row.wholes && spec.square) {
+      for (let k = 0; k < Math.ceil(row.length - EPS); k++) {
+        const len = Math.min(1, row.length - k), pad = SQUARE.cell / 2;
+        push({ type: "rect", x: r1(X(start + k) + 2), y: top - pad, w: r1(len * unit - 4), h: h + 2 * pad, rx: r1(Math.min(PIC.corner.bar, h / 4) + pad), cls: "fillsoft", enter: "fade", ...when(row.from ?? 0, row.until) });
+      }
+    }
     // the parts of each cut
     layers.forEach((lay, li) => {
       const pw = span(lay) * unit, ins = inset(pw), step = Math.min(0.06, 0.6 / lay.count);
       for (let i = 0; i < lay.count; i++) {
-        push({ type: "rect", x: r1(X(start) + i * pw + ins), y: top, w: r1(pw - 2 * ins), h, rx: r1(Math.min(PIC.corner.bar, pw / 3, h / 4)), cls: "seg",
+        const xa = XR(row, start + i * span(lay)), xw = XR(row, start + (i + 1) * span(lay), true) - xa, xi = row.wholes && spec.square ? inset(xw) : ins;
+        push({ type: "rect", x: r1(xa + xi), y: top, w: r1(xw - 2 * xi), h, rx: r1(Math.min(PIC.corner.bar, xw / 3, h / 4)), cls: "seg",
           ...enterOf(li, i, r1(i * step * 100) / 100), ...when(lay.from, lay.until) });
       }
     });
@@ -383,9 +403,10 @@ function buildOne(spec: TapeSpec): SceneDiagram {
         for (let i = 0; i < lay.count; i++) {
           const p0 = start + i * pu, p1 = p0 + pu, lo = Math.max(fill.a, p0), hi = Math.min(fill.b, p1);
           if (hi - lo < EPS) continue;
-          const xa = X(lo) + (Math.abs(lo - p0) < EPS ? ins : 0);
+          const pi = row.wholes && spec.square ? inset(XR(row, p1, true) - XR(row, p0)) : ins;
+          const xa = XR(row, lo) + (Math.abs(lo - p0) < EPS ? pi : 0);
           // a sliver (one hundredth past the tenths) keeps a readable minimum width inside its part, not a hairline
-          const xb = Math.max(X(hi) - (Math.abs(hi - p1) < EPS ? ins : 0), Math.min(xa + MIN_FILL, X(p1) - ins));
+          const xb = Math.max(XR(row, hi, true) - (Math.abs(hi - p1) < EPS ? pi : 0), Math.min(xa + MIN_FILL, XR(row, p1, true) - pi));
           const dx = split ? splitDx(li, i) : 0;
           pushLit(fill.tone === "cut" ? undefined : row.lit, { type: "rect", x: r1(xa), y: top, w: r1(Math.max(0.5, xb - xa)), h, rx: r1(Math.min(PIC.corner.bar, (xb - xa) / 3, h / 4)),
             cls: fill.tone === "cut" ? "seg on cut" : fill.tone === "two" ? "seg on p1" : "seg on",
@@ -416,7 +437,7 @@ function buildOne(spec: TapeSpec): SceneDiagram {
     }
 
     // whole outlines
-    if (row.wholes) {
+    if (row.wholes && !spec.square) {
       for (let k = 0; k < Math.ceil(row.length - EPS); k++) {
         const len = Math.min(1, row.length - k);
         push({ type: "rect", x: X(start + k), y: top - 1, w: r1(len * unit), h: h + 2, rx: 8, cls: "ax thin", enter: "fade", ...when(row.from ?? 0, row.until) });
@@ -501,8 +522,10 @@ function buildOne(spec: TapeSpec): SceneDiagram {
     const row = spec.rows[b.row]!, top = L.rowTops[b.row]!;
     const run = within(b.from ?? 0, b.until, row);
     if (!run) continue;
-    const xa = X(b.a) + 2, xb = X(b.b) - 2, above = b.side === "above";
-    const y = above ? top - 7 : top + h + 7, tick = above ? 6 : -6;
+    // over a row of wholes a bracket spans the trays it covers (a whole's end) or stops at its part's edge, clear of the trays
+    const tray = row.wholes && spec.square, onWhole = (u: number) => Math.abs(u - (row.start ?? 0) - Math.round(u - (row.start ?? 0))) < EPS;
+    const xa = tray && !onWhole(b.a) ? XR(row, b.a) : X(b.a) + 2, xb = tray && !onWhole(b.b) ? XR(row, b.b, true) : X(b.b) - 2, above = b.side === "above";
+    const lift = tray ? SQUARE.cell / 2 : 0, y = above ? top - 7 - lift : top + h + 7 + lift, tick = above ? 6 : -6;
     push({ type: "path", d: `M${r1(xa)} ${r1(y + tick)} L${r1(xa)} ${r1(y)} L${r1(xb)} ${r1(y)} L${r1(xb)} ${r1(y + tick)}`, cls: "ax thin", enter: "draw", ...when(run.from, run.until) });
     const tw = textWidth(b.text, FS.bracket);
     const cx = Math.min(Math.max((xa + xb) / 2, M + tw / 2), L.width - M - tw / 2);
