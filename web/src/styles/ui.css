@@ -170,9 +170,9 @@
 /* home: Today beside the box */
 .o-today{grid-template-rows:auto auto auto auto minmax(0,1fr)}
 .o-today>.o-art{margin-top:var(--gap)}
-/* the Today picture follows the same rule: a square container set to the bottom of the card; spare height sits above it */
-.o-today{container-type:inline-size}
-.o-today>.o-art{align-self:end;height:min(100cqw,100%)}
+/* the Today picture fills all the room under Start: no square, no spare height above it */
+.o-today>.o-art{align-self:stretch;min-height:0}
+.o-today>.o-art .viz{grid-template-rows:minmax(0,1fr)}.o-today>.o-art .viz>svg{width:100%;height:100%}
 .o-box{grid-template-rows:auto minmax(0,1fr);position:relative;overflow:hidden}
 .o-box :is(.o-grid,.o-gyear){touch-action:pan-y;-webkit-user-select:none;user-select:none}
 .o-bh{display:flex;align-items:center;gap:var(--gap);padding-left:var(--gap);min-height:var(--pill-size);min-width:0}
