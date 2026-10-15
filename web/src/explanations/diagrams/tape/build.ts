@@ -203,10 +203,13 @@ function squareTape(spec: TapeSpec): TapeLayout {
       if (i > 0 && wrapped && !row.cont) y += cell;
       if (over && (row.label?.length || row.total?.length)) y += cells(OVER);
       overYs.push(y - 6);
-      if (br.some(b => b.row === i && b.side === "above") || out.includes("above")) y += cells(BRACKET);
+      // a bracket stands two cells off its bar (buildOne), so it takes a cell more room than a leader
+      if (br.some(b => b.row === i && b.side === "above")) y += cells(BRACKET) + cell;
+      else if (out.includes("above")) y += cells(BRACKET);
       rowTops.push(y);
       y += rowHeight;
-      if (br.some(b => b.row === i && b.side === "below") || out.includes("below")) y += cells(BRACKET);
+      if (br.some(b => b.row === i && b.side === "below")) y += cells(BRACKET) + cell;
+      else if (out.includes("below")) y += cells(BRACKET);
       if (under && row.total?.length) { overYs[i] = y + 6; y += cells(OVER); }
       y += cell;
     });
@@ -404,7 +407,9 @@ function buildOne(spec: TapeSpec): SceneDiagram {
         }
       });
       if (fill.tone === "cut") {
-        push({ type: "line", x1: r1(X(fill.a) + 4), y1: top + h - 5, x2: r1(X(fill.b) - 4), y2: top + 5, cls: "ln p1", enter: "draw", delay: 0.4, ...when(run.from, run.until) });
+        // on the grid the strike runs corner to corner of what it crosses out (G 2026-10-15: "edge to edge")
+        const ci = grid ? 0 : 4, cj = grid ? 0 : 5;
+        push({ type: "line", x1: r1(X(fill.a) + ci), y1: top + h - cj, x2: r1(X(fill.b, true) - ci), y2: top + cj, cls: "ln p1", enter: "draw", delay: 0.4, ...when(run.from, run.until) });
       }
     }
 
@@ -523,7 +528,11 @@ function buildOne(spec: TapeSpec): SceneDiagram {
     const run = within(b.from ?? 0, b.until, row);
     if (!run) continue;
     const xa = X(b.a) + 2, xb = X(b.b, true) - 2, above = b.side === "above";
-    const y = above ? top - 7 : top + h + 7, tick = above ? 6 : -6;
+    // on the grid a bracket stands on the grid line two cells off its bar, its ends a cell long, so a clear cell always
+    // parts it from the bar even on a phone, where lines keep their weight as the cells shrink (G 2026-10-15: "the bar
+    // that shows the fraction under doesn't show its function")
+    const off = grid ? 2 * SQUARE.cell : 7, end = grid ? SQUARE.cell : 6;
+    const y = above ? top - off : top + h + off, tick = above ? end : -end;
     push({ type: "path", d: `M${r1(xa)} ${r1(y + tick)} L${r1(xa)} ${r1(y)} L${r1(xb)} ${r1(y)} L${r1(xb)} ${r1(y + tick)}`, cls: "ax thin", enter: "draw", ...when(run.from, run.until) });
     const tw = textWidth(b.text, FS.bracket);
     const cx = Math.min(Math.max((xa + xb) / 2, M + tw / 2), L.width - M - tw / 2);
