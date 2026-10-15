@@ -122,9 +122,8 @@ describe("pictures follow the problem", () => {
     const d = unlikePicture(createUnlikeFractions(2, 3, 1, 6, "+"));
     const knives = d.items.filter(i => i.type === "line" && i.cls === "ln2" && i.from === 1);
     expect(knives).toHaveLength(3); // through the middle of each third
-    const split = d.items.filter(i => i.type === "rect" && i.from === 1 && i.enter === "slide");
-    expect(split.length).toBeGreaterThanOrEqual(6);
-    expect(split.every(i => i.vars?.["--dx"] != null && (i.delay ?? 0) > 0)).toBe(true);
+    // on the grid the parts touch (G 2026-10-15: the grid is the maths), so the knife's line is the cut and nothing slides
+    expect(d.items.filter(i => i.type === "rect" && i.from === 1 && i.enter === "slide")).toEqual([]);
     for (let beat = 1; beat <= 4; beat++) expect(d.items.some(i => i.from === beat), `beat ${beat}`).toBe(true);
   });
 
