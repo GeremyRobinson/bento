@@ -263,7 +263,7 @@ function wrapTape(spec: TapeSpec): TapeSpec | null {
       const a0 = k * len, b0 = a0 + len;
       const off = (beat: number) => (k * countAt(beat)) / n;
       rows.push({
-        ...row, length: len, cont: k > 0,
+        ...row, length: len, cont: k > 0, held: row.held ?? !row.fills?.length,
         parts: typeof row.parts === "number" ? row.parts / n : row.parts.map(l => ({ ...l, count: l.count / n })),
         fills: (row.fills ?? []).filter(f => f.b > a0 && f.a < b0).map(f => ({ ...f, a: Math.max(f.a, a0) - a0, b: Math.min(f.b, b0) - a0 })),
         ticks: row.ticks?.map(t => ({ ...t, count: t.count / n })),
@@ -369,12 +369,15 @@ function buildOne(spec: TapeSpec): SceneDiagram {
       const dx = splitDx(li, i);
       return dx ? { enter: "slide" as const, vars: { "--dx": `${dx}px` }, delay: layers[li]!.delay ?? 0 } : {};
     };
-    // the parts of each cut; on the grid an empty part is blank paper and shading is what fills it (G 2026-10-15 mock)
+    // the parts of each cut; on the grid an empty part is blank paper and shading is what fills it (G 2026-10-15 mock).
+    // A bar with no shading at all is amounts, not a share of a whole (4 packs of 6), so its parts keep their fill
+    // (Review c9517f6: g3-twostep's groups went blank)
+    const held = grid && (row.held ?? !row.fills?.length);
     layers.forEach((lay, li) => {
       const pw = span(lay) * unit, ins = inset(pw), step = Math.min(0.06, 0.6 / lay.count);
       for (let i = 0; i < lay.count; i++) {
         const xa = X(start + i * span(lay)), xw = X(start + (i + 1) * span(lay), true) - xa;
-        push({ type: "rect", x: r1(xa + ins), y: top, w: r1(xw - 2 * ins), h, rx: grid ? 0 : r1(Math.min(PIC.corner.bar, xw / 3, h / 4)), cls: "seg",
+        push({ type: "rect", x: r1(xa + ins), y: top, w: r1(xw - 2 * ins), h, rx: grid ? 0 : r1(Math.min(PIC.corner.bar, xw / 3, h / 4)), cls: held ? "seg held" : "seg",
           ...enterOf(li, i, r1(i * step * 100) / 100), ...when(lay.from, lay.until) });
       }
     });
