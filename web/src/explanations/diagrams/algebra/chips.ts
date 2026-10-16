@@ -125,7 +125,7 @@ export function buildFactorChips(frames: ChipFrame[], alt: string, family = "fac
     return shift(g.translate ? { ...it, vars: { ...it.vars, ...g } } : it, dx, dy);
   });
   // its rows move apart on a phone (growRows), so its frame may grow twice its plain height there
-  return { kind: "scene", family, width: r1(W), height: r1(y1 - y0 + 2 * pad), items: moved, alt, grow: 2 };
+  return { kind: "scene", family, width: r1(W), height: r1(y1 - y0 + 2 * pad), items: moved, alt, grow: 2, camera: true };
 }
 
 function shift(it: SceneItem, dx: number, dy: number): SceneItem {

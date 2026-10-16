@@ -25,6 +25,23 @@ export const PIC = {
 } as const;
 
 /**
+ * The master square every lesson picture is drawn inside (G 2026-10-14 22:36: "lessons should start as an empty square…
+ * the picture is designed INSIDE that box"). It is 36 cells of 10 a side: 360 splits evenly into 2, 3, 4, 5, 6, 8, 9, 10
+ * and 12, so bars cut that many ways land their cuts on grid lines; sevenths and elevenths split exactly and sit centred.
+ * Parts, labels, gaps and padding are whole cells; the square scales as one to its box.
+ */
+export const SQUARE = { side: 360, cell: 10, pad: 20 } as const;
+/**
+ * The master shapes a picture is drawn in, on the same 10-unit grid with the same 2-cell padding (G 2026-10-14: the box
+ * isn't always square). The box takes the shape nearest its own: square (iPad portrait), wide 3:2 (iPad landscape),
+ * strip 3:1 (phone practice). A strip under about 330px across would draw its 20-unit labels under the 14px floor.
+ */
+export type MasterShape = "square" | "wide" | "strip";
+export const MASTERS: Record<MasterShape, { w: number; h: number }> = { square: { w: 360, h: 360 }, wide: { w: 540, h: 360 }, strip: { w: 480, h: 160 } };
+/** a length rounded up to whole cells */
+export const cells = (v: number) => Math.ceil(v / SQUARE.cell - 1e-9) * SQUARE.cell;
+
+/**
  * On a phone the label floor (--px, styles/picture-system.css) draws a label bigger than its picture units, so a row of
  * text under the picture moves down by what the `rows` label rows above it grew: stacked lines never run into each other.
  * Spread into a scene item's `vars`. (A text row is about 1.25 of its size, edge to edge.)

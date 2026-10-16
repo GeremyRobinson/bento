@@ -187,7 +187,7 @@ export function AreaModelDiagram({ diagram: d, timeline, at, ask }: { diagram: A
   const found = (i: number) => !d.find || v.sum || d.regions.some(r => r.col === i && v.shown.has(r.index));
   const x0 = fit.starts[0] ?? 0, xr = (fit.starts.at(-1) ?? 0) + (fit.widths.at(-1) ?? 0);
   return (
-    <svg ref={ref} className="am" viewBox={`0 0 ${fit.width} ${fit.height}`} preserveAspectRatio="xMinYMin meet" role="img" aria-label={label}
+    <svg ref={ref} className="am" viewBox={`0 0 ${fit.width} ${fit.height}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={label}
       data-split={split} data-sum={v.sum} data-find={d.find || undefined} style={{ "--w": fit.width, "--h": fit.height } as CSSProperties}>
       <g transform={`translate(0 ${fit.dy})`} fill="none">
       {d.cols.map((c, i) => {

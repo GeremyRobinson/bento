@@ -50,7 +50,7 @@ export function buildCircumference(s: CircumferenceSpec): SceneDiagram {
   items.push(seg([-R + 6 * R, y + 16], [-R + len, y + 16], "ln2", { from: s.aroundBeat, enter: "draw", delay: 2.2 }));
   items.push(t(-R + 6 * R + (len - 6 * R) / 2, y + 34, "0.14", "xs acc", { from: s.aroundBeat, enter: "rise", delay: 2.4 }));
   items.push(t(-R + len / 2, y - 22, `about ${s.pi} diameters = ${s.c}`, "lbl", { from: s.aroundBeat, enter: "rise", delay: 2.8 }));
-  return frame("circle", items, s.alt);
+  return { ...frame("circle", items, s.alt), camera: true };
 }
 
 export interface CircleAreaSpec {
@@ -82,7 +82,7 @@ export function buildCircleArea(s: CircleAreaSpec): SceneDiagram {
       ...broken(`${s.pi} × ${s.r2} = ${s.area}`, "lbl acc", s.areaBeat),
     ]),
   ];
-  return frame("circle", items, s.alt);
+  return { ...frame("circle", items, s.alt), camera: true };
 }
 
 export interface SectorSpec {
@@ -124,7 +124,7 @@ export function buildSector(s: SectorSpec): SceneDiagram {
     { text: `${s.fraction} of the ${what}:`, cls: "sm", from: s.partBeat },
     { text: String(s.part), cls: "lbl acc", from: s.partBeat },
   ]));
-  return frame("circle", items, s.alt);
+  return { ...frame("circle", items, s.alt), camera: true };
 }
 
 export interface RadianSpec {
@@ -163,7 +163,7 @@ export function buildRadians(s: RadianSpec): SceneDiagram {
     ...notes.map(text => ({ text, cls: "sm", from: s.pieceBeat })),
     ...broken(s.answerNote, "lbl acc", s.angleBeat),
   ]));
-  return frame("circle", items, s.alt);
+  return { ...frame("circle", items, s.alt), camera: true };
 }
 
 export interface UnitCircleSpec {
@@ -222,5 +222,5 @@ export function buildUnitCircle(s: UnitCircleSpec): SceneDiagram {
     { text: `reference ${s.ref}°`, cls: "lbl acc", from: s.refBeat },
     ...broken(`${s.f} ${s.t}° = ${s.value}`, "lbl acc", s.valueBeat),
   ]));
-  return frame("circle", items, s.alt);
+  return { ...frame("circle", items, s.alt), camera: true };
 }

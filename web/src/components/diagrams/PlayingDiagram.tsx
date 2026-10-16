@@ -52,7 +52,10 @@ export function PlayingDiagram({ ex, replay = 0, autoplay = true, hold, end }: {
     return () => clearTimeout(t);
   }, [playing, at, last, ex.diagram]);
 
-  return <div className="viz" ref={box}><Diagram key={gen} diagram={ex.diagram} timeline={ex.timeline} at={at} /></div>;
+  // a picture drawn for the camera frames itself to its box here too, so it zooms as it plays on Today and the tiles the
+  // way it does in the lesson (G 2026-10-15); other pictures keep their own canvas
+  const camera = ex.diagram.kind === "scene" && !!ex.diagram.camera;
+  return <div className="viz" ref={box}><Diagram key={gen} diagram={ex.diagram} timeline={ex.timeline} at={at} fit={camera} /></div>;
 }
 
 /** seconds each entrance runs (the picture animation vocabulary in components.css) */

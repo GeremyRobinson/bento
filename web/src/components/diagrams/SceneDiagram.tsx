@@ -1,7 +1,9 @@
-import { useLayoutEffect, useState, type CSSProperties } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
 import type { SceneDiagram as Scene, SceneItem } from "../../explanations/diagrams/scene/schema";
 import { useLabelFloor } from "./labelFloor";
 import { layoutRect } from "../../app/transition";
+import { motionOff } from "../../app/settings";
+import { SQUARE, type MasterShape } from "../../explanations/diagrams/scene/picture-system";
 
 const enterClass = (e: SceneItem["enter"]) => (e ? e.split(" ").map((w, i) => (i ? w : `a-${w}`)).join(" ") : "");
 
@@ -12,10 +14,15 @@ const enterClass = (e: SceneItem["enter"]) => (e ? e.split(" ").map((w, i) => (i
 export function SceneDiagram({ diagram: given, at, fit = false }: { diagram: Scene; at: number; fit?: boolean }) {
   // a picture with other arrangements draws the one that is biggest in its box (picked when the box is measured)
   const [picked, setPicked] = useState(0);
-  const d = (fit && picked && given.layouts?.[picked - 1]) || given;
-  const [frame, setFrame] = useState<{ d: Scene; box: Box; size: [number, number]; text: Record<string, number>; panel: boolean } | null>(null);
+  // a picture drawn in every master shape (G 2026-10-15: the grid) draws the one nearest its box's shape
+  const [shape, setShape] = useState<MasterShape | null>(null);
+  const shaped = (fit && shape && given.shapes?.[shape]) || given;
+  const d = (fit && picked && shaped.layouts?.[picked - 1]) || shaped;
+  const [frame, setFrame] = useState<{ d: Scene; box: Box; size: [number, number]; text: Record<string, number>; panel: boolean; beats?: Box[] } | null>(null);
   const fitted = fit && frame?.d === d;
-  const vb = fitted ? framed(frame.box, frame.size) : { x: 0, y: 0, w: d.width, h: d.height };
+  // a picture drawn for the camera (d.camera) is framed on what each beat shows; a picture in a master shape otherwise
+  // shows its whole master, any other picture its finished drawing
+  const vb = fitted ? (frame.beats?.[Math.min(Math.max(0, at), frame.beats.length - 1)] ?? (d.square ? frame.box : framed(frame.box, frame.size))) : { x: 0, y: 0, w: d.width, h: d.height };
   const zoom = fitted ? Math.min(frame.size[0] / vb.w, frame.size[1] / vb.h) : 1;
   const ref = useLabelFloor(vb.w, undefined, vb.h);
   // fit: frame the finished picture (every beat drawn) instead of the builder's canvas, so it fills the room it gets
@@ -29,13 +36,21 @@ export function SceneDiagram({ diagram: given, at, fit = false }: { diagram: Sce
     const measure = () => {
       const r = layoutRect(room);
       if (!(r.width > 0 && r.height > 0)) return;
-      const best = biggest(given, r.width, r.height);
+      const near = given.shapes ? bestShape(given.shapes, r.width, r.height) : null;
+      if (near !== shape) { setShape(near); return; }
+      const best = biggest(shaped, r.width, r.height);
       if (best !== picked) { setPicked(best); return; }
       // the box's height goes to the picture's CSS before it is measured (see BOX_H), so a picture that lays itself
       // out more compactly in a short box is framed as it draws there
       el.style.setProperty("--box-h", String(Math.round(r.height)));
+      if (d.square) {
+        const size: [number, number] = [r.width, r.height], whole = fitBox({ x: 0, y: 0, w: d.width, h: d.height }, size);
+        setFrame({ d, box: whole, size, text, panel, ...(d.camera ? { beats: gridFrames(el, d.items, [d.width, d.height], size, d.grow ?? GROW) } : {}) });
+        return;
+      }
       const box0 = contentBox(el, d.items, 0);
-      if (box0) setFrame({ d, box: floorBox(el, d.items, box0, [r.width, r.height], d.grow ?? GROW), size: [r.width, r.height], text, panel });
+      const size: [number, number] = [r.width, r.height];
+      if (box0) setFrame({ d, box: aroundEnd(el, d.items, floorBox(el, d.items, box0, size, d.grow ?? GROW)), size, text, panel, ...(d.camera ? { beats: cameraFrames(el, d.items, size, d.grow ?? GROW) } : {}) });
     };
     measure();
     // the frame is the text measured at its own size, so text measured in the fallback font (a cold first load, before
@@ -49,19 +64,32 @@ export function SceneDiagram({ diagram: given, at, fit = false }: { diagram: Sce
     const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
     ro?.observe(room);
     return () => { alive = false; fonts?.removeEventListener?.("loadingdone", again); ro?.disconnect(); };
-  }, [d, given, picked, fit, ref]);
+  }, [d, given, shaped, shape, picked, fit, ref]);
+  const camOn = fitted && !!frame?.beats;
+  useCamera(ref, at, vb, camOn);
+  // the camera leads: when a beat widens the view, its new parts start drawing once the move is under way, so they draw
+  // in at their own size instead of shrinking with the view (motion research: camera first, then the part)
+  const leadAt = useRef<{ at: number; lead: number }>({ at, lead: 0 });
+  if (leadAt.current.at !== at) {
+    const was = leadAt.current.at, a = frame?.beats?.[was], b = frame?.beats?.[at];
+    leadAt.current = { at, lead: camOn && at === was + 1 && a && b && Math.abs(a.w - b.w) >= 0.5 && !motionOff() ? CAMERA_LEAD : 0 };
+  }
+  const lead = leadAt.current.lead;
   // fit centres the finished picture once (the frame above); parts then appear where they stay, and nothing already
-  // drawn moves between beats (G 19:34: "random coming from the side animations")
+  // drawn moves between beats (G 19:34: "random coming from the side animations"). The one exception is a picture drawn
+  // for the camera (G 2026-10-15 03:01: zoom is allowed when the picture is redrawn for it): the view widens as new parts come in
   return (
     <svg ref={ref} className={d.two ? "viz-svg two" : "viz-svg"} viewBox={`${r1(vb.x)} ${r1(vb.y)} ${r1(vb.w)} ${r1(vb.h)}`} role="img" aria-label={d.alt}
       style={{ "--w": Math.round(d.width), "--h": Math.round(d.height), ...(fitted ? { [BOX_H]: Math.round(frame.size[1]) } : {}), ...(fitted ? textHold(zoom, frame.text) : {}), ...(fitted && frame.panel ? FILL : {}) } as CSSProperties} data-family={d.family}>
       {/* a second amount is the same colour in stripes (style guide rule 5) */}
+      {/* the master's grid, drawn in the picture so it zooms with it and every part stays on its lines (G 2026-10-15) */}
+      {d.square && <g className="pic-grid" aria-hidden="true">{gridLines(d.width, d.height, d.major)}</g>}
       {d.two && <defs><pattern id="pic-stripe" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect className="stripe-bg" width="8" height="8" /><rect className="stripe" width="3.5" height="8" /></pattern></defs>}
       {dotsOnTop(d.items).map((it, i, all) => {
         const from = it.from ?? 0;
         if (from > at || (it.until != null && at > it.until)) return null;
         const cls = [it.cls ?? "", continues(it, all) ? "" : enterClass(it.enter)].join(" ").trim();
-        const style = { "--d": `${(it.delay ?? 0).toFixed(2)}s`, ...it.vars } as CSSProperties;
+        const style = { "--d": `${((it.delay ?? 0) + (from === at ? lead : 0)).toFixed(2)}s`, ...it.vars } as CSSProperties;
         const key = `${i}-${from}`;
         switch (it.type) {
           case "rect": return <rect key={key} className={cls} style={style} x={it.x} y={it.y} width={it.w} height={it.h} rx={it.rx} />;
@@ -89,6 +117,138 @@ const continues = (it: SceneItem, all: SceneItem[]) => {
 };
 
 interface Box { x: number; y: number; w: number; h: number }
+
+/** the camera's move: one beat (m-beat), on the motion system's ease (m-ease) */
+const CAMERA_MS = 750;
+/** the first views are never more than this much closer than the finished picture, so a part never seems to shrink
+ *  (Review: size means something in maths) */
+const CAMERA_CLOSE = 2;
+/** how far into the move a beat's new parts start drawing, in seconds */
+const CAMERA_LEAD = 0.35;
+const ease = (t: number) => { // cubic-bezier(.2,.8,.2,1)
+  let lo = 0, hi = 1;
+  for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2, x = 3 * m * (1 - m) ** 2 * 0.2 + 3 * m * m * (1 - m) * 0.2 + m ** 3; if (x < t) lo = m; else hi = m; }
+  const m = (lo + hi) / 2; return 3 * m * (1 - m) ** 2 * 0.8 + 3 * m * m * (1 - m) + m ** 3;
+};
+const vbText = (b: Box) => `${r1(b.x)} ${r1(b.y)} ${r1(b.w)} ${r1(b.h)}`;
+
+/**
+ * The camera (G 2026-10-15): each beat is framed on what it shows, fitted to the box's own shape and centred, so every
+ * step sits in the middle with the same room round it. A beat that only changes parts already there keeps the frame.
+ */
+function cameraFrames(svg: SVGSVGElement, items: SceneItem[], size: [number, number], grow: number): Box[] {
+  const last = Math.max(0, ...items.map(it => it.from ?? 0));
+  const zooms: number[] = [], centres: [number, number][] = [];
+  for (let b = 0; b <= last; b++) {
+    const shown = items.filter(it => (it.from ?? 0) <= b && (it.until == null || it.until >= b));
+    const b0 = contentBox(svg, shown, 0);
+    if (!b0) { zooms.push(zooms[b - 1] ?? 1); centres.push(centres[b - 1] ?? [0, 0]); continue; }
+    const f = framed(floorBox(svg, shown, b0, size, grow), size);
+    zooms.push(Math.min(size[0] / f.w, size[1] / f.h)); centres.push([f.x + f.w / 2, f.y + f.h / 2]);
+  }
+  const close = zooms[last]! * CAMERA_CLOSE;
+  return zooms.map((z, b) => {
+    const k = Math.min(z, close), w = size[0] / k, h = size[1] / k, [cx, cy] = centres[b]!;
+    return { x: cx - w / 2, y: cy - h / 2, w, h };
+  });
+}
+
+/** The master shape nearest a box's own: a wide strip (phones), wide (3:2) or square. */
+function nearestShape(w: number, h: number): MasterShape {
+  const r = w / h;
+  // a short box (a phone) holds its labels at the floor, which only the strip leaves room for
+  return r >= 2.2 || (h <= SHORT_BOX && r >= 1.4) ? "strip" : r >= 1.25 ? "wide" : "square";
+}
+/**
+ * The master shape for a box: the one whose smallest part comes out biggest on screen, so a picture of two long bars on
+ * a phone takes the wide master instead of the strip's thin rows (Review 31ee827, g7-prop at 375). The shape nearest
+ * the box's own wins unless its parts are thinner than three cells and another's come out clearly bigger.
+ */
+function bestShape(shapes: NonNullable<Scene["shapes"]>, w: number, h: number): MasterShape {
+  const near = nearestShape(w, h);
+  const scale = (k: MasterShape) => { const s = shapes[k]!; return Math.min(w / s.width, h / s.height); };
+  const size = (k: MasterShape) => (shapes[k]?.block ?? 0) * scale(k);
+  const all = (["square", "wide", "strip"] as const).filter(k => shapes[k]);
+  if (!all.every(k => shapes[k]!.block)) return near;
+  // only a shape whose parts come out thinner than three cells gives way, and only to one whose parts come out at least
+  // a quarter bigger on screen while it draws nearly as big (text is held at its floor, so a much smaller drawing
+  // crowds its labels: in the smallest strips every other shape does)
+  const thin = (k: MasterShape) => shapes[k]!.block! < 3 * SQUARE.cell;
+  if (!thin(near)) return near;
+  const best = all.filter(k => !thin(k) && scale(k) >= 0.85 * scale(near)).reduce<MasterShape | null>((a, b) => (!a || size(b) > size(a) ? b : a), null);
+  return best && size(best) >= 1.25 * size(near) ? best : near;
+}
+/** A box widened evenly to the box's own shape, so it fills it with its middle in the middle. */
+function fitBox(b: Box, [W, H]: [number, number]): Box {
+  const k = Math.min(W / b.w, H / b.h), w = W / k, h = H / k;
+  return { x: b.x + b.w / 2 - w / 2, y: b.y + b.h / 2 - h / 2, w, h };
+}
+/**
+ * The camera on the master's grid: each beat is framed on whole cells round what it shows (a cell of air each side), at
+ * the box's shape, so the finished picture fills the box too. The first views are never more than CAMERA_CLOSE closer
+ * than the finished one, and the view only widens. The grid runs past the master (gridLines), so it reaches the box's
+ * edges wherever the view sits.
+ */
+function gridFrames(svg: SVGSVGElement, items: SceneItem[], master: [number, number], size: [number, number], grow: number): Box[] {
+  const whole = fitBox({ x: 0, y: 0, w: master[0], h: master[1] }, size);
+  const last = Math.max(0, ...items.map(it => it.from ?? 0)), c = SQUARE.cell;
+  const raw: (Box | null)[] = [];
+  for (let b = 0; b <= last; b++) {
+    const shown = items.filter(it => (it.from ?? 0) <= b && (it.until == null || it.until >= b)), at0 = contentBox(svg, shown, 0);
+    if (!at0) { raw.push(null); continue; }
+    // with the text at the size it will draw (a phone holds labels at the floor, so they take more of a small picture)
+    const at = floorBox(svg, shown, at0, size, grow);
+    const x0 = Math.floor(at.x / c) * c - c, y0 = Math.floor(at.y / c) * c - c, x1 = Math.ceil((at.x + at.w) / c) * c + c, y1 = Math.ceil((at.y + at.h) / c) * c + c;
+    raw.push(fitBox({ x: x0, y: y0, w: x1 - x0, h: y1 - y0 }, size));
+  }
+  const end = raw[last] ?? whole, closest = end.w / CAMERA_CLOSE;
+  const out: Box[] = [];
+  raw.forEach((r, b) => {
+    let f = r ?? out[b - 1] ?? end;
+    if (f.w < closest) { const k = closest / f.w; f = { x: f.x + f.w / 2 - (f.w * k) / 2, y: f.y + f.h / 2 - (f.h * k) / 2, w: f.w * k, h: f.h * k }; }
+    if (b && f.w < out[b - 1]!.w) f = out[b - 1]!;
+    out.push(f);
+  });
+  return out;
+}
+/** The grid lines of a master, one per cell, run on past it a master's size each way, so the grid reaches every edge of
+ *  a box of any shape */
+function gridLines(w: number, h: number, major?: [number, number]) {
+  const c = SQUARE.cell, lines = [], s = Math.max(w, h), ten = 10 * c;
+  const bold = (v: number, o: number) => !!major && Math.abs((((v - o) % ten) + ten) % ten) < 1e-6;
+  for (let x = -s; x <= w + s + 1e-6; x += c) lines.push(<line key={`x${x}`} x1={x} y1={-s} x2={x} y2={h + s} {...(bold(x, major?.[0] ?? 0) ? { className: "major" } : {})} />);
+  for (let y = -s; y <= h + s + 1e-6; y += c) lines.push(<line key={`y${y}`} x1={-s} y1={y} x2={w + s} y2={y} {...(bold(y, major?.[1] ?? 0) ? { className: "major" } : {})} />);
+  return lines;
+}
+
+/** Moves the view to the next beat's frame over one beat; going back, Watch again, a resize or less motion just cut. */
+function useCamera(ref: RefObject<SVGSVGElement | null>, at: number, vb: Box, on: boolean) {
+  const prev = useRef<{ at: number; vb: Box } | null>(null);
+  useLayoutEffect(() => {
+    const el = ref.current, p = prev.current;
+    prev.current = { at, vb };
+    if (!el || !on || !p || at !== p.at + 1 || motionOff()) return;
+    const a = p.vb, b = vb;
+    if (Math.abs(a.w - b.w) < 0.5 && Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5) return;
+    // labels step out while the view moves and come back where they settle (G 02:47)
+    el.classList.add("moving");
+    const t0 = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const u = Math.min(1, (now - t0) / CAMERA_MS), k = u < 1 ? ease(u) : 1;
+      const c = { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k, w: a.w + (b.w - a.w) * k, h: a.h + (b.h - a.h) * k };
+      el.setAttribute("viewBox", vbText(c));
+      // lines hold their 3px as the view widens (--px: drawing units per screen pixel, as useLabelFloor sets it)
+      const r = layoutRect(el);
+      if (r.width > 0 && r.height > 0) el.style.setProperty("--px", Math.max(c.w / r.width, c.h / r.height).toFixed(3));
+      if (u < 1) raf = requestAnimationFrame(tick); else el.classList.remove("moving");
+    };
+    el.setAttribute("viewBox", vbText(a));
+    raf = requestAnimationFrame(tick);
+    return () => { cancelAnimationFrame(raf); el.classList.remove("moving"); el.setAttribute("viewBox", vbText(b)); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [at, vb.x, vb.y, vb.w, vb.h, on]);
+}
 /** boxes this tall or less are short (phones; the same line as --short in the picture CSS) */
 const SHORT_BOX = 300;
 
@@ -185,6 +345,19 @@ const cap = (b: Box, b0: Box, grow: number): Box => {
     w, h,
   };
 };
+/**
+ * The frame, widened evenly so the picture as it ends sits in the middle of its box (G 2026-10-14: "make sure they're
+ * centered in the box"). The frame still holds every beat, so nothing moves between beats; a shape shown only on an
+ * earlier beat just leaves room on its side.
+ */
+function aroundEnd(svg: SVGSVGElement, items: SceneItem[], box: Box): Box {
+  const last = Math.max(0, ...items.map(it => it.from ?? 0));
+  const end = contentBox(svg, items.filter(it => (it.from ?? 0) <= last && (it.until == null || it.until >= last)), 0);
+  if (!end) return box;
+  const cx = end.x + end.w / 2, cy = end.y + end.h / 2;
+  const hw = Math.max(cx - box.x, box.x + box.w - cx), hh = Math.max(cy - box.y, box.y + box.h - cy);
+  return { x: cx - hw, y: cy - hh, w: 2 * hw, h: 2 * hh };
+}
 const union = (a: Box, b: Box): Box => {
   const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y);
   return { x, y, w: Math.max(a.x + a.w, b.x + b.w) - x, h: Math.max(a.y + a.h, b.y + b.h) - y };
