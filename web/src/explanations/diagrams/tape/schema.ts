@@ -63,6 +63,8 @@ export interface TapeRow {
   lit?: Beats[];
   /** set by the builder when it wraps a bar onto more lines in the master square: this row goes on the line before it */
   cont?: boolean;
+  /** set by the builder when it wraps a bar: the whole bar had no shading, so every line of it keeps its parts filled */
+  held?: boolean;
 }
 
 /** a run of beats, from one beat to another (or to the end) */

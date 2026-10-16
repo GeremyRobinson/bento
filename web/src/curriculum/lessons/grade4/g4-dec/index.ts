@@ -2,8 +2,7 @@ import { formatNumber as f, frac, num, op, type MathText } from "../../../schema
 import type { AnswerModel, LessonDefinition } from "../../../schemas/lesson";
 import type { Rng } from "../../../generators/rng";
 import { beats, type Explanation } from "../../../../explanations/schema";
-import { buildTape } from "../../../../explanations/diagrams/tape/build";
-import type { TapeRow } from "../../../../explanations/diagrams/tape/schema";
+import { buildHundredthsSum } from "../../../../explanations/diagrams/early-g4/hundredths";
 import { expectedOf, ints, ns } from "../../_tape-family/steps";
 
 /** a/10 + b/100, written as a decimal. */
@@ -33,30 +32,13 @@ function answers({ a, b }: TenthsHundredthsProblem): AnswerModel {
 }
 
 /**
- * Bars cut into tenths. The first shows a tenths; the second b hundredths (each tenth carries ten thin hundredth lines).
- * Beat 1 cuts the first bar's tenths into hundredths too, beat 2 puts the pieces together (two bars past one whole),
- * beat 3 names the total as a decimal.
+ * Hundredths on the grid (G 2026-10-15): a cell is one hundredth, a column of ten is one tenth, a 10 by 10 square is
+ * one whole. The first square shows a tenths as whole columns, the second b hundredths. Beat 1 cuts the tenths into
+ * hundredths, beat 2 puts the cells together (past one whole they fill a second square), beat 3 names the decimal.
  */
 export function tenthsHundredthsPicture({ a, b }: TenthsHundredthsProblem) {
-  const S = 10 * a + b, wholes = Math.ceil(S / 100);
-  const rows: TapeRow[] = [
-    { length: 1, parts: 10, ticks: [{ count: 100, from: 1 }], fills: [{ a: 0, b: a / 10, tone: "on" }],
-      label: [{ text: `${a}/10`, until: 0 }, { text: `${10 * a}/100`, from: 1 }] },
-    { length: 1, parts: 10, ticks: [{ count: 100 }], fills: [{ a: 0, b: b / 100, tone: "two" }], label: [{ text: `${b}/100` }] },
-  ];
-  for (let w = 0; w < wholes; w++) {
-    const on = [Math.max(0, -w * 100), Math.min(100, 10 * a - w * 100)], acc = [Math.max(0, 10 * a - w * 100), Math.min(100, S - w * 100)];
-    rows.push({
-      length: 1, parts: 10, ticks: [{ count: 100, from: 2 }], from: 2,
-      fills: [
-        ...(on[1]! > on[0]! ? [{ a: on[0]! / 100, b: on[1]! / 100, tone: "on" as const }] : []),
-        ...(acc[1]! > acc[0]! ? [{ a: acc[0]! / 100, b: acc[1]! / 100, tone: "two" as const }] : []),
-      ],
-      label: w === 0 ? [{ text: `${S}/100` }] : [],
-      total: w === wholes - 1 ? [{ text: `= ${f(S / 100)}`, from: 3, acc: true }] : [],
-    });
-  }
-  return buildTape({ rows, alt: `Bars cut into tenths and hundredths: ${a}/10 is ${10 * a}/100; with ${b}/100 that makes ${S}/100, which is ${f(S / 100)}.` });
+  const S = 10 * a + b;
+  return buildHundredthsSum({ a, b, decimal: f(S / 100), alt: `Hundredths squares: ${a}/10 is ${a} column${a === 1 ? "" : "s"}, ${10 * a}/100; with ${b}/100 that makes ${S}/100, which is ${f(S / 100)}.` });
 }
 
 function explain(p: TenthsHundredthsProblem, model: AnswerModel): Explanation {

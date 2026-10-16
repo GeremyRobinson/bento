@@ -372,7 +372,8 @@ describe("tape lessons", () => {
       const d = sceneOf(l, p), S = p.a * p.d, L = p.b * p.c;
       const copies = d.items.filter(i => i.type === "rect" && i.from === 3 && /\bseg on\b/.test(i.cls ?? ""));
       expect(copies).toHaveLength(Math.ceil(S / L));
-      expect(copies.filter(i => i.vars?.["--tint"] === "var(--acc)")).toHaveLength(S % L ? 1 : 0);
+      // the short copy is the 60% step fill on the grid (style guide: no solid blocks), the accent off it
+      expect(copies.filter(i => i.vars?.["--tint"] === "var(--pic-mid)")).toHaveLength(S % L ? 1 : 0);
       expect(textsAt(d, 2).map(t => t.text)).toEqual(expect.arrayContaining([`${S} small pieces`, `${L} small pieces`]));
       // never in grade 6's lime (right) part colour
       expect(d.items.filter(i => /\bp1\b/.test(i.cls ?? ""))).toEqual([]);

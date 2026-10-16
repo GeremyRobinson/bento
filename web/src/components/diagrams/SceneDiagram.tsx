@@ -83,7 +83,7 @@ export function SceneDiagram({ diagram: given, at, fit = false }: { diagram: Sce
       style={{ "--w": Math.round(d.width), "--h": Math.round(d.height), ...(fitted ? { [BOX_H]: Math.round(frame.size[1]) } : {}), ...(fitted ? textHold(zoom, frame.text) : {}), ...(fitted && frame.panel ? FILL : {}) } as CSSProperties} data-family={d.family}>
       {/* a second amount is the same colour in stripes (style guide rule 5) */}
       {/* the master's grid, drawn in the picture so it zooms with it and every part stays on its lines (G 2026-10-15) */}
-      {d.square && <g className="pic-grid" aria-hidden="true">{gridLines(d.width, d.height)}</g>}
+      {d.square && <g className="pic-grid" aria-hidden="true">{gridLines(d.width, d.height, d.major)}</g>}
       {d.two && <defs><pattern id="pic-stripe" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect className="stripe-bg" width="8" height="8" /><rect className="stripe" width="3.5" height="8" /></pattern></defs>}
       {dotsOnTop(d.items).map((it, i, all) => {
         const from = it.from ?? 0;
@@ -213,10 +213,11 @@ function gridFrames(svg: SVGSVGElement, items: SceneItem[], master: [number, num
 }
 /** The grid lines of a master, one per cell, run on past it a master's size each way, so the grid reaches every edge of
  *  a box of any shape */
-function gridLines(w: number, h: number) {
-  const c = SQUARE.cell, lines = [], s = Math.max(w, h);
-  for (let x = -s; x <= w + s + 1e-6; x += c) lines.push(<line key={`x${x}`} x1={x} y1={-s} x2={x} y2={h + s} />);
-  for (let y = -s; y <= h + s + 1e-6; y += c) lines.push(<line key={`y${y}`} x1={-s} y1={y} x2={w + s} y2={y} />);
+function gridLines(w: number, h: number, major?: [number, number]) {
+  const c = SQUARE.cell, lines = [], s = Math.max(w, h), ten = 10 * c;
+  const bold = (v: number, o: number) => !!major && Math.abs((((v - o) % ten) + ten) % ten) < 1e-6;
+  for (let x = -s; x <= w + s + 1e-6; x += c) lines.push(<line key={`x${x}`} x1={x} y1={-s} x2={x} y2={h + s} {...(bold(x, major?.[0] ?? 0) ? { className: "major" } : {})} />);
+  for (let y = -s; y <= h + s + 1e-6; y += c) lines.push(<line key={`y${y}`} x1={-s} y1={y} x2={w + s} y2={y} {...(bold(y, major?.[1] ?? 0) ? { className: "major" } : {})} />);
   return lines;
 }
 

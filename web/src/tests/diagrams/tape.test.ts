@@ -122,9 +122,8 @@ describe("pictures follow the problem", () => {
     const d = unlikePicture(createUnlikeFractions(2, 3, 1, 6, "+"));
     const knives = d.items.filter(i => i.type === "line" && i.cls === "ln2" && i.from === 1);
     expect(knives).toHaveLength(3); // through the middle of each third
-    const split = d.items.filter(i => i.type === "rect" && i.from === 1 && i.enter === "slide");
-    expect(split.length).toBeGreaterThanOrEqual(6);
-    expect(split.every(i => i.vars?.["--dx"] != null && (i.delay ?? 0) > 0)).toBe(true);
+    // on the grid the parts touch (G 2026-10-15: the grid is the maths), so the knife's line is the cut and nothing slides
+    expect(d.items.filter(i => i.type === "rect" && i.from === 1 && i.enter === "slide")).toEqual([]);
     for (let beat = 1; beat <= 4; beat++) expect(d.items.some(i => i.from === beat), `beat ${beat}`).toBe(true);
   });
 
@@ -156,7 +155,7 @@ describe("pictures follow the problem", () => {
 });
 
 // every tape lesson, the reference and many generated problems: every shape and label inside the canvas
-const TAPE = ["g4-equiv", "g4-likefrac", "g4-fracwhole", "g4-dec", "add", "sub", "mix", "g5-improper", "g5-fracof", "g5-unitdiv", "g5-units",
+const TAPE = ["g4-equiv", "g4-likefrac", "g4-fracwhole", "add", "sub", "mix", "g5-improper", "g5-fracof", "g5-unitdiv", "g5-units",
   "g6-ratio", "g6-rate", "g6-pctof", "g6-pctwhole", "g7-prop", "g7-scale", "g7-discount", "g7-pctchange"];
 
 function bounds(i: SceneItem): [number, number, number, number] {
