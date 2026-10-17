@@ -66,6 +66,15 @@ enum PaperText {
         return e
     }
 
+    /// A line of text standing up, in points, its line's bottom-left at its origin: for words that face the child.
+    static func standing(_ s: String, _ f: UIFont, _ c: UIColor) -> ModelEntity {
+        let e = label(s, f, c, at: .zero)
+        e.orientation = simd_quatf(angle: 0, axis: [0, 1, 0])
+        e.scale = SIMD3(repeating: 72)
+        e.position = .zero
+        return e
+    }
+
     /// A Phosphor icon lying on the paper in rect `r`, filled with colour `c`, as drawn.
     static func icon(_ name: String, _ c: UIColor, in r: CGRect, y: Float = 0.0025) -> ModelEntity? {
         var red: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0

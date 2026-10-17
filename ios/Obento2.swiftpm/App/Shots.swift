@@ -147,6 +147,15 @@ enum Shots {
                 l.go()
                 if name.hasPrefix("cover") { for c in [(0, 0), (1, 0), (2, 0), (0, 1), (1, 1)] { l.tap(.init(c.0, c.1)) } }
                 if name == "cover-hint1" { l.go(); return }
+                if name == "cover-tapcheck" {
+                    // press Check by where it shows on the screen, as a finger would
+                    let v = l.view(at: PaperClock.now), a = v.project(CubesLayout.blocksAt(l), screen: l.screen), k = v.scale / Paper.unit
+                    if let r = CubesLayout.blocks(l).first(where: { $0.kind == .main })?.rect {
+                        let p = Point(a.x + r.midX * k, a.y + r.midY * k)
+                        if CubesLayout.block(at: p, l) == .main { l.go() }
+                    }
+                    return
+                }
                 if name == "cover-hint2" { l.go(); l.go(); return }
                 if name == "cover" { return }
                 for i in 0..<l.box.floor { l.tap(UnitCubes.cell(i, in: l.box)) }

@@ -172,6 +172,9 @@ final class Rig {
     var startKey = ""
     // the lesson page's words, in the scene (ProblemWords.swift)
     let pageWords = Entity()
+    // Unit cubes' words, standing in the scene (CubesWords.swift)
+    let cubesQuestion = Pin(), cubesL = Pin(), cubesW = Pin(), cubesH = Pin(), cubesCount = Pin(), cubesBlocks = Pin()
+    var cubesKey = ""
     var problemWords: [UUID: ProblemWords] = [:]
     var piecesQuick = ""
     var pieceGroups: [String: ModelEntity] = [:]
@@ -275,10 +278,11 @@ final class Rig {
             c.e.scale = SIMD3(1, Float(max(0.0001, k)), 1)
         }
         outline.isEnabled = l.tilt(at: t) == 0 && l.layers == 0
+        Perf.time("cubes-words") { drawCubesWords(l, view: v, at: t) }
     }
 
     private func recolour(_ dark: Bool) {
-        wordsKey = ""
+        wordsKey = ""; cubesKey = ""
         self.dark = dark
         colours = Colours(dark: dark, chapter: Chapter.measurement.hex)
         paperHex = dark ? 0x121211 : 0xF3F2EF
