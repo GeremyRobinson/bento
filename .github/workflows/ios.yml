@@ -67,6 +67,9 @@ jobs:
           xcrun simctl launch "$UDID" education.bento.obento2 -shot demo -landscape
           sleep 26
           kill -INT $REC; wait $REC || true
+          # keep the video small enough to send
+          avconvert --source shots/ipad-demo.mp4 --preset Preset960x540 --output shots/demo-small.mp4 --replace && mv shots/demo-small.mp4 shots/ipad-demo.mp4 || true
+          ls -la shots
           shoot "iPad Pro 13-inch" dark -landscape "tilt" ipad-dark
           shoot "iPhone 16 Pro" light "" "paper flat tilt stacked" phone
       - name: Save screenshots to the branch

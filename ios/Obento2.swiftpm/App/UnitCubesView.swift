@@ -151,7 +151,7 @@ final class Rig {
         content.add(camera)
         content.add(root)
         // the paper itself, under the grid, large enough to fill any tilted view
-        let sheet = ModelEntity(mesh: .generatePlane(width: 400, depth: 400), materials: [UnlitMaterial(color: colours.paper)])
+        let sheet = ModelEntity(mesh: .generatePlane(width: 400, depth: 400), materials: [flat( colours.paper)])
         sheet.position = SIMD3(Float(model.origin.x), -0.003, Float(model.origin.z))
         root.addChild(sheet)
     }
@@ -168,7 +168,8 @@ final class Rig {
         camera.look(at: target, from: from, upVector: SIMD3(Float(up.x), Float(up.y), Float(up.z)), relativeTo: nil)
         var oc = OrthographicCameraComponent()
         oc.near = 0.1; oc.far = 400
-        oc.scale = Float(model.screen.height / v.scale)
+        // RealityKit's orthographic scale is half the view's height, in world units
+        oc.scale = Float(model.screen.height / 2 / v.scale)
         camera.components.set(oc)
 
         for (c, e) in squares { let k = Float(max(0.0001, model.square(c, at: t))); e.scale = SIMD3(k, 1, k) }
@@ -187,18 +188,18 @@ final class Rig {
         let b = model.box, o = model.origin
         let sq = MeshResource.generatePlane(width: 1, depth: 1)
         for z in 0..<b.width { for x in 0..<b.length {
-            let e = ModelEntity(mesh: sq, materials: [UnlitMaterial(color: colours.square)])
+            let e = ModelEntity(mesh: sq, materials: [flat( colours.square)])
             e.position = SIMD3(Float(o.x) + Float(x) + 0.5, 0.001, Float(o.z) + Float(z) + 0.5)
             root.addChild(e); squares[.init(x, z)] = e
         } }
         let cube = MeshResource.generateBox(width: 1, height: 1, depth: 1, cornerRadius: 0, splitFaces: true)
         // splitFaces order: front, top, back, bottom, right, left
-        let faces: [any RealityKit.Material] = [colours.front, colours.top, colours.front, colours.top, colours.side, colours.side].map { UnlitMaterial(color: $0) as any RealityKit.Material }
+        let faces: [any RealityKit.Material] = [colours.front, colours.top, colours.front, colours.top, colours.side, colours.side].map { flat( $0) as any RealityKit.Material }
         for y in 0..<b.height { for z in 0..<b.width { for x in 0..<b.length {
             let g = Entity()
             g.position = SIMD3(Float(o.x) + Float(x), Float(y), Float(o.z) + Float(z))
             let m = ModelEntity(mesh: cube, materials: faces); m.position = SIMD3(0.5, 0.5, 0.5); g.addChild(m)
-            for e in Self.cubeEdges() { e.model?.materials = [UnlitMaterial(color: colours.deep)]; g.addChild(e); edges.append(e) }
+            for e in Self.cubeEdges() { e.model?.materials = [flat( colours.deep)]; g.addChild(e); edges.append(e) }
             g.isEnabled = false
             root.addChild(g); cubes.append((x, y, z, g))
         } } }
@@ -238,9 +239,9 @@ final class Rig {
             let lines = [(SIMD2(Float(o.x) + d, z0), SIMD2(Float(o.x) + d, z1)), (SIMD2(x0, Float(o.z) + d), SIMD2(x1, Float(o.z) + d))]
             if i % Paper.major == 0 { major += lines } else { minor += lines }
         }
-        if let m = Self.lines(minor, width: px) { grid.addChild(ModelEntity(mesh: m, materials: [UnlitMaterial(color: colours.minor)])) }
+        if let m = Self.lines(minor, width: px) { grid.addChild(ModelEntity(mesh: m, materials: [flat( colours.minor)])) }
         if let m = Self.lines(major, width: px) {
-            let e = ModelEntity(mesh: m, materials: [UnlitMaterial(color: colours.major)]); e.position.y = 0.0005; grid.addChild(e)
+            let e = ModelEntity(mesh: m, materials: [flat( colours.major)]); e.position.y = 0.0005; grid.addChild(e)
         }
         // the box's floor, dashed, on the paper's strong lines
         let b = model.box, L = Float(b.length), W = Float(b.width)
@@ -252,7 +253,7 @@ final class Rig {
             while s < len { dashes.append((a + dirn * s, a + dirn * min(len, s + 0.08))); s += 0.14 }
         }
         if let m = Self.lines(dashes, width: 2 * px) {
-            let e = ModelEntity(mesh: m, materials: [UnlitMaterial(color: colours.deep)]); e.position.y = 0.002; outline.addChild(e)
+            let e = ModelEntity(mesh: m, materials: [flat( colours.deep)]); e.position.y = 0.002; outline.addChild(e)
         }
         root.addChild(grid); root.addChild(outline)
     }
@@ -280,3 +281,10 @@ final class Rig {
 }
 
 struct EdgeAxis: Component { let axis: Int }
+
+/// A plain colour with no lighting and no tone mapping, so the paper in 3D is the same colour as the flat paper.
+@MainActor func flat(_ c: UIColor) -> UnlitMaterial {
+    var m = UnlitMaterial(color: c)
+    m.applyPostProcessToneMap = false
+    return m
+}
