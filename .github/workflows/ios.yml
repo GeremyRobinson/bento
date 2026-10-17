@@ -24,10 +24,11 @@ jobs:
         run: brew install xcodegen && xcodegen
       - name: Build for the iPad simulator
         run: |
-          set -o pipefail
           xcodebuild -project Obento2.xcodeproj -scheme Obento2 -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO build | tail -80
+            ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 \
+            || { grep -E ": error:" -A4 build.log | head -200; exit 1; }
+          grep -E ": warning:" build.log | grep Obento2/ | sort -u | head -40 || true
       - name: Screenshots
         run: |
           APP=$(find build/Build/Products -name '*.app' -maxdepth 3 | head -1)
