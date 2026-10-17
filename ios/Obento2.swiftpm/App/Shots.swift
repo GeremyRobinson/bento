@@ -28,6 +28,15 @@ enum Shots {
         Task {
             try? await Task.sleep(for: .seconds(1.5))
             if name == "demo" { await demo(m); return }
+            if name == "hop" {
+                // glide from group to group, as a hand would, to watch the words keep up with the pictures
+                m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
+                try? await Task.sleep(for: .seconds(2))
+                for id in ["ad", "uc", "g5-pow10", "uc", "g5-mult2", "uc"] {
+                    m.select(Map.pieces.first { $0.id == id }!); try? await Task.sleep(for: .seconds(1.2))
+                }
+                return
+            }
             if name == "move" {
                 // drag across the map and pinch in and out, about as a hand would, for -perf timings
                 m.frameGroup(duration: 0); try? await Task.sleep(for: .seconds(2.5))

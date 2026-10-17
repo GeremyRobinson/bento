@@ -163,6 +163,13 @@ final class Rig {
     var gridAt: (x: Int, z: Int, half: Int)?
     let pieces = Entity()
     var piecesKey = ""
+    // the map's words, in the scene (PaperWords.swift)
+    let words = Entity()
+    var wordsKey = ""
+    var pieceWords: [String: Entity] = [:]
+    var pieceWordsK: [String: Double] = [:]
+    let start = Entity()
+    var startKey = ""
     var piecesQuick = ""
     var pieceGroups: [String: ModelEntity] = [:]
     // the open lesson
@@ -216,7 +223,7 @@ final class Rig {
         // the paper itself, under the grid, large enough to fill any tilted view; it follows the camera
         sheet.model = ModelComponent(mesh: .generatePlane(width: 400, depth: 400), materials: [])
         sheet.position.y = -0.003
-        root.addChild(sheet); root.addChild(pieces); root.addChild(lessonRoot); root.addChild(barsRoot); root.addChild(stepsRoot); barsRoot.addChild(boxes)
+        root.addChild(sheet); root.addChild(pieces); root.addChild(lessonRoot); root.addChild(barsRoot); root.addChild(stepsRoot); barsRoot.addChild(boxes); root.addChild(words)
     }
 
     func update(view v: PaperView3D, model: PaperModel, time t: Double, dark: Bool) {
@@ -248,8 +255,8 @@ final class Rig {
         if let g = gridAt, abs(g.x - gx) <= 2, abs(g.z - gz) <= 2, g.half >= half {} else { Perf.time("grid") { regrid(x: gx, z: gz, half: half) } }
 
         let onMap = model.lesson == nil && model.bars == nil && model.steps == nil
-        pieces.isEnabled = onMap
-        if onMap { Perf.time("pieces") { drawPieces(model, at: t) } }
+        pieces.isEnabled = onMap; words.isEnabled = onMap
+        if onMap { Perf.time("pieces") { drawPieces(model, at: t) }; Perf.time("words") { drawWords(model, at: t) } }
         drawPage(model.bars, at: t)
         drawSteps(model.steps, at: t)
 
@@ -268,6 +275,7 @@ final class Rig {
     }
 
     private func recolour(_ dark: Bool) {
+        wordsKey = ""
         self.dark = dark
         colours = Colours(dark: dark, chapter: Chapter.measurement.hex)
         paperHex = dark ? 0x121211 : 0xF3F2EF
