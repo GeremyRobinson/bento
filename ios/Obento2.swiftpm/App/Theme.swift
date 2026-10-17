@@ -62,18 +62,21 @@ enum Typeface {
 struct CellButton<Label: View>: View {
     var width: CGFloat = 40
     var main = false
+    /// A picked choice: outlined, tinted and lettered in its chapter's colour.
+    var picked: Color? = nil
     let action: () -> Void
     @ViewBuilder let label: () -> Label
     var body: some View {
         Button(action: action) {
             label()
                 .frame(width: width, height: 40)
-                .background(Ink.surface, ignoresSafeAreaEdges: [])
-                .overlay(Rectangle().strokeBorder(main ? Ink.ink : Ink.lineStrong, lineWidth: 1.5))
+                .background { ZStack { Ink.surface; picked?.opacity(0.12) } }
+                .overlay(Rectangle().strokeBorder(picked ?? (main ? Ink.ink : Ink.lineStrong), lineWidth: 1.5))
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .foregroundStyle(Ink.ink)
+        .foregroundStyle(picked ?? Ink.ink)
+        .zIndex(picked == nil ? 0 : 1)
     }
 }
 

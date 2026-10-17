@@ -3,6 +3,10 @@ import SwiftUI
 /// Add with different bottoms: the words, numbers and buttons on top of the bars. The bars themselves are in the
 /// paper's scene (PaperScene). Everything is pinned to the paper with the paper's own camera, so it pans and zooms as one sheet.
 struct AddFractionsView: View {
+    /// Everything in a problem lines up in one column, two cells in from each side of its box.
+    static let column = BarsPage.box.width - 80
+    /// The action row: two cells above the box's bottom.
+    static let actions = BarsPage.box.dy + BarsPage.box.height - 80
     let model: AddFractionsModel
     let camera: PaperCamera
     let time: Double
@@ -26,7 +30,7 @@ struct AddFractionsView: View {
                     .frame(minHeight: 40, alignment: .bottomLeading)
                 Text(words.hint).font(Typeface.hint).foregroundStyle(Ink.ink2).frame(height: 20, alignment: .leading)
             }
-            .frame(width: 480, alignment: .leading)
+            .frame(width: Self.column, alignment: .leading)
             .opacity(fresh).offset(y: (1 - fresh) * 8)
             .pinned(at(0, 0), .bottomLeading, k)
 
@@ -42,9 +46,10 @@ struct AddFractionsView: View {
             }
             .opacity(shown)
 
+            // under the piece waiting to be added, so it never runs into the match written above the row
             if l.picture["waiting"] == 1 && l.marked.isEmpty {
-                Text("+ \(s.q)/\(s.b)").font(Typeface.font(15, .medium)).monospacedDigit().foregroundStyle(Ink.ink2)
-                    .pinned(at(W + 20, r2 - 8), .bottomLeading, k)
+                Text("+ \(s.q)/\(s.b)").font(Typeface.font(17, .medium)).monospacedDigit().foregroundStyle(Ink.ink2)
+                    .pinned(at(W + 20, r2 + h + 20), .topLeading, k)
             }
             if l.picture["match"] == 1 {
                 Text("\(s.p)/\(s.a) = \(s.covered)/\(s.b)").font(Typeface.font(22, .medium)).monospacedDigit().foregroundStyle(chapter)
@@ -54,20 +59,21 @@ struct AddFractionsView: View {
                 Text(look).font(Typeface.font(13)).foregroundStyle(Ink.ink2).opacity(model.guide(at: time))
                     .pinned(at(e + 10, r1 - 24), .bottomLeading, k)
             }
-            // a pick-one step: the choices are cell blocks under the bars, the message under them
+            // a pick-one step: the choices share the column's width, two cells under the bars; the picked one takes the
+            // chapter's colour (black stays for the main action). The message goes a cell under them
             if let choices = l.step.answer?.choices {
+                let w = (Self.column + 1.5 * Double(choices.count - 1)) / Double(choices.count)
                 HStack(spacing: -1.5) {
                     ForEach(Array(choices.enumerated()), id: \.offset) { i, c in
-                        CellButton(width: 120, main: l.typed["c"] == String(i), action: { model.choose(i) }) { Text(c).font(Typeface.button) }
+                        CellButton(width: w, picked: l.typed["c"] == String(i) ? chapter : nil, action: { model.choose(i) }) { Text(c).font(Typeface.button) }
                     }
                 }
                 .opacity(shown)
-                .pinned(at(0, r2 + h + 12), .topLeading, k)
+                .pinned(at(0, r2 + h + 20), .topLeading, k)
                 if let m = model.message {
-                    // wraps inside the problem's box
                     Text(m.text).font(Typeface.font(17, .medium)).foregroundStyle(chapter)
-                        .frame(width: 520, alignment: .leading).fixedSize(horizontal: false, vertical: true)
-                        .pinned(at(0, r2 + h + 60), .topLeading, k)
+                        .frame(width: Self.column, alignment: .leading).fixedSize(horizontal: false, vertical: true)
+                        .pinned(at(0, r2 + h + 80), .topLeading, k)
                 }
             }
             if let count = l.countLine {
@@ -75,7 +81,7 @@ struct AddFractionsView: View {
                     if let m = model.message { Text(m.text).foregroundStyle(m.ok ? Ink.right : chapter) }
                     else { Text(count).foregroundStyle(Ink.ink2) }
                 }
-                .font(Typeface.font(17, .medium)).frame(width: 520, alignment: .leading).fixedSize(horizontal: false, vertical: true)
+                .font(Typeface.font(17, .medium)).frame(width: Self.column, alignment: .leading).fixedSize(horizontal: false, vertical: true)
                 .pinned(at(0, r2 + h + 20), .topLeading, k)
             }
             if l.picture["total"] == 1 {
@@ -84,27 +90,29 @@ struct AddFractionsView: View {
                     .pinned(at(0, r2 + h + 40), .topLeading, k)
             }
 
-            // the action blocks: Show me (not in the skill check; outlined when it's the third hint), Reset, the main action.
+            // the action row, the same on every problem: the main action on the left, where it always is, and Show me (not
+            // in the skill check; outlined when it's the third hint) and Reset on the column's right edge.
             // Hands off while a See beat plays: they grey out until it ends. A solved problem has none: it stays solved.
             // The How to plays itself, and offers Watch again once it has.
             HStack(spacing: -1.5) {
                 if model.auto {
                     if model.solved, let watchAgain { MainCellButton(title: "Watch again", action: watchAgain) }
                 } else if !model.solved {
+                    MainCellButton(title: words.action, action: model.go)
+                    Spacer(minLength: 0)
                     if l.step.task != nil {
                         if l.helps { CellButton(main: l.picture["showMe"] == 1, action: model.showMe) { Icon(name: "play") } }
                         CellButton(action: model.reset) { Icon(name: "arrow-counter-clockwise") }
-                        Color.clear.frame(width: 40, height: 40)
                     }
-                    MainCellButton(title: words.action, action: model.go)
                 }
             }
+            .frame(width: Self.column, alignment: .leading)
             .opacity(model.busy ? 0.35 * shown : shown).allowsHitTesting(!model.busy)
-            .pinned(at(0, 460), .topLeading, k)
+            .pinned(at(0, Self.actions), .topLeading, k)
 
-            // the box's name, at the top of the box, above the question
+            // the box's name, at the top of the column, two cells in from the box's top
             Text(model.label).font(Typeface.font(15, .medium)).foregroundStyle(Ink.ink3).opacity(shown)
-                .pinned(at(BarsPage.box.dx + 20, BarsPage.box.dy + 20), .topLeading, k)
+                .pinned(at(0, BarsPage.box.dy + 40), .topLeading, k)
 
             // the map's tab, on the box's top-right corner: Now on the problem the child is on, Done once it's solved
             if let tag = model.solved && !model.auto ? "Done" : current ? "Now" : nil {
