@@ -127,6 +127,25 @@ button{font:inherit;color:inherit}
 .run #lpic .pc{transform-box:fill-box;transform-origin:center bottom;opacity:0;animation:cell .4s var(--settle) var(--d) forwards}
 @keyframes draw{to{stroke-dashoffset:0}}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* number line + digit cells (Compare decimals) */
+#lpic .tk{stroke:var(--line-strong);stroke-width:1.5;fill:none;transition:d .15s var(--ease)}
+#lpic .nlt{font:450 12px var(--font);fill:var(--ink3)}
+#lpic .nlt.big{fill:var(--ink2);font-weight:550}
+#lpic .nlt.hl{fill:var(--cc);font-weight:600}
+#lpic .bd line{stroke:var(--cc);stroke-width:2}
+#lpic .bd rect{fill:var(--cc);stroke:var(--cc);stroke-width:2;transition:x .12s var(--ease)}
+#lpic .bd.b2 rect,#lpic .bd.b2 line{fill:color-mix(in oklab,var(--cc) 45%,var(--bg));stroke:color-mix(in oklab,var(--cc) 70%,var(--bg))}
+#lpic .bd.live rect{cursor:ew-resize}
+#lpic .bd.on rect{stroke-width:4}
+#lpic .nlr{font:550 28px var(--font);fill:var(--ink);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+#lpic .nlr.small{font-size:15px;fill:var(--cc)}
+#lpic .nlr.small.b2{fill:var(--ink2)}
+#lpic .dc{fill:var(--surface);stroke:var(--line-strong);stroke-width:1.5;transition:stroke .15s}
+#lpic .dc.act{stroke:var(--cc);stroke-width:3}
+#lpic .dc.fill{stroke:var(--ink)}
+#lpic .dgt{font:550 24px var(--font);fill:var(--ink);font-variant-numeric:tabular-nums}
+#lpic .nlb{stroke:var(--cc);stroke-width:8;fill:none}
+#lpic .nlb.b2{stroke:color-mix(in oklab,var(--cc) 45%,var(--bg))}
 @keyframes cell{from{opacity:0;transform:scaleY(.2)}to{opacity:1;transform:none}}
 
 /* lesson panel: same master as the inspector; intro, then each step, then solved */
@@ -493,12 +512,12 @@ function bounds(){ var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; L.forEach(function(c){x0=M
 
 // pointer: pan, pinch, tap
 var pts={}, moved=0;
-P.addEventListener('pointerdown',function(e){ document.body.classList.remove('fly','glide'); pts[e.pointerId]={x:e.clientX,y:e.clientY}; moved=0; P.classList.add('drag'); P.setPointerCapture(e.pointerId); hint(); });
-P.addEventListener('pointermove',function(e){ if(!pts[e.pointerId])return; var ids=Object.keys(pts);
+P.addEventListener('pointerdown',function(e){ if(open&&open.id==='cd'&&NL.down(e)) return; document.body.classList.remove('fly','glide'); pts[e.pointerId]={x:e.clientX,y:e.clientY}; moved=0; P.classList.add('drag'); P.setPointerCapture(e.pointerId); hint(); });
+P.addEventListener('pointermove',function(e){ if(NL.drag){ NL.move(e); return; } if(!pts[e.pointerId])return; var ids=Object.keys(pts);
   if(ids.length===1){ var p=pts[e.pointerId]; cam.x+=e.clientX-p.x; cam.y+=e.clientY-p.y; moved+=Math.abs(e.clientX-p.x)+Math.abs(e.clientY-p.y); apply(); }
   else if(ids.length===2){ var a=pts[ids[0]],b=pts[ids[1]],d0=Math.hypot(a.x-b.x,a.y-b.y); pts[e.pointerId]={x:e.clientX,y:e.clientY}; a=pts[ids[0]];b=pts[ids[1]]; zoomAt(Math.hypot(a.x-b.x,a.y-b.y)/d0,(a.x+b.x)/2,(a.y+b.y)/2); moved+=99; return; }
   pts[e.pointerId]={x:e.clientX,y:e.clientY}; });
-P.addEventListener('pointerup',function(e){ delete pts[e.pointerId]; if(!Object.keys(pts).length) P.classList.remove('drag'); if(moved>=6) return;
+P.addEventListener('pointerup',function(e){ if(NL.drag){ NL.up(e); return; } delete pts[e.pointerId]; if(!Object.keys(pts).length) P.classList.remove('drag'); if(moved>=6) return;
   var el=document.elementFromPoint(e.clientX,e.clientY)||document.body, Ls=document.getElementById('lesson');
   if(open){ var ab=el.closest('[data-act]'); if(ab){ act(ab.dataset.act); return; } var pc=el.closest('[data-p]'); if(pc) tapPiece(+pc.dataset.p); return; }
   if(kidMode){ var st=el.closest('.stop'); if(st){ var kl=BY[st.dataset.id]; if(sel===kl) openLesson(kl); else kidSelect(kl,true); } else if(!el.closest('.pgo')) kidSelect(null); return; }
@@ -550,7 +569,7 @@ function select(l,fly){ sel=l; document.body.classList.toggle('sel-on',!!l);
 var open=null, step=0, sh=[], ad=[], hintOn=false, said='', sayOk=false, BX=0, BY0=0;
 var P0=40, ROW1=150, ROW2=270, BH=60;
 function cnt(a){ return a.filter(Boolean).length; }
-function openLesson(l){ if(kidMode&&l.id==='uc'&&window.T3&&T3.open){ T3.open(KP[l.id]); return; } l=kidMode?KP[l.id]:l; open=l; select(null); step=-1; sh=[0,0,0,0,0,0,0,0]; ad=[0,0,0,0,0,0,0,0]; hintOn=false; said=''; sayOk=false;
+function openLesson(l){ if(kidMode&&l.id==='uc'&&window.T3&&T3.open){ T3.open(KP[l.id]); return; } l=kidMode?KP[l.id]:l; open=l; select(null); step=-1; sh=[0,0,0,0,0,0,0,0]; ad=[0,0,0,0,0,0,0,0]; hintOn=false; said=''; sayOk=false; if(l.id==='cd') NL.reset();
   var B=document.getElementById('board'), bw=460, bh=440; BX=Math.round((l.x+l.w/2-bw/2)/CELL)*CELL; BY0=Math.round((l.y+l.h/2-bh/2)/CELL)*CELL;
   document.body.classList.add('focus'); B.style.cssText='left:'+BX+'px;top:'+BY0+'px;width:'+bw+'px;height:'+bh+'px;--cc:'+CH[l.ch].c;
   B.className='board'; void B.offsetWidth; B.classList.add('on','run'); draw(); panel();
@@ -566,7 +585,7 @@ function begin(){ if(!open||step>=0)return; var t=document.querySelector('#lui .
   document.body.appendChild(f); var ir=T.getBoundingClientRect(); void f.offsetWidth; f.style.transform='translate('+(ir.left-r.left)+'px,'+(ir.top-r.top-4)+'px) scale('+(17/40)+')'; f.style.opacity=0;
   setTimeout(function(){document.getElementById('isl').classList.add('on');},380); setTimeout(function(){f.remove();},800);
   step=0; document.getElementById('board').classList.remove('run'); document.body.classList.add('working'); draw(); panel(); }
-function draw(){ var s='', run=step<0, D=function(t){return run?' style="--d:'+t+'s"':'';};
+function draw(){ if(open&&open.id==='cd') return NL.draw(); var s='', run=step<0, D=function(t){return run?' style="--d:'+t+'s"':'';};
   s+='<text class="q" x="'+P0+'" y="60"'+D(.6)+'>1/4 + 1/8</text>';
   s+='<g class="dim"><path d="M'+P0+' 92 V108 M'+(P0+320)+' 92 V108" style="--len:16;--d:.9s"/><line x1="'+P0+'" y1="100" x2="'+(P0+320)+'" y2="100" style="--len:320;--d:.95s"/><text x="'+(P0+160)+'" y="86" text-anchor="middle"'+D(1.1)+'>1 whole · 16 cells</text></g>';
   s+='<text class="lab" x="'+P0+'" y="'+(ROW1-10)+'"'+D(1.0)+'>fourths</text>';
@@ -586,7 +605,7 @@ function cellBtn(act,x,y,w,label,main){ var g='<g class="cb'+(main?' main':'')+(
   else g+='<svg x="'+(x+10)+'" y="'+(y+10)+'" width="20" height="20" viewBox="0 0 256 256">'+IC[act]+'</svg>';
   return g+'<title>'+(label||{hint:'Hint',show:'Show me',pad:'Keypad',reset:'Start again'}[act])+'</title></g>'; }
 function words(lines,cls,y0){ return lines.map(function(t,n){ return '<text class="'+cls+' fade" x="'+P0+'" y="'+(y0+n*40)+'" style="--d:'+(n*.08)+'s">'+t+'</text>'; }).join(''); }
-function panel(){ var l=open, c=CH[l.ch], q, how, say=said, ok=sayOk, go, s='';
+function panel(){ if(open&&open.id==='cd') return NL.panel(); var l=open, c=CH[l.ch], q, how, say=said, ok=sayOk, go, s='';
   if(step<0){ q=kidMode?['A fourth and an eighth.','How much is that together?']:[l.n]; how=kidMode?'Look at the picture. What do you notice?':l.g; go='Let’s find out'; }
   else if(step===0){ q=['1/4 is how many eighths?']; how='Tap the eighths until they cover the fourth.'; go='Check'; }
   else if(step===1){ q=['Now add 1/8.','How many eighths in all?']; how='Tap one more eighth to add it on.'; go='Check'; }
@@ -602,7 +621,7 @@ function panel(){ var l=open, c=CH[l.ch], q, how, say=said, ok=sayOk, go, s='';
     s+=cellBtn('go',P0+200,y,120,go,true); }
   else s+=cellBtn('go',P0,y,step<0?180:180,go,true);
   var U=document.getElementById('lui'); U.style.setProperty('--cc',c.c); U.innerHTML=s; }
-function act(a){ if(a==='go'){ if(step<0) begin(); else if(step<2) check(); else openLesson(open); return; }
+function act(a){ if(a==='go'){ if(step<0) begin(); else if(open.id==='cd') NL.go(); else if(step<2) check(); else openLesson(open); return; }
   document.getElementById('t-'+a).click(); panel(); }
 function live(){ var r=document.getElementById('rd'); if(r) r.textContent=(cnt(sh)+cnt(ad))+'/8'; }
 function tapPiece(j){ if(step<0||step>1) return; if(step===0) sh[j]=sh[j]?0:1; else if(!sh[j]) ad[j]=ad[j]?0:1; said=''; sayOk=false; draw(); live(); var sy=document.querySelector('#lui .ws'); if(sy) sy.remove(); }
@@ -611,14 +630,14 @@ function check(){ if(step===0){ if(cnt(sh)===2){ sh=[1,1,0,0,0,0,0,0]; step=1; s
   draw(); panel(); }
 // tools live in the bottom bar, icon only
 (function(){ var bt=document.getElementById('bt'); [].slice.call(document.querySelectorAll('#tools .tb')).forEach(function(b){ var sp=b.querySelector('span'); if(sp){ b.title=sp.textContent; b.setAttribute('aria-label',sp.textContent); } bt.appendChild(b); }); })();
-document.getElementById('t-hint').onclick=function(){ if(step===0){ hintOn=true; draw(); } else if(step===1){ said='2 eighths are already shaded. One more makes how many?'; panel(); } };
-document.getElementById('t-show').onclick=function(){ if(step===0){ sh=[0,0,0,0,0,0,0,0]; draw(); live(); [0,1].forEach(function(j,i){ setTimeout(function(){ sh[j]=1; draw(); live(); },350*(i+1)); }); }
+document.getElementById('t-hint').onclick=function(){ if(open&&open.id==='cd') return NL.tool('hint'); if(step===0){ hintOn=true; draw(); } else if(step===1){ said='2 eighths are already shaded. One more makes how many?'; panel(); } };
+document.getElementById('t-show').onclick=function(){ if(open&&open.id==='cd') return NL.tool('show'); if(step===0){ sh=[0,0,0,0,0,0,0,0]; draw(); live(); [0,1].forEach(function(j,i){ setTimeout(function(){ sh[j]=1; draw(); live(); },350*(i+1)); }); }
   else if(step===1){ ad=[0,0,0,0,0,0,0,0]; draw(); setTimeout(function(){ ad[2]=1; draw(); live(); },350); } };
-document.getElementById('t-reset').onclick=function(){ if(step===0) sh=[0,0,0,0,0,0,0,0]; if(step===1) ad=[0,0,0,0,0,0,0,0]; said=''; hintOn=false; draw(); panel(); };
+document.getElementById('t-reset').onclick=function(){ if(open&&open.id==='cd') return NL.tool('reset'); if(step===0) sh=[0,0,0,0,0,0,0,0]; if(step===1) ad=[0,0,0,0,0,0,0,0]; said=''; hintOn=false; draw(); panel(); };
 document.getElementById('t-pad').onclick=function(){ var on=!document.body.classList.contains('kp-on'); document.body.classList.toggle('kp-on',on); this.classList.toggle('on',on); fitBoard(); };
 // the keypad is a tool that drives the picture: typing a number shades that many eighths
-function kd(){ var d=document.getElementById('kd'); if(d) d.innerHTML=(cnt(sh)+cnt(ad))+'<small>/8</small>'; }
-[].forEach.call(document.querySelectorAll('#kp [data-k]'),function(b){ b.onclick=function(){ if(step<0||step>1) return; var k=b.dataset.k, n=cnt(sh)+cnt(ad);
+function kd(){ if(open&&open.id==='cd') return NL.kd(); var d=document.getElementById('kd'); if(d) d.innerHTML=(cnt(sh)+cnt(ad))+'<small>/8</small>'; }
+[].forEach.call(document.querySelectorAll('#kp [data-k]'),function(b){ b.onclick=function(){ if(open&&open.id==='cd') return NL.key(b.dataset.k); if(step<0||step>1) return; var k=b.dataset.k, n=cnt(sh)+cnt(ad);
   if(k==='del'||k==='clr') n=k==='clr'?0:Math.floor(n/10); else n=Math.min(8,+k); 
   if(step===0){ sh=sh.map(function(_,i){return i<n?1:0;}); } else { var m=Math.max(0,n-2); ad=ad.map(function(_,i){return i>=2&&i<2+m?1:0;}); }
   said=''; draw(); live(); var sy=document.querySelector('#lui .ws'); if(sy) sy.remove(); }; });
@@ -687,11 +706,90 @@ function pickGrade(g){ GRADE=g; var r=GR.filter(function(x){return x[0]===g;})[0
 pickGrade(q.get('g')||'5');
 var v=q.get('v');
 if(v==='uc') addEventListener('t3ready',function(){ setTimeout(function(){ openLesson(BY.uc); },300); });
+if(v==='cd') setTimeout(function(){ openLesson(BY.cd); },300);
 if(v==='grades') setTimeout(function(){ openGrades(true); },300);
 if(v==='fit') setTimeout(function(){ var b=bounds(); flyTo(b[0],b[1],b[2],b[3],40); },50);
 if(v==='sel') setTimeout(function(){ select(BY[q.get('id')||'ad'],true); },300);
 if(v==='ksel') setTimeout(function(){ kidSelect(BY[q.get('id')||NOW.id],true); },300);
 if(v==='lesson') setTimeout(function(){ openLesson(NOW); var st=q.get('st'); if(st){ setTimeout(function(){ begin(); if(st==='shade'){ sh=[1,0,0,0,0,0,0,0]; draw(); panel(); } if(st==='hint'){ sh=[1,0,0,0,0,0,0,0]; check(); } if(st==='1'||st==='2'){ sh=[1,1,0,0,0,0,0,0]; check(); } if(st==='2'){ ad[2]=1; check(); } if(q.get('kp')) document.getElementById('t-pad').click(); },50); } },300);
+
+// ---------- Compare decimals (cd): a number line you scrub, and an answer written into cells ----------
+// The line is the paper's own grid line: 0 to 1 over 20 cells, so one cell = 0.05 and a tenth = 2 cells.
+// Step 0/1: drag a bead along the line to place each number (ticks lift near your finger, the value reads out above).
+// Step 2: write the bigger number in cells on the paper, one digit per cell. Step 3: the line shows why.
+var NL=(function(){ var LX=40, LY=150, N=20, CY=300, a, b, first, cur=[null,null], drag=null, dig=[], hintL=false;
+  function fmt(c){ var h=c*5; if(h===0) return '0'; if(h===100) return '1'; return h%10===0?'0.'+(h/10):'0.'+String(h).padStart(2,'0'); }
+  function reset(){ var t=3+Math.floor(Math.random()*7); a=2*t; b=a-1; first=Math.random()<.5?0:1; cur=[null,null]; dig=[]; hintL=false; drag=null; }
+  function want(i){ return (i===0)===(first===0)?a:b; } // marker 0 = the first number named
+  function xs(c){ return LX+c*20; }
+  function draw(){ var s='', run=step<0, D=function(t){return run?' style="--d:'+t+'s"':'';}, cc='var(--cc)', A=fmt(want(0)), B=fmt(want(1));
+    // ticks: every cell, taller every tenth, tallest at 0, 0.5 and 1; ticks lift as the bead comes near
+    var near=drag?cur[drag.i]:null;
+    s+='<g class="dim"><line x1="'+LX+'" y1="'+LY+'" x2="'+xs(N)+'" y2="'+LY+'" style="--len:400;--d:.9s"/>';
+    for(var i=0;i<=N;i++){ var h=i%10===0?22:i%2===0?14:7; if(near!==null) h+=Math.max(0,12-5*Math.abs(i-near));
+      s+='<path class="tk" d="M'+xs(i)+' '+LY+' V'+(LY-h)+'" style="--len:'+h+';--d:'+(1+i*.02).toFixed(2)+'s"/>'; }
+    s+='</g>';
+    for(i=0;i<=N;i+=2) s+='<text class="nlt'+(i%10===0?' big':'')+(hintL&&i%10!==0?' hl':'')+'" x="'+xs(i)+'" y="'+(LY+24)+'" text-anchor="middle"'+D((1.2+i*.02).toFixed(2))+'>'+fmt(i)+'</text>';
+    // the two beads: one cell each, sitting on the line
+    [0,1].forEach(function(m){ var c=cur[m]; if(c===null&&!(step===m)) return; if(c===null) c=0;
+      var x=xs(c), live=step===m, sec=step===3?want(m)<want(1-m):m===1, cls='bd'+(sec?' b2':'')+(live?' live':'')+(drag&&drag.i===m?' on':'');
+      s+='<g class="'+cls+'"><line x1="'+x+'" y1="'+(LY-40)+'" x2="'+x+'" y2="'+LY+'"/><rect x="'+(x-10)+'" y="'+(LY-10)+'" width="20" height="20"/></g>';
+      s+='<text class="nlr'+(sec?' b2':'')+(live?'':' small')+'" x="'+Math.max(LX+8,Math.min(xs(N)-8,x))+'" y="'+(sec&&!live?LY+62:LY-50)+'" text-anchor="middle">'+fmt(c)+'</text>'; });
+    if(step===0||step===1) s+='<rect data-scrub="1" x="'+(LX-14)+'" y="'+(LY-80)+'" width="'+(N*20+28)+'" height="110" fill="transparent" style="cursor:ew-resize"/>';
+    // the answer, one digit per cell; the point is already written on the paper
+    if(step>=2){ var slots=[0,'.',1,2], x0=LX;
+      slots.forEach(function(k){ if(k==='.'){ s+='<text class="dgt" x="'+(x0+10)+'" y="'+(CY+30)+'" text-anchor="middle">.</text>'; x0+=20; return; }
+        var act=step===2&&k===Math.min(dig.length,2), v=dig[k]!==undefined?dig[k]:'';
+        s+='<rect class="dc'+(act?' act':'')+(v!==''?' fill':'')+'" x="'+x0+'" y="'+CY+'" width="40" height="40"/><text class="dgt" x="'+(x0+20)+'" y="'+(CY+30)+'" text-anchor="middle">'+v+'</text>'; x0+=40; });
+      if(step===2) s+='<text class="cnt" x="'+(LX+160)+'" y="'+(CY+26)+'">'+(dig.length?'':'Type on the keypad')+'</text>'; }
+    // step 3: how far along the line each one goes
+    if(step===3){ var big=Math.max(want(0),want(1)), sm=Math.min(want(0),want(1));
+      s+='<path class="nlb drawn" style="--len:'+(big*20)+'" d="M'+LX+' '+(LY+96)+' H'+xs(big)+'"/><text class="nlr small" x="'+(xs(big)+10)+'" y="'+(LY+101)+'">'+fmt(big)+'</text>';
+      s+='<path class="nlb b2 drawn" style="--len:'+(sm*20)+';animation-delay:.2s" d="M'+LX+' '+(LY+116)+' H'+xs(sm)+'"/><text class="nlr small b2" x="'+(xs(sm)+10)+'" y="'+(LY+121)+'">'+fmt(sm)+'</text>';
+      s+='<text class="eq pop" x="'+(LX+200)+'" y="'+(CY+30)+'">'+fmt(big)+' &gt; '+fmt(sm)+'</text>'; }
+    document.getElementById('lpic').innerHTML=s; kd(); }
+  function panel(){ var c=CH[open.ch], q, how, go, s='', A=fmt(want(0)), B=fmt(want(1)), big=fmt(Math.max(a,b)), sm=fmt(Math.min(a,b));
+    if(step<0){ q=['Which is bigger,',A+' or '+B+'?']; how='Look at the line. Where would each one go?'; go='Let’s find out'; }
+    else if(step===0){ q=['Put '+A+' on the line.']; how='Drag the square along the line. One cell is 0.05.'; go='Check'; }
+    else if(step===1){ q=['Now put '+B+' on the line.']; how='Drag the new square. Watch where it lands.'; go='Check'; }
+    else if(step===2){ q=['Which one is bigger?','Write it in the cells.']; how='The one further along the line is bigger.'; go='Check'; }
+    else { q=[big+' is bigger.']; how=big+' is '+big+'0. That is 5 hundredths more than '+sm+'.'; go='Next problem'; said=''; }
+    s+=words(q,'wq',q.length>1?-80:-60);
+    s+='<text class="wh fade" x="'+LX+'" y="'+(q.length>1?0:-20)+'" style="--d:.15s">'+how+'</text>';
+    if(said) s+='<text class="ws fade'+(sayOk?' ok':'')+'" x="'+LX+'" y="440">'+said+'</text>';
+    var y=460;
+    if(step>=0&&step<3){ ['hint','show','pad','reset'].forEach(function(t,n){ s+=cellBtn(t,LX+n*40,y,40); });
+      [0,1,2].forEach(function(n){ s+='<rect class="stepc'+(n<step?' d':n===step?' n':'')+'" x="'+(LX+n*20)+'" y="-140" width="20" height="20"/>'; });
+      s+=cellBtn('go',LX+200,y,120,go,true); }
+    else s+=cellBtn('go',LX,y,180,go,true);
+    var U=document.getElementById('lui'); U.style.setProperty('--cc',c.c); U.innerHTML=s;
+    if(step===2&&!document.body.classList.contains('kp-on')) document.getElementById('t-pad').click(); }
+  function go(){ said=''; sayOk=false;
+    if(step===0||step===1){ var m=step, c=cur[m];
+      if(c===want(m)){ step++; hintL=false; if(step===2) dig=[]; }
+      else { var w=want(m); said=c===null||c===0?'Drag the square to where '+fmt(w)+' goes.':(c>w?'A little too far. ':'Not far enough yet. ')+fmt(w)+(w%2?' is halfway between two tenths.':' is '+(w/2)+' tenths.'); hintL=true; } }
+    else if(step===2){ var t=Math.max(a,b)/2, ok=dig[0]===0&&dig[1]===t&&(dig[2]===undefined||dig[2]===0);
+      if(ok){ step=3; document.body.classList.remove('kp-on'); document.getElementById('t-pad').classList.remove('on'); fitBoard(); }
+      else said=dig.length<2?'Fill in the cells first.':'Not that one. Which square went further along the line?'; }
+    else { openLesson(open); return; }
+    draw(); panel(); }
+  function key(k){ if(step!==2) return; if(k==='del') dig.pop(); else if(k==='clr') dig=[]; else if(dig.length<3) dig.push(+k); said=''; draw(); var sy=document.querySelector('#lui .ws'); if(sy) sy.remove(); }
+  function tool(t){ if(t==='hint'){ if(step<2){ hintL=true; said=fmt(want(step))+' is '+(want(step)%2?'between '+fmt(want(step)-1)+' and '+fmt(want(step)+1):fmt(want(step)).replace('0.','')+' tenths')+'. The labels count tenths.'; }
+      else said='Look at the line: which square is further right?'; draw(); panel(); }
+    else if(t==='show'){ if(step<2){ var m=step, to=want(m), from=cur[m]||0, t0=performance.now();
+        (function f(now){ var k=Math.min(1,(now-t0)/700), e=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2; cur[m]=Math.round(from+(to-from)*e); draw(); if(k<1) requestAnimationFrame(f); })(t0); }
+      else { dig=[]; var big=Math.max(a,b)/2; [0,big].forEach(function(d,n){ setTimeout(function(){ dig.push(d); draw(); },300*(n+1)); }); } }
+    else if(t==='reset'){ if(step<2) cur[step]=null; else dig=[]; said=''; hintL=false; draw(); panel(); } }
+  function at(e){ var r=document.getElementById('lpic').getBoundingClientRect(), x=(e.clientX-r.left)/(r.width/460); return Math.max(0,Math.min(N,Math.round((x-LX)/20))); }
+  function down(e){ if(step!==0&&step!==1) return false; var t=e.target&&e.target.closest&&e.target.closest('[data-scrub]'); if(!t) return false;
+    drag={i:step}; cur[step]=at(e); said=''; P.setPointerCapture(e.pointerId); draw(); return true; }
+  function move(e){ var c=at(e); if(c!==cur[drag.i]){ cur[drag.i]=c; draw(); } }
+  function up(){ drag=null; draw(); panel(); }
+  addEventListener('keydown',function(e){ if(!open||open.id!=='cd') return; if(step===2&&/^\d$/.test(e.key)) key(e.key); else if(step===2&&e.key==='Backspace') key('del');
+    else if((step===0||step===1)&&(e.key==='ArrowRight'||e.key==='ArrowLeft')){ cur[step]=Math.max(0,Math.min(N,(cur[step]||0)+(e.key==='ArrowRight'?1:-1))); draw(); }
+    else if(e.key==='Enter'&&step>=0) go(); });
+  return {reset:reset,draw:draw,panel:panel,go:go,key:key,tool:tool,down:down,move:move,up:up,get drag(){return drag;},kd:function(){ var d=document.getElementById('kd'); if(d) d.innerHTML=dig.length?(dig[0]+'.'+dig.slice(1).join('')):'<small>0.__</small>'; }};
+})();
 </script><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <script type="module">
 /* ---------- 3D on the paper (test: Unit cubes) ----------
