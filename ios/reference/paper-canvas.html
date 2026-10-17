@@ -1,0 +1,824 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Obento on paper</title>
+<style>@font-face{font-family:"Areal";src:url("areal.ttf") format("truetype");font-weight:400 700;font-style:normal;font-display:block}</style>
+<style>
+:root{
+  --pill:52px;--gap:10px;--half:5px;--pad2:20px;--r-pill:26px;--r-node:18px;--r-panel:28px;
+  --font:"Areal",system-ui,sans-serif;--mono:"Areal",ui-monospace,monospace;--serif:"Areal",system-ui,sans-serif;
+  --bg:#f3f2ef;--grid-minor:rgba(26,26,25,.045);--grid-major:rgba(26,26,25,.09);
+  --surface:#fbfbfa;--sunk:#efeee9;--line:#e3e1dc;--line-strong:#cfccc5;
+  --ink:#1a1a19;--ink2:#5d5852;--ink3:#8c867d;--edge:#cdcac3;--on-ink:#fbfbfa;--right:#178a57;--act:var(--ink);--on-act:var(--on-ink);--dot:var(--on-ink);--on-dot:var(--ink);
+  --ease:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.34,1.2,.5,1);
+}
+:root[data-theme="dark"]{--bg:#121211;--grid-minor:rgba(236,235,231,.035);--grid-major:rgba(236,235,231,.07);
+  --surface:#1b1b1a;--sunk:#232321;--line:#2c2c2a;--line-strong:#3a3a37;--ink:#ecebe7;--ink2:#b3ada4;--ink3:#878177;--edge:#3d3c39;--on-ink:#121211;--right:#3ccf8e;--act:#3a3834;--on-act:#ecebe7;--dot:#e4e1db;--on-dot:#1b1b1a}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.4 var(--font);touch-action:none;user-select:none;-webkit-user-select:none;transition:background .3s}
+button{font:inherit;color:inherit}
+
+/* canvas: plain on the map; the grid only rises when a lesson opens */
+#paper{position:fixed;inset:0;cursor:grab}
+#paper.drag{cursor:grabbing}
+#grid{position:absolute;inset:0;opacity:0;transition:opacity .6s var(--ease);pointer-events:none;
+  background-image:linear-gradient(var(--grid-major) 1px,transparent 1px),linear-gradient(90deg,var(--grid-major) 1px,transparent 1px),linear-gradient(var(--grid-minor) 1px,transparent 1px),linear-gradient(90deg,var(--grid-minor) 1px,transparent 1px)}
+.focus #grid{opacity:1}
+#world{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+
+
+/* chapter groups: a quiet frame and a name, like a group in a node editor */
+.group{position:absolute;border-radius:32px;background:color-mix(in oklab,var(--cc) 3%,transparent);outline:1px solid color-mix(in oklab,var(--cc) 16%,transparent);outline-offset:-1px;transition:opacity .4s var(--ease)}
+.group h2{position:absolute;left:28px;top:-46px;font:500 26px/1 var(--serif);letter-spacing:-.025em;white-space:nowrap;display:flex;align-items:baseline;gap:12px}
+.group h2 i{font:400 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);font-style:normal}
+.group h2::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--cc);align-self:center}
+
+/* edges: what each lesson builds on */
+#edges{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+#edges path{fill:none;stroke:var(--edge);stroke-width:1.5;transition:stroke .25s var(--ease),stroke-width .25s,opacity .3s}
+#edges path.walked{stroke:var(--ink2)}
+#edges path.hl{stroke:var(--cc);stroke-width:2.5}
+#edges circle{fill:var(--bg);stroke:var(--edge);stroke-width:1.5;transition:fill .25s,stroke .25s}
+#edges circle.walked{fill:var(--ink2);stroke:var(--ink2)}
+#edges circle.hl{fill:var(--cc);stroke:var(--cc)}
+.sel-on #edges path:not(.hl),.sel-on #edges circle:not(.hl){opacity:.35}
+
+/* node: one lesson */
+.node{position:absolute;width:260px;height:88px;border-radius:var(--r-node);background:var(--surface);outline:1px solid var(--line);outline-offset:-1px;
+  display:grid;grid-template-columns:68px 1fr;align-items:center;gap:12px;padding:10px 16px 10px 10px;cursor:pointer;
+  transition:outline-color .2s var(--ease),transform .25s var(--settle),opacity .3s var(--ease);animation:in .5s var(--settle) both}
+@keyframes in{from{opacity:0;transform:translateY(10px) scale(.97)}}
+.node:hover{outline-color:var(--line-strong)}
+.node:active{transform:scale(.98)}
+.node .th{width:68px;height:68px;border-radius:10px;background:var(--sunk);display:grid;place-items:center}
+.node .th svg{width:56px;height:40px}
+.node .meta{display:flex;align-items:center;gap:8px;font:400 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+.node .nm{font-weight:500;font-size:15px;line-height:1.25;margin-top:3px;text-wrap:balance}
+.node .st{margin-left:auto}
+.node.done .st{color:var(--ink2)}
+.node.now{outline:1.5px solid var(--ink);outline-offset:-1.5px}
+.node.now .st{color:var(--ink)}
+.node.sel{outline:2px solid var(--cc);outline-offset:-2px}
+.sel-on .node:not(.sel):not(.rel){opacity:.45}
+.focus .node,.focus .group,.focus #edges{opacity:0!important;pointer-events:none}
+
+/* floating UI */
+.float{position:fixed;z-index:5;background:var(--surface);outline:1px solid var(--line);outline-offset:-1px;border-radius:var(--r-pill);display:flex;align-items:center;gap:var(--half);padding:var(--half);transition:background .3s,opacity .3s}
+.ib{width:42px;height:42px;border-radius:50%;border:0;background:transparent;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
+.ib:hover{background:var(--sunk)}
+.ib svg{width:20px;height:20px}
+.tl{top:16px;left:16px;padding-right:var(--pad2)}
+.tl .gr{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font:500 15px var(--mono);outline:1px solid var(--line);outline-offset:-1px}
+.tl b{font-weight:500}.tl small{display:block;font:400 11px var(--mono);letter-spacing:.06em;color:var(--ink3);text-transform:uppercase}
+.tl .back{display:none}.focus .tl .back{display:grid}.focus .tl .gr{display:none}
+.tr{top:16px;right:16px}
+.dock{bottom:20px;left:50%;transform:translateX(-50%)}
+.dock .pct{min-width:52px;text-align:center;font:400 12px var(--mono);color:var(--ink2);font-variant-numeric:tabular-nums}
+.dock .sep{width:1px;height:24px;background:var(--line);margin:0 var(--half)}
+.btn{height:42px;border:0;border-radius:21px;background:var(--act);color:var(--on-act);font:500 15px var(--font);padding:0 var(--pad2);cursor:pointer;white-space:nowrap}
+.focus .hint,.sel-on .hint{opacity:0}
+.hint{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);z-index:5;font:400 12px var(--mono);color:var(--ink3);letter-spacing:.04em;transition:opacity .4s;white-space:nowrap}
+
+/* inspector: tap a lesson to see what it is and how it connects */
+.insp{position:fixed;z-index:6;top:84px;left:16px;bottom:84px;width:340px;background:var(--surface);outline:1px solid var(--line);outline-offset:-1px;border-radius:var(--r-panel);
+  padding:var(--pad2);display:flex;flex-direction:column;gap:18px;transform:translateX(-24px);opacity:0;pointer-events:none;transition:transform .4s var(--ease),opacity .3s var(--ease);overflow:auto}
+.insp.on{transform:none;opacity:1;pointer-events:auto}
+.focus .insp:not(.lp){opacity:0;pointer-events:none}
+.insp .tag{font:400 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);display:flex;align-items:center;gap:8px}
+.insp .tag::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--cc)}
+.insp .x{margin-left:auto;width:32px;height:32px}
+.insp h3{font:500 30px/1.08 var(--serif);letter-spacing:-.03em}
+.insp .goal{color:var(--ink2);font-size:15px}
+.insp .pv{height:140px;border-radius:16px;background:var(--sunk);display:grid;place-items:center}
+.insp .pv svg{width:70%;height:80%}
+.insp .row{display:flex;flex-direction:column;gap:6px}
+.insp .row>i{font:400 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);font-style:normal}
+.insp .lk{display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border-radius:12px;border:0;background:var(--sunk);cursor:pointer;text-align:left;font-weight:500}
+.insp .lk:hover{background:var(--line)}
+.insp .lk span{width:6px;height:6px;border-radius:50%;background:var(--c2);flex:none}
+.insp .lk em{margin-left:auto;font:400 11px var(--mono);color:var(--ink3);font-style:normal;text-transform:uppercase;letter-spacing:.06em}
+.insp .none{color:var(--ink3);font-size:13px}
+.insp .go{margin-top:auto;height:var(--pill);border-radius:var(--r-pill);display:flex;align-items:center;justify-content:space-between;padding:0 var(--half) 0 var(--pad2)}
+.insp .go svg,.intro .begin svg{width:42px;height:42px;border-radius:50%;background:var(--dot);color:var(--on-dot);padding:11px}
+
+/* LESSON: the picture is the problem, drawn on the grid; panels around it are the tools */
+.board{position:absolute;display:none}
+.board.on{display:block;animation:grow .5s var(--settle) both}
+@keyframes grow{from{opacity:0;transform:scale(.96)}}
+#lpic{position:absolute;left:0;top:0;overflow:visible}
+#lpic .q{font:400 44px var(--mono);font-variation-settings:"MONO" 100;fill:var(--ink);letter-spacing:-.02em}
+#lpic .lab{font:500 15px var(--font);fill:var(--ink2)}
+#lpic .cnt{font:400 13px var(--mono);font-variation-settings:"MONO" 100;fill:var(--ink2);letter-spacing:.04em}
+#lpic .eq{font:400 22px var(--mono);font-variation-settings:"MONO" 100;fill:var(--cc)}
+#lpic .note{font:400 11px var(--mono);font-variation-settings:"MONO" 100;fill:var(--ink3);letter-spacing:.1em}
+#lpic .pc{stroke:var(--cc);stroke-width:2;transition:fill .25s var(--ease)}
+#lpic .pc.e{fill:transparent;stroke:color-mix(in oklab,var(--cc) 45%,transparent)}
+#lpic .pc.s{fill:var(--cc)}
+#lpic .pc.a{fill:color-mix(in oklab,var(--cc) 50%,var(--bg))}
+.working #lpic .pc.tap{cursor:pointer}
+.working #lpic .pc.tap.e:hover{fill:color-mix(in oklab,var(--cc) 12%,transparent)}
+#lpic .guide{stroke:var(--ink);stroke-width:1.5;stroke-dasharray:4 5;fill:none}
+#lpic .match{stroke:var(--cc);stroke-width:2;stroke-dasharray:4 6;fill:none}
+.dim line,.dim path{stroke:var(--line-strong);stroke-width:1.5;fill:none}
+.dim text{font:400 11px var(--mono);font-variation-settings:"MONO" 100;letter-spacing:.1em;fill:var(--ink3)}
+.pop{animation:rise .45s var(--settle) both}
+.drawn{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw .5s var(--ease) forwards}
+.run .dim line,.run .dim path{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw .5s var(--ease) var(--d) forwards}
+.run #lpic text{opacity:0;animation:rise .45s var(--ease) var(--d) forwards}
+.run #lpic .pc{transform-box:fill-box;transform-origin:center bottom;opacity:0;animation:cell .4s var(--settle) var(--d) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes cell{from{opacity:0;transform:scaleY(.2)}to{opacity:1;transform:none}}
+
+/* lesson panel: same master as the inspector; intro, then each step, then solved */
+.lp{z-index:6}
+.lp .tag::before{background:var(--cc)}
+.lp h3.tt{font:500 40px/1.02 var(--serif);letter-spacing:-.04em}
+.lp .chip{display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border-radius:12px;background:var(--sunk);font-weight:500}
+.lp .chip::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--cc)}
+.lp .marks{display:flex;gap:6px;margin-left:auto}
+.lp .marks i{width:18px;height:4px;border-radius:2px;background:var(--line)}
+.lp .marks i.d{background:var(--cc)}.lp .marks i.n{background:var(--ink);width:28px}
+.lp .ask{font:500 28px/1.12 var(--font);letter-spacing:-.025em}
+.lp .how{color:var(--ink2)}
+.lp .read{display:flex;align-items:baseline;gap:10px;padding:16px;border-radius:16px;background:var(--sunk)}
+.lp .read b{font:400 40px var(--mono);font-variation-settings:"MONO" 100;font-weight:400;letter-spacing:-.02em}
+.lp .read small{font:400 11px var(--mono);font-variation-settings:"MONO" 100;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
+.lp .say{min-height:20px;color:var(--ink2)}
+.lp .say.ok{color:var(--right);font-weight:500}
+.lp .ghost{background:transparent;color:var(--ink);outline:1px solid var(--line);outline-offset:-1px;justify-content:center}
+.lp .acts{margin-top:auto;display:flex;flex-direction:column;gap:var(--gap)}
+.lp .acts .btn{height:var(--pill);border-radius:var(--r-pill);display:flex;align-items:center;justify-content:space-between;padding:0 var(--half) 0 var(--pad2)}
+.lp .acts .btn.ghost{justify-content:center;padding:0}
+.lp .acts svg{width:42px;height:42px;border-radius:50%;background:var(--dot);color:var(--on-dot);padding:11px}
+.lp .fade{animation:rise .4s var(--ease) both}
+
+/* tools: a quiet rail on the right, labelled so it can be found */
+.tools{right:16px;top:50%;transform:translateY(-50%) translateX(20px);flex-direction:column;padding:6px;gap:2px;border-radius:28px;opacity:0;pointer-events:none;transition:opacity .3s var(--ease),transform .4s var(--ease)}
+.working .tools{opacity:1;pointer-events:auto;transform:translateY(-50%)}
+.tb{width:64px;height:62px;border:0;border-radius:22px;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;color:var(--ink)}
+.tb:hover,.tb.on{background:var(--sunk)}
+.tb svg{width:22px;height:22px}
+.tb span{font:400 10px var(--mono);font-variation-settings:"MONO" 100;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)}
+.kp{right:96px;top:50%;width:236px;flex-direction:column;align-items:stretch;padding:10px;gap:10px;border-radius:var(--r-panel);transform:translateY(-50%) translateX(16px);opacity:0;pointer-events:none;transition:opacity .25s var(--ease),transform .35s var(--ease)}
+.kp-on .kp{opacity:1;pointer-events:auto;transform:translateY(-50%)}
+.kp .disp{height:56px;border-radius:20px;outline:1.5px solid var(--ink);outline-offset:-1.5px;display:flex;align-items:center;padding:0 16px;font:400 28px var(--mono);font-variation-settings:"MONO" 100}
+.kp .disp small{font-size:15px;color:var(--ink3);margin-left:6px}
+.kp .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kp .keys button{height:46px;border:0;border-radius:23px;background:var(--sunk);font:400 19px var(--mono);font-variation-settings:"MONO" 100;cursor:pointer}
+.kp .keys [data-k=del]{font-family:var(--font);font-variation-settings:"MONO" 0}
+.focus #today,.focus .dock .sep{display:none}
+.flyer{position:fixed;z-index:9;font:500 40px/1.02 var(--serif);letter-spacing:-.04em;pointer-events:none;transform-origin:0 0;transition:transform .6s var(--ease),opacity .25s var(--ease) .45s}
+.isl{top:16px;left:50%;transform:translateX(-50%);padding:0 var(--pad2);height:var(--pill);opacity:0;pointer-events:none}
+.isl b{font-weight:500}.isl small{font:400 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);display:block}
+.focus .isl.on{opacity:1}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important}.fly #world{transition:none}}
+@media (max-width:760px){.insp{left:16px;right:16px;width:auto;top:auto;height:62%}.hint{display:none}}
+
+/* one family, ABC Areal: its MONO axis gives the labels and numbers their monospaced voice */
+.group h2 i,.node .meta,.tl .gr,.tl small,.dock .pct,.hint,.insp .tag,.insp .row>i,.insp .lk em,.board .q,.dim text,.solve .s1,.solve .ans,.keys button,.intro .tag,.intro .uses i,.isl small,.mn{font-variation-settings:"MONO" 100}
+.keys [data-k=del],.keys .go{font-variation-settings:"MONO" 0}
+body{font-feature-settings:"ss01" 0;-webkit-font-smoothing:antialiased}
+
+/* grade picker: the same panel, with the map blurred behind it, so grades read as part of the UI */
+.gpick{display:flex;align-items:center;gap:var(--gap);border:0;background:transparent;cursor:pointer;text-align:left;padding:0;border-radius:var(--r-pill)}
+.gpick .chev{width:16px;height:16px;color:var(--ink3);margin-left:2px;transition:transform .3s var(--ease)}
+.gopen .gpick .chev{transform:rotate(180deg)}
+.focus .gpick{pointer-events:none}.focus .gpick .chev{display:none}
+.scrim{position:fixed;inset:0;z-index:6;background:color-mix(in oklab,var(--bg) 45%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);opacity:0;pointer-events:none;transition:opacity .35s var(--ease)}
+.gopen .scrim{opacity:1;pointer-events:auto}
+.insp.grades{z-index:7;gap:14px;touch-action:pan-y}
+.gopen .tl{z-index:8}
+.insp{touch-action:pan-y}
+.grades .tag::before{display:none}
+.grades .list{display:flex;flex-direction:column;gap:6px;margin:0 -6px;padding:0 6px 6px;overflow:auto;flex:1}
+.grow{flex:none;display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:12px;min-height:64px;padding:8px 14px 8px 8px;border-radius:16px;border:0;background:transparent;cursor:pointer;text-align:left;transition:background .2s}
+.grow:hover{background:var(--sunk)}
+.grow .gn{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;outline:1px solid var(--line);outline-offset:-1px;font:500 15px var(--mono);font-variation-settings:"MONO" 100}
+.grow b{display:block;font-weight:500;font-size:15px}
+.grow small{display:block;color:var(--ink3);font-size:13px;line-height:1.3;margin-top:1px}
+.grow .pr{font:400 12px var(--mono);font-variation-settings:"MONO" 100;color:var(--ink3);text-align:right;white-space:nowrap}
+.grow.cur .pr{color:var(--ink)}
+.grow .bar{grid-column:2/4;height:3px;border-radius:2px;background:var(--line);overflow:hidden;margin-top:2px}
+.grow .bar i{display:block;height:100%;background:var(--ink)}
+.grow.cur{background:var(--sunk);outline:1.5px solid var(--ink);outline-offset:-1.5px}
+.grow.cur .gn{background:var(--ink);color:var(--on-ink);outline:0}
+.grow .soon{grid-column:2/4;font:400 11px var(--mono);font-variation-settings:"MONO" 100;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);display:none}
+.grow.ask .soon{display:block}
+/* SOFT VOICE (G 2026-10-16: mono labels felt "technical"; kids should feel at home).
+   No monospaced text anywhere: labels, numbers and the problem use Areal's normal sans,
+   sentence case, no wide tracking. Numbers keep even widths via tabular figures. */
+*,#lpic text{font-variation-settings:"MONO" 0 !important}
+body{font-variant-numeric:tabular-nums}
+.group h2 i,.node .meta,.tl small,.insp .tag,.insp .row>i,.insp .lk em,.isl small,.lp .read small,.tb span,.grow .soon{text-transform:none;letter-spacing:0;font-size:13px;font-weight:450}
+.node .meta{font-size:12.5px}
+.tb span{font-size:11.5px;font-weight:500}
+.isl small{font-size:12px}
+.dock .pct,.hint,.grow .pr{letter-spacing:0;font-size:13px}
+#lpic .q{font-weight:500;letter-spacing:-.03em}
+#lpic .eq{font-weight:500;letter-spacing:-.01em}
+#lpic .cnt{font:450 15px var(--font);letter-spacing:0}
+#lpic .note{font:450 13px var(--font);letter-spacing:0}
+.dim text{font:450 13px var(--font);letter-spacing:0}
+.lp .read b{font-weight:500;letter-spacing:-.03em}
+.tl .gr,.grow .gn,.kp .keys button,.kp .disp{font-weight:500}
+
+/* ---------- K-5: one trail, big stops, one obvious next step (the 6-12 map stays as it is) ---------- */
+#kid{position:absolute;left:0;top:0;display:none}
+.kid #kid{display:block}
+.kid .node,.kid .group,.kid #edges{display:none}
+.focus #kid{opacity:0;pointer-events:none}
+#trail{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+#trail path{fill:none;stroke-linecap:round}
+#trail .road{stroke:var(--line);stroke-width:30}
+#trail .dots{stroke:var(--line-strong);stroke-width:10;stroke-dasharray:0 22}
+#trail .walk{stroke:var(--cc);stroke-width:10}
+.stop{position:absolute;width:220px;display:flex;flex-direction:column;align-items:center;gap:12px;cursor:pointer;animation:in .5s var(--settle) both}
+.stop .ring{width:156px;height:156px;border-radius:50%;background:var(--surface);outline:3px solid color-mix(in oklab,var(--cc) 40%,var(--line));outline-offset:-3px;display:grid;place-items:center;position:relative;transition:transform .25s var(--settle),outline-color .2s}
+.stop:active .ring{transform:scale(.96)}
+.stop .ring svg{width:112px;height:76px}
+.stop.done .ring{background:color-mix(in oklab,var(--cc) 10%,var(--surface))}
+.stop .ok{position:absolute;right:4px;top:4px;width:40px;height:40px;border-radius:50%;background:var(--cc);color:#fff;display:grid;place-items:center;outline:4px solid var(--bg)}
+.stop .ok svg{width:22px;height:22px}
+.stop.now .ring{width:184px;height:184px;margin-top:-28px;outline:4px solid var(--ink);outline-offset:-4px}
+.stop.now .ring svg{width:132px;height:90px}
+.stop .flag{position:absolute;top:-58px;height:36px;padding:0 16px;border-radius:18px;background:var(--ink);color:var(--on-ink);font:550 15px/36px var(--font);white-space:nowrap}
+.stop.now .flag{top:-86px}
+.stop .nm{font:550 19px/1.2 var(--font);letter-spacing:-.01em;text-align:center;text-wrap:balance}
+.stop.sel .ring{outline:4px solid var(--cc);outline-offset:-4px}
+.kch{position:absolute;display:flex;align-items:center;gap:14px;font:550 34px/1 var(--font);letter-spacing:-.025em;white-space:nowrap}
+.kch::before{content:"";width:16px;height:16px;border-radius:50%;background:var(--cc)}
+.kch small{font:450 17px var(--font);color:var(--ink3);letter-spacing:0}
+.kid .dock #zo,.kid .dock #zi,.kid .dock .pct,.kid .dock #fit,.kid .dock .sep,.kid .hint{display:none}
+.kid .dock{padding:6px}
+.kid #today{height:64px;border-radius:32px;font:550 19px var(--font);display:flex;align-items:center;gap:16px;padding:0 6px 0 26px}
+.kid #today svg{width:52px;height:52px;border-radius:50%;background:var(--dot);color:var(--on-dot);padding:14px}
+.kid #today .tn{display:inline}
+#today .tn{display:none}
+.kid.focus .dock{display:none}
+.kidp .pv{height:220px;border-radius:24px}
+.kidp h3{font-size:34px}
+.kidp .goal{font-size:18px;line-height:1.35;color:var(--ink2)}
+.kidp .go{height:64px;border-radius:32px;font:550 19px var(--font);padding:0 6px 0 26px}
+.kidp .go svg{width:52px;height:52px;padding:14px}
+.kidp .dn{font:500 16px var(--font);color:var(--cc);display:flex;align-items:center;gap:8px}
+
+/* K-5 paper: pieces of maths on the paper itself */
+.kid #grid,.kid.focus #grid{opacity:1;transition:none}
+.piece{position:absolute;width:200px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer}
+.piece .art{width:200px;height:136px;border-radius:22px;display:grid;place-items:center;transition:background .3s,transform .25s var(--settle)}
+.piece:active .art{transform:scale(.96)}
+.piece .art svg{width:176px;height:119px;overflow:visible}
+.piece .art svg *{stroke:var(--cc);stroke-width:2.5}
+.piece:not(.done):not(.now) .art svg *{fill:transparent!important;stroke:color-mix(in oklab,var(--cc) 45%,transparent)}
+.piece.now .art{background:var(--surface);outline:2.5px solid var(--ink);outline-offset:-2.5px}
+.piece.sel .art{outline:3px solid var(--cc);outline-offset:-3px;background:var(--surface)}
+.piece .nm{font:550 22px/1.15 var(--font);letter-spacing:-.01em;text-align:center;text-wrap:balance;color:var(--ink3);max-width:250px}
+.piece.done .nm,.piece.now .nm{color:var(--ink)}
+.piece .flag{position:absolute;top:-17px;height:34px;padding:0 14px;border-radius:17px;line-height:34px!important;font-size:16px!important;background:var(--ink);color:var(--on-ink);font:550 18px/40px var(--font)}
+.kch{font-size:38px}.kch small{font-size:20px}
+#kid.drawing .art svg *{stroke-dasharray:101;stroke-dashoffset:101;animation:pen .9s var(--ease) var(--d) forwards}
+#kid.drawing .piece.done .art svg *,#kid.drawing .piece.now .art svg *{animation:pen .9s var(--ease) var(--d) forwards,fillin .5s var(--ease) calc(var(--d) + .55s) both}
+#kid.drawing .nm,#kid.drawing .flag,#kid.drawing .kch{animation:rise .45s var(--ease) calc(var(--d) + .35s) both}
+@keyframes pen{to{stroke-dashoffset:0}}
+@keyframes fillin{from{fill-opacity:0}}
+
+.piece:not(.done):not(.now) .nm{color:var(--ink2)}
+.kidp .dn{color:var(--ink)}
+.kidp .dn .ck{width:26px;height:26px;border-radius:50%;background:var(--cc);color:#fff;display:grid;place-items:center}
+.kidp .dn .ck svg{width:15px;height:15px}
+/* only what changed draws again: the lesson you just learned colours in, and the next one lights up */
+
+.piece.now .flag{top:-17px}
+/* phones: the question sits under the picture, not over it */
+@media (max-width:760px){.kid .lp{top:auto;height:auto;max-height:58%;bottom:16px}.kid .lp .acts{margin-top:8px}}
+
+/* v19: pieces on the grid, drawn frame, left-aligned labels */
+.piece{width:220px;align-items:flex-start;gap:12px}
+.piece .art{width:220px;height:140px;border-radius:18px;position:relative;background:transparent}
+.piece .art svg{width:176px;height:119px}
+.piece .art svg.fr{position:absolute;inset:0;width:220px;height:140px}
+#kid .piece .art svg.fr rect{fill:none;stroke:var(--line-strong)!important;stroke-width:1.5!important}
+.piece.done .art{background:color-mix(in oklab,var(--cc) 6%,var(--surface))}
+#kid .piece.done .art svg.fr rect{stroke:color-mix(in oklab,var(--cc) 40%,transparent)!important}
+.piece.now .art{background:var(--surface);outline:0}
+#kid .piece.now .art svg.fr rect{stroke:var(--ink)!important;stroke-width:2.5!important}
+.piece.sel .art{outline:0}
+#kid .piece.sel .art svg.fr rect{stroke:var(--cc)!important;stroke-width:3!important}
+.piece .nm{text-align:left;max-width:220px;min-height:52px;padding-left:4px;font-size:20px}
+.piece .flag,.piece.now .flag{top:-17px;left:16px}
+#kid.drawing .piece.done .art,#kid.drawing .piece.now .art{animation:wash .5s var(--ease) calc(var(--d) + .5s) both}
+@keyframes wash{from{background:transparent}}
+#kid.drawing .fresh .art svg:not(.fr) *{animation:pen .9s var(--ease) var(--d) forwards,fillin .7s var(--ease) calc(var(--d) + 1.4s) both}
+#kid.drawing .fresh .art{animation:wash .7s var(--ease) calc(var(--d) + 1.4s) both}
+
+/* v21: the controls belong to the paper. No side panel, no big buttons: words are written on the paper, tools sit in one quiet bar */
+.kid .dock{display:none}
+.zp{top:16px;display:none}#lfit{display:grid}.focus #lfit{display:none}.kid .zp{display:flex}.zp .pct{min-width:52px;text-align:center;font:400 13px var(--font);color:var(--ink2);font-variant-numeric:tabular-nums}.zp .sep{width:1px;height:24px;background:var(--line);margin:0 var(--half)}.zp .ib{font:400 20px var(--font)}
+@media (max-width:760px){.zp{top:auto;bottom:16px;right:auto!important;left:50%;transform:translateX(-50%)}}
+.lp{display:none!important}
+.tools{display:none}
+
+.wr{position:absolute;left:40px;top:-112px;width:400px;pointer-events:none}
+.wr .wq{font:500 26px/1.15 var(--font);letter-spacing:-.02em;color:var(--ink);animation:rise .5s var(--ease) both}
+.wr .wh{margin-top:8px;font:400 16px/1.35 var(--font);color:var(--ink2);animation:rise .5s var(--ease) .12s both}
+.ws{position:absolute;left:40px;top:448px;width:400px;font:500 17px/1.3 var(--font);color:var(--cc);pointer-events:none}
+.ws span{display:inline-block;animation:rise .4s var(--ease) both;padding-bottom:4px;background:linear-gradient(currentColor,currentColor) 0 100%/0 1.5px no-repeat;animation:rise .4s var(--ease) both,ul .6s var(--ease) .3s forwards}
+.ws.ok{color:var(--right)}
+@keyframes ul{to{background-size:100% 1.5px}}
+.bar{bottom:20px;left:50%;transform:translate(-50%,16px);opacity:0;pointer-events:none;padding:6px;gap:2px;transition:opacity .3s var(--ease),transform .4s var(--ease)}
+.bar.on{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+.bar .bt,.bar .bm{display:flex;align-items:center;gap:2px}
+.bar:not(.tools-on) .bt,.bar:not(.tools-on) .bts{display:none}
+.bar .sep{width:1px;height:24px;background:var(--line);margin:0 8px}
+.bar .tb{width:42px;height:42px;border-radius:50%;gap:0;padding:0}
+.bar .tb span{display:none}
+.bar .tb svg{width:20px;height:20px}
+.bar .marks{display:flex;gap:5px;margin:0 10px 0 6px}
+.bar .marks i{width:14px;height:3px;border-radius:2px;background:var(--line-strong)}
+.bar .marks i.d{background:var(--cc)}.bar .marks i.n{background:var(--ink);width:22px}
+.go{height:42px;border:0;background:transparent;color:var(--ink);display:flex;align-items:center;gap:12px;padding:0 0 0 16px;border-radius:21px;font:500 15px var(--font);cursor:pointer;white-space:nowrap;transition:background .2s}
+.go:hover{background:var(--sunk)}
+.go i{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;outline:1px solid var(--line-strong);outline-offset:-1px}
+.go svg{width:18px;height:18px}
+.kp{right:16px}
+.pnote{position:absolute;z-index:3;width:260px;padding:12px 6px 6px 14px;margin-left:-14px;background:var(--surface);outline:1px solid var(--line);outline-offset:-1px;border-radius:24px;display:flex;flex-direction:column;gap:6px;animation:rise .45s var(--ease) .35s both}
+.pnote .pn{font:550 18px/1.2 var(--font);color:var(--ink);padding-right:10px}
+.pnote .pg{font:400 15px/1.35 var(--font);color:var(--ink2);padding-right:10px}
+.pnote .go{align-self:flex-end}
+.piece.sel .nm{opacity:0}
+@media (max-width:760px){.wr{left:20px;width:420px}.wr .wq{font-size:30px}.wr .wh{font-size:19px}}
+
+/* v21b: the graph is the UI. Words sit on grid lines, buttons are whole cells, nothing floats on the paper */
+.bar{display:none!important}
+#lui{position:absolute;left:0;top:-140px;overflow:visible;pointer-events:none}
+#lui .cb{pointer-events:auto;cursor:pointer}
+#lui .wq{font:500 28px var(--font);letter-spacing:-.02em;fill:var(--ink)}
+#lui .wh{font:400 16px var(--font);fill:var(--ink2)}
+#lui .ws{font:500 17px var(--font);fill:var(--cc)}
+#lui .ws.ok{fill:var(--right)}
+#lui .fade{animation:rise .5s var(--ease) var(--d,0s) both}
+#lui .cb rect{fill:var(--surface);stroke:var(--line-strong);stroke-width:1.5}
+#lui .cb:hover rect,#lui .cb.on rect{fill:var(--sunk)}
+#lui .cb svg{fill:var(--ink)}
+#lui .cb text{font:500 15px var(--font);fill:var(--ink)}
+#lui .cb.main rect{stroke:var(--ink)}
+#lui .stepc{fill:transparent;stroke:var(--line-strong);stroke-width:1.5}
+#lui .stepc.d{fill:var(--cc);stroke:var(--cc)}
+#lui .stepc.n{stroke:var(--ink)}
+#lpic .q{font-size:40px}
+.pgo{position:absolute;z-index:3;width:160px;height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 10px 0 16px;border:0;background:var(--surface);outline:1.5px solid var(--ink);outline-offset:-1.5px;color:var(--ink);font:500 16px var(--font);cursor:pointer;animation:rise .45s var(--ease) .5s both}
+.pgo svg{width:20px;height:20px}
+.pgo:hover{background:var(--sunk)}
+.piece{gap:0}
+.piece .nm{margin-top:20px;line-height:20px;min-height:40px;padding-top:2px;font-size:18px}
+.piece .flag,.piece.now .flag{top:-20px;left:0;height:20px;line-height:20px!important;padding:0 8px;border-radius:0;font:550 13px/20px var(--font)!important}
+.piece .art,.piece .art svg.fr rect{border-radius:0}
+@media (max-width:760px){#isl{display:none!important}#lui .wq{font-size:28px}#lui .wh{font-size:15px}}
+
+/* 3D on the paper: the three.js layer takes over the paper's grid pixel for pixel, then tilts it */
+#three{position:fixed;inset:0;z-index:2;display:none;touch-action:none;cursor:grab}
+#three.on{display:block}
+#three canvas{position:absolute;inset:0;width:100%;height:100%}
+.t3labels{position:absolute;inset:0;pointer-events:none}
+.t3d #grid{visibility:hidden}
+.t3{width:0;height:0}
+.t3 .t3i{position:absolute;left:0;top:0;transform-origin:0 0;transform:scale(var(--k,1))}
+.t3.say .t3i{top:auto;bottom:0;width:480px;transform-origin:0 100%}
+.t3.say .in .q,.t3.say .in .h{animation:rise .5s var(--ease) both}.t3.say .in .h{animation-delay:.12s}
+.t3 .q{font:500 28px/40px var(--font);letter-spacing:-.02em;color:var(--ink)}
+.t3 .h{font:400 16px/20px var(--font);color:var(--ink2);margin-top:0}
+.t3.lab .t3i{transform:translate(-50%,-50%) scale(var(--k,1));transform-origin:50% 50%;font:550 20px var(--font);color:var(--ink)}
+.t3.fb .t3i{white-space:nowrap;font:500 17px/20px var(--font);color:var(--ink2)}
+.t3.fb .no{color:var(--cc,#e39b00)}.t3.fb .ok{color:var(--right)}
+.t3.tbar .t3i{display:flex;align-items:center}
+.t3b{pointer-events:auto;width:40px;height:40px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer;margin-left:-1.5px;padding:0}
+.t3b:first-child{margin-left:0}
+.t3b svg{width:20px;height:20px}
+.t3b:hover{background:var(--sunk)}
+.t3b.main{width:180px;border-color:var(--ink);display:flex;justify-content:space-between;align-items:center;padding:0 10px 0 16px;font:500 15px var(--font)}
+.t3 .gap{width:40px}
+</style></head><body>
+<div id="paper"><div id="grid"></div><div id="world"></div></div>
+
+<div class="float tl"><button class="ib back" id="back" aria-label="Back to the map"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"/></svg></button><button class="gpick" id="gpick" aria-label="Change grade"><span class="gr">5</span><div><b>5th grade</b><small id="prog">5 of 17 learned</small></div><svg class="chev" viewBox="0 0 256 256" fill="currentColor"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg></button></div>
+<div class="float isl" id="isl"><div><b id="islT"></b><small id="islS"></small></div></div>
+<div class="float tr"><button class="ib" id="theme" aria-label="Light or dark"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M233.54,142.23a8,8,0,0,0-8-2,88.08,88.08,0,0,1-109.8-109.8,8,8,0,0,0-10-10,104.84,104.84,0,0,0-52.91,37A104,104,0,0,0,136,224a103.09,103.09,0,0,0,62.52-20.88,104.84,104.84,0,0,0,37-52.91A8,8,0,0,0,233.54,142.23ZM188.9,190.34A88,88,0,0,1,65.66,67.11a89,89,0,0,1,31.4-26A106,106,0,0,0,96,56,104.11,104.11,0,0,0,200,160a106,106,0,0,0,14.92-1.06A89,89,0,0,1,188.9,190.34Z"/></svg></button><button class="ib" aria-label="Me"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"/></svg></button></div>
+<div class="float zp" id="zp"><button class="ib" id="kzo" aria-label="Zoom out">−</button><span class="pct" id="kpct">100%</span><button class="ib" id="kzi" aria-label="Zoom in">+</button><span class="sep"></span><button class="ib" id="lfit" aria-label="Fit this lesson group" title="Fit this lesson group"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M200,80v32a8,8,0,0,1-16,0V88H160a8,8,0,0,1,0-16h32A8,8,0,0,1,200,80ZM96,168H72V144a8,8,0,0,0-16,0v32a8,8,0,0,0,8,8H96a8,8,0,0,0,0-16ZM232,56V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM216,200V56H40V200H216Z"/></svg></button><button class="ib" id="find" aria-label="Find what's next" title="Find what's next"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm8,191.63V184a8,8,0,0,0-16,0v31.63A88.13,88.13,0,0,1,40.37,136H72a8,8,0,0,0,0-16H40.37A88.13,88.13,0,0,1,120,40.37V72a8,8,0,0,0,16,0V40.37A88.13,88.13,0,0,1,215.63,120H184a8,8,0,0,0,0,16h31.63A88.13,88.13,0,0,1,136,215.63Z"/></svg></button></div>
+<div class="float dock" id="dock"><button class="ib" id="zo" aria-label="Zoom out">−</button><span class="pct" id="pct">100%</span><button class="ib" id="zi" aria-label="Zoom in">+</button><span class="sep"></span><button class="ib" id="fit" aria-label="See everything"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M216,48V88a8,8,0,0,1-16,0V56H168a8,8,0,0,1,0-16h40A8,8,0,0,1,216,48ZM88,200H56V168a8,8,0,0,0-16,0v40a8,8,0,0,0,8,8H88a8,8,0,0,0,0-16Zm120-40a8,8,0,0,0-8,8v32H168a8,8,0,0,0,0,16h40a8,8,0,0,0,8-8V168A8,8,0,0,0,208,160ZM88,40H48a8,8,0,0,0-8,8V88a8,8,0,0,0,16,0V56H88a8,8,0,0,0,0-16Z"/></svg></button><button class="btn" id="today">Up next</button></div>
+<div class="hint" id="hint">Tap a lesson to see what it builds on</div>
+<aside class="insp" id="insp"></aside>
+<aside class="insp lp" id="lp"></aside>
+<div class="float bar" id="bar"><span class="bt" id="bt"></span><span class="sep bts"></span><span class="bm" id="bm"></span></div>
+<div class="float tools" id="tools"><button class="tb" id="t-hint"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M176,232a8,8,0,0,1-8,8H88a8,8,0,0,1,0-16h80A8,8,0,0,1,176,232Zm40-128a87.55,87.55,0,0,1-33.64,69.21A16.24,16.24,0,0,0,176,186v6a16,16,0,0,1-16,16H96a16,16,0,0,1-16-16v-6a16,16,0,0,0-6.23-12.66A87.59,87.59,0,0,1,40,104.49C39.74,56.83,78.26,17.14,125.88,16A88,88,0,0,1,216,104Zm-16,0a72,72,0,0,0-73.74-72c-39,.92-70.47,33.39-70.26,72.39a71.65,71.65,0,0,0,27.64,56.3A32,32,0,0,1,96,186v6h64v-6a32.15,32.15,0,0,1,12.47-25.35A71.65,71.65,0,0,0,200,104Z"/></svg><span>Hint</span></button><button class="tb" id="t-show"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg><span>Show me</span></button><button class="tb" id="t-pad"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M88,72a12,12,0,1,1-12-12A12,12,0,0,1,88,72Zm52-12a12,12,0,1,0,12,12A12,12,0,0,0,140,60Zm64,24a12,12,0,1,0-12-12A12,12,0,0,0,204,84ZM76,116a12,12,0,1,0,12,12A12,12,0,0,0,76,116Zm64,0a12,12,0,1,0,12,12A12,12,0,0,0,140,116Zm64,0a12,12,0,1,0,12,12A12,12,0,0,0,204,116ZM76,172a12,12,0,1,0,12,12A12,12,0,0,0,76,172Zm64,0a12,12,0,1,0,12,12A12,12,0,0,0,140,172Zm64,0a12,12,0,1,0,12,12A12,12,0,0,0,204,172Z"/></svg><span>Keypad</span></button><button class="tb" id="t-reset"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M224,128a96,96,0,0,1-94.71,96H128A95.38,95.38,0,0,1,62.1,197.8a8,8,0,0,1,11-11.63A80,80,0,1,0,71.43,71.39a3.07,3.07,0,0,1-.26.25L44.59,96H72a8,8,0,0,1,0,16H24a8,8,0,0,1-8-8V56a8,8,0,0,1,16,0V85.8L60.25,60A96,96,0,0,1,224,128Z"/></svg><span>Reset</span></button></div>
+<div class="float kp" id="kp"><div class="disp" id="kd">0<small>/8</small></div><div class="keys"><button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button data-k="0">0</button><button data-k="del">⌫</button><button data-k="clr">C</button></div></div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="insp grades" id="grades"></aside>
+
+<script>
+var CELL=20, W=document.getElementById('world'), P=document.getElementById('paper'), G=document.getElementById('grid');
+var cam={x:0,y:0,z:1}, NW=260, NH=88;
+var ARROW='<svg viewBox="0 0 256 256" fill="currentColor"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg>';
+// colour lives in the maths: one picture colour per chapter (never red or green, those mean wrong and right)
+var CH=[{t:'Fractions',c:'#3b6cff'},{t:'Decimals',c:'#e0559b'},{t:'Volume',c:'#e39b00'},{t:'Graphs',c:'#7a5cf0'}];
+// lessons as nodes; `in` = the lessons each one builds on
+var L=[
+ {id:'eq',ch:0,n:'Equal parts',x:0,y:0,s:'done',g:'Cut a whole into parts that are all the same size.'},
+ {id:'ev',ch:0,n:'Equivalent fractions',x:340,y:0,s:'done',in:['eq'],g:'Different fractions can cover the same amount.'},
+ {id:'ad',ch:0,n:'Add with different bottoms',x:680,y:0,s:'now',in:['ev'],g:'Make the bottoms match. Then add the tops.'},
+ {id:'sb',ch:0,n:'Subtract fractions',x:1020,y:0,in:['ad'],g:'Match the bottoms, then take away.'},
+ {id:'mx',ch:0,n:'Mixed numbers',x:1360,y:0,in:['sb'],g:'Wholes and a part, written together.'},
+ {id:'fg',ch:0,n:'Fractions of a group',x:680,y:160,in:['ev'],g:'Find a part of a set of things.'},
+ {id:'th',ch:1,n:'Tenths and hundredths',x:340,y:440,s:'done',in:['ev'],g:'Fractions with 10 and 100 at the bottom, written as decimals.'},
+ {id:'cd',ch:1,n:'Compare decimals',x:680,y:440,s:'done',in:['th'],g:'Line up the places to see which is bigger.'},
+ {id:'dd',ch:1,n:'Add decimals',x:1020,y:440,in:['cd'],g:'Line up the points, then add place by place.'},
+ {id:'m10',ch:1,n:'Multiply by 10s',x:1360,y:440,in:['dd'],g:'Every place moves one step left.'},
+ {id:'uc',ch:2,n:'Unit cubes',x:1360,y:760,s:'done',g:'Volume is how many cubes fill a shape.'},
+ {id:'lw',ch:2,n:'Length × width × height',x:1700,y:760,in:['uc','m10'],g:'Count one layer, then stack the layers.'},
+ {id:'av',ch:2,n:'Add volumes',x:2040,y:760,in:['lw'],g:'Split a shape into boxes and add them.'},
+ {id:'pp',ch:3,n:'Plot points',x:1360,y:-360,g:'Go across, then up, to find a point.'},
+ {id:'pg',ch:3,n:'Patterns on a graph',x:1700,y:-360,in:['pp'],g:'Two rules make points that line up.'},
+ {id:'rl',ch:3,n:'Read a line plot',x:1700,y:-200,in:['fg'],g:'Each mark is one thing measured.'},
+ {id:'ml',ch:3,n:'Make a line plot',x:2040,y:-200,in:['rl','sb'],g:'Measure in fractions, then mark each one.'}
+];
+var BY={}; L.forEach(function(l,i){l.i=i; l.w=NW; l.h=NH; BY[l.id]=l; l.in=l.in||[]; l.out=[];}); L.forEach(function(l){l.in.forEach(function(p){BY[p].out.push(l.id);});});
+var NOW=L.filter(function(l){return l.s==='now';})[0];
+function chi(l){ l=BY[l.id]||l; return L.filter(function(m){return m.ch===l.ch;}).indexOf(l);}
+
+function pic(l,big){ // small picture in the chapter colour
+  var a=CH[l.ch].c, f='color-mix(in oklab,'+a+' 28%,transparent)', s='', i=chi(l);
+  if(l.ch===0){ var n=[2,4,8,6,3,4][i]||4; for(var j=0;j<n;j++) s+='<rect x="'+(10+j*(180/n))+'" y="34" width="'+(180/n-8)+'" height="46" rx="9" fill="'+(j<Math.ceil(n/2)?a:f)+'"/>'; s+='<rect x="10" y="96" width="172" height="12" rx="6" fill="'+f+'"/>'; }
+  if(l.ch===1){ for(var r=0;r<5;r++)for(var c=0;c<10;c++) s+='<rect x="'+(10+c*18)+'" y="'+(22+r*18)+'" width="15" height="15" rx="3" fill="'+((r*10+c)<(i+2)*7?a:f)+'"/>'; }
+  if(l.ch===2){ for(var z=0;z<3;z++)for(var c2=0;c2<4-z;c2++) s+='<rect x="'+(40+c2*30+z*15)+'" y="'+(100-z*28)+'" width="26" height="26" rx="5" fill="'+(z===i%3?a:f)+'"/>'; }
+  if(l.ch===3){ s+='<path d="M20 120 H190 M20 120 V20" stroke="'+f+'" stroke-width="5" fill="none"/>'; for(var k=0;k<6;k++) s+='<circle cx="'+(40+k*28)+'" cy="'+(105-((k*(i+2))%5)*18)+'" r="8" fill="'+a+'"/>'; }
+  return '<svg viewBox="0 0 200 135">'+s+'</svg>';
+}
+function edgeD(a,b){ var x1=a.x+a.w,y1=a.y+a.h/2,x2=b.x,y2=b.y+b.h/2,dx=Math.max(70,Math.abs(x2-x1)/2); return 'M'+x1+' '+y1+' C'+(x1+dx)+' '+y1+' '+(x2-dx)+' '+y2+' '+x2+' '+y2; }
+function walked(a,b){ return a.s==='done'&&(b.s==='done'||b.s==='now'); }
+
+// build the map
+var h='', k=0;
+CH.forEach(function(c,ci){ var ls=L.filter(function(l){return l.ch===ci;}), x0=Math.min.apply(0,ls.map(function(l){return l.x;}))-30, y0=Math.min.apply(0,ls.map(function(l){return l.y;}))-30,
+  x1=Math.max.apply(0,ls.map(function(l){return l.x+NW;}))+30, y1=Math.max.apply(0,ls.map(function(l){return l.y+NH;}))+30, d=ls.filter(function(l){return l.s==='done';}).length;
+  h+='<div class="group" style="--cc:'+c.c+';left:'+x0+'px;top:'+y0+'px;width:'+(x1-x0)+'px;height:'+(y1-y0)+'px"><h2>'+c.t+'<i>'+d+' of '+ls.length+'</i></h2></div>'; });
+var es='';
+L.forEach(function(b){ b.in.forEach(function(p){ var a=BY[p], w=walked(a,b)?' walked':'';
+  es+='<path class="e'+w+'" data-a="'+a.id+'" data-b="'+b.id+'" style="--cc:'+CH[b.ch].c+'" d="'+edgeD(a,b)+'"/>';
+  es+='<circle class="e'+w+'" data-a="'+a.id+'" data-b="'+b.id+'" style="--cc:'+CH[b.ch].c+'" cx="'+(a.x+a.w)+'" cy="'+(a.y+a.h/2)+'" r="4.5"/><circle class="e'+w+'" data-a="'+a.id+'" data-b="'+b.id+'" style="--cc:'+CH[b.ch].c+'" cx="'+b.x+'" cy="'+(b.y+b.h/2)+'" r="4.5"/>'; }); });
+h+='<svg id="edges" width="10" height="10">'+es+'</svg>';
+L.forEach(function(l){ var st=l.s==='done'?'Learned':l.s==='now'?'Up next':'';
+  h+='<div class="node '+(l.s||'')+'" data-i="'+l.i+'" style="--cc:'+CH[l.ch].c+';left:'+l.x+'px;top:'+l.y+'px;animation-delay:'+(k++*35)+'ms"><div class="th">'+pic(l)+'</div><div><div class="meta">'+String(chi(l)+1).padStart(2,'0')+'<span class="st">'+st+'</span></div><div class="nm">'+l.n+'</div></div></div>'; });
+h+='<div id="kid"></div>';
+h+='<div class="board" id="board"><svg id="lui" width="460" height="700" viewBox="0 -140 460 700"></svg><svg id="lpic" width="460" height="440" viewBox="0 0 460 440"></svg></div>';
+W.innerHTML=h;
+
+// camera
+var crispT, shown={x:0,y:0,z:1}, tw=null;
+// one camera for the paper and its grid: moves are tweened here, so both always travel as one sheet
+function apply(){ var b=document.body.classList, ms=b.contains('glide')?1100:b.contains('fly')?700:0;
+  if(tw){ cancelAnimationFrame(tw); tw=null; }
+  if(!ms||matchMedia('(prefers-reduced-motion: reduce)').matches){ render(cam); return; }
+  var a={x:shown.x,y:shown.y,z:shown.z}, t0=performance.now(), to={x:cam.x,y:cam.y,z:cam.z}, io=ms>900;
+  (function step(now){ var t=Math.min(1,(now-t0)/ms), e=io?(t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2):1-Math.pow(1-t,4), z=a.z*Math.pow(to.z/a.z,e);
+    // zoom moves in proportion (log space) and the point under the centre travels straight
+    var k=(a.z===to.z)?e:(z-a.z)/(to.z-a.z);
+    render({x:a.x+(to.x-a.x)*k,y:a.y+(to.y-a.y)*k,z:z}); tw=t<1?requestAnimationFrame(step):null; })(t0); }
+function render(c){ shown={x:c.x,y:c.y,z:c.z}; W.style.transform='translate('+c.x+'px,'+c.y+'px) scale('+c.z+')'; W.style.willChange='transform'; clearTimeout(crispT); crispT=setTimeout(function(){ W.style.willChange='auto'; },260); /* re-render sharp once the camera rests */ var m=CELL*c.z,M=m*5;
+  G.style.backgroundSize=M+'px '+M+'px,'+M+'px '+M+'px,'+m+'px '+m+'px,'+m+'px '+m+'px'; G.style.backgroundPosition=c.x+'px '+c.y+'px';
+  document.getElementById('pct').textContent=document.getElementById('kpct').textContent=Math.round(c.z*100)+'%'; }
+function zoomAt(f,cx,cy){ if(window.T3&&T3.on){ T3.zoom(f); return; } var nz=Math.min(2.5,Math.max(.25,cam.z*f)); f=nz/cam.z; cam.x=cx-(cx-cam.x)*f; cam.y=cy-(cy-cam.y)*f; cam.z=nz; apply(); }
+function flyTo(x,y,w,h,pad,left,right,bottom){ pad=pad||80; left=left||0; right=right||0; bottom=bottom||0; var vw=innerWidth-left-right,vh=innerHeight-150-bottom,z=Math.min(1.6,Math.min((vw-pad*2)/w,(vh-pad*2)/h));
+  document.body.classList.add('fly'); cam.z=z; cam.x=left+vw/2-(x+w/2)*z; cam.y=75+vh/2-(y+h/2)*z; apply(); setTimeout(function(){document.body.classList.remove('fly');},720); }
+function bounds(){ var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; L.forEach(function(c){x0=Math.min(x0,c.x);y0=Math.min(y0,c.y-60);x1=Math.max(x1,c.x+c.w);y1=Math.max(y1,c.y+c.h);}); return [x0-30,y0,x1-x0+60,y1-y0+30]; }
+
+// pointer: pan, pinch, tap
+var pts={}, moved=0;
+P.addEventListener('pointerdown',function(e){ document.body.classList.remove('fly','glide'); pts[e.pointerId]={x:e.clientX,y:e.clientY}; moved=0; P.classList.add('drag'); P.setPointerCapture(e.pointerId); hint(); });
+P.addEventListener('pointermove',function(e){ if(!pts[e.pointerId])return; var ids=Object.keys(pts);
+  if(ids.length===1){ var p=pts[e.pointerId]; cam.x+=e.clientX-p.x; cam.y+=e.clientY-p.y; moved+=Math.abs(e.clientX-p.x)+Math.abs(e.clientY-p.y); apply(); }
+  else if(ids.length===2){ var a=pts[ids[0]],b=pts[ids[1]],d0=Math.hypot(a.x-b.x,a.y-b.y); pts[e.pointerId]={x:e.clientX,y:e.clientY}; a=pts[ids[0]];b=pts[ids[1]]; zoomAt(Math.hypot(a.x-b.x,a.y-b.y)/d0,(a.x+b.x)/2,(a.y+b.y)/2); moved+=99; return; }
+  pts[e.pointerId]={x:e.clientX,y:e.clientY}; });
+P.addEventListener('pointerup',function(e){ delete pts[e.pointerId]; if(!Object.keys(pts).length) P.classList.remove('drag'); if(moved>=6) return;
+  var el=document.elementFromPoint(e.clientX,e.clientY)||document.body, Ls=document.getElementById('lesson');
+  if(open){ var ab=el.closest('[data-act]'); if(ab){ act(ab.dataset.act); return; } var pc=el.closest('[data-p]'); if(pc) tapPiece(+pc.dataset.p); return; }
+  if(kidMode){ var st=el.closest('.stop'); if(st){ var kl=BY[st.dataset.id]; if(sel===kl) openLesson(kl); else kidSelect(kl,true); } else if(!el.closest('.pgo')) kidSelect(null); return; }
+  var n=el.closest('.node'); if(n){ var l=L[+n.dataset.i]; if(sel===l) openLesson(l); else select(l,true); } else select(null); });
+P.addEventListener('pointercancel',function(e){delete pts[e.pointerId];});
+P.addEventListener('wheel',function(e){ e.preventDefault(); document.body.classList.remove('fly','glide'); hint(); if(e.ctrlKey||(Math.abs(e.deltaY)>=40&&e.deltaMode===0&&!e.shiftKey&&Math.abs(e.deltaX)<2)) zoomAt(Math.exp(-e.deltaY*.0025),e.clientX,e.clientY); else { cam.x-=e.deltaX; cam.y-=e.deltaY; apply(); } },{passive:false});
+document.getElementById('zi').onclick=function(){zoomAt(1.25,innerWidth/2,innerHeight/2);};
+document.getElementById('zo').onclick=function(){zoomAt(.8,innerWidth/2,innerHeight/2);};
+document.getElementById('fit').onclick=function(){ closeLesson(); select(null); var b=bounds(); flyTo(b[0],b[1],b[2],b[3],40); };
+document.getElementById('today').onclick=function(){ closeLesson(); if(kidMode) openLesson(NOW); else select(NOW,true); };
+document.getElementById('back').onclick=function(){ if(window.T3&&T3.on){ T3.close(); return; } var l=open; closeLesson(); if(kidMode){ kidPaper(); var k=KP[l?l.id:NOW.id]; cam.z=1.8; cam.x=innerWidth/2-k.cx*cam.z; cam.y=innerHeight/2-k.cy*cam.z; apply(); requestAnimationFrame(function(){ requestAnimationFrame(function(){ kidCam(null,true); }); }); } else if(l) select(l,true); };
+document.getElementById('theme').onclick=function(){ var r=document.documentElement; r.dataset.theme=r.dataset.theme==='dark'?'light':'dark'; };
+
+// grades: one list, current grade marked, the map blurs behind
+var GR=[['K','Kindergarten','Counting, shapes, more and less',14],['1','1st grade','Add and subtract within 20',15],['2','2nd grade','Place value, adding to 1000',15],['3','3rd grade','Multiply, divide, first fractions',16],['4','4th grade','Big numbers, equivalent fractions',16],['5','5th grade','Fractions, decimals, volume, graphs',17],
+ ['6','6th grade','Ratios, negative numbers',15],['7','7th grade','Proportions, equations',15],['8','8th grade','Functions, Pythagoras',14],['9','9th grade','Algebra 1',14],['10','10th grade','Geometry',14],['11','11th grade','Algebra 2',13],['12','12th grade','Precalculus',13]];
+function openGrades(on){ var G2=document.getElementById('grades'); if(on===undefined) on=!document.body.classList.contains('gopen');
+  if(on){ select(null); G2.innerHTML='<div class="tag">All grades<button class="ib x" id="gx" aria-label="Close">✕</button></div><h3>Pick a grade</h3><div class="list">'+GR.map(function(g){ var cur=g[0]===GRADE, d=cur?5:0;
+      return '<button class="grow'+(cur?' cur':'')+'" data-g="'+g[0]+'"><span class="gn">'+g[0]+'</span><span><b>'+g[1]+'</b><small>'+g[2]+'</small></span><span class="pr">'+d+' / '+g[3]+'</span>'+(cur?'<span class="bar"><i style="width:'+(d/g[3]*100)+'%"></i></span>':'')+'<span class="soon">Only 5th grade is in this mock-up</span></button>'; }).join('')+'</div>';
+    G2.querySelector('#gx').onclick=function(){openGrades(false);};
+    [].forEach.call(G2.querySelectorAll('.grow'),function(b){ b.onclick=function(){ openGrades(false); pickGrade(b.dataset.g); }; });
+    G2.classList.remove('on'); void G2.offsetWidth; G2.classList.add('on'); var c=G2.querySelector('.cur'); setTimeout(function(){ c.scrollIntoView({block:'center'}); },0); }
+  else G2.classList.remove('on');
+  document.body.classList.toggle('gopen',on); }
+document.getElementById('gpick').onclick=function(){ openGrades(); };
+document.getElementById('scrim').onclick=function(){ openGrades(false); };
+function hint(){ document.getElementById('hint').style.opacity=0; }
+
+// selecting a lesson: its links light up and the inspector says what it is and where it leads
+var sel=null;
+function select(l,fly){ sel=l; document.body.classList.toggle('sel-on',!!l);
+  var rel={}; if(l){ rel[l.id]=1; l.in.forEach(function(x){rel[x]=1;}); l.out.forEach(function(x){rel[x]=1;}); }
+  [].forEach.call(document.querySelectorAll('.node'),function(n){ var m=L[+n.dataset.i]; n.classList.toggle('sel',m===l); n.classList.toggle('rel',!!(l&&rel[m.id]&&m!==l)); });
+  [].forEach.call(document.querySelectorAll('#edges .e'),function(e){ e.classList.toggle('hl',!!(l&&(e.dataset.a===l.id||e.dataset.b===l.id))); });
+  var I=document.getElementById('insp'); if(!l){ I.classList.remove('on'); return; }
+  var c=CH[l.ch], link=function(id,dir){ var m=BY[id]; return '<button class="lk" data-go="'+id+'" style="--c2:'+CH[m.ch].c+'"><span></span>'+m.n+'<em>'+(m.s==='done'?'Learned':m.s==='now'?'Up next':m.ch!==l.ch?CH[m.ch].t:'')+'</em></button>'; };
+  I.style.setProperty('--cc',c.c);
+  I.innerHTML='<div class="tag">'+c.t+' · Lesson '+String(chi(l)+1).padStart(2,'0')+'<button class="ib x" id="ix" aria-label="Close">✕</button></div><h3>'+l.n+'</h3><div class="goal">'+l.g+'</div><div class="pv">'+pic(l)+'</div>'+
+    '<div class="row"><i>Builds on</i>'+(l.in.length?l.in.map(function(x){return link(x);}).join(''):'<span class="none">Nothing. A good place to start.</span>')+'</div>'+
+    '<div class="row"><i>Leads to</i>'+(l.out.length?l.out.map(function(x){return link(x);}).join(''):'<span class="none">The end of this path for now.</span>')+'</div>'+
+    '<button class="btn go" id="igo">'+(l.s==='done'?'Go over it':'Begin')+ARROW+'</button>';
+  I.classList.remove('on'); void I.offsetWidth; I.classList.add('on');
+  document.getElementById('ix').onclick=function(){select(null);}; document.getElementById('igo').onclick=function(){openLesson(l);};
+  [].forEach.call(I.querySelectorAll('[data-go]'),function(b){ b.onclick=function(){ select(BY[b.dataset.go],true); }; });
+  if(fly){ flyTo(l.x-420,l.y-200,l.w+840,l.h+400,30,innerWidth>760?360:0); } }
+
+// lesson: the picture is the problem. 1 whole = 16 cells (20 each); a fourth = 4 cells, an eighth = 2.
+// Step 1: shade eighths until they cover the fourth. Step 2: add one more eighth, read the total.
+var open=null, step=0, sh=[], ad=[], hintOn=false, said='', sayOk=false, BX=0, BY0=0;
+var P0=40, ROW1=150, ROW2=270, BH=60;
+function cnt(a){ return a.filter(Boolean).length; }
+function openLesson(l){ if(kidMode&&l.id==='uc'&&window.T3&&T3.open){ T3.open(KP[l.id]); return; } l=kidMode?KP[l.id]:l; open=l; select(null); step=-1; sh=[0,0,0,0,0,0,0,0]; ad=[0,0,0,0,0,0,0,0]; hintOn=false; said=''; sayOk=false;
+  var B=document.getElementById('board'), bw=460, bh=440; BX=Math.round((l.x+l.w/2-bw/2)/CELL)*CELL; BY0=Math.round((l.y+l.h/2-bh/2)/CELL)*CELL;
+  document.body.classList.add('focus'); B.style.cssText='left:'+BX+'px;top:'+BY0+'px;width:'+bw+'px;height:'+bh+'px;--cc:'+CH[l.ch].c;
+  B.className='board'; void B.offsetWidth; B.classList.add('on','run'); draw(); panel();
+  var LP=document.getElementById('lp'); LP.style.setProperty('--cc',CH[l.ch].c); LP.classList.remove('on'); void LP.offsetWidth; LP.classList.add('on');
+  fitBoard(); }
+// the camera keeps the picture clear of every open tool panel
+function fitBoard(){ if(!open)return; var wide=innerWidth>760, kp=document.body.classList.contains('kp-on'); flyTo(BX,BY0-140,460,660,wide?30:8,0,wide&&kp?270:0,wide?0:(kp?330:70)); }
+function closeLesson(){ if(!open)return; document.getElementById('board').className='board'; document.getElementById('bar').classList.remove('on'); document.getElementById('lp').classList.remove('on');
+  ['focus','working','kp-on'].forEach(function(c){document.body.classList.remove(c);}); document.getElementById('isl').classList.remove('on'); document.getElementById('t-pad').classList.remove('on'); open=null; }
+function begin(){ if(!open||step>=0)return; var t=document.querySelector('#lui .wq'), r=t.getBoundingClientRect(), T=document.getElementById('islT');
+  T.textContent=open.n; document.getElementById('islS').textContent=CH[open.ch].t+' · Lesson '+String(chi(open)+1).padStart(2,'0');
+  var f=document.createElement('div'); f.className='flyer'; f.textContent=open.n; f.style.cssText='left:'+r.left+'px;top:'+r.top+'px;width:'+r.width+'px';
+  document.body.appendChild(f); var ir=T.getBoundingClientRect(); void f.offsetWidth; f.style.transform='translate('+(ir.left-r.left)+'px,'+(ir.top-r.top-4)+'px) scale('+(17/40)+')'; f.style.opacity=0;
+  setTimeout(function(){document.getElementById('isl').classList.add('on');},380); setTimeout(function(){f.remove();},800);
+  step=0; document.getElementById('board').classList.remove('run'); document.body.classList.add('working'); draw(); panel(); }
+function draw(){ var s='', run=step<0, D=function(t){return run?' style="--d:'+t+'s"':'';};
+  s+='<text class="q" x="'+P0+'" y="60"'+D(.6)+'>1/4 + 1/8</text>';
+  s+='<g class="dim"><path d="M'+P0+' 92 V108 M'+(P0+320)+' 92 V108" style="--len:16;--d:.9s"/><line x1="'+P0+'" y1="100" x2="'+(P0+320)+'" y2="100" style="--len:320;--d:.95s"/><text x="'+(P0+160)+'" y="86" text-anchor="middle"'+D(1.1)+'>1 whole · 16 cells</text></g>';
+  s+='<text class="lab" x="'+P0+'" y="'+(ROW1-10)+'"'+D(1.0)+'>fourths</text>';
+  for(var j=0;j<4;j++) s+='<rect class="pc '+(j===0?'s':'e')+'" x="'+(P0+j*80)+'" y="'+ROW1+'" width="80" height="'+BH+'"'+D((1.1+j*.06).toFixed(2))+'/>';
+  s+='<text class="lab" x="'+P0+'" y="'+(ROW2-10)+'"'+D(1.3)+'>eighths</text>';
+  for(j=0;j<8;j++){ var c=sh[j]?'s':ad[j]?'a':'e', tap=(step===0&&!false)||(step===1&&!sh[j]); s+='<rect class="pc '+c+(tap&&step>=0&&step<2?' tap':'')+'" data-p="'+j+'" x="'+(P0+j*40)+'" y="'+ROW2+'" width="40" height="'+BH+'"'+D((1.4+j*.04).toFixed(2))+'/>'; }
+  // the piece to add waits beside the whole in step 2
+  if(step===1&&cnt(ad)===0) s+='<text class="lab pop" x="'+(P0+340)+'" y="'+(ROW2-10)+'">+ 1/8</text><rect class="pc a pop" x="'+(P0+340)+'" y="'+ROW2+'" width="40" height="'+BH+'"/>';
+  if(hintOn&&step===0) s+='<path class="guide" d="M'+(P0+80)+' '+(ROW1-34)+' V'+(ROW2+BH+12)+'"/><text class="note" x="'+(P0+90)+'" y="'+(ROW1-26)+'">The fourth ends here</text>';
+  if(step>=1) s+='<path class="match" d="M'+P0+' '+(ROW1+BH+6)+' V'+(ROW2-28)+' M'+(P0+80)+' '+(ROW1+BH+6)+' V'+(ROW2-6)+'"/><text class="eq'+(step===1&&!said?' pop':'')+'" x="'+(P0+104)+'" y="'+(ROW2-20)+'">1/4 = 2/8</text>';
+  if(step<2&&step>=0) s+='<text class="cnt" x="'+P0+'" y="'+(ROW2+BH+28)+'">'+(cnt(sh)+cnt(ad))+' of 8 shaded</text>';
+  if(step===2) s+='<path class="match drawn" style="--len:200" d="M'+P0+' '+(ROW2+BH+14)+' V'+(ROW2+BH+24)+' H'+(P0+120)+' V'+(ROW2+BH+14)+'"/><text class="eq pop" x="'+P0+'" y="'+(ROW2+BH+64)+'">1/4 + 1/8 = 3/8</text>';
+  document.getElementById('lpic').innerHTML=s; kd(); }
+var IC={hint:'<path d="M176,232a8,8,0,0,1-8,8H88a8,8,0,0,1,0-16h80A8,8,0,0,1,176,232Zm40-128a87.55,87.55,0,0,1-33.64,69.21A16.24,16.24,0,0,0,176,186v6a16,16,0,0,1-16,16H96a16,16,0,0,1-16-16v-6a16,16,0,0,0-6.23-12.66A87.59,87.59,0,0,1,40,104.49C39.74,56.83,78.26,17.14,125.88,16A88,88,0,0,1,216,104Zm-16,0a72,72,0,0,0-73.74-72c-39,.92-70.47,33.39-70.26,72.39a71.65,71.65,0,0,0,27.64,56.3A32,32,0,0,1,96,186v6h64v-6a32.15,32.15,0,0,1,12.47-25.35A71.65,71.65,0,0,0,200,104Zm-16.11-9.34a57.6,57.6,0,0,0-46.56-46.55,8,8,0,0,0-2.66,15.78c16.57,2.79,30.63,16.85,33.44,33.45A8,8,0,0,0,176,104a9,9,0,0,0,1.35-.11A8,8,0,0,0,183.89,94.66Z"/>',show:'<path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/>',pad:'<path d="M72,60A12,12,0,1,1,60,48,12,12,0,0,1,72,60Zm56-12a12,12,0,1,0,12,12A12,12,0,0,0,128,48Zm68,24a12,12,0,1,0-12-12A12,12,0,0,0,196,72ZM60,116a12,12,0,1,0,12,12A12,12,0,0,0,60,116Zm68,0a12,12,0,1,0,12,12A12,12,0,0,0,128,116Zm68,0a12,12,0,1,0,12,12A12,12,0,0,0,196,116ZM60,184a12,12,0,1,0,12,12A12,12,0,0,0,60,184Zm68,0a12,12,0,1,0,12,12A12,12,0,0,0,128,184Zm68,0a12,12,0,1,0,12,12A12,12,0,0,0,196,184Z"/>',reset:'<path d="M224,128a96,96,0,0,1-94.71,96H128A95.38,95.38,0,0,1,62.1,197.8a8,8,0,0,1,11-11.63A80,80,0,1,0,71.43,71.39a3.07,3.07,0,0,1-.26.25L44.59,96H72a8,8,0,0,1,0,16H24a8,8,0,0,1-8-8V56a8,8,0,0,1,16,0V85.8L60.25,60A96,96,0,0,1,224,128Z"/>',go:'<path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/>'};
+function cellBtn(act,x,y,w,label,main){ var g='<g class="cb'+(main?' main':'')+((act==='pad'&&document.body.classList.contains('kp-on'))?' on':'')+'" data-act="'+act+'"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="40"/>';
+  if(label) g+='<text x="'+(x+20)+'" y="'+(y+26)+'">'+label+'</text><svg x="'+(x+w-30)+'" y="'+(y+10)+'" width="20" height="20" viewBox="0 0 256 256">'+IC.go+'</svg>';
+  else g+='<svg x="'+(x+10)+'" y="'+(y+10)+'" width="20" height="20" viewBox="0 0 256 256">'+IC[act]+'</svg>';
+  return g+'<title>'+(label||{hint:'Hint',show:'Show me',pad:'Keypad',reset:'Start again'}[act])+'</title></g>'; }
+function words(lines,cls,y0){ return lines.map(function(t,n){ return '<text class="'+cls+' fade" x="'+P0+'" y="'+(y0+n*40)+'" style="--d:'+(n*.08)+'s">'+t+'</text>'; }).join(''); }
+function panel(){ var l=open, c=CH[l.ch], q, how, say=said, ok=sayOk, go, s='';
+  if(step<0){ q=kidMode?['A fourth and an eighth.','How much is that together?']:[l.n]; how=kidMode?'Look at the picture. What do you notice?':l.g; go='Let’s find out'; }
+  else if(step===0){ q=['1/4 is how many eighths?']; how='Tap the eighths until they cover the fourth.'; go='Check'; }
+  else if(step===1){ q=['Now add 1/8.','How many eighths in all?']; how='Tap one more eighth to add it on.'; go='Check'; }
+  else { q=['Three eighths.']; how='A fourth covers two eighths. Add one more and you have three.'; say=''; go='Next problem'; }
+  // question on the two rows above the picture, the hint line just under it
+  s+=words(q,'wq',q.length>1?-80:-60);
+  s+='<text class="wh fade" x="'+P0+'" y="'+(q.length>1?0:-20)+'" style="--d:.15s">'+how+'</text>';
+  if(say) s+='<text class="ws fade'+(ok?' ok':'')+'" x="'+P0+'" y="440">'+say+'</text>';
+  // one row of cells under the picture: tools, the steps, then the main action
+  var y=460;
+  if(step>=0&&step<2){ ['hint','show','pad','reset'].forEach(function(a,n){ s+=cellBtn(a,P0+n*40,y,40); });
+    [0,1].forEach(function(n){ s+='<rect class="stepc'+(n<step?' d':n===step?' n':'')+'" x="'+(P0+n*20)+'" y="-140" width="20" height="20"/>'; });
+    s+=cellBtn('go',P0+200,y,120,go,true); }
+  else s+=cellBtn('go',P0,y,step<0?180:180,go,true);
+  var U=document.getElementById('lui'); U.style.setProperty('--cc',c.c); U.innerHTML=s; }
+function act(a){ if(a==='go'){ if(step<0) begin(); else if(step<2) check(); else openLesson(open); return; }
+  document.getElementById('t-'+a).click(); panel(); }
+function live(){ var r=document.getElementById('rd'); if(r) r.textContent=(cnt(sh)+cnt(ad))+'/8'; }
+function tapPiece(j){ if(step<0||step>1) return; if(step===0) sh[j]=sh[j]?0:1; else if(!sh[j]) ad[j]=ad[j]?0:1; said=''; sayOk=false; draw(); live(); var sy=document.querySelector('#lui .ws'); if(sy) sy.remove(); }
+function check(){ if(step===0){ if(cnt(sh)===2){ sh=[1,1,0,0,0,0,0,0]; step=1; said=''; hintOn=false; } else { said=cnt(sh)<2?'Not yet. Some of the fourth is still uncovered.':'Too many. Some eighths go past the fourth.'; hintOn=true; } }
+  else if(step===1){ if(cnt(ad)===1){ step=2; learned(open.id); document.body.classList.remove('kp-on'); document.getElementById('t-pad').classList.remove('on'); fitBoard(); } else said=cnt(ad)===0?'Add the extra eighth first.':'Only one eighth is being added.'; }
+  draw(); panel(); }
+// tools live in the bottom bar, icon only
+(function(){ var bt=document.getElementById('bt'); [].slice.call(document.querySelectorAll('#tools .tb')).forEach(function(b){ var sp=b.querySelector('span'); if(sp){ b.title=sp.textContent; b.setAttribute('aria-label',sp.textContent); } bt.appendChild(b); }); })();
+document.getElementById('t-hint').onclick=function(){ if(step===0){ hintOn=true; draw(); } else if(step===1){ said='2 eighths are already shaded. One more makes how many?'; panel(); } };
+document.getElementById('t-show').onclick=function(){ if(step===0){ sh=[0,0,0,0,0,0,0,0]; draw(); live(); [0,1].forEach(function(j,i){ setTimeout(function(){ sh[j]=1; draw(); live(); },350*(i+1)); }); }
+  else if(step===1){ ad=[0,0,0,0,0,0,0,0]; draw(); setTimeout(function(){ ad[2]=1; draw(); live(); },350); } };
+document.getElementById('t-reset').onclick=function(){ if(step===0) sh=[0,0,0,0,0,0,0,0]; if(step===1) ad=[0,0,0,0,0,0,0,0]; said=''; hintOn=false; draw(); panel(); };
+document.getElementById('t-pad').onclick=function(){ var on=!document.body.classList.contains('kp-on'); document.body.classList.toggle('kp-on',on); this.classList.toggle('on',on); fitBoard(); };
+// the keypad is a tool that drives the picture: typing a number shades that many eighths
+function kd(){ var d=document.getElementById('kd'); if(d) d.innerHTML=(cnt(sh)+cnt(ad))+'<small>/8</small>'; }
+[].forEach.call(document.querySelectorAll('#kp [data-k]'),function(b){ b.onclick=function(){ if(step<0||step>1) return; var k=b.dataset.k, n=cnt(sh)+cnt(ad);
+  if(k==='del'||k==='clr') n=k==='clr'?0:Math.floor(n/10); else n=Math.min(8,+k); 
+  if(step===0){ sh=sh.map(function(_,i){return i<n?1:0;}); } else { var m=Math.max(0,n-2); ad=ad.map(function(_,i){return i>=2&&i<2+m?1:0;}); }
+  said=''; draw(); live(); var sy=document.querySelector('#lui .ws'); if(sy) sy.remove(); }; });
+
+
+// ---------- K-5: the paper is the map ----------
+// Every lesson is a small piece of real maths drawn on the paper, near the ideas it belongs with.
+// Learned pieces are in full colour; the rest wait as light pencil lines. Pieces draw themselves in front of you.
+var kidMode=false, KP={}, KS=[], KSX=240, KSY=300, DRAWN=false, JUST=null;
+var NARROW=innerWidth<760, KC=[{x:0,y:0,cols:3},{x:840,y:0,cols:2},{x:0,y:720,cols:3},{x:840,y:720,cols:2}]; /* every chapter origin and piece sits on the 20px paper grid */
+if(NARROW){ KC=[]; var yy=0; CH.forEach(function(c,ci){ var n=L.filter(function(l){return l.ch===ci;}).length; KC.push({x:0,y:yy,cols:2}); yy+=Math.ceil(n/2)*KSY+120; }); }
+(function(){ var i=0;
+  CH.forEach(function(c,ci){ var ls=L.filter(function(l){return l.ch===ci;}), o=KC[ci];
+    ls.forEach(function(l,j){ var x=o.x+(j%o.cols)*KSX, y=o.y+Math.floor(j/o.cols)*KSY;
+      KP[l.id]={id:l.id,ch:l.ch,n:l.n,g:l.g,s:l.s,in:l.in,out:l.out,x:x,y:y,w:220,h:200,cx:x+110,cy:y+70}; KS.push(KP[l.id]); i++; }); });
+})();
+function kidPaper(){ var N=KP[NOW.id], h='', first=!DRAWN; DRAWN=true;
+  CH.forEach(function(c,ci){ var ls=KS.filter(function(k){return k.ch===ci;}), dn=ls.filter(function(k){return k.s==='done';}).length, o=KC[ci];
+    h+='<div class="kch" style="--cc:'+c.c+';left:'+o.x+'px;top:'+(o.y-60)+'px;--d:.1s">'+c.t+'<small>'+dn+' of '+ls.length+'</small></div>'; });
+  KS.forEach(function(k){ var l=BY[k.id], d=(.15+Math.min(1.4,Math.hypot(k.cx-N.cx,k.cy-N.cy)/1100)).toFixed(2);
+    h+='<div class="stop piece '+(k.s||'')+(k.id===JUST?' fresh':'')+'" data-id="'+k.id+'" style="--cc:'+CH[k.ch].c+';left:'+k.x+'px;top:'+k.y+'px;--d:'+d+'s"><div class="art"><svg class="fr" viewBox="0 0 220 140"><rect x=".75" y=".75" width="218.5" height="138.5" pathLength="100"/></svg>'+pic(l).replace(/<(rect|circle|path)/g,'<$1 pathLength="100"')+'</div><div class="nm">'+k.n+'</div>'+(k.s==='now'?'<span class="flag">Up next</span>':'')+'</div>'; });
+  var K=document.getElementById('kid'); K.innerHTML=h; K.classList.remove('drawing'); void K.offsetWidth; K.classList.add('drawing'); JUST=null; }
+var CHK='<svg viewBox="0 0 256 256" fill="currentColor"><path d="M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z"/></svg>';
+function learned(id){ if(!kidMode||id!==NOW.id) return; BY[id].s=KP[id].s='done'; JUST=id;
+  var nx=L.filter(function(m){return m.ch===BY[id].ch&&!m.s;})[0]||L.filter(function(m){return !m.s;})[0]; if(nx){ nx.s=KP[nx.id].s='now'; NOW=nx; }
+  document.getElementById('prog').textContent=L.filter(function(m){return m.s==='done';}).length+' of '+L.length+' learned'; }
+function glide(x,y,z){ document.body.classList.add('glide'); cam.x=x; cam.y=y; cam.z=z; apply(); clearTimeout(glide.t); glide.t=setTimeout(function(){document.body.classList.remove('glide');},1150); }
+// tapping a lesson moves the paper to it: a little closer, never a big jump
+function glideTo(k){ var z=cam.z>=1.05?cam.z:Math.min(1.05,Math.max(cam.z*1.3,.8)); if(NARROW) z=Math.max(cam.z,Math.min(1,cam.z*1.15));
+  glide(innerWidth/2-(k.x+110)*z, innerHeight/2-(k.y+130)*z, z); }
+function kidSelect(l,fly){ sel=l; [].forEach.call(document.querySelectorAll('.stop'),function(n){ n.classList.toggle('sel',!!l&&n.dataset.id===l.id); });
+  var old=document.getElementById('pnote'); if(old) old.remove(); if(!l) return;
+  var k=KP[l.id], N=document.createElement('button'); N.id='pnote'; N.className='pgo'; N.style.cssText='left:'+k.x+'px;top:'+(k.y+220)+'px;--cc:'+CH[l.ch].c;
+  N.innerHTML='<span>'+(l.s==='done'?'Play again':l.s==='now'?'Start':'Try it')+'</span>'+ARROW;
+  document.getElementById('kid').appendChild(N); N.onclick=function(e){ e.stopPropagation(); openLesson(l); };
+  if(fly) glideTo(k); }
+function kidCam(k,fly){ if(NARROW){ var zN=Math.min(1,(innerWidth-40)/(KSX+220)), N=KP[NOW.id]; if(fly) document.body.classList.add('fly'); cam.z=zN; cam.x=(innerWidth-(KSX+220)*zN)/2; cam.y=110-(KC[N.ch].y-70)*zN; apply(); if(fly) setTimeout(function(){document.body.classList.remove('fly');},720); return; }
+  var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; KS.forEach(function(p){x0=Math.min(x0,p.x);y0=Math.min(y0,p.y-70);x1=Math.max(x1,p.x+p.w);y1=Math.max(y1,p.y+p.h);});
+  var left=innerWidth>760&&sel?372:0, vw=innerWidth-left-60, vh=innerHeight-200, z=Math.min(1,vw/(x1-x0),vh/(y1-y0));
+  if(fly) document.body.classList.add('fly'); cam.z=z; cam.x=left+30+(vw-(x1-x0)*z)/2-x0*z; cam.y=86+(vh-(y1-y0)*z)/2-y0*z; apply(); if(fly) setTimeout(function(){document.body.classList.remove('fly');},720); }
+function setMode(m){ closeLesson(); select(null); kidSelect(null); kidMode=m==='kid'; document.body.classList.toggle('kid',kidMode);
+  document.getElementById('insp').classList.remove('kidp');
+  document.getElementById('today').innerHTML='Up next';
+  if(kidMode){ kidPaper(); kidCam(null,false); if(!q.get('v')) setTimeout(function(){ openLesson(NOW); },60); } else startCam(); }
+
+document.getElementById('find').onclick=function(){ if(open) document.getElementById('back').click(); setTimeout(function(){ kidSelect(BY[NOW.id],true); },open?750:0); };
+// frame button (on the paper): fit the lesson group you're in, title to last row
+document.getElementById('lfit').onclick=function(){ if(open) return; var ch=(sel?sel.ch:NOW.ch), x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  KS.forEach(function(k){ if(k.ch!==ch) return; x0=Math.min(x0,k.x); y0=Math.min(y0,k.y-80); x1=Math.max(x1,k.x+220); y1=Math.max(y1,k.y+(sel&&sel.id===k.id?260:200)); });
+  var top=NARROW?100:90, bot=NARROW?90:30, pad=NARROW?16:60, w=x1-x0, h=y1-y0, z=Math.min(1.2,(innerWidth-pad*2)/w,(innerHeight-top-bot-pad)/h);
+  glide(innerWidth/2-(x0+w/2)*z, top+(innerHeight-top-bot)/2-(y0+h/2)*z, z); };
+document.getElementById('kzi').onclick=function(){zoomAt(1.25,innerWidth/2,innerHeight/2);};
+document.getElementById('kzo').onclick=function(){zoomAt(.8,innerWidth/2,innerHeight/2);};
+function placeZp(){ var t=document.querySelector('.float.tr').getBoundingClientRect(); document.getElementById('zp').style.right=(innerWidth-t.left+10)+'px'; }
+addEventListener('resize',placeZp); setTimeout(placeZp,0);
+// start
+addEventListener('resize',apply);
+var q=new URLSearchParams(location.search); document.documentElement.dataset.theme=q.get('t')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+// open on the chapter you're in, at a readable size
+var g0=L.filter(function(l){return l.ch===NOW.ch;}), gx=Math.min.apply(0,g0.map(function(l){return l.x;})), gx1=Math.max.apply(0,g0.map(function(l){return l.x+NW;})), gy=Math.min.apply(0,g0.map(function(l){return l.y;})), gy1=Math.max.apply(0,g0.map(function(l){return l.y+NH;}));
+function startCam(){ cam.z=Math.min(.85,(innerWidth-80)/(gx1-gx+60)); cam.x=innerWidth/2-((gx+gx1)/2)*cam.z; cam.y=innerHeight/2+10-((gy+gy1)/2-20)*cam.z; apply(); }
+var GRADE='5';
+// K-5 get the trail, 6-12 the map. Every grade uses the 5th grade lessons for now: this is the template.
+function pickGrade(g){ GRADE=g; var r=GR.filter(function(x){return x[0]===g;})[0]; document.querySelector('.tl .gr').textContent=g; document.querySelector('.gpick b').textContent=r[1];
+  setMode(['K','1','2','3','4','5'].indexOf(g)>=0?'kid':'big'); }
+pickGrade(q.get('g')||'5');
+var v=q.get('v');
+if(v==='uc') addEventListener('t3ready',function(){ setTimeout(function(){ openLesson(BY.uc); },300); });
+if(v==='grades') setTimeout(function(){ openGrades(true); },300);
+if(v==='fit') setTimeout(function(){ var b=bounds(); flyTo(b[0],b[1],b[2],b[3],40); },50);
+if(v==='sel') setTimeout(function(){ select(BY[q.get('id')||'ad'],true); },300);
+if(v==='ksel') setTimeout(function(){ kidSelect(BY[q.get('id')||NOW.id],true); },300);
+if(v==='lesson') setTimeout(function(){ openLesson(NOW); var st=q.get('st'); if(st){ setTimeout(function(){ begin(); if(st==='shade'){ sh=[1,0,0,0,0,0,0,0]; draw(); panel(); } if(st==='hint'){ sh=[1,0,0,0,0,0,0,0]; check(); } if(st==='1'||st==='2'){ sh=[1,1,0,0,0,0,0,0]; check(); } if(st==='2'){ ad[2]=1; check(); } if(q.get('kp')) document.getElementById('t-pad').click(); },50); } },300);
+</script><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+/* ---------- 3D on the paper (test: Unit cubes) ----------
+   Built on Assets' three.js model (zoom-trial/zoom-camera-model.html): one orthographic camera, solid tints of the
+   chapter colour, 3px edges, eased camera moves, drawn only while something moves.
+   The paper's grid IS the floor: one cube = one big square of the paper (5 x 5 cells). The lesson opens flat, seen from
+   straight above, lined up pixel for pixel with the paper; only then does the paper tilt and the squares rise into cubes.
+   Words and buttons are pinned to points on the paper, so they travel with it and stay readable at every angle. */
+import * as THREE from 'three';
+import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
+import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
+import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+const U=100, BEAT=1100, reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const ICON={show:'<svg viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg>',
+  reset:'<svg viewBox="0 0 256 256" fill="currentColor"><path d="M224,128a96,96,0,0,1-94.71,96H128A95.38,95.38,0,0,1,62.1,197.8a8,8,0,0,1,11-11.63A80,80,0,1,0,71.43,71.39a3.07,3.07,0,0,1-.26.25L44.59,96H72a8,8,0,0,1,0,16H24a8,8,0,0,1-8-8V56a8,8,0,0,1,16,0V85.8L60.25,60A96,96,0,0,1,224,128Z"/></svg>'};
+let host, R, L2, scene, cam3, view={el:89.9,az:0,s:100,t:new THREE.Vector3()}, move=null, tweens=[], dirty=false, mats=[];
+let k0=null, O={x:0,z:0}, st=0, sq=[], cubes=[], filled=new Set(), ui={}, tilt=0, C;
+const T3=window.T3={on:false};
+function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function rgba(str){ const m=str.match(/rgba?\(([^)]+)\)/); if(!m) return {c:new THREE.Color(str),a:1}; const p=m[1].split(',').map(Number); return {c:new THREE.Color(p[0]/255,p[1]/255,p[2]/255),a:p[3]??1}; }
+function colours(cc){ const surf=new THREE.Color(css('--surface')), ink=new THREE.Color(css('--ink')), c=new THREE.Color(cc), dark=document.documentElement.dataset.theme==='dark';
+  const mix=(a,k)=>a.clone().lerp(c,k);
+  return dark?{top:mix(surf,.32),front:mix(surf,.42),side:mix(surf,.52),deep:c.clone().lerp(new THREE.Color('#fff'),.25),sq:mix(surf,.38)}
+             :{top:mix(surf,.30),front:mix(surf,.42),side:mix(surf,.55),deep:c.clone().lerp(ink,.35),sq:mix(surf,.35)}; }
+function orient(el,az){ const e=el*Math.PI/180,z=az*Math.PI/180, dir=new THREE.Vector3(Math.cos(e)*Math.sin(z),Math.sin(e),Math.cos(e)*Math.cos(z));
+  const right=new THREE.Vector3(0,1,0).cross(dir).normalize(), up=dir.clone().cross(right).normalize(); return {dir,right,up}; }
+function place(){ const o=orient(view.el,view.az), W=innerWidth, H=innerHeight;
+  cam3.position.copy(view.t).addScaledVector(o.dir,60); cam3.up.copy(o.up); cam3.lookAt(view.t);
+  cam3.left=-W/2/view.s; cam3.right=W/2/view.s; cam3.top=H/2/view.s; cam3.bottom=-H/2/view.s; cam3.updateProjectionMatrix();
+  const k=view.s/U; host.style.setProperty('--k',k); document.getElementById('pct').textContent=document.getElementById('kpct').textContent=Math.round(k*100)+'%'; dirty=true; }
+function size(){ R.setSize(innerWidth,innerHeight,false); L2.setSize(innerWidth,innerHeight); const p=R.getPixelRatio(); mats.forEach(m=>m.resolution.set(innerWidth*p,innerHeight*p)); if(cam3) place(); }
+function lineMat(o){ const m=new LineMaterial({linewidth:3,worldUnits:false,...o}); mats.push(m); m.resolution.set(innerWidth*R.getPixelRatio(),innerHeight*R.getPixelRatio()); return m; }
+function tween(at,ms,fn){ if(reduce){ fn(1); dirty=true; return; } tweens.push({t0:performance.now()+at,ms,fn}); }
+function moveTo(to,ms,done){ if(reduce||!ms){ Object.assign(view,to); if(to.t) view.t=to.t.clone(); place(); done&&done(); return; }
+  move={from:{el:view.el,az:view.az,s:view.s,t:view.t.clone()},to:{el:to.el??view.el,az:to.az??view.az,s:to.s??view.s,t:(to.t||view.t).clone()},t0:performance.now(),ms,done}; }
+function loop(now){ if(!T3.on&&!move){ return; }
+  if(move){ const u=Math.min(1,(now-move.t0)/move.ms), k=ease(u), f=move.from, t=move.to;
+    view.el=f.el+(t.el-f.el)*k; view.az=f.az+(t.az-f.az)*k; view.s=f.s*Math.pow(t.s/f.s,k); view.t.lerpVectors(f.t,t.t,k); place();
+    if(u>=1){ const d=move.done; move=null; d&&d(); } }
+  if(tweens.length){ tweens=tweens.filter(tw=>{ const u=(now-tw.t0)/tw.ms; if(u<0) return true; tw.fn(u<1?ease(u):1); dirty=true; return u<1; }); }
+  if(dirty&&scene){ R.render(scene,cam3); L2.render(scene,cam3); dirty=false; }
+  requestAnimationFrame(loop); }
+// the paper's own grid, drawn as the floor: thin line every cell (20px), strong line every 5 cells (one cube)
+function floor(){ const a=rgba(css('--grid-minor')), b=rgba(css('--grid-major')), mi=[], ma=[], N=60;
+  for(let i=-N*5;i<=N*5;i++){ const v=i/5, arr=i%5===0?ma:mi, x=Math.round(O.x)+v, z=Math.round(O.z)+v;
+    arr.push(x,0,O.z-N, x,0,O.z+N, O.x-N,0,z, O.x+N,0,z); }
+  [[mi,a],[ma,b]].forEach(([p,c])=>{ const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
+    const l=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:c.c,transparent:true,opacity:c.a,depthWrite:false})); l.renderOrder=-1; scene.add(l); }); }
+function pin(html,x,z,cls,y){ const d=document.createElement('div'); d.className='t3 '+(cls||''); d.innerHTML='<div class="t3i">'+html+'</div>';
+  const o=new CSS2DObject(d); o.position.set(x,y||0,z); scene.add(o); return {d,o}; }
+function cellBtn(act,label,main){ return '<button class="t3b'+(main?' main':'')+'" data-a="'+act+'">'+(label?'<span>'+label+'</span>'+ARROW:ICON[act])+'</button>'; }
+// the box: 4 long, 3 wide, 2 tall
+const BL=4, BW=3, BH=2;
+function build(){
+  scene=new THREE.Scene(); mats=[]; tweens=[]; sq=[]; cubes=[]; filled=new Set(); st=0; tilt=0;
+  C=colours(CH[k0.ch].c); floor();
+  // the box's floor, drawn on the paper's strong lines as a dashed outline
+  const out=new LineSegmentsGeometry().setPositions([O.x,0,O.z, O.x+BL,0,O.z, O.x+BL,0,O.z, O.x+BL,0,O.z+BW, O.x+BL,0,O.z+BW, O.x,0,O.z+BW, O.x,0,O.z+BW, O.x,0,O.z]);
+  ui.outline=new LineSegments2(out,lineMat({color:C.deep,dashed:true,dashSize:.08,gapSize:.06,linewidth:2})); ui.outline.computeLineDistances(); scene.add(ui.outline);
+  const unit=new THREE.BoxGeometry(1,1,1).translate(.5,.5,.5), edges=new LineSegmentsGeometry().fromEdgesGeometry(new THREE.EdgesGeometry(unit));
+  const m=c=>new THREE.MeshBasicMaterial({color:c,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1});
+  const faces=[m(C.side),m(C.side),m(C.top),m(C.top),m(C.front),m(C.front)], lm=lineMat({color:C.deep});
+  for(let y=0;y<BH;y++) for(let z=0;z<BW;z++) for(let x=0;x<BL;x++){ const g=new THREE.Group(); g.position.set(O.x+x,y,O.z+z);
+    g.add(new THREE.Mesh(unit,faces)); g.add(new LineSegments2(edges,lm)); g.scale.set(1,.0001,1); g.visible=false; scene.add(g); cubes.push({g,x,y,z}); }
+  ui.len=pin('4',O.x+BL/2,O.z+BW+.3,'lab'); ui.wid=pin('3',O.x-.3,O.z+BW/2,'lab'); ui.hgt=pin('2',O.x+BL+.3,O.z+BW,'lab',1); ui.hgt.d.style.opacity=0;
+  ui.q=pin('',O.x,O.z-.6,'say'); ui.fb=pin('',O.x,O.z+BW+.6,'fb'); ui.bar=pin('',O.x,O.z+BW+1,'tbar');
+  ui.bar.d.addEventListener('click',e=>{ const b=e.target.closest('[data-a]'); if(b) act(b.dataset.a); });
+  words(); size(); }
+function words(){ const say=[['How many cubes fill this box?','It is 4 long, 3 wide and 2 tall.'],['Cover the floor with squares.','Tap each square inside the box.'],['One layer: 12 cubes.','The box is 2 tall. Add the next layer.'],['2 layers of 12 is 24.','Volume = 4 × 3 × 2 = 24 cubes.']][st];
+  ui.q.d.firstChild.innerHTML='<div class="q">'+say[0]+'</div><div class="h">'+say[1]+'</div>';
+  ui.q.d.firstChild.classList.remove('in'); void ui.q.d.offsetWidth; ui.q.d.firstChild.classList.add('in');
+  const go=['Let’s find out','Check','Add a layer','Next problem'][st];
+  ui.bar.d.firstChild.innerHTML=(st===1?cellBtn('show')+cellBtn('reset')+'<i class="gap"></i>':'')+cellBtn('go',go,true);
+  count(); dirty=true; }
+function count(msg,ok){ ui.fb.d.firstChild.innerHTML=st===1?'<span class="'+(ok?'ok':msg?'no':'')+'">'+(msg||filled.size+' of 12 squares')+'</span>':''; dirty=true; }
+function square(x,z,on){ const id=x+','+z; let s=sq.find(s=>s.id===id);
+  if(!s){ const g=new THREE.Mesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2).translate(.5,0,.5),new THREE.MeshBasicMaterial({color:C.sq,transparent:true,opacity:0,depthWrite:false}));
+    g.position.set(O.x+x,.001,O.z+z); scene.add(g); s={id,g}; sq.push(s); }
+  if(on) filled.add(id); else filled.delete(id); const a=s.g.material.opacity, b=on?1:0; tween(0,260,k=>s.g.material.opacity=a+(b-a)*k); }
+function act(a){
+  if(a==='go'){ if(st===0){ st=1; words(); }
+    else if(st===1){ if(filled.size===12){ st=2; lift(); } else count(filled.size<12?'Not yet. '+(12-filled.size)+' squares are still empty.':'',false); }
+    else if(st===2){ st=3; words(); cubes.filter(c=>c.y===1).forEach((c,i)=>{ c.g.visible=true; tween(i*35,700,k=>c.g.scale.y=Math.max(.0001,k)); }); tween(500,400,k=>ui.hgt.d.style.opacity=k); }
+    else { T3.close(()=>T3.open(k0),true); } return; }
+  if(st!==1) return;
+  if(a==='show'){ let i=0; for(let z=0;z<BW;z++) for(let x=0;x<BL;x++){ const id=x+','+z; if(!filled.has(id)){ const xx=x,zz=z; setTimeout(()=>{ square(xx,zz,true); count(); },60*i++); } } }
+  if(a==='reset'){ [...filled].forEach(id=>{ const [x,z]=id.split(',').map(Number); square(x,z,false); }); count(); } }
+// the paper tilts, the squares rise into cubes; the words above the box step back so the cubes never cover them
+function lift(){ words(); ui.outline.visible=false;
+  // the tilted box must fit the screen: on a phone the view also steps back a little and centres on the box
+  const o=orient(52,-28); let x0=1e9,x1=-1e9; for(const X of [0,BL]) for(const Y of [0,BH]) for(const Z of [0,BW]){ const v=new THREE.Vector3(O.x+X,Y,O.z+Z).dot(o.right); x0=Math.min(x0,v); x1=Math.max(x1,v); }
+  const fit=(innerWidth-72)/(x1-x0), to={el:52,az:-28}; if(fit<view.s){ to.s=fit; to.t=new THREE.Vector3(O.x+BL/2,BH/2,O.z+BW/2); }
+  moveTo(to,BEAT);
+  tween(0,BEAT,k=>{ tilt=k; ui.q.o.position.set(O.x-.4*k,4.6*k,O.z-.6*(1-k)); });
+  cubes.filter(c=>c.y===0).forEach((c,i)=>{ c.g.visible=true; c.g.scale.y=.0001; tween(BEAT*.55+i*40,700,k=>c.g.scale.y=Math.max(.0001,k)); });
+  sq.forEach(s=>tween(BEAT*.55,500,k=>s.g.material.opacity=1-k)); }
+// a tap on the paper: which square of the box's floor is under it?
+const ray=new THREE.Raycaster(), plane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+let drag=null;
+function down(e){ if(e.target.closest('.t3b')) return; drag={x:e.clientX,y:e.clientY,m:0}; host.setPointerCapture(e.pointerId); }
+function moveP(e){ if(!drag) return; const dx=e.clientX-drag.x, dy=e.clientY-drag.y; drag.m+=Math.abs(dx)+Math.abs(dy); drag.x=e.clientX; drag.y=e.clientY;
+  const o=orient(view.el,view.az); view.t.addScaledVector(o.right,-dx/view.s).addScaledVector(o.up,dy/view.s); place(); }
+function up(e){ const d=drag; drag=null; if(!d||d.m>6||st!==1) return;
+  ray.setFromCamera(new THREE.Vector2(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1),cam3); const p=new THREE.Vector3(); if(!ray.ray.intersectPlane(plane,p)) return;
+  const x=Math.floor(p.x-O.x), z=Math.floor(p.z-O.z); if(x<0||z<0||x>=BL||z>=BW) return; square(x,z,!filled.has(x+','+z)); count(); }
+T3.zoom=f=>{ view.s=Math.min(250,Math.max(25,view.s*f)); place(); };
+// open: fly the flat paper to the lesson first, then hand the same view to the 3D camera, pixel for pixel
+T3.open=function(k){ k0=k; open=k; document.body.classList.add('focus'); kidSelect(null);
+  const ox=Math.round((k.x+10)/U)*U, oy=Math.round((k.y+40)/U)*U; O={x:ox/U,z:oy/U};
+  document.getElementById('islT').textContent=k.n; document.getElementById('islS').textContent=CH[k.ch].t+' · Lesson '+String(chi(k)+1).padStart(2,'0'); document.getElementById('isl').classList.add('on');
+  const wide=innerWidth>760; flyTo(ox-40,oy-200,480,640,wide?30:8,0,0,wide?0:70);
+  setTimeout(()=>{ if(!host){ host=document.createElement('div'); host.id='three'; document.body.appendChild(host);
+      R=new THREE.WebGLRenderer({antialias:true,alpha:true}); R.setPixelRatio(Math.min(2,devicePixelRatio)); host.appendChild(R.domElement);
+      L2=new CSS2DRenderer(); L2.domElement.className='t3labels'; host.appendChild(L2.domElement);
+      cam3=new THREE.OrthographicCamera(-1,1,1,-1,.1,400); addEventListener('resize',()=>T3.on&&size());
+      host.addEventListener('pointerdown',down); host.addEventListener('pointermove',moveP); host.addEventListener('pointerup',up);
+      host.addEventListener('wheel',e=>{ e.preventDefault(); if(e.ctrlKey||Math.abs(e.deltaY)>=40) T3.zoom(Math.exp(-e.deltaY*.0025)); },{passive:false}); }
+    // same view as the flat paper: the point at the centre of the screen, at the same scale (lines sit on pixel centres like the CSS grid)
+    view={el:89.9,az:0,s:cam.z*U,t:new THREE.Vector3(((innerWidth/2-cam.x)/cam.z-.5/cam.z)/U,0,((innerHeight/2-cam.y)/cam.z-.5/cam.z)/U)};
+    build(); T3.on=true; document.body.classList.add('t3d'); host.classList.add('on'); place(); dirty=true; requestAnimationFrame(loop); },reduce?0:740); };
+// close: tilt back to flat, hand the view back to the paper, then leave as any lesson does
+T3.close=function(then,stay){ if(!T3.on) return; const o=orient(view.el,view.az), t=view.t.clone().addScaledVector(o.dir,-view.t.y/o.dir.y);
+  moveTo({el:89.9,az:0,t},tilt?BEAT:0,()=>{ cam.z=view.s/U; cam.x=innerWidth/2-(view.t.x*U+.5/cam.z)*cam.z; cam.y=innerHeight/2-(view.t.z*U+.5/cam.z)*cam.z; render(cam);
+    T3.on=false; document.body.classList.remove('t3d'); host.classList.remove('on'); scene=null; if(stay){ then&&then(); return; } then?then():document.getElementById('back').click(); });
+  tween(0,BEAT,k=>{ if(ui.q&&tilt) ui.q.o.position.set(O.x-.4*(1-k),4.6*(1-k),O.z-.6*k); }); };
+window.dispatchEvent(new Event('t3ready'));
+</script>
+</body></html>

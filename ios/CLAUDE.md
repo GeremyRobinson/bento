@@ -7,7 +7,7 @@ You're working with G, who owns Obento², a maths app for kids (K-12) that shows
 - `App/` holds the screens. The whole paper is one RealityKit scene seen through one camera (`PaperScene.swift`): grid, lesson pictures and 3D lessons alike; flat is that camera straight above. Words and controls are SwiftUI on top, pinned to the paper. `Core/` holds the lesson logic and camera maths, with no drawing in it.
 - Xcode is installed (`/Applications/Xcode.app`) but not selected, so prefix commands with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`. Build and screenshot locally on the iPad simulator (`xcodegen`, then `xcodebuild` and `simctl launch … -shot <name>`) before pushing; it's much faster than waiting for GitHub.
 - Test Core with `cd Packages/ObentoCore && swift test` (it links to `Obento2.swiftpm/Core`). Every lesson's maths gets tests.
-- The look comes from the web prototype (the "paper canvas", v27). The Unit cubes 3D lesson is what sold the idea.
+- The look comes from the web prototype (the "paper canvas", v27): `reference/paper-canvas.html`. Open it in a browser and match it or beat it. The Unit cubes 3D lesson is what sold the idea.
 - Branch `claude/project-thread-15w6ys`. `git pull` before each change and push after it; other sessions push here too. A push makes GitHub build it and save iPad screenshots in `shots/`.
 
 - **All the lessons:** `specs/k12/` (191 K-12 lessons) and `specs/obento2/` (154 Obento² lessons) are the Curriculum specs. The live web app's lesson code (generators, answer checks) is in `web/src/curriculum/` on `main`: read it, port its maths with the same answers, and never change the web app.
