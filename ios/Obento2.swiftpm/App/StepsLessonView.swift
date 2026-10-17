@@ -7,8 +7,6 @@ struct StepsLessonView: View {
     let model: StepsModel
     let camera: PaperCamera
     let time: Double
-    let top: CGFloat
-    let onBack: () -> Void
 
     var body: some View {
         let k = camera.zoom, l = model.lesson, o = model.origin
@@ -61,7 +59,6 @@ struct StepsLessonView: View {
                 Keypad(type: model.type).pinned(at(StepsModel.keypadX, StepsModel.workTop), .topLeading, k)
             }
 
-            LessonHeader(title: l.spec.title, subtitle: "\(model.chapter.title) · Lesson \(String(format: "%02d", model.number))", top: top, onBack: onBack)
         }
     }
 }

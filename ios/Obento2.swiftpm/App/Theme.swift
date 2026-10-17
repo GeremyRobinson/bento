@@ -10,6 +10,8 @@ enum Ink {
     static let ink2 = dynamic(0x6B6964, 0xA3A19B)
     static let pencil = dynamic(0xCFCCC5, 0x3D3C39)
     static let lineStrong = dynamic(0xCFCCC5, 0x3A3A37)
+    static let line = dynamic(0xE3E1DC, 0x2C2C2A)
+    static let ink3 = dynamic(0x8C867D, 0x878177)
     static let right = dynamic(0x178A57, 0x3CCF8E)
     /// Grid lines, already mixed into the paper so they draw the same in 2D and 3D.
     static let gridMinor = dynamic(mix(0xF3F2EF, 0x1A1A19, 0.045), mix(0x121211, 0xECEBE7, 0.035))
@@ -29,12 +31,14 @@ enum Ink {
 
 /// Chapter colours. Colour lives only in the maths.
 enum Chapter: String, CaseIterable {
-    case fractions, decimals, volume, graphs
+    case whole, decimals, fractions, measurement
     var hex: UInt32 {
-        switch self { case .fractions: 0x3B6CFF; case .decimals: 0xE0559B; case .volume: 0xE39B00; case .graphs: 0x7A5CF0 }
+        switch self { case .whole: 0x7A5CF0; case .decimals: 0xE0559B; case .fractions: 0x3B6CFF; case .measurement: 0xE39B00 }
     }
     var color: Color { Color(UIColor(hex: hex)) }
-    var title: String { rawValue.capitalized }
+    var title: String {
+        switch self { case .whole: "Whole numbers"; case .decimals: "Decimals"; case .fractions: "Fractions"; case .measurement: "Measurement" }
+    }
 }
 
 extension UIColor {
@@ -88,23 +92,5 @@ struct MainCellButton: View {
             HStack { Text(title).font(Typeface.button); Spacer(); Icon(name: "arrow-right") }
                 .padding(.leading, 16).padding(.trailing, 10)
         }
-    }
-}
-
-/// A lesson's back block and name, top left on the paper.
-struct LessonHeader: View {
-    let title: String
-    let subtitle: String
-    let top: CGFloat
-    let onBack: () -> Void
-    var body: some View {
-        HStack(spacing: 20) {
-            CellButton(action: onBack) { Icon(name: "arrow-left") }
-            VStack(alignment: .leading, spacing: 0) {
-                Text(title).font(Typeface.name).foregroundStyle(Ink.ink)
-                Text(subtitle).font(Typeface.font(13)).foregroundStyle(Ink.ink2)
-            }
-        }
-        .padding(.leading, 40).padding(.top, top)
     }
 }

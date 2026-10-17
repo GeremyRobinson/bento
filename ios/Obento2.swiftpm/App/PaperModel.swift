@@ -6,12 +6,18 @@ struct Piece: Identifiable, Equatable {
     let id: String
     let name: String
     let chapter: Chapter
-    let state: State
     /// Top-left of the picture frame, on grid lines.
     let at: Point
     /// The lesson behind this piece, if one has been written.
     var spec: LessonSpec? { Lessons.spec(id) }
     var opens: Bool { spec != nil }
+
+    /// Learned, up next (the first lesson in its chapter not learned yet), or not yet.
+    @MainActor var state: State {
+        if Progress.shared.learned.contains(id) { return .learned }
+        let next = Map.pieces.first { $0.chapter == chapter && $0.opens && !Progress.shared.learned.contains($0.id) }
+        return next?.id == id ? .now : .notYet
+    }
 
     static let size = Size(240, 180)
     var frame: Rect { Rect(x: at.x, y: at.y, width: Piece.size.width, height: Piece.size.height) }
@@ -20,51 +26,53 @@ struct Piece: Identifiable, Equatable {
     var start: Rect { Rect(x: at.x, y: at.y + Piece.size.height + 40, width: 160, height: 40) }
 
     /// How far a piece has drawn itself in (0...1). They draw outward from today's lesson.
-    static func drawIn(_ p: Piece, time: Double, drawnAt: Double) -> Double {
-        let now = Map.pieces.first { $0.state == .now }!.frame.mid
-        let d = hypot(p.frame.mid.x - now.x, p.frame.mid.y - now.y) / 900
+    @MainActor static func drawIn(_ p: Piece, time: Double, drawnAt: Double) -> Double {
+        let now = (Map.pieces.first { $0.state == .now } ?? Map.pieces[0]).frame.mid
+        let d = hypot(p.frame.mid.x - now.x, p.frame.mid.y - now.y) / 1400
         return ease((time - drawnAt - d) / 0.9)
     }
-    static let drawTime = 1.6
+    static let drawTime = 1.9
 }
 
-/// The Volume chapter, laid out on the 20 pt grid.
-enum Volume {
-    static let title = "Volume"
-    static let origin = Point(0, 0)
-    static let pieces: [Piece] = [
-        Piece(id: "sq", name: "Squares on a floor", chapter: .volume, state: .learned, at: .init(0, 80)),
-        Piece(id: "uc", name: "Unit cubes", chapter: .volume, state: .now, at: .init(300, 80)),
-        Piece(id: "ly", name: "Layers of cubes", chapter: .volume, state: .notYet, at: .init(0, 380)),
-        Piece(id: "lwh", name: "Length × width × height", chapter: .volume, state: .notYet, at: .init(300, 380)),
-    ]
+/// A chapter on the paper: its title, where it sits, and its lessons in order, laid out in rows on the grid.
+struct ChapterGroup {
+    let chapter: Chapter
+    let origin: Point
+    let columns: Int
+    let lessons: [(id: String, name: String)]
+    static let pitch = Size(300, 300)
+
+    var pieces: [Piece] {
+        lessons.enumerated().map { i, l in
+            Piece(id: l.id, name: l.name, chapter: chapter,
+                  at: Point(origin.x + Double(i % columns) * Self.pitch.width, origin.y + 80 + Double(i / columns) * Self.pitch.height))
+        }
+    }
 }
 
-/// The Fractions chapter: one flat lesson for now, to the right of Volume.
-enum Fractions {
-    static let title = "Fractions"
-    static let origin = Point(640, 0)
-    static let pieces: [Piece] = [
-        Piece(id: "ad", name: "Add with different bottoms", chapter: .fractions, state: .now, at: .init(640, 80)),
-    ]
-}
-
-/// The Decimals chapter: the first lesson worked in steps, under Fractions.
-enum Decimals {
-    static let title = "Decimals"
-    static let origin = Point(640, 300)
-    static let pieces: [Piece] = [
-        Piece(id: "g5-pow10", name: "Multiply by 10, 100, 1000", chapter: .decimals, state: .now, at: .init(640, 380)),
-    ]
-}
-
-/// Everything on the paper.
+/// 5th grade on the paper: the 17 lessons of specs/k12/grade5.md in four chapters, laid out two by two as v27 does,
+/// with the Paper proof's two lessons (Unit cubes, Add with different bottoms) in their chapters.
 enum Map {
-    static let titles: [(String, Point)] = [(Volume.title, Volume.origin), (Fractions.title, Fractions.origin), (Decimals.title, Decimals.origin)]
-    static let pieces = Volume.pieces + Fractions.pieces + Decimals.pieces
+    static let grade = (number: "5", name: "5th grade")
+    static let groups: [ChapterGroup] = [
+        ChapterGroup(chapter: .whole, origin: Point(0, 0), columns: 3, lessons: [
+            ("g5-mult2", "Multiply two-digit numbers"), ("g5-divide", "Long division"), ("g5-order", "Order of operations")]),
+        ChapterGroup(chapter: .decimals, origin: Point(1000, 0), columns: 3, lessons: [
+            ("g5-pow10", "Multiply by 10, 100, 1000"), ("g5-round", "Rounding decimals"), ("g5-adddec", "Adding decimals"),
+            ("g5-multdec", "Multiplying decimals"), ("g5-divdec", "Dividing by a decimal")]),
+        ChapterGroup(chapter: .fractions, origin: Point(0, 440), columns: 3, lessons: [
+            ("ad", "Add with different bottoms"), ("add", "Adding fractions"), ("sub", "Subtracting fractions"),
+            ("mix", "Adding and subtracting"), ("g5-multfrac", "Multiplying fractions"), ("g5-improper", "Mixed numbers to fractions"),
+            ("g5-fracof", "Fraction of a number"), ("g5-unitdiv", "Dividing by a unit fraction")]),
+        ChapterGroup(chapter: .measurement, origin: Point(1000, 740), columns: 3, lessons: [
+            ("uc", "Unit cubes"), ("g5-volume", "Volume of a box"), ("g5-units", "Converting units")]),
+    ]
+    static let pieces = groups.flatMap(\.pieces)
+    /// The grade's own lessons (the specs' 17), for "5 of 17 learned".
+    static let gradeLessons = pieces.map(\.id).filter { $0 != "ad" && $0 != "uc" }
     /// A lesson's number within its chapter, in map order.
     static func number(_ p: Piece) -> Int { (pieces.filter { $0.chapter == p.chapter }.firstIndex { $0.id == p.id } ?? 0) + 1 }
-    static var bounds: Rect { Rect(x: -20, y: -20, width: 920, height: 640) }
+    static var bounds: Rect { Rect(x: -20, y: -20, width: 1940, height: 1460) }
 }
 
 /// The paper's camera and what's on it. One clock drives every move, so the grid and the paper never come apart.
@@ -90,6 +98,9 @@ final class PaperModel {
     var bars: AddFractionsModel?
     /// A lesson worked in steps, when one is open. It uses the paper's own camera too.
     var steps: StepsModel?
+    /// The piece whose lesson is open: its name goes in the top bar.
+    var openPiece: Piece? { lesson != nil || bars != nil || steps != nil ? opened : nil }
+    private var opened: Piece?
     /// When the pieces started drawing themselves.
     var drawnAt: Double = PaperClock.now
     var instant = false
@@ -121,9 +132,12 @@ final class PaperModel {
         fly(to: camera(at: PaperClock.now).zoomed(by: f, at: .init(screen.width / 2, screen.height / 2)), duration: CameraTiming.fly)
     }
 
-    /// The whole lesson group, framed.
+    /// The whole map, framed, with room for the top bar above it.
     func frameGroup(duration: Double = CameraTiming.fly) {
-        fly(to: .framing(Map.bounds, in: screen, maxZoom: 1.4), duration: duration)
+        let b = Map.bounds, bar = 72.0
+        var cam = PaperCamera.framing(b, in: Size(screen.width, screen.height - bar), maxZoom: 1.4)
+        cam.y += bar
+        fly(to: cam, duration: duration)
     }
 
     /// The crosshair: glide to the lesson that's up next.
@@ -150,6 +164,7 @@ final class PaperModel {
 
     /// Opening Unit cubes: fly the flat paper to the lesson, then hand the same view to the 3D camera.
     func open(_ p: Piece) {
+        opened = p
         // the lesson's picture master decides how it opens: flat on the paper, or in 3D
         guard let spec = p.spec else { return }
         if spec.master == "bars" { openBars(p); return }
@@ -180,6 +195,13 @@ final class PaperModel {
         fly(to: .framing(s.frame, in: screen, pad: screen.width > 760 ? 30 : 8, maxZoom: 1), duration: CameraTiming.fly)
         let go = { [self] in s.start(); steps = s; selected = nil }
         if instant { go() } else { Task { try? await Task.sleep(for: .seconds(CameraTiming.fly + 0.04)); go() } }
+    }
+
+    /// The crosshair inside a flat lesson: glide back to the whole lesson.
+    func reframe() {
+        let pad = screen.width > 760 ? 30.0 : 8
+        if let b = bars { fly(to: .framing(b.frame, in: screen, pad: pad, maxZoom: 1), duration: CameraTiming.fly) }
+        if let s = steps { fly(to: .framing(s.frame, in: screen, pad: pad, maxZoom: 1), duration: CameraTiming.fly) }
     }
 
     /// Leaving the lesson: it tilts back flat first, then the paper takes the same view back.

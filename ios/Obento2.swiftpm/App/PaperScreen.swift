@@ -23,17 +23,17 @@ struct PaperScreen: View {
                         PiecesLayer(camera: cam, time: t, drawnAt: model.drawnAt, selected: model.selected)
                     }
                     if let lesson = model.lesson {
-                        UnitCubesView(model: lesson, time: t, top: edge(safe.safeAreaInsets.top), onBack: { model.close() })
+                        UnitCubesView(model: lesson, time: t)
                     } else {
                         surfaceGestures
                     }
                     if let bars = model.bars {
-                        AddFractionsView(model: bars, camera: cam, time: t, top: edge(safe.safeAreaInsets.top), onBack: { model.close() })
+                        AddFractionsView(model: bars, camera: cam, time: t)
                     }
                     if let steps = model.steps {
-                        StepsLessonView(model: steps, camera: cam, time: t, top: edge(safe.safeAreaInsets.top), onBack: { model.close() })
+                        StepsLessonView(model: steps, camera: cam, time: t)
                     }
-                    ZoomCells(model: model, lessonOpen: model.lesson != nil || model.bars != nil || model.steps != nil, top: edge(safe.safeAreaInsets.top), bottom: edge(safe.safeAreaInsets.bottom))
+                    TopBar(model: model, top: max(16, safe.safeAreaInsets.top + 8), bottom: max(16, safe.safeAreaInsets.bottom + 8))
                 }
                 .onChange(of: t) { _, now in model.settle(at: now); model.lesson?.settle(at: now) }
             }
@@ -43,9 +43,6 @@ struct PaperScreen: View {
         .ignoresSafeArea()
         }
     }
-
-    /// Controls sit two cells from the edge, or just clear of the notch and home bar where those reach further.
-    private func edge(_ inset: CGFloat) -> CGFloat { max(40, inset + 12) }
 
     /// The clock only runs while something moves or draws, so a still paper costs nothing.
     private var animating: Bool {
@@ -79,9 +76,13 @@ struct PiecesLayer: View {
         Canvas { ctx, _ in
             let z = camera.zoom
             ctx.translateBy(x: camera.x, y: camera.y); ctx.scaleBy(x: z, y: z)
-            // chapter titles, baselines on a grid line
-            for (title, at) in Map.titles {
-                ctx.draw(Text(title).font(Typeface.title).foregroundStyle(Ink.ink), at: CGPoint(x: at.x, y: at.y + 40), anchor: .bottomLeading)
+            // chapter titles, baselines on a grid line: a dot in the chapter's colour, the title, and how many are learned
+            for g in Map.groups {
+                let o = g.origin, done = g.lessons.filter { Progress.shared.learned.contains($0.id) }.count
+                ctx.fill(Path(ellipseIn: CGRect(x: o.x, y: o.y + 22, width: 10, height: 10)), with: .color(g.chapter.color))
+                ctx.draw(Text(g.chapter.title).font(Typeface.title).foregroundStyle(Ink.ink), at: CGPoint(x: o.x + 20, y: o.y + 40), anchor: .bottomLeading)
+                let w = MathLineView.width(g.chapter.title, 26)
+                ctx.draw(Text("\(done) of \(g.lessons.count)").font(Typeface.font(15)).foregroundStyle(Ink.ink3), at: CGPoint(x: o.x + 32 + w, y: o.y + 37), anchor: .bottomLeading)
             }
             for p in Map.pieces { draw(p, k: Piece.drawIn(p, time: time, drawnAt: drawnAt), in: &ctx) }
         }
@@ -107,31 +108,5 @@ struct PiecesLayer: View {
             let a = CGRect(x: s.maxX - 30, y: s.midY - 10, width: 20, height: 20)
             t.drawLayer { l in l.clipToLayer { $0.draw(Image("ph-arrow-right"), in: a) }; l.fill(Path(a), with: .color(Ink.ink)) }
         }
-    }
-}
-
-/// The zoom cells: − % + | find next | fit the group. Inside a lesson the group button goes away.
-struct ZoomCells: View {
-    let model: PaperModel
-    let lessonOpen: Bool
-    let top: CGFloat
-    let bottom: CGFloat
-    private func zoom(_ f: Double) { if let l = model.lesson { l.zoom(f) } else { model.zoomButton(f) } }
-    var body: some View {
-        let pct = model.lesson?.scale ?? model.camera(at: PaperClock.now).zoom
-        HStack(spacing: -1.5) {
-            CellButton(action: { zoom(1 / 1.25) }) { Icon(name: "minus") }
-            CellButton(width: 64, action: {}) {
-                Text("\(Int((pct * 100).rounded()))%").font(Typeface.font(14, .medium)).monospacedDigit()
-            }
-            CellButton(action: { zoom(1.25) }) { Icon(name: "plus") }
-            Color.clear.frame(width: 20, height: 40)
-            if !lessonOpen {
-                CellButton(action: { model.findNext() }) { Icon(name: "crosshair") }
-                CellButton(action: { model.frameGroup() }) { Icon(name: "frame-corners") }
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: model.screen.width > 760 ? .topTrailing : .bottom)
-        .padding(.top, top).padding(.trailing, model.screen.width > 760 ? 40 : 0).padding(.bottom, bottom)
     }
 }

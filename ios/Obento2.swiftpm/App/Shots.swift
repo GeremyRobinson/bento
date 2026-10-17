@@ -14,6 +14,9 @@ enum Shots {
 
     static func run(_ m: PaperModel) {
         guard let name else { return }
+        // the same progress every time, and nothing saved: two lessons learned
+        Progress.shared.saving = false
+        Progress.shared.reset(to: ["g5-mult2", "add"])
         let args = ProcessInfo.processInfo.arguments
         if args.contains("-landscape") || args.contains("-portrait"),
            let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
@@ -29,19 +32,19 @@ enum Shots {
             m.shotBox = .init(length: 4, width: 3, height: 2)
             m.frameGroup(duration: 0)
             m.shotProblem = .init(a: 4, p: 1, b: 8, q: 1)
-            let uc = Volume.pieces.first { $0.id == "uc" }!
+            let uc = Map.pieces.first { $0.id == "uc" }!
             switch name {
             case "paper": break
             case "selected": m.select(uc)
             case let n where n.hasPrefix("pow10"):
                 m.shotNumbers = PowersOfTen.numbers(x: 4.6, k: 2)
-                m.open(Decimals.pieces[0])
+                m.open(Map.pieces.first { $0.id == "g5-pow10" }!)
                 guard let s = m.steps, n != "pow10" else { return }
                 s.go(); s.type("2"); s.go()
                 if n == "pow10-move" { for k in ["4", "6"] { s.type(k) }; s.go(); return }
                 s.showMe(); s.go()
             case let n where n.hasPrefix("fractions"):
-                m.open(Fractions.pieces[0])
+                m.open(Map.pieces.first { $0.id == "ad" }!)
                 guard let b = m.bars, n != "fractions" else { return }
                 b.go()
                 if n == "fractions-wrong" { b.tap(5); b.go(); return }
@@ -78,7 +81,7 @@ enum Shots {
         m.frameGroup(duration: 0)
         m.drawnAt = PaperClock.now
         await wait(2.4)
-        let uc = Volume.pieces.first { $0.id == "uc" }!
+        let uc = Map.pieces.first { $0.id == "uc" }!
         m.select(uc); await wait(2)
         m.open(uc); await wait(2)
         guard let l = m.lesson else { return }

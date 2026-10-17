@@ -33,36 +33,73 @@ extension Piece {
         let r = CGRect(x: at.x, y: at.y, width: Piece.size.width, height: Piece.size.height)
         let c = Paper.cell
         func box(_ b: CGRect) -> [CGPoint] { [CGPoint(x: b.minX, y: b.minY), CGPoint(x: b.maxX, y: b.minY), CGPoint(x: b.maxX, y: b.maxY), CGPoint(x: b.minX, y: b.maxY), CGPoint(x: b.minX, y: b.minY)] }
+        func bar(y: Double, parts: Int, x: Double = 40, w: Double = 160) -> [[CGPoint]] {
+            let b = CGRect(x: r.minX + x, y: r.minY + y, width: w, height: 2 * c), step: Double = b.width / Double(parts)
+            let cuts: [[CGPoint]] = (1..<max(1, parts)).map { i in
+                let x: Double = b.minX + Double(i) * step
+                return [CGPoint(x: x, y: b.minY), CGPoint(x: x, y: b.maxY)]
+            }
+            return [box(b)] + cuts
+        }
+        func arc(_ x0: Double, _ x1: Double, _ y: Double, _ h: Double) -> [CGPoint] {
+            (0...12).map { s in
+                let f = Double(s) / 12
+                return CGPoint(x: r.minX + x0 + (x1 - x0) * f, y: r.minY + y - sin(.pi * f) * h)
+            }
+        }
+        func line(_ pts: (Double, Double)...) -> [CGPoint] { pts.map { CGPoint(x: r.minX + $0.0, y: r.minY + $0.1) } }
         switch id {
-        case "sq": // a 4 x 3 floor of squares
-            let across = (0...4).map { i in [CGPoint(x: r.minX + 40 + Double(i) * 2 * c, y: r.minY + 30), CGPoint(x: r.minX + 40 + Double(i) * 2 * c, y: r.minY + 150)] }
-            let down = (0...3).map { j in [CGPoint(x: r.minX + 40, y: r.minY + 30 + Double(j) * 2 * c), CGPoint(x: r.minX + 200, y: r.minY + 30 + Double(j) * 2 * c)] }
-            return across + down
         case "uc": // one cube, drawn on the grid
             let x = r.minX + 80, y = r.minY + 60, s = 4 * c, o = 2 * c
             return [box(CGRect(x: x, y: y, width: s, height: s)),
                     [CGPoint(x: x, y: y), CGPoint(x: x + o, y: y - o), CGPoint(x: x + s + o, y: y - o), CGPoint(x: x + s, y: y)],
                     [CGPoint(x: x + s + o, y: y - o), CGPoint(x: x + s + o, y: y + s - o), CGPoint(x: x + s, y: y + s)]]
-        case "ad": // a fourths bar over an eighths bar, one whole long
-            func bar(y: Double, parts: Int) -> [[CGPoint]] {
-                let b = CGRect(x: r.minX + 40, y: r.minY + y, width: 8 * c, height: 2 * c), w: Double = b.width / Double(parts)
-                let cuts: [[CGPoint]] = (1..<parts).map { i in
-                    let x: Double = b.minX + Double(i) * w
-                    return [CGPoint(x: x, y: b.minY), CGPoint(x: x, y: b.maxY)]
-                }
-                return [box(b)] + cuts
-            }
+        case "ad", "add", "mix": // a fourths bar over an eighths bar, one whole long
             return bar(y: 40, parts: 4) + bar(y: 100, parts: 8)
-        case "g5-pow10": // digit boxes and the point hopping right
+        case "sub": // thirds over sixths
+            return bar(y: 40, parts: 3) + bar(y: 100, parts: 6)
+        case "g5-improper": // two wholes and part of a third, all cut into fourths
+            return bar(y: 40, parts: 4, x: 20, w: 80) + bar(y: 40, parts: 4, x: 120, w: 80) + bar(y: 100, parts: 4, x: 20, w: 80)
+        case "g5-fracof": // a bar of twenty cut into four groups
+            return bar(y: 60, parts: 4) + [line((40, 120), (40, 130), (120, 130), (120, 120))]
+        case "g5-multfrac": // a square cut into rows and columns
+            let sq = CGRect(x: r.minX + 60, y: r.minY + 20, width: 6 * c, height: 6 * c)
+            var out: [[CGPoint]] = [box(sq)]
+            for i in 1..<3 { let y: Double = 20 + Double(i) * 40; out.append(line((60, y), (180, y))) }
+            for i in 1..<4 { let x: Double = 60 + Double(i) * 30; out.append(line((x, 20), (x, 140))) }
+            return out
+        case "g5-unitdiv": // three wholes, each cut into fourths
+            return (0..<3).flatMap { i in bar(y: 40 + Double(i) * 40, parts: 4) }
+        case "g5-pow10", "g5-divdec": // digit boxes and the point hopping right
             let y = r.minY + 70
             var out: [[CGPoint]] = (0..<3).map { i in box(CGRect(x: r.minX + 50 + Double(i) * 3 * c, y: y, width: 2 * c, height: 2 * c)) }
-            out.append((0...12).map { s in
-                let f = Double(s) / 12
-                return CGPoint(x: r.minX + 100 + 3 * c * f, y: y - 8 - sin(.pi * f) * 1.5 * c)
-            })
+            out.append(arc(100, 160, 62, 30))
             return out
-        case "ly": // two layers
-            return (0..<2).map { k in box(CGRect(x: r.minX + 40, y: r.minY + 50 + Double(k) * 2 * c, width: 8 * c, height: 2 * c)) }
+        case "g5-round": // a number line with the halfway mark
+            return [line((30, 90), (210, 90)), line((40, 80), (40, 100)), line((200, 80), (200, 100)), line((120, 84), (120, 96)), arc(150, 200, 70, 20)]
+        case "g5-adddec": // two numbers lined up at the point, and the line under them
+            var out: [[CGPoint]] = []
+            for j in 0..<2 { for i in 0..<3 {
+                let x: Double = r.minX + 60 + Double(i) * 2 * c, y: Double = r.minY + 30 + Double(j) * 2 * c
+                out.append(box(CGRect(x: x, y: y, width: 2 * c, height: 2 * c)))
+            } }
+            out.append(line((50, 120), (190, 120)))
+            return out
+        case "g5-multdec", "g5-mult2": // an area model: a rectangle split into strips
+            return [box(CGRect(x: r.minX + 40, y: r.minY + 40, width: 8 * c, height: 5 * c)), line((160, 40), (160, 140))]
+                + (id == "g5-multdec" ? [line((40, 100), (200, 100))] : [])
+        case "g5-divide": // the long division bracket
+            return [line((60, 50), (200, 50)), line((60, 50), (52, 90), (60, 130)), line((80, 90), (160, 90))]
+        case "g5-order": // a pair of parentheses around a small sum
+            return [line((70, 50), (60, 90), (70, 130)), line((170, 50), (180, 90), (170, 130)),
+                    line((100, 90), (140, 90)), line((120, 70), (120, 110))]
+        case "g5-units": // a ruler
+            var out: [[CGPoint]] = [box(CGRect(x: r.minX + 30, y: r.minY + 70, width: 9 * c, height: 2 * c))]
+            for i in 1..<9 {
+                let x: Double = 30 + Double(i) * 20, end: Double = i % 4 == 0 ? 100 : 84
+                out.append(line((x, 70), (x, end)))
+            }
+            return out
         default: // a box with its three sides
             return [box(CGRect(x: r.minX + 40, y: r.minY + 60, width: 6 * c, height: 4 * c)),
                     [CGPoint(x: r.minX + 40, y: r.minY + 60), CGPoint(x: r.minX + 80, y: r.minY + 20), CGPoint(x: r.minX + 200, y: r.minY + 20), CGPoint(x: r.minX + 160, y: r.minY + 60)],
@@ -123,7 +160,7 @@ final class Rig {
     var stepsKey = ""
     var lineScale: Double = 0
     var dark: Bool?
-    var colours = Colours(dark: false, chapter: Chapter.volume.hex)
+    var colours = Colours(dark: false, chapter: Chapter.measurement.hex)
 
     init() { EdgeAxis.registerComponent() }
 
@@ -200,7 +237,7 @@ final class Rig {
 
     private func recolour(_ dark: Bool) {
         self.dark = dark
-        colours = Colours(dark: dark, chapter: Chapter.volume.hex)
+        colours = Colours(dark: dark, chapter: Chapter.measurement.hex)
         paperHex = dark ? 0x121211 : 0xF3F2EF
         sheet.model?.materials = [flat(colours.paper)]
         gridAt = nil; pieceState = [:]; shape = nil; barsKey = ""; stepsKey = ""
@@ -233,7 +270,7 @@ final class Rig {
         for p in Map.pieces {
             let k = Piece.drawIn(p, time: t, drawnAt: model.drawnAt)
             let on = model.selected?.id == p.id
-            let key = "\((k * 500).rounded()) \(on)"
+            let key = "\((k * 500).rounded()) \(on) \(p.state)"
             guard pieceState[p.id] != key else { continue }
             pieceState[p.id] = key
             if pieceLines[p.id] == nil {

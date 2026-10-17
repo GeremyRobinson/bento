@@ -2,7 +2,12 @@ import SwiftUI
 
 @main
 struct Obento2App: App {
+    /// "light" or "dark" once the child picks one in the top bar; otherwise the device decides.
+    @AppStorage("theme") private var theme = ""
     var body: some Scene {
-        WindowGroup { PaperScreen(model: PaperModel()).statusBarHidden() }
+        WindowGroup {
+            PaperScreen(model: PaperModel()).statusBarHidden()
+                .preferredColorScheme(theme == "dark" ? .dark : theme == "light" ? .light : nil)
+        }
     }
 }

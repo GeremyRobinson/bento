@@ -6,8 +6,6 @@ struct AddFractionsView: View {
     let model: AddFractionsModel
     let camera: PaperCamera
     let time: Double
-    let top: CGFloat
-    let onBack: () -> Void
 
     var body: some View {
         let k = camera.zoom, s = model.problem, l = model.lesson, words = l.words
@@ -75,7 +73,6 @@ struct AddFractionsView: View {
             .opacity(shown)
             .pinned(at(0, 440), .topLeading, k)
 
-            LessonHeader(title: "Add with different bottoms", subtitle: "Fractions · Lesson 03", top: top, onBack: onBack)
         }
     }
 }

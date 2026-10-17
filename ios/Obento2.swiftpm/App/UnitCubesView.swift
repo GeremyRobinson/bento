@@ -7,12 +7,10 @@ import SwiftUI
 struct UnitCubesView: View {
     let model: UnitCubesModel
     let time: Double
-    let top: CGFloat
-    let onBack: () -> Void
     @State private var lastDrag: CGSize = .zero
     @State private var lastPinch: CGFloat = 1
 
-    init(model: UnitCubesModel, time: Double, top: CGFloat, onBack: @escaping () -> Void) { self.model = model; self.time = time; self.top = top; self.onBack = onBack }
+    init(model: UnitCubesModel, time: Double) { self.model = model; self.time = time }
 
     var body: some View {
         let v = model.view(at: time)
@@ -27,7 +25,6 @@ struct UnitCubesView: View {
                     .onEnded { _ in lastPinch = 1 })
                 .simultaneousGesture(SpatialTapGesture().onEnded { g in model.tapScreen(.init(g.location.x, g.location.y)) })
             pins(v, k)
-            LessonHeader(title: "Unit cubes", subtitle: "Volume · Lesson 02", top: top, onBack: onBack)
         }
     }
 
