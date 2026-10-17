@@ -59,6 +59,7 @@ final class AddFractionsModel {
         case .moved:
             guideAt = nil; message = nil; wordsAt = PaperClock.now
             syncFills()
+            if lesson.isLast { Progress.shared.learn(lesson.spec.id) }
         case .notYet(let line):
             message = (line, false)
             if lesson.picture["guide"] == 1, guideAt == nil { guideAt = time(0) }

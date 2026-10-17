@@ -80,6 +80,7 @@ final class UnitCubesModel {
         case .newProblem: restart(); return
         }
         message = nil; wordsAt = PaperClock.now
+        if lesson.isLast { Progress.shared.learn(lesson.spec.id) }
     }
 
     func tap(_ c: UnitCubes.Cell) {
