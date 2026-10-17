@@ -29,6 +29,11 @@ public struct Rect: Equatable, Sendable {
     public var x: Double, y: Double, width: Double, height: Double
     public init(x: Double, y: Double, width: Double, height: Double) { self.x = x; self.y = y; self.width = width; self.height = height }
     public var mid: Point { Point(x + width / 2, y + height / 2) }
+    /// The smallest rect holding both.
+    public func union(_ o: Rect) -> Rect {
+        let x0 = min(x, o.x), y0 = min(y, o.y)
+        return Rect(x: x0, y: y0, width: max(x + width, o.x + o.width) - x0, height: max(y + height, o.y + o.height) - y0)
+    }
 }
 
 /// The one ease every camera move uses: slow start, slow finish.

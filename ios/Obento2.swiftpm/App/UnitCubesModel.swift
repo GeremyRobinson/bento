@@ -39,6 +39,14 @@ final class UnitCubesModel {
     }
 
     /// The lesson sits on strong lines just inside the lesson's picture frame.
+    /// What the lesson needs in view as it starts, flat: the question over the box, the box with its labels, the count
+    /// and the buttons under it (paper points).
+    static func startFrame(origin o: Vec3, box b: UnitCubes.Box) -> Rect {
+        let u = Paper.unit, x = o.x * u, y = o.z * u
+        let right = max(x + 480, x + Double(b.length) * u + 20)
+        return Rect(x: x - 60, y: y - 130, width: right - x + 60, height: Double(b.width) * u + 130 + 160)
+    }
+
     static func origin(for p: Piece) -> Vec3 {
         Vec3(((p.at.x + 10) / Paper.unit).rounded(), 0, ((p.at.y + 40) / Paper.unit).rounded())
     }
@@ -155,15 +163,33 @@ final class UnitCubesModel {
     /// The paper tilts; the squares rise into the first layer of cubes. On a narrow screen the view
     /// steps back a little and centres on the box so the whole box fits.
     private func lift() {
-        let now = view(at: PaperClock.now)
-        var to = PaperView3D(elevation: PaperView3D.tilted.elevation, azimuth: PaperView3D.tilted.azimuth, scale: now.scale, target: now.target)
-        let w = to.width(of: corners) / to.scale
-        let fit = (screen.width - 72) / w
-        if fit < to.scale { to.scale = fit; to.target = Vec3(origin.x + Double(box.length) / 2, Double(box.height) / 2, origin.z + Double(box.width) / 2) }
-        move(to: to, duration: Self.beat)
+        move(to: tiltedView(from: view(at: PaperClock.now)), duration: Self.beat)
         tiltAt = time(0); untiltAt = nil
         layerAt[0] = time(Self.beat * 0.55)
         squaresGoneAt = time(Self.beat * 0.55)
+    }
+
+    /// The tilted view that shows the whole box at full height, the words above it and the buttons below, with two cells
+    /// to spare and room for the top bar, so the layers rising later stay in view. Never closer than now.
+    private func tiltedView(from now: PaperView3D) -> PaperView3D {
+        let L = Double(box.length), W = Double(box.width), H = Double(box.height)
+        var to = PaperView3D(elevation: PaperView3D.tilted.elevation, azimuth: PaperView3D.tilted.azimuth, scale: now.scale,
+                             target: Vec3(origin.x + L / 2, H / 2, origin.z + W / 2))
+        let k = to.scale / Paper.unit
+        var pts = corners.map { to.project($0, screen: screen) }
+        let q = to.project(Vec3(origin.x - 0.4, 4.6, origin.z), screen: screen)          // the words' bottom-left, tilted
+        pts += [q, Point(q.x + 480 * k, q.y - 60 * k)]
+        let bt = to.project(Vec3(origin.x, 0, origin.z + W + 1), screen: screen)         // the buttons' top-left
+        pts += [bt, Point(bt.x + 300 * k, bt.y + 40 * k)]
+        let x0 = pts.map(\.x).min()!, x1 = pts.map(\.x).max()!, y0 = pts.map(\.y).min()!, y1 = pts.map(\.y).max()!
+        let bar = 72.0, m = screen.width > 760 ? 2 * Paper.cell : 8
+        let f = min(1, (screen.width - 2 * m) / (x1 - x0), (screen.height - bar - 2 * m) / (y1 - y0))
+        to.scale *= f
+        // scaling shrinks everything about the screen's middle; then slide so it sits in the free space under the bar
+        let cx = screen.width / 2 + ((x0 + x1) / 2 - screen.width / 2) * f, cy = screen.height / 2 + ((y0 + y1) / 2 - screen.height / 2) * f
+        let (_, r, u) = to.axes
+        to.target = to.target + r * ((cx - screen.width / 2) / to.scale) + u * (-(cy - (bar + (screen.height - bar) / 2)) / to.scale)
+        return to
     }
 
     /// Before leaving, the paper tilts back flat, so the hand-over to the flat paper moves nothing.

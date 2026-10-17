@@ -393,3 +393,9 @@ final class SelectZoomTests: XCTestCase {
         XCTAssertEqual(CameraTiming.selectZoom(current: 0.6, overview: 0.6, fit: 0.7), 0.7, "the lesson always fits")
     }
 }
+
+final class RectTests: XCTestCase {
+    func testUnion() {
+        XCTAssertEqual(Rect(x: 0, y: 0, width: 10, height: 10).union(Rect(x: 5, y: -5, width: 20, height: 5)), Rect(x: 0, y: -5, width: 25, height: 15))
+    }
+}

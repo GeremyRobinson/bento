@@ -167,6 +167,12 @@ final class PaperModel {
     func select(_ p: Piece?) {
         selected = p
         guard let p else { return }
+        // a lesson that opens: its first problem is chosen now, and the glide frames the lesson as it will start, at up
+        // to 100%, so Start needs no camera move and the lesson starts at a comfortable size (G 17 Oct)
+        if let f = startFrame(p) {
+            fly(to: framingBelowBar(f.union(p.focus), maxZoom: CameraTiming.selectMax), duration: CameraTiming.glide)
+            return
+        }
         let now = camera(at: PaperClock.now)
         let z = CameraTiming.selectZoom(current: now.zoom, overview: overview.zoom, fit: PaperCamera.framing(p.focus, in: screen).zoom)
         let c = p.focus.mid
@@ -193,7 +199,8 @@ final class PaperModel {
         // The 3D lesson takes over the camera, so it waits for that glide to land first.
         let origin = UnitCubesModel.origin(for: p)
         let go = { [self] in
-            lesson = UnitCubesModel(origin: origin, chapter: p.chapter, view: .matching(camera(at: PaperClock.now), screen: screen), screen: screen, instant: instant, box: shotBox,
+            lesson = UnitCubesModel(origin: origin, chapter: p.chapter, view: .matching(camera(at: PaperClock.now), screen: screen), screen: screen, instant: instant,
+                                    box: shotBox ?? prepared.flatMap { $0.id == p.id ? UnitCubes.Box($0.numbers) : nil },
                                     session: Progress.shared.dueBack(p.id) ? .recheck : LessonSession())
             selected = nil
         }
@@ -204,8 +211,11 @@ final class PaperModel {
     /// Opening the flat lesson: its pieces grow in where it is, on the paper's own camera (no camera move).
     func openBars(_ p: Piece) {
         // a learned lesson that's due back opens straight on its recheck
-        let b = AddFractionsModel(origin: AddFractionsModel.origin(for: p), chapter: p.chapter, instant: instant, problem: shotProblem,
-                                  session: Progress.shared.dueBack(p.id) ? .recheck : LessonSession())
+        let first = shotProblem ?? prepared.flatMap { $0.id == p.id ? AddFractions.Problem($0.numbers) : nil }
+        let due = Progress.shared.dueBack(p.id)
+        let b = AddFractionsModel(origin: AddFractionsModel.origin(for: p), chapter: p.chapter, instant: instant, problem: due ? nil : first,
+                                  session: due ? .recheck : LessonSession())
+        b.needs = { [weak self] r in self?.keepInView(r) }
         b.start(); bars = b; selected = nil
     }
 
@@ -225,6 +235,42 @@ final class PaperModel {
     /// Leaving the lesson: it tilts back flat first, then the paper takes the same view back.
     /// A lesson is framed with two cells to spare (LESSONS.md §5).
     static let margin = 2 * Paper.cell
+
+    /// A rect framed under the top bar, with two cells to spare, never closer than `maxZoom`.
+    func framingBelowBar(_ r: Rect, maxZoom: Double) -> PaperCamera {
+        let bar = 72.0
+        var cam = PaperCamera.framing(r, in: Size(screen.width, screen.height - bar), pad: screen.width > 760 ? Self.margin : 8, maxZoom: maxZoom)
+        cam.y += bar
+        return cam
+    }
+
+    /// The first problem of the lesson last tapped, chosen at the tap so its start can be framed exactly.
+    private var prepared: (id: String, numbers: Numbers)?
+    private var prepRng = SeededRandom(seed: UInt64(Date().timeIntervalSince1970 * 1000))
+
+    /// What a lesson that opens needs in view as it starts (question, picture, buttons), in paper points.
+    func startFrame(_ p: Piece) -> Rect? {
+        guard p.opens else { return nil }
+        switch p.id {
+        case "uc":
+            let b = shotBox ?? UnitCubes.generate(using: &prepRng)
+            prepared = (p.id, b.numbers)
+            return UnitCubesModel.startFrame(origin: UnitCubesModel.origin(for: p), box: b)
+        case "ad":
+            let s = shotProblem ?? AddFractions.problems.randomElement(using: &prepRng)!
+            prepared = (p.id, s.numbers)
+            return AddFractionsModel.contentFrame(origin: AddFractionsModel.origin(for: p), problem: s, storyLines: 0)
+        default: return nil
+        }
+    }
+
+    /// As a lesson adds parts, the camera eases out just enough to keep them in view; it never zooms in by itself.
+    func keepInView(_ r: Rect) {
+        let cam = camera(at: PaperClock.now), bar = 72.0, m = Self.margin
+        let tl = cam.toPaper(Point(m, bar + m)), br = cam.toPaper(Point(screen.width - m, screen.height - m))
+        if r.x >= tl.x, r.y >= tl.y, r.x + r.width <= br.x, r.y + r.height <= br.y { return }
+        fly(to: framingBelowBar(r, maxZoom: cam.zoom), duration: CameraTiming.fly)
+    }
 
     /// Leaving a lesson: a 3D one tilts back flat first; then the paper glides back out to the lesson's piece
     /// (LESSONS.md §5), which shows in colour once it's learned.

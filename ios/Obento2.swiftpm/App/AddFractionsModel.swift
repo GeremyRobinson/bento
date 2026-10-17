@@ -41,7 +41,7 @@ final class AddFractionsModel {
     }
 
     /// The pieces grow in now (called when the glide to the lesson ends).
-    func start() { openedAt = time(0); wordsAt = PaperClock.now }
+    func start() { openedAt = time(0); wordsAt = PaperClock.now; needs?(contentFrame) }
 
     /// The lesson sits just inside its picture frame on the map.
     static func origin(for p: Piece) -> Point { Point(p.at.x, p.at.y) }
@@ -53,7 +53,20 @@ final class AddFractionsModel {
     /// Where p/a ends along the rows.
     var coverEnd: Double { Double(problem.covered) * pieceWidth }
     /// The whole picture with its words and buttons: what opening the lesson frames.
-    var frame: Rect { Rect(x: origin.x - 40, y: origin.y - 120, width: max(480, wholeWidth + 80), height: 660) }
+    var frame: Rect { contentFrame }
+
+    /// What the lesson needs in view now: the question (a story runs to more lines), the bars and the piece waiting to be
+    /// added, the count, and the buttons. The camera eases out to keep it in view.
+    var contentFrame: Rect {
+        Self.contentFrame(origin: origin, problem: problem, storyLines: lesson.step.answer?.choices != nil ? 2 : 0)
+    }
+    static func contentFrame(origin o: Point, problem s: AddFractions.Problem, storyLines: Int) -> Rect {
+        let whole = Double(s.wholeCells) * Paper.cell, piece = whole / Double(s.b)
+        let right = max(480, whole + 20 + piece + 20), top = -70 - Double(storyLines) * 40
+        return Rect(x: o.x - 20, y: o.y + top, width: right + 20, height: 490 - top)
+    }
+    /// Told when the lesson needs more room in view.
+    var needs: ((Rect) -> Void)?
 
     var animating: Bool {
         let now = PaperClock.now
@@ -71,6 +84,7 @@ final class AddFractionsModel {
             syncFills()
             // See: the pieces line up and the matching lines draw; hands off while they do
             busyUntil = time(Self.seeBeat)
+            needs?(contentFrame)
             if lesson.isLast {
                 session.finished(lesson)
                 // the skill check is over: its score decides learned, and when the lesson comes back
@@ -131,6 +145,7 @@ final class AddFractionsModel {
         lesson = session.makeRun(AddFractions.spec, using: &rng)
         fills = [:]; guideAt = nil; message = nil
         openedAt = time(0); wordsAt = PaperClock.now
+        needs?(contentFrame)
     }
 
     /// Full for a piece shaded to cover p/a, lighter for one added on: each step says how strongly it marks.
