@@ -63,7 +63,7 @@ struct CellButton<Label: View>: View {
         Button(action: action) {
             label()
                 .frame(width: width, height: 40)
-                .background(Ink.surface)
+                .background(Ink.surface, ignoresSafeAreaEdges: [])
                 .overlay(Rectangle().strokeBorder(main ? Ink.ink : Ink.lineStrong, lineWidth: 1.5))
                 .contentShape(Rectangle())
         }

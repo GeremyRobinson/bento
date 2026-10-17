@@ -190,7 +190,7 @@ final class Rig {
         let sq = MeshResource.generatePlane(width: 1, depth: 1)
         for z in 0..<b.width { for x in 0..<b.length {
             let e = ModelEntity(mesh: sq, materials: [flat(colours.square)])
-            e.position = SIMD3(Float(o.x) + Float(x) + 0.5, 0.001, Float(o.z) + Float(z) + 0.5)
+            e.position = SIMD3(Float(o.x) + Float(x) + 0.5, 0.0003, Float(o.z) + Float(z) + 0.5)  // under the strong lines, so each big square shows
             root.addChild(e); squares[.init(x, z)] = e
         } }
         let cube = MeshResource.generateBox(width: 1, height: 1, depth: 1, cornerRadius: 0, splitFaces: true)

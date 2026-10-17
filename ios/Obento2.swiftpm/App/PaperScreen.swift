@@ -9,6 +9,8 @@ struct PaperScreen: View {
     init(model: PaperModel) { _model = State(initialValue: model) }
 
     var body: some View {
+        // the outer reader keeps the safe area, so it knows where the notch and home bar are
+        GeometryReader { safe in
         GeometryReader { geo in
             TimelineView(.animation(paused: !animating)) { ctx in
                 let t = ctx.date.timeIntervalSinceReferenceDate
@@ -20,11 +22,11 @@ struct PaperScreen: View {
                         PiecesLayer(camera: cam, time: t, drawnAt: model.drawnAt, selected: model.selected)
                     }
                     if let lesson = model.lesson {
-                        UnitCubesView(model: lesson, time: t, top: edge(geo.safeAreaInsets.top), onBack: { model.close() })
+                        UnitCubesView(model: lesson, time: t, top: edge(safe.safeAreaInsets.top), onBack: { model.close() })
                     } else {
                         surfaceGestures
                     }
-                    ZoomCells(model: model, lessonOpen: model.lesson != nil, top: edge(geo.safeAreaInsets.top), bottom: edge(geo.safeAreaInsets.bottom))
+                    ZoomCells(model: model, lessonOpen: model.lesson != nil, top: edge(safe.safeAreaInsets.top), bottom: edge(safe.safeAreaInsets.bottom))
                 }
                 .onChange(of: t) { _, now in model.settle(at: now); model.lesson?.settle(at: now) }
             }
@@ -32,6 +34,7 @@ struct PaperScreen: View {
             .onChange(of: geo.size) { _, s in model.screen = Size(s.width, s.height) }
         }
         .ignoresSafeArea()
+        }
     }
 
     /// Controls sit two cells from the edge, or just clear of the notch and home bar where those reach further.
@@ -129,7 +132,9 @@ struct PiecesLayer: View {
             t.fill(Path(s), with: .color(Ink.surface))
             t.stroke(Path(s.insetBy(dx: 0.75, dy: 0.75)), with: .color(Ink.ink), lineWidth: 1.5)
             t.draw(Text("Start").font(Typeface.button).foregroundStyle(Ink.ink), at: CGPoint(x: s.minX + 16, y: s.midY), anchor: .leading)
-            t.draw(Image("ph-arrow-right"), in: CGRect(x: s.maxX - 30, y: s.midY - 10, width: 20, height: 20))
+            // the icon's shape, filled with ink like the arrows on the other buttons
+            let a = CGRect(x: s.maxX - 30, y: s.midY - 10, width: 20, height: 20)
+            t.drawLayer { l in l.clipToLayer { $0.draw(Image("ph-arrow-right"), in: a) }; l.fill(Path(a), with: .color(Ink.ink)) }
         }
     }
 
