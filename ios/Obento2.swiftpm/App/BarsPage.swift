@@ -15,12 +15,19 @@ final class BarsPage {
     /// Asks the camera to frame a part of the page.
     var frame: ((Rect) -> Void)?
 
-    // where things sit, in paper points: the How to at the lesson's place, the problems in rows under it. Every problem
-    // has a box of its own, big enough for its largest content (a three-line story, the widest bars and the piece
-    // waiting past them, the choices, the buttons and its name), with three cells between boxes
-    static let box = (dx: -40.0, dy: -200.0, width: 600.0, height: 760.0), gap = 60.0
+    // where things sit, in paper points: the How to at the lesson's place, the problems in rows under it. The paper is
+    // graph paper (G 17 Oct): every box starts and ends on the strong lines, 6 blocks wide and 8 tall, with one block
+    // between boxes; inside, two cells of margin all round. Big enough for its largest content (a three-line story, the
+    // widest bars and the piece waiting past them, the choices, the buttons and its name)
+    static let box = (dx: -2 * Paper.cell, dy: -10 * Paper.cell, width: 6 * Paper.unit, height: 8 * Paper.unit), gap = Paper.unit
     static let pitch = Size(box.width + gap, box.height + gap)
-    static let problemsTop = box.height + gap + 100
+    static let problemsTop = box.height + gap
+
+    /// The How to's origin: its box's corner on the strong line at or before the lesson's place on the map.
+    static func origin(for p: Piece) -> Point {
+        Point(((p.at.x + box.dx) / Paper.unit).rounded(.down) * Paper.unit - box.dx, ((p.at.y + box.dy) / Paper.unit).rounded(.down) * Paper.unit - box.dy)
+    }
+    private var at: Point { Self.origin(for: piece) }
 
     /// A problem's box on the paper.
     static func box(of m: AddFractionsModel) -> Rect { Rect(x: m.origin.x + box.dx, y: m.origin.y + box.dy, width: box.width, height: box.height) }
@@ -32,15 +39,16 @@ final class BarsPage {
         self.piece = piece; self.instant = instant
         var rng = SeededRandom(seed: UInt64(Date().timeIntervalSince1970 * 1000))
         let example = first ?? AddFractions.problems.randomElement(using: &rng)!
-        howTo = AddFractionsModel(origin: piece.at, chapter: piece.chapter, instant: instant,
+        howTo = AddFractionsModel(origin: Self.origin(for: piece), chapter: piece.chapter, instant: instant,
                                   run: LessonRun(AddFractions.spec, numbers: example.numbers), label: "How to", auto: true)
         let page = LessonPage.problems(AddFractions.spec, using: &rng)
         var practice = 0, check = 0
         problems = page.enumerated().map { i, p in
             let label = p.isCheck ? "Skill check \(check + 1)" : "Problem \(practice + 1)"
             if p.isCheck { check += 1 } else { practice += 1 }
-            let at = Point(piece.at.x + Double(i % LessonPage.columns) * Self.pitch.width,
-                           piece.at.y + Self.problemsTop + Double(i / LessonPage.columns) * Self.pitch.height)
+            let o = Self.origin(for: piece)
+            let at = Point(o.x + Double(i % LessonPage.columns) * Self.pitch.width,
+                           o.y + Self.problemsTop + Double(i / LessonPage.columns) * Self.pitch.height)
             return AddFractionsModel(origin: at, chapter: piece.chapter, instant: instant, run: LessonPage.run(AddFractions.spec, p), label: label)
         }
         for p in problems {
@@ -62,7 +70,7 @@ final class BarsPage {
     /// Everything on the page: what the camera shows when the problems arrive.
     var pageFrame: Rect {
         let rows = Double((problems.count + LessonPage.columns - 1) / LessonPage.columns)
-        return Rect(x: piece.at.x + Self.box.dx, y: piece.at.y + Self.box.dy, width: Double(LessonPage.columns) * Self.pitch.width - Self.gap,
+        return Rect(x: at.x + Self.box.dx, y: at.y + Self.box.dy, width: Double(LessonPage.columns) * Self.pitch.width - Self.gap,
                     height: Self.problemsTop + rows * Self.pitch.height - Self.gap)
     }
 
@@ -113,7 +121,7 @@ final class BarsPage {
 
     /// The first row of problems, with their questions: where the child starts.
     var firstRow: Rect {
-        Rect(x: piece.at.x + Self.box.dx, y: piece.at.y + Self.problemsTop + Self.box.dy, width: Double(LessonPage.columns) * Self.pitch.width - Self.gap, height: Self.box.height)
+        Rect(x: at.x + Self.box.dx, y: at.y + Self.problemsTop + Self.box.dy, width: Double(LessonPage.columns) * Self.pitch.width - Self.gap, height: Self.box.height)
     }
 
     // MARK: what the child does

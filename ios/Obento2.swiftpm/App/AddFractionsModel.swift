@@ -47,8 +47,8 @@ final class AddFractionsModel: Identifiable {
     func start(after delay: Double = 0) { openedAt = time(delay); wordsAt = openedAt }
     var solved: Bool { lesson.isLast }
 
-    /// The lesson sits just inside its picture frame on the map.
-    static func origin(for p: Piece) -> Point { Point(p.at.x, p.at.y) }
+    /// The How to sits where the lesson's page starts, its box on the paper's strong lines.
+    static func origin(for p: Piece) -> Point { BarsPage.origin(for: p) }
 
     var problem: AddFractions.Problem { AddFractions.Problem(lesson.numbers) }
     /// One piece of the bottom row, in points.
