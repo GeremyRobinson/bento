@@ -10,7 +10,8 @@ struct Piece: Identifiable, Equatable {
     let at: Point
     /// The lesson behind this piece, if one has been written.
     var spec: LessonSpec? { Lessons.spec(id) }
-    var opens: Bool { spec != nil }
+    /// Only lessons built the paper way open (LESSONS.md); the rest wait, locked, for G's OK on their web preview.
+    var opens: Bool { spec != nil && Map.paperLessons.contains(id) }
 
     /// Learned, up next (the first lesson in its chapter not learned yet), or not yet.
     @MainActor var state: State {
@@ -68,6 +69,9 @@ enum Map {
             ("uc", "Unit cubes"), ("g5-volume", "Volume of a box"), ("g5-units", "Converting units")]),
     ]
     static let pieces = groups.flatMap(\.pieces)
+    /// The lessons built the paper way, with G's OK on their preview. The others' maths is ported and tested in Core,
+    /// but their screens wait for their previews (LESSONS.md §9).
+    static let paperLessons: Set<String> = ["uc", "ad"]
     /// The grade's own lessons (the specs' 17), for "5 of 17 learned".
     static let gradeLessons = pieces.map(\.id).filter { $0 != "ad" && $0 != "uc" }
     /// A lesson's number within its chapter, in map order.
