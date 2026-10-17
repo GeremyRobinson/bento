@@ -9,8 +9,8 @@ struct Piece: Identifiable, Equatable {
     let state: State
     /// Top-left of the picture frame, on grid lines.
     let at: Point
-    /// Only Unit cubes opens in the Paper proof.
-    var opens: Bool { id == "uc" }
+    /// Only Unit cubes and Add with different bottoms open in the Paper proof.
+    var opens: Bool { id == "uc" || id == "ad" }
 
     static let size = Size(240, 180)
     var frame: Rect { Rect(x: at.x, y: at.y, width: Piece.size.width, height: Piece.size.height) }
@@ -20,7 +20,7 @@ struct Piece: Identifiable, Equatable {
 
     /// How far a piece has drawn itself in (0...1). They draw outward from today's lesson.
     static func drawIn(_ p: Piece, time: Double, drawnAt: Double) -> Double {
-        let now = Volume.pieces.first { $0.state == .now }!.frame.mid
+        let now = Map.pieces.first { $0.state == .now }!.frame.mid
         let d = hypot(p.frame.mid.x - now.x, p.frame.mid.y - now.y) / 900
         return ease((time - drawnAt - d) / 0.9)
     }
@@ -37,7 +37,22 @@ enum Volume {
         Piece(id: "ly", name: "Layers of cubes", chapter: .volume, state: .notYet, at: .init(0, 380)),
         Piece(id: "lwh", name: "Length × width × height", chapter: .volume, state: .notYet, at: .init(300, 380)),
     ]
-    static var bounds: Rect { Rect(x: -20, y: -20, width: 580, height: 640) }
+}
+
+/// The Fractions chapter: one flat lesson for now, to the right of Volume.
+enum Fractions {
+    static let title = "Fractions"
+    static let origin = Point(640, 0)
+    static let pieces: [Piece] = [
+        Piece(id: "ad", name: "Add with different bottoms", chapter: .fractions, state: .now, at: .init(640, 80)),
+    ]
+}
+
+/// Everything on the paper.
+enum Map {
+    static let titles: [(String, Point)] = [(Volume.title, Volume.origin), (Fractions.title, Fractions.origin)]
+    static let pieces = Volume.pieces + Fractions.pieces
+    static var bounds: Rect { Rect(x: -20, y: -20, width: 920, height: 640) }
 }
 
 /// The paper's camera and what's on it. One clock drives every move, so the grid and the paper never come apart.
@@ -48,11 +63,14 @@ final class PaperModel {
     private(set) var flight: CameraFlight?
     var selected: Piece?
     var lesson: UnitCubesModel?
+    /// The flat lesson, when one is open. It uses the paper's own camera.
+    var bars: AddFractionsModel?
     /// When the pieces started drawing themselves.
     var drawnAt: Double = PaperClock.now
     var instant = false
     /// A fixed box, for screenshots.
     var shotBox: UnitCubes.Box?
+    var shotProblem: AddFractions.Problem?
 
     func camera(at t: Double) -> PaperCamera { flight?.camera(at: t, screen: screen) ?? resting }
     /// The one camera the paper's scene is seen through: the open lesson's, or the flat paper's from straight above.
@@ -79,11 +97,11 @@ final class PaperModel {
 
     /// The whole lesson group, framed.
     func frameGroup(duration: Double = CameraTiming.fly) {
-        fly(to: .framing(Volume.bounds, in: screen, maxZoom: 1.4), duration: duration)
+        fly(to: .framing(Map.bounds, in: screen, maxZoom: 1.4), duration: duration)
     }
 
     /// The crosshair: glide to the lesson that's up next.
-    func findNext() { if let p = Volume.pieces.first(where: { $0.state == .now }) { select(p) } }
+    func findNext() { if let p = Map.pieces.first(where: { $0.state == .now }) { select(p) } }
 
     /// A tap on a lesson: a slow, gentle glide that brings it closer, not too close.
     func select(_ p: Piece?) {
@@ -98,27 +116,37 @@ final class PaperModel {
 
     func tap(at s: Point) {
         let p = camera(at: PaperClock.now).toPaper(s)
+        if let b = bars { b.tapPaper(p); return }
         if let sel = selected, sel.opens, contains(sel.start, p) { open(sel); return }
-        select(Volume.pieces.first(where: { contains($0.frame, p) || contains(Rect(x: $0.at.x, y: $0.at.y + 180, width: 240, height: 40), p) }))
+        select(Map.pieces.first(where: { contains($0.frame, p) || contains(Rect(x: $0.at.x, y: $0.at.y + 180, width: 240, height: 40), p) }))
     }
 
     /// Opening Unit cubes: fly the flat paper to the lesson, then hand the same view to the 3D camera.
     func open(_ p: Piece) {
+        if p.id == "ad" { openBars(p); return }
         let origin = UnitCubesModel.origin(for: p)
         let wide = screen.width > 760
         let frame = Rect(x: origin.x * Paper.unit - 40, y: origin.z * Paper.unit - 200, width: 480, height: 640)
         fly(to: .framing(frame, in: screen, pad: wide ? 30 : 8, maxZoom: 1), duration: CameraTiming.fly)
-        let target = resting
         let go = { [self] in
-            let cam = flight?.to ?? target
+            let cam = flight?.to ?? camera(at: PaperClock.now)
             lesson = UnitCubesModel(origin: origin, chapter: p.chapter, view: .matching(cam, screen: screen), screen: screen, instant: instant, box: shotBox)
             selected = nil
         }
         if instant { go() } else { Task { try? await Task.sleep(for: .seconds(CameraTiming.fly + 0.04)); go() } }
     }
 
+    /// Opening the flat lesson: glide to it, then the pieces grow in. It never tilts, so the paper's camera stays in charge.
+    func openBars(_ p: Piece) {
+        let b = AddFractionsModel(origin: AddFractionsModel.origin(for: p), chapter: p.chapter, instant: instant, problem: shotProblem)
+        fly(to: .framing(b.frame, in: screen, pad: screen.width > 760 ? 30 : 8, maxZoom: 1), duration: CameraTiming.fly)
+        let go = { [self] in b.start(); bars = b; selected = nil }
+        if instant { go() } else { Task { try? await Task.sleep(for: .seconds(CameraTiming.fly + 0.04)); go() } }
+    }
+
     /// Leaving the lesson: it tilts back flat first, then the paper takes the same view back.
     func close() {
+        if bars != nil { bars = nil; return }
         guard let l = lesson else { return }
         l.flatten { [self] view in
             stop(); resting = view.paperCamera(screen: screen); lesson = nil

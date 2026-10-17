@@ -27,14 +27,7 @@ struct UnitCubesView: View {
                     .onEnded { _ in lastPinch = 1 })
                 .simultaneousGesture(SpatialTapGesture().onEnded { g in model.tapScreen(.init(g.location.x, g.location.y)) })
             pins(v, k)
-            HStack(spacing: 20) {
-                CellButton(action: onBack) { Icon(name: "arrow-left") }
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Unit cubes").font(Typeface.name).foregroundStyle(Ink.ink)
-                    Text("Volume · Lesson 02").font(Typeface.font(13)).foregroundStyle(Ink.ink2)
-                }
-            }
-            .padding(.leading, 40).padding(.top, top)
+            LessonHeader(title: "Unit cubes", subtitle: "Volume · Lesson 02", top: top, onBack: onBack)
         }
     }
 

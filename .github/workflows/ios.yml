@@ -44,21 +44,23 @@ jobs:
           xcrun simctl list devices available | grep -E "iPad|iPhone" | head -20
           APP=$(find build/Build/Products -name '*.app' -maxdepth 3 | head -1)
           mkdir -p shots
+          # macOS has no `timeout`; perl's alarm does the same job
+          limit() { perl -e 'alarm shift; exec @ARGV' "$@"; }
           shoot() { # device-name prefix, appearance, orientation flag
             UDID=$(xcrun simctl list devices available | grep -m1 "$1" | grep -oE '[0-9A-F-]{36}')
             [ -n "$UDID" ] || { echo "no simulator matching $1"; return 0; }
             xcrun simctl boot "$UDID" || true
-            timeout 300 xcrun simctl bootstatus "$UDID" -b || true
+            limit 300 xcrun simctl bootstatus "$UDID" -b || true
             xcrun simctl ui "$UDID" appearance "$2"
             xcrun simctl install "$UDID" "$APP"
             for s in $4; do
               xcrun simctl terminate "$UDID" education.bento.obento2 || true
-              timeout 60 xcrun simctl launch "$UDID" education.bento.obento2 -shot "$s" $3 || true
+              limit 60 xcrun simctl launch "$UDID" education.bento.obento2 -shot "$s" $3 || true
               sleep 6
-              timeout 60 xcrun simctl io "$UDID" screenshot "shots/$5-$s.png" || true
+              limit 60 xcrun simctl io "$UDID" screenshot "shots/$5-$s.png" || true
             done
           }
-          shoot "iPad Pro 13-inch" light -landscape "paper selected flat cover tilt stacked" ipad
+          shoot "iPad Pro 13-inch" light -landscape "paper selected flat cover tilt stacked fractions fractions-wrong fractions-done" ipad
           # the whole lesson playing on its own, as a video
           UDID=$(xcrun simctl list devices available | grep -m1 "iPad Pro 13-inch" | grep -oE '[0-9A-F-]{36}')
           xcrun simctl terminate "$UDID" education.bento.obento2 || true

@@ -17,7 +17,7 @@ struct PaperScreen: View {
                 let cam = model.camera(at: t)
                 ZStack(alignment: .topLeading) {
                     PaperScene(model: model, time: t)
-                    if model.lesson == nil {
+                    if model.lesson == nil && model.bars == nil {
                         PiecesLayer(camera: cam, time: t, drawnAt: model.drawnAt, selected: model.selected)
                     }
                     if let lesson = model.lesson {
@@ -25,7 +25,10 @@ struct PaperScreen: View {
                     } else {
                         surfaceGestures
                     }
-                    ZoomCells(model: model, lessonOpen: model.lesson != nil, top: edge(safe.safeAreaInsets.top), bottom: edge(safe.safeAreaInsets.bottom))
+                    if let bars = model.bars {
+                        AddFractionsView(model: bars, camera: cam, time: t, top: edge(safe.safeAreaInsets.top), onBack: { model.close() })
+                    }
+                    ZoomCells(model: model, lessonOpen: model.lesson != nil || model.bars != nil, top: edge(safe.safeAreaInsets.top), bottom: edge(safe.safeAreaInsets.bottom))
                 }
                 .onChange(of: t) { _, now in model.settle(at: now); model.lesson?.settle(at: now) }
             }
@@ -41,7 +44,7 @@ struct PaperScreen: View {
 
     /// The clock only runs while something moves or draws, so a still paper costs nothing.
     private var animating: Bool {
-        model.moving || PaperClock.now - model.drawnAt < Piece.drawTime + 0.2 || (model.lesson?.animating ?? false)
+        model.moving || PaperClock.now - model.drawnAt < Piece.drawTime + 0.2 || (model.lesson?.animating ?? false) || (model.bars?.animating ?? false)
     }
 
     private var surfaceGestures: some View {
@@ -71,9 +74,11 @@ struct PiecesLayer: View {
         Canvas { ctx, _ in
             let z = camera.zoom
             ctx.translateBy(x: camera.x, y: camera.y); ctx.scaleBy(x: z, y: z)
-            // chapter title, baseline on a grid line
-            ctx.draw(Text(Volume.title).font(Typeface.title).foregroundStyle(Ink.ink), at: CGPoint(x: 0, y: 40), anchor: .bottomLeading)
-            for p in Volume.pieces { draw(p, k: Piece.drawIn(p, time: time, drawnAt: drawnAt), in: &ctx) }
+            // chapter titles, baselines on a grid line
+            for (title, at) in Map.titles {
+                ctx.draw(Text(title).font(Typeface.title).foregroundStyle(Ink.ink), at: CGPoint(x: at.x, y: at.y + 40), anchor: .bottomLeading)
+            }
+            for p in Map.pieces { draw(p, k: Piece.drawIn(p, time: time, drawnAt: drawnAt), in: &ctx) }
         }
         .allowsHitTesting(false)
     }

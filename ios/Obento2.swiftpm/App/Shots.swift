@@ -26,17 +26,26 @@ enum Shots {
             m.drawnAt = PaperClock.now - 100
             m.shotBox = .init(length: 4, width: 3, height: 2)
             m.frameGroup(duration: 0)
+            m.shotProblem = .init(a: 4, p: 1, b: 8, q: 1)
             let uc = Volume.pieces.first { $0.id == "uc" }!
             switch name {
             case "paper": break
             case "selected": m.select(uc)
+            case let n where n.hasPrefix("fractions"):
+                m.open(Fractions.pieces[0])
+                guard let b = m.bars, n != "fractions" else { return }
+                b.go()
+                if n == "fractions-wrong" { b.tap(5); b.go(); return }
+                b.tap(0); b.tap(1); b.go()
+                if n == "fractions-add" { return }
+                b.tap(2); b.go()
             default:
                 m.open(uc)
                 guard let l = m.lesson else { return }
                 if name == "flat" { return }
                 l.go()
                 if name == "cover" { for c in [(0, 0), (1, 0), (2, 0), (0, 1), (1, 1)] { l.tap(.init(c.0, c.1)) }; return }
-                _ = l.showMe(); l.go()
+                l.showMe(); l.go()
                 if name == "tilt" { return }
                 l.go()
             }

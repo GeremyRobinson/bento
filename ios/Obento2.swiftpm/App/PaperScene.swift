@@ -43,6 +43,16 @@ extension Piece {
             return [box(CGRect(x: x, y: y, width: s, height: s)),
                     [CGPoint(x: x, y: y), CGPoint(x: x + o, y: y - o), CGPoint(x: x + s + o, y: y - o), CGPoint(x: x + s, y: y)],
                     [CGPoint(x: x + s + o, y: y - o), CGPoint(x: x + s + o, y: y + s - o), CGPoint(x: x + s, y: y + s)]]
+        case "ad": // a fourths bar over an eighths bar, one whole long
+            func bar(y: Double, parts: Int) -> [[CGPoint]] {
+                let b = CGRect(x: r.minX + 40, y: r.minY + y, width: 8 * c, height: 2 * c), w: Double = b.width / Double(parts)
+                let cuts: [[CGPoint]] = (1..<parts).map { i in
+                    let x: Double = b.minX + Double(i) * w
+                    return [CGPoint(x: x, y: b.minY), CGPoint(x: x, y: b.maxY)]
+                }
+                return [box(b)] + cuts
+            }
+            return bar(y: 40, parts: 4) + bar(y: 100, parts: 8)
         case "ly": // two layers
             return (0..<2).map { k in box(CGRect(x: r.minX + 40, y: r.minY + 50 + Double(k) * 2 * c, width: 8 * c, height: 2 * c)) }
         default: // a box with its three sides
@@ -92,6 +102,14 @@ final class Rig {
     var cubes: [(x: Int, y: Int, z: Int, e: Entity)] = []
     var outline = Entity()
     var edges: [ModelEntity] = []
+    // the flat lesson
+    let barsRoot = Entity()
+    var barsKey = ""
+    var bars: [(row: Int, i: Int, group: Entity, fill: ModelEntity, outline: ModelEntity)] = []
+    var barLevel: [String: Double] = [:]
+    var decor = Entity()
+    var decorKey = ""
+    var paperHex: UInt32 = 0xF3F2EF
     var lineScale: Double = 0
     var dark: Bool?
     var colours = Colours(dark: false, chapter: Chapter.volume.hex)
@@ -99,7 +117,7 @@ final class Rig {
     init() { EdgeAxis.registerComponent() }
 
     struct Colours {
-        let paper, minor, major, top, front, side, deep, square, ink, lineStrong, pencil: UIColor
+        let paper, minor, major, top, front, side, deep, square, ink, ink2, lineStrong, pencil: UIColor
         init(dark: Bool, chapter c: UInt32) {
             let surf: UInt32 = dark ? 0x1B1B1A : 0xFBFBFA, ink: UInt32 = dark ? 0xECEBE7 : 0x1A1A19
             let paper: UInt32 = dark ? 0x121211 : 0xF3F2EF
@@ -108,7 +126,7 @@ final class Rig {
             minor = m(paper, ink, dark ? 0.035 : 0.045); major = m(paper, ink, dark ? 0.07 : 0.09)
             top = m(surf, c, dark ? 0.32 : 0.30); front = m(surf, c, dark ? 0.42 : 0.42); side = m(surf, c, dark ? 0.52 : 0.55)
             deep = dark ? m(c, 0xFFFFFF, 0.25) : m(c, ink, 0.35); square = m(surf, c, dark ? 0.38 : 0.35)
-            self.ink = UIColor(hex: ink)
+            self.ink = UIColor(hex: ink); ink2 = UIColor(hex: dark ? 0xA3A19B : 0x6B6964)
             lineStrong = UIColor(hex: dark ? 0x3A3A37 : 0xCFCCC5); pencil = UIColor(hex: dark ? 0x3D3C39 : 0xCFCCC5)
         }
     }
@@ -120,7 +138,7 @@ final class Rig {
         // the paper itself, under the grid, large enough to fill any tilted view; it follows the camera
         sheet.model = ModelComponent(mesh: .generatePlane(width: 400, depth: 400), materials: [])
         sheet.position.y = -0.003
-        root.addChild(sheet); root.addChild(pieces); root.addChild(lessonRoot)
+        root.addChild(sheet); root.addChild(pieces); root.addChild(lessonRoot); root.addChild(barsRoot)
     }
 
     func update(view v: PaperView3D, model: PaperModel, time t: Double, dark: Bool) {
@@ -151,8 +169,10 @@ final class Rig {
         let gx = Int(floor.x.rounded()), gz = Int(floor.z.rounded())
         if let g = gridAt, abs(g.x - gx) <= 2, abs(g.z - gz) <= 2, g.half >= half {} else { regrid(x: gx, z: gz, half: half) }
 
-        pieces.isEnabled = model.lesson == nil
-        if model.lesson == nil { drawPieces(model, at: t) }
+        let onMap = model.lesson == nil && model.bars == nil
+        pieces.isEnabled = onMap
+        if onMap { drawPieces(model, at: t) }
+        drawBars(model.bars, at: t)
 
         guard let l = lesson else { return }
         // the last lesson's pieces are reused when the box is the same; otherwise cleared now, while the new one builds
@@ -169,8 +189,9 @@ final class Rig {
     private func recolour(_ dark: Bool) {
         self.dark = dark
         colours = Colours(dark: dark, chapter: Chapter.volume.hex)
+        paperHex = dark ? 0x121211 : 0xF3F2EF
         sheet.model?.materials = [flat(colours.paper)]
-        gridAt = nil; pieceState = [:]; shape = nil
+        gridAt = nil; pieceState = [:]; shape = nil; barsKey = ""
         relines()
     }
 
@@ -197,7 +218,7 @@ final class Rig {
     /// Each lesson's frame and picture, drawn in as far as it has got; rebuilt only when something changed.
     private func drawPieces(_ model: PaperModel, at t: Double) {
         let px = 1 / lineScale
-        for p in Volume.pieces {
+        for p in Map.pieces {
             let k = Piece.drawIn(p, time: t, drawnAt: model.drawnAt)
             let on = model.selected?.id == p.id
             let key = "\((k * 500).rounded()) \(on)"
@@ -217,6 +238,97 @@ final class Rig {
     private func set(_ e: ModelEntity, _ mesh: MeshResource?, _ c: UIColor) {
         guard let mesh else { e.isEnabled = false; return }
         e.model = ModelComponent(mesh: mesh, materials: [flat(c)]); e.isEnabled = true
+    }
+
+    // MARK: the flat lesson
+
+    /// The bars: a row of a-ths over a row of b-ths, and the piece waiting to be added. Rebuilt only for a new problem or zoom.
+    private func drawBars(_ b: AddFractionsModel?, at t: Double) {
+        barsRoot.isEnabled = b != nil
+        guard let b else { return }
+        let s = b.problem
+        let key = "\(s.a) \(s.p) \(s.b) \(s.q) \(b.origin.x) \(b.origin.y) \(lineScale)"
+        if key != barsKey { buildBars(b); barsKey = key }
+        let waiting = b.lesson.step == .add && b.lesson.added.isEmpty
+        for piece in bars {
+            let k = piece.row == 2 ? (waiting ? 1 : 0) : b.grow(row: piece.row, piece.i, at: t)
+            piece.group.isEnabled = k > 0
+            piece.group.scale.z = Float(max(0.0001, k))
+            let level = piece.row == 0 ? (piece.i < s.p ? 1 : 0) : piece.row == 1 ? b.fill(piece.i, at: t) : 0.5
+            paint(piece, level, chapter: b.chapter.hex)
+        }
+        drawDecor(b, at: t)
+    }
+
+    private func buildBars(_ b: AddFractionsModel) {
+        for c in Array(barsRoot.children) { c.removeFromParent() }
+        bars = []; barLevel = [:]; decorKey = ""
+        let s = b.problem, u = Paper.unit, px = Float(1 / lineScale), h = AddFractionsModel.barHeight
+        func piece(_ row: Int, _ i: Int, x: Double, y: Double, w: Double) {
+            // the group's origin is the piece's bottom-left corner, so growing in rises from the bottom
+            let g = Entity(); g.position = SIMD3(Float((b.origin.x + x) / u), 0, Float((b.origin.y + y + h) / u))
+            let W = Float(w / u), H = Float(h / u)
+            let fill = ModelEntity(mesh: .generatePlane(width: W, depth: H), materials: [])
+            // over the grid: its strong lines don't fall on the pieces' edges, and would read as extra cuts
+            fill.position = SIMD3(W / 2, 0.0008, -H / 2)
+            let outline = ModelEntity()
+            if let m = Self.lines([(SIMD2(0, 0), SIMD2(W, 0)), (SIMD2(W, 0), SIMD2(W, -H)), (SIMD2(W, -H), SIMD2(0, -H)), (SIMD2(0, -H), SIMD2(0, 0))], width: 2 * px) {
+                outline.model = ModelComponent(mesh: m, materials: [])
+            }
+            outline.position.y = 0.0012
+            g.addChild(fill); g.addChild(outline); barsRoot.addChild(g)
+            bars.append((row, i, g, fill, outline))
+        }
+        let top = b.wholeWidth / Double(s.a)
+        for i in 0..<s.a { piece(0, i, x: Double(i) * top, y: AddFractionsModel.row1, w: top) }
+        for i in 0..<s.b { piece(1, i, x: Double(i) * b.pieceWidth, y: AddFractionsModel.row2, w: b.pieceWidth) }
+        piece(2, 0, x: b.wholeWidth + 20, y: AddFractionsModel.row2, w: b.pieceWidth)
+        decor = Entity(); barsRoot.addChild(decor)
+    }
+
+    /// Empty pieces are outlined in a light tint; filled ones take the chapter colour, half strength for an added piece.
+    private func paint(_ p: (row: Int, i: Int, group: Entity, fill: ModelEntity, outline: ModelEntity), _ level: Double, chapter: UInt32) {
+        let id = "\(p.row)-\(p.i)"
+        if let last = barLevel[id], abs(last - level) < 0.01 { return }
+        barLevel[id] = level
+        p.fill.isEnabled = level > 0.01
+        if level > 0.01 { p.fill.model?.materials = [flat(UIColor(hex: Ink.mix(paperHex, chapter, level)))] }
+        p.outline.model?.materials = [flat(UIColor(hex: level > 0.01 ? chapter : Ink.mix(paperHex, chapter, 0.45)))]
+    }
+
+    /// The lines around the bars: the whole's length, the matching dashes, the guide after a wrong count, the total's bracket.
+    private func drawDecor(_ b: AddFractionsModel, at t: Double) {
+        let whole = b.wholeLine(at: t), guide = b.guide(at: t), step = b.lesson.step
+        let bracket = step == .done ? ease((t - b.wordsAt - 0.2) / 0.5) : 0
+        let key = "\(step) \((whole * 50).rounded()) \((guide * 50).rounded()) \((bracket * 50).rounded())"
+        guard key != decorKey else { return }
+        decorKey = key
+        for c in Array(decor.children) { c.removeFromParent() }
+        let o = b.origin, W = b.wholeWidth, e = b.coverEnd, r1 = AddFractionsModel.row1, r2 = AddFractionsModel.row2, h = AddFractionsModel.barHeight
+        func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x, y: o.y + y) }
+        func dashed(_ a: CGPoint, _ c: CGPoint, _ on: Double = 4, _ off: Double = 6) -> [[CGPoint]] {
+            let len = hypot(c.x - a.x, c.y - a.y), dx = (c.x - a.x) / len, dy = (c.y - a.y) / len
+            var out: [[CGPoint]] = []
+            for s in stride(from: 0, to: len, by: on + off) {
+                let f: Double = min(len, s + on)
+                out.append([CGPoint(x: a.x + dx * s, y: a.y + dy * s), CGPoint(x: a.x + dx * f, y: a.y + dy * f)])
+            }
+            return out
+        }
+        func add(_ lines: [[CGPoint]], _ k: Double, width: Double, _ c: UIColor) {
+            guard let m = Self.lines(drawn(lines, k), width: Float(width / lineScale)) else { return }
+            let e = ModelEntity(mesh: m, materials: [flat(c)]); e.position.y = 0.0012; decor.addChild(e)
+        }
+        let chapter = UIColor(hex: b.chapter.hex)
+        add([[P(0, 92), P(0, 108)], [P(0, 100), P(W, 100)], [P(W, 92), P(W, 108)]], whole, width: 1.5, colours.ink2)
+        if step == .add || step == .done {
+            add(dashed(P(0, r1 + h + 6), P(0, r2 - 28)) + dashed(P(e, r1 + h + 6), P(e, r2 - 6)), 1, width: 2, chapter)
+        }
+        if step == .cover, guide > 0 { add(dashed(P(e, r1 - 34), P(e, r2 + h + 12), 4, 5), guide, width: 1.5, colours.ink) }
+        if bracket > 0 {
+            let end = Double(b.problem.total) * b.pieceWidth
+            add([[P(0, r2 + h + 14), P(0, r2 + h + 24), P(end, r2 + h + 24), P(end, r2 + h + 14)]], bracket, width: 2, chapter)
+        }
     }
 
     // MARK: the open lesson

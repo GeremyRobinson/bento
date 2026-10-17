@@ -112,3 +112,51 @@ final class UnitCubesTests: XCTestCase {
         }
     }
 }
+
+final class AddFractionsTests: XCTestCase {
+    let quarterAndEighth = AddFractions.Problem(a: 4, p: 1, b: 8, q: 1)
+
+    func testWalkThroughTheLesson() {
+        var l = AddFractions(problem: quarterAndEighth)
+        XCTAssertEqual(l.words.say, "A fourth and an eighth.")
+        XCTAssertEqual(l.go(), .moved(.cover))
+        XCTAssertEqual(l.words.say, "1/4 is how many eighths?")
+        l.tap(5)
+        XCTAssertEqual(l.go(), .notYet("Not yet. Some of the fourth is still uncovered."))
+        l.tap(6); l.tap(7)
+        XCTAssertEqual(l.go(), .notYet("Too many. Some eighths go past the fourth."))
+        l.tap(7)
+        // two eighths cover the fourth, and they line up under it
+        XCTAssertEqual(l.go(), .moved(.add))
+        XCTAssertEqual(l.shaded, [0, 1])
+        XCTAssertFalse(l.tap(0), "shaded pieces stay put while adding")
+        XCTAssertEqual(l.go(), .notYet("Add the extra eighth first."))
+        l.tap(2)
+        XCTAssertEqual(l.go(), .moved(.done))
+        XCTAssertEqual(l.words.say, "Three eighths.")
+        XCTAssertEqual(l.words.hint, "A fourth covers two eighths. Add one more and you have three.")
+        XCTAssertEqual(l.go(), .newProblem)
+    }
+
+    func testShowMeFillsTheRightPieces() {
+        var l = AddFractions(problem: .init(a: 3, p: 2, b: 6, q: 1))
+        _ = l.go()
+        XCTAssertEqual(l.showMe(), [0, 1, 2, 3])
+        _ = l.go()
+        XCTAssertEqual(l.showMe(), [4])
+        XCTAssertEqual(l.go(), .moved(.done))
+        XCTAssertEqual(l.words.say, "Five sixths.")
+        XCTAssertEqual(l.words.hint, "2 thirds cover four sixths. Add one more and you have five.")
+    }
+
+    /// Every problem fits on the grid and is in lowest terms, the answer too.
+    func testEveryProblemIsFairAndOnTheGrid() {
+        XCTAssertTrue(AddFractions.problems.contains(quarterAndEighth))
+        XCTAssertGreaterThan(AddFractions.problems.count, 8)
+        for s in AddFractions.problems {
+            XCTAssertEqual(s.b % s.a, 0); XCTAssertEqual(s.wholeCells % s.b, 0)
+            XCTAssertEqual(gcd(s.p, s.a), 1); XCTAssertEqual(gcd(s.q, s.b), 1); XCTAssertEqual(gcd(s.total, s.b), 1)
+            XCTAssertLessThan(s.total, s.b)
+        }
+    }
+}

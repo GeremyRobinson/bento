@@ -89,3 +89,21 @@ struct MainCellButton: View {
         }
     }
 }
+
+/// A lesson's back block and name, top left on the paper.
+struct LessonHeader: View {
+    let title: String
+    let subtitle: String
+    let top: CGFloat
+    let onBack: () -> Void
+    var body: some View {
+        HStack(spacing: 20) {
+            CellButton(action: onBack) { Icon(name: "arrow-left") }
+            VStack(alignment: .leading, spacing: 0) {
+                Text(title).font(Typeface.name).foregroundStyle(Ink.ink)
+                Text(subtitle).font(Typeface.font(13)).foregroundStyle(Ink.ink2)
+            }
+        }
+        .padding(.leading, 40).padding(.top, top)
+    }
+}
