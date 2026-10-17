@@ -589,6 +589,9 @@ final class BarsDrawer {
     var barsKey = ""
     var bars: [(row: Int, i: Int, group: Entity, fill: ModelEntity, outline: ModelEntity)] = []
     var barLevel: [String: Double] = [:]
+    /// The line between two filled pieces of a row, keyed "row-i" for the line on piece i's left edge.
+    var seams: [String: ModelEntity] = [:]
+    var seamLevel: [String: Double] = [:]
     var decor = Entity()
     var decorKey = ""
 
@@ -600,19 +603,31 @@ final class BarsDrawer {
         let key = "\(s.a) \(s.p) \(s.b) \(s.q) \(b.origin.x) \(b.origin.y) \(rig.lineScale)"
         if key != barsKey { buildBars(b); barsKey = key }
         let waiting = b.lesson.picture["waiting"] == 1 && b.lesson.marked.isEmpty
+        var levels: [String: Double] = [:]
         for piece in bars {
             let k = piece.row == 2 ? (waiting ? 1 : 0) : b.grow(row: piece.row, piece.i, at: t)
             piece.group.isEnabled = k > 0
             piece.group.scale.z = Float(max(0.0001, k))
             let level = piece.row == 0 ? (piece.i < s.p ? 1 : 0) : piece.row == 1 ? b.shown(piece.i, at: t) : 0.5
             paint(piece, level, chapter: b.chapter.hex)
+            levels["\(piece.row)-\(piece.i)"] = level
+        }
+        // filled pieces side by side stay pieces: a light line between them (G 17 Oct)
+        for (id, seam) in seams {
+            let parts = id.split(separator: "-").compactMap { Int($0) }
+            let left = levels["\(parts[0])-\(parts[1] - 1)"] ?? 0, right = levels[id] ?? 0
+            let level = min(left, right) > 0.01 ? max(left, right) : 0
+            if let last = seamLevel[id], abs(last - level) < 0.01 { continue }
+            seamLevel[id] = level
+            seam.isEnabled = level > 0
+            if level > 0 { seam.model?.materials = [flat(UIColor(hex: Ink.mix(Ink.mix(rig.paperHex, b.chapter.hex, level), 0xFFFFFF, 0.5)))] }
         }
         drawDecor(b, at: t)
     }
 
     private func buildBars(_ b: AddFractionsModel) {
         for c in Array(root.children) { c.removeFromParent() }
-        bars = []; barLevel = [:]; decorKey = ""
+        bars = []; barLevel = [:]; seams = [:]; seamLevel = [:]; decorKey = ""
         let s = b.problem, u = Paper.unit, px = Float(1 / rig.lineScale), h = AddFractionsModel.barHeight
         func piece(_ row: Int, _ i: Int, x: Double, y: Double, w: Double) {
             // the group's origin is the piece's bottom-left corner, so growing in rises from the bottom
@@ -627,6 +642,10 @@ final class BarsDrawer {
             }
             outline.position.y = 0.0012
             g.addChild(fill); g.addChild(outline); root.addChild(g)
+            if row < 2, i > 0, let m = Rig.lines([(SIMD2(0, -px), SIMD2(0, -H + px))], width: 1.5 * px) {
+                let seam = ModelEntity(mesh: m, materials: []); seam.position.y = 0.0014; seam.isEnabled = false
+                g.addChild(seam); seams["\(row)-\(i)"] = seam
+            }
             bars.append((row, i, g, fill, outline))
         }
         let top = b.wholeWidth / Double(s.a)
