@@ -126,6 +126,10 @@ extension Piece {
     }
 }
 
+/// A draw-in amount rounded to one of `steps` steps. Drawn with the same value its cache key holds, so the last step
+/// is drawn whole: drawing the unrounded value left a gap where an outline was cached just short of finishing.
+func snapped(_ k: Double, _ steps: Double) -> Double { (k * steps).rounded() / steps }
+
 /// The first `k` (0...1) of some lines, by length, as world segments (paper points / one big square).
 func drawn(_ lines: [[CGPoint]], _ k: Double) -> [(SIMD2<Float>, SIMD2<Float>)] {
     var segs: [(CGPoint, CGPoint)] = []
@@ -293,8 +297,8 @@ final class Rig {
         let settled = t - model.drawnAt > Piece.drawTime + 1, quick = "\(model.selected?.id ?? "") \(lineScale) \(Progress.shared.checks.count)"
         if settled, quick == piecesQuick, !piecesKey.isEmpty { return }
         piecesQuick = settled ? quick : ""
-        let now = Map.pieces.map { p in (p, Piece.drawIn(p, time: t, drawnAt: model.drawnAt, from: model.drawFrom), model.selected?.id == p.id, p.state) }
-        let key = now.map { "\(($0.1 * 400).rounded()) \($0.2) \($0.3)" }.joined(separator: ",")
+        let now = Map.pieces.map { p in (p, snapped(Piece.drawIn(p, time: t, drawnAt: model.drawnAt, from: model.drawFrom), 400), model.selected?.id == p.id, p.state) }
+        let key = now.map { "\($0.1) \($0.2) \($0.3)" }.joined(separator: ",")
         guard key != piecesKey else { return }
         piecesKey = key
         var groups: [String: (colour: UIColor, width: Double, y: Float, segs: [(SIMD2<Float>, SIMD2<Float>)])] = [:]
@@ -358,8 +362,8 @@ final class Rig {
     /// the child is on outlined in full colour, thicker; a solved one lightly filled, as a learned lesson is on the map.
     private func drawBoxes(_ page: BarsPage, _ shown: [AddFractionsModel], at t: Double) {
         let chapter = page.piece.chapter.hex, px = 1 / lineScale
-        let ks = shown.map { (m: $0, k: $0.wholeLine(at: t)) }
-        let key = ks.map { "\(($0.k * 40).rounded())\($0.m.solved)" }.joined() + "\(page.current?.id.uuidString ?? "") \(lineScale) \(paperHex)"
+        let ks = shown.map { (m: $0, k: snapped($0.wholeLine(at: t), 40)) }
+        let key = ks.map { "\($0.k)\($0.m.solved)" }.joined() + "\(page.current?.id.uuidString ?? "") \(lineScale) \(paperHex)"
         guard key != boxesKey else { return }
         boxesKey = key
         for c in Array(boxes.children) { c.removeFromParent() }
@@ -395,9 +399,9 @@ final class Rig {
 
     /// The decimal shift: digit boxes, the hops drawn so far, and the point.
     private func drawShift(_ m: StepsModel, at t: Double) {
-        let s = ShiftPicture(m.lesson.numbers), grow = m.grow(at: t)
-        let h = s.hops(m.sincePicture(t), moving: m.lesson.picture["hop"] == 1)
-        let key = "\(m.lesson.numbers) \((h * 40).rounded()) \((grow * 20).rounded()) \(lineScale)"
+        let s = ShiftPicture(m.lesson.numbers), grow = snapped(m.grow(at: t), 20)
+        let h = snapped(s.hops(m.sincePicture(t), moving: m.lesson.picture["hop"] == 1), 40)
+        let key = "\(m.lesson.numbers) \(h) \(grow) \(lineScale)"
         guard key != stepsKey else { return }
         stepsKey = key
         for c in Array(stepsRoot.children) { c.removeFromParent() }
@@ -667,9 +671,9 @@ final class BarsDrawer {
 
     /// The lines around the bars: the whole's length, the matching dashes, the guide after a wrong count, the total's bracket.
     private func drawDecor(_ b: AddFractionsModel, at t: Double) {
-        let whole = b.wholeLine(at: t), guide = b.guide(at: t), picture = b.lesson.picture
-        let bracket = picture["total"] == 1 ? ease((t - b.wordsAt - 0.2) / 0.5) : 0
-        let key = "\(b.lesson.index) \((whole * 50).rounded()) \((guide * 50).rounded()) \((bracket * 50).rounded()) \(picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(b.lesson.marks.count)"
+        let whole = snapped(b.wholeLine(at: t), 50), guide = snapped(b.guide(at: t), 50), picture = b.lesson.picture
+        let bracket = picture["total"] == 1 ? snapped(ease((t - b.wordsAt - 0.2) / 0.5), 50) : 0
+        let key = "\(b.lesson.index) \(whole) \(guide) \(bracket) \(picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(b.lesson.marks.count)"
         guard key != decorKey else { return }
         decorKey = key
         for c in Array(decor.children) { c.removeFromParent() }
