@@ -7,8 +7,8 @@ public enum AddFractions {
     public struct Problem: Equatable, Sendable {
         public let a: Int, p: Int, b: Int, q: Int
         public init(a: Int, p: Int, b: Int, q: Int) { self.a = a; self.p = p; self.b = b; self.q = q }
-        public init(_ n: Numbers) { self.init(a: n["a"] ?? 1, p: n["p"] ?? 0, b: n["b"] ?? 1, q: n["q"] ?? 0) }
-        public var numbers: Numbers { ["a": a, "p": p, "b": b, "q": q] }
+        public init(_ n: Numbers) { self.init(a: Int(n["a"] ?? 1), p: Int(n["p"] ?? 0), b: Int(n["b"] ?? 1), q: Int(n["q"] ?? 0)) }
+        public var numbers: Numbers { ["a": Double(a), "p": Double(p), "b": Double(b), "q": Double(q)] }
         /// How many b-ths one a-th is.
         public var k: Int { b / a }
         /// How many b-ths cover p/a.

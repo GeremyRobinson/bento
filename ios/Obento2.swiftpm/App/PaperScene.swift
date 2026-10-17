@@ -53,6 +53,14 @@ extension Piece {
                 return [box(b)] + cuts
             }
             return bar(y: 40, parts: 4) + bar(y: 100, parts: 8)
+        case "g5-pow10": // digit boxes and the point hopping right
+            let y = r.minY + 70
+            var out: [[CGPoint]] = (0..<3).map { i in box(CGRect(x: r.minX + 50 + Double(i) * 3 * c, y: y, width: 2 * c, height: 2 * c)) }
+            out.append((0...12).map { s in
+                let f = Double(s) / 12
+                return CGPoint(x: r.minX + 100 + 3 * c * f, y: y - 8 - sin(.pi * f) * 1.5 * c)
+            })
+            return out
         case "ly": // two layers
             return (0..<2).map { k in box(CGRect(x: r.minX + 40, y: r.minY + 50 + Double(k) * 2 * c, width: 8 * c, height: 2 * c)) }
         default: // a box with its three sides
@@ -110,6 +118,9 @@ final class Rig {
     var decor = Entity()
     var decorKey = ""
     var paperHex: UInt32 = 0xF3F2EF
+    // a lesson worked in steps: its picture
+    let stepsRoot = Entity()
+    var stepsKey = ""
     var lineScale: Double = 0
     var dark: Bool?
     var colours = Colours(dark: false, chapter: Chapter.volume.hex)
@@ -138,7 +149,7 @@ final class Rig {
         // the paper itself, under the grid, large enough to fill any tilted view; it follows the camera
         sheet.model = ModelComponent(mesh: .generatePlane(width: 400, depth: 400), materials: [])
         sheet.position.y = -0.003
-        root.addChild(sheet); root.addChild(pieces); root.addChild(lessonRoot); root.addChild(barsRoot)
+        root.addChild(sheet); root.addChild(pieces); root.addChild(lessonRoot); root.addChild(barsRoot); root.addChild(stepsRoot)
     }
 
     func update(view v: PaperView3D, model: PaperModel, time t: Double, dark: Bool) {
@@ -169,10 +180,11 @@ final class Rig {
         let gx = Int(floor.x.rounded()), gz = Int(floor.z.rounded())
         if let g = gridAt, abs(g.x - gx) <= 2, abs(g.z - gz) <= 2, g.half >= half {} else { regrid(x: gx, z: gz, half: half) }
 
-        let onMap = model.lesson == nil && model.bars == nil
+        let onMap = model.lesson == nil && model.bars == nil && model.steps == nil
         pieces.isEnabled = onMap
         if onMap { drawPieces(model, at: t) }
         drawBars(model.bars, at: t)
+        drawSteps(model.steps, at: t)
 
         guard let l = lesson else { return }
         // the last lesson's pieces are reused when the box is the same; otherwise cleared now, while the new one builds
@@ -191,7 +203,7 @@ final class Rig {
         colours = Colours(dark: dark, chapter: Chapter.volume.hex)
         paperHex = dark ? 0x121211 : 0xF3F2EF
         sheet.model?.materials = [flat(colours.paper)]
-        gridAt = nil; pieceState = [:]; shape = nil; barsKey = ""
+        gridAt = nil; pieceState = [:]; shape = nil; barsKey = ""; stepsKey = ""
         relines()
     }
 
@@ -329,6 +341,46 @@ final class Rig {
             let end = Double(b.problem.total) * b.pieceWidth
             add([[P(0, r2 + h + 14), P(0, r2 + h + 24), P(end, r2 + h + 24), P(end, r2 + h + 14)]], bracket, width: 2, chapter)
         }
+    }
+
+    // MARK: a lesson worked in steps
+
+    /// The picture of a lesson worked in steps, drawn by its master. Rebuilt only when it changes.
+    private func drawSteps(_ m: StepsModel?, at t: Double) {
+        stepsRoot.isEnabled = m != nil
+        guard let m else { stepsKey = ""; return }
+        switch m.lesson.spec.master {
+        case "shift": drawShift(m, at: t)
+        default: break
+        }
+    }
+
+    /// The decimal shift: digit boxes, the hops drawn so far, and the point.
+    private func drawShift(_ m: StepsModel, at t: Double) {
+        let s = ShiftPicture(m.lesson.numbers), grow = m.grow(at: t)
+        let h = s.hops(m.sincePicture(t), moving: m.lesson.picture["hop"] == 1)
+        let key = "\(m.lesson.numbers) \((h * 40).rounded()) \((grow * 20).rounded()) \(lineScale)"
+        guard key != stepsKey else { return }
+        stepsKey = key
+        for c in Array(stepsRoot.children) { c.removeFromParent() }
+        guard grow > 0 else { return }
+        let o = m.origin, chapter = UIColor(hex: m.chapter.hex), u = Paper.unit
+        func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x, y: o.y + y) }
+        func add(_ lines: [[CGPoint]], width: Double, _ c: UIColor) {
+            guard let mesh = Self.lines(drawn(lines, 1), width: Float(width / lineScale)) else { return }
+            let e = ModelEntity(mesh: mesh, materials: [flat(c)]); e.position.y = 0.0012; stepsRoot.addChild(e)
+        }
+        let boxes = s.digits.indices.filter { s.shows($0, hops: h) }.map { i -> [CGPoint] in
+            let x = s.boxX(i), y = ShiftPicture.top, b = ShiftPicture.box
+            return [P(x, y), P(x + b, y), P(x + b, y + b), P(x, y + b), P(x, y)]
+        }
+        add(boxes, width: 1.5, colours.lineStrong)
+        add(s.arcs(h).map { $0.map { P($0.x, $0.y) } }, width: 2, chapter)
+        // the point: a dot in the chapter's colour
+        let p = s.point(h), d = Float(10 / u)
+        let dot = ModelEntity(mesh: .generatePlane(width: d, depth: d, cornerRadius: d / 2), materials: [flat(chapter)])
+        dot.position = SIMD3(Float((o.x + p.x) / u), 0.0016, Float((o.y + p.y) / u))
+        stepsRoot.addChild(dot)
     }
 
     // MARK: the open lesson

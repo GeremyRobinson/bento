@@ -19,7 +19,7 @@ struct PaperScreen: View {
                     // RealityKit's view keeps the size it was made at, so a new screen shape (rotating) makes a new one
                     PaperScene(model: model, time: t)
                         .id("\(Int(model.screen.width))x\(Int(model.screen.height))")
-                    if model.lesson == nil && model.bars == nil {
+                    if model.lesson == nil && model.bars == nil && model.steps == nil {
                         PiecesLayer(camera: cam, time: t, drawnAt: model.drawnAt, selected: model.selected)
                     }
                     if let lesson = model.lesson {
@@ -30,7 +30,10 @@ struct PaperScreen: View {
                     if let bars = model.bars {
                         AddFractionsView(model: bars, camera: cam, time: t, top: edge(safe.safeAreaInsets.top), onBack: { model.close() })
                     }
-                    ZoomCells(model: model, lessonOpen: model.lesson != nil || model.bars != nil, top: edge(safe.safeAreaInsets.top), bottom: edge(safe.safeAreaInsets.bottom))
+                    if let steps = model.steps {
+                        StepsLessonView(model: steps, camera: cam, time: t, top: edge(safe.safeAreaInsets.top), onBack: { model.close() })
+                    }
+                    ZoomCells(model: model, lessonOpen: model.lesson != nil || model.bars != nil || model.steps != nil, top: edge(safe.safeAreaInsets.top), bottom: edge(safe.safeAreaInsets.bottom))
                 }
                 .onChange(of: t) { _, now in model.settle(at: now); model.lesson?.settle(at: now) }
             }
@@ -46,7 +49,7 @@ struct PaperScreen: View {
 
     /// The clock only runs while something moves or draws, so a still paper costs nothing.
     private var animating: Bool {
-        model.moving || PaperClock.now - model.drawnAt < Piece.drawTime + 0.2 || (model.lesson?.animating ?? false) || (model.bars?.animating ?? false)
+        model.moving || PaperClock.now - model.drawnAt < Piece.drawTime + 0.2 || (model.lesson?.animating ?? false) || (model.bars?.animating ?? false) || (model.steps?.animating ?? false)
     }
 
     private var surfaceGestures: some View {

@@ -33,6 +33,13 @@ enum Shots {
             switch name {
             case "paper": break
             case "selected": m.select(uc)
+            case let n where n.hasPrefix("pow10"):
+                m.shotNumbers = PowersOfTen.numbers(x: 4.6, k: 2)
+                m.open(Decimals.pieces[0])
+                guard let s = m.steps, n != "pow10" else { return }
+                s.go(); s.type("2"); s.go()
+                if n == "pow10-move" { for k in ["4", "6"] { s.type(k) }; s.go(); return }
+                s.showMe(); s.go()
             case let n where n.hasPrefix("fractions"):
                 m.open(Fractions.pieces[0])
                 guard let b = m.bars, n != "fractions" else { return }

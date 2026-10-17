@@ -34,6 +34,7 @@ enum Chapter: String, CaseIterable {
         switch self { case .fractions: 0x3B6CFF; case .decimals: 0xE0559B; case .volume: 0xE39B00; case .graphs: 0x7A5CF0 }
     }
     var color: Color { Color(UIColor(hex: hex)) }
+    var title: String { rawValue.capitalized }
 }
 
 extension UIColor {

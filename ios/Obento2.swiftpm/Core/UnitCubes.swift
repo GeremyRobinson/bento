@@ -7,10 +7,10 @@ public enum UnitCubes {
     public struct Box: Equatable, Sendable {
         public let length: Int, width: Int, height: Int
         public init(length: Int, width: Int, height: Int) { self.length = length; self.width = width; self.height = height }
-        public init(_ n: Numbers) { self.init(length: n["length"] ?? 0, width: n["width"] ?? 0, height: n["height"] ?? 0) }
+        public init(_ n: Numbers) { self.init(length: Int(n["length"] ?? 0), width: Int(n["width"] ?? 0), height: Int(n["height"] ?? 0)) }
         public var floor: Int { length * width }
         public var volume: Int { floor * height }
-        public var numbers: Numbers { ["length": length, "width": width, "height": height] }
+        public var numbers: Numbers { ["length": Double(length), "width": Double(width), "height": Double(height)] }
     }
 
     /// A floor square, as (x, z) inside the box.
@@ -40,10 +40,10 @@ public enum UnitCubes {
         let stack = (1..<b.height).map { k in
             LessonStep(k == 1 ? StepWords(say: "One layer: \(b.floor) cubes.", hint: "The box is \(b.height) tall. Add the next layer.", action: "Add a layer")
                               : StepWords(say: "\(k) layers of \(b.floor) is \(k * b.floor).", hint: "Add the next layer.", action: "Add a layer"),
-                       camera: .tilted, picture: ["layers": k])
+                       camera: .tilted, picture: ["layers": Double(k)])
         }
         let done = LessonStep(StepWords(say: "\(b.height) layers of \(b.floor) is \(b.volume).", hint: "Volume = \(b.length) × \(b.width) × \(b.height) = \(b.volume) cubes.", action: "Next problem"),
-                              camera: .tilted, picture: ["layers": b.height, "height": 1])
+                              camera: .tilted, picture: ["layers": Double(b.height), "height": 1])
         return [ask, cover] + stack + [done]
     }
 }

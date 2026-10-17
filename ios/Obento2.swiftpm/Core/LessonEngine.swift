@@ -1,7 +1,61 @@
 import Foundation
 
 /// A problem's numbers, by name ("a", "p", "length"...). The picture, the words and the answers are all read from them.
-public typealias Numbers = [String: Int]
+public typealias Numbers = [String: Double]
+
+/// A number as the paper writes it: no trailing zeros, a real minus sign. 3.40 → "3.4", -2 → "−2".
+public func fmt(_ x: Double) -> String {
+    let r = (x * 1_000_000).rounded() / 1_000_000
+    var s = r == r.rounded() ? String(Int(r)) : String(format: "%.6f", r)
+    if s.contains(".") { while s.hasSuffix("0") { s.removeLast() }; if s.hasSuffix(".") { s.removeLast() } }
+    return s.replacingOccurrences(of: "-", with: "−")
+}
+
+/// Math as it's written on the paper, with answer boxes in it.
+public indirect enum Math: Equatable, Sendable {
+    case num(Double)
+    /// + − × ÷ =
+    case op(String)
+    case text(String)
+    /// An answer box, by its id.
+    case box(String)
+    /// top over bottom
+    case frac(Math, Math)
+}
+public typealias MathLine = [Math]
+
+/// The child types numbers into the boxes of a line of math. Checked together, against the predictable slips first.
+public struct AnswerTask: Sendable {
+    public var prompt: MathLine
+    /// What each box should hold, by id.
+    public var expected: [String: Double]
+    /// Predictable slips, checked in order: the typed values that trigger each, and what to say.
+    public var known: [(values: [String: Double], message: String)]
+    public var hint: String
+    /// What "Show me" says after filling the answer in.
+    public var explain: String
+
+    public init(prompt: MathLine, expected: [String: Double], known: [(values: [String: Double], message: String)] = [], hint: String, explain: String? = nil) {
+        self.prompt = prompt; self.expected = expected; self.known = known; self.hint = hint
+        self.explain = explain ?? "\(hint) That makes \(expected.count == 1 ? fmt(expected.values.first!) : "it")."
+    }
+
+    /// The boxes in the order they're written.
+    public var boxes: [String] {
+        func walk(_ m: Math) -> [String] {
+            switch m { case .box(let id): [id]; case .frac(let a, let b): walk(a) + walk(b); default: [] }
+        }
+        return prompt.flatMap(walk)
+    }
+
+    /// The line with every box filled in: the finished work that stays on the paper.
+    public var work: MathLine {
+        func fill(_ m: Math) -> Math {
+            switch m { case .box(let id): .num(expected[id] ?? 0); case .frac(let a, let b): .frac(fill(a), fill(b)); default: m }
+        }
+        return prompt.map(fill)
+    }
+}
 
 /// A lesson as data: a generator makes fresh numbers, and the steps are worked out from those numbers.
 /// One engine (LessonRun) plays every lesson; a picture master draws it, flat or 3D.
@@ -11,12 +65,15 @@ public struct LessonSpec: Sendable {
     /// Which picture master draws it: "cubes", "bars".
     public let master: String
     public let generate: @Sendable (inout SeededRandom) -> Numbers
+    /// The problem as the paper writes it above the picture ("3.47 × 100").
+    public let display: @Sendable (Numbers) -> MathLine
     public let steps: @Sendable (Numbers) -> [LessonStep]
 
     public init(id: String, title: String, master: String,
                 generate: @escaping @Sendable (inout SeededRandom) -> Numbers,
+                display: @escaping @Sendable (Numbers) -> MathLine = { _ in [] },
                 steps: @escaping @Sendable (Numbers) -> [LessonStep]) {
-        self.id = id; self.title = title; self.master = master; self.generate = generate; self.steps = steps
+        self.id = id; self.title = title; self.master = master; self.generate = generate; self.display = display; self.steps = steps
     }
 }
 
@@ -26,6 +83,7 @@ public enum StepCamera: Sendable { case flat, tilted }
 public struct LessonStep: Sendable {
     public var words: StepWords
     public var task: MarkTask?
+    public var answer: AnswerTask?
     public var camera: StepCamera
     /// What the picture shows at this step, read by its master ("layers": 2, "match": 1...).
     public var picture: Numbers
@@ -34,8 +92,8 @@ public struct LessonStep: Sendable {
     /// The words that go with `onMiss` ("The fourth ends here").
     public var look: String?
 
-    public init(_ words: StepWords, task: MarkTask? = nil, camera: StepCamera = .flat, picture: Numbers = [:], onMiss: Numbers = [:], look: String? = nil) {
-        self.words = words; self.task = task; self.camera = camera; self.picture = picture; self.onMiss = onMiss; self.look = look
+    public init(_ words: StepWords, task: MarkTask? = nil, answer: AnswerTask? = nil, camera: StepCamera = .flat, picture: Numbers = [:], onMiss: Numbers = [:], look: String? = nil) {
+        self.words = words; self.task = task; self.answer = answer; self.camera = camera; self.picture = picture; self.onMiss = onMiss; self.look = look
     }
 }
 
@@ -86,19 +144,28 @@ public struct LessonRun: Sendable {
     public private(set) var marks: [Int: Int] = [:]
     /// A wrong check happened on this step.
     public private(set) var missed = false
+    /// Wrong checks on this step.
+    public private(set) var misses = 0
+    /// What the child has typed in each box of this step.
+    public private(set) var typed: [String: String] = [:]
+    /// The box the keypad types into.
+    public var active: String?
 
     public init(_ spec: LessonSpec, numbers: Numbers) {
         self.spec = spec; self.numbers = numbers; steps = spec.steps(numbers)
+        active = steps.first?.answer?.boxes.first
     }
 
     public static func fresh(_ spec: LessonSpec, using rng: inout SeededRandom) -> LessonRun { LessonRun(spec, numbers: spec.generate(&rng)) }
 
     public var step: LessonStep { steps[index] }
+    public var display: MathLine { spec.display(numbers) }
     public var words: StepWords { step.words }
     public var isLast: Bool { index == steps.count - 1 }
     /// The picture as it stands: this step's, plus what a wrong check shows.
     public var picture: Numbers { missed ? step.picture.merging(step.onMiss) { $1 } : step.picture }
-    public subscript(_ name: String) -> Int { numbers[name] ?? 0 }
+    public subscript(_ name: String) -> Double { numbers[name] ?? 0 }
+    public func int(_ name: String) -> Int { Int((numbers[name] ?? 0).rounded()) }
 
     /// The cells marked on this step.
     public var marked: Set<Int> { Set(marks.filter { $0.value == index }.keys) }
@@ -126,10 +193,42 @@ public struct LessonRun: Sendable {
         return fresh
     }
 
-    public mutating func reset() { for c in marked { marks[c] = nil } }
+    public mutating func reset() {
+        for c in marked { marks[c] = nil }
+        typed = [:]; active = step.answer?.boxes.first
+    }
+
+    /// A keypad press: a digit, ".", or "del". Goes into the active box; a box holds at most 7 characters.
+    public mutating func type(_ key: String) {
+        guard let a = step.answer, let box = active ?? a.boxes.first else { return }
+        active = box
+        var t = typed[box] ?? ""
+        switch key {
+        case "del": if !t.isEmpty { t.removeLast() }
+        case ".": if !t.contains(".") && t.count < 7 { t += t.isEmpty ? "0." : "." }
+        default: if t.count < 7 { t = t == "0" ? key : t + key }
+        }
+        typed[box] = t.isEmpty ? nil : t
+    }
+
+    /// "Show me" on a typed step: fills in the answer and returns what to say about it.
+    public mutating func showAnswer() -> String? {
+        guard let a = step.answer else { return nil }
+        for (id, v) in a.expected { typed[id] = fmt(v).replacingOccurrences(of: "−", with: "-") }
+        return a.explain
+    }
 
     /// The main action: check this step's marks, then move on.
     public mutating func go() -> Outcome {
+        if let a = step.answer {
+            if a.boxes.contains(where: { (typed[$0] ?? "").isEmpty }) { return .notYet("Fill in every box.") }
+            let values = typed.compactMapValues { Double($0) }
+            let same = { (want: [String: Double]) in want.allSatisfy { abs((values[$0.key] ?? .nan) - $0.value) < 1e-9 } }
+            if !same(a.expected) {
+                missed = true; misses += 1
+                return .notYet(a.known.first { same($0.values) }?.message ?? "Not quite. \(a.hint)")
+            }
+        }
         if let t = step.task {
             let n = marked.count
             let wrong: Mistake.When? = n == 0 && t.want > 0 ? .noneMarked : n < t.want ? .tooFew : n > t.want ? .tooMany : nil
@@ -141,13 +240,13 @@ public struct LessonRun: Sendable {
             if let snap = t.snap { reset(); for c in snap { marks[c] = index } }
         }
         guard !isLast else { return .newProblem }
-        index += 1; missed = false
+        index += 1; missed = false; misses = 0; typed = [:]; active = step.answer?.boxes.first
         return .moved(index)
     }
 }
 
 /// Every lesson the app can play, by id. The map opens whatever is here; its picture master draws it.
 public enum Lessons {
-    public static let all: [LessonSpec] = [UnitCubes.spec, AddFractions.spec]
+    public static let all: [LessonSpec] = [UnitCubes.spec, AddFractions.spec, PowersOfTen.spec]
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }

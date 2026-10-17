@@ -42,7 +42,7 @@ final class UnitCubesModel {
 
     var box: UnitCubes.Box { UnitCubes.Box(lesson.numbers) }
     /// How many layers of cubes the picture shows at this step.
-    var layers: Int { lesson.picture["layers"] ?? 0 }
+    var layers: Int { Int(lesson.picture["layers"] ?? 0) }
     var scale: Double { view(at: PaperClock.now).scale / Paper.unit }
 
     func view(at t: Double) -> PaperView3D {

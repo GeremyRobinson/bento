@@ -49,10 +49,21 @@ enum Fractions {
     ]
 }
 
+/// The Decimals chapter: the first lesson worked in steps, under Fractions.
+enum Decimals {
+    static let title = "Decimals"
+    static let origin = Point(640, 300)
+    static let pieces: [Piece] = [
+        Piece(id: "g5-pow10", name: "Multiply by 10, 100, 1000", chapter: .decimals, state: .now, at: .init(640, 380)),
+    ]
+}
+
 /// Everything on the paper.
 enum Map {
-    static let titles: [(String, Point)] = [(Volume.title, Volume.origin), (Fractions.title, Fractions.origin)]
-    static let pieces = Volume.pieces + Fractions.pieces
+    static let titles: [(String, Point)] = [(Volume.title, Volume.origin), (Fractions.title, Fractions.origin), (Decimals.title, Decimals.origin)]
+    static let pieces = Volume.pieces + Fractions.pieces + Decimals.pieces
+    /// A lesson's number within its chapter, in map order.
+    static func number(_ p: Piece) -> Int { (pieces.filter { $0.chapter == p.chapter }.firstIndex { $0.id == p.id } ?? 0) + 1 }
     static var bounds: Rect { Rect(x: -20, y: -20, width: 920, height: 640) }
 }
 
@@ -77,12 +88,15 @@ final class PaperModel {
     var lesson: UnitCubesModel?
     /// The flat lesson, when one is open. It uses the paper's own camera.
     var bars: AddFractionsModel?
+    /// A lesson worked in steps, when one is open. It uses the paper's own camera too.
+    var steps: StepsModel?
     /// When the pieces started drawing themselves.
     var drawnAt: Double = PaperClock.now
     var instant = false
     /// A fixed box, for screenshots.
     var shotBox: UnitCubes.Box?
     var shotProblem: AddFractions.Problem?
+    var shotNumbers: Numbers?
 
     func camera(at t: Double) -> PaperCamera { flight?.camera(at: t, screen: screen) ?? resting }
     /// The one camera the paper's scene is seen through: the open lesson's, or the flat paper's from straight above.
@@ -129,6 +143,7 @@ final class PaperModel {
     func tap(at s: Point) {
         let p = camera(at: PaperClock.now).toPaper(s)
         if let b = bars { b.tapPaper(p); return }
+        if steps != nil { return }
         if let sel = selected, sel.opens, contains(sel.start, p) { open(sel); return }
         select(Map.pieces.first(where: { contains($0.frame, p) || contains(Rect(x: $0.at.x, y: $0.at.y + 180, width: 240, height: 40), p) }))
     }
@@ -138,6 +153,7 @@ final class PaperModel {
         // the lesson's picture master decides how it opens: flat on the paper, or in 3D
         guard let spec = p.spec else { return }
         if spec.master == "bars" { openBars(p); return }
+        if spec.master != "cubes" { openSteps(p, spec); return }
         let origin = UnitCubesModel.origin(for: p)
         let wide = screen.width > 760
         let frame = Rect(x: origin.x * Paper.unit - 40, y: origin.z * Paper.unit - 200, width: 480, height: 640)
@@ -158,9 +174,18 @@ final class PaperModel {
         if instant { go() } else { Task { try? await Task.sleep(for: .seconds(CameraTiming.fly + 0.04)); go() } }
     }
 
+    /// Opening a lesson worked in steps: glide to it, then its picture grows in. Flat, on the paper's camera.
+    func openSteps(_ p: Piece, _ spec: LessonSpec) {
+        let s = StepsModel(spec: spec, origin: p.at, chapter: p.chapter, number: Map.number(p), instant: instant, numbers: shotNumbers)
+        fly(to: .framing(s.frame, in: screen, pad: screen.width > 760 ? 30 : 8, maxZoom: 1), duration: CameraTiming.fly)
+        let go = { [self] in s.start(); steps = s; selected = nil }
+        if instant { go() } else { Task { try? await Task.sleep(for: .seconds(CameraTiming.fly + 0.04)); go() } }
+    }
+
     /// Leaving the lesson: it tilts back flat first, then the paper takes the same view back.
     func close() {
         if bars != nil { bars = nil; return }
+        if steps != nil { steps = nil; return }
         guard let l = lesson else { return }
         l.flatten { [self] view in
             stop(); resting = view.paperCamera(screen: screen); lesson = nil
