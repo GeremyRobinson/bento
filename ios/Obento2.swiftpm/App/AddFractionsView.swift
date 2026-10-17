@@ -8,6 +8,8 @@ struct AddFractionsView: View {
     let time: Double
     /// The How to's own block, once it has played.
     var watchAgain: (() -> Void)?
+    /// This is the problem the child is on.
+    var current = false
 
     var body: some View {
         let k = camera.zoom, s = model.problem, l = model.lesson, words = l.words
@@ -98,9 +100,16 @@ struct AddFractionsView: View {
             .opacity(model.busy ? 0.35 * shown : shown).allowsHitTesting(!model.busy)
             .pinned(at(0, 440), .topLeading, k)
 
-            Text(model.label + (model.solved && !model.auto ? " · done" : "")).font(Typeface.font(13, .medium))
-                .foregroundStyle(model.solved && !model.auto ? chapter : Ink.ink3).opacity(shown)
+            Text(model.label).font(Typeface.font(13, .medium)).foregroundStyle(Ink.ink3).opacity(shown)
                 .pinned(at(0, 500), .topLeading, k)
+
+            // the map's tab, on the box's top-right corner: Now on the problem the child is on, Done once it's solved
+            if let tag = model.solved && !model.auto ? "Done" : current ? "Now" : nil {
+                Text(tag).font(Typeface.font(12, .semibold)).foregroundStyle(.white)
+                    .frame(width: 80, height: 20).background(chapter)
+                    .opacity(shown)
+                    .pinned(at(BarsPage.box.dx + BarsPage.box.width - 80, BarsPage.box.dy - 20), .topLeading, k)
+            }
 
         }
     }

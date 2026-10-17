@@ -29,7 +29,7 @@ struct PaperScreen: View {
                     }
                     if let page = model.bars {
                         ForEach(page.all) { m in
-                            AddFractionsView(model: m, camera: cam, time: t, watchAgain: m.auto ? { page.watchAgain() } : nil)
+                            AddFractionsView(model: m, camera: cam, time: t, watchAgain: m.auto ? { page.watchAgain() } : nil, current: page.current === m)
                         }
                     }
                     if let steps = model.steps {

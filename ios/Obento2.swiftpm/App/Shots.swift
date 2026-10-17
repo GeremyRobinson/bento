@@ -86,6 +86,7 @@ enum Shots {
                 for i in 0..<b.problem.covered { b.tap(i) }
                 b.go()
                 if n == "fractions-add" { return }
+                if n == "fractions-two" { for i in b.problem.covered..<b.problem.total { b.tap(i) }; b.go(); page.problems[1].go(); return }
                 for i in b.problem.covered..<b.problem.total { b.tap(i) }
                 b.go()
             default:

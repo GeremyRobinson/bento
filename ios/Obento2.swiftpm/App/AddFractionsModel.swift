@@ -12,6 +12,8 @@ final class AddFractionsModel: Identifiable {
     let auto: Bool
     /// Told when the problem is solved.
     var onSolved: (() -> Void)?
+    /// Told whenever the child works this problem (a tap, Check, Show me, Reset, a choice): it's the one they're on.
+    var onTouch: (() -> Void)?
     /// The picture's top-left, in paper points, on grid lines. Rows and labels are placed from here.
     let origin: Point
     let chapter: Chapter
@@ -82,6 +84,7 @@ final class AddFractionsModel: Identifiable {
 
     func go() {
         guard !busy else { return }
+        onTouch?()
         switch lesson.go() {
         case .moved:
             guideAt = nil; message = nil; wordsAt = PaperClock.now
@@ -110,9 +113,10 @@ final class AddFractionsModel: Identifiable {
     }
 
     /// A pick-one step (the story's "Which operation solves it?"): the child taps choice i.
-    func choose(_ i: Int) { guard !busy else { return }; lesson.choose(i); message = nil }
+    func choose(_ i: Int) { guard !busy else { return }; onTouch?(); lesson.choose(i); message = nil }
 
     func tap(_ i: Int) {
+        onTouch?()
         guard !busy, lesson.tap(i) else { return }
         message = nil; syncFills()
     }
@@ -129,6 +133,7 @@ final class AddFractionsModel: Identifiable {
 
     func showMe() {
         guard lesson.helps, !busy, let t = lesson.step.task else { return }
+        onTouch?()
         let p = ShowMePreview(cells: t.showMe, at: time(0.2), step: 0.35)
         preview = p; previewStyle = t.style
         busyUntil = instant ? 0 : p.end
@@ -141,7 +146,7 @@ final class AddFractionsModel: Identifiable {
         max(fill(i, at: t), (preview?.level(i, at: t) ?? 0) * (previewStyle == 2 ? 0.5 : 1))
     }
 
-    func reset() { guard !busy else { return }; lesson.reset(); message = nil; guideAt = nil; syncFills() }
+    func reset() { guard !busy else { return }; onTouch?(); lesson.reset(); message = nil; guideAt = nil; syncFills() }
 
     /// Starts the problem over with the same numbers (the How to's Watch again).
     func replay() {

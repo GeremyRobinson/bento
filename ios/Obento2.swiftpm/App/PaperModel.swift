@@ -186,7 +186,7 @@ final class PaperModel {
         let p = camera(at: PaperClock.now).toPaper(s)
         if let b = bars {
             // zoomed out over the page, a tap on a problem brings it close first; close up, it works the problem
-            if camera(at: PaperClock.now).zoom < 0.9, let m = b.problem(at: p) { frameCurrent(m.contentFrame); return }
+            if camera(at: PaperClock.now).zoom < 0.9, let m = b.problem(at: p) { frameCurrent(BarsPage.box(of: m)); return }
             b.tap(p); return
         }
         if steps != nil { return }
@@ -234,7 +234,7 @@ final class PaperModel {
     /// The crosshair inside a flat lesson: glide back to the whole lesson.
     func reframe() {
         let pad = screen.width > 760 ? Self.margin : 8
-        if let b = bars { frameCurrent(b.showing ? b.pageFrame : b.howTo.contentFrame) }
+        if let b = bars { frameCurrent(b.current.map(BarsPage.box(of:)) ?? (b.showing ? b.firstRow : BarsPage.box(of: b.howTo))) }
         if let s = steps { fly(to: .framing(s.frame, in: screen, pad: pad, maxZoom: 1), duration: CameraTiming.fly) }
     }
 

@@ -171,6 +171,8 @@ final class Rig {
     // the flat lesson
     let barsRoot = Entity()
     var drawers: [UUID: BarsDrawer] = [:]
+    let boxes = Entity()
+    var boxesKey = ""
     var paperHex: UInt32 = 0xF3F2EF
     // a lesson worked in steps: its picture
     let stepsRoot = Entity()
@@ -202,7 +204,7 @@ final class Rig {
         // the paper itself, under the grid, large enough to fill any tilted view; it follows the camera
         sheet.model = ModelComponent(mesh: .generatePlane(width: 400, depth: 400), materials: [])
         sheet.position.y = -0.003
-        root.addChild(sheet); root.addChild(pieces); root.addChild(lessonRoot); root.addChild(barsRoot); root.addChild(stepsRoot)
+        root.addChild(sheet); root.addChild(pieces); root.addChild(lessonRoot); root.addChild(barsRoot); root.addChild(stepsRoot); barsRoot.addChild(boxes)
     }
 
     func update(view v: PaperView3D, model: PaperModel, time t: Double, dark: Bool) {
@@ -341,7 +343,7 @@ final class Rig {
         barsRoot.isEnabled = page != nil
         guard let page else {
             for d in drawers.values { d.root.removeFromParent() }
-            drawers = [:]; return
+            drawers = [:]; boxesKey = ""; return
         }
         let shown = page.all
         for m in shown {
@@ -349,6 +351,34 @@ final class Rig {
             d.draw(m, at: t)
         }
         for (id, d) in drawers where !shown.contains(where: { $0.id == id }) { d.root.removeFromParent(); drawers[id] = nil }
+        drawBoxes(page, shown, at: t)
+    }
+
+    /// Every problem's box (G 17 Oct): a light outline in the chapter's colour, drawing in with its problem; the problem
+    /// the child is on outlined in full colour, thicker; a solved one lightly filled, as a learned lesson is on the map.
+    private func drawBoxes(_ page: BarsPage, _ shown: [AddFractionsModel], at t: Double) {
+        let chapter = page.piece.chapter.hex, px = 1 / lineScale
+        let ks = shown.map { (m: $0, k: $0.wholeLine(at: t)) }
+        let key = ks.map { "\(($0.k * 40).rounded())\($0.m.solved)" }.joined() + "\(page.current?.id.uuidString ?? "") \(lineScale) \(paperHex)"
+        guard key != boxesKey else { return }
+        boxesKey = key
+        for c in Array(boxes.children) { c.removeFromParent() }
+        func outline(_ r: Rect) -> [[CGPoint]] {
+            [[CGPoint(x: r.x, y: r.y), CGPoint(x: r.x + r.width, y: r.y), CGPoint(x: r.x + r.width, y: r.y + r.height), CGPoint(x: r.x, y: r.y + r.height), CGPoint(x: r.x, y: r.y)]]
+        }
+        var light: [(SIMD2<Float>, SIMD2<Float>)] = [], lit: [(SIMD2<Float>, SIMD2<Float>)] = [], solved: [CGRect] = []
+        for (m, k) in ks where k > 0 {
+            let r = BarsPage.box(of: m)
+            if m === page.current { lit += drawn(outline(r), k) } else { light += drawn(outline(r), k) }
+            if m.solved && !m.auto { solved.append(CGRect(x: r.x, y: r.y, width: r.width, height: r.height)) }
+        }
+        func add(_ mesh: MeshResource?, _ c: UInt32, _ y: Float) {
+            guard let mesh else { return }
+            let e = ModelEntity(mesh: mesh, materials: [flat(UIColor(hex: c))]); e.position.y = y; boxes.addChild(e)
+        }
+        add(Self.fills(solved), Ink.mix(paperHex, chapter, 0.08), 0.0003)
+        add(Self.lines(light, width: Float(1.5 * px)), Ink.mix(paperHex, chapter, 0.3), 0.001)
+        add(Self.lines(lit, width: Float(2.5 * px)), chapter, 0.0011)
     }
 
     // MARK: a lesson worked in steps

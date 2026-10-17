@@ -15,8 +15,18 @@ final class BarsPage {
     /// Asks the camera to frame a part of the page.
     var frame: ((Rect) -> Void)?
 
-    // where things sit, in paper points: the How to at the lesson's place, the problems in rows under it
-    static let pitch = Size(560, 680), problemsTop: Double = 760
+    // where things sit, in paper points: the How to at the lesson's place, the problems in rows under it. Every problem
+    // has a box of its own, big enough for its largest content (a three-line story, the widest bars and the piece
+    // waiting past them, the choices, the buttons and its name), with three cells between boxes
+    static let box = (dx: -40.0, dy: -200.0, width: 600.0, height: 760.0), gap = 60.0
+    static let pitch = Size(box.width + gap, box.height + gap)
+    static let problemsTop = box.height + gap + 100
+
+    /// A problem's box on the paper.
+    static func box(of m: AddFractionsModel) -> Rect { Rect(x: m.origin.x + box.dx, y: m.origin.y + box.dy, width: box.width, height: box.height) }
+
+    /// The problem the child is on: outlined in the chapter's colour, and what the camera frames.
+    private(set) var current: AddFractionsModel?
 
     init(piece: Piece, instant: Bool, first: AddFractions.Problem? = nil) {
         self.piece = piece; self.instant = instant
@@ -35,7 +45,12 @@ final class BarsPage {
         }
         for p in problems {
             p.onSolved = { [weak self] in self?.solvedOne() }
-            p.needs = { [weak self] r in self?.frame?(r) }
+            // the camera frames the problem's whole box, so where you are never shifts inside it
+            p.needs = { [weak self, weak p] _ in if let p { self?.frame?(Self.box(of: p)) } }
+            p.onTouch = { [weak self, weak p] in
+                guard let self, let p, current !== p else { return }
+                current = p; frame?(Self.box(of: p))
+            }
         }
     }
 
@@ -46,9 +61,9 @@ final class BarsPage {
 
     /// Everything on the page: what the camera shows when the problems arrive.
     var pageFrame: Rect {
-        let rows = (problems.count + LessonPage.columns - 1) / LessonPage.columns
-        return Rect(x: piece.at.x - 20, y: piece.at.y - 160, width: Double(LessonPage.columns) * Self.pitch.width,
-                    height: Self.problemsTop + Double(rows) * Self.pitch.height)
+        let rows = Double((problems.count + LessonPage.columns - 1) / LessonPage.columns)
+        return Rect(x: piece.at.x + Self.box.dx, y: piece.at.y + Self.box.dy, width: Double(LessonPage.columns) * Self.pitch.width - Self.gap,
+                    height: Self.problemsTop + rows * Self.pitch.height - Self.gap)
     }
 
     // MARK: the How to, then the page
@@ -58,14 +73,16 @@ final class BarsPage {
     /// The How to plays itself: the pieces grow in, each move is made for it, then its answer is written.
     func start() {
         howTo.start()
-        frame?(howTo.contentFrame)
+        current = howTo
+        frame?(Self.box(of: howTo))
         play()
     }
 
     /// Watch the How to again: it starts over and plays, with the problems staying where they are.
     func watchAgain() {
         howTo.replay()
-        frame?(howTo.contentFrame)
+        current = howTo
+        frame?(Self.box(of: howTo))
         play()
     }
 
@@ -90,23 +107,24 @@ final class BarsPage {
     private func showProblems() {
         for (i, p) in problems.enumerated() { p.start(after: instant ? 0 : 0.3 + Double(i) * 0.12) }
         showing = true
+        current = nil
         frame?(firstRow)
     }
 
     /// The first row of problems, with their questions: where the child starts.
     var firstRow: Rect {
-        Rect(x: piece.at.x - 20, y: piece.at.y + Self.problemsTop - 160, width: Double(LessonPage.columns) * Self.pitch.width, height: Self.pitch.height)
+        Rect(x: piece.at.x + Self.box.dx, y: piece.at.y + Self.problemsTop + Self.box.dy, width: Double(LessonPage.columns) * Self.pitch.width - Self.gap, height: Self.box.height)
     }
 
     // MARK: what the child does
 
     /// A tap on the paper goes to the problem it landed in.
     func tap(_ p: Point) {
-        for m in all where contains(m.contentFrame, p) { m.tapPaper(p); return }
+        for m in all where contains(Self.box(of: m), p) { m.tapPaper(p); return }
     }
 
     /// The problem a point is in, so the camera can frame it.
-    func problem(at p: Point) -> AddFractionsModel? { all.first { contains($0.contentFrame, p) } }
+    func problem(at p: Point) -> AddFractionsModel? { all.first { contains(Self.box(of: $0), p) } }
 
     /// A problem was solved: when the whole check row is done, its score decides learned (and when it comes back).
     private func solvedOne() {
