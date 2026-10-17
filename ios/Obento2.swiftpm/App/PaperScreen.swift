@@ -16,7 +16,9 @@ struct PaperScreen: View {
                 let t = ctx.date.timeIntervalSinceReferenceDate
                 let cam = model.camera(at: t)
                 ZStack(alignment: .topLeading) {
+                    // RealityKit's view keeps the size it was made at, so a new screen shape (rotating) makes a new one
                     PaperScene(model: model, time: t)
+                        .id("\(Int(model.screen.width))x\(Int(model.screen.height))")
                     if model.lesson == nil && model.bars == nil {
                         PiecesLayer(camera: cam, time: t, drawnAt: model.drawnAt, selected: model.selected)
                     }

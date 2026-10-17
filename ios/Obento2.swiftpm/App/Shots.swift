@@ -14,9 +14,10 @@ enum Shots {
 
     static func run(_ m: PaperModel) {
         guard let name else { return }
-        if ProcessInfo.processInfo.arguments.contains("-landscape"),
+        let args = ProcessInfo.processInfo.arguments
+        if args.contains("-landscape") || args.contains("-portrait"),
            let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            scene.requestGeometryUpdate(UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: .landscapeRight))
+            scene.requestGeometryUpdate(UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: args.contains("-portrait") ? .portrait : .landscapeRight))
         }
         // let the window settle into its final size, then jump to the moment
         Task {
@@ -53,12 +54,13 @@ enum Shots {
         }
     }
 
-    /// `-rotate`: turn to portrait a moment after the moment opens, to check everything stays together.
+    /// `-rotate`: turn the other way (from `-portrait` or `-landscape`) a moment after the moment opens, to check everything stays together.
     static func rotate() {
         Task {
             try? await Task.sleep(for: .seconds(1))
-            (UIApplication.shared.connectedScenes.first as? UIWindowScene)?
-                .requestGeometryUpdate(UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: .portrait))
+            guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
+            let turn: UIInterfaceOrientationMask = ProcessInfo.processInfo.arguments.contains("-portrait") ? .landscapeRight : .portrait
+            scene.requestGeometryUpdate(UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: turn))
         }
     }
 
