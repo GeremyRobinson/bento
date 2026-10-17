@@ -203,7 +203,11 @@ final class PaperModel {
         let p = camera(at: PaperClock.now).toPaper(s)
         if let b = bars {
             // zoomed out over the page, a tap on a problem brings it close first; close up, it works the problem
-            if camera(at: PaperClock.now).zoom < 0.9, let m = b.problem(at: p) { frameCurrent(BarsPage.box(of: m)); return }
+            if camera(at: PaperClock.now).zoom < 0.9, let m = b.problem(at: p) {
+                if !m.auto { b.activate(m) }
+                frameCurrent(BarsPage.box(of: m))
+                return
+            }
             b.tap(p); return
         }
         if steps != nil { return }

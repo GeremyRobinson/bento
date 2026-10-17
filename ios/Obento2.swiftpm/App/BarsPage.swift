@@ -56,10 +56,7 @@ final class BarsPage {
             p.onSolved = { [weak self] in self?.solvedOne() }
             // the camera frames the problem's whole box, so where you are never shifts inside it
             p.needs = { [weak self, weak p] _ in if let p { self?.frame?(Self.box(of: p)) } }
-            p.onTouch = { [weak self, weak p] in
-                guard let self, let p, current !== p else { return }
-                current = p; frame?(Self.box(of: p))
-            }
+            p.onTouch = { [weak self, weak p] in if let p { self?.activate(p) } }
         }
     }
 
@@ -124,9 +121,17 @@ final class BarsPage {
 
     // MARK: what the child does
 
-    /// A tap on the paper goes to the problem it landed in: one of its blocks (ProblemLayout), or its bars.
+    /// The problem being worked: outlined in the chapter's colour with its Now tab, and framed by the camera.
+    func activate(_ m: AddFractionsModel) {
+        guard current !== m else { return }
+        current = m; frame?(Self.box(of: m))
+    }
+
+    /// A tap on the paper goes to the problem it landed in, anywhere in its box, which becomes the one being worked;
+    /// on one of its blocks (ProblemLayout) or its bars, it does that too.
     func tap(_ p: Point) {
         guard let m = all.first(where: { contains(Self.box(of: $0), p) }) else { return }
+        if !m.auto { activate(m) }
         if let b = ProblemLayout.blocks(m).first(where: { $0.rect.contains(CGPoint(x: p.x, y: p.y)) }) {
             switch b.kind {
             case .main: m.go()
