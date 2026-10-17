@@ -26,6 +26,14 @@ enum Shots {
         Task {
             try? await Task.sleep(for: .seconds(1.5))
             if name == "demo" { await demo(m); return }
+            if name == "move" {
+                // drag across the map and pinch in and out, about as a hand would, for -perf timings
+                m.frameGroup(duration: 0); try? await Task.sleep(for: .seconds(2.5))
+                for _ in 0..<120 { m.pan(-6, -2); try? await Task.sleep(for: .milliseconds(16)) }
+                for _ in 0..<60 { m.zoom(by: 1.015, at: .init(m.screen.width / 2, m.screen.height / 2)); try? await Task.sleep(for: .milliseconds(16)) }
+                for _ in 0..<60 { m.zoom(by: 1 / 1.015, at: .init(m.screen.width / 2, m.screen.height / 2)); try? await Task.sleep(for: .milliseconds(16)) }
+                return
+            }
             defer { if ProcessInfo.processInfo.arguments.contains("-rotate") { rotate() } }
             m.instant = true
             m.drawnAt = PaperClock.now - 100

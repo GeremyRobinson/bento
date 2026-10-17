@@ -35,7 +35,7 @@ struct PaperScreen: View {
                     }
                     TopBar(model: model, top: max(16, safe.safeAreaInsets.top + 8), bottom: max(16, safe.safeAreaInsets.bottom + 8))
                 }
-                .onChange(of: t) { _, now in model.settle(at: now); model.lesson?.settle(at: now) }
+                .onChange(of: t) { _, now in Perf.frame(now); model.settle(at: now); model.lesson?.settle(at: now) }
             }
             .onAppear {
                 model.screen = Size(geo.size.width, geo.size.height)
@@ -82,6 +82,7 @@ struct PiecesLayer: View {
 
     var body: some View {
         Canvas { ctx, _ in
+          Perf.time("words") {
             let z = camera.zoom
             ctx.translateBy(x: camera.x, y: camera.y); ctx.scaleBy(x: z, y: z)
             // chapter titles, baselines on a grid line: a dot in the chapter's colour, the title, and how many are learned
@@ -93,6 +94,7 @@ struct PiecesLayer: View {
                 ctx.draw(Text("\(done) of \(g.lessons.count)").font(Typeface.font(15)).foregroundStyle(Ink.ink3), at: CGPoint(x: o.x + 32 + w, y: o.y + 37), anchor: .bottomLeading)
             }
             for p in Map.pieces { draw(p, k: Piece.drawIn(p, time: time, drawnAt: drawnAt), in: &ctx) }
+          }
         }
         .allowsHitTesting(false)
     }

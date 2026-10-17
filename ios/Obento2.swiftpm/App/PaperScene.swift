@@ -23,7 +23,7 @@ struct PaperScene: View {
             rig.build(into: &content)
             rig.update(view: view, model: model, time: time, dark: dark)
         } update: { _ in
-            rig.update(view: view, model: model, time: time, dark: dark)
+            Perf.time("scene") { rig.update(view: view, model: model, time: time, dark: dark) }
         }
         .background(Ink.paper)
         .allowsHitTesting(false)
@@ -140,8 +140,9 @@ final class Rig {
     var grid = Entity()
     var gridAt: (x: Int, z: Int, half: Int)?
     let pieces = Entity()
-    var pieceState: [String: String] = [:]
-    var pieceLines: [String: (frame: ModelEntity, picture: ModelEntity)] = [:]
+    var piecesKey = ""
+    var piecesQuick = ""
+    var pieceGroups: [String: ModelEntity] = [:]
     // the open lesson
     let lessonRoot = Entity()
     weak var lesson: UnitCubesModel?
@@ -150,6 +151,10 @@ final class Rig {
     var cubes: [(x: Int, y: Int, z: Int, e: Entity)] = []
     var outline = Entity()
     var edges: [ModelEntity] = []
+    /// Cubes still to be made, a few per frame; the box mesh and the edges mesh every cube shares.
+    var pendingCubes: [(Int, Int, Int)] = []
+    var cubeMesh: MeshResource?
+    var edgeMesh: MeshResource?
     /// Hints on the floor: the empty squares outlined (and tinted), rebuilt when they change.
     var hints = Entity()
     var hintKey = ""
@@ -168,7 +173,6 @@ final class Rig {
     var dark: Bool?
     var colours = Colours(dark: false, chapter: Chapter.measurement.hex)
 
-    init() { EdgeAxis.registerComponent() }
 
     struct Colours {
         let paper, minor, major, top, front, side, deep, square, ink, ink2, lineStrong, pencil: UIColor
@@ -217,21 +221,22 @@ final class Rig {
         lessonRoot.isEnabled = lesson != nil
 
         // lines keep their screen width at any zoom
-        if lineScale == 0 || abs(v.scale / lineScale - 1) > 0.05 { lineScale = v.scale; gridAt = nil; pieceState = [:]; relines() }
+        if lineScale == 0 || abs(v.scale / lineScale - 1) > 0.05 { lineScale = v.scale; gridAt = nil; piecesKey = ""; relines() }
         // enough grid to fill the screen even when tilted, centred on a strong line near the middle
         let half = min(120, Int((hypot(screen.width, screen.height) / 2 / v.scale / sin(.pi / 4)).rounded(.up)) + 3)
         let gx = Int(floor.x.rounded()), gz = Int(floor.z.rounded())
-        if let g = gridAt, abs(g.x - gx) <= 2, abs(g.z - gz) <= 2, g.half >= half {} else { regrid(x: gx, z: gz, half: half) }
+        if let g = gridAt, abs(g.x - gx) <= 2, abs(g.z - gz) <= 2, g.half >= half {} else { Perf.time("grid") { regrid(x: gx, z: gz, half: half) } }
 
         let onMap = model.lesson == nil && model.bars == nil && model.steps == nil
         pieces.isEnabled = onMap
-        if onMap { drawPieces(model, at: t) }
+        if onMap { Perf.time("pieces") { drawPieces(model, at: t) } }
         drawBars(model.bars, at: t)
         drawSteps(model.steps, at: t)
 
         guard let l = lesson else { return }
         // the last lesson's pieces are reused when the box is the same; otherwise cleared now, while the new one builds
-        if shape?.box != l.box || shape?.origin != l.origin { rebuild(l) }
+        if shape?.box != l.box || shape?.origin != l.origin { Perf.time("cubes-build") { rebuild(l) } }
+        if !pendingCubes.isEmpty { Perf.time("cubes-some") { buildCubes(l, count: l.instant ? .max : 6) } }
         for (c, e) in squares { let k = Float(max(0.0001, l.square(c, at: t))); e.scale = SIMD3(k, 1, k) }
         drawHints(l)
         for c in cubes {
@@ -247,7 +252,7 @@ final class Rig {
         colours = Colours(dark: dark, chapter: Chapter.measurement.hex)
         paperHex = dark ? 0x121211 : 0xF3F2EF
         sheet.model?.materials = [flat(colours.paper)]
-        gridAt = nil; pieceState = [:]; shape = nil; barsKey = ""; stepsKey = ""
+        gridAt = nil; piecesKey = ""; shape = nil; barsKey = ""; stepsKey = ""
         relines()
     }
 
@@ -273,21 +278,31 @@ final class Rig {
 
     /// Each lesson's frame and picture, drawn in as far as it has got; rebuilt only when something changed.
     private func drawPieces(_ model: PaperModel, at t: Double) {
+        // one mesh per colour and line width (frames, the chosen frame, each chapter's pictures, pencil), so drawing in
+        // or zooming rebuilds a handful of meshes, not two per lesson
         let px = 1 / lineScale
-        for p in Map.pieces {
-            let k = Piece.drawIn(p, time: t, drawnAt: model.drawnAt)
-            let on = model.selected?.id == p.id
-            let key = "\((k * 500).rounded()) \(on) \(p.state)"
-            guard pieceState[p.id] != key else { continue }
-            pieceState[p.id] = key
-            if pieceLines[p.id] == nil {
-                let frame = ModelEntity(), picture = ModelEntity()
-                frame.position.y = 0.001; picture.position.y = 0.0015
-                pieces.addChild(frame); pieces.addChild(picture); pieceLines[p.id] = (frame, picture)
-            }
-            guard let e = pieceLines[p.id] else { continue }
-            set(e.frame, Self.lines(drawn(p.outline, k), width: Float((on ? 2 : 1.5) * px)), on ? colours.ink : colours.lineStrong)
-            set(e.picture, Self.lines(drawn(p.strokes, k), width: Float(2.5 * px)), p.state == .notYet ? colours.pencil : UIColor(hex: p.chapter.hex))
+        // once the drawings have drawn in, only a new choice, zoom or learned lesson changes them: skip the rest
+        let settled = t - model.drawnAt > Piece.drawTime + 1, quick = "\(model.selected?.id ?? "") \(lineScale) \(Progress.shared.checks.count)"
+        if settled, quick == piecesQuick, !piecesKey.isEmpty { return }
+        piecesQuick = settled ? quick : ""
+        let now = Map.pieces.map { p in (p, Piece.drawIn(p, time: t, drawnAt: model.drawnAt), model.selected?.id == p.id, p.state) }
+        let key = now.map { "\(($0.1 * 400).rounded()) \($0.2) \($0.3)" }.joined(separator: ",")
+        guard key != piecesKey else { return }
+        piecesKey = key
+        var groups: [String: (colour: UIColor, width: Double, y: Float, segs: [(SIMD2<Float>, SIMD2<Float>)])] = [:]
+        func add(_ id: String, _ c: UIColor, _ w: Double, _ y: Float, _ segs: [(SIMD2<Float>, SIMD2<Float>)]) {
+            groups[id, default: (c, w, y, [])].segs += segs
+        }
+        for (p, k, on, state) in now {
+            add(on ? "frame-on" : "frame", on ? colours.ink : colours.lineStrong, on ? 2 : 1.5, 0.001, drawn(p.outline, k))
+            if state == .notYet { add("pencil", colours.pencil, 2.5, 0.0015, drawn(p.strokes, k)) }
+            else { add("chapter-\(p.chapter.rawValue)", UIColor(hex: p.chapter.hex), 2.5, 0.0015, drawn(p.strokes, k)) }
+        }
+        for (id, e) in pieceGroups where groups[id] == nil { e.isEnabled = false }
+        for (id, g) in groups {
+            let e = pieceGroups[id] ?? { let e = ModelEntity(); pieces.addChild(e); pieceGroups[id] = e; return e }()
+            e.position.y = g.y
+            set(e, Self.lines(g.segs, width: Float(g.width * px)), g.colour)
         }
     }
 
@@ -478,7 +493,7 @@ final class Rig {
 
     private func clearLesson() {
         for c in Array(lessonRoot.children) { c.removeFromParent() }
-        squares = [:]; cubes = []; edges = []; outline = Entity(); hintKey = ""
+        squares = [:]; cubes = []; edges = []; outline = Entity(); hintKey = ""; pendingCubes = []
     }
 
     private func rebuild(_ l: UnitCubesModel) {
@@ -491,43 +506,60 @@ final class Rig {
             e.position = SIMD3(Float(o.x) + Float(x) + 0.5, 0.0003, Float(o.z) + Float(z) + 0.5)  // under the strong lines, so each big square shows
             lessonRoot.addChild(e); squares[.init(x, z)] = e
         } }
-        let cube = MeshResource.generateBox(width: 1, height: 1, depth: 1, cornerRadius: 0, splitFaces: true)
-        // splitFaces order: front, top, back, bottom, right, left
-        let faces: [any RealityKit.Material] = [colours.front, colours.top, colours.front, colours.top, colours.side, colours.side].map { flat($0) as any RealityKit.Material }
-        for y in 0..<b.height { for z in 0..<b.width { for x in 0..<b.length {
-            let g = Entity()
-            g.position = SIMD3(Float(o.x) + Float(x), Float(y), Float(o.z) + Float(z))
-            let m = ModelEntity(mesh: cube, materials: faces); m.position = SIMD3(0.5, 0.5, 0.5); g.addChild(m)
-            for e in Self.cubeEdges() { e.model?.materials = [flat(colours.deep)]; g.addChild(e); edges.append(e) }
-            g.isEnabled = false
-            lessonRoot.addChild(g); cubes.append((x, y, z, g))
-        } } }
+        // the cubes are made a few per frame while the child reads the question, not all at once (it took 130 ms)
+        pendingCubes = []
+        for y in 0..<b.height { for z in 0..<b.width { for x in 0..<b.length { pendingCubes.append((x, y, z)) } } }
         relines()
     }
 
-    /// The 12 edges of a unit cube as thin bars. Their thickness is set in `relines`.
-    private static func cubeEdges() -> [ModelEntity] {
-        var out: [ModelEntity] = []
-        let bar = MeshResource.generateBox(size: 1)
+    /// Makes up to `count` of the cubes still to come: each is a group (which rises), its faces, and its edges, whose
+    /// mesh every cube shares.
+    private func buildCubes(_ l: UnitCubesModel, count: Int) {
+        let o = l.origin
+        if cubeMesh == nil { cubeMesh = MeshResource.generateBox(width: 1, height: 1, depth: 1, cornerRadius: 0, splitFaces: true) }
+        if edgeMesh == nil { edgeMesh = Self.cubeEdges(width: Float(2.5 / lineScale)) }
+        // splitFaces order: front, top, back, bottom, right, left
+        let faces: [any RealityKit.Material] = [colours.front, colours.top, colours.front, colours.top, colours.side, colours.side].map { flat($0) as any RealityKit.Material }
+        for (x, y, z) in pendingCubes.prefix(count) {
+            let g = Entity()
+            g.position = SIMD3(Float(o.x) + Float(x), Float(y), Float(o.z) + Float(z))
+            let m = ModelEntity(mesh: cubeMesh!, materials: faces); m.position = SIMD3(0.5, 0.5, 0.5); g.addChild(m)
+            if let edgeMesh { let e = ModelEntity(mesh: edgeMesh, materials: [flat(colours.deep)]); g.addChild(e); edges.append(e) }
+            g.isEnabled = false
+            lessonRoot.addChild(g); cubes.append((x, y, z, g))
+        }
+        pendingCubes.removeFirst(min(count, pendingCubes.count))
+    }
+
+    /// The 12 edges of a unit cube, as thin bars of the given width, in one mesh.
+    static func cubeEdges(width w: Float) -> MeshResource? {
+        var pos: [SIMD3<Float>] = [], idx: [UInt32] = []
+        let h = w / 2
         for a in 0..<3 { for i in 0..<2 { for j in 0..<2 {
-            let e = ModelEntity(mesh: bar, materials: [])
-            var p = SIMD3<Float>(0.5, 0.5, 0.5)
-            let (u, w) = [(1, 2), (0, 2), (0, 1)][a]
-            p[u] = Float(i); p[w] = Float(j)
-            e.position = p
-            e.components.set(EdgeAxis(axis: a))
-            out.append(e)
+            let (u, v) = [(1, 2), (0, 2), (0, 1)][a]
+            var lo = SIMD3<Float>(repeating: 0), hi = SIMD3<Float>(repeating: 0)
+            lo[u] = Float(i) - h; hi[u] = Float(i) + h; lo[v] = Float(j) - h; hi[v] = Float(j) + h; lo[a] = -h; hi[a] = 1 + h
+            let base = UInt32(pos.count)
+            for k in 0..<8 { pos.append(SIMD3(k & 1 == 0 ? lo.x : hi.x, k & 2 == 0 ? lo.y : hi.y, k & 4 == 0 ? lo.z : hi.z)) }
+            // six faces, both windings, so the bar shows from any side
+            for f in [[0, 1, 3, 2], [4, 6, 7, 5], [0, 4, 5, 1], [2, 3, 7, 6], [0, 2, 6, 4], [1, 5, 7, 3]] {
+                let q = f.map { base + UInt32($0) }
+                idx += [q[0], q[1], q[2], q[0], q[2], q[3], q[0], q[2], q[1], q[0], q[3], q[2]]
+            }
         } } }
-        return out
+        var desc = MeshDescriptor(name: "edges")
+        desc.positions = MeshBuffers.Positions(pos)
+        desc.primitives = .triangles(idx)
+        return try? MeshResource.generate(from: [desc])
     }
 
     /// The lesson's lines at the current zoom: cube edges and the box's dashed floor.
     private func relines() {
         guard lineScale > 0 else { return }
         let px = Float(1 / lineScale)
-        for e in edges {
-            guard let a = e.components[EdgeAxis.self]?.axis else { continue }
-            var s = SIMD3<Float>(repeating: 2.5 * px); s[a] = 1 + 2.5 * px; e.scale = s
+        if !edges.isEmpty || edgeMesh != nil {
+            edgeMesh = Self.cubeEdges(width: 2.5 * px)
+            if let edgeMesh { for e in edges { e.model?.mesh = edgeMesh } }
         }
         guard let l = lesson else { return }
         outline.removeFromParent(); outline = Entity()
@@ -569,11 +601,17 @@ final class Rig {
     }
 }
 
-struct EdgeAxis: Component { let axis: Int }
 
 /// A plain colour with no lighting and no tone mapping, so the paper in 3D is the same colour as the flat paper.
+/// Each colour's material is made once and reused (making a new one for every line on every frame was costly).
 @MainActor func flat(_ c: UIColor) -> UnlitMaterial {
+    var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+    c.getRed(&r, green: &g, blue: &b, alpha: &a)
+    let key = UInt32(r * 255) << 16 | UInt32(g * 255) << 8 | UInt32(b * 255)
+    if let m = flatMaterials[key] { return m }
     var m = UnlitMaterial(applyPostProcessToneMap: false)
     m.color = .init(tint: c)
+    flatMaterials[key] = m
     return m
 }
+@MainActor private var flatMaterials: [UInt32: UnlitMaterial] = [:]
