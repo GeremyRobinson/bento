@@ -58,7 +58,18 @@ enum Map {
 /// The paper's camera and what's on it. One clock drives every move, so the grid and the paper never come apart.
 @MainActor @Observable
 final class PaperModel {
-    var screen = Size(1180, 820)
+    /// When the screen changes shape (rotating), the paper point in the middle stays in the middle,
+    /// and an open lesson takes the new size, so its words and its picture still agree.
+    var screen = Size(1180, 820) {
+        didSet {
+            guard screen != oldValue else { return }
+            let was = flight?.camera(at: PaperClock.now, screen: oldValue) ?? resting
+            let c = was.toPaper(Point(oldValue.width / 2, oldValue.height / 2))
+            flight = nil
+            resting = PaperCamera(x: screen.width / 2 - c.x * was.zoom, y: screen.height / 2 - c.y * was.zoom, zoom: was.zoom)
+            lesson?.screen = screen
+        }
+    }
     private(set) var resting = PaperCamera()
     private(set) var flight: CameraFlight?
     var selected: Piece?

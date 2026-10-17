@@ -22,6 +22,7 @@ enum Shots {
         Task {
             try? await Task.sleep(for: .seconds(1.5))
             if name == "demo" { await demo(m); return }
+            defer { if ProcessInfo.processInfo.arguments.contains("-rotate") { rotate() } }
             m.instant = true
             m.drawnAt = PaperClock.now - 100
             m.shotBox = .init(length: 4, width: 3, height: 2)
@@ -49,6 +50,15 @@ enum Shots {
                 if name == "tilt" { return }
                 l.go()
             }
+        }
+    }
+
+    /// `-rotate`: turn to portrait a moment after the moment opens, to check everything stays together.
+    static func rotate() {
+        Task {
+            try? await Task.sleep(for: .seconds(1))
+            (UIApplication.shared.connectedScenes.first as? UIWindowScene)?
+                .requestGeometryUpdate(UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: .portrait))
         }
     }
 
