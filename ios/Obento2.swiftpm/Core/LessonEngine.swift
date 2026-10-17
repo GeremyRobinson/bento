@@ -480,3 +480,45 @@ public struct LessonSession: Sendable, Equatable {
     /// The check just ended in learning the lesson.
     public var justLearned: Bool { phase == .done(learned: true) }
 }
+
+/// A lesson's page (G 17 Oct): after the How to, every problem is on the paper at once and the child works them in
+/// any order, right where they are. 16 problems from easy to hard (the run's index), every third practice problem told
+/// as a story, and the last row of 4 the skill check (no hints, no Show me, one try), which decides learned.
+public enum LessonPage {
+    public static let count = 16, checks = 4, columns = 4
+
+    public struct Problem: Sendable {
+        public let numbers: Numbers
+        public let story: Bool
+        public let isCheck: Bool
+    }
+
+    /// The page's problems, fresh from the lesson's generator; the check row follows the lesson's own recipe.
+    public static func problems(_ spec: LessonSpec, using rng: inout SeededRandom) -> [Problem] {
+        (0..<count).map { i in
+            if i >= count - checks {
+                let k = i - (count - checks)
+                if !spec.check.isEmpty {
+                    let item = spec.check[k % spec.check.count]
+                    return Problem(numbers: item.draw(spec, using: &rng), story: item.story && spec.story != nil, isCheck: true)
+                }
+                return Problem(numbers: spec.generate(&rng, 3), story: false, isCheck: true)
+            }
+            return Problem(numbers: spec.generate(&rng, i), story: spec.story != nil && i % 3 == 2, isCheck: false)
+        }
+    }
+
+    /// The run for one problem on the page: hints and tries follow whether it's part of the check.
+    public static func run(_ spec: LessonSpec, _ p: Problem) -> LessonRun {
+        var r = LessonRun(spec, numbers: p.numbers, story: p.story)
+        r.helps = !p.isCheck; r.oneTry = p.isCheck
+        return r
+    }
+
+    /// The check's score, 0 to 4, from the share of its steps right on their one try; nil until all its problems are done.
+    public static func checkLevel(_ runs: [LessonRun]) -> Int? {
+        guard runs.count == checks, runs.allSatisfy(\.isLast) else { return nil }
+        let steps = runs.reduce(0) { $0 + $1.workSteps }, right = runs.reduce(0) { $0 + $1.workSteps - $1.missedSteps.count }
+        return Mastery.level(steps == 0 ? 0 : Double(right) / Double(steps))
+    }
+}

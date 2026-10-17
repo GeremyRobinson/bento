@@ -6,6 +6,8 @@ struct AddFractionsView: View {
     let model: AddFractionsModel
     let camera: PaperCamera
     let time: Double
+    /// The How to's own block, once it has played.
+    var watchAgain: (() -> Void)?
 
     var body: some View {
         let k = camera.zoom, s = model.problem, l = model.lesson, words = l.words
@@ -79,17 +81,26 @@ struct AddFractionsView: View {
             }
 
             // the action blocks: Show me (not in the skill check; outlined when it's the third hint), Reset, the main action.
-            // Hands off while a See beat plays: they grey out until it ends
+            // Hands off while a See beat plays: they grey out until it ends. A solved problem has none: it stays solved.
+            // The How to plays itself, and offers Watch again once it has.
             HStack(spacing: -1.5) {
-                if l.step.task != nil {
-                    if l.helps { CellButton(main: l.picture["showMe"] == 1, action: model.showMe) { Icon(name: "play") } }
-                    CellButton(action: model.reset) { Icon(name: "arrow-counter-clockwise") }
-                    Color.clear.frame(width: 40, height: 40)
+                if model.auto {
+                    if model.solved, let watchAgain { MainCellButton(title: "Watch again", action: watchAgain) }
+                } else if !model.solved {
+                    if l.step.task != nil {
+                        if l.helps { CellButton(main: l.picture["showMe"] == 1, action: model.showMe) { Icon(name: "play") } }
+                        CellButton(action: model.reset) { Icon(name: "arrow-counter-clockwise") }
+                        Color.clear.frame(width: 40, height: 40)
+                    }
+                    MainCellButton(title: words.action, action: model.go)
                 }
-                MainCellButton(title: words.action, action: model.go)
             }
             .opacity(model.busy ? 0.35 * shown : shown).allowsHitTesting(!model.busy)
             .pinned(at(0, 440), .topLeading, k)
+
+            Text(model.label + (model.solved && !model.auto ? " · done" : "")).font(Typeface.font(13, .medium))
+                .foregroundStyle(model.solved && !model.auto ? chapter : Ink.ink3).opacity(shown)
+                .pinned(at(0, 500), .topLeading, k)
 
         }
     }

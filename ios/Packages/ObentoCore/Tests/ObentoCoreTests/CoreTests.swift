@@ -398,3 +398,32 @@ final class RectTests: XCTestCase {
         XCTAssertEqual(Rect(x: 0, y: 0, width: 10, height: 10).union(Rect(x: 5, y: -5, width: 20, height: 5)), Rect(x: 0, y: -5, width: 25, height: 15))
     }
 }
+
+final class LessonPageTests: XCTestCase {
+    func testAPageOf16WithTheCheckLast() {
+        var rng = SeededRandom(seed: 8)
+        let page = LessonPage.problems(AddFractions.spec, using: &rng)
+        XCTAssertEqual(page.count, 16)
+        XCTAssertEqual(page.filter(\.isCheck).count, 4)
+        XCTAssertTrue(page.suffix(4).allSatisfy(\.isCheck))
+        XCTAssertEqual(page.prefix(12).filter(\.story).count, 4, "every third practice problem is a story")
+        let check = LessonPage.run(AddFractions.spec, page[15])
+        XCTAssertFalse(check.helps); XCTAssertTrue(check.oneTry)
+        XCTAssertTrue(LessonPage.run(AddFractions.spec, page[0]).helps)
+    }
+
+    func testTheCheckRowScores() {
+        var rng = SeededRandom(seed: 8)
+        var runs = LessonPage.problems(AddFractions.spec, using: &rng).suffix(4).map { LessonPage.run(AddFractions.spec, $0) }
+        XCTAssertNil(LessonPage.checkLevel(runs), "not done yet")
+        for k in runs.indices {
+            while !runs[k].isLast {
+                if k == 0, runs[k].step.task != nil, runs[k].missedSteps.isEmpty { _ = runs[k].go() }
+                if runs[k].step.task != nil { _ = runs[k].showMe() }
+                if runs[k].step.answer?.choices != nil { runs[k].choose(0) }
+                _ = runs[k].go()
+            }
+        }
+        XCTAssertEqual(LessonPage.checkLevel(runs), 3, "7 of 8 steps right")
+    }
+}

@@ -1,15 +1,22 @@
 import SwiftUI
 
-/// Add with different bottoms, flat on the paper. The lesson logic lives in Core/AddFractions.swift; this keeps the timing:
-/// when the pieces grew in and when each one was shaded. It never tilts, so the paper's own camera shows it.
+/// One problem of Add with different bottoms, flat on the paper, live where it sits on the lesson's page (BarsPage).
+/// The lesson logic lives in Core/AddFractions.swift; this keeps the timing: when the pieces grew in and when each one
+/// was shaded. It never tilts, so the paper's own camera shows it.
 @MainActor @Observable
-final class AddFractionsModel {
+final class AddFractionsModel: Identifiable {
+    let id = UUID()
+    /// What the page calls it: "How to", "Problem 3", "Skill check 1".
+    let label: String
+    /// The How to plays itself: no buttons, and its moves are made for it.
+    let auto: Bool
+    /// Told when the problem is solved.
+    var onSolved: (() -> Void)?
     /// The picture's top-left, in paper points, on grid lines. Rows and labels are placed from here.
     let origin: Point
     let chapter: Chapter
     let instant: Bool
     private(set) var lesson: LessonRun
-    private var rng: SeededRandom
 
     /// When the pieces started growing in.
     private(set) var openedAt: Double
@@ -19,8 +26,6 @@ final class AddFractionsModel {
     /// The dashed line showing where p/a ends, after a wrong count.
     private(set) var guideAt: Double?
     var message: (text: String, ok: Bool)?
-    /// Where the child is: the first problem, practice, or the skill check (LESSONS.md §7).
-    private(set) var session: LessonSession
     /// Hands off until then: a See beat is playing (LESSONS.md §4).
     private(set) var busyUntil: Double = 0
     var busy: Bool { PaperClock.now < busyUntil }
@@ -30,18 +35,15 @@ final class AddFractionsModel {
     // where things sit, in paper points from `origin`
     static let row1: Double = 160, row2: Double = 280, barHeight: Double = 60
 
-    init(origin: Point, chapter: Chapter, instant: Bool, problem: AddFractions.Problem? = nil, session: LessonSession = LessonSession()) {
-        self.origin = origin; self.chapter = chapter; self.instant = instant; self.session = session
-        var r = SeededRandom(seed: UInt64(Date().timeIntervalSince1970 * 1000))
-        var run = problem.map { LessonRun(AddFractions.spec, numbers: $0.numbers) } ?? session.makeRun(AddFractions.spec, using: &r)
-        run.helps = session.helps; run.oneTry = session.oneTry
+    init(origin: Point, chapter: Chapter, instant: Bool, run: LessonRun, label: String, auto: Bool = false) {
+        self.origin = origin; self.chapter = chapter; self.instant = instant; self.label = label; self.auto = auto
         lesson = run
-        rng = r
-        openedAt = instant ? PaperClock.now - 100 : PaperClock.now
+        openedAt = instant ? PaperClock.now - 100 : PaperClock.now + 1000
     }
 
-    /// The pieces grow in now (called when the glide to the lesson ends).
-    func start() { openedAt = time(0); wordsAt = PaperClock.now; needs?(contentFrame) }
+    /// The pieces grow in, after `delay` (the page draws its problems in one after another).
+    func start(after delay: Double = 0) { openedAt = time(delay); wordsAt = openedAt }
+    var solved: Bool { lesson.isLast }
 
     /// The lesson sits just inside its picture frame on the map.
     static func origin(for p: Piece) -> Point { Point(p.at.x, p.at.y) }
@@ -87,18 +89,24 @@ final class AddFractionsModel {
             // See: the pieces line up and the matching lines draw; hands off while they do
             busyUntil = time(Self.seeBeat)
             needs?(contentFrame)
-            if lesson.isLast {
-                session.finished(lesson)
-                // the skill check is over: its score decides learned, and when the lesson comes back
-                if case .done = session.phase, let level = session.level { Progress.shared.checked(lesson.spec.id, level: level) }
-            }
+            if lesson.isLast { onSolved?() }
         case .notYet(let line):
             message = (line, false)
             if lesson.hintLevel >= 1, guideAt == nil { guideAt = time(0) }
             // one try (the skill check): the right pieces are shown, so watch them fill
             if lesson.oneTry { syncFills(); busyUntil = time(Self.seeBeat) }
-        case .newProblem: restart()
+        case .newProblem: break  // a solved problem stays on the page, solved
         }
+    }
+
+    /// The How to's moves, made for it: the pieces the step needs fill one by one. Returns how long that takes.
+    @discardableResult
+    func demonstrate() -> Double {
+        guard lesson.step.task != nil else { return 0 }
+        let filled = lesson.showMe()
+        for (n, i) in filled.enumerated() { setFill(i, target(i), at: time(0.35 * Double(n)), from: 0) }
+        if lesson.step.answer?.choices != nil { lesson.choose(0) }
+        return 0.35 * Double(filled.count) + 0.3
     }
 
     /// A pick-one step (the story's "Which operation solves it?"): the child taps choice i.
@@ -135,20 +143,12 @@ final class AddFractionsModel {
 
     func reset() { guard !busy else { return }; lesson.reset(); message = nil; guideAt = nil; syncFills() }
 
-    /// For screenshots: jump to a phase of the session with a fresh problem.
-    func jump(to phase: LessonSession.Phase, problem: AddFractions.Problem) {
-        session = LessonSession(phase: phase)
-        lesson = LessonRun(AddFractions.spec, numbers: problem.numbers, story: session.story)
-        lesson.helps = session.helps; lesson.oneTry = session.oneTry
-        fills = [:]; guideAt = nil; message = nil
-        needs?(contentFrame)
-    }
-
-    private func restart() {
-        lesson = session.makeRun(AddFractions.spec, using: &rng)
-        fills = [:]; guideAt = nil; message = nil
-        openedAt = time(0); wordsAt = PaperClock.now
-        needs?(contentFrame)
+    /// Starts the problem over with the same numbers (the How to's Watch again).
+    func replay() {
+        var r = LessonRun(lesson.spec, numbers: lesson.numbers); r.helps = lesson.helps; r.oneTry = lesson.oneTry
+        lesson = r
+        fills = [:]; guideAt = nil; message = nil; preview = nil; busyUntil = 0
+        openedAt = time(0); wordsAt = openedAt
     }
 
     /// Full for a piece shaded to cover p/a, lighter for one added on: each step says how strongly it marks.

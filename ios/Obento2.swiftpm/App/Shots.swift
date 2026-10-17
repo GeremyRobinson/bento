@@ -74,18 +74,20 @@ enum Shots {
                 if n == "pow10-move" { for k in ["4", "6"] { s.type(k) }; s.go(); return }
                 s.showMe(); s.go()
             case let n where n.hasPrefix("fractions"):
+                // the page: the How to has played (instant), the 16 problems are on the paper
                 start(Map.pieces.first { $0.id == "ad" }!)
-                guard let b = m.bars, n != "fractions" else { return }
+                guard let page = m.bars, n != "fractions" else { return }
+                let b = n == "fractions-story" ? page.problems[2] : n == "fractions-check" ? page.problems[12] : page.problems[0]
+                if n == "fractions-howto" { page.watchAgain(); return }
+                if n == "fractions-story" { b.choose(2); b.go(); return }
                 b.go()
-                if n == "fractions-wrong" { b.tap(5); b.go(); return }
-                if n == "fractions-hint2" { b.tap(5); b.go(); b.go(); return }
-                if n == "fractions-story" { b.jump(to: .practice(2), problem: .init(a: 4, p: 1, b: 8, q: 1)); b.choose(2); b.go(); return }
-                if n == "fractions-check" {
-                    b.jump(to: .check(2, right: 1), problem: .init(a: 4, p: 1, b: 8, q: 1)); b.go(); b.tap(5); b.go(); return
-                }
-                b.tap(0); b.tap(1); b.go()
+                if n == "fractions-wrong" || n == "fractions-check" { b.tap(b.problem.covered + 1); b.go(); return }
+                if n == "fractions-hint2" { b.tap(b.problem.covered + 1); b.go(); b.go(); return }
+                for i in 0..<b.problem.covered { b.tap(i) }
+                b.go()
                 if n == "fractions-add" { return }
-                b.tap(2); b.go()
+                for i in b.problem.covered..<b.problem.total { b.tap(i) }
+                b.go()
             default:
                 start(uc)
                 guard let l = m.lesson else { return }

@@ -109,13 +109,13 @@ final class PaperModel {
     var selected: Piece?
     var lesson: UnitCubesModel?
     /// The flat lesson, when one is open. It uses the paper's own camera.
-    var bars: AddFractionsModel?
+    var bars: BarsPage?
     /// A lesson worked in steps, when one is open. It uses the paper's own camera too.
     var steps: StepsModel?
     /// The piece whose lesson is open: its name goes in the top bar.
     var openPiece: Piece? { lesson != nil || bars != nil || steps != nil ? opened : nil }
     /// Where the child is in the open lesson ("Practice 2 of 6"), for the top bar.
-    var sessionLabel: String? { bars?.session.label ?? lesson?.session.label }
+    var sessionLabel: String? { bars?.label ?? lesson?.session.label }
     private var opened: Piece?
     /// When the pieces started drawing themselves.
     var drawnAt: Double = PaperClock.now
@@ -184,7 +184,11 @@ final class PaperModel {
 
     func tap(at s: Point) {
         let p = camera(at: PaperClock.now).toPaper(s)
-        if let b = bars { b.tapPaper(p); return }
+        if let b = bars {
+            // zoomed out over the page, a tap on a problem brings it close first; close up, it works the problem
+            if camera(at: PaperClock.now).zoom < 0.9, let m = b.problem(at: p) { frameCurrent(m.contentFrame); return }
+            b.tap(p); return
+        }
         if steps != nil { return }
         if let sel = selected, sel.opens, contains(sel.start, p) { open(sel); return }
         select(Map.pieces.first(where: { contains($0.frame, p) || contains(Rect(x: $0.at.x, y: $0.at.y + 180, width: 240, height: 40), p) }))
@@ -211,15 +215,14 @@ final class PaperModel {
         if instant || landing <= 0 { go() } else { Task { try? await Task.sleep(for: .seconds(landing + 0.02)); go() } }
     }
 
-    /// Opening the flat lesson: its pieces grow in where it is, on the paper's own camera (no camera move).
+    /// Opening the flat lesson: its page. The How to plays where the lesson is, on the paper's own camera, then the 16
+    /// problems draw themselves onto the paper, each live where it sits (BarsPage).
     func openBars(_ p: Piece) {
-        // a learned lesson that's due back opens straight on its recheck
         let first = shotProblem ?? prepared.flatMap { $0.id == p.id ? AddFractions.Problem($0.numbers) : nil }
-        let due = Progress.shared.dueBack(p.id)
-        let b = AddFractionsModel(origin: AddFractionsModel.origin(for: p), chapter: p.chapter, instant: instant, problem: due ? nil : first,
-                                  session: due ? .recheck : LessonSession())
-        b.needs = { [weak self] r in self?.frameCurrent(r) }
-        b.start(); bars = b; selected = nil
+        let b = BarsPage(piece: p, instant: instant, first: first)
+        b.frame = { [weak self] r in self?.frameCurrent(r) }
+        bars = b; selected = nil
+        b.start()
     }
 
     /// Opening a lesson worked in steps: glide to it, then its picture grows in. Flat, on the paper's camera.
@@ -231,7 +234,7 @@ final class PaperModel {
     /// The crosshair inside a flat lesson: glide back to the whole lesson.
     func reframe() {
         let pad = screen.width > 760 ? Self.margin : 8
-        if let b = bars { fly(to: .framing(b.frame, in: screen, pad: pad, maxZoom: 1), duration: CameraTiming.fly) }
+        if let b = bars { frameCurrent(b.showing ? b.pageFrame : b.howTo.contentFrame) }
         if let s = steps { fly(to: .framing(s.frame, in: screen, pad: pad, maxZoom: 1), duration: CameraTiming.fly) }
     }
 
