@@ -213,7 +213,7 @@ final class PowersOfTenTests: XCTestCase {
     func testEveryProblemIsInRange() {
         var rng = SeededRandom(seed: 11)
         for _ in 0..<300 {
-            let n = PowersOfTen.spec.generate(&rng), x = n["x"]!, k = Int(n["k"]!)
+            let n = PowersOfTen.spec.generate(&rng, 5), x = n["x"]!, k = Int(n["k"]!)
             XCTAssertTrue((1.01...99.99).contains(x) && (1...3).contains(k))
             XCTAssertEqual(x * 100, (x * 100).rounded(), accuracy: 1e-9)
         }

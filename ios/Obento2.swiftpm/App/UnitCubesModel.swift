@@ -31,7 +31,7 @@ final class UnitCubesModel {
     init(origin: Vec3, chapter: Chapter, view: PaperView3D, screen: Size, instant: Bool, box: UnitCubes.Box? = nil) {
         self.origin = origin; self.chapter = chapter; self.resting = view; self.screen = screen; self.instant = instant
         var r = SeededRandom(seed: UInt64(Date().timeIntervalSince1970))
-        lesson = LessonRun(UnitCubes.spec, numbers: box?.numbers ?? UnitCubes.spec.generate(&r))
+        lesson = LessonRun(UnitCubes.spec, numbers: box?.numbers ?? UnitCubes.spec.generate(&r, 0))
         rng = r
     }
 

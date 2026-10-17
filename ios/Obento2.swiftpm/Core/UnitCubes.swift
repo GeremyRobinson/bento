@@ -29,7 +29,7 @@ public enum UnitCubes {
         return Box(length: max(l, w), width: min(l, w), height: Int.random(in: 2...3, using: &rng))
     }
 
-    public static let spec = LessonSpec(id: "uc", title: "Unit cubes", master: "cubes", generate: { generate(using: &$0).numbers }) { n in
+    public static let spec = LessonSpec(id: "uc", title: "Unit cubes", master: "cubes", generate: { rng, _ in generate(using: &rng).numbers }) { n in
         let b = Box(n)
         let ask = LessonStep(StepWords(say: "How many cubes fill this box?", hint: "It is \(b.length) long, \(b.width) wide and \(b.height) tall.", action: "Let’s find out"))
         let floor = Array(0..<b.floor)

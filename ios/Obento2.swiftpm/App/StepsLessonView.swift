@@ -24,7 +24,7 @@ struct StepsLessonView: View {
             .opacity(fresh).offset(y: (1 - fresh) * 8)
             .pinned(at(0, 0), .bottomLeading, k)
 
-            MathLineView(line: l.display, size: 40).opacity(shown).pinned(at(0, 60), .bottomLeading, k)
+            MathLineView(line: l.display, size: 30).opacity(shown).pinned(at(0, 20), .topLeading, k)
 
             if l.spec.master == "shift" { ShiftWords(model: model, time: time, at: at, k: k) }
 
@@ -38,7 +38,6 @@ struct StepsLessonView: View {
                         MathLineView(line: a.work, size: 28)
                     }
                 }
-                .frame(height: 40)
                 .pinned(at(0, StepsModel.workTop + Double(row) * StepsModel.row), .topLeading, k)
             }
 
@@ -74,43 +73,109 @@ struct BoxState {
     let select: (String) -> Void
 }
 
-/// A line of math written on the paper. Answer boxes are cell blocks; a fraction is stacked over its bar.
+/// A line of math written on the paper's cells, like on graph paper: each digit in its own cell, a sign in a cell with
+/// an empty cell either side, an answer box two cells tall and whole cells wide, and a fraction's bar on a grid line.
+/// Pinned at a grid point, so everything lands on the grid.
 struct MathLineView: View {
     let line: MathLine
-    let size: CGFloat
+    /// Type size; a digit at this size fits one cell.
+    var size: CGFloat = 28
     var boxes: BoxState?
 
+    struct Item: Identifiable {
+        enum Kind { case char(String, ink: Bool), point, word(String), box(String), bar }
+        let id: Int
+        let kind: Kind
+        /// Position and size, in cells.
+        let col: Int, row: Int, w: Int, h: Int
+    }
+
+    static let cell = Paper.cell
+
+    /// Lays the line out in cells: its pieces, and its width and height (two cells, or four with a fraction in it).
+    static func layout(_ line: MathLine, typed: [String: String] = [:], size: CGFloat) -> (items: [Item], w: Int, h: Int) {
+        var items: [Item] = [], col = 0
+        let tall = line.contains { if case .frac = $0 { true } else { false } }
+        let h = tall ? 4 : 2, mid = tall ? 1 : 0
+        func add(_ k: Item.Kind, _ c: Int, _ r: Int, _ w: Int, _ hh: Int) { items.append(Item(id: items.count, kind: k, col: c, row: r, w: w, h: hh)) }
+        /// One piece at (col, row); returns its width in cells.
+        func place(_ m: Math, _ c: Int, _ r: Int) -> Int {
+            switch m {
+            case .num(let x):
+                // a digit to a cell; the point sits on the line between two digits, as on graph paper
+                var i = 0
+                for ch in fmt(x) {
+                    if ch == "." { add(.point, c + i, r, 0, 2) } else { add(.char(String(ch), ink: true), c + i, r, 1, 2); i += 1 }
+                }
+                return i
+            case .op(let o): add(.char(o, ink: true), c, r, 1, 2); return 1
+            case .text(let t):
+                let w = cells(t)
+                add(.word(t), c, r, w, 2); return w
+            case .box(let id):
+                let w = max(3, (typed[id] ?? "").count + 2)
+                add(.box(id), c, r, w, 2); return w
+            case .frac(let a, let b):
+                let wa = measure(a), wb = measure(b), w = max(wa, wb)
+                _ = place(a, c + (w - wa) / 2, r - 1); _ = place(b, c + (w - wb) / 2, r + 1)
+                add(.bar, c, r + 1, w, 0)
+                return w
+            }
+        }
+        func measure(_ m: Math) -> Int {
+            switch m {
+            case .num(let x): fmt(x).filter { $0 != "." }.count
+            case .op: 1
+            case .text(let t): cells(t)
+            case .box(let id): max(3, (typed[id] ?? "").count + 2)
+            case .frac(let a, let b): max(measure(a), measure(b))
+            }
+        }
+        func cells(_ t: String) -> Int { Int(((width(t, size * 0.7) + 2) / cell).rounded(.up)) }
+        for (i, m) in line.enumerated() {
+            if i > 0 { col += 1 }  // an empty cell between pieces
+            col += place(m, col, tall ? (isFrac(m) ? 1 : mid) : 0)
+        }
+        return (items, col, h)
+    }
+
+    static func isFrac(_ m: Math) -> Bool { if case .frac = m { true } else { false } }
+
+    static func width(_ t: String, _ size: CGFloat) -> CGFloat {
+        var f = UIFont.systemFont(ofSize: size)
+        if let d = f.fontDescriptor.withDesign(.rounded) { f = UIFont(descriptor: d, size: size) }
+        return (t as NSString).size(withAttributes: [.font: f]).width
+    }
+
     var body: some View {
-        HStack(alignment: .center, spacing: size * 0.3) { ForEach(Array(line.enumerated()), id: \.offset) { piece($0.element) } }
-            .fixedSize()
+        let (items, w, h) = Self.layout(line, typed: boxes?.typed ?? [:], size: size), c = Self.cell
+        ZStack(alignment: .topLeading) {
+            ForEach(items) { it in
+                view(it)
+                    .frame(width: it.w == 0 && it.h > 0 ? c : CGFloat(it.w) * c, height: max(1.5, CGFloat(it.h) * c))
+                    .offset(x: it.w == 0 && it.h > 0 ? -c / 2 : 0)
+                    .offset(x: CGFloat(it.col) * c, y: CGFloat(it.row) * c - (it.h == 0 ? 0.75 : 0))
+            }
+        }
+        .frame(width: CGFloat(w) * c, height: CGFloat(h) * c, alignment: .topLeading)
     }
 
-    private func piece(_ m: Math) -> AnyView {
-        switch m {
-        case .num(let x): return AnyView(Text(fmt(x)).font(Typeface.font(size, .medium)).monospacedDigit().foregroundStyle(Ink.ink))
-        case .op(let o): return AnyView(Text(o).font(Typeface.font(size, .regular)).foregroundStyle(Ink.ink))
-        case .text(let t): return AnyView(Text(t).font(Typeface.font(size * 0.7)).foregroundStyle(Ink.ink2))
-        case .box(let id): return AnyView(box(id))
-        case .frac(let a, let b):
-            return AnyView(VStack(spacing: 2) {
-                MathLineView(line: [a], size: size * 0.8, boxes: boxes)
-                Rectangle().fill(Ink.ink).frame(height: 1.5)
-                MathLineView(line: [b], size: size * 0.8, boxes: boxes)
-            }.fixedSize())
+    @ViewBuilder private func view(_ it: Item) -> some View {
+        switch it.kind {
+        case .char(let ch, _): Text(ch).font(Typeface.font(size, .medium)).monospacedDigit().foregroundStyle(Ink.ink)
+        case .point: Text(".").font(Typeface.font(size, .bold)).foregroundStyle(Ink.ink)
+        case .word(let t): Text(t).font(Typeface.font(size * 0.7)).foregroundStyle(Ink.ink2).fixedSize()
+        case .bar: Rectangle().fill(Ink.ink)
+        case .box(let id):
+            let text = boxes?.typed[id] ?? "", on = boxes?.active == id
+            Button { boxes?.select(id) } label: {
+                Text(text.replacingOccurrences(of: "-", with: "−")).font(Typeface.font(size, .medium)).monospacedDigit().foregroundStyle(Ink.ink)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Ink.surface)
+                    .overlay(Rectangle().strokeBorder(on ? Ink.ink : Ink.lineStrong, lineWidth: on ? 2 : 1.5))
+            }
+            .buttonStyle(.plain)
         }
-    }
-
-    /// A box is two cells tall, and wide enough for what's typed in whole cells, never under four.
-    private func box(_ id: String) -> some View {
-        let text = boxes?.typed[id] ?? "", on = boxes?.active == id
-        let w = max(80, ((CGFloat(text.count) * size * 0.62 + 24) / 20).rounded(.up) * 20)
-        return Button { boxes?.select(id) } label: {
-            Text(text.replacingOccurrences(of: "-", with: "−")).font(Typeface.font(size, .medium)).monospacedDigit().foregroundStyle(Ink.ink)
-                .frame(width: w, height: 40)
-                .background(Ink.surface)
-                .overlay(Rectangle().strokeBorder(on ? Ink.ink : Ink.lineStrong, lineWidth: on ? 2 : 1.5))
-        }
-        .buttonStyle(.plain)
     }
 }
 

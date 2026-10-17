@@ -76,7 +76,7 @@ struct ShiftWords: View {
             Text(done ? "× \(fmt(s.multiplier)): \(PowersOfTen.words[hops]) \(hops == 1 ? "hop" : "hops") right → \(fmt(((model.lesson["x"] * s.multiplier) * 1_000_000).rounded() / 1_000_000))"
                       : "× \(fmt(s.multiplier))")
                 .font(Typeface.font(17, .medium)).foregroundStyle(done ? model.chapter.color : Ink.ink2).opacity(shown)
-                .pinned(at(0, ShiftPicture.top + ShiftPicture.box + 16), .topLeading, k)
+                .pinned(at(0, ShiftPicture.top + ShiftPicture.box + 20), .topLeading, k)
         }
     }
 }

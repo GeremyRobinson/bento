@@ -34,9 +34,13 @@ public struct AnswerTask: Sendable {
     public var hint: String
     /// What "Show me" says after filling the answer in.
     public var explain: String
+    /// For answers that can be written more than one way (any equivalent fraction, either order, lowest terms):
+    /// decides instead of comparing with `expected`, after every box is filled.
+    public var check: (@Sendable ([String: Double]) -> Verdict)?
 
-    public init(prompt: MathLine, expected: [String: Double], known: [(values: [String: Double], message: String)] = [], hint: String, explain: String? = nil) {
-        self.prompt = prompt; self.expected = expected; self.known = known; self.hint = hint
+    public init(prompt: MathLine, expected: [String: Double], known: [(values: [String: Double], message: String)] = [], hint: String, explain: String? = nil,
+                check: (@Sendable ([String: Double]) -> Verdict)? = nil) {
+        self.prompt = prompt; self.expected = expected; self.known = known; self.hint = hint; self.check = check
         self.explain = explain ?? "\(hint) That makes \(expected.count == 1 ? fmt(expected.values.first!) : "it")."
     }
 
@@ -59,22 +63,60 @@ public struct AnswerTask: Sendable {
 
 /// A lesson as data: a generator makes fresh numbers, and the steps are worked out from those numbers.
 /// One engine (LessonRun) plays every lesson; a picture master draws it, flat or 3D.
+/// The words follow the Curriculum team's specs (ios/specs/k12), the maths the web app's lessons.
 public struct LessonSpec: Sendable {
     public let id: String
     public let title: String
-    /// Which picture master draws it: "cubes", "bars".
+    /// Which picture master draws it: "cubes", "bars", "shift"...
     public let master: String
-    public let generate: @Sendable (inout SeededRandom) -> Numbers
+    /// Fresh numbers for the problem at this place in a run (0 = the first; the first problems are easier).
+    public let generate: @Sendable (inout SeededRandom, Int) -> Numbers
     /// The problem as the paper writes it above the picture ("3.47 × 100").
     public let display: @Sendable (Numbers) -> MathLine
     public let steps: @Sendable (Numbers) -> [LessonStep]
+    /// The idea in one sentence, built from the same numbers.
+    public let idea: @Sendable (Numbers) -> String
+    /// The same problem told as a word problem, for lessons that have one.
+    public let story: (@Sendable (Numbers) -> String)?
+    /// The lessons a child needs first; the first is the main build-up.
+    public let depends: [String]
+    /// The lesson's own skill check: four problems, no hints, one try per step.
+    public let check: [CheckItem]
 
     public init(id: String, title: String, master: String,
-                generate: @escaping @Sendable (inout SeededRandom) -> Numbers,
+                generate: @escaping @Sendable (inout SeededRandom, Int) -> Numbers,
                 display: @escaping @Sendable (Numbers) -> MathLine = { _ in [] },
+                idea: @escaping @Sendable (Numbers) -> String = { _ in "" },
+                story: (@Sendable (Numbers) -> String)? = nil,
+                depends: [String] = [], check: [CheckItem] = [],
                 steps: @escaping @Sendable (Numbers) -> [LessonStep]) {
-        self.id = id; self.title = title; self.master = master; self.generate = generate; self.display = display; self.steps = steps
+        self.id = id; self.title = title; self.master = master; self.generate = generate; self.display = display
+        self.idea = idea; self.story = story; self.depends = depends; self.check = check; self.steps = steps
     }
+}
+
+/// One problem of a skill check: `generate(rng, index)`, redrawn (up to 50 tries) until `when` holds;
+/// `story` shows it as the lesson's word problem.
+public struct CheckItem: Sendable {
+    public let index: Int
+    public let when: (@Sendable (Numbers) -> Bool)?
+    public let story: Bool
+    public init(_ index: Int, when: (@Sendable (Numbers) -> Bool)? = nil, story: Bool = false) { self.index = index; self.when = when; self.story = story }
+
+    public func draw(_ spec: LessonSpec, using rng: inout SeededRandom) -> Numbers {
+        var n = spec.generate(&rng, index)
+        for _ in 0..<50 where !(when?(n) ?? true) { n = spec.generate(&rng, index) }
+        return n
+    }
+}
+
+/// What a custom answer check says about the typed values.
+public enum Verdict: Sendable, Equatable {
+    case right
+    /// A real miss, with what to say.
+    case wrong(String)
+    /// Not checked yet (a box needs something first); doesn't count as a miss.
+    case soft(String)
 }
 
 public enum StepCamera: Sendable { case flat, tilted }
@@ -156,7 +198,8 @@ public struct LessonRun: Sendable {
         active = steps.first?.answer?.boxes.first
     }
 
-    public static func fresh(_ spec: LessonSpec, using rng: inout SeededRandom) -> LessonRun { LessonRun(spec, numbers: spec.generate(&rng)) }
+    /// A fresh problem at this place in a run.
+    public static func fresh(_ spec: LessonSpec, using rng: inout SeededRandom, index: Int = 3) -> LessonRun { LessonRun(spec, numbers: spec.generate(&rng, index)) }
 
     public var step: LessonStep { steps[index] }
     public var display: MathLine { spec.display(numbers) }
@@ -224,7 +267,15 @@ public struct LessonRun: Sendable {
             if a.boxes.contains(where: { (typed[$0] ?? "").isEmpty }) { return .notYet("Fill in every box.") }
             let values = typed.compactMapValues { Double($0) }
             let same = { (want: [String: Double]) in want.allSatisfy { abs((values[$0.key] ?? .nan) - $0.value) < 1e-9 } }
-            if !same(a.expected) {
+            if let check = a.check {
+                switch check(values) {
+                case .right: break
+                case .soft(let line): return .notYet(line)
+                case .wrong(let line):
+                    missed = true; misses += 1
+                    return .notYet(a.known.first { same($0.values) }?.message ?? line)
+                }
+            } else if !same(a.expected) {
                 missed = true; misses += 1
                 return .notYet(a.known.first { same($0.values) }?.message ?? "Not quite. \(a.hint)")
             }

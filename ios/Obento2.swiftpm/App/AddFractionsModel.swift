@@ -26,7 +26,7 @@ final class AddFractionsModel {
     init(origin: Point, chapter: Chapter, instant: Bool, problem: AddFractions.Problem? = nil) {
         self.origin = origin; self.chapter = chapter; self.instant = instant
         var r = SeededRandom(seed: UInt64(Date().timeIntervalSince1970 * 1000))
-        lesson = LessonRun(AddFractions.spec, numbers: problem?.numbers ?? AddFractions.spec.generate(&r))
+        lesson = LessonRun(AddFractions.spec, numbers: problem?.numbers ?? AddFractions.spec.generate(&r, 0))
         rng = r
         openedAt = instant ? PaperClock.now - 100 : PaperClock.now
     }

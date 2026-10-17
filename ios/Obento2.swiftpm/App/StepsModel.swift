@@ -13,6 +13,8 @@ final class StepsModel {
     let instant: Bool
     private(set) var lesson: LessonRun
     private var rng: SeededRandom
+    /// How many problems this run has had: the first ones are easier.
+    private var count = 0
     private(set) var openedAt: Double
     private(set) var wordsAt: Double = PaperClock.now
     /// When the picture last changed (the point hopping, say).
@@ -26,7 +28,7 @@ final class StepsModel {
     init(spec: LessonSpec, origin: Point, chapter: Chapter, number: Int, instant: Bool, numbers: Numbers? = nil) {
         self.origin = origin; self.chapter = chapter; self.number = number; self.instant = instant
         var r = SeededRandom(seed: UInt64(Date().timeIntervalSince1970 * 1000))
-        lesson = LessonRun(spec, numbers: numbers ?? spec.generate(&r))
+        lesson = LessonRun(spec, numbers: numbers ?? spec.generate(&r, 0))
         rng = r
         openedAt = instant ? PaperClock.now - 100 : PaperClock.now
     }
@@ -59,7 +61,8 @@ final class StepsModel {
     func reset() { lesson.reset(); message = nil }
 
     private func restart() {
-        lesson = LessonRun.fresh(lesson.spec, using: &rng)
+        count += 1
+        lesson = LessonRun.fresh(lesson.spec, using: &rng, index: count)
         message = nil; openedAt = time(0); wordsAt = PaperClock.now; pictureAt = PaperClock.now
     }
 
