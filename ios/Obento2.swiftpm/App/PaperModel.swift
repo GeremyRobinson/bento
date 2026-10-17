@@ -271,7 +271,8 @@ final class PaperModel {
     private var prepared: (id: String, numbers: Numbers)?
     private var prepRng = SeededRandom(seed: UInt64(Date().timeIntervalSince1970 * 1000))
 
-    /// What a lesson that opens needs in view as it starts (question, picture, buttons), in paper points.
+    /// What a lesson that opens needs in view as it starts (question, picture, buttons), in paper points; nil to frame
+    /// the tapped lesson on the map as usual. Its first problem is chosen here either way.
     func startFrame(_ p: Piece) -> Rect? {
         guard p.opens else { return nil }
         switch p.id {
@@ -282,7 +283,8 @@ final class PaperModel {
         case "ad":
             let s = shotProblem ?? AddFractions.problems.randomElement(using: &prepRng)!
             prepared = (p.id, s.numbers)
-            return AddFractionsModel.contentFrame(origin: AddFractionsModel.origin(for: p), problem: s, storyLines: 0)
+            // a lesson page frames its own How to when it opens: the tap frames the lesson on the map like any other
+            return nil
         default: return nil
         }
     }
