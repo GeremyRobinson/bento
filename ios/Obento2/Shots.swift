@@ -17,13 +17,13 @@ enum Shots {
         guard let name else { return }
         if ProcessInfo.processInfo.arguments.contains("-landscape"),
            let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            scene.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight))
+            scene.requestGeometryUpdate(UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: .landscapeRight))
         }
         // let the window settle into its final size, then jump to the moment
         Task {
             try? await Task.sleep(for: .seconds(1.5))
             m.instant = true
-            m.drawnAt = Clock.now - 100
+            m.drawnAt = PaperClock.now - 100
             m.shotBox = .init(length: 4, width: 3, height: 2)
             m.frameGroup(duration: 0)
             let uc = Volume.pieces.first { $0.id == "uc" }!

@@ -42,7 +42,7 @@ final class PaperModel {
     var selected: Piece?
     var lesson: UnitCubesModel?
     /// When the pieces started drawing themselves.
-    var drawnAt: Double = Clock.now
+    var drawnAt: Double = PaperClock.now
     var instant = false
     /// A fixed box, for screenshots.
     var shotBox: UnitCubes.Box?
@@ -53,19 +53,19 @@ final class PaperModel {
     func settle(at t: Double) { if let f = flight, f.done(at: t) { resting = f.to; flight = nil } }
 
     func fly(to cam: PaperCamera, duration: Double) {
-        let now = Clock.now
+        let now = PaperClock.now
         let from = camera(at: now)
         flight = instant ? nil : CameraFlight(from: from, to: cam, start: now, duration: duration)
         if instant { resting = cam } else { resting = from }
     }
 
-    func stop() { let c = camera(at: Clock.now); flight = nil; resting = c }
+    func stop() { let c = camera(at: PaperClock.now); flight = nil; resting = c }
 
     func pan(_ dx: Double, _ dy: Double) { stop(); resting = resting.panned(by: dx, dy) }
     func zoom(by f: Double, at p: ObentoCore.Point) { stop(); resting = resting.zoomed(by: f, at: p) }
 
     func zoomButton(_ f: Double) {
-        fly(to: camera(at: Clock.now).zoomed(by: f, at: .init(screen.width / 2, screen.height / 2)), duration: CameraTiming.fly)
+        fly(to: camera(at: PaperClock.now).zoomed(by: f, at: .init(screen.width / 2, screen.height / 2)), duration: CameraTiming.fly)
     }
 
     /// The whole lesson group, framed.
@@ -80,7 +80,7 @@ final class PaperModel {
     func select(_ p: Piece?) {
         selected = p
         guard let p else { return }
-        let now = camera(at: Clock.now)
+        let now = camera(at: PaperClock.now)
         let fit = PaperCamera.framing(p.focus, in: screen)
         let z = min(fit.zoom, max(now.zoom, min(now.zoom * CameraTiming.glideZoom, 1.6)))
         let c = p.focus.mid
@@ -88,9 +88,9 @@ final class PaperModel {
     }
 
     func tap(at s: ObentoCore.Point) {
-        let p = camera(at: Clock.now).toPaper(s)
+        let p = camera(at: PaperClock.now).toPaper(s)
         if let sel = selected, sel.opens, contains(sel.start, p) { open(sel); return }
-        select(Volume.pieces.first { contains($0.frame, p) || contains(Rect(x: $0.at.x, y: $0.at.y + 180, width: 240, height: 40), p) })
+        select(Volume.pieces.first(where: { contains($0.frame, p) || contains(Rect(x: $0.at.x, y: $0.at.y + 180, width: 240, height: 40), p) }))
     }
 
     /// Opening Unit cubes: fly the flat paper to the lesson, then hand the same view to the 3D camera.
@@ -119,4 +119,4 @@ final class PaperModel {
     private func contains(_ r: Rect, _ p: ObentoCore.Point) -> Bool { p.x >= r.x && p.y >= r.y && p.x <= r.x + r.width && p.y <= r.y + r.height }
 }
 
-enum Clock { static var now: Double { Date().timeIntervalSinceReferenceDate } }
+enum PaperClock { static var now: Double { Date().timeIntervalSinceReferenceDate } }

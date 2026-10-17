@@ -26,13 +26,13 @@ final class UnitCubesModel {
     /// When the paper started to tilt (nil while flat).
     private(set) var tiltAt: Double?
     private(set) var untiltAt: Double?
-    private(set) var wordsAt: Double = Clock.now
+    private(set) var wordsAt: Double = PaperClock.now
     var message: (text: String, ok: Bool)?
 
     init(origin: Vec3, chapter: Chapter, view: PaperView3D, screen: Size, instant: Bool, box: UnitCubes.Box? = nil) {
         self.origin = origin; self.chapter = chapter; self.resting = view; self.screen = screen; self.instant = instant
         var r = SeededRandom(seed: UInt64(Date().timeIntervalSince1970))
-        lesson = box.map(UnitCubes.init) ?? UnitCubes.generate(using: &r)
+        lesson = box.map { UnitCubes(box: $0) } ?? UnitCubes.generate(using: &r)
         rng = r
     }
 
@@ -42,7 +42,7 @@ final class UnitCubesModel {
     }
 
     var box: UnitCubes.Box { lesson.box }
-    var scale: Double { view(at: Clock.now).scale / Paper.unit }
+    var scale: Double { view(at: PaperClock.now).scale / Paper.unit }
 
     func view(at t: Double) -> PaperView3D {
         guard let f = flight else { return resting }
@@ -50,7 +50,7 @@ final class UnitCubesModel {
     }
 
     var animating: Bool {
-        let now = Clock.now
+        let now = PaperClock.now
         return flight != nil || now - wordsAt < 0.8 || (layerAt.values.max().map { now - $0 < 2.6 } ?? false)
             || squares.values.contains { now - $0.at < 0.4 } || (squaresGoneAt.map { now - $0 < 1.2 } ?? false)
             || (tiltAt.map { now - $0 < Self.beat + 0.1 } ?? false) || (untiltAt.map { now - $0 < Self.beat + 0.1 } ?? false)
@@ -62,7 +62,7 @@ final class UnitCubesModel {
     }
 
     private func move(to v: PaperView3D, duration: Double, done: ((PaperView3D) -> Void)? = nil) {
-        let now = Clock.now, from = view(at: now)
+        let now = PaperClock.now, from = view(at: now)
         if instant || duration == 0 { flight = nil; resting = v; done?(v); return }
         resting = from; flight = (from, v, now, duration, done)
     }
@@ -77,7 +77,7 @@ final class UnitCubesModel {
         case .notYet(let empty): message = (UnitCubes.notYetLine(empty), false); return
         case .newProblem: restart(); return
         }
-        message = nil; wordsAt = Clock.now
+        message = nil; wordsAt = PaperClock.now
     }
 
     func tap(_ c: UnitCubes.Cell) {
@@ -97,24 +97,24 @@ final class UnitCubesModel {
     }
 
     func zoom(_ f: Double) {
-        var v = view(at: Clock.now); v.scale = min(250, max(25, v.scale * f)); move(to: v, duration: 0.4)
+        var v = view(at: PaperClock.now); v.scale = min(250, max(25, v.scale * f)); move(to: v, duration: 0.4)
     }
 
     func pan(_ dx: Double, _ dy: Double) {
-        var v = view(at: Clock.now); flight = nil
+        var v = view(at: PaperClock.now); flight = nil
         let (_, r, u) = v.axes
         v.target = v.target + r * (-dx / v.scale) + u * (dy / v.scale); resting = v
     }
 
     func tapScreen(_ p: ObentoCore.Point) {
-        let hit = view(at: Clock.now).unproject(p, screen: screen)
+        let hit = view(at: PaperClock.now).unproject(p, screen: screen)
         tap(.init(Int(floor(hit.x - origin.x)), Int(floor(hit.z - origin.z))))
     }
 
     /// The paper tilts; the squares rise into the first layer of cubes. On a narrow screen the view
     /// steps back a little and centres on the box so the whole box fits.
     private func lift() {
-        let now = view(at: Clock.now)
+        let now = view(at: PaperClock.now)
         var to = PaperView3D(elevation: PaperView3D.tilted.elevation, azimuth: PaperView3D.tilted.azimuth, scale: now.scale, target: now.target)
         let w = to.width(of: corners) / to.scale
         let fit = (screen.width - 72) / w
@@ -127,7 +127,7 @@ final class UnitCubesModel {
 
     /// Before leaving, the paper tilts back flat, so the hand-over to the flat paper moves nothing.
     func flatten(then done: @escaping (PaperView3D) -> Void) {
-        let now = view(at: Clock.now)
+        let now = view(at: PaperClock.now)
         guard tiltAt != nil else { done(now); return }
         let (dir, _, _) = now.axes
         let t = now.target - dir * (now.target.y / dir.y)
@@ -138,12 +138,12 @@ final class UnitCubesModel {
     private func restart() {
         flatten { [self] v in
             lesson = UnitCubes.generate(using: &rng)
-            squares = [:]; squaresGoneAt = nil; layerAt = [:]; message = nil; wordsAt = Clock.now
+            squares = [:]; squaresGoneAt = nil; layerAt = [:]; message = nil; wordsAt = PaperClock.now
             resting = v
         }
     }
 
-    private func time(_ delay: Double) -> Double { instant ? Clock.now - 100 : Clock.now + delay }
+    private func time(_ delay: Double) -> Double { instant ? PaperClock.now - 100 : PaperClock.now + delay }
 
     var corners: [Vec3] {
         var out: [Vec3] = []

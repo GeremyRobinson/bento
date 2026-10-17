@@ -1,5 +1,6 @@
 import SwiftUI
 import RealityKit
+import simd
 import ObentoCore
 
 /// Unit cubes as a 3D lesson. The paper's grid is the floor: one cube sits on one big square.
@@ -11,6 +12,8 @@ struct UnitCubesView: View {
     let onBack: () -> Void
     @State private var lastDrag: CGSize = .zero
     @State private var lastPinch: CGFloat = 1
+
+    init(model: UnitCubesModel, time: Double, onBack: @escaping () -> Void) { self.model = model; self.time = time; self.onBack = onBack }
 
     var body: some View {
         let v = model.view(at: time)
@@ -97,6 +100,8 @@ struct PaperScene3D: View {
     let time: Double
     @Environment(\.colorScheme) private var scheme
     @State private var rig = Rig()
+
+    init(model: UnitCubesModel, time: Double) { self.model = model; self.time = time }
 
     var body: some View {
         RealityView { content in

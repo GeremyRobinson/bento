@@ -7,6 +7,8 @@ struct PaperScreen: View {
     @State private var lastDrag: CGSize = .zero
     @State private var lastPinch: CGFloat = 1
 
+    init(model: PaperModel) { _model = State(initialValue: model) }
+
     var body: some View {
         GeometryReader { geo in
             TimelineView(.animation(paused: !animating)) { ctx in
@@ -35,7 +37,7 @@ struct PaperScreen: View {
 
     /// The clock only runs while something moves or draws, so a still paper costs nothing.
     private var animating: Bool {
-        model.moving || Clock.now - model.drawnAt < PiecesLayer.drawTime + 0.2 || (model.lesson?.animating ?? false)
+        model.moving || PaperClock.now - model.drawnAt < PiecesLayer.drawTime + 0.2 || (model.lesson?.animating ?? false)
     }
 
     private var surfaceGestures: some View {
@@ -157,14 +159,15 @@ struct PiecesLayer: View {
 struct ZoomCells: View {
     let model: PaperModel
     let lessonOpen: Bool
+    private func zoom(_ f: Double) { if let l = model.lesson { l.zoom(f) } else { model.zoomButton(f) } }
     var body: some View {
-        let pct = model.lesson?.scale ?? model.camera(at: Clock.now).zoom
+        let pct = model.lesson?.scale ?? model.camera(at: PaperClock.now).zoom
         HStack(spacing: -1.5) {
-            CellButton(action: { lessonOpen ? model.lesson?.zoom(1 / 1.25) : model.zoomButton(1 / 1.25) }) { Icon(name: "minus") }
+            CellButton(action: { zoom(1 / 1.25) }) { Icon(name: "minus") }
             CellButton(width: 64, action: {}) {
                 Text("\(Int((pct * 100).rounded()))%").font(Typeface.font(14, .medium)).monospacedDigit()
             }
-            CellButton(action: { lessonOpen ? model.lesson?.zoom(1.25) : model.zoomButton(1.25) }) { Icon(name: "plus") }
+            CellButton(action: { zoom(1.25) }) { Icon(name: "plus") }
             Color.clear.frame(width: 20, height: 40)
             if !lessonOpen {
                 CellButton(action: { model.findNext() }) { Icon(name: "crosshair") }
