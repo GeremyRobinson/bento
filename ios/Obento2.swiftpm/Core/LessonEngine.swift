@@ -225,6 +225,8 @@ public struct LessonRun: Sendable {
         var s = spec.steps(numbers)
         if story, let first = Self.operationStep(spec, numbers, picture: s.first?.picture ?? [:]) { s.insert(first, at: 0) }
         steps = s
+        let ask = story && s.count > 1 && s[0].answer?.choices != nil ? 1 : 0
+        askIndex = s.indices.contains(ask) && s[ask].task == nil && s[ask].answer == nil && ask < s.count - 1 ? ask : nil
         active = steps.first?.answer?.boxes.first
     }
 
@@ -258,6 +260,15 @@ public struct LessonRun: Sendable {
         if step.task != nil || step.answer != nil { return .do }
         return index == 0 ? .ask : isLast ? .say : .see
     }
+    /// The lesson's opening question with nothing to do but "Let’s find out" (after a story's operation step, if any).
+    public let askIndex: Int?
+    /// On a lesson's page the child goes straight into solving: the opening question is passed by (G 17 Oct).
+    public private(set) var skipsAsk = false
+    public mutating func skipAsk() {
+        skipsAsk = true
+        if index == askIndex { index += 1; active = step.answer?.boxes.first }
+    }
+
     /// Hints and Show me are off in the skill check (LESSONS.md §7).
     public var helps = true
     /// One try per step, as in the skill check: a wrong check shows the answer and the problem counts as missed.
@@ -377,7 +388,9 @@ public struct LessonRun: Sendable {
             if let snap = t.snap { reset(); for c in snap { marks[c] = index } }
         }
         guard !isLast else { return .newProblem }
-        index += 1; missed = false; misses = 0; typed = [:]; active = step.answer?.boxes.first
+        index += 1; missed = false; misses = 0; typed = [:]
+        if skipsAsk, index == askIndex, !isLast { index += 1 }
+        active = step.answer?.boxes.first
         return .moved(index)
     }
 }
@@ -512,6 +525,7 @@ public enum LessonPage {
     public static func run(_ spec: LessonSpec, _ p: Problem) -> LessonRun {
         var r = LessonRun(spec, numbers: p.numbers, story: p.story)
         r.helps = !p.isCheck; r.oneTry = p.isCheck
+        r.skipAsk()
         return r
     }
 

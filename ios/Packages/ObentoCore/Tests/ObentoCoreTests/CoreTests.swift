@@ -427,3 +427,19 @@ final class LessonPageTests: XCTestCase {
         XCTAssertEqual(LessonPage.checkLevel(runs), 3, "7 of 8 steps right")
     }
 }
+
+final class StraightIntoSolvingTests: XCTestCase {
+    func testPageProblemsStartOnTheirFirstStep() {
+        let plain = LessonPage.run(AddFractions.spec, .init(numbers: AddFractions.Problem(a: 4, p: 1, b: 8, q: 1).numbers, story: false, isCheck: false))
+        XCTAssertEqual(plain.words.say, "1/4 is how many eighths?", "no Let’s find out first")
+        var story = LessonPage.run(AddFractions.spec, .init(numbers: AddFractions.Problem(a: 4, p: 1, b: 8, q: 1).numbers, story: true, isCheck: false))
+        XCTAssertEqual(story.words.hint, "Which operation solves it?")
+        story.choose(0)
+        _ = story.go()
+        XCTAssertEqual(story.words.say, "1/4 is how many eighths?", "after the story's operation, straight into the problem")
+        var cubes = LessonRun(UnitCubes.spec, numbers: UnitCubes.Box(length: 4, width: 3, height: 2).numbers); cubes.skipAsk()
+        XCTAssertEqual(cubes.words.say, "Cover the floor with squares.")
+        _ = cubes.showMe(); _ = cubes.go()
+        XCTAssertEqual(cubes.words.say, "One layer: 12 cubes.", "the layers aren't skipped")
+    }
+}

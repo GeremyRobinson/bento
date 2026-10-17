@@ -79,15 +79,14 @@ enum Shots {
                 guard let page = m.bars, n != "fractions" else { return }
                 let b = n == "fractions-story" ? page.problems[2] : n == "fractions-check" ? page.problems[12] : page.problems[0]
                 if n == "fractions-howto" { page.watchAgain(); return }
-                if n == "fractions-overview" { page.problems[0].go(); for i in 0..<page.problems[0].problem.covered { page.problems[0].tap(i) }; page.problems[0].go(); m.frameAll(); return }
+                if n == "fractions-overview" { for i in 0..<page.problems[0].problem.covered { page.problems[0].tap(i) }; page.problems[0].go(); m.frameAll(); return }
                 if n == "fractions-story" { b.choose(2); b.go(); return }
-                b.go()
                 if n == "fractions-wrong" || n == "fractions-check" { b.tap(b.problem.covered + 1); b.go(); return }
                 if n == "fractions-hint2" { b.tap(b.problem.covered + 1); b.go(); b.go(); return }
                 for i in 0..<b.problem.covered { b.tap(i) }
                 b.go()
                 if n == "fractions-add" { return }
-                if n == "fractions-two" { for i in b.problem.covered..<b.problem.total { b.tap(i) }; b.go(); page.problems[1].go(); return }
+                if n == "fractions-two" { for i in b.problem.covered..<b.problem.total { b.tap(i) }; b.go(); page.problems[1].tap(0); return }
                 for i in b.problem.covered..<b.problem.total { b.tap(i) }
                 b.go()
             default:
