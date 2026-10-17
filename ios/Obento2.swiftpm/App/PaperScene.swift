@@ -32,13 +32,36 @@ struct PaperScene: View {
 
 /// A lesson's picture as lines on the grid, in paper points, in the order they draw themselves in.
 extension Piece {
-    /// The picture, centred in its frame to the nearest whole cell (so it stays on the grid).
+    /// The picture, centred in its frame to the nearest whole cell (so it stays on the grid). A box seen in 3D can't
+    /// sit on the grid's lines, so it's centred exactly.
     var strokes: [[CGPoint]] {
         let lines = drawing, pts = lines.flatMap { $0 }
         guard let x0 = pts.map(\.x).min(), let x1 = pts.map(\.x).max(), let y0 = pts.map(\.y).min(), let y1 = pts.map(\.y).max() else { return lines }
-        let c = Paper.cell, f = frame
+        let c = isBox ? 0.001 : Paper.cell, f = frame
         let dx = ((f.mid.x - (x0 + x1) / 2) / c).rounded() * c, dy = ((f.mid.y - (y0 + y1) / 2) / c).rounded() * c
         return lines.map { $0.map { CGPoint(x: $0.x + dx, y: $0.y + dy) } }
+    }
+
+    /// The lessons whose picture is a box of cubes, drawn as the 3D lesson shows it.
+    private var isBox: Bool { id == "uc" || id == "g5-volume" }
+
+    /// A box `l` long, `h` tall and `w` wide, seen from the tilted 3D lesson's own angle (PaperView3D.tilted), `u`
+    /// points to a cube: the top, the front and the left side, as the cubes show when the paper tilts.
+    private func box3D(l: Double, h: Double, w: Double, u: Double) -> [[CGPoint]] {
+        let (_, right, up) = PaperView3D(elevation: PaperView3D.tilted.elevation, azimuth: PaperView3D.tilted.azimuth).axes
+        func P(_ x: Double, _ y: Double, _ z: Double) -> CGPoint {
+            let v = Vec3(x, y, z)
+            return CGPoint(x: at.x + v.dot(right) * u, y: at.y - v.dot(up) * u)
+        }
+        let top = [P(0, h, 0), P(l, h, 0), P(l, h, w), P(0, h, w), P(0, h, 0)]
+        let front = [P(0, h, w), P(0, 0, w), P(l, 0, w), P(l, h, w)]
+        let left = [P(0, h, 0), P(0, 0, 0), P(0, 0, w)]
+        // the cubes' own lines: across the top and down the front and the side
+        var cuts: [[CGPoint]] = []
+        for i in stride(from: 1.0, to: l, by: 1) { cuts += [[P(i, h, 0), P(i, h, w), P(i, 0, w)]] }
+        for k in stride(from: 1.0, to: w, by: 1) { cuts += [[P(l, h, k), P(0, h, k), P(0, 0, k)]] }
+        for j in stride(from: 1.0, to: h, by: 1) { cuts += [[P(0, j, 0), P(0, j, w), P(l, j, w)]] }
+        return [top, front, left] + cuts
     }
 
     /// The picture as it's drawn, before centring.
@@ -62,11 +85,10 @@ extension Piece {
         }
         func line(_ pts: (Double, Double)...) -> [CGPoint] { pts.map { CGPoint(x: r.minX + $0.0, y: r.minY + $0.1) } }
         switch id {
-        case "uc": // one cube, drawn on the grid
-            let x = r.minX + 80, y = r.minY + 60, s = 4 * c, o = 2 * c
-            return [box(CGRect(x: x, y: y, width: s, height: s)),
-                    [CGPoint(x: x, y: y), CGPoint(x: x + o, y: y - o), CGPoint(x: x + s + o, y: y - o), CGPoint(x: x + s, y: y)],
-                    [CGPoint(x: x + s + o, y: y - o), CGPoint(x: x + s + o, y: y + s - o), CGPoint(x: x + s, y: y + s)]]
+        case "uc": // one cube, as the lesson's cubes look when the paper tilts
+            return box3D(l: 1, h: 1, w: 1, u: 70)
+        case "g5-volume": // a box of cubes, 4 by 3 by 2, as the lesson shows it
+            return box3D(l: 4, h: 2, w: 3, u: 32)
         case "ad", "add", "mix": // a fourths bar over an eighths bar, one whole long
             return bar(y: 40, parts: 4) + bar(y: 100, parts: 8)
         case "sub": // thirds over sixths
