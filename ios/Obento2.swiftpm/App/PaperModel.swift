@@ -170,7 +170,7 @@ final class PaperModel {
         // a lesson that opens: its first problem is chosen now, and the glide frames the lesson as it will start, at up
         // to 100%, so Start needs no camera move and the lesson starts at a comfortable size (G 17 Oct)
         if let f = startFrame(p) {
-            fly(to: framingBelowBar(f.union(p.focus), maxZoom: CameraTiming.selectMax), duration: CameraTiming.glide)
+            fly(to: framingBelowBar(f, maxZoom: CameraTiming.lessonMax), duration: CameraTiming.glide)
             return
         }
         let now = camera(at: PaperClock.now)
@@ -264,10 +264,10 @@ final class PaperModel {
         }
     }
 
-    /// Each step, the camera frames what the lesson shows right now: zoomed to fit it (in or out, never past 100%) and
+    /// Each step, the camera frames what the lesson shows right now: zoomed to fit it (in or out, up to 160%) and
     /// centred on it (G 17 Oct). A move too small to notice is skipped, so the camera doesn't twitch.
     func frameCurrent(_ r: Rect) {
-        let now = camera(at: PaperClock.now), to = framingBelowBar(r, maxZoom: CameraTiming.selectMax)
+        let now = camera(at: PaperClock.now), to = framingBelowBar(r, maxZoom: CameraTiming.lessonMax)
         let c0 = now.toPaper(Point(screen.width / 2, screen.height / 2)), c1 = to.toPaper(Point(screen.width / 2, screen.height / 2))
         if abs(to.zoom / now.zoom - 1) < 0.02, hypot(c1.x - c0.x, c1.y - c0.y) * now.zoom < 12 { return }
         fly(to: to, duration: CameraTiming.fly)

@@ -46,6 +46,9 @@ public enum CameraTiming {
     public static let glideZoom: Double = 1.3
     /// ...and never closer than 100%, however many lessons are tapped one after another (G 17 Oct).
     public static let selectMax: Double = 1.0
+    /// A lesson frames what it shows and may come this close, so a little content doesn't float in empty paper
+    /// (G 17 Oct: "100% might be too zoomed out").
+    public static let lessonMax: Double = 1.6
 
     /// The zoom a tap on a lesson glides to: 1.3x the whole map's view, kept if the child is already a little closer,
     /// never past `selectMax`, and never so close the lesson doesn't fit.

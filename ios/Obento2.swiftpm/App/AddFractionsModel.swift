@@ -141,6 +141,7 @@ final class AddFractionsModel {
         lesson = LessonRun(AddFractions.spec, numbers: problem.numbers, story: session.story)
         lesson.helps = session.helps; lesson.oneTry = session.oneTry
         fills = [:]; guideAt = nil; message = nil
+        needs?(contentFrame)
     }
 
     private func restart() {

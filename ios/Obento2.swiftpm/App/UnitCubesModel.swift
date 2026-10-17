@@ -174,7 +174,7 @@ final class UnitCubesModel {
     }
 
     /// The tilted view of what's shown now: the box as high as its `layers`, the words above it and the buttons below,
-    /// zoomed to fit (in or out, never past 100%) and centred under the top bar, with two cells to spare.
+    /// zoomed to fit (in or out, up to 160%) and centred under the top bar, with two cells to spare.
     private func tiltedView(from now: PaperView3D, layers: Int) -> PaperView3D {
         let L = Double(box.length), W = Double(box.width), H = Double(min(box.height, max(1, layers)))
         var to = PaperView3D(elevation: PaperView3D.tilted.elevation, azimuth: PaperView3D.tilted.azimuth, scale: now.scale,
@@ -188,7 +188,7 @@ final class UnitCubesModel {
         pts += [bt, Point(bt.x + 300 * k, bt.y + 40 * k)]
         let x0 = pts.map(\.x).min()!, x1 = pts.map(\.x).max()!, y0 = pts.map(\.y).min()!, y1 = pts.map(\.y).max()!
         let bar = 72.0, m = screen.width > 760 ? 2 * Paper.cell : 8
-        let f = min(Paper.unit * CameraTiming.selectMax / to.scale, (screen.width - 2 * m) / (x1 - x0), (screen.height - bar - 2 * m) / (y1 - y0))
+        let f = min(Paper.unit * CameraTiming.lessonMax / to.scale, (screen.width - 2 * m) / (x1 - x0), (screen.height - bar - 2 * m) / (y1 - y0))
         to.scale *= f
         // scaling shrinks everything about the screen's middle; then slide so it sits in the free space under the bar
         let cx = screen.width / 2 + ((x0 + x1) / 2 - screen.width / 2) * f, cy = screen.height / 2 + ((y0 + y1) / 2 - screen.height / 2) * f
