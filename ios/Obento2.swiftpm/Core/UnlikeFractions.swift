@@ -128,6 +128,7 @@ public enum UnlikeFractions {
                    display: { n in [.frac(.num(n["a"] ?? 1), .num(n["b"] ?? 2)), .op((n["minus"] ?? 0) == 1 ? "−" : "+"), .frac(.num(n["c"] ?? 1), .num(n["d"] ?? 2))] },
                    idea: { _ in ideas[lesson]! },
                    story: { n in story(lesson, n) },
+                   storyOp: { n in (n["minus"] ?? 0) == 1 ? "−" : "+" },
                    depends: depends, check: check) { n in steps(lesson, n) }
     }
 

@@ -32,7 +32,11 @@ public enum AddFractions {
     }()
 
     public static let spec = LessonSpec(id: "ad", title: "Add with different bottoms", master: "bars",
-                                        generate: { rng, _ in problems.randomElement(using: &rng)!.numbers }) { n in
+                                        generate: { rng, _ in problems.randomElement(using: &rng)!.numbers },
+                                        display: { n in let s = Problem(n); return [.frac(.num(Double(s.p)), .num(Double(s.a))), .op("+"), .frac(.num(Double(s.q)), .num(Double(s.b)))] },
+                                        // the web's story for adding fractions
+                                        story: { n in let s = Problem(n); return "You walked \(s.p)/\(s.a) of a mile to the park and then \(s.q)/\(s.b) of a mile to the store. How far did you walk in all?" },
+                                        storyOp: { _ in "+" }) { n in
         let s = Problem(n), A = amount(s.p, s.a), B = amount(s.q, s.b), names = plural(s.b)
         // "the fourth", "the 3 fourths": the part of the top row the child covers
         let the = s.p == 1 ? "the \(name(s.a))" : "the \(s.p) \(plural(s.a))"

@@ -49,6 +49,7 @@ public enum DivideByUnitFraction {
     }, display: { p in [.num(p["W"] ?? 0), .op("÷"), .frac(.num(1), .num(p["d"] ?? 2))] },
     idea: { _ in "Dividing by a unit fraction asks how many of those pieces fit." },
     story: { p in "You have \(fmt(p["W"] ?? 0)) cups of flour. Each batch of cookies uses 1/\(fmt(p["d"] ?? 2)) cup. How many batches can you make?" },
+    storyOp: { _ in "÷" },
     depends: ["g3-unitfrac", "g3-facts"],
     check: [CheckItem(3), CheckItem(3), CheckItem(3), CheckItem(3, story: true)]) { p in
         let W = Int(p["W"] ?? 0), d = Int(p["d"] ?? 2), all = W * d, last = wholeBeat(W - 1)

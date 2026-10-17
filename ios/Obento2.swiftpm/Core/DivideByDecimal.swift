@@ -36,6 +36,7 @@ public enum DivideByDecimal {
     }, display: { v in let s = Parts(v); return [.num(s.x), .op("÷"), .num(s.y)] },
     idea: { _ in "Making both numbers ten times bigger doesn’t change how many times one fits in the other." },
     story: { v in let s = Parts(v); return "You have \(fmt(s.x)) liters of juice. Each cup holds \(fmt(s.y)) liters. How many cups can you fill?" },
+    storyOp: { _ in "÷" },
     depends: ["g5-pow10", "g3-divfacts"],
     check: [CheckItem(0, when: { Parts($0).qt >= 7 }), CheckItem(0, when: { Parts($0).qt >= 10 }), CheckItem(0), CheckItem(0, story: true)]) { v in
         let s = Parts(v), d = s.d, qt = s.qt, x = s.x, y = s.y, n = s.n

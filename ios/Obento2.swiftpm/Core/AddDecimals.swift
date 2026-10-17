@@ -43,6 +43,7 @@ public enum AddDecimals {
     }, display: { n in [.num(n["a"] ?? 0), .op("+"), .num(n["b"] ?? 0)] },
     idea: { _ in "Line up the points so tenths add to tenths and hundredths to hundredths." },
     story: { n in "Maya biked \(fmt(n["a"] ?? 0)) km on Saturday and \(fmt(n["b"] ?? 0)) km on Sunday. How far did she bike in all?" },
+    storyOp: { _ in "+" },
     depends: ["g4-dec", "g4-addsub"],
     check: [CheckItem(3, when: { n in let s = Parts(n); return s.da + s.db >= 1 - 1e-9 }),
             CheckItem(3, when: { n in let s = Parts(n); return s.da + s.db < 1 - 1e-9 }),

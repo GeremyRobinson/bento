@@ -393,7 +393,7 @@ final class Rig {
         }
         // and then the pieces that are right, outlined
         if picture["outline"] == 1 {
-            let want = b.lesson.index == 1 ? 0..<s.covered : s.covered..<s.total
+            let want = b.lesson.step.task?.style == 2 ? s.covered..<s.total : 0..<s.covered
             let boxes = want.map { i -> [CGPoint] in
                 let x = Double(i) * pw + 3, w = pw - 6
                 return [P(x, r2 + 3), P(x + w, r2 + 3), P(x + w, r2 + h - 3), P(x, r2 + h - 3), P(x, r2 + 3)]

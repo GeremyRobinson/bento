@@ -45,6 +45,7 @@ public enum MultiplyTwoDigit {
     }, display: { n in [.num(n["a"] ?? 0), .op("×"), .num(n["b"] ?? 0)] },
     idea: { _ in "Splitting one number into tens and ones turns one hard multiplication into two easy ones, added back together." },
     story: { n in "A theater has \(fmt(n["a"] ?? 0)) rows. Each row has \(fmt(n["b"] ?? 0)) seats. How many seats are there?" },
+    storyOp: { _ in "×" },
     depends: ["g4-mult2x2", "g3-mult10"],
     check: [CheckItem(3), CheckItem(3), CheckItem(3, when: { Int($0["b"] ?? 0) % 10 >= 6 }), CheckItem(3, story: true)]) { n in
         let a = Int(n["a"] ?? 0), b = Int(n["b"] ?? 0)

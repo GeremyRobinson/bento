@@ -175,8 +175,7 @@ final class UnitCubesModel {
     private func restart() {
         busyUntil = time(Self.beat + 0.1)
         flatten { [self] v in
-            lesson = LessonRun.fresh(UnitCubes.spec, using: &rng, index: session.index)
-            lesson.helps = session.helps; lesson.oneTry = session.oneTry
+            lesson = session.makeRun(UnitCubes.spec, using: &rng)
             squares = [:]; squaresGoneAt = nil; layerAt = [:]; message = nil; wordsAt = PaperClock.now
             resting = v
         }

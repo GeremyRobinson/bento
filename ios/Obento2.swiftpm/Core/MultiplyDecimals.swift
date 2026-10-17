@@ -51,6 +51,7 @@ public enum MultiplyDecimals {
     }, display: { v in let s = Parts(v); return [.num(s.x), .op("×"), .num(s.y)] },
     idea: { _ in "A tenth of a tenth is a hundredth, so the answer has as many decimal places as both numbers together." },
     story: { v in let s = Parts(v); return "A garden bed is \(fmt(s.x)) m long and \(fmt(s.y)) m wide. What is its area in square meters?" },
+    storyOp: { _ in "×" },
     depends: ["g4-partial", "g4-dec"],
     check: [CheckItem(1), CheckItem(4), CheckItem(7), CheckItem(5, story: true)]) { v in
         let s = Parts(v), A = s.A, B = s.B, pa = s.pa, pb = s.pb, x = s.x, y = s.y, P = s.P, n = s.n, ans = s.answer

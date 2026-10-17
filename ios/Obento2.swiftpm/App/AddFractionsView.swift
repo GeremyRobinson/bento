@@ -17,7 +17,9 @@ struct AddFractionsView: View {
 
         ZStack(alignment: .topLeading) {
             VStack(alignment: .leading, spacing: 0) {
-                Text(words.say).font(Typeface.question).foregroundStyle(Ink.ink).frame(height: 40, alignment: .leading)
+                // a story runs onto more lines, growing up from the hint
+                Text(words.say).font(Typeface.question).foregroundStyle(Ink.ink).lineLimit(4).fixedSize(horizontal: false, vertical: true)
+                    .frame(minHeight: 40, alignment: .bottomLeading)
                 Text(words.hint).font(Typeface.hint).foregroundStyle(Ink.ink2).frame(height: 20, alignment: .leading)
             }
             .frame(width: 480, alignment: .leading)
@@ -47,6 +49,20 @@ struct AddFractionsView: View {
             if l.picture["guide"] == 1, let look = l.step.look {
                 Text(look).font(Typeface.font(13)).foregroundStyle(Ink.ink2).opacity(model.guide(at: time))
                     .pinned(at(e + 10, r1 - 24), .bottomLeading, k)
+            }
+            // a pick-one step: the choices are cell blocks under the bars, the message under them
+            if let choices = l.step.answer?.choices {
+                HStack(spacing: -1.5) {
+                    ForEach(Array(choices.enumerated()), id: \.offset) { i, c in
+                        CellButton(width: 120, main: l.typed["c"] == String(i), action: { model.choose(i) }) { Text(c).font(Typeface.button) }
+                    }
+                }
+                .opacity(shown)
+                .pinned(at(0, r2 + h + 12), .topLeading, k)
+                if let m = model.message {
+                    Text(m.text).font(Typeface.font(17, .medium)).foregroundStyle(chapter).fixedSize()
+                        .pinned(at(0, r2 + h + 60), .topLeading, k)
+                }
             }
             if let count = l.countLine {
                 Group {

@@ -28,6 +28,7 @@ public enum LongDivision {
     }, display: { n in [.num(n["n"] ?? 0), .op("÷"), .num(n["dv"] ?? 0)] },
     idea: { _ in "Taking out ten groups at a time gets to the answer faster than going one by one." },
     story: { n in "\(fmt(n["n"] ?? 0)) marbles are packed equally into \(fmt(n["dv"] ?? 0)) jars. How many marbles go in each jar?" },
+    storyOp: { _ in "÷" },
     depends: ["g4-divide", "g3-mult10"],
     check: [CheckItem(3, when: { ($0["dv"] ?? 0) <= 9 }), CheckItem(3, when: { ($0["dv"] ?? 0) >= 11 }), CheckItem(3, when: { ($0["dv"] ?? 0) >= 11 }),
             CheckItem(3, story: true)]) { nums in

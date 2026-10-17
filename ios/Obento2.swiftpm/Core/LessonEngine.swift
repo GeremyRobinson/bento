@@ -90,6 +90,8 @@ public struct LessonSpec: Sendable {
     public let idea: @Sendable (Numbers) -> String
     /// The same problem told as a word problem, for lessons that have one.
     public let story: (@Sendable (Numbers) -> String)?
+    /// The operation the story needs ("+", "−", "×", "÷"): what "Which operation solves it?" checks.
+    public let storyOp: (@Sendable (Numbers) -> String)?
     /// The lessons a child needs first; the first is the main build-up.
     public let depends: [String]
     /// The lesson's own skill check: four problems, no hints, one try per step.
@@ -100,10 +102,11 @@ public struct LessonSpec: Sendable {
                 display: @escaping @Sendable (Numbers) -> MathLine = { _ in [] },
                 idea: @escaping @Sendable (Numbers) -> String = { _ in "" },
                 story: (@Sendable (Numbers) -> String)? = nil,
+                storyOp: (@Sendable (Numbers) -> String)? = nil,
                 depends: [String] = [], check: [CheckItem] = [],
                 steps: @escaping @Sendable (Numbers) -> [LessonStep]) {
         self.id = id; self.title = title; self.master = master; self.generate = generate; self.display = display
-        self.idea = idea; self.story = story; self.depends = depends; self.check = check; self.steps = steps
+        self.idea = idea; self.story = story; self.storyOp = storyOp; self.depends = depends; self.check = check; self.steps = steps
     }
 }
 
@@ -216,9 +219,33 @@ public struct LessonRun: Sendable {
     /// The box the keypad types into.
     public var active: String?
 
-    public init(_ spec: LessonSpec, numbers: Numbers) {
-        self.spec = spec; self.numbers = numbers; steps = spec.steps(numbers)
+    /// `story`: tell it as the lesson's word problem, with "Which operation solves it?" first (as the web's practice does).
+    public init(_ spec: LessonSpec, numbers: Numbers, story: Bool = false) {
+        self.spec = spec; self.numbers = numbers
+        var s = spec.steps(numbers)
+        if story, let first = Self.operationStep(spec, numbers, picture: s.first?.picture ?? [:]) { s.insert(first, at: 0) }
+        steps = s
         active = steps.first?.answer?.boxes.first
+    }
+
+    public static let ops = ["+", "−", "×", "÷"]
+    static let opName = ["+": "Add", "−": "Subtract", "×": "Multiply", "÷": "Divide"]
+    static let opWhy = [
+        "+": "Putting amounts together means adding.",
+        "−": "Taking away, or finding how much more, means subtracting.",
+        "×": "Equal groups, or a part of a group, means multiplying.",
+        "÷": "Sharing equally, or splitting into groups, means dividing.",
+    ]
+
+    /// "Read the story": the child picks the operation first. Its words and check are the web's.
+    static func operationStep(_ spec: LessonSpec, _ n: Numbers, picture: Numbers) -> LessonStep? {
+        guard let text = spec.story?(n), let op = spec.storyOp?(n), let k = ops.firstIndex(of: op) else { return nil }
+        let why = opWhy[op]!
+        return LessonStep(StepWords(say: text, hint: "Which operation solves it?", action: "Check"),
+            answer: AnswerTask(prompt: spec.display(n), expected: ["c": Double(k)], hint: why, explain: why,
+                               check: { v in v["c"] == Double(k) ? .right : .wrong("Read the story again. Is it putting together, taking away, equal groups, or sharing?") },
+                               choices: ops.map { "\($0) \(opName[$0]!)" }),
+            picture: picture)
     }
 
     /// A fresh problem at this place in a run.
@@ -408,6 +435,22 @@ public struct LessonSession: Sendable, Equatable {
         case .done(let learned): phase = learned ? .done(learned: true) : .practice(1)
         }
         return phase
+    }
+
+    /// Every third practice problem is told as a story, as on the web (problems 2 and 5).
+    public var story: Bool { if case .practice(let n) = phase { n % 3 == 2 } else { false } }
+
+    /// The next problem for this phase: fresh numbers at the right place in the run, told as a story where it should be,
+    /// and in the skill check drawn from the lesson's own recipe. Hints and tries follow the phase.
+    public func makeRun(_ spec: LessonSpec, using rng: inout SeededRandom) -> LessonRun {
+        var n = spec.generate(&rng, index), told = story
+        if case .check(let k, _) = phase, !spec.check.isEmpty {
+            let item = spec.check[(k - 1) % spec.check.count]
+            n = item.draw(spec, using: &rng); told = item.story
+        }
+        var run = LessonRun(spec, numbers: n, story: told && spec.story != nil)
+        run.helps = helps; run.oneTry = oneTry
+        return run
     }
 
     /// The check just ended in learning the lesson.

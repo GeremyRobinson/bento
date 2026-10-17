@@ -63,6 +63,7 @@ enum Shots {
                 b.go()
                 if n == "fractions-wrong" { b.tap(5); b.go(); return }
                 if n == "fractions-hint2" { b.tap(5); b.go(); b.go(); return }
+                if n == "fractions-story" { b.jump(to: .practice(2), problem: .init(a: 4, p: 1, b: 8, q: 1)); b.choose(2); b.go(); return }
                 if n == "fractions-check" {
                     b.jump(to: .check(2, right: 1), problem: .init(a: 4, p: 1, b: 8, q: 1)); b.go(); b.tap(5); b.go(); return
                 }

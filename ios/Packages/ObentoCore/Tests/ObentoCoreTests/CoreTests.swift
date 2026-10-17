@@ -283,3 +283,37 @@ final class PaperWayTests: XCTestCase {
         XCTAssertEqual(t.finished(right: true), .practice(1), "not learned: back to practice")
     }
 }
+
+final class StoryStepTests: XCTestCase {
+    func testAStoryProblemAsksForTheOperationFirst() {
+        var l = LessonRun(AddingFractions.spec, numbers: AddingFractions.spec.generate(&rngForTests, 1), story: true)
+        XCTAssertEqual(l.words.hint, "Which operation solves it?")
+        XCTAssertTrue(l.words.say.hasPrefix("You walked"))
+        XCTAssertEqual(l.step.answer?.choices, ["+ Add", "− Subtract", "× Multiply", "÷ Divide"])
+        l.choose(2)
+        XCTAssertEqual(l.go(), .notYet("Read the story again. Is it putting together, taking away, equal groups, or sharing?"))
+        l.choose(0)
+        XCTAssertEqual(l.go(), .moved(1))
+        XCTAssertEqual(l.steps.count, AddingFractions.spec.steps(l.numbers).count + 1)
+    }
+
+    func testEveryThirdPracticeProblemIsAStory() {
+        var rng = SeededRandom(seed: 9)
+        var s = LessonSession(phase: .practice(1))
+        XCTAssertNotEqual(s.makeRun(LongDivision.spec, using: &rng).words.hint, "Which operation solves it?")
+        s.finished(right: true)
+        XCTAssertEqual(s.makeRun(LongDivision.spec, using: &rng).words.hint, "Which operation solves it?")
+        XCTAssertEqual(s.makeRun(LongDivision.spec, using: &rng).step.answer?.expected["c"], 3, "dividing")
+        XCTAssertNotEqual(s.makeRun(UnitCubes.spec, using: &rng).words.hint, "Which operation solves it?", "no story, no step")
+    }
+
+    func testTheCheckUsesTheLessonsRecipe() {
+        var rng = SeededRandom(seed: 2)
+        let s = LessonSession(phase: .check(4, right: 2))
+        let r = s.makeRun(MultiplyTwoDigit.spec, using: &rng)
+        XCTAssertEqual(r.words.hint, "Which operation solves it?", "the recipe's fourth item is the story")
+        XCTAssertFalse(r.helps); XCTAssertTrue(r.oneTry)
+    }
+}
+
+nonisolated(unsafe) var rngForTests = SeededRandom(seed: 5)

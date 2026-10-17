@@ -38,6 +38,7 @@ public enum MultiplyFractions {
     story: { p in
         "\(fmt(p["c"] ?? 1))/\(fmt(p["d"] ?? 2)) of a garden is vegetables. \(fmt(p["a"] ?? 1))/\(fmt(p["b"] ?? 2)) of the vegetable part is carrots. What part of the whole garden is carrots?"
     },
+    storyOp: { _ in "×" },
     depends: ["g5-fracof", "g4-equiv"],
     check: [CheckItem(3, when: { p in gcd(Int(p["a"]! * p["c"]!), Int(p["b"]! * p["d"]!)) > 1 }),
             CheckItem(3, when: { p in gcd(Int(p["a"]! * p["c"]!), Int(p["b"]! * p["d"]!)) == 1 }),

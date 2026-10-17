@@ -36,7 +36,8 @@ struct UnitCubesView: View {
         let at = { (p: Vec3) -> CGPoint in let s = v.project(p, screen: model.screen); return CGPoint(x: s.x, y: s.y) }
 
         VStack(alignment: .leading, spacing: 0) {
-            Text(words.say).font(Typeface.question).foregroundStyle(Ink.ink).frame(height: 40, alignment: .leading)
+            Text(words.say).font(Typeface.question).foregroundStyle(Ink.ink).lineLimit(4).fixedSize(horizontal: false, vertical: true)
+                    .frame(minHeight: 40, alignment: .bottomLeading)
             Text(words.hint).font(Typeface.hint).foregroundStyle(Ink.ink2).frame(height: 20, alignment: .leading)
         }
         .frame(width: 480, alignment: .leading)

@@ -15,7 +15,8 @@ struct StepsLessonView: View {
 
         ZStack(alignment: .topLeading) {
             VStack(alignment: .leading, spacing: 0) {
-                Text(l.words.say).font(Typeface.question).foregroundStyle(Ink.ink).frame(height: 40, alignment: .leading)
+                Text(l.words.say).font(Typeface.question).foregroundStyle(Ink.ink).lineLimit(4).fixedSize(horizontal: false, vertical: true)
+                    .frame(minHeight: 40, alignment: .bottomLeading)
                 Text(l.words.hint).font(Typeface.hint).foregroundStyle(Ink.ink2).frame(height: 20, alignment: .leading)
             }
             .frame(width: 640, alignment: .leading)

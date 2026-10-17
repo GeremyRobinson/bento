@@ -92,6 +92,7 @@ public enum ConvertUnits {
         if p.one == "gallon" { return "A fish tank holds \(p.given) of water. How many \(p.target) is that?" }
         return "A rope is \(p.given) long. How many \(p.target) long is it?"
     },
+    storyOp: { n in (n["up"] ?? 0) == 1 ? "÷" : "×" },
     depends: ["g4-convert", "g4-partial"],
     check: [CheckItem(1, when: { $0["up"] == 0 }), CheckItem(4, when: { $0["up"] == 1 }), CheckItem(5, when: { $0["up"] == 1 }),
             CheckItem(7, when: { x in x["up"] == 1 && fmod(x["n"] ?? 0, Problem(x).f) != 0 })]) { x in

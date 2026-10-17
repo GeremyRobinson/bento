@@ -34,6 +34,7 @@ public enum FractionOf {
     }, display: { p in [.frac(.num(p["n"] ?? 1), .num(p["d"] ?? 2)), .text("of"), .num(p["W"] ?? 0)] },
     idea: { _ in "The bottom says how many equal groups to make, and the top says how many to take." },
     story: { p in "There are \(fmt(p["W"] ?? 0)) marbles in a bag. \(fmt(p["n"] ?? 1))/\(fmt(p["d"] ?? 2)) of them are blue. How many marbles are blue?" },
+    storyOp: { _ in "×" },
     depends: ["g3-divfacts", "g4-fracwhole"],
     check: [CheckItem(3, when: { ($0["n"] ?? 0) > 1 }), CheckItem(3, when: { ($0["n"] ?? 0) > 1 }), CheckItem(3), CheckItem(3, story: true)]) { p in
         let n = Int(p["n"] ?? 1), d = Int(p["d"] ?? 2), W = Int(p["W"] ?? 0), g = W / d, R = g * n

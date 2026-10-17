@@ -82,6 +82,9 @@ final class AddFractionsModel {
         }
     }
 
+    /// A pick-one step (the story's "Which operation solves it?"): the child taps choice i.
+    func choose(_ i: Int) { guard !busy else { return }; lesson.choose(i); message = nil }
+
     func tap(_ i: Int) {
         guard !busy, lesson.tap(i) else { return }
         message = nil; syncFills()
@@ -116,14 +119,13 @@ final class AddFractionsModel {
     /// For screenshots: jump to a phase of the session with a fresh problem.
     func jump(to phase: LessonSession.Phase, problem: AddFractions.Problem) {
         session = LessonSession(phase: phase)
-        lesson = LessonRun(AddFractions.spec, numbers: problem.numbers)
+        lesson = LessonRun(AddFractions.spec, numbers: problem.numbers, story: session.story)
         lesson.helps = session.helps; lesson.oneTry = session.oneTry
         fills = [:]; guideAt = nil; message = nil
     }
 
     private func restart() {
-        lesson = LessonRun.fresh(AddFractions.spec, using: &rng, index: session.index)
-        lesson.helps = session.helps; lesson.oneTry = session.oneTry
+        lesson = session.makeRun(AddFractions.spec, using: &rng)
         fills = [:]; guideAt = nil; message = nil
         openedAt = time(0); wordsAt = PaperClock.now
     }
