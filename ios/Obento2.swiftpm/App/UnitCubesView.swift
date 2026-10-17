@@ -51,17 +51,17 @@ struct UnitCubesView: View {
         Text("\(b.height)").font(Typeface.label).foregroundStyle(Ink.ink).opacity(model.heightLabel(at: time))
             .pinned(at(Vec3(o.x + L + 0.3, H / 2, o.z + W)), .center, k)
 
-        if model.lesson.step == .coverFloor {
+        if model.lesson.step.task != nil {
             Group {
                 if let m = model.message { Text(m.text).foregroundStyle(m.ok ? Ink.right : model.chapter.color) }
-                else { Text(model.lesson.countLine).foregroundStyle(Ink.ink2) }
+                else { Text(model.lesson.countLine ?? "").foregroundStyle(Ink.ink2) }
             }
             .font(Typeface.font(17, .medium)).fixedSize()
             .pinned(at(Vec3(o.x, 0, o.z + W + 0.6)), .topLeading, k)
         }
 
         HStack(spacing: -1.5) {
-            if model.lesson.step == .coverFloor {
+            if model.lesson.step.task != nil {
                 CellButton(action: model.showMe) { Icon(name: "play") }
                 CellButton(action: model.reset) { Icon(name: "arrow-counter-clockwise") }
                 Color.clear.frame(width: 40, height: 40)

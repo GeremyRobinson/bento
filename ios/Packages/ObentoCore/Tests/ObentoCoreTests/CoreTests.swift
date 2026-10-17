@@ -70,42 +70,53 @@ final class PaperView3DTests: XCTestCase {
 }
 
 final class UnitCubesTests: XCTestCase {
+    func run(_ l: Int, _ w: Int, _ h: Int) -> LessonRun { LessonRun(UnitCubes.spec, numbers: UnitCubes.Box(length: l, width: w, height: h).numbers) }
+
     func testWalkThroughTheLesson() {
-        var l = UnitCubes(box: .init(length: 4, width: 3, height: 2))
+        var l = run(4, 3, 2)
         XCTAssertEqual(l.words.hint, "It is 4 long, 3 wide and 2 tall.")
-        XCTAssertEqual(l.go(), .moved(.coverFloor))
-        XCTAssertTrue(l.tap(.init(0, 0)))
-        XCTAssertFalse(l.tap(.init(4, 0)), "outside the box")
-        XCTAssertEqual(l.go(), .notYet(empty: 11))
-        XCTAssertEqual(UnitCubes.notYetLine(11), "Not yet. 11 squares are still empty.")
+        XCTAssertEqual(l.go(), .moved(1))
+        XCTAssertTrue(l.tap(0))
+        XCTAssertFalse(l.tap(12), "outside the box")
+        XCTAssertEqual(l.go(), .notYet("Not yet. 11 squares are still empty."))
+        XCTAssertEqual(l.picture, [:], "nothing extra after a miss here")
         XCTAssertEqual(l.showMe().count, 11)
         XCTAssertEqual(l.countLine, "12 of 12 squares")
-        XCTAssertEqual(l.go(), .moved(.stack(layers: 1)))
+        XCTAssertEqual(l.go(), .moved(2))
         XCTAssertEqual(l.words.say, "One layer: 12 cubes.")
-        XCTAssertEqual(l.go(), .moved(.done))
+        XCTAssertEqual(l.step.camera, .tilted)
+        XCTAssertEqual(l.picture["layers"], 1)
+        XCTAssertEqual(l.go(), .moved(3))
         XCTAssertEqual(l.words.hint, "Volume = 4 × 3 × 2 = 24 cubes.")
         XCTAssertEqual(l.go(), .newProblem)
     }
 
+    func testOneSquareLeftIsSingular() {
+        var l = run(3, 2, 2); _ = l.go()
+        for c in 0..<5 { l.tap(c) }
+        XCTAssertEqual(l.go(), .notYet("Not yet. 1 square is still empty."))
+    }
+
     func testTapTwiceUncovers() {
-        var l = UnitCubes(box: .init(length: 3, width: 2, height: 2)); _ = l.go()
-        l.tap(.init(1, 1)); l.tap(.init(1, 1))
-        XCTAssertTrue(l.covered.isEmpty)
+        var l = run(3, 2, 2); _ = l.go()
+        l.tap(4); l.tap(4)
+        XCTAssertTrue(l.marked.isEmpty)
     }
 
     func testTallBoxStacksEveryLayer() {
-        var l = UnitCubes(box: .init(length: 3, width: 2, height: 3)); _ = l.go(); _ = l.showMe(); _ = l.go()
-        XCTAssertEqual(l.go(), .moved(.stack(layers: 2)))
+        var l = run(3, 2, 3); _ = l.go(); _ = l.showMe(); _ = l.go()
+        XCTAssertEqual(l.go(), .moved(3))
         XCTAssertEqual(l.words.say, "2 layers of 6 is 12.")
-        XCTAssertEqual(l.go(), .moved(.done))
-        XCTAssertEqual(l.layers, 3)
+        XCTAssertEqual(l.go(), .moved(4))
+        XCTAssertEqual(l.picture["layers"], 3)
+        XCTAssertTrue(l.isLast)
     }
 
     /// Every generated box is a real, readable problem and the answer always matches the cubes.
     func testGeneratorAlwaysMakesAReadableBox() {
         var rng = SeededRandom(seed: 7)
         for _ in 0..<500 {
-            let b = UnitCubes.generate(using: &rng).box
+            let b = UnitCubes.Box(LessonRun.fresh(UnitCubes.spec, using: &rng).numbers)
             XCTAssertTrue((2...5).contains(b.length) && (2...4).contains(b.width) && (2...3).contains(b.height))
             XCTAssertGreaterThan(b.length, b.width)
             XCTAssertEqual(b.volume, b.length * b.width * b.height)
@@ -115,36 +126,43 @@ final class UnitCubesTests: XCTestCase {
 
 final class AddFractionsTests: XCTestCase {
     let quarterAndEighth = AddFractions.Problem(a: 4, p: 1, b: 8, q: 1)
+    func run(_ s: AddFractions.Problem) -> LessonRun { LessonRun(AddFractions.spec, numbers: s.numbers) }
 
     func testWalkThroughTheLesson() {
-        var l = AddFractions(problem: quarterAndEighth)
+        var l = run(quarterAndEighth)
         XCTAssertEqual(l.words.say, "A fourth and an eighth.")
-        XCTAssertEqual(l.go(), .moved(.cover))
+        XCTAssertEqual(l.go(), .moved(1))
         XCTAssertEqual(l.words.say, "1/4 is how many eighths?")
         l.tap(5)
         XCTAssertEqual(l.go(), .notYet("Not yet. Some of the fourth is still uncovered."))
+        XCTAssertEqual(l.picture["guide"], 1, "a miss shows where the fourth ends")
+        XCTAssertEqual(l.step.look, "The fourth ends here")
         l.tap(6); l.tap(7)
         XCTAssertEqual(l.go(), .notYet("Too many. Some eighths go past the fourth."))
         l.tap(7)
         // two eighths cover the fourth, and they line up under it
-        XCTAssertEqual(l.go(), .moved(.add))
-        XCTAssertEqual(l.shaded, [0, 1])
+        XCTAssertEqual(l.go(), .moved(2))
+        XCTAssertEqual(l.marked(on: 1), [0, 1])
+        XCTAssertNil(l.picture["guide"])
         XCTAssertFalse(l.tap(0), "shaded pieces stay put while adding")
         XCTAssertEqual(l.go(), .notYet("Add the extra eighth first."))
         l.tap(2)
-        XCTAssertEqual(l.go(), .moved(.done))
+        XCTAssertEqual(l.countLine, "3 of 8 shaded")
+        XCTAssertEqual(l.go(), .moved(3))
         XCTAssertEqual(l.words.say, "Three eighths.")
         XCTAssertEqual(l.words.hint, "A fourth covers two eighths. Add one more and you have three.")
         XCTAssertEqual(l.go(), .newProblem)
     }
 
     func testShowMeFillsTheRightPieces() {
-        var l = AddFractions(problem: .init(a: 3, p: 2, b: 6, q: 1))
+        var l = run(.init(a: 3, p: 2, b: 6, q: 1))
         _ = l.go()
+        l.tap(5)
         XCTAssertEqual(l.showMe(), [0, 1, 2, 3])
+        XCTAssertEqual(l.marked, [0, 1, 2, 3], "the wrong piece is cleared")
         _ = l.go()
         XCTAssertEqual(l.showMe(), [4])
-        XCTAssertEqual(l.go(), .moved(.done))
+        XCTAssertEqual(l.go(), .moved(3))
         XCTAssertEqual(l.words.say, "Five sixths.")
         XCTAssertEqual(l.words.hint, "2 thirds cover four sixths. Add one more and you have five.")
     }

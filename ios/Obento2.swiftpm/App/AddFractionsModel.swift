@@ -8,7 +8,7 @@ final class AddFractionsModel {
     let origin: Point
     let chapter: Chapter
     let instant: Bool
-    private(set) var lesson: AddFractions
+    private(set) var lesson: LessonRun
     private var rng: SeededRandom
 
     /// When the pieces started growing in.
@@ -26,7 +26,7 @@ final class AddFractionsModel {
     init(origin: Point, chapter: Chapter, instant: Bool, problem: AddFractions.Problem? = nil) {
         self.origin = origin; self.chapter = chapter; self.instant = instant
         var r = SeededRandom(seed: UInt64(Date().timeIntervalSince1970 * 1000))
-        lesson = problem.map { AddFractions(problem: $0) } ?? AddFractions.generate(using: &r)
+        lesson = LessonRun(AddFractions.spec, numbers: problem?.numbers ?? AddFractions.spec.generate(&r))
         rng = r
         openedAt = instant ? PaperClock.now - 100 : PaperClock.now
     }
@@ -37,7 +37,7 @@ final class AddFractionsModel {
     /// The lesson sits just inside its picture frame on the map.
     static func origin(for p: Piece) -> Point { Point(p.at.x, p.at.y) }
 
-    var problem: AddFractions.Problem { lesson.problem }
+    var problem: AddFractions.Problem { AddFractions.Problem(lesson.numbers) }
     /// One piece of the bottom row, in points.
     var pieceWidth: Double { Double(problem.wholeCells) * Paper.cell / Double(problem.b) }
     var wholeWidth: Double { Double(problem.wholeCells) * Paper.cell }
@@ -61,7 +61,7 @@ final class AddFractionsModel {
             syncFills()
         case .notYet(let line):
             message = (line, false)
-            if lesson.step == .cover, guideAt == nil { guideAt = time(0) }
+            if lesson.picture["guide"] == 1, guideAt == nil { guideAt = time(0) }
         case .newProblem: restart()
         }
     }
@@ -79,7 +79,7 @@ final class AddFractionsModel {
     }
 
     func showMe() {
-        let before = lesson.step == .cover ? lesson.shaded : lesson.added
+        let before = lesson.marked
         let filled = lesson.showMe()
         message = nil
         // what was there clears at once; the right pieces then fill one by one
@@ -90,12 +90,16 @@ final class AddFractionsModel {
     func reset() { lesson.reset(); message = nil; guideAt = nil; syncFills() }
 
     private func restart() {
-        lesson = AddFractions.generate(using: &rng)
+        lesson = LessonRun.fresh(AddFractions.spec, using: &rng)
         fills = [:]; guideAt = nil; message = nil
         openedAt = time(0); wordsAt = PaperClock.now
     }
 
-    private func target(_ i: Int) -> Double { lesson.shaded.contains(i) ? 1 : lesson.added.contains(i) ? 0.5 : 0 }
+    /// Full for a piece shaded to cover p/a, lighter for one added on: each step says how strongly it marks.
+    private func target(_ i: Int) -> Double {
+        guard let by = lesson.marks[i] else { return 0 }
+        return lesson.steps[by].task?.style == 2 ? 0.5 : 1
+    }
 
     /// Every piece moves toward what the lesson says it is now.
     private func syncFills() {

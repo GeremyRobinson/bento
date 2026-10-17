@@ -183,7 +183,7 @@ final class Rig {
             c.e.isEnabled = k > 0
             c.e.scale = SIMD3(1, Float(max(0.0001, k)), 1)
         }
-        outline.isEnabled = l.tilt(at: t) == 0 && l.lesson.layers == 0
+        outline.isEnabled = l.tilt(at: t) == 0 && l.layers == 0
     }
 
     private func recolour(_ dark: Bool) {
@@ -249,7 +249,7 @@ final class Rig {
         let s = b.problem
         let key = "\(s.a) \(s.p) \(s.b) \(s.q) \(b.origin.x) \(b.origin.y) \(lineScale)"
         if key != barsKey { buildBars(b); barsKey = key }
-        let waiting = b.lesson.step == .add && b.lesson.added.isEmpty
+        let waiting = b.lesson.picture["waiting"] == 1 && b.lesson.marked.isEmpty
         for piece in bars {
             let k = piece.row == 2 ? (waiting ? 1 : 0) : b.grow(row: piece.row, piece.i, at: t)
             piece.group.isEnabled = k > 0
@@ -298,9 +298,9 @@ final class Rig {
 
     /// The lines around the bars: the whole's length, the matching dashes, the guide after a wrong count, the total's bracket.
     private func drawDecor(_ b: AddFractionsModel, at t: Double) {
-        let whole = b.wholeLine(at: t), guide = b.guide(at: t), step = b.lesson.step
-        let bracket = step == .done ? ease((t - b.wordsAt - 0.2) / 0.5) : 0
-        let key = "\(step) \((whole * 50).rounded()) \((guide * 50).rounded()) \((bracket * 50).rounded())"
+        let whole = b.wholeLine(at: t), guide = b.guide(at: t), picture = b.lesson.picture
+        let bracket = picture["total"] == 1 ? ease((t - b.wordsAt - 0.2) / 0.5) : 0
+        let key = "\(b.lesson.index) \((whole * 50).rounded()) \((guide * 50).rounded()) \((bracket * 50).rounded())"
         guard key != decorKey else { return }
         decorKey = key
         for c in Array(decor.children) { c.removeFromParent() }
@@ -321,10 +321,10 @@ final class Rig {
         }
         let chapter = UIColor(hex: b.chapter.hex)
         add([[P(0, 92), P(0, 108)], [P(0, 100), P(W, 100)], [P(W, 92), P(W, 108)]], whole, width: 1.5, colours.ink2)
-        if step == .add || step == .done {
+        if picture["match"] == 1 {
             add(dashed(P(0, r1 + h + 6), P(0, r2 - 28)) + dashed(P(e, r1 + h + 6), P(e, r2 - 6)), 1, width: 2, chapter)
         }
-        if step == .cover, guide > 0 { add(dashed(P(e, r1 - 34), P(e, r2 + h + 12), 4, 5), guide, width: 1.5, colours.ink) }
+        if picture["guide"] == 1, guide > 0 { add(dashed(P(e, r1 - 34), P(e, r2 + h + 12), 4, 5), guide, width: 1.5, colours.ink) }
         if bracket > 0 {
             let end = Double(b.problem.total) * b.pieceWidth
             add([[P(0, r2 + h + 14), P(0, r2 + h + 24), P(end, r2 + h + 24), P(end, r2 + h + 14)]], bracket, width: 2, chapter)

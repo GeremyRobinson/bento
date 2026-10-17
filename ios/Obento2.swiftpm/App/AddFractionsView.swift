@@ -38,34 +38,34 @@ struct AddFractionsView: View {
             }
             .opacity(shown)
 
-            if l.step == .add && l.added.isEmpty {
+            if l.picture["waiting"] == 1 && l.marked.isEmpty {
                 Text("+ \(s.q)/\(s.b)").font(Typeface.font(15, .medium)).monospacedDigit().foregroundStyle(Ink.ink2)
                     .pinned(at(W + 20, r2 - 8), .bottomLeading, k)
             }
-            if l.step == .add || l.step == .done {
+            if l.picture["match"] == 1 {
                 Text("\(s.p)/\(s.a) = \(s.covered)/\(s.b)").font(Typeface.font(22, .medium)).monospacedDigit().foregroundStyle(chapter)
                     .pinned(at(e + 24, r2 - 12), .bottomLeading, k)
             }
-            if l.step == .cover {
-                Text(l.guideLine).font(Typeface.font(13)).foregroundStyle(Ink.ink2).opacity(model.guide(at: time))
+            if l.picture["guide"] == 1, let look = l.step.look {
+                Text(look).font(Typeface.font(13)).foregroundStyle(Ink.ink2).opacity(model.guide(at: time))
                     .pinned(at(e + 10, r1 - 24), .bottomLeading, k)
             }
-            if l.step == .cover || l.step == .add {
+            if let count = l.countLine {
                 Group {
                     if let m = model.message { Text(m.text).foregroundStyle(m.ok ? Ink.right : chapter) }
-                    else { Text(l.countLine).foregroundStyle(Ink.ink2) }
+                    else { Text(count).foregroundStyle(Ink.ink2) }
                 }
                 .font(Typeface.font(17, .medium)).fixedSize()
                 .pinned(at(0, r2 + h + 12), .topLeading, k)
             }
-            if l.step == .done {
+            if l.picture["total"] == 1 {
                 Text("\(s.sum) = \(s.total)/\(s.b)").font(Typeface.font(22, .medium)).monospacedDigit().foregroundStyle(chapter)
                     .opacity(ease((time - model.wordsAt - 0.5) / 0.4))
                     .pinned(at(0, r2 + h + 40), .topLeading, k)
             }
 
             HStack(spacing: -1.5) {
-                if l.step == .cover || l.step == .add {
+                if l.step.task != nil {
                     CellButton(action: model.showMe) { Icon(name: "play") }
                     CellButton(action: model.reset) { Icon(name: "arrow-counter-clockwise") }
                     Color.clear.frame(width: 40, height: 40)

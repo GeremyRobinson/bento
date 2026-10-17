@@ -21,4 +21,6 @@ You're working with G, who owns Obento², a maths app for kids (K-12) that shows
 - Bible references, if any ever come up, use the NWT and jw.org / wol.jw.org.
 
 ## What's next
-This is the "Paper proof": the grid, pan and zoom, the glide, and Unit cubes in 3D. Once G is happy with it, the plan's next milestones are the lesson model as data, then the picture masters.
+- Milestone 2 (Paper proof: grid, camera, Unit cubes in 3D, Add with different bottoms flat) was approved by G on 17 Oct 2026.
+- Milestone 3: every lesson is data (`Core/LessonEngine.swift`). A `LessonSpec` generates fresh numbers and works out its steps from them: words, the marking task with its checks and mistake messages, the camera, and what the picture shows. `LessonRun` plays any spec; `Lessons.all` is the catalog the map opens from, and the spec's `master` ("cubes", "bars") picks the picture master that draws it. Adding a lesson = a spec in Core with tests, a map piece, and a master if no existing one fits.
+- Next: milestone 4, the 5th grade template (all 17 lessons, the paper map, the design system in code). Milestone 6 (launch) needs G's Apple Developer account, the font licence and G's typed go.

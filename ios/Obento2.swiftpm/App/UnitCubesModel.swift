@@ -11,7 +11,7 @@ final class UnitCubesModel {
     let chapter: Chapter
     var screen: Size
     let instant: Bool
-    private(set) var lesson: UnitCubes
+    private(set) var lesson: LessonRun
     private var rng = SeededRandom(seed: UInt64(Date().timeIntervalSince1970))
 
     private(set) var resting: PaperView3D
@@ -31,7 +31,7 @@ final class UnitCubesModel {
     init(origin: Vec3, chapter: Chapter, view: PaperView3D, screen: Size, instant: Bool, box: UnitCubes.Box? = nil) {
         self.origin = origin; self.chapter = chapter; self.resting = view; self.screen = screen; self.instant = instant
         var r = SeededRandom(seed: UInt64(Date().timeIntervalSince1970))
-        lesson = box.map { UnitCubes(box: $0) } ?? UnitCubes.generate(using: &r)
+        lesson = LessonRun(UnitCubes.spec, numbers: box?.numbers ?? UnitCubes.spec.generate(&r))
         rng = r
     }
 
@@ -40,7 +40,9 @@ final class UnitCubesModel {
         Vec3(((p.at.x + 10) / Paper.unit).rounded(), 0, ((p.at.y + 40) / Paper.unit).rounded())
     }
 
-    var box: UnitCubes.Box { lesson.box }
+    var box: UnitCubes.Box { UnitCubes.Box(lesson.numbers) }
+    /// How many layers of cubes the picture shows at this step.
+    var layers: Int { lesson.picture["layers"] ?? 0 }
     var scale: Double { view(at: PaperClock.now).scale / Paper.unit }
 
     func view(at t: Double) -> PaperView3D {
@@ -69,29 +71,30 @@ final class UnitCubesModel {
     // MARK: what the child does
 
     func go() {
-        let before = lesson.layers
+        let before = lesson.step, had = layers
         switch lesson.go() {
-        case .moved(.stack(layers: 1)) where before == 0: lift()
-        case .moved: if before > 0, lesson.layers > before { layerAt[lesson.layers - 1] = time(0) }
-        case .notYet(let empty): message = (UnitCubes.notYetLine(empty), false); return
+        // the paper tilts when the step's camera does; each new layer rises
+        case .moved where before.camera == .flat && lesson.step.camera == .tilted: lift()
+        case .moved: if had > 0, layers > had { layerAt[layers - 1] = time(0) }
+        case .notYet(let line): message = (line, false); return
         case .newProblem: restart(); return
         }
         message = nil; wordsAt = PaperClock.now
     }
 
     func tap(_ c: UnitCubes.Cell) {
-        guard lesson.tap(c) else { return }
-        squares[c] = (lesson.covered.contains(c), time(0)); message = nil
+        guard let i = UnitCubes.cell(c, in: box), lesson.tap(i) else { return }
+        squares[c] = (lesson.marks[i] != nil, time(0)); message = nil
     }
 
     func showMe() {
-        for (i, c) in lesson.showMe().enumerated() { squares[c] = (true, time(0.06 * Double(i))) }
+        for (n, i) in lesson.showMe().enumerated() { squares[UnitCubes.cell(i, in: box)] = (true, time(0.06 * Double(n))) }
         message = nil
     }
 
     func reset() {
-        let was = lesson.covered; lesson.reset()
-        for c in was { squares[c] = (false, time(0)) }
+        let was = lesson.marked; lesson.reset()
+        for i in was { squares[UnitCubes.cell(i, in: box)] = (false, time(0)) }
         message = nil
     }
 
@@ -145,7 +148,7 @@ final class UnitCubesModel {
 
     private func restart() {
         flatten { [self] v in
-            lesson = UnitCubes.generate(using: &rng)
+            lesson = LessonRun.fresh(UnitCubes.spec, using: &rng)
             squares = [:]; squaresGoneAt = nil; layerAt = [:]; message = nil; wordsAt = PaperClock.now
             resting = v
         }
@@ -186,7 +189,7 @@ final class UnitCubesModel {
     }
 
     func heightLabel(at t: Double) -> Double {
-        guard lesson.step == .done, let a = layerAt[box.height - 1] else { return 0 }
+        guard lesson.picture["height"] == 1, let a = layerAt[box.height - 1] else { return 0 }
         return ease((t - a - 0.5) / 0.4)
     }
 }

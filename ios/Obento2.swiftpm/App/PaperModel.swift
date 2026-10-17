@@ -9,8 +9,9 @@ struct Piece: Identifiable, Equatable {
     let state: State
     /// Top-left of the picture frame, on grid lines.
     let at: Point
-    /// Only Unit cubes and Add with different bottoms open in the Paper proof.
-    var opens: Bool { id == "uc" || id == "ad" }
+    /// The lesson behind this piece, if one has been written.
+    var spec: LessonSpec? { Lessons.spec(id) }
+    var opens: Bool { spec != nil }
 
     static let size = Size(240, 180)
     var frame: Rect { Rect(x: at.x, y: at.y, width: Piece.size.width, height: Piece.size.height) }
@@ -134,7 +135,9 @@ final class PaperModel {
 
     /// Opening Unit cubes: fly the flat paper to the lesson, then hand the same view to the 3D camera.
     func open(_ p: Piece) {
-        if p.id == "ad" { openBars(p); return }
+        // the lesson's picture master decides how it opens: flat on the paper, or in 3D
+        guard let spec = p.spec else { return }
+        if spec.master == "bars" { openBars(p); return }
         let origin = UnitCubesModel.origin(for: p)
         let wide = screen.width > 760
         let frame = Rect(x: origin.x * Paper.unit - 40, y: origin.z * Paper.unit - 200, width: 480, height: 640)
