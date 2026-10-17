@@ -10,6 +10,8 @@ You're working with G, who owns Obento², a maths app for kids (K-12) that shows
 - The look comes from the web prototype (the "paper canvas", v27). The Unit cubes 3D lesson is what sold the idea.
 - Branch `claude/project-thread-15w6ys`. `git pull` before each change and push after it; other sessions push here too. A push makes GitHub build it and save iPad screenshots in `shots/`.
 
+- **All the lessons:** `specs/k12/` (191 K-12 lessons) and `specs/obento2/` (154 Obento² lessons) are the Curriculum specs. The live web app's lesson code (generators, answer checks) is in `web/src/curriculum/` on `main`: read it, port its maths with the same answers, and never change the web app.
+
 ## G's rules (firm)
 - **The paper is the app.** Everything is drawn on the grid and uses its cells: 20 pt cells, a strong line every 5. One cube = one big square. Nothing goes off-grid, and the grid never changes or fades when a lesson opens.
 - **No iOS look.** No big bright or dark buttons, no side panel, no pop-ups. Controls are cell blocks drawn on the paper. Colour lives only in the maths; red and green mean only wrong and right.
