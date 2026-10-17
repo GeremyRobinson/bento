@@ -28,10 +28,12 @@ final class UnitCubesModel {
     private(set) var wordsAt: Double = PaperClock.now
     var message: (text: String, ok: Bool)?
 
-    init(origin: Vec3, chapter: Chapter, view: PaperView3D, screen: Size, instant: Bool, box: UnitCubes.Box? = nil) {
-        self.origin = origin; self.chapter = chapter; self.resting = view; self.screen = screen; self.instant = instant
+    init(origin: Vec3, chapter: Chapter, view: PaperView3D, screen: Size, instant: Bool, box: UnitCubes.Box? = nil, session: LessonSession = LessonSession()) {
+        self.origin = origin; self.chapter = chapter; self.resting = view; self.screen = screen; self.instant = instant; self.session = session
         var r = SeededRandom(seed: UInt64(Date().timeIntervalSince1970))
-        lesson = LessonRun(UnitCubes.spec, numbers: box?.numbers ?? UnitCubes.spec.generate(&r, 0))
+        var run = box.map { LessonRun(UnitCubes.spec, numbers: $0.numbers) } ?? session.makeRun(UnitCubes.spec, using: &r)
+        run.helps = session.helps; run.oneTry = session.oneTry
+        lesson = run
         rng = r
     }
 
@@ -72,7 +74,7 @@ final class UnitCubesModel {
     // MARK: what the child does
 
     /// Where the child is: the first problem, practice, or the skill check (LESSONS.md §7).
-    private(set) var session = LessonSession()
+    private(set) var session: LessonSession
     /// Hands off until then: a See beat is playing (LESSONS.md §4).
     private(set) var busyUntil: Double = 0
     var busy: Bool { PaperClock.now < busyUntil }
@@ -96,8 +98,9 @@ final class UnitCubesModel {
         }
         message = nil; wordsAt = PaperClock.now
         if lesson.isLast {
-            session.finished(right: !lesson.missedAny)
-            if session.justLearned { Progress.shared.learn(lesson.spec.id) }
+            session.finished(lesson)
+            // the skill check is over: its score decides learned, and when the lesson comes back
+            if case .done = session.phase, let level = session.level { Progress.shared.checked(lesson.spec.id, level: level) }
         }
     }
 

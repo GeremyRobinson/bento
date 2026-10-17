@@ -57,7 +57,7 @@ final class StepsModel {
         switch lesson.go() {
         case .moved:
             message = nil; wordsAt = PaperClock.now; pictureAt = time(0)
-            if lesson.isLast { Progress.shared.learn(lesson.spec.id) }
+            if lesson.isLast, !lesson.missedAny { Progress.shared.checked(lesson.spec.id, level: 4) }
         case .notYet(let line): message = (line, .wrong)
         case .newProblem: restart()
         }

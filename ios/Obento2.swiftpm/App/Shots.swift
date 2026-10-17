@@ -41,6 +41,9 @@ enum Shots {
                 UserDefaults.standard.set("light", forKey: "theme")
                 try? await Task.sleep(for: .seconds(1))
                 UserDefaults.standard.set("dark", forKey: "theme")
+            case "recheck":
+                Progress.shared.makeDue("ad")
+                m.open(Map.pieces.first { $0.id == "ad" }!)
             case "back": m.open(Map.pieces.first { $0.id == "ad" }!); m.close()
             case let n where n.hasPrefix("L-"):
                 // L-<lesson id>-<step>: open any lesson and work it to that step, each answer filled in by Show me

@@ -263,7 +263,11 @@ public struct LessonRun: Sendable {
     /// One try per step, as in the skill check: a wrong check shows the answer and the problem counts as missed.
     public var oneTry = false
     /// A step of this problem was missed.
-    public private(set) var missedAny = false
+    public var missedAny: Bool { !missedSteps.isEmpty }
+    /// The steps of this problem that were missed at least once.
+    public private(set) var missedSteps: Set<Int> = []
+    /// The steps with something to do: what a skill check scores.
+    public var workSteps: Int { steps.filter { $0.task != nil || $0.answer != nil }.count }
     /// How many hints the picture shows: one per miss, at most three; none when helps are off.
     public var hintLevel: Int { helps ? min(misses, 3) : 0 }
     public var display: MathLine { spec.display(numbers) }
@@ -349,13 +353,13 @@ public struct LessonRun: Sendable {
                 case .right: break
                 case .soft(let line): return .notYet(line)
                 case .wrong(let line):
-                    missed = true; misses += 1; missedAny = true
+                    missed = true; misses += 1; missedSteps.insert(index)
                     let said = a.known.first { same($0.values) }?.message ?? line
                     if oneTry { _ = showAnswer() }
                     return .notYet(said)
                 }
             } else if !same(a.expected) {
-                missed = true; misses += 1; missedAny = true
+                missed = true; misses += 1; missedSteps.insert(index)
                 let said = a.known.first { same($0.values) }?.message ?? "Not quite. \(a.hint)"
                 if oneTry { _ = showAnswer() }
                 return .notYet(said)
@@ -365,7 +369,7 @@ public struct LessonRun: Sendable {
             let n = marked.count
             let wrong: Mistake.When? = n == 0 && t.want > 0 ? .noneMarked : n < t.want ? .tooFew : n > t.want ? .tooMany : nil
             if let wrong {
-                missed = true; misses += 1; missedAny = true
+                missed = true; misses += 1; missedSteps.insert(index)
                 let m = t.mistakes.first { $0.when == wrong } ?? t.mistakes.first { $0.when == .tooFew && wrong == .noneMarked }
                 if oneTry { _ = showMe() }
                 return .notYet(m?.message(n, t.want) ?? "Not yet.")
@@ -423,19 +427,39 @@ public struct LessonSession: Sendable, Equatable {
         switch phase { case .learn: 0; case .practice(let n): n; case .check: 3; case .done: Self.practice + 1 }
     }
 
+    /// Step points so far in the check: one per step right on its one try.
+    public private(set) var points = 0, steps = 0
+    /// The check's score, 0 to 4, once it's over.
+    public private(set) var level: Int?
+
     /// A problem was worked to the end; `right` = no step of it was missed. Returns the phase the next problem is in.
     @discardableResult
-    public mutating func finished(right: Bool) -> Phase {
+    public mutating func finished(right: Bool) -> Phase { finished(right: right, points: right ? 1 : 0, of: 1) }
+
+    /// A problem was worked to the end: the check scores its steps (Mastery.level of the share right).
+    @discardableResult
+    public mutating func finished(_ run: LessonRun) -> Phase {
+        finished(right: !run.missedAny, points: run.workSteps - run.missedSteps.count, of: run.workSteps)
+    }
+
+    private mutating func finished(right: Bool, points p: Int, of n: Int) -> Phase {
         switch phase {
         case .learn: phase = .practice(1)
-        case .practice(let n): phase = n < Self.practice ? .practice(n + 1) : .check(1, right: 0)
-        case .check(let n, let r):
-            let r2 = r + (right ? 1 : 0)
-            phase = n < Self.check ? .check(n + 1, right: r2) : .done(learned: r2 >= Self.pass)
+        case .practice(let k): phase = k < Self.practice ? .practice(k + 1) : .check(1, right: 0)
+        case .check(let k, let r):
+            points += p; steps += n
+            if k < Self.check { phase = .check(k + 1, right: r + (right ? 1 : 0)) }
+            else {
+                let l = Mastery.level(steps == 0 ? 0 : Double(points) / Double(steps))
+                level = l; phase = .done(learned: l >= Mastery.pass)
+            }
         case .done(let learned): phase = learned ? .done(learned: true) : .practice(1)
         }
         return phase
     }
+
+    /// A recheck: a learned lesson that's due back goes straight to its skill check.
+    public static var recheck: LessonSession { LessonSession(phase: .check(1, right: 0)) }
 
     /// Every third practice problem is told as a story, as on the web (problems 2 and 5).
     public var story: Bool { if case .practice(let n) = phase { n % 3 == 2 } else { false } }

@@ -72,6 +72,15 @@ enum Map {
     /// The lessons built the paper way, with G's OK on their preview. The others' maths is ported and tested in Core,
     /// but their screens wait for their previews (LESSONS.md §9).
     static let paperLessons: Set<String> = ["uc", "ad"]
+
+    /// Today's pick, by the web's rules (Core/Mastery.swift): what to go over first, then what builds on the lesson just
+    /// learned, then the first one ready. Only lessons that open are picked.
+    @MainActor static var today: Piece? {
+        let open = pieces.filter(\.opens)
+        let pick = Mastery.upNext(open.map(\.id), depends: { Lessons.spec($0)?.depends ?? [] },
+                                  checks: Progress.shared.checks.filter { !Progress.shared.dueBack($0.key) }, grade: 5)
+        return open.first { $0.id == pick?.id }
+    }
     /// The grade's own lessons (the specs' 17), for "5 of 17 learned".
     static let gradeLessons = pieces.map(\.id).filter { $0 != "ad" && $0 != "uc" }
     /// A lesson's number within its chapter, in map order.
@@ -147,7 +156,7 @@ final class PaperModel {
     }
 
     /// The crosshair: glide to the lesson that's up next.
-    func findNext() { if let p = Map.pieces.first(where: { $0.state == .now }) { select(p) } }
+    func findNext() { if let p = Map.today { select(p) } }
 
     /// A tap on a lesson: a slow, gentle glide that brings it closer, not too close.
     func select(_ p: Piece?) {
@@ -182,7 +191,8 @@ final class PaperModel {
         fly(to: .framing(frame, in: screen, pad: wide ? Self.margin : 8, maxZoom: 1), duration: CameraTiming.fly)
         let go = { [self] in
             let cam = flight?.to ?? camera(at: PaperClock.now)
-            lesson = UnitCubesModel(origin: origin, chapter: p.chapter, view: .matching(cam, screen: screen), screen: screen, instant: instant, box: shotBox)
+            lesson = UnitCubesModel(origin: origin, chapter: p.chapter, view: .matching(cam, screen: screen), screen: screen, instant: instant, box: shotBox,
+                                    session: Progress.shared.dueBack(p.id) ? .recheck : LessonSession())
             selected = nil
         }
         if instant { go() } else { Task { try? await Task.sleep(for: .seconds(CameraTiming.fly + 0.04)); go() } }
@@ -190,7 +200,9 @@ final class PaperModel {
 
     /// Opening the flat lesson: glide to it, then the pieces grow in. It never tilts, so the paper's camera stays in charge.
     func openBars(_ p: Piece) {
-        let b = AddFractionsModel(origin: AddFractionsModel.origin(for: p), chapter: p.chapter, instant: instant, problem: shotProblem)
+        // a learned lesson that's due back opens straight on its recheck
+        let b = AddFractionsModel(origin: AddFractionsModel.origin(for: p), chapter: p.chapter, instant: instant, problem: shotProblem,
+                                  session: Progress.shared.dueBack(p.id) ? .recheck : LessonSession())
         fly(to: .framing(b.frame, in: screen, pad: screen.width > 760 ? Self.margin : 8, maxZoom: 1), duration: CameraTiming.fly)
         let go = { [self] in b.start(); bars = b; selected = nil }
         if instant { go() } else { Task { try? await Task.sleep(for: .seconds(CameraTiming.fly + 0.04)); go() } }

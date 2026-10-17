@@ -20,7 +20,7 @@ final class AddFractionsModel {
     private(set) var guideAt: Double?
     var message: (text: String, ok: Bool)?
     /// Where the child is: the first problem, practice, or the skill check (LESSONS.md §7).
-    private(set) var session = LessonSession()
+    private(set) var session: LessonSession
     /// Hands off until then: a See beat is playing (LESSONS.md §4).
     private(set) var busyUntil: Double = 0
     var busy: Bool { PaperClock.now < busyUntil }
@@ -30,10 +30,12 @@ final class AddFractionsModel {
     // where things sit, in paper points from `origin`
     static let row1: Double = 160, row2: Double = 280, barHeight: Double = 60
 
-    init(origin: Point, chapter: Chapter, instant: Bool, problem: AddFractions.Problem? = nil) {
-        self.origin = origin; self.chapter = chapter; self.instant = instant
+    init(origin: Point, chapter: Chapter, instant: Bool, problem: AddFractions.Problem? = nil, session: LessonSession = LessonSession()) {
+        self.origin = origin; self.chapter = chapter; self.instant = instant; self.session = session
         var r = SeededRandom(seed: UInt64(Date().timeIntervalSince1970 * 1000))
-        lesson = LessonRun(AddFractions.spec, numbers: problem?.numbers ?? AddFractions.spec.generate(&r, 0))
+        var run = problem.map { LessonRun(AddFractions.spec, numbers: $0.numbers) } ?? session.makeRun(AddFractions.spec, using: &r)
+        run.helps = session.helps; run.oneTry = session.oneTry
+        lesson = run
         rng = r
         openedAt = instant ? PaperClock.now - 100 : PaperClock.now
     }
@@ -70,8 +72,9 @@ final class AddFractionsModel {
             // See: the pieces line up and the matching lines draw; hands off while they do
             busyUntil = time(Self.seeBeat)
             if lesson.isLast {
-                session.finished(right: !lesson.missedAny)
-                if session.justLearned { Progress.shared.learn(lesson.spec.id) }
+                session.finished(lesson)
+                // the skill check is over: its score decides learned, and when the lesson comes back
+                if case .done = session.phase, let level = session.level { Progress.shared.checked(lesson.spec.id, level: level) }
             }
         case .notYet(let line):
             message = (line, false)

@@ -317,3 +317,66 @@ final class StoryStepTests: XCTestCase {
 }
 
 nonisolated(unsafe) var rngForTests = SeededRandom(seed: 5)
+
+final class MasteryTests: XCTestCase {
+    let day = 86_400.0
+
+    func testRechecksComeBackAfter3_7_21_60Days() {
+        var c = Mastery.record(nil, level: 4, now: 0)
+        XCTAssertEqual(c.due, 3 * day); XCTAssertEqual(c.passes, 1)
+        c = Mastery.record(c, level: 3, now: c.due); XCTAssertEqual(c.due - c.date, 7 * day)
+        c = Mastery.record(c, level: 4, now: c.due); XCTAssertEqual(c.due - c.date, 21 * day)
+        c = Mastery.record(c, level: 4, now: c.due); XCTAssertEqual(c.due - c.date, 60 * day)
+        c = Mastery.record(c, level: 4, now: c.due); XCTAssertEqual(c.due - c.date, 60 * day, "60 days from then on")
+        c = Mastery.record(c, level: 2, now: c.due)
+        XCTAssertEqual(c.due - c.date, day, "a miss comes back tomorrow"); XCTAssertEqual(c.passes, 0); XCTAssertEqual(c.best, 4)
+    }
+
+    func testLevelsFromTheShareOfStepsRight() {
+        XCTAssertEqual(Mastery.level(0.9), 4); XCTAssertEqual(Mastery.level(0.8), 3); XCTAssertEqual(Mastery.level(0.5), 2)
+        XCTAssertEqual(Mastery.level(0.3), 1); XCTAssertEqual(Mastery.level(0.1), 0)
+    }
+
+    func testShelvesOfMe() {
+        let now = 100 * day
+        let checks: [String: CheckRecord] = [
+            "a": .init(last: 4, best: 4, date: now - day, due: now + 2 * day, passes: 1),      // getting stronger
+            "b": .init(last: 4, best: 4, date: now - 9 * day, due: now - day, passes: 2),      // due back: go over
+            "c": .init(last: 2, best: 3, date: now - day, due: now, passes: 0),                // scored low: go over
+            "d": .init(last: 4, best: 4, date: now - day, due: now + 59 * day, passes: 4),     // stuck for good
+        ]
+        let s = Mastery.shelves(["a", "b", "c", "d", "e"], checks: checks, now: now)
+        XCTAssertEqual(s.goOver, ["b", "c"]); XCTAssertEqual(s.gettingStronger, ["a"]); XCTAssertEqual(s.stuck, ["d"])
+        XCTAssertTrue(Mastery.learnedNow(checks, "a", now: now)); XCTAssertFalse(Mastery.learnedNow(checks, "b", now: now))
+    }
+
+    func testTodaysPick() {
+        let deps: (String) -> [String] = { ["add": ["g4-equiv"], "sub": ["add"], "mix": ["add", "sub"]][$0] ?? [] }
+        let lessons = ["add", "sub", "mix"]
+        XCTAssertEqual(Mastery.upNext(lessons, depends: deps, checks: [:], grade: 5)?.id, "add", "4th grade counts as learned")
+        var checks = ["add": CheckRecord(last: 4, best: 4, date: 1, due: 1e9, passes: 1)]
+        XCTAssertEqual(Mastery.upNext(lessons, depends: deps, checks: checks, grade: 5)?.id, "sub", "builds on the one just learned")
+        checks["sub"] = .init(last: 1, best: 1, date: 2, due: 3, passes: 0)
+        checks["add"] = .init(last: 2, best: 4, date: 0.5, due: 3, passes: 0)
+        let pick = Mastery.upNext(lessons, depends: deps, checks: checks, grade: 5)
+        XCTAssertEqual(pick?.id, "add"); XCTAssertEqual(pick?.why, .goOver, "the oldest to go over first")
+        XCTAssertEqual(Mastery.stepBack("sub", depends: ["add"], checks: checks), "add")
+        XCTAssertFalse(Mastery.ready("mix", depends: ["add", "sub"], checks: checks, grade: 5))
+    }
+
+    func testTheCheckScoresSteps() {
+        var s = LessonSession(phase: .check(1, right: 0))
+        var rng = SeededRandom(seed: 4)
+        for k in 0..<4 {
+            var r = s.makeRun(AddFractions.spec, using: &rng)
+            while !r.isLast {
+                if k == 0, r.step.task != nil, r.missedSteps.isEmpty { _ = r.go() }   // one miss in the first problem
+                if r.step.task != nil { _ = r.showMe() }
+                _ = r.go()
+            }
+            s.finished(r)
+        }
+        // 4 problems × 2 marking steps, one missed: 7 of 8 = 0.875 → 3
+        XCTAssertEqual(s.level, 3); XCTAssertEqual(s.phase, .done(learned: true))
+    }
+}
