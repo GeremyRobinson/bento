@@ -36,6 +36,14 @@ enum Shots {
             switch name {
             case "paper": break
             case "selected": m.select(uc)
+            case let n where n.hasPrefix("L-"):
+                // L-<lesson id>-<step>: open any lesson and work it to that step, each answer filled in by Show me
+                let parts = n.dropFirst(2).split(separator: "-"), id = parts.dropLast().joined(separator: "-")
+                guard let p = Map.pieces.first(where: { $0.id == id }), let k = Int(parts.last ?? "0") else { return }
+                m.open(p)
+                guard let s = m.steps else { return }
+                for _ in 0..<k { if s.lesson.step.answer != nil { s.showMe() }; s.go() }
+                if s.lesson.step.answer != nil, args.contains("-filled") { s.showMe() }
             case let n where n.hasPrefix("pow10"):
                 m.shotNumbers = PowersOfTen.numbers(x: 4.6, k: 2)
                 m.open(Map.pieces.first { $0.id == "g5-pow10" }!)

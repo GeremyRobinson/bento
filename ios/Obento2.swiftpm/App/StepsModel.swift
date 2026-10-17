@@ -39,8 +39,14 @@ final class StepsModel {
     var frame: Rect { Rect(x: origin.x - 40, y: origin.y - 120, width: Self.keypadX + 200, height: 720) }
     /// The steps whose work is written on the paper so far, and the one being worked.
     var workSteps: [Int] { (0...lesson.index).filter { lesson.steps[$0].answer != nil } }
-    /// Where the buttons go: under the last line of work.
-    var toolsY: Double { Self.workTop + Double(max(1, workSteps.count)) * Self.row + 60 }
+    /// Where each line of work starts: a plain line takes two cells, one with a fraction four, and a cell between lines.
+    func workY(_ row: Int) -> Double {
+        Self.workTop + workSteps.prefix(row).reduce(0) { y, i in
+            y + Double(MathLineView.layout(lesson.steps[i].answer!.prompt, size: 28).h + 1) * Paper.cell
+        }
+    }
+    /// Where the buttons go: under the last line of work, with room for a message.
+    var toolsY: Double { workY(workSteps.count) + 60 }
 
     var animating: Bool {
         let now = PaperClock.now
@@ -59,6 +65,7 @@ final class StepsModel {
 
     func type(_ key: String) { lesson.type(key); if message?.kind == .wrong { message = nil } }
     func select(_ box: String) { lesson.active = box }
+    func choose(_ i: Int) { lesson.choose(i); if message?.kind == .wrong { message = nil } }
     func showMe() { if let e = lesson.showAnswer() { message = (e, .explain) } }
     func reset() { lesson.reset(); message = nil }
 

@@ -36,7 +36,7 @@ struct StepsLessonView: View {
                         MathLineView(line: a.work, size: 28)
                     }
                 }
-                .pinned(at(0, StepsModel.workTop + Double(row) * StepsModel.row), .topLeading, k)
+                .pinned(at(0, model.workY(row)), .topLeading, k)
             }
 
             if let m = model.message {
@@ -55,8 +55,22 @@ struct StepsLessonView: View {
             .opacity(shown)
             .pinned(at(0, model.toolsY), .topLeading, k)
 
-            if l.step.answer != nil {
-                Keypad(type: model.type).pinned(at(StepsModel.keypadX, StepsModel.workTop), .topLeading, k)
+            if let a = l.step.answer {
+                Group {
+                    if let choices = a.choices {
+                        // a pick-one step: the choices are cell blocks where the keypad would be
+                        VStack(alignment: .leading, spacing: -1.5) {
+                            ForEach(Array(choices.enumerated()), id: \.offset) { i, c in
+                                CellButton(width: 180, main: l.typed["c"] == String(i), action: { model.choose(i) }) {
+                                    Text(c).font(Typeface.button).frame(maxWidth: .infinity, alignment: .leading).padding(.leading, 16)
+                                }
+                            }
+                        }
+                    } else {
+                        Keypad(type: model.type)
+                    }
+                }
+                .pinned(at(StepsModel.keypadX, StepsModel.workTop), .topLeading, k)
             }
 
         }

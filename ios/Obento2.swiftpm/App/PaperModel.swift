@@ -167,8 +167,9 @@ final class PaperModel {
         opened = p
         // the lesson's picture master decides how it opens: flat on the paper, or in 3D
         guard let spec = p.spec else { return }
-        if spec.master == "bars" { openBars(p); return }
-        if spec.master != "cubes" { openSteps(p, spec); return }
+        // Unit cubes and Add with different bottoms are the Paper proof's own lessons; every other lesson is worked in steps
+        if p.id == "ad" { openBars(p); return }
+        if p.id != "uc" { openSteps(p, spec); return }
         let origin = UnitCubesModel.origin(for: p)
         let wide = screen.width > 760
         let frame = Rect(x: origin.x * Paper.unit - 40, y: origin.z * Paper.unit - 200, width: 480, height: 640)

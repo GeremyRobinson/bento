@@ -37,10 +37,13 @@ public struct AnswerTask: Sendable {
     /// For answers that can be written more than one way (any equivalent fraction, either order, lowest terms):
     /// decides instead of comparing with `expected`, after every box is filled.
     public var check: (@Sendable ([String: Double]) -> Verdict)?
+    /// A pick-one step: the child taps one of these instead of typing. The choice goes in box "c" as its index;
+    /// the prompt may leave the box out, and the finished line writes the choice's words.
+    public var choices: [String]?
 
     public init(prompt: MathLine, expected: [String: Double], known: [(values: [String: Double], message: String)] = [], hint: String, explain: String? = nil,
-                check: (@Sendable ([String: Double]) -> Verdict)? = nil) {
-        self.prompt = prompt; self.expected = expected; self.known = known; self.hint = hint; self.check = check
+                check: (@Sendable ([String: Double]) -> Verdict)? = nil, choices: [String]? = nil) {
+        self.prompt = prompt; self.expected = expected; self.known = known; self.hint = hint; self.check = check; self.choices = choices
         self.explain = explain ?? "\(hint) That makes \(expected.count == 1 ? fmt(expected.values.first!) : "it")."
     }
 
@@ -49,15 +52,24 @@ public struct AnswerTask: Sendable {
         func walk(_ m: Math) -> [String] {
             switch m { case .box(let id): [id]; case .frac(let a, let b): walk(a) + walk(b); default: [] }
         }
-        return prompt.flatMap(walk)
+        let found = prompt.flatMap(walk)
+        return choices != nil && found.isEmpty ? ["c"] : found
     }
 
     /// The line with every box filled in: the finished work that stays on the paper.
     public var work: MathLine {
         func fill(_ m: Math) -> Math {
-            switch m { case .box(let id): .num(expected[id] ?? 0); case .frac(let a, let b): .frac(fill(a), fill(b)); default: m }
+            switch m {
+            case .box(let id):
+                if let c = choices, id == "c", let i = expected["c"].map({ Int($0) }), c.indices.contains(i) { .text(c[i]) } else { .num(expected[id] ?? 0) }
+            case .frac(let a, let b): .frac(fill(a), fill(b))
+            default: m
+            }
         }
-        return prompt.map(fill)
+        let line = prompt.map(fill)
+        // a pick-one step with no box in its prompt still writes its choice
+        if let c = choices, !prompt.contains(.box("c")), let i = expected["c"].map({ Int($0) }), c.indices.contains(i) { return line + [.text(c[i])] }
+        return line
     }
 }
 
@@ -254,6 +266,12 @@ public struct LessonRun: Sendable {
         typed[box] = t.isEmpty ? nil : t
     }
 
+    /// A pick-one step: the child taps choice `i`.
+    public mutating func choose(_ i: Int) {
+        guard step.answer?.choices != nil else { return }
+        typed["c"] = String(i)
+    }
+
     /// "Show me" on a typed step: fills in the answer and returns what to say about it.
     public mutating func showAnswer() -> String? {
         guard let a = step.answer else { return nil }
@@ -298,6 +316,13 @@ public struct LessonRun: Sendable {
 
 /// Every lesson the app can play, by id. The map opens whatever is here; its picture master draws it.
 public enum Lessons {
-    public static let all: [LessonSpec] = [UnitCubes.spec, AddFractions.spec, PowersOfTen.spec]
+    public static let all: [LessonSpec] = [
+        UnitCubes.spec, AddFractions.spec, PowersOfTen.spec,
+        AddingFractions.spec, SubtractingFractions.spec, AddAndSubtract.spec, MixedToImproper.spec,
+        FractionOf.spec, MultiplyFractions.spec, DivideByUnitFraction.spec,
+        VolumeOfBox.spec, ConvertUnits.spec,
+        MultiplyTwoDigit.spec, LongDivision.spec, OrderOfOperations.spec,
+        RoundDecimals.spec, AddDecimals.spec, MultiplyDecimals.spec, DivideByDecimal.spec,
+    ]
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }

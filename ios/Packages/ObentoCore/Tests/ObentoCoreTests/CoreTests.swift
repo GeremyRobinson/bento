@@ -219,3 +219,22 @@ final class PowersOfTenTests: XCTestCase {
         }
     }
 }
+
+final class ChoiceStepTests: XCTestCase {
+    func testPickOneStep() {
+        let spec = LessonSpec(id: "t", title: "t", master: "x", generate: { _, _ in [:] }) { _ in
+            [LessonStep(StepWords(say: "More or fewer?", hint: "", action: "Check"),
+                        answer: AnswerTask(prompt: [.num(3), .text("feet is")], expected: ["c": 0],
+                                           known: [(["c": 1], "Inches are smaller, so it takes more of them.")], hint: "", choices: ["More", "Fewer"])),
+             LessonStep(StepWords(say: "", hint: "", action: "Next"))]
+        }
+        var l = LessonRun(spec, numbers: [:])
+        XCTAssertEqual(l.step.answer?.boxes, ["c"])
+        XCTAssertEqual(l.go(), .notYet("Fill in every box."))
+        l.choose(1)
+        XCTAssertEqual(l.go(), .notYet("Inches are smaller, so it takes more of them."))
+        l.choose(0)
+        XCTAssertEqual(l.go(), .moved(1))
+        XCTAssertEqual(l.steps[0].answer?.work, [.num(3), .text("feet is"), .text("More")])
+    }
+}
