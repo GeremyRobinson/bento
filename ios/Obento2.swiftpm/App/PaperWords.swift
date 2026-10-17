@@ -1,5 +1,6 @@
 import SwiftUI
 import RealityKit
+import CoreText
 
 /// Words drawn on the paper itself: flat shapes in the 3D scene, under the same camera as the grid and the pictures.
 /// Drawn as SwiftUI on top they were a separate picture that RealityKit's sometimes reached the screen a refresh
@@ -10,9 +11,33 @@ enum PaperText {
     private static var icons: [String: UnlitMaterial] = [:]
 
     /// The app's type (SF Pro Rounded, as `Typeface`).
-    static func font(_ size: CGFloat, _ weight: UIFont.Weight = .regular) -> UIFont {
+    static func font(_ size: CGFloat, _ weight: UIFont.Weight = .regular, digits: Bool = false) -> UIFont {
         let f = UIFont.systemFont(ofSize: size, weight: weight)
-        return f.fontDescriptor.withDesign(.rounded).map { UIFont(descriptor: $0, size: size) } ?? f
+        var d = f.fontDescriptor.withDesign(.rounded) ?? f.fontDescriptor
+        // digits all one width, so numbers line up as they change
+        if digits { d = d.addingAttributes([.featureSettings: [[UIFontDescriptor.FeatureKey.type: kNumberSpacingType, UIFontDescriptor.FeatureKey.selector: kMonospacedNumbersSelector]]]) }
+        return UIFont(descriptor: d, size: size)
+    }
+
+    /// Text wrapped to `width`, one line under another, as SwiftUI wraps it: placed by its top-left, or by its
+    /// bottom-left so more lines grow upward.
+    static func block(_ s: String, _ f: UIFont, _ c: UIColor, width: Double, topLeft: CGPoint? = nil, bottomLeft: CGPoint? = nil, maxLines: Int = 6) -> [ModelEntity] {
+        let lines = Array(wrap(s, f, width: width).prefix(maxLines)), h = Double(f.lineHeight)
+        let top = topLeft?.y ?? ((bottomLeft?.y ?? 0) - Double(lines.count) * h), x = topLeft?.x ?? bottomLeft?.x ?? 0
+        return lines.enumerated().map { i, line in label(line, f, c, at: CGPoint(x: x, y: top + Double(i) * h), anchor: .topLeading) }
+    }
+
+    /// The lines a text breaks into at `width`, by word.
+    static func wrap(_ s: String, _ f: UIFont, width: Double) -> [String] {
+        let attributed = NSAttributedString(string: s, attributes: [.font: f])
+        let setter = CTFramesetterCreateWithAttributedString(attributed)
+        let frame = CTFramesetterCreateFrame(setter, CFRange(location: 0, length: 0), CGPath(rect: CGRect(x: 0, y: 0, width: width, height: 10_000), transform: nil), nil)
+        let lines = CTFrameGetLines(frame) as? [CTLine] ?? []
+        let text = s as NSString
+        return lines.map { line in
+            let r = CTLineGetStringRange(line)
+            return text.substring(with: NSRange(location: r.location, length: r.length)).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
     }
 
     static func width(_ s: String, _ f: UIFont) -> Double { Double((s as NSString).size(withAttributes: [.font: f]).width) }

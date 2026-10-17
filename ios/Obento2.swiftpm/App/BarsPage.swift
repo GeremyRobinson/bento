@@ -126,9 +126,20 @@ final class BarsPage {
 
     // MARK: what the child does
 
-    /// A tap on the paper goes to the problem it landed in.
+    /// A tap on the paper goes to the problem it landed in: one of its blocks (ProblemLayout), or its bars.
     func tap(_ p: Point) {
-        for m in all where contains(Self.box(of: m), p) { m.tapPaper(p); return }
+        guard let m = all.first(where: { contains(Self.box(of: $0), p) }) else { return }
+        if let b = ProblemLayout.blocks(m).first(where: { $0.rect.contains(CGPoint(x: p.x, y: p.y)) }) {
+            switch b.kind {
+            case .main: m.go()
+            case .showMe: m.showMe()
+            case .reset: m.reset()
+            case .watchAgain: watchAgain()
+            case .choice(let i): m.choose(i)
+            }
+            return
+        }
+        m.tapPaper(p)
     }
 
     /// The problem a point is in, so the camera can frame it.

@@ -28,6 +28,18 @@ enum Shots {
         Task {
             try? await Task.sleep(for: .seconds(1.5))
             if name == "demo" { await demo(m); return }
+            if name == "page-hop" {
+                // the lesson page: frame one problem after another, as taps on them would, for -perf timings
+                m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
+                m.instant = true; m.shotProblem = .init(a: 4, p: 1, b: 8, q: 1)
+                m.select(Map.pieces.first { $0.id == "ad" }!); m.open(Map.pieces.first { $0.id == "ad" }!); m.instant = false
+                try? await Task.sleep(for: .seconds(2))
+                guard let page = m.bars else { return }
+                for i in [0, 1, 2, 3, 7, 6, 5, 4, 0] {
+                    m.frameCurrent(BarsPage.box(of: page.problems[i])); try? await Task.sleep(for: .seconds(1))
+                }
+                return
+            }
             if name == "hop" {
                 // glide from group to group, as a hand would, to watch the words keep up with the pictures
                 m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
@@ -89,6 +101,13 @@ enum Shots {
                 guard let page = m.bars, n != "fractions" else { return }
                 let b = n == "fractions-story" ? page.problems[2] : n == "fractions-check" ? page.problems[12] : page.problems[0]
                 if n == "fractions-howto" { page.watchAgain(); return }
+                if n == "fractions-taps" {
+                    // a finger's taps, by where they land on the screen: the pieces, then Check, then a choice on the story
+                    @MainActor func tap(_ p: CGPoint) { let s = m.camera(at: PaperClock.now).toScreen(Point(p.x, p.y)); m.tap(at: s) }
+                    for i in 0..<b.problem.covered { tap(CGPoint(x: b.origin.x + (Double(i) + 0.5) * b.pieceWidth, y: b.origin.y + AddFractionsModel.row2 + 30)) }
+                    if let check = ProblemLayout.blocks(b).first(where: { $0.kind == .main }) { tap(CGPoint(x: check.rect.midX, y: check.rect.midY)) }
+                    return
+                }
                 if n == "fractions-overview" { for i in 0..<page.problems[0].problem.covered { page.problems[0].tap(i) }; page.problems[0].go(); m.frameAll(); return }
                 if n == "fractions-story" { b.choose(2); b.go(); return }
                 if n == "fractions-wrong" || n == "fractions-check" { b.tap(b.problem.covered + 1); b.go(); return }

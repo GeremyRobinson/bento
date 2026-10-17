@@ -24,11 +24,6 @@ struct PaperScreen: View {
                     } else {
                         surfaceGestures
                     }
-                    if let page = model.bars {
-                        ForEach(page.all) { m in
-                            AddFractionsView(model: m, camera: cam, time: t, watchAgain: m.auto ? { page.watchAgain() } : nil, current: page.current === m)
-                        }
-                    }
                     if let steps = model.steps {
                         StepsLessonView(model: steps, camera: cam, time: t)
                     }

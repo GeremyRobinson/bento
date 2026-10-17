@@ -170,6 +170,9 @@ final class Rig {
     var pieceWordsK: [String: Double] = [:]
     let start = Entity()
     var startKey = ""
+    // the lesson page's words, in the scene (ProblemWords.swift)
+    let pageWords = Entity()
+    var problemWords: [UUID: ProblemWords] = [:]
     var piecesQuick = ""
     var pieceGroups: [String: ModelEntity] = [:]
     // the open lesson
@@ -223,7 +226,7 @@ final class Rig {
         // the paper itself, under the grid, large enough to fill any tilted view; it follows the camera
         sheet.model = ModelComponent(mesh: .generatePlane(width: 400, depth: 400), materials: [])
         sheet.position.y = -0.003
-        root.addChild(sheet); root.addChild(pieces); root.addChild(lessonRoot); root.addChild(barsRoot); root.addChild(stepsRoot); barsRoot.addChild(boxes); root.addChild(words)
+        root.addChild(sheet); root.addChild(pieces); root.addChild(lessonRoot); root.addChild(barsRoot); root.addChild(stepsRoot); barsRoot.addChild(boxes); barsRoot.addChild(pageWords); root.addChild(words)
     }
 
     func update(view v: PaperView3D, model: PaperModel, time t: Double, dark: Bool) {
@@ -280,6 +283,7 @@ final class Rig {
         colours = Colours(dark: dark, chapter: Chapter.measurement.hex)
         paperHex = dark ? 0x121211 : 0xF3F2EF
         sheet.model?.materials = [flat(colours.paper)]
+        problemWords.values.forEach { $0.key = "" }
         gridAt = nil; piecesKey = ""; shape = nil; stepsKey = ""; drawers.values.forEach { $0.barsKey = "" }
         relines()
     }
@@ -363,7 +367,9 @@ final class Rig {
         barsRoot.isEnabled = page != nil
         guard let page else {
             for d in drawers.values { d.root.removeFromParent() }
-            drawers = [:]; boxesKey = ""; return
+            drawers = [:]; boxesKey = ""
+            for w in problemWords.values { w.root.removeFromParent() }
+            problemWords = [:]; return
         }
         let shown = page.all
         for m in shown {
@@ -372,6 +378,7 @@ final class Rig {
         }
         for (id, d) in drawers where !shown.contains(where: { $0.id == id }) { d.root.removeFromParent(); drawers[id] = nil }
         drawBoxes(page, shown, at: t)
+        Perf.time("page-words") { drawProblemWords(page, shown, at: t) }
     }
 
     /// Every problem's box (G 17 Oct): a light outline in the chapter's colour, drawing in with its problem; the problem
