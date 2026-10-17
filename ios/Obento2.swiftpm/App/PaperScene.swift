@@ -372,12 +372,19 @@ final class Rig {
             problemWords = [:]; return
         }
         let shown = page.all
+        // a page that opens builds its problems' bars two a frame (all 17 at once stalled a frame for 170 ms): the
+        // problems draw themselves in one after another, so each is built before its turn comes
+        var made = 0
         for m in shown {
+            if drawers[m.id] == nil {
+                if made >= 2 && !m.instant { continue }
+                made += 1
+            }
             let d = drawers[m.id] ?? { let d = BarsDrawer(rig: self); barsRoot.addChild(d.root); drawers[m.id] = d; return d }()
             d.draw(m, at: t)
         }
         for (id, d) in drawers where !shown.contains(where: { $0.id == id }) { d.root.removeFromParent(); drawers[id] = nil }
-        drawBoxes(page, shown, at: t)
+        Perf.time("boxes") { drawBoxes(page, shown, at: t) }
         Perf.time("page-words") { drawProblemWords(page, shown, at: t) }
     }
 
@@ -627,8 +634,10 @@ final class BarsDrawer {
     /// The bars: a row of a-ths over a row of b-ths, and the piece waiting to be added. Rebuilt only for a new problem or zoom.
     func draw(_ b: AddFractionsModel, at t: Double) {
         let s = b.problem
-        let key = "\(s.a) \(s.p) \(s.b) \(s.q) \(b.origin.x) \(b.origin.y) \(rig.lineScale)"
-        if key != barsKey { buildBars(b); barsKey = key }
+        // zoom isn't in it: the bars' lines are paper-sized and scale with the paper, like the words, so zooming never
+        // rebuilds them (rebuilding all 17 at every step of a zoom made it stall)
+        let key = "\(s.a) \(s.p) \(s.b) \(s.q) \(b.origin.x) \(b.origin.y)"
+        if key != barsKey { Perf.time("bars-build") { buildBars(b) }; barsKey = key }
         let waiting = b.lesson.picture["waiting"] == 1 && b.lesson.marked.isEmpty
         var levels: [String: Double] = [:]
         for piece in bars {
@@ -655,7 +664,7 @@ final class BarsDrawer {
     private func buildBars(_ b: AddFractionsModel) {
         for c in Array(root.children) { c.removeFromParent() }
         bars = []; barLevel = [:]; seams = [:]; seamLevel = [:]; decorKey = ""
-        let s = b.problem, u = Paper.unit, px = Float(1 / rig.lineScale), h = AddFractionsModel.barHeight
+        let s = b.problem, u = Paper.unit, px = Float(1 / Paper.unit), h = AddFractionsModel.barHeight
         func piece(_ row: Int, _ i: Int, x: Double, y: Double, w: Double) {
             // the group's origin is the piece's bottom-left corner, so growing in rises from the bottom
             let g = Entity(); g.position = SIMD3(Float((b.origin.x + x) / u), 0, Float((b.origin.y + y + h) / u))
@@ -712,7 +721,7 @@ final class BarsDrawer {
             return out
         }
         func add(_ lines: [[CGPoint]], _ k: Double, width: Double, _ c: UIColor) {
-            guard let m = Rig.lines(drawn(lines, k), width: Float(width / rig.lineScale)) else { return }
+            guard let m = Rig.lines(drawn(lines, k), width: Float(width / Paper.unit)) else { return }
             let e = ModelEntity(mesh: m, materials: [flat(c)]); e.position.y = 0.0012; decor.addChild(e)
         }
         let chapter = UIColor(hex: b.chapter.hex)

@@ -28,6 +28,28 @@ enum Shots {
         Task {
             try? await Task.sleep(for: .seconds(1.5))
             if name == "demo" { await demo(m); return }
+            if name == "open-ad" {
+                // tap the lesson and open it as a hand would, the How to playing, for -perf timings
+                m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
+                try? await Task.sleep(for: .seconds(2))
+                let ad = Map.pieces.first { $0.id == "ad" }!
+                m.select(ad); try? await Task.sleep(for: .seconds(1.5))
+                m.open(ad)
+                return
+            }
+            if name == "page-zoom" {
+                // the lesson page: out to see it all and back in to a problem, again and again, for -perf timings
+                m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
+                m.instant = true; m.shotProblem = .init(a: 4, p: 1, b: 8, q: 1)
+                m.select(Map.pieces.first { $0.id == "ad" }!); m.open(Map.pieces.first { $0.id == "ad" }!); m.instant = false
+                try? await Task.sleep(for: .seconds(2))
+                guard let page = m.bars else { return }
+                for _ in 0..<3 {
+                    m.frameAll(); try? await Task.sleep(for: .seconds(1.2))
+                    m.frameCurrent(BarsPage.box(of: page.problems[5])); try? await Task.sleep(for: .seconds(1.2))
+                }
+                return
+            }
             if name == "page-hop" {
                 // the lesson page: frame one problem after another, as taps on them would, for -perf timings
                 m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
