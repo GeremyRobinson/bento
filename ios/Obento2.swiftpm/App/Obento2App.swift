@@ -8,7 +8,7 @@ struct Obento2App: App {
         WindowGroup {
             PaperScreen(model: PaperModel()).statusBarHidden()
                 // screenshots follow the device's setting, never a choice saved earlier
-                .preferredColorScheme(Shots.active ? nil : theme == "dark" ? .dark : theme == "light" ? .light : nil)
+                .preferredColorScheme(Shots.active && Shots.name != "theme" ? nil : theme == "dark" ? .dark : theme == "light" ? .light : nil)
         }
     }
 }

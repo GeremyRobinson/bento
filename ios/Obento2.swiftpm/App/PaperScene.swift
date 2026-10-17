@@ -15,12 +15,15 @@ struct PaperScene: View {
 
     var body: some View {
         let view = model.view(at: time)
+        // read light or dark here, in the body, so switching it redraws the scene (read only inside the closures,
+        // SwiftUI never knew the scene depended on it, and the paper stayed light when the words went dark)
+        let dark = scheme == .dark
         RealityView { content in
             content.camera = .virtual
             rig.build(into: &content)
-            rig.update(view: view, model: model, time: time, dark: scheme == .dark)
+            rig.update(view: view, model: model, time: time, dark: dark)
         } update: { _ in
-            rig.update(view: view, model: model, time: time, dark: scheme == .dark)
+            rig.update(view: view, model: model, time: time, dark: dark)
         }
         .background(Ink.paper)
         .allowsHitTesting(false)

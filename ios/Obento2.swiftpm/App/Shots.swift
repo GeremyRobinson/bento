@@ -36,6 +36,11 @@ enum Shots {
             switch name {
             case "paper": break
             case "selected": m.select(uc)
+            case "theme":
+                // flip to dark while the app runs, as the moon in the top bar does
+                UserDefaults.standard.set("light", forKey: "theme")
+                try? await Task.sleep(for: .seconds(1))
+                UserDefaults.standard.set("dark", forKey: "theme")
             case "back": m.open(Map.pieces.first { $0.id == "ad" }!); m.close()
             case let n where n.hasPrefix("L-"):
                 // L-<lesson id>-<step>: open any lesson and work it to that step, each answer filled in by Show me
