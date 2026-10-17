@@ -43,11 +43,11 @@ jobs:
           set -x
           xcrun simctl list devices available | grep -E "iPad|iPhone" | head -20
           APP=$(find build/Build/Products -name '*.app' -maxdepth 3 | head -1)
-          mkdir -p shots
+          rm -f shots/*.png; mkdir -p shots
           # macOS has no `timeout`; perl's alarm does the same job
           limit() { perl -e 'alarm shift; exec @ARGV' "$@"; }
           shoot() { # device-name prefix, appearance, orientation flag
-            UDID=$(xcrun simctl list devices available | grep -m1 "$1" | grep -oE '[0-9A-F-]{36}')
+            UDID=$(xcrun simctl list devices available | grep -m1 -E "$1" | grep -oE '[0-9A-F-]{36}')
             [ -n "$UDID" ] || { echo "no simulator matching $1"; return 0; }
             xcrun simctl boot "$UDID" || true
             limit 300 xcrun simctl bootstatus "$UDID" -b || true
@@ -73,7 +73,7 @@ jobs:
           avconvert --source shots/ipad-demo.mp4 --preset Preset960x540 --output shots/demo-small.mp4 --replace && mv shots/demo-small.mp4 shots/ipad-demo.mp4 || true
           ls -la shots
           shoot "iPad Pro 13-inch" dark -landscape "tilt" ipad-dark
-          shoot "iPhone 16 Pro" light "" "paper flat tilt stacked" phone
+          shoot "iPhone 1[5-9] Pro \\(" light "" "paper flat tilt stacked" phone
       - name: Keep the demo video with the build
         if: always()
         uses: actions/upload-artifact@v4
@@ -89,7 +89,7 @@ jobs:
           git config user.name "obento-ci"; git config user.email "ci@users.noreply.github.com"
           for i in 1 2 3; do
             git fetch -q origin "${GITHUB_REF_NAME}" && git reset -q --hard "origin/${GITHUB_REF_NAME}"
-            rm -f shots/ipad-demo.mp4; cp "$RUNNER_TEMP"/shots/*.png shots/
+            rm -f shots/ipad-demo.mp4 shots/*.png; cp "$RUNNER_TEMP"/shots/*.png shots/
             git add -A shots && git commit -qm "iOS screenshots for ${GITHUB_SHA::7}" || exit 0
             git push -q origin "HEAD:${GITHUB_REF_NAME}" && exit 0
           done
