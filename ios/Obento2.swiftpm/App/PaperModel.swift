@@ -215,7 +215,7 @@ final class PaperModel {
         let due = Progress.shared.dueBack(p.id)
         let b = AddFractionsModel(origin: AddFractionsModel.origin(for: p), chapter: p.chapter, instant: instant, problem: due ? nil : first,
                                   session: due ? .recheck : LessonSession())
-        b.needs = { [weak self] r in self?.keepInView(r) }
+        b.needs = { [weak self] r in self?.frameCurrent(r) }
         b.start(); bars = b; selected = nil
     }
 
@@ -264,12 +264,13 @@ final class PaperModel {
         }
     }
 
-    /// As a lesson adds parts, the camera eases out just enough to keep them in view; it never zooms in by itself.
-    func keepInView(_ r: Rect) {
-        let cam = camera(at: PaperClock.now), bar = 72.0, m = Self.margin
-        let tl = cam.toPaper(Point(m, bar + m)), br = cam.toPaper(Point(screen.width - m, screen.height - m))
-        if r.x >= tl.x, r.y >= tl.y, r.x + r.width <= br.x, r.y + r.height <= br.y { return }
-        fly(to: framingBelowBar(r, maxZoom: cam.zoom), duration: CameraTiming.fly)
+    /// Each step, the camera frames what the lesson shows right now: zoomed to fit it (in or out, never past 100%) and
+    /// centred on it (G 17 Oct). A move too small to notice is skipped, so the camera doesn't twitch.
+    func frameCurrent(_ r: Rect) {
+        let now = camera(at: PaperClock.now), to = framingBelowBar(r, maxZoom: CameraTiming.selectMax)
+        let c0 = now.toPaper(Point(screen.width / 2, screen.height / 2)), c1 = to.toPaper(Point(screen.width / 2, screen.height / 2))
+        if abs(to.zoom / now.zoom - 1) < 0.02, hypot(c1.x - c0.x, c1.y - c0.y) * now.zoom < 12 { return }
+        fly(to: to, duration: CameraTiming.fly)
     }
 
     /// Leaving a lesson: a 3D one tilts back flat first; then the paper glides back out to the lesson's piece

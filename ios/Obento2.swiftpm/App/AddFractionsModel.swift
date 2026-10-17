@@ -55,15 +55,17 @@ final class AddFractionsModel {
     /// The whole picture with its words and buttons: what opening the lesson frames.
     var frame: Rect { contentFrame }
 
-    /// What the lesson needs in view now: the question (a story runs to more lines), the bars and the piece waiting to be
-    /// added, the count, and the buttons. The camera eases out to keep it in view.
+    /// What the lesson shows right now: the question (a story runs to more lines), the bars, the piece waiting to be added
+    /// while it waits, and the buttons. The camera frames this at every step.
     var contentFrame: Rect {
-        Self.contentFrame(origin: origin, problem: problem, storyLines: lesson.step.answer?.choices != nil ? 2 : 0)
+        Self.contentFrame(origin: origin, problem: problem, storyLines: lesson.step.answer?.choices != nil ? 2 : 0,
+                          waiting: lesson.picture["waiting"] == 1)
     }
-    static func contentFrame(origin o: Point, problem s: AddFractions.Problem, storyLines: Int) -> Rect {
+    static func contentFrame(origin o: Point, problem s: AddFractions.Problem, storyLines: Int, waiting: Bool = false) -> Rect {
         let whole = Double(s.wholeCells) * Paper.cell, piece = whole / Double(s.b)
-        let right = max(480, whole + 20 + piece + 20), top = -70 - Double(storyLines) * 40
-        return Rect(x: o.x - 20, y: o.y + top, width: right + 20, height: 490 - top)
+        // the question's line is about 480 points long; the bars as long as the whole, and the waiting piece past it
+        let right = max(440, whole + (waiting ? 20 + piece : 0)), top = -70 - Double(storyLines) * 40
+        return Rect(x: o.x - 10, y: o.y + top, width: right + 20, height: 490 - top)
     }
     /// Told when the lesson needs more room in view.
     var needs: ((Rect) -> Void)?
