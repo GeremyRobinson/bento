@@ -90,7 +90,14 @@ enum Map {
     static let gradeLessons = pieces.map(\.id).filter { $0 != "ad" && $0 != "uc" }
     /// A lesson's number within its chapter, in map order.
     static func number(_ p: Piece) -> Int { (pieces.filter { $0.chapter == p.chapter }.firstIndex { $0.id == p.id } ?? 0) + 1 }
-    static var bounds: Rect { Rect(x: -20, y: -20, width: 1940, height: 1460) }
+    /// Every group, from its title to its last row's name and Start, with a cell to spare: what the overview shows.
+    /// Worked out from the layout, so it stays right when groups move.
+    static let bounds: Rect = {
+        let x0 = groups.map(\.origin.x).min()!, y0 = groups.map(\.origin.y).min()!
+        let x1 = pieces.map { $0.at.x + Piece.size.width }.max()!, y1 = pieces.map { $0.at.y + Piece.size.height + Paper.unit }.max()!
+        let m = Paper.cell
+        return Rect(x: x0 - m, y: y0 - m, width: x1 - x0 + 2 * m, height: y1 - y0 + 2 * m)
+    }()
 }
 
 /// The paper's camera and what's on it. One clock drives every move, so the grid and the paper never come apart.
