@@ -1,7 +1,6 @@
 import SwiftUI
 import RealityKit
 import simd
-import ObentoCore
 
 /// Unit cubes as a 3D lesson. The paper's grid is the floor: one cube sits on one big square.
 /// It opens flat, lined up with the paper exactly; it only tilts when the squares rise into cubes.

@@ -1,5 +1,4 @@
 import SwiftUI
-import ObentoCore
 
 /// One lesson drawn on the paper as a small picture of its own maths.
 struct Piece: Identifiable, Equatable {
@@ -9,7 +8,7 @@ struct Piece: Identifiable, Equatable {
     let chapter: Chapter
     let state: State
     /// Top-left of the picture frame, on grid lines.
-    let at: ObentoCore.Point
+    let at: Point
     /// Only Unit cubes opens in the Paper proof.
     var opens: Bool { id == "uc" }
 
@@ -23,7 +22,7 @@ struct Piece: Identifiable, Equatable {
 /// The Volume chapter, laid out on the 20 pt grid.
 enum Volume {
     static let title = "Volume"
-    static let origin = ObentoCore.Point(0, 0)
+    static let origin = Point(0, 0)
     static let pieces: [Piece] = [
         Piece(id: "sq", name: "Squares on a floor", chapter: .volume, state: .learned, at: .init(0, 80)),
         Piece(id: "uc", name: "Unit cubes", chapter: .volume, state: .now, at: .init(300, 80)),
@@ -62,7 +61,7 @@ final class PaperModel {
     func stop() { let c = camera(at: PaperClock.now); flight = nil; resting = c }
 
     func pan(_ dx: Double, _ dy: Double) { stop(); resting = resting.panned(by: dx, dy) }
-    func zoom(by f: Double, at p: ObentoCore.Point) { stop(); resting = resting.zoomed(by: f, at: p) }
+    func zoom(by f: Double, at p: Point) { stop(); resting = resting.zoomed(by: f, at: p) }
 
     func zoomButton(_ f: Double) {
         fly(to: camera(at: PaperClock.now).zoomed(by: f, at: .init(screen.width / 2, screen.height / 2)), duration: CameraTiming.fly)
@@ -87,7 +86,7 @@ final class PaperModel {
         fly(to: PaperCamera(x: screen.width / 2 - c.x * z, y: screen.height / 2 - c.y * z, zoom: z), duration: CameraTiming.glide)
     }
 
-    func tap(at s: ObentoCore.Point) {
+    func tap(at s: Point) {
         let p = camera(at: PaperClock.now).toPaper(s)
         if let sel = selected, sel.opens, contains(sel.start, p) { open(sel); return }
         select(Volume.pieces.first(where: { contains($0.frame, p) || contains(Rect(x: $0.at.x, y: $0.at.y + 180, width: 240, height: 40), p) }))
@@ -116,7 +115,7 @@ final class PaperModel {
         }
     }
 
-    private func contains(_ r: Rect, _ p: ObentoCore.Point) -> Bool { p.x >= r.x && p.y >= r.y && p.x <= r.x + r.width && p.y <= r.y + r.height }
+    private func contains(_ r: Rect, _ p: Point) -> Bool { p.x >= r.x && p.y >= r.y && p.x <= r.x + r.width && p.y <= r.y + r.height }
 }
 
 enum PaperClock { static var now: Double { Date().timeIntervalSinceReferenceDate } }

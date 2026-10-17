@@ -2,11 +2,12 @@
 
 The paper proof: the paper's grid, pan and zoom, the glide to a lesson, and Unit cubes in 3D.
 
-- `Packages/ObentoCore` holds the lesson logic and the camera maths. No drawing, so it builds and tests anywhere: `swift test`.
-- `Obento2/` is the app: SwiftUI for the paper, RealityKit for 3D lessons.
-- `project.yml` makes the Xcode project: `brew install xcodegen && xcodegen`, then open `Obento2.xcodeproj`.
+**`Obento2.swiftpm` is the app.** Open it in Swift Playgrounds (Mac or iPad) and press Play.
+- `App/` holds the screens: SwiftUI for the paper, RealityKit for 3D lessons.
+- `Core/` holds the lesson logic and the camera maths, with no drawing in it.
 
-To put it on an iPad: open the project in Xcode, plug in the iPad, pick it as the destination, sign with your Apple ID
-(Signing & Capabilities → Team), and press Run. With a free Apple ID the app needs reinstalling every 7 days.
+`Packages/ObentoCore` runs Core's tests on any machine: `cd Packages/ObentoCore && swift test`. Its sources are a link to `Obento2.swiftpm/Core`.
 
-`-shot paper|selected|flat|cover|tilt|stacked` opens the app on one moment; CI uses it for screenshots (see `shots/`).
+`project.yml` builds the same files as a regular Xcode project (`brew install xcodegen && xcodegen`). CI uses it for simulator screenshots.
+
+`-shot paper|selected|flat|cover|tilt|stacked|demo` opens the app on one moment. CI uses it for screenshots and the demo video in `shots/`.

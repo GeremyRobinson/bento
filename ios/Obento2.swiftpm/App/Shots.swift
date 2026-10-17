@@ -1,6 +1,5 @@
 import SwiftUI
 import UIKit
-import ObentoCore
 
 /// Launch with `-shot <name>` to open the app straight on one moment, with every move finished.
 /// GitHub's Mac machines use it to take the same screenshots on every build.

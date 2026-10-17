@@ -1,7 +1,6 @@
 import SwiftUI
-import ObentoCore
 
-/// Unit cubes on the paper, in 3D. The lesson logic lives in ObentoCore; this keeps the timing:
+/// Unit cubes on the paper, in 3D. The lesson logic lives in Core/UnitCubes.swift; this keeps the timing:
 /// when each square appeared, when each layer started rising, and where the camera is going.
 @MainActor @Observable
 final class UnitCubesModel {
@@ -106,7 +105,7 @@ final class UnitCubesModel {
         v.target = v.target + r * (-dx / v.scale) + u * (dy / v.scale); resting = v
     }
 
-    func tapScreen(_ p: ObentoCore.Point) {
+    func tapScreen(_ p: Point) {
         let hit = view(at: PaperClock.now).unproject(p, screen: screen)
         tap(.init(Int(floor(hit.x - origin.x)), Int(floor(hit.z - origin.z))))
     }

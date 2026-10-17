@@ -1,5 +1,4 @@
 import SwiftUI
-import ObentoCore
 
 /// The whole app is one sheet of paper. The grid, the lessons and the controls all sit on its cells.
 struct PaperScreen: View {

@@ -32,10 +32,10 @@ jobs:
       - name: Build the Swift Playgrounds version
         continue-on-error: true
         run: |
-          ./make-playground.sh build/Obento2.swiftpm
-          cd build/Obento2.swiftpm
-          xcodebuild -scheme Obento2 -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build > ../pg.log 2>&1 \
-            || { xcodebuild -list; grep -E ": error:" -A4 ../pg.log | head -80; tail -30 ../pg.log; exit 1; }
+          cd Obento2.swiftpm
+          xcodebuild -list
+          xcodebuild -scheme Obento2 -destination 'generic/platform=iOS Simulator' -derivedDataPath ../build-pg CODE_SIGNING_ALLOWED=NO build > ../pg.log 2>&1 \
+            || { grep -E ": error:" -A4 ../pg.log | head -80; tail -30 ../pg.log; exit 1; }
           echo "playground builds"
       - name: Screenshots
         run: |

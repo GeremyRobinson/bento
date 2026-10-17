@@ -1,17 +1,6 @@
-#!/bin/bash
-# Packs the app into Obento2.swiftpm, an app Swift Playgrounds can open and run on an iPad.
-# Playgrounds can't use our local package, so the lesson logic is copied in beside the app code.
-set -e
-cd "$(dirname "$0")"
-OUT=${1:-build/Obento2.swiftpm}
-rm -rf "$OUT"; mkdir -p "$OUT"
-for f in Obento2/*.swift Packages/ObentoCore/Sources/ObentoCore/*.swift; do
-  sed -e '/^import ObentoCore$/d' -e 's/ObentoCore\.//g' "$f" > "$OUT/$(basename "$f")"
-done
-cp -R Obento2/Assets.xcassets "$OUT/"
-cat > "$OUT/Package.swift" <<'SWIFT'
 // swift-tools-version: 5.9
-// Made by make-playground.sh from ios/. Edit the files in ios/, not here.
+// The Obento² app. Open this folder in Swift Playgrounds (Mac or iPad) and press Play.
+// App/ is the screens; Core/ is the lesson logic and camera maths (tested by ios/Packages/ObentoCore).
 import PackageDescription
 import AppleProductTypes
 
@@ -33,5 +22,3 @@ let package = Package(
         .executableTarget(name: "AppModule", path: ".")
     ]
 )
-SWIFT
-echo "$OUT"

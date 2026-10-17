@@ -4,16 +4,12 @@ options:
   bundleIdPrefix: education.bento
   deploymentTarget:
     iOS: "18.0"
-packages:
-  ObentoCore:
-    path: Packages/ObentoCore
 targets:
   Obento2:
     type: application
     platform: iOS
-    sources: [Obento2]
-    dependencies:
-      - package: ObentoCore
+    # the same files Swift Playgrounds runs, built as one app
+    sources: [Obento2.swiftpm/App, Obento2.swiftpm/Core, Obento2.swiftpm/Assets.xcassets]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: education.bento.obento2
