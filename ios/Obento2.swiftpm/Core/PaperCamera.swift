@@ -39,10 +39,19 @@ public struct PaperCamera: Equatable, Sendable {
 
 /// How long camera moves take. Tapping a lesson is a slow, gentle glide; other moves fly a little quicker.
 public enum CameraTiming {
-    public static let fly: Double = 0.7
-    public static let glide: Double = 1.1
-    /// Tapping a lesson zooms in a little, not a lot.
+    // snappier, G 17 Oct (was 0.7 and 1.1)
+    public static let fly: Double = 0.5
+    public static let glide: Double = 0.75
+    /// Tapping a lesson zooms in a little, not a lot: 1.3x the whole map's view...
     public static let glideZoom: Double = 1.3
+    /// ...and never closer than 100%, however many lessons are tapped one after another (G 17 Oct).
+    public static let selectMax: Double = 1.0
+
+    /// The zoom a tap on a lesson glides to: 1.3x the whole map's view, kept if the child is already a little closer,
+    /// never past `selectMax`, and never so close the lesson doesn't fit.
+    public static func selectZoom(current: Double, overview: Double, fit: Double) -> Double {
+        min(fit, selectMax, max(min(current, selectMax), overview * glideZoom))
+    }
 }
 
 /// A camera move in progress, read at any moment.

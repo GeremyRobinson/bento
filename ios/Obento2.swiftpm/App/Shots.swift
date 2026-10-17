@@ -44,6 +44,9 @@ enum Shots {
             switch name {
             case "paper": break
             case "selected": m.select(uc)
+            case "selected-many":
+                // tap five lessons one after another: the zoom mustn't creep in
+                for id in ["g5-mult2", "ad", "g5-round", "uc", "add"] { m.select(Map.pieces.first { $0.id == id }!) }
             case "theme":
                 // flip to dark while the app runs, as the moon in the top bar does
                 UserDefaults.standard.set("light", forKey: "theme")

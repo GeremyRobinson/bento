@@ -147,12 +147,17 @@ final class PaperModel {
         fly(to: camera(at: PaperClock.now).zoomed(by: f, at: .init(screen.width / 2, screen.height / 2)), duration: CameraTiming.fly)
     }
 
-    /// The whole map, framed, with room for the top bar above it.
-    func frameGroup(duration: Double = CameraTiming.fly) {
-        let b = Map.bounds, bar = 72.0
-        var cam = PaperCamera.framing(b, in: Size(screen.width, screen.height - bar), maxZoom: 1.4)
+    /// The whole map's view, with room for the top bar above it.
+    var overview: PaperCamera {
+        let bar = 72.0
+        var cam = PaperCamera.framing(Map.bounds, in: Size(screen.width, screen.height - bar), maxZoom: 1.4)
         cam.y += bar
-        fly(to: cam, duration: duration)
+        return cam
+    }
+
+    /// The whole map, framed.
+    func frameGroup(duration: Double = CameraTiming.fly) {
+        fly(to: overview, duration: duration)
     }
 
     /// The crosshair: glide to the lesson that's up next.
@@ -163,8 +168,7 @@ final class PaperModel {
         selected = p
         guard let p else { return }
         let now = camera(at: PaperClock.now)
-        let fit = PaperCamera.framing(p.focus, in: screen)
-        let z = min(fit.zoom, max(now.zoom, min(now.zoom * CameraTiming.glideZoom, 1.6)))
+        let z = CameraTiming.selectZoom(current: now.zoom, overview: overview.zoom, fit: PaperCamera.framing(p.focus, in: screen).zoom)
         let c = p.focus.mid
         fly(to: PaperCamera(x: screen.width / 2 - c.x * z, y: screen.height / 2 - c.y * z, zoom: z), duration: CameraTiming.glide)
     }
@@ -242,8 +246,9 @@ final class PaperModel {
     /// The gentle glide back to a piece on the map, its frame, name and Start block in view, without choosing it.
     private func glideOut(to p: Piece?) {
         guard let p else { return }
-        let fit = PaperCamera.framing(p.focus, in: screen)
-        let z = min(fit.zoom, 1.6), c = p.focus.mid
+        let z = CameraTiming.selectZoom(current: camera(at: PaperClock.now).zoom, overview: overview.zoom,
+                                        fit: PaperCamera.framing(p.focus, in: screen).zoom)
+        let c = p.focus.mid
         fly(to: PaperCamera(x: screen.width / 2 - c.x * z, y: screen.height / 2 - c.y * z, zoom: z), duration: CameraTiming.glide)
     }
 

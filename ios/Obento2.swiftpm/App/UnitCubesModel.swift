@@ -4,7 +4,8 @@ import SwiftUI
 /// when each square appeared, when each layer started rising, and where the camera is going.
 @MainActor @Observable
 final class UnitCubesModel {
-    static let beat = 1.1
+    /// The paper tilting into 3D and back (snappier, G 17 Oct: was 1.1 s).
+    static let beat = 0.9
 
     /// The box's back-left corner, in world units (one unit = one big square), on the paper's strong lines.
     let origin: Vec3
@@ -128,7 +129,7 @@ final class UnitCubesModel {
     }
 
     func zoom(_ f: Double) {
-        var v = view(at: PaperClock.now); v.scale = min(250, max(25, v.scale * f)); move(to: v, duration: 0.4)
+        var v = view(at: PaperClock.now); v.scale = min(250, max(25, v.scale * f)); move(to: v, duration: 0.3)
     }
 
     /// Pinch follows the fingers directly; the buttons glide.
