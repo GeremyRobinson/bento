@@ -26,9 +26,10 @@ struct Piece: Identifiable, Equatable {
     var focus: Rect { Rect(x: at.x - 20, y: at.y - 20, width: Piece.size.width + 40, height: Piece.size.height + 140) }
     var start: Rect { Rect(x: at.x, y: at.y + Piece.size.height + 40, width: 160, height: 40) }
 
-    /// How far a piece has drawn itself in (0...1). They draw outward from today's lesson.
-    @MainActor static func drawIn(_ p: Piece, time: Double, drawnAt: Double) -> Double {
-        let now = (Map.pieces.first { $0.state == .now } ?? Map.pieces[0]).frame.mid
+    /// How far a piece has drawn itself in (0...1). They draw outward from `from` (the lesson just left), else from
+    /// today's lesson.
+    @MainActor static func drawIn(_ p: Piece, time: Double, drawnAt: Double, from: Point? = nil) -> Double {
+        let now = from ?? (Map.pieces.first { $0.state == .now } ?? Map.pieces[0]).frame.mid
         let d = hypot(p.frame.mid.x - now.x, p.frame.mid.y - now.y) / 1400
         return ease((time - drawnAt - d) / 0.9)
     }
@@ -118,6 +119,8 @@ final class PaperModel {
     private var opened: Piece?
     /// When the pieces started drawing themselves.
     var drawnAt: Double = PaperClock.now
+    /// Where the drawings draw out from: the lesson just left, after coming out of one.
+    var drawFrom: Point?
     var instant = false
     /// A fixed box, for screenshots.
     var shotBox: UnitCubes.Box?
@@ -277,12 +280,21 @@ final class PaperModel {
     /// (LESSONS.md §5), which shows in colour once it's learned.
     func close() {
         let piece = opened
-        if bars != nil || steps != nil { bars = nil; steps = nil; glideOut(to: piece); return }
+        if bars != nil || steps != nil { bars = nil; steps = nil; redraw(from: piece); glideOut(to: piece); return }
         guard let l = lesson else { return }
         l.flatten { [self] view in
             stop(); resting = view.paperCamera(screen: screen); lesson = nil
+            redraw(from: piece)
             glideOut(to: piece)
         }
+    }
+
+    /// Coming back to the map, the drawings draw themselves in again as they do when the app opens, outward from the
+    /// lesson just left (G 17 Oct). Reduce Motion skips it.
+    private func redraw(from p: Piece?) {
+        guard !instant else { return }
+        drawFrom = p?.frame.mid
+        drawnAt = PaperClock.now
     }
 
     /// The gentle glide back to a piece on the map, its frame, name and Start block in view, without choosing it.

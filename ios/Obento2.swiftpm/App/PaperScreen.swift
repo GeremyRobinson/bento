@@ -20,7 +20,7 @@ struct PaperScreen: View {
                     PaperScene(model: model, time: t)
                         .id("\(Int(model.screen.width))x\(Int(model.screen.height))")
                     if model.lesson == nil && model.bars == nil && model.steps == nil {
-                        PiecesLayer(camera: cam, time: t, drawnAt: model.drawnAt, selected: model.selected)
+                        PiecesLayer(camera: cam, time: t, drawnAt: model.drawnAt, from: model.drawFrom, selected: model.selected)
                     }
                     if let lesson = model.lesson {
                         UnitCubesView(model: lesson, time: t)
@@ -78,6 +78,7 @@ struct PiecesLayer: View {
     let camera: PaperCamera
     let time: Double
     let drawnAt: Double
+    let from: Point?
     let selected: Piece?
 
     var body: some View {
@@ -93,7 +94,7 @@ struct PiecesLayer: View {
                 let w = MathLineView.width(g.chapter.title, 26)
                 ctx.draw(Text("\(done) of \(g.lessons.count)").font(Typeface.font(15)).foregroundStyle(Ink.ink3), at: CGPoint(x: o.x + 32 + w, y: o.y + 37), anchor: .bottomLeading)
             }
-            for p in Map.pieces { draw(p, k: Piece.drawIn(p, time: time, drawnAt: drawnAt), in: &ctx) }
+            for p in Map.pieces { draw(p, k: Piece.drawIn(p, time: time, drawnAt: drawnAt, from: from), in: &ctx) }
           }
         }
         .allowsHitTesting(false)
