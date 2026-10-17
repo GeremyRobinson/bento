@@ -17,6 +17,14 @@ struct Piece: Identifiable, Equatable {
     /// The frame, its name and its Start block: what a tap glides to.
     var focus: Rect { Rect(x: at.x - 20, y: at.y - 20, width: Piece.size.width + 40, height: Piece.size.height + 140) }
     var start: Rect { Rect(x: at.x, y: at.y + Piece.size.height + 40, width: 160, height: 40) }
+
+    /// How far a piece has drawn itself in (0...1). They draw outward from today's lesson.
+    static func drawIn(_ p: Piece, time: Double, drawnAt: Double) -> Double {
+        let now = Volume.pieces.first { $0.state == .now }!.frame.mid
+        let d = hypot(p.frame.mid.x - now.x, p.frame.mid.y - now.y) / 900
+        return ease((time - drawnAt - d) / 0.9)
+    }
+    static let drawTime = 1.6
 }
 
 /// The Volume chapter, laid out on the 20 pt grid.
@@ -47,6 +55,8 @@ final class PaperModel {
     var shotBox: UnitCubes.Box?
 
     func camera(at t: Double) -> PaperCamera { flight?.camera(at: t, screen: screen) ?? resting }
+    /// The one camera the paper's scene is seen through: the open lesson's, or the flat paper's from straight above.
+    func view(at t: Double) -> PaperView3D { lesson?.view(at: t) ?? .matching(camera(at: t), screen: screen) }
     var moving: Bool { flight != nil }
 
     func settle(at t: Double) { if let f = flight, f.done(at: t) { resting = f.to; flight = nil } }

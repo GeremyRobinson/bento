@@ -59,6 +59,14 @@ final class PaperView3DTests: XCTestCase {
         let hit = v.unproject(v.project(p, screen: screen), screen: screen)
         XCTAssertEqual(hit.x, p.x, accuracy: 1e-9); XCTAssertEqual(hit.y, 0, accuracy: 1e-9); XCTAssertEqual(hit.z, p.z, accuracy: 1e-9)
     }
+
+    /// The paper point at the middle of the screen, which the grid is centred on, tilted or not.
+    func testFloorTargetIsUnderTheScreenCentre() {
+        let v = PaperView3D(elevation: 52, azimuth: -28, scale: 90, target: Vec3(3, 1.5, 2))
+        let f = v.floorTarget, c = v.project(f, screen: screen)
+        XCTAssertEqual(f.y, 0, accuracy: 1e-9)
+        XCTAssertEqual(c.x, screen.width / 2, accuracy: 1e-6); XCTAssertEqual(c.y, screen.height / 2, accuracy: 1e-6)
+    }
 }
 
 final class UnitCubesTests: XCTestCase {

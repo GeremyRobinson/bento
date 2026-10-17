@@ -65,6 +65,9 @@ public struct PaperView3D: Equatable, Sendable {
         return floorPoint(under: q)
     }
 
+    /// The point on the paper at the centre of the screen.
+    public var floorTarget: Vec3 { floorPoint(under: target) }
+
     /// Slides a point along the view direction down onto the paper.
     func floorPoint(under q: Vec3) -> Vec3 { q - axes.dir * (q.y / axes.dir.y) }
 

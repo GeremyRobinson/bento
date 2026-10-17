@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The whole app is one sheet of paper. The grid, the lessons and the controls all sit on its cells.
+/// The whole app is one sheet of paper: one 3D scene seen through one camera, with words and controls pinned on top.
 struct PaperScreen: View {
     @State var model: PaperModel
     @State private var lastDrag: CGSize = .zero
@@ -16,9 +16,8 @@ struct PaperScreen: View {
                 let t = ctx.date.timeIntervalSinceReferenceDate
                 let cam = model.camera(at: t)
                 ZStack(alignment: .topLeading) {
-                    Ink.paper
+                    PaperScene(model: model, time: t)
                     if model.lesson == nil {
-                        GridLayer(camera: cam)
                         PiecesLayer(camera: cam, time: t, drawnAt: model.drawnAt, selected: model.selected)
                     }
                     if let lesson = model.lesson {
@@ -42,7 +41,7 @@ struct PaperScreen: View {
 
     /// The clock only runs while something moves or draws, so a still paper costs nothing.
     private var animating: Bool {
-        model.moving || PaperClock.now - model.drawnAt < PiecesLayer.drawTime + 0.2 || (model.lesson?.animating ?? false)
+        model.moving || PaperClock.now - model.drawnAt < Piece.drawTime + 0.2 || (model.lesson?.animating ?? false)
     }
 
     private var surfaceGestures: some View {
@@ -60,56 +59,21 @@ struct PaperScreen: View {
     }
 }
 
-/// The paper's grid: a thin line every cell, a stronger line every five. Drawn from the camera, so it IS the paper.
-struct GridLayer: View {
-    let camera: PaperCamera
-    var body: some View {
-        Canvas { ctx, size in
-            let step = Paper.cell * camera.zoom
-            let tl = camera.toPaper(.init(0, 0)), br = camera.toPaper(.init(size.width, size.height))
-            var minor = Path(), major = Path()
-            let i0 = Int(floor(tl.x / Paper.cell)), i1 = Int(ceil(br.x / Paper.cell))
-            let j0 = Int(floor(tl.y / Paper.cell)), j1 = Int(ceil(br.y / Paper.cell))
-            for i in i0...i1 {
-                let x = (Double(i) * step + camera.x).rounded() + 0.5
-                var p = i % Paper.major == 0 ? major : minor
-                p.move(to: CGPoint(x: x, y: 0)); p.addLine(to: CGPoint(x: x, y: size.height))
-                if i % Paper.major == 0 { major = p } else { minor = p }
-            }
-            for j in j0...j1 {
-                let y = (Double(j) * step + camera.y).rounded() + 0.5
-                var p = j % Paper.major == 0 ? major : minor
-                p.move(to: CGPoint(x: 0, y: y)); p.addLine(to: CGPoint(x: size.width, y: y))
-                if j % Paper.major == 0 { major = p } else { minor = p }
-            }
-            ctx.stroke(minor, with: .color(Ink.gridMinor), lineWidth: 1)
-            ctx.stroke(major, with: .color(Ink.gridMajor), lineWidth: 1)
-        }
-        .allowsHitTesting(false)
-    }
-}
-
-/// Each lesson is a small drawing of its own maths. Learned = full colour; not yet = light pencil.
-/// They draw themselves in when the paper opens, outward from today's lesson.
+/// The words on the paper: the chapter title, each lesson's name, the Up next tag and the Start block.
+/// The lessons' pictures and the grid are in the 3D scene underneath (PaperScene); this draws on top with the same camera.
 struct PiecesLayer: View {
     let camera: PaperCamera
     let time: Double
     let drawnAt: Double
     let selected: Piece?
-    static let drawTime = 1.6
 
     var body: some View {
         Canvas { ctx, _ in
             let z = camera.zoom
             ctx.translateBy(x: camera.x, y: camera.y); ctx.scaleBy(x: z, y: z)
-            let now = Volume.pieces.first { $0.state == .now }!.frame.mid
             // chapter title, baseline on a grid line
             ctx.draw(Text(Volume.title).font(Typeface.title).foregroundStyle(Ink.ink), at: CGPoint(x: 0, y: 40), anchor: .bottomLeading)
-            for p in Volume.pieces {
-                let d = hypot(p.frame.mid.x - now.x, p.frame.mid.y - now.y) / 900
-                let k = ease((time - drawnAt - d) / 0.9)
-                draw(p, k: k, in: &ctx)
-            }
+            for p in Volume.pieces { draw(p, k: Piece.drawIn(p, time: time, drawnAt: drawnAt), in: &ctx) }
         }
         .allowsHitTesting(false)
     }
@@ -117,9 +81,6 @@ struct PiecesLayer: View {
     private func draw(_ p: Piece, k: Double, in ctx: inout GraphicsContext) {
         let r = CGRect(x: p.at.x, y: p.at.y, width: Piece.size.width, height: Piece.size.height)
         let on = selected?.id == p.id
-        let colour = p.state == .notYet ? Ink.pencil : p.chapter.color
-        ctx.stroke(Path(r).trimmedPath(from: 0, to: k), with: .color(on ? Ink.ink : Ink.lineStrong), lineWidth: on ? 2 : 1.5)
-        ctx.stroke(picture(p, in: r).trimmedPath(from: 0, to: k), with: .color(colour), style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
         var t = ctx; t.opacity = k
         t.draw(Text(p.name).font(Typeface.name).foregroundStyle(Ink.ink), at: CGPoint(x: r.minX, y: r.maxY + 28), anchor: .bottomLeading)
         if p.state == .now {
@@ -136,29 +97,6 @@ struct PiecesLayer: View {
             let a = CGRect(x: s.maxX - 30, y: s.midY - 10, width: 20, height: 20)
             t.drawLayer { l in l.clipToLayer { $0.draw(Image("ph-arrow-right"), in: a) }; l.fill(Path(a), with: .color(Ink.ink)) }
         }
-    }
-
-    /// The lesson's own picture, every point on the grid.
-    private func picture(_ p: Piece, in r: CGRect) -> Path {
-        var path = Path()
-        let c = Paper.cell
-        switch p.id {
-        case "sq": // a 4 x 3 floor of squares
-            for i in 0...4 { path.move(to: CGPoint(x: r.minX + 40 + Double(i) * 2 * c, y: r.minY + 30)); path.addLine(to: CGPoint(x: r.minX + 40 + Double(i) * 2 * c, y: r.minY + 150)) }
-            for j in 0...3 { path.move(to: CGPoint(x: r.minX + 40, y: r.minY + 30 + Double(j) * 2 * c)); path.addLine(to: CGPoint(x: r.minX + 200, y: r.minY + 30 + Double(j) * 2 * c)) }
-        case "uc": // one cube, drawn on the grid
-            let x = r.minX + 80, y = r.minY + 60, s = 4 * c, o = 2 * c
-            path.addRect(CGRect(x: x, y: y, width: s, height: s))
-            path.move(to: CGPoint(x: x, y: y)); path.addLine(to: CGPoint(x: x + o, y: y - o)); path.addLine(to: CGPoint(x: x + s + o, y: y - o)); path.addLine(to: CGPoint(x: x + s, y: y))
-            path.move(to: CGPoint(x: x + s + o, y: y - o)); path.addLine(to: CGPoint(x: x + s + o, y: y + s - o)); path.addLine(to: CGPoint(x: x + s, y: y + s))
-        case "ly": // two layers
-            for k in 0..<2 { path.addRect(CGRect(x: r.minX + 40, y: r.minY + 50 + Double(k) * 2 * c, width: 8 * c, height: 2 * c)) }
-        default: // a box with its three sides
-            path.addRect(CGRect(x: r.minX + 40, y: r.minY + 60, width: 6 * c, height: 4 * c))
-            path.move(to: CGPoint(x: r.minX + 40, y: r.minY + 60)); path.addLine(to: CGPoint(x: r.minX + 80, y: r.minY + 20)); path.addLine(to: CGPoint(x: r.minX + 200, y: r.minY + 20)); path.addLine(to: CGPoint(x: r.minX + 160, y: r.minY + 60))
-            path.move(to: CGPoint(x: r.minX + 200, y: r.minY + 20)); path.addLine(to: CGPoint(x: r.minX + 200, y: r.minY + 100)); path.addLine(to: CGPoint(x: r.minX + 160, y: r.minY + 140))
-        }
-        return path
     }
 }
 

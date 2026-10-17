@@ -3,7 +3,7 @@
 The paper proof: the paper's grid, pan and zoom, the glide to a lesson, and Unit cubes in 3D.
 
 **`Obento2.swiftpm` is the app.** Open it in Swift Playgrounds (Mac or iPad) and press Play.
-- `App/` holds the screens: SwiftUI for the paper, RealityKit for 3D lessons.
+- `App/` holds the screens: the whole paper is one RealityKit scene (`PaperScene.swift`), with SwiftUI words and controls on top.
 - `Core/` holds the lesson logic and the camera maths, with no drawing in it.
 
 `Packages/ObentoCore` runs Core's tests on any machine: `cd Packages/ObentoCore && swift test`. Its sources are a link to `Obento2.swiftpm/Core`.
