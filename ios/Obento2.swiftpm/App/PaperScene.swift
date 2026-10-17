@@ -87,7 +87,7 @@ final class Rig {
     // the open lesson
     let lessonRoot = Entity()
     weak var lesson: UnitCubesModel?
-    var shape: UnitCubes.Box?
+    var shape: (box: UnitCubes.Box, origin: Vec3)?
     var squares: [UnitCubes.Cell: ModelEntity] = [:]
     var cubes: [(x: Int, y: Int, z: Int, e: Entity)] = []
     var outline = Entity()
@@ -140,6 +140,10 @@ final class Rig {
         let floor = v.floorTarget
         sheet.position.x = Float(floor.x); sheet.position.z = Float(floor.z)
 
+        // a lesson that ends is only hidden: deleting hundreds of pieces as the paper comes back makes it stall
+        if model.lesson !== lesson { lesson = model.lesson }
+        lessonRoot.isEnabled = lesson != nil
+
         // lines keep their screen width at any zoom
         if lineScale == 0 || abs(v.scale / lineScale - 1) > 0.05 { lineScale = v.scale; gridAt = nil; pieceState = [:]; relines() }
         // enough grid to fill the screen even when tilted, centred on a strong line near the middle
@@ -150,9 +154,9 @@ final class Rig {
         pieces.isEnabled = model.lesson == nil
         if model.lesson == nil { drawPieces(model, at: t) }
 
-        if model.lesson !== lesson { lesson = model.lesson; shape = nil; clearLesson() }
         guard let l = lesson else { return }
-        if shape != l.box { rebuild(l) }
+        // the last lesson's pieces are reused when the box is the same; otherwise cleared now, while the new one builds
+        if shape?.box != l.box || shape?.origin != l.origin { rebuild(l) }
         for (c, e) in squares { let k = Float(max(0.0001, l.square(c, at: t))); e.scale = SIMD3(k, 1, k) }
         for c in cubes {
             let k = l.cube(x: c.x, y: c.y, z: c.z, at: t)
@@ -224,7 +228,7 @@ final class Rig {
 
     private func rebuild(_ l: UnitCubesModel) {
         clearLesson()
-        shape = l.box
+        shape = (l.box, l.origin)
         let b = l.box, o = l.origin
         let sq = MeshResource.generatePlane(width: 1, depth: 1)
         for z in 0..<b.width { for x in 0..<b.length {
@@ -270,8 +274,8 @@ final class Rig {
             guard let a = e.components[EdgeAxis.self]?.axis else { continue }
             var s = SIMD3<Float>(repeating: 2.5 * px); s[a] = 1 + 2.5 * px; e.scale = s
         }
-        outline.removeFromParent(); outline = Entity()
         guard let l = lesson else { return }
+        outline.removeFromParent(); outline = Entity()
         // the box's floor, dashed, on the paper's strong lines
         let o = l.origin, b = l.box, L = Float(b.length), W = Float(b.width)
         let ox = Float(o.x), oz = Float(o.z)
