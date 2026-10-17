@@ -74,8 +74,22 @@ jobs:
           ls -la shots
           shoot "iPad Pro 13-inch" dark -landscape "tilt" ipad-dark
           shoot "iPhone 16 Pro" light "" "paper flat tilt stacked" phone
+      - name: Keep the demo video with the build
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ipad-demo
+          path: ios/shots/ipad-demo.mp4
+          if-no-files-found: ignore
       - name: Save screenshots to the branch
         if: always()
         run: |
+          # the pictures go on top of whatever the branch holds now, so other pushes never conflict with them
+          mkdir -p "$RUNNER_TEMP/shots" && cp shots/*.png "$RUNNER_TEMP/shots/" 2>/dev/null || { echo "no shots"; exit 0; }
           git config user.name "obento-ci"; git config user.email "ci@users.noreply.github.com"
-          git add shots && git commit -m "iOS screenshots for ${GITHUB_SHA::7}" && git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" || echo "no shots"
+          for i in 1 2 3; do
+            git fetch -q origin "${GITHUB_REF_NAME}" && git reset -q --hard "origin/${GITHUB_REF_NAME}"
+            rm -f shots/ipad-demo.mp4; cp "$RUNNER_TEMP"/shots/*.png shots/
+            git add -A shots && git commit -qm "iOS screenshots for ${GITHUB_SHA::7}" || exit 0
+            git push -q origin "HEAD:${GITHUB_REF_NAME}" && exit 0
+          done

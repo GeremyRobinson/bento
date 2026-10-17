@@ -4,3 +4,4 @@ build-pg/
 *.log
 .build/
 .swiftpm/
+shots/*.mp4
