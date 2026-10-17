@@ -23,9 +23,9 @@ final class BarsPage {
     static let pitch = Size(box.width + gap, box.height + gap)
     static let problemsTop = box.height + gap
 
-    /// The How to's origin: its box's corner on the strong line at or before the lesson's place on the map.
+    /// The How to's origin: its box's corner on the lesson's frame corner on the map, on the strong lines.
     static func origin(for p: Piece) -> Point {
-        Point(((p.at.x + box.dx) / Paper.unit).rounded(.down) * Paper.unit - box.dx, ((p.at.y + box.dy) / Paper.unit).rounded(.down) * Paper.unit - box.dy)
+        Point((p.at.x / Paper.unit).rounded() * Paper.unit - box.dx, (p.at.y / Paper.unit).rounded() * Paper.unit - box.dy)
     }
     private var at: Point { Self.origin(for: piece) }
 

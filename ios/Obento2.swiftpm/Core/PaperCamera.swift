@@ -42,13 +42,14 @@ public enum CameraTiming {
     // snappier, G 17 Oct (was 0.7 and 1.1)
     public static let fly: Double = 0.5
     public static let glide: Double = 0.75
-    /// Tapping a lesson on the map glides to this zoom, the same however many are tapped one after another (G 17 Oct: 125%).
-    public static let selectMax: Double = 1.25
+    /// Tapping a lesson on the map glides to this zoom, the same however many are tapped one after another (G 17 Oct:
+    /// 100%, now the frames are 3 blocks by 2; was 125%).
+    public static let selectMax: Double = 1.0
     /// A lesson frames what it shows and may come this close: the same as the tap, so Start doesn't move the camera
     /// (G 17 Oct: 125% for the focus and the target).
     public static let lessonMax: Double = 1.25
 
-    /// The zoom a tap on a lesson glides to: 125%, unless the lesson wouldn't fit.
+    /// The zoom a tap on a lesson glides to: 100%, unless the lesson wouldn't fit.
     public static func selectZoom(current: Double, overview: Double, fit: Double) -> Double { min(fit, selectMax) }
 }
 

@@ -382,14 +382,14 @@ final class MasteryTests: XCTestCase {
 }
 
 final class SelectZoomTests: XCTestCase {
-    /// Tapping lessons one after another always glides to 125%, unless the lesson wouldn't fit.
+    /// Tapping lessons one after another always glides to 100%, unless the lesson wouldn't fit.
     func testTappingLessonsHasALimit() {
         var z = 0.6
         for _ in 0..<5 { z = CameraTiming.selectZoom(current: z, overview: 0.6, fit: 2.5) }
-        XCTAssertEqual(z, 1.25, accuracy: 1e-9)
-        XCTAssertEqual(CameraTiming.selectZoom(current: 1.8, overview: 0.6, fit: 2.5), 1.25, "closer than that: back to 125%")
+        XCTAssertEqual(z, 1.0, accuracy: 1e-9)
+        XCTAssertEqual(CameraTiming.selectZoom(current: 1.8, overview: 0.6, fit: 2.5), 1.0, "closer than that: back to 100%")
         XCTAssertEqual(CameraTiming.selectZoom(current: 0.6, overview: 0.6, fit: 0.7), 0.7, "the lesson always fits")
-        XCTAssertEqual(CameraTiming.lessonMax, CameraTiming.selectMax, "Start doesn't move the camera")
+        XCTAssertEqual(CameraTiming.lessonMax, 1.25, "a lesson's own steps can still come closer")
     }
 }
 

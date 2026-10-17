@@ -20,7 +20,9 @@ struct Piece: Identifiable, Equatable {
         return next?.id == id ? .now : .notYet
     }
 
-    static let size = Size(240, 180)
+    /// Graph paper (G 17 Oct): 3 blocks by 2, starting and ending on the strong lines; its name and Start block fill
+    /// the block under it.
+    static let size = Size(3 * Paper.unit, 2 * Paper.unit)
     var frame: Rect { Rect(x: at.x, y: at.y, width: Piece.size.width, height: Piece.size.height) }
     /// The frame, its name and its Start block: what a tap glides to.
     var focus: Rect { Rect(x: at.x - 20, y: at.y - 20, width: Piece.size.width + 40, height: Piece.size.height + 140) }
@@ -42,12 +44,13 @@ struct ChapterGroup {
     let origin: Point
     let columns: Int
     let lessons: [(id: String, name: String)]
-    static let pitch = Size(300, 300)
+    /// A frame and one block across; a frame, the block with its name and Start, and one block down.
+    static let pitch = Size(4 * Paper.unit, 4 * Paper.unit)
 
     var pieces: [Piece] {
         lessons.enumerated().map { i, l in
             Piece(id: l.id, name: l.name, chapter: chapter,
-                  at: Point(origin.x + Double(i % columns) * Self.pitch.width, origin.y + 80 + Double(i / columns) * Self.pitch.height))
+                  at: Point(origin.x + Double(i % columns) * Self.pitch.width, origin.y + Paper.unit + Double(i / columns) * Self.pitch.height))
         }
     }
 }
@@ -59,14 +62,14 @@ enum Map {
     static let groups: [ChapterGroup] = [
         ChapterGroup(chapter: .whole, origin: Point(0, 0), columns: 3, lessons: [
             ("g5-mult2", "Multiply two-digit numbers"), ("g5-divide", "Long division"), ("g5-order", "Order of operations")]),
-        ChapterGroup(chapter: .decimals, origin: Point(1000, 0), columns: 3, lessons: [
+        ChapterGroup(chapter: .decimals, origin: Point(1300, 0), columns: 3, lessons: [
             ("g5-pow10", "Multiply by 10, 100, 1000"), ("g5-round", "Rounding decimals"), ("g5-adddec", "Adding decimals"),
             ("g5-multdec", "Multiplying decimals"), ("g5-divdec", "Dividing by a decimal")]),
-        ChapterGroup(chapter: .fractions, origin: Point(0, 440), columns: 3, lessons: [
+        ChapterGroup(chapter: .fractions, origin: Point(0, 600), columns: 3, lessons: [
             ("ad", "Add with different bottoms"), ("add", "Adding fractions"), ("sub", "Subtracting fractions"),
             ("mix", "Adding and subtracting"), ("g5-multfrac", "Multiplying fractions"), ("g5-improper", "Mixed numbers to fractions"),
             ("g5-fracof", "Fraction of a number"), ("g5-unitdiv", "Dividing by a unit fraction")]),
-        ChapterGroup(chapter: .measurement, origin: Point(1000, 740), columns: 3, lessons: [
+        ChapterGroup(chapter: .measurement, origin: Point(1300, 1000), columns: 3, lessons: [
             ("uc", "Unit cubes"), ("g5-volume", "Volume of a box"), ("g5-units", "Converting units")]),
     ]
     static let pieces = groups.flatMap(\.pieces)
@@ -177,9 +180,9 @@ final class PaperModel {
         selected = p
         guard let p else { return }
         // a lesson that opens: its first problem is chosen now, and the glide frames the lesson as it will start, at up
-        // to 100%, so Start needs no camera move and the lesson starts at a comfortable size (G 17 Oct)
+        // to the tap's 100% (G 17 Oct)
         if let f = startFrame(p) {
-            fly(to: framingBelowBar(f, maxZoom: CameraTiming.lessonMax), duration: CameraTiming.glide)
+            fly(to: framingBelowBar(f, maxZoom: CameraTiming.selectMax), duration: CameraTiming.glide)
             return
         }
         let now = camera(at: PaperClock.now)
@@ -197,7 +200,7 @@ final class PaperModel {
         }
         if steps != nil { return }
         if let sel = selected, sel.opens, contains(sel.start, p) { open(sel); return }
-        select(Map.pieces.first(where: { contains($0.frame, p) || contains(Rect(x: $0.at.x, y: $0.at.y + 180, width: 240, height: 40), p) }))
+        select(Map.pieces.first(where: { contains($0.frame, p) || contains($0.start, p) }))
     }
 
     /// Opening Unit cubes: fly the flat paper to the lesson, then hand the same view to the 3D camera.
