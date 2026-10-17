@@ -1,0 +1,55 @@
+name: ios
+on:
+  push:
+    branches-ignore: [main]
+    paths: ["ios/**", ".github/workflows/ios.yml", "!ios/shots/**"]
+  workflow_dispatch:
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: ios
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lesson logic tests
+        run: cd Packages/ObentoCore && swift test
+      - name: Make the Xcode project
+        run: brew install xcodegen && xcodegen
+      - name: Build for the iPad simulator
+        run: |
+          set -o pipefail
+          xcodebuild -project Obento2.xcodeproj -scheme Obento2 -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO build | tail -80
+      - name: Screenshots
+        run: |
+          APP=$(find build/Build/Products -name '*.app' -maxdepth 3 | head -1)
+          mkdir -p shots
+          shoot() { # device-name prefix, appearance, orientation flag
+            UDID=$(xcrun simctl list devices available | grep -m1 "$1" | grep -oE '[0-9A-F-]{36}')
+            xcrun simctl boot "$UDID" || true
+            xcrun simctl bootstatus "$UDID" -b
+            xcrun simctl ui "$UDID" appearance "$2"
+            xcrun simctl install "$UDID" "$APP"
+            for s in $4; do
+              xcrun simctl terminate "$UDID" education.bento.obento2 || true
+              xcrun simctl launch "$UDID" education.bento.obento2 -shot "$s" $3
+              sleep 6
+              xcrun simctl io "$UDID" screenshot "shots/$5-$s.png"
+            done
+          }
+          shoot "iPad Pro 13-inch" light -landscape "paper selected flat cover tilt stacked" ipad
+          shoot "iPad Pro 13-inch" dark -landscape "tilt" ipad-dark
+          shoot "iPhone 16 Pro" light "" "paper flat tilt stacked" phone
+      - name: Save screenshots to the branch
+        if: always()
+        run: |
+          git config user.name "obento-ci"; git config user.email "ci@users.noreply.github.com"
+          git add shots && git commit -m "iOS screenshots for ${GITHUB_SHA::7}" && git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" || echo "no shots"
