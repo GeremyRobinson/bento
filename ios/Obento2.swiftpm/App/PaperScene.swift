@@ -307,14 +307,17 @@ final class Rig {
         for (p, k, on, state) in now {
             // the chosen lesson, and the one up next, are outlined in their chapter's colour
             let lit = on || state == .now
-            add(lit ? "frame-\(p.chapter.rawValue)-\(on)" : "frame", lit ? UIColor(hex: p.chapter.hex) : colours.lineStrong, on ? 2 : 1.5, 0.001, drawn(p.outline, k))
+            // the others' frames are their chapter's colour too, lighter: no grey on the map
+            let frameColour = lit ? UIColor(hex: p.chapter.hex) : UIColor(hex: Ink.mix(paperHex, p.chapter.hex, 0.3))
+            add("frame-\(p.chapter.rawValue)-\(lit)-\(on)", frameColour, on ? 2 : 1.5, 0.001, drawn(p.outline, k))
             // a light fill in the chapter's colour, coming in with the drawing
             let strength = (k * 10).rounded() / 10 * 0.1
             if strength > 0 {
                 let id = "tint-\(p.chapter.rawValue)-\(strength)"
                 tints[id, default: (UIColor(hex: Ink.mix(paperHex, p.chapter.hex, strength)), [])].rects.append(CGRect(x: p.at.x, y: p.at.y, width: Piece.size.width, height: Piece.size.height))
             }
-            if state == .notYet { add("pencil", colours.pencil, 2.5, 0.0015, drawn(p.strokes, k)) }
+            // a lesson not yet open is drawn in its chapter's colour, lightened, instead of grey pencil (G 17 Oct)
+            if state == .notYet { add("light-\(p.chapter.rawValue)", UIColor(hex: Ink.mix(paperHex, p.chapter.hex, 0.4)), 2.5, 0.0015, drawn(p.strokes, k)) }
             else { add("chapter-\(p.chapter.rawValue)", UIColor(hex: p.chapter.hex), 2.5, 0.0015, drawn(p.strokes, k)) }
         }
         for (id, e) in pieceGroups where groups[id] == nil && tints[id] == nil { e.isEnabled = false }
