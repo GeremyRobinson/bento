@@ -22,6 +22,7 @@ enum Shots {
         // let the window settle into its final size, then jump to the moment
         Task {
             try? await Task.sleep(for: .seconds(1.5))
+            if name == "demo" { await demo(m); return }
             m.instant = true
             m.drawnAt = PaperClock.now - 100
             m.shotBox = .init(length: 4, width: 3, height: 2)
@@ -41,5 +42,25 @@ enum Shots {
                 l.go()
             }
         }
+    }
+
+    /// The whole Paper proof playing on its own, at real speed, for the build's video.
+    static func demo(_ m: PaperModel) async {
+        func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
+        m.shotBox = .init(length: 4, width: 3, height: 2)
+        m.frameGroup(duration: 0)
+        m.drawnAt = PaperClock.now
+        await wait(2.4)
+        let uc = Volume.pieces.first { $0.id == "uc" }!
+        m.select(uc); await wait(2)
+        m.open(uc); await wait(2)
+        guard let l = m.lesson else { return }
+        l.go(); await wait(1.4)
+        for c in [(0, 0), (1, 0), (2, 0), (3, 0), (0, 1)] { l.tap(.init(c.0, c.1)); await wait(0.35) }
+        l.go(); await wait(1.4)
+        l.showMe(); await wait(1.4)
+        l.go(); await wait(3)
+        l.go(); await wait(3)
+        m.close(); await wait(2)
     }
 }
