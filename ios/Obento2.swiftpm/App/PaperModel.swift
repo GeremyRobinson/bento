@@ -189,35 +189,30 @@ final class PaperModel {
         // Unit cubes and Add with different bottoms are the Paper proof's own lessons; every other lesson is worked in steps
         if p.id == "ad" { openBars(p); return }
         if p.id != "uc" { openSteps(p, spec); return }
+        // Start opens the lesson where it is: the tap already glided to it, so the camera doesn't move again (G 17 Oct).
+        // The 3D lesson takes over the camera, so it waits for that glide to land first.
         let origin = UnitCubesModel.origin(for: p)
-        let wide = screen.width > 760
-        let frame = Rect(x: origin.x * Paper.unit - 40, y: origin.z * Paper.unit - 200, width: 480, height: 640)
-        fly(to: .framing(frame, in: screen, pad: wide ? Self.margin : 8, maxZoom: 1), duration: CameraTiming.fly)
         let go = { [self] in
-            let cam = flight?.to ?? camera(at: PaperClock.now)
-            lesson = UnitCubesModel(origin: origin, chapter: p.chapter, view: .matching(cam, screen: screen), screen: screen, instant: instant, box: shotBox,
+            lesson = UnitCubesModel(origin: origin, chapter: p.chapter, view: .matching(camera(at: PaperClock.now), screen: screen), screen: screen, instant: instant, box: shotBox,
                                     session: Progress.shared.dueBack(p.id) ? .recheck : LessonSession())
             selected = nil
         }
-        if instant { go() } else { Task { try? await Task.sleep(for: .seconds(CameraTiming.fly + 0.04)); go() } }
+        let landing = flight.map { $0.start + $0.duration - PaperClock.now } ?? 0
+        if instant || landing <= 0 { go() } else { Task { try? await Task.sleep(for: .seconds(landing + 0.02)); go() } }
     }
 
-    /// Opening the flat lesson: glide to it, then the pieces grow in. It never tilts, so the paper's camera stays in charge.
+    /// Opening the flat lesson: its pieces grow in where it is, on the paper's own camera (no camera move).
     func openBars(_ p: Piece) {
         // a learned lesson that's due back opens straight on its recheck
         let b = AddFractionsModel(origin: AddFractionsModel.origin(for: p), chapter: p.chapter, instant: instant, problem: shotProblem,
                                   session: Progress.shared.dueBack(p.id) ? .recheck : LessonSession())
-        fly(to: .framing(b.frame, in: screen, pad: screen.width > 760 ? Self.margin : 8, maxZoom: 1), duration: CameraTiming.fly)
-        let go = { [self] in b.start(); bars = b; selected = nil }
-        if instant { go() } else { Task { try? await Task.sleep(for: .seconds(CameraTiming.fly + 0.04)); go() } }
+        b.start(); bars = b; selected = nil
     }
 
     /// Opening a lesson worked in steps: glide to it, then its picture grows in. Flat, on the paper's camera.
     func openSteps(_ p: Piece, _ spec: LessonSpec) {
         let s = StepsModel(spec: spec, origin: p.at, chapter: p.chapter, number: Map.number(p), instant: instant, numbers: shotNumbers)
-        fly(to: .framing(s.frame, in: screen, pad: screen.width > 760 ? Self.margin : 8, maxZoom: 1), duration: CameraTiming.fly)
-        let go = { [self] in s.start(); steps = s; selected = nil }
-        if instant { go() } else { Task { try? await Task.sleep(for: .seconds(CameraTiming.fly + 0.04)); go() } }
+        s.start(); steps = s; selected = nil
     }
 
     /// The crosshair inside a flat lesson: glide back to the whole lesson.

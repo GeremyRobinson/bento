@@ -14,6 +14,8 @@ enum Shots {
 
     static func run(_ m: PaperModel) {
         guard let name else { return }
+        // as a child does it: tap the lesson (the glide), then Start
+        func start(_ p: Piece) { m.select(p); m.open(p) }
         // the same progress every time, and nothing saved: two lessons learned
         Progress.shared.saving = false
         Progress.shared.reset(to: ["g5-mult2", "add"])
@@ -54,25 +56,25 @@ enum Shots {
                 UserDefaults.standard.set("dark", forKey: "theme")
             case "recheck":
                 Progress.shared.makeDue("ad")
-                m.open(Map.pieces.first { $0.id == "ad" }!)
-            case "back": m.open(Map.pieces.first { $0.id == "ad" }!); m.close()
+                start(Map.pieces.first { $0.id == "ad" }!)
+            case "back": start(Map.pieces.first { $0.id == "ad" }!); m.close()
             case let n where n.hasPrefix("L-"):
                 // L-<lesson id>-<step>: open any lesson and work it to that step, each answer filled in by Show me
                 let parts = n.dropFirst(2).split(separator: "-"), id = parts.dropLast().joined(separator: "-")
                 guard let p = Map.pieces.first(where: { $0.id == id }), let k = Int(parts.last ?? "0") else { return }
-                m.open(p)
+                start(p)
                 guard let s = m.steps else { return }
                 for _ in 0..<k { if s.lesson.step.answer != nil { s.showMe() }; s.go() }
                 if s.lesson.step.answer != nil, args.contains("-filled") { s.showMe() }
             case let n where n.hasPrefix("pow10"):
                 m.shotNumbers = PowersOfTen.numbers(x: 4.6, k: 2)
-                m.open(Map.pieces.first { $0.id == "g5-pow10" }!)
+                start(Map.pieces.first { $0.id == "g5-pow10" }!)
                 guard let s = m.steps, n != "pow10" else { return }
                 s.go(); s.type("2"); s.go()
                 if n == "pow10-move" { for k in ["4", "6"] { s.type(k) }; s.go(); return }
                 s.showMe(); s.go()
             case let n where n.hasPrefix("fractions"):
-                m.open(Map.pieces.first { $0.id == "ad" }!)
+                start(Map.pieces.first { $0.id == "ad" }!)
                 guard let b = m.bars, n != "fractions" else { return }
                 b.go()
                 if n == "fractions-wrong" { b.tap(5); b.go(); return }
@@ -85,7 +87,7 @@ enum Shots {
                 if n == "fractions-add" { return }
                 b.tap(2); b.go()
             default:
-                m.open(uc)
+                start(uc)
                 guard let l = m.lesson else { return }
                 if name == "flat" { return }
                 l.go()
