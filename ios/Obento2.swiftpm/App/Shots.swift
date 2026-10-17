@@ -122,7 +122,6 @@ enum Shots {
                 start(Map.pieces.first { $0.id == "ad" }!)
                 guard let page = m.bars, n != "fractions" else { return }
                 let b = n == "fractions-story" ? page.problems[2] : n == "fractions-check" ? page.problems[12] : page.problems[0]
-                if n == "fractions-howto" { page.watchAgain(); return }
                 if n == "fractions-taps" {
                     // a finger's taps, by where they land on the screen: the pieces, then Check, then a choice on the story
                     @MainActor func tap(_ p: CGPoint) { let s = m.camera(at: PaperClock.now).toScreen(Point(p.x, p.y)); m.tap(at: s) }

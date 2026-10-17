@@ -375,21 +375,21 @@ final class Rig {
             for w in problemWords.values { w.root.removeFromParent() }
             problemWords = [:]; return
         }
-        let shown = page.all
-        // a page that opens builds its problems' bars two a frame (all 17 at once stalled a frame for 170 ms): the
-        // problems draw themselves in one after another, so each is built before its turn comes
+        let shown = page.all, every = page.all + (page.howToGone ? [] : page.problems)
+        // the problems' bars are built one a frame while the How to plays, unseen (they haven't grown in), so nothing
+        // is built when they arrive (building all 17 at once stalled a frame for 170 ms; 16 as they arrived, 80 ms)
         var made = 0
-        for m in shown {
+        for m in every {
             if drawers[m.id] == nil {
-                if made >= 2 && !m.instant { continue }
+                if made >= 1 && !m.instant && m !== page.howTo { continue }
                 made += 1
             }
             let d = drawers[m.id] ?? { let d = BarsDrawer(rig: self); barsRoot.addChild(d.root); drawers[m.id] = d; return d }()
             d.draw(m, at: t)
         }
-        for (id, d) in drawers where !shown.contains(where: { $0.id == id }) { d.root.removeFromParent(); drawers[id] = nil }
+        for (id, d) in drawers where !every.contains(where: { $0.id == id }) { d.root.removeFromParent(); drawers[id] = nil }
         Perf.time("boxes") { drawBoxes(page, shown, at: t) }
-        Perf.time("page-words") { drawProblemWords(page, shown, at: t) }
+        Perf.time("page-words") { drawProblemWords(page, shown, waiting: page.showing || made > 0 ? [] : page.problems, at: t) }
     }
 
     /// Every problem's box (G 17 Oct): a light outline in the chapter's colour, drawing in with its problem; the problem
@@ -707,9 +707,9 @@ final class BarsDrawer {
 
     /// The lines around the bars: the whole's length, the matching dashes, the guide after a wrong count, the total's bracket.
     private func drawDecor(_ b: AddFractionsModel, at t: Double) {
-        let whole = snapped(b.wholeLine(at: t), 50), guide = snapped(b.guide(at: t), 50), picture = b.lesson.picture
+        let whole = snapped(b.wholeLine(at: t), 50), guide = snapped(b.guide(at: t), 50), picture = b.lesson.picture, gone = snapped(b.gone(at: t), 50)
         let bracket = picture["total"] == 1 ? snapped(ease((t - b.wordsAt - 0.2) / 0.5), 50) : 0
-        let key = "\(b.lesson.index) \(whole) \(guide) \(bracket) \(picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(b.lesson.marks.count)"
+        let key = "\(b.lesson.index) \(whole) \(guide) \(bracket) \(gone) \(picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(b.lesson.marks.count)"
         guard key != decorKey else { return }
         decorKey = key
         for c in Array(decor.children) { c.removeFromParent() }
@@ -725,7 +725,7 @@ final class BarsDrawer {
             return out
         }
         func add(_ lines: [[CGPoint]], _ k: Double, width: Double, _ c: UIColor) {
-            guard let m = Rig.lines(drawn(lines, k), width: Float(width / Paper.unit)) else { return }
+            guard let m = Rig.lines(drawn(lines, k * gone), width: Float(width / Paper.unit)) else { return }
             let e = ModelEntity(mesh: m, materials: [flat(c)]); e.position.y = 0.0012; decor.addChild(e)
         }
         let chapter = UIColor(hex: b.chapter.hex)

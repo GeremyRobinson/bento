@@ -10,11 +10,11 @@ enum ProblemLayout {
     /// The action row: two cells above the box's bottom.
     static let actions = BarsPage.box.dy + BarsPage.box.height - 80
 
-    enum Kind: Equatable { case main, showMe, reset, watchAgain, choice(Int) }
+    enum Kind: Equatable { case main, showMe, reset, choice(Int) }
     struct Block { let kind: Kind; let rect: CGRect }
 
-    /// The blocks a problem shows now, in paper points. The How to has only Watch again once it has played; a solved
-    /// problem has none; Show me only outside the skill check.
+    /// The blocks a problem shows now, in paper points. The How to plays itself and has none; a solved problem has
+    /// none; Show me only outside the skill check.
     static func blocks(_ m: AddFractionsModel) -> [Block] {
         let o = m.origin, l = m.lesson
         func R(_ x: Double, _ y: Double, _ w: Double, _ h: Double = 40) -> CGRect { CGRect(x: o.x + x, y: o.y + y, width: w, height: h) }
@@ -24,9 +24,7 @@ enum ProblemLayout {
             let y = AddFractionsModel.row2 + AddFractionsModel.barHeight + 20
             for i in choices.indices { out.append(Block(kind: .choice(i), rect: R(Double(i) * (w - 1.5), y, w))) }
         }
-        if m.auto {
-            if m.solved { out.append(Block(kind: .watchAgain, rect: R(0, actions, 180))) }
-        } else if !m.solved {
+        if !m.auto && !m.solved {
             out.append(Block(kind: .main, rect: R(0, actions, 180)))
             if l.step.task != nil {
                 out.append(Block(kind: .reset, rect: R(column - 40, actions, 40)))
@@ -66,33 +64,48 @@ final class ProblemWords {
 extension Rig {
     /// Every problem's words on the lesson's page (G 17 Oct). Only the problem being worked, or one still animating,
     /// does anything each frame; the rest are still.
-    func drawProblemWords(_ page: BarsPage, _ shown: [AddFractionsModel], at t: Double) {
+    func drawProblemWords(_ page: BarsPage, _ shown: [AddFractionsModel], waiting: [AddFractionsModel], at t: Double) {
         let isDark = dark ?? false
+        // the problems still to come have their words made one a frame while the How to plays, kept hidden
+        if let m = waiting.first(where: { problemWords[$0.id] == nil }) {
+            let w = ProblemWords(); pageWords.addChild(w.root); problemWords[m.id] = w
+            w.root.isEnabled = false
+            w.key = wordsKey(m, page, dark: isDark); build(w, m, current: false, dark: isDark)
+        }
         // a page that opens makes its problems' words two at a time, a frame apart, so opening doesn't stall:
         // the problems draw themselves in one after another anyway
         var made = 0
         for m in shown {
             let w = problemWords[m.id] ?? { let w = ProblemWords(); pageWords.addChild(w.root); problemWords[m.id] = w; return w }()
-            let l = m.lesson
-            let key = [m.label, l.words.say, l.words.hint, l.words.action, "\(l.index)", "\(l.marks.count)", l.typed["c"] ?? "",
-                       m.message.map { "\($0.text)\($0.ok)" } ?? "", "\(m.solved)", "\(page.current === m)", "\(l.helps)", "\(isDark)",
-                       l.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }.joined()].joined(separator: "|")
+            w.root.isEnabled = true
+            let key = wordsKey(m, page, dark: isDark)
             if key != w.key {
                 if w.key.isEmpty && made >= 2 { continue }
                 made += 1
                 w.key = key; w.idle = false; build(w, m, current: page.current === m, dark: isDark)
             }
             if w.idle && !m.animating && !m.busy { continue }
-            let s = m.words(at: t), fresh = ease((t - m.wordsAt) / 0.5)
+            let s = m.words(at: t), gone = m.gone(at: t), fresh = ease((t - m.wordsAt) / 0.5) * gone
             w.fade(w.question, fresh)
             w.question.position.z = Float((1 - fresh) * 8 / Paper.unit)
             w.fade(w.shown, s)
-            w.fade(w.guide, m.guide(at: t))
-            w.fade(w.total, ease((t - m.wordsAt - 0.5) / 0.4))
+            w.fade(w.still, s)
+            w.fade(w.guide, m.guide(at: t) * gone)
+            w.fade(w.total, ease((t - m.wordsAt - 0.5) / 0.4) * gone)
             w.fade(w.blocks, m.busy ? 0.35 * s : s)
             w.idle = !m.animating && !m.busy && t - m.wordsAt > 1
         }
-        for (id, w) in problemWords where !shown.contains(where: { $0.id == id }) { w.root.removeFromParent(); problemWords[id] = nil }
+        for (id, w) in problemWords where !page.all.contains(where: { $0.id == id }) && !page.problems.contains(where: { $0.id == id }) {
+            w.root.removeFromParent(); problemWords[id] = nil
+        }
+    }
+
+    /// Everything a problem's words show: when it changes, they're made again.
+    private func wordsKey(_ m: AddFractionsModel, _ page: BarsPage, dark: Bool) -> String {
+        let l = m.lesson
+        return [m.label, l.words.say, l.words.hint, l.words.action, "\(l.index)", "\(l.marks.count)", l.typed["c"] ?? "",
+                m.message.map { "\($0.text)\($0.ok)" } ?? "", "\(m.solved)", "\(page.current === m)", "\(l.helps)", "\(dark)",
+                l.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }.joined()].joined(separator: "|")
     }
 
     private func build(_ w: ProblemWords, _ m: AddFractionsModel, current: Bool, dark: Bool) {
@@ -142,7 +155,7 @@ extension Rig {
         for b in ProblemLayout.blocks(m) {
             var stroke = line, fill = UIColor(hex: surface), text = ink, lift: Float = 0
             switch b.kind {
-            case .main, .watchAgain: stroke = ink
+            case .main: stroke = ink
             case .showMe: if l.picture["showMe"] == 1 { stroke = ink }
             case .choice(let i):
                 if l.typed["c"] == String(i) { stroke = chapter; text = chapter; fill = UIColor(hex: Ink.mix(surface, m.chapter.hex, 0.12)); lift = 0.0002 }
@@ -150,8 +163,8 @@ extension Rig {
             }
             cellBlock(b.rect, fill: fill, stroke: stroke, lift: lift).forEach { w.blocks.addChild($0) }
             switch b.kind {
-            case .main, .watchAgain:
-                w.blocks.addChild(PaperText.label(b.kind == .main ? words.action : "Watch again", button, ink, at: CGPoint(x: b.rect.minX + 16, y: b.rect.midY), anchor: UnitPoint(x: 0, y: 0.5)))
+            case .main:
+                w.blocks.addChild(PaperText.label(words.action, button, ink, at: CGPoint(x: b.rect.minX + 16, y: b.rect.midY), anchor: UnitPoint(x: 0, y: 0.5)))
                 if let a = PaperText.icon("arrow-right", ink, in: CGRect(x: b.rect.maxX - 30, y: b.rect.midY - 10, width: 20, height: 20)) { w.blocks.addChild(a) }
             case .showMe, .reset:
                 let r = CGRect(x: b.rect.midX - 10, y: b.rect.midY - 10, width: 20, height: 20)

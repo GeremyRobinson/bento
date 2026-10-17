@@ -21,7 +21,8 @@ final class BarsPage {
     // widest bars and the piece waiting past them, the choices, the buttons and its name)
     static let box = (dx: -2 * Paper.cell, dy: -10 * Paper.cell, width: 6 * Paper.unit, height: 8 * Paper.unit), gap = Paper.unit
     static let pitch = Size(box.width + gap, box.height + gap)
-    static let problemsTop = box.height + gap
+    /// The problems take the How to's place once it has erased itself (G 17 Oct).
+    static let problemsTop = 0.0
 
     /// The How to's origin: its box's corner on the lesson's frame corner on the map, on the strong lines.
     static func origin(for p: Piece) -> Point {
@@ -62,7 +63,9 @@ final class BarsPage {
         }
     }
 
-    var all: [AddFractionsModel] { showing ? [howTo] + problems : [howTo] }
+    /// The How to has played and erased itself.
+    private(set) var howToGone = false
+    var all: [AddFractionsModel] { howToGone ? problems : [howTo] }
     var animating: Bool { all.contains { $0.animating } || playing }
     /// "3 of 16 done", for the top bar.
     var label: String { showing ? "\(problems.filter(\.solved).count) of \(problems.count) done" : "How to" }
@@ -86,16 +89,8 @@ final class BarsPage {
         play()
     }
 
-    /// Watch the How to again: it starts over and plays, with the problems staying where they are.
-    func watchAgain() {
-        howTo.replay()
-        current = howTo
-        frame?(Self.box(of: howTo))
-        play()
-    }
-
     private func play() {
-        if instant { while !howTo.solved { howTo.demonstrate(); howTo.go() }; showProblems(); return }
+        if instant { while !howTo.solved { howTo.demonstrate(); howTo.go() }; howToGone = true; showProblems(); return }
         playing = true
         Task {
             func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
@@ -106,14 +101,17 @@ final class BarsPage {
                 await wait(howTo.demonstrate() + 0.8)         // the move, made for it
             }
             await wait(1.6)                                   // read the answer
+            howTo.leave(); await wait(0.6)                    // it erases itself, as it drew itself in
+            howToGone = true
             playing = false
-            if !showing { showProblems() }
+            showProblems()
         }
     }
 
-    /// The problems draw themselves onto the paper, one after another, and the camera steps back to the first row.
+    /// The problems draw themselves onto the paper where the How to was, one after another, and the camera steps back
+    /// to the first row.
     private func showProblems() {
-        for (i, p) in problems.enumerated() { p.start(after: instant ? 0 : 0.3 + Double(i) * 0.12) }
+        for (i, p) in problems.enumerated() { p.start(after: instant ? 0 : 0.05 + Double(i) * 0.12) }
         showing = true
         current = nil
         frame?(firstRow)
@@ -134,7 +132,6 @@ final class BarsPage {
             case .main: m.go()
             case .showMe: m.showMe()
             case .reset: m.reset()
-            case .watchAgain: watchAgain()
             case .choice(let i): m.choose(i)
             }
             return

@@ -45,6 +45,12 @@ final class AddFractionsModel: Identifiable {
 
     /// The pieces grow in, after `delay` (the page draws its problems in one after another).
     func start(after delay: Double = 0) { openedAt = time(delay); wordsAt = openedAt }
+
+    /// When it started erasing itself (the How to, once it has played).
+    private(set) var leftAt: Double?
+    func leave() { leftAt = time(0) }
+    /// 1 while it's on the paper, down to 0 as it erases itself: its drawing in, backwards.
+    func gone(at t: Double) -> Double { leftAt.map { 1 - ease((t - $0) / 0.5) } ?? 1 }
     var solved: Bool { lesson.isLast }
 
     /// The How to sits where the lesson's page starts, its box on the paper's strong lines.
@@ -77,7 +83,7 @@ final class AddFractionsModel: Identifiable {
     var animating: Bool {
         let now = PaperClock.now
         return now - openedAt < 2.2 || now - wordsAt < 0.8 || fills.values.contains { now - $0.at < 0.35 } || now < busyUntil + 0.1 || (preview.map { now < $0.end + 0.1 } ?? false)
-            || (guideAt.map { now - $0 < 0.6 } ?? false)
+            || (guideAt.map { now - $0 < 0.6 } ?? false) || (leftAt.map { now - $0 < 0.6 } ?? false)
     }
 
     // MARK: what the child does
@@ -183,13 +189,13 @@ final class AddFractionsModel: Identifiable {
 
     /// How far a piece has grown in (0...1). Rows grow in left to right, the top row first.
     func grow(row: Int, _ i: Int, at t: Double) -> Double {
-        ease((t - openedAt - (row == 0 ? 0.5 + Double(i) * 0.06 : 0.8 + Double(i) * 0.04)) / 0.4)
+        ease((t - openedAt - (row == 0 ? 0.5 + Double(i) * 0.06 : 0.8 + Double(i) * 0.04)) / 0.4) * gone(at: t)
     }
 
     /// The "1 whole" line drawing itself in.
-    func wholeLine(at t: Double) -> Double { ease((t - openedAt - 0.3) / 0.5) }
+    func wholeLine(at t: Double) -> Double { ease((t - openedAt - 0.3) / 0.5) * gone(at: t) }
 
-    func words(at t: Double) -> Double { ease((t - openedAt - 0.4) / 0.4) }
+    func words(at t: Double) -> Double { ease((t - openedAt - 0.4) / 0.4) * gone(at: t) }
 
     func guide(at t: Double) -> Double { guideAt.map { ease((t - $0) / 0.4) } ?? 0 }
 }
