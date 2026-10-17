@@ -55,6 +55,7 @@ final class UnitCubesModel {
         return flight != nil || now - wordsAt < 0.8 || (layerAt.values.max().map { now - $0 < 2.6 } ?? false)
             || squares.values.contains { now - $0.at < 0.4 } || (squaresGoneAt.map { now - $0 < 1.2 } ?? false)
             || (tiltAt.map { now - $0 < Self.beat + 0.1 } ?? false) || (untiltAt.map { now - $0 < Self.beat + 0.1 } ?? false)
+            || now < busyUntil + 0.1
     }
 
     func settle(at t: Double) {
@@ -70,30 +71,51 @@ final class UnitCubesModel {
 
     // MARK: what the child does
 
+    /// Where the child is: the first problem, practice, or the skill check (LESSONS.md §7).
+    private(set) var session = LessonSession()
+    /// Hands off until then: a See beat is playing (LESSONS.md §4).
+    private(set) var busyUntil: Double = 0
+    var busy: Bool { PaperClock.now < busyUntil }
+
     func go() {
+        guard !busy else { return }
         let before = lesson.step, had = layers
         switch lesson.go() {
         // the paper tilts when the step's camera does; each new layer rises
-        case .moved where before.camera == .flat && lesson.step.camera == .tilted: lift()
-        case .moved: if had > 0, layers > had { layerAt[layers - 1] = time(0) }
-        case .notYet(let line): message = (line, false); return
+        case .moved where before.camera == .flat && lesson.step.camera == .tilted:
+            lift()
+            busyUntil = time(Self.beat * 0.55 + 0.7 + 0.04 * Double(box.floor))
+        case .moved:
+            if had > 0, layers > had { layerAt[layers - 1] = time(0); busyUntil = time(0.7 + 0.035 * Double(box.floor)) }
+        case .notYet(let line):
+            message = (line, false)
+            // one try (the skill check): the squares it needed are shown filling
+            if lesson.oneTry { for i in lesson.marked { let c = UnitCubes.cell(i, in: box); if squares[c]?.on != true { squares[c] = (true, time(0)) } }; busyUntil = time(0.3) }
+            return
         case .newProblem: restart(); return
         }
         message = nil; wordsAt = PaperClock.now
-        if lesson.isLast { Progress.shared.learn(lesson.spec.id) }
+        if lesson.isLast {
+            session.finished(right: !lesson.missedAny)
+            if session.justLearned { Progress.shared.learn(lesson.spec.id) }
+        }
     }
 
     func tap(_ c: UnitCubes.Cell) {
-        guard let i = UnitCubes.cell(c, in: box), lesson.tap(i) else { return }
+        guard !busy, let i = UnitCubes.cell(c, in: box), lesson.tap(i) else { return }
         squares[c] = (lesson.marks[i] != nil, time(0)); message = nil
     }
 
     func showMe() {
-        for (n, i) in lesson.showMe().enumerated() { squares[UnitCubes.cell(i, in: box)] = (true, time(0.06 * Double(n))) }
+        guard lesson.helps, !busy else { return }
+        let filled = lesson.showMe()
+        for (n, i) in filled.enumerated() { squares[UnitCubes.cell(i, in: box)] = (true, time(0.06 * Double(n))) }
+        busyUntil = time(0.06 * Double(filled.count) + 0.26)
         message = nil
     }
 
     func reset() {
+        guard !busy else { return }
         let was = lesson.marked; lesson.reset()
         for i in was { squares[UnitCubes.cell(i, in: box)] = (false, time(0)) }
         message = nil
@@ -148,8 +170,10 @@ final class UnitCubesModel {
     }
 
     private func restart() {
+        busyUntil = time(Self.beat + 0.1)
         flatten { [self] v in
-            lesson = LessonRun.fresh(UnitCubes.spec, using: &rng)
+            lesson = LessonRun.fresh(UnitCubes.spec, using: &rng, index: session.index)
+            lesson.helps = session.helps; lesson.oneTry = session.oneTry
             squares = [:]; squaresGoneAt = nil; layerAt = [:]; message = nil; wordsAt = PaperClock.now
             resting = v
         }

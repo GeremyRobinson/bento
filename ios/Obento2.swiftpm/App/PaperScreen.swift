@@ -37,7 +37,15 @@ struct PaperScreen: View {
                 }
                 .onChange(of: t) { _, now in model.settle(at: now); model.lesson?.settle(at: now) }
             }
-            .onAppear { model.screen = Size(geo.size.width, geo.size.height); if !Shots.active { model.frameGroup(duration: 0) } ; Shots.run(model) }
+            .onAppear {
+                model.screen = Size(geo.size.width, geo.size.height)
+                model.reduceMotion(UIAccessibility.isReduceMotionEnabled)
+                if !Shots.active { model.frameGroup(duration: 0) }
+                Shots.run(model)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIAccessibility.reduceMotionStatusDidChangeNotification)) { _ in
+                model.reduceMotion(UIAccessibility.isReduceMotionEnabled)
+            }
             .onChange(of: geo.size) { _, s in model.screen = Size(s.width, s.height) }
         }
         .ignoresSafeArea()

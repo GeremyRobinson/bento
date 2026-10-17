@@ -19,6 +19,13 @@ final class AddFractionsModel {
     /// The dashed line showing where p/a ends, after a wrong count.
     private(set) var guideAt: Double?
     var message: (text: String, ok: Bool)?
+    /// Where the child is: the first problem, practice, or the skill check (LESSONS.md §7).
+    private(set) var session = LessonSession()
+    /// Hands off until then: a See beat is playing (LESSONS.md §4).
+    private(set) var busyUntil: Double = 0
+    var busy: Bool { PaperClock.now < busyUntil }
+    /// One See beat (m-beat).
+    static let seeBeat = 0.75
 
     // where things sit, in paper points from `origin`
     static let row1: Double = 160, row2: Double = 280, barHeight: Double = 60
@@ -48,27 +55,35 @@ final class AddFractionsModel {
 
     var animating: Bool {
         let now = PaperClock.now
-        return now - openedAt < 2.2 || now - wordsAt < 0.8 || fills.values.contains { now - $0.at < 0.35 }
+        return now - openedAt < 2.2 || now - wordsAt < 0.8 || fills.values.contains { now - $0.at < 0.35 } || now < busyUntil + 0.1
             || (guideAt.map { now - $0 < 0.6 } ?? false)
     }
 
     // MARK: what the child does
 
     func go() {
+        guard !busy else { return }
         switch lesson.go() {
         case .moved:
             guideAt = nil; message = nil; wordsAt = PaperClock.now
             syncFills()
-            if lesson.isLast { Progress.shared.learn(lesson.spec.id) }
+            // See: the pieces line up and the matching lines draw; hands off while they do
+            busyUntil = time(Self.seeBeat)
+            if lesson.isLast {
+                session.finished(right: !lesson.missedAny)
+                if session.justLearned { Progress.shared.learn(lesson.spec.id) }
+            }
         case .notYet(let line):
             message = (line, false)
-            if lesson.picture["guide"] == 1, guideAt == nil { guideAt = time(0) }
+            if lesson.hintLevel >= 1, guideAt == nil { guideAt = time(0) }
+            // one try (the skill check): the right pieces are shown, so watch them fill
+            if lesson.oneTry { syncFills(); busyUntil = time(Self.seeBeat) }
         case .newProblem: restart()
         }
     }
 
     func tap(_ i: Int) {
-        guard lesson.tap(i) else { return }
+        guard !busy, lesson.tap(i) else { return }
         message = nil; syncFills()
     }
 
@@ -80,18 +95,29 @@ final class AddFractionsModel {
     }
 
     func showMe() {
+        guard lesson.helps, !busy else { return }
         let before = lesson.marked
         let filled = lesson.showMe()
         message = nil
         // what was there clears at once; the right pieces then fill one by one
         for i in before where !filled.contains(i) { setFill(i, 0, at: time(0)) }
         for (n, i) in filled.enumerated() { setFill(i, target(i), at: time(0.35 * Double(n + 1)), from: 0) }
+        busyUntil = time(0.35 * Double(filled.count + 1))
     }
 
-    func reset() { lesson.reset(); message = nil; guideAt = nil; syncFills() }
+    func reset() { guard !busy else { return }; lesson.reset(); message = nil; guideAt = nil; syncFills() }
+
+    /// For screenshots: jump to a phase of the session with a fresh problem.
+    func jump(to phase: LessonSession.Phase, problem: AddFractions.Problem) {
+        session = LessonSession(phase: phase)
+        lesson = LessonRun(AddFractions.spec, numbers: problem.numbers)
+        lesson.helps = session.helps; lesson.oneTry = session.oneTry
+        fills = [:]; guideAt = nil; message = nil
+    }
 
     private func restart() {
-        lesson = LessonRun.fresh(AddFractions.spec, using: &rng)
+        lesson = LessonRun.fresh(AddFractions.spec, using: &rng, index: session.index)
+        lesson.helps = session.helps; lesson.oneTry = session.oneTry
         fills = [:]; guideAt = nil; message = nil
         openedAt = time(0); wordsAt = PaperClock.now
     }

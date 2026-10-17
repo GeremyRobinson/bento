@@ -54,7 +54,7 @@ struct AddFractionsView: View {
                     else { Text(count).foregroundStyle(Ink.ink2) }
                 }
                 .font(Typeface.font(17, .medium)).fixedSize()
-                .pinned(at(0, r2 + h + 12), .topLeading, k)
+                .pinned(at(0, r2 + h + 20), .topLeading, k)
             }
             if l.picture["total"] == 1 {
                 Text("\(s.sum) = \(s.total)/\(s.b)").font(Typeface.font(22, .medium)).monospacedDigit().foregroundStyle(chapter)
@@ -62,15 +62,17 @@ struct AddFractionsView: View {
                     .pinned(at(0, r2 + h + 40), .topLeading, k)
             }
 
+            // the action blocks: Show me (not in the skill check; outlined when it's the third hint), Reset, the main action.
+            // Hands off while a See beat plays: they grey out until it ends
             HStack(spacing: -1.5) {
                 if l.step.task != nil {
-                    CellButton(action: model.showMe) { Icon(name: "play") }
+                    if l.helps { CellButton(main: l.picture["showMe"] == 1, action: model.showMe) { Icon(name: "play") } }
                     CellButton(action: model.reset) { Icon(name: "arrow-counter-clockwise") }
                     Color.clear.frame(width: 40, height: 40)
                 }
                 MainCellButton(title: words.action, action: model.go)
             }
-            .opacity(shown)
+            .opacity(model.busy ? 0.35 * shown : shown).allowsHitTesting(!model.busy)
             .pinned(at(0, 440), .topLeading, k)
 
         }

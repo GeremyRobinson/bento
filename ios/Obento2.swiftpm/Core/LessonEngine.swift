@@ -133,6 +133,10 @@ public enum Verdict: Sendable, Equatable {
 
 public enum StepCamera: Sendable { case flat, tilted }
 
+/// The four beats of every lesson (LESSONS.md §2): Ask (the problem draws itself), Do (the child acts on the drawing),
+/// See (the picture proves the step; hands off while it moves), Say (the answer is written under its proof).
+public enum Beat: Sendable { case ask, `do`, see, say }
+
 /// One step: what the paper says, what the child does on the picture, and how the picture and camera look.
 public struct LessonStep: Sendable {
     public var words: StepWords
@@ -145,9 +149,16 @@ public struct LessonStep: Sendable {
     public var onMiss: Numbers
     /// The words that go with `onMiss` ("The fourth ends here").
     public var look: String?
+    /// The second hint, after a second miss: another small drawing step added to the picture (LESSONS.md §7).
+    /// The first hint is `onMiss`; the third always points at Show me.
+    public var hint2: Numbers
+    /// Overrides the beat worked out from the step (a step with something to do is Do; the first is Ask, the last Say).
+    public var beatOverride: Beat?
 
-    public init(_ words: StepWords, task: MarkTask? = nil, answer: AnswerTask? = nil, camera: StepCamera = .flat, picture: Numbers = [:], onMiss: Numbers = [:], look: String? = nil) {
+    public init(_ words: StepWords, task: MarkTask? = nil, answer: AnswerTask? = nil, camera: StepCamera = .flat, picture: Numbers = [:], onMiss: Numbers = [:], look: String? = nil,
+                hint2: Numbers = [:], beat: Beat? = nil) {
         self.words = words; self.task = task; self.answer = answer; self.camera = camera; self.picture = picture; self.onMiss = onMiss; self.look = look
+        self.hint2 = hint2; self.beatOverride = beat
     }
 }
 
@@ -214,11 +225,32 @@ public struct LessonRun: Sendable {
     public static func fresh(_ spec: LessonSpec, using rng: inout SeededRandom, index: Int = 3) -> LessonRun { LessonRun(spec, numbers: spec.generate(&rng, index)) }
 
     public var step: LessonStep { steps[index] }
+    /// This step's beat.
+    public var beat: Beat {
+        if let b = step.beatOverride { return b }
+        if step.task != nil || step.answer != nil { return .do }
+        return index == 0 ? .ask : isLast ? .say : .see
+    }
+    /// Hints and Show me are off in the skill check (LESSONS.md §7).
+    public var helps = true
+    /// One try per step, as in the skill check: a wrong check shows the answer and the problem counts as missed.
+    public var oneTry = false
+    /// A step of this problem was missed.
+    public private(set) var missedAny = false
+    /// How many hints the picture shows: one per miss, at most three; none when helps are off.
+    public var hintLevel: Int { helps ? min(misses, 3) : 0 }
     public var display: MathLine { spec.display(numbers) }
     public var words: StepWords { step.words }
     public var isLast: Bool { index == steps.count - 1 }
-    /// The picture as it stands: this step's, plus what a wrong check shows.
-    public var picture: Numbers { missed ? step.picture.merging(step.onMiss) { $1 } : step.picture }
+    /// The picture as it stands: this step's, plus the hints the misses have earned (the child's answer drawn beside the
+    /// real one, then a second drawing step, then Show me pointed at).
+    public var picture: Numbers {
+        var p = step.picture
+        if hintLevel >= 1 { p.merge(step.onMiss) { $1 } }
+        if hintLevel >= 2 { p.merge(step.hint2) { $1 } }
+        if hintLevel >= 3 { p["showMe"] = 1 }
+        return p
+    }
     public subscript(_ name: String) -> Double { numbers[name] ?? 0 }
     public func int(_ name: String) -> Int { Int((numbers[name] ?? 0).rounded()) }
 
@@ -290,20 +322,25 @@ public struct LessonRun: Sendable {
                 case .right: break
                 case .soft(let line): return .notYet(line)
                 case .wrong(let line):
-                    missed = true; misses += 1
-                    return .notYet(a.known.first { same($0.values) }?.message ?? line)
+                    missed = true; misses += 1; missedAny = true
+                    let said = a.known.first { same($0.values) }?.message ?? line
+                    if oneTry { _ = showAnswer() }
+                    return .notYet(said)
                 }
             } else if !same(a.expected) {
-                missed = true; misses += 1
-                return .notYet(a.known.first { same($0.values) }?.message ?? "Not quite. \(a.hint)")
+                missed = true; misses += 1; missedAny = true
+                let said = a.known.first { same($0.values) }?.message ?? "Not quite. \(a.hint)"
+                if oneTry { _ = showAnswer() }
+                return .notYet(said)
             }
         }
         if let t = step.task {
             let n = marked.count
             let wrong: Mistake.When? = n == 0 && t.want > 0 ? .noneMarked : n < t.want ? .tooFew : n > t.want ? .tooMany : nil
             if let wrong {
-                missed = true
+                missed = true; misses += 1; missedAny = true
                 let m = t.mistakes.first { $0.when == wrong } ?? t.mistakes.first { $0.when == .tooFew && wrong == .noneMarked }
+                if oneTry { _ = showMe() }
                 return .notYet(m?.message(n, t.want) ?? "Not yet.")
             }
             if let snap = t.snap { reset(); for c in snap { marks[c] = index } }
@@ -325,4 +362,54 @@ public enum Lessons {
         RoundDecimals.spec, AddDecimals.spec, MultiplyDecimals.spec, DivideByDecimal.spec,
     ]
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
+}
+
+/// A child's run through one lesson (LESSONS.md §7): the first problem teaches, then 6 practice problems, then the
+/// 4-problem skill check (no hints, no Show me, one try per step). Learned = 3 or 4 of the check right.
+public struct LessonSession: Sendable, Equatable {
+    public enum Phase: Sendable, Equatable {
+        case learn
+        /// practice problem n (1...6)
+        case practice(Int)
+        /// check problem n (1...4), with how many were right so far
+        case check(Int, right: Int)
+        /// the check is over
+        case done(learned: Bool)
+    }
+    public static let practice = 6, check = 4, pass = 3
+    public private(set) var phase: Phase = .learn
+    public init(phase: Phase = .learn) { self.phase = phase }
+
+    public var helps: Bool { if case .check = phase { false } else { true } }
+    public var oneTry: Bool { !helps }
+    /// What the paper says about where the child is ("Practice 2 of 6").
+    public var label: String? {
+        switch phase {
+        case .learn: nil
+        case .practice(let n): "Practice \(n) of \(Self.practice)"
+        case .check(let n, _): "Skill check \(n) of \(Self.check)"
+        case .done(let learned): learned ? "Learned" : "Not yet learned: more practice"
+        }
+    }
+    /// The problem's place in the run, for the generator (the first problems are easier).
+    public var index: Int {
+        switch phase { case .learn: 0; case .practice(let n): n; case .check: 3; case .done: Self.practice + 1 }
+    }
+
+    /// A problem was worked to the end; `right` = no step of it was missed. Returns the phase the next problem is in.
+    @discardableResult
+    public mutating func finished(right: Bool) -> Phase {
+        switch phase {
+        case .learn: phase = .practice(1)
+        case .practice(let n): phase = n < Self.practice ? .practice(n + 1) : .check(1, right: 0)
+        case .check(let n, let r):
+            let r2 = r + (right ? 1 : 0)
+            phase = n < Self.check ? .check(n + 1, right: r2) : .done(learned: r2 >= Self.pass)
+        case .done(let learned): phase = learned ? .done(learned: true) : .practice(1)
+        }
+        return phase
+    }
+
+    /// The check just ended in learning the lesson.
+    public var justLearned: Bool { phase == .done(learned: true) }
 }

@@ -238,3 +238,48 @@ final class ChoiceStepTests: XCTestCase {
         XCTAssertEqual(l.steps[0].answer?.work, [.num(3), .text("feet is"), .text("More")])
     }
 }
+
+final class PaperWayTests: XCTestCase {
+    func testBeatsOfALesson() {
+        var l = LessonRun(UnitCubes.spec, numbers: UnitCubes.Box(length: 4, width: 3, height: 2).numbers)
+        XCTAssertEqual(l.beat, .ask); _ = l.go()
+        XCTAssertEqual(l.beat, .do); _ = l.showMe(); _ = l.go()
+        XCTAssertEqual(l.beat, .see); _ = l.go()
+        XCTAssertEqual(l.beat, .say)
+    }
+
+    func testHintsBuildUpWithMisses() {
+        var l = LessonRun(AddFractions.spec, numbers: AddFractions.Problem(a: 4, p: 1, b: 8, q: 1).numbers); _ = l.go()
+        _ = l.go(); XCTAssertEqual(l.hintLevel, 1); XCTAssertEqual(l.picture["guide"], 1)
+        _ = l.go(); XCTAssertEqual(l.hintLevel, 2)
+        _ = l.go(); XCTAssertEqual(l.picture["showMe"], 1)
+        l.helps = false
+        XCTAssertEqual(l.hintLevel, 0); XCTAssertNil(l.picture["guide"])
+    }
+
+    func testOneTryShowsTheAnswerAndCountsTheMiss() {
+        var l = LessonRun(AddFractions.spec, numbers: AddFractions.Problem(a: 4, p: 1, b: 8, q: 1).numbers); _ = l.go()
+        l.oneTry = true; l.tap(5)
+        XCTAssertEqual(l.go(), .notYet("Not yet. Some of the fourth is still uncovered."))
+        XCTAssertEqual(l.marked, [0, 1], "the right pieces are shown")
+        XCTAssertTrue(l.missedAny)
+        XCTAssertEqual(l.go(), .moved(2))
+    }
+
+    func testSessionPracticeThenCheck() {
+        var s = LessonSession()
+        XCTAssertNil(s.label)
+        XCTAssertEqual(s.finished(right: true), .practice(1))
+        XCTAssertEqual(s.label, "Practice 1 of 6")
+        for _ in 1..<6 { s.finished(right: false) }
+        XCTAssertEqual(s.finished(right: true), .check(1, right: 0))
+        XCTAssertFalse(s.helps); XCTAssertTrue(s.oneTry)
+        s.finished(right: true); s.finished(right: false); s.finished(right: true)
+        XCTAssertEqual(s.finished(right: true), .done(learned: true))
+        XCTAssertTrue(s.justLearned)
+        var t = LessonSession(phase: .check(1, right: 0))
+        for _ in 0..<3 { t.finished(right: false) }
+        XCTAssertEqual(t.finished(right: true), .done(learned: false))
+        XCTAssertEqual(t.finished(right: true), .practice(1), "not learned: back to practice")
+    }
+}

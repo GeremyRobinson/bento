@@ -147,6 +147,9 @@ final class Rig {
     var cubes: [(x: Int, y: Int, z: Int, e: Entity)] = []
     var outline = Entity()
     var edges: [ModelEntity] = []
+    /// Hints on the floor: the empty squares outlined (and tinted), rebuilt when they change.
+    var hints = Entity()
+    var hintKey = ""
     // the flat lesson
     let barsRoot = Entity()
     var barsKey = ""
@@ -227,6 +230,7 @@ final class Rig {
         // the last lesson's pieces are reused when the box is the same; otherwise cleared now, while the new one builds
         if shape?.box != l.box || shape?.origin != l.origin { rebuild(l) }
         for (c, e) in squares { let k = Float(max(0.0001, l.square(c, at: t))); e.scale = SIMD3(k, 1, k) }
+        drawHints(l)
         for c in cubes {
             let k = l.cube(x: c.x, y: c.y, z: c.z, at: t)
             c.e.isEnabled = k > 0
@@ -349,7 +353,7 @@ final class Rig {
     private func drawDecor(_ b: AddFractionsModel, at t: Double) {
         let whole = b.wholeLine(at: t), guide = b.guide(at: t), picture = b.lesson.picture
         let bracket = picture["total"] == 1 ? ease((t - b.wordsAt - 0.2) / 0.5) : 0
-        let key = "\(b.lesson.index) \((whole * 50).rounded()) \((guide * 50).rounded()) \((bracket * 50).rounded())"
+        let key = "\(b.lesson.index) \((whole * 50).rounded()) \((guide * 50).rounded()) \((bracket * 50).rounded()) \(picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(b.lesson.marks.count)"
         guard key != decorKey else { return }
         decorKey = key
         for c in Array(decor.children) { c.removeFromParent() }
@@ -374,6 +378,25 @@ final class Rig {
             add(dashed(P(0, r1 + h + 6), P(0, r2 - 28)) + dashed(P(e, r1 + h + 6), P(e, r2 - 6)), 1, width: 2, chapter)
         }
         if picture["guide"] == 1, guide > 0 { add(dashed(P(e, r1 - 34), P(e, r2 + h + 12), 4, 5), guide, width: 1.5, colours.ink) }
+        // hints (LESSONS.md §7): the child's own count as a bracket under the bottom row, from its left end, so it can be
+        // seen against where the fraction really ends
+        let pw = b.pieceWidth, s = b.problem, mine = Double(b.lesson.marks.count) * pw
+        if picture["yours"] == 1, mine > 0 {
+            add([[P(0, r2 + h + 4), P(0, r2 + h + 12), P(mine, r2 + h + 12), P(mine, r2 + h + 4)]], guide, width: 2, chapter)
+        }
+        if picture["totalGuide"] == 1 {
+            let t = Double(s.total) * pw
+            add(dashed(P(t, r1 + h + 6), P(t, r2 + h + 12), 4, 5), guide, width: 1.5, colours.ink)
+        }
+        // and then the pieces that are right, outlined
+        if picture["outline"] == 1 {
+            let want = b.lesson.index == 1 ? 0..<s.covered : s.covered..<s.total
+            let boxes = want.map { i -> [CGPoint] in
+                let x = Double(i) * pw + 3, w = pw - 6
+                return [P(x, r2 + 3), P(x + w, r2 + 3), P(x + w, r2 + h - 3), P(x, r2 + h - 3), P(x, r2 + 3)]
+            }
+            add(boxes.flatMap { dashed($0[0], $0[1], 4, 4) + dashed($0[1], $0[2], 4, 4) + dashed($0[2], $0[3], 4, 4) + dashed($0[3], $0[4], 4, 4) }, 1, width: 1.5, chapter)
+        }
         if bracket > 0 {
             let end = Double(b.problem.total) * b.pieceWidth
             add([[P(0, r2 + h + 14), P(0, r2 + h + 24), P(end, r2 + h + 24), P(end, r2 + h + 14)]], bracket, width: 2, chapter)
@@ -422,9 +445,37 @@ final class Rig {
 
     // MARK: the open lesson
 
+    /// Hints on the floor (LESSONS.md §7): after a miss the empty squares are outlined; after a second, tinted too.
+    private func drawHints(_ l: UnitCubesModel) {
+        let p = l.lesson.picture, b = l.box, o = l.origin
+        let empty = (0..<b.floor).filter { l.lesson.marks[$0] == nil }
+        let key = "\(p["empty"] ?? 0) \(p["tint"] ?? 0) \(empty) \(lineScale)"
+        guard key != hintKey else { return }
+        hintKey = key
+        hints.removeFromParent(); hints = Entity(); lessonRoot.addChild(hints)
+        guard p["empty"] == 1, l.lesson.step.task != nil else { return }
+        let chapter = UIColor(hex: l.chapter.hex), px = Float(1 / lineScale), inset: Float = 0.06
+        var dashes: [(SIMD2<Float>, SIMD2<Float>)] = []
+        for i in empty {
+            let c = UnitCubes.cell(i, in: b), x = Float(o.x) + Float(c.x) + inset, z = Float(o.z) + Float(c.z) + inset, s = 1 - 2 * inset
+            for (a, e) in [(SIMD2(x, z), SIMD2(x + s, z)), (SIMD2(x + s, z), SIMD2(x + s, z + s)), (SIMD2(x + s, z + s), SIMD2(x, z + s)), (SIMD2(x, z + s), SIMD2(x, z))] {
+                let len = simd_length(e - a), d = (e - a) / len
+                var u: Float = 0
+                while u < len { dashes.append((a + d * u, a + d * min(len, u + 0.06))); u += 0.11 }
+            }
+            if p["tint"] == 1 {
+                let f = ModelEntity(mesh: .generatePlane(width: s, depth: s), materials: [flat(UIColor(hex: Ink.mix(paperHex, l.chapter.hex, 0.12)))])
+                f.position = SIMD3(x + s / 2, 0.0002, z + s / 2); hints.addChild(f)
+            }
+        }
+        if let m = Self.lines(dashes, width: 2 * px) {
+            let e = ModelEntity(mesh: m, materials: [flat(chapter)]); e.position.y = 0.0018; hints.addChild(e)
+        }
+    }
+
     private func clearLesson() {
         for c in Array(lessonRoot.children) { c.removeFromParent() }
-        squares = [:]; cubes = []; edges = []; outline = Entity()
+        squares = [:]; cubes = []; edges = []; outline = Entity(); hintKey = ""
     }
 
     private func rebuild(_ l: UnitCubesModel) {

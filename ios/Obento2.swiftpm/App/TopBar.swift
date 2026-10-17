@@ -27,7 +27,8 @@ struct TopBar: View {
                 Pill {
                     VStack(spacing: 0) {
                         Text(p.name).font(Typeface.font(15, .medium)).foregroundStyle(Ink.ink)
-                        Text("\(p.chapter.title) · Lesson \(String(format: "%02d", Map.number(p)))").font(Typeface.font(12)).foregroundStyle(Ink.ink3)
+                        Text("\(p.chapter.title) · Lesson \(String(format: "%02d", Map.number(p)))" + (model.sessionLabel.map { " · \($0)" } ?? ""))
+                            .font(Typeface.font(12)).foregroundStyle(Ink.ink3)
                     }
                     .padding(.horizontal, 15)
                 }

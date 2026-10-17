@@ -59,12 +59,15 @@ struct UnitCubesView: View {
 
         HStack(spacing: -1.5) {
             if model.lesson.step.task != nil {
-                CellButton(action: model.showMe) { Icon(name: "play") }
+                // Show me: not in the skill check, outlined when it is the third hint
+                if model.lesson.helps { CellButton(main: model.lesson.picture["showMe"] == 1, action: model.showMe) { Icon(name: "play") } }
                 CellButton(action: model.reset) { Icon(name: "arrow-counter-clockwise") }
                 Color.clear.frame(width: 40, height: 40)
             }
             MainCellButton(title: words.action, action: model.go)
         }
+        // hands off while a See beat plays: the blocks grey out until it ends
+        .opacity(model.busy ? 0.35 : 1).allowsHitTesting(!model.busy)
         .pinned(at(Vec3(o.x, 0, o.z + W + 1)), .topLeading, k)
     }
 }

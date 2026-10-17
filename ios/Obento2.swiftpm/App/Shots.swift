@@ -36,6 +36,7 @@ enum Shots {
             switch name {
             case "paper": break
             case "selected": m.select(uc)
+            case "back": m.open(Map.pieces.first { $0.id == "ad" }!); m.close()
             case let n where n.hasPrefix("L-"):
                 // L-<lesson id>-<step>: open any lesson and work it to that step, each answer filled in by Show me
                 let parts = n.dropFirst(2).split(separator: "-"), id = parts.dropLast().joined(separator: "-")
@@ -56,6 +57,10 @@ enum Shots {
                 guard let b = m.bars, n != "fractions" else { return }
                 b.go()
                 if n == "fractions-wrong" { b.tap(5); b.go(); return }
+                if n == "fractions-hint2" { b.tap(5); b.go(); b.go(); return }
+                if n == "fractions-check" {
+                    b.jump(to: .check(2, right: 1), problem: .init(a: 4, p: 1, b: 8, q: 1)); b.go(); b.tap(5); b.go(); return
+                }
                 b.tap(0); b.tap(1); b.go()
                 if n == "fractions-add" { return }
                 b.tap(2); b.go()
@@ -64,7 +69,10 @@ enum Shots {
                 guard let l = m.lesson else { return }
                 if name == "flat" { return }
                 l.go()
-                if name == "cover" { for c in [(0, 0), (1, 0), (2, 0), (0, 1), (1, 1)] { l.tap(.init(c.0, c.1)) }; return }
+                if name.hasPrefix("cover") { for c in [(0, 0), (1, 0), (2, 0), (0, 1), (1, 1)] { l.tap(.init(c.0, c.1)) } }
+                if name == "cover-hint1" { l.go(); return }
+                if name == "cover-hint2" { l.go(); l.go(); return }
+                if name == "cover" { return }
                 l.showMe(); l.go()
                 if name == "tilt" { return }
                 l.go()

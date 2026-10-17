@@ -104,6 +104,8 @@ final class PaperModel {
     var steps: StepsModel?
     /// The piece whose lesson is open: its name goes in the top bar.
     var openPiece: Piece? { lesson != nil || bars != nil || steps != nil ? opened : nil }
+    /// Where the child is in the open lesson ("Practice 2 of 6"), for the top bar.
+    var sessionLabel: String? { bars?.session.label ?? lesson?.session.label }
     private var opened: Piece?
     /// When the pieces started drawing themselves.
     var drawnAt: Double = PaperClock.now
@@ -177,7 +179,7 @@ final class PaperModel {
         let origin = UnitCubesModel.origin(for: p)
         let wide = screen.width > 760
         let frame = Rect(x: origin.x * Paper.unit - 40, y: origin.z * Paper.unit - 200, width: 480, height: 640)
-        fly(to: .framing(frame, in: screen, pad: wide ? 30 : 8, maxZoom: 1), duration: CameraTiming.fly)
+        fly(to: .framing(frame, in: screen, pad: wide ? Self.margin : 8, maxZoom: 1), duration: CameraTiming.fly)
         let go = { [self] in
             let cam = flight?.to ?? camera(at: PaperClock.now)
             lesson = UnitCubesModel(origin: origin, chapter: p.chapter, view: .matching(cam, screen: screen), screen: screen, instant: instant, box: shotBox)
@@ -189,7 +191,7 @@ final class PaperModel {
     /// Opening the flat lesson: glide to it, then the pieces grow in. It never tilts, so the paper's camera stays in charge.
     func openBars(_ p: Piece) {
         let b = AddFractionsModel(origin: AddFractionsModel.origin(for: p), chapter: p.chapter, instant: instant, problem: shotProblem)
-        fly(to: .framing(b.frame, in: screen, pad: screen.width > 760 ? 30 : 8, maxZoom: 1), duration: CameraTiming.fly)
+        fly(to: .framing(b.frame, in: screen, pad: screen.width > 760 ? Self.margin : 8, maxZoom: 1), duration: CameraTiming.fly)
         let go = { [self] in b.start(); bars = b; selected = nil }
         if instant { go() } else { Task { try? await Task.sleep(for: .seconds(CameraTiming.fly + 0.04)); go() } }
     }
@@ -197,26 +199,47 @@ final class PaperModel {
     /// Opening a lesson worked in steps: glide to it, then its picture grows in. Flat, on the paper's camera.
     func openSteps(_ p: Piece, _ spec: LessonSpec) {
         let s = StepsModel(spec: spec, origin: p.at, chapter: p.chapter, number: Map.number(p), instant: instant, numbers: shotNumbers)
-        fly(to: .framing(s.frame, in: screen, pad: screen.width > 760 ? 30 : 8, maxZoom: 1), duration: CameraTiming.fly)
+        fly(to: .framing(s.frame, in: screen, pad: screen.width > 760 ? Self.margin : 8, maxZoom: 1), duration: CameraTiming.fly)
         let go = { [self] in s.start(); steps = s; selected = nil }
         if instant { go() } else { Task { try? await Task.sleep(for: .seconds(CameraTiming.fly + 0.04)); go() } }
     }
 
     /// The crosshair inside a flat lesson: glide back to the whole lesson.
     func reframe() {
-        let pad = screen.width > 760 ? 30.0 : 8
+        let pad = screen.width > 760 ? Self.margin : 8
         if let b = bars { fly(to: .framing(b.frame, in: screen, pad: pad, maxZoom: 1), duration: CameraTiming.fly) }
         if let s = steps { fly(to: .framing(s.frame, in: screen, pad: pad, maxZoom: 1), duration: CameraTiming.fly) }
     }
 
     /// Leaving the lesson: it tilts back flat first, then the paper takes the same view back.
+    /// A lesson is framed with two cells to spare (LESSONS.md §5).
+    static let margin = 2 * Paper.cell
+
+    /// Leaving a lesson: a 3D one tilts back flat first; then the paper glides back out to the lesson's piece
+    /// (LESSONS.md §5), which shows in colour once it's learned.
     func close() {
-        if bars != nil { bars = nil; return }
-        if steps != nil { steps = nil; return }
+        let piece = opened
+        if bars != nil || steps != nil { bars = nil; steps = nil; glideOut(to: piece); return }
         guard let l = lesson else { return }
         l.flatten { [self] view in
             stop(); resting = view.paperCamera(screen: screen); lesson = nil
+            glideOut(to: piece)
         }
+    }
+
+    /// The gentle glide back to a piece on the map, its frame, name and Start block in view, without choosing it.
+    private func glideOut(to p: Piece?) {
+        guard let p else { return }
+        let fit = PaperCamera.framing(p.focus, in: screen)
+        let z = min(fit.zoom, 1.6), c = p.focus.mid
+        fly(to: PaperCamera(x: screen.width / 2 - c.x * z, y: screen.height / 2 - c.y * z, zoom: z), duration: CameraTiming.glide)
+    }
+
+    /// Reduce Motion (LESSONS.md §4): cut straight to every state, with no glide, tilt or draw-in.
+    func reduceMotion(_ on: Bool) {
+        guard !Shots.active else { return }
+        instant = on
+        if on { drawnAt = PaperClock.now - 100 }
     }
 
     private func contains(_ r: Rect, _ p: Point) -> Bool { p.x >= r.x && p.y >= r.y && p.x <= r.x + r.width && p.y <= r.y + r.height }

@@ -36,7 +36,9 @@ public enum UnitCubes {
         let cover = LessonStep(StepWords(say: "Cover the floor with squares.", hint: "Tap each square inside the box.", action: "Check"),
             task: MarkTask(cells: Set(floor), want: b.floor, showMe: floor,
                            mistakes: [Mistake(.tooFew) { m, w in let e = w - m; return "Not yet. \(e) \(e == 1 ? "square is" : "squares are") still empty." }],
-                           count: { "\($0) of \(b.floor) squares" }))
+                           count: { "\($0) of \(b.floor) squares" }),
+            // hint 1: the empty squares outlined; hint 2: and lightly tinted, so the gaps can be counted
+            onMiss: ["empty": 1], hint2: ["tint": 1])
         let stack = (1..<b.height).map { k in
             LessonStep(k == 1 ? StepWords(say: "One layer: \(b.floor) cubes.", hint: "The box is \(b.height) tall. Add the next layer.", action: "Add a layer")
                               : StepWords(say: "\(k) layers of \(b.floor) is \(k * b.floor).", hint: "Add the next layer.", action: "Add a layer"),
