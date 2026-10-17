@@ -79,6 +79,7 @@ enum Shots {
                 guard let page = m.bars, n != "fractions" else { return }
                 let b = n == "fractions-story" ? page.problems[2] : n == "fractions-check" ? page.problems[12] : page.problems[0]
                 if n == "fractions-howto" { page.watchAgain(); return }
+                if n == "fractions-overview" { page.problems[0].go(); for i in 0..<page.problems[0].problem.covered { page.problems[0].tap(i) }; page.problems[0].go(); m.frameAll(); return }
                 if n == "fractions-story" { b.choose(2); b.go(); return }
                 b.go()
                 if n == "fractions-wrong" || n == "fractions-check" { b.tap(b.problem.covered + 1); b.go(); return }

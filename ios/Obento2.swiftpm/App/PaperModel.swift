@@ -158,6 +158,12 @@ final class PaperModel {
         return cam
     }
 
+    /// The overview button: the whole lesson page when one is open, else the whole map.
+    func frameAll() {
+        if let b = bars { fly(to: framingBelowBar(b.pageFrame, maxZoom: CameraTiming.lessonMax), duration: CameraTiming.fly) }
+        else { frameGroup() }
+    }
+
     /// The whole map, framed.
     func frameGroup(duration: Double = CameraTiming.fly) {
         fly(to: overview, duration: duration)

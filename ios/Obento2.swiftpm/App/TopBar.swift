@@ -66,7 +66,8 @@ struct TopBar: View {
             RoundButton(icon: "plus") { by(1.25) }
             if open == nil || model.lesson == nil {
                 Rectangle().fill(Ink.line).frame(width: 1, height: 24).padding(.horizontal, 5)
-                if open == nil { RoundButton(icon: "frame-corners") { model.frameGroup() } }
+                // the whole map, or on a lesson's page the whole page: every problem, what's done and what's left
+                if open == nil || model.bars?.showing == true { RoundButton(icon: "frame-corners") { model.frameAll() } }
                 RoundButton(icon: "crosshair") { if open == nil { model.findNext() } else { model.reframe() } }
             }
         }
