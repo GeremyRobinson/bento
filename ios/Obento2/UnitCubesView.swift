@@ -262,9 +262,12 @@ final class Rig {
     static func lines(_ segs: [(SIMD2<Float>, SIMD2<Float>)], width: Float) -> MeshResource? {
         var pos: [SIMD3<Float>] = [], idx: [UInt32] = []
         for (a, b) in segs {
-            let d = simd_normalize(b - a), nrm = SIMD2(-d.y, d.x) * (width / 2)
-            let ext = d * (width / 2)
-            let p = [a - ext + nrm, b + ext + nrm, b + ext - nrm, a - ext - nrm]
+            let d: SIMD2<Float> = simd_normalize(b - a)
+            let half: Float = width / 2
+            let nrm: SIMD2<Float> = SIMD2<Float>(-d.y, d.x) * half
+            let ext: SIMD2<Float> = d * half
+            let a0: SIMD2<Float> = a - ext, b0: SIMD2<Float> = b + ext
+            let p: [SIMD2<Float>] = [a0 + nrm, b0 + nrm, b0 - nrm, a0 - nrm]
             let base = UInt32(pos.count)
             pos += p.map { SIMD3($0.x, 0, $0.y) }
             // both windings, so the bar shows whichever way the quad turned out
