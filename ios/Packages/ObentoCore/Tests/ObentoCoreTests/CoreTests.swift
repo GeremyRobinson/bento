@@ -79,7 +79,7 @@ final class UnitCubesTests: XCTestCase {
         XCTAssertTrue(l.tap(0))
         XCTAssertFalse(l.tap(12), "outside the box")
         XCTAssertEqual(l.go(), .notYet("Not yet. 11 squares are still empty."))
-        XCTAssertEqual(l.picture, [:], "nothing extra after a miss here")
+        XCTAssertEqual(l.picture, ["empty": 1], "a miss outlines the empty squares")
         XCTAssertEqual(l.showMe().count, 11)
         XCTAssertEqual(l.countLine, "12 of 12 squares")
         XCTAssertEqual(l.go(), .moved(2))
