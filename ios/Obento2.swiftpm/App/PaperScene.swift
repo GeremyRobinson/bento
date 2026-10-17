@@ -32,7 +32,17 @@ struct PaperScene: View {
 
 /// A lesson's picture as lines on the grid, in paper points, in the order they draw themselves in.
 extension Piece {
+    /// The picture, centred in its frame to the nearest whole cell (so it stays on the grid).
     var strokes: [[CGPoint]] {
+        let lines = drawing, pts = lines.flatMap { $0 }
+        guard let x0 = pts.map(\.x).min(), let x1 = pts.map(\.x).max(), let y0 = pts.map(\.y).min(), let y1 = pts.map(\.y).max() else { return lines }
+        let c = Paper.cell, f = frame
+        let dx = ((f.mid.x - (x0 + x1) / 2) / c).rounded() * c, dy = ((f.mid.y - (y0 + y1) / 2) / c).rounded() * c
+        return lines.map { $0.map { CGPoint(x: $0.x + dx, y: $0.y + dy) } }
+    }
+
+    /// The picture as it's drawn, before centring.
+    private var drawing: [[CGPoint]] {
         let r = CGRect(x: at.x, y: at.y, width: Piece.size.width, height: Piece.size.height)
         let c = Paper.cell
         func box(_ b: CGRect) -> [CGPoint] { [CGPoint(x: b.minX, y: b.minY), CGPoint(x: b.maxX, y: b.minY), CGPoint(x: b.maxX, y: b.maxY), CGPoint(x: b.minX, y: b.maxY), CGPoint(x: b.minX, y: b.minY)] }
@@ -293,12 +303,26 @@ final class Rig {
         func add(_ id: String, _ c: UIColor, _ w: Double, _ y: Float, _ segs: [(SIMD2<Float>, SIMD2<Float>)]) {
             groups[id, default: (c, w, y, [])].segs += segs
         }
+        var tints: [String: (colour: UIColor, rects: [CGRect])] = [:]
         for (p, k, on, state) in now {
-            add(on ? "frame-on" : "frame", on ? colours.ink : colours.lineStrong, on ? 2 : 1.5, 0.001, drawn(p.outline, k))
+            // the chosen lesson, and the one up next, are outlined in their chapter's colour
+            let lit = on || state == .now
+            add(lit ? "frame-\(p.chapter.rawValue)-\(on)" : "frame", lit ? UIColor(hex: p.chapter.hex) : colours.lineStrong, on ? 2 : 1.5, 0.001, drawn(p.outline, k))
+            // a light fill in the chapter's colour, coming in with the drawing
+            let strength = (k * 10).rounded() / 10 * 0.1
+            if strength > 0 {
+                let id = "tint-\(p.chapter.rawValue)-\(strength)"
+                tints[id, default: (UIColor(hex: Ink.mix(paperHex, p.chapter.hex, strength)), [])].rects.append(CGRect(x: p.at.x, y: p.at.y, width: Piece.size.width, height: Piece.size.height))
+            }
             if state == .notYet { add("pencil", colours.pencil, 2.5, 0.0015, drawn(p.strokes, k)) }
             else { add("chapter-\(p.chapter.rawValue)", UIColor(hex: p.chapter.hex), 2.5, 0.0015, drawn(p.strokes, k)) }
         }
-        for (id, e) in pieceGroups where groups[id] == nil { e.isEnabled = false }
+        for (id, e) in pieceGroups where groups[id] == nil && tints[id] == nil { e.isEnabled = false }
+        for (id, t) in tints {
+            let e = pieceGroups[id] ?? { let e = ModelEntity(); pieces.addChild(e); pieceGroups[id] = e; return e }()
+            e.position.y = 0.0003  // under the strong lines, like the floor squares
+            set(e, Self.fills(t.rects), t.colour)
+        }
         for (id, g) in groups {
             let e = pieceGroups[id] ?? { let e = ModelEntity(); pieces.addChild(e); pieceGroups[id] = e; return e }()
             e.position.y = g.y
@@ -576,6 +600,23 @@ final class Rig {
             let e = ModelEntity(mesh: m, materials: [flat(colours.deep)]); e.position.y = 0.002; outline.addChild(e)
         }
         lessonRoot.addChild(outline)
+    }
+
+    /// Filled rectangles on the paper (paper points), one quad each, facing up.
+    static func fills(_ rects: [CGRect]) -> MeshResource? {
+        var pos: [SIMD3<Float>] = [], idx: [UInt32] = []
+        let u = Paper.unit
+        for r in rects {
+            let base = UInt32(pos.count)
+            pos += [CGPoint(x: r.minX, y: r.minY), CGPoint(x: r.maxX, y: r.minY), CGPoint(x: r.maxX, y: r.maxY), CGPoint(x: r.minX, y: r.maxY)]
+                .map { SIMD3(Float($0.x / u), 0, Float($0.y / u)) }
+            idx += [base, base + 1, base + 2, base, base + 2, base + 3, base, base + 2, base + 1, base, base + 3, base + 2]
+        }
+        guard !pos.isEmpty else { return nil }
+        var desc = MeshDescriptor(name: "fills")
+        desc.positions = MeshBuffers.Positions(pos)
+        desc.primitives = .triangles(idx)
+        return try? MeshResource.generate(from: [desc])
     }
 
     /// Flat bars on the paper, one quad per line, facing up.
