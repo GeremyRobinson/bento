@@ -20,11 +20,11 @@ struct PaperScreen: View {
                         PiecesLayer(camera: cam, time: t, drawnAt: model.drawnAt, selected: model.selected)
                     }
                     if let lesson = model.lesson {
-                        UnitCubesView(model: lesson, time: t, onBack: { model.close() })
+                        UnitCubesView(model: lesson, time: t, top: edge(geo.safeAreaInsets.top), onBack: { model.close() })
                     } else {
                         surfaceGestures
                     }
-                    ZoomCells(model: model, lessonOpen: model.lesson != nil)
+                    ZoomCells(model: model, lessonOpen: model.lesson != nil, top: edge(geo.safeAreaInsets.top), bottom: edge(geo.safeAreaInsets.bottom))
                 }
                 .onChange(of: t) { _, now in model.settle(at: now); model.lesson?.settle(at: now) }
             }
@@ -33,6 +33,9 @@ struct PaperScreen: View {
         }
         .ignoresSafeArea()
     }
+
+    /// Controls sit two cells from the edge, or just clear of the notch and home bar where those reach further.
+    private func edge(_ inset: CGFloat) -> CGFloat { max(40, inset + 12) }
 
     /// The clock only runs while something moves or draws, so a still paper costs nothing.
     private var animating: Bool {
@@ -158,6 +161,8 @@ struct PiecesLayer: View {
 struct ZoomCells: View {
     let model: PaperModel
     let lessonOpen: Bool
+    let top: CGFloat
+    let bottom: CGFloat
     private func zoom(_ f: Double) { if let l = model.lesson { l.zoom(f) } else { model.zoomButton(f) } }
     var body: some View {
         let pct = model.lesson?.scale ?? model.camera(at: PaperClock.now).zoom
@@ -174,6 +179,6 @@ struct ZoomCells: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: model.screen.width > 760 ? .topTrailing : .bottom)
-        .padding(.top, 40).padding(.trailing, model.screen.width > 760 ? 40 : 0).padding(.bottom, 40)
+        .padding(.top, top).padding(.trailing, model.screen.width > 760 ? 40 : 0).padding(.bottom, bottom)
     }
 }

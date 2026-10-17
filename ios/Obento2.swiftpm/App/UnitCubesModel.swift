@@ -99,7 +99,16 @@ final class UnitCubesModel {
         var v = view(at: PaperClock.now); v.scale = min(250, max(25, v.scale * f)); move(to: v, duration: 0.4)
     }
 
+    /// Pinch follows the fingers directly; the buttons glide.
+    func pinch(_ f: Double) {
+        guard flight?.done == nil else { return }
+        var v = view(at: PaperClock.now); flight = nil
+        v.scale = min(250, max(25, v.scale * f)); resting = v
+    }
+
     func pan(_ dx: Double, _ dy: Double) {
+        // never cut short a move that has something to do when it ends (tilting flat before leaving)
+        guard flight?.done == nil else { return }
         var v = view(at: PaperClock.now); flight = nil
         let (_, r, u) = v.axes
         v.target = v.target + r * (-dx / v.scale) + u * (dy / v.scale); resting = v

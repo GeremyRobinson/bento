@@ -8,11 +8,12 @@ import simd
 struct UnitCubesView: View {
     let model: UnitCubesModel
     let time: Double
+    let top: CGFloat
     let onBack: () -> Void
     @State private var lastDrag: CGSize = .zero
     @State private var lastPinch: CGFloat = 1
 
-    init(model: UnitCubesModel, time: Double, onBack: @escaping () -> Void) { self.model = model; self.time = time; self.onBack = onBack }
+    init(model: UnitCubesModel, time: Double, top: CGFloat, onBack: @escaping () -> Void) { self.model = model; self.time = time; self.top = top; self.onBack = onBack }
 
     var body: some View {
         let v = model.view(at: time)
@@ -24,7 +25,7 @@ struct UnitCubesView: View {
                     .onChanged { g in model.pan(g.translation.width - lastDrag.width, g.translation.height - lastDrag.height); lastDrag = g.translation }
                     .onEnded { _ in lastDrag = .zero })
                 .simultaneousGesture(MagnifyGesture()
-                    .onChanged { g in model.zoom(g.magnification / lastPinch); lastPinch = g.magnification }
+                    .onChanged { g in model.pinch(g.magnification / lastPinch); lastPinch = g.magnification }
                     .onEnded { _ in lastPinch = 1 })
                 .simultaneousGesture(SpatialTapGesture().onEnded { g in model.tapScreen(.init(g.location.x, g.location.y)) })
             pins(v, k)
@@ -35,7 +36,7 @@ struct UnitCubesView: View {
                     Text("Volume · Lesson 02").font(Typeface.font(13)).foregroundStyle(Ink.ink2)
                 }
             }
-            .padding(.leading, 40).padding(.top, 40)
+            .padding(.leading, 40).padding(.top, top)
         }
     }
 
