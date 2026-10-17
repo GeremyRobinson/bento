@@ -174,7 +174,7 @@ final class UnitCubesModel {
     }
 
     /// The tilted view of what's shown now: the box as high as its `layers`, the words above it and the buttons below,
-    /// zoomed to fit (in or out, up to 160%) and centred under the top bar, with two cells to spare.
+    /// zoomed to fit (in or out, up to 125%) and centred under the top bar, with two cells to spare.
     private func tiltedView(from now: PaperView3D, layers: Int) -> PaperView3D {
         let L = Double(box.length), W = Double(box.width), H = Double(min(box.height, max(1, layers)))
         var to = PaperView3D(elevation: PaperView3D.tilted.elevation, azimuth: PaperView3D.tilted.azimuth, scale: now.scale,

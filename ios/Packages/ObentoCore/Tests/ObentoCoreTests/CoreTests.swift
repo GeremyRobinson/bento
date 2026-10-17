@@ -382,15 +382,14 @@ final class MasteryTests: XCTestCase {
 }
 
 final class SelectZoomTests: XCTestCase {
-    /// Tapping lessons one after another doesn't keep zooming in, and never goes past 100%.
+    /// Tapping lessons one after another always glides to 125%, unless the lesson wouldn't fit.
     func testTappingLessonsHasALimit() {
         var z = 0.6
         for _ in 0..<5 { z = CameraTiming.selectZoom(current: z, overview: 0.6, fit: 2.5) }
-        XCTAssertEqual(z, 0.78, accuracy: 1e-9, "1.3x the map's view, the same every time")
-        XCTAssertEqual(CameraTiming.selectZoom(current: 0.9, overview: 0.6, fit: 2.5), 0.9, "a little closer already: kept")
-        XCTAssertEqual(CameraTiming.selectZoom(current: 1.8, overview: 0.6, fit: 2.5), 1.0, "past 100%: back to 100%")
-        XCTAssertEqual(CameraTiming.selectZoom(current: 0.6, overview: 0.9, fit: 2.5), 1.0, "never past 100%")
+        XCTAssertEqual(z, 1.25, accuracy: 1e-9)
+        XCTAssertEqual(CameraTiming.selectZoom(current: 1.8, overview: 0.6, fit: 2.5), 1.25, "closer than that: back to 125%")
         XCTAssertEqual(CameraTiming.selectZoom(current: 0.6, overview: 0.6, fit: 0.7), 0.7, "the lesson always fits")
+        XCTAssertEqual(CameraTiming.lessonMax, CameraTiming.selectMax, "Start doesn't move the camera")
     }
 }
 

@@ -264,7 +264,7 @@ final class PaperModel {
         }
     }
 
-    /// Each step, the camera frames what the lesson shows right now: zoomed to fit it (in or out, up to 160%) and
+    /// Each step, the camera frames what the lesson shows right now: zoomed to fit it (in or out, up to 125%) and
     /// centred on it (G 17 Oct). A move too small to notice is skipped, so the camera doesn't twitch.
     func frameCurrent(_ r: Rect) {
         let now = camera(at: PaperClock.now), to = framingBelowBar(r, maxZoom: CameraTiming.lessonMax)
