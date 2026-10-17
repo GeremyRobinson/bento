@@ -130,6 +130,9 @@ extension Rig {
         // the Start block moves with the choice on its own, so a tap rebuilds only it
         let chosen = model.selected.flatMap { $0.opens ? $0 : nil }
         if chosen?.id ?? "" != startKey { startKey = chosen?.id ?? ""; rebuildStart(chosen, dark: isDark) }
+        // erasing on the way into a lesson: all the map's words fade together
+        let gone = snapped(model.mapGone(at: t), 40)
+        if gone < 1 { words.components.set(OpacityComponent(opacity: Float(gone))) } else if words.components.has(OpacityComponent.self) { words.components.remove(OpacityComponent.self) }
         // once everything has drawn in, the fades are done: nothing more to do each frame
         let settled = t - model.drawnAt > Piece.drawTime + 1
         if settled, pieceWordsK.count == Map.pieces.count, !pieceWordsK.values.contains(where: { $0 < 1 }) { return }

@@ -37,6 +37,15 @@ enum Shots {
                 m.open(ad)
                 return
             }
+            if name == "leave-ad" {
+                // the lesson page, then back to the map, for watching the page erase itself
+                m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
+                m.instant = true; m.shotProblem = .init(a: 4, p: 1, b: 8, q: 1)
+                m.select(Map.pieces.first { $0.id == "ad" }!); m.open(Map.pieces.first { $0.id == "ad" }!); m.instant = false
+                try? await Task.sleep(for: .seconds(2.5))
+                m.close()
+                return
+            }
             if name == "page-zoom" {
                 // the lesson page: out to see it all and back in to a problem, again and again, for -perf timings
                 m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100

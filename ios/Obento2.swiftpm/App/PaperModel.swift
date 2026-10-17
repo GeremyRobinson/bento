@@ -130,6 +130,15 @@ final class PaperModel {
     private var opened: Piece?
     /// When the pieces started drawing themselves.
     var drawnAt: Double = PaperClock.now
+    /// When the map started erasing itself, on the way into a lesson (G 17 Oct: the How to's undraw, for every
+    /// move from one place to the next).
+    private(set) var mapLeftAt: Double?
+    /// 1 while the map is on the paper, down to 0 as it erases itself: its drawing in, backwards.
+    func mapGone(at t: Double) -> Double { mapLeftAt.map { 1 - ease((t - $0) / Self.undraw) } ?? 1 }
+    /// How long a place takes to erase itself.
+    static let undraw = 0.45
+    /// Something is erasing itself: hands off until the next place is there.
+    private(set) var leaving = false
     /// Where the drawings draw out from: the lesson just left, after coming out of one.
     var drawFrom: Point?
     var instant = false
@@ -200,6 +209,7 @@ final class PaperModel {
     }
 
     func tap(at s: Point) {
+        guard !leaving else { return }
         let p = camera(at: PaperClock.now).toPaper(s)
         if let b = bars {
             // zoomed out over the page, a tap on a problem brings it close first; close up, it works the problem
@@ -215,8 +225,22 @@ final class PaperModel {
         select(Map.pieces.first(where: { contains($0.frame, p) || contains($0.start, p) }))
     }
 
-    /// Opening Unit cubes: fly the flat paper to the lesson, then hand the same view to the 3D camera.
+    /// Opening a lesson: the map erases itself, as it drew in, then the lesson opens where it was.
     func open(_ p: Piece) {
+        guard !leaving else { return }
+        if instant { openNow(p); return }
+        leaving = true
+        mapLeftAt = PaperClock.now
+        Task { [self] in
+            try? await Task.sleep(for: .seconds(Self.undraw + 0.05))
+            leaving = false
+            openNow(p)
+            mapLeftAt = nil
+        }
+    }
+
+    /// Opening Unit cubes: fly the flat paper to the lesson, then hand the same view to the 3D camera.
+    private func openNow(_ p: Piece) {
         opened = p
         // the lesson's picture master decides how it opens: flat on the paper, or in 3D
         guard let spec = p.spec else { return }
@@ -305,7 +329,19 @@ final class PaperModel {
     /// Leaving a lesson: a 3D one tilts back flat first; then the paper glides back out to the lesson's piece
     /// (LESSONS.md §5), which shows in colour once it's learned.
     func close() {
+        guard !leaving else { return }
         let piece = opened
+        // a lesson's page erases itself first, as it drew in, then the map draws itself back in
+        if let b = bars, !instant {
+            leaving = true
+            b.leave()
+            Task { [self] in
+                try? await Task.sleep(for: .seconds(Self.undraw + 0.05))
+                leaving = false
+                bars = nil; steps = nil; redraw(from: piece); glideOut(to: piece)
+            }
+            return
+        }
         if bars != nil || steps != nil { bars = nil; steps = nil; redraw(from: piece); glideOut(to: piece); return }
         guard let l = lesson else { return }
         l.flatten { [self] view in

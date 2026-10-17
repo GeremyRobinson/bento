@@ -121,6 +121,9 @@ final class BarsPage {
 
     // MARK: what the child does
 
+    /// Leaving the lesson: every problem erases itself, as it drew in.
+    func leave() { for m in all { m.leave() } }
+
     /// The problem being worked: outlined in the chapter's colour with its Now tab, and framed by the camera.
     func activate(_ m: AddFractionsModel) {
         guard current !== m else { return }

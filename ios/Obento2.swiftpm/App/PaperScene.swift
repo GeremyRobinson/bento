@@ -318,10 +318,11 @@ final class Rig {
         // or zooming rebuilds a handful of meshes, not two per lesson
         let px = 1 / lineScale
         // once the drawings have drawn in, only a new choice, zoom or learned lesson changes them: skip the rest
-        let settled = t - model.drawnAt > Piece.drawTime + 1, quick = "\(model.selected?.id ?? "") \(lineScale) \(Progress.shared.checks.count)"
+        let gone = snapped(model.mapGone(at: t), 40)
+        let settled = t - model.drawnAt > Piece.drawTime + 1, quick = "\(model.selected?.id ?? "") \(lineScale) \(Progress.shared.checks.count) \(gone)"
         if settled, quick == piecesQuick, !piecesKey.isEmpty { return }
         piecesQuick = settled ? quick : ""
-        let now = Map.pieces.map { p in (p, snapped(Piece.drawIn(p, time: t, drawnAt: model.drawnAt, from: model.drawFrom), 400), model.selected?.id == p.id, p.state) }
+        let now = Map.pieces.map { p in (p, snapped(Piece.drawIn(p, time: t, drawnAt: model.drawnAt, from: model.drawFrom), 400) * gone, model.selected?.id == p.id, p.state) }
         let key = now.map { "\($0.1) \($0.2) \($0.3)" }.joined(separator: ",")
         guard key != piecesKey else { return }
         piecesKey = key
