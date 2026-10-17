@@ -55,7 +55,7 @@ final class UnitCubesModel {
         return flight != nil || now - wordsAt < 0.8 || (layerAt.values.max().map { now - $0 < 2.6 } ?? false)
             || squares.values.contains { now - $0.at < 0.4 } || (squaresGoneAt.map { now - $0 < 1.2 } ?? false)
             || (tiltAt.map { now - $0 < Self.beat + 0.1 } ?? false) || (untiltAt.map { now - $0 < Self.beat + 0.1 } ?? false)
-            || now < busyUntil + 0.1
+            || now < busyUntil + 0.1 || (preview.map { now < $0.end + 0.1 } ?? false)
     }
 
     func settle(at t: Double) {
@@ -106,11 +106,14 @@ final class UnitCubesModel {
         squares[c] = (lesson.marks[i] != nil, time(0)); message = nil
     }
 
+    /// Show me: a preview of the step. Every floor square fills in turn over the child's own, holds, and fades back.
+    private(set) var preview: ShowMePreview?
+
     func showMe() {
-        guard lesson.helps, !busy else { return }
-        let filled = lesson.showMe()
-        for (n, i) in filled.enumerated() { squares[UnitCubes.cell(i, in: box)] = (true, time(0.06 * Double(n))) }
-        busyUntil = time(0.06 * Double(filled.count) + 0.26)
+        guard lesson.helps, !busy, let t = lesson.step.task else { return }
+        let p = ShowMePreview(cells: t.showMe, at: time(0.2), step: 0.08)
+        preview = p
+        busyUntil = instant ? 0 : p.end
         message = nil
     }
 
@@ -200,8 +203,10 @@ final class UnitCubesModel {
 
     /// How far a square has grown in (0...1).
     func square(_ c: UnitCubes.Cell, at t: Double) -> Double {
-        guard let s = squares[c] else { return 0 }
+        let ahead = preview.flatMap { p in UnitCubes.cell(c, in: box).map { p.level($0, at: t) } } ?? 0
+        guard let s = squares[c] else { return ahead }
         var k = ease((t - s.at) / 0.26); if !s.on { k = 1 - k }
+        k = max(k, ahead)
         if let g = squaresGoneAt { k *= 1 - ease((t - g) / 0.5) }
         return k
     }

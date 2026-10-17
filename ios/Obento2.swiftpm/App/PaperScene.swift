@@ -307,7 +307,7 @@ final class Rig {
             let k = piece.row == 2 ? (waiting ? 1 : 0) : b.grow(row: piece.row, piece.i, at: t)
             piece.group.isEnabled = k > 0
             piece.group.scale.z = Float(max(0.0001, k))
-            let level = piece.row == 0 ? (piece.i < s.p ? 1 : 0) : piece.row == 1 ? b.fill(piece.i, at: t) : 0.5
+            let level = piece.row == 0 ? (piece.i < s.p ? 1 : 0) : piece.row == 1 ? b.shown(piece.i, at: t) : 0.5
             paint(piece, level, chapter: b.chapter.hex)
         }
         drawDecor(b, at: t)

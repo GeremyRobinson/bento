@@ -73,7 +73,8 @@ enum Shots {
                 if name == "cover-hint1" { l.go(); return }
                 if name == "cover-hint2" { l.go(); l.go(); return }
                 if name == "cover" { return }
-                l.showMe(); l.go()
+                for i in 0..<l.box.floor { l.tap(UnitCubes.cell(i, in: l.box)) }
+                l.go()
                 if name == "tilt" { return }
                 l.go()
             }
@@ -104,7 +105,9 @@ enum Shots {
         l.go(); await wait(1.4)
         for c in [(0, 0), (1, 0), (2, 0), (3, 0), (0, 1)] { l.tap(.init(c.0, c.1)); await wait(0.35) }
         l.go(); await wait(1.4)
-        l.showMe(); await wait(1.4)
+        // Show me previews the step, then the child covers the rest of the floor themselves
+        l.showMe(); await wait((l.preview?.end ?? PaperClock.now) - PaperClock.now + 0.3)
+        for i in 0..<l.box.floor where l.lesson.marks[i] == nil { l.tap(UnitCubes.cell(i, in: l.box)); await wait(0.2) }
         l.go(); await wait(3)
         l.go(); await wait(3)
         m.close(); await wait(2)

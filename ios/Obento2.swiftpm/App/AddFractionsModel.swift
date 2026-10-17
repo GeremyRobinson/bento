@@ -55,7 +55,7 @@ final class AddFractionsModel {
 
     var animating: Bool {
         let now = PaperClock.now
-        return now - openedAt < 2.2 || now - wordsAt < 0.8 || fills.values.contains { now - $0.at < 0.35 } || now < busyUntil + 0.1
+        return now - openedAt < 2.2 || now - wordsAt < 0.8 || fills.values.contains { now - $0.at < 0.35 } || now < busyUntil + 0.1 || (preview.map { now < $0.end + 0.1 } ?? false)
             || (guideAt.map { now - $0 < 0.6 } ?? false)
     }
 
@@ -94,15 +94,21 @@ final class AddFractionsModel {
         tap(Int(x / pieceWidth))
     }
 
+    /// Show me: a preview of the step. The right pieces fill one by one over the child's own, hold, and fade back.
+    private(set) var preview: ShowMePreview?
+
     func showMe() {
-        guard lesson.helps, !busy else { return }
-        let before = lesson.marked
-        let filled = lesson.showMe()
+        guard lesson.helps, !busy, let t = lesson.step.task else { return }
+        let p = ShowMePreview(cells: t.showMe, at: time(0.2), step: 0.35)
+        preview = p; previewStyle = t.style
+        busyUntil = instant ? 0 : p.end
         message = nil
-        // what was there clears at once; the right pieces then fill one by one
-        for i in before where !filled.contains(i) { setFill(i, 0, at: time(0)) }
-        for (n, i) in filled.enumerated() { setFill(i, target(i), at: time(0.35 * Double(n + 1)), from: 0) }
-        busyUntil = time(0.35 * Double(filled.count + 1))
+    }
+    private var previewStyle = 1
+
+    /// How a piece is filled with the preview over it: the stronger of the child's fill and the preview's.
+    func shown(_ i: Int, at t: Double) -> Double {
+        max(fill(i, at: t), (preview?.level(i, at: t) ?? 0) * (previewStyle == 2 ? 0.5 : 1))
     }
 
     func reset() { guard !busy else { return }; lesson.reset(); message = nil; guideAt = nil; syncFills() }
