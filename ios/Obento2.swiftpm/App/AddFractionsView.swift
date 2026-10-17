@@ -64,7 +64,9 @@ struct AddFractionsView: View {
                 .opacity(shown)
                 .pinned(at(0, r2 + h + 12), .topLeading, k)
                 if let m = model.message {
-                    Text(m.text).font(Typeface.font(17, .medium)).foregroundStyle(chapter).fixedSize()
+                    // wraps inside the problem's box
+                    Text(m.text).font(Typeface.font(17, .medium)).foregroundStyle(chapter)
+                        .frame(width: 520, alignment: .leading).fixedSize(horizontal: false, vertical: true)
                         .pinned(at(0, r2 + h + 60), .topLeading, k)
                 }
             }
@@ -73,7 +75,7 @@ struct AddFractionsView: View {
                     if let m = model.message { Text(m.text).foregroundStyle(m.ok ? Ink.right : chapter) }
                     else { Text(count).foregroundStyle(Ink.ink2) }
                 }
-                .font(Typeface.font(17, .medium)).fixedSize()
+                .font(Typeface.font(17, .medium)).frame(width: 520, alignment: .leading).fixedSize(horizontal: false, vertical: true)
                 .pinned(at(0, r2 + h + 20), .topLeading, k)
             }
             if l.picture["total"] == 1 {
@@ -98,10 +100,11 @@ struct AddFractionsView: View {
                 }
             }
             .opacity(model.busy ? 0.35 * shown : shown).allowsHitTesting(!model.busy)
-            .pinned(at(0, 440), .topLeading, k)
+            .pinned(at(0, 460), .topLeading, k)
 
-            Text(model.label).font(Typeface.font(13, .medium)).foregroundStyle(Ink.ink3).opacity(shown)
-                .pinned(at(0, 500), .topLeading, k)
+            // the box's name, at the top of the box, above the question
+            Text(model.label).font(Typeface.font(15, .medium)).foregroundStyle(Ink.ink3).opacity(shown)
+                .pinned(at(BarsPage.box.dx + 20, BarsPage.box.dy + 20), .topLeading, k)
 
             // the map's tab, on the box's top-right corner: Now on the problem the child is on, Done once it's solved
             if let tag = model.solved && !model.auto ? "Done" : current ? "Now" : nil {
