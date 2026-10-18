@@ -168,11 +168,11 @@ extension Rig {
                 // its score once taken, else what it waits for
                 // taken: just Done; how it went is broken down in Me
                 let line = Progress.shared.tests[p.id].map { _ in "Done" }
-                    ?? (p.opens ? "\(p.id == "test-grade" ? 20 : 12) problems" : p.id == "test-grade" ? "Opens after the chapter tests" : Map.chapterHasLessons(p.chapter) ? "Opens when its lessons are learned" : "Coming soon")
-                e.addChild(PaperText.label(PageStore.load(p.id).map { "Not finished · \($0.solved) of \($0.problems.count)" } ?? line, PaperText.font(16, .medium),
+                    ?? (p.opens ? "\(p.id == "test-grade" ? 20 : 12) problems" : p.id == "test-grade" ? "Finish the chapter tests first" : Map.chapterHasLessons(p.chapter) ? "Finish the lessons first" : "Coming soon")
+                e.addChild(PaperText.label(PageStore.load(p.id).map { "\($0.solved) of \($0.problems.count) done" } ?? line, PaperText.font(16, .medium),
                                            p.opens || Progress.shared.tests[p.id] != nil ? UIColor(hex: p.chapter.hex) : ink3, at: CGPoint(x: r.minX, y: r.maxY + 50)))
             } else if let s = PageStore.load(p.id) {
-                e.addChild(PaperText.label("Not finished · \(s.solved) of \(s.problems.count)", PaperText.font(16, .medium), UIColor(hex: p.chapter.hex),
+                e.addChild(PaperText.label("\(s.solved) of \(s.problems.count) done", PaperText.font(16, .medium), UIColor(hex: p.chapter.hex),
                                            at: CGPoint(x: r.minX, y: r.maxY + 50)))
             }
             if p.isTest {
@@ -214,7 +214,7 @@ extension Rig {
         guard let p else { return }
         let s = CGRect(x: p.start.x, y: p.start.y, width: p.start.width, height: p.start.height)
         if let m = Self.fills([s]) { let f = ModelEntity(mesh: m, materials: [flat(UIColor(hex: p.chapter.hex))]); f.position.y = 0.0021; start.addChild(f) }
-        start.addChild(PaperText.label(PageStore.load(p.id) == nil ? "Start" : "Keep going", PaperText.font(14, .semibold), .white,
+        start.addChild(PaperText.label(PageStore.load(p.id) == nil ? "Start" : "Continue", PaperText.font(14, .semibold), .white,
                                        at: CGPoint(x: s.minX + 12, y: s.midY), anchor: UnitPoint(x: 0, y: 0.5)))
         if let a = PaperText.icon("arrow-right", .white, in: CGRect(x: s.maxX - 26, y: s.midY - 8, width: 16, height: 16)) { start.addChild(a) }
     }

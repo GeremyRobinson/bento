@@ -24,9 +24,9 @@ final class HelpTests: XCTestCase {
         var r = LessonRun(AddFractions.spec, numbers: p.numbers, finalOnly: true); r.skipAsk()
         XCTAssertTrue(r.finalOnly)
         XCTAssertEqual(r.steps.count, 3)
-        XCTAssertEqual(r.words.say, "3/4 + 1/8 is how many eighths?")
+        XCTAssertEqual(r.words.say, "Shade the answer in eighths.")
         for i in 0..<6 { r.tap(i) }
-        XCTAssertEqual(r.go(), .notYet("Not yet. Let's do it step by step."))
+        XCTAssertEqual(r.go(), .notYet("Not quite. Let's go step by step."))
         r.tap(6)
         XCTAssertEqual(r.go(), .moved(2))
         XCTAssertTrue(r.isLast)

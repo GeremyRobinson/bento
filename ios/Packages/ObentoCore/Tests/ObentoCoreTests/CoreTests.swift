@@ -132,25 +132,25 @@ final class AddFractionsTests: XCTestCase {
         var l = run(quarterAndEighth)
         XCTAssertEqual(l.words.say, "A fourth and an eighth.")
         XCTAssertEqual(l.go(), .moved(1))
-        XCTAssertEqual(l.words.say, "1/4 is how many eighths?")
+        XCTAssertEqual(l.words.say, "Shade eighths to match 1/4.")
         l.tap(5)
-        XCTAssertEqual(l.go(), .notYet("Not yet. Some of the fourth is still uncovered."))
+        XCTAssertEqual(l.go(), .notYet("Not yet. Shade more."))
         XCTAssertEqual(l.picture["guide"], 1, "a miss shows where the fourth ends")
-        XCTAssertEqual(l.step.look, "The fourth ends here")
+        XCTAssertEqual(l.step.look, "1/4 ends here")
         l.tap(6); l.tap(7)
-        XCTAssertEqual(l.go(), .notYet("Too many. Some eighths go past the fourth."))
+        XCTAssertEqual(l.go(), .notYet("Too many. Stop where the blue ends."))
         l.tap(7)
         // two eighths cover the fourth, and they line up under it
         XCTAssertEqual(l.go(), .moved(2))
         XCTAssertEqual(l.marked(on: 1), [0, 1])
         XCTAssertNil(l.picture["guide"])
         XCTAssertFalse(l.tap(0), "shaded pieces stay put while adding")
-        XCTAssertEqual(l.go(), .notYet("Add the extra eighth first."))
+        XCTAssertEqual(l.go(), .notYet("Shade 1 more first."))
         l.tap(2)
         XCTAssertEqual(l.countLine, "3 of 8 shaded")
         XCTAssertEqual(l.go(), .moved(3))
-        XCTAssertEqual(l.words.say, "Three eighths.")
-        XCTAssertEqual(l.words.hint, "A fourth covers two eighths. Add one more and you have three.")
+        XCTAssertEqual(l.words.say, "The answer is 3/8.")
+        XCTAssertEqual(l.words.hint, "2/8 + 1/8 = 3/8")
         XCTAssertEqual(l.go(), .newProblem)
     }
 
@@ -163,8 +163,8 @@ final class AddFractionsTests: XCTestCase {
         _ = l.go()
         XCTAssertEqual(l.showMe(), [4])
         XCTAssertEqual(l.go(), .moved(3))
-        XCTAssertEqual(l.words.say, "Five sixths.")
-        XCTAssertEqual(l.words.hint, "2 thirds cover four sixths. Add one more and you have five.")
+        XCTAssertEqual(l.words.say, "The answer is 5/6.")
+        XCTAssertEqual(l.words.hint, "4/6 + 1/6 = 5/6")
     }
 
     /// Every problem fits on the grid and is in lowest terms, the answer too.
@@ -260,7 +260,7 @@ final class PaperWayTests: XCTestCase {
     func testOneTryShowsTheAnswerAndCountsTheMiss() {
         var l = LessonRun(AddFractions.spec, numbers: AddFractions.Problem(a: 4, p: 1, b: 8, q: 1).numbers); _ = l.go()
         l.oneTry = true; l.tap(5)
-        XCTAssertEqual(l.go(), .notYet("Not yet. Some of the fourth is still uncovered."))
+        XCTAssertEqual(l.go(), .notYet("Not yet. Shade more."))
         XCTAssertEqual(l.marked, [0, 1], "the right pieces are shown")
         XCTAssertTrue(l.missedAny)
         XCTAssertEqual(l.go(), .moved(2))
@@ -287,11 +287,11 @@ final class PaperWayTests: XCTestCase {
 final class StoryStepTests: XCTestCase {
     func testAStoryProblemAsksForTheOperationFirst() {
         var l = LessonRun(AddingFractions.spec, numbers: AddingFractions.spec.generate(&rngForTests, 1), story: true)
-        XCTAssertEqual(l.words.hint, "Which operation solves it?")
+        XCTAssertEqual(l.words.hint, "Pick what to do.")
         XCTAssertTrue(l.words.say.hasPrefix("You walked"))
         XCTAssertEqual(l.step.answer?.choices, ["+ Add", "− Subtract", "× Multiply", "÷ Divide"])
         l.choose(2)
-        XCTAssertEqual(l.go(), .notYet("Read the story again. Is it putting together, taking away, equal groups, or sharing?"))
+        XCTAssertEqual(l.go(), .notYet("Read it again. What happens to the amounts?"))
         l.choose(0)
         XCTAssertEqual(l.go(), .moved(1))
         XCTAssertEqual(l.steps.count, AddingFractions.spec.steps(l.numbers).count + 1)
@@ -302,7 +302,7 @@ final class StoryStepTests: XCTestCase {
         var s = LessonSession(phase: .practice(1))
         XCTAssertNotEqual(s.makeRun(LongDivision.spec, using: &rng).words.hint, "Which operation solves it?")
         s.finished(right: true)
-        XCTAssertEqual(s.makeRun(LongDivision.spec, using: &rng).words.hint, "Which operation solves it?")
+        XCTAssertEqual(s.makeRun(LongDivision.spec, using: &rng).words.hint, "Pick what to do.")
         XCTAssertEqual(s.makeRun(LongDivision.spec, using: &rng).step.answer?.expected["c"], 3, "dividing")
         XCTAssertNotEqual(s.makeRun(UnitCubes.spec, using: &rng).words.hint, "Which operation solves it?", "no story, no step")
     }
@@ -311,7 +311,7 @@ final class StoryStepTests: XCTestCase {
         var rng = SeededRandom(seed: 2)
         let s = LessonSession(phase: .check(4, right: 2))
         let r = s.makeRun(MultiplyTwoDigit.spec, using: &rng)
-        XCTAssertEqual(r.words.hint, "Which operation solves it?", "the recipe's fourth item is the story")
+        XCTAssertEqual(r.words.hint, "Pick what to do.", "the recipe's fourth item is the story")
         XCTAssertFalse(r.helps); XCTAssertTrue(r.oneTry)
     }
 }
@@ -431,12 +431,12 @@ final class LessonPageTests: XCTestCase {
 final class StraightIntoSolvingTests: XCTestCase {
     func testPageProblemsStartOnTheirFirstStep() {
         let plain = LessonPage.run(AddFractions.spec, .init(numbers: AddFractions.Problem(a: 4, p: 1, b: 8, q: 1).numbers, story: false, isCheck: false))
-        XCTAssertEqual(plain.words.say, "1/4 is how many eighths?", "no Let’s find out first")
+        XCTAssertEqual(plain.words.say, "Shade eighths to match 1/4.", "no Let’s find out first")
         var story = LessonPage.run(AddFractions.spec, .init(numbers: AddFractions.Problem(a: 4, p: 1, b: 8, q: 1).numbers, story: true, isCheck: false))
-        XCTAssertEqual(story.words.hint, "Which operation solves it?")
+        XCTAssertEqual(story.words.hint, "Pick what to do.")
         story.choose(0)
         _ = story.go()
-        XCTAssertEqual(story.words.say, "1/4 is how many eighths?", "after the story's operation, straight into the problem")
+        XCTAssertEqual(story.words.say, "Shade eighths to match 1/4.", "after the story's operation, straight into the problem")
         var cubes = LessonRun(UnitCubes.spec, numbers: UnitCubes.Box(length: 4, width: 3, height: 2).numbers); cubes.skipAsk()
         XCTAssertEqual(cubes.words.say, "Cover the floor with squares.")
         _ = cubes.showMe(); _ = cubes.go()

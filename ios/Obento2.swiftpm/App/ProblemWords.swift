@@ -127,7 +127,7 @@ extension Rig {
         let say = m.intro ?? (storyStep ? words.hint : words.say)
         let sayLines = PaperText.block(say, q, ink, width: col, topLeft: P(0, sy), maxLines: 3)
         sayLines.forEach { w.question.addChild($0) }
-        let hintText = m.intro != nil ? "Why it works" : storyStep ? "" : words.hint
+        let hintText = m.intro != nil || storyStep ? "" : words.hint
         w.question.addChild(PaperText.label(hintText, hint, ink2, at: P(0, sy + Double(sayLines.count) * Double(q.lineHeight) + 4), anchor: .topLeading))
 
         // the problem, at the top: the story when it's told as one, then the sum
@@ -181,7 +181,7 @@ extension Rig {
             cellBlock(b.rect, fill: fill, stroke: stroke, lift: lift).forEach { w.blocks.addChild($0) }
             switch b.kind {
             case .next, .practise, .again, .skip:
-                let word = b.kind == .next ? "Next step" : b.kind == .practise ? "Let's practise" : b.kind == .again ? "Watch again" : "Skip"
+                let word = b.kind == .next ? "Next step" : b.kind == .practise ? "Practice" : b.kind == .again ? "Watch again" : "Skip"
                 w.blocks.addChild(PaperText.label(word, button, ink, at: CGPoint(x: b.rect.minX + 16, y: b.rect.midY), anchor: UnitPoint(x: 0, y: 0.5)))
                 if b.kind == .next || b.kind == .practise, let a = PaperText.icon("arrow-right", ink, in: CGRect(x: b.rect.maxX - 30, y: b.rect.midY - 10, width: 20, height: 20)) { w.blocks.addChild(a) }
             case .main:

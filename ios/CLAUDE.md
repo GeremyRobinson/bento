@@ -22,6 +22,7 @@ You're working with G, who owns Obento², a maths app for kids (K-12) that shows
 - **Every problem is fresh** (from a generator), and the answer is worked out from the same numbers as the picture.
 - **Icons are Obento²'s own** (G 17 Oct): drawn like the lesson pictures, thin square-ended lines on a 24-unit grid with one shape softly tinted (`ObentoIcons.swift`); squares and gaps measured like the Lessons icon. Phosphor stays only where an icon isn't drawn yet. Font: SF Pro Rounded for now (`Typeface` in `Theme.swift`).
 - **One floating bar at the bottom** (G 17 Oct, `Toolbar.swift`): a pill fixed to the screen. Map: Lessons · Me | grade and progress | ⋯. Lesson: ← Lessons | lesson and progress | Hint · Show me | ⋯. Everything else lives in ⋯ More. A pinch shows the zoom in the bar's middle at 22 pt (the size G likes). G tried a dial instead and found it too complicated; Today will move into Me.
+- **Plain words** (G 18 Oct): every line tells the child what to do, short and clear ("Shade eighths to match 3/4.", "Continue", "Practice"). No teacher phrasing, no extra labels like "Why it works", no questions they didn't ask.
 - **G approves first.** Show G (a screenshot, or "press Play") before calling anything done. Change only what G asked for. Every change must be better than what came before.
 - Bible references, if any ever come up, use the NWT and jw.org / wol.jw.org.
 

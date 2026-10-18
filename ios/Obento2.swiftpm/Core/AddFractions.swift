@@ -34,16 +34,17 @@ public enum AddFractions {
     public static let spec = LessonSpec(id: "ad", title: "Add with different bottoms", master: "bars",
                                         generate: { rng, _ in problems.randomElement(using: &rng)!.numbers },
                                         display: { n in let s = Problem(n); return [.frac(.num(Double(s.p)), .num(Double(s.a))), .op("+"), .frac(.num(Double(s.q)), .num(Double(s.b)))] },
-                                        idea: { n in let s = Problem(n); return "\(capital(plural(s.a))) and \(plural(s.b)) can be the same amount. Cut them the same size, then count them all." },
+                                        // plain words (G 18 Oct): say what to do, short and clear
+                                        idea: { n in let s = Problem(n); return "First change the \(plural(s.a)) into \(plural(s.b)). Then add." },
                                         // the web's story for adding fractions
                                         story: { n in let s = Problem(n); return "You walked \(s.p)/\(s.a) of a mile to the park and then \(s.q)/\(s.b) of a mile to the store. How far did you walk in all?" },
                                         storyOp: { _ in "+" },
                                         finalStep: { n in
         let s = Problem(n), names = plural(s.b), shaded: @Sendable (Int) -> String = { "\($0) of \(s.b) shaded" }
-        return LessonStep(StepWords(say: "\(s.sum) is how many \(names)?", hint: "Shade the \(names) for both parts.", action: "Check"),
+        return LessonStep(StepWords(say: "Shade the answer in \(names).", hint: "Shade both parts.", action: "Check"),
             task: MarkTask(cells: Set(0..<s.b), want: s.total, showMe: Array(0..<s.total),
-                           mistakes: [Mistake(.tooFew) { _, _ in "Not yet. Let's do it step by step." },
-                                      Mistake(.tooMany) { _, _ in "Too many. Let's do it step by step." }],
+                           mistakes: [Mistake(.tooFew) { _, _ in "Not quite. Let's go step by step." },
+                                      Mistake(.tooMany) { _, _ in "Not quite. Let's go step by step." }],
                            count: shaded),
             picture: ["waiting": 1])
     }) { n in
@@ -52,25 +53,24 @@ public enum AddFractions {
         let the = s.p == 1 ? "the \(name(s.a))" : "the \(s.p) \(plural(s.a))"
         let shaded: @Sendable (Int) -> String = { "\($0) of \(s.b) shaded" }
         let ask = LessonStep(StepWords(say: "\(capital(A)) and \(B).", hint: "How much is that together? Look at the picture.", action: "Let’s find out"))
-        let cover = LessonStep(StepWords(say: "\(s.p)/\(s.a) is how many \(names)?", hint: "Tap the \(names) until they cover \(the).", action: "Check"),
+        let cover = LessonStep(StepWords(say: "Shade \(names) to match \(s.p)/\(s.a).", hint: "Shade under the blue part.", action: "Check"),
             task: MarkTask(cells: Set(0..<s.b), want: s.covered, showMe: Array(0..<s.covered), snap: Array(0..<s.covered),
-                           mistakes: [Mistake(.tooFew) { _, _ in "Not yet. Some of \(the) is still uncovered." },
-                                      Mistake(.tooMany) { _, _ in "Too many. Some \(names) go past \(the)." }],
+                           mistakes: [Mistake(.tooFew) { _, _ in "Not yet. Shade more." },
+                                      Mistake(.tooMany) { _, _ in "Too many. Stop where the blue ends." }],
                            count: shaded),
             // hint 1: the child's count drawn beside where the fraction really ends; hint 2: the right pieces outlined
-            onMiss: ["guide": 1, "yours": 1], look: s.p == 1 ? "The \(name(s.a)) ends here" : "The \(s.p) \(plural(s.a)) end here",
+            onMiss: ["guide": 1, "yours": 1], look: "\(s.p)/\(s.a) ends here",
             hint2: ["outline": 1])
-        let add = LessonStep(StepWords(say: "Now add \(s.q)/\(s.b). How many \(names)?",
-                                       hint: s.q == 1 ? "Tap one more \(name(s.b)) to add it on." : "Tap \(number(s.q)) more \(names) to add them on.", action: "Check"),
+        let add = LessonStep(StepWords(say: "Now add \(s.q)/\(s.b).", hint: "Shade \(s.q) more.", action: "Check"),
             task: MarkTask(cells: Set(0..<s.b), want: s.q, showMe: Array(s.covered..<s.total),
-                           mistakes: [Mistake(.noneMarked) { _, _ in s.q == 1 ? "Add the extra \(name(s.b)) first." : "Add the \(number(s.q)) extra \(names) first." },
-                                      Mistake(.tooFew) { m, w in "Not yet. Add \(number(w - m)) more." },
-                                      Mistake(.tooMany) { _, _ in s.q == 1 ? "Only one \(name(s.b)) is being added." : "Only \(number(s.q)) \(names) are being added." }],
+                           mistakes: [Mistake(.noneMarked) { _, _ in "Shade \(s.q) more first." },
+                                      Mistake(.tooFew) { m, w in "Not yet. Shade \(w - m) more." },
+                                      Mistake(.tooMany) { _, _ in "Too many. Add just \(s.q)." }],
                            style: 2, count: shaded),
             picture: ["match": 1, "waiting": 1], onMiss: ["yours": 1, "totalGuide": 1], hint2: ["outline": 1])
         let verb = s.p == 1 ? "covers" : "cover"
-        let done = LessonStep(StepWords(say: "\(capital(amount(s.total, s.b, words: true))).",
-                                        hint: "\(capital(A)) \(verb) \(number(s.covered)) \(names). Add \(number(s.q)) more and you have \(number(s.total)).",
+        let done = LessonStep(StepWords(say: "The answer is \(s.total)/\(s.b).",
+                                        hint: "\(s.covered)/\(s.b) + \(s.q)/\(s.b) = \(s.total)/\(s.b)",
                                         action: "Next problem"),
                               picture: ["match": 1, "total": 1])
         return [ask, cover, add, done]

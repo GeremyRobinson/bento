@@ -255,9 +255,9 @@ public struct LessonRun: Sendable {
     static func operationStep(_ spec: LessonSpec, _ n: Numbers, picture: Numbers) -> LessonStep? {
         guard let text = spec.story?(n), let op = spec.storyOp?(n), let k = ops.firstIndex(of: op) else { return nil }
         let why = opWhy[op]!
-        return LessonStep(StepWords(say: text, hint: "Which operation solves it?", action: "Check"),
+        return LessonStep(StepWords(say: text, hint: "Pick what to do.", action: "Check"),
             answer: AnswerTask(prompt: spec.display(n), expected: ["c": Double(k)], hint: why, explain: why,
-                               check: { v in v["c"] == Double(k) ? .right : .wrong("Read the story again. Is it putting together, taking away, equal groups, or sharing?") },
+                               check: { v in v["c"] == Double(k) ? .right : .wrong("Read it again. What happens to the amounts?") },
                                choices: ops.map { "\($0) \(opName[$0]!)" }),
             picture: picture)
     }

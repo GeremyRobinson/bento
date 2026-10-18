@@ -49,7 +49,7 @@ final class BarsPage {
         // coming back after a day or more, the How to is a quick reminder the child can skip
         let remind = saved.map { !Calendar.current.isDateInToday($0.date) } ?? false
         howTo = AddFractionsModel(origin: Self.origin(for: piece), chapter: piece.chapter, instant: instant,
-                                  run: LessonRun(AddFractions.spec, numbers: example.numbers), label: remind ? "Remember?" : "How to", auto: true)
+                                  run: LessonRun(AddFractions.spec, numbers: example.numbers), label: "How to", auto: true)
         let spec = AddFractions.spec
         let fresh: [LessonRun] = test.map { n in
             // a test draws from the lessons' own check recipes, mixed (only Add with different bottoms is built so far)
