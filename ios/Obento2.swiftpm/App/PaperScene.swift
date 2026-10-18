@@ -34,12 +34,48 @@ struct PaperScene: View {
 extension Piece {
     /// The picture, centred in its frame to the nearest whole cell (so it stays on the grid). A box seen in 3D can't
     /// sit on the grid's lines, so it's centred exactly.
-    var strokes: [[CGPoint]] {
-        let lines = drawing, pts = lines.flatMap { $0 }
-        guard let x0 = pts.map(\.x).min(), let x1 = pts.map(\.x).max(), let y0 = pts.map(\.y).min(), let y1 = pts.map(\.y).max() else { return lines }
+    var strokes: [[CGPoint]] { let o = centring; return drawing.map { $0.map { CGPoint(x: $0.x + o.x, y: $0.y + o.y) } } }
+
+    /// The parts of the picture softly filled (G 18 Oct, the icons' tint): what matters in it, the shaded part of a
+    /// fraction, the digit that moves, the top of a box. Closed shapes, centred with the lines.
+    var softs: [[CGPoint]] { let o = centring; return soft.map { $0.map { CGPoint(x: $0.x + o.x, y: $0.y + o.y) } } }
+
+    /// How far the picture moves to sit in the middle of its frame.
+    private var centring: CGPoint {
+        let pts = drawing.flatMap { $0 }
+        guard let x0 = pts.map(\.x).min(), let x1 = pts.map(\.x).max(), let y0 = pts.map(\.y).min(), let y1 = pts.map(\.y).max() else { return .zero }
         let c = isBox ? 0.001 : Paper.cell, f = frame
-        let dx = ((f.mid.x - (x0 + x1) / 2) / c).rounded() * c, dy = ((f.mid.y - (y0 + y1) / 2) / c).rounded() * c
-        return lines.map { $0.map { CGPoint(x: $0.x + dx, y: $0.y + dy) } }
+        return CGPoint(x: ((f.mid.x - (x0 + x1) / 2) / c).rounded() * c, y: ((f.mid.y - (y0 + y1) / 2) / c).rounded() * c)
+    }
+
+    private var soft: [[CGPoint]] {
+        let c = Paper.cell
+        func box(_ x: Double, _ y: Double, _ w: Double, _ h: Double) -> [CGPoint] {
+            [CGPoint(x: at.x + x * c, y: at.y + y * c), CGPoint(x: at.x + (x + w) * c, y: at.y + y * c),
+             CGPoint(x: at.x + (x + w) * c, y: at.y + (y + h) * c), CGPoint(x: at.x + x * c, y: at.y + (y + h) * c)]
+        }
+        if isTest { return [box(0, 0, 1.5, 1.5)] }
+        switch id {
+        case "uc": return [Array(box3D(l: 1, h: 1, w: 1, u: 70)[0].dropLast())]
+        case "g5-volume": return [Array(box3D(l: 4, h: 2, w: 3, u: 32)[0].dropLast())]
+        case "ad": return [box(0, 0, 6, 2), box(10, 4, 1, 2)]                  // 3 fourths, and the eighth to add
+        case "add": return [box(0, 0, 3, 2), box(0, 4, 6, 2)]                   // a third and two thirds
+        case "sub": return [box(0, 0, 6, 2)]                                    // two thirds, to take from
+        case "mix": return [box(0, 0, 3, 2), box(0, 6, 6, 2)]
+        case "g5-improper": return [box(0, 0, 4, 2), box(5, 0, 4, 2), box(0, 4, 1, 2)]   // two wholes and a fourth
+        case "g5-fracof": return [box(0, 0, 6, 2)]                              // two of the thirds
+        case "g5-multfrac": return [box(0, 0, 6, 4)]                            // 2/3 of 2/3
+        case "g5-unitdiv": return [box(0, 0, 1, 2), box(4, 0, 1, 2), box(8, 0, 1, 2)]    // a third of each whole
+        case "g5-pow10", "g5-divdec": return [box(3, 2, 2, 2)]                  // the digit the point hops over
+        case "g5-round": return [box(7, 2, 3, 2)]                               // the stretch up to the whole
+        case "g5-adddec": return [box(6, 0, 2, 2), box(6, 3, 2, 2)]             // the decimal places, lined up
+        case "g5-multdec": return [box(0, 0, 6, 4)]
+        case "g5-mult2": return [box(0, 0, 6, 6)]                               // the tens part
+        case "g5-divide": return [box(3, 1, 4, 1)]
+        case "g5-order": return [box(2, 1, 2, 2)]                               // the part done first
+        case "g5-units": return [box(0, 0, 4, 2)]                               // a foot of it
+        default: return []
+        }
     }
 
     /// The lessons whose picture is a box of cubes, drawn as the 3D lesson shows it.
@@ -354,7 +390,18 @@ final class Rig {
             if state == .notYet { add("light-\(p.chapter.rawValue)", UIColor(hex: Ink.mix(paperHex, p.chapter.hex, 0.4)), 2.5, 0.0015, drawn(p.strokes, k)) }
             else { add("chapter-\(p.chapter.rawValue)", UIColor(hex: p.chapter.hex), 2.5, 0.0015, drawn(p.strokes, k)) }
         }
-        for (id, e) in pieceGroups where groups[id] == nil && tints[id] == nil { e.isEnabled = false }
+        // the soft fills inside the pictures, a little stronger than the frame's tint, coming in with the drawing
+        var softFills: [String: (colour: UIColor, polys: [[CGPoint]])] = [:]
+        for (p, k, _, state) in now where k > 0.3 {
+            let strength = state == .notYet ? 0.26 : 0.42, id = "soft-\(p.chapter.rawValue)-\(strength)"
+            softFills[id, default: (UIColor(hex: Ink.mix(paperHex, p.chapter.hex, strength)), [])].polys += p.softs
+        }
+        for (id, f) in softFills {
+            let e = pieceGroups[id] ?? { let e = ModelEntity(); pieces.addChild(e); pieceGroups[id] = e; return e }()
+            e.position.y = 0.0008
+            set(e, Self.polygons(f.polys), f.colour)
+        }
+        for (id, e) in pieceGroups where groups[id] == nil && tints[id] == nil && softFills[id] == nil { e.isEnabled = false }
         for (id, t) in tints {
             let e = pieceGroups[id] ?? { let e = ModelEntity(); pieces.addChild(e); pieceGroups[id] = e; return e }()
             e.position.y = 0.0003  // under the strong lines, like the floor squares
@@ -597,6 +644,25 @@ final class Rig {
                 return [CGPoint(x: a.x + (b.x - a.x) * f0, y: a.y + (b.y - a.y) * f0), CGPoint(x: a.x + (b.x - a.x) * f1, y: a.y + (b.y - a.y) * f1)]
             }
         } }
+    }
+
+    /// Filled shapes on the paper, each closed and convex (a fan from its first corner).
+    static func polygons(_ polys: [[CGPoint]]) -> MeshResource? {
+        var pos: [SIMD3<Float>] = [], idx: [UInt32] = []
+        let u = Paper.unit
+        for poly in polys where poly.count >= 3 {
+            let base = UInt32(pos.count)
+            pos += poly.map { SIMD3(Float($0.x / u), 0, Float($0.y / u)) }
+            for i in 1..<(poly.count - 1) {
+                let a = base, b = base + UInt32(i), c = base + UInt32(i + 1)
+                idx += [a, b, c, a, c, b]
+            }
+        }
+        guard !pos.isEmpty else { return nil }
+        var d = MeshDescriptor(name: "polygons")
+        d.positions = MeshBuffers.Positions(pos)
+        d.primitives = .triangles(idx)
+        return try? MeshResource.generate(from: [d])
     }
 
     static func fills(_ rects: [CGRect]) -> MeshResource? {
