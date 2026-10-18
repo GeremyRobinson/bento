@@ -159,7 +159,7 @@ extension Rig {
             let w = PaperText.width(g.chapter.title, title)
             words.addChild(PaperText.label("\(done) of \(g.lessons.count)", small, ink3, at: CGPoint(x: o.x + 32 + w, y: o.y + 37)))
         }
-        let name = PaperText.font(20, .medium), tagFont = PaperText.font(14, .semibold)
+        let name = PaperText.font(20, .medium), tagFont = PaperText.font(16, .semibold)
         for p in Map.pieces {
             let e = Entity(), r = CGRect(x: p.at.x, y: p.at.y, width: Piece.size.width, height: Piece.size.height)
             e.addChild(PaperText.label(p.name, name, ink, at: CGPoint(x: r.minX, y: r.maxY + 28)))
@@ -169,7 +169,7 @@ extension Rig {
                                            at: CGPoint(x: r.minX, y: r.maxY + 50)))
             }
             if p.state == .now, !(model.selected?.id == p.id && p.opens) {
-                let tag = CGRect(x: r.maxX - 80, y: r.minY - 20, width: 80, height: 20)
+                let tag = CGRect(x: r.maxX - 100, y: r.minY - 40, width: 100, height: 40)
                 if let m = Self.fills([tag]) { let f = ModelEntity(mesh: m, materials: [flat(UIColor(hex: p.chapter.hex))]); f.position.y = 0.002; e.addChild(f) }
                 e.addChild(PaperText.label("Up next", tagFont, .white, at: CGPoint(x: tag.midX, y: tag.midY), anchor: .center))
             }
@@ -186,8 +186,8 @@ extension Rig {
         guard let p else { return }
         let s = CGRect(x: p.start.x, y: p.start.y, width: p.start.width, height: p.start.height)
         if let m = Self.fills([s]) { let f = ModelEntity(mesh: m, materials: [flat(UIColor(hex: p.chapter.hex))]); f.position.y = 0.0021; start.addChild(f) }
-        start.addChild(PaperText.label(PageStore.load(p.id) == nil ? "Start" : "Keep going", PaperText.font(14, .semibold), .white,
-                                       at: CGPoint(x: s.minX + 12, y: s.midY), anchor: UnitPoint(x: 0, y: 0.5)))
-        if let a = PaperText.icon("arrow-right", .white, in: CGRect(x: s.maxX - 26, y: s.midY - 8, width: 16, height: 16)) { start.addChild(a) }
+        start.addChild(PaperText.label(PageStore.load(p.id) == nil ? "Start" : "Keep going", PaperText.font(16, .semibold), .white,
+                                       at: CGPoint(x: s.minX + 14, y: s.midY), anchor: UnitPoint(x: 0, y: 0.5)))
+        if let a = PaperText.icon("arrow-right", .white, in: CGRect(x: s.maxX - 32, y: s.midY - 10, width: 20, height: 20)) { start.addChild(a) }
     }
 }

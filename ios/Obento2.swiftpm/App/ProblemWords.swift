@@ -125,9 +125,9 @@ extension Rig {
         w.shown.addChild(PaperText.label(m.label, PaperText.font(17, .medium), ink3, at: P(0, BarsPage.box.dy + 40), anchor: .topLeading))
         // the map's tab on the box's top-right corner: Now on the problem being worked, Done once it's solved
         if let tag = m.solved && !m.auto ? "Done" : current ? "Now" : nil {
-            let r = CGRect(origin: P(BarsPage.box.dx + BarsPage.box.width - 80, BarsPage.box.dy - 20), size: CGSize(width: 80, height: 20))
+            let r = CGRect(origin: P(BarsPage.box.dx + BarsPage.box.width - 100, BarsPage.box.dy - 40), size: CGSize(width: 100, height: 40))
             if let mesh = Self.fills([r]) { let f = ModelEntity(mesh: mesh, materials: [flat(chapter)]); f.position.y = 0.002; w.shown.addChild(f) }
-            w.shown.addChild(PaperText.label(tag, PaperText.font(14, .semibold), .white, at: CGPoint(x: r.midX, y: r.midY), anchor: .center))
+            w.shown.addChild(PaperText.label(tag, PaperText.font(16, .semibold), .white, at: CGPoint(x: r.midX, y: r.midY), anchor: .center))
         }
 
         // the piece waiting to be added, and the match once the rows line up
