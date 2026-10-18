@@ -167,7 +167,7 @@ extension Rig {
             if p.isTest {
                 // its score once taken, else what it waits for
                 let line = Progress.shared.tests[p.id].map { "Score \($0) of 4 · \(Mastery.levels[$0])" }
-                    ?? (p.opens ? "\(p.id == "test-grade" ? 20 : 12) problems, no hints" : p.id == "test-grade" ? "Opens after the chapter tests" : Map.chapterHasLessons(p.chapter) ? "Opens when its lessons are learned" : "Coming soon")
+                    ?? (p.opens ? "\(p.id == "test-grade" ? 20 : 12) problems" : p.id == "test-grade" ? "Opens after the chapter tests" : Map.chapterHasLessons(p.chapter) ? "Opens when its lessons are learned" : "Coming soon")
                 e.addChild(PaperText.label(PageStore.load(p.id).map { "Not finished · \($0.solved) of \($0.problems.count)" } ?? line, PaperText.font(16, .medium),
                                            p.opens || Progress.shared.tests[p.id] != nil ? UIColor(hex: p.chapter.hex) : ink3, at: CGPoint(x: r.minX, y: r.maxY + 50)))
             } else if let s = PageStore.load(p.id) {
