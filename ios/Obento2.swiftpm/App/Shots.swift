@@ -134,6 +134,9 @@ enum Shots {
             case "tests-all":
                 Progress.shared.reset(to: ["ad", "uc"]); Progress.shared.tested("test-fractions", level: 3)
                 m.frameGroup(duration: 0)
+            case "grade-test":
+                Progress.shared.reset(to: ["ad"]); Progress.shared.tested("test-fractions", level: 4)
+                m.select(Map.tests.first { $0.id == "test-grade" }!)
             case "test-page":
                 Progress.shared.reset(to: ["ad"])
                 let t = Map.tests.first { $0.id == "test-fractions" }!

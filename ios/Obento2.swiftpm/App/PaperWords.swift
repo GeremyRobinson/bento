@@ -174,7 +174,22 @@ extension Rig {
                 e.addChild(PaperText.label("Not finished · \(s.solved) of \(s.problems.count)", PaperText.font(16, .medium), UIColor(hex: p.chapter.hex),
                                            at: CGPoint(x: r.minX, y: r.maxY + 50)))
             }
-            if p.state == .now, !(model.selected?.id == p.id && p.opens) {
+            if p.isTest {
+                // a test's badge (G 18 Oct): a round seal on the frame's top-left corner, how many problems it has, its
+                // score once taken; filled in the chapter's colour when it can be taken, an outline while it waits
+                let c = UIColor(hex: p.chapter.hex), corner = CGPoint(x: r.minX, y: r.minY), score = Progress.shared.tests[p.id]
+                if p.opens || score != nil {
+                    if let d = PaperText.dot(at: corner, radius: 22, c, y: 0.0021) { e.addChild(d) }
+                } else {
+                    if let d = PaperText.dot(at: corner, radius: 22, UIColor(hex: dark ? 0x121211 : 0xF3F2EF), y: 0.0021) { e.addChild(d) }
+                    let ring = (0...40).map { i -> CGPoint in let a = Double(i) / 40 * 2 * .pi; return CGPoint(x: corner.x + 21 * cos(a), y: corner.y + 21 * sin(a)) }
+                    let segs = zip(ring, ring.dropFirst()).map { (SIMD2(Float($0.x / Paper.unit), Float($0.y / Paper.unit)), SIMD2(Float($1.x / Paper.unit), Float($1.y / Paper.unit))) }
+                    if let m = Self.lines(segs, width: Float(1.5 / Paper.unit)) { let l = ModelEntity(mesh: m, materials: [flat(UIColor(hex: Ink.mix(dark ? 0x121211 : 0xF3F2EF, p.chapter.hex, 0.45)))]); l.position.y = 0.0022; e.addChild(l) }
+                }
+                let text = score.map { "\($0)/4" } ?? "\(p.id == "test-grade" ? 20 : 12)"
+                e.addChild(PaperText.label(text, PaperText.font(15, .bold, digits: true), p.opens || score != nil ? .white : UIColor(hex: Ink.mix(dark ? 0x121211 : 0xF3F2EF, p.chapter.hex, 0.7)),
+                                           at: corner, anchor: .center, y: 0.0023))
+            } else if p.state == .now, !(model.selected?.id == p.id && p.opens) {
                 let tag = CGRect(x: r.maxX - 80, y: r.minY - 20, width: 80, height: 20)
                 if let m = Self.fills([tag]) { let f = ModelEntity(mesh: m, materials: [flat(UIColor(hex: p.chapter.hex))]); f.position.y = 0.002; e.addChild(f) }
                 e.addChild(PaperText.label("Up next", tagFont, .white, at: CGPoint(x: tag.midX, y: tag.midY), anchor: .center))
