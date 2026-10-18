@@ -67,7 +67,7 @@ struct Dial: View {
             .opacity(open ? 1 : 0)
             ForEach(Array(modes.enumerated()), id: \.offset) { i, m in
                 let a = Double(i) * Self.modeStep + mTurn
-                Text(m.name.uppercased()).font(Typeface.font(14, .semibold)).tracking(0.6)
+                Text(m.name).font(Typeface.font(18, .semibold))
                     .foregroundStyle(i == modeIndex ? Ink.ink : Ink.ink3)
                     .rotationEffect(.degrees(a)).position(point(a, Self.modeLabels))
                     .opacity(open ? min(1, fade(a) * 1.4) : 0)
@@ -94,7 +94,7 @@ struct Dial: View {
             ForEach(mode.stops.indices.filter { $0 % mode.labelEvery == 0 }, id: \.self) { j in
                 let a = Double(j) * mode.step + vTurn
                 if abs(a) < 80 {
-                    Text(mode.short(j)).font(Typeface.font(13)).foregroundStyle(j == index ? Ink.ink : Ink.ink2)
+                    Text(mode.short(j)).font(Typeface.font(16, .semibold)).monospacedDigit().foregroundStyle(j == index ? Ink.ink : Ink.ink2)
                         .rotationEffect(.degrees(a)).position(point(a, Self.valueLabels)).opacity(open ? fade(a) : 0)
                 }
             }
@@ -105,7 +105,7 @@ struct Dial: View {
             // a pinch on the paper shows the zoom here for a moment
             let pinching = time - model.pinchedAt < 1.2
             VStack(spacing: 4) {
-                Text(pinching ? "ZOOM" : mode.name.uppercased()).font(Typeface.font(13, .semibold)).tracking(0.8).foregroundStyle(Ink.ink3)
+                Text(pinching ? "Zoom" : mode.name).font(Typeface.font(15, .semibold)).foregroundStyle(Ink.ink3)
                 Text(pinching ? "\(Int((zoomNow * 100).rounded()))%" : readout(mode, live: liveIndex(mode, vTurn))).font(Typeface.font(22, .semibold)).monospacedDigit()
                     .foregroundStyle(Ink.ink).lineLimit(1)
             }
