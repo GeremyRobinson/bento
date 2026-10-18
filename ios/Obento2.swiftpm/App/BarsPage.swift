@@ -19,7 +19,7 @@ final class BarsPage {
     // graph paper (G 17 Oct): every box starts and ends on the strong lines, 6 blocks wide and 9 tall, with one block
     // between boxes; inside, two cells of margin all round. Big enough for its largest content (a three-line story, the
     // widest bars and the piece waiting past them, the choices, the buttons and its name)
-    static let box = (dx: -2 * Paper.cell, dy: -10 * Paper.cell, width: 6 * Paper.unit, height: 9 * Paper.unit), gap = Paper.unit
+    static let box = (dx: -2 * Paper.cell, dy: -10 * Paper.cell, width: 6 * Paper.unit, height: 8 * Paper.unit), gap = Paper.unit
     static let pitch = Size(box.width + gap, box.height + gap)
     /// The problems take the How to's place once it has erased itself (G 17 Oct).
     static let problemsTop = 0.0

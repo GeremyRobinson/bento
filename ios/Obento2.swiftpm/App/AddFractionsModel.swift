@@ -35,8 +35,11 @@ final class AddFractionsModel: Identifiable {
     static let seeBeat = 0.75
 
     // where things sit, in paper points from `origin`
-    // spaced out (G 18 Oct): the question, a gap, the sum, a gap, the whole's length, then the two rows
-    static let sumBaseline: Double = 80, wholeY: Double = 150, row1: Double = 220, row2: Double = 340, barHeight: Double = 60
+    // top to bottom (G 18 Oct): the problem (its story, then the sum) above the origin, then the picture (the whole's
+    // length and the two rows), then the step: what to do now, its count or message, and the choices
+    static let wholeY: Double = 40, row1: Double = 90, row2: Double = 190, barHeight: Double = 60, stepY: Double = 336
+    /// Where the step's count, message or choices go, under its words.
+    static let underStep: Double = stepY + 72
 
     init(origin: Point, chapter: Chapter, instant: Bool, run: LessonRun, label: String, auto: Bool = false) {
         self.origin = origin; self.chapter = chapter; self.instant = instant; self.label = label; self.auto = auto

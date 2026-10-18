@@ -21,7 +21,7 @@ enum ProblemLayout {
         var out: [Block] = []
         if let choices = l.step.answer?.choices {
             let n = Double(choices.count), w = (column + 1.5 * (n - 1)) / n
-            let y = AddFractionsModel.row2 + AddFractionsModel.barHeight + 20
+            let y = AddFractionsModel.underStep
             for i in choices.indices { out.append(Block(kind: .choice(i), rect: R(Double(i) * (w - 1.5), y, w))) }
         }
         if !m.auto && !m.solved { out.append(Block(kind: .main, rect: R(0, actions, 180))) }
@@ -120,13 +120,26 @@ extension Rig {
         func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x, y: o.y + y) }
         let col = ProblemLayout.column
 
-        // the question, a story running onto more lines upward, and its hint under it
-        let q = PaperText.font(28, .medium), hint = PaperText.font(18)
-        PaperText.block(m.intro ?? words.say, q, ink, width: col, bottomLeft: P(0, -23), maxLines: 4).forEach { w.question.addChild($0) }
-        w.question.addChild(PaperText.label(m.intro != nil ? "Why it works" : words.hint, hint, ink2, at: P(0, -10), anchor: UnitPoint(x: 0, y: 0.5)))
+        // the step, under the picture: what to do now, and its hint. A story's step is the question about it ("Which
+        // operation solves it?"), since the story itself is the problem, at the top
+        let storyStep = l.story && l.step.answer?.choices != nil
+        let q = PaperText.font(24, .medium), hint = PaperText.font(18), sy = AddFractionsModel.stepY
+        let say = m.intro ?? (storyStep ? words.hint : words.say)
+        let sayLines = PaperText.block(say, q, ink, width: col, topLeft: P(0, sy), maxLines: 3)
+        sayLines.forEach { w.question.addChild($0) }
+        let hintText = m.intro != nil ? "Why it works" : storyStep ? "" : words.hint
+        w.question.addChild(PaperText.label(hintText, hint, ink2, at: P(0, sy + Double(sayLines.count) * Double(q.lineHeight) + 4), anchor: .topLeading))
 
-        // what comes in with the picture: the sum, the whole's length, the rows' names; the box's name and its tab
-        w.shown.addChild(PaperText.label(s.sum, PaperText.font(40, .medium, digits: true), ink, at: P(0, AddFractionsModel.sumBaseline)))
+        // the problem, at the top: the story when it's told as one, then the sum
+        let storyText = l.story ? l.spec.story?(l.numbers) : nil
+        var sumBottom = -40.0
+        if let storyText {
+            let sf = PaperText.font(20), lines = PaperText.wrap(storyText, sf, width: col).prefix(4)
+            let top = -124.0
+            for (i, line) in lines.enumerated() { w.shown.addChild(PaperText.label(line, sf, ink, at: P(0, top + Double(i) * Double(sf.lineHeight)), anchor: .topLeading)) }
+            sumBottom = max(-40, top + Double(lines.count) * Double(sf.lineHeight) + 50)
+        }
+        w.shown.addChild(PaperText.label(s.sum, PaperText.font(40, .medium, digits: true), ink, at: P(0, storyText == nil ? -60 : sumBottom)))
         w.shown.addChild(PaperText.label("1 whole · \(s.wholeCells) cells", PaperText.font(16), ink2, at: P(W / 2, AddFractionsModel.wholeY - 12), anchor: .bottom))
         w.shown.addChild(PaperText.label(AddFractions.plural(s.a), PaperText.font(17, .medium), ink2, at: P(0, r1 - 8)))
         w.shown.addChild(PaperText.label(AddFractions.plural(s.b), PaperText.font(17, .medium), ink2, at: P(0, r2 - 8)))
@@ -146,12 +159,12 @@ extension Rig {
 
         // under the bars: the count as the child taps, or what a miss says; for a pick-one step the message goes under the choices
         if l.step.answer?.choices != nil {
-            if let msg = m.message { PaperText.block(msg.text, mid, chapter, width: col, topLeft: P(0, r2 + h + 80)).forEach { w.still.addChild($0) } }
+            if let msg = m.message { PaperText.block(msg.text, mid, chapter, width: col, topLeft: P(0, AddFractionsModel.underStep + 52)).forEach { w.still.addChild($0) } }
         } else if let count = l.countLine {
             let (text, c) = m.message.map { ($0.text, $0.ok ? right : chapter) } ?? (count, ink2)
-            PaperText.block(text, mid, c, width: col, topLeft: P(0, r2 + h + 20)).forEach { w.still.addChild($0) }
+            PaperText.block(text, mid, c, width: col, topLeft: P(0, AddFractionsModel.underStep)).forEach { w.still.addChild($0) }
         }
-        if l.picture["total"] == 1 { w.total.addChild(PaperText.label("\(s.sum) = \(s.total)/\(s.b)", big, chapter, at: P(0, r2 + h + 40), anchor: .topLeading)) }
+        if l.picture["total"] == 1 { w.total.addChild(PaperText.label("\(s.sum) = \(s.total)/\(s.b)", big, chapter, at: P(0, r2 + h + 32), anchor: .topLeading)) }
 
         // the blocks: cell blocks on the paper, the main one outlined in ink, a picked choice in the chapter's colour
         let surface = dark ? 0x1B1B1A as UInt32 : 0xFBFBFA, line = UIColor(hex: dark ? 0x3A3A37 : 0xCFCCC5), button = PaperText.font(17, .medium)
