@@ -57,9 +57,9 @@ struct Toolbar: View {
             BarButton(icon: .more, label: nil, lit: open == .more) { toggle(.more) }
         }
         .padding(8).padding(.horizontal, 4)
-        .background(Ink.surface, in: Capsule())
+        // the shadow belongs to the bar's shape only: on the whole bar, SwiftUI shadowed every button and word in it
+        .background(Capsule().fill(Ink.surface).shadow(color: .black.opacity(0.10), radius: 15, y: 8))
         .overlay(Capsule().strokeBorder(Ink.line, lineWidth: 1))
-        .shadow(color: .black.opacity(0.10), radius: 15, y: 8)
     }
 
     private var divider: some View { Rectangle().fill(Ink.line).frame(width: 1, height: 36).padding(.horizontal, 4) }
@@ -283,9 +283,8 @@ struct Card<Content: View>: View {
         content()
             .padding(8)
             .frame(width: width)
-            .background(Ink.surface, in: RoundedRectangle(cornerRadius: 24))
+            .background(RoundedRectangle(cornerRadius: 24).fill(Ink.surface).shadow(color: .black.opacity(0.12), radius: 18, y: 10))
             .overlay(RoundedRectangle(cornerRadius: 24).strokeBorder(Ink.line, lineWidth: 1))
-            .shadow(color: .black.opacity(0.12), radius: 18, y: 10)
             .transition(.opacity.combined(with: .offset(y: 8)))
     }
 }
