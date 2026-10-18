@@ -55,7 +55,8 @@ struct Toolbar: View {
             divider
             BarButton(icon: .more, label: nil, lit: open == .more) { toggle(.more) }
         }
-        .padding(8).padding(.horizontal, 4)
+        // the same gap all round, so a lit button sits evenly inside the bar's curve
+        .padding(6)
         // the shadow belongs to the bar's shape only: on the whole bar, SwiftUI shadowed every button and word in it
         .background(Capsule().fill(Ink.surface).shadow(color: .black.opacity(0.10), radius: 15, y: 8))
         .overlay(Capsule().strokeBorder(Ink.line, lineWidth: 1))
