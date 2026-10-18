@@ -56,7 +56,7 @@ extension Piece {
         }
         if id == "test-grade" {
             let p = { (x: Double, y: Double) in CGPoint(x: at.x + x * c, y: at.y + y * c) }
-            return Self.starFan(p, cx: 4.5, cy: 2.4, r: 1.4)
+            return Self.starFan(p, cx: 5, cy: 4.6, r: 1.1)
         }
         if isTest { return [[CGPoint(x: at.x + 3.5 * c, y: at.y), CGPoint(x: at.x + 3.5 * c, y: at.y + 1.5 * c), CGPoint(x: at.x + 5 * c, y: at.y + 1.5 * c)]] }
         switch id {
@@ -129,9 +129,10 @@ extension Piece {
         func arc(_ x0: Double, _ x1: Double, _ y: Double, _ h: Double) -> [CGPoint] {
             (0...12).map { s in let f = Double(s) / 12; return P(x0 + (x1 - x0) * f, y - sin(.pi * f) * h) }
         }
-        if id == "test-grade" { // the grade's test: a medal, a star in its middle and two ribbon tails: 9 by 6... 5 wide
-            let ring = (0...32).map { s -> CGPoint in let a = Double(s) / 32 * 2 * .pi; return P(4.5 + 2.4 * cos(a), 2.4 + 2.4 * sin(a)) }
-            return [ring, Self.star(P, cx: 4.5, cy: 2.4, r: 1.4), line((3.2, 4.3), (2.6, 6), (3.6, 5.5), (4.1, 6), (4.3, 4.8)), line((5.8, 4.3), (6.4, 6), (5.4, 5.5), (4.9, 6), (4.7, 4.8))]
+        if id == "test-grade" { // the grade's test: the test paper with a star seal on its corner, the grade's mark
+            let ring = (0...32).map { s -> CGPoint in let a = Double(s) / 32 * 2 * .pi; return P(5 + 1.9 * cos(a), 4.6 + 1.9 * sin(a)) }
+            return [line((0, 0), (3.5, 0), (5, 1.5), (5, 2.7)), line((3.1, 6), (0, 6), (0, 0)), line((3.5, 0), (3.5, 1.5), (5, 1.5)),
+                    line((1, 2.5), (3.5, 2.5)), line((1, 3.5), (2.6, 3.5)), ring, Self.star(P, cx: 5, cy: 4.6, r: 1.1)]
         }
         if isTest { // a chapter's test: a sheet with its corner folded and answers written on it: 5 by 6
             return [line((0, 0), (3.5, 0), (5, 1.5), (5, 6), (0, 6), (0, 0)), line((3.5, 0), (3.5, 1.5), (5, 1.5)),
