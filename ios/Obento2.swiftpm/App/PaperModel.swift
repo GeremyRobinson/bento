@@ -196,6 +196,20 @@ final class PaperModel {
     /// The crosshair: glide to the lesson that's up next.
     func findNext() { if let p = Map.today { select(p) } }
 
+    /// The dial's zoom: straight to `z`, about the middle of the screen.
+    func zoomTo(_ z: Double) {
+        let now = camera(at: PaperClock.now)
+        stop(); resting = now.zoomed(by: z / now.zoom, at: .init(screen.width / 2, screen.height / 2))
+    }
+
+    /// The dial's Lessons: a glide to chapter `i`, its title and every lesson in it.
+    func frameChapter(_ i: Int) {
+        guard Map.groups.indices.contains(i) else { return }
+        let g = Map.groups[i], frames = g.pieces.map { Rect(x: $0.at.x, y: $0.at.y, width: Piece.size.width, height: Piece.size.height + Paper.unit) }
+        let r = frames.reduce(Rect(x: g.origin.x, y: g.origin.y, width: 1, height: 1)) { $0.union($1) }
+        fly(to: framingBelowBar(r, maxZoom: CameraTiming.selectMax), duration: CameraTiming.glide)
+    }
+
     /// A tap on a lesson: a slow, gentle glide that brings it closer, not too close.
     func select(_ p: Piece?) {
         selected = p

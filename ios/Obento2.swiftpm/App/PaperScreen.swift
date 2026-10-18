@@ -27,7 +27,7 @@ struct PaperScreen: View {
                     if let steps = model.steps {
                         StepsLessonView(model: steps, camera: cam, time: t)
                     }
-                    Toolbar(model: model, time: t, bottom: max(16, safe.safeAreaInsets.bottom + 8))
+                    Dial(model: model, time: t)
                 }
                 .onChange(of: t) { _, now in Perf.frame(now); model.settle(at: now); model.lesson?.settle(at: now) }
             }
