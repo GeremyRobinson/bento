@@ -164,11 +164,11 @@ extension Rig {
             let e = Entity(), r = CGRect(x: p.at.x, y: p.at.y, width: Piece.size.width, height: Piece.size.height)
             e.addChild(PaperText.label(p.name, name, ink, at: CGPoint(x: r.minX, y: r.maxY + 28)))
             // stopped partway: how far they got, after the name
-            if let s = PageStore.load(p.id), model.selected?.id != p.id {
+            if let s = PageStore.load(p.id) {
                 e.addChild(PaperText.label("Not finished · \(s.solved) of \(s.problems.count)", PaperText.font(16, .medium), UIColor(hex: p.chapter.hex),
                                            at: CGPoint(x: r.minX, y: r.maxY + 50)))
             }
-            if p.state == .now {
+            if p.state == .now, !(model.selected?.id == p.id && p.opens) {
                 let tag = CGRect(x: r.maxX - 80, y: r.minY - 20, width: 80, height: 20)
                 if let m = Self.fills([tag]) { let f = ModelEntity(mesh: m, materials: [flat(UIColor(hex: p.chapter.hex))]); f.position.y = 0.002; e.addChild(f) }
                 e.addChild(PaperText.label("Up next", tagFont, .white, at: CGPoint(x: tag.midX, y: tag.midY), anchor: .center))
@@ -179,18 +179,15 @@ extension Rig {
         words.addChild(start)
     }
 
-    /// The chosen lesson's Start block: a cell block with its word and arrow, under its name.
+    /// The chosen lesson's tag (G 18 Oct): the frame's top-right tab, in its chapter's colour, saying Start (or Keep
+    /// going) with an arrow, where Up next sits on the others. No block under the name, so the rows stay a block apart.
     private func rebuildStart(_ p: Piece?, dark: Bool) {
         for c in Array(start.children) { c.removeFromParent() }
         guard let p else { return }
-        let ink = colours.ink, surface = UIColor(hex: dark ? 0x1B1B1A : 0xFBFBFA), u = Paper.unit
         let s = CGRect(x: p.start.x, y: p.start.y, width: p.start.width, height: p.start.height)
-        if let m = Self.fills([s]) { let f = ModelEntity(mesh: m, materials: [flat(surface)]); f.position.y = 0.002; start.addChild(f) }
-        let i = s.insetBy(dx: 0.75, dy: 0.75)
-        let corners = [CGPoint(x: i.minX, y: i.minY), CGPoint(x: i.maxX, y: i.minY), CGPoint(x: i.maxX, y: i.maxY), CGPoint(x: i.minX, y: i.maxY), CGPoint(x: i.minX, y: i.minY)]
-        let segs = zip(corners, corners.dropFirst()).map { (SIMD2(Float($0.x / u), Float($0.y / u)), SIMD2(Float($1.x / u), Float($1.y / u))) }
-        if let m = Self.lines(segs, width: Float(1.5 / u)) { let l = ModelEntity(mesh: m, materials: [flat(ink)]); l.position.y = 0.0022; start.addChild(l) }
-        start.addChild(PaperText.label(PageStore.load(p.id) == nil ? "Start" : "Keep going", PaperText.font(17, .medium), ink, at: CGPoint(x: s.minX + 16, y: s.midY), anchor: UnitPoint(x: 0, y: 0.5)))
-        if let a = PaperText.icon("arrow-right", ink, in: CGRect(x: s.maxX - 30, y: s.midY - 10, width: 20, height: 20)) { start.addChild(a) }
+        if let m = Self.fills([s]) { let f = ModelEntity(mesh: m, materials: [flat(UIColor(hex: p.chapter.hex))]); f.position.y = 0.0021; start.addChild(f) }
+        start.addChild(PaperText.label(PageStore.load(p.id) == nil ? "Start" : "Keep going", PaperText.font(14, .semibold), .white,
+                                       at: CGPoint(x: s.minX + 12, y: s.midY), anchor: UnitPoint(x: 0, y: 0.5)))
+        if let a = PaperText.icon("arrow-right", .white, in: CGRect(x: s.maxX - 26, y: s.midY - 8, width: 16, height: 16)) { start.addChild(a) }
     }
 }

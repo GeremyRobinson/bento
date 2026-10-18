@@ -25,8 +25,9 @@ struct Piece: Identifiable, Equatable {
     static let size = Size(3 * Paper.unit, 2 * Paper.unit)
     var frame: Rect { Rect(x: at.x, y: at.y, width: Piece.size.width, height: Piece.size.height) }
     /// The frame, its name and its Start block: what a tap glides to.
-    var focus: Rect { Rect(x: at.x - 20, y: at.y - 20, width: Piece.size.width + 40, height: Piece.size.height + 140) }
-    var start: Rect { Rect(x: at.x, y: at.y + Piece.size.height + 40, width: 160, height: 40) }
+    var focus: Rect { Rect(x: at.x - 20, y: at.y - 40, width: Piece.size.width + 40, height: Piece.size.height + 120) }
+    /// The chosen lesson's tag on its frame's top-right corner, which says Start (or Keep going): the Up next tab's place.
+    var start: Rect { Rect(x: at.x + Piece.size.width - 140, y: at.y - 20, width: 140, height: 20) }
 
     /// How far a piece has drawn itself in (0...1). They draw outward from `from` (the lesson just left), else from
     /// today's lesson.
@@ -44,10 +45,9 @@ struct ChapterGroup {
     let origin: Point
     let columns: Int
     let lessons: [(id: String, name: String)]
-    /// Inside a group, one block between lessons (G 17 Oct): a frame and one block across; down, a frame, the block with
-    /// its name and Start, and one more block so the next row's frame isn't crowding them (G 18 Oct). Groups are two
-    /// blocks apart.
-    static let pitch = Size(4 * Paper.unit, 4 * Paper.unit)
+    /// Inside a group, one block between lessons (G 17 Oct): a frame and one block across; a frame and the block with
+    /// its name down. Groups are two blocks apart. Start is the frame's tag, not a block under it (G 18 Oct).
+    static let pitch = Size(4 * Paper.unit, 3 * Paper.unit)
 
     var pieces: [Piece] {
         lessons.enumerated().map { i, l in
@@ -71,7 +71,7 @@ enum Map {
             ("ad", "Add with different bottoms"), ("add", "Adding fractions"), ("sub", "Subtracting fractions"),
             ("mix", "Adding and subtracting"), ("g5-multfrac", "Multiplying fractions"), ("g5-improper", "Mixed numbers to fractions"),
             ("g5-fracof", "Fraction of a number"), ("g5-unitdiv", "Dividing by a unit fraction")]),
-        ChapterGroup(chapter: .measurement, origin: Point(1300, 1000), columns: 3, lessons: [
+        ChapterGroup(chapter: .measurement, origin: Point(1300, 900), columns: 3, lessons: [
             ("uc", "Unit cubes"), ("g5-volume", "Volume of a box"), ("g5-units", "Converting units")]),
     ]
     static let pieces = groups.flatMap(\.pieces)
@@ -240,7 +240,10 @@ final class PaperModel {
             b.tap(p); return
         }
         if steps != nil { return }
-        if let sel = selected, sel.opens, contains(sel.start, p) { open(sel); return }
+        // the chosen lesson opens from its tag (a little extra all round, for a finger) or a second tap on its frame
+        if let sel = selected, sel.opens, contains(Rect(x: sel.start.x - 20, y: sel.start.y - 20, width: sel.start.width + 40, height: sel.start.height + 40), p) || contains(sel.frame, p) {
+            open(sel); return
+        }
         select(Map.pieces.first(where: { contains($0.frame, p) || contains($0.start, p) }))
     }
 
