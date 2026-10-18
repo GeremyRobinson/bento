@@ -25,9 +25,9 @@ struct Piece: Identifiable, Equatable {
     static let size = Size(3 * Paper.unit, 2 * Paper.unit)
     var frame: Rect { Rect(x: at.x, y: at.y, width: Piece.size.width, height: Piece.size.height) }
     /// The frame, its name and its Start block: what a tap glides to.
-    var focus: Rect { Rect(x: at.x - 20, y: at.y - 60, width: Piece.size.width + 40, height: Piece.size.height + 140) }
+    var focus: Rect { Rect(x: at.x - 20, y: at.y - 40, width: Piece.size.width + 40, height: Piece.size.height + 120) }
     /// The chosen lesson's tag on its frame's top-right corner, which says Start (or Keep going): the Up next tab's place.
-    var start: Rect { Rect(x: at.x + Piece.size.width - 160, y: at.y - 40, width: 160, height: 40) }
+    var start: Rect { Rect(x: at.x + Piece.size.width - 140, y: at.y - 20, width: 140, height: 20) }
 
     /// How far a piece has drawn itself in (0...1). They draw outward from `from` (the lesson just left), else from
     /// today's lesson.
