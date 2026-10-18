@@ -34,9 +34,19 @@ public enum AddFractions {
     public static let spec = LessonSpec(id: "ad", title: "Add with different bottoms", master: "bars",
                                         generate: { rng, _ in problems.randomElement(using: &rng)!.numbers },
                                         display: { n in let s = Problem(n); return [.frac(.num(Double(s.p)), .num(Double(s.a))), .op("+"), .frac(.num(Double(s.q)), .num(Double(s.b)))] },
+                                        idea: { n in let s = Problem(n); return "\(capital(plural(s.a))) and \(plural(s.b)) can be the same amount. Cut them the same size, then count them all." },
                                         // the web's story for adding fractions
                                         story: { n in let s = Problem(n); return "You walked \(s.p)/\(s.a) of a mile to the park and then \(s.q)/\(s.b) of a mile to the store. How far did you walk in all?" },
-                                        storyOp: { _ in "+" }) { n in
+                                        storyOp: { _ in "+" },
+                                        finalStep: { n in
+        let s = Problem(n), names = plural(s.b), shaded: @Sendable (Int) -> String = { "\($0) of \(s.b) shaded" }
+        return LessonStep(StepWords(say: "\(s.sum) is how many \(names)?", hint: "Shade the \(names) for both parts.", action: "Check"),
+            task: MarkTask(cells: Set(0..<s.b), want: s.total, showMe: Array(0..<s.total),
+                           mistakes: [Mistake(.tooFew) { _, _ in "Not yet. Let's do it step by step." },
+                                      Mistake(.tooMany) { _, _ in "Too many. Let's do it step by step." }],
+                           count: shaded),
+            picture: ["waiting": 1])
+    }) { n in
         let s = Problem(n), A = amount(s.p, s.a), B = amount(s.q, s.b), names = plural(s.b)
         // "the fourth", "the 3 fourths": the part of the top row the child covers
         let the = s.p == 1 ? "the \(name(s.a))" : "the \(s.p) \(plural(s.a))"

@@ -96,6 +96,8 @@ public struct LessonSpec: Sendable {
     public let depends: [String]
     /// The lesson's own skill check: four problems, no hints, one try per step.
     public let check: [CheckItem]
+    /// The whole problem as one step, for "final answer only" (help faded, G 18 Oct); nil keeps every step.
+    public let finalStep: (@Sendable (Numbers) -> LessonStep)?
 
     public init(id: String, title: String, master: String,
                 generate: @escaping @Sendable (inout SeededRandom, Int) -> Numbers,
@@ -104,9 +106,11 @@ public struct LessonSpec: Sendable {
                 story: (@Sendable (Numbers) -> String)? = nil,
                 storyOp: (@Sendable (Numbers) -> String)? = nil,
                 depends: [String] = [], check: [CheckItem] = [],
+                finalStep: (@Sendable (Numbers) -> LessonStep)? = nil,
                 steps: @escaping @Sendable (Numbers) -> [LessonStep]) {
         self.id = id; self.title = title; self.master = master; self.generate = generate; self.display = display
         self.idea = idea; self.story = story; self.storyOp = storyOp; self.depends = depends; self.check = check; self.steps = steps
+        self.finalStep = finalStep
     }
 }
 
@@ -208,6 +212,8 @@ public struct LessonRun: Sendable {
     public let numbers: Numbers
     /// Told as the lesson's word problem.
     public let story: Bool
+    /// The whole problem asked as one step (help faded); a miss brings the steps back.
+    public let finalOnly: Bool
     public let steps: [LessonStep]
     public private(set) var index = 0
     /// Each marked cell, and the step that marked it.
@@ -222,9 +228,13 @@ public struct LessonRun: Sendable {
     public var active: String?
 
     /// `story`: tell it as the lesson's word problem, with "Which operation solves it?" first (as the web's practice does).
-    public init(_ spec: LessonSpec, numbers: Numbers, story: Bool = false) {
+    public init(_ spec: LessonSpec, numbers: Numbers, story: Bool = false, finalOnly: Bool = false) {
         self.spec = spec; self.numbers = numbers; self.story = story
         var s = spec.steps(numbers)
+        // final answer only: the whole problem in one step, then its answer; lessons without one keep every step
+        let final = finalOnly ? spec.finalStep?(numbers) : nil
+        if let final, let last = s.last { s = [s[0], final, last] }
+        self.finalOnly = final != nil
         if story, let first = Self.operationStep(spec, numbers, picture: s.first?.picture ?? [:]) { s.insert(first, at: 0) }
         steps = s
         let ask = story && s.count > 1 && s[0].answer?.choices != nil ? 1 : 0
@@ -252,6 +262,9 @@ public struct LessonRun: Sendable {
             picture: picture)
     }
 
+    /// What earlier steps' boxes held: a wrong answer equal to one of them reused it.
+    var earlierAnswers: [Double] { steps[..<index].compactMap { $0.answer }.flatMap { $0.expected.values } }
+
     /// A fresh problem at this place in a run.
     public static func fresh(_ spec: LessonSpec, using rng: inout SeededRandom, index: Int = 3) -> LessonRun { LessonRun(spec, numbers: spec.generate(&rng, index)) }
 
@@ -271,6 +284,29 @@ public struct LessonRun: Sendable {
         if index == askIndex { index += 1; active = step.answer?.boxes.first }
     }
 
+    /// Done together (G 18 Oct): the paper points to every move from the start (the right pieces outlined).
+    public var guided = false
+    /// The strongest hint a miss can bring (3: up to Show me; 1: the first hint only, for less help).
+    public var hintCap = 3
+    /// Each work step's misses, and the steps where a hint was opened or Show me was used: what the points count.
+    public private(set) var stepMisses: [Int: Int] = [:]
+    public private(set) var hinted: Set<Int> = []
+    public private(set) var shown: Set<Int> = []
+    /// The kind of each unknown slip, for the grown-up's report.
+    public private(set) var mistakeKinds: [Diagnose.Kind] = []
+    /// A hint was opened on this step.
+    public mutating func usedHint() { hinted.insert(index) }
+
+    /// Points for the work, the web's rule: each step 1 on the first try (½ after a hint), ½ after one miss,
+    /// ¼ after more, 0 if shown. Out of `workSteps`.
+    public var points: Double {
+        steps.indices.filter { steps[$0].task != nil || steps[$0].answer != nil }.reduce(0) { sum, i in
+            if shown.contains(i) { return sum }
+            let m = stepMisses[i] ?? 0
+            return sum + (m == 0 ? (hinted.contains(i) ? 0.5 : 1) : m == 1 ? 0.5 : 0.25)
+        }
+    }
+
     /// Hints and Show me are off in the skill check (LESSONS.md §7).
     public var helps = true
     /// One try per step, as in the skill check: a wrong check shows the answer and the problem counts as missed.
@@ -282,7 +318,7 @@ public struct LessonRun: Sendable {
     /// The steps with something to do: what a skill check scores.
     public var workSteps: Int { steps.filter { $0.task != nil || $0.answer != nil }.count }
     /// How many hints the picture shows: one per miss, at most three; none when helps are off.
-    public var hintLevel: Int { helps ? min(misses, 3) : 0 }
+    public var hintLevel: Int { helps ? min(misses, hintCap) : 0 }
     public var display: MathLine { spec.display(numbers) }
     public var words: StepWords { step.words }
     public var isLast: Bool { index == steps.count - 1 }
@@ -291,7 +327,7 @@ public struct LessonRun: Sendable {
     public var picture: Numbers {
         var p = step.picture
         if hintLevel >= 1 { p.merge(step.onMiss) { $1 } }
-        if hintLevel >= 2 { p.merge(step.hint2) { $1 } }
+        if hintLevel >= 2 || (guided && step.task != nil) { p.merge(step.hint2) { $1 } }
         if hintLevel >= 3 { p["showMe"] = 1 }
         return p
     }
@@ -317,6 +353,7 @@ public struct LessonRun: Sendable {
     /// Marks what "Show me" marks; returns the cells that weren't marked before, in order.
     public mutating func showMe() -> [Int] {
         guard let t = step.task else { return [] }
+        if helps { shown.insert(index) }
         let had = marked
         for c in had where !t.showMe.contains(c) { marks[c] = nil }
         var fresh: [Int] = []
@@ -366,14 +403,18 @@ public struct LessonRun: Sendable {
                 case .right: break
                 case .soft(let line): return .notYet(line)
                 case .wrong(let line):
-                    missed = true; misses += 1; missedSteps.insert(index)
+                    missed = true; misses += 1; missedSteps.insert(index); stepMisses[index, default: 0] += 1
                     let said = a.known.first { same($0.values) }?.message ?? line
                     if oneTry { _ = showAnswer() }
                     return .notYet(said)
                 }
             } else if !same(a.expected) {
-                missed = true; misses += 1; missedSteps.insert(index)
-                let said = a.known.first { same($0.values) }?.message ?? "Not quite. \(a.hint)"
+                missed = true; misses += 1; missedSteps.insert(index); stepMisses[index, default: 0] += 1
+                let kind = Diagnose.kind(values, a.expected, earlier: earlierAnswers)
+                if let kind { mistakeKinds.append(kind) }
+                // the lesson's own words teach best (the web's order); the kind of slip speaks when it has none
+                let said = a.known.first { same($0.values) }?.message
+                    ?? (a.hint.isEmpty ? kind.flatMap { Diagnose.say[$0] }.map { "Not quite. \($0)" } : nil) ?? "Not quite. \(a.hint)"
                 if oneTry { _ = showAnswer() }
                 return .notYet(said)
             }
@@ -382,7 +423,7 @@ public struct LessonRun: Sendable {
             let n = marked.count
             let wrong: Mistake.When? = n == 0 && t.want > 0 ? .noneMarked : n < t.want ? .tooFew : n > t.want ? .tooMany : nil
             if let wrong {
-                missed = true; misses += 1; missedSteps.insert(index)
+                missed = true; misses += 1; missedSteps.insert(index); stepMisses[index, default: 0] += 1
                 let m = t.mistakes.first { $0.when == wrong } ?? t.mistakes.first { $0.when == .tooFew && wrong == .noneMarked }
                 if oneTry { _ = showMe() }
                 return .notYet(m?.message(n, t.want) ?? "Not yet.")
@@ -512,18 +553,26 @@ public struct RunSnapshot: Codable, Equatable, Sendable {
     public var helps: Bool
     public var oneTry: Bool
     public var skipsAsk: Bool
+    public var guided = false
+    public var hintCap = 3
+    public var finalOnly = false
+    public var stepMisses: [Int: Int] = [:]
+    public var hinted: [Int] = []
+    public var shown: [Int] = []
 }
 
 extension LessonRun {
     public var snapshot: RunSnapshot {
         RunSnapshot(numbers: numbers, story: story, index: index, marks: marks, typed: typed, misses: misses, missed: missed,
-                    missedSteps: missedSteps.sorted(), helps: helps, oneTry: oneTry, skipsAsk: skipsAsk)
+                    missedSteps: missedSteps.sorted(), helps: helps, oneTry: oneTry, skipsAsk: skipsAsk,
+                    guided: guided, hintCap: hintCap, finalOnly: finalOnly, stepMisses: stepMisses, hinted: hinted.sorted(), shown: shown.sorted())
     }
 
     /// The run as it was saved: the same numbers make the same steps, and the child's work goes back on them.
     public init(_ spec: LessonSpec, restoring s: RunSnapshot) {
-        self.init(spec, numbers: s.numbers, story: s.story)
-        helps = s.helps; oneTry = s.oneTry
+        self.init(spec, numbers: s.numbers, story: s.story, finalOnly: s.finalOnly)
+        helps = s.helps; oneTry = s.oneTry; guided = s.guided; hintCap = s.hintCap
+        stepMisses = s.stepMisses; hinted = Set(s.hinted); shown = Set(s.shown)
         if s.skipsAsk { skipAsk() }
         index = min(max(0, s.index), steps.count - 1)
         marks = s.marks; typed = s.typed; misses = s.misses; missed = s.missed; missedSteps = Set(s.missedSteps)
@@ -568,5 +617,44 @@ public enum LessonPage {
         guard runs.count == checks, runs.allSatisfy(\.isLast) else { return nil }
         let steps = runs.reduce(0) { $0 + $1.workSteps }, right = runs.reduce(0) { $0 + $1.workSteps - $1.missedSteps.count }
         return Mastery.level(steps == 0 ? 0 : Double(right) / Double(steps))
+    }
+}
+
+/// Wrong typed answers sorted into what probably went wrong, with the web's words for each (engine/diagnosis).
+/// Tried only when the step's own known slips don't match.
+public enum Diagnose {
+    public enum Kind: String, Sendable { case sign, swap, reuse, place, off1, digits, close }
+
+    public static let say: [Kind: String] = [
+        .sign: "The size is right. Check the sign.",
+        .swap: "The right numbers, in the wrong boxes.",
+        .reuse: "That's the answer to an earlier step. What does this step ask?",
+        .place: "The digits are right. Check where the point goes.",
+        .off1: "You're 1 away. Count again.",
+        .digits: "The right digits in the wrong order.",
+        .close: "Close. Do the math again.",
+    ]
+
+    public static func kind(_ typed: [String: Double], _ want: [String: Double], earlier: [Double] = []) -> Kind? {
+        guard !want.isEmpty, want.keys.allSatisfy({ typed[$0] != nil }) else { return nil }
+        if want.count > 1 {
+            let t = want.keys.sorted().map { typed[$0]! }, w = want.keys.sorted().map { want[$0]! }
+            if t.sorted() == w.sorted() { return .swap }
+            if zip(t, w).allSatisfy({ abs($0 + $1) < 1e-9 }) { return .sign }
+            return nil
+        }
+        let (k, w) = want.first!, a = typed[k]!
+        let eq = { (x: Double, y: Double) in abs(x - y) < 1e-9 }
+        if eq(a, -w), w != 0 { return .sign }
+        if earlier.contains(where: { eq($0, a) }), !eq(a, w) { return .reuse }
+        for f in [10.0, 100, 1000, 0.1, 0.01, 0.001] where eq(a, w * f) { return .place }
+        if eq(abs(a - w), 1) { return .off1 }
+        if abs(a) >= 10, abs(w) >= 10, String(String(Int(abs(a).rounded())).sorted()) == String(String(Int(abs(w).rounded())).sorted()), a == a.rounded(), w == w.rounded() { return .digits }
+        if w != 0, abs(a - w) / abs(w) <= 0.1 { return .close }
+        return nil
+    }
+
+    public static func say(_ typed: [String: Double], _ want: [String: Double], earlier: [Double] = []) -> String? {
+        kind(typed, want, earlier: earlier).flatMap { say[$0] }
     }
 }

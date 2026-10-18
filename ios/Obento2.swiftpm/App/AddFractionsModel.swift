@@ -46,6 +46,12 @@ final class AddFractionsModel: Identifiable {
     /// The pieces grow in, after `delay` (the page draws its problems in one after another).
     func start(after delay: Double = 0) { openedAt = time(delay); wordsAt = openedAt; leftAt = nil }
 
+    /// The How to opens with the lesson's idea (why it works) before any steps: shown in place of the question.
+    var intro: String?
+
+    /// A hint was opened on this problem: its points count it.
+    func usedHint() { lesson.usedHint(); onChange?() }
+
     /// Told after anything the child does that changes the work, so the page can save it.
     var onChange: (() -> Void)?
 
@@ -105,6 +111,13 @@ final class AddFractionsModel: Identifiable {
             busyUntil = time(Self.seeBeat)
             needs?(contentFrame)
             if lesson.isLast { onSolved?() }
+        case .notYet(let line) where lesson.finalOnly:
+            // final answer only, missed: the steps come back for this problem
+            var r = LessonRun(lesson.spec, numbers: lesson.numbers, story: lesson.story)
+            r.helps = lesson.helps; r.oneTry = lesson.oneTry; r.hintCap = lesson.hintCap; r.skipAsk()
+            lesson = r
+            message = (line, false); wordsAt = PaperClock.now
+            syncFills()
         case .notYet(let line):
             message = (line, false)
             if lesson.hintLevel >= 1, guideAt == nil { guideAt = time(0) }

@@ -28,6 +28,17 @@ enum Shots {
         Task {
             try? await Task.sleep(for: .seconds(1.5))
             if name == "demo" { await demo(m); return }
+            if name.hasPrefix("teach") {
+                // the How to taught a tap at a time: teach-0 is the idea, teach-N after N taps
+                m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
+                let ad = Map.pieces.first { $0.id == "ad" }!
+                PageStore.clear("ad")
+                m.shotProblem = .init(a: 4, p: 3, b: 8, q: 1)
+                func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
+                m.select(ad); await wait(1); m.open(ad); await wait(3.5)
+                for _ in 0..<(Int(name.dropFirst(6)) ?? 0) { m.bars?.skipHowTo(); await wait(2.2) }
+                return
+            }
             if name.hasPrefix("resume") {
                 // the real path, not instant: open the lesson, skip the How to, work problem 2 partway, leave, come back
                 PageStore.clear("ad")
@@ -35,7 +46,7 @@ enum Shots {
                 let ad = Map.pieces.first { $0.id == "ad" }!
                 func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
                 m.select(ad); await wait(1); m.open(ad); await wait(1.5)
-                m.bars?.skipHowTo(); await wait(2.5)
+                for _ in 0..<12 { m.bars?.skipHowTo(); await wait(1.6) }
                 guard let page = m.bars else { return }
                 let b = page.problems[1]
                 page.activate(b)
@@ -154,6 +165,13 @@ enum Shots {
                     // a tap on the empty bottom corner of problem 2's box makes it the one being worked
                     let r = BarsPage.box(of: page.problems[1]), s = m.camera(at: PaperClock.now).toScreen(Point(r.x + 30, r.y + r.height - 30))
                     m.tap(at: s); return
+                }
+                if n == "fractions-row" {
+                    // a problem from each row: 1 together, 5 less help, 9 final answer only
+                    return
+                }
+                if n == "fractions-final-miss" {
+                    let f = page.problems[8]; page.activate(f); f.tap(0); f.go(); return
                 }
                 if n == "fractions-taps" {
                     // a finger's taps, by where they land on the screen: the pieces, then Check, then a choice on the story

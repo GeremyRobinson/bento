@@ -98,7 +98,7 @@ extension Rig {
     /// Everything a problem's words show: when it changes, they're made again.
     private func wordsKey(_ m: AddFractionsModel, _ page: BarsPage, dark: Bool) -> String {
         let l = m.lesson
-        return [m.label, l.words.say, l.words.hint, l.words.action, "\(l.index)", "\(l.marks.count)", l.typed["c"] ?? "",
+        return [m.label, m.intro ?? "", l.words.say, l.words.hint, l.words.action, "\(l.index)", "\(l.marks.count)", l.typed["c"] ?? "",
                 m.message.map { "\($0.text)\($0.ok)" } ?? "", "\(m.solved)", "\(page.current === m)", "\(l.helps)", "\(dark)",
                 l.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }.joined()].joined(separator: "|")
     }
@@ -114,8 +114,8 @@ extension Rig {
 
         // the question, a story running onto more lines upward, and its hint under it
         let q = PaperText.font(28, .medium), hint = PaperText.font(18)
-        PaperText.block(words.say, q, ink, width: col, bottomLeft: P(0, -23), maxLines: 4).forEach { w.question.addChild($0) }
-        w.question.addChild(PaperText.label(words.hint, hint, ink2, at: P(0, -10), anchor: UnitPoint(x: 0, y: 0.5)))
+        PaperText.block(m.intro ?? words.say, q, ink, width: col, bottomLeft: P(0, -23), maxLines: 4).forEach { w.question.addChild($0) }
+        w.question.addChild(PaperText.label(m.intro != nil ? "Why it works" : words.hint, hint, ink2, at: P(0, -10), anchor: UnitPoint(x: 0, y: 0.5)))
 
         // what comes in with the picture: the sum, the whole's length, the rows' names; the box's name and its tab
         w.shown.addChild(PaperText.label(s.sum, PaperText.font(40, .medium, digits: true), ink, at: P(0, 60)))

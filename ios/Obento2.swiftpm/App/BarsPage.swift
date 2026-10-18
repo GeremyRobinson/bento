@@ -46,12 +46,12 @@ final class BarsPage {
         // coming back after a day or more, the How to is a quick reminder the child can skip
         let remind = saved.map { !Calendar.current.isDateInToday($0.date) } ?? false
         howTo = AddFractionsModel(origin: Self.origin(for: piece), chapter: piece.chapter, instant: instant,
-                                  run: LessonRun(AddFractions.spec, numbers: example.numbers), label: remind ? "Remember? Tap to skip" : "How to", auto: true)
+                                  run: LessonRun(AddFractions.spec, numbers: example.numbers), label: remind ? "Remember? Tap to skip" : "How to · tap to go on", auto: true)
         let runs: [LessonRun] = saved?.problems.map { LessonRun(AddFractions.spec, restoring: $0) }
-            ?? LessonPage.problems(AddFractions.spec, using: &rng).map { LessonPage.run(AddFractions.spec, $0) }
+            ?? LessonPage.problems(AddFractions.spec, using: &rng).enumerated().map { i, p in Self.run(p, row: i / LessonPage.columns, i: i, piece: piece) }
         var practice = 0, check = 0
         problems = runs.enumerated().map { i, run in
-            let label = run.oneTry ? "Skill check \(check + 1)" : "Problem \(practice + 1)"
+            let label = run.oneTry ? "Skill check \(check + 1)" : run.guided ? "Problem \(practice + 1) · together" : "Problem \(practice + 1)"
             if run.oneTry { check += 1 } else { practice += 1 }
             let o = Self.origin(for: piece)
             let at = Point(o.x + Double(i % LessonPage.columns) * Self.pitch.width,
@@ -69,6 +69,25 @@ final class BarsPage {
             p.onTouch = { [weak self, weak p] in if let p { self?.activate(p) } }
         }
     }
+
+    /// Help fades across the page (G 18 Oct): row 1 is done together for its first two problems, then every step
+    /// named with hints; row 2 hints stop at the first one; row 3 asks for the final answer only (a miss brings the
+    /// steps back); row 4 is the skill check. A lesson already learned starts without the together problems.
+    static func run(_ p: LessonPage.Problem, row: Int, i: Int, piece: Piece) -> LessonRun {
+        if p.isCheck { return LessonPage.run(AddFractions.spec, p) }
+        var r = LessonRun(AddFractions.spec, numbers: p.numbers, story: p.story, finalOnly: row == 2)
+        r.guided = i < 2 && !Progress.shared.learned.contains(piece.id)
+        r.hintCap = row == 0 ? 3 : 1
+        r.skipAsk()
+        return r
+    }
+
+    /// Clean work on the practice so far: four problems solved with no miss can go straight to the skill check.
+    var canSkipToCheck: Bool {
+        !problems.prefix(12).contains { $0.lesson.oneTry } && problems.prefix(12).filter { $0.solved && !$0.lesson.missedAny }.count >= 4
+            && problems.suffix(4).contains { !$0.solved }
+    }
+    func skipToCheck() { if let m = problems.suffix(4).first(where: { !$0.solved }) { activate(m) } }
 
     /// The How to has played and erased itself.
     private(set) var howToGone = false
@@ -121,8 +140,35 @@ final class BarsPage {
         }
     }
 
-    /// A tap while the How to plays skips to the end of it.
-    func skipHowTo() { if playing && !howToGone { skipping = true } }
+    /// A tap while the How to plays: the next step when it's being taught, the end of it when it's a reminder.
+    func skipHowTo() { if playing && !howToGone { if reminding { skipping = true } else { tapped = true } } }
+    private var tapped = false
+    /// Coming back after a day or more: the How to replays on its own, and a tap skips it.
+    private var reminding: Bool { saved.map { !Calendar.current.isDateInToday($0.date) } ?? false }
+
+    /// The How to taught a tap at a time (G 18 Oct): why it works, then each step's words and its move, waiting for the
+    /// child before going on.
+    private func teach() {
+        Task {
+            @MainActor func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
+            @MainActor func tap() async { tapped = false; while !tapped { await wait(0.1) }; tapped = false }
+            howTo.intro = AddFractions.spec.idea(howTo.lesson.numbers)
+            await wait(1.2); await tap()                                // the bars grow in; read why
+            howTo.intro = nil
+            while !howTo.solved {
+                howTo.go()                                              // the next step's words
+                if howTo.solved { break }
+                await wait(1.0)
+                await wait(howTo.demonstrate() + 0.4)                   // its move, made for it
+                await tap()
+            }
+            await wait(0.8); await tap()                                // read the answer
+            howTo.leave(); await wait(0.6)
+            howToGone = true
+            playing = false
+            showProblems()
+        }
+    }
     private var skipping = false
     /// The problem to come back to after the How to.
     private var resumeAt: Int?
@@ -130,6 +176,8 @@ final class BarsPage {
     private func play() {
         if instant { while !howTo.solved { howTo.demonstrate(); howTo.go() }; howToGone = true; showProblems(); return }
         playing = true
+        // the first time it's taught a tap at a time, idea first; coming back it plays itself as a reminder
+        if !reminding { teach(); return }
         Task {
             func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
             skipping = false

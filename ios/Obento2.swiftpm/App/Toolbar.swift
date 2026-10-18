@@ -113,6 +113,7 @@ struct Toolbar: View {
             }
             MenuRow(icon: .read, label: "Read it aloud") { open = nil; readAloud() }
             if let b = model.bars, b.howToGone { MenuRow(icon: .show, label: "Watch the How to again") { open = nil; b.watchAgain() } }
+            if let b = model.bars, b.canSkipToCheck { MenuRow(icon: .find, label: "Go to the skill check") { open = nil; b.skipToCheck() } }
             if model.bars?.showing == true { MenuRow(icon: .every, label: "See every problem") { open = nil; model.frameAll() } }
             MenuRow(icon: .dark, label: scheme == .dark ? "Light" : "Dark") { theme = scheme == .dark ? "light" : "dark" }
             zoomRow
@@ -158,7 +159,7 @@ struct Toolbar: View {
     // MARK: what the buttons do
 
     private func toggle(_ p: Panel) {
-        if p == .hint, open != .hint, canHint { hintsUsed += 1 }
+        if p == .hint, open != .hint, canHint { hintsUsed += 1; problem?.usedHint() }
         open = open == p ? nil : p
     }
 

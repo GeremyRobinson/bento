@@ -712,9 +712,11 @@ final class BarsDrawer {
 
     /// The lines around the bars: the whole's length, the matching dashes, the guide after a wrong count, the total's bracket.
     private func drawDecor(_ b: AddFractionsModel, at t: Double) {
-        let whole = snapped(b.wholeLine(at: t), 50), guide = snapped(b.guide(at: t), 50), picture = b.lesson.picture, gone = snapped(b.gone(at: t), 50)
+        // the lines come and go with the problem's words: none before it has drawn in, or once it has erased itself
+        let shown = snapped(b.words(at: t), 20)
+        let whole = snapped(b.wholeLine(at: t), 50), guide = snapped(b.guide(at: t), 50), picture = b.lesson.picture, gone = snapped(b.gone(at: t), 50) * shown
         let bracket = picture["total"] == 1 ? snapped(ease((t - b.wordsAt - 0.2) / 0.5), 50) : 0
-        let key = "\(b.lesson.index) \(whole) \(guide) \(bracket) \(gone) \(picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(b.lesson.marks.count)"
+        let key = "\(b.lesson.index) \(whole) \(guide) \(bracket) \(gone) \(b.lesson.finalOnly) \(picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(b.lesson.marks.count)"
         guard key != decorKey else { return }
         decorKey = key
         for c in Array(decor.children) { c.removeFromParent() }
