@@ -173,7 +173,7 @@ final class PaperModel {
     }
 
     /// Room kept clear of the paper's content: a little at the top, and the floating bar at the bottom.
-    static let chrome = (top: 24.0, bottom: 112.0)
+    static let chrome = (top: 24.0, bottom: 120.0)
 
     /// The whole map's view, clear of the bar.
     var overview: PaperCamera {

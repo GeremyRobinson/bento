@@ -62,7 +62,7 @@ struct Toolbar: View {
         .overlay(Capsule().strokeBorder(Ink.line, lineWidth: 1))
     }
 
-    private var divider: some View { Rectangle().fill(Ink.line).frame(width: 1, height: 36).padding(.horizontal, 4) }
+    private var divider: some View { Rectangle().fill(Ink.line).frame(width: 1, height: 40).padding(.horizontal, 4) }
 
     /// Where you are and how far along, or for a moment after a pinch, the zoom.
     private func info(title: String, detail: String, progress: Double, wide: Bool = false) -> some View {
@@ -73,9 +73,9 @@ struct Toolbar: View {
                     .frame(maxWidth: .infinity, alignment: .center)
             } else {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Text(title).font(Typeface.font(18, .semibold)).foregroundStyle(Ink.ink).lineLimit(1)
+                    Text(title).font(Typeface.font(20, .semibold)).foregroundStyle(Ink.ink).lineLimit(1)
                     Spacer(minLength: 0)
-                    Text(detail).font(Typeface.font(16)).foregroundStyle(Ink.ink2).lineLimit(1)
+                    Text(detail).font(Typeface.font(17)).foregroundStyle(Ink.ink2).lineLimit(1)
                 }
                 Capsule().fill(Ink.sunk).frame(height: 6)
                     .overlay(alignment: .leading) {
@@ -84,7 +84,7 @@ struct Toolbar: View {
             }
         }
         .padding(.horizontal, 12)
-        .frame(width: model.screen.width > 900 ? (wide ? 330 : 280) : 220, height: 56)
+        .frame(width: model.screen.width > 900 ? (wide ? 360 : 300) : 230, height: 64)
     }
 
     // MARK: what opens above it
@@ -223,16 +223,16 @@ struct BarButton: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 10) {
-                ObentoIconView(icon, size: 28)
-                if let label { Text(label).font(Typeface.font(18, .semibold)) }
+                ObentoIconView(icon, size: 32)
+                if let label { Text(label).font(Typeface.font(20, .semibold)) }
                 if let count {
-                    Text("\(count)").font(Typeface.font(15, .bold)).monospacedDigit()
-                        .frame(minWidth: 24, minHeight: 24).padding(.horizontal, count > 9 ? 4 : 0)
+                    Text("\(count)").font(Typeface.font(17, .bold)).monospacedDigit()
+                        .frame(minWidth: 28, minHeight: 28).padding(.horizontal, count > 9 ? 4 : 0)
                         .background(Ink.sunk, in: Capsule())
                 }
             }
             .padding(.leading, label == nil ? 0 : 14).padding(.trailing, label == nil ? 0 : 16)
-            .frame(minWidth: 56, minHeight: 56)
+            .frame(minWidth: 64, minHeight: 64)
             .background(lit ? Ink.litFill : .clear, in: Capsule())
             .foregroundStyle(lit ? Ink.lit : Ink.ink)
             .contentShape(Capsule())
