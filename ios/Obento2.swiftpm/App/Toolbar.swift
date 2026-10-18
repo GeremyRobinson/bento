@@ -73,9 +73,9 @@ struct Toolbar: View {
                     .frame(maxWidth: .infinity, alignment: .center)
             } else {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Text(title).font(Typeface.font(16, .semibold)).foregroundStyle(Ink.ink).lineLimit(1)
+                    Text(title).font(Typeface.font(18, .semibold)).foregroundStyle(Ink.ink).lineLimit(1)
                     Spacer(minLength: 0)
-                    Text(detail).font(Typeface.font(14)).foregroundStyle(Ink.ink2).lineLimit(1)
+                    Text(detail).font(Typeface.font(16)).foregroundStyle(Ink.ink2).lineLimit(1)
                 }
                 Capsule().fill(Ink.sunk).frame(height: 6)
                     .overlay(alignment: .leading) {
@@ -120,10 +120,10 @@ struct Toolbar: View {
 
     private var zoomRow: some View {
         HStack {
-            Text("Zoom").font(Typeface.font(16)).foregroundStyle(Ink.ink)
+            Text("Zoom").font(Typeface.font(18)).foregroundStyle(Ink.ink)
             Spacer()
             SmallButton(text: "−") { zoomBy(1 / 1.25) }
-            Text("\(Int((zoom * 100).rounded()))%").font(Typeface.font(14)).monospacedDigit().foregroundStyle(Ink.ink2).frame(width: 52)
+            Text("\(Int((zoom * 100).rounded()))%").font(Typeface.font(16)).monospacedDigit().foregroundStyle(Ink.ink2).frame(width: 56)
             SmallButton(text: "+") { zoomBy(1.25) }
         }
         .padding(.horizontal, 12).frame(height: 52)
@@ -136,9 +136,9 @@ struct Toolbar: View {
             Text("Me").font(Typeface.font(20, .semibold)).foregroundStyle(Ink.ink)
             ForEach([("Go over", s.goOver.count), ("Getting stronger", s.gettingStronger.count), ("Stuck for good", s.stuck.count)], id: \.0) { row in
                 HStack {
-                    Text(row.0).font(Typeface.font(16)).foregroundStyle(Ink.ink)
+                    Text(row.0).font(Typeface.font(18)).foregroundStyle(Ink.ink)
                     Spacer()
-                    Text("\(row.1)").font(Typeface.font(16, .semibold)).monospacedDigit().foregroundStyle(Ink.ink)
+                    Text("\(row.1)").font(Typeface.font(18, .semibold)).monospacedDigit().foregroundStyle(Ink.ink)
                 }
             }
         }
@@ -147,7 +147,7 @@ struct Toolbar: View {
 
     private var hintCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(hintsLeft.map { "Hint · \($0) left in this lesson" } ?? "Hint").font(Typeface.font(14, .semibold)).foregroundStyle(Ink.ink2)
+            Text(hintsLeft.map { "Hint · \($0) left in this lesson" } ?? "Hint").font(Typeface.font(16, .semibold)).foregroundStyle(Ink.ink2)
             Text(hintText).font(Typeface.font(18)).foregroundStyle(Ink.ink).fixedSize(horizontal: false, vertical: true)
         }
         .padding(10)
@@ -224,9 +224,9 @@ struct BarButton: View {
         Button(action: action) {
             HStack(spacing: 10) {
                 ObentoIconView(icon, size: 28)
-                if let label { Text(label).font(Typeface.font(16, .semibold)) }
+                if let label { Text(label).font(Typeface.font(18, .semibold)) }
                 if let count {
-                    Text("\(count)").font(Typeface.font(13, .bold)).monospacedDigit()
+                    Text("\(count)").font(Typeface.font(15, .bold)).monospacedDigit()
                         .frame(minWidth: 24, minHeight: 24).padding(.horizontal, count > 9 ? 4 : 0)
                         .background(Ink.sunk, in: Capsule())
                 }
@@ -253,7 +253,7 @@ struct MenuRow: View {
         Button(action: action) {
             HStack(spacing: 12) {
                 ObentoIconView(icon, size: 24)
-                Text(label).font(Typeface.font(16))
+                Text(label).font(Typeface.font(18))
                 Spacer()
             }
             .padding(.horizontal, 12).frame(height: 52)

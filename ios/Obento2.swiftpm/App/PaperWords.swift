@@ -151,7 +151,7 @@ extension Rig {
         pieceWords = [:]; pieceWordsK = [:]
         let ink = colours.ink, ink3 = UIColor(hex: dark ? 0x878177 : 0x8C867D)
         // chapter titles, baselines on a grid line: a dot in the chapter's colour, the title, and how many are learned
-        let title = PaperText.font(26, .medium), small = PaperText.font(15)
+        let title = PaperText.font(30, .medium), small = PaperText.font(17)
         for g in Map.groups {
             let o = g.origin, done = g.lessons.filter { Progress.shared.learned.contains($0.id) }.count
             if let d = PaperText.dot(at: CGPoint(x: o.x + 5, y: o.y + 27), radius: 5, UIColor(hex: g.chapter.hex)) { words.addChild(d) }
@@ -159,7 +159,7 @@ extension Rig {
             let w = PaperText.width(g.chapter.title, title)
             words.addChild(PaperText.label("\(done) of \(g.lessons.count)", small, ink3, at: CGPoint(x: o.x + 32 + w, y: o.y + 37)))
         }
-        let name = PaperText.font(17, .medium), tagFont = PaperText.font(12, .semibold)
+        let name = PaperText.font(20, .medium), tagFont = PaperText.font(14, .semibold)
         for p in Map.pieces {
             let e = Entity(), r = CGRect(x: p.at.x, y: p.at.y, width: Piece.size.width, height: Piece.size.height)
             e.addChild(PaperText.label(p.name, name, ink, at: CGPoint(x: r.minX, y: r.maxY + 28)))
@@ -185,7 +185,7 @@ extension Rig {
         let corners = [CGPoint(x: i.minX, y: i.minY), CGPoint(x: i.maxX, y: i.minY), CGPoint(x: i.maxX, y: i.maxY), CGPoint(x: i.minX, y: i.maxY), CGPoint(x: i.minX, y: i.minY)]
         let segs = zip(corners, corners.dropFirst()).map { (SIMD2(Float($0.x / u), Float($0.y / u)), SIMD2(Float($1.x / u), Float($1.y / u))) }
         if let m = Self.lines(segs, width: Float(1.5 / u)) { let l = ModelEntity(mesh: m, materials: [flat(ink)]); l.position.y = 0.0022; start.addChild(l) }
-        start.addChild(PaperText.label("Start", PaperText.font(15, .medium), ink, at: CGPoint(x: s.minX + 16, y: s.midY), anchor: UnitPoint(x: 0, y: 0.5)))
+        start.addChild(PaperText.label("Start", PaperText.font(17, .medium), ink, at: CGPoint(x: s.minX + 16, y: s.midY), anchor: UnitPoint(x: 0, y: 0.5)))
         if let a = PaperText.icon("arrow-right", ink, in: CGRect(x: s.maxX - 30, y: s.midY - 10, width: 20, height: 20)) { start.addChild(a) }
     }
 }

@@ -176,6 +176,8 @@ final class Rig {
     let cubesQuestion = Pin(), cubesL = Pin(), cubesW = Pin(), cubesH = Pin(), cubesCount = Pin(), cubesBlocks = Pin()
     var cubesKey = ""
     var problemWords: [UUID: ProblemWords] = [:]
+    /// Some problem's bars or words are still to be made.
+    var pageBuilding = false
     var piecesQuick = ""
     var pieceGroups: [String: ModelEntity] = [:]
     // the open lesson
@@ -377,12 +379,14 @@ final class Rig {
             problemWords = [:]; return
         }
         let shown = page.all, every = page.all + (page.howToGone ? [] : page.problems)
+        pageBuilding = false
+        defer { let b = pageBuilding; Task { @MainActor in page.setBuilding(b) } }
         // the problems' bars are built one a frame while the How to plays, unseen (they haven't grown in), so nothing
         // is built when they arrive (building all 17 at once stalled a frame for 170 ms; 16 as they arrived, 80 ms)
         var made = 0
         for m in every {
             if drawers[m.id] == nil {
-                if made >= 1 && !m.instant && m !== page.howTo { continue }
+                if made >= 1 && !m.instant && m !== page.howTo { pageBuilding = true; continue }
                 made += 1
             }
             let d = drawers[m.id] ?? { let d = BarsDrawer(rig: self); barsRoot.addChild(d.root); drawers[m.id] = d; return d }()

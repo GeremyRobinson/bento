@@ -68,13 +68,14 @@ extension Rig {
         }
         // a page that opens makes its problems' words two at a time, a frame apart, so opening doesn't stall:
         // the problems draw themselves in one after another anyway
-        var made = 0
+        var made = 0, pending = false
+        defer { if pending || waiting.contains(where: { problemWords[$0.id] == nil }) { pageBuilding = true } }
         for m in shown {
             let w = problemWords[m.id] ?? { let w = ProblemWords(); pageWords.addChild(w.root); problemWords[m.id] = w; return w }()
             w.root.isEnabled = true
             let key = wordsKey(m, page, dark: isDark)
             if key != w.key {
-                if w.key.isEmpty && made >= 2 { continue }
+                if w.key.isEmpty && made >= 2 { pending = true; continue }
                 made += 1
                 w.key = key; w.idle = false; build(w, m, current: page.current === m, dark: isDark)
             }
@@ -112,28 +113,28 @@ extension Rig {
         let col = ProblemLayout.column
 
         // the question, a story running onto more lines upward, and its hint under it
-        let q = PaperText.font(28, .medium), hint = PaperText.font(16)
-        PaperText.block(words.say, q, ink, width: col, bottomLeft: P(0, -20), maxLines: 4).forEach { w.question.addChild($0) }
+        let q = PaperText.font(28, .medium), hint = PaperText.font(18)
+        PaperText.block(words.say, q, ink, width: col, bottomLeft: P(0, -23), maxLines: 4).forEach { w.question.addChild($0) }
         w.question.addChild(PaperText.label(words.hint, hint, ink2, at: P(0, -10), anchor: UnitPoint(x: 0, y: 0.5)))
 
         // what comes in with the picture: the sum, the whole's length, the rows' names; the box's name and its tab
         w.shown.addChild(PaperText.label(s.sum, PaperText.font(40, .medium, digits: true), ink, at: P(0, 60)))
-        w.shown.addChild(PaperText.label("1 whole · \(s.wholeCells) cells", PaperText.font(13), ink2, at: P(W / 2, 88), anchor: .bottom))
-        w.shown.addChild(PaperText.label(AddFractions.plural(s.a), PaperText.font(15, .medium), ink2, at: P(0, r1 - 8)))
-        w.shown.addChild(PaperText.label(AddFractions.plural(s.b), PaperText.font(15, .medium), ink2, at: P(0, r2 - 8)))
-        w.shown.addChild(PaperText.label(m.label, PaperText.font(15, .medium), ink3, at: P(0, BarsPage.box.dy + 40), anchor: .topLeading))
+        w.shown.addChild(PaperText.label("1 whole · \(s.wholeCells) cells", PaperText.font(16), ink2, at: P(W / 2, 88), anchor: .bottom))
+        w.shown.addChild(PaperText.label(AddFractions.plural(s.a), PaperText.font(17, .medium), ink2, at: P(0, r1 - 8)))
+        w.shown.addChild(PaperText.label(AddFractions.plural(s.b), PaperText.font(17, .medium), ink2, at: P(0, r2 - 8)))
+        w.shown.addChild(PaperText.label(m.label, PaperText.font(17, .medium), ink3, at: P(0, BarsPage.box.dy + 40), anchor: .topLeading))
         // the map's tab on the box's top-right corner: Now on the problem being worked, Done once it's solved
         if let tag = m.solved && !m.auto ? "Done" : current ? "Now" : nil {
             let r = CGRect(origin: P(BarsPage.box.dx + BarsPage.box.width - 80, BarsPage.box.dy - 20), size: CGSize(width: 80, height: 20))
             if let mesh = Self.fills([r]) { let f = ModelEntity(mesh: mesh, materials: [flat(chapter)]); f.position.y = 0.002; w.shown.addChild(f) }
-            w.shown.addChild(PaperText.label(tag, PaperText.font(12, .semibold), .white, at: CGPoint(x: r.midX, y: r.midY), anchor: .center))
+            w.shown.addChild(PaperText.label(tag, PaperText.font(14, .semibold), .white, at: CGPoint(x: r.midX, y: r.midY), anchor: .center))
         }
 
         // the piece waiting to be added, and the match once the rows line up
-        let mid = PaperText.font(17, .medium), digits = PaperText.font(17, .medium, digits: true), big = PaperText.font(22, .medium, digits: true)
+        let mid = PaperText.font(19, .medium), digits = PaperText.font(19, .medium, digits: true), big = PaperText.font(22, .medium, digits: true)
         if l.picture["waiting"] == 1 && l.marked.isEmpty { w.still.addChild(PaperText.label("+ \(s.q)/\(s.b)", digits, ink2, at: P(W + 20, r2 + h + 20), anchor: .topLeading)) }
         if l.picture["match"] == 1 { w.still.addChild(PaperText.label("\(s.p)/\(s.a) = \(s.covered)/\(s.b)", big, chapter, at: P(e + 24, r2 - 12))) }
-        if l.picture["guide"] == 1, let look = l.step.look { w.guide.addChild(PaperText.label(look, PaperText.font(13), ink2, at: P(e + 10, r1 - 24))) }
+        if l.picture["guide"] == 1, let look = l.step.look { w.guide.addChild(PaperText.label(look, PaperText.font(16), ink2, at: P(e + 10, r1 - 24))) }
 
         // under the bars: the count as the child taps, or what a miss says; for a pick-one step the message goes under the choices
         if l.step.answer?.choices != nil {
@@ -145,7 +146,7 @@ extension Rig {
         if l.picture["total"] == 1 { w.total.addChild(PaperText.label("\(s.sum) = \(s.total)/\(s.b)", big, chapter, at: P(0, r2 + h + 40), anchor: .topLeading)) }
 
         // the blocks: cell blocks on the paper, the main one outlined in ink, a picked choice in the chapter's colour
-        let surface = dark ? 0x1B1B1A as UInt32 : 0xFBFBFA, line = UIColor(hex: dark ? 0x3A3A37 : 0xCFCCC5), button = PaperText.font(15, .medium)
+        let surface = dark ? 0x1B1B1A as UInt32 : 0xFBFBFA, line = UIColor(hex: dark ? 0x3A3A37 : 0xCFCCC5), button = PaperText.font(17, .medium)
         for b in ProblemLayout.blocks(m) {
             var stroke = line, fill = UIColor(hex: surface), text = ink, lift: Float = 0
             switch b.kind {

@@ -103,8 +103,8 @@ extension Rig {
             // the question, a story running onto more lines upward, and its hint under it
             let q = PaperText.font(28, .medium), h = Double(q.lineHeight)
             let lines = Array(PaperText.wrap(words.say, q, width: 480).prefix(4))
-            for (i, line) in lines.enumerated() { cubesQuestion.text(line, q, ink, 0, -20 - Double(lines.count - i) * h) }
-            cubesQuestion.text(words.hint, PaperText.font(16), ink2, 0, -10, anchor: UnitPoint(x: 0, y: 0.5))
+            for (i, line) in lines.enumerated() { cubesQuestion.text(line, q, ink, 0, -23 - Double(lines.count - i) * h) }
+            cubesQuestion.text(words.hint, PaperText.font(18), ink2, 0, -10, anchor: UnitPoint(x: 0, y: 0.5))
             // the box's measures
             let label = PaperText.font(20, .semibold)
             cubesL.text("\(b.length)", label, ink, 0, 0, anchor: .center)
@@ -113,10 +113,10 @@ extension Rig {
             // the count as the child taps, or what a miss says
             if l.lesson.step.task != nil {
                 let (text, c) = l.message.map { ($0.text, $0.ok ? right : chapter) } ?? (l.lesson.countLine ?? "", ink2)
-                cubesCount.text(text, PaperText.font(17, .medium), c, 0, 0)
+                cubesCount.text(text, PaperText.font(19, .medium), c, 0, 0)
             }
             // the blocks
-            let surface = UIColor(hex: dark ? 0x1B1B1A : 0xFBFBFA), line = UIColor(hex: dark ? 0x3A3A37 : 0xCFCCC5), button = PaperText.font(15, .medium)
+            let surface = UIColor(hex: dark ? 0x1B1B1A : 0xFBFBFA), line = UIColor(hex: dark ? 0x3A3A37 : 0xCFCCC5), button = PaperText.font(17, .medium)
             for (kind, r) in CubesLayout.blocks(l) {
                 let main = kind == .main || (kind == .showMe && l.lesson.picture["showMe"] == 1)
                 cubesBlocks.block(r, fill: surface, stroke: main ? ink : line)

@@ -63,7 +63,12 @@ final class BarsPage {
     /// The How to has played and erased itself.
     private(set) var howToGone = false
     var all: [AddFractionsModel] { howToGone ? problems : [howTo] }
-    var animating: Bool { all.contains { $0.animating } || playing }
+    var animating: Bool { all.contains { $0.animating } || playing || building }
+    /// The scene still has problems' bars or words to make, a few a frame: the clock keeps running until they're all
+    /// made (stopped, a page that arrived without moving, or a switch to dark, left some boxes empty or the old colour).
+    /// Set by the scene, only when it changes, so the clock (which watches it) starts and stops with it.
+    private(set) var building = false
+    func setBuilding(_ b: Bool) { if building != b { building = b } }
     /// "3 of 16 done", for the top bar.
     var label: String { showing ? "\(problems.filter(\.solved).count) of \(problems.count) done" : "How to" }
 
