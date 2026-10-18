@@ -838,7 +838,8 @@ final class BarsDrawer {
             let e = ModelEntity(mesh: m, materials: [flat(c)]); e.position.y = 0.0012; decor.addChild(e)
         }
         let chapter = UIColor(hex: b.chapter.hex)
-        add([[P(0, 92), P(0, 108)], [P(0, 100), P(W, 100)], [P(W, 92), P(W, 108)]], whole, width: 1.5, rig.colours.ink2)
+        let wy = AddFractionsModel.wholeY
+        add([[P(0, wy - 8), P(0, wy + 8)], [P(0, wy), P(W, wy)], [P(W, wy - 8), P(W, wy + 8)]], whole, width: 1.5, rig.colours.ink2)
         if picture["match"] == 1 {
             add(dashed(P(0, r1 + h + 6), P(0, r2 - 28)) + dashed(P(e, r1 + h + 6), P(e, r2 - 6)), 1, width: 2, chapter)
         }

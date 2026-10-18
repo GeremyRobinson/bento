@@ -126,8 +126,8 @@ extension Rig {
         w.question.addChild(PaperText.label(m.intro != nil ? "Why it works" : words.hint, hint, ink2, at: P(0, -10), anchor: UnitPoint(x: 0, y: 0.5)))
 
         // what comes in with the picture: the sum, the whole's length, the rows' names; the box's name and its tab
-        w.shown.addChild(PaperText.label(s.sum, PaperText.font(40, .medium, digits: true), ink, at: P(0, 60)))
-        w.shown.addChild(PaperText.label("1 whole · \(s.wholeCells) cells", PaperText.font(16), ink2, at: P(W / 2, 88), anchor: .bottom))
+        w.shown.addChild(PaperText.label(s.sum, PaperText.font(40, .medium, digits: true), ink, at: P(0, AddFractionsModel.sumBaseline)))
+        w.shown.addChild(PaperText.label("1 whole · \(s.wholeCells) cells", PaperText.font(16), ink2, at: P(W / 2, AddFractionsModel.wholeY - 12), anchor: .bottom))
         w.shown.addChild(PaperText.label(AddFractions.plural(s.a), PaperText.font(17, .medium), ink2, at: P(0, r1 - 8)))
         w.shown.addChild(PaperText.label(AddFractions.plural(s.b), PaperText.font(17, .medium), ink2, at: P(0, r2 - 8)))
         w.shown.addChild(PaperText.label(m.label, PaperText.font(17, .medium), ink3, at: P(0, BarsPage.box.dy + 40), anchor: .topLeading))
