@@ -28,10 +28,15 @@ final class Progress {
         if saving, let data = try? JSONEncoder().encode(checks) { UserDefaults.standard.set(data, forKey: Self.key) }
     }
 
-    /// A chapter or grade test is over.
-    func tested(_ id: String, level: Int) {
+    /// Each test's problems right and how many it had, for its badge.
+    private(set) var testRight: [String: [Int]] = (UserDefaults.standard.dictionary(forKey: "testRight") as? [String: [Int]]) ?? [:]
+
+    /// A chapter or grade test is over: its level (0 to 4) and how many problems came out right.
+    func tested(_ id: String, level: Int, right: Int? = nil, of total: Int? = nil) {
         tests[id] = level
-        if saving { UserDefaults.standard.set(tests, forKey: "tests") }
+        let t = total ?? (id == "test-grade" ? 20 : 12)
+        testRight[id] = [right ?? Int((Double(level) / 4 * Double(t)).rounded()), t]
+        if saving { UserDefaults.standard.set(tests, forKey: "tests"); UserDefaults.standard.set(testRight, forKey: "testRight") }
     }
 
     /// For screenshots: a learned lesson whose time to come back has come.

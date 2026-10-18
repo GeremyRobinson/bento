@@ -166,7 +166,8 @@ extension Rig {
             // stopped partway: how far they got, after the name
             if p.isTest {
                 // its score once taken, else what it waits for
-                let line = Progress.shared.tests[p.id].map { "Score \($0) of 4 · \(Mastery.levels[$0])" }
+                // taken: just Done; how it went is broken down in Me
+                let line = Progress.shared.tests[p.id].map { _ in "Done" }
                     ?? (p.opens ? "\(p.id == "test-grade" ? 20 : 12) problems" : p.id == "test-grade" ? "Opens after the chapter tests" : Map.chapterHasLessons(p.chapter) ? "Opens when its lessons are learned" : "Coming soon")
                 e.addChild(PaperText.label(PageStore.load(p.id).map { "Not finished · \($0.solved) of \($0.problems.count)" } ?? line, PaperText.font(16, .medium),
                                            p.opens || Progress.shared.tests[p.id] != nil ? UIColor(hex: p.chapter.hex) : ink3, at: CGPoint(x: r.minX, y: r.maxY + 50)))
@@ -186,9 +187,15 @@ extension Rig {
                     let segs = zip(ring, ring.dropFirst()).map { (SIMD2(Float($0.x / Paper.unit), Float($0.y / Paper.unit)), SIMD2(Float($1.x / Paper.unit), Float($1.y / Paper.unit))) }
                     if let m = Self.lines(segs, width: Float(1.5 / Paper.unit)) { let l = ModelEntity(mesh: m, materials: [flat(UIColor(hex: Ink.mix(dark ? 0x121211 : 0xF3F2EF, p.chapter.hex, 0.45)))]); l.position.y = 0.0022; e.addChild(l) }
                 }
-                let text = score.map { "\($0)/4" } ?? "\(p.id == "test-grade" ? 20 : 12)"
-                e.addChild(PaperText.label(text, PaperText.font(15, .bold, digits: true), p.opens || score != nil ? .white : UIColor(hex: Ink.mix(dark ? 0x121211 : 0xF3F2EF, p.chapter.hex, 0.7)),
-                                           at: corner, anchor: .center, y: 0.0023))
+                let textColour = p.opens || score != nil ? UIColor.white : UIColor(hex: Ink.mix(dark ? 0x121211 : 0xF3F2EF, p.chapter.hex, 0.7))
+                if score != nil {
+                    // taken: a tick for done; how it went is written under its name
+                    let tick = [CGPoint(x: corner.x - 8, y: corner.y), CGPoint(x: corner.x - 2.5, y: corner.y + 6), CGPoint(x: corner.x + 9, y: corner.y - 6.5)]
+                    let segs = zip(tick, tick.dropFirst()).map { (SIMD2(Float($0.x / Paper.unit), Float($0.y / Paper.unit)), SIMD2(Float($1.x / Paper.unit), Float($1.y / Paper.unit))) }
+                    if let m = Self.lines(segs, width: Float(3 / Paper.unit)) { let l = ModelEntity(mesh: m, materials: [flat(textColour)]); l.position.y = 0.0023; e.addChild(l) }
+                } else {
+                    e.addChild(PaperText.label("\(p.id == "test-grade" ? 20 : 12)", PaperText.font(15, .bold, digits: true), textColour, at: corner, anchor: .center, y: 0.0023))
+                }
             } else if p.state == .now, !(model.selected?.id == p.id && p.opens) {
                 let tag = CGRect(x: r.maxX - 80, y: r.minY - 20, width: 80, height: 20)
                 if let m = Self.fills([tag]) { let f = ModelEntity(mesh: m, materials: [flat(UIColor(hex: p.chapter.hex))]); f.position.y = 0.002; e.addChild(f) }

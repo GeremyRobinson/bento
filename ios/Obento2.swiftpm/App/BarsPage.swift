@@ -267,7 +267,10 @@ final class BarsPage {
     /// A problem was solved: when the whole check row is done, its score decides learned (and when it comes back).
     private func solvedOne() {
         if test != nil {
-            if let level = LessonPage.testLevel(problems.map(\.lesson)), !recorded { recorded = true; Progress.shared.tested(piece.id, level: level) }
+            if let level = LessonPage.testLevel(problems.map(\.lesson)), !recorded {
+                recorded = true
+                Progress.shared.tested(piece.id, level: level, right: problems.filter { !$0.lesson.missedAny }.count, of: problems.count)
+            }
             save(); return
         }
         let checks = problems.filter { !$0.lesson.helps }

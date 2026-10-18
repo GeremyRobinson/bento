@@ -133,9 +133,9 @@ extension Piece {
             let ring = (0...32).map { s -> CGPoint in let a = Double(s) / 32 * 2 * .pi; return P(4.5 + 2.4 * cos(a), 2.4 + 2.4 * sin(a)) }
             return [ring, Self.star(P, cx: 4.5, cy: 2.4, r: 1.4), line((3.2, 4.3), (2.6, 6), (3.6, 5.5), (4.1, 6), (4.3, 4.8)), line((5.8, 4.3), (6.4, 6), (5.4, 5.5), (4.9, 6), (4.7, 4.8))]
         }
-        if isTest { // a chapter's test: a sheet with its corner folded, answers written, and a big tick: 7 by 6
+        if isTest { // a chapter's test: a sheet with its corner folded and answers written on it: 5 by 6
             return [line((0, 0), (3.5, 0), (5, 1.5), (5, 6), (0, 6), (0, 0)), line((3.5, 0), (3.5, 1.5), (5, 1.5)),
-                    line((1, 2.5), (3.5, 2.5)), line((1, 3.5), (3.5, 3.5)), line((1, 4.5), (2.5, 4.5)), line((4, 3.5), (5, 4.5), (7, 2))]
+                    line((1, 2.5), (3.5, 2.5)), line((1, 3.5), (3.5, 3.5)), line((1, 4.5), (2.5, 4.5))]
         }
         switch id {
         case "uc": // one cube, as the lesson's cubes look when the paper tilts
