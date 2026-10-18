@@ -283,7 +283,7 @@ final class PaperModel {
     /// problems draw themselves onto the paper, each live where it sits (BarsPage).
     func openBars(_ p: Piece) {
         let first = shotProblem ?? prepared.flatMap { $0.id == p.id ? AddFractions.Problem($0.numbers) : nil }
-        let b = BarsPage(piece: p, instant: instant, first: first)
+        let b = BarsPage(piece: p, instant: instant, first: first, saved: instant ? nil : PageStore.load(p.id))
         b.frame = { [weak self] r in self?.frameCurrent(r) }
         bars = b; selected = nil
         b.start()

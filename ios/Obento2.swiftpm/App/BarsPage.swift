@@ -36,23 +36,33 @@ final class BarsPage {
     /// The problem the child is on: outlined in the chapter's colour, and what the camera frames.
     private(set) var current: AddFractionsModel?
 
-    init(piece: Piece, instant: Bool, first: AddFractions.Problem? = nil) {
-        self.piece = piece; self.instant = instant
+    /// The page as the child left it, if they stopped partway (nil for a fresh page).
+    let saved: PageStore.Saved?
+
+    init(piece: Piece, instant: Bool, first: AddFractions.Problem? = nil, saved: PageStore.Saved? = nil) {
+        self.piece = piece; self.instant = instant; self.saved = saved
         var rng = SeededRandom(seed: UInt64(Date().timeIntervalSince1970 * 1000))
         let example = first ?? AddFractions.problems.randomElement(using: &rng)!
+        // coming back after a day or more, the How to is a quick reminder the child can skip
+        let remind = saved.map { !Calendar.current.isDateInToday($0.date) } ?? false
         howTo = AddFractionsModel(origin: Self.origin(for: piece), chapter: piece.chapter, instant: instant,
-                                  run: LessonRun(AddFractions.spec, numbers: example.numbers), label: "How to", auto: true)
-        let page = LessonPage.problems(AddFractions.spec, using: &rng)
+                                  run: LessonRun(AddFractions.spec, numbers: example.numbers), label: remind ? "Remember? Tap to skip" : "How to", auto: true)
+        let runs: [LessonRun] = saved?.problems.map { LessonRun(AddFractions.spec, restoring: $0) }
+            ?? LessonPage.problems(AddFractions.spec, using: &rng).map { LessonPage.run(AddFractions.spec, $0) }
         var practice = 0, check = 0
-        problems = page.enumerated().map { i, p in
-            let label = p.isCheck ? "Skill check \(check + 1)" : "Problem \(practice + 1)"
-            if p.isCheck { check += 1 } else { practice += 1 }
+        problems = runs.enumerated().map { i, run in
+            let label = run.oneTry ? "Skill check \(check + 1)" : "Problem \(practice + 1)"
+            if run.oneTry { check += 1 } else { practice += 1 }
             let o = Self.origin(for: piece)
             let at = Point(o.x + Double(i % LessonPage.columns) * Self.pitch.width,
                            o.y + Self.problemsTop + Double(i / LessonPage.columns) * Self.pitch.height)
-            return AddFractionsModel(origin: at, chapter: piece.chapter, instant: instant, run: LessonPage.run(AddFractions.spec, p), label: label)
+            let m = AddFractionsModel(origin: at, chapter: piece.chapter, instant: instant, run: run, label: label)
+            if saved != nil { m.restoreFills() }
+            return m
         }
+        recorded = saved?.recorded ?? false
         for p in problems {
+            p.onChange = { [weak self] in self?.save() }
             p.onSolved = { [weak self] in self?.solvedOne() }
             // the camera frames the problem's whole box, so where you are never shifts inside it
             p.needs = { [weak self, weak p] _ in if let p { self?.frame?(Self.box(of: p)) } }
@@ -85,24 +95,52 @@ final class BarsPage {
 
     /// The How to plays itself: the pieces grow in, each move is made for it, then its answer is written.
     func start() {
+        // back the same day: straight to the problem they were on, no How to
+        if let s = saved, Calendar.current.isDateInToday(s.date) {
+            howToGone = true
+            showProblems()
+            return
+        }
         howTo.start()
         current = howTo
         frame?(Self.box(of: howTo))
         play()
     }
 
+    /// Watch the How to again (in More): the problems step aside, it plays where they were, and they come back.
+    func watchAgain() {
+        guard howToGone, !playing else { return }
+        resumeAt = current.flatMap { c in problems.firstIndex { $0 === c } }
+        for p in problems { p.leave() }
+        playing = true
+        Task {
+            try? await Task.sleep(for: .seconds(0.55))
+            howTo.replay(); howToGone = false; showing = false
+            current = howTo; frame?(Self.box(of: howTo))
+            play()
+        }
+    }
+
+    /// A tap while the How to plays skips to the end of it.
+    func skipHowTo() { if playing && !howToGone { skipping = true } }
+    private var skipping = false
+    /// The problem to come back to after the How to.
+    private var resumeAt: Int?
+
     private func play() {
         if instant { while !howTo.solved { howTo.demonstrate(); howTo.go() }; howToGone = true; showProblems(); return }
         playing = true
         Task {
             func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
-            await wait(2.2)                                   // the bars grow in; read the question
-            while !howTo.solved {
-                howTo.go(); await wait(1.4)                   // the next step's words come in, the See beat plays
-                if howTo.solved { break }
-                await wait(howTo.demonstrate() + 0.8)         // the move, made for it
+            skipping = false
+            @MainActor func pause(_ s: Double) async { var t = 0.0; while t < s, !skipping { await wait(0.1); t += 0.1 } }
+            await pause(2.2)                                  // the bars grow in; read the question
+            while !howTo.solved && !skipping {
+                howTo.go(); await pause(1.4)                  // the next step's words come in, the See beat plays
+                if howTo.solved || skipping { break }
+                await pause(howTo.demonstrate() + 0.8)        // the move, made for it
             }
-            await wait(1.6)                                   // read the answer
+            if !skipping { await pause(1.6) }                 // read the answer
             howTo.leave(); await wait(0.6)                    // it erases itself, as it drew itself in
             howToGone = true
             playing = false
@@ -115,8 +153,15 @@ final class BarsPage {
     private func showProblems() {
         for (i, p) in problems.enumerated() { p.start(after: instant ? 0 : 0.05 + Double(i) * 0.12) }
         showing = true
-        current = nil
-        frame?(firstRow)
+        // where they were: the problem they were on when they left, or before watching the How to again
+        let back = resumeAt ?? saved?.current
+        resumeAt = nil
+        if let i = back, problems.indices.contains(i) {
+            current = problems[i]; frame?(Self.box(of: problems[i]))
+        } else {
+            current = nil
+            frame?(firstRow)
+        }
     }
 
     /// The first row of problems, with their questions: where the child starts.
@@ -133,11 +178,13 @@ final class BarsPage {
     func activate(_ m: AddFractionsModel) {
         guard current !== m else { return }
         current = m; frame?(Self.box(of: m))
+        save()
     }
 
     /// A tap on the paper goes to the problem it landed in, anywhere in its box, which becomes the one being worked;
     /// on one of its blocks (ProblemLayout) or its bars, it does that too.
     func tap(_ p: Point) {
+        if playing && !howToGone { skipHowTo(); return }
         guard let m = all.first(where: { contains(Self.box(of: $0), p) }) else { return }
         if !m.auto { activate(m) }
         if let b = ProblemLayout.blocks(m).first(where: { $0.rect.contains(CGPoint(x: p.x, y: p.y)) }) {
@@ -162,8 +209,43 @@ final class BarsPage {
             recorded = true
             Progress.shared.checked(AddFractions.spec.id, level: level)
         }
+        save()
+    }
+
+    /// The page is saved after every change; a page with every problem solved is done, and the next visit is fresh.
+    private func save() {
+        guard !instant, howToGone else { return }
+        if problems.allSatisfy(\.solved) { PageStore.clear(piece.id); return }
+        PageStore.save(piece.id, .init(date: Date(), problems: problems.map(\.lesson.snapshot),
+                                       current: current.flatMap { c in problems.firstIndex { $0 === c } },
+                                       recorded: recorded, solved: problems.filter(\.solved).count))
     }
     private var recorded = false
 
     private func contains(_ r: Rect, _ p: Point) -> Bool { p.x >= r.x && p.y >= r.y && p.x <= r.x + r.width && p.y <= r.y + r.height }
+}
+
+/// Each lesson page's work, saved on the device as the child goes (G 18 Oct): stop anywhere and come back to it.
+@MainActor
+enum PageStore {
+    struct Saved: Codable {
+        var date: Date
+        var problems: [RunSnapshot]
+        var current: Int?
+        var recorded: Bool
+        /// Problems solved, for the map's "Not finished · 5 of 16".
+        var solved: Int
+    }
+    /// Bumped on every save, so the map's words know to change.
+    private(set) static var version = 0
+    private static func key(_ id: String) -> String { "page-\(id)" }
+
+    static func load(_ id: String) -> Saved? {
+        guard let d = UserDefaults.standard.data(forKey: key(id)) else { return nil }
+        return try? JSONDecoder().decode(Saved.self, from: d)
+    }
+    static func save(_ id: String, _ s: Saved) {
+        if let d = try? JSONEncoder().encode(s) { UserDefaults.standard.set(d, forKey: key(id)); version += 1 }
+    }
+    static func clear(_ id: String) { UserDefaults.standard.removeObject(forKey: key(id)); version += 1 }
 }

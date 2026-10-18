@@ -44,7 +44,13 @@ final class AddFractionsModel: Identifiable {
     }
 
     /// The pieces grow in, after `delay` (the page draws its problems in one after another).
-    func start(after delay: Double = 0) { openedAt = time(delay); wordsAt = openedAt }
+    func start(after delay: Double = 0) { openedAt = time(delay); wordsAt = openedAt; leftAt = nil }
+
+    /// Told after anything the child does that changes the work, so the page can save it.
+    var onChange: (() -> Void)?
+
+    /// A problem brought back from where the child left it: its pieces filled as they were, at once.
+    func restoreFills() { for i in 0..<problem.b { fills[i] = (target(i), target(i), PaperClock.now - 100) } }
 
     /// When it started erasing itself (the How to, once it has played).
     private(set) var leftAt: Double?
@@ -106,6 +112,7 @@ final class AddFractionsModel: Identifiable {
             if lesson.oneTry { syncFills(); busyUntil = time(Self.seeBeat) }
         case .newProblem: break  // a solved problem stays on the page, solved
         }
+        onChange?()
     }
 
     /// The How to's moves, made for it: the pieces the step needs fill one by one. Returns how long that takes.
@@ -119,12 +126,13 @@ final class AddFractionsModel: Identifiable {
     }
 
     /// A pick-one step (the story's "Which operation solves it?"): the child taps choice i.
-    func choose(_ i: Int) { guard !busy else { return }; onTouch?(); lesson.choose(i); message = nil }
+    func choose(_ i: Int) { guard !busy else { return }; onTouch?(); lesson.choose(i); message = nil; onChange?() }
 
     func tap(_ i: Int) {
         onTouch?()
         guard !busy, lesson.tap(i) else { return }
         message = nil; syncFills()
+        onChange?()
     }
 
     /// A tap on the paper: which piece of the bottom row it landed on.
@@ -152,7 +160,7 @@ final class AddFractionsModel: Identifiable {
         max(fill(i, at: t), (preview?.level(i, at: t) ?? 0) * (previewStyle == 2 ? 0.5 : 1))
     }
 
-    func reset() { guard !busy else { return }; onTouch?(); lesson.reset(); message = nil; guideAt = nil; syncFills() }
+    func reset() { guard !busy else { return }; onTouch?(); lesson.reset(); message = nil; guideAt = nil; syncFills(); onChange?() }
 
     /// Starts the problem over with the same numbers (the How to's Watch again).
     func replay() {

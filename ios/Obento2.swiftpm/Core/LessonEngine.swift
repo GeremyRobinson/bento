@@ -206,6 +206,8 @@ public struct LessonRun: Sendable {
 
     public let spec: LessonSpec
     public let numbers: Numbers
+    /// Told as the lesson's word problem.
+    public let story: Bool
     public let steps: [LessonStep]
     public private(set) var index = 0
     /// Each marked cell, and the step that marked it.
@@ -221,7 +223,7 @@ public struct LessonRun: Sendable {
 
     /// `story`: tell it as the lesson's word problem, with "Which operation solves it?" first (as the web's practice does).
     public init(_ spec: LessonSpec, numbers: Numbers, story: Bool = false) {
-        self.spec = spec; self.numbers = numbers
+        self.spec = spec; self.numbers = numbers; self.story = story
         var s = spec.steps(numbers)
         if story, let first = Self.operationStep(spec, numbers, picture: s.first?.picture ?? [:]) { s.insert(first, at: 0) }
         steps = s
@@ -497,6 +499,38 @@ public struct LessonSession: Sendable, Equatable {
 /// A lesson's page (G 17 Oct): after the How to, every problem is on the paper at once and the child works them in
 /// any order, right where they are. 16 problems from easy to hard (the run's index), every third practice problem told
 /// as a story, and the last row of 4 the skill check (no hints, no Show me, one try), which decides learned.
+/// A problem's work, saved so the child can stop anywhere and come back to it exactly as they left it.
+public struct RunSnapshot: Codable, Equatable, Sendable {
+    public var numbers: Numbers
+    public var story: Bool
+    public var index: Int
+    public var marks: [Int: Int]
+    public var typed: [String: String]
+    public var misses: Int
+    public var missed: Bool
+    public var missedSteps: [Int]
+    public var helps: Bool
+    public var oneTry: Bool
+    public var skipsAsk: Bool
+}
+
+extension LessonRun {
+    public var snapshot: RunSnapshot {
+        RunSnapshot(numbers: numbers, story: story, index: index, marks: marks, typed: typed, misses: misses, missed: missed,
+                    missedSteps: missedSteps.sorted(), helps: helps, oneTry: oneTry, skipsAsk: skipsAsk)
+    }
+
+    /// The run as it was saved: the same numbers make the same steps, and the child's work goes back on them.
+    public init(_ spec: LessonSpec, restoring s: RunSnapshot) {
+        self.init(spec, numbers: s.numbers, story: s.story)
+        helps = s.helps; oneTry = s.oneTry
+        if s.skipsAsk { skipAsk() }
+        index = min(max(0, s.index), steps.count - 1)
+        marks = s.marks; typed = s.typed; misses = s.misses; missed = s.missed; missedSteps = Set(s.missedSteps)
+        active = step.answer?.boxes.first
+    }
+}
+
 public enum LessonPage {
     public static let count = 16, checks = 4, columns = 4
 

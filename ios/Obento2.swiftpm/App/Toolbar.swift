@@ -112,6 +112,7 @@ struct Toolbar: View {
                 MenuRow(icon: .restart, label: "Start this problem over", enabled: canReset) { open = nil; reset() }
             }
             MenuRow(icon: .read, label: "Read it aloud") { open = nil; readAloud() }
+            if let b = model.bars, b.howToGone { MenuRow(icon: .show, label: "Watch the How to again") { open = nil; b.watchAgain() } }
             if model.bars?.showing == true { MenuRow(icon: .every, label: "See every problem") { open = nil; model.frameAll() } }
             MenuRow(icon: .dark, label: scheme == .dark ? "Light" : "Dark") { theme = scheme == .dark ? "light" : "dark" }
             zoomRow

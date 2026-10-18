@@ -125,8 +125,8 @@ extension Rig {
     /// Start block. Rebuilt when what they say changes; each lesson's words fade in with its drawing.
     func drawWords(_ model: PaperModel, at t: Double) {
         let isDark = dark ?? false
-        let key = "\(Progress.shared.checks.count) \(Progress.shared.learned.count) \(isDark)"
-        if key != wordsKey { wordsKey = key; startKey = ""; rebuildWords(model, dark: isDark) }
+        let key = "\(Progress.shared.checks.count) \(Progress.shared.learned.count) \(isDark) \(PageStore.version) \(model.selected?.id ?? "")"
+        if key != wordsKey { wordsKey = key; startKey = "-"; rebuildWords(model, dark: isDark) }
         // the Start block moves with the choice on its own, so a tap rebuilds only it
         let chosen = model.selected.flatMap { $0.opens ? $0 : nil }
         if chosen?.id ?? "" != startKey { startKey = chosen?.id ?? ""; rebuildStart(chosen, dark: isDark) }
@@ -163,6 +163,11 @@ extension Rig {
         for p in Map.pieces {
             let e = Entity(), r = CGRect(x: p.at.x, y: p.at.y, width: Piece.size.width, height: Piece.size.height)
             e.addChild(PaperText.label(p.name, name, ink, at: CGPoint(x: r.minX, y: r.maxY + 28)))
+            // stopped partway: how far they got, after the name
+            if let s = PageStore.load(p.id), model.selected?.id != p.id {
+                e.addChild(PaperText.label("Not finished · \(s.solved) of \(s.problems.count)", PaperText.font(16, .medium), UIColor(hex: p.chapter.hex),
+                                           at: CGPoint(x: r.minX, y: r.maxY + 50)))
+            }
             if p.state == .now {
                 let tag = CGRect(x: r.maxX - 80, y: r.minY - 20, width: 80, height: 20)
                 if let m = Self.fills([tag]) { let f = ModelEntity(mesh: m, materials: [flat(UIColor(hex: p.chapter.hex))]); f.position.y = 0.002; e.addChild(f) }
@@ -185,7 +190,7 @@ extension Rig {
         let corners = [CGPoint(x: i.minX, y: i.minY), CGPoint(x: i.maxX, y: i.minY), CGPoint(x: i.maxX, y: i.maxY), CGPoint(x: i.minX, y: i.maxY), CGPoint(x: i.minX, y: i.minY)]
         let segs = zip(corners, corners.dropFirst()).map { (SIMD2(Float($0.x / u), Float($0.y / u)), SIMD2(Float($1.x / u), Float($1.y / u))) }
         if let m = Self.lines(segs, width: Float(1.5 / u)) { let l = ModelEntity(mesh: m, materials: [flat(ink)]); l.position.y = 0.0022; start.addChild(l) }
-        start.addChild(PaperText.label("Start", PaperText.font(17, .medium), ink, at: CGPoint(x: s.minX + 16, y: s.midY), anchor: UnitPoint(x: 0, y: 0.5)))
+        start.addChild(PaperText.label(PageStore.load(p.id) == nil ? "Start" : "Keep going", PaperText.font(17, .medium), ink, at: CGPoint(x: s.minX + 16, y: s.midY), anchor: UnitPoint(x: 0, y: 0.5)))
         if let a = PaperText.icon("arrow-right", ink, in: CGRect(x: s.maxX - 30, y: s.midY - 10, width: 20, height: 20)) { start.addChild(a) }
     }
 }

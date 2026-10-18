@@ -28,6 +28,25 @@ enum Shots {
         Task {
             try? await Task.sleep(for: .seconds(1.5))
             if name == "demo" { await demo(m); return }
+            if name.hasPrefix("resume") {
+                // the real path, not instant: open the lesson, skip the How to, work problem 2 partway, leave, come back
+                PageStore.clear("ad")
+                m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
+                let ad = Map.pieces.first { $0.id == "ad" }!
+                func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
+                m.select(ad); await wait(1); m.open(ad); await wait(1.5)
+                m.bars?.skipHowTo(); await wait(2.5)
+                guard let page = m.bars else { return }
+                let b = page.problems[1]
+                page.activate(b)
+                for i in 0..<b.problem.covered { b.tap(i) }
+                b.go(); await wait(1)
+                if name == "resume-map" { m.close(); await wait(2); return }
+                if name == "resume-select" { m.close(); await wait(2); m.select(ad); return }
+                m.close(); await wait(2)
+                m.select(ad); await wait(1); m.open(ad)
+                return
+            }
             if name == "open-ad" {
                 // tap the lesson and open it as a hand would, the How to playing, for -perf timings
                 m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
