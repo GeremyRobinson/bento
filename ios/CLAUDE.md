@@ -20,7 +20,8 @@ You're working with G, who owns Obento², a maths app for kids (K-12) that shows
 - **Motion has a purpose.** Pieces draw themselves in. Tapping a lesson is a gentle glide (0.75 s) to 100% (G 17 Oct, with the bigger 3 × 2 block frames; was 125%). Each step of a lesson frames what it shows now, zoomed to fit and centred, up to 125% (`CameraTiming.selectMax`, `lessonMax`). No looping animations. Never remove drawing or zoom; G counts that as a step back.
 - **3D lessons** open flat, lined up with the paper exactly. They tilt only when the maths rises off the paper, words stay pinned to the paper facing the child, and the view goes flat again before leaving.
 - **Every problem is fresh** (from a generator), and the answer is worked out from the same numbers as the picture.
-- **Icons are Phosphor**, used as drawn (they're in `Assets.xcassets`). Font: SF Pro Rounded for now (`Typeface` in `Theme.swift`).
+- **Icons are Obento²'s own** (G 17 Oct): drawn like the lesson pictures, thin square-ended lines on a 24-unit grid with one shape softly tinted (`ObentoIcons.swift`); squares and gaps measured like the Lessons icon. Phosphor stays only where an icon isn't drawn yet. Font: SF Pro Rounded for now (`Typeface` in `Theme.swift`).
+- **One floating bar at the bottom** (G 17 Oct, `Toolbar.swift`): a pill fixed to the screen. Map: Today · Lessons · Me | grade and progress | ⋯. Lesson: ← Lessons | lesson and progress | Hint · Show me | ⋯. Everything else lives in ⋯ More (zoom, dark, find next, start over, read aloud…). A pinch shows the zoom in the bar's middle for a moment.
 - **G approves first.** Show G (a screenshot, or "press Play") before calling anything done. Change only what G asked for. Every change must be better than what came before.
 - Bible references, if any ever come up, use the NWT and jw.org / wol.jw.org.
 

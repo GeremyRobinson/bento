@@ -145,8 +145,12 @@ final class UnitCubesModel {
     }
 
     /// Pinch follows the fingers directly; the buttons glide.
+    /// Told on a pinch, so the bar can show the zoom.
+    var onPinch: (() -> Void)?
+
     func pinch(_ f: Double) {
         guard flight?.done == nil else { return }
+        onPinch?()
         var v = view(at: PaperClock.now); flight = nil
         v.scale = min(250, max(25, v.scale * f)); resting = v
     }
@@ -187,13 +191,13 @@ final class UnitCubesModel {
         let bt = to.project(Vec3(origin.x, 0, origin.z + W + 1), screen: screen)         // the buttons' top-left
         pts += [bt, Point(bt.x + 300 * k, bt.y + 40 * k)]
         let x0 = pts.map(\.x).min()!, x1 = pts.map(\.x).max()!, y0 = pts.map(\.y).min()!, y1 = pts.map(\.y).max()!
-        let bar = 72.0, m = screen.width > 760 ? 2 * Paper.cell : 8
+        let top = PaperModel.chrome.top, bar = PaperModel.chrome.top + PaperModel.chrome.bottom, m = screen.width > 760 ? 2 * Paper.cell : 8
         let f = min(Paper.unit * CameraTiming.lessonMax / to.scale, (screen.width - 2 * m) / (x1 - x0), (screen.height - bar - 2 * m) / (y1 - y0))
         to.scale *= f
         // scaling shrinks everything about the screen's middle; then slide so it sits in the free space under the bar
         let cx = screen.width / 2 + ((x0 + x1) / 2 - screen.width / 2) * f, cy = screen.height / 2 + ((y0 + y1) / 2 - screen.height / 2) * f
         let (_, r, u) = to.axes
-        to.target = to.target + r * ((cx - screen.width / 2) / to.scale) + u * (-(cy - (bar + (screen.height - bar) / 2)) / to.scale)
+        to.target = to.target + r * ((cx - screen.width / 2) / to.scale) + u * (-(cy - (top + (screen.height - bar) / 2)) / to.scale)
         return to
     }
 

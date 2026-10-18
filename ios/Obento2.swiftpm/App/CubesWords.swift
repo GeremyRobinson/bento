@@ -8,16 +8,10 @@ import RealityKit
 @MainActor
 enum CubesLayout {
     enum Kind: Equatable { case main, showMe, reset }
-    /// The blocks' places in points from their point on the paper (x right, y down), as one row: Show me (not in the
-    /// skill check), Reset, a gap, the main action.
+    /// The blocks' places in points from their point on the paper (x right, y down): the main action (Show me and
+    /// Start over are in the bar).
     static func blocks(_ m: UnitCubesModel) -> [(kind: Kind, rect: CGRect)] {
-        var out: [(Kind, CGRect)] = [], x = 0.0
-        if m.lesson.step.task != nil {
-            if m.lesson.helps { out.append((.showMe, CGRect(x: x, y: 0, width: 40, height: 40))); x += 38.5 }
-            out.append((.reset, CGRect(x: x, y: 0, width: 40, height: 40))); x += 38.5 + 38.5
-        }
-        out.append((.main, CGRect(x: x, y: 0, width: 180, height: 40)))
-        return out
+        [(.main, CGRect(x: 0, y: 0, width: 180, height: 40))]
     }
     /// The paper points the words hang from.
     static func blocksAt(_ m: UnitCubesModel) -> Vec3 { Vec3(m.origin.x, 0, m.origin.z + Double(m.box.width) + 1) }

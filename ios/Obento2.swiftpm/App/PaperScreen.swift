@@ -27,7 +27,7 @@ struct PaperScreen: View {
                     if let steps = model.steps {
                         StepsLessonView(model: steps, camera: cam, time: t)
                     }
-                    TopBar(model: model, top: max(16, safe.safeAreaInsets.top + 8), bottom: max(16, safe.safeAreaInsets.bottom + 8))
+                    Toolbar(model: model, time: t, bottom: max(16, safe.safeAreaInsets.bottom + 8))
                 }
                 .onChange(of: t) { _, now in Perf.frame(now); model.settle(at: now); model.lesson?.settle(at: now) }
             }
@@ -48,7 +48,7 @@ struct PaperScreen: View {
 
     /// The clock only runs while something moves or draws, so a still paper costs nothing.
     private var animating: Bool {
-        model.moving || model.leaving || PaperClock.now - model.drawnAt < Piece.drawTime + 0.2 || (model.lesson?.animating ?? false) || (model.bars?.animating ?? false) || (model.steps?.animating ?? false)
+        model.moving || model.leaving || PaperClock.now - model.pinchedAt < 1.3 || PaperClock.now - model.drawnAt < Piece.drawTime + 0.2 || (model.lesson?.animating ?? false) || (model.bars?.animating ?? false) || (model.steps?.animating ?? false)
     }
 
     private var surfaceGestures: some View {

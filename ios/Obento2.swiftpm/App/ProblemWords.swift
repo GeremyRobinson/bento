@@ -13,8 +13,8 @@ enum ProblemLayout {
     enum Kind: Equatable { case main, showMe, reset, choice(Int) }
     struct Block { let kind: Kind; let rect: CGRect }
 
-    /// The blocks a problem shows now, in paper points. The How to plays itself and has none; a solved problem has
-    /// none; Show me only outside the skill check.
+    /// The blocks a problem shows now, in paper points: its choices, and Check (Show me and Start over are in the bar).
+    /// The How to plays itself and has none; a solved problem has none.
     static func blocks(_ m: AddFractionsModel) -> [Block] {
         let o = m.origin, l = m.lesson
         func R(_ x: Double, _ y: Double, _ w: Double, _ h: Double = 40) -> CGRect { CGRect(x: o.x + x, y: o.y + y, width: w, height: h) }
@@ -24,13 +24,7 @@ enum ProblemLayout {
             let y = AddFractionsModel.row2 + AddFractionsModel.barHeight + 20
             for i in choices.indices { out.append(Block(kind: .choice(i), rect: R(Double(i) * (w - 1.5), y, w))) }
         }
-        if !m.auto && !m.solved {
-            out.append(Block(kind: .main, rect: R(0, actions, 180)))
-            if l.step.task != nil {
-                out.append(Block(kind: .reset, rect: R(column - 40, actions, 40)))
-                if l.helps { out.append(Block(kind: .showMe, rect: R(column - 78.5, actions, 40))) }
-            }
-        }
+        if !m.auto && !m.solved { out.append(Block(kind: .main, rect: R(0, actions, 180))) }
         return out
     }
 }

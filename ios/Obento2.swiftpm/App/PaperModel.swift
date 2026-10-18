@@ -164,17 +164,21 @@ final class PaperModel {
     func stop() { let c = camera(at: PaperClock.now); flight = nil; resting = c }
 
     func pan(_ dx: Double, _ dy: Double) { stop(); resting = resting.panned(by: dx, dy) }
-    func zoom(by f: Double, at p: Point) { stop(); resting = resting.zoomed(by: f, at: p) }
+    func zoom(by f: Double, at p: Point) { stop(); resting = resting.zoomed(by: f, at: p); pinchedAt = PaperClock.now }
+    /// When the paper was last pinched: the bar shows the zoom for a moment.
+    var pinchedAt: Double = -100
 
     func zoomButton(_ f: Double) {
         fly(to: camera(at: PaperClock.now).zoomed(by: f, at: .init(screen.width / 2, screen.height / 2)), duration: CameraTiming.fly)
     }
 
-    /// The whole map's view, with room for the top bar above it.
+    /// Room kept clear of the paper's content: a little at the top, and the floating bar at the bottom.
+    static let chrome = (top: 24.0, bottom: 112.0)
+
+    /// The whole map's view, clear of the bar.
     var overview: PaperCamera {
-        let bar = 72.0
-        var cam = PaperCamera.framing(Map.bounds, in: Size(screen.width, screen.height - bar), maxZoom: 1.4)
-        cam.y += bar
+        var cam = PaperCamera.framing(Map.bounds, in: Size(screen.width, screen.height - Self.chrome.top - Self.chrome.bottom), maxZoom: 1.4)
+        cam.y += Self.chrome.top
         return cam
     }
 
@@ -254,6 +258,7 @@ final class PaperModel {
             lesson = UnitCubesModel(origin: origin, chapter: p.chapter, view: .matching(camera(at: PaperClock.now), screen: screen), screen: screen, instant: instant,
                                     box: shotBox ?? prepared.flatMap { $0.id == p.id ? UnitCubes.Box($0.numbers) : nil },
                                     session: Progress.shared.dueBack(p.id) ? .recheck : LessonSession())
+            lesson?.onPinch = { [weak self] in self?.pinchedAt = PaperClock.now }
             selected = nil
         }
         let landing = flight.map { $0.start + $0.duration - PaperClock.now } ?? 0
@@ -287,11 +292,10 @@ final class PaperModel {
     /// A lesson is framed with two cells to spare (LESSONS.md §5).
     static let margin = 2 * Paper.cell
 
-    /// A rect framed under the top bar, with two cells to spare, never closer than `maxZoom`.
+    /// A rect framed clear of the bar, with two cells to spare, never closer than `maxZoom`.
     func framingBelowBar(_ r: Rect, maxZoom: Double) -> PaperCamera {
-        let bar = 72.0
-        var cam = PaperCamera.framing(r, in: Size(screen.width, screen.height - bar), pad: screen.width > 760 ? Self.margin : 8, maxZoom: maxZoom)
-        cam.y += bar
+        var cam = PaperCamera.framing(r, in: Size(screen.width, screen.height - Self.chrome.top - Self.chrome.bottom), pad: screen.width > 760 ? Self.margin : 8, maxZoom: maxZoom)
+        cam.y += Self.chrome.top
         return cam
     }
 

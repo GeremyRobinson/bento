@@ -13,6 +13,9 @@ enum Ink {
     static let line = dynamic(0xE3E1DC, 0x2C2C2A)
     static let ink3 = dynamic(0x8C867D, 0x878177)
     static let right = dynamic(0x178A57, 0x3CCF8E)
+    /// The bar's lit button: where you are, or what's open.
+    static let lit = dynamic(0x2A52CC, 0x9DB5FF)
+    static let litFill = dynamic(0xE4E8F7, 0x1F2746)
     /// Grid lines, already mixed into the paper so they draw the same in 2D and 3D.
     static let gridMinor = dynamic(mix(0xF3F2EF, 0x1A1A19, 0.045), mix(0x121211, 0xECEBE7, 0.035))
     static let gridMajor = dynamic(mix(0xF3F2EF, 0x1A1A19, 0.09), mix(0x121211, 0xECEBE7, 0.07))
