@@ -6,12 +6,15 @@ import Foundation
 final class Progress {
     static let shared = Progress()
     private(set) var checks: [String: CheckRecord]
+    /// Each chapter or grade test's last score, 0 to 4.
+    private(set) var tests: [String: Int]
     /// Screenshots set a fixed state and don't save it.
     var saving = true
     private static let key = "checks"
 
     init() {
         checks = (UserDefaults.standard.data(forKey: Self.key)).flatMap { try? JSONDecoder().decode([String: CheckRecord].self, from: $0) } ?? [:]
+        tests = (UserDefaults.standard.dictionary(forKey: "tests") as? [String: Int]) ?? [:]
     }
 
     var now: Double { PaperClock.now }
@@ -23,6 +26,12 @@ final class Progress {
     func checked(_ id: String, level: Int) {
         checks[id] = Mastery.record(checks[id], level: level, now: now)
         if saving, let data = try? JSONEncoder().encode(checks) { UserDefaults.standard.set(data, forKey: Self.key) }
+    }
+
+    /// A chapter or grade test is over.
+    func tested(_ id: String, level: Int) {
+        tests[id] = level
+        if saving { UserDefaults.standard.set(tests, forKey: "tests") }
     }
 
     /// For screenshots: a learned lesson whose time to come back has come.

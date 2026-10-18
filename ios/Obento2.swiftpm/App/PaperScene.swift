@@ -79,6 +79,9 @@ extension Piece {
         func arc(_ x0: Double, _ x1: Double, _ y: Double, _ h: Double) -> [CGPoint] {
             (0...12).map { s in let f = Double(s) / 12; return P(x0 + (x1 - x0) * f, y - sin(.pi * f) * h) }
         }
+        if isTest { // a test: three lines to answer, each with its box
+            return (0..<3).flatMap { j -> [[CGPoint]] in let y = Double(j) * 2.5; return [box(0, y, 1.5, 1.5), line((3, y + 0.75), (9, y + 0.75))] }
+        }
         switch id {
         case "uc": // one cube, as the lesson's cubes look when the paper tilts
             return box3D(l: 1, h: 1, w: 1, u: 70)
@@ -324,7 +327,7 @@ final class Rig {
         let settled = t - model.drawnAt > Piece.drawTime + 1, quick = "\(model.selected?.id ?? "") \(lineScale) \(Progress.shared.checks.count) \(gone)"
         if settled, quick == piecesQuick, !piecesKey.isEmpty { return }
         piecesQuick = settled ? quick : ""
-        let now = Map.pieces.map { p in (p, snapped(Piece.drawIn(p, time: t, drawnAt: model.drawnAt, from: model.drawFrom), 400) * gone, model.selected?.id == p.id, p.state) }
+        let now = Map.all.map { p in (p, snapped(Piece.drawIn(p, time: t, drawnAt: model.drawnAt, from: model.drawFrom), 400) * gone, model.selected?.id == p.id, p.state) }
         let key = now.map { "\($0.1) \($0.2) \($0.3)" }.joined(separator: ",")
         guard key != piecesKey else { return }
         piecesKey = key
@@ -338,7 +341,9 @@ final class Rig {
             let lit = on || state == .now
             // the others' frames are their chapter's colour too, lighter: no grey on the map
             let frameColour = lit ? UIColor(hex: p.chapter.hex) : UIColor(hex: Ink.mix(paperHex, p.chapter.hex, 0.3))
-            add("frame-\(p.chapter.rawValue)-\(lit)-\(on)", frameColour, on ? 2 : 1.5, 0.001, drawn(p.outline, k))
+            // a test still waiting is a dashed frame: there, but not open yet
+            let locked = p.isTest && !p.opens && state != .learned
+            add("frame-\(p.chapter.rawValue)-\(lit)-\(on)", frameColour, on ? 2 : 1.5, 0.001, drawn(locked ? Self.dashes(p.outline) : p.outline, k))
             // a light fill in the chapter's colour, coming in with the drawing
             let strength = (k * 10).rounded() / 10 * 0.1
             if strength > 0 {
@@ -582,6 +587,18 @@ final class Rig {
     }
 
     /// Filled rectangles on the paper (paper points), one quad each, facing up.
+    /// Lines broken into dashes, a cell's half on and half off.
+    static func dashes(_ lines: [[CGPoint]]) -> [[CGPoint]] {
+        lines.flatMap { pts in zip(pts, pts.dropFirst()).flatMap { a, b -> [[CGPoint]] in
+            let len = hypot(b.x - a.x, b.y - a.y), n = max(1, Int(len / 10))
+            return (0..<n).compactMap { i in
+                guard i % 2 == 0 else { return nil }
+                let f0 = Double(i) / Double(n), f1 = Double(i + 1) / Double(n)
+                return [CGPoint(x: a.x + (b.x - a.x) * f0, y: a.y + (b.y - a.y) * f0), CGPoint(x: a.x + (b.x - a.x) * f1, y: a.y + (b.y - a.y) * f1)]
+            }
+        } }
+    }
+
     static func fills(_ rects: [CGRect]) -> MeshResource? {
         var pos: [SIMD3<Float>] = [], idx: [UInt32] = []
         let u = Paper.unit

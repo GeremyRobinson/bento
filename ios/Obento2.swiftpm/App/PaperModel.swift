@@ -11,10 +11,13 @@ struct Piece: Identifiable, Equatable {
     /// The lesson behind this piece, if one has been written.
     var spec: LessonSpec? { Lessons.spec(id) }
     /// Only lessons built the paper way open (LESSONS.md); the rest wait, locked, for G's OK on their web preview.
-    var opens: Bool { spec != nil && Map.paperLessons.contains(id) }
+    @MainActor var opens: Bool { isTest ? Map.testReady(id) : spec != nil && Map.paperLessons.contains(id) }
+    /// A chapter or grade test, not a lesson (G 18 Oct).
+    var isTest: Bool { id.hasPrefix("test-") }
 
     /// Learned, up next (the first lesson in its chapter not learned yet), or not yet.
     @MainActor var state: State {
+        if isTest { return (Progress.shared.tests[id] ?? 0) >= Mastery.pass ? .learned : opens ? .now : .notYet }
         if Progress.shared.learned.contains(id) { return .learned }
         let next = Map.pieces.first { $0.chapter == chapter && $0.opens && !Progress.shared.learned.contains($0.id) }
         return next?.id == id ? .now : .notYet
@@ -67,7 +70,7 @@ enum Map {
         ChapterGroup(chapter: .decimals, origin: Point(1300, 0), columns: 3, lessons: [
             ("g5-pow10", "Multiply by 10, 100, 1000"), ("g5-round", "Rounding decimals"), ("g5-adddec", "Adding decimals"),
             ("g5-multdec", "Multiplying decimals"), ("g5-divdec", "Dividing by a decimal")]),
-        ChapterGroup(chapter: .fractions, origin: Point(0, 600), columns: 3, lessons: [
+        ChapterGroup(chapter: .fractions, origin: Point(0, 900), columns: 3, lessons: [
             ("ad", "Add with different bottoms"), ("add", "Adding fractions"), ("sub", "Subtracting fractions"),
             ("mix", "Adding and subtracting"), ("g5-multfrac", "Multiplying fractions"), ("g5-improper", "Mixed numbers to fractions"),
             ("g5-fracof", "Fraction of a number"), ("g5-unitdiv", "Dividing by a unit fraction")]),
@@ -75,6 +78,30 @@ enum Map {
             ("uc", "Unit cubes"), ("g5-volume", "Volume of a box"), ("g5-units", "Converting units")]),
     ]
     static let pieces = groups.flatMap(\.pieces)
+
+    /// Each chapter's test, in the slot after its last lesson, and the grade's test under everything (G 18 Oct).
+    static let tests: [Piece] = groups.map { g in
+        let i = g.lessons.count
+        return Piece(id: "test-\(g.chapter.rawValue)", name: "\(g.chapter.title) test", chapter: g.chapter,
+                     at: Point(g.origin.x + Double(i % g.columns) * ChapterGroup.pitch.width, g.origin.y + Paper.unit + Double(i / g.columns) * ChapterGroup.pitch.height))
+    } + [Piece(id: "test-grade", name: "\(grade.name) test", chapter: .whole, at: Point(0, 2100))]
+    /// Everything drawn on the map.
+    static let all = pieces + tests
+
+    /// A chapter's test opens once every lesson there is to do in it is learned; the grade's test once every chapter
+    /// test that can be taken has been. Lessons are always open; only tests wait.
+    @MainActor static func testReady(_ id: String) -> Bool {
+        if id == "test-grade" {
+            let ready = tests.filter { $0.id != "test-grade" && chapterHasLessons($0.chapter) }
+            return !ready.isEmpty && ready.allSatisfy { Progress.shared.tests[$0.id] != nil }
+        }
+        guard let t = tests.first(where: { $0.id == id }), chapterHasLessons(t.chapter) else { return false }
+        return pieces.filter { $0.chapter == t.chapter && pageLessons.contains($0.id) }.allSatisfy { Progress.shared.learned.contains($0.id) }
+    }
+    /// A chapter's test draws from lessons built as a page of problems: only Add with different bottoms so far, so only
+    /// Fractions has a test to take; the others say Coming soon until their lessons are pages too.
+    static let pageLessons: Set<String> = ["ad"]
+    static func chapterHasLessons(_ c: Chapter) -> Bool { pieces.contains { $0.chapter == c && pageLessons.contains($0.id) } }
     /// The lessons built the paper way, with G's OK on their preview. The others' maths is ported and tested in Core,
     /// but their screens wait for their previews (LESSONS.md §9).
     static let paperLessons: Set<String> = ["uc", "ad"]
@@ -95,7 +122,7 @@ enum Map {
     /// Worked out from the layout, so it stays right when groups move.
     static let bounds: Rect = {
         let x0 = groups.map(\.origin.x).min()!, y0 = groups.map(\.origin.y).min()!
-        let x1 = pieces.map { $0.at.x + Piece.size.width }.max()!, y1 = pieces.map { $0.at.y + Piece.size.height + Paper.unit }.max()!
+        let x1 = all.map { $0.at.x + Piece.size.width }.max()!, y1 = all.map { $0.at.y + Piece.size.height + Paper.unit }.max()!
         let m = Paper.cell
         return Rect(x: x0 - m, y: y0 - m, width: x1 - x0 + 2 * m, height: y1 - y0 + 2 * m)
     }()
@@ -244,7 +271,7 @@ final class PaperModel {
         if let sel = selected, sel.opens, contains(Rect(x: sel.start.x - 20, y: sel.start.y - 20, width: sel.start.width + 40, height: sel.start.height + 40), p) || contains(sel.frame, p) {
             open(sel); return
         }
-        select(Map.pieces.first(where: { contains($0.frame, p) || contains($0.start, p) }))
+        select(Map.all.first(where: { contains($0.frame, p) || contains($0.start, p) }))
     }
 
     /// Opening a lesson: the map erases itself, as it drew in, then the lesson opens where it was.
@@ -265,9 +292,10 @@ final class PaperModel {
     private func openNow(_ p: Piece) {
         opened = p
         // the lesson's picture master decides how it opens: flat on the paper, or in 3D
+        if p.isTest { openBars(p); return }
         guard let spec = p.spec else { return }
         // Unit cubes and Add with different bottoms are the Paper proof's own lessons; every other lesson is worked in steps
-        if p.id == "ad" { openBars(p); return }
+        if p.id == "ad" || p.isTest { openBars(p); return }
         if p.id != "uc" { openSteps(p, spec); return }
         // Start opens the lesson where it is: the tap already glided to it, so the camera doesn't move again (G 17 Oct).
         // The 3D lesson takes over the camera, so it waits for that glide to land first.
@@ -287,7 +315,8 @@ final class PaperModel {
     /// problems draw themselves onto the paper, each live where it sits (BarsPage).
     func openBars(_ p: Piece) {
         let first = shotProblem ?? prepared.flatMap { $0.id == p.id ? AddFractions.Problem($0.numbers) : nil }
-        let b = BarsPage(piece: p, instant: instant, first: first, saved: instant ? nil : PageStore.load(p.id))
+        let b = BarsPage(piece: p, instant: instant, first: first, saved: instant ? nil : PageStore.load(p.id),
+                         test: p.isTest ? (p.id == "test-grade" ? 20 : 12) : nil)
         b.frame = { [weak self] r in self?.frameCurrent(r) }
         bars = b; selected = nil
         b.start()

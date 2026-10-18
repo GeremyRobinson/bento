@@ -612,6 +612,13 @@ public enum LessonPage {
         return r
     }
 
+    /// A test's score, 0 to 4: the share of all its problems' steps right on their one try; nil until every one is done.
+    public static func testLevel(_ runs: [LessonRun]) -> Int? {
+        guard !runs.isEmpty, runs.allSatisfy(\.isLast) else { return nil }
+        let steps = runs.reduce(0) { $0 + $1.workSteps }, right = runs.reduce(0) { $0 + $1.workSteps - $1.missedSteps.count }
+        return Mastery.level(steps == 0 ? 0 : Double(right) / Double(steps))
+    }
+
     /// The check's score, 0 to 4, from the share of its steps right on their one try; nil until all its problems are done.
     public static func checkLevel(_ runs: [LessonRun]) -> Int? {
         guard runs.count == checks, runs.allSatisfy(\.isLast) else { return nil }

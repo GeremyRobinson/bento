@@ -128,6 +128,16 @@ enum Shots {
             switch name {
             case "paper": break
             case "selected": m.select(uc)
+            case "tests":
+                // the map with Add with different bottoms learned: its chapter's test opens; frame on Fractions
+                Progress.shared.reset(to: ["ad"]); m.frameChapter(2)
+            case "tests-all":
+                Progress.shared.reset(to: ["ad", "uc"]); Progress.shared.tested("test-fractions", level: 3)
+                m.frameGroup(duration: 0)
+            case "test-page":
+                Progress.shared.reset(to: ["ad"])
+                let t = Map.tests.first { $0.id == "test-fractions" }!
+                m.select(t); m.open(t)
             case "selected-ad": m.select(Map.pieces.first { $0.id == "ad" }!)
             case "selected-many":
                 // tap five lessons one after another: the zoom mustn't creep in

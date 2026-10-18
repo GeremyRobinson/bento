@@ -39,19 +39,29 @@ final class BarsPage {
     /// The page as the child left it, if they stopped partway (nil for a fresh page).
     let saved: PageStore.Saved?
 
-    init(piece: Piece, instant: Bool, first: AddFractions.Problem? = nil, saved: PageStore.Saved? = nil) {
-        self.piece = piece; self.instant = instant; self.saved = saved
+    /// A chapter or grade test: this many problems, every one a check (no hints, one try), and no How to.
+    let test: Int?
+
+    init(piece: Piece, instant: Bool, first: AddFractions.Problem? = nil, saved: PageStore.Saved? = nil, test: Int? = nil) {
+        self.piece = piece; self.instant = instant; self.saved = saved; self.test = test
         var rng = SeededRandom(seed: UInt64(Date().timeIntervalSince1970 * 1000))
         let example = first ?? AddFractions.problems.randomElement(using: &rng)!
         // coming back after a day or more, the How to is a quick reminder the child can skip
         let remind = saved.map { !Calendar.current.isDateInToday($0.date) } ?? false
         howTo = AddFractionsModel(origin: Self.origin(for: piece), chapter: piece.chapter, instant: instant,
                                   run: LessonRun(AddFractions.spec, numbers: example.numbers), label: remind ? "Remember? Tap to skip" : "How to · tap to go on", auto: true)
-        let runs: [LessonRun] = saved?.problems.map { LessonRun(AddFractions.spec, restoring: $0) }
-            ?? LessonPage.problems(AddFractions.spec, using: &rng).enumerated().map { i, p in Self.run(p, row: i / LessonPage.columns, i: i, piece: piece) }
+        let spec = AddFractions.spec
+        let fresh: [LessonRun] = test.map { n in
+            // a test draws from the lessons' own check recipes, mixed (only Add with different bottoms is built so far)
+            (0..<n).map { i in
+                let item = spec.check.isEmpty ? CheckItem(3) : spec.check[i % spec.check.count]
+                return LessonPage.run(spec, LessonPage.Problem(numbers: item.draw(spec, using: &rng), story: item.story && spec.story != nil, isCheck: true))
+            }
+        } ?? LessonPage.problems(spec, using: &rng).enumerated().map { i, p in Self.run(p, row: i / LessonPage.columns, i: i, piece: piece) }
+        let runs: [LessonRun] = saved?.problems.map { LessonRun(spec, restoring: $0) } ?? fresh
         var practice = 0, check = 0
         problems = runs.enumerated().map { i, run in
-            let label = run.oneTry ? "Skill check \(check + 1)" : run.guided ? "Problem \(practice + 1) · together" : "Problem \(practice + 1)"
+            let label = test != nil ? "Question \(i + 1)" : run.oneTry ? "Skill check \(check + 1)" : run.guided ? "Problem \(practice + 1) · together" : "Problem \(practice + 1)"
             if run.oneTry { check += 1 } else { practice += 1 }
             let o = Self.origin(for: piece)
             let at = Point(o.x + Double(i % LessonPage.columns) * Self.pitch.width,
@@ -100,6 +110,8 @@ final class BarsPage {
     func setBuilding(_ b: Bool) { if building != b { building = b } }
     /// "3 of 16 done", for the top bar.
     var label: String { showing ? "\(problems.filter(\.solved).count) of \(problems.count) done" : "How to" }
+    /// "Fractions test" or the lesson's name, for the bar.
+    var title: String { piece.name }
 
     /// Everything on the page: what the camera shows when the problems arrive.
     var pageFrame: Rect {
@@ -114,6 +126,8 @@ final class BarsPage {
 
     /// The How to plays itself: the pieces grow in, each move is made for it, then its answer is written.
     func start() {
+        // a test has no How to
+        if test != nil { howToGone = true; showProblems(); return }
         // back the same day: straight to the problem they were on, no How to
         if let s = saved, Calendar.current.isDateInToday(s.date) {
             howToGone = true
@@ -252,6 +266,10 @@ final class BarsPage {
 
     /// A problem was solved: when the whole check row is done, its score decides learned (and when it comes back).
     private func solvedOne() {
+        if test != nil {
+            if let level = LessonPage.testLevel(problems.map(\.lesson)), !recorded { recorded = true; Progress.shared.tested(piece.id, level: level) }
+            save(); return
+        }
         let checks = problems.filter { !$0.lesson.helps }
         if let level = LessonPage.checkLevel(checks.map(\.lesson)), !recorded {
             recorded = true

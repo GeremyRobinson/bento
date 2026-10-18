@@ -125,7 +125,7 @@ extension Rig {
     /// Start block. Rebuilt when what they say changes; each lesson's words fade in with its drawing.
     func drawWords(_ model: PaperModel, at t: Double) {
         let isDark = dark ?? false
-        let key = "\(Progress.shared.checks.count) \(Progress.shared.learned.count) \(isDark) \(PageStore.version) \(model.selected?.id ?? "")"
+        let key = "\(Progress.shared.checks.count) \(Progress.shared.learned.count) \(Progress.shared.tests) \(isDark) \(PageStore.version) \(model.selected?.id ?? "")"
         if key != wordsKey { wordsKey = key; startKey = "-"; rebuildWords(model, dark: isDark) }
         // the Start block moves with the choice on its own, so a tap rebuilds only it
         let chosen = model.selected.flatMap { $0.opens ? $0 : nil }
@@ -135,8 +135,8 @@ extension Rig {
         if gone < 1 { words.components.set(OpacityComponent(opacity: Float(gone))) } else if words.components.has(OpacityComponent.self) { words.components.remove(OpacityComponent.self) }
         // once everything has drawn in, the fades are done: nothing more to do each frame
         let settled = t - model.drawnAt > Piece.drawTime + 1
-        if settled, pieceWordsK.count == Map.pieces.count, !pieceWordsK.values.contains(where: { $0 < 1 }) { return }
-        for p in Map.pieces {
+        if settled, pieceWordsK.count == Map.all.count, !pieceWordsK.values.contains(where: { $0 < 1 }) { return }
+        for p in Map.all {
             guard let e = pieceWords[p.id] else { continue }
             let k = snapped(Piece.drawIn(p, time: t, drawnAt: model.drawnAt, from: model.drawFrom), 20)
             if pieceWordsK[p.id] == k { continue }
@@ -160,11 +160,17 @@ extension Rig {
             words.addChild(PaperText.label("\(done) of \(g.lessons.count)", small, ink3, at: CGPoint(x: o.x + 32 + w, y: o.y + 37)))
         }
         let name = PaperText.font(20, .medium), tagFont = PaperText.font(14, .semibold)
-        for p in Map.pieces {
+        for p in Map.all {
             let e = Entity(), r = CGRect(x: p.at.x, y: p.at.y, width: Piece.size.width, height: Piece.size.height)
             e.addChild(PaperText.label(p.name, name, ink, at: CGPoint(x: r.minX, y: r.maxY + 28)))
             // stopped partway: how far they got, after the name
-            if let s = PageStore.load(p.id) {
+            if p.isTest {
+                // its score once taken, else what it waits for
+                let line = Progress.shared.tests[p.id].map { "Score \($0) of 4 · \(Mastery.levels[$0])" }
+                    ?? (p.opens ? "\(p.id == "test-grade" ? 20 : 12) problems, no hints" : p.id == "test-grade" ? "Opens after the chapter tests" : Map.chapterHasLessons(p.chapter) ? "Opens when its lessons are learned" : "Coming soon")
+                e.addChild(PaperText.label(PageStore.load(p.id).map { "Not finished · \($0.solved) of \($0.problems.count)" } ?? line, PaperText.font(16, .medium),
+                                           p.opens || Progress.shared.tests[p.id] != nil ? UIColor(hex: p.chapter.hex) : ink3, at: CGPoint(x: r.minX, y: r.maxY + 50)))
+            } else if let s = PageStore.load(p.id) {
                 e.addChild(PaperText.label("Not finished · \(s.solved) of \(s.problems.count)", PaperText.font(16, .medium), UIColor(hex: p.chapter.hex),
                                            at: CGPoint(x: r.minX, y: r.maxY + 50)))
             }
