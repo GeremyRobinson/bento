@@ -42,6 +42,5 @@ You're working with G, who owns Obento², a maths app for kids (K-12) that shows
   5. **The web's learning rules.** Wrong answers sorted into types (sign, off by one, place value, digits, close, reused) each with its own line; step points (1, ½, ¼, 0) make the 0–4 score; hints limited; help also fades by last score.
   6. **Tests on the map.** Skill check in every lesson (rechecks 3, 7, 21, 60 days, a miss tomorrow); a chapter test (12 problems) appears at the end of a chapter's row once its lessons are learned, dashed until then; a grade test (20) once every chapter test is done; scores 0–4. Lessons stay open; only tests unlock.
   Steps 1–6 built 18 Oct 2026 (step 7 left for later, G). Chapter tests exist only where a chapter has a lesson built as a page (`Map.pageLessons`, just Add with different bottoms so far); the rest say Coming soon.
-  Later, with Me (G 18 Oct): each grade earns its own badge when its grade test is passed, like graduating; Me breaks down every test's details (problems right, level).
   7. **Today inside Me**, with the daily review (8 problems weighted to weak and old lessons).
 - Next: milestone 4, the 5th grade template (all 17 lessons, the paper map, the design system in code). Milestone 6 (launch) needs G's Apple Developer account, the font licence and G's typed go.
