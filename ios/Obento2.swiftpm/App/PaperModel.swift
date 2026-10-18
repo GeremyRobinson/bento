@@ -44,9 +44,10 @@ struct ChapterGroup {
     let origin: Point
     let columns: Int
     let lessons: [(id: String, name: String)]
-    /// Inside a group, one block between lessons (G 17 Oct): a frame and one block across; a frame and the block with
-    /// its name and Start down. Groups are two blocks apart.
-    static let pitch = Size(4 * Paper.unit, 3 * Paper.unit)
+    /// Inside a group, one block between lessons (G 17 Oct): a frame and one block across; down, a frame, the block with
+    /// its name and Start, and one more block so the next row's frame isn't crowding them (G 18 Oct). Groups are two
+    /// blocks apart.
+    static let pitch = Size(4 * Paper.unit, 4 * Paper.unit)
 
     var pieces: [Piece] {
         lessons.enumerated().map { i, l in
@@ -70,7 +71,7 @@ enum Map {
             ("ad", "Add with different bottoms"), ("add", "Adding fractions"), ("sub", "Subtracting fractions"),
             ("mix", "Adding and subtracting"), ("g5-multfrac", "Multiplying fractions"), ("g5-improper", "Mixed numbers to fractions"),
             ("g5-fracof", "Fraction of a number"), ("g5-unitdiv", "Dividing by a unit fraction")]),
-        ChapterGroup(chapter: .measurement, origin: Point(1300, 900), columns: 3, lessons: [
+        ChapterGroup(chapter: .measurement, origin: Point(1300, 1000), columns: 3, lessons: [
             ("uc", "Unit cubes"), ("g5-volume", "Volume of a box"), ("g5-units", "Converting units")]),
     ]
     static let pieces = groups.flatMap(\.pieces)
