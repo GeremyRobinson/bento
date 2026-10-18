@@ -10,7 +10,7 @@ enum ProblemLayout {
     /// The action row: two cells above the box's bottom.
     static let actions = BarsPage.box.dy + BarsPage.box.height - 80
 
-    enum Kind: Equatable { case main, showMe, reset, choice(Int) }
+    enum Kind: Equatable { case main, showMe, reset, choice(Int), next, practise, again, skip }
     struct Block { let kind: Kind; let rect: CGRect }
 
     /// The blocks a problem shows now, in paper points: its choices, and Check (Show me and Start over are in the bar).
@@ -25,6 +25,14 @@ enum ProblemLayout {
             for i in choices.indices { out.append(Block(kind: .choice(i), rect: R(Double(i) * (w - 1.5), y, w))) }
         }
         if !m.auto && !m.solved { out.append(Block(kind: .main, rect: R(0, actions, 180))) }
+        // the How to: its main block where Check sits, the other on the column's right
+        for k in m.howToButtons {
+            switch k {
+            case .next, .practise: out.append(Block(kind: k, rect: R(0, actions, 220)))
+            case .again, .skip: out.append(Block(kind: k, rect: R(column - 180, actions, 180)))
+            default: break
+            }
+        }
         return out
     }
 }
@@ -98,7 +106,7 @@ extension Rig {
     /// Everything a problem's words show: when it changes, they're made again.
     private func wordsKey(_ m: AddFractionsModel, _ page: BarsPage, dark: Bool) -> String {
         let l = m.lesson
-        return [m.label, m.intro ?? "", l.words.say, l.words.hint, l.words.action, "\(l.index)", "\(l.marks.count)", l.typed["c"] ?? "",
+        return [m.label, m.intro ?? "", "\(m.howToButtons)", l.words.say, l.words.hint, l.words.action, "\(l.index)", "\(l.marks.count)", l.typed["c"] ?? "",
                 m.message.map { "\($0.text)\($0.ok)" } ?? "", "\(m.solved)", "\(page.current === m)", "\(l.helps)", "\(dark)",
                 l.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }.joined()].joined(separator: "|")
     }
@@ -150,7 +158,8 @@ extension Rig {
         for b in ProblemLayout.blocks(m) {
             var stroke = line, fill = UIColor(hex: surface), text = ink, lift: Float = 0
             switch b.kind {
-            case .main: stroke = ink
+            case .main, .next, .practise: stroke = ink
+            case .again, .skip: break
             case .showMe: if l.picture["showMe"] == 1 { stroke = ink }
             case .choice(let i):
                 if l.typed["c"] == String(i) { stroke = chapter; text = chapter; fill = UIColor(hex: Ink.mix(surface, m.chapter.hex, 0.12)); lift = 0.0002 }
@@ -158,6 +167,10 @@ extension Rig {
             }
             cellBlock(b.rect, fill: fill, stroke: stroke, lift: lift).forEach { w.blocks.addChild($0) }
             switch b.kind {
+            case .next, .practise, .again, .skip:
+                let word = b.kind == .next ? "Next step" : b.kind == .practise ? "Let's practise" : b.kind == .again ? "Watch again" : "Skip"
+                w.blocks.addChild(PaperText.label(word, button, ink, at: CGPoint(x: b.rect.minX + 16, y: b.rect.midY), anchor: UnitPoint(x: 0, y: 0.5)))
+                if b.kind == .next || b.kind == .practise, let a = PaperText.icon("arrow-right", ink, in: CGRect(x: b.rect.maxX - 30, y: b.rect.midY - 10, width: 20, height: 20)) { w.blocks.addChild(a) }
             case .main:
                 w.blocks.addChild(PaperText.label(words.action, button, ink, at: CGPoint(x: b.rect.minX + 16, y: b.rect.midY), anchor: UnitPoint(x: 0, y: 0.5)))
                 if let a = PaperText.icon("arrow-right", ink, in: CGRect(x: b.rect.maxX - 30, y: b.rect.midY - 10, width: 20, height: 20)) { w.blocks.addChild(a) }

@@ -48,6 +48,8 @@ final class AddFractionsModel: Identifiable {
 
     /// The How to opens with the lesson's idea (why it works) before any steps: shown in place of the question.
     var intro: String?
+    /// The How to's own blocks right now (Next step; at the end Let's practise and Watch again; Skip on a reminder).
+    var howToButtons: [ProblemLayout.Kind] = []
 
     /// A hint was opened on this problem: its points count it.
     func usedHint() { lesson.usedHint(); onChange?() }

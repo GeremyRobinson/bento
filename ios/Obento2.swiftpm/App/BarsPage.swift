@@ -49,7 +49,7 @@ final class BarsPage {
         // coming back after a day or more, the How to is a quick reminder the child can skip
         let remind = saved.map { !Calendar.current.isDateInToday($0.date) } ?? false
         howTo = AddFractionsModel(origin: Self.origin(for: piece), chapter: piece.chapter, instant: instant,
-                                  run: LessonRun(AddFractions.spec, numbers: example.numbers), label: remind ? "Remember? Tap to skip" : "How to · tap to go on", auto: true)
+                                  run: LessonRun(AddFractions.spec, numbers: example.numbers), label: remind ? "Remember?" : "How to", auto: true)
         let spec = AddFractions.spec
         let fresh: [LessonRun] = test.map { n in
             // a test draws from the lessons' own check recipes, mixed (only Add with different bottoms is built so far)
@@ -155,8 +155,12 @@ final class BarsPage {
     }
 
     /// A tap while the How to plays: the next step when it's being taught, the end of it when it's a reminder.
-    func skipHowTo() { if playing && !howToGone { if reminding { skipping = true } else { tapped = true } } }
-    private var tapped = false
+    func skipHowTo() {
+        guard playing, !howToGone else { return }
+        if reminding { skipping = true } else { pressed = howTo.howToButtons.first ?? .next }
+    }
+    /// The How to's block the child pressed, while it waits for one.
+    private var pressed: ProblemLayout.Kind?
     /// Coming back after a day or more: the How to replays on its own, and a tap skips it.
     private var reminding: Bool { saved.map { !Calendar.current.isDateInToday($0.date) } ?? false }
 
@@ -165,18 +169,30 @@ final class BarsPage {
     private func teach() {
         Task {
             @MainActor func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
-            @MainActor func tap() async { tapped = false; while !tapped { await wait(0.1) }; tapped = false }
-            howTo.intro = AddFractions.spec.idea(howTo.lesson.numbers)
-            await wait(1.2); await tap()                                // the bars grow in; read why
-            howTo.intro = nil
-            while !howTo.solved {
-                howTo.go()                                              // the next step's words
-                if howTo.solved { break }
-                await wait(1.0)
-                await wait(howTo.demonstrate() + 0.4)                   // its move, made for it
-                await tap()
+            /// Shows these blocks and waits for one to be pressed.
+            @MainActor func ask(_ blocks: [ProblemLayout.Kind]) async -> ProblemLayout.Kind {
+                pressed = nil; howTo.howToButtons = blocks
+                while pressed == nil { await wait(0.1) }
+                howTo.howToButtons = []
+                defer { pressed = nil }
+                return pressed!
             }
-            await wait(0.8); await tap()                                // read the answer
+            while true {
+                howTo.intro = AddFractions.spec.idea(howTo.lesson.numbers)
+                await wait(1.2); _ = await ask([.next])                 // the bars grow in; read why
+                howTo.intro = nil
+                while !howTo.solved {
+                    howTo.go()                                          // the next step's words
+                    if howTo.solved { break }
+                    await wait(1.0)
+                    await wait(howTo.demonstrate() + 0.4)               // its move, made for it
+                    _ = await ask([.next])
+                }
+                // the answer stays until the child chooses: practise, or watch it all again
+                await wait(0.6)
+                if await ask([.practise, .again]) == .practise { break }
+                howTo.replay(); await wait(0.4)
+            }
             howTo.leave(); await wait(0.6)
             howToGone = true
             playing = false
@@ -192,6 +208,7 @@ final class BarsPage {
         playing = true
         // the first time it's taught a tap at a time, idea first; coming back it plays itself as a reminder
         if !reminding { teach(); return }
+        howTo.howToButtons = [.skip]
         Task {
             func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
             skipping = false
@@ -203,6 +220,7 @@ final class BarsPage {
                 await pause(howTo.demonstrate() + 0.8)        // the move, made for it
             }
             if !skipping { await pause(1.6) }                 // read the answer
+            howTo.howToButtons = []
             howTo.leave(); await wait(0.6)                    // it erases itself, as it drew itself in
             howToGone = true
             playing = false
@@ -246,11 +264,20 @@ final class BarsPage {
     /// A tap on the paper goes to the problem it landed in, anywhere in its box, which becomes the one being worked;
     /// on one of its blocks (ProblemLayout) or its bars, it does that too.
     func tap(_ p: Point) {
-        if playing && !howToGone { skipHowTo(); return }
+        // while the How to plays, only its blocks do anything
+        if playing && !howToGone {
+            if let b = ProblemLayout.blocks(howTo).first(where: { $0.rect.contains(CGPoint(x: p.x, y: p.y)) }) {
+                switch b.kind { case .skip: skipping = true; case .next, .practise, .again: pressed = b.kind; default: break }
+            }
+            return
+        }
         guard let m = all.first(where: { contains(Self.box(of: $0), p) }) else { return }
         if !m.auto { activate(m) }
         if let b = ProblemLayout.blocks(m).first(where: { $0.rect.contains(CGPoint(x: p.x, y: p.y)) }) {
             switch b.kind {
+            case .next, .practise: pressed = b.kind
+            case .again: pressed = .again
+            case .skip: skipping = true
             case .main: m.go()
             case .showMe: m.showMe()
             case .reset: m.reset()
