@@ -57,12 +57,6 @@ struct Dial: View {
         let mTurn = modeTurn ?? -Double(modeIndex) * Self.modeStep
         let index = value(of: mode), vTurn = valueTurn ?? -Double(index) * mode.step
         return ZStack {
-            // behind the rings while open: the paper itself, so the ticks read clearly over whatever is under them
-            Circle().fill(Ink.paper)
-                .overlay(Circle().strokeBorder(Ink.line, lineWidth: 1))
-                .frame(width: (Self.outerTicks + 34) * 2, height: (Self.outerTicks + 34) * 2)
-                .shadow(color: .black.opacity(0.10), radius: 24, y: -4)
-                .opacity(open ? 1 : 0)
             // the outer ticks and the mode names
             Canvas { ctx, size in
                 let c = CGPoint(x: size.width / 2, y: size.height / 2)
@@ -81,7 +75,6 @@ struct Dial: View {
             // the face
             Circle().fill(Ink.surface).overlay(Circle().strokeBorder(Ink.lineStrong, lineWidth: 1.5))
                 .frame(width: Self.face * 2, height: Self.face * 2)
-                .shadow(color: .black.opacity(0.08), radius: 15, y: -6)
             // the value ticks and their labels
             Canvas { ctx, size in
                 let c = CGPoint(x: size.width / 2, y: size.height / 2)
@@ -105,11 +98,9 @@ struct Dial: View {
                         .rotationEffect(.degrees(a)).position(point(a, Self.valueLabels)).opacity(open ? fade(a) : 0)
                 }
             }
-            // the marker: a notch at each ring, clear of the words
-            Capsule().fill(Chapter.fractions.color).frame(width: 3, height: 36)
-                .position(x: Self.side / 2, y: Self.side / 2 - Self.outerTicks).opacity(open ? 1 : 0)
-            Capsule().fill(Chapter.fractions.color).frame(width: 3, height: 40)
-                .position(x: Self.side / 2, y: Self.side / 2 - Self.valueTicks).opacity(open ? 1 : 0)
+            // the marker, through both rings, as the mockup
+            Capsule().fill(Chapter.fractions.color).frame(width: 3, height: 150)
+                .position(x: Self.side / 2, y: Self.side / 2 - 371).opacity(open ? 1 : 0)
             // the readout: the mode small, its value big (the zoom's size, G 17 Oct)
             // a pinch on the paper shows the zoom here for a moment
             let pinching = time - model.pinchedAt < 1.2
