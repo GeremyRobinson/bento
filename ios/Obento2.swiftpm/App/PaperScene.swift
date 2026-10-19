@@ -817,8 +817,9 @@ final class BarsDrawer {
         // the lines come and go with the problem's words: none before it has drawn in, or once it has erased itself
         let shown = snapped(b.words(at: t), 20)
         let whole = snapped(b.wholeLine(at: t), 50), guide = snapped(b.guide(at: t), 50), picture = b.lesson.picture, gone = snapped(b.gone(at: t), 50) * shown
+        let split = snapped(b.splitDrawn(at: t), 40)
         let bracket = picture["total"] == 1 ? snapped(ease((t - b.wordsAt - 0.2) / 0.5), 50) : 0
-        let key = "\(b.lesson.index) \(whole) \(guide) \(bracket) \(gone) \(b.lesson.finalOnly) \(picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(b.lesson.marks.count)"
+        let key = "\(b.lesson.index) \(whole) \(guide) \(bracket) \(gone) \(b.lesson.finalOnly) \(split) \(picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(b.lesson.marks.count)"
         guard key != decorKey else { return }
         decorKey = key
         for c in Array(decor.children) { c.removeFromParent() }
@@ -842,6 +843,15 @@ final class BarsDrawer {
         add([[P(0, wy - 8), P(0, wy + 8)], [P(0, wy), P(W, wy)], [P(W, wy - 8), P(W, wy + 8)]], whole, width: 1.5, rig.colours.ink2)
         if picture["match"] == 1 {
             add(dashed(P(0, r1 + h + 6), P(0, r2 - 28)) + dashed(P(e, r1 + h + 6), P(e, r2 - 6)), 1, width: 2, chapter)
+        }
+        // the How to's cut: every top piece split into the bottom row's pieces, dashed, in the chapter's colour
+        if split > 0 {
+            let s = b.problem, pw = b.pieceWidth, k = s.b / s.a
+            let cuts = (1..<s.b).filter { $0 % k != 0 }
+            let line = { (i: Int) in dashed(P(Double(i) * pw, r1 + 4), P(Double(i) * pw, r1 + h - 4), 5, 4) }
+            // on a shaded piece the cut shows in the paper's colour, on an empty one in the chapter's
+            add(cuts.filter { $0 < s.covered }.flatMap(line), split, width: 2, rig.colours.paper)
+            add(cuts.filter { $0 >= s.covered }.flatMap(line), split, width: 2, chapter)
         }
         if picture["guide"] == 1, guide > 0 { add(dashed(P(e, r1 - 34), P(e, r2 + h + 12), 4, 5), guide, width: 1.5, rig.colours.ink) }
         // hints (LESSONS.md §7): the child's own count as a bracket under the bottom row, from its left end, so it can be

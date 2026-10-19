@@ -52,6 +52,11 @@ final class AddFractionsModel: Identifiable {
 
     /// The How to opens with the lesson's idea (why it works) before any steps: shown in place of the question.
     var intro: String?
+    /// The How to's cut (G 18 Oct): when each top piece started splitting into the bottom row's pieces, dashed.
+    private(set) var splitAt: Double?
+    func split() { splitAt = time(0) }
+    /// How far the cut lines have drawn in (0...1).
+    func splitDrawn(at t: Double) -> Double { splitAt.map { ease((t - $0) / 0.8) } ?? 0 }
     /// The How to's own blocks right now (Next step; at the end Let's practise and Watch again; Skip on a reminder).
     var howToButtons: [ProblemLayout.Kind] = []
 
@@ -100,7 +105,7 @@ final class AddFractionsModel: Identifiable {
 
     var animating: Bool {
         let now = PaperClock.now
-        return now - openedAt < 2.2 || now - wordsAt < 0.8 || fills.values.contains { now - $0.at < 0.35 } || now < busyUntil + 0.1 || (preview.map { now < $0.end + 0.1 } ?? false)
+        return now - openedAt < 2.2 || (splitAt.map { now - $0 < 0.9 } ?? false) || now - wordsAt < 0.8 || fills.values.contains { now - $0.at < 0.35 } || now < busyUntil + 0.1 || (preview.map { now < $0.end + 0.1 } ?? false)
             || (guideAt.map { now - $0 < 0.6 } ?? false) || (leftAt.map { now - $0 < 0.6 } ?? false)
     }
 
@@ -185,7 +190,7 @@ final class AddFractionsModel: Identifiable {
     func replay() {
         var r = LessonRun(lesson.spec, numbers: lesson.numbers); r.helps = lesson.helps; r.oneTry = lesson.oneTry
         lesson = r
-        fills = [:]; guideAt = nil; message = nil; preview = nil; busyUntil = 0
+        fills = [:]; guideAt = nil; message = nil; preview = nil; busyUntil = 0; splitAt = nil
         openedAt = time(0); wordsAt = openedAt
     }
 

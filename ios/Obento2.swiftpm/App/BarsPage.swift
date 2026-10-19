@@ -179,7 +179,11 @@ final class BarsPage {
             }
             while true {
                 howTo.intro = AddFractions.spec.idea(howTo.lesson.numbers)
-                await wait(1.2); _ = await ask([.next])                 // the bars grow in; read why
+                await wait(1.2); _ = await ask([.next])                 // the bars grow in; what to do
+                // the cut: each top piece splits into the bottom row's pieces, so they're the same size
+                let s = howTo.problem
+                howTo.intro = "Cut each \(AddFractions.name(s.a)) into \(s.b / s.a). Now they are \(AddFractions.plural(s.b))."
+                howTo.split(); await wait(1.0); _ = await ask([.next])
                 howTo.intro = nil
                 while !howTo.solved {
                     howTo.go()                                          // the next step's words

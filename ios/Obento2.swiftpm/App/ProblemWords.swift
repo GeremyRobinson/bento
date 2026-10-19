@@ -139,7 +139,28 @@ extension Rig {
             for (i, line) in lines.enumerated() { w.shown.addChild(PaperText.label(line, sf, ink, at: P(0, top + Double(i) * Double(sf.lineHeight)), anchor: .topLeading)) }
             sumBottom = max(-40, top + Double(lines.count) * Double(sf.lineHeight) + 50)
         }
-        w.shown.addChild(PaperText.label(s.sum, PaperText.font(40, .medium, digits: true), ink, at: P(0, storyText == nil ? -60 : sumBottom)))
+        let sumFont = PaperText.font(40, .medium, digits: true), sumY = storyText == nil ? -60 : sumBottom
+        w.shown.addChild(PaperText.label(s.sum, sumFont, ink, at: P(0, sumY)))
+        // the How to writes why the numbers change (G 18 Oct): 3/4 = (3 × 2)/(4 × 2) = 6/8, the × 2 in the cut's colour
+        if m.auto, l.picture["match"] == 1 {
+            // beside the sum, on its line
+            let f = PaperText.font(22, .medium, digits: true), k = s.b / s.a, cy = sumY - Double(sumFont.lineHeight) / 2 + 2, lh = Double(f.lineHeight)
+            var x = PaperText.width(s.sum, sumFont) + 36
+            func put(_ text: String, _ c: UIColor, _ y: Double) -> Double {
+                w.still.addChild(PaperText.label(text, f, c, at: P(x, y), anchor: UnitPoint(x: 0, y: 0.5))); return PaperText.width(text, f)
+            }
+            func stack(_ top: [(String, UIColor)], _ bottom: [(String, UIColor)]) {
+                let tw = top.reduce(0) { $0 + PaperText.width($1.0, f) }, bw = bottom.reduce(0) { $0 + PaperText.width($1.0, f) }, wd = max(tw, bw)
+                var tx = x + (wd - tw) / 2; for (t, c) in top { w.still.addChild(PaperText.label(t, f, c, at: P(tx, cy - lh / 2 - 1), anchor: UnitPoint(x: 0, y: 0.5))); tx += PaperText.width(t, f) }
+                var bx = x + (wd - bw) / 2; for (t, c) in bottom { w.still.addChild(PaperText.label(t, f, c, at: P(bx, cy + lh / 2 + 1), anchor: UnitPoint(x: 0, y: 0.5))); bx += PaperText.width(t, f) }
+                let bar = CGRect(origin: P(x, cy - 0.75), size: CGSize(width: wd, height: 1.5))
+                if let mesh = Self.fills([bar]) { let e = ModelEntity(mesh: mesh, materials: [flat(ink)]); e.position.y = 0.0025; w.still.addChild(e) }
+                x += wd
+            }
+            stack([("\(s.p)", ink)], [("\(s.a)", ink)]); x += put(" = ", ink, cy)
+            stack([("\(s.p)", ink), (" × \(k)", chapter)], [("\(s.a)", ink), (" × \(k)", chapter)]); x += put(" = ", ink, cy)
+            stack([("\(s.covered)", ink)], [("\(s.b)", ink)])
+        }
         w.shown.addChild(PaperText.label("1 whole · \(s.wholeCells) cells", PaperText.font(16), ink2, at: P(W / 2, AddFractionsModel.wholeY - 12), anchor: .bottom))
         w.shown.addChild(PaperText.label(AddFractions.plural(s.a), PaperText.font(17, .medium), ink2, at: P(0, r1 - 8)))
         w.shown.addChild(PaperText.label(AddFractions.plural(s.b), PaperText.font(17, .medium), ink2, at: P(0, r2 - 8)))
