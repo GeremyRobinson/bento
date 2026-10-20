@@ -90,7 +90,9 @@ extension Sketch {
 
     /// How a block looks: its outline, its fill and its word.
     struct Block {
-        var stroke: Colour = .hex(0xCFCCC5, 0x3A3A37), fill: Colour = .hex(0xFBFBFA, 0x1B1B1A), text: Colour = .ink
+        // no white fill (G 19 Oct): a block is an outline drawn on the paper, the grid showing through; only a picked
+        // choice is tinted
+        var stroke: Colour = .hex(0xCFCCC5, 0x3A3A37), fill: Colour? = nil, text: Colour = .ink
         /// The main one (Check, Next): outlined in ink.
         static let main = Block(stroke: .ink)
         static let plain = Block()
@@ -106,7 +108,7 @@ extension Sketch {
         // its id doesn't hold where it is, so a block that only moved glides there
         let place = "", was = snaps
         snaps = grows
-        fill("\(id)f\(place)\(b.fill)", r, b.fill)
+        if let f = b.fill { fill("\(id)f\(place)\(f)", r, f) }
         let i = r.insetBy(dx: 0.75 * k, dy: 0.75 * k)
         line("\(id)o\(place)\(b.stroke)", [CGPoint(x: i.minX, y: i.minY), CGPoint(x: i.maxX, y: i.minY), CGPoint(x: i.maxX, y: i.maxY), CGPoint(x: i.minX, y: i.maxY), CGPoint(x: i.minX, y: i.minY)], b.stroke, width: 1.5 * k)
         snaps = was

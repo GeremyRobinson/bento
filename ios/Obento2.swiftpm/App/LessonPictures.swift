@@ -208,6 +208,7 @@ enum LessonPictures {
         func sq(_ design: Double) -> Double { design / Paper.cell * k }
         let rx = sq(g.rx), ry = sq(g.ry), H = Double(a), widths = split ? ps : [b]
         let label = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink)
+        let product = Sketch.Words(size: Sketch.maths, weight: .semibold, colour: .chapter)
         // every label half a square from what it labels: the side's number beside the rectangle, each width over its strip
         pen.label("side", String(a), label.colour(.chapter), .left, edge: rx, along: ry + H / 2)
         var x = rx
@@ -217,10 +218,10 @@ enum LessonPictures {
             pen.label(id + "top\(lit)", String(split ? ps[i] : b), label.colour(lit ? .chapter : .ink2), .above, edge: ry, along: x + Double(w) / 2)
             if split, i < found {
                 if w >= 4 * kk + 1 {
-                    pen.plate("pf\(i)", over: (w, a), at: x, ry, w: 4 * kk, h: 2 * kk)
-                    pen.word("p\(i)", String(products[i]), at: x + Double(w) / 2, ry + H / 2, label)
+                    // straight on its squares, big and firm in the strip's colour (no white patch, G 19 Oct)
+                    pen.word("p\(i)", String(products[i]), at: x + Double(w) / 2, ry + H / 2, product)
                 } else {
-                    pen.label("p\(i)", String(products[i]), label, .below, edge: ry + H, along: x + Double(w) / 2)
+                    pen.label("p\(i)", String(products[i]), product, .below, edge: ry + H, along: x + Double(w) / 2)
                 }
             }
             x += Double(w) + (split ? 1 : 0)
@@ -267,6 +268,7 @@ enum LessonPictures {
         func sq(_ design: Double) -> Double { design / Paper.cell * k }
         let rx = sq(g.rx), ry = sq(g.ry), H = Double(dv)
         let label = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink)
+        let product = Sketch.Words(size: Sketch.maths, weight: .semibold, colour: .chapter)
         pen.label("side", String(dv), label.colour(.chapter), .left, edge: rx, along: ry + H / 2)
         var x = rx
         for (i, w) in widths.enumerated() where w > 0 {
@@ -277,10 +279,9 @@ enum LessonPictures {
             let inside = i < found ? String(products[i]) : (i == 1 && left ? String(rest) : nil)
             if let inside {
                 if w >= 4 * kk + 1 {
-                    pen.plate("pf\(i)", over: (w, dv), at: x, ry, w: 4 * kk, h: 2 * kk)
-                    pen.word("p\(i)\(inside)", inside, at: x + Double(w) / 2, ry + H / 2, label.colour(i < found ? .ink : .ink2))
+                    pen.word("p\(i)\(inside)", inside, at: x + Double(w) / 2, ry + H / 2, product.colour(i < found ? .chapter : .tint(0.7)))
                 } else {
-                    pen.label("p\(i)\(inside)", inside, label.colour(i < found ? .ink : .ink2), .below, edge: ry + H, along: x + Double(w) / 2)
+                    pen.label("p\(i)\(inside)", inside, product.colour(i < found ? .chapter : .tint(0.7)), .below, edge: ry + H, along: x + Double(w) / 2)
                 }
             }
             x += Double(w) + 1
