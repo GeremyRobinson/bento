@@ -39,7 +39,7 @@ struct PaperScreen: View {
                         // iPadOS's number pad pops up from the hidden field: it sits in the screen's bottom-right corner,
                         // over the bar, so the pad comes up there, clear of the picture and the record (a docked keyboard
                         // doesn't mind where it is)
-                        .position(NumberEntry.anchor(screen: model.screen, bottom: max(16, safe.safeAreaInsets.bottom + 8)))
+                        .position(NumberEntry.anchor(screen: model.screen, bottom: max(16, safe.safeAreaInsets.bottom + 8), stacked: typing?.stacked ?? true))
                 }
                 .onChange(of: t) { _, now in Perf.frame(now); model.settle(at: now); model.lesson?.settle(at: now) }
             }
@@ -135,11 +135,12 @@ struct NumberEntry: View {
     let problem: WorkProblem?
     let step: String
 
-    /// Where the hidden field sits on the screen: the bottom-right corner, just over the floating bar. iPadOS's number pad
-    /// (a popover on iPadOS 26) comes up from it into that corner, which the camera's framing leaves to the record's
-    /// empty right-hand side, so it never covers the picture, the words or the box being typed into.
-    static func anchor(screen: Size, bottom: Double) -> CGPoint {
-        CGPoint(x: screen.width - 48, y: screen.height - bottom - 76)
+    /// Where the hidden field sits on the screen. iPadOS's number pad (a popover on iPadOS 26) comes up from it. A paper
+    /// lesson (stacked): the bottom-right corner, just over the floating bar, the record's empty right-hand side, so the
+    /// pad never covers the picture, the words, the box or Check. The lessons not moved yet (their words beside the box,
+    /// Check under it): the top-right corner.
+    static func anchor(screen: Size, bottom: Double, stacked: Bool) -> CGPoint {
+        stacked ? CGPoint(x: screen.width - 48, y: screen.height - bottom - 76) : CGPoint(x: screen.width - 48, y: 32)
     }
     @State private var text = " "
     @FocusState private var focused: Bool

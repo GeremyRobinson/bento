@@ -137,6 +137,8 @@ enum GhostSpot: Equatable {
     case check
     case choice(Int)
     case box(String)
+    /// Just past a box's bottom-right corner: where the finger lifts away to, so what it wrote shows.
+    case beside(String)
 }
 
 /// One move the ghost finger makes (Show me and the How to, G 20 Oct).

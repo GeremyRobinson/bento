@@ -45,9 +45,11 @@ struct GhostPlay {
                 events += [(pressed, i, .grab), (letGo, i, .release)]
                 t = letGo + Self.lift
             case .write(let box, _):
-                keys += [(t + Self.reach, .box(box), false), (t + Self.reach + Self.press, .box(box), true), (t + Self.reach + Self.press + Self.lift, .box(box), false)]
+                // a press in the box writes its number; the finger lifts away past the box's corner, so it shows
+                keys += [(t + Self.reach, .box(box), false), (t + Self.reach + Self.press, .box(box), true), (t + Self.reach + Self.press + Self.lift, .box(box), false),
+                         (t + Self.reach + Self.press + Self.lift + Self.reach, .beside(box), false)]
                 events.append((t + Self.reach + Self.press + 0.1, i, .write))
-                t += Self.reach + Self.press + Self.lift + 0.3
+                t += Self.reach + Self.press + Self.lift + Self.reach
             }
         }
         done = t

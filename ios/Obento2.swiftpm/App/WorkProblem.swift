@@ -376,7 +376,8 @@ final class WorkProblem: Identifiable, PageProblem {
         fireGhost(upTo: .infinity)
         if let g = ghost { lesson = g.run; hand = g.hand }
         ghost = nil
-        if !a.byHand { for (b, v) in a.expected where (lesson.typed[b] ?? "").isEmpty { lesson.set(b, v) } }
+        // anything the moves didn't fill (a lesson with no demo for a step) is answered with what's expected
+        for (b, v) in a.expected where (lesson.typed[b] ?? "").isEmpty { lesson.set(b, v) }
         go()
     }
 
@@ -556,6 +557,7 @@ final class WorkProblem: Identifiable, PageProblem {
         case .check:
             if g.mode == .preview, case .moved = g.run.go() { g.hand = [:]; Self.answerAhead(&g.run, paper) }
         case .box(let id): g.run.active = id
+        case .beside: break
         }
     }
 
@@ -587,6 +589,7 @@ final class WorkProblem: Identifiable, PageProblem {
         case .check: return ProblemLayout.blocks(self).first { $0.kind == .main }.map { CGPoint(x: $0.rect.midX, y: $0.rect.midY) }
         case .choice(let i): return ProblemLayout.blocks(self).first { $0.kind == .choice(i) }.map { CGPoint(x: $0.rect.midX, y: $0.rect.midY) }
         case .box(let id): return ProblemLayout.blocks(self).first { $0.kind == .field(id) }.map { CGPoint(x: $0.rect.midX, y: $0.rect.midY) }
+        case .beside(let id): return ProblemLayout.blocks(self).first { $0.kind == .field(id) }.map { CGPoint(x: $0.rect.maxX + Paper.cell, y: $0.rect.maxY + Paper.cell) }
         }
     }
 
