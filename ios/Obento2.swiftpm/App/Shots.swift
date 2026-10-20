@@ -14,15 +14,22 @@ enum Shots {
     /// `-reduce-motion`: the moment runs as it does for a child with Reduce Motion on (cuts, nothing drawing in), and
     /// otherwise for real: the How to plays, the work is kept (in memory only) and comes back.
     static var reduceMotion: Bool { ProcessInfo.processInfo.arguments.contains("-reduce-motion") }
+    /// A moment's pages have the same numbers every time it's taken (light and dark, before and after a change), from
+    /// its name and the lesson; nil outside screenshots (fresh numbers).
+    static func seed(_ id: String) -> UInt64? {
+        guard let name else { return nil }
+        // FNV-1a: the same on every launch (Swift's own hashes aren't)
+        return "\(name) \(id)".utf8.reduce(UInt64(14_695_981_039_346_656_037)) { ($0 ^ UInt64($1)) &* 1_099_511_628_211 }
+    }
 
     static func run(_ m: PaperModel) {
         guard let name else { return }
         // as a child does it: tap the lesson (the glide), then Start
         func start(_ p: Piece) { m.select(p); m.open(p) }
-        // the same progress every time, and nothing saved: two lessons learned
+        // the same progress every time, and nothing saved: two lessons learned, the two that worked (G 20 Oct)
         Progress.shared.saving = false
         PageStore.saving = false
-        Progress.shared.reset(to: ["g5-mult2", "add"])
+        Progress.shared.reset(to: ["g5-round", "add"])
         let args = ProcessInfo.processInfo.arguments
         if args.contains("-landscape") || args.contains("-portrait"),
            let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
@@ -243,8 +250,10 @@ enum Shots {
                 Progress.shared.reset(to: Set(Map.gradeLessons), tests: ["test-whole": 12, "test-decimals": 10, "test-fractions": 11, "test-measurement": 10])
                 m.select(Map.tests.first { $0.id == "test-grade" }!)
             case "test-page":
-                Progress.shared.reset(to: whole)
-                let t = Map.tests.first { $0.id == "test-whole" }!
+                // a chapter's test, its 12 problems mixed from its lessons (-chapter=<n>: that chapter's; Whole numbers')
+                let n = args.first { $0.hasPrefix("-chapter=") }.flatMap { Int($0.dropFirst(9)) } ?? 0
+                let t = Map.tests[min(max(0, n), Map.tests.count - 2)]
+                Progress.shared.reset(to: Set(Map.pieces.filter { $0.chapter == t.chapter }.map(\.id)))
                 m.select(t); m.open(t)
             case "selected-ad": m.select(Map.piece("add"))
             case "selected-many":
@@ -319,32 +328,41 @@ enum Shots {
     /// Whole numbers' lessons, for the tests' moments.
     static let whole: Set<String> = ["g5-mult2", "g5-divide", "g5-order"]
 
-    /// The app's structure at its moments (G 20 Oct), each with its own progress, nothing saved:
-    /// - `map-fresh`: nothing learned. `map-learned`: some lessons learned, one due back (Go over), one whose test came
-    ///   back low, a page partway, and chapter tests locked, open, passed and to take again. `map-grade`: every chapter
-    ///   test passed, so the grade's test is open. `-chapter=<n>` frames that chapter instead of the whole map;
-    ///   `-select=<id>` chooses a piece (its tab: Start, Continue, or Go over for one due back).
+    /// The app's structure at its moments (G 20 Oct), each with its own progress, nothing saved, and the same numbers
+    /// every time (Shots.seed). Lessons default to the two that worked (G 20 Oct: Rounding decimals, Adding fractions).
+    /// - `map-fresh`: nothing learned. `map-learned`: some lessons learned, one due back and one whose recheck came back
+    ///   low (both Go over), one whose test came back low and was never learned (its test to take again), a page
+    ///   partway, and chapter tests locked, open, passed and to take again. `map-grade`: every chapter test passed, so the
+    ///   grade's test is open. The map opens on today's chapter; `-whole` frames all of it, `-chapter=<n>` that chapter;
+    ///   `-select=<id>` chooses a piece (its tab: Start, Continue, or Go over).
     /// - `plan-<partway|testopen|passed>-<lesson>`: its page of cards: partway (together done, own ones right, one with a
     ///   miss, one with Show me), the test open (6 right on their own), the test passed (11 of 12, Continue pressed).
     /// - `result-<pass|fail>-<lesson>`: a finished lesson test's result on the paper.
-    /// - `hint-<together|own|used>-<lesson>`: a problem open with the bar's Hint: free in a together problem; on their own
-    ///   after a miss; the page's hints used up.
-    /// - `recheck-<lesson>`, `recheck-result-<lesson>`: a due lesson opening on its recheck, and its result.
-    /// - `test-result-<chapter>`: a chapter test answered to the end (10 right), its result.
-    /// - `howto-<lesson>` (`-taps=<n>`: Next pressed n times), `back-<lesson>`: opened as a child does, not as a
+    /// - `hint-<first|together|own|used>-<lesson>`: a problem open with the bar's Hint: on their own before a miss, tapped
+    ///   (the paper says why there's none); in a together problem, tapped (free); on their own after a miss; the page's
+    ///   hints used up.
+    /// - `recheck-<lesson>`: a due lesson opening on its recheck; `recheck-pass-<lesson>`, `recheck-fail-<lesson>`: its
+    ///   result; `recheck-after-<lesson>`: one that came back low, Continue pressed: the page with problems to go over.
+    /// - `test-result-<chapter>`, `test-fail-<chapter>`: a chapter test answered to the end (10 right; 7), its result.
+    /// - `taught-<lesson>` (`-showing`: while the step is shown): opened as a child does; the same slip twice, then the
+    ///   problem aimed at it, its step shown first by the app and then worked with no miss: right on their own.
+    /// - `stuck-<lesson>`: a lesson test's last problem answered right and the bar's Problems pressed straight away: the
+    ///   result shows (it never waits for a Next problem that's gone).
+    /// - `lesson-<lesson>` (`-taps=<n>`: Next pressed n times), `back-<lesson>`: opened as a child does, not as a
     ///   screenshot: the How to plays; back: the How to tapped through, a problem started, the lesson left and opened
     ///   again, on the problem as it was left. With `-reduce-motion`, as Reduce Motion has it.
+    /// - `cards-fit`: every lesson's cards written as they are on its page, checked inside their frames; printed.
     static func structure(_ m: PaperModel, _ name: String) async -> Bool {
         func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
         let args = ProcessInfo.processInfo.arguments
         let chapter = args.first { $0.hasPrefix("-chapter=") }.flatMap { Int($0.dropFirst(9)) }
-        /// The map framed (whole, or `-chapter=<n>`), and with `-select=<id>` that piece chosen, its tab saying Start,
-        /// Continue or Go over.
+        /// The map framed (today's chapter; `-whole`, or `-chapter=<n>`), and with `-select=<id>` that piece chosen, its
+        /// tab saying Start, Continue or Go over.
         func frameMap() {
-            if let chapter { m.frameChapter(chapter) } else { m.frameGroup(duration: 0) }
+            if let chapter { m.frameChapter(chapter) } else if args.contains("-whole") { m.frameAll() } else { m.frameGroup(duration: 0) }
             if let id = args.first(where: { $0.hasPrefix("-select=") }).map({ String($0.dropFirst(8)) }), let p = Map.piece(id) { m.select(p) }
         }
-        /// The lesson named after the moment's kind ("plan-partway-g5-mult2" → g5-mult2).
+        /// The lesson named after the moment's kind ("plan-partway-g5-round" → g5-round).
         func lesson(_ prefix: String) -> Piece? { Map.piece(String(name.dropFirst(prefix.count))) }
         /// Opens a lesson as a child does, at once: its page (the How to done), or its recheck.
         func open(_ p: Piece) -> BarsPage? { m.shotMode = true; m.select(p); m.open(p); return m.bars }
@@ -356,12 +374,13 @@ enum Shots {
         case "map-learned":
             Progress.shared.reset(to: whole.union(["g5-pow10", "g5-round", "g5-adddec", "g5-multdec", "g5-divdec", "add", "sub", "g5-volume", "g5-units"]),
                                   due: ["g5-round"], tests: ["test-whole": 11, "test-measurement": 7])
-            Progress.shared.checked("mix", level: 1)
-            if let spec = Lessons.spec("g5-multfrac") {
-                var rng = SeededRandom(seed: 3)
-                let plan = LessonPlan(spec, using: &rng), runs = plan.items.indices.map { plan.run(spec, $0).snapshot }
-                PageStore.save("g5-multfrac", .init(date: Date(), plan: plan, problems: runs, test: [], recheck: [], spot: nil, recorded: false, solved: 4, hintsLeft: 5))
-            }
+            // Subtracting fractions: learned, its recheck came back low (Go over, still counted)
+            Progress.shared.checked("sub", level: 1)
+            // Adding and subtracting: its page done and its test 8 of 12, never learned: its test is there to take again
+            seedPage("mix", own: LessonPlan.own, test: 8)
+            Progress.shared.checked("mix", level: LessonPlan.level(8, of: LessonPlan.test))
+            // Multiplying fractions: partway
+            seedPage("g5-multfrac", own: 1)
             m.shotMode = true; frameMap()
         case "map-grade":
             Progress.shared.reset(to: Set(Map.gradeLessons), tests: ["test-whole": 12, "test-decimals": 10, "test-fractions": 11, "test-measurement": 10])
@@ -402,7 +421,8 @@ enum Shots {
             let kind = n.dropFirst(5).prefix { $0 != "-" }
             guard let p = lesson("hint-\(kind)-"), let page = open(p) else { return true }
             await wait(0.3)
-            if kind == "together" { page.open(page.problems[0]); return true }
+            // a together problem: its hint is free, and shows on the paper
+            if kind == "together" { page.open(page.problems[0]); page.hint(); return true }
             /// The next own problem not done, told plainly (a story's first step is picking what to do).
             func nextOwn() -> Int? {
                 page.problems.indices.first { i in page.plan.map { $0.items[i].part == .own && !$0.items[i].story } == true && !page.problems[i].solved }
@@ -415,28 +435,35 @@ enum Shots {
                 }
             }
             guard let i = nextOwn() else { return true }
-            page.open(page.problems[i]); await work(page.problems[i], miss: true, stopAfterMiss: true)
+            page.open(page.problems[i])
+            // before a miss: Hint tapped anyway, and the paper says why there's none yet
+            if kind == "first" { page.hint(); return true }
+            await work(page.problems[i], miss: true, stopAfterMiss: true)
         case let n where n.hasPrefix("recheck"):
-            let id = n.hasPrefix("recheck-result-") ? String(n.dropFirst(15)) : n.hasPrefix("recheck-") ? String(n.dropFirst(8)) : "g5-mult2"
+            // recheck-<lesson>, recheck-pass-, recheck-result- (the same), recheck-fail-, recheck-after-
+            let kinds = ["recheck-pass-", "recheck-result-", "recheck-fail-", "recheck-after-", "recheck-"]
+            let kind = kinds.first { n.hasPrefix($0) } ?? "recheck-"
+            let id = n.count > kind.count ? String(n.dropFirst(kind.count)) : "g5-round"
             guard let p = Map.piece(id) else { return true }
             Progress.shared.reset(to: [id], due: [id])
-            guard let page = open(p), n.hasPrefix("recheck-result-") else { return true }
+            // its page as it was finished, days ago
+            seedPage(id, own: LessonPlan.own, test: 11)
+            guard let page = open(p), kind != "recheck-" else { return true }
             await wait(0.3)
-            for (i, q) in page.recheckProblems.enumerated() { page.open(q); await work(q, miss: i == 2) }
+            let fail = kind == "recheck-fail-" || kind == "recheck-after-"
+            for (i, q) in page.recheckProblems.enumerated() { page.open(q); await work(q, miss: fail ? i < 2 : i == 2) }
             page.goNext()
-        case let n where n.hasPrefix("howto-") || n.hasPrefix("back-"):
+            if kind == "recheck-after-" { await wait(0.3); page.continueFromResult() }
+        case let n where n.hasPrefix("lesson-") || n.hasPrefix("back-"):
             let back = n.hasPrefix("back-")
-            guard let p = lesson(back ? "back-" : "howto-") else { return true }
+            guard let p = lesson(back ? "back-" : "lesson-") else { return true }
             Progress.shared.reset(to: [])
             PageStore.clear(p.id)
             m.frameGroup(duration: 0)
             m.select(p); await wait(m.reduceMotion ? 0.2 : 1.2); m.open(p); await wait(1.5)
             // a tap each time the How to waits for one (its blocks are up)
             let taps = back ? 99 : args.first { $0.hasPrefix("-taps=") }.flatMap { Int($0.dropFirst(6)) } ?? 0
-            var tapped = 0
-            for _ in 0..<600 where tapped < taps && m.bars?.howToGone == false {
-                if m.bars?.howTo.howToButtons.isEmpty == false { m.bars?.skipHowTo(); tapped += 1; await wait(0.4) } else { await wait(0.1) }
-            }
+            await tapThrough(m, taps: taps)
             guard back, let page = m.bars, let i = page.problems.indices.first(where: { page.plan?.items[$0].part == .own }),
                   let w = page.problems[i] as? WorkProblem else { return true }
             await wait(0.8)
@@ -446,47 +473,148 @@ enum Shots {
             await wait(0.5)
             m.close(); await wait(2)
             m.select(p); await wait(m.reduceMotion ? 0.2 : 1.2); m.open(p)
-        case let n where n.hasPrefix("test-result-"):
-            guard let t = Map.piece("test-\(n.dropFirst(12))") else { return true }
+        case let n where n.hasPrefix("taught-"):
+            // as a child does (the app's teaching never runs in a screenshot's instant page): the same slip twice on their
+            // own, then the problem aimed at it, its step shown by the app first, then worked with no miss
+            guard let p = lesson("taught-") else { return true }
+            Progress.shared.reset(to: [])
+            seedPage(p.id, own: 0)
+            m.frameGroup(duration: 0)
+            m.select(p); await wait(1.2); m.open(p); await wait(2.5)
+            guard let page = m.bars else { return true }
+            func own() -> [Int] { page.problems.indices.filter { page.plan?.items[$0].part == .own && page.plan?.items[$0].story == false } }
+            for _ in 0..<2 {
+                guard let i = own().first(where: { !page.problems[$0].solved }) else { return true }
+                page.open(page.problems[i]); await wait(1.5)
+                await work(page.problems[i], miss: true)
+                await wait(1)
+            }
+            guard let t = page.problems.indices.first(where: { page.plan?.items[$0].focus?.teach == true }), let w = page.problems[t] as? WorkProblem else { return true }
+            page.open(w)
+            // the app shows the step (about 1.2 s in, for 2.4 s)
+            await wait(2.4)
+            if args.contains("-showing") { return true }
+            for _ in 0..<60 where w.busy || w.message != nil { await wait(0.1) }
+            await work(w)
+            await wait(1)
+            page.backToProblems()
+        case let n where n.hasPrefix("stuck-"):
+            // as a child does: the lesson test's last problem right, and the bar's Problems pressed as it's checked
+            guard let p = lesson("stuck-") else { return true }
+            Progress.shared.reset(to: [])
+            seedPage(p.id, own: LessonPlan.own, test: 11, testAnswered: LessonPlan.test - 1)
+            m.frameGroup(duration: 0)
+            m.select(p); await wait(1.2); m.open(p); await wait(2.5)
+            guard let page = m.bars, let last = page.testProblems.last else { return true }
+            page.open(last); await wait(1.5)
+            await work(last, steps: last.lesson.workSteps - 1)
+            for _ in 0..<40 where last.busy { await wait(0.05) }
+            guard last.lesson.step.answer != nil else { return true }
+            last.answerForShots(wrong: false)
+            page.backToProblems()
+        case let n where n.hasPrefix("test-result-") || n.hasPrefix("test-fail-"):
+            let fail = n.hasPrefix("test-fail-")
+            guard let t = Map.piece("test-\(n.dropFirst(fail ? 10 : 12))") else { return true }
             Progress.shared.reset(to: Set(Map.gradeLessons))
             guard let page = open(t) else { return true }
             await wait(0.3)
-            for (i, q) in page.problems.enumerated() { page.open(q); await work(q, miss: i == 2 || i == 7) }
+            for (i, q) in page.problems.enumerated() { page.open(q); await work(q, miss: fail ? i % 3 == 1 || i == 0 : i == 2 || i == 7) }
             page.goNext()
+        case "cards-fit":
+            // every lesson's cards checked inside their frames, printed for the build to read
+            for line in CardText.check() { print("OBENTO-CARDS \(line)") }
+            fflush(stdout)
+            exit(0)
         default:
             return false
         }
         return true
     }
 
-    /// Works a problem as a child does (screenshots): each step's answer typed into its boxes (or its choice tapped)
-    /// and checked. `miss`: the first step answered wrong first, then `afterMiss` (the bar's Hint, say), and with
-    /// `stopAfterMiss` it's left there; `showMe`: Show me on every step; `steps`: stop after that many steps.
+    /// Taps through the How to (`taps` times at most), each time it waits for a tap.
+    static func tapThrough(_ m: PaperModel, taps: Int) async {
+        var tapped = 0
+        for _ in 0..<600 where tapped < taps && m.bars?.howToGone == false {
+            if m.bars?.howTo.howToButtons.isEmpty == false { m.bars?.skipHowTo(); tapped += 1; try? await Task.sleep(for: .seconds(0.4)) }
+            else { try? await Task.sleep(for: .seconds(0.1)) }
+        }
+    }
+
+    /// A lesson's page as a child left it, in the page store (screenshots keep it in memory only): its together
+    /// problems and `own` on their own worked right, and a test of 12 with `test` right (`testAnswered` of them
+    /// answered), when there's one.
+    static func seedPage(_ id: String, own: Int, test: Int? = nil, testAnswered: Int = LessonPlan.test) {
+        guard let spec = Lessons.spec(id) else { return }
+        // its own seed, not the page's (Shots.seed(id)): the page would make the same numbers again for what it adds
+        var rng = SeededRandom(seed: seed("seeded \(id)") ?? 3)
+        let plan = LessonPlan(spec, using: &rng)
+        var runs = plan.items.indices.map { plan.run(spec, $0) }
+        var made = 0
+        for i in runs.indices where plan.items[i].part == .together || (plan.items[i].part == .own && made < own) {
+            runs[i] = worked(runs[i]); if plan.items[i].part == .own { made += 1 }
+        }
+        var tests: [LessonRun] = []
+        if let test {
+            tests = LessonPlan.testRuns(spec, using: &rng)
+            for i in tests.indices where i < testAnswered { tests[i] = worked(tests[i], miss: i >= test) }
+        }
+        PageStore.save(id, .init(date: Date(), plan: plan, problems: runs.map(\.snapshot), test: tests.map(\.snapshot), recheck: [], spot: nil,
+                                 recorded: test != nil && testAnswered == LessonPlan.test, solved: runs.filter(\.isLast).count, hintsLeft: LessonPlan.hints))
+    }
+
+    /// A problem worked to its end in Core, as a child would with each step's answer; `miss`: its first step wrong first.
+    static func worked(_ run: LessonRun, miss: Bool = false) -> LessonRun {
+        var r = run, missed = !miss
+        for _ in 0..<40 where !r.isLast {
+            if let a = r.step.answer {
+                if !missed {
+                    missed = true
+                    if let c = a.choices { r.choose((Int(a.expected["c"] ?? 0) + 1) % c.count) } else { for b in a.boxes { r.set(b, (a.expected[b] ?? 0) + 7) } }
+                    _ = r.go()
+                }
+                if a.choices != nil { r.choose(Int(a.expected["c"] ?? 0)) } else { for b in a.boxes { r.set(b, a.expected[b]) } }
+            }
+            _ = r.go()
+        }
+        return r
+    }
+
+    /// Works a problem as a child does (screenshots): each step answered (typed, picked, or on a paper lesson by its
+    /// hand moves: the problem's own answerForShots) and checked, waiting while the paper shows each step right or plays
+    /// Show me. `miss`: the first step answered wrong first, then `afterMiss` (the bar's Hint, say), and with
+    /// `stopAfterMiss` it's left there; `showMe`: Show me on every step first; `steps`: stop after that many steps.
     static func work(_ m: any PageProblem, miss: Bool = false, afterMiss: (() -> Void)? = nil, stopAfterMiss: Bool = false, showMe: Bool = false, steps: Int = 99) async {
-        guard let w = m as? WorkProblem else { return }
         var missed = !miss, done = 0
+        /// Hands off while the paper answers (a step right shows for a moment, Show me plays), not in an instant page.
+        func settle() async { for _ in 0..<100 where m.busy { try? await Task.sleep(for: .seconds(0.05)) } }
+        /// A step checked right: until the next step is in (the paper shows it right for a moment first; on a busy
+        /// machine that moment can outlast the hands-off time, and the same step mustn't be answered twice).
+        func moved(from at: Int) async {
+            for _ in 0..<200 where m.lesson.index == at && !m.solved { try? await Task.sleep(for: .seconds(0.05)) }
+            await settle()
+        }
         for _ in 0..<40 {
-            if w.solved || done >= steps { return }
-            guard let a = w.lesson.step.answer else { w.go(); continue }
+            await settle()
+            if m.solved || done >= steps { return }
+            guard m.lesson.step.answer != nil else { let at = m.lesson.index; m.go(); await moved(from: at); continue }
             if !missed {
                 missed = true
-                if let c = a.choices { w.choose((Int(a.expected["c"] ?? 0) + 1) % c.count) }
-                else { w.select(a.boxes.first ?? "x"); for k in ["9", "9", "9"] { w.type(k) } }
-                w.go()
+                let at = m.lesson.index
+                m.answerForShots(wrong: true)
                 afterMiss?()
                 if stopAfterMiss { return }
                 // one try: its answer is shown, and it moves on by itself (waited for: the paper may still be drawing)
-                if w.lesson.oneTry {
-                    let at = w.lesson.index
-                    for _ in 0..<60 where w.lesson.index == at && !w.solved { try? await Task.sleep(for: .seconds(0.05)) }
+                if m.lesson.oneTry {
+                    for _ in 0..<60 where m.lesson.index == at && !m.solved { try? await Task.sleep(for: .seconds(0.05)) }
                     done += 1; continue
                 }
-                w.reset()
+                await settle()
+                m.reset()
             }
-            if showMe { w.showMe() }
-            else if a.choices != nil { w.choose(Int(a.expected["c"] ?? 0)) }
-            else { for box in a.boxes { w.select(box); for ch in fmt(a.expected[box] ?? 0) where ch != "−" { w.type(String(ch)) } } }
-            w.go()
+            if showMe { m.showMe(); await settle() }
+            let at = m.lesson.index
+            m.answerForShots(wrong: false)
+            await moved(from: at)
             done += 1
         }
     }

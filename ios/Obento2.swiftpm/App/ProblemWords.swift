@@ -280,8 +280,9 @@ extension Rig {
         // were told then, in the chapter's colour; never in a test
         if m.intro == nil, !storyStep, l.step.answer?.choices == nil {
             // only after a miss (G 19 Oct: no text that isn't needed); the picture lights what to look at
-            let (text, c): (String?, Sketch.Colour) = m.onFocus ? (m.focus?.said, .chapter) : (l.helps && l.misses > 0) ? (words.hint, .ink2) : (nil, .ink2)
-            if let text { s.words("hint\(l.index)", text, Sketch.Words.hint.colour(c), x: sayX, top: sayTop + Double(said) * row * k, width: lay.inline ? max(lay.sayWidth, 300) : col, k: k) }
+            // said once (G 20 Oct): not again when what a miss says (or the hint) already has it; grey, as colour is the maths'
+            let (text, c): (String?, Sketch.Colour) = m.onFocus ? (m.focus?.said, .ink2) : (l.helps && l.misses > 0) ? (words.hint, .ink2) : (nil, .ink2)
+            if let text, !text.isEmpty, !(m.message?.text.contains(text) ?? false) { s.words("hint\(l.index)", text, Sketch.Words.hint.colour(c), x: sayX, top: sayTop + Double(said) * row * k, width: lay.inline ? max(lay.sayWidth, 300) : col, k: k) }
         }
         // the line being worked, a digit to a square, its boxes drawn as blocks
         if let a = l.step.answer, a.choices == nil, m.intro == nil, !lay.inline {

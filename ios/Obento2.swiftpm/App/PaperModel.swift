@@ -16,16 +16,16 @@ struct Piece: Identifiable, Equatable {
     var isTest: Bool { id.hasPrefix("test-") }
 
     /// Learned (coloured in: a lesson learned at some time, a test passed), up next (the first lesson in its chapter not
-    /// learned yet, or one whose test came back low: lit, with a tab), or not yet.
+    /// learned yet, its test to take again included: lit, with a tab), or not yet.
     @MainActor var state: State {
         if isTest { return Progress.shared.passed(id) ? .learned : opens ? .now : .notYet }
         if Progress.shared.learned.contains(id) { return .learned }
-        if Progress.shared.goOver(id) { return .now }
-        let next = Map.pieces.first { $0.chapter == chapter && $0.opens && !Progress.shared.learned.contains($0.id) && !Progress.shared.goOver($0.id) }
+        let next = Map.pieces.first { $0.chapter == chapter && $0.opens && !Progress.shared.learned.contains($0.id) }
         return next?.id == id ? .now : .notYet
     }
-    /// Marked Go over on the map (G 20 Oct): a learned lesson due back for its recheck (it opens on it), or one whose
-    /// last check came back low. It stays coloured and counted; the tab says Go over instead of Up next.
+    /// Marked Go over on the map (G 20 Oct): a lesson learned at some time that's due back for its recheck (it opens on
+    /// it), or whose recheck came back low (it opens on its page, with fresh problems to go over). It stays coloured and
+    /// counted; the tab says Go over instead of Up next. A lesson never learned is never Go over.
     @MainActor var goOver: Bool { !isTest && Progress.shared.goOver(id) }
 
     /// Graph paper (G 17 Oct): 3 blocks by 2, starting and ending on the strong lines; its name and Start block fill
@@ -250,26 +250,42 @@ final class PaperModel {
         return cam
     }
 
-    /// The overview button: the whole lesson page when one is open, else the whole map.
+    /// The overview button (Lessons): the whole lesson page when one is open, else the whole map.
     func frameAll() {
         if let b = bars { fly(to: framingBelowBar(b.pageFrame, maxZoom: CameraTiming.lessonMax), duration: CameraTiming.fly) }
-        else { frameGroup() }
+        else { fly(to: overview, duration: CameraTiming.fly) }
     }
 
-    /// The whole map, framed.
+    /// The map as it opens (G 20 Oct): today's chapter, at 100% so its names and lines read at 20 on the screen (the whole
+    /// map is the Lessons button's, its words too small to read). The other chapters are a pan or a pinch away.
     func frameGroup(duration: Double = CameraTiming.fly) {
-        fly(to: overview, duration: duration)
+        guard let today = Map.today ?? Map.pieces.first(where: { $0.state == .now }),
+              let i = Map.groups.firstIndex(where: { $0.chapter == today.chapter }) else { fly(to: overview, duration: duration); return }
+        fly(to: chapterView(i, showing: today), duration: duration)
     }
 
     /// The crosshair: glide to the lesson that's up next.
     func findNext() { if let p = Map.today { select(p) } }
 
-    /// The dial's Lessons: a glide to chapter `i`, its title and every lesson in it.
+    /// A glide to chapter `i`: its title, every lesson in it and its test, read at 100%.
     func frameChapter(_ i: Int) {
         guard Map.groups.indices.contains(i) else { return }
-        let g = Map.groups[i], frames = g.pieces.map { Rect(x: $0.at.x, y: $0.at.y, width: Piece.size.width, height: Piece.size.height + Paper.unit) }
-        let r = frames.reduce(Rect(x: g.origin.x, y: g.origin.y, width: 1, height: 1)) { $0.union($1) }
-        fly(to: framingBelowBar(r, maxZoom: CameraTiming.selectMax), duration: CameraTiming.glide)
+        fly(to: chapterView(i), duration: CameraTiming.glide)
+    }
+    /// Chapter `i` framed to read, as a page is read: its title at the top, its lessons and test across the screen at up
+    /// to 100% (a little less where its three columns are wider than the screen, as in portrait, so no lesson is cut off
+    /// at the sides), the next chapter coming in under it. A chapter too tall for the room above the bar shows from its
+    /// title down, or, when `piece` is further down, down to it; the rest is a scroll away.
+    func chapterView(_ i: Int, showing piece: Piece? = nil) -> PaperCamera {
+        let g = Map.groups[i], all = g.pieces + Map.tests.filter { $0.chapter == g.chapter && $0.id != "test-grade" }
+        let r = all.map { Rect(x: $0.at.x, y: $0.at.y, width: Piece.size.width, height: Piece.size.height + Paper.unit) }
+            .reduce(Rect(x: g.origin.x, y: g.origin.y, width: 1, height: 1)) { $0.union($1) }
+        let pad = screen.width > 760 ? Self.margin : 8
+        let top = Self.chrome.top + pad, bottom = screen.height - max(Self.chrome.bottom, keyboard + 16) - pad
+        let z = min(CameraTiming.selectMax, (screen.width - 2 * pad) / r.width), x = screen.width / 2 - r.mid.x * z
+        var y0 = r.y
+        if let p = piece, (p.focus.y + p.focus.height - y0) * z > bottom - top { y0 = p.focus.y + p.focus.height - (bottom - top) / z }
+        return PaperCamera(x: x, y: top - y0 * z, zoom: z)
     }
 
     /// A tap on a lesson: a slow, gentle glide that brings it closer, not too close.
@@ -339,16 +355,18 @@ final class PaperModel {
     }
 
     /// Opening the flat lesson: its page (BarsPage). The How to plays where the lesson is, on the paper's own camera,
-    /// then its problems' cards draw in. A learned lesson that's due back opens on its recheck (G 20 Oct); a chapter or
-    /// grade test finished before starts afresh.
+    /// then its problems' cards draw in. A lesson learned at some time that's due back opens on its recheck (G 20 Oct;
+    /// one that came back low, the next day); a chapter or grade test finished before starts afresh. A screenshot's
+    /// page has the same numbers every time it's taken.
     func openBars(_ p: Piece) {
         // another page was open: its tasks end now
         bars?.stop()
         let first = (p.id == "ad" ? shotProblem?.numbers : shotNumbers) ?? prepared.flatMap { $0.id == p.id ? $0.numbers : nil }
-        var saved = shotMode ? nil : PageStore.load(p.id)
+        // a screenshot's page is one it set up itself, or fresh
+        var saved = shotMode ? PageStore.cached(p.id) : PageStore.load(p.id)
         if p.isTest, saved?.recorded == true { saved = nil }
         let b = BarsPage(piece: p, reduceMotion: reduceMotion, shotMode: shotMode, first: first, saved: saved,
-                         test: p.isTest ? LessonPlan.test : nil, recheck: !p.isTest && Progress.shared.dueBack(p.id))
+                         test: p.isTest ? LessonPlan.test : nil, recheck: !p.isTest && Progress.shared.dueBack(p.id), seed: Shots.seed(p.id))
         b.frame = { [weak self] r in self?.frameCurrent(r) }
         b.close = { [weak self] in self?.close() }
         bars = b; selected = nil

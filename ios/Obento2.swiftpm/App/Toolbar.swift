@@ -45,10 +45,11 @@ struct Toolbar: View {
                 }
                 divider
                 info(title: model.openPiece?.name ?? "", detail: lessonDetail, progress: lessonProgress, wide: true)
-                if hasTools {
+                if hasTools && !inTest {
                     divider
-                    // the hint is drawn on the paper (G 20 Oct): no card opens for it
-                    BarButton(icon: .hint, label: "Hint", count: hintCount, enabled: canHint) { open = nil; model.bars?.hint() }
+                    // the hint is drawn on the paper (G 20 Oct): no card opens for it. Dim when there's none to give, but
+                    // still there to tap: the paper then says why ("Have a go first. A hint comes after a miss.")
+                    BarButton(icon: .hint, label: "Hint", count: hintCount, dim: !canHint) { open = nil; model.bars?.hint() }
                     BarButton(icon: .show, label: "Show me", enabled: canShowMe) { open = nil; showMe() }
                 }
             } else {
@@ -163,10 +164,12 @@ struct Toolbar: View {
     private var hasTools: Bool { problem != nil || model.lesson != nil }
     private var helps: Bool { problem?.lesson.helps ?? model.lesson?.lesson.helps ?? false }
 
-    /// Hints (G 20 Oct): the page decides, with its budget saved with it: free in together problems up to their cap, on
-    /// their own one of the page's once the step had a miss, none in tests. The count is what's left for this problem.
+    /// Hints (G 20 Oct): the page decides, with its budget saved with it: free in together problems up to their cap (not
+    /// counted), on their own one of the page's once the step had a miss (then the count shows), none in tests.
     private var hintCount: Int? { model.bars?.hintCount }
     private var canHint: Bool { (model.bars?.hintUse ?? .off) != .off }
+    /// A test or a recheck (or its result): no help of any kind, so no Hint or Show me in the bar.
+    private var inTest: Bool { model.bars?.inTest ?? false }
     private var canShowMe: Bool { helps && (step?.task != nil || step?.answer != nil) && problem?.solved != true }
     private var canReset: Bool { step?.task != nil }
     private var step: LessonStep? { problem?.lesson.step ?? model.lesson?.lesson.step }
@@ -216,12 +219,14 @@ final class Speech {
 }
 
 /// A big button in the bar: an icon and, for the main ones, its word. Lit when it's where you are or what's open.
+/// `dim`: drawn as if off, but still tapped (what it does then is say why it's off).
 struct BarButton: View {
     let icon: ObentoIcon
     let label: String?
     var count: Int? = nil
     var lit = false
     var enabled = true
+    var dim = false
     let action: () -> Void
     var body: some View {
         Button(action: action) {
@@ -241,7 +246,7 @@ struct BarButton: View {
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
-        .disabled(!enabled).opacity(enabled ? 1 : 0.35)
+        .disabled(!enabled).opacity(enabled && !dim ? 1 : 0.35)
         .accessibilityLabel(label ?? "More")
     }
 }

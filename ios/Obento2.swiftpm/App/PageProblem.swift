@@ -40,11 +40,11 @@ protocol PageProblem: AnyObject {
     func go()
     func choose(_ i: Int)
     func showMe()
+    /// The bar's Hint: the step's hint shown on the paper (a paper lesson writes it on rows 3–4 and lights its part of
+    /// the picture).
+    func showHint()
     func reset()
     func usedHint()
-    /// The bar's Hint (G 20 Oct): the step's hint shown on the paper itself, a small drawing step (LESSONS.md §7), never
-    /// a pop-up. The page has already decided a hint may be given and counted it (usedHint).
-    func showHint()
     func tapPaper(_ p: Point)
     /// A drag that starts on something the child can move (a point, a length, a cut): true takes it, and the drag's
     /// moves and its end come here instead of panning the paper. Paper points.
@@ -55,12 +55,26 @@ protocol PageProblem: AnyObject {
     func restore()
     /// The How to's explaining beats after the lesson's first words: what each says, and what it draws.
     func howToBeats() -> [(words: String, run: () -> Void)]
+    /// Screenshots only: the step answered as a child would, then checked; `wrong`: a slip instead. A problem answered
+    /// by hand moves answers with its moves (its own answerForShots).
+    func answerForShots(wrong: Bool)
 }
 
 extension PageProblem {
+    func showHint() {}
     func grab(_ p: Point) -> Bool { false }
     func drag(to p: Point) {}
     func release() {}
-    /// Nothing drawn yet: each kind of problem draws its own hint on the paper.
-    func showHint() {}
+    /// Typed into its boxes, or picked.
+    func answerForShots(wrong: Bool) {
+        guard let a = lesson.step.answer else { go(); return }
+        if let c = a.choices {
+            let k = Int(a.expected["c"] ?? 0)
+            choose(wrong ? (k + 1) % max(1, c.count) : k)
+        } else if let w = self as? WorkProblem {
+            w.reset()
+            for box in a.boxes { w.select(box); for ch in fmt((a.expected[box] ?? 0) + (wrong ? 7 : 0)) where ch != "−" { w.type(String(ch)) } }
+        }
+        go()
+    }
 }

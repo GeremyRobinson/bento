@@ -154,13 +154,15 @@ extension Rig {
         if moving != model.mapDrawing { Task { @MainActor in model.setMapDrawing(moving) } }
     }
 
-    /// The line under a piece's name: a lesson Learned, or how far its page got; a test's last result ("Passed · 11 of
-    /// 12", "Take it again"), how far an attempt got, how many problems it has, or what it waits for. Lit (in its
+    /// The line under a piece's name: a lesson Learned, or where its page stands (the goal that opens its test, as the
+    /// bar says it: "On your own · 2 of 6 right", "Test · 8 of 12 · Take it again"); a test's last result ("Passed · 11
+    /// of 12", "Take it again"), how far an attempt got, how many problems it has, or what it waits for. Lit (in its
     /// chapter's colour) when it's news or something to do; grey while it waits.
     @MainActor static func line(_ p: Piece) -> (text: String, lit: Bool)? {
         let saved = PageStore.load(p.id)
         guard p.isTest else {
             if Progress.shared.learned.contains(p.id) { return ("Learned", true) }
+            if let s = saved, let plan = s.plan { return (plan.standing(s.problems, test: s.test).words, true) }
             return saved.map { ("\($0.solved) of \($0.problems.count) done", true) }
         }
         if let s = saved, !s.recorded { return ("\(s.solved) of \(s.problems.count) done", true) }
@@ -201,12 +203,13 @@ extension Rig {
                 if passed { s.overLine(id + "tick", [CGPoint(x: corner.x - 8, y: corner.y), CGPoint(x: corner.x - 2.5, y: corner.y + 6), CGPoint(x: corner.x + 9, y: corner.y - 6.5)], mark, width: Sketch.stroke) }
                 else { s.text(id + "n", "\(LessonPlan.test)", at: corner, size: 15, weight: .bold, mark) }
             } else if model.selected?.id == p.id && p.opens {
-                // chosen: its tab says Start (Continue, or Go over when it opens on its recheck), with an arrow (G 18 Oct)
+                // chosen: its tab says Start (Continue; Go over when it's marked so: it opens on its recheck, or on the
+                // page with what to go over), with an arrow (G 18 Oct)
                 s.startAt = nil
-                let word = Progress.shared.dueBack(p.id) ? "Go over" : PageStore.load(p.id) == nil ? "Start" : "Continue"
+                let word = p.goOver ? "Go over" : PageStore.load(p.id) == nil ? "Start" : "Continue"
                 s.tab(id, frame: r, word, width: p.start.width, arrow: true, colour: chapter)
             } else if p.goOver {
-                // learned, and its time to come back has come (or its check came back low): Go over, not Up next
+                // learned, and its time to come back has come (or its recheck came back low): Go over, not Up next
                 s.tab(id, frame: r, "Go over", colour: chapter)
             } else if p.state == .now {
                 s.tab(id, frame: r, "Up next", colour: chapter)
