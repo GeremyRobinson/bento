@@ -80,7 +80,10 @@ extension Rig {
             let d = problemWords[m.id] ?? { let d = SketchDrawer(); pageWords.addChild(d.root); problemWords[m.id] = d; return d }()
             if m.leftAt == nil, d.leftAt != nil { d.revive() }
             let key = wordsKey(m, page, dark: isDark)
-            if key != d.key, m.leftAt == nil {
+            // only the problem being worked (or the How to) may draw; anything else undraws
+            let wanted = page.mode == .work ? page.current === m : (page.mode == .howTo && m === page.howTo)
+            if !wanted { d.undrawAll(at: m.leftAt ?? t) }
+            if key != d.key, m.leftAt == nil, wanted {
                 d.key = key
                 d.build(barsSketch(m), rig: self, chapter: m.chapter.hex, dark: isDark, origin: .zero, from: d.isEmpty ? m.openedAt + 0.4 : max(t, m.wordsAt), now: t)
             }

@@ -119,8 +119,12 @@ extension Rig {
         // opened again while it was still undrawing: it draws itself back in
         if m.leftAt == nil, d.leftAt != nil { d.revive() }
         let key = "\(m.lesson.numbers) \(m.lesson.index) \(m.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(m.lesson.missedSteps.count) \(m.scale) " + wordsKey(m, page, dark: dark)
-        // leaving, it only undraws: a rebuild now (it stopped being the current one) would draw it all back in
-        if key != d.key, m.leftAt == nil {
+        // only the problem being worked (or the How to while it plays) may draw (G 19 Oct): anything else on the paper
+        // undraws, however it got there, so nothing can be left over the page of problems; and leaving, it only
+        // undraws (a rebuild now would draw it all back in)
+        let wanted = page.mode == .work ? page.current === m : (page.mode == .howTo && m === page.howTo)
+        if !wanted { d.undrawAll(at: m.leftAt ?? t) }
+        if key != d.key, m.leftAt == nil, wanted {
             d.key = key
             let l = m.layout, o = m.contentOrigin
             var s = workSketch(m, top: true)
@@ -177,7 +181,8 @@ final class SketchDrawer {
             }
         }
         func P(_ p: CGPoint) -> CGPoint { CGPoint(x: o.x + p.x * k, y: o.y + p.y * k) }
-        let sigs = s.items.map { "\($0.kind) \($0.colour) \(o) \(k)" }
+        // light or dark is part of every part: switching redraws it all in the new colours
+        let sigs = s.items.map { "\($0.kind) \($0.colour) \(o) \(k) \(dark)" }
         let fresh = s.items.indices.filter { nodes[s.items[$0].id]?.sig != sigs[$0] }
         // the whole drawing-in takes at most `most` seconds, however many parts are new
         let gap = fresh.count > 1 ? min(Self.each, Self.most / Double(fresh.count)) : 0

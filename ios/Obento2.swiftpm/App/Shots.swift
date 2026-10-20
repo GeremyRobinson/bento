@@ -60,6 +60,8 @@ enum Shots {
                 page.open(w); await wait(1.5)
                 page.backToProblems(); await wait(1.5)
                 page.open(page.problems[3]); await wait(3)
+                // dark while it's open, then back (G found it stuck after this)
+                UserDefaults.standard.set("dark", forKey: "theme"); await wait(1.5)
                 page.backToProblems()
                 return
             }
