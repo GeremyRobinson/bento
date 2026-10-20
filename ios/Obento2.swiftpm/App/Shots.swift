@@ -580,9 +580,10 @@ enum Shots {
         case "me-fresh":
             Progress.shared.reset(to: [])
             m.shotMode = true; m.go(to: .me)
-        case "me", "me-review-done":
+        case "me", "me-review-done", "me-review-partway":
             seedMe()
             if name == "me-review-done" { Progress.shared.setReview(right: 6, of: 8, missed: ["g5-round", "sub"]) }
+            if name == "me-review-partway" { PaperModel.shotPartway = 3 }
             m.shotMode = true; m.go(to: .me)
         case let n where n.hasPrefix("review-"):
             // review-page: its 8 problems, opened from Me; review-problem: the first open; review-result: all 8
@@ -607,6 +608,19 @@ enum Shots {
             if n == "grownup-confirm" { m.grownUp.confirmForShots(.lesson("g5-round")) }
             if n == "grownup-confirm-all" { m.grownUp.confirmForShots(.all) }
             m.reframePlace()
+        case "path-me":
+            // the real path, not instant, to watch the places draw in and out: the map, then Me, a lesson opened from Me
+            // and closed (back to Me), the review opened and closed, then the map again
+            seedMe()
+            m.frameGroup(duration: 0)
+            await wait(2)
+            m.go(to: .me); await wait(3)
+            if let p = Map.piece("g5-divide") { m.open(p, from: .me) }
+            await wait(4)
+            m.close(); await wait(3)
+            m.open(Map.review, from: .me); await wait(3)
+            m.close(); await wait(3)
+            m.go(to: nil)
         case let n where n.hasPrefix("first-launch"):
             // the very first launch (nothing done yet): the map drawing itself in, for real, then the ghost finger's tap
             // on the first lesson up next and "Start here."; first-launch-<seconds>: held that far into the finger's moves

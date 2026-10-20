@@ -209,6 +209,8 @@ final class PaperModel {
         guard force || fresh, let p = Map.today ?? Map.pieces.first(where: { $0.state == .now }) else { return }
         startHere = StartHere(piece: p, start: drawnAt + Piece.drawTime + 0.2, frozen: frozen)
         if !Shots.active { UserDefaults.standard.set(true, forKey: StartHere.key) }
+        // Reduce Motion (no finger moving, nothing to wait for), or a screenshot held past the tap: chosen at once
+        if instant || (frozen ?? -1) >= StartHere.tapTime { startHere?.tapped = true; select(p) }
     }
     /// The piece whose lesson is open: its name goes in the top bar.
     var openPiece: Piece? { lesson != nil || bars != nil ? opened : nil }
@@ -654,8 +656,11 @@ final class PaperModel {
         return PaperCamera(x: screen.width / 2 - r.mid.x * z, y: Self.chrome.top + pad - r.y * z, zoom: z)
     }
 
+    /// Screenshots only: today's review partway, this many done.
+    static var shotPartway: Int?
     /// Today's review, started and not finished: how many of its problems are done (nil when none is partway).
     static func reviewPartway(now: Double) -> Int? {
+        if let n = shotPartway { return n }
         guard let s = PageStore.load(Map.review.id), !s.recorded, Review.day(s.date.timeIntervalSinceReferenceDate) == Review.day(now) else { return nil }
         let done = s.problems.filter(\.finished).count
         return done > 0 ? done : nil
