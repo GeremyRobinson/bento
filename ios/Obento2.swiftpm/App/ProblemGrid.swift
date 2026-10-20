@@ -88,7 +88,8 @@ enum ProblemGrid {
 
     /// The answer box as wide as it starts (three digits) in the work's points.
     static func boxRect(_ b: (right: Double, mid: Double, cell: Double)) -> CGRect {
-        CGRect(x: b.right - 3 * b.cell, y: b.mid - b.cell / 2, width: 3 * b.cell, height: b.cell)
+        // with its half cell of room for the cursor, so the box stays inside the work's section
+        CGRect(x: b.right - 3 * b.cell, y: b.mid - b.cell / 2, width: 3.5 * b.cell, height: b.cell)
     }
 
     typealias Placed = (pic: CGPoint, work: CGPoint, step: CGPoint, size: CGSize)

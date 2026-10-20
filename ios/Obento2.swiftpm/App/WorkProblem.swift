@@ -216,8 +216,11 @@ final class WorkProblem: Identifiable, PageProblem {
 
     func choose(_ i: Int) { guard !busy else { return }; onTouch?(); lesson.choose(i); message = nil; onChange?() }
     /// A key on the keypad: a digit, ".", "-", or "del", into the chosen box.
+    /// When a key was last pressed: the cursor holds still a moment after, then blinks.
+    @ObservationIgnored private(set) var typedAt: Double = 0
     func type(_ key: String) {
         guard !busy, !solved else { return }
+        typedAt = PaperClock.now
         onTouch?()
         if key == "-" { lesson.type("del"); return }
         lesson.type(key)

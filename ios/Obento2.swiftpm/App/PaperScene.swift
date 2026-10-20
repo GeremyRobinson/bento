@@ -257,6 +257,9 @@ final class Rig {
     var boxesKey = ""
     /// What the camera last framed a problem's content for.
     var contentKey = ""
+    /// The blinking cursor in the answer box being typed into.
+    let cursorEntity = ModelEntity()
+    var cursorKey = ""
     /// The page of problems' cards (PageCards).
     let cardsRoot = Entity()
     var cardsDrawer: SketchDrawer?
@@ -291,7 +294,7 @@ final class Rig {
         // the paper itself, under the grid, large enough to fill any tilted view; it follows the camera
         sheet.model = ModelComponent(mesh: .generatePlane(width: 400, depth: 400), materials: [])
         sheet.position.y = -0.003
-        root.addChild(sheet); root.addChild(pieces); root.addChild(lessonRoot); root.addChild(barsRoot); root.addChild(stepsRoot); barsRoot.addChild(boxes); barsRoot.addChild(pageWords); barsRoot.addChild(cardsRoot); root.addChild(words)
+        root.addChild(sheet); root.addChild(pieces); root.addChild(lessonRoot); root.addChild(barsRoot); root.addChild(stepsRoot); barsRoot.addChild(boxes); barsRoot.addChild(pageWords); barsRoot.addChild(cardsRoot); barsRoot.addChild(cursorEntity); root.addChild(words)
     }
 
     func update(view v: PaperView3D, model: PaperModel, time t: Double, dark: Bool) {
@@ -480,6 +483,25 @@ final class Rig {
         Perf.time("page-words") { drawProblemWords(page, shown, waiting: page.showing || made > 0 ? [] : page.problems, at: t) }
         frameContent(page)
         if drawCards(page, at: t) { pageBuilding = true }
+        drawCursor(page, at: t)
+    }
+
+    /// The cursor in the box being typed into (G 19 Oct): a thin line that blinks as a cursor does, held still for a
+    /// moment after each key, once the problem has drawn in.
+    private func drawCursor(_ page: BarsPage, at t: Double) {
+        guard page.mode == .work, let m = page.current as? WorkProblem, t - m.openedAt > 1.2, let r = ProblemLayout.cursor(m) else {
+            cursorEntity.isEnabled = false; return
+        }
+        let key = "\(r) \(dark ?? false)"
+        if key != cursorKey {
+            cursorKey = key
+            let u = Paper.unit, w = 2.5 * m.scale
+            cursorEntity.model = Self.lines([(SIMD2(Float(r.minX / u), Float(r.minY / u)), SIMD2(Float(r.minX / u), Float(r.maxY / u)))], width: Float(w / u))
+                .map { ModelComponent(mesh: $0, materials: [flat(colours.ink)]) }
+            cursorEntity.position.y = 0.0027
+        }
+        let since = t - m.typedAt
+        cursorEntity.isEnabled = since < 0.6 || (since - 0.6).truncatingRemainder(dividingBy: 1.06) < 0.53
     }
 
     /// The camera frames what's on the paper (G 19 Oct): the problem's picture and words as they are now, so when a

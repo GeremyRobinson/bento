@@ -33,8 +33,7 @@ struct PaperScreen: View {
                     // up by itself whenever the problem being worked wants a number (no tap needed), so a Mac's or
                     // a hardware keyboard types straight away too
                     let typing = (model.bars?.current as? WorkProblem).flatMap { w in model.bars?.mode == .work && !w.auto && !w.solved && w.lesson.step.answer.map { $0.choices == nil } == true ? w : nil }
-                    SystemKeys(active: typing != nil, type: { typing?.type($0) }, enter: { typing?.go() })
-                        .frame(width: 1, height: 1).opacity(0.01)
+                    NumberEntry(problem: typing, step: typing.map { "\($0.id) \($0.lesson.index)" } ?? "")
                 }
                 .onChange(of: t) { _, now in Perf.frame(now); model.settle(at: now); model.lesson?.settle(at: now) }
             }
@@ -109,5 +108,35 @@ struct SystemKeys: UIViewRepresentable {
             }
         }
         func deleteBackward() { type("del") }
+    }
+}
+
+/// Typing for the answer box (G 19 Oct): a hidden text field, focused while a number is wanted, so the iPad's own
+/// number keys come up and a Mac's or hardware keyboard types too. It holds a single space: whatever is typed after it
+/// goes to the box, a delete that takes the space is a delete in the box, and it goes back to the space each time.
+struct NumberEntry: View {
+    let problem: WorkProblem?
+    let step: String
+    @State private var text = " "
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        TextField("", text: $text)
+            .keyboardType(.decimalPad)
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
+            .focused($focused)
+            .frame(width: 1, height: 1)
+            .opacity(0.01)
+            .allowsHitTesting(false)
+            .onChange(of: text) { _, new in
+                guard new != " " else { return }
+                if new.count < 1 { problem?.type("del") }
+                else { for ch in new.dropFirst() { if ch.isNumber, let d = ch.wholeNumberValue { problem?.type(String(d)) } else if ch == "." || ch == "," { problem?.type(".") } } }
+                text = " "
+            }
+            .onSubmit { problem?.go(); focused = problem != nil }
+            .onChange(of: step) { _, _ in text = " "; focused = problem != nil }
+            .onAppear { focused = problem != nil }
     }
 }

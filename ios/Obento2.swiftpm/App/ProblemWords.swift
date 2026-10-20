@@ -39,7 +39,8 @@ enum ProblemLayout {
         }
         if let a = l.step.answer, a.choices == nil, let b = L.box, let id = a.boxes.first {
             let cells = Double(max(3, (l.typed[id] ?? "").count + 1))
-            out.append(Block(kind: .field(id), rect: A(b.right - cells * b.cell, b.mid - b.cell / 2, cells * b.cell, b.cell)))
+            // half a cell past the column's edge, room for the cursor so it touches nothing
+            out.append(Block(kind: .field(id), rect: A(b.right - cells * b.cell, b.mid - b.cell / 2, (cells + 0.5) * b.cell, b.cell)))
         }
         if !m.auto && !m.solved { out.append(Block(kind: .main, rect: A(L.checkAt.x, y, 120 * k, 40 * k))) }
         if !m.auto && m.solved { out.append(Block(kind: .nextProblem, rect: A(L.checkAt.x, y, 180 * k, 40 * k))) }
@@ -51,6 +52,17 @@ enum ProblemLayout {
             }
         }
         return out
+    }
+
+    /// Where the blinking cursor goes in the box being typed into: after the last digit, in a gap of its own.
+    static func cursor(_ m: WorkProblem) -> CGRect? {
+        let l = m.lesson
+        guard !m.auto, !m.solved, m.verdict == nil, let a = l.step.answer, a.choices == nil, let id = l.active ?? a.boxes.first,
+              let r = blocks(m).first(where: { $0.kind == .field(id) })?.rect else { return nil }
+        let L = m.layout, count = Double((l.typed[id] ?? "").count)
+        let cell = L.box?.cell ?? Paper.cell * WorkProblem.lineCell * L.scale
+        let x = L.inline ? m.origin.x + (L.box?.right ?? 0) + 0.22 * cell : r.minX + cell + count * cell + 0.15 * cell
+        return CGRect(x: x, y: r.midY - 0.4 * cell, width: 0, height: 0.8 * cell)
     }
 
     enum Kind: Equatable { case main, nextProblem, showMe, reset, choice(Int), next, practise, again, skip, field(String), key(String) }
@@ -289,15 +301,10 @@ extension Rig {
                 // and what's typed stays put as the box widens to the right
                 let cell = lay.box?.cell ?? Paper.cell * WorkProblem.lineCell * k, chars = Array(typed ?? "")
                 // in the work, digits fill the cells from the right, so their places line up with the rows above
-                let left = lay.inline ? r.maxX - Double(chars.count) * cell : r.minX + cell
+                let left = lay.inline ? (lay.box?.right ?? r.maxX) + m.origin.x - Double(chars.count) * cell : r.minX + cell
                 let tag = "\(m.verdict.map { $0.right } as Bool?)"
                 for (j, ch) in chars.enumerated() {
                     s.text("\(id)typed\(j)\(ch)\(tag)", String(ch), at: CGPoint(x: left + (Double(j) + 0.5) * cell, y: r.midY), size: Sketch.maths * k, weight: .medium, style.text)
-                }
-                if l.active == f, m.verdict == nil, !m.auto {
-                    // in the work the digits end at the box's right edge, so the cursor sits just inside it
-                    let x = lay.inline ? r.maxX - 6 * k : left + Double(chars.count) * cell
-                    s.line("cursor\(typed ?? "")", [CGPoint(x: x, y: r.midY - 18 * k), CGPoint(x: x, y: r.midY + 18 * k)], .ink, width: 2.5 * k)
                 }
                 s.pace = 0.4
             case .key(let key): s.block(id, r, .plain, centred: key == "del" ? nil : key, icon: key == "del" ? "backspace" : nil, k: k)
