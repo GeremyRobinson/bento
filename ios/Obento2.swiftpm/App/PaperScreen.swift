@@ -27,13 +27,12 @@ struct PaperScreen: View {
                     if let steps = model.steps {
                         StepsLessonView(model: steps, camera: cam, time: t)
                     }
-                    Toolbar(model: model, time: t, bottom: max(16, safe.safeAreaInsets.bottom + 8))
-                    // the keypad: fixed to the screen's right, while the problem being worked wants a number typed
-                    if let w = model.bars?.current as? WorkProblem, !w.auto, !w.solved, let a = w.lesson.step.answer, a.choices == nil {
-                        FloatingKeypad(type: w.type)
-                            .padding(.trailing, 24).padding(.bottom, max(16, safe.safeAreaInsets.bottom + 8) + 96)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                    }
+                    Toolbar(model: model, time: t, bottom: max(16, safe.safeAreaInsets.bottom + 8, model.keyboard + 8))
+                    // iPadOS's own keyboard (G 19 Oct), up while the problem being worked wants a number typed; a
+                    // hardware keyboard types too, and return checks
+                    let typing = (model.bars?.current as? WorkProblem).flatMap { w in !w.auto && !w.solved && w.lesson.step.answer.map { $0.choices == nil } == true ? w : nil }
+                    SystemKeys(active: typing != nil, type: { typing?.type($0) }, enter: { typing?.go() })
+                        .frame(width: 1, height: 1).opacity(0.01)
                 }
                 .onChange(of: t) { _, now in Perf.frame(now); model.settle(at: now); model.lesson?.settle(at: now) }
             }
@@ -47,6 +46,13 @@ struct PaperScreen: View {
                 model.reduceMotion(UIAccessibility.isReduceMotionEnabled)
             }
             .onChange(of: geo.size) { _, s in model.screen = Size(s.width, s.height) }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { n in
+                // the keyboard's top, so the camera frames the problem in the paper still showing above it
+                guard let f = n.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+                let screenH = geo.frame(in: .global).maxY
+                model.keyboardAppeared(max(0, screenH - f.minY))
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in model.keyboardAppeared(0) }
         }
         .ignoresSafeArea()
         }
@@ -73,24 +79,35 @@ struct PaperScreen: View {
 }
 
 
-/// The keypad for a typed step: the paper's cell blocks, on a card at the screen's edge.
-struct FloatingKeypad: View {
+/// Takes typing from iPadOS's keyboard (or a hardware one) for the answer box being filled: digits, the point, delete,
+/// and return to check. It shows the number keys while a step wants a number, and puts the keyboard away when not.
+struct SystemKeys: UIViewRepresentable {
+    let active: Bool
     let type: (String) -> Void
-    var body: some View {
-        VStack(spacing: -1.5) {
-            ForEach([["7", "8", "9"], ["4", "5", "6"], ["1", "2", "3"], [".", "0", "del"]], id: \.self) { row in
-                HStack(spacing: -1.5) {
-                    ForEach(row, id: \.self) { key in
-                        CellButton(width: 64, height: 64, action: { type(key) }) {
-                            if key == "del" { Icon(name: "backspace", size: 24) }
-                            else { Text(key).font(Typeface.font(26, .medium)) }
-                        }
-                    }
-                }
+    let enter: () -> Void
+
+    func makeUIView(context: Context) -> KeyView { KeyView() }
+    func updateUIView(_ v: KeyView, context: Context) {
+        v.type = type; v.enter = enter
+        if active && !v.isFirstResponder { DispatchQueue.main.async { v.becomeFirstResponder() } }
+        if !active && v.isFirstResponder { DispatchQueue.main.async { v.resignFirstResponder() } }
+    }
+
+    final class KeyView: UIView, UIKeyInput {
+        var type: (String) -> Void = { _ in }
+        var enter: () -> Void = {}
+        var keyboardType: UIKeyboardType = .decimalPad
+        var autocorrectionType: UITextAutocorrectionType = .no
+        var returnKeyType: UIReturnKeyType = .done
+        override var canBecomeFirstResponder: Bool { true }
+        var hasText: Bool { true }
+        func insertText(_ text: String) {
+            for ch in text {
+                if ch == "\n" { enter() }
+                else if ch.isNumber, let d = ch.wholeNumberValue { type(String(d)) }
+                else if ch == "." || ch == "," { type(".") }
             }
         }
-        .padding(10)
-        .background(RoundedRectangle(cornerRadius: 20).fill(Ink.surface).shadow(color: .black.opacity(0.10), radius: 15, y: 8))
-        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(Ink.line, lineWidth: 1))
+        func deleteBackward() { type("del") }
     }
 }
