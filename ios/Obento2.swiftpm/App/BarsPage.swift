@@ -3,23 +3,23 @@ import SwiftUI
 /// A lesson's page on the paper (G 17 Oct): first the How to, a worked example that plays itself; then all 16 problems
 /// draw themselves onto the paper and every one is live right where it is, worked in any order, with nothing to go into.
 /// The last row of 4 is the skill check (no hints, no Show me, one try), which decides learned.
-/// This is Add with different bottoms' page; its problems are AddFractionsModel.
+/// Its problems are AddFractionsModel (Add with different bottoms) or WorkProblem (every other lesson).
 @MainActor @Observable
 final class BarsPage {
     let piece: Piece
     let instant: Bool
-    private(set) var howTo: AddFractionsModel
-    private(set) var problems: [AddFractionsModel] = []
+    private(set) var howTo: any PageProblem
+    private(set) var problems: [any PageProblem] = []
     /// The How to has played and the problems are on the paper.
     private(set) var showing = false
     /// Asks the camera to frame a part of the page.
     var frame: ((Rect) -> Void)?
 
     // where things sit, in paper points: the How to at the lesson's place, the problems in rows under it. The paper is
-    // graph paper (G 17 Oct): every box starts and ends on the strong lines, 6 blocks wide and 9 tall, with one block
+    // graph paper (G 17 Oct): every box starts and ends on the strong lines, a square 8 blocks each way (G 19 Oct), with one block
     // between boxes; inside, two cells of margin all round. Big enough for its largest content (a three-line story, the
     // widest bars and the piece waiting past them, the choices, the buttons and its name)
-    static let box = (dx: -2 * Paper.cell, dy: -10 * Paper.cell, width: 6 * Paper.unit, height: 8 * Paper.unit), gap = Paper.unit
+    static let box = (dx: -2 * Paper.cell, dy: -10 * Paper.cell, width: 8 * Paper.unit, height: 8 * Paper.unit), gap = Paper.unit
     static let pitch = Size(box.width + gap, box.height + gap)
     /// The problems take the How to's place once it has erased itself (G 17 Oct).
     static let problemsTop = 0.0
@@ -31,10 +31,10 @@ final class BarsPage {
     private var at: Point { Self.origin(for: piece) }
 
     /// A problem's box on the paper.
-    static func box(of m: AddFractionsModel) -> Rect { Rect(x: m.origin.x + box.dx, y: m.origin.y + box.dy, width: box.width, height: box.height) }
+    static func box(of m: any PageProblem) -> Rect { Rect(x: m.origin.x + box.dx, y: m.origin.y + box.dy, width: box.width, height: box.height) }
 
     /// The problem the child is on: outlined in the chapter's colour, and what the camera frames.
-    private(set) var current: AddFractionsModel?
+    private(set) var current: (any PageProblem)?
 
     /// The page as the child left it, if they stopped partway (nil for a fresh page).
     let saved: PageStore.Saved?
@@ -42,23 +42,29 @@ final class BarsPage {
     /// A chapter or grade test: this many problems, every one a check (no hints, one try), and no How to.
     let test: Int?
 
-    init(piece: Piece, instant: Bool, first: AddFractions.Problem? = nil, saved: PageStore.Saved? = nil, test: Int? = nil) {
+    /// The lesson this page teaches (a test's first lesson, for its How to that it never plays).
+    let spec: LessonSpec
+
+    init(piece: Piece, instant: Bool, first: Numbers? = nil, saved: PageStore.Saved? = nil, test: Int? = nil) {
         self.piece = piece; self.instant = instant; self.saved = saved; self.test = test
         var rng = SeededRandom(seed: UInt64(Date().timeIntervalSince1970 * 1000))
-        let example = first ?? AddFractions.problems.randomElement(using: &rng)!
-        // coming back after a day or more, the How to is a quick reminder the child can skip
-        let remind = saved.map { !Calendar.current.isDateInToday($0.date) } ?? false
-        howTo = AddFractionsModel(origin: Self.origin(for: piece), chapter: piece.chapter, instant: instant,
-                                  run: LessonRun(AddFractions.spec, numbers: example.numbers), label: "How to", auto: true)
-        let spec = AddFractions.spec
+        // a test mixes every lesson of its chapter that's built as a page (the grade's test, every chapter's)
+        let specs = test != nil ? Map.testSpecs(piece) : [Lessons.spec(piece.id) ?? AddFractions.spec]
+        let spec = specs.first ?? AddFractions.spec
+        self.spec = spec
+        howTo = Self.make(spec, origin: Self.origin(for: piece), chapter: piece.chapter, instant: instant,
+                          run: LessonRun(spec, numbers: first ?? spec.generate(&rng, 0)), label: "How to", auto: true)
         let fresh: [LessonRun] = test.map { n in
-            // a test draws from the lessons' own check recipes, mixed (only Add with different bottoms is built so far)
+            // a test draws from the lessons' own check recipes, in turn
             (0..<n).map { i in
-                let item = spec.check.isEmpty ? CheckItem(3) : spec.check[i % spec.check.count]
-                return LessonPage.run(spec, LessonPage.Problem(numbers: item.draw(spec, using: &rng), story: item.story && spec.story != nil, isCheck: true))
+                let sp = specs[i % specs.count], k = i / specs.count
+                let item = sp.check.isEmpty ? CheckItem(3) : sp.check[k % sp.check.count]
+                return LessonPage.run(sp, LessonPage.Problem(numbers: item.draw(sp, using: &rng), story: item.story && sp.story != nil, isCheck: true))
             }
-        } ?? LessonPage.problems(spec, using: &rng).enumerated().map { i, p in Self.run(p, row: i / LessonPage.columns, i: i, piece: piece) }
-        let runs: [LessonRun] = saved?.problems.map { LessonRun(spec, restoring: $0) } ?? fresh
+        } ?? LessonPage.problems(spec, using: &rng).enumerated().map { i, p in Self.run(spec, p, row: i / LessonPage.columns, i: i, piece: piece) }
+        let runs: [LessonRun] = saved?.problems.enumerated().map { i, s in
+            LessonRun(test != nil ? specs[i % specs.count] : spec, restoring: s)
+        } ?? fresh
         var practice = 0, check = 0
         problems = runs.enumerated().map { i, run in
             let label = test != nil ? "Question \(i + 1)" : run.oneTry ? "Skill check \(check + 1)" : run.guided ? "Problem \(practice + 1) · together" : "Problem \(practice + 1)"
@@ -66,8 +72,8 @@ final class BarsPage {
             let o = Self.origin(for: piece)
             let at = Point(o.x + Double(i % LessonPage.columns) * Self.pitch.width,
                            o.y + Self.problemsTop + Double(i / LessonPage.columns) * Self.pitch.height)
-            let m = AddFractionsModel(origin: at, chapter: piece.chapter, instant: instant, run: run, label: label)
-            if saved != nil { m.restoreFills() }
+            let m = Self.make(run.spec, origin: at, chapter: piece.chapter, instant: instant, run: run, label: label)
+            if saved != nil { m.restore() }
             return m
         }
         recorded = saved?.recorded ?? false
@@ -83,9 +89,17 @@ final class BarsPage {
     /// Help fades across the page (G 18 Oct): row 1 is done together for its first two problems, then every step
     /// named with hints; row 2 hints stop at the first one; row 3 asks for the final answer only (a miss brings the
     /// steps back); row 4 is the skill check. A lesson already learned starts without the together problems.
-    static func run(_ p: LessonPage.Problem, row: Int, i: Int, piece: Piece) -> LessonRun {
-        if p.isCheck { return LessonPage.run(AddFractions.spec, p) }
-        var r = LessonRun(AddFractions.spec, numbers: p.numbers, story: p.story, finalOnly: row == 2)
+    /// The problem a lesson's page holds: the fraction bars for Add with different bottoms, else typed steps with
+    /// the lesson's picture.
+    static func make(_ spec: LessonSpec, origin: Point, chapter: Chapter, instant: Bool, run: LessonRun, label: String, auto: Bool = false) -> any PageProblem {
+        spec.master == "bars"
+            ? AddFractionsModel(origin: origin, chapter: chapter, instant: instant, run: run, label: label, auto: auto)
+            : WorkProblem(origin: origin, chapter: chapter, instant: instant, run: run, label: label, auto: auto)
+    }
+
+    static func run(_ spec: LessonSpec, _ p: LessonPage.Problem, row: Int, i: Int, piece: Piece) -> LessonRun {
+        if p.isCheck { return LessonPage.run(spec, p) }
+        var r = LessonRun(spec, numbers: p.numbers, story: p.story, finalOnly: row == 2)
         r.guided = i < 2 && !Progress.shared.learned.contains(piece.id)
         r.hintCap = row == 0 ? 3 : 1
         r.skipAsk()
@@ -101,7 +115,7 @@ final class BarsPage {
 
     /// The How to has played and erased itself.
     private(set) var howToGone = false
-    var all: [AddFractionsModel] { howToGone ? problems : [howTo] }
+    var all: [any PageProblem] { howToGone ? problems : [howTo] }
     var animating: Bool { all.contains { $0.animating } || playing || building }
     /// The scene still has problems' bars or words to make, a few a frame: the clock keeps running until they're all
     /// made (stopped, a page that arrived without moving, or a switch to dark, left some boxes empty or the old colour).
@@ -134,7 +148,7 @@ final class BarsPage {
             showProblems()
             return
         }
-        howTo.start()
+        howTo.start(after: 0)
         current = howTo
         frame?(Self.box(of: howTo))
         play()
@@ -178,12 +192,14 @@ final class BarsPage {
                 return pressed!
             }
             while true {
-                howTo.intro = AddFractions.spec.idea(howTo.lesson.numbers)
-                await wait(1.2); _ = await ask([.next])                 // the bars grow in; what to do
-                // the cut: each top piece splits into the bottom row's pieces, so they're the same size
-                let s = howTo.problem
-                howTo.intro = "Cut each \(AddFractions.name(s.a)) into \(s.b / s.a). Now they are \(AddFractions.plural(s.b))."
-                howTo.split(); await wait(1.0); _ = await ask([.next])
+                howTo.intro = spec.idea(howTo.lesson.numbers)
+                await wait(1.2); _ = await ask([.next])                 // the picture grows in; what to do
+                // the lesson's own explaining beats: why the numbers do what they do
+                for beat in howTo.howToBeats() {
+                    howTo.intro = beat.words; beat.run()
+                    await wait(1.0); _ = await ask([.next])
+                }
+                (howTo as? WorkProblem)?.endBeats()
                 howTo.intro = nil
                 while !howTo.solved {
                     howTo.go()                                          // the next step's words
@@ -259,7 +275,7 @@ final class BarsPage {
     func leave() { for m in all { m.leave() } }
 
     /// The problem being worked: outlined in the chapter's colour with its Now tab, and framed by the camera.
-    func activate(_ m: AddFractionsModel) {
+    func activate(_ m: any PageProblem) {
         guard current !== m else { return }
         current = m; frame?(Self.box(of: m))
         save()
@@ -286,6 +302,7 @@ final class BarsPage {
             case .showMe: m.showMe()
             case .reset: m.reset()
             case .choice(let i): m.choose(i)
+            case .field(let id): (m as? WorkProblem)?.select(id)
             }
             return
         }
@@ -293,7 +310,7 @@ final class BarsPage {
     }
 
     /// The problem a point is in, so the camera can frame it.
-    func problem(at p: Point) -> AddFractionsModel? { all.first { contains(Self.box(of: $0), p) } }
+    func problem(at p: Point) -> (any PageProblem)? { all.first { contains(Self.box(of: $0), p) } }
 
     /// A problem was solved: when the whole check row is done, its score decides learned (and when it comes back).
     private func solvedOne() {
@@ -307,7 +324,7 @@ final class BarsPage {
         let checks = problems.filter { !$0.lesson.helps }
         if let level = LessonPage.checkLevel(checks.map(\.lesson)), !recorded {
             recorded = true
-            Progress.shared.checked(AddFractions.spec.id, level: level)
+            Progress.shared.checked(spec.id, level: level)
         }
         save()
     }

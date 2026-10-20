@@ -168,7 +168,7 @@ struct Toolbar: View {
     private var learned: Int { Map.gradeLessons.filter { Progress.shared.learned.contains($0) }.count }
 
     /// The problem being worked on a lesson's page, if any.
-    private var problem: AddFractionsModel? { model.bars?.current.flatMap { $0.auto ? nil : $0 } }
+    private var problem: (any PageProblem)? { model.bars?.current.flatMap { $0.auto ? nil : $0 } }
     private var hasTools: Bool { problem != nil || model.lesson != nil }
     private var helps: Bool { problem?.lesson.helps ?? model.lesson?.lesson.helps ?? false }
 

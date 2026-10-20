@@ -64,6 +64,7 @@ enum Typeface {
 /// One square button the size of two cells, drawn on the paper like everything else.
 struct CellButton<Label: View>: View {
     var width: CGFloat = 40
+    var height: CGFloat = 40
     var main = false
     /// A picked choice: outlined, tinted and lettered in its chapter's colour.
     var picked: Color? = nil
@@ -72,7 +73,7 @@ struct CellButton<Label: View>: View {
     var body: some View {
         Button(action: action) {
             label()
-                .frame(width: width, height: 40)
+                .frame(width: width, height: height)
                 .background { ZStack { Ink.surface; picked?.opacity(0.12) } }
                 .overlay(Rectangle().strokeBorder(picked ?? (main ? Ink.ink : Ink.lineStrong), lineWidth: 1.5))
                 .contentShape(Rectangle())

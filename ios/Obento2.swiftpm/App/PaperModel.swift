@@ -100,11 +100,15 @@ enum Map {
     }
     /// A chapter's test draws from lessons built as a page of problems: only Add with different bottoms so far, so only
     /// Fractions has a test to take; the others say Coming soon until their lessons are pages too.
-    static let pageLessons: Set<String> = ["ad"]
+    static let pageLessons: Set<String> = Set(pieces.map(\.id).filter { $0 != "uc" && Lessons.spec($0) != nil })
+    /// The lessons a test mixes: its chapter's page lessons, or for the grade's test every one.
+    static func testSpecs(_ t: Piece) -> [LessonSpec] {
+        pieces.filter { pageLessons.contains($0.id) && (t.id == "test-grade" || $0.chapter == t.chapter) }.compactMap(\.spec)
+    }
     static func chapterHasLessons(_ c: Chapter) -> Bool { pieces.contains { $0.chapter == c && pageLessons.contains($0.id) } }
     /// The lessons built the paper way, with G's OK on their preview. The others' maths is ported and tested in Core,
     /// but their screens wait for their previews (LESSONS.md §9).
-    static let paperLessons: Set<String> = ["uc", "ad"]
+    static let paperLessons: Set<String> = Set(pieces.map(\.id).filter { Lessons.spec($0) != nil })
 
     /// Today's pick, by the web's rules (Core/Mastery.swift): what to go over first, then what builds on the lesson just
     /// learned, then the first one ready. Only lessons that open are picked.
@@ -295,8 +299,8 @@ final class PaperModel {
         if p.isTest { openBars(p); return }
         guard let spec = p.spec else { return }
         // Unit cubes and Add with different bottoms are the Paper proof's own lessons; every other lesson is worked in steps
-        if p.id == "ad" || p.isTest { openBars(p); return }
-        if p.id != "uc" { openSteps(p, spec); return }
+        // every lesson is a page of problems (G 19 Oct), but Unit cubes, which rises into 3D
+        if p.id != "uc" { _ = spec; openBars(p); return }
         // Start opens the lesson where it is: the tap already glided to it, so the camera doesn't move again (G 17 Oct).
         // The 3D lesson takes over the camera, so it waits for that glide to land first.
         let origin = UnitCubesModel.origin(for: p)
@@ -314,7 +318,7 @@ final class PaperModel {
     /// Opening the flat lesson: its page. The How to plays where the lesson is, on the paper's own camera, then the 16
     /// problems draw themselves onto the paper, each live where it sits (BarsPage).
     func openBars(_ p: Piece) {
-        let first = shotProblem ?? prepared.flatMap { $0.id == p.id ? AddFractions.Problem($0.numbers) : nil }
+        let first = (p.id == "ad" ? shotProblem?.numbers : shotNumbers) ?? prepared.flatMap { $0.id == p.id ? $0.numbers : nil }
         let b = BarsPage(piece: p, instant: instant, first: first, saved: instant ? nil : PageStore.load(p.id),
                          test: p.isTest ? (p.id == "test-grade" ? 20 : 12) : nil)
         b.frame = { [weak self] r in self?.frameCurrent(r) }

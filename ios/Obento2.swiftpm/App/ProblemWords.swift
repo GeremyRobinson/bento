@@ -10,19 +10,26 @@ enum ProblemLayout {
     /// The action row: two cells above the box's bottom.
     static let actions = BarsPage.box.dy + BarsPage.box.height - 80
 
-    enum Kind: Equatable { case main, showMe, reset, choice(Int), next, practise, again, skip }
+    enum Kind: Equatable { case main, showMe, reset, choice(Int), next, practise, again, skip, field(String) }
     struct Block { let kind: Kind; let rect: CGRect }
 
     /// The blocks a problem shows now, in paper points: its choices, and Check (Show me and Start over are in the bar).
     /// The How to plays itself and has none; a solved problem has none.
-    static func blocks(_ m: AddFractionsModel) -> [Block] {
+    static func blocks(_ m: any PageProblem) -> [Block] {
         let o = m.origin, l = m.lesson
         func R(_ x: Double, _ y: Double, _ w: Double, _ h: Double = 40) -> CGRect { CGRect(x: o.x + x, y: o.y + y, width: w, height: h) }
         var out: [Block] = []
         if let choices = l.step.answer?.choices {
             let n = Double(choices.count), w = (column + 1.5 * (n - 1)) / n
-            let y = AddFractionsModel.underStep
+            let y = m.underStep
             for i in choices.indices { out.append(Block(kind: .choice(i), rect: R(Double(i) * (w - 1.5), y, w))) }
+        }
+        // a typed step's answer boxes, where its line is written (MathLineView's cells)
+        if let a = l.step.answer, a.choices == nil, m is WorkProblem {
+            let lay = MathLineView.layout(a.prompt, typed: l.typed, size: 28), c = Paper.cell
+            for it in lay.items { if case .box(let id) = it.kind {
+                out.append(Block(kind: .field(id), rect: R(Double(it.col) * c, WorkProblem.lineY + Double(it.row) * c, Double(it.w) * c, Double(it.h) * c)))
+            } }
         }
         if !m.auto && !m.solved { out.append(Block(kind: .main, rect: R(0, actions, 180))) }
         // the How to: its main block where Check sits, the other on the column's right
@@ -66,7 +73,7 @@ final class ProblemWords {
 extension Rig {
     /// Every problem's words on the lesson's page (G 17 Oct). Only the problem being worked, or one still animating,
     /// does anything each frame; the rest are still.
-    func drawProblemWords(_ page: BarsPage, _ shown: [AddFractionsModel], waiting: [AddFractionsModel], at t: Double) {
+    func drawProblemWords(_ page: BarsPage, _ shown: [any PageProblem], waiting: [any PageProblem], at t: Double) {
         let isDark = dark ?? false
         // the problems still to come have their words made one a frame while the How to plays, kept hidden
         if let m = waiting.first(where: { problemWords[$0.id] == nil }) {
@@ -104,15 +111,35 @@ extension Rig {
     }
 
     /// Everything a problem's words show: when it changes, they're made again.
-    private func wordsKey(_ m: AddFractionsModel, _ page: BarsPage, dark: Bool) -> String {
+    private func wordsKey(_ m: any PageProblem, _ page: BarsPage, dark: Bool) -> String {
         let l = m.lesson
-        return [m.label, m.intro ?? "", "\(m.howToButtons)", l.words.say, l.words.hint, l.words.action, "\(l.index)", "\(l.marks.count)", l.typed["c"] ?? "",
+        return [l.typed.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: ","), l.active ?? "", m.label, m.intro ?? "", "\(m.howToButtons)", l.words.say, l.words.hint, l.words.action, "\(l.index)", "\(l.marks.count)", l.typed["c"] ?? "",
                 m.message.map { "\($0.text)\($0.ok)" } ?? "", "\(m.solved)", "\(page.current === m)", "\(l.helps)", "\(dark)",
                 l.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }.joined()].joined(separator: "|")
     }
 
-    private func build(_ w: ProblemWords, _ m: AddFractionsModel, current: Bool, dark: Bool) {
+    private func build(_ w: ProblemWords, _ m: any PageProblem, current: Bool, dark: Bool) {
         w.clear()
+        if let a = m as? AddFractionsModel { buildBars(w, a, current: current, dark: dark) }
+        if let wp = m as? WorkProblem { buildWork(w, wp, current: current, dark: dark) }
+        addTag(w, m, current: current)
+        addBlocks(w, m, dark: dark)
+    }
+
+    /// The box's name at its top, and the map's tab on its top-right corner: Now on the problem being worked, Done once
+    /// it's solved.
+    private func addTag(_ w: ProblemWords, _ m: any PageProblem, current: Bool) {
+        let o = m.origin, chapter = UIColor(hex: m.chapter.hex)
+        func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x, y: o.y + y) }
+        w.shown.addChild(PaperText.label(m.label, PaperText.font(17, .medium), UIColor(hex: (dark ?? false) ? 0x878177 : 0x8C867D), at: P(0, BarsPage.box.dy + 40), anchor: .topLeading))
+        if let tag = m.solved && !m.auto ? "Done" : current ? "Now" : nil {
+            let r = CGRect(origin: P(BarsPage.box.dx + BarsPage.box.width - 80, BarsPage.box.dy - 20), size: CGSize(width: 80, height: 20))
+            if let mesh = Self.fills([r]) { let f = ModelEntity(mesh: mesh, materials: [flat(chapter)]); f.position.y = 0.002; w.shown.addChild(f) }
+            w.shown.addChild(PaperText.label(tag, PaperText.font(14, .semibold), .white, at: CGPoint(x: r.midX, y: r.midY), anchor: .center))
+        }
+    }
+
+    private func buildBars(_ w: ProblemWords, _ m: AddFractionsModel, current: Bool, dark: Bool) {
         let s = m.problem, l = m.lesson, words = l.words, o = m.origin
         let W = m.wholeWidth, e = m.coverEnd, r1 = AddFractionsModel.row1, r2 = AddFractionsModel.row2, h = AddFractionsModel.barHeight
         let ink = colours.ink, ink2 = colours.ink2, ink3 = UIColor(hex: dark ? 0x878177 : 0x8C867D), chapter = UIColor(hex: m.chapter.hex)
@@ -164,13 +191,6 @@ extension Rig {
         w.shown.addChild(PaperText.label("1 whole · \(s.wholeCells) cells", PaperText.font(16), ink2, at: P(W / 2, AddFractionsModel.wholeY - 12), anchor: .bottom))
         w.shown.addChild(PaperText.label(AddFractions.plural(s.a), PaperText.font(17, .medium), ink2, at: P(0, r1 - 8)))
         w.shown.addChild(PaperText.label(AddFractions.plural(s.b), PaperText.font(17, .medium), ink2, at: P(0, r2 - 8)))
-        w.shown.addChild(PaperText.label(m.label, PaperText.font(17, .medium), ink3, at: P(0, BarsPage.box.dy + 40), anchor: .topLeading))
-        // the map's tab on the box's top-right corner: Now on the problem being worked, Done once it's solved
-        if let tag = m.solved && !m.auto ? "Done" : current ? "Now" : nil {
-            let r = CGRect(origin: P(BarsPage.box.dx + BarsPage.box.width - 80, BarsPage.box.dy - 20), size: CGSize(width: 80, height: 20))
-            if let mesh = Self.fills([r]) { let f = ModelEntity(mesh: mesh, materials: [flat(chapter)]); f.position.y = 0.002; w.shown.addChild(f) }
-            w.shown.addChild(PaperText.label(tag, PaperText.font(14, .semibold), .white, at: CGPoint(x: r.midX, y: r.midY), anchor: .center))
-        }
 
         // the piece waiting to be added, and the match once the rows line up
         let mid = PaperText.font(19, .medium), digits = PaperText.font(19, .medium, digits: true), big = PaperText.font(22, .medium, digits: true)
@@ -187,7 +207,12 @@ extension Rig {
         }
         if l.picture["total"] == 1 { w.total.addChild(PaperText.label("\(s.sum) = \(s.total)/\(s.b)", big, chapter, at: P(0, r2 + h + 32), anchor: .topLeading)) }
 
-        // the blocks: cell blocks on the paper, the main one outlined in ink, a picked choice in the chapter's colour
+    }
+
+    /// The blocks: cell blocks on the paper, the main one outlined in ink, a picked choice in the chapter's colour,
+    /// an answer box with what's typed in it (outlined in ink when it's the one the keypad types into).
+    private func addBlocks(_ w: ProblemWords, _ m: any PageProblem, dark: Bool) {
+        let l = m.lesson, words = l.words, ink = colours.ink, chapter = UIColor(hex: m.chapter.hex)
         let surface = dark ? 0x1B1B1A as UInt32 : 0xFBFBFA, line = UIColor(hex: dark ? 0x3A3A37 : 0xCFCCC5), button = PaperText.font(17, .medium)
         for b in ProblemLayout.blocks(m) {
             var stroke = line, fill = UIColor(hex: surface), text = ink, lift: Float = 0
@@ -198,6 +223,7 @@ extension Rig {
             case .choice(let i):
                 if l.typed["c"] == String(i) { stroke = chapter; text = chapter; fill = UIColor(hex: Ink.mix(surface, m.chapter.hex, 0.12)); lift = 0.0002 }
             case .reset: break
+            case .field(let id): if l.active == id { stroke = ink }
             }
             cellBlock(b.rect, fill: fill, stroke: stroke, lift: lift).forEach { w.blocks.addChild($0) }
             switch b.kind {
@@ -213,6 +239,76 @@ extension Rig {
                 if let a = PaperText.icon(b.kind == .showMe ? "play" : "arrow-counter-clockwise", ink, in: r) { w.blocks.addChild(a) }
             case .choice(let i):
                 if let c = l.step.answer?.choices?[i] { w.blocks.addChild(PaperText.label(c, button, text, at: CGPoint(x: b.rect.midX, y: b.rect.midY), anchor: .center)) }
+            case .field(let id):
+                if let t = l.typed[id] {
+                    w.blocks.addChild(PaperText.label(t.replacingOccurrences(of: "-", with: "−"), PaperText.font(26, .medium, digits: true), ink,
+                                                      at: CGPoint(x: b.rect.midX, y: b.rect.midY), anchor: .center, y: 0.0026))
+                }
+            }
+        }
+    }
+
+    /// A lesson worked in typed steps (WorkProblem): the problem at the top (a story, then the sum), the step under
+    /// the picture (its words and hint), the line being worked (its boxes are blocks), and what a miss says.
+    private func buildWork(_ w: ProblemWords, _ m: WorkProblem, current: Bool, dark: Bool) {
+        let l = m.lesson, words = l.words, o = m.origin, col = ProblemLayout.column
+        let ink = colours.ink, ink2 = colours.ink2, chapter = UIColor(hex: m.chapter.hex), right = UIColor(hex: dark ? 0x3CCF8E : 0x178A57)
+        func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x, y: o.y + y) }
+
+        // the problem: a story above it when it's told as one, then the sum as written on paper
+        var top = WorkProblem.problemY
+        if l.story, let story = l.spec.story?(l.numbers) {
+            let sf = PaperText.font(20), lines = Array(PaperText.wrap(story, sf, width: col).prefix(3))
+            let y0 = -136.0
+            for (i, line) in lines.enumerated() { w.shown.addChild(PaperText.label(line, sf, ink, at: P(0, y0 + Double(i) * Double(sf.lineHeight)), anchor: .topLeading)) }
+            top = max(top, y0 + Double(lines.count) * Double(sf.lineHeight) + 6)
+        }
+        mathLine(l.spec.display(l.numbers), at: P(0, top), typed: [:], into: w.shown, size: 30)
+
+        // the step, under the picture: what to do now (a story's step asks only "Pick what to do"), and its hint
+        let storyStep = l.story && l.step.answer?.choices != nil
+        let q = PaperText.font(24, .medium), hint = PaperText.font(18), sy = WorkProblem.stepY
+        let say = m.intro ?? (storyStep ? words.hint : words.say)
+        let sayLines = PaperText.block(say, q, ink, width: col, topLeft: P(0, sy - 20), maxLines: 2)
+        sayLines.forEach { w.question.addChild($0) }
+        if m.intro == nil, !storyStep, l.step.answer?.choices == nil {
+            PaperText.block(words.hint, hint, ink2, width: col, topLeft: P(0, sy - 20 + Double(sayLines.count) * Double(q.lineHeight) + 2), maxLines: 2).forEach { w.question.addChild($0) }
+        }
+
+        // the line being worked, its boxes drawn as blocks; or, once solved, nothing more to write
+        var under = WorkProblem.lineY
+        if let a = l.step.answer, a.choices == nil, m.intro == nil {
+            let lay = MathLineView.layout(a.prompt, typed: l.typed, size: 28)
+            mathLine(a.prompt, at: P(0, WorkProblem.lineY), typed: l.typed, into: w.still, size: 28)
+            under += Double(lay.h) * Paper.cell + 14
+        } else if l.step.answer?.choices != nil {
+            under += 56
+        }
+        if let msg = m.message {
+            PaperText.block(msg.text, PaperText.font(19, .medium), msg.ok ? ink2 : chapter, width: col, topLeft: P(0, under), maxLines: 3).forEach { w.still.addChild($0) }
+        } else if l.isLast {
+            _ = right
+        }
+    }
+
+    /// A line of math written on the paper's cells (MathLineView's layout), its boxes left to the blocks.
+    func mathLine(_ line: MathLine, at p: CGPoint, typed: [String: String], into e: Entity, size: CGFloat) {
+        let lay = MathLineView.layout(line, typed: typed, size: 28), c = Paper.cell, ink = colours.ink, ink2 = colours.ink2
+        let k = size / 28
+        for it in lay.items {
+            let x = p.x + Double(it.col) * c * k, y = p.y + Double(it.row) * c * k
+            switch it.kind {
+            case .char(let ch, _):
+                e.addChild(PaperText.label(ch, PaperText.font(size, .medium, digits: true), ink, at: CGPoint(x: x + c * k / 2, y: y + c * k), anchor: .center))
+            case .point:
+                e.addChild(PaperText.label(".", PaperText.font(size, .bold), ink, at: CGPoint(x: x, y: y + c * k), anchor: .center))
+            case .word(let t):
+                e.addChild(PaperText.label(t, PaperText.font(size * 0.7), ink2, at: CGPoint(x: x, y: y + c * k), anchor: UnitPoint(x: 0, y: 0.5)))
+            case .bar:
+                if let m = Self.fills([CGRect(x: x, y: y - 0.75, width: Double(it.w) * c * k, height: 1.5)]) {
+                    let b = ModelEntity(mesh: m, materials: [flat(ink)]); b.position.y = 0.0024; e.addChild(b)
+                }
+            case .box: break
             }
         }
     }

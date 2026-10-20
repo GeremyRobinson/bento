@@ -48,7 +48,7 @@ enum Shots {
                 m.select(ad); await wait(1); m.open(ad); await wait(1.5)
                 for _ in 0..<12 { m.bars?.skipHowTo(); await wait(1.6) }
                 guard let page = m.bars else { return }
-                let b = page.problems[1]
+                let b = page.problems[1] as! AddFractionsModel
                 page.activate(b)
                 for i in 0..<b.problem.covered { b.tap(i) }
                 b.go(); await wait(1)
@@ -128,6 +128,15 @@ enum Shots {
             switch name {
             case "paper": break
             case "selected": m.select(uc)
+            case let n where n.hasPrefix("page-") && n != "page-zoom" && n != "page-hop":
+                // page-<lesson id>[-<step>]: a lesson's page, How to skipped; its first problem worked to that step
+                let parts = n.dropFirst(5).split(separator: "-")
+                let k = Int(parts.last ?? "") ?? -1, id = (k >= 0 ? parts.dropLast() : parts[...]).joined(separator: "-")
+                guard let p = Map.pieces.first(where: { $0.id == id }) else { return }
+                m.select(p); m.open(p)
+                guard let page = m.bars, let w = page.problems.first as? WorkProblem else { return }
+                page.activate(w)
+                for _ in 0..<max(0, k) { if w.lesson.step.answer != nil { w.lesson.step.answer?.choices != nil ? w.choose(Int(w.lesson.step.answer!.expected["c"] ?? 0)) : w.showMe() }; w.go() }
             case "tests":
                 // the map with Add with different bottoms learned: its chapter's test opens; frame on Fractions
                 Progress.shared.reset(to: ["ad"]); m.frameChapter(2)
@@ -175,7 +184,7 @@ enum Shots {
                 // the page: the How to has played (instant), the 16 problems are on the paper
                 start(Map.pieces.first { $0.id == "ad" }!)
                 guard let page = m.bars, n != "fractions" else { return }
-                let b = n == "fractions-story" ? page.problems[2] : n == "fractions-check" ? page.problems[12] : page.problems[0]
+                let b = (n == "fractions-story" ? page.problems[2] : n == "fractions-check" ? page.problems[12] : page.problems[0]) as! AddFractionsModel
                 if n == "fractions-activate" {
                     // a tap on the empty bottom corner of problem 2's box makes it the one being worked
                     let r = BarsPage.box(of: page.problems[1]), s = m.camera(at: PaperClock.now).toScreen(Point(r.x + 30, r.y + r.height - 30))
@@ -186,7 +195,7 @@ enum Shots {
                     return
                 }
                 if n == "fractions-final-miss" {
-                    let f = page.problems[8]; page.activate(f); f.tap(0); f.go(); return
+                    let f = page.problems[8] as! AddFractionsModel; page.activate(f); f.tap(0); f.go(); return
                 }
                 if n == "fractions-taps" {
                     // a finger's taps, by where they land on the screen: the pieces, then Check, then a choice on the story
@@ -195,14 +204,14 @@ enum Shots {
                     if let check = ProblemLayout.blocks(b).first(where: { $0.kind == .main }) { tap(CGPoint(x: check.rect.midX, y: check.rect.midY)) }
                     return
                 }
-                if n == "fractions-overview" { for i in 0..<page.problems[0].problem.covered { page.problems[0].tap(i) }; page.problems[0].go(); m.frameAll(); return }
+                if n == "fractions-overview" { let p0 = page.problems[0] as! AddFractionsModel; for i in 0..<p0.problem.covered { p0.tap(i) }; p0.go(); m.frameAll(); return }
                 if n == "fractions-story" { b.choose(2); b.go(); return }
                 if n == "fractions-wrong" || n == "fractions-check" { b.tap(b.problem.covered + 1); b.go(); return }
                 if n == "fractions-hint2" { b.tap(b.problem.covered + 1); b.go(); b.go(); return }
                 for i in 0..<b.problem.covered { b.tap(i) }
                 b.go()
                 if n == "fractions-add" { return }
-                if n == "fractions-two" { for i in b.problem.covered..<b.problem.total { b.tap(i) }; b.go(); page.problems[1].tap(0); return }
+                if n == "fractions-two" { for i in b.problem.covered..<b.problem.total { b.tap(i) }; b.go(); (page.problems[1] as! AddFractionsModel).tap(0); return }
                 for i in b.problem.covered..<b.problem.total { b.tap(i) }
                 b.go()
             default:

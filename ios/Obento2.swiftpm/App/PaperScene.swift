@@ -256,6 +256,7 @@ final class Rig {
     // the flat lesson
     let barsRoot = Entity()
     var drawers: [UUID: BarsDrawer] = [:]
+    var sketches: [UUID: SketchDrawer] = [:]
     let boxes = Entity()
     var boxesKey = ""
     var paperHex: UInt32 = 0xF3F2EF
@@ -446,6 +447,8 @@ final class Rig {
         guard let page else {
             for d in drawers.values { d.root.removeFromParent() }
             drawers = [:]; boxesKey = ""
+            for d in sketches.values { d.root.removeFromParent() }
+            sketches = [:]
             for w in problemWords.values { w.root.removeFromParent() }
             problemWords = [:]; return
         }
@@ -456,23 +459,29 @@ final class Rig {
         // is built when they arrive (building all 17 at once stalled a frame for 170 ms; 16 as they arrived, 80 ms)
         var made = 0
         for m in every {
-            if drawers[m.id] == nil {
-                if made >= 1 && !m.instant && m !== page.howTo { pageBuilding = true; continue }
+            if drawers[m.id] == nil && sketches[m.id] == nil {
+                if made >= 1 && !page.instant && m !== page.howTo { pageBuilding = true; continue }
                 made += 1
             }
-            let d = drawers[m.id] ?? { let d = BarsDrawer(rig: self); barsRoot.addChild(d.root); drawers[m.id] = d; return d }()
-            d.draw(m, at: t)
+            if let a = m as? AddFractionsModel {
+                let d = drawers[m.id] ?? { let d = BarsDrawer(rig: self); barsRoot.addChild(d.root); drawers[m.id] = d; return d }()
+                d.draw(a, at: t)
+            } else if let w = m as? WorkProblem {
+                let d = sketches[m.id] ?? { let d = SketchDrawer(); barsRoot.addChild(d.root); sketches[m.id] = d; return d }()
+                drawSketch(w, into: d, at: t)
+            }
         }
         for (id, d) in drawers where !every.contains(where: { $0.id == id }) { d.root.removeFromParent(); drawers[id] = nil }
+        for (id, d) in sketches where !every.contains(where: { $0.id == id }) { d.root.removeFromParent(); sketches[id] = nil }
         Perf.time("boxes") { drawBoxes(page, shown, at: t) }
         Perf.time("page-words") { drawProblemWords(page, shown, waiting: page.showing || made > 0 ? [] : page.problems, at: t) }
     }
 
     /// Every problem's box (G 17 Oct): a light outline in the chapter's colour, drawing in with its problem; the problem
     /// the child is on outlined in full colour, thicker; a solved one lightly filled, as a learned lesson is on the map.
-    private func drawBoxes(_ page: BarsPage, _ shown: [AddFractionsModel], at t: Double) {
+    private func drawBoxes(_ page: BarsPage, _ shown: [any PageProblem], at t: Double) {
         let chapter = page.piece.chapter.hex, px = 1 / lineScale
-        let ks = shown.map { (m: $0, k: snapped($0.wholeLine(at: t), 40)) }
+        let ks = shown.map { (m: $0, k: snapped(($0 as? AddFractionsModel)?.wholeLine(at: t) ?? (($0 as? WorkProblem)?.grow(at: t) ?? 1), 40)) }
         let key = ks.map { "\($0.k)\($0.m.solved)" }.joined() + "\(page.current?.id.uuidString ?? "") \(lineScale) \(paperHex)"
         guard key != boxesKey else { return }
         boxesKey = key

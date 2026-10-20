@@ -4,7 +4,7 @@ import SwiftUI
 /// The lesson logic lives in Core/AddFractions.swift; this keeps the timing: when the pieces grew in and when each one
 /// was shaded. It never tilts, so the paper's own camera shows it.
 @MainActor @Observable
-final class AddFractionsModel: Identifiable {
+final class AddFractionsModel: Identifiable, PageProblem {
     let id = UUID()
     /// What the page calls it: "How to", "Problem 3", "Skill check 1".
     let label: String
@@ -48,7 +48,7 @@ final class AddFractionsModel: Identifiable {
     }
 
     /// The pieces grow in, after `delay` (the page draws its problems in one after another).
-    func start(after delay: Double = 0) { openedAt = time(delay); wordsAt = openedAt; leftAt = nil }
+    func start(after delay: Double) { openedAt = time(delay); wordsAt = openedAt; leftAt = nil }
 
     /// The How to opens with the lesson's idea (why it works) before any steps: shown in place of the question.
     var intro: String?
@@ -67,7 +67,14 @@ final class AddFractionsModel: Identifiable {
     var onChange: (() -> Void)?
 
     /// A problem brought back from where the child left it: its pieces filled as they were, at once.
-    func restoreFills() { for i in 0..<problem.b { fills[i] = (target(i), target(i), PaperClock.now - 100) } }
+    func restore() { for i in 0..<problem.b { fills[i] = (target(i), target(i), PaperClock.now - 100) } }
+    var underStep: Double { Self.underStep }
+
+    /// The How to's cut: each top piece splits into the bottom row's pieces, so they're the same size (G 18 Oct).
+    func howToBeats() -> [(words: String, run: () -> Void)] {
+        let s = problem
+        return [("Cut each \(AddFractions.name(s.a)) into \(s.b / s.a). Now they are \(AddFractions.plural(s.b)).", { [weak self] in self?.split() })]
+    }
 
     /// When it started erasing itself (the How to, once it has played).
     private(set) var leftAt: Double?

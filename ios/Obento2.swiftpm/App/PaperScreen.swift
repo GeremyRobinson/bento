@@ -28,6 +28,12 @@ struct PaperScreen: View {
                         StepsLessonView(model: steps, camera: cam, time: t)
                     }
                     Toolbar(model: model, time: t, bottom: max(16, safe.safeAreaInsets.bottom + 8))
+                    // the keypad: fixed to the screen's right, while the problem being worked wants a number typed
+                    if let w = model.bars?.current as? WorkProblem, !w.auto, !w.solved, let a = w.lesson.step.answer, a.choices == nil {
+                        FloatingKeypad(type: w.type)
+                            .padding(.trailing, 24).padding(.bottom, max(16, safe.safeAreaInsets.bottom + 8) + 96)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    }
                 }
                 .onChange(of: t) { _, now in Perf.frame(now); model.settle(at: now); model.lesson?.settle(at: now) }
             }
@@ -63,5 +69,28 @@ struct PaperScreen: View {
                     model.zoom(by: v.magnification / lastPinch, at: .init(v.startLocation.x, v.startLocation.y)); lastPinch = v.magnification }
                 .onEnded { _ in lastPinch = 1 })
             .simultaneousGesture(SpatialTapGesture().onEnded { v in model.tap(at: .init(v.location.x, v.location.y)) })
+    }
+}
+
+
+/// The keypad for a typed step: the paper's cell blocks, on a card at the screen's edge.
+struct FloatingKeypad: View {
+    let type: (String) -> Void
+    var body: some View {
+        VStack(spacing: -1.5) {
+            ForEach([["7", "8", "9"], ["4", "5", "6"], ["1", "2", "3"], [".", "0", "del"]], id: \.self) { row in
+                HStack(spacing: -1.5) {
+                    ForEach(row, id: \.self) { key in
+                        CellButton(width: 64, height: 64, action: { type(key) }) {
+                            if key == "del" { Icon(name: "backspace", size: 24) }
+                            else { Text(key).font(Typeface.font(26, .medium)) }
+                        }
+                    }
+                }
+            }
+        }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 20).fill(Ink.surface).shadow(color: .black.opacity(0.10), radius: 15, y: 8))
+        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(Ink.line, lineWidth: 1))
     }
 }
