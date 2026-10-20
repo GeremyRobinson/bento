@@ -8,9 +8,9 @@ import SwiftUI
 final class TiltCamera {
     /// The paper tilting into 3D and back (snappier, G 17 Oct: was 1.1 s).
     static let beat = 0.9
-    /// Lying flat again on the way out of a problem: as quick as the page's own undrawing, so the paper is flat by
-    /// the time what comes next draws in.
-    static let away = 0.5
+    /// Lying flat again on the way out of a problem: quick, so the paper is flat by the time what comes next draws
+    /// in (the page's cards start 0.35 s after Problems, the next problem 0.4 s after Next problem).
+    static let away = 0.35
 
     let instant: Bool
     private(set) var resting: PaperView3D
@@ -130,4 +130,6 @@ protocol TiltOwner: AnyObject {
     func lieFlat()
     /// The paper stands tilted through it (or is still lying flat again).
     var holdsCamera: Bool { get }
+    /// While it lies flat again: when the paper is flat.
+    var flatEnds: Double? { get }
 }

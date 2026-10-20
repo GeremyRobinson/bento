@@ -481,4 +481,8 @@ final class PaperModel {
     private func contains(_ r: Rect, _ p: Point) -> Bool { p.x >= r.x && p.y >= r.y && p.x <= r.x + r.width && p.y <= r.y + r.height }
 }
 
-enum PaperClock { static var now: Double { Date().timeIntervalSinceReferenceDate } }
+enum PaperClock {
+    static var now: Double { frozen ?? Date().timeIntervalSinceReferenceDate }
+    /// Screenshots only (`-freeze`): the paper held still at this moment, so a slow screenshot still catches it.
+    static var frozen: Double?
+}

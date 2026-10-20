@@ -69,7 +69,7 @@ final class CubesDrawer {
 
     func draw(_ p: any CubesPicture, at t: Double) {
         let dark = rig.dark ?? false, key = "\(p.chapter.hex) \(dark)"
-        if key != lookKey { lookKey = key; looks = Self.looks(chapter: p.chapter.hex, dark: dark); shape = nil }
+        if key != lookKey { lookKey = key; looks = Self.looks(chapter: p.chapter.hex, dark: dark, paper: rig.paperHex); shape = nil }
         if shape?.box != p.box || shape?.corner != p.corner { rebuild(p) }
         if rig.lineScale != lines { relines(p) }
         guard let looks else { return }
@@ -193,8 +193,8 @@ final class CubesDrawer {
     // MARK: the pieces
 
     /// The colours: the cube faces in the chapter's colour, lighter for a preview's, the floor's squares, the edges.
-    static func looks(chapter c: UInt32, dark: Bool) -> (solid: [UnlitMaterial], ghost: [UnlitMaterial], square: UnlitMaterial, ghostSquare: UnlitMaterial, deep: UIColor, wire: UIColor) {
-        let k = Rig.Colours(dark: dark, chapter: c), paper: UInt32 = dark ? 0x121211 : 0xF3F2EF
+    static func looks(chapter c: UInt32, dark: Bool, paper: UInt32) -> (solid: [UnlitMaterial], ghost: [UnlitMaterial], square: UnlitMaterial, ghostSquare: UnlitMaterial, deep: UIColor, wire: UIColor) {
+        let k = Rig.Colours(dark: dark, chapter: c)
         func hex(_ u: UIColor) -> UInt32 {
             var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
             u.getRed(&r, green: &g, blue: &b, alpha: &a)
@@ -313,7 +313,7 @@ final class CubesDrawer {
         hints.removeFromParent(); hints = Entity(); root.addChild(hints)
         guard h.outline || h.tint, lines > 0 else { return }
         let b = p.box, o = p.corner, chapter = UIColor(hex: p.chapter.hex), px = Float(1 / lines), inset: Float = 0.06
-        let paper: UInt32 = (rig.dark ?? false) ? 0x121211 : 0xF3F2EF
+        let paper = rig.paperHex
         var dashes: [(SIMD2<Float>, SIMD2<Float>)] = []
         for i in h.empty {
             let c = UnitCubes.cell(i, in: b), x = Float(o.x) + Float(c.x) + inset, z = Float(o.z) + Float(c.z) + inset, s = 1 - 2 * inset

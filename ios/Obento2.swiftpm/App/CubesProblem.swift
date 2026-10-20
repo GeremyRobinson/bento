@@ -136,8 +136,9 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
     }
     var animating: Bool { PaperClock.now < until + 0.1 || wantsNumber }
 
-    /// The record's box wants a number (the iPad's number keys come up; the cursor blinks).
-    var wantsNumber: Bool { !auto && !solved && leftAt == nil && lesson.step.answer != nil && preview?.kind != .answer }
+    /// The record's box wants a number (the iPad's number keys come up; the cursor blinks). The keys stay up while Show
+    /// me plays the number into the box, so the paper doesn't jump as they go down and come back.
+    var wantsNumber: Bool { !auto && !solved && leftAt == nil && lesson.step.answer != nil }
 
     private func time(_ delay: Double) -> Double { instant ? PaperClock.now - 100 : PaperClock.now + delay }
     private func touched() { wordsAt = PaperClock.now }
@@ -145,6 +146,10 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
     // MARK: on the paper, and off it
 
     func start(after delay: Double) {
+        // the problem before it still lying flat again (Next problem from one that stood tilted): it draws in once the
+        // paper is flat
+        var delay = delay
+        if let o = TiltCamera.owner, o !== self, let e = o.flatEnds { delay = max(delay, e - PaperClock.now + 0.05) }
         // reopened after it lay flat again: it rises again from its covered floor
         if flatAt != nil || leftAt != nil { settleFlat() }
         openedAt = time(delay); wordsAt = openedAt; leftAt = nil; message = nil; verdict = nil
@@ -175,6 +180,7 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
 
     /// The paper stands tilted (or is still lying flat again): its view is the paper's.
     var holdsCamera: Bool { camera != nil && (flatAt.map { PaperClock.now - $0 < flatTime } ?? true) }
+    var flatEnds: Double? { flatAt.map { $0 + flatTime }.flatMap { camera != nil && $0 > PaperClock.now ? $0 : nil } }
 
     private func flatten(_ duration: Double) {
         let now = PaperClock.now
@@ -185,7 +191,7 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
     /// Flat again, and nothing standing: ready to rise again from the floor.
     private func settleFlat() {
         if TiltCamera.owner === self { TiltCamera.owner = nil }
-        camera = nil; anchored = false; flatAt = nil; flatFrom = nil; liftAt = nil; riseAt = nil; built = [:]; wireAt = nil; sinkAt = nil; fitted = nil
+        camera = nil; anchored = false; before = nil; flatAt = nil; flatFrom = nil; liftAt = nil; riseAt = nil; built = [:]; wireAt = nil; sinkAt = nil; fitted = nil
     }
 
     /// The How to again (Watch again): the cubes sink, the paper lies flat, and it starts over on a bare floor.
@@ -210,8 +216,15 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
     /// The tilt has started from the flat camera's view (on the first frame of it, so it starts exactly where the
     /// paper is then).
     @ObservationIgnored private var anchored = false
+    /// The problem the paper was seen through before this one, while it finishes lying flat again.
+    @ObservationIgnored private var before: (any TiltOwner)?
 
     func view(at t: Double, flat: PaperView3D) -> PaperView3D? {
+        // the problem before it is still lying flat again (Next problem onto one that stood tilted): its view until then
+        if let b = before {
+            if b.holdsCamera, let v = b.view(at: t, flat: flat) { return v }
+            before = nil
+        }
         if let f = flatAt {
             let u = (t - f) / flatTime
             guard u < 1 else { return nil }
@@ -271,8 +284,12 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         liftAt = at
         camera = TiltCamera(TiltCamera.flatNow, instant: instant)
         anchored = false; flatAt = nil; sinkAt = nil
+        // the paper is seen through this problem from now on; one still lying flat again finishes first (its tilt starts
+        // after that has ended: a problem opens 0.4 s after the last one leaves, and its paper tilts 0.7 s after that)
+        if let o = TiltCamera.owner, o !== self, o.holdsCamera { before = o }
         TiltCamera.owner = self
-        let rise = at + TiltCamera.beat * 0.55 * Self.slow
+        riseSlow = Self.slow
+        let rise = at + TiltCamera.beat * 0.55 * riseSlow
         riseAt = rise
         let risen = rose
         wireAt = lesson.step.task != nil ? risen - 0.2 : nil
@@ -286,7 +303,9 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
     }
 
     /// When the floor has risen into its layer: its last cube stands.
-    private var rose: Double { riseAt.map { $0 + (CubesTiming.end($0, floor: box.floor) - $0) * Self.slow } ?? 0 }
+    private var rose: Double { riseAt.map { $0 + (CubesTiming.end($0, floor: box.floor) - $0) * riseSlow } ?? 0 }
+    /// Screenshots' slow motion as it was when the floor started rising (a later change doesn't move a rise that's done).
+    @ObservationIgnored private var riseSlow = 1.0
 
     /// The tilted view that shows the box at its full height with its words: what to do over it, its labels, and the
     /// record under it, fitted between the top and the bar (or the keyboard).
@@ -650,7 +669,7 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         if let s = squares[i] { fill = ease((t - s.at) / 0.26); if !s.on { fill = 1 - fill } }
         // each square goes as its own cube rises over it (a big floor's last squares wait for theirs), and undraws
         // leaving
-        let away = (riseAt.map { 1 - ease(((t - $0) / Self.slow - Double(i) * CubesTiming.stagger(floor: box.floor)) / 0.5) } ?? 1) * gone(at: t)
+        let away = (riseAt.map { 1 - ease(((t - $0) / riseSlow - Double(i) * CubesTiming.stagger(floor: box.floor)) / 0.5) } ?? 1) * gone(at: t)
         var ghost = 0.0
         if let p = preview, p.kind == .cover, let at = p.cells[i] {
             ghost = ease((t - at) / 0.26) * (1 - ease((t - (p.end - Preview.fade)) / Preview.fade))
@@ -676,7 +695,7 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
     func cube(x: Int, y: Int, z: Int, at t: Double) -> Double {
         guard y == 0, let r = riseAt else { return 0 }
         let i = Double(z * box.length + x)
-        return ease(((t - r) / Self.slow - i * CubesTiming.stagger(floor: box.floor)) / CubesTiming.rise)
+        return ease(((t - r) / riseSlow - i * CubesTiming.stagger(floor: box.floor)) / CubesTiming.rise)
     }
 
     var hints: (outline: Bool, tint: Bool, empty: [Int]) {
@@ -876,11 +895,20 @@ extension Shots {
 
     /// The moment has been reached (Show me just pressed, the drag just let go), or `-at S` seconds after it: written
     /// to the device's log, so a screenshot can be taken right then (the app's own start takes a varying few seconds).
+    /// `-freeze`: the paper holds still from then on, so a screenshot that takes a while still catches that moment.
     static func marked(_ args: [String]) async {
         if let s = args.firstIndex(of: "-at").flatMap({ $0 + 1 < args.count ? Double(args[$0 + 1]) : nil }) { try? await Task.sleep(for: .seconds(s)) }
+        if args.contains("-freeze") { PaperClock.frozen = PaperClock.now }
         mark()
     }
-    static func mark() { NSLog("OBENTO-SHOT-MARK") }
+    /// Written to the device's log, and as a file in the app's Documents (`shot-mark`), which a script on the Mac can
+    /// watch for without reading the device's log.
+    static func mark() {
+        NSLog("OBENTO-SHOT-MARK")
+        if let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+            try? "\(Date().timeIntervalSince1970)".write(to: docs.appendingPathComponent("shot-mark"), atomically: true, encoding: .utf8)
+        }
+    }
 
     private static func cubesMoves(_ m: PaperModel, _ page: BarsPage, _ c: CubesProblem, stage k: Int, args: [String]) async {
         func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
@@ -942,6 +970,9 @@ extension Shots {
         guard k >= 3, args.contains("-next") || args.contains("-back") || args.contains("-leave") else { return }
         await wait(1.8)
         CubesProblem.slow = slow ?? 1
+        // the page's other problems draw in at their own pace from here, as they do for a child (screenshots open the
+        // page all at once)
+        for q in page.problems { (q as? CubesProblem)?.instant = false }
         if args.contains("-next"), let v = c.tiltedView, let r = c.places(v, screen: m.screen).blocks.first(where: { $0.kind == .nextProblem })?.rect {
             m.tap(at: Point(r.midX, r.midY))
         } else if args.contains("-back") { page.backToProblems() }

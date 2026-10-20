@@ -239,10 +239,10 @@ final class CubesWords {
     }
 
     func draw(_ p: CubesProblem, rig: Rig, view v: PaperView3D, screen: Size, at t: Double) {
-        prewarm(p)
+        Perf.time("cubes-words-prewarm") { prewarm(p) }
         // two groups of words made a frame at most
         var budget = 2
-        let pl = p.places(v, screen: screen), k = pl.k, b = p.box, chapter = p.chapter.hex, dark = rig.dark ?? false
+        let pl = Perf.time("cubes-words-places") { p.places(v, screen: screen) }, k = pl.k, b = p.box, chapter = p.chapter.hex, dark = rig.dark ?? false
         let start = p.openedAt + 0.3, left = p.leftAt
         let red = Sketch.Colour.hex(0xC8372D, 0xFF6B5E), green = Sketch.Colour.hex(0x178A57, 0x3CCF8E)
         let tilted = p.camera != nil && p.flatAt == nil
@@ -292,7 +292,13 @@ final class CubesWords {
             let lit = !text.isEmpty && (p.lesson.picture["counts"] == 1 || preview || (p.hinting && p.lesson.step.answer != nil))
             stand.show(text.isEmpty ? "" : "\(text) \(lit) \(dark)", {
                 var s = Sketch()
-                if !text.isEmpty { s.label("c", text, Sketch.Words(size: Sketch.small, weight: .semibold, colour: lit ? .chapter : .ink), at: .zero, anchor: .center) }
+                guard !text.isEmpty else { return s }
+                // lit, the count stands on a patch of paper in the chapter's colour, so it shows on the cubes' own colour
+                if lit {
+                    let w = CubesProblem.measure(text, Sketch.small, digits: true)
+                    s.plate("p", CGRect(x: -w / 2 - 8, y: -14, width: w + 16, height: 28), .paper)
+                }
+                s.label("c", text, Sketch.Words(size: Sketch.small, weight: .semibold, colour: lit ? .chapter : .ink), at: .zero, anchor: .center)
                 return s
             }(), rig: rig, chapter: chapter, start: t, left: left, at: t, budget: &budget)
             if y < pl.counts.count { stand.place(pl.counts[y], v, screen: screen) }
@@ -345,7 +351,7 @@ final class CubesWords {
 
         // the cursor in the box, blinking as a cursor does, held still a moment after each key
         let since = t - p.typedAt
-        let blink = p.wantsNumber && p.verdict == nil && left == nil && t - p.wordsAt > 0.4 && (since < 0.6 || (since - 0.6).truncatingRemainder(dividingBy: 1.06) < 0.53)
+        let blink = p.wantsNumber && p.preview == nil && p.verdict == nil && left == nil && t - p.wordsAt > 0.4 && (since < 0.6 || (since - 0.6).truncatingRemainder(dividingBy: 1.06) < 0.53)
         cursor.isEnabled = blink && lines.contains { $0.box }
         if cursor.isEnabled {
             let x = boxRect.midX + CubesProblem.measure(typed, Sketch.maths, digits: true) / 2 + 6, u = Paper.unit
@@ -358,8 +364,13 @@ final class CubesWords {
             }
         }
 
-        // the ghost finger making the move (Show me, the How to), as it plays every lesson's moves: a soft round
-        // fingertip, pressing while it drags, with a short trail behind it; drawn at once wherever it is now
+        Perf.time("cubes-words-finger") { drawFinger(p, rig: rig, view: v, screen: screen, k: k, at: t) }
+    }
+
+    /// The ghost finger making the move (Show me, the How to), as it plays every lesson's moves: a soft round fingertip,
+    /// pressing while it drags, with a short trail behind it; drawn at once wherever it is now.
+    private func drawFinger(_ p: CubesProblem, rig: Rig, view v: PaperView3D, screen: Size, k: Double, at t: Double) {
+        let chapter = p.chapter.hex, dark = rig.dark ?? false
         let f = p.finger, shows = snapped(f.map { $0.shown(t) } ?? 0, 12)
         if let f, shows > 0.05 {
             let q = v.project(f.at(t), screen: screen), down = f.down(t)

@@ -13,7 +13,7 @@ struct PaperScreen: View {
         GeometryReader { safe in
         GeometryReader { geo in
             TimelineView(.animation(paused: !animating)) { ctx in
-                let t = ctx.date.timeIntervalSinceReferenceDate
+                let t = PaperClock.frozen ?? ctx.date.timeIntervalSinceReferenceDate
                 let cam = model.camera(at: t)
                 ZStack(alignment: .topLeading) {
                     // RealityKit's view keeps the size it was made at, so a new screen shape (rotating) makes a new one
