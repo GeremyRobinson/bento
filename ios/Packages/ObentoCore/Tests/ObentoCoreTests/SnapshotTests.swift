@@ -79,6 +79,18 @@ final class SnapshotTests: XCTestCase {
         XCTAssertEqual(LessonRun.restored(MultiplyTwoDigit.spec, old)?.index, run.index)
     }
 
+    /// A lesson that has no steps for a save's numbers any more doesn't take the page down: that problem starts fresh.
+    func testALessonWithNoStepsForASaveStartsFresh() {
+        let spec = LessonSpec(id: "t-empty", title: "Empty", master: "test", generate: { _, _ in ["x": 2] }) { n in
+            n["x"] == 1 ? [] : [LessonStep(StepWords(say: "Ask", hint: "", action: "Let’s find out")),
+                                LessonStep(StepWords(say: "Done", hint: "", action: "Next problem"))]
+        }
+        var save = LessonRun(spec, numbers: ["x": 2]).snapshot
+        XCTAssertNotNil(LessonRun.restored(spec, save))
+        save.numbers = ["x": 1]; save.stepCount = nil
+        XCTAssertNil(LessonRun.restored(spec, save))
+    }
+
     /// The numbers a lesson always has, which a save must have to come back.
     func testRequiredKeys() {
         XCTAssertEqual(MultiplyTwoDigit.spec.requiredKeys, ["a", "b"])

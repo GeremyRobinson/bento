@@ -607,7 +607,8 @@ extension LessonRun {
         if s.skipsAsk { skipAsk() }
         index = min(max(0, s.index), max(0, steps.count - 1))
         marks = s.marks; typed = s.typed; misses = s.misses; missed = s.missed; missedSteps = Set(s.missedSteps)
-        active = step.answer?.boxes.first
+        // a lesson that has no steps for these numbers any more is caught by `restored`, which asks for it first
+        active = steps.indices.contains(index) ? steps[index].answer?.boxes.first : nil
     }
 
     /// A saved problem brought back as the child left it, or nil when it no longer fits its lesson as the lesson is now

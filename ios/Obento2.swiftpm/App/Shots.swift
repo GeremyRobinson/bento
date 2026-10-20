@@ -11,6 +11,9 @@ enum Shots {
         return a[i + 1]
     }
     static var active: Bool { name != nil }
+    /// `-reduce-motion`: the moment runs as it does for a child with Reduce Motion on (cuts, nothing drawing in), and
+    /// otherwise for real: the How to plays, the work is kept (in memory only) and comes back.
+    static var reduceMotion: Bool { ProcessInfo.processInfo.arguments.contains("-reduce-motion") }
 
     static func run(_ m: PaperModel) {
         guard let name else { return }
@@ -326,6 +329,9 @@ enum Shots {
     ///   after a miss; the page's hints used up.
     /// - `recheck-<lesson>`, `recheck-result-<lesson>`: a due lesson opening on its recheck, and its result.
     /// - `test-result-<chapter>`: a chapter test answered to the end (10 right), its result.
+    /// - `howto-<lesson>` (`-taps=<n>`: Next pressed n times), `back-<lesson>`: opened as a child does, not as a
+    ///   screenshot: the How to plays; back: the How to tapped through, a problem started, the lesson left and opened
+    ///   again, on the problem as it was left. With `-reduce-motion`, as Reduce Motion has it.
     static func structure(_ m: PaperModel, _ name: String) async -> Bool {
         func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
         let args = ProcessInfo.processInfo.arguments
@@ -411,6 +417,28 @@ enum Shots {
             await wait(0.3)
             for (i, q) in page.recheckProblems.enumerated() { page.open(q); await work(q, miss: i == 2) }
             page.goNext()
+        case let n where n.hasPrefix("howto-") || n.hasPrefix("back-"):
+            let back = n.hasPrefix("back-")
+            guard let p = lesson(back ? "back-" : "howto-") else { return true }
+            Progress.shared.reset(to: [])
+            PageStore.clear(p.id)
+            m.frameGroup(duration: 0)
+            m.select(p); await wait(m.reduceMotion ? 0.2 : 1.2); m.open(p); await wait(1.5)
+            // a tap each time the How to waits for one (its blocks are up)
+            let taps = back ? 99 : args.first { $0.hasPrefix("-taps=") }.flatMap { Int($0.dropFirst(6)) } ?? 0
+            var tapped = 0
+            for _ in 0..<600 where tapped < taps && m.bars?.howToGone == false {
+                if m.bars?.howTo.howToButtons.isEmpty == false { m.bars?.skipHowTo(); tapped += 1; await wait(0.4) } else { await wait(0.1) }
+            }
+            guard back, let page = m.bars, let i = page.problems.indices.first(where: { page.plan?.items[$0].part == .own }),
+                  let w = page.problems[i] as? WorkProblem else { return true }
+            await wait(0.8)
+            page.open(w); await wait(1)
+            await work(w, steps: 1)
+            if let box = w.lesson.step.answer?.boxes.first { w.select(box); w.type("4") }
+            await wait(0.5)
+            m.close(); await wait(2)
+            m.select(p); await wait(m.reduceMotion ? 0.2 : 1.2); m.open(p)
         case let n where n.hasPrefix("test-result-"):
             guard let t = Map.piece("test-\(n.dropFirst(12))") else { return true }
             Progress.shared.reset(to: Set(Map.gradeLessons))

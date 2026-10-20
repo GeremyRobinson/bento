@@ -465,9 +465,10 @@ final class PaperModel {
         fly(to: PaperCamera(x: screen.width / 2 - c.x * z, y: screen.height / 2 - c.y * z, zoom: z), duration: CameraTiming.glide)
     }
 
-    /// Reduce Motion (LESSONS.md §4): cut straight to every state, with no glide, tilt or draw-in.
+    /// Reduce Motion (LESSONS.md §4): cut straight to every state, with no glide, tilt or draw-in. Screenshots keep it
+    /// off, unless the moment asks for it (`-reduce-motion`).
     func setReduceMotion(_ on: Bool) {
-        guard !Shots.active else { return }
+        let on = Shots.active ? Shots.reduceMotion : on
         reduceMotion = on
         if on { drawnAt = PaperClock.now - 100 }
     }
