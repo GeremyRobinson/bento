@@ -19,6 +19,9 @@ enum LessonPictures {
         case "g5-round": return roundLayout()
         case "g5-divide": return areaLayout(tall: v("dv"), wide: v("qt"))
         case "g5-divdec", "g5-pow10", "g5-adddec": return gridLayout()
+        case "add", "sub", "mix", "g5-multfrac", "g5-fracof": return gridLayout()
+        case "g5-improper": return gridLayout(rows: 3 * (Int(v("w")) + 1))
+        case "g5-unitdiv": return gridLayout(rows: Int(v("W")) * (v("W") > 6 ? 2 : 3))
         default: return WorkProblem.Layout()
         }
     }
@@ -37,11 +40,11 @@ enum LessonPictures {
         case "g5-adddec": s = addDecimalsGrid(a: v("a"), b: v("b"), p)
         case "g5-multdec": multiplyDecimals(&s, n, p)
         case "g5-divdec": s = divideDecimalGrid(d: Int(v("d")), qt: Int(v("qt")), p)
-        case "add", "sub", "mix": unlike(&s, n, p)
-        case "g5-multfrac": multiplyFractions(&s, n, p)
-        case "g5-improper": improper(&s, n, p)
-        case "g5-fracof": fractionOf(&s, n, p)
-        case "g5-unitdiv": unitDivide(&s, n, p)
+        case "add", "sub", "mix": s = unlikeGrid(n, p)
+        case "g5-multfrac": s = multiplyFractionsGrid(n, p)
+        case "g5-improper": s = improperGrid(n, p)
+        case "g5-fracof": s = fractionOfGrid(n, p)
+        case "g5-unitdiv": s = unitDivideGrid(n, p)
         case "g5-volume": volume(&s, n, p)
         case "g5-units": units(&s, n, p)
         default: break
@@ -285,11 +288,14 @@ enum LessonPictures {
 
     /// The picture across the top four blocks, the step on the block line under it, its line and Check a block apart,
     /// the keypad on the right.
-    static func gridLayout() -> WorkProblem.Layout {
+    /// `rows`: how many rows of squares the picture needs; the step starts on the block line after them.
+    static func gridLayout(rows: Int = 18) -> WorkProblem.Layout {
         var l = WorkProblem.Layout()
+        let stepY = max(400, ((Double(rows) + 1) * Paper.cell / Paper.unit).rounded(.up) * Paper.unit)
         l.pictureTop = 0; l.pictureScale = 1
-        l.stepX = 0; l.stepY = 400; l.lineY = 500; l.column = 760; l.actions = 600; l.messageBelow = false
-        l.keypadX = 900; l.keypadY = 400
+        l.stepX = 0; l.stepY = stepY; l.lineY = stepY + 100; l.column = 760; l.actions = stepY + 200; l.messageBelow = false
+        l.keypadX = 900; l.keypadY = stepY
+        l.height = max(10, (stepY + 300 + 200) / Paper.unit)
         return l
     }
 
@@ -399,6 +405,146 @@ enum LessonPictures {
             pen.rule("r2", from: wx + 10, to: wx + 20, row: 8)
             pen.word("st", String(format: "%.2f", a + b), at: wx + 20, 9.5, num.colour(.chapter), anchor: UnitPoint(x: 1, y: 0.5))
         }
+        return pen.sketch
+    }
+
+    // MARK: fractions
+
+    static func frac(_ a: Int, _ b: Int) -> Math { .frac(.num(Double(a)), .num(Double(b))) }
+
+    /// 1/2 + 1/3 on the grid: on the left the sum as school writes it, each fraction rewritten over the common bottom
+    /// with its × beside it, a digit to a square; on the right the bars, one whole each, a length every bottom divides
+    /// (so a third and a fourth of twelve are exact squares), cut into the same size pieces, then put together (or
+    /// taken away).
+    static func unlikeGrid(_ n: Numbers, _ p: Numbers) -> Sketch {
+        var pen = GridPen()
+        let a = Int(n["a"] ?? 0), b = Int(n["b"] ?? 1), c = Int(n["c"] ?? 0), d = Int(n["d"] ?? 1), minus = n["minus"] == 1
+        let L = Int(n["L"] ?? 1), A = Int(n["A"] ?? 0), C = Int(n["C"] ?? 0), S = Int(n["S"] ?? 0)
+        let cut = p["cut"] == 1, first = p["first"] == 1, second = p["second"] == 1, combine = p["combine"] == 1, focus = p["focus"]
+        let small = Sketch.Words(size: 18, weight: .medium, colour: .ink2), chapter = Sketch.Words(size: 18, weight: .medium, colour: .chapter)
+        // school: a/b = A/L (× L/b) over c/d = C/L, a line, S/L
+        pen.math("f1", first ? [frac(a, b), .op("="), frac(A, L)] : [frac(a, b)], col: 1, row: 1)
+        if first { pen.word("k1", "× \(L / b)", at: 9, 3, chapter, anchor: UnitPoint(x: 0, y: 0.5)) }
+        pen.word("op", minus ? "−" : "+", at: 0, 8, Sketch.Words(size: 26, weight: .medium, colour: .ink))
+        pen.math("f2", second ? [frac(c, d), .op("="), frac(C, L)] : [frac(c, d)], col: 1, row: 6)
+        if second { pen.word("k2", "× \(L / d)", at: 9, 8, chapter, anchor: UnitPoint(x: 0, y: 0.5)) }
+        if combine {
+            pen.rule("r", from: 0, to: 12, row: 11)
+            pen.math("ans", [frac(S, L)], col: 5, row: 11)
+            if p["answer"] == 1 {
+                let g = gcd(S, L), whole = S / L, rem = S % L
+                let simple = whole >= 1 ? (rem == 0 ? "\(whole)" : "\(whole) \(rem / gcd(rem, L))/\(L / gcd(rem, L))") : "\(S / g)/\(L / g)"
+                pen.word("simp", "= \(simple)", at: 8, 13, Sketch.Words(size: 24, weight: .medium, colour: .chapter), anchor: UnitPoint(x: 0, y: 0.5))
+            }
+        }
+        // the bars: a whole is L pieces of `per` squares
+        let per = max(1, 36 / L), length = L * per, x0 = 20.0
+        pen.bar("b1", col: x0, row: 2, length: length, parts: cut ? L : b, shaded: cut ? A : a, lit: focus == 1 || focus == 3)
+        pen.label("l1", first ? "\(A)/\(L)" : "\(a)/\(b)", small, .right, edge: x0 + Double(length), along: 3)
+        pen.bar("b2", col: x0, row: 7, length: length, parts: cut ? L : d, shaded: cut ? C : c, striped: true, lit: focus == 2 || focus == 3)
+        pen.label("l2", second ? "\(C)/\(L)" : "\(c)/\(d)", small, .right, edge: x0 + Double(length), along: 8)
+        if combine {
+            if minus {
+                pen.bar("b3", col: x0, row: 12, length: length, parts: L, shaded: S, lit: focus == 4, struck: S..<min(L, S + C))
+            } else {
+                let bars = max(1, Int((Double(S) / Double(L)).rounded(.up)))
+                for j in 0..<bars {
+                    let row = 12 + Double(j) * 3, base = j * L
+                    pen.bar("b3\(j)", col: x0, row: row, length: length, parts: L, shaded: max(0, min(L, A - base)), lit: focus == 4)
+                    let from = max(0, A - base), count = max(0, min(L - from, S - base - from))
+                    if count > 0 { pen.bar("b3c\(j)", col: x0, row: row, length: length, parts: L, shaded: count, from: from, striped: true, lit: focus == 4) }
+                }
+            }
+            pen.label("l3", "\(S)/\(L)", chapter, .right, edge: x0 + Double(length), along: 13)
+        }
+        return pen.sketch
+    }
+
+    /// 2/3 × 3/4 on the grid: the square cut into b rows and d columns of whole squares, a rows and c columns shaded,
+    /// their overlap counted; on the left top times top over bottom times bottom.
+    static func multiplyFractionsGrid(_ n: Numbers, _ p: Numbers) -> Sketch {
+        var pen = GridPen()
+        let a = Int(n["a"] ?? 0), b = Int(n["b"] ?? 1), c = Int(n["c"] ?? 0), d = Int(n["d"] ?? 1)
+        let at = Int(p["at"] ?? 0), ask = p["ask"].map(Int.init)
+        pen.math("prob", [frac(a, b), .op("×"), frac(c, d)], col: 0, row: 1)
+        if at >= 3 || ask == 3 { pen.math("mul", [.op("="), .frac(.text("\(a) × \(c)"), .text("\(b) × \(d)"))], col: 7, row: 1) }
+        if at >= 3 { pen.math("res", [.op("="), frac(a * c, b * d)], col: 7, row: 7) }
+        if at >= 4 {
+            let g = gcd(a * c, b * d)
+            pen.word("simp", g > 1 ? "= \(a * c / g)/\(b * d / g)" : "already simplest", at: 13, 9, Sketch.Words(size: 22, weight: .medium, colour: .chapter), anchor: UnitPoint(x: 0, y: 0.5))
+        }
+        // the grid: each piece `s` squares a side
+        let s = Double(max(2, min(6, 16 / b, 24 / d))), x0 = 30.0, y0 = 2.0
+        for r in 0..<b { for col in 0..<d {
+            let inRow = r < a, inCol = col < c, rect = pen.R(x0 + Double(col) * s, y0 + Double(r) * s, s, s)
+            if inRow && inCol { pen.sketch.fill("o\(r)_\(col)\(at >= 3 || ask == 3)", rect, ask == 3 || at >= 3 ? .tint(0.7) : .tint(0.55)) }
+            else if inRow { pen.sketch.fill("r\(r)_\(col)\(ask == 1)", rect, ask == 1 ? .tint(0.4) : .tint(0.22)) }
+            else if inCol { pen.sketch.fill("c\(r)_\(col)\(ask == 2)", rect, ask == 2 ? .tint(0.4) : .tint(0.12)) }
+            if at >= 3, inRow && inCol { pen.word("n\(r)_\(col)", "\(r * c + col + 1)", at: x0 + (Double(col) + 0.5) * s, y0 + (Double(r) + 0.5) * s, Sketch.Words(size: 14, weight: .semibold, colour: .paper)) }
+        } }
+        pen.sketch.segments("grid", (0...d).map { i in (pen.P(x0 + Double(i) * s, y0), pen.P(x0 + Double(i) * s, y0 + Double(b) * s)) }
+            + (0...b).map { j in (pen.P(x0, y0 + Double(j) * s), pen.P(x0 + Double(d) * s, y0 + Double(j) * s)) }, .tint(0.6), width: 1.5)
+        let small = Sketch.Words(size: 18, weight: .medium, colour: .ink2)
+        pen.label("rl", "\(a)/\(b)", small.colour(ask == 1 ? .chapter : .ink2), .left, edge: x0, along: y0 + Double(a) * s / 2)
+        pen.label("cl", "\(c)/\(d)", small.colour(ask == 2 ? .chapter : .ink2), .above, edge: y0, along: x0 + Double(c) * s / 2)
+        return pen.sketch
+    }
+
+    /// 2 3/4 on the grid: a bar per whole and one for the extra pieces, each piece a whole number of squares, every
+    /// piece counted on; on the right the mixed number rewritten.
+    static func improperGrid(_ n: Numbers, _ p: Numbers) -> Sketch {
+        var pen = GridPen()
+        let w = Int(n["w"] ?? 1), nn = Int(n["n"] ?? 1), d = Int(n["d"] ?? 2)
+        let wholes = Int(p["wholes"] ?? 0), extra = p["extra"] == 1, fraction = p["fraction"] == 1, focus = p["focus"]
+        let per = max(2, 30 / d), length = d * per, x0 = 3.0, small = Sketch.Words(size: 18, weight: .medium, colour: .ink2)
+        for j in 0...w {
+            let row = 1 + Double(j) * 3, isExtra = j == w, filled = isExtra ? (extra ? nn : 0) : (j < wholes ? d : 0)
+            pen.bar("b\(j)", col: x0, row: row, length: length, parts: d, shaded: filled, striped: isExtra,
+                    lit: (focus == 1 && !isExtra) || (focus == 2 && isExtra) || focus == 3)
+            pen.label("bl\(j)", isExtra ? "\(nn)/\(d)" : "1", small, .left, edge: x0, along: row + 1)
+            if filled > 0 { pen.label("cnt\(j)\(j * d + filled)", "\(j * d + filled)", small.colour(isExtra || j == w - 1 ? .chapter : .ink2), .right, edge: x0 + Double(length), along: row + 1) }
+        }
+        let wx = x0 + Double(length) + 8, line = Sketch.Words(size: 24, weight: .medium, colour: .ink)
+        pen.math("mixed", [.num(Double(w)), frac(nn, d)] + (fraction ? [.op("="), frac(w * d + nn, d)] : []), col: wx, row: 1)
+        if wholes >= w { pen.word("l1", "\(w) × \(d) = \(w * d)", at: wx, 8, line, anchor: UnitPoint(x: 0, y: 0.5)) }
+        if extra { pen.word("l2", "\(w * d) + \(nn) = \(w * d + nn)", at: wx, 11, line, anchor: UnitPoint(x: 0, y: 0.5)) }
+        return pen.sketch
+    }
+
+    /// 3/4 of 20 on the grid: the bar of 20 cut into 4 equal groups (each a whole number of squares), 3 taken, a
+    /// bracket under them; the working under the bar.
+    static func fractionOfGrid(_ n: Numbers, _ p: Numbers) -> Sketch {
+        var pen = GridPen()
+        let nn = Int(n["n"] ?? 1), d = Int(n["d"] ?? 2), W = Int(n["W"] ?? 0), g = W / max(1, d)
+        let at = Int(p["at"] ?? 0), ask = p["ask"].map(Int.init)
+        let length = d * max(3, 40 / d), x0 = 0.0, row = 3.0, label = Sketch.Words(size: 20, weight: .medium, colour: .ink2)
+        pen.label("W", "\(W)", label, .above, edge: row, along: x0 + Double(length) / 2)
+        let cutNow = at >= 1 || ask == 1
+        pen.bar("g", col: x0, row: row, length: length, height: 3, parts: cutNow ? d : 1, shaded: at >= 2 ? nn : (cutNow ? 0 : 1), lit: ask == 2 || at >= 2)
+        if at >= 1 { for i in 0..<d { pen.word("gl\(i)", "\(g)", at: x0 + (Double(i) + 0.5) * Double(length / d), row + 1.5, Sketch.Words(size: 20, weight: .medium, colour: .ink)) } }
+        if at >= 2 { pen.bracket("br", from: x0, to: x0 + Double(nn * (length / d)), row: row + 5, "\(nn)/\(d)", Sketch.Words(size: 20, weight: .medium, colour: .chapter)) }
+        let line = Sketch.Words(size: 24, weight: .medium, colour: .ink)
+        if at >= 1 { pen.word("l1", "\(W) ÷ \(d) = \(g)", at: x0, 12, line, anchor: UnitPoint(x: 0, y: 0.5)) }
+        if at >= 2 { pen.word("l2", "\(g) × \(nn) = \(g * nn)", at: x0, 15, line.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5)) }
+        return pen.sketch
+    }
+
+    /// 3 ÷ 1/4 on the grid: a bar per whole, cut into fourths of whole squares and counted on; on the right, 1 = 4 × 1/4
+    /// and 3 × 4 = 12.
+    static func unitDivideGrid(_ n: Numbers, _ p: Numbers) -> Sketch {
+        var pen = GridPen()
+        let W = Int(n["W"] ?? 1), d = Int(n["d"] ?? 2), at = Int(p["at"] ?? 0), ask = p["ask"].map(Int.init)
+        let per = max(2, 32 / d), length = d * per, x0 = 2.0, tall: Double = W > 6 ? 1 : 2, step = tall + 1
+        let small = Sketch.Words(size: 18, weight: .medium, colour: .ink2)
+        for j in 0..<W {
+            let row = 1 + Double(j) * step, beat = min(j + 1, 3), isCut = at >= beat
+            pen.bar("b\(j)", col: x0, row: row, length: length, height: tall, parts: isCut ? d : 1, shaded: isCut ? d : 1, lit: ask == beat)
+            pen.label("one\(j)", "1", small, .left, edge: x0, along: row + tall / 2)
+            if isCut { pen.label("c\(j)", "\((j + 1) * d)", small.colour(j == W - 1 ? .chapter : .ink2), .right, edge: x0 + Double(length), along: row + tall / 2) }
+        }
+        let wx = x0 + Double(length) + 6, line = Sketch.Words(size: 24, weight: .medium, colour: .ink)
+        if at >= 1 { pen.word("l1", "1 = \(d) × 1/\(d)", at: wx, 2, line, anchor: UnitPoint(x: 0, y: 0.5)) }
+        if at >= min(W, 3) { pen.word("l2", "\(W) × \(d) = \(W * d)", at: wx, 5, line.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5)) }
         return pen.sketch
     }
 

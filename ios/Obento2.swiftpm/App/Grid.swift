@@ -83,6 +83,37 @@ struct GridPen {
 
     // MARK: pieces
 
+    /// A bar one whole long (`length` squares) cut into `parts` equal pieces, each a whole number of squares (the
+    /// caller picks a length every part divides): pieces from `from` for `shaded` filled (striped for a second
+    /// amount), some struck out, lit when it's the one being looked at.
+    mutating func bar(_ id: String, col: Double, row: Double, length: Int, height: Double = 2, parts: Int, shaded: Int, from: Int = 0,
+                      striped: Bool = false, lit: Bool = false, struck: Range<Int>? = nil) {
+        let per = Double(length / max(1, parts)), tag = "\(id)\(parts)\(lit)"
+        for i in 0..<max(1, parts) {
+            let r = R(col + Double(i) * per, row, per, height)
+            if i >= from && i < from + shaded {
+                sketch.fill("\(tag)f\(i)\(striped)", r, lit ? .tint(0.45) : .tint(0.25))
+                if striped {
+                    // stripes a square apart, corner to corner of each square
+                    var segs: [(CGPoint, CGPoint)] = []
+                    var t = -height
+                    while t < per { segs.append((P(r.minX / Self.sq + max(0, t), r.minY / Self.sq + max(0, -t)), P(r.minX / Self.sq + min(per, t + height), r.minY / Self.sq + min(height, per - t)))); t += 1 }
+                    sketch.segments("\(tag)s\(i)", segs, .tint(0.65), width: 1.5)
+                }
+            }
+            if let st = struck, st.contains(i) { sketch.line("\(tag)x\(i)", [P(r.minX / Self.sq + 0.3, r.maxY / Self.sq - 0.3), P(r.maxX / Self.sq - 0.3, r.minY / Self.sq + 0.3)], .ink2, width: 2) }
+        }
+        sketch.box("\(tag)o", R(col, row, Double(length), height), lit ? .chapter : .tint(0.7), width: 2)
+        if parts > 1 {
+            sketch.segments("\(tag)cuts", (1..<parts).map { i in (P(col + Double(i) * per, row), P(col + Double(i) * per, row + height)) }, lit ? .chapter : .tint(0.7), width: 1.5)
+        }
+    }
+
+    /// A line of math on the squares, a digit to a square (fractions stacked: their bar on the row `row` + 2).
+    mutating func math(_ id: String, _ line: MathLine, col: Double, row: Double, size: CGFloat = 26) {
+        sketch.mathLine(id, line, at: P(col, row), size: size * k, cell: Self.sq * k)
+    }
+
     /// A rectangle of squares, one for each unit (an area model, an array): its outline strokes on, then every square,
     /// then every ten stronger, then its fill under them. Lit, it's the part being worked.
     mutating func squares(_ id: String, col: Double, row: Double, cols: Int, rows: Int, lit: Bool) {
