@@ -341,7 +341,9 @@ final class WorkProblem: Identifiable, PageProblem {
 
     /// The hint (the bar's Hint): the step's hint written on rows 3–4, its part of the picture lit.
     func showHint() {
-        guard !solved, lesson.step.answer != nil || lesson.step.task != nil else { return }
+        // only a lesson on the paper draws its hint (rows 3–4 and its part of the picture), and counts it; the others'
+        // hint is the page's to write (nothing drawn here, nothing counted)
+        guard stacked, !solved, lesson.step.answer != nil || lesson.step.task != nil else { return }
         lesson.usedHint()
         hinting = true
         if message?.ok == false { message = nil }
