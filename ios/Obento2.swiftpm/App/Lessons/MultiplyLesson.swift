@@ -52,8 +52,10 @@ struct MultiplyLesson: PaperLesson {
         var tensProduct: Int { a * T }
         var onesProduct: Int { a * O }
         var product: Int { a * b }
-        /// Digits in the record's widest number (the product): its column is a square each side of them.
+        /// Digits in the record's widest number (the product), and the column's cells: those and the sign's, one more
+        /// when the ones strip's squares are as long as the total (25 × 17: + 175), so the + never touches them.
         var digits: Int { String(product).count }
+        var columns: Int { max(digits, String(onesProduct).count + 1) + 1 }
     }
 
     /// The stage (MultiplyTwoDigit's "at"): 0 the question, 1 the cut, 2 the tens strip, 3 the ones strip, 4 the total,
@@ -139,7 +141,7 @@ struct MultiplyLesson: PaperLesson {
         // typed where it goes: a × b, each strip's squares, the total in the chapter's colour
         var boxes: [WorkBox] = []
         if at >= 2 {
-            let per = 2 * k, R = Double(q.digits + 1) * per, cells = q.digits
+            let per = 2 * k, R = Double(q.columns) * per, cells = q.digits
             func row(_ r: Double) -> Double { (r + 0.5) * per }
             rec.digits("ra", "\(q.a)", right: R, row: row(0), per: per)
             rec.word("rx", "×", at: per / 2, row(1), Self.sign)
@@ -197,7 +199,13 @@ struct MultiplyLesson: PaperLesson {
         let q = Q(s.numbers), k = q.k
         guard stage(s) == 1, q.cuts else { return nil }
         let b = Double(q.b), c = s.h("cut") ?? b, a = Double(q.a)
-        func column(_ x: Double) -> Double { min(b, max(0, x.rounded())) }
+        /// The column under the finger. Drawn big, the camera far back, a square is a few points on the screen: a bold
+        /// line within a square of the finger takes the cut, so a ten is easy to land on.
+        func column(_ x: Double) -> Double {
+            let ten = (x / 10).rounded() * 10
+            let at = k > 1 && abs(x - ten) <= 1 ? ten : x.rounded()
+            return min(b, max(0, at))
+        }
         return Hands(
             // a tap along the top (over the rectangle, where the handle runs) puts the cut there
             tap: { p in p.y > q.handle - 1.5 * k && p.y < q.top + 0.5 && p.x > -0.5 && p.x < b + 0.5 ? HandMove(hand: ["cut": column(p.x)], missHand: nil) : nil },
@@ -230,7 +238,7 @@ struct MultiplyLesson: PaperLesson {
         let q = Q(n), k = q.k
         let longest = "That's \(q.a) × \(max(1, q.T / 10)). The tens digit stands for \(q.T), so add a zero."
         let w = PaperText.width(longest, PaperText.font(Sketch.small * k, .medium)) / Paper.cell
-        let narrowest = max(30, Double(q.b + 2), Double(q.digits + 1) * 2 * k + 1)
+        let narrowest = max(30, Double(q.b + 2), Double(q.columns) * 2 * k + 1)
         return w > narrowest ? 2 : 1
     }
 }
