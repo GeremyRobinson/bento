@@ -50,18 +50,19 @@ extension Rig {
                 s.fill(id + "tab" + tag, t, .chapter)
                 s.text(id + "tabw" + tag, tag, at: CGPoint(x: t.midX, y: t.midY), size: 14, weight: .semibold, .hex(0xFFFFFF, 0xFFFFFF), digits: false)
             }
-            // on the grid: the name in the top row of squares, the problem a digit to every two squares under it, and
-            // what's next in the bottom row
-            s.text(id + "name", c.title, at: CGPoint(x: r.minX + 20, y: r.minY + 40), size: 22, .ink3, anchor: UnitPoint(x: 0, y: 0.5), digits: false)
+            // like a lesson's thumbnail: the problem in the frame, centred on its squares (a digit to every two squares, a
+            // fraction a digit to a square), and its name and how it's going in the block under it
             if let d = c.display {
-                // a digit to every two squares; a fraction (four rows tall) a digit to a square, so it fits the card
-                let tall = MathLineView.layout(d, size: 28).h > 2
-                s.mathLine(id + "sum", d, at: CGPoint(x: r.minX + 20, y: r.minY + 80), size: tall ? 30 : 40, cell: tall ? 20 : 40)
+                let lay = MathLineView.layout(d, size: 28)
+                let cell = lay.h > 2 || Double(lay.w) * 40 > r.width - 40 ? 20.0 : 40.0, w = Double(lay.w) * cell, h = Double(lay.h) * cell
+                let x = r.minX + ((r.width - w) / 2 / 20).rounded() * 20, y = r.minY + ((r.height - h) / 2 / 20).rounded() * 20
+                s.mathLine(id + "sum", d, at: CGPoint(x: x, y: lay.h > 2 ? y + 20 : y), size: cell == 40 ? 40 : 30, cell: cell)
             } else {
-                s.text(id + "twelve", "12 problems", at: CGPoint(x: r.minX + 20, y: r.minY + 140), size: 40, c.state == .locked ? .ink3 : .ink, anchor: UnitPoint(x: 0, y: 0.5), digits: false)
+                s.text(id + "twelve", "12 problems", at: CGPoint(x: r.midX, y: r.midY), size: 30, c.state == .locked ? .ink3 : .ink, digits: false)
             }
-            let colour: Sketch.Colour = c.state == .done || c.state == .now ? .chapter : c.state == .missed ? .ink : .ink2
-            s.text(id + "line" + c.line, c.line, at: CGPoint(x: r.minX + 20, y: r.maxY - 40), size: 22, colour, anchor: UnitPoint(x: 0, y: 0.5), digits: false)
+            s.text(id + "name", c.title, at: CGPoint(x: r.minX, y: r.maxY + 28), size: 20, .ink, anchor: UnitPoint(x: 0, y: 1), digits: false)
+            let colour: Sketch.Colour = c.state == .done || c.state == .now ? .chapter : c.state == .missed ? .ink : .ink3
+            s.text(id + "line" + c.line, c.line, at: CGPoint(x: r.minX, y: r.maxY + 50), size: 16, weight: .regular, colour, anchor: UnitPoint(x: 0, y: 1), digits: false)
         }
         return s
     }

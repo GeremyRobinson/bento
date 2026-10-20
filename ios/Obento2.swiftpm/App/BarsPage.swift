@@ -26,8 +26,9 @@ final class BarsPage {
     // graph paper (G 17 Oct): every box starts and ends on the strong lines, with whole blocks between. The How to and
     // the problem being worked sit at the lesson's place, a square 8 blocks each way, or bigger when its maths needs it
     static let box = (dx: -2 * Paper.cell, dy: -10 * Paper.cell, width: 8 * Paper.unit, height: 8 * Paper.unit), gap = Paper.unit
-    /// The cards on the page of problems: 4 blocks by 3, a block apart, 3 to a row.
-    static let card = Size(4 * Paper.unit, 3 * Paper.unit), columns = 3
+    /// The cards on the page of problems, the lesson thumbnails' size (G 19 Oct): a frame 3 blocks by 2 with its name
+    /// in the block under it, a block apart, 3 to a row.
+    static let card = Size(3 * Paper.unit, 2 * Paper.unit), columns = 3
 
     /// The How to's origin: its box's corner on the lesson's frame corner on the map, on the strong lines.
     static func origin(for p: Piece) -> Point {
@@ -182,14 +183,14 @@ final class BarsPage {
         func part(_ heading: String, _ items: [Int], columns: Int = Self.columns) {
             heads.append((Point(x0, y - Paper.unit / 2), heading))
             for (k, i) in items.enumerated() {
-                let r = Rect(x: x0 + Double(k % columns) * (w + g), y: y + Double(k / columns) * (h + g), width: w, height: h)
+                let r = Rect(x: x0 + Double(k % columns) * (w + g), y: y + Double(k / columns) * (h + Paper.unit), width: w, height: h)
                 let m = problems[i], l = m.lesson
                 let state: Card.State = m.solved ? (l.missedAny && !l.helps ? .missed : .done) : m === lastWorked ? .now : .open
                 let done = l.steps.indices.filter { $0 < l.index && (l.steps[$0].answer != nil || l.steps[$0].task != nil) }.count
                 let line = m.solved ? (l.missedAny ? (l.helps ? "Done, with a miss" : "Missed") : "Done") : done > 0 ? "\(done) of \(l.workSteps) steps" : focusLine(m)
                 out.append(Card(index: i, rect: r, title: m.label, display: l.display, line: line, state: state))
             }
-            y += Double((items.count + columns - 1) / columns) * (h + g) + g
+            y += Double((items.count + columns - 1) / columns) * (h + Paper.unit) + g
         }
         if let n = test {
             part("\(n) questions, one try each", Array(problems.indices), columns: 4)
@@ -225,7 +226,8 @@ final class BarsPage {
         guard let first = cs.first else { return Self.box(of: howTo) }
         var minX = first.rect.x, minY = corner.y, maxX = 0.0, maxY = 0.0
         for c in cs { minX = min(minX, c.rect.x); maxX = max(maxX, c.rect.x + c.rect.width); maxY = max(maxY, c.rect.y + c.rect.height) }
-        return Rect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+        // the names under the last row too
+        return Rect(x: minX, y: minY, width: maxX - minX, height: maxY + Paper.unit - minY)
     }
     var firstRow: Rect { pageFrame }
 
