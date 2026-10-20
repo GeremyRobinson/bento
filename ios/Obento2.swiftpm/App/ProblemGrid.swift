@@ -11,7 +11,7 @@ enum ProblemGrid {
     /// The screen the problem is shown on (set as it changes), and what the bar and its edges leave of it.
     static var screen = Size(1366, 1024)
     /// While testing (G 19 Oct): a dashed box round each section of a problem (the sum, the picture, the work, the step).
-    static let showSections = true
+    static let showSections = false
 
     static let block = Paper.unit, sq = Paper.cell
     /// The next block line at or after `x`.
