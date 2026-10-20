@@ -7,7 +7,7 @@ import SwiftUI
 @MainActor
 enum Bars {
     /// A bar is 4 squares tall, and bars sit 2 squares apart.
-    static let height = 4.0, gap = 2.0
+    nonisolated static let height = 4.0, gap = 2.0
 
     static let maths = Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink)
     /// A piece's number, as it's counted.

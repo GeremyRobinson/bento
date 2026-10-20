@@ -45,6 +45,7 @@ enum PaperLessons {
         switch id {
         case "g5-round": return RoundingLesson()
         case "add", "sub", "mix": return FractionsLesson()
+        case "g5-improper": return MixedNumbersLesson()
         default: return nil
         }
     }
