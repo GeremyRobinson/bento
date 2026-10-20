@@ -12,8 +12,9 @@ extension Sketch {
     /// messages, buttons, headings, picture labels), and small (hints, names, statuses, notes). Every line sits centred
     /// on its letters in a row of squares. A tab's tiny word is the only other size.
     static let maths: CGFloat = 36, wordSize: CGFloat = 28, small: CGFloat = 20
-    /// One weight for every ink line in a problem (G 19 Oct): the work's rules and bracket, and every box's outline.
-    static let stroke = 2.0
+    /// One weight for every line (G 19 Oct): the work's rules and bracket, every box's and frame's outline, the
+    /// pictures' outlines and lines. Only the faint squares inside a picture (standing in for the paper's grid) are finer.
+    static let stroke = 1.5
 
     /// How a kind of words looks, everywhere it appears.
     struct Words {
@@ -141,7 +142,7 @@ extension Sketch {
         let corners = [CGPoint(x: r.minX, y: r.minY), CGPoint(x: r.maxX, y: r.minY), CGPoint(x: r.maxX, y: r.maxY), CGPoint(x: r.minX, y: r.maxY), CGPoint(x: r.minX, y: r.minY)]
         switch state {
         case .locked: line(id + "o-locked", corners, .tint(0.35), width: 1.5, dashed: true)
-        case .now: line(id + "o-now", corners, .chapter, width: 2.5)
+        case .now: line(id + "o-now", corners, .chapter, width: Sketch.stroke)
         case .done:
             fill(id + "f", r, .tint(0.08))
             line(id + "o", corners, .tint(0.3), width: 1.5)

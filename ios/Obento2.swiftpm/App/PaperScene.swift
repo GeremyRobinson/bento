@@ -546,7 +546,7 @@ final class Rig {
         }
         add(Self.fills(solved), Ink.mix(paperHex, chapter, 0.08), 0.0003)
         add(Self.lines(light, width: Float(1.5 * px)), Ink.mix(paperHex, chapter, 0.3), 0.001)
-        add(Self.lines(lit, width: Float(2.5 * px)), chapter, 0.0011)
+        add(Self.lines(lit, width: Float(Sketch.stroke) * Float(px)), chapter, 0.0011)
     }
 
     // MARK: a lesson worked in steps
@@ -614,7 +614,7 @@ final class Rig {
                 f.position = SIMD3(x + s / 2, 0.0002, z + s / 2); hints.addChild(f)
             }
         }
-        if let m = Self.lines(dashes, width: 2 * px) {
+        if let m = Self.lines(dashes, width: Float(Sketch.stroke) * Float(px)) {
             let e = ModelEntity(mesh: m, materials: [flat(chapter)]); e.position.y = 0.0018; hints.addChild(e)
         }
     }
@@ -645,7 +645,7 @@ final class Rig {
     private func buildCubes(_ l: UnitCubesModel, count: Int) {
         let o = l.origin
         if cubeMesh == nil { cubeMesh = MeshResource.generateBox(width: 1, height: 1, depth: 1, cornerRadius: 0, splitFaces: true) }
-        if edgeMesh == nil { edgeMesh = Self.cubeEdges(width: Float(2.5 / lineScale)) }
+        if edgeMesh == nil { edgeMesh = Self.cubeEdges(width: Float(Sketch.stroke / lineScale)) }
         // splitFaces order: front, top, back, bottom, right, left
         let faces: [any RealityKit.Material] = [colours.front, colours.top, colours.front, colours.top, colours.side, colours.side].map { flat($0) as any RealityKit.Material }
         for (x, y, z) in pendingCubes.prefix(count) {
@@ -686,7 +686,7 @@ final class Rig {
         guard lineScale > 0 else { return }
         let px = Float(1 / lineScale)
         if !edges.isEmpty || edgeMesh != nil {
-            edgeMesh = Self.cubeEdges(width: 2.5 * px)
+            edgeMesh = Self.cubeEdges(width: Float(Sketch.stroke) * Float(px))
             if let edgeMesh { for e in edges { e.model?.mesh = edgeMesh } }
         }
         guard let l = lesson else { return }
@@ -700,7 +700,7 @@ final class Rig {
             var s: Float = 0
             while s < len { dashes.append((a + dirn * s, a + dirn * min(len, s + 0.08))); s += 0.14 }
         }
-        if let m = Self.lines(dashes, width: 2 * px) {
+        if let m = Self.lines(dashes, width: Float(Sketch.stroke) * Float(px)) {
             let e = ModelEntity(mesh: m, materials: [flat(colours.deep)]); e.position.y = 0.002; outline.addChild(e)
         }
         lessonRoot.addChild(outline)
@@ -838,7 +838,7 @@ final class BarsDrawer {
             // over the grid: its strong lines don't fall on the pieces' edges, and would read as extra cuts
             fill.position = SIMD3(W / 2, 0.0008, -H / 2)
             let outline = ModelEntity()
-            if let m = Rig.lines([(SIMD2(0, 0), SIMD2(W, 0)), (SIMD2(W, 0), SIMD2(W, -H)), (SIMD2(W, -H), SIMD2(0, -H)), (SIMD2(0, -H), SIMD2(0, 0))], width: 2 * px) {
+            if let m = Rig.lines([(SIMD2(0, 0), SIMD2(W, 0)), (SIMD2(W, 0), SIMD2(W, -H)), (SIMD2(W, -H), SIMD2(0, -H)), (SIMD2(0, -H), SIMD2(0, 0))], width: Float(Sketch.stroke) * Float(px)) {
                 outline.model = ModelComponent(mesh: m, materials: [])
             }
             outline.position.y = 0.0012

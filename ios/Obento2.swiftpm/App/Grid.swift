@@ -68,13 +68,13 @@ struct GridPen {
     }
     /// A bracket under some squares, its ends a square tall, and its words in the row under it.
     mutating func bracket(_ id: String, from c0: Double, to c1: Double, row: Double, _ text: String, _ w: Sketch.Words = .message, tick: Double = 1) {
-        sketch.line(id, [P(c0, row - tick), P(c0, row), P(c1, row), P(c1, row - tick)], w.colour, width: 2)
+        sketch.line(id, [P(c0, row - tick), P(c0, row), P(c1, row), P(c1, row - tick)], w.colour, width: Sketch.stroke)
         word(id + "w", text, at: c0, row + tick, w, anchor: UnitPoint(x: 0, y: 0.5))
     }
     /// An arc hopping from one column to another over `row`, rising `height` squares.
     mutating func hop(_ id: String, from c0: Double, to c1: Double, row: Double, height: Double, _ colour: Sketch.Colour = .chapter) {
         let pts = (0...16).map { i -> CGPoint in let t = Double(i) / 16; return P(c0 + (c1 - c0) * t, row - sin(.pi * t) * height) }
-        sketch.line(id, pts, colour, width: 2)
+        sketch.line(id, pts, colour, width: Sketch.stroke)
     }
     /// A dot on the grid (a number's place on a line).
     mutating func dot(_ id: String, at col: Double, _ row: Double, radius: Double = 0.35, _ colour: Sketch.Colour = .chapter) {
@@ -84,7 +84,7 @@ struct GridPen {
     /// A ring round some squares (a digit to look at).
     mutating func ring(_ id: String, col: Double, row: Double, w: Double, h: Double, _ colour: Sketch.Colour = .chapter) {
         let c = P(col + w / 2, row + h / 2), rx = w / 2 * Self.sq, ry = h / 2 * Self.sq
-        sketch.line(id, (0...32).map { i in let a = Double(i) / 32 * 2 * .pi; return CGPoint(x: c.x + rx * cos(a), y: c.y + ry * sin(a)) }, colour, width: 2)
+        sketch.line(id, (0...32).map { i in let a = Double(i) / 32 * 2 * .pi; return CGPoint(x: c.x + rx * cos(a), y: c.y + ry * sin(a)) }, colour, width: Sketch.stroke)
     }
 
     // MARK: pieces
@@ -107,9 +107,9 @@ struct GridPen {
                     sketch.segments("\(tag)s\(i)", segs, .tint(0.65), width: 1.5)
                 }
             }
-            if let st = struck, st.contains(i) { sketch.line("\(tag)x\(i)", [P(r.minX / Self.sq + 0.3, r.maxY / Self.sq - 0.3), P(r.maxX / Self.sq - 0.3, r.minY / Self.sq + 0.3)], .ink2, width: 2) }
+            if let st = struck, st.contains(i) { sketch.line("\(tag)x\(i)", [P(r.minX / Self.sq + 0.3, r.maxY / Self.sq - 0.3), P(r.maxX / Self.sq - 0.3, r.minY / Self.sq + 0.3)], .ink2, width: Sketch.stroke) }
         }
-        sketch.box("\(tag)o", R(col, row, Double(length), height), lit ? .chapter : .tint(0.7), width: 2)
+        sketch.box("\(tag)o", R(col, row, Double(length), height), lit ? .chapter : .tint(0.7), width: Sketch.stroke)
         if parts > 1 {
             sketch.segments("\(tag)cuts", (1..<parts).map { i in (P(col + Double(i) * per, row), P(col + Double(i) * per, row + height)) }, lit ? .chapter : .tint(0.7), width: 1.5)
         }
@@ -124,13 +124,13 @@ struct GridPen {
     /// then every ten stronger, then its fill under them. Lit, it's the part being worked.
     mutating func squares(_ id: String, col: Double, row: Double, cols: Int, rows: Int, lit: Bool) {
         let r = R(col, row, Double(cols), Double(rows)), tag = "\(id)\(lit)"
-        sketch.box(tag + "o", r, .chapter, width: lit ? 3 : 2)
+        sketch.box(tag + "o", r, .chapter, width: Sketch.stroke)
         func lines(every: Int) -> [(CGPoint, CGPoint)] {
             stride(from: every, to: cols, by: every).map { j in (P(col + Double(j), row), P(col + Double(j), row + Double(rows))) }
                 + stride(from: every, to: rows, by: every).map { j in (P(col, row + Double(j)), P(col + Double(cols), row + Double(j))) }
         }
         sketch.segments(tag + "c", lines(every: 1), lit ? .tint(0.6) : .tint(0.42), width: 1)
-        sketch.segments(tag + "t", lines(every: 10), .tint(lit ? 1 : 0.8), width: 2)
+        sketch.segments(tag + "t", lines(every: 10), .tint(lit ? 1 : 0.8), width: Sketch.stroke)
         sketch.fill(tag + "f", r, lit ? .tint(0.38) : .tint(0.16))
     }
 
@@ -147,11 +147,11 @@ struct GridPen {
     @discardableResult
     mutating func numberLine(_ id: String, col: Double, row: Double, steps: Int, per: Double, long: Int, _ colour: Sketch.Colour = .ink) -> (Int) -> Double {
         let end = col + Double(steps) * per
-        sketch.line(id, [P(col, row), P(end, row)], colour, width: 2)
+        sketch.line(id, [P(col, row), P(end, row)], colour, width: Sketch.stroke)
         sketch.segments(id + "ticks", (0...steps).map { i in
             let x = col + Double(i) * per, tall = i % long == 0
             return (P(x, row - (tall ? 2 : 1)), P(x, row))
-        }, colour, width: 2)
+        }, colour, width: Sketch.stroke)
         return { i in col + Double(i) * per }
     }
 }

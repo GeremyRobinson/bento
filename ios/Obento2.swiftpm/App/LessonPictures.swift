@@ -98,7 +98,7 @@ enum LessonPictures {
     static func R(_ x: Double, _ y: Double, _ w: Double, _ h: Double) -> CGRect { CGRect(x: x, y: y, width: w, height: h) }
     /// A bracket under a span, its ends turned up, and words under it.
     static func bracket(_ s: inout Sketch, _ id: String, x0: Double, x1: Double, y: Double, _ words: String, _ colour: Sketch.Colour = .chapter) {
-        s.line(id, [P(x0, y - 8), P(x0, y), P(x1, y), P(x1, y - 8)], colour, width: 2)
+        s.line(id, [P(x0, y - 8), P(x0, y), P(x1, y), P(x1, y - 8)], colour, width: Sketch.stroke)
         s.text(id + "w", words, at: P((x0 + x1) / 2, y + 18), size: 18, colour)
     }
 
@@ -113,7 +113,7 @@ enum LessonPictures {
         s.digits("a", String(a), right: rx, y: 24, cell: cell)
         s.text("x", "×", at: P(rx - 4 * cell - 6, 62), size: 24)
         s.digits("b", String(b), right: rx, y: 62, cell: cell)
-        s.line("r1", [P(rx - 5 * cell, 84), P(rx + 4, 84)], .ink, width: 2)
+        s.line("r1", [P(rx - 5 * cell, 84), P(rx + 4, 84)], .ink, width: Sketch.stroke)
         for (i, pr) in products.enumerated() where i < found {
             let y = 106 + Double(i) * 36
             s.digits("p\(i)", String(pr), right: rx, y: y, cell: cell)
@@ -121,7 +121,7 @@ enum LessonPictures {
         }
         if sum {
             let y = 106 + Double(products.count) * 36
-            s.line("r2", [P(rx - 5 * cell, y - 18), P(rx + 4, y - 18)], .ink, width: 2)
+            s.line("r2", [P(rx - 5 * cell, y - 18), P(rx + 4, y - 18)], .ink, width: Sketch.stroke)
             s.digits("t", String(products.reduce(0, +)), right: rx, y: y + 4, .chapter, cell: cell)
         }
         // the area model: one scale both ways, the strips a gap apart once split
@@ -135,7 +135,7 @@ enum LessonPictures {
         for (i, w) in widths.enumerated() {
             let lit = split && strip == i + 1
             s.fill("s\(i)\(split)", R(x, top, w, h), lit ? mid : soft)
-            s.box("o\(i)\(split)", R(x, top, w, h), .chapter, width: 2)
+            s.box("o\(i)\(split)", R(x, top, w, h), .chapter, width: Sketch.stroke)
             s.text("top\(i)\(split)", split ? String(ps[i]) : String(b), at: P(x + w / 2, top - 16), size: 20, lit ? .chapter : .ink2)
             if split, i < found {
                 let fits = w > CGFloat(PaperText.width(String(products[i]), PaperText.font(18, .medium, digits: true))) + 8
@@ -356,8 +356,8 @@ enum LessonPictures {
             if all || (one && i <= 1) { pen.label("bl\(i)", String(d * i), small.colour(litTop ? .chapter : .ink2), .below, edge: bottom, along: c) }
             if all { pen.sketch.line("wire\(i)", [pen.P(c, top), pen.P(c, bottom - 2)], .tint(0.45), width: 1.5) }
         }
-        if all { pen.rule("topb", from: x0, to: atTop(qt), row: top, .chapter, width: 4); pen.rule("botb", from: x0, to: atTop(qt), row: bottom, .chapter, width: 4) }
-        else if one { pen.rule("top1", from: x0, to: atTop(1), row: top, .chapter, width: 4); pen.rule("bot1", from: x0, to: atTop(1), row: bottom, .chapter, width: 4) }
+        if all { pen.rule("topb", from: x0, to: atTop(qt), row: top, .chapter, width: Sketch.stroke); pen.rule("botb", from: x0, to: atTop(qt), row: bottom, .chapter, width: Sketch.stroke) }
+        else if one { pen.rule("top1", from: x0, to: atTop(1), row: top, .chapter, width: Sketch.stroke); pen.rule("bot1", from: x0, to: atTop(1), row: bottom, .chapter, width: Sketch.stroke) }
         if hops {
             // over the top line's numbers, so they never meet
             for i in 0..<qt { pen.hop("h\(i)", from: atTop(i), to: atTop(i + 1), row: top - 4.5, height: 1) }
@@ -659,7 +659,7 @@ enum LessonPictures {
             if filled > 0 { pen.sketch.fill("\(id)f\(filled)", pen.R(col, row + Double(rows - filled) * cube, Double(cols) * cube, Double(filled) * cube), lit ? .tint(0.4) : .tint(0.22)) }
             pen.sketch.segments("\(id)g\(filled > 0)", (0...cols).map { i in (pen.P(col + Double(i) * cube, row), pen.P(col + Double(i) * cube, row + Double(rows) * cube)) }
                 + (0...rows).map { j in (pen.P(col, row + Double(j) * cube), pen.P(col + Double(cols) * cube, row + Double(j) * cube)) }, filled > 0 ? .tint(0.7) : .tint(0.45), width: 1.5)
-            pen.sketch.box("\(id)o", pen.R(col, row, Double(cols) * cube, Double(rows) * cube), .chapter, width: 2)
+            pen.sketch.box("\(id)o", pen.R(col, row, Double(cols) * cube, Double(rows) * cube), .chapter, width: Sketch.stroke)
         }
         // from above: the floor
         let fx = 3.0, fy = 3.0
@@ -698,7 +698,7 @@ enum LessonPictures {
             let r = i / perRow, c = i % perRow, col = x0 + Double(c) * cw, row = y0 + Double(r) * (ch + 1)
             let part = i == cells - 1 && count < Double(cells) ? count - Double(cells - 1) : 1, opened = i < fill
             pen.sketch.fill("u\(i)\(opened)", pen.R(col, row, cw * part, ch), opened ? .tint(0.4) : .tint(0.2))
-            pen.sketch.box("ub\(i)", pen.R(col, row, cw, ch), .tint(0.7), width: 2)
+            pen.sketch.box("ub\(i)", pen.R(col, row, cw, ch), .tint(0.7), width: Sketch.stroke)
             let text = opened ? fmt(per * part) : (ask && i > 0 ? "?" : (part < 1 ? "½" : "1"))
             pen.word("ul\(i)\(text)", text, at: col + cw / 2, row + ch / 2, label.colour(opened ? .ink : .ink2))
         }
@@ -746,7 +746,7 @@ enum LessonPictures {
             pen.sketch.fill("piece\(places)", piece, .tint(0.6))
         }
         pen.sketch.segments("unit", (0...10).map { i in (pen.P(ux + Double(i), uy), pen.P(ux + Double(i), uy + 10)) } + (0...10).map { j in (pen.P(ux, uy + Double(j)), pen.P(ux + 10, uy + Double(j))) }, .tint(0.5), width: 1)
-        pen.sketch.box("unito", pen.R(ux, uy, 10, 10), .chapter, width: 2)
+        pen.sketch.box("unito", pen.R(ux, uy, 10, 10), .chapter, width: Sketch.stroke)
         if lit {
             let size = fmt(1 / pow(10, Double(places)))
             pen.label("ps", places > 2 ? "one piece: \(size) (a tenth of a square)" : "one piece: \(size)", Sketch.Words(size: Sketch.small, weight: .medium, colour: .chapter), .below, edge: uy + 10, along: ux + 5)
@@ -784,7 +784,7 @@ enum LessonPictures {
         let right = Double(digitsOnly.count) * 2
         pen.digits("num", text, right: right, row: 1, per: 2, size: Sketch.maths)
         let placeCol = Double(wholeDigits + parts.p - 1) * 2, nextCol = placeCol + 2
-        pen.rule("place", from: placeCol, to: placeCol + 2, row: 2, lit == 0 ? .chapter : .ink2, width: 3)
+        pen.rule("place", from: placeCol, to: placeCol + 2, row: 2, lit == 0 ? .chapter : .ink2, width: Sketch.stroke)
         if halfway { pen.ring("next", col: nextCol, row: 0, w: 2, h: 2) }
         _ = big
 
@@ -828,20 +828,20 @@ enum LessonPictures {
         let cell = 20.0, rx = 160.0, bx = rx - 4 * cell - 10
         // the bracket: the divisor outside, the number under the line, the answer over it at the end
         s.digits("dv", String(dv), right: bx - 6, y: 50, cell: cell)
-        s.line("br", [P(bx, 70), P(bx + 6, 50), P(bx, 30), P(rx + 6, 30)], .ink, width: 2)
+        s.line("br", [P(bx, 70), P(bx + 6, 50), P(bx, 30), P(rx + 6, 30)], .ink, width: Sketch.stroke)
         s.digits("n", String(n), right: rx, y: 50, cell: cell)
         if sum { s.digits("q", String(qt), right: rx, y: 12, .chapter, cell: cell) }
         if found >= 1 {
             s.text("m1", "−", at: P(rx - Double(String(dv * T).count) * cell - 12, 84), size: 22)
             s.digits("p1", String(dv * T), right: rx, y: 84, cell: cell)
-            s.line("u1", [P(rx - 3.5 * cell, 102), P(rx + 4, 102)], .ink, width: 2)
+            s.line("u1", [P(rx - 3.5 * cell, 102), P(rx + 4, 102)], .ink, width: Sketch.stroke)
             s.text("t1", String(T), at: P(rx + 36, 84), size: 20, .chapter, anchor: UnitPoint(x: 0, y: 0.5))
         }
         if left || found >= 2 { s.digits("l", String(rest), right: rx, y: 120, cell: cell) }
         if found >= 2 {
             s.text("m2", "−", at: P(rx - Double(String(dv * O).count) * cell - 12, 154), size: 22)
             s.digits("p2", String(dv * O), right: rx, y: 154, cell: cell)
-            s.line("u2", [P(rx - 2.5 * cell, 172), P(rx + 4, 172)], .ink, width: 2)
+            s.line("u2", [P(rx - 2.5 * cell, 172), P(rx + 4, 172)], .ink, width: Sketch.stroke)
             s.digits("z", "0", right: rx, y: 190, cell: cell)
             s.text("t2", "+ \(O)", at: P(rx + 36, 154), size: 20, .chapter, anchor: UnitPoint(x: 0, y: 0.5))
         }
@@ -853,7 +853,7 @@ enum LessonPictures {
         for i in 0..<2 {
             let lit = strip == i + 1
             s.fill("s\(i)", R(x, top, widths[i], h), lit ? mid : soft)
-            s.box("o\(i)", R(x, top, widths[i], h), .chapter, width: 2)
+            s.box("o\(i)", R(x, top, widths[i], h), .chapter, width: Sketch.stroke)
             if i < found {
                 s.text("w\(i)", String(i == 0 ? T : O), at: P(x + widths[i] / 2, top - 16), size: 20, lit ? .chapter : .ink2)
                 s.text("in\(i)", String(products[i]), at: P(x + widths[i] / 2, top + h / 2), size: 17)
@@ -942,7 +942,7 @@ enum LessonPictures {
             for j in 0..<k {
                 let x1 = pointX + Double(j) * cw, x2 = x1 + cw
                 let arc = (0...10).map { i -> CGPoint in let t = Double(i) / 10; return P(x1 + (x2 - x1) * t, 96 + sin(.pi * t) * 18) }
-                s.line("hop\(j)", arc, .chapter, width: 2)
+                s.line("hop\(j)", arc, .chapter, width: Sketch.stroke)
             }
             s.text("cap", "every digit is worth \(f(pow(10, Double(k)))) times more", at: P(x0, 214), size: 16, .ink2, anchor: UnitPoint(x: 0, y: 0.5))
         }
@@ -961,10 +961,10 @@ enum LessonPictures {
         for (i, ch) in chars.enumerated() {
             let w = PaperText.width(String(ch), font)
             s.text("d\(i)", String(ch), at: P(x + w / 2, 30), size: 32)
-            if i == dot + places { s.line("u", [P(x, 54), P(x + w, 54)], .chapter, width: 3) }
+            if i == dot + places { s.line("u", [P(x, 54), P(x + w, 54)], .chapter, width: Sketch.stroke) }
             if i == dot + places + 1, halfway {
                 let ring = (0...24).map { j -> CGPoint in let a = Double(j) / 24 * 2 * .pi; return P(x + w / 2 + 18 * cos(a), 30 + 22 * sin(a)) }
-                s.line("ring", ring, .chapter, width: 2)
+                s.line("ring", ring, .chapter, width: Sketch.stroke)
             }
             x += w
         }
@@ -972,10 +972,10 @@ enum LessonPictures {
         // the number line
         let x0 = 30.0, x1 = 690.0, y = 170.0
         func X(_ v: Double) -> Double { hi == lo ? x0 : x0 + (v - lo) / (hi - lo) * (x1 - x0) }
-        s.line("axis", [P(x0, y), P(x1, y)], .ink, width: 2)
+        s.line("axis", [P(x0, y), P(x1, y)], .ink, width: Sketch.stroke)
         for i in 0...10 {
             let tx = x0 + Double(i) / 10 * (x1 - x0), long = i == 0 || i == 5 || i == 10
-            s.line("t\(i)", [P(tx, y - (long ? 12 : 6)), P(tx, y + (long ? 12 : 6))], .ink, width: 2)
+            s.line("t\(i)", [P(tx, y - (long ? 12 : 6)), P(tx, y + (long ? 12 : 6))], .ink, width: Sketch.stroke)
         }
         s.text("lo", f(lo), at: P(x0, y + 30), size: 18, lit == 0 ? .chapter : .ink2)
         s.text("hi", f(hi), at: P(x1, y + 30), size: 18, lit == 0 ? .chapter : .ink2)
@@ -989,7 +989,7 @@ enum LessonPictures {
         if hop, rounded != value {
             let rx = X(rounded)
             let arc = (0...12).map { i -> CGPoint in let t = Double(i) / 12; return P(vx + (rx - vx) * t, y - 44 - sin(.pi * t) * 26) }
-            s.line("hop", arc, .chapter, width: 2)
+            s.line("hop", arc, .chapter, width: Sketch.stroke)
             s.polygon("rd", circle(P(rx, y), 7), .chapter)
             s.text("hw", p["halfwayUp"] == 1 ? "halfway: up" : "closer", at: P((vx + rx) / 2, y - 84), size: 16, .chapter)
         }
@@ -1011,7 +1011,7 @@ enum LessonPictures {
         if Double(Int(a * 10)) == a * 10 { s.fill("zf", R(rx - cell + 2, 14, cell - 4, 32), lit == 0 ? mid : soft); s.text("z", "0", at: P(rx - cell / 2, 30), size: 24, .chapter) }
         s.text("plus", "+", at: P(pointX - 4 * cell, 72), size: 24)
         s.digits("b", Bs, right: rx, y: 72, cell: cell)
-        s.line("rule", [P(pointX - 4.5 * cell, 96), P(rx + 4, 96)], .ink, width: 2)
+        s.line("rule", [P(pointX - 4.5 * cell, 96), P(rx + 4, 96)], .ink, width: Sketch.stroke)
         s.line("wire", [P(pointX + 0.5, 4), P(pointX + 0.5, 130)], .chapter, width: 1.5, dashed: true)
         if p["total"] == 1 { s.digits("t", String(format: "%.2f", a + b), right: rx, y: 118, .chapter, cell: cell) }
         // the parts, on the right
@@ -1021,7 +1021,7 @@ enum LessonPictures {
         if p["whole"] == 1 { s.text("sw", f(whole), at: P(wx + 60, 30), size: 24, anchor: UnitPoint(x: 1, y: 0.5)) }
         if p["decimal"] == 1 { s.text("sd", String(format: "%.2f", dec), at: P(wx + 60, 72), size: 24, p["carry"] == 1 ? .chapter : .ink, anchor: UnitPoint(x: 1, y: 0.5)) }
         if p["total"] == 1 {
-            s.line("r2", [P(wx - 20, 96), P(wx + 64, 96)], .ink, width: 2)
+            s.line("r2", [P(wx - 20, 96), P(wx + 64, 96)], .ink, width: Sketch.stroke)
             s.text("st", String(format: "%.2f", a + b), at: P(wx + 60, 118), size: 24, .chapter, anchor: UnitPoint(x: 1, y: 0.5))
         }
     }
@@ -1037,7 +1037,7 @@ enum LessonPictures {
         s.digits("b", f(y), right: rx, y: 72, cell: cell)
         s.text("pa", pa == 1 ? "1 place" : "\(pa) places", at: P(rx + 14, 30), size: 15, p["piece"] == 1 ? .chapter : .ink3, anchor: UnitPoint(x: 0, y: 0.5))
         s.text("pb", pb == 1 ? "1 place" : "\(pb) places", at: P(rx + 14, 72), size: 15, p["piece"] == 1 ? .chapter : .ink3, anchor: UnitPoint(x: 0, y: 0.5))
-        s.line("r", [P(rx - 5.5 * cell, 94), P(rx + 4, 94)], .ink, width: 2)
+        s.line("r", [P(rx - 5.5 * cell, 94), P(rx + 4, 94)], .ink, width: Sketch.stroke)
         if line == 2 {
             s.digits("t", f(ans), right: rx, y: 116, .chapter, cell: cell)
             s.text("pt", pa + pb == 1 ? "1 place" : "\(pa + pb) places", at: P(rx + 14, 116), size: 15, .chapter, anchor: UnitPoint(x: 0, y: 0.5))
@@ -1051,14 +1051,14 @@ enum LessonPictures {
         for i in 0..<cols { for j in 0..<rows { s.box("u\(i)\(j)", R(x0 + Double(i) * u, y0 + Double(j) * u, u, u), .line, width: 1) } }
         let sw = wide * u, sh = tall * u, sy = y0 + Double(rows) * u - sh
         s.fill("strip", R(x0, sy, sw, sh), p["lit"] == 0 ? mid : soft)
-        s.box("so", R(x0, sy, sw, sh), .chapter, width: 2)
+        s.box("so", R(x0, sy, sw, sh), .chapter, width: Sketch.stroke)
         let stepX = u / pow(10, Double(x >= y ? pa : pb)), stepY = u / pow(10, Double(x >= y ? pb : pa))
         if stepX >= 4 { var gx = x0 + stepX; while gx < x0 + sw - 1 { s.line("gx\(Int(gx))", [P(gx, sy), P(gx, sy + sh)], .tint(0.45), width: 1); gx += stepX } }
         if stepY >= 4 { var gy = sy + stepY; while gy < sy + sh - 1 { s.line("gy\(Int(gy))", [P(x0, gy), P(x0 + sw, gy)], .tint(0.45), width: 1); gy += stepY } }
         s.text("sl", f(wide), at: P(x0 + sw / 2, y0 + Double(rows) * u + 18), size: 17, .ink2)
         s.text("sh", f(tall), at: P(x0 - 18, sy + sh / 2), size: 17, .ink2)
         if p["piece"] == 1, stepX >= 4, stepY >= 4 {
-            s.box("pc", R(x0, sy + sh - stepY, stepX, stepY), .chapter, width: 2)
+            s.box("pc", R(x0, sy + sh - stepY, stepX, stepY), .chapter, width: Sketch.stroke)
             s.fill("chip", R(x0 + sw + 24, sy + sh - 34, 34, 34), mid)
             s.text("chipl", f(1 / pow(10, Double(pa + pb))), at: P(x0 + sw + 41, sy + sh + 14), size: 16, .chapter)
             s.line("lead", [P(x0 + stepX, sy + sh - stepY / 2), P(x0 + sw + 24, sy + sh - 17)], .chapter, width: 1.5)
@@ -1072,13 +1072,13 @@ enum LessonPictures {
         let one = p["one"] == 1, all = p["all"] == 1, hops = p["hops"] == 1, lit = p["lit"]
         s.text("x10", "× 10", at: P(24, (top + bottom) / 2), size: 18, .chapter)
         for (id, y) in [("top", top), ("bot", bottom)] {
-            s.line(id, [P(x0, y), P(x1, y)], .ink2, width: 2)
-            if all { s.line(id + "b", [P(x0, y), P(x1, y)], .chapter, width: 4) } else if one { s.line(id + "1", [P(x0, y), P(x0 + step, y)], .chapter, width: 4) }
+            s.line(id, [P(x0, y), P(x1, y)], .ink2, width: Sketch.stroke)
+            if all { s.line(id + "b", [P(x0, y), P(x1, y)], .chapter, width: Sketch.stroke) } else if one { s.line(id + "1", [P(x0, y), P(x0 + step, y)], .chapter, width: Sketch.stroke) }
         }
         for i in 0...qt {
             let x = x0 + Double(i) * step
-            s.line("tt\(i)", [P(x, top - 6), P(x, top + 6)], .ink, width: 2)
-            s.line("bt\(i)", [P(x, bottom - 6), P(x, bottom + 6)], .ink, width: 2)
+            s.line("tt\(i)", [P(x, top - 6), P(x, top + 6)], .ink, width: Sketch.stroke)
+            s.line("bt\(i)", [P(x, bottom - 6), P(x, bottom + 6)], .ink, width: Sketch.stroke)
             if qt <= 8 || i % 2 == 0 || i == qt {
                 let litTop = (lit == 0 && i == 1) || (lit == 1 && i == qt)
                 s.text("tl\(i)", f(Double(d * i) / 10), at: P(x, top - 22), size: 15, litTop ? .chapter : .ink2)
@@ -1114,8 +1114,8 @@ enum LessonPictures {
                     while t < pw { s.line("\(id)s\(i)\(Int(t))", [P(r.minX + max(0, t), r.minY + max(0, -t)), P(r.minX + min(pw, t + h), r.minY + min(h, pw - t))], .tint(0.6), width: 1.5); t += 9 }
                 }
             }
-            if let st = struck, st.contains(i) { s.line("\(id)x\(i)", [P(r.minX + 4, r.maxY - 4), P(r.maxX - 4, r.minY + 4)], .ink2, width: 2) }
-            s.box("\(id)b\(i)", r, lit ? .chapter : .tint(0.6), width: 2)
+            if let st = struck, st.contains(i) { s.line("\(id)x\(i)", [P(r.minX + 4, r.maxY - 4), P(r.maxX - 4, r.minY + 4)], .ink2, width: Sketch.stroke) }
+            s.box("\(id)b\(i)", r, lit ? .chapter : .tint(0.6), width: Sketch.stroke)
         }
     }
 
@@ -1132,7 +1132,7 @@ enum LessonPictures {
         s.fraction("f2", "\(c)", "\(d)", at: P(40, 112))
         if second { s.text("e2", "=", at: P(78, 112), size: 24); s.fraction("g2", "\(C)", "\(L)", at: P(116, 112), .chapter); s.text("k2", "× \(L / d)", at: P(150, 112), size: 15, .chapter, anchor: UnitPoint(x: 0, y: 0.5)) }
         if combine {
-            s.line("r", [P(0, 150), P(200, 150)], .ink, width: 2)
+            s.line("r", [P(0, 150), P(200, 150)], .ink, width: Sketch.stroke)
             s.fraction("ans", "\(S)", "\(L)", at: P(116, 190), .chapter)
             if p["answer"] == 1 {
                 let g = gcd(S, L), whole = S / L, rem = S % L
@@ -1220,7 +1220,7 @@ enum LessonPictures {
             bar(&s, "g", x: x0, y: y, w: w, h: h, parts: d, shaded: at >= 2 ? nn : 0, lit: ask == 2 || at >= 2)
             if at >= 1 { for i in 0..<d { s.text("gl\(i)", "\(g)", at: P(x0 + (Double(i) + 0.5) * w / Double(d), y + h / 2), size: 17) } }
         } else {
-            s.fill("whole", R(x0, y, w, h), soft); s.box("wo", R(x0, y, w, h), .tint(0.6), width: 2)
+            s.fill("whole", R(x0, y, w, h), soft); s.box("wo", R(x0, y, w, h), .tint(0.6), width: Sketch.stroke)
         }
         if at >= 2 { bracket(&s, "br", x0: x0, x1: x0 + Double(nn) * w / Double(d), y: y + h + 18, "\(nn)/\(d)") }
         if at >= 1 { s.text("l1", "\(W) ÷ \(d) = \(g)", at: P(0, 190), size: 22, anchor: UnitPoint(x: 0, y: 0.5)) }
@@ -1269,11 +1269,11 @@ enum LessonPictures {
         }
         // the box's outline
         let H = Double(h), Lx = Double(l), Wz = Double(w)
-        s.line("ob", [pt(0, 0, 0), pt(Lx, 0, 0), pt(Lx, 0, Wz)], .chapter, width: 2)
-        s.line("ot", [pt(0, H, 0), pt(Lx, H, 0), pt(Lx, H, Wz), pt(0, H, Wz), pt(0, H, 0)], .chapter, width: 2)
-        s.line("ov", [pt(0, 0, 0), pt(0, H, 0)], .chapter, width: 2)
-        s.line("ov2", [pt(Lx, 0, 0), pt(Lx, H, 0)], .chapter, width: 2)
-        s.line("ov3", [pt(Lx, 0, Wz), pt(Lx, H, Wz)], .chapter, width: 2)
+        s.line("ob", [pt(0, 0, 0), pt(Lx, 0, 0), pt(Lx, 0, Wz)], .chapter, width: Sketch.stroke)
+        s.line("ot", [pt(0, H, 0), pt(Lx, H, 0), pt(Lx, H, Wz), pt(0, H, Wz), pt(0, H, 0)], .chapter, width: Sketch.stroke)
+        s.line("ov", [pt(0, 0, 0), pt(0, H, 0)], .chapter, width: Sketch.stroke)
+        s.line("ov2", [pt(Lx, 0, 0), pt(Lx, H, 0)], .chapter, width: Sketch.stroke)
+        s.line("ov3", [pt(Lx, 0, Wz), pt(Lx, H, Wz)], .chapter, width: Sketch.stroke)
         s.line("hid", [pt(0, 0, 0), pt(0, 0, Wz), pt(Lx, 0, Wz)], .tint(0.5), width: 1.5, dashed: true)
         s.line("hid2", [pt(0, 0, Wz), pt(0, H, Wz)], .tint(0.5), width: 1.5, dashed: true)
         let lp = pt(Lx / 2, 0, 0), wp = pt(Lx, 0, Wz / 2), hp = pt(0, H / 2, 0)
@@ -1301,7 +1301,7 @@ enum LessonPictures {
             let part = i == cellsN - 1 && count < Double(cellsN) ? count - Double(cellsN - 1) : 1
             let opened = i < fill
             s.fill("u\(i)\(opened)", R(r.minX, r.minY, r.width * part, r.height), opened ? mid : soft)
-            s.box("ub\(i)", r, .tint(0.6), width: 2)
+            s.box("ub\(i)", r, .tint(0.6), width: Sketch.stroke)
             let label = opened ? f(per * part) : (ask && i > 0 ? "?" : (part < 1 ? "½" : "1"))
             s.text("ul\(i)", label, at: P(r.midX, r.midY), size: 18, opened ? .ink : .ink2)
         }

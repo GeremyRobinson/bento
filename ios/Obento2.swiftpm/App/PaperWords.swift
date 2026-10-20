@@ -185,7 +185,7 @@ extension Rig {
                 s.plate(id + "seal\(ready)", Self.circle(corner, 22), ready ? chapter : .paper)
                 if !ready { s.overLine(id + "ring", Self.circle(corner, 21) + [Self.circle(corner, 21)[0]], .hex(Ink.mix(0xF3F2EF, hex, 0.45), Ink.mix(0x121211, hex, 0.45)), width: 1.5) }
                 let mark: Sketch.Colour = ready ? .hex(0xFFFFFF, 0xFFFFFF) : .hex(Ink.mix(0xF3F2EF, hex, 0.7), Ink.mix(0x121211, hex, 0.7))
-                if taken { s.overLine(id + "tick", [CGPoint(x: corner.x - 8, y: corner.y), CGPoint(x: corner.x - 2.5, y: corner.y + 6), CGPoint(x: corner.x + 9, y: corner.y - 6.5)], mark, width: 3) }
+                if taken { s.overLine(id + "tick", [CGPoint(x: corner.x - 8, y: corner.y), CGPoint(x: corner.x - 2.5, y: corner.y + 6), CGPoint(x: corner.x + 9, y: corner.y - 6.5)], mark, width: Sketch.stroke) }
                 else { s.text(id + "n", "\(p.id == "test-grade" ? 20 : 12)", at: corner, size: 15, weight: .bold, mark) }
             } else if model.selected?.id == p.id && p.opens {
                 // chosen: its tab says Start (or Continue), with an arrow (G 18 Oct)
