@@ -321,7 +321,8 @@ enum Shots {
     /// The app's structure at its moments (G 20 Oct), each with its own progress, nothing saved:
     /// - `map-fresh`: nothing learned. `map-learned`: some lessons learned, one due back (Go over), one whose test came
     ///   back low, a page partway, and chapter tests locked, open, passed and to take again. `map-grade`: every chapter
-    ///   test passed, so the grade's test is open. `-chapter=<n>` frames that chapter instead of the whole map.
+    ///   test passed, so the grade's test is open. `-chapter=<n>` frames that chapter instead of the whole map;
+    ///   `-select=<id>` chooses a piece (its tab: Start, Continue, or Go over for one due back).
     /// - `plan-<partway|testopen|passed>-<lesson>`: its page of cards: partway (together done, own ones right, one with a
     ///   miss, one with Show me), the test open (6 right on their own), the test passed (11 of 12, Continue pressed).
     /// - `result-<pass|fail>-<lesson>`: a finished lesson test's result on the paper.
@@ -336,7 +337,12 @@ enum Shots {
         func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
         let args = ProcessInfo.processInfo.arguments
         let chapter = args.first { $0.hasPrefix("-chapter=") }.flatMap { Int($0.dropFirst(9)) }
-        func frameMap() { if let chapter { m.frameChapter(chapter) } else { m.frameGroup(duration: 0) } }
+        /// The map framed (whole, or `-chapter=<n>`), and with `-select=<id>` that piece chosen, its tab saying Start,
+        /// Continue or Go over.
+        func frameMap() {
+            if let chapter { m.frameChapter(chapter) } else { m.frameGroup(duration: 0) }
+            if let id = args.first(where: { $0.hasPrefix("-select=") }).map({ String($0.dropFirst(8)) }), let p = Map.piece(id) { m.select(p) }
+        }
         /// The lesson named after the moment's kind ("plan-partway-g5-mult2" → g5-mult2).
         func lesson(_ prefix: String) -> Piece? { Map.piece(String(name.dropFirst(prefix.count))) }
         /// Opens a lesson as a child does, at once: its page (the How to done), or its recheck.
