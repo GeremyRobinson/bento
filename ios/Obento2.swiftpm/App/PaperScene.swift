@@ -477,7 +477,8 @@ final class Rig {
         }
         for (id, d) in drawers where !every.contains(where: { $0.id == id }) { d.root.removeFromParent(); drawers[id] = nil }
         for (id, d) in sketches where !every.contains(where: { $0.id == id }) { d.root.removeFromParent(); sketches[id] = nil }
-        Perf.time("boxes") { drawBoxes(page, shown, at: t) }
+        // an open problem is its own space on the grid, with no frame (G 19 Oct): only the page's cards are outlined
+        Perf.time("boxes") { drawBoxes(page, [], at: t) }
         Perf.time("page-words") { drawProblemWords(page, shown, waiting: page.showing || made > 0 ? [] : page.problems, at: t) }
     }
 

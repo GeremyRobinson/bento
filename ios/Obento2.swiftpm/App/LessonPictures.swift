@@ -11,13 +11,21 @@ enum LessonPictures {
     /// The fills: every part soft, the part the step is about stronger (the web's picture system).
     static let soft = Sketch.Colour.tint(0.22), mid = Sketch.Colour.tint(0.5)
 
+    /// Where an open problem puts things: the plain layout, or a lesson's own.
+    static func layout(_ m: WorkProblem) -> WorkProblem.Layout {
+        switch m.lesson.spec.id {
+        case "g5-mult2": return multiplyLayout(m.lesson.numbers)
+        default: return WorkProblem.Layout()
+        }
+    }
+
     static func sketch(_ m: WorkProblem) -> Sketch {
         var s = Sketch()
         let n = m.lesson.numbers, p = m.picture
         func v(_ k: String) -> Double { n[k] ?? 0 }
         func k(_ key: String) -> Double { p[key] ?? 0 }
         switch m.lesson.spec.id {
-        case "g5-mult2": multiply(&s, a: Int(v("a")), b: Int(v("b")), split: k("split") == 1, strip: Int(k("strip")), found: Int(k("found")), sum: k("sum") == 1)
+        case "g5-mult2": multiplyTrue(&s, m, a: Int(v("a")), b: Int(v("b")), split: k("split") == 1, strip: Int(k("strip")), found: Int(k("found")), sum: k("sum") == 1)
         case "g5-divide": divide(&s, dv: Int(v("dv")), qt: Int(v("qt")), strip: Int(k("strip")), found: Int(k("found")), left: k("left") == 1, sum: k("sum") == 1)
         case "g5-order": order(&s, n, beat: Int(k("beat")))
         case "g5-pow10": powers(&s, x: v("x"), k: Int(v("k")), counted: k("zeros") == 1, hop: k("hop") == 1)
@@ -110,6 +118,80 @@ enum LessonPictures {
             x += w + gap
         }
         if sum { bracket(&s, "br", x0: x0, x1: x - gap, y: top + h + 40, "\(products.map(String.init).joined(separator: " + ")) = \(products.reduce(0, +))") }
+    }
+
+    /// Multiply two-digit numbers on the grid itself (G 19 Oct): the rectangle is a squares tall and b wide, one square of
+    /// the paper for each, so the child can count it; a strong line every 10 squares shows the tens and the hundreds.
+    /// The school work runs down beside it, and the step's words under that. Too big for the screen, everything but the
+    /// squares is drawn bigger and the camera steps back.
+    static func multiplyLayout(_ n: Numbers) -> WorkProblem.Layout {
+        let a = n["a"] ?? 12, b = n["b"] ?? 12
+        var l = WorkProblem.Layout()
+        l.scale = (max(1, a * Paper.cell / 600, (b * Paper.cell + Paper.cell) / 560) * 4).rounded(.up) / 4
+        l.pictureTop = 0; l.pictureScale = 1
+        l.stepX = 700; l.stepY = 320; l.lineY = 400; l.column = 520; l.actions = 470; l.messageBelow = true
+        return l
+    }
+
+    static func multiplyTrue(_ s: inout Sketch, _ m: WorkProblem, a: Int, b: Int, split: Bool, strip: Int, found: Int, sum: Bool) {
+        let ps = MultiplyTwoDigit.parts(b), products = ps.map { a * $0 }, k = m.scale, o = m.contentOrigin
+        // one square of the paper, in the sketch's units (it's drawn k times bigger), and the rectangle's corner on a
+        // line of the grid
+        let c = Paper.cell / k
+        func snap(_ v: Double) -> Double { (v / Paper.cell).rounded() * Paper.cell }
+        let rx = (snap(o.x + 60 * k) - o.x) / k, ry = (snap(o.y + 50 * k) - o.y) / k, h = Double(a) * c
+        let widths = split ? ps.map { Double($0) * c } : [Double(b) * c]
+        // lines grow with the problem, like its words, so the squares still show when the camera steps back
+        let thin = 1.0, strong = 2.0
+        // the side, down the left
+        s.text("side", String(a), at: P(rx - 30, ry + min(h / 2, 200)), size: 24, .chapter)
+        var x = rx
+        for (i, w) in widths.enumerated() {
+            let lit = split && strip == i + 1, cols = Int((w / c).rounded()), id = "s\(i)\(split)"
+            s.fill(id + "f", R(x, ry, w, h), lit ? .tint(0.38) : .tint(0.16))
+            // every square, then every ten: one line each way, drawn as a zigzag whose turns hide under the outline
+            func zig(_ name: String, every: Int, _ colour: Sketch.Colour, _ width: Double) {
+                var down: [CGPoint] = [], across: [CGPoint] = []
+                for (n, j) in stride(from: every, to: cols, by: every).enumerated() {
+                    let lx = x + Double(j) * c
+                    down += n % 2 == 0 ? [P(lx, ry), P(lx, ry + h)] : [P(lx, ry + h), P(lx, ry)]
+                }
+                for (n, j) in stride(from: every, to: a, by: every).enumerated() {
+                    let ly = ry + Double(j) * c
+                    across += n % 2 == 0 ? [P(x, ly), P(x + w, ly)] : [P(x + w, ly), P(x, ly)]
+                }
+                if down.count > 1 { s.line(id + name + "d", down, colour, width: width) }
+                if across.count > 1 { s.line(id + name + "a", across, colour, width: width) }
+            }
+            zig("c", every: 1, lit ? .tint(0.6) : .tint(0.42), thin)
+            zig("t", every: 10, .tint(lit ? 1 : 0.8), strong)
+            s.box(id + "o", R(x, ry, w, h), .chapter, width: lit ? 3 : 2)
+            s.text(id + "top", split ? String(ps[i]) : String(b), at: P(x + w / 2, ry - 20), size: 24, lit ? .chapter : .ink2)
+            if split, i < found {
+                let label = String(products[i]), fits = w > PaperText.width(label, PaperText.font(28 * k, .medium, digits: true)) / k + 12
+                if fits { s.fill("pf\(i)", R(x + w / 2 - 40, ry + min(h / 2, 200) - 20, 80, 40), .paper) }
+                s.text("p\(i)", label, at: P(x + w / 2, fits ? ry + min(h / 2, 200) : ry + h + 22), size: 28, .ink)
+            }
+            x += w + (split ? c : 0)
+        }
+        if sum { bracket(&s, "sum", x0: rx, x1: x - (split ? c : 0), y: ry + h + 56, "\(products.map(String.init).joined(separator: " + ")) = \(products.reduce(0, +))") }
+
+        // the work as school writes it, down the right
+        let right = 920.0, cell = 30.0
+        s.digits("wa", String(a), right: right, y: 30, size: 32, cell: cell)
+        s.text("wx", "×", at: P(right - 4 * cell - 8, 74), size: 30)
+        s.digits("wb", String(b), right: right, y: 74, size: 32, cell: cell)
+        s.line("wr1", [P(right - 5 * cell, 100), P(right + 4, 100)], .ink, width: 2)
+        for (i, pr) in products.enumerated() where i < found {
+            let y = 128 + Double(i) * 44
+            s.digits("wp\(i)", String(pr), right: right, y: y, size: 32, i + 1 == strip ? .chapter : .ink, cell: cell)
+            s.text("wl\(i)", "\(a) × \(ps[i])", at: P(right + 16, y), size: 18, .ink3, anchor: UnitPoint(x: 0, y: 0.5))
+        }
+        if sum {
+            let y = 128 + Double(products.count) * 44
+            s.line("wr2", [P(right - 5 * cell, y - 22), P(right + 4, y - 22)], .ink, width: 2)
+            s.digits("wt", String(products.reduce(0, +)), right: right, y: y + 4, size: 32, .chapter, cell: cell)
+        }
     }
 
     /// 864 ÷ 12 in chunks: on the left the division bracket as school writes it, the tens taken away first and the

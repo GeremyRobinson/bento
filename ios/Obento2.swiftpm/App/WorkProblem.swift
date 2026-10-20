@@ -32,12 +32,31 @@ final class WorkProblem: Identifiable, PageProblem {
 
     // where things sit, in paper points from `origin`, inside the box (BarsPage.box): the problem above the origin, the
     // picture from the origin down, then the step
-    // an open problem fills the screen (G 19 Oct): 13 blocks by 9, its picture drawn 1.6 times its size across the top,
-    // the step under it, Check and what a miss says on the bottom row
-    static let problemY: Double = -96, pictureTop: Double = -10, pictureScale: Double = 1.6, stepY: Double = 480
-    static let lineY: Double = 536
-    var underStep: Double { Self.lineY }
-    var boxSize: Size { Size(13 * Paper.unit, 9 * Paper.unit) }
+    static let problemY: Double = -96
+
+    /// Where things sit in an open problem, in points from its origin before `scale`. An open problem is its own space
+    /// on the grid, with no frame, filling the screen (G 19 Oct): 13 blocks by 9, its picture drawn 1.6 times its size
+    /// across the top, the step under it, Check and what a miss says on the bottom row. A lesson can lay itself out
+    /// (LessonPictures.layout); when its maths is too big for the screen, everything but its true-size picture is
+    /// drawn `scale` times bigger, and the camera steps back to see it all.
+    struct Layout {
+        var scale = 1.0
+        var width = 13.0, height = 9.0
+        var pictureTop = -10.0, pictureScale = 1.6
+        var stepX = 0.0, stepY = 480.0, lineY = 536.0, column = 1220.0
+        /// Check's row (else the bottom row, or under a tall line), and what a miss says under Check instead of beside it.
+        var actions: Double? = nil
+        var messageBelow = false
+    }
+    var layout: Layout { LessonPictures.layout(self) }
+    var scale: Double { layout.scale }
+    var underStep: Double { layout.lineY }
+    var boxSize: Size { let l = layout; return Size((l.width * l.scale).rounded(.up) * Paper.unit, (l.height * l.scale).rounded(.up) * Paper.unit) }
+    /// The box's corner stays on the strong lines; everything in it is drawn `scale` times bigger from there.
+    var contentOrigin: Point {
+        let k = scale
+        return Point(origin.x + BarsPage.box.dx * (1 - k), origin.y + BarsPage.box.dy * (1 - k))
+    }
     /// A problem aimed at a step the child slipped on before (LessonPlan): that step starts with what they were told,
     /// its part of the picture lit, and, the second time, its answer shown first and taken away again.
     var focus: LessonPlan.Focus?

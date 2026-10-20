@@ -150,12 +150,14 @@ enum Shots {
                 for i in [0, 1, 2, 3, 4, 5] { if let w = page.problems[i] as? WorkProblem { work(w, miss: i == 3) } }
                 page.backToProblems()
             case let n where n.hasPrefix("page-") && n != "page-zoom" && n != "page-hop":
-                // page-<lesson id>[-<step>]: a lesson's page, How to skipped; its first problem worked to that step
+                // page-<lesson id>[@<problem>][-<step>]: a lesson's page, How to skipped; its first problem (or that one)
+                // worked to that step
                 let parts = n.dropFirst(5).split(separator: "-")
-                let k = Int(parts.last ?? "") ?? -1, id = (k >= 0 ? parts.dropLast() : parts[...]).joined(separator: "-")
+                let k = Int(parts.last ?? "") ?? -1, named = (k >= 0 ? parts.dropLast() : parts[...]).joined(separator: "-")
+                let id = String(named.split(separator: "@").first ?? ""), which = Int(named.split(separator: "@").dropFirst().first ?? "") ?? 0
                 guard let p = Map.pieces.first(where: { $0.id == id }) else { return }
                 m.select(p); m.open(p)
-                guard let page = m.bars, let w = page.problems.first as? WorkProblem else { return }
+                guard let page = m.bars, page.problems.indices.contains(which), let w = page.problems[which] as? WorkProblem else { return }
                 page.open(w)
                 for _ in 0..<max(0, k) { if w.lesson.step.answer != nil { w.lesson.step.answer?.choices != nil ? w.choose(Int(w.lesson.step.answer!.expected["c"] ?? 0)) : w.showMe() }; w.go() }
             case "tests":

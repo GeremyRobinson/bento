@@ -61,7 +61,8 @@ extension Rig {
         if key != d.key {
             d.key = key
             let s = LessonPictures.sketch(m)
-            d.build(s, rig: self, chapter: m.chapter.hex, dark: dark, origin: CGPoint(x: m.origin.x, y: m.origin.y + WorkProblem.pictureTop), scale: WorkProblem.pictureScale)
+            let l = m.layout, o = m.contentOrigin
+            d.build(s, rig: self, chapter: m.chapter.hex, dark: dark, origin: CGPoint(x: o.x, y: o.y + l.pictureTop * l.scale), scale: l.pictureScale * l.scale)
         }
         d.fade(grow: m.grow(at: t), fresh: m.fresh(at: t))
     }

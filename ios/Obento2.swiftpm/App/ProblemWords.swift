@@ -10,12 +10,15 @@ enum ProblemLayout {
     /// The action row: two cells above the box's bottom.
     static let actions = BarsPage.box.dy + BarsPage.box.height - 80
     /// A problem's own column and action row, from its box (an open problem fills the screen, G 19 Oct).
-    static func column(_ m: any PageProblem) -> Double { m.boxSize.width - 80 }
+    /// A problem's own column and action row (before its scale), from its layout.
+    static func column(_ m: any PageProblem) -> Double { (m as? WorkProblem)?.layout.column ?? column }
     static func actions(_ m: any PageProblem) -> Double {
-        // under the line being worked when it's tall (a fraction's boxes), else the box's bottom row
-        var y = BarsPage.box.dy + m.boxSize.height - 80
-        if m is WorkProblem, let a = m.lesson.step.answer, a.choices == nil {
-            y = max(y, WorkProblem.lineY + Double(MathLineView.layout(a.prompt, typed: m.lesson.typed, size: 28).h) * Paper.cell + 20)
+        guard let w = m as? WorkProblem else { return actions }
+        let l = w.layout
+        // under the line being worked when it's tall (a fraction's boxes), else the bottom row
+        var y = l.actions ?? (BarsPage.box.dy + l.height * Paper.unit - 80)
+        if let a = m.lesson.step.answer, a.choices == nil {
+            y = max(y, l.lineY + Double(MathLineView.layout(a.prompt, typed: m.lesson.typed, size: 28).h) * Paper.cell + 20)
         }
         return y
     }
@@ -26,8 +29,9 @@ enum ProblemLayout {
     /// The blocks a problem shows now, in paper points: its choices, and Check (Show me and Start over are in the bar).
     /// The How to plays itself and has none; a solved problem has none.
     static func blocks(_ m: any PageProblem) -> [Block] {
-        let o = m.origin, l = m.lesson
-        func R(_ x: Double, _ y: Double, _ w: Double, _ h: Double = 40) -> CGRect { CGRect(x: o.x + x, y: o.y + y, width: w, height: h) }
+        let l = m.lesson, wp = m as? WorkProblem
+        let o = wp?.contentOrigin ?? m.origin, k = wp?.scale ?? 1, sx = wp?.layout.stepX ?? 0
+        func R(_ x: Double, _ y: Double, _ w: Double, _ h: Double = 40) -> CGRect { CGRect(x: o.x + (sx + x) * k, y: o.y + y * k, width: w * k, height: h * k) }
         var out: [Block] = []
         if let choices = l.step.answer?.choices {
             let n = Double(choices.count), w = (min(column(m), 720) + 1.5 * (n - 1)) / n
@@ -38,7 +42,7 @@ enum ProblemLayout {
         if let a = l.step.answer, a.choices == nil, m is WorkProblem {
             let lay = MathLineView.layout(a.prompt, typed: l.typed, size: 28), c = Paper.cell
             for it in lay.items { if case .box(let id) = it.kind {
-                out.append(Block(kind: .field(id), rect: R(Double(it.col) * c, WorkProblem.lineY + Double(it.row) * c, Double(it.w) * c, Double(it.h) * c)))
+                out.append(Block(kind: .field(id), rect: R(Double(it.col) * c, (wp?.layout.lineY ?? 0) + Double(it.row) * c, Double(it.w) * c, Double(it.h) * c)))
             } }
         }
         let actions = actions(m), column = column(m)
@@ -140,15 +144,11 @@ extension Rig {
 
     /// The box's name at its top, and the map's tab on its top-right corner: Now on the problem being worked, Done once
     /// it's solved.
+    /// The problem's name over it. The open problem has no frame and no tab (G 19 Oct): Done and Now live on its card.
     private func addTag(_ w: ProblemWords, _ m: any PageProblem, current: Bool) {
-        let o = m.origin, chapter = UIColor(hex: m.chapter.hex)
-        func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x, y: o.y + y) }
-        w.shown.addChild(PaperText.label(m.label, PaperText.font(17, .medium), UIColor(hex: (dark ?? false) ? 0x878177 : 0x8C867D), at: P(0, BarsPage.box.dy + 40), anchor: .topLeading))
-        if let tag = m.solved && !m.auto ? "Done" : current ? "Now" : nil {
-            let r = CGRect(origin: P(BarsPage.box.dx + m.boxSize.width - 80, BarsPage.box.dy - 20), size: CGSize(width: 80, height: 20))
-            if let mesh = Self.fills([r]) { let f = ModelEntity(mesh: mesh, materials: [flat(chapter)]); f.position.y = 0.002; w.shown.addChild(f) }
-            w.shown.addChild(PaperText.label(tag, PaperText.font(14, .semibold), .white, at: CGPoint(x: r.midX, y: r.midY), anchor: .center))
-        }
+        let (o, k) = (m as? WorkProblem).map { ($0.contentOrigin, $0.scale) } ?? (m.origin, 1)
+        w.shown.addChild(PaperText.label(m.label, PaperText.font(17 * k, .medium), UIColor(hex: (dark ?? false) ? 0x878177 : 0x8C867D),
+                                         at: CGPoint(x: o.x, y: o.y + (BarsPage.box.dy + 40) * k), anchor: .topLeading))
     }
 
     private func buildBars(_ w: ProblemWords, _ m: AddFractionsModel, current: Bool, dark: Bool) {
@@ -225,7 +225,8 @@ extension Rig {
     /// an answer box with what's typed in it (outlined in ink when it's the one the keypad types into).
     private func addBlocks(_ w: ProblemWords, _ m: any PageProblem, dark: Bool) {
         let l = m.lesson, words = l.words, ink = colours.ink, chapter = UIColor(hex: m.chapter.hex)
-        let surface = dark ? 0x1B1B1A as UInt32 : 0xFBFBFA, line = UIColor(hex: dark ? 0x3A3A37 : 0xCFCCC5), button = PaperText.font(17, .medium)
+        let k = (m as? WorkProblem)?.scale ?? 1
+        let surface = dark ? 0x1B1B1A as UInt32 : 0xFBFBFA, line = UIColor(hex: dark ? 0x3A3A37 : 0xCFCCC5), button = PaperText.font(17 * k, .medium)
         for b in ProblemLayout.blocks(m) {
             var stroke = line, fill = UIColor(hex: surface), text = ink, lift: Float = 0
             switch b.kind {
@@ -237,23 +238,23 @@ extension Rig {
             case .reset: break
             case .field(let id): if l.active == id { stroke = ink }
             }
-            cellBlock(b.rect, fill: fill, stroke: stroke, lift: lift).forEach { w.blocks.addChild($0) }
+            cellBlock(b.rect, fill: fill, stroke: stroke, lift: lift, width: 1.5 * k).forEach { w.blocks.addChild($0) }
             switch b.kind {
             case .next, .practise, .again, .skip, .nextProblem:
                 let word = b.kind == .nextProblem ? "Next problem" : b.kind == .next ? "Next step" : b.kind == .practise ? "Practice" : b.kind == .again ? "Watch again" : "Skip"
-                w.blocks.addChild(PaperText.label(word, button, ink, at: CGPoint(x: b.rect.minX + 16, y: b.rect.midY), anchor: UnitPoint(x: 0, y: 0.5)))
-                if b.kind == .next || b.kind == .practise || b.kind == .nextProblem, let a = PaperText.icon("arrow-right", ink, in: CGRect(x: b.rect.maxX - 30, y: b.rect.midY - 10, width: 20, height: 20)) { w.blocks.addChild(a) }
+                w.blocks.addChild(PaperText.label(word, button, ink, at: CGPoint(x: b.rect.minX + 16 * k, y: b.rect.midY), anchor: UnitPoint(x: 0, y: 0.5)))
+                if b.kind == .next || b.kind == .practise || b.kind == .nextProblem, let a = PaperText.icon("arrow-right", ink, in: CGRect(x: b.rect.maxX - 30 * k, y: b.rect.midY - 10 * k, width: 20 * k, height: 20 * k)) { w.blocks.addChild(a) }
             case .main:
-                w.blocks.addChild(PaperText.label(words.action, button, ink, at: CGPoint(x: b.rect.minX + 16, y: b.rect.midY), anchor: UnitPoint(x: 0, y: 0.5)))
-                if let a = PaperText.icon("arrow-right", ink, in: CGRect(x: b.rect.maxX - 30, y: b.rect.midY - 10, width: 20, height: 20)) { w.blocks.addChild(a) }
+                w.blocks.addChild(PaperText.label(words.action, button, ink, at: CGPoint(x: b.rect.minX + 16 * k, y: b.rect.midY), anchor: UnitPoint(x: 0, y: 0.5)))
+                if let a = PaperText.icon("arrow-right", ink, in: CGRect(x: b.rect.maxX - 30 * k, y: b.rect.midY - 10 * k, width: 20 * k, height: 20 * k)) { w.blocks.addChild(a) }
             case .showMe, .reset:
-                let r = CGRect(x: b.rect.midX - 10, y: b.rect.midY - 10, width: 20, height: 20)
+                let r = CGRect(x: b.rect.midX - 10 * k, y: b.rect.midY - 10 * k, width: 20 * k, height: 20 * k)
                 if let a = PaperText.icon(b.kind == .showMe ? "play" : "arrow-counter-clockwise", ink, in: r) { w.blocks.addChild(a) }
             case .choice(let i):
                 if let c = l.step.answer?.choices?[i] { w.blocks.addChild(PaperText.label(c, button, text, at: CGPoint(x: b.rect.midX, y: b.rect.midY), anchor: .center)) }
             case .field(let id):
                 if let t = l.typed[id] {
-                    w.blocks.addChild(PaperText.label(t.replacingOccurrences(of: "-", with: "−"), PaperText.font(26, .medium, digits: true), ink,
+                    w.blocks.addChild(PaperText.label(t.replacingOccurrences(of: "-", with: "−"), PaperText.font(26 * k, .medium, digits: true), ink,
                                                       at: CGPoint(x: b.rect.midX, y: b.rect.midY), anchor: .center, y: 0.0026))
                 }
             }
@@ -263,41 +264,44 @@ extension Rig {
     /// A lesson worked in typed steps (WorkProblem): the problem at the top (a story, then the sum), the step under
     /// the picture (its words and hint), the line being worked (its boxes are blocks), and what a miss says.
     private func buildWork(_ w: ProblemWords, _ m: WorkProblem, current: Bool, dark: Bool) {
-        let l = m.lesson, words = l.words, o = m.origin, col = ProblemLayout.column(m)
+        let l = m.lesson, words = l.words, o = m.contentOrigin, lay = m.layout, k = lay.scale, col = lay.column * k
         let ink = colours.ink, ink2 = colours.ink2, chapter = UIColor(hex: m.chapter.hex), right = UIColor(hex: dark ? 0x3CCF8E : 0x178A57)
-        func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x, y: o.y + y) }
+        func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x * k, y: o.y + y * k) }
+        func F(_ size: CGFloat, _ weight: UIFont.Weight = .regular) -> UIFont { PaperText.font(size * k, weight) }
+        let sx = lay.stepX
 
         // the problem: a story above it when it's told as one, then the sum as written on paper
         var top = WorkProblem.problemY
         if l.story, let story = l.spec.story?(l.numbers) {
-            let sf = PaperText.font(20), lines = Array(PaperText.wrap(story, sf, width: col).prefix(3))
+            let sf = F(20), lh = Double(sf.lineHeight) / k, lines = Array(PaperText.wrap(story, sf, width: col).prefix(3))
             let y0 = -136.0
-            for (i, line) in lines.enumerated() { w.shown.addChild(PaperText.label(line, sf, ink, at: P(0, y0 + Double(i) * Double(sf.lineHeight)), anchor: .topLeading)) }
-            top = max(top, y0 + Double(lines.count) * Double(sf.lineHeight) + 6)
+            for (i, line) in lines.enumerated() { w.shown.addChild(PaperText.label(line, sf, ink, at: P(0, y0 + Double(i) * lh), anchor: .topLeading)) }
+            top = max(top, y0 + Double(lines.count) * lh + 6)
         }
-        mathLine(l.spec.display(l.numbers), at: P(0, top), typed: [:], into: w.shown, size: 40)
+        mathLine(l.spec.display(l.numbers), at: P(0, top), typed: [:], into: w.shown, size: 40 * k)
 
         // the step, under the picture: what to do now (a story's step asks only "Pick what to do"), and its hint
         let storyStep = l.story && l.step.answer?.choices != nil
-        let q = PaperText.font(28, .medium), hint = PaperText.font(20), sy = WorkProblem.stepY
+        let q = F(28, .medium), hint = F(20), sy = lay.stepY
         let say = m.intro ?? (storyStep ? words.hint : words.say)
-        let sayLines = PaperText.block(say, q, ink, width: col, topLeft: P(0, sy - 20), maxLines: 2)
+        let sayLines = PaperText.block(say, q, ink, width: col, topLeft: P(sx, sy - 20), maxLines: 2)
         sayLines.forEach { w.question.addChild($0) }
         // the hint under it: always when done together; on their own only after a miss; on a step missed before, what
         // they were told then, in the chapter's colour; never in a test
         if m.intro == nil, !storyStep, l.step.answer?.choices == nil {
             let (text, c): (String?, UIColor) = m.onFocus ? (m.focus?.said, chapter) : (l.guided || (l.helps && l.misses > 0)) ? (words.hint, ink2) : (nil, ink2)
-            if let text { PaperText.block(text, hint, c, width: col, topLeft: P(0, sy - 20 + Double(sayLines.count) * Double(q.lineHeight) + 2), maxLines: 2).forEach { w.question.addChild($0) } }
+            if let text { PaperText.block(text, hint, c, width: col, topLeft: P(sx, sy - 20 + Double(sayLines.count) * Double(q.lineHeight) / k + 2), maxLines: 2).forEach { w.question.addChild($0) } }
         }
 
         // the line being worked, its boxes drawn as blocks; or, once solved, nothing more to write
         if let a = l.step.answer, a.choices == nil, m.intro == nil {
-            mathLine(a.prompt, at: P(0, WorkProblem.lineY), typed: l.typed, into: w.still, size: 28)
+            mathLine(a.prompt, at: P(sx, lay.lineY), typed: l.typed, into: w.still, size: 28 * k)
         }
         // what a miss (or Show me) says: beside Check, on its row
         if let msg = m.message {
             let ay = ProblemLayout.actions(m)
-            PaperText.block(msg.text, PaperText.font(20, .medium), msg.ok ? ink2 : chapter, width: col - 260, topLeft: P(260, ay - 4), maxLines: 3).forEach { w.still.addChild($0) }
+            let (at, width) = lay.messageBelow ? (P(sx, ay + 60), col) : (P(sx + 260, ay - 4), col - 260 * k)
+            PaperText.block(msg.text, F(20, .medium), msg.ok ? ink2 : chapter, width: width, topLeft: at, maxLines: 3).forEach { w.still.addChild($0) }
         }
         _ = right
     }
@@ -325,14 +329,14 @@ extension Rig {
     }
 
     /// A cell block: filled, with its border drawn inside its edge.
-    private func cellBlock(_ r: CGRect, fill: UIColor, stroke: UIColor, lift: Float) -> [ModelEntity] {
+    private func cellBlock(_ r: CGRect, fill: UIColor, stroke: UIColor, lift: Float, width: Double = 1.5) -> [ModelEntity] {
         let u = Paper.unit
         var out: [ModelEntity] = []
         if let m = Self.fills([r]) { let f = ModelEntity(mesh: m, materials: [flat(fill)]); f.position.y = 0.002 + lift; out.append(f) }
-        let i = r.insetBy(dx: 0.75, dy: 0.75)
+        let i = r.insetBy(dx: width / 2, dy: width / 2)
         let c = [CGPoint(x: i.minX, y: i.minY), CGPoint(x: i.maxX, y: i.minY), CGPoint(x: i.maxX, y: i.maxY), CGPoint(x: i.minX, y: i.maxY), CGPoint(x: i.minX, y: i.minY)]
         let segs = zip(c, c.dropFirst()).map { (SIMD2(Float($0.x / u), Float($0.y / u)), SIMD2(Float($1.x / u), Float($1.y / u))) }
-        if let m = Self.lines(segs, width: Float(1.5 / u)) { let l = ModelEntity(mesh: m, materials: [flat(stroke)]); l.position.y = 0.0022 + lift; out.append(l) }
+        if let m = Self.lines(segs, width: Float(width / u)) { let l = ModelEntity(mesh: m, materials: [flat(stroke)]); l.position.y = 0.0022 + lift; out.append(l) }
         return out
     }
 }
