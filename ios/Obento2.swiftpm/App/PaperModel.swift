@@ -159,10 +159,8 @@ final class PaperModel {
     var lesson: UnitCubesModel?
     /// The flat lesson, when one is open. It uses the paper's own camera.
     var bars: BarsPage?
-    /// A lesson worked in steps, when one is open. It uses the paper's own camera too.
-    var steps: StepsModel?
     /// The piece whose lesson is open: its name goes in the top bar.
-    var openPiece: Piece? { lesson != nil || bars != nil || steps != nil ? opened : nil }
+    var openPiece: Piece? { lesson != nil || bars != nil ? opened : nil }
     /// Where the child is in the open lesson ("Practice 2 of 6"), for the top bar.
     var sessionLabel: String? { bars?.label ?? lesson?.session.label }
     private var opened: Piece?
@@ -283,7 +281,6 @@ final class PaperModel {
         if let b = bars {
             b.tap(p); return
         }
-        if steps != nil { return }
         // the chosen lesson opens from its tag (a little extra all round, for a finger) or a second tap on its frame
         if let sel = selected, sel.opens, contains(Rect(x: sel.start.x - 20, y: sel.start.y - 20, width: sel.start.width + 40, height: sel.start.height + 40), p) || contains(sel.frame, p) {
             open(sel); return
@@ -339,17 +336,9 @@ final class PaperModel {
         b.start()
     }
 
-    /// Opening a lesson worked in steps: glide to it, then its picture grows in. Flat, on the paper's camera.
-    func openSteps(_ p: Piece, _ spec: LessonSpec) {
-        let s = StepsModel(spec: spec, origin: p.at, chapter: p.chapter, number: Map.number(p), instant: instant, numbers: shotNumbers)
-        s.start(); steps = s; selected = nil
-    }
-
     /// The crosshair inside a flat lesson: glide back to the whole lesson.
     func reframe() {
-        let pad = screen.width > 760 ? Self.margin : 8
         if let b = bars { frameCurrent(b.current.map(BarsPage.box(of:)) ?? (b.showing ? b.firstRow : BarsPage.box(of: b.howTo))) }
-        if let s = steps { fly(to: .framing(s.frame, in: screen, pad: pad, maxZoom: 1), duration: CameraTiming.fly) }
     }
 
     /// Leaving the lesson: it tilts back flat first, then the paper takes the same view back.
@@ -415,11 +404,11 @@ final class PaperModel {
             Task { [self] in
                 try? await Task.sleep(for: .seconds(Self.undraw + 0.05))
                 leaving = false
-                bars = nil; steps = nil; redraw(from: piece); glideOut(to: piece)
+                bars = nil; redraw(from: piece); glideOut(to: piece)
             }
             return
         }
-        if bars != nil || steps != nil { bars = nil; steps = nil; redraw(from: piece); glideOut(to: piece); return }
+        if bars != nil { bars = nil; redraw(from: piece); glideOut(to: piece); return }
         guard let l = lesson else { return }
         l.flatten { [self] view in
             stop(); resting = view.paperCamera(screen: screen); lesson = nil

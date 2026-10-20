@@ -253,21 +253,6 @@ enum Shots {
                 Progress.shared.makeDue("ad")
                 start(Map.pieces.first { $0.id == "ad" }!)
             case "back": start(Map.pieces.first { $0.id == "ad" }!); m.close()
-            case let n where n.hasPrefix("L-"):
-                // L-<lesson id>-<step>: open any lesson and work it to that step, each answer filled in by Show me
-                let parts = n.dropFirst(2).split(separator: "-"), id = parts.dropLast().joined(separator: "-")
-                guard let p = Map.pieces.first(where: { $0.id == id }), let k = Int(parts.last ?? "0") else { return }
-                start(p)
-                guard let s = m.steps else { return }
-                for _ in 0..<k { if s.lesson.step.answer != nil { s.showMe() }; s.go() }
-                if s.lesson.step.answer != nil, args.contains("-filled") { s.showMe() }
-            case let n where n.hasPrefix("pow10"):
-                m.shotNumbers = PowersOfTen.numbers(x: 4.6, k: 2)
-                start(Map.pieces.first { $0.id == "g5-pow10" }!)
-                guard let s = m.steps, n != "pow10" else { return }
-                s.go(); s.type("2"); s.go()
-                if n == "pow10-move" { for k in ["4", "6"] { s.type(k) }; s.go(); return }
-                s.showMe(); s.go()
             case let n where n.hasPrefix("fractions"):
                 // the page: the How to has played (instant), the 16 problems are on the paper
                 start(Map.pieces.first { $0.id == "ad" }!)

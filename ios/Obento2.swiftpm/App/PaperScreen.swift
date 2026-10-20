@@ -14,7 +14,6 @@ struct PaperScreen: View {
         GeometryReader { geo in
             TimelineView(.animation(paused: !animating)) { ctx in
                 let t = ctx.date.timeIntervalSinceReferenceDate
-                let cam = model.camera(at: t)
                 ZStack(alignment: .topLeading) {
                     // RealityKit's view keeps the size it was made at, so a new screen shape (rotating) makes a new one
                     PaperScene(model: model, time: t)
@@ -23,9 +22,6 @@ struct PaperScreen: View {
                         UnitCubesView(model: lesson, time: t)
                     } else {
                         surfaceGestures
-                    }
-                    if let steps = model.steps {
-                        StepsLessonView(model: steps, camera: cam, time: t)
                     }
                     Toolbar(model: model, time: t, bottom: max(16, safe.safeAreaInsets.bottom + 8, model.keyboard + 8))
                     // iPadOS's own number keyboard (G 19 Oct), up once an answer box is tapped and while a number is
@@ -60,7 +56,7 @@ struct PaperScreen: View {
 
     /// The clock only runs while something moves or draws, so a still paper costs nothing.
     private var animating: Bool {
-        model.moving || model.leaving || model.mapDrawing || PaperClock.now - model.pinchedAt < 1.3 || PaperClock.now - model.drawnAt < Piece.drawTime + 0.2 || (model.lesson?.animating ?? false) || (model.bars?.animating ?? false) || (model.steps?.animating ?? false)
+        model.moving || model.leaving || model.mapDrawing || PaperClock.now - model.pinchedAt < 1.3 || PaperClock.now - model.drawnAt < Piece.drawTime + 0.2 || (model.lesson?.animating ?? false) || (model.bars?.animating ?? false)
     }
 
     private var surfaceGestures: some View {

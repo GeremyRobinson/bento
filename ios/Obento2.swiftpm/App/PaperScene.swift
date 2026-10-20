@@ -253,8 +253,6 @@ final class Rig {
     let barsRoot = Entity()
     var drawers: [UUID: BarsDrawer] = [:]
     var sketches: [UUID: SketchDrawer] = [:]
-    let boxes = Entity()
-    var boxesKey = ""
     /// What the camera last framed a problem's content for.
     var contentKey = ""
     /// The blinking cursor in the answer box being typed into.
@@ -264,9 +262,6 @@ final class Rig {
     let cardsRoot = Entity()
     var cardsDrawer: SketchDrawer?
     var paperHex: UInt32 = 0xF3F2EF
-    // a lesson worked in steps: its picture
-    let stepsRoot = Entity()
-    var stepsKey = ""
     var lineScale: Double = 0
     var dark: Bool?
     var colours = Colours(dark: false, chapter: Chapter.measurement.hex)
@@ -294,7 +289,7 @@ final class Rig {
         // the paper itself, under the grid, large enough to fill any tilted view; it follows the camera
         sheet.model = ModelComponent(mesh: .generatePlane(width: 400, depth: 400), materials: [])
         sheet.position.y = -0.003
-        root.addChild(sheet); root.addChild(pieces); root.addChild(lessonRoot); root.addChild(barsRoot); root.addChild(stepsRoot); barsRoot.addChild(boxes); barsRoot.addChild(pageWords); barsRoot.addChild(cardsRoot); barsRoot.addChild(cursorEntity); root.addChild(words)
+        root.addChild(sheet); root.addChild(pieces); root.addChild(lessonRoot); root.addChild(barsRoot); barsRoot.addChild(pageWords); barsRoot.addChild(cardsRoot); barsRoot.addChild(cursorEntity); root.addChild(words)
     }
 
     func update(view v: PaperView3D, model: PaperModel, time t: Double, dark: Bool) {
@@ -325,11 +320,10 @@ final class Rig {
         let gx = Int(floor.x.rounded()), gz = Int(floor.z.rounded())
         if let g = gridAt, abs(g.x - gx) <= 2, abs(g.z - gz) <= 2, g.half >= half {} else { Perf.time("grid") { regrid(x: gx, z: gz, half: half) } }
 
-        let onMap = model.lesson == nil && model.bars == nil && model.steps == nil
+        let onMap = model.lesson == nil && model.bars == nil
         pieces.isEnabled = onMap; words.isEnabled = onMap
         if onMap { Perf.time("pieces") { drawPieces(model, at: t) }; Perf.time("words") { drawWords(model, at: t) } }
         drawPage(model.bars, at: t)
-        drawSteps(model.steps, at: t)
 
         guard let l = lesson else { return }
         // the last lesson's pieces are reused when the box is the same; otherwise cleared now, while the new one builds
@@ -353,7 +347,7 @@ final class Rig {
         paperHex = dark ? 0x121211 : 0xF3F2EF
         sheet.model?.materials = [flat(colours.paper)]
         problemWords.values.forEach { $0.key = "" }
-        gridAt = nil; piecesKey = ""; shape = nil; stepsKey = ""; drawers.values.forEach { $0.barsKey = "" }
+        gridAt = nil; piecesKey = ""; shape = nil; drawers.values.forEach { $0.barsKey = "" }
         relines()
     }
 
@@ -450,7 +444,7 @@ final class Rig {
         barsRoot.isEnabled = page != nil
         guard let page else {
             for d in drawers.values { d.root.removeFromParent() }
-            drawers = [:]; boxesKey = ""
+            drawers = [:]
             for d in sketches.values { d.root.removeFromParent() }
             sketches = [:]
             drawCards(nil, at: t)
@@ -478,8 +472,6 @@ final class Rig {
         }
         for (id, d) in drawers where !every.contains(where: { $0.id == id }) { d.root.removeFromParent(); drawers[id] = nil }
         for (id, d) in sketches where !every.contains(where: { $0.id == id }) { d.root.removeFromParent(); sketches[id] = nil }
-        // an open problem is its own space on the grid, with no frame (G 19 Oct): only the page's cards are outlined
-        Perf.time("boxes") { drawBoxes(page, [], at: t) }
         Perf.time("page-words") { drawProblemWords(page, shown, waiting: page.showing || made > 0 ? [] : page.problems, at: t) }
         frameContent(page)
         if drawCards(page, at: t) { pageBuilding = true }
@@ -520,73 +512,6 @@ final class Rig {
             r = r.map { $0.union(rr) } ?? rr
         }
         if let r { Task { @MainActor in page.contentChanged(Rect(x: r.minX, y: r.minY, width: r.width, height: r.height)) } }
-    }
-
-    /// Every problem's box (G 17 Oct): a light outline in the chapter's colour, drawing in with its problem; the problem
-    /// the child is on outlined in full colour, thicker; a solved one lightly filled, as a learned lesson is on the map.
-    private func drawBoxes(_ page: BarsPage, _ shown: [any PageProblem], at t: Double) {
-        let chapter = page.piece.chapter.hex, px = 1 / lineScale
-        let ks = shown.map { (m: $0, k: snapped(($0 as? AddFractionsModel)?.wholeLine(at: t) ?? (($0 as? WorkProblem)?.grow(at: t) ?? 1), 40)) }
-        let key = ks.map { "\($0.k)\($0.m.solved)" }.joined() + "\(page.current?.id.uuidString ?? "") \(lineScale) \(paperHex)"
-        guard key != boxesKey else { return }
-        boxesKey = key
-        for c in Array(boxes.children) { c.removeFromParent() }
-        func outline(_ r: Rect) -> [[CGPoint]] {
-            [[CGPoint(x: r.x, y: r.y), CGPoint(x: r.x + r.width, y: r.y), CGPoint(x: r.x + r.width, y: r.y + r.height), CGPoint(x: r.x, y: r.y + r.height), CGPoint(x: r.x, y: r.y)]]
-        }
-        var light: [(SIMD2<Float>, SIMD2<Float>)] = [], lit: [(SIMD2<Float>, SIMD2<Float>)] = [], solved: [CGRect] = []
-        for (m, k) in ks where k > 0 {
-            let r = BarsPage.box(of: m)
-            if m === page.current { lit += drawn(outline(r), k) } else { light += drawn(outline(r), k) }
-            if m.solved && !m.auto { solved.append(CGRect(x: r.x, y: r.y, width: r.width, height: r.height)) }
-        }
-        func add(_ mesh: MeshResource?, _ c: UInt32, _ y: Float) {
-            guard let mesh else { return }
-            let e = ModelEntity(mesh: mesh, materials: [flat(UIColor(hex: c))]); e.position.y = y; boxes.addChild(e)
-        }
-        add(Self.fills(solved), Ink.mix(paperHex, chapter, 0.08), 0.0003)
-        add(Self.lines(light, width: Float(1.5 * px)), Ink.mix(paperHex, chapter, 0.3), 0.001)
-        add(Self.lines(lit, width: Float(Sketch.stroke) * Float(px)), chapter, 0.0011)
-    }
-
-    // MARK: a lesson worked in steps
-
-    /// The picture of a lesson worked in steps, drawn by its master. Rebuilt only when it changes.
-    private func drawSteps(_ m: StepsModel?, at t: Double) {
-        stepsRoot.isEnabled = m != nil
-        guard let m else { stepsKey = ""; return }
-        switch m.lesson.spec.master {
-        case "shift": drawShift(m, at: t)
-        default: break
-        }
-    }
-
-    /// The decimal shift: digit boxes, the hops drawn so far, and the point.
-    private func drawShift(_ m: StepsModel, at t: Double) {
-        let s = ShiftPicture(m.lesson.numbers), grow = snapped(m.grow(at: t), 20)
-        let h = snapped(s.hops(m.sincePicture(t), moving: m.lesson.picture["hop"] == 1), 40)
-        let key = "\(m.lesson.numbers) \(h) \(grow) \(lineScale)"
-        guard key != stepsKey else { return }
-        stepsKey = key
-        for c in Array(stepsRoot.children) { c.removeFromParent() }
-        guard grow > 0 else { return }
-        let o = m.origin, chapter = UIColor(hex: m.chapter.hex), u = Paper.unit
-        func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x, y: o.y + y) }
-        func add(_ lines: [[CGPoint]], width: Double, _ c: UIColor) {
-            guard let mesh = Self.lines(drawn(lines, 1), width: Float(width / lineScale)) else { return }
-            let e = ModelEntity(mesh: mesh, materials: [flat(c)]); e.position.y = 0.0012; stepsRoot.addChild(e)
-        }
-        let boxes = s.digits.indices.filter { s.shows($0, hops: h) }.map { i -> [CGPoint] in
-            let x = s.boxX(i), y = ShiftPicture.top, b = ShiftPicture.box
-            return [P(x, y), P(x + b, y), P(x + b, y + b), P(x, y + b), P(x, y)]
-        }
-        add(boxes, width: 1.5, colours.lineStrong)
-        add(s.arcs(h).map { $0.map { P($0.x, $0.y) } }, width: 2, chapter)
-        // the point: a dot in the chapter's colour
-        let p = s.point(h), d = Float(10 / u)
-        let dot = ModelEntity(mesh: .generatePlane(width: d, depth: d, cornerRadius: d / 2), materials: [flat(chapter)])
-        dot.position = SIMD3(Float((o.x + p.x) / u), 0.0016, Float((o.y + p.y) / u))
-        stepsRoot.addChild(dot)
     }
 
     // MARK: the open lesson
