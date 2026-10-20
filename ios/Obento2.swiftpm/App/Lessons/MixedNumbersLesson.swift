@@ -21,7 +21,7 @@ struct MixedNumbersLesson: PaperLesson {
         let w, n, d, W: Int
         init(_ p: Numbers) {
             func i(_ k: String, _ v: Int) -> Int { Int((p[k] ?? Double(v)).rounded()) }
-            w = max(1, i("w", 1)); n = i("n", 1); d = max(2, i("d", 2))
+            w = max(1, i("w", 1)); d = max(2, i("d", 2)); n = min(max(1, i("n", 1)), d - 1)
             W = UnlikeFractions.wholeLength(d)
         }
         /// One piece's length: the extra bar's, and the wholes' once cut.
