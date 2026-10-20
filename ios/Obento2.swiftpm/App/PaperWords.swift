@@ -170,13 +170,13 @@ extension Rig {
             let hex = p.chapter.hex, chapter = Sketch.Colour.hex(hex, hex)
             s.startAt = at(p.frame.mid)
             // its name, and under it how far it got (stopped partway), or for a test what it waits for
-            s.label(id + "name", p.name, .label, at: CGPoint(x: r.minX, y: r.maxY + 10), anchor: UnitPoint(x: 0, y: 0.5))
+            s.label(id + "name", p.name, .label, at: CGPoint(x: r.minX, y: r.maxY + 30), anchor: UnitPoint(x: 0, y: 0.5))
             if p.isTest {
                 let line = PageStore.load(p.id).map { "\($0.solved) of \($0.problems.count) done" } ?? Progress.shared.tests[p.id].map { _ in "Done" }
                     ?? (p.opens ? "\(p.id == "test-grade" ? 20 : 12) problems" : p.id == "test-grade" ? "Finish the chapter tests first" : Map.chapterHasLessons(p.chapter) ? "Finish the lessons first" : "Coming soon")
-                s.label(id + "line", line, Sketch.Words(size: Sketch.small, weight: .medium, colour: p.opens || Progress.shared.tests[p.id] != nil ? chapter : .ink3), at: CGPoint(x: r.minX, y: r.maxY + 30), anchor: UnitPoint(x: 0, y: 0.5), slot: id + "line")
+                s.label(id + "line", line, Sketch.Words(size: Sketch.small, weight: .medium, colour: p.opens || Progress.shared.tests[p.id] != nil ? chapter : .ink3), at: CGPoint(x: r.minX, y: r.maxY + 50), anchor: UnitPoint(x: 0, y: 0.5), slot: id + "line")
             } else if let saved = PageStore.load(p.id) {
-                s.label(id + "line", "\(saved.solved) of \(saved.problems.count) done", Sketch.Words(size: Sketch.small, weight: .medium, colour: chapter), at: CGPoint(x: r.minX, y: r.maxY + 30), anchor: UnitPoint(x: 0, y: 0.5), slot: id + "line")
+                s.label(id + "line", "\(saved.solved) of \(saved.problems.count) done", Sketch.Words(size: Sketch.small, weight: .medium, colour: chapter), at: CGPoint(x: r.minX, y: r.maxY + 50), anchor: UnitPoint(x: 0, y: 0.5), slot: id + "line")
             }
             if p.isTest {
                 // a test's badge (G 18 Oct): a round seal on the frame's top-left corner, how many problems it has (a tick
