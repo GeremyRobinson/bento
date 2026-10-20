@@ -189,6 +189,7 @@ final class WorkProblem: Identifiable, PageProblem {
 
     func go() {
         guard !busy else { return }
+        if demoAnswered { demoAnswered = false; return }
         onTouch?()
         if lesson.handAnswered { goByHand(); return }
         let misses = lesson.missedSteps.count + lesson.misses
@@ -320,8 +321,12 @@ final class WorkProblem: Identifiable, PageProblem {
     func select(_ box: String) {
         onTouch?(); lesson.active = box
         if !keypadOpen { keypadOpen = true; keypadAt = time(0) }
+        boxTapped += 1
         onChange?()
     }
+    /// How many times a box has been tapped: each tap brings the iPad's number keys back up (NumberEntry), even after
+    /// the child put them away.
+    private(set) var boxTapped = 0
 
     /// Show me (G 17 Oct, 20 Oct): a preview, never the child's work. The ghost finger plays the step's moves on a copy
     /// of the problem, the picture following it, holds, and everything goes back as the child left it; the step only
@@ -371,8 +376,8 @@ final class WorkProblem: Identifiable, PageProblem {
             return
         }
         if a.choices != nil { choose(Int(a.expected["c"] ?? 0)); go(); return }
-        // the How to's way: the ghost's moves made at once (and kept), then checked
-        ghost = GhostPlay(mode: .howTo, start: PaperClock.now, run: lesson, hand: hand, moves: ghostMoves(state()))
+        // the ghost's moves made at once and kept, then checked as Check would
+        ghost = GhostPlay(mode: .keep, start: PaperClock.now, run: lesson, hand: hand, moves: ghostMoves(state()))
         fireGhost(upTo: .infinity)
         if let g = ghost { lesson = g.run; hand = g.hand }
         ghost = nil
@@ -396,7 +401,7 @@ final class WorkProblem: Identifiable, PageProblem {
     func replay() {
         var r = LessonRun(lesson.spec, numbers: lesson.numbers); r.helps = lesson.helps; r.oneTry = lesson.oneTry
         lesson = r
-        message = nil; busyUntil = 0; extra = [:]; hand = [:]; ghost = nil; hinting = false
+        message = nil; busyUntil = 0; extra = [:]; hand = [:]; ghost = nil; hinting = false; demoAnswered = false
         openedAt = time(0); wordsAt = openedAt; pictureAt = openedAt
     }
 
@@ -463,12 +468,20 @@ final class WorkProblem: Identifiable, PageProblem {
         // Show me is a preview: the camera holds still while it plays, even when its copy moves on a stage
         if ghost?.mode == .preview, let held = heldFrame { return held }
         guard let st = layout.stack else { return nil }
-        let r = st.frame
+        var r = st.frame
+        // a docked keyboard up for the record's box: the record and its blocks, framed in the paper above it
+        if Self.keyboard > 0, wantsTyping {
+            let top = (st.plan.recordTop - 1) * Paper.cell
+            r = CGRect(x: r.minX, y: top, width: r.width, height: max(2 * Paper.cell, r.maxY - top))
+        }
         let f = Rect(x: origin.x + r.minX, y: origin.y + r.minY, width: r.width, height: r.height)
         heldFrame = f
         return f
     }
     @ObservationIgnored private var heldFrame: Rect?
+    /// How much of the screen's bottom a docked keyboard covers (PaperScreen sets it; iPadOS's floating number pad
+    /// covers only its corner and counts as none).
+    static var keyboard: Double = 0
 
     private func time(_ delay: Double) -> Double { instant ? PaperClock.now - 100 : PaperClock.now + delay }
 
@@ -574,17 +587,25 @@ final class WorkProblem: Identifiable, PageProblem {
         if let h = mv.hand { g.hand = h }
         for (b, v) in mv.set { g.run.set(b, v) }
         for cell in mv.marks { g.run.tap(cell) }
-        guard mv.check, g.mode == .preview else { return }
+        // a move that answers its step does it, as the child's would: Show me's copy shows it, the How to keeps it
+        guard mv.check, g.mode != .keep else { return }
         let i = g.run.index
         if case .moved = g.run.go() { g.hand = [:]; Self.answerAhead(&g.run, paper) }
         else if g.run.index == i, let mh = mv.missHand { g.hand = mh }
     }
 
+    /// The How to's move already answered its step (its Cut cut, its point hopped): the How to's Next only goes on.
+    private var demoAnswered = false
+
     /// The ghost is done: Show me's copy is dropped (everything as the child left it); the How to keeps its moves.
     private func endGhost() {
         guard let g = ghost else { return }
         ghost = nil
-        if g.mode == .howTo { lesson = g.run; hand = g.hand }
+        if g.mode != .preview {
+            let moved = g.run.index != lesson.index
+            lesson = g.run; hand = g.hand
+            if moved { demoAnswered = true; stepChanged(); wordsAt = PaperClock.now }
+        }
         pictureAt = time(0)
         onChange?()
     }

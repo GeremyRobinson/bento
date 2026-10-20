@@ -72,7 +72,9 @@ struct FractionsLesson: PaperLesson {
                 pic.fill("b1f", col: 0, row: y1, w: W * Double(q.S) / Double(q.L), h: h, .tint(0.4))
             }
         } else {
-            let parts = cut ? q.L : q.b, per = cut ? pw : Double(q.pw1), shaded = cut ? q.A : q.a
+            // taken away, the pieces the striped ones cover are theirs, not shaded too (two fills on one square fight
+            // over which shows)
+            let parts = cut ? q.L : q.b, per = cut ? pw : Double(q.pw1), shaded = cut ? (placed && q.minus ? q.S : q.A) : q.a
             pic.fill("b1f\(parts)", col: 0, row: y1, w: Double(shaded) * per, h: h, .tint(0.4))
             bar(&pic, "b1", row: y1, parts: parts, W: q.W)
             if placed {

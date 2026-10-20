@@ -35,7 +35,7 @@ struct PaperScreen: View {
                     // number written (no tap needed), so a Mac's or a hardware keyboard types straight away too; only for
                     // a box the drawing shows (G 20 Oct): a step answered by the hands never raises it
                     let typing = (model.bars?.current as? WorkProblem).flatMap { w in model.bars?.mode == .work && w.wantsTyping ? w : nil }
-                    NumberEntry(problem: typing, step: typing.map { "\($0.id) \($0.lesson.index)" } ?? "")
+                    NumberEntry(problem: typing, step: typing.map { "\($0.id) \($0.lesson.index) \($0.boxTapped)" } ?? "")
                         // iPadOS's number pad pops up from the hidden field: it sits in the screen's bottom-right corner,
                         // over the bar, so the pad comes up there, clear of the picture and the record (a docked keyboard
                         // doesn't mind where it is)
@@ -59,9 +59,11 @@ struct PaperScreen: View {
                 guard let f = n.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
                 let screen = geo.frame(in: .global)
                 let docked = f.width >= screen.width * 0.8 && f.maxY >= screen.maxY - 1
-                model.keyboardAppeared(docked ? max(0, screen.maxY - f.minY) : 0)
+                // a paper lesson's camera then frames its record above it (WorkProblem.stageFrame)
+                WorkProblem.keyboard = docked ? max(0, screen.maxY - f.minY) : 0
+                model.keyboardAppeared(WorkProblem.keyboard)
             }
-            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in model.keyboardAppeared(0) }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in WorkProblem.keyboard = 0; model.keyboardAppeared(0) }
         }
         .ignoresSafeArea()
         }

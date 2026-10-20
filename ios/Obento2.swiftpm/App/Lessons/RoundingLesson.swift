@@ -45,12 +45,13 @@ struct RoundingLesson: PaperLesson {
         if at == 1, s.on("ring") { pic.circle("ring", at: x1, y1, radius: 1.3, .chapter, dashed: true) }
 
         if found {
-            // the block it's in, lit, its ends named, opened out below into line 2's ten big steps
+            // the block it's in, lit, its ends named, opened out below into line 2's ten big steps (the funnel stops
+            // two squares over line 2's end ticks, clear of the number's own label wherever the point is)
             pic.fill("blk", col: k * B, row: y1 - 2, w: B, h: 2, .tint(0.42))
             pic.label("blklo", RoundDecimals.written(P.T, p), label.colour(.chapter), .below, edge: y1, along: k * B)
             pic.label("blkhi", RoundDecimals.written(P.up, p), label.colour(.chapter), .below, edge: y1, along: k * B + B)
-            pic.line("zoomL", [(k * B, y1 + 3), (0, y2 - 3)], .chapter, dashed: true)
-            pic.line("zoomR", [(k * B + B, y1 + 3), (L, y2 - 3)], .chapter, dashed: true)
+            pic.line("zoomL", [(k * B, y1 + 3), (0, y2 - 4)], .chapter, dashed: true)
+            pic.line("zoomR", [(k * B + B, y1 + 3), (L, y2 - 4)], .chapter, dashed: true)
             pic.numberLine("l2", col: 0, row: y2, steps: 10, per: B, long: 5)
             let done = at >= 4
             pic.label("l2lo", RoundDecimals.written(P.T, p), label.colour(done && P.stays ? .chapter : .ink2), .below, edge: y2, along: 0)
@@ -67,14 +68,15 @@ struct RoundingLesson: PaperLesson {
                     pic.label("p2w", fmt(P.value), label.colour(.ink), .above, edge: y2 - 2, along: sx)
                     live.circle("p2ring", at: now * B, y2, radius: 1.3, .chapter, dashed: true)
                 }
-                // the steps counted while it moves: a bracket from where it was to where it is
+                // the steps counted while it moves: a bracket under the line from where it was to where it is, its
+                // count under it (under the line, where the hint counts too, so it never crosses the dashed funnel)
                 if s.grabbed, abs(now - P.step) > 0.01 {
                     let a = min(now, P.step) * B, b = max(now, P.step) * B, n = Int(abs(now - P.step).rounded())
-                    live.line("count", [(a, y2 - 4), (a, y2 - 3), (b, y2 - 3), (b, y2 - 4)], .chapter)
-                    live.label("countw", n == 1 ? "1 step" : "\(n) steps", label.colour(.chapter), .above, edge: y2 - 4, along: (a + b) / 2)
+                    live.line("count", [(a, y2 + 3), (a, y2 + 4), (b, y2 + 4), (b, y2 + 3)], .chapter)
+                    live.label("countw", RoundDecimals.steps(n), label.colour(.chapter), .below, edge: y2 + 4, along: (a + b) / 2)
                 }
-                // a hint: the steps to each end, counted under the line
-                if s.on("counts") {
+                // a hint: the steps to each end, counted under the line (the live count takes its place while held)
+                if s.on("counts"), !s.grabbed {
                     let low = P.step, high = 10 - P.step
                     pic.line("toLo", [(0, y2 + 3), (0, y2 + 4), (sx, y2 + 4), (sx, y2 + 3)], .ink2)
                     pic.label("toLow", low == 1 ? "1 step" : "\(fmt(low)) steps", Self.small, .below, edge: y2 + 4, along: sx / 2)
@@ -82,16 +84,16 @@ struct RoundingLesson: PaperLesson {
                     pic.label("toHigh", high == 1 ? "1 step" : "\(fmt(high)) steps", Self.small, .below, edge: y2 + 4, along: (sx + L) / 2)
                 }
             } else if at >= 3 {
-                // the point where the number is, and its hop to the closer end, its steps counted over it
+                // the point where the number is, and its hop to the closer end; the steps it took counted under the
+                // line, as they were while it was dragged
                 let end = P.roundsUp ? L : 0, span = abs(end - sx), height = min(2.5, max(1.2, span / 6))
                 pic.dot("p2", at: sx, y2, radius: 0.55, .chapter, over: true)
                 pic.label("p2w", fmt(P.value), label.colour(.ink), .above, edge: y2 - 2, along: sx)
                 pic.hop("hop", from: sx, to: end, row: y2, height: height)
                 pic.dot("end", at: end, y2, radius: 0.4, .chapter, over: true)
-                // over the hop's top when it's wide enough to keep well clear of the number's own label; higher, above
-                // that label's row, when it's short (the test page always put it there)
-                let edge = span >= 16 ? y2 - height - 0.5 : y2 - 4.5
-                pic.label("hopw", RoundDecimals.steps(P.near), label.colour(.chapter), .above, edge: edge, along: (sx + end) / 2)
+                let a = min(sx, end), b = max(sx, end)
+                pic.line("hopc", [(a, y2 + 3), (a, y2 + 4), (b, y2 + 4), (b, y2 + 3)], .chapter)
+                pic.label("hopw", RoundDecimals.steps(P.near), label.colour(.chapter), .below, edge: y2 + 4, along: (a + b) / 2)
             }
         }
 

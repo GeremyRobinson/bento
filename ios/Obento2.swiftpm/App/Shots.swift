@@ -71,7 +71,8 @@ enum Shots {
             }
             if name.hasPrefix("howto-") {
                 // howto-<lesson id>[-<taps>]: the real path, not instant: the lesson opens and its How to plays (the ghost
-                // finger making each step's move), Next pressed that many times, a few seconds apart; -numbers as page-
+                // finger making each step's move), Next pressed that many times, each as soon as it shows (a child's
+                // tap while the move still plays does nothing); -numbers as page-
                 let rest = name.dropFirst(6).split(separator: "-")
                 let taps = Int(rest.last ?? "") ?? 0, id = (Int(rest.last ?? "") != nil ? rest.dropLast() : rest[...]).joined(separator: "-")
                 guard let p = Map.pieces.first(where: { $0.id == id }) else { return }
@@ -80,7 +81,11 @@ enum Shots {
                 m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
                 func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
                 m.select(p); await wait(1); m.open(p); await wait(2.5)
-                for _ in 0..<taps { m.bars?.skipHowTo(); await wait(4) }
+                for _ in 0..<taps {
+                    var n = 0
+                    while m.bars?.howTo.howToButtons.isEmpty != false, n < 150 { await wait(0.1); n += 1 }
+                    await wait(0.6); m.bars?.skipHowTo(); await wait(0.4)
+                }
                 return
             }
             if name.hasPrefix("live-") {

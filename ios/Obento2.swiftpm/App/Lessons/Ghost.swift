@@ -5,7 +5,10 @@ import SwiftUI
 /// plays on a copy of the problem, holds a moment, then everything goes back exactly as the child left it; only the
 /// step is counted as shown. The How to plays the same moves on its own problem and keeps them (it does the step).
 struct GhostPlay {
-    enum Mode { case preview, howTo }
+    /// `preview`: Show me, on a copy that's dropped at the end. `howTo`: the How to's own problem, kept, each move doing
+    /// what the child's would (a Cut cuts, a point let go on its end hops there). `keep`: the moves made and kept but not
+    /// checked (screenshots, which check the step themselves).
+    enum Mode { case preview, howTo, keep }
     enum Event { case tap, grab, release, write }
     let id = UUID()
     let mode: Mode
