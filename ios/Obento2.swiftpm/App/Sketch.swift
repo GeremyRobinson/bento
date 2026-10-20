@@ -22,13 +22,17 @@ struct Sketch {
     }
     /// `slot`: words that stay in one place while what they say changes ("2 of 6 done"): when they change, the
     /// characters that differ roll over like a clock's digits instead of being written again.
-    struct Item { let id: String; let kind: Kind; let colour: Colour; var at: Double? = nil; var slot: String? = nil; var pace: Double = 1 }
+    /// `snaps`: a part that changes shape in place (an answer box widening as digits are typed) takes its new shape
+    /// at once instead of being drawn again.
+    struct Item { let id: String; let kind: Kind; let colour: Colour; var at: Double? = nil; var slot: String? = nil; var pace: Double = 1; var snaps = false }
     private(set) var items: [Item] = []
     /// When the parts added from now on start drawing in (a map piece's words with its frame), instead of one after
     /// another from the drawing's start.
     var startAt: Double?
     /// How fast the parts added from now on draw in (1 calm; less is quicker: the solving area, G 19 Oct).
     var pace: Double = 1
+    /// Whether the parts added from now on change shape in place (see Item.snaps).
+    var snaps = false
     static let c = Paper.cell
 
     mutating func line(_ id: String, _ pts: [CGPoint], _ colour: Colour = .ink, width: Double = 2, dashed: Bool = false) {
@@ -68,7 +72,7 @@ struct Sketch {
         }
         return (out, changed)
     }
-    private mutating func add(_ item: Item) { var it = item; it.at = startAt; it.pace = pace; items.append(it) }
+    private mutating func add(_ item: Item) { var it = item; it.at = startAt; it.pace = pace; it.snaps = snaps; items.append(it) }
     /// The same sketch in paper points: moved to `o` and drawn `k` times bigger.
     func transformed(to o: CGPoint, scale k: Double) -> Sketch {
         func P(_ p: CGPoint) -> CGPoint { CGPoint(x: o.x + p.x * k, y: o.y + p.y * k) }
@@ -84,7 +88,7 @@ struct Sketch {
             case .icon(let n, let r): kind = .icon(n, CGRect(origin: P(r.origin), size: CGSize(width: r.width * k, height: r.height * k)))
             case .segments(let segs, let w): kind = .segments(segs.map { (P($0.0), P($0.1)) }, width: w * k)
             }
-            return Item(id: it.id, kind: kind, colour: it.colour, at: it.at, slot: it.slot, pace: it.pace)
+            return Item(id: it.id, kind: kind, colour: it.colour, at: it.at, slot: it.slot, pace: it.pace, snaps: it.snaps)
         }
         return out
     }
@@ -231,6 +235,11 @@ final class SketchDrawer {
         var rolled: [String: Node] = [:]
         for i in fresh { if let slot = s.items[i].slot, let old = nodes.values.first(where: { $0.slot == slot && !$0.undrawing && $0.id != s.items[i].id }), old.shown >= 1 { rolled[s.items[i].id] = old } }
         for old in rolled.values { nodes[old.id] = nil }
+        // a part that changes shape in place takes its new shape at once: its old self goes without undrawing
+        var snapped: Set<String> = []
+        for i in fresh where s.items[i].snaps {
+            if let old = nodes[s.items[i].id], !old.undrawing, old.shown >= 1 { for e in old.parts { e.removeFromParent() }; nodes[old.id] = nil; snapped.insert(old.id) }
+        }
         // what left, or changed, undraws
         let keep = Set(s.items.indices.filter { !fresh.contains($0) }.map { s.items[$0].id })
         let leaving = nodes.values.filter { !keep.contains($0.id) }
@@ -300,8 +309,9 @@ final class SketchDrawer {
             }
             // a part with its own start (a map piece's words) keeps it, unless that's passed: then it draws in now
             let at = item.at.map { max($0, now) } ?? start + Double(order) * gap * item.pace
-            // pace 0: shown at once, as typing shows (G 19 Oct)
-            let node = Node(id: item.id, sig: sigs[i], parts: parts, line: line, start: item.pace == 0 ? now : at, length: item.pace == 0 ? 0 : length)
+            // pace 0, or a part that just changed shape in place: shown at once (G 19 Oct)
+            let atOnce = item.pace == 0 || snapped.contains(item.id)
+            let node = Node(id: item.id, sig: sigs[i], parts: parts, line: line, start: atOnce ? now : at, length: atOnce ? 0 : length)
             node.chars = chars; node.slot = item.slot; node.size = textSize
             nodes[item.id] = node
             if item.at == nil { order += 1 }

@@ -94,10 +94,14 @@ extension Sketch {
     /// A block on the paper (a button, an answer box, a key): its outline strokes on, its fill under it, then its word
     /// (from the left, with an arrow on the right when `arrow`) or its centred number or icon.
     /// `size`: the centred number's size (a key's 30, a typed answer's 26, a choice's words 17).
-    mutating func block(_ id: String, _ r: CGRect, _ b: Block, word: String? = nil, arrow: Bool = false, centred: String? = nil, size: CGFloat = 30, icon: String? = nil, k: Double = 1) {
-        fill("\(id)f\(r)\(b.fill)", r, b.fill)
+    /// `grows`: a box whose width follows what's typed in it: it keeps its outline and takes its new width at once.
+    mutating func block(_ id: String, _ r: CGRect, _ b: Block, word: String? = nil, arrow: Bool = false, centred: String? = nil, size: CGFloat = 30, icon: String? = nil, k: Double = 1, grows: Bool = false) {
+        let place = grows ? "" : "\(r)", was = snaps
+        snaps = grows
+        fill("\(id)f\(place)\(b.fill)", r, b.fill)
         let i = r.insetBy(dx: 0.75 * k, dy: 0.75 * k)
-        line("\(id)o\(r)\(b.stroke)", [CGPoint(x: i.minX, y: i.minY), CGPoint(x: i.maxX, y: i.minY), CGPoint(x: i.maxX, y: i.maxY), CGPoint(x: i.minX, y: i.maxY), CGPoint(x: i.minX, y: i.minY)], b.stroke, width: 1.5 * k)
+        line("\(id)o\(place)\(b.stroke)", [CGPoint(x: i.minX, y: i.minY), CGPoint(x: i.maxX, y: i.minY), CGPoint(x: i.maxX, y: i.maxY), CGPoint(x: i.minX, y: i.maxY), CGPoint(x: i.minX, y: i.minY)], b.stroke, width: 1.5 * k)
+        snaps = was
         if let word { text("\(id)w\(word)", word, at: CGPoint(x: r.minX + 20 * k, y: r.midY), size: Words.block.size * k, weight: .medium, b.text, anchor: UnitPoint(x: 0, y: 0.5), digits: false) }
         if arrow { self.icon("\(id)a", "arrow-right", in: CGRect(x: r.maxX - 30 * k, y: r.midY - 10 * k, width: 20 * k, height: 20 * k), b.text) }
         if let centred { text("\(id)c\(centred)", centred, at: CGPoint(x: r.midX, y: r.midY), size: size * k, weight: .medium, b.text, digits: size > 20) }

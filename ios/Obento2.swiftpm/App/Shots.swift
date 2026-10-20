@@ -39,6 +39,19 @@ enum Shots {
                 for _ in 0..<(Int(name.dropFirst(6)) ?? 0) { m.bars?.skipHowTo(); await wait(2.2) }
                 return
             }
+            if name.hasPrefix("type-") {
+                // typing into the answer box, a digit a second: the box widens by squares, the numbers show at once
+                let id = String(name.dropFirst(5))
+                guard let p = Map.pieces.first(where: { $0.id == id }) else { return }
+                m.instant = true; m.select(p); m.open(p); m.instant = false
+                guard let page = m.bars, let w = page.problems.first as? WorkProblem else { return }
+                page.open(w)
+                func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
+                await wait(3)
+                if let box = w.lesson.step.answer?.boxes.first { w.select(box) }
+                for d in ["1", "2", "3", "4"] { await wait(1); w.type(d) }
+                return
+            }
             if name.hasPrefix("roll-") {
                 // the page of problems, one step of the first problem, and back: its status rolls over like a clock
                 let id = String(name.dropFirst(5))

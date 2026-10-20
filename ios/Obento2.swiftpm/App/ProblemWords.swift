@@ -239,7 +239,7 @@ extension Rig {
                 let typed = l.typed[f]?.replacingOccurrences(of: "-", with: "−")
                 let style: Sketch.Block = m.verdict.map { $0.right ? Sketch.Block(stroke: green, text: green) : Sketch.Block(stroke: red, text: red) }
                     ?? (l.active == f ? .main : .plain)
-                s.block(id + "\(m.verdict.map { $0.right } as Bool?)", r, style, k: k)
+                s.block(id + "\(m.verdict.map { $0.right } as Bool?)", r, style, k: k, grows: true)
                 // what's typed, and the cursor, show at once, as any text box does
                 s.pace = 0
                 if let typed { s.text("\(id)typed\(typed)\(m.verdict.map { $0.right } as Bool?)", typed, at: CGPoint(x: r.midX, y: r.midY), size: 26 * k, weight: .medium, style.text) }
