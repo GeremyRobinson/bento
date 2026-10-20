@@ -32,7 +32,7 @@ struct PaperScreen: View {
                     // wanted; a hardware keyboard types too, and return checks
                     // up by itself whenever the problem being worked wants a number (no tap needed), so a Mac's or
                     // a hardware keyboard types straight away too
-                    let typing = (model.bars?.current as? WorkProblem).flatMap { w in model.bars?.mode == .work && !w.auto && !w.solved && w.lesson.step.answer.map { $0.choices == nil } == true ? w : nil }
+                    let typing = typingProblem
                     NumberEntry(problem: typing, step: typing.map { "\($0.id) \($0.lesson.index)" } ?? "")
                 }
                 .onChange(of: t) { _, now in Perf.frame(now); model.settle(at: now); model.lesson?.settle(at: now) }
@@ -56,6 +56,14 @@ struct PaperScreen: View {
         }
         .ignoresSafeArea()
         }
+    }
+
+    /// The problem being worked that wants a typed number now: a typed step's, or Volume of a box's record.
+    private var typingProblem: (any NumberTyping)? {
+        guard let page = model.bars, page.mode == .work else { return nil }
+        if let w = page.current as? WorkProblem { return !w.auto && !w.solved && w.lesson.step.answer.map { $0.choices == nil } == true ? w : nil }
+        if let c = page.current as? CubesProblem { return c.wantsNumber ? c : nil }
+        return nil
     }
 
     /// The clock only runs while something moves or draws, so a still paper costs nothing.
@@ -119,7 +127,7 @@ struct SystemKeys: UIViewRepresentable {
 /// number keys come up and a Mac's or hardware keyboard types too. It holds a single space: whatever is typed after it
 /// goes to the box, a delete that takes the space is a delete in the box, and it goes back to the space each time.
 struct NumberEntry: View {
-    let problem: WorkProblem?
+    let problem: (any NumberTyping)?
     let step: String
     @State private var text = " "
     @FocusState private var focused: Bool

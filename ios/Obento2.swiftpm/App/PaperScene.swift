@@ -237,18 +237,13 @@ final class Rig {
     // the open lesson
     let lessonRoot = Entity()
     weak var lesson: UnitCubesModel?
-    var shape: (box: UnitCubes.Box, origin: Vec3)?
-    var squares: [UnitCubes.Cell: ModelEntity] = [:]
-    var cubes: [(x: Int, y: Int, z: Int, e: Entity)] = []
-    var outline = Entity()
-    var edges: [ModelEntity] = []
-    /// Cubes still to be made, a few per frame; the box mesh and the edges mesh every cube shares.
-    var pendingCubes: [(Int, Int, Int)] = []
-    var cubeMesh: MeshResource?
-    var edgeMesh: MeshResource?
-    /// Hints on the floor: the empty squares outlined (and tinted), rebuilt when they change.
-    var hints = Entity()
-    var hintKey = ""
+    /// The open 3D lesson's box of cubes (Unit cubes), and each Volume of a box problem's on a lesson's page, with its
+    /// standing words (CubesDrawer, CubesWords).
+    lazy var lessonCubes: CubesDrawer = { let d = CubesDrawer(rig: self); lessonRoot.addChild(d.root); return d }()
+    var problemCubes: [UUID: (cubes: CubesDrawer, words: CubesWords)] = [:]
+    /// The view this frame is seen through, and the screen.
+    var view = PaperView3D()
+    var screen = Size(1180, 820)
     // the flat lesson
     let barsRoot = Entity()
     var drawers: [UUID: BarsDrawer] = [:]
@@ -300,6 +295,7 @@ final class Rig {
     func update(view v: PaperView3D, model: PaperModel, time t: Double, dark: Bool) {
         if dark != self.dark { recolour(dark) }
         let screen = model.screen
+        self.view = v; self.screen = screen
 
         let (dir, _, up) = v.axes
         let target = SIMD3<Float>(Float(v.target.x), Float(v.target.y), Float(v.target.z))
@@ -319,7 +315,7 @@ final class Rig {
         lessonRoot.isEnabled = lesson != nil
 
         // lines keep their screen width at any zoom
-        if lineScale == 0 || abs(v.scale / lineScale - 1) > 0.05 { lineScale = v.scale; gridAt = nil; piecesKey = ""; relines() }
+        if lineScale == 0 || abs(v.scale / lineScale - 1) > 0.05 { lineScale = v.scale; gridAt = nil; piecesKey = "" }
         // enough grid to fill the screen even when tilted, centred on a strong line near the middle
         let half = min(120, Int((hypot(screen.width, screen.height) / 2 / v.scale / sin(.pi / 4)).rounded(.up)) + 3)
         let gx = Int(floor.x.rounded()), gz = Int(floor.z.rounded())
@@ -332,17 +328,8 @@ final class Rig {
         drawSteps(model.steps, at: t)
 
         guard let l = lesson else { return }
-        // the last lesson's pieces are reused when the box is the same; otherwise cleared now, while the new one builds
-        if shape?.box != l.box || shape?.origin != l.origin { Perf.time("cubes-build") { rebuild(l) } }
-        if !pendingCubes.isEmpty { Perf.time("cubes-some") { buildCubes(l, count: l.instant ? .max : 6) } }
-        for (c, e) in squares { let k = Float(max(0.0001, l.square(c, at: t))); e.scale = SIMD3(k, 1, k) }
-        drawHints(l)
-        for c in cubes {
-            let k = l.cube(x: c.x, y: c.y, z: c.z, at: t)
-            c.e.isEnabled = k > 0
-            c.e.scale = SIMD3(1, Float(max(0.0001, k)), 1)
-        }
-        outline.isEnabled = l.tilt(at: t) == 0 && l.layers == 0
+        // the last lesson's box is kept, hidden, and reused when it's the same
+        Perf.time("cubes") { lessonCubes.draw(l, at: t) }
         Perf.time("cubes-words") { drawCubesWords(l, view: v, at: t) }
     }
 
@@ -353,8 +340,7 @@ final class Rig {
         paperHex = dark ? 0x121211 : 0xF3F2EF
         sheet.model?.materials = [flat(colours.paper)]
         problemWords.values.forEach { $0.key = "" }
-        gridAt = nil; piecesKey = ""; shape = nil; stepsKey = ""; drawers.values.forEach { $0.barsKey = "" }
-        relines()
+        gridAt = nil; piecesKey = ""; stepsKey = ""; drawers.values.forEach { $0.barsKey = "" }
     }
 
     // MARK: the paper
@@ -455,7 +441,9 @@ final class Rig {
             sketches = [:]
             drawCards(nil, at: t)
             for w in problemWords.values { w.root.removeFromParent() }
-            problemWords = [:]; return
+            problemWords = [:]
+            for d in problemCubes.values { d.cubes.root.removeFromParent(); d.words.root.removeFromParent() }
+            problemCubes = [:]; return
         }
         let shown = page.all, every = page.all + (page.howToGone ? [] : page.problems)
         pageBuilding = false
@@ -464,6 +452,18 @@ final class Rig {
         // is built when they arrive (building all 17 at once stalled a frame for 170 ms; 16 as they arrived, 80 ms)
         var made = 0
         for m in every {
+            // Volume of a box: its cubes and its standing words, only while it's on the paper
+            if let c = m as? CubesProblem {
+                guard shown.contains(where: { $0 === c }) else { continue }
+                let d = problemCubes[c.id] ?? {
+                    let d = (cubes: CubesDrawer(rig: self), words: CubesWords())
+                    barsRoot.addChild(d.cubes.root); barsRoot.addChild(d.words.root); problemCubes[c.id] = d
+                    return d
+                }()
+                Perf.time("cubes") { d.cubes.draw(c, at: t) }
+                Perf.time("cubes-words") { d.words.draw(c, rig: self, view: view, screen: screen, at: t) }
+                continue
+            }
             if drawers[m.id] == nil && sketches[m.id] == nil {
                 if made >= 1 && !page.instant && m !== page.howTo { pageBuilding = true; continue }
                 made += 1
@@ -478,6 +478,7 @@ final class Rig {
         }
         for (id, d) in drawers where !every.contains(where: { $0.id == id }) { d.root.removeFromParent(); drawers[id] = nil }
         for (id, d) in sketches where !every.contains(where: { $0.id == id }) { d.root.removeFromParent(); sketches[id] = nil }
+        for (id, d) in problemCubes where !shown.contains(where: { $0.id == id }) { d.cubes.root.removeFromParent(); d.words.root.removeFromParent(); problemCubes[id] = nil }
         // an open problem is its own space on the grid, with no frame (G 19 Oct): only the page's cards are outlined
         Perf.time("boxes") { drawBoxes(page, [], at: t) }
         Perf.time("page-words") { drawProblemWords(page, shown, waiting: page.showing || made > 0 ? [] : page.problems, at: t) }
@@ -587,123 +588,6 @@ final class Rig {
         let dot = ModelEntity(mesh: .generatePlane(width: d, depth: d, cornerRadius: d / 2), materials: [flat(chapter)])
         dot.position = SIMD3(Float((o.x + p.x) / u), 0.0016, Float((o.y + p.y) / u))
         stepsRoot.addChild(dot)
-    }
-
-    // MARK: the open lesson
-
-    /// Hints on the floor (LESSONS.md §7): after a miss the empty squares are outlined; after a second, tinted too.
-    private func drawHints(_ l: UnitCubesModel) {
-        let p = l.lesson.picture, b = l.box, o = l.origin
-        let empty = (0..<b.floor).filter { l.lesson.marks[$0] == nil }
-        let key = "\(p["empty"] ?? 0) \(p["tint"] ?? 0) \(empty) \(lineScale)"
-        guard key != hintKey else { return }
-        hintKey = key
-        hints.removeFromParent(); hints = Entity(); lessonRoot.addChild(hints)
-        guard p["empty"] == 1, l.lesson.step.task != nil else { return }
-        let chapter = UIColor(hex: l.chapter.hex), px = Float(1 / lineScale), inset: Float = 0.06
-        var dashes: [(SIMD2<Float>, SIMD2<Float>)] = []
-        for i in empty {
-            let c = UnitCubes.cell(i, in: b), x = Float(o.x) + Float(c.x) + inset, z = Float(o.z) + Float(c.z) + inset, s = 1 - 2 * inset
-            for (a, e) in [(SIMD2(x, z), SIMD2(x + s, z)), (SIMD2(x + s, z), SIMD2(x + s, z + s)), (SIMD2(x + s, z + s), SIMD2(x, z + s)), (SIMD2(x, z + s), SIMD2(x, z))] {
-                let len = simd_length(e - a), d = (e - a) / len
-                var u: Float = 0
-                while u < len { dashes.append((a + d * u, a + d * min(len, u + 0.06))); u += 0.11 }
-            }
-            if p["tint"] == 1 {
-                let f = ModelEntity(mesh: .generatePlane(width: s, depth: s), materials: [flat(UIColor(hex: Ink.mix(paperHex, l.chapter.hex, 0.12)))])
-                f.position = SIMD3(x + s / 2, 0.0002, z + s / 2); hints.addChild(f)
-            }
-        }
-        if let m = Self.lines(dashes, width: Float(Sketch.stroke) * Float(px)) {
-            let e = ModelEntity(mesh: m, materials: [flat(chapter)]); e.position.y = 0.0018; hints.addChild(e)
-        }
-    }
-
-    private func clearLesson() {
-        for c in Array(lessonRoot.children) { c.removeFromParent() }
-        squares = [:]; cubes = []; edges = []; outline = Entity(); hintKey = ""; pendingCubes = []
-    }
-
-    private func rebuild(_ l: UnitCubesModel) {
-        clearLesson()
-        shape = (l.box, l.origin)
-        let b = l.box, o = l.origin
-        let sq = MeshResource.generatePlane(width: 1, depth: 1)
-        for z in 0..<b.width { for x in 0..<b.length {
-            let e = ModelEntity(mesh: sq, materials: [flat(colours.square)])
-            e.position = SIMD3(Float(o.x) + Float(x) + 0.5, 0.0003, Float(o.z) + Float(z) + 0.5)  // under the strong lines, so each big square shows
-            lessonRoot.addChild(e); squares[.init(x, z)] = e
-        } }
-        // the cubes are made a few per frame while the child reads the question, not all at once (it took 130 ms)
-        pendingCubes = []
-        for y in 0..<b.height { for z in 0..<b.width { for x in 0..<b.length { pendingCubes.append((x, y, z)) } } }
-        relines()
-    }
-
-    /// Makes up to `count` of the cubes still to come: each is a group (which rises), its faces, and its edges, whose
-    /// mesh every cube shares.
-    private func buildCubes(_ l: UnitCubesModel, count: Int) {
-        let o = l.origin
-        if cubeMesh == nil { cubeMesh = MeshResource.generateBox(width: 1, height: 1, depth: 1, cornerRadius: 0, splitFaces: true) }
-        if edgeMesh == nil { edgeMesh = Self.cubeEdges(width: Float(Sketch.stroke / lineScale)) }
-        // splitFaces order: front, top, back, bottom, right, left
-        let faces: [any RealityKit.Material] = [colours.front, colours.top, colours.front, colours.top, colours.side, colours.side].map { flat($0) as any RealityKit.Material }
-        for (x, y, z) in pendingCubes.prefix(count) {
-            let g = Entity()
-            g.position = SIMD3(Float(o.x) + Float(x), Float(y), Float(o.z) + Float(z))
-            let m = ModelEntity(mesh: cubeMesh!, materials: faces); m.position = SIMD3(0.5, 0.5, 0.5); g.addChild(m)
-            if let edgeMesh { let e = ModelEntity(mesh: edgeMesh, materials: [flat(colours.deep)]); g.addChild(e); edges.append(e) }
-            g.isEnabled = false
-            lessonRoot.addChild(g); cubes.append((x, y, z, g))
-        }
-        pendingCubes.removeFirst(min(count, pendingCubes.count))
-    }
-
-    /// The 12 edges of a unit cube, as thin bars of the given width, in one mesh.
-    static func cubeEdges(width w: Float) -> MeshResource? {
-        var pos: [SIMD3<Float>] = [], idx: [UInt32] = []
-        let h = w / 2
-        for a in 0..<3 { for i in 0..<2 { for j in 0..<2 {
-            let (u, v) = [(1, 2), (0, 2), (0, 1)][a]
-            var lo = SIMD3<Float>(repeating: 0), hi = SIMD3<Float>(repeating: 0)
-            lo[u] = Float(i) - h; hi[u] = Float(i) + h; lo[v] = Float(j) - h; hi[v] = Float(j) + h; lo[a] = -h; hi[a] = 1 + h
-            let base = UInt32(pos.count)
-            for k in 0..<8 { pos.append(SIMD3(k & 1 == 0 ? lo.x : hi.x, k & 2 == 0 ? lo.y : hi.y, k & 4 == 0 ? lo.z : hi.z)) }
-            // six faces, both windings, so the bar shows from any side
-            for f in [[0, 1, 3, 2], [4, 6, 7, 5], [0, 4, 5, 1], [2, 3, 7, 6], [0, 2, 6, 4], [1, 5, 7, 3]] {
-                let q = f.map { base + UInt32($0) }
-                idx += [q[0], q[1], q[2], q[0], q[2], q[3], q[0], q[2], q[1], q[0], q[3], q[2]]
-            }
-        } } }
-        var desc = MeshDescriptor(name: "edges")
-        desc.positions = MeshBuffers.Positions(pos)
-        desc.primitives = .triangles(idx)
-        return try? MeshResource.generate(from: [desc])
-    }
-
-    /// The lesson's lines at the current zoom: cube edges and the box's dashed floor.
-    private func relines() {
-        guard lineScale > 0 else { return }
-        let px = Float(1 / lineScale)
-        if !edges.isEmpty || edgeMesh != nil {
-            edgeMesh = Self.cubeEdges(width: Float(Sketch.stroke) * Float(px))
-            if let edgeMesh { for e in edges { e.model?.mesh = edgeMesh } }
-        }
-        guard let l = lesson else { return }
-        outline.removeFromParent(); outline = Entity()
-        // the box's floor, dashed, on the paper's strong lines
-        let o = l.origin, b = l.box, L = Float(b.length), W = Float(b.width)
-        let ox = Float(o.x), oz = Float(o.z)
-        var dashes: [(SIMD2<Float>, SIMD2<Float>)] = []
-        for (a, c) in [(SIMD2(ox, oz), SIMD2(ox + L, oz)), (SIMD2(ox + L, oz), SIMD2(ox + L, oz + W)), (SIMD2(ox + L, oz + W), SIMD2(ox, oz + W)), (SIMD2(ox, oz + W), SIMD2(ox, oz))] {
-            let len = simd_length(c - a), dirn = (c - a) / len
-            var s: Float = 0
-            while s < len { dashes.append((a + dirn * s, a + dirn * min(len, s + 0.08))); s += 0.14 }
-        }
-        if let m = Self.lines(dashes, width: Float(Sketch.stroke) * Float(px)) {
-            let e = ModelEntity(mesh: m, materials: [flat(colours.deep)]); e.position.y = 0.002; outline.addChild(e)
-        }
-        lessonRoot.addChild(outline)
     }
 
     /// Filled rectangles on the paper (paper points), one quad each, facing up.

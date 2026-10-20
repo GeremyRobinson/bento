@@ -210,7 +210,13 @@ enum Shots {
                 let k = Int(parts.last ?? "") ?? -1, named = (k >= 0 ? parts.dropLast() : parts[...]).joined(separator: "-")
                 let id = String(named.split(separator: "@").first ?? ""), which = Int(named.split(separator: "@").dropFirst().first ?? "") ?? 0
                 guard let p = Map.pieces.first(where: { $0.id == id }) else { return }
+                // -howto N: its How to, taught a tap at a time (CubesProblem.swift)
+                if args.contains("-howto") { await howToTaps(m, p, args: args); return }
                 m.select(p); m.open(p)
+                // Volume of a box: worked by the hands (CubesProblem.swift)
+                if let page = m.bars, page.problems.indices.contains(which), let c = page.problems[which] as? CubesProblem {
+                    await cubes(m, page, c, stage: k, args: args); return
+                }
                 guard let page = m.bars, page.problems.indices.contains(which), let w = page.problems[which] as? WorkProblem else { return }
                 // -numbers a=1,b=2,…: that problem with these numbers (the lesson's own worked-out ones added by its spec);
                 // -story: told as its story

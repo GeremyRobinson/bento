@@ -83,6 +83,7 @@ enum ProblemLayout {
     /// The blocks a problem shows now, in paper points: its choices, and Check (Show me and Start over are in the bar).
     /// The How to plays itself and has none; a solved problem has none.
     static func blocks(_ m: any PageProblem) -> [Block] {
+        if let c = m as? CubesProblem { return c.blocks }
         if let wp = m as? WorkProblem, wp.layout.inline { return inlineBlocks(wp) }
         let l = m.lesson, wp = m as? WorkProblem
         let o = wp?.contentOrigin ?? m.origin, k = wp?.scale ?? 1, sx = wp?.layout.stepX ?? 0

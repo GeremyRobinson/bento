@@ -118,9 +118,12 @@ final class BarsPage {
     /// The problem a lesson's page holds: the fraction bars for Add with different bottoms, else typed steps with
     /// the lesson's picture.
     static func make(_ spec: LessonSpec, origin: Point, chapter: Chapter, instant: Bool, run: LessonRun, label: String, auto: Bool = false) -> any PageProblem {
-        spec.master == "bars"
-            ? AddFractionsModel(origin: origin, chapter: chapter, instant: instant, run: run, label: label, auto: auto)
-            : WorkProblem(origin: origin, chapter: chapter, instant: instant, run: run, label: label, auto: auto)
+        switch spec.master {
+        case "bars": return AddFractionsModel(origin: origin, chapter: chapter, instant: instant, run: run, label: label, auto: auto)
+        // Volume of a box: Unit cubes' box, covered, risen and stacked (G 20 Oct: anything 3D builds on Unit cubes)
+        case "cubes": return CubesProblem(origin: origin, chapter: chapter, instant: instant, run: run, label: label, auto: auto)
+        default: return WorkProblem(origin: origin, chapter: chapter, instant: instant, run: run, label: label, auto: auto)
+        }
     }
 
     /// The How to has played and erased itself.
@@ -514,6 +517,7 @@ final class BarsPage {
             let k = plan.items[...i].filter { $0.part == it.part }.count
             (m as? WorkProblem)?.label = it.part == .together ? "Together \(k)" : "On your own \(k)"
             (m as? AddFractionsModel)?.label = it.part == .together ? "Together \(k)" : "On your own \(k)"
+            (m as? CubesProblem)?.label = it.part == .together ? "Together \(k)" : "On your own \(k)"
             return m
         }
     }

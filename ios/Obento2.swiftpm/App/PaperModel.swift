@@ -189,8 +189,27 @@ final class PaperModel {
     var shotNumbers: Numbers?
 
     func camera(at t: Double) -> PaperCamera { flight?.camera(at: t, screen: screen) ?? resting }
-    /// The one camera the paper's scene is seen through: the open lesson's, or the flat paper's from straight above.
-    func view(at t: Double) -> PaperView3D { lesson?.view(at: t) ?? .matching(camera(at: t), screen: screen) }
+    /// The one camera the paper's scene is seen through: the open 3D lesson's (Unit cubes), a problem's on a lesson's
+    /// page while it stands tilted (Volume of a box), or the flat paper's from straight above.
+    func view(at t: Double) -> PaperView3D {
+        if let l = lesson { return l.view(at: t) }
+        let flat = PaperView3D.matching(camera(at: t), screen: screen)
+        // what a tilt starts from and fits into: the flat view, the screen, and the room the bar (or the keyboard) takes
+        TiltCamera.flatNow = flat; TiltCamera.screen = screen
+        TiltCamera.top = Self.chrome.top; TiltCamera.bottom = max(Self.chrome.bottom, keyboard + 16)
+        guard let o = TiltCamera.owner else { return flat }
+        // a problem that's no longer on the page (its How to played straight through, the lesson closed) lies flat again
+        if !(bars?.all.contains { $0 === o } ?? false) { o.lieFlat() }
+        guard let v = o.view(at: t, flat: flat) else { if !o.holdsCamera { TiltCamera.owner = nil }; return flat }
+        return v
+    }
+
+    /// Where a point on the screen lands on the paper: through the tilted problem's view while the paper stands tilted
+    /// (a tap on one of its blocks or on its box; the paper under a dragging finger), else through the flat camera.
+    private func paperPoint(_ s: Point, tap: Bool = false) -> Point {
+        if lesson == nil, let o = TiltCamera.owner, let p = tap ? o.tapPoint(s) : o.dragPoint(s) { return p }
+        return camera(at: PaperClock.now).toPaper(s)
+    }
     var moving: Bool { flight != nil }
 
     func settle(at t: Double) { if let f = flight, f.done(at: t) { resting = f.to; flight = nil } }
@@ -204,18 +223,25 @@ final class PaperModel {
 
     func stop() { let c = camera(at: PaperClock.now); flight = nil; resting = c }
 
-    func pan(_ dx: Double, _ dy: Double) { stop(); resting = resting.panned(by: dx, dy) }
+    func pan(_ dx: Double, _ dy: Double) {
+        // tilted, a drag turns the tilted view, not the flat paper under it
+        if lesson == nil, TiltCamera.owner?.pan(dx, dy) == true { return }
+        stop(); resting = resting.panned(by: dx, dy)
+    }
 
     /// A drag that starts on something the open problem lets the child move goes to the problem (a hand move); any
     /// other drag pans the paper.
     private(set) var handDrag = false
     func dragStart(at s: Point) {
         guard !leaving, let m = bars?.current else { handDrag = false; return }
-        handDrag = m.grab(camera(at: PaperClock.now).toPaper(s))
+        handDrag = m.grab(paperPoint(s))
     }
-    func dragMove(to s: Point) { bars?.current?.drag(to: camera(at: PaperClock.now).toPaper(s)) }
+    func dragMove(to s: Point) { bars?.current?.drag(to: paperPoint(s)) }
     func dragEnd() { if handDrag { bars?.current?.release() }; handDrag = false }
-    func zoom(by f: Double, at p: Point) { stop(); resting = resting.zoomed(by: f, at: p); pinchedAt = PaperClock.now }
+    func zoom(by f: Double, at p: Point) {
+        if lesson == nil, TiltCamera.owner?.pinch(f) == true { pinchedAt = PaperClock.now; return }
+        stop(); resting = resting.zoomed(by: f, at: p); pinchedAt = PaperClock.now
+    }
     /// When the paper was last pinched: the bar shows the zoom for a moment.
     var pinchedAt: Double = -100
 
@@ -279,7 +305,7 @@ final class PaperModel {
 
     func tap(at s: Point) {
         guard !leaving else { return }
-        let p = camera(at: PaperClock.now).toPaper(s)
+        let p = paperPoint(s, tap: true)
         if let b = bars {
             b.tap(p); return
         }
