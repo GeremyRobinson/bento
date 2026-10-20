@@ -26,7 +26,6 @@ enum LessonPictures {
         case "g5-mult2": return multiplyGrid(n, a: Int(v("a")), b: Int(v("b")), split: k("split") == 1, strip: Int(k("strip")), found: Int(k("found")), sum: k("sum") == 1, box: k("box") == 1)
         case "g5-divide": return divideGrid(dv: Int(v("dv")), qt: Int(v("qt")), strip: Int(k("strip")), found: Int(k("found")), left: k("left") == 1, sum: k("sum") == 1, box: k("box") == 1)
         case "g5-order": return with(orderGrid(n, beat: Int(k("beat"))))
-        case "g5-pow10": return with(powersGrid(x: v("x"), k: Int(v("k")), hop: k("hop") == 1))
         case "g5-adddec": return with(addDecimalsGrid(a: v("a"), b: v("b"), p))
         case "g5-multdec": return with(multiplyDecimalsGrid(n, p))
         case "g5-divdec": return with(divideDecimalGrid(d: Int(v("d")), qt: Int(v("qt")), p))
@@ -58,9 +57,6 @@ enum LessonPictures {
             return [("Split \(b) into \(ps.map(String.init).joined(separator: " and ")). Each part makes a strip.", ["split": 1])]
         case "g5-divide":
             return [("Take out tens of \(Int(v("dv"))) first. They fill the big strip.", ["strip": 1])]
-        case "g5-pow10":
-            let k = Int(v("k"))
-            return [("Each zero makes every digit 10 times bigger. The point hops \(k == 1 ? "1 place" : "\(k) places") right.", ["zeros": 1, "hop": 1])]
         case "g5-adddec":
             return [("Line up the points. Tenths go under tenths.", ["lineUp": 1, "lit": 0])]
         default: return []
@@ -239,43 +235,6 @@ enum LessonPictures {
         let line = hops ? "\(d * qt) ÷ \(d) = \(qt), and \(fmt(Double(d * qt) / 10)) ÷ \(fmt(Double(d) / 10)) = \(qt)"
             : all ? "\(fmt(Double(d * qt) / 10)) × 10 = \(d * qt)" : one ? "\(fmt(Double(d) / 10)) × 10 = \(d)" : nil
         if let line { wk.word("line\(line)", line, at: x0, 18, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink), anchor: UnitPoint(x: 0, y: 0.5)) }
-        return (pen.sketch, wk.sketch)
-    }
-
-    // MARK: multiply by 10, 100, 1000
-
-    /// 3.47 × 100 on a place-value chart of whole blocks: a column a block wide for each place, the digits in their
-    /// columns, the point on the grid line between ones and tenths. The answer under it, its point hopped a block for
-    /// each zero, every digit worth ten times more for each, a written-in 0 in each empty place.
-    static func powersGrid(x: Double, k: Int, hop: Bool) -> (picture: Sketch, work: Sketch) {
-        var pen = GridPen()
-        var wk = GridPen()
-        let names = ["thousands", "hundreds", "tens", "ones", "tenths", "hundredths"], cw = 5.0
-        let head = Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink3), big = Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink)
-        for (i, n) in names.enumerated() {
-            pen.word("h\(i)", n, at: (Double(i) + 0.5) * cw, 1, head)
-            if i > 0 { pen.sketch.line("c\(i)", [pen.P(Double(i) * cw, 2), pen.P(Double(i) * cw, 15)], .line, width: 1) }
-        }
-        let pointX = 4 * cw
-        func row(_ id: String, _ value: Double, at r: Double, written: Int = 0) {
-            let (dg, whole) = PowersOfTen.digits(value)
-            for (i, ch) in dg.enumerated() {
-                let col = 4 - whole + i
-                guard col >= 0, col < names.count else { continue }
-                let isWritten = i >= dg.count - written
-                if isWritten { pen.sketch.plate("\(id)z\(i)", pen.R(Double(col) * cw + 1, r - 1.5, 3, 3), .tint(0.3)) }
-                pen.word("\(id)\(i)\(ch)", String(ch), at: (Double(col) + 0.5) * cw, r, big.colour(isWritten ? .chapter : .ink))
-            }
-            if dg.count > whole { pen.word("\(id).", ".", at: pointX, r + 0.6, Sketch.Words(size: Sketch.maths, weight: .bold, colour: .ink)) }
-        }
-        row("a", x, at: 5)
-        pen.label("m", "× \(fmt(pow(10, Double(k))))", Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .chapter), .right, edge: 6 * cw, along: 5)
-        if hop {
-            let ans = x * pow(10, Double(k)), (dg, w) = PowersOfTen.digits(x), (ag, _) = PowersOfTen.digits(ans)
-            row("b", ans, at: 11, written: max(0, ag.count - dg.count))
-            _ = w
-            for j in 0..<k { pen.hop("hop\(j)", from: pointX + Double(j) * cw, to: pointX + Double(j + 1) * cw, row: 7, height: 1.2) }
-        }
         return (pen.sketch, wk.sketch)
     }
 
