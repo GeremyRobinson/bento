@@ -158,12 +158,10 @@ final class SketchDrawer {
             case .text(let str, let p, let size, let weight, let anchor, let digits):
                 // written a letter at a time: each letter its own piece, where it sits in the whole line
                 let f = PaperText.font(size * k, weight, digits: digits), at = P(p), w = PaperText.width(str, f)
-                let left = at.x - anchor.x * w
-                var prefix = ""
-                for ch in str {
-                    defer { prefix.append(ch) }
+                let left = at.x - anchor.x * w, offsets = PaperText.offsets(str, f)
+                for (j, ch) in str.enumerated() {
                     if ch == " " { continue }
-                    let x = left + PaperText.width(prefix, f)
+                    let x = left + offsets[j]
                     parts.append(PaperText.label(String(ch), f, colour(item.colour), at: CGPoint(x: x, y: at.y), anchor: UnitPoint(x: 0, y: anchor.y), y: 0.0024 + lift))
                 }
                 length = min(0.7, 0.18 + Double(parts.count) * Self.letter)

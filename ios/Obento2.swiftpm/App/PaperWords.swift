@@ -40,6 +40,18 @@ enum PaperText {
         }
     }
 
+    /// Where each character of a line starts, as the font sets the whole line (its kerning included), so letters drawn
+    /// one at a time sit exactly where the whole word would put them.
+    static func offsets(_ s: String, _ f: UIFont) -> [Double] {
+        let line = CTLineCreateWithAttributedString(NSAttributedString(string: s, attributes: [.font: f]))
+        var out: [Double] = [], i = 0
+        for ch in s {
+            out.append(Double(CTLineGetOffsetForStringIndex(line, i, nil)))
+            i += String(ch).utf16.count
+        }
+        return out
+    }
+
     static func width(_ s: String, _ f: UIFont) -> Double { Double((s as NSString).size(withAttributes: [.font: f]).width) }
 
 
