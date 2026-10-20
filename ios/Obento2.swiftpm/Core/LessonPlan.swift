@@ -45,14 +45,28 @@ public struct LessonPlan: Codable, Equatable, Sendable {
     /// Own problems made so far, for the generator (later ones are harder) and every third one told as a story.
     private var made = 0
 
-    public init(_ spec: LessonSpec, using rng: inout SeededRandom) {
-        items = (0..<Self.together).map { i in Item(part: .together, numbers: spec.generate(&rng, i), story: false) }
-        for _ in 0..<Self.own { items.append(Self.ownItem(spec, made, using: &rng)); made += 1 }
+    /// `shown`: the problems the child saw just before the page (its How to's), so none of the page's is the same again.
+    public init(_ spec: LessonSpec, after shown: [Numbers] = [], using rng: inout SeededRandom) {
+        items = []
+        for i in 0..<Self.together {
+            items.append(Item(part: .together, numbers: Self.draw(spec, i, besides: shown + items.map(\.numbers), using: &rng), story: false))
+        }
+        for _ in 0..<Self.own { items.append(Self.ownItem(spec, made, besides: shown + items.map(\.numbers), using: &rng)); made += 1 }
     }
 
-    private static func ownItem(_ spec: LessonSpec, _ k: Int, focus: Focus? = nil, using rng: inout SeededRandom) -> Item {
+    /// Fresh numbers for a problem at this place (the generator's index) that the page hasn't got: drawn again while
+    /// they're one of `page`'s problems (the review of 20 Oct: Together 1 and Together 2 were both 2 2/3, and a child
+    /// reads the same problem twice as broken). Every problem on the page is different, unless the lesson has so few at
+    /// this level that 32 draws find none new, when the last one stands.
+    static func draw(_ spec: LessonSpec, _ index: Int, besides page: [Numbers], using rng: inout SeededRandom) -> Numbers {
+        var n = spec.generate(&rng, index)
+        for _ in 0..<32 where page.contains(n) { n = spec.generate(&rng, index) }
+        return n
+    }
+
+    private static func ownItem(_ spec: LessonSpec, _ k: Int, focus: Focus? = nil, besides page: [Numbers], using rng: inout SeededRandom) -> Item {
         // a problem aimed at a slip is told plainly, so its steps line up with the one that went wrong
-        let n = spec.generate(&rng, Self.together + min(k, 6))
+        let n = draw(spec, Self.together + min(k, 6), besides: page, using: &rng)
         return Item(part: .own, numbers: n, story: focus == nil && spec.story != nil && k % 3 == 2,
                     focus: focus.map { Focus(step: $0.step, said: advice(spec, n, step: $0.step), teach: $0.teach) })
     }
@@ -81,7 +95,8 @@ public struct LessonPlan: Codable, Equatable, Sendable {
     public mutating func renew(_ i: Int, _ spec: LessonSpec, using rng: inout SeededRandom) {
         guard items.indices.contains(i) else { return }
         let k = items[...i].filter { $0.part == items[i].part }.count - 1
-        let n = spec.generate(&rng, items[i].part == .together ? min(k, Self.together - 1) : Self.together + min(k, 6))
+        // fresh: none of the page's problems, its own old one included
+        let n = Self.draw(spec, items[i].part == .together ? min(k, Self.together - 1) : Self.together + min(k, 6), besides: items.map(\.numbers), using: &rng)
         items[i].numbers = n
         items[i].story = false
         items[i].focus = items[i].focus.map { Focus(step: $0.step, said: Self.advice(spec, n, step: $0.step), teach: $0.teach) }
@@ -151,7 +166,7 @@ public struct LessonPlan: Codable, Equatable, Sendable {
             guard i == together.last, usedShowMe(i, run.shown, lead: run.lead), extra < Self.moreTogether else { return [] }
             extra += 1
             let at = (together.last ?? 0) + 1
-            items.insert(Item(part: .together, numbers: spec.generate(&rng, 1), story: false), at: at)
+            items.insert(Item(part: .together, numbers: Self.draw(spec, 1, besides: items.map(\.numbers), using: &rng), story: false), at: at)
             return [at]
         case .own:
             if run.missedAny, let first = run.slips.first {
@@ -159,12 +174,12 @@ public struct LessonPlan: Codable, Equatable, Sendable {
                 // the slip seen most often is the one to aim at
                 let worst = run.slips.max { (slips[$0.key] ?? 0) < (slips[$1.key] ?? 0) } ?? first
                 let focus = Focus(step: worst.step, said: worst.said, teach: (slips[worst.key] ?? 0) >= 2)
-                items.append(Self.ownItem(spec, made, focus: focus, using: &rng)); made += 1
+                items.append(Self.ownItem(spec, made, focus: focus, besides: items.map(\.numbers), using: &rng)); made += 1
                 return [items.count - 1]
             }
             // done with Show me (or a miss with nothing said about it): it doesn't count, so another takes its place
             guard run.missedAny || usedShowMe(i, run.shown, lead: run.lead) else { return [] }
-            items.append(Self.ownItem(spec, made, using: &rng)); made += 1
+            items.append(Self.ownItem(spec, made, besides: items.map(\.numbers), using: &rng)); made += 1
             return [items.count - 1]
         }
     }
@@ -176,7 +191,7 @@ public struct LessonPlan: Codable, Equatable, Sendable {
         var added: [Int] = []
         for run in recheck where run.missedAny {
             let focus = run.slips.first.map { Focus(step: $0.step, said: $0.said, teach: false) }
-            var item = Self.ownItem(spec, made, focus: focus, using: &rng); made += 1
+            var item = Self.ownItem(spec, made, focus: focus, besides: items.map(\.numbers), using: &rng); made += 1
             item.goOver = true
             items.append(item)
             added.append(items.count - 1)
@@ -222,17 +237,20 @@ public struct LessonPlan: Codable, Equatable, Sendable {
     /// A fresh test of `count` problems, no help and one try each, from the lessons' own check recipes, the lessons
     /// taken in turn: a lesson's test (one lesson), a chapter's (its lessons) or the grade's.
     public static func testRuns(_ specs: [LessonSpec], count: Int = test, using rng: inout SeededRandom) -> [LessonRun] {
-        (0..<count).compactMap { testRun(specs, $0, using: &rng) }
+        var runs: [LessonRun] = []
+        for i in 0..<count { if let r = testRun(specs, i, besides: runs.map(\.numbers), using: &rng) { runs.append(r) } }
+        return runs
     }
     /// A lesson's own test: 12 of its problems.
     public static func testRuns(_ spec: LessonSpec, using rng: inout SeededRandom) -> [LessonRun] { testRuns([spec], using: &rng) }
 
-    /// Problem `i` of a test of these lessons: from lesson `i` in turn, the next item of its check recipe.
-    public static func testRun(_ specs: [LessonSpec], _ i: Int, using rng: inout SeededRandom) -> LessonRun? {
+    /// Problem `i` of a test of these lessons: from lesson `i` in turn, the next item of its check recipe, and none of
+    /// the problems the test has asked already (`asked`).
+    public static func testRun(_ specs: [LessonSpec], _ i: Int, besides asked: [Numbers] = [], using rng: inout SeededRandom) -> LessonRun? {
         guard !specs.isEmpty else { return nil }
         let spec = specs[i % specs.count], k = i / specs.count
         let item = spec.check.isEmpty ? CheckItem(3) : spec.check[k % spec.check.count]
-        var r = LessonRun(spec, numbers: item.draw(spec, using: &rng), story: item.story && spec.story != nil)
+        var r = LessonRun(spec, numbers: item.draw(spec, besides: asked, using: &rng), story: item.story && spec.story != nil)
         r.helps = false; r.oneTry = true
         r.skipAsk()
         return r

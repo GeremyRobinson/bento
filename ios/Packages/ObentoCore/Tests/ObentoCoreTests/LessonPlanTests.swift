@@ -307,6 +307,43 @@ final class LessonPlanTests: XCTestCase {
         XCTAssertEqual(plan.items.count, 9)
     }
 
+    /// No problem twice on a page (the review of 20 Oct: Together 1 and Together 2 were both 2 2/3). Mixed numbers' first
+    /// three come from a small pool (1 or 2 wholes, halves to fifths: 18 problems), so plain draws repeat among them on
+    /// about 1 page in 5, and on about 1 in 3 counting the How to's problem. Each problem is drawn again while the page
+    /// has it already (the How to's too), and so is each one the page adds later, and each of a test's 12.
+    func testNoProblemTwiceOnAPage() {
+        let spec = MixedToImproper.spec
+        var plainRepeats = 0
+        for seed in 0..<300 {
+            // the page as BarsPage makes it: the How to's problem, then the plan
+            var rng = SeededRandom(seed: UInt64(seed))
+            let howTo = spec.generate(&rng, 0)
+            var plan = LessonPlan(spec, after: [howTo], using: &rng)
+            // the same draws without drawing again: how often the page would have repeated itself
+            var raw = SeededRandom(seed: UInt64(seed))
+            let plain = [spec.generate(&raw, 0)] + (0..<3).map { spec.generate(&raw, $0) }
+            if Set(plain).count < plain.count { plainRepeats += 1 }
+
+            var seen = [howTo] + plan.items.map(\.numbers)
+            XCTAssertEqual(Set(seen).count, seen.count, "seed \(seed): \(seen)")
+            // what the page adds: a fourth together problem after Show me, a fresh own one for one Show me helped
+            var runs = plan.items.indices.map { plan.run(spec, $0) }
+            func showMe(_ i: Int) { while !runs[i].isLast { if runs[i].step.answer != nil { _ = runs[i].showAnswer() }; _ = runs[i].go() } }
+            showMe(2)
+            XCTAssertEqual(plan.solved(2, runs[2], spec, using: &rng), [3])
+            runs = plan.items.indices.map { plan.run(spec, $0) }
+            showMe(4)
+            XCTAssertEqual(plan.solved(4, runs[4], spec, using: &rng), [10])
+            plan.renew(5, spec, using: &rng)
+            seen = plan.items.map(\.numbers)
+            XCTAssertEqual(Set(seen).count, seen.count, "seed \(seed): \(seen)")
+            // a test's 12
+            let test = LessonPlan.testRuns(spec, using: &rng).map(\.numbers)
+            XCTAssertEqual(Set(test).count, 12, "seed \(seed): \(test)")
+        }
+        XCTAssertGreaterThan(plainRepeats, 30, "plain draws repeat often enough that the test shows the redraw at work")
+    }
+
     /// A problem aimed at a slip that's made again keeps its aim, with its advice for its fresh numbers.
     func testRenewKeepsTheAim() {
         var rng = SeededRandom(seed: 18)
