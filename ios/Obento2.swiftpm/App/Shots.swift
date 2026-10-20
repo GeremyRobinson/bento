@@ -39,6 +39,21 @@ enum Shots {
                 for _ in 0..<(Int(name.dropFirst(6)) ?? 0) { m.bars?.skipHowTo(); await wait(2.2) }
                 return
             }
+            if name.hasPrefix("roll-") {
+                // the page of problems, one step of the first problem, and back: its status rolls over like a clock
+                let id = String(name.dropFirst(5))
+                guard let p = Map.pieces.first(where: { $0.id == id }) else { return }
+                PageStore.clear(id)
+                m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
+                func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
+                m.select(p); await wait(1); m.open(p); await wait(2)
+                for _ in 0..<10 { m.bars?.skipHowTo(); await wait(1.3) }
+                guard let page = m.bars, let w = page.problems.first as? WorkProblem else { return }
+                await wait(2); page.open(w); await wait(3)
+                w.showMe(); await wait(0.5); w.go(); await wait(2)
+                page.backToProblems()
+                return
+            }
             if name.hasPrefix("live-") {
                 // the real path, not instant, to watch things draw in and the camera follow: the How to tapped through,
                 // the first problem opened, its answer box tapped, a step worked

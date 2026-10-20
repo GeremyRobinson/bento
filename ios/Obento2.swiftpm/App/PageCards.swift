@@ -15,7 +15,8 @@ extension Rig {
         if page.mode == .choose, page.cardsGoneAt == nil {
             // wanted: a fresh drawer if the last one undrew, then only what changed draws in
             if cardsDrawer?.leftAt != nil { cardsDrawer?.root.removeFromParent(); cardsDrawer = nil }
-            let d = cardsDrawer ?? { let d = SketchDrawer(); cardsRoot.addChild(d.root); cardsDrawer = d; return d }()
+            // the page of problems is passed through on the way to a problem: it draws in about twice as fast
+            let d = cardsDrawer ?? { let d = SketchDrawer(); d.pace = 0.45; cardsRoot.addChild(d.root); cardsDrawer = d; return d }()
             let isDark = dark ?? false, cards = page.cards
             let key = cards.map { "\($0.title)\($0.line)\($0.state)\($0.rect.x)\($0.rect.y)" }.joined() + page.headings.map(\.1).joined() + "\(isDark)"
             if key != d.key {
@@ -31,7 +32,8 @@ extension Rig {
     private func cardsSketch(_ page: BarsPage, _ cards: [BarsPage.Card]) -> Sketch {
         var s = Sketch()
         // the headings first, so each part's name draws in before its cards
-        for (p, words) in page.headings { s.words("head", words, .heading, x: p.x, top: p.y - Sketch.row / 2, width: 1200) }
+        let lesson = page.piece.id
+        for (n, (p, words)) in page.headings.enumerated() { s.words("head", words, .heading, x: p.x, top: p.y - Sketch.row / 2, width: 1200, slot: "\(lesson)head\(n)") }
         for c in cards {
             let r = CGRect(x: c.rect.x, y: c.rect.y, width: c.rect.width, height: c.rect.height), id = "card\(c.index ?? -1)"
             // a lesson thumbnail's frame and tab, the problem centred in it, its name and status under it
@@ -40,7 +42,7 @@ extension Rig {
             if let d = c.display { s.sum(id + "sum", d, at: CGPoint(x: r.midX, y: r.midY), size: 34, centred: true) }
             else { s.label(id + "twelve", "12 problems", Sketch.Words(size: 30, weight: .medium, colour: c.state == .locked ? .ink3 : .ink), at: CGPoint(x: r.midX, y: r.midY), anchor: .center) }
             s.label(id + "name", c.title, .label, at: CGPoint(x: r.minX, y: r.maxY + 28))
-            s.label(id + "line", c.line, Sketch.Words.status.colour(c.state == .done || c.state == .now ? .chapter : c.state == .missed ? .ink : .ink3), at: CGPoint(x: r.minX, y: r.maxY + 50))
+            s.label(id + "line", c.line, Sketch.Words.status.colour(c.state == .done || c.state == .now ? .chapter : c.state == .missed ? .ink : .ink3), at: CGPoint(x: r.minX, y: r.maxY + 50), slot: lesson + id + "line")
         }
         return s
     }

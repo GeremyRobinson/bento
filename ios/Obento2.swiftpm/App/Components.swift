@@ -38,18 +38,19 @@ extension Sketch {
     /// Words in rows of squares from `top`, each line centred in its row and starting on `x`, wrapped to `width`;
     /// `k` draws them bigger (a big problem). Returns how many rows.
     @discardableResult
-    mutating func words(_ id: String, _ text: String, _ w: Words, x: Double, top: Double, width: Double, max: Int = 1, k: Double = 1) -> Int {
+    mutating func words(_ id: String, _ text: String, _ w: Words, x: Double, top: Double, width: Double, max: Int = 1, k: Double = 1, slot: String? = nil) -> Int {
         let lines = Array(PaperText.wrap(text, PaperText.font(w.size * k, w.weight), width: width).prefix(max))
         for (i, line) in lines.enumerated() {
             self.text("\(id)\(i):\(line)", line, at: CGPoint(x: x, y: top + (Double(i) + 0.5) * Self.row * k), size: w.size * k, weight: w.weight, w.colour,
-                      anchor: UnitPoint(x: 0, y: 0.5), digits: false)
+                      anchor: UnitPoint(x: 0, y: 0.5), digits: false, slot: slot.map { "\($0)\(i)" })
         }
         return lines.count
     }
 
     /// One line of words with its baseline at `at` (a thumbnail's name and status under its frame).
-    mutating func label(_ id: String, _ text: String, _ w: Words, at p: CGPoint, anchor: UnitPoint = UnitPoint(x: 0, y: 1)) {
-        self.text("\(id):\(text)", text, at: p, size: w.size, weight: w.weight, w.colour, anchor: anchor, digits: false)
+    /// `slot`: when what it says changes, its characters roll over in place (a count, a status).
+    mutating func label(_ id: String, _ text: String, _ w: Words, at p: CGPoint, anchor: UnitPoint = UnitPoint(x: 0, y: 1), slot: String? = nil) {
+        self.text("\(id):\(text)", text, at: p, size: w.size, weight: w.weight, w.colour, anchor: anchor, digits: true, slot: slot)
     }
 
     /// A problem's sum as written at the top of the problem and on its card: one line of big numbers starting exactly

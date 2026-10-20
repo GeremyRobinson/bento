@@ -20,7 +20,9 @@ struct Sketch {
         /// A line over plates (a seal's ring or tick).
         case overLine([CGPoint], width: Double)
     }
-    struct Item { let id: String; let kind: Kind; let colour: Colour; var at: Double? = nil }
+    /// `slot`: words that stay in one place while what they say changes ("2 of 6 done"): when they change, the
+    /// characters that differ roll over like a clock's digits instead of being written again.
+    struct Item { let id: String; let kind: Kind; let colour: Colour; var at: Double? = nil; var slot: String? = nil }
     private(set) var items: [Item] = []
     /// When the parts added from now on start drawing in (a map piece's words with its frame), instead of one after
     /// another from the drawing's start.
@@ -39,8 +41,8 @@ struct Sketch {
     }
     mutating func polygon(_ id: String, _ pts: [CGPoint], _ colour: Colour) { add(Item(id: id, kind: .fill(pts), colour: colour)) }
     mutating func text(_ id: String, _ s: String, at p: CGPoint, size: CGFloat = 20, weight: UIFont.Weight = .medium, _ colour: Colour = .ink,
-                       anchor: UnitPoint = .center, digits: Bool = true) {
-        add(Item(id: id, kind: .text(s, p, size: size, weight: weight, anchor: anchor, digits: digits), colour: colour))
+                       anchor: UnitPoint = .center, digits: Bool = true, slot: String? = nil) {
+        add(Item(id: id, kind: .text(s, p, size: size, weight: weight, anchor: anchor, digits: digits), colour: colour, slot: slot))
     }
     mutating func icon(_ id: String, _ name: String, in r: CGRect, _ colour: Colour = .ink) { add(Item(id: id, kind: .icon(name, r), colour: colour)) }
     mutating func segments(_ id: String, _ segs: [(CGPoint, CGPoint)], _ colour: Colour, width: Double) {
@@ -53,6 +55,17 @@ struct Sketch {
     /// A shape that sits over the lines (a test's seal on its frame's corner).
     mutating func plate(_ id: String, _ pts: [CGPoint], _ colour: Colour) { add(Item(id: id, kind: .plate(pts), colour: colour)) }
     mutating func append(_ other: Sketch) { items += other.items }
+    /// The same sketch with its slots saying what they said before (`was`), and whether any of them differs.
+    func withSlots(_ was: [String: String]) -> (sketch: Sketch, changed: Bool) {
+        var out = self, changed = false
+        out.items = items.map { it in
+            guard let slot = it.slot, let old = was[slot], case .text(let t, let p, let size, let weight, let anchor, let digits) = it.kind, t != old else { return it }
+            changed = true
+            let base = it.id.hasSuffix(":\(t)") ? String(it.id.dropLast(t.count + 1)) : it.id
+            return Item(id: "\(base):\(old)", kind: .text(old, p, size: size, weight: weight, anchor: anchor, digits: digits), colour: it.colour, at: it.at, slot: slot)
+        }
+        return (out, changed)
+    }
     private mutating func add(_ item: Item) { var it = item; it.at = startAt; items.append(it) }
     /// The same sketch in paper points: moved to `o` and drawn `k` times bigger.
     func transformed(to o: CGPoint, scale k: Double) -> Sketch {
@@ -69,7 +82,7 @@ struct Sketch {
             case .icon(let n, let r): kind = .icon(n, CGRect(origin: P(r.origin), size: CGSize(width: r.width * k, height: r.height * k)))
             case .segments(let segs, let w): kind = .segments(segs.map { (P($0.0), P($0.1)) }, width: w * k)
             }
-            return Item(id: it.id, kind: kind, colour: it.colour, at: it.at)
+            return Item(id: it.id, kind: kind, colour: it.colour, at: it.at, slot: it.slot)
         }
         return out
     }
@@ -154,6 +167,10 @@ final class SketchDrawer {
         var start: Double, length: Double
         var undrawing = false
         var shown = -1.0
+        /// A text's letters (spaces left out, as its parts are) and its slot, for rolling over when it changes.
+        var chars: [Character] = []
+        var slot: String?
+        var size: Double = 20
         init(id: String, sig: String, parts: [ModelEntity], line: (pts: [[CGPoint]], width: Double, dashed: Bool)?, start: Double, length: Double) {
             self.id = id; self.sig = sig; self.parts = parts; self.line = line; self.start = start; self.length = length
         }
@@ -164,9 +181,31 @@ final class SketchDrawer {
     private(set) var leftAt: Double?
     // calm, not rushed (G 19 Oct): each part a moment after the last, the whole thing about two seconds
     static let each = 0.07, length = 0.55, most = 1.8, letter = 0.03
+    /// How fast this drawing draws in: 1 for a problem (calm), less for a page that's passed through (the page of
+    /// problems).
+    var pace = 1.0
+    /// Characters rolling over in place (a clock's digits, G 19 Oct): the old one up and out, the new one up into place.
+    private struct Roll { let out: ModelEntity?; let into: ModelEntity?; let outZ: Float; let inZ: Float; let dz: Float; let start: Double }
+    private var rolls: [Roll] = []
+    static let roll = 0.32
+    /// What each slot last said, wherever it was drawn: a page drawn afresh (back from a problem, back on the map)
+    /// draws a changed count as it was, then rolls it over to what it says now.
+    static var remembered: [String: String] = [:]
+    private var pending: (sketch: Sketch, rig: Rig, chapter: UInt32, dark: Bool, origin: CGPoint, scale: Double, at: Double)?
     static let undraw = 0.28, undrawMost = 0.25
 
-    func build(_ s: Sketch, rig: Rig, chapter: UInt32, dark: Bool, origin o: CGPoint, scale k: Double = 1, from start: Double, now: Double = PaperClock.now) {
+    func build(_ real: Sketch, rig: Rig, chapter: UInt32, dark: Bool, origin o: CGPoint, scale k: Double = 1, from start: Double, now: Double = PaperClock.now) {
+        // drawn afresh: a slot whose words changed since it was last shown draws as it was, and rolls over once drawn
+        var s = real
+        pending = nil
+        if nodes.isEmpty {
+            let was = real.withSlots(Self.remembered)
+            if was.changed {
+                s = was.sketch
+                pending = (real, rig, chapter, dark, o, k, start + Self.most * pace + Self.length * pace + 0.25)
+            }
+        }
+        for it in real.items { if let slot = it.slot, case .text(let t, _, _, _, _, _) = it.kind { Self.remembered[slot] = t } }
         let paper: UInt32 = dark ? 0x121211 : 0xF3F2EF
         func colour(_ c: Sketch.Colour) -> UIColor {
             switch c {
@@ -185,7 +224,11 @@ final class SketchDrawer {
         let sigs = s.items.map { "\($0.kind) \($0.colour) \(o) \(k) \(dark)" }
         let fresh = s.items.indices.filter { nodes[s.items[$0].id]?.sig != sigs[$0] }
         // the whole drawing-in takes at most `most` seconds, however many parts are new
-        let gap = fresh.count > 1 ? min(Self.each, Self.most / Double(fresh.count)) : 0
+        let gap = fresh.count > 1 ? min(Self.each * pace, Self.most * pace / Double(fresh.count)) : 0
+        // words in a slot that are already showing roll over to their new words instead of undrawing
+        var rolled: [String: Node] = [:]
+        for i in fresh { if let slot = s.items[i].slot, let old = nodes.values.first(where: { $0.slot == slot && !$0.undrawing && $0.id != s.items[i].id }), old.shown >= 1 { rolled[s.items[i].id] = old } }
+        for old in rolled.values { nodes[old.id] = nil }
         // what left, or changed, undraws
         let keep = Set(s.items.indices.filter { !fresh.contains($0) }.map { s.items[$0].id })
         let leaving = nodes.values.filter { !keep.contains($0.id) }
@@ -196,7 +239,8 @@ final class SketchDrawer {
             let item = s.items[i]
             // fills under lines under words, whatever order they draw in; later parts a hair above earlier ones
             let lift = Float(i) * 0.0000002
-            var parts: [ModelEntity] = [], line: (pts: [[CGPoint]], width: Double, dashed: Bool)?, length = Self.length
+            var parts: [ModelEntity] = [], line: (pts: [[CGPoint]], width: Double, dashed: Bool)?, length = Self.length * pace
+            var chars: [Character] = [], textSize = 20.0
             switch item.kind {
             case .fill(let pts), .plate(let pts):
                 let base: Float = { if case .plate = item.kind { 0.0021 } else { 0.0016 } }()
@@ -223,16 +267,39 @@ final class SketchDrawer {
                     if ch == " " { continue }
                     let x = left + offsets[j]
                     parts.append(PaperText.label(String(ch), f, colour(item.colour), at: CGPoint(x: x, y: at.y), anchor: UnitPoint(x: 0, y: anchor.y), y: 0.0024 + lift))
+                    chars.append(ch)
                 }
-                length = min(1.0, 0.3 + Double(parts.count) * Self.letter)
+                textSize = Double(size * k)
+                length = min(1.0, 0.3 + Double(parts.count) * Self.letter) * pace
             case .icon(let name, let r):
                 if let e = PaperText.icon(name, colour(item.colour), in: CGRect(origin: P(r.origin), size: CGSize(width: r.width * k, height: r.height * k)), y: 0.0025 + lift) { parts = [e] }
             }
             guard !parts.isEmpty else { continue }
             for e in parts { e.isEnabled = false; root.addChild(e) }
+            if let old = rolled[item.id] {
+                // rolling over: letters that stay the same just stay; the ones that change roll, the old up and out,
+                // the new up into place (matched from the right, as a number's digits are)
+                let node = Node(id: item.id, sig: sigs[i], parts: parts, line: nil, start: now, length: 0)
+                node.shown = 1; node.chars = chars; node.slot = item.slot; node.size = textSize
+                let dz = Float(textSize * 0.7 / Paper.unit)
+                for j in 0..<max(parts.count, old.parts.count) {
+                    let ni = parts.count - 1 - j, oi = old.parts.count - 1 - j
+                    let new = ni >= 0 ? parts[ni] : nil, was = oi >= 0 ? old.parts[oi] : nil
+                    if let new, let was, chars[ni] == old.chars[oi] {
+                        new.isEnabled = true; was.removeFromParent(); continue
+                    }
+                    new?.isEnabled = true
+                    new?.components.set(OpacityComponent(opacity: 0))
+                    rolls.append(Roll(out: was, into: new, outZ: was?.position.z ?? 0, inZ: new?.position.z ?? 0, dz: dz, start: now))
+                }
+                nodes[item.id] = node
+                continue
+            }
             // a part with its own start (a map piece's words) keeps it, unless that's passed: then it draws in now
             let at = item.at.map { max($0, now) } ?? start + Double(order) * gap
-            nodes[item.id] = Node(id: item.id, sig: sigs[i], parts: parts, line: line, start: at, length: length)
+            let node = Node(id: item.id, sig: sigs[i], parts: parts, line: line, start: at, length: length)
+            node.chars = chars; node.slot = item.slot; node.size = textSize
+            nodes[item.id] = node
             if item.at == nil { order += 1 }
         }
     }
@@ -283,6 +350,22 @@ final class SketchDrawer {
     @discardableResult
     func update(at t: Double) -> Bool {
         var moving = false
+        if let p = pending {
+            if t >= p.at { build(p.sketch, rig: p.rig, chapter: p.chapter, dark: p.dark, origin: p.origin, scale: p.scale, from: t, now: t) }
+            moving = true
+        }
+        rolls = rolls.filter { r in
+            let k = Float(ease((t - r.start) / Self.roll))
+            if let o = r.out { o.position.z = r.outZ - r.dz * k; o.components.set(OpacityComponent(opacity: 1 - k)) }
+            if let n = r.into { n.position.z = r.inZ + r.dz * (1 - k); n.components.set(OpacityComponent(opacity: k)) }
+            if k >= 1 {
+                r.out?.removeFromParent()
+                if let n = r.into { n.position.z = r.inZ; n.components.remove(OpacityComponent.self) }
+                return false
+            }
+            moving = true
+            return true
+        }
         for n in nodes.values where n.shown < 1 { apply(n, ease((t - n.start) / n.length)); if n.shown < 1 { moving = true } }
         going = going.filter { n in
             let k = 1 - ease((t - n.start) / n.length)

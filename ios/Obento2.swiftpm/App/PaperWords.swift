@@ -163,7 +163,7 @@ extension Rig {
             s.polygon("dot\(g.chapter)", Self.circle(CGPoint(x: o.x + 5, y: o.y + 27), 5), .hex(g.chapter.hex, g.chapter.hex))
             s.label("title\(g.chapter)", g.chapter.title, .chapter, at: CGPoint(x: o.x + 20, y: o.y + 40))
             let w = PaperText.width(g.chapter.title, PaperText.font(Sketch.Words.chapter.size, Sketch.Words.chapter.weight))
-            s.label("count\(g.chapter)", "\(done) of \(g.lessons.count)", .count, at: CGPoint(x: o.x + 32 + w, y: o.y + 37))
+            s.label("count\(g.chapter)", "\(done) of \(g.lessons.count)", .count, at: CGPoint(x: o.x + 32 + w, y: o.y + 37), slot: "count\(g.chapter)")
         }
         for p in Map.all {
             let r = CGRect(x: p.at.x, y: p.at.y, width: Piece.size.width, height: Piece.size.height), id = p.id
@@ -174,9 +174,9 @@ extension Rig {
             if p.isTest {
                 let line = PageStore.load(p.id).map { "\($0.solved) of \($0.problems.count) done" } ?? Progress.shared.tests[p.id].map { _ in "Done" }
                     ?? (p.opens ? "\(p.id == "test-grade" ? 20 : 12) problems" : p.id == "test-grade" ? "Finish the chapter tests first" : Map.chapterHasLessons(p.chapter) ? "Finish the lessons first" : "Coming soon")
-                s.label(id + "line", line, Sketch.Words(size: 16, weight: .medium, colour: p.opens || Progress.shared.tests[p.id] != nil ? chapter : .ink3), at: CGPoint(x: r.minX, y: r.maxY + 50))
+                s.label(id + "line", line, Sketch.Words(size: 16, weight: .medium, colour: p.opens || Progress.shared.tests[p.id] != nil ? chapter : .ink3), at: CGPoint(x: r.minX, y: r.maxY + 50), slot: id + "line")
             } else if let saved = PageStore.load(p.id) {
-                s.label(id + "line", "\(saved.solved) of \(saved.problems.count) done", Sketch.Words(size: 16, weight: .medium, colour: chapter), at: CGPoint(x: r.minX, y: r.maxY + 50))
+                s.label(id + "line", "\(saved.solved) of \(saved.problems.count) done", Sketch.Words(size: 16, weight: .medium, colour: chapter), at: CGPoint(x: r.minX, y: r.maxY + 50), slot: id + "line")
             }
             if p.isTest {
                 // a test's badge (G 18 Oct): a round seal on the frame's top-left corner, how many problems it has (a tick

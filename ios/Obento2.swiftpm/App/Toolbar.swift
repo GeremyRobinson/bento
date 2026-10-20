@@ -79,7 +79,9 @@ struct Toolbar: View {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     Text(title).font(Typeface.font(20, .semibold)).foregroundStyle(Ink.ink).lineLimit(1)
                     Spacer(minLength: 0)
-                    Text(detail).font(Typeface.font(17)).foregroundStyle(Ink.ink2).lineLimit(1)
+                    // a count that changes rolls over like a clock's digits (G 19 Oct)
+                    Text(detail).font(Typeface.font(17)).monospacedDigit().foregroundStyle(Ink.ink2).lineLimit(1)
+                        .contentTransition(.numericText()).animation(.snappy(duration: 0.32), value: detail)
                 }
                 Capsule().fill(Ink.sunk).frame(height: 6)
                     .overlay(alignment: .leading) {
