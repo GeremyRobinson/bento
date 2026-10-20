@@ -174,33 +174,33 @@ final class BarsPage {
     var headings: [(Point, String)] { layout().headings }
 
     private func layout() -> (cards: [Card], headings: [(Point, String)]) {
-        // the parts side by side, so the whole page fits the screen: Together in one column, On your own in two, the
-        // Test in one, each under its heading, two blocks between parts
+        // the problems in a grid of 3 columns (G 19 Oct), each part under its heading and stacked under the one before:
+        // Together's 3 in a row, then On your own in rows of 3; the Test off to the side, at the top
         var out: [Card] = [], heads: [(Point, String)] = []
-        let w = Self.card.width, h = Self.card.height, g = Self.gap, top = corner.y + Paper.unit
-        var x = corner.x
-        func part(_ heading: String, _ items: [Int], columns: Int) {
-            heads.append((Point(x, top - Paper.unit / 2), heading))
-            // numbered down each column, then the next column (G 19 Oct): 1, 2, 3 down the first, 4, 5, 6 down the second
-            let rows = max(3, (items.count + columns - 1) / columns)
+        let w = Self.card.width, h = Self.card.height, g = Self.gap, x0 = corner.x
+        var y = corner.y + Paper.unit
+        func part(_ heading: String, _ items: [Int], columns: Int = Self.columns) {
+            heads.append((Point(x0, y - Paper.unit / 2), heading))
             for (k, i) in items.enumerated() {
-                let r = Rect(x: x + Double(k / rows) * (w + g), y: top + Double(k % rows) * (h + g), width: w, height: h)
+                let r = Rect(x: x0 + Double(k % columns) * (w + g), y: y + Double(k / columns) * (h + g), width: w, height: h)
                 let m = problems[i], l = m.lesson
                 let state: Card.State = m.solved ? (l.missedAny && !l.helps ? .missed : .done) : m === lastWorked ? .now : .open
                 let done = l.steps.indices.filter { $0 < l.index && (l.steps[$0].answer != nil || l.steps[$0].task != nil) }.count
                 let line = m.solved ? (l.missedAny ? (l.helps ? "Done, with a miss" : "Missed") : "Done") : done > 0 ? "\(done) of \(l.workSteps) steps" : focusLine(m)
                 out.append(Card(index: i, rect: r, title: m.label, display: l.display, line: line, state: state))
             }
-            x += Double(columns) * (w + g) + g
+            y += Double((items.count + columns - 1) / columns) * (h + g) + g
         }
         if let n = test {
-            part("\(n) questions, one try each", Array(problems.indices), columns: 5)
+            part("\(n) questions, one try each", Array(problems.indices), columns: 4)
             return (out, heads)
         }
         guard let plan else { return (out, []) }
-        part("Together", plan.items.indices.filter { plan.items[$0].part == .together }, columns: 1)
-        part("On your own · \(plan.ownRight(problems.map(\.lesson))) of \(LessonPlan.own) right", plan.items.indices.filter { plan.items[$0].part == .own }, columns: 2)
-        heads.append((Point(x, top - Paper.unit / 2), "Test"))
+        let top = y
+        part("Together", plan.items.indices.filter { plan.items[$0].part == .together })
+        part("On your own · \(plan.ownRight(problems.map(\.lesson))) of \(LessonPlan.own) right", plan.items.indices.filter { plan.items[$0].part == .own })
+        let tx = x0 + Double(Self.columns) * (w + g) + g
+        heads.append((Point(tx, top - Paper.unit / 2), "Test"))
         let started = testProblems.contains { $0.lesson.index > 0 || $0.solved }
         let (line, state): (String, Card.State) = {
             if let res = testResult { return res.right >= LessonPlan.pass ? ("Passed · \(res.right) of 12. Take it again", .done) : ("\(res.right) of 12. Take it again", .missed) }
@@ -208,9 +208,10 @@ final class BarsPage {
             if started { return ("\(testProblems.filter(\.solved).count) of 12 done", .now) }
             return ("12 problems, no help", .open)
         }()
-        out.append(Card(index: nil, rect: Rect(x: x, y: top, width: w, height: h), title: "Lesson test", display: nil, line: line, state: state))
+        out.append(Card(index: nil, rect: Rect(x: tx, y: top, width: w, height: h), title: "Lesson test", display: nil, line: line, state: state))
         return (out, heads)
     }
+
     /// The problem worked last, marked Now on its card.
     private var lastWorked: (any PageProblem)?
 
