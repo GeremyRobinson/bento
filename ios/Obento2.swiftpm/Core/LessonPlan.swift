@@ -28,6 +28,8 @@ public struct LessonPlan: Codable, Equatable, Sendable {
         public var numbers: Numbers
         public var story: Bool
         public var focus: Focus?
+        /// Put on the page to go over after a recheck came back low (G 20 Oct).
+        public var goOver: Bool?
     }
 
     public static let together = 3, moreTogether = 2, own = 6, test = 12, pass = 10
@@ -105,11 +107,15 @@ public struct LessonPlan: Codable, Equatable, Sendable {
     }
 
     /// Where the page stands, as the bar and the map say it (G 20 Oct): the goal that opens the test, never a total that
-    /// grows as fresh problems are added. The together problems done (until one is right on their own), then right on
-    /// their own of 6, then the lesson's test. `done` fills the bar's line the same way. `solved` and `clean` are the
+    /// grows as fresh problems are added. What a low recheck put on the page to go over, while there's some left; the
+    /// together problems done (until one is right on their own), then right on their own of 6, then the lesson's test.
+    /// `done` fills the bar's line the same way. `solved` and `clean` are the
     /// page's problems in the plan's order; `test` the test's problems: nil not answered yet, else right or not.
     public struct Standing: Equatable, Sendable { public let words: String; public let done: Double }
     public func standing(solved: [Bool], clean: [Bool], test: [Bool?]) -> Standing {
+        // a recheck came back low: what it put on the page to go over, first
+        let over = items.indices.filter { items[$0].goOver == true }, overDone = over.filter { solved.indices.contains($0) && solved[$0] }.count
+        if overDone < over.count { return Standing(words: "Go over · \(overDone) of \(over.count) done", done: Double(overDone) / Double(over.count)) }
         let together = items.indices.filter { items[$0].part == .together }
         let togetherDone = together.filter { solved.indices.contains($0) && solved[$0] }.count
         let right = items.indices.filter { items[$0].part == .own && clean.indices.contains($0) && clean[$0] }.count
@@ -170,7 +176,9 @@ public struct LessonPlan: Codable, Equatable, Sendable {
         var added: [Int] = []
         for run in recheck where run.missedAny {
             let focus = run.slips.first.map { Focus(step: $0.step, said: $0.said, teach: false) }
-            items.append(Self.ownItem(spec, made, focus: focus, using: &rng)); made += 1
+            var item = Self.ownItem(spec, made, focus: focus, using: &rng); made += 1
+            item.goOver = true
+            items.append(item)
             added.append(items.count - 1)
         }
         return added
@@ -205,7 +213,7 @@ public struct LessonPlan: Codable, Equatable, Sendable {
         guard !run.isLast, run.step.answer != nil || run.step.task != nil, !run.hinted.contains(run.index) else { return nil }
         switch part {
         case .together: return "That's all the hints for this problem."
-        case .own: return run.misses == 0 ? "Have a go first. A hint comes after a miss." : "This page's hints are used up."
+        case .own: return left <= 0 ? "This page's hints are used up." : "Have a go first. A hint comes after a miss."
         }
     }
 

@@ -126,6 +126,7 @@ final class LessonPlanTests: XCTestCase {
         XCTAssertEqual(LessonPlan.hint(own, part: .own, left: 5), .off, "no hint before a miss")
         XCTAssertNil(LessonPlan.hintsLeft(own, part: .own, left: 5), "no count standing there unusable before a miss")
         XCTAssertEqual(LessonPlan.noHint(own, part: .own, left: 5), "Have a go first. A hint comes after a miss.")
+        XCTAssertEqual(LessonPlan.noHint(own, part: .own, left: 0), "This page's hints are used up.", "none would come after a miss either")
         type(&own, "1"); _ = own.go()
         XCTAssertEqual(LessonPlan.hint(own, part: .own, left: 5), .spend)
         XCTAssertNil(LessonPlan.noHint(own, part: .own, left: 5))
@@ -204,10 +205,27 @@ final class LessonPlanTests: XCTestCase {
         var check = LessonPlan.recheckRuns(spec, using: &rng)
         for i in check.indices { work(&check[i], wrong: i < 2 ? [1: "1"] : [:]) }
         XCTAssertLessThan(LessonPlan.recheckScore(check)?.level ?? 9, Mastery.pass)
+        // the page as it was: every problem done, the test passed
+        var runs = plan.items.indices.map { plan.run(spec, $0) }
+        for i in runs.indices { work(&runs[i]) }
+        var test = LessonPlan.testRuns(spec, using: &rng)
+        for i in test.indices { work(&test[i]) }
+        func standing() -> LessonPlan.Standing {
+            plan.standing(solved: runs.map(\.isLast), clean: runs.indices.map { plan.clean($0, runs[$0]) }, test: test.map { $0.isLast ? !$0.missedAny : nil })
+        }
+        XCTAssertEqual(standing().words, "Test passed · 12 of 12")
         let added = plan.goOver(check, spec, using: &rng)
         XCTAssertEqual(added, [9, 10])
         XCTAssertTrue(added.allSatisfy { plan.items[$0].part == .own && plan.items[$0].focus?.step == 1 && plan.items[$0].focus?.teach == false })
+        XCTAssertTrue(added.allSatisfy { plan.items[$0].goOver == true }); XCTAssertNil(plan.items[3].goOver)
         XCTAssertEqual(plan.items[9].focus?.said, LessonPlan.advice(spec, plan.items[9].numbers, step: 1), "advice for its own numbers")
+        // the page says what there is to go over first, until it's done
+        runs += added.map { plan.run(spec, $0) }
+        XCTAssertEqual(standing().words, "Go over · 0 of 2 done"); XCTAssertEqual(standing().done, 0)
+        work(&runs[9])
+        XCTAssertEqual(standing().words, "Go over · 1 of 2 done")
+        work(&runs[10])
+        XCTAssertEqual(standing().words, "Test passed · 12 of 12")
         XCTAssertEqual(plan.goOver(Array(check[2...]), spec, using: &rng), [], "nothing missed, nothing added")
     }
 
