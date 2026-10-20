@@ -5,11 +5,12 @@ import Foundation
 ///
 /// On the paper (design/grade5.md): a place chart, a column for each place the problem uses (from one past where the
 /// answer's first digit lands down to x's last decimal), the point fixed on the strong line between the ones and the
-/// tenths, and x's digits in their columns (the number written once). The child drags the digits left together, a column at a time, the hops and the readout under
-/// the chart counting "× 10", "× 100", "× 1000"; letting go on k columns answers the web's "how many zeros" step (its box
-/// is set from the columns moved). Then, only when x has fewer decimals than 10^k has zeros, they tap each empty place
-/// between the digits and the point, and a 0 is written there. Then the record, x × 10^k = [ ], typed: the web's "move
-/// the point" step, with its slips, worded for the chart (the digits move; the point stays where it is).
+/// tenths, and x's digits in their columns (the number written once). The child drags the digits left together, a
+/// column at a time, the hops and the readout under the chart counting "× 10", "× 100", "× 1000"; letting go on k
+/// columns answers the web's "how many zeros" step (its box is set from the columns moved). Then, only when x has fewer
+/// decimals than 10^k has zeros, they tap each empty place between the digits and the point, and a 0 is written there.
+/// Then the record, x × 10^k = [ ], typed: the web's "move the point" step, with its slips, worded for the chart (the
+/// digits move; the point stays where it is).
 ///
 /// Picture keys: "at", the stage: 0 the question, 1 drag the digits, 2 write the 0s, 3 write the record, 4 done. A hint
 /// (after a miss, or asked for) lights: "target" (the hops the digits make, dashed, and what they make), "gaps" (each
@@ -57,7 +58,7 @@ public enum PowersOfTen {
             let i = whole - 1 + by - p
             return digits.indices.contains(i) ? digits[i] : nil
         }
-        /// The first digit's place, before the move and after it.
+        /// The first digit's place, before the move (k places bigger after it).
         public var lead: Int { whole - 1 }
         /// The places left empty between the digits and the point once they've moved: a 0 is written in each (none
         /// when x has as many decimals as 10^k has zeros).
