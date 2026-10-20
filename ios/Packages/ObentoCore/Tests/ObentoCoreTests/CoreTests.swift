@@ -269,19 +269,31 @@ final class PaperWayTests: XCTestCase {
     func testSessionPracticeThenCheck() {
         var s = LessonSession()
         XCTAssertNil(s.label)
-        XCTAssertEqual(s.finished(right: true), .practice(1))
+        XCTAssertEqual(s.finished(worked(right: true)), .practice(1))
         XCTAssertEqual(s.label, "Practice 1 of 6")
-        for _ in 1..<6 { s.finished(right: false) }
-        XCTAssertEqual(s.finished(right: true), .check(1, right: 0))
+        for _ in 1..<6 { s.finished(worked(right: false)) }
+        XCTAssertEqual(s.finished(worked(right: true)), .check(1, right: 0))
         XCTAssertFalse(s.helps); XCTAssertTrue(s.oneTry)
-        s.finished(right: true); s.finished(right: false); s.finished(right: true)
-        XCTAssertEqual(s.finished(right: true), .done(learned: true))
-        XCTAssertTrue(s.justLearned)
+        s.finished(worked(right: true)); s.finished(worked(right: false)); s.finished(worked(right: true))
+        XCTAssertEqual(s.finished(worked(right: true)), .done(learned: true))
         var t = LessonSession(phase: .check(1, right: 0))
-        for _ in 0..<3 { t.finished(right: false) }
-        XCTAssertEqual(t.finished(right: true), .done(learned: false))
-        XCTAssertEqual(t.finished(right: true), .practice(1), "not learned: back to practice")
+        for _ in 0..<3 { t.finished(worked(right: false)) }
+        XCTAssertEqual(t.finished(worked(right: true)), .done(learned: false))
+        XCTAssertEqual(t.finished(worked(right: true)), .practice(1), "not learned: back to practice")
     }
+}
+
+/// A Unit cubes problem worked to the end: right, or with a miss on covering the floor first.
+func worked(right: Bool) -> LessonRun {
+    var l = LessonRun(UnitCubes.spec, numbers: UnitCubes.Box(length: 2, width: 2, height: 1).numbers)
+    while !l.isLast {
+        if l.step.task != nil {
+            if !right && l.missedSteps.isEmpty { _ = l.go() }
+            _ = l.showMe()
+        }
+        _ = l.go()
+    }
+    return l
 }
 
 final class StoryStepTests: XCTestCase {
@@ -301,7 +313,7 @@ final class StoryStepTests: XCTestCase {
         var rng = SeededRandom(seed: 9)
         var s = LessonSession(phase: .practice(1))
         XCTAssertNotEqual(s.makeRun(LongDivision.spec, using: &rng).words.hint, "Which operation solves it?")
-        s.finished(right: true)
+        s.finished(worked(right: true))
         XCTAssertEqual(s.makeRun(LongDivision.spec, using: &rng).words.hint, "Pick what to do.")
         XCTAssertEqual(s.makeRun(LongDivision.spec, using: &rng).step.answer?.expected["c"], 3, "dividing")
         XCTAssertNotEqual(s.makeRun(UnitCubes.spec, using: &rng).words.hint, "Which operation solves it?", "no story, no step")
@@ -343,10 +355,10 @@ final class MasteryTests: XCTestCase {
             "a": .init(last: 4, best: 4, date: now - day, due: now + 2 * day, passes: 1),      // getting stronger
             "b": .init(last: 4, best: 4, date: now - 9 * day, due: now - day, passes: 2),      // due back: go over
             "c": .init(last: 2, best: 3, date: now - day, due: now, passes: 0),                // scored low: go over
-            "d": .init(last: 4, best: 4, date: now - day, due: now + 59 * day, passes: 4),     // stuck for good
+            "d": .init(last: 4, best: 4, date: now - day, due: now + 59 * day, passes: 4),     // know it
         ]
         let s = Mastery.shelves(["a", "b", "c", "d", "e"], checks: checks, now: now)
-        XCTAssertEqual(s.goOver, ["b", "c"]); XCTAssertEqual(s.gettingStronger, ["a"]); XCTAssertEqual(s.stuck, ["d"])
+        XCTAssertEqual(s.goOver, ["b", "c"]); XCTAssertEqual(s.gettingStronger, ["a"]); XCTAssertEqual(s.knowIt, ["d"])
         XCTAssertTrue(Mastery.learnedNow(checks, "a", now: now)); XCTAssertFalse(Mastery.learnedNow(checks, "b", now: now))
     }
 
@@ -362,6 +374,65 @@ final class MasteryTests: XCTestCase {
         XCTAssertEqual(pick?.id, "add"); XCTAssertEqual(pick?.why, .goOver, "the oldest to go over first")
         XCTAssertEqual(Mastery.stepBack("sub", depends: ["add"], checks: checks), "add")
         XCTAssertFalse(Mastery.ready("mix", depends: ["add", "sub"], checks: checks, grade: 5))
+    }
+
+    /// A learned lesson that comes due stays learned on the map and in the count (G 20 Oct); it's marked Go over.
+    func testALearnedLessonStaysLearnedWhenItComesDue() {
+        var c = Mastery.record(nil, level: 3, now: 0)
+        var checks = ["x": c]
+        XCTAssertTrue(Mastery.learnedEver(checks, "x")); XCTAssertFalse(Mastery.goOver(checks, "x", now: day))
+        let later = 4 * day
+        XCTAssertTrue(Mastery.dueBack(checks, "x", now: later)); XCTAssertFalse(Mastery.learnedNow(checks, "x", now: later))
+        XCTAssertTrue(Mastery.learnedEver(checks, "x"), "still counted")
+        XCTAssertTrue(Mastery.goOver(checks, "x", now: later))
+        // the recheck comes back low: still counted as learned once, to go over
+        c = Mastery.record(c, level: 2, now: later); checks["x"] = c
+        XCTAssertTrue(Mastery.learnedEver(checks, "x")); XCTAssertTrue(Mastery.goOver(checks, "x", now: later + 1))
+        XCTAssertFalse(Mastery.learnedEver(["y": Mastery.record(nil, level: 2, now: 0)], "y"), "a test never passed")
+    }
+
+    /// A recheck that comes back low (G 20 Oct, CLAUDE.md "a miss: tomorrow"): not due again today, marked Go over, and
+    /// the next day it opens on its recheck again; passed then, it's on its way again.
+    func testARecheckThatComesBackLowComesBackTomorrowAsARecheck() {
+        var c = Mastery.record(nil, level: 4, now: 0)
+        let recheck = c.due
+        XCTAssertTrue(Mastery.dueBack(["x": c], "x", now: recheck))
+        c = Mastery.record(c, level: 2, now: recheck)
+        var checks = ["x": c]
+        XCTAssertFalse(Mastery.dueBack(checks, "x", now: recheck + 60), "not again today")
+        XCTAssertTrue(Mastery.goOver(checks, "x", now: recheck + 60))
+        XCTAssertTrue(Mastery.dueBack(checks, "x", now: recheck + day), "the next day it opens on its recheck")
+        XCTAssertEqual(Mastery.upNext(["x"], depends: { _ in [] }, checks: checks, grade: 5, now: recheck + day)?.why, .goOver)
+        c = Mastery.record(c, level: 3, now: recheck + day); checks["x"] = c
+        XCTAssertFalse(Mastery.goOver(checks, "x", now: recheck + day + 60))
+        XCTAssertEqual(c.due - c.date, 3 * day, "passed again: three days, as after a first pass")
+    }
+
+    /// A lesson never learned isn't Go over (G 20 Oct): a lesson test that came back low is to take again, and the
+    /// shelves of Me add up to the learned count.
+    func testATestThatCameBackLowIsntGoOver() {
+        let now = 10 * day
+        let checks = ["never": Mastery.record(nil, level: 1, now: now - day),
+                      "learned": Mastery.record(nil, level: 4, now: now - day),
+                      "due": Mastery.record(nil, level: 4, now: now - 4 * day),
+                      "slipped": Mastery.record(Mastery.record(nil, level: 4, now: now - 5 * day), level: 1, now: now - 60)]
+        XCTAssertFalse(Mastery.goOver(checks, "never", now: now)); XCTAssertFalse(Mastery.dueBack(checks, "never", now: now + 9 * day))
+        XCTAssertTrue(Mastery.toGoOver(checks, "never"), "Today's pick still sends the child back to it")
+        XCTAssertTrue(Mastery.goOver(checks, "due", now: now)); XCTAssertTrue(Mastery.goOver(checks, "slipped", now: now))
+        let s = Mastery.shelves(["never", "learned", "due", "slipped"], checks: checks, now: now)
+        XCTAssertEqual(s.goOver, ["due", "slipped"]); XCTAssertEqual(s.gettingStronger, ["learned"]); XCTAssertEqual(s.knowIt, [])
+        let learned = checks.keys.filter { Mastery.learnedEver(checks, $0) }.count
+        XCTAssertEqual(s.goOver.count + s.gettingStronger.count + s.knowIt.count, learned)
+    }
+
+    /// Today's pick: a lesson due back for its recheck comes first.
+    func testTodayPicksTheLessonDueBackFirst() {
+        let deps: (String) -> [String] = { _ in [] }
+        let checks = ["add": CheckRecord(last: 4, best: 4, date: 0, due: 3 * day, passes: 1),
+                      "sub": CheckRecord(last: 4, best: 4, date: day, due: 5 * day, passes: 1)]
+        XCTAssertEqual(Mastery.upNext(["add", "sub", "mix"], depends: deps, checks: checks, grade: 5, now: 2 * day)?.id, "mix")
+        let pick = Mastery.upNext(["add", "sub", "mix"], depends: deps, checks: checks, grade: 5, now: 6 * day)
+        XCTAssertEqual(pick?.id, "add"); XCTAssertEqual(pick?.why, .goOver)
     }
 
     func testTheCheckScoresSteps() {
@@ -399,40 +470,11 @@ final class RectTests: XCTestCase {
     }
 }
 
-final class LessonPageTests: XCTestCase {
-    func testAPageOf16WithTheCheckLast() {
-        var rng = SeededRandom(seed: 8)
-        let page = LessonPage.problems(AddFractions.spec, using: &rng)
-        XCTAssertEqual(page.count, 16)
-        XCTAssertEqual(page.filter(\.isCheck).count, 4)
-        XCTAssertTrue(page.suffix(4).allSatisfy(\.isCheck))
-        XCTAssertEqual(page.prefix(12).filter(\.story).count, 4, "every third practice problem is a story")
-        let check = LessonPage.run(AddFractions.spec, page[15])
-        XCTAssertFalse(check.helps); XCTAssertTrue(check.oneTry)
-        XCTAssertTrue(LessonPage.run(AddFractions.spec, page[0]).helps)
-    }
-
-    func testTheCheckRowScores() {
-        var rng = SeededRandom(seed: 8)
-        var runs = LessonPage.problems(AddFractions.spec, using: &rng).suffix(4).map { LessonPage.run(AddFractions.spec, $0) }
-        XCTAssertNil(LessonPage.checkLevel(runs), "not done yet")
-        for k in runs.indices {
-            while !runs[k].isLast {
-                if k == 0, runs[k].step.task != nil, runs[k].missedSteps.isEmpty { _ = runs[k].go() }
-                if runs[k].step.task != nil { _ = runs[k].showMe() }
-                if runs[k].step.answer?.choices != nil { runs[k].choose(0) }
-                _ = runs[k].go()
-            }
-        }
-        XCTAssertEqual(LessonPage.checkLevel(runs), 3, "7 of 8 steps right")
-    }
-}
-
 final class StraightIntoSolvingTests: XCTestCase {
     func testPageProblemsStartOnTheirFirstStep() {
-        let plain = LessonPage.run(AddFractions.spec, .init(numbers: AddFractions.Problem(a: 4, p: 1, b: 8, q: 1).numbers, story: false, isCheck: false))
+        var plain = LessonRun(AddFractions.spec, numbers: AddFractions.Problem(a: 4, p: 1, b: 8, q: 1).numbers); plain.skipAsk()
         XCTAssertEqual(plain.words.say, "Shade eighths to match 1/4.", "no Let’s find out first")
-        var story = LessonPage.run(AddFractions.spec, .init(numbers: AddFractions.Problem(a: 4, p: 1, b: 8, q: 1).numbers, story: true, isCheck: false))
+        var story = LessonRun(AddFractions.spec, numbers: AddFractions.Problem(a: 4, p: 1, b: 8, q: 1).numbers, story: true); story.skipAsk()
         XCTAssertEqual(story.words.hint, "Pick what to do.")
         story.choose(0)
         _ = story.go()

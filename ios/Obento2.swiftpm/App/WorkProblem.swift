@@ -132,7 +132,10 @@ final class WorkProblem: Identifiable, PageProblem {
         Task { [weak self] in
             try? await Task.sleep(for: .seconds(delay))
             guard let self, self.onFocus else { return }
+            // the app's own teaching, not the child's Show me (LessonPlan.usedShowMe); hands off while its answer shows,
+            // so Check can't take the app's answer for theirs
             if let e = self.lesson.showAnswer() { self.message = (e, true) }
+            self.busyUntil = PaperClock.now + 2.4
             self.pictureAt = self.time(0); self.onChange?()
             try? await Task.sleep(for: .seconds(2.4))
             self.lesson.reset(); self.message = nil; self.wordsAt = PaperClock.now; self.onChange?()
