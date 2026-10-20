@@ -229,7 +229,7 @@ final class Rig {
     // Unit cubes' words, standing in the scene (CubesWords.swift)
     let cubesQuestion = Pin(), cubesL = Pin(), cubesW = Pin(), cubesH = Pin(), cubesCount = Pin(), cubesBlocks = Pin()
     var cubesKey = ""
-    var problemWords: [UUID: ProblemWords] = [:]
+    var problemWords: [UUID: SketchDrawer] = [:]
     /// Some problem's bars or words are still to be made.
     var pageBuilding = false
     var piecesQuick = ""
