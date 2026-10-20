@@ -14,13 +14,13 @@ final class UnlikeFractionsTests: XCTestCase {
         XCTAssertEqual(n["L"], 6); XCTAssertEqual(n["A"], 3); XCTAssertEqual(n["C"], 2); XCTAssertEqual(n["S"], 5)
         var l = LessonRun(AddingFractions.spec, numbers: n)
         XCTAssertEqual(l.display, [.frac(.num(1), .num(2)), .op("+"), .frac(.num(1), .num(3))])
-        XCTAssertEqual(l.steps.count, 7)
-        XCTAssertEqual(l.words.say, "What is 1/2 + 1/3?")
+        XCTAssertEqual(l.steps.count, 6, "5/6 is already simplest, so there is no Simplify step")
+        XCTAssertEqual(l.words.say, "Look at the bars. Are the pieces the same size?")
         XCTAssertEqual(l.words.action, "Let’s find out")
         XCTAssertEqual(l.go(), .moved(1))
 
         // lcd
-        XCTAssertEqual(l.words.say, "Smallest number that both 2 and 3 go into:")
+        XCTAssertEqual(l.words.say, "What size pieces fit both? Type the new bottom.")
         XCTAssertEqual(l.words.hint, "Both 2 and 3 go into 6, so cut both bars into sixths.")
         XCTAssertEqual(l.go(), .notYet("Fill in every box."))
         fill(&l, [("x", "5")])
@@ -36,7 +36,7 @@ final class UnlikeFractionsTests: XCTestCase {
         XCTAssertEqual(l.go(), .moved(2))
 
         // first
-        XCTAssertEqual(l.words.say, "Rewrite the first fraction")
+        XCTAssertEqual(l.words.say, "How many sixths is one half?")
         XCTAssertEqual(l.words.hint, "Each half is 3 sixths.")
         fill(&l, [("x", "1")])
         XCTAssertEqual(l.go(), .notYet("You changed the bottom from 2 to 6, but kept the top as 1. Whatever you multiply the bottom by, multiply the top by the same number."))
@@ -48,7 +48,7 @@ final class UnlikeFractionsTests: XCTestCase {
         XCTAssertEqual(l.go(), .moved(3))
 
         // second
-        XCTAssertEqual(l.words.say, "Rewrite the second fraction")
+        XCTAssertEqual(l.words.say, "How many sixths is one third?")
         XCTAssertEqual(l.words.hint, "Each third is 2 sixths.")
         XCTAssertEqual(l.step.answer?.hint, "3 × ? = 6. Whatever you multiply the bottom by, do the same to the top.")
         fill(&l, [("x", "4")])
@@ -56,35 +56,19 @@ final class UnlikeFractionsTests: XCTestCase {
         XCTAssertEqual(l.showAnswer(), "3 × 2 = 6, so 1 × 2 = 2.")
         XCTAssertEqual(l.go(), .moved(4))
 
-        // add
-        XCTAssertEqual(l.words.say, "Add")
+        // add: the bottom is given, only the top is typed
+        XCTAssertEqual(l.words.say, "Add the tops.")
         XCTAssertEqual(l.words.hint, "Same-size pieces now, so add the tops. The bottom stays 6.")
-        fill(&l, [("n", "5")])
+        XCTAssertEqual(l.step.answer?.boxes, ["n"])
         XCTAssertEqual(l.go(), .notYet("Fill in every box."))
-        fill(&l, [("n", "5"), ("d", "12")])
-        XCTAssertEqual(l.go(), .notYet("You added the bottoms too (6 + 6). The pieces are already the same size, 6ths, so the bottom stays 6. Picture a pizza: 3 slices plus 2 slices is 5 slices, still 6ths."))
-        fill(&l, [("n", "5"), ("d", "7")])
-        XCTAssertEqual(l.go(), .notYet("When the bottoms match, the bottom stays the same: 6. Only the tops get added."))
-        fill(&l, [("n", "1"), ("d", "6")])
+        fill(&l, [("n", "1")])
         XCTAssertEqual(l.go(), .notYet("You subtracted. Look at the sign: this one is a plus."))
-        fill(&l, [("n", "4"), ("d", "6")])
-        XCTAssertEqual(l.go(), .notYet("The bottom is right. Check the top: 3 + 2 = ?"))
+        fill(&l, [("n", "4")])
+        XCTAssertEqual(l.go(), .notYet("Check the top: 3 + 2 = ?"))
         XCTAssertEqual(l.showAnswer(), "3 + 2 = 5, and the bottom stays 6.")
         XCTAssertEqual(l.go(), .moved(5))
 
-        // simplify: 5/6 is already simplest
-        XCTAssertEqual(l.words.say, "Simplify")
-        XCTAssertEqual(l.words.hint, "It’s already as simple as it gets.")
-        XCTAssertEqual(l.step.answer?.boxes, ["n", "d"])
-        XCTAssertEqual(l.step.answer?.hint, "No number (other than 1) divides both 5 and 6. It’s already simplest.")
-        fill(&l, [("n", "10"), ("d", "12")])
-        XCTAssertEqual(l.go(), .notYet("Same amount. 10/12 can still be simplified. Both 10 and 12 divide by 2."))
-        fill(&l, [("n", "4"), ("d", "6")])
-        XCTAssertEqual(l.go(), .notYet("That’s not equal to 5/6. Divide the top and the bottom by the same number."))
-        XCTAssertEqual(l.showAnswer(), "It was already as simple as it gets.")
-        XCTAssertEqual(l.go(), .moved(6))
-
-        XCTAssertEqual(l.words.say, "1/2 + 1/3 = 5/6.")
+        XCTAssertEqual(l.words.say, "Same-size pieces, so the tops add.")
         XCTAssertEqual(l.words.hint, "The bottom is the size of the pieces, and only same-size pieces can be added.")
         XCTAssertEqual(l.words.action, "Next problem")
         XCTAssertEqual(l.go(), .newProblem)
@@ -94,12 +78,11 @@ final class UnlikeFractionsTests: XCTestCase {
         XCTAssertEqual(l.steps[2].answer?.work, [.frac(.num(1), .num(2)), .op("="), .frac(.num(3), .num(6))])
         XCTAssertEqual(l.steps[3].answer?.work, [.frac(.num(1), .num(3)), .op("="), .frac(.num(2), .num(6))])
         XCTAssertEqual(l.steps[4].answer?.work, [.frac(.num(3), .num(6)), .op("+"), .frac(.num(2), .num(6)), .op("="), .frac(.num(5), .num(6))])
-        XCTAssertEqual(l.steps[5].answer?.work, [.frac(.num(5), .num(6)), .op("="), .frac(.num(5), .num(6))])
 
         // the picture, step by step
         XCTAssertEqual(l.steps.map(\.picture), [
             [:], ["focus": 3], ["cut": 1, "focus": 1], ["cut": 1, "first": 1, "focus": 2],
-            ["cut": 1, "first": 1, "second": 1, "focus": 3], ["cut": 1, "first": 1, "second": 1, "combine": 1, "focus": 4],
+            ["cut": 1, "first": 1, "second": 1, "focus": 3],
             ["cut": 1, "first": 1, "second": 1, "combine": 1, "answer": 0],
         ])
         XCTAssertEqual(AddingFractions.spec.story?(n), "You walked 1/2 of a mile to the park and then 1/3 of a mile to the store. How far did you walk in all?")
@@ -112,7 +95,7 @@ final class UnlikeFractionsTests: XCTestCase {
         let n = UnlikeFractions.numbers(a: 1, b: 2, c: 1, d: 3, minus: true)
         var l = LessonRun(SubtractingFractions.spec, numbers: n)
         XCTAssertEqual(l.display, [.frac(.num(1), .num(2)), .op("−"), .frac(.num(1), .num(3))])
-        XCTAssertEqual(l.words.say, "What is 1/2 − 1/3?")
+        XCTAssertEqual(l.words.say, "Look at the bars. Are the pieces the same size?")
         _ = l.go()
         fill(&l, [("x", "1")])
         XCTAssertEqual(l.go(), .notYet("You subtracted 3 − 2. The bottom number is the size of the pieces, so it doesn’t get subtracted. Find a number that 2 and 3 both go into evenly."))
@@ -121,19 +104,14 @@ final class UnlikeFractionsTests: XCTestCase {
         fill(&l, [("x", "6")]); XCTAssertEqual(l.go(), .moved(2))
         fill(&l, [("x", "3")]); XCTAssertEqual(l.go(), .moved(3))
         fill(&l, [("x", "2")]); XCTAssertEqual(l.go(), .moved(4))
-        XCTAssertEqual(l.words.say, "Subtract")
+        XCTAssertEqual(l.words.say, "Take away the tops.")
         XCTAssertEqual(l.words.hint, "Same-size pieces now, so take away. The bottom stays 6.")
         XCTAssertEqual(l.step.answer?.hint, "The pieces are the same size now, so only the tops get taken away. Does the size of a piece change?")
-        fill(&l, [("n", "1"), ("d", "0")])
-        XCTAssertEqual(l.go(), .notYet("You subtracted the bottoms too (6 − 6 = 0). The pieces are already the same size, 6ths, so the bottom stays 6. Picture a pizza: 3 slices take away 2 is 1 slices, still 6ths."))
-        fill(&l, [("n", "1"), ("d", "5")])
-        XCTAssertEqual(l.go(), .notYet("When the bottoms match, the bottom stays the same: 6. Only the tops get subtracted."))
-        fill(&l, [("n", "5"), ("d", "6")])
+        fill(&l, [("n", "5")])
         XCTAssertEqual(l.go(), .notYet("You added 3 + 2. Look at the sign: this one is a minus."))
         XCTAssertEqual(l.showAnswer(), "3 − 2 = 1, and the bottom stays 6.")
         XCTAssertEqual(l.go(), .moved(5))
-        fill(&l, [("n", "1"), ("d", "6")]); XCTAssertEqual(l.go(), .moved(6))
-        XCTAssertEqual(l.words.say, "1/2 − 1/3 = 1/6.")
+        XCTAssertEqual(l.words.say, "Same-size pieces, so the tops are taken away.")
         XCTAssertEqual(l.words.hint, "Only same-size pieces can be taken away, so the bottoms have to match first.")
         XCTAssertEqual(SubtractingFractions.spec.story?(n), "There was 1/2 of a cake left. The family ate 1/3 of a cake. How much cake is left now?")
     }
@@ -142,7 +120,7 @@ final class UnlikeFractionsTests: XCTestCase {
         // 2/3 + 1/4 = 8/12 + 3/12 = 11/12
         let n = UnlikeFractions.numbers(a: 2, b: 3, c: 1, d: 4, minus: false)
         var l = LessonRun(AddAndSubtract.spec, numbers: n)
-        XCTAssertEqual(l.words.say, "What is 2/3 + 1/4?")
+        XCTAssertEqual(l.words.say, "Look at the bars. Are the pieces the same size?")
         _ = l.go()
         XCTAssertEqual(l.words.hint, "Both 3 and 4 go into 12, so cut both bars into twelfths.")
         fill(&l, [("x", "7")])
@@ -159,11 +137,10 @@ final class UnlikeFractionsTests: XCTestCase {
         fill(&l, [("x", "8")]); _ = l.go()
         XCTAssertEqual(l.words.hint, "Each fourth is 3 twelfths.")
         fill(&l, [("x", "3")]); _ = l.go()
-        fill(&l, [("n", "5"), ("d", "12")])
+        fill(&l, [("n", "5")])
         XCTAssertEqual(l.go(), .notYet("You subtracted. Look at the sign: this one is a plus."))
-        fill(&l, [("n", "11"), ("d", "12")]); _ = l.go()
-        fill(&l, [("n", "11"), ("d", "12")]); _ = l.go()
-        XCTAssertEqual(l.words.say, "2/3 + 1/4 = 11/12.")
+        fill(&l, [("n", "11")]); _ = l.go()
+        XCTAssertEqual(l.words.say, "Same-size pieces, so the tops add.")
         XCTAssertEqual(l.words.hint, "Adding and taking away both need same-size pieces, so the first steps never change.")
         XCTAssertEqual(AddAndSubtract.spec.story?(n), "A plant grew 2/3 inch in May and 1/4 inch in June. How much did it grow in all?")
         XCTAssertEqual(AddAndSubtract.spec.story?(UnlikeFractions.numbers(a: 2, b: 3, c: 1, d: 4, minus: true)),
@@ -186,12 +163,14 @@ final class UnlikeFractionsTests: XCTestCase {
         XCTAssertEqual(check(["w": 1, "n": 5, "d": 12]), .wrong("That’s not equal to 19/12. How many whole 12s fit into 19? That’s the whole number. What’s left over goes on top."))
         XCTAssertEqual(check(["w": 1, "n": 7, "d": 0]), .soft("The bottom can’t be 0."))
         XCTAssertEqual(check(["w": 1, "n": 7]), .soft("Fill in the bottom number too."))
-        XCTAssertEqual(m.steps[6].words.say, "3/4 + 5/6 = 1 7/12.")
+        XCTAssertEqual(m.steps[6].words.say, "Same-size pieces, so the tops add.")
         XCTAssertEqual(m.steps[6].picture["answer"], 1)
 
         // a take-away that simplifies: 1/2 − 1/6 = 3/6 − 1/6 = 2/6 = 1/3
         var l = LessonRun(SubtractingFractions.spec, numbers: UnlikeFractions.numbers(a: 1, b: 2, c: 1, d: 6, minus: true))
-        for _ in 0..<5 { _ = l.showAnswer(); _ = l.go() }
+        // 1/6 is already over 6, so only the first fraction is rewritten
+        XCTAssertEqual(l.steps.map(\.words.say), ["Look at the bars. Are the pieces the same size?", "What size pieces fit both? Type the new bottom.", "How many sixths is one half?", "Take away the tops.", "Write it as simply as you can.", "Same-size pieces, so the tops are taken away."])
+        for _ in 0..<4 { _ = l.showAnswer(); _ = l.go() }
         XCTAssertEqual(l.words.hint, "Divide the top and the bottom by 2.")
         XCTAssertEqual(l.step.answer?.hint, "Both 2 and 6 can be divided by 2.")
         XCTAssertEqual(l.step.answer?.explain, "Divide top and bottom by 2.")
@@ -201,12 +180,12 @@ final class UnlikeFractionsTests: XCTestCase {
         fill(&l, [("n", "4"), ("d", "6")])
         XCTAssertEqual(l.go(), .notYet("That’s not equal to 2/6. Divide the top and the bottom by the same number."))
         fill(&l, [("n", "1"), ("d", "3")])
-        XCTAssertEqual(l.go(), .moved(6))
-        XCTAssertEqual(l.words.say, "1/2 − 1/6 = 1/3.")
+        XCTAssertEqual(l.go(), .moved(5))
+        XCTAssertEqual(l.words.say, "Same-size pieces, so the tops are taken away.")
 
-        // the bar already in sixths: 6 ÷ 6 = 1 sixth each, and the rewrite keeps its top
-        XCTAssertEqual(l.steps[3].words.hint, "Each sixth is 1 sixth.")
-        XCTAssertEqual(l.steps[3].answer?.expected, ["x": 1])
+        // the first fraction already over L: 3/8 + 1/2 asks only for the LCD, the second rewrite and the sum
+        let e = LessonRun(AddingFractions.spec, numbers: UnlikeFractions.numbers(a: 3, b: 8, c: 1, d: 2, minus: false))
+        XCTAssertEqual(e.steps.map(\.words.say), ["Look at the bars. Are the pieces the same size?", "What size pieces fit both? Type the new bottom.", "How many eighths is one half?", "Add the tops.", "Same-size pieces, so the tops add."])
     }
 
     func testWebPictureNumbers() {

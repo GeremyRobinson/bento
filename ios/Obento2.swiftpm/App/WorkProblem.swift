@@ -68,7 +68,9 @@ final class WorkProblem: Identifiable, PageProblem {
         /// Answered in the work (G 19 Oct): the answer box sits in the work where the number goes, what to do beside
         /// it, Check under the work. All in paper points from the origin.
         var inline = false
-        var box: (right: Double, mid: Double, cell: Double)?
+        var boxes: [WorkBox] = []
+        /// The box the answer's box `id` is typed into (a box with no name is the step's first).
+        func box(for id: String, first: String?) -> WorkBox? { boxes.first { ($0.id ?? first) == id } }
         var sayAt = CGPoint.zero, checkAt = CGPoint.zero, sayWidth = 400.0
     }
     /// Laid out once for its numbers and the screen's shape (ProblemGrid).
@@ -83,7 +85,10 @@ final class WorkProblem: Identifiable, PageProblem {
     var scale: Double { layout.scale }
     var underStep: Double { layout.lineY }
     /// The picture keys the drawing reads now: the step's, and whether its answer box is in the work.
-    var drawingKeys: Numbers { picture.merging(["box": lesson.step.answer.map { $0.choices == nil ? 1 : 0 } ?? 0]) { $1 } }
+    /// `pick`: the step is a pick-one (a story's "Pick what to do"), so the work doesn't give its answer away.
+    var drawingKeys: Numbers {
+        picture.merging(["box": lesson.step.answer.map { $0.choices == nil ? 1 : 0 } ?? 0, "pick": lesson.step.answer?.choices != nil ? 1 : 0]) { $1 }
+    }
     var boxSize: Size { let l = layout; return Size((l.width * l.scale).rounded(.up) * Paper.unit, (l.height * l.scale).rounded(.up) * Paper.unit) }
     /// The box's corner stays on the strong lines; everything in it is drawn `scale` times bigger from there.
     var contentOrigin: Point { origin }
@@ -244,6 +249,9 @@ final class WorkProblem: Identifiable, PageProblem {
     func reset() { guard !busy else { return }; onTouch?(); lesson.reset(); message = nil; onChange?() }
     func usedHint() { lesson.usedHint(); onChange?() }
     func tapPaper(_ p: Point) {}
+
+    /// Screenshots only: these numbers instead of the generated ones (and a story, when asked).
+    func use(_ n: Numbers, story: Bool = false) { lesson = LessonRun(lesson.spec, numbers: n, story: story) }
 
     func replay() {
         var r = LessonRun(lesson.spec, numbers: lesson.numbers); r.helps = lesson.helps; r.oneTry = lesson.oneTry

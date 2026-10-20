@@ -30,12 +30,19 @@ enum LessonPictures {
 
     /// A lesson's drawing for these numbers and this step's picture keys: its picture, and its work as school writes
     /// it, each in squares from its own corner; the problem's layout (ProblemGrid) places them.
-    /// A lesson's drawing: its picture, its work, and (for a lesson answered in its work) where the answer box goes.
-    struct Drawing { var picture: Sketch; var work: Sketch; var box: (right: Double, mid: Double, cell: Double)? = nil }
+    /// A lesson's drawing: its picture, its work, and (for a lesson answered in its work) where its answer boxes go.
+    /// `shared`: the lesson placed its picture and work itself, in one set of squares, and the layout keeps them so.
+    struct Drawing {
+        var picture: Sketch; var work: Sketch; var boxes: [WorkBox] = []; var shared = false
+    }
 
     static func drawing(_ id: String, _ n: Numbers, _ p: Numbers) -> Drawing {
-        let d = drawingParts(id, n, p)
-        return Drawing(picture: d.picture, work: d.work, box: d.box)
+        switch id {
+        case "add", "sub", "mix": return unlikeDrawing(n, p)
+        default:
+            let d = drawingParts(id, n, p)
+            return Drawing(picture: d.picture, work: d.work, boxes: d.box.map { [WorkBox(id: nil, right: $0.right, mid: $0.mid, cell: $0.cell)] } ?? [])
+        }
     }
 
     static func drawingParts(_ id: String, _ n: Numbers, _ p: Numbers) -> (picture: Sketch, work: Sketch, box: (right: Double, mid: Double, cell: Double)?) {
@@ -51,7 +58,6 @@ enum LessonPictures {
         case "g5-adddec": return with(addDecimalsGrid(a: v("a"), b: v("b"), p))
         case "g5-multdec": return with(multiplyDecimalsGrid(n, p))
         case "g5-divdec": return with(divideDecimalGrid(d: Int(v("d")), qt: Int(v("qt")), p))
-        case "add", "sub", "mix": return with(unlikeGrid(n, p))
         case "g5-multfrac": return with(multiplyFractionsGrid(n, p))
         case "g5-improper": return with(improperGrid(n, p))
         case "g5-fracof": return with(fractionOfGrid(n, p))
@@ -453,53 +459,117 @@ enum LessonPictures {
 
     static func frac(_ a: Int, _ b: Int) -> Math { .frac(.num(Double(a)), .num(Double(b))) }
 
-    /// 1/2 + 1/3 on the grid: on the left the sum as school writes it, each fraction rewritten over the common bottom
-    /// with its × beside it, a digit to a square; on the right the bars, one whole each, a length every bottom divides
-    /// (so a third and a fourth of twelve are exact squares), cut into the same size pieces, then put together (or
-    /// taken away).
-    static func unlikeGrid(_ n: Numbers, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
-        var pen = GridPen()
-        var wk = GridPen()
+    /// Adding fractions (and Subtracting, and Adding and subtracting), designed for itself (G 20 Oct, the lesson's
+    /// brief): each bar is its fraction drawn, on the same rows as the fraction in the work beside it. On the left the
+    /// bars, one whole each, cut into the new bottom's pieces once it's found; on the right the work as 5th grade
+    /// writes it, the two fractions over each other, each rewritten over the new bottom after an =, a line, and the
+    /// answer under it, beside the answer bar. The box is where the number goes: the new bottom, each new top, the
+    /// answer's top (its bottom given), and a mixed number's whole and fraction. A fraction already over the new bottom
+    /// is written for the child. Picture and work share one set of squares (`shared`), so the layout keeps their rows.
+    static func unlikeDrawing(_ n: Numbers, _ p: Numbers) -> Drawing {
+        // two pens on the same squares: the bars (the picture) and the work
+        var pic = GridPen(), pen = GridPen()
         let a = Int(n["a"] ?? 0), b = Int(n["b"] ?? 1), c = Int(n["c"] ?? 0), d = Int(n["d"] ?? 1), minus = n["minus"] == 1
         let L = Int(n["L"] ?? 1), A = Int(n["A"] ?? 0), C = Int(n["C"] ?? 0), S = Int(n["S"] ?? 0)
-        let cut = p["cut"] == 1, first = p["first"] == 1, second = p["second"] == 1, combine = p["combine"] == 1, focus = p["focus"]
-        let small = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink2), chapter = Sketch.Words(size: Sketch.small, weight: .medium, colour: .chapter)
-        // school: a/b = A/L (× L/b) over c/d = C/L, a line, S/L
-        wk.math("f1", first ? [frac(a, b), .op("="), frac(A, L)] : [frac(a, b)], col: 1, row: 1)
-        if first { wk.word("k1", "× \(L / b)", at: 9, 3, chapter, anchor: UnitPoint(x: 0, y: 0.5)) }
-        wk.word("op", minus ? "−" : "+", at: 0, 8, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink))
-        wk.math("f2", second ? [frac(c, d), .op("="), frac(C, L)] : [frac(c, d)], col: 1, row: 6)
-        if second { wk.word("k2", "× \(L / d)", at: 9, 8, chapter, anchor: UnitPoint(x: 0, y: 0.5)) }
-        if combine {
-            wk.rule("r", from: 0, to: 12, row: 11)
-            wk.math("ans", [frac(S, L)], col: 5, row: 11)
-            if p["answer"] == 1 {
-                let g = gcd(S, L), whole = S / L, rem = S % L
-                let simple = whole >= 1 ? (rem == 0 ? "\(whole)" : "\(whole) \(rem / gcd(rem, L))/\(L / gcd(rem, L))") : "\(S / g)/\(L / g)"
-                wk.word("simp", "= \(simple)", at: 8, 13, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .chapter), anchor: UnitPoint(x: 0, y: 0.5))
-            }
+        let cut = p["cut"] == 1, first = p["first"] == 1, second = p["second"] == 1, combine = p["combine"] == 1
+        let answer = p["answer"] == 1, focus = p["focus"], typing = p["box"] == 1
+        let F = UnlikeFractions.finalForm(S, L)
+        // the bars: a whole is L pieces of `per` squares, as long as fits 24 squares; four squares tall, a fraction's height
+        let per = Double(max(1, 24 / L)), length = L * Int(per), barH = 4.0
+        // rows: the first fraction and its bar, the second two squares under, the line, the answer and its bar(s)
+        let row1 = 0.0, row2 = 6.0, rule = 12.0, row3 = 13.0
+        // the work's columns, from the first block line past the bars: the sign, the fraction, =, the new fraction,
+        // then = and the simplest form beside the answer; a digit is 2 squares, a fraction's column 4
+        let wx = ((Double(length) + 2) / 5).rounded(.up) * 5
+        let signX = wx + 1, fracA = wx + 2, eqX = wx + 8, fracB = wx + 10, eq2X = wx + 16, mixX = wx + 18
+        let num = Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink), dp = 2.0
+
+        // a fraction in its 4-square column: the top centred down row r + 1, the bar on r + 2, the bottom down r + 3,
+        // each number one word centred on the column's middle line (12 reads as one number); nil leaves a part empty
+        // (a box goes there)
+        func fraction(_ id: String, _ top: Int?, _ bottom: Int?, col: Double, row r: Double, _ colour: Sketch.Colour = .ink) {
+            if let top { pen.word(id + "t", String(top), at: col + 2, r + 1, num.colour(colour)) }
+            pen.rule(id + "bar", from: col, to: col + 4, row: r + 2, colour)
+            if let bottom { pen.word(id + "b", String(bottom), at: col + 2, r + 3, num.colour(colour)) }
         }
-        // the bars: a whole is L pieces of `per` squares
-        let per = max(1, 36 / L), length = L * per, x0 = 20.0
-        pen.bar("b1", col: x0, row: 2, length: length, parts: cut ? L : b, shaded: cut ? A : a, lit: focus == 1 || focus == 3)
-        pen.label("l1", first ? "\(A)/\(L)" : "\(a)/\(b)", small, .right, edge: x0 + Double(length), along: 3)
-        pen.bar("b2", col: x0, row: 7, length: length, parts: cut ? L : d, shaded: cut ? C : c, striped: true, lit: focus == 2 || focus == 3)
-        pen.label("l2", second ? "\(C)/\(L)" : "\(c)/\(d)", small, .right, edge: x0 + Double(length), along: 8)
+        // a box the width of a fraction's column (two digits), what's typed centred in it as the fraction's numbers are
+        func box(_ id: String, col: Double, mid: Double) {
+            pen.answerBox(id, right: col + 4, mid: mid, per: dp, cells: 2, centred: true)
+        }
+
+        // which step is being typed (the picture keys say how far it's got)
+        let atLCD = typing && !cut, atFirst = typing && cut && !first, atSecond = typing && first && !second
+        let atCombine = typing && second && !combine, atSimplify = typing && combine
+
+        // MARK: the bars
+        func lit(_ k: Double) -> Bool { focus == k || (focus == 3 && k < 3) }
+        pic.bar("b1", col: 0, row: row1, length: length, height: barH, parts: cut ? L : b, shaded: cut ? A : a, lit: lit(1))
+        pic.bar("b2", col: 0, row: row2, length: length, height: barH, parts: cut ? L : d, shaded: cut ? C : c, striped: true, lit: lit(2))
+        // counted on as the child looks: each shaded piece's number, when the pieces are big enough to hold one
+        let count = Sketch.Words(size: Sketch.small, weight: .semibold, colour: .ink2)
+        func counted(_ id: String, _ k: Int, row r: Double, from: Int = 0) {
+            guard per >= 2 else { return }
+            for i in 0..<k { pic.word("\(id)\(i)", String(from + i + 1), at: (Double(i) + 0.5) * per, r + barH / 2, count) }
+        }
+        if first { counted("n1", A, row: row1) }
+        if second { counted("n2", C, row: row2) }
         if combine {
-            if minus {
-                pen.bar("b3", col: x0, row: 12, length: length, parts: L, shaded: S, lit: focus == 4, struck: S..<min(L, S + C))
+            if answer && F.whole == 0 && F.den < L {
+                // simplified: the cuts go, leaving the simplest pieces (3 sixths is one half)
+                pic.bar("b3s", col: 0, row: row3, length: length, height: barH, parts: F.den, shaded: F.num, lit: focus == 4)
+            } else if minus {
+                pic.bar("b3", col: 0, row: row3, length: length, height: barH, parts: L, shaded: S, lit: focus == 4, struck: S..<min(L, S + C))
+                counted("n3", S, row: row3)
             } else {
-                let bars = max(1, Int((Double(S) / Double(L)).rounded(.up)))
-                for j in 0..<bars {
-                    let row = 12 + Double(j) * 3, base = j * L
-                    pen.bar("b3\(j)", col: x0, row: row, length: length, parts: L, shaded: max(0, min(L, A - base)), lit: focus == 4)
-                    let from = max(0, A - base), count = max(0, min(L - from, S - base - from))
-                    if count > 0 { pen.bar("b3c\(j)", col: x0, row: row, length: length, parts: L, shaded: count, from: from, striped: true, lit: focus == 4) }
+                // one bar per whole the total needs: the first fraction's pieces, then the second's after them
+                for j in 0..<max(1, Int((Double(S) / Double(L)).rounded(.up))) {
+                    let r = row3 + Double(j) * (barH + 2), base = j * L
+                    pic.bar("b3\(j)", col: 0, row: r, length: length, height: barH, parts: L, shaded: max(0, min(L, A - base)), lit: focus == 4)
+                    let from = max(0, A - base), more = max(0, min(L - from, S - base - from))
+                    if more > 0 { pic.bar("b3c\(j)", col: 0, row: r, length: length, height: barH, parts: L, shaded: more, from: from, striped: true, lit: focus == 4) }
+                    if per >= 2 { for i in 0..<min(L, S - base) { pic.word("n3\(j)_\(i)", String(base + i + 1), at: (Double(i) + 0.5) * per, r + barH / 2, count) } }
                 }
             }
-            pen.label("l3", "\(S)/\(L)", chapter, .right, edge: x0 + Double(length), along: 13)
         }
-        return (pen.sketch, wk.sketch)
+
+        // MARK: the work
+        fraction("f1", a, b, col: fracA, row: row1)
+        // the sign, once it's known: a story's child picks it first
+        if p["pick"] != 1 { pen.word("op", minus ? "−" : "+", at: signX, row2 + 2, num) }
+        fraction("f2", c, d, col: fracA, row: row2)
+        pen.rule("rule", from: wx, to: fracB + 4, row: rule)
+        // rewritten over the new bottom: = and the fraction once the step begins; the bottom once it's found, the top
+        // once it's worked out (or at once, for a fraction already over the new bottom)
+        if typing || cut {
+            for (i, (r, top, den, done, isFirst)) in [(row1, A, b, first, true), (row2, C, d, second, false)].enumerated() {
+                pen.word("eq\(i)", "=", at: eqX, r + 2, num)
+                let shown = cut && (done || den == L)
+                fraction("g\(i)", shown ? top : nil, cut ? L : nil, col: fracB, row: r)
+                if isFirst ? atFirst : atSecond, !shown { box("x", col: fracB, mid: r + 1) }
+            }
+            if atLCD { box("x", col: fracB, mid: row1 + 3) }
+        }
+        // the answer under the line: its bottom given, its top typed, then written in the chapter's colour
+        if second || atCombine {
+            fraction("ans", combine ? S : nil, L, col: fracB, row: row3, combine ? .chapter : .ink)
+            if atCombine { box("n", col: fracB, mid: row3 + 1) }
+        }
+        // simplest form beside it: a whole number and a fraction as it needs them, typed, then written
+        if atSimplify || answer {
+            pen.word("eq3", "=", at: eq2X, row3 + 2, num)
+            var x = mixX
+            if F.whole > 0 {
+                // the whole number in its 2 squares, the fraction a square after it
+                if answer { pen.word("w", String(F.whole), at: x + 1, row3 + 2, num.colour(.chapter)) }
+                else { pen.answerBox("w", right: x + 2, mid: row3 + 2, per: dp, cells: 1, centred: true) }
+                x += 3
+            }
+            if F.num > 0 {
+                fraction("s", answer ? F.num : nil, answer ? F.den : nil, col: x, row: row3, answer ? .chapter : .ink)
+                if !answer { box("n", col: x, mid: row3 + 1); box("d", col: x, mid: row3 + 3) }
+            }
+        }
+        return Drawing(picture: pic.sketch, work: pen.sketch, boxes: pen.boxes, shared: true)
     }
 
     /// 2/3 × 3/4 on the grid: the square cut into b rows and d columns of whole squares, a rows and c columns shaded,

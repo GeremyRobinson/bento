@@ -5,6 +5,27 @@ import SwiftUI
 /// point; GridPen turns squares into the paper's points at the very end. Edges always fall on grid lines; only a word
 /// or a number may sit in the middle of a square (to be centred on what it labels), and something centred on an odd
 /// count of squares is an odd count itself. Its origin (0, 0) is a crossing of the grid.
+/// An answer box written into the work, where the number goes (G 19 Oct: the work is where you answer), in points: its
+/// right edge (numbers line up on the right, as in columns), its row's middle and a digit's cell. It's `cells` digits
+/// wide at least, `spare` more than what's typed, and types into the answer's box `id` (nil: the step's first box).
+struct WorkBox {
+    var id: String?
+    var right: Double, mid: Double, cell: Double
+    var cells = 3, spare = 1
+    /// Centred (a fraction's top or bottom): the box is its column, and what's typed sits in its middle.
+    var centred = false
+    func moved(_ by: CGPoint) -> WorkBox { var b = self; b.right += by.x; b.mid += by.y; return b }
+    /// Its rect when `typed` digits are in it, with half a cell past its right edge for the cursor.
+    func rect(typed: Int = 0) -> CGRect {
+        if centred {
+            let n = Double(max(cells, typed)), mid = right - Double(cells) * cell / 2
+            return CGRect(x: mid - n * cell / 2, y: self.mid - cell / 2, width: n * cell, height: cell)
+        }
+        let n = Double(max(cells, typed + spare))
+        return CGRect(x: right - n * cell, y: mid - cell / 2, width: (n + 0.5) * cell, height: cell)
+    }
+}
+
 @MainActor
 struct GridPen {
     var sketch = Sketch()
@@ -12,11 +33,23 @@ struct GridPen {
     /// right edge (numbers line up on the right, as in columns), its row's middle, and the size of a digit's cell, in
     /// points. The box grows left as digits are typed.
     var box: (right: Double, mid: Double, cell: Double)?
+    /// More than one answer box in the work (a fraction's top, a mixed number's whole and its fraction), each named by
+    /// the answer's box it types into.
+    var boxes: [WorkBox] = []
     /// The words' size: 1, or a whole number bigger in a big problem (its squares stay the paper's).
     let k: Double
     static let sq = Paper.cell
 
     init(k: Double = 1) { self.k = k }
+
+    /// An answer box `cells` digits wide whose right edge is column `right`, on the row whose middle is `mid` (a digit is
+    /// `per` squares): it grows left as digits are typed, so they line up on the right as written work does.
+    mutating func answerBox(_ id: String, right: Double, mid: Double, per: Double, cells: Int, spare: Int = 0, centred: Bool = false) {
+        boxes.append(WorkBox(id: id, right: P(right, 0).x, mid: P(0, mid).y, cell: per * Self.sq, cells: cells, spare: spare, centred: centred))
+    }
+
+    /// Every box the work has: the one `box`, then the named ones.
+    var allBoxes: [WorkBox] { (box.map { [WorkBox(id: nil, right: $0.right, mid: $0.mid, cell: $0.cell)] } ?? []) + boxes }
 
     /// A place on the grid, in squares across and down from the origin.
     func P(_ col: Double, _ row: Double) -> CGPoint { CGPoint(x: col * Self.sq, y: row * Self.sq) }

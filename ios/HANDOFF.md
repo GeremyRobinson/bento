@@ -12,6 +12,13 @@ For the next session taking over from this one. Read `CLAUDE.md` first: its G's 
   A quick attempt to move them all at once onto a generic "worked down in lines" layout made them worse and was
   undone (never pushed).
 
+## 20 Oct: one design per lesson (read `design/README.md`)
+- G: lessons can't be fitted into one layout; each lesson is designed for its own scenarios. The plan, the order (by
+  kit) and all 191 lessons' pictures and working are in `design/`. Every lesson gets a brief there before code.
+- **Adding fractions** (`design/add.md`) is built that way: bars and the working on the same rows, answered in the
+  working, its own steps (rewrites that change nothing and simplify with nothing to do are left out). `sub` and `mix`
+  share it. Waiting for G to try it. Next kit: number line (Rounding decimals).
+
 ## How to work with G (what went wrong)
 - One lesson at a time. Before writing code, show G a sketch of that lesson's screen (a text mock-up in chat was
   what G liked for Multiply) and build only once G says yes.

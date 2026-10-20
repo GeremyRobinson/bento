@@ -133,19 +133,21 @@ public enum UnlikeFractions {
     }
 
     /// The web's five steps (lcd, first, second, add/subtract, simplify), with their checks and messages,
-    /// between an opening question and the answer.
+    /// between an opening question and the answer. A rewrite that changes nothing and a simplify with nothing to do are
+    /// left out, and the answer's bottom is given (G 20 Oct).
     static func steps(_ lesson: Lesson, _ n: Numbers) -> [LessonStep] {
         let a = Int(n["a"] ?? 1), b = Int(n["b"] ?? 2), c = Int(n["c"] ?? 1), d = Int(n["d"] ?? 2)
         let L = Int(n["L"] ?? 1), A = Int(n["A"] ?? 0), C = Int(n["C"] ?? 0), S = Int(n["S"] ?? 0)
         let sub = (n["minus"] ?? 0) == 1, sign = sub ? "−" : "+"
         let big = max(b, d), small = min(b, d)
-        let problem = "\(a)/\(b) \(sign) \(c)/\(d)"
 
-        let ask = LessonStep(StepWords(say: "What is \(problem)?", hint: "Look at the two bars. Are the pieces the same size?", action: "Let’s find out"))
+        // the problem is written once, in the work (G 20 Oct): the first step points at the bars instead
+        let ask = LessonStep(StepWords(say: "Look at the bars. Are the pieces the same size?", hint: ideas[lesson]!, action: "Let’s find out"))
 
         // lcd: the web's question, its check() and messages; the narration (specs/k12/grade5.md §3) as the step's hint
         let lcd = LessonStep(
-            StepWords(say: "Smallest number that both \(b) and \(d) go into:",
+            // plain words (G 20 Oct): what to do, in the work's own terms
+            StepWords(say: "What size pieces fit both? Type the new bottom.",
                       hint: "Both \(b) and \(d) go into \(L), so cut both bars into \(pieceName(L)).", action: "Check"),
             answer: AnswerTask(
                 prompt: [.text("LCD of"), .num(Double(b)), .text("and"), .num(Double(d)), .text("is"), .box("x")],
@@ -173,7 +175,7 @@ public enum UnlikeFractions {
         func rewrite(_ top: Int, _ den: Int, _ N: Int, first: Bool) -> LessonStep {
             let k = L / den
             return LessonStep(
-                StepWords(say: "Rewrite \(first ? "the first" : "the second") fraction",
+                StepWords(say: "How many \(pieceName(L)) is \(top == 1 ? "one" : "\(top)") \(pieceName(den, top != 1))?",
                           hint: "Each \(pieceName(den, false)) is \(k) \(pieceName(L, k != 1)).", action: "Check"),
                 answer: AnswerTask(
                     prompt: [.frac(.num(Double(top)), .num(Double(den))), .op("="), .frac(.box("x"), .num(Double(L)))],
@@ -194,42 +196,39 @@ public enum UnlikeFractions {
                 picture: first ? ["cut": 1, "focus": 1] : ["cut": 1, "first": 1, "focus": 2])
         }
 
+        // the answer's bottom is written for the child (G 20 Oct): the pieces are already the same size, so only the
+        // top is worked out
         let combine = LessonStep(
-            StepWords(say: sub ? "Subtract" : "Add",
+            StepWords(say: sub ? "Take away the tops." : "Add the tops.",
                       hint: sub ? "Same-size pieces now, so take away. The bottom stays \(L)." : "Same-size pieces now, so add the tops. The bottom stays \(L).",
                       action: "Check"),
             answer: AnswerTask(
-                prompt: [.frac(.num(Double(A)), .num(Double(L))), .op(sign), .frac(.num(Double(C)), .num(Double(L))), .op("="), .frac(.box("n"), .box("d"))],
-                expected: ["n": Double(S), "d": Double(L)],
+                prompt: [.frac(.num(Double(A)), .num(Double(L))), .op(sign), .frac(.num(Double(C)), .num(Double(L))), .op("="), .frac(.box("n"), .num(Double(L)))],
+                expected: ["n": Double(S)],
                 hint: "The pieces are the same size now, so only the tops \(sub ? "get taken away" : "add"). Does the size of a piece change?",
                 explain: "\(A) \(sign) \(C) = \(S), and the bottom stays \(L).",
                 check: { v in
-                    guard let top = v["n"], let dd = v["d"] else { return .soft("Fill in both boxes, the top and the bottom.") }
-                    if same(top, S) && same(dd, L) { return .right }
-                    if !sub && same(dd, 2 * L) {
-                        return .wrong("You added the bottoms too (\(L) + \(L)). The pieces are already the same size, \(L)ths, so the bottom stays \(L). Picture a pizza: \(A) slices plus \(C) slices is \(S) slices, still \(L)ths.")
-                    }
-                    if sub && same(dd, 0) {
-                        return .wrong("You subtracted the bottoms too (\(L) − \(L) = 0). The pieces are already the same size, \(L)ths, so the bottom stays \(L). Picture a pizza: \(A) slices take away \(C) is \(S) slices, still \(L)ths.")
-                    }
-                    if !same(dd, L) {
-                        return .wrong("When the bottoms match, the bottom stays the same: \(L). Only the tops get \(sub ? "subtracted" : "added").")
-                    }
+                    guard let top = v["n"] else { return .soft("Fill in the top.") }
+                    if same(top, S) { return .right }
                     if sub && same(top, A + C) { return .wrong("You added \(A) + \(C). Look at the sign: this one is a minus.") }
                     if !sub && same(top, abs(A - C)) { return .wrong("You subtracted. Look at the sign: this one is a plus.") }
-                    return .wrong("The bottom is right. Check the top: \(A) \(sign) \(C) = ?")
+                    return .wrong("Check the top: \(A) \(sign) \(C) = ?")
                 }),
             picture: ["cut": 1, "first": 1, "second": 1, "focus": 3])
 
         let simplify = LessonStep(
-            StepWords(say: "Simplify", hint: simplifyNarration(S, L), action: "Check"),
+            StepWords(say: "Write it as simply as you can.", hint: simplifyNarration(S, L), action: "Check"),
             answer: simplifyTask(S, L),
             picture: ["cut": 1, "first": 1, "second": 1, "combine": 1, "focus": 4])
 
         let F = finalForm(S, L), changes = !(F.whole == 0 && F.den == L)
-        let done = LessonStep(StepWords(say: "\(problem) = \(mixedLabel(S, L)).", hint: ideas[lesson]!, action: "Next problem"),
+        // the answer is in the work, in the chapter's colour; the last words say why it works, not the sum again
+        let done = LessonStep(StepWords(say: sub ? "Same-size pieces, so the tops are taken away." : "Same-size pieces, so the tops add.", hint: ideas[lesson]!, action: "Next problem"),
                               picture: ["cut": 1, "first": 1, "second": 1, "combine": 1, "answer": changes ? 1 : 0])
-        return [ask, lcd, rewrite(a, b, A, first: true), rewrite(c, d, C, first: false), combine, simplify, done]
+        // a fraction already over L is written for the child, and an answer already as simple as it gets needs no
+        // simplifying (G 20 Oct): only the steps that change something are asked
+        return [ask, lcd] + (b == L ? [] : [rewrite(a, b, A, first: true)]) + (d == L ? [] : [rewrite(c, d, C, first: false)])
+            + [combine] + (changes ? [simplify] : []) + [done]
     }
 
     /// The simplify narration (specs/k12/grade5.md §3).

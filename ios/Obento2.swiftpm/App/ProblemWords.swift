@@ -30,6 +30,11 @@ enum ProblemLayout {
     static func inlineBlocks(_ m: WorkProblem) -> [Block] {
         let l = m.lesson, L = m.layout, k = L.scale, o = m.origin
         func A(_ x: Double, _ y: Double, _ w: Double, _ h: Double) -> CGRect { CGRect(x: o.x + x, y: o.y + y, width: w, height: h) }
+        // a block with a word and its arrow as wide as they need, in whole squares, never narrower than `least`
+        func width(_ word: String, _ least: Double) -> Double {
+            let w = PaperText.width(word, PaperText.font(Sketch.Words.block.size * k, .medium)) + 60 * k
+            return max(least * k, (w / Paper.cell).rounded(.up) * Paper.cell)
+        }
         var out: [Block] = []
         var y = L.checkAt.y
         if let choices = l.step.answer?.choices {
@@ -37,16 +42,18 @@ enum ProblemLayout {
             for i in choices.indices { out.append(Block(kind: .choice(i), rect: A(L.checkAt.x + Double(i) * (w - 1.5), y, w, 40 * k))) }
             y += 60 * k
         }
-        if let a = l.step.answer, a.choices == nil, let b = L.box, let id = a.boxes.first {
-            let cells = Double(max(3, (l.typed[id] ?? "").count + 1))
-            // half a cell past the column's edge, room for the cursor so it touches nothing
-            out.append(Block(kind: .field(id), rect: A(b.right - cells * b.cell, b.mid - b.cell / 2, (cells + 0.5) * b.cell, b.cell)))
+        if let a = l.step.answer, a.choices == nil {
+            for b in L.boxes {
+                guard let id = b.id ?? a.boxes.first, a.boxes.contains(id) else { continue }
+                // half a cell past the column's edge, room for the cursor so it touches nothing
+                out.append(Block(kind: .field(id), rect: b.rect(typed: (l.typed[id] ?? "").count).offsetBy(dx: o.x, dy: o.y)))
+            }
         }
-        if !m.auto && !m.solved { out.append(Block(kind: .main, rect: A(L.checkAt.x, y, 120 * k, 40 * k))) }
-        if !m.auto && m.solved { out.append(Block(kind: .nextProblem, rect: A(L.checkAt.x, y, 180 * k, 40 * k))) }
+        if !m.auto && !m.solved { out.append(Block(kind: .main, rect: A(L.checkAt.x, y, width(l.words.action, 120), 40 * k))) }
+        if !m.auto && m.solved { out.append(Block(kind: .nextProblem, rect: A(L.checkAt.x, y, width("Next problem", 180), 40 * k))) }
         for kind in m.howToButtons {
             switch kind {
-            case .next, .practise: out.append(Block(kind: kind, rect: A(L.checkAt.x, y, 180 * k, 40 * k)))
+            case .next, .practise: out.append(Block(kind: kind, rect: A(L.checkAt.x, y, width(kind == .next ? "Next step" : "Practice", 180), 40 * k)))
             case .again, .skip: out.append(Block(kind: kind, rect: A(L.checkAt.x + 200 * k, y, 160 * k, 40 * k)))
             default: break
             }
@@ -59,9 +66,14 @@ enum ProblemLayout {
         let l = m.lesson
         guard !m.auto, !m.solved, m.verdict == nil, let a = l.step.answer, a.choices == nil, let id = l.active ?? a.boxes.first,
               let r = blocks(m).first(where: { $0.kind == .field(id) })?.rect else { return nil }
-        let L = m.layout, count = Double((l.typed[id] ?? "").count)
-        let cell = L.box?.cell ?? Paper.cell * WorkProblem.lineCell * L.scale
-        let x = L.inline ? m.origin.x + (L.box?.right ?? 0) + 0.22 * cell : r.minX + cell + count * cell + 0.15 * cell
+        let L = m.layout, count = Double((l.typed[id] ?? "").count), b = L.box(for: id, first: a.boxes.first)
+        let cell = b?.cell ?? Paper.cell * WorkProblem.lineCell * L.scale
+        // a centred box: just after its number, which is written centred as one word
+        func after(_ b: WorkBox) -> Double {
+            b.right - Double(b.cells) * b.cell / 2 + PaperText.width(l.typed[id] ?? "", PaperText.font(Sketch.maths * L.scale, .medium, digits: true)) / 2 + 0.1 * b.cell
+        }
+        let x = L.inline ? m.origin.x + (b.map { $0.centred ? after($0) : $0.right + 0.22 * cell } ?? 0)
+            : r.minX + cell + count * cell + 0.15 * cell
         return CGRect(x: x, y: r.midY - 0.4 * cell, width: 0, height: 0.8 * cell)
     }
 
@@ -293,17 +305,21 @@ extension Rig {
                 // after what's in it (steady: no looping animations)
                 let typed = l.typed[f]?.replacingOccurrences(of: "-", with: "−")
                 let style: Sketch.Block = m.verdict.map { $0.right ? Sketch.Block(stroke: green, text: green) : Sketch.Block(stroke: red, text: red) }
-                    ?? (l.active == f ? .main : .plain)
+                    ?? (l.active == f ? .main : lay.inline ? Sketch.Block(stroke: .ink3) : .plain)
                 s.block(id + "\(m.verdict.map { $0.right } as Bool?)", r, style, k: k, grows: true)
                 // what's typed, and the cursor, show at once, as any text box does
                 s.pace = 0
                 // a digit to a square, from a square in: the same square of space each side however many are typed,
                 // and what's typed stays put as the box widens to the right
-                let cell = lay.box?.cell ?? Paper.cell * WorkProblem.lineCell * k, chars = Array(typed ?? "")
+                let wb = lay.box(for: f, first: l.step.answer?.boxes.first)
+                let cell = wb?.cell ?? Paper.cell * WorkProblem.lineCell * k, chars = Array(typed ?? "")
                 // in the work, digits fill the cells from the right, so their places line up with the rows above
-                let left = lay.inline ? (lay.box?.right ?? r.maxX) + m.origin.x - Double(chars.count) * cell : r.minX + cell
+                let left = lay.inline ? (wb?.right ?? r.maxX) + m.origin.x - Double(chars.count) * cell : r.minX + cell
                 let tag = "\(m.verdict.map { $0.right } as Bool?)"
-                for (j, ch) in chars.enumerated() {
+                if let wb, wb.centred, let typed, !typed.isEmpty {
+                    s.text("\(id)typed\(typed)\(tag)", typed, at: CGPoint(x: wb.right - Double(wb.cells) * cell / 2 + m.origin.x, y: r.midY), size: Sketch.maths * k, weight: .medium, style.text)
+                }
+                for (j, ch) in chars.enumerated() where wb?.centred != true {
                     s.text("\(id)typed\(j)\(ch)\(tag)", String(ch), at: CGPoint(x: left + (Double(j) + 0.5) * cell, y: r.midY), size: Sketch.maths * k, weight: .medium, style.text)
                 }
                 s.pace = 0.4

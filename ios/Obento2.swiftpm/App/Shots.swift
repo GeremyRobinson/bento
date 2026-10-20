@@ -212,6 +212,14 @@ enum Shots {
                 guard let p = Map.pieces.first(where: { $0.id == id }) else { return }
                 m.select(p); m.open(p)
                 guard let page = m.bars, page.problems.indices.contains(which), let w = page.problems[which] as? WorkProblem else { return }
+                // -numbers a=1,b=2,…: that problem with these numbers (the lesson's own worked-out ones added by its spec);
+                // -story: told as its story
+                if let i = args.firstIndex(of: "-numbers"), i + 1 < args.count {
+                    var given: Numbers = [:]
+                    for pair in args[i + 1].split(separator: ",") { let kv = pair.split(separator: "="); if kv.count == 2, let v = Double(kv[1]) { given[String(kv[0])] = v } }
+                    w.use(["add", "sub", "mix"].contains(id) ? UnlikeFractions.numbers(a: Int(given["a"] ?? 1), b: Int(given["b"] ?? 2), c: Int(given["c"] ?? 1), d: Int(given["d"] ?? 3), minus: given["minus"] == 1) : given,
+                          story: args.contains("-story"))
+                }
                 page.open(w)
                 defer { if ProcessInfo.processInfo.arguments.contains("-keypad"), let box = w.lesson.step.answer?.boxes.first { w.select(box) } }
                 // -wrong: a wrong answer typed and checked, so its box and words show red

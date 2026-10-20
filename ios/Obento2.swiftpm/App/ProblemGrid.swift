@@ -24,7 +24,10 @@ enum ProblemGrid {
     /// never changes partway), and the step's own measures. Kept per numbers and screen.
     struct Plan { var P: Piece, W: Piece, S: Piece, arrangement: Int, k: Double, lineY: Double, actions: Double, keyX: Double, stepW: Double
         /// Answered in the work: the work's own width (what to do goes beside it), and what to do's width.
-        var inline = false, workW = 0.0, sayW = 0.0 }
+        var inline = false, workW = 0.0, sayW = 0.0
+        /// The lesson placed its picture and work itself in one set of squares (G 20 Oct): their corner over all its
+        /// steps, and the work's left edge there (Check starts on it).
+        var shared = false, corner = CGPoint.zero, workLeft = 0.0 }
     private static var plans: [String: Plan] = [:]
 
     static func layout(_ m: WorkProblem) -> WorkProblem.Layout {
@@ -37,25 +40,37 @@ enum ProblemGrid {
         func piece(_ b: CGRect?) -> Piece { b.map { Piece(w: $0.maxX - floorSq($0.minX), h: $0.maxY - floorSq($0.minY)) } ?? Piece() }
         let pb = d.picture.bounds
         // the answer box is part of the work: what comes under it starts under the box
-        let wb = d.box.map { b in (d.work.bounds ?? boxRect(b)).union(boxRect(b)) } ?? d.work.bounds
+        let wb = withBoxes(d.work.bounds, d.boxes)
         if plan.inline {
             let P = piece(pb), W = piece(wb), k = plan.k
-            let wx = plan.arrangement == 1 ? next(P.w + 2 * sq) : 0, wy = plan.arrangement == 1 ? 0 : next(P.h + sq)
             var out = WorkProblem.Layout()
             out.scale = k; out.inline = true
-            out.pictureOffset = CGPoint(x: -floorSq(Double(pb?.minX ?? 0)), y: -floorSq(Double(pb?.minY ?? 0)))
-            out.workOffset = CGPoint(x: wx - floorSq(Double(wb?.minX ?? 0)), y: wy - floorSq(Double(wb?.minY ?? 0)))
-            // the box where the work puts it; what to do level with it, beside the work; Check a square under the work
-            if let b = d.box { out.box = (b.right + out.workOffset.x, b.mid + out.workOffset.y, b.cell) }
+            // where the work starts, and where its bottom is now (Check goes a square under it)
+            let wx: Double, wy: Double, bottom: Double
+            if plan.shared {
+                // the lesson's own placing: picture and work move together, so their rows stay level
+                let o = CGPoint(x: -plan.corner.x, y: -plan.corner.y)
+                out.pictureOffset = o; out.workOffset = o
+                wx = plan.workLeft + o.x; wy = 0
+                bottom = [pb, wb].compactMap { $0 }.reduce(CGRect.null) { $0.union($1) }.maxY + o.y
+            } else {
+                wx = plan.arrangement == 1 ? next(P.w + 2 * sq) : 0; wy = plan.arrangement == 1 ? 0 : next(P.h + sq)
+                out.pictureOffset = CGPoint(x: -floorSq(Double(pb?.minX ?? 0)), y: -floorSq(Double(pb?.minY ?? 0)))
+                out.workOffset = CGPoint(x: wx - floorSq(Double(wb?.minX ?? 0)), y: wy - floorSq(Double(wb?.minY ?? 0)))
+                bottom = wy + W.h
+            }
+            // the boxes where the work puts them; what to do level with the first, beside the work; Check a square
+            // under the work
+            out.boxes = d.boxes.map { $0.moved(out.workOffset) }
             // what to do: level with the box when there is one, else on the work's first row; always on a line of the
             // grid and never above the work, so it keeps its square from the picture (G 19 Oct: nothing floats)
-            let sayX = wx + next(plan.workW + 2 * sq)
-            let row = out.box.map { (($0.mid - Sketch.row * k / 2) / sq).rounded() * sq } ?? wy
+            let sayX = (plan.shared ? 0 : wx) + next(plan.workW + 2 * sq)
+            let row = out.boxes.first.map { (($0.mid - Sketch.row * k / 2) / sq).rounded() * sq } ?? wy
             out.sayAt = CGPoint(x: sayX, y: max(wy, row))
             out.sayWidth = plan.sayW
-            out.checkAt = CGPoint(x: wx, y: ((wy + W.h + sq) / sq).rounded(.up) * sq)
+            out.checkAt = CGPoint(x: wx, y: ((bottom + sq) / sq).rounded(.up) * sq)
             out.column = 600
-            let width = max(plan.arrangement == 1 ? wx + plan.W.w : max(P.w, plan.W.w), 1)
+            let width = max(plan.shared ? plan.W.w : plan.arrangement == 1 ? wx + plan.W.w : max(P.w, plan.W.w), 1)
             out.total = width / k
             // what to do takes as many rows as its words wrap to (up to two), its box holding all of them
             let sayFont = PaperText.font(Sketch.Words.say.size * k, Sketch.Words.say.weight)
@@ -64,7 +79,7 @@ enum ProblemGrid {
                             CGRect(x: sayX, y: out.sayAt.y, width: plan.sayW, height: Sketch.row * k * max(1, rows)),
                             CGRect(x: wx, y: out.checkAt.y, width: 120 * k, height: 40 * k)]
             out.width = (width + 2 * block) / block / k
-            out.height = (max(P.h, wy + plan.W.h) + 3 * block) / block / k
+            out.height = ((plan.shared ? plan.W.h : max(P.h, wy + plan.W.h)) + 3 * block) / block / k
             return out
         }
         let placed = arrange(plan.arrangement, P: piece(pb), W: piece(wb), S: plan.S)
@@ -89,10 +104,10 @@ enum ProblemGrid {
         return out
     }
 
-    /// The answer box as wide as it starts (three digits) in the work's points.
-    static func boxRect(_ b: (right: Double, mid: Double, cell: Double)) -> CGRect {
-        // with its half cell of room for the cursor, so the box stays inside the work's section
-        CGRect(x: b.right - 3 * b.cell, y: b.mid - b.cell / 2, width: 3.5 * b.cell, height: b.cell)
+    /// The work's bounds with its answer boxes as wide as they start (and their half cell of room for the cursor), so
+    /// the boxes stay inside the work's section.
+    static func withBoxes(_ work: CGRect?, _ boxes: [WorkBox]) -> CGRect? {
+        boxes.reduce(work) { r, b in r.map { $0.union(b.rect()) } ?? b.rect() }
     }
 
     typealias Placed = (pic: CGPoint, work: CGPoint, step: CGPoint, size: CGSize)
@@ -119,13 +134,14 @@ enum ProblemGrid {
     static func makePlan(_ m: WorkProblem) -> Plan {
         let l = m.lesson, id = l.spec.id, n = l.numbers, k = LessonPictures.scale(id, n)
         // the picture and the work, as big as they get over the problem's steps
-        var pb: CGRect?, wb: CGRect?, inline = false
+        var pb: CGRect?, wb: CGRect?, inline = false, shared = false
         for step in l.steps {
             let keys = step.picture.merging(step.onMiss) { $1 }.merging(["box": step.answer.map { $0.choices == nil ? 1 : 0 } ?? 0]) { $1 }
             let d = LessonPictures.drawing(id, n, keys)
-            if let b = d.box { inline = true; wb = (wb ?? boxRect(b)).union(boxRect(b)) }
+            if !d.boxes.isEmpty { inline = true }
+            shared = shared || d.shared
             if let b = d.picture.bounds { pb = pb.map { $0.union(b) } ?? b }
-            if let b = d.work.bounds { wb = wb.map { $0.union(b) } ?? b }
+            if let b = withBoxes(d.work.bounds, d.boxes) { wb = wb.map { $0.union(b) } ?? b }
         }
         func piece(_ b: CGRect?) -> Piece { b.map { Piece(w: $0.maxX - floorSq($0.minX), h: $0.maxY - floorSq($0.minY)) } ?? Piece() }
         let P = piece(pb), W = piece(wb)
@@ -134,6 +150,16 @@ enum ProblemGrid {
             // what to do beside the work (as wide as its longest, up to six blocks), Check a square under it
             let sayFont = PaperText.font(Sketch.Words.say.size * k, Sketch.Words.say.weight)
             let sayW = min(600 * k, l.steps.map { PaperText.width($0.words.say, sayFont) }.max() ?? 0)
+            if shared {
+                // the lesson placed its pieces: kept as they are, what to do beside them all, Check under the work
+                let u = [pb, wb].compactMap { $0 }.reduce(CGRect.null) { $0.union($1) }
+                let corner = CGPoint(x: floorSq(u.minX), y: floorSq(u.minY)), uw = u.maxX - corner.x
+                // what to do wraps onto a second row rather than pushing the camera back (20 squares at most)
+                let sayW = min(sayW, 400 * k)
+                let Wfull = Piece(w: next(uw + 2 * sq) + sayW, h: u.maxY - corner.y + sq + 2 * sq * k + 3 * 2 * sq * k)
+                return Plan(P: P, W: Wfull, S: Piece(), arrangement: 1, k: k, lineY: 0, actions: 0, keyX: 0, stepW: 600, inline: true,
+                            workW: uw, sayW: sayW, shared: true, corner: corner, workLeft: floorSq(Double(wb?.minX ?? 0)))
+            }
             let Wfull = Piece(w: next(W.w + 2 * sq) + sayW, h: W.h + sq + 2 * sq * k + 3 * 2 * sq * k)
             let availW = screen.width - 4 * sq, availH = screen.height - 24 - 120 - 4 * sq
             let side = CGSize(width: next(P.w + 2 * sq) + Wfull.w, height: max(P.h, Wfull.h))
