@@ -377,7 +377,8 @@ final class BarsPage {
     /// draws (contentChanged).
     func open(_ m: any PageProblem) {
         if mode == .work, let c = current, c !== m { c.leave(); leaving = c; clearLeaving(c) }
-        if mode == .choose { cardsGoneAt = PaperClock.now }
+        // the cards go, whether they were up or not (coming back opens the problem straight away)
+        if cardsGoneAt == nil { cardsGoneAt = PaperClock.now }
         mode = .work
         if leaving === m { leaving = nil }
         current = m; lastWorked = m; framed = nil

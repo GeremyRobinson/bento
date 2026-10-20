@@ -11,7 +11,8 @@ extension Rig {
             if let d = cardsDrawer { d.root.removeFromParent(); cardsDrawer = nil }
             return false
         }
-        if page.cardsGoneAt == nil {
+        // the cards are there only while a problem is being chosen (G found them under a problem reopened on coming back)
+        if page.mode == .choose, page.cardsGoneAt == nil {
             // wanted: a fresh drawer if the last one undrew, then only what changed draws in
             if cardsDrawer?.leftAt != nil { cardsDrawer?.root.removeFromParent(); cardsDrawer = nil }
             let d = cardsDrawer ?? { let d = SketchDrawer(); cardsRoot.addChild(d.root); cardsDrawer = d; return d }()
@@ -21,8 +22,8 @@ extension Rig {
                 d.key = key
                 d.build(cardsSketch(page, cards), rig: self, chapter: page.piece.chapter.hex, dark: isDark, origin: .zero, from: d.isEmpty ? page.cardsAt : t, now: t)
             }
-        } else if let gone = page.cardsGoneAt {
-            cardsDrawer?.undrawAll(at: gone)
+        } else {
+            cardsDrawer?.undrawAll(at: page.cardsGoneAt ?? t)
         }
         return cardsDrawer?.update(at: t) ?? false
     }
