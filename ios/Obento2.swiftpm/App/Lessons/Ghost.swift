@@ -87,15 +87,16 @@ struct GhostPlay {
 
 extension Sketch {
     /// The ghost finger (G 20 Oct): a soft round fingertip, a short trail behind it, in ink2 on the paper. Pressing, it's
-    /// a little smaller and firmer. `trail`: where it was a moment ago, newest first. Points are the paper's.
-    mutating func ghostFinger(_ id: String, at p: CGPoint, down: Bool, trail: [CGPoint], shows: Double) {
+    /// a little smaller and firmer. `trail`: where it was a moment ago, newest first. Points are the paper's. `size`: a
+    /// big problem's (StackPlan.k), seen from further back.
+    mutating func ghostFinger(_ id: String, at p: CGPoint, down: Bool, trail: [CGPoint], shows: Double, size: Double = 1) {
         guard shows > 0.05 else { return }
         let paper: (UInt32, UInt32) = (0xF3F2EF, 0x121211), ink2: (UInt32, UInt32) = (0x6B6964, 0xA3A19B)
         func soft(_ k: Double) -> Colour { .hex(Ink.mix(paper.0, ink2.0, k * shows), Ink.mix(paper.1, ink2.1, k * shows)) }
         func disc(_ id: String, _ c: CGPoint, _ r: Double, _ colour: Colour) {
             polygon(id, (0..<28).map { i in let a = Double(i) / 28 * 2 * .pi; return CGPoint(x: c.x + r * cos(a), y: c.y + r * sin(a)) }, colour)
         }
-        let cell = Paper.cell
+        let cell = Paper.cell * size
         for (i, q) in trail.enumerated() {
             let k = Double(trail.count - i) / Double(trail.count + 1)
             disc("\(id)trail\(i)", q, cell * (0.35 + 0.35 * k), soft(0.1 + 0.12 * k))

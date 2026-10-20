@@ -45,13 +45,13 @@ final class LessonPlanTests: XCTestCase {
         var rng = SeededRandom(seed: 7)
         var plan = LessonPlan(spec, using: &rng)
         var runs = plan.items.indices.map { plan.run(spec, $0) }
-        // forgetting the tens strip's zero: 47 × 3 for 47 × 30
+        // forgetting the tens strip's zero (its step comes after the cut): 47 × 3 for 47 × 30
         let i = 3, a = Int(plan.items[i].numbers["a"]!), b = Int(plan.items[i].numbers["b"]!)
         let tens = MultiplyTwoDigit.parts(b)[0] / 10
-        work(&runs[i], wrong: [1: String(a * tens)])
+        work(&runs[i], wrong: [2: String(a * tens)])
         let added = plan.solved(i, runs[i], spec, using: &rng)
         XCTAssertEqual(added, [9])
-        XCTAssertEqual(plan.items[9].focus?.step, 1)
+        XCTAssertEqual(plan.items[9].focus?.step, 2, "the tens strip's step, after the cut")
         XCTAssertEqual(plan.items[9].focus?.teach, false)
         XCTAssertTrue(plan.items[9].focus!.said.contains("add a zero"))
         // what it keeps in mind is this problem's own advice, never the last problem's numbers
@@ -61,7 +61,7 @@ final class LessonPlanTests: XCTestCase {
         // the same slip again: that part is taught first next time
         var r = plan.run(spec, 9)
         let a2 = Int(plan.items[9].numbers["a"]!), t2 = MultiplyTwoDigit.parts(Int(plan.items[9].numbers["b"]!))[0] / 10
-        work(&r, wrong: [1: String(a2 * t2)])
+        work(&r, wrong: [2: String(a2 * t2)])
         XCTAssertEqual(plan.solved(9, r, spec, using: &rng), [10])
         XCTAssertEqual(plan.items[10].focus?.teach, true)
     }
@@ -156,7 +156,7 @@ final class LessonPlanTests: XCTestCase {
         // the same slip twice: the tens strip's zero forgotten
         func slip(_ i: Int) -> [Int] {
             let a = Int(plan.items[i].numbers["a"] ?? 0), tens = MultiplyTwoDigit.parts(Int(plan.items[i].numbers["b"] ?? 0))[0] / 10
-            var r = plan.run(spec, i); work(&r, wrong: [1: String(a * tens)])
+            var r = plan.run(spec, i); work(&r, wrong: [2: String(a * tens)])
             if runs.indices.contains(i) { runs[i] = r } else { runs.append(r) }
             return plan.solved(i, r, spec, using: &rng)
         }
@@ -244,7 +244,7 @@ final class LessonPlanTests: XCTestCase {
         XCTAssertEqual(standing().words, "On your own · 0 of 6 right")
         // a miss adds a fresh problem, and the goal stays 6
         let a = Int(plan.items[3].numbers["a"] ?? 0), tens = MultiplyTwoDigit.parts(Int(plan.items[3].numbers["b"] ?? 0))[0] / 10
-        work(&runs[3], wrong: [1: String(a * tens)])
+        work(&runs[3], wrong: [2: String(a * tens)])
         for i in plan.solved(3, runs[3], spec, using: &rng) { runs.insert(plan.run(spec, i), at: i) }
         XCTAssertEqual(plan.items.count, 10)
         for i in 4..<8 { work(&runs[i]) }
@@ -313,11 +313,11 @@ final class LessonPlanTests: XCTestCase {
         var plan = LessonPlan(spec, using: &rng)
         var runs = plan.items.indices.map { plan.run(spec, $0) }
         let a = Int(plan.items[3].numbers["a"] ?? 0), tens = MultiplyTwoDigit.parts(Int(plan.items[3].numbers["b"] ?? 0))[0] / 10
-        work(&runs[3], wrong: [1: String(a * tens)])
+        work(&runs[3], wrong: [2: String(a * tens)])
         let i = plan.solved(3, runs[3], spec, using: &rng)[0]
         plan.renew(i, spec, using: &rng)
         let n = plan.items[i].numbers
-        XCTAssertEqual(plan.items[i].focus?.step, 1)
+        XCTAssertEqual(plan.items[i].focus?.step, 2)
         XCTAssertEqual(plan.items[i].focus?.said, "Do \(fmt(n["a"] ?? 0)) × \(MultiplyTwoDigit.parts(Int(n["b"] ?? 0))[0] / 10), then add a zero.")
     }
 }

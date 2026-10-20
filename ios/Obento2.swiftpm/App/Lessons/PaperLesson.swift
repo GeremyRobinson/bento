@@ -28,6 +28,14 @@ protocol PaperLesson {
     func messageRows(_ n: Numbers) -> Int
     /// Screenshots only (-wrong): a wrong move for this step, as a child might make it.
     func wrongMove(_ s: PaperState) -> HandMove?
+    /// How much bigger than the paper its words, blocks and record are drawn (G 19 Oct: whole steps only, 1 or 2): 2
+    /// for a problem whose true-size picture is so big that the camera steps far back to see it (an area model 98
+    /// squares tall), so what's written still reads. The picture itself stays the paper's squares.
+    func scale(_ n: Numbers) -> Double
+    /// nil: the record always goes under the picture. A row of the picture: the record may go beside the picture
+    /// instead, its first row level with that row, the blocks under it, when that shows the problem bigger on the screen
+    /// (G 19 Oct rule 10: the arrangement that fills the screen best), as a picture taller than it's wide does.
+    func recordBeside(_ n: Numbers) -> Double?
 }
 
 extension PaperLesson {
@@ -36,6 +44,8 @@ extension PaperLesson {
     var liveKeys: Set<String> { [] }
     func messageRows(_ n: Numbers) -> Int { 1 }
     func wrongMove(_ s: PaperState) -> HandMove? { nil }
+    func scale(_ n: Numbers) -> Double { 1 }
+    func recordBeside(_ n: Numbers) -> Double? { nil }
 }
 
 /// The lessons built on the paper, by lesson id. The rest keep LessonPictures' drawings until they're moved here.
@@ -45,6 +55,7 @@ enum PaperLessons {
         switch id {
         case "g5-round": return RoundingLesson()
         case "add", "sub", "mix": return FractionsLesson()
+        case "g5-mult2": return MultiplyLesson()
         default: return nil
         }
     }

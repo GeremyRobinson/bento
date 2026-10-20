@@ -67,18 +67,25 @@ enum ProblemLayout {
     static func stackedBlocks(_ m: WorkProblem) -> [Block] {
         let L = m.layout, o = m.origin, sq = Paper.cell, run = m.ghost?.run ?? m.lesson
         guard let st = L.stack else { return [] }
+        // a big problem's blocks are drawn bigger, as its words are (StackPlan.k)
+        let k = st.plan.k, left = st.blocksLeft * sq
         func width(_ word: String, _ least: Double) -> Double {
-            let w = PaperText.width(word, PaperText.font(Sketch.Words.block.size, .medium)) + 60
-            return max(least, (w / sq).rounded(.up) * sq)
+            let w = PaperText.width(word, PaperText.font(Sketch.Words.block.size * k, .medium)) + 60 * k
+            return max(least * k, (w / sq).rounded(.up) * sq)
         }
         var out: [Block] = []
-        var x = 0.0, y = st.blocksTop * sq
-        func add(_ kind: Kind, _ w: Double) { out.append(Block(kind: kind, rect: CGRect(x: o.x + x, y: o.y + y, width: w, height: 2 * sq))); x += w + sq }
+        var x = left, y = st.blocksTop * sq
+        func add(_ kind: Kind, _ w: Double) { out.append(Block(kind: kind, rect: CGRect(x: o.x + x, y: o.y + y, width: w, height: 2 * sq * k))); x += w + sq * k }
         for a in L.lessonBlocks { add(.action(a), width(a, 120)) }
         if let choices = run.step.answer?.choices {
-            let f = PaperText.font(Sketch.wordSize, .medium)
-            for (i, c) in choices.enumerated() { add(.choice(i), max(140, ((PaperText.width(c, f) + 40) / sq).rounded(.up) * sq)) }
-            x = 0; y += 3 * sq
+            let f = PaperText.font(Sketch.wordSize * k, .medium)
+            for (i, c) in choices.enumerated() {
+                add(.choice(i), max(140 * k, ((PaperText.width(c, f) + 40 * k) / sq).rounded(.up) * sq))
+                // beside a tall picture, in the record's column: one under another
+                if st.plan.beside { x = left; y += 3 * sq * k }
+            }
+            if !st.plan.beside { y += 3 * sq * k }
+            x = left
         }
         if let a = run.step.answer, a.choices == nil, !a.byHand {
             for b in L.boxes {
@@ -106,9 +113,9 @@ enum ProblemLayout {
               let r = blocks(m).first(where: { $0.kind == .field(id) })?.rect else { return nil }
         let L = m.layout, count = Double((l.typed[id] ?? "").count), b = L.box(for: id, first: a.boxes.first)
         let cell = b?.cell ?? Paper.cell * WorkProblem.lineCell * L.scale
-        // a centred box: just after its number, which is written centred as one word
+        // a centred box: just after its number, which is written centred as one word (as big as a big problem writes it)
         func after(_ b: WorkBox) -> Double {
-            b.right - Double(b.cells) * b.cell / 2 + PaperText.width(l.typed[id] ?? "", PaperText.font(Sketch.maths * L.scale, .medium, digits: true)) / 2 + 0.1 * b.cell
+            b.right - Double(b.cells) * b.cell / 2 + PaperText.width(l.typed[id] ?? "", PaperText.font(Sketch.maths * (L.stack?.plan.k ?? L.scale), .medium, digits: true)) / 2 + 0.1 * b.cell
         }
         let x = L.inline ? m.origin.x + (b.map { $0.centred ? after($0) : $0.right + 0.22 * cell } ?? 0)
             : r.minX + cell + count * cell + 0.15 * cell
@@ -391,42 +398,42 @@ extension Rig {
     func stackedStill(_ m: WorkProblem) -> Sketch {
         var s = Sketch()
         guard let paper = m.paper, let st = m.layout.stack else { return s }
-        let o = m.origin, sq = Paper.cell, plan = st.plan, width = plan.width * sq, l = m.lesson
+        let o = m.origin, sq = Paper.cell, plan = st.plan, width = plan.width * sq, l = m.lesson, k = plan.k
         let view = m.state(), d = paper.draw(view)
         func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x * sq, y: o.y + y * sq) }
         // the words draw in quickly (the solving area), the picture calmly
         s.pace = 0.4
         if l.story, let story = l.spec.story?(l.numbers) {
-            s.words("story", story, .tell, x: o.x, top: o.y, width: width, max: max(1, plan.storyRows))
+            s.words("story", story, .tell, x: o.x, top: o.y, width: width, max: max(1, plan.storyRows), k: k)
         }
         // what to do (a story's pick asks only "Pick what to do"; the How to says its own)
         let storyStep = l.story && l.step.answer?.choices != nil
         let say = m.intro ?? (storyStep ? l.words.hint : l.words.say)
-        s.words("say\(l.index)", say, .say, x: o.x, top: o.y + plan.sayTop * sq, width: width, max: max(plan.sayRows, m.intro != nil ? 3 : 1))
+        s.words("say\(l.index)", say, .say, x: o.x, top: o.y + plan.sayTop * sq, width: width, max: max(plan.sayRows, m.intro != nil ? 3 : 1), k: k)
         // rows 3–4: what a miss says, or the hint
         if let w = m.rowsWords {
-            s.words("note", w.text, Sketch.Words.note.colour(w.colour), x: o.x, top: o.y + plan.msgTop * sq, width: width, max: plan.msgRows)
+            s.words("note", w.text, Sketch.Words.note.colour(w.colour), x: o.x, top: o.y + plan.msgTop * sq, width: width, max: plan.msgRows, k: k)
         }
         s.append(d.picture.transformed(to: P(0, plan.pictureTop), scale: 1))
-        s.append(d.record.transformed(to: P(0, plan.recordTop), scale: 1))
+        s.append(d.record.transformed(to: P(plan.recordLeft, plan.recordTop), scale: 1))
         let green = Sketch.Colour.hex(0x178A57, 0x3CCF8E), red = Sketch.Colour.hex(0xC8372D, 0xFF6B5E)
         for b in ProblemLayout.blocks(m) {
             let r = b.rect, id = "\(b.kind)"
             switch b.kind {
-            case .action(let name): s.block(id, r, .main, word: name, arrow: true)
-            case .next: s.block(id, r, .main, word: "Next step", arrow: true)
-            case .practise: s.block(id, r, .main, word: "Practice", arrow: true)
-            case .nextProblem: s.block(id, r, .main, word: "Next problem", arrow: true)
-            case .main: s.block(id, r, .main, word: view.run.words.action, arrow: true)
-            case .again: s.block(id, r, .plain, word: "Watch again")
-            case .skip: s.block(id, r, .plain, word: "Skip")
-            case .choice(let n): s.block(id, r, view.run.typed["c"] == String(n) ? .picked : .plain, centred: view.run.step.answer?.choices?[n], size: Sketch.wordSize)
+            case .action(let name): s.block(id, r, .main, word: name, arrow: true, k: k)
+            case .next: s.block(id, r, .main, word: "Next step", arrow: true, k: k)
+            case .practise: s.block(id, r, .main, word: "Practice", arrow: true, k: k)
+            case .nextProblem: s.block(id, r, .main, word: "Next problem", arrow: true, k: k)
+            case .main: s.block(id, r, .main, word: view.run.words.action, arrow: true, k: k)
+            case .again: s.block(id, r, .plain, word: "Watch again", k: k)
+            case .skip: s.block(id, r, .plain, word: "Skip", k: k)
+            case .choice(let n): s.block(id, r, view.run.typed["c"] == String(n) ? .picked : .plain, centred: view.run.step.answer?.choices?[n], size: Sketch.wordSize, k: k)
             case .field(let f):
                 // right: green for a moment; wrong: red until they type again; the box being typed into is outlined
                 // in ink; the ghost's number written faintly (Show me), and gone again when it's over
                 let style: Sketch.Block = view.verdict.map { $0 ? Sketch.Block(stroke: green, text: green) : Sketch.Block(stroke: red, text: red) }
                     ?? (view.active == f ? .main : Sketch.Block(stroke: .ink3))
-                s.block(id + "\(view.verdict as Bool?)", r, style, grows: true)
+                s.block(id + "\(view.verdict as Bool?)", r, style, k: k, grows: true)
                 // what the child types shows at once, as in any box; the ghost's number (Show me) writes itself in
                 // faintly and fades when it's over
                 s.pace = view.faint ? 0.6 : 0
@@ -434,12 +441,12 @@ extension Rig {
                 let wb = m.layout.box(for: f, first: view.step.answer?.boxes.first), cell = wb?.cell ?? 2 * sq
                 let colour: Sketch.Colour = view.faint ? .ink3 : style.text, tag = "\(view.verdict as Bool?)\(view.faint)"
                 if let wb, wb.centred {
-                    if !typed.isEmpty { s.text("\(id)typed\(typed)\(tag)", typed, at: CGPoint(x: o.x + wb.right - Double(wb.cells) * cell / 2, y: r.midY), size: Sketch.maths, weight: .medium, colour) }
+                    if !typed.isEmpty { s.text("\(id)typed\(typed)\(tag)", typed, at: CGPoint(x: o.x + wb.right - Double(wb.cells) * cell / 2, y: r.midY), size: Sketch.maths * k, weight: .medium, colour) }
                 } else {
                     // a digit to a cell, from the right, so places line up with the record's
                     let chars = Array(typed), left = (wb?.right ?? r.maxX - o.x) + o.x - Double(chars.count) * cell
                     for (j, ch) in chars.enumerated() {
-                        s.text("\(id)typed\(j)\(ch)\(tag)", String(ch), at: CGPoint(x: left + (Double(j) + 0.5) * cell, y: r.midY), size: Sketch.maths, weight: .medium, colour)
+                        s.text("\(id)typed\(j)\(ch)\(tag)", String(ch), at: CGPoint(x: left + (Double(j) + 0.5) * cell, y: r.midY), size: Sketch.maths * k, weight: .medium, colour)
                     }
                 }
                 s.pace = 0.4
@@ -454,8 +461,8 @@ extension Rig {
     func stackedLive(_ m: WorkProblem, at t: Double) -> Sketch {
         var s = Sketch()
         guard let paper = m.paper, let st = m.layout.stack, m.instant || t >= m.openedAt + 0.9 else { return s }
-        // the finger first, so what it moves shows over it
-        if let f = m.ghostFinger(at: t) { s.ghostFinger("ghost", at: f.at, down: f.down, trail: f.trail, shows: f.shows) }
+        // the finger first, so what it moves shows over it (as big as a big problem's words, so it shows as far back)
+        if let f = m.ghostFinger(at: t) { s.ghostFinger("ghost", at: f.at, down: f.down, trail: f.trail, shows: f.shows, size: st.plan.k) }
         let d = paper.draw(m.state(at: t))
         s.append(d.live.transformed(to: CGPoint(x: m.origin.x, y: m.origin.y + st.plan.pictureTop * Paper.cell), scale: 1))
         return s
