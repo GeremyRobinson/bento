@@ -104,6 +104,7 @@ final class BarsPage {
         let label = it.part == .together ? "Together \(k)" : "On your own \(k)"
         let m = Self.make(spec, origin: at, chapter: piece.chapter, instant: instant, run: run, label: label)
         (m as? WorkProblem)?.focus = it.focus
+        (m as? CubesProblem)?.focus = it.focus
         return m
     }
 
@@ -225,7 +226,7 @@ final class BarsPage {
     private var lastWorked: (any PageProblem)?
 
     private func focusLine(_ m: any PageProblem) -> String {
-        (m as? WorkProblem)?.focus != nil ? "Practice the part you missed" : "Not started"
+        ((m as? WorkProblem)?.focus ?? (m as? CubesProblem)?.focus) != nil ? "Practice the part you missed" : "Not started"
     }
 
     /// The page of problems, all of it: what the camera shows.

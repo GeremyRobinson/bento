@@ -4,11 +4,12 @@ import SwiftUI
 /// Unit cubes; design/grade5.md). One cube is one block of the paper, 1 cm each way.
 ///
 /// It opens flat: the box's floor outlined on the paper's strong lines, its length and width beside it. The child covers
-/// the floor (a tap covers a square, a drag sweeps a rectangle of them), the squares counting. Then the paper tilts and
-/// the floor rises into the first layer, Unit cubes' way; the child drags up (or taps) to stack the layers, each one's
-/// running count written on its front, the box's full height dashed. The record is written under the box, standing up
-/// facing the child, and the last number is typed. The paper lies flat again before the next problem, the page or the
-/// map. Show me plays the hand move with a ghost finger and puts everything back; the How to plays it and keeps it.
+/// the floor (a tap covers a square, a drag sweeps a rectangle of them), the squares counting up. Then the paper tilts
+/// and the floor rises into the first layer, Unit cubes' way; the child drags up (or taps) to stack the layers, each
+/// one's own count written on its front (the same on every layer), the box's full height dashed where the box is still
+/// empty. The record stands facing the child beside the box (under it on a screen held upright), and its last number,
+/// how many in all, is the child's to work out and type. The paper lies flat again before the next problem, the page or
+/// the map. Show me plays the hand move with a ghost finger and puts everything back; the How to plays it and keeps it.
 @MainActor @Observable
 final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
     let id = UUID()
@@ -27,6 +28,13 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
     var onTouch: (() -> Void)?
     var onChange: (() -> Void)?
     var needs: ((Rect) -> Void)?
+    /// A problem aimed at a step the child slipped on before (LessonPlan): that step starts with what to keep in mind
+    /// there (the step's own hint in this problem's numbers: what the child was told was about other numbers) and its
+    /// part of the picture lit; the same slip twice, its answer is shown first and taken away again (the app's
+    /// teaching, not the child's Show me).
+    var focus: LessonPlan.Focus?
+    /// The step being worked is the one aimed at.
+    var onFocus: Bool { focus.map { $0.step == lesson.index - lesson.lead } ?? false }
 
     init(origin: Point, chapter: Chapter, instant: Bool, run: LessonRun, label: String, auto: Bool = false) {
         self.origin = origin; self.chapter = chapter; self.instant = instant; self.label = label; self.auto = auto
@@ -134,11 +142,14 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         if let c = camera, c.moving { u = max(u, c.lands) }
         return u
     }
-    var animating: Bool { PaperClock.now < until + 0.1 || wantsNumber }
+    var animating: Bool { PaperClock.now < until + 0.1 || wantsTyping }
 
     /// The record's box wants a number (the iPad's number keys come up; the cursor blinks). The keys stay up while Show
     /// me plays the number into the box, so the paper doesn't jump as they go down and come back.
-    var wantsNumber: Bool { !auto && !solved && leftAt == nil && lesson.step.answer != nil }
+    var wantsTyping: Bool { !auto && !solved && leftAt == nil && lesson.step.answer != nil }
+    /// Laid out the paper lessons' way (what to do over the picture, the record by it): the number pad comes up in the
+    /// screen's bottom-right corner, clear of the box and the record (NumberEntry.anchor).
+    var stacked: Bool { true }
 
     private func time(_ delay: Double) -> Double { instant ? PaperClock.now - 100 : PaperClock.now + delay }
     private func touched() { wordsAt = PaperClock.now }
@@ -156,6 +167,7 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         for i in lesson.marks.keys where i < box.floor && squares[i] == nil { squares[i] = (true, openedAt - 100) }
         if lesson.step.camera == .tilted && liftAt == nil { lift(at: openedAt + 0.7, again: true) }
         needs?(frameRect)
+        teachIfDue(after: delay + 1.2)
     }
 
     /// It's on the paper again as the child left it, at once.
@@ -194,14 +206,18 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         camera = nil; anchored = false; before = nil; flatAt = nil; flatFrom = nil; liftAt = nil; riseAt = nil; built = [:]; wireAt = nil; sinkAt = nil; fitted = nil
     }
 
-    /// The How to again (Watch again): the cubes sink, the paper lies flat, and it starts over on a bare floor.
+    /// The How to again (its own Watch again, or Watch again from the menu): the cubes sink, the paper lies flat, and it
+    /// starts over on a bare floor, on the paper again: from the menu it comes after the How to drew itself out, so it
+    /// draws itself in again (a How to still drawn out would be blank, and its moves wait for it).
     func replay() {
         var r = LessonRun(lesson.spec, numbers: lesson.numbers); r.helps = lesson.helps; r.oneTry = lesson.oneTry
         lesson = r
         message = nil; verdict = nil; preview = nil; finger = nil; busyUntil = 0
+        hinting = false; wrongTyped = nil; typedAt = 0; pending += 1; sweep = nil; lifting = nil
         let tilted = holdsCamera
         lieFlat()
         squares = [:]
+        leftAt = nil
         openedAt = time(tilted ? 0.55 : 0); wordsAt = openedAt
         guard tilted, !instant else { settleFlat(); return }
         Task { [weak self] in
@@ -219,32 +235,41 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
     /// The problem the paper was seen through before this one, while it finishes lying flat again.
     @ObservationIgnored private var before: (any TiltOwner)?
 
+    /// Only reads (it's asked while a frame is drawn): what changes the camera happens in `settle`, between frames.
     func view(at t: Double, flat: PaperView3D) -> PaperView3D? {
         // the problem before it is still lying flat again (Next problem onto one that stood tilted): its view until then
-        if let b = before {
-            if b.holdsCamera, let v = b.view(at: t, flat: flat) { return v }
-            before = nil
-        }
+        if let b = before, b.holdsCamera, let v = b.view(at: t, flat: flat) { return v }
         if let f = flatAt {
             let u = (t - f) / flatTime
             guard u < 1 else { return nil }
             return .between(flatFrom ?? flat, flat, u)
         }
         guard let c = camera, let at = liftAt, t >= at else { return nil }
+        // the tilt's first frame: it starts exactly where the flat paper is (settle starts the move from there)
+        return anchored ? c.view(at: t) : flat
+    }
+
+    /// Between frames (TiltCamera.settle): the tilt starts from the flat camera's view on its first frame, so it starts
+    /// exactly where the paper is then; a keyboard coming up (or the screen turning) frames the box again in what's left
+    /// of the screen; the problem before it lets go once it lies flat.
+    func settle(at t: Double, flat: PaperView3D) {
+        if let b = before, !b.holdsCamera { before = nil }
+        guard flatAt == nil, let c = camera, let at = liftAt, t >= at else { return }
         if !anchored {
             anchored = true
             c.start(from: flat, to: fitView(), at: at, duration: TiltCamera.beat * Self.slow)
             fitted = (TiltCamera.bottom, TiltCamera.screen)
+        } else if let was = fitted, abs(was.bottom - TiltCamera.bottom) > 1 || was.screen != TiltCamera.screen, !c.moving {
+            refit()
         }
-        // a keyboard coming up (or the screen turning) frames the box again in what's left of the screen
-        if let was = fitted, abs(was.bottom - TiltCamera.bottom) > 1 || was.screen != TiltCamera.screen, !c.moving { refit() }
-        return c.view(at: t)
+        c.settle(at: t)
     }
 
     func tapPoint(_ s: Point) -> Point? {
         guard let v = tiltedView else { return nil }
         let pl = places(v, screen: TiltCamera.screen)
-        if let b = pl.blocks.first(where: { $0.rect.contains(CGPoint(x: s.x, y: s.y)) }), let f = footprint(b.kind) { return Point(f.midX, f.midY) }
+        // a block takes a tap anywhere a finger's width round it, however small the zoom draws it
+        if let b = pl.blocks.first(where: { Self.touchable($0.rect).contains(CGPoint(x: s.x, y: s.y)) }), let f = footprint(b.kind) { return Point(f.midX, f.midY) }
         // a tap on the box (or the space it fills, dashed): its floor's middle
         if pl.bounds.insetBy(dx: -10, dy: -10).contains(CGPoint(x: s.x, y: s.y)) { let f = floorRect; return Point(f.midX, f.midY) }
         // anywhere else on the tilted paper is nothing to the page
@@ -289,6 +314,8 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         if let o = TiltCamera.owner, o !== self, o.holdsCamera { before = o }
         TiltCamera.owner = self
         riseSlow = Self.slow
+        // cutting straight to it (Reduce Motion): the view is tilted now, without waiting for a frame to start from
+        if instant, let c = camera { anchored = true; c.start(from: TiltCamera.flatNow, to: fitView(), at: at, duration: 0); fitted = (TiltCamera.bottom, TiltCamera.screen) }
         let rise = at + TiltCamera.beat * 0.55 * riseSlow
         riseAt = rise
         let risen = rose
@@ -392,7 +419,24 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         if lesson.step.task == nil { wireAt = nil }
         if lesson.step.answer != nil || lesson.isLast { busyUntil = time(0.3); refit() }
         if lesson.isLast { onSolved?() }
+        teachIfDue(after: 0.9)
         onChange?()
+    }
+
+    /// The second time a step is slipped on, a problem aimed at it shows that step first (LessonPlan.Focus.teach): the
+    /// record's number counted up and shown in the box, then taken away for the child to work out. It's the app's
+    /// teaching, not the child's Show me: nothing counts as shown.
+    @ObservationIgnored private var taught = false
+    private func teachIfDue(after delay: Double) {
+        guard onFocus, focus?.teach == true, !taught, !instant, !auto, !solved, lesson.step.answer != nil else { return }
+        taught = true
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(delay))
+            // once the hands are free (the box has risen again, the record's in)
+            while let self, self.busy { try? await Task.sleep(for: .seconds(0.1)) }
+            guard let self, self.onFocus, self.leftAt == nil, self.preview == nil, (self.lesson.typed["x"] ?? "").isEmpty else { return }
+            self.previewAnswer()
+        }
     }
 
     /// Checks itself a moment after the hands finish, unless they change it again first.
@@ -441,9 +485,12 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         return UnitCubes.cell(UnitCubes.Cell(x, z), in: b)
     }
 
-    private func toggle(_ c: Int, on: Bool) {
-        guard (lesson.marks[c] != nil) != on, lesson.tap(c) else { return }
+    /// Covers or uncovers floor square `c`; whether it changed.
+    @discardableResult
+    private func toggle(_ c: Int, on: Bool) -> Bool {
+        guard (lesson.marks[c] != nil) != on, lesson.tap(c) else { return false }
         squares[c] = (on, PaperClock.now)
+        return true
     }
 
     // the drag: a rectangle of squares from where it started, or the layers going up and down
@@ -454,6 +501,8 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         guard !busy, !auto, leftAt == nil, preview == nil else { return false }
         if isCover, let c = cell(at: p) {
             onTouch?()
+            // a check waiting from the last move waits for this one
+            pending += 1
             sweep = (UnitCubes.cell(c, in: box), lesson.marks[c] == nil, Set(lesson.marked))
             drag(to: p)
             return true
@@ -462,6 +511,7 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
             let s = v.project(Vec3(p.x / Paper.unit, 0, p.y / Paper.unit), screen: TiltCamera.screen)
             guard places(v, screen: TiltCamera.screen).bounds.insetBy(dx: -10, dy: -10).contains(CGPoint(x: s.x, y: s.y)) else { return false }
             onTouch?()
+            pending += 1
             lifting = (s.y, layersStanding); message = nil
             return true
         }
@@ -475,16 +525,15 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
             var rect: Set<Int> = []
             for z in zs { for x in xs { if let i = UnitCubes.cell(UnitCubes.Cell(x, z), in: box) { rect.insert(i) } } }
             let want = sw.paint ? sw.before.union(rect) : sw.before.subtracting(rect)
-            for i in 0..<box.floor { toggle(i, on: want.contains(i)) }
-            pending += 1
-            onChange?()
+            var changed = false
+            for i in 0..<box.floor where toggle(i, on: want.contains(i)) { changed = true }
+            // the page is saved when a square changes, not on every move of the finger
+            if changed { onChange?() }
         } else if let l = lifting, let v = tiltedView {
             // a layer for every cube's height the finger moves up, as the cubes stand on the screen
             let s = v.project(Vec3(p.x / Paper.unit, 0, p.y / Paper.unit), screen: TiltCamera.screen)
             let per = v.scale * v.axes.up.y
-            setLayers(l.layers + Int(((l.y - s.y) / per).rounded()))
-            pending += 1
-            onChange?()
+            if setLayers(l.layers + Int(((l.y - s.y) / per).rounded())) { onChange?() }
         }
     }
 
@@ -497,8 +546,9 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         }
     }
 
-    /// The layers standing: those above it sink, those up to it rise, one after another.
-    private func setLayers(_ n: Int) {
+    /// The layers standing: those above it sink, those up to it rise, one after another. Whether any changed.
+    @discardableResult
+    private func setLayers(_ n: Int) -> Bool {
         let n = min(box.height, max(1, n)), now = PaperClock.now
         var k = 0
         for y in 1..<max(1, box.height) {
@@ -506,6 +556,7 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
             guard (lesson.marks[cell] != nil) != want, lesson.tap(cell) else { continue }
             built[y] = (want, now + 0.06 * Double(k)); k += 1
         }
+        return k > 0
     }
 
     func choose(_ i: Int) {}
@@ -513,7 +564,7 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
 
     /// A key from the iPad's keyboard (or a hardware one) into the record's box.
     func type(_ key: String) {
-        guard !busy, wantsNumber else { return }
+        guard !busy, wantsTyping else { return }
         typedAt = PaperClock.now
         onTouch?()
         lesson.type(key == "-" ? "del" : key)
@@ -555,9 +606,21 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
             preview = Preview(kind: .build, at: now, end: f.start + f.duration + 0.35 + Preview.hold * Self.slow + Preview.fade, layers: times)
             finger = f
         } else if lesson.step.answer != nil {
-            // the layers counted up, one after another, and the number they make shown in the box
-            preview = Preview(kind: .answer, at: now, end: now + 0.45 * Double(box.height) + 0.4 + Preview.hold * Self.slow + Preview.fade)
+            previewAnswer(); return
         }
+        played()
+    }
+
+    /// The record's number previewed: the layers counted up on their fronts, one after another (12, 24…), and the
+    /// number they make shown in the box, lightly; then it all goes back.
+    private func previewAnswer() {
+        let now = PaperClock.now + 0.2
+        preview = Preview(kind: .answer, at: now, end: now + 0.45 * Double(box.height) + 0.4 + Preview.hold * Self.slow + Preview.fade)
+        played()
+    }
+
+    /// Hands off while a preview plays; then it goes, leaving everything as the child had it.
+    private func played() {
         busyUntil = instant ? 0 : preview?.end ?? 0
         touched()
         Task { [weak self] in
@@ -590,8 +653,10 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         if message?.ok == false { message = nil }
         onChange?()
     }
-    /// The hint's words: the typed step's own hint, else the step's.
-    var hintText: String? { hinting ? (lesson.step.answer?.hint ?? lesson.words.hint) : nil }
+    /// The hint's words: the typed step's own hint, else the step's; on a step aimed at a slip, from the start.
+    var hintText: String? { hinting || onFocus ? (lesson.step.answer?.hint ?? lesson.words.hint) : nil }
+    /// Each layer's count lit on its front: a hint after a miss on the record, the bar's Hint, or a problem aimed at it.
+    var countsLit: Bool { lesson.picture["counts"] == 1 || ((hinting || onFocus) && lesson.step.answer != nil) }
 
     /// The How to's move, made for it and kept: the hand sweeps the floor, stacks the layers, writes the number.
     @discardableResult
@@ -701,7 +766,7 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
     var hints: (outline: Bool, tint: Bool, empty: [Int]) {
         guard isCover, leftAt == nil else { return (false, false, []) }
         let p = lesson.picture
-        return (p["empty"] == 1 || hinting, p["tint"] == 1, (0..<box.floor).filter { lesson.marks[$0] == nil })
+        return (p["empty"] == 1 || hinting || onFocus, p["tint"] == 1, (0..<box.floor).filter { lesson.marks[$0] == nil })
     }
 
     func wire(at t: Double) -> Double {
@@ -754,8 +819,11 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         wrapped[s] = l
         return l
     }
-    /// The small words' capitals' height, which a label's distance from what it labels is measured from.
-    static let capHeight = Double(PaperText.font(Sketch.small, .medium, digits: true).capHeight)
+    /// The box's labels (its sides in cm, each layer's count): the picture's own names, at the words' size, as every
+    /// picture's labels are (Sketch: words are what to do, messages, buttons and picture labels).
+    static let labelSize = Sketch.wordSize
+    /// The labels' capitals' height, which a label's distance from what it labels is measured from.
+    static let capHeight = Double(PaperText.font(labelSize, .medium, digits: true).capHeight)
 
     /// The blocks it shows now: Check while a number is wanted, Next problem once it's solved, the How to's own.
     var blockKinds: [ProblemLayout.Kind] {
@@ -765,24 +833,44 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         return out + howToButtons.filter { [.next, .practise, .again, .skip].contains($0) }
     }
 
-    /// The blocks, by their places on the paper (ProblemLayout.blocks), for the page's taps.
-    var blocks: [ProblemLayout.Block] { blockKinds.compactMap { k in footprint(k).map { ProblemLayout.Block(kind: k, rect: $0) } } }
+    /// The blocks, by their places on the paper (ProblemLayout.blocks), for the page's taps: each takes a tap a finger's
+    /// width round it on the screen (44 points at least), however far out the paper is zoomed.
+    var blocks: [ProblemLayout.Block] {
+        let z = max(0.01, TiltCamera.flatNow.scale / Paper.unit)
+        return blockKinds.compactMap { k in
+            footprint(k).map { r in
+                let least = Self.finger / z
+                return ProblemLayout.Block(kind: k, rect: r.insetBy(dx: min(0, (r.width - least) / 2), dy: min(0, (r.height - least) / 2)))
+            }
+        }
+    }
+    /// The least a block takes a tap over on the screen (Apple's 44 points), and a block's rect grown to it.
+    static let finger = 44.0
+    static func touchable(_ r: CGRect) -> CGRect { r.insetBy(dx: min(0, (r.width - finger) / 2), dy: min(0, (r.height - finger) / 2)) }
 
     /// Where everything goes on the screen through view `v`: what to do over the box, its labels, each layer's count
-    /// on its front, the count or the record under it, the blocks under that; and all of it, for the camera.
-    /// Flat, the box is its floor, and every place falls on the paper's grid; tilted, it's the box at its full height.
+    /// on its front, the count of squares under the floor, the record and its blocks; and all of it, for the camera.
+    /// Flat, the box is its floor, and every place falls on the paper's grid; tilted, it's the box at its full height,
+    /// and on a screen wider than tall the record stands beside it, level with its top, so the box alone sets how big
+    /// the paper can be (a box of 8 × 8 × 6 stands 12 blocks tall on the screen: the record under it as well made
+    /// everything half size).
     func places(_ v: PaperView3D, screen: Size, tilted: Bool? = nil) -> CubesPlaces {
         let k = v.scale / Paper.unit, b = box, c = corner
         let L = Double(b.length), W = Double(b.width), H = Double(b.height)
-        let high = (tilted ?? (camera != nil)) ? H : 0
+        let up = tilted ?? (camera != nil)
+        let high = up ? H : 0
         func P(_ x: Double, _ y: Double, _ z: Double) -> CGPoint { let p = v.project(Vec3(c.x + x, y, c.z + z), screen: screen); return CGPoint(x: p.x, y: p.y) }
         var bounds = CGRect.null
         for x in [0, L] { for y in [0, high] { for z in [0, W] { bounds = bounds.union(CGRect(origin: P(x, y, z), size: .zero)) } } }
+        // the box's twelve edges on the screen: words over the box keep clear of the highest of them
+        var edges: [(CGPoint, CGPoint)] = []
+        for y in [0, high] { edges += [(P(0, y, 0), P(L, y, 0)), (P(0, y, W), P(L, y, W)), (P(0, y, 0), P(0, y, W)), (P(L, y, 0), P(L, y, W))] }
+        for x in [0, L] { for z in [0, W] { edges.append((P(x, 0, z), P(x, high, z))) } }
         var pl = CubesPlaces(k: k, bounds: bounds)
         let cap = Self.capHeight
         // the length under the floor's front edge, the width left of its left edge, the height right of the front-right edge
-        let lw = Self.measure("\(b.length) cm", Sketch.small, digits: true) * k, ww = Self.measure("\(b.width) cm", Sketch.small, digits: true) * k
-        let hw = Self.measure("\(b.height) cm", Sketch.small, digits: true) * k
+        let lw = Self.measure("\(b.length) cm", Self.labelSize, digits: true) * k, ww = Self.measure("\(b.width) cm", Self.labelSize, digits: true) * k
+        let hw = Self.measure("\(b.height) cm", Self.labelSize, digits: true) * k
         let a = P(L / 2, 0, W), e = P(L, 0, W), slope = abs(e.y - a.y) / max(1, abs(e.x - a.x))
         pl.length = CGPoint(x: a.x, y: a.y + (10 + cap / 2) * k + slope * lw / 2)
         let wm = P(0, 0, W / 2)
@@ -796,30 +884,27 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         var extent = bounds
         extent = extent.union(CGRect(x: pl.length.x - lw / 2, y: pl.length.y - cap * k / 2, width: lw, height: cap * k))
         extent = extent.union(CGRect(x: pl.width.x - ww, y: pl.width.y - cap * k / 2, width: ww, height: cap * k))
-        if high > 0 { extent = extent.union(CGRect(x: pl.height.x, y: pl.height.y - cap * k / 2, width: hw, height: cap * k)) }
+        if up { extent = extent.union(CGRect(x: pl.height.x, y: pl.height.y - cap * k / 2, width: hw, height: cap * k)) }
 
-        // what to do over the box, a row of two squares a line, and what a miss says (or the hint) under it: five rows
-        // over the box, or more when they need more, so they never reach it
-        let sayLines = Self.lines(sayText)
-        let under = message?.text ?? hintText, rows = Double(sayLines.count + (under == nil ? 0 : 1))
-        pl.say = CGPoint(x: bounds.minX, y: bounds.minY - max(100, rows * Sketch.row + 20) * k)
-        let sayWidth = sayLines.map { Self.measure($0, Sketch.wordSize) }.max() ?? 0
-        extent = extent.union(CGRect(x: pl.say.x, y: pl.say.y, width: sayWidth * k, height: Double(sayLines.count) * Sketch.row * k))
-        if let m = under {
-            extent = extent.union(CGRect(x: pl.say.x, y: pl.say.y + Double(sayLines.count) * Sketch.row * k, width: Self.measure(m, Sketch.small) * k, height: Sketch.row * k))
-        }
-
-        // under the box: the count while the floor is covered, the record once it has risen; then the blocks
+        // the record (the school working): beside the box on a screen wider than tall, once it stands up; else under it
+        let beside = up && screen.width > screen.height
         let lenBottom = pl.length.y + cap * k / 2
-        pl.record = CGPoint(x: bounds.minX, y: max(bounds.maxY + 40 * k, lenBottom + 12 * k))
-        let lines = recordLines
+        pl.record = beside ? CGPoint(x: max(bounds.maxX, pl.height.x + hw) + 2 * Paper.cell * k, y: bounds.minY)
+                           : CGPoint(x: bounds.minX, y: max(bounds.maxY + 40 * k, lenBottom + 12 * k))
+        let lines = recordLines, pitch = Self.recordPitch * k
         for (i, line) in lines.enumerated() {
-            var w = Self.measure(line.text, Sketch.wordSize) * k
-            if line.box { w += (20 + 40 * Double(answerCells)) * k + 20 * k }
-            extent = extent.union(CGRect(x: pl.record.x, y: pl.record.y + Double(i) * 60 * k, width: w, height: 40 * k))
+            extent = extent.union(CGRect(x: pl.record.x, y: pl.record.y + Double(i) * pitch, width: CubesRecord.width(line.line, cells: answerCells) * k, height: Sketch.row * k))
+        }
+        // once it stands up, room for the whole record as it ends (its three lines and Next problem), so the camera
+        // holds still while it's written
+        if up {
+            for (i, line) in finalRecord.enumerated() {
+                extent = extent.union(CGRect(x: pl.record.x, y: pl.record.y + Double(i) * pitch, width: CubesRecord.width(line, cells: 3) * k, height: Sketch.row * k))
+            }
+            extent = extent.union(CGRect(x: pl.record.x, y: pl.record.y + Double(finalRecord.count) * pitch, width: Self.blockWidth("Next problem", 180) * k, height: 40 * k))
         }
         if isCover { extent = extent.union(CGRect(x: pl.record.x, y: pl.record.y, width: 200 * k, height: 40 * k)) }
-        let blocksTop = pl.record.y + Double(max(1, lines.count)) * 60 * k
+        let blocksTop = pl.record.y + Double(max(1, lines.count)) * pitch
         for kind in blockKinds {
             guard let f = footprint(kind) else { continue }
             let r = CGRect(x: pl.record.x + (f.minX - floorRect.minX) * k, y: blocksTop, width: f.width * k, height: f.height * k)
@@ -828,27 +913,62 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         }
         // room for the blocks that come later, so the camera doesn't step back again for them
         if blockKinds.isEmpty { extent = extent.union(CGRect(x: pl.record.x, y: blocksTop, width: 180 * k, height: 40 * k)) }
+
+        // what to do over the box, a row of two squares a line, and what a miss says (or the hint) in the row under it,
+        // kept while the box stands up so a miss doesn't move anything
+        let sayLines = Self.lines(sayText)
+        let under = message?.text ?? hintText
+        let rows = Double(sayLines.count) + (under != nil || (up && !solved) ? 1 : 0)
+        let sayWidth = max(sayLines.map { Self.measure($0, Sketch.wordSize) }.max() ?? 0, under.map { Self.measure($0, Sketch.small) } ?? 0) * k
+        let sayHeight = rows * Sketch.row * k
+        if up {
+            // as low as it can sit and still clear the box by a square: the box's top rises to its right, so short words
+            // tuck in over its left; over the record too, where they reach it
+            var floorOfWords = Self.highest(edges, from: bounds.minX, to: bounds.minX + sayWidth) ?? bounds.minY
+            if beside, bounds.minX + sayWidth > pl.record.x - Paper.cell * k { floorOfWords = min(floorOfWords, pl.record.y) }
+            pl.say = CGPoint(x: bounds.minX, y: floorOfWords - Paper.cell * k - sayHeight)
+        } else {
+            pl.say = CGPoint(x: bounds.minX, y: bounds.minY - max(100, rows * Sketch.row + 20) * k)
+        }
+        extent = extent.union(CGRect(x: pl.say.x, y: pl.say.y, width: sayWidth, height: sayHeight))
         pl.extent = extent
         return pl
     }
 
-    /// What to do now: the How to's words while it explains, else the step's (a problem aimed at a slip starts its
-    /// step with what the child was told).
+    /// How far apart the record's lines are: a line is two squares tall, with a square between.
+    static let recordPitch = 3 * Paper.cell
+
+    /// The highest point (smallest y) of the segments where they run between x0 and x1 on the screen (nil: none do).
+    static func highest(_ segments: [(CGPoint, CGPoint)], from x0: Double, to x1: Double) -> Double? {
+        var top: Double?
+        for (p, q) in segments {
+            let lo = max(x0, min(p.x, q.x)), hi = min(x1, max(p.x, q.x))
+            guard lo <= hi else { continue }
+            for x in [lo, hi] {
+                let y = abs(q.x - p.x) < 1e-6 ? min(p.y, q.y) : p.y + (q.y - p.y) * (x - p.x) / (q.x - p.x)
+                top = min(top ?? y, y)
+            }
+        }
+        return top
+    }
+
+    /// What to do now: the How to's words while it explains, else the step's. (A problem aimed at a slip shows that
+    /// step's hint under it from the start: hintText.)
     var sayText: String { intro ?? lesson.words.say }
 
-    /// The record's lines under the box: the layer (once the floor has risen into it), then the layers with the box
-    /// to type in, then the volume. The camera makes room for them from the moment the paper tilts.
-    var recordLines: [(text: String, box: Bool, chapter: Bool)] {
+    /// The record's lines (the school working, as 5th grade writes it): the layer (once the floor has risen into it), then
+    /// the layers with the box to type how many in all, then the volume in the chapter's colour.
+    var recordLines: [(line: MathLine, chapter: Bool)] {
         let b = box
-        if lesson.isLast {
-            return [(VolumeOfBox.layerLine(b), false, false), (VolumeOfBox.layersDone(b), false, false), (VolumeOfBox.volumeLine(b), false, true)]
-        }
-        if lesson.step.answer != nil { return [(VolumeOfBox.layerLine(b), false, false), (VolumeOfBox.layersLine(b), true, false)] }
-        if isBuild { return [(VolumeOfBox.layerLine(b), false, false)] }
+        if lesson.isLast { return finalRecord.enumerated().map { ($1, $0 == 2) } }
+        if lesson.step.answer != nil { return [(VolumeOfBox.layerRecord(b), false), (VolumeOfBox.layersRecord(b), false)] }
+        if isBuild { return [(VolumeOfBox.layerRecord(b), false)] }
         return []
     }
+    /// The record as it ends.
+    var finalRecord: [MathLine] { let b = box; return [VolumeOfBox.layerRecord(b), VolumeOfBox.layersDoneRecord(b), VolumeOfBox.volumeRecord(b)] }
     /// The record as it's written by now: building, its first line comes once the floor has risen into a layer.
-    func recordLines(at t: Double) -> [(text: String, box: Bool, chapter: Bool)] {
+    func recordLines(at t: Double) -> [(line: MathLine, chapter: Bool)] {
         isBuild && !(riseAt != nil && t >= rose) ? [] : recordLines
     }
     /// The answer box's width in cells of two squares: three, or one more than what's typed.
@@ -870,16 +990,80 @@ struct CubesPlaces {
 }
 
 /// Typing from the iPad's keyboard into a problem's box (NumberEntry): a typed step's problem, or Volume of a box's
-/// record.
+/// record. The page's typing gate asks the problem (wantsTyping), and the pad comes up where the problem's layout keeps
+/// clear (stacked: the bottom-right corner, as the paper lessons have it; else the top-right).
 @MainActor
 protocol NumberTyping: AnyObject {
     var id: UUID { get }
     var lesson: LessonRun { get }
+    /// A number is wanted now: the iPad's number keys come up by themselves (no tap needed).
+    var wantsTyping: Bool { get }
+    /// Laid out stacked, a paper lesson's way: the number pad comes up in the screen's bottom-right corner.
+    var stacked: Bool { get }
     func type(_ key: String)
     func go()
 }
+extension NumberTyping where Self: PageProblem {
+    /// A typed step (not a pick-one step) of a problem being worked, until it's solved.
+    var wantsTyping: Bool { !auto && !solved && lesson.step.answer.map { $0.choices == nil } == true }
+}
+extension NumberTyping {
+    /// A lesson not laid out the paper way yet: its words beside the box, Check under it.
+    var stacked: Bool { false }
+}
 extension WorkProblem: NumberTyping {}
 extension CubesProblem: NumberTyping {}
+
+/// A line of the record as it's written (design/README.md rule 1: the record is maths, 36): its numbers, signs and words
+/// all at the maths size, a space (half a square) between them, a number's digits together as they're written (standing
+/// up off the paper there are no squares behind them, and digits two squares apart read as separate numbers), and the
+/// box to type in, two squares a digit, its digits the line's own size. In points from the line's left; a line is two
+/// squares tall. The same layout measures it (the camera), draws it, and puts the box and the typed digits in it.
+@MainActor
+enum CubesRecord {
+    enum Kind: Equatable { case run(String, digits: Bool), box }
+    struct Piece: Equatable { let kind: Kind; let x: Double; let width: Double }
+    /// A space at the maths size: half a square.
+    static let gap = Paper.cell / 2
+
+    static func layout(_ line: MathLine, cells: Int) -> (pieces: [Piece], width: Double) {
+        var out: [Piece] = [], x = 0.0
+        func run(_ s: String, digits: Bool) {
+            let w = CubesProblem.measure(s, Sketch.maths, digits: digits)
+            out.append(Piece(kind: .run(s, digits: digits), x: x, width: w)); x += w
+        }
+        for m in line {
+            if !out.isEmpty { x += gap }
+            switch m {
+            case .num(let v): run(fmt(v), digits: true)
+            case .op(let o): run(o, digits: true)
+            case .text(let t): run(t, digits: false)
+            case .box: let w = Double(cells) * Sketch.row; out.append(Piece(kind: .box, x: x, width: w)); x += w
+            case .frac: break
+            }
+        }
+        return (out, x)
+    }
+    /// How wide a line is, in points.
+    static func width(_ line: MathLine, cells: Int) -> Double { layout(line, cells: cells).width }
+    /// Where its box is, in points from the line's top-left.
+    static func box(_ line: MathLine, cells: Int) -> CGRect? {
+        layout(line, cells: cells).pieces.first { $0.kind == .box }.map { CGRect(x: $0.x, y: 0, width: $0.width, height: Sketch.row) }
+    }
+    /// The line's words and numbers into a sketch, from its top-left (its box is the record's own: it changes as the
+    /// child types).
+    static func draw(_ s: inout Sketch, _ id: String, _ line: MathLine, cells: Int, _ colour: Sketch.Colour) {
+        for (i, p) in layout(line, cells: cells).pieces.enumerated() {
+            guard case .run(let t, let digits) = p.kind else { continue }
+            s.text("\(id)\(i):\(t)", t, at: CGPoint(x: p.x, y: Sketch.row / 2), size: Sketch.maths, weight: .medium, colour, anchor: UnitPoint(x: 0, y: 0.5), digits: digits)
+        }
+    }
+    /// The digits typed into a box, as the line writes a number: together, from half a square in; and where the
+    /// cursor goes after them.
+    static func typed(_ s: String, in box: CGRect) -> (at: CGPoint, cursor: Double) {
+        (CGPoint(x: box.minX + gap, y: box.midY), box.minX + gap + CubesProblem.measure(s, Sketch.maths, digits: true) + 4)
+    }
+}
 
 extension Shots {
     /// `page-g5-volume[@n]-<stage>`, with `-numbers length=4,width=3,height=2`: Volume of a box worked to a stage by
@@ -918,6 +1102,8 @@ extension Shots {
             for pair in list.split(separator: ",") { let kv = pair.split(separator: "="); if kv.count == 2, let v = Double(kv[1]) { n[String(kv[0])] = v } }
             c.use(n)
         }
+        // `-focus`: a problem aimed at the record's slip (LessonPlan.Focus); `-teach`: the same slip twice, shown first
+        if args.contains("-focus") || args.contains("-teach") { c.focus = LessonPlan.Focus(step: 2, said: "That adds the height to the layer.", teach: args.contains("-teach")) }
         m.instant = false; c.instant = false
         page.open(c)
         await wait(1.6)
@@ -980,7 +1166,8 @@ extension Shots {
     }
 
     /// `page-<id>` with `-howto N`: the lesson opened as a child opens it, its How to taught a tap at a time: its block
-    /// pressed N times, each once it shows. `-numbers` sets the How to's box; `-slow N` slows the hand's moves.
+    /// pressed N times, each once it shows (`-again M`: then Watch the How to again, and M more). `-numbers` sets the How
+    /// to's box; `-slow N` slows the hand's moves.
     static func howToTaps(_ m: PaperModel, _ p: Piece, args: [String]) async {
         func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
         func arg(_ name: String) -> String? { args.firstIndex(of: name).flatMap { $0 + 1 < args.count ? args[$0 + 1] : nil } }
@@ -993,12 +1180,22 @@ extension Shots {
         CubesProblem.slow = arg("-slow").flatMap(Double.init) ?? 1
         m.instant = false
         m.select(p); await wait(1); m.open(p)
-        for _ in 0..<(Int(arg("-howto") ?? "") ?? 0) {
-            var waited = 0.0
-            while (m.bars?.howTo.howToButtons.isEmpty ?? true) && waited < 30 { await wait(0.1); waited += 0.1 }
-            await wait(0.4)
-            m.bars?.skipHowTo()
-            await wait(0.5)
+        func taps(_ n: Int) async {
+            for _ in 0..<n {
+                var waited = 0.0
+                while (m.bars?.howTo.howToButtons.isEmpty ?? true) && waited < 30 { await wait(0.1); waited += 0.1 }
+                await wait(0.4)
+                m.bars?.skipHowTo()
+                await wait(0.5)
+            }
+        }
+        await taps(Int(arg("-howto") ?? "") ?? 0)
+        // `-again N`: then Watch the How to again (the ⋯ menu's), on the page it came back to, and its block pressed N times
+        if let n = arg("-again").flatMap(Int.init) {
+            await wait(1.5)
+            m.bars?.watchAgain()
+            await wait(1.0)
+            await taps(n)
         }
         await marked(args)
     }

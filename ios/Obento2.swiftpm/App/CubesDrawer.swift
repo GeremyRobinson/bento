@@ -26,6 +26,22 @@ protocol CubesPicture: AnyObject {
     func wire(at t: Double) -> Double
 }
 
+extension CubesPicture {
+    /// How high the cubes stand now (a layer rising stands part way), counting a preview's lighter ones: the box's full
+    /// height shows dashed only above them.
+    func stands(at t: Double) -> Double {
+        var top = 0.0
+        for y in 0..<box.height {
+            switch layer(y, at: t) {
+            case .none: continue
+            case .cubes: top = max(top, Double(y) + 1)
+            case .whole(let h), .ghost(let h): if h > 0.001 { top = max(top, Double(y) + h) }
+            }
+        }
+        return top
+    }
+}
+
 /// How a layer of cubes stands: not there, rising cube by cube, or as one piece this tall (0...1), in the cubes'
 /// colours or a preview's lighter ones.
 enum CubesLayer: Equatable { case none, cubes, whole(Double), ghost(Double) }
@@ -56,7 +72,7 @@ final class CubesDrawer {
     private var pool: [ModelEntity] = []
     private var poolLayer: Int?
     private var outline = ModelEntity(), outlineK = -1.0
-    private var wire = ModelEntity(), wireK = -1.0
+    private var wire = ModelEntity(), wireK = -1.0, wireTop = -1.0
     private var hints = Entity(), hintKey = ""
     private var cubeMesh: MeshResource?, layerMesh: MeshResource?
     /// A floor square's edges, in the cubes' edge colour: covered squares read as squares, to count, at any zoom.
@@ -130,19 +146,18 @@ final class CubesDrawer {
         // the floor's outline, dashed on the paper's strong lines, and the box's full height, dashed
         let ok = snapped(p.outline(at: t), 30)
         if ok != outlineK { outlineK = ok; drawOutline(p, ok, looks.deep) }
-        let wk = snapped(p.wire(at: t), 30)
-        if wk != wireK { wireK = wk; drawWire(p, wk, looks.wire) }
+        // the full height's dashes go where the box is still empty: above the cubes as they stand now (a tenth of a cube
+        // ahead of a rising layer, so no dash shows over it)
+        let wk = snapped(p.wire(at: t), 30), top = wk > 0 ? (p.stands(at: t) * 10).rounded(.up) / 10 : 0
+        if wk != wireK || top != wireTop { wireK = wk; wireTop = top; drawWire(p, wk, stands: top, looks.wire) }
     }
 
     /// Everything goes (the lesson or problem has left the paper).
     func clear() {
         for c in Array(root.children) { c.removeFromParent() }
         squares = []; layers = []; pool = []; poolLayer = nil; squareLook = [:]; layerLook = [:]
-        outline = ModelEntity(); wire = ModelEntity(); hints = Entity(); outlineK = -1; wireK = -1; hintKey = ""; shape = nil
+        outline = ModelEntity(); wire = ModelEntity(); hints = Entity(); outlineK = -1; wireK = -1; wireTop = -1; hintKey = ""; shape = nil
     }
-
-    /// Light or dark changed: every colour again.
-    func recolour() { lookKey = "" }
 
     private func rebuild(_ p: any CubesPicture) {
         clear()
@@ -187,23 +202,31 @@ final class CubesDrawer {
         if let squareEdge { for e in squares { (e.children.first as? ModelEntity)?.model?.mesh = squareEdge } }
         if let cubeMesh { for e in pool { e.model?.mesh = cubeMesh } }
         if let layerMesh { for e in layers { if e.model == nil { e.model = ModelComponent(mesh: layerMesh, materials: looks?.solid ?? []) } else { e.model?.mesh = layerMesh } } }
-        outlineK = -1; wireK = -1; hintKey = ""
+        outlineK = -1; wireK = -1; wireTop = -1; hintKey = ""
     }
 
     // MARK: the pieces
 
-    /// The colours: the cube faces in the chapter's colour, lighter for a preview's, the floor's squares, the edges.
+    /// The colours: the cube faces in the chapter's colour, lighter for a preview's, the floor's squares, the edges, the
+    /// dashed full height (ink3, from the colour table). On dark paper the faces are lit as they are on light paper, the
+    /// top lightest and the sides darker, each a clear step from the next (mixed thinly into the dark surface they were
+    /// all a muddy brown, the top the darkest), and a covered square is the cube top it rises into.
     static func looks(chapter c: UInt32, dark: Bool, paper: UInt32) -> (solid: [UnlitMaterial], ghost: [UnlitMaterial], square: UnlitMaterial, ghostSquare: UnlitMaterial, deep: UIColor, wire: UIColor) {
         let k = Rig.Colours(dark: dark, chapter: c)
-        func hex(_ u: UIColor) -> UInt32 {
-            var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-            u.getRed(&r, green: &g, blue: &b, alpha: &a)
-            return UInt32(r * 255) << 16 | UInt32(g * 255) << 8 | UInt32(b * 255)
-        }
-        func light(_ u: UIColor, _ f: Double = 0.55) -> UIColor { UIColor(hex: Ink.mix(hex(u), paper, f)) }
-        let solid = [k.top, k.front, k.side, k.deep].map(flat)
-        let ghost = [light(k.top), light(k.front), light(k.side), light(k.deep, 0.45)].map(flat)
-        return (solid, ghost, flat(k.square), flat(light(k.square, 0.5)), k.deep, UIColor(hex: dark ? 0x878177 : 0x8C867D))
+        func light(_ u: UIColor, _ f: Double = 0.55) -> UIColor { UIColor(hex: Ink.mix(u.hexValue, paper, f)) }
+        let surface = Ink.surface.hexValue(dark: dark)
+        func face(_ f: Double) -> UIColor { UIColor(hex: Ink.mix(surface, c, f)) }
+        let (top, front, side, square) = dark ? (face(0.78), face(0.60), face(0.44), face(0.70)) : (k.top, k.front, k.side, k.square)
+        let solid = [top, front, side, k.deep].map(flat)
+        let ghost = [light(top), light(front), light(side), light(k.deep, 0.45)].map(flat)
+        return (solid, ghost, flat(square), flat(light(square, 0.5)), k.deep, UIColor(hex: Ink.ink3.hexValue(dark: dark)))
+    }
+
+    /// A count lit on a cube's face (a hint, or Show me counting): the chapter's colour in a shade that reads on the
+    /// faces (3.8 : 1 on amber, light or dark), underlined: no patch of paper over the cubes.
+    static func lit(chapter c: UInt32) -> Sketch.Colour {
+        // darker on light paper (mixed toward the ink), lighter on dark (toward the near-white of light paper's surface)
+        .hex(Ink.mix(c, Ink.ink.hexValue(dark: false), 0.45), Ink.mix(c, Ink.surface.hexValue(dark: false), 0.7))
     }
 
     /// A layer of cubes `length` × `width`, one block tall, from its back-left-bottom corner: its six faces as six big
@@ -270,9 +293,12 @@ final class CubesDrawer {
         outline.position.y = 0.002
     }
 
-    /// The box's full height (its 12 edges), dashed, drawn in as far as `k`. Set a hair inside the box, so the cubes
-    /// hide it wherever they stand and it shows only where the box is still empty.
-    private func drawWire(_ p: any CubesPicture, _ k: Double, _ c: UIColor) {
+    /// The box's full height (its 12 edges), dashed, drawn in as far as `k`, only where the box is still empty: a dash
+    /// that would cross the cubes standing now (`stands` high) isn't drawn, as if the cubes stood in front of it (over
+    /// the cubes' top it read as a cut through them). The tilted view's angles are fixed, so what the cubes hide is
+    /// worked out on the view's plane, whatever the pan or zoom. Set a hair inside the box, so the cubes hide its
+    /// lowest edges too.
+    private func drawWire(_ p: any CubesPicture, _ k: Double, stands: Double, _ c: UIColor) {
         wire.isEnabled = k > 0
         guard k > 0, lines > 0 else { return }
         let o = p.corner, b = p.box, w = Float(Sketch.stroke / lines), i = w * 1.2
@@ -280,6 +306,13 @@ final class CubesDrawer {
         var edges: [(SIMD3<Float>, SIMD3<Float>)] = []
         for y in [y0, y1] { edges += [([x0, y, z0], [x1, y, z0]), ([x0, y, z1], [x1, y, z1]), ([x0, y, z0], [x0, y, z1]), ([x1, y, z0], [x1, y, z1])] }
         for x in [x0, x1] { for z in [z0, z1] { edges.append(([x, y0, z], [x, y1, z])) } }
+        // the cubes standing, outlined on the view's plane (right, up), a hair bigger so a dash along their edge goes too
+        let hidden = stands > 0 ? Self.outline(of: o, b.length, stands, b.width, grow: Double(w)) : []
+        func covered(_ q: SIMD3<Float>) -> Bool {
+            guard !hidden.isEmpty else { return false }
+            let (r, u) = Self.plane
+            return Self.inside((Double(q.x) * r.x + Double(q.y) * r.y + Double(q.z) * r.z, Double(q.x) * u.x + Double(q.y) * u.y + Double(q.z) * u.z), hidden)
+        }
         var pos: [SIMD3<Float>] = [], idx: [UInt32] = []
         let h = w / 2
         for (a, e) in edges {
@@ -287,6 +320,8 @@ final class CubesDrawer {
             var s: Float = 0
             while s < len {
                 let p0 = a + d * s, p1 = a + d * min(len, s + 0.07)
+                s += 0.15
+                if covered((p0 + p1) / 2) { continue }
                 let lo = simd_min(p0, p1) - SIMD3(repeating: h), hi = simd_max(p0, p1) + SIMD3(repeating: h)
                 let base = UInt32(pos.count)
                 for n in 0..<8 { pos.append(SIMD3(n & 1 == 0 ? lo.x : hi.x, n & 2 == 0 ? lo.y : hi.y, n & 4 == 0 ? lo.z : hi.z)) }
@@ -294,7 +329,6 @@ final class CubesDrawer {
                     let q = f.map { base + UInt32($0) }
                     idx += [q[0], q[1], q[2], q[0], q[2], q[3], q[0], q[2], q[1], q[0], q[3], q[2]]
                 }
-                s += 0.15
             }
         }
         guard !pos.isEmpty else { wire.isEnabled = false; return }
@@ -302,6 +336,43 @@ final class CubesDrawer {
         d.positions = MeshBuffers.Positions(pos)
         d.primitives = .triangles(idx)
         wire.model = (try? MeshResource.generate(from: [d])).map { ModelComponent(mesh: $0, materials: [flat(c)]) }
+    }
+
+    /// The tilted view's plane: its right and up, the same for every tilted view (only the pan and zoom differ).
+    static let plane: (right: Vec3, up: Vec3) = {
+        let v = PaperView3D(elevation: PaperView3D.tilted.elevation, azimuth: PaperView3D.tilted.azimuth)
+        return (v.axes.right, v.axes.up)
+    }()
+
+    /// The outline of a block of cubes `l` × `h` × `w` from corner `o`, on the tilted view's plane, grown by `grow`: the
+    /// hull of its eight corners.
+    static func outline(of o: Vec3, _ l: Int, _ h: Double, _ w: Int, grow: Double) -> [(Double, Double)] {
+        let (r, u) = plane
+        var pts: [(Double, Double)] = []
+        for x in [o.x, o.x + Double(l)] { for y in [0, h] { for z in [o.z, o.z + Double(w)] { let q = Vec3(x, y, z); pts.append((q.dot(r), q.dot(u))) } } }
+        // the convex hull (monotone chain), counter-clockwise
+        pts.sort { $0.0 == $1.0 ? $0.1 < $1.1 : $0.0 < $1.0 }
+        func cross(_ a: (Double, Double), _ b: (Double, Double), _ c: (Double, Double)) -> Double { (b.0 - a.0) * (c.1 - a.1) - (b.1 - a.1) * (c.0 - a.0) }
+        var lower: [(Double, Double)] = [], upper: [(Double, Double)] = []
+        for q in pts { while lower.count >= 2 && cross(lower[lower.count - 2], lower[lower.count - 1], q) <= 0 { lower.removeLast() }; lower.append(q) }
+        for q in pts.reversed() { while upper.count >= 2 && cross(upper[upper.count - 2], upper[upper.count - 1], q) <= 0 { upper.removeLast() }; upper.append(q) }
+        let hull = Array(lower.dropLast()) + Array(upper.dropLast())
+        // grown out from its middle
+        let mx = hull.map(\.0).reduce(0, +) / Double(max(1, hull.count)), my = hull.map(\.1).reduce(0, +) / Double(max(1, hull.count))
+        return hull.map { q in
+            let dx = q.0 - mx, dy = q.1 - my, d = max(1e-9, (dx * dx + dy * dy).squareRoot())
+            return (q.0 + dx / d * grow, q.1 + dy / d * grow)
+        }
+    }
+
+    /// Whether a point is inside a convex outline (counter-clockwise).
+    static func inside(_ p: (Double, Double), _ hull: [(Double, Double)]) -> Bool {
+        guard hull.count >= 3 else { return false }
+        for i in hull.indices {
+            let a = hull[i], b = hull[(i + 1) % hull.count]
+            if (b.0 - a.0) * (p.1 - a.1) - (b.1 - a.1) * (p.0 - a.0) < 0 { return false }
+        }
+        return true
     }
 
     /// Hints on the floor (LESSONS.md §7): the empty squares outlined, dashed, and lightly tinted.
@@ -333,4 +404,19 @@ final class CubesDrawer {
             let e = ModelEntity(mesh: m, materials: [flat(chapter)]); e.position.y = 0.0018; hints.addChild(e)
         }
     }
+}
+
+extension UIColor {
+    /// Its colour as 0xRRGGBB.
+    var hexValue: UInt32 {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        getRed(&r, green: &g, blue: &b, alpha: &a)
+        func byte(_ v: CGFloat) -> UInt32 { UInt32(max(0, min(255, (v * 255).rounded()))) }
+        return byte(r) << 16 | byte(g) << 8 | byte(b)
+    }
+}
+
+extension Color {
+    /// A colour of the table (Ink) as 0xRRGGBB on light or dark paper, for what's drawn in the paper's scene.
+    func hexValue(dark: Bool) -> UInt32 { UIColor(self).resolvedColor(with: UITraitCollection(userInterfaceStyle: dark ? .dark : .light)).hexValue }
 }

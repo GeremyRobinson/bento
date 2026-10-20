@@ -34,6 +34,9 @@ struct PaperScreen: View {
                     // a hardware keyboard types straight away too
                     let typing = typingProblem
                     NumberEntry(problem: typing, step: typing.map { "\($0.id) \($0.lesson.index)" } ?? "")
+                        // iPadOS's number pad pops up from the hidden field: for a problem laid out stacked it sits in the
+                        // screen's bottom-right corner, clear of the picture and the record (as the paper lessons have it)
+                        .position(NumberEntry.anchor(screen: model.screen, bottom: max(16, safe.safeAreaInsets.bottom + 8), stacked: typing?.stacked ?? true))
                 }
                 .onChange(of: t) { _, now in Perf.frame(now); model.settle(at: now); model.lesson?.settle(at: now) }
             }
@@ -58,12 +61,11 @@ struct PaperScreen: View {
         }
     }
 
-    /// The problem being worked that wants a typed number now: a typed step's, or Volume of a box's record.
+    /// The problem being worked that wants a typed number now (NumberTyping.wantsTyping): a typed step's, or Volume of a
+    /// box's record.
     private var typingProblem: (any NumberTyping)? {
-        guard let page = model.bars, page.mode == .work else { return nil }
-        if let w = page.current as? WorkProblem { return !w.auto && !w.solved && w.lesson.step.answer.map { $0.choices == nil } == true ? w : nil }
-        if let c = page.current as? CubesProblem { return c.wantsNumber ? c : nil }
-        return nil
+        guard let page = model.bars, page.mode == .work, let p = page.current as? any NumberTyping else { return nil }
+        return p.wantsTyping ? p : nil
     }
 
     /// The clock only runs while something moves or draws, so a still paper costs nothing.
@@ -129,6 +131,14 @@ struct SystemKeys: UIViewRepresentable {
 struct NumberEntry: View {
     let problem: (any NumberTyping)?
     let step: String
+
+    /// Where the hidden field sits on the screen. iPadOS's number pad (a popover on iPadOS 26) comes up from it. A paper
+    /// lesson (stacked): the bottom-right corner, just over the floating bar, the record's empty right-hand side, so the
+    /// pad never covers the picture, the words, the box or Check. The lessons not moved yet (their words beside the box,
+    /// Check under it): the top-right corner.
+    static func anchor(screen: Size, bottom: Double, stacked: Bool) -> CGPoint {
+        stacked ? CGPoint(x: screen.width - 48, y: screen.height - bottom - 76) : CGPoint(x: screen.width - 48, y: 32)
+    }
     @State private var text = " "
     @FocusState private var focused: Bool
 

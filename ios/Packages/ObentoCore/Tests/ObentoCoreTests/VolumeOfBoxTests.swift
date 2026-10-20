@@ -9,7 +9,7 @@ final class VolumeOfBoxTests: XCTestCase {
     func testWalkThroughTheLesson() {
         var l = run(4, 3, 2)
         let b = UnitCubes.Box(length: 4, width: 3, height: 2)
-        XCTAssertEqual(l.display, [.num(4), .op("×"), .num(3), .op("×"), .num(2), .op("="), .text("?")])
+        XCTAssertEqual(l.display, [.text("4 by 3, 2 cm tall")], "a card names the box by its sides: no × and no = ?")
         XCTAssertEqual(l.steps.count, 4, "cover, build, volume, done")
         XCTAssertNil(l.askIndex, "the floor is the first step: nothing to pass by")
 
@@ -19,8 +19,11 @@ final class VolumeOfBoxTests: XCTestCase {
         XCTAssertEqual(l.picture, ["floor": 1])
         XCTAssertEqual(l.step.task?.cells, Set(0..<12))
         XCTAssertFalse(l.tap(12), "a layer's cell isn't on the floor")
-        for c in 0..<9 { XCTAssertTrue(l.tap(c)) }
-        XCTAssertEqual(l.countLine, "9 of 12 squares")
+        XCTAssertEqual(l.countLine, "0 squares", "the squares count up with no total: the hands find how many")
+        XCTAssertTrue(l.tap(0))
+        XCTAssertEqual(l.countLine, "1 square")
+        for c in 1..<9 { XCTAssertTrue(l.tap(c)) }
+        XCTAssertEqual(l.countLine, "9 squares")
         XCTAssertEqual(l.go(), .notYet("Not yet. 3 squares are still empty."))
         XCTAssertEqual(l.picture, ["floor": 1, "empty": 1], "a miss outlines the squares still empty")
         for c in 9..<12 { l.tap(c) }
@@ -44,8 +47,12 @@ final class VolumeOfBoxTests: XCTestCase {
         XCTAssertEqual(l.step.camera, .tilted)
         XCTAssertEqual(l.picture, ["layers": 2, "record": 1])
         XCTAssertEqual(VolumeOfBox.layerLine(b), "4 × 3 = 12 cubes in a layer")
-        XCTAssertEqual(VolumeOfBox.layersLine(b), "2 layers of 12 =")
+        XCTAssertEqual(VolumeOfBox.layersLine(b), "2 layers of 12 = [ ]")
         XCTAssertEqual(l.step.answer?.prompt, [.num(2), .text("layers of"), .num(12), .op("="), .box("x")])
+        XCTAssertEqual(l.step.answer?.prompt, VolumeOfBox.layersRecord(b), "the record's line is the step's own prompt")
+        // each layer's front says its own count; how many in all is the child's to work out, not read off the box
+        XCTAssertEqual((0..<2).map { VolumeOfBox.count($0, b) }, ["12", "12"])
+        XCTAssertFalse((0..<2).map { VolumeOfBox.count($0, b) }.contains("24"), "the answer isn't written on the box")
         XCTAssertEqual(l.go(), .notYet("Fill in every box."))
         type(&l, "14")
         XCTAssertEqual(l.go(), .notYet("That adds 2 to 12. There are 2 layers of 12."))
@@ -60,8 +67,8 @@ final class VolumeOfBoxTests: XCTestCase {
         type(&l, "24")
         XCTAssertEqual(l.go(), .moved(3))
 
-        // done: the last words say it, and the record ends with the volume
-        XCTAssertEqual(l.words.say, "2 layers of 12 is 24.")
+        // done: the last words say why (never the sum again), and the record ends with the volume
+        XCTAssertEqual(l.words.say, "The floor makes one layer. The height says how many.")
         XCTAssertEqual(l.words.hint, "Volume = 4 × 3 × 2 = 24 cubic cm")
         XCTAssertEqual(VolumeOfBox.layersDone(b), "2 layers of 12 = 24 cubes")
         XCTAssertEqual(l.picture, ["layers": 2, "record": 2])
@@ -75,9 +82,9 @@ final class VolumeOfBoxTests: XCTestCase {
         var l = run(2, 2, 2)
         let b = UnitCubes.Box(length: 2, width: 2, height: 2)
         XCTAssertEqual(l.step.task?.want, 4)
-        XCTAssertEqual(l.countLine, "0 of 4 squares")
+        XCTAssertEqual(l.countLine, "0 squares")
         _ = l.showMe()
-        XCTAssertEqual(l.countLine, "4 of 4 squares")
+        XCTAssertEqual(l.countLine, "4 squares")
         XCTAssertEqual(l.go(), .moved(1))
         XCTAssertEqual(l.step.task?.cells, [VolumeOfBox.layerCell(1, b)])
         XCTAssertEqual(VolumeOfBox.layerCell(1, b), 5)
@@ -90,9 +97,10 @@ final class VolumeOfBoxTests: XCTestCase {
         XCTAssertEqual(l.go(), .notYet("That's one layer. There are 2."))
         type(&l, "8")
         XCTAssertEqual(l.go(), .moved(3))
-        XCTAssertEqual(l.words.say, "2 layers of 4 is 8.")
+        XCTAssertEqual(l.words.say, VolumeOfBox.why)
         XCTAssertEqual(l.words.hint, "Volume = 2 × 2 × 2 = 8 cubic cm")
-        XCTAssertEqual((0..<2).map { VolumeOfBox.count($0, b) }, ["4", "8"])
+        XCTAssertEqual((0..<2).map { VolumeOfBox.count($0, b) }, ["4", "4"], "every layer's own count")
+        XCTAssertEqual((0..<2).map { VolumeOfBox.total($0, b) }, ["4", "8"], "Show me counts them up")
     }
 
     /// The biggest box the lesson draws: 8 × 8 × 6, 6 layers of 64. Every layer is built, and counted on its front.
@@ -101,7 +109,7 @@ final class VolumeOfBoxTests: XCTestCase {
         let b = UnitCubes.Box(length: 8, width: 8, height: 6)
         XCTAssertEqual(l.step.task?.cells.count, 64)
         for c in 0..<64 { l.tap(c) }
-        XCTAssertEqual(l.countLine, "64 of 64 squares")
+        XCTAssertEqual(l.countLine, "64 squares")
         XCTAssertEqual(l.go(), .moved(1))
         XCTAssertEqual(l.step.task?.cells, Set(65..<70), "layers 1 to 5 stand on the floor's layer")
         XCTAssertEqual(l.step.task?.want, 5)
@@ -115,15 +123,17 @@ final class VolumeOfBoxTests: XCTestCase {
         for k in 3..<6 { l.tap(VolumeOfBox.layerCell(k, b)) }
         XCTAssertEqual(l.go(), .moved(2))
         XCTAssertEqual(VolumeOfBox.layerLine(b), "8 × 8 = 64 cubes in a layer")
-        XCTAssertEqual(VolumeOfBox.layersLine(b), "6 layers of 64 =")
-        XCTAssertEqual((0..<6).map { VolumeOfBox.count($0, b) }, ["64", "128", "192", "256", "320", "384"])
+        XCTAssertEqual(VolumeOfBox.layersLine(b), "6 layers of 64 = [ ]")
+        XCTAssertEqual(Set((0..<6).map { VolumeOfBox.count($0, b) }), ["64"], "every layer says 64")
+        XCTAssertEqual((0..<6).map { VolumeOfBox.total($0, b) }, ["64", "128", "192", "256", "320", "384"])
         type(&l, "70")
         XCTAssertEqual(l.go(), .notYet("That adds 6 to 64. There are 6 layers of 64."))
         type(&l, "22")
         XCTAssertEqual(l.go(), .notYet("That adds the sides. There are 6 layers of 64."))
         type(&l, "384")
         XCTAssertEqual(l.go(), .moved(3))
-        XCTAssertEqual(l.words.say, "6 layers of 64 is 384.")
+        XCTAssertEqual(l.words.say, VolumeOfBox.why)
+        XCTAssertEqual(l.display, [.text("8 by 8, 6 cm tall")])
         XCTAssertEqual(VolumeOfBox.volumeLine(b), "Volume = 8 × 8 × 6 = 384 cubic cm")
         XCTAssertEqual(VolumeOfBox.layersDone(b), "6 layers of 64 = 384 cubes")
     }

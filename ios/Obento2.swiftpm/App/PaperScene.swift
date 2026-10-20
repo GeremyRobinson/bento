@@ -442,8 +442,7 @@ final class Rig {
             drawCards(nil, at: t)
             for w in problemWords.values { w.root.removeFromParent() }
             problemWords = [:]
-            for d in problemCubes.values { d.cubes.root.removeFromParent(); d.words.root.removeFromParent() }
-            problemCubes = [:]; return
+            clearCubesProblems(keeping: []); return
         }
         let shown = page.all, every = page.all + (page.howToGone ? [] : page.problems)
         pageBuilding = false
@@ -452,18 +451,8 @@ final class Rig {
         // is built when they arrive (building all 17 at once stalled a frame for 170 ms; 16 as they arrived, 80 ms)
         var made = 0
         for m in every {
-            // Volume of a box: its cubes and its standing words, only while it's on the paper
-            if let c = m as? CubesProblem {
-                guard shown.contains(where: { $0 === c }) else { continue }
-                let d = problemCubes[c.id] ?? {
-                    let d = (cubes: CubesDrawer(rig: self), words: CubesWords())
-                    barsRoot.addChild(d.cubes.root); barsRoot.addChild(d.words.root); problemCubes[c.id] = d
-                    return d
-                }()
-                Perf.time("cubes") { d.cubes.draw(c, at: t) }
-                Perf.time("cubes-words") { d.words.draw(c, rig: self, view: view, screen: screen, at: t) }
-                continue
-            }
+            // Volume of a box: its cubes and its standing words, only while it's on the paper (CubesWords.swift)
+            if let c = m as? CubesProblem { if shown.contains(where: { $0 === c }) { drawCubesProblem(c, at: t) }; continue }
             if drawers[m.id] == nil && sketches[m.id] == nil {
                 if made >= 1 && !page.instant && m !== page.howTo { pageBuilding = true; continue }
                 made += 1
@@ -478,7 +467,7 @@ final class Rig {
         }
         for (id, d) in drawers where !every.contains(where: { $0.id == id }) { d.root.removeFromParent(); drawers[id] = nil }
         for (id, d) in sketches where !every.contains(where: { $0.id == id }) { d.root.removeFromParent(); sketches[id] = nil }
-        for (id, d) in problemCubes where !shown.contains(where: { $0.id == id }) { d.cubes.root.removeFromParent(); d.words.root.removeFromParent(); problemCubes[id] = nil }
+        clearCubesProblems(keeping: shown)
         // an open problem is its own space on the grid, with no frame (G 19 Oct): only the page's cards are outlined
         Perf.time("boxes") { drawBoxes(page, [], at: t) }
         Perf.time("page-words") { drawProblemWords(page, shown, waiting: page.showing || made > 0 ? [] : page.problems, at: t) }

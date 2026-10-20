@@ -110,6 +110,29 @@ final class TiltCamera {
     static var screen = Size(1180, 820), top = 24.0, bottom = 120.0
     /// The flat camera's view at the last frame: where a tilt starts from.
     static var flatNow = PaperView3D()
+
+    /// The view the paper is seen through (PaperModel.view): the problem's while it holds the camera, else the flat
+    /// paper's. It only reads, as a frame being drawn may: what changes happens in `settle`.
+    static func view(at t: Double, flat: PaperView3D) -> PaperView3D { owner?.view(at: t, flat: flat) ?? flat }
+
+    /// Each frame, between frames (PaperModel.settle, never while one is drawn): where a tilt starts from and what it
+    /// fits into (the flat view, the screen, the room the bar or the keyboard takes); a problem no longer on the page (its
+    /// How to played straight through, the lesson closed) lies flat again; the problem holding the camera settles its
+    /// view; once the paper lies flat, nobody holds it.
+    static func settle(at t: Double, flat: PaperView3D, screen: Size, top: Double, bottom: Double, onPage: (any TiltOwner) -> Bool) {
+        flatNow = flat; self.screen = screen; self.top = top; self.bottom = bottom
+        guard let o = owner else { return }
+        if !onPage(o) { o.lieFlat() }
+        o.settle(at: t, flat: flat)
+        if !o.holdsCamera { owner = nil }
+    }
+
+    /// Where a point on the screen lands on the paper while the paper stands tilted (a tap on a block or on the box, the
+    /// paper under a dragging finger); nil while it's flat.
+    static func paperPoint(_ s: Point, tap: Bool) -> Point? { owner.flatMap { tap ? $0.tapPoint(s) : $0.dragPoint(s) } }
+    /// A drag that isn't a hand move, and a pinch, move the tilted view; false while the paper is flat (its own camera's).
+    static func pan(_ dx: Double, _ dy: Double) -> Bool { owner?.pan(dx, dy) ?? false }
+    static func pinch(_ f: Double) -> Bool { owner?.pinch(f) ?? false }
 }
 
 /// A problem on a lesson's page that tilts the paper (Volume of a box). While it holds the camera, the paper is seen
@@ -118,7 +141,11 @@ final class TiltCamera {
 protocol TiltOwner: AnyObject {
     /// The view while the paper stands tilted (or is tilting, or lying flat again); nil once it lies flat, when the
     /// flat camera shows the paper again. `flat` is the flat camera's view now: where a tilt starts and a flattening ends.
+    /// Only reads: it's asked while a frame is drawn.
     func view(at t: Double, flat: PaperView3D) -> PaperView3D?
+    /// Between frames: the tilt anchored to the flat view on its first frame, the view framed again when the room for it
+    /// changed.
+    func settle(at t: Double, flat: PaperView3D)
     /// Where a tap on the screen lands while tilted, in paper points: a block's place, the box, or nowhere.
     func tapPoint(_ s: Point) -> Point?
     /// The paper point under a finger that drags, while tilted.
