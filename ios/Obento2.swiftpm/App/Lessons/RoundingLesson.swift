@@ -30,7 +30,7 @@ struct RoundingLesson: PaperLesson {
 
         // line 1: the place one bigger, in ten blocks of the place; its ends to one place fewer (3.4 and 3.5, 5 and 6),
         // the block's own ends taking their place once it's found
-        pic.numberLine("l1", col: 0, row: y1, steps: 10, per: B, long: 5)
+        _ = pic.numberLine("l1", col: 0, row: y1, steps: 10, per: B, long: 5)
         if !(found && P.digit == 0) { pic.label("l1lo", RoundDecimals.written(P.lo1, p - 1), label, .below, edge: y1, along: 0) }
         if !(found && P.digit == 9) { pic.label("l1hi", RoundDecimals.written(P.lo1 + 10 * P.place, p - 1), label, .below, edge: y1, along: L) }
         if at == 1 {
@@ -52,7 +52,7 @@ struct RoundingLesson: PaperLesson {
             pic.label("blkhi", RoundDecimals.written(P.up, p), label.colour(.chapter), .below, edge: y1, along: k * B + B)
             pic.line("zoomL", [(k * B, y1 + 3), (0, y2 - 4)], .chapter, dashed: true)
             pic.line("zoomR", [(k * B + B, y1 + 3), (L, y2 - 4)], .chapter, dashed: true)
-            pic.numberLine("l2", col: 0, row: y2, steps: 10, per: B, long: 5)
+            _ = pic.numberLine("l2", col: 0, row: y2, steps: 10, per: B, long: 5)
             let done = at >= 4
             pic.label("l2lo", RoundDecimals.written(P.T, p), label.colour(done && P.stays ? .chapter : .ink2), .below, edge: y2, along: 0)
             // halfway, small, under the middle tick; not when the point is there (its own number says it, and its ring
