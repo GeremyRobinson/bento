@@ -1,7 +1,8 @@
 import SwiftUI
 import AVFoundation
 
-/// The one floating bar at the bottom (G 17 Oct): a pill with a few big buttons, where you are and how far along in the
+/// The one floating bar at the bottom (G 17 Oct; lighter, words first, after the paper prototype G liked, 20 Oct): a
+/// pill with a few buttons, where you are and how far along in the
 /// middle, and everything else in ⋯ More. On the map: Lessons, Me (Today will live in Me, G 17 Oct). In a lesson: back to Lessons, the lesson and
 /// its progress, Hint and Show me. It's fixed to the screen, never to the paper, so it can't jiggle as the paper moves.
 /// While the paper is pinched, the middle shows the zoom for a moment instead.
@@ -62,35 +63,33 @@ struct Toolbar: View {
         // the same gap all round, so a lit button sits evenly inside the bar's curve
         .padding(6)
         // the shadow belongs to the bar's shape only: on the whole bar, SwiftUI shadowed every button and word in it
-        .background(Capsule().fill(Ink.surface).shadow(color: .black.opacity(0.10), radius: 15, y: 8))
+        .background(Capsule().fill(Ink.surface).shadow(color: .black.opacity(0.08), radius: 12, y: 6))
         .overlay(Capsule().strokeBorder(Ink.line, lineWidth: 1))
     }
 
-    private var divider: some View { Rectangle().fill(Ink.line).frame(width: 1, height: 40).padding(.horizontal, 4) }
+    private var divider: some View { Rectangle().fill(Ink.line).frame(width: 1, height: 32).padding(.horizontal, 4) }
 
     /// Where you are and how far along, or for a moment after a pinch, the zoom.
     private func info(title: String, detail: String, progress: Double, wide: Bool = false) -> some View {
         let zooming = time - model.pinchedAt < 1.2
-        return VStack(alignment: .leading, spacing: 6) {
+        return VStack(alignment: .leading, spacing: 3) {
             if zooming {
                 Text("\(Int((zoom * 100).rounded()))%").font(Typeface.font(22, .semibold)).monospacedDigit().foregroundStyle(Ink.ink)
                     .frame(maxWidth: .infinity, alignment: .center)
             } else {
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Text(title).font(Typeface.font(20, .semibold)).foregroundStyle(Ink.ink).lineLimit(1)
-                    Spacer(minLength: 0)
-                    // a count that changes rolls over like a clock's digits (G 19 Oct)
-                    Text(detail).font(Typeface.font(17)).monospacedDigit().foregroundStyle(Ink.ink2).lineLimit(1)
-                        .contentTransition(.numericText()).animation(.snappy(duration: 0.32), value: detail)
-                }
-                Capsule().fill(Ink.sunk).frame(height: 6)
+                // the name, then where you are on its own line, so it's never cut short
+                Text(title).font(Typeface.font(18, .semibold)).foregroundStyle(Ink.ink).lineLimit(1)
+                // a count that changes rolls over like a clock's digits (G 19 Oct)
+                Text(detail).font(Typeface.font(14, .medium)).monospacedDigit().foregroundStyle(Ink.ink2).lineLimit(1)
+                    .contentTransition(.numericText()).animation(.snappy(duration: 0.32), value: detail)
+                Capsule().fill(Ink.sunk).frame(height: 4)
                     .overlay(alignment: .leading) {
                         GeometryReader { g in Capsule().fill(Ink.lit).frame(width: max(6, g.size.width * min(1, progress))) }
                     }
             }
         }
         .padding(.horizontal, 12)
-        .frame(width: model.screen.width > 900 ? (wide ? 360 : 300) : 230, height: 64)
+        .frame(width: model.screen.width > 900 ? (wide ? 340 : 280) : 220, height: 52)
     }
 
     // MARK: what opens above it
@@ -190,13 +189,23 @@ struct Toolbar: View {
     private func showMe() { if let p = problem { p.showMe() } else { model.lesson?.showMe() } }
     private func reset() { if let p = problem { p.reset() } else { model.lesson?.reset() } }
 
+    /// In a problem: which one and its step ("Together 1 · Step 2 of 4"), the bar filling as its steps are done (as the
+    /// paper prototype G liked, 20 Oct); on the page: how far through the page.
     private var lessonDetail: String {
+        if let p = problem, let s = problemSteps { return "\(p.label) · Step \(s.at) of \(s.of)" }
         if let b = model.bars { return b.label }
         return model.lesson?.session.label ?? ""
     }
     private var lessonProgress: Double {
+        if let s = problemSteps { return Double(s.at - 1) / Double(max(1, s.of - 1)) }
         if let b = model.bars, b.showing { return b.progress }
         return 0
+    }
+    /// The open problem's steps, counted from its first question to its answer.
+    private var problemSteps: (at: Int, of: Int)? {
+        guard let l = problem?.lesson else { return nil }
+        let of = max(1, l.steps.count - l.lead)
+        return (min(of, l.index - l.lead + 1), of)
     }
 
     private func readAloud() {
@@ -228,17 +237,17 @@ struct BarButton: View {
     let action: () -> Void
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 10) {
-                ObentoIconView(icon, size: 32)
-                if let label { Text(label).font(Typeface.font(20, .semibold)) }
+            HStack(spacing: 8) {
+                ObentoIconView(icon, size: 24)
+                if let label { Text(label).font(Typeface.font(18, .semibold)) }
                 if let count {
-                    Text("\(count)").font(Typeface.font(17, .bold)).monospacedDigit()
-                        .frame(minWidth: 28, minHeight: 28).padding(.horizontal, count > 9 ? 4 : 0)
+                    Text("\(count)").font(Typeface.font(15, .bold)).monospacedDigit()
+                        .frame(minWidth: 24, minHeight: 24).padding(.horizontal, count > 9 ? 4 : 0)
                         .background(Ink.sunk, in: Capsule())
                 }
             }
-            .padding(.leading, label == nil ? 0 : 14).padding(.trailing, label == nil ? 0 : 16)
-            .frame(minWidth: 64, minHeight: 64)
+            .padding(.leading, label == nil ? 0 : 12).padding(.trailing, label == nil ? 0 : 14)
+            .frame(minWidth: 52, minHeight: 52)
             .background(lit ? Ink.litFill : .clear, in: Capsule())
             .foregroundStyle(lit ? Ink.lit : Ink.ink)
             .contentShape(Capsule())
