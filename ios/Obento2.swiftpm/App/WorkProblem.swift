@@ -506,6 +506,9 @@ final class WorkProblem: Identifiable, PageProblem {
         var g = GhostPlay(mode: mode, start: PaperClock.now, run: lesson, hand: hand, moves: moves)
         g.frozen = frozen
         ghost = g
+        spotsSeen = []
+        // where its blocks are as it starts (it may press one that goes as its move answers the step)
+        for mv in moves { if case .tap(let spot) = mv { _ = point(of: spot) } }
         message = nil
         if instant && frozen == nil {
             // Reduce Motion: straight to the step done, no finger moving; Show me holds it a moment, then puts it back
@@ -612,18 +615,24 @@ final class WorkProblem: Identifiable, PageProblem {
         onChange?()
     }
 
-    /// Where a ghost spot is on the paper now, in paper points.
+    /// Where a ghost spot is on the paper now, in paper points. A block the finger pressed can go as its move answers
+    /// the step (the Cut block once it's cut): the finger then lifts away from where it was.
     func point(of spot: GhostSpot) -> CGPoint? {
         let l = layout, o = contentOrigin
+        let found: CGPoint?
         switch spot {
-        case .picture(let p): return CGPoint(x: o.x + l.pictureOffset.x + p.x * Paper.cell, y: o.y + l.pictureOffset.y + p.y * Paper.cell)
-        case .action(let name): return ProblemLayout.blocks(self).first { $0.kind == .action(name) }.map { CGPoint(x: $0.rect.midX, y: $0.rect.midY) }
-        case .check: return ProblemLayout.blocks(self).first { $0.kind == .main }.map { CGPoint(x: $0.rect.midX, y: $0.rect.midY) }
-        case .choice(let i): return ProblemLayout.blocks(self).first { $0.kind == .choice(i) }.map { CGPoint(x: $0.rect.midX, y: $0.rect.midY) }
-        case .box(let id): return ProblemLayout.blocks(self).first { $0.kind == .field(id) }.map { CGPoint(x: $0.rect.midX, y: $0.rect.midY) }
-        case .beside(let id): return ProblemLayout.blocks(self).first { $0.kind == .field(id) }.map { CGPoint(x: $0.rect.maxX + Paper.cell, y: $0.rect.maxY + Paper.cell) }
+        case .picture(let p): found = CGPoint(x: o.x + l.pictureOffset.x + p.x * Paper.cell, y: o.y + l.pictureOffset.y + p.y * Paper.cell)
+        case .action(let name): found = ProblemLayout.blocks(self).first { $0.kind == .action(name) }.map { CGPoint(x: $0.rect.midX, y: $0.rect.midY) }
+        case .check: found = ProblemLayout.blocks(self).first { $0.kind == .main }.map { CGPoint(x: $0.rect.midX, y: $0.rect.midY) }
+        case .choice(let i): found = ProblemLayout.blocks(self).first { $0.kind == .choice(i) }.map { CGPoint(x: $0.rect.midX, y: $0.rect.midY) }
+        case .box(let id): found = ProblemLayout.blocks(self).first { $0.kind == .field(id) }.map { CGPoint(x: $0.rect.midX, y: $0.rect.midY) }
+        case .beside(let id): found = ProblemLayout.blocks(self).first { $0.kind == .field(id) }.map { CGPoint(x: $0.rect.maxX + Paper.cell, y: $0.rect.maxY + Paper.cell) }
         }
+        if let found { spotsSeen.removeAll { $0.spot == spot }; spotsSeen.append((spot, found)); return found }
+        return spotsSeen.last { $0.spot == spot }?.at
     }
+    /// Where the ghost's spots last were (for a block that's gone since).
+    @ObservationIgnored private var spotsSeen: [(spot: GhostSpot, at: CGPoint)] = []
 
     /// The ghost finger as it is at `t`: where (paper points), pressing or not, the trail behind it, how much shows.
     func ghostFinger(at t: Double) -> (at: CGPoint, down: Bool, trail: [CGPoint], shows: Double)? {
