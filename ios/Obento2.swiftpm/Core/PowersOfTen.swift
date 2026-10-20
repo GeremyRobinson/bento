@@ -142,7 +142,7 @@ public enum PowersOfTen {
                                known: [(["x": r6(ans / 10)], "Move every digit one place for each zero."),
                                        (["x": r6(ans * 10)], "Move every digit one place for each zero, no more."),
                                        (["x": r6(x / m)], "Multiplying by \(M) makes the number bigger, so the digits move left.")],
-                               hint: "Each zero moves every digit one place.", explain: "The chart shows \(A).",
+                               hint: "Write the number the chart shows.", explain: "The chart shows \(A).",
                                check: { v in
                                    guard let t = v["x"] else { return .soft("Fill in every box.") }
                                    return abs(t - ans) < 1e-9 ? .right : .wrong("That’s not the number on the chart.")

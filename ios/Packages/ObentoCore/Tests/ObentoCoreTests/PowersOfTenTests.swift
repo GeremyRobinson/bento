@@ -52,6 +52,9 @@ final class PowersOfTenTests: XCTestCase {
         XCTAssertEqual(answer(&l, "348"), .notYet("That’s not the number on the chart."))
         XCTAssertEqual(l.picture["read"], 1, "a miss outlines the new number on the chart")
         XCTAssertEqual(l.steps[2].answer?.work, [.num(3.47), .op("×"), .num(100), .op("="), .num(347)])
+        // a problem aimed at a slip here starts with what to keep in mind: the chart has the number
+        XCTAssertEqual(LessonPlan.advice(PowersOfTen.spec, l.numbers, step: 2), "Write the number the chart shows.")
+        XCTAssertEqual(LessonPlan.advice(PowersOfTen.spec, l.numbers, step: 1), "100 has 2 zeros: every digit moves 2 places.")
         XCTAssertEqual(answer(&l, "347.0"), .moved(3), "the same number, however it's written")
 
         // done: the last words say why, the rule under the record
