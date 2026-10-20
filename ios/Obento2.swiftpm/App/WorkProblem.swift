@@ -459,10 +459,15 @@ final class WorkProblem: Identifiable, PageProblem {
     /// A stacked problem's frame for the step it's on (the plan's rectangle for it), in paper points: what the camera
     /// shows, never past 125%. Nil for the side-by-side layout (the camera frames what's drawn).
     var stageFrame: Rect? {
+        // Show me is a preview: the camera holds still while it plays, even when its copy moves on a stage
+        if ghost?.mode == .preview, let held = heldFrame { return held }
         guard let st = layout.stack else { return nil }
         let r = st.frame
-        return Rect(x: origin.x + r.minX, y: origin.y + r.minY, width: r.width, height: r.height)
+        let f = Rect(x: origin.x + r.minX, y: origin.y + r.minY, width: r.width, height: r.height)
+        heldFrame = f
+        return f
     }
+    @ObservationIgnored private var heldFrame: Rect?
 
     private func time(_ delay: Double) -> Double { instant ? PaperClock.now - 100 : PaperClock.now + delay }
 

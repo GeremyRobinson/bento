@@ -69,6 +69,20 @@ enum Shots {
                 page.backToProblems()
                 return
             }
+            if name.hasPrefix("howto-") {
+                // howto-<lesson id>[-<taps>]: the real path, not instant: the lesson opens and its How to plays (the ghost
+                // finger making each step's move), Next pressed that many times, a few seconds apart; -numbers as page-
+                let rest = name.dropFirst(6).split(separator: "-")
+                let taps = Int(rest.last ?? "") ?? 0, id = (Int(rest.last ?? "") != nil ? rest.dropLast() : rest[...]).joined(separator: "-")
+                guard let p = Map.pieces.first(where: { $0.id == id }) else { return }
+                PageStore.clear(id)
+                m.shotNumbers = given(id)
+                m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
+                func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
+                m.select(p); await wait(1); m.open(p); await wait(2.5)
+                for _ in 0..<taps { m.bars?.skipHowTo(); await wait(4) }
+                return
+            }
             if name.hasPrefix("live-") {
                 // the real path, not instant, to watch things draw in and the camera follow: the How to tapped through,
                 // the first problem opened, its answer box tapped, a step worked
@@ -212,12 +226,7 @@ enum Shots {
                 guard let page = m.bars, page.problems.indices.contains(which), let w = page.problems[which] as? WorkProblem else { return }
                 // -numbers a=1,b=2,…: that problem with these numbers (the lesson's own worked-out ones added by its spec);
                 // -story: told as its story
-                if let i = args.firstIndex(of: "-numbers"), i + 1 < args.count {
-                    var given: Numbers = [:]
-                    for pair in args[i + 1].split(separator: ",") { let kv = pair.split(separator: "="); if kv.count == 2, let v = Double(kv[1]) { given[String(kv[0])] = v } }
-                    w.use(["add", "sub", "mix"].contains(id) ? UnlikeFractions.numbers(a: Int(given["a"] ?? 1), b: Int(given["b"] ?? 2), c: Int(given["c"] ?? 1), d: Int(given["d"] ?? 3), minus: given["minus"] == 1) : given,
-                          story: args.contains("-story"))
-                }
+                if let n = given(id) { w.use(n, story: args.contains("-story")) }
                 page.open(w)
                 // each step before it answered as a child would: a hand step by its moves, a number typed, a pick picked
                 for _ in 0..<max(0, k) { w.answerForShots() }
@@ -338,6 +347,16 @@ enum Shots {
                 l.go()
             }
         }
+    }
+
+    /// `-numbers a=1,b=2,…`: a problem's numbers, the lesson's own worked-out ones added (the fractions' L, A, C, S).
+    static func given(_ id: String) -> Numbers? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-numbers"), i + 1 < args.count else { return nil }
+        var n: Numbers = [:]
+        for pair in args[i + 1].split(separator: ",") { let kv = pair.split(separator: "="); if kv.count == 2, let v = Double(kv[1]) { n[String(kv[0])] = v } }
+        guard ["add", "sub", "mix"].contains(id) else { return n }
+        return UnlikeFractions.numbers(a: Int(n["a"] ?? 1), b: Int(n["b"] ?? 2), c: Int(n["c"] ?? 1), d: Int(n["d"] ?? 3), minus: n["minus"] == 1)
     }
 
     /// `-rotate`: turn the other way (from `-portrait` or `-landscape`) a moment after the moment opens, to check everything stays together.

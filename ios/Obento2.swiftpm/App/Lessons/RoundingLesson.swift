@@ -54,7 +54,9 @@ struct RoundingLesson: PaperLesson {
             pic.numberLine("l2", col: 0, row: y2, steps: 10, per: B, long: 5)
             let done = at >= 4
             pic.label("l2lo", RoundDecimals.written(P.T, p), label.colour(done && P.stays ? .chapter : .ink2), .below, edge: y2, along: 0)
-            pic.label("l2mid", RoundDecimals.written(P.half, p + 1), Self.small.colour(.ink3), .below, edge: y2, along: L / 2)
+            // halfway, small, under the middle tick; not when the point is there (its own number says it, and its ring
+            // would cross it)
+            if !(at >= 2 && P.halfway) { pic.label("l2mid", RoundDecimals.written(P.half, p + 1), Self.small.colour(.ink3), .below, edge: y2, along: L / 2) }
             pic.label("l2hi", RoundDecimals.written(P.up, p), label.colour(done && P.roundsUp ? .chapter : .ink2), .below, edge: y2, along: L)
 
             if at == 2 {
@@ -86,8 +88,9 @@ struct RoundingLesson: PaperLesson {
                 pic.label("p2w", fmt(P.value), label.colour(.ink), .above, edge: y2 - 2, along: sx)
                 pic.hop("hop", from: sx, to: end, row: y2, height: height)
                 pic.dot("end", at: end, y2, radius: 0.4, .chapter, over: true)
-                // over the hop's top when it's wide enough to keep clear of the number; higher when it's short
-                let edge = span >= 10 ? y2 - height - 0.5 : y2 - 4.5
+                // over the hop's top when it's wide enough to keep well clear of the number's own label; higher, above
+                // that label's row, when it's short (the test page always put it there)
+                let edge = span >= 16 ? y2 - height - 0.5 : y2 - 4.5
                 pic.label("hopw", RoundDecimals.steps(P.near), label.colour(.chapter), .above, edge: edge, along: (sx + end) / 2)
             }
         }
@@ -100,7 +103,9 @@ struct RoundingLesson: PaperLesson {
             rec.digits("num", V, right: right, row: row, per: 2)
             rec.word("approx", "≈", at: right + 2, row, Self.maths)
             if at == 3 {
-                rec.answerBox("x", right: right + 4 + 2 * Double(R.count), mid: row, per: 2, cells: R.count)
+                // as on the test page: a box as many cells as the answer has characters, what's typed written in its
+                // middle as one number (the point on its line, not in a cell of its own)
+                rec.answerBox("x", right: right + 4 + 2 * Double(R.count), mid: row, per: 2, cells: R.count, centred: true)
             } else {
                 rec.digits("R", R, right: right + 4 + 2 * Double(R.filter { $0 != "." }.count), row: row, per: 2, .chapter)
                 // the rule as the record has it: the place's digit underlined, the next one ringed, why written under them

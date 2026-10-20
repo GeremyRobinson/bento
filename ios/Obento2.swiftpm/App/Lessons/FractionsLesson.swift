@@ -133,7 +133,8 @@ struct FractionsLesson: PaperLesson {
             // name, "twenty-fourths", starts where the bars do)
             let name = UnlikeFractions.pieceName(q.W / Int(w))
             let half = PaperText.width(name, PaperText.font(Self.small.size, Self.small.weight, digits: true)) / 2 / Paper.cell
-            live.label("rulerw", name, Self.small, .above, edge: R, along: max(w / 2, half))
+            // (its ink half a square over the handle, which a short ruler's name would otherwise touch)
+            live.label("rulerw", name, Self.small, .above, edge: R - 0.75, along: max(w / 2, half))
             // the cuts it would make, dashed across both bars
             for k in 1..<max(1, Int((W / w).rounded())) {
                 let x = Double(k) * w
@@ -151,8 +152,9 @@ struct FractionsLesson: PaperLesson {
 
         // MARK: hints on the other steps: where the striped pieces go, the last piece counted, the simplest pieces
         if sliding && !placed && !held && s.on("target") {
+            // where they go: the pieces they'll fill (or cover), outlined dashed just inside the bar's own lines
             let n = q.minus ? q.C : min(q.L, q.S) - q.A
-            pic.sketch.box("target", pic.R(Double(q.target) * pw, y1, Double(n) * pw, h), .chapter, width: Sketch.stroke, dashed: true)
+            pic.sketch.box("target", pic.R(Double(q.target) * pw + 0.5, y1 + 0.5, Double(n) * pw - 1, h - 1), .chapter, width: Sketch.stroke, dashed: true)
         }
         if slid && !sum && s.on("last") {
             // the last piece counted: in the second whole bar when the sum spills into it
@@ -165,7 +167,11 @@ struct FractionsLesson: PaperLesson {
                 // every L pieces make one whole: the top bar, all of it
                 pic.sketch.box("whole", pic.R(0, y1 - 1, W, h + 2), .chapter, width: Sketch.stroke, dashed: true)
             } else if F.den < q.L {
-                for k in 1..<F.den { let x = W * Double(k) / Double(F.den); pic.line("simple\(k)", [(x, y1 - 1), (x, y1 + h + 1)], .chapter, dashed: true) }
+                // the bigger pieces the answer is made of, marked over the top bar: a line along it, a tick down at each
+                // of their cuts (3 sixths make a half)
+                let top = y1 - 1
+                pic.line("simpleTop", [(0, y1), (0, top), (W, top), (W, y1)], .chapter)
+                for k in 1..<F.den { let x = W * Double(k) / Double(F.den); pic.line("simple\(k)", [(x, top), (x, y1)], .chapter) }
             }
         }
 

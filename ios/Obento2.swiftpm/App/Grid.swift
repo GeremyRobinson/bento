@@ -120,7 +120,32 @@ struct GridPen {
     /// A circle round a place (a hint: look here), solid or dashed.
     mutating func circle(_ id: String, at col: Double, _ row: Double, radius: Double, _ colour: Sketch.Colour = .chapter, dashed: Bool = false) {
         let c = P(col, row), r = radius * Self.sq
-        sketch.line(id, (0...40).map { i in let a = Double(i) / 40 * 2 * .pi; return CGPoint(x: c.x + r * cos(a), y: c.y + r * sin(a)) }, colour, width: Sketch.stroke, dashed: dashed)
+        let pts = (0...40).map { i in let a = Double(i) / 40 * 2 * .pi; return CGPoint(x: c.x + r * cos(a), y: c.y + r * sin(a)) }
+        if dashed { sketch.segments(id, Self.dashes(pts), colour, width: Sketch.stroke) }
+        else { sketch.line(id, pts, colour, width: Sketch.stroke) }
+    }
+    /// A curve cut into dashes along its whole length (a straight line's own dashes are cut segment by segment, which
+    /// leaves a curve's short segments whole): about 5 points drawn, 5 left, as chords of the curve.
+    static func dashes(_ pts: [CGPoint], on: Double = 5, off: Double = 5) -> [(CGPoint, CGPoint)] {
+        var out: [(CGPoint, CGPoint)] = [], pos = 0.0
+        let period = on + off
+        for (a, b) in zip(pts, pts.dropFirst()) {
+            let len = hypot(b.x - a.x, b.y - a.y)
+            guard len > 0 else { continue }
+            var t = 0.0
+            while t < len {
+                // where in the pattern this point is, and how far to the next change
+                let phase = (pos + t).truncatingRemainder(dividingBy: period), drawing = phase < on
+                let step = min(len - t, drawing ? on - phase : period - phase)
+                if drawing {
+                    let f0 = t / len, f1 = (t + step) / len
+                    out.append((CGPoint(x: a.x + (b.x - a.x) * f0, y: a.y + (b.y - a.y) * f0), CGPoint(x: a.x + (b.x - a.x) * f1, y: a.y + (b.y - a.y) * f1)))
+                }
+                t += max(step, 0.01)
+            }
+            pos += len
+        }
+        return out
     }
     /// A line through places on the grid, solid or dashed.
     mutating func line(_ id: String, _ pts: [(Double, Double)], _ colour: Sketch.Colour = .ink, dashed: Bool = false) {

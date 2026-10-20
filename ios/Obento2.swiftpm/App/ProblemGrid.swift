@@ -169,10 +169,12 @@ enum ProblemGrid {
         guard let paper = m.paper else { return out }
         let d = paper.draw(s)
         out.boxes = d.boxes.map { $0.moved(out.workOffset) }
-        out.lessonBlocks = m.auto || s.run.isLast ? [] : d.actions
-        // the blocks: two squares under what's drawn now (the record once it's there, else the picture, with the room
-        // the step's move will make)
-        var bottom = plan.pictureTop * sq + max(d.picture.bounds?.maxY ?? 0, d.extent?.maxY ?? 0)
+        // the lesson's own blocks ("Cut"), in the How to too: the ghost finger presses them there
+        out.lessonBlocks = s.run.isLast ? [] : d.actions
+        // the blocks: two squares under what the step draws (the record once it's there, else the picture, with the
+        // room the step's move will make, and its hint's drawings, so a miss or a hint never moves the camera)
+        let hinted = paper.draw(s.at(s.index, hint: true))
+        var bottom = plan.pictureTop * sq + ([d.picture.bounds?.maxY, d.extent?.maxY, hinted.picture.bounds?.maxY].compactMap { $0 }.max() ?? 0)
         if let r = withBoxes(d.record.bounds, d.boxes) { bottom = max(bottom, plan.recordTop * sq + r.maxY) }
         let blocksTop = (bottom / sq).rounded(.up) + 2
         let a = s.step.answer
