@@ -17,12 +17,12 @@ extension Sketch {
         static let heading = Words(size: 26, weight: .semibold, colour: .ink)
         static let chapter = Words(size: 30, weight: .medium, colour: .ink)
         /// What to do now.
-        static let say = Words(size: 28, weight: .medium, colour: .ink)
+        static let say = Words(size: 34, weight: .medium, colour: .ink)
         /// The hint under it, and a story.
-        static let hint = Words(size: 20, weight: .regular, colour: .ink2)
-        static let story = Words(size: 20, weight: .regular, colour: .ink)
+        static let hint = Words(size: 24, weight: .regular, colour: .ink2)
+        static let story = Words(size: 24, weight: .regular, colour: .ink)
         /// What a miss (or Show me) says.
-        static let message = Words(size: 20, weight: .medium, colour: .chapter)
+        static let message = Words(size: 26, weight: .medium, colour: .chapter)
         /// A thumbnail's name under its frame, and its status under that.
         static let label = Words(size: 20, weight: .medium, colour: .ink)
         static let status = Words(size: 16, weight: .regular, colour: .ink3)
@@ -31,7 +31,7 @@ extension Sketch {
         /// A tab's word ("Done", "Up next", "Start").
         static let tab = Words(size: 14, weight: .semibold, colour: .hex(0xFFFFFF, 0xFFFFFF))
         /// A block's word ("Check").
-        static let block = Words(size: 17, weight: .medium, colour: .ink)
+        static let block = Words(size: 22, weight: .medium, colour: .ink)
         func colour(_ c: Colour) -> Words { Words(size: size, weight: weight, colour: c) }
     }
 

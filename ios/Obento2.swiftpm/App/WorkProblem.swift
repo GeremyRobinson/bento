@@ -37,6 +37,8 @@ final class WorkProblem: Identifiable, PageProblem {
     // picture from the origin down, then the step
     /// The sum's row starts on the block line one block above the picture.
     static let problemY: Double = -100
+    /// The line being worked is written big for kids (G 19 Oct): two squares to a digit, like the sum at the top.
+    static let lineCell: Double = 2
 
     /// Where things sit in an open problem, in points from its origin before `scale`. An open problem is its own space
     /// on the grid, with no frame, filling the screen (G 19 Oct): 13 blocks by 9, its picture drawn 1.6 times its size

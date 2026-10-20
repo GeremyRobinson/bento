@@ -19,7 +19,7 @@ enum ProblemLayout {
         var y = l.actions ?? (l.lineY + Paper.unit)
         if let a = m.lesson.step.answer, a.choices == nil {
             // a tall line (a fraction's boxes) pushes Check down, to the next block line
-            let under = l.lineY + Double(MathLineView.layout(a.prompt, typed: m.lesson.typed, size: 28).h) * Paper.cell + Paper.cell
+            let under = l.lineY + Double(MathLineView.layout(a.prompt, typed: m.lesson.typed, size: 28).h) * Paper.cell * WorkProblem.lineCell + Paper.cell
             y = max(y, (under / Paper.unit).rounded(.up) * Paper.unit)
         }
         return y
@@ -44,14 +44,18 @@ enum ProblemLayout {
         if let a = l.step.answer, a.choices == nil, m is WorkProblem {
             let lay = MathLineView.layout(a.prompt, typed: l.typed, size: 28), c = Paper.cell
             for it in lay.items { if case .box(let id) = it.kind {
+                let c = c * WorkProblem.lineCell
                 out.append(Block(kind: .field(id), rect: R(Double(it.col) * c, (wp?.layout.lineY ?? 0) + Double(it.row) * c, Double(it.w) * c, Double(it.h) * c)))
             } }
         }
         // the keypad, once an answer box was tapped: the keys in the order a keypad has them
         if let wp, wp.keypadOpen, !m.solved, let a = l.step.answer, a.choices == nil {
             let keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "del"], size = 60.0, lay = wp.layout
+            // clear of the line being worked: on the first block line past its end (it's written big, and grows)
+            let lineEnd = sx + Double(MathLineView.layout(a.prompt, typed: l.typed, size: 28).w) * Paper.cell * WorkProblem.lineCell
+            let kx = max(lay.keypadX, ((lineEnd + Paper.cell) / Paper.unit).rounded(.up) * Paper.unit)
             for (i, key) in keys.enumerated() {
-                out.append(Block(kind: .key(key), rect: R(lay.keypadX - sx + Double(i % 3) * size, lay.keypadY + Double(i / 3) * size, size, size)))
+                out.append(Block(kind: .key(key), rect: R(kx - sx + Double(i % 3) * size, lay.keypadY + Double(i / 3) * size, size, size)))
             }
         }
         let actions = actions(m), column = column(m)
@@ -194,7 +198,6 @@ extension Rig {
         let row = Sketch.row, sx = lay.stepX
         if part {
             // its name, then the sum starting on the same left edge, and the story beside it when it's told as one
-            s.words("name", m.label, .name, x: P(0, 0).x, top: P(0, BarsPage.box.dy).y, width: col, k: k)
             let width = s.sum("sum", l.spec.display(l.numbers), at: P(0, WorkProblem.problemY), k: k)
             if l.story, let story = l.spec.story?(l.numbers) {
                 let x = P(0, 0).x + width + 2 * row * k
@@ -213,12 +216,13 @@ extension Rig {
         // the hint: always when done together; on their own only after a miss; on a step missed before, what they
         // were told then, in the chapter's colour; never in a test
         if m.intro == nil, !storyStep, l.step.answer?.choices == nil {
-            let (text, c): (String?, Sketch.Colour) = m.onFocus ? (m.focus?.said, .chapter) : (l.guided || (l.helps && l.misses > 0)) ? (words.hint, .ink2) : (nil, .ink2)
+            // only after a miss (G 19 Oct: no text that isn't needed); the picture lights what to look at
+            let (text, c): (String?, Sketch.Colour) = m.onFocus ? (m.focus?.said, .chapter) : (l.helps && l.misses > 0) ? (words.hint, .ink2) : (nil, .ink2)
             if let text { s.words("hint\(l.index)", text, Sketch.Words.hint.colour(c), x: P(sx, 0).x, top: P(0, lay.stepY + Double(said) * row).y, width: col, k: k) }
         }
         // the line being worked, a digit to a square, its boxes drawn as blocks
         if let a = l.step.answer, a.choices == nil, m.intro == nil {
-            s.mathLine("line\(l.index)", a.prompt, at: P(sx, lay.lineY), typed: l.typed, size: 28 * k, cell: Paper.cell * k)
+            s.mathLine("line\(l.index)", a.prompt, at: P(sx, lay.lineY), typed: l.typed, size: 40 * k, cell: Paper.cell * WorkProblem.lineCell * k)
         }
 
         // the blocks
@@ -244,14 +248,14 @@ extension Rig {
                 s.pace = 0
                 // a digit to a square, from a square in: the same square of space each side however many are typed,
                 // and what's typed stays put as the box widens to the right
-                let left = r.minX + Paper.cell * k, cell = Paper.cell * k, chars = Array(typed ?? "")
+                let cell = Paper.cell * WorkProblem.lineCell * k, left = r.minX + cell, chars = Array(typed ?? "")
                 let tag = "\(m.verdict.map { $0.right } as Bool?)"
                 for (j, ch) in chars.enumerated() {
-                    s.text("\(id)typed\(j)\(ch)\(tag)", String(ch), at: CGPoint(x: left + (Double(j) + 0.5) * cell, y: r.midY), size: 26 * k, weight: .medium, style.text)
+                    s.text("\(id)typed\(j)\(ch)\(tag)", String(ch), at: CGPoint(x: left + (Double(j) + 0.5) * cell, y: r.midY), size: 40 * k, weight: .medium, style.text)
                 }
                 if l.active == f, m.verdict == nil, !m.auto {
                     let x = left + Double(chars.count) * cell
-                    s.line("cursor\(typed ?? "")", [CGPoint(x: x, y: r.midY - 12 * k), CGPoint(x: x, y: r.midY + 12 * k)], .ink, width: 2 * k)
+                    s.line("cursor\(typed ?? "")", [CGPoint(x: x, y: r.midY - 18 * k), CGPoint(x: x, y: r.midY + 18 * k)], .ink, width: 2.5 * k)
                 }
                 s.pace = 0.4
             case .key(let key): s.block(id, r, .plain, centred: key == "del" ? nil : key, icon: key == "del" ? "backspace" : nil, k: k)
