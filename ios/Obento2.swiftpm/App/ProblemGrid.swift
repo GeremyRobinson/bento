@@ -57,8 +57,11 @@ enum ProblemGrid {
             out.column = 600
             let width = max(plan.arrangement == 1 ? wx + plan.W.w : max(P.w, plan.W.w), 1)
             out.total = width / k
+            // what to do takes as many rows as its words wrap to (up to two), its box holding all of them
+            let sayFont = PaperText.font(Sketch.Words.say.size * k, Sketch.Words.say.weight)
+            let rows = Double(min(2, PaperText.wrap(m.intro ?? l.words.say, sayFont, width: max(plan.sayW, 300)).count))
             out.sections = [CGRect(x: 0, y: 0, width: P.w, height: P.h), CGRect(x: wx, y: wy, width: W.w, height: W.h),
-                            CGRect(x: sayX, y: out.sayAt.y, width: plan.sayW, height: Sketch.row * k),
+                            CGRect(x: sayX, y: out.sayAt.y, width: plan.sayW, height: Sketch.row * k * max(1, rows)),
                             CGRect(x: wx, y: out.checkAt.y, width: 120 * k, height: 40 * k)]
             out.width = (width + 2 * block) / block / k
             out.height = (max(P.h, wy + plan.W.h) + 3 * block) / block / k

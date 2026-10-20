@@ -41,7 +41,7 @@ public enum LongDivision {
         let ask = LessonStep(StepWords(say: "What is \(N) ÷ \(D)?", hint: "The strip is \(D) tall. How wide is it?", action: "Let’s find out"),
                              picture: ["strip": 0, "found": 0])
         let tensHint = "Try \(D) × 10, \(D) × 20, … and stop before you go past \(N)."
-        let tens = LessonStep(StepWords(say: "Take out as many tens of \(D) as fit in \(N). How many is that?", hint: "Take out as many tens of \(D) as fit.", action: "Check"),
+        let tens = LessonStep(StepWords(say: "How many tens of \(D) fit in \(N)?", hint: "Take out as many tens of \(D) as fit.", action: "Check"),
             answer: AnswerTask(prompt: [.text("tens"), .op("="), .box("x")], expected: ["x": d(T)],
                                known: [(["x": d(T - 10)], "\(D) × \(T) still fits, so you can use more tens."),
                                        (["x": d(T / 10)], "\(tensWord(T / 10)) is written \(T)."),

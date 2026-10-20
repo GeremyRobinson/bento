@@ -19,7 +19,7 @@ final class LongDivisionTests: XCTestCase {
         XCTAssertEqual(l.go(), .moved(1))
 
         // tens first
-        XCTAssertEqual(l.words, StepWords(say: "Take out as many tens of 12 as fit in 864. How many is that?", hint: "Take out as many tens of 12 as fit.", action: "Check"))
+        XCTAssertEqual(l.words, StepWords(say: "How many tens of 12 fit in 864?", hint: "Take out as many tens of 12 as fit.", action: "Check"))
         XCTAssertEqual(l.picture, ["strip": 1, "found": 0])
         type(&l, "60"); XCTAssertEqual(l.go(), .notYet("12 × 70 still fits, so you can use more tens."))
         type(&l, "7"); XCTAssertEqual(l.go(), .notYet("7 tens is written 70."))
@@ -64,7 +64,7 @@ final class LongDivisionTests: XCTestCase {
 
     /// The web test's question for 1168 ÷ 16, and slips that the web keeps or drops.
     func testWebAssertionsAndEdgeSlips() {
-        XCTAssertEqual(run(16, 73).steps[1].words.say, "Take out as many tens of 16 as fit in 1168. How many is that?")
+        XCTAssertEqual(run(16, 73).steps[1].words.say, "How many tens of 16 fit in 1168?")
         let l = run(3, 21)  // T = 20, O = 1: the one-too-few slip is 0, still kept
         XCTAssertEqual(l.steps[3].answer!.known.map(\.values), [["x": 2], ["x": 0]])
         let m = run(7, 13)  // T = 10: "1 ten is written 10."
