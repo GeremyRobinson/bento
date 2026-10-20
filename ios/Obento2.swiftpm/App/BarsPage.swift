@@ -118,8 +118,10 @@ final class BarsPage {
             let kept = saved?.problems ?? []
             let back = kept.compactMap { k in k.spec.flatMap { Lessons.spec($0) }.flatMap { LessonRun.restored($0, k) } }
             let runs = kept.count == n && back.count == n ? back : Review.runs(specs, using: &rng)
-            problems = runs.enumerated().map { i, r in
-                Self.make(r.spec, origin: o, chapter: Map.chapter(of: r.spec.id) ?? chapter, instant: instant, run: r, label: "Problem \(i + 1)")
+            // each card named by its own lesson, so the child sees the review is made of their lessons (the bar still
+            // counts them: "Problem 3 of 8")
+            problems = runs.map { r in
+                Self.make(r.spec, origin: o, chapter: Map.chapter(of: r.spec.id) ?? chapter, instant: instant, run: r, label: Map.piece(r.spec.id)?.name ?? r.spec.title)
             }
         } else if let n = test {
             let kept = saved?.problems ?? []
