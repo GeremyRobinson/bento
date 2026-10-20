@@ -508,6 +508,16 @@ final class Rig {
     /// step adds something the paper eases out to fit it as it draws in, and eases back in when something goes.
     private func frameContent(_ page: BarsPage) {
         guard let m = page.mode == .work ? page.current : (page.howToGone ? nil : page.howTo) else { contentKey = ""; return }
+        // a lesson on the paper frames its plan's rectangle for the step it's on (G 20 Oct), not what's drawn, and holds
+        // still while a hand drags on it
+        if let w = m as? WorkProblem, let r = w.stageFrame {
+            guard !w.dragging else { return }
+            let key = "\(m.id) \(r)"
+            guard key != contentKey else { return }
+            contentKey = key
+            Task { @MainActor in page.contentChanged(r) }
+            return
+        }
         let key = "\(m.id) \(sketches[m.id]?.key ?? "") \(problemWords[m.id]?.key ?? "")"
         guard key != contentKey else { return }
         contentKey = key

@@ -40,6 +40,9 @@ protocol PageProblem: AnyObject {
     func go()
     func choose(_ i: Int)
     func showMe()
+    /// The bar's Hint: the step's hint shown on the paper (a paper lesson writes it on rows 3–4 and lights its part of
+    /// the picture).
+    func showHint()
     func reset()
     func usedHint()
     func tapPaper(_ p: Point)
@@ -55,6 +58,7 @@ protocol PageProblem: AnyObject {
 }
 
 extension PageProblem {
+    func showHint() {}
     func grab(_ p: Point) -> Bool { false }
     func drag(to p: Point) {}
     func release() {}

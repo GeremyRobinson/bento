@@ -22,7 +22,9 @@ enum Shots {
         let args = ProcessInfo.processInfo.arguments
         if args.contains("-landscape") || args.contains("-portrait"),
            let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            scene.requestGeometryUpdate(UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: args.contains("-portrait") ? .portrait : .landscapeRight))
+            scene.requestGeometryUpdate(UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: args.contains("-portrait") ? .portrait : .landscapeRight)) { e in
+                NSLog("OBENTO-SHOT orientation refused: \(e)")
+            }
         }
         // let the window settle into its final size, then jump to the moment
         Task {
@@ -63,7 +65,7 @@ enum Shots {
                 for _ in 0..<10 { m.bars?.skipHowTo(); await wait(1.3) }
                 guard let page = m.bars, let w = page.problems.first as? WorkProblem else { return }
                 await wait(2); page.open(w); await wait(3)
-                w.showMe(); await wait(0.5); w.go(); await wait(2)
+                w.answerForShots(); await wait(2)
                 page.backToProblems()
                 return
             }
@@ -80,8 +82,8 @@ enum Shots {
                 guard let page = m.bars, let w = page.problems.first as? WorkProblem else { return }
                 await wait(1.5); page.open(w); await wait(2.5)
                 if let box = w.lesson.step.answer?.boxes.first { w.select(box) }
-                await wait(2); w.showMe(); await wait(1); w.go(); await wait(3)
-                w.showMe(); await wait(1); w.go(); await wait(2)
+                await wait(2); w.answerForShots(); await wait(3)
+                w.answerForShots(); await wait(2)
                 // back to the page, the same problem again straight away, and back once more (G found it stuck); then
                 // another problem, and back
                 page.backToProblems(); await wait(0.3)
@@ -193,12 +195,8 @@ enum Shots {
                     page.open(w)
                     var missed = !miss
                     while !w.solved {
-                        if let a = w.lesson.step.answer {
-                            if a.choices != nil { w.choose(Int(a.expected["c"] ?? 0)) }
-                            else if !missed { w.type("1"); w.go(); missed = true; w.reset() }
-                            _ = w.lesson.step.answer.map { _ in w.showMe() }
-                        }
-                        w.go()
+                        if w.lesson.step.answer != nil, !missed { w.answerForShots(wrong: true); missed = true; w.reset() }
+                        w.answerForShots()
                     }
                 }
                 for i in [0, 1, 2, 3, 4, 5] { if let w = page.problems[i] as? WorkProblem { work(w, miss: i == 3) } }
@@ -221,10 +219,24 @@ enum Shots {
                           story: args.contains("-story"))
                 }
                 page.open(w)
-                defer { if ProcessInfo.processInfo.arguments.contains("-keypad"), let box = w.lesson.step.answer?.boxes.first { w.select(box) } }
-                // -wrong: a wrong answer typed and checked, so its box and words show red
-                defer { if ProcessInfo.processInfo.arguments.contains("-wrong") { w.type("1"); w.go() } }
-                for _ in 0..<max(0, k) { if w.lesson.step.answer != nil { w.lesson.step.answer?.choices != nil ? w.choose(Int(w.lesson.step.answer!.expected["c"] ?? 0)) : w.showMe() }; w.go() }
+                // each step before it answered as a child would: a hand step by its moves, a number typed, a pick picked
+                for _ in 0..<max(0, k) { w.answerForShots() }
+                // -wrong: a slip on this step (a wrong move, or a wrong number typed and checked), so what a miss says shows
+                if args.contains("-wrong") { w.answerForShots(wrong: true) }
+                // -hint: the step's hint, as the bar's Hint shows it
+                if args.contains("-hint") { w.showHint() }
+                // -hand key=value,…: the hand mid-move (a ruler being dragged, a point held, pieces being slid)
+                if let i = args.firstIndex(of: "-hand"), i + 1 < args.count {
+                    var hand: Numbers = [:]
+                    for pair in args[i + 1].split(separator: ",") { let kv = pair.split(separator: "="); if kv.count == 2, let v = Double(kv[1]) { hand[String(kv[0])] = v } }
+                    w.hand = hand
+                }
+                // -ghost [seconds]: Show me's ghost finger stopped that far into its moves
+                if let i = args.firstIndex(of: "-ghost") {
+                    let at = i + 1 < args.count ? Double(args[i + 1]) : nil
+                    w.play(.preview, frozen: at ?? 1.2)
+                }
+                if args.contains("-keypad"), let box = w.lesson.step.answer?.boxes.first { w.select(box) }
             case "tests":
                 // the map with Add with different bottoms learned: its chapter's test opens; frame on Fractions
                 Progress.shared.reset(to: ["ad"]); m.frameChapter(2)

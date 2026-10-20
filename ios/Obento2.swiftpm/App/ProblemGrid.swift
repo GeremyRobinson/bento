@@ -104,6 +104,89 @@ enum ProblemGrid {
         return out
     }
 
+    // MARK: stacked: a lesson on the paper (G 20 Oct, design/README.md rule 1)
+
+    /// A paper lesson's plan, in squares from the problem's corner, made once for its numbers: the story (when it's
+    /// told as one), what to do (rows 0–2, words 28), what a miss says or the hint (rows 3–4, words 20), the picture
+    /// (from row 6, its names at its right end), the record (3 rows under the picture). The rows kept for words are the
+    /// most any step needs, and the record's row is under the picture's biggest step, so nothing jumps.
+    struct StackPlan {
+        var storyRows = 0, sayRows = 1, msgRows = 1
+        /// What the words wrap to (the picture's width, or the record's), and how far the picture's end labels reach
+        /// left of the edge everything starts on.
+        var width = 40.0, left = 0.0
+        var sayTop = 0.0, msgTop = 3.0, pictureTop = 6.0, recordTop = 24.0
+    }
+    /// A stacked problem on the step it's on: its plan, its blocks' row (two squares under what's drawn now), and the
+    /// rectangle the camera frames for the step (paper points from the origin).
+    struct Stack {
+        var plan: StackPlan
+        var blocksTop = 0.0
+        var frame = CGRect.zero
+    }
+
+    static func stackPlan(_ m: WorkProblem) -> StackPlan {
+        var p = StackPlan()
+        guard let paper = m.paper else { return p }
+        let l = m.lesson
+        // the picture and the record, as big as they get over the problem's steps, a hint's drawings and the room a
+        // move makes included
+        var pic: CGRect?, rec: CGRect?
+        let base = PaperState(run: l, index: l.index)
+        for i in l.steps.indices {
+            let d = paper.draw(base.at(i, hint: true))
+            for b in [d.picture.bounds, d.extent].compactMap({ $0 }) { pic = pic.map { $0.union(b) } ?? b }
+            if let b = withBoxes(d.record.bounds, d.boxes) { rec = rec.map { $0.union(b) } ?? b }
+        }
+        p.left = min(0, ((pic?.minX ?? 0) / sq).rounded(.down))
+        p.width = max(30, (max(pic?.maxX ?? 0, rec?.maxX ?? 0) / sq).rounded(.up))
+        let width = p.width * sq
+        // what to do, each step's (a story's pick says "Pick what to do"), and the How to's idea when it plays
+        let say = PaperText.font(Sketch.Words.say.size, Sketch.Words.say.weight)
+        var texts = l.steps.map { st in l.story && st.answer?.choices != nil ? st.words.hint : st.words.say }
+        if m.auto { texts.append(l.spec.idea(l.numbers)) }
+        p.sayRows = max(1, texts.map { PaperText.wrap($0, say, width: width).count }.max() ?? 1)
+        if l.story, let story = l.spec.story?(l.numbers) {
+            p.storyRows = PaperText.wrap(story, PaperText.font(Sketch.Words.tell.size, Sketch.Words.tell.weight), width: width).count
+        }
+        p.msgRows = paper.messageRows(l.numbers)
+        p.sayTop = p.storyRows > 0 ? Double(2 * p.storyRows + 1) : 0
+        p.msgTop = p.sayTop + Double(2 * p.sayRows) + 1
+        p.pictureTop = p.msgTop + Double(2 * p.msgRows) + 1
+        p.recordTop = p.pictureTop + ((pic?.maxY ?? 0) / sq).rounded(.up) + 3
+        return p
+    }
+
+    /// A stacked problem's layout for the state it's in.
+    static func stackedLayout(_ m: WorkProblem, _ s: PaperState) -> WorkProblem.Layout {
+        let plan = m.plan ?? { let p = stackPlan(m); m.plan = p; return p }()
+        var out = WorkProblem.Layout()
+        out.inline = true; out.scale = 1
+        out.pictureOffset = CGPoint(x: 0, y: plan.pictureTop * sq)
+        out.workOffset = CGPoint(x: 0, y: plan.recordTop * sq)
+        out.sayAt = CGPoint(x: 0, y: plan.sayTop * sq); out.sayWidth = plan.width * sq
+        out.total = plan.width * sq; out.column = plan.width * sq
+        guard let paper = m.paper else { return out }
+        let d = paper.draw(s)
+        out.boxes = d.boxes.map { $0.moved(out.workOffset) }
+        out.lessonBlocks = m.auto || s.run.isLast ? [] : d.actions
+        // the blocks: two squares under what's drawn now (the record once it's there, else the picture, with the room
+        // the step's move will make)
+        var bottom = plan.pictureTop * sq + max(d.picture.bounds?.maxY ?? 0, d.extent?.maxY ?? 0)
+        if let r = withBoxes(d.record.bounds, d.boxes) { bottom = max(bottom, plan.recordTop * sq + r.maxY) }
+        let blocksTop = (bottom / sq).rounded(.up) + 2
+        let a = s.step.answer
+        let rows = a?.choices != nil ? 5.0 : (!out.lessonBlocks.isEmpty || (a != nil && a?.byHand == false && !m.auto) || (s.run.isLast && !m.auto) || !m.howToButtons.isEmpty) ? 2 : 0
+        let frameBottom = rows > 0 ? (blocksTop + rows) * sq : bottom
+        out.checkAt = CGPoint(x: 0, y: blocksTop * sq)
+        out.stack = Stack(plan: plan, blocksTop: blocksTop, frame: CGRect(x: plan.left * sq, y: 0, width: (plan.width - plan.left) * sq, height: frameBottom))
+        // its box (BarsPage.box: taps land in it) holds it all, in whole blocks
+        out.width = ((plan.width - plan.left) * sq + 2 * block) / block
+        out.height = (frameBottom + 3 * block) / block
+        out.sections = [CGRect(x: 0, y: plan.pictureTop * sq, width: plan.width * sq, height: bottom - plan.pictureTop * sq)]
+        return out
+    }
+
     /// The work's bounds with its answer boxes as wide as they start (and their half cell of room for the cursor), so
     /// the boxes stay inside the work's section.
     static func withBoxes(_ work: CGRect?, _ boxes: [WorkBox]) -> CGRect? {

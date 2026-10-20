@@ -5,6 +5,9 @@ struct PaperScreen: View {
     @State var model: PaperModel
     @State private var lastDrag: CGSize = .zero
     @State private var lastPinch: CGFloat = 1
+    /// A drag is under way (its first move has decided what it does), and a pinch is.
+    @State private var dragging = false
+    @State private var pinching = false
 
     init(model: PaperModel) { _model = State(initialValue: model) }
 
@@ -28,12 +31,14 @@ struct PaperScreen: View {
                         StepsLessonView(model: steps, camera: cam, time: t)
                     }
                     Toolbar(model: model, time: t, bottom: max(16, safe.safeAreaInsets.bottom + 8, model.keyboard + 8))
-                    // iPadOS's own number keyboard (G 19 Oct), up once an answer box is tapped and while a number is
-                    // wanted; a hardware keyboard types too, and return checks
-                    // up by itself whenever the problem being worked wants a number (no tap needed), so a Mac's or
-                    // a hardware keyboard types straight away too
-                    let typing = (model.bars?.current as? WorkProblem).flatMap { w in model.bars?.mode == .work && !w.auto && !w.solved && w.lesson.step.answer.map { $0.choices == nil } == true ? w : nil }
+                    // iPadOS's own number keyboard (G 19 Oct), up by itself whenever the problem being worked wants a
+                    // number written (no tap needed), so a Mac's or a hardware keyboard types straight away too; only for
+                    // a box the drawing shows (G 20 Oct): a step answered by the hands never raises it
+                    let typing = (model.bars?.current as? WorkProblem).flatMap { w in model.bars?.mode == .work && w.wantsTyping ? w : nil }
                     NumberEntry(problem: typing, step: typing.map { "\($0.id) \($0.lesson.index)" } ?? "")
+                        // beside the box being typed into: iPadOS's number pad pops up from it (a docked keyboard
+                        // doesn't mind where it is)
+                        .offset(typing.flatMap { w in NumberEntry.anchor(w, cam) } ?? .zero)
                 }
                 .onChange(of: t) { _, now in Perf.frame(now); model.settle(at: now); model.lesson?.settle(at: now) }
             }
@@ -68,16 +73,20 @@ struct PaperScreen: View {
             .contentShape(Rectangle())
             .gesture(DragGesture(minimumDistance: 4)
                 .onChanged { v in
-                    // the drag's first move decides: a hand move on the problem, or the paper panning
-                    if lastDrag == .zero { model.dragStart(at: .init(v.startLocation.x, v.startLocation.y)) }
+                    // the drag's first move decides: a hand move on the problem (it took hold of something the child can
+                    // move), or the paper panning; a drag that started as a pinch only ever pans
+                    if !dragging { dragging = true; if !pinching { model.dragStart(at: .init(v.startLocation.x, v.startLocation.y)) } }
                     if model.handDrag { model.dragMove(to: .init(v.location.x, v.location.y)) }
                     else { model.pan(v.translation.width - lastDrag.width, v.translation.height - lastDrag.height) }
                     lastDrag = v.translation }
-                .onEnded { _ in model.dragEnd(); lastDrag = .zero })
+                .onEnded { _ in model.dragEnd(); lastDrag = .zero; dragging = false })
             .simultaneousGesture(MagnifyGesture()
                 .onChanged { v in
+                    pinching = true
+                    // a hand holding something on the problem keeps it: the paper doesn't zoom under it
+                    guard !model.handDrag else { lastPinch = v.magnification; return }
                     model.zoom(by: v.magnification / lastPinch, at: .init(v.startLocation.x, v.startLocation.y)); lastPinch = v.magnification }
-                .onEnded { _ in lastPinch = 1 })
+                .onEnded { _ in lastPinch = 1; pinching = false })
             .simultaneousGesture(SpatialTapGesture().onEnded { v in model.tap(at: .init(v.location.x, v.location.y)) })
     }
 }
@@ -121,6 +130,15 @@ struct SystemKeys: UIViewRepresentable {
 struct NumberEntry: View {
     let problem: WorkProblem?
     let step: String
+
+    /// Where the hidden field sits on the screen: just past the right end of the box being typed into, level with its
+    /// middle, so iPadOS's number pad (a popover on iPadOS 26) comes up beside the box, not over the words.
+    @MainActor static func anchor(_ w: WorkProblem, _ cam: PaperCamera) -> CGSize? {
+        guard let a = w.lesson.step.answer, let id = w.lesson.active ?? a.boxes.first,
+              let r = ProblemLayout.blocks(w).first(where: { $0.kind == .field(id) })?.rect else { return nil }
+        let p = cam.toScreen(Point(r.maxX + Paper.cell / 2, r.midY))
+        return CGSize(width: p.x, height: p.y)
+    }
     @State private var text = " "
     @FocusState private var focused: Bool
 

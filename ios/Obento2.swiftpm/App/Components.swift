@@ -29,6 +29,10 @@ extension Sketch {
         /// The hint under it, and a story.
         static let hint = Words(size: Sketch.small, weight: .regular, colour: .ink2)
         static let story = Words(size: Sketch.small, weight: .regular, colour: .ink)
+        /// A story told over a paper lesson's picture, once (G 20 Oct): the problem itself, in words a child reads.
+        static let tell = Words(size: Sketch.wordSize, weight: .regular, colour: .ink)
+        /// Rows 3–4 of a paper lesson: what a miss says (red), a notice or the hint (grey).
+        static let note = Words(size: Sketch.small, weight: .medium, colour: .ink2)
         /// What a miss (or Show me) says.
         static let message = Words(size: Sketch.wordSize, weight: .medium, colour: .chapter)
         /// A thumbnail's name under its frame, and its status under that.

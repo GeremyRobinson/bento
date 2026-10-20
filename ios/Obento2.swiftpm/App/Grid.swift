@@ -109,10 +109,35 @@ struct GridPen {
         let pts = (0...16).map { i -> CGPoint in let t = Double(i) / 16; return P(c0 + (c1 - c0) * t, row - sin(.pi * t) * height) }
         sketch.line(id, pts, colour, width: Sketch.stroke)
     }
-    /// A dot on the grid (a number's place on a line).
-    mutating func dot(_ id: String, at col: Double, _ row: Double, radius: Double = 0.35, _ colour: Sketch.Colour = .chapter) {
+    /// A dot on the grid (a number's place on a line). `over`: it sits over the lines (a handle, a mark on a cut).
+    mutating func dot(_ id: String, at col: Double, _ row: Double, radius: Double = 0.35, _ colour: Sketch.Colour = .chapter, over: Bool = false) {
         let c = P(col, row), r = radius * Self.sq
-        sketch.polygon(id, (0..<24).map { i in let a = Double(i) / 24 * 2 * .pi; return CGPoint(x: c.x + r * cos(a), y: c.y + r * sin(a)) }, colour)
+        let pts = (0..<24).map { i in let a = Double(i) / 24 * 2 * .pi; return CGPoint(x: c.x + r * cos(a), y: c.y + r * sin(a)) }
+        if over { sketch.plate(id, pts, colour) } else { sketch.polygon(id, pts, colour) }
+    }
+    /// A circle round a place (a hint: look here), solid or dashed.
+    mutating func circle(_ id: String, at col: Double, _ row: Double, radius: Double, _ colour: Sketch.Colour = .chapter, dashed: Bool = false) {
+        let c = P(col, row), r = radius * Self.sq
+        sketch.line(id, (0...40).map { i in let a = Double(i) / 40 * 2 * .pi; return CGPoint(x: c.x + r * cos(a), y: c.y + r * sin(a)) }, colour, width: Sketch.stroke, dashed: dashed)
+    }
+    /// A line through places on the grid, solid or dashed.
+    mutating func line(_ id: String, _ pts: [(Double, Double)], _ colour: Sketch.Colour = .ink, dashed: Bool = false) {
+        sketch.line(id, pts.map { P($0.0, $0.1) }, colour, width: Sketch.stroke, dashed: dashed)
+    }
+    /// Squares filled (a piece shaded, a block lit).
+    mutating func fill(_ id: String, col: Double, row: Double, w: Double, h: Double, _ colour: Sketch.Colour) {
+        sketch.fill(id, R(col, row, w, h), colour)
+    }
+    /// Squares striped (the second amount): lightly filled, a stripe corner to corner of every square.
+    mutating func stripes(_ id: String, col: Double, row: Double, w: Double, h: Double) {
+        sketch.fill(id + "f", R(col, row, w, h), .tint(0.2))
+        var segs: [(CGPoint, CGPoint)] = []
+        var t = -h
+        while t < w {
+            segs.append((P(col + max(0, t), row + max(0, -t)), P(col + min(w, t + h), row + min(h, w - t))))
+            t += 1
+        }
+        sketch.segments(id + "s", segs, .tint(0.6), width: Sketch.stroke)
     }
     /// A ring round some squares (a digit to look at).
     mutating func ring(_ id: String, col: Double, row: Double, w: Double, h: Double, _ colour: Sketch.Colour = .chapter) {

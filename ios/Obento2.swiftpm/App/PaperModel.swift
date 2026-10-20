@@ -206,14 +206,16 @@ final class PaperModel {
 
     func pan(_ dx: Double, _ dy: Double) { stop(); resting = resting.panned(by: dx, dy) }
 
-    /// A drag that starts on something the open problem lets the child move goes to the problem (a hand move); any
-    /// other drag pans the paper.
+    /// A drag that starts on something the open problem lets the child move goes to the problem (a hand move, G 20
+    /// Oct); any other drag pans the paper. Only the problem being worked takes hands (not the How to, not the page).
     private(set) var handDrag = false
     func dragStart(at s: Point) {
-        guard !leaving, let m = bars?.current else { handDrag = false; return }
+        guard !leaving, let b = bars, b.mode == .work, let m = b.current else { handDrag = false; return }
         handDrag = m.grab(camera(at: PaperClock.now).toPaper(s))
+        // the camera holds still under the finger while it drags
+        if handDrag { stop() }
     }
-    func dragMove(to s: Point) { bars?.current?.drag(to: camera(at: PaperClock.now).toPaper(s)) }
+    func dragMove(to s: Point) { guard handDrag else { return }; bars?.current?.drag(to: camera(at: PaperClock.now).toPaper(s)) }
     func dragEnd() { if handDrag { bars?.current?.release() }; handDrag = false }
     func zoom(by f: Double, at p: Point) { stop(); resting = resting.zoomed(by: f, at: p); pinchedAt = PaperClock.now }
     /// When the paper was last pinched: the bar shows the zoom for a moment.
@@ -348,7 +350,7 @@ final class PaperModel {
     /// The crosshair inside a flat lesson: glide back to the whole lesson.
     func reframe() {
         let pad = screen.width > 760 ? Self.margin : 8
-        if let b = bars { frameCurrent(b.current.map(BarsPage.box(of:)) ?? (b.showing ? b.firstRow : BarsPage.box(of: b.howTo))) }
+        if let b = bars { frameCurrent(b.current.map { ($0 as? WorkProblem)?.stageFrame ?? BarsPage.box(of: $0) } ?? (b.showing ? b.firstRow : BarsPage.box(of: b.howTo))) }
         if let s = steps { fly(to: .framing(s.frame, in: screen, pad: pad, maxZoom: 1), duration: CameraTiming.fly) }
     }
 
