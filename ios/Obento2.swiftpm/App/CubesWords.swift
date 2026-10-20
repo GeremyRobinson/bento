@@ -162,14 +162,26 @@ final class Stand {
     }
 
     /// Draws `sketch` when `key` says it changed (from `start`), undraws when the problem leaves, and moves what's moving.
-    func show(_ key: String, _ sketch: @autoclosure () -> Sketch, rig: Rig, chapter: UInt32, start: Double, left: Double?, at t: Double) {
+    /// `budget`: how many groups of words may still be made this frame; one that may not waits for the next frame
+    /// (making many lines' letters at once held a frame up). Returns whether it made its words.
+    @discardableResult
+    func show(_ key: String, _ sketch: @autoclosure () -> Sketch, rig: Rig, chapter: UInt32, start: Double, left: Double?, at t: Double, budget: inout Int) -> Bool {
+        var made = false
         if left == nil, drawer.leftAt != nil { drawer.revive(); self.key = "" }
         if let left { drawer.undrawAll(at: left) }
-        else if key != self.key {
+        else if key != self.key, budget > 0 {
+            budget -= 1; made = true
             self.key = key
-            drawer.build(sketch(), rig: rig, chapter: chapter, dark: rig.dark ?? false, origin: .zero, from: drawer.isEmpty ? max(t, start) : t, now: t)
+            let s = sketch()
+            Perf.time("cubes-words-build") { drawer.build(s, rig: rig, chapter: chapter, dark: rig.dark ?? false, origin: .zero, from: drawer.isEmpty ? max(t, start) : t, now: t) }
         }
         _ = drawer.update(at: t)
+        return made
+    }
+    /// The same, free of any budget (the ghost finger, made again every frame it moves).
+    func show(_ key: String, _ sketch: @autoclosure () -> Sketch, rig: Rig, chapter: UInt32, start: Double, left: Double?, at t: Double) {
+        var free = 1
+        show(key, sketch(), rig: rig, chapter: chapter, start: start, left: left, at: t, budget: &free)
     }
 }
 
@@ -180,6 +192,8 @@ final class Stand {
 final class CubesWords {
     let root = Entity()
     let say = Stand(), count = Stand(), length = Stand(), width = Stand(), height = Stand(), record = Stand(lift: 0.1), finger = Stand(lift: 0.4)
+    /// The record's lines, one group of words each, and each layer's count.
+    private var lines: [Stand] = []
     private var counts: [Stand] = []
     private let cursor = ModelEntity()
     private var cursorKey = ""
@@ -189,7 +203,45 @@ final class CubesWords {
         record.root.addChild(cursor)
     }
 
+    /// The letters its words will need later (the record, the counts, the typed digits, what a slip says), made a few
+    /// a frame while it's on the paper: a letter's shape is made the first time it's written, and a whole record's
+    /// worth at once held a frame up for a tenth of a second.
+    private var warm: [(text: String, size: CGFloat, weight: UIFont.Weight, digits: Bool)] = []
+    private var warmFor: UUID?
+    private func prewarm(_ p: CubesProblem) {
+        if warmFor != p.id {
+            warmFor = p.id
+            let b = p.box
+            var seen = Set<String>()
+            func add(_ s: String, _ size: CGFloat, _ weight: UIFont.Weight, _ digits: Bool) {
+                for ch in s where ch != " " && seen.insert("\(ch) \(size) \(weight.rawValue) \(digits)").inserted { warm.append((String(ch), size, weight, digits)) }
+            }
+            let l = p.lesson
+            for s in [VolumeOfBox.layerLine(b), VolumeOfBox.layersLine(b), VolumeOfBox.layersDone(b), VolumeOfBox.volumeLine(b)] + l.steps.map(\.words.say) {
+                add(s, Sketch.wordSize, .medium, false)
+            }
+            for y in 0..<b.height { add(VolumeOfBox.count(y, b), Sketch.small, .semibold, true) }
+            add("0123456789", Sketch.maths, .medium, true)
+            add("\(b.length) cm \(b.width) cm \(b.height) cm", Sketch.small, .medium, true)
+            add("Check Next problem", Sketch.Words.block.size, .medium, false)
+            for st in l.steps {
+                for k in st.answer?.known ?? [] { add(k.message, Sketch.small, .medium, false) }
+                if let a = st.answer { add(a.hint, Sketch.small, .medium, false) }
+                add(st.words.hint, Sketch.small, .medium, false)
+                if let t = st.task { for m in t.mistakes { add(m.message(0, t.want), Sketch.small, .medium, false) } }
+            }
+        }
+        for _ in 0..<4 {
+            guard !warm.isEmpty else { return }
+            let w = warm.removeFirst()
+            _ = PaperText.label(w.text, PaperText.font(w.size, w.weight, digits: w.digits), .black, at: .zero)
+        }
+    }
+
     func draw(_ p: CubesProblem, rig: Rig, view v: PaperView3D, screen: Size, at t: Double) {
+        prewarm(p)
+        // two groups of words made a frame at most
+        var budget = 2
         let pl = p.places(v, screen: screen), k = pl.k, b = p.box, chapter = p.chapter.hex, dark = rig.dark ?? false
         let start = p.openedAt + 0.3, left = p.leftAt
         let red = Sketch.Colour.hex(0xC8372D, 0xFF6B5E), green = Sketch.Colour.hex(0x178A57, 0x3CCF8E)
@@ -203,7 +255,7 @@ final class CubesWords {
             if let m = p.message { s.words("msg", m.text, Sketch.Words(size: Sketch.small, weight: .medium, colour: m.ok ? .ink2 : red), x: 0, top: Double(n) * Sketch.row, width: CubesProblem.wordsWidth) }
             else if let h = p.hintText { s.words("hint", h, Sketch.Words(size: Sketch.small, weight: .medium, colour: .ink2), x: 0, top: Double(n) * Sketch.row, width: CubesProblem.wordsWidth) }
             return s
-        }(), rig: rig, chapter: chapter, start: start, left: left, at: t)
+        }(), rig: rig, chapter: chapter, start: start, left: left, at: t, budget: &budget)
         say.place(pl.say, v, screen: screen)
 
         // the squares counted as the floor is covered, under it
@@ -213,7 +265,7 @@ final class CubesWords {
             var s = Sketch()
             if counting { s.label("count", "\(covered) of \(b.floor) squares", Sketch.Words(size: Sketch.small, weight: .medium, colour: .ink2), at: CGPoint(x: 0, y: Sketch.row / 2), anchor: UnitPoint(x: 0, y: 0.5), slot: "cubes\(p.id)") }
             return s
-        }(), rig: rig, chapter: chapter, start: start, left: left, at: t)
+        }(), rig: rig, chapter: chapter, start: start, left: left, at: t, budget: &budget)
         count.place(pl.record, v, screen: screen)
 
         // the box's measures: its length and width from the start, its height once it stands up
@@ -224,7 +276,7 @@ final class CubesWords {
                 var s = Sketch()
                 if shown { s.label("m", text, label, at: .zero, anchor: anchor) }
                 return s
-            }(), rig: rig, chapter: chapter, start: start + 0.4, left: left, at: t)
+            }(), rig: rig, chapter: chapter, start: start + 0.4, left: left, at: t, budget: &budget)
             stand.place(at, v, screen: screen)
         }
 
@@ -242,7 +294,7 @@ final class CubesWords {
                 var s = Sketch()
                 if !text.isEmpty { s.label("c", text, Sketch.Words(size: Sketch.small, weight: .semibold, colour: lit ? .chapter : .ink), at: .zero, anchor: .center) }
                 return s
-            }(), rig: rig, chapter: chapter, start: t, left: left, at: t)
+            }(), rig: rig, chapter: chapter, start: t, left: left, at: t, budget: &budget)
             if y < pl.counts.count { stand.place(pl.counts[y], v, screen: screen) }
         }
 
@@ -250,16 +302,24 @@ final class CubesWords {
         let lines = p.recordLines(at: t), typed = p.lesson.typed["x"] ?? ""
         let answering = p.preview?.kind == .answer && t < (p.preview?.end ?? 0) - CubesProblem.Preview.fade && t >= (p.preview?.at ?? 0) + 0.45 * Double(b.height)
         let shownTyped = p.wrongTyped ?? (answering && typed.isEmpty ? "\(b.volume)" : typed)
-        let lineFont = PaperText.font(Sketch.wordSize, .medium)
-        let boxX = lines.first(where: { $0.box }).map { ((PaperText.width($0.text, lineFont) + 20) / Paper.cell).rounded(.up) * Paper.cell } ?? 0
+        let boxX = lines.first(where: { $0.box }).map { ((CubesProblem.measure($0.text, Sketch.wordSize) + 20) / Paper.cell).rounded(.up) * Paper.cell } ?? 0
         let boxRect = CGRect(x: boxX, y: 60, width: 40 * Double(p.answerCells), height: 40)
         let verdict = p.verdict.map { $0.right }
-        let recordKey = "\(lines.map(\.text))|\(shownTyped)|\(answering)|\(verdict as Bool?)|\(p.blockKinds)|\(dark)"
+        // each line of the record its own words, three rows apart
+        while self.lines.count < 3 { let s = Stand(lift: 0.1); root.addChild(s.root); self.lines.append(s) }
+        for (i, stand) in self.lines.enumerated() {
+            let line = i < lines.count ? lines[i] : nil
+            stand.show(line.map { "\($0.text)|\($0.chapter)|\(dark)" } ?? "", {
+                var s = Sketch()
+                if let line { s.words("r", line.text, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: line.chapter ? .chapter : .ink), x: 0, top: 0, width: 900) }
+                return s
+            }(), rig: rig, chapter: chapter, start: start, left: left, at: t, budget: &budget)
+            stand.place(CGPoint(x: pl.record.x, y: pl.record.y + Double(i) * 60 * k), v, screen: screen)
+        }
+        // the box to type in, and the blocks under the record
+        let recordKey = "\(lines.map(\.box))|\(boxX)|\(shownTyped)|\(answering)|\(verdict as Bool?)|\(p.blockKinds)|\(pl.blocks.map { "\(($0.rect.minY - pl.record.y) / k)" })|\(dark)"
         record.show(recordKey, {
             var s = Sketch()
-            for (i, line) in lines.enumerated() {
-                s.words("r\(i)", line.text, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: line.chapter ? .chapter : .ink), x: 0, top: Double(i) * 60, width: 900)
-            }
             if lines.contains(where: { $0.box }) {
                 let style: Sketch.Block = verdict.map { $0 ? Sketch.Block(stroke: green, text: green) : Sketch.Block(stroke: red, text: red) } ?? .main
                 s.block("box\(verdict as Bool?)", boxRect, style, grows: true)
@@ -280,7 +340,7 @@ final class CubesWords {
                 }
             }
             return s
-        }(), rig: rig, chapter: chapter, start: start, left: left, at: t)
+        }(), rig: rig, chapter: chapter, start: start, left: left, at: t, budget: &budget)
         record.place(pl.record, v, screen: screen)
 
         // the cursor in the box, blinking as a cursor does, held still a moment after each key
@@ -288,7 +348,7 @@ final class CubesWords {
         let blink = p.wantsNumber && p.verdict == nil && left == nil && t - p.wordsAt > 0.4 && (since < 0.6 || (since - 0.6).truncatingRemainder(dividingBy: 1.06) < 0.53)
         cursor.isEnabled = blink && lines.contains { $0.box }
         if cursor.isEnabled {
-            let x = boxRect.midX + PaperText.width(typed, PaperText.font(Sketch.maths, .medium, digits: true)) / 2 + 6, u = Paper.unit
+            let x = boxRect.midX + CubesProblem.measure(typed, Sketch.maths, digits: true) / 2 + 6, u = Paper.unit
             let key = "\(x) \(dark)"
             if key != cursorKey {
                 cursorKey = key

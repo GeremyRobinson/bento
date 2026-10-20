@@ -715,9 +715,28 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
 
     /// A block as wide as its word and arrow need, in whole squares, never narrower than `least`.
     static func blockWidth(_ word: String, _ least: Double) -> Double {
-        let w = PaperText.width(word, PaperText.font(Sketch.Words.block.size, .medium)) + 60
+        let w = measure(word, Sketch.Words.block.size) + 60
         return max(least, (w / Paper.cell).rounded(.up) * Paper.cell)
     }
+
+    /// Words measured once: where everything goes is worked out every frame the paper moves.
+    private static var widths: [String: Double] = [:], wrapped: [String: [String]] = [:]
+    static func measure(_ s: String, _ size: CGFloat, digits: Bool = false) -> Double {
+        let key = "\(size) \(digits) \(s)"
+        if let w = widths[key] { return w }
+        let w = PaperText.width(s, PaperText.font(size, .medium, digits: digits))
+        widths[key] = w
+        return w
+    }
+    /// What to do, in the lines it wraps to (two at most).
+    static func lines(_ s: String) -> [String] {
+        if let l = wrapped[s] { return l }
+        let l = Array(PaperText.wrap(s, PaperText.font(Sketch.wordSize, .medium), width: wordsWidth).prefix(2))
+        wrapped[s] = l
+        return l
+    }
+    /// The small words' capitals' height, which a label's distance from what it labels is measured from.
+    static let capHeight = Double(PaperText.font(Sketch.small, .medium, digits: true).capHeight)
 
     /// The blocks it shows now: Check while a number is wanted, Next problem once it's solved, the How to's own.
     var blockKinds: [ProblemLayout.Kind] {
@@ -741,10 +760,10 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         var bounds = CGRect.null
         for x in [0, L] { for y in [0, high] { for z in [0, W] { bounds = bounds.union(CGRect(origin: P(x, y, z), size: .zero)) } } }
         var pl = CubesPlaces(k: k, bounds: bounds)
-        let small = PaperText.font(Sketch.small, .medium, digits: true), cap = Double(small.capHeight)
+        let cap = Self.capHeight
         // the length under the floor's front edge, the width left of its left edge, the height right of the front-right edge
-        let lenText = "\(b.length) cm", widText = "\(b.width) cm", hiText = "\(b.height) cm"
-        let lw = PaperText.width(lenText, small) * k, ww = PaperText.width(widText, small) * k, hw = PaperText.width(hiText, small) * k
+        let lw = Self.measure("\(b.length) cm", Sketch.small, digits: true) * k, ww = Self.measure("\(b.width) cm", Sketch.small, digits: true) * k
+        let hw = Self.measure("\(b.height) cm", Sketch.small, digits: true) * k
         let a = P(L / 2, 0, W), e = P(L, 0, W), slope = abs(e.y - a.y) / max(1, abs(e.x - a.x))
         pl.length = CGPoint(x: a.x, y: a.y + (10 + cap / 2) * k + slope * lw / 2)
         let wm = P(0, 0, W / 2)
@@ -762,23 +781,21 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
 
         // what to do over the box, a row of two squares a line, and what a miss says (or the hint) under it: five rows
         // over the box, or more when they need more, so they never reach it
-        let sayFont = PaperText.font(Sketch.wordSize, .medium)
-        let sayLines = PaperText.wrap(sayText, sayFont, width: Self.wordsWidth).prefix(2)
+        let sayLines = Self.lines(sayText)
         let under = message?.text ?? hintText, rows = Double(sayLines.count + (under == nil ? 0 : 1))
         pl.say = CGPoint(x: bounds.minX, y: bounds.minY - max(100, rows * Sketch.row + 20) * k)
-        let sayWidth = sayLines.map { PaperText.width($0, sayFont) }.max() ?? 0
+        let sayWidth = sayLines.map { Self.measure($0, Sketch.wordSize) }.max() ?? 0
         extent = extent.union(CGRect(x: pl.say.x, y: pl.say.y, width: sayWidth * k, height: Double(sayLines.count) * Sketch.row * k))
         if let m = under {
-            extent = extent.union(CGRect(x: pl.say.x, y: pl.say.y + Double(sayLines.count) * Sketch.row * k, width: PaperText.width(m, PaperText.font(Sketch.small, .medium)) * k, height: Sketch.row * k))
+            extent = extent.union(CGRect(x: pl.say.x, y: pl.say.y + Double(sayLines.count) * Sketch.row * k, width: Self.measure(m, Sketch.small) * k, height: Sketch.row * k))
         }
 
         // under the box: the count while the floor is covered, the record once it has risen; then the blocks
         let lenBottom = pl.length.y + cap * k / 2
         pl.record = CGPoint(x: bounds.minX, y: max(bounds.maxY + 40 * k, lenBottom + 12 * k))
         let lines = recordLines
-        let recordFont = PaperText.font(Sketch.wordSize, .medium)
         for (i, line) in lines.enumerated() {
-            var w = PaperText.width(line.text, recordFont) * k
+            var w = Self.measure(line.text, Sketch.wordSize) * k
             if line.box { w += (20 + 40 * Double(answerCells)) * k + 20 * k }
             extent = extent.union(CGRect(x: pl.record.x, y: pl.record.y + Double(i) * 60 * k, width: w, height: 40 * k))
         }
