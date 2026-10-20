@@ -162,32 +162,22 @@ enum LessonPictures {
         var x = rx
         for (i, w) in widths.enumerated() {
             let lit = split && strip == i + 1, cols = Int((w / c).rounded()), id = "s\(i)\(split)"
-            s.fill(id + "f", R(x, ry, w, h), lit ? .tint(0.38) : .tint(0.16))
-            // every square, then every ten: one line each way, drawn as a zigzag whose turns hide under the outline
-            func zig(_ name: String, every: Int, _ colour: Sketch.Colour, _ width: Double) {
-                var down: [CGPoint] = [], across: [CGPoint] = []
-                for (n, j) in stride(from: every, to: cols, by: every).enumerated() {
-                    let lx = x + Double(j) * c
-                    down += n % 2 == 0 ? [P(lx, ry), P(lx, ry + h)] : [P(lx, ry + h), P(lx, ry)]
-                }
-                for (n, j) in stride(from: every, to: a, by: every).enumerated() {
-                    let ly = ry + Double(j) * c
-                    across += n % 2 == 0 ? [P(x, ly), P(x + w, ly)] : [P(x + w, ly), P(x, ly)]
-                }
-                if down.count > 1 { s.line(id + name + "d", down, colour, width: width) }
-                if across.count > 1 { s.line(id + name + "a", across, colour, width: width) }
+            // drawn in this order: its outline, its width over it, its squares, every ten, then its fill under them
+            s.box(id + "o\(lit)", R(x, ry, w, h), .chapter, width: lit ? 3 : 2)
+            s.text(id + "top\(lit)", split ? String(ps[i]) : String(b), at: P(x + w / 2, ry - 20), size: 24, lit ? .chapter : .ink2)
+            func grid(every: Int) -> [(CGPoint, CGPoint)] {
+                stride(from: every, to: cols, by: every).map { j in (P(x + Double(j) * c, ry), P(x + Double(j) * c, ry + h)) }
+                    + stride(from: every, to: a, by: every).map { j in (P(x, ry + Double(j) * c), P(x + w, ry + Double(j) * c)) }
             }
-            zig("c", every: 1, lit ? .tint(0.6) : .tint(0.42), thin)
-            zig("t", every: 10, .tint(lit ? 1 : 0.8), strong)
-            s.box(id + "o", R(x, ry, w, h), .chapter, width: lit ? 3 : 2)
-            // its width over it, in the row of squares above
-            s.text(id + "top", split ? String(ps[i]) : String(b), at: P(x + w / 2, ry - 20), size: 24, lit ? .chapter : .ink2)
+            s.segments(id + "c\(lit)", grid(every: 1), lit ? .tint(0.6) : .tint(0.42), width: thin)
+            s.segments(id + "t\(lit)", grid(every: 10), .tint(lit ? 1 : 0.8), width: strong)
+            s.fill(id + "f\(lit)", R(x, ry, w, h), lit ? .tint(0.38) : .tint(0.16))
             if split, i < found {
                 // its product on a plate of whole squares in its middle, or under it when it's too narrow
                 let label = String(products[i]), plate = 4 * c
                 if cols >= 5 {
                     let px = x + Double((cols - 4) / 2) * c, py = ry + Double(max(0, a / 2 - 1)) * c
-                    s.fill("pf\(i)", R(px, py, plate, 2 * c), .paper)
+                    s.plate("pf\(i)", R(px, py, plate, 2 * c), .paper)
                     s.text("p\(i)", label, at: P(px + plate / 2, py + c), size: 24, .ink)
                 } else {
                     s.text("p\(i)", label, at: P(x + w / 2, ry + h + 20), size: 24, .ink)

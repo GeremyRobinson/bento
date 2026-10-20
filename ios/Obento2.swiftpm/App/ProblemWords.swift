@@ -111,10 +111,8 @@ extension Rig {
         var made = 0, pending = false
         defer { if pending || waiting.contains(where: { problemWords[$0.id] == nil && !($0 is WorkProblem) }) { pageBuilding = true } }
         for m in shown {
-            if let wp = m as? WorkProblem {
-                if drawWorkWords(page, wp, dark: isDark, at: t) { pending = true }
-                continue
-            }
+            // a WorkProblem's words are drawn with its picture (drawWork)
+            if m is WorkProblem { continue }
             let w = problemWords[m.id] ?? { let w = ProblemWords(); pageWords.addChild(w.root); problemWords[m.id] = w; return w }()
             w.root.isEnabled = true
             let key = wordsKey(m, page, dark: isDark)
@@ -140,27 +138,10 @@ extension Rig {
         for (id, w) in problemWords where !page.all.contains(where: { $0.id == id }) && !page.problems.contains(where: { $0.id == id }) {
             w.root.removeFromParent(); problemWords[id] = nil
         }
-        for (id, d) in wordDrawers where !page.all.contains(where: { $0.id == id }) {
-            d.root.removeFromParent(); wordDrawers[id] = nil
-        }
-    }
-
-    /// A WorkProblem's words and blocks: made again as a Sketch when what they say changes, so only what's new draws
-    /// in and what went undraws; leaving, all of it undraws. True while any of it moves.
-    private func drawWorkWords(_ page: BarsPage, _ m: WorkProblem, dark: Bool, at t: Double) -> Bool {
-        let d = wordDrawers[m.id] ?? { let d = SketchDrawer(); pageWords.addChild(d.root); wordDrawers[m.id] = d; return d }()
-        if m.leftAt == nil, d.leftAt != nil { d.revive() }
-        let key = wordsKey(m, page, dark: dark)
-        if key != d.key {
-            d.key = key
-            d.build(workSketch(m), rig: self, chapter: m.chapter.hex, dark: dark, origin: .zero, from: d.isEmpty ? m.openedAt + 0.35 : max(t, m.wordsAt), now: t)
-        }
-        if let left = m.leftAt { d.undrawAll(at: left) }
-        return d.update(at: t)
     }
 
     /// Everything a problem's words show: when it changes, they're made again.
-    private func wordsKey(_ m: any PageProblem, _ page: BarsPage, dark: Bool) -> String {
+    func wordsKey(_ m: any PageProblem, _ page: BarsPage, dark: Bool) -> String {
         let l = m.lesson
         return [l.typed.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: ","), l.active ?? "", m.label, m.intro ?? "", "\(m.howToButtons)", l.words.say, l.words.hint, l.words.action, "\(l.index)", "\(l.marks.count)", l.typed["c"] ?? "",
                 m.message.map { "\($0.text)\($0.ok)" } ?? "", "\(m.solved)", "\((m as? WorkProblem)?.keypadOpen ?? false)", "\(page.current === m)", "\(l.helps)", "\(dark)",
@@ -170,7 +151,6 @@ extension Rig {
     private func build(_ w: ProblemWords, _ m: any PageProblem, current: Bool, dark: Bool) {
         w.clear()
         if let a = m as? AddFractionsModel { buildBars(w, a, current: current, dark: dark) }
-        if let wp = m as? WorkProblem { buildWork(w, wp, current: current, dark: dark) }
         addTag(w, m, current: current)
         addBlocks(w, m, dark: dark)
     }
@@ -310,56 +290,11 @@ extension Rig {
 
     /// A lesson worked in typed steps (WorkProblem): the problem at the top (a story, then the sum), the step under
     /// the picture (its words and hint), the line being worked (its boxes are blocks), and what a miss says.
-    private func buildWork(_ w: ProblemWords, _ m: WorkProblem, current: Bool, dark: Bool) {
-        // on the grid (G 19 Oct): every line of words fills whole rows of squares (two squares tall), every number one
-        // square per digit; positions are whole squares from the origin, and a big problem is drawn a whole k times bigger
-        let l = m.lesson, words = l.words, o = m.contentOrigin, lay = m.layout, k = lay.scale, col = lay.column * k
-        let ink = colours.ink, ink2 = colours.ink2, chapter = UIColor(hex: m.chapter.hex)
-        func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x * k, y: o.y + y * k) }
-        func F(_ size: CGFloat, _ weight: UIFont.Weight = .regular) -> UIFont { PaperText.font(size * k, weight) }
-        let row = 2 * Paper.cell, sx = lay.stepX
-        /// Words in rows of squares from `top`, each line centred in its row; returns how many rows.
-        @discardableResult func rows(_ text: String, _ f: UIFont, _ c: UIColor, x: Double, top: Double, width: Double, max: Int, into e: Entity) -> Int {
-            let lines = Array(PaperText.wrap(text, f, width: width).prefix(max))
-            for (i, line) in lines.enumerated() { e.addChild(PaperText.label(line, f, c, at: P(x, top + (Double(i) + 0.5) * row), anchor: UnitPoint(x: 0, y: 0.5))) }
-            return lines.count
-        }
-
-        // the problem: the sum, a digit to every two squares, and the story beside it when it's told as one
-        let display = l.spec.display(l.numbers), top = WorkProblem.problemY
-        mathLine(display, at: P(0, top), typed: [:], into: w.shown, size: 40 * k, cell: 2 * Paper.cell * k)
-        if l.story, let story = l.spec.story?(l.numbers) {
-            let x = Double(MathLineView.layout(display, size: 28).w) * 2 * Paper.cell + 2 * row
-            rows(story, F(20), ink, x: x, top: top, width: (lay.width * Paper.unit - 80 - x) * k, max: 2, into: w.shown)
-        }
-
-        // the step: what to do now (a story's step asks only "Pick what to do"), and the hint under it
-        let storyStep = l.story && l.step.answer?.choices != nil
-        let say = m.intro ?? (storyStep ? words.hint : words.say)
-        let said = rows(say, F(28, .medium), ink, x: sx, top: lay.stepY, width: col, max: m.intro != nil ? 5 : 2, into: w.question)
-        // the hint: always when done together; on their own only after a miss; on a step missed before, what they
-        // were told then, in the chapter's colour; never in a test
-        if m.intro == nil, !storyStep, l.step.answer?.choices == nil {
-            let (text, c): (String?, UIColor) = m.onFocus ? (m.focus?.said, chapter) : (l.guided || (l.helps && l.misses > 0)) ? (words.hint, ink2) : (nil, ink2)
-            if let text { rows(text, F(20), c, x: sx, top: lay.stepY + Double(said) * row, width: col, max: 1, into: w.question) }
-        }
-
-        // the line being worked, a digit to a square, its boxes drawn as blocks
-        if let a = l.step.answer, a.choices == nil, m.intro == nil {
-            mathLine(a.prompt, at: P(sx, lay.lineY), typed: l.typed, into: w.still, size: 28 * k)
-        }
-        // what a miss (or Show me) says: beside Check on its row, or under it
-        if let msg = m.message {
-            let ay = ProblemLayout.actions(m)
-            let (x, y, width) = lay.messageBelow ? (sx, ay + row + Paper.cell, col) : (sx + 240, ay, col - 240 * k)
-            rows(msg.text, F(20, .medium), msg.ok ? ink2 : chapter, x: x, top: y, width: width, max: 3, into: w.still)
-        }
-    }
-
     /// A WorkProblem's words and blocks as a Sketch, in paper points, on the grid: its name, the sum a digit to every
     /// two squares (the story beside it), the step's words in rows of squares, the line being worked a digit to a
     /// square, what a miss says, and every block (Check, the answer boxes, the keys) as an outline, a fill and its word.
-    func workSketch(_ m: WorkProblem) -> Sketch {
+    /// `top`: just its name, the sum and the story (drawn before the picture); else the rest (drawn after it).
+    func workSketch(_ m: WorkProblem, top part: Bool) -> Sketch {
         var s = Sketch()
         let l = m.lesson, words = l.words, o = m.contentOrigin, lay = m.layout, k = lay.scale, col = lay.column * k
         func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x * k, y: o.y + y * k) }
@@ -372,6 +307,7 @@ extension Rig {
             }
             return lines.count
         }
+        if part {
         rows("name", m.label, 17, .medium, .ink3, x: 0, top: BarsPage.box.dy + 20, width: col, max: 1)
 
         // the problem: the sum, a digit to every two squares, and the story beside it when it's told as one
@@ -382,6 +318,8 @@ extension Rig {
         if l.story, let story = l.spec.story?(l.numbers) {
             let x = Double(MathLineView.layout(display, size: 28).w) * per + 2 * row
             rows("story", story, 20, .regular, .ink, x: x, top: top, width: (lay.width * Paper.unit - 80 - x) * k, max: 2)
+        }
+        return s
         }
 
         // the step: what to do now (a story's step asks only "Pick what to do"), and the hint under it

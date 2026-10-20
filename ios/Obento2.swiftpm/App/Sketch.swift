@@ -13,6 +13,10 @@ struct Sketch {
         case fill([CGPoint])
         case text(String, CGPoint, size: CGFloat, weight: UIFont.Weight, anchor: UnitPoint, digits: Bool)
         case icon(String, CGRect)
+        /// Many straight lines as one part, stroked on one after another (a grid's lines, with no turns to show).
+        case segments([(CGPoint, CGPoint)], width: Double)
+        /// A fill that sits over the lines (a label's plate).
+        case plate([CGPoint])
     }
     struct Item { let id: String; let kind: Kind; let colour: Colour }
     private(set) var items: [Item] = []
@@ -34,6 +38,31 @@ struct Sketch {
         items.append(Item(id: id, kind: .text(s, p, size: size, weight: weight, anchor: anchor, digits: digits), colour: colour))
     }
     mutating func icon(_ id: String, _ name: String, in r: CGRect, _ colour: Colour = .ink) { items.append(Item(id: id, kind: .icon(name, r), colour: colour)) }
+    mutating func segments(_ id: String, _ segs: [(CGPoint, CGPoint)], _ colour: Colour, width: Double) {
+        if !segs.isEmpty { items.append(Item(id: id, kind: .segments(segs, width: width), colour: colour)) }
+    }
+    mutating func plate(_ id: String, _ r: CGRect, _ colour: Colour) {
+        items.append(Item(id: id, kind: .plate([CGPoint(x: r.minX, y: r.minY), CGPoint(x: r.maxX, y: r.minY), CGPoint(x: r.maxX, y: r.maxY), CGPoint(x: r.minX, y: r.maxY)]), colour: colour))
+    }
+    mutating func append(_ other: Sketch) { items += other.items }
+    /// The same sketch in paper points: moved to `o` and drawn `k` times bigger.
+    func transformed(to o: CGPoint, scale k: Double) -> Sketch {
+        func P(_ p: CGPoint) -> CGPoint { CGPoint(x: o.x + p.x * k, y: o.y + p.y * k) }
+        var out = Sketch()
+        out.items = items.map { it in
+            let kind: Kind
+            switch it.kind {
+            case .line(let pts, let w, let d): kind = .line(pts.map(P), width: w * k, dashed: d)
+            case .fill(let pts): kind = .fill(pts.map(P))
+            case .plate(let pts): kind = .plate(pts.map(P))
+            case .text(let s, let p, let size, let weight, let anchor, let digits): kind = .text(s, P(p), size: size * k, weight: weight, anchor: anchor, digits: digits)
+            case .icon(let n, let r): kind = .icon(n, CGRect(origin: P(r.origin), size: CGSize(width: r.width * k, height: r.height * k)))
+            case .segments(let segs, let w): kind = .segments(segs.map { (P($0.0), P($0.1)) }, width: w * k)
+            }
+            return Item(id: it.id, kind: kind, colour: it.colour)
+        }
+        return out
+    }
     /// A fraction written on the paper: top over bottom with its bar, centred on `p`.
     mutating func fraction(_ id: String, _ top: String, _ bottom: String, at p: CGPoint, size: CGFloat = 22, _ colour: Colour = .ink) {
         let w = max(PaperText.width(top, PaperText.font(size, .medium, digits: true)), PaperText.width(bottom, PaperText.font(size, .medium, digits: true))) + 6
@@ -71,20 +100,23 @@ struct Sketch {
 extension Rig {
     /// A WorkProblem's picture, rebuilt when what it shows changes; its new parts draw themselves in (G 19 Oct):
     /// lines stroke on, fills and words fade in, one after another.
-    /// Returns true while some of it is still drawing in or undrawing.
+    /// A WorkProblem, all of it in one drawing (G 19 Oct): its name and sum, then its picture, then the step, its
+    /// line and its blocks, so it draws in in that order, calmly; rebuilt when what it shows or says changes, only
+    /// what's new drawing in. Returns true while some of it is still drawing in or undrawing.
     @discardableResult
-    func drawSketch(_ m: WorkProblem, into d: SketchDrawer, at t: Double) -> Bool {
+    func drawWork(_ m: WorkProblem, _ page: BarsPage, into d: SketchDrawer, at t: Double) -> Bool {
         let dark = self.dark ?? false
         // opened again while it was still undrawing: it draws itself back in
         if m.leftAt == nil, d.leftAt != nil { d.revive() }
-        let key = "\(m.lesson.numbers) \(m.lesson.index) \(m.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(m.lesson.typed) \(dark) \(m.lesson.missedSteps.count) \(m.scale)"
+        let key = "\(m.lesson.numbers) \(m.lesson.index) \(m.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(m.lesson.missedSteps.count) \(m.scale) " + wordsKey(m, page, dark: dark)
         if key != d.key {
             d.key = key
-            let s = LessonPictures.sketch(m)
             let l = m.layout, o = m.contentOrigin
+            var s = workSketch(m, top: true)
+            s.append(LessonPictures.sketch(m).transformed(to: CGPoint(x: o.x, y: o.y + l.pictureTop * l.scale), scale: l.pictureScale * l.scale))
+            s.append(workSketch(m, top: false))
             // the first time, everything draws in as the problem opens; after that, only what's new, as the step moves
-            d.build(s, rig: self, chapter: m.chapter.hex, dark: dark, origin: CGPoint(x: o.x, y: o.y + l.pictureTop * l.scale), scale: l.pictureScale * l.scale,
-                    from: d.isEmpty ? m.openedAt + 0.15 : max(m.pictureAt, t), now: t)
+            d.build(s, rig: self, chapter: m.chapter.hex, dark: dark, origin: .zero, from: d.isEmpty ? m.openedAt + 0.15 : max(m.pictureAt, t), now: t)
         }
         if let left = m.leftAt { d.undrawAll(at: left) }
         return d.update(at: t)
@@ -103,11 +135,11 @@ final class SketchDrawer {
     private final class Node {
         let id: String, sig: String
         let parts: [ModelEntity]
-        let line: (pts: [CGPoint], width: Double, dashed: Bool)?
+        let line: (pts: [[CGPoint]], width: Double, dashed: Bool)?
         var start: Double, length: Double
         var undrawing = false
         var shown = -1.0
-        init(id: String, sig: String, parts: [ModelEntity], line: (pts: [CGPoint], width: Double, dashed: Bool)?, start: Double, length: Double) {
+        init(id: String, sig: String, parts: [ModelEntity], line: (pts: [[CGPoint]], width: Double, dashed: Bool)?, start: Double, length: Double) {
             self.id = id; self.sig = sig; self.parts = parts; self.line = line; self.start = start; self.length = length
         }
     }
@@ -115,7 +147,8 @@ final class SketchDrawer {
     /// Parts undrawing after they left the sketch (or changed), until they're gone.
     private var going: [Node] = []
     private(set) var leftAt: Double?
-    static let each = 0.025, length = 0.45, most = 0.9, letter = 0.014
+    // calm, not rushed (G 19 Oct): each part a moment after the last, the whole thing about two seconds
+    static let each = 0.07, length = 0.55, most = 1.8, letter = 0.03
     static let undraw = 0.28, undrawMost = 0.25
 
     func build(_ s: Sketch, rig: Rig, chapter: UInt32, dark: Bool, origin o: CGPoint, scale k: Double = 1, from start: Double, now: Double = PaperClock.now) {
@@ -145,18 +178,25 @@ final class SketchDrawer {
         var order = 0
         for i in fresh {
             let item = s.items[i]
-            // later parts sit a hair above earlier ones, fills under lines under words
-            let lift = Float(i) * 0.000002
-            var parts: [ModelEntity] = [], line: (pts: [CGPoint], width: Double, dashed: Bool)?, length = Self.length
+            // fills under lines under words, whatever order they draw in; later parts a hair above earlier ones
+            let lift = Float(i) * 0.0000002
+            var parts: [ModelEntity] = [], line: (pts: [[CGPoint]], width: Double, dashed: Bool)?, length = Self.length
             switch item.kind {
-            case .fill(let pts):
-                if let m = Rig.polygons([pts.map(P)]) { let e = ModelEntity(mesh: m, materials: [flat(colour(item.colour))]); e.position.y = 0.0016 + lift; parts = [e] }
+            case .fill(let pts), .plate(let pts):
+                let base: Float = { if case .plate = item.kind { 0.0021 } else { 0.0016 } }()
+                if let m = Rig.polygons([pts.map(P)]) { let e = ModelEntity(mesh: m, materials: [flat(colour(item.colour))]); e.position.y = base + lift; parts = [e] }
+                length = 0.6
             case .line(let pts, let w, let dashed):
-                let mapped = pts.map(P)
+                let mapped = [pts.map(P)]
                 if let m = Self.mesh(mapped, width: w * k, dashed: dashed, upTo: 1) { let e = ModelEntity(mesh: m, materials: [flat(colour(item.colour))]); e.position.y = 0.0018 + lift; parts = [e] }
                 line = (mapped, w * k, dashed)
+            case .segments(let segs, let w):
+                let mapped = segs.map { [P($0.0), P($0.1)] }
+                if let m = Self.mesh(mapped, width: w * k, dashed: false, upTo: 1) { let e = ModelEntity(mesh: m, materials: [flat(colour(item.colour))]); e.position.y = 0.0017 + lift; parts = [e] }
+                line = (mapped, w * k, false)
+                length = 0.9
             case .text(let str, let p, let size, let weight, let anchor, let digits):
-                // written a letter at a time: each letter its own piece, where it sits in the whole line
+                // written a letter at a time: each letter its own piece, where the whole line puts it
                 let f = PaperText.font(size * k, weight, digits: digits), at = P(p), w = PaperText.width(str, f)
                 let left = at.x - anchor.x * w, offsets = PaperText.offsets(str, f)
                 for (j, ch) in str.enumerated() {
@@ -164,7 +204,7 @@ final class SketchDrawer {
                     let x = left + offsets[j]
                     parts.append(PaperText.label(String(ch), f, colour(item.colour), at: CGPoint(x: x, y: at.y), anchor: UnitPoint(x: 0, y: anchor.y), y: 0.0024 + lift))
                 }
-                length = min(0.7, 0.18 + Double(parts.count) * Self.letter)
+                length = min(1.0, 0.3 + Double(parts.count) * Self.letter)
             case .icon(let name, let r):
                 if let e = PaperText.icon(name, colour(item.colour), in: CGRect(origin: P(r.origin), size: CGSize(width: r.width * k, height: r.height * k)), y: 0.0025 + lift) { parts = [e] }
             }
@@ -198,12 +238,22 @@ final class SketchDrawer {
         }
     }
 
-    /// A line's mesh, stroked on as far as `k` of its length.
-    static func mesh(_ pts: [CGPoint], width: Double, dashed: Bool, upTo k: Double) -> MeshResource? {
-        let part = k >= 1 ? pts : Self.partial(pts, k)
-        guard part.count > 1 else { return nil }
-        let lines = dashed ? Rig.dashes([part]) : [part], u = Paper.unit
-        let segs = lines.flatMap { l in zip(l, l.dropFirst()).map { (SIMD2(Float($0.x / u), Float($0.y / u)), SIMD2(Float($1.x / u), Float($1.y / u))) } }
+    /// Some lines' mesh, stroked on as far as `k` of their whole length, one after another.
+    static func mesh(_ lines: [[CGPoint]], width: Double, dashed: Bool, upTo k: Double) -> MeshResource? {
+        var part: [[CGPoint]] = lines
+        if k < 1 {
+            let lengths = lines.map { l in zip(l, l.dropFirst()).reduce(0) { $0 + hypot($1.1.x - $1.0.x, $1.1.y - $1.0.y) } }
+            var left = lengths.reduce(0, +) * max(0, k)
+            part = []
+            for (l, len) in zip(lines, lengths) where left > 0.01 {
+                part.append(left >= len ? l : Self.partial(l, left / len))
+                left -= len
+            }
+        }
+        let drawn = part.filter { $0.count > 1 }
+        guard !drawn.isEmpty else { return nil }
+        let all = dashed ? Rig.dashes(drawn) : drawn, u = Paper.unit
+        let segs = all.flatMap { l in zip(l, l.dropFirst()).map { (SIMD2(Float($0.x / u), Float($0.y / u)), SIMD2(Float($1.x / u), Float($1.y / u))) } }
         return Rig.lines(segs, width: Float(width / u))
     }
 
