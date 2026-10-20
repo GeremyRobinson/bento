@@ -40,10 +40,14 @@ public struct AnswerTask: Sendable {
     /// A pick-one step: the child taps one of these instead of typing. The choice goes in box "c" as its index;
     /// the prompt may leave the box out, and the finished line writes the choice's words.
     public var choices: [String]?
+    /// Answered by a hand move on the picture (a tap, a drag, a cut, a slide), never typed: the move puts its value in
+    /// the step's boxes (LessonRun.set) and checks it, so the checks, slips and misses are the same as typing's.
+    public var byHand: Bool
 
     public init(prompt: MathLine, expected: [String: Double], known: [(values: [String: Double], message: String)] = [], hint: String, explain: String? = nil,
-                check: (@Sendable ([String: Double]) -> Verdict)? = nil, choices: [String]? = nil) {
+                check: (@Sendable ([String: Double]) -> Verdict)? = nil, choices: [String]? = nil, byHand: Bool = false) {
         self.prompt = prompt; self.expected = expected; self.known = known; self.hint = hint; self.check = check; self.choices = choices
+        self.byHand = byHand
         self.explain = explain ?? "\(hint) That makes \(expected.count == 1 ? fmt(expected.values.first!) : "it")."
     }
 
@@ -399,6 +403,16 @@ public struct LessonRun: Sendable {
         guard step.answer?.choices != nil else { return }
         typed["c"] = String(i)
     }
+
+    /// Show me played this step as a preview (G 17 Oct: never the child's work): nothing is written, but the step
+    /// counts as shown, so it earns no points.
+    public mutating func markShown() {
+        guard step.answer != nil || step.task != nil, helps, !oneTry else { return }
+        shown.insert(index)
+    }
+
+    /// This step is answered by a hand move: its boxes are set from the move, never typed.
+    public var handAnswered: Bool { step.answer?.byHand == true }
 
     /// "Show me" on a typed step: fills in the answer and returns what to say about it.
     public mutating func showAnswer() -> String? {

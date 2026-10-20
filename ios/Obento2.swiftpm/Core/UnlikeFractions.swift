@@ -7,21 +7,22 @@ import Foundation
 /// Numbers: a, b, c, d (the problem a/b ± c/d); minus (1 for −, 0 for +); and, worked out from them, L (the LCD),
 /// A = a·L/b and C = c·L/d (the tops over L) and S = A ± C (the answer's top over L).
 ///
-/// Picture (master "tape", the web's fraction bars, web/src/explanations/diagrams/tape): two bars one whole long,
-/// a/b shaded blue ("on") in b parts, c/d shaded orange ("two") in d parts, each labelled with its fraction. Keys,
-/// all 0 or 1 unless said otherwise, and cumulative (once on, they stay on):
-/// - cut: both bars are cut into L pieces (web beat 1: the knife draws the new cuts, then the pieces come apart; a bar
-///   already in L pieces has the knife run down the cuts it has).
-/// - first: the first bar's shaded pieces are counted 1...A and its label becomes A/L (web beat 2).
-/// - second: the second bar's shaded pieces are counted 1...C and its label becomes C/L (web beat 3).
-/// - combine: the answer bar(s) appear (web beat 4). Adding: bars of L pieces, A shaded "on" then C more shaded
-///   "two", counted 1...S, one bar per whole the total needs. Taking away: one bar of L pieces with the first S
-///   shaded "on" and the next C (up to A) struck out ("cut"), the S left counted. Labelled S/L in amber.
-/// - answer: "= <S/L in lowest terms or as a mixed number>" is written beside the answer, when that differs from S/L
-///   (web beat 5).
-/// - focus: the rows this step asks about, lit while the rest stay quiet: 1 the first bar, 2 the second bar,
-///   3 both bars, 4 the answer bar(s). Absent: nothing is singled out.
+/// On the paper (design/grade5.md, the test page G approved): two bars a whole long (`wholeLength`, so every piece is
+/// a whole number of squares), a/b shaded, c/d striped, named by their fractions at their right ends. The child drags
+/// the ruler and cuts both bars into the same pieces (that answers the new bottom and both rewrites: their boxes are
+/// set from the cut), slides the striped pieces into the top bar (adding: after the shaded ones; taking away: over
+/// them from the right), then writes the record a/b ± c/d = A/L ± C/L = S/L, and simplifies when it can be simpler.
+///
+/// Picture keys, by step (cumulative): "ruler" (the cut: the ruler's handle above the first bar); "cut" (both bars cut
+/// into L pieces, numbered, named A/L and C/L); "slide" (the striped pieces wait to be slid); "slid" (they're in the
+/// top bar: after the shaded pieces, spilling into a second whole bar under it past the end; or over the shaded ones,
+/// crossing them out); "sum" (the record's S/L written); "answer" (the simplest form written, the answer bars cut into
+/// the simplest pieces).
 public enum UnlikeFractions {
+    /// A whole bar's length in squares for a problem whose new bottom is L (G 20 Oct): the smallest of 36, 40, 42, 44,
+    /// 45 and 48 that every bottom divides (L does, so its factors do), so every piece is a whole number of squares.
+    public static func wholeLength(_ L: Int) -> Int { [36, 40, 42, 44, 45, 48].first { $0 % max(1, L) == 0 } ?? max(2, L) * 2 }
+
     /// a/b ± c/d with every derived value, as the web's createUnlikeFractions.
     public static func numbers(a: Int, b: Int, c: Int, d: Int, minus: Bool) -> Numbers {
         let L = lcm(b, d), A = a * (L / b), C = c * (L / d)
@@ -132,47 +133,40 @@ public enum UnlikeFractions {
                    depends: depends, check: check) { n in steps(lesson, n) }
     }
 
-    /// The web's five steps (lcd, first, second, add/subtract, simplify), with their checks and messages,
-    /// between an opening question and the answer. A rewrite that changes nothing and a simplify with nothing to do are
-    /// left out, and the answer's bottom is given (G 20 Oct).
+    /// The steps on the paper (G 20 Oct, design/grade5.md): the cut (it answers the web's lcd step, and the two
+    /// rewrites after it, whose boxes are set from the cut), the slide, then the web's add/subtract and simplify steps
+    /// written in the record, between an opening question and the answer. A rewrite that changes nothing and a simplify
+    /// with nothing to do are left out, and the answer's bottom is given.
     static func steps(_ lesson: Lesson, _ n: Numbers) -> [LessonStep] {
         let a = Int(n["a"] ?? 1), b = Int(n["b"] ?? 2), c = Int(n["c"] ?? 1), d = Int(n["d"] ?? 2)
         let L = Int(n["L"] ?? 1), A = Int(n["A"] ?? 0), C = Int(n["C"] ?? 0), S = Int(n["S"] ?? 0)
         let sub = (n["minus"] ?? 0) == 1, sign = sub ? "−" : "+"
-        let big = max(b, d), small = min(b, d)
+        let big = max(b, d), small = min(b, d), piece = pieceName(L)
 
-        // the problem is written once, in the work (G 20 Oct): the first step points at the bars instead
+        // the problem is written once, as the bars' own names (G 20 Oct): the first step points at the bars
         let ask = LessonStep(StepWords(say: "Look at the bars. Are the pieces the same size?", hint: ideas[lesson]!, action: "Let’s find out"))
 
-        // lcd: the web's question, its check() and messages; the narration (specs/k12/grade5.md §3) as the step's hint
+        // the cut: the ruler sets one piece's size, and Cut cuts both bars into it. Its box is how many of those pieces
+        // make a whole: the new bottom. What a cut that doesn't fit says is measured on the bars (the test page).
         let lcd = LessonStep(
-            // plain words (G 20 Oct): what to do, in the work's own terms
-            StepWords(say: "What size pieces fit both? Type the new bottom.",
-                      hint: "Both \(b) and \(d) go into \(L), so cut both bars into \(pieceName(L)).", action: "Check"),
+            StepWords(say: "Drag the ruler to cut both bars into the same size pieces.",
+                      hint: "Every old cut needs a new cut on it.", action: "Cut"),
             answer: AnswerTask(
                 prompt: [.text("LCD of"), .num(Double(b)), .text("and"), .num(Double(d)), .text("is"), .box("x")],
                 expected: ["x": Double(L)],
-                hint: "Count by the bigger bottom number, and stop at the first number the smaller one also goes into.",
-                explain: "Counting by \(big)s, the first number \(small) also goes into is \(L).",
+                hint: "Every old cut needs a new cut on it. Then try bigger pieces.",
+                explain: "Counting by \(big)s, the first number \(small) also goes into is \(L): \(pieceName(L)) fit both bars.",
                 check: { v in
-                    guard let x = v["x"] else { return .wrong("Type a number first.") }
+                    guard let x = v["x"], x > 0 else { return .soft("Drag the ruler first.") }
                     if same(x, L) { return .right }
-                    if same(x, b + d) {
-                        return .wrong("You added \(b) + \(d). The bottom number is the size of the pieces, so it doesn’t get added. Find a number that \(b) and \(d) both go into evenly.")
-                    }
-                    if sub && same(x, abs(b - d)) {
-                        return .wrong("You subtracted \(big) − \(small). The bottom number is the size of the pieces, so it doesn’t get subtracted. Find a number that \(b) and \(d) both go into evenly.")
-                    }
-                    if x > 0 && divides(b, x) && divides(d, x) {
-                        return .wrong("\(fmt(x)) works, since \(b) and \(d) both go into it. Find a smaller one. It keeps the numbers easier.")
-                    }
-                    if !(x > 0) { return .wrong("Type a number first.") }
-                    let bad = divides(b, x) ? d : b
-                    return .wrong("\(bad) doesn’t go into \(fmt(x)) evenly (\(fmt(x)) ÷ \(bad) has a remainder). Both bottom numbers must divide into it.")
-                }),
-            picture: ["focus": 3])
+                    if divides(b, x) && divides(d, x) { return .wrong("Those fit both bars. Bigger pieces fit too.") }
+                    return .wrong("Some old cuts have no new cut on them.")
+                }, byHand: true),
+            picture: ["ruler": 1])
 
-        func rewrite(_ top: Int, _ den: Int, _ N: Int, first: Bool) -> LessonStep {
+        // the rewrites: the cut answers them (A and C are the shaded pieces counted once the bars are cut); a fraction
+        // already over L is written for the child
+        func rewrite(_ top: Int, _ den: Int, _ N: Int) -> LessonStep {
             let k = L / den
             return LessonStep(
                 StepWords(say: "How many \(pieceName(L)) is \(top == 1 ? "one" : "\(top)") \(pieceName(den, top != 1))?",
@@ -192,19 +186,36 @@ public enum UnlikeFractions {
                             return .wrong("You added \(L - den) to the top because the bottom went up by \(L - den). A fraction stays the same only when you multiply top and bottom by the same number. What times \(den) makes \(L)?")
                         }
                         return .wrong("\(den) × ? = \(L). Then multiply the top, \(top), by that number.")
-                    }),
-                picture: first ? ["cut": 1, "focus": 1] : ["cut": 1, "first": 1, "focus": 2])
+                    }, byHand: true),
+                picture: ["cut": 1])
         }
 
-        // the answer's bottom is written for the child (G 20 Oct): the pieces are already the same size, so only the
-        // top is worked out
+        // the slide: the striped pieces into the top bar, after the shaded ones (adding) or over them from the right
+        // (taking away). Its box is 1 once they're dropped in the top bar.
+        let slideSay: String
+        switch (lesson, sub) {
+        case (.mix, false): slideSay = "Slide the striped \(piece) in to add."
+        case (.mix, true): slideSay = "Slide the striped \(piece) over to take away."
+        case (_, false): slideSay = "Slide the striped \(piece) into the top bar."
+        case (_, true): slideSay = "Slide the striped \(piece) over the shaded ones."
+        }
+        let slide = LessonStep(
+            StepWords(say: slideSay, hint: sub ? "Drag the striped pieces up onto the shaded pieces." : "Drag the striped pieces up into the top bar.", action: "Check"),
+            answer: AnswerTask(prompt: [.box("s")], expected: ["s": 1],
+                               hint: sub ? "Same-size pieces, so they can be taken away." : "Same-size pieces, so they can go together.",
+                               explain: sub ? "The striped \(piece) cover \(C) of the shaded ones: \(S) are left." : "The striped \(piece) go after the shaded ones: \(S) in all.",
+                               check: { v in same(v["s"], 1) ? .right : .soft("Put them in the top bar.") }, byHand: true),
+            picture: ["cut": 1, "slide": 1])
+
+        // the record: a/b ± c/d = A/L ± C/L = [S]/L, the answer's bottom written for the child (G 20 Oct)
+        let count = sub ? "Count the shaded \(piece) that aren’t crossed out." : S > L ? "Count the \(piece) in both bars." : "Count the \(piece) in the top bar."
+        var slips: [(values: [String: Double], message: String)] = []
+        if !sub, a + c != S { slips.append((["n": Double(a + c)], "That adds the old tops. \(count)")) }
         let combine = LessonStep(
-            StepWords(say: sub ? "Take away the tops." : "Add the tops.",
-                      hint: sub ? "Same-size pieces now, so take away. The bottom stays \(L)." : "Same-size pieces now, so add the tops. The bottom stays \(L).",
-                      action: "Check"),
+            StepWords(say: sub ? "How many \(piece) are left? Write it." : "How many \(piece) in all? Write it.", hint: count, action: "Check"),
             answer: AnswerTask(
                 prompt: [.frac(.num(Double(A)), .num(Double(L))), .op(sign), .frac(.num(Double(C)), .num(Double(L))), .op("="), .frac(.box("n"), .num(Double(L)))],
-                expected: ["n": Double(S)],
+                expected: ["n": Double(S)], known: slips,
                 hint: "The pieces are the same size now, so only the tops \(sub ? "get taken away" : "add"). Does the size of a piece change?",
                 explain: "\(A) \(sign) \(C) = \(S), and the bottom stays \(L).",
                 check: { v in
@@ -214,21 +225,20 @@ public enum UnlikeFractions {
                     if !sub && same(top, abs(A - C)) { return .wrong("You subtracted. Look at the sign: this one is a plus.") }
                     return .wrong("Check the top: \(A) \(sign) \(C) = ?")
                 }),
-            picture: ["cut": 1, "first": 1, "second": 1, "focus": 3])
+            picture: ["cut": 1, "slid": 1])
 
         let simplify = LessonStep(
             StepWords(say: "Write it as simply as you can.", hint: simplifyNarration(S, L), action: "Check"),
             answer: simplifyTask(S, L),
-            picture: ["cut": 1, "first": 1, "second": 1, "combine": 1, "focus": 4])
+            picture: ["cut": 1, "slid": 1, "sum": 1])
 
         let F = finalForm(S, L), changes = !(F.whole == 0 && F.den == L)
-        // the answer is in the work, in the chapter's colour; the last words say why it works, not the sum again
+        // the answer is in the record, in the chapter's colour; the last words say why it works, not the sum again
         let done = LessonStep(StepWords(say: sub ? "Same-size pieces, so the tops are taken away." : "Same-size pieces, so the tops add.", hint: ideas[lesson]!, action: "Next problem"),
-                              picture: ["cut": 1, "first": 1, "second": 1, "combine": 1, "answer": changes ? 1 : 0])
-        // a fraction already over L is written for the child, and an answer already as simple as it gets needs no
-        // simplifying (G 20 Oct): only the steps that change something are asked
-        return [ask, lcd] + (b == L ? [] : [rewrite(a, b, A, first: true)]) + (d == L ? [] : [rewrite(c, d, C, first: false)])
-            + [combine] + (changes ? [simplify] : []) + [done]
+                              picture: ["cut": 1, "slid": 1, "sum": 1, "answer": changes ? 1 : 0])
+        // a simplify with nothing to do is left out (G 20 Oct): only the steps that change something are asked
+        return [ask, lcd] + (b == L ? [] : [rewrite(a, b, A)]) + (d == L ? [] : [rewrite(c, d, C)])
+            + [slide, combine] + (changes ? [simplify] : []) + [done]
     }
 
     /// The simplify narration (specs/k12/grade5.md §3).
