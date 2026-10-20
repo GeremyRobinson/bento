@@ -10,6 +10,8 @@ import SwiftUI
 enum ProblemGrid {
     /// The screen the problem is shown on (set as it changes), and what the bar and its edges leave of it.
     static var screen = Size(1366, 1024)
+    /// While testing (G 19 Oct): a dashed box round each section of a problem (the sum, the picture, the work, the step).
+    static let showSections = true
 
     static let block = Paper.unit, sq = Paper.cell
     /// The next block line at or after `x`.
@@ -18,7 +20,64 @@ enum ProblemGrid {
 
     struct Piece { var w = 0.0, h = 0.0; var empty: Bool { w <= 0 } }
 
+    /// The plan for a problem: the pieces' biggest sizes over its steps (the arrangement is chosen from these, so it
+    /// never changes partway), and the step's own measures. Kept per numbers and screen.
+    struct Plan { var P: Piece, W: Piece, S: Piece, arrangement: Int, k: Double, lineY: Double, actions: Double, keyX: Double, stepW: Double }
+    private static var plans: [String: Plan] = [:]
+
     static func layout(_ m: WorkProblem) -> WorkProblem.Layout {
+        let l = m.lesson, id = l.spec.id, n = l.numbers
+        let key = "\(id) \(n) \(screen)"
+        let plan = plans[key] ?? { let p = makePlan(m); plans[key] = p; return p }()
+        // what's drawn now: each piece as big as it is on this step, so there's no gap waiting for what's to come;
+        // as it grows the pieces after it glide along, and the camera eases out
+        let d = LessonPictures.drawing(id, n, m.picture)
+        func piece(_ b: CGRect?) -> Piece { b.map { Piece(w: $0.maxX - floorSq($0.minX), h: $0.maxY - floorSq($0.minY)) } ?? Piece() }
+        let pb = d.picture.bounds, wb = d.work.bounds
+        let placed = arrange(plan.arrangement, P: piece(pb), W: piece(wb), S: plan.S)
+        let k = plan.k
+        var out = WorkProblem.Layout()
+        out.scale = k
+        out.pictureOffset = CGPoint(x: placed.pic.x - floorSq(Double(pb?.minX ?? 0)), y: placed.pic.y - floorSq(Double(pb?.minY ?? 0)))
+        out.workOffset = CGPoint(x: placed.work.x - floorSq(Double(wb?.minX ?? 0)), y: placed.work.y - floorSq(Double(wb?.minY ?? 0)))
+        let sx = placed.step.x / k, sy = placed.step.y / k
+        out.stepX = sx; out.stepY = sy; out.lineY = sy + plan.lineY; out.actions = sy + plan.actions
+        out.keypadX = sx + plan.keyX; out.keypadY = sy + plan.lineY - sq
+        out.column = plan.stepW; out.messageBelow = true
+        out.total = placed.size.width / k
+        let P = piece(pb), W = piece(wb)
+        let tall = MathLineView.layout(l.spec.display(n), size: 28).h > 2
+        out.sections = [CGRect(x: 0, y: -block * k - (tall ? 2 * sq : 0), width: placed.size.width, height: block * k + (tall ? 2 * sq : 0)),
+                        CGRect(x: placed.pic.x, y: placed.pic.y, width: P.w, height: P.h),
+                        CGRect(x: placed.step.x, y: placed.step.y, width: plan.S.w, height: plan.S.h)]
+            + (W.empty ? [] : [CGRect(x: placed.work.x, y: placed.work.y, width: W.w, height: W.h)])
+        out.width = (placed.size.width + 2 * block) / block / k
+        out.height = (placed.size.height + block * k + 3 * block) / block / k
+        return out
+    }
+
+    typealias Placed = (pic: CGPoint, work: CGPoint, step: CGPoint, size: CGSize)
+    /// The four arrangements, by number.
+    static func arrange(_ i: Int, P: Piece, W: Piece, S: Piece) -> Placed {
+        func beside(_ x: Double) -> Double { next(x + 2 * sq) }
+        func under(_ y: Double) -> Double { next(y + sq) }
+        switch i {
+        case 0: // picture and work side by side, the step under them
+            let wx = W.empty ? 0 : beside(P.w), sy = under(max(P.h, W.h))
+            return (CGPoint(x: 0, y: 0), CGPoint(x: wx, y: 0), CGPoint(x: 0, y: sy), CGSize(width: max(wx + W.w, S.w), height: sy + S.h))
+        case 1: // the picture, and beside it the work over the step
+            let cx = beside(P.w), sy = W.empty ? 0 : under(W.h)
+            return (CGPoint(x: 0, y: 0), CGPoint(x: cx, y: 0), CGPoint(x: cx, y: sy), CGSize(width: cx + max(W.w, S.w), height: max(P.h, sy + S.h)))
+        case 2: // the picture across the top, the step and the work side by side under it
+            let y = under(P.h), wx = beside(S.w)
+            return (CGPoint(x: 0, y: 0), CGPoint(x: wx, y: y), CGPoint(x: 0, y: y), CGSize(width: max(P.w, W.empty ? S.w : wx + W.w), height: y + max(S.h, W.h)))
+        default: // three columns
+            let wx = beside(P.w), sx = W.empty ? wx : beside(wx + W.w)
+            return (CGPoint(x: 0, y: 0), CGPoint(x: wx, y: 0), CGPoint(x: sx, y: 0), CGSize(width: sx + S.w, height: max(P.h, W.h, S.h)))
+        }
+    }
+
+    static func makePlan(_ m: WorkProblem) -> Plan {
         let l = m.lesson, id = l.spec.id, n = l.numbers, k = LessonPictures.scale(id, n)
         // the picture and the work, as big as they get over the problem's steps
         var pb: CGRect?, wb: CGRect?
@@ -31,7 +90,7 @@ enum ProblemGrid {
         let P = piece(pb), W = piece(wb)
 
         // the step, in its own points before k: what to do (one row, two when long), its hint, the line, Check, and
-        // what a miss says under Check; the keypad beside the line
+        // what a miss says under Check
         let sayFont = PaperText.font(Sketch.Words.say.size, Sketch.Words.say.weight), cap = 800.0
         let sayW = l.steps.map { PaperText.width($0.words.say, sayFont) }.max() ?? 0
         let rows: Double = sayW > cap ? 2 : 1
@@ -44,54 +103,15 @@ enum ProblemGrid {
         let keyX = ((lineW + 2 * sq) / sq).rounded(.up) * sq
         let choices = l.steps.contains { $0.answer?.choices != nil } ? 720.0 : 0
         let stepW = max(min(sayW, cap), WorkProblem.drawnKeys ? keyX + 180 : lineW, choices, 260)
-        let stepH = max(actions + 3 * sq + sq + 3 * 2 * sq, 240)
+        // just what's always there: the words, the line and Check (a message under it grows the problem when it comes)
+        let stepH = actions + 3 * sq
         let S = Piece(w: stepW * k, h: stepH * k)
-
-        // the arrangements: each piece's corner, and the space they take
-        typealias Plan = (pic: CGPoint, work: CGPoint, step: CGPoint, size: CGSize)
-        func beside(_ x: Double) -> Double { next(x + 2 * sq) }
-        func under(_ y: Double) -> Double { next(y + sq) }
-        var plans: [Plan] = []
-        // picture and work side by side, the step under them
-        do {
-            let wx = W.empty ? 0 : beside(P.w), sy = under(max(P.h, W.h))
-            plans.append((CGPoint(x: 0, y: 0), CGPoint(x: wx, y: 0), CGPoint(x: 0, y: sy), CGSize(width: max(wx + W.w, S.w), height: sy + S.h)))
-        }
-        // the picture, and beside it the work over the step
-        do {
-            let cx = beside(P.w), sy = W.empty ? 0 : under(W.h)
-            plans.append((CGPoint(x: 0, y: 0), CGPoint(x: cx, y: 0), CGPoint(x: cx, y: sy), CGSize(width: cx + max(W.w, S.w), height: max(P.h, sy + S.h))))
-        }
-        // the picture across the top, the step and the work side by side under it
-        do {
-            let y = under(P.h), wx = beside(S.w)
-            plans.append((CGPoint(x: 0, y: 0), CGPoint(x: wx, y: y), CGPoint(x: 0, y: y), CGSize(width: max(P.w, W.empty ? S.w : wx + W.w), height: y + max(S.h, W.h))))
-        }
-        // three columns
-        do {
-            let wx = beside(P.w), sx = W.empty ? wx : beside(wx + W.w)
-            plans.append((CGPoint(x: 0, y: 0), CGPoint(x: wx, y: 0), CGPoint(x: sx, y: 0), CGSize(width: sx + S.w, height: max(P.h, W.h, S.h))))
-        }
-        // the one the screen shows biggest (the sum's row over it too)
+        // the arrangement the screen shows biggest (the sum's row over it too)
         let availW = screen.width - 4 * sq, availH = screen.height - 24 - 120 - 4 * sq, sumH = block * k
-        let best = plans.max { a, b in
-            let fa = min(availW / a.size.width, availH / (a.size.height + sumH)), fb = min(availW / b.size.width, availH / (b.size.height + sumH))
-            return fa < fb - 1e-9
+        let best = (0..<4).max { a, b in
+            let pa = arrange(a, P: P, W: W, S: S).size, pb = arrange(b, P: P, W: W, S: S).size
+            return min(availW / pa.width, availH / (pa.height + sumH)) < min(availW / pb.width, availH / (pb.height + sumH)) - 1e-9
         }!
-
-        var out = WorkProblem.Layout()
-        out.scale = k
-        // the picture and the work moved so their corners land where their pieces start, by whole squares
-        out.pictureOffset = CGPoint(x: best.pic.x - floorSq(Double(pb?.minX ?? 0)), y: best.pic.y - floorSq(Double(pb?.minY ?? 0)))
-        out.workOffset = CGPoint(x: best.work.x - floorSq(Double(wb?.minX ?? 0)), y: best.work.y - floorSq(Double(wb?.minY ?? 0)))
-        // the step's own positions, in its points before k (drawn k times bigger from the problem's origin)
-        let sx = best.step.x / k, sy = best.step.y / k
-        out.stepX = sx; out.stepY = sy; out.lineY = sy + lineY; out.actions = sy + actions
-        out.keypadX = sx + keyX; out.keypadY = sy + lineY - sq
-        out.column = stepW; out.messageBelow = true
-        out.total = best.size.width / k
-        out.width = (best.size.width + 2 * block) / block / k
-        out.height = (best.size.height + sumH + 3 * block) / block / k
-        return out
+        return Plan(P: P, W: W, S: S, arrangement: best, k: k, lineY: lineY, actions: actions, keyX: keyX, stepW: stepW)
     }
 }

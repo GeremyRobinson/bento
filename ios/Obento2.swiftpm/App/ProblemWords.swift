@@ -18,9 +18,10 @@ enum ProblemLayout {
         // under the line being worked when it's tall (a fraction's boxes), else the bottom row
         var y = l.actions ?? (l.lineY + Paper.unit)
         if let a = m.lesson.step.answer, a.choices == nil {
-            // a tall line (a fraction's boxes) pushes Check down, to the next block line
+            // a tall line (a fraction's boxes) pushes Check down, a square under it (the layout already allows for the
+            // tallest line, so this only matters when it doesn't)
             let under = l.lineY + Double(MathLineView.layout(a.prompt, typed: m.lesson.typed, size: 28).h) * Paper.cell * WorkProblem.lineCell + Paper.cell
-            y = max(y, (under / Paper.unit).rounded(.up) * Paper.unit)
+            y = max(y, (under / Paper.cell).rounded(.up) * Paper.cell)
         }
         return y
     }

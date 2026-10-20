@@ -63,11 +63,13 @@ final class WorkProblem: Identifiable, PageProblem {
         var pictureOffset = CGPoint.zero, workOffset = CGPoint.zero
         /// The whole problem's width, in its points before scale.
         var total = 1200.0
+        /// Each section's box in paper points from the origin, outlined while testing (ProblemGrid.showSections).
+        var sections: [CGRect] = []
     }
     /// Laid out once for its numbers and the screen's shape (ProblemGrid).
     @ObservationIgnored private var laidOut: (key: String, layout: Layout)?
     var layout: Layout {
-        let key = "\(lesson.numbers) \(ProblemGrid.screen)"
+        let key = "\(lesson.numbers) \(ProblemGrid.screen) \(picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" })"
         if let c = laidOut, c.key == key { return c.layout }
         let l = ProblemGrid.layout(self)
         laidOut = (key, l)

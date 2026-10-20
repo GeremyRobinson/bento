@@ -169,6 +169,11 @@ extension Rig {
             s.append(drawn.picture.transformed(to: CGPoint(x: o.x + l.pictureOffset.x, y: o.y + l.pictureOffset.y), scale: 1))
             s.append(drawn.work.transformed(to: CGPoint(x: o.x + l.workOffset.x, y: o.y + l.workOffset.y), scale: 1))
             s.append(workSketch(m, top: false))
+            if ProblemGrid.showSections {
+                for (i, r) in l.sections.enumerated() {
+                    s.box("section\(i)", r.offsetBy(dx: o.x, dy: o.y), .hex(0xC8372D, 0xFF6B5E), width: 1.5, dashed: true)
+                }
+            }
             // the first time, everything draws in as the problem opens; after that, only what's new, as the step moves
             d.build(s, rig: self, chapter: m.chapter.hex, dark: dark, origin: .zero, from: d.isEmpty ? m.openedAt + 0.15 : max(m.pictureAt, t), now: t)
         }
@@ -187,7 +192,12 @@ final class SketchDrawer {
     var isEmpty: Bool { nodes.isEmpty }
 
     private final class Node {
-        let id: String, sig: String
+        let id: String
+        var sig: String
+        /// What it draws, to tell a part that only moved from one that changed.
+        var item: Sketch.Item?
+        /// Gliding to where it now belongs: each part's position from and to.
+        var move: (from: [SIMD3<Float>], to: [SIMD3<Float>], start: Double)?
         let parts: [ModelEntity]
         let line: (pts: [[CGPoint]], width: Double, dashed: Bool)?
         var start: Double, length: Double
@@ -213,7 +223,27 @@ final class SketchDrawer {
     /// Characters rolling over in place (a clock's digits, G 19 Oct): the old one up and out, the new one up into place.
     private struct Roll { let out: ModelEntity?; let into: ModelEntity?; let outZ: Float; let inZ: Float; let dz: Float; let start: Double }
     private var rolls: [Roll] = []
-    static let roll = 0.32
+    static let roll = 0.32, glide = 0.45
+
+    /// How far a part moved, if that's all that changed about it.
+    static func delta(_ a: Sketch.Kind, _ b: Sketch.Kind) -> CGPoint? {
+        func same(_ p: [CGPoint], _ q: [CGPoint]) -> CGPoint? {
+            guard p.count == q.count, let p0 = p.first, let q0 = q.first else { return nil }
+            let d = CGPoint(x: q0.x - p0.x, y: q0.y - p0.y)
+            for (u, v) in zip(p, q) where abs(v.x - u.x - d.x) > 0.01 || abs(v.y - u.y - d.y) > 0.01 { return nil }
+            return d
+        }
+        switch (a, b) {
+        case let (.text(s1, p1, z1, w1, a1, d1), .text(s2, p2, z2, w2, a2, d2)):
+            return s1 == s2 && z1 == z2 && w1 == w2 && a1 == a2 && d1 == d2 ? CGPoint(x: p2.x - p1.x, y: p2.y - p1.y) : nil
+        case let (.line(p, w1, d1), .line(q, w2, d2)): return w1 == w2 && d1 == d2 ? same(p, q) : nil
+        case let (.overLine(p, w1), .overLine(q, w2)): return w1 == w2 ? same(p, q) : nil
+        case let (.fill(p), .fill(q)), let (.plate(p), .plate(q)): return same(p, q)
+        case let (.segments(p, w1), .segments(q, w2)): return w1 == w2 ? same(p.flatMap { [$0.0, $0.1] }, q.flatMap { [$0.0, $0.1] }) : nil
+        case let (.icon(n1, r1), .icon(n2, r2)): return n1 == n2 && r1.size == r2.size ? CGPoint(x: r2.minX - r1.minX, y: r2.minY - r1.minY) : nil
+        default: return nil
+        }
+    }
     /// What each slot last said, wherever it was drawn: a page drawn afresh (back from a problem, back on the map)
     /// draws a changed count as it was, then rolls it over to what it says now.
     static var remembered: [String: String] = [:]
@@ -248,7 +278,21 @@ final class SketchDrawer {
         func P(_ p: CGPoint) -> CGPoint { CGPoint(x: o.x + p.x * k, y: o.y + p.y * k) }
         // light or dark is part of every part: switching redraws it all in the new colours
         let sigs = s.items.map { "\($0.kind) \($0.colour) \(o) \(k) \(dark)" }
-        let fresh = s.items.indices.filter { nodes[s.items[$0].id]?.sig != sigs[$0] }
+        var fresh = s.items.indices.filter { nodes[s.items[$0].id]?.sig != sigs[$0] }
+        // a part that's the same but somewhere else (content above it grew) glides there instead of being drawn again
+        // (G 19 Oct)
+        var moved: Set<String> = []
+        for i in fresh {
+            let item = s.items[i]
+            guard let old = nodes[item.id], !old.undrawing, let was = old.item, was.colour == item.colour,
+                  let d = Self.delta(was.kind, item.kind), hypot(d.x, d.y) > 0.01 else { continue }
+            let dv = SIMD3(Float(d.x * k / Paper.unit), 0, Float(d.y * k / Paper.unit))
+            let from = old.parts.map(\.position), base = old.move?.to ?? from
+            old.move = (from, base.map { $0 + dv }, now)
+            old.sig = sigs[i]; old.item = item
+            moved.insert(item.id)
+        }
+        fresh.removeAll { moved.contains(s.items[$0].id) }
         // the whole drawing-in takes at most `most` seconds, however many parts are new
         let gap = fresh.count > 1 ? min(Self.each * pace, Self.most * pace / Double(fresh.count)) : 0
         // words in a slot that are already showing roll over to their new words instead of undrawing
@@ -261,7 +305,7 @@ final class SketchDrawer {
             if let old = nodes[s.items[i].id], !old.undrawing, old.shown >= 1 { for e in old.parts { e.removeFromParent() }; nodes[old.id] = nil; snapped.insert(old.id) }
         }
         // what left, or changed, undraws
-        let keep = Set(s.items.indices.filter { !fresh.contains($0) }.map { s.items[$0].id })
+        let keep = Set(s.items.indices.filter { !fresh.contains($0) }.map { s.items[$0].id }).union(moved)
         let leaving = nodes.values.filter { !keep.contains($0.id) }
         undraw(leaving, at: now)
         for n in leaving { nodes[n.id] = nil }
@@ -336,7 +380,7 @@ final class SketchDrawer {
             // pace 0, or a part that just changed shape in place: shown at once (G 19 Oct)
             let atOnce = item.pace == 0 || snapped.contains(item.id)
             let node = Node(id: item.id, sig: sigs[i], parts: parts, line: line, start: atOnce ? now : at, length: atOnce ? 0 : length)
-            node.chars = chars; node.slot = item.slot; node.size = textSize
+            node.chars = chars; node.slot = item.slot; node.size = textSize; node.item = item
             nodes[item.id] = node
             if item.at == nil { order += 1 }
         }
@@ -390,6 +434,12 @@ final class SketchDrawer {
     @discardableResult
     func update(at t: Double) -> Bool {
         var moving = false
+        for n in nodes.values {
+            guard let mv = n.move else { continue }
+            let f = Float(ease((t - mv.start) / Self.glide))
+            for (j, e) in n.parts.enumerated() where j < mv.to.count { e.position = mv.from[j] + (mv.to[j] - mv.from[j]) * f }
+            if f >= 1 { n.move = nil } else { moving = true }
+        }
         if let p = pending {
             if t >= p.at { build(p.sketch, rig: p.rig, chapter: p.chapter, dark: p.dark, origin: p.origin, scale: p.scale, from: t, now: t) }
             moving = true

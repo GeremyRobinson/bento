@@ -101,7 +101,8 @@ extension Sketch {
     /// `size`: the centred number's size (a key's 30, a typed answer's 26, a choice's words 17).
     /// `grows`: a box whose width follows what's typed in it: it keeps its outline and takes its new width at once.
     mutating func block(_ id: String, _ r: CGRect, _ b: Block, word: String? = nil, arrow: Bool = false, centred: String? = nil, size: CGFloat = Sketch.maths, icon: String? = nil, k: Double = 1, grows: Bool = false) {
-        let place = grows ? "" : "\(r)", was = snaps
+        // its id doesn't hold where it is, so a block that only moved glides there
+        let place = "", was = snaps
         snaps = grows
         fill("\(id)f\(place)\(b.fill)", r, b.fill)
         let i = r.insetBy(dx: 0.75 * k, dy: 0.75 * k)
