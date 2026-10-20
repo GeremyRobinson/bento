@@ -164,7 +164,7 @@ extension Rig {
             d.key = key
             let l = m.layout, o = m.contentOrigin
             // the sum, then the picture and the work where the layout puts them, then the step
-            let drawn = LessonPictures.drawing(m.lesson.spec.id, m.lesson.numbers, m.picture)
+            let drawn = LessonPictures.drawing(m.lesson.spec.id, m.lesson.numbers, m.drawingKeys)
             var s = workSketch(m, top: true)
             s.append(drawn.picture.transformed(to: CGPoint(x: o.x + l.pictureOffset.x, y: o.y + l.pictureOffset.y), scale: 1))
             s.append(drawn.work.transformed(to: CGPoint(x: o.x + l.workOffset.x, y: o.y + l.workOffset.y), scale: 1))

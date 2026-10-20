@@ -65,11 +65,16 @@ final class WorkProblem: Identifiable, PageProblem {
         var total = 1200.0
         /// Each section's box in paper points from the origin, outlined while testing (ProblemGrid.showSections).
         var sections: [CGRect] = []
+        /// Answered in the work (G 19 Oct): the answer box sits in the work where the number goes, what to do beside
+        /// it, Check under the work. All in paper points from the origin.
+        var inline = false
+        var box: (right: Double, mid: Double, cell: Double)?
+        var sayAt = CGPoint.zero, checkAt = CGPoint.zero, sayWidth = 400.0
     }
     /// Laid out once for its numbers and the screen's shape (ProblemGrid).
     @ObservationIgnored private var laidOut: (key: String, layout: Layout)?
     var layout: Layout {
-        let key = "\(lesson.numbers) \(ProblemGrid.screen) \(picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" })"
+        let key = "\(lesson.numbers) \(lesson.index) \(ProblemGrid.screen) \(picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" })"
         if let c = laidOut, c.key == key { return c.layout }
         let l = ProblemGrid.layout(self)
         laidOut = (key, l)
@@ -77,6 +82,8 @@ final class WorkProblem: Identifiable, PageProblem {
     }
     var scale: Double { layout.scale }
     var underStep: Double { layout.lineY }
+    /// The picture keys the drawing reads now: the step's, and whether its answer box is in the work.
+    var drawingKeys: Numbers { picture.merging(["box": lesson.step.answer.map { $0.choices == nil ? 1 : 0 } ?? 0]) { $1 } }
     var boxSize: Size { let l = layout; return Size((l.width * l.scale).rounded(.up) * Paper.unit, (l.height * l.scale).rounded(.up) * Paper.unit) }
     /// The box's corner stays on the strong lines; everything in it is drawn `scale` times bigger from there.
     var contentOrigin: Point { origin }

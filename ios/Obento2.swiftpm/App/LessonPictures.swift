@@ -30,26 +30,35 @@ enum LessonPictures {
 
     /// A lesson's drawing for these numbers and this step's picture keys: its picture, and its work as school writes
     /// it, each in squares from its own corner; the problem's layout (ProblemGrid) places them.
-    static func drawing(_ id: String, _ n: Numbers, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
+    /// A lesson's drawing: its picture, its work, and (for a lesson answered in its work) where the answer box goes.
+    struct Drawing { var picture: Sketch; var work: Sketch; var box: (right: Double, mid: Double, cell: Double)? = nil }
+
+    static func drawing(_ id: String, _ n: Numbers, _ p: Numbers) -> Drawing {
+        let d = drawingParts(id, n, p)
+        return Drawing(picture: d.picture, work: d.work, box: d.box)
+    }
+
+    static func drawingParts(_ id: String, _ n: Numbers, _ p: Numbers) -> (picture: Sketch, work: Sketch, box: (right: Double, mid: Double, cell: Double)?) {
+        func with(_ t: (picture: Sketch, work: Sketch)) -> (picture: Sketch, work: Sketch, box: (right: Double, mid: Double, cell: Double)?) { (t.picture, t.work, nil) }
         func v(_ k: String) -> Double { n[k] ?? 0 }
         func k(_ key: String) -> Double { p[key] ?? 0 }
         switch id {
-        case "g5-mult2": return multiplyGrid(n, a: Int(v("a")), b: Int(v("b")), split: k("split") == 1, strip: Int(k("strip")), found: Int(k("found")), sum: k("sum") == 1)
-        case "g5-divide": return divideGrid(dv: Int(v("dv")), qt: Int(v("qt")), strip: Int(k("strip")), found: Int(k("found")), left: k("left") == 1, sum: k("sum") == 1)
-        case "g5-order": return orderGrid(n, beat: Int(k("beat")))
-        case "g5-pow10": return powersGrid(x: v("x"), k: Int(v("k")), hop: k("hop") == 1)
-        case "g5-round": return roundGrid(n, p)
-        case "g5-adddec": return addDecimalsGrid(a: v("a"), b: v("b"), p)
-        case "g5-multdec": return multiplyDecimalsGrid(n, p)
-        case "g5-divdec": return divideDecimalGrid(d: Int(v("d")), qt: Int(v("qt")), p)
-        case "add", "sub", "mix": return unlikeGrid(n, p)
-        case "g5-multfrac": return multiplyFractionsGrid(n, p)
-        case "g5-improper": return improperGrid(n, p)
-        case "g5-fracof": return fractionOfGrid(n, p)
-        case "g5-unitdiv": return unitDivideGrid(n, p)
-        case "g5-volume": return volumeGrid(n, p)
-        case "g5-units": return unitsGrid(n, p)
-        default: return (Sketch(), Sketch())
+        case "g5-mult2": return multiplyGrid(n, a: Int(v("a")), b: Int(v("b")), split: k("split") == 1, strip: Int(k("strip")), found: Int(k("found")), sum: k("sum") == 1, box: k("box") == 1)
+        case "g5-divide": return with(divideGrid(dv: Int(v("dv")), qt: Int(v("qt")), strip: Int(k("strip")), found: Int(k("found")), left: k("left") == 1, sum: k("sum") == 1))
+        case "g5-order": return with(orderGrid(n, beat: Int(k("beat"))))
+        case "g5-pow10": return with(powersGrid(x: v("x"), k: Int(v("k")), hop: k("hop") == 1))
+        case "g5-round": return with(roundGrid(n, p))
+        case "g5-adddec": return with(addDecimalsGrid(a: v("a"), b: v("b"), p))
+        case "g5-multdec": return with(multiplyDecimalsGrid(n, p))
+        case "g5-divdec": return with(divideDecimalGrid(d: Int(v("d")), qt: Int(v("qt")), p))
+        case "add", "sub", "mix": return with(unlikeGrid(n, p))
+        case "g5-multfrac": return with(multiplyFractionsGrid(n, p))
+        case "g5-improper": return with(improperGrid(n, p))
+        case "g5-fracof": return with(fractionOfGrid(n, p))
+        case "g5-unitdiv": return with(unitDivideGrid(n, p))
+        case "g5-volume": return with(volumeGrid(n, p))
+        case "g5-units": return with(unitsGrid(n, p))
+        default: return (Sketch(), Sketch(), nil)
         }
     }
 
@@ -192,7 +201,7 @@ enum LessonPictures {
     /// each width in the row above it, the side's number on the left edge level with the middle, each product on a
     /// plate centred on its strip; the school work beside it, two squares to a digit. k (1 or 2) draws the words and
     /// the school work bigger in a big problem; the rectangle's squares are always the paper's.
-    static func multiplyGrid(_ n: Numbers, a: Int, b: Int, split: Bool, strip: Int, found: Int, sum: Bool) -> (picture: Sketch, work: Sketch) {
+    static func multiplyGrid(_ n: Numbers, a: Int, b: Int, split: Bool, strip: Int, found: Int, sum: Bool, box: Bool) -> (picture: Sketch, work: Sketch, box: (right: Double, mid: Double, cell: Double)?) {
         let ps = MultiplyTwoDigit.parts(b), products = ps.map { a * $0 }, g = geometry(n), k = g.k, kk = Int(k)
         var pen = GridPen(k: k)
         var wk = GridPen(k: k)
@@ -216,32 +225,32 @@ enum LessonPictures {
             }
             x += Double(w) + (split ? 1 : 0)
         }
-        if sum {
-            let narrow = found > 0 && widths.contains { $0 < 4 * kk + 1 }
-            pen.bracket("sum", from: rx, to: x - (split ? 1 : 0), row: ry + H + (narrow ? 3 : 2) * k, "\(products.map(String.init).joined(separator: " + ")) = \(products.reduce(0, +))",
-                        Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .chapter), tick: k)
-        }
-        // the work as school writes it, two squares to a digit, down the column beside it
-        let per = 2 * k, right = sq(g.colX) + 5 * per
-        func row(_ r: Double) -> Double { ry + (r + 0.5) * per }
+        // (no sum bracket under it: the total is added up in the work, once, G 19 Oct)
+        // the work as school writes it, two squares to a digit: the problem written once, at its top; each part in its
+        // row as it's found; the answer box in the row being worked (G 19 Oct: answered in the work)
+        let per = 2 * k, right = 5 * per, ry0 = 0.0
+        func row(_ r: Double) -> Double { ry0 + (r + 0.5) * per }
+        let sign = Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink)
         wk.digits("wa", String(a), right: right, row: row(0), per: per)
-        wk.word("wx", "×", at: right - 4.5 * per, row(1), Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink))
+        wk.word("wx", "×", at: right - 4.5 * per, row(1), sign)
         wk.digits("wb", String(b), right: right, row: row(1), per: per)
-        wk.rule("wr1", from: right - 5 * per, to: right, row: ry + 2 * per)
+        wk.rule("wr1", from: right - 5 * per, to: right, row: ry0 + 2 * per)
         for (i, pr) in products.enumerated() where i < found {
-            wk.digits("wp\(i)", String(pr), right: right, row: row(Double(2 + i)), per: per, i + 1 == strip ? .chapter : .ink)
+            wk.digits("wp\(i)", String(pr), right: right, row: row(Double(2 + i)), per: per)
         }
-        // the plus before the last part, in the ×'s column, once every part is written (as school adds them); a sign,
-        // so in ink like the ×
-        if products.count > 1, found >= products.count {
-            wk.word("wplus", "+", at: right - 4.5 * per, row(Double(1 + products.count)), Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink))
+        let working = box && !sum ? found : -1
+        if working >= 0 { wk.box = (wk.P(right, 0).x, wk.P(0, row(Double(2 + working))).y, wk.P(per, 0).x) }
+        // the plus before the last part, as school writes it, once that row is being worked or written
+        if products.count > 1, found >= products.count - 1, working == products.count - 1 || found >= products.count {
+            wk.word("wplus", "+", at: right - 4.5 * per, row(Double(1 + products.count)), sign)
         }
         if sum {
             let r = Double(2 + products.count)
-            wk.rule("wr2", from: right - 5 * per, to: right, row: ry + r * per)
-            wk.digits("wt", String(products.reduce(0, +)), right: right, row: row(r), per: per, .chapter)
+            wk.rule("wr2", from: right - 5 * per, to: right, row: ry0 + r * per)
+            if box { wk.box = (wk.P(right, 0).x, wk.P(0, row(r)).y, wk.P(per, 0).x) }
+            else { wk.digits("wt", String(products.reduce(0, +)), right: right, row: row(r), per: per, .chapter) }
         }
-        return (pen.sketch, wk.sketch)
+        return (pen.sketch, wk.sketch, wk.box)
     }
 
     // MARK: long division

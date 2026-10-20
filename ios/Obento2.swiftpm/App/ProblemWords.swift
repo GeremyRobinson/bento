@@ -26,12 +26,40 @@ enum ProblemLayout {
         return y
     }
 
+    /// A problem answered in its work (G 19 Oct): its box where the number goes, its choices and Check under the work.
+    static func inlineBlocks(_ m: WorkProblem) -> [Block] {
+        let l = m.lesson, L = m.layout, k = L.scale, o = m.origin
+        func A(_ x: Double, _ y: Double, _ w: Double, _ h: Double) -> CGRect { CGRect(x: o.x + x, y: o.y + y, width: w, height: h) }
+        var out: [Block] = []
+        var y = L.checkAt.y
+        if let choices = l.step.answer?.choices {
+            let n = Double(choices.count), w = ((600 * k + 1.5 * (n - 1)) / n).rounded()
+            for i in choices.indices { out.append(Block(kind: .choice(i), rect: A(L.checkAt.x + Double(i) * (w - 1.5), y, w, 60 * k))) }
+            y += 80 * k
+        }
+        if let a = l.step.answer, a.choices == nil, let b = L.box, let id = a.boxes.first {
+            let cells = Double(max(3, (l.typed[id] ?? "").count + 1))
+            out.append(Block(kind: .field(id), rect: A(b.right - cells * b.cell, b.mid - b.cell / 2, cells * b.cell, b.cell)))
+        }
+        if !m.auto && !m.solved { out.append(Block(kind: .main, rect: A(L.checkAt.x, y, 200 * k, 60 * k))) }
+        if !m.auto && m.solved { out.append(Block(kind: .nextProblem, rect: A(L.checkAt.x, y, 260 * k, 60 * k))) }
+        for kind in m.howToButtons {
+            switch kind {
+            case .next, .practise: out.append(Block(kind: kind, rect: A(L.checkAt.x, y, 260 * k, 60 * k)))
+            case .again, .skip: out.append(Block(kind: kind, rect: A(L.checkAt.x + 300 * k, y, 240 * k, 60 * k)))
+            default: break
+            }
+        }
+        return out
+    }
+
     enum Kind: Equatable { case main, nextProblem, showMe, reset, choice(Int), next, practise, again, skip, field(String), key(String) }
     struct Block { let kind: Kind; let rect: CGRect }
 
     /// The blocks a problem shows now, in paper points: its choices, and Check (Show me and Start over are in the bar).
     /// The How to plays itself and has none; a solved problem has none.
     static func blocks(_ m: any PageProblem) -> [Block] {
+        if let wp = m as? WorkProblem, wp.layout.inline { return inlineBlocks(wp) }
         let l = m.lesson, wp = m as? WorkProblem
         let o = wp?.contentOrigin ?? m.origin, k = wp?.scale ?? 1, sx = wp?.layout.stepX ?? 0
         func R(_ x: Double, _ y: Double, _ w: Double, _ h: Double = 40) -> CGRect { CGRect(x: o.x + (sx + x) * k, y: o.y + y * k, width: w * k, height: h * k) }
@@ -198,6 +226,13 @@ extension Rig {
         let l = m.lesson, words = l.words, o = m.contentOrigin, lay = m.layout, k = lay.scale, col = lay.column * k
         func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x * k, y: o.y + y * k) }
         let row = Sketch.row, sx = lay.stepX
+        if part, lay.inline {
+            // answered in the work: the problem is written once, in the work; only a story is told over it
+            if l.story, let story = l.spec.story?(l.numbers) {
+                s.words("story", story, .story, x: o.x, top: o.y - Sketch.row * k * 2, width: max(600, lay.total * k), max: 2, k: k)
+            }
+            return s
+        }
         if part {
             // its name, then the sum starting on the same left edge, and the story beside it when it's told as one
             let width = s.sum("sum", l.spec.display(l.numbers), at: P(0, WorkProblem.problemY), k: k)
@@ -211,19 +246,21 @@ extension Rig {
         // the solving area draws in quickly (G 19 Oct): the picture is the calm part
         s.pace = 0.4
         let red = Sketch.Colour.hex(0xC8372D, 0xFF6B5E), green = Sketch.Colour.hex(0x178A57, 0x3CCF8E)
-        // the step: what to do now (a story's step asks only "Pick what to do"), and the hint under it
+        // the step: what to do now (a story's step asks only "Pick what to do"), and the hint under it; answered in the
+        // work, what to do sits beside the box
         let storyStep = l.story && l.step.answer?.choices != nil
         let say = m.intro ?? (storyStep ? words.hint : words.say)
-        let said = s.words("say\(l.index)", say, .say, x: P(sx, 0).x, top: P(0, lay.stepY).y, width: col, max: m.intro != nil ? 5 : 2, k: k)
+        let sayX = lay.inline ? o.x + lay.sayAt.x : P(sx, 0).x, sayTop = lay.inline ? o.y + lay.sayAt.y : P(0, lay.stepY).y
+        let said = s.words("say\(l.index)", say, .say, x: sayX, top: sayTop, width: lay.inline ? max(lay.sayWidth, 300) : col, max: m.intro != nil ? 5 : 2, k: k)
         // the hint: always when done together; on their own only after a miss; on a step missed before, what they
         // were told then, in the chapter's colour; never in a test
         if m.intro == nil, !storyStep, l.step.answer?.choices == nil {
             // only after a miss (G 19 Oct: no text that isn't needed); the picture lights what to look at
             let (text, c): (String?, Sketch.Colour) = m.onFocus ? (m.focus?.said, .chapter) : (l.helps && l.misses > 0) ? (words.hint, .ink2) : (nil, .ink2)
-            if let text { s.words("hint\(l.index)", text, Sketch.Words.hint.colour(c), x: P(sx, 0).x, top: P(0, lay.stepY + Double(said) * row).y, width: col, k: k) }
+            if let text { s.words("hint\(l.index)", text, Sketch.Words.hint.colour(c), x: sayX, top: sayTop + Double(said) * row * k, width: lay.inline ? max(lay.sayWidth, 300) : col, k: k) }
         }
         // the line being worked, a digit to a square, its boxes drawn as blocks
-        if let a = l.step.answer, a.choices == nil, m.intro == nil {
+        if let a = l.step.answer, a.choices == nil, m.intro == nil, !lay.inline {
             s.mathLine("line\(l.index)", a.prompt, at: P(sx, lay.lineY), typed: l.typed, size: Sketch.maths * k, cell: Paper.cell * WorkProblem.lineCell * k)
         }
 
@@ -250,7 +287,9 @@ extension Rig {
                 s.pace = 0
                 // a digit to a square, from a square in: the same square of space each side however many are typed,
                 // and what's typed stays put as the box widens to the right
-                let cell = Paper.cell * WorkProblem.lineCell * k, left = r.minX + cell, chars = Array(typed ?? "")
+                let cell = lay.box?.cell ?? Paper.cell * WorkProblem.lineCell * k, chars = Array(typed ?? "")
+                // in the work, digits fill the cells from the right, so their places line up with the rows above
+                let left = lay.inline ? r.maxX - Double(chars.count) * cell : r.minX + cell
                 let tag = "\(m.verdict.map { $0.right } as Bool?)"
                 for (j, ch) in chars.enumerated() {
                     s.text("\(id)typed\(j)\(ch)\(tag)", String(ch), at: CGPoint(x: left + (Double(j) + 0.5) * cell, y: r.midY), size: Sketch.maths * k, weight: .medium, style.text)
@@ -267,7 +306,8 @@ extension Rig {
         // what a miss (or Show me) says: beside Check on its row, or under it
         if let msg = m.message {
             let ay = ProblemLayout.actions(m)
-            let (x, y, width) = lay.messageBelow ? (sx, ay + 4 * Paper.cell, col) : (sx + 280, ay, col - 280 * k)
+            var (x, y, width) = lay.messageBelow ? (sx, ay + 4 * Paper.cell, col) : (sx + 280, ay, col - 280 * k)
+            if lay.inline { x = lay.checkAt.x / k; y = (lay.checkAt.y + 80 * k) / k; width = 600 * k }
             s.words("msg", msg.text, Sketch.Words.message.colour(msg.ok ? .ink2 : red), x: P(x, 0).x, top: P(0, y).y, width: width, max: 3, k: k)
         }
         return s

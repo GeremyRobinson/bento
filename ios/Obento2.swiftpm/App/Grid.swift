@@ -8,6 +8,10 @@ import SwiftUI
 @MainActor
 struct GridPen {
     var sketch = Sketch()
+    /// The answer box written into the work, where the number goes (G 19 Oct: the work is where you answer): its
+    /// right edge (numbers line up on the right, as in columns), its row's middle, and the size of a digit's cell, in
+    /// points. The box grows left as digits are typed.
+    var box: (right: Double, mid: Double, cell: Double)?
     /// The words' size: 1, or a whole number bigger in a big problem (its squares stay the paper's).
     let k: Double
     static let sq = Paper.cell

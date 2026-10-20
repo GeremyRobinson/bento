@@ -22,7 +22,9 @@ enum ProblemGrid {
 
     /// The plan for a problem: the pieces' biggest sizes over its steps (the arrangement is chosen from these, so it
     /// never changes partway), and the step's own measures. Kept per numbers and screen.
-    struct Plan { var P: Piece, W: Piece, S: Piece, arrangement: Int, k: Double, lineY: Double, actions: Double, keyX: Double, stepW: Double }
+    struct Plan { var P: Piece, W: Piece, S: Piece, arrangement: Int, k: Double, lineY: Double, actions: Double, keyX: Double, stepW: Double
+        /// Answered in the work: the work's own width (what to do goes beside it), and what to do's width.
+        var inline = false, workW = 0.0, sayW = 0.0 }
     private static var plans: [String: Plan] = [:]
 
     static func layout(_ m: WorkProblem) -> WorkProblem.Layout {
@@ -31,9 +33,34 @@ enum ProblemGrid {
         let plan = plans[key] ?? { let p = makePlan(m); plans[key] = p; return p }()
         // what's drawn now: each piece as big as it is on this step, so there's no gap waiting for what's to come;
         // as it grows the pieces after it glide along, and the camera eases out
-        let d = LessonPictures.drawing(id, n, m.picture)
+        let d = LessonPictures.drawing(id, n, m.drawingKeys)
         func piece(_ b: CGRect?) -> Piece { b.map { Piece(w: $0.maxX - floorSq($0.minX), h: $0.maxY - floorSq($0.minY)) } ?? Piece() }
-        let pb = d.picture.bounds, wb = d.work.bounds
+        let pb = d.picture.bounds
+        // the answer box is part of the work: what comes under it starts under the box
+        let wb = d.box.map { b in (d.work.bounds ?? boxRect(b)).union(boxRect(b)) } ?? d.work.bounds
+        if plan.inline {
+            let P = piece(pb), W = piece(wb), k = plan.k
+            let wx = plan.arrangement == 1 ? next(P.w + 2 * sq) : 0, wy = plan.arrangement == 1 ? 0 : next(P.h + sq)
+            var out = WorkProblem.Layout()
+            out.scale = k; out.inline = true
+            out.pictureOffset = CGPoint(x: -floorSq(Double(pb?.minX ?? 0)), y: -floorSq(Double(pb?.minY ?? 0)))
+            out.workOffset = CGPoint(x: wx - floorSq(Double(wb?.minX ?? 0)), y: wy - floorSq(Double(wb?.minY ?? 0)))
+            // the box where the work puts it; what to do level with it, beside the work; Check a square under the work
+            if let b = d.box { out.box = (b.right + out.workOffset.x, b.mid + out.workOffset.y, b.cell) }
+            let sayX = wx + next(plan.workW + 2 * sq), mid = out.box?.mid ?? wy
+            out.sayAt = CGPoint(x: sayX, y: ((mid - Sketch.row * k / 2) / sq).rounded() * sq)
+            out.sayWidth = plan.sayW
+            out.checkAt = CGPoint(x: wx, y: ((wy + W.h + sq) / sq).rounded(.up) * sq)
+            out.column = 600
+            let width = max(plan.arrangement == 1 ? wx + plan.W.w : max(P.w, plan.W.w), 1)
+            out.total = width / k
+            out.sections = [CGRect(x: 0, y: 0, width: P.w, height: P.h), CGRect(x: wx, y: wy, width: W.w, height: W.h),
+                            CGRect(x: sayX, y: out.sayAt.y, width: plan.sayW, height: Sketch.row * k),
+                            CGRect(x: wx, y: out.checkAt.y, width: 200 * k, height: 60 * k)]
+            out.width = (width + 2 * block) / block / k
+            out.height = (max(P.h, wy + plan.W.h) + 3 * block) / block / k
+            return out
+        }
         let placed = arrange(plan.arrangement, P: piece(pb), W: piece(wb), S: plan.S)
         let k = plan.k
         var out = WorkProblem.Layout()
@@ -54,6 +81,11 @@ enum ProblemGrid {
         out.width = (placed.size.width + 2 * block) / block / k
         out.height = (placed.size.height + block * k + 3 * block) / block / k
         return out
+    }
+
+    /// The answer box as wide as it starts (three digits) in the work's points.
+    static func boxRect(_ b: (right: Double, mid: Double, cell: Double)) -> CGRect {
+        CGRect(x: b.right - 3 * b.cell, y: b.mid - b.cell / 2, width: 3 * b.cell, height: b.cell)
     }
 
     typealias Placed = (pic: CGPoint, work: CGPoint, step: CGPoint, size: CGSize)
@@ -80,15 +112,28 @@ enum ProblemGrid {
     static func makePlan(_ m: WorkProblem) -> Plan {
         let l = m.lesson, id = l.spec.id, n = l.numbers, k = LessonPictures.scale(id, n)
         // the picture and the work, as big as they get over the problem's steps
-        var pb: CGRect?, wb: CGRect?
+        var pb: CGRect?, wb: CGRect?, inline = false
         for step in l.steps {
-            let d = LessonPictures.drawing(id, n, step.picture.merging(step.onMiss) { $1 })
+            let keys = step.picture.merging(step.onMiss) { $1 }.merging(["box": step.answer.map { $0.choices == nil ? 1 : 0 } ?? 0]) { $1 }
+            let d = LessonPictures.drawing(id, n, keys)
+            if let b = d.box { inline = true; wb = (wb ?? boxRect(b)).union(boxRect(b)) }
             if let b = d.picture.bounds { pb = pb.map { $0.union(b) } ?? b }
             if let b = d.work.bounds { wb = wb.map { $0.union(b) } ?? b }
         }
         func piece(_ b: CGRect?) -> Piece { b.map { Piece(w: $0.maxX - floorSq($0.minX), h: $0.maxY - floorSq($0.minY)) } ?? Piece() }
         let P = piece(pb), W = piece(wb)
 
+        if inline {
+            // what to do beside the work (as wide as its longest, up to six blocks), Check a square under it
+            let sayFont = PaperText.font(Sketch.Words.say.size * k, Sketch.Words.say.weight)
+            let sayW = min(600 * k, l.steps.map { PaperText.width($0.words.say, sayFont) }.max() ?? 0)
+            let Wfull = Piece(w: next(W.w + 2 * sq) + sayW, h: W.h + sq + 3 * sq * k + 3 * 2 * sq * k)
+            let availW = screen.width - 4 * sq, availH = screen.height - 24 - 120 - 4 * sq
+            let side = CGSize(width: next(P.w + 2 * sq) + Wfull.w, height: max(P.h, Wfull.h))
+            let stack = CGSize(width: max(P.w, Wfull.w), height: next(P.h + sq) + Wfull.h)
+            let pick = min(availW / side.width, availH / side.height) >= min(availW / stack.width, availH / stack.height) ? 1 : 2
+            return Plan(P: P, W: Wfull, S: Piece(), arrangement: pick, k: k, lineY: 0, actions: 0, keyX: 0, stepW: 600, inline: true, workW: W.w, sayW: sayW)
+        }
         // the step, in its own points before k: what to do (one row, two when long), its hint, the line, Check, and
         // what a miss says under Check
         let sayFont = PaperText.font(Sketch.Words.say.size, Sketch.Words.say.weight), cap = 800.0
