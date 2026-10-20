@@ -64,15 +64,17 @@ extension Sketch {
             mathLine(id, line, at: CGPoint(x: x, y: centred ? p.y - 2 * cell : p.y - cell), size: 30 * k, cell: cell)
             return w
         }
-        let text = line.map { m -> String in
+        // words after a number get a space before them ("6.723 ≈ ? (nearest tenth)")
+        var text = ""
+        for m in line {
             switch m {
-            case .num(let x): fmt(x)
-            case .op(let o): " \(o) "
-            case .text(let t): t
-            case .box: "?"
-            case .frac: ""
+            case .num(let x): text += fmt(x)
+            case .op(let o): text += " \(o) "
+            case .text(let t): text += (text.isEmpty || text.hasSuffix(" ") ? "" : " ") + t
+            case .box: text += "?"
+            case .frac: break
             }
-        }.joined()
+        }
         let f = PaperText.font(size * k, .medium, digits: true)
         self.text("\(id):\(text)", text, at: centred ? p : CGPoint(x: p.x, y: p.y + Self.row * k), size: size * k, anchor: centred ? .center : UnitPoint(x: 0, y: 0.5))
         return PaperText.width(text, f)

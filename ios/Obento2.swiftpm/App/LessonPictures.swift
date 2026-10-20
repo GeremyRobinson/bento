@@ -15,6 +15,7 @@ enum LessonPictures {
     static func layout(_ m: WorkProblem) -> WorkProblem.Layout {
         switch m.lesson.spec.id {
         case "g5-mult2": return multiplyLayout(m.lesson.numbers)
+        case "g5-round": return roundLayout()
         default: return WorkProblem.Layout()
         }
     }
@@ -25,11 +26,11 @@ enum LessonPictures {
         func v(_ k: String) -> Double { n[k] ?? 0 }
         func k(_ key: String) -> Double { p[key] ?? 0 }
         switch m.lesson.spec.id {
-        case "g5-mult2": multiplyTrue(&s, m, a: Int(v("a")), b: Int(v("b")), split: k("split") == 1, strip: Int(k("strip")), found: Int(k("found")), sum: k("sum") == 1)
+        case "g5-mult2": s = multiplyGrid(m, a: Int(v("a")), b: Int(v("b")), split: k("split") == 1, strip: Int(k("strip")), found: Int(k("found")), sum: k("sum") == 1)
         case "g5-divide": divide(&s, dv: Int(v("dv")), qt: Int(v("qt")), strip: Int(k("strip")), found: Int(k("found")), left: k("left") == 1, sum: k("sum") == 1)
         case "g5-order": order(&s, n, beat: Int(k("beat")))
         case "g5-pow10": powers(&s, x: v("x"), k: Int(v("k")), counted: k("zeros") == 1, hop: k("hop") == 1)
-        case "g5-round": round(&s, n, p)
+        case "g5-round": s = roundGrid(m)
         case "g5-adddec": addDecimals(&s, a: v("a"), b: v("b"), p)
         case "g5-multdec": multiplyDecimals(&s, n, p)
         case "g5-divdec": divideDecimal(&s, d: Int(v("d")), qt: Int(v("qt")), p)
@@ -128,7 +129,8 @@ enum LessonPictures {
         let g = geometry(n)
         var l = WorkProblem.Layout()
         l.scale = g.k
-        l.pictureTop = 0; l.pictureScale = 1
+        // the picture is built in squares (GridPen), the paper's own: not drawn bigger with the words
+        l.pictureTop = 0; l.pictureScale = 1 / g.k
         l.stepX = g.colX; l.stepY = g.stepY; l.lineY = g.stepY + 120; l.column = g.keyX - g.colX - 40
         l.actions = g.stepY + 200; l.messageBelow = true
         l.keypadX = g.keyX; l.keypadY = g.stepY
@@ -153,71 +155,118 @@ enum LessonPictures {
         return (k, rx, ry, a, w, colX, 280, colX + 400)
     }
 
-    static func multiplyTrue(_ s: inout Sketch, _ m: WorkProblem, a: Int, b: Int, split: Bool, strip: Int, found: Int, sum: Bool) {
-        let ps = MultiplyTwoDigit.parts(b), products = ps.map { a * $0 }, g = geometry(m.lesson.numbers)
-        // one square of the paper, in the problem's units (it's drawn k times bigger)
-        let c = Paper.cell / g.k, rx = g.rx, ry = g.ry, h = Double(a) * c
-        let widths = split ? ps.map { Double($0) * c } : [Double(b) * c]
-        let thin = 1.0, strong = 2.0
-        // its height beside it, on the problem's left edge, level with the rectangle's middle
-        s.text("side", String(a), at: P(0, ry + h / 2), size: 24, .chapter, anchor: UnitPoint(x: 0, y: 0.5))
+    /// Multiply on the grid (GridPen): the rectangle a squares tall and b wide, split into its strips a square apart,
+    /// each width in the row above it, the side's number on the left edge level with the middle, each product on a
+    /// plate centred on its strip; the school work beside it, two squares to a digit. k (1 or 2) draws the words and
+    /// the school work bigger in a big problem; the rectangle's squares are always the paper's.
+    static func multiplyGrid(_ m: WorkProblem, a: Int, b: Int, split: Bool, strip: Int, found: Int, sum: Bool) -> Sketch {
+        let ps = MultiplyTwoDigit.parts(b), products = ps.map { a * $0 }, g = geometry(m.lesson.numbers), k = g.k, kk = Int(k)
+        var pen = GridPen(k: k)
+        func sq(_ design: Double) -> Double { design / Paper.cell * k }
+        let rx = sq(g.rx), ry = sq(g.ry), H = Double(a), widths = split ? ps : [b]
+        let label = Sketch.Words(size: 24, weight: .medium, colour: .ink)
+        pen.word("side", String(a), at: 0, ry + H / 2, label.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5))
         var x = rx
         for (i, w) in widths.enumerated() {
-            let lit = split && strip == i + 1, cols = Int((w / c).rounded()), id = "s\(i)\(split)"
-            // drawn in this order: its outline, its width over it, its squares, every ten, then its fill under them
-            s.box(id + "o\(lit)", R(x, ry, w, h), .chapter, width: lit ? 3 : 2)
-            s.text(id + "top\(lit)", split ? String(ps[i]) : String(b), at: P(x + w / 2, ry - 20), size: 24, lit ? .chapter : .ink2)
-            func grid(every: Int) -> [(CGPoint, CGPoint)] {
-                stride(from: every, to: cols, by: every).map { j in (P(x + Double(j) * c, ry), P(x + Double(j) * c, ry + h)) }
-                    + stride(from: every, to: a, by: every).map { j in (P(x, ry + Double(j) * c), P(x + w, ry + Double(j) * c)) }
-            }
-            s.segments(id + "c\(lit)", grid(every: 1), lit ? .tint(0.6) : .tint(0.42), width: thin)
-            s.segments(id + "t\(lit)", grid(every: 10), .tint(lit ? 1 : 0.8), width: strong)
-            s.fill(id + "f\(lit)", R(x, ry, w, h), lit ? .tint(0.38) : .tint(0.16))
+            let lit = split && strip == i + 1, id = "s\(i)\(split)"
+            pen.squares(id, col: x, row: ry, cols: w, rows: a, lit: lit)
+            pen.word(id + "top\(lit)", String(split ? ps[i] : b), at: x + Double(w) / 2, ry - k, label.colour(lit ? .chapter : .ink2))
             if split, i < found {
-                // its product on a plate of whole squares in its middle, or under it when it's too narrow
-                // its product on a plate of whole squares, centred on the strip both ways (as big as the problem's words,
-                // and as many squares as keep it centred: odd across an odd strip, odd down an odd side), level with the
-                // side's number; under the strip when it's too narrow
-                let label = String(products[i]), kk = Int(m.scale)
-                let across = 4 * kk + (cols - 4 * kk) % 2, down = 2 * kk + (a - 2 * kk) % 2
-                if cols >= across + 1 {
-                    let px = x + Double((cols - across) / 2) * c, py = ry + Double((a - down) / 2) * c
-                    s.plate("pf\(i)", R(px, py, Double(across) * c, Double(down) * c), .paper)
-                    s.text("p\(i)", label, at: P(x + w / 2, ry + h / 2), size: 24, .ink)
+                if w >= 4 * kk + 1 {
+                    pen.plate("pf\(i)", over: (w, a), at: x, ry, w: 4 * kk, h: 2 * kk)
+                    pen.word("p\(i)", String(products[i]), at: x + Double(w) / 2, ry + H / 2, label)
                 } else {
-                    s.text("p\(i)", label, at: P(x + w / 2, ry + h + 20), size: 24, .ink)
+                    pen.word("p\(i)", String(products[i]), at: x + Double(w) / 2, ry + H + k, label)
                 }
             }
-            x += w + (split ? c : 0)
+            x += Double(w) + (split ? 1 : 0)
         }
         if sum {
-            // a bracket a square deep under it all, and the sum in the row under that
-            let x1 = x - (split ? c : 0), y = ry + h + (found > 0 && widths.contains { Int(($0 / c).rounded()) < 5 } ? 60 : 40)
-            s.line("sum", [P(rx, y - 20), P(rx, y), P(x1, y), P(x1, y - 20)], .chapter, width: 2)
-            s.text("sumw", "\(products.map(String.init).joined(separator: " + ")) = \(products.reduce(0, +))", at: P(rx, y + 20), size: 22, .chapter, anchor: UnitPoint(x: 0, y: 0.5))
+            let narrow = found > 0 && widths.contains { $0 < 4 * kk + 1 }
+            pen.bracket("sum", from: rx, to: x - (split ? 1 : 0), row: ry + H + (narrow ? 3 : 2) * k, "\(products.map(String.init).joined(separator: " + ")) = \(products.reduce(0, +))",
+                        Sketch.Words(size: 22, weight: .medium, colour: .chapter), tick: k)
+        }
+        // the work as school writes it, two squares to a digit, down the column beside it
+        let per = 2 * k, right = sq(g.colX) + 5 * per
+        func row(_ r: Double) -> Double { ry + (r + 0.5) * per }
+        pen.digits("wa", String(a), right: right, row: row(0), per: per)
+        pen.word("wx", "×", at: right - 4.5 * per, row(1), Sketch.Words(size: 28, weight: .medium, colour: .ink))
+        pen.digits("wb", String(b), right: right, row: row(1), per: per)
+        pen.rule("wr1", from: right - 5 * per, to: right, row: ry + 2 * per)
+        for (i, pr) in products.enumerated() where i < found {
+            pen.digits("wp\(i)", String(pr), right: right, row: row(Double(2 + i)), per: per, i + 1 == strip ? .chapter : .ink)
+            pen.word("wl\(i)", "\(a) × \(ps[i])", at: right + k, row(Double(2 + i)), Sketch.Words(size: 18, weight: .regular, colour: .ink3), anchor: UnitPoint(x: 0, y: 0.5))
+        }
+        if sum {
+            let r = Double(2 + products.count)
+            pen.rule("wr2", from: right - 5 * per, to: right, row: ry + r * per)
+            pen.digits("wt", String(products.reduce(0, +)), right: right, row: row(r), per: per, .chapter)
+        }
+        return pen.sketch
+    }
+
+    // MARK: rounding
+
+    /// Rounding on the grid: the number two squares to a digit along the top, the step under the number line, the
+    /// keypad beside it.
+    static func roundLayout() -> WorkProblem.Layout {
+        var l = WorkProblem.Layout()
+        l.pictureTop = 0; l.pictureScale = 1
+        l.stepX = 0; l.stepY = 320; l.lineY = 400; l.column = 700; l.actions = 480; l.messageBelow = false
+        l.keypadX = 760; l.keypadY = 320
+        return l
+    }
+
+    /// 6.723 to the nearest tenth, on the grid: the number two squares to a digit, its place underlined and the next
+    /// digit ringed; the number line from 6.7 to 6.8 where the squares are the distance (ten steps of four squares, so
+    /// halfway is the middle grid line and 6.723 sits 9.2 squares along: plainly nearer 6.7); the hop to the nearer end;
+    /// and the working beside it.
+    static func roundGrid(_ m: WorkProblem) -> Sketch {
+        let parts = RoundDecimals.Parts(m.lesson.numbers), p = m.picture
+        let lo = p["lo"] ?? parts.T, hi = p["hi"] ?? parts.up, tick = p["tick"] ?? parts.place / 10, value = parts.value
+        let lit = p["lit"], halfway = p["halfway"] == 1, hop = p["hop"] == 1
+        var pen = GridPen()
+        let big = Sketch.Words(size: 40, weight: .medium, colour: .ink), label = Sketch.Words(size: 20, weight: .medium, colour: .ink2)
+
+        // the number, two squares to a digit, from the left edge; its place underlined, the digit after it ringed
+        // written as the problem writes it (3.18, not 3.180)
+        let text = fmt(value), digitsOnly = text.filter { $0 != "." }, wholeDigits = text.split(separator: ".")[0].count
+        let right = Double(digitsOnly.count) * 2
+        pen.digits("num", text, right: right, row: 1, per: 2, size: 40)
+        let placeCol = Double(wholeDigits + parts.p - 1) * 2, nextCol = placeCol + 2
+        pen.rule("place", from: placeCol, to: placeCol + 2, row: 2, lit == 0 ? .chapter : .ink2, width: 3)
+        if halfway { pen.ring("next", col: nextCol, row: 0, w: 2, h: 2) }
+        _ = big
+
+        // the number line: ten steps of four squares from lo to hi, long ticks at the ends and halfway
+        let per = 4.0, row = 9.0
+        let at = pen.numberLine("line", col: 0, row: row, steps: 10, per: per, long: 5)
+        func col(_ v: Double) -> Double { (v - lo) / tick * per }
+        pen.word("lo", fmt(lo), at: at(0), row + 1.5, label.colour(lit == 0 ? .chapter : .ink2))
+        pen.word("hi", fmt(hi), at: at(10), row + 1.5, label.colour(lit == 0 ? .chapter : .ink2))
+        if halfway {
+            pen.dot("half", at: at(5), row, radius: 0.3, lit == 1 ? .chapter : .ink2)
+            pen.word("halfw", fmt(parts.half), at: at(5), row + 1.5, label.colour(lit == 1 ? .chapter : .ink3))
+        }
+        pen.dot("value", at: col(value), row, radius: 0.4, .tint(0.7))
+        pen.word("valuew", fmt(value), at: col(value), row - 3, label.colour(lit == 0 ? .chapter : .ink))
+        if hop {
+            let to = col(parts.R)
+            pen.hop("hop", from: col(value), to: to, row: row, height: 2.5)
+            pen.dot("rounded", at: to, row, radius: 0.4)
+            // over the hop and above the number's label, so the two never meet
+            pen.word("hopw", parts.halfway ? "halfway: up" : "closer", at: (col(value) + to) / 2, row - 5, label.colour(.chapter))
         }
 
-        // the work as school writes it, a digit to every two squares, down the column beside it
-        let sq = 40.0, right = g.colX + 5 * sq
-        func digits(_ id: String, _ text: String, row: Int, _ colour: Sketch.Colour = .ink) {
-            for (j, ch) in text.reversed().enumerated() {
-                s.text("\(id)\(j)", String(ch), at: P(right - (Double(j) + 0.5) * sq, ry + (Double(row) + 0.5) * sq), size: 30, colour)
-            }
+        // the working, beside the line: the next digit against 5, then the answer
+        let wx = 44.0
+        if halfway {
+            pen.word("cmp", parts.next >= 5 ? "\(parts.next) is 5 or more: up" : "\(parts.next) is 4 or less: stays", at: wx, 1, label.colour(.ink), anchor: UnitPoint(x: 0, y: 0.5))
         }
-        digits("wa", String(a), row: 0)
-        s.text("wx", "×", at: P(right - 4.5 * sq, ry + 1.5 * sq), size: 28)
-        digits("wb", String(b), row: 1)
-        s.line("wr1", [P(right - 5 * sq, ry + 2 * sq), P(right, ry + 2 * sq)], .ink, width: 2)
-        for (i, pr) in products.enumerated() where i < found {
-            digits("wp\(i)", String(pr), row: 2 + i, i + 1 == strip ? .chapter : .ink)
-            s.text("wl\(i)", "\(a) × \(ps[i])", at: P(right + 20, ry + (Double(2 + i) + 0.5) * sq), size: 18, .ink3, anchor: UnitPoint(x: 0, y: 0.5))
+        if hop {
+            pen.word("ans", "\(fmt(value)) ≈ \(fmt(parts.R))", at: wx, 3, Sketch.Words(size: 28, weight: .medium, colour: .chapter), anchor: UnitPoint(x: 0, y: 0.5))
         }
-        if sum {
-            let r = 2 + products.count
-            s.line("wr2", [P(right - 5 * sq, ry + Double(r) * sq), P(right, ry + Double(r) * sq)], .ink, width: 2)
-            digits("wt", String(products.reduce(0, +)), row: r, .chapter)
-        }
+        return pen.sketch
     }
 
     /// 864 ÷ 12 in chunks: on the left the division bracket as school writes it, the tens taken away first and the
