@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// The 5th grade lessons not yet moved onto the paper (PaperLessons has Rounding decimals and the Adding fractions
-/// family, designed the way G approved on 20 Oct), each drawn as a Sketch from its numbers and what its step shows
+/// The 5th grade lessons not yet moved onto the paper (PaperLessons has those designed the way G approved on 20 Oct,
+/// in App/Lessons/), each drawn as a Sketch from its numbers and what its step shows
 /// (`picture` keys, as each spec in Core documents them): the work as school writes it beside a picture that shows why
 /// it works, built in squares on the grid (GridPen). Each will move to App/Lessons/ when it's designed for the paper.
 @MainActor
@@ -31,7 +31,6 @@ enum LessonPictures {
         case "g5-multdec": return with(multiplyDecimalsGrid(n, p))
         case "g5-divdec": return with(divideDecimalGrid(d: Int(v("d")), qt: Int(v("qt")), p))
         case "g5-multfrac": return with(multiplyFractionsGrid(n, p))
-        case "g5-improper": return with(improperGrid(n, p))
         case "g5-fracof": return with(fractionOfGrid(n, p))
         case "g5-unitdiv": return with(unitDivideGrid(n, p))
         case "g5-volume": return with(volumeGrid(n, p))
@@ -355,28 +354,6 @@ enum LessonPictures {
         let small = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink2)
         pen.label("rl", "\(a)/\(b)", small.colour(ask == 1 ? .chapter : .ink2), .left, edge: x0, along: y0 + Double(a) * s / 2)
         pen.label("cl", "\(c)/\(d)", small.colour(ask == 2 ? .chapter : .ink2), .above, edge: y0, along: x0 + Double(c) * s / 2)
-        return (pen.sketch, wk.sketch)
-    }
-
-    /// 2 3/4 on the grid: a bar per whole and one for the extra pieces, each piece a whole number of squares, every
-    /// piece counted on; on the right the mixed number rewritten.
-    static func improperGrid(_ n: Numbers, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
-        var pen = GridPen()
-        var wk = GridPen()
-        let w = Int(n["w"] ?? 1), nn = Int(n["n"] ?? 1), d = Int(n["d"] ?? 2)
-        let wholes = Int(p["wholes"] ?? 0), extra = p["extra"] == 1, fraction = p["fraction"] == 1, focus = p["focus"]
-        let per = max(2, 30 / d), length = d * per, x0 = 3.0, small = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink2)
-        for j in 0...w {
-            let row = 1 + Double(j) * 3, isExtra = j == w, filled = isExtra ? (extra ? nn : 0) : (j < wholes ? d : 0)
-            pen.bar("b\(j)", col: x0, row: row, length: length, parts: d, shaded: filled, striped: isExtra,
-                    lit: (focus == 1 && !isExtra) || (focus == 2 && isExtra) || focus == 3)
-            pen.label("bl\(j)", isExtra ? "\(nn)/\(d)" : "1", small, .left, edge: x0, along: row + 1)
-            if filled > 0 { pen.label("cnt\(j)\(j * d + filled)", "\(j * d + filled)", small.colour(isExtra || j == w - 1 ? .chapter : .ink2), .right, edge: x0 + Double(length), along: row + 1) }
-        }
-        let wx = x0 + Double(length) + 8, line = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink)
-        wk.math("mixed", [.num(Double(w)), frac(nn, d)] + (fraction ? [.op("="), frac(w * d + nn, d)] : []), col: wx, row: 1)
-        if wholes >= w { wk.word("l1", "\(w) × \(d) = \(w * d)", at: wx, 8, line, anchor: UnitPoint(x: 0, y: 0.5)) }
-        if extra { wk.word("l2", "\(w * d) + \(nn) = \(w * d + nn)", at: wx, 11, line, anchor: UnitPoint(x: 0, y: 0.5)) }
         return (pen.sketch, wk.sketch)
     }
 

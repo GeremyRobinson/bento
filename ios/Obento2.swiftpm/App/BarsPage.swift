@@ -92,8 +92,9 @@ final class BarsPage {
         let spec = specs.first ?? AddFractions.spec
         self.spec = spec; self.specs = specs
         let o = Self.origin(for: piece), chapter = piece.chapter, instant = reduceMotion || shotMode
+        let shown = first ?? spec.generate(&rng, 0)
         howTo = Self.make(spec, origin: o, chapter: chapter, instant: instant,
-                          run: LessonRun(spec, numbers: first ?? spec.generate(&rng, 0)), label: "How to", auto: true)
+                          run: LessonRun(spec, numbers: shown), label: "How to", auto: true)
         /// Saved questions that had to be asked afresh.
         var afresh = 0
         /// A test's question `i` as it was saved, brought back by its own lesson (never by its place: the grade's test
@@ -122,7 +123,8 @@ final class BarsPage {
                     if let r = LessonRun.restored(spec, s.problems[i]) { runs.append(r) } else { plan.renew(i, spec, using: &rng); runs.append(plan.run(spec, i)) }
                 }
             } else {
-                plan = LessonPlan(spec, using: &rng)
+                // a fresh page: no problem twice on it, and the first not the How to's again
+                plan = LessonPlan(spec, after: [shown], using: &rng)
                 runs = plan.items.indices.map { plan.run(spec, $0) }
             }
             let kept = saved?.test ?? []
