@@ -190,9 +190,9 @@ extension Rig {
             } else if model.selected?.id == p.id && p.opens {
                 // chosen: its tab says Start (or Continue), with an arrow (G 18 Oct)
                 s.startAt = nil
-                s.tab(id, frame: r, PageStore.load(p.id) == nil ? "Start" : "Continue", width: p.start.width, arrow: true)
+                s.tab(id, frame: r, PageStore.load(p.id) == nil ? "Start" : "Continue", width: p.start.width, arrow: true, colour: chapter)
             } else if p.state == .now {
-                s.tab(id, frame: r, "Up next")
+                s.tab(id, frame: r, "Up next", colour: chapter)
             }
         }
         return s

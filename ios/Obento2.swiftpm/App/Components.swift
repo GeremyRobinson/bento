@@ -103,9 +103,10 @@ extension Sketch {
 
     /// A tab on a frame's top-right corner, in the chapter's colour ("Done", "Now", "Up next", "Start"), with an arrow
     /// when it's something to tap.
-    mutating func tab(_ id: String, frame r: CGRect, _ word: String, width: Double = 80, arrow: Bool = false) {
+    /// `colour`: its chapter's (the map draws many chapters at once, so it says which).
+    mutating func tab(_ id: String, frame r: CGRect, _ word: String, width: Double = 80, arrow: Bool = false, colour: Colour = .chapter) {
         let t = CGRect(x: r.maxX - width, y: r.minY - Paper.cell, width: width, height: Paper.cell)
-        fill("\(id)tab\(word)\(width)", t, .chapter)
+        fill("\(id)tab\(word)\(width)\(colour)", t, colour)
         if arrow {
             text("\(id)tabw\(word)", word, at: CGPoint(x: t.minX + 12, y: t.midY), size: Words.tab.size, weight: Words.tab.weight, Words.tab.colour, anchor: UnitPoint(x: 0, y: 0.5), digits: false)
             self.icon("\(id)taba", "arrow-right", in: CGRect(x: t.maxX - 26, y: t.midY - 8, width: 16, height: 16), Words.tab.colour)
