@@ -36,7 +36,9 @@ extension Sketch {
         /// A tab's word ("Done", "Up next", "Start").
         static let tab = Words(size: 14, weight: .semibold, colour: .hex(0xFFFFFF, 0xFFFFFF))
         /// A block's word ("Check").
-        static let block = Words(size: Sketch.wordSize, weight: .medium, colour: .ink)
+        /// A button's word: small and firm, in a button two squares tall (the answer box's height), so buttons stay one
+        /// size however the rest grows (G 19 Oct).
+        static let block = Words(size: Sketch.small, weight: .semibold, colour: .ink)
         func colour(_ c: Colour) -> Words { Words(size: size, weight: weight, colour: c) }
     }
 

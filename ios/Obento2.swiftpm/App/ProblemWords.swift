@@ -34,19 +34,19 @@ enum ProblemLayout {
         var y = L.checkAt.y
         if let choices = l.step.answer?.choices {
             let n = Double(choices.count), w = ((600 * k + 1.5 * (n - 1)) / n).rounded()
-            for i in choices.indices { out.append(Block(kind: .choice(i), rect: A(L.checkAt.x + Double(i) * (w - 1.5), y, w, 60 * k))) }
-            y += 80 * k
+            for i in choices.indices { out.append(Block(kind: .choice(i), rect: A(L.checkAt.x + Double(i) * (w - 1.5), y, w, 40 * k))) }
+            y += 60 * k
         }
         if let a = l.step.answer, a.choices == nil, let b = L.box, let id = a.boxes.first {
             let cells = Double(max(3, (l.typed[id] ?? "").count + 1))
             out.append(Block(kind: .field(id), rect: A(b.right - cells * b.cell, b.mid - b.cell / 2, cells * b.cell, b.cell)))
         }
-        if !m.auto && !m.solved { out.append(Block(kind: .main, rect: A(L.checkAt.x, y, 200 * k, 60 * k))) }
-        if !m.auto && m.solved { out.append(Block(kind: .nextProblem, rect: A(L.checkAt.x, y, 260 * k, 60 * k))) }
+        if !m.auto && !m.solved { out.append(Block(kind: .main, rect: A(L.checkAt.x, y, 120 * k, 40 * k))) }
+        if !m.auto && m.solved { out.append(Block(kind: .nextProblem, rect: A(L.checkAt.x, y, 180 * k, 40 * k))) }
         for kind in m.howToButtons {
             switch kind {
-            case .next, .practise: out.append(Block(kind: kind, rect: A(L.checkAt.x, y, 260 * k, 60 * k)))
-            case .again, .skip: out.append(Block(kind: kind, rect: A(L.checkAt.x + 300 * k, y, 240 * k, 60 * k)))
+            case .next, .practise: out.append(Block(kind: kind, rect: A(L.checkAt.x, y, 180 * k, 40 * k)))
+            case .again, .skip: out.append(Block(kind: kind, rect: A(L.checkAt.x + 200 * k, y, 160 * k, 40 * k)))
             default: break
             }
         }
@@ -67,7 +67,7 @@ enum ProblemLayout {
         if let choices = l.step.answer?.choices {
             let n = Double(choices.count), w = (min(column(m), 720) + 1.5 * (n - 1)) / n
             let y = m.underStep
-            for i in choices.indices { out.append(Block(kind: .choice(i), rect: R(Double(i) * (w - 1.5), y, w, 60))) }
+            for i in choices.indices { out.append(Block(kind: .choice(i), rect: R(Double(i) * (w - 1.5), y, w, 40))) }
         }
         // a typed step's answer boxes, where its line is written (MathLineView's cells)
         if let a = l.step.answer, a.choices == nil, m is WorkProblem {
@@ -89,13 +89,13 @@ enum ProblemLayout {
             }
         }
         let actions = actions(m), column = column(m)
-        if !m.auto && !m.solved { out.append(Block(kind: .main, rect: R(0, actions, 200, 60))) }
-        if !m.auto && m.solved { out.append(Block(kind: .nextProblem, rect: R(0, actions, 260, 60))) }
+        if !m.auto && !m.solved { out.append(Block(kind: .main, rect: R(0, actions, 120, 40))) }
+        if !m.auto && m.solved { out.append(Block(kind: .nextProblem, rect: R(0, actions, 180, 40))) }
         // the How to: its main block where Check sits, the other on the column's right
         for k in m.howToButtons {
             switch k {
-            case .next, .practise: out.append(Block(kind: k, rect: R(0, actions, 260, 60)))
-            case .again, .skip: out.append(Block(kind: k, rect: R(column - 240, actions, 240, 60)))
+            case .next, .practise: out.append(Block(kind: k, rect: R(0, actions, 180, 40)))
+            case .again, .skip: out.append(Block(kind: k, rect: R(column - 160, actions, 160, 40)))
             default: break
             }
         }
@@ -308,7 +308,7 @@ extension Rig {
         if let msg = m.message {
             let ay = ProblemLayout.actions(m)
             var (x, y, width) = lay.messageBelow ? (sx, ay + 4 * Paper.cell, col) : (sx + 280, ay, col - 280 * k)
-            if lay.inline { x = lay.checkAt.x / k; y = (lay.checkAt.y + 80 * k) / k; width = 600 * k }
+            if lay.inline { x = lay.checkAt.x / k; y = (lay.checkAt.y + 60 * k) / k; width = 600 * k }
             s.words("msg", msg.text, Sketch.Words.message.colour(msg.ok ? .ink2 : red), x: P(x, 0).x, top: P(0, y).y, width: width, max: 3, k: k)
         }
         return s

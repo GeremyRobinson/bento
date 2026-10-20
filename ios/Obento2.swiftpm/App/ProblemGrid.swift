@@ -56,7 +56,7 @@ enum ProblemGrid {
             out.total = width / k
             out.sections = [CGRect(x: 0, y: 0, width: P.w, height: P.h), CGRect(x: wx, y: wy, width: W.w, height: W.h),
                             CGRect(x: sayX, y: out.sayAt.y, width: plan.sayW, height: Sketch.row * k),
-                            CGRect(x: wx, y: out.checkAt.y, width: 200 * k, height: 60 * k)]
+                            CGRect(x: wx, y: out.checkAt.y, width: 120 * k, height: 40 * k)]
             out.width = (width + 2 * block) / block / k
             out.height = (max(P.h, wy + plan.W.h) + 3 * block) / block / k
             return out
@@ -127,7 +127,7 @@ enum ProblemGrid {
             // what to do beside the work (as wide as its longest, up to six blocks), Check a square under it
             let sayFont = PaperText.font(Sketch.Words.say.size * k, Sketch.Words.say.weight)
             let sayW = min(600 * k, l.steps.map { PaperText.width($0.words.say, sayFont) }.max() ?? 0)
-            let Wfull = Piece(w: next(W.w + 2 * sq) + sayW, h: W.h + sq + 3 * sq * k + 3 * 2 * sq * k)
+            let Wfull = Piece(w: next(W.w + 2 * sq) + sayW, h: W.h + sq + 2 * sq * k + 3 * 2 * sq * k)
             let availW = screen.width - 4 * sq, availH = screen.height - 24 - 120 - 4 * sq
             let side = CGSize(width: next(P.w + 2 * sq) + Wfull.w, height: max(P.h, Wfull.h))
             let stack = CGSize(width: max(P.w, Wfull.w), height: next(P.h + sq) + Wfull.h)
@@ -149,7 +149,7 @@ enum ProblemGrid {
         let choices = l.steps.contains { $0.answer?.choices != nil } ? 720.0 : 0
         let stepW = max(min(sayW, cap), WorkProblem.drawnKeys ? keyX + 180 : lineW, choices, 260)
         // just what's always there: the words, the line and Check (a message under it grows the problem when it comes)
-        let stepH = actions + 3 * sq
+        let stepH = actions + 2 * sq
         let S = Piece(w: stepW * k, h: stepH * k)
         // the arrangement the screen shows biggest (the sum's row over it too)
         let availW = screen.width - 4 * sq, availH = screen.height - 24 - 120 - 4 * sq, sumH = block * k

@@ -44,7 +44,7 @@ enum LessonPictures {
         func k(_ key: String) -> Double { p[key] ?? 0 }
         switch id {
         case "g5-mult2": return multiplyGrid(n, a: Int(v("a")), b: Int(v("b")), split: k("split") == 1, strip: Int(k("strip")), found: Int(k("found")), sum: k("sum") == 1, box: k("box") == 1)
-        case "g5-divide": return with(divideGrid(dv: Int(v("dv")), qt: Int(v("qt")), strip: Int(k("strip")), found: Int(k("found")), left: k("left") == 1, sum: k("sum") == 1))
+        case "g5-divide": return divideGrid(dv: Int(v("dv")), qt: Int(v("qt")), strip: Int(k("strip")), found: Int(k("found")), left: k("left") == 1, sum: k("sum") == 1, box: k("box") == 1)
         case "g5-order": return with(orderGrid(n, beat: Int(k("beat"))))
         case "g5-pow10": return with(powersGrid(x: v("x"), k: Int(v("k")), hop: k("hop") == 1))
         case "g5-round": return with(roundGrid(n, p))
@@ -259,7 +259,7 @@ enum LessonPictures {
     /// are what's found: the tens strip first ("?" until it is), then the ones strip with what's left in it. The
     /// division as school writes it beside it, two squares to a digit: the divisor, the bracket, the number under it,
     /// each part taken away and its quotient beside it, the answer over the bracket at the end.
-    static func divideGrid( dv: Int, qt: Int, strip: Int, found: Int, left: Bool, sum: Bool) -> (picture: Sketch, work: Sketch) {
+    static func divideGrid( dv: Int, qt: Int, strip: Int, found: Int, left: Bool, sum: Bool, box: Bool) -> (picture: Sketch, work: Sketch, box: (right: Double, mid: Double, cell: Double)?) {
         let n = dv * qt, T = qt - qt % 10, O = qt % 10, rest = n - dv * T, widths = [T, O], products = [dv * T, dv * O]
         let g = areaGeometry(tall: Double(dv), wide: Double(qt)), k = g.k, kk = Int(k)
         var pen = GridPen(k: k)
@@ -285,32 +285,40 @@ enum LessonPictures {
             }
             x += Double(w) + 1
         }
-        if sum {
-            pen.bracket("sum", from: rx, to: x - 1, row: ry + H + (O < 4 * kk + 1 ? 3 : 2) * k, "\(T) + \(O) = \(qt)", Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .chapter), tick: k)
-        }
-        // the division as school writes it: two squares to a digit
-        let per = 2 * k, nd = Double(String(n).count), right = sq(g.colX) + (2 + nd) * per + per
-        func row(_ r: Double) -> Double { ry + (r + 0.5) * per }
+        // (no sum bracket: the answer is worked out in the bracket, G 19 Oct)
+        // the division as school writes it, answered in it (G 19 Oct): two squares to a digit, the problem written once
+        // in the bracket; each part taken away under it and how many groups beside it; the box where the next number
+        // goes; the answer over the bracket at the end
+        let per = 2 * k, nd = Double(String(n).count), right = (2 + nd) * per + per, qRight = right + 3 * per
+        func row(_ r: Double) -> Double { (r + 0.5) * per }
+        func boxAt(_ x: Double, _ r: Double) { wk.box = (wk.P(x, 0).x, wk.P(0, row(r)).y, wk.P(per, 0).x) }
         let bracketX = right - nd * per - 0.3 * per
-        if sum { wk.digits("q", String(qt), right: right, row: row(0), per: per, .chapter) }
+        if sum && !box { wk.digits("q", String(qt), right: right, row: row(0), per: per, .chapter) }
         wk.digits("dv", String(dv), right: bracketX - 0.4 * per, row: row(1), per: per)
-        wk.sketch.line("bracket", [wk.P(bracketX - 0.3 * per, ry + 2 * per), wk.P(bracketX, ry + 1.5 * per), wk.P(bracketX - 0.3 * per, ry + per), wk.P(right, ry + per)], .ink, width: 2)
+        wk.sketch.line("bracket", [wk.P(bracketX - 0.3 * per, 2 * per), wk.P(bracketX, 1.5 * per), wk.P(bracketX - 0.3 * per, per), wk.P(right, per)], .ink, width: 2)
         wk.digits("n", String(n), right: right, row: row(1), per: per)
+        let sign = Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink)
+        // how many tens: the box beside the first row, then its number
         if found >= 1 {
-            wk.word("m1", "−", at: right - (Double(String(products[0]).count) + 0.5) * per, row(2), label)
+            wk.word("m1", "−", at: right - (Double(String(products[0]).count) + 0.5) * per, row(2), sign)
             wk.digits("p1", String(products[0]), right: right, row: row(2), per: per)
-            wk.rule("u1", from: right - Double(String(products[0]).count) * per, to: right, row: ry + 3 * per)
-            wk.word("t1", String(T), at: right + k, row(2), label.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5))
-        }
+            wk.rule("u1", from: right - Double(String(products[0]).count) * per, to: right, row: 3 * per)
+            wk.digits("t1", String(T), right: qRight, row: row(2), per: per, .chapter)
+        } else if box && strip == 1 { boxAt(qRight, 2) }
+        // what's left: the box under the line, then its number
         if left || found >= 2 { wk.digits("rest", String(rest), right: right, row: row(3), per: per) }
+        else if box && found == 1 { boxAt(right, 3) }
+        // how many ones: the box beside the second row, then its rows
         if found >= 2 {
-            wk.word("m2", "−", at: right - (Double(String(products[1]).count) + 0.5) * per, row(4), label)
+            wk.word("m2", "−", at: right - (Double(String(products[1]).count) + 0.5) * per, row(4), sign)
             wk.digits("p2", String(products[1]), right: right, row: row(4), per: per)
-            wk.rule("u2", from: right - Double(String(products[1]).count) * per, to: right, row: ry + 5 * per)
+            wk.rule("u2", from: right - Double(String(products[1]).count) * per, to: right, row: 5 * per)
             wk.digits("zero", "0", right: right, row: row(5), per: per)
-            wk.word("t2", "+ \(O)", at: right + k, row(4), label.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5))
-        }
-        return (pen.sketch, wk.sketch)
+            wk.digits("t2", String(O), right: qRight, row: row(4), per: per, .chapter)
+        } else if box && left { boxAt(qRight, 4) }
+        // the answer: the box over the bracket
+        if sum && box { boxAt(right, 0) }
+        return (pen.sketch, wk.sketch, wk.box)
     }
 
     // MARK: the plain grid layout
