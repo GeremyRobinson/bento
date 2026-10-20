@@ -259,6 +259,8 @@ final class Rig {
     var sketches: [UUID: SketchDrawer] = [:]
     let boxes = Entity()
     var boxesKey = ""
+    /// What the camera last framed a problem's content for.
+    var contentKey = ""
     /// The page of problems' cards (PageCards).
     let cardsRoot = Entity()
     var cardsKey = ""
@@ -480,6 +482,25 @@ final class Rig {
         // an open problem is its own space on the grid, with no frame (G 19 Oct): only the page's cards are outlined
         Perf.time("boxes") { drawBoxes(page, [], at: t) }
         Perf.time("page-words") { drawProblemWords(page, shown, waiting: page.showing || made > 0 ? [] : page.problems, at: t) }
+        frameContent(page)
+    }
+
+    /// The camera frames what's on the paper (G 19 Oct): the problem's picture and words as they are now, so when a
+    /// step adds something the paper eases out to fit it as it draws in, and eases back in when something goes.
+    private func frameContent(_ page: BarsPage) {
+        guard let m = page.mode == .work ? page.current : (page.howToGone ? nil : page.howTo) else { contentKey = ""; return }
+        let key = "\(m.id) \(sketches[m.id]?.key ?? "") \(problemWords[m.id]?.key ?? "")"
+        guard key != contentKey else { return }
+        contentKey = key
+        let u = Paper.unit
+        var r: CGRect?
+        for e in [sketches[m.id]?.root, drawers[m.id]?.root, problemWords[m.id]?.root].compactMap({ $0 }) {
+            let b = e.visualBounds(recursive: true, relativeTo: barsRoot, excludeInactive: false)
+            guard !b.isEmpty else { continue }
+            let rr = CGRect(x: Double(b.min.x) * u, y: Double(b.min.z) * u, width: Double(b.max.x - b.min.x) * u, height: Double(b.max.z - b.min.z) * u)
+            r = r.map { $0.union(rr) } ?? rr
+        }
+        if let r { Task { @MainActor in page.contentChanged(Rect(x: r.minX, y: r.minY, width: r.width, height: r.height)) } }
     }
 
     /// Every problem's box (G 17 Oct): a light outline in the chapter's colour, drawing in with its problem; the problem

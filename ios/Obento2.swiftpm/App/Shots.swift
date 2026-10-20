@@ -39,6 +39,23 @@ enum Shots {
                 for _ in 0..<(Int(name.dropFirst(6)) ?? 0) { m.bars?.skipHowTo(); await wait(2.2) }
                 return
             }
+            if name.hasPrefix("live-") {
+                // the real path, not instant, to watch things draw in and the camera follow: the How to tapped through,
+                // the first problem opened, its answer box tapped, a step worked
+                let id = String(name.dropFirst(5))
+                guard let p = Map.pieces.first(where: { $0.id == id }) else { return }
+                PageStore.clear(id)
+                m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
+                func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
+                m.select(p); await wait(1); m.open(p); await wait(2)
+                for _ in 0..<10 { m.bars?.skipHowTo(); await wait(1.3) }
+                guard let page = m.bars, let w = page.problems.first as? WorkProblem else { return }
+                await wait(1.5); page.open(w); await wait(2.5)
+                if let box = w.lesson.step.answer?.boxes.first { w.select(box) }
+                await wait(2); w.showMe(); await wait(1); w.go(); await wait(3)
+                w.showMe(); await wait(1); w.go()
+                return
+            }
             if name.hasPrefix("resume") {
                 // the real path, not instant: open the lesson, skip the How to, work problem 2 partway, leave, come back
                 PageStore.clear("ad")
@@ -159,6 +176,7 @@ enum Shots {
                 m.select(p); m.open(p)
                 guard let page = m.bars, page.problems.indices.contains(which), let w = page.problems[which] as? WorkProblem else { return }
                 page.open(w)
+                defer { if ProcessInfo.processInfo.arguments.contains("-keypad"), let box = w.lesson.step.answer?.boxes.first { w.select(box) } }
                 for _ in 0..<max(0, k) { if w.lesson.step.answer != nil { w.lesson.step.answer?.choices != nil ? w.choose(Int(w.lesson.step.answer!.expected["c"] ?? 0)) : w.showMe() }; w.go() }
             case "tests":
                 // the map with Add with different bottoms learned: its chapter's test opens; frame on Fractions

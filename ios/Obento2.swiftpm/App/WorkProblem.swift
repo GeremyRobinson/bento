@@ -25,6 +25,9 @@ final class WorkProblem: Identifiable, PageProblem {
     private(set) var wordsAt: Double = PaperClock.now
     /// When the picture last changed: what's new in it draws in from then.
     private(set) var pictureAt: Double = PaperClock.now
+    /// The keypad, drawn on the paper beside the line, comes up when an answer box is tapped (G 19 Oct).
+    private(set) var keypadOpen = false
+    private(set) var keypadAt: Double = -100
     private(set) var leftAt: Double?
     private(set) var busyUntil: Double = 0
     /// Extra picture keys the How to's explaining beats turn on (merged over the step's).
@@ -32,7 +35,7 @@ final class WorkProblem: Identifiable, PageProblem {
 
     // where things sit, in paper points from `origin`, inside the box (BarsPage.box): the problem above the origin, the
     // picture from the origin down, then the step
-    static let problemY: Double = -96
+    static let problemY: Double = -120
 
     /// Where things sit in an open problem, in points from its origin before `scale`. An open problem is its own space
     /// on the grid, with no frame, filling the screen (G 19 Oct): 13 blocks by 9, its picture drawn 1.6 times its size
@@ -43,7 +46,9 @@ final class WorkProblem: Identifiable, PageProblem {
         var scale = 1.0
         var width = 13.0, height = 9.0
         var pictureTop = -10.0, pictureScale = 1.6
-        var stepX = 0.0, stepY = 480.0, lineY = 536.0, column = 1220.0
+        var stepX = 0.0, stepY = 480.0, lineY = 560.0, column = 1220.0
+        /// The keypad's corner: 3 keys by 4, each 3 squares.
+        var keypadX = 1000.0, keypadY = 460.0
         /// Check's row (else the bottom row, or under a tall line), and what a miss says under Check instead of beside it.
         var actions: Double? = nil
         var messageBelow = false
@@ -80,7 +85,7 @@ final class WorkProblem: Identifiable, PageProblem {
 
     var animating: Bool {
         let now = PaperClock.now
-        return now - openedAt < 1.6 || now - wordsAt < 0.8 || now - pictureAt < 1.2 || now < busyUntil + 0.1 || (leftAt.map { now - $0 < 0.6 } ?? false)
+        return now - openedAt < 1.8 || now - wordsAt < 0.8 || now - pictureAt < 1.6 || now - keypadAt < 0.9 || now < busyUntil + 0.1 || (leftAt.map { now - $0 < 0.6 } ?? false)
     }
 
     func start(after delay: Double) { openedAt = time(delay); wordsAt = openedAt; pictureAt = openedAt; leftAt = nil; teachIfDue(after: delay + 1.2) }
@@ -165,7 +170,11 @@ final class WorkProblem: Identifiable, PageProblem {
         if message?.ok == false { message = nil }
         onChange?()
     }
-    func select(_ box: String) { onTouch?(); lesson.active = box }
+    func select(_ box: String) {
+        onTouch?(); lesson.active = box
+        if !keypadOpen { keypadOpen = true; keypadAt = time(0) }
+        onChange?()
+    }
 
     /// Show me: the step's answer written in, with why.
     func showMe() {

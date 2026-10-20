@@ -365,22 +365,33 @@ final class BarsPage {
     /// Leaving the lesson: what's on the paper erases itself, as it drew in.
     func leave() { for m in all { m.leave() }; if mode == .choose { cardsGoneAt = PaperClock.now } }
 
-    /// A problem opens: the page draws out, and it draws in alone where the How to was.
+    /// A problem opens: the page draws out, and it draws in alone where the How to was. The camera frames what it
+    /// draws (contentChanged).
     func open(_ m: any PageProblem) {
         if mode == .work, let c = current, c !== m { c.leave(); leaving = c; clearLeaving(c) }
         if mode == .choose { cardsGoneAt = PaperClock.now }
         mode = .work
-        current = m; lastWorked = m
+        current = m; lastWorked = m; framed = nil
         m.start(after: instant ? 0 : 0.4)
-        frame?(Self.box(of: m))
         save()
     }
+
+    /// What the scene says the open problem (or the How to) has on the paper now: the camera eases to fit it when it
+    /// grows or shrinks by more than a square or so.
+    func contentChanged(_ r: Rect) {
+        // only while a problem is open or the How to plays: a late word from either mustn't pull the camera off the page
+        guard mode == .work || (mode == .howTo && !howToGone) else { return }
+        if let f = framed, abs(f.x - r.x) < 30, abs(f.y - r.y) < 30, abs(f.width - r.width) < 30, abs(f.height - r.height) < 30 { return }
+        framed = r
+        frame?(r)
+    }
+    private var framed: Rect?
 
     /// The bar's "Problems": the problem draws out and the page draws back in.
     func backToProblems() {
         guard mode == .work, let c = current else { return }
         c.leave(); leaving = c; clearLeaving(c)
-        current = nil
+        current = nil; framed = nil
         mode = .choose
         cardsAt = instant ? PaperClock.now - 100 : PaperClock.now + 0.35; cardsGoneAt = nil
         frame?(pageFrame)
@@ -443,6 +454,7 @@ final class BarsPage {
             case .reset: m.reset()
             case .choice(let i): m.choose(i)
             case .field(let id): (m as? WorkProblem)?.select(id)
+            case .key(let key): (m as? WorkProblem)?.type(key)
             }
             return
         }

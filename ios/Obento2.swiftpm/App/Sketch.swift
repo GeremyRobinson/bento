@@ -54,74 +54,133 @@ struct Sketch {
 }
 
 extension Rig {
-    /// A WorkProblem's picture, rebuilt when what it shows changes; its new parts draw in.
+    /// A WorkProblem's picture, rebuilt when what it shows changes; its new parts draw themselves in (G 19 Oct):
+    /// lines stroke on, fills and words fade in, one after another.
     func drawSketch(_ m: WorkProblem, into d: SketchDrawer, at t: Double) {
         let dark = self.dark ?? false
-        let key = "\(m.lesson.numbers) \(m.lesson.index) \(m.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(m.lesson.typed) \(dark) \(m.lesson.missedSteps.count)"
+        let key = "\(m.lesson.numbers) \(m.lesson.index) \(m.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(m.lesson.typed) \(dark) \(m.lesson.missedSteps.count) \(m.scale)"
         if key != d.key {
             d.key = key
             let s = LessonPictures.sketch(m)
             let l = m.layout, o = m.contentOrigin
-            d.build(s, rig: self, chapter: m.chapter.hex, dark: dark, origin: CGPoint(x: o.x, y: o.y + l.pictureTop * l.scale), scale: l.pictureScale * l.scale)
+            // the first time, everything draws in as the problem opens; after that, only what's new, as the step moves
+            d.build(s, rig: self, chapter: m.chapter.hex, dark: dark, origin: CGPoint(x: o.x, y: o.y + l.pictureTop * l.scale), scale: l.pictureScale * l.scale,
+                    from: d.isEmpty ? m.openedAt + 0.15 : max(m.pictureAt, t))
         }
-        d.fade(grow: m.grow(at: t), fresh: m.fresh(at: t))
+        d.update(at: t, gone: m.gone(at: t))
     }
 }
 
-/// Draws a Sketch into the scene: the parts it already had in one group, the new ones in another that fades in.
+/// Draws a Sketch into the scene. Parts it already had stay; new ones draw themselves in, each a moment after the one
+/// before: a line strokes on from its start, a fill or a word fades in.
 @MainActor
 final class SketchDrawer {
     let root = Entity()
-    private let steady = Entity(), fresh = Entity()
     var key = ""
     private var ids: Set<String> = []
-    private var faded: (Double, Double) = (-1, -1)
+    var isEmpty: Bool { ids.isEmpty }
+    /// The parts still drawing in: when each starts, and for a line what it strokes along.
+    private struct Fresh {
+        let entity: ModelEntity
+        let start: Double
+        let line: (pts: [CGPoint], width: Double, dashed: Bool)?
+        var shown: Double = -1
+    }
+    private var fresh: [Fresh] = []
+    private var faded = -1.0
+    static let each = 0.025, length = 0.45, most = 0.9
 
-    init() { root.addChild(steady); root.addChild(fresh) }
-
-    func build(_ s: Sketch, rig: Rig, chapter: UInt32, dark: Bool, origin o: CGPoint, scale k: Double = 1) {
-        for e in [steady, fresh] { for c in Array(e.children) { c.removeFromParent() } }
-        let paper: UInt32 = dark ? 0x121211 : 0xF3F2EF, u = Paper.unit
+    func build(_ s: Sketch, rig: Rig, chapter: UInt32, dark: Bool, origin o: CGPoint, scale k: Double = 1, from start: Double) {
+        for c in Array(root.children) { c.removeFromParent() }
+        fresh = []
+        let paper: UInt32 = dark ? 0x121211 : 0xF3F2EF
         func colour(_ c: Sketch.Colour) -> UIColor {
             switch c {
             case .ink: rig.colours.ink
             case .ink2: rig.colours.ink2
             case .ink3: UIColor(hex: dark ? 0x878177 : 0x8C867D)
             case .chapter: UIColor(hex: chapter)
-            case .tint(let k): UIColor(hex: Ink.mix(paper, chapter, k))
+            case .tint(let f): UIColor(hex: Ink.mix(paper, chapter, f))
             case .paper: UIColor(hex: paper)
             case .line: rig.colours.lineStrong
             }
         }
         func P(_ p: CGPoint) -> CGPoint { CGPoint(x: o.x + p.x * k, y: o.y + p.y * k) }
-        var next: Set<String> = []
+        var next: Set<String> = [], order = 0
+        let newCount = s.items.filter { !ids.contains($0.id) }.count
+        // the whole drawing-in takes at most `most` seconds, however many parts are new
+        let gap = newCount > 1 ? min(Self.each, Self.most / Double(newCount)) : 0
         for (n, item) in s.items.enumerated() {
             next.insert(item.id)
-            let into = ids.contains(item.id) || ids.isEmpty ? steady : fresh
+            let isNew = !ids.contains(item.id)
             // later parts sit a hair above earlier ones, fills under lines under words
             let lift = Float(n) * 0.000002
+            var e: ModelEntity?, line: (pts: [CGPoint], width: Double, dashed: Bool)?
             switch item.kind {
             case .fill(let pts):
-                if let m = Rig.polygons([pts.map(P)]) { let e = ModelEntity(mesh: m, materials: [flat(colour(item.colour))]); e.position.y = 0.0016 + lift; into.addChild(e) }
+                if let m = Rig.polygons([pts.map(P)]) { e = ModelEntity(mesh: m, materials: [flat(colour(item.colour))]); e?.position.y = 0.0016 + lift }
             case .line(let pts, let w, let dashed):
-                let lines = dashed ? Rig.dashes([pts.map(P)]) : [pts.map(P)]
-                let segs = lines.flatMap { l in zip(l, l.dropFirst()).map { (SIMD2(Float($0.x / u), Float($0.y / u)), SIMD2(Float($1.x / u), Float($1.y / u))) } }
-                if let m = Rig.lines(segs, width: Float(w * k / u)) { let e = ModelEntity(mesh: m, materials: [flat(colour(item.colour))]); e.position.y = 0.0018 + lift; into.addChild(e) }
+                let mapped = pts.map(P)
+                if let m = Self.mesh(mapped, width: w * k, dashed: dashed, upTo: 1) { e = ModelEntity(mesh: m, materials: [flat(colour(item.colour))]); e?.position.y = 0.0018 + lift }
+                line = (mapped, w * k, dashed)
             case .text(let str, let p, let size, let weight, let anchor, let digits):
-                into.addChild(PaperText.label(str, PaperText.font(size * k, weight, digits: digits), colour(item.colour), at: P(p), anchor: anchor, y: 0.0024 + lift))
+                e = PaperText.label(str, PaperText.font(size * k, weight, digits: digits), colour(item.colour), at: P(p), anchor: anchor, y: 0.0024 + lift)
+            }
+            guard let e else { continue }
+            root.addChild(e)
+            if isNew {
+                fresh.append(Fresh(entity: e, start: start + Double(order) * gap, line: line))
+                order += 1
             }
         }
         ids = next
-        faded = (-1, -1)
+        faded = -1
     }
 
-    func fade(grow: Double, fresh f: Double) {
-        let g = snapped(grow, 30), n = snapped(f, 30)
-        guard (g, n) != faded else { return }
-        faded = (g, n)
-        root.isEnabled = g > 0
-        if g >= 1 { root.components.remove(OpacityComponent.self) } else { root.components.set(OpacityComponent(opacity: Float(g))) }
-        fresh.isEnabled = n > 0
-        if n >= 1 { fresh.components.remove(OpacityComponent.self) } else { fresh.components.set(OpacityComponent(opacity: Float(n))) }
+    /// A line's mesh, stroked on as far as `k` of its length.
+    static func mesh(_ pts: [CGPoint], width: Double, dashed: Bool, upTo k: Double) -> MeshResource? {
+        let part = k >= 1 ? pts : Self.partial(pts, k)
+        guard part.count > 1 else { return nil }
+        let lines = dashed ? Rig.dashes([part]) : [part], u = Paper.unit
+        let segs = lines.flatMap { l in zip(l, l.dropFirst()).map { (SIMD2(Float($0.x / u), Float($0.y / u)), SIMD2(Float($1.x / u), Float($1.y / u))) } }
+        return Rig.lines(segs, width: Float(width / u))
     }
+
+    func update(at t: Double, gone: Double) {
+        let g = snapped(gone, 30)
+        if g != faded {
+            faded = g
+            root.isEnabled = g > 0
+            if g >= 1 { root.components.remove(OpacityComponent.self) } else { root.components.set(OpacityComponent(opacity: Float(g))) }
+        }
+        guard !fresh.isEmpty else { return }
+        var still: [Fresh] = []
+        for var f in fresh {
+            let k = snapped(ease((t - f.start) / Self.length), 24)
+            if k != f.shown {
+                f.shown = k
+                f.entity.isEnabled = k > 0
+                if let l = f.line {
+                    // a line strokes on; its mesh is remade only as it grows
+                    if k > 0, let m = Self.mesh(l.pts, width: l.width, dashed: l.dashed, upTo: k) { f.entity.model?.mesh = m }
+                } else if k >= 1 { f.entity.components.remove(OpacityComponent.self) } else { f.entity.components.set(OpacityComponent(opacity: Float(k))) }
+            }
+            if k < 1 { still.append(f) }
+        }
+        fresh = still
+    }
+    /// The first `k` of a line, by length.
+    static func partial(_ pts: [CGPoint], _ k: Double) -> [CGPoint] {
+        guard pts.count > 1 else { return pts }
+        let total = zip(pts, pts.dropFirst()).reduce(0) { $0 + hypot($1.1.x - $1.0.x, $1.1.y - $1.0.y) }
+        var left = total * min(1, max(0, k)), out = [pts[0]]
+        for (a, b) in zip(pts, pts.dropFirst()) where left > 0.01 {
+            let len = hypot(b.x - a.x, b.y - a.y), f = len > 0 ? min(1, left / len) : 1
+            out.append(CGPoint(x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f))
+            left -= len
+        }
+        return out
+    }
+    /// Something is still drawing in.
+    var drawing: Bool { !fresh.isEmpty }
 }

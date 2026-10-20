@@ -16,14 +16,16 @@ enum ProblemLayout {
         guard let w = m as? WorkProblem else { return actions }
         let l = w.layout
         // under the line being worked when it's tall (a fraction's boxes), else the bottom row
-        var y = l.actions ?? (BarsPage.box.dy + l.height * Paper.unit - 80)
+        var y = l.actions ?? (BarsPage.box.dy + l.height * Paper.unit - 100)
         if let a = m.lesson.step.answer, a.choices == nil {
-            y = max(y, l.lineY + Double(MathLineView.layout(a.prompt, typed: m.lesson.typed, size: 28).h) * Paper.cell + 20)
+            // a tall line (a fraction's boxes) pushes Check down, a whole row at a time
+            let under = l.lineY + Double(MathLineView.layout(a.prompt, typed: m.lesson.typed, size: 28).h) * Paper.cell + 2 * Paper.cell
+            y = max(y, (under / (2 * Paper.cell)).rounded(.up) * 2 * Paper.cell)
         }
         return y
     }
 
-    enum Kind: Equatable { case main, nextProblem, showMe, reset, choice(Int), next, practise, again, skip, field(String) }
+    enum Kind: Equatable { case main, nextProblem, showMe, reset, choice(Int), next, practise, again, skip, field(String), key(String) }
     struct Block { let kind: Kind; let rect: CGRect }
 
     /// The blocks a problem shows now, in paper points: its choices, and Check (Show me and Start over are in the bar).
@@ -44,6 +46,13 @@ enum ProblemLayout {
             for it in lay.items { if case .box(let id) = it.kind {
                 out.append(Block(kind: .field(id), rect: R(Double(it.col) * c, (wp?.layout.lineY ?? 0) + Double(it.row) * c, Double(it.w) * c, Double(it.h) * c)))
             } }
+        }
+        // the keypad, once an answer box was tapped: the keys in the order a keypad has them
+        if let wp, wp.keypadOpen, !m.solved, let a = l.step.answer, a.choices == nil {
+            let keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "del"], size = 60.0, lay = wp.layout
+            for (i, key) in keys.enumerated() {
+                out.append(Block(kind: .key(key), rect: R(lay.keypadX - sx + Double(i % 3) * size, lay.keypadY + Double(i / 3) * size, size, size)))
+            }
         }
         let actions = actions(m), column = column(m)
         if !m.auto && !m.solved { out.append(Block(kind: .main, rect: R(0, actions, 180))) }
@@ -67,13 +76,13 @@ final class ProblemWords {
     let root = Entity()
     /// The question and its hint (they fade and rise in with each new step), the words that come in with the picture,
     /// the guide's note, the total, and the blocks.
-    let question = Entity(), shown = Entity(), still = Entity(), guide = Entity(), total = Entity(), blocks = Entity()
+    let question = Entity(), shown = Entity(), still = Entity(), guide = Entity(), total = Entity(), blocks = Entity(), keys = Entity()
     var key = ""
     /// Nothing is fading: skipped each frame until something changes.
     var idle = false
     private var faded: [ObjectIdentifier: Double] = [:]
 
-    init() { for e in [question, shown, still, guide, total, blocks] { root.addChild(e) } }
+    init() { for e in [question, shown, still, guide, total, blocks, keys] { root.addChild(e) } }
 
     func fade(_ e: Entity, _ k: Double) {
         let q = snapped(k, 40), id = ObjectIdentifier(e)
@@ -83,7 +92,7 @@ final class ProblemWords {
         if q >= 1 { e.components.remove(OpacityComponent.self) } else { e.components.set(OpacityComponent(opacity: Float(q))) }
     }
 
-    func clear() { for e in [question, shown, still, guide, total, blocks] { for c in Array(e.children) { c.removeFromParent() } }; faded = [:] }
+    func clear() { for e in [question, shown, still, guide, total, blocks, keys] { for c in Array(e.children) { c.removeFromParent() } }; faded = [:] }
 }
 
 extension Rig {
@@ -119,6 +128,9 @@ extension Rig {
             w.fade(w.guide, m.guide(at: t) * gone)
             w.fade(w.total, ease((t - m.wordsAt - 0.5) / 0.4) * gone)
             w.fade(w.blocks, m.busy ? 0.35 * s : s)
+            if let wp = m as? WorkProblem {
+                for (i, e) in w.keys.children.enumerated() { w.fade(e, ease((t - wp.keypadAt - Double(i) * 0.03) / 0.3) * gone) }
+            }
             w.idle = !m.animating && !m.busy && t - m.wordsAt > 1
         }
         for (id, w) in problemWords where !page.all.contains(where: { $0.id == id }) && !page.problems.contains(where: { $0.id == id }) {
@@ -130,7 +142,7 @@ extension Rig {
     private func wordsKey(_ m: any PageProblem, _ page: BarsPage, dark: Bool) -> String {
         let l = m.lesson
         return [l.typed.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: ","), l.active ?? "", m.label, m.intro ?? "", "\(m.howToButtons)", l.words.say, l.words.hint, l.words.action, "\(l.index)", "\(l.marks.count)", l.typed["c"] ?? "",
-                m.message.map { "\($0.text)\($0.ok)" } ?? "", "\(m.solved)", "\(page.current === m)", "\(l.helps)", "\(dark)",
+                m.message.map { "\($0.text)\($0.ok)" } ?? "", "\(m.solved)", "\((m as? WorkProblem)?.keypadOpen ?? false)", "\(page.current === m)", "\(l.helps)", "\(dark)",
                 l.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }.joined()].joined(separator: "|")
     }
 
@@ -237,6 +249,19 @@ extension Rig {
                 if l.typed["c"] == String(i) { stroke = chapter; text = chapter; fill = UIColor(hex: Ink.mix(surface, m.chapter.hex, 0.12)); lift = 0.0002 }
             case .reset: break
             case .field(let id): if l.active == id { stroke = ink }
+            case .key: break
+            }
+            if case .key(let key) = b.kind {
+                // each key is its own entity, so the keypad draws in a key at a time
+                let e = Entity()
+                cellBlock(b.rect, fill: fill, stroke: stroke, lift: lift, width: 1.5 * k).forEach { e.addChild($0) }
+                if key == "del" {
+                    if let a = PaperText.icon("backspace", ink, in: CGRect(x: b.rect.midX - 13 * k, y: b.rect.midY - 13 * k, width: 26 * k, height: 26 * k)) { e.addChild(a) }
+                } else {
+                    e.addChild(PaperText.label(key, PaperText.font(30 * k, .medium, digits: true), ink, at: CGPoint(x: b.rect.midX, y: b.rect.midY), anchor: .center))
+                }
+                w.keys.addChild(e)
+                continue
             }
             cellBlock(b.rect, fill: fill, stroke: stroke, lift: lift, width: 1.5 * k).forEach { w.blocks.addChild($0) }
             switch b.kind {
@@ -257,6 +282,7 @@ extension Rig {
                     w.blocks.addChild(PaperText.label(t.replacingOccurrences(of: "-", with: "−"), PaperText.font(26 * k, .medium, digits: true), ink,
                                                       at: CGPoint(x: b.rect.midX, y: b.rect.midY), anchor: .center, y: 0.0026))
                 }
+            case .key: break
             }
         }
     }
@@ -264,52 +290,56 @@ extension Rig {
     /// A lesson worked in typed steps (WorkProblem): the problem at the top (a story, then the sum), the step under
     /// the picture (its words and hint), the line being worked (its boxes are blocks), and what a miss says.
     private func buildWork(_ w: ProblemWords, _ m: WorkProblem, current: Bool, dark: Bool) {
+        // on the grid (G 19 Oct): every line of words fills whole rows of squares (two squares tall), every number one
+        // square per digit; positions are whole squares from the origin, and a big problem is drawn a whole k times bigger
         let l = m.lesson, words = l.words, o = m.contentOrigin, lay = m.layout, k = lay.scale, col = lay.column * k
-        let ink = colours.ink, ink2 = colours.ink2, chapter = UIColor(hex: m.chapter.hex), right = UIColor(hex: dark ? 0x3CCF8E : 0x178A57)
+        let ink = colours.ink, ink2 = colours.ink2, chapter = UIColor(hex: m.chapter.hex)
         func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x * k, y: o.y + y * k) }
         func F(_ size: CGFloat, _ weight: UIFont.Weight = .regular) -> UIFont { PaperText.font(size * k, weight) }
-        let sx = lay.stepX
-
-        // the problem: a story above it when it's told as one, then the sum as written on paper
-        var top = WorkProblem.problemY
-        if l.story, let story = l.spec.story?(l.numbers) {
-            let sf = F(20), lh = Double(sf.lineHeight) / k, lines = Array(PaperText.wrap(story, sf, width: col).prefix(3))
-            let y0 = -136.0
-            for (i, line) in lines.enumerated() { w.shown.addChild(PaperText.label(line, sf, ink, at: P(0, y0 + Double(i) * lh), anchor: .topLeading)) }
-            top = max(top, y0 + Double(lines.count) * lh + 6)
+        let row = 2 * Paper.cell, sx = lay.stepX
+        /// Words in rows of squares from `top`, each line centred in its row; returns how many rows.
+        @discardableResult func rows(_ text: String, _ f: UIFont, _ c: UIColor, x: Double, top: Double, width: Double, max: Int, into e: Entity) -> Int {
+            let lines = Array(PaperText.wrap(text, f, width: width).prefix(max))
+            for (i, line) in lines.enumerated() { e.addChild(PaperText.label(line, f, c, at: P(x, top + (Double(i) + 0.5) * row), anchor: UnitPoint(x: 0, y: 0.5))) }
+            return lines.count
         }
-        mathLine(l.spec.display(l.numbers), at: P(0, top), typed: [:], into: w.shown, size: 40 * k)
 
-        // the step, under the picture: what to do now (a story's step asks only "Pick what to do"), and its hint
+        // the problem: the sum, a digit to every two squares, and the story beside it when it's told as one
+        let display = l.spec.display(l.numbers), top = WorkProblem.problemY
+        mathLine(display, at: P(0, top), typed: [:], into: w.shown, size: 40 * k, cell: 2 * Paper.cell * k)
+        if l.story, let story = l.spec.story?(l.numbers) {
+            let x = Double(MathLineView.layout(display, size: 28).w) * 2 * Paper.cell + 2 * row
+            rows(story, F(20), ink, x: x, top: top, width: (lay.width * Paper.unit - 80 - x) * k, max: 2, into: w.shown)
+        }
+
+        // the step: what to do now (a story's step asks only "Pick what to do"), and the hint under it
         let storyStep = l.story && l.step.answer?.choices != nil
-        let q = F(28, .medium), hint = F(20), sy = lay.stepY
         let say = m.intro ?? (storyStep ? words.hint : words.say)
-        let sayLines = PaperText.block(say, q, ink, width: col, topLeft: P(sx, sy - 20), maxLines: 2)
-        sayLines.forEach { w.question.addChild($0) }
-        // the hint under it: always when done together; on their own only after a miss; on a step missed before, what
-        // they were told then, in the chapter's colour; never in a test
+        let said = rows(say, F(28, .medium), ink, x: sx, top: lay.stepY, width: col, max: m.intro != nil ? 5 : 2, into: w.question)
+        // the hint: always when done together; on their own only after a miss; on a step missed before, what they
+        // were told then, in the chapter's colour; never in a test
         if m.intro == nil, !storyStep, l.step.answer?.choices == nil {
             let (text, c): (String?, UIColor) = m.onFocus ? (m.focus?.said, chapter) : (l.guided || (l.helps && l.misses > 0)) ? (words.hint, ink2) : (nil, ink2)
-            if let text { PaperText.block(text, hint, c, width: col, topLeft: P(sx, sy - 20 + Double(sayLines.count) * Double(q.lineHeight) / k + 2), maxLines: 2).forEach { w.question.addChild($0) } }
+            if let text { rows(text, F(20), c, x: sx, top: lay.stepY + Double(said) * row, width: col, max: 1, into: w.question) }
         }
 
-        // the line being worked, its boxes drawn as blocks; or, once solved, nothing more to write
+        // the line being worked, a digit to a square, its boxes drawn as blocks
         if let a = l.step.answer, a.choices == nil, m.intro == nil {
             mathLine(a.prompt, at: P(sx, lay.lineY), typed: l.typed, into: w.still, size: 28 * k)
         }
-        // what a miss (or Show me) says: beside Check, on its row
+        // what a miss (or Show me) says: beside Check on its row, or under it
         if let msg = m.message {
             let ay = ProblemLayout.actions(m)
-            let (at, width) = lay.messageBelow ? (P(sx, ay + 60), col) : (P(sx + 260, ay - 4), col - 260 * k)
-            PaperText.block(msg.text, F(20, .medium), msg.ok ? ink2 : chapter, width: width, topLeft: at, maxLines: 3).forEach { w.still.addChild($0) }
+            let (x, y, width) = lay.messageBelow ? (sx, ay + row + Paper.cell, col) : (sx + 240, ay, col - 240 * k)
+            rows(msg.text, F(20, .medium), msg.ok ? ink2 : chapter, x: x, top: y, width: width, max: 3, into: w.still)
         }
-        _ = right
     }
 
     /// A line of math written on the paper's cells (MathLineView's layout), its boxes left to the blocks.
-    func mathLine(_ line: MathLine, at p: CGPoint, typed: [String: String], into e: Entity, size: CGFloat) {
+    func mathLine(_ line: MathLine, at p: CGPoint, typed: [String: String], into e: Entity, size: CGFloat, cell: Double? = nil) {
+        // a digit to a square: `cell` is the square's size (the paper's own, unless written bigger)
         let lay = MathLineView.layout(line, typed: typed, size: 28), c = Paper.cell, ink = colours.ink, ink2 = colours.ink2
-        let k = size / 28
+        let k = (cell ?? Double(size) / 28 * c) / c
         for it in lay.items {
             let x = p.x + Double(it.col) * c * k, y = p.y + Double(it.row) * c * k
             switch it.kind {

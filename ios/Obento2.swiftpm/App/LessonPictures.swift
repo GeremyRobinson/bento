@@ -125,26 +125,40 @@ enum LessonPictures {
     /// The school work runs down beside it, and the step's words under that. Too big for the screen, everything but the
     /// squares is drawn bigger and the camera steps back.
     static func multiplyLayout(_ n: Numbers) -> WorkProblem.Layout {
-        let a = n["a"] ?? 12, b = n["b"] ?? 12
+        let g = geometry(n)
         var l = WorkProblem.Layout()
-        l.scale = (max(1, a * Paper.cell / 600, (b * Paper.cell + Paper.cell) / 560) * 4).rounded(.up) / 4
+        l.scale = g.k
         l.pictureTop = 0; l.pictureScale = 1
-        l.stepX = 700; l.stepY = 320; l.lineY = 400; l.column = 520; l.actions = 470; l.messageBelow = true
+        l.stepX = g.colX; l.stepY = g.stepY; l.lineY = g.stepY + 120; l.column = g.keyX - g.colX - 40
+        l.actions = g.stepY + 200; l.messageBelow = true
+        l.keypadX = g.keyX; l.keypadY = g.stepY
+        // the box (for the page's layout) holds it all, in whole blocks
+        l.width = ((g.keyX + 180 + 80) * g.k / Paper.unit).rounded(.up) / g.k
+        l.height = ((max(g.ry + g.h * Paper.cell / g.k + 120, g.stepY + 380) + 200) * g.k / Paper.unit).rounded(.up) / g.k
         return l
     }
 
-    static func multiplyTrue(_ s: inout Sketch, _ m: WorkProblem, a: Int, b: Int, split: Bool, strip: Int, found: Int, sum: Bool) {
-        let ps = MultiplyTwoDigit.parts(b), products = ps.map { a * $0 }, k = m.scale, o = m.contentOrigin
-        // one square of the paper, in the sketch's units (it's drawn k times bigger), and the rectangle's corner on a
-        // line of the grid
+    /// Where Multiply's parts sit, in squares from the problem's origin (before k): the rectangle's corner, the school
+    /// work's column, the step under the work, and the keypad beside the step. k is 1, or 2 when the rectangle is too
+    /// big to read at the camera's distance (whole steps only, so everything stays on the grid).
+    static func geometry(_ n: Numbers) -> (k: Double, rx: Double, ry: Double, h: Double, w: Double, colX: Double, stepY: Double, keyX: Double) {
+        let a = n["a"] ?? 12, b = n["b"] ?? 12
+        let k: Double = a > 50 || b > 60 ? 2 : 1
+        // the rectangle's squares are the paper's; in the problem's units (k times bigger) each is 20 / k
         let c = Paper.cell / k
-        func snap(_ v: Double) -> Double { (v / Paper.cell).rounded() * Paper.cell }
-        let rx = (snap(o.x + 60 * k) - o.x) / k, ry = (snap(o.y + 50 * k) - o.y) / k, h = Double(a) * c
+        let rx = 80.0, ry = 40.0, w = (b + 1) * c
+        let colX = ((rx + w + 80) / 40).rounded(.up) * 40
+        return (k, rx, ry, a, w, colX, 280, colX + 400)
+    }
+
+    static func multiplyTrue(_ s: inout Sketch, _ m: WorkProblem, a: Int, b: Int, split: Bool, strip: Int, found: Int, sum: Bool) {
+        let ps = MultiplyTwoDigit.parts(b), products = ps.map { a * $0 }, g = geometry(m.lesson.numbers)
+        // one square of the paper, in the problem's units (it's drawn k times bigger)
+        let c = Paper.cell / g.k, rx = g.rx, ry = g.ry, h = Double(a) * c
         let widths = split ? ps.map { Double($0) * c } : [Double(b) * c]
-        // lines grow with the problem, like its words, so the squares still show when the camera steps back
         let thin = 1.0, strong = 2.0
-        // the side, down the left
-        s.text("side", String(a), at: P(rx - 30, ry + min(h / 2, 200)), size: 24, .chapter)
+        // its height down the side, on the line across its middle
+        s.text("side", String(a), at: P(rx - 40, ry + Double(a / 2) * c), size: 24, .chapter)
         var x = rx
         for (i, w) in widths.enumerated() {
             let lit = split && strip == i + 1, cols = Int((w / c).rounded()), id = "s\(i)\(split)"
@@ -166,31 +180,47 @@ enum LessonPictures {
             zig("c", every: 1, lit ? .tint(0.6) : .tint(0.42), thin)
             zig("t", every: 10, .tint(lit ? 1 : 0.8), strong)
             s.box(id + "o", R(x, ry, w, h), .chapter, width: lit ? 3 : 2)
+            // its width over it, in the row of squares above
             s.text(id + "top", split ? String(ps[i]) : String(b), at: P(x + w / 2, ry - 20), size: 24, lit ? .chapter : .ink2)
             if split, i < found {
-                let label = String(products[i]), fits = w > PaperText.width(label, PaperText.font(28 * k, .medium, digits: true)) / k + 12
-                if fits { s.fill("pf\(i)", R(x + w / 2 - 40, ry + min(h / 2, 200) - 20, 80, 40), .paper) }
-                s.text("p\(i)", label, at: P(x + w / 2, fits ? ry + min(h / 2, 200) : ry + h + 22), size: 28, .ink)
+                // its product on a plate of whole squares in its middle, or under it when it's too narrow
+                let label = String(products[i]), plate = 4 * c
+                if cols >= 5 {
+                    let px = x + Double((cols - 4) / 2) * c, py = ry + Double(max(0, a / 2 - 1)) * c
+                    s.fill("pf\(i)", R(px, py, plate, 2 * c), .paper)
+                    s.text("p\(i)", label, at: P(px + plate / 2, py + c), size: 24, .ink)
+                } else {
+                    s.text("p\(i)", label, at: P(x + w / 2, ry + h + 20), size: 24, .ink)
+                }
             }
             x += w + (split ? c : 0)
         }
-        if sum { bracket(&s, "sum", x0: rx, x1: x - (split ? c : 0), y: ry + h + 56, "\(products.map(String.init).joined(separator: " + ")) = \(products.reduce(0, +))") }
+        if sum {
+            // a bracket a square deep under it all, and the sum in the row under that
+            let x1 = x - (split ? c : 0), y = ry + h + (found > 0 && widths.contains { Int(($0 / c).rounded()) < 5 } ? 60 : 40)
+            s.line("sum", [P(rx, y - 20), P(rx, y), P(x1, y), P(x1, y - 20)], .chapter, width: 2)
+            s.text("sumw", "\(products.map(String.init).joined(separator: " + ")) = \(products.reduce(0, +))", at: P(rx, y + 20), size: 22, .chapter, anchor: UnitPoint(x: 0, y: 0.5))
+        }
 
-        // the work as school writes it, down the right
-        let right = 920.0, cell = 30.0
-        s.digits("wa", String(a), right: right, y: 30, size: 32, cell: cell)
-        s.text("wx", "×", at: P(right - 4 * cell - 8, 74), size: 30)
-        s.digits("wb", String(b), right: right, y: 74, size: 32, cell: cell)
-        s.line("wr1", [P(right - 5 * cell, 100), P(right + 4, 100)], .ink, width: 2)
+        // the work as school writes it, a digit to every two squares, down the column beside it
+        let sq = 40.0, right = g.colX + 5 * sq
+        func digits(_ id: String, _ text: String, row: Int, _ colour: Sketch.Colour = .ink) {
+            for (j, ch) in text.reversed().enumerated() {
+                s.text("\(id)\(j)", String(ch), at: P(right - (Double(j) + 0.5) * sq, ry + (Double(row) + 0.5) * sq), size: 30, colour)
+            }
+        }
+        digits("wa", String(a), row: 0)
+        s.text("wx", "×", at: P(right - 4.5 * sq, ry + 1.5 * sq), size: 28)
+        digits("wb", String(b), row: 1)
+        s.line("wr1", [P(right - 5 * sq, ry + 2 * sq), P(right, ry + 2 * sq)], .ink, width: 2)
         for (i, pr) in products.enumerated() where i < found {
-            let y = 128 + Double(i) * 44
-            s.digits("wp\(i)", String(pr), right: right, y: y, size: 32, i + 1 == strip ? .chapter : .ink, cell: cell)
-            s.text("wl\(i)", "\(a) × \(ps[i])", at: P(right + 16, y), size: 18, .ink3, anchor: UnitPoint(x: 0, y: 0.5))
+            digits("wp\(i)", String(pr), row: 2 + i, i + 1 == strip ? .chapter : .ink)
+            s.text("wl\(i)", "\(a) × \(ps[i])", at: P(right + 20, ry + (Double(2 + i) + 0.5) * sq), size: 18, .ink3, anchor: UnitPoint(x: 0, y: 0.5))
         }
         if sum {
-            let y = 128 + Double(products.count) * 44
-            s.line("wr2", [P(right - 5 * cell, y - 22), P(right + 4, y - 22)], .ink, width: 2)
-            s.digits("wt", String(products.reduce(0, +)), right: right, y: y + 4, size: 32, .chapter, cell: cell)
+            let r = 2 + products.count
+            s.line("wr2", [P(right - 5 * sq, ry + Double(r) * sq), P(right, ry + Double(r) * sq)], .ink, width: 2)
+            digits("wt", String(products.reduce(0, +)), row: r, .chapter)
         }
     }
 

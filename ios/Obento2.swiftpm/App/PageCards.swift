@@ -61,14 +61,16 @@ extension Rig {
                 add(e, Self.fills([t]), chapterC, 0.002)
                 e.addChild(PaperText.label(tag, PaperText.font(14, .semibold), .white, at: CGPoint(x: t.midX, y: t.midY), anchor: .center))
             }
-            e.addChild(PaperText.label(c.title, PaperText.font(22, .medium), grey, at: CGPoint(x: r.minX + 20, y: r.minY + 20), anchor: .topLeading))
+            // on the grid: the name in the top row of squares, the problem a digit to every two squares under it, and
+            // what's next in the bottom row
+            e.addChild(PaperText.label(c.title, PaperText.font(22, .medium), grey, at: CGPoint(x: r.minX + 20, y: r.minY + 40), anchor: UnitPoint(x: 0, y: 0.5)))
             if let d = c.display {
-                mathLine(d, at: CGPoint(x: r.minX + 20, y: r.minY + 70), typed: [:], into: e, size: 44)
+                mathLine(d, at: CGPoint(x: r.minX + 20, y: r.minY + 80), typed: [:], into: e, size: 40, cell: 40)
             } else {
-                e.addChild(PaperText.label("12 problems", PaperText.font(40, .medium), c.state == .locked ? grey : ink, at: CGPoint(x: r.minX + 20, y: r.minY + 100), anchor: UnitPoint(x: 0, y: 0.5)))
+                e.addChild(PaperText.label("12 problems", PaperText.font(40, .medium), c.state == .locked ? grey : ink, at: CGPoint(x: r.minX + 20, y: r.minY + 140), anchor: UnitPoint(x: 0, y: 0.5)))
             }
             let lineColour = c.state == .done || c.state == .now ? chapterC : c.state == .missed ? ink : ink2
-            PaperText.block(c.line, PaperText.font(22, .medium), lineColour, width: r.width - 40, topLeft: CGPoint(x: r.minX + 20, y: r.maxY - 64), maxLines: 2).forEach { e.addChild($0) }
+            e.addChild(PaperText.label(c.line, PaperText.font(22, .medium), lineColour, at: CGPoint(x: r.minX + 20, y: r.maxY - 40), anchor: UnitPoint(x: 0, y: 0.5)))
             cardsRoot.addChild(e)
         }
     }
