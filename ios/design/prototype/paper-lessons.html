@@ -29,6 +29,12 @@ body.decimals { --chapter: #D6407F; --tint: rgba(214, 64, 127, .2); --tint-stron
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) body.decimals { --chapter: #FF7AB0; --tint: rgba(255, 122, 176, .22); --tint-strong: rgba(255, 122, 176, .42) } }
 :root[data-theme="dark"] body.decimals { --chapter: #FF7AB0; --tint: rgba(255, 122, 176, .22); --tint-strong: rgba(255, 122, 176, .42) }
 
+body.volume { --chapter: #B7791F; --tint: rgba(197, 138, 27, .2); --tint-strong: rgba(197, 138, 27, .4) }
+:root { --cube-top: #F7E3B5; --cube-front: #F0CD80; --cube-side: #E5B95E; --cube-edge: #A8741A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --cube-top: #8A6A2A; --cube-front: #74561E; --cube-side: #5F4516; --cube-edge: #E9B95A; }
+  :root:not([data-theme="light"]) body.volume { --chapter: #F0B341; --tint: rgba(240, 179, 65, .22); --tint-strong: rgba(240, 179, 65, .42) } }
+:root[data-theme="dark"] { --cube-top: #8A6A2A; --cube-front: #74561E; --cube-side: #5F4516; --cube-edge: #E9B95A; }
+:root[data-theme="dark"] body.volume { --chapter: #F0B341; --tint: rgba(240, 179, 65, .22); --tint-strong: rgba(240, 179, 65, .42) }
 html, body { height: 100%; }
 body { background: var(--paper); color: var(--ink); font-family: var(--round); overflow: hidden; touch-action: none;
   -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -84,8 +90,11 @@ svg text { font-family: var(--round); font-variant-numeric: tabular-nums; }
       <path d="M-5 5L5 -5M0 20L20 0M15 25L25 15" stroke="var(--chapter)" stroke-width="1.5" opacity=".55"/>
     </pattern>
   </defs>
-  <rect x="-20000" y="-20000" width="40000" height="40000" fill="url(#grid)"/>
-  <g id="scene"></g>
+  <g id="paperg">
+    <rect x="-20000" y="-20000" width="40000" height="40000" fill="url(#grid)"/>
+    <g id="scene"></g>
+  </g>
+  <g id="upright"></g>
 </svg>
 
 <nav id="bar" aria-label="Lessons">
@@ -109,7 +118,9 @@ const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(
 
 let items = [], drawn = new Set();
 // one thing on the paper: its key (a new key draws in), its tag and attributes in paper units, how it draws in
-function put(k, tag, a, kind = "fade", text) { items.push({ k, tag, a, kind, text }); }
+// UP: what's put now stands up off the paper or faces the child (drawn over the tilting paper, never tilted)
+let UP = false;
+function put(k, tag, a, kind = "fade", text) { items.push({ k, tag, a, kind, text, up: UP }); }
 const sq = n => n * SQ;
 function line(k, x1, y1, x2, y2, o = {}) {
   put(k, "line", { x1: sq(x1), y1: sq(y1), x2: sq(x2), y2: sq(y2), stroke: o.c || "var(--ink)", "stroke-width": o.w || 1.5,
@@ -172,10 +183,11 @@ function answerBox(k, x, y, cells, value, state) {
   put(`${k}hit`, "rect", { x: sq(x), y: sq(y), width: sq(cells * 2), height: sq(2), fill: "transparent", "data-act": "type" }, "none");
 }
 
+let raf = 0;
 function render() {
   items = [];
   lesson.scene();
-  const next = new Set(); let n = 0, out = "";
+  const next = new Set(); let n = 0, out = "", outUp = "";
   for (const it of items) {
     next.add(it.k);
     const fresh = !drawn.has(it.k) && it.kind !== "none", a = { ...it.a };
@@ -184,9 +196,16 @@ function render() {
       a.style = `animation-delay:${Math.min(n++ * 0.035, 1.2).toFixed(3)}s;` + (a.style || "");
     }
     const attrs = Object.entries(a).filter(([, v]) => v != null).map(([k, v]) => `${k}="${esc(v)}"`).join(" ");
-    out += `<${it.tag} ${attrs}>${it.text != null ? esc(it.text) : ""}</${it.tag}>`;
+    const el = `<${it.tag} ${attrs}>${it.text != null ? esc(it.text) : ""}</${it.tag}>`;
+    if (it.up) outUp += el; else out += el;
   }
   sceneEl.innerHTML = out;
+  document.getElementById("upright").innerHTML = outUp;
+  const m = lesson.paperMatrix && lesson.paperMatrix();
+  if (m) document.getElementById("paperg").setAttribute("transform", `matrix(${m.join(" ")})`);
+  else document.getElementById("paperg").removeAttribute("transform");
+  // a lesson that's moving (the paper tilting, cubes rising) draws again next frame
+  if (lesson.animating && lesson.animating() && !raf) raf = requestAnimationFrame(() => { raf = 0; render(); });
   drawn = next;
   const [i, of] = lesson.progress();
   document.getElementById("stepname").textContent = `Step ${Math.min(i + 1, of)} of ${of}`;
@@ -246,7 +265,7 @@ svg.addEventListener("pointerup", e => {
 });
 function act(a) {
   if (a === "type") { openKeys(); return; }
-  if (a === "next") { start(lesson.id); return; }
+  if (a === "next") { leave(); return; }
   lesson.act(a);
   if (!lesson.typing) keys.blur(); else openKeys();
   render(); frame(lesson.frame());
@@ -505,6 +524,182 @@ function fractionsLesson() {
           block("next", 0, r + 6, 10, "Next problem", "next");
         }
       }
+    },
+  };
+  return L;
+}
+
+
+// ---------- Volume of a box (3D) ----------
+// As Unit cubes: one cube is one block (5 × 5 squares) on the paper. Flat, the child covers the box's floor, the
+// squares counting; then the paper tilts and the floor rises into the first layer of cubes, the box's full height
+// dashed; the child drags up to stack the layers, each counted on its front; then writes it. Words stay upright,
+// facing the child; the paper lies flat again before the next problem.
+function volumeLesson() {
+  const Lx = rnd(2, 6), Wy = rnd(2, 4), H = rnd(2, 4), base = Lx * Wy, V = base * H, B = 5;
+  const ox = 0, oy = 0, PHI = 25 * Math.PI / 180, THETA = 55 * Math.PI / 180;
+  const ease = u => u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+  const P = { x: ox + Lx * B / 2, y: oy + Wy * B / 2 };
+  const L = {
+    id: "volume", maxZoom: 1.25, stage: "floor", covered: new Set(), layers: 0, riseAt: [], tiltFrom: 0, tiltTo: 0, tiltAt: -1e9,
+    typed: "", typing: false, msg: null, verdict: null, grabbed: false,
+    progress() { return [{ floor: 0, build: 1, write: 2, done: 3 }[this.stage], 3]; },
+    t() { const u = Math.min(1, (performance.now() - this.tiltAt) / 1100); return this.tiltFrom + (this.tiltTo - this.tiltFrom) * ease(Math.max(0, u)); },
+    animating() { const now = performance.now(); return now - this.tiltAt < 1200 || this.riseAt.some(a => now - a < 450 && now - a > -1500); },
+    tiltTo1(to, after) { this.tiltFrom = this.t(); this.tiltTo = to; this.tiltAt = performance.now(); if (after) setTimeout(after, 1150); },
+    // a point on (or above) the paper, as it's seen now: the paper turned φ and tipped back θ about the floor's middle
+    proj(x, y, z, t = this.t()) {
+      const f = PHI * t, th = THETA * t, c = Math.cos(f), s = Math.sin(f), dx = x - P.x, dy = y - P.y;
+      return { x: P.x + c * dx - s * dy, y: P.y + (s * dx + c * dy) * Math.cos(th) - z * Math.sin(th) };
+    },
+    paperMatrix() {
+      const t = this.t(); if (t <= 0) return null;
+      const f = PHI * t, th = THETA * t, c = Math.cos(f), s = Math.sin(f), a = c, b = s * Math.cos(th), cc = -s, d = c * Math.cos(th);
+      const px = sq(P.x), py = sq(P.y);
+      return [a, b, cc, d, px - (a * px + cc * py), py - (b * px + d * py)];
+    },
+    // the box's outline as seen at tilt t: its 8 corners' bounds (just the floor before it rises)
+    bounds(t, high) {
+      let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+      for (const x of [ox, ox + Lx * B]) for (const y of [oy, oy + Wy * B]) for (const z of high ? [0, H * B] : [0]) {
+        const q = this.proj(x, y, z, t); x0 = Math.min(x0, q.x); y0 = Math.min(y0, q.y); x1 = Math.max(x1, q.x); y1 = Math.max(y1, q.y);
+      }
+      return { x0, y0, x1, y1 };
+    },
+    frame() {
+      const b = this.bounds(this.stage === "floor" ? 0 : 1, this.stage !== "floor");
+      return { x: b.x0 - 8, y: b.y0 - 7, w: Math.max(56, b.x1 - b.x0 + 16), h: b.y1 - b.y0 + (this.stage === "floor" ? 10 : 17) };
+    },
+    cell(q) {
+      const i = Math.floor((q.x - ox) / B), j = Math.floor((q.y - oy) / B);
+      return i >= 0 && i < Lx && j >= 0 && j < Wy ? j * Lx + i : null;
+    },
+    cover(q) {
+      const c = this.cell(q); if (c == null) return false;
+      this.covered.add(c); this.msg = null; return true;
+    },
+    floorDone() {
+      if (this.stage !== "floor" || this.covered.size < base) return;
+      this.stage = "build";
+      // the paper tips back, then the floor's squares rise into the first layer
+      setTimeout(() => { this.tiltTo1(1); if (!this.layers) { this.layers = 1; this.riseAt[0] = performance.now() + 1050; } render(); frame(this.frame()); }, 450);
+    },
+    tap(q) {
+      if (this.stage === "floor") { const ok = this.cover(q); this.floorDone(); return ok; }
+      if (this.stage === "build" && this.t() > 0.95 && this.layers < H) { this.addLayers(this.layers + 1); this.checkBuilt(); return true; }
+      return false;
+    },
+    grab(q) {
+      if (this.stage === "floor") return this.cover(q);
+      if (this.stage === "build" && this.t() > 0.95) { this.grabbed = true; this.y0 = q.y; this.l0 = this.layers; this.msg = null; return true; }
+      return false;
+    },
+    drag(q) {
+      if (this.stage === "floor") { this.cover(q); return; }
+      if (!this.grabbed) return;
+      // a layer for every cube's height the finger moves up (as it's seen, tipped back)
+      const per = B * Math.sin(THETA), n = Math.max(1, Math.min(H, this.l0 + Math.round((this.y0 - q.y) / per)));
+      this.addLayers(n);
+    },
+    addLayers(n) {
+      const now = performance.now();
+      for (let k = this.layers; k < n; k++) this.riseAt[k] = now + (k - this.layers) * 120;
+      this.layers = n;
+    },
+    release() {
+      if (this.stage === "floor") { this.floorDone(); return; }
+      this.grabbed = false; this.checkBuilt();
+    },
+    checkBuilt() {
+      if (this.layers >= H) { this.stage = "write"; this.typing = true; this.msg = null; }
+      else this.msg = `Keep going. The box is ${H} cm tall.`;
+    },
+    type(v) { this.typed = v; this.verdict = null; this.msg = null; },
+    act(a) {
+      if (a !== "check" || this.stage !== "write") return;
+      if (!this.typed) { this.msg = "Type how many cubes first."; return; }
+      if (+this.typed === V) { this.stage = "done"; this.typing = false; this.verdict = "right"; }
+      else { this.verdict = "wrong"; this.msg = +this.typed === Lx + Wy + H ? `That adds the sides. Count the layers: ${H} layers of ${base}.` : `Count the layers: ${H} layers of ${base}.`; }
+    },
+    leave(then) { this.typing = false; this.tiltTo1(0, then); render(); },
+    scene() {
+      const st = this.stage, t = this.t(), now = performance.now();
+      // MARK: flat on the paper: the floor, its squares covered and counted
+      if (t < 0.02) {
+        rect("floor", ox, oy, Lx * B, Wy * B, { c: "var(--cube-edge)" });
+        for (let i = 1; i < Lx; i++) line(`fx${i}`, ox + i * B, oy, ox + i * B, oy + Wy * B, { c: "var(--cube-edge)", w: 1 });
+        for (let j = 1; j < Wy; j++) line(`fy${j}`, ox, oy + j * B, ox + Lx * B, oy + j * B, { c: "var(--cube-edge)", w: 1 });
+        [...this.covered].forEach((c, n) => {
+          const i = c % Lx, j = Math.floor(c / Lx);
+          rect(`cv${c}`, ox + i * B, oy + j * B, B, B, { fill: "var(--cube-top)" });
+          rect(`cvo${c}`, ox + i * B, oy + j * B, B, B, { c: "var(--cube-edge)" });
+          text(`cvn${c}`, n + 1, ox + (i + .5) * B, oy + (j + .5) * B, "small", { c: "var(--ink)" });
+        });
+      }
+      UP = true;
+      const b = this.bounds(t, st !== "floor");
+      // MARK: standing up: the box's full height dashed, the cubes layer by layer, each layer counted on its front
+      if (t >= 0.02) {
+        const corner = (x, y, z) => { const q = this.proj(x, y, z, t); return `${sq(q.x)},${sq(q.y)}`; };
+        const X = [ox, ox + Lx * B], Y = [oy, oy + Wy * B], Z = [0, H * B];
+        if (st === "build") {
+          const edges = [[0,0,0,1,0,0],[0,1,0,1,1,0],[0,0,0,0,1,0],[1,0,0,1,1,0],[0,0,1,1,0,1],[0,1,1,1,1,1],[0,0,1,0,1,1],[1,0,1,1,1,1],[0,0,0,0,0,1],[1,0,0,1,0,1],[0,1,0,0,1,1],[1,1,0,1,1,1]];
+          edges.forEach((e, k) => { const a = this.proj(X[e[0]], Y[e[1]], Z[e[2]], t), c2 = this.proj(X[e[3]], Y[e[4]], Z[e[5]], t);
+            put(`wire${k}`, "line", { x1: sq(a.x), y1: sq(a.y), x2: sq(c2.x), y2: sq(c2.y), stroke: "var(--ink3)", "stroke-width": 1.5, "stroke-dasharray": "6 6" }, "none"); });
+        }
+        const f = PHI * t, th = THETA * t, cubes = [];
+        for (let k = 0; k < this.layers; k++) {
+          const u = Math.max(0, Math.min(1, (now - (this.riseAt[k] ?? -1e9)) / 400)), h = ease(u);
+          if (h <= 0) continue;
+          for (let j = 0; j < Wy; j++) for (let i = 0; i < Lx; i++) {
+            const cx = ox + (i + .5) * B - P.x, cy = oy + (j + .5) * B - P.y, zc = (k + h / 2) * B;
+            cubes.push({ i, j, k, h, d: (cx * Math.sin(f) + cy * Math.cos(f)) * Math.sin(th) + zc * Math.cos(th) });
+          }
+        }
+        cubes.sort((p, q) => p.d - q.d);
+        for (const c of cubes) {
+          const x0 = ox + c.i * B, x1 = x0 + B, y0 = oy + c.j * B, y1 = y0 + B, z0 = c.k * B, z1 = (c.k + c.h) * B, id = `${c.i}_${c.j}_${c.k}`;
+          const face = (n, pts, fill) => put(`${n}${id}`, "polygon", { points: pts.map(p => corner(...p)).join(" "), fill, stroke: "var(--cube-edge)", "stroke-width": 1.5, "stroke-linejoin": "round" }, "none");
+          face("top", [[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]], "var(--cube-top)");
+          face("front", [[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]], "var(--cube-front)");
+          face("side", [[x1, y0, z0], [x1, y1, z0], [x1, y1, z1], [x1, y0, z1]], "var(--cube-side)");
+        }
+        // each layer's count on its front, once it has risen
+        for (let k = 0; k < this.layers; k++) {
+          if (now - (this.riseAt[k] ?? 0) < 380) continue;
+          const q = this.proj(ox + Lx * B / 2, oy + Wy * B, (k + .5) * B, t);
+          text(`lay${k}`, base, q.x, q.y, "small", { c: "var(--ink)" });
+        }
+        // the sides' lengths, beside the edges they measure
+        const len = this.proj(ox + Lx * B / 2, oy + Wy * B, 0, t), wid = this.proj(ox + Lx * B, oy + Wy * B / 2, 0, t), hi = this.proj(ox, oy + Wy * B, H * B / 2, t);
+        text("len", `${Lx} cm`, len.x, len.y + 1.6, "small");
+        text("wid", `${Wy} cm`, wid.x + 1.2, wid.y + 0.6, "small", { anchor: "start" });
+        if (st !== "floor") text("hi", `${H} cm`, hi.x - 1, hi.y, "small", { anchor: "end" });
+      } else {
+        text("len", `${Lx} cm`, ox + Lx * B / 2, oy + Wy * B + 1.2, "small");
+        text("wid", `${Wy} cm`, ox - 1, oy + Wy * B / 2, "small", { anchor: "end" });
+      }
+      // MARK: the words over the box, the record under it, both facing the child
+      const say = { floor: `This box is ${Lx} cm long, ${Wy} cm wide and ${H} cm tall. Cover its floor with 1 cm cubes.`,
+        build: "Drag up to stack the layers.", write: "How many cubes fill the box? Write it.", done: `${H} layers of ${base} is ${V}.` }[st];
+      const wx = b.x0, top = b.y0 - (st === "floor" ? 6 : 5);
+      words(`say-${st}`, say, wx, top, Math.max(40, b.x1 - b.x0 + 8));
+      if (this.msg) words(`msg-${this.msg}`, this.msg, wx, top + 2.2, 50, "small", { c: "var(--wrong)" });
+      const ry = b.y1 + (st === "floor" ? 3.5 : 3);
+      if (st === "floor" && this.covered.size) text(`fcount${this.covered.size}`, `${this.covered.size} of ${base} squares covered`, wx, ry, "small", { anchor: "start" });
+      if (st !== "floor") text("rec1", `${Lx} × ${Wy} = ${base} cubes in a layer`, wx, ry, "say", { anchor: "start", c: "var(--ink)" });
+      if (st === "write") {
+        text("rec2", `${H} layers of ${base} =`, wx, ry + 3, "say", { anchor: "start", c: "var(--ink)" });
+        const w = `${H} layers of ${base} =`.length * 0.66 + 1;
+        answerBox("ans", Math.ceil(wx + w), ry + 2, 3, this.typed, this.verdict || "active");
+        block("check", wx, ry + 6, 7, "Check", "check");
+      }
+      if (st === "done") {
+        text("rec2d", `${H} layers of ${base} = ${V} cubes`, wx, ry + 3, "say", { anchor: "start", c: "var(--ink)" });
+        text("rec3", `Volume = ${Lx} × ${Wy} × ${H} = ${V} cubic cm`, wx, ry + 6, "say", { anchor: "start", c: "var(--chapter)" });
+        block("next", wx, ry + 9, 10, "Next problem", "next");
+      }
+      UP = false;
     },
   };
   return L;
@@ -1323,7 +1518,7 @@ const LESSONS = {
   pow10: { name: "Multiply by 10, 100, 1000", body: "decimals", designer: dPow10 },
   fracof: { name: "Fraction of a number", body: "fractions", designer: dFracOf },
   unitdiv: { name: "Dividing by a unit fraction", body: "fractions", designer: dUnitDiv },
-  volume: { name: "Volume of a box", body: "volume", designer: dVolume },
+  volume: { name: "Volume of a box", body: "volume", claude: volumeLesson, designer: dVolume },
 };
 const pick = document.getElementById("pick"), ver = document.getElementById("ver");
 pick.innerHTML = Object.entries(LESSONS).map(([id, e]) => `<option value="${id}">${esc(e.name)}</option>`).join("");
@@ -1344,7 +1539,9 @@ function start(id) {
 pick.onchange = () => start(pick.value);
 document.getElementById("v-claude").onclick = () => { version = "claude"; start(lesson.id); };
 document.getElementById("v-designer").onclick = () => { version = "designer"; start(lesson.id); };
-document.getElementById("fresh").onclick = () => start(lesson.id);
+document.getElementById("fresh").onclick = () => leave();
+// a lesson that tilted the paper lays it flat again before the next problem
+function leave() { if (lesson.leave) lesson.leave(() => start(lesson.id)); else start(lesson.id); }
 let first = "add";
 try { first = localStorage.getItem("paper-lesson") || "add"; version = localStorage.getItem("paper-version") || "claude"; } catch (e) {}
 start(first);
