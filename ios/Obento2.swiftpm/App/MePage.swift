@@ -56,8 +56,9 @@ enum MePage {
         reviewCard(&s, &out, R(x0 + 4 * u, y0 + u, 3 * u, 2 * u), now: now)
 
         // the shelves, side by side: a lesson moves right as its checks pass
+        // getting stronger: the next check soonest first, so what's coming is on top
         let sh = Mastery.shelves(Map.gradeLessons, checks: checks, now: now)
-        let lists = [sh.goOver, sh.gettingStronger, sh.knowIt]
+        let lists = [sh.goOver, sh.gettingStronger.sorted { (checks[$0]?.due ?? 0) < (checks[$1]?.due ?? 0) }, sh.knowIt]
         let top = y0 + 5 * u
         for (k, list) in lists.enumerated() {
             let x = x0 + 4 * Double(k) * u

@@ -48,6 +48,8 @@ struct PaperScreen: View {
                 if !Shots.active { model.frameGroup(duration: 0); model.beginStartHere() }
                 Shots.run(model)
             }
+            // leaving the app with a finger down: no hold carries on (the grown-ups' square opens only for a real 3 seconds)
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in model.pressEnded() }
             .onReceive(NotificationCenter.default.publisher(for: UIAccessibility.reduceMotionStatusDidChangeNotification)) { _ in
                 model.setReduceMotion(UIAccessibility.isReduceMotionEnabled)
             }

@@ -646,13 +646,13 @@ final class PaperModel {
         }
     }
 
-    /// A place framed to read (G 20 Oct): all of it at up to 100%, centred clear of the bar; one too tall for that at 60%
-    /// shows from its top down at 60%, the rest a pan away.
+    /// A place framed to read (G 20 Oct): all of it at up to 100%, centred clear of the bar; one too tall for that at 75%
+    /// (its words still big enough to read) shows from its top down at 75%, the rest a pan away.
     func placeCamera(_ place: Place) -> PaperCamera {
         let r = place == .me ? MePage.sheet(now: PaperClock.now).frame : grownUp.frame
         let cam = framingBelowBar(r, maxZoom: CameraTiming.selectMax)
-        guard cam.zoom < 0.6 else { return cam }
-        let z = 0.6, pad = screen.width > 760 ? Self.margin : 8
+        guard cam.zoom < 0.75 else { return cam }
+        let z = 0.75, pad = screen.width > 760 ? Self.margin : 8
         return PaperCamera(x: screen.width / 2 - r.mid.x * z, y: Self.chrome.top + pad - r.y * z, zoom: z)
     }
 

@@ -585,6 +585,13 @@ enum Shots {
             if name == "me-review-done" { Progress.shared.setReview(right: 6, of: 8, missed: ["g5-round", "sub"]) }
             if name == "me-review-partway" { PaperModel.shotPartway = 3 }
             m.shotMode = true; m.go(to: .me)
+        case "me-full":
+            // every lesson learned, most on their way through their checks: the longest shelves Me has
+            Progress.shared.reset(to: [])
+            for (i, id) in Map.gradeLessons.enumerated() {
+                Progress.shared.setCheck(id, passes: [1, 2, 3, 2, 1, 4][i % 6], daysAgo: Double(i % 5) + 1, dueIn: Double(i % 7) + 1)
+            }
+            m.shotMode = true; m.go(to: .me)
         case let n where n.hasPrefix("review-"):
             // review-page: its 8 problems, opened from Me; review-problem: the first open; review-result: all 8
             // answered (two missed), its result on the paper
