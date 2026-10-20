@@ -108,4 +108,18 @@ final class RoundDecimalsTests: XCTestCase {
             XCTAssertTrue(item.when?(n) ?? true, "\(n)")
         } }
     }
+
+    func testAHandMoveSetsTheAnswer() {
+        // a point placed or a length dragged puts its value in the box, as typing would, and can be taken out again
+        var l = LessonRun(RoundDecimals.spec, numbers: RoundDecimals.numbers(N: 3476, p: 2))
+        _ = l.go(); _ = l.go(); l.set("x", 7); _ = l.go(); l.set("x", 6); _ = l.go()
+        l.set("x", 3.48)
+        XCTAssertEqual(l.typed["x"], "3.48")
+        l.set("y", 1)
+        XCTAssertNil(l.typed["y"], "only the step's own boxes")
+        l.set("x", nil)
+        XCTAssertNil(l.typed["x"])
+        l.set("x", 3.48)
+        XCTAssertEqual(l.go(), .moved(4))
+    }
 }

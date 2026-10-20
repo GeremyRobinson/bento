@@ -68,8 +68,12 @@ struct PaperScreen: View {
             .contentShape(Rectangle())
             .gesture(DragGesture(minimumDistance: 4)
                 .onChanged { v in
-                    model.pan(v.translation.width - lastDrag.width, v.translation.height - lastDrag.height); lastDrag = v.translation }
-                .onEnded { _ in lastDrag = .zero })
+                    // the drag's first move decides: a hand move on the problem, or the paper panning
+                    if lastDrag == .zero { model.dragStart(at: .init(v.startLocation.x, v.startLocation.y)) }
+                    if model.handDrag { model.dragMove(to: .init(v.location.x, v.location.y)) }
+                    else { model.pan(v.translation.width - lastDrag.width, v.translation.height - lastDrag.height) }
+                    lastDrag = v.translation }
+                .onEnded { _ in model.dragEnd(); lastDrag = .zero })
             .simultaneousGesture(MagnifyGesture()
                 .onChanged { v in
                     model.zoom(by: v.magnification / lastPinch, at: .init(v.startLocation.x, v.startLocation.y)); lastPinch = v.magnification }

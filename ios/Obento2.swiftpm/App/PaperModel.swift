@@ -205,6 +205,16 @@ final class PaperModel {
     func stop() { let c = camera(at: PaperClock.now); flight = nil; resting = c }
 
     func pan(_ dx: Double, _ dy: Double) { stop(); resting = resting.panned(by: dx, dy) }
+
+    /// A drag that starts on something the open problem lets the child move goes to the problem (a hand move); any
+    /// other drag pans the paper.
+    private(set) var handDrag = false
+    func dragStart(at s: Point) {
+        guard !leaving, let m = bars?.current else { handDrag = false; return }
+        handDrag = m.grab(camera(at: PaperClock.now).toPaper(s))
+    }
+    func dragMove(to s: Point) { bars?.current?.drag(to: camera(at: PaperClock.now).toPaper(s)) }
+    func dragEnd() { if handDrag { bars?.current?.release() }; handDrag = false }
     func zoom(by f: Double, at p: Point) { stop(); resting = resting.zoomed(by: f, at: p); pinchedAt = PaperClock.now }
     /// When the paper was last pinched: the bar shows the zoom for a moment.
     var pinchedAt: Double = -100

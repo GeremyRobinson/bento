@@ -86,8 +86,11 @@ final class WorkProblem: Identifiable, PageProblem {
     var underStep: Double { layout.lineY }
     /// The picture keys the drawing reads now: the step's, and whether its answer box is in the work.
     /// `pick`: the step is a pick-one (a story's "Pick what to do"), so the work doesn't give its answer away.
+    /// `typed.<box>`: what's in each of the step's boxes, so a hand move shows on the picture as it's made.
     var drawingKeys: Numbers {
-        picture.merging(["box": lesson.step.answer.map { $0.choices == nil ? 1 : 0 } ?? 0, "pick": lesson.step.answer?.choices != nil ? 1 : 0]) { $1 }
+        var k = picture.merging(["box": lesson.step.answer.map { $0.choices == nil ? 1 : 0 } ?? 0, "pick": lesson.step.answer?.choices != nil ? 1 : 0]) { $1 }
+        for (box, t) in lesson.typed { if let v = Double(t) { k["typed." + box] = v } }
+        return k
     }
     var boxSize: Size { let l = layout; return Size((l.width * l.scale).rounded(.up) * Paper.unit, (l.height * l.scale).rounded(.up) * Paper.unit) }
     /// The box's corner stays on the strong lines; everything in it is drawn `scale` times bigger from there.
@@ -248,7 +251,16 @@ final class WorkProblem: Identifiable, PageProblem {
     }
     func reset() { guard !busy else { return }; onTouch?(); lesson.reset(); message = nil; onChange?() }
     func usedHint() { lesson.usedHint(); onChange?() }
-    func tapPaper(_ p: Point) {}
+    func tapPaper(_ p: Point) { _ = handTap(p) }
+
+    /// A hand move's answer into its box (LessonHands): what it says after a miss goes, as typing again would.
+    func apply(_ r: (box: String, value: Double?)) {
+        onTouch?()
+        lesson.set(r.box, r.value)
+        if message?.ok == false { message = nil }
+        if verdict?.right == false { verdict = nil }
+        onChange?()
+    }
 
     /// Screenshots only: these numbers instead of the generated ones (and a story, when asked).
     func use(_ n: Numbers, story: Bool = false) { lesson = LessonRun(lesson.spec, numbers: n, story: story) }

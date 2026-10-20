@@ -43,8 +43,19 @@ protocol PageProblem: AnyObject {
     func reset()
     func usedHint()
     func tapPaper(_ p: Point)
+    /// A drag that starts on something the child can move (a point, a length, a cut): true takes it, and the drag's
+    /// moves and its end come here instead of panning the paper. Paper points.
+    func grab(_ p: Point) -> Bool
+    func drag(to p: Point)
+    func release()
     /// Brought back from where the child left it: its picture as it was, at once.
     func restore()
     /// The How to's explaining beats after the lesson's first words: what each says, and what it draws.
     func howToBeats() -> [(words: String, run: () -> Void)]
+}
+
+extension PageProblem {
+    func grab(_ p: Point) -> Bool { false }
+    func drag(to p: Point) {}
+    func release() {}
 }

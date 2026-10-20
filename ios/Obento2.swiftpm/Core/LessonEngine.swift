@@ -386,6 +386,14 @@ public struct LessonRun: Sendable {
         typed[box] = t.isEmpty ? nil : t
     }
 
+    /// A hand move's answer (a point placed, a length dragged, a cut made): `value` goes into the box, as if typed;
+    /// nil takes it out again.
+    public mutating func set(_ box: String, _ value: Double?) {
+        guard let a = step.answer, a.boxes.contains(box) else { return }
+        active = box
+        typed[box] = value.map { fmt($0).replacingOccurrences(of: "−", with: "-") }
+    }
+
     /// A pick-one step: the child taps choice `i`.
     public mutating func choose(_ i: Int) {
         guard step.answer?.choices != nil else { return }
