@@ -144,6 +144,7 @@ final class PaperModel {
     /// and an open lesson takes the new size, so its words and its picture still agree.
     var screen = Size(1180, 820) {
         didSet {
+            ProblemGrid.screen = screen
             guard screen != oldValue else { return }
             let was = flight?.camera(at: PaperClock.now, screen: oldValue) ?? resting
             let c = was.toPaper(Point(oldValue.width / 2, oldValue.height / 2))
@@ -345,9 +346,18 @@ final class PaperModel {
     /// A lesson is framed with two cells to spare (LESSONS.md §5).
     static let margin = 2 * Paper.cell
 
-    /// A rect framed clear of the bar, with two cells to spare, never closer than `maxZoom`.
+    /// How much of the screen's bottom the iPad's keyboard covers while a number is typed.
+    private(set) var keyboard: Double = 0
+    func keyboardAppeared(_ h: Double) {
+        guard abs(h - keyboard) > 1 else { return }
+        keyboard = h
+        if bars?.mode == .work { reframe() }
+    }
+
+    /// A rect framed clear of the bar (and the keyboard), with two cells to spare, never closer than `maxZoom`.
     func framingBelowBar(_ r: Rect, maxZoom: Double) -> PaperCamera {
-        var cam = PaperCamera.framing(r, in: Size(screen.width, screen.height - Self.chrome.top - Self.chrome.bottom), pad: screen.width > 760 ? Self.margin : 8, maxZoom: maxZoom)
+        let bottom = max(Self.chrome.bottom, keyboard + 16)
+        var cam = PaperCamera.framing(r, in: Size(screen.width, screen.height - Self.chrome.top - bottom), pad: screen.width > 760 ? Self.margin : 8, maxZoom: maxZoom)
         cam.y += Self.chrome.top
         return cam
     }

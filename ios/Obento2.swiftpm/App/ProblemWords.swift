@@ -38,7 +38,7 @@ enum ProblemLayout {
         if let choices = l.step.answer?.choices {
             let n = Double(choices.count), w = (min(column(m), 720) + 1.5 * (n - 1)) / n
             let y = m.underStep
-            for i in choices.indices { out.append(Block(kind: .choice(i), rect: R(Double(i) * (w - 1.5), y, w))) }
+            for i in choices.indices { out.append(Block(kind: .choice(i), rect: R(Double(i) * (w - 1.5), y, w, 60))) }
         }
         // a typed step's answer boxes, where its line is written (MathLineView's cells)
         if let a = l.step.answer, a.choices == nil, m is WorkProblem {
@@ -49,7 +49,8 @@ enum ProblemLayout {
             } }
         }
         // the keypad, once an answer box was tapped: the keys in the order a keypad has them
-        if let wp, wp.keypadOpen, !m.solved, let a = l.step.answer, a.choices == nil {
+        // (the drawn keypad is put away for now: the iPad's own keyboard types, G 19 Oct)
+        if let wp, wp.keypadOpen, !m.solved, let a = l.step.answer, a.choices == nil, WorkProblem.drawnKeys {
             let keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "del"], size = 60.0, lay = wp.layout
             // clear of the line being worked: on the first block line past its end (it's written big, and grows)
             let lineEnd = sx + Double(MathLineView.layout(a.prompt, typed: l.typed, size: 28).w) * Paper.cell * WorkProblem.lineCell
@@ -59,13 +60,13 @@ enum ProblemLayout {
             }
         }
         let actions = actions(m), column = column(m)
-        if !m.auto && !m.solved { out.append(Block(kind: .main, rect: R(0, actions, 180))) }
-        if !m.auto && m.solved { out.append(Block(kind: .nextProblem, rect: R(0, actions, 220))) }
+        if !m.auto && !m.solved { out.append(Block(kind: .main, rect: R(0, actions, 200, 60))) }
+        if !m.auto && m.solved { out.append(Block(kind: .nextProblem, rect: R(0, actions, 260, 60))) }
         // the How to: its main block where Check sits, the other on the column's right
         for k in m.howToButtons {
             switch k {
-            case .next, .practise: out.append(Block(kind: k, rect: R(0, actions, 220)))
-            case .again, .skip: out.append(Block(kind: k, rect: R(column - 180, actions, 180)))
+            case .next, .practise: out.append(Block(kind: k, rect: R(0, actions, 260, 60)))
+            case .again, .skip: out.append(Block(kind: k, rect: R(column - 240, actions, 240, 60)))
             default: break
             }
         }
@@ -120,7 +121,7 @@ extension Rig {
 
         // the problem, at the top: the sum, and the story beside it when it's told as one (as every problem has it)
         let sumFont = PaperText.font(40, .medium, digits: true), sumY = -100 + Sketch.row
-        s.text("sum:\(p.sum)", p.sum, at: P(0, sumY), size: 40, anchor: UnitPoint(x: 0, y: 0.5))
+        s.text("sum:\(p.sum)", p.sum, at: P(0, sumY), size: Sketch.maths, anchor: UnitPoint(x: 0, y: 0.5))
         if l.story, let storyText = l.spec.story?(l.numbers) {
             let x = ((PaperText.width(p.sum, sumFont) + 2 * Sketch.row) / Paper.cell).rounded(.up) * Paper.cell
             s.words("story", storyText, .story, x: o.x + x, top: P(0, -100).y, width: col - x, max: 2)
@@ -143,31 +144,31 @@ extension Rig {
             stack("2", [("\(p.p)", .ink), (" × \(k)", chapter)], [("\(p.a)", .ink), (" × \(k)", chapter)]); put("e2", " = ")
             stack("3", [("\(p.covered)", .ink)], [("\(p.b)", .ink)])
         }
-        s.label("whole", "1 whole · \(p.wholeCells) cells", Sketch.Words(size: 16, weight: .regular, colour: .ink2), at: P(W / 2, AddFractionsModel.wholeY - 12), anchor: UnitPoint(x: 0.5, y: 1))
-        s.label("row1", AddFractions.plural(p.a), Sketch.Words(size: 17, weight: .medium, colour: .ink2), at: P(0, r1 - 8))
-        s.label("row2", AddFractions.plural(p.b), Sketch.Words(size: 17, weight: .medium, colour: .ink2), at: P(0, r2 - 8))
+        s.label("whole", "1 whole · \(p.wholeCells) cells", Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2), at: P(W / 2, AddFractionsModel.wholeY - 12), anchor: UnitPoint(x: 0.5, y: 1))
+        s.label("row1", AddFractions.plural(p.a), Sketch.Words(size: Sketch.small, weight: .medium, colour: .ink2), at: P(0, r1 - 8))
+        s.label("row2", AddFractions.plural(p.b), Sketch.Words(size: Sketch.small, weight: .medium, colour: .ink2), at: P(0, r2 - 8))
 
         // the piece waiting to be added, the match once the rows line up, and the guide after a miss
-        if l.picture["waiting"] == 1 && l.marked.isEmpty { s.label("waiting", "+ \(p.q)/\(p.b)", Sketch.Words(size: 19, weight: .medium, colour: .ink2), at: P(W + 20, r2 + h + 20), anchor: UnitPoint(x: 0, y: 0)) }
-        if l.picture["match"] == 1 { s.label("match", "\(p.p)/\(p.a) = \(p.covered)/\(p.b)", Sketch.Words(size: 22, weight: .medium, colour: chapter), at: P(e + 24, r2 - 12)) }
-        if l.picture["guide"] == 1, let look = l.step.look { s.label("guide", look, Sketch.Words(size: 16, weight: .regular, colour: .ink2), at: P(e + 10, r1 - 24)) }
+        if l.picture["waiting"] == 1 && l.marked.isEmpty { s.label("waiting", "+ \(p.q)/\(p.b)", Sketch.Words(size: Sketch.small, weight: .medium, colour: .ink2), at: P(W + 20, r2 + h + 20), anchor: UnitPoint(x: 0, y: 0)) }
+        if l.picture["match"] == 1 { s.label("match", "\(p.p)/\(p.a) = \(p.covered)/\(p.b)", Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: chapter), at: P(e + 24, r2 - 12)) }
+        if l.picture["guide"] == 1, let look = l.step.look { s.label("guide", look, Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2), at: P(e + 10, r1 - 24)) }
 
         // the step, under the picture: what to do now, and its hint (a story's step asks only "Pick what to do")
         let storyStep = l.story && l.step.answer?.choices != nil
         let say = m.intro ?? (storyStep ? words.hint : words.say)
-        let said = s.words("say\(l.index)", say, Sketch.Words(size: 24, weight: .medium, colour: .ink), x: o.x, top: P(0, AddFractionsModel.stepY).y, width: col, max: 3)
-        if m.intro == nil && !storyStep { s.words("hint\(l.index)", words.hint, Sketch.Words(size: 18, weight: .regular, colour: .ink2), x: o.x, top: P(0, AddFractionsModel.stepY + Double(said) * Sketch.row).y, width: col) }
+        let said = s.words("say\(l.index)", say, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink), x: o.x, top: P(0, AddFractionsModel.stepY).y, width: col, max: 3)
+        if m.intro == nil && !storyStep { s.words("hint\(l.index)", words.hint, Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2), x: o.x, top: P(0, AddFractionsModel.stepY + Double(said) * Sketch.row).y, width: col) }
 
         // under the bars: the count as the child taps, or what a miss says; for a pick-one step the message goes under
         // the choices
-        let under = Sketch.Words(size: 19, weight: .medium, colour: .ink2)
+        let under = Sketch.Words(size: Sketch.small, weight: .medium, colour: .ink2)
         if l.step.answer?.choices != nil {
             if let msg = m.message { s.words("msg", msg.text, under.colour(msg.ok ? .ink2 : red), x: o.x, top: P(0, AddFractionsModel.underStep + 52).y, width: col, max: 3) }
         } else if let count = l.countLine {
             let (text, c): (String, Sketch.Colour) = m.message.map { ($0.text, $0.ok ? right : red) } ?? (count, .ink2)
             s.words("count", text, under.colour(c), x: o.x, top: P(0, AddFractionsModel.underStep).y, width: col, max: 3)
         }
-        if l.picture["total"] == 1 { s.label("total", "\(p.sum) = \(p.total)/\(p.b)", Sketch.Words(size: 22, weight: .medium, colour: chapter), at: P(0, r2 + h + 32), anchor: UnitPoint(x: 0, y: 0)) }
+        if l.picture["total"] == 1 { s.label("total", "\(p.sum) = \(p.total)/\(p.b)", Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: chapter), at: P(0, r2 + h + 32), anchor: UnitPoint(x: 0, y: 0)) }
 
         // the blocks
         for b in ProblemLayout.blocks(m) {
@@ -180,7 +181,7 @@ extension Rig {
             case .again: s.block(id, r, .plain, word: "Watch again")
             case .skip: s.block(id, r, .plain, word: "Skip")
             case .showMe, .reset: s.block(id, r, l.picture["showMe"] == 1 && b.kind == .showMe ? .main : .plain, icon: b.kind == .showMe ? "play" : "arrow-counter-clockwise")
-            case .choice(let n): s.block(id, r, l.typed["c"] == String(n) ? .picked : .plain, centred: l.step.answer?.choices?[n], size: 17)
+            case .choice(let n): s.block(id, r, l.typed["c"] == String(n) ? .picked : .plain, centred: l.step.answer?.choices?[n], size: Sketch.wordSize)
             case .field, .key: break
             }
         }
@@ -201,7 +202,7 @@ extension Rig {
             let width = s.sum("sum", l.spec.display(l.numbers), at: P(0, WorkProblem.problemY), k: k)
             if l.story, let story = l.spec.story?(l.numbers) {
                 let x = P(0, 0).x + width + 2 * row * k
-                s.words("story", story, .story, x: x, top: P(0, WorkProblem.problemY).y, width: o.x + lay.width * Paper.unit * k - 80 * k - x, max: 2, k: k)
+                s.words("story", story, .story, x: x, top: P(0, WorkProblem.problemY).y, width: max(400, o.x + lay.total * k - x), max: 2, k: k)
             }
             return s
         }
@@ -222,7 +223,7 @@ extension Rig {
         }
         // the line being worked, a digit to a square, its boxes drawn as blocks
         if let a = l.step.answer, a.choices == nil, m.intro == nil {
-            s.mathLine("line\(l.index)", a.prompt, at: P(sx, lay.lineY), typed: l.typed, size: 40 * k, cell: Paper.cell * WorkProblem.lineCell * k)
+            s.mathLine("line\(l.index)", a.prompt, at: P(sx, lay.lineY), typed: l.typed, size: Sketch.maths * k, cell: Paper.cell * WorkProblem.lineCell * k)
         }
 
         // the blocks
@@ -236,7 +237,7 @@ extension Rig {
             case .again: s.block(id, r, .plain, word: "Watch again", k: k)
             case .skip: s.block(id, r, .plain, word: "Skip", k: k)
             case .showMe, .reset: s.block(id, r, l.picture["showMe"] == 1 && b.kind == .showMe ? .main : .plain, icon: b.kind == .showMe ? "play" : "arrow-counter-clockwise", k: k)
-            case .choice(let n): s.block(id, r, l.typed["c"] == String(n) ? .picked : .plain, centred: l.step.answer?.choices?[n], size: 17, k: k)
+            case .choice(let n): s.block(id, r, l.typed["c"] == String(n) ? .picked : .plain, centred: l.step.answer?.choices?[n], size: Sketch.wordSize, k: k)
             case .field(let f):
                 // right: green for a moment; wrong: red until they type again; the box being typed into has a cursor
                 // after what's in it (steady: no looping animations)
@@ -251,7 +252,7 @@ extension Rig {
                 let cell = Paper.cell * WorkProblem.lineCell * k, left = r.minX + cell, chars = Array(typed ?? "")
                 let tag = "\(m.verdict.map { $0.right } as Bool?)"
                 for (j, ch) in chars.enumerated() {
-                    s.text("\(id)typed\(j)\(ch)\(tag)", String(ch), at: CGPoint(x: left + (Double(j) + 0.5) * cell, y: r.midY), size: 40 * k, weight: .medium, style.text)
+                    s.text("\(id)typed\(j)\(ch)\(tag)", String(ch), at: CGPoint(x: left + (Double(j) + 0.5) * cell, y: r.midY), size: Sketch.maths * k, weight: .medium, style.text)
                 }
                 if l.active == f, m.verdict == nil, !m.auto {
                     let x = left + Double(chars.count) * cell
@@ -265,7 +266,7 @@ extension Rig {
         // what a miss (or Show me) says: beside Check on its row, or under it
         if let msg = m.message {
             let ay = ProblemLayout.actions(m)
-            let (x, y, width) = lay.messageBelow ? (sx, ay + row + Paper.cell, col) : (sx + 240, ay, col - 240 * k)
+            let (x, y, width) = lay.messageBelow ? (sx, ay + 4 * Paper.cell, col) : (sx + 280, ay, col - 280 * k)
             s.words("msg", msg.text, Sketch.Words.message.colour(msg.ok ? .ink2 : red), x: P(x, 0).x, top: P(0, y).y, width: width, max: 3, k: k)
         }
         return s

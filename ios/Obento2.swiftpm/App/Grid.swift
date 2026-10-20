@@ -39,16 +39,18 @@ struct GridPen {
         case .left: at = P(edge - gap, along); anchor = UnitPoint(x: 1, y: 0.5)
         case .right: at = P(edge + gap, along); anchor = UnitPoint(x: 0, y: 0.5)
         }
-        sketch.text("\(id):\(text)", text, at: CGPoint(x: at.x, y: at.y - ink), size: w.size * k, weight: w.weight, w.colour, anchor: anchor, digits: true)
+        _ = ink
+        sketch.text("\(id):\(text)", text, at: at, size: w.size * k, weight: w.weight, w.colour, anchor: anchor, digits: true)
     }
 
     /// A number in its squares: `per` squares to a digit, the ones digit ending on column `right`, the point on the
     /// grid line between two digits (as school writes it on squared paper), centred down `row`.
-    mutating func digits(_ id: String, _ text: String, right: Double, row: Double, per: Double, size: CGFloat = 30, _ colour: Sketch.Colour = .ink) {
+    mutating func digits(_ id: String, _ text: String, right: Double, row: Double, per: Double, size: CGFloat = Sketch.maths, _ colour: Sketch.Colour = .ink) {
         var col = 0.0
         for (i, ch) in Array(text).enumerated().reversed() {
             // the point on the grid line between its digits, level with them (its glyph sits it on their baseline)
-            if ch == "." { sketch.text("\(id).", ".", at: P(right - col, row), size: size * k, weight: .bold, colour); continue }
+            // the point sits on the baseline: its line box is placed as the digits' are, not centred on its own ink
+            if ch == "." { sketch.text("\(id).", ".", at: P(right - col, row), size: size * k, weight: .bold, colour, anchor: UnitPoint(x: 0.5, y: 0.49)); continue }
             sketch.text("\(id)\(i)", String(ch), at: P(right - col - per / 2, row), size: size * k, colour)
             col += per
         }

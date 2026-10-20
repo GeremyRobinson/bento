@@ -28,30 +28,38 @@ enum LessonPictures {
         }
     }
 
-    static func sketch(_ m: WorkProblem) -> Sketch {
-        var s = Sketch()
-        let n = m.lesson.numbers, p = m.picture
+    /// A lesson's drawing for these numbers and this step's picture keys: its picture, and its work as school writes
+    /// it, each in squares from its own corner; the problem's layout (ProblemGrid) places them.
+    static func drawing(_ id: String, _ n: Numbers, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
         func v(_ k: String) -> Double { n[k] ?? 0 }
         func k(_ key: String) -> Double { p[key] ?? 0 }
-        switch m.lesson.spec.id {
-        case "g5-mult2": s = multiplyGrid(m, a: Int(v("a")), b: Int(v("b")), split: k("split") == 1, strip: Int(k("strip")), found: Int(k("found")), sum: k("sum") == 1)
-        case "g5-divide": s = divideGrid(m, dv: Int(v("dv")), qt: Int(v("qt")), strip: Int(k("strip")), found: Int(k("found")), left: k("left") == 1, sum: k("sum") == 1)
-        case "g5-order": s = orderGrid(n, beat: Int(k("beat")))
-        case "g5-pow10": s = powersGrid(x: v("x"), k: Int(v("k")), hop: k("hop") == 1)
-        case "g5-round": s = roundGrid(m)
-        case "g5-adddec": s = addDecimalsGrid(a: v("a"), b: v("b"), p)
-        case "g5-multdec": s = multiplyDecimalsGrid(n, p)
-        case "g5-divdec": s = divideDecimalGrid(d: Int(v("d")), qt: Int(v("qt")), p)
-        case "add", "sub", "mix": s = unlikeGrid(n, p)
-        case "g5-multfrac": s = multiplyFractionsGrid(n, p)
-        case "g5-improper": s = improperGrid(n, p)
-        case "g5-fracof": s = fractionOfGrid(n, p)
-        case "g5-unitdiv": s = unitDivideGrid(n, p)
-        case "g5-volume": s = volumeGrid(n, p)
-        case "g5-units": s = unitsGrid(n, p)
-        default: break
+        switch id {
+        case "g5-mult2": return multiplyGrid(n, a: Int(v("a")), b: Int(v("b")), split: k("split") == 1, strip: Int(k("strip")), found: Int(k("found")), sum: k("sum") == 1)
+        case "g5-divide": return divideGrid(dv: Int(v("dv")), qt: Int(v("qt")), strip: Int(k("strip")), found: Int(k("found")), left: k("left") == 1, sum: k("sum") == 1)
+        case "g5-order": return orderGrid(n, beat: Int(k("beat")))
+        case "g5-pow10": return powersGrid(x: v("x"), k: Int(v("k")), hop: k("hop") == 1)
+        case "g5-round": return roundGrid(n, p)
+        case "g5-adddec": return addDecimalsGrid(a: v("a"), b: v("b"), p)
+        case "g5-multdec": return multiplyDecimalsGrid(n, p)
+        case "g5-divdec": return divideDecimalGrid(d: Int(v("d")), qt: Int(v("qt")), p)
+        case "add", "sub", "mix": return unlikeGrid(n, p)
+        case "g5-multfrac": return multiplyFractionsGrid(n, p)
+        case "g5-improper": return improperGrid(n, p)
+        case "g5-fracof": return fractionOfGrid(n, p)
+        case "g5-unitdiv": return unitDivideGrid(n, p)
+        case "g5-volume": return volumeGrid(n, p)
+        case "g5-units": return unitsGrid(n, p)
+        default: return (Sketch(), Sketch())
         }
-        return s
+    }
+
+    /// Words drawn bigger in a big problem (whole steps, so they stay on the grid): Multiply's and Long division's.
+    static func scale(_ id: String, _ n: Numbers) -> Double {
+        switch id {
+        case "g5-mult2": return areaGeometry(tall: n["a"] ?? 12, wide: n["b"] ?? 12).k
+        case "g5-divide": return areaGeometry(tall: n["dv"] ?? 12, wide: n["qt"] ?? 12).k
+        default: return 1
+        }
     }
 
     /// The How to's explaining beats for a lesson, after its first words: what each says, and what it turns on.
@@ -184,12 +192,13 @@ enum LessonPictures {
     /// each width in the row above it, the side's number on the left edge level with the middle, each product on a
     /// plate centred on its strip; the school work beside it, two squares to a digit. k (1 or 2) draws the words and
     /// the school work bigger in a big problem; the rectangle's squares are always the paper's.
-    static func multiplyGrid(_ m: WorkProblem, a: Int, b: Int, split: Bool, strip: Int, found: Int, sum: Bool) -> Sketch {
-        let ps = MultiplyTwoDigit.parts(b), products = ps.map { a * $0 }, g = geometry(m.lesson.numbers), k = g.k, kk = Int(k)
+    static func multiplyGrid(_ n: Numbers, a: Int, b: Int, split: Bool, strip: Int, found: Int, sum: Bool) -> (picture: Sketch, work: Sketch) {
+        let ps = MultiplyTwoDigit.parts(b), products = ps.map { a * $0 }, g = geometry(n), k = g.k, kk = Int(k)
         var pen = GridPen(k: k)
+        var wk = GridPen(k: k)
         func sq(_ design: Double) -> Double { design / Paper.cell * k }
         let rx = sq(g.rx), ry = sq(g.ry), H = Double(a), widths = split ? ps : [b]
-        let label = Sketch.Words(size: 28, weight: .medium, colour: .ink)
+        let label = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink)
         // every label half a square from what it labels: the side's number beside the rectangle, each width over its strip
         pen.label("side", String(a), label.colour(.chapter), .left, edge: rx, along: ry + H / 2)
         var x = rx
@@ -210,29 +219,29 @@ enum LessonPictures {
         if sum {
             let narrow = found > 0 && widths.contains { $0 < 4 * kk + 1 }
             pen.bracket("sum", from: rx, to: x - (split ? 1 : 0), row: ry + H + (narrow ? 3 : 2) * k, "\(products.map(String.init).joined(separator: " + ")) = \(products.reduce(0, +))",
-                        Sketch.Words(size: 22, weight: .medium, colour: .chapter), tick: k)
+                        Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .chapter), tick: k)
         }
         // the work as school writes it, two squares to a digit, down the column beside it
         let per = 2 * k, right = sq(g.colX) + 5 * per
         func row(_ r: Double) -> Double { ry + (r + 0.5) * per }
-        pen.digits("wa", String(a), right: right, row: row(0), per: per)
-        pen.word("wx", "×", at: right - 4.5 * per, row(1), Sketch.Words(size: 28, weight: .medium, colour: .ink))
-        pen.digits("wb", String(b), right: right, row: row(1), per: per)
-        pen.rule("wr1", from: right - 5 * per, to: right, row: ry + 2 * per)
+        wk.digits("wa", String(a), right: right, row: row(0), per: per)
+        wk.word("wx", "×", at: right - 4.5 * per, row(1), Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink))
+        wk.digits("wb", String(b), right: right, row: row(1), per: per)
+        wk.rule("wr1", from: right - 5 * per, to: right, row: ry + 2 * per)
         for (i, pr) in products.enumerated() where i < found {
-            pen.digits("wp\(i)", String(pr), right: right, row: row(Double(2 + i)), per: per, i + 1 == strip ? .chapter : .ink)
+            wk.digits("wp\(i)", String(pr), right: right, row: row(Double(2 + i)), per: per, i + 1 == strip ? .chapter : .ink)
         }
         // the plus before the last part, in the ×'s column, once every part is written (as school adds them); a sign,
         // so in ink like the ×
         if products.count > 1, found >= products.count {
-            pen.word("wplus", "+", at: right - 4.5 * per, row(Double(1 + products.count)), Sketch.Words(size: 28, weight: .medium, colour: .ink))
+            wk.word("wplus", "+", at: right - 4.5 * per, row(Double(1 + products.count)), Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink))
         }
         if sum {
             let r = Double(2 + products.count)
-            pen.rule("wr2", from: right - 5 * per, to: right, row: ry + r * per)
-            pen.digits("wt", String(products.reduce(0, +)), right: right, row: row(r), per: per, .chapter)
+            wk.rule("wr2", from: right - 5 * per, to: right, row: ry + r * per)
+            wk.digits("wt", String(products.reduce(0, +)), right: right, row: row(r), per: per, .chapter)
         }
-        return pen.sketch
+        return (pen.sketch, wk.sketch)
     }
 
     // MARK: long division
@@ -241,13 +250,14 @@ enum LessonPictures {
     /// are what's found: the tens strip first ("?" until it is), then the ones strip with what's left in it. The
     /// division as school writes it beside it, two squares to a digit: the divisor, the bracket, the number under it,
     /// each part taken away and its quotient beside it, the answer over the bracket at the end.
-    static func divideGrid(_ m: WorkProblem, dv: Int, qt: Int, strip: Int, found: Int, left: Bool, sum: Bool) -> Sketch {
+    static func divideGrid( dv: Int, qt: Int, strip: Int, found: Int, left: Bool, sum: Bool) -> (picture: Sketch, work: Sketch) {
         let n = dv * qt, T = qt - qt % 10, O = qt % 10, rest = n - dv * T, widths = [T, O], products = [dv * T, dv * O]
         let g = areaGeometry(tall: Double(dv), wide: Double(qt)), k = g.k, kk = Int(k)
         var pen = GridPen(k: k)
+        var wk = GridPen(k: k)
         func sq(_ design: Double) -> Double { design / Paper.cell * k }
         let rx = sq(g.rx), ry = sq(g.ry), H = Double(dv)
-        let label = Sketch.Words(size: 28, weight: .medium, colour: .ink)
+        let label = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink)
         pen.label("side", String(dv), label.colour(.chapter), .left, edge: rx, along: ry + H / 2)
         var x = rx
         for (i, w) in widths.enumerated() where w > 0 {
@@ -267,31 +277,31 @@ enum LessonPictures {
             x += Double(w) + 1
         }
         if sum {
-            pen.bracket("sum", from: rx, to: x - 1, row: ry + H + (O < 4 * kk + 1 ? 3 : 2) * k, "\(T) + \(O) = \(qt)", Sketch.Words(size: 22, weight: .medium, colour: .chapter), tick: k)
+            pen.bracket("sum", from: rx, to: x - 1, row: ry + H + (O < 4 * kk + 1 ? 3 : 2) * k, "\(T) + \(O) = \(qt)", Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .chapter), tick: k)
         }
         // the division as school writes it: two squares to a digit
         let per = 2 * k, nd = Double(String(n).count), right = sq(g.colX) + (2 + nd) * per + per
         func row(_ r: Double) -> Double { ry + (r + 0.5) * per }
         let bracketX = right - nd * per - 0.3 * per
-        if sum { pen.digits("q", String(qt), right: right, row: row(0), per: per, .chapter) }
-        pen.digits("dv", String(dv), right: bracketX - 0.4 * per, row: row(1), per: per)
-        pen.sketch.line("bracket", [pen.P(bracketX - 0.3 * per, ry + 2 * per), pen.P(bracketX, ry + 1.5 * per), pen.P(bracketX - 0.3 * per, ry + per), pen.P(right, ry + per)], .ink, width: 2)
-        pen.digits("n", String(n), right: right, row: row(1), per: per)
+        if sum { wk.digits("q", String(qt), right: right, row: row(0), per: per, .chapter) }
+        wk.digits("dv", String(dv), right: bracketX - 0.4 * per, row: row(1), per: per)
+        wk.sketch.line("bracket", [wk.P(bracketX - 0.3 * per, ry + 2 * per), wk.P(bracketX, ry + 1.5 * per), wk.P(bracketX - 0.3 * per, ry + per), wk.P(right, ry + per)], .ink, width: 2)
+        wk.digits("n", String(n), right: right, row: row(1), per: per)
         if found >= 1 {
-            pen.word("m1", "−", at: right - (Double(String(products[0]).count) + 0.5) * per, row(2), label)
-            pen.digits("p1", String(products[0]), right: right, row: row(2), per: per)
-            pen.rule("u1", from: right - Double(String(products[0]).count) * per, to: right, row: ry + 3 * per)
-            pen.word("t1", String(T), at: right + k, row(2), label.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5))
+            wk.word("m1", "−", at: right - (Double(String(products[0]).count) + 0.5) * per, row(2), label)
+            wk.digits("p1", String(products[0]), right: right, row: row(2), per: per)
+            wk.rule("u1", from: right - Double(String(products[0]).count) * per, to: right, row: ry + 3 * per)
+            wk.word("t1", String(T), at: right + k, row(2), label.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5))
         }
-        if left || found >= 2 { pen.digits("rest", String(rest), right: right, row: row(3), per: per) }
+        if left || found >= 2 { wk.digits("rest", String(rest), right: right, row: row(3), per: per) }
         if found >= 2 {
-            pen.word("m2", "−", at: right - (Double(String(products[1]).count) + 0.5) * per, row(4), label)
-            pen.digits("p2", String(products[1]), right: right, row: row(4), per: per)
-            pen.rule("u2", from: right - Double(String(products[1]).count) * per, to: right, row: ry + 5 * per)
-            pen.digits("zero", "0", right: right, row: row(5), per: per)
-            pen.word("t2", "+ \(O)", at: right + k, row(4), label.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5))
+            wk.word("m2", "−", at: right - (Double(String(products[1]).count) + 0.5) * per, row(4), label)
+            wk.digits("p2", String(products[1]), right: right, row: row(4), per: per)
+            wk.rule("u2", from: right - Double(String(products[1]).count) * per, to: right, row: ry + 5 * per)
+            wk.digits("zero", "0", right: right, row: row(5), per: per)
+            wk.word("t2", "+ \(O)", at: right + k, row(4), label.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5))
         }
-        return pen.sketch
+        return (pen.sketch, wk.sketch)
     }
 
     // MARK: the plain grid layout
@@ -313,11 +323,12 @@ enum LessonPictures {
 
     /// 4.8 ÷ 0.6 on the grid: two number lines a step of squares apart for every tick, the top counting by 0.6, the
     /// bottom by 6, "× 10" between them; matched one step, then all, then the hops counted.
-    static func divideDecimalGrid(d: Int, qt: Int, _ p: Numbers) -> Sketch {
+    static func divideDecimalGrid(d: Int, qt: Int, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
         let one = p["one"] == 1, all = p["all"] == 1, hops = p["hops"] == 1, lit = p["lit"]
         var pen = GridPen()
+        var wk = GridPen()
         let per = Double(max(3, 40 / qt)), top = 8.0, bottom = 14.0, x0 = 5.0
-        let small = Sketch.Words(size: 22, weight: .medium, colour: .ink2)
+        let small = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink2)
         let atTop = pen.numberLine("top", col: x0, row: top, steps: qt, per: per, long: qt)
         _ = pen.numberLine("bottom", col: x0, row: bottom, steps: qt, per: per, long: qt)
         pen.label("x10", "× 10", small.colour(.chapter), .left, edge: x0, along: (top + bottom) / 2)
@@ -336,8 +347,8 @@ enum LessonPictures {
         }
         let line = hops ? "\(d * qt) ÷ \(d) = \(qt), and \(fmt(Double(d * qt) / 10)) ÷ \(fmt(Double(d) / 10)) = \(qt)"
             : all ? "\(fmt(Double(d * qt) / 10)) × 10 = \(d * qt)" : one ? "\(fmt(Double(d) / 10)) × 10 = \(d)" : nil
-        if let line { pen.word("line\(line)", line, at: x0, 18, Sketch.Words(size: 26, weight: .medium, colour: .ink), anchor: UnitPoint(x: 0, y: 0.5)) }
-        return pen.sketch
+        if let line { wk.word("line\(line)", line, at: x0, 18, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink), anchor: UnitPoint(x: 0, y: 0.5)) }
+        return (pen.sketch, wk.sketch)
     }
 
     // MARK: multiply by 10, 100, 1000
@@ -345,10 +356,11 @@ enum LessonPictures {
     /// 3.47 × 100 on a place-value chart of whole blocks: a column a block wide for each place, the digits in their
     /// columns, the point on the grid line between ones and tenths. The answer under it, its point hopped a block for
     /// each zero, every digit worth ten times more for each, a written-in 0 in each empty place.
-    static func powersGrid(x: Double, k: Int, hop: Bool) -> Sketch {
+    static func powersGrid(x: Double, k: Int, hop: Bool) -> (picture: Sketch, work: Sketch) {
         var pen = GridPen()
+        var wk = GridPen()
         let names = ["thousands", "hundreds", "tens", "ones", "tenths", "hundredths"], cw = 5.0
-        let head = Sketch.Words(size: 13, weight: .regular, colour: .ink3), big = Sketch.Words(size: 32, weight: .medium, colour: .ink)
+        let head = Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink3), big = Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink)
         for (i, n) in names.enumerated() {
             pen.word("h\(i)", n, at: (Double(i) + 0.5) * cw, 1, head)
             if i > 0 { pen.sketch.line("c\(i)", [pen.P(Double(i) * cw, 2), pen.P(Double(i) * cw, 15)], .line, width: 1) }
@@ -363,17 +375,17 @@ enum LessonPictures {
                 if isWritten { pen.sketch.plate("\(id)z\(i)", pen.R(Double(col) * cw + 1, r - 1.5, 3, 3), .tint(0.3)) }
                 pen.word("\(id)\(i)\(ch)", String(ch), at: (Double(col) + 0.5) * cw, r, big.colour(isWritten ? .chapter : .ink))
             }
-            if dg.count > whole { pen.word("\(id).", ".", at: pointX, r + 0.6, Sketch.Words(size: 32, weight: .bold, colour: .ink)) }
+            if dg.count > whole { pen.word("\(id).", ".", at: pointX, r + 0.6, Sketch.Words(size: Sketch.maths, weight: .bold, colour: .ink)) }
         }
         row("a", x, at: 5)
-        pen.label("m", "× \(fmt(pow(10, Double(k))))", Sketch.Words(size: 24, weight: .medium, colour: .chapter), .right, edge: 6 * cw, along: 5)
+        pen.label("m", "× \(fmt(pow(10, Double(k))))", Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .chapter), .right, edge: 6 * cw, along: 5)
         if hop {
             let ans = x * pow(10, Double(k)), (dg, w) = PowersOfTen.digits(x), (ag, _) = PowersOfTen.digits(ans)
             row("b", ans, at: 11, written: max(0, ag.count - dg.count))
             _ = w
             for j in 0..<k { pen.hop("hop\(j)", from: pointX + Double(j) * cw, to: pointX + Double(j + 1) * cw, row: 7, height: 1.2) }
         }
-        return pen.sketch
+        return (pen.sketch, wk.sketch)
     }
 
     // MARK: adding decimals
@@ -381,40 +393,42 @@ enum LessonPictures {
     /// 12.5 + 3.75 on the grid: the sum in columns two squares to a digit, the points on one grid line with a line down
     /// through them, a 0 written in so both have hundredths; the whole columns' band, then the decimal columns'; the
     /// parts' sums on the right; the total under the line.
-    static func addDecimalsGrid(a: Double, b: Double, _ p: Numbers) -> Sketch {
+    static func addDecimalsGrid(a: Double, b: Double, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
         var pen = GridPen()
+        var wk = GridPen()
         // three squares to a digit, so each column has room for its place's name over it
-        let lit = p["lit"], per = 3.0, pointCol = 15.0, right = pointCol + 2 * per
-        let A = String(format: "%.2f", a), B = String(format: "%.2f", b), big: CGFloat = 40
-        let small = Sketch.Words(size: 18, weight: .regular, colour: .ink3)
+        // five squares to a column, a block, so each column's place name fits over it
+        let lit = p["lit"], per = 5.0, pointCol = 20.0, right = pointCol + 2 * per
+        let A = String(format: "%.2f", a), B = String(format: "%.2f", b), big: CGFloat = Sketch.maths
+        let small = Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink3)
         // the place names over the columns
         for (i, n) in ["tens", "ones", "tenths", "hundredths"].enumerated() {
-            pen.word("h\(i)", n, at: pointCol + (Double(i) - 2 + 0.5) * per, 1, Sketch.Words(size: 13, weight: .regular, colour: .ink3))
+            pen.word("h\(i)", n, at: pointCol + (Double(i) - 2 + 0.5) * per, 1, Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink3))
         }
         if lit == 1 { pen.sketch.fill("bw", pen.R(pointCol - 2 * per, 2, 2 * per, 12), .tint(0.16)) }
         if lit == 2 { pen.sketch.fill("bd", pen.R(pointCol, 2, 2 * per, 12), .tint(0.16)) }
         pen.digits("a", A, right: right, row: 3.5, per: per, size: big)
         if (a * 10).rounded() == a * 10 {
             pen.sketch.plate("zf", pen.R(right - per, 2, per, per), lit == 0 ? .tint(0.38) : .tint(0.2))
-            pen.word("z", "0", at: right - per / 2, 3.5, Sketch.Words(size: big, weight: .medium, colour: .chapter))
+            pen.word("z", "0", at: right - per / 2, 3.5, Sketch.Words(size: Sketch.maths, weight: .medium, colour: .chapter))
         }
-        pen.word("plus", "+", at: pointCol - 2.5 * per, 6.5, Sketch.Words(size: 32, weight: .medium, colour: .ink))
+        pen.word("plus", "+", at: pointCol - 2.5 * per, 6.5, Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink))
         pen.digits("b", B, right: right, row: 6.5, per: per, size: big)
         pen.rule("rule", from: pointCol - 3 * per, to: right, row: 8)
         pen.sketch.line("wire", [pen.P(pointCol, 2), pen.P(pointCol, 14)], .chapter, width: 1.5, dashed: true)
         if p["total"] == 1 { pen.digits("t", String(format: "%.2f", a + b), right: right, row: 9.5, per: per, size: big, .chapter) }
         // the parts, on the right, row for row with the sum
-        let wx = 30.0, whole = Double(Int(a) + Int(b)), dec = (a - Double(Int(a))) + (b - Double(Int(b)))
-        pen.word("hw", "wholes", at: wx, 3.5, small, anchor: UnitPoint(x: 0, y: 0.5))
-        pen.word("hd", "after the point", at: wx, 6.5, small, anchor: UnitPoint(x: 0, y: 0.5))
-        let num = Sketch.Words(size: 32, weight: .medium, colour: .ink)
-        if p["whole"] == 1 { pen.word("sw", fmt(whole), at: wx + 20, 3.5, num, anchor: UnitPoint(x: 1, y: 0.5)) }
-        if p["decimal"] == 1 { pen.word("sd", String(format: "%.2f", dec), at: wx + 20, 6.5, num.colour(p["carry"] == 1 ? .chapter : .ink), anchor: UnitPoint(x: 1, y: 0.5)) }
+        let wx = 36.0, whole = Double(Int(a) + Int(b)), dec = (a - Double(Int(a))) + (b - Double(Int(b)))
+        wk.word("hw", "wholes", at: wx, 3.5, small, anchor: UnitPoint(x: 0, y: 0.5))
+        wk.word("hd", "after the point", at: wx, 6.5, small, anchor: UnitPoint(x: 0, y: 0.5))
+        let num = Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink)
+        if p["whole"] == 1 { wk.word("sw", fmt(whole), at: wx + 20, 3.5, num, anchor: UnitPoint(x: 1, y: 0.5)) }
+        if p["decimal"] == 1 { wk.word("sd", String(format: "%.2f", dec), at: wx + 20, 6.5, num.colour(p["carry"] == 1 ? .chapter : .ink), anchor: UnitPoint(x: 1, y: 0.5)) }
         if p["total"] == 1 {
-            pen.rule("r2", from: wx + 10, to: wx + 20, row: 8)
-            pen.word("st", String(format: "%.2f", a + b), at: wx + 20, 9.5, num.colour(.chapter), anchor: UnitPoint(x: 1, y: 0.5))
+            wk.rule("r2", from: wx + 10, to: wx + 20, row: 8)
+            wk.word("st", String(format: "%.2f", a + b), at: wx + 20, 9.5, num.colour(.chapter), anchor: UnitPoint(x: 1, y: 0.5))
         }
-        return pen.sketch
+        return (pen.sketch, wk.sketch)
     }
 
     // MARK: fractions
@@ -425,25 +439,26 @@ enum LessonPictures {
     /// with its × beside it, a digit to a square; on the right the bars, one whole each, a length every bottom divides
     /// (so a third and a fourth of twelve are exact squares), cut into the same size pieces, then put together (or
     /// taken away).
-    static func unlikeGrid(_ n: Numbers, _ p: Numbers) -> Sketch {
+    static func unlikeGrid(_ n: Numbers, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
         var pen = GridPen()
+        var wk = GridPen()
         let a = Int(n["a"] ?? 0), b = Int(n["b"] ?? 1), c = Int(n["c"] ?? 0), d = Int(n["d"] ?? 1), minus = n["minus"] == 1
         let L = Int(n["L"] ?? 1), A = Int(n["A"] ?? 0), C = Int(n["C"] ?? 0), S = Int(n["S"] ?? 0)
         let cut = p["cut"] == 1, first = p["first"] == 1, second = p["second"] == 1, combine = p["combine"] == 1, focus = p["focus"]
-        let small = Sketch.Words(size: 22, weight: .medium, colour: .ink2), chapter = Sketch.Words(size: 18, weight: .medium, colour: .chapter)
+        let small = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink2), chapter = Sketch.Words(size: Sketch.small, weight: .medium, colour: .chapter)
         // school: a/b = A/L (× L/b) over c/d = C/L, a line, S/L
-        pen.math("f1", first ? [frac(a, b), .op("="), frac(A, L)] : [frac(a, b)], col: 1, row: 1)
-        if first { pen.word("k1", "× \(L / b)", at: 9, 3, chapter, anchor: UnitPoint(x: 0, y: 0.5)) }
-        pen.word("op", minus ? "−" : "+", at: 0, 8, Sketch.Words(size: 26, weight: .medium, colour: .ink))
-        pen.math("f2", second ? [frac(c, d), .op("="), frac(C, L)] : [frac(c, d)], col: 1, row: 6)
-        if second { pen.word("k2", "× \(L / d)", at: 9, 8, chapter, anchor: UnitPoint(x: 0, y: 0.5)) }
+        wk.math("f1", first ? [frac(a, b), .op("="), frac(A, L)] : [frac(a, b)], col: 1, row: 1)
+        if first { wk.word("k1", "× \(L / b)", at: 9, 3, chapter, anchor: UnitPoint(x: 0, y: 0.5)) }
+        wk.word("op", minus ? "−" : "+", at: 0, 8, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink))
+        wk.math("f2", second ? [frac(c, d), .op("="), frac(C, L)] : [frac(c, d)], col: 1, row: 6)
+        if second { wk.word("k2", "× \(L / d)", at: 9, 8, chapter, anchor: UnitPoint(x: 0, y: 0.5)) }
         if combine {
-            pen.rule("r", from: 0, to: 12, row: 11)
-            pen.math("ans", [frac(S, L)], col: 5, row: 11)
+            wk.rule("r", from: 0, to: 12, row: 11)
+            wk.math("ans", [frac(S, L)], col: 5, row: 11)
             if p["answer"] == 1 {
                 let g = gcd(S, L), whole = S / L, rem = S % L
                 let simple = whole >= 1 ? (rem == 0 ? "\(whole)" : "\(whole) \(rem / gcd(rem, L))/\(L / gcd(rem, L))") : "\(S / g)/\(L / g)"
-                pen.word("simp", "= \(simple)", at: 8, 13, Sketch.Words(size: 24, weight: .medium, colour: .chapter), anchor: UnitPoint(x: 0, y: 0.5))
+                wk.word("simp", "= \(simple)", at: 8, 13, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .chapter), anchor: UnitPoint(x: 0, y: 0.5))
             }
         }
         // the bars: a whole is L pieces of `per` squares
@@ -466,21 +481,22 @@ enum LessonPictures {
             }
             pen.label("l3", "\(S)/\(L)", chapter, .right, edge: x0 + Double(length), along: 13)
         }
-        return pen.sketch
+        return (pen.sketch, wk.sketch)
     }
 
     /// 2/3 × 3/4 on the grid: the square cut into b rows and d columns of whole squares, a rows and c columns shaded,
     /// their overlap counted; on the left top times top over bottom times bottom.
-    static func multiplyFractionsGrid(_ n: Numbers, _ p: Numbers) -> Sketch {
+    static func multiplyFractionsGrid(_ n: Numbers, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
         var pen = GridPen()
+        var wk = GridPen()
         let a = Int(n["a"] ?? 0), b = Int(n["b"] ?? 1), c = Int(n["c"] ?? 0), d = Int(n["d"] ?? 1)
         let at = Int(p["at"] ?? 0), ask = p["ask"].map(Int.init)
-        pen.math("prob", [frac(a, b), .op("×"), frac(c, d)], col: 0, row: 1)
-        if at >= 3 || ask == 3 { pen.math("mul", [.op("="), .frac(.text("\(a) × \(c)"), .text("\(b) × \(d)"))], col: 7, row: 1) }
-        if at >= 3 { pen.math("res", [.op("="), frac(a * c, b * d)], col: 7, row: 7) }
+        wk.math("prob", [frac(a, b), .op("×"), frac(c, d)], col: 0, row: 1)
+        if at >= 3 || ask == 3 { wk.math("mul", [.op("="), .frac(.text("\(a) × \(c)"), .text("\(b) × \(d)"))], col: 7, row: 1) }
+        if at >= 3 { wk.math("res", [.op("="), frac(a * c, b * d)], col: 7, row: 7) }
         if at >= 4 {
             let g = gcd(a * c, b * d)
-            pen.word("simp", g > 1 ? "= \(a * c / g)/\(b * d / g)" : "already simplest", at: 13, 9, Sketch.Words(size: 22, weight: .medium, colour: .chapter), anchor: UnitPoint(x: 0, y: 0.5))
+            wk.word("simp", g > 1 ? "= \(a * c / g)/\(b * d / g)" : "already simplest", at: 13, 9, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .chapter), anchor: UnitPoint(x: 0, y: 0.5))
         }
         // the grid: each piece `s` squares a side
         let s = Double(max(2, min(6, 16 / b, 24 / d))), x0 = 30.0, y0 = 2.0
@@ -489,23 +505,24 @@ enum LessonPictures {
             if inRow && inCol { pen.sketch.fill("o\(r)_\(col)\(at >= 3 || ask == 3)", rect, ask == 3 || at >= 3 ? .tint(0.7) : .tint(0.55)) }
             else if inRow { pen.sketch.fill("r\(r)_\(col)\(ask == 1)", rect, ask == 1 ? .tint(0.4) : .tint(0.22)) }
             else if inCol { pen.sketch.fill("c\(r)_\(col)\(ask == 2)", rect, ask == 2 ? .tint(0.4) : .tint(0.12)) }
-            if at >= 3, inRow && inCol { pen.word("n\(r)_\(col)", "\(r * c + col + 1)", at: x0 + (Double(col) + 0.5) * s, y0 + (Double(r) + 0.5) * s, Sketch.Words(size: 14, weight: .semibold, colour: .paper)) }
+            if at >= 3, inRow && inCol { pen.word("n\(r)_\(col)", "\(r * c + col + 1)", at: x0 + (Double(col) + 0.5) * s, y0 + (Double(r) + 0.5) * s, Sketch.Words(size: Sketch.small, weight: .semibold, colour: .paper)) }
         } }
         pen.sketch.segments("grid", (0...d).map { i in (pen.P(x0 + Double(i) * s, y0), pen.P(x0 + Double(i) * s, y0 + Double(b) * s)) }
             + (0...b).map { j in (pen.P(x0, y0 + Double(j) * s), pen.P(x0 + Double(d) * s, y0 + Double(j) * s)) }, .tint(0.6), width: 1.5)
-        let small = Sketch.Words(size: 22, weight: .medium, colour: .ink2)
+        let small = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink2)
         pen.label("rl", "\(a)/\(b)", small.colour(ask == 1 ? .chapter : .ink2), .left, edge: x0, along: y0 + Double(a) * s / 2)
         pen.label("cl", "\(c)/\(d)", small.colour(ask == 2 ? .chapter : .ink2), .above, edge: y0, along: x0 + Double(c) * s / 2)
-        return pen.sketch
+        return (pen.sketch, wk.sketch)
     }
 
     /// 2 3/4 on the grid: a bar per whole and one for the extra pieces, each piece a whole number of squares, every
     /// piece counted on; on the right the mixed number rewritten.
-    static func improperGrid(_ n: Numbers, _ p: Numbers) -> Sketch {
+    static func improperGrid(_ n: Numbers, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
         var pen = GridPen()
+        var wk = GridPen()
         let w = Int(n["w"] ?? 1), nn = Int(n["n"] ?? 1), d = Int(n["d"] ?? 2)
         let wholes = Int(p["wholes"] ?? 0), extra = p["extra"] == 1, fraction = p["fraction"] == 1, focus = p["focus"]
-        let per = max(2, 30 / d), length = d * per, x0 = 3.0, small = Sketch.Words(size: 22, weight: .medium, colour: .ink2)
+        let per = max(2, 30 / d), length = d * per, x0 = 3.0, small = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink2)
         for j in 0...w {
             let row = 1 + Double(j) * 3, isExtra = j == w, filled = isExtra ? (extra ? nn : 0) : (j < wholes ? d : 0)
             pen.bar("b\(j)", col: x0, row: row, length: length, parts: d, shaded: filled, striped: isExtra,
@@ -513,56 +530,59 @@ enum LessonPictures {
             pen.label("bl\(j)", isExtra ? "\(nn)/\(d)" : "1", small, .left, edge: x0, along: row + 1)
             if filled > 0 { pen.label("cnt\(j)\(j * d + filled)", "\(j * d + filled)", small.colour(isExtra || j == w - 1 ? .chapter : .ink2), .right, edge: x0 + Double(length), along: row + 1) }
         }
-        let wx = x0 + Double(length) + 8, line = Sketch.Words(size: 28, weight: .medium, colour: .ink)
-        pen.math("mixed", [.num(Double(w)), frac(nn, d)] + (fraction ? [.op("="), frac(w * d + nn, d)] : []), col: wx, row: 1)
-        if wholes >= w { pen.word("l1", "\(w) × \(d) = \(w * d)", at: wx, 8, line, anchor: UnitPoint(x: 0, y: 0.5)) }
-        if extra { pen.word("l2", "\(w * d) + \(nn) = \(w * d + nn)", at: wx, 11, line, anchor: UnitPoint(x: 0, y: 0.5)) }
-        return pen.sketch
+        let wx = x0 + Double(length) + 8, line = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink)
+        wk.math("mixed", [.num(Double(w)), frac(nn, d)] + (fraction ? [.op("="), frac(w * d + nn, d)] : []), col: wx, row: 1)
+        if wholes >= w { wk.word("l1", "\(w) × \(d) = \(w * d)", at: wx, 8, line, anchor: UnitPoint(x: 0, y: 0.5)) }
+        if extra { wk.word("l2", "\(w * d) + \(nn) = \(w * d + nn)", at: wx, 11, line, anchor: UnitPoint(x: 0, y: 0.5)) }
+        return (pen.sketch, wk.sketch)
     }
 
     /// 3/4 of 20 on the grid: the bar of 20 cut into 4 equal groups (each a whole number of squares), 3 taken, a
     /// bracket under them; the working under the bar.
-    static func fractionOfGrid(_ n: Numbers, _ p: Numbers) -> Sketch {
+    static func fractionOfGrid(_ n: Numbers, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
         var pen = GridPen()
+        var wk = GridPen()
         let nn = Int(n["n"] ?? 1), d = Int(n["d"] ?? 2), W = Int(n["W"] ?? 0), g = W / max(1, d)
         let at = Int(p["at"] ?? 0), ask = p["ask"].map(Int.init)
-        let length = d * max(3, 40 / d), x0 = 0.0, row = 3.0, label = Sketch.Words(size: 24, weight: .medium, colour: .ink2)
+        let length = d * max(3, 40 / d), x0 = 0.0, row = 3.0, label = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink2)
         pen.label("W", "\(W)", label, .above, edge: row, along: x0 + Double(length) / 2)
         let cutNow = at >= 1 || ask == 1
         pen.bar("g", col: x0, row: row, length: length, height: 3, parts: cutNow ? d : 1, shaded: at >= 2 ? nn : (cutNow ? 0 : 1), lit: ask == 2 || at >= 2)
-        if at >= 1 { for i in 0..<d { pen.word("gl\(i)", "\(g)", at: x0 + (Double(i) + 0.5) * Double(length / d), row + 1.5, Sketch.Words(size: 20, weight: .medium, colour: .ink)) } }
-        if at >= 2 { pen.bracket("br", from: x0, to: x0 + Double(nn * (length / d)), row: row + 5, "\(nn)/\(d)", Sketch.Words(size: 20, weight: .medium, colour: .chapter)) }
-        let line = Sketch.Words(size: 28, weight: .medium, colour: .ink)
-        if at >= 1 { pen.word("l1", "\(W) ÷ \(d) = \(g)", at: x0, 12, line, anchor: UnitPoint(x: 0, y: 0.5)) }
-        if at >= 2 { pen.word("l2", "\(g) × \(nn) = \(g * nn)", at: x0, 15, line.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5)) }
-        return pen.sketch
+        if at >= 1 { for i in 0..<d { pen.word("gl\(i)", "\(g)", at: x0 + (Double(i) + 0.5) * Double(length / d), row + 1.5, Sketch.Words(size: Sketch.small, weight: .medium, colour: .ink)) } }
+        if at >= 2 { pen.bracket("br", from: x0, to: x0 + Double(nn * (length / d)), row: row + 5, "\(nn)/\(d)", Sketch.Words(size: Sketch.small, weight: .medium, colour: .chapter)) }
+        let line = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink)
+        if at >= 1 { wk.word("l1", "\(W) ÷ \(d) = \(g)", at: x0, 12, line, anchor: UnitPoint(x: 0, y: 0.5)) }
+        if at >= 2 { wk.word("l2", "\(g) × \(nn) = \(g * nn)", at: x0, 15, line.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5)) }
+        return (pen.sketch, wk.sketch)
     }
 
     /// 3 ÷ 1/4 on the grid: a bar per whole, cut into fourths of whole squares and counted on; on the right, 1 = 4 × 1/4
     /// and 3 × 4 = 12.
-    static func unitDivideGrid(_ n: Numbers, _ p: Numbers) -> Sketch {
+    static func unitDivideGrid(_ n: Numbers, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
         var pen = GridPen()
+        var wk = GridPen()
         let W = Int(n["W"] ?? 1), d = Int(n["d"] ?? 2), at = Int(p["at"] ?? 0), ask = p["ask"].map(Int.init)
         let per = max(2, 32 / d), length = d * per, x0 = 2.0, tall: Double = W > 6 ? 1 : 2, step = tall + 1
-        let small = Sketch.Words(size: 22, weight: .medium, colour: .ink2)
+        let small = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink2)
         for j in 0..<W {
             let row = 1 + Double(j) * step, beat = min(j + 1, 3), isCut = at >= beat
             pen.bar("b\(j)", col: x0, row: row, length: length, height: tall, parts: isCut ? d : 1, shaded: isCut ? d : 1, lit: ask == beat)
             pen.label("one\(j)", "1", small, .left, edge: x0, along: row + tall / 2)
             if isCut { pen.label("c\(j)", "\((j + 1) * d)", small.colour(j == W - 1 ? .chapter : .ink2), .right, edge: x0 + Double(length), along: row + tall / 2) }
         }
-        let wx = x0 + Double(length) + 6, line = Sketch.Words(size: 28, weight: .medium, colour: .ink)
-        if at >= 1 { pen.word("l1", "1 = \(d) × 1/\(d)", at: wx, 2, line, anchor: UnitPoint(x: 0, y: 0.5)) }
-        if at >= min(W, 3) { pen.word("l2", "\(W) × \(d) = \(W * d)", at: wx, 5, line.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5)) }
-        return pen.sketch
+        let wx = x0 + Double(length) + 6, line = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink)
+        if at >= 1 { wk.word("l1", "1 = \(d) × 1/\(d)", at: wx, 2, line, anchor: UnitPoint(x: 0, y: 0.5)) }
+        if at >= min(W, 3) { wk.word("l2", "\(W) × \(d) = \(W * d)", at: wx, 5, line.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5)) }
+        return (pen.sketch, wk.sketch)
     }
 
     // MARK: order of operations
 
     /// 3 + 4 × (6 − 2) on the grid: rewritten line under line as school does it, two squares to a character, the group
     /// done on each line lit behind it; on the right the order to follow, the rule being used lit.
-    static func orderGrid(_ n: Numbers, beat: Int) -> Sketch {
+    static func orderGrid(_ n: Numbers, beat: Int) -> (picture: Sketch, work: Sketch) {
         var pen = GridPen()
+        var wk = GridPen()
         let t = Int(n["t"] ?? 0), a = n["a"] ?? 0, b = n["b"] ?? 0, c = n["c"] ?? 0, d = n["d"] ?? 0
         let A = fmt(a), B = fmt(b), C = fmt(c), D = fmt(d)
         var lines: [[String]] = [], groups: [Range<Int>] = [], rules: [Int] = []
@@ -580,7 +600,7 @@ enum LessonPictures {
             lines = [[A, "×", B, "−", C, "÷", D], [fmt(v1), "−", C, "÷", D], [fmt(v1), "−", fmt(v2)], [fmt(v3)]]
             groups = [0..<3, 2..<5, 0..<3]; rules = [1, 1, 2]
         }
-        let big = Sketch.Words(size: 30, weight: .medium, colour: .ink), shown = min(max(beat, 0), 3)
+        let big = Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink), shown = min(max(beat, 0), 3)
         for i in 0...shown {
             let row = 1 + Double(i) * 4, x0 = 3.0
             if i > 0 { pen.word("eq\(i)", "=", at: 1, row + 1, big) }
@@ -599,11 +619,11 @@ enum LessonPictures {
         let litRule = beat >= 1 && beat <= 3 ? rules[beat - 1] : -1
         for (i, name) in names.enumerated() {
             let row = 1 + Double(i) * 3
-            pen.sketch.fill("rf\(i)\(i == litRule)", pen.R(rx, row, 12, 2), i == litRule ? .tint(0.4) : .tint(0.15))
-            pen.word("rn\(i)", "\(i + 1)", at: rx + 1, row + 1, Sketch.Words(size: 18, weight: .semibold, colour: .chapter))
-            pen.word("rt\(i)", name, at: rx + 2.5, row + 1, Sketch.Words(size: 18, weight: .medium, colour: i == litRule ? .ink : .ink2), anchor: UnitPoint(x: 0, y: 0.5))
+            wk.sketch.fill("rf\(i)\(i == litRule)", pen.R(rx, row, 12, 2), i == litRule ? .tint(0.4) : .tint(0.15))
+            wk.word("rn\(i)", "\(i + 1)", at: rx + 1, row + 1, Sketch.Words(size: Sketch.small, weight: .semibold, colour: .chapter))
+            wk.word("rt\(i)", name, at: rx + 2.5, row + 1, Sketch.Words(size: Sketch.small, weight: .medium, colour: i == litRule ? .ink : .ink2), anchor: UnitPoint(x: 0, y: 0.5))
         }
-        return pen.sketch
+        return (pen.sketch, wk.sketch)
     }
 
     // MARK: volume
@@ -611,11 +631,12 @@ enum LessonPictures {
     /// A box 4 × 3 × 2 on the grid, each cube three squares a side, seen two ways as school draws it flat: its floor from
     /// above (length × width, the layer of cubes on it) and its front (length × height, the layers stacked); the
     /// working beside them.
-    static func volumeGrid(_ n: Numbers, _ p: Numbers) -> Sketch {
+    static func volumeGrid(_ n: Numbers, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
         var pen = GridPen()
+        var wk = GridPen()
         let l = Int(n["length"] ?? 1), w = Int(n["width"] ?? 1), h = Int(n["height"] ?? 1)
         let floor = p["floor"] == 1, layers = Int(p["layers"] ?? 0), height = p["height"] == 1, cube = 3.0
-        let label = Sketch.Words(size: 22, weight: .medium, colour: .ink2), head = Sketch.Words(size: 16, weight: .medium, colour: .ink3)
+        let label = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink2), head = Sketch.Words(size: Sketch.small, weight: .medium, colour: .ink3)
         func grid(_ id: String, col: Double, row: Double, cols: Int, rows: Int, filled: Int, lit: Bool) {
             if filled > 0 { pen.sketch.fill("\(id)f\(filled)", pen.R(col, row + Double(rows - filled) * cube, Double(cols) * cube, Double(filled) * cube), lit ? .tint(0.4) : .tint(0.22)) }
             pen.sketch.segments("\(id)g\(filled > 0)", (0...cols).map { i in (pen.P(col + Double(i) * cube, row), pen.P(col + Double(i) * cube, row + Double(rows) * cube)) }
@@ -635,24 +656,25 @@ enum LessonPictures {
         pen.label("hl", "\(h) cm", label.colour(height ? .chapter : .ink2), .right, edge: sx + Double(l) * cube, along: sy + Double(h) * cube / 2)
         pen.label("sl", "\(l) cm", label, .below, edge: sy + Double(h) * cube, along: sx + Double(l) * cube / 2)
         // the working
-        let wx = sx + Double(l) * cube + 8, line = Sketch.Words(size: 26, weight: .medium, colour: .ink)
-        pen.word("v", "Volume = l × w × h", at: wx, 3, line, anchor: UnitPoint(x: 0, y: 0.5))
-        if floor || layers > 0 { pen.word("b", "\(l) × \(w) = \(l * w) in a layer", at: wx, 6, line, anchor: UnitPoint(x: 0, y: 0.5)) }
-        if height { pen.word("t", "\(l * w) × \(h) = \(l * w * h) cm³", at: wx, 9, line.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5)) }
-        return pen.sketch
+        let wx = sx + Double(l) * cube + 8, line = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink)
+        wk.word("v", "Volume = l × w × h", at: wx, 3, line, anchor: UnitPoint(x: 0, y: 0.5))
+        if floor || layers > 0 { wk.word("b", "\(l) × \(w) = \(l * w) in a layer", at: wx, 6, line, anchor: UnitPoint(x: 0, y: 0.5)) }
+        if height { wk.word("t", "\(l * w) × \(h) = \(l * w * h) cm³", at: wx, 9, line.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5)) }
+        return (pen.sketch, wk.sketch)
     }
 
     // MARK: converting units
 
     /// 3 feet = ? inches on the grid: a bar of big units, each a block wide, opened up into small ones one after
     /// another; the brackets over and under it say what it holds.
-    static func unitsGrid(_ n: Numbers, _ p: Numbers) -> Sketch {
+    static func unitsGrid(_ n: Numbers, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
         var pen = GridPen()
+        var wk = GridPen()
         let pair = ConvertUnits.units[min(ConvertUnits.units.count - 1, Int(n["u"] ?? 0))]
         let count = p["units"] ?? 1, per = p["per"] ?? pair.per, rows = Int(p["rows"] ?? 1), fill = Int(p["fill"] ?? 0)
         let one = p["one"] == 1, ask = p["ask"] == 1, total = p["total"] == 1, up = n["up"] == 1, amount = n["n"] ?? 0
         let cells = Int(count.rounded(.up)), perRow = rows == 2 ? Int((Double(cells) / 2).rounded(.up)) : cells
-        let cw = 5.0, ch = 3.0, x0 = 0.0, y0 = 4.0, label = Sketch.Words(size: 20, weight: .medium, colour: .ink)
+        let cw = 5.0, ch = 3.0, x0 = 0.0, y0 = 4.0, label = Sketch.Words(size: Sketch.small, weight: .medium, colour: .ink)
         pen.label("amt", up ? "\(fmt(amount)) \(pair.small)" : "\(fmt(amount)) \(amount == 1 ? pair.one : pair.many)", label.colour(.ink2), .above, edge: y0, along: x0 + Double(perRow) * cw / 2)
         for i in 0..<cells {
             let r = i / perRow, c = i % perRow, col = x0 + Double(c) * cw, row = y0 + Double(r) * (ch + 1)
@@ -662,14 +684,14 @@ enum LessonPictures {
             let text = opened ? fmt(per * part) : (ask && i > 0 ? "?" : (part < 1 ? "½" : "1"))
             pen.word("ul\(i)\(text)", text, at: col + cw / 2, row + ch / 2, label.colour(opened ? .ink : .ink2))
         }
-        let below = y0 + Double(rows) * (ch + 1) + 1, line = Sketch.Words(size: 26, weight: .medium, colour: .ink)
-        if one { pen.word("one", "1 \(pair.one) = \(fmt(per)) \(pair.small)", at: x0, below + 1, line, anchor: UnitPoint(x: 0, y: 0.5)) }
+        let below = y0 + Double(rows) * (ch + 1) + 1, line = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink)
+        if one { wk.word("one", "1 \(pair.one) = \(fmt(per)) \(pair.small)", at: x0, below + 1, line, anchor: UnitPoint(x: 0, y: 0.5)) }
         if total {
             let ans = up ? amount / per : amount * per
-            pen.word("tot", up ? "\(fmt(amount)) ÷ \(fmt(per)) = \(fmt(ans)) \(pair.many)" : "\(fmt(amount)) × \(fmt(per)) = \(fmt(ans)) \(pair.small)",
+            wk.word("tot", up ? "\(fmt(amount)) ÷ \(fmt(per)) = \(fmt(ans)) \(pair.many)" : "\(fmt(amount)) × \(fmt(per)) = \(fmt(ans)) \(pair.small)",
                      at: x0, below + 4, line.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5))
         }
-        return pen.sketch
+        return (pen.sketch, wk.sketch)
     }
 
     // MARK: multiplying decimals
@@ -677,26 +699,27 @@ enum LessonPictures {
     /// 2.4 × 0.3 on the grid: the multiplication as school writes it, two squares to a digit, each number's decimal
     /// places counted beside it and the answer's under; beside it one whole as ten squares by ten, with the one piece
     /// the two numbers' places make lit (a tenth is a column of it, a hundredth one square).
-    static func multiplyDecimalsGrid(_ n: Numbers, _ p: Numbers) -> Sketch {
+    static func multiplyDecimalsGrid(_ n: Numbers, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
         var pen = GridPen()
+        var wk = GridPen()
         let A = Int(n["A"] ?? 0), B = Int(n["B"] ?? 0), pa = Int(n["pa"] ?? 0), pb = Int(n["pb"] ?? 0)
         let x = Double(A) / pow(10, Double(pa)), y = Double(B) / pow(10, Double(pb)), ans = x * y, places = pa + pb
         let line = p["line"].map(Int.init), per = 2.0, right = 14.0
-        let note = Sketch.Words(size: 18, weight: .regular, colour: .ink3), placeWord = { (k: Int) in k == 1 ? "1 place" : "\(k) places" }
-        pen.digits("a", fmt(x), right: right, row: 2, per: per)
-        pen.word("x", "×", at: right - 4.5 * per, 4, Sketch.Words(size: 28, weight: .medium, colour: .ink))
-        pen.digits("b", fmt(y), right: right, row: 4, per: per)
-        pen.word("pa", placeWord(pa), at: right + 1, 2, note.colour(p["piece"] == 1 ? .chapter : .ink3), anchor: UnitPoint(x: 0, y: 0.5))
-        pen.word("pb", placeWord(pb), at: right + 1, 4, note.colour(p["piece"] == 1 ? .chapter : .ink3), anchor: UnitPoint(x: 0, y: 0.5))
-        pen.rule("r", from: right - 5 * per, to: right, row: 5)
+        let note = Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink3), placeWord = { (k: Int) in k == 1 ? "1 place" : "\(k) places" }
+        wk.digits("a", fmt(x), right: right, row: 2, per: per)
+        wk.word("x", "×", at: right - 4.5 * per, 4, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink))
+        wk.digits("b", fmt(y), right: right, row: 4, per: per)
+        wk.word("pa", placeWord(pa), at: right + 1, 2, note.colour(p["piece"] == 1 ? .chapter : .ink3), anchor: UnitPoint(x: 0, y: 0.5))
+        wk.word("pb", placeWord(pb), at: right + 1, 4, note.colour(p["piece"] == 1 ? .chapter : .ink3), anchor: UnitPoint(x: 0, y: 0.5))
+        wk.rule("r", from: right - 5 * per, to: right, row: 5)
         if line == 2 {
-            pen.digits("t", fmt(ans), right: right, row: 6, per: per, .chapter)
-            pen.word("pt", placeWord(places), at: right + 1, 6, note.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5))
+            wk.digits("t", fmt(ans), right: right, row: 6, per: per, .chapter)
+            wk.word("pt", placeWord(places), at: right + 1, 6, note.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5))
         }
         let lines = ["\(A) × \(B) = \(A * B) small pieces",
                      "\(fmt(1 / pow(10, Double(pa)))) × \(fmt(1 / pow(10, Double(pb)))) = \(fmt(1 / pow(10, Double(places))))",
                      "\(A * B) \(places == 1 ? "tenths" : places == 2 ? "hundredths" : "thousandths") = \(fmt(ans))"]
-        if let l = line { pen.word("line\(l)", lines[l], at: 0, 10, Sketch.Words(size: 26, weight: .medium, colour: .ink), anchor: UnitPoint(x: 0, y: 0.5)) }
+        if let l = line { wk.word("line\(l)", lines[l], at: 0, 10, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink), anchor: UnitPoint(x: 0, y: 0.5)) }
         // one whole: ten squares by ten; the piece lit
         let ux = 30.0, uy = 2.0, lit = p["piece"] == 1 || p["lit"] == 1
         pen.word("wl", "1 whole", at: ux + 5, uy - 1, note.colour(.ink2))
@@ -708,9 +731,9 @@ enum LessonPictures {
         pen.sketch.box("unito", pen.R(ux, uy, 10, 10), .chapter, width: 2)
         if lit {
             let size = fmt(1 / pow(10, Double(places)))
-            pen.label("ps", places > 2 ? "one piece: \(size) (a tenth of a square)" : "one piece: \(size)", Sketch.Words(size: 16, weight: .medium, colour: .chapter), .below, edge: uy + 10, along: ux + 5)
+            pen.label("ps", places > 2 ? "one piece: \(size) (a tenth of a square)" : "one piece: \(size)", Sketch.Words(size: Sketch.small, weight: .medium, colour: .chapter), .below, edge: uy + 10, along: ux + 5)
         }
-        return pen.sketch
+        return (pen.sketch, wk.sketch)
     }
 
     // MARK: rounding
@@ -729,18 +752,19 @@ enum LessonPictures {
     /// digit ringed; the number line from 6.7 to 6.8 where the squares are the distance (ten steps of four squares, so
     /// halfway is the middle grid line and 6.723 sits 9.2 squares along: plainly nearer 6.7); the hop to the nearer end;
     /// and the working beside it.
-    static func roundGrid(_ m: WorkProblem) -> Sketch {
-        let parts = RoundDecimals.Parts(m.lesson.numbers), p = m.picture
+    static func roundGrid(_ n: Numbers, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
+        let parts = RoundDecimals.Parts(n)
         let lo = p["lo"] ?? parts.T, hi = p["hi"] ?? parts.up, tick = p["tick"] ?? parts.place / 10, value = parts.value
         let lit = p["lit"], halfway = p["halfway"] == 1, hop = p["hop"] == 1
         var pen = GridPen()
-        let big = Sketch.Words(size: 40, weight: .medium, colour: .ink), label = Sketch.Words(size: 24, weight: .medium, colour: .ink2)
+        var wk = GridPen()
+        let big = Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink), label = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink2)
 
         // the number, two squares to a digit, from the left edge; its place underlined, the digit after it ringed
         // written as the problem writes it (3.18, not 3.180)
         let text = fmt(value), digitsOnly = text.filter { $0 != "." }, wholeDigits = text.split(separator: ".")[0].count
         let right = Double(digitsOnly.count) * 2
-        pen.digits("num", text, right: right, row: 1, per: 2, size: 40)
+        pen.digits("num", text, right: right, row: 1, per: 2, size: Sketch.maths)
         let placeCol = Double(wholeDigits + parts.p - 1) * 2, nextCol = placeCol + 2
         pen.rule("place", from: placeCol, to: placeCol + 2, row: 2, lit == 0 ? .chapter : .ink2, width: 3)
         if halfway { pen.ring("next", col: nextCol, row: 0, w: 2, h: 2) }
@@ -771,12 +795,12 @@ enum LessonPictures {
         // the working, beside the line: the next digit against 5, then the answer
         let wx = 45.0
         if halfway {
-            pen.word("cmp", parts.next >= 5 ? "\(parts.next) is 5 or more: up" : "\(parts.next) is 4 or less: stays", at: wx, 1, label.colour(.ink), anchor: UnitPoint(x: 0, y: 0.5))
+            wk.word("cmp", parts.next >= 5 ? "\(parts.next) is 5 or more: up" : "\(parts.next) is 4 or less: stays", at: wx, 1, label.colour(.ink), anchor: UnitPoint(x: 0, y: 0.5))
         }
         if hop {
-            pen.word("ans", "\(fmt(value)) ≈ \(fmt(parts.R))", at: wx, 3, Sketch.Words(size: 28, weight: .medium, colour: .chapter), anchor: UnitPoint(x: 0, y: 0.5))
+            wk.word("ans", "\(fmt(value)) ≈ \(fmt(parts.R))", at: wx, 3, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .chapter), anchor: UnitPoint(x: 0, y: 0.5))
         }
-        return pen.sketch
+        return (pen.sketch, wk.sketch)
     }
 
     /// 864 ÷ 12 in chunks: on the left the division bracket as school writes it, the tens taken away first and the

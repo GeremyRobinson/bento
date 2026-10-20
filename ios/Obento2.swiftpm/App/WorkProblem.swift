@@ -39,6 +39,8 @@ final class WorkProblem: Identifiable, PageProblem {
     static let problemY: Double = -100
     /// The line being worked is written big for kids (G 19 Oct): two squares to a digit, like the sum at the top.
     static let lineCell: Double = 2
+    /// Obento²'s own keypad drawn on the paper; off while the iPad's keyboard types (G 19 Oct).
+    static let drawnKeys = false
 
     /// Where things sit in an open problem, in points from its origin before `scale`. An open problem is its own space
     /// on the grid, with no frame, filling the screen (G 19 Oct): 13 blocks by 9, its picture drawn 1.6 times its size
@@ -57,16 +59,25 @@ final class WorkProblem: Identifiable, PageProblem {
         /// Check's row (else the bottom row, or under a tall line), and what a miss says under Check instead of beside it.
         var actions: Double? = nil
         var messageBelow = false
+        /// Where the picture and the work are moved to, in paper points from the origin (ProblemGrid).
+        var pictureOffset = CGPoint.zero, workOffset = CGPoint.zero
+        /// The whole problem's width, in its points before scale.
+        var total = 1200.0
     }
-    var layout: Layout { LessonPictures.layout(self) }
+    /// Laid out once for its numbers and the screen's shape (ProblemGrid).
+    @ObservationIgnored private var laidOut: (key: String, layout: Layout)?
+    var layout: Layout {
+        let key = "\(lesson.numbers) \(ProblemGrid.screen)"
+        if let c = laidOut, c.key == key { return c.layout }
+        let l = ProblemGrid.layout(self)
+        laidOut = (key, l)
+        return l
+    }
     var scale: Double { layout.scale }
     var underStep: Double { layout.lineY }
     var boxSize: Size { let l = layout; return Size((l.width * l.scale).rounded(.up) * Paper.unit, (l.height * l.scale).rounded(.up) * Paper.unit) }
     /// The box's corner stays on the strong lines; everything in it is drawn `scale` times bigger from there.
-    var contentOrigin: Point {
-        let k = scale
-        return Point(origin.x + BarsPage.box.dx * (1 - k), origin.y + BarsPage.box.dy * (1 - k))
-    }
+    var contentOrigin: Point { origin }
     /// A problem aimed at a step the child slipped on before (LessonPlan): that step starts with what they were told,
     /// its part of the picture lit, and, the second time, its answer shown first and taken away again.
     var focus: LessonPlan.Focus?

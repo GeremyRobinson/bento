@@ -8,30 +8,35 @@ extension Sketch {
     /// A row of words is two squares tall.
     static let row = 2 * Paper.cell
 
+    /// The three sizes (G 19 Oct): maths (the sum, the work, the line, typed numbers, keys), words (what to do,
+    /// messages, buttons, headings, picture labels), and small (hints, names, statuses, notes). Every line sits centred
+    /// on its letters in a row of squares. A tab's tiny word is the only other size.
+    static let maths: CGFloat = 36, wordSize: CGFloat = 28, small: CGFloat = 20
+
     /// How a kind of words looks, everywhere it appears.
     struct Words {
         let size: CGFloat, weight: UIFont.Weight, colour: Colour
         /// A problem's name over it ("Together 1"), a card's status, a test's line.
-        static let name = Words(size: 17, weight: .medium, colour: .ink3)
+        static let name = Words(size: Sketch.small, weight: .medium, colour: .ink3)
         /// A part's heading on the page of problems ("Together"), a chapter's title is bigger (`chapter`).
-        static let heading = Words(size: 26, weight: .semibold, colour: .ink)
-        static let chapter = Words(size: 30, weight: .medium, colour: .ink)
+        static let heading = Words(size: Sketch.wordSize, weight: .semibold, colour: .ink)
+        static let chapter = Words(size: Sketch.wordSize, weight: .medium, colour: .ink)
         /// What to do now.
-        static let say = Words(size: 34, weight: .medium, colour: .ink)
+        static let say = Words(size: Sketch.wordSize, weight: .medium, colour: .ink)
         /// The hint under it, and a story.
-        static let hint = Words(size: 24, weight: .regular, colour: .ink2)
-        static let story = Words(size: 24, weight: .regular, colour: .ink)
+        static let hint = Words(size: Sketch.small, weight: .regular, colour: .ink2)
+        static let story = Words(size: Sketch.small, weight: .regular, colour: .ink)
         /// What a miss (or Show me) says.
-        static let message = Words(size: 26, weight: .medium, colour: .chapter)
+        static let message = Words(size: Sketch.wordSize, weight: .medium, colour: .chapter)
         /// A thumbnail's name under its frame, and its status under that.
-        static let label = Words(size: 20, weight: .medium, colour: .ink)
-        static let status = Words(size: 16, weight: .regular, colour: .ink3)
+        static let label = Words(size: Sketch.small, weight: .medium, colour: .ink)
+        static let status = Words(size: Sketch.small, weight: .regular, colour: .ink3)
         /// A count beside a title ("3 of 5").
-        static let count = Words(size: 17, weight: .regular, colour: .ink3)
+        static let count = Words(size: Sketch.small, weight: .regular, colour: .ink3)
         /// A tab's word ("Done", "Up next", "Start").
         static let tab = Words(size: 14, weight: .semibold, colour: .hex(0xFFFFFF, 0xFFFFFF))
         /// A block's word ("Check").
-        static let block = Words(size: 22, weight: .medium, colour: .ink)
+        static let block = Words(size: Sketch.wordSize, weight: .medium, colour: .ink)
         func colour(_ c: Colour) -> Words { Words(size: size, weight: weight, colour: c) }
     }
 
@@ -56,13 +61,13 @@ extension Sketch {
     /// A problem's sum as written at the top of the problem and on its card: one line of big numbers starting exactly
     /// on the left edge (or centred on `at` when `centred`), a fraction stacked a digit to a square. Returns its width.
     @discardableResult
-    mutating func sum(_ id: String, _ line: MathLine, at p: CGPoint, size: CGFloat = 40, k: Double = 1, centred: Bool = false) -> Double {
+    mutating func sum(_ id: String, _ line: MathLine, at p: CGPoint, size: CGFloat = Sketch.maths, k: Double = 1, centred: Bool = false) -> Double {
         let lay = MathLineView.layout(line, size: 28)
         if lay.h > 2 {
             // a fraction: stacked on the squares, a digit to a square
             let cell = Paper.cell * k, w = Double(lay.w) * cell
             let x = centred ? p.x - ((w / 2) / cell).rounded() * cell : p.x
-            mathLine(id, line, at: CGPoint(x: x, y: centred ? p.y - 2 * cell : p.y - cell), size: 30 * k, cell: cell)
+            mathLine(id, line, at: CGPoint(x: x, y: centred ? p.y - 2 * cell : p.y - cell), size: Sketch.wordSize * k, cell: cell)
             return w
         }
         // words after a number get a space before them ("6.723 ≈ ? (nearest tenth)")
@@ -95,7 +100,7 @@ extension Sketch {
     /// (from the left, with an arrow on the right when `arrow`) or its centred number or icon.
     /// `size`: the centred number's size (a key's 30, a typed answer's 26, a choice's words 17).
     /// `grows`: a box whose width follows what's typed in it: it keeps its outline and takes its new width at once.
-    mutating func block(_ id: String, _ r: CGRect, _ b: Block, word: String? = nil, arrow: Bool = false, centred: String? = nil, size: CGFloat = 30, icon: String? = nil, k: Double = 1, grows: Bool = false) {
+    mutating func block(_ id: String, _ r: CGRect, _ b: Block, word: String? = nil, arrow: Bool = false, centred: String? = nil, size: CGFloat = Sketch.maths, icon: String? = nil, k: Double = 1, grows: Bool = false) {
         let place = grows ? "" : "\(r)", was = snaps
         snaps = grows
         fill("\(id)f\(place)\(b.fill)", r, b.fill)

@@ -27,7 +27,12 @@ struct PaperScreen: View {
                     if let steps = model.steps {
                         StepsLessonView(model: steps, camera: cam, time: t)
                     }
-                    Toolbar(model: model, time: t, bottom: max(16, safe.safeAreaInsets.bottom + 8))
+                    Toolbar(model: model, time: t, bottom: max(16, safe.safeAreaInsets.bottom + 8, model.keyboard + 8))
+                    // iPadOS's own number keyboard (G 19 Oct), up once an answer box is tapped and while a number is
+                    // wanted; a hardware keyboard types too, and return checks
+                    let typing = (model.bars?.current as? WorkProblem).flatMap { w in w.keypadOpen && !w.auto && !w.solved && w.lesson.step.answer.map { $0.choices == nil } == true ? w : nil }
+                    SystemKeys(active: typing != nil, type: { typing?.type($0) }, enter: { typing?.go() })
+                        .frame(width: 1, height: 1).opacity(0.01)
                 }
                 .onChange(of: t) { _, now in Perf.frame(now); model.settle(at: now); model.lesson?.settle(at: now) }
             }
@@ -41,6 +46,12 @@ struct PaperScreen: View {
                 model.reduceMotion(UIAccessibility.isReduceMotionEnabled)
             }
             .onChange(of: geo.size) { _, s in model.screen = Size(s.width, s.height) }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { n in
+                // the keyboard's top, so the camera frames the problem in the paper still showing above it
+                guard let f = n.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+                model.keyboardAppeared(max(0, geo.frame(in: .global).maxY - f.minY))
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in model.keyboardAppeared(0) }
         }
         .ignoresSafeArea()
         }
@@ -63,5 +74,38 @@ struct PaperScreen: View {
                     model.zoom(by: v.magnification / lastPinch, at: .init(v.startLocation.x, v.startLocation.y)); lastPinch = v.magnification }
                 .onEnded { _ in lastPinch = 1 })
             .simultaneousGesture(SpatialTapGesture().onEnded { v in model.tap(at: .init(v.location.x, v.location.y)) })
+    }
+}
+
+/// Takes typing from iPadOS's keyboard (or a hardware one) for the answer box being filled: digits, the point, delete,
+/// and return to check. It shows the number keys while a step wants a number, and puts the keyboard away when not.
+struct SystemKeys: UIViewRepresentable {
+    let active: Bool
+    let type: (String) -> Void
+    let enter: () -> Void
+
+    func makeUIView(context: Context) -> KeyView { KeyView() }
+    func updateUIView(_ v: KeyView, context: Context) {
+        v.type = type; v.enter = enter
+        if active && !v.isFirstResponder { DispatchQueue.main.async { v.becomeFirstResponder() } }
+        if !active && v.isFirstResponder { DispatchQueue.main.async { v.resignFirstResponder() } }
+    }
+
+    final class KeyView: UIView, UIKeyInput {
+        var type: (String) -> Void = { _ in }
+        var enter: () -> Void = {}
+        var keyboardType: UIKeyboardType = .decimalPad
+        var autocorrectionType: UITextAutocorrectionType = .no
+        var returnKeyType: UIReturnKeyType = .done
+        override var canBecomeFirstResponder: Bool { true }
+        var hasText: Bool { true }
+        func insertText(_ text: String) {
+            for ch in text {
+                if ch == "\n" { enter() }
+                else if ch.isNumber, let d = ch.wholeNumberValue { type(String(d)) }
+                else if ch == "." || ch == "," { type(".") }
+            }
+        }
+        func deleteBackward() { type("del") }
     }
 }

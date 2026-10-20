@@ -61,6 +61,23 @@ struct Sketch {
     /// A shape that sits over the lines (a test's seal on its frame's corner).
     mutating func plate(_ id: String, _ pts: [CGPoint], _ colour: Colour) { add(Item(id: id, kind: .plate(pts), colour: colour)) }
     mutating func append(_ other: Sketch) { items += other.items }
+    /// Everything it draws, in its own points: lines and shapes by their points, words by the box their font sets.
+    var bounds: CGRect? {
+        var r: CGRect?
+        func add(_ q: CGRect) { r = r.map { $0.union(q) } ?? q }
+        func pts(_ ps: [CGPoint]) { for p in ps { add(CGRect(x: p.x, y: p.y, width: 0, height: 0)) } }
+        for it in items {
+            switch it.kind {
+            case .line(let ps, _, _), .fill(let ps), .plate(let ps), .overLine(let ps, _): pts(ps)
+            case .segments(let segs, _): pts(segs.flatMap { [$0.0, $0.1] })
+            case .icon(_, let q): add(q)
+            case .text(let t, let p, let size, let weight, let anchor, let digits):
+                let f = PaperText.font(size, weight, digits: digits), w = PaperText.width(t, f), h = Double(f.lineHeight)
+                add(CGRect(x: p.x - anchor.x * w, y: p.y - anchor.y * h, width: w, height: h))
+            }
+        }
+        return r
+    }
     /// The same sketch with its slots saying what they said before (`was`), and whether any of them differs.
     func withSlots(_ was: [String: String]) -> (sketch: Sketch, changed: Bool) {
         var out = self, changed = false
@@ -146,8 +163,11 @@ extension Rig {
         if key != d.key, m.leftAt == nil, wanted {
             d.key = key
             let l = m.layout, o = m.contentOrigin
+            // the sum, then the picture and the work where the layout puts them, then the step
+            let drawn = LessonPictures.drawing(m.lesson.spec.id, m.lesson.numbers, m.picture)
             var s = workSketch(m, top: true)
-            s.append(LessonPictures.sketch(m).transformed(to: CGPoint(x: o.x, y: o.y + l.pictureTop * l.scale), scale: l.pictureScale * l.scale))
+            s.append(drawn.picture.transformed(to: CGPoint(x: o.x + l.pictureOffset.x, y: o.y + l.pictureOffset.y), scale: 1))
+            s.append(drawn.work.transformed(to: CGPoint(x: o.x + l.workOffset.x, y: o.y + l.workOffset.y), scale: 1))
             s.append(workSketch(m, top: false))
             // the first time, everything draws in as the problem opens; after that, only what's new, as the step moves
             d.build(s, rig: self, chapter: m.chapter.hex, dark: dark, origin: .zero, from: d.isEmpty ? m.openedAt + 0.15 : max(m.pictureAt, t), now: t)
@@ -273,7 +293,11 @@ final class SketchDrawer {
                 length = 0.9
             case .text(let str, let p, let size, let weight, let anchor, let digits):
                 // written a letter at a time: each letter its own piece, where the whole line puts it
-                let f = PaperText.font(size * k, weight, digits: digits), at = P(p), w = PaperText.width(str, f)
+                let f = PaperText.font(size * k, weight, digits: digits), w = PaperText.width(str, f)
+                // a line centred on a row is centred on its capitals' height, not its font's box, so it sits in the
+                // middle of the squares (G 19 Oct: text on the grid)
+                var at = P(p)
+                if abs(anchor.y - 0.5) < 0.001 { at.y -= Double(f.ascender) - Double(f.capHeight) / 2 - Double(f.lineHeight) / 2 }
                 let left = at.x - anchor.x * w, offsets = PaperText.offsets(str, f)
                 for (j, ch) in str.enumerated() {
                     if ch == " " { continue }

@@ -39,10 +39,10 @@ extension Rig {
             // a lesson thumbnail's frame and tab, the problem centred in it, its name and status under it
             s.frame(id, r, c.state == .locked ? .locked : c.state == .now ? .now : c.state == .open ? .open : .done)
             if let tag = c.state == .done ? "Done" : c.state == .now ? "Now" : nil { s.tab(id, frame: r, tag) }
-            if let d = c.display { s.sum(id + "sum", d, at: CGPoint(x: r.midX, y: r.midY), size: 34, centred: true) }
-            else { s.label(id + "twelve", "12 problems", Sketch.Words(size: 30, weight: .medium, colour: c.state == .locked ? .ink3 : .ink), at: CGPoint(x: r.midX, y: r.midY), anchor: .center) }
-            s.label(id + "name", c.title, .label, at: CGPoint(x: r.minX, y: r.maxY + 28))
-            s.label(id + "line", c.line, Sketch.Words.status.colour(c.state == .done || c.state == .now ? .chapter : c.state == .missed ? .ink : .ink3), at: CGPoint(x: r.minX, y: r.maxY + 50), slot: lesson + id + "line")
+            if let d = c.display { s.sum(id + "sum", d, at: CGPoint(x: r.midX, y: r.midY), size: Sketch.maths, centred: true) }
+            else { s.label(id + "twelve", "12 problems", Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: c.state == .locked ? .ink3 : .ink), at: CGPoint(x: r.midX, y: r.midY), anchor: .center) }
+            s.label(id + "name", c.title, .label, at: CGPoint(x: r.minX, y: r.maxY + 30), anchor: UnitPoint(x: 0, y: 0.5))
+            s.label(id + "line", c.line, Sketch.Words.status.colour(c.state == .done || c.state == .now ? .chapter : c.state == .missed ? .ink : .ink3), at: CGPoint(x: r.minX, y: r.maxY + 70), anchor: UnitPoint(x: 0, y: 0.5), slot: lesson + id + "line")
         }
         return s
     }
