@@ -7,7 +7,7 @@ import SwiftUI
 /// count of squares is an odd count itself. Its origin (0, 0) is a crossing of the grid.
 @MainActor
 struct GridPen {
-    private(set) var sketch = Sketch()
+    var sketch = Sketch()
     /// The words' size: 1, or a whole number bigger in a big problem (its squares stay the paper's).
     let k: Double
     static let sq = Paper.cell
@@ -108,7 +108,7 @@ struct GridPen {
     /// (a square tall, above the line) and a long one every `long` steps (two squares). Halfway is always a grid line
     /// when `steps` is even. Returns the column of step `i` for placing things on it.
     @discardableResult
-    mutating func numberLine(_ id: String, col: Double, row: Double, steps: Int, per: Double, long: Int, _ colour: Sketch.Colour = .ink) -> (Double) -> Double {
+    mutating func numberLine(_ id: String, col: Double, row: Double, steps: Int, per: Double, long: Int, _ colour: Sketch.Colour = .ink) -> (Int) -> Double {
         let end = col + Double(steps) * per
         sketch.line(id, [P(col, row), P(end, row)], colour, width: 2)
         sketch.segments(id + "ticks", (0...steps).map { i in
