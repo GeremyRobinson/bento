@@ -181,8 +181,10 @@ final class BarsPage {
         var x = corner.x
         func part(_ heading: String, _ items: [Int], columns: Int) {
             heads.append((Point(x, top - Paper.unit / 2), heading))
+            // numbered down each column, then the next column (G 19 Oct): 1, 2, 3 down the first, 4, 5, 6 down the second
+            let rows = max(3, (items.count + columns - 1) / columns)
             for (k, i) in items.enumerated() {
-                let r = Rect(x: x + Double(k % columns) * (w + g), y: top + Double(k / columns) * (h + g), width: w, height: h)
+                let r = Rect(x: x + Double(k / rows) * (w + g), y: top + Double(k % rows) * (h + g), width: w, height: h)
                 let m = problems[i], l = m.lesson
                 let state: Card.State = m.solved ? (l.missedAny && !l.helps ? .missed : .done) : m === lastWorked ? .now : .open
                 let done = l.steps.indices.filter { $0 < l.index && (l.steps[$0].answer != nil || l.steps[$0].task != nil) }.count
@@ -371,6 +373,7 @@ final class BarsPage {
         if mode == .work, let c = current, c !== m { c.leave(); leaving = c; clearLeaving(c) }
         if mode == .choose { cardsGoneAt = PaperClock.now }
         mode = .work
+        if leaving === m { leaving = nil }
         current = m; lastWorked = m; framed = nil
         m.start(after: instant ? 0 : 0.4)
         save()

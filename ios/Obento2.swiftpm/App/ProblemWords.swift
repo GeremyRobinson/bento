@@ -149,6 +149,7 @@ extension Rig {
     /// in and what went undraws; leaving, all of it undraws. True while any of it moves.
     private func drawWorkWords(_ page: BarsPage, _ m: WorkProblem, dark: Bool, at t: Double) -> Bool {
         let d = wordDrawers[m.id] ?? { let d = SketchDrawer(); pageWords.addChild(d.root); wordDrawers[m.id] = d; return d }()
+        if m.leftAt == nil, d.leftAt != nil { d.revive() }
         let key = wordsKey(m, page, dark: dark)
         if key != d.key {
             d.key = key

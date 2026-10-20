@@ -53,7 +53,11 @@ enum Shots {
                 await wait(1.5); page.open(w); await wait(2.5)
                 if let box = w.lesson.step.answer?.boxes.first { w.select(box) }
                 await wait(2); w.showMe(); await wait(1); w.go(); await wait(3)
-                w.showMe(); await wait(1); w.go()
+                w.showMe(); await wait(1); w.go(); await wait(2)
+                // back to the page, the same problem again straight away, and back once more (G found it stuck)
+                page.backToProblems(); await wait(0.3)
+                page.open(w); await wait(1.5)
+                page.backToProblems()
                 return
             }
             if name.hasPrefix("resume") {

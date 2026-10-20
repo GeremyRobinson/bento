@@ -75,6 +75,8 @@ extension Rig {
     @discardableResult
     func drawSketch(_ m: WorkProblem, into d: SketchDrawer, at t: Double) -> Bool {
         let dark = self.dark ?? false
+        // opened again while it was still undrawing: it draws itself back in
+        if m.leftAt == nil, d.leftAt != nil { d.revive() }
         let key = "\(m.lesson.numbers) \(m.lesson.index) \(m.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(m.lesson.typed) \(dark) \(m.lesson.missedSteps.count) \(m.scale)"
         if key != d.key {
             d.key = key
@@ -174,6 +176,10 @@ final class SketchDrawer {
             order += 1
         }
     }
+
+    /// Wanted again after undrawing (a problem opened again straight away): what's left of it finishes undrawing,
+    /// and the next build draws it all in afresh.
+    func revive() { leftAt = nil; key = "" }
 
     /// Everything undraws, last first (leaving).
     func undrawAll(at t: Double) {
