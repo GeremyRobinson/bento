@@ -22,11 +22,13 @@ struct Sketch {
     }
     /// `slot`: words that stay in one place while what they say changes ("2 of 6 done"): when they change, the
     /// characters that differ roll over like a clock's digits instead of being written again.
-    struct Item { let id: String; let kind: Kind; let colour: Colour; var at: Double? = nil; var slot: String? = nil }
+    struct Item { let id: String; let kind: Kind; let colour: Colour; var at: Double? = nil; var slot: String? = nil; var pace: Double = 1 }
     private(set) var items: [Item] = []
     /// When the parts added from now on start drawing in (a map piece's words with its frame), instead of one after
     /// another from the drawing's start.
     var startAt: Double?
+    /// How fast the parts added from now on draw in (1 calm; less is quicker: the solving area, G 19 Oct).
+    var pace: Double = 1
     static let c = Paper.cell
 
     mutating func line(_ id: String, _ pts: [CGPoint], _ colour: Colour = .ink, width: Double = 2, dashed: Bool = false) {
@@ -62,11 +64,11 @@ struct Sketch {
             guard let slot = it.slot, let old = was[slot], case .text(let t, let p, let size, let weight, let anchor, let digits) = it.kind, t != old else { return it }
             changed = true
             let base = it.id.hasSuffix(":\(t)") ? String(it.id.dropLast(t.count + 1)) : it.id
-            return Item(id: "\(base):\(old)", kind: .text(old, p, size: size, weight: weight, anchor: anchor, digits: digits), colour: it.colour, at: it.at, slot: slot)
+            return Item(id: "\(base):\(old)", kind: .text(old, p, size: size, weight: weight, anchor: anchor, digits: digits), colour: it.colour, at: it.at, slot: slot, pace: it.pace)
         }
         return (out, changed)
     }
-    private mutating func add(_ item: Item) { var it = item; it.at = startAt; items.append(it) }
+    private mutating func add(_ item: Item) { var it = item; it.at = startAt; it.pace = pace; items.append(it) }
     /// The same sketch in paper points: moved to `o` and drawn `k` times bigger.
     func transformed(to o: CGPoint, scale k: Double) -> Sketch {
         func P(_ p: CGPoint) -> CGPoint { CGPoint(x: o.x + p.x * k, y: o.y + p.y * k) }
@@ -82,7 +84,7 @@ struct Sketch {
             case .icon(let n, let r): kind = .icon(n, CGRect(origin: P(r.origin), size: CGSize(width: r.width * k, height: r.height * k)))
             case .segments(let segs, let w): kind = .segments(segs.map { (P($0.0), P($0.1)) }, width: w * k)
             }
-            return Item(id: it.id, kind: kind, colour: it.colour, at: it.at, slot: it.slot)
+            return Item(id: it.id, kind: kind, colour: it.colour, at: it.at, slot: it.slot, pace: it.pace)
         }
         return out
     }
@@ -239,6 +241,7 @@ final class SketchDrawer {
             let item = s.items[i]
             // fills under lines under words, whatever order they draw in; later parts a hair above earlier ones
             let lift = Float(i) * 0.0000002
+            let pace = self.pace * item.pace
             var parts: [ModelEntity] = [], line: (pts: [[CGPoint]], width: Double, dashed: Bool)?, length = Self.length * pace
             var chars: [Character] = [], textSize = 20.0
             switch item.kind {
@@ -296,7 +299,7 @@ final class SketchDrawer {
                 continue
             }
             // a part with its own start (a map piece's words) keeps it, unless that's passed: then it draws in now
-            let at = item.at.map { max($0, now) } ?? start + Double(order) * gap
+            let at = item.at.map { max($0, now) } ?? start + Double(order) * gap * item.pace
             let node = Node(id: item.id, sig: sigs[i], parts: parts, line: line, start: at, length: length)
             node.chars = chars; node.slot = item.slot; node.size = textSize
             nodes[item.id] = node

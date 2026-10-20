@@ -201,6 +201,8 @@ enum Shots {
                 guard let page = m.bars, page.problems.indices.contains(which), let w = page.problems[which] as? WorkProblem else { return }
                 page.open(w)
                 defer { if ProcessInfo.processInfo.arguments.contains("-keypad"), let box = w.lesson.step.answer?.boxes.first { w.select(box) } }
+                // -wrong: a wrong answer typed and checked, so its box and words show red
+                defer { if ProcessInfo.processInfo.arguments.contains("-wrong") { w.type("1"); w.go() } }
                 for _ in 0..<max(0, k) { if w.lesson.step.answer != nil { w.lesson.step.answer?.choices != nil ? w.choose(Int(w.lesson.step.answer!.expected["c"] ?? 0)) : w.showMe() }; w.go() }
             case "tests":
                 // the map with Add with different bottoms learned: its chapter's test opens; frame on Fractions

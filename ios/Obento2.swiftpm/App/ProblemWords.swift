@@ -99,7 +99,7 @@ extension Rig {
     func wordsKey(_ m: any PageProblem, _ page: BarsPage, dark: Bool) -> String {
         let l = m.lesson
         return [l.typed.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: ","), l.active ?? "", m.label, m.intro ?? "", "\(m.howToButtons)", l.words.say, l.words.hint, l.words.action, "\(l.index)", "\(l.marks.count)", l.typed["c"] ?? "",
-                m.message.map { "\($0.text)\($0.ok)" } ?? "", "\(m.solved)", "\((m as? WorkProblem)?.keypadOpen ?? false)", "\(page.current === m)", "\(l.helps)", "\(dark)",
+                m.message.map { "\($0.text)\($0.ok)" } ?? "", "\(m.solved)", "\((m as? WorkProblem)?.keypadOpen ?? false)", "\(((m as? WorkProblem)?.verdict).map { $0.right } as Bool?)", "\(page.current === m)", "\(l.helps)", "\(dark)",
                 l.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }.joined()].joined(separator: "|")
     }
 
@@ -111,7 +111,7 @@ extension Rig {
         let p = m.problem, l = m.lesson, words = l.words, o = m.origin
         let W = m.wholeWidth, e = m.coverEnd, r1 = AddFractionsModel.row1, r2 = AddFractionsModel.row2, h = AddFractionsModel.barHeight
         func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x, y: o.y + y) }
-        let col = ProblemLayout.column, chapter = Sketch.Colour.chapter, right = Sketch.Colour.hex(0x178A57, 0x3CCF8E)
+        let col = ProblemLayout.column, chapter = Sketch.Colour.chapter, right = Sketch.Colour.hex(0x178A57, 0x3CCF8E), red = Sketch.Colour.hex(0xC8372D, 0xFF6B5E)
         s.words("name", m.label, .name, x: o.x, top: P(0, BarsPage.box.dy).y, width: col)
 
         // the problem, at the top: the sum, and the story beside it when it's told as one (as every problem has it)
@@ -158,9 +158,9 @@ extension Rig {
         // the choices
         let under = Sketch.Words(size: 19, weight: .medium, colour: .ink2)
         if l.step.answer?.choices != nil {
-            if let msg = m.message { s.words("msg", msg.text, under.colour(chapter), x: o.x, top: P(0, AddFractionsModel.underStep + 52).y, width: col, max: 3) }
+            if let msg = m.message { s.words("msg", msg.text, under.colour(msg.ok ? .ink2 : red), x: o.x, top: P(0, AddFractionsModel.underStep + 52).y, width: col, max: 3) }
         } else if let count = l.countLine {
-            let (text, c): (String, Sketch.Colour) = m.message.map { ($0.text, $0.ok ? right : chapter) } ?? (count, .ink2)
+            let (text, c): (String, Sketch.Colour) = m.message.map { ($0.text, $0.ok ? right : red) } ?? (count, .ink2)
             s.words("count", text, under.colour(c), x: o.x, top: P(0, AddFractionsModel.underStep).y, width: col, max: 3)
         }
         if l.picture["total"] == 1 { s.label("total", "\(p.sum) = \(p.total)/\(p.b)", Sketch.Words(size: 22, weight: .medium, colour: chapter), at: P(0, r2 + h + 32), anchor: UnitPoint(x: 0, y: 0)) }
@@ -203,6 +203,9 @@ extension Rig {
             return s
         }
 
+        // the solving area draws in quickly (G 19 Oct): the picture is the calm part
+        s.pace = 0.4
+        let red = Sketch.Colour.hex(0xC8372D, 0xFF6B5E), green = Sketch.Colour.hex(0x178A57, 0x3CCF8E)
         // the step: what to do now (a story's step asks only "Pick what to do"), and the hint under it
         let storyStep = l.story && l.step.answer?.choices != nil
         let say = m.intro ?? (storyStep ? words.hint : words.say)
@@ -230,7 +233,18 @@ extension Rig {
             case .skip: s.block(id, r, .plain, word: "Skip", k: k)
             case .showMe, .reset: s.block(id, r, l.picture["showMe"] == 1 && b.kind == .showMe ? .main : .plain, icon: b.kind == .showMe ? "play" : "arrow-counter-clockwise", k: k)
             case .choice(let n): s.block(id, r, l.typed["c"] == String(n) ? .picked : .plain, centred: l.step.answer?.choices?[n], size: 17, k: k)
-            case .field(let f): s.block(id, r, l.active == f ? .main : .plain, centred: l.typed[f]?.replacingOccurrences(of: "-", with: "−"), size: 26, k: k)
+            case .field(let f):
+                // right: green for a moment; wrong: red until they type again; the box being typed into has a cursor
+                // after what's in it (steady: no looping animations)
+                let typed = l.typed[f]?.replacingOccurrences(of: "-", with: "−")
+                let style: Sketch.Block = m.verdict.map { $0.right ? Sketch.Block(stroke: green, text: green) : Sketch.Block(stroke: red, text: red) }
+                    ?? (l.active == f ? .main : .plain)
+                s.block(id + "\(m.verdict.map { $0.right } as Bool?)", r, style, centred: typed, size: 26, k: k)
+                if l.active == f, m.verdict == nil, !m.auto {
+                    let w = typed.map { PaperText.width($0, PaperText.font(26 * k, .medium, digits: true)) } ?? 0
+                    let x = r.midX + w / 2 + (w > 0 ? 3 * k : 0)
+                    s.line("cursor\(typed ?? "")", [CGPoint(x: x, y: r.midY - 12 * k), CGPoint(x: x, y: r.midY + 12 * k)], .ink, width: 2 * k)
+                }
             case .key(let key): s.block(id, r, .plain, centred: key == "del" ? nil : key, icon: key == "del" ? "backspace" : nil, k: k)
             }
         }
@@ -239,7 +253,7 @@ extension Rig {
         if let msg = m.message {
             let ay = ProblemLayout.actions(m)
             let (x, y, width) = lay.messageBelow ? (sx, ay + row + Paper.cell, col) : (sx + 240, ay, col - 240 * k)
-            s.words("msg", msg.text, Sketch.Words.message.colour(msg.ok ? .ink2 : .chapter), x: P(x, 0).x, top: P(0, y).y, width: width, max: 3, k: k)
+            s.words("msg", msg.text, Sketch.Words.message.colour(msg.ok ? .ink2 : red), x: P(x, 0).x, top: P(0, y).y, width: width, max: 3, k: k)
         }
         return s
     }

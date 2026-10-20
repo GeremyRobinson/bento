@@ -120,23 +120,52 @@ final class WorkProblem: Identifiable, PageProblem {
 
     // MARK: what the child does
 
+    /// Right or wrong, shown on the answer box (G 19 Oct; green and red mean only these): right for a moment before
+    /// the next step comes in, wrong until the child types again.
+    private(set) var verdict: (right: Bool, at: Double)?
+
     func go() {
         guard !busy else { return }
         onTouch?()
-        switch lesson.go() {
+        let misses = lesson.missedSteps.count + lesson.misses
+        var trial = lesson
+        let out = trial.go()
+        // right: the box goes green, and a moment later the next step comes in
+        if case .moved = out, lesson.step.answer != nil, !instant, !auto {
+            verdict = (true, PaperClock.now); message = nil
+            busyUntil = PaperClock.now + 0.6
+            onChange?()
+            Task { [weak self] in
+                try? await Task.sleep(for: .seconds(0.6))
+                guard let self else { return }
+                self.verdict = nil
+                self.lesson = trial
+                self.message = nil; self.wordsAt = PaperClock.now; self.pictureAt = self.time(0)
+                self.busyUntil = self.time(0.3)
+                self.teachIfDue(after: 0.8)
+                if self.lesson.isLast { self.onSolved?() }
+                self.onChange?()
+            }
+            return
+        }
+        lesson = trial
+        // a miss is wrong (red); "Fill in every box" is only a notice (grey)
+        let wrong = lesson.missedSteps.count + lesson.misses > misses
+        if case .notYet = out { verdict = wrong ? (false, PaperClock.now) : nil }
+        switch out {
         case .moved:
             message = nil; wordsAt = PaperClock.now; pictureAt = time(0)
             busyUntil = time(0.4)
             teachIfDue(after: 0.8)
             if lesson.isLast { onSolved?() }
-        case .notYet(let line) where lesson.finalOnly && !lesson.oneTry:
+        case .notYet(let line) where lesson.finalOnly && !lesson.oneTry && wrong:
             // final answer only, missed: the steps come back for this problem
             var r = LessonRun(lesson.spec, numbers: lesson.numbers, story: lesson.story)
             r.helps = lesson.helps; r.oneTry = lesson.oneTry; r.hintCap = lesson.hintCap; r.skipAsk()
             lesson = r
             message = (line, false); wordsAt = PaperClock.now; pictureAt = time(0)
         case .notYet(let line):
-            message = (line, false); pictureAt = time(0)
+            message = (line, !wrong); pictureAt = time(0)
             // one try (a check or test): the answer is shown, and the problem moves on
             if lesson.oneTry, lesson.step.answer != nil {
                 busyUntil = time(1.2)
@@ -171,6 +200,7 @@ final class WorkProblem: Identifiable, PageProblem {
         if key == "-" { lesson.type("del"); return }
         lesson.type(key)
         if message?.ok == false { message = nil }
+        if verdict?.right == false { verdict = nil }
         onChange?()
     }
     func select(_ box: String) {
