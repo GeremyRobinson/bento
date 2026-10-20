@@ -42,6 +42,9 @@ protocol PageProblem: AnyObject {
     func showMe()
     func reset()
     func usedHint()
+    /// The bar's Hint (G 20 Oct): the step's hint shown on the paper itself, a small drawing step (LESSONS.md §7), never
+    /// a pop-up. The page has already decided a hint may be given and counted it (usedHint).
+    func showHint()
     func tapPaper(_ p: Point)
     /// A drag that starts on something the child can move (a point, a length, a cut): true takes it, and the drag's
     /// moves and its end come here instead of panning the paper. Paper points.
@@ -58,4 +61,6 @@ extension PageProblem {
     func grab(_ p: Point) -> Bool { false }
     func drag(to p: Point) {}
     func release() {}
+    /// Nothing drawn yet: each kind of problem draws its own hint on the paper.
+    func showHint() {}
 }

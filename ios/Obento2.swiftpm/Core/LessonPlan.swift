@@ -107,16 +107,16 @@ public struct LessonPlan: Codable, Equatable, Sendable {
 
     // MARK: hints
 
-    /// What the bar's Hint does for a problem now (G 20 Oct): nothing, a free hint (together problems, up to the run's
+    /// What the bar's Hint does for a problem now (G 20 Oct): nothing (off), a free hint (together problems, up to the run's
     /// cap of hinted steps), or one of the page's hints (own problems, only once the step has had a miss). One hint a
     /// step; none in tests and rechecks, or once the problem is done.
-    public enum HintUse: Equatable, Sendable { case none, free, spend }
+    public enum HintUse: Equatable, Sendable { case off, free, spend }
     public static func hint(_ run: LessonRun, part: Part?, left: Int) -> HintUse {
         guard let part, run.helps, !run.oneTry, !run.isLast, run.step.answer != nil || run.step.task != nil,
-              !run.hinted.contains(run.index) else { return .none }
+              !run.hinted.contains(run.index) else { return .off }
         switch part {
-        case .together: return run.hinted.count < run.hintCap ? .free : .none
-        case .own: return run.misses > 0 && left > 0 ? .spend : .none
+        case .together: return run.hinted.count < run.hintCap ? .free : .off
+        case .own: return run.misses > 0 && left > 0 ? .spend : .off
         }
     }
     /// The hints the bar shows as left: a together problem's own free ones, else the page's.

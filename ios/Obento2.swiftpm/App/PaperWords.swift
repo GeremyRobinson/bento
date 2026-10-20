@@ -134,22 +134,39 @@ enum PaperText {
 
 extension Rig {
     /// The map's words (G 19 Oct, master components): each chapter's dot, title and count; each lesson's name and how
-    /// far it got, its Up next tab or, when chosen, its Start tab; a test's badge. Drawn like everything else
-    /// (SketchDrawer): each lesson's words write themselves on as its frame draws in, only what changes redraws, and
-    /// leaving for a lesson they undraw.
+    /// far it got (Learned, or "5 of 9 done"), its tab (Up next, Go over, or when chosen Start); a test's badge and its
+    /// line. Drawn like everything else (SketchDrawer): each lesson's words write themselves on as its frame draws in,
+    /// only what changes redraws, and leaving for a lesson they undraw.
     func drawWords(_ model: PaperModel, at t: Double) {
         let isDark = dark ?? false
         // gone (into a lesson): undraw; back on the map, a fresh drawing
         if let left = model.mapLeftAt { mapDrawer?.undrawAll(at: left) }
         else if mapDrawer?.leftAt != nil { mapDrawer?.root.removeFromParent(); mapDrawer = nil }
         let d = mapDrawer ?? { let d = SketchDrawer(); words.addChild(d.root); mapDrawer = d; return d }()
-        let key = "\(Progress.shared.checks.count) \(Progress.shared.learned.count) \(Progress.shared.tests) \(isDark) \(PageStore.version) \(model.selected?.id ?? "") \(model.drawnAt)"
+        // a lesson comes due on its own, as time passes: that changes its tab too
+        let due = Map.pieces.filter(\.goOver).map(\.id).joined(separator: ",")
+        let key = "\(Progress.shared.checks.count) \(Progress.shared.learned.count) \(due) \(Progress.shared.tests) \(isDark) \(PageStore.version) \(model.selected?.id ?? "") \(model.drawnAt)"
         if key != d.key, model.mapLeftAt == nil {
             d.key = key
             d.build(mapSketch(model, dark: isDark), rig: self, chapter: Chapter.whole.hex, dark: isDark, origin: .zero, from: t, now: t)
         }
         let moving = d.update(at: t)
         if moving != model.mapDrawing { Task { @MainActor in model.setMapDrawing(moving) } }
+    }
+
+    /// The line under a piece's name: a lesson Learned, or how far its page got; a test's last result ("Passed · 11 of
+    /// 12", "Take it again"), how far an attempt got, how many problems it has, or what it waits for. Lit (in its
+    /// chapter's colour) when it's news or something to do; grey while it waits.
+    @MainActor static func line(_ p: Piece) -> (text: String, lit: Bool)? {
+        let saved = PageStore.load(p.id)
+        guard p.isTest else {
+            if Progress.shared.learned.contains(p.id) { return ("Learned", true) }
+            return saved.map { ("\($0.solved) of \($0.problems.count) done", true) }
+        }
+        if let s = saved, !s.recorded { return ("\(s.solved) of \(s.problems.count) done", true) }
+        if let r = Progress.shared.tests[p.id] { return (r.passed ? "Passed · \(r.right) of \(r.of)" : "Take it again", true) }
+        if p.opens { return ("\(LessonPlan.test) problems", true) }
+        return (p.id == "test-grade" ? "Pass the chapter tests first" : "Finish the lessons first", false)
     }
 
     private func mapSketch(_ model: PaperModel, dark: Bool) -> Sketch {
@@ -169,28 +186,28 @@ extension Rig {
             let r = CGRect(x: p.at.x, y: p.at.y, width: Piece.size.width, height: Piece.size.height), id = p.id
             let hex = p.chapter.hex, chapter = Sketch.Colour.hex(hex, hex)
             s.startAt = at(p.frame.mid)
-            // its name, and under it how far it got (stopped partway), or for a test what it waits for
+            // its name, and under it how far it got, or for a test how it went or what it waits for
             s.label(id + "name", p.name, .label, at: CGPoint(x: r.minX, y: r.maxY + 30), anchor: UnitPoint(x: 0, y: 0.5))
-            if p.isTest {
-                let line = PageStore.load(p.id).map { "\($0.solved) of \($0.problems.count) done" } ?? Progress.shared.tests[p.id].map { _ in "Done" }
-                    ?? (p.opens ? "\(p.id == "test-grade" ? 20 : 12) problems" : p.id == "test-grade" ? "Finish the chapter tests first" : Map.chapterHasLessons(p.chapter) ? "Finish the lessons first" : "Coming soon")
-                s.label(id + "line", line, Sketch.Words(size: Sketch.small, weight: .medium, colour: p.opens || Progress.shared.tests[p.id] != nil ? chapter : .ink3), at: CGPoint(x: r.minX, y: r.maxY + 50), anchor: UnitPoint(x: 0, y: 0.5), slot: id + "line")
-            } else if let saved = PageStore.load(p.id) {
-                s.label(id + "line", "\(saved.solved) of \(saved.problems.count) done", Sketch.Words(size: Sketch.small, weight: .medium, colour: chapter), at: CGPoint(x: r.minX, y: r.maxY + 50), anchor: UnitPoint(x: 0, y: 0.5), slot: id + "line")
+            if let line = Self.line(p) {
+                s.label(id + "line", line.text, Sketch.Words(size: Sketch.small, weight: .medium, colour: line.lit ? chapter : .ink3), at: CGPoint(x: r.minX, y: r.maxY + 50), anchor: UnitPoint(x: 0, y: 0.5), slot: id + "line")
             }
             if p.isTest {
                 // a test's badge (G 18 Oct): a round seal on the frame's top-left corner, how many problems it has (a tick
-                // once taken); filled in the chapter's colour when it can be taken, an outline while it waits
-                let corner = CGPoint(x: r.minX, y: r.minY), taken = Progress.shared.tests[p.id] != nil, ready = p.opens || taken
+                // once passed); filled in the chapter's colour when it can be taken, an outline while it waits
+                let corner = CGPoint(x: r.minX, y: r.minY), passed = Progress.shared.passed(p.id), ready = p.opens
                 s.plate(id + "seal\(ready)", Self.circle(corner, 22), ready ? chapter : .paper)
                 if !ready { s.overLine(id + "ring", Self.circle(corner, 21) + [Self.circle(corner, 21)[0]], .hex(Ink.mix(0xF3F2EF, hex, 0.45), Ink.mix(0x121211, hex, 0.45)), width: 1.5) }
                 let mark: Sketch.Colour = ready ? .hex(0xFFFFFF, 0xFFFFFF) : .hex(Ink.mix(0xF3F2EF, hex, 0.7), Ink.mix(0x121211, hex, 0.7))
-                if taken { s.overLine(id + "tick", [CGPoint(x: corner.x - 8, y: corner.y), CGPoint(x: corner.x - 2.5, y: corner.y + 6), CGPoint(x: corner.x + 9, y: corner.y - 6.5)], mark, width: Sketch.stroke) }
-                else { s.text(id + "n", "\(p.id == "test-grade" ? 20 : 12)", at: corner, size: 15, weight: .bold, mark) }
+                if passed { s.overLine(id + "tick", [CGPoint(x: corner.x - 8, y: corner.y), CGPoint(x: corner.x - 2.5, y: corner.y + 6), CGPoint(x: corner.x + 9, y: corner.y - 6.5)], mark, width: Sketch.stroke) }
+                else { s.text(id + "n", "\(LessonPlan.test)", at: corner, size: 15, weight: .bold, mark) }
             } else if model.selected?.id == p.id && p.opens {
-                // chosen: its tab says Start (or Continue), with an arrow (G 18 Oct)
+                // chosen: its tab says Start (Continue, or Go over when it opens on its recheck), with an arrow (G 18 Oct)
                 s.startAt = nil
-                s.tab(id, frame: r, PageStore.load(p.id) == nil ? "Start" : "Continue", width: p.start.width, arrow: true, colour: chapter)
+                let word = Progress.shared.dueBack(p.id) ? "Go over" : PageStore.load(p.id) == nil ? "Start" : "Continue"
+                s.tab(id, frame: r, word, width: p.start.width, arrow: true, colour: chapter)
+            } else if p.goOver {
+                // learned, and its time to come back has come (or its check came back low): Go over, not Up next
+                s.tab(id, frame: r, "Go over", colour: chapter)
             } else if p.state == .now {
                 s.tab(id, frame: r, "Up next", colour: chapter)
             }

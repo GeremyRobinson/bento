@@ -13,14 +13,13 @@ struct Toolbar: View {
     @Environment(\.colorScheme) private var scheme
     @AppStorage("theme") private var theme = ""
     @State private var open: Panel? = Toolbar.shotPanel
-    /// `-panel=more|me|hint`: a screenshot opens that panel.
+    /// `-panel=more|me`: a screenshot opens that panel.
     private static var shotPanel: Panel? {
         guard let a = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("-panel=") }) else { return nil }
-        return ["more": Panel.more, "me": .me, "hint": .hint][String(a.dropFirst(7))]
+        return ["more": Panel.more, "me": .me][String(a.dropFirst(7))]
     }
-    @State private var hintsUsed = 0
 
-    enum Panel { case more, me, hint }
+    enum Panel { case more, me }
 
     var body: some View {
         let inLesson = model.openPiece != nil
@@ -48,7 +47,8 @@ struct Toolbar: View {
                 info(title: model.openPiece?.name ?? "", detail: lessonDetail, progress: lessonProgress, wide: true)
                 if hasTools {
                     divider
-                    BarButton(icon: .hint, label: "Hint", count: hintsLeft, lit: open == .hint, enabled: canHint) { toggle(.hint) }
+                    // the hint is drawn on the paper (G 20 Oct): no card opens for it
+                    BarButton(icon: .hint, label: "Hint", count: hintCount, enabled: canHint) { open = nil; model.bars?.hint() }
                     BarButton(icon: .show, label: "Show me", enabled: canShowMe) { open = nil; showMe() }
                 }
             } else {
@@ -98,7 +98,6 @@ struct Toolbar: View {
         switch open {
         case .more?: Card(width: 300) { inLesson ? AnyView(lessonMenu) : AnyView(mapMenu) }
         case .me?: Card(width: 320) { meCard }
-        case .hint?: Card(width: 380) { hintCard }
         case nil: EmptyView()
         }
     }
@@ -116,8 +115,9 @@ struct Toolbar: View {
             if hasTools {
                 MenuRow(icon: .restart, label: "Start this problem over", enabled: canReset) { open = nil; reset() }
             }
-            MenuRow(icon: .read, label: "Read it aloud") { open = nil; readAloud() }
-            if let b = model.bars, b.howToGone { MenuRow(icon: .show, label: "Watch the How to again") { open = nil; b.watchAgain() } }
+            // off in tests (G 20 Oct)
+            MenuRow(icon: .read, label: "Read it aloud", enabled: canRead) { open = nil; readAloud() }
+            if let b = model.bars, b.howToGone, !b.inTest { MenuRow(icon: .show, label: "Watch the How to again") { open = nil; b.watchAgain() } }
             MenuRow(icon: .dark, label: scheme == .dark ? "Light" : "Dark") { theme = scheme == .dark ? "light" : "dark" }
             zoomRow
         }
@@ -150,21 +150,9 @@ struct Toolbar: View {
         .padding(8)
     }
 
-    private var hintCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(hintsLeft.map { "Hint · \($0) left in this lesson" } ?? "Hint").font(Typeface.font(16, .semibold)).foregroundStyle(Ink.ink2)
-            Text(hintText).font(Typeface.font(18)).foregroundStyle(Ink.ink).fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
     // MARK: what the buttons do
 
-    private func toggle(_ p: Panel) {
-        if p == .hint, open != .hint, canHint { hintsUsed += 1; problem?.usedHint() }
-        open = open == p ? nil : p
-    }
+    private func toggle(_ p: Panel) { open = open == p ? nil : p }
 
     private var zoom: Double { model.lesson?.scale ?? model.camera(at: PaperClock.now).zoom }
     private func zoomBy(_ f: Double) { if let l = model.lesson { l.zoom(f) } else { model.zoomButton(f) } }
@@ -175,16 +163,14 @@ struct Toolbar: View {
     private var hasTools: Bool { problem != nil || model.lesson != nil }
     private var helps: Bool { problem?.lesson.helps ?? model.lesson?.lesson.helps ?? false }
 
-    /// Hints: about one for every two problems on a page (the web's rule), none in the skill check.
-    private var hintsLeft: Int? {
-        guard model.bars != nil else { return nil }
-        return max(0, 5 - hintsUsed)
-    }
-    private var canHint: Bool { helps && (open == .hint || (hintsLeft ?? 1) > 0) && (step?.task != nil || step?.answer != nil) }
+    /// Hints (G 20 Oct): the page decides, with its budget saved with it: free in together problems up to their cap, on
+    /// their own one of the page's once the step had a miss, none in tests. The count is what's left for this problem.
+    private var hintCount: Int? { model.bars?.hintCount }
+    private var canHint: Bool { (model.bars?.hintUse ?? .off) != .off }
     private var canShowMe: Bool { helps && (step?.task != nil || step?.answer != nil) && problem?.solved != true }
     private var canReset: Bool { step?.task != nil }
     private var step: LessonStep? { problem?.lesson.step ?? model.lesson?.lesson.step }
-    private var hintText: String { step.map { $0.look ?? $0.answer?.hint ?? $0.words.hint } ?? "" }
+    private var canRead: Bool { problem != nil && !(model.bars?.inTest ?? false) }
 
     private func showMe() { if let p = problem { p.showMe() } else { model.lesson?.showMe() } }
     private func reset() { if let p = problem { p.reset() } else { model.lesson?.reset() } }
@@ -192,7 +178,7 @@ struct Toolbar: View {
     /// In a problem: which one and its step ("Together 1 · Step 2 of 4"), the bar filling as its steps are done (as the
     /// paper prototype G liked, 20 Oct); on the page: how far through the page.
     private var lessonDetail: String {
-        if let p = problem, let s = problemSteps { return "\(p.label) · Step \(s.at) of \(s.of)" }
+        if let p = problem, let s = problemSteps { return "\(model.bars?.label ?? p.label) · Step \(s.at) of \(s.of)" }
         if let b = model.bars { return b.label }
         return model.lesson?.session.label ?? ""
     }
@@ -208,9 +194,10 @@ struct Toolbar: View {
         return (min(of, l.index - l.lead + 1), of)
     }
 
+    /// The instruction only, never the hint (G 20 Oct): that's the Hint button's, and counted.
     private func readAloud() {
-        guard let s = problem?.lesson.words ?? model.lesson?.lesson.words else { return }
-        Speech.shared.say(s.say + ". " + s.hint)
+        guard canRead, let s = problem?.lesson.words else { return }
+        Speech.shared.say(problem?.intro ?? s.say)
     }
 }
 

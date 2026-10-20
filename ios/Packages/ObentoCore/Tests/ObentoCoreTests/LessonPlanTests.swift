@@ -116,23 +116,23 @@ final class LessonPlanTests: XCTestCase {
         XCTAssertEqual(LessonPlan.hint(together, part: .together, left: 0), .free, "free, whatever the page has left")
         XCTAssertEqual(LessonPlan.hintsLeft(together, part: .together, left: 0), 3)
         together.usedHint()
-        XCTAssertEqual(LessonPlan.hint(together, part: .together, left: 5), .none, "one a step")
+        XCTAssertEqual(LessonPlan.hint(together, part: .together, left: 5), .off, "one a step")
         XCTAssertEqual(LessonPlan.hintsLeft(together, part: .together, left: 5), 2)
 
         var own = plan.run(spec, 3)
-        XCTAssertEqual(LessonPlan.hint(own, part: .own, left: 5), .none, "no hint before a miss")
+        XCTAssertEqual(LessonPlan.hint(own, part: .own, left: 5), .off, "no hint before a miss")
         type(&own, "1"); _ = own.go()
         XCTAssertEqual(LessonPlan.hint(own, part: .own, left: 5), .spend)
-        XCTAssertEqual(LessonPlan.hint(own, part: .own, left: 0), .none, "the page's hints are used up")
+        XCTAssertEqual(LessonPlan.hint(own, part: .own, left: 0), .off, "the page's hints are used up")
         XCTAssertEqual(LessonPlan.hintsLeft(own, part: .own, left: 4), 4)
         own.usedHint()
-        XCTAssertEqual(LessonPlan.hint(own, part: .own, left: 4), .none)
+        XCTAssertEqual(LessonPlan.hint(own, part: .own, left: 4), .off)
 
         var test = LessonPlan.testRuns(spec, using: &rng)[0]
         type(&test, "1")
-        XCTAssertEqual(LessonPlan.hint(test, part: .own, left: 5), .none)
+        XCTAssertEqual(LessonPlan.hint(test, part: .own, left: 5), .off)
         XCTAssertNil(LessonPlan.hintsLeft(test, part: .own, left: 5))
-        XCTAssertEqual(LessonPlan.hint(own, part: nil, left: 5), .none, "a test's question has no part")
+        XCTAssertEqual(LessonPlan.hint(own, part: nil, left: 5), .off, "a test's question has no part")
     }
 
     /// Every test is scored one way (G 20 Oct): problems right, 12 of them, 10 to pass. A chapter's test takes its

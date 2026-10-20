@@ -4,24 +4,37 @@ import SwiftUI
 /// problems to choose from, drawn as cards: 3 done together, 6 on their own (a miss brings a fresh one aimed at it), and
 /// the lesson's test (LessonPlan). Choosing one draws the page out and that problem in, alone and as big as its maths
 /// needs; the bar's "Problems" draws it out and the page back in. A chapter or grade test's page is its questions.
+/// A learned lesson that's due back opens on its recheck first (G 20 Oct): 4 questions, one try each and no help, then
+/// the lesson's page. A finished test or recheck shows its result on the paper before going on.
 /// Its problems are AddFractionsModel (Add with different bottoms) or WorkProblem (every other lesson).
 @MainActor @Observable
 final class BarsPage {
-    enum Mode { case howTo, choose, work }
+    enum Mode { case howTo, choose, work, result }
 
     let piece: Piece
+    /// Everything shows at once: Reduce Motion, or a screenshot.
     let instant: Bool
+    /// Reduce Motion: cuts instead of glides; the work is still saved and brought back, and the How to still plays.
+    let reduceMotion: Bool
+    /// A screenshot: the How to is skipped and nothing is saved.
+    let shotMode: Bool
     private(set) var howTo: any PageProblem
     /// The lesson's problems in the plan's order (together, then own), or a chapter test's questions.
     private(set) var problems: [any PageProblem] = []
     /// The lesson test being taken (12), if one is started.
     private(set) var testProblems: [any PageProblem] = []
+    /// A due lesson's recheck (4), while the page is on it.
+    private(set) var recheckProblems: [any PageProblem] = []
+    /// The page opened on its recheck and hasn't gone on to the lesson's own page yet.
+    private(set) var rechecking = false
     private(set) var plan: LessonPlan?
     private(set) var mode: Mode = .howTo
-    /// The page of problems is up (or a problem from it is open): the How to is over.
+    /// The page of problems is up (or a problem from it is open, or a result): the How to is over.
     var showing: Bool { mode != .howTo }
     /// Asks the camera to frame a part of the page.
     var frame: ((Rect) -> Void)?
+    /// Asks to go back to the map: a chapter or grade test's result goes on there.
+    var close: (() -> Void)?
 
     // graph paper (G 17 Oct): every box starts and ends on the strong lines, with whole blocks between. The How to and
     // the problem being worked sit at the lesson's place, a square 8 blocks each way, or bigger when its maths needs it
@@ -49,7 +62,7 @@ final class BarsPage {
     private(set) var current: (any PageProblem)?
     /// A problem drawing itself out as the page comes back.
     private var leaving: (any PageProblem)?
-    /// When the cards last drew in, and when they started drawing out.
+    /// When the cards (or a result) last drew in, and when they started drawing out.
     private(set) var cardsAt: Double = 0
     private(set) var cardsGoneAt: Double?
 
@@ -64,34 +77,66 @@ final class BarsPage {
     private let specs: [LessonSpec]
     private var rng = SeededRandom(seed: UInt64(Date().timeIntervalSince1970 * 1000))
 
-    init(piece: Piece, instant: Bool, first: Numbers? = nil, saved: PageStore.Saved? = nil, test: Int? = nil) {
-        self.piece = piece; self.instant = instant; self.saved = saved; self.test = test
+    /// The page's hints for its own problems (G 20 Oct): one budget for the page, saved with it.
+    private(set) var hintsLeft = LessonPlan.hints
+    /// Back soon after stopping: the problem the child was on, opened straight away.
+    private var resumeAt: PageStore.Spot?
+
+    init(piece: Piece, reduceMotion: Bool = false, shotMode: Bool = false, first: Numbers? = nil, saved: PageStore.Saved? = nil, test: Int? = nil, recheck: Bool = false) {
+        self.piece = piece; self.reduceMotion = reduceMotion; self.shotMode = shotMode; instant = reduceMotion || shotMode
+        self.saved = saved; self.test = test
         var rng = SeededRandom(seed: UInt64(Date().timeIntervalSince1970 * 1000))
-        // a test mixes every lesson of its chapter that's built as a page (the grade's test, every chapter's)
-        let specs = test != nil ? Map.testSpecs(piece) : [Lessons.spec(piece.id) ?? AddFractions.spec]
+        // a test mixes its chapter's lessons (the grade's test, every chapter's)
+        let specs = test != nil ? Map.testSpecs(piece, using: &rng) : [Lessons.spec(piece.id) ?? AddFractions.spec]
         let spec = specs.first ?? AddFractions.spec
         self.spec = spec; self.specs = specs
-        let o = Self.origin(for: piece)
-        howTo = Self.make(spec, origin: o, chapter: piece.chapter, instant: instant,
+        let o = Self.origin(for: piece), chapter = piece.chapter, instant = reduceMotion || shotMode
+        howTo = Self.make(spec, origin: o, chapter: chapter, instant: instant,
                           run: LessonRun(spec, numbers: first ?? spec.generate(&rng, 0)), label: "How to", auto: true)
+        /// A test's question `i` as it was saved, brought back by its own lesson (never by its place), or asked afresh
+        /// when it no longer fits that lesson.
+        func question(_ i: Int, _ s: RunSnapshot?, from specs: [LessonSpec]) -> LessonRun? {
+            if let s, let sp = specs.first(where: { $0.id == (s.spec ?? spec.id) }), let r = LessonRun.restored(sp, s) { return r }
+            return LessonPlan.testRun(specs, i, using: &rng)
+        }
         if let n = test {
-            // a test draws from the lessons' own check recipes, in turn
-            let runs: [LessonRun] = saved.map { s in s.problems.enumerated().map { i, r in LessonRun(specs[i % specs.count], restoring: r) } } ?? LessonPlan.testRuns(specs, count: n, using: &rng)
-            problems = runs.enumerated().map { i, r in Self.make(r.spec, origin: o, chapter: piece.chapter, instant: instant, run: r, label: "Question \(i + 1)") }
+            let kept = saved?.problems ?? []
+            let runs = (0..<n).compactMap { i in question(i, kept.indices.contains(i) ? kept[i] : nil, from: specs) }
+            problems = runs.enumerated().map { i, r in Self.make(r.spec, origin: o, chapter: chapter, instant: instant, run: r, label: "Question \(i + 1)") }
         } else {
-            let plan = saved?.plan ?? LessonPlan(spec, using: &rng)
-            let runs = saved.map { s in s.problems.map { LessonRun(spec, restoring: $0) } } ?? plan.items.indices.map { plan.run(spec, $0) }
-            problems = runs.indices.map { make(practice: $0, run: runs[$0], plan: plan) }
-            testProblems = (saved?.test ?? []).enumerated().map { i, r in
-                Self.make(spec, origin: o, chapter: piece.chapter, instant: instant, run: LessonRun(spec, restoring: r), label: "Test question \(i + 1)")
+            // the page as it was left: a problem whose save no longer fits the lesson (it changed since) starts fresh
+            var plan: LessonPlan, runs: [LessonRun] = []
+            if let s = saved, let p = s.plan, s.problems.count == p.items.count {
+                plan = p
+                for i in plan.items.indices {
+                    if let r = LessonRun.restored(spec, s.problems[i]) { runs.append(r) } else { plan.renew(i, spec, using: &rng); runs.append(plan.run(spec, i)) }
+                }
+            } else {
+                plan = LessonPlan(spec, using: &rng)
+                runs = plan.items.indices.map { plan.run(spec, $0) }
             }
+            let kept = saved?.test ?? []
+            let tests = kept.indices.compactMap { question($0, kept[$0], from: [spec]) }
+            // a due lesson's recheck: as it was left, or fresh
+            let checks = saved?.recheck ?? []
+            let recheckRuns: [LessonRun] = !recheck ? [] : checks.count == LessonPlan.recheck ? checks.indices.compactMap { question($0, checks[$0], from: [spec]) }
+                : LessonPlan.recheckRuns(spec, using: &rng)
             self.plan = plan
+            problems = runs.indices.map { make(practice: $0, run: runs[$0], plan: plan) }
+            testProblems = tests.enumerated().map { i, r in Self.make(spec, origin: o, chapter: chapter, instant: instant, run: r, label: "Test question \(i + 1)") }
+            recheckProblems = recheckRuns.enumerated().map { i, r in Self.make(spec, origin: o, chapter: chapter, instant: instant, run: r, label: "Question \(i + 1)") }
+            rechecking = recheck
         }
         self.rng = rng
         recorded = saved?.recorded ?? false
-        for p in problems + testProblems { wire(p) }
-        if saved != nil { for p in problems + testProblems { p.restore() } }
+        hintsLeft = saved?.hintsLeft ?? LessonPlan.hints
+        if let s = saved, Self.backSoon(s) { resumeAt = s.spot }
+        for p in problems + testProblems + recheckProblems { wire(p) }
+        if saved != nil { for p in problems + testProblems + recheckProblems { p.restore() } }
     }
+
+    /// Back within 12 hours of stopping (G 20 Oct: "the same day"): no How to, straight back to where they were.
+    static func backSoon(_ s: PageStore.Saved) -> Bool { Date().timeIntervalSince(s.date) < 12 * 3600 }
 
     /// Problem `i` of the lesson, its label from its part of the plan.
     private func make(practice i: Int, run: LessonRun, plan: LessonPlan) -> any PageProblem {
@@ -136,36 +181,90 @@ final class BarsPage {
     private(set) var building = false
     func setBuilding(_ b: Bool) { if building != b { building = b } }
 
-    /// For the bar: "4 of 9" on the page, the problem's place while one is open.
+    /// The list a problem is in: the lesson's own, its test's, or its recheck's.
+    private func siblings(of m: any PageProblem) -> [any PageProblem] {
+        if testProblems.contains(where: { $0 === m }) { return testProblems }
+        if recheckProblems.contains(where: { $0 === m }) { return recheckProblems }
+        return problems
+    }
+
+    /// For the bar: "4 of 9 done" on the page, the problem's place while one is open.
     var label: String {
-        guard showing else { return "How to" }
-        if let c = current, mode == .work {
-            if let i = testProblems.firstIndex(where: { $0 === c }) { return "Test \(i + 1) of \(testProblems.count)" }
-            return c.label
+        switch mode {
+        case .howTo: return "How to"
+        case .result: return result?.title ?? ""
+        case .work:
+            if let c = current {
+                if let i = testProblems.firstIndex(where: { $0 === c }) { return "Test \(i + 1) of \(testProblems.count)" }
+                if let i = recheckProblems.firstIndex(where: { $0 === c }) { return "Go over \(i + 1) of \(recheckProblems.count)" }
+                return c.label
+            }
+            return pageLabel
+        case .choose: return pageLabel
         }
-        return "\(problems.filter(\.solved).count) of \(problems.count) done"
+    }
+    private var pageLabel: String {
+        let list = rechecking ? recheckProblems : problems
+        return "\(list.filter(\.solved).count) of \(list.count) done"
     }
     var progress: Double {
-        let list = mode == .work && testProblems.contains(where: { $0 === current }) ? testProblems : problems
+        let list = mode == .work ? current.map(siblings(of:)) ?? problems : rechecking ? recheckProblems : problems
         return list.isEmpty ? 0 : Double(list.filter(\.solved).count) / Double(list.count)
     }
     /// "Fractions test" or the lesson's name, for the bar.
     var title: String { piece.name }
+    /// A test, a recheck or one of their questions is up: no help of any kind (Read it aloud, the How to).
+    var inTest: Bool { test != nil || rechecking || mode == .result || current.map { c in testProblems.contains { $0 === c } } ?? false }
+
+    // MARK: hints
+
+    /// The open problem's part of the plan: nil for a test's or a recheck's question.
+    private var part: LessonPlan.Part? {
+        guard mode == .work, let c = current, let plan, let i = problems.firstIndex(where: { $0 === c }), plan.items.indices.contains(i) else { return nil }
+        return plan.items[i].part
+    }
+    /// What the bar's Hint does now (G 20 Oct): together problems' are free up to their cap; on their own, one of the
+    /// page's, once the step has had a miss; none in tests and rechecks.
+    var hintUse: LessonPlan.HintUse {
+        guard mode == .work, let c = current, !c.solved else { return .off }
+        return LessonPlan.hint(c.lesson, part: part, left: hintsLeft)
+    }
+    /// The hints the bar shows as left, for the open problem.
+    var hintCount: Int? {
+        guard mode == .work, let c = current else { return nil }
+        return LessonPlan.hintsLeft(c.lesson, part: part, left: hintsLeft)
+    }
+    /// The bar's Hint: the problem shows its step's hint on the paper; an own problem's comes out of the page's hints.
+    func hint() {
+        guard let m = current, !m.busy else { return }
+        let use = hintUse
+        guard use != .off else { return }
+        if use == .spend { hintsLeft -= 1 }
+        m.usedHint()
+        m.showHint()
+        save()
+    }
 
     // MARK: the page of problems
 
     struct Card {
         enum State { case open, now, done, missed, locked }
-        /// The problem it opens: an index into `problems`, or nil for the lesson's test.
-        let index: Int?
+        /// What the card opens: one of the lesson's problems (or a test's questions), the lesson's test, or a question
+        /// of the recheck.
+        enum Opens: Equatable { case problem(Int), test, recheck(Int) }
+        let opens: Opens
         let rect: Rect
         let title: String
         let display: MathLine?
         let line: String
         let state: State
+        /// Its parts' names on the paper.
+        var id: String {
+            switch opens { case .problem(let i): "card\(i)"; case .test: "card-1"; case .recheck(let i): "recheck\(i)" }
+        }
     }
 
-    /// The lesson's test is open once 6 own problems are right.
+    /// The lesson's test is open once 6 own problems are right on their own.
     var testOpen: Bool { plan?.testOpen(problems.map(\.lesson)) ?? false }
     /// The test's result, once all 12 are done.
     var testResult: (right: Int, level: Int)? { LessonPlan.testScore(testProblems.map(\.lesson)) }
@@ -181,37 +280,57 @@ final class BarsPage {
         var out: [Card] = [], heads: [(Point, String)] = []
         let w = Self.card.width, h = Self.card.height, g = Self.gap, x0 = corner.x
         var y = corner.y + Paper.unit
-        func part(_ heading: String, _ items: [Int], columns: Int = Self.columns) {
+        func part(_ heading: String, _ items: [(Card.Opens, any PageProblem)], columns: Int) {
             heads.append((Point(x0, y - Paper.unit / 2), heading))
-            for (k, i) in items.enumerated() {
+            for (k, (opens, m)) in items.enumerated() {
                 let r = Rect(x: x0 + Double(k % columns) * (w + g), y: y + Double(k / columns) * (h + Paper.unit), width: w, height: h)
-                let m = problems[i], l = m.lesson
-                let state: Card.State = m.solved ? (l.missedAny && !l.helps ? .missed : .done) : m === lastWorked ? .now : .open
-                let done = l.steps.indices.filter { $0 < l.index && (l.steps[$0].answer != nil || l.steps[$0].task != nil) }.count
-                let line = m.solved ? (l.missedAny ? (l.helps ? "Done, with a miss" : "Missed") : "Done") : done > 0 ? "\(done) of \(l.workSteps) steps" : focusLine(m)
-                out.append(Card(index: i, rect: r, title: m.label, display: l.display, line: line, state: state))
+                out.append(card(opens, m, r))
             }
             y += Double((items.count + columns - 1) / columns) * (h + Paper.unit) + g
         }
         if let n = test {
-            part("\(n) questions, one try each", Array(problems.indices), columns: 4)
+            part("\(n) questions, one try each", problems.indices.map { (.problem($0), problems[$0]) }, columns: 4)
+            return (out, heads)
+        }
+        // a due lesson's recheck: its 4 questions, before the lesson's page
+        if rechecking {
+            part("Go over · one try each", recheckProblems.indices.map { (.recheck($0), recheckProblems[$0]) }, columns: 4)
             return (out, heads)
         }
         guard let plan else { return (out, []) }
         let top = y
-        part("Together", plan.items.indices.filter { plan.items[$0].part == .together })
-        part("On your own · \(plan.ownRight(problems.map(\.lesson))) of \(LessonPlan.own) right", plan.items.indices.filter { plan.items[$0].part == .own })
+        part("Together", plan.items.indices.filter { plan.items[$0].part == .together }.map { (.problem($0), problems[$0]) }, columns: Self.columns)
+        part("On your own · \(plan.ownRight(problems.map(\.lesson))) of \(LessonPlan.own) right",
+             plan.items.indices.filter { plan.items[$0].part == .own }.map { (.problem($0), problems[$0]) }, columns: Self.columns)
         let tx = x0 + Double(Self.columns) * (w + g) + g
         heads.append((Point(tx, top - Paper.unit / 2), "Test"))
         let started = testProblems.contains { $0.lesson.index > 0 || $0.solved }
         let (line, state): (String, Card.State) = {
-            if let res = testResult { return res.right >= LessonPlan.pass ? ("Passed · \(res.right) of 12. Take it again", .done) : ("\(res.right) of 12. Take it again", .missed) }
+            if let res = testResult {
+                return res.level >= Mastery.pass ? ("Passed · \(res.right) of \(LessonPlan.test)", .done) : ("\(res.right) of \(LessonPlan.test) · Take it again", .missed)
+            }
             if !testOpen { return ("Get 6 right on your own first", .locked) }
-            if started { return ("\(testProblems.filter(\.solved).count) of 12 done", .now) }
-            return ("12 problems, no help", .open)
+            if started { return ("\(testProblems.filter(\.solved).count) of \(LessonPlan.test) done", .now) }
+            return ("\(LessonPlan.test) problems, no help", .open)
         }()
-        out.append(Card(index: nil, rect: Rect(x: tx, y: top, width: w, height: h), title: "Lesson test", display: nil, line: line, state: state))
+        out.append(Card(opens: .test, rect: Rect(x: tx, y: top, width: w, height: h), title: "Lesson test", display: nil, line: line, state: state))
         return (out, heads)
+    }
+
+    /// A problem's card: how it stands, and the line under its name.
+    private func card(_ opens: Card.Opens, _ m: any PageProblem, _ r: Rect) -> Card {
+        let l = m.lesson, oneTry = l.oneTry || !l.helps
+        let state: Card.State, line: String
+        if m.solved {
+            // a test's question was right or missed; a practice problem is done (a miss or Show me said so)
+            state = oneTry && l.missedAny ? .missed : .done
+            line = oneTry ? (l.missedAny ? "Missed" : "Right") : l.missedAny ? "Done, with a miss" : !l.shown.isEmpty ? "Done, with Show me" : "Done"
+        } else {
+            state = m === lastWorked ? .now : .open
+            let done = l.steps.indices.filter { $0 < l.index && (l.steps[$0].answer != nil || l.steps[$0].task != nil) }.count
+            line = done > 0 ? "\(done) of \(l.workSteps) steps" : focusLine(m)
+        }
+        return Card(opens: opens, rect: r, title: m.label, display: l.display, line: line, state: state)
     }
 
     /// The problem worked last, marked Now on its card.
@@ -221,8 +340,9 @@ final class BarsPage {
         (m as? WorkProblem)?.focus != nil ? "Practice the part you missed" : "Not started"
     }
 
-    /// The page of problems, all of it: what the camera shows.
+    /// The page of problems, all of it (or the result on it): what the camera shows.
     var pageFrame: Rect {
+        if mode == .result { return resultFrame }
         let cs = cards
         guard let first = cs.first else { return Self.box(of: howTo) }
         var minX = first.rect.x, minY = corner.y, maxX = 0.0, maxY = 0.0
@@ -240,16 +360,80 @@ final class BarsPage {
         return min(inK, out)
     }
 
+    // MARK: a finished test's result
+
+    /// A finished test or recheck, shown on the paper before going on (G 20 Oct): its score, and what it means.
+    struct Result: Equatable {
+        enum Kind: Equatable { case lessonTest, recheck, test }
+        let kind: Kind
+        /// Its heading: "Lesson test", "Go over", "Fractions test".
+        let title: String
+        let right: Int, of: Int
+        let passed: Bool
+        /// What it means: learned (still learned, passed), or what to do now.
+        var verdict: String {
+            switch kind {
+            case .lessonTest: passed ? "Learned" : "Take it again"
+            case .recheck: passed ? "Still learned" : "Go over it again"
+            case .test: passed ? "Passed" : "Take it again"
+            }
+        }
+        /// For one not passed: what passes.
+        var needs: String? {
+            guard !passed else { return nil }
+            return kind == .recheck ? "\(Mastery.pass) of \(of) keeps it learned" : "\(LessonPlan.passMark(of)) of \(of) passes"
+        }
+    }
+    /// The result on the paper now.
+    private(set) var result: Result?
+    /// A test just finished: its result shows when the child goes on from its last question.
+    private var pending: Result?
+
+    /// Where the result's parts sit, on the page's grid: its heading where the cards' first heading goes; a frame 4
+    /// blocks by 2 with the score in it; what it means under it, then what passes; Continue a block under the frame.
+    var resultLayout: (heading: Point, frame: Rect, verdict: Point, needs: Point, block: Rect) {
+        let x0 = corner.x, top = corner.y + Paper.unit, c = Paper.cell
+        let frame = Rect(x: x0, y: top, width: 4 * Paper.unit, height: 2 * Paper.unit), bottom = frame.y + frame.height
+        return (Point(x0, top - Paper.unit / 2), frame, Point(x0, bottom + 2 * c), Point(x0, bottom + 3.5 * c),
+                Rect(x: x0, y: bottom + Paper.unit, width: 9 * c, height: 2 * c))
+    }
+    var resultFrame: Rect {
+        let l = resultLayout
+        return Rect(x: corner.x, y: corner.y, width: l.frame.width, height: l.block.y + l.block.height - corner.y)
+    }
+
+    private func showResult(_ r: Result) {
+        result = r
+        if let c = current { c.leave(); leaving = c; clearLeaving(c) }
+        current = nil; framed = nil
+        mode = .result
+        cardsAt = instant ? PaperClock.now - 100 : PaperClock.now + 0.35; cardsGoneAt = nil
+        frame?(resultFrame)
+        save()
+    }
+
+    /// The result's Continue: a lesson test back to its page, a recheck on to the lesson's page, a chapter or grade
+    /// test back to the map.
+    func continueFromResult() {
+        guard mode == .result, let r = result else { return }
+        if r.kind == .test { close?(); return }
+        if r.kind == .recheck { rechecking = false; recheckProblems = [] }
+        result = nil
+        showPage(after: 0.05)
+        save()
+    }
+
     // MARK: the How to, then the page
 
     private var playing = false
 
-    /// The How to plays itself: the pieces grow in, each move is made for it, then its answer is written.
+    /// The page opens: a test or a recheck on its questions, back soon on the problem the child was on, else the How to
+    /// plays itself (taught a tap at a time, or as a reminder after a while).
     func start() {
-        // a test has no How to
-        if test != nil { howToGone = true; showProblems(); return }
-        // back the same day: straight to the problem they were on, no How to
-        if let s = saved, Calendar.current.isDateInToday(s.date) {
+        // a chapter or grade test has no How to; nor does a recheck (G 20 Oct)
+        if test != nil || rechecking { howToGone = true; showProblems(); return }
+        // back soon: straight to the problem they were on, no How to
+        if let s = saved, Self.backSoon(s), !shotMode {
             howToGone = true
             showProblems()
             return
@@ -262,114 +446,148 @@ final class BarsPage {
 
     /// Watch the How to again (in More): the page steps aside, it plays where it was, and the page comes back.
     func watchAgain() {
-        guard howToGone, !playing else { return }
+        guard howToGone, !playing, !inTest else { return }
         if mode == .work, let c = current { c.leave(); leaving = c }
         cardsGoneAt = PaperClock.now
         playing = true
-        Task {
-            try? await Task.sleep(for: .seconds(0.55))
+        run { [self] in
+            guard await wait(0.55) else { return }
             leaving = nil
             howTo.replay(); howToGone = false; mode = .howTo
             current = howTo; frame?(Self.box(of: howTo))
-            play()
+            if shotMode { play() } else { teach() }
         }
     }
 
     /// A tap while the How to plays: the next step when it's being taught, the end of it when it's a reminder.
     func skipHowTo() {
         guard playing, !howToGone else { return }
-        if reminding { skipping = true } else { pressed = howTo.howToButtons.first ?? .next }
+        if reminding { skipping = true } else { press(howTo.howToButtons.first ?? .next) }
     }
-    /// The How to's block the child pressed, while it waits for one.
-    private var pressed: ProblemLayout.Kind?
-    /// Coming back after a day or more: the How to replays on its own, and a tap skips it.
-    private var reminding: Bool { saved.map { !Calendar.current.isDateInToday($0.date) } ?? false }
+    /// Coming back after a while: the How to replays on its own, and a tap skips it.
+    private var reminding: Bool { saved.map { !Self.backSoon($0) } ?? false }
+    private var skipping = false
+
+    /// The How to waiting for the child to press one of its blocks: their tap ends the wait (nothing polls).
+    @ObservationIgnored private var waiting: CheckedContinuation<ProblemLayout.Kind?, Never>?
+    private func press(_ k: ProblemLayout.Kind?) {
+        guard let c = waiting else { return }
+        waiting = nil
+        c.resume(returning: k)
+    }
+    /// Shows these blocks and waits for one to be pressed; nil when the page stops first.
+    private func ask(_ blocks: [ProblemLayout.Kind]) async -> ProblemLayout.Kind? {
+        guard !Task.isCancelled else { return nil }
+        press(nil)
+        howTo.howToButtons = blocks
+        let k = await withTaskCancellationHandler {
+            await withCheckedContinuation { (c: CheckedContinuation<ProblemLayout.Kind?, Never>) in waiting = c }
+        } onCancel: {
+            Task { @MainActor [weak self] in self?.press(nil) }
+        }
+        howTo.howToButtons = []
+        return k
+    }
 
     /// The How to taught a tap at a time (G 18 Oct): why it works, then each step's words and its move, waiting for the
     /// child before going on.
     private func teach() {
-        Task {
-            @MainActor func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
-            /// Shows these blocks and waits for one to be pressed.
-            @MainActor func ask(_ blocks: [ProblemLayout.Kind]) async -> ProblemLayout.Kind {
-                pressed = nil; howTo.howToButtons = blocks
-                while pressed == nil { await wait(0.1) }
-                howTo.howToButtons = []
-                defer { pressed = nil }
-                return pressed!
-            }
+        run { [self] in
             while true {
                 howTo.intro = spec.idea(howTo.lesson.numbers)
-                await wait(1.2); _ = await ask([.next])                 // the picture grows in; what to do
+                // the picture grows in; what to do
+                guard await wait(1.2), await ask([.next]) != nil else { return }
                 // the lesson's own explaining beats: why the numbers do what they do
                 for beat in howTo.howToBeats() {
                     howTo.intro = beat.words; beat.run()
-                    await wait(1.0); _ = await ask([.next])
+                    guard await wait(1.0), await ask([.next]) != nil else { return }
                 }
                 (howTo as? WorkProblem)?.endBeats()
                 howTo.intro = nil
                 while !howTo.solved {
                     howTo.go()                                          // the next step's words
                     if howTo.solved { break }
-                    await wait(1.0)
-                    await wait(howTo.demonstrate() + 0.4)               // its move, made for it
-                    _ = await ask([.next])
+                    guard await wait(1.0) else { return }
+                    guard await wait(howTo.demonstrate() + 0.4) else { return }     // its move, made for it
+                    guard await ask([.next]) != nil else { return }
                 }
                 // the answer stays until the child chooses: practise, or watch it all again
-                await wait(0.6)
-                if await ask([.practise, .again]) == .practise { break }
-                howTo.replay(); await wait(0.4)
+                guard await wait(0.6), let k = await ask([.practise, .again]) else { return }
+                if k == .practise { break }
+                howTo.replay()
+                guard await wait(0.4) else { return }
             }
-            howTo.leave(); await wait(0.6)
+            howTo.leave()
+            guard await wait(0.6) else { return }
             howToGone = true
             playing = false
             showProblems()
         }
     }
-    private var skipping = false
-    /// The problem to come back to after the How to.
-    private var resumeAt: Int?
 
     private func play() {
-        if instant { while !howTo.solved { howTo.demonstrate(); howTo.go() }; howToGone = true; showProblems(); return }
+        // a screenshot: the How to done at once
+        if shotMode { while !howTo.solved { howTo.demonstrate(); howTo.go() }; howToGone = true; showProblems(); return }
         playing = true
         // the first time it's taught a tap at a time, idea first; coming back it plays itself as a reminder
         if !reminding { teach(); return }
         howTo.howToButtons = [.skip]
-        Task {
-            func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
-            skipping = false
-            @MainActor func pause(_ s: Double) async { var t = 0.0; while t < s, !skipping { await wait(0.1); t += 0.1 } }
-            await pause(2.2)                                  // the bars grow in; read the question
-            while !howTo.solved && !skipping {
-                howTo.go(); await pause(1.4)                  // the next step's words come in, the See beat plays
-                if howTo.solved || skipping { break }
-                await pause(howTo.demonstrate() + 0.8)        // the move, made for it
+        skipping = false
+        run { [self] in
+            /// Waits `s` seconds, or less when Skip is pressed; false once the page has stopped.
+            @MainActor func pause(_ s: Double) async -> Bool {
+                var t = 0.0
+                while t < s, !skipping { guard await wait(0.1) else { return false }; t += 0.1 }
+                return true
             }
-            if !skipping { await pause(1.6) }                 // read the answer
+            guard await pause(2.2) else { return }                    // the bars grow in; read the question
+            while !howTo.solved && !skipping {
+                howTo.go()                                            // the next step's words come in, the See beat plays
+                guard await pause(1.4) else { return }
+                if howTo.solved || skipping { break }
+                guard await pause(howTo.demonstrate() + 0.8) else { return }   // the move, made for it
+            }
+            if !skipping { guard await pause(1.6) else { return } }   // read the answer
             howTo.howToButtons = []
-            howTo.leave(); await wait(0.6)                    // it erases itself, as it drew itself in
+            howTo.leave()                                             // it erases itself, as it drew itself in
+            guard await wait(0.6) else { return }
             howToGone = true
             playing = false
             showProblems()
         }
     }
 
-    /// After the How to: the page of problems draws itself in, or, back the same day, the problem they were on.
+    /// After the How to (or straight away): the page of problems draws itself in; or, back soon, the problem the child
+    /// was on.
     private func showProblems() {
-        if let i = saved?.current, saved?.inTest == false, problems.indices.contains(i), !problems[i].solved, Calendar.current.isDateInToday(saved!.date), current == nil {
-            open(problems[i]); return
+        if let spot = resumeAt {
+            resumeAt = nil
+            if let m = problem(for: spot), !m.solved { open(m); return }
         }
-        current = nil
+        showPage(after: 0.05)
+    }
+
+    /// The page of problems (the recheck's, while it's on) draws in.
+    private func showPage(after delay: Double) {
+        current = nil; framed = nil
         mode = .choose
-        cardsAt = instant ? PaperClock.now - 100 : PaperClock.now + 0.05; cardsGoneAt = nil
+        cardsAt = instant ? PaperClock.now - 100 : PaperClock.now + delay; cardsGoneAt = nil
         frame?(pageFrame)
+    }
+
+    /// The problem at a saved place, if it's still on the page.
+    private func problem(for spot: PageStore.Spot) -> (any PageProblem)? {
+        switch spot {
+        case .problem(let i): return !rechecking && problems.indices.contains(i) ? problems[i] : nil
+        case .test(let i): return !rechecking && testProblems.indices.contains(i) ? testProblems[i] : nil
+        case .recheck(let i): return rechecking && recheckProblems.indices.contains(i) ? recheckProblems[i] : nil
+        }
     }
 
     // MARK: what the child does
 
     /// Leaving the lesson: what's on the paper erases itself, as it drew in.
-    func leave() { for m in all { m.leave() }; if mode == .choose { cardsGoneAt = PaperClock.now } }
+    func leave() { for m in all { m.leave() }; if mode == .choose || mode == .result { cardsGoneAt = PaperClock.now } }
 
     /// A problem opens: the page draws out, and it draws in alone where the How to was. The camera frames what it
     /// draws (contentChanged).
@@ -395,28 +613,28 @@ final class BarsPage {
     }
     private var framed: Rect?
 
-    /// The bar's "Problems": the problem draws out and the page draws back in.
+    /// The bar's "Problems": the problem draws out and the page draws back in (a test just finished: its result).
     func backToProblems() {
         guard mode == .work, let c = current else { return }
+        if let r = pending { pending = nil; showResult(r); return }
         c.leave(); leaving = c; clearLeaving(c)
-        current = nil; framed = nil
-        mode = .choose
-        cardsAt = instant ? PaperClock.now - 100 : PaperClock.now + 0.35; cardsGoneAt = nil
-        frame?(pageFrame)
+        showPage(after: 0.35)
         save()
     }
 
     private func clearLeaving(_ c: any PageProblem) {
-        Task { [weak self] in
-            try? await Task.sleep(for: .seconds(0.6))
-            if let self, self.leaving === c { self.leaving = nil; self.leftClearedAt = PaperClock.now }
+        run { [self] in
+            guard await wait(0.6), leaving === c else { return }
+            leaving = nil; leftClearedAt = PaperClock.now
         }
     }
 
-    /// "Next problem" on a solved one: the next one not done yet, in order; when there's none, back to the page.
+    /// "Next problem" on a solved one: the next one not done yet, in order; when there's none, back to the page. A test
+    /// or recheck just finished shows its result first.
     func goNext() {
         guard let c = current else { return }
-        let list = testProblems.contains(where: { $0 === c }) ? testProblems : problems
+        if let r = pending { pending = nil; showResult(r); return }
+        let list = siblings(of: c)
         let i = list.firstIndex { $0 === c } ?? 0
         let next = (list[(i + 1)...] + list[..<i]).first { !$0.solved }
         // a lesson's own problems stop at the test: that's chosen from the page
@@ -436,25 +654,33 @@ final class BarsPage {
         if let m = testProblems.first(where: { !$0.solved }) { open(m) }
     }
 
-    /// A tap on the paper: on the page, the card it lands on opens; in a problem, the block it lands on.
+    /// A tap on the paper: on the page, the card it lands on opens; in a problem, the block it lands on; on a result,
+    /// Continue.
     func tap(_ p: Point) {
         // while the How to plays, only its blocks do anything
         if playing && !howToGone {
             if let b = ProblemLayout.blocks(howTo).first(where: { $0.rect.contains(CGPoint(x: p.x, y: p.y)) }) {
-                switch b.kind { case .skip: skipping = true; case .next, .practise, .again: pressed = b.kind; default: break }
+                switch b.kind { case .skip: skipping = true; case .next, .practise, .again: press(b.kind); default: break }
             }
+            return
+        }
+        if mode == .result {
+            if contains(resultLayout.block, p) { continueFromResult() }
             return
         }
         if mode == .choose {
             guard let c = cards.first(where: { contains($0.rect, p) }) else { return }
-            if let i = c.index { open(problems[i]) } else { openTest() }
+            switch c.opens {
+            case .problem(let i): open(problems[i])
+            case .test: openTest()
+            case .recheck(let i): open(recheckProblems[i])
+            }
             return
         }
         guard let m = current, contains(Self.box(of: m), p) else { return }
         if let b = ProblemLayout.blocks(m).first(where: { $0.rect.contains(CGPoint(x: p.x, y: p.y)) }) {
             switch b.kind {
-            case .next, .practise: pressed = b.kind
-            case .again: pressed = .again
+            case .next, .practise, .again: press(b.kind)
             case .skip: skipping = true
             case .main: m.go()
             case .nextProblem: goNext()
@@ -473,12 +699,20 @@ final class BarsPage {
     func problem(at p: Point) -> (any PageProblem)? { all.first { contains(Self.box(of: $0), p) } }
 
     /// A problem was solved: the plan adds what it needs (another together problem, a fresh one aimed at a miss); a
-    /// finished test decides learned.
+    /// finished test or recheck is scored, the one way every test is (LessonPlan), and its result waits to be shown.
     private func solved(_ m: any PageProblem) {
         if test != nil {
             if let r = LessonPlan.testScore(problems.map(\.lesson)), !recorded {
                 recorded = true
-                Progress.shared.tested(piece.id, level: r.level, right: r.right, of: problems.count)
+                Progress.shared.tested(piece.id, right: r.right, of: problems.count)
+                pending = Result(kind: .test, title: piece.name, right: r.right, of: problems.count, passed: r.level >= Mastery.pass)
+            }
+            save(); return
+        }
+        if recheckProblems.contains(where: { $0 === m }) {
+            if let r = LessonPlan.recheckScore(recheckProblems.map(\.lesson)), pending == nil, result == nil {
+                Progress.shared.checked(spec.id, level: r.level)
+                pending = Result(kind: .recheck, title: "Go over", right: r.right, of: recheckProblems.count, passed: r.level >= Mastery.pass)
             }
             save(); return
         }
@@ -486,6 +720,7 @@ final class BarsPage {
             if let r = testResult, !recorded {
                 recorded = true
                 Progress.shared.checked(spec.id, level: r.level)
+                pending = Result(kind: .lessonTest, title: "Lesson test", right: r.right, of: testProblems.count, passed: r.level >= Mastery.pass)
             }
             save(); return
         }
@@ -514,43 +749,111 @@ final class BarsPage {
         }
     }
 
-    /// The page is saved after every change.
+    /// The page is saved after every change (a screenshot saves nothing).
     private func save() {
-        guard !instant, howToGone else { return }
-        let cur = current.flatMap { c in problems.firstIndex { $0 === c } ?? testProblems.firstIndex { $0 === c } }
+        guard !shotMode, howToGone else { return }
+        let spot: PageStore.Spot? = current.flatMap { c in
+            if let i = problems.firstIndex(where: { $0 === c }) { return .problem(i) }
+            if let i = testProblems.firstIndex(where: { $0 === c }) { return .test(i) }
+            return recheckProblems.firstIndex { $0 === c }.map { .recheck($0) }
+        }
         PageStore.save(piece.id, .init(date: Date(), plan: plan, problems: problems.map(\.lesson.snapshot), test: testProblems.map(\.lesson.snapshot),
-                                       current: cur, inTest: current.map { c in testProblems.contains { $0 === c } } ?? false,
-                                       recorded: recorded, solved: problems.filter(\.solved).count))
+                                       recheck: rechecking ? recheckProblems.map(\.lesson.snapshot) : [], spot: spot, recorded: recorded,
+                                       solved: problems.filter(\.solved).count, hintsLeft: hintsLeft))
     }
     private var recorded = false
+
+    // MARK: its tasks
+
+    @ObservationIgnored private var tasks: [Int: Task<Void, Never>] = [:]
+    @ObservationIgnored private var taskCount = 0
+    /// The page has stopped: closed, or another page opened.
+    private(set) var stopped = false
+
+    /// Runs `body` as one of the page's tasks (the How to, a problem drawing out): every one ends when the page stops.
+    private func run(_ body: @escaping @MainActor () async -> Void) {
+        guard !stopped else { return }
+        taskCount += 1
+        let k = taskCount
+        tasks[k] = Task { @MainActor [weak self] in
+            await body()
+            self?.tasks[k] = nil
+        }
+    }
+    /// Waits `s` seconds; false once the page has stopped (its task is cancelled): stop there.
+    private func wait(_ s: Double) async -> Bool {
+        try? await Task.sleep(for: .seconds(s))
+        return !Task.isCancelled
+    }
+
+    /// The page closes, or another opens: its work is saved, and everything it started ends now, whatever it was waiting
+    /// for (the How to waiting for a tap), so nothing keeps running or keeps the page.
+    func stop() {
+        guard !stopped else { return }
+        save()
+        stopped = true
+        for t in tasks.values { t.cancel() }
+        tasks = [:]
+        press(nil)
+    }
 
     private func contains(_ r: Rect, _ p: Point) -> Bool { p.x >= r.x && p.y >= r.y && p.x <= r.x + r.width && p.y <= r.y + r.height }
 }
 
 /// Each lesson page's work, saved on the device as the child goes (G 18 Oct): stop anywhere and come back to it.
+/// Versioned (G 20 Oct): a save in an older shape starts that page fresh, and a problem whose save no longer fits its
+/// lesson starts fresh (LessonRun.restored), instead of being misread.
 @MainActor
 enum PageStore {
+    /// The saves' shape: bumped whenever `Saved` changes.
+    nonisolated static let schema = 2
+
+    /// Where the child was: one of the lesson's problems (or a test's questions), the lesson test's, or the recheck's.
+    enum Spot: Codable, Equatable { case problem(Int), test(Int), recheck(Int) }
+
     struct Saved: Codable {
+        var schema = PageStore.schema
         var date: Date
         var plan: LessonPlan?
         var problems: [RunSnapshot]
         var test: [RunSnapshot]
-        var current: Int?
-        var inTest: Bool
+        /// A due lesson's recheck, while it's being taken.
+        var recheck: [RunSnapshot]
+        var spot: Spot?
+        /// The test taken to the end has been scored (a chapter or grade test: it's finished).
         var recorded: Bool
         /// Problems solved, for the map's "5 of 9 done".
         var solved: Int
+        /// The page's hints left for its own problems.
+        var hintsLeft: Int
     }
     /// Bumped on every save, so the map's words know to change.
     private(set) static var version = 0
+    /// Screenshots keep what they set here only.
+    static var saving = true
     private static func key(_ id: String) -> String { "lesson-\(id)" }
+    /// What's been read or saved, so the map doesn't decode every page each time it draws.
+    private static var cache: [String: Saved?] = [:]
+
+    private struct Shape: Decodable { var schema: Int? }
 
     static func load(_ id: String) -> Saved? {
-        guard let d = UserDefaults.standard.data(forKey: key(id)) else { return nil }
-        return try? JSONDecoder().decode(Saved.self, from: d)
+        if let c = cache[id] { return c }
+        var out: Saved?
+        // an older shape (or one that can't be read) starts the page fresh; its next save takes its place
+        if let d = UserDefaults.standard.data(forKey: key(id)), (try? JSONDecoder().decode(Shape.self, from: d))?.schema == schema {
+            out = try? JSONDecoder().decode(Saved.self, from: d)
+        }
+        cache[id] = .some(out)
+        return out
     }
     static func save(_ id: String, _ s: Saved) {
-        if let d = try? JSONEncoder().encode(s) { UserDefaults.standard.set(d, forKey: key(id)); version += 1 }
+        cache[id] = .some(s); version += 1
+        guard saving, let d = try? JSONEncoder().encode(s) else { return }
+        UserDefaults.standard.set(d, forKey: key(id))
     }
-    static func clear(_ id: String) { UserDefaults.standard.removeObject(forKey: key(id)); version += 1 }
+    static func clear(_ id: String) {
+        cache[id] = .some(nil); version += 1
+        if saving { UserDefaults.standard.removeObject(forKey: key(id)) }
+    }
 }

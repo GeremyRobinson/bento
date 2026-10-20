@@ -10,18 +10,23 @@ struct Piece: Identifiable, Equatable {
     let at: Point
     /// The lesson behind this piece, if one has been written.
     var spec: LessonSpec? { Lessons.spec(id) }
-    /// Only lessons built the paper way open (LESSONS.md); the rest wait, locked, for G's OK on their web preview.
-    @MainActor var opens: Bool { isTest ? Map.testReady(id) : spec != nil && Map.paperLessons.contains(id) }
+    /// Every lesson with a spec opens (the Paper proof's two as well, for their screenshots); a test once it's ready.
+    @MainActor var opens: Bool { isTest ? Map.testReady(id) : spec != nil && (Map.paperLessons.contains(id) || Map.proof.contains { $0.id == id }) }
     /// A chapter or grade test, not a lesson (G 18 Oct).
     var isTest: Bool { id.hasPrefix("test-") }
 
-    /// Learned, up next (the first lesson in its chapter not learned yet), or not yet.
+    /// Learned (coloured in: a lesson learned at some time, a test passed), up next (the first lesson in its chapter not
+    /// learned yet, or one whose test came back low: lit, with a tab), or not yet.
     @MainActor var state: State {
-        if isTest { return (Progress.shared.tests[id] ?? 0) >= Mastery.pass ? .learned : opens ? .now : .notYet }
+        if isTest { return Progress.shared.passed(id) ? .learned : opens ? .now : .notYet }
         if Progress.shared.learned.contains(id) { return .learned }
-        let next = Map.pieces.first { $0.chapter == chapter && $0.opens && !Progress.shared.learned.contains($0.id) }
+        if Progress.shared.goOver(id) { return .now }
+        let next = Map.pieces.first { $0.chapter == chapter && $0.opens && !Progress.shared.learned.contains($0.id) && !Progress.shared.goOver($0.id) }
         return next?.id == id ? .now : .notYet
     }
+    /// Marked Go over on the map (G 20 Oct): a learned lesson due back for its recheck (it opens on it), or one whose
+    /// last check came back low. It stays coloured and counted; the tab says Go over instead of Up next.
+    @MainActor var goOver: Bool { !isTest && Progress.shared.goOver(id) }
 
     /// Graph paper (G 17 Oct): 3 blocks by 2, starting and ending on the strong lines; its name and Start block fill
     /// the block under it.
@@ -65,8 +70,7 @@ struct ChapterGroup {
     }
 }
 
-/// 5th grade on the paper: the 17 lessons of specs/k12/grade5.md in four chapters, laid out two by two as v27 does,
-/// with the Paper proof's two lessons (Unit cubes, Add with different bottoms) in their chapters.
+/// 5th grade on the paper: the 17 lessons of specs/k12/grade5.md in four chapters, laid out two by two as v27 does.
 enum Map {
     static let grade = (number: "5", name: "5th grade")
     static let groups: [ChapterGroup] = [
@@ -76,13 +80,23 @@ enum Map {
             ("g5-pow10", "Multiply by 10, 100, 1000"), ("g5-round", "Rounding decimals"), ("g5-adddec", "Adding decimals"),
             ("g5-multdec", "Multiplying decimals"), ("g5-divdec", "Dividing by a decimal")]),
         ChapterGroup(chapter: .fractions, origin: Point(0, 900), columns: 3, lessons: [
-            ("ad", "Add with different bottoms"), ("add", "Adding fractions"), ("sub", "Subtracting fractions"),
-            ("mix", "Adding and subtracting"), ("g5-multfrac", "Multiplying fractions"), ("g5-improper", "Mixed numbers to fractions"),
+            ("add", "Adding fractions"), ("sub", "Subtracting fractions"), ("mix", "Adding and subtracting"),
+            ("g5-multfrac", "Multiplying fractions"), ("g5-improper", "Mixed numbers to fractions"),
             ("g5-fracof", "Fraction of a number"), ("g5-unitdiv", "Dividing by a unit fraction")]),
         ChapterGroup(chapter: .measurement, origin: Point(1300, 900), columns: 3, lessons: [
-            ("uc", "Unit cubes"), ("g5-volume", "Volume of a box"), ("g5-units", "Converting units")]),
+            ("g5-volume", "Volume of a box"), ("g5-units", "Converting units")]),
     ]
     static let pieces = groups.flatMap(\.pieces)
+
+    /// The Paper proof's two lessons, off the map since 20 Oct: their teaching lives in Adding fractions and Volume of
+    /// a box now. Not drawn, counted or tested; kept (each where it used to sit) so their screenshots still open them,
+    /// and as the models the bars and the 3D cubes build from.
+    static let proof: [Piece] = [
+        Piece(id: "ad", name: "Add with different bottoms", chapter: .fractions, at: Point(0, 1000)),
+        Piece(id: "uc", name: "Unit cubes", chapter: .measurement, at: Point(1300, 1000)),
+    ]
+    /// Any piece by its id: a lesson, a test, or one of the proof's two.
+    static func piece(_ id: String) -> Piece? { (all + proof).first { $0.id == id } }
 
     /// Each chapter's test, in the slot after its last lesson, and the grade's test under everything (G 18 Oct).
     static let tests: [Piece] = groups.map { g in
@@ -93,38 +107,38 @@ enum Map {
     /// Everything drawn on the map.
     static let all = pieces + tests
 
-    /// A chapter's test opens once every lesson there is to do in it is learned; the grade's test once every chapter
-    /// test that can be taken has been. Lessons are always open; only tests wait.
+    /// A chapter's test opens once every lesson in it has been learned (G 18 Oct); the grade's test once every chapter
+    /// test is passed (G 20 Oct). Once taken, or started, a test stays open: it can be taken again. Lessons are always
+    /// open; only tests wait.
     @MainActor static func testReady(_ id: String) -> Bool {
-        if id == "test-grade" {
-            let ready = tests.filter { $0.id != "test-grade" && chapterHasLessons($0.chapter) }
-            return !ready.isEmpty && ready.allSatisfy { Progress.shared.tests[$0.id] != nil }
-        }
-        guard let t = tests.first(where: { $0.id == id }), chapterHasLessons(t.chapter) else { return false }
-        return pieces.filter { $0.chapter == t.chapter && pageLessons.contains($0.id) }.allSatisfy { Progress.shared.learned.contains($0.id) }
+        if Progress.shared.tests[id] != nil || PageStore.load(id) != nil { return true }
+        if id == "test-grade" { return tests.filter { $0.id != "test-grade" }.allSatisfy { Progress.shared.passed($0.id) } }
+        guard let t = tests.first(where: { $0.id == id }) else { return false }
+        let lessons = pieces.filter { $0.chapter == t.chapter }
+        return !lessons.isEmpty && lessons.allSatisfy { Progress.shared.learned.contains($0.id) }
     }
-    /// A chapter's test draws from lessons built as a page of problems: only Add with different bottoms so far, so only
-    /// Fractions has a test to take; the others say Coming soon until their lessons are pages too.
-    static let pageLessons: Set<String> = Set(pieces.map(\.id).filter { $0 != "uc" && Lessons.spec($0) != nil })
-    /// The lessons a test mixes: its chapter's page lessons, or for the grade's test every one.
-    static func testSpecs(_ t: Piece) -> [LessonSpec] {
-        pieces.filter { pageLessons.contains($0.id) && (t.id == "test-grade" || $0.chapter == t.chapter) }.compactMap(\.spec)
+    /// The lessons a test asks from, in the order it takes them, one question each in turn: a chapter's test its
+    /// lessons in map order; the grade's test the chapters in turn, each chapter's lessons in a fresh order, so its 12
+    /// questions reach every chapter and, taken again, other lessons.
+    static func testSpecs(_ t: Piece, using rng: inout SeededRandom) -> [LessonSpec] {
+        guard t.id == "test-grade" else { return pieces.filter { $0.chapter == t.chapter }.compactMap(\.spec) }
+        let chapters = groups.map { $0.lessons.compactMap { Lessons.spec($0.id) }.shuffled(using: &rng) }.filter { !$0.isEmpty }
+        let rounds = (LessonPlan.test + chapters.count - 1) / max(1, chapters.count)
+        return (0..<rounds).flatMap { k in chapters.map { $0[k % $0.count] } }
     }
-    static func chapterHasLessons(_ c: Chapter) -> Bool { pieces.contains { $0.chapter == c && pageLessons.contains($0.id) } }
-    /// The lessons built the paper way, with G's OK on their preview. The others' maths is ported and tested in Core,
-    /// but their screens wait for their previews (LESSONS.md §9).
+    /// The lessons that open: every one with a spec (all 17).
     static let paperLessons: Set<String> = Set(pieces.map(\.id).filter { Lessons.spec($0) != nil })
 
-    /// Today's pick, by the web's rules (Core/Mastery.swift): what to go over first, then what builds on the lesson just
-    /// learned, then the first one ready. Only lessons that open are picked.
+    /// Today's pick, by the web's rules (Core/Mastery.swift): a lesson due back for its recheck first, then what to go
+    /// over, then what builds on the lesson just learned, then the first one ready. Only lessons that open are picked.
     @MainActor static var today: Piece? {
         let open = pieces.filter(\.opens)
         let pick = Mastery.upNext(open.map(\.id), depends: { Lessons.spec($0)?.depends ?? [] },
-                                  checks: Progress.shared.checks.filter { !Progress.shared.dueBack($0.key) }, grade: 5)
+                                  checks: Progress.shared.checks, grade: 5, now: Progress.shared.now)
         return open.first { $0.id == pick?.id }
     }
-    /// The grade's own lessons (the specs' 17), for "5 of 17 learned".
-    static let gradeLessons = pieces.map(\.id).filter { $0 != "ad" && $0 != "uc" }
+    /// The grade's lessons (the specs' 17), for "5 of 17 learned": the same lessons the chapters count.
+    static let gradeLessons = pieces.map(\.id)
     /// A lesson's number within its chapter, in map order.
     static func number(_ p: Piece) -> Int { (pieces.filter { $0.chapter == p.chapter }.firstIndex { $0.id == p.id } ?? 0) + 1 }
     /// Every group, from its title to its last row's name and Start, with a cell to spare: what the overview shows.
@@ -180,7 +194,16 @@ final class PaperModel {
     private(set) var leaving = false
     /// Where the drawings draw out from: the lesson just left, after coming out of one.
     var drawFrom: Point?
-    var instant = false
+    /// Reduce Motion (LESSONS.md §4): cut straight to every state instead of gliding or drawing in. A child with it on
+    /// still has their work saved and brought back, and still sees the How to.
+    private(set) var reduceMotion = false
+    /// A screenshot (Shots): every moment finished at once, the How to skipped, nothing saved.
+    var shotMode = false
+    /// Everything cuts: Reduce Motion, or a screenshot. Screenshots set it (it's `shotMode`).
+    var instant: Bool {
+        get { reduceMotion || shotMode }
+        set { shotMode = newValue }
+    }
     /// A fixed box, for screenshots.
     var shotBox: UnitCubes.Box?
     var shotProblem: AddFractions.Problem?
@@ -325,13 +348,19 @@ final class PaperModel {
         if instant || landing <= 0 { go() } else { Task { try? await Task.sleep(for: .seconds(landing + 0.02)); go() } }
     }
 
-    /// Opening the flat lesson: its page. The How to plays where the lesson is, on the paper's own camera, then the 16
-    /// problems draw themselves onto the paper, each live where it sits (BarsPage).
+    /// Opening the flat lesson: its page (BarsPage). The How to plays where the lesson is, on the paper's own camera,
+    /// then its problems' cards draw in. A learned lesson that's due back opens on its recheck (G 20 Oct); a chapter or
+    /// grade test finished before starts afresh.
     func openBars(_ p: Piece) {
+        // another page was open: its tasks end now
+        bars?.stop()
         let first = (p.id == "ad" ? shotProblem?.numbers : shotNumbers) ?? prepared.flatMap { $0.id == p.id ? $0.numbers : nil }
-        let b = BarsPage(piece: p, instant: instant, first: first, saved: instant ? nil : PageStore.load(p.id),
-                         test: p.isTest ? (p.id == "test-grade" ? 20 : 12) : nil)
+        var saved = shotMode ? nil : PageStore.load(p.id)
+        if p.isTest, saved?.recorded == true { saved = nil }
+        let b = BarsPage(piece: p, reduceMotion: reduceMotion, shotMode: shotMode, first: first, saved: saved,
+                         test: p.isTest ? LessonPlan.test : nil, recheck: !p.isTest && Progress.shared.dueBack(p.id))
         b.frame = { [weak self] r in self?.frameCurrent(r) }
+        b.close = { [weak self] in self?.close() }
         bars = b; selected = nil
         b.start()
     }
@@ -397,6 +426,8 @@ final class PaperModel {
     func close() {
         guard !leaving else { return }
         let piece = opened
+        // the page's own tasks (the How to waiting for a tap, a problem's next step) end now, and its work is saved
+        bars?.stop()
         // a lesson's page erases itself first, as it drew in, then the map draws itself back in
         if let b = bars, !instant {
             leaving = true
@@ -435,9 +466,9 @@ final class PaperModel {
     }
 
     /// Reduce Motion (LESSONS.md §4): cut straight to every state, with no glide, tilt or draw-in.
-    func reduceMotion(_ on: Bool) {
+    func setReduceMotion(_ on: Bool) {
         guard !Shots.active else { return }
-        instant = on
+        reduceMotion = on
         if on { drawnAt = PaperClock.now - 100 }
     }
 
