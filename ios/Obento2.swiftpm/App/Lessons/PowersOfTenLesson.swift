@@ -28,7 +28,7 @@ struct PowersOfTenLesson: PaperLesson {
     private func stage(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
 
     /// Where a problem's places are: the chart's first place (P.hi) is its first column.
-    private struct Chart {
+    @MainActor private struct Chart {
         let P: PowersOfTen.Parts
         func left(_ place: Int) -> Double { Double(P.hi - place) * col }
         func mid(_ place: Int) -> Double { left(place) + col / 2 }
@@ -55,6 +55,10 @@ struct PowersOfTenLesson: PaperLesson {
                 if d > 0 { hops(&live, C, "live", d) }
             } else {
                 digits(&pic, C, by: 0, .ink)
+                // what the hand moves, ringed, as Rounding's point is (only while it waits to be dragged)
+                if at == 1 {
+                    for i in P.digits.indices { live.circle("handle\(i)", at: C.mid(P.place(i)), Self.row, radius: 1.4, .chapter, dashed: true) }
+                }
             }
             // a hint (after a miss, or asked for): the hops the digits make, dashed, and what they make (the live
             // readout takes its place while they're held)
