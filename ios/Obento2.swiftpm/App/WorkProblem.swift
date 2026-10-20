@@ -471,10 +471,16 @@ final class WorkProblem: Identifiable, PageProblem {
         if ghost?.mode == .preview, let held = heldFrame { return held }
         guard let st = layout.stack else { return nil }
         var r = st.frame
-        // a docked keyboard up for the record's box: the record and its blocks, framed in the paper above it
+        // a docked keyboard up for the record's box: the record and its blocks, framed in the paper above it (beside a
+        // tall picture, the record's column, down to its blocks)
         if Self.keyboard > 0, wantsTyping {
             let top = (st.plan.recordTop - 1) * Paper.cell
-            r = CGRect(x: r.minX, y: top, width: r.width, height: max(2 * Paper.cell, r.maxY - top))
+            if st.plan.beside {
+                let left = (st.plan.recordLeft - 2) * Paper.cell, bottom = (st.blocksTop + 2 * st.plan.k) * Paper.cell
+                r = CGRect(x: left, y: top, width: max(2 * Paper.cell, r.maxX - left), height: max(2 * Paper.cell, bottom - top))
+            } else {
+                r = CGRect(x: r.minX, y: top, width: r.width, height: max(2 * Paper.cell, r.maxY - top))
+            }
         }
         let f = Rect(x: origin.x + r.minX, y: origin.y + r.minY, width: r.width, height: r.height)
         heldFrame = f
