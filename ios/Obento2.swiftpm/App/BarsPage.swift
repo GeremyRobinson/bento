@@ -76,11 +76,7 @@ final class BarsPage {
                           run: LessonRun(spec, numbers: first ?? spec.generate(&rng, 0)), label: "How to", auto: true)
         if let n = test {
             // a test draws from the lessons' own check recipes, in turn
-            let runs: [LessonRun] = saved.map { s in s.problems.enumerated().map { i, r in LessonRun(specs[i % specs.count], restoring: r) } } ?? (0..<n).map { i in
-                let sp = specs[i % specs.count], k = i / specs.count
-                let item = sp.check.isEmpty ? CheckItem(3) : sp.check[k % sp.check.count]
-                return LessonPage.run(sp, LessonPage.Problem(numbers: item.draw(sp, using: &rng), story: item.story && sp.story != nil, isCheck: true))
-            }
+            let runs: [LessonRun] = saved.map { s in s.problems.enumerated().map { i, r in LessonRun(specs[i % specs.count], restoring: r) } } ?? LessonPlan.testRuns(specs, count: n, using: &rng)
             problems = runs.enumerated().map { i, r in Self.make(r.spec, origin: o, chapter: piece.chapter, instant: instant, run: r, label: "Question \(i + 1)") }
         } else {
             let plan = saved?.plan ?? LessonPlan(spec, using: &rng)
@@ -480,9 +476,9 @@ final class BarsPage {
     /// finished test decides learned.
     private func solved(_ m: any PageProblem) {
         if test != nil {
-            if let level = LessonPage.testLevel(problems.map(\.lesson)), !recorded {
+            if let r = LessonPlan.testScore(problems.map(\.lesson)), !recorded {
                 recorded = true
-                Progress.shared.tested(piece.id, level: level, right: problems.filter { !$0.lesson.missedAny }.count, of: problems.count)
+                Progress.shared.tested(piece.id, level: r.level, right: r.right, of: problems.count)
             }
             save(); return
         }

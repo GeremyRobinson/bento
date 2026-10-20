@@ -40,8 +40,8 @@ public enum MultiplyFractions {
     },
     storyOp: { _ in "×" },
     depends: ["g5-fracof", "g4-equiv"],
-    check: [CheckItem(3, when: { p in gcd(Int(p["a"]! * p["c"]!), Int(p["b"]! * p["d"]!)) > 1 }),
-            CheckItem(3, when: { p in gcd(Int(p["a"]! * p["c"]!), Int(p["b"]! * p["d"]!)) == 1 }),
+    check: [CheckItem(3, when: { p in gcd(Int((p["a"] ?? 1) * (p["c"] ?? 1)), Int((p["b"] ?? 2) * (p["d"] ?? 2))) > 1 }),
+            CheckItem(3, when: { p in gcd(Int((p["a"] ?? 1) * (p["c"] ?? 1)), Int((p["b"] ?? 2) * (p["d"] ?? 2))) == 1 }),
             CheckItem(3), CheckItem(3, story: true)]) { p in
         let a = Int(p["a"] ?? 1), b = Int(p["b"] ?? 2), c = Int(p["c"] ?? 1), d = Int(p["d"] ?? 2)
         let N = a * c, D = b * d, F = finalForm(N, D), g = gcd(N, D)

@@ -320,6 +320,9 @@ public struct LessonRun: Sendable {
     public var oneTry = false
     /// A step of this problem was missed.
     public var missedAny: Bool { !missedSteps.isEmpty }
+    /// Right on their own (G 20 Oct): worked to the end with no miss and without Show me. A problem Show me helped
+    /// with was done, but not by the child alone.
+    public var clean: Bool { isLast && !missedAny && shown.isEmpty }
     /// The steps of this problem that were missed at least once.
     public private(set) var missedSteps: Set<Int> = []
     /// The steps with something to do: what a skill check scores.
@@ -472,8 +475,9 @@ public enum Lessons {
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }
 
-/// A child's run through one lesson (LESSONS.md §7): the first problem teaches, then 6 practice problems, then the
-/// 4-problem skill check (no hints, no Show me, one try per step). Learned = 3 or 4 of the check right.
+/// Unit cubes' own run (the Paper proof's 3D lesson, off the map since 20 Oct; UnitCubesModel still plays it): the
+/// first problem teaches, then 6 practice problems, then the 4-problem skill check (no hints, no Show me, one try per
+/// step). Learned = 3 or 4 of the check right. Every lesson on the map is a page instead (LessonPlan).
 public struct LessonSession: Sendable, Equatable {
     public enum Phase: Sendable, Equatable {
         case learn
@@ -508,10 +512,6 @@ public struct LessonSession: Sendable, Equatable {
     public private(set) var points = 0, steps = 0
     /// The check's score, 0 to 4, once it's over.
     public private(set) var level: Int?
-
-    /// A problem was worked to the end; `right` = no step of it was missed. Returns the phase the next problem is in.
-    @discardableResult
-    public mutating func finished(right: Bool) -> Phase { finished(right: right, points: right ? 1 : 0, of: 1) }
 
     /// A problem was worked to the end: the check scores its steps (Mastery.level of the share right).
     @discardableResult
@@ -553,14 +553,8 @@ public struct LessonSession: Sendable, Equatable {
         run.helps = helps; run.oneTry = oneTry
         return run
     }
-
-    /// The check just ended in learning the lesson.
-    public var justLearned: Bool { phase == .done(learned: true) }
 }
 
-/// A lesson's page (G 17 Oct): after the How to, every problem is on the paper at once and the child works them in
-/// any order, right where they are. 16 problems from easy to hard (the run's index), every third practice problem told
-/// as a story, and the last row of 4 the skill check (no hints, no Show me, one try), which decides learned.
 /// A problem's work, saved so the child can stop anywhere and come back to it exactly as they left it.
 public struct RunSnapshot: Codable, Equatable, Sendable {
     public var numbers: Numbers
@@ -581,6 +575,10 @@ public struct RunSnapshot: Codable, Equatable, Sendable {
     public var hinted: [Int] = []
     public var shown: [Int] = []
     public var slips: [Slip] = []
+    /// The lesson it belongs to, and how many steps it had: a save is brought back by its lesson, never by where it
+    /// sat, and one that no longer fits its lesson starts fresh (LessonRun.restored). Missing in older saves.
+    public var spec: String? = nil
+    public var stepCount: Int? = nil
 }
 
 /// One wrong check: the step (in the lesson's own steps), the kind of slip ("k0" = the lesson's first known slip for
@@ -596,65 +594,56 @@ extension LessonRun {
     public var snapshot: RunSnapshot {
         RunSnapshot(numbers: numbers, story: story, index: index, marks: marks, typed: typed, misses: misses, missed: missed,
                     missedSteps: missedSteps.sorted(), helps: helps, oneTry: oneTry, skipsAsk: skipsAsk,
-                    guided: guided, hintCap: hintCap, finalOnly: finalOnly, stepMisses: stepMisses, hinted: hinted.sorted(), shown: shown.sorted(), slips: slips)
+                    guided: guided, hintCap: hintCap, finalOnly: finalOnly, stepMisses: stepMisses, hinted: hinted.sorted(), shown: shown.sorted(), slips: slips,
+                    spec: spec.id, stepCount: steps.count)
     }
 
     /// The run as it was saved: the same numbers make the same steps, and the child's work goes back on them.
+    /// Check a save with `restored` first: this trusts it.
     public init(_ spec: LessonSpec, restoring s: RunSnapshot) {
         self.init(spec, numbers: s.numbers, story: s.story, finalOnly: s.finalOnly)
         helps = s.helps; oneTry = s.oneTry; guided = s.guided; hintCap = s.hintCap
         stepMisses = s.stepMisses; hinted = Set(s.hinted); shown = Set(s.shown); slips = s.slips
         if s.skipsAsk { skipAsk() }
-        index = min(max(0, s.index), steps.count - 1)
+        index = min(max(0, s.index), max(0, steps.count - 1))
         marks = s.marks; typed = s.typed; misses = s.misses; missed = s.missed; missedSteps = Set(s.missedSteps)
         active = step.answer?.boxes.first
     }
-}
 
-public enum LessonPage {
-    public static let count = 16, checks = 4, columns = 4
-
-    public struct Problem: Sendable {
-        public let numbers: Numbers
-        public let story: Bool
-        public let isCheck: Bool
-    }
-
-    /// The page's problems, fresh from the lesson's generator; the check row follows the lesson's own recipe.
-    public static func problems(_ spec: LessonSpec, using rng: inout SeededRandom) -> [Problem] {
-        (0..<count).map { i in
-            if i >= count - checks {
-                let k = i - (count - checks)
-                if !spec.check.isEmpty {
-                    let item = spec.check[k % spec.check.count]
-                    return Problem(numbers: item.draw(spec, using: &rng), story: item.story && spec.story != nil, isCheck: true)
-                }
-                return Problem(numbers: spec.generate(&rng, 3), story: false, isCheck: true)
-            }
-            return Problem(numbers: spec.generate(&rng, i), story: spec.story != nil && i % 3 == 2, isCheck: false)
-        }
-    }
-
-    /// The run for one problem on the page: hints and tries follow whether it's part of the check.
-    public static func run(_ spec: LessonSpec, _ p: Problem) -> LessonRun {
-        var r = LessonRun(spec, numbers: p.numbers, story: p.story)
-        r.helps = !p.isCheck; r.oneTry = p.isCheck
-        r.skipAsk()
+    /// A saved problem brought back as the child left it, or nil when it no longer fits its lesson as the lesson is now
+    /// (changed since it was saved: other numbers, steps or boxes). The page then starts that problem fresh instead of
+    /// misreading the work, or stopping on a number the lesson no longer has.
+    public static func restored(_ spec: LessonSpec, _ s: RunSnapshot) -> LessonRun? {
+        // its own lesson's, with every number the lesson's steps read
+        guard s.spec == nil || s.spec == spec.id, spec.requiredKeys.isSubset(of: Set(s.numbers.keys)) else { return nil }
+        let r = LessonRun(spec, restoring: s), n = r.steps.count
+        // the same steps, and the step it was on still one of them (a story still has its first question)
+        guard n > 0, s.stepCount == nil || s.stepCount == n, (0..<n).contains(s.index), r.index == s.index, !s.story || r.lead == 1 else { return nil }
+        // every mark on a cell its step lets the child mark, made on that step or one before
+        for (cell, step) in s.marks where !(0...s.index).contains(step) || r.steps[step].task?.cells.contains(cell) != true { return nil }
+        // what's typed is in this step's boxes
+        let boxes = Set(r.step.answer.map { $0.boxes + ($0.choices != nil ? ["c"] : []) } ?? [])
+        guard Set(s.typed.keys).isSubset(of: boxes) else { return nil }
+        // what it remembers about its steps is about these steps
+        let inSteps = { (i: Int) in (0..<n).contains(i) }
+        guard s.missedSteps.allSatisfy(inSteps), s.stepMisses.keys.allSatisfy(inSteps), s.hinted.allSatisfy(inSteps), s.shown.allSatisfy(inSteps),
+              s.slips.allSatisfy({ inSteps($0.step + r.lead) }) else { return nil }
         return r
     }
+}
 
-    /// A test's score, 0 to 4: the share of all its problems' steps right on their one try; nil until every one is done.
-    public static func testLevel(_ runs: [LessonRun]) -> Int? {
-        guard !runs.isEmpty, runs.allSatisfy(\.isLast) else { return nil }
-        let steps = runs.reduce(0) { $0 + $1.workSteps }, right = runs.reduce(0) { $0 + $1.workSteps - $1.missedSteps.count }
-        return Mastery.level(steps == 0 ? 0 : Double(right) / Double(steps))
-    }
-
-    /// The check's score, 0 to 4, from the share of its steps right on their one try; nil until all its problems are done.
-    public static func checkLevel(_ runs: [LessonRun]) -> Int? {
-        guard runs.count == checks, runs.allSatisfy(\.isLast) else { return nil }
-        let steps = runs.reduce(0) { $0 + $1.workSteps }, right = runs.reduce(0) { $0 + $1.workSteps - $1.missedSteps.count }
-        return Mastery.level(steps == 0 ? 0 : Double(right) / Double(steps))
+extension LessonSpec {
+    /// The numbers every problem of this lesson has (what its steps and picture read): the keys its generator makes
+    /// every time, over a few problems from easy to hard. A saved problem without one of them was made by an older
+    /// version of the lesson.
+    public var requiredKeys: Set<String> {
+        var rng = SeededRandom(seed: 20)
+        var keys: Set<String>?
+        for i in 0..<6 {
+            let k = Set(generate(&rng, i).keys)
+            keys = keys.map { $0.intersection(k) } ?? k
+        }
+        return keys ?? []
     }
 }
 

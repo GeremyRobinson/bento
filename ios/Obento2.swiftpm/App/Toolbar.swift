@@ -139,7 +139,7 @@ struct Toolbar: View {
         let s = Mastery.shelves(Map.pieces.map(\.id), checks: Progress.shared.checks, now: Date().timeIntervalSinceReferenceDate)
         return VStack(alignment: .leading, spacing: 12) {
             Text("Me").font(Typeface.font(20, .semibold)).foregroundStyle(Ink.ink)
-            ForEach([("Go over", s.goOver.count), ("Getting stronger", s.gettingStronger.count), ("Stuck for good", s.stuck.count)], id: \.0) { row in
+            ForEach([("Go over", s.goOver.count), ("Getting stronger", s.gettingStronger.count), ("Know it", s.knowIt.count)], id: \.0) { row in
                 HStack {
                     Text(row.0).font(Typeface.font(18)).foregroundStyle(Ink.ink)
                     Spacer()
