@@ -21,6 +21,8 @@ enum LessonPictures {
         case "g5-divdec", "g5-pow10", "g5-adddec": return gridLayout()
         case "add", "sub", "mix", "g5-multfrac", "g5-fracof": return gridLayout()
         case "g5-improper": return gridLayout(rows: 3 * (Int(v("w")) + 1))
+        case "g5-order", "g5-units", "g5-multdec": return gridLayout()
+        case "g5-volume": return gridLayout(rows: Int(max(v("width"), v("height"))) * 3 + 6)
         case "g5-unitdiv": return gridLayout(rows: Int(v("W")) * (v("W") > 6 ? 2 : 3))
         default: return WorkProblem.Layout()
         }
@@ -34,19 +36,19 @@ enum LessonPictures {
         switch m.lesson.spec.id {
         case "g5-mult2": s = multiplyGrid(m, a: Int(v("a")), b: Int(v("b")), split: k("split") == 1, strip: Int(k("strip")), found: Int(k("found")), sum: k("sum") == 1)
         case "g5-divide": s = divideGrid(m, dv: Int(v("dv")), qt: Int(v("qt")), strip: Int(k("strip")), found: Int(k("found")), left: k("left") == 1, sum: k("sum") == 1)
-        case "g5-order": order(&s, n, beat: Int(k("beat")))
+        case "g5-order": s = orderGrid(n, beat: Int(k("beat")))
         case "g5-pow10": s = powersGrid(x: v("x"), k: Int(v("k")), hop: k("hop") == 1)
         case "g5-round": s = roundGrid(m)
         case "g5-adddec": s = addDecimalsGrid(a: v("a"), b: v("b"), p)
-        case "g5-multdec": multiplyDecimals(&s, n, p)
+        case "g5-multdec": s = multiplyDecimalsGrid(n, p)
         case "g5-divdec": s = divideDecimalGrid(d: Int(v("d")), qt: Int(v("qt")), p)
         case "add", "sub", "mix": s = unlikeGrid(n, p)
         case "g5-multfrac": s = multiplyFractionsGrid(n, p)
         case "g5-improper": s = improperGrid(n, p)
         case "g5-fracof": s = fractionOfGrid(n, p)
         case "g5-unitdiv": s = unitDivideGrid(n, p)
-        case "g5-volume": volume(&s, n, p)
-        case "g5-units": units(&s, n, p)
+        case "g5-volume": s = volumeGrid(n, p)
+        case "g5-units": s = unitsGrid(n, p)
         default: break
         }
         return s
@@ -545,6 +547,162 @@ enum LessonPictures {
         let wx = x0 + Double(length) + 6, line = Sketch.Words(size: 24, weight: .medium, colour: .ink)
         if at >= 1 { pen.word("l1", "1 = \(d) × 1/\(d)", at: wx, 2, line, anchor: UnitPoint(x: 0, y: 0.5)) }
         if at >= min(W, 3) { pen.word("l2", "\(W) × \(d) = \(W * d)", at: wx, 5, line.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5)) }
+        return pen.sketch
+    }
+
+    // MARK: order of operations
+
+    /// 3 + 4 × (6 − 2) on the grid: rewritten line under line as school does it, two squares to a character, the group
+    /// done on each line lit behind it; on the right the order to follow, the rule being used lit.
+    static func orderGrid(_ n: Numbers, beat: Int) -> Sketch {
+        var pen = GridPen()
+        let t = Int(n["t"] ?? 0), a = n["a"] ?? 0, b = n["b"] ?? 0, c = n["c"] ?? 0, d = n["d"] ?? 0
+        let A = fmt(a), B = fmt(b), C = fmt(c), D = fmt(d)
+        var lines: [[String]] = [], groups: [Range<Int>] = [], rules: [Int] = []
+        switch t {
+        case 0:
+            let v1 = c - d, v2 = b * v1, v3 = a + v2
+            lines = [[A, "+", B, "×", "(", C, "−", D, ")"], [A, "+", B, "×", fmt(v1)], [A, "+", fmt(v2)], [fmt(v3)]]
+            groups = [4..<9, 2..<5, 0..<3]; rules = [0, 1, 2]
+        case 1:
+            let v1 = a + b, v2 = v1 * c, v3 = v2 - d
+            lines = [["(", A, "+", B, ")", "×", C, "−", D], [fmt(v1), "×", C, "−", D], [fmt(v2), "−", D], [fmt(v3)]]
+            groups = [0..<5, 0..<3, 0..<3]; rules = [0, 1, 2]
+        default:
+            let v1 = a * b, v2 = c / d, v3 = v1 - v2
+            lines = [[A, "×", B, "−", C, "÷", D], [fmt(v1), "−", C, "÷", D], [fmt(v1), "−", fmt(v2)], [fmt(v3)]]
+            groups = [0..<3, 2..<5, 0..<3]; rules = [1, 1, 2]
+        }
+        let big = Sketch.Words(size: 30, weight: .medium, colour: .ink), shown = min(max(beat, 0), 3)
+        for i in 0...shown {
+            let row = 1 + Double(i) * 4, x0 = 3.0
+            if i > 0 { pen.word("eq\(i)", "=", at: 1, row + 1, big) }
+            // each character two squares wide; a token as wide as its characters
+            var x = x0, spans: [(Double, Double)] = []
+            for tok in lines[i] { let w = Double(tok.count) * 2; spans.append((x, x + w)); x += w }
+            if i == beat - 1, i < groups.count, let first = spans[safe: groups[i].lowerBound], let last = spans[safe: groups[i].upperBound - 1] {
+                pen.sketch.fill("hl\(i)", pen.R(first.0 - 0.5, row - 0.5, last.1 - first.0 + 1, 3), .tint(0.3))
+            }
+            for (j, tok) in lines[i].enumerated() {
+                for (q, ch) in tok.enumerated() { pen.word("t\(i)_\(j)_\(q)\(ch)", String(ch), at: spans[j].0 + Double(q) * 2 + 1, row + 1, big.colour(i == 3 ? .chapter : .ink)) }
+            }
+        }
+        // the order to follow
+        let names = ["( )   first", "×  ÷   next", "+  −   last"], rx = 40.0
+        let litRule = beat >= 1 && beat <= 3 ? rules[beat - 1] : -1
+        for (i, name) in names.enumerated() {
+            let row = 1 + Double(i) * 3
+            pen.sketch.fill("rf\(i)\(i == litRule)", pen.R(rx, row, 12, 2), i == litRule ? .tint(0.4) : .tint(0.15))
+            pen.word("rn\(i)", "\(i + 1)", at: rx + 1, row + 1, Sketch.Words(size: 18, weight: .semibold, colour: .chapter))
+            pen.word("rt\(i)", name, at: rx + 2.5, row + 1, Sketch.Words(size: 18, weight: .medium, colour: i == litRule ? .ink : .ink2), anchor: UnitPoint(x: 0, y: 0.5))
+        }
+        return pen.sketch
+    }
+
+    // MARK: volume
+
+    /// A box 4 × 3 × 2 on the grid, each cube three squares a side, seen two ways as school draws it flat: its floor from
+    /// above (length × width, the layer of cubes on it) and its front (length × height, the layers stacked); the
+    /// working beside them.
+    static func volumeGrid(_ n: Numbers, _ p: Numbers) -> Sketch {
+        var pen = GridPen()
+        let l = Int(n["length"] ?? 1), w = Int(n["width"] ?? 1), h = Int(n["height"] ?? 1)
+        let floor = p["floor"] == 1, layers = Int(p["layers"] ?? 0), height = p["height"] == 1, cube = 3.0
+        let label = Sketch.Words(size: 18, weight: .medium, colour: .ink2), head = Sketch.Words(size: 16, weight: .medium, colour: .ink3)
+        func grid(_ id: String, col: Double, row: Double, cols: Int, rows: Int, filled: Int, lit: Bool) {
+            if filled > 0 { pen.sketch.fill("\(id)f\(filled)", pen.R(col, row + Double(rows - filled) * cube, Double(cols) * cube, Double(filled) * cube), lit ? .tint(0.4) : .tint(0.22)) }
+            pen.sketch.segments("\(id)g\(filled > 0)", (0...cols).map { i in (pen.P(col + Double(i) * cube, row), pen.P(col + Double(i) * cube, row + Double(rows) * cube)) }
+                + (0...rows).map { j in (pen.P(col, row + Double(j) * cube), pen.P(col + Double(cols) * cube, row + Double(j) * cube)) }, filled > 0 ? .tint(0.7) : .tint(0.45), width: 1.5)
+            pen.sketch.box("\(id)o", pen.R(col, row, Double(cols) * cube, Double(rows) * cube), .chapter, width: 2)
+        }
+        // from above: the floor
+        let fx = 3.0, fy = 3.0
+        pen.word("fh", "from above", at: fx, 1, head, anchor: UnitPoint(x: 0, y: 0.5))
+        grid("floor", col: fx, row: fy, cols: l, rows: w, filled: floor || layers > 0 ? w : 0, lit: floor && layers == 0)
+        pen.label("fl", "\(l) cm", label.colour(floor ? .chapter : .ink2), .below, edge: fy + Double(w) * cube, along: fx + Double(l) * cube / 2)
+        pen.label("fw", "\(w) cm", label.colour(floor ? .chapter : .ink2), .left, edge: fx, along: fy + Double(w) * cube / 2)
+        // from the front: the layers
+        let sx = fx + Double(l) * cube + 6, sy = 3.0
+        pen.word("sh", "from the front", at: sx, 1, head, anchor: UnitPoint(x: 0, y: 0.5))
+        grid("front", col: sx, row: sy, cols: l, rows: h, filled: min(layers, h), lit: layers > 0)
+        pen.label("hl", "\(h) cm", label.colour(height ? .chapter : .ink2), .right, edge: sx + Double(l) * cube, along: sy + Double(h) * cube / 2)
+        pen.label("sl", "\(l) cm", label, .below, edge: sy + Double(h) * cube, along: sx + Double(l) * cube / 2)
+        // the working
+        let wx = sx + Double(l) * cube + 8, line = Sketch.Words(size: 22, weight: .medium, colour: .ink)
+        pen.word("v", "Volume = l × w × h", at: wx, 3, line, anchor: UnitPoint(x: 0, y: 0.5))
+        if floor || layers > 0 { pen.word("b", "\(l) × \(w) = \(l * w) in a layer", at: wx, 6, line, anchor: UnitPoint(x: 0, y: 0.5)) }
+        if height { pen.word("t", "\(l * w) × \(h) = \(l * w * h) cm³", at: wx, 9, line.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5)) }
+        return pen.sketch
+    }
+
+    // MARK: converting units
+
+    /// 3 feet = ? inches on the grid: a bar of big units, each a block wide, opened up into small ones one after
+    /// another; the brackets over and under it say what it holds.
+    static func unitsGrid(_ n: Numbers, _ p: Numbers) -> Sketch {
+        var pen = GridPen()
+        let pair = ConvertUnits.units[min(ConvertUnits.units.count - 1, Int(n["u"] ?? 0))]
+        let count = p["units"] ?? 1, per = p["per"] ?? pair.per, rows = Int(p["rows"] ?? 1), fill = Int(p["fill"] ?? 0)
+        let one = p["one"] == 1, ask = p["ask"] == 1, total = p["total"] == 1, up = n["up"] == 1, amount = n["n"] ?? 0
+        let cells = Int(count.rounded(.up)), perRow = rows == 2 ? Int((Double(cells) / 2).rounded(.up)) : cells
+        let cw = 5.0, ch = 3.0, x0 = 0.0, y0 = 4.0, label = Sketch.Words(size: 20, weight: .medium, colour: .ink)
+        pen.label("amt", up ? "\(fmt(amount)) \(pair.small)" : "\(fmt(amount)) \(amount == 1 ? pair.one : pair.many)", label.colour(.ink2), .above, edge: y0, along: x0 + Double(perRow) * cw / 2)
+        for i in 0..<cells {
+            let r = i / perRow, c = i % perRow, col = x0 + Double(c) * cw, row = y0 + Double(r) * (ch + 1)
+            let part = i == cells - 1 && count < Double(cells) ? count - Double(cells - 1) : 1, opened = i < fill
+            pen.sketch.fill("u\(i)\(opened)", pen.R(col, row, cw * part, ch), opened ? .tint(0.4) : .tint(0.2))
+            pen.sketch.box("ub\(i)", pen.R(col, row, cw, ch), .tint(0.7), width: 2)
+            let text = opened ? fmt(per * part) : (ask && i > 0 ? "?" : (part < 1 ? "½" : "1"))
+            pen.word("ul\(i)\(text)", text, at: col + cw / 2, row + ch / 2, label.colour(opened ? .ink : .ink2))
+        }
+        let below = y0 + Double(rows) * (ch + 1) + 1, line = Sketch.Words(size: 22, weight: .medium, colour: .ink)
+        if one { pen.word("one", "1 \(pair.one) = \(fmt(per)) \(pair.small)", at: x0, below + 1, line, anchor: UnitPoint(x: 0, y: 0.5)) }
+        if total {
+            let ans = up ? amount / per : amount * per
+            pen.word("tot", up ? "\(fmt(amount)) ÷ \(fmt(per)) = \(fmt(ans)) \(pair.many)" : "\(fmt(amount)) × \(fmt(per)) = \(fmt(ans)) \(pair.small)",
+                     at: x0, below + 4, line.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5))
+        }
+        return pen.sketch
+    }
+
+    // MARK: multiplying decimals
+
+    /// 2.4 × 0.3 on the grid: the multiplication as school writes it, two squares to a digit, each number's decimal
+    /// places counted beside it and the answer's under; beside it one whole as ten squares by ten, with the one piece
+    /// the two numbers' places make lit (a tenth is a column of it, a hundredth one square).
+    static func multiplyDecimalsGrid(_ n: Numbers, _ p: Numbers) -> Sketch {
+        var pen = GridPen()
+        let A = Int(n["A"] ?? 0), B = Int(n["B"] ?? 0), pa = Int(n["pa"] ?? 0), pb = Int(n["pb"] ?? 0)
+        let x = Double(A) / pow(10, Double(pa)), y = Double(B) / pow(10, Double(pb)), ans = x * y, places = pa + pb
+        let line = p["line"].map(Int.init), per = 2.0, right = 14.0
+        let note = Sketch.Words(size: 16, weight: .regular, colour: .ink3), placeWord = { (k: Int) in k == 1 ? "1 place" : "\(k) places" }
+        pen.digits("a", fmt(x), right: right, row: 2, per: per)
+        pen.word("x", "×", at: right - 4.5 * per, 4, Sketch.Words(size: 28, weight: .medium, colour: .ink))
+        pen.digits("b", fmt(y), right: right, row: 4, per: per)
+        pen.word("pa", placeWord(pa), at: right + 1, 2, note.colour(p["piece"] == 1 ? .chapter : .ink3), anchor: UnitPoint(x: 0, y: 0.5))
+        pen.word("pb", placeWord(pb), at: right + 1, 4, note.colour(p["piece"] == 1 ? .chapter : .ink3), anchor: UnitPoint(x: 0, y: 0.5))
+        pen.rule("r", from: right - 5 * per, to: right, row: 5)
+        if line == 2 {
+            pen.digits("t", fmt(ans), right: right, row: 6, per: per, .chapter)
+            pen.word("pt", placeWord(places), at: right + 1, 6, note.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5))
+        }
+        let lines = ["\(A) × \(B) = \(A * B) small pieces",
+                     "\(fmt(1 / pow(10, Double(pa)))) × \(fmt(1 / pow(10, Double(pb)))) = \(fmt(1 / pow(10, Double(places))))",
+                     "\(A * B) \(places == 1 ? "tenths" : places == 2 ? "hundredths" : "thousandths") = \(fmt(ans))"]
+        if let l = line { pen.word("line\(l)", lines[l], at: 0, 10, Sketch.Words(size: 22, weight: .medium, colour: .ink), anchor: UnitPoint(x: 0, y: 0.5)) }
+        // one whole: ten squares by ten; the piece lit
+        let ux = 30.0, uy = 2.0, lit = p["piece"] == 1 || p["lit"] == 1
+        pen.word("wl", "1 whole", at: ux + 5, uy - 1, note.colour(.ink2))
+        if lit {
+            let piece = places == 1 ? pen.R(ux, uy, 1, 10) : pen.R(ux, uy, 1, 1)
+            pen.sketch.fill("piece\(places)", piece, .tint(0.6))
+        }
+        pen.sketch.segments("unit", (0...10).map { i in (pen.P(ux + Double(i), uy), pen.P(ux + Double(i), uy + 10)) } + (0...10).map { j in (pen.P(ux, uy + Double(j)), pen.P(ux + 10, uy + Double(j))) }, .tint(0.5), width: 1)
+        pen.sketch.box("unito", pen.R(ux, uy, 10, 10), .chapter, width: 2)
+        if lit {
+            let size = fmt(1 / pow(10, Double(places)))
+            pen.label("ps", places > 2 ? "one piece: \(size) (a tenth of a square)" : "one piece: \(size)", Sketch.Words(size: 16, weight: .medium, colour: .chapter), .below, edge: uy + 10, along: ux + 5)
+        }
         return pen.sketch
     }
 
