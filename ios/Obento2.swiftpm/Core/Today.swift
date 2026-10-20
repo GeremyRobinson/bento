@@ -21,6 +21,15 @@ public enum Today {
         case oldest
     }
 
+    /// How many days from `now` to `t`, as the child counts them on a calendar: 0 today, 1 tomorrow (a check due at 4pm
+    /// three days on is "in 3 days" whatever the time now). Less than 0 when `t` has passed.
+    public static func days(until t: Double, from now: Double, in zone: TimeZone = .current) -> Int {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = zone
+        let a = cal.startOfDay(for: Date(timeIntervalSinceReferenceDate: now)), b = cal.startOfDay(for: Date(timeIntervalSinceReferenceDate: t))
+        return cal.dateComponents([.day], from: a, to: b).day ?? 0
+    }
+
     /// The reason for a pick made by Mastery.upNext, worked out the same way it was picked.
     public static func reason(_ pick: (id: String, why: Mastery.Why), lessons: [String], depends: (String) -> [String],
                               checks: [String: CheckRecord], now: Double) -> Reason {

@@ -51,3 +51,17 @@ final class TodayTests: XCTestCase {
         XCTAssertEqual(reason(checks)?.1, .oldest)
     }
 }
+
+/// Days as a child counts them on a calendar, for "Check in 3 days".
+final class CalendarDaysTests: XCTestCase {
+    func testDaysAreCalendarDays() {
+        let utc = TimeZone(identifier: "UTC")!, day = 86_400.0, h = 3600.0
+        // 10pm on day 0
+        let now = 22 * h
+        XCTAssertEqual(Today.days(until: now + 3 * h, from: now, in: utc), 1, "three hours later, past midnight, is tomorrow")
+        XCTAssertEqual(Today.days(until: 23.5 * h, from: now, in: utc), 0, "later today")
+        XCTAssertEqual(Today.days(until: 3 * day + 16 * h, from: now, in: utc), 3)
+        XCTAssertEqual(Today.days(until: 3 * day + 16 * h, from: 3 * day + 9 * h, in: utc), 0, "due later today")
+        XCTAssertEqual(Today.days(until: now - day, from: now, in: utc), -1)
+    }
+}

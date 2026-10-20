@@ -120,12 +120,21 @@ enum Map {
     /// The lessons a test asks from, in the order it takes them, one question each in turn: a chapter's test its
     /// lessons in map order; the grade's test the chapters in turn, each chapter's lessons in a fresh order, so its 12
     /// questions reach every chapter and, taken again, other lessons.
-    static func testSpecs(_ t: Piece, using rng: inout SeededRandom) -> [LessonSpec] {
+    @MainActor static func testSpecs(_ t: Piece, using rng: inout SeededRandom) -> [LessonSpec] {
+        // the daily review: a lesson for each of its problems, weighted to the weak and the old (Core/Review.swift)
+        if t.id == review.id {
+            return Review.pick(gradeLessons, checks: Progress.shared.checks, now: Progress.shared.now, using: &rng).compactMap { Lessons.spec($0) }
+        }
         guard t.id == "test-grade" else { return pieces.filter { $0.chapter == t.chapter }.compactMap(\.spec) }
         let chapters = groups.map { $0.lessons.compactMap { Lessons.spec($0.id) }.shuffled(using: &rng) }.filter { !$0.isEmpty }
         let rounds = (LessonPlan.test + chapters.count - 1) / max(1, chapters.count)
         return (0..<rounds).flatMap { k in chapters.map { $0[k % $0.count] } }
     }
+    /// The daily review's page (G's plan, step 7): a page of problems like a test, where Me is on the paper (it opens from
+    /// Me, so it draws in where Me was). Not on the map, not counted, never a lesson.
+    static let review = Piece(id: "review", name: "Daily review", chapter: .whole, at: MePage.corner)
+    /// The chapter a lesson is in, for a page that mixes them (the review gives each problem its own lesson's colour).
+    static func chapter(of id: String) -> Chapter? { pieces.first { $0.id == id }?.chapter }
     /// The lessons that open: every one with a spec (all 17).
     static let paperLessons: Set<String> = Set(pieces.map(\.id).filter { Lessons.spec($0) != nil })
 
@@ -149,6 +158,10 @@ enum Map {
     }()
 }
 
+/// A page of its own on the paper instead of the map (G 20 Oct): Me (the child's own page, MePage) or the grown-ups'
+/// page (GrownUpPage). Each has its place on the sheet, left of the map.
+enum Place: Equatable { case me, grownUp }
+
 /// The paper's camera and what's on it. One clock drives every move, so the grid and the paper never come apart.
 @MainActor @Observable
 final class PaperModel {
@@ -171,6 +184,32 @@ final class PaperModel {
     var lesson: UnitCubesModel?
     /// The flat lesson, when one is open. It uses the paper's own camera.
     var bars: BarsPage?
+    /// A page of its own on the paper instead of the map: Me, or the grown-ups' page (nil on the map and in a lesson).
+    private(set) var place: Place?
+    /// When the place started drawing in, and when it started erasing itself on the way somewhere else.
+    private(set) var placeAt: Double = -100
+    private(set) var placeLeftAt: Double?
+    /// The place a lesson's page (or the daily review) was opened from: closing it comes back there, and the bar's back
+    /// button says so.
+    private(set) var cameFrom: Place?
+    /// The place's words are still drawing in or undrawing: the clock keeps running.
+    private(set) var placeDrawing = false
+    func setPlaceDrawing(_ b: Bool) { if placeDrawing != b { placeDrawing = b } }
+    /// The grown-ups' page: shut behind its hold until a grown-up opens it, and what it's asking to confirm.
+    let grownUp = GrownUpPage()
+    /// The very first launch's ghost tap on the first lesson up next (StartHere), from when it starts until another
+    /// lesson is chosen, or one opens.
+    private(set) var startHere: StartHere?
+
+    /// The very first launch (G 20 Oct): once the map has drawn in, a ghost finger taps the first lesson up next and
+    /// "Start here." is written beside it. Only for a child with nothing done yet; remembered at once (never in a
+    /// screenshot), so it never plays again. `frozen`: screenshots, held at that moment of it.
+    func beginStartHere(force: Bool = false, frozen: Double? = nil) {
+        let fresh = !StartHere.shown && Progress.shared.checks.isEmpty && !UserDefaults.standard.dictionaryRepresentation().keys.contains { $0.hasPrefix("lesson-") }
+        guard force || fresh, let p = Map.today ?? Map.pieces.first(where: { $0.state == .now }) else { return }
+        startHere = StartHere(piece: p, start: drawnAt + Piece.drawTime + 0.2, frozen: frozen)
+        if !Shots.active { UserDefaults.standard.set(true, forKey: StartHere.key) }
+    }
     /// The piece whose lesson is open: its name goes in the top bar.
     var openPiece: Piece? { lesson != nil || bars != nil ? opened : nil }
     private var opened: Piece?
@@ -219,6 +258,13 @@ final class PaperModel {
 
     func settle(at t: Double) {
         if let f = flight, f.done(at: t) { resting = f.to; flight = nil }
+        // the first launch's finger presses the lesson: it's chosen, as a tap chooses it
+        if let sh = startHere, sh.tapDue(at: t), place == nil, bars == nil, lesson == nil { startHere?.tapped = true; select(sh.piece) }
+        // the grown-ups' square held for 3 seconds: its page opens, and the camera frames it
+        if place == .grownUp, grownUp.settle(at: t) {
+            Sounds.shared.play(.done)
+            fly(to: placeCamera(.grownUp), duration: CameraTiming.fly)
+        }
         // the tilted problem's camera, between frames (TiltCamera.settle): what a tilt starts from and fits into (the
         // room the bar or the keyboard takes), and a problem no longer on the page lying flat again
         if lesson == nil {
@@ -245,9 +291,30 @@ final class PaperModel {
     /// A drag that starts on something the open problem lets the child move goes to the problem (a hand move, G 20
     /// Oct); any other drag pans the paper. Only the problem being worked takes hands (not the How to, not the page).
     private(set) var handDrag = false
+    /// A finger is down on the paper (from the moment it touches, before it's a tap, a drag or a hold).
+    private var pressing = false
+    /// A finger down at screen point `s`, or moving: on the grown-ups' gate, a hold on its square starts, and lets go
+    /// when the finger leaves it.
+    func press(at s: Point) {
+        let p = camera(at: PaperClock.now).toPaper(s), now = PaperClock.now
+        if !pressing {
+            pressing = true
+            if place == .grownUp, !leaving { grownUp.press(p, at: now) }
+            return
+        }
+        if grownUp.holding { grownUp.moved(p, at: now) }
+    }
+    /// The finger lifted: a hold let go too soon empties its ring.
+    func pressEnded() {
+        pressing = false
+        if grownUp.holding { grownUp.letGo(at: PaperClock.now) }
+    }
+
     /// The camera was on its way to frame the step when the hand took hold (it held still under the finger).
     private var framingHeld = false
     func dragStart(at s: Point) {
+        // a finger holding the grown-ups' square keeps the paper still
+        if place == .grownUp, grownUp.holding { handDrag = true; return }
         guard !leaving, let b = bars, b.mode == .work, let m = b.current else { handDrag = false; return }
         handDrag = m.grab(paperPoint(s))
         // the camera holds still under the finger while it drags
@@ -324,6 +391,8 @@ final class PaperModel {
 
     /// A tap on a lesson: a slow, gentle glide that brings it closer, not too close.
     func select(_ p: Piece?) {
+        // another lesson chosen: the first launch's "Start here." goes
+        if p?.id != startHere?.piece.id { startHere = nil }
         selected = p
         guard let p else { return }
         // a lesson that opens: its first problem is chosen now, and the glide frames the lesson as it will start, at up
@@ -344,6 +413,7 @@ final class PaperModel {
         if let b = bars {
             b.tap(p); return
         }
+        if let place { tapPlace(place, at: p); return }
         // the chosen lesson opens from its tag (a little extra all round, for a finger) or a second tap on its frame
         if let sel = selected, sel.opens, contains(Rect(x: sel.start.x - 20, y: sel.start.y - 20, width: sel.start.width + 40, height: sel.start.height + 40), p) || contains(sel.frame, p) {
             open(sel); return
@@ -354,6 +424,7 @@ final class PaperModel {
     /// Opening a lesson: the map erases itself, as it drew in, then the lesson opens where it was.
     func open(_ p: Piece) {
         guard !leaving else { return }
+        startHere = nil
         if instant { openNow(p); return }
         leaving = true
         mapLeftAt = PaperClock.now
@@ -369,7 +440,7 @@ final class PaperModel {
     private func openNow(_ p: Piece) {
         opened = p
         // the lesson's picture master decides how it opens: flat on the paper, or in 3D
-        if p.isTest { openBars(p); return }
+        if p.isTest || p.id == Map.review.id { openBars(p); return }
         guard let spec = p.spec else { return }
         // Unit cubes and Add with different bottoms are the Paper proof's own lessons; every other lesson is worked in steps
         // every lesson is a page of problems (G 19 Oct), but Unit cubes, which rises into 3D
@@ -399,8 +470,12 @@ final class PaperModel {
         // a screenshot's page is one it set up itself, or fresh
         var saved = shotMode ? PageStore.cached(p.id) : PageStore.load(p.id)
         if p.isTest, saved?.recorded == true { saved = nil }
+        // the daily review is the day's own: one left from another day starts afresh
+        let review = p.id == Map.review.id
+        if review, let s = saved, Review.day(s.date.timeIntervalSinceReferenceDate) != Review.day(PaperClock.now) { saved = nil; PageStore.clear(p.id) }
         let b = BarsPage(piece: p, reduceMotion: reduceMotion, shotMode: shotMode, first: first, saved: saved,
-                         test: p.isTest ? LessonPlan.test : nil, recheck: !p.isTest && Progress.shared.dueBack(p.id), seed: Shots.seed(p.id))
+                         test: p.isTest ? LessonPlan.test : review ? Review.problems : nil, recheck: !p.isTest && !review && Progress.shared.dueBack(p.id),
+                         seed: Shots.seed(p.id))
         b.frame = { [weak self] r in self?.frameCurrent(r) }
         b.close = { [weak self] in self?.close() }
         bars = b; selected = nil
@@ -477,17 +552,113 @@ final class PaperModel {
             Task { [self] in
                 try? await Task.sleep(for: .seconds(Self.undraw + 0.05))
                 leaving = false
-                bars = nil; redraw(from: piece); glideOut(to: piece)
+                bars = nil; back(from: piece)
             }
             return
         }
-        if bars != nil { bars = nil; redraw(from: piece); glideOut(to: piece); return }
+        if bars != nil { bars = nil; back(from: piece); return }
         guard let l = lesson else { return }
         l.flatten { [self] view in
             stop(); resting = view.paperCamera(screen: screen); lesson = nil
             redraw(from: piece)
             glideOut(to: piece)
         }
+    }
+
+    /// Out of a lesson's page: back to the place it was opened from (Me), else to the map, gliding out to the lesson.
+    private func back(from piece: Piece?) {
+        if let from = cameFrom { cameFrom = nil; arrive(at: from); return }
+        redraw(from: piece); glideOut(to: piece)
+    }
+
+    // MARK: places (Me, the grown-ups' page)
+
+    /// Goes to a place on the paper, or back to the map (nil): what's on the paper now erases itself first, as it drew
+    /// in (G 17 Oct), then the camera flies there and it draws itself in. Already there, the map shows all of itself (the
+    /// Lessons button, as before) and a place frames itself again. `then` runs once it's there.
+    func go(to target: Place?, then: (() -> Void)? = nil) {
+        guard !leaving, lesson == nil else { return }
+        startHere = nil
+        if bars == nil, place == target {
+            if let target { fly(to: placeCamera(target), duration: CameraTiming.fly) } else { frameAll() }
+            then?(); return
+        }
+        erase { [self] in arrive(at: target); then?() }
+    }
+
+    /// A lesson (or the daily review) chosen on a place: the place erases itself, and the lesson's page opens where the
+    /// lesson lives; closing it comes back to the place.
+    func open(_ p: Piece, from origin: Place) {
+        guard !leaving, lesson == nil else { return }
+        erase { [self] in
+            place = nil; placeLeftAt = nil; cameFrom = origin
+            openNow(p)
+        }
+    }
+
+    /// What's on the paper erases itself, as it drew in: the map, a place, or a lesson's page (stopped first, so its work
+    /// is saved); then `next`. Hands off until the next thing is there.
+    private func erase(_ next: @escaping () -> Void) {
+        bars?.stop()
+        if instant { bars = nil; cameFrom = nil; next(); return }
+        leaving = true
+        let now = PaperClock.now
+        if let b = bars { b.leave() } else if place != nil { placeLeftAt = now } else { mapLeftAt = now }
+        Task { [self] in
+            try? await Task.sleep(for: .seconds(Self.undraw + 0.05))
+            leaving = false
+            bars = nil; cameFrom = nil
+            next()
+        }
+    }
+
+    /// Arrived: a place draws itself in as the camera flies to it; the map (nil) draws itself back in, framed on today's
+    /// chapter as when the app opens.
+    private func arrive(at target: Place?) {
+        place = target; placeLeftAt = nil; mapLeftAt = nil; selected = nil
+        guard let target else { redraw(from: nil); frameGroup(); return }
+        placeAt = instant ? PaperClock.now - 100 : PaperClock.now + 0.05
+        if target == .grownUp { grownUp.shut() }
+        fly(to: placeCamera(target), duration: CameraTiming.fly)
+    }
+
+    /// The place frames itself again (it grew or shrank: a question asked on the paper, or put away).
+    func reframePlace() {
+        guard let place, bars == nil, !leaving else { return }
+        let to = placeCamera(place), now = camera(at: PaperClock.now)
+        if abs(to.zoom / now.zoom - 1) < 0.02, abs(to.x - now.x) < 12, abs(to.y - now.y) < 12 { return }
+        fly(to: to, duration: CameraTiming.fly)
+    }
+
+    /// A tap on a place: the card it lands on opens (Me), or the grown-ups' page takes it.
+    private func tapPlace(_ place: Place, at p: Point) {
+        switch place {
+        case .me:
+            let q = CGPoint(x: p.x, y: p.y)
+            switch MePage.sheet(now: PaperClock.now).taps.first(where: { $0.rect.contains(q) })?.action {
+            case .lesson(let id)?: if let piece = Map.piece(id) { open(piece, from: .me) }
+            case .review?: open(Map.review, from: .me)
+            case nil: break
+            }
+        case .grownUp: grownUp.tap(p, model: self)
+        }
+    }
+
+    /// A place framed to read (G 20 Oct): all of it at up to 100%, centred clear of the bar; one too tall for that at 60%
+    /// shows from its top down at 60%, the rest a pan away.
+    func placeCamera(_ place: Place) -> PaperCamera {
+        let r = place == .me ? MePage.sheet(now: PaperClock.now).frame : grownUp.frame
+        let cam = framingBelowBar(r, maxZoom: CameraTiming.selectMax)
+        guard cam.zoom < 0.6 else { return cam }
+        let z = 0.6, pad = screen.width > 760 ? Self.margin : 8
+        return PaperCamera(x: screen.width / 2 - r.mid.x * z, y: Self.chrome.top + pad - r.y * z, zoom: z)
+    }
+
+    /// Today's review, started and not finished: how many of its problems are done (nil when none is partway).
+    static func reviewPartway(now: Double) -> Int? {
+        guard let s = PageStore.load(Map.review.id), !s.recorded, Review.day(s.date.timeIntervalSinceReferenceDate) == Review.day(now) else { return nil }
+        let done = s.problems.filter(\.finished).count
+        return done > 0 ? done : nil
     }
 
     /// Coming back to the map, the drawings draw themselves in again as they do when the app opens, outward from the

@@ -224,6 +224,9 @@ final class Rig {
     // the map's words, in the scene (PaperWords.swift)
     let words = Entity()
     var mapDrawer: SketchDrawer?
+    // a place of its own instead of the map: Me, or the grown-ups' page (Places.swift)
+    let placeRoot = Entity()
+    var placeDrawer: SketchDrawer?
     // the lesson page's words, in the scene (ProblemWords.swift)
     let pageWords = Entity()
     // Unit cubes' words, standing in the scene (CubesWords.swift)
@@ -284,7 +287,7 @@ final class Rig {
         // the paper itself, under the grid, large enough to fill any tilted view; it follows the camera
         sheet.model = ModelComponent(mesh: .generatePlane(width: 400, depth: 400), materials: [])
         sheet.position.y = -0.003
-        root.addChild(sheet); root.addChild(pieces); root.addChild(lessonRoot); root.addChild(barsRoot); barsRoot.addChild(pageWords); barsRoot.addChild(cardsRoot); barsRoot.addChild(cursorEntity); root.addChild(words)
+        root.addChild(sheet); root.addChild(pieces); root.addChild(lessonRoot); root.addChild(barsRoot); barsRoot.addChild(pageWords); barsRoot.addChild(cardsRoot); barsRoot.addChild(cursorEntity); root.addChild(words); root.addChild(placeRoot)
     }
 
     func update(view v: PaperView3D, model: PaperModel, time t: Double, dark: Bool) {
@@ -316,9 +319,10 @@ final class Rig {
         let gx = Int(floor.x.rounded()), gz = Int(floor.z.rounded())
         if let g = gridAt, abs(g.x - gx) <= 2, abs(g.z - gz) <= 2, g.half >= half {} else { Perf.time("grid") { regrid(x: gx, z: gz, half: half) } }
 
-        let onMap = model.lesson == nil && model.bars == nil
+        let onMap = model.lesson == nil && model.bars == nil && model.place == nil
         pieces.isEnabled = onMap; words.isEnabled = onMap
         if onMap { Perf.time("pieces") { drawPieces(model, at: t) }; Perf.time("words") { drawWords(model, at: t) } }
+        Perf.time("place") { drawPlace(model, at: t) }
         drawPage(model.bars, at: t)
 
         guard let l = lesson else { return }
@@ -328,7 +332,7 @@ final class Rig {
     }
 
     private func recolour(_ dark: Bool) {
-        mapDrawer?.key = ""; cubesKey = ""
+        mapDrawer?.key = ""; cubesKey = ""; placeDrawer?.key = ""; placeDrawer?.live.key = ""
         self.dark = dark
         colours = Colours(dark: dark, chapter: Chapter.measurement.hex)
         paperHex = dark ? 0x121211 : 0xF3F2EF

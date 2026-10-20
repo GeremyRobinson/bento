@@ -28,6 +28,8 @@ struct PaperScreen: View {
                         surfaceGestures
                     }
                     Toolbar(model: model, time: t, bottom: max(16, safe.safeAreaInsets.bottom + 8, model.keyboard + 8))
+                    // the problem's sounds, and its words read aloud when the grown-ups asked for that
+                    Listener(model: model)
                     // iPadOS's own number keyboard (G 19 Oct), up by itself whenever the problem being worked wants a
                     // number written (no tap needed), so a Mac's or a hardware keyboard types straight away too; only for
                     // a box the drawing shows (G 20 Oct): a step answered by the hands never raises it; a box tapped
@@ -43,7 +45,7 @@ struct PaperScreen: View {
             .onAppear {
                 model.screen = Size(geo.size.width, geo.size.height)
                 model.setReduceMotion(UIAccessibility.isReduceMotionEnabled)
-                if !Shots.active { model.frameGroup(duration: 0) }
+                if !Shots.active { model.frameGroup(duration: 0); model.beginStartHere() }
                 Shots.run(model)
             }
             .onReceive(NotificationCenter.default.publisher(for: UIAccessibility.reduceMotionStatusDidChangeNotification)) { _ in
@@ -75,7 +77,9 @@ struct PaperScreen: View {
 
     /// The clock only runs while something moves or draws, so a still paper costs nothing.
     private var animating: Bool {
-        model.moving || model.leaving || model.mapDrawing || PaperClock.now - model.pinchedAt < 1.3 || PaperClock.now - model.drawnAt < Piece.drawTime + 0.2 || (model.lesson?.animating ?? false) || (model.bars?.animating ?? false)
+        model.moving || model.leaving || model.mapDrawing || model.placeDrawing || PaperClock.now - model.placeAt < 2.5 || model.grownUp.animating
+            || (model.startHere?.playing(at: PaperClock.now) ?? false)
+            || PaperClock.now - model.pinchedAt < 1.3 || PaperClock.now - model.drawnAt < Piece.drawTime + 0.2 || (model.lesson?.animating ?? false) || (model.bars?.animating ?? false)
     }
 
     private var surfaceGestures: some View {
@@ -98,6 +102,10 @@ struct PaperScreen: View {
                     model.zoom(by: v.magnification / lastPinch, at: .init(v.startLocation.x, v.startLocation.y)); lastPinch = v.magnification }
                 .onEnded { _ in lastPinch = 1; pinching = false })
             .simultaneousGesture(SpatialTapGesture().onEnded { v in model.tap(at: .init(v.location.x, v.location.y)) })
+            // a finger down, from the moment it touches (a tap or a drag is only known later): the grown-ups' hold
+            .simultaneousGesture(DragGesture(minimumDistance: 0)
+                .onChanged { v in model.press(at: .init(v.location.x, v.location.y)) }
+                .onEnded { _ in model.pressEnded() })
     }
 }
 

@@ -70,6 +70,9 @@ final class BarsPage {
 
     /// A chapter or grade test: this many questions, every one no help and one try, and no How to.
     let test: Int?
+    /// The daily review (G's plan, step 7): a test's page of problems, each from its own lesson, scored for the review
+    /// only (it never changes what's learned), its result on the paper.
+    var review: Bool { piece.id == Map.review.id }
 
     /// The lesson this page teaches (a test's first lesson, for its How to that it never plays).
     let spec: LessonSpec
@@ -109,7 +112,16 @@ final class BarsPage {
         /// The lesson test's result stands, unless one of its questions had to be asked afresh: then it's scored again
         /// when that one is answered.
         var resultStands = true
-        if let n = test {
+        if let n = test, piece.id == Map.review.id {
+            // the daily review: as it was left today, or fresh, each problem from its own lesson's check recipe, drawn in
+            // its own lesson's colour
+            let kept = saved?.problems ?? []
+            let back = kept.compactMap { k in k.spec.flatMap { Lessons.spec($0) }.flatMap { LessonRun.restored($0, k) } }
+            let runs = kept.count == n && back.count == n ? back : Review.runs(specs, using: &rng)
+            problems = runs.enumerated().map { i, r in
+                Self.make(r.spec, origin: o, chapter: Map.chapter(of: r.spec.id) ?? chapter, instant: instant, run: r, label: "Problem \(i + 1)")
+            }
+        } else if let n = test {
             let kept = saved?.problems ?? []
             let runs = (0..<n).compactMap { i in question(i, kept.indices.contains(i) ? kept[i] : nil, from: specs) }
             problems = runs.enumerated().map { i, r in Self.make(r.spec, origin: o, chapter: chapter, instant: instant, run: r, label: "Problem \(i + 1)") }
@@ -211,7 +223,7 @@ final class BarsPage {
         case .result:
             // a chapter or grade test's name is the bar's own title already
             guard let r = result else { return "" }
-            return r.kind == .test ? "\(r.right) of \(r.of) right" : "\(r.title) · \(r.right) of \(r.of) right"
+            return r.kind == .test || r.kind == .review ? "\(r.right) of \(r.of) right" : "\(r.title) · \(r.right) of \(r.of) right"
         case .work:
             if let c = current {
                 if let i = testProblems.firstIndex(where: { $0 === c }) { return "Test \(i + 1) of \(testProblems.count)" }
@@ -298,6 +310,8 @@ final class BarsPage {
         let display: MathLine?
         let line: String
         let state: State
+        /// Drawn in its own lesson's colour, not the page's (the daily review mixes them).
+        var pen: Pen? = nil
         /// Its parts' names on the paper.
         var id: String {
             switch opens { case .problem(let i): "card\(i)"; case .test: "card-1"; case .recheck(let i): "recheck\(i)" }
@@ -330,7 +344,9 @@ final class BarsPage {
         }
         // one word for them, problems, everywhere (G 20 Oct), and what passes
         if let n = test {
-            part("\(n) problems, one try each · \(LessonPlan.passMark(n)) right passes", problems.indices.map { (.problem($0), problems[$0]) }, columns: 4)
+            // the review passes nobody: it only says how it went
+            part(review ? "\(n) problems, one try each" : "\(n) problems, one try each · \(LessonPlan.passMark(n)) right passes",
+                 problems.indices.map { (.problem($0), problems[$0]) }, columns: 4)
             return (out, heads)
         }
         // a due lesson's recheck: its 4 problems, before the lesson's page, two by two so they read big
@@ -374,7 +390,7 @@ final class BarsPage {
             let done = l.steps.indices.filter { $0 < l.index && (l.steps[$0].answer != nil || l.steps[$0].task != nil) }.count
             line = done > 0 ? "\(done) of \(l.workSteps) steps" : focusLine(m)
         }
-        return Card(opens: opens, rect: r, title: m.label, display: l.display, line: line, state: state)
+        return Card(opens: opens, rect: r, title: m.label, display: l.display, line: line, state: state, pen: review ? .chapter(m.chapter) : nil)
     }
 
     /// The problem worked last, marked Now on its card.
@@ -401,25 +417,34 @@ final class BarsPage {
     /// A finished test or recheck, shown on the paper before going on (G 20 Oct): its score, what it means, and why
     /// (the last words say why); then what to do: go on, or take it again.
     struct Result: Equatable {
-        enum Kind: Equatable { case lessonTest, recheck, test }
+        enum Kind: Equatable { case lessonTest, recheck, test, review }
         let kind: Kind
         /// Its heading: "Lesson test", "Go over", "Fractions test".
         let title: String
         let right: Int, of: Int
         let passed: Bool
-        /// What it means: learned (still learned, passed), or what to do now.
+        /// The review: the lessons it had a miss in, in the order they came.
+        var missed: [String] = []
+        /// What it means: learned (still learned, passed), or what to do now; the review, that it's done for the day.
         var verdict: String {
             switch kind {
             case .lessonTest: passed ? "Learned" : "Take it again"
             case .recheck: passed ? "Still learned" : "Go over it again"
             case .test: passed ? "Passed" : "Take it again"
+            case .review: "Done for today"
             }
         }
-        /// Why, always: what passes, what keeps it learned, or after a recheck that came back low, what comes next.
+        /// Why, always: what passes, what keeps it learned, or after a recheck that came back low, what comes next; the
+        /// review, what to go over (it changes nothing that's learned).
         var why: String {
             switch kind {
-            case .recheck: passed ? "\(Mastery.pass) of \(of) keeps it learned." : "New problems are on your page. The check comes back tomorrow."
-            default: "\(LessonPlan.passMark(of)) of \(of) passes."
+            case .recheck: return passed ? "\(Mastery.pass) of \(of) keeps it learned." : "New problems are on your page. The check comes back tomorrow."
+            case .review:
+                var names: [String] = []
+                for id in missed { if let n = Map.piece(id)?.name, !names.contains(n) { names.append(n) } }
+                guard let lastName = names.popLast() else { return "Every one right. A new review comes tomorrow." }
+                return "Go over " + (names.isEmpty ? lastName : names.joined(separator: ", ") + " and " + lastName) + "."
+            default: return "\(LessonPlan.passMark(of)) of \(of) passes."
             }
         }
         /// Its blocks: the main one (Continue; or, not passed, Take it again), and a quieter one beside it then.
@@ -475,7 +500,7 @@ final class BarsPage {
     /// The result's quieter block: back to the page (or the map), not taking it again now.
     func leaveResult() {
         guard mode == .result, let r = result else { return }
-        if r.kind == .test { close?(); return }
+        if r.kind == .test || r.kind == .review { close?(); return }
         if r.kind == .recheck { rechecking = false; recheckProblems = [] }
         result = nil
         showPage(after: 0.05)
@@ -502,6 +527,12 @@ final class BarsPage {
     /// The page opens: a test or a recheck on its questions, back soon on the problem the child was on, else the How to
     /// plays itself (taught a tap at a time, or as a reminder after a while).
     func start() {
+        // today's review, done: its result, on the paper
+        if review, recorded, let r = Progress.shared.todaysReview {
+            howToGone = true
+            showResult(Result(kind: .review, title: piece.name, right: r.right, of: r.of, passed: true, missed: r.missed))
+            return
+        }
         // a chapter or grade test has no How to; nor does a recheck (G 20 Oct)
         if test != nil || rechecking { howToGone = true; showProblems(); return }
         // back soon: straight to the problem they were on, no How to
@@ -778,6 +809,16 @@ final class BarsPage {
     /// once: Check pressed again as its last step moves on mustn't add a second fresh problem for the same miss.
     private func solved(_ m: any PageProblem) {
         guard !stopped, counted.insert(m.id).inserted else { return }
+        if test != nil, review {
+            // the daily review: scored for itself only, never for what's learned
+            if let r = LessonPlan.testScore(problems.map(\.lesson)), !recorded {
+                recorded = true
+                let missed = problems.filter { $0.lesson.missedAny }.map(\.lesson.spec.id)
+                Progress.shared.reviewed(right: r.right, of: problems.count, missed: missed)
+                finished(Result(kind: .review, title: piece.name, right: r.right, of: problems.count, passed: true, missed: missed), m)
+            }
+            save(); return
+        }
         if test != nil {
             if let r = LessonPlan.testScore(problems.map(\.lesson)), !recorded {
                 recorded = true

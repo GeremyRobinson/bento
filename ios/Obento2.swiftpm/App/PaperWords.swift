@@ -145,10 +145,19 @@ extension Rig {
         let d = mapDrawer ?? { let d = SketchDrawer(); words.addChild(d.root); mapDrawer = d; return d }()
         // a lesson comes due on its own, as time passes: that changes its tab too
         let due = Map.pieces.filter(\.goOver).map(\.id).joined(separator: ",")
-        let key = "\(Progress.shared.checks.count) \(Progress.shared.learned.count) \(due) \(Progress.shared.tests) \(isDark) \(PageStore.version) \(model.selected?.id ?? "") \(model.drawnAt)"
+        let key = "\(Progress.shared.checks.count) \(Progress.shared.learned.count) \(due) \(Progress.shared.tests) \(isDark) \(PageStore.version) \(model.selected?.id ?? "") \(model.drawnAt) \(model.startHere?.tapped ?? false)"
         if key != d.key, model.mapLeftAt == nil {
             d.key = key
             d.build(mapSketch(model, dark: isDark), rig: self, chapter: Chapter.whole.hex, dark: isDark, origin: .zero, from: t, now: t)
+        }
+        // the first launch's ghost finger (StartHere), drawn at once as it moves
+        let finger = model.mapLeftAt == nil ? model.startHere?.finger(at: t) : nil, live = d.live
+        let fingerKey = finger.map { "\(Int($0.at.x)),\(Int($0.at.y)) \($0.down) \($0.trail.count) \(Int($0.shows * 20)) \(isDark)" } ?? ""
+        if fingerKey != live.key, model.mapLeftAt == nil {
+            live.key = fingerKey
+            var f = Sketch()
+            if let finger { f.ghostFinger("start-ghost", at: finger.at, down: finger.down, trail: finger.trail, shows: finger.shows) }
+            live.build(f, rig: self, chapter: Chapter.whole.hex, dark: isDark, origin: .zero, from: t, now: t)
         }
         let moving = d.update(at: t)
         if moving != model.mapDrawing { Task { @MainActor in model.setMapDrawing(moving) } }
@@ -214,6 +223,11 @@ extension Rig {
             } else if p.state == .now {
                 s.tab(id, frame: r, "Up next", colour: chapter)
             }
+        }
+        // the first launch: "Start here." beside the lesson its finger chose, while it stays chosen
+        if let sh = model.startHere, sh.tapped, model.selected?.id == sh.piece.id {
+            s.startAt = nil
+            s.startHere(sh.piece)
         }
         return s
     }
