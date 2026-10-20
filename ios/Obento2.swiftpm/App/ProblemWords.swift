@@ -242,10 +242,12 @@ extension Rig {
                 s.block(id + "\(m.verdict.map { $0.right } as Bool?)", r, style, k: k, grows: true)
                 // what's typed, and the cursor, show at once, as any text box does
                 s.pace = 0
-                if let typed { s.text("\(id)typed\(typed)\(m.verdict.map { $0.right } as Bool?)", typed, at: CGPoint(x: r.midX, y: r.midY), size: 26 * k, weight: .medium, style.text) }
+                // from the left, a square in, so what's typed stays put as the box widens to the right
+                let left = r.minX + Paper.cell * k
+                if let typed { s.text("\(id)typed\(typed)\(m.verdict.map { $0.right } as Bool?)", typed, at: CGPoint(x: left, y: r.midY), size: 26 * k, weight: .medium, style.text, anchor: UnitPoint(x: 0, y: 0.5)) }
                 if l.active == f, m.verdict == nil, !m.auto {
                     let w = typed.map { PaperText.width($0, PaperText.font(26 * k, .medium, digits: true)) } ?? 0
-                    let x = r.midX + w / 2 + (w > 0 ? 3 * k : 0)
+                    let x = left + w + (w > 0 ? 3 * k : 0)
                     s.line("cursor\(typed ?? "")", [CGPoint(x: x, y: r.midY - 12 * k), CGPoint(x: x, y: r.midY + 12 * k)], .ink, width: 2 * k)
                 }
                 s.pace = 0.4
