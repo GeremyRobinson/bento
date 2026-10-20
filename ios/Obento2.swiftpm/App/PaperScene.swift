@@ -257,13 +257,15 @@ final class Rig {
     let barsRoot = Entity()
     var drawers: [UUID: BarsDrawer] = [:]
     var sketches: [UUID: SketchDrawer] = [:]
+    /// A WorkProblem's words and blocks, drawn the way its picture is (they draw in and undraw).
+    var wordDrawers: [UUID: SketchDrawer] = [:]
     let boxes = Entity()
     var boxesKey = ""
     /// What the camera last framed a problem's content for.
     var contentKey = ""
     /// The page of problems' cards (PageCards).
     let cardsRoot = Entity()
-    var cardsKey = ""
+    var cardsDrawer: SketchDrawer?
     var paperHex: UInt32 = 0xF3F2EF
     // a lesson worked in steps: its picture
     let stepsRoot = Entity()
@@ -330,7 +332,6 @@ final class Rig {
         pieces.isEnabled = onMap; words.isEnabled = onMap
         if onMap { Perf.time("pieces") { drawPieces(model, at: t) }; Perf.time("words") { drawWords(model, at: t) } }
         drawPage(model.bars, at: t)
-        drawCards(model.bars, at: t)
         drawSteps(model.steps, at: t)
 
         guard let l = lesson else { return }
@@ -455,6 +456,9 @@ final class Rig {
             drawers = [:]; boxesKey = ""
             for d in sketches.values { d.root.removeFromParent() }
             sketches = [:]
+            for d in wordDrawers.values { d.root.removeFromParent() }
+            wordDrawers = [:]
+            drawCards(nil, at: t)
             for w in problemWords.values { w.root.removeFromParent() }
             problemWords = [:]; return
         }
@@ -474,7 +478,7 @@ final class Rig {
                 d.draw(a, at: t)
             } else if let w = m as? WorkProblem {
                 let d = sketches[m.id] ?? { let d = SketchDrawer(); barsRoot.addChild(d.root); sketches[m.id] = d; return d }()
-                drawSketch(w, into: d, at: t)
+                if drawSketch(w, into: d, at: t) { pageBuilding = true }
             }
         }
         for (id, d) in drawers where !every.contains(where: { $0.id == id }) { d.root.removeFromParent(); drawers[id] = nil }
@@ -483,18 +487,19 @@ final class Rig {
         Perf.time("boxes") { drawBoxes(page, [], at: t) }
         Perf.time("page-words") { drawProblemWords(page, shown, waiting: page.showing || made > 0 ? [] : page.problems, at: t) }
         frameContent(page)
+        if drawCards(page, at: t) { pageBuilding = true }
     }
 
     /// The camera frames what's on the paper (G 19 Oct): the problem's picture and words as they are now, so when a
     /// step adds something the paper eases out to fit it as it draws in, and eases back in when something goes.
     private func frameContent(_ page: BarsPage) {
         guard let m = page.mode == .work ? page.current : (page.howToGone ? nil : page.howTo) else { contentKey = ""; return }
-        let key = "\(m.id) \(sketches[m.id]?.key ?? "") \(problemWords[m.id]?.key ?? "")"
+        let key = "\(m.id) \(sketches[m.id]?.key ?? "") \(problemWords[m.id]?.key ?? "") \(wordDrawers[m.id]?.key ?? "")"
         guard key != contentKey else { return }
         contentKey = key
         let u = Paper.unit
         var r: CGRect?
-        for e in [sketches[m.id]?.root, drawers[m.id]?.root, problemWords[m.id]?.root].compactMap({ $0 }) {
+        for e in [sketches[m.id]?.root, drawers[m.id]?.root, problemWords[m.id]?.root, wordDrawers[m.id]?.root].compactMap({ $0 }) {
             let b = e.visualBounds(recursive: true, relativeTo: barsRoot, excludeInactive: false)
             guard !b.isEmpty else { continue }
             let rr = CGRect(x: Double(b.min.x) * u, y: Double(b.min.z) * u, width: Double(b.max.x - b.min.x) * u, height: Double(b.max.z - b.min.z) * u)
