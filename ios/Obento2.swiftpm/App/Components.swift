@@ -12,6 +12,8 @@ extension Sketch {
     /// messages, buttons, headings, picture labels), and small (hints, names, statuses, notes). Every line sits centred
     /// on its letters in a row of squares. A tab's tiny word is the only other size.
     static let maths: CGFloat = 36, wordSize: CGFloat = 28, small: CGFloat = 20
+    /// One weight for every ink line in a problem (G 19 Oct): the work's rules and bracket, and every box's outline.
+    static let stroke = 2.0
 
     /// How a kind of words looks, everywhere it appears.
     struct Words {
@@ -109,8 +111,8 @@ extension Sketch {
         let place = "", was = snaps
         snaps = grows
         if let f = b.fill { fill("\(id)f\(place)\(f)", r, f) }
-        let i = r.insetBy(dx: 0.75 * k, dy: 0.75 * k)
-        line("\(id)o\(place)\(b.stroke)", [CGPoint(x: i.minX, y: i.minY), CGPoint(x: i.maxX, y: i.minY), CGPoint(x: i.maxX, y: i.maxY), CGPoint(x: i.minX, y: i.maxY), CGPoint(x: i.minX, y: i.minY)], b.stroke, width: 1.5 * k)
+        let i = r.insetBy(dx: Sketch.stroke / 2 * k, dy: Sketch.stroke / 2 * k)
+        line("\(id)o\(place)\(b.stroke)", [CGPoint(x: i.minX, y: i.minY), CGPoint(x: i.maxX, y: i.minY), CGPoint(x: i.maxX, y: i.maxY), CGPoint(x: i.minX, y: i.maxY), CGPoint(x: i.minX, y: i.minY)], b.stroke, width: Sketch.stroke * k)
         snaps = was
         if let word { text("\(id)w\(word)", word, at: CGPoint(x: r.minX + 20 * k, y: r.midY), size: Words.block.size * k, weight: .medium, b.text, anchor: UnitPoint(x: 0, y: 0.5), digits: false) }
         if arrow { self.icon("\(id)a", "arrow-right", in: CGRect(x: r.maxX - 30 * k, y: r.midY - 10 * k, width: 20 * k, height: 20 * k), b.text) }

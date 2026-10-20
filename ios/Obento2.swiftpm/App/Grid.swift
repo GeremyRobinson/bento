@@ -63,7 +63,7 @@ struct GridPen {
     // MARK: lines
 
     /// A rule along a grid line (school work's line, a total's line).
-    mutating func rule(_ id: String, from c0: Double, to c1: Double, row: Double, _ colour: Sketch.Colour = .ink, width: Double = 2) {
+    mutating func rule(_ id: String, from c0: Double, to c1: Double, row: Double, _ colour: Sketch.Colour = .ink, width: Double = Sketch.stroke) {
         sketch.line(id, [P(c0, row), P(c1, row)], colour, width: width)
     }
     /// A bracket under some squares, its ends a square tall, and its words in the row under it.

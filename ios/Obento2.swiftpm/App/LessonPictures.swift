@@ -296,7 +296,7 @@ enum LessonPictures {
         let bracketX = right - nd * per - 0.3 * per
         if sum && !box { wk.digits("q", String(qt), right: right, row: row(0), per: per, .chapter) }
         wk.digits("dv", String(dv), right: bracketX - 0.4 * per, row: row(1), per: per)
-        wk.sketch.line("bracket", [wk.P(bracketX - 0.3 * per, 2 * per), wk.P(bracketX, 1.5 * per), wk.P(bracketX - 0.3 * per, per), wk.P(right, per)], .ink, width: 2)
+        wk.sketch.line("bracket", [wk.P(bracketX - 0.3 * per, 2 * per), wk.P(bracketX, 1.5 * per), wk.P(bracketX - 0.3 * per, per), wk.P(right, per)], .ink, width: Sketch.stroke)
         wk.digits("n", String(n), right: right, row: row(1), per: per)
         let sign = Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink)
         // how many tens: the box beside the first row, then its number

@@ -495,7 +495,7 @@ final class Rig {
         let key = "\(r) \(dark ?? false)"
         if key != cursorKey {
             cursorKey = key
-            let u = Paper.unit, w = 2.5 * m.scale
+            let u = Paper.unit, w = Sketch.stroke * m.scale
             cursorEntity.model = Self.lines([(SIMD2(Float(r.minX / u), Float(r.minY / u)), SIMD2(Float(r.minX / u), Float(r.maxY / u)))], width: Float(w / u))
                 .map { ModelComponent(mesh: $0, materials: [flat(colours.ink)]) }
             cursorEntity.position.y = 0.0027
