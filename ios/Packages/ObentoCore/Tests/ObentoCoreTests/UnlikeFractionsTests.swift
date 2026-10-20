@@ -276,6 +276,22 @@ final class UnlikeFractionsTests: XCTestCase {
         }
     }
 
+    func testEachHandStepLightsAHintOnTheBars() {
+        // a miss (or the bar's Hint) lights a drawing on the bars, not just words: the old cuts ringed on the cut, where
+        // the pieces go on the slide, the last piece counted on the sum, the bigger pieces on the simplify
+        let l = LessonRun(AddingFractions.spec, numbers: UnlikeFractions.numbers(a: 1, b: 6, c: 1, d: 3, minus: false))
+        let byWords = Dictionary(l.steps.map { ($0.words.say, $0.onMiss) }, uniquingKeysWith: { a, _ in a })
+        XCTAssertEqual(byWords["Drag the ruler to cut both bars into the same size pieces."], ["oldCuts": 1])
+        XCTAssertEqual(byWords["Slide the striped sixths into the top bar."], ["target": 1])
+        XCTAssertEqual(byWords["How many sixths in all? Write it."], ["last": 1])
+        XCTAssertEqual(byWords["Write it as simply as you can."], ["simple": 1])
+        var r = LessonRun(AddingFractions.spec, numbers: UnlikeFractions.numbers(a: 1, b: 6, c: 1, d: 3, minus: false))
+        _ = r.go()
+        XCTAssertNil(r.picture["oldCuts"], "nothing lit before a miss")
+        r.set("x", 3); _ = r.go()
+        XCTAssertEqual(r.picture["oldCuts"], 1, "lit after a miss")
+    }
+
     func testSkillChecksDrawWhatTheyAskFor() {
         var rng = SeededRandom(seed: 23)
         for spec in [AddingFractions.spec, SubtractingFractions.spec, AddAndSubtract.spec] {

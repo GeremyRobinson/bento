@@ -240,6 +240,26 @@ enum Shots {
                     for pair in args[i + 1].split(separator: ",") { let kv = pair.split(separator: "="); if kv.count == 2, let v = Double(kv[1]) { hand[String(kv[0])] = v } }
                     w.hand = hand
                 }
+                // -tapsq x,y / -drag x0,y0,x1,y1 / -block Name: a finger's tap or drag on the picture (in its squares) or a
+                // tap on a block, made through the camera and the paper's own gesture handling, as a real finger's would be
+                @MainActor func screen(_ x: Double, _ y: Double) -> Point {
+                    let o = w.contentOrigin, l = w.layout
+                    return m.camera(at: PaperClock.now).toScreen(Point(o.x + l.pictureOffset.x + x * Paper.cell, o.y + l.pictureOffset.y + y * Paper.cell))
+                }
+                func numbers(_ flag: String) -> [Double]? {
+                    guard let i = args.firstIndex(of: flag), i + 1 < args.count else { return nil }
+                    return args[i + 1].split(separator: ",").compactMap { Double($0) }
+                }
+                if let t = numbers("-tapsq"), t.count == 2 { m.tap(at: screen(t[0], t[1])) }
+                if let d = numbers("-drag"), d.count == 4 {
+                    m.dragStart(at: screen(d[0], d[1]))
+                    for k in 1...12 { let f = Double(k) / 12; m.dragMove(to: screen(d[0] + (d[2] - d[0]) * f, d[1] + (d[3] - d[1]) * f)) }
+                    if !args.contains("-hold") { m.dragEnd() }
+                }
+                if let i = args.firstIndex(of: "-block"), i + 1 < args.count,
+                   let b = ProblemLayout.blocks(w).first(where: { $0.kind == .action(args[i + 1]) || ($0.kind == .main && args[i + 1] == "Check") }) {
+                    m.tap(at: m.camera(at: PaperClock.now).toScreen(Point(b.rect.midX, b.rect.midY)))
+                }
                 // -ghost [seconds]: Show me's ghost finger stopped that far into its moves
                 if let i = args.firstIndex(of: "-ghost") {
                     let at = i + 1 < args.count ? Double(args[i + 1]) : nil

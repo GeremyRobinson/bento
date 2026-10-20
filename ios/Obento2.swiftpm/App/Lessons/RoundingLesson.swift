@@ -26,7 +26,7 @@ struct RoundingLesson: PaperLesson {
         let P = RoundDecimals.Parts(s.numbers), p = P.p, at = stage(s), found = at >= 2
         let y1 = Self.line1, y2 = Self.line2, B = Self.block, L = Self.length, label = Self.label
         let k = Double(P.digit), x1 = (P.value - P.lo1) / P.place * B, sx = P.step * B
-        var pic = GridPen(), live = GridPen(), rec = GridPen()
+        var pic = GridPen(), live = GridPen(stableIds: true), rec = GridPen()
 
         // line 1: the place one bigger, in ten blocks of the place; its ends to one place fewer (3.4 and 3.5, 5 and 6),
         // the block's own ends taking their place once it's found

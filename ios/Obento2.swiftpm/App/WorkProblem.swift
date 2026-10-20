@@ -493,8 +493,17 @@ final class WorkProblem: Identifiable, PageProblem {
         ghost = g
         message = nil
         if instant && frozen == nil {
+            // Reduce Motion: straight to the step done, no finger moving; Show me holds it a moment, then puts it back
             fireGhost(upTo: .infinity)
-            endGhost()
+            guard mode == .preview, var held = ghost else { endGhost(); return 0 }
+            held.frozen = held.end
+            ghost = held
+            let id = held.id
+            Task { [weak self] in
+                try? await Task.sleep(for: .seconds(1.6))
+                guard let self, self.ghost?.id == id else { return }
+                self.endGhost()
+            }
             return 0
         }
         if let frozen { fireGhost(upTo: frozen); return 0 }

@@ -350,7 +350,7 @@ final class PaperModel {
     /// The crosshair inside a flat lesson: glide back to the whole lesson.
     func reframe() {
         let pad = screen.width > 760 ? Self.margin : 8
-        if let b = bars { frameCurrent(b.current.map { ($0 as? WorkProblem)?.stageFrame ?? BarsPage.box(of: $0) } ?? (b.showing ? b.firstRow : BarsPage.box(of: b.howTo))) }
+        if let b = bars { frameCurrent(b.current.map(BarsPage.box(of:)) ?? (b.showing ? b.firstRow : BarsPage.box(of: b.howTo))) }
         if let s = steps { fly(to: .framing(s.frame, in: screen, pad: pad, maxZoom: 1), duration: CameraTiming.fly) }
     }
 
