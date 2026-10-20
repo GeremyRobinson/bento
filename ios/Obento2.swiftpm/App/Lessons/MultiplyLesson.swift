@@ -38,11 +38,16 @@ struct MultiplyLesson: PaperLesson {
         /// Twice as big (G 19 Oct: whole steps only) when at the paper's own size the words would show smaller than 22
         /// points on this screen (Rounding's and the fractions' read at about 30): the camera steps that far back to see
         /// the whole rectangle, with the words over it, the cut's rows and the record beside it (or under it, for a wide one).
+        /// Worked out once for a problem's numbers, so its drawing always agrees with its plan.
         static func k(a: Int, b: Int) -> Double {
+            if let k = scales["\(a)×\(b)"] { return k }
             let beside = ProblemGrid.zoom(squares: Double(b + 20), Double(a + 11))
             let under = ProblemGrid.zoom(squares: Double(max(b + 5, 30)), Double(a + 28))
-            return max(beside, under) * Sketch.wordSize < 22 ? 2 : 1
+            let k: Double = max(beside, under) * Sketch.wordSize < 22 ? 2 : 1
+            scales["\(a)×\(b)"] = k
+            return k
         }
+        private static var scales: [String: Double] = [:]
         var cuts: Bool { T > 0 && O > 0 }
         /// The rectangle's top row, and the row the cut's handle runs along over it (the widths written between them).
         var top: Double { 3 * k }
