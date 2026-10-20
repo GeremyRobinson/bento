@@ -223,15 +223,27 @@ final class PaperModel {
 
     func pan(_ dx: Double, _ dy: Double) { stop(); resting = resting.panned(by: dx, dy) }
 
-    /// A drag that starts on something the open problem lets the child move goes to the problem (a hand move); any
-    /// other drag pans the paper.
+    /// A drag that starts on something the open problem lets the child move goes to the problem (a hand move, G 20
+    /// Oct); any other drag pans the paper. Only the problem being worked takes hands (not the How to, not the page).
     private(set) var handDrag = false
+    /// The camera was on its way to frame the step when the hand took hold (it held still under the finger).
+    private var framingHeld = false
     func dragStart(at s: Point) {
-        guard !leaving, let m = bars?.current else { handDrag = false; return }
+        guard !leaving, let b = bars, b.mode == .work, let m = b.current else { handDrag = false; return }
         handDrag = m.grab(camera(at: PaperClock.now).toPaper(s))
+        // the camera holds still under the finger while it drags
+        if handDrag { framingHeld = moving; stop() }
     }
-    func dragMove(to s: Point) { bars?.current?.drag(to: camera(at: PaperClock.now).toPaper(s)) }
-    func dragEnd() { if handDrag { bars?.current?.release() }; handDrag = false }
+    func dragMove(to s: Point) { guard handDrag else { return }; bars?.current?.drag(to: camera(at: PaperClock.now).toPaper(s)) }
+    func dragEnd() {
+        guard handDrag else { return }
+        bars?.current?.release()
+        handDrag = false
+        // let go: a framing the hand stopped partway finishes (a new step frames itself, Rig.frameContent; a camera the
+        // child pinched or panned stays where they left it, LESSONS.md §5)
+        if framingHeld, let w = bars?.current as? WorkProblem, let r = w.stageFrame { frameCurrent(r) }
+        framingHeld = false
+    }
     func zoom(by f: Double, at p: Point) { stop(); resting = resting.zoomed(by: f, at: p); pinchedAt = PaperClock.now }
     /// When the paper was last pinched: the bar shows the zoom for a moment.
     var pinchedAt: Double = -100

@@ -33,7 +33,9 @@ enum Shots {
         let args = ProcessInfo.processInfo.arguments
         if args.contains("-landscape") || args.contains("-portrait"),
            let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            scene.requestGeometryUpdate(UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: args.contains("-portrait") ? .portrait : .landscapeRight))
+            scene.requestGeometryUpdate(UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: args.contains("-portrait") ? .portrait : .landscapeRight)) { e in
+                NSLog("OBENTO-SHOT orientation refused: \(e)")
+            }
         }
         // let the window settle into its final size, then jump to the moment
         Task {
@@ -74,8 +76,27 @@ enum Shots {
                 for _ in 0..<10 { m.bars?.skipHowTo(); await wait(1.3) }
                 guard let page = m.bars, let w = page.problems.first as? WorkProblem else { return }
                 await wait(2); page.open(w); await wait(3)
-                w.showMe(); await wait(0.5); w.go(); await wait(2)
+                w.answerForShots(); await wait(2)
                 page.backToProblems()
+                return
+            }
+            if name.hasPrefix("howto-") {
+                // howto-<lesson id>[-<taps>]: the real path, not instant: the lesson opens and its How to plays (the ghost
+                // finger making each step's move), Next pressed that many times, each as soon as it shows (a child's
+                // tap while the move still plays does nothing); -numbers as page-
+                let rest = name.dropFirst(6).split(separator: "-")
+                let taps = Int(rest.last ?? "") ?? 0, id = (Int(rest.last ?? "") != nil ? rest.dropLast() : rest[...]).joined(separator: "-")
+                guard let p = Map.pieces.first(where: { $0.id == id }) else { return }
+                PageStore.clear(id)
+                m.shotNumbers = given(id)
+                m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
+                func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
+                m.select(p); await wait(1); m.open(p); await wait(2.5)
+                for _ in 0..<taps {
+                    var n = 0
+                    while m.bars?.howTo.howToButtons.isEmpty != false, n < 150 { await wait(0.1); n += 1 }
+                    await wait(0.6); m.bars?.skipHowTo(); await wait(0.4)
+                }
                 return
             }
             if name.hasPrefix("live-") {
@@ -91,8 +112,8 @@ enum Shots {
                 guard let page = m.bars, let w = page.problems.first as? WorkProblem else { return }
                 await wait(1.5); page.open(w); await wait(2.5)
                 if let box = w.lesson.step.answer?.boxes.first { w.select(box) }
-                await wait(2); w.showMe(); await wait(1); w.go(); await wait(3)
-                w.showMe(); await wait(1); w.go(); await wait(2)
+                await wait(2); w.answerForShots(); await wait(3)
+                w.answerForShots(); await wait(2)
                 // back to the page, the same problem again straight away, and back once more (G found it stuck); then
                 // another problem, and back
                 page.backToProblems(); await wait(0.3)
@@ -206,12 +227,8 @@ enum Shots {
                     page.open(w)
                     var missed = !miss
                     while !w.solved {
-                        if let a = w.lesson.step.answer {
-                            if a.choices != nil { w.choose(Int(a.expected["c"] ?? 0)) }
-                            else if !missed { w.type("1"); w.go(); missed = true; w.reset() }
-                            _ = w.lesson.step.answer.map { _ in w.showMe() }
-                        }
-                        w.go()
+                        if w.lesson.step.answer != nil, !missed { w.answerForShots(wrong: true); missed = true; w.reset() }
+                        w.answerForShots()
                     }
                 }
                 for i in [0, 1, 2, 3, 4, 5] { if let w = page.problems[i] as? WorkProblem { work(w, miss: i == 3) } }
@@ -227,17 +244,48 @@ enum Shots {
                 guard let page = m.bars, page.problems.indices.contains(which), let w = page.problems[which] as? WorkProblem else { return }
                 // -numbers a=1,b=2,…: that problem with these numbers (the lesson's own worked-out ones added by its spec);
                 // -story: told as its story
-                if let i = args.firstIndex(of: "-numbers"), i + 1 < args.count {
-                    var given: Numbers = [:]
-                    for pair in args[i + 1].split(separator: ",") { let kv = pair.split(separator: "="); if kv.count == 2, let v = Double(kv[1]) { given[String(kv[0])] = v } }
-                    w.use(["add", "sub", "mix"].contains(id) ? UnlikeFractions.numbers(a: Int(given["a"] ?? 1), b: Int(given["b"] ?? 2), c: Int(given["c"] ?? 1), d: Int(given["d"] ?? 3), minus: given["minus"] == 1) : given,
-                          story: args.contains("-story"))
-                }
+                if let n = given(id) { w.use(n, story: args.contains("-story")) }
                 page.open(w)
-                defer { if ProcessInfo.processInfo.arguments.contains("-keypad"), let box = w.lesson.step.answer?.boxes.first { w.select(box) } }
-                // -wrong: a wrong answer typed and checked, so its box and words show red
-                defer { if ProcessInfo.processInfo.arguments.contains("-wrong") { w.type("1"); w.go() } }
-                for _ in 0..<max(0, k) { if w.lesson.step.answer != nil { w.lesson.step.answer?.choices != nil ? w.choose(Int(w.lesson.step.answer!.expected["c"] ?? 0)) : w.showMe() }; w.go() }
+                // each step before it answered as a child would: a hand step by its moves, a number typed, a pick picked
+                for _ in 0..<max(0, k) { w.answerForShots() }
+                // -wrong: a slip on this step (a wrong move, or a wrong number typed and checked), so what a miss says shows
+                if args.contains("-wrong") { w.answerForShots(wrong: true) }
+                // -hint: the step's hint, as the bar's Hint shows it
+                if args.contains("-hint") { w.showHint() }
+                // -hand key=value,…: the hand mid-move (a ruler being dragged, a point held, pieces being slid)
+                if let i = args.firstIndex(of: "-hand"), i + 1 < args.count {
+                    var hand: Numbers = [:]
+                    for pair in args[i + 1].split(separator: ",") { let kv = pair.split(separator: "="); if kv.count == 2, let v = Double(kv[1]) { hand[String(kv[0])] = v } }
+                    w.hand = hand
+                }
+                // -tapsq x,y / -drag x0,y0,x1,y1 / -block Name: a finger's tap or drag on the picture (in its squares) or a
+                // tap on a block, made through the camera and the paper's own gesture handling, as a real finger's would be
+                @MainActor func screen(_ x: Double, _ y: Double) -> Point {
+                    let o = w.contentOrigin, l = w.layout
+                    return m.camera(at: PaperClock.now).toScreen(Point(o.x + l.pictureOffset.x + x * Paper.cell, o.y + l.pictureOffset.y + y * Paper.cell))
+                }
+                func numbers(_ flag: String) -> [Double]? {
+                    guard let i = args.firstIndex(of: flag), i + 1 < args.count else { return nil }
+                    return args[i + 1].split(separator: ",").compactMap { Double($0) }
+                }
+                // a finger comes after the camera has framed the step, as a child's does
+                if args.contains("-tapsq") || args.contains("-drag") || args.contains("-block") { try? await Task.sleep(for: .seconds(1.5)) }
+                if let t = numbers("-tapsq"), t.count == 2 { m.tap(at: screen(t[0], t[1])) }
+                if let d = numbers("-drag"), d.count == 4 {
+                    m.dragStart(at: screen(d[0], d[1]))
+                    for k in 1...12 { let f = Double(k) / 12; m.dragMove(to: screen(d[0] + (d[2] - d[0]) * f, d[1] + (d[3] - d[1]) * f)) }
+                    if !args.contains("-hold") { m.dragEnd() }
+                }
+                if let i = args.firstIndex(of: "-block"), i + 1 < args.count,
+                   let b = ProblemLayout.blocks(w).first(where: { $0.kind == .action(args[i + 1]) || ($0.kind == .main && args[i + 1] == "Check") }) {
+                    m.tap(at: m.camera(at: PaperClock.now).toScreen(Point(b.rect.midX, b.rect.midY)))
+                }
+                // -ghost [seconds]: Show me's ghost finger stopped that far into its moves
+                if let i = args.firstIndex(of: "-ghost") {
+                    let at = i + 1 < args.count ? Double(args[i + 1]) : nil
+                    w.play(.preview, frozen: at ?? 1.2)
+                }
+                if args.contains("-keypad"), let box = w.lesson.step.answer?.boxes.first { w.select(box) }
             case "tests":
                 // the map with Whole numbers' lessons learned: its chapter's test opens; frame on Whole numbers
                 Progress.shared.reset(to: whole); m.frameChapter(0)
@@ -617,6 +665,16 @@ enum Shots {
             await moved(from: at)
             done += 1
         }
+    }
+
+    /// `-numbers a=1,b=2,…`: a problem's numbers, the lesson's own worked-out ones added (the fractions' L, A, C, S).
+    static func given(_ id: String) -> Numbers? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-numbers"), i + 1 < args.count else { return nil }
+        var n: Numbers = [:]
+        for pair in args[i + 1].split(separator: ",") { let kv = pair.split(separator: "="); if kv.count == 2, let v = Double(kv[1]) { n[String(kv[0])] = v } }
+        guard ["add", "sub", "mix"].contains(id) else { return n }
+        return UnlikeFractions.numbers(a: Int(n["a"] ?? 1), b: Int(n["b"] ?? 2), c: Int(n["c"] ?? 1), d: Int(n["d"] ?? 3), minus: n["minus"] == 1)
     }
 
     /// `-rotate`: turn the other way (from `-portrait` or `-landscape`) a moment after the moment opens, to check everything stays together.

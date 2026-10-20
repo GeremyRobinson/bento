@@ -1,32 +1,16 @@
 import SwiftUI
 
-/// What the child does with their hands on a lesson's picture (LESSONS.md §3; G 20 Oct: the grid is the measuring
-/// tool, and the answer is found on it, not only typed). A lesson's hands work in its own squares, the space its
-/// Drawing is built in: a tap on a square, or a drag that starts on something movable, puts a value in one of the
-/// step's answer boxes (as typing would), and the drawing shows it at once (it reads the boxes' values from its picture
-/// keys as "typed.<box>"). Everything snaps to the grid: a hand only ever lands on a grid line or in a square.
-struct Hands {
-    /// A tap at a place (in squares): the box it sets and its value (nil clears it), or nil when it's not on anything.
-    var tap: ((CGPoint) -> (box: String, value: Double?)?)? = nil
-    /// Whether a drag starting here (in squares) is taken by the problem rather than panning the paper.
-    var grab: ((CGPoint) -> Bool)? = nil
-    /// Where the drag is now (in squares): the box it sets and its value.
-    var drag: ((CGPoint) -> (box: String, value: Double?)?)? = nil
-}
-
-@MainActor
-enum LessonHands {
-    /// The hands a lesson's step has, from its numbers and the picture keys it's drawn with (none: typing only).
-    static func hands(_ id: String, _ n: Numbers, _ keys: Numbers) -> Hands? {
-        switch id {
-        default: return nil
-        }
-    }
-}
-
+/// What the child does with their hands on a lesson's picture (LESSONS.md §3; G 20 Oct: the grid is the measuring tool,
+/// and the answer is found on it, not only typed). A paper lesson (PaperLessons) says what its hands can do on each
+/// step (Hands): tap a square, grab something and drag it (it snaps to the grid as the finger moves, its live parts
+/// redrawn at once), let it go, or press one of its own blocks ("Cut"). A move can change the problem's hand state,
+/// set the step's answer boxes (LessonRun.set), and check the step now (WorkProblem.go), so Core's checks, slip messages
+/// and misses all apply, as they do to typing. Everything works in the lesson's own squares: a hand only ever lands on
+/// a grid line or in a square.
 extension WorkProblem {
-    /// This step's hands, if it has any.
-    var hands: Hands? { solved || auto ? nil : LessonHands.hands(lesson.spec.id, lesson.numbers, drawingKeys) }
+    /// This step's hands, if it has any: the lesson's, for the state it's in. None while the picture proves a step, the
+    /// ghost finger plays, or the problem is done.
+    var hands: Hands? { solved || auto || ghost != nil ? nil : paper?.hands(state()) }
 
     /// A paper point in the picture's squares (the space the lesson built its drawing in).
     func squares(_ p: Point) -> CGPoint {
@@ -34,17 +18,40 @@ extension WorkProblem {
         return CGPoint(x: (p.x - contentOrigin.x - l.pictureOffset.x) / Paper.cell, y: (p.y - contentOrigin.y - l.pictureOffset.y) / Paper.cell)
     }
 
+    /// A tap on the picture (blocks are tapped first, BarsPage.tap).
     func handTap(_ p: Point) -> Bool {
-        guard !busy, let r = hands?.tap?(squares(p)) else { return false }
-        apply(r); return true
+        guard !busy, let mv = hands?.tap?(squares(p)) else { return false }
+        apply(mv); return true
     }
+
+    /// A drag starting here: true when it takes hold of something the child can move (the paper pans otherwise).
     func grab(_ p: Point) -> Bool {
-        guard !busy, let h = hands, h.grab?(squares(p)) == true else { return false }
-        drag(to: p); return true
+        guard !busy, let held = hands?.grab?(squares(p)) else { return false }
+        onTouch?()
+        hand = held; dragging = true; handAt = PaperClock.now
+        // what a miss said goes as the child tries again
+        if message != nil { message = nil }
+        return true
     }
+
+    /// The finger moved: the hand state for where it is now, applied only when its snapped value changes (so nothing is
+    /// redrawn or saved for a move within a square).
     func drag(to p: Point) {
-        guard let r = hands?.drag?(squares(p)) else { return }
-        apply(r)
+        guard dragging, let d = hands?.drag else { return }
+        let now = d(squares(p), hand)
+        if now != hand { hand = now; handAt = PaperClock.now }
     }
-    func release() {}
+
+    /// Let go: the move's result (often checked now, answering the step); the page is saved once, here.
+    func release() {
+        guard dragging else { return }
+        dragging = false
+        if let r = hands?.release { apply(r(hand)) } else { onChange?() }
+    }
+
+    /// One of the lesson's own blocks ("Cut").
+    func act(_ name: String) {
+        guard !busy, let a = hands?.actions[name] else { return }
+        apply(a())
+    }
 }

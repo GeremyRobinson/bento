@@ -61,10 +61,48 @@ enum ProblemLayout {
         return out
     }
 
+    /// A paper lesson's blocks (G 20 Oct), on their row two squares under what's drawn: its own blocks ("Cut"), a
+    /// story's choices (Check on the row under them), Check for a number written in the record, Next problem, the How
+    /// to's; and the record's boxes, where they are, to tap into.
+    static func stackedBlocks(_ m: WorkProblem) -> [Block] {
+        let L = m.layout, o = m.origin, sq = Paper.cell, run = m.ghost?.run ?? m.lesson
+        guard let st = L.stack else { return [] }
+        func width(_ word: String, _ least: Double) -> Double {
+            let w = PaperText.width(word, PaperText.font(Sketch.Words.block.size, .medium)) + 60
+            return max(least, (w / sq).rounded(.up) * sq)
+        }
+        var out: [Block] = []
+        var x = 0.0, y = st.blocksTop * sq
+        func add(_ kind: Kind, _ w: Double) { out.append(Block(kind: kind, rect: CGRect(x: o.x + x, y: o.y + y, width: w, height: 2 * sq))); x += w + sq }
+        for a in L.lessonBlocks { add(.action(a), width(a, 120)) }
+        if let choices = run.step.answer?.choices {
+            let f = PaperText.font(Sketch.wordSize, .medium)
+            for (i, c) in choices.enumerated() { add(.choice(i), max(140, ((PaperText.width(c, f) + 40) / sq).rounded(.up) * sq)) }
+            x = 0; y += 3 * sq
+        }
+        if let a = run.step.answer, a.choices == nil, !a.byHand {
+            for b in L.boxes {
+                guard let id = b.id ?? a.boxes.first, a.boxes.contains(id) else { continue }
+                out.append(Block(kind: .field(id), rect: b.rect(typed: (run.typed[id] ?? "").count).offsetBy(dx: o.x, dy: o.y)))
+            }
+        }
+        if !m.auto, !run.isLast, let a = run.step.answer, !a.byHand { add(.main, width(run.words.action, 120)) }
+        if !m.auto, run.isLast { add(.nextProblem, width("Next problem", 180)) }
+        for kind in m.howToButtons {
+            switch kind {
+            case .next, .practise: add(kind, width(kind == .next ? "Next step" : "Practice", 180))
+            case .again, .skip: add(kind, width(kind == .again ? "Watch again" : "Skip", 120))
+            default: break
+            }
+        }
+        return out
+    }
+
     /// Where the blinking cursor goes in the box being typed into: after the last digit, in a gap of its own.
     static func cursor(_ m: WorkProblem) -> CGRect? {
         let l = m.lesson
-        guard !m.auto, !m.solved, m.verdict == nil, let a = l.step.answer, a.choices == nil, let id = l.active ?? a.boxes.first,
+        // none while Show me's ghost writes (its faint number is in the box)
+        guard !m.auto, !m.solved, m.verdict == nil, m.ghost == nil, let a = l.step.answer, a.choices == nil, let id = l.active ?? a.boxes.first,
               let r = blocks(m).first(where: { $0.kind == .field(id) })?.rect else { return nil }
         let L = m.layout, count = Double((l.typed[id] ?? "").count), b = L.box(for: id, first: a.boxes.first)
         let cell = b?.cell ?? Paper.cell * WorkProblem.lineCell * L.scale
@@ -77,12 +115,14 @@ enum ProblemLayout {
         return CGRect(x: x, y: r.midY - 0.4 * cell, width: 0, height: 0.8 * cell)
     }
 
-    enum Kind: Equatable { case main, nextProblem, showMe, reset, choice(Int), next, practise, again, skip, field(String), key(String) }
+    /// `action`: a paper lesson's own block ("Cut"), running the lesson's code (Hands.actions).
+    enum Kind: Equatable { case main, nextProblem, showMe, reset, choice(Int), next, practise, again, skip, field(String), key(String), action(String) }
     struct Block { let kind: Kind; let rect: CGRect }
 
     /// The blocks a problem shows now, in paper points: its choices, and Check (Show me and Start over are in the bar).
     /// The How to plays itself and has none; a solved problem has none.
     static func blocks(_ m: any PageProblem) -> [Block] {
+        if let wp = m as? WorkProblem, wp.stacked { return stackedBlocks(wp) }
         if let wp = m as? WorkProblem, wp.layout.inline { return inlineBlocks(wp) }
         let l = m.lesson, wp = m as? WorkProblem
         let o = wp?.contentOrigin ?? m.origin, k = wp?.scale ?? 1, sx = wp?.layout.stepX ?? 0
@@ -235,7 +275,7 @@ extension Rig {
             case .skip: s.block(id, r, .plain, word: "Skip")
             case .showMe, .reset: s.block(id, r, l.picture["showMe"] == 1 && b.kind == .showMe ? .main : .plain, icon: b.kind == .showMe ? "play" : "arrow-counter-clockwise")
             case .choice(let n): s.block(id, r, l.typed["c"] == String(n) ? .picked : .plain, centred: l.step.answer?.choices?[n], size: Sketch.wordSize)
-            case .field, .key: break
+            case .field, .key, .action: break
             }
         }
         return s
@@ -303,10 +343,12 @@ extension Rig {
             case .choice(let n): s.block(id, r, l.typed["c"] == String(n) ? .picked : .plain, centred: l.step.answer?.choices?[n], size: Sketch.wordSize, k: k)
             case .field(let f):
                 // right: green for a moment; wrong: red until they type again; the box being typed into has a cursor
-                // after what's in it (steady: no looping animations)
-                let typed = l.typed[f]?.replacingOccurrences(of: "-", with: "−")
-                let style: Sketch.Block = m.verdict.map { $0.right ? Sketch.Block(stroke: green, text: green) : Sketch.Block(stroke: red, text: red) }
+                // after what's in it (steady: no looping animations); Show me's number written faintly, then gone
+                let shown = m.ghost?.run ?? l, faint = m.ghost?.mode == .preview
+                let typed = shown.typed[f]?.replacingOccurrences(of: "-", with: "−")
+                var style: Sketch.Block = m.verdict.map { $0.right ? Sketch.Block(stroke: green, text: green) : Sketch.Block(stroke: red, text: red) }
                     ?? (l.active == f ? .main : lay.inline ? Sketch.Block(stroke: .ink3) : .plain)
+                if faint { style.text = .ink3 }
                 s.block(id + "\(m.verdict.map { $0.right } as Bool?)", r, style, k: k, grows: true)
                 // what's typed, and the cursor, show at once, as any text box does
                 s.pace = 0
@@ -316,7 +358,7 @@ extension Rig {
                 let cell = wb?.cell ?? Paper.cell * WorkProblem.lineCell * k, chars = Array(typed ?? "")
                 // in the work, digits fill the cells from the right, so their places line up with the rows above
                 let left = lay.inline ? (wb?.right ?? r.maxX) + m.origin.x - Double(chars.count) * cell : r.minX + cell
-                let tag = "\(m.verdict.map { $0.right } as Bool?)"
+                let tag = "\(m.verdict.map { $0.right } as Bool?)\(faint)"
                 if let wb, wb.centred, let typed, !typed.isEmpty {
                     s.text("\(id)typed\(typed)\(tag)", typed, at: CGPoint(x: wb.right - Double(wb.cells) * cell / 2 + m.origin.x, y: r.midY), size: Sketch.maths * k, weight: .medium, style.text)
                 }
@@ -325,6 +367,7 @@ extension Rig {
                 }
                 s.pace = 0.4
             case .key(let key): s.block(id, r, .plain, centred: key == "del" ? nil : key, icon: key == "del" ? "backspace" : nil, k: k)
+            case .action(let name): s.block(id, r, .main, word: name, arrow: true, k: k)
             }
         }
 
@@ -338,4 +381,100 @@ extension Rig {
         return s
     }
 
+}
+
+extension Rig {
+    /// A paper lesson's still drawing (G 20 Oct, design/README.md): the story told once, what to do, what a miss says or
+    /// the hint, the picture, the record, and the blocks with the record's boxes and what's typed in them. It's rebuilt
+    /// when any of that changes, never as a hand moves (its live parts are stackedLive's).
+    func stackedStill(_ m: WorkProblem) -> Sketch {
+        var s = Sketch()
+        guard let paper = m.paper, let st = m.layout.stack else { return s }
+        let o = m.origin, sq = Paper.cell, plan = st.plan, width = plan.width * sq, l = m.lesson
+        let view = m.state(), d = paper.draw(view)
+        func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x * sq, y: o.y + y * sq) }
+        // the words draw in quickly (the solving area), the picture calmly
+        s.pace = 0.4
+        if l.story, let story = l.spec.story?(l.numbers) {
+            s.words("story", story, .tell, x: o.x, top: o.y, width: width, max: max(1, plan.storyRows))
+        }
+        // what to do (a story's pick asks only "Pick what to do"; the How to says its own)
+        let storyStep = l.story && l.step.answer?.choices != nil
+        let say = m.intro ?? (storyStep ? l.words.hint : l.words.say)
+        s.words("say\(l.index)", say, .say, x: o.x, top: o.y + plan.sayTop * sq, width: width, max: max(plan.sayRows, m.intro != nil ? 3 : 1))
+        // rows 3–4: what a miss says, or the hint
+        if let w = m.rowsWords {
+            s.words("note", w.text, Sketch.Words.note.colour(w.colour), x: o.x, top: o.y + plan.msgTop * sq, width: width, max: plan.msgRows)
+        }
+        s.append(d.picture.transformed(to: P(0, plan.pictureTop), scale: 1))
+        s.append(d.record.transformed(to: P(0, plan.recordTop), scale: 1))
+        let green = Sketch.Colour.hex(0x178A57, 0x3CCF8E), red = Sketch.Colour.hex(0xC8372D, 0xFF6B5E)
+        for b in ProblemLayout.blocks(m) {
+            let r = b.rect, id = "\(b.kind)"
+            switch b.kind {
+            case .action(let name): s.block(id, r, .main, word: name, arrow: true)
+            case .next: s.block(id, r, .main, word: "Next step", arrow: true)
+            case .practise: s.block(id, r, .main, word: "Practice", arrow: true)
+            case .nextProblem: s.block(id, r, .main, word: "Next problem", arrow: true)
+            case .main: s.block(id, r, .main, word: view.run.words.action, arrow: true)
+            case .again: s.block(id, r, .plain, word: "Watch again")
+            case .skip: s.block(id, r, .plain, word: "Skip")
+            case .choice(let n): s.block(id, r, view.run.typed["c"] == String(n) ? .picked : .plain, centred: view.run.step.answer?.choices?[n], size: Sketch.wordSize)
+            case .field(let f):
+                // right: green for a moment; wrong: red until they type again; the box being typed into is outlined
+                // in ink; the ghost's number written faintly (Show me), and gone again when it's over
+                let style: Sketch.Block = view.verdict.map { $0 ? Sketch.Block(stroke: green, text: green) : Sketch.Block(stroke: red, text: red) }
+                    ?? (view.active == f ? .main : Sketch.Block(stroke: .ink3))
+                s.block(id + "\(view.verdict as Bool?)", r, style, grows: true)
+                // what the child types shows at once, as in any box; the ghost's number (Show me) writes itself in
+                // faintly and fades when it's over
+                s.pace = view.faint ? 0.6 : 0
+                let typed = view.typed[f]?.replacingOccurrences(of: "-", with: "−") ?? ""
+                let wb = m.layout.box(for: f, first: view.step.answer?.boxes.first), cell = wb?.cell ?? 2 * sq
+                let colour: Sketch.Colour = view.faint ? .ink3 : style.text, tag = "\(view.verdict as Bool?)\(view.faint)"
+                if let wb, wb.centred {
+                    if !typed.isEmpty { s.text("\(id)typed\(typed)\(tag)", typed, at: CGPoint(x: o.x + wb.right - Double(wb.cells) * cell / 2, y: r.midY), size: Sketch.maths, weight: .medium, colour) }
+                } else {
+                    // a digit to a cell, from the right, so places line up with the record's
+                    let chars = Array(typed), left = (wb?.right ?? r.maxX - o.x) + o.x - Double(chars.count) * cell
+                    for (j, ch) in chars.enumerated() {
+                        s.text("\(id)typed\(j)\(ch)\(tag)", String(ch), at: CGPoint(x: left + (Double(j) + 0.5) * cell, y: r.midY), size: Sketch.maths, weight: .medium, colour)
+                    }
+                }
+                s.pace = 0.4
+            case .showMe, .reset, .key: break
+            }
+        }
+        return s
+    }
+
+    /// A paper lesson's live parts (G 20 Oct): what follows the hand (a point, the ruler and the cuts it would make,
+    /// pieces being slid) and the ghost finger, drawn at once as they move (their drawer neither draws in nor glides).
+    func stackedLive(_ m: WorkProblem, at t: Double) -> Sketch {
+        var s = Sketch()
+        guard let paper = m.paper, let st = m.layout.stack, m.instant || t >= m.openedAt + 0.9 else { return s }
+        // the finger first, so what it moves shows over it
+        if let f = m.ghostFinger(at: t) { s.ghostFinger("ghost", at: f.at, down: f.down, trail: f.trail, shows: f.shows) }
+        let d = paper.draw(m.state(at: t))
+        s.append(d.live.transformed(to: CGPoint(x: m.origin.x, y: m.origin.y + st.plan.pictureTop * Paper.cell), scale: 1))
+        return s
+    }
+
+    /// What the still drawing reads: when it changes, it's rebuilt (only what's new drawing in).
+    func stackedStillKey(_ m: WorkProblem, _ page: BarsPage, dark: Bool) -> String {
+        let s = m.state(), l = m.lesson
+        return ["\(l.numbers)", "\(l.story)", "\(l.index)", "\(s.index)", "\(l.isLast)",
+                s.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }.joined(), m.stillHand(s.hand),
+                s.typed.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: ","), "\(s.faint)", s.active ?? "",
+                "\(s.verdict as Bool?)", m.rowsWords.map { "\($0.text)\($0.colour)" } ?? "", m.intro ?? "", "\(m.howToButtons)",
+                "\(l.helps)", "\(dark)", "\(page.current === m)"].joined(separator: "|")
+    }
+
+    /// What the live parts read: the hand, the step, and the ghost finger where it is now.
+    func stackedLiveKey(_ m: WorkProblem, at t: Double, dark: Bool) -> String {
+        let s = m.state(at: t), early = !m.instant && t < m.openedAt + 0.9
+        let finger = m.ghostFinger(at: t).map { "\(Int($0.at.x)),\(Int($0.at.y)) \($0.down) \($0.trail.map { "\(Int($0.x)),\(Int($0.y))" }) \(Int($0.shows * 20))" } ?? ""
+        return ["\(early)", "\(s.index)", s.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }.joined(),
+                s.hand.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }.joined(), finger, "\(dark)"].joined(separator: "|")
+    }
 }

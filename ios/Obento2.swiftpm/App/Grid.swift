@@ -38,9 +38,12 @@ struct GridPen {
     var boxes: [WorkBox] = []
     /// The words' size: 1, or a whole number bigger in a big problem (its squares stay the paper's).
     let k: Double
+    /// Words keep the id they're given, whatever they say (a live part: a count that changes as the hand moves is the
+    /// same part, written again at once). Otherwise what they say is part of their id, so new words draw in.
+    var stableIds = false
     static let sq = Paper.cell
 
-    init(k: Double = 1) { self.k = k }
+    init(k: Double = 1, stableIds: Bool = false) { self.k = k; self.stableIds = stableIds }
 
     /// An answer box `cells` digits wide whose right edge is column `right`, on the row whose middle is `mid` (a digit is
     /// `per` squares): it grows left as digits are typed, so they line up on the right as written work does.
@@ -59,7 +62,7 @@ struct GridPen {
 
     /// Words centred on a place (the middle of what they label), in a kind of words; `size` overrides its size.
     mutating func word(_ id: String, _ text: String, at col: Double, _ row: Double, _ w: Sketch.Words, anchor: UnitPoint = .center) {
-        sketch.text("\(id):\(text)", text, at: P(col, row), size: w.size * k, weight: w.weight, w.colour, anchor: anchor, digits: true)
+        sketch.text(stableIds ? id : "\(id):\(text)", text, at: P(col, row), size: w.size * k, weight: w.weight, w.colour, anchor: anchor, digits: true)
     }
     enum Side { case above, below, left, right }
     /// A label on one side of what it labels (G 19 Oct): its ink always half a square from that edge, whichever side,
@@ -67,8 +70,8 @@ struct GridPen {
     /// what it labels the other way.
     mutating func label(_ id: String, _ text: String, _ w: Sketch.Words, _ side: Side, edge: Double, along: Double) {
         let f = PaperText.font(w.size * k, w.weight, digits: true), gap = 0.5 * k
-        // where the line's box puts its digits: their ink's middle is this far below the box's middle
-        let ink = Double(f.ascender) - Double(f.capHeight) / 2 - Double(f.lineHeight) / 2, cap = Double(f.capHeight) / Self.sq
+        // a centred line sits on its capitals' middle (SketchDrawer), so half their height clears the edge
+        let cap = Double(f.capHeight) / Self.sq
         let at: CGPoint, anchor: UnitPoint
         switch side {
         case .above: at = P(along, edge - gap - cap / 2); anchor = .center
@@ -76,8 +79,7 @@ struct GridPen {
         case .left: at = P(edge - gap, along); anchor = UnitPoint(x: 1, y: 0.5)
         case .right: at = P(edge + gap, along); anchor = UnitPoint(x: 0, y: 0.5)
         }
-        _ = ink
-        sketch.text("\(id):\(text)", text, at: at, size: w.size * k, weight: w.weight, w.colour, anchor: anchor, digits: true)
+        sketch.text(stableIds ? id : "\(id):\(text)", text, at: at, size: w.size * k, weight: w.weight, w.colour, anchor: anchor, digits: true)
     }
 
     /// A number in its squares: `per` squares to a digit, the ones digit ending on column `right`, the point on the
@@ -109,10 +111,60 @@ struct GridPen {
         let pts = (0...16).map { i -> CGPoint in let t = Double(i) / 16; return P(c0 + (c1 - c0) * t, row - sin(.pi * t) * height) }
         sketch.line(id, pts, colour, width: Sketch.stroke)
     }
-    /// A dot on the grid (a number's place on a line).
-    mutating func dot(_ id: String, at col: Double, _ row: Double, radius: Double = 0.35, _ colour: Sketch.Colour = .chapter) {
+    /// A dot on the grid (a number's place on a line). `over`: it sits over the lines (a handle, a mark on a cut).
+    mutating func dot(_ id: String, at col: Double, _ row: Double, radius: Double = 0.35, _ colour: Sketch.Colour = .chapter, over: Bool = false) {
         let c = P(col, row), r = radius * Self.sq
-        sketch.polygon(id, (0..<24).map { i in let a = Double(i) / 24 * 2 * .pi; return CGPoint(x: c.x + r * cos(a), y: c.y + r * sin(a)) }, colour)
+        let pts = (0..<24).map { i in let a = Double(i) / 24 * 2 * .pi; return CGPoint(x: c.x + r * cos(a), y: c.y + r * sin(a)) }
+        if over { sketch.plate(id, pts, colour) } else { sketch.polygon(id, pts, colour) }
+    }
+    /// A circle round a place (a hint: look here), solid or dashed.
+    mutating func circle(_ id: String, at col: Double, _ row: Double, radius: Double, _ colour: Sketch.Colour = .chapter, dashed: Bool = false) {
+        let c = P(col, row), r = radius * Self.sq
+        let pts = (0...40).map { i in let a = Double(i) / 40 * 2 * .pi; return CGPoint(x: c.x + r * cos(a), y: c.y + r * sin(a)) }
+        if dashed { sketch.segments(id, Self.dashes(pts), colour, width: Sketch.stroke) }
+        else { sketch.line(id, pts, colour, width: Sketch.stroke) }
+    }
+    /// A curve cut into dashes along its whole length (a straight line's own dashes are cut segment by segment, which
+    /// leaves a curve's short segments whole): about 5 points drawn, 5 left, as chords of the curve.
+    static func dashes(_ pts: [CGPoint], on: Double = 5, off: Double = 5) -> [(CGPoint, CGPoint)] {
+        var out: [(CGPoint, CGPoint)] = [], pos = 0.0
+        let period = on + off
+        for (a, b) in zip(pts, pts.dropFirst()) {
+            let len = hypot(b.x - a.x, b.y - a.y)
+            guard len > 0 else { continue }
+            var t = 0.0
+            while t < len {
+                // where in the pattern this point is, and how far to the next change
+                let phase = (pos + t).truncatingRemainder(dividingBy: period), drawing = phase < on
+                let step = min(len - t, drawing ? on - phase : period - phase)
+                if drawing {
+                    let f0 = t / len, f1 = (t + step) / len
+                    out.append((CGPoint(x: a.x + (b.x - a.x) * f0, y: a.y + (b.y - a.y) * f0), CGPoint(x: a.x + (b.x - a.x) * f1, y: a.y + (b.y - a.y) * f1)))
+                }
+                t += max(step, 0.01)
+            }
+            pos += len
+        }
+        return out
+    }
+    /// A line through places on the grid, solid or dashed.
+    mutating func line(_ id: String, _ pts: [(Double, Double)], _ colour: Sketch.Colour = .ink, dashed: Bool = false) {
+        sketch.line(id, pts.map { P($0.0, $0.1) }, colour, width: Sketch.stroke, dashed: dashed)
+    }
+    /// Squares filled (a piece shaded, a block lit).
+    mutating func fill(_ id: String, col: Double, row: Double, w: Double, h: Double, _ colour: Sketch.Colour) {
+        sketch.fill(id, R(col, row, w, h), colour)
+    }
+    /// Squares striped (the second amount): lightly filled, a stripe corner to corner of every square.
+    mutating func stripes(_ id: String, col: Double, row: Double, w: Double, h: Double) {
+        sketch.fill(id + "f", R(col, row, w, h), .tint(0.2))
+        var segs: [(CGPoint, CGPoint)] = []
+        var t = -h
+        while t < w {
+            segs.append((P(col + max(0, t), row + max(0, -t)), P(col + min(w, t + h), row + min(h, w - t))))
+            t += 1
+        }
+        sketch.segments(id + "s", segs, .tint(0.6), width: Sketch.stroke)
     }
     /// A ring round some squares (a digit to look at).
     mutating func ring(_ id: String, col: Double, row: Double, w: Double, h: Double, _ colour: Sketch.Colour = .chapter) {

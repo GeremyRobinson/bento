@@ -760,6 +760,7 @@ final class BarsPage {
             case .choice(let i): m.choose(i)
             case .field(let id): (m as? WorkProblem)?.select(id)
             case .key(let key): (m as? WorkProblem)?.type(key)
+            case .action(let name): (m as? WorkProblem)?.act(name)
             }
             return
         }

@@ -154,12 +154,28 @@ extension Rig {
         let dark = self.dark ?? false
         // opened again while it was still undrawing: it draws itself back in
         if m.leftAt == nil, d.leftAt != nil { d.revive() }
-        let key = "\(m.lesson.numbers) \(m.lesson.index) \(m.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(m.lesson.missedSteps.count) \(m.scale) " + wordsKey(m, page, dark: dark)
         // only the problem being worked (or the How to while it plays) may draw (G 19 Oct): anything else on the paper
         // undraws, however it got there, so nothing can be left over the page of problems; and leaving, it only
         // undraws (a rebuild now would draw it all back in)
         let wanted = page.mode == .work ? page.current === m : (page.mode == .howTo && m === page.howTo)
         if !wanted { d.undrawAll(at: m.leftAt ?? t) }
+        if m.stacked {
+            // a lesson on the paper (G 20 Oct): its still drawing, rebuilt when what it shows changes; and its live
+            // parts, redrawn at once as a hand (or the ghost finger) moves them, never drawing in or gliding
+            let still = stackedStillKey(m, page, dark: dark)
+            if still != d.key, m.leftAt == nil, wanted {
+                d.key = still
+                d.build(stackedStill(m), rig: self, chapter: m.chapter.hex, dark: dark, origin: .zero, from: d.isEmpty ? m.openedAt + 0.15 : max(m.pictureAt, t), now: t)
+            }
+            let live = d.live, moving = stackedLiveKey(m, at: t, dark: dark)
+            if moving != live.key, m.leftAt == nil, wanted {
+                live.key = moving
+                live.build(stackedLive(m, at: t), rig: self, chapter: m.chapter.hex, dark: dark, origin: .zero, from: t, now: t)
+            }
+            if let left = m.leftAt { d.undrawAll(at: left) }
+            return d.update(at: t)
+        }
+        let key = "\(m.lesson.numbers) \(m.lesson.index) \(m.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(m.lesson.missedSteps.count) \(m.scale) \(m.ghost.map { "\($0.fired)" } ?? "") " + wordsKey(m, page, dark: dark)
         if key != d.key, m.leftAt == nil, wanted {
             d.key = key
             let l = m.layout, o = m.contentOrigin
@@ -176,6 +192,15 @@ extension Rig {
             }
             // the first time, everything draws in as the problem opens; after that, only what's new, as the step moves
             d.build(s, rig: self, chapter: m.chapter.hex, dark: dark, origin: .zero, from: d.isEmpty ? m.openedAt + 0.15 : max(m.pictureAt, t), now: t)
+        }
+        // the ghost finger (Show me, the How to), drawn at once as it moves
+        let finger = m.ghostFinger(at: t), live = d.live
+        let fingerKey = finger.map { "\(Int($0.at.x)),\(Int($0.at.y)) \($0.down) \($0.trail.count) \(Int($0.shows * 20)) \(dark)" } ?? ""
+        if fingerKey != live.key, m.leftAt == nil, wanted {
+            live.key = fingerKey
+            var f = Sketch()
+            if let finger { f.ghostFinger("ghost", at: finger.at, down: finger.down, trail: finger.trail, shows: finger.shows) }
+            live.build(f, rig: self, chapter: m.chapter.hex, dark: dark, origin: .zero, from: t, now: t)
         }
         if let left = m.leftAt { d.undrawAll(at: left) }
         return d.update(at: t)
@@ -218,8 +243,22 @@ final class SketchDrawer {
     // calm, not rushed (G 19 Oct): each part a moment after the last, the whole thing about two seconds
     static let each = 0.07, length = 0.55, most = 1.8, letter = 0.03
     /// How fast this drawing draws in: 1 for a problem (calm), less for a page that's passed through (the page of
-    /// problems).
+    /// problems); 0 draws at once (a paper lesson's live parts).
     var pace = 1.0
+    /// Parts that only moved glide to their new place; a live drawer's jump there at once (they follow a finger).
+    var glides = true
+    /// The live parts' own drawer, over this one's (G 20 Oct: what follows the hand is drawn at once, with ids that stay
+    /// the same as it moves): made the first time it's wanted, and undrawn and revived with this one.
+    private var liveChild: SketchDrawer?
+    var live: SketchDrawer {
+        if let l = liveChild { return l }
+        let l = SketchDrawer()
+        l.glides = false; l.pace = 0
+        // over everything still on the paper: what's being moved is on top
+        l.root.position.y = 0.001
+        root.addChild(l.root); liveChild = l
+        return l
+    }
     /// Characters rolling over in place (a clock's digits, G 19 Oct): the old one up and out, the new one up into place.
     private struct Roll { let out: ModelEntity?; let into: ModelEntity?; let outZ: Float; let inZ: Float; let dz: Float; let start: Double }
     private var rolls: [Roll] = []
@@ -282,7 +321,7 @@ final class SketchDrawer {
         // a part that's the same but somewhere else (content above it grew) glides there instead of being drawn again
         // (G 19 Oct)
         var moved: Set<String> = []
-        for i in fresh {
+        for i in fresh where glides {
             let item = s.items[i]
             guard let old = nodes[item.id], !old.undrawing, let was = old.item, was.colour == item.colour,
                   let d = Self.delta(was.kind, item.kind), hypot(d.x, d.y) > 0.01 else { continue }
@@ -388,10 +427,11 @@ final class SketchDrawer {
 
     /// Wanted again after undrawing (a problem opened again straight away): what's left of it finishes undrawing,
     /// and the next build draws it all in afresh.
-    func revive() { leftAt = nil; key = "" }
+    func revive() { leftAt = nil; key = ""; liveChild?.revive() }
 
     /// Everything undraws, last first (leaving).
     func undrawAll(at t: Double) {
+        liveChild?.undrawAll(at: t)
         guard leftAt == nil else { return }
         leftAt = t
         let all = Array(nodes.values); nodes = [:]
@@ -433,7 +473,7 @@ final class SketchDrawer {
     /// Moves every part that's drawing in or undrawing to where it is at `t`; true while any still moves.
     @discardableResult
     func update(at t: Double) -> Bool {
-        var moving = false
+        var moving = liveChild?.update(at: t) ?? false
         for n in nodes.values {
             guard let mv = n.move else { continue }
             let f = Float(ease((t - mv.start) / Self.glide))
