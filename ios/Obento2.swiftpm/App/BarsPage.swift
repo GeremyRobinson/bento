@@ -93,6 +93,8 @@ final class BarsPage {
         let o = Self.origin(for: piece), chapter = piece.chapter, instant = reduceMotion || shotMode
         howTo = Self.make(spec, origin: o, chapter: chapter, instant: instant,
                           run: LessonRun(spec, numbers: first ?? spec.generate(&rng, 0)), label: "How to", auto: true)
+        /// Saved questions that had to be asked afresh.
+        var afresh = 0
         /// A test's question `i` as it was saved, brought back by its own lesson (never by its place: the grade's test
         /// picks its lessons afresh each time it opens, from any of the grade's), or asked afresh when that lesson isn't
         /// the test's or has changed since.
@@ -100,8 +102,12 @@ final class BarsPage {
             let id = s?.spec ?? spec.id
             let own = specs.first { $0.id == id } ?? (piece.id == "test-grade" && Map.gradeLessons.contains(id) ? Lessons.spec(id) : nil)
             if let s, let own, let r = LessonRun.restored(own, s) { return r }
+            if s != nil { afresh += 1 }
             return LessonPlan.testRun(specs, i, using: &rng)
         }
+        /// The lesson test's result stands, unless one of its questions had to be asked afresh: then it's scored again
+        /// when that one is answered.
+        var resultStands = true
         if let n = test {
             let kept = saved?.problems ?? []
             let runs = (0..<n).compactMap { i in question(i, kept.indices.contains(i) ? kept[i] : nil, from: specs) }
@@ -120,6 +126,7 @@ final class BarsPage {
             }
             let kept = saved?.test ?? []
             let tests = kept.indices.compactMap { question($0, kept[$0], from: [spec]) }
+            resultStands = afresh == 0
             // a due lesson's recheck: as it was left, or fresh
             let checks = saved?.recheck ?? []
             let recheckRuns: [LessonRun] = !recheck ? [] : checks.count == LessonPlan.recheck ? checks.indices.compactMap { question($0, checks[$0], from: [spec]) }
@@ -131,7 +138,7 @@ final class BarsPage {
             rechecking = recheck
         }
         self.rng = rng
-        recorded = saved?.recorded ?? false
+        recorded = (saved?.recorded ?? false) && resultStands
         hintsLeft = saved?.hintsLeft ?? LessonPlan.hints
         if let s = saved, Self.backSoon(s) { resumeAt = s.spot }
         for p in problems + testProblems + recheckProblems { wire(p) }
