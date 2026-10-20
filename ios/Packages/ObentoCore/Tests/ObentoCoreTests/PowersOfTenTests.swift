@@ -42,14 +42,17 @@ final class PowersOfTenTests: XCTestCase {
         XCTAssertEqual(l.slips.last?.kind, "wrong")
         XCTAssertEqual(move(&l, 2), .moved(2))
 
-        // the record: 3.47 × 100 = [347], typed, with the web's slips said of the digits
+        // the record: 3.47 × 100 = [347], typed; the chart shows 347 by now, so a slip is said of the chart
         XCTAssertEqual(l.words.say, "Write the new number.")
         XCTAssertFalse(l.handAnswered)
         XCTAssertEqual(l.picture["at"], 3)
-        XCTAssertEqual(answer(&l, "34.7"), .notYet("Move every digit one place for each zero."))
-        XCTAssertEqual(answer(&l, "3470"), .notYet("Move every digit one place for each zero, no more."))
         XCTAssertEqual(answer(&l, "0.0347"), .notYet("Multiplying by 100 makes the number bigger, so the digits move left."))
+        XCTAssertEqual(l.slips.last?.kind, "k0", "moving the wrong way: the first known slip on every problem")
+        // no 0 written and no digit after the point: nothing on the chart was left out, so it just isn't its number
+        XCTAssertEqual(answer(&l, "34.7"), .notYet("That’s not the number on the chart."))
+        XCTAssertEqual(answer(&l, "3470"), .notYet("That’s not the number on the chart."))
         XCTAssertEqual(answer(&l, "348"), .notYet("That’s not the number on the chart."))
+        XCTAssertEqual(l.slips.last?.kind, "wrong")
         XCTAssertEqual(l.picture["read"], 1, "a miss outlines the new number on the chart")
         XCTAssertEqual(l.steps[2].answer?.work, [.num(3.47), .op("×"), .num(100), .op("="), .num(347)])
         // a problem aimed at a slip here starts with what to keep in mind: the chart has the number
@@ -94,7 +97,11 @@ final class PowersOfTenTests: XCTestCase {
         XCTAssertEqual(l.steps[2].answer?.explain, "The tens and ones places are empty: a 0 goes in each.")
         // the last gap filled answers it: how many 0s were written
         XCTAssertEqual(move(&l, 2), .moved(3))
-        XCTAssertEqual(answer(&l, "340"), .notYet("Move every digit one place for each zero."))
+        // the record: the 0s just written are on the chart, so leaving them out is said of them
+        XCTAssertEqual(answer(&l, "340"), .notYet("The 0s in the tens and ones places are part of the number."))
+        XCTAssertEqual(l.slips.last?.kind, "k1")
+        XCTAssertEqual(answer(&l, "34"), .notYet("The 0s in the tens and ones places are part of the number."), "both left out")
+        XCTAssertEqual(answer(&l, "34000"), .notYet("That’s not the number on the chart."))
         XCTAssertEqual(answer(&l, "3400"), .moved(4))
         XCTAssertEqual(s.rule, "3 zeros: 3 places bigger")
 
@@ -102,7 +109,7 @@ final class PowersOfTenTests: XCTestCase {
         var f = run(4.7, 2); _ = f.go(); _ = move(&f, 2)
         XCTAssertEqual(f.steps[2].answer?.explain, "The ones place is empty: a 0 goes in it.")
         XCTAssertEqual(move(&f, 1), .moved(3))
-        XCTAssertEqual(answer(&f, "47"), .notYet("Move every digit one place for each zero."), "the 0 left out")
+        XCTAssertEqual(answer(&f, "47"), .notYet("The 0 in the ones place is part of the number."), "the 0 left out: the tricky part")
         XCTAssertEqual(answer(&f, "470"), .moved(4))
     }
 
@@ -124,10 +131,13 @@ final class PowersOfTenTests: XCTestCase {
         let whole = PowersOfTen.Parts(PowersOfTen.numbers(x: 12, k: 2))
         XCTAssertEqual(whole.decimals, 0); XCTAssertEqual(whole.gaps, [1, 0]); XCTAssertEqual(whole.answer, 1200)
         XCTAssertEqual(whole.columns, [4, 3, 2, 1, 0, -1], "the tenths too, so the point has a place each side")
-        // times 10, a decimal answer: the point is still among the digits
+        // times 10, a decimal answer: the point is still among the digits, and leaving it out is said of the chart
         var t = run(3.47, 1); _ = t.go()
         XCTAssertEqual(move(&t, 1), .moved(2))
-        XCTAssertEqual(answer(&t, "3.47"), .notYet("Move every digit one place for each zero."))
+        XCTAssertEqual(answer(&t, "347"), .notYet("The point stays where it is on the chart: the 7 is after it."))
+        XCTAssertEqual(t.slips.last?.kind, "k1")
+        XCTAssertEqual(answer(&t, "3.47"), .notYet("That’s not the number on the chart."), "the number as it was")
+        XCTAssertEqual(answer(&t, "0.347"), .notYet("Multiplying by 10 makes the number bigger, so the digits move left."))
         XCTAssertEqual(answer(&t, "34.7"), .moved(3))
     }
 
@@ -167,6 +177,38 @@ final class PowersOfTenTests: XCTestCase {
         for item in items { for _ in 0..<300 {
             let n = item.draw(PowersOfTen.spec, using: &rng)
             XCTAssertTrue(item.when?(n) ?? true, "\(n)")
+        } }
+    }
+
+    /// At the record step the chart already shows the digits moved and the 0s written: the child is copying a number,
+    /// so its slips are what can be left out of it (a 0 written in a gap, or the point), said of the chart.
+    func testRecordSlipsAreSaidOfTheChart() {
+        func parts(_ x: Double, _ k: Int) -> PowersOfTen.Parts { PowersOfTen.Parts(PowersOfTen.numbers(x: x, k: k)) }
+        XCTAssertEqual(parts(4.7, 2).zerosLeftOut, "The 0 in the ones place is part of the number.")
+        XCTAssertEqual(parts(3.4, 3).zerosLeftOut, "The 0s in the tens and ones places are part of the number.")
+        XCTAssertEqual(parts(12, 3).zerosLeftOut, "The 0s in the hundreds, tens and ones places are part of the number.")
+        XCTAssertNil(parts(3.47, 2).zerosLeftOut, "347: no gaps")
+        XCTAssertEqual(parts(3.47, 1).pointLeftOut, "The point stays where it is on the chart: the 7 is after it.")
+        XCTAssertEqual(parts(10.05, 1).pointLeftOut, "The point stays where it is on the chart: the 5 is after it.")
+        XCTAssertNil(parts(4.7, 2).pointLeftOut, "470: a whole number")
+        XCTAssertEqual(PowersOfTen.list(["tens", "ones"]), "tens and ones")
+        XCTAssertEqual(PowersOfTen.list(["ones"]), "ones")
+
+        // every problem: moving the wrong way is the first known slip; then a 0 left out (when 0s were written) or the
+        // point left out (when the answer has decimals), never both
+        var rng = SeededRandom(seed: 5)
+        for index in 0..<7 { for _ in 0..<200 {
+            let n = PowersOfTen.spec.generate(&rng, index), s = PowersOfTen.Parts(n)
+            XCTAssertFalse(s.zerosLeftOut != nil && s.pointLeftOut != nil, "\(n)")
+            let l = LessonRun(PowersOfTen.spec, numbers: n)
+            guard let known = l.steps.first(where: { $0.answer?.prompt.contains(.op("=")) == true })?.answer?.known else { XCTFail("\(n)"); continue }
+            XCTAssertEqual(known.first?.values["x"] ?? 0, s.x / s.m, accuracy: 1e-9)
+            XCTAssertEqual(known.count, 1 + s.gaps.count + (s.pointLeftOut == nil ? 0 : 1), "\(n)")
+            for slip in known.dropFirst() {
+                let v = slip.values["x"] ?? 0
+                XCTAssertNotEqual(v, s.answer, accuracy: 1e-9)
+                XCTAssertEqual(slip.message, v < s.answer ? s.zerosLeftOut : s.pointLeftOut, "\(n)")
+            }
         } }
     }
 

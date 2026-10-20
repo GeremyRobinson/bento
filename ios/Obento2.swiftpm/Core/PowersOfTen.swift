@@ -9,8 +9,8 @@ import Foundation
 /// digits left together, a column at a time, the hops and the readout under the chart counting "× 10", "× 100",
 /// "× 1000"; letting go on k columns answers the web's "how many zeros" step (its box is set from the columns moved).
 /// Then, only when x has fewer decimals than 10^k has zeros, they tap each empty place between the digits and the
-/// point, and a 0 is written there. Then the record, x × 10^k = [ ], typed: the web's "move the point" step, with its
-/// slips, worded for the chart (the digits move; the point stays where it is).
+/// point, and a 0 is written there. Then the record, x × 10^k = [ ], typed: the web's "move the point" step, its slips
+/// worded for what the chart shows by then (the digits moved, the 0s written): a 0 left out, or the point.
 ///
 /// Picture keys: "at", the stage: 0 the question, 1 drag the digits, 2 write the 0s, 3 write the record, 4 done. A hint
 /// (after a miss, or asked for) lights: "target" (the hops the digits make, dashed, and what they make), "gaps" (each
@@ -20,6 +20,10 @@ public enum PowersOfTen {
 
     static let words = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
     static func places(_ k: Int) -> String { "\(k) place\(k == 1 ? "" : "s")" }
+    /// Names in a row, as said: "tens and ones", "hundreds, tens and ones".
+    static func list(_ names: [String]) -> String {
+        names.count > 1 ? names.dropLast().joined(separator: ", ") + " and " + names[names.count - 1] : names.first ?? ""
+    }
     private static func r6(_ x: Double) -> Double { (x * 1_000_000).rounded() / 1_000_000 }
 
     /// The digits as written without the point, and how many sit left of it: 3.47 → ("347", 1).
@@ -79,6 +83,23 @@ public enum PowersOfTen {
         public func moved(_ d: Int) -> String { "That’s \(Self.times(d)). × \(M) moves every digit \(PowersOfTen.places(k))." }
         /// The rule, written under the record once it's done.
         public var rule: String { "\(k) zero\(k == 1 ? "" : "s"): \(PowersOfTen.places(k)) bigger" }
+        /// The record's slips, said of what the chart shows by then (the digits moved, the 0s written): the 0s written in
+        /// the gaps left out (470 written 47, 3400 written 340 or 34); nil when there are no gaps.
+        public var zerosLeftOut: String? {
+            let names = gaps.map { PowersOfTen.placeName($0) }
+            guard let only = names.first else { return nil }
+            return names.count == 1 ? "The 0 in the \(only) place is part of the number."
+                : "The 0s in the \(PowersOfTen.list(names)) places are part of the number."
+        }
+        /// ... and the point left out (34.7 written 347): it stays where it is, the digits after it on the chart; nil when
+        /// the answer is a whole number.
+        public var pointLeftOut: String? {
+            guard let after = fmt(answer).split(separator: ".").dropFirst().first else { return nil }
+            let ds = after.map(String.init)
+            return "The point stays where it is on the chart: the \(PowersOfTen.list(ds)) \(ds.count == 1 ? "is" : "are") after it."
+        }
+        /// ... and the number divided instead (0.0347 for 3.47 × 100): the web's slip, said as it was.
+        public var madeSmaller: String { "Multiplying by \(M) makes the number bigger, so the digits move left." }
         /// What a tap that isn't on an empty place between the digits and the point says.
         public func tapped(_ p: Int) -> String {
             if let d = digit(at: p, by: k) { return "That place has a \(d) in it." }
@@ -130,7 +151,7 @@ public enum PowersOfTen {
         let zeros = LessonStep(StepWords(say: "Tap each gap to write a 0.", hint: "Every place between the digits and the point needs a digit.", action: "Check"),
             answer: AnswerTask(prompt: [.box("x")], expected: ["x": Double(gaps.count)],
                                hint: "Write a 0 in each empty place between the digits and the point.",
-                               explain: "The \(names.dropLast().joined(separator: ", ") + (names.count > 1 ? " and " : "") + (names.last ?? "")) \(gaps.count == 1 ? "place is" : "places are") empty: a 0 goes in \(gaps.count == 1 ? "it" : "each").",
+                               explain: "The \(list(names)) \(gaps.count == 1 ? "place is" : "places are") empty: a 0 goes in \(gaps.count == 1 ? "it" : "each").",
                                check: { v in
                                    guard let z = v["x"] else { return .soft("Tap each gap.") }
                                    let t = Int(z.rounded())
@@ -139,13 +160,16 @@ public enum PowersOfTen {
                                }, byHand: true),
             picture: ["at": 2], onMiss: ["gaps": 1])
 
-        // the record, as school writes it: x × 10^k = [ ], typed; the web's slips, said of the digits (they moved, the
-        // point didn't)
+        // the record, as school writes it: x × 10^k = [ ], typed. By now the chart shows the digits moved and the 0s
+        // written, so the child is copying a number, and its slips are said of the chart: the 0s written in the gaps
+        // left out (one or more of them), or the point left out (never both: an answer with decimals has no gaps).
+        // The web's slip of moving the wrong way, said as it was, comes first, so each slip's kind means one thing
+        // whatever the problem. Anything else is just not the number on the chart.
+        var known: [(values: [String: Double], message: String)] = [(["x": r6(x / m)], s.madeSmaller)]
+        if let said = s.zerosLeftOut { for j in 1...gaps.count { known.append((["x": r6(ans / pow(10, Double(j)))], said)) } }
+        if let said = s.pointLeftOut { known.append((["x": r6(ans * 10)], said)) }
         let write = LessonStep(StepWords(say: "Write the new number.", hint: "Write the number the chart shows.", action: "Check"),
-            answer: AnswerTask(prompt: [.num(x), .op("×"), .num(m), .op("="), .box("x")], expected: ["x": ans],
-                               known: [(["x": r6(ans / 10)], "Move every digit one place for each zero."),
-                                       (["x": r6(ans * 10)], "Move every digit one place for each zero, no more."),
-                                       (["x": r6(x / m)], "Multiplying by \(M) makes the number bigger, so the digits move left.")],
+            answer: AnswerTask(prompt: [.num(x), .op("×"), .num(m), .op("="), .box("x")], expected: ["x": ans], known: known,
                                hint: "Write the number the chart shows.", explain: "The chart shows \(A).",
                                check: { v in
                                    guard let t = v["x"] else { return .soft("Fill in every box.") }

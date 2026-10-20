@@ -8,8 +8,9 @@ import SwiftUI
 /// or 70 squares. Drag the digits left together: they snap a place at a time, and under the chart a hop for each place
 /// counts from the point, the readout under the hops ("× 10", "× 100", "× 1000"); let go on k places ("That's × 1000.
 /// × 100 moves every digit 2 places." when it isn't). Tap each gap the digits left between them and the point: a 0 is
-/// written there. Then the record, x × 10^k = [ ], typed; done, the answer in the chapter's colour, the multiplier's
-/// zeros underlined and the rule under it ("2 zeros: 2 places bigger"), and the last words say why.
+/// written there. Then the record, x × 10^k = [ ], typed (a slip is said of the chart: "The 0 in the ones place is part
+/// of the number."); done, the answer in the chapter's colour, the multiplier's zeros underlined and the rule under it
+/// ("2 zeros: 2 places bigger"), and the last words say why.
 @MainActor
 struct PowersOfTenLesson: PaperLesson {
     /// The picture's rows, in its squares: the names' row in the chart's head, the head's foot, the digits' row and the
@@ -193,7 +194,7 @@ struct PowersOfTenLesson: PaperLesson {
     func messageRows(_ n: Numbers) -> Int {
         // what a miss says, at its longest, over the chart's width
         let P = PowersOfTen.Parts(n), f = PaperText.font(Sketch.Words.note.size, Sketch.Words.note.weight)
-        let longest = [P.moved(P.k + 1), "Multiplying by \(P.M) makes the number bigger, so the digits move left.", P.tapped(P.hi)]
+        let longest = [P.moved(P.k + 1), P.madeSmaller, P.tapped(P.hi), P.zerosLeftOut, P.pointLeftOut].compactMap { $0 }
         return min(2, longest.map { PaperText.wrap($0, f, width: Chart(P: P).width * Paper.cell).count }.max() ?? 1)
     }
 
