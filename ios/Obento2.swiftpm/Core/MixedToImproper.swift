@@ -3,7 +3,12 @@ import Foundation
 /// Mixed numbers to fractions (the web app's g5-improper): w n/d as one fraction, (w·d + n)/d.
 /// Count the pieces in the wholes, add the extra pieces, and the bottom stays the same.
 ///
-/// Numbers: w (wholes, 1–6), n (the extra pieces, 1 to d − 1, in lowest terms with d), d (the bottom, 2–9).
+/// Numbers: w (wholes, 1–3), n (the extra pieces, 1 to d − 1, in lowest terms with d), d (the bottom, 2–9).
+///
+/// The web makes 1–6 wholes; the paper makes 1–3 (the review of 20 Oct), so every problem is drawn at full size. A whole
+/// is a bar 4 squares tall, a square under the one before, so each whole takes 5 rows, and the iPad holds about 40 rows
+/// at 100% between the top of the screen and the bar at the bottom: the words, the ruler, the bars, the record and Check
+/// of three wholes take 41 (99%); six wholes took 64 (63%), their words about 18 pt and their pieces' numbers about 13.
 ///
 /// On the paper (design/grade5.md, the fractions family): w whole bars, all shaded, each named 1, and under them a bar of
 /// d pieces with n shaded, named n/d; the column of names braced (w n/d, written once, as the bars' own names). The
@@ -20,6 +25,9 @@ import Foundation
 public enum MixedToImproper {
     public static func numbers(w: Int, n: Int, d: Int) -> Numbers { ["w": Double(w), "n": Double(n), "d": Double(d)] }
 
+    /// The most wholes a problem has: the most whose bars fit the screen at 100% (see above).
+    public static let maxWholes = 3
+
     /// "1 whole", "3 pieces" (the web's count()).
     static func count(_ k: Int, _ one: String) -> String { "\(k) \(k == 1 ? one : one + "s")" }
 
@@ -27,15 +35,17 @@ public enum MixedToImproper {
 
     public static let spec = LessonSpec(id: "g5-improper", title: "Mixed numbers to fractions", master: "tape", generate: { rng, index in
         // the web's generateMixedToImproper: the first three are 1 or 2 wholes cut into halves to fifths;
-        // then a bottom of 2–9 and 1–6 wholes; the top is always in lowest terms
+        // then a bottom of 2–9 and 1–3 wholes (the web's 1–6, capped so the bars fit the screen at full size); the
+        // top is always in lowest terms
         let early = index < 3, d = Int.random(in: 2...(early ? 5 : 9), using: &rng)
         var n: Int
         repeat { n = Int.random(in: 1...(d - 1), using: &rng) } while gcd(n, d) != 1
-        return numbers(w: Int.random(in: 1...(early ? 2 : 6), using: &rng), n: n, d: d)
+        return numbers(w: Int.random(in: 1...(early ? 2 : maxWholes), using: &rng), n: n, d: d)
     }, display: { n in [.num(n["w"] ?? 1), .frac(.num(n["n"] ?? 1), .num(n["d"] ?? 2))] },
     idea: { _ in "Cut every whole into the same pieces, then count all the pieces." },
     depends: ["g4-mixed"],
-    check: [CheckItem(3), CheckItem(3, when: { ($0["d"] ?? 0) >= 6 }), CheckItem(3, when: { ($0["w"] ?? 0) >= 4 }), CheckItem(3)]) { p in
+    // the web's check recipe; its item with many wholes (4 or more there) has the most the paper draws
+    check: [CheckItem(3), CheckItem(3, when: { ($0["d"] ?? 0) >= 6 }), CheckItem(3, when: { ($0["w"] ?? 0) >= Double(maxWholes) }), CheckItem(3)]) { p in
         let w = Int(p["w"] ?? 1), n = Int(p["n"] ?? 1), d = Int(p["d"] ?? 2), S = w * d + n
         let piece = pieceName(d), extra = "\(n)/\(d)"
 

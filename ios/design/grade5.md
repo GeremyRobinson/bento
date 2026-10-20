@@ -45,7 +45,9 @@ away").
 Bars: `w` whole bars (all shaded) and one bar with `n` of `d` pieces shaded; names `1`, `1`, …, `n/d`; `w n/d` written
 once as the column of names with a brace. 1. **Cut** the whole bars with the ruler to the extra bar's piece size (its
 cuts are the old cuts). 2. The pieces number on across all the bars (See). 3. **Write** `w n/d = (w × d + n)/d = [ ]/d`.
-Say: "Each whole is d pieces."
+Say: "Each whole is d pieces." Fit (review, 20 Oct): 1–3 wholes (the web's 1–6), the bars a square apart (only the
+extra bar has old cuts, and their dots go under it) and the record 3 rows under the bars, so every problem is drawn at
+full size: 3 wholes take 41 rows of the screen's 40 (99%), fewer are bigger; 6 took 64 (63%, the pieces' numbers 13 pt).
 
 ### Dividing by a unit fraction (`g5-unitdiv`)
 `W` whole bars, and the `1/d` piece drawn alone above them, the size it really is. 1. **Cut** the first whole with the

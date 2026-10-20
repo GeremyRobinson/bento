@@ -103,18 +103,19 @@ final class MixedToImproperTests: XCTestCase {
     }
 
     func testTheBiggestProblem() {
-        // 6 8/9, the most the generator makes: 7 bars, 62 ninths, the whole 45 squares (a ninth is 5)
-        var l = LessonRun(MixedToImproper.spec, numbers: MixedToImproper.numbers(w: 6, n: 8, d: 9))
+        // 3 8/9, the most the generator makes: 4 bars, 35 ninths, the whole 45 squares (a ninth is 5)
+        XCTAssertEqual(MixedToImproper.maxWholes, 3)
+        var l = LessonRun(MixedToImproper.spec, numbers: MixedToImproper.numbers(w: 3, n: 8, d: 9))
         XCTAssertEqual(UnlikeFractions.wholeLength(9), 45)
         _ = l.go()
         XCTAssertEqual(l.words.say, "Drag the ruler to cut each whole into ninths.")
         XCTAssertEqual(cut(&l, 3), .notYet("Some cuts in the 8/9 bar have no new cut on them."))
         XCTAssertEqual(cut(&l, 9), .moved(2))
-        fill(&l, [("n", "23")])
-        XCTAssertEqual(l.go(), .notYet("6 wholes with 9 pieces each: multiply."))
-        fill(&l, [("n", "14")])
-        XCTAssertEqual(l.go(), .notYet("Use the 54 pieces the wholes make, not the 6."))
-        fill(&l, [("n", "62")])
+        fill(&l, [("n", "20")])
+        XCTAssertEqual(l.go(), .notYet("3 wholes with 9 pieces each: multiply."))
+        fill(&l, [("n", "11")])
+        XCTAssertEqual(l.go(), .notYet("Use the 27 pieces the wholes make, not the 3."))
+        fill(&l, [("n", "35")])
         XCTAssertEqual(l.go(), .moved(3))
         XCTAssertEqual(l.words.say, "Each whole is 9 ninths.")
     }
@@ -142,12 +143,15 @@ final class MixedToImproperTests: XCTestCase {
 
     func testEveryProblemKeepsTheWebRules() {
         var rng = SeededRandom(seed: 31)
+        var wholes = Set<Int>()
         for index in 0...5 {
             for _ in 0..<300 {
                 let n = MixedToImproper.spec.generate(&rng, index), w = Int(n["w"]!), top = Int(n["n"]!), d = Int(n["d"]!)
                 let early = index < 3
                 XCTAssertTrue((2...(early ? 5 : 9)).contains(d))
-                XCTAssertTrue((1...(early ? 2 : 6)).contains(w))
+                // the web's 1–6 wholes, capped at 3 so every problem's bars fit the screen at full size
+                XCTAssertTrue((1...(early ? 2 : 3)).contains(w))
+                if !early { wholes.insert(w) }
                 XCTAssertTrue(top >= 1 && top < d && gcd(top, d) == 1)
                 // the web's oracle: the answer is (w·d + n)/d; the cut is d pieces to a whole
                 let l = LessonRun(MixedToImproper.spec, numbers: n)
@@ -155,6 +159,7 @@ final class MixedToImproperTests: XCTestCase {
                 XCTAssertEqual(l.steps[2].answer?.expected, ["n": Double(w * d + top)])
             }
         }
+        XCTAssertEqual(wholes, [1, 2, 3], "every number of wholes up to the most comes up")
         // every generated problem walks through with Show me on each step
         for index in 0...5 {
             var l = LessonRun.fresh(MixedToImproper.spec, using: &rng, index: index)
@@ -177,5 +182,8 @@ final class MixedToImproperTests: XCTestCase {
                 XCTAssertTrue(item.when?(n) ?? true)
             }
         }
+        // the web's item with many wholes (4 or more there) asks for the most the paper draws
+        for _ in 0..<100 { XCTAssertEqual(spec.check[2].draw(spec, using: &rng)["w"], 3) }
+        for _ in 0..<100 { XCTAssertGreaterThanOrEqual(spec.check[1].draw(spec, using: &rng)["d"] ?? 0, 6) }
     }
 }

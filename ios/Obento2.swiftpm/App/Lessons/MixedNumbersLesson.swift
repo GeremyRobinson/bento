@@ -1,18 +1,21 @@
 import SwiftUI
 
 /// Mixed numbers to fractions on the paper (design/grade5.md, the fractions family). The wholes are bars a whole long
-/// (40 to 48 squares, the smallest the bottom divides, so each piece is a whole number of squares), 4 squares tall and 2
-/// apart, all shaded, each named 1; under them the extra bar, cut into d pieces with n shaded, named n/d; the column of
-/// names braced: the mixed number, written once. The ruler's handle, over the first whole, sets one piece's length; the
-/// cuts it would make show dashed down every bar, and a dot under each of the extra bar's cuts is green when a new cut
-/// lands on it, red when none does. Cut cuts every whole into those pieces: the cuts turn solid, every shaded piece is
-/// numbered on across all the bars (the count reaching w × d + n), and the wholes are named d/d. Then the record,
-/// w n/d = (w × d + n)/d = [S]/d, the top typed, and the last words say why. The bars and the ruler are the family's kit
-/// (BarsKit.swift).
+/// (40 to 48 squares, the smallest the bottom divides, so each piece is a whole number of squares), 4 squares tall and a
+/// square apart, all shaded, each named 1; under them the extra bar, cut into d pieces with n shaded, named n/d; the
+/// column of names braced: the mixed number, written once. The ruler's handle, over the first whole, sets one piece's
+/// length; the cuts it would make show dashed down every bar, and a dot under each of the extra bar's cuts is green when a
+/// new cut lands on it, red when none does. Cut cuts every whole into those pieces: the cuts turn solid, every shaded
+/// piece is numbered on across all the bars (the count reaching w × d + n), and the wholes are named d/d. Then the
+/// record, w n/d = (w × d + n)/d = [S]/d, 3 rows under the bars, the top typed, and the last words say why. Up to three
+/// wholes (MixedToImproper.maxWholes), so every problem is drawn at full size (99% with three, bigger with fewer). The
+/// bars and the ruler are the family's kit (BarsKit.swift).
 @MainActor
 struct MixedNumbersLesson: PaperLesson {
-    /// The picture's rows, in its squares: the ruler, the first whole's top, and a bar's step down to the next.
-    nonisolated static let ruler = 2.0, top = 4.0, step = Bars.height + Bars.gap
+    /// The picture's rows, in its squares: the ruler, the first whole's top, and a bar's step down to the next. The bars
+    /// are a square apart, not the family's two: only the extra bar has old cuts, and their dots go under it, at the
+    /// bottom, so no dots go between the bars (each whole takes 5 rows, so three of them fit the screen at full size).
+    nonisolated static let ruler = 2.0, top = 4.0, step = Bars.height + 1
 
     var liveKeys: Set<String> { ["ruler"] }
 
@@ -110,6 +113,9 @@ struct MixedNumbersLesson: PaperLesson {
         // the ruler (Cut: how many pieces of its length make a whole, checked against the extra bar's)
         s.on("ruler") ? theRuler(Q(s.numbers)).hands(s) : nil
     }
+
+    /// The record is written once the ruler and the dots under the extra bar are put away: 3 rows under the bars.
+    func recordRow(_ n: Numbers) -> Double? { Q(n).extra + Bars.height + 3 }
 
     func demo(_ s: PaperState) -> [GhostMove] {
         let q = Q(s.numbers)

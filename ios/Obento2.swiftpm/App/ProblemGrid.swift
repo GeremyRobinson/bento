@@ -109,7 +109,8 @@ enum ProblemGrid {
     /// A paper lesson's plan, in squares from the problem's corner, made once for its numbers: the story (when it's
     /// told as one), what to do (rows 0–2, words 28), what a miss says or the hint (rows 3–4, words 20), the picture
     /// (from row 6, its names at its right end), the record (3 rows under the picture). The rows kept for words are the
-    /// most any step needs, and the record's row is under the picture's biggest step, so nothing jumps.
+    /// most any step needs, and the record's row is under the picture's biggest step, so nothing jumps (or where the
+    /// lesson puts it, PaperLesson.recordRow, for a record that comes after the picture's biggest step has gone).
     struct StackPlan {
         var storyRows = 0, sayRows = 1, msgRows = 1
         /// What the words wrap to (the picture's width, or the record's), and how far the picture's end labels reach
@@ -153,7 +154,7 @@ enum ProblemGrid {
         p.sayTop = p.storyRows > 0 ? Double(2 * p.storyRows + 1) : 0
         p.msgTop = p.sayTop + Double(2 * p.sayRows) + 1
         p.pictureTop = p.msgTop + Double(2 * p.msgRows) + 1
-        p.recordTop = p.pictureTop + ((pic?.maxY ?? 0) / sq).rounded(.up) + 3
+        p.recordTop = p.pictureTop + (paper.recordRow(l.numbers) ?? ((pic?.maxY ?? 0) / sq).rounded(.up) + 3)
         return p
     }
 
