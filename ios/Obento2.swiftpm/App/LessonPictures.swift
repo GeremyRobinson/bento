@@ -146,7 +146,9 @@ enum LessonPictures {
         let k: Double = a > 50 || b > 60 ? 2 : 1
         // the rectangle's squares are the paper's; in the problem's units (k times bigger) each is 20 / k
         let c = Paper.cell / k
-        let rx = 80.0, ry = 40.0, w = (b + 1) * c
+        // one left edge for the whole problem (G 19 Oct): the name, the sum and the side's number all start on it, and
+        // the rectangle three squares in, past that number
+        let rx = 60.0, ry = 40.0, w = (b + 1) * c
         let colX = ((rx + w + 80) / 40).rounded(.up) * 40
         return (k, rx, ry, a, w, colX, 280, colX + 400)
     }
@@ -157,8 +159,8 @@ enum LessonPictures {
         let c = Paper.cell / g.k, rx = g.rx, ry = g.ry, h = Double(a) * c
         let widths = split ? ps.map { Double($0) * c } : [Double(b) * c]
         let thin = 1.0, strong = 2.0
-        // its height down the side, on the line across its middle
-        s.text("side", String(a), at: P(rx - 40, ry + Double(a / 2) * c), size: 24, .chapter)
+        // its height beside it, on the problem's left edge, level with the rectangle's middle
+        s.text("side", String(a), at: P(0, ry + h / 2), size: 24, .chapter, anchor: UnitPoint(x: 0, y: 0.5))
         var x = rx
         for (i, w) in widths.enumerated() {
             let lit = split && strip == i + 1, cols = Int((w / c).rounded()), id = "s\(i)\(split)"
@@ -174,11 +176,15 @@ enum LessonPictures {
             s.fill(id + "f\(lit)", R(x, ry, w, h), lit ? .tint(0.38) : .tint(0.16))
             if split, i < found {
                 // its product on a plate of whole squares in its middle, or under it when it's too narrow
-                let label = String(products[i]), plate = 4 * c
-                if cols >= 5 {
-                    let px = x + Double((cols - 4) / 2) * c, py = ry + Double(max(0, a / 2 - 1)) * c
-                    s.plate("pf\(i)", R(px, py, plate, 2 * c), .paper)
-                    s.text("p\(i)", label, at: P(px + plate / 2, py + c), size: 24, .ink)
+                // its product on a plate of whole squares, centred on the strip both ways (as big as the problem's words,
+                // and as many squares as keep it centred: odd across an odd strip, odd down an odd side), level with the
+                // side's number; under the strip when it's too narrow
+                let label = String(products[i]), kk = Int(m.scale)
+                let across = 4 * kk + (cols - 4 * kk) % 2, down = 2 * kk + (a - 2 * kk) % 2
+                if cols >= across + 1 {
+                    let px = x + Double((cols - across) / 2) * c, py = ry + Double((a - down) / 2) * c
+                    s.plate("pf\(i)", R(px, py, Double(across) * c, Double(down) * c), .paper)
+                    s.text("p\(i)", label, at: P(x + w / 2, ry + h / 2), size: 24, .ink)
                 } else {
                     s.text("p\(i)", label, at: P(x + w / 2, ry + h + 20), size: 24, .ink)
                 }
