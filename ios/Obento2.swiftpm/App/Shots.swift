@@ -49,7 +49,7 @@ enum Shots {
                 for _ in 0..<12 { m.bars?.skipHowTo(); await wait(1.6) }
                 guard let page = m.bars else { return }
                 let b = page.problems[1] as! AddFractionsModel
-                page.activate(b)
+                page.open(b)
                 for i in 0..<b.problem.covered { b.tap(i) }
                 b.go(); await wait(1)
                 if name == "resume-map" { m.close(); await wait(2); return }
@@ -128,6 +128,27 @@ enum Shots {
             switch name {
             case "paper": break
             case "selected": m.select(uc)
+            case let n where n.hasPrefix("cards-"):
+                // cards-<lesson id>[-done]: the page of problems after the How to; -done: the together ones solved, the
+                // first own one with a miss (a fresh one comes for it), two more right, and the page back
+                let rest = String(n.dropFirst(6)), done = rest.hasSuffix("-done"), id = done ? String(rest.dropLast(5)) : rest
+                guard let p = Map.pieces.first(where: { $0.id == id }) else { return }
+                m.select(p); m.open(p)
+                guard done, let page = m.bars else { return }
+                @MainActor func work(_ w: WorkProblem, miss: Bool) {
+                    page.open(w)
+                    var missed = !miss
+                    while !w.solved {
+                        if let a = w.lesson.step.answer {
+                            if a.choices != nil { w.choose(Int(a.expected["c"] ?? 0)) }
+                            else if !missed { w.type("1"); w.go(); missed = true; w.reset() }
+                            _ = w.lesson.step.answer.map { _ in w.showMe() }
+                        }
+                        w.go()
+                    }
+                }
+                for i in [0, 1, 2, 3, 4, 5] { if let w = page.problems[i] as? WorkProblem { work(w, miss: i == 3) } }
+                page.backToProblems()
             case let n where n.hasPrefix("page-") && n != "page-zoom" && n != "page-hop":
                 // page-<lesson id>[-<step>]: a lesson's page, How to skipped; its first problem worked to that step
                 let parts = n.dropFirst(5).split(separator: "-")
@@ -135,7 +156,7 @@ enum Shots {
                 guard let p = Map.pieces.first(where: { $0.id == id }) else { return }
                 m.select(p); m.open(p)
                 guard let page = m.bars, let w = page.problems.first as? WorkProblem else { return }
-                page.activate(w)
+                page.open(w)
                 for _ in 0..<max(0, k) { if w.lesson.step.answer != nil { w.lesson.step.answer?.choices != nil ? w.choose(Int(w.lesson.step.answer!.expected["c"] ?? 0)) : w.showMe() }; w.go() }
             case "tests":
                 // the map with Add with different bottoms learned: its chapter's test opens; frame on Fractions
@@ -195,7 +216,7 @@ enum Shots {
                     return
                 }
                 if n == "fractions-final-miss" {
-                    let f = page.problems[8] as! AddFractionsModel; page.activate(f); f.tap(0); f.go(); return
+                    let f = page.problems[8] as! AddFractionsModel; page.open(f); f.tap(0); f.go(); return
                 }
                 if n == "fractions-taps" {
                     // a finger's taps, by where they land on the screen: the pieces, then Check, then a choice on the story

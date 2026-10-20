@@ -235,7 +235,9 @@ public struct LessonRun: Sendable {
         let final = finalOnly ? spec.finalStep?(numbers) : nil
         if let final, let last = s.last { s = [s[0], final, last] }
         self.finalOnly = final != nil
-        if story, let first = Self.operationStep(spec, numbers, picture: s.first?.picture ?? [:]) { s.insert(first, at: 0) }
+        var lead = 0
+        if story, let first = Self.operationStep(spec, numbers, picture: s.first?.picture ?? [:]) { s.insert(first, at: 0); lead = 1 }
+        self.lead = lead
         steps = s
         let ask = story && s.count > 1 && s[0].answer?.choices != nil ? 1 : 0
         askIndex = s.indices.contains(ask) && s[ask].task == nil && s[ask].answer == nil && ask < s.count - 1 ? ask : nil
@@ -294,6 +296,11 @@ public struct LessonRun: Sendable {
     public private(set) var shown: Set<Int> = []
     /// The kind of each unknown slip, for the grown-up's report.
     public private(set) var mistakeKinds: [Diagnose.Kind] = []
+    /// Every wrong check: which step (counted in the lesson's own steps, before a story's first question), what kind of
+    /// slip it was, and what the child was told. Two of the same slip bring that part's teaching back (LessonPlan).
+    public private(set) var slips: [Slip] = []
+    /// A story's operation question goes before the lesson's own steps: 1 when it's there.
+    public private(set) var lead = 0
     /// A hint was opened on this step.
     public mutating func usedHint() { hinted.insert(index) }
 
@@ -388,6 +395,7 @@ public struct LessonRun: Sendable {
     /// "Show me" on a typed step: fills in the answer and returns what to say about it.
     public mutating func showAnswer() -> String? {
         guard let a = step.answer else { return nil }
+        if helps && !oneTry { shown.insert(index) }
         for (id, v) in a.expected { typed[id] = fmt(v).replacingOccurrences(of: "−", with: "-") }
         return a.explain
     }
@@ -404,7 +412,9 @@ public struct LessonRun: Sendable {
                 case .soft(let line): return .notYet(line)
                 case .wrong(let line):
                     missed = true; misses += 1; missedSteps.insert(index); stepMisses[index, default: 0] += 1
-                    let said = a.known.first { same($0.values) }?.message ?? line
+                    let k = a.known.firstIndex { same($0.values) }
+                    let said = k.map { a.known[$0].message } ?? line
+                    slips.append(Slip(step: index - lead, kind: k.map { "k\($0)" } ?? "wrong", said: said))
                     if oneTry { _ = showAnswer() }
                     return .notYet(said)
                 }
@@ -413,8 +423,10 @@ public struct LessonRun: Sendable {
                 let kind = Diagnose.kind(values, a.expected, earlier: earlierAnswers)
                 if let kind { mistakeKinds.append(kind) }
                 // the lesson's own words teach best (the web's order); the kind of slip speaks when it has none
-                let said = a.known.first { same($0.values) }?.message
+                let k = a.known.firstIndex { same($0.values) }
+                let said = k.map { a.known[$0].message }
                     ?? (a.hint.isEmpty ? kind.flatMap { Diagnose.say[$0] }.map { "Not quite. \($0)" } : nil) ?? "Not quite. \(a.hint)"
+                slips.append(Slip(step: index - lead, kind: k.map { "k\($0)" } ?? kind?.rawValue ?? "other", said: said))
                 if oneTry { _ = showAnswer() }
                 return .notYet(said)
             }
@@ -425,6 +437,7 @@ public struct LessonRun: Sendable {
             if let wrong {
                 missed = true; misses += 1; missedSteps.insert(index); stepMisses[index, default: 0] += 1
                 let m = t.mistakes.first { $0.when == wrong } ?? t.mistakes.first { $0.when == .tooFew && wrong == .noneMarked }
+                slips.append(Slip(step: index - lead, kind: "\(wrong)", said: m?.message(n, t.want) ?? "Not yet."))
                 if oneTry { _ = showMe() }
                 return .notYet(m?.message(n, t.want) ?? "Not yet.")
             }
@@ -559,20 +572,30 @@ public struct RunSnapshot: Codable, Equatable, Sendable {
     public var stepMisses: [Int: Int] = [:]
     public var hinted: [Int] = []
     public var shown: [Int] = []
+    public var slips: [Slip] = []
+}
+
+/// One wrong check: the step (in the lesson's own steps), the kind of slip ("k0" = the lesson's first known slip for
+/// that step, or a Diagnose kind), and what the child was told.
+public struct Slip: Codable, Equatable, Sendable {
+    public var step: Int
+    public var kind: String
+    public var said: String
+    public var key: String { "\(step):\(kind)" }
 }
 
 extension LessonRun {
     public var snapshot: RunSnapshot {
         RunSnapshot(numbers: numbers, story: story, index: index, marks: marks, typed: typed, misses: misses, missed: missed,
                     missedSteps: missedSteps.sorted(), helps: helps, oneTry: oneTry, skipsAsk: skipsAsk,
-                    guided: guided, hintCap: hintCap, finalOnly: finalOnly, stepMisses: stepMisses, hinted: hinted.sorted(), shown: shown.sorted())
+                    guided: guided, hintCap: hintCap, finalOnly: finalOnly, stepMisses: stepMisses, hinted: hinted.sorted(), shown: shown.sorted(), slips: slips)
     }
 
     /// The run as it was saved: the same numbers make the same steps, and the child's work goes back on them.
     public init(_ spec: LessonSpec, restoring s: RunSnapshot) {
         self.init(spec, numbers: s.numbers, story: s.story, finalOnly: s.finalOnly)
         helps = s.helps; oneTry = s.oneTry; guided = s.guided; hintCap = s.hintCap
-        stepMisses = s.stepMisses; hinted = Set(s.hinted); shown = Set(s.shown)
+        stepMisses = s.stepMisses; hinted = Set(s.hinted); shown = Set(s.shown); slips = s.slips
         if s.skipsAsk { skipAsk() }
         index = min(max(0, s.index), steps.count - 1)
         marks = s.marks; typed = s.typed; misses = s.misses; missed = s.missed; missedSteps = Set(s.missedSteps)

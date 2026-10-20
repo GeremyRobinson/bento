@@ -259,6 +259,9 @@ final class Rig {
     var sketches: [UUID: SketchDrawer] = [:]
     let boxes = Entity()
     var boxesKey = ""
+    /// The page of problems' cards (PageCards).
+    let cardsRoot = Entity()
+    var cardsKey = ""
     var paperHex: UInt32 = 0xF3F2EF
     // a lesson worked in steps: its picture
     let stepsRoot = Entity()
@@ -290,7 +293,7 @@ final class Rig {
         // the paper itself, under the grid, large enough to fill any tilted view; it follows the camera
         sheet.model = ModelComponent(mesh: .generatePlane(width: 400, depth: 400), materials: [])
         sheet.position.y = -0.003
-        root.addChild(sheet); root.addChild(pieces); root.addChild(lessonRoot); root.addChild(barsRoot); root.addChild(stepsRoot); barsRoot.addChild(boxes); barsRoot.addChild(pageWords); root.addChild(words)
+        root.addChild(sheet); root.addChild(pieces); root.addChild(lessonRoot); root.addChild(barsRoot); root.addChild(stepsRoot); barsRoot.addChild(boxes); barsRoot.addChild(pageWords); barsRoot.addChild(cardsRoot); root.addChild(words)
     }
 
     func update(view v: PaperView3D, model: PaperModel, time t: Double, dark: Bool) {
@@ -325,6 +328,7 @@ final class Rig {
         pieces.isEnabled = onMap; words.isEnabled = onMap
         if onMap { Perf.time("pieces") { drawPieces(model, at: t) }; Perf.time("words") { drawWords(model, at: t) } }
         drawPage(model.bars, at: t)
+        drawCards(model.bars, at: t)
         drawSteps(model.steps, at: t)
 
         guard let l = lesson else { return }

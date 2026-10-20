@@ -38,7 +38,11 @@ struct Toolbar: View {
     private func bar(_ inLesson: Bool) -> some View {
         HStack(spacing: 6) {
             if inLesson {
-                BarButton(icon: .back, label: "Lessons") { open = nil; model.close() }
+                if let b = model.bars, b.mode == .work {
+                    BarButton(icon: .back, label: "Problems") { open = nil; b.backToProblems() }
+                } else {
+                    BarButton(icon: .back, label: "Lessons") { open = nil; model.close() }
+                }
                 divider
                 info(title: model.openPiece?.name ?? "", detail: lessonDetail, progress: lessonProgress, wide: true)
                 if hasTools {
@@ -113,8 +117,6 @@ struct Toolbar: View {
             }
             MenuRow(icon: .read, label: "Read it aloud") { open = nil; readAloud() }
             if let b = model.bars, b.howToGone { MenuRow(icon: .show, label: "Watch the How to again") { open = nil; b.watchAgain() } }
-            if let b = model.bars, b.canSkipToCheck { MenuRow(icon: .find, label: "Go to the skill check") { open = nil; b.skipToCheck() } }
-            if model.bars?.showing == true { MenuRow(icon: .every, label: "See every problem") { open = nil; model.frameAll() } }
             MenuRow(icon: .dark, label: scheme == .dark ? "Light" : "Dark") { theme = scheme == .dark ? "light" : "dark" }
             zoomRow
         }
@@ -168,30 +170,30 @@ struct Toolbar: View {
     private var learned: Int { Map.gradeLessons.filter { Progress.shared.learned.contains($0) }.count }
 
     /// The problem being worked on a lesson's page, if any.
-    private var problem: (any PageProblem)? { model.bars?.current.flatMap { $0.auto ? nil : $0 } }
+    private var problem: (any PageProblem)? { model.bars.flatMap { $0.mode == .work ? $0.current : nil } }
     private var hasTools: Bool { problem != nil || model.lesson != nil }
     private var helps: Bool { problem?.lesson.helps ?? model.lesson?.lesson.helps ?? false }
 
     /// Hints: about one for every two problems on a page (the web's rule), none in the skill check.
     private var hintsLeft: Int? {
         guard model.bars != nil else { return nil }
-        return max(0, LessonPage.count / 2 - hintsUsed)
+        return max(0, 5 - hintsUsed)
     }
-    private var canHint: Bool { helps && (open == .hint || (hintsLeft ?? 1) > 0) && step?.task != nil }
-    private var canShowMe: Bool { helps && step?.task != nil }
+    private var canHint: Bool { helps && (open == .hint || (hintsLeft ?? 1) > 0) && (step?.task != nil || step?.answer != nil) }
+    private var canShowMe: Bool { helps && (step?.task != nil || step?.answer != nil) && problem?.solved != true }
     private var canReset: Bool { step?.task != nil }
     private var step: LessonStep? { problem?.lesson.step ?? model.lesson?.lesson.step }
-    private var hintText: String { step.map { $0.look ?? $0.words.hint } ?? "" }
+    private var hintText: String { step.map { $0.look ?? $0.answer?.hint ?? $0.words.hint } ?? "" }
 
     private func showMe() { if let p = problem { p.showMe() } else { model.lesson?.showMe() } }
     private func reset() { if let p = problem { p.reset() } else { model.lesson?.reset() } }
 
     private var lessonDetail: String {
-        if let b = model.bars { return b.showing ? "\(b.problems.filter(\.solved).count) of \(b.problems.count)" : "How to" }
+        if let b = model.bars { return b.label }
         return model.lesson?.session.label ?? ""
     }
     private var lessonProgress: Double {
-        if let b = model.bars, b.showing { return Double(b.problems.filter(\.solved).count) / Double(b.problems.count) }
+        if let b = model.bars, b.showing { return b.progress }
         return 0
     }
 

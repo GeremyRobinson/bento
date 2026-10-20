@@ -27,6 +27,8 @@ protocol PageProblem: AnyObject {
     /// Where a pick-one step's choices go, under the step's words.
     var underStep: Double { get }
     var wordsAt: Double { get }
+    /// Its box's size on the paper (BarsPage.box): 8 blocks square, or as big as its maths needs.
+    var boxSize: Size { get }
 
     func start(after delay: Double)
     func leave()

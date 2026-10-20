@@ -7,7 +7,7 @@ import SwiftUI
 final class AddFractionsModel: Identifiable, PageProblem {
     let id = UUID()
     /// What the page calls it: "How to", "Problem 3", "Skill check 1".
-    let label: String
+    var label: String
     /// The How to plays itself: no buttons, and its moves are made for it.
     let auto: Bool
     /// Told when the problem is solved.
@@ -69,6 +69,7 @@ final class AddFractionsModel: Identifiable, PageProblem {
     /// A problem brought back from where the child left it: its pieces filled as they were, at once.
     func restore() { for i in 0..<problem.b { fills[i] = (target(i), target(i), PaperClock.now - 100) } }
     var underStep: Double { Self.underStep }
+    var boxSize: Size { Size(BarsPage.box.width, BarsPage.box.height) }
 
     /// The How to's cut: each top piece splits into the bottom row's pieces, so they're the same size (G 18 Oct).
     func howToBeats() -> [(words: String, run: () -> Void)] {

@@ -7,7 +7,7 @@ import SwiftUI
 @MainActor @Observable
 final class WorkProblem: Identifiable, PageProblem {
     let id = UUID()
-    let label: String
+    var label: String
     let auto: Bool
     let origin: Point
     let chapter: Chapter
@@ -32,9 +32,17 @@ final class WorkProblem: Identifiable, PageProblem {
 
     // where things sit, in paper points from `origin`, inside the box (BarsPage.box): the problem above the origin, the
     // picture from the origin down, then the step
-    static let problemY: Double = -96, pictureTop: Double = -10, pictureHeight: Double = 290, stepY: Double = 300
-    static let lineY: Double = 360
+    // an open problem fills the screen (G 19 Oct): 13 blocks by 9, its picture drawn 1.6 times its size across the top,
+    // the step under it, Check and what a miss says on the bottom row
+    static let problemY: Double = -96, pictureTop: Double = -10, pictureScale: Double = 1.6, stepY: Double = 480
+    static let lineY: Double = 536
     var underStep: Double { Self.lineY }
+    var boxSize: Size { Size(13 * Paper.unit, 9 * Paper.unit) }
+    /// A problem aimed at a step the child slipped on before (LessonPlan): that step starts with what they were told,
+    /// its part of the picture lit, and, the second time, its answer shown first and taken away again.
+    var focus: LessonPlan.Focus?
+    /// The focus step is this step.
+    var onFocus: Bool { focus.map { $0.step == lesson.index - lesson.lead } ?? false }
 
     init(origin: Point, chapter: Chapter, instant: Bool, run: LessonRun, label: String, auto: Bool = false) {
         self.origin = origin; self.chapter = chapter; self.instant = instant; self.label = label; self.auto = auto
@@ -45,14 +53,34 @@ final class WorkProblem: Identifiable, PageProblem {
     var solved: Bool { lesson.isLast }
     var busy: Bool { PaperClock.now < busyUntil }
     /// What the picture shows now: the step's picture, its hints after misses, and the How to's beats.
-    var picture: Numbers { lesson.picture.merging(extra) { $1 } }
+    var picture: Numbers {
+        var p = lesson.picture.merging(extra) { $1 }
+        if onFocus { p.merge(lesson.step.onMiss) { $1 } }
+        return p
+    }
 
     var animating: Bool {
         let now = PaperClock.now
         return now - openedAt < 1.6 || now - wordsAt < 0.8 || now - pictureAt < 1.2 || now < busyUntil + 0.1 || (leftAt.map { now - $0 < 0.6 } ?? false)
     }
 
-    func start(after delay: Double) { openedAt = time(delay); wordsAt = openedAt; pictureAt = openedAt; leftAt = nil }
+    func start(after delay: Double) { openedAt = time(delay); wordsAt = openedAt; pictureAt = openedAt; leftAt = nil; teachIfDue(after: delay + 1.2) }
+
+    /// The second time a step is slipped on, a problem aimed at it shows that step's answer first, then takes it away
+    /// for the child to do (Show me is a preview, G 17 Oct).
+    private var taught = false
+    private func teachIfDue(after delay: Double) {
+        guard onFocus, focus?.teach == true, !taught, !instant, !solved else { return }
+        taught = true
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(delay))
+            guard let self, self.onFocus else { return }
+            if let e = self.lesson.showAnswer() { self.message = (e, true) }
+            self.pictureAt = self.time(0); self.onChange?()
+            try? await Task.sleep(for: .seconds(2.4))
+            self.lesson.reset(); self.message = nil; self.wordsAt = PaperClock.now; self.onChange?()
+        }
+    }
     func leave() { leftAt = time(0) }
     func gone(at t: Double) -> Double { leftAt.map { 1 - ease((t - $0) / 0.5) } ?? 1 }
     func words(at t: Double) -> Double { ease((t - openedAt - 0.3) / 0.4) * gone(at: t) }
@@ -72,6 +100,7 @@ final class WorkProblem: Identifiable, PageProblem {
         case .moved:
             message = nil; wordsAt = PaperClock.now; pictureAt = time(0)
             busyUntil = time(0.4)
+            teachIfDue(after: 0.8)
             if lesson.isLast { onSolved?() }
         case .notYet(let line) where lesson.finalOnly && !lesson.oneTry:
             // final answer only, missed: the steps come back for this problem

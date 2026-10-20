@@ -61,7 +61,7 @@ extension Rig {
         if key != d.key {
             d.key = key
             let s = LessonPictures.sketch(m)
-            d.build(s, rig: self, chapter: m.chapter.hex, dark: dark, origin: CGPoint(x: m.origin.x, y: m.origin.y + WorkProblem.pictureTop))
+            d.build(s, rig: self, chapter: m.chapter.hex, dark: dark, origin: CGPoint(x: m.origin.x, y: m.origin.y + WorkProblem.pictureTop), scale: WorkProblem.pictureScale)
         }
         d.fade(grow: m.grow(at: t), fresh: m.fresh(at: t))
     }
@@ -78,7 +78,7 @@ final class SketchDrawer {
 
     init() { root.addChild(steady); root.addChild(fresh) }
 
-    func build(_ s: Sketch, rig: Rig, chapter: UInt32, dark: Bool, origin o: CGPoint) {
+    func build(_ s: Sketch, rig: Rig, chapter: UInt32, dark: Bool, origin o: CGPoint, scale k: Double = 1) {
         for e in [steady, fresh] { for c in Array(e.children) { c.removeFromParent() } }
         let paper: UInt32 = dark ? 0x121211 : 0xF3F2EF, u = Paper.unit
         func colour(_ c: Sketch.Colour) -> UIColor {
@@ -92,7 +92,7 @@ final class SketchDrawer {
             case .line: rig.colours.lineStrong
             }
         }
-        func P(_ p: CGPoint) -> CGPoint { CGPoint(x: o.x + p.x, y: o.y + p.y) }
+        func P(_ p: CGPoint) -> CGPoint { CGPoint(x: o.x + p.x * k, y: o.y + p.y * k) }
         var next: Set<String> = []
         for (n, item) in s.items.enumerated() {
             next.insert(item.id)
@@ -105,9 +105,9 @@ final class SketchDrawer {
             case .line(let pts, let w, let dashed):
                 let lines = dashed ? Rig.dashes([pts.map(P)]) : [pts.map(P)]
                 let segs = lines.flatMap { l in zip(l, l.dropFirst()).map { (SIMD2(Float($0.x / u), Float($0.y / u)), SIMD2(Float($1.x / u), Float($1.y / u))) } }
-                if let m = Rig.lines(segs, width: Float(w / u)) { let e = ModelEntity(mesh: m, materials: [flat(colour(item.colour))]); e.position.y = 0.0018 + lift; into.addChild(e) }
+                if let m = Rig.lines(segs, width: Float(w * k / u)) { let e = ModelEntity(mesh: m, materials: [flat(colour(item.colour))]); e.position.y = 0.0018 + lift; into.addChild(e) }
             case .text(let str, let p, let size, let weight, let anchor, let digits):
-                into.addChild(PaperText.label(str, PaperText.font(size, weight, digits: digits), colour(item.colour), at: P(p), anchor: anchor, y: 0.0024 + lift))
+                into.addChild(PaperText.label(str, PaperText.font(size * k, weight, digits: digits), colour(item.colour), at: P(p), anchor: anchor, y: 0.0024 + lift))
             }
         }
         ids = next
