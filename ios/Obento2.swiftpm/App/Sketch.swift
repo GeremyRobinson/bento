@@ -300,7 +300,8 @@ final class SketchDrawer {
             }
             // a part with its own start (a map piece's words) keeps it, unless that's passed: then it draws in now
             let at = item.at.map { max($0, now) } ?? start + Double(order) * gap * item.pace
-            let node = Node(id: item.id, sig: sigs[i], parts: parts, line: line, start: at, length: length)
+            // pace 0: shown at once, as typing shows (G 19 Oct)
+            let node = Node(id: item.id, sig: sigs[i], parts: parts, line: line, start: item.pace == 0 ? now : at, length: item.pace == 0 ? 0 : length)
             node.chars = chars; node.slot = item.slot; node.size = textSize
             nodes[item.id] = node
             if item.at == nil { order += 1 }
@@ -323,6 +324,8 @@ final class SketchDrawer {
         let sorted = list.sorted { $0.start > $1.start }
         let gap = sorted.count > 1 ? min(Self.each, Self.undrawMost / Double(sorted.count)) : 0
         for (i, n) in sorted.enumerated() {
+            // shown at once, gone at once
+            if n.length == 0 { for e in n.parts { e.removeFromParent() }; continue }
             // a part still drawing in turns round from where it got to
             let at = max(0, min(1, n.shown))
             n.undrawing = true; n.start = t + Double(i) * gap - (1 - at) * Self.undraw; n.length = Self.undraw
@@ -369,7 +372,7 @@ final class SketchDrawer {
             moving = true
             return true
         }
-        for n in nodes.values where n.shown < 1 { apply(n, ease((t - n.start) / n.length)); if n.shown < 1 { moving = true } }
+        for n in nodes.values where n.shown < 1 { apply(n, n.length == 0 ? 1 : ease((t - n.start) / n.length)); if n.shown < 1 { moving = true } }
         going = going.filter { n in
             let k = 1 - ease((t - n.start) / n.length)
             apply(n, k)

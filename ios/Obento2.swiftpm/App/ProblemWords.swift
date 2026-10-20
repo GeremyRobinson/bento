@@ -239,12 +239,16 @@ extension Rig {
                 let typed = l.typed[f]?.replacingOccurrences(of: "-", with: "−")
                 let style: Sketch.Block = m.verdict.map { $0.right ? Sketch.Block(stroke: green, text: green) : Sketch.Block(stroke: red, text: red) }
                     ?? (l.active == f ? .main : .plain)
-                s.block(id + "\(m.verdict.map { $0.right } as Bool?)", r, style, centred: typed, size: 26, k: k)
+                s.block(id + "\(m.verdict.map { $0.right } as Bool?)", r, style, k: k)
+                // what's typed, and the cursor, show at once, as any text box does
+                s.pace = 0
+                if let typed { s.text("\(id)typed\(typed)\(m.verdict.map { $0.right } as Bool?)", typed, at: CGPoint(x: r.midX, y: r.midY), size: 26 * k, weight: .medium, style.text) }
                 if l.active == f, m.verdict == nil, !m.auto {
                     let w = typed.map { PaperText.width($0, PaperText.font(26 * k, .medium, digits: true)) } ?? 0
                     let x = r.midX + w / 2 + (w > 0 ? 3 * k : 0)
                     s.line("cursor\(typed ?? "")", [CGPoint(x: x, y: r.midY - 12 * k), CGPoint(x: x, y: r.midY + 12 * k)], .ink, width: 2 * k)
                 }
+                s.pace = 0.4
             case .key(let key): s.block(id, r, .plain, centred: key == "del" ? nil : key, icon: key == "del" ? "backspace" : nil, k: k)
             }
         }
