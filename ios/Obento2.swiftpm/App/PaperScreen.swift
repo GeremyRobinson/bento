@@ -30,7 +30,9 @@ struct PaperScreen: View {
                     Toolbar(model: model, time: t, bottom: max(16, safe.safeAreaInsets.bottom + 8, model.keyboard + 8))
                     // iPadOS's own number keyboard (G 19 Oct), up once an answer box is tapped and while a number is
                     // wanted; a hardware keyboard types too, and return checks
-                    let typing = (model.bars?.current as? WorkProblem).flatMap { w in w.keypadOpen && !w.auto && !w.solved && w.lesson.step.answer.map { $0.choices == nil } == true ? w : nil }
+                    // up by itself whenever the problem being worked wants a number (no tap needed), so a Mac's or
+                    // a hardware keyboard types straight away too
+                    let typing = (model.bars?.current as? WorkProblem).flatMap { w in model.bars?.mode == .work && !w.auto && !w.solved && w.lesson.step.answer.map { $0.choices == nil } == true ? w : nil }
                     SystemKeys(active: typing != nil, type: { typing?.type($0) }, enter: { typing?.go() })
                         .frame(width: 1, height: 1).opacity(0.01)
                 }

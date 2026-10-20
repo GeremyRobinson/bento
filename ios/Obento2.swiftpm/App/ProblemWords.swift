@@ -295,7 +295,8 @@ extension Rig {
                     s.text("\(id)typed\(j)\(ch)\(tag)", String(ch), at: CGPoint(x: left + (Double(j) + 0.5) * cell, y: r.midY), size: Sketch.maths * k, weight: .medium, style.text)
                 }
                 if l.active == f, m.verdict == nil, !m.auto {
-                    let x = left + Double(chars.count) * cell
+                    // in the work the digits end at the box's right edge, so the cursor sits just inside it
+                    let x = lay.inline ? r.maxX - 6 * k : left + Double(chars.count) * cell
                     s.line("cursor\(typed ?? "")", [CGPoint(x: x, y: r.midY - 18 * k), CGPoint(x: x, y: r.midY + 18 * k)], .ink, width: 2.5 * k)
                 }
                 s.pace = 0.4
