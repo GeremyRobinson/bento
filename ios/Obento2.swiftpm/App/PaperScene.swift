@@ -223,11 +223,7 @@ final class Rig {
     var piecesKey = ""
     // the map's words, in the scene (PaperWords.swift)
     let words = Entity()
-    var wordsKey = ""
-    var pieceWords: [String: Entity] = [:]
-    var pieceWordsK: [String: Double] = [:]
-    let start = Entity()
-    var startKey = ""
+    var mapDrawer: SketchDrawer?
     // the lesson page's words, in the scene (ProblemWords.swift)
     let pageWords = Entity()
     // Unit cubes' words, standing in the scene (CubesWords.swift)
@@ -348,7 +344,7 @@ final class Rig {
     }
 
     private func recolour(_ dark: Bool) {
-        wordsKey = ""; cubesKey = ""
+        mapDrawer?.key = ""; cubesKey = ""
         self.dark = dark
         colours = Colours(dark: dark, chapter: Chapter.measurement.hex)
         paperHex = dark ? 0x121211 : 0xF3F2EF

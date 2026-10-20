@@ -17,34 +17,43 @@ struct Sketch {
         case segments([(CGPoint, CGPoint)], width: Double)
         /// A fill that sits over the lines (a label's plate).
         case plate([CGPoint])
+        /// A line over plates (a seal's ring or tick).
+        case overLine([CGPoint], width: Double)
     }
-    struct Item { let id: String; let kind: Kind; let colour: Colour }
+    struct Item { let id: String; let kind: Kind; let colour: Colour; var at: Double? = nil }
     private(set) var items: [Item] = []
+    /// When the parts added from now on start drawing in (a map piece's words with its frame), instead of one after
+    /// another from the drawing's start.
+    var startAt: Double?
     static let c = Paper.cell
 
     mutating func line(_ id: String, _ pts: [CGPoint], _ colour: Colour = .ink, width: Double = 2, dashed: Bool = false) {
-        items.append(Item(id: id, kind: .line(pts, width: width, dashed: dashed), colour: colour))
+        add(Item(id: id, kind: .line(pts, width: width, dashed: dashed), colour: colour))
     }
     /// A rectangle's outline.
     mutating func box(_ id: String, _ r: CGRect, _ colour: Colour = .ink, width: Double = 2, dashed: Bool = false) {
         line(id, [CGPoint(x: r.minX, y: r.minY), CGPoint(x: r.maxX, y: r.minY), CGPoint(x: r.maxX, y: r.maxY), CGPoint(x: r.minX, y: r.maxY), CGPoint(x: r.minX, y: r.minY)], colour, width: width, dashed: dashed)
     }
     mutating func fill(_ id: String, _ r: CGRect, _ colour: Colour) {
-        items.append(Item(id: id, kind: .fill([CGPoint(x: r.minX, y: r.minY), CGPoint(x: r.maxX, y: r.minY), CGPoint(x: r.maxX, y: r.maxY), CGPoint(x: r.minX, y: r.maxY)]), colour: colour))
+        add(Item(id: id, kind: .fill([CGPoint(x: r.minX, y: r.minY), CGPoint(x: r.maxX, y: r.minY), CGPoint(x: r.maxX, y: r.maxY), CGPoint(x: r.minX, y: r.maxY)]), colour: colour))
     }
-    mutating func polygon(_ id: String, _ pts: [CGPoint], _ colour: Colour) { items.append(Item(id: id, kind: .fill(pts), colour: colour)) }
+    mutating func polygon(_ id: String, _ pts: [CGPoint], _ colour: Colour) { add(Item(id: id, kind: .fill(pts), colour: colour)) }
     mutating func text(_ id: String, _ s: String, at p: CGPoint, size: CGFloat = 20, weight: UIFont.Weight = .medium, _ colour: Colour = .ink,
                        anchor: UnitPoint = .center, digits: Bool = true) {
-        items.append(Item(id: id, kind: .text(s, p, size: size, weight: weight, anchor: anchor, digits: digits), colour: colour))
+        add(Item(id: id, kind: .text(s, p, size: size, weight: weight, anchor: anchor, digits: digits), colour: colour))
     }
-    mutating func icon(_ id: String, _ name: String, in r: CGRect, _ colour: Colour = .ink) { items.append(Item(id: id, kind: .icon(name, r), colour: colour)) }
+    mutating func icon(_ id: String, _ name: String, in r: CGRect, _ colour: Colour = .ink) { add(Item(id: id, kind: .icon(name, r), colour: colour)) }
     mutating func segments(_ id: String, _ segs: [(CGPoint, CGPoint)], _ colour: Colour, width: Double) {
-        if !segs.isEmpty { items.append(Item(id: id, kind: .segments(segs, width: width), colour: colour)) }
+        if !segs.isEmpty { add(Item(id: id, kind: .segments(segs, width: width), colour: colour)) }
     }
     mutating func plate(_ id: String, _ r: CGRect, _ colour: Colour) {
-        items.append(Item(id: id, kind: .plate([CGPoint(x: r.minX, y: r.minY), CGPoint(x: r.maxX, y: r.minY), CGPoint(x: r.maxX, y: r.maxY), CGPoint(x: r.minX, y: r.maxY)]), colour: colour))
+        add(Item(id: id, kind: .plate([CGPoint(x: r.minX, y: r.minY), CGPoint(x: r.maxX, y: r.minY), CGPoint(x: r.maxX, y: r.maxY), CGPoint(x: r.minX, y: r.maxY)]), colour: colour))
     }
+    mutating func overLine(_ id: String, _ pts: [CGPoint], _ colour: Colour = .ink, width: Double = 2) { add(Item(id: id, kind: .overLine(pts, width: width), colour: colour)) }
+    /// A shape that sits over the lines (a test's seal on its frame's corner).
+    mutating func plate(_ id: String, _ pts: [CGPoint], _ colour: Colour) { add(Item(id: id, kind: .plate(pts), colour: colour)) }
     mutating func append(_ other: Sketch) { items += other.items }
+    private mutating func add(_ item: Item) { var it = item; it.at = startAt; items.append(it) }
     /// The same sketch in paper points: moved to `o` and drawn `k` times bigger.
     func transformed(to o: CGPoint, scale k: Double) -> Sketch {
         func P(_ p: CGPoint) -> CGPoint { CGPoint(x: o.x + p.x * k, y: o.y + p.y * k) }
@@ -55,11 +64,12 @@ struct Sketch {
             case .line(let pts, let w, let d): kind = .line(pts.map(P), width: w * k, dashed: d)
             case .fill(let pts): kind = .fill(pts.map(P))
             case .plate(let pts): kind = .plate(pts.map(P))
+            case .overLine(let pts, let w): kind = .overLine(pts.map(P), width: w * k)
             case .text(let s, let p, let size, let weight, let anchor, let digits): kind = .text(s, P(p), size: size * k, weight: weight, anchor: anchor, digits: digits)
             case .icon(let n, let r): kind = .icon(n, CGRect(origin: P(r.origin), size: CGSize(width: r.width * k, height: r.height * k)))
             case .segments(let segs, let w): kind = .segments(segs.map { (P($0.0), P($0.1)) }, width: w * k)
             }
-            return Item(id: it.id, kind: kind, colour: it.colour)
+            return Item(id: it.id, kind: kind, colour: it.colour, at: it.at)
         }
         return out
     }
@@ -190,6 +200,10 @@ final class SketchDrawer {
                 let mapped = [pts.map(P)]
                 if let m = Self.mesh(mapped, width: w * k, dashed: dashed, upTo: 1) { let e = ModelEntity(mesh: m, materials: [flat(colour(item.colour))]); e.position.y = 0.0018 + lift; parts = [e] }
                 line = (mapped, w * k, dashed)
+            case .overLine(let pts, let w):
+                let mapped = [pts.map(P)]
+                if let m = Self.mesh(mapped, width: w * k, dashed: false, upTo: 1) { let e = ModelEntity(mesh: m, materials: [flat(colour(item.colour))]); e.position.y = 0.0023 + lift; parts = [e] }
+                line = (mapped, w * k, false)
             case .segments(let segs, let w):
                 let mapped = segs.map { [P($0.0), P($0.1)] }
                 if let m = Self.mesh(mapped, width: w * k, dashed: false, upTo: 1) { let e = ModelEntity(mesh: m, materials: [flat(colour(item.colour))]); e.position.y = 0.0017 + lift; parts = [e] }
@@ -210,8 +224,10 @@ final class SketchDrawer {
             }
             guard !parts.isEmpty else { continue }
             for e in parts { e.isEnabled = false; root.addChild(e) }
-            nodes[item.id] = Node(id: item.id, sig: sigs[i], parts: parts, line: line, start: start + Double(order) * gap, length: length)
-            order += 1
+            // a part with its own start (a map piece's words) keeps it, unless that's passed: then it draws in now
+            let at = item.at.map { max($0, now) } ?? start + Double(order) * gap
+            nodes[item.id] = Node(id: item.id, sig: sigs[i], parts: parts, line: line, start: at, length: length)
+            if item.at == nil { order += 1 }
         }
     }
 

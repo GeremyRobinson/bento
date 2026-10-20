@@ -40,6 +40,11 @@ struct Piece: Identifiable, Equatable {
         return ease((time - drawnAt - d) / 0.9)
     }
     static let drawTime = 1.9
+    /// How long after the map starts drawing a place draws in: the further from where it draws out from, the later.
+    @MainActor static func drawDelay(_ p: Point, from: Point? = nil) -> Double {
+        let now = from ?? (Map.pieces.first { $0.state == .now } ?? Map.pieces[0]).frame.mid
+        return hypot(p.x - now.x, p.y - now.y) / 1400
+    }
 }
 
 /// A chapter on the paper: its title, where it sits, and its lessons in order, laid out in rows on the grid.
@@ -165,6 +170,9 @@ final class PaperModel {
     /// When the map started erasing itself, on the way into a lesson (G 17 Oct: the How to's undraw, for every
     /// move from one place to the next).
     private(set) var mapLeftAt: Double?
+    /// The map's words are still drawing in or undrawing: the clock keeps running.
+    private(set) var mapDrawing = false
+    func setMapDrawing(_ b: Bool) { if mapDrawing != b { mapDrawing = b } }
     /// 1 while the map is on the paper, down to 0 as it erases itself: its drawing in, backwards.
     func mapGone(at t: Double) -> Double { mapLeftAt.map { 1 - ease((t - $0) / Self.undraw) } ?? 1 }
     /// How long a place takes to erase itself.

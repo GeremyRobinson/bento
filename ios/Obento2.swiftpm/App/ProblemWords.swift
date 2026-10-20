@@ -298,78 +298,47 @@ extension Rig {
         var s = Sketch()
         let l = m.lesson, words = l.words, o = m.contentOrigin, lay = m.layout, k = lay.scale, col = lay.column * k
         func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x * k, y: o.y + y * k) }
-        let row = 2 * Paper.cell, sx = lay.stepX
-        /// Words in rows of squares from `top`, each line centred in its row; returns how many rows.
-        @discardableResult func rows(_ id: String, _ text: String, _ size: CGFloat, _ weight: UIFont.Weight, _ c: Sketch.Colour, x: Double, top: Double, width: Double, max: Int) -> Int {
-            let lines = Array(PaperText.wrap(text, PaperText.font(size * k, weight), width: width).prefix(max))
-            for (i, line) in lines.enumerated() {
-                s.text("\(id)\(i):\(line)", line, at: P(x, top + (Double(i) + 0.5) * row), size: size * k, weight: weight, c, anchor: UnitPoint(x: 0, y: 0.5), digits: false)
-            }
-            return lines.count
-        }
+        let row = Sketch.row, sx = lay.stepX
         if part {
-        rows("name", m.label, 17, .medium, .ink3, x: 0, top: BarsPage.box.dy + 20, width: col, max: 1)
-
-        // the problem: the sum, a digit to every two squares, and the story beside it when it's told as one
-        // (a fraction, four rows tall, a digit to a square, so it stays above the picture)
-        let display = l.spec.display(l.numbers), top = WorkProblem.problemY, tall = MathLineView.layout(display, size: 28).h > 2
-        let per = tall ? Paper.cell : 2 * Paper.cell
-        s.mathLine("sum", display, at: P(0, tall ? top - Paper.cell : top), size: (tall ? 30 : 40) * k, cell: per * k)
-        if l.story, let story = l.spec.story?(l.numbers) {
-            let x = Double(MathLineView.layout(display, size: 28).w) * per + 2 * row
-            rows("story", story, 20, .regular, .ink, x: x, top: top, width: (lay.width * Paper.unit - 80 - x) * k, max: 2)
-        }
-        return s
+            // its name, then the sum starting on the same left edge, and the story beside it when it's told as one
+            s.words("name", m.label, .name, x: P(0, 0).x, top: P(0, BarsPage.box.dy + 20).y, width: col, k: k)
+            let width = s.sum("sum", l.spec.display(l.numbers), at: P(0, WorkProblem.problemY), k: k)
+            if l.story, let story = l.spec.story?(l.numbers) {
+                let x = P(0, 0).x + width + 2 * row * k
+                s.words("story", story, .story, x: x, top: P(0, WorkProblem.problemY).y, width: o.x + lay.width * Paper.unit * k - 80 * k - x, max: 2, k: k)
+            }
+            return s
         }
 
         // the step: what to do now (a story's step asks only "Pick what to do"), and the hint under it
         let storyStep = l.story && l.step.answer?.choices != nil
         let say = m.intro ?? (storyStep ? words.hint : words.say)
-        let said = rows("say\(l.index)", say, 28, .medium, .ink, x: sx, top: lay.stepY, width: col, max: m.intro != nil ? 5 : 2)
+        let said = s.words("say\(l.index)", say, .say, x: P(sx, 0).x, top: P(0, lay.stepY).y, width: col, max: m.intro != nil ? 5 : 2, k: k)
         // the hint: always when done together; on their own only after a miss; on a step missed before, what they
         // were told then, in the chapter's colour; never in a test
         if m.intro == nil, !storyStep, l.step.answer?.choices == nil {
             let (text, c): (String?, Sketch.Colour) = m.onFocus ? (m.focus?.said, .chapter) : (l.guided || (l.helps && l.misses > 0)) ? (words.hint, .ink2) : (nil, .ink2)
-            if let text { rows("hint\(l.index)", text, 20, .regular, c, x: sx, top: lay.stepY + Double(said) * row, width: col, max: 1) }
+            if let text { s.words("hint\(l.index)", text, Sketch.Words.hint.colour(c), x: P(sx, 0).x, top: P(0, lay.stepY + Double(said) * row).y, width: col, k: k) }
         }
         // the line being worked, a digit to a square, its boxes drawn as blocks
         if let a = l.step.answer, a.choices == nil, m.intro == nil {
             s.mathLine("line\(l.index)", a.prompt, at: P(sx, lay.lineY), typed: l.typed, size: 28 * k, cell: Paper.cell * k)
         }
 
-        // the blocks: an outline that strokes on, a fill under it, and its word or number
-        let surface = Sketch.Colour.hex(0xFBFBFA, 0x1B1B1A), edge = Sketch.Colour.hex(0xCFCCC5, 0x3A3A37)
+        // the blocks
         for b in ProblemLayout.blocks(m) {
             let r = b.rect, id = "\(b.kind)"
-            var stroke = edge, fill = surface, text = Sketch.Colour.ink
             switch b.kind {
-            case .main, .next, .practise, .nextProblem: stroke = .ink
-            case .choice(let i): if l.typed["c"] == String(i) { stroke = .chapter; text = .chapter; fill = .tint(0.12) }
-            case .field(let f): if l.active == f { stroke = .ink }
-            case .showMe: if l.picture["showMe"] == 1 { stroke = .ink }
-            default: break
-            }
-            s.fill("\(id)f\(r)\(fill)", r, fill)
-            let i = r.insetBy(dx: 0.75 * k, dy: 0.75 * k)
-            s.line("\(id)o\(r)\(stroke)", [CGPoint(x: i.minX, y: i.minY), CGPoint(x: i.maxX, y: i.minY), CGPoint(x: i.maxX, y: i.maxY), CGPoint(x: i.minX, y: i.maxY), CGPoint(x: i.minX, y: i.minY)], stroke, width: 1.5 * k)
-            let arrow = CGRect(x: r.maxX - 30 * k, y: r.midY - 10 * k, width: 20 * k, height: 20 * k)
-            func word(_ w: String) { s.text("\(id)w\(w)", w, at: CGPoint(x: r.minX + 20 * k, y: r.midY), size: 17 * k, weight: .medium, text, anchor: UnitPoint(x: 0, y: 0.5), digits: false) }
-            switch b.kind {
-            case .next: word("Next step"); s.icon("\(id)a", "arrow-right", in: arrow)
-            case .practise: word("Practice"); s.icon("\(id)a", "arrow-right", in: arrow)
-            case .nextProblem: word("Next problem"); s.icon("\(id)a", "arrow-right", in: arrow)
-            case .again: word("Watch again")
-            case .skip: word("Skip")
-            case .main: word(words.action); s.icon("\(id)a", "arrow-right", in: arrow)
-            case .showMe, .reset:
-                s.icon("\(id)a", b.kind == .showMe ? "play" : "arrow-counter-clockwise", in: CGRect(x: r.midX - 10 * k, y: r.midY - 10 * k, width: 20 * k, height: 20 * k))
-            case .choice(let n):
-                if let c = l.step.answer?.choices?[n] { s.text("\(id)w\(c)", c, at: CGPoint(x: r.midX, y: r.midY), size: 17 * k, weight: .medium, text, digits: false) }
-            case .field(let f):
-                if let t = l.typed[f] { s.text("\(id)t\(t)", t.replacingOccurrences(of: "-", with: "−"), at: CGPoint(x: r.midX, y: r.midY), size: 26 * k) }
-            case .key(let key):
-                if key == "del" { s.icon("\(id)a", "backspace", in: CGRect(x: r.midX - 13 * k, y: r.midY - 13 * k, width: 26 * k, height: 26 * k)) }
-                else { s.text("\(id)w", key, at: CGPoint(x: r.midX, y: r.midY), size: 30 * k) }
+            case .next: s.block(id, r, .main, word: "Next step", arrow: true, k: k)
+            case .practise: s.block(id, r, .main, word: "Practice", arrow: true, k: k)
+            case .nextProblem: s.block(id, r, .main, word: "Next problem", arrow: true, k: k)
+            case .main: s.block(id, r, .main, word: words.action, arrow: true, k: k)
+            case .again: s.block(id, r, .plain, word: "Watch again", k: k)
+            case .skip: s.block(id, r, .plain, word: "Skip", k: k)
+            case .showMe, .reset: s.block(id, r, l.picture["showMe"] == 1 && b.kind == .showMe ? .main : .plain, icon: b.kind == .showMe ? "play" : "arrow-counter-clockwise", k: k)
+            case .choice(let n): s.block(id, r, l.typed["c"] == String(n) ? .picked : .plain, centred: l.step.answer?.choices?[n], size: 17, k: k)
+            case .field(let f): s.block(id, r, l.active == f ? .main : .plain, centred: l.typed[f]?.replacingOccurrences(of: "-", with: "−"), size: 26, k: k)
+            case .key(let key): s.block(id, r, .plain, centred: key == "del" ? nil : key, icon: key == "del" ? "backspace" : nil, k: k)
             }
         }
 
@@ -377,7 +346,7 @@ extension Rig {
         if let msg = m.message {
             let ay = ProblemLayout.actions(m)
             let (x, y, width) = lay.messageBelow ? (sx, ay + row + Paper.cell, col) : (sx + 240, ay, col - 240 * k)
-            rows("msg", msg.text, 20, .medium, msg.ok ? .ink2 : .chapter, x: x, top: y, width: width, max: 3)
+            s.words("msg", msg.text, Sketch.Words.message.colour(msg.ok ? .ink2 : .chapter), x: P(x, 0).x, top: P(0, y).y, width: width, max: 3, k: k)
         }
         return s
     }

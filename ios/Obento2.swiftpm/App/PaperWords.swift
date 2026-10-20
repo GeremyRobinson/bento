@@ -133,101 +133,72 @@ enum PaperText {
 }
 
 extension Rig {
-    /// The map's words: each chapter's dot, title and count; each lesson's name, its Up next tab and, when chosen, its
-    /// Start block. Rebuilt when what they say changes; each lesson's words fade in with its drawing.
+    /// The map's words (G 19 Oct, master components): each chapter's dot, title and count; each lesson's name and how
+    /// far it got, its Up next tab or, when chosen, its Start tab; a test's badge. Drawn like everything else
+    /// (SketchDrawer): each lesson's words write themselves on as its frame draws in, only what changes redraws, and
+    /// leaving for a lesson they undraw.
     func drawWords(_ model: PaperModel, at t: Double) {
         let isDark = dark ?? false
-        let key = "\(Progress.shared.checks.count) \(Progress.shared.learned.count) \(Progress.shared.tests) \(isDark) \(PageStore.version) \(model.selected?.id ?? "")"
-        if key != wordsKey { wordsKey = key; startKey = "-"; rebuildWords(model, dark: isDark) }
-        // the Start block moves with the choice on its own, so a tap rebuilds only it
-        let chosen = model.selected.flatMap { $0.opens ? $0 : nil }
-        if chosen?.id ?? "" != startKey { startKey = chosen?.id ?? ""; rebuildStart(chosen, dark: isDark) }
-        // erasing on the way into a lesson: all the map's words fade together
-        let gone = snapped(model.mapGone(at: t), 40)
-        if gone < 1 { words.components.set(OpacityComponent(opacity: Float(gone))) } else if words.components.has(OpacityComponent.self) { words.components.remove(OpacityComponent.self) }
-        // once everything has drawn in, the fades are done: nothing more to do each frame
-        let settled = t - model.drawnAt > Piece.drawTime + 1
-        if settled, pieceWordsK.count == Map.all.count, !pieceWordsK.values.contains(where: { $0 < 1 }) { return }
-        for p in Map.all {
-            guard let e = pieceWords[p.id] else { continue }
-            let k = snapped(Piece.drawIn(p, time: t, drawnAt: model.drawnAt, from: model.drawFrom), 20)
-            if pieceWordsK[p.id] == k { continue }
-            pieceWordsK[p.id] = k
-            e.isEnabled = k > 0
-            if k >= 1 { e.components.remove(OpacityComponent.self) } else { e.components.set(OpacityComponent(opacity: Float(k))) }
+        // gone (into a lesson): undraw; back on the map, a fresh drawing
+        if let left = model.mapLeftAt { mapDrawer?.undrawAll(at: left) }
+        else if mapDrawer?.leftAt != nil { mapDrawer?.root.removeFromParent(); mapDrawer = nil }
+        let d = mapDrawer ?? { let d = SketchDrawer(); words.addChild(d.root); mapDrawer = d; return d }()
+        let key = "\(Progress.shared.checks.count) \(Progress.shared.learned.count) \(Progress.shared.tests) \(isDark) \(PageStore.version) \(model.selected?.id ?? "") \(model.drawnAt)"
+        if key != d.key, model.mapLeftAt == nil {
+            d.key = key
+            d.build(mapSketch(model, dark: isDark), rig: self, chapter: Chapter.whole.hex, dark: isDark, origin: .zero, from: t, now: t)
         }
+        let moving = d.update(at: t)
+        if moving != model.mapDrawing { Task { @MainActor in model.setMapDrawing(moving) } }
     }
 
-    private func rebuildWords(_ model: PaperModel, dark: Bool) {
-        for c in Array(words.children) { c.removeFromParent() }
-        pieceWords = [:]; pieceWordsK = [:]
-        let ink = colours.ink, ink3 = UIColor(hex: dark ? 0x878177 : 0x8C867D)
+    private func mapSketch(_ model: PaperModel, dark: Bool) -> Sketch {
+        var s = Sketch()
+        /// When a place's words start: as its frame draws in (Piece.drawIn), a moment after.
+        func at(_ p: Point) -> Double { model.drawnAt + Piece.drawDelay(p, from: model.drawFrom) + 0.3 }
         // chapter titles, baselines on a grid line: a dot in the chapter's colour, the title, and how many are learned
-        let title = PaperText.font(30, .medium), small = PaperText.font(17)
         for g in Map.groups {
             let o = g.origin, done = g.lessons.filter { Progress.shared.learned.contains($0.id) }.count
-            if let d = PaperText.dot(at: CGPoint(x: o.x + 5, y: o.y + 27), radius: 5, UIColor(hex: g.chapter.hex)) { words.addChild(d) }
-            words.addChild(PaperText.label(g.chapter.title, title, ink, at: CGPoint(x: o.x + 20, y: o.y + 40)))
-            let w = PaperText.width(g.chapter.title, title)
-            words.addChild(PaperText.label("\(done) of \(g.lessons.count)", small, ink3, at: CGPoint(x: o.x + 32 + w, y: o.y + 37)))
+            s.startAt = at(Point(o.x + 150, o.y + 100))
+            s.polygon("dot\(g.chapter)", Self.circle(CGPoint(x: o.x + 5, y: o.y + 27), 5), .hex(g.chapter.hex, g.chapter.hex))
+            s.label("title\(g.chapter)", g.chapter.title, .chapter, at: CGPoint(x: o.x + 20, y: o.y + 40))
+            let w = PaperText.width(g.chapter.title, PaperText.font(Sketch.Words.chapter.size, Sketch.Words.chapter.weight))
+            s.label("count\(g.chapter)", "\(done) of \(g.lessons.count)", .count, at: CGPoint(x: o.x + 32 + w, y: o.y + 37))
         }
-        let name = PaperText.font(20, .medium), tagFont = PaperText.font(14, .semibold)
         for p in Map.all {
-            let e = Entity(), r = CGRect(x: p.at.x, y: p.at.y, width: Piece.size.width, height: Piece.size.height)
-            e.addChild(PaperText.label(p.name, name, ink, at: CGPoint(x: r.minX, y: r.maxY + 28)))
-            // stopped partway: how far they got, after the name
+            let r = CGRect(x: p.at.x, y: p.at.y, width: Piece.size.width, height: Piece.size.height), id = p.id
+            let hex = p.chapter.hex, chapter = Sketch.Colour.hex(hex, hex)
+            s.startAt = at(p.frame.mid)
+            // its name, and under it how far it got (stopped partway), or for a test what it waits for
+            s.label(id + "name", p.name, .label, at: CGPoint(x: r.minX, y: r.maxY + 28))
             if p.isTest {
-                // its score once taken, else what it waits for
-                // taken: just Done; how it went is broken down in Me
-                let line = Progress.shared.tests[p.id].map { _ in "Done" }
+                let line = PageStore.load(p.id).map { "\($0.solved) of \($0.problems.count) done" } ?? Progress.shared.tests[p.id].map { _ in "Done" }
                     ?? (p.opens ? "\(p.id == "test-grade" ? 20 : 12) problems" : p.id == "test-grade" ? "Finish the chapter tests first" : Map.chapterHasLessons(p.chapter) ? "Finish the lessons first" : "Coming soon")
-                e.addChild(PaperText.label(PageStore.load(p.id).map { "\($0.solved) of \($0.problems.count) done" } ?? line, PaperText.font(16, .medium),
-                                           p.opens || Progress.shared.tests[p.id] != nil ? UIColor(hex: p.chapter.hex) : ink3, at: CGPoint(x: r.minX, y: r.maxY + 50)))
-            } else if let s = PageStore.load(p.id) {
-                e.addChild(PaperText.label("\(s.solved) of \(s.problems.count) done", PaperText.font(16, .medium), UIColor(hex: p.chapter.hex),
-                                           at: CGPoint(x: r.minX, y: r.maxY + 50)))
+                s.label(id + "line", line, Sketch.Words(size: 16, weight: .medium, colour: p.opens || Progress.shared.tests[p.id] != nil ? chapter : .ink3), at: CGPoint(x: r.minX, y: r.maxY + 50))
+            } else if let saved = PageStore.load(p.id) {
+                s.label(id + "line", "\(saved.solved) of \(saved.problems.count) done", Sketch.Words(size: 16, weight: .medium, colour: chapter), at: CGPoint(x: r.minX, y: r.maxY + 50))
             }
             if p.isTest {
-                // a test's badge (G 18 Oct): a round seal on the frame's top-left corner, how many problems it has, its
-                // score once taken; filled in the chapter's colour when it can be taken, an outline while it waits
-                let c = UIColor(hex: p.chapter.hex), corner = CGPoint(x: r.minX, y: r.minY), score = Progress.shared.tests[p.id]
-                if p.opens || score != nil {
-                    if let d = PaperText.dot(at: corner, radius: 22, c, y: 0.0021) { e.addChild(d) }
-                } else {
-                    if let d = PaperText.dot(at: corner, radius: 22, UIColor(hex: dark ? 0x121211 : 0xF3F2EF), y: 0.0021) { e.addChild(d) }
-                    let ring = (0...40).map { i -> CGPoint in let a = Double(i) / 40 * 2 * .pi; return CGPoint(x: corner.x + 21 * cos(a), y: corner.y + 21 * sin(a)) }
-                    let segs = zip(ring, ring.dropFirst()).map { (SIMD2(Float($0.x / Paper.unit), Float($0.y / Paper.unit)), SIMD2(Float($1.x / Paper.unit), Float($1.y / Paper.unit))) }
-                    if let m = Self.lines(segs, width: Float(1.5 / Paper.unit)) { let l = ModelEntity(mesh: m, materials: [flat(UIColor(hex: Ink.mix(dark ? 0x121211 : 0xF3F2EF, p.chapter.hex, 0.45)))]); l.position.y = 0.0022; e.addChild(l) }
-                }
-                let textColour = p.opens || score != nil ? UIColor.white : UIColor(hex: Ink.mix(dark ? 0x121211 : 0xF3F2EF, p.chapter.hex, 0.7))
-                if score != nil {
-                    // taken: a tick for done; how it went is written under its name
-                    let tick = [CGPoint(x: corner.x - 8, y: corner.y), CGPoint(x: corner.x - 2.5, y: corner.y + 6), CGPoint(x: corner.x + 9, y: corner.y - 6.5)]
-                    let segs = zip(tick, tick.dropFirst()).map { (SIMD2(Float($0.x / Paper.unit), Float($0.y / Paper.unit)), SIMD2(Float($1.x / Paper.unit), Float($1.y / Paper.unit))) }
-                    if let m = Self.lines(segs, width: Float(3 / Paper.unit)) { let l = ModelEntity(mesh: m, materials: [flat(textColour)]); l.position.y = 0.0023; e.addChild(l) }
-                } else {
-                    e.addChild(PaperText.label("\(p.id == "test-grade" ? 20 : 12)", PaperText.font(15, .bold, digits: true), textColour, at: corner, anchor: .center, y: 0.0023))
-                }
-            } else if p.state == .now, !(model.selected?.id == p.id && p.opens) {
-                let tag = CGRect(x: r.maxX - 80, y: r.minY - 20, width: 80, height: 20)
-                if let m = Self.fills([tag]) { let f = ModelEntity(mesh: m, materials: [flat(UIColor(hex: p.chapter.hex))]); f.position.y = 0.002; e.addChild(f) }
-                e.addChild(PaperText.label("Up next", tagFont, .white, at: CGPoint(x: tag.midX, y: tag.midY), anchor: .center))
+                // a test's badge (G 18 Oct): a round seal on the frame's top-left corner, how many problems it has (a tick
+                // once taken); filled in the chapter's colour when it can be taken, an outline while it waits
+                let corner = CGPoint(x: r.minX, y: r.minY), taken = Progress.shared.tests[p.id] != nil, ready = p.opens || taken
+                s.plate(id + "seal\(ready)", Self.circle(corner, 22), ready ? chapter : .paper)
+                if !ready { s.overLine(id + "ring", Self.circle(corner, 21) + [Self.circle(corner, 21)[0]], .hex(Ink.mix(0xF3F2EF, hex, 0.45), Ink.mix(0x121211, hex, 0.45)), width: 1.5) }
+                let mark: Sketch.Colour = ready ? .hex(0xFFFFFF, 0xFFFFFF) : .hex(Ink.mix(0xF3F2EF, hex, 0.7), Ink.mix(0x121211, hex, 0.7))
+                if taken { s.overLine(id + "tick", [CGPoint(x: corner.x - 8, y: corner.y), CGPoint(x: corner.x - 2.5, y: corner.y + 6), CGPoint(x: corner.x + 9, y: corner.y - 6.5)], mark, width: 3) }
+                else { s.text(id + "n", "\(p.id == "test-grade" ? 20 : 12)", at: corner, size: 15, weight: .bold, mark) }
+            } else if model.selected?.id == p.id && p.opens {
+                // chosen: its tab says Start (or Continue), with an arrow (G 18 Oct)
+                s.startAt = nil
+                s.tab(id, frame: r, PageStore.load(p.id) == nil ? "Start" : "Continue", width: p.start.width, arrow: true)
+            } else if p.state == .now {
+                s.tab(id, frame: r, "Up next")
             }
-            words.addChild(e)
-            pieceWords[p.id] = e
         }
-        words.addChild(start)
+        return s
     }
 
-    /// The chosen lesson's tag (G 18 Oct): the frame's top-right tab, in its chapter's colour, saying Start (or Keep
-    /// going) with an arrow, where Up next sits on the others. No block under the name, so the rows stay a block apart.
-    private func rebuildStart(_ p: Piece?, dark: Bool) {
-        for c in Array(start.children) { c.removeFromParent() }
-        guard let p else { return }
-        let s = CGRect(x: p.start.x, y: p.start.y, width: p.start.width, height: p.start.height)
-        if let m = Self.fills([s]) { let f = ModelEntity(mesh: m, materials: [flat(UIColor(hex: p.chapter.hex))]); f.position.y = 0.0021; start.addChild(f) }
-        start.addChild(PaperText.label(PageStore.load(p.id) == nil ? "Start" : "Continue", PaperText.font(14, .semibold), .white,
-                                       at: CGPoint(x: s.minX + 12, y: s.midY), anchor: UnitPoint(x: 0, y: 0.5)))
-        if let a = PaperText.icon("arrow-right", .white, in: CGRect(x: s.maxX - 26, y: s.midY - 8, width: 16, height: 16)) { start.addChild(a) }
+    static func circle(_ c: CGPoint, _ r: Double) -> [CGPoint] {
+        (0..<40).map { i in let a = Double(i) / 40 * 2 * .pi; return CGPoint(x: c.x + r * cos(a), y: c.y + r * sin(a)) }
     }
 }
