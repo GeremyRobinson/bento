@@ -163,7 +163,7 @@ enum Shots {
                 // glide from group to group, as a hand would, to watch the words keep up with the pictures
                 m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
                 try? await Task.sleep(for: .seconds(2))
-                for id in ["ad", "uc", "g5-pow10", "uc", "g5-mult2", "uc"] {
+                for id in ["add", "g5-volume", "g5-pow10", "g5-volume", "g5-mult2", "g5-volume"] {
                     m.select(Map.piece(id)!); try? await Task.sleep(for: .seconds(1.2))
                 }
                 return
@@ -186,7 +186,8 @@ enum Shots {
             let uc = Map.piece("uc")!
             switch name {
             case "paper": break
-            case "selected": m.select(uc)
+            // the Paper proof's pieces are off the map (20 Oct): a lesson on it is chosen instead
+            case "selected": m.select(Map.piece("g5-volume"))
             case let n where n.hasPrefix("cards-"):
                 // cards-<lesson id>[-done]: the page of problems after the How to; -done: the together ones solved, the
                 // first own one with a miss (a fresh one comes for it), two more right, and the page back
@@ -245,10 +246,10 @@ enum Shots {
                 Progress.shared.reset(to: whole)
                 let t = Map.tests.first { $0.id == "test-whole" }!
                 m.select(t); m.open(t)
-            case "selected-ad": m.select(Map.piece("ad")!)
+            case "selected-ad": m.select(Map.piece("add"))
             case "selected-many":
                 // tap five lessons one after another: the zoom mustn't creep in
-                for id in ["g5-mult2", "ad", "g5-round", "uc", "add"] { m.select(Map.piece(id)!) }
+                for id in ["g5-mult2", "sub", "g5-round", "g5-volume", "add"] { m.select(Map.piece(id)) }
             case "theme":
                 // flip to dark while the app runs, as the moon in the top bar does
                 UserDefaults.standard.set("light", forKey: "theme")
