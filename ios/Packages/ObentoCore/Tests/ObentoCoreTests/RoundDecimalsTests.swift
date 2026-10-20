@@ -15,7 +15,7 @@ final class RoundDecimalsTests: XCTestCase {
         var l = run(3476, 2)
         XCTAssertEqual(RoundDecimals.spec.master, "number-line")
         XCTAssertEqual(l.display, [.num(3.476), .op("≈"), .text("?"), .text("(nearest hundredth)")])
-        XCTAssertEqual(l.words.say, "What is 3.476 rounded to the nearest hundredth?")
+        XCTAssertEqual(l.words.say, "Round to the nearest hundredth.")
         XCTAssertEqual(l.words.action, "Let’s find out")
         XCTAssertEqual(l.picture["value"], 3.476); XCTAssertEqual(l.picture["lo"], 3.47); XCTAssertEqual(l.picture["hi"], 3.48)
         XCTAssertEqual(l.picture["half"], 3.475); XCTAssertEqual(l.picture["tick"]!, 0.001, accuracy: 1e-12)
@@ -45,7 +45,7 @@ final class RoundDecimalsTests: XCTestCase {
         XCTAssertEqual(l.steps[3].answer?.work, [.num(3.476), .op("≈"), .num(3.48)])
         XCTAssertEqual(l.go(), .moved(4))
 
-        XCTAssertEqual(l.words.say, "3.476 ≈ 3.48.")
+        XCTAssertEqual(l.words.say, "6 is 5 or more, so round up.")
         XCTAssertEqual(l.words.hint, "Rounding picks the closer number, and the digit just to the right tells you which.")
         XCTAssertEqual(l.picture["hop"], 1); XCTAssertEqual(l.picture["halfwayUp"], 0)
         XCTAssertEqual(l.go(), .newProblem)
@@ -60,7 +60,7 @@ final class RoundDecimalsTests: XCTestCase {
         XCTAssertEqual(answer(&l, "51.65"), .moved(4))
         var roll = run(4960, 1); toRound(&roll)
         XCTAssertEqual(answer(&roll, "5"), .moved(4))
-        XCTAssertEqual(roll.words.say, "4.96 ≈ 5.")
+        XCTAssertEqual(roll.words.say, "6 is 5 or more, so round up.")
         var roll2 = run(4960, 1); toRound(&roll2)
         XCTAssertEqual(answer(&roll2, "5.0"), .moved(4))
     }

@@ -76,7 +76,8 @@ public enum RoundDecimals {
         let base: Numbers = ["lo": T, "hi": s.up, "tick": s.place / 10, "value": s.value, "half": s.half, "rounded": R, "line": 1]
         let pic = { (extra: Numbers) in base.merging(extra) { $1 } }
 
-        let ask = LessonStep(StepWords(say: "What is \(V) rounded to the nearest \(p == 1 ? "tenth" : "hundredth")?",
+        // the number is written once, in the work (G 20 Oct): the first words only say which place
+        let ask = LessonStep(StepWords(say: "Round to the nearest \(p == 1 ? "tenth" : "hundredth").",
                                        hint: "Look at the line. Which end is it closer to?", action: "Let’s find out"),
                              picture: base)
 
@@ -110,7 +111,8 @@ public enum RoundDecimals {
                                hint: "The next digit is \(next)."),
             picture: pic(["halfway": 1]))
 
-        let done = LessonStep(StepWords(say: "\(V) ≈ \(fmt(R)).",
+        // the answer is in the work; the last words say why
+        let done = LessonStep(StepWords(say: narration,
                                         hint: "Rounding picks the closer number, and the digit just to the right tells you which.",
                                         action: "Next problem"),
                               picture: pic(["halfway": 1, "hop": 1, "halfwayUp": s.halfway ? 1 : 0]))

@@ -39,6 +39,7 @@ enum LessonPictures {
     static func drawing(_ id: String, _ n: Numbers, _ p: Numbers) -> Drawing {
         switch id {
         case "add", "sub", "mix": return unlikeDrawing(n, p)
+        case "g5-round": return roundDrawing(n, p)
         default:
             let d = drawingParts(id, n, p)
             return Drawing(picture: d.picture, work: d.work, boxes: d.box.map { [WorkBox(id: nil, right: $0.right, mid: $0.mid, cell: $0.cell)] } ?? [])
@@ -54,7 +55,6 @@ enum LessonPictures {
         case "g5-divide": return divideGrid(dv: Int(v("dv")), qt: Int(v("qt")), strip: Int(k("strip")), found: Int(k("found")), left: k("left") == 1, sum: k("sum") == 1, box: k("box") == 1)
         case "g5-order": return with(orderGrid(n, beat: Int(k("beat"))))
         case "g5-pow10": return with(powersGrid(x: v("x"), k: Int(v("k")), hop: k("hop") == 1))
-        case "g5-round": return with(roundGrid(n, p))
         case "g5-adddec": return with(addDecimalsGrid(a: v("a"), b: v("b"), p))
         case "g5-multdec": return with(multiplyDecimalsGrid(n, p))
         case "g5-divdec": return with(divideDecimalGrid(d: Int(v("d")), qt: Int(v("qt")), p))
@@ -836,59 +836,62 @@ enum LessonPictures {
         return l
     }
 
-    /// 6.723 to the nearest tenth, on the grid: the number two squares to a digit, its place underlined and the next
-    /// digit ringed; the number line from 6.7 to 6.8 where the squares are the distance (ten steps of four squares, so
-    /// halfway is the middle grid line and 6.723 sits 9.2 squares along: plainly nearer 6.7); the hop to the nearer end;
-    /// and the working beside it.
-    static func roundGrid(_ n: Numbers, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
+    /// Rounding decimals in our format (G 20 Oct), from Assets' number line: on the left the line from the number
+    /// rounded down to rounded up, ten ticks of 3 squares, the number marked over it, halfway once the next digit is
+    /// found, then the hop to the closer end; under it, on the same left edge, the number as written, 2 squares a digit
+    /// (stacked, not side by side, so the problem is narrow and drawn big). The child answers in it: the place's digit in a box under its column (then underlined), the digit after it
+    /// under its own (then ringed), and the rounded number after ≈. One set of squares (`shared`).
+    static func roundDrawing(_ n: Numbers, _ p: Numbers) -> Drawing {
         let parts = RoundDecimals.Parts(n)
-        let lo = p["lo"] ?? parts.T, hi = p["hi"] ?? parts.up, tick = p["tick"] ?? parts.place / 10, value = parts.value
-        let lit = p["lit"], halfway = p["halfway"] == 1, hop = p["hop"] == 1
-        var pen = GridPen()
-        var wk = GridPen()
-        let big = Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink), label = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink2)
+        let lo = p["lo"] ?? parts.T, tick = p["tick"] ?? parts.place / 10, value = parts.value
+        let lit = p["lit"], halfway = p["halfway"] == 1, hop = p["hop"] == 1, typing = p["box"] == 1
+        let atDigit = typing && lit == 0, atNext = typing && lit == 1, atRound = typing && halfway && lit == nil
+        var pic = GridPen(), pen = GridPen()
+        let label = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink2)
+        let num = Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink)
 
-        // the number, two squares to a digit, from the left edge; its place underlined, the digit after it ringed
-        // written as the problem writes it (3.18, not 3.180)
-        let text = fmt(value), digitsOnly = text.filter { $0 != "." }, wholeDigits = text.split(separator: ".")[0].count
-        let right = Double(digitsOnly.count) * 2
-        pen.digits("num", text, right: right, row: 1, per: 2, size: Sketch.maths)
-        let placeCol = Double(wholeDigits + parts.p - 1) * 2, nextCol = placeCol + 2
-        pen.rule("place", from: placeCol, to: placeCol + 2, row: 2, lit == 0 ? .chapter : .ink2, width: Sketch.stroke)
-        if halfway { pen.ring("next", col: nextCol, row: 0, w: 2, h: 2) }
-        _ = big
-
-        // the number line: ten steps of four squares from lo to hi, long ticks at the ends and halfway
-        let per = 4.0, row = 10.0
-        let at = pen.numberLine("line", col: 0, row: row, steps: 10, per: per, long: 5)
+        // MARK: the number line, its line on row 4 (room over it for the number's label and the hop's word)
+        let per = 3.0, row = 4.0
+        let at = pic.numberLine("line", col: 0, row: row, steps: 10, per: per, long: 5)
         func col(_ v: Double) -> Double { (v - lo) / tick * per }
-        // every label half a square from what it labels: the ends and halfway under the line, the number over the ticks
-        pen.label("lo", fmt(lo), label.colour(lit == 0 ? .chapter : .ink2), .below, edge: row, along: at(0))
-        pen.label("hi", fmt(hi), label.colour(lit == 0 ? .chapter : .ink2), .below, edge: row, along: at(10))
+        // the ends written to the place (5.0, not 5), halfway one place further
+        let place = { (v: Double, k: Int) in String(format: "%.\(k)f", v) }
+        pic.label("lo", place(lo, parts.p), label.colour(lit == 0 ? .chapter : .ink2), .below, edge: row, along: at(0))
+        pic.label("hi", place(parts.up, parts.p), label.colour(lit == 0 ? .chapter : .ink2), .below, edge: row, along: at(10))
         if halfway {
-            pen.dot("half", at: at(5), row, radius: 0.3, lit == 1 ? .chapter : .ink2)
-            pen.label("halfw", fmt(parts.half), label.colour(lit == 1 ? .chapter : .ink3), .below, edge: row, along: at(5))
+            pic.dot("half", at: at(5), row, radius: 0.3, lit == 1 ? .chapter : .ink2)
+            pic.label("halfw", place(parts.half, parts.p + 1), label.colour(lit == 1 ? .chapter : .ink3), .below, edge: row, along: at(5))
         }
-        pen.dot("value", at: col(value), row, radius: 0.4, .tint(0.7))
-        pen.label("valuew", fmt(value), label.colour(lit == 0 ? .chapter : .ink), .above, edge: row - 2, along: col(value))
+        pic.dot("value", at: col(value), row, radius: 0.4, .tint(0.7))
+        pic.label("valuew", fmt(value), label.colour(lit == 0 ? .chapter : .ink), .above, edge: row - 2, along: col(value))
         if hop {
             let to = col(parts.R)
-            // under the tall ticks' tops, so it stays clear of the number's label over them
-            pen.hop("hop", from: col(value), to: to, row: row, height: 1.5)
-            pen.dot("rounded", at: to, row, radius: 0.4)
-            // over the hop and above the number's label, so the two never meet
-            pen.label("hopw", parts.halfway ? "halfway: up" : "closer", label.colour(.chapter), .above, edge: row - 4.5, along: (col(value) + to) / 2)
+            pic.hop("hop", from: col(value), to: to, row: row, height: 1.5)
+            pic.dot("rounded", at: to, row, radius: 0.4)
+            pic.label("hopw", parts.halfway ? "halfway: up" : "closer", label.colour(.chapter), .above, edge: row - 4.5, along: (col(value) + to) / 2)
         }
 
-        // the working, beside the line: the next digit against 5, then the answer
-        let wx = 45.0
-        if halfway {
-            wk.word("cmp", parts.next >= 5 ? "\(parts.next) is 5 or more: up" : "\(parts.next) is 4 or less: stays", at: wx, 1, label.colour(.ink), anchor: UnitPoint(x: 0, y: 0.5))
+        // MARK: the work, on the first block line under the line's labels, from the same left edge
+        let wrow = 10.0
+        let text = fmt(value), digits = text.filter { $0 != "." }, whole = text.split(separator: ".")[0].count
+        let right = 2 * Double(digits.count)
+        pen.digits("num", text, right: right, row: wrow + 1, per: 2)
+        // a digit's column middle, counted from the first digit
+        func mid(_ i: Int) -> Double { right - 2 * Double(digits.count - 1 - i) - 1 }
+        let placeI = whole + parts.p - 1, nextI = placeI + 1
+        // the place: its digit typed under it, then underlined; the digit after it typed under its own, then ringed
+        if atDigit { pen.answerBox("x", right: mid(placeI) + 1, mid: wrow + 4, per: 2, cells: 1, centred: true) }
+        if halfway { pen.rule("place", from: mid(placeI) - 1, to: mid(placeI) + 1, row: wrow + 2, .chapter) }
+        if atNext { pen.answerBox("x", right: mid(nextI) + 1, mid: wrow + 4, per: 2, cells: 1, centred: true) }
+        if halfway && !atNext { pen.ring("next", col: mid(nextI) - 1, row: wrow, w: 2, h: 2) }
+        // ≈ and the rounded number, written to the place (5.0, not 5)
+        if atRound || hop {
+            pen.word("approx", "≈", at: right + 2, wrow + 1, num)
+            let R = String(format: "%.\(parts.p)f", parts.R)
+            if hop { pen.digits("R", R, right: right + 4 + 2 * Double(R.count - 1), row: wrow + 1, per: 2, .chapter) }
+            else { pen.answerBox("x", right: right + 4 + 2 * Double(R.count), mid: wrow + 1, per: 2, cells: R.count) }
         }
-        if hop {
-            wk.word("ans", "\(fmt(value)) ≈ \(fmt(parts.R))", at: wx, 3, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .chapter), anchor: UnitPoint(x: 0, y: 0.5))
-        }
-        return (pen.sketch, wk.sketch)
+        return Drawing(picture: pic.sketch, work: pen.sketch, boxes: pen.boxes, shared: true)
     }
 
     /// 864 ÷ 12 in chunks: on the left the division bracket as school writes it, the tens taken away first and the
