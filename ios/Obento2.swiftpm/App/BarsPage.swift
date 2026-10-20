@@ -129,7 +129,9 @@ final class BarsPage {
         if !howToGone { return [howTo] }
         return [current, leaving].compactMap { $0 }
     }
-    var animating: Bool { all.contains { $0.animating } || playing || building || PaperClock.now - cardsAt < 1.2 || cardsGoneAt.map { PaperClock.now - $0 < 0.8 } ?? false }
+    /// When a problem last finished leaving: the clock runs a moment more, so the scene takes its drawing away.
+    private var leftClearedAt: Double = -100
+    var animating: Bool { all.contains { $0.animating } || playing || building || PaperClock.now - leftClearedAt < 0.5 || PaperClock.now - cardsAt < 1.2 || cardsGoneAt.map { PaperClock.now - $0 < 0.8 } ?? false }
     /// The scene still has problems' bars or words to make, a few a frame: the clock keeps running until they're all
     /// made. Set by the scene, only when it changes, so the clock (which watches it) starts and stops with it.
     private(set) var building = false
@@ -407,7 +409,7 @@ final class BarsPage {
     private func clearLeaving(_ c: any PageProblem) {
         Task { [weak self] in
             try? await Task.sleep(for: .seconds(0.6))
-            if let self, self.leaving === c { self.leaving = nil }
+            if let self, self.leaving === c { self.leaving = nil; self.leftClearedAt = PaperClock.now }
         }
     }
 

@@ -54,9 +54,12 @@ enum Shots {
                 if let box = w.lesson.step.answer?.boxes.first { w.select(box) }
                 await wait(2); w.showMe(); await wait(1); w.go(); await wait(3)
                 w.showMe(); await wait(1); w.go(); await wait(2)
-                // back to the page, the same problem again straight away, and back once more (G found it stuck)
+                // back to the page, the same problem again straight away, and back once more (G found it stuck); then
+                // another problem, and back
                 page.backToProblems(); await wait(0.3)
                 page.open(w); await wait(1.5)
+                page.backToProblems(); await wait(1.5)
+                page.open(page.problems[3]); await wait(3)
                 page.backToProblems()
                 return
             }

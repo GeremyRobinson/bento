@@ -119,7 +119,8 @@ extension Rig {
         // opened again while it was still undrawing: it draws itself back in
         if m.leftAt == nil, d.leftAt != nil { d.revive() }
         let key = "\(m.lesson.numbers) \(m.lesson.index) \(m.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(m.lesson.missedSteps.count) \(m.scale) " + wordsKey(m, page, dark: dark)
-        if key != d.key {
+        // leaving, it only undraws: a rebuild now (it stopped being the current one) would draw it all back in
+        if key != d.key, m.leftAt == nil {
             d.key = key
             let l = m.layout, o = m.contentOrigin
             var s = workSketch(m, top: true)
