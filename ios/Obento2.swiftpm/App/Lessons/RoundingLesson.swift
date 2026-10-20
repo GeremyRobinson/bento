@@ -63,7 +63,9 @@ struct RoundingLesson: PaperLesson {
             if at == 2 {
                 // the point to drag: where the hand has it, the number's label where it started (not while it's held)
                 let now = s.h("at") ?? P.step
-                live.dot("p2", at: now * B, y2, radius: s.grabbed ? 0.7 : 0.55, .chapter, over: true)
+                // bigger in the hand, but never into an end's number under the line (its ink half a square down)
+                let held = now == 0 || now == 10 ? 0.45 : 0.7
+                live.dot("p2", at: now * B, y2, radius: s.grabbed ? held : 0.55, .chapter, over: true)
                 if !s.grabbed {
                     pic.label("p2w", fmt(P.value), label.colour(.ink), .above, edge: y2 - 2, along: sx)
                     live.circle("p2ring", at: now * B, y2, radius: 1.3, .chapter, dashed: true)

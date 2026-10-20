@@ -255,6 +255,8 @@ enum Shots {
                     guard let i = args.firstIndex(of: flag), i + 1 < args.count else { return nil }
                     return args[i + 1].split(separator: ",").compactMap { Double($0) }
                 }
+                // a finger comes after the camera has framed the step, as a child's does
+                if args.contains("-tapsq") || args.contains("-drag") || args.contains("-block") { try? await Task.sleep(for: .seconds(1.5)) }
                 if let t = numbers("-tapsq"), t.count == 2 { m.tap(at: screen(t[0], t[1])) }
                 if let d = numbers("-drag"), d.count == 4 {
                     m.dragStart(at: screen(d[0], d[1]))
