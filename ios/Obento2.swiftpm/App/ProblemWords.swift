@@ -101,7 +101,8 @@ enum ProblemLayout {
     /// Where the blinking cursor goes in the box being typed into: after the last digit, in a gap of its own.
     static func cursor(_ m: WorkProblem) -> CGRect? {
         let l = m.lesson
-        guard !m.auto, !m.solved, m.verdict == nil, let a = l.step.answer, a.choices == nil, let id = l.active ?? a.boxes.first,
+        // none while Show me's ghost writes (its faint number is in the box)
+        guard !m.auto, !m.solved, m.verdict == nil, m.ghost == nil, let a = l.step.answer, a.choices == nil, let id = l.active ?? a.boxes.first,
               let r = blocks(m).first(where: { $0.kind == .field(id) })?.rect else { return nil }
         let L = m.layout, count = Double((l.typed[id] ?? "").count), b = L.box(for: id, first: a.boxes.first)
         let cell = b?.cell ?? Paper.cell * WorkProblem.lineCell * L.scale

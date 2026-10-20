@@ -67,8 +67,9 @@ struct FractionsLesson: PaperLesson {
                 bar(&pic, "b1", row: y1, parts: 1, W: q.W)
                 pic.fill("b1f", col: 0, row: y1, w: W, h: h, .tint(0.4))
             } else {
-                bar(&pic, "b1", row: y1, parts: F.den, W: q.W)
-                pic.fill("b1f", col: 0, row: y1, w: W * Double(F.num) / Double(F.den), h: h, .tint(0.4))
+                // as much as the sum is (S of L), cut into the simplest pieces (one piece when it's a whole)
+                bar(&pic, "b1", row: y1, parts: F.num == 0 ? 1 : F.den, W: q.W)
+                pic.fill("b1f", col: 0, row: y1, w: W * Double(q.S) / Double(q.L), h: h, .tint(0.4))
             }
         } else {
             let parts = cut ? q.L : q.b, per = cut ? pw : Double(q.pw1), shaded = cut ? q.A : q.a
