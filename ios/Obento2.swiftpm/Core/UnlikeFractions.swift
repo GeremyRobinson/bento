@@ -76,19 +76,25 @@ public enum UnlikeFractions {
         return (F.whole > 0 ? [.num(Double(F.whole))] : []) + [.frac(.num(Double(F.num)), .num(Double(F.den)))]
     }
 
-    /// Name of a piece size: halves, thirds, ..., twentieths, 22nds (the web's pieceName).
+    /// Name of a piece size, spelled out as a child reads it aloud: halves, thirds, ..., twelfths, eighteenths,
+    /// twenty-firsts, twenty-fourths (every bottom these lessons can have; the web's pieceName wrote "21sts" past 20).
     static func pieceName(_ d: Int, _ plural: Bool = true) -> String {
-        let names: [Int: (String, String)] = [
-            2: ("half", "halves"), 3: ("third", "thirds"), 4: ("fourth", "fourths"), 5: ("fifth", "fifths"), 6: ("sixth", "sixths"),
-            7: ("seventh", "sevenths"), 8: ("eighth", "eighths"), 9: ("ninth", "ninths"), 10: ("tenth", "tenths"),
-            11: ("eleventh", "elevenths"), 12: ("twelfth", "twelfths"), 13: ("thirteenth", "thirteenths"), 14: ("fourteenth", "fourteenths"),
-            15: ("fifteenth", "fifteenths"), 16: ("sixteenth", "sixteenths"), 17: ("seventeenth", "seventeenths"),
-            18: ("eighteenth", "eighteenths"), 19: ("nineteenth", "nineteenths"), 20: ("twentieth", "twentieths"), 100: ("hundredth", "hundredths"),
-        ]
-        if let n = names[d] { return plural ? n.1 : n.0 }
-        let last = d % 10, teen = (11...13).contains(d % 100)
-        let suffix = teen ? "th" : last == 1 ? "st" : last == 2 ? "nd" : last == 3 ? "rd" : "th"
-        return "\(d)\(suffix)\(plural ? "s" : "")"
+        if d == 2 { return plural ? "halves" : "half" }
+        let ones = ["", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth"]
+        let teens = ["tenth", "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth", "sixteenth", "seventeenth", "eighteenth", "nineteenth"]
+        let tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
+        let name: String
+        switch d {
+        case 3...9: name = ones[d]
+        case 10...19: name = teens[d - 10]
+        // twentieth, thirtieth; twenty-first, twenty-fourth
+        case 20...99: name = d % 10 == 0 ? tens[d / 10].dropLast() + "ieth" : "\(tens[d / 10])-\(ones[d % 10])"
+        case 100: name = "hundredth"
+        default:
+            let last = d % 10, teen = (11...13).contains(d % 100)
+            name = "\(d)" + (teen ? "th" : last == 1 ? "st" : last == 2 ? "nd" : last == 3 ? "rd" : "th")
+        }
+        return plural ? name + "s" : name
     }
 
     static func lcm(_ a: Int, _ b: Int) -> Int { a * b / gcd(a, b) }
@@ -208,7 +214,8 @@ public enum UnlikeFractions {
             answer: AnswerTask(prompt: [.box("s")], expected: ["s": 1],
                                hint: sub ? "Same-size pieces, so they can be taken away." : "Same-size pieces, so they can go together.",
                                explain: sub ? "The striped \(piece) cover \(C) of the shaded ones: \(S) are left." : "The striped \(piece) go after the shaded ones: \(S) in all.",
-                               check: { v in same(v["s"], 1) ? .right : .soft("Put them in the top bar.") }, byHand: true),
+                               // dropped anywhere else they go back: what happened, then what to do (a notice, not a miss)
+                               check: { v in same(v["s"], 1) ? .right : .soft("They went back. Drop them on the top bar.") }, byHand: true),
             picture: ["cut": 1, "slide": 1], onMiss: ["target": 1])
 
         // the record: a/b ± c/d = A/L ± C/L = [S]/L, the answer's bottom written for the child (G 20 Oct)
