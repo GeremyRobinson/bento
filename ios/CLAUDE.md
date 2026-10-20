@@ -3,7 +3,7 @@
 You're working with G, who owns Obento², a maths app for kids (K-12) that shows a child why the maths works, then practises it with them every day. Talk in plain words; G isn't a programmer. Always write the name as "Obento²", never "Bento 2".
 
 ## The app
-- `Obento2.swiftpm` is the app. G runs it in Swift Playgrounds on the Mac (no Xcode). After a change, tell G to press Play. If Playgrounds doesn't refresh, close and reopen the project.
+- `Obento2.swiftpm` holds the app's code. **G builds and runs it in Xcode** (20 Oct 2026: "we're not working in Swift Playgrounds anymore"). `Obento2.xcodeproj` is generated from `project.yml` by XcodeGen and isn't in git: after files are added or removed, run `xcodegen` in `ios/` (or `tools/build.sh`, which does it) so Xcode sees them. Swift Playgrounds compatibility is no longer required (`tools/playgrounds.sh` can still check it).
 - `App/` holds the screens. The whole paper is one RealityKit scene seen through one camera (`PaperScene.swift`): grid, lesson pictures and 3D lessons alike; flat is that camera straight above. Words and controls are SwiftUI on top, pinned to the paper. `Core/` holds the lesson logic and camera maths, with no drawing in it.
 - Xcode is installed (`/Applications/Xcode.app`) but not selected, so prefix commands with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`. Build and screenshot locally on the iPad simulator (`xcodegen`, then `xcodebuild` and `simctl launch … -shot <name>`) before pushing; it's much faster than waiting for GitHub.
 - Test Core with `cd Packages/ObentoCore && swift test` (it links to `Obento2.swiftpm/Core`). Every lesson's maths gets tests.
