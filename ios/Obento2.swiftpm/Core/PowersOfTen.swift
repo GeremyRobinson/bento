@@ -3,14 +3,14 @@ import Foundation
 /// Multiply by 10, 100, 1000 (the web app's g5-pow10): each zero moves every digit one place bigger.
 /// Numbers: x (two decimal places at most, 1.01 to 99.99) and k (1 to 3); the problem is x × 10^k.
 ///
-/// On the paper (design/grade5.md): a place chart, a column for each place the problem uses (from one past where the
-/// answer's first digit lands down to x's last decimal), the point fixed on the strong line between the ones and the
-/// tenths, and x's digits in their columns (the number written once). The child drags the digits left together, a
-/// column at a time, the hops and the readout under the chart counting "× 10", "× 100", "× 1000"; letting go on k
-/// columns answers the web's "how many zeros" step (its box is set from the columns moved). Then, only when x has fewer
-/// decimals than 10^k has zeros, they tap each empty place between the digits and the point, and a 0 is written there.
-/// Then the record, x × 10^k = [ ], typed: the web's "move the point" step, with its slips, worded for the chart (the
-/// digits move; the point stays where it is).
+/// On the paper (design/grade5.md): a place chart from the ten thousands down to x's last decimal (the same chart for
+/// × 10, × 100 and × 1000, so how far to drag is counted, never read off the chart), the point fixed on the strong line
+/// between the ones and the tenths, and x's digits in their columns (the number written once). The child drags the
+/// digits left together, a column at a time, the hops and the readout under the chart counting "× 10", "× 100",
+/// "× 1000"; letting go on k columns answers the web's "how many zeros" step (its box is set from the columns moved).
+/// Then, only when x has fewer decimals than 10^k has zeros, they tap each empty place between the digits and the
+/// point, and a 0 is written there. Then the record, x × 10^k = [ ], typed: the web's "move the point" step, with its
+/// slips, worded for the chart (the digits move; the point stays where it is).
 ///
 /// Picture keys: "at", the stage: 0 the question, 1 drag the digits, 2 write the 0s, 3 write the record, 4 done. A hint
 /// (after a miss, or asked for) lights: "target" (the hops the digits make, dashed, and what they make), "gaps" (each
@@ -63,12 +63,15 @@ public enum PowersOfTen {
         /// The places left empty between the digits and the point once they've moved: a 0 is written in each (none
         /// when x has as many decimals as 10^k has zeros).
         public var gaps: [Int] { (0..<max(0, k - decimals)).reversed().map { $0 } }
-        /// The chart's places, left to right: from one past where the first digit lands (room for one place too far,
-        /// the ten thousands at most) down to x's last decimal (the tenths at least, so the point has a place each side).
-        public var hi: Int { min(4, lead + k + 1) }
+        /// The chart's places, left to right: from the ten thousands (the biggest place an answer reaches: 99.99 × 1000
+        /// is 99990) down to x's last decimal (the tenths at least, so the point has a place each side). It never
+        /// depends on k: × 10, × 100 and × 1000 of a number have the same chart, so how far the digits go is counted
+        /// (the hops, the readout), never read off how wide the chart is.
+        public var hi: Int { 4 }
         public var lo: Int { min(-1, -decimals) }
         public var columns: [Int] { Array((lo...hi).reversed()) }
-        /// The furthest the digits can go: the first one to the chart's first place.
+        /// The furthest the digits can go: the first one to the chart's first place (4 places from the ones, room for one
+        /// too far even times 1000; 3 from the tens).
         public var most: Int { hi - lead }
         /// What `d` places make: "× 100".
         public static func times(_ d: Int) -> String { "× " + fmt(pow(10, Double(d))) }

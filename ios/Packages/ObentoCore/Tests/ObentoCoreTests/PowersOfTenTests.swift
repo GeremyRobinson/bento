@@ -22,8 +22,8 @@ final class PowersOfTenTests: XCTestCase {
         XCTAssertEqual(l.picture["at"], 0)
         XCTAssertEqual(s.digits, ["3", "4", "7"]); XCTAssertEqual(s.whole, 1); XCTAssertEqual(s.decimals, 2)
         XCTAssertEqual(s.lead, 0); XCTAssertEqual(s.gaps, [])
-        // the chart: the thousands (one past the hundreds, where the 3 lands) to the hundredths; the 3 can go 3 places
-        XCTAssertEqual(s.columns, [3, 2, 1, 0, -1, -2]); XCTAssertEqual(s.most, 3)
+        // the chart: the ten thousands to the hundredths, whatever it's multiplied by; the 3 can go 4 places, one too far
+        XCTAssertEqual(s.columns, [4, 3, 2, 1, 0, -1, -2]); XCTAssertEqual(s.most, 4)
         XCTAssertEqual(l.steps.count, 4, "nothing to fill: no step for the 0s")
         XCTAssertEqual(l.go(), .moved(1))
 
@@ -109,10 +109,10 @@ final class PowersOfTenTests: XCTestCase {
     /// How far the digits can go, and what each move says.
     func testMovesAndWhatTheySay() {
         let small = PowersOfTen.Parts(PowersOfTen.numbers(x: 1.01, k: 1)), big = PowersOfTen.Parts(PowersOfTen.numbers(x: 99.99, k: 3))
-        XCTAssertEqual(small.columns, [2, 1, 0, -1, -2], "the hundreds, one past the tens where the 1 lands")
-        XCTAssertEqual(small.most, 2, "one place too far, at most")
-        XCTAssertEqual(big.columns, [4, 3, 2, 1, 0, -1, -2], "the ten thousands at most: the whole chart")
-        XCTAssertEqual(big.most, 3, "a tens digit as far as the ten thousands: × 1000 exactly")
+        XCTAssertEqual(small.columns, [4, 3, 2, 1, 0, -1, -2], "the ten thousands to the hundredths, times 10 as times 1000")
+        XCTAssertEqual(small.most, 4, "a ones digit can go 4 places: one too far, even times 1000")
+        XCTAssertEqual(big.columns, [4, 3, 2, 1, 0, -1, -2], "the same chart")
+        XCTAssertEqual(big.most, 3, "a tens digit as far as the ten thousands")
         XCTAssertEqual(big.answer, 99990)
         XCTAssertEqual(big.digit(at: 4, by: 3), "9"); XCTAssertEqual(big.digit(at: 1, by: 3), "9"); XCTAssertNil(big.digit(at: 0, by: 3))
         XCTAssertEqual(big.gaps, [0], "99990: the ones get a 0")
@@ -147,7 +147,12 @@ final class PowersOfTenTests: XCTestCase {
                 // every move fits the chart: the first digit lands by the ten thousands, and the chart has its place
                 XCTAssertLessThanOrEqual(s.lead + s.k, 4)
                 XCTAssertGreaterThanOrEqual(s.most, s.k)
-                XCTAssertTrue(s.columns.count >= 4 && s.columns.count <= 7, "\(n)")
+                XCTAssertTrue(s.columns.count == 6 || s.columns.count == 7, "\(n)")
+                // the chart never says how far to go: the same for × 10, × 100 and × 1000 of the number
+                for other in 1...3 { XCTAssertEqual(PowersOfTen.Parts(PowersOfTen.numbers(x: s.x, k: other)).columns, s.columns, "\(n)") }
+                // one place too far can always be dragged, but for a tens digit times 1000 (it lands on the chart's
+                // first place, the ten thousands, the biggest any answer needs)
+                XCTAssertTrue(s.most > s.k || (s.whole == 2 && s.k == 3), "\(n)")
                 let l = LessonRun(PowersOfTen.spec, numbers: n)
                 XCTAssertEqual(l.steps.count, s.gaps.isEmpty ? 4 : 5)
                 XCTAssertEqual(l.steps.last(where: { $0.answer != nil })?.answer?.expected["x"] ?? 0, s.x * s.m, accuracy: 1e-9)

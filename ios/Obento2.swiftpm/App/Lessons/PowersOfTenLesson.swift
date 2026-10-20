@@ -1,15 +1,15 @@
 import SwiftUI
 
 /// Multiply by 10, 100, 1000 on the paper (design/grade5.md). A place chart, a table as school draws it: a column for
-/// each place the problem uses, each place's name in its head, the point fixed on the strong line between the ones and
+/// each place from the ten thousands to x's last decimal (the same chart for × 10, × 100 and × 1000, so how far to drag
+/// is counted, not read off it), each place's name in its head, the point fixed on the strong line between the ones and
 /// the tenths, x's digits in their cells (the problem's number, written once; the words say what it's multiplied by).
-/// A place is two blocks (the smallest words' "ten thousands" and "hundredths" are wider than one), so the chart is 40
-/// to 70 squares, as big as Rounding's line. Drag the digits left together: they snap a place at a time, and under the
-/// chart a hop for each place counts from the point, the readout under the hops ("× 10", "× 100", "× 1000"); let go on
-/// k places ("That's × 1000. × 100 moves every digit 2 places." when it isn't). Tap each gap the digits left between
-/// them and the point: a 0 is written there. Then the record, x × 10^k = [ ], typed; done, the answer in the chapter's
-/// colour, the multiplier's zeros underlined and the rule under it ("2 zeros: 2 places bigger"), and the last words say
-/// why.
+/// A place is two blocks (the smallest words' "ten thousands" and "hundredths" are wider than one), so the chart is 60
+/// or 70 squares. Drag the digits left together: they snap a place at a time, and under the chart a hop for each place
+/// counts from the point, the readout under the hops ("× 10", "× 100", "× 1000"); let go on k places ("That's × 1000.
+/// × 100 moves every digit 2 places." when it isn't). Tap each gap the digits left between them and the point: a 0 is
+/// written there. Then the record, x × 10^k = [ ], typed; done, the answer in the chapter's colour, the multiplier's
+/// zeros underlined and the rule under it ("2 zeros: 2 places bigger"), and the last words say why.
 @MainActor
 struct PowersOfTenLesson: PaperLesson {
     /// The picture's rows, in its squares: the names' row in the chart's head, the head's foot, the digits' row and the
@@ -111,7 +111,8 @@ struct PowersOfTenLesson: PaperLesson {
         for p in P.columns { pen.word("name\(p)", PowersOfTen.placeName(p), at: C.mid(p), Self.names, Self.small) }
         pen.sketch.box("chart\(P.columns.count)", pen.R(0, 0, C.width, Self.bottom), .ink2, width: Sketch.stroke)
         let edges = P.columns.dropFirst().map { C.left($0) }.filter { abs($0 - C.point) > 0.01 }
-        pen.sketch.segments("cells\(P.hi)\(P.lo)", edges.map { x in (pen.P(x, 0), pen.P(x, Self.bottom)) } + [(pen.P(0, Self.top), pen.P(C.width, Self.top))], .ink3, width: 1)
+        // its inner lines at the one line weight, lighter in colour than its outline and the point's line
+        pen.sketch.segments("cells\(P.hi)\(P.lo)", edges.map { x in (pen.P(x, 0), pen.P(x, Self.bottom)) } + [(pen.P(0, Self.top), pen.P(C.width, Self.top))], .ink3, width: Sketch.stroke)
         // the point's line, the chart's height; the point on it, sitting on the digits' line as a written point does
         pen.line("pointLine", [(C.point, 0), (C.point, Self.bottom)], .ink)
         let base = Self.row + Double(PaperText.font(Sketch.maths, .medium, digits: true).capHeight) / 2 / Paper.cell
