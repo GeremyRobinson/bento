@@ -93,10 +93,13 @@ final class BarsPage {
         let o = Self.origin(for: piece), chapter = piece.chapter, instant = reduceMotion || shotMode
         howTo = Self.make(spec, origin: o, chapter: chapter, instant: instant,
                           run: LessonRun(spec, numbers: first ?? spec.generate(&rng, 0)), label: "How to", auto: true)
-        /// A test's question `i` as it was saved, brought back by its own lesson (never by its place), or asked afresh
-        /// when it no longer fits that lesson.
+        /// A test's question `i` as it was saved, brought back by its own lesson (never by its place: the grade's test
+        /// picks its lessons afresh each time it opens, from any of the grade's), or asked afresh when that lesson isn't
+        /// the test's or has changed since.
         func question(_ i: Int, _ s: RunSnapshot?, from specs: [LessonSpec]) -> LessonRun? {
-            if let s, let sp = specs.first(where: { $0.id == (s.spec ?? spec.id) }), let r = LessonRun.restored(sp, s) { return r }
+            let id = s?.spec ?? spec.id
+            let own = specs.first { $0.id == id } ?? (piece.id == "test-grade" && Map.gradeLessons.contains(id) ? Lessons.spec(id) : nil)
+            if let s, let own, let r = LessonRun.restored(own, s) { return r }
             return LessonPlan.testRun(specs, i, using: &rng)
         }
         if let n = test {
@@ -192,7 +195,10 @@ final class BarsPage {
     var label: String {
         switch mode {
         case .howTo: return "How to"
-        case .result: return result?.title ?? ""
+        case .result:
+            // a chapter or grade test's name is the bar's own title already
+            guard let r = result else { return "" }
+            return r.kind == .test ? "\(r.right) of \(r.of) right" : "\(r.title) · \(r.right) of \(r.of) right"
         case .work:
             if let c = current {
                 if let i = testProblems.firstIndex(where: { $0 === c }) { return "Test \(i + 1) of \(testProblems.count)" }

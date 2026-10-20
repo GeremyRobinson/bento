@@ -54,6 +54,9 @@ final class LessonPlanTests: XCTestCase {
         XCTAssertEqual(plan.items[9].focus?.step, 1)
         XCTAssertEqual(plan.items[9].focus?.teach, false)
         XCTAssertTrue(plan.items[9].focus!.said.contains("add a zero"))
+        // what it keeps in mind is this problem's own advice, never the last problem's numbers
+        let a9 = fmt(plan.items[9].numbers["a"] ?? 0), d9 = MultiplyTwoDigit.parts(Int(plan.items[9].numbers["b"] ?? 0))[0] / 10
+        XCTAssertEqual(plan.items[9].focus?.said, "Do \(a9) × \(d9), then add a zero.")
         XCTAssertFalse(plan.items[9].story)
         // the same slip again: that part is taught first next time
         var r = plan.run(spec, 9)
@@ -179,5 +182,19 @@ final class LessonPlanTests: XCTestCase {
         XCTAssertEqual(plan.items[4].part, .own); XCTAssertFalse(plan.items[4].story)
         XCTAssertNotEqual(plan.items[4].numbers, was.numbers)
         XCTAssertEqual(plan.items.count, 9)
+    }
+
+    /// A problem aimed at a slip that's made again keeps its aim, with its advice for its fresh numbers.
+    func testRenewKeepsTheAim() {
+        var rng = SeededRandom(seed: 18)
+        var plan = LessonPlan(spec, using: &rng)
+        var runs = plan.items.indices.map { plan.run(spec, $0) }
+        let a = Int(plan.items[3].numbers["a"] ?? 0), tens = MultiplyTwoDigit.parts(Int(plan.items[3].numbers["b"] ?? 0))[0] / 10
+        work(&runs[3], wrong: [1: String(a * tens)])
+        let i = plan.solved(3, runs[3], spec, using: &rng)[0]
+        plan.renew(i, spec, using: &rng)
+        let n = plan.items[i].numbers
+        XCTAssertEqual(plan.items[i].focus?.step, 1)
+        XCTAssertEqual(plan.items[i].focus?.said, "Do \(fmt(n["a"] ?? 0)) × \(MultiplyTwoDigit.parts(Int(n["b"] ?? 0))[0] / 10), then add a zero.")
     }
 }

@@ -14,7 +14,8 @@ import Foundation
 public struct LessonPlan: Codable, Equatable, Sendable {
     public enum Part: String, Codable, Sendable { case together, own }
 
-    /// A problem aimed at a step the child slipped on: the step, what they were told, and whether to show it first.
+    /// A problem aimed at a step the child slipped on: the step, what to keep in mind there (that step's own advice for
+    /// this problem's numbers, so it never speaks of the problem that went wrong), and whether to show it first.
     public struct Focus: Codable, Equatable, Sendable {
         public var step: Int
         public var said: String
@@ -48,7 +49,18 @@ public struct LessonPlan: Codable, Equatable, Sendable {
 
     private static func ownItem(_ spec: LessonSpec, _ k: Int, focus: Focus? = nil, using rng: inout SeededRandom) -> Item {
         // a problem aimed at a slip is told plainly, so its steps line up with the one that went wrong
-        Item(part: .own, numbers: spec.generate(&rng, Self.together + min(k, 6)), story: focus == nil && spec.story != nil && k % 3 == 2, focus: focus)
+        let n = spec.generate(&rng, Self.together + min(k, 6))
+        return Item(part: .own, numbers: n, story: focus == nil && spec.story != nil && k % 3 == 2,
+                    focus: focus.map { Focus(step: $0.step, said: advice(spec, n, step: $0.step), teach: $0.teach) })
+    }
+
+    /// What to keep in mind at step `step` of the problem with these numbers: its own hint, worked out from them (the
+    /// words the child was told last time were about other numbers).
+    static func advice(_ spec: LessonSpec, _ n: Numbers, step: Int) -> String {
+        let steps = spec.steps(n)
+        guard steps.indices.contains(step) else { return "" }
+        let s = steps[step]
+        return [s.answer?.hint, s.words.hint, s.look].compactMap { $0 }.first { !$0.isEmpty } ?? ""
     }
 
     /// The run for item `i`: together problems guided with every hint, own ones with the first hint only after a miss.
@@ -66,8 +78,10 @@ public struct LessonPlan: Codable, Equatable, Sendable {
     public mutating func renew(_ i: Int, _ spec: LessonSpec, using rng: inout SeededRandom) {
         guard items.indices.contains(i) else { return }
         let k = items[...i].filter { $0.part == items[i].part }.count - 1
-        items[i].numbers = spec.generate(&rng, items[i].part == .together ? min(k, Self.together - 1) : Self.together + min(k, 6))
+        let n = spec.generate(&rng, items[i].part == .together ? min(k, Self.together - 1) : Self.together + min(k, 6))
+        items[i].numbers = n
         items[i].story = false
+        items[i].focus = items[i].focus.map { Focus(step: $0.step, said: Self.advice(spec, n, step: $0.step), teach: $0.teach) }
     }
 
     /// Own problems right on their own: no miss, and no Show me (G 20 Oct).

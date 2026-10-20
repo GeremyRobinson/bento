@@ -390,14 +390,18 @@ enum Shots {
             guard let p = lesson("hint-\(kind)-"), let page = open(p) else { return true }
             await wait(0.3)
             if kind == "together" { page.open(page.problems[0]); return true }
-            let own = page.problems.indices.filter { page.plan?.items[$0].part == .own }
+            /// The next own problem not done, told plainly (a story's first step is picking what to do).
+            func nextOwn() -> Int? {
+                page.problems.indices.first { i in page.plan.map { $0.items[i].part == .own && !$0.items[i].story } == true && !page.problems[i].solved }
+            }
             if kind == "used" {
                 // five own problems, each with a miss and its hint taken: the page's hints are used up
-                for i in own.prefix(LessonPlan.hints) {
+                for _ in 0..<LessonPlan.hints {
+                    guard let i = nextOwn() else { break }
                     page.open(page.problems[i]); await work(page.problems[i], miss: true, afterMiss: { page.hint() })
                 }
             }
-            let i = own[LessonPlan.hints]
+            guard let i = nextOwn() else { return true }
             page.open(page.problems[i]); await work(page.problems[i], miss: true, stopAfterMiss: true)
         case let n where n.hasPrefix("recheck"):
             let id = n.hasPrefix("recheck-result-") ? String(n.dropFirst(15)) : n.hasPrefix("recheck-") ? String(n.dropFirst(8)) : "g5-mult2"
@@ -436,8 +440,12 @@ enum Shots {
                 w.go()
                 afterMiss?()
                 if stopAfterMiss { return }
-                // one try: its answer is shown, and it moves on by itself
-                if w.lesson.oneTry { try? await Task.sleep(for: .seconds(0.15)); done += 1; continue }
+                // one try: its answer is shown, and it moves on by itself (waited for: the paper may still be drawing)
+                if w.lesson.oneTry {
+                    let at = w.lesson.index
+                    for _ in 0..<60 where w.lesson.index == at && !w.solved { try? await Task.sleep(for: .seconds(0.05)) }
+                    done += 1; continue
+                }
                 w.reset()
             }
             if showMe { w.showMe() }

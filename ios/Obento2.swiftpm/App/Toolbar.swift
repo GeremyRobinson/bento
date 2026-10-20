@@ -187,11 +187,12 @@ struct Toolbar: View {
         if let b = model.bars, b.showing { return b.progress }
         return 0
     }
-    /// The open problem's steps, counted from its first question to its answer.
+    /// The open problem's steps as the child meets them, from its first question (a story's "Pick what to do") to its
+    /// answer: the opening question a page's problem goes straight past isn't one, so the first step is Step 1.
     private var problemSteps: (at: Int, of: Int)? {
         guard let l = problem?.lesson else { return nil }
-        let of = max(1, l.steps.count - l.lead)
-        return (min(of, l.index - l.lead + 1), of)
+        let seen = l.steps.indices.filter { !(l.skipsAsk && $0 == l.askIndex) }
+        return ((seen.firstIndex(of: l.index) ?? 0) + 1, max(1, seen.count))
     }
 
     /// The instruction only, never the hint (G 20 Oct): that's the Hint button's, and counted.
