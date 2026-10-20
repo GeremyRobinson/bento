@@ -41,6 +41,14 @@ final class PlacesTests: XCTestCase {
         at(mid.x - 200, mid.y + 70).press(forDuration: 3.6)
         sleep(2)
         attach(app, "5 grown-ups open")
+        // the paper's colours, from the page (framed at 82%: its Colours blocks are 107 points under the screen's middle,
+        // Dark 428 to the right of it, Match the iPad 198): dark, then as the iPad is set again
+        at(mid.x + 428, mid.y + 107).tap()
+        sleep(2)
+        attach(app, "5b dark from the page")
+        at(mid.x + 198, mid.y + 107).tap()
+        sleep(2)
+        attach(app, "5c as the iPad is set")
 
         // back to the map from the bar; a tap on a lesson there chooses it
         app.buttons["Lessons"].tap()
