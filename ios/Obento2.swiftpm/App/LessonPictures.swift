@@ -200,6 +200,11 @@ enum LessonPictures {
             pen.digits("wp\(i)", String(pr), right: right, row: row(Double(2 + i)), per: per, i + 1 == strip ? .chapter : .ink)
             pen.word("wl\(i)", "\(a) × \(ps[i])", at: right + k, row(Double(2 + i)), Sketch.Words(size: 18, weight: .regular, colour: .ink3), anchor: UnitPoint(x: 0, y: 0.5))
         }
+        // the plus before the last part, in the ×'s column, once every part is written (as school adds them); a sign,
+        // so in ink like the ×
+        if products.count > 1, found >= products.count {
+            pen.word("wplus", "+", at: right - 4.5 * per, row(Double(1 + products.count)), Sketch.Words(size: 28, weight: .medium, colour: .ink))
+        }
         if sum {
             let r = Double(2 + products.count)
             pen.rule("wr2", from: right - 5 * per, to: right, row: ry + r * per)
