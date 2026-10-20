@@ -24,6 +24,24 @@ struct GridPen {
     mutating func word(_ id: String, _ text: String, at col: Double, _ row: Double, _ w: Sketch.Words, anchor: UnitPoint = .center) {
         sketch.text("\(id):\(text)", text, at: P(col, row), size: w.size * k, weight: w.weight, w.colour, anchor: anchor, digits: true)
     }
+    enum Side { case above, below, left, right }
+    /// A label on one side of what it labels (G 19 Oct): its ink always half a square from that edge, whichever side,
+    /// however many digits; `edge` is the edge's row (above, below) or column (left, right), `along` the middle of
+    /// what it labels the other way.
+    mutating func label(_ id: String, _ text: String, _ w: Sketch.Words, _ side: Side, edge: Double, along: Double) {
+        let f = PaperText.font(w.size * k, w.weight, digits: true), gap = 0.5 * k
+        // where the line's box puts its digits: their ink's middle is this far below the box's middle
+        let ink = Double(f.ascender) - Double(f.capHeight) / 2 - Double(f.lineHeight) / 2, cap = Double(f.capHeight) / Self.sq
+        let at: CGPoint, anchor: UnitPoint
+        switch side {
+        case .above: at = P(along, edge - gap - cap / 2); anchor = .center
+        case .below: at = P(along, edge + gap + cap / 2); anchor = .center
+        case .left: at = P(edge - gap, along); anchor = UnitPoint(x: 1, y: 0.5)
+        case .right: at = P(edge + gap, along); anchor = UnitPoint(x: 0, y: 0.5)
+        }
+        sketch.text("\(id):\(text)", text, at: CGPoint(x: at.x, y: at.y - ink), size: w.size * k, weight: w.weight, w.colour, anchor: anchor, digits: true)
+    }
+
     /// A number in its squares: `per` squares to a digit, the ones digit ending on column `right`, the point on the
     /// grid line between two digits (as school writes it on squared paper), centred down `row`.
     mutating func digits(_ id: String, _ text: String, right: Double, row: Double, per: Double, size: CGFloat = 30, _ colour: Sketch.Colour = .ink) {

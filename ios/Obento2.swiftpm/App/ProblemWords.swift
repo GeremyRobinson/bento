@@ -16,11 +16,11 @@ enum ProblemLayout {
         guard let w = m as? WorkProblem else { return actions }
         let l = w.layout
         // under the line being worked when it's tall (a fraction's boxes), else the bottom row
-        var y = l.actions ?? (BarsPage.box.dy + l.height * Paper.unit - 100)
+        var y = l.actions ?? (l.lineY + Paper.unit)
         if let a = m.lesson.step.answer, a.choices == nil {
-            // a tall line (a fraction's boxes) pushes Check down, a whole row at a time
-            let under = l.lineY + Double(MathLineView.layout(a.prompt, typed: m.lesson.typed, size: 28).h) * Paper.cell + 2 * Paper.cell
-            y = max(y, (under / (2 * Paper.cell)).rounded(.up) * 2 * Paper.cell)
+            // a tall line (a fraction's boxes) pushes Check down, to the next block line
+            let under = l.lineY + Double(MathLineView.layout(a.prompt, typed: m.lesson.typed, size: 28).h) * Paper.cell + Paper.cell
+            y = max(y, (under / Paper.unit).rounded(.up) * Paper.unit)
         }
         return y
     }
@@ -109,7 +109,7 @@ extension Rig {
         let W = m.wholeWidth, e = m.coverEnd, r1 = AddFractionsModel.row1, r2 = AddFractionsModel.row2, h = AddFractionsModel.barHeight
         func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x, y: o.y + y) }
         let col = ProblemLayout.column, chapter = Sketch.Colour.chapter, right = Sketch.Colour.hex(0x178A57, 0x3CCF8E)
-        s.words("name", m.label, .name, x: o.x, top: P(0, BarsPage.box.dy + 20).y, width: col)
+        s.words("name", m.label, .name, x: o.x, top: P(0, BarsPage.box.dy).y, width: col)
 
         // the problem, at the top: the sum, and the story beside it when it's told as one (as every problem has it)
         let sumFont = PaperText.font(40, .medium, digits: true), sumY = -100 + Sketch.row
@@ -191,7 +191,7 @@ extension Rig {
         let row = Sketch.row, sx = lay.stepX
         if part {
             // its name, then the sum starting on the same left edge, and the story beside it when it's told as one
-            s.words("name", m.label, .name, x: P(0, 0).x, top: P(0, BarsPage.box.dy + 20).y, width: col, k: k)
+            s.words("name", m.label, .name, x: P(0, 0).x, top: P(0, BarsPage.box.dy).y, width: col, k: k)
             let width = s.sum("sum", l.spec.display(l.numbers), at: P(0, WorkProblem.problemY), k: k)
             if l.story, let story = l.spec.story?(l.numbers) {
                 let x = P(0, 0).x + width + 2 * row * k

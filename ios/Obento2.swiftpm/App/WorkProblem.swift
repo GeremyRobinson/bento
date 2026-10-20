@@ -35,7 +35,8 @@ final class WorkProblem: Identifiable, PageProblem {
 
     // where things sit, in paper points from `origin`, inside the box (BarsPage.box): the problem above the origin, the
     // picture from the origin down, then the step
-    static let problemY: Double = -120
+    /// The sum's row starts on the block line one block above the picture.
+    static let problemY: Double = -100
 
     /// Where things sit in an open problem, in points from its origin before `scale`. An open problem is its own space
     /// on the grid, with no frame, filling the screen (G 19 Oct): 13 blocks by 9, its picture drawn 1.6 times its size
@@ -44,11 +45,13 @@ final class WorkProblem: Identifiable, PageProblem {
     /// drawn `scale` times bigger, and the camera steps back to see it all.
     struct Layout {
         var scale = 1.0
-        var width = 13.0, height = 9.0
-        var pictureTop = -10.0, pictureScale = 1.6
-        var stepX = 0.0, stepY = 480.0, lineY = 560.0, column = 1220.0
+        var width = 13.0, height = 10.0
+        // every part starts on a block line: the picture at the top, the step five blocks down, its line and Check a
+        // block apart, the keypad's corner on a block too
+        var pictureTop = 0.0, pictureScale = 1.6
+        var stepX = 0.0, stepY = 500.0, lineY = 600.0, column = 1100.0
         /// The keypad's corner: 3 keys by 4, each 3 squares.
-        var keypadX = 1000.0, keypadY = 460.0
+        var keypadX = 1000.0, keypadY = 500.0
         /// Check's row (else the bottom row, or under a tall line), and what a miss says under Check instead of beside it.
         var actions: Double? = nil
         var messageBelow = false

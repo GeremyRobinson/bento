@@ -25,7 +25,8 @@ final class BarsPage {
 
     // graph paper (G 17 Oct): every box starts and ends on the strong lines, with whole blocks between. The How to and
     // the problem being worked sit at the lesson's place, a square 8 blocks each way, or bigger when its maths needs it
-    static let box = (dx: -2 * Paper.cell, dy: -10 * Paper.cell, width: 8 * Paper.unit, height: 8 * Paper.unit), gap = Paper.unit
+    // everything starts on a block (G 19 Oct): a problem's left edge is the block line one block in from its box
+    static let box = (dx: -Paper.unit, dy: -2 * Paper.unit, width: 8 * Paper.unit, height: 8 * Paper.unit), gap = Paper.unit
     /// The cards on the page of problems, the lesson thumbnails' size (G 19 Oct): a frame 3 blocks by 2 with its name
     /// in the block under it, a block apart, 3 to a row.
     static let card = Size(3 * Paper.unit, 2 * Paper.unit), columns = 3

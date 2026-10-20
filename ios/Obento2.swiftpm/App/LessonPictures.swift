@@ -131,12 +131,12 @@ enum LessonPictures {
         l.scale = g.k
         // the picture is built in squares (GridPen), the paper's own: not drawn bigger with the words
         l.pictureTop = 0; l.pictureScale = 1 / g.k
-        l.stepX = g.colX; l.stepY = g.stepY; l.lineY = g.stepY + 120; l.column = g.keyX - g.colX - 40
+        l.stepX = g.colX; l.stepY = g.stepY; l.lineY = g.stepY + 100; l.column = g.keyX - g.colX - 40
         l.actions = g.stepY + 200; l.messageBelow = true
         l.keypadX = g.keyX; l.keypadY = g.stepY
         // the box (for the page's layout) holds it all, in whole blocks
         l.width = ((g.keyX + 180 + 80) * g.k / Paper.unit).rounded(.up) / g.k
-        l.height = ((max(g.ry + g.h * Paper.cell / g.k + 120, g.stepY + 380) + 200) * g.k / Paper.unit).rounded(.up) / g.k
+        l.height = ((max(g.ry + g.h * Paper.cell / g.k + 120, g.stepY + 400) + 200) * g.k / Paper.unit).rounded(.up) / g.k
         return l
     }
 
@@ -150,9 +150,11 @@ enum LessonPictures {
         let c = Paper.cell / k
         // one left edge for the whole problem (G 19 Oct): the name, the sum and the side's number all start on it, and
         // the rectangle three squares in, past that number
-        let rx = 60.0, ry = 40.0, w = (b + 1) * c
-        let colX = ((rx + w + 80) / 40).rounded(.up) * 40
-        return (k, rx, ry, a, w, colX, 280, colX + 400)
+        // on blocks (G 19 Oct): the rectangle one block in and one block down (its widths in the row over it), the
+        // school work's column, the step and the keypad each starting on a block line
+        let rx = 100.0, ry = 100.0, w = (b + 1) * c
+        let colX = ((rx + w + 60) / 100).rounded(.up) * 100
+        return (k, rx, ry, a, w, colX, 400, colX + 400)
     }
 
     /// Multiply on the grid (GridPen): the rectangle a squares tall and b wide, split into its strips a square apart,
@@ -165,18 +167,19 @@ enum LessonPictures {
         func sq(_ design: Double) -> Double { design / Paper.cell * k }
         let rx = sq(g.rx), ry = sq(g.ry), H = Double(a), widths = split ? ps : [b]
         let label = Sketch.Words(size: 24, weight: .medium, colour: .ink)
-        pen.word("side", String(a), at: 0, ry + H / 2, label.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5))
+        // every label half a square from what it labels: the side's number beside the rectangle, each width over its strip
+        pen.label("side", String(a), label.colour(.chapter), .left, edge: rx, along: ry + H / 2)
         var x = rx
         for (i, w) in widths.enumerated() {
             let lit = split && strip == i + 1, id = "s\(i)\(split)"
             pen.squares(id, col: x, row: ry, cols: w, rows: a, lit: lit)
-            pen.word(id + "top\(lit)", String(split ? ps[i] : b), at: x + Double(w) / 2, ry - k, label.colour(lit ? .chapter : .ink2))
+            pen.label(id + "top\(lit)", String(split ? ps[i] : b), label.colour(lit ? .chapter : .ink2), .above, edge: ry, along: x + Double(w) / 2)
             if split, i < found {
                 if w >= 4 * kk + 1 {
                     pen.plate("pf\(i)", over: (w, a), at: x, ry, w: 4 * kk, h: 2 * kk)
                     pen.word("p\(i)", String(products[i]), at: x + Double(w) / 2, ry + H / 2, label)
                 } else {
-                    pen.word("p\(i)", String(products[i]), at: x + Double(w) / 2, ry + H + k, label)
+                    pen.label("p\(i)", String(products[i]), label, .below, edge: ry + H, along: x + Double(w) / 2)
                 }
             }
             x += Double(w) + (split ? 1 : 0)
@@ -212,8 +215,8 @@ enum LessonPictures {
     static func roundLayout() -> WorkProblem.Layout {
         var l = WorkProblem.Layout()
         l.pictureTop = 0; l.pictureScale = 1
-        l.stepX = 0; l.stepY = 320; l.lineY = 400; l.column = 700; l.actions = 480; l.messageBelow = false
-        l.keypadX = 760; l.keypadY = 320
+        l.stepX = 0; l.stepY = 300; l.lineY = 400; l.column = 700; l.actions = 500; l.messageBelow = false
+        l.keypadX = 800; l.keypadY = 300
         return l
     }
 
@@ -239,27 +242,29 @@ enum LessonPictures {
         _ = big
 
         // the number line: ten steps of four squares from lo to hi, long ticks at the ends and halfway
-        let per = 4.0, row = 9.0
+        let per = 4.0, row = 10.0
         let at = pen.numberLine("line", col: 0, row: row, steps: 10, per: per, long: 5)
         func col(_ v: Double) -> Double { (v - lo) / tick * per }
-        pen.word("lo", fmt(lo), at: at(0), row + 1.5, label.colour(lit == 0 ? .chapter : .ink2))
-        pen.word("hi", fmt(hi), at: at(10), row + 1.5, label.colour(lit == 0 ? .chapter : .ink2))
+        // every label half a square from what it labels: the ends and halfway under the line, the number over the ticks
+        pen.label("lo", fmt(lo), label.colour(lit == 0 ? .chapter : .ink2), .below, edge: row, along: at(0))
+        pen.label("hi", fmt(hi), label.colour(lit == 0 ? .chapter : .ink2), .below, edge: row, along: at(10))
         if halfway {
             pen.dot("half", at: at(5), row, radius: 0.3, lit == 1 ? .chapter : .ink2)
-            pen.word("halfw", fmt(parts.half), at: at(5), row + 1.5, label.colour(lit == 1 ? .chapter : .ink3))
+            pen.label("halfw", fmt(parts.half), label.colour(lit == 1 ? .chapter : .ink3), .below, edge: row, along: at(5))
         }
         pen.dot("value", at: col(value), row, radius: 0.4, .tint(0.7))
-        pen.word("valuew", fmt(value), at: col(value), row - 3, label.colour(lit == 0 ? .chapter : .ink))
+        pen.label("valuew", fmt(value), label.colour(lit == 0 ? .chapter : .ink), .above, edge: row - 2, along: col(value))
         if hop {
             let to = col(parts.R)
-            pen.hop("hop", from: col(value), to: to, row: row, height: 2.5)
+            // under the tall ticks' tops, so it stays clear of the number's label over them
+            pen.hop("hop", from: col(value), to: to, row: row, height: 1.5)
             pen.dot("rounded", at: to, row, radius: 0.4)
             // over the hop and above the number's label, so the two never meet
-            pen.word("hopw", parts.halfway ? "halfway: up" : "closer", at: (col(value) + to) / 2, row - 5, label.colour(.chapter))
+            pen.label("hopw", parts.halfway ? "halfway: up" : "closer", label.colour(.chapter), .above, edge: row - 4.5, along: (col(value) + to) / 2)
         }
 
         // the working, beside the line: the next digit against 5, then the answer
-        let wx = 44.0
+        let wx = 45.0
         if halfway {
             pen.word("cmp", parts.next >= 5 ? "\(parts.next) is 5 or more: up" : "\(parts.next) is 4 or less: stays", at: wx, 1, label.colour(.ink), anchor: UnitPoint(x: 0, y: 0.5))
         }
