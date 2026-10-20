@@ -28,7 +28,7 @@ Each lesson builds the kit that the most later lessons need. All 191 lessons, wi
 
 | Kit | Lessons | First lesson | Status |
 |---|---|---|---|
-| tape (bars) + fractions over one bottom | 24 | Adding fractions (`add`) | Built 20 Oct, waiting for G |
+| tape (bars) + fractions over one bottom | 24 | Adding fractions (`add`) | Approved 20 Oct |
 | area grid + columns | 20 | Multiply two-digit numbers | Approved 19 Oct |
 | area grid + division bracket | 2 | Long division | Built, not reviewed |
 | number line | 15 | Rounding decimals (`g5-round`) | Next |

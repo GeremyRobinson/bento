@@ -1,7 +1,7 @@
 # Brief: Adding fractions (`add`)
 
 **Kits:** tape (bars) and fractions over one bottom. `sub` and `mix` use the same design.
-**Status:** brief approved by G on 20 Oct 2026. Built the same day, waiting for G to try it.
+**Status:** approved by G on 20 Oct 2026, built and tried. Also approved: the first and last steps' words, and a number in a fraction written as one word centred on its column.
 
 ## The idea
 You can only add pieces of the same size. Once both bars are cut into eighths, you just count the eighths.
