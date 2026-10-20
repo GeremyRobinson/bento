@@ -246,7 +246,7 @@ enum LessonPictures {
             wk.digits("wp\(i)", String(pr), right: right, row: row(Double(2 + i)), per: per)
         }
         let working = box && !sum ? found : -1
-        if working >= 0 { wk.box = (wk.P(right, 0).x, wk.P(0, row(Double(2 + working))).y, wk.P(per, 0).x) }
+        if working >= 0 { wk.box = (Double(wk.P(right, 0).x), Double(wk.P(0, row(Double(2 + working))).y), Double(wk.P(per, 0).x)) }
         // the plus before the last part, as school writes it, once that row is being worked or written
         if products.count > 1, found >= products.count - 1, working == products.count - 1 || found >= products.count {
             wk.word("wplus", "+", at: right - 4.5 * per, row(Double(1 + products.count)), sign)
@@ -254,7 +254,7 @@ enum LessonPictures {
         if sum {
             let r = Double(2 + products.count)
             wk.rule("wr2", from: right - 5 * per, to: right, row: ry0 + r * per)
-            if box { wk.box = (wk.P(right, 0).x, wk.P(0, row(r)).y, wk.P(per, 0).x) }
+            if box { wk.box = (Double(wk.P(right, 0).x), Double(wk.P(0, row(r)).y), Double(wk.P(per, 0).x)) }
             else { wk.digits("wt", String(products.reduce(0, +)), right: right, row: row(r), per: per, .chapter) }
         }
         return (pen.sketch, wk.sketch, wk.box)
@@ -298,7 +298,7 @@ enum LessonPictures {
         // goes; the answer over the bracket at the end
         let per = 2 * k, nd = Double(String(n).count), right = (2 + nd) * per + per, qRight = right + 3 * per
         func row(_ r: Double) -> Double { (r + 0.5) * per }
-        func boxAt(_ x: Double, _ r: Double) { wk.box = (wk.P(x, 0).x, wk.P(0, row(r)).y, wk.P(per, 0).x) }
+        func boxAt(_ x: Double, _ r: Double) { wk.box = (Double(wk.P(x, 0).x), Double(wk.P(0, row(r)).y), Double(wk.P(per, 0).x)) }
         let bracketX = right - nd * per - 0.3 * per
         if sum && !box { wk.digits("q", String(qt), right: right, row: row(0), per: per, .chapter) }
         wk.digits("dv", String(dv), right: bracketX - 0.4 * per, row: row(1), per: per)

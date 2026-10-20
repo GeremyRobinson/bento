@@ -14,3 +14,5 @@ xcrun simctl launch "$UDID" education.bento.obento2 -shot "$@" >/dev/null
 sleep ${WAIT:-8}
 mkdir -p "$(dirname "$OUT")"
 xcrun simctl io "$UDID" screenshot "$OUT" >/dev/null 2>&1 && echo "$OUT"
+# quit the app once it's photographed: a running app keeps the simulator (and the Mac) busy
+xcrun simctl terminate "$UDID" education.bento.obento2 2>/dev/null
