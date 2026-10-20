@@ -109,7 +109,8 @@ enum ProblemGrid {
     /// A paper lesson's plan, in squares from the problem's corner, made once for its numbers: the story (when it's
     /// told as one), what to do (rows 0–2, words 28), what a miss says or the hint (rows 3–4, words 20), the picture
     /// (from row 6, its names at its right end), the record (3 rows under the picture). The rows kept for words are the
-    /// most any step needs, and the record's row is under the picture's biggest step, so nothing jumps.
+    /// most any step needs, and the record's row is under the picture's biggest step, so nothing jumps (or where the
+    /// lesson puts it, PaperLesson.recordRow, for a record that comes after the picture's biggest step has gone).
     struct StackPlan {
         var storyRows = 0, sayRows = 1, msgRows = 1
         /// What the words wrap to (the picture's width, or the record's), and how far the picture's end labels reach
@@ -170,7 +171,7 @@ enum ProblemGrid {
             q.sayTop = q.storyRows > 0 ? Double(2 * q.storyRows + 1) * k : 0
             q.msgTop = q.sayTop + Double(2 * q.sayRows + 1) * k
             q.pictureTop = q.msgTop + Double(2 * q.msgRows + 1) * k
-            q.recordTop = beside ? q.pictureTop + (paper.recordBeside(l.numbers) ?? 0) : q.pictureTop + picH + 3 * k
+            q.recordTop = q.pictureTop + (beside ? (paper.recordBeside(l.numbers) ?? 0) : (paper.recordRow(l.numbers) ?? picH + 3 * k))
             return q
         }
         let under = made(beside: false)

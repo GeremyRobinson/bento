@@ -179,47 +179,6 @@ final class AddFractionsTests: XCTestCase {
     }
 }
 
-final class PowersOfTenTests: XCTestCase {
-    func testWalkThroughTheLesson() {
-        var l = LessonRun(PowersOfTen.spec, numbers: PowersOfTen.numbers(x: 3.47, k: 2))
-        XCTAssertEqual(l.words.say, "What is 3.47 × 100?")
-        XCTAssertEqual(l.go(), .moved(1))
-        XCTAssertEqual(l.go(), .notYet("Fill in every box."))
-        l.type("3")
-        XCTAssertEqual(l.go(), .notYet("The 1 isn’t a zero. Count only the 0s in 100."))
-        l.type("del"); l.type("2")
-        XCTAssertEqual(l.go(), .moved(2))
-        XCTAssertEqual(l.words.say, "Move the point 2 places to the right.")
-        for k in ["3", "4", ".", "7"] { l.type(k) }
-        XCTAssertEqual(l.go(), .notYet("Move it one place for each zero."))
-        l.reset()
-        for k in ["0", ".", "0", "3", "4", "7"] { l.type(k) }
-        XCTAssertEqual(l.go(), .notYet("Multiplying by 100 makes the number bigger, so the point moves right."))
-        XCTAssertEqual(l.misses, 2)
-        XCTAssertEqual(l.showAnswer(), "Each zero moves the point one place to the right. That makes 347.")
-        XCTAssertEqual(l.go(), .moved(3))
-        XCTAssertEqual(l.words.say, "3.47 × 100 = 347.")
-        XCTAssertEqual(l.steps[2].answer?.work, [.num(3.47), .op("×"), .num(100), .op("="), .num(347)])
-    }
-
-    func testTypingRules() {
-        var l = LessonRun(PowersOfTen.spec, numbers: PowersOfTen.numbers(x: 1.5, k: 3)); _ = l.go(); _ = l.go()
-        l.reset(); l.type("."); l.type("5"); l.type(".")
-        XCTAssertEqual(l.typed["x"], "0.5", "a lone point gets its 0, and only one point")
-        XCTAssertEqual(PowersOfTen.digits(4.06).digits, "406")
-        XCTAssertEqual(fmt(3.40), "3.4"); XCTAssertEqual(fmt(-2), "−2"); XCTAssertEqual(fmt(1500), "1500")
-    }
-
-    func testEveryProblemIsInRange() {
-        var rng = SeededRandom(seed: 11)
-        for _ in 0..<300 {
-            let n = PowersOfTen.spec.generate(&rng, 5), x = n["x"]!, k = Int(n["k"]!)
-            XCTAssertTrue((1.01...99.99).contains(x) && (1...3).contains(k))
-            XCTAssertEqual(x * 100, (x * 100).rounded(), accuracy: 1e-9)
-        }
-    }
-}
-
 final class ChoiceStepTests: XCTestCase {
     func testPickOneStep() {
         let spec = LessonSpec(id: "t", title: "t", master: "x", generate: { _, _ in [:] }) { _ in

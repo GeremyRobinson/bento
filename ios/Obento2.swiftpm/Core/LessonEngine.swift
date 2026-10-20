@@ -126,8 +126,10 @@ public struct CheckItem: Sendable {
     public let story: Bool
     public init(_ index: Int, when: (@Sendable (Numbers) -> Bool)? = nil, story: Bool = false) { self.index = index; self.when = when; self.story = story }
 
-    public func draw(_ spec: LessonSpec, using rng: inout SeededRandom) -> Numbers {
+    /// `asked`: the problems its test has asked already, drawn again too (what it asks for comes first).
+    public func draw(_ spec: LessonSpec, besides asked: [Numbers] = [], using rng: inout SeededRandom) -> Numbers {
         var n = spec.generate(&rng, index)
+        for _ in 0..<50 where !(when?(n) ?? true) || asked.contains(n) { n = spec.generate(&rng, index) }
         for _ in 0..<50 where !(when?(n) ?? true) { n = spec.generate(&rng, index) }
         return n
     }

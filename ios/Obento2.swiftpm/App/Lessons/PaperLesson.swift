@@ -26,6 +26,10 @@ protocol PaperLesson {
     var liveKeys: Set<String> { get }
     /// How many rows what a miss says may need (1, or 2 for a lesson whose slips run long).
     func messageRows(_ n: Numbers) -> Int
+    /// The record's first row, in the picture's rows, when the lesson places it (nil: 3 rows under the biggest picture
+    /// of any step). A record that comes only after the ruler and its dots are put away sits 3 rows under the picture
+    /// it's written with, not under the dots that were there.
+    func recordRow(_ n: Numbers) -> Double?
     /// Screenshots only (-wrong): a wrong move for this step, as a child might make it.
     func wrongMove(_ s: PaperState) -> HandMove?
     /// How much bigger than the paper its words, blocks and record are drawn (G 19 Oct: whole steps only, 1 or 2): 2
@@ -43,6 +47,7 @@ extension PaperLesson {
     func autoAnswer(_ s: PaperState) -> [String: Double]? { nil }
     var liveKeys: Set<String> { [] }
     func messageRows(_ n: Numbers) -> Int { 1 }
+    func recordRow(_ n: Numbers) -> Double? { nil }
     func wrongMove(_ s: PaperState) -> HandMove? { nil }
     func scale(_ n: Numbers) -> Double { 1 }
     func recordBeside(_ n: Numbers) -> Double? { nil }
@@ -56,6 +61,8 @@ enum PaperLessons {
         case "g5-round": return RoundingLesson()
         case "add", "sub", "mix": return FractionsLesson()
         case "g5-mult2": return MultiplyLesson()
+        case "g5-improper": return MixedNumbersLesson()
+        case "g5-pow10": return PowersOfTenLesson()
         default: return nil
         }
     }
