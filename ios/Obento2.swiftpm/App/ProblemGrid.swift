@@ -47,8 +47,11 @@ enum ProblemGrid {
             out.workOffset = CGPoint(x: wx - floorSq(Double(wb?.minX ?? 0)), y: wy - floorSq(Double(wb?.minY ?? 0)))
             // the box where the work puts it; what to do level with it, beside the work; Check a square under the work
             if let b = d.box { out.box = (b.right + out.workOffset.x, b.mid + out.workOffset.y, b.cell) }
-            let sayX = wx + next(plan.workW + 2 * sq), mid = out.box?.mid ?? wy
-            out.sayAt = CGPoint(x: sayX, y: ((mid - Sketch.row * k / 2) / sq).rounded() * sq)
+            // what to do: level with the box when there is one, else on the work's first row; always on a line of the
+            // grid and never above the work, so it keeps its square from the picture (G 19 Oct: nothing floats)
+            let sayX = wx + next(plan.workW + 2 * sq)
+            let row = out.box.map { (($0.mid - Sketch.row * k / 2) / sq).rounded() * sq } ?? wy
+            out.sayAt = CGPoint(x: sayX, y: max(wy, row))
             out.sayWidth = plan.sayW
             out.checkAt = CGPoint(x: wx, y: ((wy + W.h + sq) / sq).rounded(.up) * sq)
             out.column = 600
