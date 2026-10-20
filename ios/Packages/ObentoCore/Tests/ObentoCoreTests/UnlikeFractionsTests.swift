@@ -56,7 +56,7 @@ final class UnlikeFractionsTests: XCTestCase {
         XCTAssertEqual(l.words.say, "Slide the striped twelfths into the top bar.")
         XCTAssertEqual(l.picture["slide"], 1)
         l.set("s", 0)
-        XCTAssertEqual(l.go(), .notYet("Put them in the top bar."))
+        XCTAssertEqual(l.go(), .notYet("They went back. Drop them on the top bar."))
         XCTAssertEqual(l.misses, 0)
         XCTAssertEqual(slide(&l), .moved(5))
 
@@ -236,8 +236,8 @@ final class UnlikeFractionsTests: XCTestCase {
         XCTAssertEqual(n["L"], 12); XCTAssertEqual(n["A"], 9); XCTAssertEqual(n["C"], 2); XCTAssertEqual(n["S"], 7)
         XCTAssertEqual(UnlikeFractions.mixedLabel(19, 12), "1 7/12")
         XCTAssertEqual(UnlikeFractions.mixedLabel(4, 6), "2/3")
-        XCTAssertEqual(UnlikeFractions.pieceName(22), "22nds")
-        XCTAssertEqual(UnlikeFractions.pieceName(21, false), "21st")
+        XCTAssertEqual(UnlikeFractions.pieceName(22), "twenty-seconds")
+        XCTAssertEqual(UnlikeFractions.pieceName(21, false), "twenty-first")
     }
 
     private func checkInvariants(_ n: Numbers, index: Int, minus: Bool) {

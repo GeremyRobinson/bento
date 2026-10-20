@@ -112,13 +112,14 @@ public enum RoundDecimals {
 
         // tap the block the point is in: the block's number is the place's digit
         let block: @Sendable (Int) -> (String, String) = { b in (written(s.lo1 + Double(b) * s.place, p), written(s.lo1 + Double(b + 1) * s.place, p)) }
-        let tap = LessonStep(StepWords(say: "Round to the nearest \(place). Tap the part of the line it’s in.",
+        // the words name what to tap ("it" would have nothing to point at: the number is the point's own label)
+        let tap = LessonStep(StepWords(say: "Round to the nearest \(place). Tap the block the point is in.",
                                        hint: "Find the point on the line. Tap the block it sits in.", action: "Check"),
             answer: AnswerTask(prompt: [.box("x")], expected: ["x": Double(digit)],
                                hint: "The \(name) place is \(digits(p)) after the point.",
                                explain: "\(V) is between \(block(digit).0) and \(block(digit).1).",
                                check: { v in
-                                   guard let x = v["x"], x >= 0, x <= 9 else { return .soft("Tap the part of the line it’s in.") }
+                                   guard let x = v["x"], x >= 0, x <= 9 else { return .soft("Tap the block the point is in.") }
                                    if Int(x.rounded()) == digit { return .right }
                                    let (a, b) = block(Int(x.rounded()))
                                    return .wrong("\(V) isn’t between \(a) and \(b). Find the point.")

@@ -31,7 +31,7 @@ final class RoundDecimalsTests: XCTestCase {
         XCTAssertEqual(l.go(), .moved(1))
 
         // tap the block it's in: the block's number is the hundredths digit
-        XCTAssertEqual(l.words.say, "Round to the nearest hundredth. Tap the part of the line it’s in.")
+        XCTAssertEqual(l.words.say, "Round to the nearest hundredth. Tap the block the point is in.")
         XCTAssertEqual(l.step.answer?.byHand, true)
         XCTAssertTrue(l.handAnswered)
         XCTAssertEqual(l.picture["at"], 1)
