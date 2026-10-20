@@ -358,14 +358,6 @@ final class BarsPage {
     }
     var firstRow: Rect { pageFrame }
 
-    /// How far the cards have drawn in.
-    func cardsShown(at t: Double) -> Double {
-        guard showing else { return 0 }
-        let inK = ease((t - cardsAt) / 0.5)
-        let out = cardsGoneAt.map { 1 - ease((t - $0) / 0.4) } ?? 1
-        return min(inK, out)
-    }
-
     // MARK: a finished test's result
 
     /// A finished test or recheck, shown on the paper before going on (G 20 Oct): its score, and what it means.
@@ -700,9 +692,6 @@ final class BarsPage {
         }
         m.tapPaper(p)
     }
-
-    /// The problem a point is in, so the camera can frame it.
-    func problem(at p: Point) -> (any PageProblem)? { all.first { contains(Self.box(of: $0), p) } }
 
     /// A problem was solved: the plan adds what it needs (another together problem, a fresh one aimed at a miss); a
     /// finished test or recheck is scored, the one way every test is (LessonPlan), and its result waits to be shown.

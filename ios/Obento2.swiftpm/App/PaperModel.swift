@@ -139,8 +139,6 @@ enum Map {
     }
     /// The grade's lessons (the specs' 17), for "5 of 17 learned": the same lessons the chapters count.
     static let gradeLessons = pieces.map(\.id)
-    /// A lesson's number within its chapter, in map order.
-    static func number(_ p: Piece) -> Int { (pieces.filter { $0.chapter == p.chapter }.firstIndex { $0.id == p.id } ?? 0) + 1 }
     /// Every group, from its title to its last row's name and Start, with a cell to spare: what the overview shows.
     /// Worked out from the layout, so it stays right when groups move.
     static let bounds: Rect = {
@@ -175,8 +173,6 @@ final class PaperModel {
     var bars: BarsPage?
     /// The piece whose lesson is open: its name goes in the top bar.
     var openPiece: Piece? { lesson != nil || bars != nil ? opened : nil }
-    /// Where the child is in the open lesson ("Practice 2 of 6"), for the top bar.
-    var sessionLabel: String? { bars?.label ?? lesson?.session.label }
     private var opened: Piece?
     /// When the pieces started drawing themselves.
     var drawnAt: Double = PaperClock.now
@@ -267,12 +263,6 @@ final class PaperModel {
 
     /// The crosshair: glide to the lesson that's up next.
     func findNext() { if let p = Map.today { select(p) } }
-
-    /// The dial's zoom: straight to `z`, about the middle of the screen.
-    func zoomTo(_ z: Double) {
-        let now = camera(at: PaperClock.now)
-        stop(); resting = now.zoomed(by: z / now.zoom, at: .init(screen.width / 2, screen.height / 2))
-    }
 
     /// The dial's Lessons: a glide to chapter `i`, its title and every lesson in it.
     func frameChapter(_ i: Int) {
