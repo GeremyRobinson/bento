@@ -21,7 +21,7 @@ final class UnlikeFractionsTests: XCTestCase {
         // the test page's: 1/4 + 1/6 = 3/12 + 2/12 = 5/12
         let n = UnlikeFractions.numbers(a: 1, b: 4, c: 1, d: 6, minus: false)
         XCTAssertEqual(n["L"], 12); XCTAssertEqual(n["A"], 3); XCTAssertEqual(n["C"], 2); XCTAssertEqual(n["S"], 5)
-        XCTAssertEqual(UnlikeFractions.wholeLength(12), 36, "the smallest whole every bottom divides")
+        XCTAssertEqual(UnlikeFractions.wholeLength(12), 48, "the test page's whole: 48 squares, every piece a whole number of them")
         var l = LessonRun(AddingFractions.spec, numbers: n)
         XCTAssertEqual(l.display, [.frac(.num(1), .num(4)), .op("+"), .frac(.num(1), .num(6))])
         XCTAssertEqual(l.steps.count, 7, "ask, cut, both rewrites, slide, write, done: 5/12 is already simplest")
@@ -41,8 +41,8 @@ final class UnlikeFractionsTests: XCTestCase {
         XCTAssertEqual(l.misses, 3)
         XCTAssertEqual(l.showAnswer(), "Counting by 6s, the first number 4 also goes into is 12: twelfths fit both bars.")
         l.reset()
-        // 36ths would fit too (were the ruler to go that small), but bigger pieces do
-        XCTAssertEqual(cut(&l, 36), .notYet("Those fit both bars. Bigger pieces fit too."))
+        // 24ths fit too, but bigger pieces do
+        XCTAssertEqual(cut(&l, 24), .notYet("Those fit both bars. Bigger pieces fit too."))
         XCTAssertEqual(cut(&l, 12), .moved(2))
 
         // the rewrites are answered by the cut: the bars counted
@@ -116,7 +116,7 @@ final class UnlikeFractionsTests: XCTestCase {
     func testSubWalkThroughTheReference() {
         // 1/2 − 1/6 = 3/6 − 1/6 = 2/6 = 1/3: the second fraction is already over 6, so only the first is rewritten
         let n = UnlikeFractions.numbers(a: 1, b: 2, c: 1, d: 6, minus: true)
-        XCTAssertEqual(UnlikeFractions.wholeLength(6), 36)
+        XCTAssertEqual(UnlikeFractions.wholeLength(6), 48)
         var l = LessonRun(SubtractingFractions.spec, numbers: n)
         XCTAssertEqual(l.display, [.frac(.num(1), .num(2)), .op("−"), .frac(.num(1), .num(6))])
         XCTAssertEqual(l.steps.map(\.words.say), ["Look at the bars. Are the pieces the same size?", "Drag the ruler to cut both bars into the same size pieces.",
@@ -203,7 +203,7 @@ final class UnlikeFractionsTests: XCTestCase {
         XCTAssertEqual(e.steps.map(\.words.say), ["Look at the bars. Are the pieces the same size?", "Drag the ruler to cut both bars into the same size pieces.",
                                                   "How many eighths is one half?", "Slide the striped eighths into the top bar.",
                                                   "How many eighths in all? Write it.", "Same-size pieces, so the tops add."])
-        XCTAssertEqual(UnlikeFractions.wholeLength(8), 40)
+        XCTAssertEqual(UnlikeFractions.wholeLength(8), 48)
         // simplifies: 1/6 + 1/3 = 1/6 + 2/6 = 3/6 = 1/2
         let f = LessonRun(AddingFractions.spec, numbers: UnlikeFractions.numbers(a: 1, b: 6, c: 1, d: 3, minus: false))
         XCTAssertEqual(f.steps.count, 7, "ask, cut, one rewrite, slide, write, simplify, done")
@@ -221,6 +221,9 @@ final class UnlikeFractionsTests: XCTestCase {
             XCTAssertGreaterThanOrEqual(W / L, 2, "\(b), \(d)")
         } }
         XCTAssertEqual(UnlikeFractions.wholeLength(24), 48)
+        XCTAssertEqual(UnlikeFractions.wholeLength(12), 48)
+        XCTAssertEqual(UnlikeFractions.wholeLength(18), 36)
+        XCTAssertEqual(UnlikeFractions.wholeLength(20), 40)
         XCTAssertEqual(UnlikeFractions.wholeLength(10), 40)
         XCTAssertEqual(UnlikeFractions.wholeLength(14), 42)
         XCTAssertEqual(UnlikeFractions.wholeLength(15), 45)

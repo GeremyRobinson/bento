@@ -36,9 +36,10 @@ struct PaperScreen: View {
                     // a box the drawing shows (G 20 Oct): a step answered by the hands never raises it
                     let typing = (model.bars?.current as? WorkProblem).flatMap { w in model.bars?.mode == .work && w.wantsTyping ? w : nil }
                     NumberEntry(problem: typing, step: typing.map { "\($0.id) \($0.lesson.index)" } ?? "")
-                        // beside the box being typed into: iPadOS's number pad pops up from it (a docked keyboard
+                        // iPadOS's number pad pops up from the hidden field: it sits in the screen's bottom-right corner,
+                        // over the bar, so the pad comes up there, clear of the picture and the record (a docked keyboard
                         // doesn't mind where it is)
-                        .offset(typing.flatMap { w in NumberEntry.anchor(w, cam) } ?? .zero)
+                        .position(NumberEntry.anchor(screen: model.screen, bottom: max(16, safe.safeAreaInsets.bottom + 8)))
                 }
                 .onChange(of: t) { _, now in Perf.frame(now); model.settle(at: now); model.lesson?.settle(at: now) }
             }
@@ -53,9 +54,12 @@ struct PaperScreen: View {
             }
             .onChange(of: geo.size) { _, s in model.screen = Size(s.width, s.height) }
             .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { n in
-                // the keyboard's top, so the camera frames the problem in the paper still showing above it
+                // the keyboard's top, so the camera frames the problem in the paper still showing above it; only a
+                // keyboard docked across the bottom counts (iPadOS's floating number pad covers just its corner)
                 guard let f = n.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
-                model.keyboardAppeared(max(0, geo.frame(in: .global).maxY - f.minY))
+                let screen = geo.frame(in: .global)
+                let docked = f.width >= screen.width * 0.8 && f.maxY >= screen.maxY - 1
+                model.keyboardAppeared(docked ? max(0, screen.maxY - f.minY) : 0)
             }
             .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in model.keyboardAppeared(0) }
         }
@@ -131,13 +135,11 @@ struct NumberEntry: View {
     let problem: WorkProblem?
     let step: String
 
-    /// Where the hidden field sits on the screen: just past the right end of the box being typed into, level with its
-    /// middle, so iPadOS's number pad (a popover on iPadOS 26) comes up beside the box, not over the words.
-    @MainActor static func anchor(_ w: WorkProblem, _ cam: PaperCamera) -> CGSize? {
-        guard let a = w.lesson.step.answer, let id = w.lesson.active ?? a.boxes.first,
-              let r = ProblemLayout.blocks(w).first(where: { $0.kind == .field(id) })?.rect else { return nil }
-        let p = cam.toScreen(Point(r.maxX + Paper.cell / 2, r.midY))
-        return CGSize(width: p.x, height: p.y)
+    /// Where the hidden field sits on the screen: the bottom-right corner, just over the floating bar. iPadOS's number pad
+    /// (a popover on iPadOS 26) comes up from it into that corner, which the camera's framing leaves to the record's
+    /// empty right-hand side, so it never covers the picture, the words or the box being typed into.
+    static func anchor(screen: Size, bottom: Double) -> CGPoint {
+        CGPoint(x: screen.width - 48, y: screen.height - bottom - 76)
     }
     @State private var text = " "
     @FocusState private var focused: Bool

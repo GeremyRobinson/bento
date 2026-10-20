@@ -17,11 +17,15 @@ import Foundation
 /// into L pieces, numbered, named A/L and C/L); "slide" (the striped pieces wait to be slid); "slid" (they're in the
 /// top bar: after the shaded pieces, spilling into a second whole bar under it past the end; or over the shaded ones,
 /// crossing them out); "sum" (the record's S/L written); "answer" (the simplest form written, the answer bars cut into
-/// the simplest pieces).
+/// the simplest pieces). A hint (after a miss, or asked for) lights: "oldCuts" (every old cut's dot ringed: each needs
+/// a new cut on it), "target" (where the striped pieces go, dashed in the top bar), "last" (the last piece counted,
+/// ringed) and "simple" (the simplest pieces' cuts, dashed over the answer).
 public enum UnlikeFractions {
-    /// A whole bar's length in squares for a problem whose new bottom is L (G 20 Oct): the smallest of 36, 40, 42, 44,
-    /// 45 and 48 that every bottom divides (L does, so its factors do), so every piece is a whole number of squares.
-    public static func wholeLength(_ L: Int) -> Int { [36, 40, 42, 44, 45, 48].first { $0 % max(1, L) == 0 } ?? max(2, L) * 2 }
+    /// A whole bar's length in squares for a problem whose new bottom is L (G 20 Oct, design/grade5.md): 48, as on the
+    /// test page G approved, whenever every bottom divides it (halves to twelfths, 16ths, 24ths); else the first of 40
+    /// (fifths, tenths, 20ths), 42 (sevenths, 14ths, 21sts), 45 (ninths, 15ths), 44 (elevenths, 22nds) and 36 (18ths)
+    /// that L divides (so its factors do too). Every piece is a whole number of squares, 2 at least.
+    public static func wholeLength(_ L: Int) -> Int { [48, 40, 42, 45, 44, 36].first { $0 % max(1, L) == 0 } ?? max(2, L) * 2 }
 
     /// a/b ± c/d with every derived value, as the web's createUnlikeFractions.
     public static func numbers(a: Int, b: Int, c: Int, d: Int, minus: Bool) -> Numbers {
@@ -162,7 +166,7 @@ public enum UnlikeFractions {
                     if divides(b, x) && divides(d, x) { return .wrong("Those fit both bars. Bigger pieces fit too.") }
                     return .wrong("Some old cuts have no new cut on them.")
                 }, byHand: true),
-            picture: ["ruler": 1])
+            picture: ["ruler": 1], onMiss: ["oldCuts": 1])
 
         // the rewrites: the cut answers them (A and C are the shaded pieces counted once the bars are cut); a fraction
         // already over L is written for the child
@@ -205,7 +209,7 @@ public enum UnlikeFractions {
                                hint: sub ? "Same-size pieces, so they can be taken away." : "Same-size pieces, so they can go together.",
                                explain: sub ? "The striped \(piece) cover \(C) of the shaded ones: \(S) are left." : "The striped \(piece) go after the shaded ones: \(S) in all.",
                                check: { v in same(v["s"], 1) ? .right : .soft("Put them in the top bar.") }, byHand: true),
-            picture: ["cut": 1, "slide": 1])
+            picture: ["cut": 1, "slide": 1], onMiss: ["target": 1])
 
         // the record: a/b ± c/d = A/L ± C/L = [S]/L, the answer's bottom written for the child (G 20 Oct)
         let count = sub ? "Count the shaded \(piece) that aren’t crossed out." : S > L ? "Count the \(piece) in both bars." : "Count the \(piece) in the top bar."
@@ -225,12 +229,12 @@ public enum UnlikeFractions {
                     if !sub && same(top, abs(A - C)) { return .wrong("You subtracted. Look at the sign: this one is a plus.") }
                     return .wrong("Check the top: \(A) \(sign) \(C) = ?")
                 }),
-            picture: ["cut": 1, "slid": 1])
+            picture: ["cut": 1, "slid": 1], onMiss: ["last": 1])
 
         let simplify = LessonStep(
             StepWords(say: "Write it as simply as you can.", hint: simplifyNarration(S, L), action: "Check"),
             answer: simplifyTask(S, L),
-            picture: ["cut": 1, "slid": 1, "sum": 1])
+            picture: ["cut": 1, "slid": 1, "sum": 1], onMiss: ["simple": 1])
 
         let F = finalForm(S, L), changes = !(F.whole == 0 && F.den == L)
         // the answer is in the record, in the chapter's colour; the last words say why it works, not the sum again

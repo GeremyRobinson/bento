@@ -350,6 +350,7 @@ final class WorkProblem: Identifiable, PageProblem {
         onTouch?()
         if let h = mv.hand { hand = h }
         for (box, v) in mv.set { lesson.set(box, v) }
+        for cell in mv.marks { lesson.tap(cell) }
         if message?.ok == false { message = nil }
         if verdict?.right == false { verdict = nil }
         handAt = PaperClock.now
@@ -416,11 +417,6 @@ final class WorkProblem: Identifiable, PageProblem {
     func state(at t: Double? = nil) -> PaperState {
         let run = ghost?.run ?? lesson
         var s = PaperState(run: run, index: run.index)
-        s.hand = ghost?.hand ?? hand
-        if let t, let g = ghost, let base = g.held, let p = g.dragPoint(at: g.time(t)), let paper {
-            var held = s; held.hand = base
-            if let d = paper.hands(held)?.drag { s.hand = d(p, base) }
-        }
         var pic = run.picture.merging(extra) { $1 }
         if (onFocus || hinting) && run.index == lesson.index { pic.merge(run.step.onMiss) { $1 } }
         s.picture = pic
@@ -428,6 +424,13 @@ final class WorkProblem: Identifiable, PageProblem {
         s.faint = ghost?.mode == .preview
         s.verdict = ghost == nil ? verdict?.right : nil
         s.active = run.active
+        s.hand = ghost?.hand ?? hand
+        // the ghost finger dragging: the hand where the finger is now, as the lesson's drag would have it (the live
+        // parts follow the finger)
+        if let t, let g = ghost, let base = g.held, let p = g.dragPoint(at: g.time(t)), let paper {
+            var held = s; held.hand = base
+            if let d = paper.hands(held)?.drag { s.hand = d(p, base) }
+        }
         return s
     }
     /// The hand state the still picture reads (the lesson's live keys left out).
@@ -554,6 +557,7 @@ final class WorkProblem: Identifiable, PageProblem {
     private func ghostApply(_ mv: HandMove, _ g: inout GhostPlay) {
         if let h = mv.hand { g.hand = h }
         for (b, v) in mv.set { g.run.set(b, v) }
+        for cell in mv.marks { g.run.tap(cell) }
         guard mv.check, g.mode == .preview else { return }
         let i = g.run.index
         if case .moved = g.run.go() { g.hand = [:]; Self.answerAhead(&g.run, paper) }

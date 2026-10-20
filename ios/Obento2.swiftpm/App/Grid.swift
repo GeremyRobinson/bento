@@ -38,9 +38,12 @@ struct GridPen {
     var boxes: [WorkBox] = []
     /// The words' size: 1, or a whole number bigger in a big problem (its squares stay the paper's).
     let k: Double
+    /// Words keep the id they're given, whatever they say (a live part: a count that changes as the hand moves is the
+    /// same part, written again at once). Otherwise what they say is part of their id, so new words draw in.
+    var stableIds = false
     static let sq = Paper.cell
 
-    init(k: Double = 1) { self.k = k }
+    init(k: Double = 1, stableIds: Bool = false) { self.k = k; self.stableIds = stableIds }
 
     /// An answer box `cells` digits wide whose right edge is column `right`, on the row whose middle is `mid` (a digit is
     /// `per` squares): it grows left as digits are typed, so they line up on the right as written work does.
@@ -59,7 +62,7 @@ struct GridPen {
 
     /// Words centred on a place (the middle of what they label), in a kind of words; `size` overrides its size.
     mutating func word(_ id: String, _ text: String, at col: Double, _ row: Double, _ w: Sketch.Words, anchor: UnitPoint = .center) {
-        sketch.text("\(id):\(text)", text, at: P(col, row), size: w.size * k, weight: w.weight, w.colour, anchor: anchor, digits: true)
+        sketch.text(stableIds ? id : "\(id):\(text)", text, at: P(col, row), size: w.size * k, weight: w.weight, w.colour, anchor: anchor, digits: true)
     }
     enum Side { case above, below, left, right }
     /// A label on one side of what it labels (G 19 Oct): its ink always half a square from that edge, whichever side,
@@ -67,8 +70,8 @@ struct GridPen {
     /// what it labels the other way.
     mutating func label(_ id: String, _ text: String, _ w: Sketch.Words, _ side: Side, edge: Double, along: Double) {
         let f = PaperText.font(w.size * k, w.weight, digits: true), gap = 0.5 * k
-        // where the line's box puts its digits: their ink's middle is this far below the box's middle
-        let ink = Double(f.ascender) - Double(f.capHeight) / 2 - Double(f.lineHeight) / 2, cap = Double(f.capHeight) / Self.sq
+        // a centred line sits on its capitals' middle (SketchDrawer), so half their height clears the edge
+        let cap = Double(f.capHeight) / Self.sq
         let at: CGPoint, anchor: UnitPoint
         switch side {
         case .above: at = P(along, edge - gap - cap / 2); anchor = .center
@@ -76,8 +79,7 @@ struct GridPen {
         case .left: at = P(edge - gap, along); anchor = UnitPoint(x: 1, y: 0.5)
         case .right: at = P(edge + gap, along); anchor = UnitPoint(x: 0, y: 0.5)
         }
-        _ = ink
-        sketch.text("\(id):\(text)", text, at: at, size: w.size * k, weight: w.weight, w.colour, anchor: anchor, digits: true)
+        sketch.text(stableIds ? id : "\(id):\(text)", text, at: at, size: w.size * k, weight: w.weight, w.colour, anchor: anchor, digits: true)
     }
 
     /// A number in its squares: `per` squares to a digit, the ones digit ending on column `right`, the point on the

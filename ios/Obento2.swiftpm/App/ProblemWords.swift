@@ -424,7 +424,9 @@ extension Rig {
                 let style: Sketch.Block = view.verdict.map { $0 ? Sketch.Block(stroke: green, text: green) : Sketch.Block(stroke: red, text: red) }
                     ?? (view.active == f ? .main : Sketch.Block(stroke: .ink3))
                 s.block(id + "\(view.verdict as Bool?)", r, style, grows: true)
-                s.pace = 0
+                // what the child types shows at once, as in any box; the ghost's number (Show me) writes itself in
+                // faintly and fades when it's over
+                s.pace = view.faint ? 0.6 : 0
                 let typed = view.typed[f]?.replacingOccurrences(of: "-", with: "−") ?? ""
                 let wb = m.layout.box(for: f, first: view.step.answer?.boxes.first), cell = wb?.cell ?? 2 * sq
                 let colour: Sketch.Colour = view.faint ? .ink3 : style.text, tag = "\(view.verdict as Bool?)\(view.faint)"

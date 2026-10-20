@@ -119,13 +119,14 @@ struct Hands {
     var actions: [String: () -> HandMove] = [:]
 }
 
-/// What a hand move does: the hand state just after it, the answer boxes it sets (LessonRun.set), and whether it's
-/// checked now (WorkProblem.go: a release that answers the step). A miss puts the hand state back to `missHand`
-/// (nil keeps it: the ruler stays where it was).
+/// What a hand move does: the hand state just after it, the answer boxes it sets (LessonRun.set), the cells it marks or
+/// unmarks (LessonRun.tap, a step with a MarkTask), and whether it's checked now (WorkProblem.go: a release that answers
+/// the step). A miss puts the hand state back to `missHand` (nil keeps it: the ruler stays where it was).
 struct HandMove {
     var hand: Numbers? = nil
     var missHand: Numbers? = [:]
     var set: [(box: String, value: Double?)] = []
+    var marks: [Int] = []
     var check = false
 }
 

@@ -56,7 +56,7 @@ struct FractionsLesson: PaperLesson {
         let placed = slid || (into && !held), preview = into && held
         // the second bar makes room under the top bar for a sum past a whole
         let y2 = q.spill && (slid || into) ? Self.spillDown : Self.bar2
-        var pic = GridPen(), live = GridPen(), rec = GridPen()
+        var pic = GridPen(), live = GridPen(stableIds: true), rec = GridPen()
         let numbered = cut && !done
 
         // MARK: the top bar
@@ -129,13 +129,44 @@ struct FractionsLesson: PaperLesson {
             let w = Double(ruler(s, q)), R = Self.ruler
             live.line("ruler", [(0, R + 1), (0, R), (w, R), (w, R + 1)], .chapter)
             live.dot("handle", at: w, R, radius: s.grabbed ? 0.75 : 0.6, .chapter, over: true)
-            live.label("rulerw", UnlikeFractions.pieceName(q.W / Int(w)), Self.small, .above, edge: R, along: w / 2)
+            // the piece's name over the ruler, centred on it, but never past the bars' left end (a short ruler's long
+            // name, "twenty-fourths", starts where the bars do)
+            let name = UnlikeFractions.pieceName(q.W / Int(w))
+            let half = PaperText.width(name, PaperText.font(Self.small.size, Self.small.weight, digits: true)) / 2 / Paper.cell
+            live.label("rulerw", name, Self.small, .above, edge: R, along: max(w / 2, half))
             // the cuts it would make, dashed across both bars
-            var x = w
-            while x < W - 0.01 { live.line("cut\(Int(x))", [(x, y1 - 1), (x, y2 + h + 1)], .ink2, dashed: true); x += w }
+            for k in 1..<max(1, Int((W / w).rounded())) {
+                let x = Double(k) * w
+                live.line("cut\(k)", [(x, y1 - 1), (x, y2 + h + 1)], .ink2, dashed: true)
+            }
             // a dot under each old cut: green when a new cut lands on it, red when none does
             for i in 1..<q.b { let ox = Double(i * q.pw1); live.dot("d1_\(i)", at: ox, Self.dots1, radius: 0.35, ox.truncatingRemainder(dividingBy: w) == 0 ? Self.green : Self.red, over: true) }
             for i in 1..<q.d { let ox = Double(i * q.pw2); live.dot("d2_\(i)", at: ox, y2 + h + 1, radius: 0.35, ox.truncatingRemainder(dividingBy: w) == 0 ? Self.green : Self.red, over: true) }
+            // a hint: every old cut's dot ringed (each needs a new cut on it)
+            if s.on("oldCuts") {
+                for i in 1..<q.b { pic.circle("r1_\(i)", at: Double(i * q.pw1), Self.dots1, radius: 0.9, .chapter, dashed: true) }
+                for i in 1..<q.d { pic.circle("r2_\(i)", at: Double(i * q.pw2), y2 + h + 1, radius: 0.9, .chapter, dashed: true) }
+            }
+        }
+
+        // MARK: hints on the other steps: where the striped pieces go, the last piece counted, the simplest pieces
+        if sliding && !placed && !held && s.on("target") {
+            let n = q.minus ? q.C : min(q.L, q.S) - q.A
+            pic.sketch.box("target", pic.R(Double(q.target) * pw, y1, Double(n) * pw, h), .chapter, width: Sketch.stroke, dashed: true)
+        }
+        if slid && !sum && s.on("last") {
+            // the last piece counted: in the second whole bar when the sum spills into it
+            let i = q.S - 1, inSpill = q.spill && i >= q.L, col = Double(inSpill ? i - q.L : i)
+            pic.circle("last", at: (col + 0.5) * pw, (inSpill ? Self.bar2 : y1) + h / 2, radius: min(1.3, pw / 2 - 0.15), .chapter, dashed: true)
+        }
+        if sum && !done && s.on("simple") {
+            let F = q.simplest
+            if q.spill {
+                // every L pieces make one whole: the top bar, all of it
+                pic.sketch.box("whole", pic.R(0, y1 - 1, W, h + 2), .chapter, width: Sketch.stroke, dashed: true)
+            } else if F.den < q.L {
+                for k in 1..<F.den { let x = W * Double(k) / Double(F.den); pic.line("simple\(k)", [(x, y1 - 1), (x, y1 + h + 1)], .chapter, dashed: true) }
+            }
         }
 
         // MARK: the striped pieces in the hand: following the finger, or snapped into the top bar
@@ -185,7 +216,9 @@ struct FractionsLesson: PaperLesson {
                 if F.whole > 0 {
                     if done { rec.word("ww", "\(F.whole)", at: x + 1, 2, Self.maths.colour(.chapter)) }
                     else { rec.answerBox("w", right: x + 2, mid: 2, per: 2, cells: 1, centred: true) }
-                    x += 3
+                    // written, a mixed number's fraction sits right by its whole (1 7/12); typed, a square apart, so
+                    // the boxes don't touch
+                    x += done ? 2 : 3
                 }
                 if F.num > 0 {
                     fraction(&rec, "w6", done ? F.num : nil, done ? F.den : nil, col: x, row: 0, done ? .chapter : .ink)
