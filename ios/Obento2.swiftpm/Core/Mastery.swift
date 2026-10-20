@@ -43,10 +43,11 @@ public enum Mastery {
     /// Learned at some time (a check of 3 or 4, ever): what the map colours in and counts (G 20 Oct). A lesson that
     /// comes due, or whose recheck came back low, stays counted; the map marks it Go over instead of taking it away.
     public static func learnedEver(_ checks: [String: CheckRecord], _ id: String) -> Bool { (checks[id]?.best ?? -1) >= pass }
-    /// Learned and its time to come back has come.
+    /// Learned at some time, and its time to come back has come: 3, 7, 21 or 60 days after a pass, the day after a miss
+    /// (a recheck that came back low comes back the next day, as a recheck). It opens on its recheck.
     public static func dueBack(_ checks: [String: CheckRecord], _ id: String, now: Double) -> Bool {
         guard let c = checks[id] else { return false }
-        return c.last >= pass && c.due <= now
+        return c.best >= pass && c.due <= now
     }
     /// Learned as the child sees it: the last check was 3 or 4 and it isn't slipping (not due back yet).
     public static func learnedNow(_ checks: [String: CheckRecord], _ id: String, now: Double) -> Bool {
@@ -54,8 +55,12 @@ public enum Mastery {
     }
     /// The last check came back low: the lesson is to go over.
     public static func toGoOver(_ checks: [String: CheckRecord], _ id: String) -> Bool { checks[id].map { $0.last < pass } ?? false }
-    /// Go over (Me's shelf, the map's tab): due back for its recheck, or its last check came back low.
-    public static func goOver(_ checks: [String: CheckRecord], _ id: String, now: Double) -> Bool { dueBack(checks, id, now: now) || toGoOver(checks, id) }
+    /// Go over (Me's shelf, the map's tab, G 20 Oct): a lesson learned at some time that's due back for its recheck, or
+    /// whose last check (its recheck, or its test taken again) came back low. A lesson never learned isn't to go over,
+    /// even after a test that came back low: its test is there to take again.
+    public static func goOver(_ checks: [String: CheckRecord], _ id: String, now: Double) -> Bool {
+        learnedEver(checks, id) && (dueBack(checks, id, now: now) || toGoOver(checks, id))
+    }
 
     /// The grade a lesson belongs to: "g4-equiv" is 4th grade; ids without a grade are this grade's.
     public static func grade(of id: String, current: Int) -> Int {
@@ -77,18 +82,17 @@ public enum Mastery {
         return depends.dropFirst().first { toGoOver(checks, $0) }
     }
 
-    /// The child's own page (Me): Go over (slipped, or scored under 3), Getting stronger (learned, on its way through the
-    /// four checks), Know it (passed all four). A lesson moves right as its checks pass.
+    /// The child's own page (Me): Go over (due back, or its last check came back low), Getting stronger (learned, on its
+    /// way through the four checks), Know it (passed all four). A lesson moves right as its checks pass. Only lessons
+    /// learned at some time are on a shelf, so the shelves add up to the learned count (G 20 Oct).
     public struct Shelves: Equatable, Sendable {
         public var goOver: [String] = [], gettingStronger: [String] = [], knowIt: [String] = []
     }
     public static func shelves(_ lessons: [String], checks: [String: CheckRecord], now: Double) -> Shelves {
         var s = Shelves()
-        for id in lessons {
+        for id in lessons where learnedEver(checks, id) {
             if goOver(checks, id, now: now) { s.goOver.append(id) }
-            else if learnedNow(checks, id, now: now) {
-                if (checks[id]?.passes ?? 0) < reviewDays.count { s.gettingStronger.append(id) } else { s.knowIt.append(id) }
-            }
+            else if (checks[id]?.passes ?? 0) < reviewDays.count { s.gettingStronger.append(id) } else { s.knowIt.append(id) }
         }
         return s
     }

@@ -391,6 +391,40 @@ final class MasteryTests: XCTestCase {
         XCTAssertFalse(Mastery.learnedEver(["y": Mastery.record(nil, level: 2, now: 0)], "y"), "a test never passed")
     }
 
+    /// A recheck that comes back low (G 20 Oct, CLAUDE.md "a miss: tomorrow"): not due again today, marked Go over, and
+    /// the next day it opens on its recheck again; passed then, it's on its way again.
+    func testARecheckThatComesBackLowComesBackTomorrowAsARecheck() {
+        var c = Mastery.record(nil, level: 4, now: 0)
+        let recheck = c.due
+        XCTAssertTrue(Mastery.dueBack(["x": c], "x", now: recheck))
+        c = Mastery.record(c, level: 2, now: recheck)
+        var checks = ["x": c]
+        XCTAssertFalse(Mastery.dueBack(checks, "x", now: recheck + 60), "not again today")
+        XCTAssertTrue(Mastery.goOver(checks, "x", now: recheck + 60))
+        XCTAssertTrue(Mastery.dueBack(checks, "x", now: recheck + day), "the next day it opens on its recheck")
+        XCTAssertEqual(Mastery.upNext(["x"], depends: { _ in [] }, checks: checks, grade: 5, now: recheck + day)?.why, .goOver)
+        c = Mastery.record(c, level: 3, now: recheck + day); checks["x"] = c
+        XCTAssertFalse(Mastery.goOver(checks, "x", now: recheck + day + 60))
+        XCTAssertEqual(c.due - c.date, 3 * day, "passed again: three days, as after a first pass")
+    }
+
+    /// A lesson never learned isn't Go over (G 20 Oct): a lesson test that came back low is to take again, and the
+    /// shelves of Me add up to the learned count.
+    func testATestThatCameBackLowIsntGoOver() {
+        let now = 10 * day
+        let checks = ["never": Mastery.record(nil, level: 1, now: now - day),
+                      "learned": Mastery.record(nil, level: 4, now: now - day),
+                      "due": Mastery.record(nil, level: 4, now: now - 4 * day),
+                      "slipped": Mastery.record(Mastery.record(nil, level: 4, now: now - 5 * day), level: 1, now: now - 60)]
+        XCTAssertFalse(Mastery.goOver(checks, "never", now: now)); XCTAssertFalse(Mastery.dueBack(checks, "never", now: now + 9 * day))
+        XCTAssertTrue(Mastery.toGoOver(checks, "never"), "Today's pick still sends the child back to it")
+        XCTAssertTrue(Mastery.goOver(checks, "due", now: now)); XCTAssertTrue(Mastery.goOver(checks, "slipped", now: now))
+        let s = Mastery.shelves(["never", "learned", "due", "slipped"], checks: checks, now: now)
+        XCTAssertEqual(s.goOver, ["due", "slipped"]); XCTAssertEqual(s.gettingStronger, ["learned"]); XCTAssertEqual(s.knowIt, [])
+        let learned = checks.keys.filter { Mastery.learnedEver(checks, $0) }.count
+        XCTAssertEqual(s.goOver.count + s.gettingStronger.count + s.knowIt.count, learned)
+    }
+
     /// Today's pick: a lesson due back for its recheck comes first.
     func testTodayPicksTheLessonDueBackFirst() {
         let deps: (String) -> [String] = { _ in [] }

@@ -320,9 +320,6 @@ public struct LessonRun: Sendable {
     public var oneTry = false
     /// A step of this problem was missed.
     public var missedAny: Bool { !missedSteps.isEmpty }
-    /// Right on their own (G 20 Oct): worked to the end with no miss and without Show me. A problem Show me helped
-    /// with was done, but not by the child alone.
-    public var clean: Bool { isLast && !missedAny && shown.isEmpty }
     /// The steps of this problem that were missed at least once.
     public private(set) var missedSteps: Set<Int> = []
     /// The steps with something to do: what a skill check scores.
