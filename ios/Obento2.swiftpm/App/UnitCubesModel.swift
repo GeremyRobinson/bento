@@ -1,11 +1,12 @@
 import SwiftUI
 
 /// Unit cubes on the paper, in 3D. The lesson logic lives in Core/UnitCubes.swift; this keeps the timing:
-/// when each square appeared, when each layer started rising, and where the camera is going.
+/// when each square appeared, when each layer started rising, and where the camera is going (TiltCamera). The scene
+/// draws its box like any box of cubes (CubesPicture, CubesDrawer).
 @MainActor @Observable
-final class UnitCubesModel {
+final class UnitCubesModel: CubesPicture {
     /// The paper tilting into 3D and back (snappier, G 17 Oct: was 1.1 s).
-    static let beat = 0.9
+    static let beat = TiltCamera.beat
 
     /// The box's back-left corner, in world units (one unit = one big square), on the paper's strong lines.
     let origin: Vec3
@@ -15,8 +16,8 @@ final class UnitCubesModel {
     private(set) var lesson: LessonRun
     private var rng = SeededRandom(seed: UInt64(Date().timeIntervalSince1970))
 
-    private(set) var resting: PaperView3D
-    private var flight: (from: PaperView3D, to: PaperView3D, start: Double, duration: Double, done: ((PaperView3D) -> Void)?)?
+    /// The camera: the lesson holds it from the moment it opens, lined up with the flat paper.
+    let camera: TiltCamera
     /// Squares: when each was last turned on or off.
     private(set) var squares: [UnitCubes.Cell: (on: Bool, at: Double)] = [:]
     /// When the squares faded as the cubes rose.
@@ -30,7 +31,8 @@ final class UnitCubesModel {
     var message: (text: String, ok: Bool)?
 
     init(origin: Vec3, chapter: Chapter, view: PaperView3D, screen: Size, instant: Bool, box: UnitCubes.Box? = nil, session: LessonSession = LessonSession()) {
-        self.origin = origin; self.chapter = chapter; self.resting = view; self.screen = screen; self.instant = instant; self.session = session
+        self.origin = origin; self.chapter = chapter; self.screen = screen; self.instant = instant; self.session = session
+        camera = TiltCamera(view, instant: instant)
         var r = SeededRandom(seed: UInt64(Date().timeIntervalSince1970))
         var run = box.map { LessonRun(UnitCubes.spec, numbers: $0.numbers) } ?? session.makeRun(UnitCubes.spec, using: &r)
         run.helps = session.helps; run.oneTry = session.oneTry
@@ -56,28 +58,21 @@ final class UnitCubesModel {
     var layers: Int { Int(lesson.picture["layers"] ?? 0) }
     var scale: Double { view(at: PaperClock.now).scale / Paper.unit }
 
-    func view(at t: Double) -> PaperView3D {
-        guard let f = flight else { return resting }
-        return .between(f.from, f.to, (t - f.start) / f.duration)
-    }
+    func view(at t: Double) -> PaperView3D { camera.view(at: t) }
 
     var animating: Bool {
         let now = PaperClock.now
-        return flight != nil || now - wordsAt < 0.8 || (layerAt.values.max().map { now - $0 < 2.6 } ?? false)
+        // every layer keeps the clock running until its last cube stands (a big floor's last cubes rise late)
+        return camera.flight != nil || now - wordsAt < 0.8 || layerAt.contains { now < CubesTiming.end($0.value, floor: box.floor, first: $0.key == 0) + 0.1 }
             || squares.values.contains { now - $0.at < 0.4 } || (squaresGoneAt.map { now - $0 < 1.2 } ?? false)
             || (tiltAt.map { now - $0 < Self.beat + 0.1 } ?? false) || (untiltAt.map { now - $0 < Self.beat + 0.1 } ?? false)
             || now < busyUntil + 0.1 || (preview.map { now < $0.end + 0.1 } ?? false)
     }
 
-    func settle(at t: Double) {
-        guard let f = flight, t - f.start >= f.duration else { return }
-        resting = f.to; flight = nil; f.done?(f.to)
-    }
+    func settle(at t: Double) { camera.settle(at: t) }
 
     private func move(to v: PaperView3D, duration: Double, done: ((PaperView3D) -> Void)? = nil) {
-        let now = PaperClock.now, from = view(at: now)
-        if instant || duration == 0 { flight = nil; resting = v; done?(v); return }
-        resting = from; flight = (from, v, now, duration, done)
+        camera.move(to: v, duration: duration, done: done)
     }
 
     // MARK: what the child does
@@ -95,10 +90,10 @@ final class UnitCubesModel {
         // the paper tilts when the step's camera does; each new layer rises
         case .moved where before.camera == .flat && lesson.step.camera == .tilted:
             lift()
-            busyUntil = time(Self.beat * 0.55 + 0.7 + 0.04 * Double(box.floor))
+            busyUntil = CubesTiming.end(time(Self.beat * 0.55), floor: box.floor)
         case .moved:
             if had > 0, layers > had {
-                layerAt[layers - 1] = time(0); busyUntil = time(0.7 + 0.035 * Double(box.floor))
+                layerAt[layers - 1] = time(0); busyUntil = CubesTiming.end(time(0), floor: box.floor, first: false)
                 // the camera frames the box as it now stands, with the new layer
                 move(to: tiltedView(from: view(at: PaperClock.now), layers: layers), duration: CameraTiming.fly)
             }
@@ -140,28 +135,15 @@ final class UnitCubesModel {
         message = nil
     }
 
-    func zoom(_ f: Double) {
-        var v = view(at: PaperClock.now); v.scale = min(250, max(25, v.scale * f)); move(to: v, duration: 0.3)
-    }
+    func zoom(_ f: Double) { camera.zoom(f) }
 
     /// Pinch follows the fingers directly; the buttons glide.
     /// Told on a pinch, so the bar can show the zoom.
-    var onPinch: (() -> Void)?
+    var onPinch: (() -> Void)? { get { camera.onPinch } set { camera.onPinch = newValue } }
 
-    func pinch(_ f: Double) {
-        guard flight?.done == nil else { return }
-        onPinch?()
-        var v = view(at: PaperClock.now); flight = nil
-        v.scale = min(250, max(25, v.scale * f)); resting = v
-    }
+    func pinch(_ f: Double) { camera.pinch(f) }
 
-    func pan(_ dx: Double, _ dy: Double) {
-        // never cut short a move that has something to do when it ends (tilting flat before leaving)
-        guard flight?.done == nil else { return }
-        var v = view(at: PaperClock.now); flight = nil
-        let (_, r, u) = v.axes
-        v.target = v.target + r * (-dx / v.scale) + u * (dy / v.scale); resting = v
-    }
+    func pan(_ dx: Double, _ dy: Double) { camera.pan(dx, dy) }
 
     func tapScreen(_ p: Point) {
         let hit = view(at: PaperClock.now).unproject(p, screen: screen)
@@ -205,18 +187,15 @@ final class UnitCubesModel {
     func flatten(then done: @escaping (PaperView3D) -> Void) {
         let now = view(at: PaperClock.now)
         guard tiltAt != nil else { done(now); return }
-        let (dir, _, _) = now.axes
-        let t = now.target - dir * (now.target.y / dir.y)
         untiltAt = time(0); tiltAt = nil
-        move(to: PaperView3D(scale: now.scale, target: t), duration: Self.beat, done: done)
+        move(to: TiltCamera.flat(now), duration: Self.beat, done: done)
     }
 
     private func restart() {
         busyUntil = time(Self.beat + 0.1)
-        flatten { [self] v in
+        flatten { [self] _ in
             lesson = session.makeRun(UnitCubes.spec, using: &rng)
             squares = [:]; squaresGoneAt = nil; layerAt = [:]; message = nil; wordsAt = PaperClock.now
-            resting = v
         }
     }
 
@@ -249,12 +228,29 @@ final class UnitCubesModel {
         return k
     }
 
-    /// How tall a cube is (0...1); cubes in a layer rise one after another.
+    /// How tall a cube is (0...1); cubes in a layer rise one after another, a layer in a second at most.
     func cube(x: Int, y: Int, z: Int, at t: Double) -> Double {
         guard let a = layerAt[y] else { return 0 }
         let i = Double(z * box.length + x)
-        return ease((t - a - i * (y == 0 ? 0.04 : 0.035)) / 0.7)
+        return ease((t - a - i * CubesTiming.stagger(floor: box.floor, first: y == 0)) / CubesTiming.rise)
     }
+
+    // MARK: its box, for the scene (CubesPicture)
+
+    var corner: Vec3 { origin }
+    /// The floor's dashed outline shows while it lies flat and nothing has risen.
+    func outline(at t: Double) -> Double { tilt(at: t) == 0 && layers == 0 ? 1 : 0 }
+    func square(_ i: Int, at t: Double) -> (fill: Double, ghost: Double) { (square(UnitCubes.cell(i, in: box), at: t), 0) }
+    /// A layer rises cube by cube; once its last cube stands, it's one piece.
+    func layer(_ y: Int, at t: Double) -> CubesLayer {
+        guard let a = layerAt[y], t >= a else { return .none }
+        return t < CubesTiming.end(a, floor: box.floor, first: y == 0) ? .cubes : .whole(1)
+    }
+    var hints: (outline: Bool, tint: Bool, empty: [Int]) {
+        let p = lesson.picture, on = p["empty"] == 1 && lesson.step.task != nil
+        return (on, on && p["tint"] == 1, (0..<box.floor).filter { lesson.marks[$0] == nil })
+    }
+    func wire(at t: Double) -> Double { 0 }
 
     func heightLabel(at t: Double) -> Double {
         guard lesson.picture["height"] == 1, let a = layerAt[box.height - 1] else { return 0 }

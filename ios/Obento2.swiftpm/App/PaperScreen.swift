@@ -16,7 +16,8 @@ struct PaperScreen: View {
         GeometryReader { safe in
         GeometryReader { geo in
             TimelineView(.animation(paused: !animating)) { ctx in
-                let t = ctx.date.timeIntervalSinceReferenceDate
+                let t = PaperClock.frozen ?? ctx.date.timeIntervalSinceReferenceDate
+                let cam = model.camera(at: t)
                 ZStack(alignment: .topLeading) {
                     // RealityKit's view keeps the size it was made at, so a new screen shape (rotating) makes a new one
                     PaperScene(model: model, time: t)
@@ -29,12 +30,12 @@ struct PaperScreen: View {
                     Toolbar(model: model, time: t, bottom: max(16, safe.safeAreaInsets.bottom + 8, model.keyboard + 8))
                     // iPadOS's own number keyboard (G 19 Oct), up by itself whenever the problem being worked wants a
                     // number written (no tap needed), so a Mac's or a hardware keyboard types straight away too; only for
-                    // a box the drawing shows (G 20 Oct): a step answered by the hands never raises it
-                    let typing = (model.bars?.current as? WorkProblem).flatMap { w in model.bars?.mode == .work && w.wantsTyping ? w : nil }
-                    NumberEntry(problem: typing, step: typing.map { "\($0.id) \($0.lesson.index) \($0.boxTapped)" } ?? "")
-                        // iPadOS's number pad pops up from the hidden field: it sits in the screen's bottom-right corner,
-                        // over the bar, so the pad comes up there, clear of the picture and the record (a docked keyboard
-                        // doesn't mind where it is)
+                    // a box the drawing shows (G 20 Oct): a step answered by the hands never raises it; a box tapped
+                    // brings the keys back
+                    let typing = typingProblem
+                    NumberEntry(problem: typing, step: typing.map { "\($0.id) \($0.lesson.index) \(($0 as? WorkProblem)?.boxTapped ?? 0)" } ?? "")
+                        // iPadOS's number pad pops up from the hidden field: for a problem laid out stacked it sits in the
+                        // screen's bottom-right corner, clear of the picture and the record (as the paper lessons have it)
                         .position(NumberEntry.anchor(screen: model.screen, bottom: max(16, safe.safeAreaInsets.bottom + 8), stacked: typing?.stacked ?? true))
                 }
                 .onChange(of: t) { _, now in Perf.frame(now); model.settle(at: now); model.lesson?.settle(at: now) }
@@ -63,6 +64,13 @@ struct PaperScreen: View {
         }
         .ignoresSafeArea()
         }
+    }
+
+    /// The problem being worked that wants a typed number now (NumberTyping.wantsTyping): a typed step's, or Volume of a
+    /// box's record.
+    private var typingProblem: (any NumberTyping)? {
+        guard let page = model.bars, page.mode == .work, let p = page.current as? any NumberTyping else { return nil }
+        return p.wantsTyping ? p : nil
     }
 
     /// The clock only runs while something moves or draws, so a still paper costs nothing.
@@ -130,7 +138,7 @@ struct SystemKeys: UIViewRepresentable {
 /// number keys come up and a Mac's or hardware keyboard types too. It holds a single space: whatever is typed after it
 /// goes to the box, a delete that takes the space is a delete in the box, and it goes back to the space each time.
 struct NumberEntry: View {
-    let problem: WorkProblem?
+    let problem: (any NumberTyping)?
     let step: String
 
     /// Where the hidden field sits on the screen. iPadOS's number pad (a popover on iPadOS 26) comes up from it. A paper
