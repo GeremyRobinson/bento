@@ -981,12 +981,19 @@ final class BarsPage {
 }
 
 /// Each lesson page's work, saved on the device as the child goes (G 18 Oct): stop anywhere and come back to it.
-/// Versioned (G 20 Oct): a save in an older shape starts that page fresh, and a problem whose save no longer fits its
-/// lesson starts fresh (LessonRun.restored), instead of being misread.
+/// Versioned (G 20 Oct): a save in an older shape starts that page fresh, so does a page whose lesson's steps have been
+/// numbered differently since, and a problem whose save no longer fits its lesson starts fresh (LessonRun.restored),
+/// instead of being misread.
 @MainActor
 enum PageStore {
-    /// The saves' shape: bumped whenever `Saved` changes.
-    nonisolated static let schema = 2
+    /// The saves' shape: bumped whenever `Saved` changes, or a lesson's steps are numbered differently.
+    nonisolated static let schema = 3
+    /// The oldest save that still fits a lesson's page. `Saved` has had this shape since 2; a lesson whose steps have been
+    /// numbered differently since needs a save made after that, as its plan names steps by number (a problem aimed at a
+    /// slip: the step, what it says there, the slips counted). Multiply two-digit numbers: the cut came in as its
+    /// second step (20 Oct).
+    nonisolated static let oldest: [String: Int] = ["g5-mult2": 3]
+    private static func fits(_ saved: Int?, _ id: String) -> Bool { (saved ?? 0) >= (oldest[id] ?? 2) && (saved ?? 0) <= schema }
 
     /// Where the child was: one of the lesson's problems (or a test's questions), the lesson test's, or the recheck's.
     enum Spot: Codable, Equatable { case problem(Int), test(Int), recheck(Int) }
@@ -1020,8 +1027,9 @@ enum PageStore {
     static func load(_ id: String) -> Saved? {
         if let c = cache[id] { return c }
         var out: Saved?
-        // an older shape (or one that can't be read) starts the page fresh; its next save takes its place
-        if let d = UserDefaults.standard.data(forKey: key(id)), (try? JSONDecoder().decode(Shape.self, from: d))?.schema == schema {
+        // an older shape, a lesson renumbered since (or a save that can't be read) starts the page fresh; its next save
+        // takes its place
+        if let d = UserDefaults.standard.data(forKey: key(id)), fits((try? JSONDecoder().decode(Shape.self, from: d))?.schema, id) {
             out = try? JSONDecoder().decode(Saved.self, from: d)
         }
         cache[id] = .some(out)

@@ -34,6 +34,9 @@ final class SnapshotTests: XCTestCase {
     func testTypedWorkComesBack() throws {
         var rng = SeededRandom(seed: 11)
         var run = LessonPlan(MultiplyTwoDigit.spec, using: &rng).run(MultiplyTwoDigit.spec, 4)
+        // the cut made by hand first: the tens strip's squares are what's typed
+        let b = Int(run.numbers["b"] ?? 0)
+        run.set("x", Double(b - b % 10)); XCTAssertEqual(run.go(), .moved(2))
         let box = try XCTUnwrap(run.step.answer?.boxes.first)
         run.type("4"); run.type("2")
         let back = try XCTUnwrap(LessonRun.restored(MultiplyTwoDigit.spec, run.snapshot))
