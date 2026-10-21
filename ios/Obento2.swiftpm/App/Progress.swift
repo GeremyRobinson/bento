@@ -11,13 +11,16 @@ final class Progress {
     private(set) var checks: [String: CheckRecord]
     /// Each chapter or grade test's last result: problems right of how many, and its score (10 of 12 passes).
     private(set) var tests: [String: TestRecord]
+    /// Each day's review as it came out, by day (Review.day): the review's own, never read for what's learned.
+    private(set) var reviews: [String: ReviewRecord]
     /// Screenshots set a fixed state and don't save it.
     var saving = true
-    private static let checksKey = "checks", testsKey = "test-results"
+    private static let checksKey = "checks", testsKey = "test-results", reviewsKey = "reviews"
 
     init() {
         let d = UserDefaults.standard
         checks = d.data(forKey: Self.checksKey).flatMap { try? JSONDecoder().decode([String: CheckRecord].self, from: $0) } ?? [:]
+        reviews = d.data(forKey: Self.reviewsKey).flatMap { try? JSONDecoder().decode([String: ReviewRecord].self, from: $0) } ?? [:]
         if let t = d.data(forKey: Self.testsKey).flatMap({ try? JSONDecoder().decode([String: TestRecord].self, from: $0) }) {
             tests = t
         } else {
@@ -52,11 +55,37 @@ final class Progress {
     /// The test was passed (10 of 12 or better), the last time it was taken.
     func passed(_ id: String) -> Bool { tests[id]?.passed ?? false }
 
+    /// Today's review is over: how many were right, and the lessons with a miss. Kept for its day only (the last 60
+    /// days), and never read for what's learned or when a lesson comes back.
+    func reviewed(right: Int, of total: Int, missed: [String]) {
+        let today = Review.day(now)
+        reviews[today] = ReviewRecord(right: right, of: total, date: now, missed: missed)
+        // a couple of months is plenty to keep
+        let keep = Set((0..<60).map { Review.day(now - Double($0) * 86_400) })
+        reviews = reviews.filter { keep.contains($0.key) }
+        save()
+    }
+    /// Today's review, once it's done.
+    var todaysReview: ReviewRecord? { reviews[Review.day(now)] }
+
+    /// The grown-ups' page (G 20 Oct): one lesson's checks forgotten, as if it was never checked (its page is the
+    /// PageStore's to clear).
+    func forget(_ id: String) {
+        checks[id] = nil
+        save()
+    }
+    /// Everything forgotten: every lesson's checks, every test's result and every review.
+    func forgetAll() {
+        checks = [:]; tests = [:]; reviews = [:]
+        save()
+    }
+
     private func save() {
         guard saving else { return }
         let d = UserDefaults.standard
         if let data = try? JSONEncoder().encode(checks) { d.set(data, forKey: Self.checksKey) }
         if let data = try? JSONEncoder().encode(tests) { d.set(data, forKey: Self.testsKey) }
+        if let data = try? JSONEncoder().encode(reviews) { d.set(data, forKey: Self.reviewsKey) }
     }
 
     // MARK: screenshots (never saved)
@@ -66,6 +95,16 @@ final class Progress {
         checks = Dictionary(uniqueKeysWithValues: ids.map { ($0, Mastery.record(nil, level: 4, now: now)) })
         for id in due { makeDue(id) }
         tests = results.mapValues { TestRecord(right: $0, of: LessonPlan.test, date: now) }
+        reviews = [:]
+    }
+    /// A lesson's checks as a screenshot wants them: `passes` passed in a row, the last scoring `last`, taken `daysAgo`
+    /// days ago, coming back in `dueIn` days (less than 0: due back already).
+    func setCheck(_ id: String, last: Int = 4, best: Int? = nil, passes: Int, daysAgo: Double, dueIn: Double) {
+        checks[id] = CheckRecord(last: last, best: best ?? max(last, passes > 0 ? 4 : last), date: now - daysAgo * 86_400, due: now + dueIn * 86_400, passes: passes)
+    }
+    /// Today's review as a screenshot wants it.
+    func setReview(right: Int, of total: Int, missed: [String]) {
+        reviews[Review.day(now)] = ReviewRecord(right: right, of: total, date: now, missed: missed)
     }
     /// A learned lesson whose time to come back has come.
     func makeDue(_ id: String) {

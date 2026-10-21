@@ -14,9 +14,45 @@ struct WorkBox {
     var cells = 3, spare = 1
     /// Centred (a fraction's top or bottom): the box is its column, and what's typed sits in its middle.
     var centred = false
-    func moved(_ by: CGPoint) -> WorkBox { var b = self; b.right += by.x; b.mid += by.y; return b }
+    /// A sum in columns (Adding decimals): what's typed lines up on its point, which sits on this line (in the box's
+    /// points, as `right` is): the digits before the point end on it, the digits after start on it, and the point is
+    /// written on the line itself, so the answer's places line up with the numbers above it. The box is its `cells`
+    /// columns, ending at `right`.
+    var point: Double?
+    func moved(_ by: CGPoint) -> WorkBox { var b = self; b.right += by.x; b.mid += by.y; b.point = point.map { $0 + by.x }; return b }
+    /// Where each typed character goes when the box lines up on its point: its middle's x (the point's: the line).
+    func placed(_ typed: String) -> [(ch: Character, x: Double)] {
+        guard let point else { return [] }
+        let parts = typed.split(separator: ".", omittingEmptySubsequences: false).map(Array.init)
+        let whole = parts.first ?? []
+        var out = whole.enumerated().map { (ch: $0.element, x: point - (Double(whole.count - $0.offset) - 0.5) * cell) }
+        if parts.count > 1 {
+            out.append((ch: ".", x: point))
+            out += parts[1].enumerated().map { (ch: $0.element, x: point + (Double($0.offset) + 0.5) * cell) }
+        }
+        return out
+    }
+    /// Where the cursor goes when the box lines up on its point: just past the last digit typed.
+    func pointCursor(_ typed: String) -> Double? {
+        guard let point else { return nil }
+        guard let dot = typed.firstIndex(of: ".") else { return point + 0.15 * cell }
+        let after = typed.distance(from: dot, to: typed.endIndex) - 1
+        return point + (after == 0 ? 0.3 : Double(after) + 0.15) * cell
+    }
+    /// Its rect with `typed` in it: a box lined up on its point grows either way to hold what's typed (a 4th whole digit
+    /// to the left, a 3rd decimal to the right), as a column box grows left.
+    func rect(for typed: String) -> CGRect {
+        guard let point else { return rect(typed: typed.count) }
+        let parts = typed.split(separator: ".", omittingEmptySubsequences: false)
+        let whole = Double(parts.first?.count ?? 0), after = Double(parts.dropFirst().first?.count ?? 0)
+        let left = min(right - Double(cells) * cell, point - whole * cell), end = max(right, point + after * cell)
+        return CGRect(x: left, y: mid - cell / 2, width: end - left + 0.5 * cell, height: cell)
+    }
     /// Its rect when `typed` digits are in it, with half a cell past its right edge for the cursor.
     func rect(typed: Int = 0) -> CGRect {
+        if point != nil {
+            return CGRect(x: right - Double(cells) * cell, y: mid - cell / 2, width: (Double(cells) + 0.5) * cell, height: cell)
+        }
         if centred {
             let n = Double(max(cells, typed)), mid = right - Double(cells) * cell / 2
             return CGRect(x: mid - n * cell / 2, y: self.mid - cell / 2, width: n * cell, height: cell)
@@ -47,8 +83,9 @@ struct GridPen {
 
     /// An answer box `cells` digits wide whose right edge is column `right`, on the row whose middle is `mid` (a digit is
     /// `per` squares): it grows left as digits are typed, so they line up on the right as written work does.
-    mutating func answerBox(_ id: String, right: Double, mid: Double, per: Double, cells: Int, spare: Int = 0, centred: Bool = false) {
-        boxes.append(WorkBox(id: id, right: P(right, 0).x, mid: P(0, mid).y, cell: per * Self.sq, cells: cells, spare: spare, centred: centred))
+    mutating func answerBox(_ id: String, right: Double, mid: Double, per: Double, cells: Int, spare: Int = 0, centred: Bool = false, point: Double? = nil) {
+        boxes.append(WorkBox(id: id, right: P(right, 0).x, mid: P(0, mid).y, cell: per * Self.sq, cells: cells, spare: spare, centred: centred,
+                             point: point.map { P($0, 0).x }))
     }
 
     /// Every box the work has: the one `box`, then the named ones.

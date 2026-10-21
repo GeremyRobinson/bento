@@ -46,7 +46,7 @@ enum ProblemLayout {
             for b in L.boxes {
                 guard let id = b.id ?? a.boxes.first, a.boxes.contains(id) else { continue }
                 // half a cell past the column's edge, room for the cursor so it touches nothing
-                out.append(Block(kind: .field(id), rect: b.rect(typed: (l.typed[id] ?? "").count).offsetBy(dx: o.x, dy: o.y)))
+                out.append(Block(kind: .field(id), rect: b.rect(for: l.typed[id] ?? "").offsetBy(dx: o.x, dy: o.y)))
             }
         }
         if !m.auto && !m.solved { out.append(Block(kind: .main, rect: A(L.checkAt.x, y, width(l.words.action, 120), 40 * k))) }
@@ -90,7 +90,7 @@ enum ProblemLayout {
         if let a = run.step.answer, a.choices == nil, !a.byHand {
             for b in L.boxes {
                 guard let id = b.id ?? a.boxes.first, a.boxes.contains(id) else { continue }
-                out.append(Block(kind: .field(id), rect: b.rect(typed: (run.typed[id] ?? "").count).offsetBy(dx: o.x, dy: o.y)))
+                out.append(Block(kind: .field(id), rect: b.rect(for: run.typed[id] ?? "").offsetBy(dx: o.x, dy: o.y)))
             }
         }
         if !m.auto, !run.isLast, let a = run.step.answer, !a.byHand { add(.main, width(run.words.action, 120)) }
@@ -117,7 +117,7 @@ enum ProblemLayout {
         func after(_ b: WorkBox) -> Double {
             b.right - Double(b.cells) * b.cell / 2 + PaperText.width(l.typed[id] ?? "", PaperText.font(Sketch.maths * (L.stack?.plan.k ?? L.scale), .medium, digits: true)) / 2 + 0.1 * b.cell
         }
-        let x = L.inline ? m.origin.x + (b.map { $0.centred ? after($0) : $0.right + 0.22 * cell } ?? 0)
+        let x = L.inline ? m.origin.x + (b.map { $0.pointCursor(l.typed[id] ?? "") ?? ($0.centred ? after($0) : $0.right + 0.22 * cell) } ?? 0)
             : r.minX + cell + count * cell + 0.15 * cell
         return CGRect(x: x, y: r.midY - 0.4 * cell, width: 0, height: 0.8 * cell)
     }
@@ -440,7 +440,14 @@ extension Rig {
                 let typed = view.typed[f]?.replacingOccurrences(of: "-", with: "−") ?? ""
                 let wb = m.layout.box(for: f, first: view.step.answer?.boxes.first), cell = wb?.cell ?? 2 * sq
                 let colour: Sketch.Colour = view.faint ? .ink3 : style.text, tag = "\(view.verdict as Bool?)\(view.faint)"
-                if let wb, wb.centred {
+                if let wb, wb.point != nil {
+                    // a sum in columns: lined up on the point, which is written on its line as the record's points are
+                    for (j, c) in wb.placed(typed).enumerated() {
+                        let at = CGPoint(x: o.x + c.x, y: r.midY)
+                        if c.ch == "." { s.text("\(id)typed\(j).\(tag)", ".", at: at, size: Sketch.maths * k, weight: .bold, colour, anchor: UnitPoint(x: 0.5, y: 0.49)) }
+                        else { s.text("\(id)typed\(j)\(c.ch)\(tag)", String(c.ch), at: at, size: Sketch.maths * k, weight: .medium, colour) }
+                    }
+                } else if let wb, wb.centred {
                     if !typed.isEmpty { s.text("\(id)typed\(typed)\(tag)", typed, at: CGPoint(x: o.x + wb.right - Double(wb.cells) * cell / 2, y: r.midY), size: Sketch.maths * k, weight: .medium, colour) }
                 } else {
                     // a digit to a cell, from the right, so places line up with the record's

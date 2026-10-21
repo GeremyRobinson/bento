@@ -29,6 +29,7 @@ enum Shots {
         // the same progress every time, and nothing saved: two lessons learned, the two that worked (G 20 Oct)
         Progress.shared.saving = false
         PageStore.saving = false
+        AppSettings.shots = true
         Progress.shared.reset(to: ["g5-round", "add"])
         let args = ProcessInfo.processInfo.arguments
         if args.contains("-landscape") || args.contains("-portrait"),
@@ -580,6 +581,125 @@ enum Shots {
             await wait(0.3)
             for (i, q) in page.problems.enumerated() { page.open(q); await work(q, miss: fail ? i % 3 == 1 || i == 0 : i == 2 || i == 7) }
             page.goNext()
+        // Me, the review and the grown-ups' page (G 20 Oct), on seeded progress (seedMe): nothing learned, or a child
+        // some way in (two to go over, five getting stronger, two known); with today's review done
+        case "me-fresh":
+            Progress.shared.reset(to: [])
+            m.shotMode = true; m.go(to: .me)
+        case "me", "me-review-done", "me-review-partway":
+            seedMe()
+            if name == "me-review-done" { Progress.shared.setReview(right: 6, of: 8, missed: ["g5-round", "sub"]) }
+            if name == "me-review-partway" { PaperModel.shotPartway = 3 }
+            m.shotMode = true; m.go(to: .me)
+        case "me-review-reset":
+            // today's review partway, then a grown-up's reset left only one lesson checked: the card still says how far
+            // it got, lit, and opens to be finished
+            Progress.shared.reset(to: [])
+            Progress.shared.setCheck("g5-round", passes: 1, daysAgo: 2, dueIn: 1)
+            PaperModel.shotPartway = 3
+            m.shotMode = true; m.go(to: .me)
+        case "review-after-reset":
+            // the real path behind me-review-reset, not instant, so the review's page saves as it goes (in memory, as a
+            // shot's pages do): today's review three problems in, then a grown-up resets every lesson but one (as the
+            // grown-ups' page does it); Me's card, tapped where it's drawn, opens the review as it was left
+            seedMe()
+            m.go(to: .me); await wait(2.5)
+            m.open(Map.review, from: .me); await wait(2)
+            guard let page = m.bars else { return true }
+            for q in page.problems.prefix(3) { page.open(q); await wait(1.5); await work(q); await wait(0.8) }
+            page.backToProblems(); await wait(1)
+            m.close(); await wait(2.5)
+            for id in Map.gradeLessons where id != "g5-round" { Progress.shared.forget(id); PageStore.clear(id) }
+            await wait(1.5)
+            m.tap(at: m.camera(at: PaperClock.now).toScreen(Point(MePage.corner.x + 5.5 * Paper.unit, 2 * Paper.unit)))
+        case "me-helps", "me-low":
+            // today's pick is up next, never Go over, when it isn't on Me's Go over shelf: me-helps, a 1 on Dividing by a
+            // decimal (never learned) picks Multiply by 10, 100, 1000 (never started) under it; me-low, a test that came
+            // back low on a lesson never learned (Adding fractions learned, so the review is ready)
+            Progress.shared.reset(to: [])
+            if name == "me-helps" { Progress.shared.setCheck("g5-divdec", last: 1, best: 1, passes: 0, daysAgo: 1, dueIn: 0) }
+            else {
+                Progress.shared.setCheck("add", passes: 1, daysAgo: 1, dueIn: 2)
+                Progress.shared.setCheck("g5-divdec", last: 2, best: 2, passes: 0, daysAgo: 2, dueIn: -1)
+            }
+            m.shotMode = true; m.go(to: .me)
+        case "me-full", "me-full-open":
+            // every lesson learned, most on their way through their checks: the longest shelves Me has; Getting stronger
+            // too long for the screen ends on "and 11 more", which me-full-open has tapped
+            seedMeFull()
+            m.shotMode = true; m.go(to: .me)
+            if name == "me-full-open" { m.openShelf(1) }
+        case "path-shelf":
+            // the real path, not instant, to watch a long shelf open and close: Me (as me-full), "and 11 more" tapped where
+            // it's drawn (the other parts undraw, the shelf's cards glide to their columns, the rest draw in), then Back
+            // to Me tapped where it's drawn
+            seedMeFull()
+            m.frameGroup(duration: 0)
+            await wait(1)
+            m.go(to: .me); await wait(3)
+            func tap(_ action: MePage.Action) {
+                guard let r = m.meSheet(now: PaperClock.now).taps.first(where: { $0.action == action })?.rect else { return }
+                m.tap(at: m.camera(at: PaperClock.now).toScreen(Point(r.midX, r.midY)))
+            }
+            tap(.shelf(1)); await wait(3.5)
+            tap(.back)
+        case let n where n.hasPrefix("review-"):
+            // review-page: its 8 problems, opened from Me; review-problem: the first open; review-result: all 8
+            // answered (two missed), its result on the paper; review-result-missed: every one missed, so the result
+            // names every lesson the review drew on (Volume of a box left out of it: its hand moves need a finger's
+            // drags, which `work` can't make)
+            seedMe()
+            if n == "review-result-missed" { Progress.shared.forget("g5-volume") }
+            m.shotMode = true; m.go(to: .me)
+            m.open(Map.review, from: .me)
+            guard let page = m.bars else { return true }
+            await wait(0.3)
+            if n == "review-page" { return true }
+            if n == "review-problem" {
+                // -wrong: a slip on its first step, so a miss in the review shows what a lesson's miss shows
+                page.open(page.problems[0])
+                if args.contains("-wrong"), let w = page.problems[0] as? WorkProblem { w.answerForShots(wrong: true) }
+                return true
+            }
+            if n == "review-result-longest" {
+                // the most the review can name: 8 problems from 8 lessons, all missed, the 8 longest names
+                let ids = ["g5-unitdiv", "g5-mult2", "g5-improper", "g5-pow10", "mix", "sub", "g5-multfrac", "g5-divdec"]
+                page.showResultForShots(.init(kind: .review, title: page.piece.name, right: 0, of: Review.problems, passed: true, missed: ids))
+                return true
+            }
+            for (i, q) in page.problems.enumerated() { page.open(q); await work(q, miss: n == "review-result-missed" || i == 2 || i == 5) }
+            page.goNext()
+        case let n where n.hasPrefix("grownup"):
+            // grownup-gate: shut; grownup-hold: its square held halfway (the clock stopped there); grownup: open;
+            // grownup-confirm: a lesson's reset asked on the paper; grownup-confirm-all: everything's
+            seedMe()
+            m.shotMode = true; m.go(to: .grownUp)
+            if n == "grownup-gate" { return true }
+            if n == "grownup-hold" { m.grownUp.heldForShots(0.55); return true }
+            m.grownUp.openForShots()
+            if n == "grownup-confirm" { m.grownUp.confirmForShots(.lesson("g5-round")) }
+            if n == "grownup-confirm-all" { m.grownUp.confirmForShots(.all) }
+            m.reframePlace()
+        case "path-me":
+            // the real path, not instant, to watch the places draw in and out: the map, then Me, a lesson opened from Me
+            // and closed (back to Me), the review opened and closed, then the map again
+            seedMe()
+            m.frameGroup(duration: 0)
+            await wait(2)
+            m.go(to: .me); await wait(3)
+            if let p = Map.piece("g5-divide") { m.open(p, from: .me) }
+            await wait(4)
+            m.close(); await wait(3)
+            m.open(Map.review, from: .me); await wait(3)
+            m.close(); await wait(3)
+            m.go(to: nil)
+        case let n where n.hasPrefix("first-launch"):
+            // the very first launch (nothing done yet): the map drawing itself in, for real, then the ghost finger's tap
+            // on the first lesson up next and "Start here."; first-launch-<seconds>: held that far into the finger's moves
+            Progress.shared.reset(to: [])
+            m.frameGroup(duration: 0)
+            m.drawnAt = PaperClock.now
+            m.beginStartHere(force: true, frozen: Double(n.dropFirst("first-launch-".count)))
         case "cards-fit":
             // every lesson's cards checked inside their frames, printed for the build to read
             for line in CardText.check() { print("OBENTO-CARDS \(line)") }
@@ -589,6 +709,44 @@ enum Shots {
             return false
         }
         return true
+    }
+
+    /// `-seed-me` or `-seed-me-full` (the real-touch tests, never a screenshot): the app opens, for real, on a child some
+    /// way in (seedMe) or with every lesson learned (seedMeFull), kept in memory only, with no page left on the iPad
+    /// brought back, so a test always starts from the same place and never changes what's saved.
+    static func seedForTests() {
+        let args = ProcessInfo.processInfo.arguments, full = args.contains("-seed-me-full")
+        guard !active, full || args.contains("-seed-me") else { return }
+        Progress.shared.saving = false
+        PageStore.saving = false
+        for p in Map.all + Map.proof + [Map.review] { PageStore.clear(p.id) }
+        if full { seedMeFull() } else { seedMe() }
+    }
+
+    /// Every lesson learned, most on their way through their checks (15 getting stronger, 2 known): Me's longest shelf.
+    static func seedMeFull() {
+        Progress.shared.reset(to: [])
+        for (i, id) in Map.gradeLessons.enumerated() {
+            Progress.shared.setCheck(id, passes: [1, 2, 3, 2, 1, 4][i % 6], daysAgo: Double(i % 5) + 1, dueIn: Double(i % 7) + 1)
+        }
+    }
+
+    /// A child some way into 5th grade, for Me and the grown-ups' page: two lessons to go over (one due back for its
+    /// check, one whose recheck came back low), five getting stronger (one to three checks passed), two known (all four).
+    static func seedMe() {
+        let p = Progress.shared
+        p.reset(to: [])
+        p.setCheck("g5-mult2", passes: 4, daysAgo: 30, dueIn: 30)
+        p.setCheck("g5-divide", passes: 2, daysAgo: 5, dueIn: 2)
+        p.setCheck("g5-order", last: 3, passes: 1, daysAgo: 1, dueIn: 2)
+        p.setCheck("g5-pow10", passes: 3, daysAgo: 10, dueIn: 11)
+        p.setCheck("g5-round", passes: 2, daysAgo: 8, dueIn: -1)
+        p.setCheck("g5-adddec", passes: 1, daysAgo: 2, dueIn: 1)
+        p.setCheck("add", passes: 4, daysAgo: 40, dueIn: 20)
+        p.setCheck("sub", last: 1, best: 4, passes: 0, daysAgo: 0.2, dueIn: 0.8)
+        p.setCheck("g5-volume", passes: 1, daysAgo: 1, dueIn: 2)
+        // a test that came back low on a lesson never learned: it's checked (the review draws on it), never on a shelf
+        p.setCheck("g5-multdec", last: 2, best: 2, passes: 0, daysAgo: 3, dueIn: -2)
     }
 
     /// Taps through the How to (`taps` times at most), each time it waits for a tap.

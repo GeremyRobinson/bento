@@ -54,13 +54,22 @@ extension Rig {
         let size = CardText.size(cards.compactMap { $0.display.map { CardText.parts($0).maths } }, room: room)
         for c in cards {
             let r = CGRect(x: c.rect.x, y: c.rect.y, width: c.rect.width, height: c.rect.height), id = c.id
-            // a lesson thumbnail's frame and tab, the problem centred in it, its name and status under it
-            s.frame(id, r, c.state == .locked ? .locked : c.state == .now ? .now : c.state == .open ? .open : .done)
-            if let tag = c.state == .done ? "Done" : c.state == .now ? "Now" : nil { s.tab(id, frame: r, tag) }
+            // a lesson thumbnail's frame and tab, the problem centred in it, its name and status under it; on a page that
+            // mixes lessons (the daily review), each card in its own lesson's colour
+            let state: Sketch.FrameState = c.state == .locked ? .locked : c.state == .now ? .now : c.state == .open ? .open : .done
+            let tag = c.state == .done ? "Done" : c.state == .now ? "Now" : nil
+            if let pen = c.pen {
+                s.frame(id, r, state, pen: pen)
+                if let tag { s.tab(id, frame: r, tag, pen: pen) }
+            } else {
+                s.frame(id, r, state)
+                if let tag { s.tab(id, frame: r, tag) }
+            }
             if let d = c.display { CardText.draw(&s, id, CardText.parts(d), in: r, size: size) }
             else { s.label(id + "twelve", "\(LessonPlan.test) problems", Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: c.state == .locked ? .ink3 : .ink), at: CGPoint(x: r.midX, y: r.midY), anchor: .center) }
             s.label(id + "name", c.title, .label, at: CGPoint(x: r.minX, y: r.maxY + 30), anchor: UnitPoint(x: 0, y: 0.5))
-            s.label(id + "line", c.line, Sketch.Words.status.colour(c.state == .done || c.state == .now ? .chapter : c.state == .missed ? .ink : .ink3), at: CGPoint(x: r.minX, y: r.maxY + 50), anchor: UnitPoint(x: 0, y: 0.5), slot: lesson + id + "line")
+            let lit: Sketch.Colour = c.pen?.full ?? .chapter
+            s.label(id + "line", c.line, Sketch.Words.status.colour(c.state == .done || c.state == .now ? lit : c.state == .missed ? .ink : .ink3), at: CGPoint(x: r.minX, y: r.maxY + 50), anchor: UnitPoint(x: 0, y: 0.5), slot: lesson + id + "line")
         }
         return s
     }
@@ -72,10 +81,15 @@ extension Rig {
         var s = Sketch()
         let l = page.resultLayout, f = CGRect(x: l.frame.x, y: l.frame.y, width: l.frame.width, height: l.frame.height), width = page.resultWidth
         s.words("result-head", r.title, .heading, x: l.heading.x, top: l.heading.y - Sketch.row / 2, width: 1200)
-        s.frame("result", f, r.passed ? .done : .open)
+        // the review's in ink: it mixes every chapter
+        if r.kind == .review { s.frame("result", f, .done, pen: .ink) } else { s.frame("result", f, r.passed ? .done : .open) }
         s.label("result-score", "\(r.right) of \(r.of) right", Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink), at: CGPoint(x: f.midX, y: f.midY), anchor: .center)
         s.words("result-verdict", r.verdict, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink), x: l.verdict.x, top: l.verdict.y - Sketch.row / 2, width: width)
-        s.words("result-why", r.why, Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2), x: l.why.x, top: l.why.y - Sketch.row / 2, width: width, max: 2)
+        // why, on as many rows as it takes (the review names every lesson it had a miss in; the blocks sit under it)
+        for (i, row) in l.whyRows.enumerated() {
+            s.text("result-why\(i):\(row)", row, at: CGPoint(x: l.why.x, y: l.why.y + Double(i) * Sketch.row), size: Sketch.small, weight: .regular, .ink2,
+                   anchor: UnitPoint(x: 0, y: 0.5), digits: false)
+        }
         s.block("result-main", CGRect(x: l.main.x, y: l.main.y, width: l.main.width, height: l.main.height), .main, word: r.main, arrow: true)
         if let o = l.other, let word = r.other { s.block("result-other", CGRect(x: o.x, y: o.y, width: o.width, height: o.height), .plain, word: word) }
         return s
