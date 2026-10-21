@@ -4,46 +4,38 @@ import XCTest
 final class ConvertUnitsTests: XCTestCase {
     func type(_ l: inout LessonRun, _ s: String) { l.reset(); for c in s { l.type(String(c)) } }
 
-    /// The web lesson's reference, 3 feet = ? inches, step by step.
+    /// The web lesson's reference, 3 feet = ? inches, on the paper: the cut sets "1 ft = [12] in" from the move, the
+    /// record's product is typed, the last words say why.
     func testWalkThroughTheLesson() {
         let n = ConvertUnits.numbers("foot", 3)
         XCTAssertEqual(n, ["u": 0, "n": 3, "up": 0])
         var l = LessonRun(ConvertUnits.spec, numbers: n)
         XCTAssertEqual(l.display, [.num(3), .text("feet"), .op("="), .text("? inches")])
         XCTAssertEqual(ConvertUnits.spec.story?(n), "A rope is 3 feet long. How many inches long is it?")
-        XCTAssertEqual(l.words.say, "How many inches is 3 feet?")
-        XCTAssertEqual(l.picture, ["units": 3, "per": 12, "rows": 1, "fill": 0])
+        XCTAssertEqual(l.steps.count, 4)
+        XCTAssertEqual(l.words.say, "How many inches fit in one foot?", "the first words don't repeat the problem")
         XCTAssertEqual(l.go(), .moved(1))
 
-        XCTAssertEqual(l.words.say, "1 foot = how many inches?")
+        // the cut: by hand, its box the small units the ruler's pieces make
+        XCTAssertEqual(l.words.say, "Drag the ruler to cut one foot into inches, then cut.")
         XCTAssertEqual(l.words.hint, "Start with just one foot.")
-        XCTAssertEqual(l.picture["one"], 1); XCTAssertEqual(l.picture["fill"], 1)
-        type(&l, "10")
-        XCTAssertEqual(l.go(), .notYet("A foot is 12 inches, not 10. Look at a ruler: it goes up to 12."))
-        type(&l, "3")
-        XCTAssertEqual(l.go(), .notYet("3 is the feet in a yard. A foot is 12 inches."))
-        type(&l, "11")
-        XCTAssertEqual(l.go(), .notYet("Not quite. Think of one foot. How many inches fit in it?"))
+        XCTAssertEqual(l.step.answer?.byHand, true)
+        XCTAssertEqual(l.picture, ["ruler": 1])
+        XCTAssertEqual(l.go(), .notYet("Fill in every box."))
+        l.set("x", 3)
+        XCTAssertEqual(l.go(), .notYet("3 is the feet in a yard. A foot is 12 inches."), "the web's mix-up, a cut into 3")
+        l.set("x", 8)
+        XCTAssertEqual(l.go(), .notYet("One foot is more than 8 inches. Cut smaller pieces."))
+        l.set("x", 24)
+        XCTAssertEqual(l.go(), .notYet("One foot is less than 24 inches. Cut bigger pieces."))
         XCTAssertEqual(l.showAnswer(), "1 foot is 12 inches.")
-        XCTAssertEqual(l.steps[1].answer?.work, [.num(12)])
+        XCTAssertEqual(l.steps[1].answer?.work, [.num(1), .text("ft"), .op("="), .num(12), .text("in")])
         XCTAssertEqual(l.go(), .moved(2))
 
-        XCTAssertEqual(l.words.say, "Will the answer be more or fewer inches than 3?")
-        XCTAssertEqual(l.words.hint, "Inches are smaller, so there will be more of them than 3.")
-        XCTAssertEqual(l.step.answer?.hint, "Which is bigger, a foot or an inch?")
-        XCTAssertEqual(l.step.answer?.boxes, ["c"])
-        XCTAssertEqual(l.picture["ask"], 1)
-        XCTAssertEqual(l.step.answer?.choices, ["More inches", "Fewer inches"])
-        l.choose(1) // Fewer
-        XCTAssertEqual(l.go(), .notYet("Inches are smaller than feet, so you need more of them."))
-        XCTAssertEqual(l.showAnswer(), "Inches are smaller, so it takes more of them.")
-        XCTAssertEqual(l.typed["c"], "0", "More")
-        XCTAssertEqual(l.go(), .moved(3))
-        XCTAssertEqual(l.steps[2].answer?.work.last, .text("More inches"), "the finished line writes the choice")
-
-        XCTAssertEqual(l.words.say, "Multiply")
-        XCTAssertEqual(l.words.hint, "Every foot is another 12 inches, so multiply.")
-        XCTAssertEqual(l.picture, ["units": 3, "per": 12, "rows": 1, "fill": 3, "total": 1])
+        // the record, the product typed
+        XCTAssertEqual(l.words.say, "How many inches in all? Write it.")
+        XCTAssertEqual(l.picture, ["cut": 1])
+        XCTAssertEqual(l.steps[2].onMiss, ["last": 1])
         type(&l, "15")
         XCTAssertEqual(l.go(), .notYet("Each foot is 12 inches, so multiply."))
         type(&l, "0.25")
@@ -51,48 +43,76 @@ final class ConvertUnitsTests: XCTestCase {
         type(&l, "35")
         XCTAssertEqual(l.go(), .notYet("Not quite. Every foot is 12 inches, and there are 3 of them."))
         XCTAssertEqual(l.showAnswer(), "3 × 12 = 36 inches.")
-        XCTAssertEqual(l.steps[3].answer?.work, [.num(3), .op("×"), .num(12), .op("="), .num(36)])
-        XCTAssertEqual(l.go(), .moved(4))
+        XCTAssertEqual(l.steps[2].answer?.work, [.num(3), .text("ft"), .op("="), .num(3), .op("×"), .num(12), .op("="), .num(36), .text("in")])
+        XCTAssertEqual(l.go(), .moved(3))
 
-        XCTAssertEqual(l.words.say, "3 feet = 36 inches.")
-        XCTAssertEqual(l.words.hint, "A big unit holds many small ones, so the same amount takes more small units.")
+        XCTAssertEqual(l.words.say, "12 inches in every foot, so there are more inches.")
+        XCTAssertEqual(l.picture, ["cut": 1, "done": 1])
         XCTAssertEqual(l.go(), .newProblem)
     }
 
-    /// The web test: 250 centimeters = 2.5 meters, divides, and "More" is the named slip.
-    func testSmallToBigDivides() {
+    /// Minutes, centimeters and grams are cut in tens (or hundreds of grams): the cut's box is still the small units.
+    func testTensCuts() {
+        var l = LessonRun(ConvertUnits.spec, numbers: ConvertUnits.numbers("meter", 4))
+        XCTAssertEqual(l.steps[1].words.say, "Drag the ruler to cut one meter into pieces of 10 centimeters, then cut.")
+        XCTAssertEqual(ConvertUnits.bar(100).length, 40); XCTAssertEqual(ConvertUnits.bar(100).piece, 10)
+        XCTAssertEqual(ConvertUnits.bar(1000).piece, 100); XCTAssertEqual(ConvertUnits.bar(60).piece, 10)
+        XCTAssertEqual(ConvertUnits.bar(12).length, 48); XCTAssertEqual(ConvertUnits.bar(16).piece, 1)
+        _ = l.go()
+        l.set("x", 50)
+        XCTAssertEqual(l.go(), .notYet("One meter is more than 50 centimeters. Cut smaller pieces."))
+        l.set("x", 100); XCTAssertEqual(l.go(), .moved(2))
+        // every unit's bar cuts into a whole number of squares a piece, and a half bar too
+        for u in ConvertUnits.units {
+            let b = ConvertUnits.bar(u.per), k = Int(u.per / b.piece)
+            XCTAssertEqual(b.length % k, 0, u.one)
+            if Int(u.per) % 2 == 0 { XCTAssertEqual(k % 2, 0, "a half bar is whole pieces: \(u.one)") }
+        }
+    }
+
+    /// The web test: 250 centimeters = 2.5 meters. The hops set how many whole meters fit; the quotient is typed.
+    func testSmallToBigHops() {
         var l = LessonRun(ConvertUnits.spec, numbers: ConvertUnits.numbers("meter", 250, up: true))
-        XCTAssertEqual(l.steps.last?.words.say, "250 centimeters = 2.5 meters.")
-        XCTAssertEqual(l.steps[3].answer?.expected["x"], 2.5)
-        XCTAssertEqual(l.picture["rows"], 1); XCTAssertEqual(l.picture["units"], 2.5)
-        _ = l.go(); type(&l, "100"); _ = l.go()
-        XCTAssertEqual(l.words.hint, "Meters are bigger, so there will be fewer of them than 250.")
-        l.choose(0)
-        XCTAssertEqual(l.go(), .notYet("Meters are bigger than centimeters, so you need fewer of them."))
-        l.choose(1); XCTAssertEqual(l.go(), .moved(3))
-        XCTAssertEqual(l.words.say, "Divide")
-        XCTAssertEqual(l.words.hint, "Every 100 centimeters make one meter, so divide.")
+        XCTAssertEqual(l.steps.last?.words.say, "100 centimeters make every meter, so there are fewer meters.")
+        XCTAssertEqual(l.words.say, "How many meters fit along the bar?")
+        _ = l.go()
+        XCTAssertEqual(l.words.say, "Hop the ruler along the bar, one meter at a time, as far as it goes.")
+        XCTAssertEqual(l.picture, ["hops": 1]); XCTAssertEqual(l.step.answer?.byHand, true)
+        l.set("h", 3)
+        XCTAssertEqual(l.go(), .notYet("3 meters is 300 centimeters, more than 250. Hop back."))
+        l.set("h", 1)
+        XCTAssertEqual(l.go(), .notYet("1 meter is only 100 centimeters. Another meter fits in 250."))
+        XCTAssertEqual(l.showAnswer(), "2 meters fit, and 50 centimeters are left: half a meter.")
+        XCTAssertEqual(l.go(), .moved(2))
+        XCTAssertEqual(l.words.say, "How many meters is that? Write it.")
+        XCTAssertEqual(l.picture, ["hopped": 1])
         type(&l, "25000")
         XCTAssertEqual(l.go(), .notYet("Meters are bigger, so there are fewer of them: divide."))
         type(&l, "150")
         XCTAssertEqual(l.go(), .notYet("Take away 100 again and again, or divide: 250 ÷ 100."))
         XCTAssertEqual(l.showAnswer(), "250 ÷ 100 = 2.5 meters.")
-        XCTAssertEqual(l.steps[3].answer?.work, [.num(250), .op("÷"), .num(100), .op("="), .num(2.5)])
+        XCTAssertEqual(l.steps[2].answer?.work, [.num(250), .text("cm"), .op("="), .num(250), .op("÷"), .num(100), .op("="), .num(2.5), .text("m")])
+        // a whole number of big units: nothing left
+        let h = LessonRun(ConvertUnits.spec, numbers: ConvertUnits.numbers("hour", 180, up: true))
+        XCTAssertEqual(h.steps[1].answer?.explain, "3 hours fit.")
+        XCTAssertEqual(h.steps[1].answer?.expected, ["h": 3])
     }
 
     func testWordsForEachUnit() {
         let hour = LessonRun(ConvertUnits.spec, numbers: ConvertUnits.numbers("hour", 4))
-        XCTAssertEqual(hour.steps[2].answer?.hint, "Which is bigger, an hour or a minute?")
         XCTAssertEqual(ConvertUnits.spec.story?(hour.numbers), "A road trip takes 4 hours. How many minutes is that?")
+        XCTAssertEqual(hour.steps[1].words.say, "Drag the ruler to cut one hour into pieces of 10 minutes, then cut.")
         let kg = LessonRun(ConvertUnits.spec, numbers: ConvertUnits.numbers("kilogram", 3.5))
-        XCTAssertEqual(kg.steps[0].words.say, "How many grams is 3.5 kilograms?")
-        XCTAssertEqual(kg.steps[3].answer?.expected["x"], 3500)
-        XCTAssertEqual(kg.picture["rows"], 2, "4 units stack in two rows")
+        XCTAssertEqual(kg.steps[2].answer?.expected["x"], 3500)
         // kilogram's two mix-ups say the same thing, but both values are slips
         XCTAssertEqual(kg.steps[1].answer?.known.map(\.values), [["x": 100], ["x": 10]])
         XCTAssertEqual(ConvertUnits.spec.story?(ConvertUnits.numbers("gallon", 5)), "A fish tank holds 5 gallons of water. How many quarts is that?")
         XCTAssertEqual(ConvertUnits.spec.story?(ConvertUnits.numbers("pound", 16, up: true)), "A bag of flour weighs 16 ounces. How many pounds is that?")
-        XCTAssertEqual(LessonRun(ConvertUnits.spec, numbers: ConvertUnits.numbers("pound", 2)).steps[2].answer?.hint, "Which is bigger, a pound or an ounce?")
+        let half = LessonRun(ConvertUnits.spec, numbers: ConvertUnits.numbers("hour", 150, up: true))
+        XCTAssertEqual(half.steps[1].answer?.explain, "2 hours fit, and 30 minutes are left: half an hour.")
+        // a story puts its operation first, then the lesson's own steps
+        let told = LessonRun(ConvertUnits.spec, numbers: ConvertUnits.numbers("pound", 3), story: true)
+        XCTAssertEqual(told.steps.count, 5); XCTAssertEqual(told.steps[0].answer?.expected["c"], 2, "×")
     }
 
     func testSpecData() {
@@ -120,9 +140,10 @@ final class ConvertUnitsTests: XCTestCase {
                 if big != big.rounded() { halves += 1; XCTAssertEqual(Int(f) % 2, 0) }
                 if up { ups += 1 }
                 let run = LessonRun(ConvertUnits.spec, numbers: n)
-                XCTAssertEqual(run.steps.count, 5)
-                XCTAssertEqual(run.steps[3].answer!.expected["x"]!, up ? n["n"]! / f : n["n"]! * f, accuracy: 1e-9)
-                XCTAssertEqual(run.steps[2].answer?.expected["c"], up ? 1 : 0)
+                XCTAssertEqual(run.steps.count, 4)
+                XCTAssertEqual(run.steps[2].answer!.expected["x"]!, up ? n["n"]! / f : n["n"]! * f, accuracy: 1e-9)
+                if up { XCTAssertEqual(run.steps[1].answer?.expected["h"], big.rounded(.down)) }
+                else { XCTAssertEqual(run.steps[1].answer?.expected["x"], f) }
             }
             if index >= 6 { XCTAssertTrue(ups > 90 && ups < 210, "either way: \(ups)"); XCTAssertGreaterThan(halves, 0) }
         }
