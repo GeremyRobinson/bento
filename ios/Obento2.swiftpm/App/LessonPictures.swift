@@ -23,7 +23,6 @@ enum LessonPictures {
         func v(_ k: String) -> Double { n[k] ?? 0 }
         func k(_ key: String) -> Double { p[key] ?? 0 }
         switch id {
-        case "g5-divdec": return with(divideDecimalGrid(d: Int(v("d")), qt: Int(v("qt")), p))
         case "g5-volume": return with(volumeGrid(n, p))
         case "g5-units": return with(unitsGrid(n, p))
         default: return (Sketch(), Sketch(), nil)
@@ -36,38 +35,6 @@ enum LessonPictures {
 
     /// The How to's explaining beats for a lesson, after its first words: what each says, and what it turns on.
     static func beats(_ id: String, _ n: Numbers) -> [(words: String, picture: Numbers)] { [] }
-
-    // MARK: dividing by a decimal
-
-    /// 4.8 ÷ 0.6 on the grid: two number lines a step of squares apart for every tick, the top counting by 0.6, the
-    /// bottom by 6, "× 10" between them; matched one step, then all, then the hops counted.
-    static func divideDecimalGrid(d: Int, qt: Int, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
-        let one = p["one"] == 1, all = p["all"] == 1, hops = p["hops"] == 1, lit = p["lit"]
-        var pen = GridPen()
-        var wk = GridPen()
-        let per = Double(max(3, 40 / qt)), top = 8.0, bottom = 14.0, x0 = 5.0
-        let small = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink2)
-        let atTop = pen.numberLine("top", col: x0, row: top, steps: qt, per: per, long: qt)
-        _ = pen.numberLine("bottom", col: x0, row: bottom, steps: qt, per: per, long: qt)
-        pen.label("x10", "× 10", small.colour(.chapter), .left, edge: x0, along: (top + bottom) / 2)
-        for i in 0...qt {
-            let c = atTop(i), litTop = (lit == 0 && i == 1) || (lit == 1 && i == qt)
-            if qt <= 8 || i % 2 == 0 || i == qt { pen.label("tl\(i)", fmt(Double(d * i) / 10), small.colour(litTop ? .chapter : .ink2), .above, edge: top - 2, along: c) }
-            if all || (one && i <= 1) { pen.label("bl\(i)", String(d * i), small.colour(litTop ? .chapter : .ink2), .below, edge: bottom, along: c) }
-            if all { pen.sketch.line("wire\(i)", [pen.P(c, top), pen.P(c, bottom - 2)], .tint(0.45), width: 1.5) }
-        }
-        if all { pen.rule("topb", from: x0, to: atTop(qt), row: top, .chapter, width: Sketch.stroke); pen.rule("botb", from: x0, to: atTop(qt), row: bottom, .chapter, width: Sketch.stroke) }
-        else if one { pen.rule("top1", from: x0, to: atTop(1), row: top, .chapter, width: Sketch.stroke); pen.rule("bot1", from: x0, to: atTop(1), row: bottom, .chapter, width: Sketch.stroke) }
-        if hops {
-            // over the top line's numbers, so they never meet
-            for i in 0..<qt { pen.hop("h\(i)", from: atTop(i), to: atTop(i + 1), row: top - 4.5, height: 1) }
-            pen.label("count", "\(qt) hops", small.colour(.chapter), .above, edge: top - 6, along: atTop(qt))
-        }
-        let line = hops ? "\(d * qt) ÷ \(d) = \(qt), and \(fmt(Double(d * qt) / 10)) ÷ \(fmt(Double(d) / 10)) = \(qt)"
-            : all ? "\(fmt(Double(d * qt) / 10)) × 10 = \(d * qt)" : one ? "\(fmt(Double(d) / 10)) × 10 = \(d)" : nil
-        if let line { wk.word("line\(line)", line, at: x0, 18, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink), anchor: UnitPoint(x: 0, y: 0.5)) }
-        return (pen.sketch, wk.sketch)
-    }
 
     // MARK: fractions
 
