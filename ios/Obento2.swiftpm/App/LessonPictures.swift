@@ -25,7 +25,6 @@ enum LessonPictures {
         switch id {
         case "g5-divdec": return with(divideDecimalGrid(d: Int(v("d")), qt: Int(v("qt")), p))
         case "g5-volume": return with(volumeGrid(n, p))
-        case "g5-units": return with(unitsGrid(n, p))
         default: return (Sketch(), Sketch(), nil)
         }
     }
@@ -107,37 +106,6 @@ enum LessonPictures {
         wk.word("v", "Volume = l × w × h", at: wx, 3, line, anchor: UnitPoint(x: 0, y: 0.5))
         if floor || layers > 0 { wk.word("b", "\(l) × \(w) = \(l * w) in a layer", at: wx, 6, line, anchor: UnitPoint(x: 0, y: 0.5)) }
         if height { wk.word("t", "\(l * w) × \(h) = \(l * w * h) cm³", at: wx, 9, line.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5)) }
-        return (pen.sketch, wk.sketch)
-    }
-
-    // MARK: converting units
-
-    /// 3 feet = ? inches on the grid: a bar of big units, each a block wide, opened up into small ones one after
-    /// another; the brackets over and under it say what it holds.
-    static func unitsGrid(_ n: Numbers, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
-        var pen = GridPen()
-        var wk = GridPen()
-        let pair = ConvertUnits.units[min(ConvertUnits.units.count - 1, Int(n["u"] ?? 0))]
-        let count = p["units"] ?? 1, per = p["per"] ?? pair.per, rows = Int(p["rows"] ?? 1), fill = Int(p["fill"] ?? 0)
-        let one = p["one"] == 1, ask = p["ask"] == 1, total = p["total"] == 1, up = n["up"] == 1, amount = n["n"] ?? 0
-        let cells = Int(count.rounded(.up)), perRow = rows == 2 ? Int((Double(cells) / 2).rounded(.up)) : cells
-        let cw = 5.0, ch = 3.0, x0 = 0.0, y0 = 4.0, label = Sketch.Words(size: Sketch.small, weight: .medium, colour: .ink)
-        pen.label("amt", up ? "\(fmt(amount)) \(pair.small)" : "\(fmt(amount)) \(amount == 1 ? pair.one : pair.many)", label.colour(.ink2), .above, edge: y0, along: x0 + Double(perRow) * cw / 2)
-        for i in 0..<cells {
-            let r = i / perRow, c = i % perRow, col = x0 + Double(c) * cw, row = y0 + Double(r) * (ch + 1)
-            let part = i == cells - 1 && count < Double(cells) ? count - Double(cells - 1) : 1, opened = i < fill
-            pen.sketch.fill("u\(i)\(opened)", pen.R(col, row, cw * part, ch), opened ? .tint(0.4) : .tint(0.2))
-            pen.sketch.box("ub\(i)", pen.R(col, row, cw, ch), .tint(0.7), width: Sketch.stroke)
-            let text = opened ? fmt(per * part) : (ask && i > 0 ? "?" : (part < 1 ? "½" : "1"))
-            pen.word("ul\(i)\(text)", text, at: col + cw / 2, row + ch / 2, label.colour(opened ? .ink : .ink2))
-        }
-        let below = y0 + Double(rows) * (ch + 1) + 1, line = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink)
-        if one { wk.word("one", "1 \(pair.one) = \(fmt(per)) \(pair.small)", at: x0, below + 1, line, anchor: UnitPoint(x: 0, y: 0.5)) }
-        if total {
-            let ans = up ? amount / per : amount * per
-            wk.word("tot", up ? "\(fmt(amount)) ÷ \(fmt(per)) = \(fmt(ans)) \(pair.many)" : "\(fmt(amount)) × \(fmt(per)) = \(fmt(ans)) \(pair.small)",
-                     at: x0, below + 4, line.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5))
-        }
         return (pen.sketch, wk.sketch)
     }
 }
