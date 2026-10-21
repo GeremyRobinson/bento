@@ -117,8 +117,12 @@ enum ProblemGrid {
         /// left of the edge everything starts on.
         var width = 40.0, left = 0.0
         var sayTop = 0.0, msgTop = 3.0, pictureTop = 6.0, recordTop = 24.0
-        /// The words, the blocks and the record drawn k times bigger (PaperLesson.scale: 1, or 2 for a big problem).
+        /// The words, the blocks and the record drawn k times bigger (PaperLesson.scale: 1, or a whole number more for
+        /// a big problem).
         var k = 1.0
+        /// How big it shows on this screen at its biggest step (ProblemGrid.zoom of its words, picture, record and
+        /// blocks): its words show `Sketch.wordSize × k × zoom` points big.
+        var zoom = 1.0
         /// The record beside the picture (PaperLesson.recordBeside): its left edge, on a block line past the picture,
         /// its blocks under it; 0 when it's under the picture. `recordFirst`: the record's first row, from its top, where
         /// its blocks start before it's written.
@@ -136,9 +140,15 @@ enum ProblemGrid {
     }
 
     static func stackPlan(_ m: WorkProblem) -> StackPlan {
+        guard let paper = m.paper else { return StackPlan() }
+        return stackPlan(paper, m.lesson, auto: m.auto)
+    }
+
+    /// The plan for a run of a paper lesson (`auto`: its How to, the idea among its words). A lesson lays out its own
+    /// numbers this way to see how big a size shows (MultiplyLesson.Q.k).
+    static func stackPlan(_ paper: any PaperLesson, _ l: LessonRun, auto: Bool) -> StackPlan {
         var p = StackPlan()
-        guard let paper = m.paper else { return p }
-        let l = m.lesson, k = paper.scale(l.numbers)
+        let k = paper.scale(l)
         p.k = k
         // the picture and the record, as big as they get over the problem's steps, a hint's drawings and the room a
         // move makes included
@@ -155,7 +165,7 @@ enum ProblemGrid {
         // what to do, each step's (a story's pick says "Pick what to do"), and the How to's idea when it plays
         let say = PaperText.font(Sketch.Words.say.size * k, Sketch.Words.say.weight)
         let steps = l.steps.map { st in l.story && st.answer?.choices != nil ? st.words.hint : st.words.say }
-        let texts = steps + (m.auto ? [l.spec.idea(l.numbers)] : [])
+        let texts = steps + (auto ? [l.spec.idea(l.numbers)] : [])
         /// The plan with the record under the picture, or beside it (its left edge on a block line, two squares past the
         /// picture at least): the words wrap to what's under them, `least` squares wide at least.
         func made(beside: Bool, least: Double = 30) -> StackPlan {
@@ -167,23 +177,25 @@ enum ProblemGrid {
             if l.story, let story = l.spec.story?(l.numbers) {
                 q.storyRows = PaperText.wrap(story, PaperText.font(Sketch.Words.tell.size * k, Sketch.Words.tell.weight), width: width).count
             }
-            q.msgRows = paper.messageRows(l.numbers)
+            q.msgRows = paper.messageRows(l)
             q.sayTop = q.storyRows > 0 ? Double(2 * q.storyRows + 1) * k : 0
             q.msgTop = q.sayTop + Double(2 * q.sayRows + 1) * k
             q.pictureTop = q.msgTop + Double(2 * q.msgRows + 1) * k
-            q.recordTop = q.pictureTop + (beside ? (paper.recordBeside(l.numbers) ?? 0) : (paper.recordRow(l.numbers) ?? picH + 3 * k))
+            q.recordTop = q.pictureTop + (beside ? (paper.recordBeside(l) ?? 0) : (paper.recordRow(l.numbers) ?? picH + 3 * k))
             return q
         }
-        let under = made(beside: false)
-        guard paper.recordBeside(l.numbers) != nil, rec != nil else { return under }
-        var side = made(beside: true)
-        // the one that shows the problem bigger on this screen (G 19 Oct rule 10): its words, its picture, its record and
-        // the blocks under the record, all framed
+        // how big a plan shows the problem on this screen (G 19 Oct rule 10): its words, its picture, its record and the
+        // blocks under the record, all framed
         func shown(_ q: StackPlan) -> Double {
             let blocks = 4 * k, recordEnd = q.recordTop + recH + blocks
             let h = q.beside ? max(q.pictureTop + picH, recordEnd) : recordEnd
             return ProblemGrid.zoom(squares: q.width - q.left, h)
         }
+        func framed(_ q: StackPlan) -> StackPlan { var q = q; q.zoom = shown(q); return q }
+        let under = made(beside: false)
+        guard paper.recordBeside(l) != nil, rec != nil else { return framed(under) }
+        // beside, if that shows it bigger
+        var side = made(beside: true)
         // beside a tall, narrow picture the camera is held by the height, with room to spare at the sides: each step's
         // words may run on past the record, as far as one row each needs, never wider than the screen shows there (so it
         // shows the problem no smaller); the How to's idea keeps to its three rows
@@ -193,7 +205,7 @@ enum ProblemGrid {
             let wider = made(beside: true, least: min(oneRow.rounded(.up), room))
             if wider.width > side.width, shown(wider) >= shown(side) { side = wider }
         }
-        return shown(side) > shown(under) ? side : under
+        return framed(shown(side) > shown(under) ? side : under)
     }
 
     /// How big a frame `w` squares wide and `h` tall shows on this screen: what the camera fits it to, clear of the bar

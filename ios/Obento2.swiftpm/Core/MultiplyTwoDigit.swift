@@ -38,13 +38,16 @@ public enum MultiplyTwoDigit {
     private static func countWord(_ n: Int) -> String { n < countWords.count ? countWords[n] : String(n) }
 
     /// The cut the child makes across the top, at column `x` of a rectangle `b` wide, measured on the grid: right where
-    /// the tens end; a part that isn't all tens, or a ten left over on the right, said in plain words.
+    /// the tens end; a part that isn't all tens, or tens left over on the right (counted, as its bold lines show them),
+    /// said in plain words.
     static func cut(_ x: Double?, b: Int) -> Verdict {
         guard let x, x > 0, x < Double(b) else { return .soft("Drag the cut to where the tens end first.") }
         let c = Int(x.rounded()), T = b - b % 10
         if c == T { return .right }
         if c % 10 != 0 { return .wrong("\(c) has \(c % 10) one\(c % 10 == 1 ? "" : "s") in it. Cut on a bold line.") }
-        return .wrong("\(b - c) still has a ten in it. Cut where the tens end.")
+        // on a bold line short of where the tens end (none is past it): the part on the right still has tens in it
+        let left = (T - c) / 10
+        return .wrong("\(b - c) still has \(left == 1 ? "a ten" : "\(left) tens") in it. Cut where the tens end.")
     }
 
     public static let spec = LessonSpec(id: "g5-mult2", title: "Multiply two-digit numbers", master: "area-model", generate: { rng, index in

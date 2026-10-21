@@ -2,15 +2,21 @@ import SwiftUI
 
 /// Multiply two-digit numbers on the paper (design/grade5.md: approved 19 Oct, now with a hand move). The rectangle a
 /// squares tall and b wide, one square for each one (a seat, in the story), every ten bold, named by its sides: a down
-/// its left, b over its top (the problem, written once). The cut: a handle over its top edge, dragged along it (or
-/// tapped to a place), snapping to the squares; a dashed cut runs down the rectangle under it and the two widths are
-/// written over the two parts as it moves ("30 | 6"). Cut cuts where the tens end: the cut turns solid and the ones strip
-/// parts a square, gliding off. Then each strip lights in turn and its squares are written in the record, the column
-/// working as school writes it (beside the picture when that shows it bigger), and on the strip itself; then the total,
-/// in the chapter's colour; the last words say why the two strips make it.
+/// its left, b over its top (the problem, written once). The cut: a handle on a stem over its top edge (a row above the
+/// widths, so they never meet), dragged along it (or tapped to a place), snapping to the squares; a dashed cut runs down
+/// the rectangle under it and the two widths are written over the two parts as it moves ("30 | 6"), each kept half a
+/// square off the stem. Cut cuts where the tens end: the cut turns solid and the ones strip parts a square, gliding off.
+/// Then each strip lights in turn and its squares are written in the record, the column working as school writes it
+/// (beside the picture when that shows it bigger), and on the strip itself; then the total, in the chapter's colour; the
+/// last words say why the two strips make it.
 @MainActor
 struct MultiplyLesson: PaperLesson {
     var liveKeys: Set<String> { ["cut", "grab"] }
+    /// A size being tried (Q.k lays the problem out at each size it tries); nil: the problem's own.
+    var trying: Double? = nil
+    /// The problem as it's shown: its numbers, told plainly or as its story (whose words take more rows over it, so it
+    /// may be drawn a size bigger).
+    private func q(_ run: LessonRun) -> Q { Q(run.numbers, story: run.story, k: trying) }
 
     private static let name = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink)
     private static let readout = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .chapter)
@@ -28,30 +34,48 @@ struct MultiplyLesson: PaperLesson {
         let a, b: Int
         /// Where the tens end (the cut) and the ones after them. One part only (none is generated): no cut.
         let T, O: Int
-        /// Words, blocks and the record drawn twice as big when the rectangle is (the camera steps far back for it).
+        /// Words, blocks and the record drawn k times as big when the rectangle is big (the camera steps far back for it).
         let k: Double
-        init(_ n: Numbers) {
+        /// `story`: told as its story; `k`: a size to draw it at (Q.k trying sizes), nil for the problem's own.
+        init(_ n: Numbers, story: Bool = false, k fixed: Double? = nil) {
             a = max(1, Int((n["a"] ?? 12).rounded())); b = max(1, Int((n["b"] ?? 12).rounded()))
             T = b - b % 10; O = b % 10
-            k = Self.k(a: a, b: b)
+            k = fixed ?? Self.k(a: a, b: b, story: story)
         }
-        /// Twice as big (G 19 Oct: whole steps only) when at the paper's own size the words would show smaller than 22
-        /// points on this screen (Rounding's and the fractions' read at about 30): the camera steps that far back to see
-        /// the whole rectangle, with the words over it, the cut's rows and the record beside it (or under it, for a wide one).
-        /// Worked out once for a problem's numbers, so its drawing always agrees with its plan.
-        static func k(a: Int, b: Int) -> Double {
-            if let k = scales["\(a)×\(b)"] { return k }
-            let beside = ProblemGrid.zoom(squares: Double(b + 20), Double(a + 11))
-            let under = ProblemGrid.zoom(squares: Double(max(b + 5, 30)), Double(a + 28))
-            let k: Double = max(beside, under) * Sketch.wordSize < 22 ? 2 : 1
-            scales["\(a)×\(b)"] = k
+        /// Words never show smaller than this many points (Rounding's and the fractions' read at about 30).
+        static let readable = 22.0
+        /// Bigger by whole steps (G 19 Oct: whole steps, so everything stays on the grid) while its words would show
+        /// smaller than `readable` on this screen: the problem laid out at each size just as it will be shown (ProblemGrid's
+        /// plan: its story's rows when it's told as one, the words over the rectangle, the cut's rows, the record beside
+        /// it or under it, the blocks). Worked out once for a problem's numbers, told plainly or as its story, so its
+        /// drawing always agrees with its plan.
+        static func k(a: Int, b: Int, story: Bool) -> Double {
+            let key = "\(a)×\(b)\(story ? " story" : "")"
+            if let k = scales[key] { return k }
+            let run = LessonRun(MultiplyTwoDigit.spec, numbers: MultiplyTwoDigit.numbers(a: a, b: b), story: story)
+            var k = 1.0
+            while k < 6, ProblemGrid.stackPlan(MultiplyLesson(trying: k), run, auto: false).zoom * Sketch.wordSize * k < readable { k += 1 }
+            scales[key] = k
             return k
         }
         private static var scales: [String: Double] = [:]
         var cuts: Bool { T > 0 && O > 0 }
-        /// The rectangle's top row, and the row the cut's handle runs along over it (the widths written between them).
-        var top: Double { 3 * k }
-        var handle: Double { top - 2 * k }
+        /// The rectangle's top row, and the row the cut's handle runs along over it: a row above the widths written over
+        /// the top, so its dot, even held (three quarters of a row round its middle), stays more than half a row clear
+        /// of them.
+        var top: Double { 4 * k }
+        var handle: Double { top - 3 * k }
+        /// Where a width written over the top goes when the cut's stem stands at column `c`: `along`, the middle of its
+        /// part, unless that brings it nearer the stem than half a square; then just that far from the stem, on its
+        /// part's side (a ones part a square or two wide has its width just past the stem, not on it).
+        func clear(_ text: String, _ words: Sketch.Words, of c: Double, _ along: Double) -> Double {
+            let half = PaperText.width(text, PaperText.font(words.size * k, words.weight, digits: true)) / Paper.cell / 2
+            return along < c ? min(along, c - 0.5 * k - half) : max(along, c + 0.5 * k + half)
+        }
+        /// How far right the cut's widths can reach: a ones part one square wide, its width half a square past the stem.
+        var reach: Double {
+            Double(b - 1) + 0.5 * k + PaperText.width("0", PaperText.font(MultiplyLesson.readout.size * k, MultiplyLesson.readout.weight, digits: true)) / Paper.cell
+        }
         /// Where the ones strip sits once the cut has parted it: a square past where the tens end.
         var onesX: Double { Double(T + 1) }
         var tensProduct: Int { a * T }
@@ -67,12 +91,17 @@ struct MultiplyLesson: PaperLesson {
     /// 5 done.
     private func stage(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
 
-    func scale(_ n: Numbers) -> Double { Q(n).k }
+    func scale(_ run: LessonRun) -> Double { q(run).k }
     /// The record's first row is level with the rectangle's top.
-    func recordBeside(_ n: Numbers) -> Double? { Q(n).top }
+    func recordBeside(_ run: LessonRun) -> Double? { q(run).top }
+    func messageRows(_ run: LessonRun) -> Int { missRows(q(run)) }
+    // told plainly (the layout asks for the run's own, above)
+    func scale(_ n: Numbers) -> Double { Q(n, k: trying).k }
+    func recordBeside(_ n: Numbers) -> Double? { Q(n, k: trying).top }
+    func messageRows(_ n: Numbers) -> Int { missRows(Q(n, k: trying)) }
 
     func draw(_ s: PaperState) -> PaperDrawing {
-        let q = Q(s.numbers), at = stage(s), k = q.k
+        let q = self.q(s.run), at = stage(s), k = q.k
         let a = Double(q.a), b = Double(q.b), T = Double(q.T), O = Double(q.O), top = q.top
         var pic = GridPen(k: k), live = GridPen(k: k, stableIds: true), rec = GridPen(k: k)
         let parted = q.cuts && at >= 2
@@ -125,8 +154,9 @@ struct MultiplyLesson: PaperLesson {
             pic.label("sumBw", "\(q.tensProduct) + \(q.onesProduct)", Self.small, .below, edge: row, along: (b + 1) / 2)
         }
 
-        // MARK: the cut, live as the hand moves it: the handle on its stem over the top edge, the cut dashed down the
-        // rectangle, and the two widths it makes written over them; at either end, no cut, the whole width
+        // MARK: the cut, live as the hand moves it: the handle on its stem over the top edge (its dot a row above the
+        // widths), the cut dashed down the rectangle, and the two widths it makes written over them, each kept half a
+        // square off the stem; at either end, no cut, the whole width
         var actions: [String] = []
         if at == 1, q.cuts {
             actions = ["Cut"]
@@ -135,10 +165,11 @@ struct MultiplyLesson: PaperLesson {
             live.dot("handle", at: c, q.handle, radius: (s.grabbed ? 0.75 : 0.6) * k, .chapter, over: true)
             if inside {
                 live.line("cut", [(c, top), (c, top + a + 1)], .ink, dashed: true)
-                live.label("wL", "\(Int(c))", Self.readout, .above, edge: top, along: c / 2)
-                live.label("wR", "\(q.b - Int(c))", Self.readout, .above, edge: top, along: (c + b) / 2)
+                let wL = "\(Int(c))", wR = "\(q.b - Int(c))"
+                live.label("wL", wL, Self.readout, .above, edge: top, along: q.clear(wL, Self.readout, of: c, c / 2))
+                live.label("wR", wR, Self.readout, .above, edge: top, along: q.clear(wR, Self.readout, of: c, (c + b) / 2))
             } else {
-                live.label("wL", "\(q.b)", Self.name, .above, edge: top, along: b / 2)
+                live.label("wL", "\(q.b)", Self.name, .above, edge: top, along: q.clear("\(q.b)", Self.name, of: c, b / 2))
             }
         }
 
@@ -171,8 +202,9 @@ struct MultiplyLesson: PaperLesson {
             }
             boxes = rec.boxes
         }
-        // the room the cut and the parted strips need: the handle over the top, the dashed cut past the bottom
-        let extent = pic.R(0, 0, b + 2, top + a + 1)
+        // the room the cut and the parted strips need: the handle over the top, the dashed cut past the bottom, a narrow
+        // ones part's width just past the stem
+        let extent = pic.R(0, 0, max(b + 2, q.reach), top + a + 1)
         return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: boxes, actions: actions, extent: extent)
     }
 
@@ -201,14 +233,15 @@ struct MultiplyLesson: PaperLesson {
     }
 
     func hands(_ s: PaperState) -> Hands? {
-        let q = Q(s.numbers), k = q.k
+        let q = self.q(s.run), k = q.k
         guard stage(s) == 1, q.cuts else { return nil }
         let b = Double(q.b), c = s.h("cut") ?? b, a = Double(q.a)
         /// The column under the finger. Drawn big, the camera far back, a square is a few points on the screen: a bold
-        /// line within a square of the finger takes the cut, so a ten is easy to land on.
+        /// line within half a square of the finger for each size up (a square at twice the size, two at four times)
+        /// takes the cut, so a ten is easy to land on.
         func column(_ x: Double) -> Double {
             let ten = (x / 10).rounded() * 10
-            let at = k > 1 && abs(x - ten) <= 1 ? ten : x.rounded()
+            let at = k > 1 && abs(x - ten) <= k / 2 ? ten : x.rounded()
             return min(b, max(0, at))
         }
         return Hands(
@@ -223,14 +256,14 @@ struct MultiplyLesson: PaperLesson {
     }
 
     func demo(_ s: PaperState) -> [GhostMove] {
-        let q = Q(s.numbers)
+        let q = self.q(s.run)
         guard stage(s) == 1, q.cuts else { return [] }
         let c = s.h("cut") ?? Double(q.b), T = Double(q.T)
         return (c == T ? [] : [.drag(from: CGPoint(x: c, y: q.handle), to: CGPoint(x: T, y: q.handle))]) + [.tap(.action("Cut"))]
     }
 
     func wrongMove(_ s: PaperState) -> HandMove? {
-        let q = Q(s.numbers)
+        let q = self.q(s.run)
         guard stage(s) == 1, q.cuts else { return nil }
         // a ten short (a ten left in the ones), or a square past where the tens end
         let x = Double(q.T >= 20 ? q.T - 10 : q.T + 1)
@@ -239,8 +272,8 @@ struct MultiplyLesson: PaperLesson {
 
     /// What a miss says can run to two rows on a narrow problem: the slips the web names ("That's 47 × 3. The tens digit
     /// stands for 30, so add a zero."), against the narrowest the problem can be laid out.
-    func messageRows(_ n: Numbers) -> Int {
-        let q = Q(n), k = q.k
+    private func missRows(_ q: Q) -> Int {
+        let k = q.k
         let longest = "That's \(q.a) × \(max(1, q.T / 10)). The tens digit stands for \(q.T), so add a zero."
         let w = PaperText.width(longest, PaperText.font(Sketch.small * k, .medium)) / Paper.cell
         let narrowest = max(30, Double(q.b + 2), Double(q.columns) * 2 * k + 1)

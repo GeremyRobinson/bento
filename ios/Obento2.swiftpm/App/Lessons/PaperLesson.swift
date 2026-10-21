@@ -32,7 +32,7 @@ protocol PaperLesson {
     func recordRow(_ n: Numbers) -> Double?
     /// Screenshots only (-wrong): a wrong move for this step, as a child might make it.
     func wrongMove(_ s: PaperState) -> HandMove?
-    /// How much bigger than the paper its words, blocks and record are drawn (G 19 Oct: whole steps only, 1 or 2): 2
+    /// How much bigger than the paper its words, blocks and record are drawn (G 19 Oct: whole steps only): 2 or more
     /// for a problem whose true-size picture is so big that the camera steps far back to see it (an area model 98
     /// squares tall), so what's written still reads. The picture itself stays the paper's squares.
     func scale(_ n: Numbers) -> Double
@@ -40,6 +40,11 @@ protocol PaperLesson {
     /// instead, its first row level with that row, the blocks under it, when that shows the problem bigger on the screen
     /// (G 19 Oct rule 10: the arrangement that fills the screen best), as a picture taller than it's wide does.
     func recordBeside(_ n: Numbers) -> Double?
+    /// The same three for a run as it's shown (told as a story, its words take more rows), which is what the layout
+    /// asks: its numbers' unless the lesson's size depends on more than its numbers.
+    func scale(_ run: LessonRun) -> Double
+    func recordBeside(_ run: LessonRun) -> Double?
+    func messageRows(_ run: LessonRun) -> Int
 }
 
 extension PaperLesson {
@@ -51,6 +56,9 @@ extension PaperLesson {
     func wrongMove(_ s: PaperState) -> HandMove? { nil }
     func scale(_ n: Numbers) -> Double { 1 }
     func recordBeside(_ n: Numbers) -> Double? { nil }
+    func scale(_ run: LessonRun) -> Double { scale(run.numbers) }
+    func recordBeside(_ run: LessonRun) -> Double? { recordBeside(run.numbers) }
+    func messageRows(_ run: LessonRun) -> Int { messageRows(run.numbers) }
 }
 
 /// The lessons built on the paper, by lesson id. The rest keep LessonPictures' drawings until they're moved here.

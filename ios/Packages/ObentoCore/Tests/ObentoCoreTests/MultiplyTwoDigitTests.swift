@@ -109,6 +109,22 @@ final class MultiplyTwoDigitTests: XCTestCase {
         type(&big, "9604"); XCTAssertEqual(big.go(), .moved(5))
     }
 
+    /// A cut on a bold line short of where the tens end counts the tens still on its right, as the bold lines show them
+    /// (the review of 20 Oct: "26 still has a ten in it" read wrong against its two tens).
+    func testAShortCutCountsTheTensLeft() {
+        var l = run(47, 36)
+        _ = l.go()
+        XCTAssertEqual(cut(&l, 10), .notYet("26 still has 2 tens in it. Cut where the tens end."))
+        XCTAssertEqual(cut(&l, 20), .notYet("16 still has a ten in it. Cut where the tens end."))
+        XCTAssertEqual(cut(&l, 30), .moved(2))
+        var wide = run(98, 91)
+        _ = wide.go()
+        XCTAssertEqual(cut(&wide, 10), .notYet("81 still has 8 tens in it. Cut where the tens end."))
+        XCTAssertEqual(cut(&wide, 70), .notYet("21 still has 2 tens in it. Cut where the tens end."))
+        XCTAssertEqual(cut(&wide, 80), .notYet("11 still has a ten in it. Cut where the tens end."))
+        XCTAssertEqual(cut(&wide, 90), .moved(2))
+    }
+
     /// A second factor with one part (the generator never makes one): no cut, its one strip is the whole rectangle.
     func testOnePartHasNoCut() {
         var l = run(47, 30)
