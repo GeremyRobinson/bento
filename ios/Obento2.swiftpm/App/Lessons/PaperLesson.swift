@@ -77,6 +77,7 @@ enum PaperLessons {
         case "g5-divide": return LongDivisionLesson()
         case "g5-multdec": return MultiplyDecimalsLesson()
         case "g5-order": return OrderLesson()
+        case "g5-multfrac": return MultiplyFractionsLesson()
         default: return nil
         }
     }

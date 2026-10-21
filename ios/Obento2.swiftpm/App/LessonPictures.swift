@@ -24,7 +24,6 @@ enum LessonPictures {
         func k(_ key: String) -> Double { p[key] ?? 0 }
         switch id {
         case "g5-divdec": return with(divideDecimalGrid(d: Int(v("d")), qt: Int(v("qt")), p))
-        case "g5-multfrac": return with(multiplyFractionsGrid(n, p))
         case "g5-volume": return with(volumeGrid(n, p))
         case "g5-units": return with(unitsGrid(n, p))
         default: return (Sketch(), Sketch(), nil)
@@ -73,38 +72,6 @@ enum LessonPictures {
     // MARK: fractions
 
     static func frac(_ a: Int, _ b: Int) -> Math { .frac(.num(Double(a)), .num(Double(b))) }
-
-
-    /// 2/3 × 3/4 on the grid: the square cut into b rows and d columns of whole squares, a rows and c columns shaded,
-    /// their overlap counted; on the left top times top over bottom times bottom.
-    static func multiplyFractionsGrid(_ n: Numbers, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
-        var pen = GridPen()
-        var wk = GridPen()
-        let a = Int(n["a"] ?? 0), b = Int(n["b"] ?? 1), c = Int(n["c"] ?? 0), d = Int(n["d"] ?? 1)
-        let at = Int(p["at"] ?? 0), ask = p["ask"].map(Int.init)
-        wk.math("prob", [frac(a, b), .op("×"), frac(c, d)], col: 0, row: 1)
-        if at >= 3 || ask == 3 { wk.math("mul", [.op("="), .frac(.text("\(a) × \(c)"), .text("\(b) × \(d)"))], col: 7, row: 1) }
-        if at >= 3 { wk.math("res", [.op("="), frac(a * c, b * d)], col: 7, row: 7) }
-        if at >= 4 {
-            let g = gcd(a * c, b * d)
-            wk.word("simp", g > 1 ? "= \(a * c / g)/\(b * d / g)" : "already simplest", at: 13, 9, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .chapter), anchor: UnitPoint(x: 0, y: 0.5))
-        }
-        // the grid: each piece `s` squares a side
-        let s = Double(max(2, min(6, 16 / b, 24 / d))), x0 = 30.0, y0 = 2.0
-        for r in 0..<b { for col in 0..<d {
-            let inRow = r < a, inCol = col < c, rect = pen.R(x0 + Double(col) * s, y0 + Double(r) * s, s, s)
-            if inRow && inCol { pen.sketch.fill("o\(r)_\(col)\(at >= 3 || ask == 3)", rect, ask == 3 || at >= 3 ? .tint(0.7) : .tint(0.55)) }
-            else if inRow { pen.sketch.fill("r\(r)_\(col)\(ask == 1)", rect, ask == 1 ? .tint(0.4) : .tint(0.22)) }
-            else if inCol { pen.sketch.fill("c\(r)_\(col)\(ask == 2)", rect, ask == 2 ? .tint(0.4) : .tint(0.12)) }
-            if at >= 3, inRow && inCol { pen.word("n\(r)_\(col)", "\(r * c + col + 1)", at: x0 + (Double(col) + 0.5) * s, y0 + (Double(r) + 0.5) * s, Sketch.Words(size: Sketch.small, weight: .semibold, colour: .paper)) }
-        } }
-        pen.sketch.segments("grid", (0...d).map { i in (pen.P(x0 + Double(i) * s, y0), pen.P(x0 + Double(i) * s, y0 + Double(b) * s)) }
-            + (0...b).map { j in (pen.P(x0, y0 + Double(j) * s), pen.P(x0 + Double(d) * s, y0 + Double(j) * s)) }, .tint(0.6), width: 1.5)
-        let small = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink2)
-        pen.label("rl", "\(a)/\(b)", small.colour(ask == 1 ? .chapter : .ink2), .left, edge: x0, along: y0 + Double(a) * s / 2)
-        pen.label("cl", "\(c)/\(d)", small.colour(ask == 2 ? .chapter : .ink2), .above, edge: y0, along: x0 + Double(c) * s / 2)
-        return (pen.sketch, wk.sketch)
-    }
 
     // MARK: volume
 
