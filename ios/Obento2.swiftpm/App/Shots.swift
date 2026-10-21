@@ -655,7 +655,12 @@ enum Shots {
             guard let page = m.bars else { return true }
             await wait(0.3)
             if n == "review-page" { return true }
-            if n == "review-problem" { page.open(page.problems[0]); return true }
+            if n == "review-problem" {
+                // -wrong: a slip on its first step, so a miss in the review shows what a lesson's miss shows
+                page.open(page.problems[0])
+                if args.contains("-wrong"), let w = page.problems[0] as? WorkProblem { w.answerForShots(wrong: true) }
+                return true
+            }
             if n == "review-result-longest" {
                 // the most the review can name: 8 problems from 8 lessons, all missed, the 8 longest names
                 let ids = ["g5-unitdiv", "g5-mult2", "g5-improper", "g5-pow10", "mix", "sub", "g5-multfrac", "g5-divdec"]
