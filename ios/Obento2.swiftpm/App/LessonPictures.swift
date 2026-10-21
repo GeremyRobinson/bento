@@ -24,7 +24,6 @@ enum LessonPictures {
         func k(_ key: String) -> Double { p[key] ?? 0 }
         switch id {
         case "g5-order": return with(orderGrid(n, beat: Int(k("beat"))))
-        case "g5-multdec": return with(multiplyDecimalsGrid(n, p))
         case "g5-divdec": return with(divideDecimalGrid(d: Int(v("d")), qt: Int(v("qt")), p))
         case "g5-multfrac": return with(multiplyFractionsGrid(n, p))
         case "g5-volume": return with(volumeGrid(n, p))
@@ -222,48 +221,6 @@ enum LessonPictures {
             let ans = up ? amount / per : amount * per
             wk.word("tot", up ? "\(fmt(amount)) ÷ \(fmt(per)) = \(fmt(ans)) \(pair.many)" : "\(fmt(amount)) × \(fmt(per)) = \(fmt(ans)) \(pair.small)",
                      at: x0, below + 4, line.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5))
-        }
-        return (pen.sketch, wk.sketch)
-    }
-
-    // MARK: multiplying decimals
-
-    /// 2.4 × 0.3 on the grid: the multiplication as school writes it, two squares to a digit, each number's decimal
-    /// places counted beside it and the answer's under; beside it one whole as ten squares by ten, with the one piece
-    /// the two numbers' places make lit (a tenth is a column of it, a hundredth one square).
-    static func multiplyDecimalsGrid(_ n: Numbers, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
-        var pen = GridPen()
-        var wk = GridPen()
-        let A = Int(n["A"] ?? 0), B = Int(n["B"] ?? 0), pa = Int(n["pa"] ?? 0), pb = Int(n["pb"] ?? 0)
-        let x = Double(A) / pow(10, Double(pa)), y = Double(B) / pow(10, Double(pb)), ans = x * y, places = pa + pb
-        let line = p["line"].map(Int.init), per = 2.0, right = 14.0
-        let note = Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink3), placeWord = { (k: Int) in k == 1 ? "1 place" : "\(k) places" }
-        wk.digits("a", fmt(x), right: right, row: 2, per: per)
-        wk.word("x", "×", at: right - 4.5 * per, 4, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink))
-        wk.digits("b", fmt(y), right: right, row: 4, per: per)
-        wk.word("pa", placeWord(pa), at: right + 1, 2, note.colour(p["piece"] == 1 ? .chapter : .ink3), anchor: UnitPoint(x: 0, y: 0.5))
-        wk.word("pb", placeWord(pb), at: right + 1, 4, note.colour(p["piece"] == 1 ? .chapter : .ink3), anchor: UnitPoint(x: 0, y: 0.5))
-        wk.rule("r", from: right - 5 * per, to: right, row: 5)
-        if line == 2 {
-            wk.digits("t", fmt(ans), right: right, row: 6, per: per, .chapter)
-            wk.word("pt", placeWord(places), at: right + 1, 6, note.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5))
-        }
-        let lines = ["\(A) × \(B) = \(A * B) small pieces",
-                     "\(fmt(1 / pow(10, Double(pa)))) × \(fmt(1 / pow(10, Double(pb)))) = \(fmt(1 / pow(10, Double(places))))",
-                     "\(A * B) \(places == 1 ? "tenths" : places == 2 ? "hundredths" : "thousandths") = \(fmt(ans))"]
-        if let l = line { wk.word("line\(l)", lines[l], at: 0, 10, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink), anchor: UnitPoint(x: 0, y: 0.5)) }
-        // one whole: ten squares by ten; the piece lit
-        let ux = 30.0, uy = 2.0, lit = p["piece"] == 1 || p["lit"] == 1
-        pen.word("wl", "1 whole", at: ux + 5, uy - 1, note.colour(.ink2))
-        if lit {
-            let piece = places == 1 ? pen.R(ux, uy, 1, 10) : pen.R(ux, uy, 1, 1)
-            pen.sketch.fill("piece\(places)", piece, .tint(0.6))
-        }
-        pen.sketch.segments("unit", (0...10).map { i in (pen.P(ux + Double(i), uy), pen.P(ux + Double(i), uy + 10)) } + (0...10).map { j in (pen.P(ux, uy + Double(j)), pen.P(ux + 10, uy + Double(j))) }, .tint(0.5), width: 1)
-        pen.sketch.box("unito", pen.R(ux, uy, 10, 10), .chapter, width: Sketch.stroke)
-        if lit {
-            let size = fmt(1 / pow(10, Double(places)))
-            pen.label("ps", places > 2 ? "one piece: \(size) (a tenth of a square)" : "one piece: \(size)", Sketch.Words(size: Sketch.small, weight: .medium, colour: .chapter), .below, edge: uy + 10, along: ux + 5)
         }
         return (pen.sketch, wk.sketch)
     }
