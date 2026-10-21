@@ -39,6 +39,15 @@ struct WorkBox {
         let after = typed.distance(from: dot, to: typed.endIndex) - 1
         return point + (after == 0 ? 0.3 : Double(after) + 0.15) * cell
     }
+    /// Its rect with `typed` in it: a box lined up on its point grows either way to hold what's typed (a 4th whole digit
+    /// to the left, a 3rd decimal to the right), as a column box grows left.
+    func rect(for typed: String) -> CGRect {
+        guard let point else { return rect(typed: typed.count) }
+        let parts = typed.split(separator: ".", omittingEmptySubsequences: false)
+        let whole = Double(parts.first?.count ?? 0), after = Double(parts.dropFirst().first?.count ?? 0)
+        let left = min(right - Double(cells) * cell, point - whole * cell), end = max(right, point + after * cell)
+        return CGRect(x: left, y: mid - cell / 2, width: end - left + 0.5 * cell, height: cell)
+    }
     /// Its rect when `typed` digits are in it, with half a cell past its right edge for the cursor.
     func rect(typed: Int = 0) -> CGRect {
         if point != nil {

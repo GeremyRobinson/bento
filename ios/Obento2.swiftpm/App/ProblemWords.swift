@@ -46,7 +46,7 @@ enum ProblemLayout {
             for b in L.boxes {
                 guard let id = b.id ?? a.boxes.first, a.boxes.contains(id) else { continue }
                 // half a cell past the column's edge, room for the cursor so it touches nothing
-                out.append(Block(kind: .field(id), rect: b.rect(typed: (l.typed[id] ?? "").count).offsetBy(dx: o.x, dy: o.y)))
+                out.append(Block(kind: .field(id), rect: b.rect(for: l.typed[id] ?? "").offsetBy(dx: o.x, dy: o.y)))
             }
         }
         if !m.auto && !m.solved { out.append(Block(kind: .main, rect: A(L.checkAt.x, y, width(l.words.action, 120), 40 * k))) }
@@ -83,7 +83,7 @@ enum ProblemLayout {
         if let a = run.step.answer, a.choices == nil, !a.byHand {
             for b in L.boxes {
                 guard let id = b.id ?? a.boxes.first, a.boxes.contains(id) else { continue }
-                out.append(Block(kind: .field(id), rect: b.rect(typed: (run.typed[id] ?? "").count).offsetBy(dx: o.x, dy: o.y)))
+                out.append(Block(kind: .field(id), rect: b.rect(for: run.typed[id] ?? "").offsetBy(dx: o.x, dy: o.y)))
             }
         }
         if !m.auto, !run.isLast, let a = run.step.answer, !a.byHand { add(.main, width(run.words.action, 120)) }
