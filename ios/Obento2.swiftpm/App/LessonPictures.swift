@@ -29,7 +29,6 @@ enum LessonPictures {
         case "g5-multdec": return with(multiplyDecimalsGrid(n, p))
         case "g5-divdec": return with(divideDecimalGrid(d: Int(v("d")), qt: Int(v("qt")), p))
         case "g5-multfrac": return with(multiplyFractionsGrid(n, p))
-        case "g5-fracof": return with(fractionOfGrid(n, p))
         case "g5-volume": return with(volumeGrid(n, p))
         case "g5-units": return with(unitsGrid(n, p))
         default: return (Sketch(), Sketch(), nil)
@@ -266,25 +265,6 @@ enum LessonPictures {
         let small = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink2)
         pen.label("rl", "\(a)/\(b)", small.colour(ask == 1 ? .chapter : .ink2), .left, edge: x0, along: y0 + Double(a) * s / 2)
         pen.label("cl", "\(c)/\(d)", small.colour(ask == 2 ? .chapter : .ink2), .above, edge: y0, along: x0 + Double(c) * s / 2)
-        return (pen.sketch, wk.sketch)
-    }
-
-    /// 3/4 of 20 on the grid: the bar of 20 cut into 4 equal groups (each a whole number of squares), 3 taken, a
-    /// bracket under them; the working under the bar.
-    static func fractionOfGrid(_ n: Numbers, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
-        var pen = GridPen()
-        var wk = GridPen()
-        let nn = Int(n["n"] ?? 1), d = Int(n["d"] ?? 2), W = Int(n["W"] ?? 0), g = W / max(1, d)
-        let at = Int(p["at"] ?? 0), ask = p["ask"].map(Int.init)
-        let length = d * max(3, 40 / d), x0 = 0.0, row = 3.0, label = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink2)
-        pen.label("W", "\(W)", label, .above, edge: row, along: x0 + Double(length) / 2)
-        let cutNow = at >= 1 || ask == 1
-        pen.bar("g", col: x0, row: row, length: length, height: 3, parts: cutNow ? d : 1, shaded: at >= 2 ? nn : (cutNow ? 0 : 1), lit: ask == 2 || at >= 2)
-        if at >= 1 { for i in 0..<d { pen.word("gl\(i)", "\(g)", at: x0 + (Double(i) + 0.5) * Double(length / d), row + 1.5, Sketch.Words(size: Sketch.small, weight: .medium, colour: .ink)) } }
-        if at >= 2 { pen.bracket("br", from: x0, to: x0 + Double(nn * (length / d)), row: row + 5, "\(nn)/\(d)", Sketch.Words(size: Sketch.small, weight: .medium, colour: .chapter)) }
-        let line = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink)
-        if at >= 1 { wk.word("l1", "\(W) ÷ \(d) = \(g)", at: x0, 12, line, anchor: UnitPoint(x: 0, y: 0.5)) }
-        if at >= 2 { wk.word("l2", "\(g) × \(nn) = \(g * nn)", at: x0, 15, line.colour(.chapter), anchor: UnitPoint(x: 0, y: 0.5)) }
         return (pen.sketch, wk.sketch)
     }
 
