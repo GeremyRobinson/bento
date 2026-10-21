@@ -85,7 +85,11 @@ extension Rig {
         if r.kind == .review { s.frame("result", f, .done, pen: .ink) } else { s.frame("result", f, r.passed ? .done : .open) }
         s.label("result-score", "\(r.right) of \(r.of) right", Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink), at: CGPoint(x: f.midX, y: f.midY), anchor: .center)
         s.words("result-verdict", r.verdict, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink), x: l.verdict.x, top: l.verdict.y - Sketch.row / 2, width: width)
-        s.words("result-why", r.why, Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2), x: l.why.x, top: l.why.y - Sketch.row / 2, width: width, max: 2)
+        // why, on as many rows as it takes (the review names every lesson it had a miss in; the blocks sit under it)
+        for (i, row) in l.whyRows.enumerated() {
+            s.text("result-why\(i):\(row)", row, at: CGPoint(x: l.why.x, y: l.why.y + Double(i) * Sketch.row), size: Sketch.small, weight: .regular, .ink2,
+                   anchor: UnitPoint(x: 0, y: 0.5), digits: false)
+        }
         s.block("result-main", CGRect(x: l.main.x, y: l.main.y, width: l.main.width, height: l.main.height), .main, word: r.main, arrow: true)
         if let o = l.other, let word = r.other { s.block("result-other", CGRect(x: o.x, y: o.y, width: o.width, height: o.height), .plain, word: word) }
         return s
