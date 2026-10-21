@@ -52,6 +52,7 @@ enum PaperLessons {
         case "add", "sub", "mix": return FractionsLesson()
         case "g5-improper": return MixedNumbersLesson()
         case "g5-pow10": return PowersOfTenLesson()
+        case "g5-adddec": return AddDecimalsLesson()
         default: return nil
         }
     }

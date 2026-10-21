@@ -26,7 +26,6 @@ enum LessonPictures {
         case "g5-mult2": return multiplyGrid(n, a: Int(v("a")), b: Int(v("b")), split: k("split") == 1, strip: Int(k("strip")), found: Int(k("found")), sum: k("sum") == 1, box: k("box") == 1)
         case "g5-divide": return divideGrid(dv: Int(v("dv")), qt: Int(v("qt")), strip: Int(k("strip")), found: Int(k("found")), left: k("left") == 1, sum: k("sum") == 1, box: k("box") == 1)
         case "g5-order": return with(orderGrid(n, beat: Int(k("beat"))))
-        case "g5-adddec": return with(addDecimalsGrid(a: v("a"), b: v("b"), p))
         case "g5-multdec": return with(multiplyDecimalsGrid(n, p))
         case "g5-divdec": return with(divideDecimalGrid(d: Int(v("d")), qt: Int(v("qt")), p))
         case "g5-multfrac": return with(multiplyFractionsGrid(n, p))
@@ -56,8 +55,6 @@ enum LessonPictures {
             return [("Split \(b) into \(ps.map(String.init).joined(separator: " and ")). Each part makes a strip.", ["split": 1])]
         case "g5-divide":
             return [("Take out tens of \(Int(v("dv"))) first. They fill the big strip.", ["strip": 1])]
-        case "g5-adddec":
-            return [("Line up the points. Tenths go under tenths.", ["lineUp": 1, "lit": 0])]
         default: return []
         }
     }
@@ -234,49 +231,6 @@ enum LessonPictures {
         let line = hops ? "\(d * qt) ÷ \(d) = \(qt), and \(fmt(Double(d * qt) / 10)) ÷ \(fmt(Double(d) / 10)) = \(qt)"
             : all ? "\(fmt(Double(d * qt) / 10)) × 10 = \(d * qt)" : one ? "\(fmt(Double(d) / 10)) × 10 = \(d)" : nil
         if let line { wk.word("line\(line)", line, at: x0, 18, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink), anchor: UnitPoint(x: 0, y: 0.5)) }
-        return (pen.sketch, wk.sketch)
-    }
-
-    // MARK: adding decimals
-
-    /// 12.5 + 3.75 on the grid: the sum in columns two squares to a digit, the points on one grid line with a line down
-    /// through them, a 0 written in so both have hundredths; the whole columns' band, then the decimal columns'; the
-    /// parts' sums on the right; the total under the line.
-    static func addDecimalsGrid(a: Double, b: Double, _ p: Numbers) -> (picture: Sketch, work: Sketch) {
-        var pen = GridPen()
-        var wk = GridPen()
-        // three squares to a digit, so each column has room for its place's name over it
-        // five squares to a column, a block, so each column's place name fits over it
-        let lit = p["lit"], per = 5.0, pointCol = 20.0, right = pointCol + 2 * per
-        let A = String(format: "%.2f", a), B = String(format: "%.2f", b), big: CGFloat = Sketch.maths
-        let small = Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink3)
-        // the place names over the columns
-        for (i, n) in ["tens", "ones", "tenths", "hundredths"].enumerated() {
-            pen.word("h\(i)", n, at: pointCol + (Double(i) - 2 + 0.5) * per, 1, Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink3))
-        }
-        if lit == 1 { pen.sketch.fill("bw", pen.R(pointCol - 2 * per, 2, 2 * per, 12), .tint(0.16)) }
-        if lit == 2 { pen.sketch.fill("bd", pen.R(pointCol, 2, 2 * per, 12), .tint(0.16)) }
-        pen.digits("a", A, right: right, row: 3.5, per: per, size: big)
-        if (a * 10).rounded() == a * 10 {
-            pen.sketch.plate("zf", pen.R(right - per, 2, per, per), lit == 0 ? .tint(0.38) : .tint(0.2))
-            pen.word("z", "0", at: right - per / 2, 3.5, Sketch.Words(size: Sketch.maths, weight: .medium, colour: .chapter))
-        }
-        pen.word("plus", "+", at: pointCol - 2.5 * per, 6.5, Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink))
-        pen.digits("b", B, right: right, row: 6.5, per: per, size: big)
-        pen.rule("rule", from: pointCol - 3 * per, to: right, row: 8)
-        pen.sketch.line("wire", [pen.P(pointCol, 2), pen.P(pointCol, 14)], .chapter, width: 1.5, dashed: true)
-        if p["total"] == 1 { pen.digits("t", String(format: "%.2f", a + b), right: right, row: 9.5, per: per, size: big, .chapter) }
-        // the parts, on the right, row for row with the sum
-        let wx = 36.0, whole = Double(Int(a) + Int(b)), dec = (a - Double(Int(a))) + (b - Double(Int(b)))
-        wk.word("hw", "wholes", at: wx, 3.5, small, anchor: UnitPoint(x: 0, y: 0.5))
-        wk.word("hd", "after the point", at: wx, 6.5, small, anchor: UnitPoint(x: 0, y: 0.5))
-        let num = Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink)
-        if p["whole"] == 1 { wk.word("sw", fmt(whole), at: wx + 20, 3.5, num, anchor: UnitPoint(x: 1, y: 0.5)) }
-        if p["decimal"] == 1 { wk.word("sd", String(format: "%.2f", dec), at: wx + 20, 6.5, num.colour(p["carry"] == 1 ? .chapter : .ink), anchor: UnitPoint(x: 1, y: 0.5)) }
-        if p["total"] == 1 {
-            wk.rule("r2", from: wx + 10, to: wx + 20, row: 8)
-            wk.word("st", String(format: "%.2f", a + b), at: wx + 20, 9.5, num.colour(.chapter), anchor: UnitPoint(x: 1, y: 0.5))
-        }
         return (pen.sketch, wk.sketch)
     }
 
