@@ -3,17 +3,15 @@ import Foundation
 /// Long division in chunks (the web app's g5-divide): take out tens of the divisor first, then divide what's left.
 /// Numbers: dv (the divisor, 3–9 or 11–25), qt (the answer, 12–99, never a multiple of 10) and n = dv × qt.
 ///
-/// Picture master: "area-model" (web `explanations/diagrams/area-model`, in its `find` mode): g5-mult2's picture run
-/// backwards. A rectangle dv tall with n inside it, split across the top into two strips: the answer's tens (T) and
-/// ones (O). The strips' widths are found one at a time; a top label waits until its strip is found ("?" while asked).
-/// Picture keys:
-/// - `strip`: the strip being asked about, lit up: 1 = the tens strip, 2 = the ones strip; 0 = none.
-/// - `found`: how many strips, from the left, have their width (T, then O) and product (dv × T, dv × O) written in.
-/// - `left`: 1 = what's left after taking out the tens (n − dv × T) is written in the ones strip.
-/// - `sum`: 1 = both strips found and the answer's T + O shown across the top.
-/// - `look` (onMiss only): 1 = after a miss with no named slip, point at the lit strip and its height dv again.
-/// Per step: ask {strip 0, found 0} · tens {strip 1, found 0} · subtract {strip 2, found 1, left 0} ·
-/// ones {strip 2, found 1, left 1} · sum {found 2, sum 1} · done {found 2, sum 1}.
+/// On the paper (design/grade5.md): g5-mult2's rectangle run backwards. One square is one thing (a marble, in the
+/// story): a rectangle dv squares tall (a row for each jar) whose width is found. The child drags its right edge out ten
+/// columns at a time, the readout counting the squares used and what's left ("840 used", "24 left"), and presses Check:
+/// that answers the tens (its box is set from the edge) and leaves what's left in the record, so the subtraction is
+/// written for the child (no step of its own). Then the edge is dragged on a column at a time until nothing is left (the
+/// ones, set from the edge). The record is the division as school writes it, the partial quotients beside it as the
+/// strips are found; only the answer over the bracket is typed.
+/// Picture key "at", the stage: 0 the question, 1 the tens strip being dragged, 2 the ones strip, 3 both found (the
+/// answer to write), 4 done. `look` (onMiss): the lit strip's ten-column groups counted.
 public enum LongDivision {
     public static func numbers(dv: Int, qt: Int) -> Numbers { ["dv": Double(dv), "qt": Double(qt), "n": Double(dv * qt)] }
 
@@ -38,41 +36,58 @@ public enum LongDivision {
         let look = "Look again at the lit-up strip: it's \(D) tall."
         func d(_ x: Int) -> Double { Double(x) }
 
-        let ask = LessonStep(StepWords(say: "What is \(N) ÷ \(D)?", hint: "The strip is \(D) tall. How wide is it?", action: "Let’s find out"),
-                             picture: ["strip": 0, "found": 0])
+        // the problem is written once, in the record's bracket and as the rectangle's side: the first words ask about
+        // the picture, not the sum again
+        let ask = LessonStep(StepWords(say: "How wide is the rectangle?", hint: "It's \(D) tall and holds \(N) squares.", action: "Let’s find out"),
+                             picture: ["at": 0])
+        // the edge, dragged out ten columns at a time: Check puts how wide it is in the box (the web's tens and its slips;
+        // what else a move makes is measured in squares)
         let tensHint = "Try \(D) × 10, \(D) × 20, … and stop before you go past \(N)."
-        let tens = LessonStep(StepWords(say: "How many tens of \(D) fit in \(N)?", hint: "Take out as many tens of \(D) as fit.", action: "Check"),
+        let tens = LessonStep(StepWords(say: "Drag the edge out ten columns at a time, as far as the squares go.",
+                                        hint: "Ten columns of \(D) use \(dv * 10) squares.", action: "Check"),
             answer: AnswerTask(prompt: [.text("tens"), .op("="), .box("x")], expected: ["x": d(T)],
                                known: [(["x": d(T - 10)], "\(D) × \(T) still fits, so you can use more tens."),
                                        (["x": d(T / 10)], "\(tensWord(T / 10)) is written \(T)."),
                                        (["x": d(T + 10)], "\(D) × \(T + 10) = \(dv * (T + 10)), which is more than \(N).")],
-                               hint: tensHint, explain: "\(tensHint) That makes \(T)."),
-            picture: ["strip": 1, "found": 0], onMiss: ["look": 1], look: look)
-        let subHint = "\(D) × \(T) = \(dv * T). Take that away from \(N)."
-        let subtract = LessonStep(StepWords(say: "Subtract", hint: "Take those away to see what's left.", action: "Check"),
-            answer: AnswerTask(prompt: [.num(d(n)), .op("−"), .num(d(dv * T)), .op("="), .box("x")], expected: ["x": d(left)],
-                               known: [(["x": d(n + dv * T)], "Those \(dv * T) have been shared out, so take them away from \(N).")],
-                               hint: subHint, explain: "\(subHint) That makes \(left)."),
-            picture: ["strip": 2, "found": 1, "left": 0], onMiss: ["look": 1], look: look)
+                               hint: tensHint, explain: "\(tensHint) That makes \(T).",
+                               check: { v in
+                                   guard let x = v["x"], x > 0 else { return .soft("Drag the edge out first.") }
+                                   let c = Int(x.rounded()), used = dv * c
+                                   if c == T { return .right }
+                                   if used > n { return .wrong("\(D) × \(c) = \(used), which is more than \(N).") }
+                                   if c % 10 != 0 { return .wrong("Take out whole tens first: \(c) isn't a ten.") }
+                                   return .wrong("That uses \(used), and \(n - used) are left: ten more columns fit.")
+                               }, byHand: true),
+            picture: ["at": 1], onMiss: ["look": 1], look: look)
         // the web's slips(): drop a slip equal to the answer or repeating one, then any below 0
         var onesKnown: [(values: [String: Double], message: String)] = []
         for (v, message) in [(O + 1, "\(D) × \(O + 1) = \(dv * (O + 1)), which is more than \(left)."), (O - 1, "One more \(D) still fits in \(left).")]
         where v != O && v >= 0 && !onesKnown.contains(where: { $0.values["x"] == d(v) }) { onesKnown.append((["x": d(v)], message)) }
         let onesHint = "How many \(D)s make \(left)?"
-        let ones = LessonStep(StepWords(say: "Divide what's left", hint: "Now count how many \(D)s fit in what's left.", action: "Check"),
+        let ones = LessonStep(StepWords(say: "Now drag it on a column at a time until none are left.",
+                                        hint: "One column of \(D) uses \(D) squares.", action: "Check"),
             answer: AnswerTask(prompt: [.num(d(left)), .op("÷"), .num(d(dv)), .op("="), .box("x")], expected: ["x": d(O)],
-                               known: onesKnown, hint: onesHint, explain: "\(onesHint) That makes \(O)."),
-            picture: ["strip": 2, "found": 1, "left": 1], onMiss: ["look": 1], look: look)
+                               known: onesKnown, hint: onesHint, explain: "\(onesHint) That makes \(O).",
+                               check: { v in
+                                   guard let x = v["x"], x > 0 else { return .soft("Drag the edge on first.") }
+                                   let c = Int(x.rounded()), used = dv * c
+                                   if c == O { return .right }
+                                   if used > left { return .wrong("\(D) × \(c) = \(used), which is more than \(left).") }
+                                   return .wrong("That uses \(used), and \(left - used) are left: another column fits.")
+                               }, byHand: true),
+            picture: ["at": 2], onMiss: ["look": 1], look: look)
+        // the answer over the bracket: the one number school writes here (the parts were written as they were found)
         let sumHint = "\(T) + \(O)."
-        let sum = LessonStep(StepWords(say: "Add the parts", hint: "The tens and the ones together are the answer.", action: "Check"),
+        let sum = LessonStep(StepWords(say: "How wide is it? Write it over the bracket.", hint: "The tens and the ones together are the answer.", action: "Check"),
             answer: AnswerTask(prompt: [.num(d(n)), .op("÷"), .num(d(dv)), .op("="), .box("x")], expected: ["x": d(qt)],
                                known: [(["x": d(T / 10 + O)], "The first part was \(T), not \(T / 10).")],
                                hint: sumHint, explain: "\(sumHint) That makes \(qt)."),
-            picture: ["strip": 0, "found": 2, "sum": 1], onMiss: ["look": 1], look: look)
-        let done = LessonStep(StepWords(say: "The tens and the ones make \(qt).",
+            picture: ["at": 3], onMiss: ["look": 1], look: look)
+        // the last words say why: the rectangle is the division
+        let done = LessonStep(StepWords(say: "\(D) rows of \(qt) make \(N).",
                                         hint: "Taking out ten groups at a time gets to the answer faster than going one by one.",
                                         action: "Next problem"),
-                              picture: ["strip": 0, "found": 2, "sum": 1])
-        return [ask, tens, subtract, ones, sum, done]
+                              picture: ["at": 4])
+        return [ask, tens, ones, sum, done]
     }
 }
