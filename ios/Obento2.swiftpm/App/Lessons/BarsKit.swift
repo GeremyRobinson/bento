@@ -103,6 +103,15 @@ struct Ruler {
     var snaps: [Int]? = nil
     /// Its readout for a length, when it says more than the piece's name ("fourths, 5 in each").
     var readout: ((Int) -> String)? = nil
+    /// Down the left of what it cuts instead of along the top (Multiplying fractions' rows): `row` is then its column,
+    /// `from` and `to` the columns its cuts run between, and its readout sits left of it.
+    var vertical = false
+    /// Where its length starts along the way it measures (the left end of what it cuts, or its top when vertical).
+    var at = 0.0
+
+    /// A place `a` squares along the ruler's way and `b` across it, in the picture's squares.
+    private func pt(_ a: Double, _ b: Double) -> (Double, Double) { vertical ? (b, at + a) : (at + a, b) }
+    private func cg(_ a: Double, _ b: Double) -> CGPoint { let p = pt(a, b); return CGPoint(x: p.0, y: p.1) }
 
     /// The lengths it snaps to: every whole number of squares that divides the whole, 2 at least (so a piece holds its
     /// number), up to half the whole.
@@ -116,25 +125,28 @@ struct Ruler {
     /// rings every old cut's dot on the still picture (each needs a new cut on it).
     func draw(_ s: PaperState, live: inout GridPen, still pic: inout GridPen) {
         let w = Double(length(s)), R = row, small = Bars.small
-        live.line("ruler", [(0, R + 1), (0, R), (w, R), (w, R + 1)], .chapter)
-        live.dot("handle", at: w, R, radius: s.grabbed ? 0.75 : 0.6, .chapter, over: true)
+        live.line("ruler", [pt(0, R + 1), pt(0, R), pt(w, R), pt(w, R + 1)], .chapter)
+        let hp = pt(w, R)
+        live.dot("handle", at: hp.0, hp.1, radius: s.grabbed ? 0.75 : 0.6, .chapter, over: true)
         // the piece's name over the ruler, centred on it, but never past the bars' left end (a short ruler's long name,
         // "twenty-fourths", starts where the bars do)
         let name = readout?(Int(w)) ?? UnlikeFractions.pieceName(W / Int(w))
         let half = PaperText.width(name, PaperText.font(small.size, small.weight, digits: true)) / 2 / Paper.cell
-        // (its ink half a square over the handle, which a short ruler's name would otherwise touch)
-        live.label("rulerw", name, small, .above, edge: R - 0.75, along: max(w / 2, half))
+        // (its ink half a square over the handle, which a short ruler's name would otherwise touch); a ruler down the
+        // side has it on its left, level with its middle
+        if vertical { live.label("rulerw", name, small, .left, edge: R - 0.75, along: at + w / 2) }
+        else { live.label("rulerw", name, small, .above, edge: R - 0.75, along: at + max(w / 2, half)) }
         // the cuts it would make, dashed across the bars
         for k in 1..<max(1, Int((Double(W) / w).rounded())) {
             let x = Double(k) * w
-            live.line("cut\(k)", [(x, from), (x, to)], .ink2, dashed: true)
+            live.line("cut\(k)", [pt(x, from), pt(x, to)], .ink2, dashed: true)
         }
         // a dot under each old cut: green when a new cut lands on it, red when none does
         for o in old {
-            for (i, x) in o.at.enumerated() { live.dot("d\(o.tag)_\(i + 1)", at: x, o.row, radius: 0.35, x.truncatingRemainder(dividingBy: w) == 0 ? Bars.green : Bars.red, over: true) }
+            for (i, x) in o.at.enumerated() { let p = pt(x, o.row); live.dot("d\(o.tag)_\(i + 1)", at: p.0, p.1, radius: 0.35, x.truncatingRemainder(dividingBy: w) == 0 ? Bars.green : Bars.red, over: true) }
         }
         if s.on("oldCuts") {
-            for o in old { for (i, x) in o.at.enumerated() { pic.circle("r\(o.tag)_\(i + 1)", at: x, o.row, radius: 0.9, .chapter, dashed: true) } }
+            for o in old { for (i, x) in o.at.enumerated() { let p = pt(x, o.row); pic.circle("r\(o.tag)_\(i + 1)", at: p.0, p.1, radius: 0.9, .chapter, dashed: true) } }
         }
     }
 
@@ -142,10 +154,15 @@ struct Ruler {
     /// it stays where it is. Cut: how many pieces of that length make a whole, checked.
     func hands(_ s: PaperState) -> Hands {
         let w = Double(length(s)), lengths = self.lengths, R = row, W = Double(self.W), start = self.start, box = self.box
+        // the finger's place along the ruler's way and across it
+        let vertical = self.vertical, at = self.at
+        func along(_ p: CGPoint) -> Double { (vertical ? p.y : p.x) - at }
+        func across(_ p: CGPoint) -> Double { vertical ? p.x : p.y }
         return Hands(
-            grab: { p in abs(p.x - w) < 2.5 && p.y > R - 2.5 && p.y < R + 3 ? ["grab": 1, "ruler": w] : nil },
+            grab: { p in abs(along(p) - w) < 2.5 && across(p) > R - 2.5 && across(p) < R + 3 ? ["grab": 1, "ruler": w] : nil },
             drag: { p, _ in
-                let best = lengths.min { abs(Double($0) - p.x) < abs(Double($1) - p.x) } ?? start
+                let x = along(p)
+                let best = lengths.min { abs(Double($0) - x) < abs(Double($1) - x) } ?? start
                 return ["grab": 1, "ruler": Double(best)]
             },
             release: { h in HandMove(hand: ["ruler": h["ruler"] ?? w], missHand: nil) },
@@ -155,7 +172,7 @@ struct Ruler {
     /// Show me and the How to: the handle dragged to `target` (unless it's there already), then Cut.
     func demo(_ s: PaperState, to target: Int) -> [GhostMove] {
         let w = Double(length(s)), R = row
-        return (w == Double(target) ? [] : [.drag(from: CGPoint(x: w, y: R), to: CGPoint(x: Double(target), y: R))]) + [.tap(.action("Cut"))]
+        return (w == Double(target) ? [] : [.drag(from: cg(w, R), to: cg(Double(target), R))]) + [.tap(.action("Cut"))]
     }
 
     /// Screenshots only (-wrong): Cut at the first length that leaves an old cut with no new cut on it (else `fallback`).
