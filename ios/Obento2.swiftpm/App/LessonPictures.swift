@@ -23,7 +23,6 @@ enum LessonPictures {
         func v(_ k: String) -> Double { n[k] ?? 0 }
         func k(_ key: String) -> Double { p[key] ?? 0 }
         switch id {
-        case "g5-order": return with(orderGrid(n, beat: Int(k("beat"))))
         case "g5-divdec": return with(divideDecimalGrid(d: Int(v("d")), qt: Int(v("qt")), p))
         case "g5-multfrac": return with(multiplyFractionsGrid(n, p))
         case "g5-volume": return with(volumeGrid(n, p))
@@ -104,56 +103,6 @@ enum LessonPictures {
         let small = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink2)
         pen.label("rl", "\(a)/\(b)", small.colour(ask == 1 ? .chapter : .ink2), .left, edge: x0, along: y0 + Double(a) * s / 2)
         pen.label("cl", "\(c)/\(d)", small.colour(ask == 2 ? .chapter : .ink2), .above, edge: y0, along: x0 + Double(c) * s / 2)
-        return (pen.sketch, wk.sketch)
-    }
-
-    // MARK: order of operations
-
-    /// 3 + 4 × (6 − 2) on the grid: rewritten line under line as school does it, two squares to a character, the group
-    /// done on each line lit behind it; on the right the order to follow, the rule being used lit.
-    static func orderGrid(_ n: Numbers, beat: Int) -> (picture: Sketch, work: Sketch) {
-        var pen = GridPen()
-        var wk = GridPen()
-        let t = Int(n["t"] ?? 0), a = n["a"] ?? 0, b = n["b"] ?? 0, c = n["c"] ?? 0, d = n["d"] ?? 0
-        let A = fmt(a), B = fmt(b), C = fmt(c), D = fmt(d)
-        var lines: [[String]] = [], groups: [Range<Int>] = [], rules: [Int] = []
-        switch t {
-        case 0:
-            let v1 = c - d, v2 = b * v1, v3 = a + v2
-            lines = [[A, "+", B, "×", "(", C, "−", D, ")"], [A, "+", B, "×", fmt(v1)], [A, "+", fmt(v2)], [fmt(v3)]]
-            groups = [4..<9, 2..<5, 0..<3]; rules = [0, 1, 2]
-        case 1:
-            let v1 = a + b, v2 = v1 * c, v3 = v2 - d
-            lines = [["(", A, "+", B, ")", "×", C, "−", D], [fmt(v1), "×", C, "−", D], [fmt(v2), "−", D], [fmt(v3)]]
-            groups = [0..<5, 0..<3, 0..<3]; rules = [0, 1, 2]
-        default:
-            let v1 = a * b, v2 = c / d, v3 = v1 - v2
-            lines = [[A, "×", B, "−", C, "÷", D], [fmt(v1), "−", C, "÷", D], [fmt(v1), "−", fmt(v2)], [fmt(v3)]]
-            groups = [0..<3, 2..<5, 0..<3]; rules = [1, 1, 2]
-        }
-        let big = Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink), shown = min(max(beat, 0), 3)
-        for i in 0...shown {
-            let row = 1 + Double(i) * 4, x0 = 3.0
-            if i > 0 { pen.word("eq\(i)", "=", at: 1, row + 1, big) }
-            // each character two squares wide; a token as wide as its characters
-            var x = x0, spans: [(Double, Double)] = []
-            for tok in lines[i] { let w = Double(tok.count) * 2; spans.append((x, x + w)); x += w }
-            if i == beat - 1, i < groups.count, let first = spans[safe: groups[i].lowerBound], let last = spans[safe: groups[i].upperBound - 1] {
-                pen.sketch.fill("hl\(i)", pen.R(first.0 - 0.5, row - 0.5, last.1 - first.0 + 1, 3), .tint(0.3))
-            }
-            for (j, tok) in lines[i].enumerated() {
-                for (q, ch) in tok.enumerated() { pen.word("t\(i)_\(j)_\(q)\(ch)", String(ch), at: spans[j].0 + Double(q) * 2 + 1, row + 1, big.colour(i == 3 ? .chapter : .ink)) }
-            }
-        }
-        // the order to follow
-        let names = ["( )   first", "×  ÷   next", "+  −   last"], rx = 40.0
-        let litRule = beat >= 1 && beat <= 3 ? rules[beat - 1] : -1
-        for (i, name) in names.enumerated() {
-            let row = 1 + Double(i) * 3
-            wk.sketch.fill("rf\(i)\(i == litRule)", pen.R(rx, row, 12, 2), i == litRule ? .tint(0.4) : .tint(0.15))
-            wk.word("rn\(i)", "\(i + 1)", at: rx + 1, row + 1, Sketch.Words(size: Sketch.small, weight: .semibold, colour: .chapter))
-            wk.word("rt\(i)", name, at: rx + 2.5, row + 1, Sketch.Words(size: Sketch.small, weight: .medium, colour: i == litRule ? .ink : .ink2), anchor: UnitPoint(x: 0, y: 0.5))
-        }
         return (pen.sketch, wk.sketch)
     }
 
