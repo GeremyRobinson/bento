@@ -6,6 +6,8 @@ import SwiftUI
 /// for a check, or its last check came back low), Getting stronger (learned, on its way through the four checks), Know
 /// it (all four passed). Every card opens what it shows. It lives on the sheet left of the map, on the strong lines,
 /// and draws itself in and out like everything else (SketchDrawer).
+/// A shelf shows as many cards as fit on the screen with all of Me in view (`rows`); a longer one ends on a card
+/// "and 6 more", which opens that shelf on its own, every card of it in three columns, with Back to Me under them.
 @MainActor
 enum MePage {
     /// Its top-left corner on the paper: left of the map, clear of it, on the strong lines.
@@ -13,9 +15,24 @@ enum MePage {
     static let u = Paper.unit, c = Paper.cell
     /// Its width: three shelves of cards three blocks wide, a block apart.
     static let width = 11 * Paper.unit
+    /// Where the shelves' cards start: under Today (its cards, their names and why) and the shelves' names.
+    static let shelfTop = 5 * Paper.unit
+    /// An opened shelf's cards go in three columns, where the three shelves stand.
+    static let columns = 3
+    /// The least a shelf shows (its first card, and "and 6 more").
+    static let fewestRows = 2
 
-    /// What a tap on one of its cards does.
-    enum Action: Equatable { case lesson(String), review }
+    /// What a tap on one of its cards does: open a lesson or the daily review, open a long shelf to all its cards, or go
+    /// back from it to the whole of Me.
+    enum Action: Equatable { case lesson(String), review, shelf(Int), back }
+
+    /// How many cards a shelf shows on a screen this tall: as many rows as fit under Today with all of Me framed at 75%
+    /// (its words still big enough to read), clear of the bar, so nothing runs under the bar or off the screen; never
+    /// fewer than 2. `pad`: the room the camera leaves round what it frames.
+    static func rows(screenHeight h: Double, pad: Double) -> Int {
+        let room = (h - PaperModel.chrome.top - PaperModel.chrome.bottom - 2 * pad) / 0.75
+        return max(fewestRows, Int(((room - shelfTop - c) / u).rounded(.down)))
+    }
 
     /// Me as it stands: its drawing, where its cards are and what each opens, and the part the camera shows.
     @MainActor struct Sheet {
@@ -29,11 +46,22 @@ enum MePage {
         ("Go over", "Nothing to go over."), ("Getting stronger", "Learned lessons come here."), ("Know it", "Pass all four checks."),
     ]
 
-    /// Me now. `seed`: the day's review shows the lessons it will draw from (nothing random: it only says how many).
-    static func sheet(now: Double) -> Sheet {
+    /// Me now. `rows`: the most cards a shelf shows (MePage.rows); `open`: a shelf opened to all its cards, drawn on its
+    /// own instead of Today and the three shelves.
+    static func sheet(now: Double, rows: Int, open: Int? = nil) -> Sheet {
         var out = Sheet(), s = Sketch()
-        let x0 = corner.x, y0 = corner.y, p = Progress.shared, checks = p.checks
+        let x0 = corner.x, y0 = corner.y, checks = Progress.shared.checks
         func R(_ x: Double, _ y: Double, _ w: Double, _ h: Double) -> CGRect { CGRect(x: x, y: y, width: w, height: h) }
+
+        // the shelves: a lesson moves right as its checks pass; getting stronger: the next check soonest first, so
+        // what's coming is on top
+        let sh = Mastery.shelves(Map.gradeLessons, checks: checks, now: now)
+        let lists = [sh.goOver, sh.gettingStronger.sorted { (checks[$0]?.due ?? 0) < (checks[$1]?.due ?? 0) }, sh.knowIt]
+        if let k = open, lists.indices.contains(k) {
+            openShelf(&s, &out, k, lists[k], now: now)
+            out.sketch = s
+            return out
+        }
 
         // Today: the pick, and the review
         s.words("me-today", "Today", .heading, x: x0, top: y0 + u / 2 - Sketch.row / 2, width: 1200)
@@ -41,7 +69,10 @@ enum MePage {
         if let pick = Map.today {
             let reason = todayReason(pick, now: now)
             let pen = Pen.chapter(pick.chapter)
-            let goOver: Bool = { switch reason { case .due, .low, .helps: true; default: false } }()
+            // Go over means one thing on Me: what its Go over shelf holds (a lesson learned that's due back, or whose
+            // check came back low). A lesson picked to help with one that came back low, or a test to take again on a
+            // lesson never learned, is up next
+            let goOver = Mastery.goOver(checks, pick.id, now: now)
             s.frame("me-pick-\(pick.id)", pickRect, .now, pen: pen)
             picture(&s, pick, in: pickRect)
             s.tab("me-pick-\(pick.id)", frame: pickRect, goOver ? "Go over" : "Up next", pen: pen)
@@ -55,47 +86,89 @@ enum MePage {
         }
         reviewCard(&s, &out, R(x0 + 4 * u, y0 + u, 3 * u, 2 * u), now: now)
 
-        // the shelves, side by side: a lesson moves right as its checks pass
-        // getting stronger: the next check soonest first, so what's coming is on top
-        let sh = Mastery.shelves(Map.gradeLessons, checks: checks, now: now)
-        let lists = [sh.goOver, sh.gettingStronger.sorted { (checks[$0]?.due ?? 0) < (checks[$1]?.due ?? 0) }, sh.knowIt]
-        let top = y0 + 5 * u
+        // the shelves, side by side, each as long as fits (`rows`): a longer one ends on "and 6 more", which opens it
+        let top = y0 + shelfTop, most = max(fewestRows, rows)
         for (k, list) in lists.enumerated() {
             let x = x0 + 4 * Double(k) * u
-            let (name, empty) = shelves[k]
-            s.words("me-shelf\(k)", name, .heading, x: x, top: top - u / 2 - Sketch.row / 2, width: 3.6 * u)
-            let w = PaperText.width(name, PaperText.font(Sketch.Words.heading.size, Sketch.Words.heading.weight))
-            s.text("me-shelf\(k)n:\(list.count)", "\(list.count)", at: CGPoint(x: x + w + 12, y: top - u / 2), size: Sketch.small, weight: .regular, .ink3,
-                   anchor: UnitPoint(x: 0, y: 0.5), slot: "me-shelf\(k)n")
-            if list.isEmpty {
-                let r = R(x, top, 3 * u, u)
-                s.frame("me-empty\(k)", r, .locked, pen: .ink)
-                s.label("me-empty\(k)w", empty, Sketch.Words.status, at: CGPoint(x: r.minX + c, y: r.midY), anchor: UnitPoint(x: 0, y: 0.5))
-                continue
-            }
+            heading(&s, k, count: list.count, x: x, mid: top - u / 2)
+            if list.isEmpty { emptyCard(&s, k, in: R(x, top, 3 * u, u)); continue }
+            let capped = list.count > most, shown = capped ? Array(list.prefix(most - 1)) : list
             // the shelf's cards stacked one on another, a block each, as a shelf of them
-            for (j, id) in list.enumerated() {
+            for (j, id) in shown.enumerated() {
                 guard let piece = Map.piece(id), let check = checks[id] else { continue }
                 let r = R(x, top + Double(j) * u, 3 * u, u)
-                lessonCard(&s, piece, check, shelf: k, in: r, now: now)
+                lessonCard(&s, piece, check, shelf: k, in: r, now: now, last: !capped && j == shown.count - 1)
                 out.taps.append((r, .lesson(id)))
             }
+            if capped {
+                let r = R(x, top + Double(shown.count) * u, 3 * u, u)
+                moreCard(&s, k, more: list.count - shown.count, in: r)
+                out.taps.append((r, .shelf(k)))
+            }
         }
-        let rows = max(1, lists.map(\.count).max() ?? 1)
-        out.frame = Rect(x: x0, y: y0, width: width, height: 5 * u + Double(rows) * u + c)
+        let tallest = max(1, lists.map { min($0.count, most) }.max() ?? 1)
+        out.frame = Rect(x: x0, y: y0, width: width, height: shelfTop + Double(tallest) * u + c)
         out.sketch = s
         return out
     }
 
+    /// A long shelf opened (from its "and 6 more"): its name where Today's is, every one of its cards in three columns
+    /// where the three shelves stand (filled down, as a shelf is, the soonest check first), and Back to Me under them.
+    /// Its cards keep their names on the paper, so they glide from the shelf to their places and back.
+    private static func openShelf(_ s: inout Sketch, _ out: inout Sheet, _ k: Int, _ list: [String], now: Double) {
+        let x0 = corner.x, y0 = corner.y, top = y0 + u, checks = Progress.shared.checks
+        heading(&s, k, count: list.count, x: x0, mid: y0 + u / 2)
+        let perColumn = max(1, (list.count + columns - 1) / columns)
+        if list.isEmpty { emptyCard(&s, k, in: CGRect(x: x0, y: top, width: 3 * u, height: u)) }
+        for (j, id) in list.enumerated() {
+            guard let piece = Map.piece(id), let check = checks[id] else { continue }
+            let col = j / perColumn, row = j % perColumn
+            let r = CGRect(x: x0 + Double(col) * 4 * u, y: top + Double(row) * u, width: 3 * u, height: u)
+            lessonCard(&s, piece, check, shelf: k, in: r, now: now, last: row == perColumn - 1 || j == list.count - 1)
+            out.taps.append((r, .lesson(id)))
+        }
+        // the way back, a square under the cards, as the result's Back to problems is a quieter block
+        let word = "Back to Me", b = CGRect(x: x0, y: top + Double(perColumn) * u + c, width: GrownUpPage.blockWidth(word, least: 9), height: 2 * c)
+        s.block("me-back", b, .plain, word: word)
+        out.taps.append((b, .back))
+        out.frame = Rect(x: x0, y: y0, width: width, height: b.maxY + c - y0)
+    }
+
     // MARK: the cards
+
+    /// A shelf's name, big, with how many lessons it holds beside it, small: centred on `mid`.
+    private static func heading(_ s: inout Sketch, _ k: Int, count: Int, x: Double, mid: Double) {
+        let name = shelves[k].name
+        s.words("me-shelf\(k)", name, .heading, x: x, top: mid - Sketch.row / 2, width: 3.6 * u)
+        let w = PaperText.width(name, PaperText.font(Sketch.Words.heading.size, Sketch.Words.heading.weight))
+        s.text("me-shelf\(k)n:\(count)", "\(count)", at: CGPoint(x: x + w + 12, y: mid), size: Sketch.small, weight: .regular, .ink3,
+               anchor: UnitPoint(x: 0, y: 0.5), slot: "me-shelf\(k)n")
+    }
+
+    /// An empty shelf: dashed, with what comes there.
+    private static func emptyCard(_ s: inout Sketch, _ k: Int, in r: CGRect) {
+        s.frame("me-empty\(k)", r, .locked, pen: .ink)
+        s.label("me-empty\(k)w", shelves[k].empty, Sketch.Words.status, at: CGPoint(x: r.minX + c, y: r.midY), anchor: UnitPoint(x: 0, y: 0.5))
+    }
+
+    /// The last place on a shelf too long for the screen: in ink (it holds lessons of every chapter), "and 6 more" where
+    /// a card's name goes and what a tap does under it. It opens the shelf.
+    private static func moreCard(_ s: inout Sketch, _ k: Int, more: Int, in r: CGRect) {
+        let id = "me-more\(k)"
+        s.frame(id, r, .open, pen: .ink)
+        s.label("\(id)name", "and \(more) more", .label, at: CGPoint(x: r.minX + c, y: r.minY + 1.5 * c), anchor: UnitPoint(x: 0, y: 0.5), slot: "\(id)name")
+        s.label("\(id)line", "See them all", .status, at: CGPoint(x: r.minX + c, y: r.minY + 3.5 * c), anchor: UnitPoint(x: 0, y: 0.5))
+    }
 
     /// A lesson on a shelf: a card three blocks by one in its chapter's colour, its name on its top row and where it
     /// stands on the row under it: to go over, why; otherwise its four checks as a bar of four squares, as many shaded as
     /// are passed (a bar like the fractions', so it reads as "2 of 4"), and when the next one is.
-    private static func lessonCard(_ s: inout Sketch, _ p: Piece, _ check: CheckRecord, shelf: Int, in r: CGRect, now: Double) {
+    /// `last`: the last card stacked in its column draws its bottom edge; one with a card under it leaves the line they
+    /// share to that card's top, so two chapters' colours never fight over one line.
+    private static func lessonCard(_ s: inout Sketch, _ p: Piece, _ check: CheckRecord, shelf: Int, in r: CGRect, now: Double, last: Bool) {
         let pen = Pen.chapter(p.chapter), id = "me-card-\(p.id)"
         // to go over is something to do: lit, as up next is on the map; the others are learned: lightly filled
-        s.frame(id, r, shelf == 0 ? .now : .done, pen: pen)
+        s.frame(id, r, shelf == 0 ? .now : .done, pen: pen, bottom: last)
         let top = r.minY + 1.5 * c, low = r.minY + 3.5 * c
         s.label("\(id)name", p.name, .label, at: CGPoint(x: r.minX + c, y: top), anchor: UnitPoint(x: 0, y: 0.5))
         if shelf == 0 {
@@ -127,27 +200,28 @@ enum MePage {
 
     /// The daily review's card: what it is in its frame (8 problems, from the child's lessons; once done today, how it
     /// went), its name under it and how it stands. In ink: it mixes every chapter. Waiting (fewer than two lessons
-    /// checked yet), dashed.
+    /// checked yet, and none started today), dashed. Whatever it says, a tap does: one started today opens to be
+    /// finished, even after a grown-up's reset leaves fewer than two lessons checked.
     private static func reviewCard(_ s: inout Sketch, _ out: inout Sheet, _ r: CGRect, now: Double) {
         let p = Progress.shared, id = "me-review"
-        let ready = Review.ready(Map.gradeLessons, checks: p.checks)
         let done = p.todaysReview, partway = PaperModel.reviewPartway(now: now)
-        let state: Sketch.FrameState = !ready && done == nil ? .locked : done != nil ? .done : partway != nil ? .now : .open
+        let opens = Review.ready(Map.gradeLessons, checks: p.checks) || done != nil || partway != nil
+        let state: Sketch.FrameState = done != nil ? .done : partway != nil ? .now : opens ? .open : .locked
         s.frame(id, r, state, pen: .ink)
         if done != nil { s.tab(id, frame: r, "Done", pen: .ink) }
         let big = done.map { "\($0.right) of \($0.of) right" } ?? "\(Review.problems) problems"
         let small = done != nil ? "Done today" : "from your lessons"
-        s.text("\(id)big:\(big)", big, at: CGPoint(x: r.midX, y: r.minY + 4 * c), size: Sketch.wordSize, weight: .medium, ready || done != nil ? .ink : .ink3, digits: true)
+        s.text("\(id)big:\(big)", big, at: CGPoint(x: r.midX, y: r.minY + 4 * c), size: Sketch.wordSize, weight: .medium, opens ? .ink : .ink3, digits: true)
         s.text("\(id)small:\(small)", small, at: CGPoint(x: r.midX, y: r.minY + 6 * c), size: Sketch.small, weight: .regular, .ink2, digits: false)
         s.label("\(id)name", "Daily review", .label, at: CGPoint(x: r.minX, y: r.maxY + 30), anchor: UnitPoint(x: 0, y: 0.5))
         let line: (String, Sketch.Colour) = {
             if done != nil { return ("A new one tomorrow", .ink3) }
             if let n = partway { return ("\(n) of \(Review.problems) done", .ink) }
-            if !ready { return ("Take two lesson tests first", .ink3) }
+            if !opens { return ("Take two lesson tests first", .ink3) }
             return ("One try each, no help", .ink3)
         }()
         s.label("\(id)line", line.0, Sketch.Words.status.colour(line.1), at: CGPoint(x: r.minX, y: r.maxY + 50), anchor: UnitPoint(x: 0, y: 0.5), slot: "\(id)line")
-        if ready || done != nil { out.taps.append((r, .review)) }
+        if opens { out.taps.append((r, .review)) }
     }
 
     /// A lesson's own picture from the map, drawn in its card as on the map: its lines in its chapter's colour, what
@@ -174,7 +248,8 @@ enum MePage {
         func name(_ id: String) -> String { Map.piece(id)?.name ?? id }
         switch r {
         case .due: return "Time to check it again"
-        case .low: return "Its last check came back low"
+        // never learned: what came back low was its lesson test (there's no check before a lesson is learned)
+        case .low: return Mastery.learnedEver(Progress.shared.checks, pick.id) ? "Its last check came back low" : "Its test came back low"
         case .helps(let id): return "It helps with \(name(id))"
         case .buildsOn(let id): return "It builds on \(name(id))"
         case .first: return "The first lesson"
@@ -198,8 +273,11 @@ struct Pen: Equatable {
 
 extension Sketch {
     /// A thumbnail's frame (Components' `frame`) in a pen of its own, not the drawing's chapter.
-    mutating func frame(_ id: String, _ r: CGRect, _ state: FrameState, pen: Pen) {
-        let corners = [CGPoint(x: r.minX, y: r.minY), CGPoint(x: r.maxX, y: r.minY), CGPoint(x: r.maxX, y: r.maxY), CGPoint(x: r.minX, y: r.maxY), CGPoint(x: r.minX, y: r.minY)]
+    /// `bottom` false: a card with another stacked under it (Me's shelves) leaves out its bottom edge, the line the two
+    /// share, which the card under it draws as its top; one line, one colour.
+    mutating func frame(_ id: String, _ r: CGRect, _ state: FrameState, pen: Pen, bottom: Bool = true) {
+        let corners = bottom ? [CGPoint(x: r.minX, y: r.minY), CGPoint(x: r.maxX, y: r.minY), CGPoint(x: r.maxX, y: r.maxY), CGPoint(x: r.minX, y: r.maxY), CGPoint(x: r.minX, y: r.minY)]
+            : [CGPoint(x: r.minX, y: r.maxY), CGPoint(x: r.minX, y: r.minY), CGPoint(x: r.maxX, y: r.minY), CGPoint(x: r.maxX, y: r.maxY)]
         switch state {
         case .locked: line(id + "o-locked", corners, pen.tint(0.35), width: Sketch.stroke, dashed: true)
         case .now: line(id + "o-now", corners, pen.full, width: Sketch.stroke)

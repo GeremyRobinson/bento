@@ -43,6 +43,37 @@ final class TodayTests: XCTestCase {
         XCTAssertEqual(reason(stepped, now: now)?.1, .helps("sub"))
     }
 
+    /// Me's tab on today's pick says Go over only for what Me's Go over shelf holds (Mastery.goOver), never for a lesson
+    /// picked to help with one that came back low, or a test to take again on a lesson never learned: those are up next.
+    func testTheTabSaysGoOverOnlyForWhatIsOnTheGoOverShelf() {
+        let now = 30 * day
+        func tab(_ checks: [String: CheckRecord]) -> (id: String, reason: Today.Reason, goOver: Bool, onShelf: Bool)? {
+            guard let (id, why) = reason(checks, now: now) else { return nil }
+            return (id, why, Mastery.goOver(checks, id, now: now), Mastery.shelves(lessons, checks: checks, now: now).goOver.contains(id))
+        }
+        // a 1 on Subtracting fractions, Adding fractions never opened: Adding fractions helps, and it's up next
+        let helps = tab(["sub": CheckRecord(last: 1, best: 1, date: now - day, due: now + day, passes: 0)])
+        XCTAssertEqual(helps?.id, "add"); XCTAssertEqual(helps?.reason, .helps("sub"))
+        XCTAssertEqual(helps?.goOver, false); XCTAssertEqual(helps?.onShelf, false)
+        // a lesson test that came back low on a lesson never learned: picked to take again, up next, on no shelf
+        let low = tab(["add": CheckRecord(last: 2, best: 2, date: now - day, due: now - 1, passes: 0)])
+        XCTAssertEqual(low?.id, "add"); XCTAssertEqual(low?.reason, .low)
+        XCTAssertEqual(low?.goOver, false); XCTAssertEqual(low?.onShelf, false)
+        // learned, its recheck came back low: Go over, as its shelf says
+        let lowLearned = tab(["add": CheckRecord(last: 2, best: 4, date: now - day, due: now + day, passes: 0)])
+        XCTAssertEqual(lowLearned?.reason, .low); XCTAssertEqual(lowLearned?.goOver, true); XCTAssertEqual(lowLearned?.onShelf, true)
+        // learned and due back for its check: Go over
+        let due = tab(["add": CheckRecord(last: 4, best: 4, date: now - 4 * day, due: now - day, passes: 1)])
+        XCTAssertEqual(due?.reason, .due); XCTAssertEqual(due?.goOver, true); XCTAssertEqual(due?.onShelf, true)
+        // a 1 on Adding and subtracting, and Subtracting fractions under it learned but its recheck came back low: it
+        // helps, and it's on the Go over shelf, so its tab says Go over
+        let helpsLearned = tab(["mix": CheckRecord(last: 1, best: 1, date: now - 3 * day, due: now + day, passes: 0),
+                                "add": CheckRecord(last: 4, best: 4, date: now - 10 * day, due: now + 5 * day, passes: 1),
+                                "sub": CheckRecord(last: 2, best: 4, date: now - day, due: now + day, passes: 0)])
+        XCTAssertEqual(helpsLearned?.id, "sub"); XCTAssertEqual(helpsLearned?.reason, .helps("mix"))
+        XCTAssertEqual(helpsLearned?.goOver, true); XCTAssertEqual(helpsLearned?.onShelf, true)
+    }
+
     func testEverythingLearnedIsTheOldest() {
         let checks = Dictionary(uniqueKeysWithValues: lessons.enumerated().map { i, id in
             (id, CheckRecord(last: 4, best: 4, date: Double(i + 1), due: 1e9, passes: 1))

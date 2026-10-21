@@ -176,6 +176,8 @@ final class PaperModel {
             flight = nil
             resting = PaperCamera(x: screen.width / 2 - c.x * was.zoom, y: screen.height / 2 - c.y * was.zoom, zoom: was.zoom)
             lesson?.screen = screen
+            // a place is framed to read on the screen it's on (Me shows as many cards as fit it): framed again, at once
+            if let place, bars == nil, lesson == nil { resting = placeCamera(place) }
         }
     }
     private(set) var resting = PaperCamera()
@@ -192,6 +194,20 @@ final class PaperModel {
     /// The place a lesson's page (or the daily review) was opened from: closing it comes back there, and the bar's back
     /// button says so.
     private(set) var cameFrom: Place?
+    /// A long shelf on Me opened to all its cards (from its "and 6 more"), nil for the whole of Me. It stays open while a
+    /// lesson opened from it is open, so closing the lesson comes back to it; Back to Me, the bar's Me, or going
+    /// anywhere else puts it back.
+    private(set) var meShelf: Int?
+    /// How many cards a shelf on Me shows on this screen, so all of Me is in view (MePage.rows).
+    var meRows: Int { MePage.rows(screenHeight: screen.height, pad: screen.width > 760 ? Self.margin : 8) }
+    /// Me as it stands, on this screen.
+    func meSheet(now: Double) -> MePage.Sheet { MePage.sheet(now: now, rows: meRows, open: meShelf) }
+    /// A shelf on Me opened (nil: the whole of Me again): Me draws itself as it now is, and the camera frames it.
+    func openShelf(_ k: Int?) {
+        guard place == .me, meShelf != k else { return }
+        meShelf = k
+        reframePlace()
+    }
     /// The place's words are still drawing in or undrawing: the clock keeps running.
     private(set) var placeDrawing = false
     func setPlaceDrawing(_ b: Bool) { if placeDrawing != b { placeDrawing = b } }
@@ -582,6 +598,8 @@ final class PaperModel {
         guard !leaving, lesson == nil else { return }
         startHere = nil
         if bars == nil, place == target {
+            // the bar's Me on Me, with a shelf open: back to the whole of Me
+            if target == .me { meShelf = nil }
             if let target { fly(to: placeCamera(target), duration: CameraTiming.fly) } else { frameAll() }
             then?(); return
         }
@@ -618,6 +636,8 @@ final class PaperModel {
     /// chapter as when the app opens.
     private func arrive(at target: Place?) {
         place = target; placeLeftAt = nil; mapLeftAt = nil; selected = nil
+        // an open shelf is kept only for coming back to Me from a lesson opened on it
+        if target != .me { meShelf = nil }
         guard let target else { redraw(from: nil); frameGroup(); return }
         placeAt = instant ? PaperClock.now - 100 : PaperClock.now + 0.05
         if target == .grownUp { grownUp.shut() }
@@ -637,19 +657,23 @@ final class PaperModel {
         switch place {
         case .me:
             let q = CGPoint(x: p.x, y: p.y)
-            switch MePage.sheet(now: PaperClock.now).taps.first(where: { $0.rect.contains(q) })?.action {
+            switch meSheet(now: PaperClock.now).taps.first(where: { $0.rect.contains(q) })?.action {
             case .lesson(let id)?: if let piece = Map.piece(id) { open(piece, from: .me) }
             case .review?: open(Map.review, from: .me)
+            case .shelf(let k)?: openShelf(k)
+            case .back?: openShelf(nil)
             case nil: break
             }
         case .grownUp: grownUp.tap(p, model: self)
         }
     }
 
-    /// A place framed to read (G 20 Oct): all of it at up to 100%, centred clear of the bar; one too tall for that at 75%
-    /// (its words still big enough to read) shows from its top down at 75%, the rest a pan away.
+    /// A place framed to read (G 20 Oct): all of it at up to 100%, centred clear of the bar. Me always fits (its shelves
+    /// show as many cards as fit at 75%, the rest a tap away: MePage.rows); the grown-ups' page, too tall for that at 75%
+    /// (its words still big enough to read), shows from its top down at 75%, the rest a pan away.
     func placeCamera(_ place: Place) -> PaperCamera {
-        let r = place == .me ? MePage.sheet(now: PaperClock.now).frame : grownUp.frame
+        if place == .me { return framingBelowBar(meSheet(now: PaperClock.now).frame, maxZoom: CameraTiming.selectMax) }
+        let r = grownUp.frame
         let cam = framingBelowBar(r, maxZoom: CameraTiming.selectMax)
         guard cam.zoom < 0.75 else { return cam }
         let z = 0.75, pad = screen.width > 760 ? Self.margin : 8

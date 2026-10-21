@@ -21,7 +21,7 @@ extension Rig {
             let p = Progress.shared
             let key: String
             switch place {
-            case .me: key = "me \(p.checks) \(p.reviews) \(PageStore.version) \(Review.day(t)) \(isDark)"
+            case .me: key = "me \(p.checks) \(p.reviews) \(PageStore.version) \(Review.day(t)) \(isDark) \(model.meRows) \(model.meShelf ?? -1)"
             case .grownUp:
                 let g = model.grownUp
                 // the settings too: the bar's ⋯ can change the paper's colours while the page is up
@@ -29,7 +29,7 @@ extension Rig {
             }
             if key != d.key {
                 d.key = key
-                let sketch = place == .me ? MePage.sheet(now: t).sketch : model.grownUp.sheet(now: t).sketch
+                let sketch = place == .me ? model.meSheet(now: t).sketch : model.grownUp.sheet(now: t).sketch
                 d.build(sketch, rig: self, chapter: Chapter.whole.hex, dark: isDark, origin: .zero, from: d.isEmpty ? model.placeAt : t, now: t)
             }
             // the hold's ring, filled as far as it's held
