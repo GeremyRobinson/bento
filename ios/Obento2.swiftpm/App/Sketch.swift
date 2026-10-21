@@ -416,8 +416,10 @@ final class SketchDrawer {
             }
             // a part with its own start (a map piece's words) keeps it, unless that's passed: then it draws in now
             let at = item.at.map { max($0, now) } ?? start + Double(order) * gap * item.pace
-            // pace 0, or a part that just changed shape in place: shown at once (G 19 Oct)
-            let atOnce = item.pace == 0 || snapped.contains(item.id)
+            // pace 0 (the part's own, or its drawer's: a paper lesson's live parts, which follow the finger), or a part that
+            // just changed shape in place: shown at once (G 19 Oct). A fill's fade is its own length, so a live dot or
+            // handle would otherwise fade in behind the finger at every square it snaps to
+            let atOnce = pace == 0 || snapped.contains(item.id)
             let node = Node(id: item.id, sig: sigs[i], parts: parts, line: line, start: atOnce ? now : at, length: atOnce ? 0 : length)
             node.chars = chars; node.slot = item.slot; node.size = textSize; node.item = item
             nodes[item.id] = node
