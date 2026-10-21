@@ -45,6 +45,7 @@ struct PaperScreen: View {
             .onAppear {
                 model.screen = Size(geo.size.width, geo.size.height)
                 model.setReduceMotion(UIAccessibility.isReduceMotionEnabled)
+                Shots.seedForTests()
                 if !Shots.active { model.frameGroup(duration: 0); model.beginStartHere() }
                 Shots.run(model)
             }

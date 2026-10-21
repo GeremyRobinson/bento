@@ -239,6 +239,8 @@ struct BarButton: View {
         .buttonStyle(.plain)
         .disabled(!enabled).opacity(enabled && !dim ? 1 : 0.35)
         .accessibilityLabel(label ?? "More")
+        // lit is where you are (Lessons or Me): VoiceOver says so, and the real-touch tests can see it
+        .accessibilityAddTraits(lit ? .isSelected : [])
     }
 }
 
