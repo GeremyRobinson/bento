@@ -106,9 +106,9 @@ enum ProblemLayout {
               let r = blocks(m).first(where: { $0.kind == .field(id) })?.rect else { return nil }
         let L = m.layout, count = Double((l.typed[id] ?? "").count), b = L.box(for: id, first: a.boxes.first)
         let cell = b?.cell ?? Paper.cell * WorkProblem.lineCell * L.scale
-        // a centred box: just after its number, which is written centred as one word
+        // a centred box: just after its number, which is written centred as one word in the box as it is now
         func after(_ b: WorkBox) -> Double {
-            b.right - Double(b.cells) * b.cell / 2 + PaperText.width(l.typed[id] ?? "", PaperText.font(Sketch.maths * L.scale, .medium, digits: true)) / 2 + 0.1 * b.cell
+            b.rect(typed: Int(count)).midX + PaperText.width(l.typed[id] ?? "", PaperText.font(Sketch.maths * L.scale, .medium, digits: true)) / 2 + 0.1 * b.cell
         }
         let x = L.inline ? m.origin.x + (b.map { $0.pointCursor(l.typed[id] ?? "") ?? ($0.centred ? after($0) : $0.right + 0.22 * cell) } ?? 0)
             : r.minX + cell + count * cell + 0.15 * cell
@@ -441,7 +441,8 @@ extension Rig {
                         else { s.text("\(id)typed\(j)\(c.ch)\(tag)", String(c.ch), at: at, size: Sketch.maths, weight: .medium, colour) }
                     }
                 } else if let wb, wb.centred {
-                    if !typed.isEmpty { s.text("\(id)typed\(typed)\(tag)", typed, at: CGPoint(x: o.x + wb.right - Double(wb.cells) * cell / 2, y: r.midY), size: Sketch.maths, weight: .medium, colour) }
+                    // in the middle of the box as it is now (one that keeps its left edge has grown to the right)
+                    if !typed.isEmpty { s.text("\(id)typed\(typed)\(tag)", typed, at: CGPoint(x: r.midX, y: r.midY), size: Sketch.maths, weight: .medium, colour) }
                 } else {
                     // a digit to a cell, from the right, so places line up with the record's
                     let chars = Array(typed), left = (wb?.right ?? r.maxX - o.x) + o.x - Double(chars.count) * cell

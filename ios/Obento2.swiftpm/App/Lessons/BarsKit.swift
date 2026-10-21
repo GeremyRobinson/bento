@@ -1,9 +1,9 @@
 import SwiftUI
 
 /// The fractions family's kit (design/grade5.md, "Fractions family"), built once and used by every fractions lesson on
-/// the paper (Adding fractions and its family, Mixed numbers to fractions): bars a whole long, the ruler that cuts them,
-/// and pieces slid from one bar into another. A lesson places its own bars and says what they hold; the kit draws them
-/// and plays the hands, everything in the picture's squares (GridPen).
+/// the paper (Adding fractions and its family, Mixed numbers to fractions, Dividing by a unit fraction): bars a whole
+/// long, the ruler that cuts them, and pieces slid from one bar into another. A lesson places its own bars and says what
+/// they hold; the kit draws them and plays the hands, everything in the picture's squares (GridPen).
 @MainActor
 enum Bars {
     /// A bar is 4 squares tall, and bars sit 2 squares apart.
@@ -19,12 +19,13 @@ enum Bars {
     /// Shaded pieces, in the chapter's colour.
     static let shade = Sketch.Colour.tint(0.4)
 
-    /// A bar a whole long (`W` squares): its outline and its cuts in the chapter's colour.
-    static func bar(_ pen: inout GridPen, _ id: String, row: Double, parts: Int, W: Int) {
+    /// A bar a whole long (`W` squares): its outline and its cuts in the chapter's colour. `h`: its height, when a
+    /// lesson has more bars than 4-square ones fit (Dividing by a unit fraction's many wholes are 2 tall).
+    static func bar(_ pen: inout GridPen, _ id: String, row: Double, parts: Int, W: Int, h: Double = height) {
         let per = Double(W) / Double(max(1, parts))
-        pen.sketch.box("\(id)o", pen.R(0, row, Double(W), height), .chapter, width: Sketch.stroke)
+        pen.sketch.box("\(id)o", pen.R(0, row, Double(W), h), .chapter, width: Sketch.stroke)
         if parts > 1 {
-            pen.sketch.segments("\(id)c\(parts)", (1..<parts).map { i in (pen.P(Double(i) * per, row), pen.P(Double(i) * per, row + height)) }, .chapter, width: Sketch.stroke)
+            pen.sketch.segments("\(id)c\(parts)", (1..<parts).map { i in (pen.P(Double(i) * per, row), pen.P(Double(i) * per, row + h)) }, .chapter, width: Sketch.stroke)
         }
     }
 
@@ -46,8 +47,8 @@ enum Bars {
 
     /// Pieces counted: the numbers in `counted` (each one less than it's written, 0 for "1"), the first in piece
     /// `from` of a bar `per` squares a piece, each centred in its piece.
-    static func numbers(_ pen: inout GridPen, _ id: String, _ counted: Range<Int>, row: Double, from: Int = 0, per: Double) {
-        for i in counted { pen.word("\(id)\(i)", "\(i + 1)", at: (Double(from + i - counted.lowerBound) + 0.5) * per, row + height / 2, count) }
+    static func numbers(_ pen: inout GridPen, _ id: String, _ counted: Range<Int>, row: Double, from: Int = 0, per: Double, h: Double = height) {
+        for i in counted { pen.word("\(id)\(i)", "\(i + 1)", at: (Double(from + i - counted.lowerBound) + 0.5) * per, row + h / 2, count) }
     }
 
     /// A bar's name: a fraction in a column 4 squares wide, its top centred down row r + 1, its bar on r + 2, its bottom
@@ -58,9 +59,10 @@ enum Bars {
         if let bottom { pen.word(id + "b", "\(bottom)", at: col + 2, r + 3, maths.colour(colour)) }
     }
 
-    /// A whole number as a bar's name (a whole bar is named 1): in the same column, level with a fraction's bar.
-    static func whole(_ pen: inout GridPen, _ id: String, _ n: Int, col: Double, row r: Double, _ colour: Sketch.Colour = .ink) {
-        pen.word(id + "w", "\(n)", at: col + 2, r + 2, maths.colour(colour))
+    /// A whole number as a bar's name (a whole bar is named 1): in the same column, level with a fraction's bar (the
+    /// bar's middle, `h` its height).
+    static func whole(_ pen: inout GridPen, _ id: String, _ n: Int, col: Double, row r: Double, h: Double = height, _ colour: Sketch.Colour = .ink) {
+        pen.word(id + "w", "\(n)", at: col + 2, r + h / 2, maths.colour(colour))
     }
 
     /// A brace down the right of a column of names, from row `top` to row `bottom` (they're one number): its ends on
