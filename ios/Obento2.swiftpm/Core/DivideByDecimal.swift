@@ -3,19 +3,13 @@ import Foundation
 /// Dividing by a decimal (the web app's g5-divdec): multiply both numbers by 10, then divide whole numbers.
 /// Numbers: d (2 to 9) and qt (2 to 12); the problem is (d × qt)/10 ÷ d/10 (4.8 ÷ 0.6), so the answer is the whole number qt.
 ///
-/// Picture master "double-line" (the web's double number line, in its early-g4 diagram folder; not the decimal shift):
-/// two lines tick for tick, the top counting by d/10 up to (d × qt)/10, the bottom by d up to d × qt, with "× 10"
-/// between them. Keys, by step:
-/// - "lines": 1, both lines with qt + 1 ticks, the top ones labelled 0, d/10, 2d/10 … (always on).
-/// - "lit": what is lit for the child to look at: 0 = the divisor's tick on the top line (0.6) and its whole-number
-///   twin (the divisor step), 1 = the two ends, 4.8 and 48 (the other-number step). Absent: nothing lit.
-/// - "one": 1, one step matched: 0 to the first tick drawn bold on both lines, the bottom tick labelled d, and the line
-///   "0.6 × 10 = 6" under the picture (once the child has made the divisor whole).
-/// - "all": 1, every tick matched: the lines bold to the end, wires joining each tick pair, every bottom label, both
-///   ends marked with a dot and labelled in the picture's colour, and the line "4.8 × 10 = 48" (once the other number
-///   is done). It replaces "one"'s bold stretch and line.
-/// - "hops": 1, hops tick to tick along both lines, counted 1 to qt, and the line "48 ÷ 6 = 8, and 4.8 ÷ 0.6 = 8"
-///   (the last step).
+/// On the paper (design/grade5.md): a number line where one square is a tenth, in every problem (a block of five is
+/// 0.5, a whole is ten squares), from 0 on past the dividend to the next whole, the dividend marked and named on it.
+/// The child hops the divisor along it from 0 (a tap lays one more hop, a drag lays them as it goes, each snapping to
+/// the divisor's d squares and numbered), the readout counting the hops and where they reach. Then the same squares
+/// are read in tenths under the line (0, 6, 12, … 48), so 4.8 ÷ 0.6 is 48 ÷ 6, and the record is written:
+/// `4.8 ÷ 0.6 = 48 ÷ 6 = [ ]`. Picture key "at", the stage: 0 the question, 1 hop, 2 write, 3 done. Hints: "ring"
+/// (the end ringed, after a miss on the hops).
 public enum DivideByDecimal {
     public static func numbers(d: Int, qt: Int) -> Numbers { ["d": Double(d), "qt": Double(qt)] }
 
@@ -27,7 +21,20 @@ public enum DivideByDecimal {
         public var x: Double { r6(Double(d * qt) / 10) }
         public var y: Double { r6(Double(d) / 10) }
         public var n: Int { d * qt }
+        /// Where `k` hops of y reach.
+        public func reach(_ k: Int) -> Double { r6(Double(d * k) / 10) }
         public init(_ v: Numbers) { d = Int((v["d"] ?? 2).rounded()); qt = Int((v["qt"] ?? 2).rounded()) }
+    }
+
+    static func hops(_ k: Int) -> String { k == 1 ? "1 hop" : "\(k) hops" }
+
+    /// The hops laid, `h` of them: right when they reach the end, else where they reach, measured.
+    public static func hopVerdict(_ h: Double?, _ s: Parts) -> Verdict {
+        guard let h, h > 0 else { return .soft("Tap the line to hop \(fmt(s.y)) from 0.") }
+        let k = Int(h.rounded()), reach = "\(hops(k)) of \(fmt(s.y)) \(k == 1 ? "reaches" : "reach") \(fmt(s.reach(k)))."
+        if k == s.qt { return .right }
+        if k > s.qt { return .wrong("\(reach) That’s past \(fmt(s.x)).") }
+        return .wrong("\(reach) Hop on to \(fmt(s.x)).")
     }
 
     public static let spec = LessonSpec(id: "g5-divdec", title: "Dividing by a decimal", master: "double-line", generate: { rng, _ in
@@ -42,34 +49,32 @@ public enum DivideByDecimal {
         let s = Parts(v), d = s.d, qt = s.qt, x = s.x, y = s.y, n = s.n
         let X = fmt(x), Y = fmt(y)
 
-        let ask = LessonStep(StepWords(say: "What is \(X) ÷ \(Y)?", hint: "Look at \(Y). Can it be a whole number?", action: "Let’s find out"),
-                             picture: ["lines": 1])
+        // the problem is written once, as the line's end and the hop's size (G 20 Oct): the first words say what a square is
+        let ask = LessonStep(StepWords(say: "Each square on the line is a tenth.", hint: "How many hops of \(Y) reach \(X)?", action: "Let’s find out"),
+                             picture: ["at": 0])
 
-        // hints are the spec's narration (specs/k12/grade5.md §3), the task's hint the web step's own
-        let divisor = LessonStep(StepWords(say: "Make the divisor whole.", hint: "Make the divisor a whole number.", action: "Check"),
-            answer: AnswerTask(prompt: [.num(y), .op("×"), .num(10), .op("="), .box("x")], expected: ["x": Double(d)],
-                               known: [(["x": Double(d * 10)], "Times 10 moves the point one place."),
-                                       (["x": r6(y / 10)], "Times 10 makes it bigger: the point moves right.")],
-                               hint: "Move its decimal point one place right."),
-            picture: ["lines": 1, "lit": 0])
+        // the hops: tapped or dragged along from 0, each d squares; how many are laid goes in the box
+        let hop = LessonStep(StepWords(say: "Hop along the line from 0 to the end. Tap, or drag.", hint: "Each hop is \(d) squares.", action: "Check"),
+            answer: AnswerTask(prompt: [.num(x), .op("÷"), .num(y), .op("="), .box("h")], expected: ["h": Double(qt)],
+                               hint: "Hop \(Y) at a time until you reach \(X).",
+                               explain: "\(hops(qt)) of \(Y) reach \(X).",
+                               check: { v in DivideByDecimal.hopVerdict(v["h"], s) }, byHand: true),
+            picture: ["at": 1], onMiss: ["ring": 1])
 
-        let other = LessonStep(StepWords(say: "Do the same to the other number.", hint: "Do the same to \(X), so the answer doesn’t change.", action: "Check"),
-            answer: AnswerTask(prompt: [.num(x), .op("×"), .num(10), .op("="), .box("x")], expected: ["x": Double(n)],
-                               known: [(["x": x], "Multiply both numbers by 10.")],
-                               hint: "Multiply it by 10 too, so the answer doesn’t change."),
-            picture: ["lines": 1, "one": 1, "lit": 1])
-
-        let divide = LessonStep(StepWords(say: "Divide.", hint: "Now it’s whole numbers: divide.", action: "Check"),
-            answer: AnswerTask(prompt: [.num(Double(n)), .op("÷"), .num(Double(d)), .op("="), .box("x")], expected: ["x": Double(qt)],
+        // the same squares in tenths: the one number school writes is the answer; the web's divide step, its slips kept
+        let divide = LessonStep(StepWords(say: "Read the hops in tenths, under the line. Write the answer.", hint: "Now it’s whole numbers: divide.", action: "Check"),
+            answer: AnswerTask(prompt: [.num(x), .op("÷"), .num(y), .op("="), .num(Double(n)), .op("÷"), .num(Double(d)), .op("="), .box("x")],
+                               expected: ["x": Double(qt)],
                                known: [(["x": r6(Double(qt) / 10)], "Both numbers got 10 times bigger, so the answer is the same. Don’t move the point back."),
                                        (["x": Double(n * d)], "How many \(d)s fit in \(n)? That’s dividing.")],
                                hint: "How many \(d)s make \(n)?"),
-            picture: ["lines": 1, "all": 1])
+            picture: ["at": 2])
 
-        let done = LessonStep(StepWords(say: "\(X) ÷ \(Y) = \(qt).",
+        // the answer is in the record; the last words say why
+        let done = LessonStep(StepWords(say: "The same hops in tenths: \(n) ÷ \(d).",
                                         hint: "Making both numbers ten times bigger doesn’t change how many times one fits in the other.",
                                         action: "Next problem"),
-                              picture: ["lines": 1, "all": 1, "hops": 1])
-        return [ask, divisor, other, divide, done]
+                              picture: ["at": 3])
+        return [ask, hop, divide, done]
     }
 }
