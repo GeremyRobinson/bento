@@ -73,6 +73,7 @@ enum PaperLessons {
         case "g5-pow10": return PowersOfTenLesson()
         case "g5-adddec": return AddDecimalsLesson()
         case "g5-unitdiv": return UnitDivisionLesson()
+        case "g5-fracof": return FractionOfLesson()
         default: return nil
         }
     }

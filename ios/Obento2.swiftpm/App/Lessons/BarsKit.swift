@@ -98,11 +98,16 @@ struct Ruler {
     var start: Int
     /// The step's box Cut fills.
     var box = "x"
+    /// The lengths it snaps to, when a lesson's pieces aren't every length that divides the whole (Fraction of a number's
+    /// groups are whole numbers of things, 2 squares a thing when there are few).
+    var snaps: [Int]? = nil
+    /// Its readout for a length, when it says more than the piece's name ("fourths, 5 in each").
+    var readout: ((Int) -> String)? = nil
 
     /// The lengths it snaps to: every whole number of squares that divides the whole, 2 at least (so a piece holds its
     /// number), up to half the whole.
     nonisolated static func lengths(_ W: Int) -> [Int] { (2...max(2, W / 2)).filter { W % $0 == 0 } }
-    var lengths: [Int] { Self.lengths(W) }
+    var lengths: [Int] { snaps ?? Self.lengths(W) }
 
     /// Its length now: where the hand left it, or where it starts.
     func length(_ s: PaperState) -> Int { s.h("ruler").map { Int($0.rounded()) } ?? start }
@@ -115,7 +120,7 @@ struct Ruler {
         live.dot("handle", at: w, R, radius: s.grabbed ? 0.75 : 0.6, .chapter, over: true)
         // the piece's name over the ruler, centred on it, but never past the bars' left end (a short ruler's long name,
         // "twenty-fourths", starts where the bars do)
-        let name = UnlikeFractions.pieceName(W / Int(w))
+        let name = readout?(Int(w)) ?? UnlikeFractions.pieceName(W / Int(w))
         let half = PaperText.width(name, PaperText.font(small.size, small.weight, digits: true)) / 2 / Paper.cell
         // (its ink half a square over the handle, which a short ruler's name would otherwise touch)
         live.label("rulerw", name, small, .above, edge: R - 0.75, along: max(w / 2, half))
