@@ -23,7 +23,6 @@ enum LessonPictures {
         func v(_ k: String) -> Double { n[k] ?? 0 }
         func k(_ key: String) -> Double { p[key] ?? 0 }
         switch id {
-        case "g5-divide": return divideGrid(dv: Int(v("dv")), qt: Int(v("qt")), strip: Int(k("strip")), found: Int(k("found")), left: k("left") == 1, sum: k("sum") == 1, box: k("box") == 1)
         case "g5-order": return with(orderGrid(n, beat: Int(k("beat"))))
         case "g5-multdec": return with(multiplyDecimalsGrid(n, p))
         case "g5-divdec": return with(divideDecimalGrid(d: Int(v("d")), qt: Int(v("qt")), p))
@@ -34,109 +33,12 @@ enum LessonPictures {
         }
     }
 
-    /// Words drawn bigger in a big problem (whole steps, so they stay on the grid): Long division's.
-    static func scale(_ id: String, _ n: Numbers) -> Double {
-        switch id {
-        case "g5-divide": return areaGeometry(tall: n["dv"] ?? 12, wide: n["qt"] ?? 12).k
-        default: return 1
-        }
-    }
+    /// Words drawn bigger in a big problem (whole steps, so they stay on the grid): none of these lessons' yet (the
+    /// paper lessons size themselves, PaperLesson.scale).
+    static func scale(_ id: String, _ n: Numbers) -> Double { 1 }
 
     /// The How to's explaining beats for a lesson, after its first words: what each says, and what it turns on.
-    static func beats(_ id: String, _ n: Numbers) -> [(words: String, picture: Numbers)] {
-        func v(_ k: String) -> Double { n[k] ?? 0 }
-        switch id {
-        case "g5-divide":
-            return [("Take out tens of \(Int(v("dv"))) first. They fill the big strip.", ["strip": 1])]
-        default: return []
-        }
-    }
-
-    // MARK: whole numbers
-
-    /// Where an area model's parts sit (Long division), in squares from the problem's origin (before k): the
-    /// rectangle's corner, the school work's column, the step under the work, and the keypad beside the step. k is 1, or
-    /// 2 when the rectangle is too big to read at the camera's distance (whole steps only, so everything stays on the grid).
-    static func areaGeometry(tall a: Double, wide b: Double) -> (k: Double, rx: Double, ry: Double, h: Double, w: Double, colX: Double, stepY: Double, keyX: Double) {
-        let k: Double = a > 50 || b > 60 ? 2 : 1
-        // the rectangle's squares are the paper's; in the problem's units (k times bigger) each is 20 / k
-        let c = Paper.cell / k
-        // one left edge for the whole problem (G 19 Oct): the name, the sum and the side's number all start on it, and
-        // the rectangle three squares in, past that number
-        // on blocks (G 19 Oct): the rectangle one block in and one block down (its widths in the row over it), the
-        // school work's column, the step and the keypad each starting on a block line
-        let rx = 100.0, ry = 100.0, w = (b + 1) * c
-        let colX = ((rx + w + 60) / 100).rounded(.up) * 100
-        return (k, rx, ry, a, w, colX, 400, colX + 400)
-    }
-
-    // MARK: long division
-
-    /// Long division on the grid: Multiply's rectangle run backwards. It's dv squares tall and qt wide, but its widths
-    /// are what's found: the tens strip first ("?" until it is), then the ones strip with what's left in it. The
-    /// division as school writes it beside it, two squares to a digit: the divisor, the bracket, the number under it,
-    /// each part taken away and its quotient beside it, the answer over the bracket at the end.
-    static func divideGrid( dv: Int, qt: Int, strip: Int, found: Int, left: Bool, sum: Bool, box: Bool) -> (picture: Sketch, work: Sketch, box: (right: Double, mid: Double, cell: Double)?) {
-        let n = dv * qt, T = qt - qt % 10, O = qt % 10, rest = n - dv * T, widths = [T, O], products = [dv * T, dv * O]
-        let g = areaGeometry(tall: Double(dv), wide: Double(qt)), k = g.k, kk = Int(k)
-        var pen = GridPen(k: k)
-        var wk = GridPen(k: k)
-        func sq(_ design: Double) -> Double { design / Paper.cell * k }
-        let rx = sq(g.rx), ry = sq(g.ry), H = Double(dv)
-        let label = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink)
-        let product = Sketch.Words(size: Sketch.maths, weight: .semibold, colour: .chapter)
-        pen.label("side", String(dv), label.colour(.chapter), .left, edge: rx, along: ry + H / 2)
-        var x = rx
-        for (i, w) in widths.enumerated() where w > 0 {
-            let lit = strip == i + 1, id = "s\(i)"
-            pen.squares(id, col: x, row: ry, cols: w, rows: dv, lit: lit)
-            // its width once found; until then a question, lit when it's the one being found
-            pen.label(id + "top\(i < found)\(lit)", i < found ? String(w) : "?", label.colour(lit || i >= found ? .chapter : .ink2), .above, edge: ry, along: x + Double(w) / 2)
-            let inside = i < found ? String(products[i]) : (i == 1 && left ? String(rest) : nil)
-            if let inside {
-                if w >= 4 * kk + 1 {
-                    pen.word("p\(i)\(inside)", inside, at: x + Double(w) / 2, ry + H / 2, product.colour(i < found ? .chapter : .tint(0.7)))
-                } else {
-                    pen.label("p\(i)\(inside)", inside, product.colour(i < found ? .chapter : .tint(0.7)), .below, edge: ry + H, along: x + Double(w) / 2)
-                }
-            }
-            x += Double(w) + 1
-        }
-        // (no sum bracket: the answer is worked out in the bracket, G 19 Oct)
-        // the division as school writes it, answered in it (G 19 Oct): two squares to a digit, the problem written once
-        // in the bracket; each part taken away under it and how many groups beside it; the box where the next number
-        // goes; the answer over the bracket at the end
-        let per = 2 * k, nd = Double(String(n).count), right = (2 + nd) * per + per, qRight = right + 3 * per
-        func row(_ r: Double) -> Double { (r + 0.5) * per }
-        func boxAt(_ x: Double, _ r: Double) { wk.box = (Double(wk.P(x, 0).x), Double(wk.P(0, row(r)).y), Double(wk.P(per, 0).x)) }
-        let bracketX = right - nd * per - 0.3 * per
-        if sum && !box { wk.digits("q", String(qt), right: right, row: row(0), per: per, .chapter) }
-        wk.digits("dv", String(dv), right: bracketX - 0.4 * per, row: row(1), per: per)
-        wk.sketch.line("bracket", [wk.P(bracketX - 0.3 * per, 2 * per), wk.P(bracketX, 1.5 * per), wk.P(bracketX - 0.3 * per, per), wk.P(right, per)], .ink, width: Sketch.stroke)
-        wk.digits("n", String(n), right: right, row: row(1), per: per)
-        let sign = Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink)
-        // how many tens: the box beside the first row, then its number
-        if found >= 1 {
-            wk.word("m1", "−", at: right - (Double(String(products[0]).count) + 0.5) * per, row(2), sign)
-            wk.digits("p1", String(products[0]), right: right, row: row(2), per: per)
-            wk.rule("u1", from: right - Double(String(products[0]).count) * per, to: right, row: 3 * per)
-            wk.digits("t1", String(T), right: qRight, row: row(2), per: per, .chapter)
-        } else if box && strip == 1 { boxAt(qRight, 2) }
-        // what's left: the box under the line, then its number
-        if left || found >= 2 { wk.digits("rest", String(rest), right: right, row: row(3), per: per) }
-        else if box && found == 1 { boxAt(right, 3) }
-        // how many ones: the box beside the second row, then its rows
-        if found >= 2 {
-            wk.word("m2", "−", at: right - (Double(String(products[1]).count) + 0.5) * per, row(4), sign)
-            wk.digits("p2", String(products[1]), right: right, row: row(4), per: per)
-            wk.rule("u2", from: right - Double(String(products[1]).count) * per, to: right, row: 5 * per)
-            wk.digits("zero", "0", right: right, row: row(5), per: per)
-            wk.digits("t2", String(O), right: qRight, row: row(4), per: per, .chapter)
-        } else if box && left { boxAt(qRight, 4) }
-        // the answer: the box over the bracket
-        if sum && box { boxAt(right, 0) }
-        return (pen.sketch, wk.sketch, wk.box)
-    }
+    static func beats(_ id: String, _ n: Numbers) -> [(words: String, picture: Numbers)] { [] }
 
     // MARK: dividing by a decimal
 

@@ -74,6 +74,7 @@ enum PaperLessons {
         case "g5-adddec": return AddDecimalsLesson()
         case "g5-unitdiv": return UnitDivisionLesson()
         case "g5-fracof": return FractionOfLesson()
+        case "g5-divide": return LongDivisionLesson()
         default: return nil
         }
     }
