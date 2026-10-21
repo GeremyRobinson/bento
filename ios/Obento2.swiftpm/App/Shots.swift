@@ -257,6 +257,12 @@ enum Shots {
                 for _ in 0..<max(0, k) { w.answerForShots() }
                 // -wrong: a slip on this step (a wrong move, or a wrong number typed and checked), so what a miss says shows
                 if args.contains("-wrong") { w.answerForShots(wrong: true) }
+                // -type <digits>: those typed into the step's first box and checked (a slip the lesson names)
+                if let i = args.firstIndex(of: "-type"), i + 1 < args.count, let box = w.lesson.step.answer?.boxes.first {
+                    w.select(box)
+                    for ch in args[i + 1] { w.type(String(ch)) }
+                    w.go()
+                }
                 // -hint: the step's hint, as the bar's Hint shows it
                 if args.contains("-hint") { w.showHint() }
                 // -hand key=value,…: the hand mid-move (a ruler being dragged, a point held, pieces being slid)
