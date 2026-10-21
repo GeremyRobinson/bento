@@ -3,7 +3,7 @@ import SwiftUI
 /// Obento²'s own icons (G 17 Oct): drawn like the lesson pictures, thin square-ended lines on a 24-unit grid, one shape
 /// softly tinted. Each is a few SVG-style paths, the same ones as the toolbar mockup, read by `SVGPath`.
 enum ObentoIcon: String, CaseIterable {
-    case today, lessons, me, more, back, hint, show, restart, read, every, find, grade, dark, settings
+    case today, lessons, me, more, back, hint, show, restart, read, every, find, grade, dark, settings, lock
 
     /// How a part is painted: lines only, a soft tint inside its lines, solid, or the paper's colour inside its lines.
     enum Style { case line, tint, solid, paper }
@@ -23,6 +23,8 @@ enum ObentoIcon: String, CaseIterable {
         case .find: [("M19 12a7 7 0 1 1-14 0a7 7 0 1 1 14 0ZM12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4", .line), ("M13.5 12a1.5 1.5 0 1 1-3 0a1.5 1.5 0 1 1 3 0Z", .solid)]
         case .grade: [("M17 2h5v20h-5Z", .tint), ("M2 17h5v5H2ZM9.5 9.5h5V22h-5Z", .line)]
         case .dark: [("M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z", .tint)]
+        // the grown-ups' page: a padlock, its body tinted
+        case .lock: [("M4.5 11h15v10h-15Z", .tint), ("M8 11V7.5a4 4 0 0 1 8 0V11", .line)]
         case .settings: [("M9.89 5.11L10.17 2.58L13.83 2.58L14.11 5.11L15.38 5.64L17.37 4.04L19.96 6.63L18.36 8.62L18.89 9.89L21.42 10.17L21.42 13.83L18.89 14.11L18.36 15.38L19.96 17.37L17.37 19.96L15.38 18.36L14.11 18.89L13.83 21.42L10.17 21.42L9.89 18.89L8.62 18.36L6.63 19.96L4.04 17.37L5.64 15.38L5.11 14.11L2.58 13.83L2.58 10.17L5.11 9.89L5.64 8.62L4.04 6.63L6.63 4.04L8.62 5.64Z", .tint),
                          ("M15 12a3 3 0 1 1-6 0a3 3 0 1 1 6 0Z", .paper)]
         }

@@ -3,9 +3,10 @@ import AVFoundation
 
 /// The one floating bar at the bottom (G 17 Oct; lighter, words first, after the paper prototype G liked, 20 Oct): a
 /// pill with a few buttons, where you are and how far along in the
-/// middle, and everything else in ⋯ More. On the map: Lessons, Me (Today will live in Me, G 17 Oct). In a lesson: back to Lessons, the lesson and
-/// its progress, Hint and Show me. It's fixed to the screen, never to the paper, so it can't jiggle as the paper moves.
-/// While the paper is pinched, the middle shows the zoom for a moment instead.
+/// middle, and everything else in ⋯ More. On the map: Lessons, Me (Me is a page on the paper, with Today in it, G 20
+/// Oct). In a lesson: back to Lessons (or to Me, when it was opened there), the lesson and its progress, Hint and Show
+/// me. It's fixed to the screen, never to the paper, so it can't jiggle as the paper moves. While the paper is pinched,
+/// the middle shows the zoom for a moment instead.
 struct Toolbar: View {
     let model: PaperModel
     let time: Double
@@ -13,13 +14,13 @@ struct Toolbar: View {
     @Environment(\.colorScheme) private var scheme
     @AppStorage("theme") private var theme = ""
     @State private var open: Panel? = Toolbar.shotPanel
-    /// `-panel=more|me`: a screenshot opens that panel.
+    /// `-panel=more`: a screenshot opens that panel.
     private static var shotPanel: Panel? {
         guard let a = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("-panel=") }) else { return nil }
-        return ["more": Panel.more, "me": .me][String(a.dropFirst(7))]
+        return ["more": Panel.more][String(a.dropFirst(7))]
     }
 
-    enum Panel { case more, me }
+    enum Panel { case more }
 
     var body: some View {
         let inLesson = model.openPiece != nil
@@ -41,7 +42,7 @@ struct Toolbar: View {
                 if let b = model.bars, b.mode == .work {
                     BarButton(icon: .back, label: "Problems") { open = nil; b.backToProblems() }
                 } else {
-                    BarButton(icon: .back, label: "Lessons") { open = nil; model.close() }
+                    BarButton(icon: .back, label: model.cameFrom == .me ? "Me" : "Lessons") { open = nil; model.close() }
                 }
                 divider
                 info(title: model.openPiece?.name ?? "", detail: lessonDetail, progress: lessonProgress, wide: true)
@@ -53,8 +54,9 @@ struct Toolbar: View {
                     BarButton(icon: .show, label: "Show me", enabled: canShowMe) { open = nil; showMe() }
                 }
             } else {
-                BarButton(icon: .lessons, label: "Lessons", lit: open != .me) { open = nil; model.frameAll() }
-                BarButton(icon: .me, label: "Me", lit: open == .me) { toggle(.me) }
+                // the map (already on it, all of it), and Me: each a place on the paper, the one you're at lit
+                BarButton(icon: .lessons, label: "Lessons", lit: model.place == nil) { open = nil; model.go(to: nil) }
+                BarButton(icon: .me, label: "Me", lit: model.place == .me) { open = nil; model.go(to: .me) }
                 divider
                 info(title: Map.grade.name, detail: "\(learned) of \(Map.gradeLessons.count) learned", progress: Double(learned) / Double(Map.gradeLessons.count))
             }
@@ -98,7 +100,6 @@ struct Toolbar: View {
     @ViewBuilder private func panel(_ inLesson: Bool) -> some View {
         switch open {
         case .more?: Card(width: 300) { inLesson ? AnyView(lessonMenu) : AnyView(mapMenu) }
-        case .me?: Card(width: 320) { meCard }
         case nil: EmptyView()
         }
     }
@@ -106,8 +107,14 @@ struct Toolbar: View {
     private var mapMenu: some View {
         VStack(spacing: 0) {
             zoomRow
-            MenuRow(icon: .find, label: "Find what's next") { open = nil; model.findNext() }
+            MenuRow(icon: .find, label: "Find what's next") {
+                open = nil
+                // from a place, back to the map first
+                if model.place == nil { model.findNext() } else { model.go(to: nil) { model.findNext() } }
+            }
             MenuRow(icon: .dark, label: scheme == .dark ? "Light" : "Dark") { theme = scheme == .dark ? "light" : "dark" }
+            // the grown-ups' page, shut behind its hold
+            MenuRow(icon: .lock, label: "For grown-ups") { open = nil; model.go(to: .grownUp) }
         }
     }
 
@@ -133,22 +140,6 @@ struct Toolbar: View {
             SmallButton(text: "+") { zoomBy(1.25) }
         }
         .padding(.horizontal, 12).frame(height: 52)
-    }
-
-    /// Me: the three shelves of the child's own page, counted (the page itself comes with its preview).
-    private var meCard: some View {
-        let s = Mastery.shelves(Map.pieces.map(\.id), checks: Progress.shared.checks, now: Date().timeIntervalSinceReferenceDate)
-        return VStack(alignment: .leading, spacing: 12) {
-            Text("Me").font(Typeface.font(20, .semibold)).foregroundStyle(Ink.ink)
-            ForEach([("Go over", s.goOver.count), ("Getting stronger", s.gettingStronger.count), ("Know it", s.knowIt.count)], id: \.0) { row in
-                HStack {
-                    Text(row.0).font(Typeface.font(18)).foregroundStyle(Ink.ink)
-                    Spacer()
-                    Text("\(row.1)").font(Typeface.font(18, .semibold)).monospacedDigit().foregroundStyle(Ink.ink)
-                }
-            }
-        }
-        .padding(8)
     }
 
     // MARK: what the buttons do
@@ -248,6 +239,8 @@ struct BarButton: View {
         .buttonStyle(.plain)
         .disabled(!enabled).opacity(enabled && !dim ? 1 : 0.35)
         .accessibilityLabel(label ?? "More")
+        // lit is where you are (Lessons or Me): VoiceOver says so, and the real-touch tests can see it
+        .accessibilityAddTraits(lit ? .isSelected : [])
     }
 }
 
