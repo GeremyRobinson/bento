@@ -1,46 +1,53 @@
-# Handoff: 5th grade lessons (19 Oct 2026)
+# Handoff: 5th grade on paper (24 Oct 2026)
 
-For the next session taking over from this one. Read `CLAUDE.md` first: its G's rules (1)–(14) from 19 Oct are firm.
+For whoever picks this up, in this conversation or a new one. Read `CLAUDE.md` first (G's rules and the 20 Oct
+direction), then `design/README.md` (the design language) and `design/grade5.md` (every lesson's design).
 
 ## Where things stand
-- **Approved by G:** the lesson flow (How to → page of problems → one problem open, filling the screen), drawing in
-  and undrawing everything, the grid rules, three text sizes, one line weight (1.5), and Multiply two-digit numbers
-  answered *in its school working* (the box where the number goes, what to do beside it, Check under the work).
-- **Built the same way, not yet reviewed:** Long division (the box in the division bracket).
-- **Not working for G:** the other 15 lessons. They still show the problem, a picture, a separate answer line and a
-  separate sum. G finds them confusing: too many parts, the problem written more than once, no clear place to look.
-  A quick attempt to move them all at once onto a generic "worked down in lines" layout made them worse and was
-  undone (never pushed).
+- **All 17 5th grade lessons are built "on paper"** and merged on `claude/project-thread-15w6ys`: the grid is the
+  measuring tool, the picture is the hero, each step is a hand move that snaps to the grid, the school working is the
+  short record, typing only for the number school writes, Show me is a ghost finger that puts everything back.
+  The standard every lesson matches: Rounding decimals and the Adding fractions family (G: "the only thing that
+  worked" on the test page, `design/prototype/paper-lessons.html`, Claude's versions). Volume of a box is real 3D,
+  built on Unit cubes (`App/CubesProblem.swift`, `CubesDrawer.swift`, `TiltCamera.swift`).
+- **The app around them:** fair scoring (Show me isn't right; one rule for every test, 10 of 12 passes), hints drawn
+  on the paper with a budget per lesson, rechecks for due lessons, results on the paper, a map of exactly 17 lessons
+  (the proof lessons "ad" and "uc" are off it), saves that start fresh instead of crashing, the Me page with Today and
+  a daily review, a grown-ups' page behind a hold gate, first launch ("Start here."). Landscape only.
+- Builds in Xcode; 181 Core tests pass. G builds in **Xcode** (not Swift Playgrounds). G, 24 Oct: "you guys did an
+  incredible job".
 
-## 20 Oct: one design per lesson (read `design/README.md`)
-- G: lessons can't be fitted into one layout; each lesson is designed for its own scenarios. The plan, the order (by
-  kit) and all 191 lessons' pictures and working are in `design/`. Every lesson gets a brief there before code.
-- **Adding fractions** (`design/add.md`) is built that way: bars and the working on the same rows, answered in the
-  working, its own steps (rewrites that change nothing and simplify with nothing to do are left out). `sub` and `mix`
-  share it. G approved it on 20 Oct ("this works"). Next kit: number line (Rounding decimals).
+## How the code is laid out
+- `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
+  finger; `BarsKit.swift` the fractions' bars, ruler and sliding pieces). `App/LessonHands.swift`: hand moves.
+  `App/WorkProblem.swift`: the problem (stacked layout: instruction on rows 0–2, a miss/hint on 3–4, picture, record,
+  blocks). Core lesson files in `Core/` hold the maths and steps; every lesson has tests.
+- Tools: `tools/build.sh <derivedData>` (runs XcodeGen and builds), `tools/shoot.sh <simulator> <derivedData> <out.png>
+  <moment> -landscape [args]` (moments in `App/Shots.swift`, e.g. `page-<id>-<step> -numbers k=v`), `tools/sheet.py`
+  (contact sheets), `tools/playgrounds.sh` (Swift Playgrounds check, no longer required).
+- After pulling, run `xcodegen` in `ios/` so Xcode sees new files.
 
-## How to work with G (what went wrong)
-- One lesson at a time. Before writing code, show G a sketch of that lesson's screen (a text mock-up in chat was
-  what G liked for Multiply) and build only once G says yes.
-- Each lesson needs its own design: the school working it's answered in (the decimal columns, the fractions rewritten
-  over one bottom, the order-of-operations lines…), with the problem written once, the box where the number goes,
-  and nothing repeated between the picture and the working.
-- Check every change on the simulator at full size before saying it's done; G spots alignment and size slips fast.
+## Known rough edges (polish next)
+- Dark mode not checked on the 12 newest lessons.
+- Small pictures: Multiplying fractions' first step (and its "1/2" shows before the columns are cut), the smallest
+  Dividing by a decimal problems, tall Multiply story problems.
+- Multiplying decimals uses a 10 × 10 whole (not the 20 × 20 in `design/grade5.md`) so the biggest problems fit: G to
+  decide.
+- Daily review: a slip's correction stays under the next question.
+- The new real-touch UI tests (`UITests/PlacesTests.swift`) haven't been run; run them in Xcode.
+- Fraction of a number / Multiplying fractions: taps on other groups/rows shade the first ones after the check.
 
-## The systems (so nothing is placed by hand)
-- `App/Components.swift`: word styles (`Sketch.maths` 36, `wordSize` 28, `small` 20), `Sketch.stroke` (1.5), blocks,
-  tabs, frames.
-- `App/Grid.swift` (`GridPen`): pictures built in squares, labels half a square from what they label.
-- `App/ProblemGrid.swift`: lays a problem out (picture and work as pieces on block lines, the arrangement that fits
-  the iPad best). `showSections` draws dashed boxes round each part while testing.
-- `App/LessonPictures.swift`: each lesson's picture and work; `drawing(id, numbers, keys)` returns them, with
-  `box` set for a lesson answered in its work (`multiplyGrid`, `divideGrid` show how).
-- `App/Sketch.swift` (`SketchDrawer`): draws in, undraws, glides moved parts, rolls changing numbers.
-- `App/ProblemWords.swift`: the solving area (`workSketch`, `inlineBlocks` for answered-in-work lessons).
-- `Core/LessonPlan.swift`: 3 together, 6 on their own (misses bring targeted problems), a 12-question test passed at 10.
+## Next (G agreed: cheaper settings — two lanes, high effort, no separate review step)
+1. Sounds (gentle, made in code), VoiceOver over the paper, the idle-CPU fix (the clock runs at 60 fps while a number
+   is wanted), removing dead code (old AddFractionsModel/BarsDrawer, old Unit cubes path if unused).
+2. A dark-mode pass and one walkthrough of every lesson, fixing the rough edges above and what G finds by hand.
+3. Then the other grades: take each web lesson's maths as it is (generators, mistakes, check recipes, stories) and
+   design its steps fresh for paper (CLAUDE.md).
+- Branding (icon, name) is G's, later; the app may be renamed, so don't write its name anywhere new.
 
-## Open items G raised
-- The iPad keyboard: typing goes through a hidden text field (`NumberEntry` in `PaperScreen.swift`); G couldn't get the
-  simulator's on-screen keys to show (⌘K toggles them). Needs checking with G.
-- The "focus" idea (finished rows and other strips going quiet) and the picture acting out each step aren't built.
-- The red dashed section boxes are off (`ProblemGrid.showSections = false`).
+## Working notes (what went wrong, so it doesn't again)
+- At most 2–3 simulators at once (five booted overloaded the Mac for hours); `shoot.sh` quits the app after each shot.
+- Ultracode/max effort burned most of a week's tokens; work at high effort, one review at most, merge as pieces land.
+- Show G progress as it happens (screenshots in a Desktop folder; G can't open scratchpad paths).
+- Worktrees `/Users/geremy/Claude/bento-work/lane-a…d` and worker simulators "Obento Worker 1–4" are from the last
+  batch; all their work is merged, so they can be reused or removed (`git worktree remove`).
