@@ -22,6 +22,15 @@ enum Perf {
         return r
     }
 
+    /// Counts a moment something woke the paper (e.g. the cursor's blink while the clock is stopped).
+    static func tick(_ label: String) {
+        guard on else { return }
+        var s = stats[label] ?? (0, 0, 0)
+        s.n += 1
+        stats[label] = s
+        report()
+    }
+
     private static var lastFrame = 0.0
     /// The time between two drawn frames: a long one is a hitch you can see.
     static func frame(_ t: Double) {

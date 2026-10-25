@@ -398,7 +398,7 @@ final class CubesWords {
 
         // the cursor in the box after the last digit, blinking as a cursor does, held still a moment after each key
         let since = t - p.typedAt
-        let blink = p.wantsTyping && p.preview == nil && p.verdict == nil && left == nil && t - p.wordsAt > 0.4 && (since < 0.6 || (since - 0.6).truncatingRemainder(dividingBy: 1.06) < 0.53)
+        let blink = p.wantsTyping && p.preview == nil && p.verdict == nil && left == nil && t - p.wordsAt > 0.4 && Blink.on(since: since)
         cursor.isEnabled = blink && boxRect != nil
         if cursor.isEnabled, let boxRect {
             let x = CubesRecord.typed(typed, in: boxRect).cursor, u = Paper.unit

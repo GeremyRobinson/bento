@@ -153,7 +153,11 @@ final class WorkProblem: Identifiable, PageProblem {
         let now = PaperClock.now
         return now - openedAt < 1.8 || now - wordsAt < 0.8 || now - pictureAt < 1.6 || now - keypadAt < 0.9 || now < busyUntil + 0.1
             || now - handAt < 0.4 || ghost != nil || (leftAt.map { now - $0 < 0.6 } ?? false)
+            // a key just pressed: the clock runs while the cursor holds still after it and the number is written
+            || now - typedAt < Blink.hold + 0.1
     }
+    /// The cursor blinks in the box being typed into (ProblemLayout.cursor).
+    var cursorSince: Double? { ProblemLayout.cursor(self) != nil ? typedAt : nil }
 
     func start(after delay: Double) { openedAt = time(delay); wordsAt = openedAt; pictureAt = openedAt; leftAt = nil; answerAhead(); teachIfDue(after: delay + 1.2) }
 

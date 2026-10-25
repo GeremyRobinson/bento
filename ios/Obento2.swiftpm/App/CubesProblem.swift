@@ -142,7 +142,9 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         if let c = camera, c.moving { u = max(u, c.lands) }
         return u
     }
-    var animating: Bool { PaperClock.now < until + 0.1 || wantsTyping }
+    var animating: Bool { PaperClock.now < until + 0.1 }
+    /// The record's box wants a number and the cursor blinks in it (CubesWords): the clock wakes only for its blink.
+    var cursorSince: Double? { wantsTyping && preview == nil && verdict == nil ? typedAt : nil }
 
     /// The record's box wants a number (the iPad's number keys come up; the cursor blinks). The keys stay up while Show
     /// me plays the number into the box, so the paper doesn't jump as they go down and come back.

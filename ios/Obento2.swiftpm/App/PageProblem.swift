@@ -15,6 +15,9 @@ protocol PageProblem: AnyObject {
     var lesson: LessonRun { get }
     var solved: Bool { get }
     var animating: Bool { get }
+    /// A cursor blinks in its answer box: when the last key was pressed (Blink). Only its on and off change, so the
+    /// paper's clock wakes just for those while nothing else moves (PaperScreen), not every frame.
+    var cursorSince: Double? { get }
     var busy: Bool { get }
     var message: (text: String, ok: Bool)? { get }
     /// The How to's words in place of the step's, while it explains.
@@ -61,6 +64,7 @@ protocol PageProblem: AnyObject {
 }
 
 extension PageProblem {
+    var cursorSince: Double? { nil }
     func showHint() {}
     func grab(_ p: Point) -> Bool { false }
     func drag(to p: Point) {}

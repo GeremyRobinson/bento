@@ -487,7 +487,7 @@ final class Rig {
             cursorEntity.position.y = 0.0027
         }
         let since = t - m.typedAt
-        cursorEntity.isEnabled = since < 0.6 || (since - 0.6).truncatingRemainder(dividingBy: 1.06) < 0.53
+        cursorEntity.isEnabled = Blink.on(since: since)
     }
 
     /// The camera frames what's on the paper (G 19 Oct): the problem's picture and words as they are now, so when a
