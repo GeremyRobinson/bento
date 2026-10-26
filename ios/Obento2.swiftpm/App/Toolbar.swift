@@ -267,7 +267,7 @@ struct Toolbar: View {
             let finished = piece.isTest ? s.recorded : learned.contains(piece.id) && s.recheck.isEmpty
             return Pill.Page(id: piece.id, date: s.date.timeIntervalSinceReferenceDate, finished: finished)
         }
-        return Pill.offer(reviewLeft: left, due: due, pages: pages)
+        return Pill.offer(reviewLeft: left, due: due, pages: pages, now: now)
     }
 
     private func take(_ offer: Pill.Offer) {

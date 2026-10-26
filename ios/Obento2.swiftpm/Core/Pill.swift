@@ -39,15 +39,18 @@ public enum Pill {
         public init(id: String, date: Double, finished: Bool) { self.id = id; self.date = date; self.finished = finished }
     }
 
-    /// The one most useful thing on the map now: today's review when it's there to take; else the lessons due back for
-    /// their recheck (the web's rule: what's due comes first, Mastery.upNext); else the page last worked on that isn't
-    /// finished; else nothing but the grade (a child who hasn't started a lesson yet).
+    /// The one most useful thing on the map now. A page worked on earlier today and not finished comes first: the child
+    /// is mid-flow, so "Continue →". Otherwise what's due comes first (the web's rule, Mastery.upNext): today's review
+    /// when it's there to take, else the lessons due back for their recheck; then the page last worked on that isn't
+    /// finished (from another day); else nothing but the grade (a child who hasn't started a lesson yet).
     /// `reviewLeft`: today's review's problems still to do (nil: none to take today). `due`: lessons due back, in map
-    /// order.
-    public static func offer(reviewLeft: Int?, due: [String], pages: [Page]) -> Offer {
+    /// order. `now` and `zone`: what "today" is, where the child is.
+    public static func offer(reviewLeft: Int?, due: [String], pages: [Page], now: Double, zone: TimeZone = .current) -> Offer {
+        let last = pages.filter { !$0.finished }.max { $0.date < $1.date }
+        if let p = last, Review.day(p.date, in: zone) == Review.day(now, in: zone) { return .resume(p.id) }
         if let n = reviewLeft, n > 0 { return .review(left: n) }
         if let first = due.first { return .recheck(first, count: due.count) }
-        if let p = pages.filter({ !$0.finished }).max(by: { $0.date < $1.date }) { return .resume(p.id) }
+        if let p = last { return .resume(p.id) }
         return .grade
     }
 

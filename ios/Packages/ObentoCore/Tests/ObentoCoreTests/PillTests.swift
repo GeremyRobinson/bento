@@ -4,29 +4,48 @@ import XCTest
 /// The calm smart pill (Core/Pill.swift): what its middle offers, which tools show, its step squares, its first-use
 /// words and the grades.
 final class PillTests: XCTestCase {
+    let utc = TimeZone(identifier: "UTC")!
+    /// Ten days after the pages below were saved (another day).
+    let later = 10 * 86_400.0
+
     // MARK: the map's middle
 
     func testNothingStartedOffersTheGrade() {
-        XCTAssertEqual(Pill.offer(reviewLeft: nil, due: [], pages: []), .grade)
+        XCTAssertEqual(Pill.offer(reviewLeft: nil, due: [], pages: [], now: later, zone: utc), .grade)
         XCTAssertEqual(Pill.Offer.grade.words(grade: "5th grade"), "5th grade")
     }
 
     func testContinueIsThePageLastWorkedOnThatIsNotFinished() {
         let pages = [Pill.Page(id: "add", date: 10, finished: false), Pill.Page(id: "g5-round", date: 30, finished: true),
                      Pill.Page(id: "g5-divide", date: 20, finished: false)]
-        XCTAssertEqual(Pill.offer(reviewLeft: nil, due: [], pages: pages), .resume("g5-divide"))
+        XCTAssertEqual(Pill.offer(reviewLeft: nil, due: [], pages: pages, now: later, zone: utc), .resume("g5-divide"))
         XCTAssertEqual(Pill.Offer.resume("g5-divide").words(grade: "5th grade"), "Continue →")
         // every page finished: nothing to continue
-        XCTAssertEqual(Pill.offer(reviewLeft: nil, due: [], pages: [Pill.Page(id: "add", date: 1, finished: true)]), .grade)
+        XCTAssertEqual(Pill.offer(reviewLeft: nil, due: [], pages: [Pill.Page(id: "add", date: 1, finished: true)], now: later, zone: utc), .grade)
     }
 
     func testWhatsDueComesFirst() {
         let pages = [Pill.Page(id: "add", date: 10, finished: false)]
-        XCTAssertEqual(Pill.offer(reviewLeft: 8, due: ["g5-round"], pages: pages), .review(left: 8))
+        XCTAssertEqual(Pill.offer(reviewLeft: 8, due: ["g5-round"], pages: pages, now: later, zone: utc), .review(left: 8))
         XCTAssertEqual(Pill.Offer.review(left: 5).words(grade: ""), "Go over · 5")
         // today's review done: the rechecks due, the first opening
-        XCTAssertEqual(Pill.offer(reviewLeft: nil, due: ["g5-round", "sub"], pages: pages), .recheck("g5-round", count: 2))
+        XCTAssertEqual(Pill.offer(reviewLeft: nil, due: ["g5-round", "sub"], pages: pages, now: later, zone: utc), .recheck("g5-round", count: 2))
         XCTAssertEqual(Pill.Offer.recheck("g5-round", count: 2).words(grade: ""), "Go over · 2")
+    }
+
+    func testAPageLeftEarlierTodayComesBeforeWhatsDue() {
+        let noon = 1000 * 86_400.0 + 12 * 3600
+        let pages = [Pill.Page(id: "g5-divide", date: noon - 2 * 3600, finished: false), Pill.Page(id: "add", date: noon - 3600, finished: true)]
+        // mid-flow: worked on this morning, not finished
+        XCTAssertEqual(Pill.offer(reviewLeft: 8, due: ["g5-round"], pages: pages, now: noon, zone: utc), .resume("g5-divide"))
+        // the same page left yesterday: what's due comes first again
+        let yesterday = [Pill.Page(id: "g5-divide", date: noon - 86_400, finished: false)]
+        XCTAssertEqual(Pill.offer(reviewLeft: 8, due: ["g5-round"], pages: yesterday, now: noon, zone: utc), .review(left: 8))
+        XCTAssertEqual(Pill.offer(reviewLeft: nil, due: ["g5-round"], pages: yesterday, now: noon, zone: utc), .recheck("g5-round", count: 1))
+        XCTAssertEqual(Pill.offer(reviewLeft: nil, due: [], pages: yesterday, now: noon, zone: utc), .resume("g5-divide"))
+        // a page finished today doesn't count: what's due comes first
+        let done = [Pill.Page(id: "add", date: noon - 3600, finished: true)]
+        XCTAssertEqual(Pill.offer(reviewLeft: 8, due: [], pages: done, now: noon, zone: utc), .review(left: 8))
     }
 
     func testReviewLeft() {
