@@ -6,7 +6,7 @@ import SwiftUI
 /// needs; the bar's "Problems" draws it out and the page back in. A chapter or grade test's page is its questions.
 /// A learned lesson that's due back opens on its recheck first (G 20 Oct): 4 questions, one try each and no help, then
 /// the lesson's page. A finished test or recheck shows its result on the paper before going on.
-/// Its problems are AddFractionsModel (Add with different bottoms) or WorkProblem (every other lesson).
+/// Its problems are CubesProblem (Volume of a box) or WorkProblem (every other lesson).
 @MainActor @Observable
 final class BarsPage {
     enum Mode { case howTo, choose, work, result }
@@ -192,7 +192,6 @@ final class BarsPage {
     /// the lesson's picture.
     static func make(_ spec: LessonSpec, origin: Point, chapter: Chapter, instant: Bool, run: LessonRun, label: String, auto: Bool = false) -> any PageProblem {
         switch spec.master {
-        case "bars": return AddFractionsModel(origin: origin, chapter: chapter, instant: instant, run: run, label: label, auto: auto)
         // Volume of a box: Unit cubes' box, covered, risen and stacked (G 20 Oct: anything 3D builds on Unit cubes)
         case "cubes": return CubesProblem(origin: origin, chapter: chapter, instant: instant, run: run, label: label, auto: auto)
         default: return WorkProblem(origin: origin, chapter: chapter, instant: instant, run: run, label: label, auto: auto)
@@ -918,7 +917,6 @@ final class BarsPage {
             let m = problems[i], it = plan.items[i]
             let k = plan.items[...i].filter { $0.part == it.part }.count
             (m as? WorkProblem)?.label = it.part == .together ? "Together \(k)" : "On your own \(k)"
-            (m as? AddFractionsModel)?.label = it.part == .together ? "Together \(k)" : "On your own \(k)"
             (m as? CubesProblem)?.label = it.part == .together ? "Together \(k)" : "On your own \(k)"
             return m
         }

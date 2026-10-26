@@ -43,13 +43,12 @@ enum Shots {
             try? await Task.sleep(for: .seconds(1.5))
             if name == "demo" { await demo(m); return }
             if name.hasPrefix("teach") {
-                // the How to taught a tap at a time: teach-0 is the idea, teach-N after N taps
+                // the How to taught a tap at a time: teach-0 is the idea, teach-N after N taps (Adding fractions)
                 m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
-                let ad = Map.piece("ad")!
-                PageStore.clear("ad")
-                m.shotProblem = .init(a: 4, p: 3, b: 8, q: 1)
+                let add = Map.piece("add")!
+                PageStore.clear("add")
                 func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
-                m.select(ad); await wait(1); m.open(ad); await wait(3.5)
+                m.select(add); await wait(1); m.open(add); await wait(3.5)
                 for _ in 0..<(Int(name.dropFirst(6)) ?? 0) { m.bars?.skipHowTo(); await wait(2.2) }
                 return
             }
@@ -127,38 +126,37 @@ enum Shots {
                 return
             }
             if name.hasPrefix("resume") {
-                // the real path, not instant: open the lesson, skip the How to, work problem 2 partway, leave, come back
-                PageStore.clear("ad")
+                // the real path, not instant: open Adding fractions, skip the How to, work problem 2 partway (its first
+                // step), leave, come back
+                PageStore.clear("add")
                 m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
-                let ad = Map.piece("ad")!
+                let add = Map.piece("add")!
                 func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
-                m.select(ad); await wait(1); m.open(ad); await wait(1.5)
+                m.select(add); await wait(1); m.open(add); await wait(1.5)
                 for _ in 0..<12 { m.bars?.skipHowTo(); await wait(1.6) }
-                guard let page = m.bars else { return }
-                let b = page.problems[1] as! AddFractionsModel
-                page.open(b)
-                for i in 0..<b.problem.covered { b.tap(i) }
-                b.go(); await wait(1)
+                guard let page = m.bars, page.problems.count > 1, let w = page.problems[1] as? WorkProblem else { return }
+                page.open(w); await wait(2)
+                w.answerForShots(); await wait(1)
                 if name == "resume-map" { m.close(); await wait(2); return }
-                if name == "resume-select" { m.close(); await wait(2); m.select(ad); return }
+                if name == "resume-select" { m.close(); await wait(2); m.select(add); return }
                 m.close(); await wait(2)
-                m.select(ad); await wait(1); m.open(ad)
+                m.select(add); await wait(1); m.open(add)
                 return
             }
             if name == "open-ad" {
-                // tap the lesson and open it as a hand would, the How to playing, for -perf timings
+                // tap a lesson (Adding fractions) and open it as a hand would, the How to playing, for -perf timings
                 m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
                 try? await Task.sleep(for: .seconds(2))
-                let ad = Map.piece("ad")!
-                m.select(ad); try? await Task.sleep(for: .seconds(1.5))
-                m.open(ad)
+                let add = Map.piece("add")!
+                m.select(add); try? await Task.sleep(for: .seconds(1.5))
+                m.open(add)
                 return
             }
             if name == "leave-ad" {
                 // the lesson page, then back to the map, for watching the page erase itself
                 m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
-                m.shotMode = true; m.shotProblem = .init(a: 4, p: 1, b: 8, q: 1)
-                m.select(Map.piece("ad")!); m.open(Map.piece("ad")!); m.shotMode = false
+                m.shotMode = true
+                m.select(Map.piece("add")!); m.open(Map.piece("add")!); m.shotMode = false
                 try? await Task.sleep(for: .seconds(2.5))
                 m.close()
                 return
@@ -166,8 +164,8 @@ enum Shots {
             if name == "page-zoom" {
                 // the lesson page: out to see it all and back in to a problem, again and again, for -perf timings
                 m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
-                m.shotMode = true; m.shotProblem = .init(a: 4, p: 1, b: 8, q: 1)
-                m.select(Map.piece("ad")!); m.open(Map.piece("ad")!); m.shotMode = false
+                m.shotMode = true
+                m.select(Map.piece("add")!); m.open(Map.piece("add")!); m.shotMode = false
                 try? await Task.sleep(for: .seconds(2))
                 guard let page = m.bars else { return }
                 for _ in 0..<3 {
@@ -179,8 +177,8 @@ enum Shots {
             if name == "page-hop" {
                 // the lesson page: frame one problem after another, as taps on them would, for -perf timings
                 m.frameGroup(duration: 0); m.drawnAt = PaperClock.now - 100
-                m.shotMode = true; m.shotProblem = .init(a: 4, p: 1, b: 8, q: 1)
-                m.select(Map.piece("ad")!); m.open(Map.piece("ad")!); m.shotMode = false
+                m.shotMode = true
+                m.select(Map.piece("add")!); m.open(Map.piece("add")!); m.shotMode = false
                 try? await Task.sleep(for: .seconds(2))
                 guard let page = m.bars else { return }
                 for i in [0, 1, 2, 3, 7, 6, 5, 4, 0] {
@@ -209,10 +207,7 @@ enum Shots {
             defer { if ProcessInfo.processInfo.arguments.contains("-rotate") { rotate() } }
             m.shotMode = true
             m.drawnAt = PaperClock.now - 100
-            m.shotBox = .init(length: 4, width: 3, height: 2)
             m.frameGroup(duration: 0)
-            m.shotProblem = .init(a: 4, p: 1, b: 8, q: 1)
-            let uc = Map.piece("uc")!
             switch name {
             case "paper": break
             // the Paper proof's pieces are off the map (20 Oct): a lesson on it is chosen instead
@@ -325,63 +320,10 @@ enum Shots {
                 UserDefaults.standard.set("light", forKey: "theme")
                 try? await Task.sleep(for: .seconds(1))
                 UserDefaults.standard.set("dark", forKey: "theme")
-            case "back": start(Map.piece("ad")!); m.close()
-            case let n where n.hasPrefix("fractions"):
-                // the page: the How to has played (instant), the 16 problems are on the paper
-                start(Map.piece("ad")!)
-                guard let page = m.bars, n != "fractions" else { return }
-                let b = (n == "fractions-story" ? page.problems[2] : n == "fractions-check" ? page.problems[12] : page.problems[0]) as! AddFractionsModel
-                if n == "fractions-activate" {
-                    // a tap on the empty bottom corner of problem 2's box makes it the one being worked
-                    let r = BarsPage.box(of: page.problems[1]), s = m.camera(at: PaperClock.now).toScreen(Point(r.x + 30, r.y + r.height - 30))
-                    m.tap(at: s); return
-                }
-                if n == "fractions-row" {
-                    // a problem from each row: 1 together, 5 less help, 9 final answer only
-                    return
-                }
-                if n == "fractions-final-miss" {
-                    let f = page.problems[8] as! AddFractionsModel; page.open(f); f.tap(0); f.go(); return
-                }
-                if n == "fractions-taps" {
-                    // a finger's taps, by where they land on the screen: the pieces, then Check, then a choice on the story
-                    @MainActor func tap(_ p: CGPoint) { let s = m.camera(at: PaperClock.now).toScreen(Point(p.x, p.y)); m.tap(at: s) }
-                    for i in 0..<b.problem.covered { tap(CGPoint(x: b.origin.x + (Double(i) + 0.5) * b.pieceWidth, y: b.origin.y + AddFractionsModel.row2 + 30)) }
-                    if let check = ProblemLayout.blocks(b).first(where: { $0.kind == .main }) { tap(CGPoint(x: check.rect.midX, y: check.rect.midY)) }
-                    return
-                }
-                if n == "fractions-overview" { let p0 = page.problems[0] as! AddFractionsModel; for i in 0..<p0.problem.covered { p0.tap(i) }; p0.go(); m.frameAll(); return }
-                if n == "fractions-story" { b.choose(2); b.go(); return }
-                if n == "fractions-wrong" || n == "fractions-check" { b.tap(b.problem.covered + 1); b.go(); return }
-                if n == "fractions-hint2" { b.tap(b.problem.covered + 1); b.go(); b.go(); return }
-                for i in 0..<b.problem.covered { b.tap(i) }
-                b.go()
-                if n == "fractions-add" { return }
-                if n == "fractions-two" { for i in b.problem.covered..<b.problem.total { b.tap(i) }; b.go(); (page.problems[1] as! AddFractionsModel).tap(0); return }
-                for i in b.problem.covered..<b.problem.total { b.tap(i) }
-                b.go()
-            default:
-                start(uc)
-                guard let l = m.lesson else { return }
-                if name == "flat" { return }
-                l.go()
-                if name.hasPrefix("cover") { for c in [(0, 0), (1, 0), (2, 0), (0, 1), (1, 1)] { l.tap(.init(c.0, c.1)) } }
-                if name == "cover-hint1" { l.go(); return }
-                if name == "cover-tapcheck" {
-                    // press Check by where it shows on the screen, as a finger would
-                    let v = l.view(at: PaperClock.now), a = v.project(CubesLayout.blocksAt(l), screen: l.screen), k = v.scale / Paper.unit
-                    if let r = CubesLayout.blocks(l).first(where: { $0.kind == .main })?.rect {
-                        let p = Point(a.x + r.midX * k, a.y + r.midY * k)
-                        if CubesLayout.block(at: p, l) == .main { l.go() }
-                    }
-                    return
-                }
-                if name == "cover-hint2" { l.go(); l.go(); return }
-                if name == "cover" { return }
-                for i in 0..<l.box.floor { l.tap(UnitCubes.cell(i, in: l.box)) }
-                l.go()
-                if name == "tilt" { return }
-                l.go()
+            case "back": start(Map.piece("add")!); m.close()
+            // any other name: the map as it is (the Paper proof's moments, Unit cubes and Add with different bottoms,
+            // went with those two lessons on 25 Oct)
+            default: break
             }
         }
     }
@@ -719,7 +661,7 @@ enum Shots {
         guard !active, full || args.contains("-seed-me") else { return }
         Progress.shared.saving = false
         PageStore.saving = false
-        for p in Map.all + Map.proof + [Map.review] { PageStore.clear(p.id) }
+        for p in Map.all + [Map.review] { PageStore.clear(p.id) }
         if full { seedMeFull() } else { seedMe() }
     }
 
@@ -857,25 +799,23 @@ enum Shots {
         }
     }
 
-    /// The whole Paper proof playing on its own, at real speed, for the build's video.
+    /// Volume of a box playing on its own, at real speed, for the build's video: the lesson tapped and opened as a child
+    /// does, and its How to played through, the ghost finger making each move, Next pressed as soon as it shows.
     static func demo(_ m: PaperModel) async {
         func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
-        m.shotBox = .init(length: 4, width: 3, height: 2)
+        PageStore.clear("g5-volume")
         m.frameGroup(duration: 0)
         m.drawnAt = PaperClock.now
         await wait(2.4)
-        let uc = Map.piece("uc")!
-        m.select(uc); await wait(2)
-        m.open(uc); await wait(2)
-        guard let l = m.lesson else { return }
-        l.go(); await wait(1.4)
-        for c in [(0, 0), (1, 0), (2, 0), (3, 0), (0, 1)] { l.tap(.init(c.0, c.1)); await wait(0.35) }
-        l.go(); await wait(1.4)
-        // Show me previews the step, then the child covers the rest of the floor themselves
-        l.showMe(); await wait((l.preview?.end ?? PaperClock.now) - PaperClock.now + 0.3)
-        for i in 0..<l.box.floor where l.lesson.marks[i] == nil { l.tap(UnitCubes.cell(i, in: l.box)); await wait(0.2) }
-        l.go(); await wait(3)
-        l.go(); await wait(3)
+        guard let p = Map.piece("g5-volume") else { return }
+        m.select(p); await wait(2)
+        m.open(p); await wait(2.5)
+        for _ in 0..<6 {
+            var n = 0
+            while m.bars?.howTo.howToButtons.isEmpty != false, n < 80 { await wait(0.1); n += 1 }
+            await wait(0.6); m.bars?.skipHowTo(); await wait(0.4)
+        }
+        await wait(2)
         m.close(); await wait(2)
     }
 }

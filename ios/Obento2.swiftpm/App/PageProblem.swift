@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// One problem on a lesson's page (BarsPage), whatever its picture: the fraction bars (AddFractionsModel) or a lesson
-/// worked in typed steps with its picture drawn from a Sketch (WorkProblem). The page, its words and the bar only
+/// One problem on a lesson's page (BarsPage), whatever its picture: Volume of a box's cubes (CubesProblem) or a lesson
+/// worked on the paper with its picture drawn from a Sketch (WorkProblem). The page, its words and the bar only
 /// need this much of it.
 @MainActor
 protocol PageProblem: AnyObject {

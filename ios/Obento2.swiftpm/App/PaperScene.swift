@@ -60,9 +60,7 @@ extension Piece {
         }
         if isTest { return [[CGPoint(x: at.x + 3.5 * c, y: at.y), CGPoint(x: at.x + 3.5 * c, y: at.y + 1.5 * c), CGPoint(x: at.x + 5 * c, y: at.y + 1.5 * c)]] }
         switch id {
-        case "uc": return [Array(box3D(l: 1, h: 1, w: 1, u: 70)[0].dropLast())]
         case "g5-volume": return [Array(box3D(l: 4, h: 2, w: 3, u: 32)[0].dropLast())]
-        case "ad": return [box(0, 0, 6, 2), box(10, 4, 1, 2)]                  // 3 fourths, and the eighth to add
         case "add": return [box(0, 0, 3, 2), box(0, 4, 6, 2)]                   // a third and two thirds
         case "sub": return [box(0, 0, 6, 2)]                                    // two thirds, to take from
         case "mix": return [box(0, 0, 3, 2), box(0, 6, 6, 2)]
@@ -93,7 +91,7 @@ extension Piece {
     }
 
     /// The lessons whose picture is a box of cubes, drawn as the 3D lesson shows it.
-    private var isBox: Bool { id == "uc" || id == "g5-volume" }
+    private var isBox: Bool { id == "g5-volume" }
 
     /// A box `l` long, `h` tall and `w` wide, seen from the tilted 3D lesson's own angle (PaperView3D.tilted), `u`
     /// points to a cube: the top, the front and the left side, as the cubes show when the paper tilts.
@@ -138,12 +136,8 @@ extension Piece {
                     line((1, 2.5), (3.5, 2.5)), line((1, 3.5), (3.5, 3.5)), line((1, 4.5), (2.5, 4.5))]
         }
         switch id {
-        case "uc": // one cube, as the lesson's cubes look when the paper tilts
-            return box3D(l: 1, h: 1, w: 1, u: 70)
         case "g5-volume": // a box of cubes, 4 by 3 by 2, as the lesson shows it
             return box3D(l: 4, h: 2, w: 3, u: 32)
-        case "ad": // fourths over eighths, and the eighth waiting to be added: 11 by 6
-            return bar(0, 0, 8, 4) + bar(0, 4, 8, 8) + [box(10, 4, 1, 2)]
         case "add": // thirds and thirds, added: 9 by 6
             return bar(0, 0, 9, 3) + bar(0, 4, 9, 3)
         case "sub": // thirds over ninths: 9 by 6
@@ -227,29 +221,17 @@ final class Rig {
     // a place of its own instead of the map: Me, or the grown-ups' page (Places.swift)
     let placeRoot = Entity()
     var placeDrawer: SketchDrawer?
-    // the lesson page's words, in the scene (ProblemWords.swift)
-    let pageWords = Entity()
-    // Unit cubes' words, standing in the scene (CubesWords.swift)
-    let cubesQuestion = Pin(), cubesL = Pin(), cubesW = Pin(), cubesH = Pin(), cubesCount = Pin(), cubesBlocks = Pin()
-    var cubesKey = ""
-    var problemWords: [UUID: SketchDrawer] = [:]
-    /// Some problem's bars or words are still to be made.
+    /// Some problem's picture or words are still to be made.
     var pageBuilding = false
     var piecesQuick = ""
     var pieceGroups: [String: ModelEntity] = [:]
-    // the open lesson
-    let lessonRoot = Entity()
-    weak var lesson: UnitCubesModel?
-    /// The open 3D lesson's box of cubes (Unit cubes), and each Volume of a box problem's on a lesson's page, with its
-    /// standing words (CubesDrawer, CubesWords).
-    lazy var lessonCubes: CubesDrawer = { let d = CubesDrawer(rig: self); lessonRoot.addChild(d.root); return d }()
+    /// Each Volume of a box problem's box of cubes on a lesson's page, with its standing words (CubesDrawer, CubesWords).
     var problemCubes: [UUID: (cubes: CubesDrawer, words: CubesWords)] = [:]
     /// The view this frame is seen through, and the screen.
     var view = PaperView3D()
     var screen = Size(1180, 820)
     // the flat lesson
     let barsRoot = Entity()
-    var drawers: [UUID: BarsDrawer] = [:]
     var sketches: [UUID: SketchDrawer] = [:]
     /// What the camera last framed a problem's content for.
     var contentKey = ""
@@ -287,7 +269,7 @@ final class Rig {
         // the paper itself, under the grid, large enough to fill any tilted view; it follows the camera
         sheet.model = ModelComponent(mesh: .generatePlane(width: 400, depth: 400), materials: [])
         sheet.position.y = -0.003
-        root.addChild(sheet); root.addChild(pieces); root.addChild(lessonRoot); root.addChild(barsRoot); barsRoot.addChild(pageWords); barsRoot.addChild(cardsRoot); barsRoot.addChild(cursorEntity); root.addChild(words); root.addChild(placeRoot)
+        root.addChild(sheet); root.addChild(pieces); root.addChild(barsRoot); barsRoot.addChild(cardsRoot); barsRoot.addChild(cursorEntity); root.addChild(words); root.addChild(placeRoot)
     }
 
     func update(view v: PaperView3D, model: PaperModel, time t: Double, dark: Bool) {
@@ -308,10 +290,6 @@ final class Rig {
         let floor = v.floorTarget
         sheet.position.x = Float(floor.x); sheet.position.z = Float(floor.z)
 
-        // a lesson that ends is only hidden: deleting hundreds of pieces as the paper comes back makes it stall
-        if model.lesson !== lesson { lesson = model.lesson }
-        lessonRoot.isEnabled = lesson != nil
-
         // lines keep their screen width at any zoom
         if lineScale == 0 || abs(v.scale / lineScale - 1) > 0.05 { lineScale = v.scale; gridAt = nil; piecesKey = "" }
         // enough grid to fill the screen even when tilted, centred on a strong line near the middle
@@ -319,26 +297,20 @@ final class Rig {
         let gx = Int(floor.x.rounded()), gz = Int(floor.z.rounded())
         if let g = gridAt, abs(g.x - gx) <= 2, abs(g.z - gz) <= 2, g.half >= half {} else { Perf.time("grid") { regrid(x: gx, z: gz, half: half) } }
 
-        let onMap = model.lesson == nil && model.bars == nil && model.place == nil
+        let onMap = model.bars == nil && model.place == nil
         pieces.isEnabled = onMap; words.isEnabled = onMap
         if onMap { Perf.time("pieces") { drawPieces(model, at: t) }; Perf.time("words") { drawWords(model, at: t) } }
         Perf.time("place") { drawPlace(model, at: t) }
         drawPage(model.bars, at: t)
-
-        guard let l = lesson else { return }
-        // the last lesson's box is kept, hidden, and reused when it's the same
-        Perf.time("cubes") { lessonCubes.draw(l, at: t) }
-        Perf.time("cubes-words") { drawCubesWords(l, view: v, at: t) }
     }
 
     private func recolour(_ dark: Bool) {
-        mapDrawer?.key = ""; cubesKey = ""; placeDrawer?.key = ""; placeDrawer?.live.key = ""
+        mapDrawer?.key = ""; placeDrawer?.key = ""; placeDrawer?.live.key = ""
         self.dark = dark
         colours = Colours(dark: dark, chapter: Chapter.measurement.hex)
         paperHex = dark ? 0x121211 : 0xF3F2EF
         sheet.model?.materials = [flat(colours.paper)]
-        problemWords.values.forEach { $0.key = "" }
-        gridAt = nil; piecesKey = ""; drawers.values.forEach { $0.barsKey = "" }
+        gridAt = nil; piecesKey = ""
     }
 
     // MARK: the paper
@@ -429,17 +401,13 @@ final class Rig {
 
     // MARK: the flat lesson
 
-    /// A lesson's page: one drawer per problem (and the How to), each with its own bars.
+    /// A lesson's page: one drawer per problem (and the How to), each with its own picture and words.
     private func drawPage(_ page: BarsPage?, at t: Double) {
         barsRoot.isEnabled = page != nil
         guard let page else {
-            for d in drawers.values { d.root.removeFromParent() }
-            drawers = [:]
             for d in sketches.values { d.root.removeFromParent() }
             sketches = [:]
             drawCards(nil, at: t)
-            for w in problemWords.values { w.root.removeFromParent() }
-            problemWords = [:]
             clearCubesProblems(keeping: []); return
         }
         let shown = page.all, every = page.all + (page.howToGone ? [] : page.problems)
@@ -451,22 +419,17 @@ final class Rig {
         for m in every {
             // Volume of a box: its cubes and its standing words, only while it's on the paper (CubesWords.swift)
             if let c = m as? CubesProblem { if shown.contains(where: { $0 === c }) { drawCubesProblem(c, at: t) }; continue }
-            if drawers[m.id] == nil && sketches[m.id] == nil {
+            if sketches[m.id] == nil {
                 if made >= 1 && !page.instant && m !== page.howTo { pageBuilding = true; continue }
                 made += 1
             }
-            if let a = m as? AddFractionsModel {
-                let d = drawers[m.id] ?? { let d = BarsDrawer(rig: self); barsRoot.addChild(d.root); drawers[m.id] = d; return d }()
-                d.draw(a, at: t)
-            } else if let w = m as? WorkProblem {
+            if let w = m as? WorkProblem {
                 let d = sketches[m.id] ?? { let d = SketchDrawer(); barsRoot.addChild(d.root); sketches[m.id] = d; return d }()
                 if drawWork(w, page, into: d, at: t) { pageBuilding = true }
             }
         }
-        for (id, d) in drawers where !every.contains(where: { $0.id == id }) { d.root.removeFromParent(); drawers[id] = nil }
         for (id, d) in sketches where !every.contains(where: { $0.id == id }) { d.root.removeFromParent(); sketches[id] = nil }
         clearCubesProblems(keeping: shown)
-        Perf.time("page-words") { drawProblemWords(page, shown, waiting: page.showing || made > 0 ? [] : page.problems, at: t) }
         frameContent(page)
         if drawCards(page, at: t) { pageBuilding = true }
         drawCursor(page, at: t)
@@ -504,12 +467,12 @@ final class Rig {
             Task { @MainActor in page.contentChanged(r) }
             return
         }
-        let key = "\(m.id) \(sketches[m.id]?.key ?? "") \(problemWords[m.id]?.key ?? "")"
+        let key = "\(m.id) \(sketches[m.id]?.key ?? "")"
         guard key != contentKey else { return }
         contentKey = key
         let u = Paper.unit
         var r: CGRect?
-        for e in [sketches[m.id]?.root, drawers[m.id]?.root, problemWords[m.id]?.root].compactMap({ $0 }) {
+        for e in [sketches[m.id]?.root].compactMap({ $0 }) {
             let b = e.visualBounds(recursive: true, relativeTo: barsRoot, excludeInactive: false)
             guard !b.isEmpty else { continue }
             let rr = CGRect(x: Double(b.min.x) * u, y: Double(b.min.z) * u, width: Double(b.max.x - b.min.x) * u, height: Double(b.max.z - b.min.z) * u)
@@ -590,162 +553,6 @@ final class Rig {
 
 
 /// A plain colour with no lighting and no tone mapping, so the paper in 3D is the same colour as the flat paper.
-/// The bars of one problem on a lesson's page: a row of a-ths over a row of b-ths, the piece waiting to be added, and the
-/// lines around them. Rebuilt only for a new problem or zoom; each frame only what moved changes.
-@MainActor
-final class BarsDrawer {
-    unowned let rig: Rig
-    let root = Entity()
-    var barsKey = ""
-    var bars: [(row: Int, i: Int, group: Entity, fill: ModelEntity, outline: ModelEntity)] = []
-    var barLevel: [String: Double] = [:]
-    /// The line between two filled pieces of a row, keyed "row-i" for the line on piece i's left edge.
-    var seams: [String: ModelEntity] = [:]
-    var seamLevel: [String: Double] = [:]
-    var decor = Entity()
-    var decorKey = ""
-
-    init(rig: Rig) { self.rig = rig }
-
-    /// The bars: a row of a-ths over a row of b-ths, and the piece waiting to be added. Rebuilt only for a new problem or zoom.
-    func draw(_ b: AddFractionsModel, at t: Double) {
-        let s = b.problem
-        // zoom isn't in it: the bars' lines are paper-sized and scale with the paper, like the words, so zooming never
-        // rebuilds them (rebuilding all 17 at every step of a zoom made it stall)
-        let key = "\(s.a) \(s.p) \(s.b) \(s.q) \(b.origin.x) \(b.origin.y)"
-        if key != barsKey { Perf.time("bars-build") { buildBars(b) }; barsKey = key }
-        let waiting = b.lesson.picture["waiting"] == 1 && b.lesson.marked.isEmpty
-        var levels: [String: Double] = [:]
-        for piece in bars {
-            let k = piece.row == 2 ? (waiting ? 1 : 0) : b.grow(row: piece.row, piece.i, at: t)
-            piece.group.isEnabled = k > 0
-            piece.group.scale.z = Float(max(0.0001, k))
-            let level = piece.row == 0 ? (piece.i < s.p ? 1 : 0) : piece.row == 1 ? b.shown(piece.i, at: t) : 0.5
-            paint(piece, level, chapter: b.chapter.hex)
-            levels["\(piece.row)-\(piece.i)"] = level
-        }
-        // filled pieces side by side stay pieces: a light line between them (G 17 Oct)
-        for (id, seam) in seams {
-            let parts = id.split(separator: "-").compactMap { Int($0) }
-            let left = levels["\(parts[0])-\(parts[1] - 1)"] ?? 0, right = levels[id] ?? 0
-            let level = min(left, right) > 0.01 ? max(left, right) : 0
-            if let last = seamLevel[id], abs(last - level) < 0.01 { continue }
-            seamLevel[id] = level
-            seam.isEnabled = level > 0
-            if level > 0 { seam.model?.materials = [flat(UIColor(hex: Ink.mix(Ink.mix(rig.paperHex, b.chapter.hex, level), 0xFFFFFF, 0.5)))] }
-        }
-        drawDecor(b, at: t)
-    }
-
-    private func buildBars(_ b: AddFractionsModel) {
-        for c in Array(root.children) { c.removeFromParent() }
-        bars = []; barLevel = [:]; seams = [:]; seamLevel = [:]; decorKey = ""
-        let s = b.problem, u = Paper.unit, px = Float(1 / Paper.unit), h = AddFractionsModel.barHeight
-        func piece(_ row: Int, _ i: Int, x: Double, y: Double, w: Double) {
-            // the group's origin is the piece's bottom-left corner, so growing in rises from the bottom
-            let g = Entity(); g.position = SIMD3(Float((b.origin.x + x) / u), 0, Float((b.origin.y + y + h) / u))
-            let W = Float(w / u), H = Float(h / u)
-            let fill = ModelEntity(mesh: .generatePlane(width: W, depth: H), materials: [])
-            // over the grid: its strong lines don't fall on the pieces' edges, and would read as extra cuts
-            fill.position = SIMD3(W / 2, 0.0008, -H / 2)
-            let outline = ModelEntity()
-            if let m = Rig.lines([(SIMD2(0, 0), SIMD2(W, 0)), (SIMD2(W, 0), SIMD2(W, -H)), (SIMD2(W, -H), SIMD2(0, -H)), (SIMD2(0, -H), SIMD2(0, 0))], width: Float(Sketch.stroke) * Float(px)) {
-                outline.model = ModelComponent(mesh: m, materials: [])
-            }
-            outline.position.y = 0.0012
-            g.addChild(fill); g.addChild(outline); root.addChild(g)
-            if row < 2, i > 0, let m = Rig.lines([(SIMD2(0, -px), SIMD2(0, -H + px))], width: 1.5 * px) {
-                let seam = ModelEntity(mesh: m, materials: []); seam.position.y = 0.0014; seam.isEnabled = false
-                g.addChild(seam); seams["\(row)-\(i)"] = seam
-            }
-            bars.append((row, i, g, fill, outline))
-        }
-        let top = b.wholeWidth / Double(s.a)
-        for i in 0..<s.a { piece(0, i, x: Double(i) * top, y: AddFractionsModel.row1, w: top) }
-        for i in 0..<s.b { piece(1, i, x: Double(i) * b.pieceWidth, y: AddFractionsModel.row2, w: b.pieceWidth) }
-        piece(2, 0, x: b.wholeWidth + 20, y: AddFractionsModel.row2, w: b.pieceWidth)
-        decor = Entity(); root.addChild(decor)
-    }
-
-    /// Empty pieces are outlined in a light tint; filled ones take the chapter colour, half strength for an added piece.
-    private func paint(_ p: (row: Int, i: Int, group: Entity, fill: ModelEntity, outline: ModelEntity), _ level: Double, chapter: UInt32) {
-        let id = "\(p.row)-\(p.i)"
-        if let last = barLevel[id], abs(last - level) < 0.01 { return }
-        barLevel[id] = level
-        p.fill.isEnabled = level > 0.01
-        if level > 0.01 { p.fill.model?.materials = [flat(UIColor(hex: Ink.mix(rig.paperHex, chapter, level)))] }
-        p.outline.model?.materials = [flat(UIColor(hex: level > 0.01 ? chapter : Ink.mix(rig.paperHex, chapter, 0.45)))]
-    }
-
-    /// The lines around the bars: the whole's length, the matching dashes, the guide after a wrong count, the total's bracket.
-    private func drawDecor(_ b: AddFractionsModel, at t: Double) {
-        // the lines come and go with the problem's words: none before it has drawn in, or once it has erased itself
-        let shown = snapped(b.words(at: t), 20)
-        let whole = snapped(b.wholeLine(at: t), 50), guide = snapped(b.guide(at: t), 50), picture = b.lesson.picture, gone = snapped(b.gone(at: t), 50) * shown
-        let split = snapped(b.splitDrawn(at: t), 40)
-        let bracket = picture["total"] == 1 ? snapped(ease((t - b.wordsAt - 0.2) / 0.5), 50) : 0
-        let key = "\(b.lesson.index) \(whole) \(guide) \(bracket) \(gone) \(b.lesson.finalOnly) \(split) \(picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(b.lesson.marks.count)"
-        guard key != decorKey else { return }
-        decorKey = key
-        for c in Array(decor.children) { c.removeFromParent() }
-        let o = b.origin, W = b.wholeWidth, e = b.coverEnd, r1 = AddFractionsModel.row1, r2 = AddFractionsModel.row2, h = AddFractionsModel.barHeight
-        func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x, y: o.y + y) }
-        func dashed(_ a: CGPoint, _ c: CGPoint, _ on: Double = 4, _ off: Double = 6) -> [[CGPoint]] {
-            let len = hypot(c.x - a.x, c.y - a.y), dx = (c.x - a.x) / len, dy = (c.y - a.y) / len
-            var out: [[CGPoint]] = []
-            for s in stride(from: 0, to: len, by: on + off) {
-                let f: Double = min(len, s + on)
-                out.append([CGPoint(x: a.x + dx * s, y: a.y + dy * s), CGPoint(x: a.x + dx * f, y: a.y + dy * f)])
-            }
-            return out
-        }
-        func add(_ lines: [[CGPoint]], _ k: Double, width: Double, _ c: UIColor) {
-            guard let m = Rig.lines(drawn(lines, k * gone), width: Float(width / Paper.unit)) else { return }
-            let e = ModelEntity(mesh: m, materials: [flat(c)]); e.position.y = 0.0012; decor.addChild(e)
-        }
-        let chapter = UIColor(hex: b.chapter.hex)
-        let wy = AddFractionsModel.wholeY
-        add([[P(0, wy - 8), P(0, wy + 8)], [P(0, wy), P(W, wy)], [P(W, wy - 8), P(W, wy + 8)]], whole, width: 1.5, rig.colours.ink2)
-        if picture["match"] == 1 {
-            add(dashed(P(0, r1 + h + 6), P(0, r2 - 28)) + dashed(P(e, r1 + h + 6), P(e, r2 - 6)), 1, width: 2, chapter)
-        }
-        // the How to's cut: every top piece split into the bottom row's pieces, dashed, in the chapter's colour
-        if split > 0 {
-            let s = b.problem, pw = b.pieceWidth, k = s.b / s.a
-            let cuts = (1..<s.b).filter { $0 % k != 0 }
-            let line = { (i: Int) in dashed(P(Double(i) * pw, r1 + 4), P(Double(i) * pw, r1 + h - 4), 5, 4) }
-            // on a shaded piece the cut shows in the paper's colour, on an empty one in the chapter's
-            add(cuts.filter { $0 < s.covered }.flatMap(line), split, width: 2, rig.colours.paper)
-            add(cuts.filter { $0 >= s.covered }.flatMap(line), split, width: 2, chapter)
-        }
-        if picture["guide"] == 1, guide > 0 { add(dashed(P(e, r1 - 34), P(e, r2 + h + 12), 4, 5), guide, width: 1.5, rig.colours.ink) }
-        // hints (LESSONS.md §7): the child's own count as a bracket under the bottom row, from its left end, so it can be
-        // seen against where the fraction really ends
-        let pw = b.pieceWidth, s = b.problem, mine = Double(b.lesson.marks.count) * pw
-        if picture["yours"] == 1, mine > 0 {
-            add([[P(0, r2 + h + 4), P(0, r2 + h + 12), P(mine, r2 + h + 12), P(mine, r2 + h + 4)]], guide, width: 2, chapter)
-        }
-        if picture["totalGuide"] == 1 {
-            let t = Double(s.total) * pw
-            add(dashed(P(t, r1 + h + 6), P(t, r2 + h + 12), 4, 5), guide, width: 1.5, rig.colours.ink)
-        }
-        // and then the pieces that are right, outlined
-        if picture["outline"] == 1 {
-            let want = b.lesson.step.task?.style == 2 ? s.covered..<s.total : 0..<s.covered
-            let boxes = want.map { i -> [CGPoint] in
-                let x = Double(i) * pw + 3, w = pw - 6
-                return [P(x, r2 + 3), P(x + w, r2 + 3), P(x + w, r2 + h - 3), P(x, r2 + h - 3), P(x, r2 + 3)]
-            }
-            add(boxes.flatMap { dashed($0[0], $0[1], 4, 4) + dashed($0[1], $0[2], 4, 4) + dashed($0[2], $0[3], 4, 4) + dashed($0[3], $0[4], 4, 4) }, 1, width: 1.5, chapter)
-        }
-        if bracket > 0 {
-            let end = Double(b.problem.total) * b.pieceWidth
-            add([[P(0, r2 + h + 14), P(0, r2 + h + 24), P(end, r2 + h + 24), P(end, r2 + h + 14)]], bracket, width: 2, chapter)
-        }
-    }
-
-}
-
 /// Each colour's material is made once and reused (making a new one for every line on every frame was costly).
 @MainActor func flat(_ c: UIColor) -> UnlitMaterial {
     var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0

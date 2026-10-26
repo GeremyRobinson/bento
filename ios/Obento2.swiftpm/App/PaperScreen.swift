@@ -31,11 +31,7 @@ struct PaperScreen: View {
                     // RealityKit's view keeps the size it was made at, so a new screen shape (rotating) makes a new one
                     PaperScene(model: model, time: t)
                         .id("\(Int(model.screen.width))x\(Int(model.screen.height))")
-                    if let lesson = model.lesson {
-                        UnitCubesView(model: lesson, time: t)
-                    } else {
-                        surfaceGestures
-                    }
+                    surfaceGestures
                     Toolbar(model: model, time: t, bottom: max(16, safe.safeAreaInsets.bottom + 8, model.keyboard + 8))
                     // the problem's sounds, and its words read aloud when the grown-ups asked for that
                     Listener(model: model)
@@ -50,7 +46,7 @@ struct PaperScreen: View {
                         .position(NumberEntry.anchor(screen: model.screen, bottom: max(16, safe.safeAreaInsets.bottom + 8), stacked: typing?.stacked ?? true))
                 }
                 .onChange(of: t) { _, now in
-                    Perf.frame(now); model.settle(at: now); model.lesson?.settle(at: now)
+                    Perf.frame(now); model.settle(at: now)
                     // a frame of the running clock finds everything still: the clock stops (a blink's tick isn't one)
                     if now != blinkTick, !animating { quiet &+= 1 }
                 }
@@ -110,7 +106,7 @@ struct PaperScreen: View {
     private var animating: Bool {
         model.moving || model.leaving || model.mapDrawing || model.placeDrawing || PaperClock.now - model.placeAt < 2.5 || model.grownUp.animating
             || (model.startHere?.playing(at: PaperClock.now) ?? false)
-            || PaperClock.now - model.pinchedAt < 1.3 || PaperClock.now - model.drawnAt < Piece.drawTime + 0.2 || (model.lesson?.animating ?? false) || (model.bars?.animating ?? false)
+            || PaperClock.now - model.pinchedAt < 1.3 || PaperClock.now - model.drawnAt < Piece.drawTime + 0.2 || (model.bars?.animating ?? false)
     }
 
     private var surfaceGestures: some View {

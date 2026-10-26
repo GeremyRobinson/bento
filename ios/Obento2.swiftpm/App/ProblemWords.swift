@@ -177,117 +177,11 @@ enum ProblemLayout {
 }
 
 extension Rig {
-    /// The words and blocks of Add with different bottoms' problems (its bars are BarsDrawer's), drawn from the master
-    /// components like every other problem's: rebuilt as a Sketch when what they say changes, only what's new drawing
-    /// in, and all of it undrawing as the problem leaves. (A WorkProblem's words are drawn with its picture, drawWork.)
-    func drawProblemWords(_ page: BarsPage, _ shown: [any PageProblem], waiting: [any PageProblem], at t: Double) {
-        let isDark = dark ?? false
-        var moving = false
-        for case let m as AddFractionsModel in shown {
-            let d = problemWords[m.id] ?? { let d = SketchDrawer(); pageWords.addChild(d.root); problemWords[m.id] = d; return d }()
-            if m.leftAt == nil, d.leftAt != nil { d.revive() }
-            let key = wordsKey(m, page, dark: isDark)
-            // only the problem being worked (or the How to) may draw; anything else undraws
-            let wanted = page.mode == .work ? page.current === m : (page.mode == .howTo && m === page.howTo)
-            if !wanted { d.undrawAll(at: m.leftAt ?? t) }
-            if key != d.key, m.leftAt == nil, wanted {
-                d.key = key
-                d.build(barsSketch(m), rig: self, chapter: m.chapter.hex, dark: isDark, origin: .zero, from: d.isEmpty ? m.openedAt + 0.4 : max(t, m.wordsAt), now: t)
-            }
-            if let left = m.leftAt { d.undrawAll(at: left) }
-            if d.update(at: t) { moving = true }
-        }
-        if moving { pageBuilding = true }
-        for (id, d) in problemWords where !page.all.contains(where: { $0.id == id }) {
-            d.root.removeFromParent(); problemWords[id] = nil
-        }
-    }
-
     func wordsKey(_ m: any PageProblem, _ page: BarsPage, dark: Bool) -> String {
         let l = m.lesson
         return [l.typed.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: ","), l.active ?? "", m.label, m.intro ?? "", "\(m.howToButtons)", l.words.say, l.words.hint, l.words.action, "\(l.index)", "\(l.marks.count)", l.typed["c"] ?? "",
                 m.message.map { "\($0.text)\($0.ok)" } ?? "", "\(m.solved)", "\((m as? WorkProblem)?.keypadOpen ?? false)", "\(((m as? WorkProblem)?.verdict).map { $0.right } as Bool?)", "\(page.current === m)", "\(l.helps)", "\(dark)",
                 l.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }.joined()].joined(separator: "|")
-    }
-
-    /// Add with different bottoms' words and blocks as a Sketch, from the master components: its name, the sum (with
-    /// the How to's why beside it), the bars' labels, the step and its hint, the count or what a miss says, the total,
-    /// and its blocks.
-    func barsSketch(_ m: AddFractionsModel) -> Sketch {
-        var s = Sketch()
-        let p = m.problem, l = m.lesson, words = l.words, o = m.origin
-        let W = m.wholeWidth, e = m.coverEnd, r1 = AddFractionsModel.row1, r2 = AddFractionsModel.row2, h = AddFractionsModel.barHeight
-        func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x, y: o.y + y) }
-        let col = ProblemLayout.column, chapter = Sketch.Colour.chapter, right = Sketch.Colour.hex(0x178A57, 0x3CCF8E), red = Sketch.Colour.hex(0xC8372D, 0xFF6B5E)
-        s.words("name", m.label, .name, x: o.x, top: P(0, BarsPage.box.dy).y, width: col)
-
-        // the problem, at the top: the sum, and the story beside it when it's told as one (as every problem has it)
-        let sumFont = PaperText.font(40, .medium, digits: true), sumY = -100 + Sketch.row
-        s.text("sum:\(p.sum)", p.sum, at: P(0, sumY), size: Sketch.maths, anchor: UnitPoint(x: 0, y: 0.5))
-        if l.story, let storyText = l.spec.story?(l.numbers) {
-            let x = ((PaperText.width(p.sum, sumFont) + 2 * Sketch.row) / Paper.cell).rounded(.up) * Paper.cell
-            s.words("story", storyText, .story, x: o.x + x, top: P(0, -100).y, width: col - x, max: 2)
-        }
-        // the How to writes why the numbers change (G 18 Oct): 3/4 = (3 × 2)/(4 × 2) = 6/8, the × 2 in the cut's colour
-        if m.auto, l.picture["match"] == 1 {
-            let f = PaperText.font(22, .medium, digits: true), k = p.b / p.a, lh = Double(f.lineHeight)
-            var x = PaperText.width(p.sum, sumFont) + 36
-            func put(_ id: String, _ text: String) { s.text("why\(id)", text, at: P(x, sumY), size: 22, anchor: UnitPoint(x: 0, y: 0.5)); x += PaperText.width(text, f) }
-            func stack(_ id: String, _ top: [(String, Sketch.Colour)], _ bottom: [(String, Sketch.Colour)]) {
-                let tw = top.reduce(0) { $0 + PaperText.width($1.0, f) }, bw = bottom.reduce(0) { $0 + PaperText.width($1.0, f) }, wd = max(tw, bw)
-                var tx = x + (wd - tw) / 2
-                for (j, (t, c)) in top.enumerated() { s.text("why\(id)t\(j)", t, at: P(tx, sumY - lh / 2 - 1), size: 22, c, anchor: UnitPoint(x: 0, y: 0.5)); tx += PaperText.width(t, f) }
-                var bx = x + (wd - bw) / 2
-                for (j, (t, c)) in bottom.enumerated() { s.text("why\(id)b\(j)", t, at: P(bx, sumY + lh / 2 + 1), size: 22, c, anchor: UnitPoint(x: 0, y: 0.5)); bx += PaperText.width(t, f) }
-                s.line("why\(id)bar", [P(x, sumY), P(x + wd, sumY)], .ink, width: 1.5)
-                x += wd
-            }
-            stack("1", [("\(p.p)", .ink)], [("\(p.a)", .ink)]); put("e1", " = ")
-            stack("2", [("\(p.p)", .ink), (" × \(k)", chapter)], [("\(p.a)", .ink), (" × \(k)", chapter)]); put("e2", " = ")
-            stack("3", [("\(p.covered)", .ink)], [("\(p.b)", .ink)])
-        }
-        s.label("whole", "1 whole · \(p.wholeCells) cells", Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2), at: P(W / 2, AddFractionsModel.wholeY - 12), anchor: UnitPoint(x: 0.5, y: 1))
-        s.label("row1", AddFractions.plural(p.a), Sketch.Words(size: Sketch.small, weight: .medium, colour: .ink2), at: P(0, r1 - 8))
-        s.label("row2", AddFractions.plural(p.b), Sketch.Words(size: Sketch.small, weight: .medium, colour: .ink2), at: P(0, r2 - 8))
-
-        // the piece waiting to be added, the match once the rows line up, and the guide after a miss
-        if l.picture["waiting"] == 1 && l.marked.isEmpty { s.label("waiting", "+ \(p.q)/\(p.b)", Sketch.Words(size: Sketch.small, weight: .medium, colour: .ink2), at: P(W + 20, r2 + h + 20), anchor: UnitPoint(x: 0, y: 0)) }
-        if l.picture["match"] == 1 { s.label("match", "\(p.p)/\(p.a) = \(p.covered)/\(p.b)", Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: chapter), at: P(e + 24, r2 - 12)) }
-        if l.picture["guide"] == 1, let look = l.step.look { s.label("guide", look, Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2), at: P(e + 10, r1 - 24)) }
-
-        // the step, under the picture: what to do now, and its hint (a story's step asks only "Pick what to do")
-        let storyStep = l.story && l.step.answer?.choices != nil
-        let say = m.intro ?? (storyStep ? words.hint : words.say)
-        let said = s.words("say\(l.index)", say, Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink), x: o.x, top: P(0, AddFractionsModel.stepY).y, width: col, max: 3)
-        if m.intro == nil && !storyStep { s.words("hint\(l.index)", words.hint, Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2), x: o.x, top: P(0, AddFractionsModel.stepY + Double(said) * Sketch.row).y, width: col) }
-
-        // under the bars: the count as the child taps, or what a miss says; for a pick-one step the message goes under
-        // the choices
-        let under = Sketch.Words(size: Sketch.small, weight: .medium, colour: .ink2)
-        if l.step.answer?.choices != nil {
-            if let msg = m.message { s.words("msg", msg.text, under.colour(msg.ok ? .ink2 : red), x: o.x, top: P(0, AddFractionsModel.underStep + 52).y, width: col, max: 3) }
-        } else if let count = l.countLine {
-            let (text, c): (String, Sketch.Colour) = m.message.map { ($0.text, $0.ok ? right : red) } ?? (count, .ink2)
-            s.words("count", text, under.colour(c), x: o.x, top: P(0, AddFractionsModel.underStep).y, width: col, max: 3)
-        }
-        if l.picture["total"] == 1 { s.label("total", "\(p.sum) = \(p.total)/\(p.b)", Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: chapter), at: P(0, r2 + h + 32), anchor: UnitPoint(x: 0, y: 0)) }
-
-        // the blocks
-        for b in ProblemLayout.blocks(m) {
-            let r = b.rect, id = "\(b.kind)"
-            switch b.kind {
-            case .next: s.block(id, r, .main, word: "Next step", arrow: true)
-            case .practise: s.block(id, r, .main, word: "Practice", arrow: true)
-            case .nextProblem: s.block(id, r, .main, word: "Next problem", arrow: true)
-            case .main: s.block(id, r, .main, word: words.action, arrow: true)
-            case .again: s.block(id, r, .plain, word: "Watch again")
-            case .skip: s.block(id, r, .plain, word: "Skip")
-            case .showMe, .reset: s.block(id, r, l.picture["showMe"] == 1 && b.kind == .showMe ? .main : .plain, icon: b.kind == .showMe ? "play" : "arrow-counter-clockwise")
-            case .choice(let n): s.block(id, r, l.typed["c"] == String(n) ? .picked : .plain, centred: l.step.answer?.choices?[n], size: Sketch.wordSize)
-            case .field, .key, .action: break
-            }
-        }
-        return s
     }
 
     /// A WorkProblem's words and blocks as a Sketch, in paper points, on the grid: its name, the sum a digit to every
