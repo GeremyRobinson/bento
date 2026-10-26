@@ -99,7 +99,9 @@ column by column; a full grid overflows into a new one. 3. **Tap** the full grid
 the ones column as the carried 1. 4. **Write** the total. Say: "Points under points, so tenths add to tenths."
 
 ### Multiplying decimals (`g5-multdec`)
-A whole is 20 × 20 squares, cut into 10 × 10 cells (a cell is a hundredth). The strip `x` by `y` lies on wholes.
+A whole is a bold square 10 × 10 squares (a square is a hundredth), in every problem: decided 25 Oct 2026, so the
+biggest problems still fit the screen (a 20 × 20 whole, two squares a hundredth, was the first design). The strip `x` by
+`y` lies on wholes.
 1. **Drag** the strip's corner to `x` across and `y` up (tenths snap to cells; wholes are bold): the readout counts
    the pieces it covers ("24 × 3 = 72 pieces"). 2. One piece is blown up beside it with its size (0.01, or 0.001 for
    hundredths × tenths). 3. **Write** `24 × 3 = [72]`, then **tap** where the point goes in 72 (between the digits; it
