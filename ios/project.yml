@@ -13,6 +13,9 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: education.bento.obento2
+        # G's Apple ID team, so it runs on a real iPad (Xcode's own pick is wiped each time xcodegen runs)
+        DEVELOPMENT_TEAM: U76QX5X2L8
+        CODE_SIGN_STYLE: Automatic
         PRODUCT_NAME: Obento2
         MARKETING_VERSION: "0.1"
         CURRENT_PROJECT_VERSION: "1"
@@ -35,6 +38,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: education.bento.obento2.uitests
+        DEVELOPMENT_TEAM: U76QX5X2L8
+        CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: YES
         SWIFT_VERSION: "5.0"
         TEST_TARGET_NAME: Obento2
