@@ -18,6 +18,8 @@ struct MultiplyFractionsLesson: PaperLesson {
     var trying: Double? = nil
 
     private static let maths = Bars.maths, count = Bars.count, small = Bars.small
+    /// A piece shaded twice: a shaded row's colour with the column's stripes over it, so it reads darker.
+    private static let twice = Bars.shade
 
     /// A problem's numbers and where its parts go, in its squares.
     @MainActor struct Q {
@@ -53,7 +55,10 @@ struct MultiplyFractionsLesson: PaperLesson {
         var lengths: [Int] { Ruler.lengths(S) }
         func start(_ parts: Int) -> Int { lengths.last { $0 != S / parts } ?? S / parts }
 
-        static let readable = 22.0
+        /// Words never show smaller than this many points; 18, not 22 (25 Oct): a square 30 or 40 squares a side (every
+        /// problem with bottoms up to 5, the first ones) with its long record beside it showed its words at 19 to 21 points
+        /// and was drawn with everything else twice as big, which took the camera so far back the square shrank by a third.
+        static let readable = 18.0
         @MainActor static func k(_ v: Numbers, story: Bool) -> Double {
             let s = Q(v, k: 1), key = "\(s.a) \(s.b) \(s.c) \(s.d)\(story ? " story" : "")"
             if let k = scales[key] { return k }
@@ -88,9 +93,21 @@ struct MultiplyFractionsLesson: PaperLesson {
     }
 
     /// The rows (or columns) tapped, as bits of the hand's "taps".
-    private func taps(_ s: PaperState) -> Set<Int> {
-        let bits = Int(s.h("taps") ?? 0)
-        return Set((0..<12).filter { bits & (1 << $0) != 0 })
+    private func taps(_ s: PaperState) -> Set<Int> { Self.bits(s.h("taps") ?? 0) }
+    static func bits(_ v: Double) -> Set<Int> { let b = Int(v); return Set((0..<12).filter { b & (1 << $0) != 0 }) }
+
+    /// The rows shaded and the columns striped once their step is done: the ones the child tapped (kept by Shade), or
+    /// the first ones when there was nothing to tap (a top of 1 is shaded with the cut) or what's kept doesn't fit.
+    private func shaded(_ s: PaperState, _ key: String, want: Int, of n: Int) -> [Int] {
+        let kept = s.run.kept[key].map(Self.bits) ?? []
+        return kept.count == want && kept.allSatisfy({ $0 < n }) ? kept.sorted() : Array(0..<want)
+    }
+
+    /// Runs of neighbouring indices (rows 0, 1 and 3: 0–1 and 3–3), each bracketed on its own.
+    static func runs(_ xs: [Int]) -> [(Int, Int)] {
+        var out: [(Int, Int)] = []
+        for x in xs.sorted() { if let l = out.last, l.1 + 1 == x { out[out.count - 1].1 = x } else { out.append((x, x)) } }
+        return out
     }
 
     /// A fraction in a column `w` squares wide (k: the words' size), its top centred down row r + k, its bar on r + 2k,
@@ -110,33 +127,55 @@ struct MultiplyFractionsLesson: PaperLesson {
 
         // a big square is seen from far back, so its lines are drawn as much firmer as its words are bigger
         let wide = Sketch.stroke * k
-        // MARK: the square: the a rows shaded, the c columns striped over them, so the pieces shaded twice are darker
-        if shR { pic.fill("rf", col: L, row: T, w: S, h: Double(q.a) * rh, Bars.shade) }
-        if shC { pic.stripes("cs", col: L, row: T, w: Double(q.c) * cw, h: S) }
-        // the taps: rows shade, columns stripe, as they're tapped (under the lines, over the rows already shaded)
+        // MARK: the square: the a rows shaded, the c columns striped over them, so the pieces shaded twice are darker.
+        // They're the rows and columns the child tapped, where they were tapped
+        let sr = shaded(s, "rowsR", want: q.a, of: q.b), sc = shaded(s, "colsC", want: q.c, of: q.d)
+        // the taps: rows shade, columns stripe, as they're tapped (over the rows already shaded)
         let tapping = s.on("tapR") || s.on("tapC"), byRow = s.on("tapR"), on = taps(s)
-        if tapping {
-            for i in on.sorted() {
-                if byRow { pic.fill("tap\(i)", col: L, row: T + Double(i) * rh, w: S, h: rh, Bars.shade) }
-                else { pic.stripes("tap\(i)", col: L + Double(i) * cw, row: T, w: cw, h: S) }
+        let rowsOn = Set(shR ? sr : byRow ? on.sorted() : []), colsOn = Set(shC ? sc : s.on("tapC") ? on.sorted() : [])
+        // drawn as pieces that never overlap (two fills over each other on the paper flicker as to which is on top): a
+        // shaded row's pieces, a striped column's pieces, and the pieces both cover, darker, the stripes' lines over them
+        for r in rowsOn.sorted() {
+            for run in Self.runs((0..<q.d).filter { !colsOn.contains($0) }) {
+                pic.fill("r\(r)_\(run.0)_\(run.1)", col: L + Double(run.0) * cw, row: T + Double(r) * rh, w: Double(run.1 - run.0 + 1) * cw, h: rh, Bars.shade)
             }
+        }
+        for c in colsOn.sorted() {
+            for run in Self.runs((0..<q.b).filter { !rowsOn.contains($0) }) {
+                pic.fill("c\(c)_\(run.0)_\(run.1)", col: L + Double(c) * cw, row: T + Double(run.0) * rh, w: cw, h: Double(run.1 - run.0 + 1) * rh, .tint(0.2))
+            }
+            for r in rowsOn.sorted() { pic.fill("o\(r)_\(c)", col: L + Double(c) * cw, row: T + Double(r) * rh, w: cw, h: rh, Self.twice) }
+            pic.stripeLines("c\(c)s", col: L + Double(c) * cw, row: T, w: cw, h: S)
         }
         if rows { pic.sketch.segments("rc\(q.b)", (1..<q.b).map { i in (pic.P(L, T + Double(i) * rh), pic.P(R, T + Double(i) * rh)) }, .chapter, width: wide) }
         if cols { pic.sketch.segments("cc\(q.d)", (1..<q.d).map { i in (pic.P(L + Double(i) * cw, T), pic.P(L + Double(i) * cw, B)) }, .chapter, width: wide) }
         pic.sketch.box("sq", pic.R(L, T, S, S), .chapter, width: wide)
 
-        // MARK: the names, the problem written once: a/b right of its rows, c/d under its columns, each bracketed once shaded
-        let ah = Double(q.a) * rh, mid = (T + ah / 2).rounded()
-        if shR { pic.sketch.line("rbr", [pic.P(R + 1, T), pic.P(R + 2, T), pic.P(R + 2, T + ah), pic.P(R + 1, T + ah)], .chapter, width: wide) }
+        // MARK: the names, the problem written once: a/b right of its rows, c/d under its columns, each bracketed once
+        // shaded (a bracket for each run of rows or columns side by side; the name level with the middle of them all)
+        // until its rows are shaded a name is centred on the whole square (there's nothing smaller for it to name yet);
+        // then it glides to the middle of what it names
+        let r0 = Double(sr.first ?? 0) * rh, r1 = Double((sr.last ?? 0) + 1) * rh, mid = (T + (shR ? (r0 + r1) / 2 : S / 2)).rounded()
+        if shR {
+            for (j, run) in Self.runs(sr).enumerated() {
+                let y0 = T + Double(run.0) * rh, y1 = T + Double(run.1 + 1) * rh
+                pic.sketch.line("rbr\(j)", [pic.P(R + 1, y0), pic.P(R + 2, y0), pic.P(R + 2, y1), pic.P(R + 1, y1)], .chapter, width: wide)
+            }
+        }
         fraction(&pic, "na", "\(q.a)", "\(q.b)", col: q.rowName, row: mid - 2 * k, w: 4 * k)
-        let cx = L + (Double(q.c) * cw / 2).rounded()
-        if shC { pic.sketch.line("cbr", [pic.P(L, B + 1), pic.P(L, B + 2), pic.P(L + Double(q.c) * cw, B + 2), pic.P(L + Double(q.c) * cw, B + 1)], .chapter, width: wide) }
-        fraction(&pic, "nc", "\(q.c)", "\(q.d)", col: max(L, cx - 2 * k), row: q.colName, w: 4 * k)
+        let c0 = Double(sc.first ?? 0) * cw, c1 = Double((sc.last ?? 0) + 1) * cw, cx = L + (shC ? (c0 + c1) / 2 : S / 2).rounded()
+        if shC {
+            for (j, run) in Self.runs(sc).enumerated() {
+                let x0 = L + Double(run.0) * cw, x1 = L + Double(run.1 + 1) * cw
+                pic.sketch.line("cbr\(j)", [pic.P(x0, B + 1), pic.P(x0, B + 2), pic.P(x1, B + 2), pic.P(x1, B + 1)], .chapter, width: wide)
+            }
+        }
+        fraction(&pic, "nc", "\(q.c)", "\(q.d)", col: min(max(L, cx - 2 * k), R - 4 * k), row: q.colName, w: 4 * k)
 
         // MARK: the pieces shaded twice, numbered row by row
         if shC {
             var i = 0
-            for r in 0..<q.a { for c in 0..<q.c {
+            for r in sr { for c in sc {
                 i += 1
                 pic.word("p\(i)", "\(i)", at: L + (Double(c) + 0.5) * cw, T + (Double(r) + 0.5) * rh, Self.count)
             } }
@@ -204,7 +243,8 @@ struct MultiplyFractionsLesson: PaperLesson {
                 let i = min(n - 1, Int(byRow ? (p.y - T) / rh : (p.x - L) / cw)), now = bits ^ (1 << i)
                 return HandMove(hand: ["taps": Double(now)], missHand: nil, set: [("t", Double(now.nonzeroBitCount))])
             },
-            actions: ["Shade": { HandMove(hand: nil, missHand: nil, set: [("t", Double(count))], check: true) }])
+            // Shade keeps which ones were tapped, so they stay the ones shaded
+            actions: ["Shade": { HandMove(hand: nil, missHand: nil, set: [("t", Double(count))], keep: [byRow ? "rowsR" : "colsC": Double(bits)], check: true) }])
     }
 
     func demo(_ s: PaperState) -> [GhostMove] {

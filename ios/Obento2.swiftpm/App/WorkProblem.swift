@@ -272,7 +272,12 @@ final class WorkProblem: Identifiable, PageProblem {
         Task { [weak self] in
             try? await Task.sleep(for: .seconds(self?.instant == true ? 0 : 1.2))
             guard let self else { return }
-            if case .moved = self.lesson.go() { self.stepChanged(); self.wordsAt = PaperClock.now; self.pictureAt = self.time(0) }
+            if case .moved = self.lesson.go() {
+                self.stepChanged(); self.wordsAt = PaperClock.now; self.pictureAt = self.time(0)
+                // what the miss said was about the step before: it goes when the next one asks something (the daily
+                // review and the tests), and stays only beside the finished work
+                if !self.lesson.isLast { self.message = nil; self.verdict = nil }
+            }
             if self.lesson.isLast { self.onSolved?() }
             self.onChange?()
         }
@@ -358,6 +363,7 @@ final class WorkProblem: Identifiable, PageProblem {
         if let h = mv.hand { hand = h }
         for (box, v) in mv.set { lesson.set(box, v) }
         for cell in mv.marks { lesson.tap(cell) }
+        for (k, v) in mv.keep { lesson.keep(k, v) }
         if message?.ok == false { message = nil }
         if verdict?.right == false { verdict = nil }
         handAt = PaperClock.now
@@ -598,6 +604,7 @@ final class WorkProblem: Identifiable, PageProblem {
         if let h = mv.hand { g.hand = h }
         for (b, v) in mv.set { g.run.set(b, v) }
         for cell in mv.marks { g.run.tap(cell) }
+        for (k, v) in mv.keep { g.run.keep(k, v) }
         // a move that answers its step does it, as the child's would: Show me's copy shows it, the How to keeps it
         guard mv.check, g.mode != .keep else { return }
         let i = g.run.index

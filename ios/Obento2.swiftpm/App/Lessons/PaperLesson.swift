@@ -162,6 +162,8 @@ struct HandMove {
     var missHand: Numbers? = [:]
     var set: [(box: String, value: Double?)] = []
     var marks: [Int] = []
+    /// What later steps still draw from this move (LessonRun.kept: the rows shaded, the groups taken).
+    var keep: Numbers = [:]
     var check = false
 }
 

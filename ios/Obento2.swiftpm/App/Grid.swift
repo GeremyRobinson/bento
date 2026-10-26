@@ -199,13 +199,17 @@ struct GridPen {
     /// Squares striped (the second amount): lightly filled, a stripe corner to corner of every square.
     mutating func stripes(_ id: String, col: Double, row: Double, w: Double, h: Double) {
         sketch.fill(id + "f", R(col, row, w, h), .tint(0.2))
+        stripeLines(id + "s", col: col, row: row, w: w, h: h)
+    }
+    /// Just the stripes' lines, for a lesson that fills what's under them itself.
+    mutating func stripeLines(_ id: String, col: Double, row: Double, w: Double, h: Double) {
         var segs: [(CGPoint, CGPoint)] = []
         var t = -h
         while t < w {
             segs.append((P(col + max(0, t), row + max(0, -t)), P(col + min(w, t + h), row + min(h, w - t))))
             t += 1
         }
-        sketch.segments(id + "s", segs, .tint(0.6), width: Sketch.stroke)
+        sketch.segments(id, segs, .tint(0.6), width: Sketch.stroke)
     }
     /// A ring round some squares (a digit to look at).
     mutating func ring(_ id: String, col: Double, row: Double, w: Double, h: Double, _ colour: Sketch.Colour = .chapter) {
