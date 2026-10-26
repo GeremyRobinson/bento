@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Fraction of a number on the paper (design/grade5.md, the fractions family): n/d of W. One square is one thing (a
-/// 2 × 2 square when there are 30 or fewer), so the bar holds W things, each drawn in it, and is named "n/d of W" at its
+/// 2 × 2 square when there are 30 or fewer, 3 × 3 for 16 and 4 × 4 for 12), so the bar holds W things, each drawn in it, and is named "n/d of W" at its
 /// right end: the problem, written once as the picture's own names. More than 54 things fill the bar a column of 2, 3
 /// or 4 at a time (when a group is whole columns), so 108 is a bar 54 × 2, still counted, not a strip twice the screen.
 /// The ruler's handle, over the bar, sets one group's size, snapping only to sizes that divide W; while it's dragged the readout names the groups ("fourths, 5 in each")
@@ -20,13 +20,15 @@ struct FractionOfLesson: PaperLesson {
     struct Q {
         /// The top, the bottom, the things, and each group's count.
         let n, d, W, g: Int
-        /// Squares a thing (2 when there are 30 or fewer), things down a column, and the bar's length in squares.
+        /// Squares a thing (4, 3 or 2 when there are 12, 16 or 30 or fewer), things down a column, and the bar's length in squares.
         let c, r, L: Int
         init(_ p: Numbers) {
             func i(_ k: String, _ v: Int) -> Int { Int((p[k] ?? Double(v)).rounded()) }
             d = min(max(2, i("d", 2)), 12); n = min(max(1, i("n", 1)), d - 1)
             let w = max(d, i("W", d)); W = w - w % d; g = W / d
-            c = W <= 30 ? 2 : 1
+            // a thing is a square 4, 3 or 2 squares a side while the bar stays 48 squares or less (the fraction bars'
+            // whole), so a few things aren't a sliver of the screen; one square from 31 on
+            c = W <= 12 ? 4 : W <= 16 ? 3 : W <= 30 ? 2 : 1
             // a long bar folds into columns of 2 to 4 things, each group still whole columns
             let (w0, g0) = (W, g)
             r = w0 <= 54 ? 1 : (2...4).first { g0 % $0 == 0 && w0 / $0 <= 54 } ?? 1

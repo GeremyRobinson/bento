@@ -55,7 +55,7 @@ ruler to that piece's size: "How many fit in one whole?" (sets `one`). 2. The ot
 counted (See). 3. **Write** `W ÷ 1/d = W × d = [ ]`. Say: "d pieces in every whole."
 
 ### Fraction of a number (`g5-fracof`)
-One square (2 × 2 when there are 30 or fewer) is one thing: `W` things in one bar. 1. **Cut** the bar into `d` equal
+One square (2 × 2 when there are 30 or fewer; 3 × 3 for 16 or fewer and 4 × 4 for 12 or fewer, so the bar is up to 48 squares like the fraction bars, 25 Oct) is one thing: `W` things in one bar. 1. **Cut** the bar into `d` equal
 parts with the ruler (snapping to part sizes that divide `W`; the readout names the parts: "fourths, 5 in each"). 2.
 **Tap** `n` parts to take them (skipped when `n` is 1). 3. **Write** `n/d of W = W ÷ d × n = [ ]`.
 
