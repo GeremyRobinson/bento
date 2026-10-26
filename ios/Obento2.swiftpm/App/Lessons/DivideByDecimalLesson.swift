@@ -121,6 +121,7 @@ struct DivideByDecimalLesson: PaperLesson {
                 let w = PaperText.width(text, PaperText.font(Sketch.wordSize * k, .medium)) / Paper.cell
                 let along = max(w / 2, min(W - w / 2, Double(count) * D / 2))
                 pen.label("readout", text, Self.readout.colour(lit ? .chapter : .ink), .above, edge: 2 * k, along: along)
+                pen.reads(text)
             }
         }
         /// The divisor's size, written once: a dashed hop from 0 with its name over it, until the first hop is laid.

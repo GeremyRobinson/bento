@@ -49,6 +49,11 @@ extension WorkProblem {
         if let r = hands?.release { apply(r(hand)) } else { onChange?() }
     }
 
+    /// A drag is under way: the bar shows its readout (the calm pill, G 26 Oct).
+    var handMoving: Bool { dragging }
+    /// What the hand move reads now, as the lesson's live drawing has it (its readout label's words).
+    var liveReadout: String? { dragging ? paper?.draw(state()).live.readout : nil }
+
     /// One of the lesson's own blocks ("Cut").
     func act(_ name: String) {
         guard !busy, let a = hands?.actions[name] else { return }

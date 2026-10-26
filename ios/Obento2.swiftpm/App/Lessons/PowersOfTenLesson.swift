@@ -53,7 +53,7 @@ struct PowersOfTenLesson: PaperLesson {
             if held {
                 let d = Int((s.h("d") ?? 0).rounded())
                 digits(&live, C, by: d, .chapter)
-                if d > 0 { hops(&live, C, "live", d) }
+                if d > 0 { hops(&live, C, "live", d); live.reads(PowersOfTen.Parts.times(d)) }
             } else {
                 digits(&pic, C, by: 0, .ink)
                 // what the hand moves, ringed, as Rounding's point is (only while it waits to be dragged)

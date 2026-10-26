@@ -105,6 +105,8 @@ struct GridPen {
     mutating func word(_ id: String, _ text: String, at col: Double, _ row: Double, _ w: Sketch.Words, anchor: UnitPoint = .center) {
         sketch.text(stableIds ? id : "\(id):\(text)", text, at: P(col, row), size: w.size * k, weight: w.weight, w.colour, anchor: anchor, digits: true)
     }
+    /// What this hand move reads now, for the bar's middle while the finger is down (Sketch.readout).
+    mutating func reads(_ text: String) { sketch.readout = text }
     enum Side { case above, below, left, right }
     /// A label on one side of what it labels (G 19 Oct): its ink always half a square from that edge, whichever side,
     /// however many digits; `edge` is the edge's row (above, below) or column (left, right), `along` the middle of

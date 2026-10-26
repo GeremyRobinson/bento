@@ -118,3 +118,22 @@ final class PillTests: XCTestCase {
         XCTAssertEqual(Pill.gradeTapped("7", live: "5"), "7th grade: coming soon.")
     }
 }
+
+/// The page's progress as the pill's squares (LessonPlan.squares).
+final class PageSquaresTests: XCTestCase {
+    func testTogetherThenSixRightOnTheirOwn() throws {
+        let spec = try XCTUnwrap(Lessons.spec("g5-round"))
+        var rng = SeededRandom(seed: 7)
+        let plan = LessonPlan(spec, using: &rng)
+        let n = plan.items.count
+        let together = plan.items.filter { $0.part == .together }.count
+        XCTAssertEqual(plan.squares(solved: [], clean: []).done, 0)
+        XCTAssertEqual(plan.squares(solved: [], clean: []).of, together + LessonPlan.own)
+        // the together ones solved: their squares filled
+        let solved = plan.items.map { $0.part == .together }
+        XCTAssertEqual(plan.squares(solved: solved, clean: Array(repeating: false, count: n)).done, together)
+        // every own one right: never more squares than the 6 that open the test
+        let all = Array(repeating: true, count: n)
+        XCTAssertEqual(plan.squares(solved: all, clean: all).done, together + LessonPlan.own)
+    }
+}

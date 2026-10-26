@@ -656,6 +656,34 @@ enum Shots {
             m.frameGroup(duration: 0)
             m.drawnAt = PaperClock.now
             m.beginStartHere(force: true, frozen: Double(n.dropFirst("first-launch-".count)))
+        // the calm smart pill (G 26 Oct), at each of its moments; `-words` shows the first sessions' words under the icons
+        // - bar-map: a page partway, nothing due: "Continue →". bar-map-due: lessons checked, today's review to take:
+        //   "Go over · 8". bar-map-fresh: nothing started: the grade. bar-grade-open: the grades grown out of the pill,
+        //   a dead one tapped ("7th grade: coming soon.").
+        // - bar-working: Adding fractions' first problem, its squares. bar-dragging: its ruler held, the readout big in
+        //   the middle. bar-miss: a wrong cut: Show me with its word, ringed. bar-solved: worked to the end: "Next →".
+        //   bar-more-open: ⋯ More grown out of the pill in a problem.
+        case let n where n.hasPrefix("bar-map") || n == "bar-grade-open":
+            switch n {
+            case "bar-map":
+                Progress.shared.reset(to: ["add"])
+                seedPage("g5-multfrac", own: 1)
+            case "bar-map-due": seedMe()
+            default: Progress.shared.reset(to: [])
+            }
+            if n == "bar-grade-open" { BarUI.shared.open = .grade; BarUI.shared.gradeSaid = Pill.gradeTapped("7", live: Map.grade.number) }
+            m.shotMode = true; frameMap()
+        case "bar-working", "bar-dragging", "bar-miss", "bar-solved", "bar-more-open":
+            guard let p = Map.piece("add"), let page = open(p), let w = page.problems.first as? WorkProblem else { return true }
+            page.open(w)
+            await wait(0.3)
+            switch name {
+            case "bar-dragging": w.hand = ["grab": 1]; w.dragging = true
+            case "bar-miss": w.answerForShots(wrong: true)
+            case "bar-solved": for _ in 0..<20 where !w.solved { w.answerForShots() }
+            case "bar-more-open": BarUI.shared.open = .more
+            default: break
+            }
         case "cards-fit":
             // every lesson's cards checked inside their frames, printed for the build to read
             for line in CardText.check() { print("OBENTO-CARDS \(line)") }

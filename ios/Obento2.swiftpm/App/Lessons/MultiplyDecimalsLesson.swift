@@ -146,7 +146,7 @@ struct MultiplyDecimalsLesson: PaperLesson {
             let cx = s.h("cx") ?? cx0, cy = s.h("cy") ?? cy0
             strip(&live, cx: cx, cy: cy)
             live.dot("corner", at: cx, bottom - cy, radius: (s.grabbed ? 0.75 : 0.6) * k, .chapter, over: true)
-            if cx > 0, cy > 0 { live.label("count", count(cx, cy), Self.readout, .above, edge: top, along: W / 2) }
+            if cx > 0, cy > 0 { live.label("count", count(cx, cy), Self.readout, .above, edge: top, along: W / 2); live.reads(count(cx, cy)) }
         } else if at >= 2 {
             strip(&pic, cx: q.sw, cy: q.sh)
             pic.label("count", at >= 3 ? "\(q.P) pieces" : count(q.sw, q.sh), Self.readout.colour(at >= 3 ? .chapter : .ink), .above, edge: top, along: W / 2)

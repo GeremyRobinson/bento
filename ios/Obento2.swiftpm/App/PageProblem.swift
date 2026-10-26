@@ -54,6 +54,10 @@ protocol PageProblem: AnyObject {
     func grab(_ p: Point) -> Bool
     func drag(to p: Point)
     func release()
+    /// A hand move is under way (the finger is down on something it moves): the bar dims all but its readout.
+    var handMoving: Bool { get }
+    /// What the hand move reads now ("3 rows", "fourths"), said big in the bar's middle while the finger is down.
+    var liveReadout: String? { get }
     /// Brought back from where the child left it: its picture as it was, at once.
     func restore()
     /// The How to's explaining beats after the lesson's first words: what each says, and what it draws.
@@ -69,6 +73,8 @@ extension PageProblem {
     func grab(_ p: Point) -> Bool { false }
     func drag(to p: Point) {}
     func release() {}
+    var handMoving: Bool { false }
+    var liveReadout: String? { nil }
     /// Typed into its boxes, or picked.
     func answerForShots(wrong: Bool) {
         guard let a = lesson.step.answer else { go(); return }
