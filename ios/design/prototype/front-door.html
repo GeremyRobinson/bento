@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Front door and bar</title>
+<style>
+:root {
+  --paper: #F3F1EC; --grid: #E2DED6; --grid-strong: #D3CEC4;
+  --ink: #1D1C1A; --ink2: #6E6A63; --ink3: #A39E95;
+  --chapter: #4F63D9; --tint: rgba(79, 99, 217, .14); --tint-strong: rgba(79, 99, 217, .42);
+  --right: #178A57; --wrong: #C8372D;
+  --pill: rgba(255, 255, 255, .94); --pill-line: #E4E0D8; --shadow: 0 6px 24px rgba(40, 30, 10, .10);
+  --page: #E9E6DF;
+  --round: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+  --c: 12px; /* one square of the paper in these previews (20 pt on the iPad) */
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C;
+  --chapter: #8C9BFF; --tint: rgba(140, 155, 255, .16); --tint-strong: rgba(140, 155, 255, .42);
+  --right: #3CCF8E; --wrong: #FF6B5E;
+  --pill: rgba(40, 40, 37, .94); --pill-line: #3A3A36; --shadow: 0 6px 24px rgba(0, 0, 0, .4);
+  --page: #121211; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C;
+  --chapter: #8C9BFF; --tint: rgba(140, 155, 255, .16); --tint-strong: rgba(140, 155, 255, .42);
+  --right: #3CCF8E; --wrong: #FF6B5E;
+  --pill: rgba(40, 40, 37, .94); --pill-line: #3A3A36; --shadow: 0 6px 24px rgba(0, 0, 0, .4);
+  --page: #121211; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { margin: 0; background: var(--page); color: var(--ink); font-family: var(--round); line-height: 1.4 }
+main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 80px }
+h1 { font-size: 30px; margin: 0 0 4px }
+h2 { font-size: 22px; margin: 56px 0 4px }
+.lede, .note { color: var(--ink2); margin: 0 0 16px; max-width: 70ch }
+.note b { color: var(--ink) }
+.top { display: flex; justify-content: space-between; align-items: start; gap: 16px; flex-wrap: wrap }
+.chip { font: inherit; font-size: 14px; border: 1px solid var(--pill-line); background: var(--pill); color: var(--ink); border-radius: 999px; padding: 6px 12px; cursor: pointer }
+.chip[aria-pressed="true"] { border-color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 }
+
+/* an iPad in landscape, its screen graph paper */
+.ipad { position: relative; width: 100%; aspect-ratio: 1180 / 820; border-radius: 22px; overflow: hidden; border: 10px solid #111; box-shadow: var(--shadow);
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid-strong) 1px, transparent 1px), linear-gradient(90deg, var(--grid-strong) 1px, transparent 1px),
+    linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: calc(var(--c) * 5) calc(var(--c) * 5), calc(var(--c) * 5) calc(var(--c) * 5), var(--c) var(--c), var(--c) var(--c) }
+.ipad.small { --c: 8px; border-width: 7px; border-radius: 16px }
+/* everything on the paper is placed in squares: x, y, w, h in squares */
+.on { position: absolute; left: calc(var(--x) * var(--c)); top: calc(var(--y) * var(--c)); width: calc(var(--w, auto) * var(--c)); height: calc(var(--h, auto) * var(--c)) }
+.words { font-size: calc(var(--c) * 1.4); line-height: calc(var(--c) * 2); white-space: nowrap }
+.big { font-size: calc(var(--c) * 2.4); line-height: calc(var(--c) * 3); font-weight: 600 }
+.small { font-size: calc(var(--c) * 1); line-height: calc(var(--c) * 1); color: var(--ink2) }
+/* a control: a block of squares drawn on the paper */
+.block { border: 1.5px solid var(--ink); display: flex; align-items: center; justify-content: center; gap: 6px; font-size: calc(var(--c) * 1.2); cursor: pointer; background: var(--paper); color: var(--ink); font-family: inherit; padding: 0 }
+.block.lit { border-color: var(--chapter); background: var(--tint); color: var(--chapter); font-weight: 600 }
+.block.dead { border-style: dashed; border-color: var(--ink3); color: var(--ink3); cursor: not-allowed }
+.line { border-bottom: 1.5px solid var(--ink) }
+.fade { animation: fade .5s both }
+@keyframes fade { from { opacity: 0 } }
+svg .draw { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); animation: draw 1.1s ease-out forwards }
+@keyframes draw { to { stroke-dashoffset: 0 } }
+svg .fill { opacity: 0; animation: fade-in .5s ease-out forwards }
+@keyframes fade-in { to { opacity: 1 } }
+
+/* the pill */
+.pill { position: absolute; left: 50%; bottom: calc(var(--c) * 1.5); transform: translateX(-50%); display: flex; align-items: center; gap: 2px; background: var(--pill); border: 1px solid var(--pill-line); border-radius: 999px; box-shadow: var(--shadow); padding: 4px; height: calc(var(--c) * 4.2); transition: width .35s cubic-bezier(.3, .9, .3, 1); overflow: hidden; white-space: nowrap }
+.pill .b { display: flex; align-items: center; gap: 6px; padding: 0 12px; height: 100%; border-radius: 999px; font-size: 14px; color: var(--ink) }
+.pill .b.on-here { background: var(--tint); color: var(--chapter); font-weight: 600 }
+.pill .b.dim { color: var(--ink3) }
+.pill .b.ring { box-shadow: inset 0 0 0 1.5px var(--chapter); color: var(--chapter); font-weight: 600 }
+.pill .mid { display: flex; flex-direction: column; justify-content: center; padding: 0 14px; min-width: 150px; height: 100% }
+.pill .mid .t { font-size: 14px; font-weight: 600 }
+.pill .mid .s { font-size: 11px; color: var(--ink2) }
+.pill .mid .bar { height: 3px; border-radius: 2px; background: var(--grid); margin-top: 4px; overflow: hidden }
+.pill .mid .bar i { display: block; height: 100%; background: var(--chapter) }
+.pill .mid.go { background: var(--tint); border-radius: 999px; color: var(--chapter) }
+.pill .mid.go .t { color: var(--chapter) }
+.pill .readout { font-size: 20px; font-weight: 700; color: var(--chapter); text-align: center }
+.pill .sep { width: 1px; align-self: stretch; margin: 8px 2px; background: var(--pill-line) }
+.panel { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(var(--c) * 6.5); background: var(--pill); border: 1px solid var(--pill-line); border-radius: 18px; box-shadow: var(--shadow); padding: 8px; min-width: 260px; transform-origin: bottom center; animation: grow .3s cubic-bezier(.3, .9, .3, 1) both }
+@keyframes grow { from { opacity: 0; transform: translateX(-50%) translateY(10px) scale(.92) } }
+.panel .row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 10px; font-size: 14px }
+.panel .row:hover { background: var(--tint) }
+.panel .grades { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; padding: 4px }
+.panel .g { border: 1.5px solid var(--ink3); border-style: dashed; color: var(--ink3); height: 34px; display: grid; place-items: center; font-size: 13px; border-radius: 4px }
+.panel .g.live { border: 1.5px solid var(--chapter); background: var(--tint); color: var(--chapter); font-weight: 700 }
+.panel .cap { font-size: 12px; color: var(--ink2); padding: 4px 6px 2px }
+
+/* the other two bar ideas */
+.tabs { position: absolute; right: 0; top: calc(var(--c) * 6); display: flex; flex-direction: column; gap: calc(var(--c) * 1) }
+.tabs span { writing-mode: vertical-rl; background: var(--paper); border: 1.5px solid var(--ink); border-right: none; padding: 14px 6px; font-size: 13px }
+.tabs span.here { background: var(--tint); border-color: var(--chapter); color: var(--chapter); font-weight: 600 }
+.ruler { position: absolute; left: calc(var(--c) * 10); right: calc(var(--c) * 10); bottom: calc(var(--c) * 2); height: calc(var(--c) * 4); border: 1.5px solid var(--ink); background: var(--paper); display: flex; align-items: center; justify-content: space-between; padding: 0 12px; font-size: 13px;
+  background-image: repeating-linear-gradient(90deg, var(--ink3) 0 1px, transparent 1px var(--c)); background-size: 100% 6px; background-repeat: no-repeat; background-position: 0 0 }
+.ruler .fillr { position: absolute; left: 0; top: 0; height: 6px; background: var(--chapter) }
+
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-top: 16px }
+.card h3 { margin: 12px 0 2px; font-size: 17px }
+.card p { margin: 0; color: var(--ink2); font-size: 14px }
+.pick { display: inline-block; font-size: 12px; color: var(--chapter); border: 1px solid var(--chapter); padding: 1px 8px; border-radius: 999px; margin-left: 6px; vertical-align: 2px }
+
+.steps { display: flex; gap: 8px; align-items: center; margin: 12px 0; flex-wrap: wrap }
+.steps .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ink3) }
+.steps .dot.here { background: var(--ink) }
+.say { margin-top: 10px; color: var(--ink2); font-size: 14px; min-height: 3em; max-width: 70ch }
+.say b { color: var(--ink) }
+@media (max-width: 640px) { :root { --c: 6px } .pill .b, .pill .mid .t { font-size: 11px } .pill .mid { min-width: 100px } .ipad { border-width: 6px; border-radius: 14px } }
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div>
+      <h1>The front door and the bar</h1>
+      <p class="lede">A preview to tap through, so we can choose before anything is built. Every piece sits on the paper's squares, as in the app.</p>
+    </div>
+    <button class="chip" id="theme">Dark paper</button>
+  </div>
+
+  <!-- 1. SETUP -->
+  <h2>1 · Setting up (the first time it opens)</h2>
+  <p class="note">About a minute, a grown-up and the child together. Nothing on the map looks started until the child starts.</p>
+  <div class="ipad" id="setup"></div>
+  <div class="steps">
+    <button class="chip" id="back">← Back</button>
+    <span id="dots" style="display:flex;gap:8px"></span>
+    <button class="chip" id="next">Next →</button>
+    <button class="chip" id="replay">Play again</button>
+  </div>
+  <p class="say" id="say"></p>
+
+  <!-- 2. THE BAR -->
+  <h2>2 · The bar: a smart pill <span class="pick">my pick</span></h2>
+  <p class="note">The same pill as now. Its middle always offers the <b>one most useful thing right now</b>. Tap through the moments below.</p>
+  <div class="chips" id="moments"></div>
+  <div class="ipad" id="pillpaper"></div>
+  <p class="say" id="pillsay"></p>
+
+  <h2>Two other shapes, for comparison</h2>
+  <div class="cols">
+    <div class="card">
+      <div class="ipad small" id="tabsdemo"></div>
+      <h3>Notebook tabs</h3>
+      <p>Lessons, Me and Grown-ups as tabs on the paper's edge, like a binder. The most "paper" of the three, but Hint and Show me need a home of their own inside lessons, and tabs take the screen's edge from the pictures.</p>
+    </div>
+    <div class="card">
+      <div class="ipad small" id="rulerdemo"></div>
+      <h3>A ruler</h3>
+      <p>The bar drawn as a ruler lying on the grid, its ticks filling with progress. Lovely on the map; in a lesson it's a wide strip that eats picture space, and it reads less clearly as buttons.</p>
+    </div>
+  </div>
+
+  <!-- 3. ME WITH GRADES -->
+  <h2>3 · Me, with the grade switcher</h2>
+  <p class="note">Name and grade at the top of Me. The grades row is there now, with 5th live and the others <b>dead buttons</b> (they only say "Coming soon"). No maps for other grades yet. Tap a grade.</p>
+  <div class="ipad" id="me"></div>
+  <p class="say" id="mesay"></p>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const el = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstChild; };
+const on = (x, y, w, h, cls, inner, extra = '') => `<div class="on ${cls}" style="--x:${x};--y:${y};${w ? `--w:${w};` : ''}${h ? `--h:${h};` : ''}${extra}">${inner}</div>`;
+const block = (x, y, w, h, label, cls = '', act = '') => `<button class="on block ${cls}" style="--x:${x};--y:${y};--w:${w};--h:${h}" ${act}>${label}</button>`;
+
+// theme
+const root = document.documentElement;
+$('#theme').onclick = () => {
+  const dark = root.dataset.theme === 'dark' || (!root.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
+  root.dataset.theme = dark ? 'light' : 'dark';
+  $('#theme').textContent = dark ? 'Dark paper' : 'Light paper';
+};
+
+/* ---------------- 1. SETUP ---------------- */
+let name = 'Mia', grade = 5, reminder = '4:00 pm', sound = true;
+const grades = ['K', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+const setupSteps = [
+  { say: '<b>Welcome.</b> The paper draws itself in, then a rectangle builds square by square: the app\'s idea in one move. One line of words. No slides.',
+    draw: () => {
+      const sq = [];
+      for (let r = 0; r < 4; r++) for (let c = 0; c < 6; c++) sq.push(`<rect class="fill" x="${c * 5}" y="${r * 5}" width="5" height="5" style="animation-delay:${1.1 + (r * 6 + c) * .06}s" />`);
+      return on(26, 10, 30, 20, '', `<svg viewBox="-1 -1 32 22" width="100%" height="100%" style="overflow:visible">
+          <g fill="var(--tint-strong)" stroke="var(--chapter)" stroke-width=".15">${sq.join('')}</g>
+          <rect class="draw" x="0" y="0" width="30" height="20" fill="none" stroke="var(--chapter)" stroke-width=".35" style="--len:100" />
+        </svg>`) +
+        on(21, 34, 40, 3, 'words fade', '<div style="text-align:center;font-size:calc(var(--c)*2);line-height:calc(var(--c)*3)">Maths you can see.</div>', 'animation-delay:2.8s') +
+        block(36, 40, 10, 4, 'Start →', 'fade', 'data-go="next"');
+    } },
+  { say: '<b>Name.</b> Typed on a line of squares, a letter to a square. Optional: Skip leaves it as "you".',
+    draw: () => on(25, 10, 0, 0, 'big fade', 'What\'s your name?') +
+      on(25, 18, 30, 0, 'fade', `<div style="display:flex">${[...'Mia     '].map(ch => `<span style="width:calc(var(--c)*3);height:calc(var(--c)*3);display:grid;place-items:center;font-size:calc(var(--c)*2.2);border-bottom:1.5px solid var(--ink);margin-right:calc(var(--c)*0)">${ch.trim()}</span>`).join('')}</div>`) +
+      block(25, 25, 10, 4, 'Next →', '', 'data-go="next"') + block(40, 25, 10, 4, 'Skip', '', 'data-go="next"') },
+  { say: '<b>Grade.</b> Every grade as a block on one row. 5th is live; the others are dead buttons that say "Coming soon" (no maps yet). Tap one.',
+    draw: () => on(9, 10, 0, 0, 'big fade', `Which grade${name ? ', ' + name : ''}?`) +
+      grades.map((g, i) => block(9 + i * 5, 18, 4, 4, g, i === 5 ? 'lit' : 'dead', `data-grade="${i}"`)).join('') +
+      on(9, 24, 0, 0, 'words', '<span id="gradesay"></span>') +
+      block(9, 29, 10, 4, 'Next →', '', 'data-go="next"') },
+  { say: '<b>For a grown-up.</b> A daily reminder and sound, both optional. It also shows how to reach the grown-ups\' page later: hold the square for 3 seconds.',
+    draw: () => on(20, 6, 0, 0, 'big fade', 'For a grown-up') +
+      on(20, 12, 0, 0, 'words', 'A reminder each day') +
+      ['3:30 pm', '4:00 pm', '6:00 pm', 'Off'].map((t, i) => block(20 + i * 8, 15, 7, 3, t, t === reminder ? 'lit' : '', `data-rem="${t}"`)).join('') +
+      on(20, 20, 0, 0, 'words', 'Sound') +
+      ['On', 'Off'].map((t, i) => block(20 + i * 8, 23, 7, 3, t, (t === 'On') === sound ? 'lit' : '', `data-sound="${t}"`)).join('') +
+      on(20, 29, 0, 0, 'words', 'The grown-ups\' page: in ⋯, hold the square.') +
+      on(20, 32, 3, 3, 'block', '') + on(24, 32.5, 0, 0, 'small', 'held 3 seconds<br>&nbsp;') +
+      block(20, 37, 10, 4, 'Done →', '', 'data-go="next"') },
+  { say: '<b>The map.</b> The paper glides to the first lesson of their grade with "Start here." in their name. Clean: no tags, no counts, no test badges, an empty bar. Counts appear once there\'s something to count.',
+    draw: () => {
+      const frames = [['Multiply two-digit numbers', 22], ['Long division', 42], ['Order of operations', 62]];
+      return on(22, 7, 0, 0, 'words fade', '<b style="font-size:calc(var(--c)*2)">Whole numbers</b>') +
+        frames.map(([n, x], i) => on(x, 11, 15, 10, 'fade', `<div style="width:100%;height:100%;border:1.5px solid ${i ? 'var(--grid-strong)' : 'var(--chapter)'};background:${i ? 'transparent' : 'var(--tint)'}"></div>`, `animation-delay:${.2 + i * .2}s`) +
+          on(x, 22, 0, 0, 'words fade', n, `animation-delay:${.3 + i * .2}s`)).join('') +
+        on(7, 15, 0, 0, 'words fade', `<b>Start here${name ? ', ' + name : ''}.</b>`, 'animation-delay:1s') +
+        `<div class="pill fade" style="animation-delay:.8s"><span class="b on-here">⊞ Lessons</span><span class="b">◯ Me</span><span class="sep"></span><span class="mid"><span class="t">5th grade</span><span class="s">Ready to start</span></span><span class="sep"></span><span class="b">⋯</span></div>`;
+    } },
+];
+let step = 0;
+function drawSetup() {
+  const p = $('#setup'); p.innerHTML = setupSteps[step].draw();
+  $('#say').innerHTML = setupSteps[step].say;
+  $('#dots').innerHTML = setupSteps.map((_, i) => `<span class="dot ${i === step ? 'here' : ''}"></span>`).join('');
+  $('#dots').className = 'steps';
+}
+$('#setup').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.go) { step = Math.min(step + 1, setupSteps.length - 1); drawSetup(); }
+  if (b.dataset.grade) { const i = +b.dataset.grade; $('#gradesay').textContent = i === 5 ? '5th grade it is.' : `${grades[i] === 'K' ? 'Kindergarten' : grades[i] + (['', 'st', 'nd', 'rd'][+grades[i]] || 'th') + ' grade'}: coming soon.`; }
+  if (b.dataset.rem) { reminder = b.dataset.rem; drawSetup(); }
+  if (b.dataset.sound) { sound = b.dataset.sound === 'On'; drawSetup(); }
+});
+$('#next').onclick = () => { step = Math.min(step + 1, setupSteps.length - 1); drawSetup(); };
+$('#back').onclick = () => { step = Math.max(step - 1, 0); drawSetup(); };
+$('#replay').onclick = drawSetup;
+drawSetup();
+
+/* ---------------- 2. THE SMART PILL ---------------- */
+const B = (t, cls = '') => `<span class="b ${cls}">${t}</span>`;
+const sep = '<span class="sep"></span>';
+const mid = (t, s, fill, cls = '') => `<span class="mid ${cls}"><span class="t">${t}</span>${s ? `<span class="s">${s}</span>` : ''}${fill != null ? `<span class="bar"><i style="width:${fill}%"></i></span>` : ''}</span>`;
+const lessonPic = (shaded, label) => {
+  // a 6 × 4 rectangle cut into rows, as in a lesson
+  let s = '';
+  for (let r = 0; r < 4; r++) for (let c = 0; c < 6; c++) s += `<rect x="${c * 5}" y="${r * 5}" width="5" height="5" fill="${r < shaded ? 'var(--tint-strong)' : 'none'}" stroke="var(--grid-strong)" stroke-width=".12"/>`;
+  return on(30, 8, 30, 20, '', `<svg viewBox="-1 -1 32 22" width="100%" height="100%" style="overflow:visible">${s}<rect x="0" y="0" width="30" height="20" fill="none" stroke="var(--chapter)" stroke-width=".3"/></svg>`) +
+    (label ? on(62, 16, 0, 0, 'words', label) : '');
+};
+const moments = {
+  'On the map': { say: 'The middle offers what to do next: <b>Continue</b> the lesson they were on, at the problem they left. One tap goes straight there.',
+    paper: on(20, 10, 0, 0, 'words', '<b style="font-size:calc(var(--c)*2)">Whole numbers</b>') + on(20, 14, 15, 10, '', '<div style="height:100%;border:1.5px solid var(--grid-strong)"></div>') + on(40, 14, 15, 10, '', '<div style="height:100%;border:1.5px solid var(--chapter);background:var(--tint)"></div>') + on(40, 25, 0, 0, 'words', 'Long division'),
+    pill: B('⊞ Lessons', 'on-here') + B('◯ Me') + sep + mid('Continue · Long division', 'Problem 4 of 9', 40, 'go') + sep + B('⋯') },
+  'Something due': { say: 'When lessons are due for a check, the middle says so, in plain words. Tap: Today\'s review opens.',
+    paper: on(20, 10, 0, 0, 'words', '<b style="font-size:calc(var(--c)*2)">Whole numbers</b>') + on(20, 14, 15, 10, '', '<div style="height:100%;border:1.5px solid var(--grid-strong)"></div>'),
+    pill: B('⊞ Lessons', 'on-here') + B('◯ Me') + sep + mid('2 to go over today', 'About 4 minutes', null, 'go') + sep + B('⋯') },
+  'Working': { say: 'In a problem: back to the problems, where you are, Hint and Show me. As now.',
+    paper: on(30, 3, 0, 0, 'words', 'Shade 2 rows of the rectangle.') + lessonPic(0),
+    pill: B('← Problems') + sep + mid('Long division', 'Together 2 · Step 1 of 3', 33) + sep + B('◇ Hint') + B('▷ Show me') + sep + B('⋯') },
+  'Dragging': { say: 'While a hand move is under way, the middle echoes its <b>live readout</b> (still drawn on the paper too), big, near the thumb. Let go: it goes back.',
+    paper: on(30, 3, 0, 0, 'words', 'Shade 2 rows of the rectangle.') + lessonPic(3, '<span style="color:var(--chapter)">3 rows</span>'),
+    pill: B('← Problems', 'dim') + sep + `<span class="mid" style="min-width:180px"><span class="readout">3 rows</span></span>` + sep + B('◇ Hint', 'dim') + B('▷ Show me', 'dim') + sep + B('⋯', 'dim') },
+  'After a miss': { say: 'After a miss, <b>Show me</b> is ringed: the one thing most worth tapping. The miss\'s words stay on the paper, under the instruction.',
+    paper: on(30, 3, 0, 0, 'words', 'Shade 2 rows of the rectangle.') + on(30, 5, 0, 0, 'words', '<span style="color:var(--wrong)">That\'s 3 rows. Take one away.</span>') + lessonPic(3),
+    pill: B('← Problems') + sep + mid('Long division', 'Together 2 · Step 1 of 3', 33) + sep + B('◇ Hint') + B('▷ Show me', 'ring') + sep + B('⋯') },
+  'Solved': { say: 'Solved: the middle becomes <b>Next problem →</b>, so the next step is under the thumb. Hint and Show me fold away.',
+    paper: on(30, 3, 0, 0, 'words', '<span style="color:var(--right)">2 rows of 6 is 12.</span>') + lessonPic(2),
+    pill: B('← Problems') + sep + mid('Next problem →', 'Together 3 is next', 100, 'go') + sep + B('⋯') },
+  'Grade': { say: 'Tap the grade in the middle and the grades grow up out of the pill: 5th live, the rest dead buttons for now. (The same row lives in Me.)',
+    paper: on(20, 10, 0, 0, 'words', '<b style="font-size:calc(var(--c)*2)">Whole numbers</b>'),
+    pill: B('⊞ Lessons', 'on-here') + B('◯ Me') + sep + mid('5th grade ▴', '3 of 17 learned', 18) + sep + B('⋯'),
+    panel: `<div class="panel"><div class="cap">Grade</div><div class="grades">${grades.map((g, i) => `<span class="g ${i === 5 ? 'live' : ''}">${g}</span>`).join('')}<span class="g" style="border:none"></span></div><div class="cap">Other grades are coming soon.</div></div>` },
+  'More': { say: 'Everything else grows up out of ⋯ (never a pop-up over the paper): watch the How to again, the grown-ups\' page, the paper\'s colours.',
+    paper: on(30, 3, 0, 0, 'words', 'Shade 2 rows of the rectangle.') + lessonPic(0),
+    pill: B('← Problems') + sep + mid('Long division', 'Together 2 · Step 1 of 3', 33) + sep + B('◇ Hint') + B('▷ Show me') + sep + B('✕', 'on-here'),
+    panel: `<div class="panel" style="left:auto;right:calc(50% - 250px);transform:none;animation-name:fade"><div class="row">▷ Watch the How to again</div><div class="row">◐ Paper: as the iPad is set</div><div class="row">⚿ Grown-ups</div></div>` },
+};
+let moment = 'On the map';
+function drawPill() {
+  const m = moments[moment], p = $('#pillpaper');
+  const old = p.querySelector('.pill'), oldW = old ? old.getBoundingClientRect().width : null;
+  p.innerHTML = m.paper + (m.panel || '') + `<div class="pill">${m.pill}</div>`;
+  const pill = p.querySelector('.pill');
+  if (oldW) { const w = pill.getBoundingClientRect().width; pill.style.width = oldW + 'px'; pill.getBoundingClientRect(); pill.style.width = w + 'px'; }
+  $('#pillsay').innerHTML = m.say;
+  $('#moments').innerHTML = Object.keys(moments).map(k => `<button class="chip" aria-pressed="${k === moment}">${k}</button>`).join('');
+}
+$('#moments').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { moment = b.textContent; drawPill(); } });
+drawPill();
+
+/* ---------------- the other two shapes ---------------- */
+$('#tabsdemo').innerHTML = on(6, 6, 0, 0, 'words', '<b>Whole numbers</b>') + on(6, 10, 15, 10, '', '<div style="height:100%;border:1.5px solid var(--chapter);background:var(--tint)"></div>') + on(26, 10, 15, 10, '', '<div style="height:100%;border:1.5px solid var(--grid-strong)"></div>') +
+  '<div class="tabs"><span class="here">Lessons</span><span>Me</span><span>Grown-ups</span></div>';
+$('#rulerdemo').innerHTML = on(6, 6, 0, 0, 'words', '<b>Whole numbers</b>') + on(6, 10, 15, 10, '', '<div style="height:100%;border:1.5px solid var(--chapter);background:var(--tint)"></div>') + on(26, 10, 15, 10, '', '<div style="height:100%;border:1.5px solid var(--grid-strong)"></div>') +
+  '<div class="ruler"><span class="fillr" style="width:18%"></span><span>⊞ Lessons · Me</span><span><b>5th grade</b> · 3 of 17</span><span>⋯</span></div>';
+
+/* ---------------- 3. ME ---------------- */
+let meGrade = 5;
+function drawMe() {
+  const shelf = (x, title, cards) => on(x, 21, 0, 0, 'words', `<b>${title}</b>`) + cards.map((c, i) => on(x, 24 + i * 7, 13, 5, '', `<div style="height:100%;border:1.5px solid ${c[1]};background:${c[2] || 'transparent'};display:flex;align-items:flex-end;padding:4px 6px;font-size:calc(var(--c)*1)">${c[0]}</div>`)).join('');
+  $('#me').innerHTML =
+    on(10, 3, 0, 0, 'big', name || 'Me') +
+    on(10, 7, 0, 0, 'small', '5th grade · 3 of 17 learned') +
+    on(28, 3, 0, 0, 'small', 'Grade') +
+    grades.map((g, i) => block(28 + i * 4, 5, 3, 3, g, i === meGrade ? 'lit' : 'dead', `data-me="${i}"`)).join('') +
+    on(28, 9, 0, 0, 'small', '<span id="megradesay"></span>') +
+    on(10, 12, 0, 0, 'words', '<b>Today</b>') +
+    on(10, 15, 20, 4, '', '<div style="height:100%;border:1.5px solid var(--chapter);background:var(--tint);display:flex;align-items:center;padding:0 8px;font-size:calc(var(--c)*1.2)">Long division · problem 4 →</div>') +
+    on(32, 15, 16, 4, '', '<div style="height:100%;border:1.5px solid var(--ink);display:flex;align-items:center;padding:0 8px;font-size:calc(var(--c)*1.2)">Daily review · 8</div>') +
+    shelf(10, 'Go over', [['Rounding decimals', 'var(--chapter)']]) +
+    shelf(26, 'Getting stronger', [['Multiply two-digit', 'var(--chapter)', 'var(--tint)'], ['Adding decimals', 'var(--chapter)', 'var(--tint)']]) +
+    shelf(42, 'Know it', [['Powers of ten', 'var(--chapter)', 'var(--tint-strong)']]) +
+    `<div class="pill"><span class="b">⊞ Lessons</span><span class="b on-here">◯ Me</span><span class="sep"></span>${mid('5th grade', '3 of 17 learned', 18)}<span class="sep"></span><span class="b">⋯</span></div>`;
+  $('#mesay').innerHTML = 'Today and the shelves stay as they are now. The grade row is new: tapping 5th shows 5th; any other grade just says it\'s coming soon.';
+}
+$('#me').addEventListener('click', e => {
+  const b = e.target.closest('button[data-me]'); if (!b) return;
+  const i = +b.dataset.me, g = grades[i];
+  $('#megradesay').textContent = i === 5 ? '5th grade.' : `${g === 'K' ? 'Kindergarten' : g + (['', 'st', 'nd', 'rd'][+g] || 'th') + ' grade'} is coming soon.`;
+});
+drawMe();
+</script>
+</body>
+</html>
