@@ -80,9 +80,10 @@ struct LongDivisionLesson: PaperLesson {
         // handle while the edge starts there
         pic.label("side", "\(q.dv)", Self.name, .left, edge: at == 1 ? -0.6 * k : 0, along: q.mid)
 
-        /// Squares written in a strip, or under it when it's too narrow to hold them.
-        func inStrip(_ pen: inout GridPen, _ id: String, _ text: String, x: Double, w: Double, _ words: Sketch.Words) {
-            if q.width(text, words) + 0.5 <= w { pen.word(id, text, at: x + w / 2, q.mid, words) }
+        /// Squares written in a strip, or under it when it's too narrow to hold them (`clear`: room kept at each end, as
+        /// the handle's dot needs at the strip's right end, so the number never runs into it).
+        func inStrip(_ pen: inout GridPen, _ id: String, _ text: String, x: Double, w: Double, _ words: Sketch.Words, clear: Double = 0) {
+            if q.width(text, words) + 0.5 + 2 * clear <= w { pen.word(id, text, at: x + w / 2, q.mid, words) }
             else { pen.label(id, text, words, .below, edge: top + H, along: x + w / 2) }
         }
 
@@ -115,7 +116,7 @@ struct LongDivisionLesson: PaperLesson {
             if cols > 0 {
                 strip(&live, "L", x: b, cols: cols, rows: q.dv, top: top, lit: true, left: at == 1, right: true)
                 live.label("lw", "\(cols)", Self.readout, .above, edge: top, along: b + Double(cols) / 2)
-                inStrip(&live, "lu", "\(used)", x: b, w: Double(cols), Self.readout)
+                inStrip(&live, "lu", "\(used)", x: b, w: Double(cols), Self.readout, clear: (s.grabbed ? 0.75 : 0.6) * k)
             } else if at == 1 {
                 live.line("L0", [(0, top), (0, top + H)], .chapter)
             }
@@ -130,11 +131,14 @@ struct LongDivisionLesson: PaperLesson {
         let per = 2 * k, dvd = Double(String(q.dv).count), nd = Double(String(q.n).count)
         let S = (dvd + 1) * per, R = S + nd * per, Qr = R + 3 * per, bx = S - 0.25 * per
         func row(_ r: Double) -> Double { (r + 0.5) * per }
-        rec.digits("dv", "\(q.dv)", right: S - per, row: row(1), per: per)
-        // the bracket: a curve down the number's left, then over it
-        let curve = (0...12).map { i -> CGPoint in let t = Double(i) / 12; return rec.P(bx - 0.3 * per + 0.3 * per * sin(.pi * t), 2 * per - t * per) }
-        rec.sketch.line("bracket", curve + [rec.P(R, per)], .ink, width: Sketch.stroke)
-        rec.digits("n", "\(q.n)", right: R, row: row(1), per: per)
+        // a story's "Pick what to do": the bracket would give the division away, so it's written once it's picked
+        if !s.picking {
+            rec.digits("dv", "\(q.dv)", right: S - per, row: row(1), per: per)
+            // the bracket: a curve down the number's left, then over it
+            let curve = (0...12).map { i -> CGPoint in let t = Double(i) / 12; return rec.P(bx - 0.3 * per + 0.3 * per * sin(.pi * t), 2 * per - t * per) }
+            rec.sketch.line("bracket", curve + [rec.P(R, per)], .ink, width: Sketch.stroke)
+            rec.digits("n", "\(q.n)", right: R, row: row(1), per: per)
+        }
         func takeAway(_ id: String, _ product: Int, _ part: Int, _ r: Double, _ under: String) {
             let len = Double(String(product).count)
             rec.word(id + "m", "−", at: R - (len + 0.5) * per, row(r), Self.sign)
