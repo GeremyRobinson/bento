@@ -99,6 +99,33 @@ svg .fill { opacity: 0; animation: fade-in .5s ease-out forwards }
   background-image: repeating-linear-gradient(90deg, var(--ink3) 0 1px, transparent 1px var(--c)); background-size: 100% 6px; background-repeat: no-repeat; background-position: 0 0 }
 .ruler .fillr { position: absolute; left: 0; top: 0; height: 6px; background: var(--chapter) }
 
+/* the ruler, grown up: hairline scale, clear acrylic, the pill's type */
+.scale { position: absolute; left: 0; right: 0; top: 0; height: 12px; pointer-events: none;
+  background-image: linear-gradient(90deg, var(--tick) 1px, transparent 1px), linear-gradient(90deg, var(--tick) 1px, transparent 1px);
+  background-size: calc(var(--c) * 5) 9px, calc(var(--c)) 5px; background-repeat: repeat-x; background-position: var(--off, 0) 0 }
+.scale.done { --tick: var(--chapter) }
+.scale.todo { --tick: var(--ink3) }
+.nums { position: absolute; left: 0; right: 0; top: 10px; height: 10px; font-size: 8px; color: var(--ink3); font-variant-numeric: tabular-nums; pointer-events: none }
+.nums span { position: absolute; transform: translateX(-50%) }
+.caret { position: absolute; top: 0; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 6px solid var(--chapter); transform: translateX(-50%); transition: left .5s cubic-bezier(.3, .9, .3, 1) }
+.clear { position: absolute; bottom: calc(var(--c) * 1.5); height: calc(var(--c) * 5); border-radius: 8px; overflow: hidden;
+  background: color-mix(in srgb, var(--pill) 78%, transparent); -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2);
+  border: 1px solid var(--pill-line); box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, .5); display: flex; align-items: flex-end; padding: 0 6px 4px; white-space: nowrap }
+.clear .b, .rpill .b { display: flex; align-items: center; gap: 6px; padding: 0 12px; height: calc(var(--c) * 2.8); border-radius: 6px; font-size: 14px; color: var(--ink) }
+.clear .b.on-here { color: var(--chapter); font-weight: 600; background: var(--tint) }
+.clear .b.dim, .rpill .b.dim { color: var(--ink3) }
+.clear .b.ring, .rpill .b.ring { box-shadow: inset 0 0 0 1px var(--chapter); color: var(--chapter); font-weight: 600 }
+.clear .mid, .rpill .mid { display: flex; flex-direction: column; justify-content: center; padding: 0 14px; height: calc(var(--c) * 2.8); min-width: 170px; flex: 1 }
+.clear .mid .t, .rpill .mid .t { font-size: 14px; font-weight: 600 }
+.clear .mid .s, .rpill .mid .s { font-size: 11px; color: var(--ink2); font-variant-numeric: tabular-nums }
+.clear .mid.go .t, .rpill .mid.go .t { color: var(--chapter) }
+.clear .div { width: 1px; align-self: stretch; margin: 14px 4px 2px; background: var(--ink3); opacity: .6 }
+.rpill { position: absolute; left: 50%; bottom: calc(var(--c) * 1.5); transform: translateX(-50%); height: calc(var(--c) * 4.6); border-radius: 999px; overflow: hidden; display: flex; align-items: flex-end; padding: 0 6px 5px; white-space: nowrap;
+  background: var(--pill); border: 1px solid var(--pill-line); box-shadow: var(--shadow) }
+.rpill .scale { left: 22px; right: 22px; top: 1px; height: 8px; background-size: calc(var(--c) * 5) 7px, calc(var(--c)) 4px }
+.rpill .b.on-here { background: var(--tint); color: var(--chapter); font-weight: 600; border-radius: 999px }
+.rpill .sep { width: 1px; align-self: stretch; margin: 12px 2px 4px; background: var(--pill-line) }
+
 .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-top: 16px }
 .card h3 { margin: 12px 0 2px; font-size: 17px }
 .card p { margin: 0; color: var(--ink2); font-size: 14px }
@@ -141,6 +168,13 @@ svg .fill { opacity: 0; animation: fade-in .5s ease-out forwards }
   <div class="ipad" id="pillpaper"></div>
   <p class="say" id="pillsay"></p>
 
+  <h2>2b · The ruler, grown up</h2>
+  <p class="note">Same idea, drawn like a tool grown-ups like: hairline ticks a square apart and a longer one every five, so <b>the bar's scale is the paper's own grid</b>. Small numbers, no thick borders, the pill's type. Progress fills the ticks in the chapter's colour, with a small mark where you are. Two ways:</p>
+  <div class="chips" id="rvariant"></div>
+  <div class="chips" id="rmoment"></div>
+  <div class="ipad" id="rulerpaper"></div>
+  <p class="say" id="rsay"></p>
+
   <h2>Two other shapes, for comparison</h2>
   <div class="cols">
     <div class="card">
@@ -150,8 +184,8 @@ svg .fill { opacity: 0; animation: fade-in .5s ease-out forwards }
     </div>
     <div class="card">
       <div class="ipad small" id="rulerdemo"></div>
-      <h3>A ruler</h3>
-      <p>The bar drawn as a ruler lying on the grid, its ticks filling with progress. Lovely on the map; in a lesson it's a wide strip that eats picture space, and it reads less clearly as buttons.</p>
+      <h3>A ruler (the first try)</h3>
+      <p>The bar drawn as a ruler lying on the grid, its ticks filling with progress. Lovely on the map; in a lesson it's a wide strip that eats picture space, and it reads less clearly as buttons. The grown-up versions are in 2b above.</p>
     </div>
   </div>
 
@@ -289,6 +323,47 @@ function drawPill() {
 }
 $('#moments').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { moment = b.textContent; drawPill(); } });
 drawPill();
+
+/* ---------------- 2b. THE RULER, GROWN UP ---------------- */
+const rVariants = {
+  'Clear ruler': 'A clear acrylic ruler lying on the paper, a block line to a block line. Square-ish, crisp, the most "drawing tool" of the two. The paper shows faintly through it.',
+  'Pill with a ruler edge': 'The pill you like, with a fine ruler scale along its top edge. The smallest change: the pill\'s friendliness, the ruler\'s precision.',
+};
+const rMoments = {
+  'On the map': { fill: 18, items: [['⊞ Lessons', 'on-here'], ['◯ Me', '']], mid: ['5th grade', '3 of 17 learned'], right: [['⋯', '']] },
+  'Working': { fill: 33, items: [['← Problems', '']], mid: ['Long division', 'Together 2 · Step 1 of 3'], right: [['◇ Hint', ''], ['▷ Show me', ''], ['⋯', '']] },
+  'After a miss': { fill: 33, items: [['← Problems', '']], mid: ['Long division', 'Together 2 · Step 1 of 3'], right: [['◇ Hint', ''], ['▷ Show me', 'ring'], ['⋯', '']] },
+  'Solved': { fill: 66, items: [['← Problems', '']], mid: ['Next problem →', 'Together 3 is next', 'go'], right: [['⋯', '']] },
+};
+let rVariant = 'Clear ruler', rMoment = 'On the map', rFill = 18;
+function drawRuler() {
+  const m = rMoments[rMoment], P = $('#rulerpaper');
+  const back = rMoment === 'On the map'
+    ? on(20, 10, 0, 0, 'words', '<b style="font-size:calc(var(--c)*2)">Whole numbers</b>') + on(20, 14, 15, 10, '', '<div style="height:100%;border:1.5px solid var(--chapter);background:var(--tint)"></div>') + on(40, 14, 15, 10, '', '<div style="height:100%;border:1.5px solid var(--grid-strong)"></div>')
+    : on(30, 3, 0, 0, 'words', 'Shade 2 rows of the rectangle.') + lessonPic(rMoment === 'Solved' ? 2 : rMoment === 'After a miss' ? 3 : 0);
+  const btn = ([t, c]) => `<span class="b ${c}">${t}</span>`;
+  const midH = `<span class="mid ${m.mid[2] || ''}"><span class="t">${m.mid[0]}</span><span class="s">${m.mid[1]}</span></span>`;
+  let bar;
+  if (rVariant === 'Clear ruler') {
+    // a block line to a block line, centred: 50 squares long
+    bar = `<div class="clear" style="left:calc(var(--c)*16);width:calc(var(--c)*50)">
+      <div class="scale todo"></div><div class="scale done" style="right:auto;width:${rFill}%"></div>
+      <div class="nums">${[...Array(9).keys()].map(i => `<span style="left:${(i + 1) * 10}%">${(i + 1) * 5}</span>`).join('')}</div>
+      <span class="caret" style="left:${rFill}%"></span>
+      ${m.items.map(btn).join('')}<span class="div"></span>${midH}<span class="div"></span>${m.right.map(btn).join('')}</div>`;
+  } else {
+    bar = `<div class="rpill"><div class="scale todo"></div><div class="scale done" style="right:auto;width:calc((100% - 44px) * ${rFill / 100})"></div>
+      ${m.items.map(btn).join('')}<span class="sep"></span>${midH}<span class="sep"></span>${m.right.map(btn).join('')}</div>`;
+  }
+  P.innerHTML = back + bar;
+  requestAnimationFrame(() => { rFill = m.fill; P.querySelectorAll('.scale.done').forEach(e => e.style.width = rVariant === 'Clear ruler' ? rFill + '%' : `calc((100% - 44px) * ${rFill / 100})`); const c = P.querySelector('.caret'); if (c) c.style.left = rFill + '%'; });
+  $('#rsay').innerHTML = rVariants[rVariant];
+  $('#rvariant').innerHTML = Object.keys(rVariants).map(k => `<button class="chip" aria-pressed="${k === rVariant}">${k}</button>`).join('');
+  $('#rmoment').innerHTML = Object.keys(rMoments).map(k => `<button class="chip" aria-pressed="${k === rMoment}">${k}</button>`).join('');
+}
+$('#rvariant').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { rVariant = b.textContent; drawRuler(); } });
+$('#rmoment').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { rMoment = b.textContent; drawRuler(); } });
+drawRuler();
 
 /* ---------------- the other two shapes ---------------- */
 $('#tabsdemo').innerHTML = on(6, 6, 0, 0, 'words', '<b>Whole numbers</b>') + on(6, 10, 15, 10, '', '<div style="height:100%;border:1.5px solid var(--chapter);background:var(--tint)"></div>') + on(26, 10, 15, 10, '', '<div style="height:100%;border:1.5px solid var(--grid-strong)"></div>') +
