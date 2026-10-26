@@ -28,14 +28,19 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
 - After pulling, run `xcodegen` in `ios/` so Xcode sees new files.
 
 ## Known rough edges (polish next)
-- Dark mode not checked on the 12 newest lessons.
-- Small pictures: Multiplying fractions' first step (and its "1/2" shows before the columns are cut), the smallest
-  Dividing by a decimal problems, tall Multiply story problems.
-- Multiplying decimals uses a 10 × 10 whole (not the 20 × 20 in `design/grade5.md`) so the biggest problems fit: G to
-  decide.
-- Daily review: a slip's correction stays under the next question.
-- The new real-touch UI tests (`UITests/PlacesTests.swift`) haven't been run; run them in Xcode.
-- Fraction of a number / Multiplying fractions: taps on other groups/rows shade the first ones after the check.
+Fixed on 25 Oct (lane B, `work/finish-b`), each with a before/after picture:
+- Dark mode checked on all 17 lessons; the chapter colour is lifted a little on the dark paper so answers read clearly.
+- Small pictures: Multiplying fractions (its names centred until shaded; problems with bottoms up to 5 at full size),
+  Dividing by a decimal (a line of one or two wholes drawn 3 or 2 squares a tenth), Multiply story problems (words
+  stay normal size), Fraction of a number (12 or fewer things drawn 4 × 4, 16 or fewer 3 × 3).
+- Multiplying decimals keeps its 10 × 10 whole (decided; `design/grade5.md` says so).
+- Daily review and tests: what a miss said goes when the next question comes.
+- Fraction of a number / Multiplying fractions: the groups and rows the child tapped stay shaded (saved with the problem).
+- Long division: a story's "Pick what to do" no longer shows the bracket; a narrow strip's count no longer runs into the
+  handle. Multiplying fractions' overlapping fills flickered in bands; drawn as pieces that never overlap.
+- The real-touch UI tests (`UITests/PlacesTests.swift`) pass on the simulator.
+Still open: Volume of a box's 3D steps take about 12 s to reach in a screenshot (shoot them with `WAIT=16`); the
+biggest Multiplying fractions squares (bottoms 6 to 9) still draw their words twice as big and the square smaller.
 
 ## Next (G agreed: cheaper settings — two lanes, high effort, no separate review step)
 1. Sounds (gentle, made in code), VoiceOver over the paper, the idle-CPU fix (the clock runs at 60 fps while a number
