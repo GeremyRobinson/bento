@@ -47,6 +47,7 @@ struct PaperScreen: View {
                 }
                 .onChange(of: t) { _, now in
                     Perf.frame(now); model.settle(at: now)
+                    if Perf.on { Perf.awake(wakers) }
                     // a frame of the running clock finds everything still: the clock stops (a blink's tick isn't one)
                     if now != blinkTick, !animating { quiet &+= 1 }
                 }
@@ -103,10 +104,17 @@ struct PaperScreen: View {
     }
 
     /// The clock only runs while something moves or draws, so a still paper costs nothing.
-    private var animating: Bool {
-        model.moving || model.leaving || model.mapDrawing || model.placeDrawing || PaperClock.now - model.placeAt < 2.5 || model.grownUp.animating
-            || (model.startHere?.playing(at: PaperClock.now) ?? false)
-            || PaperClock.now - model.pinchedAt < 1.3 || PaperClock.now - model.drawnAt < Piece.drawTime + 0.2 || (model.bars?.animating ?? false)
+    private var animating: Bool { !wakers.isEmpty }
+    /// What keeps the clock running now, by name (`-perf` prints them, so a clock left running can be traced).
+    private var wakers: [String] {
+        let now = PaperClock.now
+        let terms: [(String, Bool)] = [
+            ("camera", model.moving), ("leaving", model.leaving), ("map", model.mapDrawing), ("place", model.placeDrawing),
+            ("placeAt", now - model.placeAt < 2.5), ("grownUp", model.grownUp.animating),
+            ("startHere", model.startHere?.playing(at: now) ?? false), ("pinch", now - model.pinchedAt < 1.3),
+            ("drawIn", now - model.drawnAt < Piece.drawTime + 0.2),
+        ]
+        return terms.filter(\.1).map(\.0) + (model.bars?.wakers ?? [])
     }
 
     private var surfaceGestures: some View {

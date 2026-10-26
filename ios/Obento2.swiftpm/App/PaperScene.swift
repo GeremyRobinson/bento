@@ -300,6 +300,9 @@ final class Rig {
         let onMap = model.bars == nil && model.place == nil
         pieces.isEnabled = onMap; words.isEnabled = onMap
         if onMap { Perf.time("pieces") { drawPieces(model, at: t) }; Perf.time("words") { drawWords(model, at: t) } }
+        // off the map (a lesson or a place open) its words aren't updated, so they can't say they're still drawing: the
+        // clock that waited on them stops (it ran at 60 fps through every lesson, 25 Oct)
+        else if model.mapDrawing { Task { @MainActor in model.setMapDrawing(false) } }
         Perf.time("place") { drawPlace(model, at: t) }
         drawPage(model.bars, at: t)
     }

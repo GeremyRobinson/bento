@@ -294,6 +294,13 @@ enum Shots {
                     w.play(.preview, frozen: at ?? 1.2)
                 }
                 if args.contains("-keypad"), let box = w.lesson.step.answer?.boxes.first { w.select(box) }
+                // -typelater <digits>: typed into the step's box 5 s on, once the paper has gone still, and not checked
+                // (the number must show at once even when the clock has stopped)
+                if let i = args.firstIndex(of: "-typelater"), i + 1 < args.count, w.lesson.step.answer?.boxes.first != nil {
+                    try? await Task.sleep(for: .seconds(5))
+                    for ch in args[i + 1] { w.type(String(ch)) }
+                    mark()
+                }
             case "tests":
                 // the map with Whole numbers' lessons learned: its chapter's test opens; frame on Whole numbers
                 Progress.shared.reset(to: whole); m.frameChapter(0)

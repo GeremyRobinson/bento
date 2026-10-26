@@ -31,6 +31,12 @@ enum Perf {
         report()
     }
 
+    /// What kept the clock running this frame (PaperScreen.wakers), counted by name.
+    static func awake(_ names: [String]) {
+        guard on else { return }
+        for n in names.isEmpty ? ["none"] : names { tick("awake:" + n) }
+    }
+
     private static var lastFrame = 0.0
     /// The time between two drawn frames: a long one is a hitch you can see.
     static func frame(_ t: Double) {
@@ -50,6 +56,7 @@ enum Perf {
         since = now
         let line = stats.sorted { $0.key < $1.key }.map { "\($0.key) n=\($0.value.n) avg=\(String(format: "%.1f", $0.value.total / Double($0.value.n)))ms max=\(String(format: "%.1f", $0.value.worst))ms" }
         print("PERF " + line.joined(separator: " | "))
+        fflush(stdout)
         stats = [:]
     }
 }

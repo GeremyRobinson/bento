@@ -210,7 +210,17 @@ final class BarsPage {
     /// A number is wanted and the cursor blinks in its box: when its last key was pressed. The clock doesn't run every
     /// frame for it, only at the blink's changes (PaperScreen).
     var cursorSince: Double? { mode == .work ? current?.cursorSince : nil }
-    var animating: Bool { all.contains { $0.animating } || playing || building || PaperClock.now - leftClearedAt < 0.5 || PaperClock.now - cardsAt < 1.2 || cardsGoneAt.map { PaperClock.now - $0 < 0.8 } ?? false }
+    var animating: Bool { !wakers.isEmpty }
+    /// What on the page keeps the paper's clock running, by name (PaperScreen.wakers).
+    var wakers: [String] {
+        let now = PaperClock.now
+        let terms: [(String, Bool)] = [
+            // the How to between its taps (a tap it waits for is still: what it draws wakes the clock on its own)
+            ("problem", all.contains { $0.animating }), ("playing", playing && waiting == nil), ("building", building),
+            ("leftCleared", now - leftClearedAt < 0.5), ("cards", now - cardsAt < 1.2), ("cardsGone", cardsGoneAt.map { now - $0 < 0.8 } ?? false),
+        ]
+        return terms.filter(\.1).map(\.0)
+    }
     /// The scene still has problems' bars or words to make, a few a frame: the clock keeps running until they're all
     /// made. Set by the scene, only when it changes, so the clock (which watches it) starts and stops with it.
     private(set) var building = false
