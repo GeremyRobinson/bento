@@ -42,12 +42,19 @@ Fixed on 25 Oct (lane B, `work/finish-b`), each with a before/after picture:
 Still open: Volume of a box's 3D steps take about 12 s to reach in a screenshot (shoot them with `WAIT=16`); the
 biggest Multiplying fractions squares (bottoms 6 to 9) still draw their words twice as big and the square smaller.
 
-## Next (G agreed: cheaper settings — two lanes, high effort, no separate review step)
-1. Sounds (gentle, made in code), VoiceOver over the paper, the idle-CPU fix (the clock runs at 60 fps while a number
-   is wanted), removing dead code (old AddFractionsModel/BarsDrawer, old Unit cubes path if unused).
-2. A dark-mode pass and one walkthrough of every lesson, fixing the rough edges above and what G finds by hand.
+## Next (G, 25 Oct: Claude leads; finish 5th grade, then the app's own screens)
+Done 25 Oct (lane A, `work/finish-a`): the paper's clock stops when nothing moves (the cursor wakes it only to blink;
+two more leaks found by measuring: the map's draw-in flag and the How to waiting for a tap). Idle CPU in the simulator
+went from about 38% to 31-34%; the rest is RealityKit drawing every frame by itself (not measured on a real iPad).
+Old proof code removed (AddFractionsModel, BarsDrawer, the old Unit cubes lesson); Core still has the "uc"/"ad" specs.
+1. Finish 5th grade: G tries it by hand; fix what G finds. Decide with G: bigger pictures with smaller words
+   (Multiplying fractions, Multiply stories) or the other way round.
+2. Then the app's own UI (G, 25 Oct): the floating bar, Me, Today, the grown-ups' page, and the UI's shape (the grid is
+   all hard squares). Bring ideas to G as a discussion first.
 3. Then the other grades: take each web lesson's maths as it is (generators, mistakes, check recipes, stories) and
    design its steps fresh for paper (CLAUDE.md).
+- Sounds and VoiceOver wait (G, 25 Oct). A `Sounds` class already exists in `App/AppSettings.swift`.
+- Keep the Mac cool (G, 25 Oct): one simulator at a time across all workers; `tools/build.sh` builds niced, 4 jobs.
 - Branding (icon, name) is G's, later; the app may be renamed, so don't write its name anywhere new.
 
 ## Working notes (what went wrong, so it doesn't again)
