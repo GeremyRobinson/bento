@@ -108,7 +108,9 @@ biggest problems still fit the screen (a 20 × 20 whole, two squares a hundredth
    counts the places from the right). Say: "Tenths times tenths are hundredths: 2 places."
 
 ### Dividing by a decimal (`g5-divdec`)
-A number line from 0 to the dividend where one square is a tenth (a block is 0.5). 1. **Hop** the divisor along it from
+A number line from 0 to the dividend where one square is a tenth (a block is 0.5); a line of one or two wholes (the
+smallest problems) is drawn 3 or 2 squares a tenth with a small tick at every tenth, so it isn't a sliver of the screen
+(25 Oct). 1. **Hop** the divisor along it from
 0 (tap to add a hop, or drag along: hops snap to the divisor's length), each hop numbered. Past the end: "That's past
 4.8." 2. The same squares read in tenths under the line (0, 6, 12, … 48): `4.8 ÷ 0.6` is `48 ÷ 6`. 3. **Write**
 `4.8 ÷ 0.6 = 48 ÷ 6 = [ ]`. Say: "The same hops in tenths: 48 ÷ 6."

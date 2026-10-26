@@ -11,6 +11,20 @@ final class DivideByDecimalTests: XCTestCase {
         l.reset(); for (k, x) in v { l.set(k, x) }; return l.go()
     }
 
+    /// A short line (one whole, or two) is drawn bigger, three or two squares a tenth, and its words say so.
+    func testShortLinesAreDrawnBigger() {
+        XCTAssertEqual(DivideByDecimal.squaresPerTenth(4), 3)
+        XCTAssertEqual(DivideByDecimal.squaresPerTenth(9), 3)
+        XCTAssertEqual(DivideByDecimal.squaresPerTenth(10), 2)
+        XCTAssertEqual(DivideByDecimal.squaresPerTenth(18), 2)
+        XCTAssertEqual(DivideByDecimal.squaresPerTenth(20), 1)
+        var l = run(2, 3)
+        XCTAssertEqual(l.words.say, "Every 3 squares on the line make a tenth.")
+        XCTAssertEqual(l.go(), .moved(1))
+        XCTAssertEqual(l.words.hint, "Each hop is 2 tenths.")
+        XCTAssertEqual(run(3, 5).words.say, "Every 2 squares on the line make a tenth.")
+    }
+
     /// The web lesson's reference, 4.8 ÷ 0.6 = 8, on the paper: the hops laid along the line, then 48 ÷ 6 written.
     func testWalkThroughTheReference() {
         var l = run(6, 8)
