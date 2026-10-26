@@ -17,7 +17,9 @@ enum Shots {
     /// A moment's pages have the same numbers every time it's taken (light and dark, before and after a change), from
     /// its name and the lesson; nil outside screenshots (fresh numbers).
     static func seed(_ id: String) -> UInt64? {
-        guard let name else { return nil }
+        guard var name else { return nil }
+        // a page's steps are one problem: page-<id>-3 has page-<id>'s numbers, so its steps can be shot one by one
+        if name.hasPrefix("page-"), let dash = name.lastIndex(of: "-"), Int(name[name.index(after: dash)...]) != nil { name = String(name[..<dash]) }
         // FNV-1a: the same on every launch (Swift's own hashes aren't)
         return "\(name) \(id)".utf8.reduce(UInt64(14_695_981_039_346_656_037)) { ($0 ^ UInt64($1)) &* 1_099_511_628_211 }
     }
@@ -250,8 +252,8 @@ enum Shots {
                 }
                 guard let page = m.bars, page.problems.indices.contains(which), let w = page.problems[which] as? WorkProblem else { return }
                 // -numbers a=1,b=2,…: that problem with these numbers (the lesson's own worked-out ones added by its spec);
-                // -story: told as its story
-                if let n = given(id) { w.use(n, story: args.contains("-story")) }
+                // -story: told as its story (its own numbers when none are given)
+                if let n = given(id) ?? (args.contains("-story") ? w.lesson.numbers : nil) { w.use(n, story: args.contains("-story")) }
                 page.open(w)
                 // each step before it answered as a child would: a hand step by its moves, a number typed, a pick picked
                 for _ in 0..<max(0, k) { w.answerForShots() }
@@ -283,7 +285,8 @@ enum Shots {
                 }
                 // a finger comes after the camera has framed the step, as a child's does
                 if args.contains("-tapsq") || args.contains("-drag") || args.contains("-block") { try? await Task.sleep(for: .seconds(1.5)) }
-                if let t = numbers("-tapsq"), t.count == 2 { m.tap(at: screen(t[0], t[1])) }
+                // -tapsq x,y[,x,y…]: one tap, or several one after another
+                if let t = numbers("-tapsq"), t.count >= 2 { for i in stride(from: 0, to: t.count - 1, by: 2) { m.tap(at: screen(t[i], t[i + 1])) } }
                 if let d = numbers("-drag"), d.count == 4 {
                     m.dragStart(at: screen(d[0], d[1]))
                     for k in 1...12 { let f = Double(k) / 12; m.dragMove(to: screen(d[0] + (d[2] - d[0]) * f, d[1] + (d[3] - d[1]) * f)) }
@@ -292,6 +295,10 @@ enum Shots {
                 if let i = args.firstIndex(of: "-block"), i + 1 < args.count,
                    let b = ProblemLayout.blocks(w).first(where: { $0.kind == .action(args[i + 1]) || ($0.kind == .main && args[i + 1] == "Check") }) {
                     m.tap(at: m.camera(at: PaperClock.now).toScreen(Point(b.rect.midX, b.rect.midY)))
+                }
+                // -then N: N more steps answered after the finger's moves, as a child would (what the moves left, drawn on)
+                if let i = args.firstIndex(of: "-then"), i + 1 < args.count, let n = Int(args[i + 1]) {
+                    for _ in 0..<n { try? await Task.sleep(for: .seconds(0.8)); w.answerForShots() }
                 }
                 // -ghost [seconds]: Show me's ghost finger stopped that far into its moves
                 if let i = args.firstIndex(of: "-ghost") {
