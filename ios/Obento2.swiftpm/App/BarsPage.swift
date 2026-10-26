@@ -6,7 +6,7 @@ import SwiftUI
 /// needs; the bar's "Problems" draws it out and the page back in. A chapter or grade test's page is its questions.
 /// A learned lesson that's due back opens on its recheck first (G 20 Oct): 4 questions, one try each and no help, then
 /// the lesson's page. A finished test or recheck shows its result on the paper before going on.
-/// Its problems are AddFractionsModel (Add with different bottoms) or WorkProblem (every other lesson).
+/// Its problems are CubesProblem (Volume of a box) or WorkProblem (every other lesson).
 @MainActor @Observable
 final class BarsPage {
     enum Mode { case howTo, choose, work, result }
@@ -192,7 +192,6 @@ final class BarsPage {
     /// the lesson's picture.
     static func make(_ spec: LessonSpec, origin: Point, chapter: Chapter, instant: Bool, run: LessonRun, label: String, auto: Bool = false) -> any PageProblem {
         switch spec.master {
-        case "bars": return AddFractionsModel(origin: origin, chapter: chapter, instant: instant, run: run, label: label, auto: auto)
         // Volume of a box: Unit cubes' box, covered, risen and stacked (G 20 Oct: anything 3D builds on Unit cubes)
         case "cubes": return CubesProblem(origin: origin, chapter: chapter, instant: instant, run: run, label: label, auto: auto)
         default: return WorkProblem(origin: origin, chapter: chapter, instant: instant, run: run, label: label, auto: auto)
@@ -208,9 +207,20 @@ final class BarsPage {
     }
     /// When a problem last finished leaving: the clock runs a moment more, so the scene takes its drawing away.
     private var leftClearedAt: Double = -100
-    /// A number is wanted: the cursor blinks, so the clock keeps running.
-    var typing: Bool { mode == .work && (current as? WorkProblem).flatMap { ProblemLayout.cursor($0) } != nil }
-    var animating: Bool { all.contains { $0.animating } || playing || building || typing || PaperClock.now - leftClearedAt < 0.5 || PaperClock.now - cardsAt < 1.2 || cardsGoneAt.map { PaperClock.now - $0 < 0.8 } ?? false }
+    /// A number is wanted and the cursor blinks in its box: when its last key was pressed. The clock doesn't run every
+    /// frame for it, only at the blink's changes (PaperScreen).
+    var cursorSince: Double? { mode == .work ? current?.cursorSince : nil }
+    var animating: Bool { !wakers.isEmpty }
+    /// What on the page keeps the paper's clock running, by name (PaperScreen.wakers).
+    var wakers: [String] {
+        let now = PaperClock.now
+        let terms: [(String, Bool)] = [
+            // the How to between its taps (a tap it waits for is still: what it draws wakes the clock on its own)
+            ("problem", all.contains { $0.animating }), ("playing", playing && waiting == nil), ("building", building),
+            ("leftCleared", now - leftClearedAt < 0.5), ("cards", now - cardsAt < 1.2), ("cardsGone", cardsGoneAt.map { now - $0 < 0.8 } ?? false),
+        ]
+        return terms.filter(\.1).map(\.0)
+    }
     /// The scene still has problems' bars or words to make, a few a frame: the clock keeps running until they're all
     /// made. Set by the scene, only when it changes, so the clock (which watches it) starts and stops with it.
     private(set) var building = false
@@ -917,7 +927,6 @@ final class BarsPage {
             let m = problems[i], it = plan.items[i]
             let k = plan.items[...i].filter { $0.part == it.part }.count
             (m as? WorkProblem)?.label = it.part == .together ? "Together \(k)" : "On your own \(k)"
-            (m as? AddFractionsModel)?.label = it.part == .together ? "Together \(k)" : "On your own \(k)"
             (m as? CubesProblem)?.label = it.part == .together ? "Together \(k)" : "On your own \(k)"
             return m
         }

@@ -8,6 +8,12 @@ struct PaperScreen: View {
     /// A drag is under way (its first move has decided what it does), and a pinch is.
     @State private var dragging = false
     @State private var pinching = false
+    /// The paper's clock (G: a still paper costs nothing). It runs every frame only while something moves or draws.
+    /// `quiet` is bumped by the frame that finds nothing moving any more, so the clock is told to stop even when nothing
+    /// else would ask SwiftUI to look again; `blinkTick` is the moment of the cursor's last blink while the clock is
+    /// stopped, so the answer box's cursor still blinks without drawing the paper sixty times a second.
+    @State private var quiet = 0
+    @State private var blinkTick = 0.0
 
     init(model: PaperModel) { _model = State(initialValue: model) }
 
@@ -15,18 +21,17 @@ struct PaperScreen: View {
         // the outer reader keeps the safe area, so it knows where the notch and home bar are
         GeometryReader { safe in
         GeometryReader { geo in
-            TimelineView(.animation(paused: !animating)) { ctx in
-                let t = PaperClock.frozen ?? ctx.date.timeIntervalSinceReferenceDate
+            let running = animating
+            let _ = quiet
+            TimelineView(.animation(paused: !running)) { ctx in
+                // stopped, the clock's last frame is old: the cursor's blink moves it on
+                let t = PaperClock.frozen ?? max(ctx.date.timeIntervalSinceReferenceDate, blinkTick)
                 let cam = model.camera(at: t)
                 ZStack(alignment: .topLeading) {
                     // RealityKit's view keeps the size it was made at, so a new screen shape (rotating) makes a new one
                     PaperScene(model: model, time: t)
                         .id("\(Int(model.screen.width))x\(Int(model.screen.height))")
-                    if let lesson = model.lesson {
-                        UnitCubesView(model: lesson, time: t)
-                    } else {
-                        surfaceGestures
-                    }
+                    surfaceGestures
                     Toolbar(model: model, time: t, bottom: max(16, safe.safeAreaInsets.bottom + 8, model.keyboard + 8))
                     // the problem's sounds, and its words read aloud when the grown-ups asked for that
                     Listener(model: model)
@@ -40,8 +45,15 @@ struct PaperScreen: View {
                         // screen's bottom-right corner, clear of the picture and the record (as the paper lessons have it)
                         .position(NumberEntry.anchor(screen: model.screen, bottom: max(16, safe.safeAreaInsets.bottom + 8), stacked: typing?.stacked ?? true))
                 }
-                .onChange(of: t) { _, now in Perf.frame(now); model.settle(at: now); model.lesson?.settle(at: now) }
+                .onChange(of: t) { _, now in
+                    Perf.frame(now); model.settle(at: now)
+                    if Perf.on { Perf.awake(wakers) }
+                    // a frame of the running clock finds everything still: the clock stops (a blink's tick isn't one)
+                    if now != blinkTick, !animating { quiet &+= 1 }
+                }
             }
+            // a number wanted with nothing else moving: wake only when the cursor turns on or off
+            .task(id: running ? nil : model.bars?.cursorSince) { await blink(since: running ? nil : model.bars?.cursorSince) }
             .onAppear {
                 model.screen = Size(geo.size.width, geo.size.height)
                 model.setReduceMotion(UIAccessibility.isReduceMotionEnabled)
@@ -78,11 +90,31 @@ struct PaperScreen: View {
         return p.wantsTyping ? p : nil
     }
 
+    /// While the clock is stopped and a cursor blinks: a tick at each of its changes (Blink), and nothing in between.
+    private func blink(since: Double?) async {
+        guard let since, PaperClock.frozen == nil else { return }
+        while !Task.isCancelled {
+            let now = PaperClock.now
+            let next = since + Blink.nextChange(after: now - since)
+            try? await Task.sleep(for: .seconds(max(0.02, next - now + 0.005)))
+            if Task.isCancelled { return }
+            blinkTick = PaperClock.now
+            Perf.tick("blink")
+        }
+    }
+
     /// The clock only runs while something moves or draws, so a still paper costs nothing.
-    private var animating: Bool {
-        model.moving || model.leaving || model.mapDrawing || model.placeDrawing || PaperClock.now - model.placeAt < 2.5 || model.grownUp.animating
-            || (model.startHere?.playing(at: PaperClock.now) ?? false)
-            || PaperClock.now - model.pinchedAt < 1.3 || PaperClock.now - model.drawnAt < Piece.drawTime + 0.2 || (model.lesson?.animating ?? false) || (model.bars?.animating ?? false)
+    private var animating: Bool { !wakers.isEmpty }
+    /// What keeps the clock running now, by name (`-perf` prints them, so a clock left running can be traced).
+    private var wakers: [String] {
+        let now = PaperClock.now
+        let terms: [(String, Bool)] = [
+            ("camera", model.moving), ("leaving", model.leaving), ("map", model.mapDrawing), ("place", model.placeDrawing),
+            ("placeAt", now - model.placeAt < 2.5), ("grownUp", model.grownUp.animating),
+            ("startHere", model.startHere?.playing(at: now) ?? false), ("pinch", now - model.pinchedAt < 1.3),
+            ("drawIn", now - model.drawnAt < Piece.drawTime + 0.2),
+        ]
+        return terms.filter(\.1).map(\.0) + (model.bars?.wakers ?? [])
     }
 
     private var surfaceGestures: some View {

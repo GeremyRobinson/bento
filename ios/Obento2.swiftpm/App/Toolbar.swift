@@ -146,14 +146,14 @@ struct Toolbar: View {
 
     private func toggle(_ p: Panel) { open = open == p ? nil : p }
 
-    private var zoom: Double { model.lesson?.scale ?? model.camera(at: PaperClock.now).zoom }
-    private func zoomBy(_ f: Double) { if let l = model.lesson { l.zoom(f) } else { model.zoomButton(f) } }
+    private var zoom: Double { model.camera(at: PaperClock.now).zoom }
+    private func zoomBy(_ f: Double) { model.zoomButton(f) }
     private var learned: Int { Map.gradeLessons.filter { Progress.shared.learned.contains($0) }.count }
 
     /// The problem being worked on a lesson's page, if any.
     private var problem: (any PageProblem)? { model.bars.flatMap { $0.mode == .work ? $0.current : nil } }
-    private var hasTools: Bool { problem != nil || model.lesson != nil }
-    private var helps: Bool { problem?.lesson.helps ?? model.lesson?.lesson.helps ?? false }
+    private var hasTools: Bool { problem != nil }
+    private var helps: Bool { problem?.lesson.helps ?? false }
 
     /// Hints (G 20 Oct): the page decides, with its budget saved with it: free in together problems up to their cap (not
     /// counted), on their own one of the page's once the step had a miss (then the count shows), none in tests.
@@ -163,18 +163,17 @@ struct Toolbar: View {
     private var inTest: Bool { model.bars?.inTest ?? false }
     private var canShowMe: Bool { helps && (step?.task != nil || step?.answer != nil) && problem?.solved != true }
     private var canReset: Bool { step?.task != nil }
-    private var step: LessonStep? { problem?.lesson.step ?? model.lesson?.lesson.step }
+    private var step: LessonStep? { problem?.lesson.step }
     private var canRead: Bool { problem != nil && !(model.bars?.inTest ?? false) }
 
-    private func showMe() { if let p = problem { p.showMe() } else { model.lesson?.showMe() } }
-    private func reset() { if let p = problem { p.reset() } else { model.lesson?.reset() } }
+    private func showMe() { problem?.showMe() }
+    private func reset() { problem?.reset() }
 
     /// In a problem: which one and its step ("Together 1 · Step 2 of 4"), the bar filling as its steps are done (as the
     /// paper prototype G liked, 20 Oct); on the page: how far through the page.
     private var lessonDetail: String {
         if let p = problem, let s = problemSteps { return "\(model.bars?.label ?? p.label) · Step \(s.at) of \(s.of)" }
-        if let b = model.bars { return b.label }
-        return model.lesson?.session.label ?? ""
+        return model.bars?.label ?? ""
     }
     private var lessonProgress: Double {
         if let s = problemSteps { return Double(s.at - 1) / Double(max(1, s.of - 1)) }

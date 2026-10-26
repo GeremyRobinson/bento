@@ -60,7 +60,7 @@ jobs:
               limit 60 xcrun simctl io "$UDID" screenshot "shots/$5-$s.png" || true
             done
           }
-          shoot "iPad Pro 13-inch" light -landscape "paper selected flat cover tilt stacked fractions fractions-wrong fractions-done" ipad
+          shoot "iPad Pro 13-inch" light -landscape "paper selected page-g5-volume-0 page-g5-volume-1 page-g5-volume-2 page-add page-add-1 cards-add" ipad
           # the whole lesson playing on its own, as a video
           UDID=$(xcrun simctl list devices available | grep -m1 "iPad Pro 13-inch" | grep -oE '[0-9A-F-]{36}')
           xcrun simctl terminate "$UDID" education.bento.obento2 || true
@@ -72,8 +72,8 @@ jobs:
           # keep the video small enough to send
           avconvert --source shots/ipad-demo.mp4 --preset Preset960x540 --output shots/demo-small.mp4 --replace && mv shots/demo-small.mp4 shots/ipad-demo.mp4 || true
           ls -la shots
-          shoot "iPad Pro 13-inch" dark -landscape "tilt" ipad-dark
-          shoot "iPhone 1[5-9] Pro \\(" light "" "paper flat tilt stacked" phone
+          shoot "iPad Pro 13-inch" dark -landscape "page-g5-volume-1" ipad-dark
+          shoot "iPhone 1[5-9] Pro \\(" light "" "paper page-g5-volume-0 page-g5-volume-1 page-add" phone
       - name: Keep the demo video with the build
         if: always()
         uses: actions/upload-artifact@v4

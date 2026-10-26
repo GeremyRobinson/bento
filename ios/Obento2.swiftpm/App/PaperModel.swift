@@ -10,8 +10,8 @@ struct Piece: Identifiable, Equatable {
     let at: Point
     /// The lesson behind this piece, if one has been written.
     var spec: LessonSpec? { Lessons.spec(id) }
-    /// Every lesson with a spec opens (the Paper proof's two as well, for their screenshots); a test once it's ready.
-    @MainActor var opens: Bool { isTest ? Map.testReady(id) : spec != nil && (Map.paperLessons.contains(id) || Map.proof.contains { $0.id == id }) }
+    /// Every lesson on the map with a spec opens; a test once it's ready.
+    @MainActor var opens: Bool { isTest ? Map.testReady(id) : spec != nil && Map.paperLessons.contains(id) }
     /// A chapter or grade test, not a lesson (G 18 Oct).
     var isTest: Bool { id.hasPrefix("test-") }
 
@@ -88,15 +88,9 @@ enum Map {
     ]
     static let pieces = groups.flatMap(\.pieces)
 
-    /// The Paper proof's two lessons, off the map since 20 Oct: their teaching lives in Adding fractions and Volume of
-    /// a box now. Not drawn, counted or tested; kept (each where it used to sit) so their screenshots still open them,
-    /// and as the models the bars and the 3D cubes build from.
-    static let proof: [Piece] = [
-        Piece(id: "ad", name: "Add with different bottoms", chapter: .fractions, at: Point(0, 1000)),
-        Piece(id: "uc", name: "Unit cubes", chapter: .measurement, at: Point(1300, 1000)),
-    ]
-    /// Any piece by its id: a lesson, a test, or one of the proof's two.
-    static func piece(_ id: String) -> Piece? { (all + proof).first { $0.id == id } }
+    /// Any piece by its id: a lesson or a test. (The Paper proof's two lessons, Unit cubes and Add with different
+    /// bottoms, are gone from the app since 25 Oct: their teaching lives in Volume of a box and Adding fractions.)
+    static func piece(_ id: String) -> Piece? { all.first { $0.id == id } }
 
     /// Each chapter's test, in the slot after its last lesson, and the grade's test under everything (G 18 Oct).
     static let tests: [Piece] = groups.map { g in
@@ -175,15 +169,13 @@ final class PaperModel {
             let c = was.toPaper(Point(oldValue.width / 2, oldValue.height / 2))
             flight = nil
             resting = PaperCamera(x: screen.width / 2 - c.x * was.zoom, y: screen.height / 2 - c.y * was.zoom, zoom: was.zoom)
-            lesson?.screen = screen
             // a place is framed to read on the screen it's on (Me shows as many cards as fit it): framed again, at once
-            if let place, bars == nil, lesson == nil { resting = placeCamera(place) }
+            if let place, bars == nil { resting = placeCamera(place) }
         }
     }
     private(set) var resting = PaperCamera()
     private(set) var flight: CameraFlight?
     var selected: Piece?
-    var lesson: UnitCubesModel?
     /// The flat lesson, when one is open. It uses the paper's own camera.
     var bars: BarsPage?
     /// A page of its own on the paper instead of the map: Me, or the grown-ups' page (nil on the map and in a lesson).
@@ -229,7 +221,7 @@ final class PaperModel {
         if instant || (frozen ?? -1) >= StartHere.tapTime { startHere?.tapped = true; select(p) }
     }
     /// The piece whose lesson is open: its name goes in the top bar.
-    var openPiece: Piece? { lesson != nil || bars != nil ? opened : nil }
+    var openPiece: Piece? { bars != nil ? opened : nil }
     private var opened: Piece?
     /// When the pieces started drawing themselves.
     var drawnAt: Double = PaperClock.now
@@ -257,27 +249,24 @@ final class PaperModel {
         get { reduceMotion || shotMode }
         set { shotMode = newValue }
     }
-    /// A fixed box, for screenshots.
-    var shotBox: UnitCubes.Box?
-    var shotProblem: AddFractions.Problem?
     var shotNumbers: Numbers?
 
     func camera(at t: Double) -> PaperCamera { flight?.camera(at: t, screen: screen) ?? resting }
-    /// The one camera the paper's scene is seen through: the open 3D lesson's (Unit cubes), a problem's on a lesson's
-    /// page while it stands tilted (Volume of a box, TiltCamera), or the flat paper's from straight above. Only reads.
-    func view(at t: Double) -> PaperView3D { lesson?.view(at: t) ?? TiltCamera.view(at: t, flat: .matching(camera(at: t), screen: screen)) }
+    /// The one camera the paper's scene is seen through: a problem's on a lesson's page while it stands tilted (Volume
+    /// of a box, TiltCamera), or the flat paper's from straight above. Only reads.
+    func view(at t: Double) -> PaperView3D { TiltCamera.view(at: t, flat: .matching(camera(at: t), screen: screen)) }
 
     /// Where a point on the screen lands on the paper: through the tilted problem's view while the paper stands tilted
     /// (a tap on one of its blocks or on its box; the paper under a dragging finger), else through the flat camera.
     private func paperPoint(_ s: Point, tap: Bool = false) -> Point {
-        (lesson == nil ? TiltCamera.paperPoint(s, tap: tap) : nil) ?? camera(at: PaperClock.now).toPaper(s)
+        TiltCamera.paperPoint(s, tap: tap) ?? camera(at: PaperClock.now).toPaper(s)
     }
     var moving: Bool { flight != nil }
 
     func settle(at t: Double) {
         if let f = flight, f.done(at: t) { resting = f.to; flight = nil }
         // the first launch's finger presses the lesson: it's chosen, as a tap chooses it
-        if let sh = startHere, sh.tapDue(at: t), place == nil, bars == nil, lesson == nil { startHere?.tapped = true; select(sh.piece) }
+        if let sh = startHere, sh.tapDue(at: t), place == nil, bars == nil { startHere?.tapped = true; select(sh.piece) }
         // the grown-ups' square held for 3 seconds: its page opens, and the camera frames it
         if place == .grownUp, grownUp.settle(at: t) {
             Sounds.shared.play(.done)
@@ -285,10 +274,8 @@ final class PaperModel {
         }
         // the tilted problem's camera, between frames (TiltCamera.settle): what a tilt starts from and fits into (the
         // room the bar or the keyboard takes), and a problem no longer on the page lying flat again
-        if lesson == nil {
-            TiltCamera.settle(at: t, flat: .matching(camera(at: t), screen: screen), screen: screen, top: Self.chrome.top,
-                              bottom: max(Self.chrome.bottom, keyboard + 16)) { [bars] o in bars?.all.contains { $0 === o } ?? false }
-        }
+        TiltCamera.settle(at: t, flat: .matching(camera(at: t), screen: screen), screen: screen, top: Self.chrome.top,
+                          bottom: max(Self.chrome.bottom, keyboard + 16)) { [bars] o in bars?.all.contains { $0 === o } ?? false }
     }
 
     func fly(to cam: PaperCamera, duration: Double) {
@@ -302,7 +289,7 @@ final class PaperModel {
 
     func pan(_ dx: Double, _ dy: Double) {
         // tilted, a drag turns the tilted view, not the flat paper under it
-        if lesson == nil, TiltCamera.pan(dx, dy) { return }
+        if TiltCamera.pan(dx, dy) { return }
         stop(); resting = resting.panned(by: dx, dy)
     }
 
@@ -349,7 +336,7 @@ final class PaperModel {
         framingHeld = false
     }
     func zoom(by f: Double, at p: Point) {
-        if lesson == nil, TiltCamera.pinch(f) { pinchedAt = PaperClock.now; return }
+        if TiltCamera.pinch(f) { pinchedAt = PaperClock.now; return }
         stop(); resting = resting.zoomed(by: f, at: p); pinchedAt = PaperClock.now
     }
     /// When the paper was last pinched: the bar shows the zoom for a moment.
@@ -413,12 +400,6 @@ final class PaperModel {
         if p?.id != startHere?.piece.id { startHere = nil }
         selected = p
         guard let p else { return }
-        // a lesson that opens: its first problem is chosen now, and the glide frames the lesson as it will start, at up
-        // to the tap's 100% (G 17 Oct)
-        if let f = startFrame(p) {
-            fly(to: framingBelowBar(f, maxZoom: CameraTiming.selectMax), duration: CameraTiming.glide)
-            return
-        }
         let now = camera(at: PaperClock.now)
         let z = CameraTiming.selectZoom(current: now.zoom, overview: overview.zoom, fit: PaperCamera.framing(p.focus, in: screen).zoom)
         let c = p.focus.mid
@@ -454,27 +435,11 @@ final class PaperModel {
         }
     }
 
-    /// Opening Unit cubes: fly the flat paper to the lesson, then hand the same view to the 3D camera.
+    /// Opening a lesson: its page of problems (G 19 Oct), flat on the paper; a test's or the daily review's too.
     private func openNow(_ p: Piece) {
         opened = p
-        // the lesson's picture master decides how it opens: flat on the paper, or in 3D
-        if p.isTest || p.id == Map.review.id { openBars(p); return }
-        guard let spec = p.spec else { return }
-        // Unit cubes and Add with different bottoms are the Paper proof's own lessons; every other lesson is worked in steps
-        // every lesson is a page of problems (G 19 Oct), but Unit cubes, which rises into 3D
-        if p.id != "uc" { _ = spec; openBars(p); return }
-        // Start opens the lesson where it is: the tap already glided to it, so the camera doesn't move again (G 17 Oct).
-        // The 3D lesson takes over the camera, so it waits for that glide to land first.
-        let origin = UnitCubesModel.origin(for: p)
-        let go = { [self] in
-            lesson = UnitCubesModel(origin: origin, chapter: p.chapter, view: .matching(camera(at: PaperClock.now), screen: screen), screen: screen, instant: instant,
-                                    box: shotBox ?? prepared.flatMap { $0.id == p.id ? UnitCubes.Box($0.numbers) : nil },
-                                    session: Progress.shared.dueBack(p.id) ? .recheck : LessonSession())
-            lesson?.onPinch = { [weak self] in self?.pinchedAt = PaperClock.now }
-            selected = nil
-        }
-        let landing = flight.map { $0.start + $0.duration - PaperClock.now } ?? 0
-        if instant || landing <= 0 { go() } else { Task { try? await Task.sleep(for: .seconds(landing + 0.02)); go() } }
+        guard p.isTest || p.id == Map.review.id || p.spec != nil else { return }
+        openBars(p)
     }
 
     /// Opening the flat lesson: its page (BarsPage). The How to plays where the lesson is, on the paper's own camera,
@@ -484,7 +449,7 @@ final class PaperModel {
     func openBars(_ p: Piece) {
         // another page was open: its tasks end now
         bars?.stop()
-        let first = (p.id == "ad" ? shotProblem?.numbers : shotNumbers) ?? prepared.flatMap { $0.id == p.id ? $0.numbers : nil }
+        let first = shotNumbers
         // a screenshot's page is one it set up itself, or fresh
         var saved = shotMode ? PageStore.cached(p.id) : PageStore.load(p.id)
         if p.isTest, saved?.recorded == true { saved = nil }
@@ -525,28 +490,6 @@ final class PaperModel {
         return cam
     }
 
-    /// The first problem of the lesson last tapped, chosen at the tap so its start can be framed exactly.
-    private var prepared: (id: String, numbers: Numbers)?
-    private var prepRng = SeededRandom(seed: UInt64(Date().timeIntervalSince1970 * 1000))
-
-    /// What a lesson that opens needs in view as it starts (question, picture, buttons), in paper points; nil to frame
-    /// the tapped lesson on the map as usual. Its first problem is chosen here either way.
-    func startFrame(_ p: Piece) -> Rect? {
-        guard p.opens else { return nil }
-        switch p.id {
-        case "uc":
-            let b = shotBox ?? UnitCubes.generate(using: &prepRng)
-            prepared = (p.id, b.numbers)
-            return UnitCubesModel.startFrame(origin: UnitCubesModel.origin(for: p), box: b)
-        case "ad":
-            let s = shotProblem ?? AddFractions.problems.randomElement(using: &prepRng)!
-            prepared = (p.id, s.numbers)
-            // a lesson page frames its own How to when it opens: the tap frames the lesson on the map like any other
-            return nil
-        default: return nil
-        }
-    }
-
     /// Each step, the camera frames what the lesson shows right now: zoomed to fit it (in or out, up to 125%) and
     /// centred on it (G 17 Oct). A move too small to notice is skipped, so the camera doesn't twitch.
     func frameCurrent(_ r: Rect) {
@@ -574,13 +517,7 @@ final class PaperModel {
             }
             return
         }
-        if bars != nil { bars = nil; back(from: piece); return }
-        guard let l = lesson else { return }
-        l.flatten { [self] view in
-            stop(); resting = view.paperCamera(screen: screen); lesson = nil
-            redraw(from: piece)
-            glideOut(to: piece)
-        }
+        if bars != nil { bars = nil; back(from: piece) }
     }
 
     /// Out of a lesson's page: back to the place it was opened from (Me), else to the map, gliding out to the lesson.
@@ -595,7 +532,7 @@ final class PaperModel {
     /// in (G 17 Oct), then the camera flies there and it draws itself in. Already there, the map shows all of itself (the
     /// Lessons button, as before) and a place frames itself again. `then` runs once it's there.
     func go(to target: Place?, then: (() -> Void)? = nil) {
-        guard !leaving, lesson == nil else { return }
+        guard !leaving else { return }
         startHere = nil
         if bars == nil, place == target {
             // the bar's Me on Me, with a shelf open: back to the whole of Me
@@ -609,7 +546,7 @@ final class PaperModel {
     /// A lesson (or the daily review) chosen on a place: the place erases itself, and the lesson's page opens where the
     /// lesson lives; closing it comes back to the place.
     func open(_ p: Piece, from origin: Place) {
-        guard !leaving, lesson == nil else { return }
+        guard !leaving else { return }
         erase { [self] in
             place = nil; placeLeftAt = nil; cameFrom = origin
             openNow(p)

@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// One problem on a lesson's page (BarsPage), whatever its picture: the fraction bars (AddFractionsModel) or a lesson
-/// worked in typed steps with its picture drawn from a Sketch (WorkProblem). The page, its words and the bar only
+/// One problem on a lesson's page (BarsPage), whatever its picture: Volume of a box's cubes (CubesProblem) or a lesson
+/// worked on the paper with its picture drawn from a Sketch (WorkProblem). The page, its words and the bar only
 /// need this much of it.
 @MainActor
 protocol PageProblem: AnyObject {
@@ -15,6 +15,9 @@ protocol PageProblem: AnyObject {
     var lesson: LessonRun { get }
     var solved: Bool { get }
     var animating: Bool { get }
+    /// A cursor blinks in its answer box: when the last key was pressed (Blink). Only its on and off change, so the
+    /// paper's clock wakes just for those while nothing else moves (PaperScreen), not every frame.
+    var cursorSince: Double? { get }
     var busy: Bool { get }
     var message: (text: String, ok: Bool)? { get }
     /// The How to's words in place of the step's, while it explains.
@@ -61,6 +64,7 @@ protocol PageProblem: AnyObject {
 }
 
 extension PageProblem {
+    var cursorSince: Double? { nil }
     func showHint() {}
     func grab(_ p: Point) -> Bool { false }
     func drag(to p: Point) {}

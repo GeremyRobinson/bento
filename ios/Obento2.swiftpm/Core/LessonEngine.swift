@@ -493,7 +493,7 @@ public enum Lessons {
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }
 
-/// Unit cubes' own run (the Paper proof's 3D lesson, off the map since 20 Oct; UnitCubesModel still plays it): the
+/// Unit cubes' own run (the Paper proof's 3D lesson; the app no longer plays it since 25 Oct, kept with its tests): the
 /// first problem teaches, then 6 practice problems, then the 4-problem skill check (no hints, no Show me, one try per
 /// step). Learned = 3 or 4 of the check right. Every lesson on the map is a page instead (LessonPlan).
 public struct LessonSession: Sendable, Equatable {
