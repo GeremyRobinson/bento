@@ -28,17 +28,22 @@ struct DivideByDecimalLesson: PaperLesson {
         let x, y: Double
         let X, Y: String
         let k: Double
+        /// Squares to a tenth: 1, or 3 or 2 on a line of one or two wholes (DivideByDecimal.squaresPerTenth).
+        let u: Double
         init(_ v: Numbers, story: Bool = false, k fixed: Double? = nil) {
             let s = DivideByDecimal.Parts(v)
             d = s.d; qt = s.qt; n = s.n; x = s.x; y = s.y; X = fmt(x); Y = fmt(y)
+            u = Double(DivideByDecimal.squaresPerTenth(s.n))
             k = fixed ?? Self.k(v, story: story)
         }
         /// The line's length: on past the dividend to the next whole, so a hop past it lands on the line.
         var wholes: Int { n / 10 + 1 }
-        var W: Double { Double(10 * wholes) }
+        var W: Double { Double(10 * wholes) * u }
+        /// The dividend's place on the line.
+        var end: Double { Double(n) * u }
         /// One hop's squares, and how many hops the line has room for (one past its end at most).
-        var D: Double { Double(d) }
-        var most: Int { Int(W) / d + 1 }
+        var D: Double { Double(d) * u }
+        var most: Int { 10 * wholes / d + 1 }
         /// The line's row (the readout and the hops' numbers over it), the hops' height, the tenths' row under it.
         var line: Double { 4 + 3 * k }
         var arc: Double { min(2.5, max(1, D / 2)) }
@@ -85,16 +90,16 @@ struct DivideByDecimalLesson: PaperLesson {
     func draw(_ s: PaperState) -> PaperDrawing {
         let q = self.q(s.run), at = stage(s), k = q.k
         var pic = GridPen(k: k), live = GridPen(k: k, stableIds: true), rec = GridPen(k: k)
-        let L = q.line, W = q.W, end = Double(q.n), D = q.D
+        let L = q.line, W = q.W, end = q.end, D = q.D, u = q.u
 
-        // MARK: the line: a short tick every five squares, a long one every whole, the wholes numbered under it (not
-        // where the dividend's own name is)
+        // MARK: the line: a short tick every half, a long one every whole, the wholes numbered under it (not where the
+        // dividend's own name is); drawn bigger than a square a tenth, a small tick every tenth too, so they still count
         pic.line("line", [(0, L), (W, L)], .ink)
-        pic.sketch.segments("ticks", stride(from: 0, through: Int(W), by: 5).map { c in
-            (pic.P(Double(c), L - (c % 10 == 0 ? 2 : 1)), pic.P(Double(c), L))
+        pic.sketch.segments("ticks", stride(from: 0, through: 10 * q.wholes, by: u > 1 ? 1 : 5).map { c in
+            (pic.P(Double(c) * u, L - (c % 10 == 0 ? 2 : c % 5 == 0 ? 1 : 0.5)), pic.P(Double(c) * u, L))
         }, .ink, width: Sketch.stroke)
-        for j in 0...q.wholes where abs(Double(10 * j) - end) >= 2.5 * k {
-            pic.label("w\(j)", "\(j)", Self.small, .below, edge: L, along: Double(10 * j))
+        for j in 0...q.wholes where abs(Double(10 * j) * u - end) >= 2.5 * k {
+            pic.label("w\(j)", "\(j)", Self.small, .below, edge: L, along: Double(10 * j) * u)
         }
         // the dividend: a post on the line in the chapter's colour, its name under it
         pic.line("post", [(end, L - 2), (end, L)], .chapter)
@@ -136,7 +141,7 @@ struct DivideByDecimalLesson: PaperLesson {
         // MARK: the same squares in tenths, under the line at each hop's end
         if at >= 2 {
             for j in 0...q.qt {
-                pic.label("t\(j)", "\(j * q.d)", Self.count, .below, edge: q.tenths, along: Double(j * q.d))
+                pic.label("t\(j)", "\(j * q.d)", Self.count, .below, edge: q.tenths, along: Double(j) * D)
             }
             pic.label("tw", "tenths", Self.small.colour(.chapter), .right, edge: W + 1, along: q.tenths + 0.5 * k + 0.4 * k)
         }
@@ -179,7 +184,7 @@ struct DivideByDecimalLesson: PaperLesson {
         let q = self.q(s.run)
         guard stage(s) == 1 else { return [] }
         let now = Double(Int((s.h("k") ?? 0).rounded()))
-        return [.drag(from: CGPoint(x: now * q.D, y: q.line), to: CGPoint(x: Double(q.n), y: q.line))]
+        return [.drag(from: CGPoint(x: now * q.D, y: q.line), to: CGPoint(x: q.end, y: q.line))]
     }
 
     func wrongMove(_ s: PaperState) -> HandMove? {

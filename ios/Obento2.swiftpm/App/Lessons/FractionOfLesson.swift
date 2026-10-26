@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Fraction of a number on the paper (design/grade5.md, the fractions family): n/d of W. One square is one thing (a
-/// 2 × 2 square when there are 30 or fewer), so the bar holds W things, each drawn in it, and is named "n/d of W" at its
+/// 2 × 2 square when there are 30 or fewer, 3 × 3 for 16 and 4 × 4 for 12), so the bar holds W things, each drawn in it, and is named "n/d of W" at its
 /// right end: the problem, written once as the picture's own names. More than 54 things fill the bar a column of 2, 3
 /// or 4 at a time (when a group is whole columns), so 108 is a bar 54 × 2, still counted, not a strip twice the screen.
 /// The ruler's handle, over the bar, sets one group's size, snapping only to sizes that divide W; while it's dragged the readout names the groups ("fourths, 5 in each")
@@ -20,13 +20,15 @@ struct FractionOfLesson: PaperLesson {
     struct Q {
         /// The top, the bottom, the things, and each group's count.
         let n, d, W, g: Int
-        /// Squares a thing (2 when there are 30 or fewer), things down a column, and the bar's length in squares.
+        /// Squares a thing (4, 3 or 2 when there are 12, 16 or 30 or fewer), things down a column, and the bar's length in squares.
         let c, r, L: Int
         init(_ p: Numbers) {
             func i(_ k: String, _ v: Int) -> Int { Int((p[k] ?? Double(v)).rounded()) }
             d = min(max(2, i("d", 2)), 12); n = min(max(1, i("n", 1)), d - 1)
             let w = max(d, i("W", d)); W = w - w % d; g = W / d
-            c = W <= 30 ? 2 : 1
+            // a thing is a square 4, 3 or 2 squares a side while the bar stays 48 squares or less (the fraction bars'
+            // whole), so a few things aren't a sliver of the screen; one square from 31 on
+            c = W <= 12 ? 4 : W <= 16 ? 3 : W <= 30 ? 2 : 1
             // a long bar folds into columns of 2 to 4 things, each group still whole columns
             let (w0, g0) = (W, g)
             r = w0 <= 54 ? 1 : (2...4).first { g0 % $0 == 0 && w0 / $0 <= 54 } ?? 1
@@ -53,9 +55,13 @@ struct FractionOfLesson: PaperLesson {
     }
 
     /// The groups tapped, as bits of the hand's "taps".
-    private func taps(_ s: PaperState) -> Set<Int> {
-        let bits = Int(s.h("taps") ?? 0)
-        return Set((0..<12).filter { bits & (1 << $0) != 0 })
+    private func taps(_ s: PaperState) -> Set<Int> { MultiplyFractionsLesson.bits(s.h("taps") ?? 0) }
+
+    /// The groups taken once Take is done: the ones the child tapped (kept by Take), or the first n when there was
+    /// nothing to tap (a top of 1 is taken with the cut) or what's kept doesn't fit.
+    private func taken(_ s: PaperState, _ q: Q) -> [Int] {
+        let kept = s.run.kept["taken"].map(MultiplyFractionsLesson.bits) ?? []
+        return kept.count == q.n && kept.allSatisfy({ $0 < q.d }) ? kept.sorted() : Array(0..<q.n)
     }
 
     func draw(_ s: PaperState) -> PaperDrawing {
@@ -63,8 +69,9 @@ struct FractionOfLesson: PaperLesson {
         let cut = s.on("cut"), tap = s.on("tap"), taken = s.on("taken"), done = s.on("done")
         var pic = GridPen(), live = GridPen(stableIds: true), rec = GridPen()
 
-        // MARK: the bar, a square (or 2 × 2) a thing; the taken groups shaded
-        if taken { pic.fill("tf", col: 0, row: top, w: Double(q.n) * gw, h: h, Bars.shade) }
+        // MARK: the bar, a square (or 2 × 2) a thing; the taken groups shaded, the ones the child tapped
+        let took = self.taken(s, q)
+        if taken { for i in took { pic.fill("tf\(i)", col: Double(i) * gw, row: top, w: gw, h: h, Bars.shade) } }
         let cols = q.W / q.r, rows = (1..<max(1, q.r)).map { j in (pic.P(0, top + Double(j * q.c)), pic.P(L, top + Double(j * q.c))) }
         pic.sketch.segments("things", (1..<cols).map { i in (pic.P(Double(i * q.c), top), pic.P(Double(i * q.c), top + h)) } + rows, .tint(0.42), width: 1)
         Bars.bar(&pic, "b", row: top, parts: cut ? q.d : 1, W: q.L, h: h)
@@ -75,11 +82,13 @@ struct FractionOfLesson: PaperLesson {
         }
         // a hint on the record: the taken groups' counts ringed
         if taken && !done && s.on("ring") {
-            for i in 0..<q.n { pic.circle("ring\(i)", at: (Double(i) + 0.5) * gw, q.counts, radius: 0.9, .chapter, dashed: true) }
+            for i in took { pic.circle("ring\(i)", at: (Double(i) + 0.5) * gw, q.counts, radius: 0.9, .chapter, dashed: true) }
         }
-        // the taken groups bracketed, named n/d
+        // the taken groups bracketed (each run of neighbours on its own), named n/d under the first
         if taken {
-            pic.bracket("br", from: 0, to: Double(q.n) * gw, row: q.bracket + 1, "\(q.n)/\(q.d)", Bars.small)
+            for (j, run) in MultiplyFractionsLesson.runs(took).enumerated() {
+                pic.bracket("br\(j)", from: Double(run.0) * gw, to: Double(run.1 + 1) * gw, row: q.bracket + 1, j == 0 ? "\(q.n)/\(q.d)" : "", Bars.small)
+            }
         }
 
         // MARK: the bar's name at its right end: n/d of W
@@ -139,7 +148,8 @@ struct FractionOfLesson: PaperLesson {
                 let i = min(q.d - 1, Int(p.x / gw)), now = bits ^ (1 << i)
                 return HandMove(hand: ["taps": Double(now)], missHand: nil, set: [("t", Double(now.nonzeroBitCount))])
             },
-            actions: ["Take": { HandMove(hand: nil, missHand: nil, set: [("t", Double(count))], check: true) }])
+            // Take keeps which groups were tapped, so they stay the ones taken
+            actions: ["Take": { HandMove(hand: nil, missHand: nil, set: [("t", Double(count))], keep: ["taken": Double(bits)], check: true) }])
     }
 
     /// The record is written 3 rows under the bracket's words.

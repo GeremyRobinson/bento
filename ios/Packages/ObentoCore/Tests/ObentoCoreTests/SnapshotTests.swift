@@ -22,6 +22,23 @@ final class SnapshotTests: XCTestCase {
         XCTAssertEqual(back.picture, run.picture)
     }
 
+    /// What a hand move left on the picture (the rows the child shaded) is kept across steps and comes back with a
+    /// save; an older save without it comes back with nothing kept.
+    func testWhatTheHandsLeftIsKept() throws {
+        var run = LessonRun(MultiplyFractions.spec, numbers: MultiplyFractions.numbers(a: 2, b: 5, c: 1, d: 3)); run.skipAsk()
+        run.set("x", 5); XCTAssertEqual(run.go(), .moved(run.index))
+        // rows 1 and 3 tapped and shaded
+        run.set("t", 2); run.keep("rowsR", 0b1010)
+        let at = run.index
+        XCTAssertEqual(run.go(), .moved(at + 1))
+        XCTAssertEqual(run.kept["rowsR"], 10)
+        let saved = try JSONDecoder().decode(RunSnapshot.self, from: JSONEncoder().encode(run.snapshot))
+        let back = try XCTUnwrap(LessonRun.restored(MultiplyFractions.spec, saved))
+        XCTAssertEqual(back.kept, ["rowsR": 10])
+        var old = run.snapshot; old.kept = nil
+        XCTAssertEqual(try XCTUnwrap(LessonRun.restored(MultiplyFractions.spec, old)).kept, [:])
+    }
+
     /// A test's problem keeps its one try and no hints.
     func testATestProblemStaysATest() throws {
         var rng = SeededRandom(seed: 3)

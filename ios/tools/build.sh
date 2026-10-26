@@ -5,6 +5,8 @@ set -o pipefail
 cd "$(dirname "$0")/.."
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
 xcodegen -q || exit 1
-xcodebuild -project Obento2.xcodeproj -scheme Obento2 -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+# JOBS=n limits parallel compile jobs and NICE=n lowers the build's priority (both optional, to keep the Mac cool).
+pre=(); [[ -n $NICE ]] && pre=(nice -n $NICE); jobs=(); [[ -n $JOBS ]] && jobs=(-jobs $JOBS)
+$pre xcodebuild $jobs -project Obento2.xcodeproj -scheme Obento2 -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
   -derivedDataPath "${1:?derived data folder}" CODE_SIGNING_ALLOWED=NO build 2>&1 | grep -E "error:|BUILD (SUCCEEDED|FAILED)"
 exit ${pipestatus[1]}

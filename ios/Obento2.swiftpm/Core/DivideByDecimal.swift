@@ -3,8 +3,8 @@ import Foundation
 /// Dividing by a decimal (the web app's g5-divdec): multiply both numbers by 10, then divide whole numbers.
 /// Numbers: d (2 to 9) and qt (2 to 12); the problem is (d × qt)/10 ÷ d/10 (4.8 ÷ 0.6), so the answer is the whole number qt.
 ///
-/// On the paper (design/grade5.md): a number line where one square is a tenth, in every problem (a block of five is
-/// 0.5, a whole is ten squares), from 0 on past the dividend to the next whole, the dividend marked and named on it.
+/// On the paper (design/grade5.md): a number line where one square is a tenth (a block of five is 0.5, a whole is ten
+/// squares; a line of one or two wholes is drawn 3 or 2 squares a tenth, squaresPerTenth), from 0 on past the dividend to the next whole, the dividend marked and named on it.
 /// The child hops the divisor along it from 0 (a tap lays one more hop, a drag lays them as it goes, each snapping to
 /// the divisor's d squares and numbered), the readout counting the hops and where they reach. Then the same squares
 /// are read in tenths under the line (0, 6, 12, … 48), so 4.8 ÷ 0.6 is 48 ÷ 6, and the record is written:
@@ -28,6 +28,10 @@ public enum DivideByDecimal {
 
     static func hops(_ k: Int) -> String { k == 1 ? "1 hop" : "\(k) hops" }
 
+    /// Squares to a tenth on the paper: one, but a short line (one whole, or two) is drawn three or two times as big, so
+    /// the smallest problems aren't a sliver of the screen; every half is still on a strong line.
+    public static func squaresPerTenth(_ n: Int) -> Int { n < 10 ? 3 : n < 20 ? 2 : 1 }
+
     /// The hops laid, `h` of them: right when they reach the end, else where they reach, measured.
     public static func hopVerdict(_ h: Double?, _ s: Parts) -> Verdict {
         guard let h, h > 0 else { return .soft("Tap the line to hop \(fmt(s.y)) from 0.") }
@@ -50,11 +54,12 @@ public enum DivideByDecimal {
         let X = fmt(x), Y = fmt(y)
 
         // the problem is written once, as the line's end and the hop's size (G 20 Oct): the first words say what a square is
-        let ask = LessonStep(StepWords(say: "Each square on the line is a tenth.", hint: "How many hops of \(Y) reach \(X)?", action: "Let’s find out"),
+        let u = squaresPerTenth(n)
+        let ask = LessonStep(StepWords(say: u == 1 ? "Each square on the line is a tenth." : "Every \(u) squares on the line make a tenth.", hint: "How many hops of \(Y) reach \(X)?", action: "Let’s find out"),
                              picture: ["at": 0])
 
         // the hops: tapped or dragged along from 0, each d squares; how many are laid goes in the box
-        let hop = LessonStep(StepWords(say: "Hop along the line from 0 to the end. Tap, or drag.", hint: "Each hop is \(d) squares.", action: "Check"),
+        let hop = LessonStep(StepWords(say: "Hop along the line from 0 to the end. Tap, or drag.", hint: u == 1 ? "Each hop is \(d) squares." : "Each hop is \(d) tenths.", action: "Check"),
             answer: AnswerTask(prompt: [.num(x), .op("÷"), .num(y), .op("="), .box("h")], expected: ["h": Double(qt)],
                                hint: "Hop \(Y) at a time until you reach \(X).",
                                explain: "\(hops(qt)) of \(Y) reach \(X).",

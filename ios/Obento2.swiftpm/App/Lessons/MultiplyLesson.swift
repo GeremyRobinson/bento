@@ -42,8 +42,10 @@ struct MultiplyLesson: PaperLesson {
             T = b - b % 10; O = b % 10
             k = fixed ?? Self.k(a: a, b: b, story: story)
         }
-        /// Words never show smaller than this many points (Rounding's and the fractions' read at about 30).
-        static let readable = 22.0
+        /// Words never show smaller than this many points (Rounding's and the fractions' read at about 30). 20, not 22: a
+        /// tall rectangle told as a story showed its words at 21 points and was drawn with them twice as big, which took
+        /// the camera so far back that the rectangle, the hero, shrank by a quarter (25 Oct).
+        static let readable = 20.0
         /// Bigger by whole steps (G 19 Oct: whole steps, so everything stays on the grid) while its words would show
         /// smaller than `readable` on this screen: the problem laid out at each size just as it will be shown (ProblemGrid's
         /// plan: its story's rows when it's told as one, the words over the rectangle, the cut's rows, the record beside

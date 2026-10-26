@@ -232,6 +232,11 @@ public struct LessonRun: Sendable {
     public private(set) var typed: [String: String] = [:]
     /// The box the keypad types into.
     public var active: String?
+    /// What a hand move left on the picture that later steps still draw (which rows were shaded, which groups taken):
+    /// kept across steps and saved, so the picture shows what the child did, not a stand-in for it.
+    public private(set) var kept: Numbers = [:]
+    /// Keeps `value` under `key` (nil forgets it).
+    public mutating func keep(_ key: String, _ value: Double?) { kept[key] = value }
 
     /// `story`: tell it as the lesson's word problem, with "Which operation solves it?" first (as the web's practice does).
     public init(_ spec: LessonSpec, numbers: Numbers, story: Bool = false, finalOnly: Bool = false) {
@@ -592,6 +597,8 @@ public struct RunSnapshot: Codable, Equatable, Sendable {
     /// sat, and one that no longer fits its lesson starts fresh (LessonRun.restored). Missing in older saves.
     public var spec: String? = nil
     public var stepCount: Int? = nil
+    /// What hand moves left on the picture (LessonRun.kept). Missing in older saves.
+    public var kept: Numbers? = nil
 }
 
 /// One wrong check: the step (in the lesson's own steps), the kind of slip ("k0" = the lesson's first known slip for
@@ -608,7 +615,7 @@ extension LessonRun {
         RunSnapshot(numbers: numbers, story: story, index: index, marks: marks, typed: typed, misses: misses, missed: missed,
                     missedSteps: missedSteps.sorted(), helps: helps, oneTry: oneTry, skipsAsk: skipsAsk,
                     guided: guided, hintCap: hintCap, finalOnly: finalOnly, stepMisses: stepMisses, hinted: hinted.sorted(), shown: shown.sorted(), slips: slips,
-                    spec: spec.id, stepCount: steps.count)
+                    spec: spec.id, stepCount: steps.count, kept: kept.isEmpty ? nil : kept)
     }
 
     /// The run as it was saved: the same numbers make the same steps, and the child's work goes back on them.
@@ -620,6 +627,7 @@ extension LessonRun {
         if s.skipsAsk { skipAsk() }
         index = min(max(0, s.index), max(0, steps.count - 1))
         marks = s.marks; typed = s.typed; misses = s.misses; missed = s.missed; missedSteps = Set(s.missedSteps)
+        kept = s.kept ?? [:]
         // a lesson that has no steps for these numbers any more is caught by `restored`, which asks for it first
         active = steps.indices.contains(index) ? steps[index].answer?.boxes.first : nil
     }

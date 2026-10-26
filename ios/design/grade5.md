@@ -55,7 +55,7 @@ ruler to that piece's size: "How many fit in one whole?" (sets `one`). 2. The ot
 counted (See). 3. **Write** `W ÷ 1/d = W × d = [ ]`. Say: "d pieces in every whole."
 
 ### Fraction of a number (`g5-fracof`)
-One square (2 × 2 when there are 30 or fewer) is one thing: `W` things in one bar. 1. **Cut** the bar into `d` equal
+One square (2 × 2 when there are 30 or fewer; 3 × 3 for 16 or fewer and 4 × 4 for 12 or fewer, so the bar is up to 48 squares like the fraction bars, 25 Oct) is one thing: `W` things in one bar. 1. **Cut** the bar into `d` equal
 parts with the ruler (snapping to part sizes that divide `W`; the readout names the parts: "fourths, 5 in each"). 2.
 **Tap** `n` parts to take them (skipped when `n` is 1). 3. **Write** `n/d of W = W ÷ d × n = [ ]`.
 
@@ -99,14 +99,18 @@ column by column; a full grid overflows into a new one. 3. **Tap** the full grid
 the ones column as the carried 1. 4. **Write** the total. Say: "Points under points, so tenths add to tenths."
 
 ### Multiplying decimals (`g5-multdec`)
-A whole is 20 × 20 squares, cut into 10 × 10 cells (a cell is a hundredth). The strip `x` by `y` lies on wholes.
+A whole is a bold square 10 × 10 squares (a square is a hundredth), in every problem: decided 25 Oct 2026, so the
+biggest problems still fit the screen (a 20 × 20 whole, two squares a hundredth, was the first design). The strip `x` by
+`y` lies on wholes.
 1. **Drag** the strip's corner to `x` across and `y` up (tenths snap to cells; wholes are bold): the readout counts
    the pieces it covers ("24 × 3 = 72 pieces"). 2. One piece is blown up beside it with its size (0.01, or 0.001 for
    hundredths × tenths). 3. **Write** `24 × 3 = [72]`, then **tap** where the point goes in 72 (between the digits; it
    counts the places from the right). Say: "Tenths times tenths are hundredths: 2 places."
 
 ### Dividing by a decimal (`g5-divdec`)
-A number line from 0 to the dividend where one square is a tenth (a block is 0.5). 1. **Hop** the divisor along it from
+A number line from 0 to the dividend where one square is a tenth (a block is 0.5); a line of one or two wholes (the
+smallest problems) is drawn 3 or 2 squares a tenth with a small tick at every tenth, so it isn't a sliver of the screen
+(25 Oct). 1. **Hop** the divisor along it from
 0 (tap to add a hop, or drag along: hops snap to the divisor's length), each hop numbered. Past the end: "That's past
 4.8." 2. The same squares read in tenths under the line (0, 6, 12, … 48): `4.8 ÷ 0.6` is `48 ÷ 6`. 3. **Write**
 `4.8 ÷ 0.6 = 48 ÷ 6 = [ ]`. Say: "The same hops in tenths: 48 ÷ 6."
