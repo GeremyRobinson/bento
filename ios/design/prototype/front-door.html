@@ -126,6 +126,21 @@ svg .fill { opacity: 0; animation: fade-in .5s ease-out forwards }
 .rpill .b.on-here { background: var(--tint); color: var(--chapter); font-weight: 600; border-radius: 999px }
 .rpill .sep { width: 1px; align-self: stretch; margin: 12px 2px 4px; background: var(--pill-line) }
 
+/* calm: icons for buttons, shapes for progress, words only for the one action */
+.ic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: square; stroke-linejoin: miter; display: block }
+.pill.calm .b, .rpill.calm .b, .clear.calm .b { padding: 0 11px }
+.pill.calm .mid, .rpill.calm .mid, .clear.calm .mid { min-width: 0; flex: none; padding: 0 16px }
+.pill.calm .mid.go, .rpill.calm .mid.go { background: var(--tint); border-radius: 999px }
+.clear.calm .mid.go { background: var(--tint); border-radius: 6px }
+.steps2 { display: flex; gap: 6px; align-items: center; padding: 0 16px; height: 100% }
+.clear .steps2, .rpill .steps2 { height: calc(var(--c) * 2.8) }
+.steps2 { flex: none }
+.steps2 i { flex: none; width: 9px; height: 9px; border: 1.5px solid var(--ink3) }
+.steps2 i.full { background: var(--chapter); border-color: var(--chapter) }
+.pill.calm .readout { padding: 0 18px }
+.pill.calm > *, .rpill.calm > *, .clear.calm > * { flex-shrink: 0 }
+.clear.calm .mid, .clear.calm .steps2 { margin: 0 auto }
+
 .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-top: 16px }
 .card h3 { margin: 12px 0 2px; font-size: 17px }
 .card p { margin: 0; color: var(--ink2); font-size: 14px }
@@ -164,12 +179,14 @@ svg .fill { opacity: 0; animation: fade-in .5s ease-out forwards }
   <!-- 2. THE BAR -->
   <h2>2 · The bar: a smart pill <span class="pick">my pick</span></h2>
   <p class="note">The same pill as now. Its middle always offers the <b>one most useful thing right now</b>. Tap through the moments below.</p>
+  <div class="chips" id="calm1"></div>
   <div class="chips" id="moments"></div>
   <div class="ipad" id="pillpaper"></div>
   <p class="say" id="pillsay"></p>
 
   <h2>2b · The ruler, grown up</h2>
   <p class="note">Same idea, drawn like a tool grown-ups like: hairline ticks a square apart and a longer one every five, so <b>the bar's scale is the paper's own grid</b>. Small numbers, no thick borders, the pill's type. Progress fills the ticks in the chapter's colour, with a small mark where you are. Two ways:</p>
+  <div class="chips" id="calm2"></div>
   <div class="chips" id="rvariant"></div>
   <div class="chips" id="rmoment"></div>
   <div class="ipad" id="rulerpaper"></div>
@@ -272,6 +289,37 @@ $('#back').onclick = () => { step = Math.max(step - 1, 0); drawSetup(); };
 $('#replay').onclick = drawSetup;
 drawSetup();
 
+/* ---------------- calm: fewer words ---------------- */
+let calm = true;
+const IC = {
+  lessons: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" fill="var(--tint-strong)"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg>',
+  me: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5" fill="var(--tint-strong)"/><path d="M5 20v-1.5c0-3 3-5 7-5s7 2 7 5V20"/></svg>',
+  back: '<svg viewBox="0 0 24 24"><path d="M10 6l-6 6 6 6M4 12h16"/></svg>',
+  hint: '<svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9V16h7v-2.1A6 6 0 0 0 12 3z" fill="var(--tint)"/></svg>',
+  show: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14"/><path d="M10 9l5 3-5 3z" fill="var(--tint-strong)"/></svg>',
+  more: '<svg viewBox="0 0 24 24"><path d="M5 12h1M11.5 12h1M18 12h1" stroke-width="2.5"/></svg>',
+  close: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+};
+const ic = (k, cls = '', word = '') => `<span class="b ic ${cls}" title="${k}">${IC[k]}${word ? `<span>${word}</span>` : ''}</span>`;
+const steps2 = (n, of) => `<span class="steps2">${[...Array(of).keys()].map(i => `<i class="${i < n ? 'full' : ''}"></i>`).join('')}</span>`;
+const go = t => `<span class="mid go"><span class="t">${t}</span></span>`;
+const calmPill = () => ({
+  'On the map': ic('lessons', 'on-here') + ic('me') + sep + go('Continue →') + sep + ic('more'),
+  'Something due': ic('lessons', 'on-here') + ic('me') + sep + go('Go over · 2') + sep + ic('more'),
+  'Working': ic('back') + sep + steps2(1, 3) + sep + ic('hint') + ic('show') + sep + ic('more'),
+  'Dragging': ic('back', 'dim') + sep + `<span class="readout">3 rows</span>` + sep + ic('hint', 'dim') + ic('show', 'dim') + sep + ic('more', 'dim'),
+  'After a miss': ic('back') + sep + steps2(1, 3) + sep + ic('hint') + ic('show', 'ring', 'Show me') + sep + ic('more'),
+  'Solved': ic('back') + sep + steps2(3, 3) + go('Next →') + sep + ic('more'),
+  'Grade': ic('lessons', 'on-here') + ic('me') + sep + `<span class="mid"><span class="t">5th grade ▴</span></span>` + sep + ic('more'),
+  'More': ic('back') + sep + steps2(1, 3) + sep + ic('hint') + ic('show') + sep + ic('close', 'on-here'),
+});
+function drawCalmChips() {
+  const h = [['Calm (fewer words)', true], ['Full (before)', false]].map(([t, v]) => `<button class="chip" data-calm="${v}" aria-pressed="${calm === v}">${t}</button>`).join('');
+  $('#calm1').innerHTML = h; $('#calm2').innerHTML = h;
+}
+['#calm1', '#calm2'].forEach(id => $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (b) { calm = b.dataset.calm === 'true'; drawCalmChips(); drawPill(); drawRuler(); } }));
+drawCalmChips();
+
 /* ---------------- 2. THE SMART PILL ---------------- */
 const B = (t, cls = '') => `<span class="b ${cls}">${t}</span>`;
 const sep = '<span class="sep"></span>';
@@ -315,7 +363,7 @@ let moment = 'On the map';
 function drawPill() {
   const m = moments[moment], p = $('#pillpaper');
   const old = p.querySelector('.pill'), oldW = old ? old.getBoundingClientRect().width : null;
-  p.innerHTML = m.paper + (m.panel || '') + `<div class="pill">${m.pill}</div>`;
+  p.innerHTML = m.paper + (m.panel || '') + `<div class="pill ${calm ? 'calm' : ''}">${calm ? calmPill()[moment] : m.pill}</div>`;
   const pill = p.querySelector('.pill');
   if (oldW) { const w = pill.getBoundingClientRect().width; pill.style.width = oldW + 'px'; pill.getBoundingClientRect(); pill.style.width = w + 'px'; }
   $('#pillsay').innerHTML = m.say;
@@ -342,18 +390,24 @@ function drawRuler() {
     ? on(20, 10, 0, 0, 'words', '<b style="font-size:calc(var(--c)*2)">Whole numbers</b>') + on(20, 14, 15, 10, '', '<div style="height:100%;border:1.5px solid var(--chapter);background:var(--tint)"></div>') + on(40, 14, 15, 10, '', '<div style="height:100%;border:1.5px solid var(--grid-strong)"></div>')
     : on(30, 3, 0, 0, 'words', 'Shade 2 rows of the rectangle.') + lessonPic(rMoment === 'Solved' ? 2 : rMoment === 'After a miss' ? 3 : 0);
   const btn = ([t, c]) => `<span class="b ${c}">${t}</span>`;
+  const calmBits = {
+    'On the map': [ic('lessons', 'on-here') + ic('me'), go('Continue →'), ic('more')],
+    'Working': [ic('back'), steps2(1, 3), ic('hint') + ic('show') + ic('more')],
+    'After a miss': [ic('back'), steps2(1, 3), ic('hint') + ic('show', 'ring', 'Show me') + ic('more')],
+    'Solved': [ic('back'), steps2(3, 3) + go('Next →'), ic('more')],
+  }[rMoment];
   const midH = `<span class="mid ${m.mid[2] || ''}"><span class="t">${m.mid[0]}</span><span class="s">${m.mid[1]}</span></span>`;
   let bar;
   if (rVariant === 'Clear ruler') {
     // a block line to a block line, centred: 50 squares long
-    bar = `<div class="clear" style="left:calc(var(--c)*16);width:calc(var(--c)*50)">
+    bar = `<div class="clear ${calm ? 'calm' : ''}" style="left:calc(var(--c)*16);width:calc(var(--c)*50)">
       <div class="scale todo"></div><div class="scale done" style="right:auto;width:${rFill}%"></div>
-      <div class="nums">${[...Array(9).keys()].map(i => `<span style="left:${(i + 1) * 10}%">${(i + 1) * 5}</span>`).join('')}</div>
+      <div class="nums" style="${calm ? 'display:none' : ''}">${[...Array(9).keys()].map(i => `<span style="left:${(i + 1) * 10}%">${(i + 1) * 5}</span>`).join('')}</div>
       <span class="caret" style="left:${rFill}%"></span>
-      ${m.items.map(btn).join('')}<span class="div"></span>${midH}<span class="div"></span>${m.right.map(btn).join('')}</div>`;
+      ${calm ? calmBits[0] : m.items.map(btn).join('')}<span class="div"></span>${calm ? calmBits[1] : midH}<span class="div"></span>${calm ? calmBits[2] : m.right.map(btn).join('')}</div>`;
   } else {
-    bar = `<div class="rpill"><div class="scale todo"></div><div class="scale done" style="right:auto;width:calc((100% - 44px) * ${rFill / 100})"></div>
-      ${m.items.map(btn).join('')}<span class="sep"></span>${midH}<span class="sep"></span>${m.right.map(btn).join('')}</div>`;
+    bar = `<div class="rpill ${calm ? 'calm' : ''}"><div class="scale todo"></div><div class="scale done" style="right:auto;width:calc((100% - 44px) * ${rFill / 100})"></div>
+      ${calm ? calmBits[0] : m.items.map(btn).join('')}<span class="sep"></span>${calm ? calmBits[1] : midH}<span class="sep"></span>${calm ? calmBits[2] : m.right.map(btn).join('')}</div>`;
   }
   P.innerHTML = back + bar;
   requestAnimationFrame(() => { rFill = m.fill; P.querySelectorAll('.scale.done').forEach(e => e.style.width = rVariant === 'Clear ruler' ? rFill + '%' : `calc((100% - 44px) * ${rFill / 100})`); const c = P.querySelector('.caret'); if (c) c.style.left = rFill + '%'; });
