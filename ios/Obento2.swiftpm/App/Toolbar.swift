@@ -56,6 +56,8 @@ struct Toolbar: View {
             }
             row(inLesson).fixedSize()
         }
+        // as wide as what's in it (the menu, the grades or the row), never the screen's width: its line across fills that
+        .fixedSize(horizontal: true, vertical: false)
         // the same gap all round, so a lit button sits evenly inside the bar's curve
         .padding(6)
         // the shadow belongs to the pill's shape only: on the whole pill, SwiftUI shadowed every button and word in it
@@ -239,7 +241,8 @@ struct Toolbar: View {
             Text(ui.gradeSaid ?? "Other grades are coming soon.").font(Typeface.font(15, .medium)).foregroundStyle(Ink.ink2)
                 .contentTransition(.opacity).padding(.horizontal, 4)
         }
-        .padding(.horizontal, 6).padding(.top, 6)
+        // clear of the pill's round corners
+        .padding(.horizontal, 16).padding(.top, 12)
     }
 
     private var zoomRow: some View {
