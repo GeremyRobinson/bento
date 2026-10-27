@@ -741,6 +741,14 @@ enum Shots {
         let args = ProcessInfo.processInfo.arguments, full = args.contains("-seed-me-full")
         // the real-touch tests start set up (in memory only), so they open on the map, not on setting up
         if !active, full || args.contains("-seed-me") || args.contains("-set-up") { AppSettings.set(profile: Profile(setUp: true), saving: false) }
+        if !active, args.contains("-setup-fresh") {
+            // a new install (the real-touch test of setting up): in memory only, so nothing on the iPad changes
+            Progress.shared.saving = false; PageStore.saving = false
+            for p in Map.all + [Map.review] { PageStore.clear(p.id) }
+            Progress.shared.reset(to: [])
+            AppSettings.shots = true
+            return
+        }
         guard !active, full || args.contains("-seed-me") else { return }
         Progress.shared.saving = false
         PageStore.saving = false
