@@ -36,32 +36,38 @@ struct Toolbar: View {
 
     // MARK: the pill
 
-    /// The pill: what's open grows up out of it, above its row, inside the same shape.
+    /// The pill: what's open grows up out of it, above its row, inside the same shape. It opens like a drawer (G 26 Oct):
+    /// the menu slides up from behind the row as the pill grows, and slides back down behind it as it shuts, never
+    /// fading outside the pill.
     private func pill(_ inLesson: Bool) -> some View {
         let shape = RoundedRectangle(cornerRadius: 32, style: .continuous)
         return VStack(spacing: 6) {
             if let open = ui.open {
-                Group {
+                VStack(spacing: 6) {
                     switch open {
                     case .more: inLesson ? AnyView(lessonMenu) : AnyView(mapMenu)
                     case .grade: AnyView(gradeRow)
                     }
+                    Rectangle().fill(Ink.line).frame(height: 1).padding(.horizontal, 10)
                 }
-                .transition(.opacity.combined(with: .scale(scale: 0.94, anchor: .bottom)))
-                Rectangle().fill(Ink.line).frame(height: 1).padding(.horizontal, 10)
-                    .transition(.opacity)
+                .transition(.move(edge: .bottom))
             }
+            // the row stays in front, so the drawer slides out from behind it
             row(inLesson).fixedSize()
+                .background(Ink.surface.padding(-6))
+                .zIndex(1)
         }
         // as wide as what's in it (the menu, the grades or the row), never the screen's width: its line across fills that
         .fixedSize(horizontal: true, vertical: false)
         // the same gap all round, so a lit button sits evenly inside the bar's curve
         .padding(6)
+        // nothing in it draws outside the pill's shape, even while it grows or shrinks
+        .clipShape(shape)
         // the shadow belongs to the pill's shape only: on the whole pill, SwiftUI shadowed every button and word in it
         .background(shape.fill(Ink.surface).shadow(color: .black.opacity(0.08), radius: 12, y: 6))
         .overlay(shape.strokeBorder(Ink.line, lineWidth: 1))
         // its width (and height, as something grows out of it) changes smoothly, never in a jump under the finger
-        .animation(.smooth(duration: 0.35), value: animationKey(inLesson))
+        .animation(.smooth(duration: ui.slow ? 3 : 0.35), value: animationKey(inLesson))
     }
 
     /// Everything that changes the pill's shape: a change in any of it is animated.
@@ -369,11 +375,21 @@ final class BarUI {
     var open: Panel?
     /// What the last grade tapped said ("7th grade: coming soon.").
     var gradeSaid: String?
+    /// Screenshots only (`-panel-demo`): the pill's changes run ten times slower.
+    private(set) var slow = false
 
     private init() {
         let args = ProcessInfo.processInfo.arguments
         // `-panel=more` / `-panel=grade`: a screenshot opens that
         if let a = args.first(where: { $0.hasPrefix("-panel=") }) { open = ["more": Panel.more, "grade": .grade][String(a.dropFirst(7))] }
+        // `-panel-demo`: ⋯ More opens at 4 s and shuts at 10 s, ten times slower, so stills can catch the drawer moving
+        slow = args.contains("-panel-demo")
+        if slow {
+            Task { [weak self] in
+                try? await Task.sleep(for: .seconds(4)); self?.open = .more
+                try? await Task.sleep(for: .seconds(6)); self?.open = nil
+            }
+        }
     }
 }
 
