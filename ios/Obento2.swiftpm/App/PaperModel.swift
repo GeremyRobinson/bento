@@ -173,7 +173,9 @@ enum Map {
     /// there, a cell to spare. The overview frames this, as a lesson frames what it shows.
     @MainActor static var shownBounds: Rect {
         let x0 = groups.map(\.origin.x).min()!, y0 = groups.map(\.origin.y).min()!
-        var r = shown.map { Rect(x: $0.at.x, y: $0.at.y, width: Piece.size.width, height: Piece.size.height + Paper.unit) }
+        // a piece and the ink of its name and its line under it (3 squares), not the whole block kept for them, so the
+        // map fills the screen as a lesson's page does (G 26 Oct)
+        var r = shown.map { Rect(x: $0.at.x, y: $0.at.y, width: Piece.size.width, height: Piece.size.height + 3 * Paper.cell) }
             .reduce(Rect(x: x0, y: y0, width: 1, height: 1)) { $0.union($1) }
         if StartHere.shows, let p = StartHere.piece { r = r.union(StartHere.bounds(for: p)) }
         let m = Paper.cell
