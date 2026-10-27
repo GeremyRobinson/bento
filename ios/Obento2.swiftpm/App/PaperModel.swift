@@ -168,6 +168,17 @@ enum Map {
         let m = Paper.cell
         return Rect(x: x0 - m, y: y0 - m, width: x1 - x0 + 2 * m, height: y1 - y0 + 2 * m)
     }()
+    /// What's on the map now (G 26 Oct: the Lessons button framed every place a test might one day go, so it sat far out
+    /// with the lessons in a corner): the groups' titles, the pieces shown with their names, and "Start here" when it's
+    /// there, a cell to spare. The overview frames this, as a lesson frames what it shows.
+    @MainActor static var shownBounds: Rect {
+        let x0 = groups.map(\.origin.x).min()!, y0 = groups.map(\.origin.y).min()!
+        var r = shown.map { Rect(x: $0.at.x, y: $0.at.y, width: Piece.size.width, height: Piece.size.height + Paper.unit) }
+            .reduce(Rect(x: x0, y: y0, width: 1, height: 1)) { $0.union($1) }
+        if StartHere.shows, let p = StartHere.piece { r = r.union(StartHere.bounds(for: p)) }
+        let m = Paper.cell
+        return Rect(x: r.x - m, y: r.y - m, width: r.width + 2 * m, height: r.height + 2 * m)
+    }
 }
 
 /// A page of its own on the paper instead of the map (G 20 Oct): Me (the child's own page, MePage) or the grown-ups'
@@ -382,9 +393,9 @@ final class PaperModel {
     /// Room kept clear of the paper's content: a little at the top, and the floating bar at the bottom.
     static let chrome = (top: 24.0, bottom: 120.0)
 
-    /// The whole map's view, clear of the bar.
+    /// The whole map's view (what's on it now), clear of the bar.
     var overview: PaperCamera {
-        var cam = PaperCamera.framing(Map.bounds, in: Size(screen.width, screen.height - Self.chrome.top - Self.chrome.bottom), maxZoom: 1.4)
+        var cam = PaperCamera.framing(Map.shownBounds, in: Size(screen.width, screen.height - Self.chrome.top - Self.chrome.bottom), maxZoom: 1.4)
         cam.y += Self.chrome.top
         return cam
     }

@@ -49,8 +49,11 @@ public enum CameraTiming {
     /// (G 17 Oct: 125% for the focus and the target).
     public static let lessonMax: Double = 1.25
 
-    /// The zoom a tap on a lesson glides to: 100%, unless the lesson wouldn't fit.
-    public static func selectZoom(current: Double, overview: Double, fit: Double) -> Double { min(fit, selectMax) }
+    /// Tapping a lesson on the map glides to this zoom (G 26 Oct: 100% was "a little too close"): the lesson with its
+    /// neighbours around it.
+    public static let tapZoom: Double = 0.85
+    /// The zoom a tap on a lesson glides to: 85%, unless the lesson wouldn't fit.
+    public static func selectZoom(current: Double, overview: Double, fit: Double) -> Double { min(fit, tapZoom) }
 }
 
 /// A camera move in progress, read at any moment.
