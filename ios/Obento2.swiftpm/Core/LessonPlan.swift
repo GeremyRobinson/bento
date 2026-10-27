@@ -149,6 +149,16 @@ public struct LessonPlan: Codable, Equatable, Sendable {
         if !answered.isEmpty { return Standing(words: "Lesson test · \(answered.count) of \(test.count) done", done: Double(answered.count) / Double(test.count)) }
         return Standing(words: "The lesson test is open", done: 1)
     }
+    /// The page's progress as the bar's squares (the calm pill, G 26 Oct): its together problems and the 6 right on
+    /// their own that open its test, one square each, `done` of them filled (fresh problems added after a miss never
+    /// add a square).
+    public func squares(solved: [Bool], clean: [Bool]) -> (done: Int, of: Int) {
+        let together = items.indices.filter { items[$0].part == .together }
+        let togetherDone = together.filter { solved.indices.contains($0) && solved[$0] }.count
+        let right = items.indices.filter { items[$0].part == .own && clean.indices.contains($0) && clean[$0] }.count
+        return (togetherDone + min(right, Self.own), together.count + Self.own)
+    }
+
     /// The same from a saved page, for the map.
     public func standing(_ problems: [RunSnapshot], test: [RunSnapshot]) -> Standing {
         standing(solved: problems.map(\.finished), clean: problems.indices.map { clean($0, problems[$0]) },

@@ -123,6 +123,7 @@ struct LongDivisionLesson: PaperLesson {
             live.dot("handle", at: c, q.mid, radius: (s.grabbed ? 0.75 : 0.6) * k, .chapter, over: true)
             let say = left >= 0 ? "\(left) left" : "\(-left) too many"
             live.label("left", say, Self.readout, .right, edge: c + 0.6 * k, along: q.mid)
+            live.reads(say)
         }
 
         // MARK: the record: the division as school writes it, two squares to a digit: the divisor, the bracket and the

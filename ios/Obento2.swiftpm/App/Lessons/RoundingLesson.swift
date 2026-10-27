@@ -76,6 +76,7 @@ struct RoundingLesson: PaperLesson {
                     let a = min(now, P.step) * B, b = max(now, P.step) * B, n = Int(abs(now - P.step).rounded())
                     live.line("count", [(a, y2 + 3), (a, y2 + 4), (b, y2 + 4), (b, y2 + 3)], .chapter)
                     live.label("countw", RoundDecimals.steps(n), label.colour(.chapter), .below, edge: y2 + 4, along: (a + b) / 2)
+                    live.reads(RoundDecimals.steps(n))
                 }
                 // a hint: the steps to each end, counted under the line (the live count takes its place while held)
                 if s.on("counts"), !s.grabbed {

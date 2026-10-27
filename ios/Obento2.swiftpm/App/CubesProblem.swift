@@ -499,6 +499,15 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
     @ObservationIgnored private var sweep: (anchor: UnitCubes.Cell, paint: Bool, before: Set<Int>)?
     @ObservationIgnored private var lifting: (y: Double, layers: Int)?
 
+    /// A sweep across the floor or the layers being lifted (the calm pill's readout, G 26 Oct).
+    var handMoving: Bool { sweep != nil || lifting != nil }
+    /// The squares covered as the finger sweeps ("12 squares"), or the layers standing as it lifts ("3 layers").
+    var liveReadout: String? {
+        if sweep != nil { let n = (0..<box.floor).filter { squares[$0]?.on == true }.count; return n == 1 ? "1 square" : "\(n) squares" }
+        if lifting != nil { let n = layersStanding; return n == 1 ? "1 layer" : "\(n) layers" }
+        return nil
+    }
+
     func grab(_ p: Point) -> Bool {
         guard !busy, !auto, leftAt == nil, preview == nil else { return false }
         if isCover, let c = cell(at: p) {

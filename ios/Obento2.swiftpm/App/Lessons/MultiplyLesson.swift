@@ -170,8 +170,10 @@ struct MultiplyLesson: PaperLesson {
                 let wL = "\(Int(c))", wR = "\(q.b - Int(c))"
                 live.label("wL", wL, Self.readout, .above, edge: top, along: q.clear(wL, Self.readout, of: c, c / 2))
                 live.label("wR", wR, Self.readout, .above, edge: top, along: q.clear(wR, Self.readout, of: c, (c + b) / 2))
+                live.reads("\(wL) + \(wR)")
             } else {
                 live.label("wL", "\(q.b)", Self.name, .above, edge: top, along: q.clear("\(q.b)", Self.name, of: c, b / 2))
+                live.reads("\(q.b)")
             }
         }
 

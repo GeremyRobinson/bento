@@ -46,6 +46,8 @@ final class WorkProblem: Identifiable, PageProblem {
     var handAt: Double = -100
     /// A drag is under way on the picture (LessonHands): the camera holds still until it's let go.
     var dragging = false
+    /// The hand move's readout for the bar, worked out once per hand state (the bar is drawn every frame).
+    @ObservationIgnored var readoutFor: (hand: Numbers, text: String?)?
     /// The step's hint is shown: written on rows 3–4 and its part of the picture lit (Hint in the bar).
     private(set) var hinting = false
     /// Show me (a preview) or the How to, playing the step's moves with a ghost finger.

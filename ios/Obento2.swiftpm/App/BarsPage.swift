@@ -264,6 +264,16 @@ final class BarsPage {
         return plan.standing(solved: problems.map(\.solved), clean: problems.indices.map { plan.clean($0, problems[$0].lesson) },
                              test: testProblems.map { $0.solved ? !$0.lesson.missedAny : nil })
     }
+    /// The page's progress as the bar's squares (the calm pill, G 26 Oct): a test's, a recheck's or the review's
+    /// problems solved of how many; a lesson's page its together problems and the 6 right on their own (LessonPlan).
+    var squares: (done: Int, of: Int) {
+        if test != nil || rechecking {
+            let list = rechecking ? recheckProblems : problems
+            return (list.filter(\.solved).count, list.count)
+        }
+        guard let plan else { return (0, 0) }
+        return plan.squares(solved: problems.map(\.solved), clean: problems.indices.map { plan.clean($0, problems[$0].lesson) })
+    }
     /// "Fractions test" or the lesson's name, for the bar.
     var title: String { piece.name }
     /// A test, a recheck or one of their questions is up: no help of any kind (Read it aloud, the How to).

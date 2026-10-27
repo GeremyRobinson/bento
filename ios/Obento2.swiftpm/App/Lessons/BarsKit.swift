@@ -131,6 +131,7 @@ struct Ruler {
         // the piece's name over the ruler, centred on it, but never past the bars' left end (a short ruler's long name,
         // "twenty-fourths", starts where the bars do)
         let name = readout?(Int(w)) ?? UnlikeFractions.pieceName(W / Int(w))
+        live.reads(name)
         let half = PaperText.width(name, PaperText.font(small.size, small.weight, digits: true)) / 2 / Paper.cell
         // (its ink half a square over the handle, which a short ruler's name would otherwise touch); a ruler down the
         // side has it on its left, level with its middle

@@ -33,6 +33,9 @@ struct Sketch {
     var pace: Double = 1
     /// Whether the parts added from now on change shape in place (see Item.snaps).
     var snaps = false
+    /// What a hand move reads now (the live drawing's readout: "3 rows", "fourths", "5 hops of 0.6 = 3"), so the bar
+    /// can say it big in its middle while the finger is down (the calm pill, G 26 Oct). Drawn nowhere by itself.
+    var readout: String?
     static let c = Paper.cell
 
     mutating func line(_ id: String, _ pts: [CGPoint], _ colour: Colour = .ink, width: Double = 2, dashed: Bool = false) {

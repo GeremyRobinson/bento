@@ -174,6 +174,7 @@ struct UnitsLesson: PaperLesson {
             let text = "\(k) \(q.p.B) = \(fmt(Double(k) * q.p.f)) \(q.p.S)"
             let half = PaperText.width(text, PaperText.font(Bars.small.size, Bars.small.weight, digits: true)) / 2 / Paper.cell
             live.label("readout", text, Bars.small, .above, edge: T - q.hopH - 0.5, along: max(x / 2, half))
+            live.reads(text)
         }
 
         // MARK: a hint on the record: what's left (or the last hop), ringed

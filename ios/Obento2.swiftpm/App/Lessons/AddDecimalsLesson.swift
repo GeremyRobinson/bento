@@ -126,12 +126,14 @@ struct AddDecimalsLesson: PaperLesson {
                         live.sketch.box("intoBo", live.R(B, top, side, side), .chapter, width: Sketch.stroke)
                     }
                     live.label("count", P.pour, Self.label.colour(.chapter), .above, edge: top, along: A + side / 2)
+                    live.reads(P.pour)
                 } else {
                     // following the finger, a square at a time, its name with it
                     let gx = B + (s.h("dx") ?? 0), gy = top + (s.h("dy") ?? 0)
                     cells(&live, "held", x: gx, y: gy, 0..<P.nb)
                     live.line("heldo", Self.outline(P.nb).map { (gx + $0.0, gy + $0.1) }, .chapter)
                     live.label("heldName", name(1, s, P), Self.label, .above, edge: gy, along: gx + side / 2)
+                    live.reads(name(1, s, P))
                     live.label("aName", name(0, s, P), Self.label, .above, edge: top, along: A + side / 2)
                 }
             } else {

@@ -1,0 +1,141 @@
+import XCTest
+@testable import ObentoCore
+
+/// The calm smart pill (Core/Pill.swift): what its middle offers, which tools show, its step squares, its first-use
+/// words and the grades.
+final class PillTests: XCTestCase {
+    let utc = TimeZone(identifier: "UTC")!
+    /// Ten days after the pages below were saved (another day).
+    let later = 10 * 86_400.0
+
+    // MARK: the map's middle
+
+    func testNothingStartedOffersTheGrade() {
+        XCTAssertEqual(Pill.offer(reviewLeft: nil, due: [], pages: [], now: later, zone: utc), .grade)
+        XCTAssertEqual(Pill.Offer.grade.words(grade: "5th grade"), "5th grade")
+    }
+
+    func testContinueIsThePageLastWorkedOnThatIsNotFinished() {
+        let pages = [Pill.Page(id: "add", date: 10, finished: false), Pill.Page(id: "g5-round", date: 30, finished: true),
+                     Pill.Page(id: "g5-divide", date: 20, finished: false)]
+        XCTAssertEqual(Pill.offer(reviewLeft: nil, due: [], pages: pages, now: later, zone: utc), .resume("g5-divide"))
+        XCTAssertEqual(Pill.Offer.resume("g5-divide").words(grade: "5th grade"), "Continue →")
+        // every page finished: nothing to continue
+        XCTAssertEqual(Pill.offer(reviewLeft: nil, due: [], pages: [Pill.Page(id: "add", date: 1, finished: true)], now: later, zone: utc), .grade)
+    }
+
+    func testWhatsDueComesFirst() {
+        let pages = [Pill.Page(id: "add", date: 10, finished: false)]
+        XCTAssertEqual(Pill.offer(reviewLeft: 8, due: ["g5-round"], pages: pages, now: later, zone: utc), .review(left: 8))
+        XCTAssertEqual(Pill.Offer.review(left: 5).words(grade: ""), "Go over · 5")
+        // today's review done: the rechecks due, the first opening
+        XCTAssertEqual(Pill.offer(reviewLeft: nil, due: ["g5-round", "sub"], pages: pages, now: later, zone: utc), .recheck("g5-round", count: 2))
+        XCTAssertEqual(Pill.Offer.recheck("g5-round", count: 2).words(grade: ""), "Go over · 2")
+    }
+
+    func testAPageLeftEarlierTodayComesBeforeWhatsDue() {
+        let noon = 1000 * 86_400.0 + 12 * 3600
+        let pages = [Pill.Page(id: "g5-divide", date: noon - 2 * 3600, finished: false), Pill.Page(id: "add", date: noon - 3600, finished: true)]
+        // mid-flow: worked on this morning, not finished
+        XCTAssertEqual(Pill.offer(reviewLeft: 8, due: ["g5-round"], pages: pages, now: noon, zone: utc), .resume("g5-divide"))
+        // the same page left yesterday: what's due comes first again
+        let yesterday = [Pill.Page(id: "g5-divide", date: noon - 86_400, finished: false)]
+        XCTAssertEqual(Pill.offer(reviewLeft: 8, due: ["g5-round"], pages: yesterday, now: noon, zone: utc), .review(left: 8))
+        XCTAssertEqual(Pill.offer(reviewLeft: nil, due: ["g5-round"], pages: yesterday, now: noon, zone: utc), .recheck("g5-round", count: 1))
+        XCTAssertEqual(Pill.offer(reviewLeft: nil, due: [], pages: yesterday, now: noon, zone: utc), .resume("g5-divide"))
+        // a page finished today doesn't count: what's due comes first
+        let done = [Pill.Page(id: "add", date: noon - 3600, finished: true)]
+        XCTAssertEqual(Pill.offer(reviewLeft: 8, due: [], pages: done, now: noon, zone: utc), .review(left: 8))
+    }
+
+    func testReviewLeft() {
+        XCTAssertNil(Pill.reviewLeft(ready: false, doneToday: false, partway: nil), "no review until two lessons are checked")
+        XCTAssertNil(Pill.reviewLeft(ready: true, doneToday: true, partway: nil), "done today")
+        XCTAssertEqual(Pill.reviewLeft(ready: true, doneToday: false, partway: nil), Review.problems)
+        XCTAssertEqual(Pill.reviewLeft(ready: true, doneToday: false, partway: 3), Review.problems - 3)
+        // started before a grown-up's reset: what's left still shows, while it's partway
+        XCTAssertNil(Pill.reviewLeft(ready: true, doneToday: false, partway: Review.problems))
+    }
+
+    // MARK: in a lesson
+
+    func testThePageHasNoTools() {
+        XCTAssertEqual(Pill.tools(nil), Pill.Tools())
+        XCTAssertEqual(Pill.tools(Pill.Problem(auto: true)), Pill.Tools(), "the How to plays itself")
+    }
+
+    func testWorkingHasHintAndShowMe() {
+        XCTAssertEqual(Pill.tools(Pill.Problem()), Pill.Tools(hint: true, showMe: true))
+    }
+
+    func testAfterAMissShowMeHasItsWord() {
+        XCTAssertEqual(Pill.tools(Pill.Problem(missed: true)), Pill.Tools(hint: true, showMe: true, showMeWord: true))
+    }
+
+    func testSolvedFoldsTheToolsAwayForNext() {
+        XCTAssertEqual(Pill.tools(Pill.Problem(solved: true, missed: true)), Pill.Tools(next: true))
+        XCTAssertEqual(Pill.tools(Pill.Problem(inTest: true, solved: true)), Pill.Tools(next: true))
+    }
+
+    func testTestsHaveNoHelp() {
+        XCTAssertEqual(Pill.tools(Pill.Problem(inTest: true, missed: true)), Pill.Tools())
+    }
+
+    func testAHandMoveDimsTheRest() {
+        XCTAssertEqual(Pill.tools(Pill.Problem(moving: true)), Pill.Tools(hint: true, showMe: true, dim: true))
+    }
+
+    func testStepSquares() {
+        // an opening question the problem goes past, then three steps the child does, then the last words
+        let work = [false, true, true, true, false]
+        XCTAssertEqual(Pill.steps(work: work, index: 1, solved: false).done, 0)
+        XCTAssertEqual(Pill.steps(work: work, index: 1, solved: false).of, 3)
+        XCTAssertEqual(Pill.steps(work: work, index: 3, solved: false).done, 2)
+        XCTAssertEqual(Pill.steps(work: work, index: 4, solved: true).done, 3)
+        XCTAssertEqual(Pill.steps(work: [], index: 0, solved: false).of, 0)
+    }
+
+    func testStepSquaresOfARealProblem() throws {
+        let spec = try XCTUnwrap(Lessons.spec("g5-round"))
+        var rng = SeededRandom(seed: 4)
+        let run = LessonRun(spec, numbers: spec.generate(&rng, 0))
+        let s = Pill.steps(run)
+        XCTAssertEqual(s.of, run.workSteps)
+        XCTAssertGreaterThan(s.of, 0)
+        XCTAssertEqual(s.done, 0)
+    }
+
+    // MARK: first-use words
+
+    func testWordsForTheFirstThreeSessionsThenTheyFade() {
+        XCTAssertEqual(Pill.labels(session: 1), .shown)
+        XCTAssertEqual(Pill.labels(session: 3), .shown)
+        XCTAssertEqual(Pill.labels(session: 4), .fading)
+        XCTAssertEqual(Pill.labels(session: 5), .hidden)
+    }
+
+    func testANewSession() {
+        XCTAssertTrue(Pill.isNewSession(lastActive: nil, now: 100))
+        XCTAssertFalse(Pill.isNewSession(lastActive: 100, now: 100 + 60))
+        XCTAssertTrue(Pill.isNewSession(lastActive: 100, now: 100 + Pill.sessionGap))
+    }
+}
+
+/// The page's progress as the pill's squares (LessonPlan.squares).
+final class PageSquaresTests: XCTestCase {
+    func testTogetherThenSixRightOnTheirOwn() throws {
+        let spec = try XCTUnwrap(Lessons.spec("g5-round"))
+        var rng = SeededRandom(seed: 7)
+        let plan = LessonPlan(spec, using: &rng)
+        let n = plan.items.count
+        let together = plan.items.filter { $0.part == .together }.count
+        XCTAssertEqual(plan.squares(solved: [], clean: []).done, 0)
+        XCTAssertEqual(plan.squares(solved: [], clean: []).of, together + LessonPlan.own)
+        // the together ones solved: their squares filled
+        let solved = plan.items.map { $0.part == .together }
+        XCTAssertEqual(plan.squares(solved: solved, clean: Array(repeating: false, count: n)).done, together)
+        // every own one right: never more squares than the 6 that open the test
+        let all = Array(repeating: true, count: n)
+        XCTAssertEqual(plan.squares(solved: all, clean: all).done, together + LessonPlan.own)
+    }
+}
