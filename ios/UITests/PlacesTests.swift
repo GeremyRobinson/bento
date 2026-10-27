@@ -137,7 +137,7 @@ final class PlacesTests: XCTestCase {
     func testMeTheGrownUpsHoldAndTheMap() throws {
         XCUIDevice.shared.orientation = .landscapeLeft
         let app = XCUIApplication()
-        app.launchArguments = ["-landscape"]
+        app.launchArguments = ["-landscape", "-set-up"]
         app.launch()
         sleep(6)
         attach(app, "1 map")

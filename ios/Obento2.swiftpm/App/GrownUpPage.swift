@@ -21,13 +21,33 @@ final class GrownUpPage {
     private(set) var letGoAt: Double?
     private var letGoFill = 0.0
     /// What it's asking to confirm on the paper: one lesson's reset, or everything's.
-    enum Confirm: Equatable { case lesson(String), all }
+    enum Confirm: Equatable { case lesson(String), all, startOver }
     private(set) var confirm: Confirm?
     /// Bumped by every change it makes (a reset, a setting), so its drawing knows to change.
     private(set) var version = 0
 
+    /// The child's name being changed here (its squares tapped): the keyboard is up and what's typed is kept at once.
+    private(set) var editingName = false
+    private(set) var nameDraft = ""
+    /// Bumped when the name's squares are tapped: the keyboard comes back.
+    private(set) var nameTaps = 0
+    /// The grade block last tapped, whose words show under the row.
+    private(set) var gradeSaid: Int?
+
     /// Shut again (each time the page is arrived at).
-    func shut() { open = false; heldAt = nil; letGoAt = nil; letGoFill = 0; confirm = nil }
+    func shut() { open = false; heldAt = nil; letGoAt = nil; letGoFill = 0; confirm = nil; editingName = false; gradeSaid = nil }
+
+    /// A name typed (NameEntry): kept as it's typed (Setup.cleanName), a space between words allowed.
+    func type(_ raw: String, saving: Bool) {
+        let clean = Setup.cleanName(raw)
+        nameDraft = raw.last == " " && !clean.isEmpty && clean.count < Setup.nameLength ? clean + " " : clean
+        var p = AppSettings.profile; p.name = clean
+        AppSettings.set(profile: p, saving: saving)
+        version += 1
+    }
+    func stopEditing() { guard editingName else { return }; editingName = false; version += 1 }
+    /// Screenshots only: the name's squares tapped.
+    func editNameForShots() { editingName = true; nameDraft = AppSettings.name; version += 1 }
 
     // MARK: the hold
 
@@ -82,6 +102,7 @@ final class GrownUpPage {
     enum Action: Equatable {
         case row(String), reset(String), resetAll, askAll, keep
         case sound(Bool), readAloud(Bool), theme(String)
+        case name, grade(Int), reminder(Reminder), askStartOver, startOver
     }
     @MainActor struct Sheet {
         var sketch = Sketch()
@@ -182,18 +203,35 @@ final class GrownUpPage {
         let rows = s.words("gu-note", note, Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2), x: x0, top: y, width: Self.tableW * c, max: 3)
         let bottom = y + Double(rows) * Sketch.row
 
-        // the settings, beside the table
+        // the settings, beside the table: the child's name and grade first (from setting up), then the reminder, sound,
+        // read aloud and the paper's colours, and Start over last
         let sx = X(Self.settingsX)
         var sy = y0 + u
+        let label = Sketch.Words(size: Sketch.small, weight: .semibold, colour: .ink), say = Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2)
+        func heading(_ name: String, _ line: String) {
+            s.label("gu-set-\(name)", name, label, at: CGPoint(x: sx, y: sy + c), anchor: UnitPoint(x: 0, y: 0.5))
+            s.label("gu-set-\(name)-say", line, say, at: CGPoint(x: sx, y: sy + 3 * c), anchor: UnitPoint(x: 0, y: 0.5), slot: "gu-set-\(name)-say")
+        }
+        // the name, on its line of squares: tapped, the keyboard comes up and what's typed is kept
+        heading("Name", editingName ? "Type the name, then press return." : "Tap the squares to change it.")
+        let line = s.nameSquares("gu-name", editingName ? nameDraft : AppSettings.name, x: sx, y: sy + 5 * c, cursor: editingName)
+        out.taps.append((line.insetBy(dx: -c / 2, dy: -c / 2), .name))
+        sy += 10 * c
+        // the grade: 5th has lessons; the others are dead blocks that say they're coming
+        heading("Grade", gradeSaid.map(Grades.onMe) ?? "Only 5th grade has lessons so far.")
+        for (r, g) in s.gradeRow("gu-grade", x: sx, y: sy + 5 * c, side: 2, pitch: 3, chosen: AppSettings.profile.grade, size: Sketch.small) {
+            out.taps.append((r, .grade(g)))
+        }
+        sy += 10 * c
         let settings: [(name: String, say: String, choices: [(String, Action, Bool)])] = [
+            ("Reminder", "A note on the iPad each day.", Reminder.allCases.map { ($0.words, Action.reminder($0), AppSettings.profile.reminder == $0) }),
             ("Sound", "A soft sound for right and wrong.", [("On", .sound(true), AppSettings.sound), ("Off", .sound(false), !AppSettings.sound)]),
             ("Read aloud", "Reads out each step's words.", [("On", .readAloud(true), AppSettings.readAloud), ("Off", .readAloud(false), !AppSettings.readAloud)]),
             ("Colours", "Light or dark paper.", [("Match the iPad", .theme(""), AppSettings.theme == ""), ("Light", .theme("light"), AppSettings.theme == "light"),
                                                ("Dark", .theme("dark"), AppSettings.theme == "dark")]),
         ]
         for setting in settings {
-            s.label("gu-set-\(setting.name)", setting.name, Sketch.Words(size: Sketch.small, weight: .semibold, colour: .ink), at: CGPoint(x: sx, y: sy + c), anchor: UnitPoint(x: 0, y: 0.5))
-            s.label("gu-set-\(setting.name)-say", setting.say, Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2), at: CGPoint(x: sx, y: sy + 3 * c), anchor: UnitPoint(x: 0, y: 0.5))
+            heading(setting.name, setting.say)
             var bx = sx
             for (word, action, chosen) in setting.choices {
                 let b = CGRect(x: bx, y: sy + 5 * c, width: Self.blockWidth(word, least: 5), height: 2 * c)
@@ -202,7 +240,26 @@ final class GrownUpPage {
             }
             sy += 10 * c
         }
-        let right = X(Self.settingsX) + 22 * c
+        // Start over: everything wiped, setting up too; asked first on the paper
+        if confirm == .startOver {
+            let ask = "Wipe every lesson, test, review and setting, and set up again?"
+            let rows = s.words("gu-startover-ask", ask, Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink), x: sx, top: sy, width: 38 * c, max: 2)
+            var bx = sx
+            let by = sy + (Double(rows) * Sketch.row / c + 1).rounded(.up) * c
+            for (word, action, style) in [("Start over", Action.startOver, Sketch.Block.main), ("Keep", .keep, .plain)] {
+                let b = CGRect(x: bx, y: by, width: Self.blockWidth(word), height: 2 * c)
+                s.block("gu-startover-\(word)", b, style, word: word)
+                out.taps.append((b, action)); bx = b.maxX + c
+            }
+            sy = by + 2 * c
+        } else {
+            let b = CGRect(x: sx, y: sy, width: Self.blockWidth("Start over"), height: 2 * c)
+            s.block("gu-startover", b, .plain, word: "Start over")
+            s.label("gu-startover-say", "Wipes everything, setting up too.", say, at: CGPoint(x: b.maxX + c, y: b.midY), anchor: UnitPoint(x: 0, y: 0.5))
+            out.taps.append((b, .askStartOver))
+            sy = b.maxY
+        }
+        let right = X(Self.settingsX) + 39 * c
         out.frame = Rect(x: x0, y: y0, width: right - x0, height: max(bottom, sy) - y0)
         out.sketch = s
         return out
@@ -258,11 +315,12 @@ final class GrownUpPage {
         guard open else { return }
         let q = CGPoint(x: p.x, y: p.y)
         guard let action = sheet(now: PaperClock.now).taps.first(where: { $0.rect.contains(q) })?.action else {
-            // a tap anywhere else puts a question away
-            if confirm != nil { confirm = nil; version += 1 }
+            // a tap anywhere else puts a question away, and the keyboard
+            if confirm != nil || editingName { confirm = nil; editingName = false; version += 1; model.reframePlace() }
             return
         }
         let saving = !model.shotMode
+        if action != .name { editingName = false }
         switch action {
         case .row(let id): confirm = confirm == .lesson(id) ? nil : .lesson(id)
         case .askAll: confirm = .all
@@ -277,6 +335,26 @@ final class GrownUpPage {
         case .sound(let on): AppSettings.set(sound: on, saving: saving)
         case .readAloud(let on): AppSettings.set(readAloud: on, saving: saving)
         case .theme(let t): AppSettings.set(theme: t, saving: saving)
+        case .name:
+            if !editingName { nameDraft = AppSettings.name }
+            editingName = true; nameTaps += 1
+        case .grade(let g):
+            gradeSaid = g
+            if Grades.isLive(g) { var p = AppSettings.profile; p.grade = g; AppSettings.set(profile: p, saving: saving) }
+        case .reminder(let r):
+            var p = AppSettings.profile; p.reminder = r
+            AppSettings.set(profile: p, saving: saving)
+            // the iPad asks once whether to allow it (its own prompt); turned down, it's Off again
+            Reminders.set(r, name: p.name) { [self] ok in
+                guard !ok else { return }
+                var q = AppSettings.profile; q.reminder = .off
+                AppSettings.set(profile: q, saving: saving); version += 1
+            }
+        case .askStartOver: confirm = .startOver
+        case .startOver:
+            confirm = nil
+            model.startOver()
+            return
         }
         version += 1
         // the page may have grown or shrunk (a question asked or put away): the camera frames it again

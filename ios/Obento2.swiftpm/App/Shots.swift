@@ -32,6 +32,8 @@ enum Shots {
         Progress.shared.saving = false
         PageStore.saving = false
         AppSettings.shots = true
+        // set up already (G 26 Oct), with no name, unless the moment is about setting up or names the child
+        AppSettings.set(profile: Profile(setUp: true), saving: false)
         Progress.shared.reset(to: ["g5-round", "add"])
         let args = ProcessInfo.processInfo.arguments
         if args.contains("-landscape") || args.contains("-portrait"),
@@ -385,9 +387,50 @@ enum Shots {
         func open(_ p: Piece) -> BarsPage? { m.shotMode = true; m.select(p); m.open(p); return m.bars }
         m.drawnAt = PaperClock.now - 100
         switch name {
-        case "map-fresh":
-            Progress.shared.reset(to: [])
+        case "map-fresh", "map-fresh-noname":
+            // a brand-new install just set up (G 26 Oct): nothing started, so no tabs, counts or tests; "Start here, Mia."
+            // beside the first lesson (no name: "Start here.")
+            fresh(name: name == "map-fresh" ? "Mia" : "")
             m.shotMode = true; frameMap()
+        case "map-started":
+            // the first page started (a problem solved), nothing learned yet: the tabs come back, "Start here" goes, still
+            // no counts or tests
+            fresh(name: "Mia")
+            seedPage("g5-mult2", own: 0)
+            m.shotMode = true; frameMap()
+        case "map-one-learned":
+            // one lesson learned: its chapter's count and its test (dashed, waiting) appear; the other chapters stay clean
+            fresh(name: "Mia")
+            Progress.shared.reset(to: ["g5-mult2"])
+            m.shotMode = true; frameMap()
+        case let n where n.hasPrefix("setup-"):
+            // setting up (G 26 Oct): setup-welcome, -name, -name-empty, -grade (a dead grade tapped: -grade-5 the live one),
+            // -grownup, each finished; setup-live: the welcome drawing itself in for real (WAIT picks the moment);
+            // setup-done: Done tapped on the grown-up step, the paper gliding down to the map (WAIT 8: arrived)
+            fresh(name: "")
+            if n == "setup-live" { m.beginSetup(); return true }
+            m.shotMode = true; m.beginSetup()
+            var p = AppSettings.profile
+            switch n {
+            case "setup-welcome": break
+            case "setup-name": m.setup.showForShots(.name, name: "Mia")
+            case "setup-name-empty": m.setup.showForShots(.name)
+            case "setup-grade", "setup-grade-5":
+                p.name = "Mia"; AppSettings.set(profile: p, saving: false)
+                m.setup.showForShots(.grade, gradeSaid: n == "setup-grade" ? 3 : 5)
+            case "setup-grownup", "setup-done":
+                p.name = "Mia"; p.reminder = .tea; AppSettings.set(profile: p, saving: false)
+                m.setup.showForShots(.grownUp)
+                if n == "setup-done" { m.shotMode = false; await wait(1); m.setup.act(.done, model: m) }
+            default: break
+            }
+            m.reframePlace()
+        case "me-grades", "me-grades-fresh":
+            // Me with the child's name and grade, the grade row; a dead grade tapped (8th: coming soon)
+            fresh(name: "Mia")
+            if name == "me-grades" { seedMe() }
+            m.shotMode = true; m.go(to: .me)
+            m.sayGradeOnMe(8)
         case "map-learned":
             Progress.shared.reset(to: whole.union(["g5-pow10", "g5-round", "g5-adddec", "g5-multdec", "g5-divdec", "add", "sub", "g5-volume", "g5-units"]),
                                   due: ["g5-round"], tests: ["test-whole": 11, "test-measurement": 7])
@@ -627,14 +670,18 @@ enum Shots {
             page.goNext()
         case let n where n.hasPrefix("grownup"):
             // grownup-gate: shut; grownup-hold: its square held halfway (the clock stopped there); grownup: open;
-            // grownup-confirm: a lesson's reset asked on the paper; grownup-confirm-all: everything's
+            // grownup-confirm: a lesson's reset asked on the paper; grownup-confirm-all: everything's;
+            // grownup-startover: Start over asked; grownup-name: the name's squares tapped (-whole-page: framed whole)
             seedMe()
+            var p = AppSettings.profile; p.name = "Mia"; p.reminder = .tea; AppSettings.set(profile: p, saving: false)
             m.shotMode = true; m.go(to: .grownUp)
             if n == "grownup-gate" { return true }
             if n == "grownup-hold" { m.grownUp.heldForShots(0.55); return true }
             m.grownUp.openForShots()
             if n == "grownup-confirm" { m.grownUp.confirmForShots(.lesson("g5-round")) }
             if n == "grownup-confirm-all" { m.grownUp.confirmForShots(.all) }
+            if n == "grownup-startover" { m.grownUp.confirmForShots(.startOver) }
+            if n == "grownup-name" { m.grownUp.editNameForShots() }
             m.reframePlace()
         case "path-me":
             // the real path, not instant, to watch the places draw in and out: the map, then Me, a lesson opened from Me
@@ -649,13 +696,11 @@ enum Shots {
             m.open(Map.review, from: .me); await wait(3)
             m.close(); await wait(3)
             m.go(to: nil)
-        case let n where n.hasPrefix("first-launch"):
-            // the very first launch (nothing done yet): the map drawing itself in, for real, then the ghost finger's tap
-            // on the first lesson up next and "Start here."; first-launch-<seconds>: held that far into the finger's moves
-            Progress.shared.reset(to: [])
-            m.frameGroup(duration: 0)
-            m.drawnAt = PaperClock.now
-            m.beginStartHere(force: true, frozen: Double(n.dropFirst("first-launch-".count)))
+        case "first-launch":
+            // the very first launch, for real: setting up's welcome drawing itself in (WAIT picks the moment)
+            fresh(name: "")
+            AppSettings.set(profile: .fresh, saving: false)
+            m.beginSetup()
         case "cards-fit":
             // every lesson's cards checked inside their frames, printed for the build to read
             for line in CardText.check() { print("OBENTO-CARDS \(line)") }
@@ -670,8 +715,18 @@ enum Shots {
     /// `-seed-me` or `-seed-me-full` (the real-touch tests, never a screenshot): the app opens, for real, on a child some
     /// way in (seedMe) or with every lesson learned (seedMeFull), kept in memory only, with no page left on the iPad
     /// brought back, so a test always starts from the same place and never changes what's saved.
+    /// A brand-new install for a moment: nothing learned, no page saved (in memory: what's on the iPad stays), set up
+    /// with this name.
+    static func fresh(name: String) {
+        Progress.shared.reset(to: [])
+        for p in Map.all + [Map.review] { PageStore.clear(p.id) }
+        AppSettings.set(profile: Profile(name: name, setUp: true), saving: false)
+    }
+
     static func seedForTests() {
         let args = ProcessInfo.processInfo.arguments, full = args.contains("-seed-me-full")
+        // the real-touch tests start set up (in memory only), so they open on the map, not on setting up
+        if !active, full || args.contains("-seed-me") || args.contains("-set-up") { AppSettings.set(profile: Profile(setUp: true), saving: false) }
         guard !active, full || args.contains("-seed-me") else { return }
         Progress.shared.saving = false
         PageStore.saving = false

@@ -1,5 +1,6 @@
 import SwiftUI
 import AudioToolbox
+import UserNotifications
 
 /// The grown-ups' settings (G 20 Oct, GrownUpPage), kept on the device: sound, read aloud, and the paper's colours (as
 /// the iPad is set, light or dark; the same `theme` the app and the bar's ⋯ read). Screenshots never save them: they
@@ -17,6 +18,27 @@ enum AppSettings {
     static var readAloud: Bool { memory["readAloud"] as? Bool ?? (shots ? nil : d.object(forKey: "readAloud") as? Bool) ?? false }
     /// "" as the iPad is set, or "light", or "dark".
     static var theme: String { memory["theme"] as? String ?? (shots ? nil : d.string(forKey: "theme")) ?? "" }
+
+    /// The child's details from setting up (Core/Setup.swift's Profile): their name, grade, reminder, and whether
+    /// setting up is done. A screenshot sets its own, in memory.
+    static var profile: Profile {
+        if let p = memory["profile"] as? Profile { return p }
+        return shots ? .fresh : Profile.read(d.data(forKey: "profile"))
+    }
+    static func set(profile p: Profile, saving: Bool) {
+        if saving && !shots { memory["profile"] = nil; d.set(p.data, forKey: "profile") } else { memory["profile"] = p }
+    }
+    /// Setting up runs when the app opens until it's been done (or a grown-up starts over).
+    static var needsSetup: Bool { !profile.setUp }
+    /// The name, as the paper uses it ("" when it was skipped).
+    static var name: String { profile.name }
+
+    /// Start over (the grown-ups' page): every setting back as a new install has it, setting up included.
+    static func forgetAll(saving: Bool) {
+        memory = [:]
+        if saving && !shots { for k in ["profile", "sound", "readAloud", "theme"] { d.removeObject(forKey: k) } }
+        else { memory["profile"] = Profile.fresh; memory["sound"] = true; memory["readAloud"] = false; memory["theme"] = "" }
+    }
 
     static func set(sound on: Bool, saving: Bool) { put("sound", on, saving) }
     static func set(readAloud on: Bool, saving: Bool) { put("readAloud", on, saving) }
@@ -127,5 +149,40 @@ struct Listener: View {
         if new.right && !old.right { Sounds.shared.play(new.index >= new.last - 1 ? .done : .right); return }
         // a step answered by the hands moves on as it's right; one that had a miss moves on with its answer shown
         if new.index > old.index && !old.right && !old.shownAnswer { Sounds.shared.play(new.solved ? .done : .right) }
+    }
+}
+
+/// The daily reminder a grown-up picks while setting up or on the grown-ups' page (G 26 Oct): a local notification at
+/// that time each day. The iPad's own prompt asks to allow it only once a time is picked (the one system dialog the app
+/// shows); if it's turned down, the reminder goes back to Off and everything else carries on. Never in a screenshot.
+@MainActor
+enum Reminders {
+    static let id = "daily-reminder"
+
+    /// Sets the reminder to `r` (Off clears it). `done` hears whether it's set as asked (false: the iPad said no, so it's
+    /// Off now).
+    static func set(_ r: Reminder, name: String, done: @escaping @MainActor (Bool) -> Void = { _ in }) {
+        guard !Shots.active else { done(true); return }
+        let centre = UNUserNotificationCenter.current()
+        centre.removePendingNotificationRequests(withIdentifiers: [id])
+        guard let time = r.time else { done(true); return }
+        centre.requestAuthorization(options: [.alert, .sound]) { granted, _ in
+            Task { @MainActor in
+                guard granted else { done(false); return }
+                let content = UNMutableNotificationContent()
+                content.body = name.isEmpty ? "Time for today's maths." : "\(name), it's time for today's maths."
+                content.sound = .default
+                var when = DateComponents(); when.hour = time.hour; when.minute = time.minute
+                let request = UNNotificationRequest(identifier: id, content: content, trigger: UNCalendarNotificationTrigger(dateMatching: when, repeats: true))
+                centre.add(request) { _ in }
+                done(true)
+            }
+        }
+    }
+
+    /// Start over: no reminder left behind.
+    static func clear() {
+        guard !Shots.active else { return }
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [id])
     }
 }

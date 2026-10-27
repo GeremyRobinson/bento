@@ -32,9 +32,14 @@ struct PaperScreen: View {
                     PaperScene(model: model, time: t)
                         .id("\(Int(model.screen.width))x\(Int(model.screen.height))")
                     surfaceGestures
-                    Toolbar(model: model, time: t, bottom: max(16, safe.safeAreaInsets.bottom + 8, model.keyboard + 8))
+                    // no bar while setting up (G 26 Oct): only the paper and its steps
+                    if model.place != .setup {
+                        Toolbar(model: model, time: t, bottom: max(16, safe.safeAreaInsets.bottom + 8, model.keyboard + 8))
+                    }
                     // the problem's sounds, and its words read aloud when the grown-ups asked for that
                     Listener(model: model)
+                    // a name typed (setting up, the grown-ups' page) with the iPad's own keyboard
+                    NameEntry(model: model).position(x: 1, y: 1)
                     // iPadOS's own number keyboard (G 19 Oct), up by itself whenever the problem being worked wants a
                     // number written (no tap needed), so a Mac's or a hardware keyboard types straight away too; only for
                     // a box the drawing shows (G 20 Oct): a step answered by the hands never raises it; a box tapped
@@ -58,7 +63,8 @@ struct PaperScreen: View {
                 model.screen = Size(geo.size.width, geo.size.height)
                 model.setReduceMotion(UIAccessibility.isReduceMotionEnabled)
                 Shots.seedForTests()
-                if !Shots.active { model.frameGroup(duration: 0); model.beginStartHere() }
+                // the first time it opens (and after a grown-up starts over), setting up; after that, the map
+                if !Shots.active { if AppSettings.needsSetup { model.beginSetup() } else { model.frameGroup(duration: 0) } }
                 Shots.run(model)
             }
             // leaving the app with a finger down: no hold carries on (the grown-ups' square opens only for a real 3 seconds)
@@ -111,7 +117,7 @@ struct PaperScreen: View {
         let terms: [(String, Bool)] = [
             ("camera", model.moving), ("leaving", model.leaving), ("map", model.mapDrawing), ("place", model.placeDrawing),
             ("placeAt", now - model.placeAt < 2.5), ("grownUp", model.grownUp.animating),
-            ("startHere", model.startHere?.playing(at: now) ?? false), ("pinch", now - model.pinchedAt < 1.3),
+            ("pinch", now - model.pinchedAt < 1.3),
             ("drawIn", now - model.drawnAt < Piece.drawTime + 0.2),
         ]
         return terms.filter(\.1).map(\.0) + (model.bars?.wakers ?? [])
