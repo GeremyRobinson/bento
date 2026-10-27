@@ -346,7 +346,7 @@ final class Rig {
         let settled = t - model.drawnAt > Piece.drawTime + 1, quick = "\(model.selected?.id ?? "") \(lineScale) \(Progress.shared.checks.count) \(gone)"
         if settled, quick == piecesQuick, !piecesKey.isEmpty { return }
         piecesQuick = settled ? quick : ""
-        let now = Map.all.map { p in (p, snapped(Piece.drawIn(p, time: t, drawnAt: model.drawnAt, from: model.drawFrom), 400) * gone, model.selected?.id == p.id, p.state) }
+        let now = Map.shown.map { p in (p, snapped(Piece.drawIn(p, time: t, drawnAt: model.drawnAt, from: model.drawFrom), 400) * gone, model.selected?.id == p.id, p.state) }
         let key = now.map { "\($0.1) \($0.2) \($0.3)" }.joined(separator: ",")
         guard key != piecesKey else { return }
         piecesKey = key

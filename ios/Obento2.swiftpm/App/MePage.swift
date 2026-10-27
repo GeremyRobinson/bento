@@ -15,8 +15,10 @@ enum MePage {
     static let u = Paper.unit, c = Paper.cell
     /// Its width: three shelves of cards three blocks wide, a block apart.
     static let width = 11 * Paper.unit
-    /// Where the shelves' cards start: under Today (its cards, their names and why) and the shelves' names.
-    static let shelfTop = 5 * Paper.unit
+    /// Name and grade at the top (G 26 Oct): a block for them, then Today.
+    static let band = Paper.unit
+    /// Where the shelves' cards start: under the name, Today (its cards, their names and why) and the shelves' names.
+    static let shelfTop = band + 5 * Paper.unit
     /// An opened shelf's cards go in three columns, where the three shelves stand.
     static let columns = 3
     /// The least a shelf shows (its first card, and "and 6 more").
@@ -24,7 +26,7 @@ enum MePage {
 
     /// What a tap on one of its cards does: open a lesson or the daily review, open a long shelf to all its cards, or go
     /// back from it to the whole of Me.
-    enum Action: Equatable { case lesson(String), review, shelf(Int), back }
+    enum Action: Equatable { case lesson(String), review, shelf(Int), back, grade(Int) }
 
     /// How many cards a shelf shows on a screen this tall: as many rows as fit under Today with all of Me framed at 75%
     /// (its words still big enough to read), clear of the bar, so nothing runs under the bar or off the screen; never
@@ -48,7 +50,7 @@ enum MePage {
 
     /// Me now. `rows`: the most cards a shelf shows (MePage.rows); `open`: a shelf opened to all its cards, drawn on its
     /// own instead of Today and the three shelves.
-    static func sheet(now: Double, rows: Int, open: Int? = nil) -> Sheet {
+    static func sheet(now: Double, rows: Int, open: Int? = nil, gradeSaid: Int? = nil) -> Sheet {
         var out = Sheet(), s = Sketch()
         let x0 = corner.x, y0 = corner.y, checks = Progress.shared.checks
         func R(_ x: Double, _ y: Double, _ w: Double, _ h: Double) -> CGRect { CGRect(x: x, y: y, width: w, height: h) }
@@ -63,9 +65,12 @@ enum MePage {
             return out
         }
 
+        // the child's name (or Me) and grade, and the grade row: 5th has lessons, the others only say they're coming
+        nameAndGrade(&s, &out, gradeSaid: gradeSaid)
         // Today: the pick, and the review
-        s.words("me-today", "Today", .heading, x: x0, top: y0 + u / 2 - Sketch.row / 2, width: 1200)
-        let pickRect = R(x0, y0 + u, 3 * u, 2 * u)
+        let ty = y0 + band
+        s.words("me-today", "Today", .heading, x: x0, top: ty + u / 2 - Sketch.row / 2, width: 1200)
+        let pickRect = R(x0, ty + u, 3 * u, 2 * u)
         if let pick = Map.today {
             let reason = todayReason(pick, now: now)
             let pen = Pen.chapter(pick.chapter)
@@ -84,7 +89,7 @@ enum MePage {
             }
             out.taps.append((pickRect, .lesson(pick.id)))
         }
-        reviewCard(&s, &out, R(x0 + 4 * u, y0 + u, 3 * u, 2 * u), now: now)
+        reviewCard(&s, &out, R(x0 + 4 * u, ty + u, 3 * u, 2 * u), now: now)
 
         // the shelves, side by side, each as long as fits (`rows`): a longer one ends on "and 6 more", which opens it
         let top = y0 + shelfTop, most = max(fewestRows, rows)
@@ -107,9 +112,29 @@ enum MePage {
             }
         }
         let tallest = max(1, lists.map { min($0.count, most) }.max() ?? 1)
-        out.frame = Rect(x: x0, y: y0, width: width, height: shelfTop + Double(tallest) * u + c)
+        out.frame = Rect(x: x0, y: corner.y, width: width, height: shelfTop + Double(tallest) * u + c)
         out.sketch = s
         return out
+    }
+
+    /// Me's top (G 26 Oct, front-door.html section 3): the child's name big (Me when it was skipped), their grade and
+    /// how many lessons are learned under it (only once there's one to count); beside them the grades as a row of
+    /// blocks, 5th chosen, the others dead blocks that only say they're coming soon when tapped.
+    private static func nameAndGrade(_ s: inout Sketch, _ out: inout Sheet, gradeSaid: Int?) {
+        let x0 = corner.x, y0 = corner.y, profile = AppSettings.profile
+        s.text("me-name:\(profile.name)", Setup.title(profile.name), at: CGPoint(x: x0, y: y0 + c), size: Sketch.maths, weight: .semibold, .ink,
+               anchor: UnitPoint(x: 0, y: 0.5), digits: false)
+        let learned = Map.gradeLessons.filter { Progress.shared.learned.contains($0) }.count
+        let line = Grades.name(profile.grade) + (Fresh.showsCount(learned: learned) ? " · \(learned) of \(Map.gradeLessons.count) learned" : "")
+        s.label("me-grade-line", line, .status, at: CGPoint(x: x0, y: y0 + 3 * c), anchor: UnitPoint(x: 0, y: 0.5), slot: "me-grade-line")
+        // the row starts on the third strong line, clear of a long name; small blocks, two squares a side
+        let gx = x0 + 3 * u
+        for (r, g) in s.gradeRow("me-grade", x: gx, y: y0, side: 2, pitch: 3, chosen: profile.grade, size: Sketch.small) {
+            out.taps.append((r, .grade(g)))
+        }
+        if let g = gradeSaid {
+            s.label("me-grade-said", Grades.onMe(g), .status, at: CGPoint(x: gx, y: y0 + 3 * c), anchor: UnitPoint(x: 0, y: 0.5), slot: "me-grade-said")
+        }
     }
 
     /// A long shelf opened (from its "and 6 more"): its name where Today's is, every one of its cards in three columns
