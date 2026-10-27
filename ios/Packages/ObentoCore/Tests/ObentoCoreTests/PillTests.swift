@@ -104,21 +104,6 @@ final class PillTests: XCTestCase {
         XCTAssertGreaterThan(s.of, 0)
         XCTAssertEqual(s.done, 0)
     }
-
-    // MARK: first-use words
-
-    func testWordsForTheFirstThreeSessionsThenTheyFade() {
-        XCTAssertEqual(Pill.labels(session: 1), .shown)
-        XCTAssertEqual(Pill.labels(session: 3), .shown)
-        XCTAssertEqual(Pill.labels(session: 4), .fading)
-        XCTAssertEqual(Pill.labels(session: 5), .hidden)
-    }
-
-    func testANewSession() {
-        XCTAssertTrue(Pill.isNewSession(lastActive: nil, now: 100))
-        XCTAssertFalse(Pill.isNewSession(lastActive: 100, now: 100 + 60))
-        XCTAssertTrue(Pill.isNewSession(lastActive: 100, now: 100 + Pill.sessionGap))
-    }
 }
 
 /// The page's progress as the pill's squares (LessonPlan.squares).

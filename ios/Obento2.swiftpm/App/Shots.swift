@@ -710,7 +710,7 @@ enum Shots {
             m.open(Map.review, from: .me); await wait(3)
             m.close(); await wait(3)
             m.go(to: nil)
-        // the calm smart pill (G 26 Oct), at each of its moments; `-words` shows the first sessions' words under the icons
+        // the calm smart pill (G 26 Oct), at each of its moments
         // - bar-map: a page partway, nothing due: "Continue →". bar-map-due: lessons checked, today's review to take:
         //   "Go over · 8". bar-map-fresh: nothing started: the grade. bar-grade-open: the grades grown out of the pill,
         //   a dead one tapped ("7th grade: coming soon.").

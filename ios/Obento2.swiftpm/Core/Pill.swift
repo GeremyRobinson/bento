@@ -118,20 +118,4 @@ public enum Pill {
     public static func steps(_ run: LessonRun) -> (done: Int, of: Int) {
         steps(work: run.steps.map { $0.task != nil || $0.answer != nil }, index: run.index, solved: run.isLast)
     }
-
-    // MARK: first-use words
-
-    /// For the child's first 3 sessions each icon has its word under it; in the 4th they show and then fade out; after
-    /// that, a long press on an icon still shows its word.
-    public enum Labels: Equatable, Sendable { case shown, fading, hidden }
-    public static let labelSessions = 3
-    public static func labels(session: Int) -> Labels {
-        session <= labelSessions ? .shown : session == labelSessions + 1 ? .fading : .hidden
-    }
-    /// A new session: the app opened, or came back after this long away (30 minutes).
-    public static let sessionGap: Double = 30 * 60
-    public static func isNewSession(lastActive: Double?, now: Double) -> Bool {
-        guard let last = lastActive else { return true }
-        return now - last >= sessionGap
-    }
 }

@@ -13,8 +13,7 @@ import AVFoundation
 ///   the rest dimmed.
 /// - While the paper is pinched, the middle shows the zoom at 22 pt (the size G likes).
 /// - ⋯ More and the grades grow up out of the pill itself (no pop-up over the paper).
-/// - Each icon has its word under it for the child's first 3 sessions, fading in the 4th; a long press on an icon always
-///   shows its word.
+/// - Icons only, no words under them (G 26 Oct: "it looks bad with the words"); a long press on an icon shows its word.
 /// What it shows is decided in Core (`Pill`); this draws it.
 struct Toolbar: View {
     let model: PaperModel
@@ -33,8 +32,6 @@ struct Toolbar: View {
         .padding(.bottom, bottom)
         .frame(maxWidth: .infinity)
         .onChange(of: inLesson) { _, _ in ui.open = nil }
-        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in ui.becameActive() }
-        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in ui.resigned() }
     }
 
     // MARK: the pill
@@ -70,7 +67,7 @@ struct Toolbar: View {
     /// Everything that changes the pill's shape: a change in any of it is animated.
     private func animationKey(_ inLesson: Bool) -> String {
         let t = tools
-        return "\(inLesson) \(model.place.map { "\($0)" } ?? "map") \(String(describing: ui.open)) \(ui.wordsOn) \(zooming) \(middleKey) \(t.hint) \(t.showMe) \(t.showMeWord) \(t.next) \(t.dim) \(ui.gradeSaid ?? "")"
+        return "\(inLesson) \(model.place.map { "\($0)" } ?? "map") \(String(describing: ui.open)) \(zooming) \(middleKey) \(t.hint) \(t.showMe) \(t.showMeWord) \(t.next) \(t.dim) \(ui.gradeSaid ?? "")"
     }
 
     @ViewBuilder private func row(_ inLesson: Bool) -> some View {
@@ -83,8 +80,8 @@ struct Toolbar: View {
 
     @ViewBuilder private var mapRow: some View {
         // the map (already on it, all of it), and Me: each a place on the paper, the one you're at lit
-        PillButton(icon: .lessons, word: "Lessons", lit: model.place == nil, words: ui.wordsOn) { ui.open = nil; model.go(to: nil) }
-        PillButton(icon: .me, word: "Me", lit: model.place == .me, words: ui.wordsOn) { ui.open = nil; model.go(to: .me) }
+        PillButton(icon: .lessons, word: "Lessons", lit: model.place == nil) { ui.open = nil; model.go(to: nil) }
+        PillButton(icon: .me, word: "Me", lit: model.place == .me) { ui.open = nil; model.go(to: .me) }
         divider
         mapMiddle
         divider
@@ -114,9 +111,9 @@ struct Toolbar: View {
     @ViewBuilder private var lessonRow: some View {
         let t = tools, dim = t.dim
         if let b = model.bars, b.mode == .work {
-            PillButton(icon: .back, word: "Problems", words: ui.wordsOn, dim: dim) { ui.open = nil; b.backToProblems() }
+            PillButton(icon: .back, word: "Problems", dim: dim) { ui.open = nil; b.backToProblems() }
         } else {
-            PillButton(icon: .back, word: model.cameFrom == .me ? "Me" : "Lessons", words: ui.wordsOn, dim: dim) { ui.open = nil; model.close() }
+            PillButton(icon: .back, word: model.cameFrom == .me ? "Me" : "Lessons", dim: dim) { ui.open = nil; model.close() }
         }
         divider.opacity(dim ? 0.35 : 1)
         lessonMiddle(t)
@@ -125,11 +122,11 @@ struct Toolbar: View {
             // the hint is drawn on the paper (G 20 Oct): no card opens for it. Dim when there's none to give, but still
             // there to tap: the paper then says why ("Have a go first. A hint comes after a miss.")
             if t.hint {
-                PillButton(icon: .hint, word: "Hint", count: hintCount, words: ui.wordsOn, dim: dim || !canHint) { ui.open = nil; model.bars?.hint() }
+                PillButton(icon: .hint, word: "Hint", count: hintCount, dim: dim || !canHint) { ui.open = nil; model.bars?.hint() }
             }
             if t.showMe {
                 // after a miss: the one thing most worth tapping, with its word, ringed in the chapter's colour
-                PillButton(icon: .show, word: "Show me", ring: t.showMeWord ? chapterInk : nil, words: ui.wordsOn, enabled: canShowMe, dim: dim) {
+                PillButton(icon: .show, word: "Show me", ring: t.showMeWord ? chapterInk : nil, enabled: canShowMe, dim: dim) {
                     ui.open = nil; showMe()
                 }
             }
@@ -176,7 +173,7 @@ struct Toolbar: View {
     private var divider: some View { Rectangle().fill(Ink.line).frame(width: 1, height: 32).padding(.horizontal, 4) }
 
     private var moreButton: some View {
-        PillButton(icon: ui.open == .more ? .close : .more, word: ui.open == .more ? "Close" : "More", lit: ui.open == .more, words: ui.wordsOn) { toggle(.more) }
+        PillButton(icon: ui.open == .more ? .close : .more, word: ui.open == .more ? "Close" : "More", lit: ui.open == .more) { toggle(.more) }
     }
 
     /// The zoom, for a moment after a pinch, at 22 pt (G 17 Oct).
@@ -362,8 +359,7 @@ struct Toolbar: View {
     }
 }
 
-/// The pill's own state, kept across the frames the bar is drawn in: what's grown out of it, what a grade's block said,
-/// and the first-use words (the child's sessions counted on the iPad, G 26 Oct).
+/// The pill's own state, kept across the frames the bar is drawn in: what's grown out of it, and what a grade's block said.
 @MainActor @Observable
 final class BarUI {
     static let shared = BarUI()
@@ -373,54 +369,11 @@ final class BarUI {
     var open: Panel?
     /// What the last grade tapped said ("7th grade: coming soon.").
     var gradeSaid: String?
-    /// The icons' words show under them.
-    private(set) var wordsOn: Bool
-
-    private static let sessionsKey = "bar-sessions", lastKey = "bar-last-active"
-    private var session: Int
 
     private init() {
         let args = ProcessInfo.processInfo.arguments
-        var n: Int
-        if Shots.active {
-            // screenshots: the same every time, never counted; `-words` shows the first sessions' words
-            n = args.contains("-words") ? 1 : 99
-        } else {
-            let d = UserDefaults.standard, now = Date().timeIntervalSinceReferenceDate
-            n = d.integer(forKey: Self.sessionsKey)
-            if Pill.isNewSession(lastActive: d.object(forKey: Self.lastKey) as? Double, now: now) || n == 0 { n += 1; d.set(n, forKey: Self.sessionsKey) }
-            // the app's own first "became active" is this same session
-            d.set(now, forKey: Self.lastKey)
-        }
-        session = n
-        wordsOn = Pill.labels(session: n) != .hidden
         // `-panel=more` / `-panel=grade`: a screenshot opens that
         if let a = args.first(where: { $0.hasPrefix("-panel=") }) { open = ["more": Panel.more, "grade": .grade][String(a.dropFirst(7))] }
-        fadeIfDue()
-    }
-
-    /// The 4th session: the words show a few seconds, then fade out for good.
-    private func fadeIfDue() {
-        guard Pill.labels(session: session) == .fading else { return }
-        Task { [weak self] in
-            try? await Task.sleep(for: .seconds(6))
-            withAnimation(.easeOut(duration: 1.2)) { self?.wordsOn = false }
-        }
-    }
-
-    /// Back on the iPad: a new session after half an hour away.
-    func becameActive() {
-        guard !Shots.active else { return }
-        let d = UserDefaults.standard, now = Date().timeIntervalSinceReferenceDate
-        guard Pill.isNewSession(lastActive: d.object(forKey: Self.lastKey) as? Double, now: now) else { return }
-        session += 1; d.set(session, forKey: Self.sessionsKey); d.set(now, forKey: Self.lastKey)
-        wordsOn = Pill.labels(session: session) != .hidden
-        fadeIfDue()
-    }
-    /// Leaving: when, so coming back soon is the same session.
-    func resigned() {
-        guard !Shots.active else { return }
-        UserDefaults.standard.set(Date().timeIntervalSinceReferenceDate, forKey: Self.lastKey)
     }
 }
 
@@ -437,7 +390,7 @@ final class Speech {
     }
 }
 
-/// A button in the pill: Obento²'s own icon, its word under it in the first sessions (or while it's held), lit when
+/// A button in the pill: Obento²'s own icon, its word under it only while it's held, lit when
 /// it's where you are or what's open. `ring`: its word beside the icon, ringed in that colour (Show me after a miss).
 /// `dim`: drawn as if off, but still tapped (what it does then is say why it's off).
 struct PillButton: View {
@@ -446,7 +399,6 @@ struct PillButton: View {
     var count: Int? = nil
     var lit = false
     var ring: Color? = nil
-    var words = false
     var enabled = true
     var dim = false
     let action: () -> Void
@@ -455,7 +407,7 @@ struct PillButton: View {
     @State private var longPressed = false
 
     var body: some View {
-        let under = (words || held) && ring == nil
+        let under = held && ring == nil
         Button {
             if longPressed { longPressed = false; return }
             action()
