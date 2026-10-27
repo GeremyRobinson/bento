@@ -134,20 +134,4 @@ public enum Pill {
         guard let last = lastActive else { return true }
         return now - last >= sessionGap
     }
-
-    // MARK: the grades
-
-    /// Every grade, as the grade row shows them: K, then 1 to 12.
-    public static let grades = ["K"] + (1...12).map(String.init)
-    /// A grade's name in words: "Kindergarten", "1st grade", "2nd grade", "3rd grade", "4th grade" … "12th grade".
-    public static func gradeName(_ g: String) -> String {
-        guard let n = Int(g) else { return "Kindergarten" }
-        let teen = (11...13).contains(n % 100)
-        let suffix = teen ? "th" : [1: "st", 2: "nd", 3: "rd"][n % 10] ?? "th"
-        return "\(n)\(suffix) grade"
-    }
-    /// What a tap on a grade's block says: the live grade's name, or that it's coming.
-    public static func gradeTapped(_ g: String, live: String) -> String {
-        g == live ? "\(gradeName(g)) it is." : "\(gradeName(g)): coming soon."
-    }
 }

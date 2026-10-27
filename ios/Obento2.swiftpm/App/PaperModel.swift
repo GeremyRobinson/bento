@@ -98,8 +98,26 @@ enum Map {
         return Piece(id: "test-\(g.chapter.rawValue)", name: "\(g.chapter.title) test", chapter: g.chapter,
                      at: Point(g.origin.x + Double(i % g.columns) * ChapterGroup.pitch.width, g.origin.y + Paper.unit + Double(i / g.columns) * ChapterGroup.pitch.height))
     } + [Piece(id: "test-grade", name: "\(grade.name) test", chapter: .whole, at: Point(0, 2100))]
-    /// Everything drawn on the map.
+    /// Everything on the map, shown or not yet.
     static let all = pieces + tests
+
+    /// Nothing started anywhere yet (G 26 Oct): no lesson checked, no test taken, no page of problems saved. A new
+    /// install's map looks untouched: no Up next tabs, no counts, no tests waiting (Core/Setup.swift, Fresh).
+    @MainActor static var untouched: Bool {
+        Fresh.untouched(checks: Progress.shared.checks, tests: Progress.shared.tests, pagesSaved: (all + [review]).contains { PageStore.load($0.id) != nil })
+    }
+    /// What the map draws now: every lesson, and each test once there's something toward it (a chapter's test once one
+    /// of its lessons is learned, the grade's once a chapter test opens), or once it's been started or taken.
+    @MainActor static var shown: [Piece] {
+        let learned = Progress.shared.learned
+        func started(_ id: String) -> Bool { Progress.shared.tests[id] != nil || PageStore.load(id) != nil }
+        let chapterTests = tests.filter { $0.id != "test-grade" }
+        let open = chapterTests.filter { testReady($0.id) }.count
+        return pieces + tests.filter { t in
+            if t.id == "test-grade" { return Fresh.showsGradeTest(chapterTestsOpen: open, started: started(t.id)) }
+            return Fresh.showsChapterTest(learnedInChapter: pieces.filter { $0.chapter == t.chapter && learned.contains($0.id) }.count, started: started(t.id))
+        }
+    }
 
     /// A chapter's test opens once every lesson in it has been learned (G 18 Oct); the grade's test once every chapter
     /// test is passed (G 20 Oct). Once taken, or started, a test stays open: it can be taken again. Lessons are always
@@ -153,8 +171,8 @@ enum Map {
 }
 
 /// A page of its own on the paper instead of the map (G 20 Oct): Me (the child's own page, MePage) or the grown-ups'
-/// page (GrownUpPage). Each has its place on the sheet, left of the map.
-enum Place: Equatable { case me, grownUp }
+/// page (GrownUpPage), each on the sheet left of the map; or setting up (SetupPage, G 26 Oct), above it.
+enum Place: Equatable { case me, grownUp, setup }
 
 /// The paper's camera and what's on it. One clock drives every move, so the grid and the paper never come apart.
 @MainActor @Observable
@@ -193,7 +211,7 @@ final class PaperModel {
     /// How many cards a shelf on Me shows on this screen, so all of Me is in view (MePage.rows).
     var meRows: Int { MePage.rows(screenHeight: screen.height, pad: screen.width > 760 ? Self.margin : 8) }
     /// Me as it stands, on this screen.
-    func meSheet(now: Double) -> MePage.Sheet { MePage.sheet(now: now, rows: meRows, open: meShelf) }
+    func meSheet(now: Double) -> MePage.Sheet { MePage.sheet(now: now, rows: meRows, open: meShelf, gradeSaid: meGradeSaid) }
     /// A shelf on Me opened (nil: the whole of Me again): Me draws itself as it now is, and the camera frames it.
     func openShelf(_ k: Int?) {
         guard place == .me, meShelf != k else { return }
@@ -205,20 +223,37 @@ final class PaperModel {
     func setPlaceDrawing(_ b: Bool) { if placeDrawing != b { placeDrawing = b } }
     /// The grown-ups' page: shut behind its hold until a grown-up opens it, and what it's asking to confirm.
     let grownUp = GrownUpPage()
-    /// The very first launch's ghost tap on the first lesson up next (StartHere), from when it starts until another
-    /// lesson is chosen, or one opens.
-    private(set) var startHere: StartHere?
+    /// Setting up, the first time the app opens (G 26 Oct): its steps on the paper, and what's been picked.
+    let setup = SetupPage()
+    /// Me's grade row: the grade block last tapped there (its words under the row), until Me is left.
+    private(set) var meGradeSaid: Int?
+    /// Screenshots only: a grade block on Me tapped.
+    func sayGradeOnMe(_ g: Int) { meGradeSaid = g }
 
-    /// The very first launch (G 20 Oct): once the map has drawn in, a ghost finger taps the first lesson up next and
-    /// "Start here." is written beside it. Only for a child with nothing done yet; remembered at once (never in a
-    /// screenshot), so it never plays again. `frozen`: screenshots, held at that moment of it.
-    func beginStartHere(force: Bool = false, frozen: Double? = nil) {
-        let fresh = !StartHere.shown && Progress.shared.checks.isEmpty && !UserDefaults.standard.dictionaryRepresentation().keys.contains { $0.hasPrefix("lesson-") }
-        guard force || fresh, let p = Map.today ?? Map.pieces.first(where: { $0.state == .now }) else { return }
-        startHere = StartHere(piece: p, start: drawnAt + Piece.drawTime + 0.2, frozen: frozen)
-        if !Shots.active { UserDefaults.standard.set(true, forKey: StartHere.key) }
-        // Reduce Motion (no finger moving, nothing to wait for), or a screenshot held past the tap: chosen at once
-        if instant || (frozen ?? -1) >= StartHere.tapTime { startHere?.tapped = true; select(p) }
+    /// The app opens on setting up until it's been done (and again after a grown-up starts over): the paper is already
+    /// there, and its welcome draws itself in.
+    func beginSetup() {
+        bars?.stop(); bars = nil; selected = nil; cameFrom = nil; meShelf = nil; mapLeftAt = nil
+        place = .setup; placeLeftAt = nil
+        placeAt = instant ? PaperClock.now - 100 : PaperClock.now + 0.3
+        setup.start(at: placeAt)
+        flight = nil; resting = placeCamera(.setup)
+    }
+    /// Setting up is done: it erases itself, and the paper glides down to the map, where "Start here" is written in the
+    /// child's name beside the first lesson of their grade.
+    func finishSetup() {
+        guard place == .setup else { return }
+        erase { [self] in arrive(at: nil, duration: CameraTiming.glide) }
+    }
+    /// A grown-up's Start over (the grown-ups' page, confirmed there): everything the child did, every setting and the
+    /// setting up itself forgotten; the paper goes back to the welcome.
+    func startOver() {
+        let saving = !shotMode
+        Progress.shared.forgetAll()
+        for piece in Map.all + [Map.review] { PageStore.clear(piece.id) }
+        AppSettings.forgetAll(saving: saving)
+        Reminders.clear()
+        erase { [self] in beginSetup() }
     }
     /// The piece whose lesson is open: its name goes in the top bar.
     var openPiece: Piece? { bars != nil ? opened : nil }
@@ -265,8 +300,6 @@ final class PaperModel {
 
     func settle(at t: Double) {
         if let f = flight, f.done(at: t) { resting = f.to; flight = nil }
-        // the first launch's finger presses the lesson: it's chosen, as a tap chooses it
-        if let sh = startHere, sh.tapDue(at: t), place == nil, bars == nil { startHere?.tapped = true; select(sh.piece) }
         // the grown-ups' square held for 3 seconds: its page opens, and the camera frames it
         if place == .grownUp, grownUp.settle(at: t) {
             Sounds.shared.play(.done)
@@ -383,9 +416,14 @@ final class PaperModel {
     /// at the sides), the next chapter coming in under it. A chapter too tall for the room above the bar shows from its
     /// title down, or, when `piece` is further down, down to it; the rest is a scroll away.
     func chapterView(_ i: Int, showing piece: Piece? = nil) -> PaperCamera {
-        let g = Map.groups[i], all = g.pieces + Map.tests.filter { $0.chapter == g.chapter && $0.id != "test-grade" }
-        let r = all.map { Rect(x: $0.at.x, y: $0.at.y, width: Piece.size.width, height: Piece.size.height + Paper.unit) }
+        let g = Map.groups[i], all = Map.shown.filter { $0.chapter == g.chapter && $0.id != "test-grade" }
+        var r = all.map { Rect(x: $0.at.x, y: $0.at.y, width: Piece.size.width, height: Piece.size.height + Paper.unit) }
             .reduce(Rect(x: g.origin.x, y: g.origin.y, width: 1, height: 1)) { $0.union($1) }
+        // a fresh map: "Start here, Mia." beside the first lesson is in view too, a square to spare
+        if StartHere.shows, let p = StartHere.piece, p.chapter == g.chapter {
+            let b = StartHere.bounds(for: p)
+            r = r.union(Rect(x: b.x - Paper.cell, y: b.y, width: b.width + Paper.cell, height: b.height))
+        }
         let pad = screen.width > 760 ? Self.margin : 8
         let top = Self.chrome.top + pad, bottom = screen.height - max(Self.chrome.bottom, keyboard + 16) - pad
         let z = min(CameraTiming.selectMax, (screen.width - 2 * pad) / r.width), x = screen.width / 2 - r.mid.x * z
@@ -396,8 +434,6 @@ final class PaperModel {
 
     /// A tap on a lesson: a slow, gentle glide that brings it closer, not too close.
     func select(_ p: Piece?) {
-        // another lesson chosen: the first launch's "Start here." goes
-        if p?.id != startHere?.piece.id { startHere = nil }
         selected = p
         guard let p else { return }
         let now = camera(at: PaperClock.now)
@@ -417,13 +453,12 @@ final class PaperModel {
         if let sel = selected, sel.opens, contains(Rect(x: sel.start.x - 20, y: sel.start.y - 20, width: sel.start.width + 40, height: sel.start.height + 40), p) || contains(sel.frame, p) {
             open(sel); return
         }
-        select(Map.all.first(where: { contains($0.frame, p) || contains($0.start, p) }))
+        select(Map.shown.first(where: { contains($0.frame, p) || contains($0.start, p) }))
     }
 
     /// Opening a lesson: the map erases itself, as it drew in, then the lesson opens where it was.
     func open(_ p: Piece) {
         guard !leaving else { return }
-        startHere = nil
         if instant { openNow(p); return }
         leaving = true
         mapLeftAt = PaperClock.now
@@ -480,6 +515,8 @@ final class PaperModel {
         guard abs(h - keyboard) > 1 else { return }
         keyboard = h
         if bars?.mode == .work { reframe() }
+        // setting up's name, or the grown-ups' page's: the camera keeps it above the keys
+        else if bars == nil, place != nil { reframePlace() }
     }
 
     /// A rect framed clear of the bar (and the keyboard), with two cells to spare, never closer than `maxZoom`.
@@ -533,7 +570,6 @@ final class PaperModel {
     /// Lessons button, as before) and a place frames itself again. `then` runs once it's there.
     func go(to target: Place?, then: (() -> Void)? = nil) {
         guard !leaving else { return }
-        startHere = nil
         if bars == nil, place == target {
             // the bar's Me on Me, with a shelf open: back to the whole of Me
             if target == .me { meShelf = nil }
@@ -571,11 +607,11 @@ final class PaperModel {
 
     /// Arrived: a place draws itself in as the camera flies to it; the map (nil) draws itself back in, framed on today's
     /// chapter as when the app opens.
-    private func arrive(at target: Place?) {
-        place = target; placeLeftAt = nil; mapLeftAt = nil; selected = nil
+    private func arrive(at target: Place?, duration: Double = CameraTiming.fly) {
+        place = target; placeLeftAt = nil; mapLeftAt = nil; selected = nil; meGradeSaid = nil
         // an open shelf is kept only for coming back to Me from a lesson opened on it
         if target != .me { meShelf = nil }
-        guard let target else { redraw(from: nil); frameGroup(); return }
+        guard let target else { redraw(from: nil); frameGroup(duration: duration); return }
         placeAt = instant ? PaperClock.now - 100 : PaperClock.now + 0.05
         if target == .grownUp { grownUp.shut() }
         fly(to: placeCamera(target), duration: CameraTiming.fly)
@@ -599,9 +635,11 @@ final class PaperModel {
             case .review?: open(Map.review, from: .me)
             case .shelf(let k)?: openShelf(k)
             case .back?: openShelf(nil)
+            case .grade(let g)?: meGradeSaid = g
             case nil: break
             }
         case .grownUp: grownUp.tap(p, model: self)
+        case .setup: setup.tap(p, model: self)
         }
     }
 
@@ -609,6 +647,14 @@ final class PaperModel {
     /// show as many cards as fit at 75%, the rest a tap away: MePage.rows); the grown-ups' page, too tall for that at 75%
     /// (its words still big enough to read), shows from its top down at 75%, the rest a pan away.
     func placeCamera(_ place: Place) -> PaperCamera {
+        if place == .setup {
+            // no bar while setting up: the step framed in the whole screen (above the keyboard while a name is typed),
+            // at up to 100%
+            let r = setup.sheet(now: PaperClock.now).frame, top = Self.chrome.top, bottom = max(Self.chrome.top, keyboard + 16)
+            var cam = PaperCamera.framing(r, in: Size(screen.width, screen.height - top - bottom), pad: screen.width > 760 ? Self.margin : 8, maxZoom: CameraTiming.selectMax)
+            cam.y += top
+            return cam
+        }
         if place == .me { return framingBelowBar(meSheet(now: PaperClock.now).frame, maxZoom: CameraTiming.selectMax) }
         let r = grownUp.frame
         let cam = framingBelowBar(r, maxZoom: CameraTiming.selectMax)

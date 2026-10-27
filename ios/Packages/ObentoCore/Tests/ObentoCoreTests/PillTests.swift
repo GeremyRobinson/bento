@@ -119,23 +119,6 @@ final class PillTests: XCTestCase {
         XCTAssertFalse(Pill.isNewSession(lastActive: 100, now: 100 + 60))
         XCTAssertTrue(Pill.isNewSession(lastActive: 100, now: 100 + Pill.sessionGap))
     }
-
-    // MARK: the grades
-
-    func testGrades() {
-        XCTAssertEqual(Pill.grades.count, 13)
-        XCTAssertEqual(Pill.grades.first, "K")
-        XCTAssertEqual(Pill.grades.last, "12")
-        XCTAssertEqual(Pill.gradeName("K"), "Kindergarten")
-        XCTAssertEqual(Pill.gradeName("1"), "1st grade")
-        XCTAssertEqual(Pill.gradeName("2"), "2nd grade")
-        XCTAssertEqual(Pill.gradeName("3"), "3rd grade")
-        XCTAssertEqual(Pill.gradeName("5"), "5th grade")
-        XCTAssertEqual(Pill.gradeName("11"), "11th grade")
-        XCTAssertEqual(Pill.gradeName("12"), "12th grade")
-        XCTAssertEqual(Pill.gradeTapped("5", live: "5"), "5th grade it is.")
-        XCTAssertEqual(Pill.gradeTapped("7", live: "5"), "7th grade: coming soon.")
-    }
 }
 
 /// The page's progress as the pill's squares (LessonPlan.squares).

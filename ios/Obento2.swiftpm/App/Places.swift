@@ -21,16 +21,21 @@ extension Rig {
             let p = Progress.shared
             let key: String
             switch place {
-            case .me: key = "me \(p.checks) \(p.reviews) \(PageStore.version) \(Review.day(t)) \(isDark) \(model.meRows) \(model.meShelf ?? -1)"
+            case .me: key = "me \(p.checks) \(p.reviews) \(PageStore.version) \(Review.day(t)) \(isDark) \(model.meRows) \(model.meShelf ?? -1) \(model.meGradeSaid ?? -1) \(AppSettings.profile.name)"
+            case .setup:
+                let su = model.setup
+                key = "su \(su.step) \(su.version) \(su.name) \(isDark) \(AppSettings.sound) \(AppSettings.profile.reminder) \(AppSettings.profile.name)"
             case .grownUp:
                 let g = model.grownUp
                 // the settings too: the bar's ⋯ can change the paper's colours while the page is up
-                key = "gu \(g.open) \(g.letGoAt != nil) \(g.version) \(p.checks) \(PageStore.version) \(isDark) \(AppSettings.theme) \(AppSettings.sound) \(AppSettings.readAloud)"
+                key = "gu \(g.open) \(g.letGoAt != nil) \(g.version) \(p.checks) \(PageStore.version) \(isDark) \(AppSettings.theme) \(AppSettings.sound) \(AppSettings.readAloud) \(AppSettings.profile.name) \(AppSettings.profile.reminder)"
             }
             if key != d.key {
                 d.key = key
-                let sketch = place == .me ? model.meSheet(now: t).sketch : model.grownUp.sheet(now: t).sketch
-                d.build(sketch, rig: self, chapter: Chapter.whole.hex, dark: isDark, origin: .zero, from: d.isEmpty ? model.placeAt : t, now: t)
+                let sketch = place == .me ? model.meSheet(now: t).sketch : place == .setup ? model.setup.sheet(now: t).sketch : model.grownUp.sheet(now: t).sketch
+                // setting up's next step draws in a moment after it's asked for, as the last one erases itself
+                let from = d.isEmpty ? model.placeAt : place == .setup ? max(t, model.setup.stepAt) : t
+                d.build(sketch, rig: self, chapter: Chapter.whole.hex, dark: isDark, origin: .zero, from: from, now: t)
             }
             // the hold's ring, filled as far as it's held
             let g = model.grownUp, k = place == .grownUp && !g.open ? g.fill(at: t) : 0

@@ -95,11 +95,12 @@ struct Toolbar: View {
             let offer = self.offer
             switch offer {
             case .grade:
-                MiddleWords(text: Map.grade.name, lit: ui.open == .grade, tint: nil, accessibility: "\(Map.grade.name), \(learned) of \(Map.gradeLessons.count) learned") {
+                MiddleWords(text: gradeName, lit: ui.open == .grade, tint: nil,
+                            accessibility: gradeName + (Fresh.showsCount(learned: learned) ? ", \(learned) of \(Map.gradeLessons.count) learned" : "")) {
                     toggle(.grade)
                 }
             default:
-                MiddleWords(text: offer.words(grade: Map.grade.name), lit: true, tint: nil, accessibility: offerAccessibility(offer)) {
+                MiddleWords(text: offer.words(grade: gradeName), lit: true, tint: nil, accessibility: offerAccessibility(offer)) {
                     ui.open = nil; take(offer)
                 }
             }
@@ -187,7 +188,7 @@ struct Toolbar: View {
     /// What the middle is showing, for the animation's key (the readout's words too, so the pill eases as they change).
     private var middleKey: String {
         if zooming { return "zoom" }
-        if model.openPiece == nil { return offer.words(grade: Map.grade.name) }
+        if model.openPiece == nil { return offer.words(grade: gradeName) }
         if tools.dim, let r = readout { return "readout \(r)" }
         let s = squares
         return "squares \(s.done) \(s.of)"
@@ -229,9 +230,9 @@ struct Toolbar: View {
     private var gradeRow: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
-                ForEach(Pill.grades, id: \.self) { g in
-                    GradeBlock(grade: g, live: g == Map.grade.number) {
-                        if g == Map.grade.number { ui.open = nil; ui.gradeSaid = nil } else { ui.gradeSaid = Pill.gradeTapped(g, live: Map.grade.number) }
+                ForEach(Grades.all, id: \.self) { g in
+                    GradeBlock(grade: g) {
+                        if Grades.isLive(g) { ui.open = nil; ui.gradeSaid = nil } else { ui.gradeSaid = Grades.picked(g) }
                     }
                 }
             }
@@ -287,7 +288,7 @@ struct Toolbar: View {
         case .review(let n): "Go over: today's review, \(n) to do"
         case .recheck(let id, let n): "Go over: \(Map.piece(id)?.name ?? "") and \(n - 1) more"
         case .resume(let id): "Continue \(Map.piece(id)?.name ?? "")"
-        case .grade: Map.grade.name
+        case .grade: gradeName
         }
     }
 
@@ -297,6 +298,9 @@ struct Toolbar: View {
         if ui.open != p { ui.gradeSaid = nil }
         ui.open = ui.open == p ? nil : p
     }
+
+    /// The child's grade in words, as Me says it ("5th grade").
+    private var gradeName: String { Grades.name(AppSettings.profile.grade) }
 
     private var zoom: Double { model.camera(at: PaperClock.now).zoom }
     private func zoomBy(_ f: Double) { model.zoomButton(f) }
@@ -541,12 +545,12 @@ struct StepSquares: View {
 
 /// A grade's block in the grade row: the live grade lit, the others dashed (dead, "coming soon").
 struct GradeBlock: View {
-    let grade: String
-    let live: Bool
+    let grade: Int
     let action: () -> Void
     var body: some View {
+        let live = Grades.isLive(grade)
         Button(action: action) {
-            Text(grade).font(Typeface.font(15, live ? .bold : .medium)).monospacedDigit()
+            Text(Grades.short(grade)).font(Typeface.font(15, live ? .bold : .medium)).monospacedDigit()
                 .frame(width: 36, height: 36)
                 .background(live ? Ink.litFill : .clear)
                 .overlay(Rectangle().strokeBorder(live ? Ink.lit : Ink.ink3, style: StrokeStyle(lineWidth: 1.5, dash: live ? [] : [4, 3])))
@@ -554,7 +558,7 @@ struct GradeBlock: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(Pill.gradeName(grade))
+        .accessibilityLabel(Grades.name(grade))
         .accessibilityValue(live ? "" : "Coming soon")
         .accessibilityAddTraits(live ? .isSelected : [])
     }

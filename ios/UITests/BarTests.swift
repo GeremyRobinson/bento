@@ -4,7 +4,7 @@ import XCTest
 final class BarTests: XCTestCase {
     func testDarkFromTheMoreMenu() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-landscape"]
+        app.launchArguments = ["-landscape", "-set-up"]
         app.launch()
         sleep(3)
         attach(app, "before")

@@ -29,8 +29,8 @@ final class PlacesTests: XCTestCase {
         attach(app, "3 back on Me")
         onMe(app, "back from the lesson")
 
-        // the daily review: the card beside Today's pick, its middle 5.5 blocks across and 2 down
-        me.tap(Me.x + 5.5 * Me.u, 2 * Me.u)
+        // the daily review: the card beside Today's pick, its middle 5.5 blocks across and 2 down under the name's block
+        me.tap(Me.x + 5.5 * Me.u, Me.band + 2 * Me.u)
         sleep(4)
         attach(app, "4 the review from Me")
         inPage(app, "Daily review")
@@ -73,7 +73,7 @@ final class PlacesTests: XCTestCase {
         attach(app, "5 the whole of Me")
         onMe(app, "Back to Me")
         // Today's pick (Rounding decimals, checked the longest ago) is drawn again where it was: it opens
-        whole.tap(Me.x + 1.5 * Me.u, 2 * Me.u)
+        whole.tap(Me.x + 1.5 * Me.u, Me.band + 2 * Me.u)
         sleep(4)
         attach(app, "6 today's pick")
         inPage(app, "Rounding decimals")
@@ -84,10 +84,11 @@ final class PlacesTests: XCTestCase {
 
     // MARK: Me on the screen
 
-    /// Me on the paper (MePage): its top-left at (-1600, 0), 11 blocks of 100 points wide; Today's cards on its second
-    /// block row, the shelves' from its sixth (`top`), as many rows as fit with all of Me at 75% (never fewer than 2).
+    /// Me on the paper (MePage): its top-left at (-1600, 0), 11 blocks of 100 points wide; the child's name and grade on
+    /// its first block row (`band`), Today's cards on its third, the shelves' from its seventh (`top`), as many rows as
+    /// fit with all of Me at 75% (never fewer than 2).
     private enum Me {
-        static let x = -1600.0, u = 100.0, width = 11 * u, top = 5 * u
+        static let x = -1600.0, u = 100.0, width = 11 * u, band = u, top = 6 * u
         static func rows(_ app: XCUIApplication) -> Int {
             let room = app.windows.firstMatch.frame.size.height - Framed.top - Framed.bar - 2 * Framed.pad
             return max(2, Int((room / 0.75 - top - 20) / u))
@@ -137,7 +138,7 @@ final class PlacesTests: XCTestCase {
     func testMeTheGrownUpsHoldAndTheMap() throws {
         XCUIDevice.shared.orientation = .landscapeLeft
         let app = XCUIApplication()
-        app.launchArguments = ["-landscape"]
+        app.launchArguments = ["-landscape", "-set-up"]
         app.launch()
         sleep(6)
         attach(app, "1 map")
@@ -189,6 +190,50 @@ final class PlacesTests: XCTestCase {
         at(size.width / 2, 264).tap()
         sleep(2)
         attach(app, "7 tapped on the map")
+    }
+
+    /// Setting up, the first time the app opens (`-setup-fresh`: a new install, kept in memory only), tapped through on
+    /// the paper: Start, a name typed with the keyboard (return goes on), the grade's Next, the grown-up's Done. There's
+    /// no bar until it's done; then the map, with the bar's Lessons. Each step is framed whole in the screen (no bar) at
+    /// up to 100%, so a block's place is worked out from the step's frame (SetupPage, in squares of 20 points).
+    func testSettingUp() throws {
+        XCUIDevice.shared.orientation = .landscapeLeft
+        let app = XCUIApplication()
+        app.launchArguments = ["-landscape", "-setup-fresh"]
+        app.launch()
+        sleep(6)
+        let window = app.windows.firstMatch, size = window.frame.size
+        /// A tap on the step framed `w` by `h` squares, at (x, y) squares from its top-left.
+        func tap(_ x: Double, _ y: Double, frame w: Double, _ h: Double) {
+            let c = 20.0, room = size.height - 48
+            let z = min(1, (size.width - 80) / (w * c), (room - 80) / (h * c))
+            let sx = size.width / 2 + (x - w / 2) * c * z, sy = 24 + room / 2 + (y - h / 2) * c * z
+            window.coordinate(withNormalizedOffset: CGVector(dx: sx / size.width, dy: sy / size.height)).tap()
+        }
+        attach(app, "1 welcome")
+        XCTAssertFalse(app.buttons["Lessons"].exists, "no bar while setting up")
+        // Start: 10 squares wide, under the 30 by 20 rectangle and its words, the welcome 27 squares tall
+        tap(15, 26, frame: 30, 27)
+        sleep(3)
+        attach(app, "2 name")
+        app.typeText("Mia")
+        sleep(1)
+        attach(app, "3 name typed")
+        app.typeText("\n")
+        sleep(3)
+        attach(app, "4 grade")
+        // a dead grade (3rd: its block 15 squares in), then Next under the row; the step is 64 by 17 squares
+        tap(17, 7, frame: 64, 17)
+        sleep(1)
+        attach(app, "5 a grade coming soon")
+        tap(3.5, 16, frame: 64, 17)
+        sleep(3)
+        attach(app, "6 for a grown-up")
+        // Done, under the reminder and sound; the step is 42 by 22 squares
+        tap(3.5, 21, frame: 42, 22)
+        sleep(4)
+        attach(app, "7 the map")
+        XCTAssertTrue(app.buttons["Lessons"].waitForExistence(timeout: 5), "the map, with the bar, once it's done")
     }
 
     private func attach(_ app: XCUIApplication, _ name: String) {

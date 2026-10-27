@@ -145,19 +145,10 @@ extension Rig {
         let d = mapDrawer ?? { let d = SketchDrawer(); words.addChild(d.root); mapDrawer = d; return d }()
         // a lesson comes due on its own, as time passes: that changes its tab too
         let due = Map.pieces.filter(\.goOver).map(\.id).joined(separator: ",")
-        let key = "\(Progress.shared.checks.count) \(Progress.shared.learned.count) \(due) \(Progress.shared.tests) \(isDark) \(PageStore.version) \(model.selected?.id ?? "") \(model.drawnAt) \(model.startHere?.tapped ?? false)"
+        let key = "\(Progress.shared.checks.count) \(Progress.shared.learned.count) \(due) \(Progress.shared.tests) \(isDark) \(PageStore.version) \(model.selected?.id ?? "") \(model.drawnAt) \(AppSettings.name) \(AppSettings.needsSetup)"
         if key != d.key, model.mapLeftAt == nil {
             d.key = key
             d.build(mapSketch(model, dark: isDark), rig: self, chapter: Chapter.whole.hex, dark: isDark, origin: .zero, from: t, now: t)
-        }
-        // the first launch's ghost finger (StartHere), drawn at once as it moves
-        let finger = model.mapLeftAt == nil ? model.startHere?.finger(at: t) : nil, live = d.live
-        let fingerKey = finger.map { "\(Int($0.at.x)),\(Int($0.at.y)) \($0.down) \($0.trail.count) \(Int($0.shows * 20)) \(isDark)" } ?? ""
-        if fingerKey != live.key, model.mapLeftAt == nil {
-            live.key = fingerKey
-            var f = Sketch()
-            if let finger { f.ghostFinger("start-ghost", at: finger.at, down: finger.down, trail: finger.trail, shows: finger.shows) }
-            live.build(f, rig: self, chapter: Chapter.whole.hex, dark: isDark, origin: .zero, from: t, now: t)
         }
         let moving = d.update(at: t)
         if moving != model.mapDrawing { Task { @MainActor in model.setMapDrawing(moving) } }
@@ -184,6 +175,9 @@ extension Rig {
         var s = Sketch()
         /// When a place's words start: as its frame draws in (Piece.drawIn), a moment after.
         func at(_ p: Point) -> Double { model.drawnAt + Piece.drawDelay(p, from: model.drawFrom) + 0.3 }
+        // a new install looks untouched (G 26 Oct): no count says "0 of 3", no tab says Up next, no test waits in a
+        // dashed frame; they come once there's something to count or unlock (Map.shown, Fresh)
+        let untouched = Map.untouched, shown = Map.shown
         // chapter titles, baselines on a grid line: a dot in the chapter's colour, the title, and how many are learned
         for g in Map.groups {
             let o = g.origin, done = g.lessons.filter { Progress.shared.learned.contains($0.id) }.count
@@ -191,9 +185,11 @@ extension Rig {
             s.polygon("dot\(g.chapter)", Self.circle(CGPoint(x: o.x + 5, y: o.y + 27), 5), .hex(g.chapter.hex, g.chapter.hex))
             s.label("title\(g.chapter)", g.chapter.title, .chapter, at: CGPoint(x: o.x + 20, y: o.y + 40))
             let w = PaperText.width(g.chapter.title, PaperText.font(Sketch.Words.chapter.size, Sketch.Words.chapter.weight))
-            s.label("count\(g.chapter)", "\(done) of \(g.lessons.count)", .count, at: CGPoint(x: o.x + 32 + w, y: o.y + 37), slot: "count\(g.chapter)")
+            if Fresh.showsCount(learned: done) {
+                s.label("count\(g.chapter)", "\(done) of \(g.lessons.count)", .count, at: CGPoint(x: o.x + 32 + w, y: o.y + 37), slot: "count\(g.chapter)")
+            }
         }
-        for p in Map.all {
+        for p in shown {
             let r = CGRect(x: p.at.x, y: p.at.y, width: Piece.size.width, height: Piece.size.height), id = p.id
             let hex = p.chapter.hex, chapter = Sketch.Colour.hex(hex, hex)
             s.startAt = at(p.frame.mid)
@@ -217,6 +213,8 @@ extension Rig {
                 s.startAt = nil
                 let word = p.goOver ? "Go over" : PageStore.load(p.id) == nil ? "Start" : "Continue"
                 s.tab(id, frame: r, word, width: p.start.width, arrow: true, colour: chapter)
+            } else if !Fresh.showsTabs(untouched: untouched) {
+                // nothing started yet: no tabs
             } else if p.goOver {
                 // learned, and its time to come back has come (or its recheck came back low): Go over, not Up next
                 s.tab(id, frame: r, "Go over", colour: chapter)
@@ -224,10 +222,10 @@ extension Rig {
                 s.tab(id, frame: r, "Up next", colour: chapter)
             }
         }
-        // the first launch: "Start here." beside the lesson its finger chose, while it stays chosen
-        if let sh = model.startHere, sh.tapped, model.selected?.id == sh.piece.id {
-            s.startAt = nil
-            s.startHere(sh.piece)
+        // set up, and nothing started yet: "Start here, Mia." beside the first lesson, written as its frame draws in
+        if StartHere.shows, let p = StartHere.piece {
+            s.startAt = at(p.frame.mid) + 0.5
+            s.startHere(p)
         }
         return s
     }
