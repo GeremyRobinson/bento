@@ -409,6 +409,20 @@ enum Shots {
             // setup-done: Done tapped on the grown-up step, the paper gliding down to the map (WAIT 8: arrived)
             fresh(name: "")
             if n == "setup-live" { m.beginSetup(); return true }
+            if n == "setup-path" {
+                // the whole of setting up for real, as a child and a grown-up go through it (WAIT picks the moment): the
+                // welcome (0-4 s), the name typed a letter at a time (5-8), the grade, 3rd tapped then Next (9-12), the
+                // grown-up's step (13-15), Done and the glide down to the map (16 on)
+                AppSettings.set(profile: .fresh, saving: false)
+                m.beginSetup(); await wait(4.5)
+                m.setup.act(.start, model: m); await wait(1.5)
+                for k in 1...3 { m.setup.type(String("Mia".prefix(k))); await wait(0.6) }
+                await wait(1); m.nameEntered(); await wait(1.5)
+                m.setup.act(.grade(3), model: m); await wait(1.5)
+                m.setup.act(.next, model: m); await wait(3)
+                m.setup.act(.done, model: m)
+                return true
+            }
             m.shotMode = true; m.beginSetup()
             var p = AppSettings.profile
             switch n {

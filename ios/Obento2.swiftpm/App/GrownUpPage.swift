@@ -199,6 +199,25 @@ final class GrownUpPage {
             out.taps.append((b, .askAll))
         }
         y += 3 * c
+        // Start over: everything wiped, setting up too (the next time it opens is a first launch); asked first
+        if confirm == .startOver {
+            let ask = "Wipe every lesson, test, review and setting, and set up again?"
+            s.label("gu-startover-ask", ask, Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink), at: CGPoint(x: x0, y: y + c), anchor: UnitPoint(x: 0, y: 0.5))
+            y += 3 * c
+            var bx = x0
+            for (word, action, style) in [("Start over", Action.startOver, Sketch.Block.main), ("Keep", .keep, .plain)] {
+                let b = CGRect(x: bx, y: y, width: Self.blockWidth(word), height: 2 * c)
+                s.block("gu-startover-\(word)", b, style, word: word)
+                out.taps.append((b, action)); bx = b.maxX + c
+            }
+        } else {
+            let b = CGRect(x: x0, y: y, width: Self.blockWidth("Reset everything"), height: 2 * c)
+            s.block("gu-startover", b, .plain, word: "Start over")
+            s.label("gu-startover-say", "wipes everything, setting up too", Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2),
+                    at: CGPoint(x: b.maxX + c, y: b.midY), anchor: UnitPoint(x: 0, y: 0.5))
+            out.taps.append((b, .askStartOver))
+        }
+        y += 3 * c
         let note = "Checks are scored 0 to 4, and 3 or 4 is learned. A learned lesson comes back for a check after 3, 7, 21 and 60 days, and the next day after a low one."
         let rows = s.words("gu-note", note, Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2), x: x0, top: y, width: Self.tableW * c, max: 3)
         let bottom = y + Double(rows) * Sketch.row
@@ -225,39 +244,24 @@ final class GrownUpPage {
         sy += 10 * c
         let settings: [(name: String, say: String, choices: [(String, Action, Bool)])] = [
             ("Reminder", "A note on the iPad each day.", Reminder.allCases.map { ($0.words, Action.reminder($0), AppSettings.profile.reminder == $0) }),
-            ("Sound", "A soft sound for right and wrong.", [("On", .sound(true), AppSettings.sound), ("Off", .sound(false), !AppSettings.sound)]),
+            ("Sound", "Soft sounds for right and wrong.", [("On", .sound(true), AppSettings.sound), ("Off", .sound(false), !AppSettings.sound)]),
             ("Read aloud", "Reads out each step's words.", [("On", .readAloud(true), AppSettings.readAloud), ("Off", .readAloud(false), !AppSettings.readAloud)]),
             ("Colours", "Light or dark paper.", [("Match the iPad", .theme(""), AppSettings.theme == ""), ("Light", .theme("light"), AppSettings.theme == "light"),
                                                ("Dark", .theme("dark"), AppSettings.theme == "dark")]),
         ]
-        for setting in settings {
-            heading(setting.name, setting.say)
-            var bx = sx
+        // Sound and Read aloud side by side, on one row (two blocks each), so the page stays short
+        for (i, setting) in settings.enumerated() {
+            let beside = setting.name == "Read aloud", x = beside ? sx + 20 * c : sx
+            if beside { sy -= 10 * c }
+            s.label("gu-set-\(setting.name)", setting.name, label, at: CGPoint(x: x, y: sy + c), anchor: UnitPoint(x: 0, y: 0.5))
+            s.label("gu-set-\(setting.name)-say", setting.say, say, at: CGPoint(x: x, y: sy + 3 * c), anchor: UnitPoint(x: 0, y: 0.5))
+            var bx = x
             for (word, action, chosen) in setting.choices {
                 let b = CGRect(x: bx, y: sy + 5 * c, width: Self.blockWidth(word, least: 5), height: 2 * c)
                 s.block("gu-set-\(setting.name)-\(word)-\(chosen)", b, chosen ? Self.chosen : Self.other, word: word)
                 out.taps.append((b, action)); bx = b.maxX + c
             }
-            sy += 10 * c
-        }
-        // Start over: everything wiped, setting up too; asked first on the paper
-        if confirm == .startOver {
-            let ask = "Wipe every lesson, test, review and setting, and set up again?"
-            let rows = s.words("gu-startover-ask", ask, Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink), x: sx, top: sy, width: 38 * c, max: 2)
-            var bx = sx
-            let by = sy + (Double(rows) * Sketch.row / c + 1).rounded(.up) * c
-            for (word, action, style) in [("Start over", Action.startOver, Sketch.Block.main), ("Keep", .keep, .plain)] {
-                let b = CGRect(x: bx, y: by, width: Self.blockWidth(word), height: 2 * c)
-                s.block("gu-startover-\(word)", b, style, word: word)
-                out.taps.append((b, action)); bx = b.maxX + c
-            }
-            sy = by + 2 * c
-        } else {
-            let b = CGRect(x: sx, y: sy, width: Self.blockWidth("Start over"), height: 2 * c)
-            s.block("gu-startover", b, .plain, word: "Start over")
-            s.label("gu-startover-say", "Wipes everything, setting up too.", say, at: CGPoint(x: b.maxX + c, y: b.midY), anchor: UnitPoint(x: 0, y: 0.5))
-            out.taps.append((b, .askStartOver))
-            sy = b.maxY
+            sy += i == settings.count - 1 ? 8 * c : 10 * c
         }
         let right = X(Self.settingsX) + 39 * c
         out.frame = Rect(x: x0, y: y0, width: right - x0, height: max(bottom, sy) - y0)
