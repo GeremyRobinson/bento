@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pill island</title>
+<style>
+:root {
+  --paper: #F3F1EC; --grid: #E2DED6; --grid-strong: #D3CEC4;
+  --ink: #1D1C1A; --ink2: #6E6A63; --ink3: #A39E95; --sunk: #EEEBE5; --tint: rgba(79, 99, 217, .14); --lit: #3F52C8;
+  --whole: #7B5CE0; --decimals: #D6407F; --fractions: #4F63D9; --measurement: #D99A1E;
+  --pill: rgba(255, 255, 255, .97); --pill-line: #E4E0D8; --shadow: 0 10px 40px rgba(40, 30, 10, .16);
+  --page: #E9E6DF;
+  --round: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+  --c: 12px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C; --sunk: #2F2F2C; --tint: rgba(140, 155, 255, .18); --lit: #9AA8FF;
+  --whole: #A58BFF; --decimals: #FF6FA6; --fractions: #8C9BFF; --measurement: #F2B84B;
+  --pill: rgba(40, 40, 37, .97); --pill-line: #3A3A36; --shadow: 0 10px 40px rgba(0, 0, 0, .5);
+  --page: #121211; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C; --sunk: #2F2F2C; --tint: rgba(140, 155, 255, .18); --lit: #9AA8FF;
+  --whole: #A58BFF; --decimals: #FF6FA6; --fractions: #8C9BFF; --measurement: #F2B84B;
+  --pill: rgba(40, 40, 37, .97); --pill-line: #3A3A36; --shadow: 0 10px 40px rgba(0, 0, 0, .5);
+  --page: #121211; color-scheme: dark }
+* { box-sizing: border-box }
+body { margin: 0; background: var(--page); color: var(--ink); font-family: var(--round); line-height: 1.4 }
+main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 80px }
+h1 { font-size: 30px; margin: 0 0 4px }
+h2 { font-size: 22px; margin: 40px 0 4px }
+.lede, .note { color: var(--ink2); margin: 0 0 16px; max-width: 72ch }
+.lede b, .note b { color: var(--ink) }
+.top { display: flex; justify-content: space-between; align-items: start; gap: 16px; flex-wrap: wrap }
+.chip { font: inherit; font-size: 14px; border: 1px solid var(--pill-line); background: var(--pill); color: var(--ink); border-radius: 999px; padding: 6px 12px; cursor: pointer }
+.chip[aria-pressed="true"] { border-color: var(--ink) }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 }
+ul.notes { color: var(--ink2); max-width: 72ch; padding-left: 20px } ul.notes li { margin: 4px 0 } ul.notes b { color: var(--ink) }
+
+.ipad { position: relative; width: 100%; aspect-ratio: 1180 / 820; border-radius: 22px; overflow: hidden; border: 10px solid #111; box-shadow: 0 6px 24px rgba(0,0,0,.12);
+  background-color: var(--paper);
+  background-image: linear-gradient(var(--grid-strong) 1px, transparent 1px), linear-gradient(90deg, var(--grid-strong) 1px, transparent 1px), linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: calc(var(--c) * 5) calc(var(--c) * 5), calc(var(--c) * 5) calc(var(--c) * 5), var(--c) var(--c), var(--c) var(--c) }
+.on { position: absolute; left: calc(var(--x) * var(--c)); top: calc(var(--y) * var(--c)) }
+.big { font-size: calc(var(--c) * 2.2); font-weight: 600; white-space: nowrap }
+.say { font-size: calc(var(--c) * 1.7); white-space: nowrap }
+.t2 { font-size: calc(var(--c) * 1.05); color: var(--ink2); white-space: nowrap }
+.block { position: absolute; white-space: nowrap; border: 1.5px solid var(--ink3); display: flex; align-items: center; padding: 0 calc(var(--c) * .8); font-size: calc(var(--c) * 1.15); height: calc(var(--c) * 3) }
+.block.chosen { border-color: var(--ink); background: var(--sunk); font-weight: 600 }
+.sq { position: absolute; width: calc(var(--c) * 3); height: calc(var(--c) * 3); border: 1.5px solid var(--col) }
+.sq.learned { background: var(--col) } .sq.started { background: color-mix(in srgb, var(--col) 28%, transparent) } .sq.none { border-color: color-mix(in srgb, var(--col) 45%, transparent) }
+.dim-paper { position: absolute; inset: 0; background: color-mix(in srgb, var(--paper) 55%, transparent); opacity: 0; transition: opacity .35s; pointer-events: none }
+.dim-paper.show { opacity: 1 }
+
+/* the pill, and the island it grows into */
+.pill { position: absolute; left: 50%; bottom: calc(var(--c) * 1.5); transform: translateX(-50%); background: var(--pill); border: 1px solid var(--pill-line); border-radius: 30px; box-shadow: var(--shadow); padding: 6px; overflow: hidden; display: flex; flex-direction: column; transition: width .4s cubic-bezier(.3, .9, .3, 1), height .4s cubic-bezier(.3, .9, .3, 1) }
+.row { display: flex; align-items: center; gap: 2px; height: 52px; flex: none; position: relative; z-index: 2; background: var(--pill); justify-content: center }
+.row .b { display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 999px; color: var(--ink) }
+.row .b.lit { background: var(--tint); color: var(--lit) }
+.row .sep { width: 1px; height: 28px; margin: 0 4px; background: var(--pill-line) }
+.row .mid { padding: 0 18px; font-size: 16px; font-weight: 600; white-space: nowrap }
+.ic svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: square; display: block }
+.drawer { flex: 1; min-height: 0; display: flex; flex-direction: column; animation: up .4s cubic-bezier(.3, .9, .3, 1) both }
+@keyframes up { from { transform: translateY(40%); } }
+.menu .r { display: flex; align-items: center; gap: 12px; padding: 11px 14px; font-size: 15px; border-radius: 12px; cursor: pointer; white-space: nowrap }
+.menu .r:hover { background: var(--sunk) }
+.menu .r .more { margin-left: auto; color: var(--ink3) }
+.line { height: 1px; background: var(--pill-line); margin: 4px 10px; flex: none }
+.tabs { display: flex; gap: 4px; padding: 10px 12px 6px; flex: none }
+.tabs button { font: inherit; font-size: 14px; border: none; background: none; color: var(--ink2); padding: 7px 12px; border-radius: 999px; cursor: pointer }
+.tabs button.here { background: var(--sunk); color: var(--ink); font-weight: 600 }
+.body { overflow: auto; padding: 8px 22px 16px; flex: 1; min-height: 0; font-size: 15px }
+.body h3 { font-size: 17px; margin: 14px 0 6px }
+.body p { margin: 6px 0; color: var(--ink2); line-height: 1.55 }
+.body .set { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--pill-line); gap: 16px }
+.body .set:last-child { border-bottom: none }
+.body .set .k { font-weight: 600 } .body .set .v { color: var(--ink2); font-size: 13px }
+.seg { display: inline-flex; background: var(--sunk); border-radius: 999px; padding: 3px; gap: 2px; flex: none }
+.seg span { padding: 5px 11px; border-radius: 999px; font-size: 13px; white-space: nowrap; color: var(--ink2) }
+.seg span.here { background: var(--pill); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.12) }
+.gr { display: flex; gap: 3px } .gr span { width: 24px; height: 24px; display: grid; place-items: center; font-size: 11px; border: 1px dashed var(--ink3); color: var(--ink3); border-radius: 5px }
+.gr span.here { border: 1.5px solid var(--ink); color: var(--ink); font-weight: 700; background: var(--sunk) }
+.promise { display: flex; gap: 10px; align-items: center; margin: 8px 0; font-weight: 600 }
+.promise i { width: 14px; height: 14px; border: 1.5px solid var(--ink); position: relative; flex: none } .promise i::after { content: ""; position: absolute; inset: 3px; background: var(--ink) }
+.q { padding: 12px 0; border-bottom: 1px solid var(--pill-line) } .q b { display: block } .q p { margin: 4px 0 0 }
+.btn { display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid var(--ink); border-radius: 999px; padding: 8px 16px; font-weight: 600; margin-top: 10px; font-size: 14px }
+.danger { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--pill-line) }
+.gate { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; flex: 1; text-align: center; padding: 20px }
+.ring { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--ink) 0 62%, var(--sunk) 62% 100%) }
+.ring div { width: 64px; height: 64px; border-radius: 50%; background: var(--pill); display: grid; place-items: center } .ring div span { width: 26px; height: 26px; border: 1.5px solid var(--ink) }
+@media (max-width: 640px) { :root { --c: 6px } .ipad { border-width: 6px; border-radius: 14px } }
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div>
+      <h1>The pill as an island</h1>
+      <p class="lede">The paper keeps the maths and the progress pictures. Everything you <b>read or set</b> (settings, privacy, help, and later the plan) grows out of the pill into a larger island, the way ⋯ More does, then shrinks back. <b>Tap through the moments.</b></p>
+    </div>
+    <button class="chip" id="theme">Dark paper</button>
+  </div>
+  <div class="chips" id="moments"></div>
+  <div class="ipad" id="pad"></div>
+  <p class="note" id="say" style="margin-top:12px"></p>
+
+  <h2>Why this split</h2>
+  <ul class="notes">
+    <li><b>Paper = maths and progress.</b> Lessons, Me, and the grown-ups' This week and Lessons stay drawn on the grid. They're pictures of learning.</li>
+    <li><b>Island = the app itself.</b> Settings, privacy, help and payments aren't maths, so they don't pretend to be on graph paper. They live in the frame that's always there.</li>
+    <li><b>One place for serious things.</b> Anything a parent must read or agree to (privacy, a purchase) appears in the same calm island, behind the same hold.</li>
+    <li><b>Still ours, not iOS.</b> Same surface, curve and icons as the pill; it grows out of it like a drawer and shrinks back into it. No sheet sliding over the screen, no system look.</li>
+  </ul>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const root = document.documentElement;
+$('#theme').onclick = () => { const d = root.dataset.theme === 'dark' || (!root.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches); root.dataset.theme = d ? 'light' : 'dark'; $('#theme').textContent = d ? 'Dark paper' : 'Light paper'; };
+const IC = {
+  lessons: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg>',
+  me: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20v-1.5c0-3 3-5 7-5s7 2 7 5V20"/></svg>',
+  more: '<svg viewBox="0 0 24 24"><path d="M5 12h1M11.5 12h1M18 12h1" stroke-width="2.5"/></svg>',
+  close: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  set: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>',
+  shield: '<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/></svg>',
+  help: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.5V14M12 17v.5"/></svg>',
+  lock: '<svg viewBox="0 0 24 24"><rect x="4.5" y="11" width="15" height="10"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/></svg>',
+  show: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14"/><path d="M10 9l5 3-5 3z"/></svg>',
+  moon: '<svg viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></svg>',
+};
+const ic = k => `<span class="ic">${IC[k]}</span>`;
+const lessons = ['whole','whole','whole','decimals','decimals','decimals','decimals','decimals','fractions','fractions','fractions','fractions','fractions','fractions','fractions','measurement','measurement'];
+const state = ['learned','learned','learned','learned','learned','learned','started','none','learned','learned','none','none','none','none','none','learned','none'];
+// before the hold: the child's map behind; after it: the grown-ups' paper
+const map = () => {
+  let h = `<div class="on say" style="--x:8;--y:4"><span style="color:var(--whole)">●</span> Whole numbers</div>`;
+  ['Multiply two-digit numbers', 'Long division', 'Order of operations'].forEach((n, i) => {
+    h += `<div class="sq" style="left:calc(${8 + i * 20} * var(--c));top:calc(8 * var(--c));width:calc(15 * var(--c));height:calc(10 * var(--c));--col:var(--whole);${i ? 'border-color:color-mix(in srgb, var(--whole) 40%, transparent)' : ''}"></div><div class="on t2" style="--x:${8 + i * 20};--y:19;color:var(--ink)">${n}</div>`;
+  });
+  return h;
+};
+const paper = () => {
+  if (['Closed', '⋯ More', 'Hold to open'].includes(moment)) return map();
+  let h = `<div class="on big" style="--x:5;--y:3">For grown-ups</div>`;
+  [['This week', 9, true], ['Lessons', 8]].forEach(([t, w, c], i) => { h += `<div class="block ${c ? 'chosen' : ''}" style="left:calc(${5 + i * 10} * var(--c));top:calc(7 * var(--c));width:calc(${w} * var(--c))">${t}</div>`; });
+  h += `<div class="on say" style="--x:5;--y:12">Mia has learned <b>9 of 17</b> lessons in 5th grade.</div>`;
+  lessons.forEach((c, i) => { h += `<div class="sq ${state[i]}" style="left:calc(${5 + i * 3} * var(--c));top:calc(16 * var(--c));--col:var(--${c})"></div>`; });
+  h += `<div class="on t2" style="--x:5;--y:20">Each square is a lesson: filled learned, shaded started, open not yet.</div>`;
+  return h;
+};
+const row = (open) => `<div class="row"><span class="b ic">${IC.lessons}</span><span class="b ic">${IC.me}</span><span class="sep"></span><span class="mid">5th grade</span><span class="sep"></span><span class="b ic ${open ? 'lit' : ''}">${open ? IC.close : IC.more}</span></div>`;
+const tabs = here => `<div class="tabs">${['Settings', 'Privacy', 'Help', 'Plan'].map(t => `<button class="${t === here ? 'here' : ''}" data-go="${t}">${t}</button>`).join('')}</div>`;
+const islands = {
+  Settings: `<div class="body">
+    <div class="set"><div><div class="k">Name</div><div class="v">Shown in "Start here" and on Me</div></div><div class="seg"><span class="here">Mia</span></div></div>
+    <div class="set"><div><div class="k">Grade</div><div class="v">Only 5th grade has lessons so far</div></div><div class="gr">${['K','1','2','3','4','5','6','7','8','9','10','11','12'].map(g => `<span class="${g === '5' ? 'here' : ''}">${g}</span>`).join('')}</div></div>
+    <div class="set"><div><div class="k">Daily reminder</div><div class="v">A note on the iPad</div></div><div class="seg"><span>3:30</span><span class="here">4:00</span><span>6:00</span><span>Off</span></div></div>
+    <div class="set"><div><div class="k">Sound</div><div class="v">Soft sounds for right and wrong</div></div><div class="seg"><span class="here">On</span><span>Off</span></div></div>
+    <div class="set"><div><div class="k">Read aloud</div><div class="v">Reads out each step's words</div></div><div class="seg"><span>On</span><span class="here">Off</span></div></div>
+    <div class="set"><div><div class="k">Paper</div><div class="v">Light or dark</div></div><div class="seg"><span class="here">Match iPad</span><span>Light</span><span>Dark</span></div></div>
+    <div class="danger"><div class="k" style="font-weight:600">Start over</div><p>Wipes every lesson, test, review and setting, and sets up again. It asks first.</p><span class="btn">Start over…</span></div></div>`,
+  Privacy: `<div class="body">
+    <h3>Mia's privacy</h3>
+    <div class="promise"><i></i>Everything stays on this iPad.</div>
+    <div class="promise"><i></i>No ads, ever.</div>
+    <div class="promise"><i></i>No tracking.</div>
+    <div class="promise"><i></i>No account needed.</div>
+    <h3>What the app keeps</h3>
+    <p>Mia's name, grade, settings, and how each lesson went: checks, tests, the daily review, and how long was spent practising each day. It's saved only on this iPad, and Start over wipes all of it.</p>
+    <h3>What it never does</h3>
+    <p>It never sends anything about Mia anywhere, never shows ads, and never asks for an email or a password.</p>
+    <span class="btn">Read the full policy →</span></div>`,
+  Help: `<div class="body">
+    <div class="q"><b>How does a lesson work?</b><p>Watch the How to, solve three together, then six on your own. Six right opens the lesson test; 10 of 12 and it's learned.</p></div>
+    <div class="q"><b>Why do lessons come back?</b><p>A learned lesson comes back for a short check after 3, 7, 21 and 60 days, and the next day after a low one, so it stays learned.</p></div>
+    <div class="q"><b>How do I reset one lesson?</b><p>On the grown-ups' paper, open Lessons and tap the lesson.</p></div>
+    <div class="q" style="border:none"><b>Still stuck?</b><p>We read every message.</p><span class="btn">Email us →</span></div></div>`,
+  Plan: `<div class="body" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;flex:1">
+    <h3 style="margin-top:0">How the app is paid for</h3><p>Coming later, once we decide. A purchase would always appear here, behind the hold, never in front of Mia.</p></div>`,
+};
+const menu = `<div class="drawer menu">
+  <div class="r">${ic('show')}Watch the How to again</div>
+  <div class="r">${ic('moon')}Dark paper</div>
+  <div class="line"></div>
+  <div class="r" data-go="Gate">${ic('lock')}For grown-ups<span class="more">hold</span></div></div><div class="line"></div>`;
+const moments = {
+  'Closed': { say: 'The calm pill, as now.', pill: () => row(false), w: 'auto', h: 'auto' },
+  '⋯ More': { say: 'More grows up out of the pill as now. "For grown-ups" is the door to everything serious.', pill: () => menu + row(true), w: 360, h: 'auto' },
+  'Hold to open': { say: 'The hold moves into the island: the grown-ups\' paper and the island both open behind it, never in front of the child.', pill: () => `<div class="drawer gate"><div class="ring"><div><span></span></div></div><b>For grown-ups</b><p style="margin:0;color:var(--ink2)">Hold the square for 3 seconds.</p></div><div class="line"></div>` + row(true), w: 360, h: 300 },
+  'Settings': { say: 'Once open: the grown-ups\' paper behind (This week, Lessons), and the island in front with Settings · Privacy · Help · Plan. Controls are the pill\'s own: rounded, quiet, readable.', pill: () => `<div class="drawer">${tabs('Settings')}<div class="line"></div>${islands.Settings}</div><div class="line"></div>` + row(true), w: 600, h: 560, dim: true },
+  'Privacy': { say: 'Reading, in a calm column the right width for text. A parent can read the promise in seconds, and the full policy is a tap away.', pill: () => `<div class="drawer">${tabs('Privacy')}<div class="line"></div>${islands.Privacy}</div><div class="line"></div>` + row(true), w: 600, h: 560, dim: true },
+  'Help': { say: 'Help as short questions and answers, with a way to reach you.', pill: () => `<div class="drawer">${tabs('Help')}<div class="line"></div>${islands.Help}</div><div class="line"></div>` + row(true), w: 600, h: 560, dim: true },
+  'Plan': { say: 'Where payments will live once decided: always here, behind the hold.', pill: () => `<div class="drawer">${tabs('Plan')}<div class="line"></div>${islands.Plan}</div><div class="line"></div>` + row(true), w: 600, h: 560, dim: true },
+};
+let moment = 'Closed';
+function draw() {
+  const m = moments[moment], pad = $('#pad');
+  const old = pad.querySelector('.pill'), ow = old?.getBoundingClientRect().width, oh = old?.getBoundingClientRect().height;
+  pad.innerHTML = paper() + `<div class="dim-paper ${m.dim ? 'show' : ''}"></div><div class="pill">${m.pill()}</div>`;
+  const p = pad.querySelector('.pill'), scale = pad.clientWidth / 1000;
+  const W = m.w === 'auto' ? 'auto' : Math.min(m.w * scale, pad.clientWidth - 40) + 'px', H = m.h === 'auto' ? 'auto' : Math.min(m.h * scale, pad.clientHeight - 40) + 'px';
+  p.style.width = W; p.style.height = H;
+  const nw = p.getBoundingClientRect().width, nh = p.getBoundingClientRect().height;
+  if (ow) { p.style.transition = 'none'; p.style.width = ow + 'px'; p.style.height = oh + 'px'; p.getBoundingClientRect(); p.style.transition = ''; p.style.width = nw + 'px'; p.style.height = nh + 'px'; }
+  $('#say').innerHTML = m.say;
+  $('#moments').innerHTML = Object.keys(moments).map(k => `<button class="chip" aria-pressed="${k === moment}">${k}</button>`).join('');
+}
+$('#moments').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { moment = b.textContent; draw(); } });
+$('#pad').addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) { moment = g.dataset.go === 'Gate' ? 'Hold to open' : g.dataset.go; draw(); }
+  else if (e.target.closest('.row .b:last-child')) { moment = moment === 'Closed' ? '⋯ More' : 'Closed'; draw(); } });
+draw();
+</script>
+</body>
+</html>
