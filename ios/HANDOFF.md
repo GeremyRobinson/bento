@@ -42,20 +42,27 @@ Fixed on 25 Oct (lane B, `work/finish-b`), each with a before/after picture:
 Still open: Volume of a box's 3D steps take about 12 s to reach in a screenshot (shoot them with `WAIT=16`); the
 biggest Multiplying fractions squares (bottoms 6 to 9) still draw their words twice as big and the square smaller.
 
-## Next (G, 25 Oct: Claude leads; finish 5th grade, then the app's own screens)
-Done 25 Oct (lane A, `work/finish-a`): the paper's clock stops when nothing moves (the cursor wakes it only to blink;
-two more leaks found by measuring: the map's draw-in flag and the How to waiting for a tap). Idle CPU in the simulator
-went from about 38% to 31-34%; the rest is RealityKit drawing every frame by itself (not measured on a real iPad).
-Old proof code removed (AddFractionsModel, BarsDrawer, the old Unit cubes lesson); Core still has the "uc"/"ad" specs.
-1. Finish 5th grade: G tries it by hand; fix what G finds. Decide with G: bigger pictures with smaller words
-   (Multiplying fractions, Multiply stories) or the other way round.
-2. Then the app's own UI (G, 25 Oct): the floating bar, Me, Today, the grown-ups' page, and the UI's shape (the grid is
-   all hard squares). Bring ideas to G as a discussion first.
-3. Then the other grades: take each web lesson's maths as it is (generators, mistakes, check recipes, stories) and
-   design its steps fresh for paper (CLAUDE.md).
-- Sounds and VoiceOver wait (G, 25 Oct). A `Sounds` class already exists in `App/AppSettings.swift`.
-- Keep the Mac cool (G, 25 Oct): one simulator at a time across all workers; `tools/build.sh` builds niced, 4 jobs.
-- Branding (icon, name) is G's, later; the app may be renamed, so don't write its name anywhere new.
+## Next (G, 25–29 Oct: Claude leads; 5th grade is finished, now the app around it)
+Built since 25 Oct (previews in `design/prototype/`, G approved each first):
+- **Setup on first launch** (`App/SetupPage.swift`, `Core/Setup.swift`; preview `front-door.html`): welcome, name, grade (5th live,
+  others dead "coming soon"), a grown-up's reminder and sound, Back on every step; a fresh map looks untouched. One child per iPad.
+- **The calm smart pill** (`App/Toolbar.swift`, `Core/Pill.swift`): icons only, no words under them (G: "looks bad with the
+  words"), step squares, one action in words, live readout while dragging; ⋯ More opens like a drawer (slides up from behind
+  the row, clipped to the pill). Close is a plain ×.
+- **Grown-ups**: the paper has This week (new practice records per day: problems and active time, `Core/Week.swift`) and
+  Lessons; everything read or set lives in **the island** that grows out of the pill (`App/Island.swift`; preview
+  `island.html`): the 3-second hold, then Settings · Privacy · Help · Plan. AppInfo.privacyURL / supportEmail are nil
+  ("Coming soon.") until there's a website.
+- The Lessons button frames what's on the map now; a tapped lesson glides to 85%. The map's 3-column shape leaves room at the
+  sides; G parked a 4-column map for later.
+Next, in order:
+1. G tries the island on the real iPad (smoothness, typing the name); the daily reminder on a real iPad.
+2. **Monetization plan before App Store basics** (G: "super important"): a short write-up of options for G (see memory).
+3. App Store basics for a kids' app: privacy policy page and support email, empty and error states, icon and launch screen
+   when the branding exists. Then a branded feel and a new name (Obento no longer fits; "Paper" is too common).
+4. A full walkthrough as a new family, then the other grades.
+- Keep the Mac cool: one simulator at a time across all workers; `tools/build.sh` builds niced, 4 jobs.
+- Branding (icon, name) is G's, later; don't write the app's name anywhere new.
 
 ## Working notes (what went wrong, so it doesn't again)
 - At most 2–3 simulators at once (five booted overloaded the Mac for hours); `shoot.sh` quits the app after each shot.
