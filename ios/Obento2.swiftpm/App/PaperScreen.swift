@@ -68,7 +68,10 @@ struct PaperScreen: View {
                 Shots.run(model)
             }
             // leaving the app with a finger down: no hold carries on (the grown-ups' square opens only for a real 3 seconds)
-            .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in model.pressEnded() }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
+                model.pressEnded(); Practice.shared.setForeground(false)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in Practice.shared.setForeground(true) }
             .onReceive(NotificationCenter.default.publisher(for: UIAccessibility.reduceMotionStatusDidChangeNotification)) { _ in
                 model.setReduceMotion(UIAccessibility.isReduceMotionEnabled)
             }
@@ -211,6 +214,7 @@ struct NumberEntry: View {
             .allowsHitTesting(false)
             .onChange(of: text) { _, new in
                 guard new != " " else { return }
+                Practice.shared.touched()
                 if new.count < 1 { problem?.type("del") }
                 else { for ch in new.dropFirst() { if ch.isNumber, let d = ch.wholeNumberValue { problem?.type(String(d)) } else if ch == "." || ch == "," { problem?.type(".") } } }
                 text = " "

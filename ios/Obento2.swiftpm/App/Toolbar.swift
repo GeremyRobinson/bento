@@ -426,6 +426,7 @@ struct PillButton: View {
         let under = held && ring == nil
         Button {
             if longPressed { longPressed = false; return }
+            Practice.shared.touched()
             action()
         } label: {
             HStack(spacing: 8) {

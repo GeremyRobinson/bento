@@ -208,7 +208,10 @@ final class PaperModel {
     private(set) var flight: CameraFlight?
     var selected: Piece?
     /// The flat lesson, when one is open. It uses the paper's own camera.
-    var bars: BarsPage?
+    var bars: BarsPage? {
+        // a lesson's page (the review, a test) open or closed: This week's active time runs only while one is (Practice)
+        didSet { if (bars == nil) != (oldValue == nil) { if bars == nil { Practice.shared.closed() } else { Practice.shared.opened() } } }
+    }
     /// A page of its own on the paper instead of the map: Me, or the grown-ups' page (nil on the map and in a lesson).
     private(set) var place: Place?
     /// When the place started drawing in, and when it started erasing itself on the way somewhere else.
@@ -265,6 +268,7 @@ final class PaperModel {
         Progress.shared.forgetAll()
         for piece in Map.all + [Map.review] { PageStore.clear(piece.id) }
         AppSettings.forgetAll(saving: saving)
+        if saving { Practice.shared.forgetAll() }
         Reminders.clear()
         erase { [self] in beginSetup() }
     }
@@ -350,6 +354,7 @@ final class PaperModel {
         let p = camera(at: PaperClock.now).toPaper(s), now = PaperClock.now
         if !pressing {
             pressing = true
+            Practice.shared.touched()
             if place == .grownUp, !leaving { grownUp.press(p, at: now) }
             return
         }

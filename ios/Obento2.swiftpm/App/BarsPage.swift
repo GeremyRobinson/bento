@@ -871,6 +871,8 @@ final class BarsPage {
     /// once: Check pressed again as its last step moves on mustn't add a second fresh problem for the same miss.
     private func solved(_ m: any PageProblem) {
         guard !stopped, counted.insert(m.id).inserted else { return }
+        // This week's count of problems finished (Practice)
+        Practice.shared.problemDone()
         if test != nil, review {
             // the daily review: scored for itself only, never for what's learned
             if let r = LessonPlan.testScore(problems.map(\.lesson)), !recorded {

@@ -28,7 +28,7 @@ extension Rig {
             case .grownUp:
                 let g = model.grownUp
                 // the settings too: the bar's ⋯ can change the paper's colours while the page is up
-                key = "gu \(g.open) \(g.letGoAt != nil) \(g.version) \(p.checks) \(PageStore.version) \(isDark) \(AppSettings.theme) \(AppSettings.sound) \(AppSettings.readAloud) \(AppSettings.profile.name) \(AppSettings.profile.reminder)"
+                key = "gu \(g.open) \(g.letGoAt != nil) \(g.version) \(Practice.shared.version) \(Review.day(t)) \(p.checks) \(PageStore.version) \(isDark) \(AppSettings.theme) \(AppSettings.sound) \(AppSettings.readAloud) \(AppSettings.profile.name) \(AppSettings.profile.reminder)"
             }
             if key != d.key {
                 d.key = key

@@ -2,9 +2,10 @@ import SwiftUI
 
 /// The grown-ups' page (G 20 Oct), drawn on the paper like everything else, reached from the bar's ⋯ More. It's shut
 /// behind a simple gate: a square held down for 3 seconds while a ring around it fills (no maths question a child could
-/// answer). Open, it shows each lesson's last check, its best and when it comes back; a lesson, or everything, can be
-/// reset, confirmed on the paper (never a pop-up); and the settings: sound, read aloud, and the paper's colours (as the
-/// iPad is set, light or dark). It shuts again whenever it's left.
+/// answer). Open, it's in sections (G's preview, design/prototype/grown-ups.html), switched by a row of blocks under its
+/// name: This week (what the child did lately, read in ten seconds), Lessons (each lesson's last check, its best and when
+/// it comes back; a lesson, or everything, reset, confirmed on the paper, never a pop-up) and Settings (name, grade,
+/// reminder, sound, read aloud, the paper's colours, and Start over). It shuts again whenever it's left.
 @MainActor @Observable
 final class GrownUpPage {
     /// Its top-left corner on the paper: left of Me, on the strong lines.
@@ -35,7 +36,7 @@ final class GrownUpPage {
     private(set) var gradeSaid: Int?
 
     /// Shut again (each time the page is arrived at).
-    func shut() { open = false; heldAt = nil; letGoAt = nil; letGoFill = 0; confirm = nil; editingName = false; gradeSaid = nil }
+    func shut() { open = false; heldAt = nil; letGoAt = nil; letGoFill = 0; confirm = nil; editingName = false; gradeSaid = nil; section = .week }
 
     /// A name typed (NameEntry): kept as it's typed (Setup.cleanName), a space between words allowed.
     func type(_ raw: String, saving: Bool) {
@@ -47,7 +48,7 @@ final class GrownUpPage {
     }
     func stopEditing() { guard editingName else { return }; editingName = false; version += 1 }
     /// Screenshots only: the name's squares tapped.
-    func editNameForShots() { editingName = true; nameDraft = AppSettings.name; version += 1 }
+    func editNameForShots() { section = .settings; editingName = true; nameDraft = AppSettings.name; version += 1 }
 
     // MARK: the hold
 
@@ -94,12 +95,26 @@ final class GrownUpPage {
     func heldForShots(_ k: Double) { heldAt = PaperClock.now; shotFill = k }
     private var shotFill: Double?
     func openForShots() { open = true; version += 1 }
-    func confirmForShots(_ c: Confirm) { confirm = c; version += 1 }
+    func confirmForShots(_ c: Confirm) { confirm = c; section = c == .startOver ? .settings : .lessons; version += 1 }
 
     // MARK: what it shows
 
+    /// The page's sections (G's preview, design/prototype/grown-ups.html), switched by a row of blocks under its name:
+    /// what the child did lately (This week), the lessons' table with its resets (Lessons), and the settings.
+    enum Section: CaseIterable {
+        case week, lessons, settings
+        var word: String { switch self { case .week: "This week"; case .lessons: "Lessons"; case .settings: "Settings" } }
+        /// Its block's width, in squares (each block starts on the next strong line after the one before it).
+        var width: Double { switch self { case .week: 9; case .lessons: 8; case .settings: 8 } }
+    }
+    /// The section shown: This week, each time the page opens.
+    private(set) var section = Section.week
+    /// Screenshots only: a section shown.
+    func showForShots(_ s: Section) { section = s; version += 1 }
+
     /// What a tap on it does.
     enum Action: Equatable {
+        case section(Section)
         case row(String), reset(String), resetAll, askAll, keep
         case sound(Bool), readAloud(Bool), theme(String)
         case name, grade(Int), reminder(Reminder), askStartOver, startOver
@@ -110,17 +125,25 @@ final class GrownUpPage {
         var frame = Rect(x: 0, y: 0, width: 1, height: 1)
     }
 
-    /// The part the camera shows: the gate, or the whole page.
+    /// The part the camera shows: the gate, or the page's name, its blocks and the section shown.
     var frame: Rect { sheet(now: PaperClock.now).frame }
 
     /// The table's columns, in squares from the page's left edge: a lesson's name (after its chapter's dot), its last
-    /// check, its best, when it comes back; and the settings' column.
-    static let nameX = 1.0, lastX = 15.0, bestX = 21.0, backX = 25.0, tableW = 33.0, settingsX = 37.0
+    /// check, its best, when it comes back; and where How checks work goes beside it.
+    static let nameX = 1.0, lastX = 15.0, bestX = 21.0, backX = 25.0, tableW = 33.0, besideX = 37.0
+    /// Where a section starts, in squares under the page's top (the name and the blocks above it).
+    static let top = 10.0
+
+    /// The words' kinds on the page: a part's name, a line, a quiet note, and a big line (the headline, a count).
+    static let head = Sketch.Words(size: Sketch.small, weight: .semibold, colour: .ink)
+    static let body = Sketch.Words(size: Sketch.small, weight: .medium, colour: .ink)
+    static let note = Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2)
+    static let big = Sketch.Words(size: Sketch.wordSize, weight: .medium, colour: .ink)
 
     func sheet(now: Double) -> Sheet {
         var out = Sheet(), s = Sketch()
         let x0 = Self.corner.x, y0 = Self.corner.y, u = Self.u, c = Self.c
-        s.words("gu-head", "For grown-ups", .heading, x: x0, top: y0 + u / 2 - Sketch.row / 2, width: 1200)
+        s.text("gu-head", "For grown-ups", at: CGPoint(x: x0, y: y0 + u / 2), size: Sketch.maths, weight: .semibold, .ink, anchor: UnitPoint(x: 0, y: 0.5), digits: false)
         guard open else {
             // the gate: what to do, and the square to hold, its ring filling (the ring's fill is a live part)
             s.words("gu-hold-say", "Hold the square for 3 seconds.", .say, x: x0, top: y0 + u, width: 1200)
@@ -136,11 +159,157 @@ final class GrownUpPage {
             return out
         }
 
-        // the lessons: a row each, in the map's order, its chapter's dot before its name
+        // the sections' blocks, a block under the name: the one shown outlined in ink and lightly filled (as a chosen
+        // setting is), the others plain
+        var bx = x0
+        for sec in Section.allCases {
+            let r = CGRect(x: bx, y: y0 + u, width: sec.width * c, height: 3 * c)
+            s.block("gu-tab-\(sec)-\(sec == section)", r, sec == section ? Self.chosen : Self.other, word: sec.word)
+            out.taps.append((r, .section(sec)))
+            bx += ((sec.width + 1) / 5).rounded(.up) * u
+        }
+        // the section shown: drawn in as it's chosen, the one before erasing itself (only what changed redraws)
+        let end: CGPoint
+        switch section {
+        case .week: end = week(&s, now: now)
+        case .lessons: end = lessons(&s, &out, now: now)
+        case .settings: end = settings(&s, &out)
+        }
+        out.frame = Rect(x: x0, y: y0, width: max(end.x, bx - c) - x0, height: end.y + c - y0)
+        out.sketch = s
+        return out
+    }
+
+    /// A point `x` squares right of the page's left edge and `y` squares under its top.
+    private static func at(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: corner.x + x * c, y: corner.y + y * c) }
+
+    // MARK: This week
+
+    /// This week (G's preview): how many lessons are learned, a square for each in its chapter's colour, the days
+    /// practised, the problems solved and about how long, the checks coming, and the lessons going well and worth a look.
+    /// Returns its bottom-right corner.
+    private func week(_ s: inout Sketch, now: Double) -> CGPoint {
+        let c = Self.c, checks = Progress.shared.checks, lessons = Map.gradeLessons, name = AppSettings.name
+        let started = Set(lessons.filter { PageStore.load($0) != nil }), records = Practice.shared.days
+        func P(_ x: Double, _ y: Double) -> CGPoint { Self.at(x, y) }
+        let left = UnitPoint(x: 0, y: 0.5)
+
+        // the headline, its count a little firmer: "Mia has learned 9 of 17 lessons in 5th grade."
+        let learned = lessons.filter { Mastery.learnedEver(checks, $0) }.count
+        let line = Week.headline(name: name, learned: learned, of: lessons.count, grade: AppSettings.profile.grade)
+        let firm = "\(learned) of \(lessons.count)"
+        if let r = line.range(of: firm) {
+            let pieces = [(String(line[..<r.lowerBound]), UIFont.Weight.medium), (firm, .semibold), (String(line[r.upperBound...]), .medium)]
+            var x = P(0, 0).x
+            for (i, (text, weight)) in pieces.enumerated() where !text.isEmpty {
+                s.text("gu-wk-head\(i):\(text)", text, at: CGPoint(x: x, y: P(0, Self.top + 1.5).y), size: Sketch.wordSize, weight: weight, .ink, anchor: left, digits: false)
+                // measured with a mark after it, so a space at its end counts
+                let f = PaperText.font(Sketch.wordSize, weight)
+                x += PaperText.width(text + "|", f) - PaperText.width("|", f)
+            }
+        }
+
+        // a square for each lesson, three squares a side, a chapter's together and a square between chapters: filled
+        // learned, shaded started, open not yet (the chapter's outline round them, cut into its lessons)
+        var groups: [(chapter: Chapter, ids: [String])] = []
+        for piece in Map.pieces {
+            if groups.last?.chapter == piece.chapter { groups[groups.count - 1].ids.append(piece.id) } else { groups.append((piece.chapter, [piece.id])) }
+        }
+        let side = 3 * c, sy = P(0, 14).y
+        var gx = P(0, 0).x
+        for (chapter, ids) in groups {
+            let pen = Pen.chapter(chapter)
+            for (i, id) in ids.enumerated() {
+                let r = CGRect(x: gx + Double(i) * side, y: sy, width: side, height: side)
+                switch Week.standing(id, checks: checks, started: started) {
+                case .learned: s.plate("gu-wk-sq-\(id)-learned", r, pen.full)
+                case .started: s.plate("gu-wk-sq-\(id)-started", r, pen.tint(0.28))
+                case .notYet: break
+                }
+            }
+            let r = CGRect(x: gx, y: sy, width: Double(ids.count) * side, height: side)
+            s.overLine("gu-wk-sqo-\(chapter)", [CGPoint(x: r.minX, y: r.minY), CGPoint(x: r.maxX, y: r.minY), CGPoint(x: r.maxX, y: r.maxY), CGPoint(x: r.minX, y: r.maxY), CGPoint(x: r.minX, y: r.minY)],
+                       pen.tint(0.7), width: Sketch.stroke)
+            for i in 1..<max(1, ids.count) {
+                let x = gx + Double(i) * side
+                s.overLine("gu-wk-sqc-\(chapter)\(i)", [CGPoint(x: x, y: sy), CGPoint(x: x, y: sy + side)], pen.tint(0.7), width: Sketch.stroke)
+            }
+            gx = r.maxX + c
+        }
+        let squaresEnd = gx - c
+        s.label("gu-wk-key", "Each square is a lesson: filled learned, shaded started, open not yet.", Self.note, at: P(0, 18), anchor: left)
+
+        // nothing yet (a new install): one line instead of the week
+        if Week.fresh(checks: checks, started: started, records: records) {
+            s.label("gu-wk-empty", Week.empty(name: name), Self.body, at: P(0, 21), anchor: left)
+            return CGPoint(x: squaresEnd, y: P(0, 22).y)
+        }
+
+        // the days practised: the last 7, today last, a square each, filled when practised, its day's letter under it
+        s.label("gu-wk-days", "Days practised", Self.head, at: P(0, 21), anchor: left)
+        let days = Week.practised(records, now: now), letters = Week.letters(now: now)
+        for (i, done) in days.enumerated() {
+            let r = CGRect(origin: P(Double(i) * 3, 23), size: CGSize(width: 2 * c, height: 2 * c))
+            if done { s.plate("gu-wk-day\(i)-f", r, .ink) }
+            s.box("gu-wk-day\(i)-o\(done)", r.insetBy(dx: Sketch.stroke / 2, dy: Sketch.stroke / 2), done ? .ink : .ink3, width: Sketch.stroke)
+            s.text("gu-wk-day\(i)-w:\(letters[i])", letters[i], at: CGPoint(x: r.midX, y: P(0, 26).y), size: Sketch.small, weight: .regular, .ink2, digits: false)
+        }
+        s.label("gu-wk-days-n", Week.daysLine(days), Self.note, at: P(0, 28), anchor: left, slot: "gu-wk-days-n")
+
+        // this week's problems, and about how long
+        let total = Week.total(records, now: now)
+        s.label("gu-wk-week", "This week", Self.head, at: P(25, 21), anchor: left)
+        let none = total.problems == 0 && total.seconds < Week.minute
+        s.label("gu-wk-week-n", none ? "None yet" : Week.problems(total.problems), Self.big, at: P(25, 24), anchor: left, slot: "gu-wk-week-n")
+        s.label("gu-wk-week-t", none ? "no problems solved this week" : Week.duration(total.seconds) + " in all", Self.note, at: P(25, 26), anchor: left, slot: "gu-wk-week-t")
+
+        // the checks coming this week
+        let coming = Week.checksComing(lessons, checks: checks, now: now)
+        s.label("gu-wk-checks", "Checks coming", Self.head, at: P(50, 21), anchor: left)
+        s.label("gu-wk-checks-n", coming.isEmpty ? "None this week" : "\(coming.count) this week", Self.big, at: P(50, 24), anchor: left, slot: "gu-wk-checks-n")
+        let next = lessons.filter { Mastery.learnedEver(checks, $0) }.compactMap { checks[$0]?.due }.min()
+        let why = !coming.isEmpty ? "short checks keep learned lessons learned"
+            : next.map { "the next one is in \(Today.days(until: $0, from: now)) days" } ?? "learned lessons come back for checks"
+        s.label("gu-wk-checks-t", why, Self.note, at: P(50, 26), anchor: left, slot: "gu-wk-checks-t")
+
+        // going well, and worth a look: a lesson a row, its chapter's dot before its name
+        s.line("gu-wk-rule", [P(0, 30), P(72, 30)], .line, width: Sketch.stroke)
+        s.label("gu-wk-well", "Going well", Self.head, at: P(0, 32), anchor: left)
+        s.label("gu-wk-look", "Worth a look", Self.head, at: P(35, 32), anchor: left)
+        let well = Week.goingWell(lessons, checks: checks, now: now)
+        let looks = Week.worthALook(lessons, checks: checks, started: started, now: now)
+        if well.isEmpty { s.label("gu-wk-well-none", "Lessons that score 4 of 4 show here.", Self.note, at: P(0, 34), anchor: left) }
+        for (i, id) in well.enumerated() { lessonLine(&s, "gu-wk-well\(i)", id, why: nil, at: P(0, 34 + 2 * Double(i))) }
+        if looks.isEmpty { s.label("gu-wk-look-none", "Nothing needs a look.", Self.note, at: P(35, 34), anchor: left) }
+        for (i, look) in looks.enumerated() { lessonLine(&s, "gu-wk-look\(i)", look.id, why: look.why, at: P(35, 34 + 2 * Double(i))) }
+        let rows = max(1, well.count, looks.count)
+        return CGPoint(x: P(72, 0).x, y: P(0, 33 + 2 * Double(rows)).y)
+    }
+
+    /// A lesson on a line: its chapter's dot, its name, and why after it, quieter. `mid`: the line's left end, at its
+    /// middle.
+    private func lessonLine(_ s: inout Sketch, _ id: String, _ lesson: String, why: String?, at mid: CGPoint) {
+        guard let piece = Map.piece(lesson) else { return }
+        let c = Self.c, left = UnitPoint(x: 0, y: 0.5)
+        s.plate("\(id)-dot-\(lesson)", Rig.circle(CGPoint(x: mid.x + c / 2, y: mid.y), 5), Pen.chapter(piece.chapter).full)
+        s.label("\(id)-name", piece.name, Self.body, at: CGPoint(x: mid.x + c, y: mid.y), anchor: left)
+        guard let why else { return }
+        let w = PaperText.width(piece.name, PaperText.font(Self.body.size, Self.body.weight))
+        s.label("\(id)-why", "· " + why, Self.note, at: CGPoint(x: mid.x + c + w + c / 2, y: mid.y), anchor: left)
+    }
+
+    // MARK: Lessons
+
+    /// The lessons (as the page has always had them): a row each, in the map's order, its chapter's dot before its name,
+    /// its last check, its best and when it comes back; a lesson, or everything, reset (confirmed on the paper); and how
+    /// checks work beside the table. Returns its bottom-right corner.
+    private func lessons(_ s: inout Sketch, _ out: inout Sheet, now: Double) -> CGPoint {
+        let x0 = Self.corner.x, c = Self.c
         let small = Sketch.Words(size: Sketch.small, weight: .medium, colour: .ink), head = Sketch.Words(size: Sketch.small, weight: .semibold, colour: .ink2)
         let quiet = Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink3)
         func X(_ col: Double) -> Double { x0 + col * c }
-        var y = y0 + u
+        var y = Self.at(0, Self.top).y
+        let top = y
         for (col, word) in [(Self.nameX, "Lesson"), (Self.lastX, "Last check"), (Self.bestX, "Best"), (Self.backX, "Comes back")] {
             s.label("gu-col-\(word)", word, head, at: CGPoint(x: X(col), y: y + c), anchor: UnitPoint(x: 0, y: 0.5))
         }
@@ -198,75 +367,85 @@ final class GrownUpPage {
                     at: CGPoint(x: b.maxX + c, y: b.midY), anchor: UnitPoint(x: 0, y: 0.5))
             out.taps.append((b, .askAll))
         }
-        y += 3 * c
+        y += 2 * c
+
+        // how checks work, beside the table
+        s.label("gu-how", "How checks work", Self.head, at: CGPoint(x: X(Self.besideX), y: top + c), anchor: UnitPoint(x: 0, y: 0.5))
+        let how = "Each check is scored 0 to 4, and 3 or 4 is learned. A learned lesson comes back for a short check after 3, 7, 21 and 60 days, and the next day after a low one. Lessons are always open; only tests wait."
+        let rows = s.words("gu-how-say", how, Self.note, x: X(Self.besideX), top: top + 2 * c, width: 20 * c, max: 10)
+        return CGPoint(x: X(Self.besideX + 20), y: max(y, top + 2 * c + Double(rows) * Sketch.row))
+    }
+
+    // MARK: Settings
+
+    /// The settings (as the page has always had them): the child's name and grade (from setting up) and the daily
+    /// reminder down the left; sound and read aloud side by side, the paper's colours, and Start over (asked first, on
+    /// the paper) on the right. Returns its bottom-right corner.
+    private func settings(_ s: inout Sketch, _ out: inout Sheet) -> CGPoint {
+        let c = Self.c
+        let label = Sketch.Words(size: Sketch.small, weight: .semibold, colour: .ink), say = Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2)
+        let left = UnitPoint(x: 0, y: 0.5)
+        func heading(_ name: String, _ line: String, x: Double, y: Double) {
+            s.label("gu-set-\(name)", name, label, at: CGPoint(x: x, y: y + c), anchor: left)
+            s.label("gu-set-\(name)-say", line, say, at: CGPoint(x: x, y: y + 3 * c), anchor: left, slot: "gu-set-\(name)-say")
+        }
+        func choices(_ name: String, _ list: [(String, Action, Bool)], x: Double, y: Double) {
+            var bx = x
+            for (word, action, chosen) in list {
+                let b = CGRect(x: bx, y: y + 5 * c, width: Self.blockWidth(word, least: 5), height: 2 * c)
+                s.block("gu-set-\(name)-\(word)-\(chosen)", b, chosen ? Self.chosen : Self.other, word: word)
+                out.taps.append((b, action)); bx = b.maxX + c
+            }
+        }
+        // the left: the name, on its line of squares (tapped, the keyboard comes up and what's typed is kept), the grade
+        // (5th has lessons; the others are dead blocks that say they're coming), and the reminder
+        let lx = Self.at(0, 0).x, rx = Self.at(40, 0).x
+        var sy = Self.at(0, Self.top).y
+        heading("Name", editingName ? "Type the name, then press return." : "Tap the squares to change it.", x: lx, y: sy)
+        let line = s.nameSquares("gu-name", editingName ? nameDraft : AppSettings.name, x: lx, y: sy + 5 * c, cursor: editingName)
+        out.taps.append((line.insetBy(dx: -c / 2, dy: -c / 2), .name))
+        sy += 10 * c
+        heading("Grade", gradeSaid.map(Grades.onMe) ?? "Only 5th grade has lessons so far.", x: lx, y: sy)
+        for (r, g) in s.gradeRow("gu-grade", x: lx, y: sy + 5 * c, side: 2, pitch: 3, chosen: AppSettings.profile.grade, size: Sketch.small) {
+            out.taps.append((r, .grade(g)))
+        }
+        sy += 10 * c
+        heading("Reminder", "A note on the iPad each day.", x: lx, y: sy)
+        choices("Reminder", Reminder.allCases.map { ($0.words, Action.reminder($0), AppSettings.profile.reminder == $0) }, x: lx, y: sy)
+        let leftEnd = sy + 7 * c
+
+        // the right: sound and read aloud side by side, then the paper's colours
+        var ry = Self.at(0, Self.top).y
+        heading("Sound", "Soft sounds for right and wrong.", x: rx, y: ry)
+        choices("Sound", [("On", .sound(true), AppSettings.sound), ("Off", .sound(false), !AppSettings.sound)], x: rx, y: ry)
+        heading("Read aloud", "Reads out each step's words.", x: rx + 20 * c, y: ry)
+        choices("Read aloud", [("On", .readAloud(true), AppSettings.readAloud), ("Off", .readAloud(false), !AppSettings.readAloud)], x: rx + 20 * c, y: ry)
+        ry += 10 * c
+        heading("Colours", "Light or dark paper.", x: rx, y: ry)
+        choices("Colours", [("Match the iPad", .theme(""), AppSettings.theme == ""), ("Light", .theme("light"), AppSettings.theme == "light"),
+                            ("Dark", .theme("dark"), AppSettings.theme == "dark")], x: rx, y: ry)
+        ry += 10 * c
+
         // Start over: everything wiped, setting up too (the next time it opens is a first launch); asked first
         if confirm == .startOver {
             let ask = "Wipe every lesson, test, review and setting, and set up again?"
-            s.label("gu-startover-ask", ask, Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink), at: CGPoint(x: x0, y: y + c), anchor: UnitPoint(x: 0, y: 0.5))
-            y += 3 * c
-            var bx = x0
+            s.label("gu-startover-ask", ask, Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink), at: CGPoint(x: rx, y: ry + c), anchor: left)
+            ry += 3 * c
+            var bx = rx
             for (word, action, style) in [("Start over", Action.startOver, Sketch.Block.main), ("Keep", .keep, .plain)] {
-                let b = CGRect(x: bx, y: y, width: Self.blockWidth(word), height: 2 * c)
+                let b = CGRect(x: bx, y: ry, width: Self.blockWidth(word), height: 2 * c)
                 s.block("gu-startover-\(word)", b, style, word: word)
                 out.taps.append((b, action)); bx = b.maxX + c
             }
         } else {
-            let b = CGRect(x: x0, y: y, width: Self.blockWidth("Reset everything"), height: 2 * c)
+            let b = CGRect(x: rx, y: ry, width: Self.blockWidth("Reset everything"), height: 2 * c)
             s.block("gu-startover", b, .plain, word: "Start over")
             s.label("gu-startover-say", "wipes everything, setting up too", Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2),
-                    at: CGPoint(x: b.maxX + c, y: b.midY), anchor: UnitPoint(x: 0, y: 0.5))
+                    at: CGPoint(x: b.maxX + c, y: b.midY), anchor: left)
             out.taps.append((b, .askStartOver))
         }
-        y += 3 * c
-        let note = "Checks are scored 0 to 4, and 3 or 4 is learned. A learned lesson comes back for a check after 3, 7, 21 and 60 days, and the next day after a low one."
-        let rows = s.words("gu-note", note, Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2), x: x0, top: y, width: Self.tableW * c, max: 3)
-        let bottom = y + Double(rows) * Sketch.row
-
-        // the settings, beside the table: the child's name and grade first (from setting up), then the reminder, sound,
-        // read aloud and the paper's colours, and Start over last
-        let sx = X(Self.settingsX)
-        var sy = y0 + u
-        let label = Sketch.Words(size: Sketch.small, weight: .semibold, colour: .ink), say = Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2)
-        func heading(_ name: String, _ line: String) {
-            s.label("gu-set-\(name)", name, label, at: CGPoint(x: sx, y: sy + c), anchor: UnitPoint(x: 0, y: 0.5))
-            s.label("gu-set-\(name)-say", line, say, at: CGPoint(x: sx, y: sy + 3 * c), anchor: UnitPoint(x: 0, y: 0.5), slot: "gu-set-\(name)-say")
-        }
-        // the name, on its line of squares: tapped, the keyboard comes up and what's typed is kept
-        heading("Name", editingName ? "Type the name, then press return." : "Tap the squares to change it.")
-        let line = s.nameSquares("gu-name", editingName ? nameDraft : AppSettings.name, x: sx, y: sy + 5 * c, cursor: editingName)
-        out.taps.append((line.insetBy(dx: -c / 2, dy: -c / 2), .name))
-        sy += 10 * c
-        // the grade: 5th has lessons; the others are dead blocks that say they're coming
-        heading("Grade", gradeSaid.map(Grades.onMe) ?? "Only 5th grade has lessons so far.")
-        for (r, g) in s.gradeRow("gu-grade", x: sx, y: sy + 5 * c, side: 2, pitch: 3, chosen: AppSettings.profile.grade, size: Sketch.small) {
-            out.taps.append((r, .grade(g)))
-        }
-        sy += 10 * c
-        let settings: [(name: String, say: String, choices: [(String, Action, Bool)])] = [
-            ("Reminder", "A note on the iPad each day.", Reminder.allCases.map { ($0.words, Action.reminder($0), AppSettings.profile.reminder == $0) }),
-            ("Sound", "Soft sounds for right and wrong.", [("On", .sound(true), AppSettings.sound), ("Off", .sound(false), !AppSettings.sound)]),
-            ("Read aloud", "Reads out each step's words.", [("On", .readAloud(true), AppSettings.readAloud), ("Off", .readAloud(false), !AppSettings.readAloud)]),
-            ("Colours", "Light or dark paper.", [("Match the iPad", .theme(""), AppSettings.theme == ""), ("Light", .theme("light"), AppSettings.theme == "light"),
-                                               ("Dark", .theme("dark"), AppSettings.theme == "dark")]),
-        ]
-        // Sound and Read aloud side by side, on one row (two blocks each), so the page stays short
-        for (i, setting) in settings.enumerated() {
-            let beside = setting.name == "Read aloud", x = beside ? sx + 20 * c : sx
-            if beside { sy -= 10 * c }
-            s.label("gu-set-\(setting.name)", setting.name, label, at: CGPoint(x: x, y: sy + c), anchor: UnitPoint(x: 0, y: 0.5))
-            s.label("gu-set-\(setting.name)-say", setting.say, say, at: CGPoint(x: x, y: sy + 3 * c), anchor: UnitPoint(x: 0, y: 0.5))
-            var bx = x
-            for (word, action, chosen) in setting.choices {
-                let b = CGRect(x: bx, y: sy + 5 * c, width: Self.blockWidth(word, least: 5), height: 2 * c)
-                s.block("gu-set-\(setting.name)-\(word)-\(chosen)", b, chosen ? Self.chosen : Self.other, word: word)
-                out.taps.append((b, action)); bx = b.maxX + c
-            }
-            sy += i == settings.count - 1 ? 8 * c : 10 * c
-        }
-        let right = X(Self.settingsX) + 39 * c
-        out.frame = Rect(x: x0, y: y0, width: right - x0, height: max(bottom, sy) - y0)
-        out.sketch = s
-        return out
+        ry += 2 * c
+        return CGPoint(x: rx + 33 * c, y: max(leftEnd, ry))
     }
 
     /// A setting's chosen block: outlined in ink, lightly filled; the others plain, their words quieter. No colour: it's
@@ -326,6 +505,9 @@ final class GrownUpPage {
         let saving = !model.shotMode
         if action != .name { editingName = false }
         switch action {
+        case .section(let sec):
+            // another section: the one shown erases itself as the new one draws in, and the camera frames it
+            section = sec; confirm = nil; gradeSaid = nil
         case .row(let id): confirm = confirm == .lesson(id) ? nil : .lesson(id)
         case .askAll: confirm = .all
         case .keep: confirm = nil
