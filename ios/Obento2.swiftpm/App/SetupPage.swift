@@ -246,7 +246,7 @@ extension Sketch {
     }
 }
 
-/// Typing a name (setting up, or the grown-ups' page): a hidden text field, focused while a name is being typed, so
+/// Typing a name (setting up): a hidden text field, focused while a name is being typed, so
 /// the iPad's own keyboard comes up (or a hardware one types). What's typed goes to the name's squares on the paper.
 struct NameEntry: View {
     let model: PaperModel
@@ -270,19 +270,18 @@ struct NameEntry: View {
 }
 
 extension PaperModel {
-    /// A name is being typed: setting up's name step, or the grown-ups' page's Name.
+    /// A name is being typed: setting up's name step (the island's Settings has a field of its own).
     var typingName: Bool {
         guard bars == nil, !leaving else { return false }
-        return (place == .setup && setup.step == .name) || (place == .grownUp && grownUp.editingName)
+        return place == .setup && setup.step == .name
     }
-    var nameDraft: String { place == .grownUp ? grownUp.nameDraft : setup.name }
-    var nameTaps: Int { setup.nameTaps + grownUp.nameTaps }
+    var nameDraft: String { setup.name }
+    var nameTaps: Int { setup.nameTaps }
     func typeName(_ raw: String) {
-        if place == .grownUp { grownUp.type(raw, saving: !shotMode) } else if place == .setup { setup.type(raw) }
+        if place == .setup { setup.type(raw) }
     }
-    /// Return on the keyboard: setting up goes on to the grade; the grown-ups' page puts the keyboard away.
+    /// Return on the keyboard: setting up goes on to the grade.
     func nameEntered() {
         if place == .setup, setup.step == .name { setup.act(.next, model: self) }
-        else if place == .grownUp { grownUp.stopEditing(); reframePlace() }
     }
 }

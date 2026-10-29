@@ -686,15 +686,16 @@ enum Shots {
             for (i, q) in page.problems.enumerated() { page.open(q); await work(q, miss: n == "review-result-missed" || i == 2 || i == 5) }
             page.goNext()
         case let n where n.hasPrefix("grownup"):
-            // grownup-gate: shut; grownup-hold: its square held halfway (the clock stopped there); grownup: open;
-            // grownup-confirm: a lesson's reset asked on the paper; grownup-confirm-all: everything's;
-            // grownup-startover: Start over asked; grownup-name: the name's squares tapped (-whole-page: framed whole)
-            // Its sections: grownup (This week, a child some way in, with a week of practice), grownup-week-fresh (a new
-            // install), grownup-week-noname (no name given), grownup-lessons, grownup-settings
+            // grownup-gate: shut on the paper; grownup-hold: its square held halfway (the clock stopped there);
+            // grownup: open, on This week (a child some way in, with a week of practice); grownup-week-fresh: a new
+            // install; grownup-week-noname: no name given; grownup-lessons: the lessons' table; grownup-confirm: a
+            // lesson's reset asked on the paper; grownup-confirm-all: everything's. The island over it: -panel=settings
+            // (or privacy, help, plan, startover), BarUI.
             seedMe()
             // no page left on the simulator from another run (only this moment's own, in memory)
             for piece in Map.all + [Map.review] { PageStore.clear(piece.id) }
             var p = AppSettings.profile; p.name = n == "grownup-week-noname" ? "" : "Mia"; p.reminder = .tea; AppSettings.set(profile: p, saving: false)
+            BarUI.shared.settingsVersion += 1
             if n == "grownup-week-fresh" {
                 p.name = "Mia"; AppSettings.set(profile: p, saving: false)
                 Progress.shared.reset(to: [])
@@ -708,11 +709,8 @@ enum Shots {
             if n == "grownup-hold" { m.grownUp.heldForShots(0.55); return true }
             m.grownUp.openForShots()
             if n == "grownup-lessons" { m.grownUp.showForShots(.lessons) }
-            if n == "grownup-settings" { m.grownUp.showForShots(.settings) }
             if n == "grownup-confirm" { m.grownUp.confirmForShots(.lesson("g5-round")) }
             if n == "grownup-confirm-all" { m.grownUp.confirmForShots(.all) }
-            if n == "grownup-startover" { m.grownUp.confirmForShots(.startOver) }
-            if n == "grownup-name" { m.grownUp.editNameForShots() }
             m.reframePlace()
         case "path-me":
             // the real path, not instant, to watch the places draw in and out: the map, then Me, a lesson opened from Me

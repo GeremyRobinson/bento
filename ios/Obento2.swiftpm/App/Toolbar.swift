@@ -25,13 +25,28 @@ struct Toolbar: View {
 
     var body: some View {
         let inLesson = model.openPiece != nil
-        VStack(spacing: 0) {
-            Spacer(minLength: 0)
-            pill(inLesson)
+        ZStack(alignment: .bottom) {
+            // the island's tabs (the grown-ups' settings, privacy, help, plan) quiet the paper behind them; a tap on the
+            // paper shrinks the island back into the pill
+            if ui.open == .grownUps {
+                Ink.paper.opacity(0.55).ignoresSafeArea()
+                    .contentShape(Rectangle())
+                    .onTapGesture { ui.open = nil }
+                    .transition(.opacity)
+            }
+            VStack(spacing: 0) {
+                Spacer(minLength: 0)
+                pill(inLesson)
+            }
+            .padding(.bottom, bottom)
+            .frame(maxWidth: .infinity)
         }
-        .padding(.bottom, bottom)
-        .frame(maxWidth: .infinity)
+        .animation(.smooth(duration: ui.slow ? 3 : 0.35), value: ui.open == .grownUps)
         .onChange(of: inLesson) { _, _ in ui.open = nil }
+        // leaving the grown-ups' page shuts its island (the island's hold takes the paper there, so arriving keeps it)
+        .onChange(of: model.place) { _, place in
+            if place != .grownUp, ui.open == .grownUps { ui.open = nil }
+        }
     }
 
     // MARK: the pill
@@ -47,13 +62,17 @@ struct Toolbar: View {
                     switch open {
                     case .more: inLesson ? AnyView(lessonMenu) : AnyView(mapMenu)
                     case .grade: AnyView(gradeRow)
+                    case .gate: AnyView(IslandGate { grownUpsOpened() }.transition(.opacity))
+                    case .grownUps: AnyView(IslandTabs(model: model, room: islandRoom, width: islandWidth).transition(.opacity))
                     }
                     Rectangle().fill(Ink.line).frame(height: 1).padding(.horizontal, 10)
                 }
                 .transition(.move(edge: .bottom))
             }
-            // the row stays in front, so the drawer slides out from behind it
+            // the row stays in front, so the drawer slides out from behind it: its backing as wide as the pill (the
+            // island is wider than the row), so nothing sliding shows beside it
             row(inLesson).fixedSize()
+                .frame(maxWidth: .infinity)
                 .background(Ink.surface.padding(-6))
                 .zIndex(1)
         }
@@ -64,7 +83,9 @@ struct Toolbar: View {
         // nothing in it draws outside the pill's shape, even while it grows or shrinks
         .clipShape(shape)
         // the shadow belongs to the pill's shape only: on the whole pill, SwiftUI shadowed every button and word in it
-        .background(shape.fill(Ink.surface).shadow(color: .black.opacity(0.08), radius: 12, y: 6))
+        .background(shape.fill(Ink.surface).shadow(color: .black.opacity(ui.open == .grownUps ? 0.14 : 0.08), radius: ui.open == .grownUps ? 20 : 12, y: 6))
+        // the island's tabs, each measured unseen ahead, so switching resizes it in one spring with no jump
+        .background { if !inLesson, ui.open != nil, ui.open != .grade { IslandMeasure(model: model, width: islandWidth, key: islandKey) } }
         .overlay(shape.strokeBorder(Ink.line, lineWidth: 1))
         // its width (and height, as something grows out of it) changes smoothly, never in a jump under the finger
         .animation(.smooth(duration: ui.slow ? 3 : 0.35), value: animationKey(inLesson))
@@ -73,7 +94,27 @@ struct Toolbar: View {
     /// Everything that changes the pill's shape: a change in any of it is animated.
     private func animationKey(_ inLesson: Bool) -> String {
         let t = tools
-        return "\(inLesson) \(model.place.map { "\($0)" } ?? "map") \(String(describing: ui.open)) \(zooming) \(middleKey) \(t.hint) \(t.showMe) \(t.showMeWord) \(t.next) \(t.dim) \(ui.gradeSaid ?? "")"
+        return "\(inLesson) \(model.place.map { "\($0)" } ?? "map") \(String(describing: ui.open)) \(zooming) \(middleKey) \(t.hint) \(t.showMe) \(t.showMeWord) \(t.next) \(t.dim) \(ui.gradeSaid ?? "") \(islandKey) \(heightsKey) \(Int(islandRoom))"
+    }
+
+    // MARK: the island
+
+    /// The island's width, and the most room its tab's words have: the screen above the pill, less its row, its tabs
+    /// and a margin at the top.
+    private var islandWidth: Double { Island.width(screen: model.screen.width) }
+    private var islandRoom: Double { max(160, model.screen.height - bottom - 40 - 52 - 12 - 6 - 1 - 50 - 1) }
+    /// What can change the island's tab's height (it's measured again, and the island eases to it).
+    private var islandKey: String { "\(ui.tab) \(ui.askStartOver) \(ui.settingsVersion) \(ui.said.count) \(ui.islandGrade ?? "")" }
+    private var heightsKey: String { Island.Tab.allCases.map { "\(Int(ui.heights[$0] ?? 0))" }.joined(separator: ",") }
+
+    /// The hold passed in the island: the paper glides to the grown-ups' page (open, no hold on the paper) and the
+    /// island grows into its tabs.
+    private func grownUpsOpened() {
+        Sounds.shared.play(.done)
+        ui.tab = .settings; ui.askStartOver = false; ui.said = [:]; ui.islandGrade = nil
+        ui.open = .grownUps
+        if model.place == .grownUp { model.grownUp.openNow(); model.reframePlace() }
+        else { model.grownUp.pass = true; model.go(to: .grownUp) }
     }
 
     @ViewBuilder private func row(_ inLesson: Bool) -> some View {
@@ -178,8 +219,12 @@ struct Toolbar: View {
 
     private var divider: some View { Rectangle().fill(Ink.line).frame(width: 1, height: 32).padding(.horizontal, 4) }
 
+    /// ⋯ More, or × while something's grown out of the pill (the menu, the hold, the grown-ups' tabs): it shrinks back.
     private var moreButton: some View {
-        PillButton(icon: ui.open == .more ? .close : .more, word: ui.open == .more ? "Close" : "More", lit: ui.open == .more) { toggle(.more) }
+        let island = ui.open == .gate || ui.open == .grownUps
+        return PillButton(icon: ui.open == .more || island ? .close : .more, word: ui.open == .more || island ? "Close" : "More", lit: ui.open == .more || island) {
+            if island { ui.open = nil } else { toggle(.more) }
+        }
     }
 
     /// The zoom, for a moment after a pinch, at 22 pt (G 17 Oct).
@@ -210,8 +255,11 @@ struct Toolbar: View {
                 if model.place == nil { model.findNext() } else { model.go(to: nil) { model.findNext() } }
             }
             MenuRow(icon: .dark, label: scheme == .dark ? "Light" : "Dark") { theme = scheme == .dark ? "light" : "dark" }
-            // the grown-ups' page, shut behind its hold
-            MenuRow(icon: .lock, label: "For grown-ups") { ui.open = nil; model.go(to: .grownUp) }
+            // the grown-ups' page, shut behind its hold (in the island); on the open page, straight to the island's tabs
+            MenuRow(icon: .lock, label: "For grown-ups") {
+                if model.place == .grownUp, model.grownUp.open { ui.tab = .settings; ui.askStartOver = false; ui.said = [:]; ui.open = .grownUps }
+                else { ui.open = .gate }
+            }
         }
         .frame(width: 300)
     }
@@ -369,10 +417,20 @@ struct Toolbar: View {
 @MainActor @Observable
 final class BarUI {
     static let shared = BarUI()
-    enum Panel: Equatable { case more, grade }
+    enum Panel: Equatable { case more, grade, gate, grownUps }
 
-    /// What's grown up out of the pill: ⋯ More, or the grades.
+    /// What's grown up out of the pill: ⋯ More, the grades, or the island (the grown-ups' hold, then their tabs).
     var open: Panel?
+    /// The island's tab shown, each tab's height (measured ahead), and what's been said or asked in it.
+    var tab = Island.Tab.settings
+    var heights: [Island.Tab: Double] = [:]
+    var askStartOver = false
+    var said: [Island.Tab: String] = [:]
+    var islandGrade: String?
+    /// Bumped by each setting changed in the island, so it draws again.
+    var settingsVersion = 0
+    /// Screenshots only: the hold's ring this full, and kept there.
+    var shotFill: CGFloat?
     /// What the last grade tapped said ("7th grade: coming soon.").
     var gradeSaid: String?
     /// Screenshots only (`-panel-demo`): the pill's changes run ten times slower.
@@ -380,11 +438,26 @@ final class BarUI {
 
     private init() {
         let args = ProcessInfo.processInfo.arguments
-        // `-panel=more` / `-panel=grade`: a screenshot opens that
-        if let a = args.first(where: { $0.hasPrefix("-panel=") }) { open = ["more": Panel.more, "grade": .grade][String(a.dropFirst(7))] }
-        // `-panel-demo`: ⋯ More opens at 4 s and shuts at 10 s, ten times slower, so stills can catch the drawer moving
-        slow = args.contains("-panel-demo")
-        if slow {
+        // `-panel=more` / `-panel=grade`: a screenshot opens that; the island: `-panel=gate` (the hold, its ring 60%
+        // full), or a tab of the grown-ups' (`-panel=settings`, `privacy`, `help`, `plan`; `startover`: Start over asked)
+        if let a = args.first(where: { $0.hasPrefix("-panel=") }) {
+            let p = String(a.dropFirst(7))
+            open = ["more": Panel.more, "grade": .grade, "gate": .gate][p] ?? (Island.Tab(rawValue: p.capitalized) != nil || p == "startover" ? .grownUps : nil)
+            if p == "gate" { shotFill = 0.6 }
+            if let t = Island.Tab(rawValue: p.capitalized) { tab = t }
+            if p == "startover" { askStartOver = true }
+        }
+        // `-panel-demo`: ⋯ More opens at 4 s and shuts at 10 s, ten times slower, so stills can catch the drawer moving.
+        // `-panel-demo=island`: the grown-ups' island grows out of the pill at 4 s, switches to Privacy at 12 s, and
+        // shrinks back at 20 s, ten times slower
+        slow = args.contains { $0.hasPrefix("-panel-demo") }
+        if args.contains("-panel-demo=island") {
+            Task { [weak self] in
+                try? await Task.sleep(for: .seconds(4)); self?.open = .grownUps
+                try? await Task.sleep(for: .seconds(8)); self?.tab = .privacy
+                try? await Task.sleep(for: .seconds(8)); self?.open = nil
+            }
+        } else if slow {
             Task { [weak self] in
                 try? await Task.sleep(for: .seconds(4)); self?.open = .more
                 try? await Task.sleep(for: .seconds(6)); self?.open = nil
