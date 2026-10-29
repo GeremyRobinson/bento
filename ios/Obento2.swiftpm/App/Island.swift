@@ -87,28 +87,38 @@ struct IslandGate: View {
 
 // MARK: the tabs
 
-/// Once the hold is passed: Settings · Privacy · Help · Plan along its top, the tab's words under them, scrolling inside
-/// when they're taller than the screen has room for. Each tab's height is measured ahead (`IslandMeasure`), so a tab
-/// switch resizes the island in one spring while the words cross-fade.
+/// Once the hold is passed: Settings · Privacy · Help · Plan along its top, the tab's words under them. A slider (G 29 Oct:
+/// "the shift of page causes the pill to move around"): the island is one height for every tab, the tallest one's (each
+/// measured ahead, `IslandMeasure`), so it never resizes on a switch; the pages lie side by side and slide across together,
+/// following a finger's swipe, and the capsule behind the tab names glides to the chosen one. A page taller than the
+/// screen has room for scrolls inside.
 struct IslandTabs: View {
     let model: PaperModel
     /// The most room its words have (the screen above the pill, less the tabs).
     let room: Double
     let width: Double
     private var ui: BarUI { BarUI.shared }
+    @Namespace private var tabsSpace
+    /// How far a finger has dragged the pages (points; 0 when nothing's held).
+    @State private var drag = 0.0
 
     var body: some View {
-        let tab = ui.tab, h = min(room, ui.heights[tab] ?? room)
+        let tabs = Island.Tab.allCases, tab = ui.tab
+        let index = Double(tabs.firstIndex(of: tab) ?? 0)
+        let h = min(room, tabs.compactMap { ui.heights[$0] }.max() ?? room)
+        let slide = Animation.smooth(duration: ui.slow ? 3.5 : 0.36)
         VStack(spacing: 0) {
             HStack(spacing: 4) {
-                ForEach(Island.Tab.allCases, id: \.self) { t in
-                    Button { ui.tab = t; ui.askStartOver = false } label: {
-                        // the words never change (one weight, one colour), only how strongly they show, and the capsule
-                        // behind fades in: a switch never re-lays the words out mid-spring
+                ForEach(tabs, id: \.self) { t in
+                    Button { go(t, slide) } label: {
+                        // the words never change (one weight, one colour), only how strongly they show; the capsule
+                        // behind them is one shape that glides from tab to tab
                         Text(t.rawValue).font(Typeface.font(16, .semibold)).foregroundStyle(Ink.ink)
                             .opacity(t == tab ? 1 : 0.62)
                             .padding(.horizontal, 14).frame(height: 36)
-                            .background(Capsule().fill(Ink.sunk).opacity(t == tab ? 1 : 0))
+                            .background {
+                                if t == tab { Capsule().fill(Ink.sunk).matchedGeometryEffect(id: "tab", in: tabsSpace) }
+                            }
                             .contentShape(Capsule())
                     }
                     .buttonStyle(.plain)
@@ -118,19 +128,48 @@ struct IslandTabs: View {
             }
             .padding(.horizontal, 12).padding(.top, 8).padding(.bottom, 6)
             Rectangle().fill(Ink.line).frame(height: 1).padding(.horizontal, 10)
-            ScrollView {
-                // the old tab's words go quickly and the new ones come just after, so the two barely overlap while the
-                // island eases to the new height
-                IslandPage(tab: tab, model: model)
-                    .id(tab)
-                    .transition(.asymmetric(insertion: .opacity.animation(.easeIn(duration: ui.slow ? 2 : 0.2).delay(ui.slow ? 1 : 0.1)),
-                                            removal: .opacity.animation(.easeOut(duration: ui.slow ? 1.2 : 0.12))))
-                    .frame(width: width)
+            // the page shown, in one frame the island's size: a new one slides in from the side it lies on as the old one
+            // slides out the other way, and a finger's drag carries the page along before it lets go
+            ZStack {
+                ScrollView {
+                    IslandPage(tab: tab, model: model).frame(width: width)
+                }
+                .scrollBounceBehavior(.basedOnSize)
+                .frame(width: width, height: h)
+                .id(tab)
+                .transition(.asymmetric(insertion: .move(edge: ui.tabForward ? .trailing : .leading),
+                                        removal: .move(edge: ui.tabForward ? .leading : .trailing)))
+                .offset(x: drag)
             }
-            .scrollBounceBehavior(.basedOnSize)
             .frame(width: width, height: h)
+            .clipped()
+            .contentShape(Rectangle())
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 12)
+                    .onChanged { v in
+                        // sideways only; at the first and last page it gives only a little
+                        guard abs(v.translation.width) > abs(v.translation.height) else { return }
+                        let edge = (index == 0 && v.translation.width > 0) || (Int(index) == tabs.count - 1 && v.translation.width < 0)
+                        drag = v.translation.width * (edge ? 0.25 : 0.6)
+                    }
+                    .onEnded { v in
+                        let i = Int(index), past = v.predictedEndTranslation.width
+                        let to = past < -width / 4 ? min(i + 1, tabs.count - 1) : past > width / 4 ? max(i - 1, 0) : i
+                        if to == i { withAnimation(slide) { drag = 0 } } else { go(tabs[to], slide) }
+                    })
         }
         .frame(width: width)
+    }
+
+    private func go(_ t: Island.Tab, _ slide: Animation) {
+        let tabs = Island.Tab.allCases
+        guard t != ui.tab else { withAnimation(slide) { drag = 0 }; return }
+        // which way it slides is set first and drawn, so the page leaving knows which side to go
+        ui.tabForward = (tabs.firstIndex(of: t) ?? 0) > (tabs.firstIndex(of: ui.tab) ?? 0)
+        ui.askStartOver = false
+        DispatchQueue.main.async {
+            withAnimation(slide) { ui.tab = t; drag = 0 }
+        }
     }
 }
 
@@ -216,7 +255,7 @@ struct IslandPage: View {
             }
         }
         setting("Daily reminder", "A note on the iPad") {
-            Choices(options: Reminder.allCases.map { ($0.words.replacingOccurrences(of: " pm", with: ""), $0 == p.reminder) }) { i in
+            Choices(options: Reminder.allCases.map { ($0.words.replacingOccurrences(of: " pm", with: ""), $0 == p.reminder) }, label: "Daily reminder") { i in
                 let r = Reminder.allCases[i]
                 var q = AppSettings.profile; q.reminder = r
                 AppSettings.set(profile: q, saving: saving); ui.settingsVersion += 1
@@ -229,17 +268,17 @@ struct IslandPage: View {
             }
         }
         setting("Sound", "Soft sounds for right and wrong") {
-            Choices(options: [("On", AppSettings.sound), ("Off", !AppSettings.sound)]) { i in
-                AppSettings.set(sound: i == 0, saving: saving); ui.settingsVersion += 1
+            OnOff(on: AppSettings.sound, label: "Sound") { on in
+                AppSettings.set(sound: on, saving: saving); ui.settingsVersion += 1
             }
         }
         setting("Read aloud", "Reads out each step's words") {
-            Choices(options: [("On", AppSettings.readAloud), ("Off", !AppSettings.readAloud)]) { i in
-                AppSettings.set(readAloud: i == 0, saving: saving); ui.settingsVersion += 1
+            OnOff(on: AppSettings.readAloud, label: "Read aloud") { on in
+                AppSettings.set(readAloud: on, saving: saving); ui.settingsVersion += 1
             }
         }
         setting("Paper", "Light or dark", last: true) {
-            Choices(options: [("Match iPad", AppSettings.theme == ""), ("Light", AppSettings.theme == "light"), ("Dark", AppSettings.theme == "dark")]) { i in
+            Choices(options: [("Match iPad", AppSettings.theme == ""), ("Light", AppSettings.theme == "light"), ("Dark", AppSettings.theme == "dark")], segment: 100, label: "Paper") { i in
                 AppSettings.set(theme: ["", "light", "dark"][i], saving: saving); ui.settingsVersion += 1
             }
         }
@@ -366,27 +405,88 @@ struct Choices: View {
     /// The chosen segment: the pill's own white on the light paper, a lifted grey on the dark.
     static let raised = Ink.dynamic(0xFFFFFF, 0x3A3A37)
     let options: [(String, Bool)]
+    /// Every segment's width, the same for each, so the thumb slides a whole segment at a time.
+    var segment: Double = 64
+    /// What it sets, said by VoiceOver (and found by the real-touch tests).
+    var label = ""
     let pick: (Int) -> Void
+    /// A slider (G 29 Oct): one raised thumb that glides to the chosen segment, and follows a finger dragged along it.
+    @State private var held: Int?
+    @Namespace private var thumbSpace
+
     var body: some View {
-        HStack(spacing: 2) {
+        let chosen = held ?? options.firstIndex(where: \.1) ?? 0
+        HStack(spacing: 0) {
             ForEach(options.indices, id: \.self) { i in
-                let (word, here) = options[i]
-                Button { pick(i) } label: {
-                    // one weight and colour (a choice never changes width as it's picked): the chosen one full strength, on
-                    // a raised capsule that fades in
-                    Text(word).font(Typeface.font(15, .semibold)).lineLimit(1).fixedSize()
-                        .foregroundStyle(Ink.ink).opacity(here ? 1 : 0.55)
-                        .padding(.horizontal, 12).frame(height: 32)
-                        .background(Capsule().fill(Self.raised).shadow(color: .black.opacity(0.12), radius: 1.5, y: 1).opacity(here ? 1 : 0))
-                        .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(word)
-                .accessibilityAddTraits(here ? .isSelected : [])
+                // one weight and colour (a choice never changes width as it's picked); the chosen one full strength
+                Text(options[i].0).font(Typeface.font(15, .semibold)).lineLimit(1).fixedSize()
+                    .foregroundStyle(Ink.ink).opacity(i == chosen ? 1 : 0.55)
+                    .frame(width: segment, height: 32)
+                    .background {
+                        if i == chosen {
+                            Capsule().fill(Self.raised).shadow(color: .black.opacity(0.12), radius: 1.5, y: 1)
+                                .matchedGeometryEffect(id: "thumb", in: thumbSpace)
+                        }
+                    }
             }
         }
         .padding(3)
         .background(Ink.sunk, in: Capsule())
+        .contentShape(Capsule())
+        .gesture(DragGesture(minimumDistance: 0)
+            .onChanged { v in
+                let i = max(0, min(options.count - 1, Int((v.location.x - 3) / segment)))
+                if i != held { withAnimation(.smooth(duration: 0.25)) { held = i } }
+            }
+            .onEnded { _ in
+                guard let i = held else { return }
+                withAnimation(.smooth(duration: 0.25)) { pick(i); held = nil }
+            })
+        .animation(.smooth(duration: 0.25), value: chosen)
+        .accessibilityElement()
+        .accessibilityLabel(label)
+        .accessibilityIdentifier("slider-\(label)")
+        .accessibilityValue(options[chosen].0)
+        .accessibilityAdjustableAction { d in
+            let i = d == .increment ? min(chosen + 1, options.count - 1) : max(chosen - 1, 0)
+            pick(i)
+        }
+    }
+}
+
+/// On or off (G 29 Oct): a switch, its knob sliding across. On is the ink track; off the sunken one. Tap it, or drag the
+/// knob across.
+struct OnOff: View {
+    let on: Bool
+    /// What it turns on, said by VoiceOver (and found by the real-touch tests).
+    var label = ""
+    let set: (Bool) -> Void
+    @State private var dragged: Bool?
+    var body: some View {
+        let shown = dragged ?? on
+        ZStack(alignment: shown ? .trailing : .leading) {
+            Capsule().fill(shown ? Ink.ink : Ink.sunk)
+            Circle().fill(Choices.raised).shadow(color: .black.opacity(0.18), radius: 1.5, y: 1)
+                .padding(3)
+        }
+        .frame(width: 54, height: 32)
+        .contentShape(Capsule())
+        .gesture(DragGesture(minimumDistance: 0)
+            .onChanged { v in
+                // a drag decides by where the finger is; a tap (no drag) flips it on release
+                if abs(v.translation.width) > 6 { let to = v.location.x > 27; if to != dragged { withAnimation(.smooth(duration: 0.22)) { dragged = to } } }
+            }
+            .onEnded { _ in
+                let to = dragged ?? !on
+                withAnimation(.smooth(duration: 0.22)) { set(to); dragged = nil }
+            })
+        .animation(.smooth(duration: 0.22), value: shown)
+        .accessibilityElement()
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(label)
+        .accessibilityIdentifier("switch-\(label)")
+        .accessibilityValue(on ? "On" : "Off")
+        .accessibilityAction { set(!on) }
     }
 }
 

@@ -177,10 +177,14 @@ final class PlacesTests: XCTestCase {
         XCTAssertTrue(app.buttons["Privacy"].waitForExistence(timeout: 3), "the island's tabs are there")
         XCTAssertTrue(app.buttons["Settings"].isSelected, "it opens on Settings")
         // the paper's colours, from the island: dark, then as the iPad is set again
-        app.buttons["Dark"].tap()
+        // the paper's slider: Match iPad | Light | Dark, a third each; tap its last third, then its first
+        let paper = app.descendants(matching: .any).matching(identifier: "slider-Paper").firstMatch
+        XCTAssertTrue(paper.waitForExistence(timeout: 3), "the Paper slider is there")
+        paper.coordinate(withNormalizedOffset: CGVector(dx: 5.0 / 6, dy: 0.5)).tap()
         sleep(2)
         attach(app, "5b dark from the island")
-        app.buttons["Match iPad"].tap()
+        XCTAssertEqual(paper.value as? String, "Dark")
+        paper.coordinate(withNormalizedOffset: CGVector(dx: 1.0 / 6, dy: 0.5)).tap()
         sleep(2)
         attach(app, "5c as the iPad is set")
         // the other tabs, then × shrinks the island back into the pill

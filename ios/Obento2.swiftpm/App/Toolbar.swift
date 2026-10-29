@@ -51,50 +51,67 @@ struct Toolbar: View {
 
     // MARK: the pill
 
-    /// The pill: what's open grows up out of it, above its row, inside the same shape. It opens like a drawer (G 26 Oct):
-    /// the menu slides up from behind the row as the pill grows, and slides back down behind it as it shuts, never
-    /// fading outside the pill.
+    /// The pill: what's open grows up out of it, above its row, inside the same shape, like a drawer (G 26 Oct): the
+    /// pill's size is set outright from what's in it (the row's width; the panel's measured size), so width and height
+    /// move together in one spring, and the panel's words sit at the top of a frame that grows from nothing behind the row
+    /// (they rise with the pill's top edge, and sink back behind the row as it shuts). Nothing draws outside its shape.
     private func pill(_ inLesson: Bool) -> some View {
         let shape = RoundedRectangle(cornerRadius: 32, style: .continuous)
-        return VStack(spacing: 6) {
-            if let open = ui.open {
-                VStack(spacing: 6) {
-                    switch open {
-                    case .more: inLesson ? AnyView(lessonMenu) : AnyView(mapMenu)
-                    case .grade: AnyView(gradeRow)
-                    case .gate: AnyView(IslandGate { grownUpsOpened() }.transition(.opacity))
-                    case .grownUps: AnyView(IslandTabs(model: model, room: islandRoom, width: islandWidth).transition(.opacity))
+        let panel = ui.open ?? ui.closing, isOpen = ui.open != nil
+        let size = panel.flatMap { ui.sizes[$0] } ?? .zero
+        let rowW = ui.rowWidth
+        // open: as wide as the panel or the row, whichever is wider; its height the panel, a gap, its line, a gap
+        let w = isOpen ? max(rowW, size.width) : rowW
+        let h = isOpen && size.height > 0 ? size.height + 13 : 0
+        let drawer = ZStack(alignment: .top) {
+            if let panel {
+                panelView(panel, inLesson)
+                    .fixedSize()
+                    .onGeometryChange(for: CGSize.self) { $0.size } action: { s in
+                        if abs((ui.sizes[panel]?.width ?? 0) - s.width) > 0.5 || abs((ui.sizes[panel]?.height ?? 0) - s.height) > 0.5 { ui.sizes[panel] = s }
                     }
-                    Rectangle().fill(Ink.line).frame(height: 1).padding(.horizontal, 10)
-                }
-                .transition(.move(edge: .bottom))
+                    .id(panel)
+                    // one panel to the next (the hold to the tabs): the old goes at once, the new comes just after, so
+                    // the two never show over each other
+                    .transition(.asymmetric(insertion: .opacity.animation(.easeIn(duration: ui.slow ? 1.5 : 0.16).delay(ui.slow ? 0.8 : 0.08)),
+                                            removal: .opacity.animation(.easeOut(duration: ui.slow ? 0.8 : 0.08))))
             }
-            // the row stays in front, so the drawer slides out from behind it: its backing as wide as the pill (the
-            // island is wider than the row), so nothing sliding shows beside it
-            row(inLesson).fixedSize()
-                .frame(maxWidth: .infinity)
-                .background(Ink.surface.padding(-6))
-                .zIndex(1)
+            // the line between the panel and the row, at the panel's foot
+            Rectangle().fill(Ink.line).frame(width: max(0, w - 20), height: 1)
+                .padding(.top, size.height + 6)
+                .opacity(panel == nil ? 0 : 1)
         }
-        // as wide as what's in it (the menu, the grades or the row), never the screen's width: its line across fills that
-        .fixedSize(horizontal: true, vertical: false)
+        // the row stays in front; its backing as wide as the pill, so nothing sliding shows beside it
+        let front = row(inLesson).fixedSize()
+            .onGeometryChange(for: Double.self) { $0.size.width } action: { if abs(ui.rowWidth - $0) > 0.5 { ui.rowWidth = $0 } }
+        return PillBody(width: rowW > 0 ? w : -1, height: h, drawer: drawer, row: front)
         // the same gap all round, so a lit button sits evenly inside the bar's curve
         .padding(6)
         // nothing in it draws outside the pill's shape, even while it grows or shrinks
         .clipShape(shape)
         // the shadow belongs to the pill's shape only: on the whole pill, SwiftUI shadowed every button and word in it
         .background(shape.fill(Ink.surface).shadow(color: .black.opacity(ui.open == .grownUps ? 0.14 : 0.08), radius: ui.open == .grownUps ? 20 : 12, y: 6))
-        // the island's tabs, each measured unseen ahead, so switching resizes it in one spring with no jump
+        // the island's tabs, each measured unseen ahead, so they're all one height and a switch never resizes it
         .background { if !inLesson, ui.open != nil, ui.open != .grade { IslandMeasure(model: model, width: islandWidth, key: islandKey) } }
         .overlay(shape.strokeBorder(Ink.line, lineWidth: 1))
-        // its width (and height, as something grows out of it) changes smoothly, never in a jump under the finger
-        .animation(.smooth(duration: ui.slow ? 3 : 0.35), value: animationKey(inLesson))
+        // one spring for its width and height together, never a jump under the finger
+        .animation(.smooth(duration: ui.slow ? 3.5 : 0.4), value: animationKey(inLesson))
+    }
+
+    /// What grows out of the pill.
+    @ViewBuilder private func panelView(_ p: BarUI.Panel, _ inLesson: Bool) -> some View {
+        switch p {
+        case .more: if inLesson { lessonMenu } else { mapMenu }
+        case .grade: gradeRow
+        case .gate: IslandGate { grownUpsOpened() }
+        case .grownUps: IslandTabs(model: model, room: islandRoom, width: islandWidth)
+        }
     }
 
     /// Everything that changes the pill's shape: a change in any of it is animated.
     private func animationKey(_ inLesson: Bool) -> String {
         let t = tools
-        return "\(inLesson) \(model.place.map { "\($0)" } ?? "map") \(String(describing: ui.open)) \(zooming) \(middleKey) \(t.hint) \(t.showMe) \(t.showMeWord) \(t.next) \(t.dim) \(ui.gradeSaid ?? "") \(islandKey) \(heightsKey) \(Int(islandRoom))"
+        return "\(inLesson) \(model.place.map { "\($0)" } ?? "map") \(String(describing: ui.open)) \(Int(ui.rowWidth)) \(ui.sizes.map { "\($0.key)\(Int($0.value.width))x\(Int($0.value.height))" }.sorted()) \(zooming) \(middleKey) \(t.hint) \(t.showMe) \(t.showMeWord) \(t.next) \(t.dim) \(ui.gradeSaid ?? "") \(islandKey) \(heightsKey) \(Int(islandRoom))"
     }
 
     // MARK: the island
@@ -419,10 +436,36 @@ final class BarUI {
     static let shared = BarUI()
     enum Panel: Equatable { case more, grade, gate, grownUps }
 
-    /// What's grown up out of the pill: ⋯ More, the grades, or the island (the grown-ups' hold, then their tabs).
-    var open: Panel?
+    /// What's grown up out of the pill: ⋯ More, the grades, or the island (the grown-ups' hold, then their tabs). Shut, the
+    /// last one stays drawn (`closing`) while the pill shrinks round it, so its words slide down behind the row with the
+    /// pill's top edge instead of vanishing.
+    var open: Panel? {
+        get { panel }
+        set {
+            if newValue == nil, let p = panel {
+                closing = p; closeCount += 1
+                let n = closeCount, wait = slow ? 4.0 : 0.6
+                Task { @MainActor [weak self] in
+                    try? await Task.sleep(for: .seconds(wait))
+                    if let self, self.closeCount == n, self.panel == nil { self.closing = nil }
+                }
+            }
+            if newValue != nil { closing = nil }
+            panel = newValue
+        }
+    }
+    private(set) var panel: Panel?
+    /// The panel still drawn while the pill shuts round it.
+    private(set) var closing: Panel?
+    @ObservationIgnored private var closeCount = 0
+    /// Each panel's own size, measured as it's drawn, and the row's width: the pill's size is worked out from them, so
+    /// its width and height move together in one spring (G 29 Oct: "super smooth").
+    var sizes: [Panel: CGSize] = [:]
+    var rowWidth: Double = 0
     /// The island's tab shown, each tab's height (measured ahead), and what's been said or asked in it.
     var tab = Island.Tab.settings
+    /// The way the island's pages slide on the next switch: to a tab further right, or back.
+    var tabForward = true
     var heights: [Island.Tab: Double] = [:]
     var askStartOver = false
     var said: [Island.Tab: String] = [:]
@@ -638,5 +681,31 @@ struct SmallButton: View {
                 .frame(width: 34, height: 34).background(Ink.sunk, in: RoundedRectangle(cornerRadius: 12))
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// The pill's size, moved as one: its width and the drawer's height are animated values here, so every frame lays the
+/// pill out at that size, the drawer's words pinned to its top edge (they rise with it, never drawn where the pill
+/// will end up before it gets there) and the row at its foot (G 29 Oct: "super smooth", tested frame by frame).
+private struct PillBody<Drawer: View, Row: View>: View, Animatable {
+    /// The pill's width (negative: as wide as the row, not yet measured), and the drawer's height above the row.
+    var width: Double
+    var height: Double
+    let drawer: Drawer
+    let row: Row
+    var animatableData: AnimatablePair<Double, Double> {
+        get { AnimatablePair(width, height) }
+        set { width = newValue.first; height = newValue.second }
+    }
+    var body: some View {
+        VStack(spacing: 0) {
+            drawer
+                .frame(width: width > 0 ? width : nil, height: max(0, height), alignment: .top)
+                .clipped()
+            row
+                .frame(width: width > 0 ? width : nil)
+                .background(Ink.surface.padding(-6))
+                .zIndex(1)
+        }
     }
 }
