@@ -31,6 +31,9 @@ enum Shots {
         // the same progress every time, and nothing saved: two lessons learned, the two that worked (G 20 Oct)
         Progress.shared.saving = false
         PageStore.saving = false
+        Practice.shared.saving = false
+        // no practice recorded unless the moment seeds some (the grown-ups' This week)
+        Practice.shared.setForShots(problems: [], minutes: [])
         AppSettings.shots = true
         // set up already (G 26 Oct), with no name, unless the moment is about setting up or names the child
         AppSettings.set(profile: Profile(setUp: true), saving: false)
@@ -683,19 +686,31 @@ enum Shots {
             for (i, q) in page.problems.enumerated() { page.open(q); await work(q, miss: n == "review-result-missed" || i == 2 || i == 5) }
             page.goNext()
         case let n where n.hasPrefix("grownup"):
-            // grownup-gate: shut; grownup-hold: its square held halfway (the clock stopped there); grownup: open;
-            // grownup-confirm: a lesson's reset asked on the paper; grownup-confirm-all: everything's;
-            // grownup-startover: Start over asked; grownup-name: the name's squares tapped (-whole-page: framed whole)
+            // grownup-gate: shut on the paper; grownup-hold: its square held halfway (the clock stopped there);
+            // grownup: open, on This week (a child some way in, with a week of practice); grownup-week-fresh: a new
+            // install; grownup-week-noname: no name given; grownup-lessons: the lessons' table; grownup-confirm: a
+            // lesson's reset asked on the paper; grownup-confirm-all: everything's. The island over it: -panel=settings
+            // (or privacy, help, plan, startover), BarUI.
             seedMe()
-            var p = AppSettings.profile; p.name = "Mia"; p.reminder = .tea; AppSettings.set(profile: p, saving: false)
+            // no page left on the simulator from another run (only this moment's own, in memory)
+            for piece in Map.all + [Map.review] { PageStore.clear(piece.id) }
+            var p = AppSettings.profile; p.name = n == "grownup-week-noname" ? "" : "Mia"; p.reminder = .tea; AppSettings.set(profile: p, saving: false)
+            BarUI.shared.settingsVersion += 1
+            if n == "grownup-week-fresh" {
+                p.name = "Mia"; AppSettings.set(profile: p, saving: false)
+                Progress.shared.reset(to: [])
+            } else {
+                // a page started and never tested, and a week of practice: 5 of the last 7 days, 42 problems, 70 minutes
+                seedPage("g5-divdec", own: 2)
+                Practice.shared.setForShots(problems: [6, 9, 0, 8, 11, 0, 8], minutes: [10, 14, 0, 13, 20, 0, 13])
+            }
             m.shotMode = true; m.go(to: .grownUp)
             if n == "grownup-gate" { return true }
             if n == "grownup-hold" { m.grownUp.heldForShots(0.55); return true }
             m.grownUp.openForShots()
+            if n == "grownup-lessons" { m.grownUp.showForShots(.lessons) }
             if n == "grownup-confirm" { m.grownUp.confirmForShots(.lesson("g5-round")) }
             if n == "grownup-confirm-all" { m.grownUp.confirmForShots(.all) }
-            if n == "grownup-startover" { m.grownUp.confirmForShots(.startOver) }
-            if n == "grownup-name" { m.grownUp.editNameForShots() }
             m.reframePlace()
         case "path-me":
             // the real path, not instant, to watch the places draw in and out: the map, then Me, a lesson opened from Me
@@ -772,7 +787,8 @@ enum Shots {
         if !active, full || args.contains("-seed-me") || args.contains("-set-up") { AppSettings.set(profile: Profile(setUp: true), saving: false) }
         if !active, args.contains("-setup-fresh") {
             // a new install (the real-touch test of setting up): in memory only, so nothing on the iPad changes
-            Progress.shared.saving = false; PageStore.saving = false
+            Progress.shared.saving = false; PageStore.saving = false; Practice.shared.saving = false
+            Practice.shared.setForShots(problems: [], minutes: [])
             for p in Map.all + [Map.review] { PageStore.clear(p.id) }
             Progress.shared.reset(to: [])
             AppSettings.shots = true
@@ -781,6 +797,7 @@ enum Shots {
         guard !active, full || args.contains("-seed-me") else { return }
         Progress.shared.saving = false
         PageStore.saving = false
+        Practice.shared.saving = false
         for p in Map.all + [Map.review] { PageStore.clear(p.id) }
         if full { seedMeFull() } else { seedMe() }
     }
