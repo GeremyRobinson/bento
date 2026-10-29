@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grown-ups page</title>
+<style>
+:root {
+  --paper: #F3F1EC; --grid: #E2DED6; --grid-strong: #D3CEC4;
+  --ink: #1D1C1A; --ink2: #6E6A63; --ink3: #A39E95; --sunk: #E6E2DA;
+  --whole: #7B5CE0; --decimals: #D6407F; --fractions: #4F63D9; --measurement: #D99A1E;
+  --right: #178A57; --wrong: #C8372D;
+  --pill: rgba(255, 255, 255, .94); --pill-line: #E4E0D8; --shadow: 0 6px 24px rgba(40, 30, 10, .10);
+  --page: #E9E6DF;
+  --round: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+  --c: 12px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C; --sunk: #2C2C29;
+  --whole: #A58BFF; --decimals: #FF6FA6; --fractions: #8C9BFF; --measurement: #F2B84B;
+  --pill: rgba(40, 40, 37, .94); --pill-line: #3A3A36; --shadow: 0 6px 24px rgba(0, 0, 0, .4);
+  --page: #121211; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C; --sunk: #2C2C29;
+  --whole: #A58BFF; --decimals: #FF6FA6; --fractions: #8C9BFF; --measurement: #F2B84B;
+  --pill: rgba(40, 40, 37, .94); --pill-line: #3A3A36; --shadow: 0 6px 24px rgba(0, 0, 0, .4);
+  --page: #121211; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { margin: 0; background: var(--page); color: var(--ink); font-family: var(--round); line-height: 1.4 }
+main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 80px }
+h1 { font-size: 30px; margin: 0 0 4px }
+h2 { font-size: 22px; margin: 40px 0 4px }
+.lede, .note { color: var(--ink2); margin: 0 0 16px; max-width: 72ch }
+.note b, .lede b { color: var(--ink) }
+.top { display: flex; justify-content: space-between; align-items: start; gap: 16px; flex-wrap: wrap }
+.chip { font: inherit; font-size: 14px; border: 1px solid var(--pill-line); background: var(--pill); color: var(--ink); border-radius: 999px; padding: 6px 12px; cursor: pointer }
+.chip[aria-pressed="true"] { border-color: var(--ink) }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 }
+ul.notes { color: var(--ink2); max-width: 72ch; padding-left: 20px }
+ul.notes li { margin: 4px 0 }
+ul.notes b { color: var(--ink) }
+
+.ipad { position: relative; width: 100%; aspect-ratio: 1180 / 820; border-radius: 22px; overflow: hidden; border: 10px solid #111; box-shadow: var(--shadow);
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid-strong) 1px, transparent 1px), linear-gradient(90deg, var(--grid-strong) 1px, transparent 1px),
+    linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: calc(var(--c) * 5) calc(var(--c) * 5), calc(var(--c) * 5) calc(var(--c) * 5), var(--c) var(--c), var(--c) var(--c) }
+.on { position: absolute; left: calc(var(--x) * var(--c)); top: calc(var(--y) * var(--c)); width: calc(var(--w, auto) * var(--c)); height: calc(var(--h, auto) * var(--c)) }
+.t { font-size: calc(var(--c) * 1.25); line-height: calc(var(--c) * 2); white-space: nowrap }
+.t2 { font-size: calc(var(--c) * 1.05); line-height: calc(var(--c) * 2); white-space: nowrap; color: var(--ink2) }
+.h { font-size: calc(var(--c) * 1.35); line-height: calc(var(--c) * 2); font-weight: 600; white-space: nowrap }
+.big { font-size: calc(var(--c) * 2.2); line-height: calc(var(--c) * 3); font-weight: 600; white-space: nowrap }
+.say { font-size: calc(var(--c) * 1.7); line-height: calc(var(--c) * 3); white-space: nowrap }
+.block { white-space: nowrap; border: 1.5px solid var(--ink3); display: flex; align-items: center; padding: 0 calc(var(--c) * .8); font-size: calc(var(--c) * 1.15); color: var(--ink); background: transparent; font-family: inherit; cursor: pointer }
+.block.chosen { border-color: var(--ink); background: var(--sunk); font-weight: 600 }
+.block.dead { border-style: dashed; color: var(--ink3); cursor: default }
+.block.centre { justify-content: center; padding: 0 }
+.sq { position: absolute; width: calc(var(--c) * 3); height: calc(var(--c) * 3); border: 1.5px solid var(--col); }
+.sq.learned { background: var(--col) }
+.sq.started { background: color-mix(in srgb, var(--col) 28%, transparent) }
+.sq.none { border-color: color-mix(in srgb, var(--col) 45%, transparent) }
+.day { position: absolute; width: calc(var(--c) * 2); height: calc(var(--c) * 2); border: 1.5px solid var(--ink3) }
+.day.done { background: var(--ink); border-color: var(--ink) }
+.dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--col); margin-right: 8px; vertical-align: 2px }
+.rule { position: absolute; height: 0; border-top: 1px solid var(--grid-strong) }
+.fade { animation: fade .45s both }
+@keyframes fade { from { opacity: 0; transform: translateY(4px) } }
+.pill { position: absolute; left: 50%; bottom: calc(var(--c) * 1.5); transform: translateX(-50%); display: flex; align-items: center; gap: 2px; background: var(--pill); border: 1px solid var(--pill-line); border-radius: 999px; box-shadow: var(--shadow); padding: 4px; height: calc(var(--c) * 4.2) }
+.pill .b { display: flex; align-items: center; padding: 0 11px; height: 100%; border-radius: 999px; color: var(--ink) }
+.pill .sep { width: 1px; align-self: stretch; margin: 8px 2px; background: var(--pill-line) }
+.pill .mid { padding: 0 16px; font-size: 14px; font-weight: 600 }
+.ic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: square; display: block }
+@media (max-width: 640px) { :root { --c: 6px } .ipad { border-width: 6px; border-radius: 14px } }
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div>
+      <h1>The grown-ups' page</h1>
+      <p class="lede">Reached as now: ⋯ → For grown-ups → hold the square. Instead of one crowded sheet, four sections switched by blocks at the top. <b>Tap the blocks on the iPad.</b></p>
+    </div>
+    <button class="chip" id="theme">Dark paper</button>
+  </div>
+  <div class="ipad" id="gu"></div>
+
+  <h2>What's new, and what it needs</h2>
+  <ul class="notes">
+    <li><b>This week</b> is new: a summary a parent can read in ten seconds. The app saves checks, tests and reviews already; <b>days practised, problems solved and time spent are new</b> and need recording from now on (on the iPad only).</li>
+    <li><b>Lessons</b> is today's table, unchanged, with its resets.</li>
+    <li><b>Settings</b> is today's settings, with Start over moved to the bottom and set apart.</li>
+    <li><b>Help &amp; privacy</b> is new and the App Store needs it for a kids' app: what the app does, a plain privacy promise (true today: everything stays on the iPad, no ads, no tracking, no account), a privacy policy page, a way to contact you, and the version.</li>
+    <li><b>Plan</b> is a dashed placeholder: where payments will live once we decide how the app makes money.</li>
+  </ul>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const on = (x, y, w, h, cls, inner, extra = '') => `<div class="on ${cls}" style="--x:${x};--y:${y};${w ? `--w:${w};` : ''}${h ? `--h:${h};` : ''}${extra}">${inner}</div>`;
+const block = (x, y, w, h, label, cls = '', act = '') => `<button class="on block ${cls}" style="--x:${x};--y:${y};--w:${w};--h:${h}" ${act}>${label}</button>`;
+const root = document.documentElement;
+$('#theme').onclick = () => {
+  const dark = root.dataset.theme === 'dark' || (!root.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
+  root.dataset.theme = dark ? 'light' : 'dark'; $('#theme').textContent = dark ? 'Dark paper' : 'Light paper';
+};
+
+// a made-up child, for the preview
+const name = 'Mia';
+const lessons = [
+  ['Multiply two-digit numbers', 'whole', 'learned', '4 of 4', '4 of 4', 'In 30 days'],
+  ['Long division', 'whole', 'learned', '4 of 4', '4 of 4', 'In 2 days'],
+  ['Order of operations', 'whole', 'learned', '3 of 4', '4 of 4', 'In 2 days'],
+  ['Multiply by 10, 100, 1000', 'decimals', 'learned', '4 of 4', '4 of 4', 'In 11 days'],
+  ['Rounding decimals', 'decimals', 'learned', '4 of 4', '4 of 4', 'Due now'],
+  ['Adding decimals', 'decimals', 'learned', '4 of 4', '4 of 4', 'Tomorrow'],
+  ['Multiplying decimals', 'decimals', 'started', '2 of 4', '2 of 4', 'Not learned yet'],
+  ['Dividing by a decimal', 'decimals', 'none', '–', '–', 'Not started'],
+  ['Adding fractions', 'fractions', 'learned', '4 of 4', '4 of 4', 'In 20 days'],
+  ['Subtracting fractions', 'fractions', 'learned', '1 of 4', '4 of 4', 'Tomorrow'],
+  ['Adding and subtracting', 'fractions', 'none', '–', '–', 'Not started'],
+  ['Multiplying fractions', 'fractions', 'none', '–', '–', 'Not started'],
+  ['Mixed numbers to fractions', 'fractions', 'none', '–', '–', 'Not started'],
+  ['Fraction of a number', 'fractions', 'none', '–', '–', 'Not started'],
+  ['Dividing by a unit fraction', 'fractions', 'none', '–', '–', 'Not started'],
+  ['Volume of a box', 'measurement', 'learned', '4 of 4', '4 of 4', 'In 2 days'],
+  ['Converting units', 'measurement', 'none', '–', '–', 'Not started'],
+];
+const tabs = [['This week', 9], ['Lessons', 8], ['Settings', 8], ['Help & privacy', 12], ['Plan', 6]];
+let tab = 'This week';
+
+function header() {
+  let x = 5, h = on(5, 3, 0, 0, 'big', 'For grown-ups');
+  tabs.forEach(([t, w]) => {
+    const dead = t === 'Plan';
+    h += block(x, 7, w, 3, t, (t === tab ? 'chosen' : '') + (dead ? ' dead' : ''), dead ? '' : `data-tab="${t}"`);
+    x += Math.ceil((w + 1) / 5) * 5;
+  });
+  return h;
+}
+
+const pages = {
+  'This week': () => {
+    const learned = lessons.filter(l => l[2] === 'learned').length;
+    let h = on(5, 12, 0, 0, 'say', `${name} has learned <b>${learned} of ${lessons.length}</b> lessons in 5th grade.`);
+    // one square per lesson, in its chapter's colour: filled learned, half started, open not yet
+    lessons.forEach((l, i) => { h += `<div class="sq ${l[2]} fade" style="left:calc(${5 + i * 3} * var(--c));top:calc(16 * var(--c));--col:var(--${l[1]});animation-delay:${i * 30}ms"></div>`; });
+    h += on(5, 19.5, 0, 0, 't2', 'Each square is a lesson: filled learned, shaded started, open not yet.');
+    // the week
+    h += on(5, 24, 0, 0, 'h', 'Days practised');
+    'MTWTFSS'.split('').forEach((d, i) => {
+      const done = [1, 1, 0, 1, 1, 0, 1][i];
+      h += `<div class="day ${done ? 'done' : ''}" style="left:calc(${5 + i * 3} * var(--c));top:calc(27 * var(--c))"></div>` + on(5 + i * 3, 29, 2, 0, 't2', `<div style="text-align:center">${d}</div>`);
+    });
+    h += on(5, 31.5, 0, 0, 't2', '5 of the last 7 days');
+    h += on(30, 24, 0, 0, 'h', 'This week') + on(30, 27, 0, 0, 'say', '42 problems') + on(30, 30, 0, 0, 't2', 'about 1 hour 10 minutes in all');
+    h += on(55, 24, 0, 0, 'h', 'Checks coming') + on(55, 27, 0, 0, 'say', '3 this week') + on(55, 30, 0, 0, 't2', 'short checks keep learned lessons learned');
+    // going well / worth a look
+    h += `<div class="rule" style="left:calc(5 * var(--c));top:calc(35 * var(--c));width:calc(72 * var(--c))"></div>`;
+    h += on(5, 36.5, 0, 0, 'h', 'Going well');
+    [['Multiply two-digit numbers', 'whole'], ['Adding fractions', 'fractions'], ['Volume of a box', 'measurement']].forEach(([n, c], i) => { h += on(5, 39 + i * 2, 0, 0, 't', `<span class="dot" style="--col:var(--${c})"></span>${n}`); });
+    h += on(40, 36.5, 0, 0, 'h', 'Worth a look');
+    [['Subtracting fractions', 'fractions', 'came back low on Tuesday'], ['Multiplying decimals', 'decimals', 'started, 2 of 4 so far']].forEach(([n, c, w], i) => {
+      h += on(40, 39 + i * 2, 0, 0, 't', `<span class="dot" style="--col:var(--${c})"></span>${n} <span style="color:var(--ink2)">· ${w}</span>`);
+    });
+    return h;
+  },
+  'Lessons': () => {
+    let h = on(5, 12, 0, 0, 't2', 'Lesson') + on(27, 12, 0, 0, 't2', 'Last check') + on(35, 12, 0, 0, 't2', 'Best') + on(41, 12, 0, 0, 't2', 'Comes back');
+    h += `<div class="rule" style="left:calc(5 * var(--c));top:calc(14 * var(--c));width:calc(48 * var(--c))"></div>`;
+    lessons.forEach((l, i) => {
+      const y = 14.3 + i * 1.75, dim = l[2] === 'none' ? 'color:var(--ink3)' : '';
+      h += on(5, y, 0, 0, 't', `<span class="dot" style="--col:var(--${l[1]})"></span>${l[0]}`) + on(27, y, 0, 0, 't', l[3]) + on(35, y, 0, 0, 't', l[4]) + on(41, y, 0, 0, 't', `<span style="${dim}">${l[5]}</span>`);
+    });
+    h += block(5, 45, 11, 2, 'Reset everything') + on(18, 45, 0, 0, 't2', 'or tap a lesson to reset just that one');
+    h += on(57, 12, 0, 0, 'h', 'How checks work') + on(57, 14.5, 20, 0, 't2', `<div style="white-space:normal;line-height:calc(var(--c)*2)">Each check is scored 0 to 4; 3 or 4 is learned. A learned lesson comes back for a short check after 3, 7, 21 and 60 days, and the next day after a low one. Lessons are always open; only tests wait.</div>`);
+    return h;
+  },
+  'Settings': () => {
+    let h = on(5, 12, 0, 0, 'h', 'Name') + on(5, 14, 0, 0, 't2', 'Tap the squares to change it.');
+    [...'Mia         '].forEach((ch, i) => { h += on(5 + i * 2, 16.5, 2, 2, '', `<div style="height:100%;border:1px solid var(--grid-strong);display:grid;place-items:center;font-size:calc(var(--c)*1.4)">${ch.trim()}</div>`); });
+    h += on(5, 21, 0, 0, 'h', 'Grade') + on(5, 23, 0, 0, 't2', 'Only 5th grade has lessons so far.');
+    ['K', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'].forEach((g, i) => { h += block(5 + i * 3, 25.5, 2, 2, g, (g === '5' ? 'chosen' : 'dead') + ' centre'); });
+    h += on(5, 30, 0, 0, 'h', 'Reminder') + on(5, 32, 0, 0, 't2', 'A note on the iPad each day.');
+    ['3:30 pm', '4:00 pm', '6:00 pm', 'Off'].forEach((t, i) => { h += block(5 + i * 8, 34.5, 7, 2, t, t === '4:00 pm' ? 'chosen' : ''); });
+    h += on(45, 12, 0, 0, 'h', 'Sound') + on(45, 14, 0, 0, 't2', 'Soft sounds for right and wrong.');
+    ['On', 'Off'].forEach((t, i) => { h += block(45 + i * 6, 16.5, 5, 2, t, t === 'On' ? 'chosen' : ''); });
+    h += on(62, 12, 0, 0, 'h', 'Read aloud') + on(62, 14, 0, 0, 't2', "Reads out each step's words.");
+    ['On', 'Off'].forEach((t, i) => { h += block(62 + i * 6, 16.5, 5, 2, t, t === 'Off' ? 'chosen' : ''); });
+    h += on(45, 21, 0, 0, 'h', 'Colours') + on(45, 23, 0, 0, 't2', 'Light or dark paper.');
+    ['Match the iPad', 'Light', 'Dark'].forEach((t, i) => { h += block(45 + [0, 12, 18][i], 25.5, [11, 5, 5][i], 2, t, i === 0 ? 'chosen' : ''); });
+    h += `<div class="rule" style="left:calc(5 * var(--c));top:calc(40 * var(--c));width:calc(72 * var(--c))"></div>`;
+    h += block(5, 42, 8, 2, 'Start over') + on(15, 42, 0, 0, 't2', 'Wipes every lesson, test, review and setting, and sets up again. It asks first.');
+    return h;
+  },
+  'Help & privacy': () => {
+    const para = (x, y, w, text) => on(x, y, w, 0, 't', `<div style="white-space:normal;line-height:calc(var(--c)*2)">${text}</div>`);
+    let h = on(5, 12, 0, 0, 'h', 'About') + para(5, 14.5, 32, `Teaches 5th grade maths by showing why it works, on graph paper, then practising a little every day. Every problem is new, and short checks bring lessons back so they stay learned.`);
+    h += on(5, 25, 0, 0, 'h', `${name}'s privacy`);
+    ['Everything stays on this iPad.', 'No ads, ever.', 'No tracking.', 'No account needed.'].forEach((t, i) => { h += on(5, 27.5 + i * 2, 0, 0, 't', `<span style="display:inline-block;width:calc(var(--c)*1.2);height:calc(var(--c)*1.2);border:1.5px solid var(--ink);margin-right:10px;vertical-align:-2px;background:linear-gradient(var(--ink),var(--ink)) center/45% 45% no-repeat"></span>${t}`); });
+    h += block(5, 37, 11, 2, 'Privacy policy') + on(17, 37, 0, 0, 't2', 'opens our web page');
+    h += on(45, 12, 0, 0, 'h', 'Get help') + para(45, 14.5, 30, 'Something not working, or a question about a lesson? We read every message.');
+    h += block(45, 20, 9, 2, 'Email us') + on(55, 20, 0, 0, 't2', 'opens Mail');
+    h += on(45, 25, 0, 0, 'h', 'How it works') + para(45, 27.5, 30, 'Watch the How to, solve three together, then six on your own. Six right opens the lesson test: 10 of 12 and it\'s learned.');
+    h += on(45, 35, 0, 0, 't2', 'Version 0.1');
+    return h;
+  },
+};
+
+function draw() {
+  $('#gu').innerHTML = header() + `<div class="fade">${pages[tab]()}</div>` +
+    `<div class="pill"><span class="b ic"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg></span><span class="b ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20v-1.5c0-3 3-5 7-5s7 2 7 5V20"/></svg></span><span class="sep"></span><span class="mid">5th grade</span><span class="sep"></span><span class="b ic"><svg viewBox="0 0 24 24"><path d="M5 12h1M11.5 12h1M18 12h1" stroke-width="2.5"/></svg></span></div>`;
+}
+$('#gu').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) { tab = b.dataset.tab; draw(); } });
+draw();
+</script>
+</body>
+</html>
