@@ -7,6 +7,7 @@ import SwiftUI
 /// 2. Name (it can be skipped): typed a letter to a square on a line of squares, with the iPad's keyboard.
 /// 3. Grade: K to 12 as a row of blocks; 5th has lessons, the others are dead blocks that only say they're coming soon.
 /// 4. For a grown-up: a daily reminder and sound, and how to find the grown-ups' page later.
+/// Every step after the welcome has Back, a plain block after the others (G 26 Oct).
 /// Done: setting up erases itself and the paper glides down to the map, "Start here, Mia." beside the first lesson.
 /// What's picked is saved as it's picked (AppSettings.profile); setting up never shows again once it's done.
 @MainActor @Observable
@@ -42,7 +43,7 @@ final class SetupPage {
 
     // MARK: what it shows
 
-    enum Action: Equatable { case start, next, skip, nameBoxes, grade(Int), reminder(Reminder), sound(Bool), done }
+    enum Action: Equatable { case start, next, skip, back, nameBoxes, grade(Int), reminder(Reminder), sound(Bool), done }
     @MainActor struct Sheet {
         var sketch = Sketch()
         var taps: [(rect: CGRect, action: Action)] = []
@@ -94,7 +95,10 @@ final class SetupPage {
             let next = R(0, 10, 7, 2), skip = R(10, 10, 6, 2)
             s.block("su-next", next, .main, word: "Next", arrow: true)
             s.block("su-skip", skip, .plain, word: "Skip")
-            out.taps += [(next, .next), (skip, .skip)]
+            // Back (G 26 Oct, kids mis-tap): a plain block after the others, on the next strong line
+            let back = R(20, 10, 6, 2)
+            s.block("su-back", back, .plain, word: "Back")
+            out.taps += [(next, .next), (skip, .skip), (back, .back)]
             out.frame = Rect(x: x0, y: y0, width: boxes.width, height: next.maxY - y0)
 
         case .grade:
@@ -109,7 +113,9 @@ final class SetupPage {
             }
             let next = R(0, 15, 7, 2)
             s.block("su-next", next, .main, word: "Next", arrow: true)
-            out.taps.append((next, .next))
+            let back = R(10, 15, 6, 2)
+            s.block("su-back", back, .plain, word: "Back")
+            out.taps += [(next, .next), (back, .back)]
             out.frame = Rect(x: x0, y: y0, width: 64 * c, height: next.maxY - y0)
 
         case .grownUp:
@@ -135,7 +141,9 @@ final class SetupPage {
                     x: x0, top: y0 + 15 * c, width: 1400)
             let done = R(0, 20, 7, 2)
             s.block("su-done", done, .main, word: "Done", arrow: true)
-            out.taps.append((done, .done))
+            let back = R(10, 20, 6, 2)
+            s.block("su-back", back, .plain, word: "Back")
+            out.taps += [(done, .done), (back, .back)]
             out.frame = Rect(x: x0, y: y0, width: right - x0, height: done.maxY - y0)
         }
         out.sketch = s
@@ -163,6 +171,11 @@ final class SetupPage {
             AppSettings.set(profile: profile, saving: saving)
             go(.grade, model)
         case .next: go(.grownUp, model)
+        case .back:
+            // a step back; what was picked stays picked (the name stays typed)
+            if step == .name { name = Setup.cleanName(name) }
+            go(Setup.Step(rawValue: step.rawValue - 1) ?? .welcome, model)
+            if step == .name { name = AppSettings.profile.name }
         case .grade(let g):
             gradeSaid = g
             // only a grade with lessons can be chosen; the others only say they're coming
