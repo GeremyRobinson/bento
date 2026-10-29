@@ -2,7 +2,8 @@ import XCTest
 
 /// Real touches on the places around the lessons (G 20 Oct): the bar's Me, a card on Me opening its lesson and the bar's
 /// Me coming back to Me, the daily review opened from Me and closed the same way, a shelf too long for the screen opened
-/// and put away, the grown-ups' square held down for its 3 seconds, a tap on the map still choosing a lesson.
+/// and put away, the grown-ups' hold in the island held for its 3 seconds and its tabs, a tap on the map still
+/// choosing a lesson.
 /// Screenshots are attached at each moment. Positions on the paper are worked out from where each page is framed.
 final class PlacesTests: XCTestCase {
     /// Me for a child some way in (`-seed-me`: Shots.seedMe, kept in memory only): Rounding decimals, the first card on
@@ -146,8 +147,6 @@ final class PlacesTests: XCTestCase {
         let size = window.frame.size
         /// A point on the screen, in points from its top-left.
         func at(_ x: Double, _ y: Double) -> XCUICoordinate { window.coordinate(withNormalizedOffset: CGVector(dx: x / size.width, dy: y / size.height)) }
-        /// The middle of the room the paper is framed in (clear of the bar), where a framed page's middle lands.
-        let mid = (x: size.width / 2, y: 24 + (size.height - 24 - 120) / 2)
 
         // Me, from the bar: a page on the paper
         let me = app.buttons["Me"]
@@ -156,30 +155,46 @@ final class PlacesTests: XCTestCase {
         sleep(3)
         attach(app, "2 me")
 
-        // the grown-ups' page, from More, shut behind its square: held for 3.6 seconds, it opens
+        // the grown-ups' page, from More: the hold grows out of the pill (the child's paper still behind it); let go too
+        // soon, it stays shut; held for 3.6 seconds, the paper goes to the grown-ups' page and the island grows into its
+        // tabs (G's island.html)
         app.buttons["More"].tap()
         sleep(1)
         let grownUps = app.buttons["For grown-ups"]
         XCTAssertTrue(grownUps.waitForExistence(timeout: 3))
         grownUps.tap()
-        sleep(3)
-        attach(app, "3 gate")
-        // the gate is framed at 100%: its frame (6 blocks by 23 squares) centred; the square's middle is 2 blocks left of
-        // that and 3.5 squares down
-        at(mid.x - 200, mid.y + 70).press(forDuration: 1.2)
+        sleep(2)
+        attach(app, "3 the hold in the island")
+        let hold = app.buttons["Hold for 3 seconds"]
+        XCTAssertTrue(hold.waitForExistence(timeout: 3), "the hold is in the island")
+        hold.press(forDuration: 1.2)
         sleep(1)
         attach(app, "4 let go too soon")
-        at(mid.x - 200, mid.y + 70).press(forDuration: 3.6)
+        XCTAssertFalse(app.buttons["Privacy"].exists, "let go too soon, it stays shut")
+        hold.press(forDuration: 3.6)
+        sleep(3)
+        attach(app, "5 grown-ups open, Settings in the island")
+        XCTAssertTrue(app.buttons["Privacy"].waitForExistence(timeout: 3), "the island's tabs are there")
+        XCTAssertTrue(app.buttons["Settings"].isSelected, "it opens on Settings")
+        // the paper's colours, from the island: dark, then as the iPad is set again
+        app.buttons["Dark"].tap()
         sleep(2)
-        attach(app, "5 grown-ups open")
-        // the paper's colours, from the page (framed at 82%: its Colours blocks are 107 points under the screen's middle,
-        // Dark 428 to the right of it, Match the iPad 198): dark, then as the iPad is set again
-        at(mid.x + 428, mid.y + 107).tap()
-        sleep(2)
-        attach(app, "5b dark from the page")
-        at(mid.x + 198, mid.y + 107).tap()
+        attach(app, "5b dark from the island")
+        app.buttons["Match iPad"].tap()
         sleep(2)
         attach(app, "5c as the iPad is set")
+        // the other tabs, then × shrinks the island back into the pill
+        app.buttons["Privacy"].tap()
+        sleep(1)
+        attach(app, "5d privacy")
+        XCTAssertTrue(app.buttons["Privacy"].isSelected)
+        app.buttons["Help"].tap()
+        sleep(1)
+        attach(app, "5e help")
+        app.buttons["Close"].tap()
+        sleep(2)
+        attach(app, "5f the island shut, the grown-ups' paper")
+        XCTAssertFalse(app.buttons["Privacy"].exists, "the island shrank back into the pill")
 
         // back to the map from the bar; a tap on a lesson there chooses it
         app.buttons["Lessons"].tap()

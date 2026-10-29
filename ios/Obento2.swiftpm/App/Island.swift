@@ -36,6 +36,8 @@ struct IslandGate: View {
     @State private var holding = false
     @State private var letGo = false
     @State private var timer: Task<Void, Never>?
+    /// A finger is on the square: false again when it lifts or the touch is cancelled (onEnded hears only a lift).
+    @GestureState private var down = false
     private var ui: BarUI { BarUI.shared }
 
     var body: some View {
@@ -49,9 +51,8 @@ struct IslandGate: View {
             }
             .frame(width: 76, height: 76)
             .contentShape(Rectangle().inset(by: -16))
-            .gesture(DragGesture(minimumDistance: 0)
-                .onChanged { _ in if !holding { press() } }
-                .onEnded { _ in release() })
+            .gesture(DragGesture(minimumDistance: 0).updating($down) { _, d, _ in d = true })
+            .onChange(of: down) { _, d in if d { if !holding { press() } } else { release() } }
             .accessibilityElement()
             .accessibilityLabel("Hold for 3 seconds")
             .accessibilityAddTraits(.isButton)
@@ -67,9 +68,11 @@ struct IslandGate: View {
 
     private func press() {
         holding = true
-        withAnimation(.linear(duration: GrownUpPage.hold * (1 - fill))) { fill = 1 }
+        // how long is left, from how full the ring is now (an early let go may not have emptied it yet)
+        let left = GrownUpPage.hold * (1 - fill)
+        withAnimation(.linear(duration: left)) { fill = 1 }
         timer = Task { @MainActor in
-            try? await Task.sleep(for: .seconds(GrownUpPage.hold * (1 - fill) + 0.05))
+            try? await Task.sleep(for: .seconds(left + 0.05))
             guard !Task.isCancelled, holding else { return }
             holding = false
             opened()
