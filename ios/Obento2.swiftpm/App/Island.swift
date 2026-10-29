@@ -119,9 +119,12 @@ struct IslandTabs: View {
             .padding(.horizontal, 12).padding(.top, 8).padding(.bottom, 6)
             Rectangle().fill(Ink.line).frame(height: 1).padding(.horizontal, 10)
             ScrollView {
+                // the old tab's words go quickly and the new ones come just after, so the two barely overlap while the
+                // island eases to the new height
                 IslandPage(tab: tab, model: model)
                     .id(tab)
-                    .transition(.opacity)
+                    .transition(.asymmetric(insertion: .opacity.animation(.easeIn(duration: ui.slow ? 2 : 0.2).delay(ui.slow ? 1 : 0.1)),
+                                            removal: .opacity.animation(.easeOut(duration: ui.slow ? 1.2 : 0.12))))
                     .frame(width: width)
             }
             .scrollBounceBehavior(.basedOnSize)
