@@ -74,6 +74,9 @@ final class CubesDrawer {
     private var outline = ModelEntity(), outlineK = -1.0
     private var wire = ModelEntity(), wireK = -1.0, wireTop = -1.0
     private var hints = Entity(), hintKey = ""
+    /// How far the hints have grown in (they wait for the floor's outline, so they never show before the problem
+    /// draws in, over the page of cards still leaving, G 29 Oct).
+    private var hintK: Float = -1
     private var cubeMesh: MeshResource?, layerMesh: MeshResource?
     /// A floor square's edges, in the cubes' edge colour: covered squares read as squares, to count, at any zoom.
     private var squareEdge: MeshResource?
@@ -104,6 +107,13 @@ final class CubesDrawer {
             (e.children.first as? ModelEntity)?.model?.materials = [ghost ? looks.ghost[3] : looks.solid[3]]
         }
         drawHints(p)
+        // the hints come once the floor's outline has drawn in, each tinted square growing from its middle
+        let hk = Float(snapped(max(0, min(1, (p.outline(at: t) - 0.8) / 0.2)), 30))
+        if hk != hintK {
+            hintK = hk
+            hints.isEnabled = hk > 0
+            for c in hints.children where c.name == "tint" { c.scale = SIMD3(max(0.0001, hk), 1, max(0.0001, hk)) }
+        }
 
         // the layers: one piece each, rising and sinking whole; the one rising cube by cube from the single cubes
         var wave: Int?
@@ -382,7 +392,7 @@ final class CubesDrawer {
         let key = "\(h.outline) \(h.tint) \(h.empty) \(lines)"
         guard key != hintKey else { return }
         hintKey = key
-        hints.removeFromParent(); hints = Entity(); root.addChild(hints)
+        hints.removeFromParent(); hints = Entity(); root.addChild(hints); hintK = -1
         guard h.outline || h.tint, lines > 0 else { return }
         let b = p.box, o = p.corner, chapter = UIColor(hex: p.chapter.hex), px = Float(1 / lines), inset: Float = 0.06
         let paper = rig.paperHex
@@ -398,7 +408,7 @@ final class CubesDrawer {
             }
             if h.tint {
                 let f = ModelEntity(mesh: .generatePlane(width: s, depth: s), materials: [flat(UIColor(hex: Ink.mix(paper, p.chapter.hex, 0.12)))])
-                f.position = SIMD3(x + s / 2, 0.0002, z + s / 2); hints.addChild(f)
+                f.position = SIMD3(x + s / 2, 0.0002, z + s / 2); f.name = "tint"; hints.addChild(f)
             }
         }
         if let m = Rig.lines(dashes, width: Float(Sketch.stroke) * px) {

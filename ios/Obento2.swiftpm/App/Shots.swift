@@ -953,6 +953,10 @@ enum Shots {
             await wait(0.6); m.bars?.skipHowTo(); await wait(0.4)
         }
         await wait(2)
+        // `-card`: then the first problem's card tapped, as a child does after the How to
+        if ProcessInfo.processInfo.arguments.contains("-card"), let b = m.bars, let p = b.problems.first {
+            b.open(p); await wait(4)
+        }
         m.close(); await wait(2)
     }
 }
