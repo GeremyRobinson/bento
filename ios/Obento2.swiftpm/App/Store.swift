@@ -29,7 +29,21 @@ final class Store {
     /// The Plan tab's choice: yearly (the default) or monthly.
     var yearly = true
 
-    var hasAllGrades: Bool { active != nil }
+    /// Every chapter of every grade is open: the family has the plan, or this is a build from Xcode (G 30 Oct: G's
+    /// daughter keeps everything on her iPad), unless "Preview as a new family" is on (or `-locked`, for screenshots).
+    var hasAllGrades: Bool { active != nil || (Self.fromXcode && !previewLocked) }
+    /// A build from Xcode (debug), not one from the App Store or TestFlight.
+    static var fromXcode: Bool {
+        #if DEBUG
+        return true
+        #else
+        return false
+        #endif
+    }
+    /// Plan's test-only switch: see the app as a family without the plan (kept on this iPad; never in an App Store build).
+    var previewLocked: Bool = UserDefaults.standard.bool(forKey: "previewLocked") || ProcessInfo.processInfo.arguments.contains("-locked") {
+        didSet { if !Shots.active { UserDefaults.standard.set(previewLocked, forKey: "previewLocked") } }
+    }
     private var updates: Task<Void, Never>?
 
     /// Loads the prices and what's owned, and keeps listening for changes (a renewal, Ask to Buy approved, a refund).

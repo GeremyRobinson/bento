@@ -11,7 +11,9 @@ struct Piece: Identifiable, Equatable {
     /// The lesson behind this piece, if one has been written.
     var spec: LessonSpec? { Lessons.spec(id) }
     /// Every lesson on the map with a spec opens; a test once it's ready.
-    @MainActor var opens: Bool { isTest ? Map.testReady(id) : spec != nil && Map.paperLessons.contains(id) }
+    @MainActor var opens: Bool { !Map.locked(id) && (isTest ? Map.testReady(id) : spec != nil && Map.paperLessons.contains(id)) }
+    /// Waiting for the plan (Store): a chapter past the free first one, or its test, or the grade's test.
+    @MainActor var locked: Bool { Map.locked(id) }
     /// A chapter or grade test, not a lesson (G 18 Oct).
     var isTest: Bool { id.hasPrefix("test-") }
 
@@ -135,13 +137,25 @@ enum Map {
     @MainActor static func testSpecs(_ t: Piece, using rng: inout SeededRandom) -> [LessonSpec] {
         // the daily review: a lesson for each of its problems, weighted to the weak and the old (Core/Review.swift)
         if t.id == review.id {
-            return Review.pick(gradeLessons, checks: Progress.shared.checks, now: Progress.shared.now, using: &rng).compactMap { Lessons.spec($0) }
+            return Review.pick(openLessons, checks: Progress.shared.checks, now: Progress.shared.now, using: &rng).compactMap { Lessons.spec($0) }
         }
         guard t.id == "test-grade" else { return pieces.filter { $0.chapter == t.chapter }.compactMap(\.spec) }
         let chapters = groups.map { $0.lessons.compactMap { Lessons.spec($0.id) }.shuffled(using: &rng) }.filter { !$0.isEmpty }
         let rounds = (LessonPlan.test + chapters.count - 1) / max(1, chapters.count)
         return (0..<rounds).flatMap { k in chapters.map { $0[k % $0.count] } }
     }
+    /// Free without the plan (G 30 Oct, the money plan): the first chapter of the grade, with its test. Everything else
+    /// waits for All grades (Store). The daily review is never locked; it asks only from lessons that are open.
+    static var freeChapter: Chapter { groups[0].chapter }
+    @MainActor static func locked(_ id: String) -> Bool {
+        if Store.shared.hasAllGrades || id == review.id { return false }
+        if id == "test-grade" { return true }
+        guard let c = all.first(where: { $0.id == id })?.chapter else { return false }
+        return c != freeChapter
+    }
+    /// The grade's lessons a family can open now (all of them with the plan).
+    @MainActor static var openLessons: [String] { gradeLessons.filter { !locked($0) } }
+
     /// The daily review's page (G's plan, step 7): a page of problems like a test, where Me is on the paper (it opens from
     /// Me, so it draws in where Me was). Not on the map, not counted, never a lesson.
     static let review = Piece(id: "review", name: "Daily review", chapter: .whole, at: MePage.corner)
@@ -661,7 +675,7 @@ final class PaperModel {
         case .me:
             let q = CGPoint(x: p.x, y: p.y)
             switch meSheet(now: PaperClock.now).taps.first(where: { $0.rect.contains(q) })?.action {
-            case .lesson(let id)?: if let piece = Map.piece(id) { open(piece, from: .me) }
+            case .lesson(let id)?: if let piece = Map.piece(id), !piece.locked { open(piece, from: .me) }
             case .review?: open(Map.review, from: .me)
             case .shelf(let k)?: openShelf(k)
             case .back?: openShelf(nil)

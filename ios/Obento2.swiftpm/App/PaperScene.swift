@@ -344,11 +344,11 @@ final class Rig {
         let px = 1 / lineScale
         // once the drawings have drawn in, only a new choice, zoom or learned lesson changes them: skip the rest
         let gone = snapped(model.mapGone(at: t), 40)
-        let settled = t - model.drawnAt > Piece.drawTime + 1, quick = "\(model.selected?.id ?? "") \(lineScale) \(Progress.shared.checks.count) \(gone)"
+        let settled = t - model.drawnAt > Piece.drawTime + 1, quick = "\(model.selected?.id ?? "") \(lineScale) \(Progress.shared.checks.count) \(gone) \(Store.shared.hasAllGrades)"
         if settled, quick == piecesQuick, !piecesKey.isEmpty { return }
         piecesQuick = settled ? quick : ""
         let now = Map.shown.map { p in (p, snapped(Piece.drawIn(p, time: t, drawnAt: model.drawnAt, from: model.drawFrom), 400) * gone, model.selected?.id == p.id, p.state) }
-        let key = now.map { "\($0.1) \($0.2) \($0.3)" }.joined(separator: ",")
+        let key = now.map { "\($0.1) \($0.2) \($0.3) \($0.0.locked)" }.joined(separator: ",")
         guard key != piecesKey else { return }
         piecesKey = key
         var groups: [String: (colour: UIColor, width: Double, y: Float, segs: [(SIMD2<Float>, SIMD2<Float>)])] = [:]
@@ -362,7 +362,7 @@ final class Rig {
             // the others' frames are their chapter's colour too, lighter: no grey on the map
             let frameColour = lit ? UIColor(hex: p.chapter.hex) : UIColor(hex: Ink.mix(paperHex, p.chapter.hex, 0.3))
             // a test still waiting is a dashed frame: there, but not open yet
-            let locked = p.isTest && !p.opens && state != .learned
+            let locked = (p.isTest && !p.opens && state != .learned) || p.locked
             add("frame-\(p.chapter.rawValue)-\(lit)-\(on)", frameColour, on ? 2 : 1.5, 0.001, drawn(locked ? Self.dashes(p.outline) : p.outline, k))
             // a light fill in the chapter's colour, coming in with the drawing
             let strength = (k * 10).rounded() / 10 * 0.1

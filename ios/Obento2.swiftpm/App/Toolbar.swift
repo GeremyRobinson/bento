@@ -331,10 +331,11 @@ struct Toolbar: View {
     private var offer: Pill.Offer {
         let p = Progress.shared, now = PaperClock.now
         let partway = PaperModel.reviewPartway(now: now)
-        let left = Pill.reviewLeft(ready: Review.ready(Map.gradeLessons, checks: p.checks) || partway != nil, doneToday: p.todaysReview != nil, partway: partway)
+        let left = Pill.reviewLeft(ready: Review.ready(Map.openLessons, checks: p.checks) || partway != nil, doneToday: p.todaysReview != nil, partway: partway)
         let due = Map.pieces.filter { $0.opens && p.dueBack($0.id) }.map(\.id)
         let learned = p.learned
-        let pages = (Map.pieces + Map.tests).compactMap { piece -> Pill.Page? in
+        // a locked lesson's page isn't offered (its work stays saved for when the plan comes back)
+        let pages = (Map.pieces + Map.tests).filter { !$0.locked }.compactMap { piece -> Pill.Page? in
             // a screenshot reads only the pages it made itself
             guard let s = Shots.active ? PageStore.cached(piece.id) : PageStore.load(piece.id) else { return nil }
             let finished = piece.isTest ? s.recorded : learned.contains(piece.id) && s.recheck.isEmpty

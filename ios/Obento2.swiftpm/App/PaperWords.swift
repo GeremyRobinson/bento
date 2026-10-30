@@ -145,7 +145,7 @@ extension Rig {
         let d = mapDrawer ?? { let d = SketchDrawer(); words.addChild(d.root); mapDrawer = d; return d }()
         // a lesson comes due on its own, as time passes: that changes its tab too
         let due = Map.pieces.filter(\.goOver).map(\.id).joined(separator: ",")
-        let key = "\(Progress.shared.checks.count) \(Progress.shared.learned.count) \(due) \(Progress.shared.tests) \(isDark) \(PageStore.version) \(model.selected?.id ?? "") \(model.drawnAt) \(AppSettings.name) \(AppSettings.needsSetup)"
+        let key = "\(Progress.shared.checks.count) \(Progress.shared.learned.count) \(due) \(Progress.shared.tests) \(isDark) \(PageStore.version) \(model.selected?.id ?? "") \(model.drawnAt) \(AppSettings.name) \(AppSettings.needsSetup) \(Store.shared.hasAllGrades)"
         if key != d.key, model.mapLeftAt == nil {
             d.key = key
             d.build(mapSketch(model, dark: isDark), rig: self, chapter: Chapter.whole.hex, dark: isDark, origin: .zero, from: t, now: t)
@@ -160,6 +160,8 @@ extension Rig {
     /// chapter's colour) when it's news or something to do; grey while it waits.
     @MainActor static func line(_ p: Piece) -> (text: String, lit: Bool)? {
         let saved = PageStore.load(p.id)
+        // waiting for the plan: said once, quietly (what it got to stays saved, and shows again with the plan)
+        if p.locked { return ("Locked", false) }
         guard p.isTest else {
             if Progress.shared.learned.contains(p.id) { return ("Passed", true) }
             if let s = saved, let plan = s.plan { return (plan.standing(s.problems, test: s.test).words, true) }
@@ -207,6 +209,11 @@ extension Rig {
                 let mark: Sketch.Colour = ready ? .hex(0xFFFFFF, 0xFFFFFF) : .hex(Ink.mix(0xF3F2EF, hex, 0.7), Ink.mix(0x121211, hex, 0.7))
                 if passed { s.overLine(id + "tick", [CGPoint(x: corner.x - 8, y: corner.y), CGPoint(x: corner.x - 2.5, y: corner.y + 6), CGPoint(x: corner.x + 9, y: corner.y - 6.5)], mark, width: Sketch.stroke) }
                 else { s.text(id + "n", "\(LessonPlan.test)", at: corner, size: 15, weight: .bold, mark) }
+            } else if model.selected?.id == p.id && p.locked {
+                // chosen, but waiting for the plan: no Start, only who to ask (no price, nothing to buy, G 30 Oct)
+                s.startAt = nil
+                let ask = "Ask a grown-up", w = PaperText.width(ask, PaperText.font(Sketch.Words.tab.size, Sketch.Words.tab.weight)) + 24
+                s.tab(id, frame: r, ask, width: (w / Paper.cell).rounded(.up) * Paper.cell, colour: .ink3)
             } else if model.selected?.id == p.id && p.opens {
                 // chosen: its tab says Start (Continue; Go over when it's marked so: it opens on its recheck, or on the
                 // page with what to go over), with an arrow (G 18 Oct)

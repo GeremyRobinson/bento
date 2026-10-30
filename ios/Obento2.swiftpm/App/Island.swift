@@ -445,6 +445,16 @@ struct IslandPage: View {
         }
         .padding(.top, 18)
         if let said = ui.said[.plan] { Text(said).font(Island.small).foregroundStyle(Ink.ink2).padding(.top, 6) }
+        // builds from Xcode have every chapter open (G's daughter keeps everything); this shows them as a new family sees
+        // them, to try the locks. Never in an App Store build.
+        if Store.fromXcode {
+            Rectangle().fill(Ink.line).frame(height: 1).padding(.top, 18)
+            planRow("Preview as a new family") {
+                OnOff(on: store.previewLocked, label: "Preview as a new family") { on in store.previewLocked = on; ui.settingsVersion += 1 }
+            }
+            Text("Only in builds from Xcode. Locks every chapter after the first, the way a family without the plan sees it.")
+                .font(Island.small).foregroundStyle(Ink.ink2).padding(.top, 4).fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     /// A row of the plan: its name on the left, what it is on the right.

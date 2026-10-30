@@ -230,7 +230,7 @@ enum MePage {
     private static func reviewCard(_ s: inout Sketch, _ out: inout Sheet, _ r: CGRect, now: Double) {
         let p = Progress.shared, id = "me-review"
         let done = p.todaysReview, partway = PaperModel.reviewPartway(now: now)
-        let opens = Review.ready(Map.gradeLessons, checks: p.checks) || done != nil || partway != nil
+        let opens = Review.ready(Map.openLessons, checks: p.checks) || done != nil || partway != nil
         let state: Sketch.FrameState = done != nil ? .done : partway != nil ? .now : opens ? .open : .locked
         s.frame(id, r, state, pen: .ink)
         if done != nil { s.tab(id, frame: r, "Done", pen: .ink) }
