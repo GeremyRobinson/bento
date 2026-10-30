@@ -8,6 +8,8 @@ struct PaperScreen: View {
     /// A drag is under way (its first move has decided what it does), and a pinch is.
     @State private var dragging = false
     @State private var pinching = false
+    /// This drag was ever a pinch: let go, it doesn't coast.
+    @State private var pinched = false
     /// The paper's clock (G: a still paper costs nothing). It runs every frame only while something moves or draws.
     /// `quiet` is bumped by the frame that finds nothing moving any more, so the clock is told to stop even when nothing
     /// else would ask SwiftUI to look again; `blinkTick` is the moment of the cursor's last blink while the clock is
@@ -133,11 +135,14 @@ struct PaperScreen: View {
                 .onChanged { v in
                     // the drag's first move decides: a hand move on the problem (it took hold of something the child can
                     // move), or the paper panning; a drag that started as a pinch only ever pans
-                    if !dragging { dragging = true; if !pinching { model.dragStart(at: .init(v.startLocation.x, v.startLocation.y)) } }
+                    if !dragging { dragging = true; pinched = pinching; if !pinching { model.dragStart(at: .init(v.startLocation.x, v.startLocation.y)) } }
+                    if pinching { pinched = true }
                     if model.handDrag { model.dragMove(to: .init(v.location.x, v.location.y)) }
                     else { model.pan(v.translation.width - lastDrag.width, v.translation.height - lastDrag.height) }
                     lastDrag = v.translation }
-                .onEnded { _ in model.dragEnd(); lastDrag = .zero; dragging = false })
+                .onEnded { v in
+                    model.dragEnd(velocity: pinched ? .init(0, 0) : .init(v.velocity.width, v.velocity.height))
+                    lastDrag = .zero; dragging = false; pinched = false })
             .simultaneousGesture(MagnifyGesture()
                 .onChanged { v in
                     pinching = true

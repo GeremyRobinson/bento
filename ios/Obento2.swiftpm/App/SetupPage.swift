@@ -3,7 +3,7 @@ import SwiftUI
 /// Setting up, the first time the app opens (G 26 Oct, design/prototype/front-door.html section 1): about a minute, a
 /// grown-up and the child together, drawn on the paper like everything else, every piece on its squares. One child per
 /// iPad, so there are no profiles.
-/// 1. Welcome: a rectangle draws itself in and fills block by block, "Maths you can see.", and Start.
+/// 1. Welcome: a rectangle draws itself in and fills block by block, "Math you can see.", and Start.
 /// 2. Name (it can be skipped): typed a letter to a square on a line of squares, with the iPad's keyboard.
 /// 3. Grade: K to 12 as a row of blocks; 5th has lessons, the others are dead blocks that only say they're coming soon.
 /// 4. For a grown-up: a daily reminder and sound, and how to find the grown-ups' page later.
@@ -81,7 +81,7 @@ final class SetupPage {
                 }
             }
             s.startAt = stepAt + 2.8
-            s.text("su-title", "Maths you can see.", at: CGPoint(x: rect.midX, y: y0 + 22 * c), size: Sketch.maths, weight: .medium, .ink, digits: false)
+            s.text("su-title", "Math you can see.", at: CGPoint(x: rect.midX, y: y0 + 22 * c), size: Sketch.maths, weight: .medium, .ink, digits: false)
             s.startAt = stepAt + 3.2
             let start = R(10, 25, 10, 2)
             s.block("su-start", start, .main, word: "Start", arrow: true)
@@ -119,9 +119,9 @@ final class SetupPage {
             out.frame = Rect(x: x0, y: y0, width: 64 * c, height: next.maxY - y0)
 
         case .grownUp:
-            s.words("su-ask-grownup", "For a grown-up", .heading, x: x0, top: y0, width: 1200)
+            s.words("su-ask-grownup", "For grown-ups", .heading, x: x0, top: y0, width: 1200)
             let p = AppSettings.profile, ask = Sketch.Words.say
-            s.words("su-rem", "A reminder each day", ask, x: x0, top: y0 + 5 * c, width: 1200)
+            s.words("su-rem", "Daily reminder", ask, x: x0, top: y0 + 5 * c, width: 1200)
             var bx = x0 + 15 * c
             for r in Reminder.allCases {
                 let b = CGRect(x: bx, y: y0 + 5 * c, width: GrownUpPage.blockWidth(r.words), height: 2 * c)
@@ -137,7 +137,7 @@ final class SetupPage {
                 s.block("su-sound-\(word)-\(chosen)", b, chosen ? GrownUpPage.chosen : GrownUpPage.other, word: word)
                 out.taps.append((b, .sound(on))); bx = b.maxX + c
             }
-            s.words("su-later", "To change these later: ⋯, then For grown-ups, then hold the square.", Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2),
+            s.words("su-later", "You can change these later in More › For grown-ups.", Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2),
                     x: x0, top: y0 + 15 * c, width: 1400)
             let done = R(0, 20, 7, 2)
             s.block("su-done", done, .main, word: "Done", arrow: true)

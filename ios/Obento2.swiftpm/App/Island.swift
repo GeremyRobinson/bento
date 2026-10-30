@@ -22,6 +22,13 @@ enum Island {
     enum Tab: String, CaseIterable { case settings = "Settings", privacy = "Privacy", help = "Help", plan = "Plan" }
     /// Its width: a readable column of words (at most 556 points) with room round it.
     static func width(screen: Double) -> Double { min(600, screen - 48) }
+    /// The space between its pages as they slide.
+    static let gap = 40.0
+    /// A pull past the end, as rubber gives: nearly all of a short pull, less and less of a long one, never more than
+    /// `size` (the way iPadOS's own scrolling pulls past its edge).
+    static func rubber(_ x: Double, _ size: Double) -> Double {
+        let d = abs(x); return (1 - 1 / (d * 0.55 / size + 1)) * size * (x < 0 ? -1 : 1)
+    }
     /// The words' sizes in it.
     static let body = Typeface.font(17), small = Typeface.font(15), key = Typeface.font(17, .semibold), heading = Typeface.font(20, .semibold)
 }
@@ -48,6 +55,9 @@ struct IslandGate: View {
                     .rotationEffect(.degrees(-90))
                 Rectangle().strokeBorder(Ink.ink, lineWidth: 1.5).frame(width: 30, height: 30)
                     .background(holding ? Ink.sunk : .clear)
+                    // pressed in under the finger while it holds
+                    .scaleEffect(holding ? 0.88 : 1)
+                    .animation(holding ? Motion.snap : Motion.flick, value: holding)
             }
             .frame(width: 76, height: 76)
             .contentShape(Rectangle().inset(by: -16))
@@ -57,7 +67,7 @@ struct IslandGate: View {
             .accessibilityLabel("Hold for 3 seconds")
             .accessibilityAddTraits(.isButton)
             Text("For grown-ups").font(Island.key).foregroundStyle(Ink.ink)
-            Text(letGo ? "Keep holding until the ring is full." : "Hold the square for 3 seconds.")
+            Text(letGo ? "Keep holding" : "Hold for 3 seconds")
                 .font(Island.small).foregroundStyle(Ink.ink2)
                 .contentTransition(.opacity)
         }
@@ -81,7 +91,7 @@ struct IslandGate: View {
     private func release() {
         guard holding else { return }
         holding = false; timer?.cancel()
-        withAnimation(.easeOut(duration: 0.35)) { fill = 0; letGo = true }
+        withAnimation(Motion.close) { fill = 0; letGo = true }
     }
 }
 
@@ -101,12 +111,14 @@ struct IslandTabs: View {
     @Namespace private var tabsSpace
     /// How far a finger has dragged the pages (points; 0 when nothing's held).
     @State private var drag = 0.0
+    /// This touch is swiping the pages (not a control's, not up and down).
+    @State private var paging = false
 
     var body: some View {
         let tabs = Island.Tab.allCases, tab = ui.tab
         let index = Double(tabs.firstIndex(of: tab) ?? 0)
         let h = min(room, tabs.compactMap { ui.heights[$0] }.max() ?? room)
-        let slide = Animation.smooth(duration: ui.slow ? 3.5 : 0.36)
+        let slide = ui.slow ? Animation.smooth(duration: 3.5) : Motion.open
         VStack(spacing: 0) {
             HStack(spacing: 4) {
                 ForEach(tabs, id: \.self) { t in
@@ -121,41 +133,54 @@ struct IslandTabs: View {
                             }
                             .contentShape(Capsule())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(Press(scale: 0.96))
                     .accessibilityAddTraits(t == tab ? .isSelected : [])
                 }
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, 12).padding(.top, 8).padding(.bottom, 6)
             Rectangle().fill(Ink.line).frame(height: 1).padding(.horizontal, 10)
-            // the page shown, in one frame the island's size: a new one slides in from the side it lies on as the old one
-            // slides out the other way, and a finger's drag carries the page along before it lets go
-            ZStack {
-                ScrollView {
-                    IslandPage(tab: tab, model: model).frame(width: width)
+            // the pages side by side in a strip, one island wide each, seen through the island's frame: a switch slides
+            // the strip, and a finger's drag carries it, the next page coming in beside the one leaving (G 29 Oct: a
+            // drag showed an empty gap until let go)
+            // a gap between pages (as Photos has), so a page settling in never shows the edge of the last one
+            HStack(alignment: .top, spacing: Island.gap) {
+                ForEach(tabs, id: \.self) { t in
+                    ScrollView {
+                        IslandPage(tab: t, model: model).frame(width: width)
+                    }
+                    .scrollBounceBehavior(.basedOnSize)
+                    .frame(width: width, height: h)
+                    .allowsHitTesting(t == tab)
+                    .accessibilityHidden(t != tab)
                 }
-                .scrollBounceBehavior(.basedOnSize)
-                .frame(width: width, height: h)
-                .id(tab)
-                .transition(.asymmetric(insertion: .move(edge: ui.tabForward ? .trailing : .leading),
-                                        removal: .move(edge: ui.tabForward ? .leading : .trailing)))
-                .offset(x: drag)
             }
-            .frame(width: width, height: h)
+            .offset(x: -index * (width + Island.gap) + drag)
+            .frame(width: width, height: h, alignment: .topLeading)
             .clipped()
             .contentShape(Rectangle())
             .simultaneousGesture(
                 DragGesture(minimumDistance: 12)
                     .onChanged { v in
-                        // sideways only; at the first and last page it gives only a little
-                        guard abs(v.translation.width) > abs(v.translation.height) else { return }
+                        // sideways only; the page stays under the finger, and past the first or last page it pulls
+                        // like rubber, giving less the further it goes
+                        guard !ui.controlHeld, paging || abs(v.translation.width) > abs(v.translation.height) else { return }
+                        paging = true
                         let edge = (index == 0 && v.translation.width > 0) || (Int(index) == tabs.count - 1 && v.translation.width < 0)
-                        drag = v.translation.width * (edge ? 0.25 : 0.6)
+                        drag = edge ? Island.rubber(v.translation.width, width) : v.translation.width
                     }
                     .onEnded { v in
+                        // whatever held this touch, it's let go now
+                        ui.controlHeld = false
+                        guard paging else { return }
+                        paging = false
                         let i = Int(index), past = v.predictedEndTranslation.width
                         let to = past < -width / 4 ? min(i + 1, tabs.count - 1) : past > width / 4 ? max(i - 1, 0) : i
-                        if to == i { withAnimation(slide) { drag = 0 } } else { go(tabs[to], slide) }
+                        // thrown: the pages carry on at the finger's speed for the way left, and settle
+                        let left = to == i ? abs(drag) : width + Island.gap - abs(drag)
+                        let speed = to == i ? -v.velocity.width * (drag > 0 ? 1 : -1) : abs(v.velocity.width)
+                        let throwIt = ui.slow ? slide : Motion.thrown(velocity: speed, distance: left, bounce: to == i ? 0.2 : 0.1)
+                        if to == i { withAnimation(throwIt) { drag = 0 } } else { go(tabs[to], throwIt) }
                     })
         }
         .frame(width: width)
@@ -164,12 +189,9 @@ struct IslandTabs: View {
     private func go(_ t: Island.Tab, _ slide: Animation) {
         let tabs = Island.Tab.allCases
         guard t != ui.tab else { withAnimation(slide) { drag = 0 }; return }
-        // which way it slides is set first and drawn, so the page leaving knows which side to go
         ui.tabForward = (tabs.firstIndex(of: t) ?? 0) > (tabs.firstIndex(of: ui.tab) ?? 0)
         ui.askStartOver = false
-        DispatchQueue.main.async {
-            withAnimation(slide) { ui.tab = t; drag = 0 }
-        }
+        withAnimation(slide) { ui.tab = t; drag = 0 }
     }
 }
 
@@ -221,18 +243,16 @@ struct IslandPage: View {
     }
 
     private var name: String { AppSettings.name }
-    /// "Mia" or "your child" (Your child's at the start of a line).
-    private var child: String { name.isEmpty ? "your child" : name }
     private var saving: Bool { !model.shotMode }
 
     // MARK: Settings
 
     @ViewBuilder private var settings: some View {
         let p = AppSettings.profile
-        setting("Name", "Shown in \u{201C}Start here\u{201D} and on Me") {
+        setting("Name") {
             if measuring { Capsule().frame(width: 180, height: 36) } else { NameField(saving: saving) }
         }
-        setting("Grade", ui.islandGrade ?? "Only 5th grade so far") {
+        setting("Grade", ui.islandGrade) {
             HStack(spacing: 3) {
                 ForEach(Grades.all, id: \.self) { g in
                     let here = g == p.grade, live = Grades.isLive(g)
@@ -249,12 +269,12 @@ struct IslandPage: View {
                             .foregroundStyle(here || live ? Ink.ink : Ink.ink3)
                             .contentShape(Rectangle())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(Press())
                     .accessibilityLabel(Grades.name(g))
                 }
             }
         }
-        setting("Daily reminder", "A note on the iPad") {
+        setting("Daily reminder") {
             Choices(options: Reminder.allCases.map { ($0.words.replacingOccurrences(of: " pm", with: ""), $0 == p.reminder) }, label: "Daily reminder") { i in
                 let r = Reminder.allCases[i]
                 var q = AppSettings.profile; q.reminder = r
@@ -267,18 +287,18 @@ struct IslandPage: View {
                 }
             }
         }
-        setting("Sound", "Soft sounds for right and wrong") {
+        setting("Sound") {
             OnOff(on: AppSettings.sound, label: "Sound") { on in
                 AppSettings.set(sound: on, saving: saving); ui.settingsVersion += 1
             }
         }
-        setting("Read aloud", "Reads out each step's words") {
+        setting("Read aloud") {
             OnOff(on: AppSettings.readAloud, label: "Read aloud") { on in
                 AppSettings.set(readAloud: on, saving: saving); ui.settingsVersion += 1
             }
         }
-        setting("Paper", "Light or dark", last: true) {
-            Choices(options: [("Match iPad", AppSettings.theme == ""), ("Light", AppSettings.theme == "light"), ("Dark", AppSettings.theme == "dark")], segment: 100, label: "Paper") { i in
+        setting("Appearance", last: true) {
+            Choices(options: [("Auto", AppSettings.theme == ""), ("Light", AppSettings.theme == "light"), ("Dark", AppSettings.theme == "dark")], label: "Appearance") { i in
                 AppSettings.set(theme: ["", "light", "dark"][i], saving: saving); ui.settingsVersion += 1
             }
         }
@@ -286,30 +306,30 @@ struct IslandPage: View {
         Rectangle().fill(Ink.line).frame(height: 1).padding(.top, 14)
         Text("Start over").font(Island.key).foregroundStyle(Ink.ink).padding(.top, 14)
         if ui.askStartOver {
-            Text("Wipe every lesson, test, review and setting, and set up again?").font(Island.body).foregroundStyle(Ink.ink)
+            Text("Erase everything and set up again?").font(Island.body).foregroundStyle(Ink.ink)
                 .fixedSize(horizontal: false, vertical: true).padding(.top, 6)
             HStack(spacing: 10) {
                 RoundButton(word: "Start over", strong: true) {
                     ui.askStartOver = false; ui.open = nil
                     model.startOver()
                 }
-                RoundButton(word: "Keep") { ui.askStartOver = false }
+                RoundButton(word: "Cancel") { ui.askStartOver = false }
             }
             .padding(.top, 10)
         } else {
-            Text("Wipes every lesson, test, review and setting, and sets up again. It asks first.").font(Island.body).foregroundStyle(Ink.ink2)
+            Text("Erases all progress and settings.").font(Island.body).foregroundStyle(Ink.ink2)
                 .fixedSize(horizontal: false, vertical: true).padding(.top, 6)
             RoundButton(word: "Start over…", strong: true) { ui.askStartOver = true }.padding(.top, 10)
         }
     }
 
     /// A setting's row: its name and what it does on the left, its choices on the right, a line under it.
-    private func setting<C: View>(_ title: String, _ line: String, last: Bool = false, @ViewBuilder control: () -> C) -> some View {
+    private func setting<C: View>(_ title: String, _ line: String? = nil, last: Bool = false, @ViewBuilder control: () -> C) -> some View {
         VStack(spacing: 0) {
             HStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title).font(Island.key).foregroundStyle(Ink.ink)
-                    Text(line).font(Island.small).foregroundStyle(Ink.ink2).contentTransition(.opacity)
+                    if let line { Text(line).font(Island.small).foregroundStyle(Ink.ink2).contentTransition(.opacity) }
                 }
                 Spacer(minLength: 8)
                 control()
@@ -322,23 +342,11 @@ struct IslandPage: View {
     // MARK: Privacy
 
     @ViewBuilder private var privacy: some View {
-        Text(name.isEmpty ? "Your child's privacy" : "\(name)'s privacy").font(Island.heading).foregroundStyle(Ink.ink).padding(.top, 10)
-        VStack(alignment: .leading, spacing: 10) {
-            ForEach(["Everything stays on this iPad.", "No ads, ever.", "No tracking.", "No account needed."], id: \.self) { line in
-                HStack(spacing: 12) {
-                    // a small square with a square in it: the paper's own tick
-                    Rectangle().strokeBorder(Ink.ink, lineWidth: 1.5).frame(width: 16, height: 16)
-                        .overlay(Rectangle().fill(Ink.ink).frame(width: 7, height: 7))
-                    Text(line).font(Island.key).foregroundStyle(Ink.ink)
-                }
-            }
-        }
-        .padding(.top, 10)
-        heading("What the app keeps")
-        paragraph("\(cap(name.isEmpty ? "your child's" : name + "'s")) name, grade, settings, and how each lesson went: checks, tests, the daily review, and how long was spent practising each day. It's saved only on this iPad, and Start over wipes all of it.")
-        heading("What it never does")
-        paragraph("It never sends anything about \(child) anywhere, never shows ads, and never asks for an email or a password.")
-        link("Read the full policy →", tab: .privacy) {
+        // said once, plainly (G 29 Oct: no list of promises)
+        heading("Privacy")
+        paragraph("\(name.isEmpty ? "Your child's" : name + "'s") name, grade and progress are saved on this iPad and nowhere else.")
+        paragraph("Start over, in Settings, erases all of it.")
+        link("Privacy policy", tab: .privacy) {
             guard let url = AppInfo.privacyURL else { return false }
             UIApplication.shared.open(url); return true
         }
@@ -347,11 +355,10 @@ struct IslandPage: View {
     // MARK: Help
 
     @ViewBuilder private var help: some View {
-        question("How does a lesson work?", "Watch the How to, solve three together, then six on your own. Six right opens the lesson test; 10 of 12 and it's learned.")
-        question("Why do lessons come back?", "A learned lesson comes back for a short check after 3, 7, 21 and 60 days, and the next day after a low one, so it stays learned.")
-        question("How do I reset one lesson?", "On the grown-ups' paper, open Lessons and tap the lesson.")
-        question("Still stuck?", "We read every message.", line: false)
-        link("Email us →", tab: .help) {
+        question("How a lesson works", "Watch the How to, do three problems together, then six alone. Six right opens the lesson test, and 10 of 12 passes it.")
+        question("Checks", "A passed lesson comes back for a short check after 3, 7, 21 and 60 days. If a check goes badly, it comes back the next day.")
+        question("Resetting a lesson", "On the page behind this, open Lessons and tap the lesson.", line: false)
+        link("Email us", tab: .help) {
             guard let email = AppInfo.supportEmail, let url = URL(string: "mailto:\(email)") else { return false }
             UIApplication.shared.open(url); return true
         }
@@ -372,8 +379,8 @@ struct IslandPage: View {
 
     @ViewBuilder private var plan: some View {
         VStack(spacing: 8) {
-            Text("How the app is paid for").font(Island.heading).foregroundStyle(Ink.ink)
-            Text("Coming later, once we decide. A purchase would always appear here, behind the hold, never in front of \(child).")
+            Text("Nothing to buy yet").font(Island.heading).foregroundStyle(Ink.ink)
+            Text("If that changes, it will be here, behind the hold.")
                 .font(Island.body).foregroundStyle(Ink.ink2).multilineTextAlignment(.center).lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -387,7 +394,6 @@ struct IslandPage: View {
     private func paragraph(_ s: String) -> some View {
         Text(s).font(Island.body).foregroundStyle(Ink.ink2).lineSpacing(3).fixedSize(horizontal: false, vertical: true).padding(.top, 6)
     }
-    private func cap(_ s: String) -> String { s.prefix(1).uppercased() + s.dropFirst() }
 
     /// A way out of the app (the policy's page, an email): while its address isn't there yet (AppInfo), it says
     /// "Coming soon." instead of opening anything.
@@ -410,83 +416,112 @@ struct Choices: View {
     /// What it sets, said by VoiceOver (and found by the real-touch tests).
     var label = ""
     let pick: (Int) -> Void
-    /// A slider (G 29 Oct): one raised thumb that glides to the chosen segment, and follows a finger dragged along it.
-    @State private var held: Int?
-    @Namespace private var thumbSpace
+    /// A slider (G 29 Oct): one raised thumb under the chosen word. It's a thing the finger holds: dragged, it follows the
+    /// finger exactly; let go, it's thrown to the nearest word at the finger's speed and settles there with a little
+    /// give (G 29 Oct: springs, so it moves like something real). A tap sends it to the word tapped.
+    @State private var finger: Double?
+    @State private var pressed = false
 
     var body: some View {
-        let chosen = held ?? options.firstIndex(where: \.1) ?? 0
-        HStack(spacing: 0) {
-            ForEach(options.indices, id: \.self) { i in
-                // one weight and colour (a choice never changes width as it's picked); the chosen one full strength
-                Text(options[i].0).font(Typeface.font(15, .semibold)).lineLimit(1).fixedSize()
-                    .foregroundStyle(Ink.ink).opacity(i == chosen ? 1 : 0.55)
-                    .frame(width: segment, height: 32)
-                    .background {
-                        if i == chosen {
-                            Capsule().fill(Self.raised).shadow(color: .black.opacity(0.12), radius: 1.5, y: 1)
-                                .matchedGeometryEffect(id: "thumb", in: thumbSpace)
-                        }
-                    }
+        let picked = options.firstIndex(where: \.1) ?? 0, last = Double(options.count - 1) * segment
+        let x = finger ?? Double(picked) * segment
+        let near = max(0, min(options.count - 1, Int((x / segment).rounded())))
+        ZStack(alignment: .leading) {
+            Capsule().fill(Self.raised).shadow(color: .black.opacity(0.12), radius: 1.5, y: 1)
+                .frame(width: segment, height: 32)
+                .scaleEffect(pressed ? 0.95 : 1)
+                .offset(x: x)
+            HStack(spacing: 0) {
+                ForEach(options.indices, id: \.self) { i in
+                    // one weight and colour (a choice never changes width as it's picked); the one under the thumb full strength
+                    Text(options[i].0).font(Typeface.font(15, .semibold)).lineLimit(1).fixedSize()
+                        .foregroundStyle(Ink.ink).opacity(i == near ? 1 : 0.55)
+                        .frame(width: segment, height: 32)
+                }
             }
+            .animation(Motion.snap, value: near)
         }
         .padding(3)
         .background(Ink.sunk, in: Capsule())
         .contentShape(Capsule())
         .gesture(DragGesture(minimumDistance: 0)
             .onChanged { v in
-                let i = max(0, min(options.count - 1, Int((v.location.x - 3) / segment)))
-                if i != held { withAnimation(.smooth(duration: 0.25)) { held = i } }
+                if !pressed { withAnimation(Motion.snap) { pressed = true } }
+                BarUI.shared.controlHeld = true
+                guard finger != nil || abs(v.translation.width) > 4 else { return }
+                // held on the thumb, it moves with the finger; held beside it, it comes to the finger first
+                let onThumb = abs(v.startLocation.x - 3 - (Double(picked) + 0.5) * segment) < segment / 2
+                let to = min(last, max(0, onThumb ? Double(picked) * segment + v.translation.width : v.location.x - 3 - segment / 2))
+                if finger == nil && !onThumb { withAnimation(Motion.snap) { finger = to } } else { finger = to }
             }
-            .onEnded { _ in
-                guard let i = held else { return }
-                withAnimation(.smooth(duration: 0.25)) { pick(i); held = nil }
+            .onEnded { v in
+                let from = finger ?? Double(picked) * segment
+                // a tap: the word tapped; a drag: where the throw would carry it
+                let landing = finger == nil ? v.location.x - 3 - segment / 2 : from + (v.predictedEndTranslation.width - v.translation.width) / 2
+                let i = max(0, min(options.count - 1, Int((landing / segment).rounded())))
+                let distance = Double(i) * segment - from
+                let move = finger == nil ? Motion.flick
+                    : Motion.thrown(velocity: distance >= 0 ? v.velocity.width : -v.velocity.width, distance: abs(distance), bounce: 0.24)
+                BarUI.shared.controlHeld = false
+                withAnimation(move) { finger = nil; pressed = false; pick(i) }
             })
-        .animation(.smooth(duration: 0.25), value: chosen)
         .accessibilityElement()
         .accessibilityLabel(label)
         .accessibilityIdentifier("slider-\(label)")
-        .accessibilityValue(options[chosen].0)
+        .accessibilityValue(options[picked].0)
         .accessibilityAdjustableAction { d in
-            let i = d == .increment ? min(chosen + 1, options.count - 1) : max(chosen - 1, 0)
-            pick(i)
+            let i = d == .increment ? min(picked + 1, options.count - 1) : max(picked - 1, 0)
+            withAnimation(Motion.flick) { pick(i) }
         }
     }
 }
 
-/// On or off (G 29 Oct): a switch, its knob sliding across. On is the ink track; off the sunken one. Tap it, or drag the
-/// knob across.
+/// On or off (G 29 Oct): a switch. On is the ink track; off the sunken one. Its knob is a thing the finger holds: touched,
+/// it stretches a little toward the middle the way a fingertip presses it; dragged, it follows the finger and the track
+/// changes as it crosses the middle; let go (or tapped), it's flicked to its end with a little bounce.
 struct OnOff: View {
     let on: Bool
     /// What it turns on, said by VoiceOver (and found by the real-touch tests).
     var label = ""
     let set: (Bool) -> Void
-    @State private var dragged: Bool?
+    @State private var finger: Double?
+    @State private var pressed = false
+    /// How far the knob travels: the track less the knob and its 3 points each side.
+    private static let travel = 54.0 - 26 - 6
     var body: some View {
-        let shown = dragged ?? on
-        ZStack(alignment: shown ? .trailing : .leading) {
+        let travel = Self.travel, x = finger ?? (on ? travel : 0)
+        let shown = finger.map { $0 > travel / 2 } ?? on
+        let stretch = pressed ? 7.0 : 0
+        ZStack(alignment: .leading) {
             Capsule().fill(shown ? Ink.ink : Ink.sunk)
-            Circle().fill(Choices.raised).shadow(color: .black.opacity(0.18), radius: 1.5, y: 1)
+            Capsule().fill(Choices.raised).shadow(color: .black.opacity(0.18), radius: 1.5, y: 1)
+                .frame(width: 26 + stretch, height: 26)
+                // stretched, it grows toward the middle, never past the track's end
+                .offset(x: min(x, travel - stretch))
                 .padding(3)
         }
         .frame(width: 54, height: 32)
+        .animation(Motion.snap, value: shown)
         .contentShape(Capsule())
         .gesture(DragGesture(minimumDistance: 0)
             .onChanged { v in
-                // a drag decides by where the finger is; a tap (no drag) flips it on release
-                if abs(v.translation.width) > 6 { let to = v.location.x > 27; if to != dragged { withAnimation(.smooth(duration: 0.22)) { dragged = to } } }
+                if !pressed { withAnimation(Motion.snap) { pressed = true } }
+                BarUI.shared.controlHeld = true
+                guard finger != nil || abs(v.translation.width) > 4 else { return }
+                finger = min(travel, max(0, (on ? travel : 0) + v.translation.width))
             }
-            .onEnded { _ in
-                let to = dragged ?? !on
-                withAnimation(.smooth(duration: 0.22)) { set(to); dragged = nil }
+            .onEnded { v in
+                // a tap flips it; a drag goes the way it was thrown
+                let to = finger.map { $0 + (v.predictedEndTranslation.width - v.translation.width) / 2 > travel / 2 } ?? !on
+                BarUI.shared.controlHeld = false
+                withAnimation(Motion.flick) { set(to); finger = nil; pressed = false }
             })
-        .animation(.smooth(duration: 0.22), value: shown)
         .accessibilityElement()
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel(label)
         .accessibilityIdentifier("switch-\(label)")
         .accessibilityValue(on ? "On" : "Off")
-        .accessibilityAction { set(!on) }
+        .accessibilityAction { withAnimation(Motion.flick) { set(!on) } }
     }
 }
 
@@ -502,7 +537,7 @@ struct RoundButton: View {
                 .overlay(Capsule().strokeBorder(strong ? Ink.ink : Ink.lineStrong, lineWidth: 1.5))
                 .contentShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(Press())
     }
 }
 

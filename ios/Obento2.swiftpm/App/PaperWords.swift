@@ -161,14 +161,14 @@ extension Rig {
     @MainActor static func line(_ p: Piece) -> (text: String, lit: Bool)? {
         let saved = PageStore.load(p.id)
         guard p.isTest else {
-            if Progress.shared.learned.contains(p.id) { return ("Learned", true) }
+            if Progress.shared.learned.contains(p.id) { return ("Passed", true) }
             if let s = saved, let plan = s.plan { return (plan.standing(s.problems, test: s.test).words, true) }
             return saved.map { ("\($0.solved) of \($0.problems.count) done", true) }
         }
         if let s = saved, !s.recorded { return ("\(s.solved) of \(s.problems.count) done", true) }
         if let r = Progress.shared.tests[p.id] { return (r.passed ? "Passed · \(r.right) of \(r.of)" : "Take it again", true) }
         if p.opens { return ("\(LessonPlan.test) problems", true) }
-        return (p.id == "test-grade" ? "Pass the chapter tests first" : "Finish the lessons first", false)
+        return (p.id == "test-grade" ? "Pass the chapter tests first" : "Pass the lessons first", false)
     }
 
     private func mapSketch(_ model: PaperModel, dark: Bool) -> Sketch {

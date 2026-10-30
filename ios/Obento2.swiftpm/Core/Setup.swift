@@ -71,10 +71,10 @@ public enum Grades {
         let end = teen ? "th" : [1: "st", 2: "nd", 3: "rd"][g % 10] ?? "th"
         return "\(g)\(end) grade"
     }
-    /// What the paper says when a grade block is tapped while setting up: "5th grade it is." or "3rd grade: coming soon."
-    public static func picked(_ g: Int) -> String { isLive(g) ? "\(name(g)) it is." : "\(name(g)): coming soon." }
-    /// The same on Me, where the grade is already chosen: "5th grade." or "3rd grade is coming soon."
-    public static func onMe(_ g: Int) -> String { isLive(g) ? "\(name(g))." : "\(name(g)) is coming soon." }
+    /// What the paper says when a grade block is tapped while setting up: "5th grade" or "3rd grade is coming soon".
+    public static func picked(_ g: Int) -> String { onMe(g) }
+    /// The same on Me and in Settings.
+    public static func onMe(_ g: Int) -> String { isLive(g) ? name(g) : "\(name(g)) is coming soon" }
 }
 
 /// Setting up, the first time the app opens (G 26 Oct, front-door.html section 1): a welcome, the child's name (it can

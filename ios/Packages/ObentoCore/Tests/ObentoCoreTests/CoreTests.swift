@@ -31,6 +31,31 @@ final class PaperCameraTests: XCTestCase {
         let end = PaperCamera.between(a, b, 1, screen: screen)
         XCTAssertEqual(end.x, b.x, accuracy: 1e-9); XCTAssertEqual(end.y, b.y, accuracy: 1e-9); XCTAssertEqual(end.zoom, b.zoom, accuracy: 1e-12)
     }
+
+    /// A glide is a spring's path (G 29 Oct): from 0 to exactly 1, never back, off at once (well ahead of the old ease
+    /// a fifth of the way in) and landing softly (barely moving over its last tenth).
+    func testGlideIsASpring() {
+        XCTAssertEqual(glide(0), 0); XCTAssertEqual(glide(1), 1, accuracy: 1e-12)
+        let steps = (0...100).map { glide(Double($0) / 100) }
+        XCTAssertEqual(steps, steps.sorted(), "never goes back")
+        XCTAssertGreaterThan(glide(0.2), ease(0.2) + 0.3)
+        XCTAssertLessThan(glide(1) - glide(0.9), 0.01)
+    }
+
+    /// Let go mid-pan, the paper carries on at the finger's speed, the way it was going, and slows to a stop; let go
+    /// slowly, it just stops; a hard flick is held to a sane distance.
+    func testPanLetGoCoasts() {
+        let a = PaperCamera(x: 10, y: 20, zoom: 1)
+        XCTAssertNil(CameraFlight.coast(from: a, velocity: Point(50, 0), start: 0))
+        let f = CameraFlight.coast(from: a, velocity: Point(800, -600), start: 0)!
+        let dt = 1e-4, c = f.camera(at: dt, screen: screen)
+        XCTAssertEqual((c.x - a.x) / dt, 800, accuracy: 2); XCTAssertEqual((c.y - a.y) / dt, -600, accuracy: 2)
+        let stop = f.camera(at: f.duration, screen: screen)
+        XCTAssertEqual(stop.x, f.to.x, accuracy: 1e-9); XCTAssertEqual(stop.y, f.to.y, accuracy: 1e-9)
+        XCTAssertEqual(f.to.zoom, a.zoom)
+        let hard = CameraFlight.coast(from: a, velocity: Point(90000, 0), start: 0)!
+        XCTAssertLessThan(hard.to.x - a.x, 5000 * CameraTiming.coastTime + 1)
+    }
 }
 
 final class PaperView3DTests: XCTestCase {

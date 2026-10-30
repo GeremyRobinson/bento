@@ -41,7 +41,7 @@ struct Toolbar: View {
             .padding(.bottom, bottom)
             .frame(maxWidth: .infinity)
         }
-        .animation(.smooth(duration: ui.slow ? 3 : 0.35), value: ui.open == .grownUps)
+        .animation(ui.slow ? .smooth(duration: 3) : Motion.close, value: ui.open == .grownUps)
         .onChange(of: inLesson) { _, _ in ui.open = nil }
         // leaving the grown-ups' page shuts its island (the island's hold takes the paper there, so arriving keeps it)
         .onChange(of: model.place) { _, place in
@@ -73,8 +73,8 @@ struct Toolbar: View {
                     .id(panel)
                     // one panel to the next (the hold to the tabs): the old goes at once, the new comes just after, so
                     // the two never show over each other
-                    .transition(.asymmetric(insertion: .opacity.animation(.easeIn(duration: ui.slow ? 1.5 : 0.16).delay(ui.slow ? 0.8 : 0.08)),
-                                            removal: .opacity.animation(.easeOut(duration: ui.slow ? 0.8 : 0.08))))
+                    .transition(.asymmetric(insertion: .opacity.animation(ui.slow ? .smooth(duration: 1.5).delay(0.8) : Motion.snap.delay(0.08)),
+                                            removal: .opacity.animation(ui.slow ? .smooth(duration: 0.8) : .spring(duration: 0.1))))
             }
             // the line between the panel and the row, at the panel's foot
             Rectangle().fill(Ink.line).frame(width: max(0, w - 20), height: 1)
@@ -95,7 +95,8 @@ struct Toolbar: View {
         .background { if !inLesson, ui.open != nil, ui.open != .grade { IslandMeasure(model: model, width: islandWidth, key: islandKey) } }
         .overlay(shape.strokeBorder(Ink.line, lineWidth: 1))
         // one spring for its width and height together, never a jump under the finger
-        .animation(.smooth(duration: ui.slow ? 3.5 : 0.4), value: animationKey(inLesson))
+        // opening: a soft landing with a touch of give; closing or settling: no give, so it never shrinks past its row
+        .animation(ui.slow ? .smooth(duration: 3.5) : ui.open == nil ? Motion.close : Motion.open, value: animationKey(inLesson))
     }
 
     /// What grows out of the pill.
@@ -121,7 +122,7 @@ struct Toolbar: View {
     private var islandWidth: Double { Island.width(screen: model.screen.width) }
     private var islandRoom: Double { max(160, model.screen.height - bottom - 40 - 52 - 12 - 6 - 1 - 50 - 1) }
     /// What can change the island's tab's height (it's measured again, and the island eases to it).
-    private var islandKey: String { "\(ui.tab) \(ui.askStartOver) \(ui.settingsVersion) \(ui.said.count) \(ui.islandGrade ?? "")" }
+    private var islandKey: String { "\(ui.askStartOver) \(ui.settingsVersion) \(ui.said.count) \(ui.islandGrade ?? "")" }
     private var heightsKey: String { Island.Tab.allCases.map { "\(Int(ui.heights[$0] ?? 0))" }.joined(separator: ",") }
 
     /// The hold passed in the island: the paper glides to the grown-ups' page (open, no hold on the paper) and the
@@ -159,7 +160,7 @@ struct Toolbar: View {
             switch offer {
             case .grade:
                 MiddleWords(text: gradeName, lit: ui.open == .grade, tint: nil,
-                            accessibility: gradeName + (Fresh.showsCount(learned: learned) ? ", \(learned) of \(Map.gradeLessons.count) learned" : "")) {
+                            accessibility: gradeName + (Fresh.showsCount(learned: learned) ? ", \(learned) of \(Map.gradeLessons.count) passed" : "")) {
                     toggle(.grade)
                 }
             default:
@@ -266,7 +267,7 @@ struct Toolbar: View {
     private var mapMenu: some View {
         VStack(spacing: 0) {
             zoomRow
-            MenuRow(icon: .find, label: "Find what's next") {
+            MenuRow(icon: .find, label: "Up next") {
                 ui.open = nil
                 // from a place, back to the map first
                 if model.place == nil { model.findNext() } else { model.go(to: nil) { model.findNext() } }
@@ -284,11 +285,11 @@ struct Toolbar: View {
     private var lessonMenu: some View {
         VStack(spacing: 0) {
             if hasTools {
-                MenuRow(icon: .restart, label: "Start this problem over", enabled: canReset) { ui.open = nil; reset() }
+                MenuRow(icon: .restart, label: "Start over", enabled: canReset) { ui.open = nil; reset() }
             }
             // off in tests (G 20 Oct)
-            MenuRow(icon: .read, label: "Read it aloud", enabled: canRead) { ui.open = nil; readAloud() }
-            if let b = model.bars, b.howToGone, !b.inTest { MenuRow(icon: .show, label: "Watch the How to again") { ui.open = nil; b.watchAgain() } }
+            MenuRow(icon: .read, label: "Read aloud", enabled: canRead) { ui.open = nil; readAloud() }
+            if let b = model.bars, b.howToGone, !b.inTest { MenuRow(icon: .show, label: "Watch the How to") { ui.open = nil; b.watchAgain() } }
             MenuRow(icon: .dark, label: scheme == .dark ? "Light" : "Dark") { theme = scheme == .dark ? "light" : "dark" }
             zoomRow
         }
@@ -466,6 +467,8 @@ final class BarUI {
     var tab = Island.Tab.settings
     /// The way the island's pages slide on the next switch: to a tab further right, or back.
     var tabForward = true
+    /// A finger holds a switch or a slider in the island: the touch is the control's, so the pages don't swipe under it.
+    @ObservationIgnored var controlHeld = false
     var heights: [Island.Tab: Double] = [:]
     var askStartOver = false
     var said: [Island.Tab: String] = [:]
@@ -572,13 +575,13 @@ struct PillButton: View {
             .foregroundStyle(ring ?? (lit ? Ink.lit : Ink.ink))
             .contentShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(Press())
         .simultaneousGesture(LongPressGesture(minimumDuration: 0.45).onEnded { _ in
             longPressed = true
-            withAnimation(.easeOut(duration: 0.2)) { held = true }
+            withAnimation(Motion.snap) { held = true }
             Task {
                 try? await Task.sleep(for: .seconds(1.6))
-                withAnimation(.easeOut(duration: 0.4)) { held = false }
+                withAnimation(Motion.close) { held = false }
                 // a long press that never ended in a tap (the finger slid off) mustn't eat the next tap
                 longPressed = false
             }
@@ -587,7 +590,7 @@ struct PillButton: View {
         .accessibilityLabel(word)
         // lit is where you are (Lessons or Me): VoiceOver says so, and the real-touch tests can see it
         .accessibilityAddTraits(lit ? .isSelected : [])
-        .animation(.smooth(duration: 0.3), value: under)
+        .animation(Motion.open, value: under)
     }
 }
 
@@ -609,7 +612,7 @@ struct MiddleWords: View {
                 .foregroundStyle(lit ? (tint ?? Ink.lit) : Ink.ink)
                 .contentShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(Press())
         .accessibilityLabel(accessibility)
     }
 }
@@ -627,7 +630,7 @@ struct StepSquares: View {
                     .overlay(Rectangle().strokeBorder(i < done ? ink : Ink.ink3, lineWidth: 1.5))
             }
         }
-        .animation(.smooth(duration: 0.3), value: done)
+        .animation(Motion.snap, value: done)
     }
 }
 
@@ -645,7 +648,7 @@ struct GradeBlock: View {
                 .foregroundStyle(live ? Ink.lit : Ink.ink3)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(Press())
         .accessibilityLabel(Grades.name(grade))
         .accessibilityValue(live ? "" : "Coming soon")
         .accessibilityAddTraits(live ? .isSelected : [])
@@ -668,7 +671,7 @@ struct MenuRow: View {
             .padding(.horizontal, 12).frame(height: 52)
             .foregroundStyle(Ink.ink).contentShape(Rectangle())
         }
-        .buttonStyle(.plain).disabled(!enabled).opacity(enabled ? 1 : 0.35)
+        .buttonStyle(Press(scale: 0.98)).disabled(!enabled).opacity(enabled ? 1 : 0.35)
     }
 }
 
@@ -680,7 +683,7 @@ struct SmallButton: View {
             Text(text).font(Typeface.font(18)).foregroundStyle(Ink.ink)
                 .frame(width: 34, height: 34).background(Ink.sunk, in: RoundedRectangle(cornerRadius: 12))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(Press())
     }
 }
 

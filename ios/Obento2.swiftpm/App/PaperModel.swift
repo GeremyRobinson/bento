@@ -339,9 +339,14 @@ final class PaperModel {
 
     func pan(_ dx: Double, _ dy: Double) {
         // tilted, a drag turns the tilted view, not the flat paper under it
-        if TiltCamera.pan(dx, dy) { return }
+        panTilted = TiltCamera.pan(dx, dy)
+        if panTilted { return }
         stop(); resting = resting.panned(by: dx, dy)
     }
+    /// The last pan turned a tilted view: nothing to coast.
+    private var panTilted = false
+    /// This touch caught the paper coasting: it only stops it, it doesn't also tap what's under it.
+    private var caught = false
 
     /// A drag that starts on something the open problem lets the child move goes to the problem (a hand move, G 20
     /// Oct); any other drag pans the paper. Only the problem being worked takes hands (not the How to, not the page).
@@ -354,6 +359,9 @@ final class PaperModel {
         let p = camera(at: PaperClock.now).toPaper(s), now = PaperClock.now
         if !pressing {
             pressing = true
+            // a finger on coasting paper stops it, as a hand on a sliding sheet does
+            caught = flight?.curve == .coast
+            if caught { stop() }
             Practice.shared.touched()
             if place == .grownUp, !leaving { grownUp.press(p, at: now) }
             return
@@ -377,8 +385,12 @@ final class PaperModel {
         if handDrag { framingHeld = moving; stop() }
     }
     func dragMove(to s: Point) { guard handDrag else { return }; bars?.current?.drag(to: paperPoint(s)) }
-    func dragEnd() {
-        guard handDrag else { return }
+    /// The finger lifted after a drag, moving at `velocity` (points a second): a pan's paper coasts on.
+    func dragEnd(velocity: Point = Point(0, 0)) {
+        guard handDrag else {
+            if !panTilted, !instant, let c = CameraFlight.coast(from: resting, velocity: velocity, start: PaperClock.now) { flight = c }
+            return
+        }
         bars?.current?.release()
         handDrag = false
         // let go: a framing the hand stopped partway finishes (a new step frames itself, Rig.frameContent; a camera the
@@ -461,7 +473,7 @@ final class PaperModel {
     }
 
     func tap(at s: Point) {
-        guard !leaving else { return }
+        guard !leaving, !caught else { caught = false; return }
         let p = paperPoint(s, tap: true)
         if let b = bars {
             b.tap(p); return

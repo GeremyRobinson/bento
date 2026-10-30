@@ -74,8 +74,8 @@ final class WeekTests: XCTestCase {
     // MARK: words
 
     func testWords() {
-        XCTAssertEqual(Week.headline(name: "Mia", learned: 9, of: 17, grade: 5), "Mia has learned 9 of 17 lessons in 5th grade.")
-        XCTAssertEqual(Week.headline(name: "", learned: 9, of: 17, grade: 5), "9 of 17 lessons learned in 5th grade.")
+        XCTAssertEqual(Week.headline(name: "Mia", learned: 9, of: 17, grade: 5), "Mia has passed 9 of 17 lessons in 5th grade.")
+        XCTAssertEqual(Week.headline(name: "", learned: 9, of: 17, grade: 5), "9 of 17 lessons passed in 5th grade.")
         XCTAssertEqual(Week.problems(1), "1 problem")
         XCTAssertEqual(Week.problems(42), "42 problems")
         XCTAssertEqual(Week.duration(20), "less than a minute")
@@ -85,8 +85,7 @@ final class WeekTests: XCTestCase {
         XCTAssertEqual(Week.duration(60 * 60), "about 1 hour")
         XCTAssertEqual(Week.duration(71 * 60), "about 1 hour 10 minutes")
         XCTAssertEqual(Week.duration(2 * 3600 + 58 * 60), "about 3 hours")
-        XCTAssertEqual(Week.empty(name: "Mia"), "Nothing yet this week. Once Mia starts a lesson, it shows here.")
-        XCTAssertEqual(Week.empty(name: ""), "Nothing yet this week. Once a lesson is started, it shows here.")
+        XCTAssertEqual(Week.empty(name: "Mia"), "Nothing yet this week.")
     }
 
     func testWhenACheckWas() {
@@ -131,10 +130,10 @@ final class WeekTests: XCTestCase {
         let checks = ["low": c(last: 1, best: 4, daysAgo: 2, passes: 0), "old": c(last: 2, best: 4, daysAgo: 12, passes: 0),
                       "tried": c(last: 2, daysAgo: 3, passes: 0), "fine": c(last: 4)]
         let looks = Week.worthALook(["fine", "old", "tried", "low", "begun"], checks: checks, started: ["begun", "fine"], now: now, in: utc)
-        XCTAssertEqual(looks, [Week.Look(id: "low", why: "came back low on Tuesday"), Week.Look(id: "old", why: "came back low"),
-                               Week.Look(id: "tried", why: "started, 2 of 4 so far")])
+        XCTAssertEqual(looks, [Week.Look(id: "low", why: "missed a check on Tuesday"), Week.Look(id: "old", why: "missed a check"),
+                               Week.Look(id: "tried", why: "scored 2 of 4")])
         let more = Week.worthALook(["tried", "begun"], checks: checks, started: ["begun"], now: now, in: utc)
-        XCTAssertEqual(more.map(\.why), ["started, 2 of 4 so far", "started, no test yet"])
+        XCTAssertEqual(more.map(\.why), ["scored 2 of 4", "no test yet"])
         XCTAssertEqual(Week.worthALook(["fine"], checks: checks, started: [], now: now, in: utc), [])
     }
 

@@ -61,11 +61,11 @@ final class SetupTests: XCTestCase {
         XCTAssertEqual(Grades.name(4), "4th grade")
         XCTAssertEqual(Grades.name(11), "11th grade")
         XCTAssertEqual(Grades.name(12), "12th grade")
-        XCTAssertEqual(Grades.picked(5), "5th grade it is.")
-        XCTAssertEqual(Grades.picked(3), "3rd grade: coming soon.")
-        XCTAssertEqual(Grades.picked(0), "Kindergarten: coming soon.")
-        XCTAssertEqual(Grades.onMe(5), "5th grade.")
-        XCTAssertEqual(Grades.onMe(8), "8th grade is coming soon.")
+        XCTAssertEqual(Grades.picked(5), "5th grade")
+        XCTAssertEqual(Grades.picked(3), "3rd grade is coming soon")
+        XCTAssertEqual(Grades.picked(0), "Kindergarten is coming soon")
+        XCTAssertEqual(Grades.onMe(5), "5th grade")
+        XCTAssertEqual(Grades.onMe(8), "8th grade is coming soon")
     }
 
     func testReminderTimes() {

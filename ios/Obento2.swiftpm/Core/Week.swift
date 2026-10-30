@@ -100,10 +100,11 @@ public enum Week {
 
     // MARK: words
 
-    /// "Mia has learned 9 of 17 lessons in 5th grade." or, with no name, "9 of 17 lessons learned in 5th grade."
+    /// "Mia has passed 9 of 17 lessons in 5th grade." or, with no name, "9 of 17 lessons passed in 5th grade." (Passed,
+    /// not learned: Learned is Me's shelf for a lesson through all four checks, G 29 Oct.)
     public static func headline(name: String, learned: Int, of total: Int, grade: Int) -> String {
         let g = Grades.name(grade)
-        return name.isEmpty ? "\(learned) of \(total) lessons learned in \(g)." : "\(name) has learned \(learned) of \(total) lessons in \(g)."
+        return name.isEmpty ? "\(learned) of \(total) lessons passed in \(g)." : "\(name) has passed \(learned) of \(total) lessons in \(g)."
     }
     /// "1 problem", "42 problems".
     public static func problems(_ n: Int) -> String { n == 1 ? "1 problem" : "\(n) problems" }
@@ -171,18 +172,18 @@ public enum Week {
         public let why: String
         public init(id: String, why: String) { self.id = id; self.why = why }
     }
-    /// Worth a look: learned lessons whose last check came back low ("came back low on Tuesday"), then lessons tested
-    /// and not learned yet ("started, 2 of 4 so far"), then lessons started and never tested ("started, no test yet");
+    /// Needs work: learned lessons whose last check came back low ("missed a check on Tuesday"), then lessons tested
+    /// and not learned yet ("scored 2 of 4"), then lessons started and never tested ("no test yet");
     /// the latest first in each, up to `most`.
     public static func worthALook(_ lessons: [String], checks: [String: CheckRecord], started: Set<String>, now: Double,
                                   in zone: TimeZone = .current, most: Int = 3) -> [Look] {
         let latest: (String, String) -> Bool = { (checks[$0]?.date ?? 0) > (checks[$1]?.date ?? 0) }
         let low = lessons.filter { Mastery.learnedEver(checks, $0) && Mastery.toGoOver(checks, $0) }.sorted(by: latest)
-            .map { id in Look(id: id, why: "came back low" + (when(checks[id]!.date, now: now, in: zone).map { " " + $0 } ?? "")) }
+            .map { id in Look(id: id, why: "missed a check" + (when(checks[id]!.date, now: now, in: zone).map { " " + $0 } ?? "")) }
         let tested = lessons.filter { checks[$0] != nil && !Mastery.learnedEver(checks, $0) }.sorted(by: latest)
-            .map { Look(id: $0, why: "started, \(checks[$0]!.last) of 4 so far") }
+            .map { Look(id: $0, why: "scored \(checks[$0]!.last) of 4") }
         let begun = lessons.filter { checks[$0] == nil && started.contains($0) }
-            .map { Look(id: $0, why: "started, no test yet") }
+            .map { Look(id: $0, why: "no test yet") }
         return Array((low + tested + begun).prefix(most))
     }
 
@@ -190,8 +191,6 @@ public enum Week {
     public static func fresh(checks: [String: CheckRecord], started: Set<String>, records: [String: DayRecord]) -> Bool {
         checks.isEmpty && started.isEmpty && !records.values.contains { $0.problems > 0 || $0.seconds > 0 }
     }
-    /// What This week says when there's nothing yet: "Nothing yet this week. Once Mia starts a lesson, it shows here."
-    public static func empty(name: String) -> String {
-        "Nothing yet this week. " + (name.isEmpty ? "Once a lesson is started, it shows here." : "Once \(name) starts a lesson, it shows here.")
-    }
+    /// What This week says when there's nothing yet.
+    public static func empty(name: String) -> String { "Nothing yet this week." }
 }

@@ -170,7 +170,7 @@ enum Reminders {
             Task { @MainActor in
                 guard granted else { done(false); return }
                 let content = UNMutableNotificationContent()
-                content.body = name.isEmpty ? "Time for today's maths." : "\(name), it's time for today's maths."
+                content.body = name.isEmpty ? "Time for today's math." : "\(name), time for today's math."
                 content.sound = .default
                 var when = DateComponents(); when.hour = time.hour; when.minute = time.minute
                 let request = UNNotificationRequest(identifier: id, content: content, trigger: UNCalendarNotificationTrigger(dateMatching: when, repeats: true))

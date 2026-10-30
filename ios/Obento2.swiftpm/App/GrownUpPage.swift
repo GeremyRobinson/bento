@@ -132,13 +132,13 @@ final class GrownUpPage {
         s.text("gu-head", "For grown-ups", at: CGPoint(x: x0, y: y0 + u / 2), size: Sketch.maths, weight: .semibold, .ink, anchor: UnitPoint(x: 0, y: 0.5), digits: false)
         guard open else {
             // the gate: what to do, and the square to hold, its ring filling (the ring's fill is a live part)
-            s.words("gu-hold-say", "Hold the square for 3 seconds.", .say, x: x0, top: y0 + u, width: 1200)
+            s.words("gu-hold-say", "Hold for 3 seconds", .say, x: x0, top: y0 + u, width: 1200)
             let r = square
             s.block("gu-hold", r, .main)
             ring(&s, "gu-ring", in: r, colour: .line)
             s.text("gu-hold-w", "Hold", at: CGPoint(x: r.midX, y: r.midY), size: Sketch.small, weight: .semibold, .ink, digits: false)
             if letGoAt != nil {
-                s.words("gu-hold-again", "Keep holding until the ring is full.", Sketch.Words.note, x: x0, top: r.maxY + c, width: 1200)
+                s.words("gu-hold-again", "Keep holding", Sketch.Words.note, x: x0, top: r.maxY + c, width: 1200)
             }
             out.frame = Rect(x: x0, y: y0, width: 6 * u, height: r.maxY + 3 * c - y0)
             out.sketch = s
@@ -222,7 +222,7 @@ final class GrownUpPage {
             gx = r.maxX + c
         }
         let squaresEnd = gx - c
-        s.label("gu-wk-key", "Each square is a lesson: filled learned, shaded started, open not yet.", Self.note, at: P(0, 19), anchor: left)
+        s.label("gu-wk-key", "Each square is a lesson. Filled: passed. Shaded: started.", Self.note, at: P(0, 19), anchor: left)
 
         // nothing yet (a new install): one line instead of the week
         if Week.fresh(checks: checks, started: started, records: records) {
@@ -231,7 +231,7 @@ final class GrownUpPage {
         }
 
         // the days practised: the last 7, today last, a square each, filled when practised, its day's letter under it
-        s.label("gu-wk-days", "Days practised", Self.head, at: P(0, 21), anchor: left)
+        s.label("gu-wk-days", "Days practiced", Self.head, at: P(0, 21), anchor: left)
         let days = Week.practised(records, now: now), letters = Week.letters(now: now)
         for (i, done) in days.enumerated() {
             let r = CGRect(origin: P(Double(i) * 3, 23), size: CGSize(width: 2 * c, height: 2 * c))
@@ -246,26 +246,26 @@ final class GrownUpPage {
         s.label("gu-wk-week", "This week", Self.head, at: P(25, 21), anchor: left)
         let none = total.problems == 0 && total.seconds < Week.minute
         s.label("gu-wk-week-n", none ? "None yet" : Week.problems(total.problems), Self.big, at: P(25, 24), anchor: left, slot: "gu-wk-week-n")
-        s.label("gu-wk-week-t", none ? "no problems solved this week" : Week.duration(total.seconds) + " in all", Self.note, at: P(25, 26), anchor: left, slot: "gu-wk-week-t")
+        if !none { s.label("gu-wk-week-t", Week.duration(total.seconds), Self.note, at: P(25, 26), anchor: left, slot: "gu-wk-week-t") }
 
         // the checks coming this week
         let coming = Week.checksComing(lessons, checks: checks, now: now)
-        s.label("gu-wk-checks", "Checks coming", Self.head, at: P(50, 21), anchor: left)
+        s.label("gu-wk-checks", "Checks", Self.head, at: P(50, 21), anchor: left)
         s.label("gu-wk-checks-n", coming.isEmpty ? "None this week" : "\(coming.count) this week", Self.big, at: P(50, 24), anchor: left, slot: "gu-wk-checks-n")
         let next = lessons.filter { Mastery.learnedEver(checks, $0) }.compactMap { checks[$0]?.due }.min()
-        let why = !coming.isEmpty ? "short checks keep learned lessons learned"
-            : next.map { "the next one is in \(Today.days(until: $0, from: now)) days" } ?? "learned lessons come back for checks"
-        s.label("gu-wk-checks-t", why, Self.note, at: P(50, 26), anchor: left, slot: "gu-wk-checks-t")
+        if coming.isEmpty, let next {
+            s.label("gu-wk-checks-t", "Next in \(Today.days(until: next, from: now)) days", Self.note, at: P(50, 26), anchor: left, slot: "gu-wk-checks-t")
+        }
 
-        // going well, and worth a look: a lesson a row, its chapter's dot before its name
+        // going well, and needs work: a lesson a row, its chapter's dot before its name
         s.line("gu-wk-rule", [P(0, 30), P(72, 30)], .line, width: Sketch.stroke)
         s.label("gu-wk-well", "Going well", Self.head, at: P(0, 32), anchor: left)
-        s.label("gu-wk-look", "Worth a look", Self.head, at: P(35, 32), anchor: left)
+        s.label("gu-wk-look", "Needs work", Self.head, at: P(35, 32), anchor: left)
         let well = Week.goingWell(lessons, checks: checks, now: now)
         let looks = Week.worthALook(lessons, checks: checks, started: started, now: now)
-        if well.isEmpty { s.label("gu-wk-well-none", "Lessons that score 4 of 4 show here.", Self.note, at: P(0, 34), anchor: left) }
+        if well.isEmpty { s.label("gu-wk-well-none", "Nothing yet.", Self.note, at: P(0, 34), anchor: left) }
         for (i, id) in well.enumerated() { lessonLine(&s, "gu-wk-well\(i)", id, why: nil, at: P(0, 34 + 2 * Double(i))) }
-        if looks.isEmpty { s.label("gu-wk-look-none", "Nothing needs a look.", Self.note, at: P(35, 34), anchor: left) }
+        if looks.isEmpty { s.label("gu-wk-look-none", "Nothing right now.", Self.note, at: P(35, 34), anchor: left) }
         for (i, look) in looks.enumerated() { lessonLine(&s, "gu-wk-look\(i)", look.id, why: look.why, at: P(35, 34 + 2 * Double(i))) }
         let rows = max(1, well.count, looks.count)
         return CGPoint(x: P(72, 0).x, y: P(0, 33 + 2 * Double(rows)).y)
@@ -295,7 +295,7 @@ final class GrownUpPage {
         func X(_ col: Double) -> Double { x0 + col * c }
         var y = Self.at(0, Self.top).y
         let top = y
-        for (col, word) in [(Self.nameX, "Lesson"), (Self.lastX, "Last check"), (Self.bestX, "Best"), (Self.backX, "Comes back")] {
+        for (col, word) in [(Self.nameX, "Lesson"), (Self.lastX, "Last check"), (Self.bestX, "Best"), (Self.backX, "Next check")] {
             s.label("gu-col-\(word)", word, head, at: CGPoint(x: X(col), y: y + c), anchor: UnitPoint(x: 0, y: 0.5))
         }
         s.line("gu-col-rule", [CGPoint(x: x0, y: y + 2 * c), CGPoint(x: X(Self.tableW), y: y + 2 * c)], .line, width: Sketch.stroke)
@@ -317,11 +317,11 @@ final class GrownUpPage {
             let row = CGRect(x: x0, y: y, width: Self.tableW * c, height: 2 * c)
             y += 2 * c
             if confirm == .lesson(id) {
-                // confirmed on the paper: under its lit row, what a reset does, with Reset and Keep
-                let say = "Wipe its checks and its page?"
+                // confirmed on the paper: under its lit row, Reset and Cancel
+                let say = "Reset this lesson?"
                 s.label("gu-ask-\(id)", say, Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink), at: CGPoint(x: X(Self.nameX), y: y + c), anchor: UnitPoint(x: 0, y: 0.5))
                 var bx = X(Self.nameX) + (((PaperText.width(say, PaperText.font(Sketch.small, .regular)) + c) / c).rounded(.up) + 1) * c
-                for (word, action, style) in [("Reset", Action.reset(id), Sketch.Block.main), ("Keep", .keep, .plain)] {
+                for (word, action, style) in [("Reset", Action.reset(id), Sketch.Block.main), ("Cancel", .keep, .plain)] {
                     let b = CGRect(x: bx, y: y, width: Self.blockWidth(word), height: 2 * c)
                     s.block("gu-ask-\(word)-\(id)", b, style, word: word)
                     out.taps.append((b, action)); bx = b.maxX + c
@@ -336,19 +336,19 @@ final class GrownUpPage {
         // everything, reset: asked first on the paper
         y += c
         if confirm == .all {
-            let say = "Wipe every lesson's checks and page, every test and every review?"
+            let say = "Reset every lesson, test and review?"
             s.label("gu-askall", say, Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink), at: CGPoint(x: x0, y: y + c), anchor: UnitPoint(x: 0, y: 0.5))
             y += 3 * c
             var bx = x0
-            for (word, action, style) in [("Reset everything", Action.resetAll, Sketch.Block.main), ("Keep", .keep, .plain)] {
+            for (word, action, style) in [("Reset all", Action.resetAll, Sketch.Block.main), ("Cancel", .keep, .plain)] {
                 let b = CGRect(x: bx, y: y, width: Self.blockWidth(word), height: 2 * c)
                 s.block("gu-askall-\(word)", b, style, word: word)
                 out.taps.append((b, action)); bx = b.maxX + c
             }
         } else {
-            let b = CGRect(x: x0, y: y, width: Self.blockWidth("Reset everything"), height: 2 * c)
-            s.block("gu-all", b, .plain, word: "Reset everything")
-            s.label("gu-all-or", "or tap a lesson to reset just that one", Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2),
+            let b = CGRect(x: x0, y: y, width: Self.blockWidth("Reset all"), height: 2 * c)
+            s.block("gu-all", b, .plain, word: "Reset all")
+            s.label("gu-all-or", "or tap a lesson to reset it", Sketch.Words(size: Sketch.small, weight: .regular, colour: .ink2),
                     at: CGPoint(x: b.maxX + c, y: b.midY), anchor: UnitPoint(x: 0, y: 0.5))
             out.taps.append((b, .askAll))
         }
@@ -356,7 +356,7 @@ final class GrownUpPage {
 
         // how checks work, beside the table
         s.label("gu-how", "How checks work", Self.head, at: CGPoint(x: X(Self.besideX), y: top + c), anchor: UnitPoint(x: 0, y: 0.5))
-        let how = "Each check is scored 0 to 4, and 3 or 4 is learned. A learned lesson comes back for a short check after 3, 7, 21 and 60 days, and the next day after a low one. Lessons are always open; only tests wait."
+        let how = "A check is scored out of 4, and 3 passes. A passed lesson comes back after 3, 7, 21 and 60 days, or the next day if a check goes badly."
         let rows = s.words("gu-how-say", how, Self.note, x: X(Self.besideX), top: top + 2 * c, width: 20 * c, max: 10)
         return CGPoint(x: X(Self.besideX + 20), y: max(y, top + 2 * c + Double(rows) * Sketch.row))
     }
@@ -374,11 +374,10 @@ final class GrownUpPage {
     /// When a lesson comes back, in plain words: never checked (not started, or being practised), not learned yet, or
     /// today, tomorrow, in so many days.
     static func comesBack(_ id: String, now: Double) -> (text: String, quiet: Bool) {
-        guard let check = Progress.shared.checks[id] else { return (PageStore.load(id) != nil ? "Practising" : "Not started", true) }
-        guard check.best >= Mastery.pass else { return ("Not learned yet", true) }
-        if check.due <= now { return ("Due now", false) }
+        guard let check = Progress.shared.checks[id] else { return (PageStore.load(id) != nil ? "In progress" : "Not started", true) }
+        guard check.best >= Mastery.pass else { return ("Not passed yet", true) }
         let days = Today.days(until: check.due, from: now)
-        return (days <= 0 ? "Later today" : days == 1 ? "Tomorrow" : "In \(days) days", false)
+        return (check.due <= now || days <= 0 ? "Today" : days == 1 ? "Tomorrow" : "In \(days) days", false)
     }
 
     /// The hold's ring: a band round the square's middle, its outline; filled as far as `k` goes (a live part).

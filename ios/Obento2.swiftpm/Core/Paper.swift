@@ -36,8 +36,24 @@ public struct Rect: Equatable, Sendable {
     }
 }
 
-/// The one ease every camera move uses: slow start, slow finish.
+/// The ease drawing uses (lines stroking on, words fading in): slow start, slow finish.
 public func ease(_ t: Double) -> Double {
     let t = min(1, max(0, t))
     return t < 0.5 ? 4 * t * t * t : 1 - pow(-2 * t + 2, 3) / 2
+}
+
+/// The path every camera glide follows (G 29 Oct: moves that feel real, not digital): a critically damped spring's.
+/// It sets off at once and comes to rest softly, the way something with weight does, instead of a timer's curve that
+/// creeps off and creeps in. Scaled to land exactly at t = 1 (where the spring has a few hundredths of its speed left).
+public func glide(_ t: Double) -> Double {
+    let t = min(1, max(0, t)), w = 7.5
+    func x(_ t: Double) -> Double { 1 - (1 + w * t) * exp(-w * t) }
+    return x(t) / x(1)
+}
+
+/// The path of the paper let go mid-pan: it leaves at the finger's speed and slows evenly to a stop, like a sheet
+/// slid across a table (its speed falling by the same share each moment). Scaled to stop exactly at t = 1.
+public func coastCurve(_ t: Double) -> Double {
+    let t = min(1, max(0, t)), k = CameraTiming.coastSpan
+    return (1 - exp(-k * t)) / (1 - exp(-k))
 }

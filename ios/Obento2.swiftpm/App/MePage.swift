@@ -2,12 +2,12 @@ import SwiftUI
 
 /// Me, the child's own page on the paper (G's plan of 18 Oct, step 7; G 20 Oct: drawn on the paper, never a card that
 /// pops up). Today at the top: today's pick (Mastery.upNext), with why in plain words, and the daily review. Under it
-/// the three shelves of the child's lessons, side by side, a lesson moving right as its checks pass: Go over (due back
-/// for a check, or its last check came back low), Getting stronger (learned, on its way through the four checks), Know
-/// it (all four passed). Every card opens what it shows. It lives on the sheet left of the map, on the strong lines,
+/// the three shelves of the child's lessons, side by side, a lesson moving right as its checks pass: Needs work (due back
+/// for a check, or its last check came back low), Learning (passed, on its way through the four checks), Learned (all
+/// four passed; G 29 Oct chose the three names). Every card opens what it shows. It lives on the sheet left of the map, on the strong lines,
 /// and draws itself in and out like everything else (SketchDrawer).
 /// A shelf shows as many cards as fit on the screen with all of Me in view (`rows`); a longer one ends on a card
-/// "and 6 more", which opens that shelf on its own, every card of it in three columns, with Back to Me under them.
+/// "6 more", which opens that shelf on its own, every card of it in three columns, with Back under them.
 @MainActor
 enum MePage {
     /// Its top-left corner on the paper: left of the map, clear of it, on the strong lines.
@@ -45,7 +45,7 @@ enum MePage {
 
     /// The three shelves, in order, with what each says when it's empty.
     static let shelves: [(name: String, empty: String)] = [
-        ("Go over", "Nothing to go over."), ("Getting stronger", "Learned lessons come here."), ("Know it", "Pass all four checks."),
+        ("Needs work", "Nothing here."), ("Learning", "Lessons you pass go here."), ("Learned", "Lessons go here after 4 checks."),
     ]
 
     /// Me now. `rows`: the most cards a shelf shows (MePage.rows); `open`: a shelf opened to all its cards, drawn on its
@@ -125,7 +125,7 @@ enum MePage {
         s.text("me-name:\(profile.name)", Setup.title(profile.name), at: CGPoint(x: x0, y: y0 + c), size: Sketch.maths, weight: .semibold, .ink,
                anchor: UnitPoint(x: 0, y: 0.5), digits: false)
         let learned = Map.gradeLessons.filter { Progress.shared.learned.contains($0) }.count
-        let line = Grades.name(profile.grade) + (Fresh.showsCount(learned: learned) ? " · \(learned) of \(Map.gradeLessons.count) learned" : "")
+        let line = Grades.name(profile.grade) + (Fresh.showsCount(learned: learned) ? " · \(learned) of \(Map.gradeLessons.count) passed" : "")
         s.label("me-grade-line", line, .status, at: CGPoint(x: x0, y: y0 + 3 * c), anchor: UnitPoint(x: 0, y: 0.5), slot: "me-grade-line")
         // the row starts on the third strong line, clear of a long name; small blocks, two squares a side
         let gx = x0 + 3 * u
@@ -153,7 +153,7 @@ enum MePage {
             out.taps.append((r, .lesson(id)))
         }
         // the way back, a square under the cards, as the result's Back to problems is a quieter block
-        let word = "Back to Me", b = CGRect(x: x0, y: top + Double(perColumn) * u + c, width: GrownUpPage.blockWidth(word, least: 9), height: 2 * c)
+        let word = "Back", b = CGRect(x: x0, y: top + Double(perColumn) * u + c, width: GrownUpPage.blockWidth(word, least: 9), height: 2 * c)
         s.block("me-back", b, .plain, word: word)
         out.taps.append((b, .back))
         out.frame = Rect(x: x0, y: y0, width: width, height: b.maxY + c - y0)
@@ -181,8 +181,8 @@ enum MePage {
     private static func moreCard(_ s: inout Sketch, _ k: Int, more: Int, in r: CGRect) {
         let id = "me-more\(k)"
         s.frame(id, r, .open, pen: .ink)
-        s.label("\(id)name", "and \(more) more", .label, at: CGPoint(x: r.minX + c, y: r.minY + 1.5 * c), anchor: UnitPoint(x: 0, y: 0.5), slot: "\(id)name")
-        s.label("\(id)line", "See them all", .status, at: CGPoint(x: r.minX + c, y: r.minY + 3.5 * c), anchor: UnitPoint(x: 0, y: 0.5))
+        s.label("\(id)name", "\(more) more", .label, at: CGPoint(x: r.minX + c, y: r.minY + 1.5 * c), anchor: UnitPoint(x: 0, y: 0.5), slot: "\(id)name")
+        s.label("\(id)line", "See all", .status, at: CGPoint(x: r.minX + c, y: r.minY + 3.5 * c), anchor: UnitPoint(x: 0, y: 0.5))
     }
 
     /// A lesson on a shelf: a card three blocks by one in its chapter's colour, its name on its top row and where it
@@ -198,14 +198,14 @@ enum MePage {
         s.label("\(id)name", p.name, .label, at: CGPoint(x: r.minX + c, y: top), anchor: UnitPoint(x: 0, y: 0.5))
         if shelf == 0 {
             let due = Mastery.dueBack(Progress.shared.checks, p.id, now: now)
-            s.label("\(id)line", due ? "Time to check it again" : "Came back low", Sketch.Words.status.colour(pen.full),
+            s.label("\(id)line", due ? "Check today" : "Try it again", Sketch.Words.status.colour(pen.full),
                     at: CGPoint(x: r.minX + c, y: low), anchor: UnitPoint(x: 0, y: 0.5))
             return
         }
         let passed = min(Mastery.reviewDays.count, check.passes)
         checksBar(&s, id, passed: passed, at: CGPoint(x: r.minX + c, y: low - c / 2), pen: pen)
         let line: String = {
-            if passed >= Mastery.reviewDays.count { return "All four passed" }
+            if passed >= Mastery.reviewDays.count { return "4 of 4 checks" }
             let days = Today.days(until: check.due, from: now)
             return days <= 0 ? "Check today" : days == 1 ? "Check tomorrow" : "Check in \(days) days"
         }()
@@ -242,8 +242,8 @@ enum MePage {
         let line: (String, Sketch.Colour) = {
             if done != nil { return ("A new one tomorrow", .ink3) }
             if let n = partway { return ("\(n) of \(Review.problems) done", .ink) }
-            if !opens { return ("Take two lesson tests first", .ink3) }
-            return ("One try each, no help", .ink3)
+            if !opens { return ("Pass two lessons first", .ink3) }
+            return ("One try each", .ink3)
         }()
         s.label("\(id)line", line.0, Sketch.Words.status.colour(line.1), at: CGPoint(x: r.minX, y: r.maxY + 50), anchor: UnitPoint(x: 0, y: 0.5), slot: "\(id)line")
         if opens { out.taps.append((r, .review)) }
@@ -272,14 +272,14 @@ enum MePage {
     static func why(_ r: Today.Reason, _ pick: Piece) -> String {
         func name(_ id: String) -> String { Map.piece(id)?.name ?? id }
         switch r {
-        case .due: return "Time to check it again"
+        case .due: return "Check today"
         // never learned: what came back low was its lesson test (there's no check before a lesson is learned)
-        case .low: return Mastery.learnedEver(Progress.shared.checks, pick.id) ? "Its last check came back low" : "Its test came back low"
-        case .helps(let id): return "It helps with \(name(id))"
-        case .buildsOn(let id): return "It builds on \(name(id))"
+        case .low: return Mastery.learnedEver(Progress.shared.checks, pick.id) ? "Missed its last check" : "Missed its test"
+        case .helps(let id): return "Helps with \(name(id))"
+        case .buildsOn(let id): return "Builds on \(name(id))"
         case .first: return "The first lesson"
         case .next: return "Next in \(pick.chapter.title)"
-        case .oldest: return "Checked the longest ago"
+        case .oldest: return "Not practiced in a while"
         }
     }
 }

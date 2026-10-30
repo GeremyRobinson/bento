@@ -78,7 +78,7 @@ struct CellButton<Label: View>: View {
                 .overlay(Rectangle().strokeBorder(picked ?? (main ? Ink.ink : Ink.lineStrong), lineWidth: 1.5))
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(Press(scale: 0.97))
         .foregroundStyle(picked ?? Ink.ink)
         .zIndex(picked == nil ? 0 : 1)
     }
@@ -99,5 +99,37 @@ struct MainCellButton: View {
             HStack { Text(title).font(Typeface.button); Spacer(); Icon(name: "arrow-right") }
                 .padding(.leading, 16).padding(.trailing, 10)
         }
+    }
+}
+
+/// How the app's controls move (G 29 Oct: "much of the natural expectations … from the curvature of its path makes its
+/// animations feel less digital and more real life"). Every move is a spring, never a timer's curve: it sets off at the
+/// speed it's given (a finger's flick, or none) and settles the way a real thing comes to rest. A few, used everywhere,
+/// so the whole app moves one way.
+enum Motion {
+    /// A tap's answer (a highlight gliding to a tab, a button pressed in): quick and soft, no overshoot.
+    static let snap = Animation.spring(duration: 0.3, bounce: 0)
+    /// What grows or slides open (the pill, the island, a page coming in): a soft landing with a touch of give.
+    static let open = Animation.spring(duration: 0.46, bounce: 0.14)
+    /// What closes or settles back: the same speed, no give (nothing shrinks past where it stops).
+    static let close = Animation.spring(duration: 0.4, bounce: 0)
+    /// A knob or thumb let go: flicked into place, a little bounce.
+    static let flick = Animation.spring(duration: 0.36, bounce: 0.24)
+    /// Let go mid-move: the move carries on at the finger's speed (`velocity`, points a second, along the way it's
+    /// going) for the `distance` left, and settles.
+    static func thrown(velocity: Double, distance: Double, bounce: Double = 0.14) -> Animation {
+        let v = distance > 1 ? max(-12, min(12, velocity / distance)) : 0
+        return .interpolatingSpring(duration: 0.46, bounce: bounce, initialVelocity: v)
+    }
+}
+
+/// A button that gives under a finger: pressed in a little while held, springing back when let go.
+struct Press: ButtonStyle {
+    var scale = 0.94
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? scale : 1)
+            .opacity(configuration.isPressed ? 0.75 : 1)
+            .animation(configuration.isPressed ? Motion.snap : Motion.flick, value: configuration.isPressed)
     }
 }

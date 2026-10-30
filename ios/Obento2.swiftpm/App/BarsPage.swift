@@ -378,7 +378,7 @@ final class BarsPage {
         }
         // a due lesson's recheck: its 4 problems, before the lesson's page, two by two so they read big
         if rechecking {
-            part("Go over: \(recheckProblems.count) problems, one try each · \(Mastery.pass) right keeps it learned",
+            part("Go over: \(recheckProblems.count) problems, one try each · \(Mastery.pass) right passes",
                  recheckProblems.indices.map { (.recheck($0), recheckProblems[$0]) }, columns: 2)
             return (out, heads)
         }
@@ -455,8 +455,8 @@ final class BarsPage {
         /// What it means: learned (still learned, passed), or what to do now; the review, that it's done for the day.
         var verdict: String {
             switch kind {
-            case .lessonTest: passed ? "Learned" : "Take it again"
-            case .recheck: passed ? "Still learned" : "Go over it again"
+            case .lessonTest: passed ? "Passed" : "Take it again"
+            case .recheck: passed ? "Passed" : "Go over it again"
             case .test: passed ? "Passed" : "Take it again"
             case .review: "Done for today"
             }
@@ -475,7 +475,7 @@ final class BarsPage {
         /// (the last with "and" and the full stop), so a name is never split across two rows; anything else, a word each.
         private var whyPieces: [String] {
             switch kind {
-            case .recheck: return words(passed ? "\(Mastery.pass) of \(of) keeps it learned." : "New problems are on your page. The check comes back tomorrow.")
+            case .recheck: return words(passed ? "\(Mastery.pass) of \(of) passes." : "New problems are on your page. The check comes back tomorrow.")
             case .review:
                 let names = missedNames
                 guard !names.isEmpty else { return words("Every one right. A new review comes tomorrow.") }

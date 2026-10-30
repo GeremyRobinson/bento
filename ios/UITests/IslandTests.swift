@@ -25,11 +25,13 @@ final class IslandTests: XCTestCase {
         for t in ["Privacy", "Help", "Plan", "Settings"] { mark("tab-\(t)"); app.buttons[t].tap(); pause() }
 
         // the pages swiped with a finger: left twice, right once
-        let page = app.buttons["Privacy"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 8))
-        let left = page.withOffset(CGVector(dx: -220, dy: 0)), right = page.withOffset(CGVector(dx: 220, dy: 0))
-        mark("swipe-left-1"); right.press(forDuration: 0.05, thenDragTo: left); pause()
-        mark("swipe-left-2"); right.press(forDuration: 0.05, thenDragTo: left); pause()
-        mark("swipe-right"); left.press(forDuration: 0.05, thenDragTo: right); pause()
+        // on Settings' words column (the controls are on the right, and a touch on a control is the control's), a
+        // finger's sweep each way
+        let name = app.staticTexts["Name"].frame, origin = app.coordinate(withNormalizedOffset: .zero)
+        func at(_ x: Double) -> XCUICoordinate { origin.withOffset(CGVector(dx: name.minX + x, dy: name.midY + 17)) }
+        mark("swipe-left-1"); at(200).press(forDuration: 0.05, thenDragTo: at(-120)); pause()
+        mark("swipe-left-2"); at(200).press(forDuration: 0.05, thenDragTo: at(-120)); pause()
+        mark("swipe-right"); at(10).press(forDuration: 0.05, thenDragTo: at(330)); pause()
         mark("tab-Settings-2"); app.buttons["Settings"].tap(); pause()
 
         // a switch flipped and back; a slider dragged along and tapped
@@ -40,7 +42,7 @@ final class IslandTests: XCTestCase {
         let reminder = app.descendants(matching: .any).matching(identifier: "slider-Daily reminder").firstMatch
         let r0 = reminder.coordinate(withNormalizedOffset: CGVector(dx: 1.0 / 8, dy: 0.5)), r3 = reminder.coordinate(withNormalizedOffset: CGVector(dx: 7.0 / 8, dy: 0.5))
         mark("reminder-drag"); r0.press(forDuration: 0.2, thenDragTo: r3, withVelocity: 300, thenHoldForDuration: 0.3); pause()
-        let paper = app.descendants(matching: .any).matching(identifier: "slider-Paper").firstMatch
+        let paper = app.descendants(matching: .any).matching(identifier: "slider-Appearance").firstMatch
         mark("paper-dark"); paper.coordinate(withNormalizedOffset: CGVector(dx: 5.0 / 6, dy: 0.5)).tap(); sleep(2)
         mark("paper-match"); paper.coordinate(withNormalizedOffset: CGVector(dx: 1.0 / 6, dy: 0.5)).tap(); sleep(2)
 

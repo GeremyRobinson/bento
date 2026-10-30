@@ -518,7 +518,7 @@ public struct LessonSession: Sendable, Equatable {
         case .learn: nil
         case .practice(let n): "Practice \(n) of \(Self.practice)"
         case .check(let n, _): "Skill check \(n) of \(Self.check)"
-        case .done(let learned): learned ? "Learned" : "Not yet learned: more practice"
+        case .done(let learned): learned ? "Passed" : "Not passed yet"
         }
     }
     /// The problem's place in the run, for the generator (the first problems are easier).
