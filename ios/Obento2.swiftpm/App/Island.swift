@@ -405,6 +405,13 @@ struct IslandPage: View {
             let id = store.yearly ? Store.yearly : Store.monthly
             let price = store.price(id) ?? "–", per = store.yearly ? "a year" : "a month"
             planRow("Billing") {
+                // what yearly saves (G 30 Oct): a green pill, outlined, the paper's own green
+                if let save = store.yearlySaving {
+                    Text(save).font(Typeface.font(13, .semibold)).foregroundStyle(Ink.right)
+                        .padding(.horizontal, 10).frame(height: 26)
+                        .overlay(Capsule().strokeBorder(Ink.right, lineWidth: 1.5))
+                        .padding(.trailing, 6)
+                }
                 Choices(options: [("Monthly", !store.yearly), ("Yearly", store.yearly)], segment: 84, label: "Billing") { i in
                     withAnimation(Motion.snap) { store.yearly = i == 1 }
                 }

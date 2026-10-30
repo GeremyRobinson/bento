@@ -91,6 +91,13 @@ final class Store {
         return (p.price / 12).formatted(p.priceFormatStyle)
     }
 
+    /// How much the yearly plan saves against twelve months: "Save 40%".
+    var yearlySaving: String? {
+        guard let m = products[Self.monthly]?.price, let y = products[Self.yearly]?.price, m > 0 else { return Shots.active ? "Save 40%" : nil }
+        let pct = Int((1 - NSDecimalNumber(decimal: y / (m * 12)).doubleValue) * 100)
+        return pct > 0 ? "Save \(pct)%" : nil
+    }
+
     func buy(_ id: String) async {
         guard let p = products[id], !buying else { return }
         buying = true; said = nil
