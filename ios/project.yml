@@ -48,6 +48,9 @@ schemes:
     build:
       targets:
         Obento2: all
+    run:
+      # the plan's products, tried in Xcode before they're on the App Store (App/Store.swift)
+      storeKitConfiguration: Obento2.storekit
     test:
       targets:
         - Obento2UITests

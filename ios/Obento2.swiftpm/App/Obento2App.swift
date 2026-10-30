@@ -7,6 +7,8 @@ struct Obento2App: App {
     var body: some Scene {
         WindowGroup {
             PaperScreen(model: PaperModel()).statusBarHidden()
+                // the plan: prices, and what the family has, kept up to date from the App Store (Store.swift)
+                .task { Store.shared.start() }
                 // screenshots follow the device's setting, never a choice saved earlier
                 .preferredColorScheme(Shots.active && Shots.name != "theme" ? nil : theme == "dark" ? .dark : theme == "light" ? .light : nil)
         }

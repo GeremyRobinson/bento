@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 
 /// Where the app's own pages live for now: placeholders until G has them (G, 29 Oct). While one is nil, its block says
 /// "Coming soon." instead of opening anything.
@@ -377,15 +378,87 @@ struct IslandPage: View {
 
     // MARK: Plan
 
+    /// The plan (G 30 Oct, the money plan): All grades, monthly or yearly, a week free to start; or, once it's the
+    /// family's, when it renews and where to manage it. Buying is Apple's own sheet (Store).
     @ViewBuilder private var plan: some View {
-        VStack(spacing: 8) {
-            Text("Nothing to buy yet").font(Island.heading).foregroundStyle(Ink.ink)
-            Text("If that changes, it will be here, behind the hold.")
-                .font(Island.body).foregroundStyle(Ink.ink2).multilineTextAlignment(.center).lineSpacing(3)
+        let store = Store.shared
+        heading("All grades").padding(.top, -8)
+        paragraph("Every grade, and every new one as it's made. For every iPad in the family.")
+        if let a = store.active {
+            let yearly = a.id == Store.yearly
+            planRow("Your plan") { Text(yearly ? "Yearly" : "Monthly").font(Island.key).foregroundStyle(Ink.ink) }
+            if let d = a.renews {
+                paragraph("\(a.willRenew ? "Renews" : "Ends") \(d.formatted(date: .long, time: .omitted)).")
+            }
+            HStack(spacing: 10) {
+                RoundButton(word: "Manage", strong: true) {
+                    guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
+                    Task { try? await AppStore.showManageSubscriptions(in: scene) }
+                }
+                RoundButton(word: "Restore Purchases") { Task { await store.restore() } }
+            }
+            .padding(.top, 14)
+        } else if store.loading == .failed {
+            paragraph("Prices didn't load. Check the internet connection and try again.")
+            RoundButton(word: "Try again", strong: true) { Task { await store.load() } }.padding(.top, 14)
+        } else {
+            let id = store.yearly ? Store.yearly : Store.monthly
+            let price = store.price(id) ?? "–", per = store.yearly ? "a year" : "a month"
+            planRow("Billing") {
+                Choices(options: [("Monthly", !store.yearly), ("Yearly", store.yearly)], segment: 84, label: "Billing") { i in
+                    withAnimation(Motion.snap) { store.yearly = i == 1 }
+                }
+            }
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(price).font(Typeface.font(34, .bold)).monospacedDigit().foregroundStyle(Ink.ink)
+                    .contentTransition(.numericText())
+                Text(per).font(Island.body).foregroundStyle(Ink.ink2)
+                Spacer(minLength: 0)
+                if store.yearly, let m = store.yearlyPerMonth {
+                    Text("About \(m) a month").font(Island.small).foregroundStyle(Ink.ink2).transition(.opacity)
+                }
+            }
+            .padding(.top, 12)
+            .animation(Motion.snap, value: store.yearly)
+            RoundButton(word: store.buying ? "One moment…" : store.trialOffered ? "Try 7 days free" : "Subscribe", strong: true) {
+                Task { await store.buy(id) }
+            }
+            .disabled(store.buying || store.loading != .ready)
+            .padding(.top, 14)
+            Text(store.trialOffered ? "Free for 7 days, then \(price) \(per). Cancel any time in Settings." : "\(price) \(per). Cancel any time in Settings.")
+                .font(Island.small).foregroundStyle(Ink.ink2).padding(.top, 8)
                 .fixedSize(horizontal: false, vertical: true)
+            Text("The first chapter of every grade stays free.").font(Island.small).foregroundStyle(Ink.ink2).padding(.top, 2)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
+        if let said = store.said {
+            Text(said).font(Island.small).foregroundStyle(Ink.ink).padding(.top, 10).fixedSize(horizontal: false, vertical: true)
+        }
+        // what Apple asks a subscription to show: restore, the terms, the privacy policy
+        HStack(spacing: 18) {
+            if store.active == nil { smallLink("Restore Purchases") { Task { await store.restore() } } }
+            smallLink("Terms of Use") {
+                if let u = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/") { UIApplication.shared.open(u) }
+            }
+            smallLink("Privacy Policy") {
+                if let u = AppInfo.privacyURL { UIApplication.shared.open(u) } else { ui.said[.plan] = "Coming soon." }
+            }
+        }
+        .padding(.top, 18)
+        if let said = ui.said[.plan] { Text(said).font(Island.small).foregroundStyle(Ink.ink2).padding(.top, 6) }
+    }
+
+    /// A row of the plan: its name on the left, what it is on the right.
+    private func planRow<C: View>(_ title: String, @ViewBuilder _ right: () -> C) -> some View {
+        HStack {
+            Text(title).font(Island.key).foregroundStyle(Ink.ink)
+            Spacer(minLength: 8)
+            right()
+        }
+        .padding(.top, 16)
+    }
+
+    private func smallLink(_ word: String, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) { Text(word).font(Island.small).foregroundStyle(Ink.ink2).underline() }.buttonStyle(Press())
     }
 
     // MARK: pieces
