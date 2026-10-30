@@ -956,6 +956,12 @@ enum Shots {
         // `-card`: then the first problem's card tapped, as a child does after the How to
         if ProcessInfo.processInfo.arguments.contains("-card"), let b = m.bars, let p = b.problems.first {
             b.open(p); await wait(4)
+            // `-reopen`: worked partway (the floor covered, the box standing), back to the page, and opened again
+            if ProcessInfo.processInfo.arguments.contains("-reopen"), let c = p as? CubesProblem {
+                await cubesMoves(m, b, c, stage: 1, args: [])
+                await wait(2.5); b.backToProblems(); await wait(3)
+                b.open(p); await wait(4)
+            }
         }
         m.close(); await wait(2)
     }

@@ -547,8 +547,9 @@ final class BarsPage {
         if let c = current { c.leave(); leaving = c; clearLeaving(c) }
         current = nil; framed = nil
         mode = .result
-        cardsAt = instant ? PaperClock.now - 100 : PaperClock.now + 0.35; cardsGoneAt = nil
-        frame?(resultFrame)
+        let (away, flat) = drawingOut
+        cardsAt = instant ? PaperClock.now - 100 : PaperClock.now + max(0.35, away); cardsGoneAt = nil
+        frameWhenFlat(flat) { [self] in mode == .result ? resultFrame : nil }
         save()
     }
 
@@ -736,8 +737,27 @@ final class BarsPage {
     private func showPage(after delay: Double) {
         current = nil; framed = nil
         mode = .choose
-        cardsAt = instant ? PaperClock.now - 100 : PaperClock.now + delay; cardsGoneAt = nil
-        frame?(pageFrame)
+        let (away, flat) = drawingOut
+        cardsAt = instant ? PaperClock.now - 100 : PaperClock.now + max(delay, away); cardsGoneAt = nil
+        frameWhenFlat(flat) { [self] in mode == .choose && current == nil ? pageFrame : nil }
+    }
+
+    /// A box of cubes leaving the paper (G 29 Oct: the cards came while it still stood, the camera still in close): how
+    /// long until it has sunk and gone (`away`), and until its paper lies flat again (`flat`); nothing for other problems.
+    private var drawingOut: (away: Double, flat: Double) {
+        guard !instant, let c = leaving as? CubesProblem else { return (0, 0) }
+        let flat = c.flatEnds.map { max(0, $0 - PaperClock.now) } ?? 0
+        return (max(flat, 0.45) + 0.1, flat)
+    }
+
+    /// The camera glides to what comes next once the paper lies flat (straight away when it already does), so the box
+    /// sinks where it stood and the camera only then leaves it; nothing if, by then, something else came (`to` is nil).
+    private func frameWhenFlat(_ flat: Double, to: @escaping () -> Rect?) {
+        guard flat > 0 else { if let r = to() { frame?(r) }; return }
+        run { [self] in
+            guard await wait(flat), let r = to() else { return }
+            frame?(r)
+        }
     }
 
     /// The problem at a saved place, if it's still on the page.

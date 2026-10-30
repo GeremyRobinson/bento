@@ -166,9 +166,20 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         // reopened after it lay flat again: it rises again from its covered floor
         if flatAt != nil || leftAt != nil { settleFlat() }
         openedAt = time(delay); wordsAt = openedAt; leftAt = nil; message = nil; verdict = nil
-        for i in lesson.marks.keys where i < box.floor && squares[i] == nil { squares[i] = (true, openedAt - 100) }
-        if lesson.step.camera == .tilted && liftAt == nil { lift(at: openedAt + 0.7, again: true) }
-        needs?(frameRect)
+        // the squares the child covered before come back as the floor draws in, not at once over the page of cards
+        // still leaving (G 29 Oct)
+        // (those still kept from before it left too: they grow in again)
+        for i in lesson.marks.keys where i < box.floor && (squares[i] == nil || squares[i]?.on == true) { squares[i] = (true, instant ? openedAt - 100 : openedAt + 0.35) }
+        if lesson.step.camera == .tilted && liftAt == nil { lift(at: openedAt + 0.9, again: true) }
+        // the camera comes in to it once the cards have gone, not while they're still leaving
+        if instant || delay <= 0 { needs?(frameRect) } else {
+            let k = openedAt
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .seconds(delay))
+                guard let self, self.openedAt == k, self.leftAt == nil else { return }
+                self.needs?(self.frameRect)
+            }
+        }
         teachIfDue(after: delay + 1.2)
     }
 
@@ -1116,7 +1127,7 @@ extension Shots {
         }
     }
 
-    private static func cubesMoves(_ m: PaperModel, _ page: BarsPage, _ c: CubesProblem, stage k: Int, args: [String]) async {
+    static func cubesMoves(_ m: PaperModel, _ page: BarsPage, _ c: CubesProblem, stage k: Int, args: [String]) async {
         func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
         func arg(_ name: String) -> String? { args.firstIndex(of: name).flatMap { $0 + 1 < args.count ? args[$0 + 1] : nil } }
         if let list = arg("-numbers") {
