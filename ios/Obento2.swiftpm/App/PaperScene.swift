@@ -101,15 +101,17 @@ extension Piece {
             let v = Vec3(x, y, z)
             return CGPoint(x: at.x + v.dot(right) * u, y: at.y - v.dot(up) * u)
         }
+        // the side that shows: the right end when the view is turned that way (CubesProblem.widthOnRight), else the left
+        let sx = CubesProblem.widthOnRight ? l : 0, ox = l - sx
         let top = [P(0, h, 0), P(l, h, 0), P(l, h, w), P(0, h, w), P(0, h, 0)]
         let front = [P(0, h, w), P(0, 0, w), P(l, 0, w), P(l, h, w)]
-        let left = [P(0, h, 0), P(0, 0, 0), P(0, 0, w)]
+        let side = [P(sx, h, 0), P(sx, 0, 0), P(sx, 0, w)]
         // the cubes' own lines: across the top and down the front and the side
         var cuts: [[CGPoint]] = []
         for i in stride(from: 1.0, to: l, by: 1) { cuts += [[P(i, h, 0), P(i, h, w), P(i, 0, w)]] }
-        for k in stride(from: 1.0, to: w, by: 1) { cuts += [[P(l, h, k), P(0, h, k), P(0, 0, k)]] }
-        for j in stride(from: 1.0, to: h, by: 1) { cuts += [[P(0, j, 0), P(0, j, w), P(l, j, w)]] }
-        return [top, front, left] + cuts
+        for k in stride(from: 1.0, to: w, by: 1) { cuts += [[P(ox, h, k), P(sx, h, k), P(sx, 0, k)]] }
+        for j in stride(from: 1.0, to: h, by: 1) { cuts += [[P(sx, j, 0), P(sx, j, w), P(ox, j, w)]] }
+        return [top, front, side] + cuts
     }
 
     /// The picture as it's drawn, before centring, in cells from the frame's corner. The frame is 15 cells by 10, so its
@@ -263,7 +265,7 @@ final class Rig {
     }
 
     func build(into content: inout RealityViewCameraContent) {
-        camera.components.set(OrthographicCameraComponent())
+        camera.components.set(PerspectiveCameraComponent())
         content.add(camera)
         content.add(root)
         // the paper itself, under the grid, large enough to fill any tilted view; it follows the camera
@@ -277,15 +279,13 @@ final class Rig {
         let screen = model.screen
         self.view = v; self.screen = screen
 
-        let (dir, _, up) = v.axes
+        // seen with perspective (PaperView3D): the eye a set distance back through the lens that keeps the target's
+        // plane at the view's scale; looking straight down, that plane is the paper, so flat it lines up exactly
+        let (_, _, up) = v.axes, eye = v.eye(screen: screen)
         let target = SIMD3<Float>(Float(v.target.x), Float(v.target.y), Float(v.target.z))
-        let from = target + SIMD3<Float>(Float(dir.x), Float(dir.y), Float(dir.z)) * 60
-        camera.look(at: target, from: from, upVector: SIMD3(Float(up.x), Float(up.y), Float(up.z)), relativeTo: nil)
-        var oc = OrthographicCameraComponent()
-        oc.near = 0.1; oc.far = 400
-        // RealityKit's orthographic scale is half the view's height, in world units
-        oc.scale = Float(screen.height / 2 / v.scale)
-        camera.components.set(oc)
+        camera.look(at: target, from: SIMD3(Float(eye.x), Float(eye.y), Float(eye.z)), upVector: SIMD3(Float(up.x), Float(up.y), Float(up.z)), relativeTo: nil)
+        let dist = v.distance(screen: screen)
+        camera.components.set(PerspectiveCameraComponent(near: Float(max(0.05, dist / 400)), far: Float(dist + 600), fieldOfViewInDegrees: Float(v.fieldOfView(screen: screen))))
 
         let floor = v.floorTarget
         sheet.position.x = Float(floor.x); sheet.position.z = Float(floor.z)
@@ -293,7 +293,8 @@ final class Rig {
         // lines keep their screen width at any zoom
         if lineScale == 0 || abs(v.scale / lineScale - 1) > 0.05 { lineScale = v.scale; gridAt = nil; piecesKey = "" }
         // enough grid to fill the screen even when tilted, centred on a strong line near the middle
-        let half = min(120, Int((hypot(screen.width, screen.height) / 2 / v.scale / sin(.pi / 4)).rounded(.up)) + 3)
+        // (tilted with perspective, the far side of the screen shows more paper: half as much again)
+        let half = min(120, Int((hypot(screen.width, screen.height) / 2 / v.scale / sin(.pi / 4) * 1.5).rounded(.up)) + 3)
         let gx = Int(floor.x.rounded()), gz = Int(floor.z.rounded())
         if let g = gridAt, abs(g.x - gx) <= 2, abs(g.z - gz) <= 2, g.half >= half {} else { Perf.time("grid") { regrid(x: gx, z: gz, half: half) } }
 

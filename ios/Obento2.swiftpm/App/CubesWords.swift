@@ -35,8 +35,11 @@ final class Stand {
     /// Puts its anchor on the screen point `s`, through view `v`.
     func place(_ s: CGPoint, _ v: PaperView3D, screen: Size) {
         let (dir, right, up) = v.axes
-        let w = v.target + right * ((s.x - screen.width / 2) / v.scale) + up * ((screen.height / 2 - s.y) / v.scale) + dir * (20 + lift)
+        // in front of everything, facing the eye; nearer the eye, made smaller by as much as it's nearer, so it shows at
+        // the size it was drawn (the view has perspective, PaperView3D)
+        let (w, k) = v.standing(Point(s.x, s.y), ahead: 20 + lift, screen: screen)
         root.position = SIMD3(Float(w.x), Float(w.y), Float(w.z))
+        root.scale = SIMD3(repeating: Float(k))
         func f(_ a: Vec3) -> SIMD3<Float> { SIMD3(Float(a.x), Float(a.y), Float(a.z)) }
         // its paper's across is the screen's, its paper's down the screen's down, and it faces the camera
         root.orientation = simd_quatf(simd_float3x3(columns: (f(right), f(dir), f(up * -1))))
@@ -171,9 +174,9 @@ final class CubesWords {
         count.place(pl.record, v, screen: screen)
 
         // the box's measures: its length and width from the start, its height once it stands up
-        let label = Sketch.Words(size: CubesProblem.labelSize, weight: .medium, colour: .ink2)
-        for (stand, text, at, anchor, shown) in [(length, "\(b.length) cm", pl.length, UnitPoint.center, true), (width, "\(b.width) cm", pl.width, UnitPoint(x: 1, y: 0.5), true),
-                                                 (height, "\(b.height) cm", pl.height, UnitPoint(x: 0, y: 0.5), p.heightShown(at: t))] {
+        let label = Sketch.Words(size: CubesProblem.labelSize, weight: .medium, colour: .ink2), right = CubesProblem.widthOnRight
+        for (stand, text, at, anchor, shown) in [(length, "\(b.length) cm", pl.length, UnitPoint.center, true), (width, "\(b.width) cm", pl.width, UnitPoint(x: right ? 0 : 1, y: 0.5), true),
+                                                 (height, "\(b.height) cm", pl.height, UnitPoint(x: right ? 1 : 0, y: 0.5), p.heightShown(at: t))] {
             stand.show(shown ? "\(text) \(dark)" : "", {
                 var s = Sketch()
                 if shown { s.label("m", text, label, at: .zero, anchor: anchor) }

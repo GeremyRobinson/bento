@@ -92,6 +92,44 @@ final class PaperView3DTests: XCTestCase {
         XCTAssertEqual(f.y, 0, accuracy: 1e-9)
         XCTAssertEqual(c.x, screen.width / 2, accuracy: 1e-6); XCTAssertEqual(c.y, screen.height / 2, accuracy: 1e-6)
     }
+
+    /// With perspective (G 29 Oct): the far end of a box is smaller on the screen than the near end, and a cube's top
+    /// (nearer the eye) is bigger than its floor; on the target's own plane the scale is exactly the view's.
+    func testFarThingsLookSmaller() {
+        let v = PaperView3D(elevation: PaperView3D.tilted.elevation, azimuth: PaperView3D.tilted.azimuth, scale: 100, target: Vec3(2.5, 2, 1.5))
+        func len(_ a: Vec3, _ b: Vec3) -> Double { let p = v.project(a, screen: screen), q = v.project(b, screen: screen); return hypot(p.x - q.x, p.y - q.y) }
+        let (dir, r, _) = v.axes
+        // near and far: the same one-cube edge across the front and across the back of a box 3 deep
+        let front = len(Vec3(0, 0, 3), Vec3(1, 0, 3)), back = len(Vec3(0, 0, 0), Vec3(1, 0, 0))
+        XCTAssertGreaterThan(front, back * 1.02, "the near edge is bigger")
+        XCTAssertGreaterThan(len(Vec3(0, 5, 3), Vec3(1, 5, 3)), front, "up nearer the eye, bigger")
+        // on the plane through the target facing the eye, a unit is `scale` points
+        XCTAssertEqual(len(v.target, v.target + r), 100, accuracy: 1e-9)
+        XCTAssertLessThan(len(v.target - dir, v.target - dir + r), 100)
+        XCTAssertEqual(v.fieldOfView(screen: screen), 2 * atan(410 / 100 / PaperView3D.eyeDistance) * 180 / .pi, accuracy: 1e-9)
+    }
+
+    /// Words standing in front, nearer the eye, land on the screen where they're meant to and shrink to show their size.
+    func testStandingWordsLandWhereMeant() {
+        let v = PaperView3D(elevation: 52, azimuth: 28, scale: 80, target: Vec3(3, 1, 2))
+        let s = Point(700, 300), (at, k) = v.standing(s, ahead: 20, screen: screen)
+        let back = v.project(at, screen: screen)
+        XCTAssertEqual(back.x, s.x, accuracy: 1e-6); XCTAssertEqual(back.y, s.y, accuracy: 1e-6)
+        XCTAssertEqual(k, (v.distance(screen: screen) - 20) / v.distance(screen: screen), accuracy: 1e-12)
+        // a unit across there, made k as big, shows a unit's `scale` points
+        let (_, r, _) = v.axes, w = v.project(at + r * k, screen: screen)
+        XCTAssertEqual(hypot(w.x - back.x, w.y - back.y), 80, accuracy: 1e-6)
+    }
+
+    /// Zoomed far out on the flat map, the eye backs off rather than the lens growing past 120°, and the paper still
+    /// lines up with the flat camera.
+    func testZoomedFarOutStaysFlatAndTrue() {
+        let cam = PaperCamera(x: 400, y: 300, zoom: 0.08)
+        let v = PaperView3D.matching(cam, screen: screen)
+        XCTAssertLessThanOrEqual(v.fieldOfView(screen: screen), 120 + 1e-9)
+        let p = Point(2000, -900), flat = cam.toScreen(p), deep = v.project(Vec3(p.x / Paper.unit, 0, p.y / Paper.unit), screen: screen)
+        XCTAssertEqual(flat.x, deep.x, accuracy: 0.5); XCTAssertEqual(flat.y, deep.y, accuracy: 0.5)
+    }
 }
 
 final class UnitCubesTests: XCTestCase {

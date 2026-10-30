@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Perspective side by side</title>
+<style>
+  :root { --bg: #121211; --ink: #EDEBE6; --ink2: #A3A19B; --line: #2A2A28; }
+  :root[data-theme="light"] { --bg: #F3F2EF; --ink: #1B1B1A; --ink2: #6B6964; --line: #DEDBD4; }
+  * { box-sizing: border-box; }
+  html, body { background: var(--bg); }
+  body { margin: 0; color: var(--ink); font: 15px -apple-system, "SF Pro Rounded", system-ui, sans-serif; }
+  header { padding: 22px 28px 6px; display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; }
+  h1 { font-size: 20px; font-weight: 600; margin: 0; }
+  header p { margin: 0; color: var(--ink2); }
+  .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; padding: 12px 28px 10px; }
+  figure { margin: 0; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  canvas { display: block; width: 100%; aspect-ratio: 5 / 6; touch-action: none; cursor: grab; }
+  canvas:active { cursor: grabbing; }
+  figcaption { padding: 12px 14px 14px; border-top: 1px solid var(--line); }
+  figcaption b { display: block; font-weight: 600; }
+  figcaption span { color: var(--ink2); font-size: 13px; }
+  input[type=range] { accent-color: var(--ink); width: 180px; }
+  .bar { padding: 4px 28px 26px; display: flex; gap: 10px; align-items: center; color: var(--ink2); font-size: 13px; flex-wrap: wrap; }
+  .keys { color: var(--ink2); font-size: 13px; padding: 0 28px 8px; }
+  .keys b { color: var(--ink); font-weight: 600; }
+  button { font: inherit; color: var(--ink); background: transparent; border: 1.5px solid var(--line); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+  @media (max-width: 760px) { .row { grid-template-columns: 1fr; padding: 12px 16px; } header, .bar, .keys { padding-left: 16px; padding-right: 16px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>The box, three ways</h1>
+  <p>Same box (5 × 3 × 5 cubes), same size on the paper. Move any view and the other two follow.</p>
+</header>
+<div class="keys"><b>Drag</b> to orbit · <b>scroll or pinch</b> to zoom · <b>shift-drag</b>, right-drag or two fingers to move · <b>double-click</b> to go back</div>
+<div class="row">
+  <figure><canvas id="a"></canvas><figcaption><b>Now</b><span>No perspective. The back is as big as the front.</span></figcaption></figure>
+  <figure><canvas id="b"></canvas><figcaption><b>Perspective, same tilt</b><span>A long lens. The back shrinks a little; the paper fades into the distance.</span></figcaption></figure>
+  <figure><canvas id="c"></canvas><figcaption><b>Perspective, lower tilt</b><span>The same lens, 12° lower. The sides show more, so the cubes read as cubes.</span></figcaption></figure>
+</div>
+<div class="bar"><label for="lens">How strong the perspective is</label><input id="lens" type="range" min="6" max="40" step="1" value="18"><span id="lensOut">18°</span><button id="shadow">Shadow: on</button><button id="theme">Light paper</button><button id="reset">Back to the lesson's angle</button></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// the app's 3D lesson: one world unit is one cube (a big square); the paper lies at y = 0. Every view orbits one shared
+// point (`target`) from elevation `el`, azimuth `az` (PaperView3D.axes: dir = (cos e sin a, sin e, cos e cos a)), at a
+// zoom `viewH` (how many units tall the view is at the target). The third view sits `drop` degrees lower.
+const L = 5, W = 3, H = 5;
+const home = { az: -28, el: 52, viewH: 13.5, target: new THREE.Vector3(L / 2, H / 2 - 0.4, W / 2) };
+let az = home.az, el = home.el, viewH = home.viewH, target = home.target.clone();
+let LENS = 18, dark = true, shadows = true;
+const views = [ { id: "a", persp: false, drop: 0 }, { id: "b", persp: true, drop: 0 }, { id: "c", persp: true, drop: 12 } ];
+
+function colours() {
+  return dark
+    ? { bg: 0x121211, minor: 0x1d1d1c, major: 0x292927, box: 0xB08A3E, edge: 0xE6C46A, shadow: 0.55 }
+    : { bg: 0xF3F2EF, minor: 0xE4E2DD, major: 0xD3D0C9, box: 0xE7C26C, edge: 0xA87B22, shadow: 0.22 };
+}
+
+function makeScene() {
+  const c = colours(), scene = new THREE.Scene();
+  scene.background = new THREE.Color(c.bg);
+  // the paper: a sheet that only catches the box's shadow, and its grid (a line every fifth of a cube, stronger every cube)
+  // only as big as the shadow can reach (beyond it a far, flat sheet only shimmers)
+  const sheet = new THREE.Mesh(new THREE.PlaneGeometry(24, 24), new THREE.ShadowMaterial({ opacity: c.shadow }));
+  sheet.rotation.x = -Math.PI / 2; sheet.position.set(L / 2, 0.001, W / 2); sheet.receiveShadow = true; scene.add(sheet);
+  const minor = [], major = [], N = 60;
+  for (let i = -N * 5; i <= N * 5; i++) {
+    const v = i / 5, arr = i % 5 === 0 ? major : minor;
+    arr.push(v, 0, -N, v, 0, N, -N, 0, v, N, 0, v);
+  }
+  for (const [pts, col] of [[minor, c.minor], [major, c.major]]) {
+    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
+    scene.add(new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: col })));
+  }
+  // light from above, a little in front and to the left (top brightest, the front next, the side darkest), with a soft fill
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, dark ? 0.55 : 0.7));
+  const sun = new THREE.DirectionalLight(0xffffff, dark ? 0.75 : 0.6);
+  sun.position.set(L / 2 - 6, 14, W / 2 + 8); sun.target.position.set(L / 2, 0, W / 2);
+  sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.radius = 6; sun.shadow.bias = -0.0008;
+  Object.assign(sun.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, near: 1, far: 40 });
+  scene.add(sun, sun.target);
+  // the box, its cubes' edges drawn over it
+  const box = new THREE.Mesh(new THREE.BoxGeometry(L, H, W),
+    new THREE.MeshLambertMaterial({ color: c.box, fog: false, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 }));
+  box.position.set(L / 2, H / 2, W / 2); box.castShadow = true; scene.add(box);
+  const e = [], k = 0.002, seg = (...p) => e.push(...p);
+  for (let x = 0; x <= L; x++) { seg(x, 0, W + k, x, H, W + k); seg(x, 0, -k, x, H, -k); seg(x, H + k, 0, x, H + k, W); }
+  for (let y = 0; y <= H; y++) { seg(0, y, W + k, L, y, W + k); seg(0, y, -k, L, y, -k); seg(-k, y, 0, -k, y, W); seg(L + k, y, 0, L + k, y, W); }
+  for (let z = 0; z <= W; z++) { seg(-k, 0, z, -k, H, z); seg(L + k, 0, z, L + k, H, z); seg(0, H + k, z, L, H + k, z); }
+  const eg = new THREE.BufferGeometry(); eg.setAttribute("position", new THREE.Float32BufferAttribute(e, 3));
+  scene.add(new THREE.LineSegments(eg, new THREE.LineBasicMaterial({ color: c.edge, fog: false })));
+  scene.userData.fog = new THREE.Fog(c.bg, 25, 90);
+  scene.userData.sun = sun;
+  return scene;
+}
+
+function axes(elev) {
+  const e = elev * Math.PI / 180, a = az * Math.PI / 180;
+  const dir = new THREE.Vector3(Math.cos(e) * Math.sin(a), Math.sin(e), Math.cos(e) * Math.cos(a));
+  const right = new THREE.Vector3(0, 1, 0).cross(dir).normalize();
+  return { dir, right, up: dir.clone().cross(right).normalize() };
+}
+
+function place(cam, elev, aspect) {
+  const { dir, up } = axes(elev);
+  if (cam.isPerspectiveCamera) {
+    // far enough that the target is the same size as in the view without perspective
+    const dist = (viewH / 2) / Math.tan(LENS / 2 * Math.PI / 180);
+    cam.fov = LENS; cam.aspect = aspect; cam.position.copy(target).addScaledVector(dir, dist);
+  } else {
+    cam.top = viewH / 2; cam.bottom = -viewH / 2; cam.left = -viewH / 2 * aspect; cam.right = viewH / 2 * aspect;
+    cam.position.copy(target).addScaledVector(dir, 80);
+  }
+  cam.up.copy(up); cam.lookAt(target); cam.near = 0.1; cam.far = 600; cam.updateProjectionMatrix();
+}
+
+const rigs = views.map(v => {
+  const canvas = document.getElementById(v.id);
+  const r = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+  r.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+  return { v, r, canvas, cam: v.persp ? new THREE.PerspectiveCamera() : new THREE.OrthographicCamera() };
+});
+let scene = makeScene();
+
+function draw() {
+  scene.userData.sun.castShadow = shadows;
+  for (const g of rigs) {
+    const w = g.canvas.clientWidth, h = g.canvas.clientHeight;
+    g.r.setSize(w, h, false);
+    place(g.cam, clampEl(el - g.v.drop), w / h);
+    if (g.v.persp) { const d = g.cam.position.distanceTo(target); scene.userData.fog.near = d + 6; scene.userData.fog.far = d + 70; }
+    scene.fog = g.v.persp ? scene.userData.fog : null;
+    g.r.render(scene, g.cam);
+  }
+}
+const clampEl = e => Math.max(3, Math.min(89.5, e));
+window.addEventListener("resize", draw);
+
+// moving the camera, as Blender does: orbit around the target, zoom toward it, move it across the screen
+function orbit(dx, dy) { az -= dx * 0.35; el = clampEl(el + dy * 0.3); draw(); }
+function zoom(f) { viewH = Math.max(2.5, Math.min(60, viewH * f)); draw(); }
+function pan(dx, dy, canvas) {
+  const { right, up } = axes(el), perPx = viewH / canvas.clientHeight;
+  target.addScaledVector(right, -dx * perPx).addScaledVector(up, dy * perPx); draw();
+}
+
+for (const g of rigs) {
+  const c = g.canvas, pts = new Map();
+  let last = null;
+  c.addEventListener("contextmenu", ev => ev.preventDefault());
+  c.addEventListener("pointerdown", ev => { c.setPointerCapture(ev.pointerId); pts.set(ev.pointerId, { x: ev.clientX, y: ev.clientY }); last = null; });
+  c.addEventListener("pointermove", ev => {
+    if (!pts.has(ev.pointerId)) return;
+    const prev = pts.get(ev.pointerId), dx = ev.clientX - prev.x, dy = ev.clientY - prev.y;
+    pts.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+    if (pts.size >= 2) {
+      // two fingers: their middle moves the view, their spread zooms
+      const [p, q] = [...pts.values()], mid = { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 }, d = Math.hypot(p.x - q.x, p.y - q.y);
+      if (last) { pan(mid.x - last.mid.x, mid.y - last.mid.y, c); if (d > 0 && last.d > 0) zoom(last.d / d); }
+      last = { mid, d };
+    } else if (ev.shiftKey || ev.buttons === 2 || ev.buttons === 4) pan(dx, dy, c);
+    else orbit(dx, dy);
+  });
+  const up = ev => { pts.delete(ev.pointerId); last = null; };
+  c.addEventListener("pointerup", up); c.addEventListener("pointercancel", up);
+  c.addEventListener("wheel", ev => {
+    ev.preventDefault();
+    if (ev.shiftKey) pan(-ev.deltaX, -ev.deltaY, c);
+    else zoom(Math.exp(ev.deltaY * (ev.ctrlKey ? 0.01 : 0.0015)));
+  }, { passive: false });
+  c.addEventListener("dblclick", reset);
+}
+function reset() { az = home.az; el = home.el; viewH = home.viewH; target = home.target.clone(); draw(); }
+document.getElementById("reset").onclick = reset;
+document.getElementById("lens").oninput = ev => { LENS = +ev.target.value; document.getElementById("lensOut").textContent = LENS + "°"; draw(); };
+document.getElementById("shadow").onclick = ev => { shadows = !shadows; ev.target.textContent = "Shadow: " + (shadows ? "on" : "off"); draw(); };
+document.getElementById("theme").onclick = ev => {
+  dark = !dark; document.documentElement.dataset.theme = dark ? "dark" : "light";
+  ev.target.textContent = dark ? "Light paper" : "Dark paper"; scene = makeScene(); draw();
+};
+draw();
+</script>
+</body>
+</html>

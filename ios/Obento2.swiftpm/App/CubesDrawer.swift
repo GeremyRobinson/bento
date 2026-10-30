@@ -306,12 +306,12 @@ final class CubesDrawer {
         var edges: [(SIMD3<Float>, SIMD3<Float>)] = []
         for y in [y0, y1] { edges += [([x0, y, z0], [x1, y, z0]), ([x0, y, z1], [x1, y, z1]), ([x0, y, z0], [x0, y, z1]), ([x1, y, z0], [x1, y, z1])] }
         for x in [x0, x1] { for z in [z0, z1] { edges.append(([x, y0, z], [x, y1, z])) } }
-        // the cubes standing, outlined on the view's plane (right, up), a hair bigger so a dash along their edge goes too
-        let hidden = stands > 0 ? Self.outline(of: o, b.length, stands, b.width, grow: Double(w)) : []
+        // the cubes standing, outlined as the tilted view shows them, a hair bigger so a dash along their edge goes too
+        let mid = Vec3(o.x + Double(b.length) / 2, Double(b.height) / 2, o.z + Double(b.width) / 2)
+        let hidden = stands > 0 ? Self.outline(of: o, b.length, stands, b.width, grow: Double(w) * Paper.unit, from: mid) : []
         func covered(_ q: SIMD3<Float>) -> Bool {
             guard !hidden.isEmpty else { return false }
-            let (r, u) = Self.plane
-            return Self.inside((Double(q.x) * r.x + Double(q.y) * r.y + Double(q.z) * r.z, Double(q.x) * u.x + Double(q.y) * u.y + Double(q.z) * u.z), hidden)
+            return Self.inside(Self.seen(Vec3(Double(q.x), Double(q.y), Double(q.z)), from: mid), hidden)
         }
         var pos: [SIMD3<Float>] = [], idx: [UInt32] = []
         let h = w / 2
@@ -338,18 +338,19 @@ final class CubesDrawer {
         wire.model = (try? MeshResource.generate(from: [d])).map { ModelComponent(mesh: $0, materials: [flat(c)]) }
     }
 
-    /// The tilted view's plane: its right and up, the same for every tilted view (only the pan and zoom differ).
-    static let plane: (right: Vec3, up: Vec3) = {
-        let v = PaperView3D(elevation: PaperView3D.tilted.elevation, azimuth: PaperView3D.tilted.azimuth)
-        return (v.axes.right, v.axes.up)
-    }()
+    /// Where a point shows through the tilted view, perspective and all, with its eye on the middle of the box (the
+    /// lesson frames the box, so its eye is there or near it): points at 100%, up positive.
+    static func seen(_ q: Vec3, from mid: Vec3) -> (Double, Double) {
+        let v = PaperView3D(elevation: PaperView3D.tilted.elevation, azimuth: PaperView3D.tilted.azimuth, scale: Paper.unit, target: mid)
+        let s = v.project(q, screen: Size(1180, 820))
+        return (s.x, -s.y)
+    }
 
     /// The outline of a block of cubes `l` × `h` × `w` from corner `o`, on the tilted view's plane, grown by `grow`: the
     /// hull of its eight corners.
-    static func outline(of o: Vec3, _ l: Int, _ h: Double, _ w: Int, grow: Double) -> [(Double, Double)] {
-        let (r, u) = plane
+    static func outline(of o: Vec3, _ l: Int, _ h: Double, _ w: Int, grow: Double, from mid: Vec3) -> [(Double, Double)] {
         var pts: [(Double, Double)] = []
-        for x in [o.x, o.x + Double(l)] { for y in [0, h] { for z in [o.z, o.z + Double(w)] { let q = Vec3(x, y, z); pts.append((q.dot(r), q.dot(u))) } } }
+        for x in [o.x, o.x + Double(l)] { for y in [0, h] { for z in [o.z, o.z + Double(w)] { pts.append(seen(Vec3(x, y, z), from: mid)) } } }
         // the convex hull (monotone chain), counter-clockwise
         pts.sort { $0.0 == $1.0 ? $0.1 < $1.1 : $0.0 < $1.0 }
         func cross(_ a: (Double, Double), _ b: (Double, Double), _ c: (Double, Double)) -> Double { (b.0 - a.0) * (c.1 - a.1) - (b.1 - a.1) * (c.0 - a.0) }

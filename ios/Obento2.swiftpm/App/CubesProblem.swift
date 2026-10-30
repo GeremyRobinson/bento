@@ -543,7 +543,7 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         } else if let l = lifting, let v = tiltedView {
             // a layer for every cube's height the finger moves up, as the cubes stand on the screen
             let s = v.project(Vec3(p.x / Paper.unit, 0, p.y / Paper.unit), screen: TiltCamera.screen)
-            let per = v.scale * v.axes.up.y
+            let per = Self.cubeTall(v, at: Vec3(p.x / Paper.unit, 0, p.y / Paper.unit), screen: TiltCamera.screen)
             if setLayers(l.layers + Int(((l.y - s.y) / per).rounded())) { onChange?() }
         }
     }
@@ -857,6 +857,15 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
     }
     /// The least a block takes a tap over on the screen (Apple's 44 points), and a block's rect grown to it.
     static let finger = 44.0
+    /// How tall one cube stands on the screen at a point on the paper, through view `v` (with its perspective).
+    static func cubeTall(_ v: PaperView3D, at p: Vec3, screen: Size) -> Double {
+        max(1, v.project(p, screen: screen).y - v.project(p + Vec3(0, 1, 0), screen: screen).y)
+    }
+
+    /// The box's short side (its width) faces the eye on the right when the tilted view is turned that way (azimuth
+    /// above 0, G 29 Oct), on the left when turned the other: its width is labelled on that side, its height on the other.
+    nonisolated static var widthOnRight: Bool { PaperView3D.tilted.azimuth > 0 }
+
     static func touchable(_ r: CGRect) -> CGRect { r.insetBy(dx: min(0, (r.width - finger) / 2), dy: min(0, (r.height - finger) / 2)) }
 
     /// Where everything goes on the screen through view `v`: what to do over the box, its labels, each layer's count
@@ -879,28 +888,30 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         for x in [0, L] { for z in [0, W] { edges.append((P(x, 0, z), P(x, high, z))) } }
         var pl = CubesPlaces(k: k, bounds: bounds)
         let cap = Self.capHeight
-        // the length under the floor's front edge, the width left of its left edge, the height right of the front-right edge
+        // the length under the floor's front edge, the width beside the side that shows (its right edge, or its left), the
+        // height beside the front's other upright edge
         let lw = Self.measure("\(b.length) cm", Self.labelSize, digits: true) * k, ww = Self.measure("\(b.width) cm", Self.labelSize, digits: true) * k
         let hw = Self.measure("\(b.height) cm", Self.labelSize, digits: true) * k
         let a = P(L / 2, 0, W), e = P(L, 0, W), slope = abs(e.y - a.y) / max(1, abs(e.x - a.x))
         pl.length = CGPoint(x: a.x, y: a.y + (10 + cap / 2) * k + slope * lw / 2)
-        let wm = P(0, 0, W / 2)
-        pl.width = CGPoint(x: wm.x - 10 * k, y: wm.y)
-        let hm = P(L, H / 2, W)
-        pl.height = CGPoint(x: hm.x + 10 * k, y: hm.y)
+        let right = Self.widthOnRight
+        let wm = P(right ? L : 0, 0, W / 2)
+        pl.width = CGPoint(x: wm.x + (right ? 10 : -10) * k, y: wm.y)
+        let hm = P(right ? 0 : L, H / 2, W)
+        pl.height = CGPoint(x: hm.x + (right ? -10 : 10) * k, y: hm.y)
         // each layer's count in the middle of a cube's face, not across the line between two (the middle cube, or the
         // one just right of the middle)
         let cx = b.length % 2 == 1 ? L / 2 : L / 2 + 0.5
         pl.counts = (0..<b.height).map { P(cx, Double($0) + 0.5, W) }
         var extent = bounds
         extent = extent.union(CGRect(x: pl.length.x - lw / 2, y: pl.length.y - cap * k / 2, width: lw, height: cap * k))
-        extent = extent.union(CGRect(x: pl.width.x - ww, y: pl.width.y - cap * k / 2, width: ww, height: cap * k))
-        if up { extent = extent.union(CGRect(x: pl.height.x, y: pl.height.y - cap * k / 2, width: hw, height: cap * k)) }
+        extent = extent.union(CGRect(x: right ? pl.width.x : pl.width.x - ww, y: pl.width.y - cap * k / 2, width: ww, height: cap * k))
+        if up { extent = extent.union(CGRect(x: right ? pl.height.x - hw : pl.height.x, y: pl.height.y - cap * k / 2, width: hw, height: cap * k)) }
 
         // the record (the school working): beside the box on a screen wider than tall, once it stands up; else under it
         let beside = up && screen.width > screen.height
         let lenBottom = pl.length.y + cap * k / 2
-        pl.record = beside ? CGPoint(x: max(bounds.maxX, pl.height.x + hw) + 2 * Paper.cell * k, y: bounds.minY)
+        pl.record = beside ? CGPoint(x: max(bounds.maxX, right ? pl.width.x + ww : pl.height.x + hw) + 2 * Paper.cell * k, y: bounds.minY)
                            : CGPoint(x: bounds.minX, y: max(bounds.maxY + 40 * k, lenBottom + 12 * k))
         let lines = recordLines, pitch = Self.recordPitch * k
         for (i, line) in lines.enumerated() {
@@ -1142,7 +1153,7 @@ extension Shots {
         if args.contains("-tilting") { return }
         await wait(3.2)
         guard let v = c.tiltedView else { return }
-        let o = c.corner, per = v.scale * v.axes.up.y
+        let o = c.corner, per = CubesProblem.cubeTall(v, at: Vec3(o.x + Double(b.length) / 2, 0, o.z + Double(b.width)), screen: m.screen)
         let front = v.project(Vec3(o.x + Double(b.length) / 2, 0.5, o.z + Double(b.width)), screen: m.screen)
         if k == 1 {
             if partway, b.height > 2 { await drag([front, Point(front.x, front.y - per * Double(b.height / 2 - 1))]) }

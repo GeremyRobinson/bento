@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// The paper's camera while a lesson stands up off it (LESSONS.md §6; Unit cubes): the same orthographic camera that
-/// shows the flat paper from straight above, turned to look at it from the side. It starts exactly where the flat
+/// The paper's camera while a lesson stands up off it (LESSONS.md §6; Unit cubes): the same camera that shows the
+/// flat paper from straight above (with perspective, PaperView3D), turned to look at it from the side. It starts exactly where the flat
 /// camera is, moves in one ease (angles straight, zoom in log space), and comes back down onto the flat camera, so
 /// neither hand-over moves a single line. While it's tilted, a drag pans it and a pinch zooms it.
 @MainActor @Observable
@@ -76,7 +76,7 @@ final class TiltCamera {
         return PaperView3D(scale: v.scale, target: v.target - dir * (v.target.y / dir.y))
     }
 
-    /// The tilted view (elevation 52°, turned −28°) that shows everything in `extent`, zoomed to fit the free part of
+    /// The tilted view (PaperView3D.tilted: 52° up, turned 28°) that shows everything in `extent`, zoomed to fit the free part of
     /// the screen (in or out, up to `maxZoom`) and centred in it, with two cells to spare. `extent` is measured on the
     /// screen through `probe`: a tilted view at 100% (one block = 100 points), whose target is anywhere near the
     /// picture. Words are paper-sized, so the whole of it grows and shrinks together with the zoom.
