@@ -75,8 +75,10 @@ public enum Pill {
         public var missed: Bool
         /// A hand move is under way (a drag, a cut, a hop): the finger is down on the picture.
         public var moving: Bool
-        public init(inTest: Bool = false, auto: Bool = false, solved: Bool = false, missed: Bool = false, moving: Bool = false) {
-            self.inTest = inTest; self.auto = auto; self.solved = solved; self.missed = missed; self.moving = moving
+        /// How many times the step on now has been missed.
+        public var missesHere: Int
+        public init(inTest: Bool = false, auto: Bool = false, solved: Bool = false, missed: Bool = false, moving: Bool = false, missesHere: Int = 0) {
+            self.inTest = inTest; self.auto = auto; self.solved = solved; self.missed = missed; self.moving = moving; self.missesHere = missesHere
         }
     }
 
@@ -86,6 +88,9 @@ public enum Pill {
         public var showMe = false
         /// After a miss, Show me is the thing most worth tapping: its icon and its word, ringed in the chapter's colour.
         public var showMeWord = false
+        /// The same step missed twice (G 1 Nov): the How to, which explains the idea, is offered instead, with its word,
+        /// ringed; Show me stays as an icon.
+        public var howTo = false
         /// Solved: the middle is "Next →" (Hint and Show me fold away).
         public var next = false
         /// A hand move is under way: everything but its readout is dimmed.
@@ -102,7 +107,8 @@ public enum Pill {
         if p.solved { t.next = true; return t }
         // tests, rechecks and the review: no Hint or Show me (as before)
         guard !p.inTest else { return t }
-        t.hint = true; t.showMe = true; t.showMeWord = p.missed
+        t.hint = true; t.showMe = true
+        if p.missed && p.missesHere >= 2 { t.howTo = true } else { t.showMeWord = p.missed }
         return t
     }
 

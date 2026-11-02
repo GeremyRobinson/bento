@@ -330,7 +330,7 @@ final class BarsPage {
         enum State { case open, now, done, missed, locked }
         /// What the card opens: one of the lesson's problems (or a test's questions), the lesson's test, or a question
         /// of the recheck.
-        enum Opens: Equatable { case problem(Int), test, recheck(Int) }
+        enum Opens: Equatable { case problem(Int), test, recheck(Int), howTo }
         let opens: Opens
         let rect: Rect
         let title: String
@@ -341,7 +341,7 @@ final class BarsPage {
         var pen: Pen? = nil
         /// Its parts' names on the paper.
         var id: String {
-            switch opens { case .problem(let i): "card\(i)"; case .test: "card-1"; case .recheck(let i): "recheck\(i)" }
+            switch opens { case .problem(let i): "card\(i)"; case .test: "card-1"; case .recheck(let i): "recheck\(i)"; case .howTo: "card-howto" }
         }
     }
 
@@ -387,8 +387,12 @@ final class BarsPage {
         part("Together", plan.items.indices.filter { plan.items[$0].part == .together }.map { (.problem($0), problems[$0]) }, columns: Self.columns)
         part("On your own · \(plan.ownRight(problems.map(\.lesson))) of \(LessonPlan.own) right",
              plan.items.indices.filter { plan.items[$0].part == .own }.map { (.problem($0), problems[$0]) }, columns: Self.columns)
-        let tx = x0 + Double(Self.columns) * (w + g) + g
-        heads.append((Point(tx, top - Paper.unit / 2), "Test"))
+        // the side column: the How to on top, always there to watch again (G 1 Nov: it's too important to hide), the
+        // lesson's test under it, level with On your own
+        let tx = x0 + Double(Self.columns) * (w + g) + g, ty = top + h + Paper.unit + g
+        heads.append((Point(tx, top - Paper.unit / 2), "How to"))
+        out.append(Card(opens: .howTo, rect: Rect(x: tx, y: top, width: w, height: h), title: "How to", display: howTo.lesson.display, line: "Watch it again", state: .open))
+        heads.append((Point(tx, ty - Paper.unit / 2), "Test"))
         let started = testProblems.contains { $0.lesson.index > 0 || $0.solved }
         let (line, state): (String, Card.State) = {
             if let res = testResult {
@@ -398,7 +402,7 @@ final class BarsPage {
             if started { return ("\(testProblems.filter(\.solved).count) of \(LessonPlan.test) done", .now) }
             return ("\(LessonPlan.test) problems, no help", .open)
         }()
-        out.append(Card(opens: .test, rect: Rect(x: tx, y: top, width: w, height: h), title: "Lesson test", display: nil, line: line, state: state))
+        out.append(Card(opens: .test, rect: Rect(x: tx, y: ty, width: w, height: h), title: "Lesson test", display: nil, line: line, state: state))
         return (out, heads)
     }
 
@@ -610,10 +614,14 @@ final class BarsPage {
         play()
     }
 
-    /// Watch the How to again (in More): the page steps aside, it plays where it was, and the page comes back.
+    /// Watch the How to again (its card on the page, or the pill after the same step is missed twice): what's open
+    /// steps aside, it plays where it was, and then the problem the child was on comes back (or the page).
     func watchAgain() {
         guard howToGone, !playing, !inTest else { return }
-        if mode == .work, let c = current { c.leave(); leaving = c }
+        if mode == .work, let c = current {
+            if !c.solved, let i = problems.firstIndex(where: { $0 === c }) { resumeAt = .problem(i) }
+            c.leave(); leaving = c
+        }
         cardsGoneAt = PaperClock.now
         playing = true
         run { [self] in
@@ -862,6 +870,7 @@ final class BarsPage {
             case .problem(let i): open(problems[i])
             case .test: openTest()
             case .recheck(let i): open(recheckProblems[i])
+            case .howTo: watchAgain()
             }
             return
         }

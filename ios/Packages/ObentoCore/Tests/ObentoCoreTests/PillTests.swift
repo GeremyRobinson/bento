@@ -72,6 +72,17 @@ final class PillTests: XCTestCase {
         XCTAssertEqual(Pill.tools(Pill.Problem(missed: true)), Pill.Tools(hint: true, showMe: true, showMeWord: true))
     }
 
+    func testTheSameStepMissedTwiceOffersTheHowTo() {
+        // one miss: Show me, with its word
+        XCTAssertEqual(Pill.tools(Pill.Problem(missed: true, missesHere: 1)), Pill.Tools(hint: true, showMe: true, showMeWord: true))
+        // twice on the same step: the How to, with its word; Show me stays as an icon
+        var t = Pill.Tools(hint: true, showMe: true); t.howTo = true
+        XCTAssertEqual(Pill.tools(Pill.Problem(missed: true, missesHere: 2)), t)
+        // never in a test, and gone once it's solved
+        XCTAssertEqual(Pill.tools(Pill.Problem(inTest: true, missed: true, missesHere: 3)), Pill.Tools())
+        XCTAssertEqual(Pill.tools(Pill.Problem(solved: true, missed: true, missesHere: 2)), Pill.Tools(next: true))
+    }
+
     func testSolvedFoldsTheToolsAwayForNext() {
         XCTAssertEqual(Pill.tools(Pill.Problem(solved: true, missed: true)), Pill.Tools(next: true))
         XCTAssertEqual(Pill.tools(Pill.Problem(inTest: true, solved: true)), Pill.Tools(next: true))

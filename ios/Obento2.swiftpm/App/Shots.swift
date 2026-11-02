@@ -258,7 +258,9 @@ enum Shots {
                 // each step before it answered as a child would: a hand step by its moves, a number typed, a pick picked
                 for _ in 0..<max(0, k) { w.answerForShots() }
                 // -wrong: a slip on this step (a wrong move, or a wrong number typed and checked), so what a miss says shows
-                if args.contains("-wrong") { w.answerForShots(wrong: true) }
+                if args.contains("-wrong") || args.contains("-wrong2") { w.answerForShots(wrong: true) }
+                // -wrong2: the same step missed twice (the pill then offers the How to)
+                if args.contains("-wrong2") { w.answerForShots(wrong: true) }
                 // -type <digits>: those typed into the step's first box and checked (a slip the lesson names)
                 if let i = args.firstIndex(of: "-type"), i + 1 < args.count, let box = w.lesson.step.answer?.boxes.first {
                     w.select(box)

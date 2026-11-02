@@ -112,7 +112,7 @@ struct Toolbar: View {
     /// Everything that changes the pill's shape: a change in any of it is animated.
     private func animationKey(_ inLesson: Bool) -> String {
         let t = tools
-        return "\(inLesson) \(model.place.map { "\($0)" } ?? "map") \(String(describing: ui.open)) \(Int(ui.rowWidth)) \(ui.sizes.map { "\($0.key)\(Int($0.value.width))x\(Int($0.value.height))" }.sorted()) \(zooming) \(middleKey) \(t.hint) \(t.showMe) \(t.showMeWord) \(t.next) \(t.dim) \(ui.gradeSaid ?? "") \(islandKey) \(heightsKey) \(Int(islandRoom))"
+        return "\(inLesson) \(model.place.map { "\($0)" } ?? "map") \(String(describing: ui.open)) \(Int(ui.rowWidth)) \(ui.sizes.map { "\($0.key)\(Int($0.value.width))x\(Int($0.value.height))" }.sorted()) \(zooming) \(middleKey) \(t.hint) \(t.showMe) \(t.showMeWord) \(t.howTo) \(t.next) \(t.dim) \(ui.gradeSaid ?? "") \(islandKey) \(heightsKey) \(Int(islandRoom))"
     }
 
     // MARK: the island
@@ -182,7 +182,7 @@ struct Toolbar: View {
         }
         divider.opacity(dim ? 0.35 : 1)
         lessonMiddle(t)
-        if t.hint || t.showMe {
+        if t.hint || t.showMe || t.howTo {
             divider.opacity(dim ? 0.35 : 1)
             // the hint is drawn on the paper (G 20 Oct): no card opens for it. Dim when there's none to give, but still
             // there to tap: the paper then says why ("Have a go first. A hint comes after a miss.")
@@ -194,6 +194,10 @@ struct Toolbar: View {
                 PillButton(icon: .show, word: "Show me", ring: t.showMeWord ? chapterInk : nil, enabled: canShowMe, dim: dim) {
                     ui.open = nil; showMe()
                 }
+            }
+            if t.howTo {
+                // missed twice: watch how it works, then back to this problem
+                PillButton(icon: .howTo, word: "How to", ring: chapterInk, dim: dim) { ui.open = nil; model.bars?.watchAgain() }
             }
         }
         divider.opacity(dim ? 0.35 : 1)
@@ -289,7 +293,6 @@ struct Toolbar: View {
             }
             // off in tests (G 20 Oct)
             MenuRow(icon: .read, label: "Read aloud", enabled: canRead) { ui.open = nil; readAloud() }
-            if let b = model.bars, b.howToGone, !b.inTest { MenuRow(icon: .show, label: "Watch the How to") { ui.open = nil; b.watchAgain() } }
             MenuRow(icon: .dark, label: scheme == .dark ? "Light" : "Dark") { theme = scheme == .dark ? "light" : "dark" }
             zoomRow
         }
@@ -389,7 +392,8 @@ struct Toolbar: View {
     private var tools: Pill.Tools {
         guard model.openPiece != nil, let p = problem else { return Pill.tools(nil) }
         let missed = p.message.map { !$0.ok } ?? false
-        return Pill.tools(Pill.Problem(inTest: inTest, auto: p.auto, solved: p.solved, missed: missed, moving: p.handMoving))
+        return Pill.tools(Pill.Problem(inTest: inTest, auto: p.auto, solved: p.solved, missed: missed, moving: p.handMoving,
+                                       missesHere: p.lesson.stepMisses[p.lesson.index] ?? 0))
     }
     /// The hand move's live readout, as its lesson draws it.
     private var readout: String? { problem?.liveReadout }
