@@ -902,21 +902,23 @@ function dAddFour(idx) {
 }
 
 // ====================================================================================================================
-// Bars to 100 (Story problems, Two-step story problems): one square is one thing. A bar is 4 squares tall from a start
-// line on a block line, with a line inside every ten squares, so 59 is seen as 5 tens and 9.
+// Bars to 100 (Story problems, Two-step story problems): one square is one thing up to 50; past 50 a square stands
+// for 2 things, so a story to 99 still fills the screen (the camera stays at 70% or more). A bar is 4 squares tall from
+// a start line on a block line, with a line inside every ten things (every 10 squares, or every 5 past 50), so 59 is
+// seen as 5 tens and 9. x and w are in squares; o.u is things per square; o.from is where its tens are counted from.
 function bar(k, x, y, w, o = {}) {
-  const p = glide(k, x, y, o.now, o.dur);
+  const p = glide(k, x, y, o.now, o.dur), u = o.u || 1;
   const style = o.style || "tint";
   if (style === "tint" || style === "lit") rect(`${k}f${style}`, p.x, p.y, w, 4, { fill: style === "lit" ? "var(--tint-strong)" : "var(--tint)" });
   else if (style === "stripe") rect(`${k}f`, p.x, p.y, w, 4, { fill: "url(#stripes)" });
   const dashed = style === "dash" || style === "ghost" || o.dashed;
   rect(`${k}o${style}${w}`, p.x, p.y, w, 4, { c: style === "ghost" ? "var(--ink3)" : dashed ? "var(--ink)" : "var(--chapter)", dash: dashed });
   if (style !== "dash" && style !== "ghost") {
-    const from = o.from ?? x;   // its tens lines are counted from the start line where it rests
-    for (let m = Math.floor(from / 10) * 10 + 10; m < from + w; m += 10) put(`${k}t${m}`, "line", { x1: sq(p.x + m - from), y1: sq(p.y), x2: sq(p.x + m - from), y2: sq(p.y + 4), stroke: "var(--chapter)", "stroke-width": 1.5 }, "fade");
+    const from = o.from ?? x * u;   // its tens lines are counted from the start line where it rests
+    for (let m = Math.floor(from / 10) * 10 + 10; m < from + w * u - 0.01; m += 10) put(`${k}t${m}`, "line", { x1: sq(p.x + (m - from) / u), y1: sq(p.y), x2: sq(p.x + (m - from) / u), y2: sq(p.y + 4), stroke: "var(--chapter)", "stroke-width": 1.5 }, "fade");
   }
   if (o.n != null) text(`${k}n${o.n}${o.nc || ""}`, o.n, p.x + w / 2, p.y + 2, "maths", { c: o.nc || (style === "ghost" ? "var(--ink3)" : null) });
-  if (o.cross) for (let i = 0; i < w; i++) put(`${k}x${i}`, "line", { x1: sq(p.x + i), y1: sq(p.y + 4), x2: sq(p.x + i + 1), y2: sq(p.y), stroke: "var(--ink)", "stroke-width": 1.5 }, "fade");
+  if (o.cross) for (let i = 0; i < w - 0.01; i++) put(`${k}x${i}`, "line", { x1: sq(p.x + i), y1: sq(p.y + 4), x2: sq(p.x + Math.min(w, i + 1)), y2: sq(p.y), stroke: "var(--ink)", "stroke-width": 1.5 }, "fade");
   return p;
 }
 const startLine = (y, h) => line("start", 0, y - 1, 0, y + h + 1);
@@ -953,20 +955,21 @@ function storyOf(P) {
 function dStory(idx) {
   const P = genStory(idx), S = storyOf(P), { W, p1, p2 } = P, cmp = P.kind.startsWith("cmp");
   const unkWhole = S.unk === "whole", known = unkWhole ? null : S.unk === "p1" ? p2 : p1, ans = unkWhole ? W : W - known;
-  const width = Math.max(50, W + 10), rows = storyRows(S.lines, width - 4), iy = instrY(rows);
+  const U = W > 50 ? 2 : 1, X = v => v / U;   // things per square: past 50 a square is 2
+  const width = Math.max(50, X(W) + 10), rows = storyRows(S.lines, width - 4), iy = instrY(rows);
   const PB = cmp ? iy + 6 : iy + 9;                             // the bar (or the top bar) starts here
-  const pieces = cmp ? { whole: [0, PB, W], p1: [0, PB + 6, p1], p2: [p1, PB + 6, p2] } : { p1: [0, PB, p1], p2: [p1, PB, p2] };
+  const pieces = cmp ? { whole: [0, PB, X(W)], p1: [0, PB + 6, X(p1)], p2: [X(p1), PB + 6, X(p2)] } : { p1: [0, PB, X(p1)], p2: [X(p1), PB, X(p2)] };
   const bottom = cmp ? PB + 10 : PB + 11, R0 = ceil5(bottom + 3);
   const same = S.eq[4] === "?";   // the story's equation is already the sum to work: the box goes in it, written once
   const stages = ["place", "op", "write", "done"];
   const L = withBoxes({
-    id: "g2-story", maxZoom: 1.25, stage: "place", msg: null, verdict: null, typing: false, held: null, P, S,
+    id: "g2-story", maxZoom: 1.25, U, stage: "place", msg: null, verdict: null, typing: false, held: null, P, S,
     storyRows: rows, storySentences: S.lines, placed: null, op: null, tok: { x: 0, y: R0 },
     progress() { return stageIndex(stages, this.stage); },
     frame() { return { x: -4, y: -1, w: width + 4, h: R0 + 13 }; },
     targets() {
       const T = {};
-      if (!cmp) T.whole = [0, PB - 5, W, 4.5];
+      if (!cmp) T.whole = [0, PB - 5, X(W), 4.5];
       for (const [k, [x, y, w]] of Object.entries(pieces)) T[k] = [x, y, w, 4];
       return T;
     },
@@ -994,7 +997,7 @@ function dStory(idx) {
         const plus = x === "op:+";
         if (plus !== unkWhole) { this.msg = unkWhole ? "The ? is the whole. Put the parts together." : "The ? is a part. Take the other part away."; return; }
         this.op = plus ? "+" : "−"; this.msg = null; this.stage = "write"; this.active = "ans"; this.typing = true;
-        if (plus && !cmp) seed("bp2", p1 + 5, PB);          // the parts slide together under the bracket
+        if (plus && !cmp) seed("bp2", X(p1) + 5, PB);          // the parts slide together under the bracket
         return;
       }
       if (boxAct(this, x)) return;
@@ -1028,26 +1031,26 @@ function dStory(idx) {
       const off = k => this.op === "−" && k !== S.unk && k !== "whole";
       if (cmp) {
         startLine(PB, 10);
-        const w = look("whole"); bar("bwhole", 0, PB, W, S.unk === "whole" ? w : { ...w, n: null });
-        if (S.unk !== "whole") lab("nW", W, "right", W, PB + 2, "maths");   // the longer bar's number at its end, clear of what slides onto it
-        lab("nmN", P.N, "right", W + 4, PB + 2, "small");
+        const w = look("whole"); bar("bwhole", 0, PB, X(W), S.unk === "whole" ? { ...w, u: U } : { ...w, n: null, u: U });
+        if (S.unk !== "whole") lab("nW", W, "right", X(W), PB + 2, "maths");   // the longer bar's number at its end, clear of what slides onto it
+        lab("nmN", P.N, "right", X(W) + 4, PB + 2, "small");
         for (const k of ["p1", "p2"]) {
           const [x, y, wd] = pieces[k], lk = look(k), up = off(k) || (this.op === "+" && unkWhole);
-          bar(`b${k}`, x, up ? PB : y, wd, { ...lk, cross: off(k) && this.op === "−", from: x });
+          bar(`b${k}`, x, up ? PB : y, wd, { ...lk, cross: off(k) && this.op === "−", from: x * U, u: U });
         }
-        lab("nmM", P.M, "right", W + 4, PB + 8, "small");
+        lab("nmM", P.M, "right", X(W) + 4, PB + 8, "small");
       } else {
         startLine(PB, 4);
         // the bracket over the whole, its number (or the ?) above it
-        const bw = W;
+        const bw = X(W);
         path("brk", `M0 ${sq(PB - 0.5)}V${sq(PB - 1.5)}H${sq(bw / 2 - 1)}l${sq(1)} ${-sq(1)}l${sq(1)} ${sq(1)}H${sq(bw)}V${sq(PB - 0.5)}`, { c: S.unk === "whole" ? "var(--ink)" : "var(--chapter)", dash: S.unk === "whole" && !this.placed });
         const wl = S.unk === "whole" ? (done ? W : this.placed ? "?" : null) : W;
         if (wl != null) text(`wl${wl}`, wl, bw / 2, PB - 3.6, "maths", { c: S.unk === "whole" ? ansC : null });
         for (const k of ["p1", "p2"]) {
           const [x, y, wd] = pieces[k], lk = look(k);
-          bar(`b${k}`, x, off(k) ? y + 7 : y, wd, off(k) ? { style: "ghost", n: lk.n, from: x } : { ...lk, from: x });
+          bar(`b${k}`, x, off(k) ? y + 7 : y, wd, off(k) ? { style: "ghost", n: lk.n, from: x * U, u: U } : { ...lk, from: x * U, u: U });
         }
-        if (P.kind.startsWith("part")) { lab("cr", "red", "below", PB + 4, p1 / 2, "small"); lab("cb", "blue", "below", PB + 4, p1 + p2 / 2, "small"); }
+        if (P.kind.startsWith("part")) { lab("cr", "red", "below", PB + 4, X(p1) / 2, "small"); lab("cb", "blue", "below", PB + 4, X(p1) + X(p2) / 2, "small"); }
       }
       // the ? waits under the picture until it's put on what we don't know
       if (st === "place") {
@@ -1098,13 +1101,14 @@ function dTwoStep(idx) {
   const lines = more ? [`Sam has ${P.s} ${P.th}. Ana has ${P.d} more than Sam.`, "How many do they have in all?"]
     : [`${P.N} had ${P.s} ${P.th}. ${Pr} ${verb(P.ops[0], P.c[0])}.`, `Then ${P.pr} ${verb(P.ops[1], P.c[1])}. How many does ${P.pr} have now?`];
   const maxEnd = more ? P.s + P.s + P.d : Math.max(P.s + P.c[0], P.e[0] + P.c[1], P.s);
-  const width = Math.max(50, maxEnd + 8), rows = storyRows(lines, width - 4), iy = instrY(rows);
+  const U = maxEnd > 50 ? 2 : 1, X = v => v / U;   // things per square: past 50 a square is 2
+  const width = Math.max(50, X(maxEnd) + 8), rows = storyRows(lines, width - 4), iy = instrY(rows);
   const PB = iy + 6, LY = PB + 6, R0 = ceil5(LY + 4 + 3);
   // the steps: each is [a, op, c, answer]
   const steps = more ? [[P.s, "+", P.d, P.s + P.d], [P.s, "+", P.s + P.d, P.s + P.s + P.d]] : [[P.s, P.ops[0], P.c[0], P.e[0]], [P.e[0], P.ops[1], P.c[1], P.e[1]]];
   const stages = ["move1", "write1", "move2", "write2", "done"];
   const L = withBoxes({
-    id: "g2-twostep", maxZoom: 1.25, stage: "move1", msg: null, verdict: null, typing: false, held: null, P,
+    id: "g2-twostep", maxZoom: 1.25, U, stage: "move1", msg: null, verdict: null, typing: false, held: null, P,
     storyRows: rows, storySentences: lines, end: P.s, joined: null, ana: P.s, written: [],
     progress() { return stageIndex(stages, this.stage); },
     frame() { return { x: -4, y: -1, w: width + 4, h: R0 + 12 }; },
@@ -1115,26 +1119,26 @@ function dTwoStep(idx) {
       const len = more ? P.s + P.d : steps[k][2];
       return [h && h.what === "bar" ? h.x : 0, h && h.what === "bar" ? h.y : LY, len];
     },
-    spots() { const lb = this.loose() || [0, LY, P.s]; return { loose: { x: lb[0] + 1, y: lb[1] + 2 }, end: { x: this.end, y: PB + 2 }, anaEnd: { x: this.ana, y: LY + 2 }, box: { x: this.boxX + 2, y: R0 + 1 + 3 * this.step() } }; },
+    spots() { const lb = this.loose() || [0, LY, P.s]; return { loose: { x: lb[0] + 1, y: lb[1] + 2 }, end: { x: X(this.end), y: PB + 2 }, anaEnd: { x: X(this.ana), y: LY + 2 }, box: { x: this.boxX + 2, y: R0 + 1 + 3 * this.step() } }; },
     canType() { return this.stage.startsWith("write"); },
     grab(q) {
       const st = this.stage;
-      if (more && st === "move1" && Math.abs(q.x - this.ana) < 2 && q.y > LY - 1 && q.y < LY + 5) { this.held = { what: "end", gx: q.x, a0: this.ana }; this.msg = null; return true; }
+      if (more && st === "move1" && Math.abs(q.x - X(this.ana)) < 2 && q.y > LY - 1 && q.y < LY + 5) { this.held = { what: "end", gx: q.x, a0: this.ana }; this.msg = null; return true; }
       const lb = this.loose();
-      if ((st === "move1" || st === "move2") && lb && inBox(q, lb[0], lb[1], lb[2], 4)) { this.held = { what: "bar", gx: q.x, gy: q.y, x0: lb[0], y0: lb[1], x: lb[0], y: lb[1] }; this.msg = null; return true; }
+      if ((st === "move1" || st === "move2") && lb && inBox(q, lb[0], lb[1], X(lb[2]), 4)) { this.held = { what: "bar", gx: q.x, gy: q.y, x0: lb[0], y0: lb[1], x: lb[0], y: lb[1] }; this.msg = null; return true; }
       return false;
     },
     drag(q) {
       const h = this.held; if (!h) return;
-      if (h.what === "end") this.ana = Math.max(P.s, Math.min(P.s + 50, Math.round(h.a0 + q.x - h.gx)));
+      if (h.what === "end") this.ana = Math.max(P.s, Math.min(P.s + 50, Math.round(h.a0 + (q.x - h.gx) * U)));
       else { h.x = h.x0 + q.x - h.gx; h.y = h.y0 + q.y - h.gy; }
     },
     // where the held bar would land on the bar's row: after the end (join) or over the end (cover)
     mode() {
       const h = this.held; if (!h || h.what !== "bar" || Math.abs(h.y - PB) > 2.5) return null;
-      const len = this.loose()[2];
-      if (h.x >= this.end - 2.5 && h.x <= this.end + 4) return "join";
-      if (h.x + len >= this.end - 2.5 && h.x + len <= this.end + 2.5 && h.x < this.end - 2.5) return "cover";
+      const len = X(this.loose()[2]), e = X(this.end);
+      if (h.x >= e - 2.5 && h.x <= e + 4) return "join";
+      if (h.x + len >= e - 2.5 && h.x + len <= e + 2.5 && h.x < e - 2.5) return "cover";
       return null;
     },
     release() {
@@ -1183,27 +1187,27 @@ function dTwoStep(idx) {
       const step = steps[k], len = this.loose() ? this.loose()[2] : 0;
       if (more) {
         const together = st === "write2" || st === "done";
-        bar("sam", 0, PB, P.s, { style: "tint", n: P.s });
-        if (!(st === "move2" && h)) lab("nmS", together ? (st === "done" ? `${steps[1][3]}` : "") : "Sam", "right", together ? 2 * P.s + P.d : P.s, PB + 2, together ? "maths" : "small", together ? "var(--chapter)" : null);
+        bar("sam", 0, PB, X(P.s), { style: "tint", n: P.s, u: U });
+        if (!(st === "move2" && h)) lab("nmS", together ? (st === "done" ? `${steps[1][3]}` : "") : "Sam", "right", X(together ? 2 * P.s + P.d : P.s), PB + 2, together ? "maths" : "small", together ? "var(--chapter)" : null);
         if (together || (st === "move2" && h)) {
-          const p = h ? [h.x, h.y] : [P.s, PB];
-          bar("ana", p[0], p[1], P.s + P.d, { style: "stripe", n: st === "move1" ? null : P.s + P.d, now: !!h, from: P.s });
+          const p = h ? [h.x, h.y] : [X(P.s), PB];
+          bar("ana", p[0], p[1], X(P.s + P.d), { style: "stripe", n: st === "move1" ? null : P.s + P.d, now: !!h, from: P.s, u: U });
         } else {
-          bar(`ana${this.ana}`, 0, LY, this.ana, { style: "stripe", n: st === "move1" ? null : this.ana, now: true });
-          if (st === "move1") put("anaH", "circle", { cx: sq(this.ana), cy: sq(LY + 2), r: sq(h ? 0.75 : 0.6), fill: "var(--chapter)" }, "none");
-          lab("nmA", "Ana", "right", this.ana + (st === "move1" ? 0.8 : 0), LY + 2, "small", null, !!h);
+          bar(`ana${this.ana}`, 0, LY, X(this.ana), { style: "stripe", n: st === "move1" ? null : this.ana, now: true, u: U });
+          if (st === "move1") put("anaH", "circle", { cx: sq(X(this.ana)), cy: sq(LY + 2), r: sq(h ? 0.75 : 0.6), fill: "var(--chapter)" }, "none");
+          lab("nmA", "Ana", "right", X(this.ana) + (st === "move1" ? 0.8 : 0), LY + 2, "small", null, !!h);
         }
       } else {
         const e = this.end, c = step[2], op = step[1];
-        if (st === "done") { bar("run", 0, PB, P.e[1], { style: "tint" }); lab(`end${P.e[1]}`, P.e[1], "right", P.e[1], PB + 2, "maths", "var(--chapter)"); }
-        else if (this.joined === "cover") { bar("run", 0, PB, e - c, { style: "tint" }); bar("cov", e - c, PB, c, { style: "stripe", cross: true, from: e - c }); }
-        else bar("run", 0, PB, e, { style: "tint" });
-        if (this.joined === "join" && st !== "done") bar("add", e, PB, c, { style: "stripe", from: e, n: c });
-        if (!this.joined && !h) lab(`end${e}`, e, "right", e, PB + 2, "maths", k ? "var(--chapter)" : null);
+        if (st === "done") { bar("run", 0, PB, X(P.e[1]), { style: "tint", u: U }); lab(`end${P.e[1]}`, P.e[1], "right", X(P.e[1]), PB + 2, "maths", "var(--chapter)"); }
+        else if (this.joined === "cover") { bar("run", 0, PB, X(e - c), { style: "tint", u: U }); bar("cov", X(e - c), PB, X(c), { style: "stripe", cross: true, from: e - c, u: U }); }
+        else bar("run", 0, PB, X(e), { style: "tint", u: U });
+        if (this.joined === "join" && st !== "done") bar("add", X(e), PB, X(c), { style: "stripe", from: e, n: c, u: U });
+        if (!this.joined && !h) lab(`end${e}`, e, "right", X(e), PB + 2, "maths", k ? "var(--chapter)" : null);
         // the change waiting under the bar, loose and striped, with its number
         if (!this.joined && (st === "move1" || st === "move2")) {
-          const lb = this.loose(), snapX = m === "join" ? e : m === "cover" ? e - c : lb[0], snapY = m ? PB : lb[1];
-          bar(`loose${k}`, h ? snapX : 0, h ? snapY : LY, c, { style: "stripe", n: c, now: !!h, from: 0 });
+          const lb = this.loose(), snapX = m === "join" ? X(e) : m === "cover" ? X(e - c) : lb[0], snapY = m ? PB : lb[1];
+          bar(`loose${k}`, h ? snapX : 0, h ? snapY : LY, X(c), { style: "stripe", n: c, now: !!h, from: 0, u: U });
         }
         void op;
       }
