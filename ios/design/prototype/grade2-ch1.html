@@ -1,0 +1,1257 @@
+<title>2nd Grade: Adding to 100</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700&display=swap">
+<style>
+/* Layout: the whole screen is one sheet of graph paper seen through one camera; the floating pill at the bottom is
+   the only chrome. 1 square = 20 paper units, a strong line every 5 squares (a block). iPad landscape only.
+   2nd grade, chapter 1 (Adding and subtracting to 100): the whole-number purple. */
+:root {
+  --paper: #F3F1EC; --grid: #E2DED6; --grid-strong: #D3CEC4;
+  --ink: #1D1C1A; --ink2: #6E6A63; --ink3: #A39E95;
+  --chapter: #7B5CE0; --tint: rgba(123, 92, 224, .2); --tint-strong: rgba(123, 92, 224, .4);
+  --right: #178A57; --wrong: #C8372D;
+  --pill: rgba(255, 255, 255, .94); --pill-line: #E4E0D8;
+  --round: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C;
+  --chapter: #A58BFF; --tint: rgba(165, 139, 255, .22); --tint-strong: rgba(165, 139, 255, .42);
+  --right: #3CCF8E; --wrong: #FF6B5E;
+  --pill: rgba(40, 40, 37, .94); --pill-line: #3A3A36; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C;
+  --chapter: #A58BFF; --tint: rgba(165, 139, 255, .22); --tint-strong: rgba(165, 139, 255, .42);
+  --right: #3CCF8E; --wrong: #FF6B5E;
+  --pill: rgba(40, 40, 37, .94); --pill-line: #3A3A36; color-scheme: dark }
+html, body { height: 100%; }
+body { background: var(--paper); color: var(--ink); font-family: var(--round); overflow: hidden; touch-action: none; margin: 0;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+#paper { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+svg text { font-family: var(--round); font-variant-numeric: tabular-nums; }
+.say { font-size: 28px; font-weight: 600; fill: var(--ink); }
+.small { font-size: 20px; font-weight: 600; fill: var(--ink2); }
+.maths { font-size: 36px; font-weight: 600; fill: var(--ink); }
+
+/* drawing in: lines stroke on, words and fills fade in, one after another */
+.in-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .55s ease-out forwards; }
+.in-fade { opacity: 0; animation: fade .4s ease-out forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes fade { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .in-line, .in-fade { animation-duration: .01s; } }
+
+/* the one floating bar */
+#bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 999px; background: var(--pill);
+  border: 1px solid var(--pill-line); box-shadow: 0 6px 24px rgba(0,0,0,.08); max-width: calc(100vw - 32px);
+  font-family: var(--round); }
+#bar button { font: 600 17px var(--round); color: var(--ink); background: none; border: 0; padding: 10px 14px;
+  border-radius: 999px; cursor: pointer; white-space: nowrap; }
+#bar button:focus-visible { outline: 2px solid var(--chapter); outline-offset: 2px; }
+#bar select { font: 600 17px var(--round); color: var(--ink); background: none; border: 0; padding: 10px 26px 10px 14px;
+  border-radius: 999px; cursor: pointer; -webkit-appearance: none; appearance: none; max-width: 52vw; text-overflow: ellipsis;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink2) 50%), linear-gradient(135deg, var(--ink2) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%; background-size: 5px 5px; background-repeat: no-repeat; }
+#bar select:focus-visible { outline: 2px solid var(--chapter); outline-offset: 2px; }
+#bar .sep { width: 1px; align-self: stretch; background: var(--pill-line); margin: 4px 4px; }
+#bar .progress { display: flex; flex-direction: column; gap: 6px; padding: 0 10px; min-width: 196px; }
+#bar .progress span { font: 600 14px var(--round); color: var(--ink2); }
+#bar .track { height: 4px; border-radius: 2px; background: var(--pill-line); overflow: hidden; }
+#bar .track i { display: block; height: 100%; background: var(--chapter); transition: width .4s ease; }
+#keys { position: fixed; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; font-size: 16px; }
+</style>
+
+<svg id="paper" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-label="Graph paper lesson">
+  <defs>
+    <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
+      <path d="M20 0V100M40 0V100M60 0V100M80 0V100M0 20H100M0 40H100M0 60H100M0 80H100" stroke="var(--grid)" stroke-width="1" fill="none"/>
+      <path d="M0 0V100M0 0H100" stroke="var(--grid-strong)" stroke-width="1.5" fill="none"/>
+    </pattern>
+    <pattern id="stripes" width="20" height="20" patternUnits="userSpaceOnUse">
+      <rect width="20" height="20" fill="var(--tint)"/>
+      <path d="M-5 5L5 -5M0 20L20 0M15 25L25 15" stroke="var(--chapter)" stroke-width="1.5" opacity=".55"/>
+    </pattern>
+  </defs>
+  <g id="paperg">
+    <rect x="-20000" y="-20000" width="40000" height="40000" fill="url(#grid)"/>
+    <g id="scene"></g>
+  </g>
+</svg>
+
+<nav id="bar" aria-label="Lessons">
+  <select id="pick" aria-label="Lesson"></select>
+  <div class="sep"></div>
+  <div class="progress"><span id="stepname">Step 1 of 3</span><div class="track"><i id="track" style="width:0"></i></div></div>
+  <div class="sep"></div>
+  <button id="fresh" type="button">New problem</button>
+</nav>
+<input id="keys" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Answer">
+
+<script>
+"use strict";
+// ---------- the paper: squares, drawing, camera (the kit of new5-lessons.html) ----------
+const SQ = 20, svg = document.getElementById("paper"), sceneEl = document.getElementById("scene");
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pickOne = list => list[rnd(0, list.length - 1)];
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+const count = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+const ceil5 = n => Math.ceil(n / 5) * 5;
+
+let items = [];
+// one thing on the paper: its key (a new key draws in), its tag and attributes in paper units, how it draws in
+function put(k, tag, a, kind = "fade", text, html) { items.push({ k, tag, a, kind, text, html }); }
+const sq = n => n * SQ;
+function line(k, x1, y1, x2, y2, o = {}) {
+  put(k, "line", { x1: sq(x1), y1: sq(y1), x2: sq(x2), y2: sq(y2), stroke: o.c || "var(--ink)", "stroke-width": o.w || 1.5,
+    "stroke-dasharray": o.dash ? "6 6" : null, "stroke-linecap": "butt", pathLength: o.dash ? null : 1 }, o.live ? "none" : o.dash ? "fade" : "line");
+}
+function path(k, d, o = {}) {
+  put(k, "path", { d, fill: o.fill || "none", stroke: o.c || "var(--ink)", "stroke-width": o.w || 1.5, pathLength: o.dash ? null : 1,
+    "stroke-dasharray": o.dash ? "6 6" : null }, o.live ? "none" : o.dash ? "fade" : "line");
+}
+function rect(k, x, y, w, h, o = {}) {
+  const outline = o.c && !o.fill && !o.dash;
+  put(k, "rect", { x: sq(x), y: sq(y), width: sq(w), height: sq(h), fill: o.fill || "none", stroke: o.c || null,
+    "stroke-width": o.c ? (o.w || 1.5) : null, opacity: o.op ?? null, "stroke-dasharray": o.dash ? (o.dash === true ? "6 6" : o.dash) : null,
+    pathLength: outline ? 1 : null }, o.live ? "none" : outline ? "line" : "fade");
+}
+function text(k, s, x, y, cls, o = {}) {
+  put(k, "text", { x: sq(x), y: sq(y), class: cls, "text-anchor": o.anchor || "middle", "dominant-baseline": "central",
+    style: o.c ? `fill:${o.c}` : null }, o.live ? "none" : "fade", s);
+}
+// words in rows of 2 squares, wrapped at a width in squares
+function words(k, s, x, y, widthSq, cls = "say", o = {}) {
+  const per = cls === "say" ? 0.72 : 0.52, max = Math.max(8, Math.floor(widthSq / per));
+  const rows = []; let cur = "";
+  for (const w of s.split(" ")) { if ((cur + " " + w).trim().length > max && cur) { rows.push(cur); cur = w; } else cur = (cur + " " + w).trim(); }
+  if (cur) rows.push(cur);
+  rows.forEach((r, i) => text(`${k}:${i}:${r}`, r, x, y + i * 2, cls, { anchor: "start", c: o.c, live: o.live }));
+  return rows.length;
+}
+// a number written as school writes it on squared paper: 2 squares a digit, lined up on the right
+function digits(k, s, right, row, o = {}) {
+  let col = 0;
+  for (let i = s.length - 1; i >= 0; i--) { text(`${k}${i}${s[i]}`, s[i], right - col - 1, row, "maths", { c: o.c }); col += 2; }
+}
+// a block drawn on the paper: an outline, its word and arrow (Check, Next problem)
+function block(k, x, y, w, label, act, o = {}) {
+  rect(`${k}o`, x, y, w, 2, { c: "var(--ink)" });
+  text(`${k}w${label}`, label, x + 1, y + 1, "small", { anchor: "start", c: "var(--ink)" });
+  if (o.arrow !== false) path(`${k}a`, `M${sq(x + w - 1.6)} ${sq(y + 1)}h${sq(0.8)}m-6 -6l6 6l-6 6`, {});
+  put(`${k}hit`, "rect", { x: sq(x), y: sq(y), width: sq(w), height: sq(2), fill: "transparent", "data-act": act }, "none");
+}
+// a word block to tap: a pick on the paper (+ or −, Add or Take away), its word centred
+function pickBlock(k, x, y, w, label, act, cls = "maths", c) {
+  rect(`${k}o${c || ""}`, x, y, w, 2, { c: c || "var(--ink)" });
+  text(`${k}w${label}`, label, x + w / 2, y + 1, cls, { c: cls === "small" ? "var(--ink)" : c });
+  put(`${k}hit`, "rect", { x: sq(x), y: sq(y), width: sq(w), height: sq(2), fill: "transparent", "data-act": act }, "none");
+}
+const CAPH = { small: 0.7, say: 1.0, maths: 1.3 };
+function lab(k, s, side, edge, along, cls = "small", c, live) {
+  const h = CAPH[cls] / 2;
+  if (side === "above") text(k, s, along, edge - 0.5 - h, cls, { c, live });
+  else if (side === "below") text(k, s, along, edge + 0.5 + h, cls, { c, live });
+  else if (side === "left") text(k, s, edge - 0.5, along, cls, { c, anchor: "end", live });
+  else text(k, s, edge + 0.5, along, cls, { c, anchor: "start", live });
+}
+// an answer box in the record: cells of 2 squares, the typed digits lined up on the right
+function dbox(k, x, y, cells, value, state, actName = "box:ans") {
+  const c = state === "right" ? "var(--right)" : state === "wrong" ? "var(--wrong)" : state === "idle" ? "var(--ink3)" : "var(--ink)";
+  const vc = state === "right" || state === "wrong" ? c : null;
+  rect(`${k}o${cells}${state}`, x, y, cells * 2, 2, { c });
+  if (value) digits(`${k}v${value}${state}`, value, x + cells * 2, y + 1, { c: vc });
+  if (state === "active") put(`${k}cur`, "line", { x1: sq(x + cells * 2 + 0.4), y1: sq(y + 0.35), x2: sq(x + cells * 2 + 0.4), y2: sq(y + 1.65), stroke: "var(--chapter)", "stroke-width": 1.5 }, "none");
+  put(`${k}hit`, "rect", { x: sq(x), y: sq(y), width: sq(cells * 2), height: sq(2), fill: "transparent", "data-act": actName }, "none");
+}
+// lessons with answer boxes: each box has its own value; the hidden input types into the active one
+function withBoxes(L) {
+  L.vals = {}; L.active = null;
+  Object.defineProperty(L, "typed", { get() { return this.vals[this.active] || ""; }, configurable: true });
+  L.type = function (v) { if (this.active != null) this.vals[this.active] = v; this.verdict = null; this.msg = null; };
+  return L;
+}
+function boxAct(L, a) { if (a.startsWith("box:")) { if (L.canType && !L.canType(a.slice(4))) return true; L.active = a.slice(4); L.typing = true; return true; } return false; }
+function boxState(L, id) { return L.verdict && L.active === id ? L.verdict : L.active === id && L.typing ? "active" : "idle"; }
+const stageIndex = (list, st) => [Math.max(0, list.indexOf(st)), list.length - 1];
+
+// an equation written on the squares: 2 squares a digit or sign; a box where the child writes
+function eqRow(k, toks, x, yc, o = {}) {
+  let cx = x;
+  toks.forEach((t, i) => {
+    if (t && t.box) { dbox(`${k}b${t.box}`, cx, yc - 1, t.cells || 2, t.val || "", t.state, `box:${t.box}`); cx += 2 * (t.cells || 2); return; }
+    const s = String(typeof t === "object" ? t.t : t), c = typeof t === "object" ? t.c : o.c;
+    for (const ch of s) { text(`${k}:${i}:${ch}:${cx}:${c || ""}`, ch, cx + 1, yc, "maths", { c }); cx += 2; }
+  });
+  return cx;
+}
+
+// ---------- motion: pieces glide (a spring's path) to where the lesson puts them; drawing-in survives re-renders ----------
+const GL = new Map(); let frameNo = 0;
+const spring = u => u >= 1 ? 1 : (1 - (1 + 7 * u) * Math.exp(-7 * u)) / (1 - 8 * Math.exp(-7));
+function glide(k, x, y, now = false, dur = 450) {
+  const t = performance.now(); let g = GL.get(k);
+  if (!g || now) { g = { fx: x, fy: y, tx: x, ty: y, t0: t - dur, dur }; GL.set(k, g); }
+  else if (g.tx !== x || g.ty !== y) { const c = glideAt(g, t); Object.assign(g, { fx: c.x, fy: c.y, tx: x, ty: y, t0: t, dur }); }
+  g.seen = frameNo;
+  return glideAt(g, t);
+}
+function glideAt(g, t) { const e = spring(Math.min(1, (t - g.t0) / g.dur)); return { x: g.fx + (g.tx - g.fx) * e, y: g.fy + (g.ty - g.fy) * e }; }
+// a piece that appears where another was (a ten opening, a ten closing) starts from there
+function seed(k, x, y) { GL.set(k, { fx: x, fy: y, tx: x, ty: y, t0: performance.now() - 1000, dur: 450, seen: frameNo }); }
+const gliding = () => { const t = performance.now(); for (const g of GL.values()) if (t - g.t0 < g.dur) return true; return false; };
+
+let born = new Map(), raf = 0;
+const DRAWN = { line: 0.55, fade: 0.4 };
+function render() {
+  items = []; frameNo++;
+  lesson.scene();
+  const now = performance.now(), next = new Map(); let n = 0, out = "";
+  for (const it of items) {
+    const a = { ...it.a };
+    if (it.kind !== "none") {
+      let b = born.get(it.k);
+      if (!b) b = { t0: now, delay: Math.min(n++ * 0.035, 1.2), kind: it.kind };
+      next.set(it.k, b);
+      const el = (now - b.t0) / 1000;
+      if (el < b.delay + DRAWN[b.kind] + 0.05) {
+        a.class = ((a.class || "") + (b.kind === "line" ? " in-line" : " in-fade")).trim();
+        a.style = `animation-delay:${(b.delay - el).toFixed(3)}s;` + (a.style || "");
+      }
+    }
+    const attrs = Object.entries(a).filter(([, v]) => v != null).map(([k, v]) => `${k}="${esc(v)}"`).join(" ");
+    out += `<${it.tag} ${attrs}>${it.html != null ? it.html : it.text != null ? esc(it.text) : ""}</${it.tag}>`;
+  }
+  sceneEl.innerHTML = out;
+  born = next;
+  for (const [k, g] of GL) if (g.seen !== frameNo) GL.delete(k);
+  if (gliding() && !raf) raf = requestAnimationFrame(() => { raf = 0; render(); });
+  const [i, of] = lesson.progress();
+  document.getElementById("stepname").textContent = `Problem ${probIndex + 1} · Step ${Math.min(i + 1, of)} of ${of}`;
+  document.getElementById("track").style.width = `${Math.round(100 * i / of)}%`;
+}
+
+// the camera: frames what the lesson shows now, its top rows at the top of the screen, eased (0.75 s), never past 125%
+const cam = { x: 0, y: 0, s: 1 }; let camTo = null, camFrom = null, camT0 = 0;
+function fitTo(f) {
+  const W = innerWidth, H = innerHeight, top = 20, bottom = 104;
+  const s = Math.min((W - 48) / sq(f.w), (H - top - bottom) / sq(f.h), (lesson && lesson.maxZoom) || 1.25);
+  return { s, x: sq(f.x + f.w / 2) - W / 2 / s, y: sq(f.y) - top / s };
+}
+function frame(f, now) {
+  const t = fitTo(f);
+  if (now) { camTo = null; Object.assign(cam, t); applyCam(); return; }
+  camFrom = { ...cam }; camTo = t; camT0 = performance.now(); requestAnimationFrame(stepCam);
+}
+function stepCam(t) {
+  if (!camTo) return;
+  const u = Math.min(1, (t - camT0) / 750), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+  for (const k of ["x", "y", "s"]) cam[k] = camFrom[k] + (camTo[k] - camFrom[k]) * e;
+  applyCam();
+  if (u < 1) requestAnimationFrame(stepCam); else camTo = null;
+}
+function applyCam() { svg.setAttribute("viewBox", `${cam.x} ${cam.y} ${innerWidth / cam.s} ${innerHeight / cam.s}`); }
+addEventListener("resize", () => frame(lesson.frame(), true));
+
+// ---------- the voice (K–2): the instruction, a miss and the last line are read aloud; the speaker mark reads again ----------
+let said = new Set(), saying = [];
+function forSpeech(s) {
+  return s.replace(/(^|\s)\?(?=[\s.,]|$)/g, "$1question mark").replace(/−/g, " minus ").replace(/\+/g, " plus ").replace(/=/g, " equals ");
+}
+function speak(s) {
+  try {
+    const ss = window.speechSynthesis;
+    if (!ss || typeof SpeechSynthesisUtterance === "undefined") return;
+    if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;   // browsers speak only after a first touch
+    const u = new SpeechSynthesisUtterance(forSpeech(s)); u.lang = "en-US"; u.rate = 0.9; ss.speak(u);
+  } catch (e) { /* no voice here */ }
+}
+function hush() { try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) { /* no voice here */ } }
+function voice(list, missLine) {
+  const fresh = list.filter(s => s && !said.has(s));
+  if (fresh.some(s => s !== missLine)) hush();
+  fresh.forEach(speak);
+  said = new Set(list); saying = list;
+}
+function sayAgain() { hush(); saying.forEach(speak); }
+// the speaker mark: a small drawn speaker in the margin, level with the first line of words
+function speaker(y) {
+  const x = sq(-3), t = sq(y);
+  path("spk", `M${x + 5} ${t + 15}h8l10 -9v28l-10 -9h-8z`, { c: "var(--ink2)" });
+  path("spkw1", `M${x + 28} ${t + 14}q5 6 0 12`, { c: "var(--ink2)" });
+  path("spkw2", `M${x + 32} ${t + 9}q10 11 0 22`, { c: "var(--ink2)" });
+  put("spkhit", "rect", { x, y: t, width: sq(2), height: sq(2), fill: "transparent", "data-act": "speak" }, "none");
+}
+
+// ---------- the top rows: a story (numbers in the chapter colour), the instruction, then a miss (red) or the readout ----------
+function storyRows(sentences, widthSq) {
+  const max = Math.floor(widthSq / 0.72), rows = []; let cur = "";
+  for (const s of sentences) { if (!cur) cur = s; else if ((cur + " " + s).length <= max) cur += " " + s; else { rows.push(cur); cur = s; } }
+  if (cur) rows.push(cur);
+  const out = [];
+  for (const r of rows) {
+    if (r.length <= max) { out.push(r); continue; }
+    let c = ""; for (const w of r.split(" ")) { if ((c + " " + w).trim().length > max && c) { out.push(c); c = w; } else c = (c + " " + w).trim(); }
+    if (c) out.push(c);
+  }
+  return out;
+}
+function richLine(k, s, x, y) {
+  const html = s.split(" ").map(w => /^\d/.test(w) ? `<tspan style="fill:var(--chapter)">${esc(w)}</tspan>` : esc(w)).join(" ");
+  put(k, "text", { x: sq(x), y: sq(y), class: "say", "text-anchor": "start", "dominant-baseline": "central" }, "fade", null, html);
+}
+// where the instruction sits (row centre): under the story's lines, or on rows 0–2
+const instrY = rows => rows && rows.length ? 2 * rows.length + 2 : 1;
+function header(L, say, readout, width = 44) {
+  const rows = L.storyRows || [], iy = instrY(rows);
+  speaker(rows.length ? 0 : 0);
+  rows.forEach((r, i) => richLine(`st${i}:${r}`, r, 0, 1 + 2 * i));
+  words(`say-${say}`, say, 0, iy, width);
+  if (L.msg) words(`msg-${L.msg}`, L.msg, 0, iy + 2.3, width, "small", { c: "var(--wrong)" });
+  else if (readout) text(`ro-${readout}`, readout, 0, iy + 2.6, "say", { anchor: "start", c: "var(--chapter)", live: !!L.held });
+  voice([rows.length ? L.storySentences.join(" ") : null, say, L.msg].filter(Boolean), L.msg);
+}
+
+// ---------- hands: tap, drag (on the lesson's picture) or pan the paper; mouse and touch alike ----------
+const keys = document.getElementById("keys");
+function openKeys() { keys.value = lesson.typed || ""; keys.focus({ preventScroll: true }); }
+keys.addEventListener("input", () => { lesson.type(keys.value.replace(/[^0-9]/g, "").slice(0, 3)); render(); });
+keys.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); act("check"); } });
+function toPaper(e) { const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse()); return { x: p.x / SQ, y: p.y / SQ }; }
+let down = null;
+svg.addEventListener("pointerdown", e => {
+  if (e.button > 0) return;
+  const p = toPaper(e), hit = e.target.closest("[data-act]");
+  down = { p, sx: e.clientX, sy: e.clientY, act: hit && hit.dataset.act, moved: false, grabbed: false, cam: { ...cam } };
+  if (!down.act && lesson.grab) { if (lesson.grab(p)) down.grabbed = true; render(); }
+  svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener("pointermove", e => {
+  if (!down) return;
+  if (Math.hypot(e.clientX - down.sx, e.clientY - down.sy) > 6) down.moved = true;
+  if (down.grabbed) { if (lesson.drag) lesson.drag(toPaper(e)); render(); return; }
+  if (down.moved && !down.act) { camTo = null; cam.x = down.cam.x - (e.clientX - down.sx) / cam.s; cam.y = down.cam.y - (e.clientY - down.sy) / cam.s; applyCam(); }
+});
+function up(e) {
+  if (!down) return;
+  const d = down; down = null;
+  if (d.grabbed) { if (lesson.release) lesson.release(toPaper(e)); afterMove(); return; }
+  if (d.moved) return;
+  if (d.act) { act(d.act); return; }
+  if (lesson.tap && lesson.tap(toPaper(e))) afterMove();
+}
+svg.addEventListener("pointerup", up);
+svg.addEventListener("pointercancel", up);
+function afterMove() { render(); frame(lesson.frame()); if (lesson.typing) openKeys(); else keys.blur(); }
+function act(a) {
+  if (a === "speak") { sayAgain(); return; }
+  if (a === "next") { leave(); return; }
+  lesson.act(a);
+  if (!lesson.typing) keys.blur(); else openKeys();
+  render(); frame(lesson.frame());
+}
+let timers = [];
+const later = (ms, fn) => timers.push(setTimeout(() => { fn(); render(); }, ms));
+const inBox = (q, x, y, w, h, m = 0.5) => q.x >= x - m && q.x <= x + w + m && q.y >= y - m && q.y <= y + h + m;
+
+// ---------- 2nd grade's pieces ----------
+// a counter: a dot in its own cell (2 × 2 squares for tens and ones, 3 × 3 for facts), drawn where glide() has it
+function counter(k, x, y, size, style = "fill", o = {}) {
+  const p = glide(k, x, y, o.now, o.dur);
+  const cx = p.x + size / 2, cy = p.y + size / 2, r = size === 3 ? 1.2 : 0.8;
+  const a = { cx: sq(cx), cy: sq(cy), r: sq(r), "stroke-width": 1.5 };
+  if (style === "fill") Object.assign(a, { fill: "var(--tint-strong)", stroke: "var(--chapter)" });
+  else if (style === "stripe") Object.assign(a, { fill: "url(#stripes)", stroke: "var(--chapter)" });
+  else Object.assign(a, { fill: "none", stroke: "var(--ink)", "stroke-dasharray": "4 4" });   // dashed: what's taken away
+  if (o.lit) Object.assign(a, { stroke: "var(--chapter)" });
+  put(k, "circle", a, "fade");
+  if (o.cross) { const d = r * 0.9; line(`${k}x1`, cx - d, cy - d, cx + d, cy + d); line(`${k}x2`, cx - d, cy + d, cx + d, cy - d); }
+  if (o.n != null) text(`${k}n${o.n}`, o.n, cx, cy, "small", { c: "var(--ink)" });
+  return p;
+}
+// a ten: ten counters closed into one strip 20 × 2, inner lines faint, a bold outline
+function tenStrip(k, x, y, style = "fill", o = {}) {
+  const p = glide(k, x, y, o.now, o.dur);
+  if (style !== "dash") rect(`${k}f`, p.x, p.y, 20, 2, { fill: style === "stripe" ? "url(#stripes)" : "var(--tint-strong)" });
+  for (let i = 1; i < 10; i++) put(`${k}i${i}`, "line", { x1: sq(p.x + 2 * i), y1: sq(p.y), x2: sq(p.x + 2 * i), y2: sq(p.y + 2), stroke: "var(--ink3)", "stroke-width": 1, "stroke-dasharray": style === "dash" ? "3 3" : null }, "fade");
+  rect(`${k}o${style}`, p.x, p.y, 20, 2, style === "dash" ? { c: "var(--ink)", dash: true } : { c: "var(--chapter)" });
+  if (o.cross) line(`${k}x`, p.x, p.y + 2, p.x + 20, p.y);
+  return p;
+}
+const chunk10 = list => { const out = []; for (let i = 0; i < list.length; i += 10) out.push(list.slice(i, i + 10)); return out; };
+const ids = (pre, n) => [...Array(n)].map((_, i) => `${pre}${i}`);
+// a column sum as school writes it: the sign, then 2 squares a digit; rows 2 squares apart; the rule; the answer box
+function columnSum(k, x, y, nums, sign) {
+  nums.forEach((n, i) => digits(`${k}n${i}`, String(n), x + 6, y + 1 + 2 * i));
+  text(`${k}sg`, sign, x + 1, y + 1 + 2 * (nums.length - 1), "maths");
+  line(`${k}rule`, x, y + 2 * nums.length, x + 6, y + 2 * nums.length);
+  return y + 2 * nums.length + 1;
+}
+// a check of a written answer: right, or the first slip that matches, or a plain line
+function checkAnswer(L, want, slips, plain) {
+  const v = L.vals.ans; if (!v) return false;
+  if (+v === want) { L.verdict = "right"; L.typing = false; L.msg = null; return true; }
+  L.verdict = "wrong";
+  const s = slips.find(([n]) => n === +v && n !== want);
+  L.msg = s ? s[1] : plain;
+  return false;
+}
+const NAMES = [["Maya", "she"], ["Leo", "he"], ["Ana", "she"], ["Sam", "he"]];
+const THINGS = ["stickers", "books", "shells", "marbles", "cards"];
+const cap = s => s[0].toUpperCase() + s.slice(1);
+
+// ====================================================================================================================
+// ---------- Facts to 20 (g2-facts) ----------
+// A counter is 3 × 3 squares, in two rows of ten places (30 × 7). The line names the way that suits the fact: make a
+// ten (slide counters up), pair them up (slide the bottom row under), or back to 10 (slide counters off the end).
+function genFacts(i) {
+  let a, b;
+  if (i === 0) { a = rnd(8, 9); b = rnd(3, 6); }
+  else if (i === 1) { const lo = rnd(5, 8); [a, b] = rnd(0, 1) ? [lo, lo + 1] : [lo + 1, lo]; }
+  else if (i === 2) { a = b = rnd(6, 9); }
+  else {
+    do { a = rnd(2, 9); b = rnd(2, 9); } while (a + b < 11);
+    if (i >= 5 && (i - 5) % 3 === 0) return { kind: "back", s: a + b, t: b, ans: a };
+  }
+  return { kind: Math.abs(a - b) <= 1 ? "pairs" : "ten", a, b, ans: a + b };
+}
+function dFacts(idx) {
+  const P = genFacts(idx), K = P.kind;
+  const TY = 6, BY = 10, RY = 17, PL = 3;            // rows: top 6–9, bottom 10–13; the record 3 rows under
+  const big = Math.max(P.a || 0, P.b || 0), small = Math.min(P.a || 0, P.b || 0);
+  const s = P.s, t = P.t, ro = s - 10;              // back: s − t, the ones over ten
+  const L = withBoxes({
+    id: "g2-facts", maxZoom: 1.25, stage: "way", msg: null, verdict: null, typing: false, held: null, P,
+    wayDone: false, up: [], bot: K === "ten" ? ids("B", small) : [], dx: 5, crossed: 0,
+    progress() { return stageIndex(["way", "write", "done"], this.stage); },
+    frame() { return { x: -4, y: -1, w: 42, h: 24 }; },
+    spots() { return { bottom: { x: 1.5 + (K === "pairs" ? this.dx : 0), y: BY + 1.5 }, bottomEnd: { x: (K === "ten" ? this.bot.length : small) * PL - 1.5 + (K === "pairs" ? this.dx : 0), y: BY + 1.5 }, top: { x: 15, y: TY + 1.5 }, last: { x: (ro > 0 ? ro : 10) * PL - 1.5, y: ro > 0 ? BY + 1.5 : TY + 1.5 }, box: { x: this.boxX + 2, y: RY } }; },
+    canType() { return this.stage !== "done"; },
+    grab(q) {
+      if (this.wayDone || this.stage === "done") return false;
+      if (K === "ten" && this.bot.length && inBox(q, 0, BY, this.bot.length * PL, 3)) {
+        const g = Math.max(0, Math.min(this.bot.length - 1, Math.floor(q.x / PL)));
+        this.held = { ids: this.bot.slice(g), gx: q.x, gy: q.y, dx: 0, dy: 0 }; this.msg = null; return true;
+      }
+      if (K === "pairs" && inBox(q, this.dx, BY, small === P.b ? P.b * PL : P.b * PL, 3)) { this.held = { gx: q.x, d0: this.dx }; this.msg = null; return true; }
+      if (K === "back" && inBox(q, 0, TY, 30, 7)) { this.held = { gx: q.x, k0: this.crossed }; this.msg = null; return true; }
+      return false;
+    },
+    drag(q) {
+      const h = this.held; if (!h) return;
+      if (K === "ten") { h.dx = q.x - h.gx; h.dy = q.y - h.gy; }
+      else if (K === "pairs") this.dx = Math.max(-3, Math.min(10, h.d0 + q.x - h.gx));
+      else this.crossed = Math.max(0, Math.min(s, h.k0 + Math.round((q.x - h.gx) / PL)));
+    },
+    // the counters that would go up now, for the live readout and the drop
+    fits() { const h = this.held; return h && K === "ten" && h.dy < -2 ? Math.min(h.ids.length, 10 - big - this.up.length) : 0; },
+    release() {
+      const h = this.held; if (!h) return; this.held = null;
+      if (K === "ten") {
+        if (h.dy > -2) return;                                   // not lifted to the top row: it slides back
+        const m = h.ids.length, room = 10 - big - this.up.length, go = Math.min(m, room);
+        const moving = h.ids.slice(0, go);
+        this.up.push(...moving); this.bot = this.bot.filter(id => !moving.includes(id));
+        if (m > room) this.msg = "The top row is full. That's 10.";
+        if (this.up.length === 10 - big) this.finishWay();
+      } else if (K === "pairs") {
+        if (Math.abs(this.dx) <= 1.5) { this.dx = 0; this.finishWay(); } else this.dx = 5;
+      } else {
+        const k = this.crossed;
+        if (k === t) this.finishWay();
+        else if (k > t) { this.msg = `That's ${k}. Take ${t} away.`; this.crossed = h.k0; }
+      }
+    },
+    finishWay() { this.wayDone = true; if (this.stage === "way") { this.stage = "write"; this.active = "ans"; this.typing = true; } },
+    // a right answer written straight away plays its way on the picture, so the picture still proves it
+    playWay() {
+      if (this.wayDone) return; this.wayDone = true;
+      if (K === "ten") { const need = 10 - big - this.up.length, moving = this.bot.slice(this.bot.length - need); this.up.push(...moving); this.bot = this.bot.filter(id => !moving.includes(id)); }
+      else if (K === "pairs") this.dx = 0;
+      else for (let k = this.crossed + 1; k <= t; k++) later(160 * (k - this.crossed), () => { this.crossed = Math.max(this.crossed, k); });
+    },
+    act(x) {
+      if (boxAct(this, x)) return;
+      if (x !== "check" || this.stage === "done") return;
+      const ans = P.ans;
+      let slips = [], plain;
+      if (K === "ten") { slips = [[ans - 1, `${big} and ${10 - big} make 10, then ${ans - 10} more.`], [ans + 1, `${big} and ${10 - big} make 10, then ${ans - 10} more.`], [big - small, "That's taking away."]]; plain = `Make a ten first: ${big} and ${10 - big}.`; }
+      else if (K === "pairs" && P.a !== P.b) { slips = [[2 * small, `That's double ${small}. ${big} is one more.`], [2 * big, `That's double ${big}. ${small} is one less.`], [1, "That's taking away."]]; plain = `Pair them up: double ${small}, then 1 more.`; }
+      else if (K === "pairs") { slips = [[ans - 1, `A double is the same number twice: ${P.a} and ${P.a} more.`], [ans + 1, `A double is the same number twice: ${P.a} and ${P.a} more.`], [P.a, `That's one ${P.a}. Double ${P.a} is ${P.a} and ${P.a}.`], [0, "That's taking away."]]; plain = `Double ${P.a} is ${P.a} and ${P.a} more.`; }
+      else { slips = [[s + t, "That's adding."], [t, `${t} is what you take. What's left?`], [ans - 1, `Back to 10 takes ${ro}. Then ${t - ro} more.`], [ans + 1, `Back to 10 takes ${ro}. Then ${t - ro} more.`]]; plain = `Back to 10 takes ${ro}. Then ${t - ro} more.`; }
+      if (checkAnswer(this, ans, slips, plain)) { this.stage = "done"; this.playWay(); }
+    },
+    scene() {
+      const st = this.stage, h = this.held;
+      const way = { ten: "Make a ten, or just write it.", pairs: "Pair them up, or just write it.", back: `Take ${t} away, or just write it.` }[K];
+      const sayLine = K === "ten" ? "Make a ten, and the rest is easy." : K === "back" ? "Back to 10 first, then the rest." : P.a === P.b ? "The same number twice." : "A double and one more.";
+      // the live readout (and, once the hands have found it, what they found)
+      let ro2 = null;
+      if (K === "ten") { const f = this.fits(); if (h && f) ro2 = `${big + this.up.length + f} + ${this.bot.length - f}`; else if (this.wayDone) ro2 = `10 + ${small - (10 - big)}`; }
+      else if (K === "pairs") { if ((h && Math.abs(this.dx) <= 1.5) || this.wayDone) ro2 = P.a === P.b ? `${P.a} + ${P.a}` : `${small} + ${small} + 1`; }
+      else { const k = this.crossed; if (k > 0) ro2 = k < ro ? `${k}` : k === ro ? `${ro} … back to 10` : `${ro} … back to 10 … ${k - ro} more: ${s - k} left`; }
+      header(this, st === "done" ? sayLine : st === "write" ? "Write the answer." : way, ro2, 40);
+      // the places: two rows of ten, dashed 3 × 3; the top row's outline goes bold when it's full
+      const dxB = K === "pairs" ? this.dx : 0;
+      const pB = glide("rowB", dxB, BY, h && K === "pairs");
+      for (let i = 0; i < 10; i++) {
+        rect(`pt${i}`, i * PL, TY, PL, PL, { c: "var(--ink3)", dash: "3 3" });
+        put(`pb${i}`, "rect", { x: sq(pB.x + i * PL), y: sq(BY), width: sq(PL), height: sq(PL), fill: "none", stroke: "var(--ink3)", "stroke-width": 1.5, "stroke-dasharray": "3 3" }, "fade");
+      }
+      const topFull = K === "back" || (K === "ten" && this.up.length === 10 - big);
+      if (topFull && K === "ten") { rect("full", 0, TY, 30, PL, { c: "var(--chapter)" }); lab("full10", "10", "right", 30, TY + 1.5, "maths", "var(--chapter)"); }
+      if (K === "ten") {
+        for (let i = 0; i < big; i++) counter(`T${i}`, i * PL, TY, 3, "fill");
+        this.up.forEach((id, j) => counter(id, (big + j) * PL, TY, 3, "stripe"));
+        this.bot.forEach((id, j) => {
+          const hd = h && h.ids.includes(id);
+          counter(id, j * PL + (hd ? h.dx : 0), BY + (hd ? h.dy : 0), 3, "stripe", { now: hd });
+        });
+      } else if (K === "pairs") {
+        for (let i = 0; i < P.a; i++) counter(`T${i}`, i * PL, TY, 3, "fill");
+        for (let j = 0; j < P.b; j++) counter(`B${j}`, pB.x + j * PL, BY, 3, "stripe", { now: true });
+        if (this.wayDone || (h && Math.abs(this.dx) <= 1.5)) {
+          for (let j = 0; j < small; j++) line(`pair${j}`, j * PL + 1.5, TY + 2.7, j * PL + 1.5, BY + 0.3, { c: "var(--chapter)", live: !!h });
+          if (P.a !== P.b) { const xr = small * PL + 1.5, yr = (P.a > P.b ? TY : BY) + 1.5; put("extra", "circle", { cx: sq(xr), cy: sq(yr), r: sq(1.45), fill: "none", stroke: "var(--chapter)", "stroke-width": 1.5 }, h ? "none" : "fade"); }
+        }
+      } else {
+        const order = [...ids("B", ro).reverse(), ...ids("T", 10).reverse()], out = new Set(order.slice(0, this.crossed));
+        for (let i = 0; i < 10; i++) counter(`T${i}`, i * PL, TY, 3, "fill", { cross: out.has(`T${i}`) });
+        for (let j = 0; j < ro; j++) counter(`B${j}`, j * PL, BY, 3, "fill", { cross: out.has(`B${j}`) });
+      }
+      // the record: the way the hands went, then the box (live from the start)
+      const op = K === "back" ? "−" : "+";
+      const toks = K === "back" ? [s, op, t, "="] : [P.a, op, P.b, "="];
+      if (this.wayDone) {
+        if (K === "ten") toks.push("10", "+", small - (10 - big), "=");
+        else if (K === "pairs" && P.a !== P.b) toks.push(small, "+", small, "+", "1", "=");
+        else if (K === "back") toks.push("10", "−", t - ro, "=");
+      }
+      this.boxX = toks.join("").length * 2;
+      eqRow("rec", [...toks, { box: "ans", cells: 2, val: this.vals.ans, state: boxState(this, "ans") }], 0, RY);
+      if (st === "done") block("next", 0, 20, 10, "Next problem", "next"); else block("check", 0, 20, 7, "Check", "check");
+    },
+  });
+  return L;
+}
+
+// ====================================================================================================================
+// Tens and ones (2nd grade): a counter is 2 × 2 squares and a ten a row of ten (20 squares), rows a square apart, so
+// a row is 3 squares and every fifth counter ends on a strong line. Shared by Adding with regrouping, Subtracting with
+// regrouping and Add up to four numbers. The column record sits at the right, 2 squares a digit.
+const ROW = 3;
+// where the column record goes: at the right of the stacks, or under the right-hand stack, whichever lets the camera
+// frame the whole problem bigger on the iPad (a problem lays itself out to fill the screen best)
+function recordPlace(Y0, leftBottom, rightBottom, n) {
+  const fit = (w, h) => Math.min(1132 / sq(w), 696 / sq(h), 1.25), colH = 2 * n + 4;
+  const rightH = Math.max(leftBottom, ceil5(Y0 + colH) + 2) + 3;
+  const belowY = ceil5(rightBottom + 3), belowH = Math.max(leftBottom, ceil5(belowY + colH) + 2) + 3;
+  return fit(50, belowH) > fit(66, rightH) ? { CX: 25, CY: belowY, w: 50 } : { CX: 50, CY: Y0, w: 66 };
+}
+
+// ---------- Adding with regrouping (g2-regroup) ----------
+function genRegroup(i) {
+  let a, b; const early = i < 3;
+  const ok = (a, b) => a % 10 + b % 10 >= 10 && a + b <= 99 && (!early || (a % 10 + b % 10 <= 12 && Math.floor(a / 10) + Math.floor(b / 10) <= 6));
+  do { a = rnd(early ? 11 : 15, early ? 49 : 79); b = rnd(early ? 11 : 15, early ? 49 : 79); } while (!ok(a, b));
+  return { a, b, story: i % 4 === 3 };
+}
+function dRegroup(idx) {
+  const P = genRegroup(idx), { a, b } = P, at = Math.floor(a / 10), ao = a % 10, bt = Math.floor(b / 10), bo = b % 10;
+  const O = ao + bo, left = O - 10, T = at + bt + 1;
+  const sentences = P.story ? [`A class read ${a} books in May and ${b} books in June.`, "How many books did they read in all?"] : null;
+  const rows = P.story ? storyRows(sentences, 60) : [];
+  const D = instrY(rows) - 1, Y0 = 6 + D + (P.story ? 2 : 0), Y = r => Y0 + ROW * r, RX = 25;
+  const { CX, CY, w: FW } = recordPlace(Y0, Y(T + 1) - 1, Y(bt) + 2, 2);
+  const stages = [...(P.story ? ["pick"] : []), "ones", "group", "tens", "write", "done"];
+  const L = withBoxes({
+    id: "g2-regroup", maxZoom: 1.25, stage: stages[0], msg: null, verdict: null, typing: false, held: null, P,
+    storyRows: rows, storySentences: sentences,
+    tensL: ids("A.t", at), onesL: ids("A.o", ao).map(id => ({ id, st: "fill" })), tensR: ids("B.t", bt), onesR: ids("B.o", bo),
+    progress() { return stageIndex(stages, this.stage); },
+    rowsL() { return this.tensL.length + Math.max(1, chunk10(this.onesL).length); },
+    frame() { return { x: -4, y: -1, w: FW, h: Math.max(Y(this.rowsL()) + 1, this.stage === "pick" ? CY + 6 : ceil5(CY + 8) + 3) + 1 }; },
+    spots() { return { onesR: { x: RX + 1, y: Y(bt) + 1 }, tensR: { x: RX + 10, y: Y(0) + 1 }, onesL: { x: 2, y: Y(this.tensL.length) + 1 }, tensL: { x: 10, y: Y(0) + 1 }, row: c => ({ x: 3, y: Y(this.tensL.length + c) + 1 }), box: { x: CX + 4, y: CY + 6 } }; },
+    canType() { return this.stage === "write"; },
+    grab(q) {
+      const st = this.stage;
+      if (st === "ones" && inBox(q, RX, Y(bt), 2 * bo, 2)) { this.held = { what: "ones", gx: q.x, gy: q.y, dx: 0, dy: 0 }; this.msg = null; return true; }
+      if (st === "ones" && inBox(q, RX, Y(0), 20, ROW * bt - 1)) { this.msg = "Start with the ones."; return false; }
+      if (st === "tens" && this.tensR.length && inBox(q, RX, Y(0), 20, ROW * bt - 1)) { this.held = { what: "tens", gx: q.x, gy: q.y, dx: 0, dy: 0 }; this.msg = null; return true; }
+      return false;
+    },
+    drag(q) { const h = this.held; if (h) { h.dx = q.x - h.gx; h.dy = q.y - h.gy; } },
+    over() {   // where the held rows would land: on the left's ones, the left's tens, or nowhere
+      const h = this.held; if (!h) return null;
+      const cx = RX + h.dx + (h.what === "ones" ? bo : 10), cy = (h.what === "ones" ? Y(bt) : Y(0) + (ROW * bt - 1) / 2) + h.dy + 1;
+      if (cx > 23 || cx < -3) return null;
+      return cy >= Y(this.tensL.length) - 1.5 ? "ones" : "tens";
+    },
+    release() {
+      const h = this.held; if (!h) return;
+      const where = this.over(), moved = Math.hypot(h.dx, h.dy) > 2; this.held = null;
+      if (h.what === "ones") {
+        if (where === "ones") {
+          this.onesL.push(...this.onesR.map((id, j) => ({ id, st: "stripe", n: ao + 1 + j }))); this.onesR = []; this.stage = "group";
+        } else if (moved) this.msg = "Ones go with the ones.";
+      } else if (where) { this.tensL.push(...this.tensR); this.tensR = []; this.stage = "write"; this.active = "ans"; this.typing = true; }
+      else if (moved) this.msg = "Tens go with the tens.";
+    },
+    tap(q) {
+      if (this.stage !== "group" || q.x < -0.5 || q.x > 20.5) return false;
+      const r = Math.floor((q.y - Y0 + 0.5) / ROW), c = r - this.tensL.length, rowsO = chunk10(this.onesL);
+      if (c < 0 || c >= rowsO.length) return false;
+      const row = rowsO[c];
+      if (row.length < 10) { this.msg = `That's ${row.length}. A ten needs 10.`; return true; }
+      this.onesL = this.onesL.filter(o => !row.includes(o)); seed("N.t0", 0, Y(r)); this.tensL.push("N.t0");
+      this.onesL.forEach(o => { delete o.n; });
+      this.msg = null; this.stage = "tens"; return true;
+    },
+    act(x) {
+      if (x === "op:+" || x === "op:-") {
+        if (this.stage !== "pick") return;
+        if (x === "op:+") { this.stage = "ones"; this.msg = null; } else this.msg = "They read books in both months. Put them together.";
+        return;
+      }
+      if (boxAct(this, x)) return;
+      if (x !== "check" || this.stage !== "write") return;
+      if (checkAnswer(this, a + b, [[(at + bt) * 10 + left, `The new ten goes with the tens too: ${count(T, "ten")}, not ${at + bt}.`]], "Count the tens, then the ones.")) this.stage = "done";
+    },
+    scene() {
+      const st = this.stage, h = this.held, where = this.over();
+      const say = { pick: "Pick what to do.", ones: "Slide the ones together.", group: "Make a ten: tap the full row.", tens: "Slide the tens together.", write: "Write the answer.", done: "10 ones make 1 ten, so it joins the tens." }[st];
+      let ro = null;
+      if (h && h.what === "ones") ro = where === "ones" ? `${ao} + ${bo} = ${O}` : `${bo} ones`;
+      else if (h) ro = where ? `${at} + ${bt} + 1 = ${T} tens` : `${count(bt, "ten")}`;
+      else if (st === "group") ro = `${ao} + ${bo} = ${O}`;
+      else if (st === "tens") ro = `${O} = 10 + ${left}`;
+      else if (st === "write" || st === "done") ro = `${at} + ${bt} + 1 = ${T} tens`;
+      header(this, say, ro, FW - 6);
+      if (P.story) { lab("nmA", "May", "above", Y0, 10, "small"); lab("nmB", "June", "above", Y0, RX + 10, "small"); }
+      // the left stack: tens, then the ones in rows of ten
+      this.tensL.forEach((id, r) => tenStrip(id, 0, Y(r), id.startsWith("B") ? "stripe" : "fill"));
+      if (st === "tens" && !h) lab("n10", "10", "right", 20, Y(this.tensL.length - 1) + 1, "small", "var(--chapter)");
+      const rowsO = chunk10(this.onesL);
+      rowsO.forEach((row, c) => row.forEach((o, j) => counter(o.id, 2 * j, Y(this.tensL.length + c), 2, o.st, { n: st === "group" ? o.n : null })));
+      if (st === "group" && rowsO[0] && rowsO[0].length === 10) rect("fullrow", 0, Y(this.tensL.length), 20, 2, { c: "var(--chapter)" });
+      // the right stack: 38 as three ten rows and its ones row
+      const hd = what => h && h.what === what;
+      this.tensR.forEach((id, r) => tenStrip(id, RX + (hd("tens") ? h.dx : 0), Y(r) + (hd("tens") ? h.dy : 0), "stripe", { now: hd("tens") }));
+      this.onesR.forEach((id, j) => counter(id, RX + 2 * j + (hd("ones") ? h.dx : 0), Y(bt) + (hd("ones") ? h.dy : 0), 2, "stripe", { now: hd("ones") }));
+      // the record: the column form, the small 1 over the tens once the ten is made
+      if (st === "pick") {
+        pickBlock("add", CX, CY, 7, "+ Add", "op:+", "small"); pickBlock("take", CX, CY + 3, 11, "− Take away", "op:-", "small");
+        return;
+      }
+      const by = columnSum("col", CX, CY, [a, b], "+");
+      if (["tens", "write", "done"].includes(st)) text("carry", "1", CX + 3, CY - 0.5, "small", { c: "var(--chapter)" });
+      dbox("ans", CX + 2, by, 2, this.vals.ans || "", boxState(this, "ans"));
+      if (st === "done") block("next", CX, ceil5(by + 4), 10, "Next problem", "next"); else if (st === "write") block("check", CX, ceil5(by + 4), 7, "Check", "check");
+    },
+  });
+  return L;
+}
+
+// ---------- Subtracting with regrouping (g2-subregroup) ----------
+function genSubRegroup(i) {
+  for (;;) {
+    const at = rnd(3, 9), ao = rnd(0, 8), bo = rnd(ao + 1, 9), bt = rnd(1, at - (i < 3 ? 2 : 1));
+    if (bt < 1 || bt >= at) continue;
+    return { a: at * 10 + ao, b: bt * 10 + bo, story: i % 4 === 3 };
+  }
+}
+function dSubRegroup(idx) {
+  const P = genSubRegroup(idx), { a, b } = P, at = Math.floor(a / 10), ao = a % 10, bt = Math.floor(b / 10), bo = b % 10;
+  const O = ao + 10, ones = O - bo, tens = at - 1 - bt, diff = a - b;
+  const sentences = P.story ? [`There were ${a} stickers on a sheet. Maya used ${b} of them.`, "How many stickers are left?"] : null;
+  const rows = P.story ? storyRows(sentences, 60) : [];
+  const D = instrY(rows) - 1, Y0 = 6 + D + (P.story ? 2 : 0), Y = r => Y0 + ROW * r, RX = 25;
+  const { CX, CY, w: FW } = recordPlace(Y0, Y(at) + 2, Y(at) + 2, 2);
+  const stages = [...(P.story ? ["pick"] : []), "open", "ones", "tens", "write", "done"];
+  const L = withBoxes({
+    id: "g2-subregroup", maxZoom: 1.25, stage: stages[0], msg: null, verdict: null, typing: false, held: null, P,
+    storyRows: rows, storySentences: sentences, demo: false,
+    tensA: ids("A.t", at), opened: false, onesP: null, tensP: false,
+    progress() { return stageIndex(stages, this.stage); },
+    frame() { return { x: -4, y: -1, w: FW, h: Math.max(Y(at) + 6, this.stage === "pick" ? CY + 6 : ceil5(CY + 8) + 3) + 1 }; },
+    spots() { return { tenA: r => ({ x: 10, y: Y(r) + 1 }), onesA: { x: 1, y: Y(at) + 1 }, loose: { x: 10, y: Y(at - 1) + 1 }, onesB: { x: RX + 1, y: Y(at) + 1 }, tensB: { x: RX + 10, y: Y(at - bt) + 1 }, tensLeft: { x: 10, y: Y(Math.max(0, at - 1 - bt)) + 1 }, box: { x: CX + 4, y: CY + 6 } }; },
+    canType() { return this.stage === "write"; },
+    grab(q) {
+      const st = this.stage;
+      if (st === "ones" && inBox(q, RX, Y(at), 2 * bo, 2)) { this.held = { what: "ones", gx: q.x, gy: q.y, dx: 0, dy: 0 }; this.msg = null; return true; }
+      if (st === "ones" && inBox(q, RX, Y(at - bt), 20, ROW * bt - 1)) { this.msg = "Start with the ones."; return false; }
+      if (st === "tens" && inBox(q, RX, Y(at - bt), 20, ROW * bt - 1)) { this.held = { what: "tens", gx: q.x, gy: q.y, dx: 0, dy: 0 }; this.msg = null; return true; }
+      return false;
+    },
+    drag(q) { const h = this.held; if (h) { h.dx = q.x - h.gx; h.dy = q.y - h.gy; } },
+    over() {
+      const h = this.held; if (!h) return null;
+      const cx = RX + h.dx + (h.what === "ones" ? bo : 10), cy = (h.what === "ones" ? Y(at) + 1 : Y(at - bt) + (ROW * bt - 1) / 2) + h.dy;
+      if (cx > 23 || cx < -3 || cy < Y0 - 2 || cy > Y(at) + 4) return null;
+      return cy >= Y(at - 1) - 0.5 ? "ones" : "tens";
+    },
+    // where the dashed ones sit over the loose row (which places they cover)
+    onesAt() { const h = this.held; const x = RX + (h ? h.dx : 0); return Math.max(0, Math.min(10 - bo, Math.round(x / 2))); },
+    release() {
+      const h = this.held; if (!h) return;
+      const where = this.over(), moved = Math.hypot(h.dx, h.dy) > 2; this.held = null;
+      if (h.what === "ones") {
+        if (where === "ones") { this.onesP = Math.max(0, Math.min(10 - bo, Math.round((RX + h.dx) / 2))); this.stage = "tens"; }
+        else if (moved) this.msg = "Ones go over ones.";
+      } else if (where === "tens") { this.tensP = true; this.stage = "write"; this.active = "ans"; this.typing = true; }
+      else if (moved) this.msg = "Tens go over tens.";
+    },
+    tap(q) {
+      if (this.stage !== "open" || q.x < -0.5 || q.x > 20.5) return false;
+      const r = Math.floor((q.y - Y0 + 0.5) / ROW);
+      if (r === at) { this.msg = "Tap a ten to open it."; return true; }
+      if (r < 0 || r >= at) return false;
+      // the tapped ten opens: its ten counters drop to the ones as a loose row over the ones
+      const id = this.tensA[r]; this.tensA.splice(r, 1);
+      for (let j = 0; j < 10; j++) seed(`L.o${j}`, 2 * j, Y(r));
+      this.openedId = id; this.opened = true; this.msg = null; this.stage = "ones"; return true;
+    },
+    act(x) {
+      if (x === "op:+" || x === "op:-") {
+        if (this.stage !== "pick") return;
+        if (x === "op:-") { this.stage = "open"; this.msg = null; this.ask(); } else this.msg = "Maya used some. Take them away.";
+        return;
+      }
+      if (boxAct(this, x)) return;
+      if (x !== "check" || this.stage !== "write") return;
+      const slips = [[(at - bt) * 10 + (bo - ao), `You did ${bo} − ${ao} in the ones. You can't take ${bo} from ${ao}, so trade a ten first.`],
+        [(at - bt) * 10 + ones, `You traded a ten, so there is one ten less: ${at - 1} − ${bt} = ${tens}.`],
+        [tens + ones * 10, `Tens go on the left: ${count(tens, "ten")} and ${count(ones, "one")}.`]];
+      if (checkAnswer(this, diff, slips, "Count the tens and the ones that are left.")) this.stage = "done";
+    },
+    // Ask: the dashed ones slide over the ones by themselves, hang past the end, and slide back
+    ask() { later(1500, () => { this.demo = true; }); later(3300, () => { this.demo = false; }); },
+    scene() {
+      const st = this.stage, h = this.held, where = this.over();
+      const say = { pick: "Pick what to do.", open: ao ? "Not enough ones. Open a ten." : "No ones. Open a ten.", ones: `Take ${bo} ones.`, tens: `Take ${count(bt, "ten")}.`, write: "Write the answer.", done: "A ten is 10 ones, so now there are enough." }[st];
+      let ro = null;
+      if (h && h.what === "ones") ro = where === "ones" ? `${O} − ${bo} = ${ones}` : `${bo} ones`;
+      else if (h) ro = where === "tens" ? `${at - 1} − ${bt} = ${count(tens, "ten")}` : count(bt, "ten");
+      else if (st === "ones") ro = `10 + ${ao} = ${O} ones`;
+      else if (st === "tens") ro = `${O} − ${bo} = ${ones}`;
+      else if (st === "write" || st === "done") ro = `${at - 1} − ${bt} = ${count(tens, "ten")}`;
+      header(this, say, ro, FW - 6);
+      if (P.story) { lab("nmA", "on the sheet", "above", Y0, 10, "small"); lab("nmB", "used", "above", Y(at - bt), RX + 10, "small"); }
+      // the left: 52 as five ten rows and a ones row; once opened, a loose row of ten over the ones
+      const tensUnder = this.tensP ? new Set(this.tensA.slice(at - 1 - bt)) : new Set();
+      this.tensA.forEach((id, r) => tenStrip(id, 0, Y(r), "fill", { cross: tensUnder.has(id) }));
+      const p = this.onesP, crossL = j => p != null && j >= p && j < p + bo;
+      if (this.opened) for (let j = 0; j < 10; j++) counter(`L.o${j}`, 2 * j, Y(at - 1), 2, "fill", { cross: crossL(j) });
+      for (let j = 0; j < ao; j++) counter(`A.o${j}`, 2 * j, Y(at), 2, "fill");
+      // the right: 27 drawn dashed, its ones row level with the 2
+      const hd = what => h && h.what === what;
+      for (let r = 0; r < bt; r++) {
+        if (this.tensP) tenStrip(`B.t${r}`, 0, Y(at - 1 - bt + r), "dash");
+        else tenStrip(`B.t${r}`, RX + (hd("tens") ? h.dx : 0), Y(at - bt + r) + (hd("tens") ? h.dy : 0), "dash", { now: hd("tens") });
+      }
+      for (let j = 0; j < bo; j++) {
+        if (p != null) counter(`B.o${j}`, 2 * (p + j), Y(at - 1), 2, "dash");
+        else if (this.demo) counter(`B.o${j}`, 2 * j, Y(at), 2, "dash", { dur: 900 });
+        else counter(`B.o${j}`, RX + 2 * j + (hd("ones") ? h.dx : 0), Y(at) + (hd("ones") ? h.dy : 0), 2, "dash", { now: hd("ones"), dur: 900 });
+      }
+      // the record: the column form with its trade marks
+      if (st === "pick") { pickBlock("add", CX, CY, 7, "+ Add", "op:+", "small"); pickBlock("take", CX, CY + 3, 11, "− Take away", "op:-", "small"); return; }
+      const by = columnSum("col", CX, CY, [a, b], "−");
+      if (this.opened) {
+        line("xT", CX + 2.4, CY + 1.6, CX + 3.6, CY + 0.4); text("nT", at - 1, CX + 3, CY - 0.5, "small", { c: "var(--chapter)" });
+        line("xO", CX + 4.4, CY + 1.6, CX + 5.6, CY + 0.4); text("nO", `1${ao}`, CX + 5, CY - 0.5, "small", { c: "var(--chapter)" });
+      }
+      dbox("ans", CX + 2, by, 2, this.vals.ans || "", boxState(this, "ans"));
+      if (st === "done") block("next", CX, ceil5(by + 4), 10, "Next problem", "next"); else if (st === "write") block("check", CX, ceil5(by + 4), 7, "Check", "check");
+    },
+  });
+  if (!P.story) L.ask();
+  return L;
+}
+
+// ---------- Add up to four numbers (g2-addfour) ----------
+function genAddFour(i) {
+  for (;;) {
+    const n = i < 3 ? 3 : i % 2 === 0 ? 4 : 3, hi = n === 4 ? 29 : 39;
+    const nums = [...Array(n)].map(() => rnd(11, hi));
+    const o = nums.map(x => x % 10), t = nums.map(x => Math.floor(x / 10));
+    const O = o.reduce((s, x) => s + x, 0), Tn = t.reduce((s, x) => s + x, 0), sum = nums.reduce((s, x) => s + x, 0);
+    if (O < 10 || sum < 30 || sum > 99) continue;
+    if (i < 3) {
+      const pair = o.some((x, j) => o.some((y, k) => k > j && x + y === 10));
+      if (!pair || O > 19 || Tn > 6) continue;
+    } else if (O > 29) continue;
+    return { nums };
+  }
+}
+function dAddFour(idx) {
+  const P = genAddFour(idx), nums = P.nums, n = nums.length;
+  const o = nums.map(x => x % 10), t = nums.map(x => Math.floor(x / 10)), sum = nums.reduce((s, x) => s + x, 0), O = o.reduce((s, x) => s + x, 0);
+  const G = Math.floor(O / 10), Y0 = 6, Y = r => Y0 + ROW * r, RX = 25;
+  // the others in a column at the right: each its ten rows and its ones row, a square apart
+  const startRow = [0, 0]; for (let k = 1; k < n - 1; k++) startRow.push(startRow[k] + t[k] + (o[k] ? 1 : 0));
+  const lastRow = startRow[n - 1] + t[n - 1] + (o[n - 1] ? 1 : 0), Tall = t.reduce((p, x) => p + x, 0) + G;
+  const { CX, CY, w: FW } = recordPlace(Y0, Y(Tall + 1) - 1, Y(lastRow) - 1, n);
+  const stages = ["ones", "group", "tens", "write", "done"];
+  const L = withBoxes({
+    id: "g2-addfour", maxZoom: 1.25, stage: "ones", msg: null, verdict: null, typing: false, held: null, P,
+    tensL: ids("A.t", t[0]), onesL: ids("A.o", o[0]).map(id => ({ id, st: "fill" })), slidOnes: [], slidTens: [], newTens: 0,
+    progress() { return stageIndex(stages, this.stage); },
+    rowsL() { return this.tensL.length + Math.max(1, chunk10(this.onesL).length); },
+    frame() { return { x: -4, y: -1, w: FW, h: Math.max(Y(this.rowsL()), Y(lastRow), ceil5(CY + 2 * n + 4) + 3) + 1 }; },
+    spots() { return { ones: k => ({ x: RX + 1, y: Y(startRow[k] + t[k]) + 1 }), tens: k => ({ x: RX + 10, y: Y(startRow[k]) + 1 }), onesL: { x: 2, y: Y(this.tensL.length) + 1 }, tensL: { x: 10, y: Y(0) + 1 }, row: c => ({ x: 3, y: Y(this.tensL.length + c) + 1 }), box: { x: CX + 4, y: CY + 2 * n + 2 } }; },
+    canType() { return this.stage === "write"; },
+    grab(q) {
+      const st = this.stage;
+      for (let k = 1; k < n; k++) {
+        const r0 = startRow[k];
+        if (st === "ones" && o[k] && !this.slidOnes.includes(k) && inBox(q, RX, Y(r0 + t[k]), 2 * o[k], 2)) { this.held = { what: "ones", k, gx: q.x, gy: q.y, dx: 0, dy: 0 }; this.msg = null; return true; }
+        if (inBox(q, RX, Y(r0), 20, ROW * t[k] - 1) && !this.slidTens.includes(k)) {
+          if (st === "ones") { this.msg = "Start with the ones."; return false; }
+          if (st === "tens") { this.held = { what: "tens", k, gx: q.x, gy: q.y, dx: 0, dy: 0 }; this.msg = null; return true; }
+        }
+      }
+      return false;
+    },
+    drag(q) { const h = this.held; if (h) { h.dx = q.x - h.gx; h.dy = q.y - h.gy; } },
+    over() {
+      const h = this.held; if (!h) return null;
+      const k = h.k, cx = RX + h.dx + (h.what === "ones" ? o[k] : 10);
+      const cy = (h.what === "ones" ? Y(startRow[k] + t[k]) + 1 : Y(startRow[k]) + (ROW * t[k] - 1) / 2) + h.dy;
+      if (cx > 23 || cx < -3) return null;
+      return cy >= Y(this.tensL.length) - 1.5 ? "ones" : "tens";
+    },
+    // holding a ones row lights another whose ones make 10 with it
+    partner() {
+      const h = this.held; if (!h || h.what !== "ones") return null;
+      if (!this.slidOnes.length && o[0] + o[h.k] === 10) return 0;
+      for (let k = 1; k < n; k++) if (k !== h.k && !this.slidOnes.includes(k) && o[k] + o[h.k] === 10) return k;
+      return null;
+    },
+    release() {
+      const h = this.held; if (!h) return;
+      const where = this.over(), moved = Math.hypot(h.dx, h.dy) > 2; this.held = null;
+      if (h.what === "ones") {
+        if (where === "ones") {
+          const before = this.onesL.length;
+          this.onesL.push(...ids(`N${h.k}.o`, o[h.k]).map((id, j) => ({ id, st: "stripe", n: before + j + 1 })));
+          this.slidOnes.push(h.k);
+          if (this.slidOnes.length === o.slice(1).filter(Boolean).length) this.stage = "group";
+        } else if (moved) this.msg = "Ones go with the ones.";
+      } else if (where) {
+        this.slidTens.push(h.k); this.tensL.push(...ids(`N${h.k}.t`, t[h.k]));
+        if (this.slidTens.length === n - 1) { this.stage = "write"; this.active = "ans"; this.typing = true; }
+      } else if (moved) this.msg = "Tens go with the tens.";
+    },
+    tap(q) {
+      if (this.stage !== "group" || q.x < -0.5 || q.x > 20.5) return false;
+      const r = Math.floor((q.y - Y0 + 0.5) / ROW), c = r - this.tensL.length, rowsO = chunk10(this.onesL);
+      if (c < 0 || c >= rowsO.length) return false;
+      const row = rowsO[c];
+      if (row.length < 10) { this.msg = `That's ${row.length}. A ten needs 10.`; return true; }
+      const id = `G.t${this.newTens++}`;
+      this.onesL = this.onesL.filter(x => !row.includes(x)); seed(id, 0, Y(r));
+      this.tensL.splice(t[0] + this.newTens - 1, 0, id);
+      this.msg = null;
+      if (this.newTens === G) { this.stage = "tens"; this.onesL.forEach(x => { delete x.n; }); }
+      return true;
+    },
+    act(x) {
+      if (boxAct(this, x)) return;
+      if (x !== "check" || this.stage !== "write") return;
+      const slips = [];
+      if (G === 2) slips.push([sum - 10, "The ones made 2 tens."], [sum - 20, "The ones made 2 tens."]);
+      else slips.push([sum - 10, "The new ten goes with the tens."]);
+      nums.forEach(x => slips.push([sum - x, `Add every number. There are ${n}.`]));
+      if (checkAnswer(this, sum, slips, "Count the tens, then the ones.")) this.stage = "done";
+    },
+    scene() {
+      const st = this.stage, h = this.held, where = this.over(), pt = this.partner();
+      const say = { ones: "Slide all the ones over.", group: G > 1 ? "Tap each full row." : "Make a ten: tap the full row.", tens: "Slide the tens over.", write: "Write the answer.", done: "Ones with ones, tens with tens, in any order." }[st];
+      const onesSum = [o[0], ...this.slidOnes.map(k => o[k])].filter((x, i) => i === 0 || x), onesTot = onesSum.reduce((s, x) => s + x, 0);
+      const tensParts = [t[0], ...this.slidTens.map(k => t[k]), ...Array(this.newTens).fill(1)];
+      let ro = null;
+      if (h && h.what === "ones") ro = pt != null ? `${o[h.k]} and ${o[pt]} make 10` : where === "ones" ? `${[...onesSum, o[h.k]].join(" + ")} = ${onesTot + o[h.k]}` : `${o[h.k]} ones`;
+      else if (h) ro = where ? `${[...tensParts, t[h.k]].join(" + ")} = ${tensParts.reduce((s, x) => s + x, 0) + t[h.k]} tens` : count(t[h.k], "ten");
+      else if (st === "ones" && this.slidOnes.length) ro = `${onesSum.join(" + ")} = ${onesTot}`;
+      else if (st === "group") ro = this.newTens ? `${O} = ${Array(this.newTens).fill("10").join(" + ")} + ${O - 10 * this.newTens}` : `${onesSum.join(" + ")} = ${onesTot}`;
+      else if (st === "tens" || st === "write" || st === "done") ro = `${tensParts.join(" + ")} = ${tensParts.reduce((s, x) => s + x, 0)} tens`;
+      header(this, say, ro, FW - 6);
+      // the first number at the left, where the total builds
+      this.tensL.forEach((id, r) => tenStrip(id, 0, Y(r), id.startsWith("A") || id.startsWith("G") ? "fill" : "stripe"));
+      const rowsO = chunk10(this.onesL);
+      rowsO.forEach((row, c) => row.forEach((x, j) => counter(x.id, 2 * j, Y(this.tensL.length + c), 2, x.st, { n: st === "ones" || st === "group" ? x.n : null })));
+      if (st === "group") rowsO.forEach((row, c) => { if (row.length === 10) rect(`full${c}`, 0, Y(this.tensL.length + c), 20, 2, { c: "var(--chapter)" }); });
+      if (pt === 0) rect("lit0", 0, Y(this.tensL.length), 2 * o[0], 2, { c: "var(--chapter)", live: true });
+      // the others in a column at the right
+      for (let k = 1; k < n; k++) {
+        const r0 = startRow[k], hk = what => h && h.k === k && h.what === what;
+        if (!this.slidTens.includes(k)) for (let r = 0; r < t[k]; r++) tenStrip(`N${k}.t${r}`, RX + (hk("tens") ? h.dx : 0), Y(r0 + r) + (hk("tens") ? h.dy : 0), "stripe", { now: hk("tens") });
+        if (!this.slidOnes.includes(k)) for (let j = 0; j < o[k]; j++) counter(`N${k}.o${j}`, RX + 2 * j + (hk("ones") ? h.dx : 0), Y(r0 + t[k]) + (hk("ones") ? h.dy : 0), 2, "stripe", { now: hk("ones") });
+        if (pt === k) rect(`lit${k}`, RX, Y(r0 + t[k]), 2 * o[k], 2, { c: "var(--chapter)", live: true });
+      }
+      // the record: the column form, a small 1 (or 2) over the tens for each new ten
+      const by = columnSum("col", CX, CY, nums, "+");
+      if (this.newTens) text(`carry${this.newTens}`, this.newTens, CX + 3, CY - 0.5, "small", { c: "var(--chapter)" });
+      dbox("ans", CX + 2, by, 2, this.vals.ans || "", boxState(this, "ans"));
+      const bk = ceil5(by + 4);
+      if (st === "done") block("next", CX, bk, 10, "Next problem", "next"); else if (st === "write") block("check", CX, bk, 7, "Check", "check");
+    },
+  });
+  return L;
+}
+
+// ====================================================================================================================
+// Bars to 100 (Story problems, Two-step story problems): one square is one thing. A bar is 4 squares tall from a start
+// line on a block line, with a line inside every ten squares, so 59 is seen as 5 tens and 9.
+function bar(k, x, y, w, o = {}) {
+  const p = glide(k, x, y, o.now, o.dur);
+  const style = o.style || "tint";
+  if (style === "tint" || style === "lit") rect(`${k}f${style}`, p.x, p.y, w, 4, { fill: style === "lit" ? "var(--tint-strong)" : "var(--tint)" });
+  else if (style === "stripe") rect(`${k}f`, p.x, p.y, w, 4, { fill: "url(#stripes)" });
+  const dashed = style === "dash" || style === "ghost" || o.dashed;
+  rect(`${k}o${style}${w}`, p.x, p.y, w, 4, { c: style === "ghost" ? "var(--ink3)" : dashed ? "var(--ink)" : "var(--chapter)", dash: dashed });
+  if (style !== "dash" && style !== "ghost") {
+    const from = o.from ?? x;   // its tens lines are counted from the start line where it rests
+    for (let m = Math.floor(from / 10) * 10 + 10; m < from + w; m += 10) put(`${k}t${m}`, "line", { x1: sq(p.x + m - from), y1: sq(p.y), x2: sq(p.x + m - from), y2: sq(p.y + 4), stroke: "var(--chapter)", "stroke-width": 1.5 }, "fade");
+  }
+  if (o.n != null) text(`${k}n${o.n}${o.nc || ""}`, o.n, p.x + w / 2, p.y + 2, "maths", { c: o.nc || (style === "ghost" ? "var(--ink3)" : null) });
+  if (o.cross) for (let i = 0; i < w; i++) put(`${k}x${i}`, "line", { x1: sq(p.x + i), y1: sq(p.y + 4), x2: sq(p.x + i + 1), y2: sq(p.y), stroke: "var(--ink)", "stroke-width": 1.5 }, "fade");
+  return p;
+}
+const startLine = (y, h) => line("start", 0, y - 1, 0, y + h + 1);
+
+// ---------- Story problems to 100 (g2-story) ----------
+const STORY_KINDS = ["joinEnd", "joinChange", "joinStart", "takeEnd", "takeChange", "takeStart", "partWhole", "partPart", "cmpDiff", "cmpBig", "cmpSmall"];
+function genStory(i) {
+  const kind = i === 0 ? "joinEnd" : i === 1 ? "takeEnd" : i === 2 ? "partWhole" : i === 3 ? pickOne(["joinChange", "takeChange"]) : i === 4 ? "partPart" : i === 5 ? "cmpDiff" : pickOne(STORY_KINDS);
+  const wording = kind === "cmpDiff" && i === 5 ? "more" : pickOne(["more", "fewer"]);
+  const big = i >= 6;
+  let W, p1, p2;
+  do { W = rnd(big ? 30 : 20, big ? 99 : 50); p1 = rnd(5, W - 5); p2 = W - p1; } while (!big && p1 % 10 + p2 % 10 >= 10);
+  const [N, pr] = pickOne(NAMES); let other; do other = pickOne(NAMES); while (other[0] === N);
+  return { kind, wording, W, p1, p2, N, pr, M: other[0], th: pickOne(THINGS) };
+}
+// what the ? is, the story's equation, and the story's lines
+function storyOf(P) {
+  const { kind, W, p1, p2, N, pr, M, th, wording } = P, Pr = cap(pr);
+  const S = {
+    joinEnd: { unk: "whole", eq: [p1, "+", p2, "=", "?"], lines: [`${N} had ${p1} ${th}.`, `${Pr} got ${p2} more.`, `How many does ${pr} have now?`] },
+    joinChange: { unk: "p2", eq: [p1, "+", "?", "=", W], lines: [`${N} had ${p1} ${th}.`, `${Pr} got some more. Now ${pr} has ${W}.`, `How many did ${pr} get?`] },
+    joinStart: { unk: "p1", eq: ["?", "+", p2, "=", W], lines: [`${N} had some ${th}.`, `${Pr} got ${p2} more. Now ${pr} has ${W}.`, `How many did ${pr} have at first?`] },
+    takeEnd: { unk: "p1", eq: [W, "−", p2, "=", "?"], lines: [`${N} had ${W} ${th}.`, `${Pr} gave ${p2} away.`, "How many are left?"] },
+    takeChange: { unk: "p2", eq: [W, "−", "?", "=", p1], lines: [`${N} had ${W} ${th}.`, `${Pr} gave some away. Now ${pr} has ${p1}.`, `How many did ${pr} give away?`] },
+    takeStart: { unk: "whole", eq: ["?", "−", p2, "=", p1], lines: [`${N} had some ${th}.`, `${Pr} gave ${p2} away. Now ${pr} has ${p1}.`, `How many did ${pr} have at first?`] },
+    partWhole: { unk: "whole", eq: [p1, "+", p2, "=", "?"], lines: [`${N} has ${p1} red ${th} and ${p2} blue ${th}.`, `How many ${th} in all?`] },
+    partPart: { unk: "p2", eq: [p1, "+", "?", "=", W], lines: [`${N} has ${W} ${th}.`, `${p1} are red. The rest are blue.`, "How many are blue?"] },
+    cmpDiff: { unk: "p2", eq: [W, "−", p1, "=", "?"], lines: [`${N} has ${W} ${th}. ${M} has ${p1}.`, wording === "more" ? `How many more does ${N} have?` : `How many fewer does ${M} have?`] },
+    cmpBig: { unk: "whole", eq: [p1, "+", p2, "=", "?"], lines: wording === "more" ? [`${M} has ${p1} ${th}.`, `${N} has ${p2} more than ${M}.`, `How many does ${N} have?`] : [`${M} has ${p2} fewer ${th} than ${N}.`, `${M} has ${p1}.`, `How many does ${N} have?`] },
+    cmpSmall: { unk: "p1", eq: [W, "−", p2, "=", "?"], lines: wording === "fewer" ? [`${N} has ${W} ${th}.`, `${M} has ${p2} fewer than ${N}.`, `How many does ${M} have?`] : [`${N} has ${p2} more ${th} than ${M}.`, `${N} has ${W}.`, `How many does ${M} have?`] },
+  }[kind];
+  return S;
+}
+function dStory(idx) {
+  const P = genStory(idx), S = storyOf(P), { W, p1, p2 } = P, cmp = P.kind.startsWith("cmp");
+  const unkWhole = S.unk === "whole", known = unkWhole ? null : S.unk === "p1" ? p2 : p1, ans = unkWhole ? W : W - known;
+  const width = Math.max(50, W + 10), rows = storyRows(S.lines, width - 4), iy = instrY(rows);
+  const PB = cmp ? iy + 6 : iy + 9;                             // the bar (or the top bar) starts here
+  const pieces = cmp ? { whole: [0, PB, W], p1: [0, PB + 6, p1], p2: [p1, PB + 6, p2] } : { p1: [0, PB, p1], p2: [p1, PB, p2] };
+  const bottom = cmp ? PB + 10 : PB + 11, R0 = ceil5(bottom + 3);
+  const same = S.eq[4] === "?";   // the story's equation is already the sum to work: the box goes in it, written once
+  const stages = ["place", "op", "write", "done"];
+  const L = withBoxes({
+    id: "g2-story", maxZoom: 1.25, stage: "place", msg: null, verdict: null, typing: false, held: null, P, S,
+    storyRows: rows, storySentences: S.lines, placed: null, op: null, tok: { x: 0, y: R0 },
+    progress() { return stageIndex(stages, this.stage); },
+    frame() { return { x: -4, y: -1, w: width + 4, h: R0 + 13 }; },
+    targets() {
+      const T = {};
+      if (!cmp) T.whole = [0, PB - 5, W, 4.5];
+      for (const [k, [x, y, w]] of Object.entries(pieces)) T[k] = [x, y, w, 4];
+      return T;
+    },
+    spots() { const T = this.targets(), c = k => ({ x: T[k][0] + T[k][2] / 2, y: T[k][1] + T[k][3] / 2 }); return { tok: { x: 1.5, y: R0 + 1.5 }, unk: c(S.unk), known: c(S.unk === "p1" ? "p2" : S.unk === "p2" ? "p1" : "p1"), box: { x: this.boxX + 2, y: same ? R0 + 1 : R0 + 6 } }; },
+    canType() { return this.stage === "write"; },
+    grab(q) {
+      if (this.stage !== "place" || !inBox(q, this.tok.x, this.tok.y, 3, 3)) return false;
+      this.held = { gx: q.x, gy: q.y, x0: this.tok.x, y0: this.tok.y }; this.msg = null; return true;
+    },
+    drag(q) { const h = this.held; if (h) this.tok = { x: h.x0 + q.x - h.gx, y: h.y0 + q.y - h.gy }; },
+    over() {
+      const cx = this.tok.x + 1.5, cy = this.tok.y + 1.5;
+      return Object.entries(this.targets()).find(([, [x, y, w, h]]) => cx >= x - 1 && cx <= x + w + 1 && cy >= y - 1 && cy <= y + h + 1)?.[0] || null;
+    },
+    release() {
+      if (!this.held) return; this.held = null;
+      const on = this.over();
+      if (on === S.unk) { this.placed = on; this.stage = "op"; }
+      else if (on) this.msg = `We know that one: ${on === "whole" ? W : on === "p1" ? p1 : p2}.`;
+      this.tok = { x: 0, y: R0 };
+    },
+    act(x) {
+      if (x === "op:+" || x === "op:-") {
+        if (this.stage !== "op") return;
+        const plus = x === "op:+";
+        if (plus !== unkWhole) { this.msg = unkWhole ? "The ? is the whole. Put the parts together." : "The ? is a part. Take the other part away."; return; }
+        this.op = plus ? "+" : "−"; this.msg = null; this.stage = "write"; this.active = "ans"; this.typing = true;
+        if (plus && !cmp) seed("bp2", p1 + 5, PB);          // the parts slide together under the bracket
+        return;
+      }
+      if (boxAct(this, x)) return;
+      if (x !== "check" || this.stage !== "write") return;
+      let slips, plain;
+      if (unkWhole) {
+        slips = [[Math.abs(p1 - p2), `The ? is the whole, so it's more than ${Math.max(p1, p2)}.`]];
+        if (p1 % 10 + p2 % 10 >= 10) slips.push([W - 10, "The ones made a new ten."]);
+        plain = `Put ${p1} and ${p2} together: tens, then ones.`;
+      } else {
+        const wO = W % 10, kO = known % 10, tW = Math.floor(W / 10), tK = Math.floor(known / 10);
+        slips = [[W + known, `The ? is a part, so it's less than ${W}.`]];
+        if (wO < kO) slips.push([(tW - tK) * 10 + (kO - wO), `You can't take ${kO} from ${wO}. Trade a ten first.`], [ans + 10, `You traded a ten: ${tW - 1} tens, not ${tW}.`]);
+        plain = `Take ${known} from ${W}: tens, then ones.`;
+      }
+      if (checkAnswer(this, ans, slips, plain)) this.stage = "done";
+    },
+    scene() {
+      const st = this.stage, h = this.held, on = h ? this.over() : null;
+      const say = { place: "Put the ? on what we don't know.", op: "Pick what to do.", write: "Write the answer.", done: unkWhole ? "The ? is the whole, so put the parts together." : "The ? is a part, so take the known part away." }[st];
+      header(this, say, h && on ? (on === "whole" ? "the whole" : "a part") : null, width - 4);
+      const done = st === "done", ansC = "var(--chapter)";
+      const look = k => {   // how each piece is drawn: known (with its number), not known (dashed), or the ? on it
+        const isU = k === S.unk;
+        if (!isU) return { style: k === "p2" ? (cmp ? "dash" : "stripe") : "tint", n: k === "whole" ? W : k === "p1" ? p1 : p2, dashed: cmp && k === "p2" };
+        if (done) return { style: "lit", n: ans, nc: ansC };
+        if (this.placed) return { style: "lit", n: "?", nc: ansC };
+        return { style: "dash" };
+      };
+      // after + or −: the known part slides off the whole (or up onto the longer bar); + slides the parts together
+      const off = k => this.op === "−" && k !== S.unk && k !== "whole";
+      if (cmp) {
+        startLine(PB, 10);
+        const w = look("whole"); bar("bwhole", 0, PB, W, S.unk === "whole" ? w : { ...w, n: null });
+        if (S.unk !== "whole") lab("nW", W, "right", W, PB + 2, "maths");   // the longer bar's number at its end, clear of what slides onto it
+        lab("nmN", P.N, "right", W + 4, PB + 2, "small");
+        for (const k of ["p1", "p2"]) {
+          const [x, y, wd] = pieces[k], lk = look(k), up = off(k) || (this.op === "+" && unkWhole);
+          bar(`b${k}`, x, up ? PB : y, wd, { ...lk, cross: off(k) && this.op === "−", from: x });
+        }
+        lab("nmM", P.M, "right", W + 4, PB + 8, "small");
+      } else {
+        startLine(PB, 4);
+        // the bracket over the whole, its number (or the ?) above it
+        const bw = W;
+        path("brk", `M0 ${sq(PB - 0.5)}V${sq(PB - 1.5)}H${sq(bw / 2 - 1)}l${sq(1)} ${-sq(1)}l${sq(1)} ${sq(1)}H${sq(bw)}V${sq(PB - 0.5)}`, { c: S.unk === "whole" ? "var(--ink)" : "var(--chapter)", dash: S.unk === "whole" && !this.placed });
+        const wl = S.unk === "whole" ? (done ? W : this.placed ? "?" : null) : W;
+        if (wl != null) text(`wl${wl}`, wl, bw / 2, PB - 3.6, "maths", { c: S.unk === "whole" ? ansC : null });
+        for (const k of ["p1", "p2"]) {
+          const [x, y, wd] = pieces[k], lk = look(k);
+          bar(`b${k}`, x, off(k) ? y + 7 : y, wd, off(k) ? { style: "ghost", n: lk.n, from: x } : { ...lk, from: x });
+        }
+        if (P.kind.startsWith("part")) { lab("cr", "red", "below", PB + 4, p1 / 2, "small"); lab("cb", "blue", "below", PB + 4, p1 + p2 / 2, "small"); }
+      }
+      // the ? waits under the picture until it's put on what we don't know
+      if (st === "place") {
+        const tp = glide("tok", this.tok.x, this.tok.y, !!h);
+        rect("toko", tp.x, tp.y, 3, 3, { c: "var(--chapter)", live: true });
+        text("tokq", "?", tp.x + 1.5, tp.y + 1.5, "maths", { c: "var(--chapter)", live: true });
+        if (h && on) rect("tgt", ...this.targets()[on], { c: "var(--ink2)", live: true });
+        return;
+      }
+      // the record: the story's equation (the ? where the story has it), then the child's line
+      if (st === "op" || !same) eqRow("seq", S.eq.map(x => x === "?" ? { t: done ? ans : "?", c: ansC } : x), 0, R0 + 1);
+      if (st === "op") { pickBlock("plus", 0, R0 + 5, 4, "+", "op:+"); pickBlock("minus", 5, R0 + 5, 4, "−", "op:-"); return; }
+      if (same) {
+        this.boxX = S.eq.slice(0, 4).join("").length * 2;
+        eqRow("seq", [...S.eq.slice(0, 4), { box: "ans", cells: 2, val: this.vals.ans, state: boxState(this, "ans") }], 0, R0 + 1);
+        if (done) block("next", 0, R0 + 5, 10, "Next problem", "next"); else block("check", 0, R0 + 5, 7, "Check", "check");
+        return;
+      }
+      const line2 = unkWhole ? [p1, "+", p2, "="] : [W, "−", known, "="];
+      this.boxX = line2.join("").length * 2;
+      eqRow("cl", [...line2, { box: "ans", cells: 2, val: this.vals.ans, state: boxState(this, "ans") }], 0, R0 + 6);
+      if (done) block("next", 0, R0 + 10, 10, "Next problem", "next"); else block("check", 0, R0 + 10, 7, "Check", "check");
+    },
+  });
+  return L;
+}
+
+// ---------- Two-step story problems (g2-twostep) ----------
+function genTwoStep(i) {
+  const [N, pr] = pickOne(NAMES), th = pickOne(THINGS);
+  if (i >= 6 && i % 3 === 0) {
+    let s, d; do { s = rnd(10, 45); d = rnd(10, 45); } while (s + s + d > 99);
+    return { kind: "more", s, d, N: "Ana", M: "Sam", th };
+  }
+  const ops = i < 3 ? ["+", "−"] : pickOne([["+", "+"], ["+", "−"], ["−", "+"], ["−", "−"]]);
+  const f = (x, op, c) => op === "+" ? x + c : x - c;
+  const trades = (x, op, c) => op === "+" ? x % 10 + c % 10 >= 10 : x % 10 < c % 10;
+  for (;;) {
+    const s = rnd(10, 60), c1 = rnd(5, 40), c2 = rnd(5, 40), e1 = f(s, ops[0], c1), e2 = f(e1, ops[1], c2);
+    if (e1 < 1 || e1 > 99 || e2 < 1 || e2 > 99) continue;
+    if (i < 3 && (s > 50 || e1 > 50 || e2 > 50 || trades(s, ops[0], c1) || trades(e1, ops[1], c2))) continue;
+    return { kind: "two", s, c: [c1, c2], ops, e: [e1, e2], N, pr, th };
+  }
+}
+function dTwoStep(idx) {
+  const P = genTwoStep(idx), more = P.kind === "more";
+  const Pr = more ? "" : cap(P.pr), verb = (op, c) => op === "+" ? `got ${c} more` : `gave ${c} away`;
+  const lines = more ? [`Sam has ${P.s} ${P.th}. Ana has ${P.d} more than Sam.`, "How many do they have in all?"]
+    : [`${P.N} had ${P.s} ${P.th}. ${Pr} ${verb(P.ops[0], P.c[0])}.`, `Then ${P.pr} ${verb(P.ops[1], P.c[1])}. How many does ${P.pr} have now?`];
+  const maxEnd = more ? P.s + P.s + P.d : Math.max(P.s + P.c[0], P.e[0] + P.c[1], P.s);
+  const width = Math.max(50, maxEnd + 8), rows = storyRows(lines, width - 4), iy = instrY(rows);
+  const PB = iy + 6, LY = PB + 6, R0 = ceil5(LY + 4 + 3);
+  // the steps: each is [a, op, c, answer]
+  const steps = more ? [[P.s, "+", P.d, P.s + P.d], [P.s, "+", P.s + P.d, P.s + P.s + P.d]] : [[P.s, P.ops[0], P.c[0], P.e[0]], [P.e[0], P.ops[1], P.c[1], P.e[1]]];
+  const stages = ["move1", "write1", "move2", "write2", "done"];
+  const L = withBoxes({
+    id: "g2-twostep", maxZoom: 1.25, stage: "move1", msg: null, verdict: null, typing: false, held: null, P,
+    storyRows: rows, storySentences: lines, end: P.s, joined: null, ana: P.s, written: [],
+    progress() { return stageIndex(stages, this.stage); },
+    frame() { return { x: -4, y: -1, w: width + 4, h: R0 + 12 }; },
+    step() { return this.stage === "move2" || this.stage === "write2" || this.stage === "done" ? 1 : 0; },
+    loose() {   // the waiting bar: [x, y, length]
+      const k = this.step(), h = this.held;
+      if (more && k === 0) return null;
+      const len = more ? P.s + P.d : steps[k][2];
+      return [h && h.what === "bar" ? h.x : 0, h && h.what === "bar" ? h.y : LY, len];
+    },
+    spots() { const lb = this.loose() || [0, LY, P.s]; return { loose: { x: lb[0] + 1, y: lb[1] + 2 }, end: { x: this.end, y: PB + 2 }, anaEnd: { x: this.ana, y: LY + 2 }, box: { x: this.boxX + 2, y: R0 + 1 + 3 * this.step() } }; },
+    canType() { return this.stage.startsWith("write"); },
+    grab(q) {
+      const st = this.stage;
+      if (more && st === "move1" && Math.abs(q.x - this.ana) < 2 && q.y > LY - 1 && q.y < LY + 5) { this.held = { what: "end", gx: q.x, a0: this.ana }; this.msg = null; return true; }
+      const lb = this.loose();
+      if ((st === "move1" || st === "move2") && lb && inBox(q, lb[0], lb[1], lb[2], 4)) { this.held = { what: "bar", gx: q.x, gy: q.y, x0: lb[0], y0: lb[1], x: lb[0], y: lb[1] }; this.msg = null; return true; }
+      return false;
+    },
+    drag(q) {
+      const h = this.held; if (!h) return;
+      if (h.what === "end") this.ana = Math.max(P.s, Math.min(P.s + 50, Math.round(h.a0 + q.x - h.gx)));
+      else { h.x = h.x0 + q.x - h.gx; h.y = h.y0 + q.y - h.gy; }
+    },
+    // where the held bar would land on the bar's row: after the end (join) or over the end (cover)
+    mode() {
+      const h = this.held; if (!h || h.what !== "bar" || Math.abs(h.y - PB) > 2.5) return null;
+      const len = this.loose()[2];
+      if (h.x >= this.end - 2.5 && h.x <= this.end + 4) return "join";
+      if (h.x + len >= this.end - 2.5 && h.x + len <= this.end + 2.5 && h.x < this.end - 2.5) return "cover";
+      return null;
+    },
+    release() {
+      const h = this.held; if (!h) return;
+      const k = this.step();
+      if (h.what === "end") {
+        this.held = null;
+        const d = this.ana - P.s;
+        if (d === P.d) { this.stage = "write1"; this.active = "ans"; this.vals.ans = ""; this.typing = true; }
+        else { if (d) this.msg = `That's ${d} more. Ana has ${P.d} more.`; this.ana = P.s; }
+        return;
+      }
+      const m = this.mode(); this.held = null;
+      if (!m) return;
+      const want = steps[k][1] === "+" ? "join" : "cover";
+      if (m !== want) {
+        this.msg = more ? "Put them together: after the end." : want === "join" ? `${Pr} got more. Put them after the end.` : `${Pr} gave some away. Slide them over the end.`;
+        return;
+      }
+      this.joined = m; this.stage = k ? "write2" : "write1"; this.active = "ans"; this.vals.ans = ""; this.typing = true;
+    },
+    act(x) {
+      if (boxAct(this, x)) return;
+      if (x !== "check" || !this.stage.startsWith("write")) return;
+      const k = this.step(), [a, op, c, want] = steps[k];
+      const other = op === "+" ? a - c : a + c;
+      const slips = [];
+      if (k === 1) { slips.push([steps[0][3], `That's after one step. Now the ${c}.`]); if (!more) slips.push([op === "+" ? P.s + c : P.s - c, `Start from ${a}, the first answer.`]); }
+      slips.push([other, more ? "Ana has more, so add." : op === "+" ? `${Pr} got ${c} more, so add.` : `${Pr} gave ${c} away, so take away.`]);
+      if (checkAnswer(this, want, slips, op === "+" ? `Count on ${c} from ${a}: tens, then ones.` : `Count back ${c} from ${a}: tens, then ones.`)) {
+        this.written.push(want);
+        if (k === 0) { this.end = more ? P.s : want; this.joined = null; this.stage = "move2"; this.vals.ans = ""; this.verdict = null; this.active = null; }
+        else this.stage = "done";
+      }
+    },
+    scene() {
+      const st = this.stage, h = this.held, k = this.step(), m = this.mode();
+      const say = more ? { move1: `Ana has ${P.d} more.`, write1: "How many does Ana have?", move2: "Put them together.", write2: "Write how many in all.", done: "The first answer is where the second step starts." }[st]
+        : { move1: `Slide the ${P.c[0]} in.`, write1: "Write how many now.", move2: `Slide the ${P.c[1]} in.`, write2: "Write how many now.", done: "The first answer is where the second step starts." }[st];
+      let ro = null;
+      if (h && h.what === "end") ro = `${P.s} + ${this.ana - P.s}`;
+      else if (h && m) ro = `${this.end} ${m === "join" ? "+" : "−"} ${this.loose()[2]}`;
+      header(this, say, ro, width - 4);
+      startLine(PB, more ? 10 : 4);
+      // the bar so far: tinted, its number at its end (the first change joined or crossed until it's written)
+      const step = steps[k], len = this.loose() ? this.loose()[2] : 0;
+      if (more) {
+        const together = st === "write2" || st === "done";
+        bar("sam", 0, PB, P.s, { style: "tint", n: P.s });
+        if (!(st === "move2" && h)) lab("nmS", together ? (st === "done" ? `${steps[1][3]}` : "") : "Sam", "right", together ? 2 * P.s + P.d : P.s, PB + 2, together ? "maths" : "small", together ? "var(--chapter)" : null);
+        if (together || (st === "move2" && h)) {
+          const p = h ? [h.x, h.y] : [P.s, PB];
+          bar("ana", p[0], p[1], P.s + P.d, { style: "stripe", n: st === "move1" ? null : P.s + P.d, now: !!h, from: P.s });
+        } else {
+          bar(`ana${this.ana}`, 0, LY, this.ana, { style: "stripe", n: st === "move1" ? null : this.ana, now: true });
+          if (st === "move1") put("anaH", "circle", { cx: sq(this.ana), cy: sq(LY + 2), r: sq(h ? 0.75 : 0.6), fill: "var(--chapter)" }, "none");
+          lab("nmA", "Ana", "right", this.ana + (st === "move1" ? 0.8 : 0), LY + 2, "small", null, !!h);
+        }
+      } else {
+        const e = this.end, c = step[2], op = step[1];
+        if (st === "done") { bar("run", 0, PB, P.e[1], { style: "tint" }); lab(`end${P.e[1]}`, P.e[1], "right", P.e[1], PB + 2, "maths", "var(--chapter)"); }
+        else if (this.joined === "cover") { bar("run", 0, PB, e - c, { style: "tint" }); bar("cov", e - c, PB, c, { style: "stripe", cross: true, from: e - c }); }
+        else bar("run", 0, PB, e, { style: "tint" });
+        if (this.joined === "join" && st !== "done") bar("add", e, PB, c, { style: "stripe", from: e, n: c });
+        if (!this.joined && !h) lab(`end${e}`, e, "right", e, PB + 2, "maths", k ? "var(--chapter)" : null);
+        // the change waiting under the bar, loose and striped, with its number
+        if (!this.joined && (st === "move1" || st === "move2")) {
+          const lb = this.loose(), snapX = m === "join" ? e : m === "cover" ? e - c : lb[0], snapY = m ? PB : lb[1];
+          bar(`loose${k}`, h ? snapX : 0, h ? snapY : LY, c, { style: "stripe", n: c, now: !!h, from: 0 });
+        }
+        void op;
+      }
+      // the record: each step's line, written in turn
+      const rowsDone = this.written.length;
+      steps.forEach(([a, op, c, want], i) => {
+        if (i > k) return;
+        const y = R0 + 1 + 3 * i;
+        if (i < rowsDone) { eqRow(`r${i}`, [a, op, c, "=", { t: want, c: "var(--chapter)" }], 0, y); return; }
+        if (st.startsWith("write")) { const toks = [a, op, c, "="]; this.boxX = toks.join("").length * 2; eqRow(`r${i}`, [...toks, { box: "ans", cells: 2, val: this.vals.ans, state: boxState(this, "ans") }], 0, y); }
+      });
+      const by = R0 + 3 * (k + 1) + 2;
+      if (st === "done") block("next", 0, ceil5(by), 10, "Next problem", "next"); else if (st.startsWith("write")) block("check", 0, ceil5(by), 7, "Check", "check");
+    },
+  });
+  return L;
+}
+
+// ---------- lessons, the bar ----------
+let lesson, probIndex = 0;
+const LESSONS = {
+  "g2-facts": { name: "Facts to 20", make: dFacts },
+  "g2-regroup": { name: "Adding with regrouping", make: dRegroup },
+  "g2-subregroup": { name: "Subtracting with regrouping", make: dSubRegroup },
+  "g2-addfour": { name: "Add up to four numbers", make: dAddFour },
+  "g2-story": { name: "Story problems to 100", make: dStory },
+  "g2-twostep": { name: "Two-step story problems", make: dTwoStep },
+};
+window.GEN = { facts: genFacts, regroup: genRegroup, subregroup: genSubRegroup, addfour: genAddFour, story: genStory, storyOf, twostep: genTwoStep };
+const pick = document.getElementById("pick");
+pick.innerHTML = Object.entries(LESSONS).map(([id, e]) => `<option value="${id}">${esc(e.name)}</option>`).join("");
+function start(id) {
+  if (!LESSONS[id]) id = "g2-facts";
+  timers.forEach(clearTimeout); timers = [];
+  GL.clear(); born = new Map(); said = new Set(); hush();
+  lesson = LESSONS[id].make(probIndex);
+  pick.value = id; keys.blur();
+  render(); frame(lesson.frame(), true);
+  try { localStorage.setItem("g2ch1-lesson", id); } catch (err) { /* private window */ }
+}
+pick.onchange = () => { probIndex = 0; start(pick.value); };
+document.getElementById("fresh").onclick = () => leave();
+function leave() { probIndex++; start(lesson.id); }
+let first = "g2-facts";
+try {
+  const q = new URLSearchParams(location.search);
+  first = q.get("l") || localStorage.getItem("g2ch1-lesson") || first;
+  probIndex = Math.max(0, parseInt(q.get("i") || "0", 10) || 0);
+} catch (err) { /* private window */ }
+start(first);
+</script>
