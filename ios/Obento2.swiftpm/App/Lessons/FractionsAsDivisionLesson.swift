@@ -149,6 +149,12 @@ struct FractionsAsDivisionLesson: PaperLesson {
         } + [.tap(.action("Check"))]
     }
 
+    /// The write step's commonest slip: upside down.
+    func wrongTyped(_ s: PaperState) -> [String: Double]? {
+        let q = Q(s.numbers)
+        return s.on("slid") && !s.on("done") ? ["t": Double(q.b), "b": Double(q.a)] : nil
+    }
+
     func wrongMove(_ s: PaperState) -> HandMove? {
         let q = Q(s.numbers)
         // a cut into the wrong number of pieces; one piece shaded for a friend instead of one from every bar

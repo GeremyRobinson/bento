@@ -32,6 +32,8 @@ protocol PaperLesson {
     func recordRow(_ n: Numbers) -> Double?
     /// Screenshots only (-wrong): a wrong move for this step, as a child might make it.
     func wrongMove(_ s: PaperState) -> HandMove?
+    /// Screenshots only (-wrong): a typed step's slip, every box filled (nil: "1" typed in the first box).
+    func wrongTyped(_ s: PaperState) -> [String: Double]?
     /// How much bigger than the paper its words, blocks and record are drawn (G 19 Oct: whole steps only): 2 or more
     /// for a problem whose true-size picture is so big that the camera steps far back to see it (an area model 98
     /// squares tall), so what's written still reads. The picture itself stays the paper's squares.
@@ -54,6 +56,7 @@ extension PaperLesson {
     func messageRows(_ n: Numbers) -> Int { 1 }
     func recordRow(_ n: Numbers) -> Double? { nil }
     func wrongMove(_ s: PaperState) -> HandMove? { nil }
+    func wrongTyped(_ s: PaperState) -> [String: Double]? { nil }
     func scale(_ n: Numbers) -> Double { 1 }
     func recordBeside(_ n: Numbers) -> Double? { nil }
     func scale(_ run: LessonRun) -> Double { scale(run.numbers) }
