@@ -687,10 +687,11 @@ function lCompare(index) {
       }
       if (this.flash) flashDot("fl", this.flash.r === "top" ? this.flash.j * 5 + 2.5 : this.bx(this.flash.j), (this.flash.r === "top" ? TY : BY) + 2.5, this.flash.t);
       // each row's name at its right end, once it's counted
-      // (right of the track, so it never sits in an empty block like a counter)
+      // (right of the track, so it never sits in an empty block like a counter); once the record is written the
+      // record carries the two numbers, so the names go (a number is written once)
       const nameX = r => r === "top" ? 50.6 : Math.max(50, this.bx(bottom - 1) + 2.5) + 0.6;
-      if (cT.length === top) text("tname", top, nameX("top"), TY + 2.5, "maths", { anchor: "start" });
-      if (cB.length === bottom) text("bname", bottom, nameX("bottom"), BY + 2.5, "maths", { anchor: "start", live: !!this.grabbed || !!this.back });
+      if (cT.length === top && st !== "done") text("tname", top, nameX("top"), TY + 2.5, "maths", { anchor: "start" });
+      if (cB.length === bottom && st !== "done") text("bname", bottom, nameX("bottom"), BY + 2.5, "maths", { anchor: "start", live: !!this.grabbed || !!this.back });
       // the dots with no partner are ringed: "2 without a partner"
       if (lined && d && e > 300 + 120 * lo) {
         const y = (top > bottom ? TY : BY) + 2.5;
@@ -758,12 +759,12 @@ function lNumCompare(index) {
       const say = ask === "more" ? `${big} comes after ${small} when you count, so ${big} is more.` : `${small} comes before ${big} when you count, so ${small} is less.`;
       head(this, st === "done" ? say : st === "pick" ? pickW : "Make each number.");
       for (let r = 0; r < 2; r++) {
-        const y = Y[r], v = V[r], bad = this.wrong === r, on = st === "done" && r === want;
+        const y = Y[r], v = V[r], bad = this.wrong === r;
         tenTrack(`trk${r}`, 0, y);
-        // the number at the start of its track (it's what to build)
+        // the number at the start of its track (it's what to build); once the tap writes the record, the record
+        // carries the two numbers, so these go (a number is written once)
         if (bad) rect(`nb${r}`, -5, y, 5, 5, { fill: "var(--wrong)", op: .15 });
-        if (on) ring(`nr${r}`, -2.5, y + 2.5, 2.05);
-        text(`num${r}${bad}${on}`, v, -2.5, y + 2.5, "maths", { c: bad ? "var(--wrong)" : on ? "var(--chapter)" : null });
+        if (st !== "done") text(`num${r}${bad}`, v, -2.5, y + 2.5, "maths", { c: bad ? "var(--wrong)" : null });
         train(`tr${r}`, 0, y, this.m[r], { nums: true, live: this.grabbed && this.row === r });
         if (this.flash && this.flash.r === r) flashCubes(`fl${r}`, 0, y, this.flash.from, this.flash.to, this.flash.t);
       }
