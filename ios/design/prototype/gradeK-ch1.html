@@ -1,0 +1,823 @@
+<title>Kindergarten · Count to 10</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700&display=swap">
+<style>
+/* Layout: the whole screen is one sheet of graph paper seen through one camera; the floating pill at the bottom is
+   the only chrome. 1 square = 20 paper units, a strong line every 5 squares (a block). Kindergarten: one block is one
+   thing. Chapter 1 (Count to 10) is whole numbers: the app's whole-number purple (--whole in island.html). */
+:root {
+  --paper: #F3F1EC; --grid: #E2DED6; --grid-strong: #D3CEC4;
+  --ink: #1D1C1A; --ink2: #6E6A63; --ink3: #A39E95;
+  --chapter: #7B5CE0; --tint: rgba(123, 92, 224, .2); --tint-strong: rgba(123, 92, 224, .42);
+  --right: #178A57; --wrong: #C8372D;
+  --pill: rgba(255, 255, 255, .94); --pill-line: #E4E0D8;
+  --round: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C;
+  --chapter: #A58BFF; --tint: rgba(165, 139, 255, .22); --tint-strong: rgba(165, 139, 255, .45);
+  --right: #3CCF8E; --wrong: #FF6B5E;
+  --pill: rgba(40, 40, 37, .94); --pill-line: #3A3A36; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C;
+  --chapter: #A58BFF; --tint: rgba(165, 139, 255, .22); --tint-strong: rgba(165, 139, 255, .45);
+  --right: #3CCF8E; --wrong: #FF6B5E;
+  --pill: rgba(40, 40, 37, .94); --pill-line: #3A3A36; color-scheme: dark }
+html, body { height: 100%; }
+body { background: var(--paper); color: var(--ink); font-family: var(--round); overflow: hidden; touch-action: none;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+#paper { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+svg text { font-family: var(--round); font-variant-numeric: tabular-nums; }
+.say { font-size: 28px; font-weight: 600; fill: var(--ink); }
+.small { font-size: 20px; font-weight: 600; fill: var(--ink2); }
+.maths { font-size: 36px; font-weight: 600; fill: var(--ink); }
+
+/* drawing in: lines stroke on, words and fills fade in, one after another */
+.in-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .55s ease-out forwards; }
+.in-fade { opacity: 0; animation: fade .4s ease-out forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes fade { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .in-line, .in-fade { animation-duration: .01s; } }
+
+/* the one floating bar */
+#bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 999px; background: var(--pill);
+  border: 1px solid var(--pill-line); box-shadow: 0 6px 24px rgba(0,0,0,.08); max-width: calc(100vw - 32px);
+  font-family: var(--round); }
+#bar button { font: 600 17px var(--round); color: var(--ink); background: none; border: 0; padding: 10px 14px;
+  border-radius: 999px; cursor: pointer; white-space: nowrap; }
+#bar button[aria-pressed="true"] { background: var(--tint); }
+#bar button:focus-visible { outline: 2px solid var(--chapter); outline-offset: 2px; }
+#bar select { font: 600 17px var(--round); color: var(--ink); background: none; border: 0; padding: 10px 26px 10px 14px;
+  border-radius: 999px; cursor: pointer; -webkit-appearance: none; appearance: none; max-width: 52vw; text-overflow: ellipsis;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink2) 50%), linear-gradient(135deg, var(--ink2) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%; background-size: 5px 5px; background-repeat: no-repeat; }
+#bar select:focus-visible { outline: 2px solid var(--chapter); outline-offset: 2px; }
+#bar .sep { width: 1px; align-self: stretch; background: var(--pill-line); margin: 4px 4px; }
+#bar .progress { display: flex; flex-direction: column; gap: 6px; padding: 0 10px; min-width: 120px; }
+#bar .progress span { font: 600 14px var(--round); color: var(--ink2); white-space: nowrap; }
+#bar .track { height: 4px; border-radius: 2px; background: var(--pill-line); overflow: hidden; }
+#bar .track i { display: block; height: 100%; background: var(--chapter); transition: width .4s ease; }
+/* the live readout of a hand move, big in the pill's middle */
+#bar #live { font: 600 22px var(--round); color: var(--chapter); padding: 0 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+#bar #live:empty, #bar #live:empty + .sep { display: none; }
+@media (max-width: 640px) { #bar .progress { display: none; } #bar button, #bar select { font-size: 15px; padding: 9px 10px; } #bar select { padding-right: 24px; }
+  #bar { flex-wrap: wrap; justify-content: center; border-radius: 26px; row-gap: 2px; } #bar .sep { display: none; } }
+#keys { position: fixed; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; font-size: 16px; }
+</style>
+
+<svg id="paper" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-label="Graph paper lesson">
+  <defs>
+    <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
+      <path d="M20 0V100M40 0V100M60 0V100M80 0V100M0 20H100M0 40H100M0 60H100M0 80H100" stroke="var(--grid)" stroke-width="1" fill="none"/>
+      <path d="M0 0V100M0 0H100" stroke="var(--grid-strong)" stroke-width="1.5" fill="none"/>
+    </pattern>
+  </defs>
+  <g id="paperg">
+    <rect x="-20000" y="-20000" width="40000" height="40000" fill="url(#grid)"/>
+    <g id="scene"></g>
+  </g>
+</svg>
+
+<nav id="bar" aria-label="Lessons">
+  <select id="pick" aria-label="Lesson"></select>
+  <div class="sep"></div>
+  <span id="live" aria-live="polite"></span>
+  <div class="sep"></div>
+  <div class="progress"><span id="stepname">Step 1 of 3</span><div class="track"><i id="track" style="width:0"></i></div></div>
+  <div class="sep"></div>
+  <button id="voice" type="button" aria-pressed="true">Voice</button>
+  <button id="fresh" type="button">New problem</button>
+</nav>
+<input id="keys" inputmode="numeric" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Answer">
+
+<script>
+"use strict";
+// ---------- the paper: squares, drawing, camera (the kit from new5-lessons.html) ----------
+const SQ = 20, svg = document.getElementById("paper"), sceneEl = document.getElementById("scene");
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pickOne = list => list[rnd(0, list.length - 1)];
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+const now = () => performance.now();
+const ease = u => (u <= 0 ? 0 : u >= 1 ? 1 : u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2);
+
+let items = [], drawn = new Set();
+function put(k, tag, a, kind = "fade", text) { items.push({ k, tag, a, kind, text }); }
+const sq = n => n * SQ;
+function line(k, x1, y1, x2, y2, o = {}) {
+  put(k, "line", { x1: sq(x1), y1: sq(y1), x2: sq(x2), y2: sq(y2), stroke: o.c || "var(--ink)", "stroke-width": 1.5,
+    "stroke-dasharray": o.dash ? "6 6" : null, "stroke-linecap": "butt", pathLength: o.dash ? null : 1, opacity: o.op ?? null },
+    o.live ? "none" : o.dash ? "fade" : "line");
+}
+function path(k, d, o = {}) {
+  put(k, "path", { d, fill: o.fill || "none", stroke: o.c || "var(--ink)", "stroke-width": 1.5, pathLength: 1, opacity: o.op ?? null }, o.live ? "none" : "line");
+}
+function rect(k, x, y, w, h, o = {}) {
+  put(k, "rect", { x: sq(x), y: sq(y), width: sq(w), height: sq(h), fill: o.fill || "none", stroke: o.c || null,
+    "stroke-width": o.c ? 1.5 : null, "fill-opacity": o.op ?? null, rx: o.rx ?? null, "stroke-dasharray": o.dash ? "6 6" : null,
+    pathLength: o.c && !o.fill && !o.dash ? 1 : null }, o.live ? "none" : o.c && !o.fill && !o.dash ? "line" : "fade");
+}
+function circle(k, x, y, r, o = {}) {
+  put(k, "circle", { cx: sq(x), cy: sq(y), r: sq(r), fill: o.fill || "none", stroke: o.c || null, "stroke-width": o.c ? 1.5 : null,
+    opacity: o.op ?? null }, o.live ? "none" : "fade");
+}
+function text(k, s, x, y, cls, o = {}) {
+  put(k, "text", { x: sq(x), y: sq(y), class: cls, "text-anchor": o.anchor || "middle", "dominant-baseline": "central",
+    style: o.c ? `fill:${o.c}` : null, opacity: o.op ?? null }, o.live ? "none" : "fade", s);
+}
+// words in rows of 2 squares, wrapped at a width in squares
+function words(k, s, x, y, widthSq, cls = "say", o = {}) {
+  const per = cls === "say" ? 0.72 : 0.52, max = Math.max(8, Math.floor(widthSq / per));
+  const rows = []; let cur = "";
+  for (const w of s.split(" ")) { if ((cur + " " + w).trim().length > max && cur) { rows.push(cur); cur = w; } else cur = (cur + " " + w).trim(); }
+  if (cur) rows.push(cur);
+  rows.forEach((r, i) => text(`${k}:${i}:${r}`, r, x, y + i * 2, cls, { anchor: "start", c: o.c }));
+  return rows.length;
+}
+// a block drawn on the paper: an outline, its word and arrow (Next problem)
+function block(k, x, y, w, label, act, o = {}) {
+  rect(`${k}o`, x, y, w, 2, { c: "var(--ink)" });
+  text(`${k}w${label}`, label, o.arrow === false ? x + w / 2 : x + 1, y + 1, "small", { anchor: o.arrow === false ? "middle" : "start", c: "var(--ink)" });
+  if (o.arrow !== false) path(`${k}a`, `M${sq(x + w - 1.6)} ${sq(y + 1)}h${sq(0.8)}m-6 -6l6 6l-6 6`, {});
+  hit(`${k}hit`, x, y, w, 2, act);
+}
+function hit(k, x, y, w, h, act) { put(k, "rect", { x: sq(x), y: sq(y), width: sq(w), height: sq(h), fill: "transparent", "data-act": act }, "none"); }
+const ring = (k, x, y, r, o = {}) => path(k, `M${sq(x + r)} ${sq(y)}a${sq(r)} ${sq(r)} 0 1 1 0 -0.1`, { c: o.c || "var(--chapter)", live: o.live });
+const stageIndex = (list, st) => [Math.max(0, list.indexOf(st)), list.length - 1];
+
+// text widths in squares, so a record's pieces start on whole squares
+const mctx = document.createElement("canvas").getContext("2d");
+const SIZE = { maths: 36, say: 28, small: 20 };
+function tw(s, cls = "maths") { mctx.font = `600 ${SIZE[cls]}px ui-rounded, "SF Pro Rounded", Nunito, system-ui, sans-serif`; return mctx.measureText(String(s)).width / SQ; }
+
+let raf = 0, lastStage = null;
+function render() {
+  if (lesson.tick) lesson.tick(now());
+  items = [];
+  lesson.scene();
+  const next = new Set(); let n = 0, out = "";
+  for (const it of items) {
+    next.add(it.k);
+    const fresh = !drawn.has(it.k) && it.kind !== "none", a = { ...it.a };
+    if (fresh) {
+      a.class = ((a.class || "") + (it.kind === "line" ? " in-line" : " in-fade")).trim();
+      a.style = `animation-delay:${Math.min(n++ * 0.035, 1.2).toFixed(3)}s;` + (a.style || "");
+    }
+    const attrs = Object.entries(a).filter(([, v]) => v != null).map(([k, v]) => `${k}="${esc(v)}"`).join(" ");
+    out += `<${it.tag} ${attrs}>${it.text != null ? esc(it.text) : ""}</${it.tag}>`;
+  }
+  sceneEl.innerHTML = out;
+  drawn = next;
+  // a lesson that's moving (dots gliding, a cube flashing) draws again next frame
+  if (lesson.animating && lesson.animating() && !raf) raf = requestAnimationFrame(() => { raf = 0; render(); });
+  // a step that changes by itself (after a See beat) moves the camera to what it shows now
+  if (lesson.stage !== lastStage) { lastStage = lesson.stage; frame(lesson.frame()); }
+  const [i, of] = lesson.progress();
+  document.getElementById("stepname").textContent = `Step ${Math.min(i + 1, of)} of ${of}`;
+  document.getElementById("track").style.width = `${Math.round(100 * i / of)}%`;
+  const r = lesson.readout ? lesson.readout() : null;
+  document.getElementById("live").textContent = r == null ? "" : String(r);
+  voiceUpdate();
+}
+
+// the camera: frames what the lesson shows now, eased (0.75 s), never past 1.25x; the frame's top sits at the top of
+// the screen (the words on rows 0–2 first, the picture under them), centred across
+const cam = { x: 0, y: 0, s: 1 }; let camTo = null, camFrom = null, camT0 = 0;
+function fitTo(f) {
+  const W = innerWidth, H = innerHeight, top = 28, bottom = 104;
+  const s = Math.min((W - 48) / sq(f.w), (H - top - bottom) / sq(f.h), 1.25);
+  return { s, x: sq(f.x + f.w / 2) - W / 2 / s, y: sq(f.y) - top / s };
+}
+function frame(f, instant) {
+  const t = fitTo(f);
+  if (instant) { camTo = null; Object.assign(cam, t); applyCam(); return; }
+  camFrom = { ...cam }; camTo = t; camT0 = now(); requestAnimationFrame(stepCam);
+}
+function stepCam(t) {
+  if (!camTo) return;
+  const u = Math.min(1, (t - camT0) / 750), e = ease(u);
+  for (const k of ["x", "y", "s"]) cam[k] = camFrom[k] + (camTo[k] - camFrom[k]) * e;
+  applyCam();
+  if (u < 1) requestAnimationFrame(stepCam); else camTo = null;
+}
+function applyCam() { svg.setAttribute("viewBox", `${cam.x} ${cam.y} ${innerWidth / cam.s} ${innerHeight / cam.s}`); }
+addEventListener("resize", () => frame(lesson.frame(), true));
+const keys = document.getElementById("keys");
+
+// ---------- hands: tap, drag (on the lesson's picture) or pan the paper; mouse and touch alike (pointer events) ----------
+function toPaper(e) { const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse()); return { x: p.x / SQ, y: p.y / SQ }; }
+let down = null;
+svg.addEventListener("pointerdown", e => {
+  if (down) return;
+  const p = toPaper(e), h = e.target.closest("[data-act]");
+  down = { id: e.pointerId, p, sx: e.clientX, sy: e.clientY, act: h && h.dataset.act, moved: false, grabbed: false, cam: { ...cam } };
+  if (!down.act && lesson.grab && lesson.grab(p)) { down.grabbed = true; render(); }
+  try { svg.setPointerCapture(e.pointerId); } catch (err) {}
+});
+svg.addEventListener("pointermove", e => {
+  if (!down || e.pointerId !== down.id) return;
+  if (Math.hypot(e.clientX - down.sx, e.clientY - down.sy) > 6) down.moved = true;
+  if (down.grabbed) { lesson.drag(toPaper(e)); render(); return; }
+  if (down.moved && !down.act) { camTo = null; cam.x = down.cam.x - (e.clientX - down.sx) / cam.s; cam.y = down.cam.y - (e.clientY - down.sy) / cam.s; applyCam(); }
+});
+function up(e) {
+  if (!down || e.pointerId !== down.id) return;
+  const d = down; down = null;
+  if (d.grabbed) { lesson.release(toPaper(e)); render(); frame(lesson.frame()); return; }
+  if (d.moved || e.type === "pointercancel") return;
+  if (d.act) { act(d.act); return; }
+  if (lesson.tap && lesson.tap(toPaper(e))) { render(); frame(lesson.frame()); }
+}
+svg.addEventListener("pointerup", up);
+svg.addEventListener("pointercancel", up);
+function act(a) {
+  if (a === "next") { leave(); return; }
+  if (a === "voice") { replay(); return; }
+  lesson.act(a);
+  render(); frame(lesson.frame());
+}
+
+// ---------- the voice (K–2: the words are read aloud for kids who can't read yet) ----------
+// Every instruction, miss line and Say line is spoken when it appears; the speaker mark drawn left of the words says
+// them again. speechSynthesis may be missing (or silent until the first tap): every call is guarded.
+const voice = { on: true, say: null, missN: 0, log: [] };
+function speak(s) {
+  if (!s) return;
+  voice.log.push(s);
+  if (!voice.on) return;
+  try {
+    const ss = window.speechSynthesis;
+    if (!ss || typeof SpeechSynthesisUtterance === "undefined") return;
+    ss.cancel();
+    const u = new SpeechSynthesisUtterance(s); u.rate = 0.9; u.pitch = 1.05; u.lang = "en-US";
+    ss.speak(u);
+  } catch (err) {}
+}
+function voiceUpdate() {
+  const s = lesson._say || "", m = lesson.msg || "", mn = lesson.missN || 0;
+  if (s !== voice.say) { voice.say = s; voice.missN = mn; speak(m ? `${s} ${m}` : s); }
+  else if (mn !== voice.missN) { voice.missN = mn; if (m) speak(m); }
+}
+function replay() { const L = lesson; speak(L.msg ? `${L._say} ${L.msg}` : L._say); }
+// the speaker mark: 2 × 2 squares left of the instruction's first row, drawn like the lessons' lines
+function speaker() {
+  const x = -3, y = 0, c = "var(--ink2)";
+  path("spk-body", `M${sq(x + 0.1)} ${sq(y + 0.7)}h${sq(0.45)}l${sq(0.55)} ${sq(-0.45)}v${sq(1.5)}l${sq(-0.55)} ${sq(-0.45)}h${sq(-0.45)}z`, { c });
+  path("spk-a1", `M${sq(x + 1.45)} ${sq(y + 0.7)}a${sq(0.4)} ${sq(0.4)} 0 0 1 0 ${sq(0.6)}`, { c });
+  path("spk-a2", `M${sq(x + 1.7)} ${sq(y + 0.35)}a${sq(0.75)} ${sq(0.75)} 0 0 1 0 ${sq(1.3)}`, { c });
+  hit("spk-hit", x - 0.5, y - 0.5, 3, 3, "voice");
+}
+// what to do on the rows above the picture (rows 0–2, 28), and what a miss says under it (rows 3–4, 20, red)
+function head(L, say) {
+  L._say = say;
+  speaker();
+  words(`say-${say}`, say, 0, 1, 64);
+  if (L.msg) words(`msg${L.missN}-${L.msg}`, L.msg, 0, 3.3, 64, "small", { c: "var(--wrong)" });
+}
+function miss(L, s) { L.msg = s; L.missN = (L.missN || 0) + 1; }
+
+// ---------- shared K pieces: dots, cubes, the ten track, the record, the number row ----------
+// a flash: two quick pulses after a tap that needs a second look (a counted dot, a cube too many)
+const FLASH = 650;
+const flashOp = t0 => { const e = now() - t0; return e < FLASH ? Math.abs(Math.sin(Math.PI * e / (FLASH / 2))) : 0; };
+// a counter: a dot 3 squares across in the middle of its block; counted, it's lighter and carries its number (28)
+function counter(k, cx, cy, num, o = {}) {
+  if (num == null) circle(`${k}d`, cx, cy, 1.5, { fill: "var(--chapter)", live: o.live });
+  else {
+    circle(`${k}c`, cx, cy, 1.5, { fill: "var(--tint-strong)", c: "var(--chapter)", live: o.live });
+    text(`${k}n${num}`, num, cx, cy, "say", { live: o.live });
+  }
+  if (o.ring) ring(`${k}r`, cx, cy, 2.05, { live: o.live });
+}
+// the ten track: a row of ten outlined blocks (50 × 5 squares); dashed when it waits for a train (One more)
+function tenTrack(k, x, y, o = {}) {
+  const c = o.c || "var(--ink)";
+  if (o.dash) {
+    for (let i = 0; i < 10; i++) rect(`${k}b${i}`, x + i * 5, y, 5, 5, { c, dash: true });
+    return;
+  }
+  rect(`${k}o`, x, y, 50, 5, { c });
+  for (let i = 1; i < 10; i++) line(`${k}l${i}`, x + i * 5, y, x + i * 5, y + 5, { c });
+}
+// a train of cubes on a track: each cube fills its block; numbers on them when counting writes them; lit cubes darker
+function train(k, x, y, m, o = {}) {
+  for (let j = 0; j < m; j++) {
+    const lit = o.lit && o.lit(j);
+    rect(`${k}f${j}${lit ? "L" : ""}`, x + j * 5, y, 5, 5, { fill: lit ? "var(--tint-strong)" : "var(--tint)", live: o.live });
+    if (o.nums) text(`${k}n${j}`, j + 1, x + j * 5 + 2.5, y + 2.5, "say", { live: o.live });
+  }
+  if (!m) return;
+  // outline: top (dashed when the stair goes on up), bottom, ends and the lines between cubes
+  if (o.dashTop) line(`${k}top`, x, y, x + m * 5, y, { c: "var(--chapter)", dash: true, live: o.live });
+  else line(`${k}top${m}`, x, y, x + m * 5, y, { c: "var(--chapter)", live: o.live });
+  line(`${k}bot${m}`, x, y + 5, x + m * 5, y + 5, { c: "var(--chapter)", live: o.live });
+  for (let j = 0; j <= m; j++) line(`${k}v${j}`, x + j * 5, y, x + j * 5, y + 5, { c: "var(--chapter)", live: o.live });
+}
+// a red flash over cubes (a cube too many) or a dot (counted already)
+function flashCubes(k, x, y, from, to, t0) {
+  const op = flashOp(t0); if (!op) return;
+  for (let j = from; j < to; j++) rect(`${k}${j}`, x + j * 5, y, 5, 5, { fill: "var(--wrong)", op: (op * 0.35).toFixed(3), live: true });
+}
+function flashDot(k, cx, cy, t0) {
+  const op = flashOp(t0); if (!op) return;
+  circle(k, cx, cy, 2.05, { c: "var(--wrong)", op: op.toFixed(3), live: true });
+}
+// the record: a short line in maths (36) laid out in whole squares; a number is 2 squares a digit; a box is 4 squares
+function record(k, parts, x, y, o = {}) {
+  let cx = x;
+  parts.forEach((p, i) => {
+    if (p && typeof p === "object") {
+      if (p.box) {
+        const c = p.state === "wrong" ? "var(--wrong)" : "var(--ink)";
+        if (i) cx += 0.5;
+        rect(`${k}box${i}${p.state || ""}`, cx, y, 4, 2, { c });
+        if (p.value != null) text(`${k}bv${i}${p.value}`, p.value, cx + 2, y + 1, "maths", { c: p.state === "wrong" ? "var(--wrong)" : null });
+        cx += 4; return;
+      }
+      if (p.num != null) {
+        const s = String(p.num);
+        text(`${k}n${i}${s}`, s, cx + s.length, y + 1, "maths", { c: p.c });
+        cx += 2 * s.length; return;
+      }
+    }
+    const s = String(p);
+    if (/^\d+$/.test(s)) { text(`${k}n${i}${s}`, s, cx + s.length, y + 1, "maths", { c: o.c }); cx += 2 * s.length; return; }
+    text(`${k}w${i}${s}`, s, cx + 0.5, y + 1, "maths", { anchor: "start", c: o.c });
+    cx += Math.ceil(tw(s) + 1);
+  });
+  return cx;
+}
+// the Number row (G, 2 Nov): the record's box is filled by tapping a number on a row drawn under the record. Each key
+// is a block wide (5 × 4 squares), 0 on the block left of the start line, so 1–10 sit under the track's blocks 1–10.
+function numberRow(k, y, L, lo = 0, hi = 10) {
+  for (let v = lo; v <= hi; v++) {
+    const x = (v - 1) * 5, bad = L.wrongPick === v;
+    rect(`${k}k${v}${bad ? "x" : ""}`, x, y, 5, 4, { c: bad ? "var(--wrong)" : "var(--ink)" });
+    text(`${k}t${v}${bad ? "x" : ""}`, v, x + 2.5, y + 2, "maths", { c: bad ? "var(--wrong)" : null });
+    hit(`${k}h${v}`, x, y, 5, 4, `num:${v}`);
+  }
+}
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+// ---------- generators (the lessons' maths: ranges, easy first by index, kinds) ----------
+// Count to 10 (gk-count10, new CountToTen): count or make, n 1–10; a line, an array, a ring or scattered.
+const ARRAY = { 4: [2, 2], 6: [2, 3], 8: [2, 4], 9: [3, 3], 10: [2, 5] };
+const RING = [[0, 0], [1, 0], [2, 0], [3, 0], [3, 1], [3, 2], [2, 2], [1, 2], [0, 2], [0, 1]];
+// fewer than 10 spread evenly round it: the corners first, then the sides' middles, so it always reads as a ring
+const RINGSET = { 4: [0, 3, 5, 8], 5: [0, 2, 4, 6, 8], 6: [0, 3, 4, 5, 8, 9], 7: [0, 1, 3, 4, 5, 8, 9], 8: [0, 1, 3, 4, 5, 6, 8, 9],
+  9: [0, 1, 2, 3, 4, 5, 6, 8, 9], 10: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] };
+function genCount(i, kindTurn) {
+  let kind, n, lay;
+  if (i < 3) { kind = "count"; n = rnd(1, 5); lay = "line"; }
+  else {
+    kind = kindTurn || (rnd(0, 1) ? "make" : "count");
+    n = i < 6 ? rnd(1, 10) : rnd(4, 10);
+    const lays = i < 6 ? ["line", "array", "scattered"] : ["line", "array", "ring", "scattered"];
+    lay = pickOne(lays.filter(l => l !== "array" || ARRAY[n]));
+  }
+  if (kind === "make") return { kind, n, lay: null, places: [], rows: 0 };
+  let places = [], rows = 1;
+  if (lay === "line") { const c0 = rnd(0, 10 - n); for (let j = 0; j < n; j++) places.push([c0 + j, 0]); }
+  else if (lay === "array") {
+    const [r, c] = ARRAY[n], c0 = rnd(0, 10 - c); rows = r;
+    for (let a = 0; a < r; a++) for (let b = 0; b < c; b++) places.push([c0 + b, a]);
+  } else if (lay === "ring") {
+    const c0 = rnd(0, 6); rows = 3;
+    for (const j of RINGSET[n]) { const [x, y] = RING[j]; places.push([c0 + x, y]); }
+  } else {
+    rows = 4;
+    for (let tries = 0; places.length < n; tries++) {
+      if (tries > 400) { places = []; tries = 0; }
+      const c = rnd(0, 9), r = rnd(0, 3);
+      if (places.some(([x, y]) => Math.abs(x - c) + Math.abs(y - r) <= 1)) continue;
+      places.push([c, r]);
+    }
+  }
+  return { kind, n, lay, places, rows };
+}
+// One more (gk-onemore, new OneMore): n 1–9; easy first: index 0–2 n 1–4.
+function genOneMore(i) { return { n: i < 3 ? rnd(1, 4) : rnd(1, 9) }; }
+// More, less or the same (k-compare): the web's generator as it is; new here, where the bottom row starts.
+function genCompare(i) {
+  const hi = i < 3 ? 5 : 10, top = rnd(1, hi);
+  let bottom;
+  if (i >= 3 && rnd(0, 4) === 0) bottom = top;
+  else { const gap = i < 3 ? 2 : 1, opts = []; for (let v = 1; v <= hi; v++) if (Math.abs(v - top) >= gap) opts.push(v); bottom = pickOne(opts); }
+  // out of line: spread out (a block between dots) when it's the smaller row and has 5 or fewer (and more than one);
+  // otherwise shifted 1–3 blocks right, never ending past 12 blocks
+  const spread = bottom < top && bottom <= 5 && bottom > 1;
+  const slots = [], shift = spread ? 0 : rnd(1, Math.min(3, 12 - bottom));
+  for (let j = 0; j < bottom; j++) slots.push(spread ? 2 * j : j);
+  return { top, bottom, spread, shift, slots };
+}
+// Which number is more? (gk-numcompare, new CompareNumbers): a, b 1–10, never the same; ask more or less.
+function genNumCompare(i) {
+  let a, b, ask = "more";
+  if (i < 3) { do { a = rnd(1, 5); b = rnd(1, 5); } while (Math.abs(a - b) < 2); }
+  else { do { a = rnd(1, 10); b = rnd(1, 10); } while (a === b); if (rnd(0, 2) === 0) ask = "less"; }
+  return { a, b, ask };
+}
+
+// ---------- Count to 10 (gk-count10) ----------
+// How many? Tap each dot: it gets the next number; the last is ringed. The dots glide onto the ten track in the order
+// they were counted; then the count is written with the number row. Make 7: drag along the track, cubes fill.
+function lCount(index) {
+  const P = genCount(index, index >= 3 ? (index % 2 ? "count" : "make") : null);
+  const { kind, n, places } = P;
+  const T = kind === "make" ? 5 : 5 + P.rows * 5 + 5;           // the ten track's top line
+  const RY = 13, NY = 18;                                          // the record, the number row (the track risen to row 5)
+  const at = j => ({ x: places[j][0] * 5 + 2.5, y: 5 + places[j][1] * 5 + 2.5 });
+  const stages = kind === "make" ? ["make", "done"] : ["count", "see", "write", "done"];
+  const GLIDE = 600, STAG = 160, G1 = GLIDE + STAG * (n - 1), LIFT = 600;
+  const trackY = (st, e) => st === "count" ? T : st === "see" ? T + (5 - T) * ease((e - G1 - 250) / LIFT) : 5;
+  const L = {
+    id: "count10", P, stage: stages[0], order: [], m: 0, grabbed: false, msg: null, wrongPick: null, value: null,
+    flash: null, t0: 0,
+    progress() { return stageIndex(stages, this.stage); },
+    frame() {
+      if (kind === "make") return { x: -5, y: -1, w: 62, h: this.stage === "done" ? T + 17 : T + 12 };
+      return { x: -5, y: -1, w: 62, h: (this.stage === "count" || this.stage === "see" ? T + 6 : NY + 5) + 1 };
+    },
+    readout() {
+      if (this.stage === "count" && this.order.length) return this.order.length;
+      if (this.stage === "make" && (this.grabbed || this.m)) return this.m;
+      return null;
+    },
+    busy() { return (this.stage === "count" && this.order.length === n) || this.stage === "see"; },
+    animating() { return this.busy() || (this.flash && now() - this.flash.t < FLASH); },
+    tick(t) {
+      if (this.stage === "count" && this.order.length === n && t - this.t0 > 700) { this.stage = "see"; this.t0 = t; }
+      if (this.stage === "see" && t - this.t0 > G1 + 250 + LIFT + 250) this.stage = "write";
+    },
+    tap(q) {
+      if (this.stage !== "count" || this.busy()) return false;
+      const j = places.findIndex((_, j) => { const p = at(j); return Math.abs(q.x - p.x) <= 2.5 && Math.abs(q.y - p.y) <= 2.5; });
+      if (j < 0) return false;
+      if (this.order.includes(j)) { miss(this, "You counted that one."); this.flash = { j, t: now() }; return true; }
+      this.msg = null; this.order.push(j);
+      if (this.order.length === n) this.t0 = now();
+      return true;
+    },
+    grab(q) {
+      if (this.stage !== "make" || q.y < T - 1 || q.y > T + 6 || q.x < -1 || q.x > 51) return false;
+      this.grabbed = true; this.msg = null; this.m = Math.max(0, Math.min(10, Math.ceil(q.x / 5))); return true;
+    },
+    drag(q) { this.m = Math.max(0, Math.min(10, Math.round(q.x / 5))); },
+    release() {
+      this.grabbed = false;
+      if (this.m === n) { this.stage = "done"; this.msg = null; return; }
+      if (this.m === 0) return;
+      miss(this, `That's ${this.m}. Make ${n}.`);
+      if (this.m > n) this.flash = { from: n, to: this.m, t: now() };
+    },
+    act(a) {
+      if (this.stage !== "write" || !a.startsWith("num:")) return;
+      const v = +a.slice(4);
+      if (v === n) { this.stage = "done"; this.value = v; this.msg = null; this.wrongPick = null; return; }
+      this.value = v; this.wrongPick = v;
+      miss(this, v === n - 1 ? `One short. The last number was ${n}.` : v === n + 1 ? `One too many. The last number was ${n}.` : `The last number was ${n}.`);
+    },
+    scene() {
+      const st = this.stage;
+      head(this, st === "done" ? "The last number you say is how many." : kind === "make" ? `Make ${n}.` : st === "write" ? "Write how many." : "Tap each dot.");
+      const e = now() - this.t0, TY = kind === "make" ? T : trackY(st, e);
+      tenTrack("trk", 0, TY);
+      if (kind === "make") {
+        train("mk", 0, T, this.m, { nums: true, live: this.grabbed });
+        if (this.flash && this.flash.to) flashCubes("mkf", 0, T, this.flash.from, this.flash.to, this.flash.t);
+        if (st === "done") {
+          ring("mkr", (n - 1) * 5 + 2.5, T + 2.5, 2.05);
+          record("rec", [{ num: n, c: "var(--chapter)" }], 0, T + 8);
+          block("next", 0, T + 13, 10, "Next problem", "next");
+        }
+        return;
+      }
+      // the dots, numbered as they're counted; in See they glide onto the track in counted order
+      places.forEach((_, j) => {
+        const k = this.order.indexOf(j), p = at(j);
+        let x = p.x, y = p.y;
+        if (st === "see" || st === "write" || st === "done") {
+          const u = st === "see" ? ease((e - k * STAG) / GLIDE) : 1, d = { x: k * 5 + 2.5, y: TY + 2.5 };
+          x = p.x + (d.x - p.x) * u; y = p.y + (d.y - p.y) * u;
+        }
+        counter(`dot${j}`, x, y, k < 0 ? null : k + 1, { live: st === "see", ring: this.order.length === n && k === n - 1 });
+      });
+      if (this.flash && this.flash.j != null) { const p = at(this.flash.j); flashDot("fl", p.x, p.y, this.flash.t); }
+      if (st === "write" || st === "done") {
+        record("rec", [{ box: st === "write", value: this.value, state: this.wrongPick != null && st === "write" ? "wrong" : null }].map(b => st === "done" ? { num: n, c: "var(--chapter)" } : b), 0, RY);
+        if (st === "write") numberRow("nr", NY, this);
+        else block("next", 0, NY, 10, "Next problem", "next");
+      }
+    },
+  };
+  return L;
+}
+
+// ---------- One more (gk-onemore) ----------
+// The number stairs: trains of 1, 2, … n cubes, rows touching, left ends on one start line, names at their right ends.
+// Only the last 5 trains are drawn while the hands work. Drag out the new train under them; write 1 more than n; then
+// the whole stair is seen, the last cube of each train lighting in turn.
+function lOneMore(index) {
+  const { n } = genOneMore(index);
+  const first = Math.max(1, n - 4), rowY = k => 5 + 5 * (k - first), NYr = rowY(n + 1);
+  const RY = NYr + 8, KY = NYr + 13;
+  const fullY = k => 5 + 5 * (k - 1), FRY = fullY(n + 2) + 3;   // the whole stair and its record
+  const stages = ["make", "write", "see", "done"];
+  const SLIDE = 700, LIGHT = 330;
+  const L = {
+    id: "onemore", P: { n }, stage: "make", m: 0, grabbed: false, msg: null, wrongPick: null, value: null, flash: null, t0: 0,
+    progress() { return stageIndex(stages, this.stage); },
+    frame() {
+      if (this.stage === "see" || this.stage === "done") return { x: -5, y: -1, w: Math.max(48, (n + 1) * 5 + 12), h: FRY + 3 };
+      return { x: -5, y: -1, w: 64, h: (this.stage === "make" ? NYr + 6 : KY + 5) + 1 };
+    },
+    readout() { return this.stage === "make" && (this.grabbed || this.m) ? this.m : null; },
+    animating() { return this.stage === "see" || (this.flash && now() - this.flash.t < FLASH); },
+    tick(t) { if (this.stage === "see" && t - this.t0 > SLIDE + 200 + LIGHT * (n + 1) + 400) this.stage = "done"; },
+    grab(q) {
+      if (this.stage !== "make" || q.y < NYr - 1 || q.y > NYr + 6 || q.x < -1 || q.x > 51) return false;
+      this.grabbed = true; this.msg = null; this.m = Math.max(0, Math.min(10, Math.ceil(q.x / 5))); return true;
+    },
+    drag(q) { this.m = Math.max(0, Math.min(10, Math.round(q.x / 5))); },
+    release() {
+      this.grabbed = false;
+      const m = this.m;
+      if (m === n + 1) { this.stage = "write"; this.msg = null; return; }
+      if (m === 0) return;
+      if (m === n) miss(this, `That's ${n} again. One more.`);
+      else if (m > n) { miss(this, `That's ${m}: ${m - n} more.`); this.flash = { from: n + 1, to: m, t: now() }; }
+      else miss(this, `That's less than ${n}.`);
+    },
+    act(a) {
+      if (this.stage !== "write" || !a.startsWith("num:")) return;
+      const v = +a.slice(4);
+      if (v === n + 1) { this.stage = "see"; this.t0 = now(); this.value = v; this.msg = null; this.wrongPick = null; return; }
+      this.value = v; this.wrongPick = v;
+      // the write box's slips (same number, two more, one less), said in the words step 1 uses for the same trains
+      miss(this, v === n ? `That's ${n} again. One more.` : v > n ? `That's ${v}: ${v - n} more.` : `That's less than ${n}.`);
+    },
+    scene() {
+      const st = this.stage, whole = st === "see" || st === "done";
+      head(this, whole ? "Each next number is one more cube." : st === "write" ? `Write 1 more than ${n}.` : "Make one more.");
+      const e = now() - this.t0, slide = st === "see" ? ease(e / SLIDE) : st === "done" ? 1 : 0;
+      const lit = k => st === "done" || (st === "see" && e > SLIDE + 200 + LIGHT * (k - 1));
+      const lo = whole ? 1 : first;
+      for (let k = lo; k <= n; k++) {
+        const y = k >= first ? rowY(k) + (fullY(k) - rowY(k)) * slide : fullY(k);
+        train(`t${k}`, 0, y, k, { dashTop: !whole && k === first && first > 1, lit: j => j === k - 1 && lit(k), live: st === "see" && k >= first });
+        text(`tn${k}${lit(k)}`, k, k * 5 + 0.6, y + 2.5, "maths", { anchor: "start", c: lit(k) ? "var(--chapter)" : null, live: st === "see" && k >= first });
+      }
+      // the new train: dragged out from the start line under the stair, its cubes numbered as it grows
+      const ny = rowY(n + 1) + (fullY(n + 1) - rowY(n + 1)) * slide;
+      if (st === "make") tenTrack("new", 0, NYr, { dash: true, c: "var(--ink3)" });
+      const m = st === "make" ? this.m : n + 1;
+      train("nt", 0, ny, m, { nums: !whole, lit: j => (st === "write" && j === n) || (j === n && lit(n + 1)), live: this.grabbed || st === "see" });
+      if (this.flash) flashCubes("ntf", 0, NYr, this.flash.from, this.flash.to, this.flash.t);
+      if (whole) {
+        text(`ntn${lit(n + 1)}`, n + 1, (n + 1) * 5 + 0.6, ny + 2.5, "maths", { anchor: "start", c: lit(n + 1) || st === "write" ? "var(--chapter)" : null, live: st === "see" });
+      }
+      // the lit cube says what it is; its number goes in the record, written once
+      if (st === "write") text("one", "1 more", (n + 1) * 5 + 1, ny + 2.5, "small", { anchor: "start", c: "var(--chapter)" });
+      if (st === "write") {
+        record("rec", ["1", "more than", String(n), "is", { box: true, value: this.value, state: this.wrongPick != null ? "wrong" : null }], 0, RY);
+        numberRow("nr", KY, this);
+      } else if (whole) {
+        record("rec", ["1", "more than", String(n), "is", { num: n + 1, c: "var(--chapter)" }], 0, FRY);
+        // Next problem beside the record, so the whole stair keeps as much of the screen as it can
+        if (st === "done") block("next", 30, FRY, 10, "Next problem", "next");
+      }
+    },
+  };
+  return L;
+}
+
+// ---------- More, less or the same (k-compare) ----------
+// Two ten tracks a block apart. Count each row (tap to count; each row's count goes at its right end), slide the
+// bottom row under the top one's start (partner lines draw, dots with no partner are ringed), then tap the row with
+// more or the "same" block.
+function lCompare(index) {
+  const P = genCompare(index), { top, bottom } = P;
+  const TY = 5, BY = 15, d = Math.abs(top - bottom);
+  const right = top > bottom ? "top" : top < bottom ? "bottom" : "same";
+  const stages = ["count", "line", "pick", "done"];
+  const L = {
+    id: "compare", P, stage: "count", counted: { top: [], bottom: [] }, off: P.shift, slots: P.slots.slice(), grabbed: false,
+    msg: null, flash: null, t0: 0, snapT: 0, back: null, wrong: null,
+    progress() { return stageIndex(stages, this.stage); },
+    frame() { return { x: -5, y: -1, w: 72, h: this.stage === "done" ? 31 : 27 }; },
+    readout() {
+      if (this.stage !== "count") return null;
+      const r = this.lastRow; return r ? this.counted[r].length : null;
+    },
+    bx(j) { return (this.slots[j] + this.off) * 5 + 2.5; },
+    busy() { return (this.stage === "count" && this.allCounted() && now() - this.t0 < 900) || (this.back && now() - this.back.t < 350) || (this.stage === "line" && this.snapT); },
+    animating() { return this.busy() || (this.flash && now() - this.flash.t < FLASH); },
+    allCounted() { return this.counted.top.length === top && this.counted.bottom.length === bottom; },
+    tick(t) {
+      if (this.stage === "count" && this.allCounted() && t - this.t0 > 900) this.stage = "line";
+      if (this.back) { const u = ease((t - this.back.t) / 350); this.off = this.back.from + (P.shift - this.back.from) * u; if (u >= 1) { this.off = P.shift; this.back = null; } }
+      if (this.stage === "line" && this.snapT && t - this.snapT > 300 + 120 * Math.min(top, bottom) + 500) { this.stage = "pick"; this.snapT = 0; }
+    },
+    tap(q) {
+      if (this.busy()) return false;
+      if (this.stage === "count") {
+        const rows = [["top", top, j => j * 5 + 2.5, TY], ["bottom", bottom, j => this.bx(j), BY]];
+        for (const [r, cnt, xOf, y] of rows) {
+          if (q.y < y || q.y > y + 5) continue;
+          const j = [...Array(cnt).keys()].find(j => Math.abs(q.x - xOf(j)) <= 2.5);
+          if (j == null) return false;
+          this.lastRow = r;
+          if (this.counted[r].includes(j)) { miss(this, "You counted that one."); this.flash = { r, j, t: now() }; return true; }
+          this.msg = null; this.counted[r].push(j);
+          if (this.allCounted()) this.t0 = now();
+          return true;
+        }
+        return false;
+      }
+      if (this.stage === "pick") {
+        const r = q.y >= TY && q.y <= TY + 5 && q.x >= 0 && q.x <= top * 5 + 4 ? "top" : q.y >= BY && q.y <= BY + 5 && q.x >= 0 && q.x <= bottom * 5 + 4 ? "bottom" : null;
+        if (!r) return false;
+        this.choose(r); return true;
+      }
+      return false;
+    },
+    choose(r) {
+      if (r === right) { this.stage = "done"; this.msg = null; this.wrong = null; return; }
+      this.wrong = r;
+      if (r === "same") miss(this, d === 1 ? "1 dot has no partner." : `${d} dots have no partner.`);
+      else if (right === "same") miss(this, "Look again: every dot has a partner.");
+      else {
+        const more = right, less = right === "top" ? "bottom" : "top";
+        miss(this, `Every ${less} dot has a partner. ${d} ${more} ${d === 1 ? "dot doesn't" : "dots don't"}.`);
+      }
+    },
+    grab(q) {
+      if (this.stage !== "line" || this.snapT || this.back || q.y < BY - 1 || q.y > BY + 6) return false;
+      const lo = this.bx(0) - 2.5, hi = this.bx(bottom - 1) + 2.5;
+      if (q.x < lo - 1 || q.x > hi + 1) return false;
+      this.grabbed = { x: q.x, off: this.off }; this.msg = null; return true;
+    },
+    drag(q) { this.off = this.grabbed.off + (q.x - this.grabbed.x) / 5; },
+    release() {
+      this.grabbed = false;
+      // under the top one's start: the row snaps, one dot per block, dot under dot
+      if (Math.abs(this.slots[0] + this.off) < 0.6) { this.off = 0; this.slots = [...Array(bottom).keys()]; this.snapT = now(); this.msg = null; return; }
+      miss(this, "Start it under the top row.");
+      this.back = { from: this.off, t: now() };
+    },
+    act(a) { if (a === "same" && this.stage === "pick") this.choose("same"); },
+    scene() {
+      const st = this.stage, lined = st === "pick" || st === "done" || this.snapT;
+      head(this, st === "done" ? "The row with dots left over has more." : st === "count" ? "Count each row." : st === "line" ? "Line them up." : "Tap the row with more.");
+      tenTrack("tt", 0, TY); tenTrack("bt", 0, BY);
+      const lo = Math.min(top, bottom), e = this.snapT ? now() - this.snapT : 1e9, hiN = Math.max(top, bottom);
+      // partner lines between the pairs, drawn in one after another
+      if (lined) for (let j = 0; j < lo; j++) if (e > 300 + 120 * j) line(`pl${j}`, j * 5 + 2.5, TY + 4, j * 5 + 2.5, BY + 1, { c: "var(--chapter)" });
+      if (st === "pick" && (this.wrong === "top" || this.wrong === "bottom")) rect(`wr${this.wrong}`, 0, this.wrong === "top" ? TY : BY, 50, 5, { fill: "var(--wrong)", op: .15 });
+      const cT = this.counted.top, cB = this.counted.bottom;
+      for (let j = 0; j < top; j++) {
+        const k = cT.indexOf(j);
+        counter(`td${j}`, j * 5 + 2.5, TY + 2.5, k < 0 ? null : k + 1, { ring: cT.length === top && k === top - 1 });
+      }
+      for (let j = 0; j < bottom; j++) {
+        const k = cB.indexOf(j);
+        counter(`bd${j}`, this.bx(j), BY + 2.5, k < 0 ? null : k + 1, { ring: cB.length === bottom && k === bottom - 1, live: !!this.grabbed || !!this.back });
+      }
+      if (this.flash) flashDot("fl", this.flash.r === "top" ? this.flash.j * 5 + 2.5 : this.bx(this.flash.j), (this.flash.r === "top" ? TY : BY) + 2.5, this.flash.t);
+      // each row's name at its right end, once it's counted
+      // (right of the track, so it never sits in an empty block like a counter)
+      const nameX = r => r === "top" ? 50.6 : Math.max(50, this.bx(bottom - 1) + 2.5) + 0.6;
+      if (cT.length === top) text("tname", top, nameX("top"), TY + 2.5, "maths", { anchor: "start" });
+      if (cB.length === bottom) text("bname", bottom, nameX("bottom"), BY + 2.5, "maths", { anchor: "start", live: !!this.grabbed || !!this.back });
+      // the dots with no partner are ringed: "2 without a partner"
+      if (lined && d && e > 300 + 120 * lo) {
+        const y = (top > bottom ? TY : BY) + 2.5;
+        rect("np", lo * 5 + 0.5, y - 2, d * 5 - 1, 4, { c: "var(--chapter)", rx: sq(2) });
+        text("npw", `${d} without a partner`, 51.6 + Math.ceil(tw(hiN)), y, "small", { anchor: "start", c: "var(--chapter)" });
+      }
+      // the "same" block at the rows' right end, between them
+      if (st === "pick") {
+        const bad = this.wrong === "same";
+        rect(`same${bad}`, 55, 10, 10, 5, { c: bad ? "var(--wrong)" : "var(--ink)" });
+        text(`samew${bad}`, "same", 60, 12.5, "say", { c: bad ? "var(--wrong)" : null });
+        hit("samehit", 55, 10, 10, 5, "same");
+      }
+      if (st === "done") {
+        const word = right === "top" ? "is more than" : right === "bottom" ? "is less than" : "is the same as";
+        record("rec", [{ num: top, c: "var(--chapter)" }, word, { num: bottom, c: "var(--chapter)" }], 0, 23);
+        block("next", 0, 28, 10, "Next problem", "next");
+      }
+    },
+  };
+  return L;
+}
+
+// ---------- Which number is more? (gk-numcompare) ----------
+// Two numerals at the start of two empty ten tracks. Make each number (drag out a train); see where the shorter one
+// stops and the longer one's extra cubes; tap the number that's more (or less). The record is written by the tap.
+function lNumCompare(index) {
+  const P = genNumCompare(index), { a, b, ask } = P;
+  const Y = [5, 15], V = [a, b], big = Math.max(a, b), small = Math.min(a, b), d = big - small;
+  const want = ask === "more" ? (a > b ? 0 : 1) : (a < b ? 0 : 1);
+  const stages = ["make", "see", "pick", "done"];
+  const L = {
+    id: "numcompare", P, stage: "make", m: [0, 0], made: [false, false], row: null, grabbed: false, msg: null, flash: null, t0: 0, wrong: null,
+    progress() { return stageIndex(stages, this.stage); },
+    frame() { return { x: -6, y: -1, w: 66, h: this.stage === "done" ? 31 : 23 }; },
+    readout() { return this.stage === "make" && this.row != null && (this.grabbed || this.m[this.row]) ? this.m[this.row] : null; },
+    animating() { return this.stage === "see" || (this.flash && now() - this.flash.t < FLASH); },
+    tick(t) { if (this.stage === "see" && t - this.t0 > 1500) this.stage = "pick"; },
+    grab(q) {
+      if (this.stage !== "make") return false;
+      const r = Y.findIndex(y => q.y >= y - 1 && q.y <= y + 6);
+      if (r < 0 || this.made[r] || q.x < -1 || q.x > 51) return false;
+      this.row = r; this.grabbed = true; this.msg = null; this.m[r] = Math.max(0, Math.min(10, Math.ceil(q.x / 5))); return true;
+    },
+    drag(q) { this.m[this.row] = Math.max(0, Math.min(10, Math.round(q.x / 5))); },
+    release() {
+      this.grabbed = false;
+      const r = this.row, m = this.m[r], v = V[r];
+      if (m === v) { this.made[r] = true; this.msg = null; if (this.made[0] && this.made[1]) { this.stage = "see"; this.t0 = now(); } return; }
+      if (m === 0) return;
+      miss(this, `That's ${m}. Make ${v}.`);
+      if (m > v) this.flash = { r, from: v, to: m, t: now() };
+    },
+    tap(q) {
+      if (this.stage !== "pick") return false;
+      const r = Y.findIndex(y => q.y >= y && q.y <= y + 5);
+      if (r < 0 || q.x < -5 || q.x > V[r] * 5 + 1) return false;
+      if (r === want) { this.stage = "done"; this.msg = null; this.wrong = null; }
+      else { this.wrong = r; miss(this, `${small} stops ${plural(d, "cube", "cubes")} before ${big}.`); }
+      return true;
+    },
+    act() {},
+    scene() {
+      const st = this.stage, pickW = ask === "more" ? "Tap the one that's more." : "Tap the one that's less.";
+      const say = ask === "more" ? `${big} comes after ${small} when you count, so ${big} is more.` : `${small} comes before ${big} when you count, so ${small} is less.`;
+      head(this, st === "done" ? say : st === "pick" ? pickW : "Make each number.");
+      for (let r = 0; r < 2; r++) {
+        const y = Y[r], v = V[r], bad = this.wrong === r, on = st === "done" && r === want;
+        tenTrack(`trk${r}`, 0, y);
+        // the number at the start of its track (it's what to build)
+        if (bad) rect(`nb${r}`, -5, y, 5, 5, { fill: "var(--wrong)", op: .15 });
+        if (on) ring(`nr${r}`, -2.5, y + 2.5, 2.05);
+        text(`num${r}${bad}${on}`, v, -2.5, y + 2.5, "maths", { c: bad ? "var(--wrong)" : on ? "var(--chapter)" : null });
+        train(`tr${r}`, 0, y, this.m[r], { nums: true, live: this.grabbed && this.row === r });
+        if (this.flash && this.flash.r === r) flashCubes(`fl${r}`, 0, y, this.flash.from, this.flash.to, this.flash.t);
+      }
+      // See: a dashed line drops from the shorter train's end; the longer one's extra cubes are ringed: "2 more"
+      if (st !== "make") {
+        const sr = a < b ? 0 : 1, br = 1 - sr, x = small * 5;
+        const e = st === "see" ? now() - this.t0 : 1e9;
+        line("drop", x, Math.min(Y[sr], Y[br]) - 1, x, Math.max(Y[sr], Y[br]) + 6, { c: "var(--chapter)", dash: true });
+        if (e > 500) {
+          rect("extra", x + 0.5, Y[br] + 0.5, d * 5 - 1, 4, { c: "var(--chapter)", rx: sq(2) });
+          text("extraw", `${d} more`, 50.6, Y[br] + 2.5, "small", { anchor: "start", c: "var(--chapter)" });
+        }
+      }
+      if (st === "done") {
+        const parts = ask === "more" ? [{ num: big, c: "var(--chapter)" }, "is more than", { num: small, c: "var(--chapter)" }]
+          : [{ num: small, c: "var(--chapter)" }, "is less than", { num: big, c: "var(--chapter)" }];
+        record("rec", parts, 0, 23);
+        block("next", 0, 28, 10, "Next problem", "next");
+      }
+    },
+  };
+  return L;
+}
+
+// ---------- lessons, the bar ----------
+let lesson;
+const LESSONS = {
+  count10: { name: "Count to 10", make: lCount },
+  onemore: { name: "One more", make: lOneMore },
+  compare: { name: "More, less or the same", make: lCompare },
+  numcompare: { name: "Which number is more?", make: lNumCompare },
+};
+const index = {};
+const pick = document.getElementById("pick");
+pick.innerHTML = Object.entries(LESSONS).map(([id, e]) => `<option value="${id}">${esc(e.name)}</option>`).join("");
+function start(id) {
+  if (!LESSONS[id]) id = "count10";
+  index[id] = index[id] || 0;
+  lesson = LESSONS[id].make(index[id]);
+  pick.value = id;
+  drawn = new Set(); lastStage = lesson.stage; voice.say = null;
+  render(); frame(lesson.frame(), true);
+  try { localStorage.setItem("gradeK-ch1", id); } catch (err) {}
+}
+pick.onchange = () => start(pick.value);
+document.getElementById("fresh").onclick = () => leave();
+const vbtn = document.getElementById("voice");
+vbtn.onclick = () => { voice.on = !voice.on; vbtn.setAttribute("aria-pressed", String(voice.on)); if (!voice.on) try { speechSynthesis.cancel(); } catch (err) {} else replay(); };
+// the next problem: a fresh one from the generator, one further down the page (easy first by index)
+function leave() { index[lesson.id] = (index[lesson.id] || 0) + 1; start(lesson.id); }
+const qs = new URLSearchParams(location.search);
+if (qs.get("theme")) document.documentElement.dataset.theme = qs.get("theme");
+let first = "count10";
+try { first = qs.get("l") || localStorage.getItem("gradeK-ch1") || "count10"; } catch (err) {}
+if (qs.get("i")) index[first] = Math.max(0, +qs.get("i") || 0);
+start(first);
+</script>
