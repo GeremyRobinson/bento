@@ -1,0 +1,1307 @@
+<title>Waves</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700&display=swap">
+<style>
+/* 12th grade, chapter 2: Waves (the unit circle unrolled). Chapter 1's kit (grade12-ch1.html), built on the 5th grade preview kit (new5-lessons.html).
+   The whole screen is one sheet of graph paper seen through one camera; the floating pill at the bottom is the only
+   chrome. 1 square = 20 paper units, a strong line every 5 squares (a block). iPad landscape only.
+   Chapter colour: grade12.md names none, so the angles family takes the geometry family's teal (paper-lessons.html). */
+:root {
+  --paper: #F3F1EC; --grid: #E2DED6; --grid-strong: #D3CEC4;
+  --ink: #1D1C1A; --ink2: #6E6A63; --ink3: #A39E95;
+  --chapter: #1E8A78; --tint: rgba(30, 138, 120, .2); --tint-strong: rgba(30, 138, 120, .4);
+  --right: #178A57; --wrong: #C8372D;
+  --pill: rgba(255, 255, 255, .94); --pill-line: #E4E0D8;
+  --round: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C;
+  --chapter: #4FD1BC; --tint: rgba(79, 209, 188, .22); --tint-strong: rgba(79, 209, 188, .42);
+  --right: #3CCF8E; --wrong: #FF6B5E;
+  --pill: rgba(40, 40, 37, .94); --pill-line: #3A3A36; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C;
+  --chapter: #4FD1BC; --tint: rgba(79, 209, 188, .22); --tint-strong: rgba(79, 209, 188, .42);
+  --right: #3CCF8E; --wrong: #FF6B5E;
+  --pill: rgba(40, 40, 37, .94); --pill-line: #3A3A36; color-scheme: dark }
+html, body { height: 100%; }
+body { background: var(--paper); color: var(--ink); font-family: var(--round); overflow: hidden; touch-action: none;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; margin: 0; }
+#paper { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+svg text { font-family: var(--round); font-variant-numeric: tabular-nums; }
+.say { font-size: 28px; font-weight: 600; fill: var(--ink); }
+.small { font-size: 20px; font-weight: 600; fill: var(--ink2); }
+.maths { font-size: 36px; font-weight: 600; fill: var(--ink); }
+
+/* drawing in: lines stroke on, words and fills fade in, one after another */
+.in-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .55s ease-out forwards; }
+.in-fade { opacity: 0; animation: fade .4s ease-out forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes fade { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .in-line, .in-fade { animation-duration: .01s; } }
+
+/* the one floating bar */
+#bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 999px; background: var(--pill);
+  border: 1px solid var(--pill-line); box-shadow: 0 6px 24px rgba(0,0,0,.08); max-width: calc(100vw - 32px);
+  font-family: var(--round); }
+#bar button { font: 600 17px var(--round); color: var(--ink); background: none; border: 0; padding: 10px 14px;
+  border-radius: 999px; cursor: pointer; white-space: nowrap; }
+#bar button:focus-visible { outline: 2px solid var(--chapter); outline-offset: 2px; }
+#bar select { font: 600 17px var(--round); color: var(--ink); background: none; border: 0; padding: 10px 26px 10px 14px;
+  border-radius: 999px; cursor: pointer; -webkit-appearance: none; appearance: none; max-width: 52vw; text-overflow: ellipsis;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink2) 50%), linear-gradient(135deg, var(--ink2) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%; background-size: 5px 5px; background-repeat: no-repeat; }
+#bar select:focus-visible { outline: 2px solid var(--chapter); outline-offset: 2px; }
+#bar .sep { width: 1px; align-self: stretch; background: var(--pill-line); margin: 4px 4px; }
+#bar .progress { display: flex; flex-direction: column; gap: 6px; padding: 0 10px; min-width: 120px; }
+#bar .progress span { font: 600 14px var(--round); color: var(--ink2); }
+#bar .track { height: 4px; border-radius: 2px; background: var(--pill-line); overflow: hidden; }
+#bar .track i { display: block; height: 100%; background: var(--chapter); transition: width .4s ease; }
+@media (max-width: 640px) { #bar .progress { display: none; } #bar button, #bar select { font-size: 15px; padding: 9px 10px; } #bar select { padding-right: 24px; }
+  #bar { flex-wrap: wrap; justify-content: center; border-radius: 26px; row-gap: 2px; } #bar .sep { display: none; } }
+#keys { position: fixed; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; font-size: 16px; }
+</style>
+
+<svg id="paper" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-label="Graph paper lesson">
+  <defs>
+    <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
+      <path d="M20 0V100M40 0V100M60 0V100M80 0V100M0 20H100M0 40H100M0 60H100M0 80H100" stroke="var(--grid)" stroke-width="1" fill="none"/>
+      <path d="M0 0V100M0 0H100" stroke="var(--grid-strong)" stroke-width="1.5" fill="none"/>
+    </pattern>
+  </defs>
+  <g id="paperg">
+    <rect x="-20000" y="-20000" width="40000" height="40000" fill="url(#grid)"/>
+    <g id="scene"></g>
+  </g>
+  <g id="upright"></g>
+</svg>
+
+<nav id="bar" aria-label="Lessons">
+  <select id="pick" aria-label="Lesson"></select>
+  <div class="sep"></div>
+  <div class="progress"><span id="stepname">Step 1 of 3</span><div class="track"><i id="track" style="width:0"></i></div></div>
+  <div class="sep"></div>
+  <button id="fresh" type="button">New problem</button>
+</nav>
+<input id="keys" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Answer">
+
+<script>
+"use strict";
+// ---------- the paper: squares, drawing, camera (the 5th grade kit) ----------
+const SQ = 20, svg = document.getElementById("paper"), sceneEl = document.getElementById("scene");
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const choose = arr => arr[rnd(0, arr.length - 1)];
+const gcd = (a, b) => b ? gcd(b, a % b) : Math.abs(a);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+
+let items = [], drawn = new Set();
+let UP = false;
+function put(k, tag, a, kind = "fade", text) { items.push({ k, tag, a, kind, text, up: UP }); }
+const sq = n => n * SQ;
+function line(k, x1, y1, x2, y2, o = {}) {
+  put(k, "line", { x1: sq(x1), y1: sq(y1), x2: sq(x2), y2: sq(y2), stroke: o.c || "var(--ink)", "stroke-width": o.w || 1.5,
+    "stroke-dasharray": o.dash ? "6 6" : null, "stroke-linecap": "butt", pathLength: o.dash ? null : 1 }, o.live ? "none" : o.dash ? "fade" : "line");
+}
+function path(k, d, o = {}) {
+  put(k, "path", { d, fill: o.fill || "none", stroke: o.c === "none" ? null : (o.c || "var(--ink)"), "stroke-width": o.c === "none" ? null : (o.w || 1.5),
+    "stroke-dasharray": o.dash ? "6 6" : null, pathLength: o.fill || o.dash ? null : 1, opacity: o.op ?? null }, o.live ? "none" : o.fill || o.dash ? "fade" : "line");
+}
+function rect(k, x, y, w, h, o = {}) {
+  put(k, "rect", { x: sq(x), y: sq(y), width: sq(w), height: sq(h), fill: o.fill || "none", stroke: o.c || null,
+    "stroke-width": o.c ? (o.w || 1.5) : null, opacity: o.op ?? null,
+    pathLength: o.c && !o.fill ? 1 : null }, o.live ? "none" : o.c && !o.fill ? "line" : "fade");
+}
+function dot(k, x, y, r, o = {}) { put(k, "circle", { cx: sq(x), cy: sq(y), r: sq(r), fill: o.c || "var(--chapter)" }, o.live ? "none" : "fade"); }
+function ringAt(k, x, y, r, o = {}) { put(k, "circle", { cx: sq(x), cy: sq(y), r: sq(r), fill: o.fill || "var(--paper)", stroke: o.c || "var(--ink)", "stroke-width": 1.5 }, o.live ? "none" : "fade"); }
+function text(k, s, x, y, cls, o = {}) {
+  put(k, "text", { x: sq(x), y: sq(y), class: cls, "text-anchor": o.anchor || "middle", "dominant-baseline": "central",
+    style: o.c ? `fill:${o.c}` : null }, o.live ? "none" : "fade", s);
+}
+// words in rows of 2 squares, wrapped at a width in squares
+function words(k, s, x, y, widthSq, cls = "say", o = {}) {
+  const max = Math.max(8, widthSq);
+  const rows = []; let cur = "";
+  for (const w of s.split(" ")) { const next = (cur + " " + w).trim(); if (tw(next, cls) > max && cur) { rows.push(cur); cur = w; } else cur = next; }
+  if (cur) rows.push(cur);
+  rows.forEach((r, i) => text(`${k}:${i}:${r}`, r, x, y + i * 2, cls, { anchor: "start", c: o.c }));
+  return rows.length;
+}
+// a block drawn on the paper: an outline, its word and arrow (Cut, Check, Next problem)
+function block(k, x, y, w, label, act, o = {}) {
+  rect(`${k}o`, x, y, w, 2, { c: "var(--ink)" });
+  text(`${k}w${label}`, label, x + 1, y + 1, "small", { anchor: "start", c: "var(--ink)" });
+  if (o.arrow !== false) path(`${k}a`, `M${sq(x + w - 1.6)} ${sq(y + 1)}h${sq(0.8)}m-6 -6l6 6l-6 6`, {});
+  put(`${k}hit`, "rect", { x: sq(x), y: sq(y), width: sq(w), height: sq(2), fill: "transparent", "data-act": act }, "none");
+}
+
+// text widths, in squares, for laying words and working on whole squares
+const mctx = document.createElement("canvas").getContext("2d");
+const PX = { maths: 36, say: 28, small: 20 };
+function tw(s, cls = "maths") { mctx.font = `600 ${PX[cls]}px ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif`; return mctx.measureText(String(s)).width / SQ; }
+
+let raf = 0;
+function render() {
+  items = [];
+  lesson.scene();
+  const next = new Set(); let n = 0, out = "", outUp = "";
+  for (const it of items) {
+    next.add(it.k);
+    const fresh = !drawn.has(it.k) && it.kind !== "none", a = { ...it.a };
+    if (fresh) {
+      a.class = ((a.class || "") + (it.kind === "line" ? " in-line" : " in-fade")).trim();
+      a.style = `animation-delay:${Math.min(n++ * 0.035, 1.2).toFixed(3)}s;` + (a.style || "");
+    }
+    const attrs = Object.entries(a).filter(([, v]) => v != null).map(([k, v]) => `${k}="${esc(v)}"`).join(" ");
+    const el = `<${it.tag} ${attrs}>${it.text != null ? esc(it.text) : ""}</${it.tag}>`;
+    if (it.up) outUp += el; else out += el;
+  }
+  sceneEl.innerHTML = out;
+  document.getElementById("upright").innerHTML = outUp;
+  drawn = next;
+  const [i, of] = lesson.progress();
+  document.getElementById("stepname").textContent = `Step ${Math.min(i + 1, of)} of ${of}`;
+  document.getElementById("track").style.width = `${Math.round(100 * i / of)}%`;
+}
+
+// the camera: frames what the lesson shows now, eased (0.75 s), at most 125%. The frame's top sits at the top of the
+// screen (the words on rows 0–2), never centred with an empty band above it.
+const cam = { x: 0, y: 0, s: 1 }; let camTo = null, camFrom = null, camT0 = 0;
+function fitTo(f) {
+  const W = innerWidth, H = innerHeight, top = 16, bottom = 96;
+  const s = Math.min((W - 48) / sq(f.w), (H - top - bottom) / sq(f.h), (lesson && lesson.maxZoom) || 1.25);
+  return { s, x: sq(f.x + f.w / 2) - W / 2 / s, y: sq(f.y) - top / s };
+}
+function frame(f, now) {
+  const t = fitTo(f);
+  if (now) { Object.assign(cam, t); applyCam(); return; }
+  camFrom = { ...cam }; camTo = t; camT0 = performance.now(); requestAnimationFrame(stepCam);
+}
+function stepCam(t) {
+  if (!camTo) return;
+  const u = Math.min(1, (t - camT0) / 750), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+  for (const k of ["x", "y", "s"]) cam[k] = camFrom[k] + (camTo[k] - camFrom[k]) * e;
+  applyCam();
+  if (u < 1) requestAnimationFrame(stepCam); else camTo = null;
+}
+function applyCam() { svg.setAttribute("viewBox", `${cam.x} ${cam.y} ${innerWidth / cam.s} ${innerHeight / cam.s}`); }
+addEventListener("resize", () => frame(lesson.frame(), true));
+
+// ---------- typing (the iPad's own keys): digits, and a minus in front ----------
+const keys = document.getElementById("keys");
+function openKeys() { keys.value = (lesson.typed || "").replace("−", "-"); keys.focus({ preventScroll: true }); }
+keys.addEventListener("input", () => {
+  const raw = keys.value.replace(/[−–]/g, "-"), neg = raw.trim().startsWith("-");
+  lesson.type(((neg ? "−" : "") + raw.replace(/[^0-9]/g, "")).slice(0, 4)); render();
+});
+keys.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); act("check"); } });
+
+// ---------- hands: tap, drag (on the lesson's picture) or pan the paper; mouse and touch alike ----------
+function toPaper(e) { const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse()); return { x: p.x / SQ, y: p.y / SQ }; }
+let down = null;
+svg.addEventListener("pointerdown", e => {
+  const p = toPaper(e), hit = e.target.closest("[data-act]");
+  down = { p, sx: e.clientX, sy: e.clientY, act: hit && hit.dataset.act, moved: false, grabbed: false, cam: { ...cam } };
+  if (!down.act && lesson.grab && lesson.grab(p)) { down.grabbed = true; render(); }
+  svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener("pointermove", e => {
+  if (!down) return;
+  if (Math.hypot(e.clientX - down.sx, e.clientY - down.sy) > 6) down.moved = true;
+  if (down.grabbed) { lesson.drag(toPaper(e)); render(); return; }
+  if (down.moved && !down.act) { camTo = null; cam.x = down.cam.x - (e.clientX - down.sx) / cam.s; cam.y = down.cam.y - (e.clientY - down.sy) / cam.s; applyCam(); }
+});
+svg.addEventListener("pointerup", e => {
+  if (!down) return;
+  const d = down; down = null;
+  if (d.grabbed) { lesson.release(toPaper(e)); render(); frame(lesson.frame()); return; }
+  if (d.moved) return;
+  if (d.act) { act(d.act); return; }
+  if (lesson.tap && lesson.tap(toPaper(e))) { render(); frame(lesson.frame()); }
+});
+function act(a) {
+  if (a === "type") { openKeys(); return; }
+  if (a === "next") { leave(); return; }
+  lesson.act(a);
+  if (!lesson.typing) keys.blur(); else openKeys();
+  render(); frame(lesson.frame());
+}
+
+// ---------- the designer kit: labels, answer boxes, what to do ----------
+const CAPH = { small: 0.7, say: 1.0, maths: 1.3 };
+function lab(k, s, side, edge, along, cls = "small", c, o = {}) {
+  const h = CAPH[cls] / 2;
+  if (side === "above") text(k, s, along, edge - 0.5 - h, cls, { c, live: o.live });
+  else if (side === "below") text(k, s, along, edge + 0.5 + h, cls, { c, live: o.live });
+  else if (side === "left") text(k, s, edge - 0.5, along, cls, { c, anchor: "end", live: o.live });
+  else text(k, s, edge + 0.5, along, cls, { c, anchor: "start", live: o.live });
+}
+function dbox(k, x, y, cells, value, state, actName) {
+  const c = state === "right" ? "var(--right)" : state === "wrong" ? "var(--wrong)" : state === "idle" ? "var(--ink3)" : "var(--ink)";
+  const vc = state === "right" || state === "wrong" ? c : null;
+  rect(`${k}o${cells}`, x, y, cells * 2, 2, { c });
+  const cls = value && tw(value) > cells * 2 - 0.3 ? "say" : "maths";        // a long slip still fits its box
+  if (value) text(`${k}v`, value, x + cells, y + 1, cls, { c: vc, live: true });
+  if (state === "active") {
+    const cx = x + cells + (value ? tw(value, cls) / 2 : 0) + 0.25;
+    put(`${k}cur`, "line", { x1: sq(cx), y1: sq(y + 0.35), x2: sq(cx), y2: sq(y + 1.65), stroke: "var(--chapter)", "stroke-width": 1.5 }, "none");
+  }
+  put(`${k}hit`, "rect", { x: sq(x), y: sq(y), width: sq(cells * 2), height: sq(2), fill: "transparent", "data-act": actName }, "none");
+}
+// what to do on the rows above the picture: one line, and a small line under it (or what a slip says, in red)
+function dhead(L, say, sub) {
+  const W = Math.min(72, L.frame().w - 3);
+  const rows = words(`say-${say}`, say, 0, 1, W);
+  const y = 1 + 2 * rows + 0.3;
+  if (L.msg) words(`msg-${L.msg}`, L.msg, 0, y, W, "small", { c: "var(--wrong)" });
+  else if (sub) words(`sub-${sub}`, sub, 0, y, W, "small");
+}
+function withBoxes(L) {
+  L.vals = {}; L.active = null;
+  Object.defineProperty(L, "typed", { get() { return this.vals[this.active] || ""; }, configurable: true });
+  L.type = function (v) { if (this.active != null) this.vals[this.active] = v; this.verdict = null; this.msg = null; };
+  return L;
+}
+function boxAct(L, a) { if (a.startsWith("box:")) { L.active = a.slice(4); L.typing = true; return true; } return false; }
+function boxState(L, id) { return L.verdict && L.active === id ? L.verdict : L.active === id ? "active" : "idle"; }
+const stageIndex = (list, st) => [Math.max(0, list.indexOf(st)), list.length - 1];
+
+// ---------- school working on squared paper ----------
+// A line of working sits on a row: ry is the line through its middle, where a fraction's bar lies. A fraction's top
+// is centred a square above the bar and its bottom a square below (boxes: 2 squares tall above and below the bar).
+// Tokens: {s, c} maths text · {box, cells} an answer box · {f: [top tokens, bottom tokens], c} a fraction.
+function tokW(t) {
+  if (t.box) return t.cells * 2;
+  if (t.f) return Math.max(listW(t.f[0]), listW(t.f[1]));
+  if (t.tight) return tw(t.s, t.cls || "maths") + 0.3;                     // a finished line, set close
+  return Math.ceil(tw(t.s, t.cls || "maths") + 0.4);
+}
+const listW = l => l.reduce((s, t) => s + tokW(t), 0);
+function mrow(L, k, x, ry, toks) {
+  for (const [i, t] of toks.entries()) {
+    const w = tokW(t), kk = `${k}${i}`;
+    if (t.box) dbox(`${kk}${t.box}`, x, ry - 1, t.cells, L.vals[t.box] || "", boxState(L, t.box), `box:${t.box}`);
+    else if (t.f) {
+      const [top, bot] = t.f, wt = listW(top), wb = listW(bot);
+      mlist(L, `${kk}t`, top, x + Math.floor((w - wt) / 2), ry - 1, t.c);
+      line(`${kk}bar${w}`, x, ry, x + w, ry, { c: t.c });
+      mlist(L, `${kk}b`, bot, x + Math.floor((w - wb) / 2), ry + 1, t.c);
+    } else text(`${kk}:${t.s}`, t.s, x + w / 2, ry, t.cls || "maths", { c: t.c });
+    x += w;
+  }
+  return x;
+}
+function mlist(L, k, toks, x, yc, c) {
+  for (const [i, t] of toks.entries()) {
+    const w = tokW(t);
+    if (t.box) dbox(`${k}${i}${t.box}`, x, yc - 1, t.cells, L.vals[t.box] || "", boxState(L, t.box), `box:${t.box}`);
+    else text(`${k}${i}:${t.s}`, t.s, x + w / 2, yc, "maths", { c: t.c || c });
+    x += w;
+  }
+}
+
+// ---------- exact values: s · a√r / d ----------
+const sqFree = r => { for (let k = 2; k * k <= r; k++) if (r % (k * k) === 0) return false; return true; };
+function simpRoot(m) { let k = 1, r = m; for (let j = 2; j * j <= r; j++) while (r % (j * j) === 0) { r /= j * j; k *= j; } return [k, r]; }
+const vNum = v => v.s * v.a * Math.sqrt(v.r) / v.d;
+// as text: −1/2, √2/2, 2√2/3, √3, 1
+const vText = v => `${v.s < 0 ? "−" : ""}${v.a === 1 && v.r > 1 ? "" : v.a}${v.r > 1 ? "√" + v.r : ""}${v.d > 1 ? "/" + v.d : ""}`;
+const magText = v => vText({ ...v, s: 1 });
+// as written in the record, in the chapter colour: a minus, then the fraction
+function vToks(v, c = "var(--chapter)") {
+  const top = `${v.a === 1 && v.r > 1 ? "" : v.a}${v.r > 1 ? "√" + v.r : ""}`;
+  const t = [];
+  if (v.s < 0) t.push({ s: "−", c });
+  if (v.d > 1) t.push({ f: [[{ s: top }], [{ s: String(v.d) }]], c }); else t.push({ s: top, c });
+  return t;
+}
+// the answer boxes for a value: a fraction (top over bottom), a root over a bottom ([1]√[2] over [2]), a root, a number
+function layoutOf(v) { return v.r === 1 ? (v.d === 1 ? "int" : "frac") : (v.d === 1 ? "rootw" : "root"); }
+function boxToks(v, pre, cellsBottom = 1) {
+  const lay = layoutOf(v);
+  if (lay === "frac") return [{ f: [[{ box: pre + "a", cells: 2 }], [{ box: pre + "d", cells: cellsBottom }]] }];
+  if (lay === "int") return [{ box: pre + "a", cells: 2 }];
+  const root = [{ box: pre + "a", cells: 2 }, { s: "√" }, { box: pre + "r", cells: 1 }];
+  if (lay === "rootw") return root;
+  return [{ f: [root, [{ box: pre + "d", cells: cellsBottom }]] }];
+}
+const num = s => (s == null || s === "" ? null : s === "−" ? -1 : Number(s.replace("−", "-")));
+function readVal(L, v, pre) {
+  const lay = layoutOf(v), g = id => L.vals[pre + id];
+  let A = num(g("a")), r = 1, d = 1;
+  if (lay === "root" || lay === "rootw") { if (A == null && g("r")) A = 1; r = num(g("r")); }
+  if (lay === "frac" || lay === "root") d = num(g("d"));
+  if (A == null || r == null || d == null) return { missing: true, first: [pre + "a", pre + "r", pre + "d"].find(id => L.vals[id] == null || L.vals[id] === "") };
+  return { A, r, d };
+}
+// judge a typed value against the answer; ctx gives the lesson's own lines for its slips
+function judge(x, v, ctx) {
+  if (x.missing) return ctx.missing || "Fill in every box.";
+  if (x.d < 0) return "Put any minus sign on the top.";
+  if (x.d === 0 || x.r <= 0) return ctx.generic;
+  const val = x.A * Math.sqrt(x.r) / x.d, want = vNum(v);
+  if (Math.abs(val - want) < 1e-9) {
+    if (x.r > 1 && !sqFree(x.r)) { const [k, r] = simpRoot(x.r); return `Take the square out: √${x.r} = ${k}√${r}.`; }
+    if (gcd(Math.abs(x.A), x.d) !== 1) return "Same value. Write it in lowest terms.";
+    return null;
+  }
+  if (Math.abs(val + want) < 1e-9 && ctx.sign) return ctx.sign;
+  const other = ctx.other && ctx.other(val, x);
+  return other || ctx.generic;
+}
+
+// ---------- the unit circle kit (chapter 1; chapter 2's waves reuse the circle and its turn) ----------
+// Angles in degrees, 0° on the right, turning counterclockwise; on the paper y grows downward.
+const D2R = Math.PI / 180;
+const norm360 = a => ((a % 360) + 360) % 360;
+const sdiff = a => ((a % 360) + 540) % 360 - 180;            // a turn, as the shortest way: −180 to 180
+const onC = (C, r, a) => ({ x: C.x + r * Math.cos(a * D2R), y: C.y - r * Math.sin(a * D2R) });
+const angOf = (C, q) => norm360(Math.atan2(C.y - q.y, q.x - C.x) / D2R);
+const fmtSq = n => (Math.abs(n - Math.round(n)) < 1e-6 ? String(Math.round(n)) : n.toFixed(1));
+// an arc of a circle from angle a0 to a1 (either way round)
+function arc(k, C, r, a0, a1, o = {}) {
+  const lo = Math.min(a0, a1), hi = Math.max(a0, a1);
+  if (hi - lo < 0.01) return;
+  const p = onC(C, r, lo);
+  if (hi - lo >= 359.99) {
+    const q = onC(C, r, lo + 180);
+    path(k, `M${sq(p.x)} ${sq(p.y)}A${sq(r)} ${sq(r)} 0 1 0 ${sq(q.x)} ${sq(q.y)}A${sq(r)} ${sq(r)} 0 1 0 ${sq(p.x)} ${sq(p.y)}`, o); return;
+  }
+  const q = onC(C, r, hi);
+  path(k, `M${sq(p.x)} ${sq(p.y)}A${sq(r)} ${sq(r)} 0 ${hi - lo > 180 ? 1 : 0} 0 ${sq(q.x)} ${sq(q.y)}`, o);
+}
+// a filled slice (a quadrant lights)
+function sector(k, C, r, a0, a1, o = {}) {
+  const p = onC(C, r, a0), q = onC(C, r, a1);
+  path(k, `M${sq(C.x)} ${sq(C.y)}L${sq(p.x)} ${sq(p.y)}A${sq(r)} ${sq(r)} 0 0 0 ${sq(q.x)} ${sq(q.y)}Z`, { fill: o.fill || "var(--tint)", c: "none", live: o.live });
+}
+// the turn so far, as a small spiral at the corner (it shows a turn past a whole one, or the other way)
+function turnMark(k, C, a, r0, o = {}) {
+  if (Math.abs(a) < 0.5) return;
+  const n = Math.max(2, Math.ceil(Math.abs(a) / 4)); let d = "";
+  for (let i = 0; i <= n; i++) {
+    const t = a * i / n, p = onC(C, r0 + 1.1 * Math.abs(t) / 360, t);
+    d += `${i ? "L" : "M"}${sq(p.x).toFixed(1)} ${sq(p.y).toFixed(1)}`;
+  }
+  path(k, d, { c: "var(--chapter)", live: o.live });
+}
+// a name at an angle, just outside a radius, its anchor turned to face away from the centre
+function labA(k, s, C, r, a, cls = "small", c, o = {}) {
+  const cs = Math.cos(a * D2R), sn = Math.sin(a * D2R);
+  if (o.top && sn > 0.8) { const e = onC(C, C.R || r, a); text(k, s, e.x + (cs < 0 ? -1.2 : 1.2), e.y + 2.2, cls, { anchor: cs < 0 ? "end" : "start", c, live: o.live }); return; }
+  const p = onC(C, r, a);
+  const anchor = cs > 0.38 ? "start" : cs < -0.38 ? "end" : "middle";
+  const dy = anchor === "middle" ? -sn * (CAPH[cls] / 2 + 0.1) : 0;
+  text(k, s, p.x, p.y + dy, cls, { anchor, c, live: o.live });
+}
+// Turn a ray (7th grade's): the arm follows the finger round the corner, unwound so it can go past a whole turn or the
+// other way, snapping to the angles the lesson allows.
+function turner(C, snap, lo, hi) {
+  return {
+    raw: 0, last: 0,
+    grab(q, now) { this.last = angOf(C, q); this.raw = now + sdiff(this.last - norm360(now)); return this.at(); },
+    drag(q) { const a = angOf(C, q); this.raw += sdiff(a - this.last); this.last = a; return this.at(); },
+    at() { return Math.max(lo, Math.min(hi, snap(this.raw))); },
+  };
+}
+// Cut the turn (new): the fractions' ruler bent round the circle. Its handle runs along the edge from 0°, snapping to
+// the piece sizes that divide 180°; dashed spokes cut the circle as it goes.
+const PIECES = [10, 12, 15, 18, 20, 30, 36, 45, 60, 90];
+function cutHandle(C, R) {
+  return {
+    p: 0,
+    near(q) { const h = onC(C, R, this.p); return Math.hypot(q.x - h.x, q.y - h.y) < 3.2; },
+    drag(q) {
+      const a = angOf(C, q), aa = a > 270 ? 0 : Math.min(a, 110);
+      this.p = aa < 5 ? 0 : PIECES.reduce((b, s) => (Math.abs(s - aa) < Math.abs(b - aa) ? s : b), PIECES[0]);
+    },
+  };
+}
+function spokes(k, C, R, p, upto, o = {}) {
+  for (let a = p; a <= upto + 0.01 && a < 360; a += p) {
+    const e = onC(C, R, a);
+    line(`${k}${a}${o.solid ? "s" : "d"}`, C.x, C.y, e.x, e.y, { c: "var(--ink2)", dash: !o.solid, live: o.live });
+  }
+}
+// the circle with its half turn bold (the rest light), the start arm at 0°
+function halfTurnCircle(C, R) {
+  arc("circ", C, R, 0, 360, { c: "var(--ink3)" });
+  arc("half", C, R, 0, 180, { c: "var(--ink)" });
+  line("start", C.x, C.y, C.x + R, C.y);
+}
+const piText = (n, d) => `${n === 1 ? "" : n}π${d === 1 ? "" : "/" + d}`;
+const piFrac = (n, d, c) => ({ f: [[{ s: `${n === 1 ? "" : n}π` }], [{ s: String(d) }]], c });
+
+// ---------- easy first (the web's withEasyStart: problems 1–3 keep the smallest of six draws) ----------
+function easy(i, gen, size) {
+  let best = gen(); if (i >= 3) return best;
+  let s = size(best);
+  for (let k = 1; k < 6; k++) { const p = gen(), z = size(p); if (z < s) { best = p; s = z; } }
+  return best;
+}
+
+// ---------- the wave kit (chapter 2) ----------
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const fmtN = (x, dp = 2) => { const r = Math.round(x * 10 ** dp) / 10 ** dp; return (r < 0 ? "−" : "") + String(Math.abs(r)); };
+const degText = d => `${d < 0 ? "−" : ""}${Math.abs(d)}°`;
+// an angle in degrees, in radians: 30 → π/6, 180 → π, −90 → −π/2
+function radText(deg) {
+  if (!deg) return "0";
+  const g = gcd(Math.abs(deg), 180), n = deg / g, d = 180 / g;
+  return `${n < 0 ? "−" : ""}${Math.abs(n) === 1 ? "" : Math.abs(n)}π${d === 1 ? "" : "/" + d}`;
+}
+const fr = (n, d) => { const g = gcd(n, d) || 1; return `${n < 0 ? "−" : ""}${Math.abs(n / g)}${d / g === 1 ? "" : "/" + d / g}`; };
+const trig = (f, deg) => (f === "sin" ? Math.sin(deg * D2R) : Math.cos(deg * D2R));
+// a wave A·f(B(u − C)) + D, u in degrees or seconds, B in degrees a unit
+const waveFn = (f, A, B, C, D) => u => A * trig(f, B * (u - C)) + D;
+// sampled at uneven steps, so a fast wave (180° a second) is never read only at its zeros
+const sameWave = (g, h) => { for (let k = 0; k < 400; k++) { const u = -720 + k * 3.6173; if (Math.abs(g(u) - h(u)) > 1e-6) return false; } return true; };
+// how many rows a line of words wraps to (as words() lays it)
+function wrapRows(s, widthSq, cls = "say") {
+  let rows = 0, cur = "";
+  for (const w of s.split(" ")) { const next = (cur + " " + w).trim(); if (tw(next, cls) > widthSq && cur) { rows++; cur = w; } else cur = next; }
+  return rows + (cur ? 1 : 0);
+}
+
+// A plot on the paper: the point (0, 0) at paper square (ox, oy); ux squares a unit across, uy up; its window a0..a1
+// across and b0..b1 up, in units; ba and bb the units in a block across and up.
+function plotOf(o) {
+  const P = { ...o };
+  P.X = u => P.ox + u * P.ux; P.Y = v => P.oy - v * P.uy;
+  P.left = P.X(P.a0); P.right = P.X(P.a1); P.top = P.Y(P.b1); P.bottom = P.Y(P.b0);
+  return P;
+}
+// its axes: lines through 0 (or the window's edge), named at every block along the bottom (one or two rows: degrees
+// and radians) and up the left edge
+function plotAxes(k, P, o = {}) {
+  const yAx = P.b0 <= 0 && P.b1 >= 0 ? P.Y(0) : P.bottom, xAx = P.a0 <= 0 && P.a1 >= 0 ? P.X(0) : P.left;
+  line(`${k}ax`, o.x0 ?? P.left, yAx, P.right + 1, yAx);
+  if (!o.noY) line(`${k}ay`, xAx, P.bottom + (o.yDown || 0), xAx, P.top - 1);
+  const n0 = Math.ceil(P.a0 / P.ba - 1e-9);
+  for (let j = n0; j * P.ba <= P.a1 + 1e-9; j++) {
+    const u = +(j * P.ba).toFixed(6), x = P.X(u);
+    if (Math.abs(x - xAx) > 0.01 || yAx === P.bottom) line(`${k}tk${u}`, x, yAx - 0.5, x, yAx + 0.5);
+    o.across(u).forEach((s, r) => s != null && text(`${k}al${r}:${u}:${s}`, s, x, P.bottom + 1.3 + r * 1.7, "small"));
+  }
+  if (o.up) for (let j = Math.ceil(P.b0 / P.bb - 1e-9); j * P.bb <= P.b1 + 1e-9; j++) {
+    const v = +(j * P.bb).toFixed(6), s = o.up(v);
+    if (s == null || (v === P.b0 && v !== 0)) continue;          // the lowest would crowd the names along the bottom
+    line(`${k}tu${v}`, xAx - 0.5, P.Y(v), xAx + 0.5, P.Y(v));
+    text(`${k}ul:${v}:${s}`, s, (o.upX ?? P.left) - 0.7, P.Y(v), "small", { anchor: "end" });
+  }
+  if (o.nameA) text(`${k}na${o.nameA}`, o.nameA, P.right + 1.6, yAx, "small", { anchor: "start" });
+  if (o.nameU) text(`${k}nu${o.nameU}`, o.nameU, xAx, P.top - 1.9, "small");
+}
+const degRad = u => [degText(u), radText(u)];
+// a curve through the window, cut where it leaves it (the tangent runs off)
+function curve(k, P, fn, o = {}) {
+  const lo = P.b0 - 1e-9, hi = P.b1 + 1e-9, n = Math.round((P.a1 - P.a0) * P.ux * 2);
+  let d = "", pen = false;
+  for (let j = 0; j <= n; j++) {
+    const u = P.a0 + (P.a1 - P.a0) * j / n, v = fn(u);
+    if (!isFinite(v) || v < lo || v > hi) { pen = false; continue; }
+    d += `${pen ? "L" : "M"}${sq(P.X(u)).toFixed(1)} ${sq(P.Y(v)).toFixed(1)}`; pen = true;
+  }
+  if (d) path(k, d, o);
+}
+const tight = toks => toks.map(t => (t.s != null ? { ...t, tight: true } : t.f ? { ...t, f: t.f.map(tight) } : t));
+function hand(k, x, y, big) { ringAt(k, x, y, big ? 0.85 : 0.7, { c: "var(--chapter)", live: true }); }
+
+// ---------- generators (grade12.md's chapter 2; new lessons, no web lesson behind them) ----------
+// Stories: the time axis is 12 blocks (60 squares); up, the smallest block (1, 2, 5 or 10) that fits the top in 5
+// blocks (25 rows, so the camera stays near 75%) with the middle and the swing on whole squares.
+function upBlock(top, vals) {
+  return [1, 2, 5, 10].find(b => top <= 5 * b && vals.every(v => Number.isInteger(+(v * 5 / b).toFixed(9))));
+}
+function genStory(kind, late) {
+  for (;;) {
+    let A, D, T, tb, text, unit = "m", tunit = "s", hb;
+    if (kind === "wheel") {
+      A = rnd(5, 20); D = A + rnd(1, 5); T = choose([30, 40, 60, 120]); tb = T === 120 ? 10 : 5;
+      const once = T === 60 ? "once a minute" : T === 120 ? "once every 2 minutes" : `once every ${T} seconds`;
+      text = late ? `A wheel ${2 * A} m across, its middle ${D} m up, turns ${once}.`
+        : `A wheel ${2 * A} m across turns ${once}. Its middle is ${D} m up, and a car starts level with it, going up.`;
+    } else if (kind === "tide") {
+      A = rnd(1, 2); D = rnd(2, 4); T = 12; tb = 1; tunit = "h";
+      text = `The tide in a harbor rises and falls ${A} m about a middle depth of ${D} m, once every 12 hours. It starts at the middle, rising.`;
+    } else {
+      A = rnd(2, 6); D = rnd(8, 12); T = choose([2, 3, 4]); tb = 0.5; unit = "cm";
+      text = `A weight on a spring bobs ${A} cm above and below a middle ${D} cm off the table, once every ${T} seconds. It starts at the middle, going up.`;
+    }
+    hb = upBlock(D + A, [A, D]);
+    if (!hb) continue;
+    let C = 0;
+    if (late) {
+      const sqS = tb / 5, opts = [5, 10, 15, 20, 30].filter(c => c < T / 2 && Number.isInteger(+(c / sqS).toFixed(9)));
+      C = choose(opts);
+      text += ` A car passes the middle going up at ${C} s.`;
+    }
+    return { kind: late ? "story" : kind, story: kind, f: "sin", A, B: 360 / T, C, D, T, tb, hb, unit, tunit, text };
+  }
+}
+// The sine wave: sin x placed point by point (problems 1–2), cos x (3), wheels from 4, tides and a spring from 7, a
+// drawn wave read from 9.
+function genSine(i) {
+  let kind;
+  if (i <= 1) kind = "sin"; else if (i === 2) kind = "cos"; else if (i <= 5) kind = "wheel";
+  else kind = choose(["wheel", "tide", "spring", choose(["sin", "cos"]), ...(i >= 8 ? ["read", "read"] : [])]);
+  if (kind === "sin" || kind === "cos") return { kind: "place", f: kind };
+  if (kind === "read") {
+    let A, B, D;
+    do { A = rnd(1, 3); B = rnd(1, 4); D = rnd(-2, 2); } while (A + Math.abs(D) > 3 || (A !== 1) + (B !== 1) + (D !== 0) < 2);
+    return { kind: "read", f: "sin", A, B, C: 0, D };
+  }
+  return genStory(kind, false);
+}
+// Shift a wave: problems 1–3 only a start (A = 1, B = 1, D = 0), the full form from 4, radians from 5, stories from
+// 7, the tangent from 10. A start is the nearer one: |C| under half a wave (at half, late and early are one wave).
+function genWave(i) {
+  const kind = i <= 2 ? "start" : i === 3 ? "full" : i <= 5 ? choose(["full", "rad"])
+    : choose(["full", "rad", "story", ...(i >= 9 ? ["tan", "tan"] : [])]);
+  if (kind === "tan") return { kind };
+  if (kind === "story") return { ...genStory("wheel", true), step4: null };
+  const gen = () => {
+    let A = 1, B = 1, D = 0;
+    if (kind !== "start") do { A = rnd(1, 3); B = rnd(1, 4); D = rnd(-2, 2); } while (A + Math.abs(D) > 3 || (A === 1 && D === 0 && B === 1));
+    const P = 360 / B, Cs = [30, 60, 90, 120].filter(c => c < P / 2);
+    return { kind, f: choose(["sin", "cos"]), A, B, C: choose(Cs) * (rnd(0, 1) ? 1 : -1), D, step4: i >= 6 ? "flip" : "slide", f4: choose(["sin", "cos"]) };
+  };
+  return kind === "start" ? easy(i, gen, p => Math.abs(p.C)) : gen();
+}
+// Adding angles: a and b from the 3-4-5 pair (sines 3/5 and 4/5) on a circle of 25 squares; sums with b = a,
+// differences with b ≠ a; cos from 2, differences from 4, quarter turns from 6; school's kind from 7, exact from 10.
+const AB = { al: { c: 4, s: 3 }, be: { c: 3, s: 4 } };
+AB.al.deg = Math.atan2(3, 4) / D2R; AB.be.deg = Math.atan2(4, 3) / D2R;
+const TRI = [[3, 4, 5], [5, 12, 13], [8, 15, 17]];
+const SPEC = { 30: { sin: [1, 1, 2], cos: [1, 3, 2] }, 45: { sin: [1, 2, 2], cos: [1, 2, 2] }, 60: { sin: [1, 3, 2], cos: [1, 1, 2] } };
+function genAdd(i) {
+  const kind = choose(i >= 9 ? ["pic", "school", "exact"] : i >= 6 ? ["pic", "school"] : ["pic"]);
+  if (kind === "pic") {
+    const f = i === 0 ? "sin" : i === 1 ? "cos" : choose(["sin", "cos"]);
+    const op = i >= 3 ? choose([1, -1]) : 1;
+    let a, b;
+    if (i === 0) a = b = "al"; else if (op > 0) a = b = choose(["al", "be"]); else { a = choose(["al", "be"]); b = a === "al" ? "be" : "al"; }
+    const k = i >= 5 ? rnd(0, 3) : 0;
+    let ca = AB[a].c, sa = AB[a].s;
+    for (let j = 0; j < k; j++) [ca, sa] = [-sa, ca];
+    const cb = AB[b].c, sb = op * AB[b].s;                          // fifths; b signed
+    const T = { x: ca * cb - sa * sb, y: sa * cb + ca * sb }, F = { x: cb * ca, y: cb * sa };   // squares (25ths)
+    const aDeg = AB[a].deg + 90 * k, bDeg = op * AB[b].deg;
+    const n = f === "sin" ? T.y : T.x;
+    return { kind, f, op, a, b, k, ca, sa, cb, sbAbs: AB[b].s, sb, T, F, aDeg, bDeg, n, v: { s: Math.sign(n), a: Math.abs(n), r: 1, d: 25 } };
+  }
+  if (kind === "school") for (;;) {
+    const f = choose(["sin", "cos"]), op = choose([1, -1]);
+    const side = () => {
+      const [p, q, c] = choose(TRI), [o, m] = rnd(0, 1) ? [p, q] : [q, p], Q = rnd(1, 4);
+      return { s: (Q <= 2 ? 1 : -1) * o, c: (Q === 1 || Q === 4 ? 1 : -1) * m, d: c, Q, given: choose(["sin", "cos"]) };
+    };
+    const a = side(), b = side();
+    const d = a.d * b.d;
+    const n = f === "sin" ? a.s * b.c + op * a.c * b.s : a.c * b.c - op * a.s * b.s;
+    if (n === 0 || Math.abs(n) >= d || gcd(Math.abs(n), d) !== 1) continue;
+    return { kind, f, op, a, b, n, d, v: { s: Math.sign(n), a: Math.abs(n), r: 1, d } };
+  }
+  const [p, q, op] = choose([[45, 30, 1], [45, 30, -1], [60, 45, 1]]), f = choose(["sin", "cos"]);
+  return { kind, f, op, p, q, t: p + op * q };
+}
+
+// ---------- The sine wave (g12-sinegraph), sin x and cos x point by point ----------
+// Across, a block is 30° (a square 6°), so a turn is 60 squares; up, 10 squares are 1: the radius of the unit circle
+// at the wave's left end, its centre on the wave's middle line. Turn the arm, place each point where the tip's level
+// line meets its angle's line; after four points the rest place themselves as the arm turns on.
+function dSinePlace(Q) {
+  const f = Q.f, C = { x: 10, y: 20, R: 10 }, R = 10;
+  const P = plotOf({ ox: 20, oy: 20, ux: 1 / 6, uy: 10, a0: 0, a1: 360, b0: -1, b1: 1, ba: 30, bb: 0.5 });
+  const off = f === "cos" ? 90 : 0;                         // cos: the circle turned a quarter, the arm starts at the top
+  const val = a => trig(f, a);
+  const rot = q => onC(C, Math.hypot(q.x - C.x, q.y - C.y), angOf(C, q) - off);
+  const T = turner(C, a => Math.round(a / 30) * 30, 0, 360);
+  const stages = ["turn", "place", "sweep", "write", "done"];
+  const upText = v => (v > 1e-9 ? `up ${fmtN(v)}` : v < -1e-9 ? `down ${fmtN(-v)}` : "on the middle");
+  const L = withBoxes({
+    id: "sinegraph", P: Q, C, R, stage: "turn", arm: 0, pts: [0], grabbed: false, msg: null, verdict: null, typing: false, ring: null,
+    get next() { return 30 * this.pts.length; },
+    progress() { return stageIndex(stages, this.stage); },
+    frame() { return { x: -1, y: -1, w: 83, h: 45 }; },
+    grab(q) {
+      if (this.stage !== "turn" && this.stage !== "sweep") return false;
+      const r = Math.hypot(q.x - C.x, q.y - C.y);
+      if (r < 2 || r > R + 4) return false;
+      this.grabbed = true; this.msg = null; this.arm = T.grab(rot(q), this.arm); this.drag(q); return true;
+    },
+    drag(q) {
+      this.arm = T.drag(rot(q));
+      if (this.stage === "sweep") {
+        this.arm = Math.max(120, this.arm);
+        for (let a = 150; a <= this.arm; a += 30) if (!this.pts.includes(a)) this.pts.push(a);
+      }
+    },
+    release() {
+      this.grabbed = false;
+      if (this.stage === "turn") {
+        const want = this.next;
+        if (this.arm === want) { this.stage = "place"; return; }
+        if (this.arm !== want - 30) this.msg = `Turn it 30° at a time: on to ${want}°.`;
+        this.arm = want - 30;
+      } else if (this.stage === "sweep" && this.arm >= 360) { this.stage = "write"; this.typing = true; this.active = "per"; }
+    },
+    tap(q) {
+      if (this.stage !== "place") return false;
+      const want = this.next, ly = P.Y(val(want)), k = Math.round((q.x - P.ox) / 5), u = 30 * k;
+      if (k >= 0 && k <= 12 && Math.abs(q.x - P.X(u)) < 2 && Math.abs(q.y - ly) < 1.8) {
+        if (u === want) { this.pts.push(u); this.ring = u; this.msg = null; this.stage = this.pts.length >= 5 ? "sweep" : "turn"; }
+        else this.msg = `That's at ${u}°. Put it on the ${want}° line.`;
+        return true;
+      }
+      if (Math.abs(q.x - P.X(want)) < 2 && q.y > P.top - 1 && q.y < P.bottom + 1) { this.msg = `Put it where the dashed level line meets the ${want}° line.`; return true; }
+      return false;
+    },
+    act(x) {
+      if (boxAct(this, x)) return;
+      if (x !== "check" || this.stage !== "write") return;
+      const g = id => num(this.vals[id]);
+      const fail = (id, m) => { this.verdict = "wrong"; this.msg = m; this.active = id; };
+      if ([g("per"), g("hi"), g("lo")].some(v => v == null)) { const id = ["per", "hi", "lo"].find(id => g(id) == null); return fail(id, "Fill in every box."); }
+      if (g("per") !== 360) return fail("per", g("per") === 180 ? "Half a turn only brings it back to the middle. One wave is a whole turn: 360°." : "The wave starts again after one whole turn of the arm.");
+      if (g("hi") !== 1) return fail("hi", "The tip is highest at the top of the circle: the radius, 1.");
+      if (g("lo") !== -1) return fail("lo", g("lo") === 1 ? "The lowest is below the middle: it needs a minus sign." : "The tip is lowest at the bottom of the circle: −1.");
+      this.stage = "done"; this.verdict = null; this.msg = null; this.typing = false;
+    },
+    scene() {
+      const st = this.stage, want = this.next;
+      const say = {
+        turn: [`Turn the arm to ${want}°.`, f === "cos" && want === 30 ? "The circle is turned a quarter: the arm starts at the top, so its height is the cosine." : "Drag it round. It stops every 30°."],
+        place: [`Put a point where the level line meets the ${want}° line.`, "Tap the crossing."],
+        sweep: ["Turn the arm on, all the way round.", "The points place themselves."],
+        write: ["Write what the wave shows.", ""],
+        done: ["The wave is the tip's height, unrolled: after one turn it starts again.", ""],
+      }[st];
+      dhead(this, say[0], say[1]);
+      // the circle and its axes; its middle line runs on as the wave's axis
+      arc("circ", C, R, 0, 360);
+      line("cy", C.x, C.y - R - 1, C.x, C.y + R + 1);
+      plotAxes("pa", P, { x0: C.x - R - 1, across: degRad });
+      for (const [d, s] of [[5, "1/2"], [-5, "−1/2"]]) { line(`ct${d}`, C.x - 0.5, C.y - d, C.x + 0.5, C.y - d); text(`ctl${d}`, s, C.x - 0.8, C.y - d, "small", { anchor: "end" }); }
+      text("c1", "1", C.x + 0.7, C.y - R - 0.9, "small", { anchor: "start" });
+      text("cm1", "−1", C.x + 0.7, C.y + R + 0.9, "small", { anchor: "start" });
+      text("name", `y = ${f} x`, P.right, 7.5, "maths", { anchor: "end" });
+      // the arm, its turn, the tip's level line
+      const a = st === "write" || st === "done" ? 360 : this.arm, tip = onC(C, R, a + off), lv = P.Y(val(a));
+      if (a > 0 && a < 360) arc("aarc", C, 2.5, off, off + a, { c: "var(--chapter)", live: true });
+      if ((st === "turn" && (this.grabbed || a > 30 * (this.pts.length - 1))) || st === "place" || (st === "sweep" && a < 360))
+        line("lvl", tip.x, tip.y, P.right, lv, { c: "var(--ink2)", dash: true, live: true });
+      line("arm", C.x, C.y, tip.x, tip.y, { c: "var(--chapter)", live: true });
+      dot("ctr", C.x, C.y, 0.3, { c: "var(--ink)" });
+      if (a > 0 && a < 360) labA("armn", `${a}°`, C, R - 3.6, a + off, "small", "var(--chapter)", { live: true });
+      if (st === "turn" || st === "sweep") hand("tip", tip.x, tip.y, this.grabbed);
+      // the points; the wave strokes on through them
+      if (st === "write" || st === "done") curve("wave", P, val, { c: "var(--chapter)" });
+      for (const u of this.pts) dot(`pt${u}`, P.X(u), P.Y(val(u)), 0.35, { c: "var(--chapter)" });
+      if (this.ring != null && (st === "turn" || st === "place")) put(`ring${this.ring}`, "circle", { cx: sq(P.X(this.ring)), cy: sq(P.Y(val(this.ring))), r: sq(0.8), fill: "none", stroke: "var(--chapter)", "stroke-width": 1.5 }, "fade");
+      // the readout, then the record
+      if (st === "turn" || st === "place" || st === "sweep") {
+        const on = this.grabbed || st === "sweep";
+        if (st !== "turn" || this.grabbed || a > 30 * (this.pts.length - 1)) text(`rd${on}`, `${a}°: ${upText(val(a))}`, P.ox, 7.5, "say", { anchor: "start", c: on || st === "turn" ? "var(--chapter)" : null, live: true });
+      }
+      if (st === "write" || st === "done") {
+        const done = st === "done", ans = (id, v, cells) => (done ? [{ s: v, c: "var(--chapter)" }] : [{ box: id, cells }]);
+        mrow(this, "w1", P.ox, 37.5, done ? [{ s: "one wave:" }, { s: "360°", c: "var(--chapter)" }] : [{ s: "one wave:" }, ...ans("per", "360", 2), { s: "°" }]);
+        mrow(this, "w2", P.ox + 20, 37.5, [{ s: "highest" }, ...ans("hi", "1", 2)]);
+        mrow(this, "w3", P.ox + 34, 37.5, [{ s: "lowest" }, ...ans("lo", "−1", 2)]);
+      }
+      if (st === "write") block("check", P.ox, 41, 7, "Check", "check");
+      if (st === "done") block("next", P.ox, 41, 10, "Next problem", "next");
+    },
+  });
+  return L;
+}
+
+// ---------- Shape a wave (new hand move): The sine wave's stories and drawn waves, and Shift a wave ----------
+// The plain wave's handles: its middle (at the window's left end), its first crest, the end of its first wave and its
+// start; each snaps to squares, and each move is checked when the finger lifts. W is in squares: mid up from 0, amp,
+// per, start across from 0.
+function dShape(id, Q) {
+  const story = !!Q.text, shift = id === "wave", rad = Q.kind === "rad", start = Q.kind === "start", f = Q.f;
+  const ux = story ? 5 / Q.tb : 1 / 6, uy = story ? 5 / Q.hb : 5;
+  const a0 = story || !shift ? 0 : -180, a1 = story ? 12 * Q.tb : a0 + 360;
+  const b0 = story ? 0 : Math.min(-1, Q.D - Q.A), b1 = story ? Math.ceil((Q.D + Q.A) / Q.hb - 1e-9) * Q.hb : Math.max(1, Q.D + Q.A);
+  const top = story ? (wrapRows(Q.text, 66) > 2 ? 15 : 10) : b1 - b0 >= 6 ? 5 : 10;   // the tallest waves start on row 5
+  const P = plotOf({ ox: 5 - a0 * ux, oy: top + b1 * uy, ux, uy, a0, a1, b0, b1, ba: story ? Q.tb : 30, bb: story ? Q.hb : 1 });
+  const X0 = P.X(0), Tm = Math.round(Q.D * uy), Ta = Math.round(Q.A * uy), Tp = Math.round(360 / Q.B * ux), Ts = Math.round(Q.C * ux);
+  const W = story ? { mid: Tm === 5 ? 10 : 5, amp: Ta === 5 ? 3 : 5, per: Tp === 30 ? 40 : 30, start: 0 } : { mid: 0, amp: 5, per: 60, start: 0 };
+  const stages = [];
+  if (W.mid !== Tm) stages.push("mid");
+  if (W.amp !== Ta) stages.push("crest");
+  if (W.per !== Tp) stages.push("end");
+  if (shift) stages.push("slide");
+  stages.push("write");
+  if (Q.step4 === "slide") stages.push("s4");
+  if (Q.step4 === "flip") stages.push("flip", "choose");
+  stages.push("done");
+  // units: what a square means up and across, and how the numbers read
+  const vUp = s => s / uy, vAc = s => s / ux;
+  const acText = u => (story ? `${fmtN(u, 1)} ${Q.tunit}` : rad ? radText(Math.round(u)) : degText(Math.round(u)));
+  const Pd = 360 / Q.B, x = story ? "t" : "x", yv = story ? "h" : "y";
+  const unitW = story ? ` ${Q.unit}` : "";
+  const read = {
+    mid: s => (story ? `middle ${fmtN(vUp(s), 1)}` : `middle y = ${fmtN(vUp(s), 1)}`),
+    crest: s => (shift && !story ? `up and down ${fmtN(vUp(s), 1)}` : `swings ${fmtN(vUp(s), 1)}`),
+    end: s => `one wave: ${acText(vAc(s))}`,
+    slide: s => (s === 0 ? "starts at 0" : `starts ${acText(Math.abs(vAc(s)))} ${s > 0 ? "late" : "early"}`),
+  };
+  const cName = c => (story ? `${c} s` : rad ? radText(c) : degText(c));
+  const miss = {
+    mid: story ? `The ${Q.story === "wheel" ? "wheel's" : Q.story === "tide" ? "tide's" : "spring's"} middle is ${Q.D}${unitW} up.`
+      : `The target's middle is at ${fmtN(Q.D)}: halfway between ${fmtN(Q.D + Q.A)} and ${fmtN(Q.D - Q.A)}.`,
+    crest: story ? (Q.story === "wheel" ? `The car swings ${Q.A} m from the middle: half of ${2 * Q.A} m across.` : `It swings ${Q.A}${unitW} above and below the middle.`)
+      : `The target swings ${Q.A} from its middle: its crests are at ${fmtN(Q.D + Q.A)}.`,
+    end: story ? (Q.story === "wheel" ? `The wheel turns once in ${Q.T} s: one wave.` : `One wave takes ${Q.T} ${Q.tunit === "h" ? "hours" : "seconds"}.`)
+      : `The target repeats every ${rad ? radText(Pd) : Pd + "°"}.`,
+    slide: story ? `The car passes the middle going up at ${Q.C} s.` : f === "sin" ? `The target first rises through its middle at ${cName(Q.C)}.` : `The target's first crest is at ${cName(Q.C)}.`,
+  };
+  // the record: the equation, its boxes signed where school writes a sign (the shift and the number added on)
+  const signed = new Set(["c", "cn", "D"]);
+  const fx = story ? "sin(" : `${f}(`;
+  function eqToks(done) {
+    const A = done ? (Q.A === 1 ? [] : [{ s: String(Q.A), c: "var(--chapter)" }]) : [{ box: "A", cells: 2 }];
+    const B = done ? [{ s: String(Q.B), c: "var(--chapter)" }] : [{ box: "B", cells: 2 }];
+    const Dt = done ? (Q.D ? [{ s: `${Q.D < 0 ? "−" : "+"} ${Math.abs(Q.D)}`, c: "var(--chapter)" }] : []) : [{ box: "D", cells: 2 }];
+    let sh = [];
+    if (shift) {
+      if (done) sh = [{ s: `${Q.C > 0 ? "−" : "+"} ${story ? Math.abs(Q.C) : rad ? radText(Math.abs(Q.C)) : Math.abs(Q.C) + "°"}`, c: "var(--chapter)" }];
+      else if (rad) sh = [{ f: [[{ box: "cn", cells: 2 }, { s: "π" }], [{ box: "cd", cells: 1 }]] }];
+      else sh = [{ box: "c", cells: 2 }, ...(story ? [] : [{ s: "°" }])];
+    }
+    const head = [{ s: `${yv} =` }];
+    if (start) return [...head, { s: `${f}(${x}` }, ...sh, { s: ")" }];
+    if (shift) return [...head, ...A, { s: fx }, ...B, { s: `(${x}` }, ...sh, { s: "))" }, ...Dt];
+    return [...head, ...A, { s: fx }, ...B, { s: `${x})` }, ...Dt];
+  }
+  const boxes = start ? (rad ? ["cn", "cd"] : ["c"]) : shift ? ["A", "B", ...(rad ? ["cn", "cd"] : ["c"]), "D"] : ["A", "B", "D"];
+  const divText = story ? `360° ÷ ${Q.T} s = ${Q.B}°` : rad ? `2π ÷ ${radText(Pd)} = ${Q.B}` : `360° ÷ ${Pd}° = ${Q.B}`;
+  const showDiv = shift && !start && Q.B !== 1;
+  const sx = 9;                                             // the step's own handle (s4: shift in squares; flip: fs)
+  const L = withBoxes({
+    id, P: Q, Wv: W, plot: P, stage: stages[0], sh: 0, fs: 1, grabbed: false, before: null, msg: null, verdict: null, typing: stages[0] === "write",
+    progress() { return stageIndex(stages.filter(s => s !== "choose"), this.stage === "choose" ? "flip" : this.stage); },
+    frame() { return { x: -1, y: -1, w: P.right + 4, h: this.recY() + (rad && shift ? 6.6 : 5.6) }; },
+    recY() { return P.bottom + (story ? 7 : 8.4); },
+    handleAt(st = this.stage) {
+      const mY = P.oy - W.mid;
+      if (st === "mid") return { x: P.left, y: mY };
+      if (st === "crest") return { x: X0 + W.start + (f === "sin" ? W.per / 4 : 0), y: mY - W.amp };
+      if (st === "end") return { x: X0 + W.start + W.per, y: mY - (f === "cos" ? W.amp : 0) };
+      if (st === "slide") return { x: X0 + W.start, y: mY - (f === "cos" ? W.amp : 0) };
+      if (st === "s4") return { x: X0 + this.sh, y: P.oy };
+      if (st === "flip") return { x: X0 + this.fs * (P.right - X0), y: P.Y(trig(Q.f4, P.a1)) };
+      return null;
+    },
+    grab(q) {
+      const h = this.handleAt(); if (!h || Math.hypot(q.x - h.x, q.y - h.y) > 2.6) return false;
+      this.grabbed = true; this.msg = null; this.before = JSON.stringify([W, this.sh, this.fs]); return true;
+    },
+    drag(q) {
+      const st = this.stage;
+      if (st === "mid") W.mid = clamp(Math.round(P.oy - q.y), b0 * uy, b1 * uy);
+      else if (st === "crest") W.amp = clamp(Math.round(P.oy - W.mid - q.y), 1, (b1 - b0) * uy);
+      else if (st === "end") W.per = clamp(Math.round(q.x - X0 - W.start), 4, P.right - X0 - W.start);
+      else if (st === "slide") W.start = clamp(Math.round(q.x - X0), P.left - X0, P.right - X0);
+      else if (st === "s4") this.sh = clamp(Math.round(q.x - X0), -30, 30);
+      else if (st === "flip") this.fs = clamp((q.x - X0) / (P.right - X0), -1, 1);
+    },
+    next() {
+      const st = stages[stages.indexOf(this.stage) + 1];
+      this.stage = st; this.msg = null; this.verdict = null;
+      if (st === "write") { this.typing = true; this.active = boxes[0]; } else this.typing = false;
+    },
+    release() {
+      this.grabbed = false;
+      const st = this.stage, moved = this.before !== JSON.stringify([W, this.sh, this.fs]);
+      if (st === "flip") { if (this.fs < 0) { this.fs = -1; this.next(); } else { this.fs = 1; if (moved) this.msg = "Drag its end across the y-axis, to the other side."; } return; }
+      if (st === "s4") {
+        if (this.sh === -15) { this.next(); return; }
+        if (this.sh !== 0) this.msg = this.sh === 15 ? `That's sin(x − ${rad ? "π/2" : "90°"}): it starts late. Slide it left.` : "Slide it until it lies on the dashed cosine.";
+        this.sh = 0; return;
+      }
+      const ok = { mid: W.mid === Tm, crest: W.amp === Ta, end: W.per === Tp, slide: (((W.start - Ts) % Tp) + Tp) % Tp === 0 }[st];
+      if (ok) this.next(); else if (moved) this.msg = miss[st];
+    },
+    act(a) {
+      if (boxAct(this, a)) return;
+      if (this.stage === "choose" && (a === "same" || a === "upside")) {
+        const right = Q.f4 === "cos" ? "same" : "upside";
+        if (a === right) this.next();
+        else this.msg = Q.f4 === "cos" ? "Look again: the flipped cosine lies on the dashed one." : "Look again: every crest landed where a trough was.";
+        return;
+      }
+      if (a !== "check" || this.stage !== "write") return;
+      const g = k => num(this.vals[k]);
+      const fail = (k, m) => { this.verdict = "wrong"; this.msg = m; this.active = k; };
+      const missing = boxes.find(k => (k === "cn" ? false : g(k) == null));
+      if (missing) return fail(missing, "Fill in every box.");
+      let C = 0;
+      if (shift) C = rad ? -180 * (this.vals.cn ? g("cn") : 1) / g("cd") : -g("c");
+      const A = start ? 1 : g("A"), B = start ? 1 : g("B"), D = start ? 0 : g("D");
+      const want = waveFn(f, Q.A, Q.B, Q.C, Q.D);
+      if (B > 0 && sameWave(waveFn(f, A, B, C, D), want)) { this.next(); return; }
+      // the slips, then what each wrong box is for
+      if (!start && B !== Q.B && Math.abs(B - (story ? Q.T : Pd)) < 1e-9)
+        return fail("B", story ? `One wave is ${Q.T} s, so it turns 360° ÷ ${Q.T} = ${Q.B}° a second: t is multiplied by ${Q.B}.`
+          : shift ? `The number with x is how many waves fit in 360°: 360 ÷ ${Pd} = ${Q.B}.` : `One wave is ${Pd}°, so ${Q.B} waves fit in 360°: x is multiplied by ${Q.B}.`);
+      const cBox = rad ? "cn" : "c";
+      if (shift && Q.C && Math.abs(C + Q.C) < 1e-9 && sameWave(waveFn(f, A, B, Q.C, D), want)) {
+        const s = cName(Math.abs(Q.C));
+        return fail(cBox, Q.C > 0 ? `${x} − ${s} starts it ${s} later: right, not left.` : `${x} + ${s} starts it ${s} earlier: left, not right.`);
+      }
+      if (!start && A !== Q.A) {
+        if (A === Q.A + Q.D && Q.D) return fail("A", shift && !story ? `${Q.A} is how far it swings from the middle, not how high it reaches.` : `The swing is from the middle to the top: ${Q.A}, not ${Q.A + Q.D}.`);
+        if (A === 2 * Q.A) return fail("A", `The swing is half of top to bottom: ${Q.A}, not ${2 * Q.A}.`);
+        return fail("A", "The swing is how far a crest rises above the middle line.");
+      }
+      if (!start && B !== Q.B) return fail("B", story ? `t is multiplied by the degrees turned each second: 360° ÷ ${Q.T} s.` : `The number with x is how many waves fit in 360°: 360 ÷ ${Pd} = ${Q.B}.`);
+      if (!start && D !== Q.D) return fail("D", "The number added on is the middle line's height.");
+      return fail(cBox, f === "sin" ? "The shift is where it first rises through its middle line." : "The shift is where its first crest is.");
+    },
+    scene() {
+      const st = this.stage, past = s => stages.indexOf(st) > stages.indexOf(s), main = !["s4", "flip", "choose"].includes(st);
+      const what = story ? (Q.story === "wheel" ? "the wheel" : Q.story === "tide" ? "the tide" : "the spring") : "the target";
+      const sub = {
+        mid: story ? `Drag the middle line to ${what}'s middle.` : "Drag the middle line onto the target's middle.",
+        crest: story ? "Drag the crest up or down to the top of the swing." : "Drag the crest onto the target's crest.",
+        end: story ? `Drag the end of the first wave to one turn of ${what}.` : "Drag the end of the first wave to where the target's first wave ends.",
+        slide: story ? "Slide the wave so it starts when the car passes the middle, going up." : "Slide the wave so it starts where the target starts.",
+        write: story ? "Write its equation." : shift ? "Write the target's equation." : "Write the target's equation.",
+      };
+      const sayDone = start ? `It's ${f} x started ${cName(Math.abs(Q.C))} ${Q.C > 0 ? "late: x − " + cName(Q.C) + " slides it right" : "early: x + " + cName(-Q.C) + " slides it left"}.`
+        : story && shift ? `It swings ${Q.A} m about a middle of ${Q.D} m, turns ${Q.B}° a second, and starts ${Q.C} s late.`
+        : shift ? `It swings ${Q.A} about a middle of ${fmtN(Q.D)}, fits ${Q.B} wave${Q.B > 1 ? "s" : ""} in a turn, and starts ${cName(Math.abs(Q.C))} ${Q.C > 0 ? "late" : "early"}.`
+        : story ? `It swings ${Q.A}${unitW} about a middle of ${Q.D}${unitW}, and one wave is one turn: 360° in ${Q.T} ${Q.tunit === "h" ? "hours" : "seconds"}, ${Q.B}° each ${Q.tunit === "h" ? "hour" : "second"}.`
+        : `It swings ${Q.A} about a middle of ${fmtN(Q.D)}, and ${Q.B} wave${Q.B > 1 ? "s" : ""} fit in 360°.`;
+      const head = {
+        mid: ["Shape the plain wave like the target.", sub.mid], crest: ["Shape the plain wave like the target.", sub.crest],
+        end: ["Shape the plain wave like the target.", sub.end], slide: ["Now slide it.", sub.slide],
+        write: ["Write the target's equation.", "Read it off your moves."],
+        s4: [`Slide sin x ${rad ? "π/2" : "90°"} to the left.`, "Drag its start along."],
+        flip: [`Flip ${Q.f4} x over the y-axis.`, "Drag its end across the axis."],
+        choose: ["What did it land on?", "Tap one."],
+        done: [sayDone, ""],
+      }[st];
+      if (story && st !== "done") dhead(this, Q.text, sub[st] || "");
+      else dhead(this, head[0], head[1]);
+      // the axes
+      plotAxes("pa", P, story ? { across: u => [fmtN(u, 1)], up: v => fmtN(v, 1), upX: P.left, nameA: `${x} (${Q.tunit})`, nameU: `h (${Q.unit})` }
+        : { across: rad ? u => [radText(u), degText(u)] : degRad, up: v => (Number.isInteger(v) && v ? fmtN(v) : null), nameA: "x" });
+      // the target (dashed), the plain wave and its handles; the found pieces stay
+      const wf = (fs = f) => u => W.amp / uy * trig(fs, (360 / vAc(W.per)) * (u - vAc(W.start))) + vUp(W.mid);
+      if (main) {
+        if (!story) curve("target", P, waveFn(f, Q.A, Q.B, Q.C, Q.D), { c: "var(--ink2)", dash: true });
+        if (st !== "write" && st !== "done") line("midl", P.left, P.oy - W.mid, P.right, P.oy - W.mid, { c: "var(--chapter)", dash: true, live: true });
+        curve("plain", P, wf(), { c: "var(--chapter)", live: true });
+        if (st === "crest") { const h = this.handleAt(); line("swing", h.x, P.oy - W.mid, h.x, h.y, { c: "var(--chapter)", live: true }); }
+        if (!past(stages[0]) && !story && st !== "done") text("pname", `y = ${f} x`, P.right, P.top - 1.4, "say", { anchor: "end", c: "var(--chapter)" });
+        const h = this.handleAt(); if (h) hand(`h${st}`, h.x, h.y, this.grabbed);
+      } else {
+        // step 4: sin x slides onto cos x, or a wave flips over the y-axis
+        if (st === "s4") {
+          curve("cos4", P, u => trig("cos", u), { c: "var(--ink2)", dash: true });
+          text("cosn", "y = cos x", P.right, P.top - 1.4, "say", { anchor: "end", c: "var(--ink2)" });
+          curve("sin4", P, u => trig("sin", u + 6 * -this.sh), { c: "var(--chapter)", live: true });
+        } else {
+          curve("orig4", P, u => trig(Q.f4, u), { c: "var(--ink2)", dash: true });
+          text("orign", `y = ${Q.f4} x`, P.right, P.top - 1.4, "say", { anchor: "end", c: "var(--ink2)" });
+          const s = this.fs, n = 240; let d = "";
+          for (let j = 0; j <= n; j++) { const u = P.a0 + (P.a1 - P.a0) * j / n; d += `${j ? "L" : "M"}${sq(X0 + s * (P.X(u) - X0)).toFixed(1)} ${sq(P.Y(trig(Q.f4, u))).toFixed(1)}`; }
+          path("flip4", d, { c: "var(--chapter)", live: true });
+        }
+        const h = this.handleAt(); if (h) hand(`h${st}`, h.x, h.y, this.grabbed);
+      }
+      // the record: what each move found, then the equation
+      const r1 = P.bottom + (story ? 3.3 : 4.9), ry = this.recY() + (rad && shift ? 1 : 0);
+      const pieces = start ? ["slide"] : ["mid", "crest", "end", ...(shift ? ["slide"] : [])];
+      const final = { mid: Tm, crest: Ta, end: Tp, slide: Ts };
+      const cur = { mid: W.mid, crest: W.amp, end: W.per, slide: W.start };
+      pieces.forEach((p, j) => {
+        const active = st === p, found = !stages.includes(p) || past(p);
+        if (!active && !found) return;
+        const s = read[p](found ? final[p] : cur[p]);
+        text(`rp${p}${found}:${s}`, s, P.left + 15 * j, r1, "say", { anchor: "start", c: active ? "var(--chapter)" : null, live: active });
+      });
+      let ex = P.left;
+      if (showDiv && (past("end") || !stages.includes("end"))) { mrow(this, "div", ex, ry, [{ s: divText }]); ex += Math.ceil(tw(divText) + 0.4) + 3; }
+      if (st === "write") mrow(this, "eqw", ex, ry, eqToks(false));
+      else if (past("write")) mrow(this, "eqd", ex, ry, tight(eqToks(true)));
+      else mrow(this, "eqq", ex, ry, tight(eqToks(false).map(t => (t.box || t.f ? { s: "?", c: "var(--ink3)" } : t))));
+      const by = ry + (rad && shift ? 3.3 : 2.3);
+      // step 4's record sits on the last row, beside Next
+      if (Q.step4 === "slide" && past("s4")) mrow(this, "id4", P.left + 14, by + 1, [{ s: `cos x = sin(x + ${rad ? "π/2" : "90°"})` }]);
+      if (Q.step4 === "flip" && past("choose")) mrow(this, "id4", P.left + 14, by + 1, [{ s: Q.f4 === "cos" ? "cos(−x) = cos x" : "sin(−x) = −sin x" }]);
+      if (st === "write") block("check", P.left, by, 7, "Check", "check");
+      if (st === "choose") { block("same", P.left, by, 10, "the same", "same", { arrow: false }); block("upside", P.left + 12, by, 12, "upside down", "upside", { arrow: false }); }
+      if (st === "done") block("next", P.left, by, 10, "Next problem", "next");
+    },
+  });
+  // signed boxes show their sign: + when none is typed
+  const type0 = L.type;
+  L.type = function (v) { type0.call(this, signed.has(this.active) && v && !v.startsWith("−") ? "+" + v : v); };
+  return L;
+}
+
+// ---------- the tangent (Shift a wave, from problem 10) ----------
+// The circle's radius is 1 (5 squares), its right side the y-axis of the plot: the arm's line meets it at its slope.
+// Turn the arm round; the points place themselves; the curve runs off at 90° and 270°.
+function dTan(Q) {
+  const C = { x: 5, y: 20, R: 5 }, R = 5;
+  const P = plotOf({ ox: 10, oy: 20, ux: 1 / 6, uy: 5, a0: 0, a1: 360, b0: -2, b1: 2, ba: 30, bb: 1 });
+  const T = turner(C, a => Math.round(a / 15) * 15, 0, 360);
+  const tanv = a => (Math.abs(((a % 180) + 180) % 180 - 90) < 1e-9 ? Infinity : Math.tan(a * D2R));
+  const stages = ["sweep", "write", "done"];
+  const L = withBoxes({
+    id: "wave", P: Q, C, R, stage: "sweep", arm: 0, grabbed: false, msg: null, verdict: null, typing: false,
+    progress() { return stageIndex(stages, this.stage); },
+    frame() { return { x: -1, y: -1, w: 74, h: 45 }; },
+    grab(q) {
+      if (this.stage !== "sweep") return false;
+      const r = Math.hypot(q.x - C.x, q.y - C.y); if (r < 1.5 || r > R + 4) return false;
+      this.grabbed = true; this.msg = null; this.arm = T.grab(q, this.arm); return true;
+    },
+    drag(q) { this.arm = Math.max(this.arm, T.drag(q)); },
+    release() { this.grabbed = false; if (this.arm >= 360) { this.stage = "write"; this.typing = true; this.active = "per"; } },
+    act(x) {
+      if (boxAct(this, x)) return;
+      if (x !== "check" || this.stage !== "write") return;
+      const v = num(this.vals.per);
+      if (v == null) { this.verdict = "wrong"; this.msg = "Fill in the box."; return; }
+      if (v === 180) { this.stage = "done"; this.verdict = null; this.msg = null; this.typing = false; return; }
+      this.verdict = "wrong";
+      this.msg = v === 360 ? "After a half turn the arm lies on the same line, so its slope repeats: every 180°." : "Find where the curve starts again: after a half turn of the arm.";
+    },
+    scene() {
+      const st = this.stage, a = st === "sweep" ? this.arm : 360;
+      const say = { sweep: ["Turn the arm all the way round.", "Its line meets the y-axis at its slope: the points place themselves."], write: ["Write how often it repeats.", ""],
+        done: ["The tangent is the arm's slope: it runs off at 90° and 270°, and repeats every 180°.", ""] }[st];
+      dhead(this, say[0], say[1]);
+      arc("circ", C, R, 0, 360);
+      plotAxes("pa", P, { x0: C.x - R - 1, across: degRad, up: v => (v ? fmtN(v) : null), upX: P.left + 0.2, nameA: "x" });
+      text("name", "y = tan x", P.right, 7.5, "maths", { anchor: "end" });
+      const tip = onC(C, R, a), t = tanv(a);
+      if (st === "sweep" && isFinite(t) && Math.abs(t) <= 2.2) {
+        line("ext", tip.x, tip.y, P.X(0), P.Y(t), { c: "var(--ink2)", dash: true, live: true });
+        line("lvl", P.X(0), P.Y(t), P.X(a), P.Y(t), { c: "var(--ink2)", dash: true, live: true });
+      }
+      if (a > 0 && a < 360) arc("aarc", C, 1.8, 0, a, { c: "var(--chapter)", live: true });
+      line("arm", C.x, C.y, tip.x, tip.y, { c: "var(--chapter)", live: true });
+      dot("ctr", C.x, C.y, 0.25, { c: "var(--ink)" });
+      if (st === "sweep") hand("tip", tip.x, tip.y, this.grabbed);
+      for (let u = 0; u <= a; u += 15) { const v = tanv(u); if (isFinite(v) && Math.abs(v) <= 2) dot(`pt${u}`, P.X(u), P.Y(v), 0.3, { c: "var(--chapter)" }); }
+      if (st !== "sweep") curve("tanw", P, tanv, { c: "var(--chapter)" });
+      if (st === "sweep" && (this.grabbed || a)) text(`rd`, `${a}°: ${isFinite(t) ? "slope " + fmtN(t) : "no slope, it runs off"}`, P.ox, 7.5, "say", { anchor: "start", c: "var(--chapter)", live: true });
+      if (st !== "sweep") mrow(this, "w1", P.ox, 37.5, [{ s: "repeats every" }, ...(st === "done" ? [{ s: "180°", c: "var(--chapter)" }] : [{ box: "per", cells: 2 }, { s: "°" }])]);
+      if (st === "write") block("check", P.ox, 41, 7, "Check", "check");
+      if (st === "done") block("next", P.ox, 41, 10, "Next problem", "next");
+    },
+  });
+  return L;
+}
+
+// ---------- Adding angles (g12-addangle) ----------
+// The radius is 25 squares, so 3/5 is 15, 4/5 is 20, 7/25 is 7 and 24/25 is 24: every corner sits on a crossing. Turn
+// the arm on by b from the first arm, lay the straightedge from its tip onto the first arm, and the tip's height (or
+// across) splits into the two parts of the formula.
+const LAT = (() => { const a = []; for (let x = -25; x <= 25; x++) for (let y = -25; y <= 25; y++) if (x * x + y * y === 625) a.push(norm360(Math.atan2(y, x) / D2R)); return a; })();
+const snapLat = raw => { const n = norm360(raw), best = LAT.reduce((b, l) => (Math.abs(sdiff(l - n)) < Math.abs(sdiff(b - n)) ? l : b), LAT[0]); return raw + sdiff(best - n); };
+const f5 = n => fr(n, 5);
+function dAddPic(Q) {
+  const { f, op, T, F, aDeg, bDeg, ca, sa, cb, sb, v } = Q, R = 25;
+  const sgn = op > 0 ? "+" : "−", nameQ = `${f}(a ${sgn} b)`;
+  // where things sit relative to the centre (y up), then on the paper
+  const tipDeg = aDeg + bDeg, q0 = 90 * Q.k;
+  const th0 = Math.min(q0, tipDeg), th1 = Math.max(q0 + 90, tipDeg);
+  const pts = [{ x: 0, y: 0 }];
+  for (let t = th0; t <= th1 + 0.01; t += 3) pts.push({ x: R * Math.cos(t * D2R), y: R * Math.sin(t * D2R) });
+  pts.push({ x: R * Math.cos(th1 * D2R), y: R * Math.sin(th1 * D2R) });
+  const mnx = Math.min(...pts.map(p => p.x)) - 1.5, mxx = Math.max(...pts.map(p => p.x)) + 1.5;
+  const mny = Math.min(...pts.map(p => p.y)) - 1.5, mxy = Math.max(...pts.map(p => p.y)) + 1.5;
+  const O = { x: 5 * Math.ceil((1.5 - mnx) / 5), y: 5 * Math.ceil((7 + mxy) / 5) };
+  const at = p => ({ x: O.x + p.x, y: O.y - p.y });
+  const C = { ...O, R }, Tp = at(T), Fp = at(F);
+  const x0 = 5 * Math.ceil((O.x + mxx + 3 + (f === "cos" ? 0 : 6)) / 5);
+  const Tturn = turner(C, snapLat, aDeg - 200, aDeg + 200);
+  const drop = Math.hypot(T.x - F.x, T.y - F.y), dn = { x: (Fp.x - Tp.x) / drop, y: (Fp.y - Tp.y) / drop };
+  const stages = ["turn", "drop", "write", "done"];
+  const bName = Q.a === Q.b ? "b = a" : `cos b = ${f5(cb)}, sin b = ${f5(Q.sbAbs)}`;
+  const latText = deg => { const p = { x: Math.round(R * Math.cos(deg * D2R)), y: Math.round(R * Math.sin(deg * D2R)) }; return `(${fmtN(p.x)}, ${fmtN(p.y)})`; };
+  const part1 = f === "sin" ? F.y : F.x, part2 = (f === "sin" ? T.y : T.x) - part1;
+  const splitText = `${fmtN(part1)} ${part2 < 0 ? "−" : "+"} ${Math.abs(part2)} = ${fmtN(part1 + part2)}`;
+  // the working: the products set close, a dot between, a negative in brackets
+  const fv = n => vToks({ s: Math.sign(n), a: Math.abs(n), r: 1, d: 5 }, null);
+  const fac = n => (n < 0 ? [{ s: "(", tight: true }, ...fv(n), { s: ")", tight: true }] : fv(n));
+  const pr = (n, m) => [...fac(n), { s: "·" }, ...fac(m)];
+  const workRow = done => [{ s: "=" }, ...(f === "sin" ? pr(sa, cb) : pr(ca, cb)), { s: f === "sin" ? sgn : op > 0 ? "−" : "+" },
+    ...(f === "sin" ? pr(ca, Math.abs(sb)) : pr(sa, Math.abs(sb))), { s: "=" }, ...(done ? vToks(v) : boxToks(v, "v", 2))];
+  const recW = Math.max(listW(workRow(false)), tw(`${nameQ} = sin a cos b + cos a sin b`) + 1, 30);
+  const L = withBoxes({
+    id: "addangle", P: Q, C, R, stage: "turn", arm: aDeg, dr: 0, grabbed: false, msg: null, verdict: null, typing: false, pos: { O, Tp, Fp },
+    progress() { return stageIndex(stages, this.stage); },
+    frame() { return { x: -1, y: -1, w: x0 + recW + 2, h: Math.max(O.y - mny + 2, 35) }; },
+    grab(q) {
+      const st = this.stage;
+      if (st === "turn") { const r = Math.hypot(q.x - O.x, q.y - O.y); if (r < 3 || r > R + 4) return false; this.grabbed = true; this.msg = null; this.arm = Tturn.grab(q, this.arm); return true; }
+      if (st === "drop") { const h = { x: Tp.x + dn.x * this.dr, y: Tp.y + dn.y * this.dr }; if (Math.hypot(q.x - h.x, q.y - h.y) > 3) return false; this.grabbed = true; this.msg = null; return true; }
+      return false;
+    },
+    drag(q) {
+      if (this.stage === "turn") this.arm = Tturn.drag(q);
+      else this.dr = clamp((q.x - Tp.x) * dn.x + (q.y - Tp.y) * dn.y, 0, drop);
+    },
+    release() {
+      this.grabbed = false;
+      if (this.stage === "turn") {
+        const t = this.arm - aDeg;
+        if (Math.abs(t - bDeg) < 0.5) { this.stage = "drop"; return; }
+        if (Math.abs(t) > 0.5) this.msg = Math.abs(t + bDeg) < 0.5 ? (op > 0 ? "a + b turns on from the first arm: counterclockwise." : "a − b turns back from the first arm: clockwise.")
+          : Q.a === Q.b ? "Turn by b: the same turn as a." : `Turn by b, the angle whose sine is ${f5(Q.sbAbs)}.`;
+        this.arm = aDeg;
+      } else if (this.stage === "drop") {
+        if (this.dr >= drop - 0.75) { this.dr = drop; this.stage = "write"; this.typing = true; this.active = "va"; }
+        else { this.msg = "Drag it all the way to the first arm."; this.dr = 0; }
+      }
+    },
+    act(x) {
+      if (boxAct(this, x)) return;
+      if (x !== "check" || this.stage !== "write") return;
+      const near = (a, b) => Math.abs(a - b) < 1e-9;
+      const sA = sa / 5, cA = ca / 5, sB = sb / 5, cB = cb / 5;
+      const m = judge(readVal(this, v, "v"), v, {
+        sign: f === "sin" ? `The tip is ${T.y > 0 ? "above" : "below"} the x-axis, so the sine is ${T.y > 0 ? "positive" : "negative"}.` : `The tip is ${T.x > 0 ? "right" : "left"} of the y-axis, so the cosine is ${T.x > 0 ? "positive" : "negative"}.`,
+        generic: f === "sin" ? `Add the two parts of the tip's height: ${splitText.split(" =")[0]} of the radius's 25 squares.` : `Put the two parts of the tip's across together: ${splitText.split(" =")[0]} of the radius's 25 squares.`,
+        other: val => {
+          if (op > 0 && f === "sin" && near(val, sA + Math.abs(sB)) && val > 1) return `${f5(sa)} + ${f5(Math.abs(sb))} = ${fr(sa + Math.abs(sb), 5)} is past the top of the circle: a sine is never more than 1.`;
+          if (op > 0 && f === "cos" && near(Math.abs(val), Math.abs(cA + cB)) && Math.abs(cA + cB) > 1) return `${f5(ca)} + ${f5(cb)} = ${fr(ca + cb, 5)} is past the edge of the circle: a cosine is never more than 1.`;
+          if (f === "cos" && near(val, cA * cB + sA * sB)) return op > 0 ? "cos(a + b) takes sin a sin b away." : "cos(a − b) adds sin a sin b.";
+          if (f === "sin" && near(val, sA * cB - cA * sB)) return op > 0 ? "sin(a + b) adds cos a sin b." : "sin(a − b) takes cos a sin b away.";
+          if (f === "sin" && (near(val, cA * cB + sA * sB) || near(val, cA * cB - sA * sB))) return `Each part of ${nameQ} has one sine and one cosine.`;
+          return null;
+        },
+      });
+      if (!m) { this.stage = "done"; this.verdict = null; this.typing = false; this.msg = null; return; }
+      this.verdict = "wrong"; this.msg = m;
+      const miss = readVal(this, v, "v"); if (miss.missing) this.active = miss.first;
+    },
+    scene() {
+      const st = this.stage, after = st === "write" || st === "done";
+      const say = {
+        turn: [`Turn the arm ${op > 0 ? "on" : "back"} by b, from the first arm.`, "Drag it round. It stops where the tip lands on a crossing."],
+        drop: ["Lay the straightedge from the tip onto the first arm.", "Drag it down, square to the arm."],
+        write: [`Write ${nameQ}.`, f === "sin" ? "The tip's height comes in two parts." : "The tip's across comes in two parts."],
+        done: [f === "sin" ? `The height comes in two parts: sin a cos b, then ${op > 0 ? "" : "less "}cos a sin b.` : `The across comes in two parts: cos a cos b, then ${op > 0 ? "less " : ""}sin a sin b.`, ""],
+      }[st];
+      dhead(this, say[0], say[1]);
+      // the arc the turns pass through, the axes
+      arc("circ", C, R, th0, th1);
+      const ex = { l: Math.min(-3, mnx + 1.5 - 1.5), r: Math.max(3, mxx - 1.5 + 1.5), d: Math.min(-3, mny + 1.5 - 1.5), u: Math.max(3, mxy - 1.5 + 1.5) };
+      line("ax", O.x + ex.l, O.y, O.x + ex.r, O.y); line("ay", O.x, O.y - ex.u, O.x, O.y + -ex.d);
+      // the first arm and its angle a
+      const A1 = at({ x: 5 * ca, y: 5 * sa });
+      arc("aarc", C, Q.k ? 2.2 : 4, 0, aDeg, { c: "var(--ink2)" });
+      labA("an", "a", C, Q.k ? 3.4 : 5.4, Q.k ? q0 + (aDeg - q0) / 2 : aDeg / 2, "small", "var(--ink2)");
+      line("arm1", O.x, O.y, A1.x, A1.y);
+      // the second arm, its turn b
+      const a2 = st === "turn" ? this.arm : tipDeg, tip2 = onC(C, R, a2);
+      if (Math.abs(a2 - aDeg) > 0.5) { arc("barc", C, 8, aDeg, a2, { c: "var(--chapter)", live: st === "turn" }); labA("bn", "b", C, 9.4, (aDeg + a2) / 2, "small", "var(--chapter)", { live: st === "turn" }); }
+      line("arm2", O.x, O.y, tip2.x, tip2.y, { c: "var(--chapter)", live: true });
+      if (st === "turn") hand("tip", tip2.x, tip2.y, this.grabbed);
+      // the straightedge, then the small right triangle on the first arm
+      if (st === "drop" && this.dr > 0.05) line("dropl", Tp.x, Tp.y, Tp.x + dn.x * this.dr, Tp.y + dn.y * this.dr, { c: "var(--ink2)", dash: true, live: true });
+      if (st === "drop") hand("tipd", Tp.x + dn.x * this.dr, Tp.y + dn.y * this.dr, this.grabbed);
+      if (after) {
+        line("legb", Tp.x, Tp.y, Fp.x, Fp.y, { c: "var(--chapter)" });
+        const u = { x: (O.x - Fp.x) / Math.hypot(O.x - Fp.x, O.y - Fp.y), y: (O.y - Fp.y) / Math.hypot(O.x - Fp.x, O.y - Fp.y) };
+        path("rc", `M${sq(Fp.x + u.x)} ${sq(Fp.y + u.y)}L${sq(Fp.x + u.x - dn.x)} ${sq(Fp.y + u.y - dn.y)}L${sq(Fp.x - dn.x)} ${sq(Fp.y - dn.y)}`);
+        dot("F", Fp.x, Fp.y, 0.35, { c: "var(--chapter)" });
+        // the split: the tip's height (or across) cut at the foot's level
+        if (f === "sin") {
+          const lvl = { x: Tp.x, y: Fp.y }, side = F.x > T.x ? -1 : 1;   // the numbers away from the triangle
+          const ys = [O.y, Fp.y, Tp.y];
+          line("hgt", Tp.x, Math.min(...ys), Tp.x, Math.max(...ys), { c: "var(--ink2)", dash: true });
+          line("flv", Fp.x, Fp.y, lvl.x, lvl.y, { c: "var(--ink2)", dash: true });
+          text("p1", fmtN(part1), Tp.x + side * 0.7, (O.y + Fp.y) / 2, "small", { anchor: side > 0 ? "start" : "end", c: "var(--chapter)" });
+          text("p2", fmtN(part2), Tp.x + side * 0.7, (Fp.y + Tp.y) / 2, "small", { anchor: side > 0 ? "start" : "end", c: "var(--chapter)" });
+        } else {
+          const side = F.y >= 0 ? 1 : -1;                          // the numbers away from the triangle
+          line("fdn", Fp.x, Fp.y, Fp.x, O.y, { c: "var(--ink2)", dash: true });
+          line("tdn", Tp.x, Tp.y, Tp.x, O.y, { c: "var(--ink2)", dash: true });
+          text("p1", fmtN(part1), (O.x + Fp.x) / 2, O.y + side * 1.1, "small", { c: "var(--chapter)" });
+          text("p2", fmtN(part2), (Fp.x + Tp.x) / 2, O.y + side * 1.1, "small", { c: "var(--chapter)" });
+        }
+      }
+      dot("ctr", O.x, O.y, 0.3, { c: "var(--ink)" });
+      // the record: a and b, the question, what each move found, the working
+      text("ra", `cos a = ${f5(ca)}, sin a = ${f5(sa)}`, x0, 8, "say", { anchor: "start" });
+      text("rb", bName, x0, 10.5, "say", { anchor: "start" });
+      if (!after) mrow(this, "q", x0, 14.5, [{ s: nameQ }]);
+      else mrow(this, "q2", x0, 14.5, [{ s: f === "sin" ? `${nameQ} = sin a cos b ${sgn} cos a sin b` : `${nameQ} = cos a cos b ${op > 0 ? "−" : "+"} sin a sin b` }]);
+      const live = (k, s, y, on) => text(k, s, x0, y, "say", { anchor: "start", c: on ? "var(--chapter)" : null, live: on });
+      if (st === "turn" && (this.grabbed || Math.abs(this.arm - aDeg) > 0.5)) { const t = this.arm - aDeg; live("rd1", `${Math.abs(t - bDeg) < 0.5 ? `a ${sgn} b: ` : ""}${latText(this.arm)}`, 18, true); }
+      if (st !== "turn") live("rc1", `a ${sgn} b lands on (${fmtN(T.x)}, ${fmtN(T.y)})`, 18, false);
+      if (st === "drop" && this.dr > 0.05) live("rd2", `${fmtN(this.dr, 1)} squares`, 20.5, true);
+      if (after) { live("rc2", `${f5(cb)} of the way out`, 20.5, false); live("rc3", splitText, 23, false); }
+      if (after) mrow(this, "w2", x0, 28, workRow(st === "done"));
+      if (st === "write") block("check", x0, 32, 7, "Check", "check");
+      if (st === "done") block("next", x0, 32, 10, "Next problem", "next");
+    },
+  });
+  return L;
+}
+
+// School's kind (from problem 7) and exact values (from 10): a table of the four products; tap the two that make it,
+// then write the sum.
+function dAddTable(Q) {
+  const { f, op } = Q, school = Q.kind === "school", sgn = op > 0 ? "+" : "−";
+  let rows, cols, cells, nameQ, ans, line1, numer;
+  const vt = (n, d) => fr(n, d);
+  if (school) {
+    const { a, b } = Q;
+    rows = [`sin a = ${vt(a.s, a.d)}`, `cos a = ${vt(a.c, a.d)}`];
+    cols = [`cos b = ${vt(b.c, b.d)}`, `sin b = ${vt(b.s, b.d)}`];
+    const rv = [a.s, a.c], cv = [b.c, b.s], d = a.d * b.d;
+    cells = rv.map(r => cv.map(c => ({ n: r * c, d, s: vt(r * c, d) })));
+    nameQ = `${f}(a ${sgn} b)`;
+  } else {
+    const val = (fn, t) => { const [x, r, d] = SPEC[t][fn]; return { a: x, r, d }; };
+    const prod = (u, w) => { const [k, r] = simpRoot(u.r * w.r); let a = u.a * w.a * k, d = u.d * w.d; const g = gcd(a, d); a /= g; d /= g; return { s: 1, a, r, d }; };
+    rows = [`sin ${Q.p}° = ${vText({ s: 1, ...val("sin", Q.p) })}`, `cos ${Q.p}° = ${vText({ s: 1, ...val("cos", Q.p) })}`];
+    cols = [`cos ${Q.q}° = ${vText({ s: 1, ...val("cos", Q.q) })}`, `sin ${Q.q}° = ${vText({ s: 1, ...val("sin", Q.q) })}`];
+    const rv = [val("sin", Q.p), val("cos", Q.p)], cv = [val("cos", Q.q), val("sin", Q.q)];
+    cells = rv.map(r => cv.map(c => { const p = prod(r, c); return { p, s: vText(p) }; }));
+    nameQ = `${f} ${Q.t}°`;
+  }
+  // the two that make it: sin → sin a cos b and cos a sin b; cos → cos a cos b and sin a sin b
+  const right = f === "sin" ? ["0:0", "1:1"] : ["1:0", "0:1"];
+  const o2 = f === "sin" ? sgn : op > 0 ? "−" : "+", sg = o2 === "+" ? 1 : -1;
+  if (school) {
+    const [c1, c2] = right.map(k => { const [r, c] = k.split(":").map(Number); return cells[r][c]; });
+    const n = c1.n + sg * c2.n;
+    ans = { s: Math.sign(n), a: Math.abs(n), r: 1, d: c1.d };
+  } else {
+    const [c1, c2] = right.map(k => { const [r, c] = k.split(":").map(Number); return cells[r][c].p; });
+    // both are a√r/4 (√6/4, √2/4): the top is written for the child, the bottom typed
+    const term = p => (p.r > 1 ? "√" + p.r : String(p.a));
+    numer = sg > 0 ? `${term(c1)} + ${term(c2)}` : `${term(c1)} − ${term(c2)}`;
+    ans = { d: 4 };
+  }
+  const hw = Math.max(...rows.map(s => tw(s, "say"))) + 1, xt = 5 * Math.ceil((5 + hw) / 5), cw = 10, chh = 4, yt = school ? 12 : 10;
+  const stages = ["tap", "write", "done"];
+  const L = withBoxes({
+    id: "addangle", P: Q, stage: "tap", picked: [], grabbed: false, msg: null, verdict: null, typing: false,
+    progress() { return stageIndex(stages, this.stage); },
+    frame() { return { x: -1, y: -1, w: Math.max(xt + 2 * cw + 2, 50), h: yt + 2 * chh + 18 }; },
+    act(x) {
+      if (boxAct(this, x)) return;
+      if (x.startsWith("cell:") && this.stage === "tap") {
+        const k = x.slice(5);
+        this.msg = null;
+        if (this.picked.includes(k)) { this.picked = this.picked.filter(p => p !== k); return; }
+        this.picked.push(k);
+        if (this.picked.length < 2) return;
+        if (right.every(r => this.picked.includes(r))) { this.stage = "write"; this.typing = true; this.active = school ? "va" : "d"; return; }
+        this.msg = f === "sin" ? `Each part of ${school ? nameQ : `sin(${Q.p}° ${sgn} ${Q.q}°)`} has one sine and one cosine.`
+          : `cos(${school ? "a" : Q.p + "°"} ${sgn} ${school ? "b" : Q.q + "°"}) pairs the cosines together, and the sines together.`;
+        this.picked = [];
+        return;
+      }
+      if (x !== "check" || this.stage !== "write") return;
+      let m = null;
+      if (school) {
+        const [c1, c2] = right.map(k => { const [r, c] = k.split(":").map(Number); return cells[r][c]; });
+        m = judge(readVal(this, ans, "v"), ans, {
+          sign: `Mind the signs: ${c1.s} ${o2} ${c2.s.startsWith("−") ? "(" + c2.s + ")" : c2.s}.`,
+          generic: `Put the two products together: ${c1.s} ${o2} ${c2.s.startsWith("−") ? "(" + c2.s + ")" : c2.s}.`,
+          other: val => (Math.abs(val - (c1.n - sg * c2.n) / c1.d) < 1e-9 ? (f === "cos" ? (op > 0 ? "cos(a + b) takes sin a sin b away." : "cos(a − b) adds sin a sin b.") : (op > 0 ? "sin(a + b) adds cos a sin b." : "sin(a − b) takes cos a sin b away.")) : null),
+        });
+        if (m) { const miss = readVal(this, ans, "v"); if (miss.missing) this.active = miss.first; }
+      } else {
+        const d = num(this.vals.d);
+        if (d == null) m = "Fill in the box.";
+        else if (d !== 4) m = "Each product's bottom is 2 × 2 = 4, and both parts share it.";
+      }
+      if (!m) { this.stage = "done"; this.verdict = null; this.typing = false; this.msg = null; return; }
+      this.verdict = "wrong"; this.msg = m;
+    },
+    scene() {
+      const st = this.stage;
+      const parts = f === "sin" ? `sin a cos b ${sgn} cos a sin b` : `cos a cos b ${op > 0 ? "−" : "+"} sin a sin b`;
+      const say = {
+        tap: [`Tap the two products that make ${school ? nameQ : `${f}(${Q.p}° ${sgn} ${Q.q}°)`}.`, `${f}(a ${sgn} b) = ${parts}`],
+        write: [`Write ${nameQ}.`, school ? "Put the two products together." : "The top is written for you."],
+        done: [school ? (f === "sin" ? `${nameQ} is sin a cos b ${sgn} cos a sin b: each part has one sine and one cosine.` : `${nameQ} is cos a cos b ${op > 0 ? "−" : "+"} sin a sin b: cosines together, sines together.`)
+          : f === "sin" ? `${nameQ} is sin ${Q.p}° cos ${Q.q}° ${sgn} cos ${Q.p}° sin ${Q.q}°: each part has one sine and one cosine.` : `${nameQ} is cos ${Q.p}° cos ${Q.q}° ${op > 0 ? "−" : "+"} sin ${Q.p}° sin ${Q.q}°: cosines together, sines together.`, ""],
+      }[st];
+      dhead(this, say[0], say[1]);
+      if (school) text("quad", `a in quadrant ${Q.a.Q}, b in quadrant ${Q.b.Q}`, 5, 8, "say", { anchor: "start" });
+      // the table: the headers, then the four products
+      cols.forEach((s, c) => text(`ch${c}`, s, xt + cw * c + cw / 2, yt - 1, "say", { c: "var(--ink)" }));
+      rows.forEach((s, r) => text(`rh${r}`, s, 5, yt + chh * r + chh / 2, "say", { anchor: "start" }));
+      for (let r = 0; r < 2; r++) for (let c = 0; c < 2; c++) {
+        const k = `${r}:${c}`, on = this.picked.includes(k) || (st !== "tap" && right.includes(k));
+        if (on) rect(`cf${k}`, xt + cw * c, yt + chh * r, cw, chh, { fill: "var(--tint)" });
+        rect(`co${k}`, xt + cw * c, yt + chh * r, cw, chh, { c: "var(--ink)" });
+        text(`cv${k}`, cells[r][c].s, xt + cw * c + cw / 2, yt + chh * r + chh / 2, "maths", { c: on ? "var(--chapter)" : null });
+        if (st === "tap") put(`hit${k}`, "rect", { x: sq(xt + cw * c), y: sq(yt + chh * r), width: sq(cw), height: sq(chh), fill: "transparent", "data-act": `cell:${k}` }, "none");
+      }
+      // the record under the table
+      const ry = yt + 2 * chh + 4;
+      if (school) {
+        mrow(this, "q", 5, ry, [{ s: st === "tap" ? nameQ : `${nameQ} = ${parts}` }]);
+        if (st !== "tap") {
+          const [c1, c2] = right.map(k => { const [r, c] = k.split(":").map(Number); return cells[r][c]; });
+          const fv = c => vToks({ s: Math.sign(c.n), a: Math.abs(c.n), r: 1, d: c.d }, null);
+          const t2 = c2.n < 0 ? [{ s: "(", tight: true }, ...fv(c2), { s: ")", tight: true }] : fv(c2);
+          mrow(this, "w2", 5, ry + 5, [{ s: "=" }, ...fv(c1), { s: o2 }, ...t2, { s: "=" }, ...(st === "done" ? vToks(ans) : boxToks(ans, "v", 2))]);
+        }
+      } else {
+        mrow(this, "q", 5, ry, [{ s: `${nameQ} = ${f}(${Q.p}° ${sgn} ${Q.q}°)` }]);
+        if (st !== "tap") {
+          const [c1, c2] = right.map(k => { const [r, c] = k.split(":").map(Number); return cells[r][c].s; });
+          const hs = right.map(k => { const [r, c] = k.split(":").map(Number); return [rows[r], cols[c]].map(s => s.split("= ")[1]); });
+          mrow(this, "w2", 5, ry + 5, [{ s: `= ${hs[0][0]} · ${hs[0][1]} ${o2} ${hs[1][0]} · ${hs[1][1]} =` }, { f: [[{ s: numer }], st === "done" ? [{ s: "4", c: "var(--chapter)" }] : [{ box: "d", cells: 1 }]] }]);
+        }
+      }
+      const by = ry + (st === "tap" ? 3 : 8.5);
+      if (st === "write") block("check", 5, by, 7, "Check", "check");
+      if (st === "done") block("next", 5, by, 10, "Next problem", "next");
+    },
+  });
+  return L;
+}
+
+// ---------- lessons, the bar ----------
+let lesson, index = 0;
+const LESSONS = {
+  sinegraph: { name: "The sine wave", make: i => { const Q = genSine(i); return Q.kind === "place" ? dSinePlace(Q) : dShape("sinegraph", Q); } },
+  wave: { name: "Shift a wave", make: i => { const Q = genWave(i); return Q.kind === "tan" ? dTan(Q) : dShape("wave", Q); } },
+  addangle: { name: "Adding angles", make: i => { const Q = genAdd(i); return Q.kind === "pic" ? dAddPic(Q) : dAddTable(Q); } },
+};
+const pick = document.getElementById("pick");
+pick.innerHTML = Object.entries(LESSONS).map(([id, e]) => `<option value="${id}">${esc(e.name)}</option>`).join("");
+function start(id, i = 0) {
+  if (!LESSONS[id]) id = "sinegraph";
+  index = i;
+  lesson = LESSONS[id].make(i);
+  document.body.className = "waves";
+  pick.value = id;
+  drawn = new Set(); keys.blur();
+  render(); frame(lesson.frame(), true);
+  try { localStorage.setItem("g12ch2-lesson", id); } catch (err) {}
+}
+pick.onchange = () => start(pick.value, 0);
+document.getElementById("fresh").onclick = () => leave();
+function leave() { start(lesson.id, index + 1); }
+window.GEN = { sine: genSine, wave: genWave, add: genAdd, waveFn, sameWave };
+let first = "sinegraph", firstI = 0;
+try { const u = new URLSearchParams(location.search); first = u.get("l") || localStorage.getItem("g12ch2-lesson") || "sinegraph"; firstI = +(u.get("i") || 0); } catch (err) {}
+start(first, firstI);
+if (document.fonts) document.fonts.ready.then(() => render());
+</script>
