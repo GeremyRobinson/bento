@@ -1,0 +1,1367 @@
+<title>Moves</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700&display=swap">
+<style>
+/* 10th grade, chapter 2: Moves (ios/design/grade10.md). Kit and engine from grade10-ch1.html. The whole screen is one sheet of graph paper
+   seen through one camera; the floating pill at the bottom is the only chrome. 1 square = 20 paper units, a strong line
+   every 5 squares (a block). Chapter colour: grade10.md names none, so this is the geometry colour of new5-lessons.html. */
+:root {
+  --paper: #F3F1EC; --grid: #E2DED6; --grid-strong: #D3CEC4;
+  --ink: #1D1C1A; --ink2: #6E6A63; --ink3: #A39E95;
+  --chapter: #1E8A78; --tint: rgba(30, 138, 120, .2); --tint-strong: rgba(30, 138, 120, .4);
+  --right: #178A57; --wrong: #C8372D;
+  --pill: rgba(255, 255, 255, .94); --pill-line: #E4E0D8;
+  --round: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C;
+  --chapter: #4FD1BC; --tint: rgba(79, 209, 188, .22); --tint-strong: rgba(79, 209, 188, .42);
+  --right: #3CCF8E; --wrong: #FF6B5E;
+  --pill: rgba(40, 40, 37, .94); --pill-line: #3A3A36; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C;
+  --chapter: #4FD1BC; --tint: rgba(79, 209, 188, .22); --tint-strong: rgba(79, 209, 188, .42);
+  --right: #3CCF8E; --wrong: #FF6B5E;
+  --pill: rgba(40, 40, 37, .94); --pill-line: #3A3A36; color-scheme: dark }
+html, body { height: 100%; }
+body { background: var(--paper); color: var(--ink); font-family: var(--round); overflow: hidden; touch-action: none;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; margin: 0; }
+#paper { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+svg text { font-family: var(--round); font-variant-numeric: tabular-nums; }
+.say { font-size: 28px; font-weight: 600; fill: var(--ink); }
+.small { font-size: 20px; font-weight: 600; fill: var(--ink2); }
+.maths { font-size: 36px; font-weight: 600; fill: var(--ink); }
+
+/* drawing in: lines stroke on, words and fills fade in, one after another */
+.in-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .55s ease-out forwards; }
+.in-fade { opacity: 0; animation: fade .4s ease-out forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes fade { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .in-line, .in-fade { animation-duration: .01s; } }
+
+/* the one floating bar */
+#bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 999px; background: var(--pill);
+  border: 1px solid var(--pill-line); box-shadow: 0 6px 24px rgba(0,0,0,.08); max-width: calc(100vw - 32px);
+  font-family: var(--round); }
+#bar button { font: 600 17px var(--round); color: var(--ink); background: none; border: 0; padding: 10px 14px;
+  border-radius: 999px; cursor: pointer; white-space: nowrap; }
+#bar button:focus-visible { outline: 2px solid var(--chapter); outline-offset: 2px; }
+#bar select { font: 600 17px var(--round); color: var(--ink); background: none; border: 0; padding: 10px 26px 10px 14px;
+  border-radius: 999px; cursor: pointer; -webkit-appearance: none; appearance: none; max-width: 52vw; text-overflow: ellipsis;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink2) 50%), linear-gradient(135deg, var(--ink2) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%; background-size: 5px 5px; background-repeat: no-repeat; }
+#bar select:focus-visible { outline: 2px solid var(--chapter); outline-offset: 2px; }
+#bar .sep { width: 1px; align-self: stretch; background: var(--pill-line); margin: 4px 4px; }
+#bar .progress { display: flex; flex-direction: column; gap: 6px; padding: 0 10px; min-width: 150px; }
+#bar .progress span { font: 600 14px var(--round); color: var(--ink2); }
+#bar .track { height: 4px; border-radius: 2px; background: var(--pill-line); overflow: hidden; }
+#bar .track i { display: block; height: 100%; background: var(--chapter); transition: width .4s ease; }
+@media (max-width: 640px) { #bar .progress { display: none; } #bar button, #bar select { font-size: 15px; padding: 9px 10px; } #bar select { padding-right: 24px; }
+  #bar { flex-wrap: wrap; justify-content: center; border-radius: 26px; row-gap: 2px; } #bar .sep { display: none; } }
+#keys { position: fixed; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; font-size: 16px; }
+</style>
+
+<svg id="paper" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-label="Graph paper lesson">
+  <defs>
+    <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
+      <path d="M20 0V100M40 0V100M60 0V100M80 0V100M0 20H100M0 40H100M0 60H100M0 80H100" stroke="var(--grid)" stroke-width="1" fill="none"/>
+      <path d="M0 0V100M0 0H100" stroke="var(--grid-strong)" stroke-width="1.5" fill="none"/>
+    </pattern>
+  </defs>
+  <g id="paperg">
+    <rect x="-20000" y="-20000" width="40000" height="40000" fill="url(#grid)"/>
+    <g id="scene"></g>
+  </g>
+</svg>
+
+<nav id="bar" aria-label="Lessons">
+  <select id="pick" aria-label="Lesson"></select>
+  <div class="sep"></div>
+  <div class="progress"><span id="stepname">Step 1 of 3</span><div class="track"><i id="track" style="width:0"></i></div></div>
+  <div class="sep"></div>
+  <button id="fresh" type="button">New problem</button>
+</nav>
+<input id="keys" inputmode="decimal" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Answer">
+
+<script>
+"use strict";
+// ---------- the paper: squares, drawing, camera (the kit of new5-lessons.html) ----------
+const SQ = 20, svg = document.getElementById("paper"), sceneEl = document.getElementById("scene");
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+
+let items = [], drawn = new Set();
+// one thing on the paper: its key (a new key draws in), its tag and attributes in paper units, how it draws in
+let TOOL = false;     // what's put now is a tool lying on the paper (compass, ruler), not the picture
+function put(k, tag, a, kind = "fade", text, delay = 0) { if (TOOL) a = { ...a, "data-tool": 1 }; items.push({ k, tag, a, kind, text, delay }); }
+const sq = n => n * SQ;
+function line(k, x1, y1, x2, y2, o = {}) {
+  put(k, "line", { x1: sq(x1), y1: sq(y1), x2: sq(x2), y2: sq(y2), stroke: o.c || "var(--ink)", "stroke-width": o.w || 1.5,
+    "stroke-dasharray": o.dash ? "6 6" : null, "stroke-linecap": "butt", pathLength: o.dash || o.live ? null : 1 },
+    o.live ? "none" : o.dash ? "fade" : "line", undefined, o.delay || 0);
+}
+const seg = (k, p, q, o) => line(k, p.x, p.y, q.x, q.y, o);
+function path(k, d, o = {}) {
+  put(k, "path", { d, fill: o.fill || "none", stroke: o.c || "var(--ink)", "stroke-width": o.w || 1.5, "stroke-linejoin": "round",
+    pathLength: o.live ? null : 1 }, o.live ? "none" : "line", undefined, o.delay || 0);
+}
+function rect(k, x, y, w, h, o = {}) {
+  put(k, "rect", { x: sq(x), y: sq(y), width: sq(w), height: sq(h), fill: o.fill || "none", stroke: o.c || null,
+    "stroke-width": o.c ? (o.w || 1.5) : null, opacity: o.op ?? null,
+    pathLength: o.c && !o.fill ? 1 : null }, o.live ? "none" : o.c && !o.fill ? "line" : "fade");
+}
+function dot(k, x, y, r, o = {}) { put(k, "circle", { cx: sq(x), cy: sq(y), r: sq(r), fill: o.c || "var(--chapter)" }, o.live ? "none" : "fade", undefined, o.delay || 0); }
+function ringAt(k, x, y, r, o = {}) { put(k, "circle", { cx: sq(x), cy: sq(y), r: sq(r), fill: o.fill || "none", stroke: o.c || "var(--ink)", "stroke-width": 1.5, pathLength: o.live ? null : 1 }, o.live ? "none" : "line", undefined, o.delay || 0); }
+function text(k, s, x, y, cls, o = {}) {
+  put(k, "text", { x: sq(x), y: sq(y), class: cls, "text-anchor": o.anchor || "middle", "dominant-baseline": "central",
+    style: o.c ? `fill:${o.c}` : null }, o.live ? "none" : "fade", s, o.delay || 0);
+}
+// words in rows of 2 squares, wrapped at a width in squares
+function words(k, s, x, y, widthSq, cls = "say", o = {}) {
+  const per = cls === "say" ? 0.72 : 0.52, max = Math.max(8, Math.floor(widthSq / per));
+  const rows = []; let cur = "";
+  for (const w of s.split(" ")) { if ((cur + " " + w).trim().length > max && cur) { rows.push(cur); cur = w; } else cur = (cur + " " + w).trim(); }
+  if (cur) rows.push(cur);
+  rows.forEach((r, i) => text(`${k}:${i}:${r}`, r, x, y + i * 2, cls, { anchor: "start", c: o.c }));
+  return rows.length;
+}
+// a number written as school writes it on squared paper: 2 squares a digit
+function digits(k, s, right, row, o = {}) {
+  let col = 0;
+  for (let i = s.length - 1; i >= 0; i--) { text(`${k}${i}${s[i]}`, s[i], right - col - 1, row, "maths", { c: o.c }); col += 2; }
+}
+// maths in the record: digits 2 squares each (school's squared paper), letters close as school writes names,
+// ° hugging the digit before it, ∠ and ∥ drawn as marks; returns where it ends (in squares)
+function mrow(k, s, x, row, c) {
+  let col = x;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i], kk = `${k}${i}${ch}`;
+    if (ch === " ") { col += 0.6; continue; }
+    if (ch === "∠") { path(kk, `M${sq(col + 1.5)} ${sq(row - 0.75)}L${sq(col + 0.2)} ${sq(row + 0.65)}H${sq(col + 1.6)}`, { c: c || "var(--ink)" }); col += 1.9; continue; }
+    if (ch === "∥") { line(`${kk}a`, col + 0.45, row + 0.8, col + 0.8, row - 0.8, { c }); line(`${kk}b`, col + 1.05, row + 0.8, col + 1.4, row - 0.8, { c }); col += 1.9; continue; }
+    if (/[0-9]/.test(ch)) { text(kk, ch, col + 1, row, "maths", { c }); col += 2; continue; }
+    if (ch === "°") { text(kk, ch, col - 0.2, row, "maths", { c, anchor: "start" }); col += 0.9; continue; }
+    if (ch === "′" || ch === "″") { text(kk, ch, col - 0.1, row, "maths", { c, anchor: "start" }); col += ch === "′" ? 0.5 : 0.8; continue; }
+    const w = "(),:".includes(ch) ? 0.8 : ch === "→" ? 2.2 : ch === "=" || ch === "÷" || ch === "+" || ch === "M" ? 1.6 : 1.35;
+    text(kk, ch, col + w / 2, row, "maths", { c }); col += w;
+  }
+  return col;
+}
+// a block drawn on the paper: an outline, its word and arrow (Check, Next problem)
+function block(k, x, y, w, label, act, o = {}) {
+  rect(`${k}o`, x, y, w, 2, { c: "var(--ink)" });
+  text(`${k}w${label}`, label, x + 1, y + 1, "small", { anchor: "start", c: "var(--ink)" });
+  if (o.arrow !== false) path(`${k}a`, `M${sq(x + w - 1.6)} ${sq(y + 1)}h${sq(0.8)}m-6 -6l6 6l-6 6`, {});
+  put(`${k}hit`, "rect", { x: sq(x), y: sq(y), width: sq(w), height: sq(2), fill: "transparent", "data-act": act }, "none");
+}
+// an answer box in the record: cells of 2 squares, the typed digits on the right, the cursor after them
+function dbox(k, x, y, cells, value, state) {
+  const c = state === "right" ? "var(--right)" : state === "wrong" ? "var(--wrong)" : "var(--ink)";
+  rect(`${k}o${cells}`, x, y, cells * 2, 2, { c });
+  if (value) digits(`${k}v${value}`, value, x + cells * 2, y + 1, { c: state === "right" || state === "wrong" ? c : null });
+  if (state === "active") put(`${k}cur`, "line", { x1: sq(x + cells * 2 + 0.4), y1: sq(y + 0.35), x2: sq(x + cells * 2 + 0.4), y2: sq(y + 1.65), stroke: "var(--chapter)", "stroke-width": 1.5 }, "none");
+  put(`${k}hit`, "rect", { x: sq(x), y: sq(y), width: sq(cells * 2), height: sq(2), fill: "transparent", "data-act": "type" }, "none");
+}
+
+let raf = 0;
+function render() {
+  items = [];
+  lesson.scene();
+  const next = new Set(); let n = 0, out = "";
+  for (const it of items) {
+    next.add(it.k);
+    const fresh = !drawn.has(it.k) && it.kind !== "none", a = { ...it.a };
+    if (fresh) {
+      a.class = ((a.class || "") + (it.kind === "line" ? " in-line" : " in-fade")).trim();
+      a.style = `animation-delay:${(Math.min(n++ * 0.035, 1.2) + it.delay).toFixed(3)}s;` + (a.style || "");
+    }
+    const attrs = Object.entries(a).filter(([, v]) => v != null).map(([k, v]) => `${k}="${esc(v)}"`).join(" ");
+    out += `<${it.tag} ${attrs}>${it.text != null ? esc(it.text) : ""}</${it.tag}>`;
+  }
+  sceneEl.innerHTML = out;
+  if (lesson.animating && lesson.animating() && !raf) raf = requestAnimationFrame(() => { raf = 0; render(); });
+  drawn = next;
+  const [i, of] = lesson.progress();
+  document.getElementById("stepname").textContent = `Problem ${lesson.index + 1} · Step ${Math.min(i + 1, of)} of ${of}`;
+  document.getElementById("track").style.width = `${Math.round(100 * i / of)}%`;
+}
+
+// the camera: fits what the lesson shows, its top row at the top of the screen (the words on rows 0-2), eased 0.75 s
+const cam = { x: 0, y: 0, s: 1 }; let camTo = null, camFrom = null, camT0 = 0;
+function fitTo(f) {
+  const W = innerWidth, H = innerHeight, top = 16, bottom = 96;
+  const s = Math.min((W - 48) / sq(f.w), (H - top - bottom) / sq(f.h), (lesson && lesson.maxZoom) || 1.6);
+  return { s, x: sq(f.x + f.w / 2) - W / 2 / s, y: sq(f.y) - top / s };
+}
+function frame(f, now) {
+  const t = fitTo(f);
+  if (now) { Object.assign(cam, t); applyCam(); return; }
+  camFrom = { ...cam }; camTo = t; camT0 = performance.now(); requestAnimationFrame(stepCam);
+}
+function stepCam(t) {
+  if (!camTo) return;
+  const u = Math.min(1, (t - camT0) / 750), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+  for (const k of ["x", "y", "s"]) cam[k] = camFrom[k] + (camTo[k] - camFrom[k]) * e;
+  applyCam();
+  if (u < 1) requestAnimationFrame(stepCam); else camTo = null;
+}
+function applyCam() { svg.setAttribute("viewBox", `${cam.x} ${cam.y} ${innerWidth / cam.s} ${innerHeight / cam.s}`); }
+addEventListener("resize", () => frame(lesson.frame(), true));
+
+// ---------- typing (the iPad's own number keys) ----------
+const keys = document.getElementById("keys");
+function openKeys() { keys.value = lesson.typed || ""; keys.focus({ preventScroll: true }); }
+keys.addEventListener("input", () => { lesson.type(keys.value.replace(/-/g, "−").replace(/[^0-9−]/g, "").replace(/(?!^)−/g, "").slice(0, 4)); render(); });
+keys.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); act("check"); } });
+
+// ---------- hands: tap, drag (the tools, a point) or pan the paper ----------
+function toPaper(e) { const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse()); return { x: p.x / SQ, y: p.y / SQ }; }
+let down = null;
+svg.addEventListener("pointerdown", e => {
+  const p = toPaper(e), hit = e.target.closest("[data-act]");
+  down = { p, sx: e.clientX, sy: e.clientY, act: hit && hit.dataset.act, moved: false, grabbed: false, cam: { ...cam } };
+  if (!down.act && lesson.grab && lesson.grab(p)) { down.grabbed = true; render(); }
+  svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener("pointermove", e => {
+  if (!down) return;
+  if (Math.hypot(e.clientX - down.sx, e.clientY - down.sy) > 6) down.moved = true;
+  if (down.grabbed) { if (down.moved) { lesson.drag(toPaper(e)); render(); } return; }
+  if (down.moved && !down.act) { camTo = null; cam.x = down.cam.x - (e.clientX - down.sx) / cam.s; cam.y = down.cam.y - (e.clientY - down.sy) / cam.s; applyCam(); }
+});
+svg.addEventListener("pointerup", e => {
+  if (!down) return;
+  const d = down; down = null;
+  if (d.grabbed) { lesson.release(toPaper(e), d.moved); render(); return; }
+  if (d.moved) return;
+  if (d.act) { act(d.act); return; }
+  if (lesson.tap && lesson.tap(toPaper(e))) render();
+});
+function act(a) {
+  if (a === "type") { if (lesson.typing) openKeys(); return; }
+  if (a === "next") { leave(); return; }
+  lesson.act(a);
+  if (!lesson.typing) keys.blur(); else openKeys();
+  render();
+}
+// timers for the See beats; a new problem cancels the old one's
+let token = 0;
+function after(ms, fn) { const t = token; setTimeout(() => { if (t !== token) return; fn(); render(); }, ms); }
+
+// ---------- geometry on the paper (in squares; y runs down the page, so "up" is a negative angle) ----------
+const TAU = Math.PI * 2, DEG = Math.PI / 180;
+const V = (x, y) => ({ x, y });
+const add = (a, b) => V(a.x + b.x, a.y + b.y), sub = (a, b) => V(a.x - b.x, a.y - b.y), mul = (a, k) => V(a.x * k, a.y * k);
+const lerp = (a, b, t) => V(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+const angOf = (c, p) => Math.atan2(p.y - c.y, p.x - c.x);
+const unit = a => V(Math.cos(a), Math.sin(a));
+const polar = (c, r, a) => V(c.x + r * Math.cos(a), c.y + r * Math.sin(a));
+const rot = (v, a) => V(v.x * Math.cos(a) - v.y * Math.sin(a), v.x * Math.sin(a) + v.y * Math.cos(a));
+const mod = (a, m) => ((a % m) + m) % m;
+const wrapPi = a => mod(a + Math.PI, TAU) - Math.PI;
+const near = (a, b, e = 0.01) => dist(a, b) < e;
+const fmt = v => Math.abs(v - Math.round(v)) < 0.05 ? String(Math.round(v)) : v.toFixed(1);
+const val = (v, L) => typeof v === "function" ? v(L) : v || "";
+// an arc is { t: "arc", c, r, a0, a1 } with a0 < a1 (a whole circle: a1 - a0 = TAU); a line is { t: "seg", a, b }
+const arcHas = (a, ang) => a.a1 - a.a0 >= TAU - 1e-9 || mod(ang - a.a0, TAU) <= a.a1 - a.a0 + 1e-9;
+function onObj(o, p) {
+  if (o.t === "seg") { const d = sub(o.b, o.a), t = ((p.x - o.a.x) * d.x + (p.y - o.a.y) * d.y) / (d.x * d.x + d.y * d.y); return t >= -1e-6 && t <= 1 + 1e-6; }
+  return arcHas(o, angOf(o.c, p));
+}
+function interCL(c, r, a, b) {
+  const d = sub(b, a), f = sub(a, c), A = d.x * d.x + d.y * d.y, B = 2 * (f.x * d.x + f.y * d.y), C = f.x * f.x + f.y * f.y - r * r, disc = B * B - 4 * A * C;
+  if (disc < -1e-9) return [];
+  const s = Math.sqrt(Math.max(0, disc));
+  return [(-B - s) / (2 * A), (-B + s) / (2 * A)].map(t => add(a, mul(d, t)));
+}
+function interCC(c1, r1, c2, r2) {
+  const d = dist(c1, c2);
+  if (d < 1e-9 || d > r1 + r2 + 1e-9 || d < Math.abs(r1 - r2) - 1e-9) return [];
+  const a = (r1 * r1 - r2 * r2 + d * d) / (2 * d), h = Math.sqrt(Math.max(0, r1 * r1 - a * a));
+  const m = add(c1, mul(sub(c2, c1), a / d)), n = V(-(c2.y - c1.y) / d, (c2.x - c1.x) / d);
+  return h < 1e-9 ? [m] : [add(m, mul(n, h)), sub(m, mul(n, h))];
+}
+function interLL(a, b, c, d) {
+  const r = sub(b, a), s = sub(d, c), den = r.x * s.y - r.y * s.x;
+  if (Math.abs(den) < 1e-12) return [];
+  return [add(a, mul(r, ((c.x - a.x) * s.y - (c.y - a.y) * s.x) / den))];
+}
+function crossings(objs) {
+  const out = [];
+  for (let i = 0; i < objs.length; i++) for (let j = i + 1; j < objs.length; j++) {
+    const o = objs[i], q = objs[j];
+    const pts = o.t === "seg" && q.t === "seg" ? interLL(o.a, o.b, q.a, q.b) : o.t === "seg" ? interCL(q.c, q.r, o.a, o.b)
+      : q.t === "seg" ? interCL(o.c, o.r, q.a, q.b) : interCC(o.c, o.r, q.c, q.r);
+    for (const p of pts) if (onObj(o, p) && onObj(q, p)) out.push(p);
+  }
+  return out;
+}
+// an arc's path, from angle a to angle b (either way round)
+function arcD(c, r, a, b) {
+  const span = Math.max(-TAU + 1e-4, Math.min(TAU - 1e-4, b - a)), p0 = polar(c, r, a), p1 = polar(c, r, a + span);
+  return `M${sq(p0.x)} ${sq(p0.y)}A${sq(r)} ${sq(r)} 0 ${Math.abs(span) > Math.PI ? 1 : 0} ${span > 0 ? 1 : 0} ${sq(p1.x)} ${sq(p1.y)}`;
+}
+
+// ---------- marks school puts on a picture ----------
+// a point's name, half a square off it (lab: which way, in squares)
+function nameAt(k, s, p, lab, c) {
+  const [dx, dy] = lab;
+  text(k, s, p.x + dx * 0.9, p.y + dy * 1.15, "say", { anchor: dx > 0.3 ? "start" : dx < -0.3 ? "end" : "middle", c });
+}
+// a bracket beside a segment that slides along it, counting squares (t: how far it has gone, 0 to 1)
+function bracket(k, p, q, side, t, name, per = 1) {
+  const len = dist(p, q), u = mul(sub(q, p), 1 / len), n = side;
+  const a = add(p, mul(n, 1.5)), b = add(a, mul(u, len * t));
+  seg(`${k}l`, a, b, { c: "var(--chapter)", live: true });
+  seg(`${k}t0`, a, add(a, mul(n, -0.7)), { c: "var(--chapter)", live: true });
+  seg(`${k}t1`, b, add(b, mul(n, -0.7)), { c: "var(--chapter)", live: true });
+  const lp = add(lerp(a, b, t < 1 ? 1 : 0.5), mul(n, 1.3));
+  const s = t < 1 ? String(Math.floor(len * t / per)) : `${name} = ${fmt(len / per)}`;
+  text(`${k}n`, s, lp.x, lp.y, "small", { c: "var(--chapter)", live: true, anchor: Math.abs(n.x) > 0.5 ? (n.x > 0 ? "start" : "end") : "middle" });
+}
+// 7th grade's protractor laid on the paper: its middle on the corner, its flat side along one arm; a tick a degree,
+// longer every 5° and 10°. dir -1 opens upward. Readings: [degrees, label] written just outside it.
+function protractor(k, c, base, R, dir, reads) {
+  path(`${k}o`, arcD(c, R, base, base + dir * Math.PI), { c: "var(--ink2)" });
+  seg(`${k}b`, polar(c, R, base), polar(c, R, base + Math.PI), { c: "var(--ink2)" });
+  for (let d = 0; d <= 180; d++) {
+    const a = base + dir * d * DEG, len = d % 10 === 0 ? 1.3 : d % 5 === 0 ? 0.85 : 0.45;
+    seg(`${k}t${d}`, polar(c, R, a), polar(c, R - len, a), { c: d % 5 ? "var(--ink3)" : "var(--ink2)", w: d % 5 ? 0.75 : 1.5 });
+  }
+  for (const [d, s, off = -8] of reads) { const p = polar(c, R + 1.8, base + dir * (d + off) * DEG); text(`${k}r${d}${s}`, s, p.x, p.y, "small", { c: "var(--chapter)" }); }
+}
+// the square corner mark (5th grade's): at p, between the directions u and v
+function cornerMark(k, p, u, v, o = {}) {
+  const a = add(p, mul(u, 1.2)), b = add(a, mul(v, 1.2)), c = add(p, mul(v, 1.2));
+  path(k, `M${sq(a.x)} ${sq(a.y)}L${sq(b.x)} ${sq(b.y)}L${sq(c.x)} ${sq(c.y)}`, { c: "var(--chapter)", ...o });
+}
+// parallel arrowheads (5th grade's): on a line going along u, at p
+function arrowhead(k, p, u, o = {}) {
+  const n = V(-u.y, u.x), a = add(sub(p, mul(u, 0.7)), mul(n, 0.7)), b = sub(sub(p, mul(u, 0.7)), mul(n, 0.7));
+  path(k, `M${sq(a.x)} ${sq(a.y)}L${sq(p.x)} ${sq(p.y)}L${sq(b.x)} ${sq(b.y)}`, { c: "var(--chapter)", ...o });
+}
+
+// ---------- the construction engine: compass, straightedge, pins (chapter 1; later chapters reuse it) ----------
+// A lesson is a list of tasks. The compass is drawn on the paper as a tool: drag its point to lift it (it snaps to
+// marked points), drag its pencil to open it (it snaps to a marked point, or to whole squares), turn it by its top to
+// swing an arc. The straightedge is a plain ruler: drag it, turn it by an end; its edge snaps to marked points, and
+// on release through the right two the line draws along it. Pin a crossing: tap where two drawn things cross.
+const KNOB = 3;     // how far the compass's top stands off the line between its legs (seen from above)
+function con(cfg) {
+  const T = cfg.tasks, LR = (cfg.ruler && cfg.ruler.len) || 46;
+  const L = {
+    id: cfg.id, index: cfg.index, maxZoom: 1.25, ti: 0, msg: null, arcs: [], bad: null, lines: [], pts: {}, want: [], wrongPt: null,
+    typed: "", typing: false, verdict: null, bi: 0, vals: {}, hold: null, t0: {}, flag: {}, wName: null, wLen: 0, LR, cfg,
+    cmp: { N: { ...cfg.park.N }, w: cfg.park.w, phi: 0 },
+    rul: cfg.ruler ? { p: { ...cfg.ruler.p }, a: cfg.ruler.a } : null,
+    get task() { return T[this.ti]; },
+    get stage() { return this.task.id; },
+    progress() { return [this.ti, T.length - 1]; },
+    frame() { return cfg.frame; },
+    animating() { return this.task.kind === "see" || !!(cfg.animating && cfg.animating(this)); },
+    tool() { const t = this.task; return t.tool !== undefined ? t.tool : { arc: "compass", open: "compass", walk: "compass", pin: "compass", ruler: "ruler" }[t.kind] || null; },
+    at(n) { const p = this.pts[n]; return !!p && near(this.cmp.N, p); },
+    wIs(v) { return Math.abs(this.cmp.w - v) < 0.01; },
+    pen() { return polar(this.cmp.N, this.cmp.w, this.cmp.phi); },
+    knob() { const u = unit(this.cmp.phi); return add(add(this.cmp.N, mul(u, this.cmp.w / 2)), V(u.y * KNOB, -u.x * KNOB)); },
+    marks() { return Object.entries(this.pts).map(([n, p]) => ({ n, x: p.x, y: p.y, hide: p.hide })); },
+    markNear(q, r, not) {
+      let best = null, bd = r;
+      for (const m of this.marks()) { if (not && near(m, not)) continue; const d = dist(m, q); if (d < bd) { bd = d; best = m; } }
+      return best;
+    },
+    covers(c, r, a) { return this.arcs.some(x => near(x.c, c) && Math.abs(x.r - r) < 1e-6 && arcHas(x, a)); },
+    geo() { return cfg.geo(this).concat(this.arcs, this.lines.map(l => ({ t: "seg", a: l.a, b: l.b }))); },
+    passed(id) { return this.ti > T.findIndex(t => t.id === id); },
+    phase(id) {
+      const k = T.findIndex(t => t.id === id);
+      if (this.ti > k) return 1; if (this.ti < k) return 0;
+      const t0 = this.t0[id]; return t0 == null ? 0 : Math.min(1, (performance.now() - t0) / T[k].dur);
+    },
+    maxW() { return this.task.maxW ? val(this.task.maxW, this) : cfg.maxW || 30; },
+    addPin(name, p, lab, kind = "pin") { this.pts[name] = { x: p.x, y: p.y, lab, kind }; },
+    next() {
+      const was = this.tool();
+      this.ti = Math.min(this.ti + 1, T.length - 1); this.msg = null; this.bad = null; this.wrongPt = null; this.hold = null;
+      const t = this.task;
+      if (this.tool() === "ruler" && was !== "ruler") this.rul = { p: { ...cfg.ruler.p }, a: cfg.ruler.a };
+      if (t.kind === "pin") this.want = t.want(this);
+      if (t.kind === "type") { this.typing = true; this.typed = ""; this.verdict = null; this.bi = 0; }
+      if (t.kind === "see") { this.t0[t.id] = performance.now(); after(t.dur, () => { if (this.task === t) this.next(); }); }
+      if (t.enter) t.enter(this);
+    },
+
+    // ----- the hand: grab a tool (or the lesson's own point), drag it, let go -----
+    grab(q) {
+      const t = this.task, tool = this.tool();
+      if (t.onGrab) t.onGrab(this);
+      if (tool === "compass") {
+        const dK = dist(q, this.knob()), dP = dist(q, this.pen()), dN = dist(q, this.cmp.N), m = Math.min(dK, dP, dN);
+        if (m > 2.2) return false;
+        if (m === dK) this.hold = { mode: "swing", last: angOf(this.cmp.N, q), cum: 0, lo: 0, hi: 0, phi0: this.cmp.phi };
+        else if (m === dP) this.hold = { mode: "open", w0: this.cmp.w };
+        else this.hold = { mode: "move", off: sub(this.cmp.N, q) };
+        this.bad = null; this.wrongPt = null; this.msg = null;
+        return true;
+      }
+      if (tool === "ruler") {
+        const r = this.rul, u = unit(r.a), b = V(-u.y, u.x), d = sub(q, r.p), s = d.x * u.x + d.y * u.y, tt = d.x * b.x + d.y * b.y;
+        if (tt < -1.5 || tt > 4 || s < -1 || s > LR + 1) return false;
+        if (s < 8 || s > LR - 8) {
+          const end = s < 8 ? 0 : 1, on = this.onEdge();
+          let piv = on.length ? on.reduce((m, x) => (end ? x.s < m.s : x.s > m.s) ? x : m) : null;
+          if (!piv) { const sp = end ? 0 : LR; piv = { p: add(r.p, mul(u, sp)), s: sp }; }
+          this.hold = { mode: "turn", g0: q, a0: r.a, piv: V(piv.p.x, piv.p.y), sp: piv.s };
+        } else this.hold = { mode: "slide", g0: q, p0: { ...r.p }, a0: r.a };
+        this.msg = null;
+        return true;
+      }
+      if (t.grab) return t.grab(this, q);
+      return false;
+    },
+    drag(q) {
+      const h = this.hold, t = this.task;
+      if (!h) { if (t.drag) t.drag(this, q); return; }
+      if (h.mode === "move") { const N = add(q, h.off), s = this.snapNeedle(N); this.cmp.N = s ? V(s.x, s.y) : N; }
+      else if (h.mode === "open") this.setPencil(q, h.w0);
+      else if (h.mode === "swing") {
+        const a = angOf(this.cmp.N, q), d = wrapPi(a - h.last); h.last = a;
+        let cum = h.cum + d;
+        cum = Math.max(h.hi - TAU, Math.min(h.lo + TAU, cum));
+        h.cum = cum; h.lo = Math.min(h.lo, cum); h.hi = Math.max(h.hi, cum);
+        this.cmp.phi = h.phi0 + cum;
+      } else if (h.mode === "slide") this.setRuler(add(h.p0, sub(q, h.g0)), h.a0, h);
+      else if (h.mode === "turn") {
+        const a = h.a0 + wrapPi(angOf(h.piv, q) - angOf(h.piv, h.g0));
+        this.setRuler(sub(h.piv, mul(unit(a), h.sp)), a, h);
+      } else if (t.drag) t.drag(this, q);
+    },
+    release(q, moved) {
+      const h = this.hold, t = this.task;
+      this.hold = null;
+      if (!moved) { this.tap(q); return; }          // a touch that didn't move is a tap
+      if (!h) { if (t.release) t.release(this, q); return; }
+      if (h.mode === "open") { if (t.onOpen) t.onOpen(this); }
+      else if (h.mode === "swing") {
+        if (h.hi - h.lo < 3 * DEG) return;
+        this.onSwing({ t: "arc", c: V(this.cmp.N.x, this.cmp.N.y), r: this.cmp.w, a0: h.phi0 + h.lo, a1: h.phi0 + h.hi });
+      } else if (h.mode === "slide" || h.mode === "turn") {
+        if (t.kind !== "ruler") return;
+        const on = this.onEdge();
+        if (on.length < 2) return;
+        const ok = t.ok(this, on.map(x => x.n));
+        // drawn along it, the ruler goes back to where it lies when not in use
+        if (ok === true || ok === "more") { t.draw(this); this.rul = { p: { ...cfg.ruler.p }, a: cfg.ruler.a }; if (ok === true) this.next(); } else if (ok && ok !== "keep") this.msg = ok;
+      }
+    },
+    snapNeedle(N) {
+      const m = this.markNear(N, 1.2);
+      if (m) return m;
+      const c = cfg.circle;
+      if (c && this.task.needleCircle && Math.abs(dist(N, c.c) - c.r) < 1.2) return polar(c.c, c.r, angOf(c.c, N));
+      return null;
+    },
+    setPencil(q, w0 = this.cmp.w) {
+      const N = this.cmp.N, max = this.maxW(), m = this.markNear(q, 1.0, N), c = cfg.circle;
+      let w, phi, named = null;
+      if (m && dist(m, N) <= max + 1e-9 && dist(m, N) >= 2) { w = dist(m, N); phi = angOf(N, m); named = m; }
+      else if (c && this.task.pencilCircle && Math.abs(dist(q, c.c) - c.r) < 1.0) { const p = polar(c.c, c.r, angOf(c.c, q)); w = dist(p, N); phi = angOf(N, p); }
+      else { const raw = dist(q, N); phi = angOf(N, q); w = Math.abs(raw - w0) < 0.35 ? w0 : Math.max(2, Math.min(max, Math.round(raw))); }
+      this.cmp.w = w; this.cmp.phi = phi;
+      const nm = this.markNear(N, 0.01);
+      // a width opened on two named points keeps their name while it stays that wide (width AB)
+      if (named && nm && !named.hide && !nm.hide) { this.wName = nm.n + named.n; this.wLen = w; }
+    },
+    // the ruler's edge: the marked points it passes through (within a hair), with how far along the edge they are
+    onEdge(e = 0.05) {
+      const r = this.rul, u = unit(r.a), b = V(-u.y, u.x), out = [];
+      for (const m of this.marks()) {
+        const d = sub(m, r.p), s = d.x * u.x + d.y * u.y, tt = d.x * b.x + d.y * b.y;
+        if (Math.abs(tt) < e && s > 0.3 && s < LR - 0.3) out.push({ n: m.n, p: m, s, hide: m.hide });
+      }
+      return out.sort((a, b) => a.s - b.s);
+    },
+    // the free place the hand puts the ruler; its edge snaps onto marked points near it (two: through both)
+    setRuler(p, a, h) {
+      const u = unit(a), b = V(-u.y, u.x), cand = [];
+      for (const m of this.marks()) {
+        const d = sub(m, p), s = d.x * u.x + d.y * u.y, tt = d.x * b.x + d.y * b.y;
+        if (Math.abs(tt) < 0.9 && s > 0.3 && s < LR - 0.3) cand.push({ m, s, tt });
+      }
+      cand.sort((x, y) => Math.abs(x.tt) - Math.abs(y.tt));
+      if (h && h.mode === "turn") {             // turning: the point under the finger's pivot stays on the edge
+        const i = cand.findIndex(c => near(c.m, h.piv, 0.05));
+        if (i > 0) cand.unshift(cand.splice(i, 1)[0]);
+      }
+      if (cand.length >= 2 && dist(cand[0].m, cand[1].m) > 0.5) {
+        let nu = unit(angOf(cand[0].m, cand[1].m));
+        if (nu.x * u.x + nu.y * u.y < 0) nu = mul(nu, -1);
+        this.rul = { p: sub(V(cand[0].m.x, cand[0].m.y), mul(nu, cand[0].s)), a: Math.atan2(nu.y, nu.x) };
+      } else if (cand.length) this.rul = { p: add(p, mul(b, cand[0].tt)), a };
+      else this.rul = { p, a };
+    },
+    onSwing(arc) {
+      const t = this.task;
+      if (t.swing) return t.swing(this, arc);
+      if (t.kind === "arc") {
+        const okC = typeof t.centre === "function" ? t.centre(this, arc.c) : near(arc.c, this.pts[t.centre] || V(1e9, 0));
+        if (!okC) { this.bad = arc; this.msg = val(t.centreMiss, this) || `Put its point on ${t.centre} first.`; return; }
+        const wm = t.width && t.width(arc.r, this);
+        if (wm) { this.bad = arc; this.msg = wm; return; }
+        this.arcs.push(arc);
+        const ok = t.cover(this, arc);
+        if (ok === true) this.next(); else if (typeof ok === "string") this.msg = ok;
+        return;
+      }
+      // between arcs: going on with an arc already drawn is fine (same middle, same width)
+      if (this.arcs.some(a => near(a.c, arc.c) && Math.abs(a.r - arc.r) < 1e-6)) { this.arcs.push(arc); this.msg = null; return; }
+      this.bad = arc; this.msg = val(t.swingMiss, this) || "First tap where they cross.";
+    },
+    tap(q) {
+      const t = this.task;
+      if (t.tap) return t.tap(this, q);
+      if (t.kind !== "pin") return false;
+      const marks = this.marks(), xs = crossings(this.geo()).filter(p => !marks.some(m => near(m, p, 0.05)));
+      let best = null, bd = 2;
+      for (const p of xs) { const d = dist(p, q); if (d < bd) { bd = d; best = p; } }
+      const open = this.want.filter(w => !this.pts[w.name]);
+      if (!best) {
+        if (t.notYet && open.some(w => w.at.some(a => dist(a, q) < 3))) { this.msg = t.notYet; return true; }
+        return false;
+      }
+      const w = open.find(w => w.at.some(a => dist(a, best) < 0.5));
+      if (!w) { this.msg = val(t.wrong, this); this.wrongPt = best; return true; }
+      this.addPin(w.name, best, w.lab); this.msg = null; this.wrongPt = null;
+      if (this.want.every(w => this.pts[w.name])) this.next();
+      return true;
+    },
+    act(x) {
+      const t = this.task;
+      if (t.act && x !== "check" && x !== "neg") { t.act(this, x); return; }
+      if (t.kind !== "type") return;
+      if (x === "neg") { this.typed = this.typed.startsWith("−") ? this.typed.slice(1) : "−" + this.typed; this.verdict = null; this.msg = null; return; }
+      if (x !== "check") return;
+      const box = t.boxes ? t.boxes[this.bi] : t;
+      if (!this.typed || this.typed === "−") { this.msg = "Type the number first."; return; }
+      const v = +this.typed.replace("−", "-");
+      if (v === box.answer) {
+        this.vals[`${t.id}${this.bi}`] = v; this.typed = ""; this.verdict = null; this.msg = null; this.bi++;
+        if (!t.boxes || this.bi >= t.boxes.length) { this.typing = false; this.next(); }
+      } else { this.verdict = "wrong"; this.msg = box.wrong(v, this); }
+    },
+    type(v) { this.typed = v; this.verdict = null; this.msg = null; },
+
+    // ----- drawing -----
+    scene() {
+      const t = this.task, fr = cfg.frame, W = fr.w - 3;
+      words(`say-${val(t.say, this)}`, val(t.say, this), 0, 1, W);
+      if (this.msg) words(`msg-${this.msg}`, this.msg, 0, 3.3, W, "small", { c: "var(--wrong)" });
+      else if (val(t.sub, this)) words(`sub-${val(t.sub, this)}`, val(t.sub, this), 0, 3.3, W, "small");
+      cfg.figure(this);
+      // pencil marks: the arcs (drawn live by the hand, so they don't draw in again)
+      this.arcs.forEach((a, k) => path(`arc${k}`, arcD(a.c, a.r, a.a0, a.a1), { c: "var(--ink2)", live: true }));
+      if (this.bad) path("bad", arcD(this.bad.c, this.bad.r, this.bad.a0, this.bad.a1), { c: "var(--wrong)", live: true });
+      const h = this.hold;
+      if (h && h.mode === "swing" && h.hi - h.lo > 0.01) path("livearc", arcD(this.cmp.N, this.cmp.w, h.phi0 + h.lo, h.phi0 + h.hi), { c: "var(--ink2)", live: true });
+      for (const l of this.lines) seg(l.k, l.a, l.b, { c: l.answer ? "var(--chapter)" : "var(--ink2)", delay: l.delay || 0 });
+      if (cfg.extra) cfg.extra(this);
+      for (const [n, p] of Object.entries(this.pts)) {
+        if (p.ghost) continue;
+        const c = p.kind === "fig" ? "var(--ink)" : "var(--chapter)";
+        dot(`pt${n}`, p.x, p.y, 0.3, { c, live: p.kind === "fig" ? false : undefined });
+        if (!p.hide) nameAt(`ptn${n}`, n, p, p.lab, c);
+      }
+      if (this.wrongPt) dot(`wp${this.wrongPt.x.toFixed(2)}`, this.wrongPt.x, this.wrongPt.y, 0.45, { c: "var(--wrong)" });
+      const tool = this.tool();
+      TOOL = true;
+      if (tool === "compass") this.drawCompass();
+      if (tool === "ruler") this.drawRuler();
+      TOOL = false;
+      if (cfg.record) cfg.record(this);
+      if (t.kind === "done") block("next", cfg.nextAt.x, cfg.nextAt.y, 10, "Next problem", "next");
+    },
+    drawCompass() {
+      const N = this.cmp.N, P = this.pen(), K = this.knob(), u = unit(this.cmp.phi), up = V(u.y, -u.x);
+      seg("cmpL", N, K, { c: "var(--ink2)" }); seg("cmpR", K, P, { c: "var(--ink2)" });
+      seg("cmpNeedle", N, add(N, mul(sub(K, N), 0.12)), { c: "var(--ink)" });
+      ringAt("cmpK", K.x, K.y, 0.75, { c: "var(--ink2)", fill: "var(--paper)" });
+      dot("cmpN", N.x, N.y, 0.22, { c: "var(--ink)" });
+      dot("cmpP", P.x, P.y, 0.3, { c: "var(--ink2)" });
+      const h = this.hold;
+      if (h && ["move", "open", "swing"].includes(h.mode)) {
+        const t = this.task, ro = t.readout ? t.readout(this) : this.wName && this.wIs(this.wLen) ? `width ${this.wName}` : `width ${fmt(this.cmp.w)}`;
+        const at = add(K, mul(up, 1.9));
+        text("readout", ro, at.x, at.y, "small", { c: "var(--chapter)", live: true });
+      }
+    },
+    drawRuler() {
+      const r = this.rul, u = unit(r.a), b = V(-u.y, u.x), e1 = add(r.p, mul(u, LR)), w = 2.5;
+      const c = [r.p, e1, add(e1, mul(b, w)), add(r.p, mul(b, w))];
+      put("rulBody", "path", { d: `M${c.map(p => `${sq(p.x)} ${sq(p.y)}`).join("L")}Z`, fill: "var(--paper)", "fill-opacity": 0.72, stroke: "var(--ink2)", "stroke-width": 1.5 }, "fade");
+      seg("rulEdge", r.p, e1, { c: "var(--ink)" });
+      if (this.hold && ["slide", "turn"].includes(this.hold.mode)) {
+        const on = this.onEdge(), at = add(add(r.p, mul(u, LR / 2)), mul(b, w + 1.4));
+        const ro = (this.task.read && this.task.read(this, on)) || (on.length >= 2 ? (on.every(x => !x.hide) ? `through ${on[0].n} and ${on[on.length - 1].n}` : "through 2 points") : on.length ? `through ${on[0].hide ? "a point" : on[0].n}` : "");
+        if (ro) text("readout", ro, at.x, at.y, "small", { c: "var(--chapter)", live: true });
+      }
+    },
+  };
+  for (const [n, p] of Object.entries(cfg.pts)) L.pts[n] = { ...p, kind: "fig" };
+  return L;
+}
+
+// the lines of words every compass step shares, by where the compass is
+const putOn = (L, n) => L.at(n) ? null : `Drag it by its point onto ${n}.`;
+function openWords(L, a, b, len) {        // opening from a to b
+  if (L.wIs(len)) return null;
+  if (L.at(a) || L.at(b)) return `Now drag its pencil onto ${L.at(a) ? b : a}.`;
+  return `Drag its point onto ${a}, then its pencil onto ${b}.`;
+}
+// for a width set on two points: once it's been right, changing it is a miss
+function keepOpen(id, len, a, b) {
+  return {
+    onOpen: L => { if (Math.abs(L.cmp.w - len) < 0.01) L.flag[id] = true; else if (L.flag[id]) L.msg = `The width changed. Open it to ${a} and ${b} again.`; },
+    width: (w, L) => Math.abs(w - len) < 0.01 ? null : L.flag[id] ? `The width changed. Open it to ${a} and ${b} again.` : `Open it from ${a} to ${b} first.`,
+  };
+}
+const sameWidth = first => w => Math.abs(w - first) < 0.01 ? null : `That arc is ${fmt(w)} wide. The first was ${fmt(first)}: keep the same width.`;
+const halfOf = (name, half) => w => w < half - 0.01 ? `That's less than half of ${name}: the arcs won't meet.` : w < half + 0.01 ? `That's just half of ${name}: the arcs only touch.` : null;
+// ---------- chapter 2's own pieces: the plane, choices, rows with boxes, a minus key ----------
+const MIN = "−";
+const sgn = v => v < 0 ? MIN + (-v) : String(v);
+const coordS = p => `(${sgn(p.x)}, ${sgn(p.y)})`;
+const ceil5 = v => Math.ceil(v / 5) * 5;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const eqP = (a, b) => Math.abs(a.x - b.x) < 1e-6 && Math.abs(a.y - b.y) < 1e-6;
+const pick1 = a => a[rnd(0, a.length - 1)];
+const sgnR = () => rnd(0, 1) ? 1 : -1;
+const cap = s => s[0].toUpperCase() + s.slice(1);
+const ease = u => u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+const cross2 = (a, b) => a.x * b.y - a.y * b.x, dot2 = (a, b) => a.x * b.x + a.y * b.y;
+const cen3 = ps => V((ps[0].x + ps[1].x + ps[2].x) / 3, (ps[0].y + ps[1].y + ps[2].y) / 3);
+// a corner's name, pushed away from its shape's middle
+const labOut = (ps, k) => { const c = cen3(ps), d = sub(ps[k], c), l = Math.hypot(d.x, d.y) || 1; return [d.x / l, d.y / l]; };
+const angAt = (ps, k) => Math.abs(wrapPi(angOf(ps[k], ps[(k + 1) % 3]) - angOf(ps[k], ps[(k + 2) % 3]))) / DEG;
+function poly(k, ps, o = {}) { path(k, `M${ps.map(p => `${sq(p.x)} ${sq(p.y)}`).join("L")}Z`, o); }
+// how wide mrow writes a row, in squares
+const mw = s => [...s].reduce((w, ch) => w + (ch === " " ? 0.6 : /[0-9]/.test(ch) ? 2 : ch === "°" ? 0.9 : ch === "′" ? 0.5 : ch === "″" ? 0.8 : "(),:".includes(ch) ? 0.8 : ch === "→" ? 2.2 : "=÷+M".includes(ch) ? 1.6 : 1.35), 0);
+// a word in the record, at the maths size; returns where it ends (about a square a letter)
+function wrec(k, s, x, row, c) { text(`${k}${s}`, s, x, row, "maths", { anchor: "start", c }); return x + s.length * 1.0 + 0.4; }
+
+// The plane (8th grade's): one unit is one square, the axes on strong lines, numbered every 5. Its top is row 6, under
+// the words; its left edge is column 0. Maths (X, Y) is paper (ox + X, oy - Y).
+function makePlane(ms, k = 1, pad = 2, padL = pad) {
+  const xs = ms.map(p => p.x).concat(0), ys = ms.map(p => p.y).concat(0);
+  const ox = ceil5(-k * Math.min(...xs) + padL), oy = ceil5(6 + k * Math.max(...ys) + pad);
+  const X0 = -Math.floor(ox / k), X1 = Math.max(...xs) + Math.ceil(pad / k), Y0 = Math.min(...ys) - Math.ceil(pad / k), Y1 = Math.floor((oy - 6) / k);
+  return {
+    k, ox, oy, X0, X1, Y0, Y1, right: ox + k * X1, bottom: oy - k * Y0,
+    P: (X, Y) => V(ox + k * X, oy - k * Y), M: p => V(Math.round((p.x - ox) / k), Math.round((oy - p.y) / k)),
+    inside: q => q.x >= ox + k * X0 - 0.5 && q.x <= ox + k * X1 + 0.5 && q.y >= oy - k * Y1 - 0.5 && q.y <= oy - k * Y0 + 0.5,
+    snap: q => V(ox + k * clamp(Math.round((q.x - ox) / k), X0, X1), oy - k * clamp(Math.round((oy - q.y) / k), Y0, Y1)),
+  };
+}
+// k = 2 squares a unit when the plane still fits beside its record; else 1 (8th grade's)
+const camScale = f => Math.min(1132 / (f.w * 20), 708 / (f.h * 20));
+const fits2 = (ms, w = 15, h = 13) => { const xs = ms.map(p => p.x).concat(0), ys = ms.map(p => p.y).concat(0); return Math.max(...xs) - Math.min(...xs) <= w && Math.max(...ys) - Math.min(...ys) <= h; };
+function drawPlane(pl) {
+  const { ox, oy, k } = pl, L = ox + k * pl.X0, R = ox + k * pl.X1, T = oy - k * pl.Y1, B = oy - k * pl.Y0;
+  line("axX", L, oy, R, oy, { c: "var(--ink2)" });
+  line("axY", ox, T, ox, B, { c: "var(--ink2)" });
+  text("axXn", "x", R + 0.7, oy, "small", { anchor: "start" });
+  text("axYn", "y", ox + 0.7, T + 0.6, "small", { anchor: "start" });
+  for (let X = ceil5(pl.X0 + 1); X <= pl.X1; X += 5) if (X) text(`nx${X}`, sgn(X), ox + k * X, oy + 1.1, "small");
+  for (let Y = ceil5(pl.Y0 + 1); Y * k <= k * pl.Y1 - 1; Y += 5) if (Y) text(`ny${Y}`, sgn(Y), ox - 0.6, oy - k * Y, "small", { anchor: "end" });
+  text("n0", "0", ox - 0.6, oy + 1.1, "small", { anchor: "end" });
+}
+// the infinite line through a and b, cut to the plane
+function clipTo(pl, a, b) {
+  const d = sub(b, a), lo = [pl.ox + pl.k * pl.X0, pl.oy - pl.k * pl.Y1], hi = [pl.ox + pl.k * pl.X1, pl.oy - pl.k * pl.Y0];
+  let t0 = -1e9, t1 = 1e9;
+  for (const [k, i] of [["x", 0], ["y", 1]]) {
+    if (Math.abs(d[k]) < 1e-12) continue;
+    const u = (lo[i] - a[k]) / d[k], v = (hi[i] - a[k]) / d[k];
+    t0 = Math.max(t0, Math.min(u, v)); t1 = Math.min(t1, Math.max(u, v));
+  }
+  return [add(a, mul(d, t0)), add(a, mul(d, t1))];
+}
+// a dashed helper circle, drawn only where it lies on the plane
+function circleOn(k, pl, c, r) {
+  const n = 180, runs = []; let cur = [];
+  for (let j = 0; j <= n; j++) { const p = polar(c, r, j * TAU / n); if (pl.inside(p)) cur.push(p); else { if (cur.length > 1) runs.push(cur); cur = []; } }
+  if (cur.length > 1) runs.push(cur);
+  if (runs.length > 1 && runs[0][0] && pl.inside(polar(c, r, 0)) && dist(runs[0][0], runs[runs.length - 1].slice(-1)[0]) < 1) runs[0] = runs.pop().concat(runs[0]);
+  path(k, runs.map(q => `M${q.map(p => `${sq(p.x)} ${sq(p.y)}`).join("L")}`).join(""), { c: "var(--ink2)", live: true });
+  items[items.length - 1].a["stroke-dasharray"] = "6 6";
+}
+// choices drawn as blocks on the paper (4th grade's Tap a choice); a wrong one goes red
+function choiceBlock(k, j, label, x, y, bad) {
+  const w = Math.ceil(label.length * 0.52 + 2);
+  rect(`${k}o${j}${bad}`, x, y, w, 2, { c: bad ? "var(--wrong)" : "var(--ink)" });
+  text(`${k}w${j}${bad}`, label, x + 1, y + 1, "small", { anchor: "start", c: bad ? "var(--wrong)" : "var(--ink)" });
+  put(`${k}hit${j}`, "rect", { x: sq(x), y: sq(y), width: sq(w), height: sq(2), fill: "transparent", "data-act": `pick:${j}` }, "none");
+  return w;
+}
+// a box in a record row: written in the chapter colour once right, the active one takes the typing
+function boxAt(L, tid, b, x, row, cells) {
+  const v = L.vals[`${tid}${b}`];
+  if (v != null) return mrow(`bv${tid}${b}`, String(v).replace("-", MIN), x + 0.3, row, "var(--chapter)") + 0.3;
+  const active = L.task.id === tid && L.bi === b;
+  dbox(`bx${tid}${b}`, x + 0.3, row - 1, cells, active ? L.typed : "", active ? (L.verdict || "active") : "idle");
+  return x + 0.6 + cells * 2;
+}
+function checkKeys(x, y, minus) { block("check", x, y, 7, "Check", "check"); if (minus) { rect("negO", x + 8, y, 2, 2, { c: "var(--ink)" }); text("negW", MIN, x + 9, y + 1, "say", { c: "var(--ink)" }); put("neghit", "rect", { x: sq(x + 8), y: sq(y), width: sq(2), height: sq(2), fill: "transparent", "data-act": "neg" }, "none"); } }
+// 7th grade's protractor on the corner k of a triangle, reading it
+function protOn(k, ps, c) {
+  const a1 = angOf(ps[c], ps[(c + 1) % 3]), a2 = angOf(ps[c], ps[(c + 2) % 3]), d = wrapPi(a2 - a1), th = Math.round(Math.abs(d) / DEG);
+  protractor(k, ps[c], a1, 4, d > 0 ? 1 : -1, [[th, `${th}°`, th > 40 ? -12 : -th / 2]]);
+}
+// the side a..b's normal pointing away from the third corner
+const outN = (ps, a, b) => { const u = unit(angOf(ps[a], ps[b])), n = V(-u.y, u.x), c = sub(ps[3 - a - b], ps[a]); return dot2(c, n) > 0 ? mul(n, -1) : n; };
+const nearK = (ps, q, r) => { let b = -1, bd = r; ps.forEach((p, k) => { const d = dist(p, q); if (d < bd) { bd = d; b = k; } }); return b; };
+
+// ---------- Moves as rules (g10-rules) ----------
+// One square: 1 (the plane). Triangle ABC, corners −8..8, its side AB 3-4-5 so it counts whole. Problems 1-3 slides and
+// flips, 4-6 turns and stretches, 7+ two rules in a row.
+const sideTxt = (v, l) => v ? `${l} ${v < 0 ? MIN : "+"} ${Math.abs(v)}` : l;
+const RULE = {
+  slide: (a, b) => ({ id: "slide", f: p => V(p.x + a, p.y + b), tx: sideTxt(a, "x"), ty: sideTxt(b, "y"), keeps: true }),
+  flipX: () => ({ id: "flipX", f: p => V(p.x, -p.y), tx: "x", ty: MIN + "y", keeps: true, slip: p => V(-p.x, p.y), slipMsg: () => `Over the x-axis x stays: only y turns to ${MIN}y.` }),
+  flipY: () => ({ id: "flipY", f: p => V(-p.x, p.y), tx: MIN + "x", ty: "y", keeps: true, slip: p => V(p.x, -p.y), slipMsg: () => `Over the y-axis y stays: only x turns to ${MIN}x.` }),
+  flipD: () => ({ id: "flipD", f: p => V(p.y, p.x), tx: "y", ty: "x", keeps: true, slip: p => V(-p.y, -p.x), slipMsg: () => "Over y = x, x and y just swap places." }),
+  turnL: () => ({ id: "turnL", f: p => V(-p.y, p.x), tx: MIN + "y", ty: "x", keeps: true, slip: p => V(p.y, -p.x), slipMsg: () => "A quarter turn left: the new x is minus the old y." }),
+  turnR: () => ({ id: "turnR", f: p => V(p.y, -p.x), tx: "y", ty: MIN + "x", keeps: true, slip: p => V(-p.y, p.x), slipMsg: () => "A quarter turn right: the new y is minus the old x." }),
+  half: () => ({ id: "half", f: p => V(-p.x, -p.y), tx: MIN + "x", ty: MIN + "y", keeps: true, slip: p => V(-p.x, p.y), slipMsg: () => "A half turn: x and y both turn to minus." }),
+  sx: () => ({ id: "sx", f: p => V(2 * p.x, p.y), tx: "2x", ty: "y", keeps: false, slip: p => V(p.x + 2, p.y), slipMsg: p => `× 2 doubles x: 2 × ${sgn(p.x)} is ${sgn(2 * p.x)}.`, say: "× 2 on x stretches it sideways: lengths change." }),
+  sy: () => ({ id: "sy", f: p => V(p.x, 2 * p.y), tx: "x", ty: "2y", keeps: false, slip: p => V(p.x, p.y + 2), slipMsg: p => `× 2 doubles y: 2 × ${sgn(p.y)} is ${sgn(2 * p.y)}.`, say: "× 2 on y stretches it up and down: lengths change." }),
+  sxy: () => ({ id: "sxy", f: p => V(2 * p.x, 2 * p.y), tx: "2x", ty: "2y", keeps: false, slip: p => V(p.x + 2, p.y + 2), slipMsg: p => `× 2 doubles x and y: 2 × ${sgn(p.x)} is ${sgn(2 * p.x)}.`, say: "× 2 on both doubles every length: the angles stay, the size changes." }),
+};
+// the miss line: where the rule sends this corner, worked from its numbers
+function ruleMiss(N, p, r) {
+  const q = r.f(p);
+  const part = (slot, t, v) => t === slot ? `${slot} stays ${sgn(v)}` : t.includes(slot) ? `${t} is ${sgn(v)}` : `the new ${slot} is ${t}: ${sgn(v)}`;
+  const a = part("x", r.tx, q.x), b = part("y", r.ty, q.y);
+  return a.startsWith("the") || b.startsWith("the") ? `${N} is ${coordS(p)}. ${cap(a)}. ${cap(b)}.` : `${N} is ${coordS(p)}. ${a} and ${b}.`;
+}
+function genRules(i) {
+  const slide = () => RULE.slide(sgnR() * rnd(1, 6), sgnR() * rnd(1, 6));
+  const rigid = () => pick1([slide, RULE.flipX, RULE.flipY, RULE.flipD, RULE.turnL, RULE.turnR, RULE.half])();
+  const stretch = () => pick1([RULE.sx, RULE.sy, RULE.sxy])();
+  let rules = null;
+  for (let tries = 0; tries < 40000; tries++) {
+    if (tries % 2000 === 0) rules = null;
+    if (rules) ;
+    else if (i === 0) rules = [RULE.slide(rnd(2, 5), -rnd(1, 4))];
+    else if (i === 1) rules = [pick1([RULE.flipX, RULE.flipY])()];
+    else if (i === 2) rules = [rnd(0, 1) ? RULE.flipD() : slide()];
+    else if (i === 3) rules = [pick1([RULE.turnL, RULE.turnR])()];
+    else if (i === 4) rules = [pick1([RULE.half, RULE.turnL, RULE.turnR])()];
+    else if (i === 5) rules = [stretch()];
+    else { const r1 = rnd(0, 2) === 0 ? stretch() : rigid(), r2 = rigid(); rules = rnd(0, 1) ? [r1, r2] : [r2, r1]; if (rules[0].id === rules[1].id) { rules = null; continue; } }
+    const lo = i === 0 ? 1 : -8, v = pick1([[3, 4], [4, 3], [5, 0], [0, 5]]);
+    const A = V(rnd(lo, 8), rnd(lo, 8)), B = V(A.x + sgnR() * v[0], A.y + sgnR() * v[1]), C = V(rnd(lo, 8), rnd(lo, 8)), T = [A, B, C];
+    if (T.some(p => Math.abs(p.x) > 8 || Math.abs(p.y) > 8 || p.x < lo || p.y < lo)) continue;
+    if (Math.abs(cross2(sub(B, A), sub(C, A))) < 14 || dist(A, C) < 4 || dist(B, C) < 4 || [0, 1, 2].some(k => angAt(T, k) < 25)) continue;
+    const imgs = []; let cur = T;
+    for (const r of rules) { cur = cur.map(r.f); imgs.push(cur); }
+    const pts = [T, ...imgs].flat();
+    if (pts.some(p => Math.abs(p.x) > 13 || Math.abs(p.y) > (rules.some(r => r.id === "sy") ? 12 : 11))) continue;
+    let close = false;
+    for (let a = 0; a < pts.length; a++) for (let b = a + 1; b < pts.length; b++) if (dist(pts[a], pts[b]) < 2.5) close = true;
+    if (close) continue;
+    if (tries % 2000 < 1500 && !fits2(pts)) continue;
+    const keeps = rules.every(r => r.keeps), fin = imgs[imgs.length - 1];
+    // a stretch changes every side, so any side the hand measures shows it
+    if (!keeps && [[0, 1], [1, 2], [2, 0]].some(([a, b]) => Math.abs(dist(T[a], T[b]) - dist(fin[a], fin[b])) < 0.05)) continue;
+    return { T, rules, imgs, keeps, k: fits2(pts) ? 2 : 1 };
+  }
+  throw new Error("genRules");
+}
+function dRules(i) {
+  const G = genRules(i), two = G.rules.length === 2, PR = ["′", "″"], N = ["A", "B", "C"];
+  // the record's widest row
+  const recW = Math.max(22, ...G.rules.map(r => mw(`(x, y) → (${r.tx}, ${r.ty})`)), ...[0, 1, 2].map(k => mw(`${N[k]}${coordS(G.T[k])} → ${N[k]}′${coordS(G.imgs[0][k])}`)),
+    ...(two ? [0, 1, 2].map(k => 4 + mw(`→ ${N[k]}″${coordS(G.imgs[1][k])}`)) : []));
+  // 2 squares a unit when the camera still shows it all at 75% or more
+  const rowEnd = two ? 34 : 23, plan = k => { const pl = makePlane([G.T, ...G.imgs].flat(), k, 4, 7), rx = ceil5(pl.right + 2); return { pl, rx, fr: { x: -1, y: -1, w: rx + recW + 1, h: Math.max(pl.bottom + 2, rowEnd + 5) } }; };
+  let PL = plan(G.k); if (G.k === 2 && camScale(PL.fr) < 0.75) PL = plan(1);
+  const { pl, rx, fr } = PL, K = pl.k, P = p => pl.P(p.x, p.y);
+  const Tp = G.T.map(P), Ip = G.imgs.map(a => a.map(P)), Fp = Ip[Ip.length - 1], fp = PR[G.imgs.length - 1];
+  const rowRule = k => 8 + 3 * k, rowC = (s, k) => two ? 15 + 6 * k + 3 * s : 13 + 3 * k;
+  const st = { s: 0, placed: [[], []], held: null, bad: null, ld: null, side: null, wrongPick: null };
+  const srcOf = (s, k) => s === 0 ? G.T[k] : G.imgs[0][k];
+  const curName = () => N[st.placed[st.s].length] + PR[st.s];
+  function placeAt(L) {
+    const s = st.s, k = st.placed[s].length, src = srcOf(s, k), want = G.imgs[s][k], r = G.rules[s], m = pl.M(st.held);
+    st.held = null;
+    if (eqP(m, want)) {
+      st.placed[s].push(want); L.addPin(N[k] + PR[s], P(want), labOut(Ip[s], k), "pin"); L.msg = null; st.bad = null;
+      if (k === 2) { if (s === 0 && two) st.s = 1; else L.next(); }
+      return;
+    }
+    st.bad = P(m);
+    L.msg = r.slip && eqP(m, r.slip(src)) && !eqP(r.slip(src), want) ? r.slipMsg(src) : ruleMiss(N[k] + (s ? "′" : ""), src, r);
+  }
+  const liveLen = () => {
+    const a = st.ld.k, A0 = Tp[a]; let best = null;
+    for (const b of [0, 1, 2]) if (b !== a) {
+      const d = sub(Tp[b], A0), t = clamp(dot2(sub(st.ld.q, A0), d) / dot2(d, d), 0, 1), p = add(A0, mul(d, t)), e = dist(p, st.ld.q);
+      if (!best || e < best.e) best = { b, t, p, e };
+    }
+    return best;
+  };
+  const sideNames = (a, b) => [N[a] + N[b], N[a] + fp + N[b] + fp];
+  const tasks = [
+    { id: "place", kind: "place", tool: null,
+      say: L => !two ? "Put A′, B′ and C′ where the rule sends A, B and C." : st.s === 0 ? "Put A′, B′ and C′ where the first rule sends A, B and C." : "Now put A″, B″ and C″ where the second rule sends A′, B′ and C′.",
+      sub: L => `Drag a point onto a crossing: ${curName()}.`,
+      grab: (L, q) => { if (!pl.inside(q)) return false; st.held = pl.snap(q); st.bad = null; L.msg = null; return true; },
+      drag: (L, q) => { st.held = pl.snap(q); },
+      release: L => placeAt(L),
+      tap: (L, q) => { if (!pl.inside(q)) return false; st.held = pl.snap(q); placeAt(L); return true; },
+      demo: H => { const w = P(G.imgs[st.s][st.placed[st.s].length]); H.drag(V(w.x + 1.3, w.y + 1.3), w); } },
+    { id: "len", kind: "len", tool: null, say: "Drag along a side of ABC, from corner to corner.", sub: `Its copy on ${N.map(n => n + fp).join("")} is measured too.`,
+      grab: (L, q) => { const k = nearK(Tp, q, 1.6); if (k < 0) return false; st.ld = { k, q }; L.msg = null; return true; },
+      drag: (L, q) => { st.ld.q = q; },
+      release: (L, q) => {
+        const a = st.ld.k, b = nearK(Tp, q, 1.4); st.ld = null;
+        if (b < 0 || b === a) { L.msg = "Drag from one corner all the way to the next."; return; }
+        st.side = [a, b]; L.msg = null; L.next();
+      },
+      tap: L => { if (!st.ld) return false; st.ld = null; L.msg = "Drag from one corner all the way to the next."; return true; },
+      demo: H => H.drag(Tp[0], Tp[1]) },
+    { id: "prot", kind: "see", dur: 2400, tool: null, say: () => `Lay the protractor on ${N[st.side[0]]} and on ${N[st.side[0]]}${fp}.` },
+    { id: "choose", kind: "choose", tool: null, say: "Tap what the rule did to the triangle.",
+      act(L, x) {
+        if (!x.startsWith("pick:")) return;
+        const j = +x.slice(5), [a, b] = st.side, [s1, s2] = sideNames(a, b), l1 = fmt(dist(Tp[a], Tp[b]) / K), l2 = fmt(dist(Fp[a], Fp[b]) / K);
+        if (j === (G.keeps ? 0 : 1)) { st.wrongPick = null; L.msg = null; L.next(); return; }
+        st.wrongPick = j;
+        L.msg = G.keeps ? `${s1} is ${l1} and ${s2} is ${l2}, and the corners match: it only moved.` : `${s1} is ${l1} and ${s2} is ${l2}: it changed.`;
+      },
+      demo: () => { lesson.act(`pick:${G.keeps ? 0 : 1}`); render(); } },
+    { id: "done", kind: "done", tool: null, say: G.keeps ? "Slides, flips and turns keep every length: the shape only moves." : G.rules.find(r => !r.keeps).say },
+  ];
+  const pts = {}; Tp.forEach((p, k) => pts[N[k]] = { ...p, lab: labOut(Tp, k) });
+  return con({
+    id: "rules", index: i, frame: fr, nextAt: V(rx, rowEnd + 2), pts, park: { N: V(-60, -60), w: 6 }, geo: () => [], tasks, G, st,
+    figure(L) {
+      drawPlane(pl);
+      poly("t0", Tp);
+      Ip.forEach((ps, s) => { if (st.placed[s].length === 3) poly(`t${s + 1}`, ps, { c: "var(--chapter)" }); });
+    },
+    extra(L) {
+      if (st.bad) dot(`bad${st.bad.x}_${st.bad.y}`, st.bad.x, st.bad.y, 0.4, { c: "var(--wrong)" });
+      if (st.held) {
+        dot("held", st.held.x, st.held.y, 0.45, { c: "var(--chapter)", live: true });
+        text("heldR", coordS(pl.M(st.held)), st.held.x + 1, st.held.y - 1.3, "small", { anchor: "start", c: "var(--chapter)", live: true });
+      }
+      if (st.ld) {
+        const b = liveLen(), A0 = Tp[st.ld.k], at = dist(st.ld.q, Tp[b.b]) < 1.4;
+        seg("ld", A0, b.p, { c: "var(--chapter)", live: true });
+        dot("ldp", b.p.x, b.p.y, 0.35, { c: "var(--chapter)", live: true });
+        const [s1, s2] = sideNames(st.ld.k, b.b);
+        const ro = at ? `${s1} = ${fmt(dist(A0, Tp[b.b]) / K)} · ${s2} = ${fmt(dist(Fp[st.ld.k], Fp[b.b]) / K)}` : fmt(dist(A0, b.p) / K);
+        text("ldr", ro, b.p.x + 1, b.p.y - 1.3, "small", { anchor: "start", c: "var(--chapter)", live: true });
+      }
+      if (st.side) {
+        const [a, b] = st.side, [s1, s2] = sideNames(a, b);
+        bracket("bT", Tp[a], Tp[b], outN(Tp, a, b), 1, s1, K); bracket("bF", Fp[a], Fp[b], outN(Fp, a, b), 1, s2, K);
+        const ph = L.phase("prot");
+        if (ph > 0) protOn("pT", Tp, a);
+        if (ph >= 0.45) protOn("pF", Fp, a);
+      }
+    },
+    record(L) {
+      G.rules.forEach((r, k) => mrow(`rule${k}`, `(x, y) → (${r.tx}, ${r.ty})`, rx, rowRule(k)));
+      for (let s = 0; s < G.imgs.length; s++) st.placed[s].forEach((p, k) => {
+        const row = rowC(s, k);
+        if (s === 0) { const e = mrow(`c0${k}`, `${N[k]}${coordS(G.T[k])} → `, rx, row); mrow(`c0v${k}`, `${N[k]}′${coordS(p)}`, e, row, "var(--chapter)"); }
+        else { const e = mrow(`c1${k}`, "→ ", rx + 4, row); mrow(`c1v${k}`, `${N[k]}″${coordS(p)}`, e, row, "var(--chapter)"); }
+      });
+      if (L.stage === "choose") { const w = choiceBlock("ch", 0, "Same size and shape", rx, rowEnd - 1, st.wrongPick === 0); choiceBlock("ch", 1, "Changed", rx + w + 1, rowEnd - 1, st.wrongPick === 1); }
+      if (L.task.kind === "done") {
+        text("keepsW", "keeps lengths and angles:", rx, rowEnd, "say", { anchor: "start" });
+        text(`keepsV${G.keeps}`, G.keeps ? "yes" : "no", rx + 18.6, rowEnd, "say", { anchor: "start", c: "var(--chapter)" });
+      }
+    },
+  });
+}
+
+// ---------- Find the mirror and the turn (g10-define) ----------
+// One square: 1. Two copies of a triangle; A′B′C′ made from ABC by one move nobody names. Slides ±1-6; flips over
+// x = a, y = b (a, b −3..3), y = x, y = −x; turns of 90°, 180°, 270° about a crossing −3..3. Problems 1-3 slides and
+// flips over x = a, y = b; 4-6 turns about (0, 0); 7+ any, and from problem 10 two flips over parallel mirrors.
+function turnAbout(p, c, th) {
+  const d = sub(p, c), r = th === 90 ? V(-d.y, d.x) : th === 180 ? V(-d.x, -d.y) : V(d.y, -d.x);
+  return add(c, r);
+}
+function genDefine(i) {
+  let kind = null, M;
+  for (let tries = 0; tries < 60000; tries++) {
+    if (tries % 3000 === 0) kind = null;
+    if (kind) ;
+    else if (i < 3) kind = ["slide", "flipV", "flipH"][i];
+    else if (i < 6) kind = ["turn90", "turn180", "turn270"][i - 3];
+    else if (i === 9 || (i > 9 && rnd(0, 2) === 0)) kind = "two";
+    else kind = pick1(["slide", "flipV", "flipH", "flipD", "flipE", "turn90", "turn180", "turn270"]);
+    if (kind === "slide") { const a = sgnR() * rnd(1, 6), b = sgnR() * rnd(1, 6); M = { type: "slide", dx: a, dy: b, f: p => V(p.x + a, p.y + b) }; }
+    else if (kind === "flipV") { const a = rnd(-3, 3); M = { type: "flip", f: p => V(2 * a - p.x, p.y), eq: `x = ${sgn(a)}`, mp: V(a, 0), mu: V(0, 1) }; }
+    else if (kind === "flipH") { const b = rnd(-3, 3); M = { type: "flip", f: p => V(p.x, 2 * b - p.y), eq: `y = ${sgn(b)}`, mp: V(0, b), mu: V(1, 0) }; }
+    else if (kind === "flipD") M = { type: "flip", f: p => V(p.y, p.x), eq: "y = x", mp: V(0, 0), mu: V(1, 1) };
+    else if (kind === "flipE") M = { type: "flip", f: p => V(-p.y, -p.x), eq: `y = ${MIN}x`, mp: V(0, 0), mu: V(1, -1) };
+    else if (kind.startsWith("turn")) { const th = +kind.slice(4), c = i < 6 ? V(0, 0) : V(rnd(-3, 3), rnd(-3, 3)); M = { type: "turn", th, c, f: p => turnAbout(p, c, th) }; }
+    else {
+      const vert = rnd(0, 1), a = rnd(-3, 2), gap = sgnR() * rnd(2, 3), b = a + gap;
+      const fl = m => vert ? p => V(2 * m - p.x, p.y) : p => V(p.x, 2 * m - p.y);
+      M = { type: "slide", two: true, vert, a, b, f1: fl(a), f: p => fl(b)(fl(a)(p)), dx: vert ? 2 * gap : 0, dy: vert ? 0 : 2 * gap };
+    }
+    const T = [V(rnd(-8, 8), rnd(-8, 8)), V(rnd(-8, 8), rnd(-8, 8)), V(rnd(-8, 8), rnd(-8, 8))];
+    const L3 = [dist(T[0], T[1]), dist(T[1], T[2]), dist(T[2], T[0])];
+    if (Math.abs(cross2(sub(T[1], T[0]), sub(T[2], T[0]))) < 16 || L3.some(l => l < 4) || Math.abs(L3[0] - L3[1]) < 0.5 || Math.abs(L3[1] - L3[2]) < 0.5 || Math.abs(L3[0] - L3[2]) < 0.5) continue;
+    if ([0, 1, 2].some(k => angAt(T, k) < 25)) continue;
+    const I = T.map(M.f), mid = M.two ? T.map(M.f1) : null, pts = [...T, ...I, ...(mid || [])];
+    if (pts.some(p => Math.abs(p.x) > 12 || Math.abs(p.y) > 11)) continue;
+    let close = false;
+    for (let a = 0; a < pts.length; a++) for (let b = a + 1; b < pts.length; b++) if (dist(pts[a], pts[b]) < 2.5) close = true;
+    if (close) continue;
+    const segD = (q, a, b) => { const d = sub(b, a), t = clamp(dot2(sub(q, a), d) / dot2(d, d), 0, 1); return dist(q, add(a, mul(d, t))); };
+    if ([0, 1, 2].some(k => pts.some(q => !eqP(q, T[k]) && !eqP(q, I[k]) && segD(q, T[k], I[k]) < 1.2))) continue;
+    if (M.type === "flip") {
+      const n = Math.hypot(M.mu.x, M.mu.y), ds = T.map(p => Math.abs(cross2(sub(p, M.mp), M.mu)) / n);
+      if (ds.some(d => d < 1.2) || Math.abs(ds[0] - ds[1]) < 0.5 || Math.abs(ds[1] - ds[2]) < 0.5 || Math.abs(ds[0] - ds[2]) < 0.5) continue;
+    }
+    if (M.type === "turn") {
+      if (T.some(p => dist(p, M.c) < 2.5)) continue;
+      if ([[0, 1], [1, 2], [0, 2]].some(([a, b]) => Math.abs(cross2(sub(T[a], M.c), sub(T[b], M.c))) < 6)) continue;
+    }
+    if (M.type === "slide" && [[0, 1], [1, 2], [0, 2]].some(([a, b]) => Math.abs(cross2(sub(T[b], T[a]), V(M.dx, M.dy))) < 4)) continue;
+    const ms = [...pts, M.c || V(0, 0), M.mp || V(0, 0)];
+    if (M.two) ms.push(M.vert ? V(M.a, 0) : V(0, M.a), M.vert ? V(M.b, 0) : V(0, M.b));
+    if (tries % 3000 < 2200 && !fits2(ms)) continue;
+    return { T, I, mid, M, k: fits2(ms) ? 2 : 1 };
+  }
+  throw new Error("genDefine");
+}
+function dDefine(i) {
+  const G = genDefine(i), M = G.M, N = ["A", "B", "C"], NI = ["A′", "B′", "C′"];
+  const ms = [...G.T, ...G.I, ...(G.mid || [])];
+  if (M.type === "turn") ms.push(M.c);
+  if (M.type === "flip") ms.push(M.mp);
+  if (M.two) ms.push(M.vert ? V(M.a, 0) : V(0, M.a), M.vert ? V(M.b, 0) : V(0, M.b));
+  const plan = k => { const pl = makePlane(ms, k), rx = ceil5(pl.right + 4); return { pl, rx, fr: { x: -1, y: -1, w: rx + 34, h: Math.max(pl.bottom + 5, 25) } }; };
+  let PL = plan(G.k); if (G.k === 2 && camScale(PL.fr) < 0.75) PL = plan(1);
+  const { pl, rx, fr } = PL, K = pl.k, P = p => pl.P(p.x, p.y), Tp = G.T.map(P), Ip = G.I.map(P), Mp = G.mid ? G.mid.map(P) : null;
+  const rulerLen = Math.max(30, Math.ceil(Math.max(...Tp.map((p, k) => dist(p, Ip[k]))) + 8));
+  const st = { joins: [], wrongPick: null, ln: null, lh: null, lnOK: false, O: null, Oheld: false, Obad: false, Ook: false, ang: 0, rayHeld: false };
+  const jn = k => N[k] + NI[k];
+  const across = (a, b) => [b.x - a.x ? `${Math.abs(b.x - a.x)} ${b.x > a.x ? "right" : "left"}` : "", b.y - a.y ? `${Math.abs(b.y - a.y)} ${b.y > a.y ? "up" : "down"}` : ""].filter(Boolean).join(", ");
+  const k1 = () => st.joins[0], k2 = () => st.joins[1];
+  const moveIdx = ["slide", "flip", "turn"].indexOf(M.type);
+  // the mirror, in paper squares
+  const mP = M.mp ? P(M.mp) : null, mU = M.mu ? V(M.mu.x, -M.mu.y) : null;
+  const isMirror = (a, b) => Math.abs(cross2(sub(a, mP), mU)) < 1e-6 && Math.abs(cross2(sub(b, mP), mU)) < 1e-6;
+  // how the laid line meets the first join: through its middle? at a square corner?
+  function lineMeets() {
+    const k = k1(), A0 = Tp[k], A1 = Ip[k], m = lerp(A0, A1, 0.5), w = sub(st.ln.b, st.ln.a), v = sub(A1, A0);
+    const X = interLL(st.ln.a, st.ln.b, A0, A1)[0], sqc = Math.abs(dot2(v, w)) < 1e-9;
+    return { s: jn(k), par: !X, half: X && dist(X, m) < 0.01, sqc, d: X ? dist(X, m) / K : 0 };
+  }
+  function lineRead() {
+    const r = lineMeets();
+    if (r.par) return `along ${r.s}`;
+    return `${r.half ? `cuts ${r.s} in half` : `${fmt(r.d)} from the middle of ${r.s}`} · ${r.sqc ? "square corner" : "not a square corner"}`;
+  }
+  function lineMiss() {
+    const r = lineMeets();
+    if (r.par) return `It runs alongside ${r.s}: it must cut it.`;
+    if (r.half) return `It cuts ${r.s} in half, but not at a square corner.`;
+    return `It cuts ${r.s} ${fmt(r.d)} from its middle${r.sqc ? "" : ", and not at a square corner"}.`;
+  }
+  const rayLen = () => dist(st.O, Tp[k1()]) + 1.5;
+  const a0 = () => angOf(st.O, Tp[k1()]);
+  const rayEnd = () => polar(st.O, rayLen(), a0() - st.ang * DEG);
+  function checkO(L) {
+    st.Oheld = false;
+    if (eqP(st.O, P(M.c))) { st.Obad = false; st.Ook = true; L.msg = null; L.next(); return; }
+    st.Obad = true;
+    const bad = [k1(), k2()].find(k => Math.abs(dist(st.O, Tp[k]) - dist(st.O, Ip[k])) > 0.01);
+    L.msg = `O${N[bad]} is ${fmt(dist(st.O, Tp[bad]) / K)} and O${NI[bad]} is ${fmt(dist(st.O, Ip[bad]) / K)}: the circle misses ${NI[bad]}.`;
+  }
+  const OPTS = [["Slide", "every join parallel and as long"], ["Flip", "every join parallel, all cut in half by one line at square corners"], ["Turn", "joins not parallel"]];
+  const tasks = [
+    { id: "joins", kind: "ruler", say: "Lay the straightedge from each corner to its copy: A to A′, B to B′.",
+      sub: () => st.joins.length ? "One more: another corner to its copy." : "Drag it. Turn it by an end.",
+      ok(L, ns) {
+        const ks = [0, 1, 2].filter(k => ns.includes(N[k]) && ns.includes(NI[k])), fresh = ks.filter(k => !st.joins.includes(k));
+        if (fresh.length) { st.joins.push(fresh[0]); return st.joins.length >= 2 ? true : "more"; }
+        if (ks.length) return `You've joined ${jn(ks[0])}. Now join another corner to its copy.`;
+        return `That joins ${ns[0]} and ${ns[ns.length - 1]}. Join a corner to its own copy, like A to A′.`;
+      },
+      draw() {},
+      read: (L, on) => { const ns = on.map(x => x.n), k = [0, 1, 2].find(k => ns.includes(N[k]) && ns.includes(NI[k])); return k == null ? null : `${jn(k)}: ${across(G.T[k], G.I[k])}`; },
+      demo: H => { const k = [0, 1, 2].find(k => !st.joins.includes(k)); H.rulerThrough(Tp[k], Ip[k]); } },
+    { id: "choose", kind: "choose", tool: null, say: "Tap the move that makes A′B′C′ from ABC.", sub: "Look at the joins.",
+      act(L, x) {
+        if (!x.startsWith("pick:")) return;
+        const j = +x.slice(5);
+        if (j === moveIdx) { st.wrongPick = null; L.msg = null; L.next(); return; }
+        st.wrongPick = j;
+        const s1 = jn(k1()), s2 = jn(k2()), l1 = fmt(dist(Tp[k1()], Ip[k1()]) / K), l2 = fmt(dist(Tp[k2()], Ip[k2()]) / K);
+        const what = ["a slide", "a flip", "a turn"][j];
+        if (M.type === "turn") L.msg = `${s1} and ${s2} aren't parallel: not ${what}.`;
+        else if (j === 2) L.msg = `${s1} and ${s2} are parallel: not a turn.`;
+        else if (M.type === "slide") L.msg = `${s1} and ${s2} are both ${l1} and go the same way: a slide.`;
+        else L.msg = `${s1} is ${l1} and ${s2} is ${l2}: a slide moves every corner as far.`;
+      },
+      demo: () => { lesson.act(`pick:${moveIdx}`); render(); } },
+  ];
+  if (M.type === "slide") {
+    const boxes = [];
+    if (M.dx) boxes.push({ answer: M.dx, wrong: () => `${jn(k1())} goes ${across(G.T[k1()], V(G.I[k1()].x, G.T[k1()].y))}, so x changes by ${sgn(M.dx)}.` });
+    if (M.dy) boxes.push({ answer: M.dy, wrong: () => `${jn(k1())} goes ${across(G.T[k1()], V(G.T[k1()].x, G.I[k1()].y))}, so y changes by ${sgn(M.dy)}.` });
+    tasks.push({ id: "write", kind: "type", tool: null, say: "Write the slide as a rule.", sub: "Count a join's squares across and up. − makes a number minus.", boxes });
+  } else if (M.type === "flip") {
+    tasks.push({ id: "line", kind: "line", tool: null, say: "Lay a line through the joins' middles.", sub: "Drag its dots. It locks when it cuts each join in half at a square corner.",
+      enter() {
+        let y = pl.Y0 + 1; const a = () => P(V(pl.X0 + 2, y)), b = () => P(V(pl.X0 + 2 + Math.round(14 / K), y));
+        while (isMirror(a(), b())) y++;
+        st.ln = { a: a(), b: b() };
+      },
+      grab(L, q) {
+        if (dist(q, st.ln.a) < 1.8) st.lh = { m: "a" }; else if (dist(q, st.ln.b) < 1.8) st.lh = { m: "b" };
+        else { const [p1, p2] = clipTo(pl, st.ln.a, st.ln.b), d = sub(p2, p1), t = clamp(dot2(sub(q, p1), d) / dot2(d, d), 0, 1); if (dist(q, add(p1, mul(d, t))) > 1.2) return false; st.lh = { m: "both", g: pl.snap(q), a0: st.ln.a, b0: st.ln.b }; }
+        L.msg = null; return true;
+      },
+      drag(L, q) {
+        const s = pl.snap(q), h = st.lh; if (!h) return;
+        if (h.m === "a" && !eqP(s, st.ln.b)) st.ln.a = s;
+        else if (h.m === "b" && !eqP(s, st.ln.a)) st.ln.b = s;
+        else if (h.m === "both") { const d = sub(s, h.g), na = add(h.a0, d), nb = add(h.b0, d); if (pl.inside(na) && pl.inside(nb)) { st.ln.a = na; st.ln.b = nb; } }
+      },
+      release(L) { st.lh = null; if (isMirror(st.ln.a, st.ln.b)) { st.lnOK = true; L.msg = null; L.next(); } else L.msg = lineMiss(); },
+      tap: () => false,
+      demo: H => { const pa = add(mP, mul(mU, 2 * K)), pb = sub(mP, mul(mU, 2 * K)); H.drag(st.ln.a, pa); if (lesson.stage === "line") H.drag(st.ln.b, pb); } });
+  } else {
+    tasks.push({ id: "centre", kind: "place", tool: null, say: "Put a point at the middle of the turn.", sub: "From it, a circle through each corner must pass through its copy.",
+      grab: (L, q) => { if (!pl.inside(q)) return false; st.O = pl.snap(q); st.Oheld = true; st.Obad = false; L.msg = null; return true; },
+      drag: (L, q) => { st.O = pl.snap(q); },
+      release: L => checkO(L),
+      tap: (L, q) => { if (!pl.inside(q)) return false; st.O = pl.snap(q); checkO(L); return true; },
+      demo: H => { const c = P(M.c); H.drag(V(c.x + 1.3, c.y + 1.2), c); } });
+    tasks.push({ id: "ray", kind: "ray", tool: null, say: () => `Turn the ray from O${N[k1()]} to O${NI[k1()]}.`, sub: "Drag its end round O.",
+      grab: (L, q) => { if (dist(q, rayEnd()) > 2.4) return false; st.rayHeld = true; L.msg = null; return true; },
+      drag: (L, q) => { let d = mod(-(angOf(st.O, q) - a0()) / DEG, 360); const f = Math.round(d / 5) * 5; d = Math.abs(d - f) < 1.5 ? f : Math.round(d); st.ang = mod(d, 360); },
+      release(L) {
+        st.rayHeld = false;
+        if (st.ang === M.th) { L.msg = null; L.next(); return; }
+        L.msg = st.ang > M.th ? `That's ${st.ang}°: past ${NI[k1()]}. Turn it back.` : `That's ${st.ang}°. Turn it on until it passes through ${NI[k1()]}.`;
+      },
+      demo: H => { const r = rayLen(), from = rayEnd(); for (let d = 10; d <= M.th; d += 10) { const to = polar(st.O, r, a0() - d * DEG); H.drag(d === 10 ? from : polar(st.O, r, a0() - (d - 10) * DEG), to, 2); } } });
+  }
+  tasks.push({ id: "see", kind: "see", dur: M.two ? 2800 : 2000, tool: null,
+    say: M.type === "slide" ? (M.two ? "Watch it flip over one mirror, then the other." : "Watch it slide onto its copy.") : M.type === "flip" ? "Watch it turn over onto its copy." : "Watch it turn round O onto its copy." });
+  tasks.push({ id: "done", kind: "done", tool: null,
+    say: M.two ? "Two flips over parallel mirrors make one slide, twice as far as the mirrors are apart." : M.type === "slide" ? "A slide moves every corner the same way, just as far."
+      : M.type === "flip" ? "A flip's mirror cuts every join in half at a square corner." : "A turn moves every corner round its own circle, all by the same angle." });
+  // the move at time e (0 to 1), on a maths point
+  const moveAt = (k, e) => {
+    if (M.type === "turn") return P(turnAbout1(G.T[k], M.c, M.th * e));
+    if (M.two) return e < 0.5 ? lerp(Tp[k], Mp[k], ease(e * 2)) : lerp(Mp[k], Ip[k], ease(e * 2 - 1));
+    return lerp(Tp[k], Ip[k], ease(e));
+  };
+  const pts = {};
+  Tp.forEach((p, k) => pts[N[k]] = { ...p, lab: labOut(Tp, k) });
+  Ip.forEach((p, k) => pts[NI[k]] = { ...p, lab: labOut(Ip, k) });
+  return con({
+    id: "define", index: i, frame: fr, nextAt: V(rx, 14), pts, park: { N: V(-60, -60), w: 6 }, ruler: { p: V(1, pl.bottom + 1.2), a: 0, len: rulerLen }, geo: () => [], tasks, G, st, rayEnd: () => rayEnd(),
+    figure(L) {
+      drawPlane(pl);
+      if (M.two) {
+        for (const [k, m] of [["m1", M.a], ["m2", M.b]]) {
+          const [p, q] = M.vert ? [P(V(m, pl.Y1)), P(V(m, pl.Y0))] : [P(V(pl.X0, m)), P(V(pl.X1, m))];
+          seg(k, p, q, { c: "var(--ink2)", dash: true });
+          text(`${k}n`, `${M.vert ? "x" : "y"} = ${sgn(m)}`, q.x + (M.vert ? 0.5 : -1), q.y + (M.vert ? -0.9 : -0.9), "small", { anchor: M.vert ? "start" : "end" });
+        }
+        path("mid", `M${Mp.map(p => `${sq(p.x)} ${sq(p.y)}`).join("L")}Z`, { c: "var(--ink3)" });
+      }
+      poly("t0", Tp); poly("t1", Ip);
+    },
+    extra(L) {
+      for (const k of st.joins) seg(`j${k}`, Tp[k], Ip[k], { c: "var(--ink2)", dash: true });
+      if (st.ln) {
+        const [p, q] = clipTo(pl, st.ln.a, st.ln.b);
+        seg(`ln${st.lnOK}`, p, q, { c: st.lnOK ? "var(--chapter)" : "var(--ink)", live: !st.lnOK });
+        if (!st.lnOK) { dot("lna", st.ln.a.x, st.ln.a.y, 0.5, { c: "var(--ink)", live: true }); dot("lnb", st.ln.b.x, st.ln.b.y, 0.5, { c: "var(--ink)", live: true }); }
+        else { const e = q.y < p.y ? q : p; text("lneq", M.eq, e.x + 0.6, e.y + 0.9, "small", { anchor: "start", c: "var(--chapter)" }); }
+        if (st.lh) text("lnr", lineRead(), rx, 8, "small", { anchor: "start", c: "var(--chapter)", live: true });
+      }
+      if (st.O) {
+        const O = st.O, c = st.Obad ? "var(--wrong)" : "var(--chapter)";
+        for (const k of [k1(), k2()]) circleOn(`circ${k}`, pl, O, dist(O, Tp[k]));
+        dot("O", O.x, O.y, 0.4, { c, live: true });
+        text("On", "O", O.x - 0.9, O.y - 1.1, "say", { anchor: "end", c, live: true });
+        if (st.Oheld) text("Or", `O${N[k1()]} = ${fmt(dist(O, Tp[k1()]) / K)} · O${NI[k1()]} = ${fmt(dist(O, Ip[k1()]) / K)}`, O.x + 1, O.y - 1.3, "small", { anchor: "start", c: "var(--chapter)", live: true });
+        if (st.Ook) {
+          const e = rayEnd();
+          seg("oa", O, Tp[k1()], { c: "var(--ink2)", dash: true });
+          if (st.ang) path("rarc", arcD(O, 2.5, a0(), a0() - st.ang * DEG), { c: "var(--chapter)", live: true });
+          seg("ray", O, e, { c: "var(--chapter)", live: true });
+          if (L.stage === "ray") dot("rayE", e.x, e.y, 0.5, { c: "var(--ink)", live: true });
+          if (st.rayHeld || L.passed("ray")) { const lp = polar(O, 4.3, a0() - st.ang * DEG / 2); text("rr", `${st.ang}°`, lp.x, lp.y, "small", { c: "var(--chapter)", live: true }); }
+        }
+      }
+      const ph = L.phase("see");
+      if (ph > 0) put("mv", "path", { d: `M${[0, 1, 2].map(k => { const p = moveAt(k, ph); return `${sq(p.x)} ${sq(p.y)}`; }).join("L")}Z`, fill: "var(--tint)", stroke: "var(--chapter)", "stroke-width": 1.5 }, "none");
+    },
+    record(L) {
+      if (L.stage === "choose") {
+        OPTS.forEach(([w, d], j) => { choiceBlock("ch", j, w, rx, 7 + 5 * j, st.wrongPick === j); words(`chd${j}`, d, rx + 7, 8, 21, "small"); });
+        return;
+      }
+      if (M.type === "slide" && L.passed("choose")) {
+        let col = mrow("sr0", "(x, y) → (x", rx, 8), b = 0;
+        const part = (v, letter) => {
+          if (!v) return;
+          const got = L.vals[`write${b}`];
+          if (got != null) { col = mrow(`sr${letter}v`, ` ${got < 0 ? MIN : "+"} ${Math.abs(got)}`, col, 8, "var(--chapter)"); b++; return; }
+          col = mrow(`sr${letter}p`, " + ", col, 8); col = boxAt(L, "write", b++, col, 8, 2);
+        };
+        part(M.dx, "x"); col = mrow("sr1", ", y", col, 8); part(M.dy, "y"); mrow("sr2", ")", col, 8);
+        if (L.stage === "write") checkKeys(rx, 11, true);
+      }
+      if (M.type === "flip" && st.lnOK) { const e = wrec("mir", "mirror:", rx, 8); mrow("mireq", M.eq, e, 8, "var(--chapter)"); }
+      if (M.type === "turn" && st.Ook) {
+        let col = wrec("turnW", "turn", rx, 8);
+        if (L.passed("ray")) col = mrow("turnV", `${M.th}°`, col, 8, "var(--chapter)");
+        else { dbox("turnB", col, 7, 3, "", "idle"); col += 6.8; text("turnD", "°", col - 0.6, 8, "maths", { anchor: "start" }); col += 0.4; }
+        col = wrec("about", "about", col + 0.4, 8);
+        mrow("turnC", coordS(M.c), col, 8, "var(--chapter)");
+      }
+    },
+  });
+}
+function turnAbout1(p, c, deg) { const d = sub(p, c), a = deg * DEG; return add(c, V(d.x * Math.cos(a) - d.y * Math.sin(a), d.x * Math.sin(a) + d.y * Math.cos(a))); }
+
+// ---------- Onto itself (g10-symmetry) ----------
+// One square: 1. A shape drawn big around a crossing O, with a see-through copy on top. Problems 1-3 rectangles,
+// trapezoids, parallelograms; 4-6 regular 3-, 5-, 6- and 8-sided shapes (radius 12); 7+ any, with 10 and 12 sides.
+const SYMNAME = { rect: "rectangle", trap: "trapezoid with equal sides", para: "parallelogram", rhombus: "rhombus", square: "square",
+  3: "triangle with equal sides", 5: "regular pentagon", 6: "regular hexagon", 8: "regular octagon", 10: "regular 10-sided shape", 12: "regular 12-sided shape" };
+function genSym(i) {
+  const kind = i < 3 ? ["rect", "trap", "para"][i] : i === 3 ? 3 : i === 4 ? 6 : i === 5 ? pick1([5, 8]) : pick1(["rect", "trap", "para", "rhombus", "square", 3, 5, 6, 8, 10, 12]);
+  let cs;
+  if (kind === "rect") { const w = rnd(11, 13), h = rnd(6, 8); cs = [V(-w, -h), V(w, -h), V(w, h), V(-w, h)]; }
+  else if (kind === "trap") { const b = rnd(11, 13), t = rnd(5, 7), h = rnd(6, 8); cs = [V(-t, -h), V(t, -h), V(b, h), V(-b, h)]; }
+  else if (kind === "para") {
+    // a diagonal folded as a mirror misses by at least 2 squares, so the slip shows
+    for (;;) {
+      const b = rnd(8, 10), s = rnd(3, 5), h = rnd(6, 8); cs = [V(-b + s, -h), V(b + s, -h), V(b - s, h), V(-b - s, h)];
+      const u = unit(angOf(V(0, 0), cs[0])), land = cs.map(c => sub(mul(u, 2 * dot2(c, u)), c)), u2 = unit(angOf(V(0, 0), cs[1])), land2 = cs.map(c => sub(mul(u2, 2 * dot2(c, u2)), c));
+      if ([land, land2].every(L => Math.max(...L.map(q => Math.min(...cs.map(c => dist(c, q))))) >= 2)) break;
+    }
+  }
+  else if (kind === "rhombus") { const p = rnd(12, 14), q = rnd(7, 9); cs = [V(0, -q), V(p, 0), V(0, q), V(-p, 0)]; }
+  else if (kind === "square") { const s = rnd(9, 10); cs = [V(-s, -s), V(s, -s), V(s, s), V(-s, s)]; }
+  else cs = Array.from({ length: kind }, (_, k) => polar(V(0, 0), 12, -Math.PI / 2 + k * TAU / kind));
+  const same = qs => qs.every(q => cs.some(c => dist(c, q) < 0.01));
+  const fits = []; for (let d = 1; d <= 360; d++) if (same(cs.map(c => rot(c, d * DEG)))) fits.push(d);
+  const mids = cs.map((c, k) => lerp(c, cs[(k + 1) % cs.length], 0.5)), mirrors = [];
+  for (const m of [...cs, ...mids]) {
+    const a = mod(angOf(V(0, 0), m), Math.PI), u = unit(a);
+    if (same(cs.map(c => sub(mul(u, 2 * dot2(c, u)), c))) && !mirrors.some(b => Math.abs(wrapPi(2 * (a - b))) < 1e-6)) mirrors.push(a);
+  }
+  return { kind, cs, mids, fits, mirrors };
+}
+function dSym(i) {
+  const S = genSym(i), Rm = Math.max(...S.cs.map(c => Math.hypot(c.x, c.y))), n = S.cs.length;
+  const O = V(Math.ceil(Rm) + 3, 8 + Math.ceil(Rm)), cs = S.cs.map(c => add(O, c)), mids = S.mids.map(c => add(O, c));
+  const T = S.fits.length, step = 360 / T, Mn = S.mirrors.length, rx = ceil5(O.x + Rm + 3);
+  const fr = { x: -1, y: -1, w: rx + 24, h: Math.max(Math.ceil(O.y + Rm + 3), 30) };
+  const st = { raw: 0, shown: 0, lastFit: 0, found: [], held: false, last: 0, mirrors: [], fold: null };
+  const isFit = v => Math.abs(v - Math.round(v / step) * step) < 1e-6;
+  const copyAt = deg => cs.map(p => add(O, rot(sub(p, O), deg * DEG)));
+  const refl = (p, a) => { const u = unit(a), d = sub(p, O); return add(O, sub(mul(u, 2 * dot2(d, u)), d)); };
+  const handle = () => copyAt(st.shown)[0];
+  function startFold(a) {
+    const land = cs.map(p => refl(p, a)), miss = land.map(q => Math.min(...cs.map(c => dist(c, q)))), w = miss.indexOf(Math.max(...miss));
+    const ok = miss[w] < 0.01;
+    st.fold = { a, t0: performance.now(), ok, worst: ok ? null : land[w] };
+    return ok ? null : `This corner lands ${fmt(miss[w])} squares from a corner.`;
+  }
+  const foldT = () => st.fold ? clamp((performance.now() - st.fold.t0) / 800, 0, 1) : 0;
+  const pts = { O: { ...O, lab: [0, 0], hide: true } };
+  cs.forEach((p, k) => pts[`c${k}`] = { ...p, lab: [0, 0], hide: true, ghost: true });
+  mids.forEach((p, k) => pts[`m${k}`] = { ...p, lab: [0, 0], hide: true, ghost: true });
+  const markFor = a => [...cs, ...mids].find(p => Math.abs(wrapPi(2 * (angOf(O, p) - a))) < 1e-6);
+  const say = S.kind === "para" ? "A parallelogram fits a half turn, but no fold." : S.kind === "trap" ? "A trapezoid with equal sides fits only a whole turn, and 1 fold."
+    : `A ${SYMNAME[S.kind]} fits ${T} ways by turning and ${Mn} by folding.`;
+  const tasks = [
+    { id: "turn", kind: "turnshape", tool: null, say: "Turn the see-through copy round its middle, all the way.", sub: "Drag it by its ringed corner. It snaps where it fits.",
+      grab: (L, q) => { if (dist(q, handle()) > 2.4) return false; st.held = true; st.last = angOf(O, q); L.msg = null; return true; },
+      drag(L, q) {
+        const a = angOf(O, q); st.raw = clamp(st.raw + wrapPi(a - st.last) / DEG, -360, 360); st.last = a;
+        const f = Math.round(st.raw / step) * step;
+        st.shown = Math.abs(st.raw - f) <= 4 ? f : st.raw;
+        if (isFit(st.shown) && st.shown && !st.found.includes(Math.abs(st.shown))) { st.found.push(Math.abs(st.shown)); st.found.sort((x, y) => x - y); }
+      },
+      release(L) {
+        st.held = false;
+        if (Math.abs(st.shown) >= 360) { st.shown = st.raw = 0; L.next(); return; }
+        if (isFit(st.shown)) { st.raw = st.lastFit = st.shown; return; }
+        L.msg = `At ${Math.round(Math.abs(st.raw))}° the corners miss: it doesn't fit.`;
+        st.shown = st.raw = st.lastFit;
+      },
+      tap: () => false,
+      demo: H => { const g = handle(); if (!lesson.grab(g)) throw new Error("can't grab the copy"); for (let d = 2; d <= 360; d += 2) lesson.drag(add(O, rot(sub(g, O), d * DEG))); lesson.release(add(O, rot(sub(g, O), TAU)), true); render(); } },
+    { id: "fold", kind: "ruler", say: "Fold the copy on every line that lands it on itself.", sub: "Lay the straightedge through the middle and a corner, or a side's middle. Then tap No more.",
+      onGrab: () => { if (st.fold && foldT() >= 1) st.fold = null; },
+      ok(L, ns) {
+        if (!ns.includes("O")) return "Lay it through the middle, and a corner or a side's middle.";
+        const p = L.pts[ns.find(x => x !== "O")], a = mod(angOf(O, p), Math.PI);
+        if (st.mirrors.some(b => Math.abs(wrapPi(2 * (a - b))) < 1e-6)) return "You've folded on that line.";
+        const miss = startFold(a);
+        if (!miss) st.mirrors.push(a);
+        L.msg = miss;
+        return "more";     // the fold plays; the straightedge goes back to its place
+      },
+      draw() {},
+      read: (L, on) => on.some(x => x.n === "O") && on.length >= 2 ? `through the middle and ${on.some(x => x.n[0] === "c") ? "a corner" : "a side's middle"}` : on.length >= 2 ? "not through the middle" : null,
+      act(L, x) { if (x !== "nomore") return; if (st.mirrors.length < Mn) L.msg = "There's another mirror."; else { L.msg = null; st.fold = null; L.next(); } },
+      demo: H => { const a = S.mirrors.find(b => !st.mirrors.some(c => Math.abs(wrapPi(2 * (c - b))) < 1e-6)); if (a == null) { lesson.act("nomore"); render(); return; } H.layThrough(O, markFor(a)); } },
+    { id: "write", kind: "type", tool: null, say: "Write how it fits.", boxes: [
+      { answer: T, wrong: () => T === 1 ? "It fit only at 360°, the whole turn." : `It fit at ${T} places on the way round, 360° among them.` },
+      { answer: step, wrong: v => `${T} turns of ${v}° make ${T * v}°, not 360°.` },
+      { answer: Mn, wrong: () => Mn ? `It folded onto itself on ${Mn} line${Mn > 1 ? "s" : ""}.` : "No fold landed it on itself." }] },
+    { id: "done", kind: "done", tool: null, say },
+  ];
+  return con({
+    id: "symmetry", index: i, frame: fr, nextAt: V(rx, 24), pts, park: { N: V(-60, -60), w: 6 }, ruler: { p: V(rx - 2, fr.h - 4), a: 0, len: 26 }, geo: () => [], tasks, S, st,
+    animating: () => !!st.fold && foldT() < 1,
+    figure(L) {
+      poly("shape", cs);
+      dot("Odot", O.x, O.y, 0.3, { c: "var(--ink)" });
+    },
+    extra(L) {
+      for (const [k, a] of st.mirrors.entries()) { const u = unit(a); seg(`mir${k}`, sub(O, mul(u, Rm + 2)), add(O, mul(u, Rm + 2)), { c: "var(--chapter)", dash: true }); }
+      let cp = copyAt(L.stage === "turn" ? st.shown : 0);
+      if (st.fold) { const e = ease(foldT()); cp = cp.map(p => lerp(p, refl(p, st.fold.a), e)); }
+      put("copy", "path", { d: `M${cp.map(p => `${sq(p.x)} ${sq(p.y)}`).join("L")}Z`, fill: "var(--tint)", stroke: "var(--chapter)", "stroke-width": 1.5 }, L.stage === "turn" && !st.held && !st.shown ? "fade" : "none");
+      if (L.stage === "turn") {
+        const h = cp[0];
+        ringAt("hring", h.x, h.y, 0.9, { c: "var(--chapter)", live: true }); dot("hdot", h.x, h.y, 0.35, { c: "var(--chapter)", live: true });
+        if (st.held) { const ro = isFit(st.shown) && st.shown ? `fits at ${Math.abs(st.shown)}°` : `${Math.round(Math.abs(st.raw))}°`, lp = add(h, mul(unit(angOf(O, h)), 2.4)); text("tr", ro, lp.x, lp.y, "small", { c: "var(--chapter)", live: true }); }
+      }
+      if (st.fold && foldT() >= 1) {
+        if (st.fold.ok) cs.forEach((p, k) => dot(`g${k}`, p.x, p.y, 0.45, { c: "var(--right)" }));
+        else dot(`wf${st.fold.worst.x.toFixed(2)}`, st.fold.worst.x, st.fold.worst.y, 0.45, { c: "var(--wrong)" });
+      }
+    },
+    record(L) {
+      if (L.stage === "turn" || L.stage === "fold") {
+        if (st.found.length) words(`fits${st.found.join()}`, `fits at ${st.found.map(d => d + "°").join(", ")}`, rx, 8, 22, "small", { c: "var(--chapter)" });
+      }
+      if (L.stage === "fold") {
+        text(`mf${st.mirrors.length}`, `folds that land: ${st.mirrors.length}`, rx, 13, "small", { anchor: "start", c: st.mirrors.length ? "var(--chapter)" : null });
+        block("nomore", rx, 15, 8, "No more", "nomore", { arrow: false });
+      }
+      if (L.stage === "write" || L.task.kind === "done") {
+        let e = wrec("tw", "turns:", rx, 8); boxAt(L, "write", 0, e, 8, 2);
+        if (L.vals.write0 != null) { wrec("sw", "smallest turn:", rx, 12); e = mrow("sv", `360° ÷ ${T} =`, rx, 15); e = boxAt(L, "write", 1, e, 15, 3); mrow("sd", "°", e, 15, L.vals.write1 != null ? "var(--chapter)" : null); }
+        if (L.vals.write1 != null) { e = wrec("mw", "mirrors:", rx, 19); boxAt(L, "write", 2, e, 19, 2); }
+        if (L.stage === "write") checkKeys(rx, 22, false);
+      }
+    },
+  });
+}
+
+// ---------- hands for checking (they move the tools the way a finger does, through grab, drag and release) ----------
+const hands = {
+  get L() { return lesson; },
+  drag(from, to, n = 8) {
+    if (!lesson.grab(from)) throw new Error(`nothing to grab at ${from.x.toFixed(2)}, ${from.y.toFixed(2)} (${lesson.stage})`);
+    for (let k = 1; k <= n; k++) lesson.drag(lerp(from, to, k / n));
+    lesson.release(to, true); render();
+  },
+  needleTo(p) { this.drag({ ...lesson.cmp.N }, p); },
+  pencilTo(p) { this.drag(lesson.pen(), p); },
+  widthTo(w) { this.drag(lesson.pen(), polar(lesson.cmp.N, w, lesson.cmp.phi)); },
+  // turn the compass by its top through an angle (radians), a little at a time
+  swing(delta) {
+    const N = lesson.cmp.N, K = lesson.knob(), r = dist(N, K), a0 = angOf(N, K), n = Math.max(2, Math.ceil(Math.abs(delta) / 0.15));
+    if (!lesson.grab(K)) throw new Error("can't grab the compass's top");
+    for (let k = 1; k <= n; k++) lesson.drag(polar(N, r, a0 + delta * k / n));
+    lesson.release(polar(N, r, a0 + delta), true); render();
+  },
+  // set the pencil just before angle a (keeping the width), then swing through to just past angle b
+  swingAcross(a, b) {
+    const N = lesson.cmp.N, w = lesson.cmp.w, d = wrapPi(b - a), s = Math.sign(d) || 1;
+    let off = 0.3;
+    for (const o of [0.3, 0.45, 0.6, 0.75]) { const p = polar(N, w, a - s * o); if (!lesson.markNear(p, 1.4, N)) { off = o; break; } }
+    this.pencilTo(polar(N, w, a - s * off));
+    if (!lesson.wIs(w)) throw new Error("the width changed while setting the pencil");
+    this.swing(d + s * 2 * off);
+  },
+  tap(p) { if (lesson.grab(p)) lesson.release(p, false); else lesson.tap(p); render(); },
+  // slide the ruler's edge onto p1, then turn it by its far end until it lies through p2
+  rulerThrough(p1, p2) {
+    let r = lesson.rul, u = unit(r.a), b = V(-u.y, u.x);
+    const g = add(add(r.p, mul(u, lesson.LR / 2)), mul(b, 1.25));
+    const ti = lesson.ti;
+    this.drag(g, add(g, sub(p1, add(r.p, mul(u, 1.2)))));     // p1 near the near end, so turning the far end pivots on it
+    if (lesson.ti !== ti) return;
+    r = lesson.rul; u = unit(r.a); b = V(-u.y, u.x);
+    const g2 = add(add(r.p, mul(u, lesson.LR - 3)), mul(b, 1.25)), da = wrapPi(angOf(p1, p2) - r.a), n = Math.max(2, Math.ceil(Math.abs(da) / 0.1));
+    if (!lesson.grab(g2)) throw new Error("can't grab the ruler's end");
+    for (let k = 1; k <= n; k++) lesson.drag(add(p1, rot(sub(g2, p1), da * k / n)));
+    lesson.release(add(p1, rot(sub(g2, p1), da)), true); render();
+  },
+  // play the current task the right way (Show me's data)
+  step() { const t = lesson.task; if (t.demo) t.demo(this); else if (t.kind === "type") { const b = t.boxes ? t.boxes[lesson.bi] : t; lesson.type(b.answer < 0 ? "−" + -b.answer : String(b.answer)); act("check"); } else if (t.kind === "see") { lesson.next(); render(); } },
+};
+
+// lay the straightedge straight onto a line through p1 and p2 and let go (for checking)
+hands.layThrough = function (p1, p2) {
+  const a = angOf(p1, p2), u = unit(a), b = V(-u.y, u.x);
+  lesson.rul = { p: sub(p1, mul(u, 2)), a };
+  const g = add(add(lesson.rul.p, mul(u, lesson.LR / 2)), mul(b, 1.25));
+  if (!lesson.grab(g)) throw new Error("can't grab the straightedge");
+  lesson.drag(g); lesson.release(g, true); render();
+};
+// ---------- lessons, the bar ----------
+let lesson;
+const LESSONS = {
+  rules: { name: "Moves as rules", make: dRules },
+  define: { name: "Find the mirror and the turn", make: dDefine },
+  symmetry: { name: "Onto itself", make: dSym },
+};
+const IDX = {};
+const pick = document.getElementById("pick");
+pick.innerHTML = Object.entries(LESSONS).map(([id, e]) => `<option value="${id}">${esc(e.name)}</option>`).join("");
+function start(id, index) {
+  if (!LESSONS[id]) id = "rules";
+  if (index != null) IDX[id] = index;
+  token++;
+  lesson = LESSONS[id].make(IDX[id] || 0);
+  document.body.className = "geometry";
+  pick.value = id;
+  drawn = new Set(); keys.blur(); keys.value = "";
+  render(); frame(lesson.frame(), true);
+  try { localStorage.setItem("g10ch2-lesson", id); } catch (err) {}
+}
+pick.onchange = () => start(pick.value, 0);
+document.getElementById("fresh").onclick = () => leave();
+function leave() { IDX[lesson.id] = (IDX[lesson.id] || 0) + 1; start(lesson.id); }
+let first = "rules", firstI = 0;
+try {
+  const u = new URLSearchParams(location.search);
+  first = u.get("l") || localStorage.getItem("g10ch2-lesson") || "rules";
+  firstI = +(u.get("i") || 0);
+  if (u.get("theme")) document.documentElement.dataset.theme = u.get("theme");
+} catch (err) {}
+start(first, firstI);
+</script>
