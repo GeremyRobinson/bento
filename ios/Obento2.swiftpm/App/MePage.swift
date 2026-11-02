@@ -292,7 +292,7 @@ struct Pen: Equatable {
     var soft = 0.08
     var full: Sketch.Colour { .hex(light, dark) }
     func tint(_ f: Double) -> Sketch.Colour { .hex(Ink.mix(0xF3F2EF, light, f), Ink.mix(0x121211, dark, f)) }
-    static func chapter(_ c: Chapter) -> Pen { Pen(light: c.hex, dark: c.hex) }
+    static func chapter(_ c: Chapter) -> Pen { Pen(light: c.hex, dark: c.darkHex) }
     static let ink = Pen(light: 0x1A1A19, dark: 0xECEBE7, soft: 0.035)
 }
 

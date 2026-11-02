@@ -34,13 +34,20 @@ enum Ink {
 
 /// Chapter colours. Colour lives only in the maths.
 enum Chapter: String, CaseIterable {
-    case whole, decimals, fractions, measurement
+    case whole, decimals, fractions, measurement, geometry
     var hex: UInt32 {
-        switch self { case .whole: 0x7A5CF0; case .decimals: 0xE0559B; case .fractions: 0x3B6CFF; case .measurement: 0xE39B00 }
+        switch self { case .whole: 0x7A5CF0; case .decimals: 0xE0559B; case .fractions: 0x3B6CFF; case .measurement: 0xE39B00; case .geometry: 0x1E8A78 }
     }
+    /// Its colour on the dark paper where a chapter has its own (Geometry's teal, from the preview G approved on 1 Nov);
+    /// the others keep theirs.
+    var darkHex: UInt32 { self == .geometry ? 0x4FD1BC : hex }
+    /// A lesson's ink on the dark paper: the chapter's own dark colour, or its colour lifted a quarter toward the ink.
+    static func darkInk(_ hex: UInt32) -> UInt32 { hex == Chapter.geometry.hex ? Chapter.geometry.darkHex : Ink.mix(hex, 0xECEBE7, 0.25) }
+    /// What its tints are mixed from on the dark paper.
+    static func darkTint(_ hex: UInt32) -> UInt32 { hex == Chapter.geometry.hex ? Chapter.geometry.darkHex : hex }
     var color: Color { Color(UIColor(hex: hex)) }
     var title: String {
-        switch self { case .whole: "Whole numbers"; case .decimals: "Decimals"; case .fractions: "Fractions"; case .measurement: "Measurement" }
+        switch self { case .whole: "Whole numbers"; case .decimals: "Decimals"; case .fractions: "Fractions"; case .measurement: "Measurement"; case .geometry: "Geometry" }
     }
 }
 

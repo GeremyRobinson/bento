@@ -312,8 +312,8 @@ final class SketchDrawer {
             case .ink3: UIColor(hex: dark ? 0x878177 : 0x8C867D)
             // on the dark paper the chapter's colour is lifted a quarter toward the ink, so its numbers and lines read as
             // clearly as they do on the light paper (a fill's tint is still mixed from the colour itself)
-            case .chapter: UIColor(hex: dark ? Ink.mix(chapter, 0xECEBE7, 0.25) : chapter)
-            case .tint(let f): UIColor(hex: Ink.mix(paper, chapter, f))
+            case .chapter: UIColor(hex: dark ? Chapter.darkInk(chapter) : chapter)
+            case .tint(let f): UIColor(hex: Ink.mix(paper, dark ? Chapter.darkTint(chapter) : chapter, f))
             case .paper: UIColor(hex: paper)
             case .line: rig.colours.lineStrong
             case .hex(let l, let d): UIColor(hex: dark ? d : l)

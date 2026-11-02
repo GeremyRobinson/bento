@@ -184,7 +184,7 @@ extension Rig {
         for g in Map.groups {
             let o = g.origin, done = g.lessons.filter { Progress.shared.learned.contains($0.id) }.count
             s.startAt = at(Point(o.x + 150, o.y + 100))
-            s.polygon("dot\(g.chapter)", Self.circle(CGPoint(x: o.x + 5, y: o.y + 27), 5), .hex(g.chapter.hex, g.chapter.hex))
+            s.polygon("dot\(g.chapter)", Self.circle(CGPoint(x: o.x + 5, y: o.y + 27), 5), .hex(g.chapter.hex, g.chapter.darkHex))
             s.label("title\(g.chapter)", g.chapter.title, .chapter, at: CGPoint(x: o.x + 20, y: o.y + 40))
             let w = PaperText.width(g.chapter.title, PaperText.font(Sketch.Words.chapter.size, Sketch.Words.chapter.weight))
             if Fresh.showsCount(learned: done) {
@@ -193,7 +193,7 @@ extension Rig {
         }
         for p in shown {
             let r = CGRect(x: p.at.x, y: p.at.y, width: Piece.size.width, height: Piece.size.height), id = p.id
-            let hex = p.chapter.hex, chapter = Sketch.Colour.hex(hex, hex)
+            let hex = p.chapter.hex, darkHex = p.chapter.darkHex, chapter = Sketch.Colour.hex(hex, darkHex)
             s.startAt = at(p.frame.mid)
             // its name, and under it how far it got, or for a test how it went or what it waits for
             s.label(id + "name", p.name, .label, at: CGPoint(x: r.minX, y: r.maxY + 30), anchor: UnitPoint(x: 0, y: 0.5))
@@ -205,8 +205,8 @@ extension Rig {
                 // once passed); filled in the chapter's colour when it can be taken, an outline while it waits
                 let corner = CGPoint(x: r.minX, y: r.minY), passed = Progress.shared.passed(p.id), ready = p.opens
                 s.plate(id + "seal\(ready)", Self.circle(corner, 22), ready ? chapter : .paper)
-                if !ready { s.overLine(id + "ring", Self.circle(corner, 21) + [Self.circle(corner, 21)[0]], .hex(Ink.mix(0xF3F2EF, hex, 0.45), Ink.mix(0x121211, hex, 0.45)), width: 1.5) }
-                let mark: Sketch.Colour = ready ? .hex(0xFFFFFF, 0xFFFFFF) : .hex(Ink.mix(0xF3F2EF, hex, 0.7), Ink.mix(0x121211, hex, 0.7))
+                if !ready { s.overLine(id + "ring", Self.circle(corner, 21) + [Self.circle(corner, 21)[0]], .hex(Ink.mix(0xF3F2EF, hex, 0.45), Ink.mix(0x121211, darkHex, 0.45)), width: 1.5) }
+                let mark: Sketch.Colour = ready ? .hex(0xFFFFFF, 0xFFFFFF) : .hex(Ink.mix(0xF3F2EF, hex, 0.7), Ink.mix(0x121211, darkHex, 0.7))
                 if passed { s.overLine(id + "tick", [CGPoint(x: corner.x - 8, y: corner.y), CGPoint(x: corner.x - 2.5, y: corner.y + 6), CGPoint(x: corner.x + 9, y: corner.y - 6.5)], mark, width: Sketch.stroke) }
                 else { s.text(id + "n", "\(LessonPlan.test)", at: corner, size: 15, weight: .bold, mark) }
             } else if model.selected?.id == p.id && p.locked {

@@ -412,7 +412,7 @@ struct Toolbar: View {
     /// The chapter's colour, lifted a little on the dark paper as the lessons have it.
     private var chapterInk: Color {
         let c = problem?.chapter ?? model.bars?.piece.chapter ?? model.openPiece?.chapter ?? .whole
-        return Ink.dynamic(c.hex, Ink.mix(c.hex, 0xECEBE7, 0.25))
+        return Ink.dynamic(c.hex, Chapter.darkInk(c.hex))
     }
 
     /// Hints (G 20 Oct): the page decides, with its budget saved with it: free in together problems up to their cap (not

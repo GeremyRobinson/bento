@@ -72,7 +72,8 @@ struct ChapterGroup {
     }
 }
 
-/// 5th grade on the paper: the 17 lessons of specs/k12/grade5.md in four chapters, laid out two by two as v27 does.
+/// 5th grade on the paper: the 17 lessons of specs/k12/grade5.md in four chapters, laid out two by two as v27 does, and
+/// Geometry's two (added 1 Nov 2026) under Measurement.
 enum Map {
     static let grade = (number: "5", name: "5th grade")
     static let groups: [ChapterGroup] = [
@@ -87,6 +88,9 @@ enum Map {
             ("g5-fracof", "Fraction of a number"), ("g5-unitdiv", "Dividing by a unit fraction")]),
         ChapterGroup(chapter: .measurement, origin: Point(1300, 900), columns: 3, lessons: [
             ("g5-volume", "Volume of a box"), ("g5-units", "Converting units")]),
+        // added 1 Nov 2026 (design/grade5.md): under Measurement, two blocks below its row
+        ChapterGroup(chapter: .geometry, origin: Point(1300, 1500), columns: 3, lessons: [
+            ("g5-coord", "Points on a grid"), ("g5-shapes", "Sorting shapes")]),
     ]
     static let pieces = groups.flatMap(\.pieces)
 

@@ -76,6 +76,8 @@ extension Piece {
         case "g5-divide": return [box(3, 1, 4, 1)]
         case "g5-order": return [box(2, 1, 2, 2)]                               // the part done first
         case "g5-units": return [box(0, 0, 4, 2)]                               // a foot of it
+        case "g5-coord": return [box(5, 1, 2, 2)]                               // the point
+        case "g5-shapes": return [[CGPoint(x: at.x + 2 * c, y: at.y), CGPoint(x: at.x + 9 * c, y: at.y), CGPoint(x: at.x + 7 * c, y: at.y + 4 * c), CGPoint(x: at.x, y: at.y + 4 * c)]]
         default: return []
         }
     }
@@ -177,6 +179,10 @@ extension Piece {
             var out: [[CGPoint]] = [box(0, 0, 9, 2)]
             for i in 1..<9 { out.append(line((Double(i), 0), (Double(i), i % 4 == 0 ? 1.5 : 0.75))) }
             return out
+        case "g5-coord": // the two edges of the grid, the walk up from the bottom, and the point: 9 by 6
+            return [line((0, 0), (0, 6), (9, 6)), line((6, 6), (6, 3)), box(5, 1, 2, 2)]
+        case "g5-shapes": // a parallelogram, its corners on the grid: 9 by 4
+            return [line((2, 0), (9, 0), (7, 4), (0, 4), (2, 0))]
         default:
             return [box(0, 0, 9, 6)]
         }
@@ -357,10 +363,11 @@ final class Rig {
         }
         var tints: [String: (colour: UIColor, rects: [CGRect])] = [:]
         for (p, k, on, state) in now {
+            let hex = (dark ?? false) ? p.chapter.darkHex : p.chapter.hex
             // the chosen lesson, and the one up next, are outlined in their chapter's colour
             let lit = on || state == .now
             // the others' frames are their chapter's colour too, lighter: no grey on the map
-            let frameColour = lit ? UIColor(hex: p.chapter.hex) : UIColor(hex: Ink.mix(paperHex, p.chapter.hex, 0.3))
+            let frameColour = lit ? UIColor(hex: hex) : UIColor(hex: Ink.mix(paperHex, hex, 0.3))
             // a test still waiting is a dashed frame: there, but not open yet
             let locked = (p.isTest && !p.opens && state != .learned) || p.locked
             add("frame-\(p.chapter.rawValue)-\(lit)-\(on)", frameColour, on ? 2 : 1.5, 0.001, drawn(locked ? Self.dashes(p.outline) : p.outline, k))
@@ -368,17 +375,17 @@ final class Rig {
             let strength = (k * 10).rounded() / 10 * 0.1
             if strength > 0 {
                 let id = "tint-\(p.chapter.rawValue)-\(strength)"
-                tints[id, default: (UIColor(hex: Ink.mix(paperHex, p.chapter.hex, strength)), [])].rects.append(CGRect(x: p.at.x, y: p.at.y, width: Piece.size.width, height: Piece.size.height))
+                tints[id, default: (UIColor(hex: Ink.mix(paperHex, hex, strength)), [])].rects.append(CGRect(x: p.at.x, y: p.at.y, width: Piece.size.width, height: Piece.size.height))
             }
             // a lesson not yet open is drawn in its chapter's colour, lightened, instead of grey pencil (G 17 Oct)
-            if state == .notYet { add("light-\(p.chapter.rawValue)", UIColor(hex: Ink.mix(paperHex, p.chapter.hex, 0.4)), 2.5, 0.0015, drawn(p.strokes, k)) }
-            else { add("chapter-\(p.chapter.rawValue)", UIColor(hex: p.chapter.hex), 2.5, 0.0015, drawn(p.strokes, k)) }
+            if state == .notYet { add("light-\(p.chapter.rawValue)", UIColor(hex: Ink.mix(paperHex, hex, 0.4)), 2.5, 0.0015, drawn(p.strokes, k)) }
+            else { add("chapter-\(p.chapter.rawValue)", UIColor(hex: hex), 2.5, 0.0015, drawn(p.strokes, k)) }
         }
         // the soft fills inside the pictures, a little stronger than the frame's tint, coming in with the drawing
         var softFills: [String: (colour: UIColor, polys: [[CGPoint]])] = [:]
         for (p, k, _, state) in now where k > 0.3 {
             let strength = state == .notYet ? 0.26 : 0.42, id = "soft-\(p.chapter.rawValue)-\(strength)"
-            softFills[id, default: (UIColor(hex: Ink.mix(paperHex, p.chapter.hex, strength)), [])].polys += p.softs
+            softFills[id, default: (UIColor(hex: Ink.mix(paperHex, (dark ?? false) ? p.chapter.darkHex : p.chapter.hex, strength)), [])].polys += p.softs
         }
         for (id, f) in softFills {
             let e = pieceGroups[id] ?? { let e = ModelEntity(); pieces.addChild(e); pieceGroups[id] = e; return e }()

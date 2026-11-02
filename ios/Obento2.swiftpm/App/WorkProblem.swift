@@ -385,6 +385,7 @@ final class WorkProblem: Identifiable, PageProblem {
         guard let a = lesson.step.answer else { go(); return }
         if wrong {
             if a.byHand, let paper, let mv = paper.wrongMove(state()) { apply(mv) }
+            else if !a.byHand, let slip = paper?.wrongTyping(state()) { for (b, v) in slip { lesson.set(b, v) }; go() }
             else if a.choices != nil { choose((Int(a.expected["c"] ?? 0) + 1) % (a.choices?.count ?? 1)); go() }
             else { type("1"); go() }
             return
