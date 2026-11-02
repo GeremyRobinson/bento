@@ -85,7 +85,10 @@ struct ShapesLesson: PaperLesson {
         for (k, pr) in pairs.enumerated() {
             for i in pr {
                 let a = V[i], b = V[(i + 1) % 4], dx = b.x - a.x, dy = b.y - a.y, len = hypot(dx, dy)
-                let u = CGPoint(x: dx / len, y: dy / len), nn = CGPoint(x: -u.y, y: u.x)
+                // both sides of a pair point the same way (right, or up when straight up and down): going round the
+                // shape, opposite sides run opposite ways
+                let flip: Double = dx < -1e-9 || (abs(dx) < 1e-9 && dy > 0) ? -1 : 1
+                let u = CGPoint(x: flip * dx / len, y: flip * dy / len), nn = CGPoint(x: -u.y, y: u.x)
                 for m in 0...k {
                     let px = a.x + dx / 2 + u.x * 0.7 * Double(m), py = a.y + dy / 2 + u.y * 0.7 * Double(m)
                     pic.line("par\(i)_\(m)", [(px - u.x * 0.6 + nn.x * 0.6, py - u.y * 0.6 + nn.y * 0.6), (px, py),

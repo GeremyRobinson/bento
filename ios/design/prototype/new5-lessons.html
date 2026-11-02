@@ -797,7 +797,9 @@ function dShapes() {
       }
       // parallel marks: one arrowhead on each side of the first pair, two on the second
       this.found.forEach((pr, k) => pr.forEach(i => {
-        const [x1, y1] = V[i], [dx, dy] = side(i), l = len(i), u = [dx / l, dy / l], nn = [-u[1], u[0]];
+        // both sides of a pair point the same way (right, or up): going round the shape, opposite sides run opposite ways
+        const [x1, y1] = V[i], [dx, dy] = side(i), l = len(i), f = dx < 0 || (dx === 0 && dy > 0) ? -1 : 1;
+        const u = [f * dx / l, f * dy / l], nn = [-u[1], u[0]];
         for (let m = 0; m <= k; m++) {
           const px = x1 + dx / 2 + u[0] * 0.7 * m, py = y1 + dy / 2 + u[1] * 0.7 * m;
           path(`par${i}_${m}`, `M${sq(px - u[0] * 0.6 + nn[0] * 0.6)} ${sq(py - u[1] * 0.6 + nn[1] * 0.6)}L${sq(px)} ${sq(py)}L${sq(px - u[0] * 0.6 - nn[0] * 0.6)} ${sq(py - u[1] * 0.6 - nn[1] * 0.6)}`, { c: "var(--chapter)" });
