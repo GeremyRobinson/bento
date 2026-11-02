@@ -217,7 +217,7 @@ final class CubesWords {
         // the record, a line at a time (maths, two squares a digit), and the box to type in on its line
         let lines = p.recordLines(at: t), typed = p.lesson.typed["x"] ?? "", pitch = CubesProblem.recordPitch
         let answering = p.preview?.kind == .answer && t < (p.preview?.end ?? 0) - CubesProblem.Preview.fade && t >= (p.preview?.at ?? 0) + 0.45 * Double(b.height)
-        let shownTyped = p.wrongTyped ?? (answering && typed.isEmpty ? "\(b.volume)" : typed)
+        let shownTyped = p.wrongTyping ?? (answering && typed.isEmpty ? "\(b.volume)" : typed)
         let cells = p.answerCells
         let boxRect: CGRect? = lines.firstIndex { $0.line.contains(.box("x")) }.flatMap { i in CubesRecord.box(lines[i].line, cells: cells)?.offsetBy(dx: 0, dy: Double(i) * pitch) }
         let verdict = p.verdict.map { $0.right }

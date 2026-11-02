@@ -17,7 +17,7 @@ struct RoundingLesson: PaperLesson {
     private static let small = Sketch.Words(size: Sketch.small, weight: .medium, colour: .ink2)
     private static let maths = Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink)
     /// A block tapped that the point isn't in: lightly red (red means wrong).
-    private static let wrongFill = Sketch.Colour.hex(Ink.mix(0xF3F2EF, 0xC8372D, 0.2), Ink.mix(0x121211, 0xFF6B5E, 0.24))
+    static let wrongFill = Sketch.Colour.hex(Ink.mix(0xF3F2EF, 0xC8372D, 0.2), Ink.mix(0x121211, 0xFF6B5E, 0.24))
 
     /// The stage: 0 the question, 1 tap the block, 2 drag the point, 3 write it, 4 done.
     private func stage(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }

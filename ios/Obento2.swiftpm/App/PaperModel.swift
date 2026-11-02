@@ -80,13 +80,14 @@ enum Map {
         ChapterGroup(chapter: .whole, origin: Point(0, 0), columns: 3, lessons: [
             ("g5-mult2", "Multiply two-digit numbers"), ("g5-divide", "Long division"), ("g5-order", "Order of operations")]),
         ChapterGroup(chapter: .decimals, origin: Point(1300, 0), columns: 3, lessons: [
-            ("g5-pow10", "Multiply by 10, 100, 1000"), ("g5-round", "Rounding decimals"), ("g5-adddec", "Adding decimals"),
+            ("g5-pow10", "Multiply by 10, 100, 1000"), ("g5-round", "Rounding decimals"), ("g5-compare", "Comparing decimals"),
+            ("g5-adddec", "Adding decimals"),
             ("g5-multdec", "Multiplying decimals"), ("g5-divdec", "Dividing by a decimal")]),
         ChapterGroup(chapter: .fractions, origin: Point(0, 900), columns: 3, lessons: [
             ("add", "Adding fractions"), ("sub", "Subtracting fractions"), ("mix", "Adding and subtracting"),
             ("g5-multfrac", "Multiplying fractions"), ("g5-improper", "Mixed numbers to fractions"),
-            ("g5-fracof", "Fraction of a number"), ("g5-unitdiv", "Dividing by a unit fraction")]),
-        ChapterGroup(chapter: .measurement, origin: Point(1300, 900), columns: 3, lessons: [
+            ("g5-fracdiv", "Fractions as division"), ("g5-fracof", "Fraction of a number"), ("g5-unitdiv", "Dividing by a unit fraction")]),
+        ChapterGroup(chapter: .measurement, origin: Point(1300, 1200), columns: 3, lessons: [
             ("g5-volume", "Volume of a box"), ("g5-units", "Converting units")]),
         // added 1 Nov 2026 (design/grade5.md): under Measurement, two blocks below its row
         ChapterGroup(chapter: .geometry, origin: Point(1300, 1500), columns: 3, lessons: [

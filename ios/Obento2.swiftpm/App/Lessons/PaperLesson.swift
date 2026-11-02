@@ -86,6 +86,8 @@ enum PaperLessons {
         case "g5-divdec": return DivideByDecimalLesson()
         case "g5-coord": return CoordLesson()
         case "g5-shapes": return ShapesLesson()
+        case "g5-compare": return CompareDecimalsLesson()
+        case "g5-fracdiv": return FractionsAsDivisionLesson()
         default: return nil
         }
     }

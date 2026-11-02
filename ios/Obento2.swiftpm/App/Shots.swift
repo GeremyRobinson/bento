@@ -267,6 +267,14 @@ enum Shots {
                     for ch in args[i + 1] { w.type(String(ch)) }
                     w.go()
                 }
+                // -typeall 6,3: those typed into the step's boxes in order and checked (a slip with every box filled)
+                if let i = args.firstIndex(of: "-typeall"), i + 1 < args.count, let a = w.lesson.step.answer {
+                    for (box, v) in zip(a.boxes, args[i + 1].split(separator: ",")) {
+                        w.select(box)
+                        for ch in v { w.type(String(ch)) }
+                    }
+                    w.go()
+                }
                 // -hint: the step's hint, as the bar's Hint shows it
                 if args.contains("-hint") { w.showHint() }
                 // -hand key=value,…: the hand mid-move (a ruler being dragged, a point held, pieces being slid)

@@ -492,6 +492,7 @@ public enum Lessons {
         MultiplyTwoDigit.spec, LongDivision.spec, OrderOfOperations.spec,
         RoundDecimals.spec, AddDecimals.spec, MultiplyDecimals.spec, DivideByDecimal.spec,
         PointsOnGrid.spec, SortingShapes.spec,
+        CompareDecimals.spec, FractionsAsDivision.spec,
     ]
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }

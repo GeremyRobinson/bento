@@ -100,7 +100,7 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
     /// The record's answer box: right (green) for a moment, wrong (red) until the child types again.
     private(set) var verdict: (right: Bool, at: Double)?
     /// One try: the child's own number, shown red while the answer they were given waits to be written.
-    private(set) var wrongTyped: String?
+    private(set) var wrongTyping: String?
     @ObservationIgnored private(set) var typedAt: Double = 0
     /// Show me (a preview, put back after) or the How to's hand (kept).
     private(set) var preview: Preview?
@@ -226,7 +226,7 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
         var r = LessonRun(lesson.spec, numbers: lesson.numbers); r.helps = lesson.helps; r.oneTry = lesson.oneTry
         lesson = r
         message = nil; verdict = nil; preview = nil; finger = nil; busyUntil = 0
-        hinting = false; wrongTyped = nil; typedAt = 0; pending += 1; sweep = nil; lifting = nil
+        hinting = false; wrongTyping = nil; typedAt = 0; pending += 1; sweep = nil; lifting = nil
         let tilted = holdsCamera
         lieFlat()
         squares = [:]
@@ -403,12 +403,12 @@ final class CubesProblem: Identifiable, PageProblem, CubesPicture, TiltOwner {
             // one try (a test): the child's number stays red a moment, then the record is written with the answer and
             // the problem moves on
             if lesson.oneTry, wrong {
-                wrongTyped = typedBefore
+                wrongTyping = typedBefore
                 busyUntil = time(1.2)
                 Task { [weak self] in
                     try? await Task.sleep(for: .seconds(self?.instant == true ? 0 : 1.2))
                     guard let self else { return }
-                    self.verdict = nil; self.wrongTyped = nil
+                    self.verdict = nil; self.wrongTyping = nil
                     if case .moved = self.lesson.go() { self.moved() }
                     self.onChange?()
                 }
