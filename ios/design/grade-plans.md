@@ -36,5 +36,10 @@ lesson, web lesson or new), its chapters in teaching order, every lesson designe
 - **Pictures that would get small:** problems are capped so a picture is never framed below about 80%.
 - **New hand moves** in each plan get a preview on the test page before they're built, as 5th grade's did.
 
-## Waiting on G (direction)
-See the questions in the conversation of 2 Nov; answers go here.
+## G's answers (2 Nov 2026: "yes to all and the color rule we can fix later")
+- Voice for K–2: yes, the words are read aloud for kids who can't read yet.
+- A drawn number row for young kids (tap, not type): yes.
+- Shorter pages for K and 1st: yes.
+- Chapter colours by family (the same kind of maths keeps one colour in every grade): yes.
+- Exceptions to the colour and grid rules where a lesson needs them: to be settled later (G: "we can fix later").
+- Build order: one grade at a time, 4th grade next, then 6th.
