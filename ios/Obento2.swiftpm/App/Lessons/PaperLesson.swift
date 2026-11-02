@@ -80,6 +80,8 @@ enum PaperLessons {
         case "g5-multfrac": return MultiplyFractionsLesson()
         case "g5-units": return UnitsLesson()
         case "g5-divdec": return DivideByDecimalLesson()
+        case "g5-compare": return CompareDecimalsLesson()
+        case "g5-fracdiv": return FractionsAsDivisionLesson()
         default: return nil
         }
     }

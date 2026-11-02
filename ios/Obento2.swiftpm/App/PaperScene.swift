@@ -70,6 +70,8 @@ extension Piece {
         case "g5-unitdiv": return [box(0, 0, 1, 2), box(4, 0, 1, 2), box(8, 0, 1, 2)]    // a third of each whole
         case "g5-pow10", "g5-divdec": return [box(3, 2, 2, 2)]                  // the digit the point hops over
         case "g5-round": return [box(7, 2, 3, 2)]                               // the stretch up to the whole
+        case "g5-compare": return [box(0, 0, 2, 2), box(6, 0, 2, 2)]            // the digits that decide
+        case "g5-fracdiv": return [box(0, 0, 3, 2), box(0, 3, 3, 2), box(0, 6, 6, 2)]   // a piece of each, and the share
         case "g5-adddec": return [box(6, 0, 2, 2), box(6, 3, 2, 2)]             // the decimal places, lined up
         case "g5-multdec": return [box(0, 0, 6, 4)]
         case "g5-mult2": return [box(0, 0, 6, 6)]                               // the tens part
@@ -162,6 +164,10 @@ extension Piece {
             for i in 1..<10 where i != 5 { out.append(line((Double(i), 2.5), (Double(i), 3.5))) }
             out.append(arc(7, 10, 2, 2))
             return out
+        case "g5-compare": // 5 > 49 (0.5 > 0.49): a digit box, the sign, two digit boxes: 11 by 2
+            return [box(0, 0, 2, 2), line((3, 0), (5, 1), (3, 2)), box(6, 0, 2, 2), box(9, 0, 2, 2)]
+        case "g5-fracdiv": // two things cut into thirds, and one friend's share slid together under them: 9 by 8
+            return bar(0, 0, 9, 3) + bar(0, 3, 9, 3) + bar(0, 6, 9, 3)
         case "g5-adddec": // two numbers lined up at the point, and the line under them: 9 by 6
             var out: [[CGPoint]] = []
             for j in 0..<2 { for x in [1.0, 3, 6] { out.append(box(x, Double(j) * 3, 2, 2)) } }
