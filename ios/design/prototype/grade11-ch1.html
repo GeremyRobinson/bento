@@ -96,9 +96,8 @@ const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
 const ceil5 = v => 5 * Math.ceil(v / 5 - 1e-9);
 
-// TZ: the text zoom. When the camera has to step back (Geometric sequences' big blocks), words, the record, blocks and
-// readouts are written TZ times bigger on the paper, a whole step (1, 2 or 3), so they stay on the grid and still read
-// at their own size on the screen. Every other lesson keeps TZ = 1.
+// TZ: a text zoom the kit can write words at (a whole step, so they stay on the grid). Every lesson keeps TZ = 1: the
+// Geometric sequences generator keeps its last block small enough that the camera never goes below 40%.
 let items = [], drawn = new Set(), TZ = 1;
 const FS = { maths: 36, say: 28, small: 20 }, CAPH = { small: 0.7, say: 1.0, maths: 1.3 };
 function put(k, tag, a, kind = "fade", text, bb) { items.push({ k, tag, a, kind, text, bb }); }
@@ -422,8 +421,11 @@ function dSeq(P) {
 // One square is 1. Term posts 6 squares apart; under post 1, term 1 as a row of a squares. Copy the whole (new move):
 // drag the handle on from post to post, and at every post the whole block is laid down again r times, across or down,
 // whichever keeps it nearer the screen's shape. Every copy of term 1 keeps a faint outline; the camera steps back.
+// The web's ranges (a 1–5, r 2 or 3, n 5–8), but the last block stays small enough to see at 40% with the words and
+// the record: a·rⁿ⁻¹ ≤ 2916 (108 × 27 squares). r = 2 keeps all of n 5–8; r = 3 goes to n 7 (a 5 to n 6), n 8 only for a 1.
+const GEO_MAX = 2916;
 function genGeo(idx) {
-  const gen = () => ({ a: rnd(1, 5), r: rnd(0, 1) ? 2 : 3, n: rnd(5, 8) });
+  const gen = () => { for (;;) { const p = { a: rnd(1, 5), r: rnd(0, 1) ? 2 : 3, n: rnd(5, 8) }; if (p.a * p.r ** (p.n - 1) <= GEO_MAX) return p; } };
   const size = ({ a, r, n }) => a * (1 + r + r * r + r ** 3) + r + (n - 1) + r ** (n - 1) + a * r ** (n - 1);
   return easy(gen, size, idx);
 }
@@ -439,38 +441,32 @@ function geoDims(a, r, n) {
 }
 function dGeo(P) {
   const { a, r, n } = P, pw = r ** (n - 1), an = a * pw, dims = geoDims(a, r, n);
-  // posts 6 squares apart; 9 or 12 when the words have to be written big for the last term (so the terms' names fit)
-  let PS = 6; const X = i => PS * (i - 1);
+  // posts 6 squares apart
+  const PS = 6, X = i => PS * (i - 1);
   const stages = ["r", "copy", "pow", "term", "done"];
-  const KS = [1, 1.5, 2, 3, 4], kFor = s => s >= 0.85 ? 1 : s >= 0.6 ? 1.5 : s >= 0.42 ? 2 : s >= 0.3 ? 3 : 4;
   const L = {
     id: "geo", P: { a, r, n, pw, an, dims }, stage: "r", term: 1, from: 1, hx: 0, dragTerm: 1, grabbed: false, typed: "", verdict: null, msg: null, typing: true,
-    k: 1, opt: "below",
+    opt: "below",
     progress() { return stageIndex(stages, this.stage); },
     type(v) { this.typed = v; this.verdict = null; this.msg = null; },
     shown() { return this.stage === "r" ? 1 : this.stage === "copy" ? Math.min(this.grabbed ? this.dragTerm : this.term, n) : n; },
     frameKey() { return `${this.shown()}`; },
-    Yp() { return ceil5(9.5 * this.k); },
+    Yp() { return 10; },
     handle() { return { x: this.stage === "copy" && this.grabbed ? this.hx : X(this.stage === "copy" ? this.term : n), y: this.Yp() }; },
-    // choose the text zoom and where the record goes (under the block or beside it) for the biggest picture
+    // where the record goes (under the block or beside it): whichever lets the camera come closest
     relayout() {
-      const save = items; let pick = null;
-      for (const k of KS) {
-        if (pick) break;
-        let best = null;
-        for (const opt of ["below", "beside"]) {
-          this.k = k; this.opt = opt; items = []; TZ = k; this.scene();
-          const s = fitTo(contentBox()).s;
-          if (!best || s > best.s + 1e-9) best = { k, opt, s };
-        }
-        if (kFor(best.s) <= k || k === 4) pick = best;
+      const save = items; let best = null;
+      for (const opt of ["below", "beside"]) {
+        this.opt = opt; items = []; this.scene();
+        const s = fitTo(contentBox()).s;
+        if (!best || s > best.s + 1e-9) best = { opt, s };
       }
-      items = save; TZ = 1; this.k = pick.k; this.opt = pick.opt; this.s = pick.s;
+      items = save; this.opt = best.opt; this.s = best.s;
     },
     grab(q) {
       if (this.stage !== "copy") return false;
       const h = this.handle();
-      if (Math.hypot(q.x - h.x, q.y - h.y) > hitR() * this.k) return false;
+      if (Math.hypot(q.x - h.x, q.y - h.y) > hitR()) return false;
       this.grabbed = true; this.from = this.term; this.hx = X(this.term); this.dragTerm = this.term; this.msg = null; this.stageChanged = false; return true;
     },
     drag(q) { this.hx = Math.max(0, Math.min(X(n + 1), q.x)); this.dragTerm = Math.round(this.hx / PS) + 1; },
@@ -559,7 +555,6 @@ function dGeo(P) {
       else if (this.typing) block("check", bx, by, 7, "Check", "check");
     },
   };
-  { const st = L.stage; L.stage = "term"; L.relayout(); PS = L.k >= 4 ? 12 : L.k >= 3 ? 9 : 6; L.stage = st; L.k = 1; }
   return L;
 }
 const SUP = "⁰¹²³⁴⁵⁶⁷⁸⁹", sup = n => String(n).split("").map(c => SUP[+c]).join("");
@@ -824,6 +819,7 @@ function selfTest(N = 300) {
     const [w, h] = G.P.dims[g.n - 1];
     ok(w * h === t && w <= 140 && h <= 90, `geo block ${w}x${h} for ${JSON.stringify(g)}`);
     G.P.dims.forEach(([w2, h2], j) => ok(w2 * h2 === g.a * g.r ** j && (w2 % g.a === 0), "geo copies tile"));
+    ok(g.a * g.r ** (g.n - 1) <= GEO_MAX, `geo cap ${JSON.stringify(g)}`);
     const q = genSum(i % 16), Q = dSum(q);
     if (q.kind === "halves") { ok(q.n >= 3 && q.n <= 5 && Number.isInteger((q.n === 5 ? 64 : 48) / 2 ** q.n), "halves whole squares"); }
     else {
@@ -834,6 +830,12 @@ function selfTest(N = 300) {
       else ok(q.a >= 1 && q.a <= 5 && q.n >= 6 && q.n <= 10 && q.r === 2, "story range");
       if (i % 16 < 3) ok(q.kind === "bars" && q.r === 2 && q.n === 4 && q.a <= 3, "geosum easy start");
     }
+  }
+  // every problem the generator can give: the camera holds the last block, words and record at 40% or closer
+  for (const r of [2, 3]) for (let n = 5; n <= 8; n++) for (let a = 1; a <= 5; a++) {
+    if (a * r ** (n - 1) > GEO_MAX) continue;
+    const G = dGeo({ a, r, n });
+    for (const st of ["pow", "term", "done"]) { G.stage = st; G.relayout(); ok(G.s >= 0.4, `geo camera ${G.s.toFixed(2)} at ${st} for ${a},${r},${n}`); }
   }
   return fail;
 }
