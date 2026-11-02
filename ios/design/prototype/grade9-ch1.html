@@ -584,7 +584,9 @@ function dMultistep(idx) {
         const w0 = tidy("rt2", c - ab, RX), tx = RX + (w0 ? w0 + 1 : 0);
         cols10("twin", ab, tx + pdx, BY + pdy, { live: true });
         rightW = w0 + 1 + Math.ceil(ab / 10); rightTop = BY - 10;
-        text("tread", `${M} ${ab} from both: ${c - ab} left`, RX, Math.min(BY - 10, BY - Math.min(ab, 10) + pdy) - 0.9, "small", { anchor: "start", c: CH, live: true });
+        // the readout ends where the right tray ended before the drag (the camera's frame), however narrow the right pan is
+        const tread = `${M} ${ab} from both: ${c - ab} left`;
+        text("tread", tread, Math.min(RX, RX + tidyW(c) + 1 - Math.ceil(tread.length * CHW.small)), Math.min(BY - 10, BY - Math.min(ab, 10) + pdy) - 0.9, "small", { anchor: "start", c: CH, live: true });
       } else if (["choose", "slide", "write1", "take"].includes(st)) {
         rightW = tidy("rt", c, RX); rightTop = BY - tidyH(c);
       } else {
