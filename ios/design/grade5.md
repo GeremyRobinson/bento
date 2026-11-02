@@ -142,3 +142,64 @@ Unit cubes with the problem's numbers: one cube is one block. 1. Flat: the floor
 it; **tap or drag** across it to cover it, the squares counting. 2. The paper tilts and the floor rises into the first
 layer; the box's full height dashed; **drag up** (or tap) to stack the layers, each counted on its front. 3. **Write**
 `h layers of N = [ ]`; then the record `Volume = l × w × h = V cubic cm`. The paper lies flat before the next problem.
+
+## Added 1 Nov 2026: what 5th grade was missing
+
+Checked against the Common Core 5th grade standards, the 17 lessons above left out the coordinate grid, sorting
+shapes, decimals to thousandths and fractions as division. Four new lessons cover them; the smaller gaps fold into
+lessons we have. Playable previews: `prototype/new5-lessons.html` (G's OK first, then Swift). A new chapter,
+**Geometry** (teal), holds the first two.
+
+### Points on a grid (`g5-coord`, 5.G.1–2) — Geometry
+One step is one block (5 squares): the paper's own strong lines are the coordinate grid, 10 across and 7 up, the
+two edges drawn with their numbers. Two kinds of problem, alternating. **Plot** `A (a, b)`, written in the record:
+1. **Drag** the dot from 0 along the bottom; it snaps to each block, the count lights under it and reads "4 across";
+wrong count: "That's 4 across. Count 5 along the bottom." Swapped: "That's 3 across. The first number, 5, is how far
+across." 2. **Drag** it up; "2 up"; same misses for up. Say: "5 across, then 3 up. Across always comes first."
+**Read** a point A: 1. **Drag** A straight down; a dashed line follows to the bottom numbers and lights a. 2. **Drag**
+A across to the side; it lights b. 3. **Write** `A ( [a] , [b] )`; swapped: "Across comes first: the number under it,
+then the one beside it." Core: a in 1–10, b in 1–7, a ≠ b (so a swap is always caught).
+
+### Sorting shapes (`g5-shapes`, 5.G.3–4) — Geometry
+A four-sided shape drawn by its corners on grid points, each side's length in squares beside it (tilted sides use
+3-4-5 steps, so a 15-square side is 9 across and 12 up and every length is whole). 1. **Tap two sides** that are
+parallel; a pair gets matching arrowheads (one for the first pair, two for the second). Wrong pair, measured on the
+grid: "Not parallel: one goes 4 across, 3 up, the other 4 across, 3 down." **No more** when done ("There's another
+parallel pair."). 2. **Tap each square corner**; it gets the little square mark. Wrong: "That corner isn't square.
+It's wider than a grid square's corner." 3. The family picture draws in beside it: boxes inside boxes,
+Quadrilaterals ⊃ Trapezoids ⊃ Parallelograms ⊃ Rectangles and Rhombuses, overlapping in Squares. **Tap the smallest
+box it fits in.** Too big a box: "It fits there. Is there a smaller box inside that it fits in too?" Wrong box:
+"Rectangles need 4 square corners." Then every box around it lights. Say: "It's a square. So it's also a rectangle,
+a rhombus, a parallelogram, a trapezoid and a quadrilateral." Core: squares (straight and tilted), rectangles,
+rhombuses, parallelograms, trapezoids (with and without square corners), other quadrilaterals; mirrored at random.
+Uses the inclusive trapezoid (at least one pair of parallel sides), so parallelograms sit inside trapezoids.
+
+### Comparing decimals (`g5-compare`, 5.NBT.3) — Decimals
+Rounding's zoom lines: a whole is a line of ten blocks, one block a tenth. 1. **Tap the tenth** both numbers are in;
+it opens below into ten hundredths (the magnifier's dashed lines), and so on until the two numbers fall in different
+blocks; **tap the block each one is in** (one shaded, one striped, named above). Wrong block: "Neither number is
+between 0.3 and 0.4." 2. The record stacks them with the points lined up and rings the place where they differ.
+**Tap < or >**; wrong: "Look at the hundredths: 0 and 7. The open mouth faces the bigger one." Say: "Both have 4
+tenths. 7 hundredths are more than 0. Fewer digits, still bigger." Core: up to thousandths, they first differ in
+tenths, hundredths or thousandths; the shorter number is often the bigger one (0.5 vs 0.49), the trap school sets.
+
+### Fractions as division (`g5-fracdiv`, 5.NF.3) — Fractions
+Sharing: a things (2–4 bars, each a whole 48 squares, 40 for fifths) shared by b friends (2, 3, 4, 5, 6, 8). The
+record starts as `a ÷ b`. 1. **Cut** with the ruler across all the bars so every friend gets a piece; "6 pieces" while
+dragging; wrong: "That's 4 pieces in each. There are 6 friends." 2. **Tap one friend's share**; the count shows;
+measured misses: "If each friend gets 1, 6 friends take 6. 12 are left over." / "…need 24. There are only 18."
+3. The share slides together into one bar under a rule ("one share"); **write** `= [a]/[b]`; upside down: "the top is
+how many pieces, the bottom is what size". Say: "Each friend gets 3/6 of a sub. Every sub gives each friend 1/6, and
+there are 3 of them." Answers over 1 (4 ÷ 3) draw a second share bar.
+
+### Folded into lessons we have (no new lesson)
+- **Multiplying as scaling** (5.NF.5) → Multiplying fractions: a last step drags the answer's bar against the
+  whole-number bar; "× 2/3 is less than 1, so it got smaller."
+- **Volume of two boxes** (5.MD.5c) → Volume of a box: an L-shaped problem type, two boxes built one after the other,
+  the volumes added.
+- **Line plots with fractions** (5.MD.2) → its own small lesson later if G wants it; otherwise a problem type in
+  Adding and subtracting (Xs stacked on a ruler line in eighths, then add them).
+- **Number patterns** (5.OA.3) → Points on a grid: a third problem type, two rules side by side (add 3, add 6), their
+  pairs plotted as points.
+- **Writing expressions** (5.OA.2) → Order of operations: a problem type that turns words ("add 8 and 7, then multiply
+  by 2") into the expression, then works it.
