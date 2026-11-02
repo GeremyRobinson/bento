@@ -43,11 +43,13 @@ public struct AnswerTask: Sendable {
     /// Answered by a hand move on the picture (a tap, a drag, a cut, a slide), never typed: the move puts its value in
     /// the step's boxes (LessonRun.set) and checks it, so the checks, slips and misses are the same as typing's.
     public var byHand: Bool
+    /// What Check says while a box is still empty (nil: "Fill in every box.").
+    public var incomplete: String?
 
     public init(prompt: MathLine, expected: [String: Double], known: [(values: [String: Double], message: String)] = [], hint: String, explain: String? = nil,
-                check: (@Sendable ([String: Double]) -> Verdict)? = nil, choices: [String]? = nil, byHand: Bool = false) {
+                check: (@Sendable ([String: Double]) -> Verdict)? = nil, incomplete: String? = nil, choices: [String]? = nil, byHand: Bool = false) {
         self.prompt = prompt; self.expected = expected; self.known = known; self.hint = hint; self.check = check; self.choices = choices
-        self.byHand = byHand
+        self.byHand = byHand; self.incomplete = incomplete
         self.explain = explain ?? "\(hint) That makes \(expected.count == 1 ? fmt(expected.values.first!) : "it")."
     }
 
@@ -432,7 +434,7 @@ public struct LessonRun: Sendable {
     /// The main action: check this step's marks, then move on.
     public mutating func go() -> Outcome {
         if let a = step.answer {
-            if a.boxes.contains(where: { (typed[$0] ?? "").isEmpty }) { return .notYet("Fill in every box.") }
+            if a.boxes.contains(where: { (typed[$0] ?? "").isEmpty }) { return .notYet(a.incomplete ?? "Fill in every box.") }
             let values = typed.compactMapValues { Double($0) }
             let same = { (want: [String: Double]) in want.allSatisfy { abs((values[$0.key] ?? .nan) - $0.value) < 1e-9 } }
             if let check = a.check {
@@ -489,6 +491,7 @@ public enum Lessons {
         VolumeOfBox.spec, ConvertUnits.spec,
         MultiplyTwoDigit.spec, LongDivision.spec, OrderOfOperations.spec,
         RoundDecimals.spec, AddDecimals.spec, MultiplyDecimals.spec, DivideByDecimal.spec,
+        PointsOnGrid.spec, SortingShapes.spec,
     ]
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }
