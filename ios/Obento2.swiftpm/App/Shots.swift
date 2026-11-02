@@ -783,10 +783,20 @@ enum Shots {
         AppSettings.set(profile: Profile(name: name, setUp: true), saving: false)
     }
 
+    /// `-seed-page <lesson id>` (the real-touch tests, never a screenshot): that lesson's page as a child left it today
+    /// (How to watched, the together problems and two on their own done), in memory only, opened for real.
+    static func openSeededPage(_ m: PaperModel) {
+        let args = ProcessInfo.processInfo.arguments
+        guard !active, let i = args.firstIndex(of: "-seed-page"), i + 1 < args.count, let p = Map.piece(args[i + 1]) else { return }
+        Progress.shared.saving = false; PageStore.saving = false; Practice.shared.saving = false
+        seedPage(p.id, own: 2)
+        m.select(p); m.open(p)
+    }
+
     static func seedForTests() {
         let args = ProcessInfo.processInfo.arguments, full = args.contains("-seed-me-full")
         // the real-touch tests start set up (in memory only), so they open on the map, not on setting up
-        if !active, full || args.contains("-seed-me") || args.contains("-set-up") { AppSettings.set(profile: Profile(setUp: true), saving: false) }
+        if !active, full || args.contains("-seed-me") || args.contains("-set-up") || args.contains("-seed-page") { AppSettings.set(profile: Profile(setUp: true), saving: false) }
         if !active, args.contains("-setup-fresh") {
             // a new install (the real-touch test of setting up): in memory only, so nothing on the iPad changes
             Progress.shared.saving = false; PageStore.saving = false; Practice.shared.saving = false

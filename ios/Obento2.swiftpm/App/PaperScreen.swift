@@ -34,6 +34,8 @@ struct PaperScreen: View {
                     PaperScene(model: model, time: t)
                         .id("\(Int(model.screen.width))x\(Int(model.screen.height))")
                     surfaceGestures
+                    // the cards and the How to's blocks, for VoiceOver and the real-touch tests (never a touch)
+                    PaperAccess(model: model, cam: cam)
                     // no bar while setting up (G 26 Oct): only the paper and its steps
                     if model.place != .setup {
                         Toolbar(model: model, time: t, bottom: max(16, safe.safeAreaInsets.bottom + 8, model.keyboard + 8))
@@ -67,6 +69,7 @@ struct PaperScreen: View {
                 Shots.seedForTests()
                 // the first time it opens (and after a grown-up starts over), setting up; after that, the map
                 if !Shots.active { if AppSettings.needsSetup { model.beginSetup() } else { model.frameGroup(duration: 0) } }
+                Shots.openSeededPage(model)
                 Shots.run(model)
             }
             // leaving the app with a finger down: no hold carries on (the grown-ups' square opens only for a real 3 seconds)
