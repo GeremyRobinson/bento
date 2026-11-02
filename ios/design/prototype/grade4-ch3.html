@@ -1,0 +1,917 @@
+<title>4th Grade: Factors and Patterns</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700&display=swap">
+<style>
+/* Layout: the whole screen is one sheet of graph paper seen through one camera; the floating pill at the bottom is
+   the only chrome. 1 square = 20 paper units, a strong line every 5 squares (a block). iPad landscape only. */
+:root {
+  --paper: #F3F1EC; --grid: #E2DED6; --grid-strong: #D3CEC4;
+  --ink: #1D1C1A; --ink2: #6E6A63; --ink3: #A39E95;
+  --chapter: #7B5CE0; --tint: rgba(123, 92, 224, .2); --tint-strong: rgba(123, 92, 224, .4);
+  --right: #178A57; --right-tint: rgba(23, 138, 87, .2); --wrong: #C8372D;
+  --pill: rgba(255, 255, 255, .94); --pill-line: #E4E0D8;
+  --round: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C;
+  --chapter: #A58BFF; --tint: rgba(165, 139, 255, .22); --tint-strong: rgba(165, 139, 255, .42);
+  --right: #3CCF8E; --right-tint: rgba(60, 207, 142, .22); --wrong: #FF6B5E;
+  --pill: rgba(40, 40, 37, .94); --pill-line: #3A3A36; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C;
+  --chapter: #A58BFF; --tint: rgba(165, 139, 255, .22); --tint-strong: rgba(165, 139, 255, .42);
+  --right: #3CCF8E; --right-tint: rgba(60, 207, 142, .22); --wrong: #FF6B5E;
+  --pill: rgba(40, 40, 37, .94); --pill-line: #3A3A36; color-scheme: dark }
+html, body { height: 100%; }
+body { background: var(--paper); color: var(--ink); font-family: var(--round); overflow: hidden; touch-action: none;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; margin: 0; }
+#paper { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+svg text { font-family: var(--round); font-variant-numeric: tabular-nums; }
+.say { font-size: 28px; font-weight: 600; fill: var(--ink); }
+.small { font-size: 20px; font-weight: 600; fill: var(--ink2); }
+.maths { font-size: 36px; font-weight: 600; fill: var(--ink); }
+
+/* drawing in: lines stroke on, words and fills fade in, one after another */
+.in-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .55s ease-out forwards; }
+.in-fade { opacity: 0; animation: fade .4s ease-out forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes fade { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .in-line, .in-fade { animation-duration: .01s; } }
+
+/* the one floating bar */
+#bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 999px; background: var(--pill);
+  border: 1px solid var(--pill-line); box-shadow: 0 6px 24px rgba(0,0,0,.08); max-width: calc(100vw - 32px);
+  font-family: var(--round); }
+#bar button { font: 600 17px var(--round); color: var(--ink); background: none; border: 0; padding: 10px 14px;
+  border-radius: 999px; cursor: pointer; white-space: nowrap; }
+#bar button:focus-visible { outline: 2px solid var(--chapter); outline-offset: 2px; }
+#bar select { font: 600 17px var(--round); color: var(--ink); background: none; border: 0; padding: 10px 26px 10px 14px;
+  border-radius: 999px; cursor: pointer; -webkit-appearance: none; appearance: none; max-width: 52vw; text-overflow: ellipsis;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink2) 50%), linear-gradient(135deg, var(--ink2) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%; background-size: 5px 5px; background-repeat: no-repeat; }
+#bar select:focus-visible { outline: 2px solid var(--chapter); outline-offset: 2px; }
+#bar .sep { width: 1px; align-self: stretch; background: var(--pill-line); margin: 4px 4px; }
+#bar .progress { display: flex; flex-direction: column; gap: 6px; padding: 0 10px; min-width: 150px; }
+#bar .progress span { font: 600 14px var(--round); color: var(--ink2); white-space: nowrap; }
+#bar .track { height: 4px; border-radius: 2px; background: var(--pill-line); overflow: hidden; }
+#bar .track i { display: block; height: 100%; background: var(--chapter); transition: width .4s ease; }
+/* the live readout of a hand move, big in the pill's middle */
+#bar #live { font: 600 22px var(--round); color: var(--chapter); padding: 0 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+#bar #live:empty, #bar #live:empty + .sep { display: none; }
+#keys { position: fixed; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; font-size: 16px; }
+</style>
+
+<svg id="paper" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-label="Graph paper lesson">
+  <defs>
+    <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
+      <path d="M20 0V100M40 0V100M60 0V100M80 0V100M0 20H100M0 40H100M0 60H100M0 80H100" stroke="var(--grid)" stroke-width="1" fill="none"/>
+      <path d="M0 0V100M0 0H100" stroke="var(--grid-strong)" stroke-width="1.5" fill="none"/>
+    </pattern>
+    <!-- a second number's disks are striped -->
+    <pattern id="dstripe" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="5" height="5" fill="var(--tint)"/>
+      <line x1="1.2" y1="0" x2="1.2" y2="5" stroke="var(--chapter)" stroke-width="2.2"/>
+    </pattern>
+  </defs>
+  <g id="paperg">
+    <rect x="-20000" y="-20000" width="40000" height="40000" fill="url(#grid)"/>
+    <g id="scene"></g>
+  </g>
+</svg>
+
+<nav id="bar" aria-label="Lessons">
+  <select id="pick" aria-label="Lesson"></select>
+  <div class="sep"></div>
+  <div class="progress"><span id="stepname">Step 1 of 3</span><div class="track"><i id="track" style="width:0"></i></div></div>
+  <div class="sep"></div>
+  <span id="live" aria-live="polite"></span>
+  <div class="sep"></div>
+  <button id="fresh" type="button">New problem</button>
+</nav>
+<input id="keys" inputmode="numeric" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Answer">
+
+<script>
+"use strict";
+// ---------- the paper: squares, drawing, camera (the kit from grade4-ch2.html) ----------
+// KS: a big problem draws its words, record and blocks KS times as big (whole steps, so they stay on the grid) when the
+// camera has to step back for its picture (Two-digit times two-digit's biggest rectangles); 1 everywhere else.
+const SQ = 20, svg = document.getElementById("paper"), sceneEl = document.getElementById("scene");
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+let KS = 1;
+
+let items = [], drawn = new Set();
+let X = { l: 0, r: 0, b: 0 }, track = true;
+const CHW = { maths: 1.05, say: 0.75, small: 0.55 }, FS = { maths: 36, say: 28, small: 20 };
+function reach(l, r, b) { if (!track) return; X.l = Math.min(X.l, l); X.r = Math.max(X.r, r); X.b = Math.max(X.b, b); }
+function put(k, tag, a, kind = "fade", text) { items.push({ k, tag, a, kind, text }); }
+const sq = n => n * SQ;
+function line(k, x1, y1, x2, y2, o = {}) {
+  reach(Math.min(x1, x2), Math.max(x1, x2), Math.max(y1, y2));
+  put(k, "line", { x1: sq(x1), y1: sq(y1), x2: sq(x2), y2: sq(y2), stroke: o.c || "var(--ink)", "stroke-width": o.w || 1.5,
+    "stroke-opacity": o.op ?? null, "stroke-dasharray": o.dash ? "6 6" : null, "stroke-linecap": "butt", pathLength: o.dash ? null : 1 },
+    o.live ? "none" : o.dash ? "fade" : "line");
+}
+function path(k, d, o = {}) {
+  put(k, "path", { d, fill: o.fill || "none", stroke: o.c || "var(--ink)", "stroke-width": o.w || 1.5, "stroke-opacity": o.op ?? null,
+    "stroke-dasharray": o.dash ? "6 6" : null, pathLength: o.dash ? null : 1 }, o.live ? "none" : o.dash ? "fade" : "line");
+}
+function rect(k, x, y, w, h, o = {}) {
+  reach(x, x + w, y + h);
+  const outline = o.c && !o.fill && !o.dash;
+  put(k, "rect", { x: sq(x), y: sq(y), width: sq(w), height: sq(h), fill: o.fill || "none", stroke: o.c || null,
+    "stroke-width": o.c ? (o.w || 1.5) : null, "stroke-dasharray": o.dash ? "6 6" : null, opacity: o.op ?? null, rx: o.rx ?? null,
+    pathLength: outline ? 1 : null }, o.live ? "none" : outline ? "line" : "fade");
+}
+function dot(k, x, y, r, o = {}) { reach(x - r, x + r, y + r); put(k, "circle", { cx: sq(x), cy: sq(y), r: sq(r), fill: o.c || "var(--chapter)" }, o.live ? "none" : "fade"); }
+function text(k, s, x, y, cls, o = {}) {
+  const w = String(s).length * (CHW[cls] || 0.7) * KS, an = o.anchor || "middle";
+  reach(an === "start" ? x : an === "end" ? x - w : x - w / 2, an === "start" ? x + w : an === "end" ? x : x + w / 2, y + 0.8 * KS);
+  const st = [o.c ? `fill:${o.c}` : "", KS !== 1 ? `font-size:${FS[cls] * KS}px` : ""].filter(Boolean).join(";");
+  put(k, "text", { x: sq(x), y: sq(y), class: cls, "text-anchor": an, "dominant-baseline": "central", style: st || null }, o.live ? "none" : "fade", s);
+}
+// words in rows of 2 squares, wrapped at a width in squares
+function words(k, s, x, y, widthSq, cls = "say", o = {}) {
+  const per = (cls === "say" ? 0.72 : 0.52) * KS, max = Math.max(8, Math.floor(widthSq / per));
+  const rows = []; let cur = "";
+  for (const w of s.split(" ")) { if ((cur + " " + w).trim().length > max && cur) { rows.push(cur); cur = w; } else cur = (cur + " " + w).trim(); }
+  if (cur) rows.push(cur);
+  rows.forEach((r, i) => text(`${k}:${i}:${r}`, r, x, y + i * 2 * KS, cls, { anchor: "start", c: o.c }));
+  return rows.length;
+}
+// a block drawn on the paper: an outline, its word and arrow (Check, Next problem)
+function block(k, x, y, w, label, act, o = {}) {
+  const K = KS;
+  rect(`${k}o`, x, y, w * K, 2 * K, { c: o.main === false ? "var(--ink3)" : "var(--ink)" });
+  text(`${k}w${label}`, label, x + K, y + K, "small", { anchor: "start", c: "var(--ink)" });
+  if (o.arrow !== false) path(`${k}a`, `M${sq(x + (w - 1.6) * K)} ${sq(y + K)}h${sq(0.8 * K)}m${-6 * K} ${-6 * K}l${6 * K} ${6 * K}l${-6 * K} ${6 * K}`, {});
+  put(`${k}hit`, "rect", { x: sq(x), y: sq(y), width: sq(w * K), height: sq(2 * K), fill: "transparent", "data-act": act }, "none");
+}
+// a label's ink half a square from what it labels
+const CAPH = { small: 0.7, say: 1.0, maths: 1.3 };
+function lab(k, s, side, edge, along, cls = "small", c) {
+  const h = CAPH[cls] * KS / 2, g = 0.5 * KS;
+  if (side === "above") text(k, s, along, edge - g - h, cls, { c });
+  else if (side === "below") text(k, s, along, edge + g + h, cls, { c });
+  else if (side === "left") text(k, s, edge - g, along, cls, { c, anchor: "end" });
+  else text(k, s, edge + g, along, cls, { c, anchor: "start" });
+}
+// what to do on the rows above the picture: one line (a story may take two), and a small line under it (or what a
+// slip says, in red)
+function dhead(L, say, sub, width) {
+  const x = Math.min(0, X.l);
+  const n = say ? words(`say-${say}`, say, x, KS, 66 * KS) : 1;
+  track = false;
+  const y = (2 * n + 1.3) * KS;
+  if (L.msg) words(`msg-${L.msg}`, L.msg, x, y, width, "small", { c: "var(--wrong)" });
+  else if (sub) words(`sub-${sub}`, sub, x, y, width, "small");
+  track = true;
+}
+function withBoxes(L) {
+  L.vals = {}; L.active = null;
+  Object.defineProperty(L, "typed", { get() { return this.vals[this.active] || ""; }, configurable: true });
+  L.type = function (v) { if (this.active != null) this.vals[this.active] = v; this.verdict = null; this.msg = null; };
+  return L;
+}
+function boxAct(L, a) { if (a.startsWith("box:")) { L.active = a.slice(4); L.typing = true; return true; } return false; }
+function boxState(L, id) { return L.verdict && L.active === id ? L.verdict : L.active === id ? "active" : "idle"; }
+const stageIndex = (list, st) => [Math.max(0, list.indexOf(st)), list.length - 1];
+
+// ---------- motion: a thing that moves glides from where it's drawn to where it belongs ----------
+const MO = { cur: new Map(), tw: new Map(), emerge: new Set(), delay: new Map(), seen: new Set() };
+const easeIO = u => (u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2);
+function moveTo(id, x, y, r, o = {}) {
+  MO.seen.add(id);
+  const now = performance.now(), c = MO.cur.get(id);
+  if (!c || o.now) { const v = { x, y, r }; MO.cur.set(id, v); MO.tw.delete(id); return v; }
+  let t = MO.tw.get(id);
+  if (t && (t.to.x !== x || t.to.y !== y || t.to.r !== r)) t = null;
+  if (!t) {
+    if (c.x === x && c.y === y && c.r === r) return c;
+    const d = MO.delay.get(id) || 0; MO.delay.delete(id);
+    t = { from: { ...c }, to: { x, y, r }, t0: now + d, dur: o.dur || 420 }; MO.tw.set(id, t);
+  }
+  const u = Math.max(0, Math.min(1, (now - t.t0) / t.dur)), e = easeIO(u);
+  const v = { x: t.from.x + (t.to.x - t.from.x) * e, y: t.from.y + (t.to.y - t.from.y) * e, r: t.from.r + (t.to.r - t.from.r) * e };
+  MO.cur.set(id, v);
+  if (u >= 1) MO.tw.delete(id);
+  return v;
+}
+const moving = id => MO.tw.has(id);
+function disk(id, x, y, r, o = {}) {
+  const v = moveTo(id, x, y, r, o);
+  reach(v.x - v.r, v.x + v.r, v.y + v.r);
+  const a = { cx: sq(v.x), cy: sq(v.y), r: sq(Math.max(0, v.r)) };
+  if (o.striped) Object.assign(a, { fill: "url(#dstripe)", stroke: "var(--chapter)", "stroke-width": 1.5, r: sq(Math.max(0, v.r - 0.04)) });
+  else a.fill = o.c || "var(--chapter)";
+  put(`dk${id}`, "circle", a, MO.emerge.has(id) || o.live ? "none" : "fade");
+}
+let NID = 0;
+const nid = () => ++NID;
+const mk = n => Array.from({ length: n }, nid);
+function emerge(x, y, r) { const id = nid(); MO.cur.set(id, { x, y, r }); MO.emerge.add(id); return id; }
+let token = 0;
+function after(ms, fn) { const t = token; setTimeout(() => { if (t !== token) return; fn(); render(); frame(lesson.frame()); if (lesson.typing) openKeys(); }, ms); }
+
+// ---------- render ----------
+let raf = 0;
+const born = new Map();
+function render() {
+  items = []; X = { l: 0, r: 0, b: 0 }; MO.seen.clear();
+  const head = lesson.scene() || ["", ""];
+  for (const id of MO.tw.keys()) if (!MO.seen.has(id)) MO.tw.delete(id);
+  const body = items; items = [];
+  dhead(lesson, head[0], head[1], Math.max(44 * KS, X.r - Math.min(0, X.l) - 1));
+  items = items.concat(body);
+  const now = performance.now() / 1000;
+  const next = new Set(); let n = 0, out = "";
+  for (const it of items) {
+    next.add(it.k);
+    const a = { ...it.a };
+    let delay = null;
+    if (it.kind !== "none") {
+      if (!drawn.has(it.k)) { delay = Math.min(n++ * 0.035, 1.2); born.set(it.k, { t: now, d: delay }); }
+      else { const b = born.get(it.k); if (b) { const el = now - b.t; if (el < b.d + 0.65) delay = b.d - el; else born.delete(it.k); } }
+      if (delay != null) {
+        a.class = ((a.class || "") + (it.kind === "line" ? " in-line" : " in-fade")).trim();
+        a.style = `animation-delay:${delay.toFixed(3)}s;` + (a.style || "");
+      }
+    }
+    const attrs = Object.entries(a).filter(([, v]) => v != null).map(([k, v]) => `${k}="${esc(v)}"`).join(" ");
+    out += `<${it.tag} ${attrs}>${it.text != null ? esc(it.text) : ""}</${it.tag}>`;
+  }
+  sceneEl.innerHTML = out;
+  for (const k of born.keys()) if (!next.has(k)) born.delete(k);
+  if ((MO.tw.size || (lesson.animating && lesson.animating())) && !raf) raf = requestAnimationFrame(() => { raf = 0; render(); });
+  drawn = next;
+  const [i, of] = lesson.progress();
+  document.getElementById("stepname").textContent = `Problem ${lesson.index + 1} · Step ${Math.min(i + 1, of)} of ${of}`;
+  document.getElementById("track").style.width = `${Math.round(100 * i / of)}%`;
+  document.getElementById("live").textContent = (lesson.live && lesson.live()) || "";
+}
+
+// the camera: frames what the lesson shows now, eased (0.75 s), never past 1.25x
+const cam = { x: 0, y: 0, s: 1 }; let camTo = null, camFrom = null, camT0 = 0;
+const viewScale = (w, h) => Math.min((innerWidth - 64) / sq(w), (innerHeight - 24 - 110 - 32) / sq(h), 1.25);
+function fitTo(f) {
+  const W = innerWidth, top = 24, s = viewScale(f.w, f.h);
+  return { s, x: sq(f.x + f.w / 2) - W / 2 / s, y: sq(f.y) - top / s };
+}
+function frame(f, now) {
+  const t = fitTo(f);
+  if (now) { Object.assign(cam, t); camTo = null; applyCam(); return; }
+  if (camTo && Math.abs(camTo.x - t.x) + Math.abs(camTo.y - t.y) + Math.abs(camTo.s - t.s) < 0.01) return;
+  if (!camTo && Math.abs(cam.x - t.x) + Math.abs(cam.y - t.y) + Math.abs(cam.s - t.s) < 0.01) return;
+  camFrom = { ...cam }; camTo = t; camT0 = performance.now(); requestAnimationFrame(stepCam);
+}
+function stepCam(t) {
+  if (!camTo) return;
+  const u = Math.min(1, (t - camT0) / 750), e = easeIO(u);
+  for (const k of ["x", "y", "s"]) cam[k] = camFrom[k] + (camTo[k] - camFrom[k]) * e;
+  applyCam();
+  if (u < 1) requestAnimationFrame(stepCam); else camTo = null;
+}
+function applyCam() { svg.setAttribute("viewBox", `${cam.x} ${cam.y} ${innerWidth / cam.s} ${innerHeight / cam.s}`); }
+addEventListener("resize", () => frame(lesson.frame(), true));
+function fitAll() { return { x: X.l - 2, y: -1, w: X.r - X.l + 4, h: X.b + 2 }; }
+
+// ---------- typing (the iPad's own number keys) ----------
+const keys = document.getElementById("keys");
+function openKeys() { keys.value = lesson.typed || ""; keys.focus({ preventScroll: true }); }
+keys.addEventListener("input", () => { lesson.type(keys.value.replace(/[^0-9]/g, "").slice(0, 7)); render(); });
+keys.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); act("check"); } });
+
+// ---------- hands: tap, drag (on the lesson's picture) or pan the paper; mouse and touch alike ----------
+function toPaper(e) { const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse()); return { x: p.x / SQ, y: p.y / SQ }; }
+function toScreen(x, y) { const p = new DOMPoint(x * SQ, y * SQ).matrixTransform(svg.getScreenCTM()); return { x: p.x, y: p.y }; }
+let down = null;
+svg.addEventListener("pointerdown", e => {
+  if (down) return;
+  const p = toPaper(e), hit = e.target.closest("[data-act]");
+  down = { id: e.pointerId, p, sx: e.clientX, sy: e.clientY, act: hit && hit.dataset.act, moved: false, grabbed: false, cam: { ...cam } };
+  if (!down.act && lesson.grab && lesson.grab(p)) { down.grabbed = true; render(); }
+  svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener("pointermove", e => {
+  if (!down || e.pointerId !== down.id) return;
+  if (Math.hypot(e.clientX - down.sx, e.clientY - down.sy) > 6) down.moved = true;
+  if (down.grabbed) { lesson.drag(toPaper(e)); render(); return; }
+  if (down.moved && !down.act) { camTo = null; cam.x = down.cam.x - (e.clientX - down.sx) / cam.s; cam.y = down.cam.y - (e.clientY - down.sy) / cam.s; applyCam(); }
+});
+function up(e, cancel) {
+  if (!down || e.pointerId !== down.id) return;
+  const d = down; down = null;
+  if (d.grabbed) { lesson.release(toPaper(e), d.moved); render(); frame(lesson.frame()); return; }
+  if (d.moved || cancel) return;
+  if (d.act) { act(d.act); return; }
+  if (lesson.tap && lesson.tap(toPaper(e))) { render(); frame(lesson.frame()); }
+}
+svg.addEventListener("pointerup", e => up(e, false));
+svg.addEventListener("pointercancel", e => up(e, true));
+function act(a) {
+  if (a === "type") { openKeys(); return; }
+  if (a === "next") { leave(); return; }
+  lesson.act(a);
+  if (!lesson.typing) keys.blur(); else openKeys();
+  render(); frame(lesson.frame());
+}
+
+// ---------- numbers written on the squares ----------
+const PL = ["ones", "tens", "hundreds", "thousands", "ten thousands", "hundred thousands"];
+const PL1 = ["one", "ten", "hundred", "thousand", "ten thousand", "hundred thousand"];
+const pl = (k, n) => (n === 1 ? PL1[k] : PL[k]);
+const fmt = n => Number(n).toLocaleString("en-US");
+const dig = (n, k) => Math.floor(n / 10 ** k) % 10;
+const nlen = n => String(n).length;
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+// a number written as school writes it on squared paper: 2 squares a digit, a comma on the grid line between
+function num(k, s, right, row, o = {}) {
+  s = String(s); let col = 0;
+  for (let i = s.length - 1; i >= 0; i--) {
+    const ch = s[i];
+    if (ch === "," || ch === ".") { text(`${k}.${i}`, ch, right - col, row, "maths", { c: o.c }); continue; }
+    text(`${k}${i}${ch}`, ch, right - col - KS, row, "maths", { c: o.c }); col += 2 * KS;
+  }
+}
+const ndig = s => String(s).replace(/[^0-9]/g, "").length;
+// a line of the record: numbers (2 squares a digit), signs (3 squares, or wd), words (28), boxes; returns where it ends
+function mrow(k, toks, x, y) {
+  let cx = x; const K = KS;
+  toks.forEach((t, i) => {
+    if (!t) return;
+    const kk = `${k}.${i}`;
+    if (t.n != null) { const w = 2 * K * ndig(t.n); num(kk, fmt(t.n), cx + w, y, { c: t.c }); cx += w; }
+    else if (t.op) { const ow = (t.wd || 3) * K; text(kk + t.op, t.op, cx + ow / 2, y, "maths", { c: t.c }); cx += ow; }
+    else if (t.w) { text(kk + t.w, t.w, cx + 0.6 * K, y, "say", { anchor: "start", c: t.c }); cx = Math.ceil(cx + (1.4 + t.w.length * 0.68) * K); }
+    else if (t.gap) cx += t.gap * K;
+    else if (t.box) { t.box(cx, y - K); cx += t.cells * 2 * K; }
+  });
+  return cx;
+}
+const rowWidth = toks => toks.reduce((s, t) => s + (!t ? 0 : t.n != null ? 2 * KS * ndig(t.n) : t.op ? (t.wd || 3) * KS : t.w ? Math.ceil((1.4 + t.w.length * 0.68) * KS) : t.gap ? t.gap * KS : (t.cells || 0) * 2 * KS), 0);
+// an answer box: cells of 2 squares, what's typed written with its commas, lined up on the right
+function nbox(k, x, y, cells, value, state, actName = "box:R") {
+  const K = KS, c = state === "right" ? "var(--right)" : state === "wrong" ? "var(--wrong)" : state === "idle" ? "var(--ink3)" : "var(--ink)";
+  rect(`${k}o${cells}`, x, y, cells * 2 * K, 2 * K, { c });
+  if (value) num(`${k}v`, fmt(+value), x + cells * 2 * K, y + K, { c: state === "right" || state === "wrong" ? c : null });
+  if (state === "active") put(`${k}cur`, "line", { x1: sq(x + cells * 2 * K + 0.4 * K), y1: sq(y + 0.35 * K), x2: sq(x + cells * 2 * K + 0.4 * K), y2: sq(y + 1.65 * K), stroke: "var(--chapter)", "stroke-width": 1.5 }, "none");
+  put(`${k}hit`, "rect", { x: sq(x), y: sq(y), width: sq(cells * 2 * K), height: sq(2 * K), fill: "transparent", "data-act": actName }, "none");
+}
+const boxTok = (L, cells, id = "R") => ({ cells, box: (x, y) => nbox(id, x, y, cells, L.vals[id] || "", boxState(L, id), "box:" + id) });
+// the first matching slip that isn't the answer
+const slip = (ans, v, list) => { for (const [w, m] of list) if (w === v && w !== ans) return m; return null; };
+// a handle the hand drags: a dot, bigger while held
+const handle = (k, x, y, held) => dot(k, x, y, (held ? 0.75 : 0.55) * KS, { c: "var(--ink)", live: true });
+
+// ---------- this chapter's shared pieces ----------
+const pk = a => a[rnd(0, a.length - 1)], nd = n => String(n).length;
+const ord = k => k + ((k % 100 >= 11 && k % 100 <= 13) ? "th" : (["th", "st", "nd", "rd"][k % 10] || "th"));
+const isPrime = n => { if (n < 2) return false; for (let d = 2; d * d <= n; d++) if (n % d === 0) return false; return true; };
+// a number's factor pairs, the small one first: 20 → [1, 20], [2, 10], [4, 5]
+const pairsOf = n => { const p = []; for (let a = 1; a * a <= n; a++) if (n % a === 0) p.push([a, n / a]); return p; };
+const factorsOf = n => { const s = pairsOf(n).map(p => p[0]); return [...new Set([...s, ...s.map(a => n / a).reverse()])]; };
+// n squares in R rows, as many in each as fit, what's left over in a dashed row under them
+function arrange(n, R) {
+  const q = Math.floor(n / R), L = n - R * q;
+  return { R, q, L, pos: j => (j < R * q ? { x: j % q, y: Math.floor(j / q), over: false } : { x: j - R * q, y: R, over: true }) };
+}
+const rowsWord = (n, R) => { const g = arrange(n, R); return R === 1 ? `1 row of ${n}` : `${R} rows of ${g.q}` + (g.L ? `, ${g.L} over` : ""); };
+// a square of the picture that glides to where it belongs; leftovers dashed, a found rectangle green
+function cell(id, x, y, o = {}) {
+  const v = moveTo(id, x, y, 1);
+  if (o.over) rect(`c${id}`, v.x, v.y, 1, 1, { c: "var(--ink3)", dash: true });
+  else rect(`c${id}`, v.x, v.y, 1, 1, { fill: o.green ? "var(--right-tint)" : o.fill || "var(--tint)", c: o.green ? "var(--right)" : "var(--chapter)" });
+}
+// a ring drawn round a number
+function ring(k, x, y, r, c = "var(--chapter)", ry = r) {
+  reach(x - r, x + r, y + ry);
+  put(k, "ellipse", { cx: sq(x), cy: sq(y), rx: sq(r), ry: sq(ry), fill: "none", stroke: c, "stroke-width": 1.5, pathLength: 1 }, "line");
+}
+// Tap a choice: blocks on the paper holding the choices (Yes, No; Prime, Composite; Odd, Even); a wrong pick is red
+function choices(k, x, y, list, bad) {
+  let cx = x;
+  for (const [a, label] of list) {
+    const w = Math.ceil(label.length * 0.75 + 2), red = bad === a, c = red ? "var(--wrong)" : "var(--ink)";
+    rect(`${k}${a}o${red}`, cx, y, w, 2, { c });
+    text(`${k}${a}w${red}`, label, cx + w / 2, y + 1, "say", { c });
+    put(`${k}${a}hit`, "rect", { x: sq(cx), y: sq(y), width: sq(w), height: sq(2), fill: "transparent", "data-act": a }, "none");
+    cx += w + 2;
+  }
+  return cx;
+}
+// a list of numbers with commas (2 squares a digit, a comma 2 squares), some ringed; returns where it ends
+function numList(k, vals, x, y, ringed = new Set(), tail = "") {
+  let cx = x;
+  vals.forEach((v, i) => {
+    const w = 2 * nd(v);
+    num(`${k}${i}`, v, cx + w, y);
+    if (ringed.has(v)) ring(`${k}r${i}`, cx + w / 2, y, w / 2 + 0.3, undefined, 1.25);
+    cx += w;
+    if (i < vals.length - 1 || tail) { text(`${k}c${i}`, ",", cx + 0.5, y, "maths"); cx += 2; }
+  });
+  if (tail) { text(`${k}t`, tail, cx + 1, y, "maths"); cx += 2; }
+  return cx;
+}
+// the first FIXED problem (?p=…) goes to the first lesson started
+function fx() { const v = FIXED; FIXED = null; return v ? v.split(",").map(Number) : null; }
+
+// ---------- the problems (fresh numbers, easy first by index) ----------
+// Factors and multiples (the web's): n 12–60 with exactly three factor pairs (up to 32 for index < 3); t 3–9, not the
+// small half of a pair and at most n ÷ 2, a factor about half the time.
+const NUMBERS = []; for (let n = 12; n <= 60; n++) if (pairsOf(n).length === 3) NUMBERS.push(n);
+function genFactors(i) {
+  const n = pk(NUMBERS.filter(x => (i < 3 ? x <= 32 : true))), small = pairsOf(n).map(p => p[0]);
+  const tries = [3, 4, 5, 6, 7, 8, 9].filter(t => !small.includes(t) && t <= n / 2);
+  const yes = tries.filter(t => n % t === 0), no = tries.filter(t => n % t !== 0);
+  return { n, t: yes.length && (rnd(0, 1) === 0 || !no.length) ? pk(yes) : pk(no) };
+}
+// Prime or composite: n 2–100, never 1, a prime half the time. Index < 3: 5–30 (a prime, a composite, either). Then a
+// composite with no factor 2 or 5 (they look prime), a prime over 50, one with four or more pairs; after that a prime
+// half the time, else a look-prime, a many-pairs or any composite.
+const upto = (lo, hi, f) => { const a = []; for (let n = lo; n <= hi; n++) if (f(n)) a.push(n); return a; };
+const comp = n => n > 3 && !isPrime(n);
+const LOOKS = upto(4, 100, n => comp(n) && n % 2 && n % 5);
+const MANY = upto(4, 100, n => pairsOf(n).length >= 4);
+function genPrime(i) {
+  if (i < 3) return pk(upto(5, 30, [isPrime, comp, () => true][i]));
+  if (i < 6) return pk([LOOKS, upto(51, 100, isPrime), MANY][i - 3]);
+  if (rnd(0, 1)) return pk(upto(2, 100, isPrime));
+  return pk([LOOKS, MANY, upto(4, 100, comp)][rnd(0, 2)]);
+}
+// Number and shape patterns. Number rules: start 0–9, add 2–9, six numbers ending at 60 or less, a question about the
+// 10th to the 30th. Shape rules: towers, L's and steps, the first shape 1–5 squares, adding 1–4 (an L adds one or two to
+// each arm, so 2 or 4, from 1, 3 or 5); a tower stays 11 squares tall by shape 4; ask about shape 6–12.
+// Index < 3: an odd add, a shape, an even add; then shape, odd, shape, even.
+function genPatterns(i) {
+  const kind = i < 3 ? ["odd", "shape", "even"][i] : ["shape", "odd", "shape", "even"][(i - 3) % 4];
+  if (kind === "shape") for (;;) {
+    const sk = pk(["tower", "L", "steps"]);
+    const [f, d] = sk === "L" ? [pk([1, 3, 5]), pk([2, 4])] : [rnd(1, 5), rnd(1, 4)];
+    if (sk === "tower" && f + 3 * d > 11) continue;
+    return { kind, sk, f, d, q: rnd(6, 12) };
+  }
+  for (;;) {
+    const s = rnd(0, 9), d = kind === "odd" ? pk([3, 5, 7, 9]) : pk([2, 4, 6, 8]);
+    if (s + 5 * d <= 60) return { kind, s, d, k: rnd(10, 30) };
+  }
+}
+// a shape's squares, (x, y) from its bottom-left corner going up, each with the shape that added it (0: shape 1)
+function shapeCells(sk, f, d, k) {
+  const out = [];
+  if (sk === "tower") for (let i = 0; i < f + (k - 1) * d; i++) out.push({ x: 0, y: i, g: i < f ? 0 : 1 + Math.floor((i - f) / d) });
+  else if (sk === "L") {
+    const m0 = (f - 1) / 2, A = m0 + (k - 1) * d / 2, g = i => (i <= m0 ? 0 : 1 + Math.floor((i - m0 - 1) / (d / 2)));
+    out.push({ x: 0, y: 0, g: 0 });
+    for (let i = 1; i <= A; i++) { out.push({ x: 0, y: i, g: g(i) }); out.push({ x: i, y: 0, g: g(i) }); }
+  } else {
+    for (let i = 0; i < f; i++) out.push({ x: i, y: 0, g: 0 });
+    let end = f - 1;
+    for (let j = 1; j < k; j++) { for (let i = 0; i < d; i++) out.push({ x: end + i, y: j, g: j }); end += d - 1; }
+  }
+  return out;
+}
+const shapeSize = cs => ({ w: Math.max(...cs.map(c => c.x)) + 1, h: Math.max(...cs.map(c => c.y)) + 1 });
+
+// ---------- Factors and multiples (g4-factors) ----------
+// One square is one. n squares in one long row (1 × n), and under it the same squares to arrange: drag the bottom edge
+// down and they flow into that many rows; let go on a rectangle and it stays, named. Then hop by t along the long row
+// and tap Yes or No; then write how many factors.
+function lFactors(index) {
+  const f = fx(), P = f ? { n: f[0], t: f[1] } : genFactors(index), { n, t } = P;
+  const pairs = pairsOf(n), [, [a1], [a2, b2]] = pairs, all = factorsOf(n);
+  const q = Math.floor(n / t), r = n % t, isM = r === 0, hopsTo = Math.ceil(n / t);
+  const maxR = Math.min(8, Math.floor(n / 2), a2 + 2);
+  const yRow = 6, yW = 10, yF0 = 20, yF1 = 11, cA = "var(--chapter)";
+  const stages = ["pairs", "hop", "multiple", "write", "done"];
+  const L = withBoxes({
+    id: "factors", index, P, stage: "pairs", msg: null, verdict: null, typing: false,
+    R: 1, R0: 1, y0: 0, held: false, found: [], h: 0, bad: null,
+    progress() { return stageIndex(stages, this.stage); },
+    frame: fitAll,
+    live() { return !this.held ? "" : this.stage === "pairs" ? rowsWord(n, this.R) : `${this.h} ${this.h === 1 ? "hop" : "hops"}: ${this.h * t}`; },
+    probe() { return { n, t, a1, a2, all, maxR, yW, yRow, stage: this.stage, R: this.R, h: this.h, hopsTo, isM, found: this.found.slice(), hd: this.handle() }; },
+    handle() {
+      if (this.stage === "pairs") return { x: arrange(n, this.R).q / 2, y: yW + this.R };
+      return { x: this.h * t, y: yRow + 1 };
+    },
+    grab(p) {
+      const hd = this.handle();
+      if (this.stage === "pairs") { if (Math.abs(p.y - hd.y) > 1.5 || p.x < -1 || p.x > 2 * hd.x + 1) return false; }
+      else if (this.stage !== "hop" || Math.abs(p.x - hd.x) > 2 || Math.abs(p.y - hd.y) > 2.5) return false;
+      this.held = true; this.msg = null; this.R0 = this.R; this.y0 = p.y; return true;
+    },
+    drag(p) {
+      if (this.stage === "pairs") this.R = Math.max(1, Math.min(maxR, this.R0 + Math.round(p.y - this.y0)));
+      else this.h = Math.max(0, Math.min(hopsTo, Math.round(p.x / t)));
+    },
+    release(p, moved) {
+      if (!this.held) return; this.held = false;
+      if (!moved) return;
+      if (this.stage === "pairs") {
+        const R = this.R, g = arrange(n, R), want = this.found.length ? a2 : a1;
+        if (R === 1) return;
+        if (R === want) {
+          // it stays where it was made, then the squares go back to one row for the next try
+          MO.cur.set(`fd${this.found.length}`, { x: 0, y: yW, r: 0 });
+          this.found.push(R); this.R = 1;
+          if (this.found.length === 2) this.stage = "hop";
+          return;
+        }
+        if (g.L) this.msg = `${R} rows leave ${g.L} over: not a rectangle.`;
+        else if (this.found.includes(R)) this.msg = `${R} rows: you found that one. Try more rows.`;
+        else this.msg = `${R} rows make one too, but there's one with fewer rows.`;
+        return;
+      }
+      if (this.h === 0) return;
+      if (this.h < hopsTo) { this.msg = `${n - this.h * t} left on the row: hop on to its end.`; return; }
+      this.stage = "multiple";
+    },
+    act(a) {
+      if (this.stage === "multiple" && (a === "yes" || a === "no")) {
+        if ((a === "yes") === isM) { this.stage = "write"; this.active = "R"; this.typing = true; this.msg = null; this.bad = null; return; }
+        this.bad = a;
+        this.msg = isM ? `Count by ${t}s: you land right on ${n}.` : `Count by ${t}s: ${t * q}, then ${t * (q + 1)}. You skip over ${n}, with ${r} left.`;
+        return;
+      }
+      if (boxAct(this, a)) return;
+      if (a !== "check" || this.stage !== "write") return;
+      if (!this.vals.R) { this.msg = "Type the number in the box."; return; }
+      const v = +this.vals.R, want = all.length, sqr = a2 === b2, np = pairs.length;
+      if (v === want) { this.verdict = "right"; this.stage = "done"; this.typing = false; this.msg = null; return; }
+      this.verdict = "wrong";
+      this.msg = slip(want, v, [
+        [np, `There are ${np} pairs, but each pair has two factors${sqr ? `, except ${a2} × ${a2}, which uses ${a2} once` : ""}.`],
+        ...(sqr ? [[2 * np, `${a2} × ${a2} uses the same factor twice. Count ${a2} only once.`]] : []),
+        [want - 2, `1 and ${n} are factors too: 1 × ${n} = ${n}.`],
+      ]) || "Count the numbers in the list.";
+    },
+    scene() {
+      const st = this.stage, done = st === "done";
+      // the long row, named 1 × n
+      for (let j = 0; j < n; j++) rect(`lr${j}`, j, yRow, 1, 1, { fill: "var(--tint)", c: cA });
+      lab("lrn", `1 × ${n}`, "right", n, yRow + 0.5, "say");
+      // the squares to arrange, a handle on their bottom edge
+      if (st === "pairs") {
+        const g = arrange(n, this.R);
+        for (let j = 0; j < n; j++) { const s = g.pos(j); cell(`w${j}`, s.x, yW + s.y, { over: s.over }); }
+        handle("hd", g.q / 2, yW + this.R, this.held);
+      }
+      // the rectangles found, each named rows × in a row
+      const fy = st === "pairs" ? yF0 : yF1;
+      let fxx = 0;
+      this.found.forEach((R, i) => {
+        const w = n / R, v = moveTo(`fd${i}`, fxx, fy, 0);
+        for (let j = 0; j < n; j++) rect(`fd${i}_${j}`, v.x + (j % w), v.y + Math.floor(j / w), 1, 1, { fill: "var(--tint)", c: cA });
+        if (!moving(`fd${i}`)) lab(`fdn${i}`, `${R} × ${w}`, "right", fxx + w, fy + R / 2, "say");
+        fxx = Math.ceil((fxx + w + 7) / 5) * 5;
+      });
+      // hops by t under the long row, counting
+      if (st !== "pairs") {
+        for (let j = 0; j < this.h; j++) {
+          const a = j * t;
+          path(`hop${j}`, `M${sq(a)} ${sq(yRow + 1)}Q${sq(a + t / 2)} ${sq(yRow + 4)} ${sq(a + t)} ${sq(yRow + 1)}`, { c: cA, live: this.held });
+          text(`hopn${j}`, (j + 1) * t, a + t, yRow + 2.2, "small", { c: cA });
+          reach(a, a + t, yRow + 2.6);
+        }
+        if (st === "hop") { handle("hh", this.h * t, yRow + 1, this.held); reach(0, hopsTo * t + 1, yRow + 2.6); }
+      }
+      // the record, 3 rows under the picture
+      const ry = fy + a2 + 3;
+      const l1 = [{ n }, { op: "=" }, { n: 1 }, { op: "×" }, { n }];
+      this.found.forEach(R => l1.push({ op: "=" }, { n: R }, { op: "×" }, { n: n / R }));
+      mrow("r1", l1, 0, ry);
+      let y = ry + 3;
+      if (st === "multiple") { choices("yn", 0, y - 1, [["yes", "Yes"], ["no", "No"]], this.bad); y += 3; }
+      if (st === "write" || done) {
+        mrow("r2", [{ n }, { op: "=" }, { n: t }, { op: "×" }, { n: q }, ...(r ? [{ op: "+" }, { n: r }] : [])], 0, y); y += 3;
+        numList("r3", all, 0, y); y += 3;
+        mrow("r4", [{ w: "factors of" }, { n }, { op: "=" }, done ? { n: all.length, c: cA } : boxTok(this, 1)], 0, y); y += 3;
+      }
+      if (st === "write") block("check", 0, y - 1, 7, "Check", "check");
+      if (done) block("next", 0, y - 1, 10, "Next problem", "next");
+      return {
+        pairs: [this.found.length ? "Make another rectangle." : "Make a rectangle with the squares.", "Drag the bottom edge down."],
+        hop: [`Is ${n} a multiple of ${t}?`, `Hop by ${t}s along the row.`],
+        multiple: [`Is ${n} a multiple of ${t}?`, "Tap Yes or No."],
+        write: ["How many factors are there?", "Both numbers of every pair."],
+        done: ["Each rectangle is a factor pair.", ""],
+      }[st];
+    },
+  });
+  return L;
+}
+
+// ---------- Prime or composite (g4-prime) ----------
+// One square is one. n squares in rows of ten, named n. Drag the bottom edge down to try 2 rows, 3 rows, …: they flow
+// into that many rows, leftovers dashed; let go on a rectangle and it turns green and its pair is written. Only the try
+// is drawn. Past the square root the tries stop. Then tap Prime or Composite.
+function lPrime(index) {
+  const f = fx(), n = f ? f[0] : genPrime(index);
+  const pairs = pairsOf(n), prime = pairs.length === 1, Rstop = Math.floor(Math.sqrt(n)) + 1;
+  const rects = pairs.slice(1).map(p => p[0]), top = 6, cA = "var(--chapter)";
+  const stages = ["try", "choice", "done"];
+  const L = {
+    id: "prime", index, P: { n }, stage: "try", msg: null, note: null,
+    R: 0, R0: 2, y0: 0, held: false, found: [], lit: null, bad: null,
+    progress() { return stageIndex(stages, this.stage); },
+    frame: fitAll,
+    live() { return this.held ? rowsWord(n, this.R) : ""; },
+    probe() { return { n, prime, Rstop, rects, top, stage: this.stage, R: this.R, found: this.found.slice(), hd: this.handle() }; },
+    handle() {
+      if (!this.R) return { x: Math.min(n, 10) / 2, y: top + Math.ceil(n / 10) };
+      return { x: arrange(n, this.R).q / 2, y: top + this.R };
+    },
+    grab(p) {
+      if (this.stage !== "try") return false;
+      const hd = this.handle();
+      if (Math.abs(p.y - hd.y) > 1.5 || p.x < -1 || p.x > 2 * hd.x + 1) return false;
+      this.held = true; this.msg = null; this.note = null; this.lit = null;
+      if (!this.R) this.R = 2;
+      this.R0 = this.R; this.y0 = p.y; return true;
+    },
+    drag(p) { this.R = Math.max(2, Math.min(Rstop, this.R0 + Math.round(p.y - this.y0))); },
+    release(p, moved) {
+      if (!this.held) return; this.held = false;
+      const R = this.R, g = arrange(n, R);
+      if (R === Rstop) {
+        const miss = rects.find(a => !this.found.includes(a));
+        if (miss) { this.msg = `You passed one: ${miss} rows make a rectangle. Let go on it.`; return; }
+        this.stage = "choice"; return;
+      }
+      if (g.L) { this.note = `${R} rows leave ${g.L} over: not a rectangle.`; return; }
+      if (!this.found.includes(R)) { this.found.push(R); this.found.sort((u, v) => u - v); }
+      this.lit = R;
+    },
+    act(a) {
+      if (this.stage !== "choice" || (a !== "prime" && a !== "composite")) return;
+      if ((a === "prime") === prime) { this.stage = "done"; this.msg = null; this.bad = null; return; }
+      this.bad = a;
+      this.msg = !prime ? `${n} makes ${rects[0]} rows of ${n / rects[0]}. More than one rectangle: composite.`
+        : n === 2 ? "2 makes only one rectangle, 1 × 2. Prime." : "Only 1 row made a rectangle. Prime.";
+    },
+    scene() {
+      const st = this.stage, done = st === "done";
+      // the squares: rows of ten, or the rows being tried (only the try is drawn)
+      const g = this.R ? arrange(n, this.R) : null;
+      for (let j = 0; j < n; j++) {
+        const s = g ? g.pos(j) : { x: j % 10, y: Math.floor(j / 10), over: false };
+        cell(`p${j}`, s.x, top + s.y, { over: s.over, green: this.lit != null && this.lit === this.R });
+      }
+      const w = g ? g.q : Math.min(n, 10);
+      lab("pn", String(n), "right", Math.max(w, g && g.L ? g.L : 0), top + 0.5, "maths");
+      if (st === "try") { handle("hd", w / 2, top + (g ? g.R : Math.ceil(n / 10)), this.held); reach(0, Math.ceil(n / 2) + 2 + 2 * nd(n), top); }
+      // the record, 3 rows under the picture: every pair, three to a line
+      const bottom = top + Math.max(Math.ceil(n / 10), Rstop + 1), ry = bottom + 3;
+      const prs = [[1, n], ...this.found.map(R => [R, n / R])];
+      let y = ry;
+      for (let i = 0; i < prs.length; i += 3) {
+        const toks = i === 0 ? [{ n }] : [{ gap: 2 * nd(n) }];
+        prs.slice(i, i + 3).forEach(([u, v]) => toks.push({ op: "=" }, { n: u }, { op: "×" }, { n: v }));
+        mrow(`pr${i}`, toks, 0, y); y += 3;
+      }
+      if (st === "choice") { choices("pc", 0, y - 1, [["prime", "Prime"], ["composite", "Composite"]], this.bad); y += 3; }
+      if (done) { mrow("pw", [{ w: prime ? "prime" : "composite", c: cA }], -0.6, y); y += 3; block("next", 0, y - 1, 10, "Next problem", "next"); }
+      if (st === "try") return [this.found.length ? "Keep trying more rows." : `Can ${n} squares make a rectangle?`, this.note || "Drag the bottom edge down: 2 rows, 3 rows, …"];
+      if (st === "choice") return [`Is ${n} prime or composite?`, "From here, any rectangle is one you've found, turned round."];
+      return [prime ? "Only one rectangle: prime." : "More than one rectangle: composite.", ""];
+    },
+  };
+  return L;
+}
+
+// ---------- Number and shape patterns (g4-patterns) ----------
+// A number rule on a number line (a square is 1): hop each step out from the last number, tap the odd numbers, then say
+// whether a far number is odd or even. A shape rule (a square is a square): build shape 4, drag out copies of the new
+// squares to reach a far shape, write its squares.
+function lPatterns(index) {
+  const P = genPatterns(index);
+  return P.kind === "shape" ? lShapes(index, P) : lNumbers(index, P);
+}
+function lNumbers(index, P) {
+  const { s, d, k } = P, vals = [0, 1, 2, 3, 4, 5].map(j => s + j * d), cA = "var(--chapter)";
+  const target = vals.some(v => v % 2) ? 1 : 0, tw = target ? "odd" : "even", want = vals.filter(v => v % 2 === target);
+  const ans = (s + (k - 1) * d) % 2 ? "odd" : "even", sp = s % 2 ? "odd" : "even", other = s % 2 ? "even" : "odd";
+  const ly = 11, ny = ly - 3, stages = ["hop", "tap", "choice", "done"];
+  const L = {
+    id: "patterns", index, P, stage: "hop", msg: null, n: 1, len: 0, held: false, ringed: new Set(), bad: null,
+    progress() { return stageIndex(stages, this.stage); },
+    frame: fitAll,
+    live() { return this.held && this.len ? `+${this.len} = ${vals[this.n - 1] + this.len}` : ""; },
+    probe() { return { kind: P.kind, s, d, k, vals, want, ans, ly, ny, stage: this.stage, n: this.n, hd: this.handle() }; },
+    handle() { return { x: vals[this.n - 1] + this.len, y: ly }; },
+    grab(p) {
+      if (this.stage !== "hop") return false;
+      const hd = this.handle();
+      if (Math.abs(p.x - hd.x) > 1.5 || Math.abs(p.y - hd.y) > 2) return false;
+      this.held = true; this.msg = null; return true;
+    },
+    drag(p) { const last = vals[this.n - 1]; this.len = Math.max(0, Math.min(15, 60 - last, Math.round(p.x - last))); },
+    release() {
+      if (!this.held) return; this.held = false;
+      const len = this.len; this.len = 0;
+      if (!len) return;
+      if (len !== d) { this.msg = `That hop is ${len}. The rule adds ${d}.`; return; }
+      this.n++;
+      if (this.n === 6) this.stage = "tap";
+    },
+    tap(p) {
+      if (this.stage !== "tap" || p.y < ny - 1.6 || p.y > ly + 0.8) return false;
+      const reachX = Math.max(0.9, Math.min(d / 2, 1.5)), v = vals.find(u => Math.abs(p.x - u) <= reachX);
+      if (v == null) return false;
+      if (v % 2 !== target) { this.msg = v === 0 ? "0 is even." : `${v} is even: it's ${v / 2} ${v === 2 ? "two" : "twos"}.`; return true; }
+      this.ringed.add(v); this.msg = null;
+      if (want.every(u => this.ringed.has(u))) this.stage = "choice";
+      return true;
+    },
+    act(a) {
+      if (this.stage !== "choice" || (a !== "odd" && a !== "even")) return;
+      if (a === ans) { this.stage = "done"; this.msg = null; this.bad = null; return; }
+      this.bad = a;
+      const A = cap(sp), B = other;
+      this.msg = d % 2 ? `${A}, ${B}, ${sp}, ${B}: it repeats every 2, so the ${ord(k)} is like the ${k % 2 ? "1st" : "2nd"}.`
+        : `${A}, ${sp}, ${sp}: adding ${d} keeps ${sp} numbers ${sp}.`;
+    },
+    scene() {
+      const st = this.stage, done = st === "done";
+      // the number line, 0 to 60, a strong tick and its number every 5
+      line("nl", 0, ly, 60, ly);
+      for (let x = 0; x <= 60; x++) {
+        const big = x % 5 === 0;
+        line(`tk${x}`, x, ly - (big ? 0.5 : 0.25), x, ly + (big ? 0.5 : 0.25), { c: big ? "var(--ink)" : "var(--ink3)" });
+        if (big) text(`tn${x}`, x, x, ly + 1.4, "small");
+      }
+      // the numbers landed, the hops between them
+      for (let j = 0; j < this.n; j++) {
+        text(`nv${j}`, vals[j], vals[j], ny, "say", { c: j ? cA : null });
+        if (j) path(`nh${j}`, `M${sq(vals[j - 1])} ${sq(ly)}Q${sq(vals[j - 1] + d / 2)} ${sq(ly - 3)} ${sq(vals[j])} ${sq(ly)}`, { c: cA });
+      }
+      const rr = v => (nd(v) > 1 ? 1.25 : 1);
+      if (st === "hop") {
+        ring("start", s, ny, rr(s), "var(--ink)");
+        const last = vals[this.n - 1], len = this.len;
+        if (len) path(`hl${len}`, `M${sq(last)} ${sq(ly)}Q${sq(last + len / 2)} ${sq(ly - 3)} ${sq(last + len)} ${sq(ly)}`, { c: cA, live: true });
+        handle("hd", last + len, ly, this.held);
+      }
+      for (const v of this.ringed) ring(`rg${v}`, v, ny, rr(v));
+      // the record
+      let y = ly + 5;
+      if (st !== "hop") { numList("rl", vals, 0, y, st === "tap" ? this.ringed : new Set(want), "…"); y += 3; }
+      if (st === "choice" || done) { mrow("rw", [{ w: vals.map(v => (v % 2 ? "odd" : "even")).join(", ") }], -0.6, y); y += 3; }
+      if (st === "choice") { choices("oe", 0, y - 1, [["odd", "Odd"], ["even", "Even"]], this.bad); y += 3; }
+      if (done) { mrow("ra", [{ w: `the ${ord(k)} number is ${ans}`, c: cA }], -0.6, y); y += 3; block("next", 0, y - 1, 10, "Next problem", "next"); }
+      return {
+        hop: [`Start at ${s}. Add ${d}.`, "Drag each hop out from the last number."],
+        tap: [`Tap the ${tw} numbers.`, ""],
+        choice: [`Will the ${ord(k)} number be odd or even?`, "Tap one."],
+        done: [d % 2 ? `Adding ${d} turns odd into even and back.` : `Adding ${d} keeps ${sp} numbers ${sp}.`, ""],
+      }[st];
+    },
+  };
+  return L;
+}
+function lShapes(index, P) {
+  const { sk, f, d, q } = P, cA = "var(--chapter)", ans = f + (q - 1) * d, n4 = f + 3 * d;
+  const C = [1, 2, 3, 4].map(k => shapeCells(sk, f, d, k)), S = C.map(shapeSize);
+  const sx = [0]; for (let k = 1; k < 4; k++) sx.push(Math.ceil((sx[k - 1] + S[k - 1].w + 3) / 5) * 5);
+  const yb = 6 + S[3].h + 2, yr = yb + 4, bw = S[3].w + 2, bh = S[3].h + 2;
+  const pre = new Set(C[2].map(c => `${c.x},${c.y}`));
+  const stages = ["build", "copies", "write", "done"];
+  const L = withBoxes({
+    id: "patterns", index, P, stage: "build", msg: null, verdict: null, typing: false,
+    added: new Set(), c: 3, c0: 3, x0: 0, held: false,
+    progress() { return stageIndex(stages, this.stage); },
+    frame: fitAll,
+    count() { return C[2].length + this.added.size; },
+    live() {
+      if (this.stage === "build") return `${this.count()} squares`;
+      return this.held ? `shape ${this.c + 1}: ${f} + ${this.c} × ${d} = ${f + this.c * d}` : "";
+    },
+    probe() {
+      const free = [];
+      for (let x = 0; x < bw; x++) for (let y = 0; y < bh; y++) if (!pre.has(`${x},${y}`)) free.push({ x: sx[3] + x + 0.5, y: yb - y - 0.5, k: `${x},${y}` });
+      const nw = C[3].filter(c => c.g === 3).map(c => ({ x: sx[3] + c.x + 0.5, y: yb - c.y - 0.5 }));
+      return { kind: "shape", sk, f, d, q, ans, n4, stage: this.stage, count: this.count(), c: this.c, free, nw, hd: this.handle() };
+    },
+    handle() { return { x: f + this.c * d, y: yr + 0.5 }; },
+    tap(p) {
+      if (this.stage !== "build") return false;
+      const x = Math.floor(p.x - sx[3]), y = Math.floor(yb - p.y);
+      if (x < 0 || x >= bw || y < 0 || y >= bh) return false;
+      const key = `${x},${y}`;
+      if (pre.has(key)) return true;
+      if (this.added.has(key)) this.added.delete(key); else this.added.add(key);
+      this.msg = null; return true;
+    },
+    grab(p) {
+      if (this.stage !== "copies") return false;
+      const hd = this.handle();
+      if (Math.abs(p.x - hd.x) > 2 || Math.abs(p.y - hd.y) > 2) return false;
+      this.held = true; this.msg = null; this.c0 = this.c; this.x0 = p.x; return true;
+    },
+    drag(p) { this.c = Math.max(1, Math.min(q + 1, this.c0 + Math.round((p.x - this.x0) / d))); },
+    release(p, moved) {
+      if (!this.held) return; this.held = false;
+      if (!moved) return;
+      const s = this.c + 1;
+      if (s === q) { this.stage = "write"; this.active = "R"; this.typing = true; return; }
+      const k = Math.abs(q - s);
+      this.msg = s < q ? `That's shape ${s}. ${k === 1 ? "One more copy." : `${k} more copies.`}` : `That's shape ${s}. ${k === 1 ? "One copy too many." : `${k} copies too many.`}`;
+    },
+    act(a) {
+      if (a === "check" && this.stage === "build") {
+        if (this.count() === n4) { this.stage = "copies"; this.msg = null; return; }
+        this.msg = `Shape 4 has ${d} more than shape 3: ${n4}.`; return;
+      }
+      if (boxAct(this, a)) return;
+      if (a !== "check" || this.stage !== "write") return;
+      if (!this.vals.R) { this.msg = "Type the number in the box."; return; }
+      const v = +this.vals.R;
+      if (v === ans) { this.verdict = "right"; this.stage = "done"; this.typing = false; this.msg = null; return; }
+      this.verdict = "wrong";
+      this.msg = slip(ans, v, [
+        [q * d, `${q} × ${d} forgets that shape 1 starts with ${f}.`],
+        [ans - d, `${ans - d} is shape ${q - 1}. Shape ${q} has one more copy.`],
+        [ans + d, `${ans + d} is shape ${q + 1}. Shape ${q} has one copy fewer.`],
+      ]) || `Count the row: ${f}, and ${q - 1} copies of ${d}.`;
+    },
+    scene() {
+      const st = this.stage, done = st === "done", build = st === "build";
+      // shapes 1–3 (and 4 once built) side by side, the newest squares tinted
+      for (let k = 0; k < 4; k++) {
+        if (k === 3 && build) continue;
+        for (const c of C[k]) rect(`s${k}_${c.x}_${c.y}`, sx[k] + c.x, yb - 1 - c.y, 1, 1, { fill: c.g === k && k ? "var(--tint)" : "var(--paper)", c: cA });
+        text(`sl${k}`, `shape ${k + 1}`, sx[k] + S[k].w / 2, yb + 1, "small");
+      }
+      // shape 4 being built in its place: shape 3's squares, and the ones tapped in
+      if (build) {
+        for (const c of C[2]) rect(`b_${c.x}_${c.y}`, sx[3] + c.x, yb - 1 - c.y, 1, 1, { fill: "var(--paper)", c: cA });
+        for (const key of this.added) { const [x, y] = key.split(",").map(Number); rect(`a_${key}`, sx[3] + x, yb - 1 - y, 1, 1, { fill: "var(--tint)", c: cA }); }
+        text("sl3", "shape 4", sx[3] + S[2].w / 2, yb + 1, "small");
+        reach(sx[3], sx[3] + bw, yb);
+      }
+      // the row of copies: shape 1's squares, then the new squares of each shape after it
+      if (!build) {
+        for (let i = 0; i < f; i++) rect(`cr${i}`, i, yr, 1, 1, { fill: "var(--paper)", c: cA });
+        for (let j = 0; j < this.c; j++) {
+          for (let i = 0; i < d; i++) rect(`cc${j}_${i}`, f + j * d + i, yr, 1, 1, { fill: j % 2 ? "var(--tint-strong)" : "var(--tint)", c: cA, live: j >= 3 });
+          text(`cn${j}`, j + 2, f + j * d + d / 2, yr + 2, "small", { c: cA, live: j >= 3 });
+        }
+        text("cn1", 1, f / 2, yr + 2, "small");
+        if (st === "copies") { handle("hd", f + this.c * d, yr + 0.5, this.held); reach(0, f + (q + 2) * d + 1, yr + 1); }
+      }
+      // the record, 3 rows under the picture
+      let y = (build ? yb + 1 : yr + 2) + 3;
+      if (!build) { numList("rl", [1, 2, 3, 4].map(k => f + (k - 1) * d), 0, y, new Set(), "…"); y += 3; }
+      if (st === "write" || done) { mrow("rq", [{ w: "shape" }, { n: q }, { op: "=" }, done ? { n: ans, c: cA } : boxTok(this, nd(ans)), { w: "squares" }], 0, y); y += 3; }
+      if (done) { mrow("rs", [{ n: f }, { op: "+" }, { n: q - 1 }, { op: "×" }, { n: d }, { op: "=" }, { n: ans }], 0, y); y += 3; }
+      if (build || st === "write") block("check", 0, y - 1, 7, "Check", "check");
+      if (done) block("next", 0, y - 1, 10, "Next problem", "next");
+      return {
+        build: ["Build shape 4.", `Tap squares to add them. Each shape has ${d} more than the last.`],
+        copies: [`How many squares will shape ${q} have?`, "Drag out copies of the new squares."],
+        write: [`Write how many squares shape ${q} has.`, ""],
+        done: [`${q - 1} more shapes add ${q - 1} × ${d} to the first one.`, ""],
+      }[st];
+    },
+  });
+  return L;
+}
+
+// ---------- lessons, the bar ----------
+let lesson;
+const LESSONS = {
+  factors: { name: "Factors and multiples", make: i => lFactors(i) },
+  prime: { name: "Prime or composite", make: i => lPrime(i) },
+  patterns: { name: "Number and shape patterns", make: i => lPatterns(i) },
+};
+let FIXED = null;   // ?p=20,3 (Factors: n, t) or ?p=51 (Prime: n) fixes the first problem
+const IDX = {};
+const pick = document.getElementById("pick");
+pick.innerHTML = Object.entries(LESSONS).map(([id, e]) => `<option value="${id}">${esc(e.name)}</option>`).join("");
+function start(id, index) {
+  if (!LESSONS[id]) id = "factors";
+  if (index != null) IDX[id] = index;
+  token++; MO.cur.clear(); MO.tw.clear(); MO.emerge.clear(); MO.delay.clear(); born.clear();
+  KS = 1;
+  lesson = LESSONS[id].make(IDX[id] || 0);
+  pick.value = id;
+  drawn = new Set(); keys.blur(); keys.value = "";
+  render(); frame(lesson.frame(), true);
+  try { localStorage.setItem("g4ch3-lesson", id); } catch (err) {}
+}
+pick.onchange = () => start(pick.value);
+document.getElementById("fresh").onclick = () => leave();
+function leave() { IDX[lesson.id] = (IDX[lesson.id] || 0) + 1; start(lesson.id); }
+let first = "factors", firstI = 0;
+try {
+  const u = new URLSearchParams(location.search);
+  first = u.get("l") || localStorage.getItem("g4ch3-lesson") || "factors";
+  firstI = +(u.get("i") || 0);
+  FIXED = u.get("p");
+  if (u.get("theme")) document.documentElement.dataset.theme = u.get("theme");
+} catch (err) {}
+start(first, firstI);
+</script>

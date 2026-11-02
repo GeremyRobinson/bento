@@ -702,9 +702,15 @@ function lPartial(index, four) {
 
 // Two-digit times two-digit (the web's): index < 3 a 11–29 and b 11–19, then a 12–99 and b 12–49, never a whole ten.
 // The bigger number goes across, the smaller down.
+// The biggest rectangles are capped so the camera never steps back past 55% (open question 4 said about 60%): a draw
+// whose best plan would go further is drawn again (it drops some of 9_ × 4_).
+const mult2Tell = (a, b) => `A theater has ${b} rows of ${a} seats. How many seats are there?`;
 function genMult2(i) {
-  const [a, b] = i < 3 ? [nt(11, 29), nt(11, 19)] : [nt(12, 99), nt(12, 49)];
-  return { a: Math.max(a, b), b: Math.min(a, b), story: i >= 3 && rnd(0, 2) === 0 };
+  for (;;) {
+    const [x, y] = i < 3 ? [nt(11, 29), nt(11, 19)] : [nt(12, 99), nt(12, 49)];
+    const a = Math.max(x, y), b = Math.min(x, y), story = i >= 3 && rnd(0, 2) === 0;
+    if (planMult2(a, b, story ? mult2Tell(a, b).length : 34).s >= 0.55) return { a, b, story };
+  }
 }
 // Where the record goes (beside the rectangle or under it) and how big the words are (KS 1 or 2): the plan that shows
 // the rectangle biggest with its words still at least 20 points on the screen.
@@ -729,7 +735,7 @@ function planMult2(a, b, sayLen) {
 function lMult2(index) {
   const P = genMult2(index), { a, b, story } = P;
   const t = Math.floor(a / 10), u = a % 10, s = Math.floor(b / 10), v = b % 10, T = 10 * t, S = 10 * s, total = a * b;
-  const tell = `A theater has ${b} rows of ${a} seats. How many seats are there?`;
+  const tell = mult2Tell(a, b);
   const plan = planMult2(a, b, story ? tell.length : 34), K = KS = plan.K;
   const x0 = 5 * K, top = 10 * K, hY = 7 * K, hX = K;
   // the four parts: tens × tens, tens × ones, ones × tens, ones × ones (across × down), each with its place on the paper
