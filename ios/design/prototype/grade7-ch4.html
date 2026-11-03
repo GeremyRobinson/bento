@@ -1137,6 +1137,8 @@ function lDecimal(index) {
       if (left || st === "share") text(`stn${left}_${sp}`, `${left} ${left === 1 ? PNAME[sp][0] : PNAME[sp][1]}`, SX0 + 2.5 * p, LY + sh + 1, "small", { live: grabbed });
       // the share rows and their columns: names over them, each share's pieces in a row, what's left under them
       const shown = st === "share" ? j + 1 : j;
+      // what's left in each column is noted a clear square below its lowest share
+      const LB = rowY(d) - p + 2;
       for (let c = 0; c < shown; c++) {
         const pl = places[c], x = colX(c), cur = st === "share" && c === j, q = cur ? this.k : pl.q;
         lab(`ph${c}`, PLACE[pl.p], "above", LY - 0.3, x + 4.5 * p, "small");
@@ -1145,14 +1147,14 @@ function lDecimal(index) {
           const ex = x + q * p;
           line(`edge`, ex, LY - 0.5, ex, rowY(d) - p + 0.5, { c: "var(--chapter)", live: true });
           handleDot("hd", ex, rowY(d) - p + 1.2);
-        } else text(`lf${c}`, `${pl.left} left`, x + 4.5 * p, rowY(d) - p + 1.2, "small", { c: "var(--ink2)" });
+        } else text(`lf${c}`, `${pl.left} left`, x + 4.5 * p, LB, "small", { c: "var(--ink2)" });
       }
       if (!shown) for (let r = 0; r < d; r++) line(`rl${r}`, colX(0), rowY(r) + p, colX(0) + 9 * p, rowY(r) + p, { c: "var(--ink3)", dash: true });
       // the key, and the readout while the edge moves, beside the picture
       text(`key${p}`, p === 1 ? "1 square = 1 piece" : "4 squares = 1 piece", RX, LY - 1.3, "small", { anchor: "start" });
       if (grabbed && this.live()) text("ro", this.live(), RX, LY + 1, "small", { anchor: "start", c: "var(--chapter)", live: true });
       // the long division bracket: d)n.000, a 0 for each place opened, the digits found over it
-      const PB = Math.max(rowY(d) - p + 1.6, LY + sh + 1.5), QY = Math.ceil(PB) + 3, DY = QY + 2;
+      const PB = Math.max(LB + 1, LY + sh + 1.5), QY = Math.ceil(PB) + 2, DY = QY + 2;
       const dS = String(d), nS = String(n), bx = 2 * dS.length, PX = bx + 1 + 2 * nS.length;
       digits("dv", dS, bx, DY);
       path("brk", `M${sq(bx + 0.3)} ${sq(DY - 1.2)}Q${sq(bx + 1)} ${sq(DY)} ${sq(bx + 0.3)} ${sq(DY + 1.1)}`, { bb: [bx, DY - 1.2, bx + 1, DY + 1.1] });
@@ -1168,9 +1170,11 @@ function lDecimal(index) {
         const a = rep.from + 1 - (n >= d ? 1 : 0), b = rep.to + 1 - (n >= d ? 1 : 0);
         line(`qbar`, PX + 2 * a + 0.2, QY - 1.1, PX + 2 * b - 0.2, QY - 1.1, { c: "var(--chapter)" });
         // the leftover that came back, and where it was before: both ring
-        const lx = c => colX(c) + 4.5 * p, ly = rowY(d) - p + 1.2;
-        ring("rg2", lx(rep.to), ly, 2.2);
-        if (rep.from >= 0) ring("rg1", lx(rep.from), ly, 2.2); else ring("rg1", bx + 1 + nS.length, DY, Math.max(1.3, nS.length));
+        // a ring that hugs the words it rings: an oval round "4 left", or round the dividend's digits
+        const oval = (k, cx, cy, rx, ry) => path(k, `M${sq(cx + rx)} ${sq(cy)}A${sq(rx)} ${sq(ry)} 0 1 1 ${sq(cx + rx)} ${sq(cy - 0.01)}`, { c: "var(--chapter)", bb: [cx - rx, cy - ry, cx + rx, cy + ry] });
+        const lx = c => colX(c) + 4.5 * p, rx = c => String(places[c].left).length * 0.28 + 1.9;
+        oval("rg2", lx(rep.to), LB, rx(rep.to), 0.8);
+        if (rep.from >= 0) oval("rg1", lx(rep.from), LB, rx(rep.from), 0.8); else oval("rg1", bx + 1 + nS.length, DY, nS.length + 0.5, 1.2);
       }
       // the record beside the bracket: n/d = (0.333… =) the decimal
       if (seen) {
