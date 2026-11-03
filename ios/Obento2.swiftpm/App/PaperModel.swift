@@ -64,36 +64,53 @@ struct ChapterGroup {
     /// its name down. Groups are two blocks apart. Start is the frame's tag, not a block under it (G 18 Oct).
     static let pitch = Size(4 * Paper.unit, 3 * Paper.unit)
 
+    /// Where slot i's frame sits: lessons fill rows of `columns`; the chapter's test (slot `lessons.count`) takes the
+    /// next slot, or, when the last row is full, sits at that row's end as one more card (G 3 Nov: a test kept a whole
+    /// empty row for itself until it opened, which left holes in the map).
+    func slot(_ i: Int) -> Point {
+        let n = lessons.count
+        let (row, col) = i == n && n > 0 && n % columns == 0 ? ((n - 1) / columns, columns) : (i / columns, i % columns)
+        return Point(origin.x + Double(col) * Self.pitch.width, origin.y + Paper.unit + Double(row) * Self.pitch.height)
+    }
+    /// Lesson rows (the test never adds one).
+    var rows: Int { max(1, (lessons.count + columns - 1) / columns) }
+    /// From the title's row to the end of the last row's names.
+    var height: Double { Paper.unit + Double(rows) * Self.pitch.height }
+
     var pieces: [Piece] {
-        lessons.enumerated().map { i, l in
-            Piece(id: l.id, name: l.name, chapter: chapter,
-                  at: Point(origin.x + Double(i % columns) * Self.pitch.width, origin.y + Paper.unit + Double(i / columns) * Self.pitch.height))
+        lessons.enumerated().map { i, l in Piece(id: l.id, name: l.name, chapter: chapter, at: slot(i)) }
+    }
+
+    /// The map lays itself out (G 3 Nov, "two packed columns"): chapters in order, each under the one before in
+    /// whichever column is shorter, two blocks apart, so the map has no holes whatever size the chapters are.
+    static func packed(_ chapters: [(Chapter, [(id: String, name: String)])], columns: Int = 3) -> [ChapterGroup] {
+        // a column is a row of lessons plus the test's card at its end, then two blocks to the next column
+        let colX = [0, Double(columns + 1) * pitch.width - Paper.unit + 2 * Paper.unit]
+        var y = [0.0, 0.0]
+        return chapters.map { chapter, lessons in
+            let c = y[1] < y[0] ? 1 : 0
+            let g = ChapterGroup(chapter: chapter, origin: Point(colX[c], y[c]), columns: columns, lessons: lessons)
+            y[c] += g.height + 2 * Paper.unit
+            return g
         }
     }
 }
 
-/// 5th grade on the paper: the 17 lessons of specs/k12/grade5.md in four chapters, laid out two by two as v27 does, and
+/// 5th grade on the paper: the 17 lessons of specs/k12/grade5.md in chapters, packed into two columns (G 3 Nov), and
 /// Geometry's two (added 1 Nov 2026) under Measurement.
 enum Map {
     static let grade = (number: "5", name: "5th grade")
-    static let groups: [ChapterGroup] = [
-        ChapterGroup(chapter: .whole, origin: Point(0, 0), columns: 3, lessons: [
-            ("g5-mult2", "Multiply two-digit numbers"), ("g5-divide", "Long division"), ("g5-order", "Order of operations")]),
-        ChapterGroup(chapter: .decimals, origin: Point(1300, 0), columns: 3, lessons: [
-            ("g5-pow10", "Multiply by 10, 100, 1000"), ("g5-round", "Rounding decimals"), ("g5-compare", "Comparing decimals"),
-            ("g5-adddec", "Adding decimals"),
-            ("g5-multdec", "Multiplying decimals"), ("g5-divdec", "Dividing by a decimal")]),
-        ChapterGroup(chapter: .fractions, origin: Point(0, 900), columns: 3, lessons: [
-            ("add", "Adding fractions"), ("sub", "Subtracting fractions"), ("mix", "Adding and subtracting"),
-            ("g5-multfrac", "Multiplying fractions"), ("g5-improper", "Mixed numbers to fractions"),
-            ("g5-fracdiv", "Fractions as division"), ("g5-fracof", "Fraction of a number"), ("g5-unitdiv", "Dividing by a unit fraction")]),
-        ChapterGroup(chapter: .measurement, origin: Point(1300, 1200), columns: 3, lessons: [
-            ("g5-volume", "Volume of a box"), ("g5-units", "Converting units")]),
-        // added 1 Nov 2026 (design/grade5.md): under Measurement, two blocks below its row's names (its frames end at
-        // 1500, their names at 1600; groups are two blocks apart). 1500 put Geometry's title on Measurement's names.
-        ChapterGroup(chapter: .geometry, origin: Point(1300, 1800), columns: 3, lessons: [
-            ("g5-coord", "Points on a grid"), ("g5-shapes", "Sorting shapes")]),
-    ]
+    static let groups: [ChapterGroup] = ChapterGroup.packed([
+        (.whole, [("g5-mult2", "Multiply two-digit numbers"), ("g5-divide", "Long division"), ("g5-order", "Order of operations")]),
+        (.decimals, [("g5-pow10", "Multiply by 10, 100, 1000"), ("g5-round", "Rounding decimals"), ("g5-compare", "Comparing decimals"),
+                     ("g5-adddec", "Adding decimals"), ("g5-multdec", "Multiplying decimals"), ("g5-divdec", "Dividing by a decimal")]),
+        (.fractions, [("add", "Adding fractions"), ("sub", "Subtracting fractions"), ("mix", "Adding and subtracting"),
+                      ("g5-multfrac", "Multiplying fractions"), ("g5-improper", "Mixed numbers to fractions"),
+                      ("g5-fracdiv", "Fractions as division"), ("g5-fracof", "Fraction of a number"), ("g5-unitdiv", "Dividing by a unit fraction")]),
+        (.measurement, [("g5-volume", "Volume of a box"), ("g5-units", "Converting units")]),
+        // added 1 Nov 2026 (design/grade5.md)
+        (.geometry, [("g5-coord", "Points on a grid"), ("g5-shapes", "Sorting shapes")]),
+    ])
     static let pieces = groups.flatMap(\.pieces)
 
     /// Any piece by its id: a lesson or a test. (The Paper proof's two lessons, Unit cubes and Add with different
@@ -102,10 +119,15 @@ enum Map {
 
     /// Each chapter's test, in the slot after its last lesson, and the grade's test under everything (G 18 Oct).
     static let tests: [Piece] = groups.map { g in
-        let i = g.lessons.count
-        return Piece(id: "test-\(g.chapter.rawValue)", name: "\(g.chapter.title) test", chapter: g.chapter,
-                     at: Point(g.origin.x + Double(i % g.columns) * ChapterGroup.pitch.width, g.origin.y + Paper.unit + Double(i / g.columns) * ChapterGroup.pitch.height))
-    } + [Piece(id: "test-grade", name: "\(grade.name) test", chapter: .whole, at: Point(0, 2100))]
+        Piece(id: "test-\(g.chapter.rawValue)", name: "\(g.chapter.title) test", chapter: g.chapter, at: g.slot(g.lessons.count))
+    } + [Piece(id: "test-grade", name: "\(grade.name) test", chapter: .whole, at: gradeTestAt)]
+    /// The grade's test under everything in the shorter column, two blocks below its last chapter, as the next chapter
+    /// would go (G 3 Nov).
+    static let gradeTestAt: Point = {
+        let ends = Dictionary(grouping: groups, by: \.origin.x).mapValues { $0.map { $0.origin.y + $0.height + 2 * Paper.unit }.max()! }
+        let c = ends.min { $0.value < $1.value || ($0.value == $1.value && $0.key < $1.key) }!
+        return Point(c.key, c.value)
+    }()
     /// Everything on the map, shown or not yet.
     static let all = pieces + tests
 
