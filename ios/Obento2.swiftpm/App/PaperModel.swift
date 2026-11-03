@@ -89,8 +89,9 @@ enum Map {
             ("g5-fracdiv", "Fractions as division"), ("g5-fracof", "Fraction of a number"), ("g5-unitdiv", "Dividing by a unit fraction")]),
         ChapterGroup(chapter: .measurement, origin: Point(1300, 1200), columns: 3, lessons: [
             ("g5-volume", "Volume of a box"), ("g5-units", "Converting units")]),
-        // added 1 Nov 2026 (design/grade5.md): under Measurement, two blocks below its row
-        ChapterGroup(chapter: .geometry, origin: Point(1300, 1500), columns: 3, lessons: [
+        // added 1 Nov 2026 (design/grade5.md): under Measurement, two blocks below its row's names (its frames end at
+        // 1500, their names at 1600; groups are two blocks apart). 1500 put Geometry's title on Measurement's names.
+        ChapterGroup(chapter: .geometry, origin: Point(1300, 1800), columns: 3, lessons: [
             ("g5-coord", "Points on a grid"), ("g5-shapes", "Sorting shapes")]),
     ]
     static let pieces = groups.flatMap(\.pieces)
