@@ -1147,7 +1147,11 @@ function dPoly(i, P0) {
           // its name in it; on two rows when the piece is too narrow for one
           const c = centroid(simplify(p.pts)), nm = `${p.w} × ${p.h}${p.k === "tri" ? " ÷ 2" : ""}`;
           if (p.k !== "tri" || textW(nm, "small") <= p.w * U * 0.6 - 0.4) text(`nm${j}`, nm, X(c[0]), Y(c[1]), "small", { c: "var(--ink)" });
-          else { text(`nm${j}a`, `${p.w} × ${p.h}`, X(c[0]), Y(c[1]) - 0.6, "small", { c: "var(--ink)" }); text(`nm${j}b`, "÷ 2", X(c[0]), Y(c[1]) + 0.6, "small", { c: "var(--ink)" }); }
+          else {
+            // two rows, or three when even "2 × 12" is wider than the piece
+            const rows = textW(`${p.w} × ${p.h}`, "small") <= p.w * U * 0.6 - 0.2 ? [`${p.w} × ${p.h}`, "÷ 2"] : [String(p.w), `× ${p.h}`, "÷ 2"];
+            rows.forEach((r, k) => text(`nm${j}r${k}`, r, X(c[0]), Y(c[1]) + (k - (rows.length - 1) / 2) * 1.2, "small", { c: "var(--ink)" }));
+          }
         }
       }
       // the shape's straight sides, labelled outside; heights dashed
@@ -1266,9 +1270,10 @@ function netLabels(faces) {
   return out;
 }
 function dNets(i, P0) {
-  const P = P0 || genNets(i), N = netOf(P), Y0 = 6, U = 2, CH = "var(--chapter)", byId = {};
+  const P = P0 || genNets(i), N = netOf(P), Y0 = 6, CH = "var(--chapter)", byId = {};
+  let U = 2, RY = 0;
   N.faces.forEach(f => (byId[f.id] = f));
-  const SA = N.faces.reduce((s, f) => s + f.A, 0), nF = N.faces.length, RY = Y0 + N.h * U + 4, sol = N.solid === "cube" ? "box" : N.solid;
+  const SA = N.faces.reduce((s, f) => s + f.A, 0), nF = N.faces.length, sol = N.solid === "cube" ? "box" : N.solid;
   const groups = [];
   for (const f of N.faces) { const g = groups.find(g => g.key === f.key); if (g) g.n++; else groups.push({ key: f.key, A: f.A, n: 1 }); }
   const terms = N.cube ? ["6", "×", String(N.cube), { sup: 2 }] : groups.flatMap((g, j) => [...(j ? ["+"] : []), ...(g.n > 1 ? [String(g.n), "×"] : []), String(g.A)]);
@@ -1300,13 +1305,14 @@ function dNets(i, P0) {
     },
     // what the tilted camera holds: the faces as they are, all folded, and a face on a face standing straight up on its way over
     fb() {
-      const bs = [this.boundsAt(f => this.ang[f.id] || 0), this.boundsAt(f => f.target), this.boundsAt(f => (!f.parent || f.parent === "base" ? f.target : 0))];
+      const bs = [this.boundsAt(f => this.ang[f.id] || 0), this.boundsAt(f => f.target)];
+      if (N.faces.some(f => f.parent && f.parent !== "base" && !(this.ang[f.id] > 0))) bs.push(this.boundsAt(f => (!f.parent || f.parent === "base" ? f.target : 0)));
       return { x0: Math.min(...bs.map(b => b.x0)), y0: Math.min(...bs.map(b => b.y0)), x1: Math.max(...bs.map(b => b.x1)), y1: Math.max(...bs.map(b => b.y1)) };
     },
     // tilted, the solid is centred under the words, which sit 7 rows above its top
     frame() {
       if (!this.tiltedNow()) return { x: -2, y: -0.5, w: Math.max(46, N.w * U + 16, recW + 4), h: RY + 7 };
-      const fb = this.fb(), hy = Math.floor(fb.y0 - 7), w = Math.max(46, fb.x1 - fb.x0 + 34);
+      const fb = this.fb(), hy = Math.floor(fb.y0 - 7), w = Math.max(46, fb.x1 - fb.x0 + 20);
       return { x: (fb.x0 + fb.x1) / 2 - w / 2, y: hy - 0.5, w, h: fb.y1 + 3 - hy };
     },
     // the faces back to front, as seen now
@@ -1417,6 +1423,13 @@ function dNets(i, P0) {
       UP = false;
     },
   }));
+  // the biggest cells (6 down to 2 squares a unit) that keep the flat net with its record, and the tilted net, in view at 72% or more
+  const fits = () => {
+    const fl = FIT(L.frame()); L.tiltTo = 1; L.piv = { x: bc[0] * U, y: Y0 + bc[1] * U };
+    const tf = FIT(L.frame()); L.tiltTo = 0; return Math.min(fl, tf);
+  };
+  for (U = 6; ; U--) { RY = Y0 + N.h * U + 4; if (U === 2 || fits() >= 0.72) break; }
+  L.nums.U = U; L.nums.RY = RY;
   return L;
 }
 
@@ -1437,7 +1450,14 @@ function genFrac(i) {
   }
 }
 function dFrac(i, P0) {
-  const P = P0 || genFrac(i), { x, y, z, d, mode } = P, B = 5, X0 = 5, Y0 = 6, CH = "var(--chapter)";
+  const P = P0 || genFrac(i), { x, y, z, d, mode } = P, X0 = 5, Y0 = 6, CH = "var(--chapter)";
+  // a small cube is one block (5 squares), or two blocks when the floor and the built box still fit at 72% or more
+  const fitB = b => {
+    const T = tilter({}), x1 = X0 + x * b, y1 = Y0 + y * b; T.piv = { x: (X0 + x1) / 2, y: (Y0 + y1) / 2 };
+    const fb = T.bounds(X0, Y0, x1, y1, (z + 1) * b, 1);
+    return Math.min(FIT({ w: Math.max(46, x1 + 18), h: y1 + 4 }), FIT({ w: Math.max(46, fb.x1 - fb.x0 + 20), h: fb.y1 + 3 - Math.floor(fb.y0 - 7) }));
+  };
+  const B = fitB(10) >= 0.72 ? 10 : 5;
   const floor = x * y, N = floor * z, per = d ** 3, V = N / per, Vs = mixedStr(N, per);
   const ls = edgeS(x, d), ws = edgeS(y, d), hs = edgeS(z, d), Bs = mixedStr(floor, d * d), X1 = X0 + x * B, Y1 = Y0 + y * B;
   const stages = ["cover", "build", "see", "write", "done"];
@@ -1452,7 +1472,7 @@ function dFrac(i, P0) {
       if (this.stage === "cover" && this.tiltTo < 1) return { x: -2, y: -0.5, w: Math.max(46, X1 + 18), h: Y1 + 4 };
       // building, the box is centred under the words (7 rows above its top); then the record comes in beside it
       const fb = this.fb(), hy = Math.floor(fb.y0 - 7);
-      if (this.stage === "cover" || this.stage === "build") { const w = Math.max(46, fb.x1 - fb.x0 + 34); return { x: (fb.x0 + fb.x1) / 2 - w / 2, y: hy - 0.5, w, h: fb.y1 + 3 - hy }; }
+      if (this.stage === "cover" || this.stage === "build") { const w = Math.max(46, fb.x1 - fb.x0 + 20); return { x: (fb.x0 + fb.x1) / 2 - w / 2, y: hy - 0.5, w, h: fb.y1 + 3 - hy }; }
       const { nx, ny } = this.tiltPlaces(fb), x0 = Math.floor(fb.x0) - 2;
       return { x: x0, y: hy - 0.5, w: Math.max(46, nx + 32 - x0), h: Math.max(fb.y1 + 3, ny + 13) - hy + 0.5 };
     },
