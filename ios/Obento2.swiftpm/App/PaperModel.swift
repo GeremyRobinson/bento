@@ -144,18 +144,8 @@ enum Map {
     @MainActor static var untouched: Bool {
         Fresh.untouched(checks: Progress.shared.checks, tests: Progress.shared.tests, pagesSaved: (all + [review]).contains { PageStore.load($0.id) != nil })
     }
-    /// What the map draws now: every lesson, and each test once there's something toward it (a chapter's test once one
-    /// of its lessons is learned, the grade's once a chapter test opens), or once it's been started or taken.
-    @MainActor static var shown: [Piece] {
-        let learned = Progress.shared.learned
-        func started(_ id: String) -> Bool { Progress.shared.tests[id] != nil || PageStore.load(id) != nil }
-        let chapterTests = tests.filter { $0.id != "test-grade" }
-        let open = chapterTests.filter { testReady($0.id) }.count
-        return pieces + tests.filter { t in
-            if t.id == "test-grade" { return Fresh.showsGradeTest(chapterTestsOpen: open, started: started(t.id)) }
-            return Fresh.showsChapterTest(learnedInChapter: pieces.filter { $0.chapter == t.chapter && learned.contains($0.id) }.count, started: started(t.id))
-        }
-    }
+    /// What the map draws now: every lesson and every test (a test faint until it opens, G 3 Nov).
+    @MainActor static var shown: [Piece] { Fresh.showsTests ? all : pieces }
 
     /// A chapter's test opens once every lesson in it has been learned (G 18 Oct); the grade's test once every chapter
     /// test is passed (G 20 Oct). Once taken, or started, a test stays open: it can be taken again. Lessons are always

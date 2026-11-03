@@ -116,11 +116,9 @@ public enum Fresh {
     }
     /// A chapter's "2 of 3" beside its title: once one of its lessons is learned.
     public static func showsCount(learned: Int) -> Bool { learned > 0 }
-    /// A chapter's test on the map: once one of its lessons is learned (something to unlock), or once it's been started
-    /// or taken.
-    public static func showsChapterTest(learnedInChapter: Int, started: Bool) -> Bool { learnedInChapter > 0 || started }
-    /// The grade's test: once a chapter test can be taken or has been, or once it's been started itself.
-    public static func showsGradeTest(chapterTestsOpen: Int, started: Bool) -> Bool { chapterTestsOpen > 0 || started }
+    /// Every test is on the map from the start (G 3 Nov: "just show the test but make it lighter"): faint and dashed,
+    /// "Pass the lessons first", until it opens, so its place on the paper is never an empty gap.
+    public static let showsTests = true
     /// The Up next tabs: once the child has started something.
     public static func showsTabs(untouched: Bool) -> Bool { !untouched }
     /// "Start here, Mia." beside the first lesson: once set up, until the child starts something.

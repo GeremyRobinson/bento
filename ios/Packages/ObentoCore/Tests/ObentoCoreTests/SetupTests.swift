@@ -83,8 +83,8 @@ final class SetupTests: XCTestCase {
         XCTAssertTrue(untouched)
         XCTAssertFalse(Fresh.showsTabs(untouched: untouched))
         XCTAssertFalse(Fresh.showsCount(learned: 0))
-        XCTAssertFalse(Fresh.showsChapterTest(learnedInChapter: 0, started: false))
-        XCTAssertFalse(Fresh.showsGradeTest(chapterTestsOpen: 0, started: false))
+        // tests are there from the start, faint until they open (G 3 Nov)
+        XCTAssertTrue(Fresh.showsTests)
         // "Start here" waits for setting up to be done
         XCTAssertFalse(Fresh.showsStartHere(setUp: false, untouched: untouched))
         XCTAssertTrue(Fresh.showsStartHere(setUp: true, untouched: untouched))
@@ -100,11 +100,7 @@ final class SetupTests: XCTestCase {
         let checked = ["add": CheckRecord(last: 4, best: 4, date: 0, due: 1, passes: 1)]
         XCTAssertFalse(Fresh.untouched(checks: checked, tests: [:], pagesSaved: false))
         XCTAssertFalse(Fresh.untouched(checks: [:], tests: ["test-whole": TestRecord(right: 3, of: 12, date: 0)], pagesSaved: false))
-        // counts and tests
+        // counts
         XCTAssertTrue(Fresh.showsCount(learned: 1))
-        XCTAssertTrue(Fresh.showsChapterTest(learnedInChapter: 1, started: false))
-        XCTAssertTrue(Fresh.showsChapterTest(learnedInChapter: 0, started: true))
-        XCTAssertTrue(Fresh.showsGradeTest(chapterTestsOpen: 1, started: false))
-        XCTAssertTrue(Fresh.showsGradeTest(chapterTestsOpen: 0, started: true))
     }
 }
