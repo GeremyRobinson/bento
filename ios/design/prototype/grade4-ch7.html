@@ -866,25 +866,26 @@ function genArea(i) {
   }
   return { l: rnd(3, 15), w: rnd(2, 10), fold: null };
 }
-// words and record KS times as big (2) when the camera must step back for a big rectangle; the record beside or under
+// The kit's sizes always. A meter is a block (5 squares) when the picture still fits at 75% or more; else 2 squares, else
+// 1 (and the picture says so). The record goes beside or under, whichever frames bigger.
 function planArea(l, w) {
-  const best = [];
-  for (const K of [1, 2]) for (const where of ["beside", "under"]) {
-    const Y0 = 10 * K, pw = 5 * Math.min(15, l + 1), ph = 5 * w, recW = 33 * K, recH = 10 * K;
-    let rx, ry, right, bottom;
-    if (where === "beside") { rx = Math.ceil((pw + 2 * K) / 5) * 5; ry = Y0 + K; right = rx + recW; bottom = Math.max(Y0 + ph + 2, Y0 + recH); }
-    else { rx = 0; ry = Y0 + ph + 3 * K; right = Math.max(pw, recW); bottom = ry + recH; }
-    right = Math.max(right, 46 * 0.72 * K);
-    const s = viewScale(right + 5 * K, bottom + 3);
-    best.push({ K, where, s, pt: 28 * K * s, rx, ry, Y0 });
+  for (const U of [5, 2, 1]) {
+    const best = [];
+    for (const where of ["beside", "under"]) {
+      const Y0 = 10, pw = U * Math.min(15, l + 1), ph = U * w, note = U < 5 ? 2 : 0;
+      let rx, ry, right, bottom;
+      if (where === "beside") { rx = Math.ceil((pw + 2) / 5) * 5; ry = Y0 + 1; right = rx + 33; bottom = Math.max(Y0 + ph + 2 + note, Y0 + 10); }
+      else { rx = 0; ry = Y0 + ph + 3 + note; right = Math.max(pw, 33); bottom = ry + 10; }
+      right = Math.max(right, 34);
+      best.push({ U, where, s: viewScale(right + 5, bottom + 3), rx, ry, Y0 });
+    }
+    best.sort((u, v) => v.s - u.s);
+    if (best[0].s >= 0.75 || U === 1) return best[0];
   }
-  // words at 16 px on the glass or more; then the biggest picture
-  const ok = best.filter(o => o.pt >= 16).sort((u, v) => v.s - u.s);
-  return ok[0] || best.sort((u, v) => v.pt - u.pt)[0];
 }
 function lArea(index) {
   const f = fx(), P = f ? { l: f[0], w: f[1], fold: [null, "A", "P"][f[2] || 0] } : genArea(index), { l, w, fold } = P;
-  const A = l * w, Pm = 2 * (l + w), plan = planArea(l, w), K = KS = plan.K, Y0 = plan.Y0, cA = "var(--chapter)";
+  const A = l * w, Pm = 2 * (l + w), plan = planArea(l, w), U = plan.U, Y0 = plan.Y0, cA = "var(--chapter)";
   const maxA = Math.min(15, l + 1), maxB = Math.min(10, w + 1);
   const stages = fold === "A" ? ["edge", "write", "done"] : fold === "P" ? ["trace", "turn", "write", "done"] : ["drag", "area", "trace", "half", "turn", "per", "done"];
   const L = withBoxes({
@@ -896,9 +897,9 @@ function lArea(index) {
     // where the traced edge's tip is, t blocks round from the top-left corner (along the top, down, back along the bottom)
     tip(t) {
       const a = this.a, b = fold === "P" ? maxB : this.b;
-      if (t <= a) return { x: 5 * t, y: Y0 };
-      if (t <= a + b) return { x: 5 * a, y: Y0 + 5 * (t - a) };
-      return { x: 5 * (a - (t - a - b)), y: Y0 + 5 * b };
+      if (t <= a) return { x: U * t, y: Y0 };
+      if (t <= a + b) return { x: U * a, y: Y0 + U * (t - a) };
+      return { x: U * (a - (t - a - b)), y: Y0 + U * b };
     },
     maxT() { return fold === "P" ? l + maxB : 2 * this.a + this.b; },
     traced(t) {
@@ -913,17 +914,17 @@ function lArea(index) {
       if (this.held === "trace") return this.traced(this.t);
       return "";
     },
-    probe() { return { l, w, fold, A, Pm, Y0, K, where: plan.where, s: plan.s, stage: this.stage, a: this.a, b: this.b, t: this.t, tip: this.tip(this.t) }; },
+    probe() { return { l, w, fold, A, Pm, Y0, U, where: plan.where, s: plan.s, stage: this.stage, a: this.a, b: this.b, t: this.t, tip: this.tip(this.t) }; },
     grab(p) {
       const st = this.stage, near = (x, y) => Math.abs(p.x - x) <= 2.5 && Math.abs(p.y - y) <= 2.5;
-      if (st === "drag" && near(5 * this.a, Y0 + 5 * this.b)) { this.held = "corner"; this.msg = null; return true; }
-      if (st === "edge" && near(5 * this.a, Y0 + 2.5 * w)) { this.held = "edge"; this.msg = null; return true; }
+      if (st === "drag" && near(U * this.a, Y0 + U * this.b)) { this.held = "corner"; this.msg = null; return true; }
+      if (st === "edge" && near(U * this.a, Y0 + U / 2 * w)) { this.held = "edge"; this.msg = null; return true; }
       if (st === "trace") { const q = this.tip(this.t); if (near(q.x, q.y)) { this.held = "trace"; this.msg = null; return true; } }
       return false;
     },
     drag(p) {
-      if (this.held === "corner") { this.a = clamp(Math.round(p.x / 5), 1, maxA); this.b = clamp(Math.round((p.y - Y0) / 5), 1, maxB); }
-      else if (this.held === "edge") this.a = clamp(Math.round(p.x / 5), 1, maxA);
+      if (this.held === "corner") { this.a = clamp(Math.round(p.x / U), 1, maxA); this.b = clamp(Math.round((p.y - Y0) / U), 1, maxB); }
+      else if (this.held === "edge") this.a = clamp(Math.round(p.x / U), 1, maxA);
       else if (this.held === "trace") {
         // the edge lights as the finger runs along it: the nearest corner-to-corner point a few blocks either side
         let best = this.t, bd = 1e9;
@@ -981,16 +982,16 @@ function lArea(index) {
     },
     scene() {
       const st = this.stage, done = st === "done", si = stages.indexOf(st);
-      const a = this.a, b = this.b, X1 = 5 * a, Y1 = Y0 + 5 * b, showRect = fold !== "P" || si >= 1;
+      const a = this.a, b = this.b, X1 = U * a, Y1 = Y0 + U * b, showRect = fold !== "P" || si >= 1;
       // room for the rectangle to grow, so the camera frames it before the hand gets there
-      reach(-1, 5 * (fold === "P" ? l : maxA) + 1, Y0 + 5 * w + 1);
+      reach(-1, U * (fold === "P" ? l : maxA) + 1, Y0 + U * w + 1);
       if (showRect) {
-        rect(`in${a}_${b}`, 0, Y0, X1, 5 * b, { fill: "var(--tint)", live: !!this.held });
+        rect(`in${a}_${b}`, 0, Y0, X1, U * b, { fill: "var(--tint)", live: !!this.held });
         // the blocks counted while the rectangle is made
-        if ((st === "drag" || st === "area" || st === "edge" || (st === "write" && fold === "A"))) for (let r = 0; r < b; r++) for (let c = 0; c < a; c++)
-          text(`bn${r}_${c}_${a}`, r * a + c + 1, 5 * c + 2.5, Y0 + 5 * r + 2.5, "small", { c: "var(--ink2)", live: !!this.held });
-        rect(`ro${a}_${b}`, 0, Y0, X1, 5 * b, { c: "var(--ink)", live: !!this.held });
-      } else line("top", 0, Y0, 5 * l, Y0);
+        if (U === 5 && (st === "drag" || st === "area" || st === "edge" || (st === "write" && fold === "A"))) for (let r = 0; r < b; r++) for (let c = 0; c < a; c++)
+          text(`bn${r}_${c}_${a}`, r * a + c + 1, U * c + U / 2, Y0 + U * r + U / 2, "small", { c: "var(--ink2)", live: !!this.held });
+        rect(`ro${a}_${b}`, 0, Y0, X1, U * b, { c: "var(--ink)", live: !!this.held });
+      } else line("top", 0, Y0, U * l, Y0);
       // the traced edge, lit; then turned round onto the other two sides
       const lit = t => { const pts = [this.tip(0)]; for (const c of [a, fold === "P" ? a + maxB : a + b, 2 * a + b]) if (t > c) pts.push(this.tip(c)); pts.push(this.tip(t)); return pts; };
       const band = (k, pts, tr, live) => put(k, "path", { d: "M" + pts.map(q => `${sq(q.x)} ${sq(q.y)}`).join("L"), fill: "none", stroke: "var(--tint-strong)", "stroke-width": 12, "stroke-linejoin": "miter", transform: tr || null }, live ? "none" : "fade");
@@ -998,18 +999,18 @@ function lArea(index) {
       if (tracing && this.t) band("lit", lit(this.t), null, true);
       if (si >= stages.indexOf("turn") && fold !== "A" && (st === "turn" || st === "per" || st === "write" || done)) {
         const u = st === "turn" ? Math.min(1, (performance.now() - this.turn0) / 900) : 1, e = easeIO(u);
-        band("turned", lit(l + w), `rotate(${(180 * e).toFixed(2)} ${sq(X1 / 2)} ${sq(Y0 + 2.5 * b)})`, true);
+        band("turned", lit(l + w), `rotate(${(180 * e).toFixed(2)} ${sq(X1 / 2)} ${sq(Y0 + U / 2 * b)})`, true);
       }
       if (st === "drag") handle("hc", X1, Y1, this.held === "corner");
-      if (st === "edge") handle("he", X1, Y0 + 2.5 * w, this.held === "edge");
+      if (st === "edge") handle("he", X1, Y0 + U / 2 * w, this.held === "edge");
       if (st === "trace") handle("ht", this.tip(this.t).x, this.tip(this.t).y, this.held === "trace");
       // the problem, as the picture's names
-      if (fold !== "A") lab("lt", `${l} m`, "above", Y0, 5 * l / 2, "say");
-      if (fold !== "P") lab("ll", `${w} m`, "left", 0, Y0 + 2.5 * w, "say");
-      if (fold === "A") text("given", `Area = ${A} m²`, 0, Y0 - 3 * K, "say", { anchor: "start" });
-      if (fold === "P") text("given", `Perimeter = ${Pm} m`, 0, Y0 - 3.5 * K, "say", { anchor: "start" });
-      if (done && fold === "A") lab("lt", `${l} m`, "above", Y0, 5 * l / 2, "say", cA);
-      if (done && fold === "P") lab("ll", `${w} m`, "left", 0, Y0 + 2.5 * w, "say", cA);
+      if (fold !== "A") lab("lt", `${l} m`, "above", Y0, U * l / 2, "say");
+      if (fold !== "P") lab("ll", `${w} m`, "left", 0, Y0 + U / 2 * w, "say");
+      if (fold === "A") text("given", `Area = ${A} m²`, 0, Y0 - 3, "say", { anchor: "start" });
+      if (fold === "P") text("given", `Perimeter = ${Pm} m`, 0, Y0 - 3.5, "say", { anchor: "start" });
+      if (done && fold === "A") lab("lt", `${l} m`, "above", Y0, U * l / 2, "say", cA);
+      if (done && fold === "P") lab("ll", `${w} m`, "left", 0, Y0 + U / 2 * w, "say", cA);
       // the record
       const rx = plan.rx, rows = [];
       const bx = (id, v) => [{ gap: 0.5 }, boxTok(this, Math.max(2, ndig(v)), id), { gap: 0.5 }];
@@ -1026,8 +1027,10 @@ function lArea(index) {
         if (done) rows.push([{ w: "Perimeter" }, { op: "=" }, { n: 2 }, { op: "×" }, { op: "(", wd: 1.5 }, { n: l }, { op: "+" }, { n: w, c: cA }, { op: ")", wd: 1.5 }, { op: "=" }, { n: Pm }, { w: "m" }]);
       }
       const ry = plan.ry;
-      rows.forEach((r, i) => frowK(`rr${i}`, r, rx, ry + i * 3 * KS, this));
-      const by = ry + rows.length * 3 * KS;
+      rows.forEach((r, i) => frow(`rr${i}`, r, rx, ry + i * 3, this));
+      const by = ry + rows.length * 3;
+      // a smaller picture says what a square is
+      if (U < 5) text("unit", U === 1 ? "A square is 1 m." : "2 squares are 1 m.", 0, Y0 + U * (fold === "P" ? w : Math.max(w, this.b)) + 1.4, "small", { anchor: "start" });
       if (["area", "half", "per", "write"].includes(st)) block("check", rx, by, 7, "Check", "check");
       if (done) block("next", rx, by, 10, "Next problem", "next");
       const S = {
@@ -1039,28 +1042,13 @@ function lArea(index) {
         per: ["All the way round is that twice.", "Type the perimeter."],
         edge: ["Drag the side out until the blocks make the area.", ""],
         write: [fold === "A" ? "How long is the top?" : "How long is the side?", "Type it."],
-        done: ["Area counts the blocks inside; perimeter goes round the edge.", ""],
+        done: ["Area counts the square meters inside; perimeter goes round the edge.", ""],
       };
       return S[st];
     },
   });
   return L;
 }
-// a record row drawn KS times as big: frow's squares scaled by KS (numbers, signs, words, boxes)
-function frowK(k, toks, x, y, L) {
-  if (KS === 1) return frow(k, toks, x, y, L);
-  let cx = x;
-  toks.forEach((t, i) => {
-    const kk = `${k}.${i}`, c = t.c;
-    if (t.n != null) { const w = 2 * KS * ndig(t.n); num(kk, fmt(t.n), cx + w, y, { c }); cx += w; }
-    else if (t.w != null) { text(`${kk}w${t.w}`, t.w, cx + 0.6 * KS, y, "say", { anchor: "start", c }); cx += Math.ceil((1.4 + t.w.length * 0.68) * KS); }
-    else if (t.op) { const w = (t.wd || 2) * KS; text(`${kk}${t.op}`, t.op, cx + w / 2, y, "maths", { c }); cx += w; }
-    else if (t.gap) cx += t.gap * KS;
-    else if (t.box) { t.box(cx, y - KS); cx += t.cells * 2 * KS; }
-  });
-  return cx;
-}
-
 // ---------- Line plots with fractions (g4-lineplot) ----------
 // Two inches are 48 squares, so an inch is 24, a fourth 6 and an eighth 3. The line plot: the line and its ticks, the
 // whole inches and halves named, the X's stacked over it (each 2 × 2), its title over it. The first three problems make
