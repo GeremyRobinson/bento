@@ -346,6 +346,11 @@ function glyphs(s) {
   const out = [];
   for (let j = 0; j < s.length; j++) {
     const ch = s[j]; let w = 2;
+    // a percent (+20%) or a function's name (a(n)) is one tight word, as a decimal is
+    if (j === 0 || !/[0-9.a-zA-Z]/.test(s[j - 1])) {
+      const m = s.slice(j).match(/^[+−]?[0-9]+(\.[0-9]+)?%|^[a-zA-Z]\([a-z]\)/);
+      if (m) { out.push({ ch: m[0], w: tightW(m[0]), tight: true }); j += m[0].length - 1; continue; }
+    }
     // a decimal (1.25, 1159.27…) is one tight number, not 2 squares a digit
     if (/[0-9]/.test(ch) && (j === 0 || !/[0-9.]/.test(s[j - 1]))) {
       let k = j, run = ""; while (k < s.length && /[0-9.…]/.test(s[k])) run += s[k++];
@@ -360,7 +365,7 @@ function glyphs(s) {
 }
 // superscripts (2⁻³): a run of them is one small number, a square a character, raised
 const SUPC = { "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4", "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9", "⁻": "−", "ˣ": "x", "ᵗ": "t", "ʷ": "w", "ⁿ": "n" };
-const tightW = r => Math.ceil([...r].reduce((a, c) => a + (c === "." ? 0.35 : c === "…" ? 1.1 : 1.1), 0) + 0.6);
+const tightW = r => Math.ceil([...r].reduce((a, c) => a + (c === "." ? 0.35 : c === "%" ? 1.6 : "()".includes(c) ? 0.55 : /[a-z]/.test(c) ? 1 : 1.1), 0) + 0.6);
 const supN = n => String(n).replace(/-|−/g, "⁻").replace(/\d/g, d => "⁰¹²³⁴⁵⁶⁷⁸⁹"[d]);
 const glyphsW = s => glyphs(s).reduce((a, g) => a + g.w, 0);
 // the width of a part: a string's glyphs; a typed box; words after it; { sx } a raised run, a square a token ("1/2" a
@@ -441,7 +446,7 @@ function mrow(k, parts, x, y, o = {}) {
     for (const g of glyphs(p.s)) {
       const pw0 = lastW; lastW = g.w;
       if (g.ch !== " ") {
-        if (g.tight) text(`${k}:${i}:${cx}${g.ch}`, g.ch, cx + g.w / 2, y, "maths", { c: p.c });
+        if (g.tight) text(`${k}:${i}:${cx}${g.ch}`, g.ch, cx + g.w - 0.3, y, "maths", { c: p.c, anchor: "end" });   // right-aligned in its squares
         else if (g.ch === ".") text(`${k}:${i}:${cx}.`, ".", cx, y, "maths", { c: p.c });
         else if (g.sup) text(`${k}:${i}:${cx}^${g.ch}`, g.ch, cx - (pw0 >= 2 ? 0.4 : 0), y - 0.85, "small", { c: p.c || INK, anchor: "start" });
         else { text(`${k}:${i}:${cx}${g.ch}`, g.ch, cx + g.w / 2, y, "maths", { c: p.c }); if (p.ring) ring(`${k}:${i}r`, cx + g.w / 2, y); }
@@ -854,7 +859,11 @@ function pcGen(idx) {
     const g = oneOf(opts);
     return { kind, f: g.c.f, p: g.c.p, n: g.c.n, P: g.P, years: g.years, grow: g.c.f > 1, noun: oneOf(["fish", "frogs", "trees"]) };
   }
-  if (kind === "rate") { const grow = Math.random() < 0.5, p = rnd(1, 9); return { kind, grow, p, f: tidy(1 + (grow ? p : -p) / 100), P: oneOf([200, 500, 1000, 2000]), t: rnd(2, 6), money: Math.random() < 0.5 }; }
+  if (kind === "rate") {
+    // an amount that comes out whole (2000 × 0.95² = 1805) has nothing to round: draw again
+    for (;;) { const grow = Math.random() < 0.5, p = rnd(1, 9), f = tidy(1 + (grow ? p : -p) / 100), P = oneOf([200, 500, 1000, 2000]), t = rnd(2, 6), a = P * f ** t;
+      if (Math.abs(a * 100 - Math.round(a * 100)) > 1e-6) return { kind, grow, p, f, P, t, money: Math.random() < 0.5 }; }
+  }
   if (kind === "stretch") { const [F, k, per] = oneOf([[8, 3, 2], [4, 2, 2], [9, 2, 3], [27, 3, 3]]); return { kind, F, k, per }; }
   const [F, k, per] = oneOf([[1.21, 2, 1.1], [1.44, 2, 1.2], [0.81, 2, 0.9], [0.64, 2, 0.8], [1.331, 3, 1.1]]);
   return { kind: "root", F, k, per };
@@ -1169,7 +1178,8 @@ function pcRoot(idx, G) {
       mrow("r2", [{ words: "is", cls: "say" }, " × ", st === "f" ? { box: "f", cells: 2, value: this.vals.f, state: boxState(this, "f") } : { s: ps, c: CH }, { words: "a year", cls: "say" }], 0, R + 3);
       if (st === "f") { block("check", 0, R + 5, 7, "Check", "check"); return; }
       mrow("r3", [`${Array(k).fill(ps).join(" × ")} = ${Fs}`], 0, R + 6);
-      mrow("r4", [grow ? "+" : M, st === "q" ? { box: "q", cells: 2, value: this.vals.q, state: boxState(this, "q") } : { s: String(q), c: CH }, "%", { words: "a year", cls: "say" }], 0, R + 9);
+      mrow("r4", st === "q" ? [grow ? "+" : M, { box: "q", cells: 2, value: this.vals.q, state: boxState(this, "q") }, "%", { words: "a year", cls: "say" }]
+        : [{ s: `${grow ? "+" : M}${q}%`, c: CH }, { words: "a year", cls: "say" }], 0, R + 9);
       block(st === "done" ? "next" : "check", 0, R + 11, st === "done" ? 10 : 7, st === "done" ? "Next problem" : "Check", st === "done" ? "next" : "check");
     },
   });
@@ -1385,11 +1395,17 @@ function dSequence(idx) {
       const RR = 11;
       if (mulK) {
         mrow("r1", [{ words: "next", cls: "say" }, "= ", { words: "now", cls: "say" }, "× ", bx(this, "r", String(step).length)], RX, RR);
-        mrow("r2", ["a(n) = ", bx(this, "s2", String(a0).length), " × ", bx(this, "r2", String(step).length), "ⁿ"], RX, RR + 3);
+        // once both are written, as school writes it: a factor of 1 isn't written (2ⁿ, not 1 × 2ⁿ)
+        const doneM = this.got.s2 != null && this.got.r2 != null;
+        mrow("r2", doneM ? ["a(n) = ", ...(a0 === 1 ? [] : [{ s: String(a0), c: CH }, " × "]), { s: String(step), c: CH }, "ⁿ"]
+          : ["a(n) = ", bx(this, "s2", String(a0).length), " × ", bx(this, "r2", String(step).length), "ⁿ"], RX, RR + 3);
       } else {
         mrow("r1", [{ words: "next", cls: "say" }, "= ", { words: "now", cls: "say" }, `${op} `, bx(this, "d", String(step).length)], RX, RR);
         mrow("r2", [{ words: `${word} 0`, cls: "say" }, "= ", bx(this, "s", String(a0).length)], RX, RR + 3);
-        mrow("r3", ["a(n) = ", bx(this, "s2", String(a0).length), ` ${op} `, bx(this, "d2", String(step).length), "n"], RX, RR + 6);
+        // once both are written, as school writes it: a step of 1 is n (23 − n), a start of 0 isn't written (3n)
+        const doneA = this.got.s2 != null && this.got.d2 != null, dn = [...(step === 1 ? [] : [{ s: String(step), c: CH }]), "n"];
+        mrow("r3", doneA ? ["a(n) = ", ...(a0 === 0 && op === "+" ? dn : [{ s: String(a0), c: CH }, ` ${op} `, ...dn])]
+          : ["a(n) = ", bx(this, "s2", String(a0).length), ` ${op} `, bx(this, "d2", String(step).length), "n"], RX, RR + 6);
       }
       const rEnd = RR + (mulK ? 3 : 6);
       if (st === "rule") { block("check", RX, rEnd + 2, 7, "Check", "check"); return; }
