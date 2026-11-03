@@ -2,6 +2,8 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700&display=swap">
 <style>
+/* ′ (prime) drawn from a serif face so A′ never reads as A' (the rounded faces draw it upright) */
+@font-face { font-family: "Prime"; src: local("Georgia"), local("Times New Roman"), local("Times"); unicode-range: U+2032-2033; }
 /* 10th grade, chapter 5: Similar shapes (ios/design/grade10.md). Kit and engine from grade10-ch4.html (and ch3, ch2, ch1). The whole screen is one sheet of graph paper
    seen through one camera; the floating pill at the bottom is the only chrome. 1 square = 20 paper units, a strong line
    every 5 squares (a block). Chapter colour: grade10.md names none, so this is the geometry colour of new5-lessons.html. */
@@ -11,7 +13,7 @@
   --chapter: #1E8A78; --tint: rgba(30, 138, 120, .2); --tint-strong: rgba(30, 138, 120, .4);
   --right: #178A57; --wrong: #C8372D;
   --pill: rgba(255, 255, 255, .94); --pill-line: #E4E0D8;
-  --round: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+  --round: "Prime", ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
@@ -846,7 +848,7 @@ function genDil(i) {
     const ra = k === 2 ? rnd(3, 6) : k === 3 ? rnd(2, 4) : k === 0.5 ? 2 * rnd(4, 6) : 2 * rnd(2, 4);
     return { kind, k, ra, rb: ra * k };
   }
-  const thru = i === 1 || i === 4;      // find O (7-9) never has a side through O: its line would hold two corners and their images
+  const thru = i === 1;      // problem 2 (× 3): a side through O stays on its line and still clears its image; at × ½ and × 3/2 it can't
   const even = k === 0.5 || k === 1.5, lo = k === 3 ? 3 : k === 2 ? 4 : 6, hi = k === 3 ? 6 : k === 2 ? 10 : 20;
   const r1 = () => { const v = rnd(-hi, hi); return even ? 2 * Math.round(v / 2) : v; };
   const cheb = p => Math.max(Math.abs(p.x), Math.abs(p.y));
@@ -863,6 +865,10 @@ function genDil(i) {
     const lds = [[A, B], [B, C], [C, A]].map(([a, b]) => lineD(a, b));
     if (thru ? lds.filter(d => d < 1e-9).length !== 1 || lds.some(d => d > 1e-9 && d < 2) : lds.some(d => d < 2)) continue;
     if (inTri(V(0, 0), T)) continue;
+    // the image clears ABC: no corner inside the other, no sides crossing, at least 1.5 squares apart
+    const I = T.map(p => mul(p, k)), eT = triSegs(T), eI = triSegs(I);
+    if (T.some(p => inTri(p, I)) || I.some(p => inTri(p, T)) || eT.some(([a, b]) => eI.some(([c, d]) => segX(a, b, c, d)))) continue;
+    if (Math.min(...T.flatMap(p => eI.map(([a, b]) => segD(p, a, b))), ...I.flatMap(p => eT.map(([a, b]) => segD(p, a, b)))) < 1.5) continue;
     const big = k > 1 ? T.map(p => mul(p, k)) : T, bb = bbox(big), across = Math.max(bb.x1 - bb.x0, bb.y1 - bb.y0);
     if (across < 20 || across > 30) continue;
     const all = bbox([V(0, 0), ...T, ...T.map(p => mul(p, k))]);
@@ -904,7 +910,7 @@ function dDilate(i) {
       },
       tap: () => { st.held = null; return false; },
       demo(H) { const c = cur(), j = 0; H.drag(c[j], add(O, mul(loc[j], k))); } });
-    tasks.push({ id: "par", kind: "see", tool: null, dur: 1800, say: thruJ >= 0 ? "Each side and its stretched side are parallel, or on one line through O." : "Each side and its stretched side are parallel." });
+    tasks.push({ id: "par", kind: "see", tool: null, dur: 2700, say: thruJ >= 0 ? "Each side and its stretched side are parallel, or on one line through O." : "Each side and its stretched side are parallel." });
     tasks.push({ id: "meas", kind: "meas", tool: null, say: "Drag along AB from A to measure it.", sub: "Drag from A.",
       grab(L, p) { if (dist(p, P[0]) < 2 || segD(p, P[0], P[1]) < 1.2) { st.mheld = true; L.msg = null; return true; } return false; },
       drag(L, p) { st.mt = Math.round(clamp((p.x - P[0].x) / AB, 0, 1) * AB) / AB; },
@@ -947,17 +953,18 @@ function dDilate(i) {
   return con({
     id: "dilate", index: i, frame: { x: -1, y: -1, w: Math.max(fw, CKX + 12), h: R1 + 2.5 }, nextAt: V(CKX, R1 - 1), pts, park: { N: V(-60, -60), w: 6 }, geo: () => [], tasks, G, st, k, O, P, Q, loc, AB,
     ruler: { p: V(2, R1 - 1.5), a: 0, len: Math.max(16, LR) },
-    animating: L => !!st.held || st.mheld,
+    animating: L => !!st.held || st.mheld || L.stage === "par",
     figure(L) {
       const segs = st.segs = [], stg = L.stage;
       for (const l of L.lines) segs.push([l.a, l.b]);
       if (find && L.passed("pin")) { const j = [0, 1, 2].find(j => !(st.lay || []).includes(j)); segs.push([add(O, far[j]), add(O, back[j])]); }
       if (find && L.pts.O) { L.pts.O.hide = true; nameNear("On", "O", O, segs, { rs: [1.3, 1.8, 2.4], rings: [...P, ...Q].map(p => [p, 1.6]), c: "var(--chapter)" }); }
-      if (!find && (stg === "meas" || L.passed("meas"))) { const n = outN(P, 0, 1); for (const r of [1.5, 2.8]) segs.push([add(P[0], mul(n, r)), add(P[1], mul(n, r))]); }
+      // the measuring bracket first, so every name keeps off it
+      if (!find && ((stg === "meas" && (st.mt > 0 || st.mheld)) || L.passed("meas"))) { const n = outN(P, 0, 1); const ms = [...triSegs(P), ...P.map((p, j) => [O, add(O, far[j])])]; measure("br", P[0], P[1], n, L.passed("meas") ? 1 : st.mt, "AB", 1, ms); segs.push(...ms); }
       const ringsC = [O, ...P, ...Q].map(p => [p, 1.2]);
       if (!find) {
         P.forEach((p, j) => { const e = add(O, far[j]); line(`ray${j}`, O.x, O.y, e.x, e.y, { c: "var(--ink2)", dash: true }); segs.push([O, e]); });
-        if (thruJ >= 0 && L.passed("stretch")) { const [a, b] = [[0, 1], [1, 2], [2, 0]][thruJ], ps = [P[a], P[b], Q[a], Q[b]], e = ps.reduce((m, x) => dist(x, O) > dist(m, O) ? x : m); seg("thruL", O, e, { c: "var(--ink)" }); }
+        if (thruJ >= 0 && L.passed("stretch") && stg === "par" && Math.min(2, Math.floor(L.phase("par") * 3)) === thruJ) { const [a, b] = [[0, 1], [1, 2], [2, 0]][thruJ], ps = [P[a], P[b], Q[a], Q[b]], e = ps.reduce((m, x) => dist(x, O) > dist(m, O) ? x : m); seg("thruL", O, e, { c: "var(--ink)" }); }
       }
       poly("orig", P); segs.push(...triSegs(P));
       // the stretched copy: live while held, red when let go at the wrong place, the image once right
@@ -967,8 +974,11 @@ function dDilate(i) {
       if (stg === "stretch") cur().forEach((p, j) => { ringAt(`h${j}`, p.x, p.y, 0.7, { c: "var(--chapter)", live: true }); segs.push(...boxSegs(p, 1.6, 1.6)); });
       // what the stretch keeps: parallel sides (arrowheads), or one line through O
       if (L.passed("stretch") && !find) {
-        let n = 0;
-        [[0, 1], [1, 2], [2, 0]].forEach(([a, b], s) => { if (s === thruJ) return; n++; arrows(`par${s}a`, P[a], P[b], n, { delay: 0.2 * n, at: 0.3 }); arrows(`par${s}b`, Q[a], Q[b], n, { delay: 0.2 * n, at: 0.3 }); });
+        // one pair at a time while they're compared (the See beat walks the sides), then AB with A′B′ while it's measured
+        const pairs = [[0, 1], [1, 2], [2, 0]].map((pr, s) => [pr, s]);
+        const now = stg === "par" ? pairs[Math.min(pairs.length - 1, Math.floor(L.phase("par") * pairs.length))] : stg === "meas" || stg === "write" ? pairs.find(([, s]) => s === 0) : null;
+        st.nowS = now ? now[1] : null;
+        if (now && now[1] !== thruJ) { const [[a, b], s] = now; arrows(`par${s}a`, P[a], P[b], 1, { at: 0.3 }); arrows(`par${s}b`, Q[a], Q[b], 1, { at: 0.3 }); }
       }
       // the copies that fill the bigger one
       if (copies && (stg === "copies" || L.passed("copies"))) {
@@ -990,7 +1000,7 @@ function dDilate(i) {
       } else {
         nameNear("prob", `× ${kS(k)} from O`, O, segs, { rs: [3, 4, 5.5, 7, 9], rings: [...P, ...Q].map(p => [p, 1.6]), box: BOX });
       }
-      if (thruJ >= 0 && L.passed("stretch") && !find) {
+      if (thruJ >= 0 && L.passed("stretch") && !find && st.nowS === thruJ) {
         const [a, b] = [[0, 1], [1, 2], [2, 0]][thruJ], m = lerp(P[a], P[b], 0.5), u = unit(angOf(P[a], P[b])), nn = V(-u.y, u.x);
         const tw = smallW("through O: the same line"), cs = [];
         for (const r of [1.2, 2, 3.2]) for (const f of [0.5, 0.3, 0.7, 0.1, 0.9, -0.2, 1.2, 1.6]) for (const sg of [1, -1]) cs.push(add(add(O, mul(sub(lerp(P[a], P[b], 0.5), O), f * 2)), mul(nn, sg * (r + Math.abs(nn.x) * tw / 2 + Math.abs(nn.y) * 0.6))));
@@ -1004,8 +1014,8 @@ function dDilate(i) {
       let ro = null;
       if (stg === "stretch" && (st.held || st.bad)) ro = st.sn != null || st.bad ? `× ${kS(st.sn ?? st.bad)}` : null;
       if (copies && (stg === "copies" || L.passed("copies"))) ro = k > 1 ? `${n2 * n2} copies: area × ${n2 * n2}` : `${n2 * n2} copies: area × ¼`;
-      if (ro) { const b = bbox([...P, ...Q]); readout("ro", ro, [V(b.x1 + 2, b.y1), V(b.x1 + 2, b.y0 + 1), V(b.x0 - 2, b.y1), V(b.x0 - 2, b.y0 + 1)].map((p, j) => ({ ...p, anchor: j < 2 ? "start" : "end" })), segs, !!st.held, undefined, BOX); }
-      if (!find && ((stg === "meas" && (st.mt > 0 || st.mheld)) || L.passed("meas"))) measure("br", P[0], P[1], outN(P, 0, 1), L.passed("meas") ? 1 : st.mt, "AB", 1, segs);
+      if (ro) { const b = bbox([...P, ...Q]); readout("ro", ro, [V(b.x1 + 2, b.y1), V(b.x1 + 2, b.y0 + 1), V(b.x0 - 2, b.y1), V(b.x0 - 2, b.y0 + 1), ...[0, 1, 2, 3, 4, 5, 6, 7, 8].flatMap(y => [V(b.x1 + 2, b.y0 + 2 * y), V(b.x0 - 2, b.y0 + 2 * y)])].map((p, j) => ({ ...p, anchor: j % 2 === 0 && (j < 2 || j >= 4) || j === 1 ? "start" : "end" })), segs, !!st.held, undefined, BOX); }
+
       if (!(stg === "write" || L.task.kind === "done")) return;
       let e = mrow("r1", recS, 1, R1); e = boxAt(L, "write", 0, e, R1, 3);
       if (stg === "write") checkKeys(CKX, R1 - 1, false);
@@ -1164,7 +1174,7 @@ function dSimtest(i) {
   // the stretch's snaps: where a side of the copy reaches its partner's length
   const cands = [...new Set(PR.map((_, j) => r2(bd[j] / sd[j] + 1e-12)))].filter(c => c > 1.05);
   {
-    const okC = c => { const w = fitW().map(p => add(B[0], mul(sub(p, B[0]), c))); return w.every(p => p.x >= 1 && p.x <= fw - 2 && p.y >= 6.5 && p.y <= Yb + 0.2); };
+    const okC = c => { const w = fitW().map(p => add(B[0], mul(sub(p, B[0]), c))); return w.every(p => p.x >= 2.5 && p.x <= fw - 3.5 && p.y >= 6.5 && p.y <= Yb + 0.2); };
     const keep = cands.filter(okC); if (keep.length) cands.splice(0, cands.length, ...keep); else cands.splice(1);
   }
   const fits = Math.max(...PR.map((_, j) => bd[j] / sd[j])) - Math.min(...PR.map((_, j) => bd[j] / sd[j])) < 1e-6;
