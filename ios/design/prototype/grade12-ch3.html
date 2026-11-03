@@ -850,29 +850,34 @@ function dLog(Q) {
       put: [{ s: `= ${lg} (${Q.p * Q.p} ÷ ${Q.q}) =` }, bx("k")] }[kind];
     return done ? tight(t) : t;
   };
-  // a power's name just right of its tick (left of it when a number's tick would cross it)
-  const powLab = (k, j, x, y, extras, x0, live) => {
-    const s = powName(b, j), w = tw(s, "small"), hit = extras.some(e => { const ex = x0 + 5 * Lg(e); return ex > x + 0.2 && ex < x + 0.6 + w; });
-    text(k, s, hit && j ? x - 0.4 : x + 0.4, y, "small", { anchor: hit && j ? "end" : "start", live });
+  // Each ruler starts a block before its 1, so every number sits centred on its own tick: the upper ruler's just above
+  // its ticks (they hang from the edge the rulers share), the lower's just below; a problem's own number has a tick
+  // the band's height and its name outside the band. A power's name that a number's tick would cross is left out.
+  const powLab = (k, j, x, y, extras, x1, live) => {
+    const s = powName(b, j), w = tw(s, "small");
+    if (extras.some(e => Math.abs(x1 + 5 * Lg(e) - x) < w / 2 + 0.4)) return;
+    text(k, s, x, y, "small", { live });
   };
-  const rdW = 19, rulW = 5 * (Lu + (lo.length ? 1 : 0)) + 3;
-  const rdBelow = rulW + 3 + rdW > 72, rx = rdBelow ? 0 : rulW + 3, ry = rdBelow ? 23.5 : 12.5, r1 = rdBelow ? 28 : 25;
-  const fw = Math.max(rx + rdW, listW(work(false)) + 1, rulW + 1, 46) + 1;
+  const X1 = 5, rdW = 19, rulR = X1 + 5 * (Lu + (lo.length ? 1 : 0)), rdBelow = rulR + 3 + rdW > 72, rx = rdBelow ? 0 : rulR + 3;
+  const fw = Math.max(rx + rdW, listW(work(false)) + 1, rulR + 1, 46) + 1;
+  // the bands as tall as the camera allows (two blocks, else one)
+  const layAt = bh => { const E = 10 + bh, r1 = E + bh + 5 + (rdBelow ? 3 : 0); return { bh, E, r1, ry: rdBelow ? E + bh + 3.5 : 10 + bh / 2, fr: { x: -1, y: -1, w: fw, h: r1 + 9 } }; };
+  const LY = fitTo(layAt(10).fr).s >= 0.749 ? layAt(10) : layAt(5), { bh, E, r1, ry } = LY, my = E + bh / 2;
   const L = withBoxes({
-    id: "logrules", P: Q, target, ell, tWant, step, Ll, stage: stages[0], s: 0, t: 1, grabbed: false, moved: false, gx: 0, s0: 0, msg: null, verdict: null, typing: false,
+    id: "logrules", P: Q, target, ell, tWant, step, Ll, X1, my, bh, stage: stages[0], s: 0, t: 1, grabbed: false, moved: false, gx: 0, s0: 0, msg: null, verdict: null, typing: false,
     progress() { return stageIndex(stages, this.stage); },
-    frame() { return { x: -1, y: -1, w: fw, h: r1 + 9 }; },
+    frame() { return LY.fr; },
     grab(q) {
       const st = this.stage;
-      if (st === "slide" && q.y > 14.5 && q.y < 21 && q.x > 5 * this.s - 1 && q.x < 5 * (this.s + Ll) + 3) { this.s0 = this.s; this.gx = q.x; }
-      else if (st === "copy" && Math.hypot(q.x - 5 * ell * this.t, q.y - 17.5) < 2.8) { this.gx = q.x; }
+      if (st === "slide" && q.y > E - 0.5 && q.y < E + bh + 1 && q.x > 5 * this.s - 1 && q.x < X1 + 5 * (this.s + Ll) + 3) { this.s0 = this.s; this.gx = q.x; }
+      else if (st === "copy" && Math.hypot(q.x - X1 - 5 * ell * this.t, q.y - my) < 2.8) { this.gx = q.x; }
       else return false;
       this.grabbed = true; this.moved = false; this.msg = null; return true;
     },
     drag(q) {
       this.moved = true;
       if (this.stage === "slide") { const raw = this.s0 + (q.x - this.gx) / 5; this.s = stops.reduce((p, s) => (Math.abs(s - raw) < Math.abs(p - raw) ? s : p), stops[0]); }
-      else this.t = clamp(Math.round(q.x / 5 / ell / step) * step, step, tMax);
+      else this.t = clamp(Math.round((q.x - X1) / 5 / ell / step) * step, step, tMax);
     },
     release() {
       this.grabbed = false; const st = this.stage;
@@ -925,27 +930,27 @@ function dLog(Q) {
       }[st];
       dhead(this, say[0], say[1]);
       // the upper ruler
-      rect("ub", 0, 10, 5 * Lu, 5, { c: "var(--ink)" });
-      if (copying) rect("whole", 0, 10, 5 * ell, 5, { fill: "var(--tint)" });
-      for (let j = 0; j < Lu; j++) { if (j) line(`ut${j}`, 5 * j, 13.5, 5 * j, 15); powLab(`un${j}`, j, 5 * j, 12, up, 0); }
-      for (const e of up) { const x = 5 * Lg(e); line(`ue${e}`, x, 10, x, 15); lab(`uen${e}`, String(e), "above", 10, x); }
+      rect(`ub${bh}`, 0, 10, X1 + 5 * Lu, bh, { c: "var(--ink)" });
+      if (copying) rect("whole", X1, 10, 5 * ell, bh, { fill: "var(--tint)" });
+      for (let j = 0; j < Lu; j++) { line(`ut${j}`, X1 + 5 * j, E - 1.5, X1 + 5 * j, E); powLab(`un${j}`, j, X1 + 5 * j, E - 2.35, up, X1); }
+      for (const e of up) { const x = X1 + 5 * Lg(e); line(`ue${e}`, x, 10, x, E); lab(`uen${e}`, String(e), "above", 10, x); }
       // the lower ruler, sliding
       if (st === "slide" || (lo.length && si > stages.indexOf("slide"))) {
-        const x0 = 5 * this.s;
-        rect("lb", x0, 15, 5 * Ll, 5, { c: "var(--ink)", live: true });
-        for (let j = 0; j < Ll; j++) { if (j) line(`lt${j}`, x0 + 5 * j, 15, x0 + 5 * j, 16.5, { live: true }); powLab(`ln${j}`, j, x0 + 5 * j, 18, lo, x0, true); }
-        for (const e of lo) { const x = x0 + 5 * Lg(e); line(`le${e}`, x, 15, x, 20, { live: true }); lab(`len${e}`, String(e), "below", 20, x, "small", null, { live: true }); }
-        if (st === "slide") hand("hl", x0 + 5 * Ll + 1.5, 17.5, this.grabbed);
+        const x0 = X1 + 5 * this.s;
+        rect("lb", x0 - X1, E, X1 + 5 * Ll, bh, { c: "var(--ink)", live: true });
+        for (let j = 0; j < Ll; j++) { line(`lt${j}`, x0 + 5 * j, E, x0 + 5 * j, E + 1.5, { live: true }); powLab(`ln${j}`, j, x0 + 5 * j, E + 2.35, lo, x0, true); }
+        for (const e of lo) { const x = x0 + 5 * Lg(e); line(`le${e}`, x, E, x, E + bh, { live: true }); lab(`len${e}`, String(e), "below", E + bh, x, "small", null, { live: true }); }
+        if (st === "slide") hand("hl", x0 + 5 * Ll + 1.5, my, this.grabbed);
       }
       // the copies laid along under it
       if (copying) {
         const t = st === "copy" ? this.t : tWant;
         for (let i = 0; i < Math.ceil(t - 1e-9); i++) {
           const w = Math.min(1, t - i) * 5 * ell;
-          rect(`cp${i}f`, 5 * ell * i, 15.5, w, 4, { fill: "var(--tint)", live: true });
-          rect(`cp${i}o`, 5 * ell * i, 15.5, w, 4, { c: "var(--chapter)", live: true });
+          rect(`cp${i}f`, X1 + 5 * ell * i, E + 0.5, w, bh - 1, { fill: "var(--tint)", live: true });
+          rect(`cp${i}o`, X1 + 5 * ell * i, E + 0.5, w, bh - 1, { c: "var(--chapter)", live: true });
         }
-        if (st === "copy") hand("hc", 5 * ell * t, 17.5, this.grabbed);
+        if (st === "copy") hand("hc", X1 + 5 * ell * t, my, this.grabbed);
       }
       // the readout beside the rulers
       let rd = "";
