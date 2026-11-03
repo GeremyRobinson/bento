@@ -773,8 +773,13 @@ function dTwopoint(idx) {
       }
       if (after("step") && !after("m")) {
         leg("lg2", x2, y2, false);
-        const ly = rise > 0 ? P.py(y1) + 0.9 : P.py(y1) - 0.9;
-        text("lgat", `${run} across`, (P.px(x1) + P.px(x2)) / 2, ly, "small", { c: CH });
+        // "2 across" on the far side of the leg from the step, kept off the axes and their numbers
+        let ly = rise > 0 ? P.py(y1) + 0.9 : P.py(y1) - 0.9;
+        if (ly > P.OY - 1.2 && ly < P.OY + 1.9) ly = rise > 0 ? P.OY + 2.4 : P.OY - 1.3;
+        const at = `${run} across`, w = at.length * CHW.small;
+        let cx = (P.px(x1) + P.px(x2)) / 2;
+        if (cx - w / 2 < P.OX + 0.6 && cx + w / 2 > P.OX - 2.6) cx = P.px(x2) - P.OX >= P.OX - P.px(x1) ? P.OX + 0.6 + w / 2 : P.OX - 2.6 - w / 2;
+        text("lgat", at, cx, ly, "small", { c: CH });
         const leftSide = x2 < 0;        // the label on the side away from the y-axis's numbers
         lab("lgut", `${Math.abs(rise)} ${rise < 0 ? "down" : "up"}`, leftSide ? "left" : "right", P.px(x2) + (leftSide ? -0.2 : 0.2), (P.py(y1) + P.py(y2)) / 2, "small", CH);
       }
@@ -933,7 +938,7 @@ function dElim(idx) {
     id: "elim", index: idx, P: G, maxZoom: 1.25, stage: stages[0], kv: 1, dr: null, mt: null, spring: null, r: null, ry: null, took: false,
     boxes: [], wi: 0, got: {}, msg: null, verdict: null, typing: false, wrongPick: null,
     progress() { return stageIndex(stages, this.stage); },
-    animating() { return running(this.mt) || running(this.spring); },
+    animating() { return running(this.mt) || running(this.spring) || running(this.lipTw); },
     frame() { return autoFrame(); },
     type(v) { if (this.active != null) this.vals[this.active] = v; this.verdict = null; this.msg = null; },
     setBoxes(list) { this.boxes = list; this.wi = 0; this.active = list[0]; this.typing = true; },
@@ -1058,21 +1063,26 @@ function dElim(idx) {
           if (shareSt) { const h = this.handleAt(null); handle("hd", h.x, h.y); }
         }
       }
-      const beam = (k, BY, dx = 0, dy = 0, live = false) => {
+      // a balance: its beam, two trays (the left as wide as its load), the stand
+      const beam = (k, BY, lip, dx = 0, dy = 0, live = false) => {
         line(`${k}b`, LX - 1 + dx, BY + dy, TR + dx, BY + dy, { live });
-        line(`${k}l0`, LX - 1 + dx, BY - 1 + dy, LX - 1 + dx, BY + dy, { live }); line(`${k}l1`, F - 2 + dx, BY - 1 + dy, F - 2 + dx, BY + dy, { live });
+        line(`${k}l0`, LX - 1 + dx, BY - 1 + dy, LX - 1 + dx, BY + dy, { live }); line(`${k}l1`, lip + dx, BY - 1 + dy, lip + dx, BY + dy, { live: live || lip !== Math.round(lip) });
         line(`${k}r0`, RX - 1 + dx, BY - 1 + dy, RX - 1 + dx, BY + dy, { live }); line(`${k}r1`, TR + dx, BY - 1 + dy, TR + dx, BY + dy, { live });
         path(`${k}s`, `M${sq(F + dx)} ${sq(BY + dy)}L${sq(F - 2 + dx)} ${sq(BY + 3 + dy)}H${sq(F + 2 + dx)}Z`, { live });
         line(`${k}g`, F - 4 + dx, BY + 3 + dy, F + 4 + dx, BY + 3 + dy, { live });
       };
-      beam("b1", BY1);
+      // the left tray's lip follows its load, eased when the load changes
+      const lipT = LX + Math.max(lw, 1) + 1;
+      if (this.lipT == null) { this.lipT = this.lipFrom = lipT; }
+      else if (this.lipT !== lipT) { this.lipFrom = this.lipFrom + (this.lipT - this.lipFrom) * tw(this.lipTw); this.lipT = lipT; this.lipTw = tween(450); }
+      beam("b1", BY1, this.lipFrom + (this.lipT - this.lipFrom) * tw(this.lipTw));
       // the second balance, until it's slid on; with its ring when it's to be scaled
       if (!merged) {
         const bd = d && d.what === "bal" ? d : { dx: 0, dy: 0 }, live = !!(d && d.what === "bal");
         const e2v = times(e2, ring ? (st === "ring" ? this.kv : K) : 1), lv = live || (st === "ring" && !!d);
         drawPan("p2l", leftOf(e2v), LX + bd.dx, BY2 + bd.dy, { live: lv });
         drawPan("p2r", [{ t: "1", c: e2v.n }], RX + bd.dx, BY2 + bd.dy, { live: lv });
-        beam("b2", BY2, bd.dx, bd.dy, live);
+        beam("b2", BY2, LX + Math.max(panW(leftOf(e2v)), 1) + 1, bd.dx, bd.dy, live);
         if (live && Math.abs(bd.dy - (BY1 - BY2)) <= 3 && Math.abs(bd.dx) <= 3) rdout(RDX, RDY, eqS(sum));
         if (st === "ring") {
           const c = this.ringAt();
