@@ -25,7 +25,7 @@ struct AddSubBigLesson: PaperLesson {
     static func chart(_ P: AddSubBig.Parts) -> PlaceChart { PlaceChart(n: columns(P), c: 2, pr: 1, y0: yT) }
 
     /// One disk on the chart, or several stacked as one (ten closed, or a disk about to open into ten).
-    /// Each disk keeps its own look as it moves (so it glides): a closed ten is its ten disks stacked, a solid one on top.
+    /// Each disk keeps its own look as it moves, so it glides; a closed ten is its ten disks stacked, all solid.
     struct Item { var ids: [String]; var striped: [Bool] }
     /// The chart after some moves: each column's disks in the top band (the crossed-out ones with the striped disk that
     /// took them away), the second number's still in its band, and what the record shows was carried or traded.
@@ -64,9 +64,10 @@ struct AddSubBigLesson: PaperLesson {
                     }
                 case .close(let pw):
                     guard finished else { continue }
-                    // stacked with the striped ones under the solid ones, so it shows as one solid disk
-                    let ten = top[pw].prefix(10).flatMap { zip($0.ids, $0.striped) }.sorted { $0.1 && !$1.1 }
-                    top[pw + 1].append(Item(ids: ten.map(\.0), striped: ten.map(\.1)))
+                    // one disk of the next place: all ten solid (the first number's glide there; the second's, striped, come
+                    // in solid with them), so the carried 1 never looks like part of the second number
+                    let ten = top[pw].prefix(10).flatMap(\.ids)
+                    top[pw + 1].append(Item(ids: ten, striped: ten.map { _ in false }))
                     crossed[pw + 1].append(nil)
                     top[pw].removeFirst(10); crossed[pw].removeFirst(10)
                     carried.insert(pw + 1)

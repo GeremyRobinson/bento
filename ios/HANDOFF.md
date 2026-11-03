@@ -17,6 +17,16 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
 - Builds in Xcode; 181 Core tests pass. G builds in **Xcode** (not Swift Playgrounds). G, 24 Oct: "you guys did an
   incredible job".
 
+## Grades (3 Nov 2026)
+- The map comes from the child's grade: `Core/Curriculum.swift` holds every grade's map as a list of chapters (5th grade's
+  ids, tests and saves unchanged; its chapters' keys are their colours, so its tests keep "test-whole" etc.). A grade is
+  live once a lesson of it is built (4th and 5th). `Map` in `App/PaperModel.swift` reads the current grade's `GradeMap`;
+  `PaperModel.chooseGrade` switches (grade row, Me, Settings). Lessons not built yet show as faint dashed empty frames
+  with their names; chosen, "Coming soon" (`Map.coming`). Each grade's first chapter is free.
+- 4th grade chapter 1, Big numbers, is built (Core: `BigNumbers`, `TensHundreds`, `ReadWriteBig`, `CompareBig`,
+  `PlaceValueRound`, `AddSubBig`; App: `Lessons/PlaceChart.swift` and a lesson file each). Shots: `page-g4-<id>-<step>`
+  opens on 4th grade by itself; `-grade 4` for map moments.
+
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
   finger; `BarsKit.swift` the fractions' bars, ruler and sliding pieces). `App/LessonHands.swift`: hand moves.
