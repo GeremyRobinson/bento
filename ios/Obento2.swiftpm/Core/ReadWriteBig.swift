@@ -64,7 +64,8 @@ public enum ReadWriteBig {
         generate: { rng, index in make(&rng, index) },
         display: { n in
             let s = Parts(n)
-            return s.a ? [.text("?"), .op("="), .text(s.name)] : [.text(BigNumbers.commas(s.N)), .op("="), .text("?")]
+            // a name is too long for a problem's card (up to three rows): the card says what to do, the name is on the paper
+            return s.a ? [.text("Build the number")] : [.text(BigNumbers.commas(s.N)), .op("="), .text("?")]
         },
         idea: { _ in "Each digit is worth its place, and an empty place still needs its 0." },
         depends: ["g4-tentimes"],

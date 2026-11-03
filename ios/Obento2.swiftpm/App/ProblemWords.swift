@@ -118,7 +118,7 @@ enum ProblemLayout {
         func after(_ b: WorkBox) -> Double {
             b.rect(typed: Int(count)).midX + PaperText.width(l.typed[id] ?? "", PaperText.font(Sketch.maths * (L.stack?.plan.k ?? L.scale), .medium, digits: true)) / 2 + 0.1 * b.cell
         }
-        let x = L.inline ? m.origin.x + (b.map { $0.pointCursor(l.typed[id] ?? "") ?? ($0.centred ? after($0) : $0.right + 0.22 * cell) } ?? 0)
+        let x = L.inline ? m.origin.x + (b.map { $0.pointCursor(l.typed[id] ?? "") ?? ($0.centred ? after($0) : $0.right + ($0.tight ? -0.12 : 0.22) * cell) } ?? 0)
             : r.minX + cell + count * cell + 0.15 * cell
         return CGRect(x: x, y: r.midY - 0.4 * cell, width: 0, height: 0.8 * cell)
     }
@@ -350,6 +350,11 @@ extension Rig {
                     let chars = Array(typed), left = (wb?.right ?? r.maxX - o.x) + o.x - Double(chars.count) * cell
                     for (j, ch) in chars.enumerated() {
                         s.text("\(id)typed\(j)\(ch)\(tag)", String(ch), at: CGPoint(x: left + (Double(j) + 0.5) * cell, y: r.midY), size: Sketch.maths * k, weight: .medium, colour)
+                        // a big number's commas, on the lines between its digits (every three from the right)
+                        let fromRight = chars.count - j
+                        if wb?.commas == true, j > 0, fromRight % 3 == 0 {
+                            s.text("\(id)typed,\(fromRight)\(tag)", ",", at: CGPoint(x: left + Double(j) * cell, y: r.midY), size: Sketch.maths * k, weight: .medium, colour)
+                        }
                     }
                 }
                 s.pace = 0.4

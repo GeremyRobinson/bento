@@ -22,6 +22,12 @@ struct WorkBox {
     /// A centred box after an = sign (a whole number answer at the end of the record): it keeps its left edge and grows
     /// to the right as more is typed than it holds, so it never covers the =.
     var keepsLeft = false
+    /// A big whole number (4th grade's Big numbers): what's typed is written with its commas on the grid lines between
+    /// its digits, as the record writes numbers (47,382).
+    var commas = false
+    /// No room for the cursor past its right edge (the cursor sits just inside it): a box written right up to more of
+    /// the number (the thousands and up of an answer whose hundreds the hands wrote), which it mustn't cover.
+    var tight = false
     func moved(_ by: CGPoint) -> WorkBox { var b = self; b.right += by.x; b.mid += by.y; b.point = point.map { $0 + by.x }; return b }
     /// Where each typed character goes when the box lines up on its point: its middle's x (the point's: the line).
     func placed(_ typed: String) -> [(ch: Character, x: Double)] {
@@ -61,7 +67,7 @@ struct WorkBox {
             return CGRect(x: keepsLeft ? left : mid - n * cell / 2, y: self.mid - cell / 2, width: n * cell, height: cell)
         }
         let n = Double(max(cells, typed + spare))
-        return CGRect(x: right - n * cell, y: mid - cell / 2, width: (n + 0.5) * cell, height: cell)
+        return CGRect(x: right - n * cell, y: mid - cell / 2, width: (n + (tight ? 0 : 0.5)) * cell, height: cell)
     }
 }
 
@@ -87,9 +93,9 @@ struct GridPen {
     /// An answer box `cells` digits wide whose right edge is column `right`, on the row whose middle is `mid` (a digit is
     /// `per` squares): it grows left as digits are typed, so they line up on the right as written work does.
     /// `keepsLeft`: a centred box that grows to the right (WorkBox.keepsLeft).
-    mutating func answerBox(_ id: String, right: Double, mid: Double, per: Double, cells: Int, spare: Int = 0, centred: Bool = false, point: Double? = nil, keepsLeft: Bool = false) {
+    mutating func answerBox(_ id: String, right: Double, mid: Double, per: Double, cells: Int, spare: Int = 0, centred: Bool = false, point: Double? = nil, keepsLeft: Bool = false, commas: Bool = false, tight: Bool = false) {
         boxes.append(WorkBox(id: id, right: P(right, 0).x, mid: P(0, mid).y, cell: per * Self.sq, cells: cells, spare: spare, centred: centred,
-                             point: point.map { P($0, 0).x }, keepsLeft: keepsLeft))
+                             point: point.map { P($0, 0).x }, keepsLeft: keepsLeft, commas: commas, tight: tight))
     }
 
     /// Every box the work has: the one `box`, then the named ones.

@@ -88,6 +88,12 @@ enum PaperLessons {
         case "g5-shapes": return ShapesLesson()
         case "g5-compare": return CompareDecimalsLesson()
         case "g5-fracdiv": return FractionsAsDivisionLesson()
+        // 4th grade, Big numbers (3 Nov 2026)
+        case "g4-tentimes": return TensHundredsLesson()
+        case "g4-readwrite": return ReadWriteLesson()
+        case "g4-compare": return CompareBigLesson()
+        case "g4-placevalue": return PlaceValueLesson()
+        case "g4-addsub": return AddSubBigLesson()
         default: return nil
         }
     }

@@ -134,7 +134,7 @@ final class BigNumbersTests: XCTestCase {
 
     func testReadWriteA() {
         var l = LessonRun(ReadWriteBig.spec, numbers: ReadWriteBig.numbers(kind: 0, N: 40605))
-        XCTAssertEqual(l.display, [.text("?"), .op("="), .text("forty thousand, six hundred five")])
+        XCTAssertEqual(l.display, [.text("Build the number")])
         _ = l.go()
         XCTAssertEqual(l.words.say, "Build the number. Tap a column to put a disk in.")
         XCTAssertEqual(l.go(), .notYet("Tap a column to put a disk in."))
