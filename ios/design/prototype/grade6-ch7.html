@@ -1,0 +1,1588 @@
+<title>Area and volume</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700&display=swap">
+<style>
+/* Layout: the whole screen is one sheet of graph paper seen through one camera; the floating pill at the bottom is
+   the only chrome. 1 square = 20 paper units, a strong line every 5 squares (a block). */
+:root {
+  --paper: #F3F1EC; --grid: #E2DED6; --grid-strong: #D3CEC4;
+  --ink: #1D1C1A; --ink2: #6E6A63; --ink3: #A39E95;
+  --chapter: #4F63D9; --tint: rgba(79, 99, 217, .22); --tint-strong: rgba(79, 99, 217, .42);
+  --right: #178A57; --wrong: #C8372D;
+  --pill: rgba(255, 255, 255, .94); --pill-line: #E4E0D8;
+  --round: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C;
+  --chapter: #8C9BFF; --tint: rgba(140, 155, 255, .22); --tint-strong: rgba(140, 155, 255, .42);
+  --right: #3CCF8E; --wrong: #FF6B5E;
+  --pill: rgba(40, 40, 37, .94); --pill-line: #3A3A36; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C;
+  --chapter: #8C9BFF; --tint: rgba(140, 155, 255, .22); --tint-strong: rgba(140, 155, 255, .42);
+  --right: #3CCF8E; --wrong: #FF6B5E;
+  --pill: rgba(40, 40, 37, .94); --pill-line: #3A3A36; color-scheme: dark }
+/* this chapter (Long division and decimals) is the decimals family's pink, as 5th grade's decimal lessons */
+body.decimals { --chapter: #D6407F; --tint: rgba(214, 64, 127, .2); --tint-strong: rgba(214, 64, 127, .4) }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) body.decimals { --chapter: #FF7AB0; --tint: rgba(255, 122, 176, .22); --tint-strong: rgba(255, 122, 176, .42) } }
+:root { --cube-top: color-mix(in srgb, var(--chapter) 18%, var(--paper)); --cube-front: color-mix(in srgb, var(--chapter) 34%, var(--paper));
+  --cube-side: color-mix(in srgb, var(--chapter) 52%, var(--paper)); --cube-edge: color-mix(in srgb, var(--chapter) 70%, var(--ink)); }
+:root[data-theme="dark"] body.decimals { --chapter: #FF7AB0; --tint: rgba(255, 122, 176, .22); --tint-strong: rgba(255, 122, 176, .42) }
+html, body { height: 100%; }
+body { background: var(--paper); color: var(--ink); font-family: var(--round); overflow: hidden; touch-action: none;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+#paper { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+svg text { font-family: var(--round); font-variant-numeric: tabular-nums; }
+.say { font-size: 28px; font-weight: 600; fill: var(--ink); }
+.small { font-size: 20px; font-weight: 600; fill: var(--ink2); }
+.maths { font-size: 36px; font-weight: 600; fill: var(--ink); }
+.label { font-size: 26px; font-weight: 600; fill: var(--ink2); }
+
+/* drawing in: lines stroke on, words and fills fade in, one after another */
+.in-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .55s ease-out forwards; }
+.in-fade { opacity: 0; animation: fade .4s ease-out forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes fade { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .in-line, .in-fade { animation-duration: .01s; } }
+
+/* the one floating bar */
+#bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 999px; background: var(--pill);
+  border: 1px solid var(--pill-line); box-shadow: 0 6px 24px rgba(0,0,0,.08); max-width: calc(100vw - 32px);
+  font-family: var(--round); }
+#bar button { font: 600 17px var(--round); color: var(--ink); background: none; border: 0; padding: 10px 14px;
+  border-radius: 999px; cursor: pointer; white-space: nowrap; }
+#bar button[aria-pressed="true"] { background: var(--tint); }
+#bar button:focus-visible { outline: 2px solid var(--chapter); outline-offset: 2px; }
+#bar select { font: 600 17px var(--round); color: var(--ink); background: none; border: 0; padding: 10px 26px 10px 14px;
+  border-radius: 999px; cursor: pointer; -webkit-appearance: none; appearance: none; max-width: 52vw; text-overflow: ellipsis;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink2) 50%), linear-gradient(135deg, var(--ink2) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%; background-size: 5px 5px; background-repeat: no-repeat; }
+#bar select:focus-visible { outline: 2px solid var(--chapter); outline-offset: 2px; }
+#bar .seg { display: flex; border: 1px solid var(--pill-line); border-radius: 999px; padding: 2px; }
+#bar .seg button { font-size: 14px; padding: 6px 10px; }
+#bar .seg[hidden] { display: none; }
+#bar .sep { width: 1px; align-self: stretch; background: var(--pill-line); margin: 4px 4px; }
+#bar .progress { display: flex; flex-direction: column; gap: 6px; padding: 0 10px; min-width: 120px; }
+#bar .progress span { font: 600 14px var(--round); color: var(--ink2); }
+#bar .track { height: 4px; border-radius: 2px; background: var(--pill-line); overflow: hidden; }
+#bar .track i { display: block; height: 100%; background: var(--chapter); transition: width .4s ease; }
+@media (max-width: 640px) { #bar .progress { display: none; } #bar button, #bar select { font-size: 15px; padding: 9px 10px; } #bar select { padding-right: 24px; } #bar .seg button { font-size: 13px; padding: 5px 8px; }
+  #bar { flex-wrap: wrap; justify-content: center; border-radius: 26px; row-gap: 2px; } #bar .sep { display: none; } }
+#keys { position: fixed; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; font-size: 16px; }
+</style>
+
+<svg id="paper" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-label="Graph paper lesson">
+  <defs>
+    <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
+      <path d="M20 0V100M40 0V100M60 0V100M80 0V100M0 20H100M0 40H100M0 60H100M0 80H100" stroke="var(--grid)" stroke-width="1" fill="none"/>
+      <path d="M0 0V100M0 0H100" stroke="var(--grid-strong)" stroke-width="1.5" fill="none"/>
+    </pattern>
+    <pattern id="stripes" width="20" height="20" patternUnits="userSpaceOnUse">
+      <rect width="20" height="20" fill="var(--tint)"/>
+      <path d="M-5 5L5 -5M0 20L20 0M15 25L25 15" stroke="var(--chapter)" stroke-width="1.5" opacity=".55"/>
+    </pattern>
+  </defs>
+  <g id="paperg">
+    <rect x="-20000" y="-20000" width="40000" height="40000" fill="url(#grid)"/>
+    <g id="scene"></g>
+  </g>
+  <g id="upright"></g>
+</svg>
+
+<nav id="bar" aria-label="Lessons">
+  <select id="pick" aria-label="Lesson"></select>
+  <div class="sep"></div>
+  <div class="progress"><span id="stepname">Step 1 of 3</span><div class="track"><i id="track" style="width:0"></i></div></div>
+  <div class="sep"></div>
+  <button id="fresh" type="button">New problem</button>
+</nav>
+<input id="keys" inputmode="decimal" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Answer">
+
+<script>
+"use strict";
+// Obento² · 6th grade, chapter 7: Area and volume. The paper kit is grade6-ch6.html's (grid, drawing in, camera, hands,
+// boxes, and every move chapters 1–6 built), with chapter 5's tilting paper and cubes (8th grade's tilt) back for the
+// two 3D lessons. The six lessons and the pieces they add (cut and slide, a turned copy, cuts along grid lines, a net
+// that folds, small cubes) are below it. Open with ?l=para | tri | trap | poly | nets | fracvol, and ?i=<n> to start
+// at the n-th problem (easy first).
+// ---------- the paper: squares, drawing, camera ----------
+const SQ = 20, svg = document.getElementById("paper"), sceneEl = document.getElementById("scene");
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const gcd = (a, b) => b ? gcd(b, a % b) : a;
+const lcm = (a, b) => a * b / gcd(a, b);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+
+let items = [], drawn = new Set();
+// one thing on the paper: its key (a new key draws in), its tag and attributes in paper units, how it draws in
+// UP: what's put now stands up off the paper or faces the child (drawn over the tilting paper, never tilted)
+// FLAP: what's put now rides on the half of the paper a fold is turning (drawn under the fold's transform, never drawn in)
+let UP = false, FLAP = false;
+function put(k, tag, a, kind = "fade", text, html) { items.push({ k, tag, a, kind, text, html, up: UP, flap: FLAP }); }
+const sq = n => n * SQ;
+function line(k, x1, y1, x2, y2, o = {}) {
+  put(k, "line", { x1: sq(x1), y1: sq(y1), x2: sq(x2), y2: sq(y2), stroke: o.c || "var(--ink)", "stroke-width": o.w || 1.5,
+    "stroke-dasharray": o.dash ? "6 6" : null, "stroke-linecap": "butt", pathLength: o.dash ? null : 1 }, o.live ? "none" : o.dash ? "fade" : "line");
+}
+function path(k, d, o = {}) {
+  put(k, "path", { d, fill: o.fill || "none", stroke: o.c || "var(--ink)", "stroke-width": o.w || 1.5, pathLength: 1 }, o.live ? "none" : "line");
+}
+function rect(k, x, y, w, h, o = {}) {
+  put(k, "rect", { x: sq(x), y: sq(y), width: sq(w), height: sq(h), fill: o.fill || "none", stroke: o.c || null,
+    "stroke-width": o.c ? (o.w || 1.5) : null, opacity: o.op ?? null, rx: o.rx ?? null, "stroke-dasharray": o.dash ? "6 6" : null,
+    pathLength: o.c && !o.fill && !o.dash ? 1 : null, transform: o.t || null }, o.live ? "none" : o.c && !o.fill ? "line" : "fade");
+}
+function dot(k, x, y, r, o = {}) { put(k, "circle", { cx: sq(x), cy: sq(y), r: sq(r), fill: o.c || "var(--chapter)" }, o.live ? "none" : "fade"); }
+function text(k, s, x, y, cls, o = {}) {
+  put(k, "text", { x: sq(x), y: sq(y), class: cls, "text-anchor": o.anchor || "middle", "dominant-baseline": "central",
+    style: o.c ? `fill:${o.c}` : null }, o.live ? "none" : "fade", s);
+}
+// words in rows of 2 squares, wrapped at a width in squares
+function words(k, s, x, y, widthSq, cls = "say", o = {}) {
+  const per = cls === "say" ? 0.72 : 0.52, max = Math.max(8, Math.floor(widthSq / per));
+  const rows = []; let cur = "";
+  for (const w of s.split(" ")) { if ((cur + " " + w).trim().length > max && cur) { rows.push(cur); cur = w; } else cur = (cur + " " + w).trim(); }
+  if (cur) rows.push(cur);
+  rows.forEach((r, i) => text(`${k}:${i}:${r}`, r, x, y + i * 2, cls, { anchor: "start", c: o.c }));
+  return rows.length;
+}
+// a number written as school writes it on squared paper: 2 squares a digit, the point on the grid line between
+function digits(k, s, right, row, o = {}) {
+  let col = 0;
+  for (let i = s.length - 1; i >= 0; i--) {
+    const ch = s[i];
+    if (ch === ".") { text(`${k}.${i}`, ".", right - col, row, "maths", { c: o.c }); continue; }
+    text(`${k}${i}${ch}`, ch, right - col - 1, row, "maths", { c: o.c }); col += 2;
+  }
+}
+// a fraction in a column 4 squares wide: top centred on row r+1, its bar on r+2, bottom on r+3
+function frac(k, top, bot, col, r, o = {}) {
+  if (top != null) text(`${k}t${top}`, top, col + 2, r + 1, "maths", { c: o.c });
+  line(`${k}bar`, col, r + 2, col + 4, r + 2, { c: o.c });
+  if (bot != null) text(`${k}b${bot}`, bot, col + 2, r + 3, "maths", { c: o.c });
+}
+// a block drawn on the paper: an outline, its word and arrow (Check, Cut, Next problem)
+function block(k, x, y, w, label, act, o = {}) {
+  rect(`${k}o`, x, y, w, 2, { c: o.main === false ? "var(--ink3)" : "var(--ink)" });
+  text(`${k}w${label}`, label, x + 1, y + 1, "small", { anchor: "start", c: "var(--ink)" });
+  if (o.arrow !== false) path(`${k}a`, `M${sq(x + w - 1.6)} ${sq(y + 1)}h${sq(0.8)}m-6 -6l6 6l-6 6`, {});
+  put(`${k}hit`, "rect", { x: sq(x), y: sq(y), width: sq(w), height: sq(2), fill: "transparent", "data-act": act }, "none");
+}
+// an answer box in the work: cells of 2 squares, what's typed in the middle, the cursor after it
+function answerBox(k, x, y, cells, value, state) {
+  const c = state === "right" ? "var(--right)" : state === "wrong" ? "var(--wrong)" : "var(--ink)";
+  rect(`${k}box${cells}`, x, y, cells * 2, 2, { c, live: false });
+  if (value) text(`${k}v`, value, x + cells, y + 1, "maths", { c, live: true });
+  if (state === "active") {
+    const w = value ? value.length * 0.62 : 0;
+    put(`${k}cur`, "line", { x1: sq(x + cells + w + 0.15), y1: sq(y + 0.35), x2: sq(x + cells + w + 0.15), y2: sq(y + 1.65),
+      stroke: "var(--chapter)", "stroke-width": 2 }, "none");
+  }
+  put(`${k}hit`, "rect", { x: sq(x), y: sq(y), width: sq(cells * 2), height: sq(2), fill: "transparent", "data-act": "type" }, "none");
+}
+
+let raf = 0;
+function render() {
+  items = [];
+  lesson.scene();
+  const next = new Set(); let n = 0, out = "", outUp = "", outFlap = "";
+  for (const it of items) {
+    next.add(it.k);
+    const fresh = !drawn.has(it.k) && it.kind !== "none" && !it.flap, a = { ...it.a };
+    if (fresh) {
+      a.class = ((a.class || "") + (it.kind === "line" ? " in-line" : " in-fade")).trim();
+      a.style = `animation-delay:${Math.min(n++ * 0.035, 1.2).toFixed(3)}s;` + (a.style || "");
+    }
+    const attrs = Object.entries(a).filter(([, v]) => v != null).map(([k, v]) => `${k}="${esc(v)}"`).join(" ");
+    const el = `<${it.tag} ${attrs}>${it.text != null ? esc(it.text) : it.html || ""}</${it.tag}>`;
+    if (it.flap) outFlap += el; else if (it.up) outUp += el; else out += el;
+  }
+  const fmx = outFlap && lesson.flapMatrix && lesson.flapMatrix();
+  sceneEl.innerHTML = out + (fmx ? `<g transform="matrix(${fmx.join(" ")})">${outFlap}</g>` : "");
+  document.getElementById("upright").innerHTML = outUp;
+  const m = lesson.paperMatrix && lesson.paperMatrix();
+  if (m) document.getElementById("paperg").setAttribute("transform", `matrix(${m.join(" ")})`);
+  else document.getElementById("paperg").removeAttribute("transform");
+  // a lesson that's moving (the paper tilting, cubes rising) draws again next frame
+  if (lesson.animating && lesson.animating() && !raf) raf = requestAnimationFrame(() => { raf = 0; render(); });
+  drawn = next;
+  const [i, of] = lesson.progress();
+  document.getElementById("stepname").textContent = `Step ${Math.min(i + 1, of)} of ${of}`;
+  document.getElementById("track").style.width = `${Math.round(100 * i / of)}%`;
+}
+
+// the camera: frames what the lesson shows now, eased (0.75 s), never past the lesson's maxZoom (1.25)
+const cam = { x: 0, y: 0, s: 1 }; let camTo = null, camFrom = null, camT0 = 0;
+function fitTo(f) {
+  const W = innerWidth, H = innerHeight, top = 24, bottom = 110;
+  const s = Math.min((W - 64) / sq(f.w), (H - top - bottom - 32) / sq(f.h), (lesson && lesson.maxZoom) || 1.6);
+  // the frame's top sits at the top of the screen (the words on rows 0–2 first, never an empty band above them)
+  return { s, x: sq(f.x + f.w / 2) - W / 2 / s, y: sq(f.y) - (top + 16) / s };
+}
+function frame(f, now) {
+  const t = fitTo(f);
+  if (now) { Object.assign(cam, t); applyCam(); return; }
+  camFrom = { ...cam }; camTo = t; camT0 = performance.now(); requestAnimationFrame(stepCam);
+}
+function stepCam(t) {
+  if (!camTo) return;
+  const u = Math.min(1, (t - camT0) / 750), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+  for (const k of ["x", "y", "s"]) cam[k] = camFrom[k] + (camTo[k] - camFrom[k]) * e;
+  applyCam();
+  if (u < 1) requestAnimationFrame(stepCam); else camTo = null;
+}
+function applyCam() { svg.setAttribute("viewBox", `${cam.x} ${cam.y} ${innerWidth / cam.s} ${innerHeight / cam.s}`); }
+addEventListener("resize", () => frame(lesson.frame(), true));
+
+// ---------- typing (the iPad's own number keys) ----------
+const keys = document.getElementById("keys");
+function openKeys() { keys.value = lesson.typed || ""; keys.focus({ preventScroll: true }); }
+// the hyphen key writes a true minus (−), as grade 8 and 9's previews do
+keys.addEventListener("input", () => { lesson.type(keys.value.replace(/-/g, "−").replace(/[^0-9.−]/g, "").slice(0, 6)); render(); });
+keys.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); act("check"); } });
+
+// ---------- hands: tap, drag (on the lesson's picture) or pan the paper ----------
+function toPaper(e) { const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse()); return { x: p.x / SQ, y: p.y / SQ }; }
+let down = null;
+svg.addEventListener("pointerdown", e => {
+  const p = toPaper(e), hit = e.target.closest("[data-act]");
+  down = { p, sx: e.clientX, sy: e.clientY, act: hit && hit.dataset.act, moved: false, grabbed: false, cam: { ...cam } };
+  if (!down.act && lesson.grab && lesson.grab(p)) { down.grabbed = true; render(); }
+  svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener("pointermove", e => {
+  if (!down) return;
+  if (Math.hypot(e.clientX - down.sx, e.clientY - down.sy) > 6) down.moved = true;
+  if (down.grabbed) { lesson.drag(toPaper(e)); render(); return; }
+  if (down.moved && !down.act) { camTo = null; cam.x = down.cam.x - (e.clientX - down.sx) / cam.s; cam.y = down.cam.y - (e.clientY - down.sy) / cam.s; applyCam(); }
+});
+svg.addEventListener("pointerup", e => {
+  if (!down) return;
+  const d = down; down = null;
+  if (d.grabbed) { lesson.release(toPaper(e)); moved(); return; }
+  if (d.moved) return;
+  if (d.act) { act(d.act); return; }
+  if (lesson.tap && lesson.tap(toPaper(e))) moved();
+});
+// after a hand move: draw, frame what's there now, and open the keys when the move led to a number to write
+function moved() { render(); frame(lesson.frame()); if (lesson.typing) openKeys(); }
+function act(a) {
+  if (a === "type") { openKeys(); return; }
+  if (a === "next") { leave(); return; }
+  lesson.act(a);
+  if (!lesson.typing) keys.blur(); else openKeys();
+  render(); frame(lesson.frame());
+}
+
+
+// ---------- Designer versions (ios/design/*.md) ----------
+// The same paper and helpers. Three text sizes only (maths 36, say 28, small 20), one line weight (1.5), the camera
+// never past 1.25 (maxZoom), a label's ink half a square from what it labels (lab), everything on grid lines. A number
+// typed into the work sits 2 squares a digit, lined up on the right (dbox). Red only for wrong, green only for right.
+const CAPH = { small: 0.7, say: 1.0, maths: 1.3 };
+function lab(k, s, side, edge, along, cls = "small", c) {
+  const h = CAPH[cls] / 2;
+  if (side === "above") text(k, s, along, edge - 0.5 - h, cls, { c });
+  else if (side === "below") text(k, s, along, edge + 0.5 + h, cls, { c });
+  else if (side === "left") text(k, s, edge - 0.5, along, cls, { c, anchor: "end" });
+  else text(k, s, edge + 0.5, along, cls, { c, anchor: "start" });
+}
+function dbox(k, x, y, cells, value, state, actName = "box:0", centred = false) {
+  const c = state === "right" ? "var(--right)" : state === "wrong" ? "var(--wrong)" : state === "idle" ? "var(--ink3)" : "var(--ink)";
+  const vc = state === "right" || state === "wrong" ? c : null;
+  rect(`${k}o${cells}`, x, y, cells * 2, 2, { c });
+  if (value) {
+    if (centred) text(`${k}v`, value, x + cells, y + 1, "maths", { c: vc, live: true });
+    else digits(`${k}v${value}`, value, x + cells * 2, y + 1, { c: vc });
+  }
+  if (state === "active") {
+    const cx = centred ? x + cells + (value ? value.length * 0.31 : 0) + 0.25 : x + cells * 2 + 0.4;
+    put(`${k}cur`, "line", { x1: sq(cx), y1: sq(y + 0.35), x2: sq(cx), y2: sq(y + 1.65), stroke: "var(--chapter)", "stroke-width": 1.5 }, "none");
+  }
+  put(`${k}hit`, "rect", { x: sq(x), y: sq(y), width: sq(cells * 2), height: sq(2), fill: "transparent", "data-act": actName }, "none");
+}
+// what to do on the rows above the picture: one line, and a small second line (or what a slip says, in red)
+function dhead(L, say, sub, x = 0, y = 0) {
+  // words wrap at the width the camera frames, so a long line never runs off the screen
+  const ww = Math.min(66, (L.frame ? L.frame().w : 68) - 2);
+  words(`say-${say}`, say, x, y + 1, ww);
+  if (L.msg) words(`msg-${L.msg}`, L.msg, x, y + 3.3, ww, "small", { c: "var(--wrong)" });
+  else if (sub) words(`sub-${sub}`, sub, x, y + 3.3, ww, "small");
+}
+// lessons with more than one answer box: each box has its own value; the hidden input types into the active one
+function withBoxes(L) {
+  L.vals = {}; L.active = null;
+  Object.defineProperty(L, "typed", { get() { return this.vals[this.active] || ""; }, configurable: true });
+  L.type = function (v) { if (this.active != null) this.vals[this.active] = v; this.verdict = null; this.msg = null; };
+  return L;
+}
+function boxAct(L, a) { if (a.startsWith("box:")) { L.active = a.slice(4); L.typing = true; return true; } return false; }
+function boxState(L, id) { return L.verdict && L.active === id ? L.verdict : L.active === id ? "active" : "idle"; }
+const PIECE = { 2: ["half", "halves"], 3: ["third", "thirds"], 4: ["fourth", "fourths"], 5: ["fifth", "fifths"], 6: ["sixth", "sixths"],
+  7: ["seventh", "sevenths"], 8: ["eighth", "eighths"], 9: ["ninth", "ninths"], 10: ["tenth", "tenths"], 11: ["eleventh", "elevenths"],
+  12: ["twelfth", "twelfths"], 14: ["fourteenth", "fourteenths"], 15: ["fifteenth", "fifteenths"], 16: ["sixteenth", "sixteenths"],
+  18: ["eighteenth", "eighteenths"], 20: ["twentieth", "twentieths"], 21: ["twenty-first", "twenty-firsts"],
+  22: ["twenty-second", "twenty-seconds"], 24: ["twenty-fourth", "twenty-fourths"] };
+const pname = (n, plural = true) => (PIECE[n] || [`${n}th`, `${n}ths`])[plural ? 1 : 0];
+const ring = (k, x, y, r = 1.05) => path(k, `M${sq(x + r)} ${sq(y)}a${sq(r)} ${sq(r)} 0 1 1 0 -0.1`, { c: "var(--chapter)" });
+const stageIndex = (list, st) => [Math.max(0, list.indexOf(st)), list.length - 1];
+
+
+const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+const pick1 = list => list[rnd(0, list.length - 1)];
+const up5 = n => Math.ceil(n / 5) * 5;
+const mctx = document.createElement("canvas").getContext("2d");
+const PX = { maths: 36, say: 28, small: 20 };
+// how wide a run of words is, in squares (words may sit mid-square; boxes after them start on the next grid line)
+function textW(s, cls = "say") { mctx.font = `600 ${PX[cls]}px ${getComputedStyle(document.body).fontFamily}`; return mctx.measureText(String(s)).width / SQ; }
+// a number as school writes it: 1 1/2, 2/3, 4
+function mixedStr(num, den) {
+  const g = gcd(num, den) || 1; num /= g; den /= g;
+  const w = Math.floor(num / den), r = num - w * den;
+  return r === 0 ? `${w}` : w ? `${w} ${r}/${den}` : `${r}/${den}`;
+}
+const half = x => mixedStr(Math.round(x * 2), 2);
+const pair = (u, v) => `(${half(u)}, ${half(v)})`;
+const arrowR = (x, y) => `M${sq(x - 0.8)} ${sq(y - 0.8)}L${sq(x)} ${sq(y)}L${sq(x - 0.8)} ${sq(y + 0.8)}`;
+const arrowU = (x, y) => `M${sq(x - 0.8)} ${sq(y + 0.8)}L${sq(x)} ${sq(y)}L${sq(x + 0.8)} ${sq(y + 0.8)}`;
+
+// a written line on squared paper: every character in its own 2 squares (digits, : × ÷ = $ %), words (units) at
+// their width, answer boxes 2 squares a digit. A token: "12" | { s, c, cells } | { word, c } | { box, cells, value, state }
+function cellsLine(k, toks, x, row, o = {}) {
+  let cx = x;
+  toks.forEach((t, i) => {
+    const x0 = cx;
+    if (t && t.box) {
+      // a box grows a cell when more digits are typed than it holds, so nothing spills onto its neighbours
+      const cells = Math.max(t.cells, String(t.value || "").replace(".", "").length);
+      dbox(`${k}b${t.box}`, cx, row - 1, cells, t.value || "", t.state, `box:${t.box}`); cx += cells * 2;
+    } else if (t && typeof t === "object" && t.sup != null) {
+      // an exponent: small and raised, in a square of its own after its base
+      text(`${k}p${i}_${cx}${t.sup}`, String(t.sup), cx - 0.4, row - 0.8, "small", { anchor: "start", c: t.c || o.c || "var(--ink)" }); cx += 1;
+    } else if (t && t.word) { text(`${k}w${i}${t.word}`, t.word, cx + 0.4, row, "maths", { anchor: "start", c: t.c || o.c }); cx += Math.ceil(textW(t.word, "maths") + 0.8); }
+    else {
+      const s = String(t && typeof t === "object" ? t.s : t), c = (t && t.c) || o.c;
+      if (t && t.cells) cx += (t.cells - s.length) * 2;
+      for (const ch of s) { text(`${k}${i}_${cx}${ch}`, ch, cx + 1, row, "maths", { c }); cx += 2; }
+    }
+    if (o.pos) o.pos[i] = [x0, cx];
+  });
+  return cx;
+}
+// a sentence with answer boxes in it: words at 28, each box on the next grid line. A part: "words" | { t, cls, c } | box
+function sentence(k, parts, x, row, o = {}) {
+  let cx = x;
+  parts.forEach((p, i) => {
+    if (p && p.box) { const bx = Math.ceil(cx - 0.25); dbox(`${k}b${p.box}`, bx, row - 1, p.cells, p.value || "", p.state, `box:${p.box}`, true); cx = bx + p.cells * 2 + 0.45; return; }
+    const s = String(p && typeof p === "object" ? p.t : p), cls = (p && p.cls) || "say", c = (p && p.c) || o.c;
+    text(`${k}s${i}${s}`, s, cx, row, cls, { anchor: "start", c });
+    cx += textW(s, cls) + (cls === "maths" ? 0.35 : 0.5);
+  });
+  return cx;
+}
+// outlined cells on the paper, each its own block, drawn in as they come
+function cellRect(k, x, y, cols, rows, s, fill = "var(--tint)") {
+  for (let i = 0; i < rows; i++) for (let j = 0; j < cols; j++) rect(`${k}${i}_${j}`, x + j * s, y + i * s, s, s, { fill, c: "var(--chapter)" });
+}
+
+// ---------- the hand moves chapter 1 added (built once; this chapter reuses them) ----------
+// The handle a finger holds: bigger while held.
+const handle = (k, x, y, on) => dot(k, x, y, on ? 0.7 : 0.55, { c: "var(--chapter)", live: true });
+// Drag a rectangle's edge: it snaps to whole cells (cell squares each), from lo to hi cells.
+const edgeCount = (pos, from, cell, lo, hi) => clamp(Math.round((pos - from) / cell), lo, hi);
+// The ruler: its handle sets one piece's length, snapped to the sizes allowed.
+const rulerSnap = (len, sizes) => sizes.reduce((b, s) => (Math.abs(s - len) < Math.abs(b - len) ? s : b));
+function drawRuler(k, x, y, len, on) {
+  path(`${k}r`, `M${sq(x)} ${sq(y - 0.6)}V${sq(y)}H${sq(x + len)}V${sq(y - 0.6)}`, { c: "var(--chapter)", live: true });
+  handle(`${k}h`, x + len, y, on);
+}
+// Hop: lay copies of a piece end to end; a tap lays one, a drag lays as many as reach the finger.
+const hopCount = (pos, from, piece, lo, hi) => clamp(Math.round((pos - from) / piece), lo, hi);
+const hopArc = (k, x1, x2, y, h = 2.5) => path(k, `M${sq(x1)} ${sq(y)}Q${sq((x1 + x2) / 2)} ${sq(y - h * 2)} ${sq(x2)} ${sq(y)}`, { c: "var(--chapter)" });
+// The plane: origin (ox, oy), U squares a unit, X by Y units. Place a point snaps to every grid point (each square),
+// dotted lines drop to both axes while it moves, the readout is its pair.
+function Plane(ox, oy, U, X, Y, xName, yName) {
+  const P = {
+    ox, oy, U, X, Y,
+    at: (u, v) => ({ x: ox + u * U, y: oy - v * U }),
+    snap: q => ({ u: clamp(Math.round((q.x - ox)), 0, X * U) / U, v: clamp(Math.round(oy - q.y), 0, Y * U) / U }),
+    holds: (q, m = 1.5) => q.x >= ox - m && q.x <= ox + X * U + m && q.y >= oy - Y * U - m && q.y <= oy + m,
+    draw(k, lit = {}) {
+      const xe = ox + X * U + 1.5, ye = oy - Y * U - 1.5;
+      line(`${k}ax`, ox, oy, xe, oy); path(`${k}axa`, arrowR(xe, oy));
+      line(`${k}ay`, ox, oy, ox, ye); path(`${k}aya`, arrowU(ox, ye));
+      lab(`${k}xn`, xName, "right", xe + 0.2, oy, "small"); lab(`${k}yn`, yName, "right", ox + 1, ye + 0.6, "small");
+      for (let i = 0; i <= X; i++) { line(`${k}xt${i}`, ox + i * U, oy, ox + i * U, oy + 0.5); lab(`${k}xl${i}${lit.x === i}`, i, "below", oy + 0.4, ox + i * U, "small", lit.x === i ? "var(--chapter)" : null); }
+      for (let j = 1; j <= Y; j++) { line(`${k}yt${j}`, ox - 0.5, oy - j * U, ox, oy - j * U); lab(`${k}yl${j}${lit.y === j}`, j, "left", ox - 0.4, oy - j * U, "small", lit.y === j ? "var(--chapter)" : null); }
+    },
+    drops(k, u, v, c = "var(--chapter)") {
+      const p = P.at(u, v);
+      if (v > 0) line(`${k}dx${u}_${v}`, p.x, p.y, p.x, oy, { dash: true, c, live: true });
+      if (u > 0) line(`${k}dy${u}_${v}`, p.x, p.y, ox, p.y, { dash: true, c, live: true });
+    },
+    // drag a point along a line through 0 (direction dx, dy): it snaps only to the grid points on it, j steps of 1/U
+    lineSnap(q, dx, dy, jmax) {
+      const u = (q.x - ox) / U, v = (oy - q.y) / U, s = (u * dx + v * dy) / (dx * dx + dy * dy);
+      return clamp(Math.round(s * U), 0, jmax);
+    },
+  };
+  return P;
+}
+// the readout beside a point while it's held
+const pairLabel = (k, p, s) => text(k, s, p.x + 1, p.y + 1.3, "small", { anchor: "start", c: "var(--chapter)", live: true });
+
+
+// ---------- 6th grade, chapter 4: Negative numbers (ios/design/grade6.md) ----------
+// The chapter colour is the kit's blue. A line now runs both ways from 0 on the grid's own squares, 0 on a strong line;
+// the plane is two such lines crossing at 0, two squares a unit, −12 to 12 across and −8 to 8 up, from row 6.
+// The minus sign is typed as grade 8 and 9's previews type it: the hyphen key writes a true minus (−), a cell of its own.
+const fm = x => (x < 0 ? "−" : "") + String(Math.round(Math.abs(x) * 100) / 100);
+const numv = s => (s === "" || s == null || s === "−" || s === "." ? NaN : +String(s).replace("−", "-"));
+const pairS = (u, v) => `(${fm(u)}, ${fm(v)})`;
+const cellsOf = s => String(s).replace(".", "").length;
+const arrowL = (x, y) => `M${sq(x + 0.8)} ${sq(y - 0.8)}L${sq(x)} ${sq(y)}L${sq(x + 0.8)} ${sq(y + 0.8)}`;
+const arrowD = (x, y) => `M${sq(x - 0.8)} ${sq(y - 0.8)}L${sq(x)} ${sq(y)}L${sq(x + 0.8)} ${sq(y - 0.8)}`;
+const ease = u => (u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2);
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(0, i); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+// A point in one of three shades (the first full, the second half, the third an outline): two or three on one line
+function ptDot(k, x, y, shade = 0, on = false, c = "var(--chapter)") {
+  const r = sq(on ? 0.7 : 0.55);
+  if (shade === 0) put(k, "circle", { cx: sq(x), cy: sq(y), r, fill: c }, "none");
+  else put(k, "circle", { cx: sq(x), cy: sq(y), r: r - 0.75, fill: shade === 1 ? c : "var(--paper)", "fill-opacity": shade === 1 ? 0.4 : null, stroke: c, "stroke-width": 1.5 }, "none");
+}
+// a pick-one row: plain outlined blocks, the picked wrong one red (a sign is written at the maths size)
+function choiceRow(k, opts, x, y, w, bad, cls = "small", gap = 3) {
+  opts.forEach((o, i) => {
+    const bx = x + i * (w + gap), isBad = bad === i;
+    rect(`${k}${i}o${isBad}`, bx, y, w, 2, { c: isBad ? "var(--wrong)" : "var(--ink)" });
+    text(`${k}${i}w${o}`, o, bx + w / 2, y + 1, cls, { c: isBad ? "var(--wrong)" : "var(--ink)" });
+    put(`${k}${i}hit`, "rect", { x: sq(bx), y: sq(y), width: sq(w), height: sq(2), fill: "transparent", "data-act": `${k}${i}` }, "none");
+  });
+}
+
+// A number line through 0 at (x0, y0), U squares a one, lo to hi; across, or upright (up). Its two halves are each
+// a piece of paper a fold can lift: keep(x, y) leaves out what's lifted.
+function NLine(x0, y0, U, lo, hi, up = false) {
+  const N = {
+    x0, y0, U, lo, hi, up,
+    at: v => (up ? { x: x0, y: y0 - v * U } : { x: x0 + v * U, y: y0 }),
+    val: (q, step = 1) => { const s = up ? (y0 - q.y) / U : (q.x - x0) / U; return clamp(Math.round(s / step) * step, lo, hi); },
+    near: (q, m = 2) => (up ? Math.abs(q.x - x0) <= m && q.y >= y0 - hi * U - m && q.y <= y0 - lo * U + m
+      : Math.abs(q.y - y0) <= m && q.x >= x0 + lo * U - m && q.x <= x0 + hi * U + m),
+    draw(k, o = {}) {
+      const keep = o.keep || (() => true), Z = N.at(0);
+      const labels = o.labels || Array.from({ length: hi - Math.ceil(lo) + 1 }, (_, j) => Math.ceil(lo) + j).filter(v => v % 5 === 0);
+      for (const [s, end] of [[-1, lo], [1, hi]]) {
+        const E = N.at(end), X = up ? { x: x0, y: E.y - s } : { x: E.x + s, y: y0 };
+        if (!keep((Z.x + E.x) / 2, (Z.y + E.y) / 2)) continue;
+        line(`${k}h${s}`, Z.x, Z.y, X.x, X.y);
+        path(`${k}a${s}`, up ? (s > 0 ? arrowU(X.x, X.y) : arrowD(X.x, X.y)) : (s > 0 ? arrowR(X.x, X.y) : arrowL(X.x, X.y)));
+      }
+      for (let v = Math.ceil(lo); v <= hi; v++) {
+        const p = N.at(v); if (!keep(p.x, p.y)) continue;
+        const t = v === 0 ? 0.9 : 0.5;
+        if (up) line(`${k}t${v}`, x0 - t, p.y, x0 + t, p.y); else line(`${k}t${v}`, p.x, y0 - t, p.x, y0 + t);
+      }
+      for (const v of labels) {
+        const p = N.at(v), lit = o.lit === v; if (!keep(p.x, p.y)) continue;
+        if (up) lab(`${k}l${v}${lit}`, fm(v), "left", x0 - 0.6, p.y, "small", lit ? "var(--chapter)" : null);
+        else lab(`${k}l${v}${lit}`, fm(v), "below", y0 + 0.5, p.x, "small", lit ? "var(--chapter)" : null);
+      }
+    },
+  };
+  return N;
+}
+
+
+// ---------- chapter 5's letter strip (grade6-ch5.html) ----------
+// A letter is a strip whose length isn't known yet: a plain bar with a dashed end and the letter in it, the same length
+// wherever it's written. Swapping in a number drags the strip to that length, and every copy goes with it.
+const SUPD = { 2: "²", 3: "³" };
+const sup = n => SUPD[n] || String(n);
+// timers for a lesson's beats; a new problem cancels the old one's
+let token = 0;
+function later(ms, fn) { const t = token; setTimeout(() => { if (t !== token) return; fn(); render(); frame(lesson.frame()); }, ms); }
+
+// a letter's strip from (x, y), len squares long, h tall. Not known yet: a plain bar, its end dashed. Known (or held):
+// its cells drawn. The letter (or the number swapped in) in it.
+function strip(k, x, y, len, h, o = {}) {
+  const c = o.c || "var(--chapter)", live = o.live !== false;
+  rect(`${k}f`, x, y, len, h, { fill: o.fill || "var(--tint)", live });
+  line(`${k}t`, x, y, x + len, y, { c, live }); line(`${k}b`, x, y + h, x + len, y + h, { c, live });
+  line(`${k}l`, x, y, x, y + h, { c, live });
+  line(`${k}r${o.known ? 1 : 0}`, x + len, y, x + len, y + h, { c, dash: !o.known, live });
+  if (o.cell) for (let j = o.cell; j < len - 0.01; j += o.cell) line(`${k}c${j}`, x + j, y, x + j, y + h, { c, live });
+  if (o.label != null && len >= 1) text(`${k}L`, o.label, x + Math.min(len / 2, o.labelAt ?? len / 2), y + h / 2, o.cls || "small", { c: o.lc || "var(--ink)", live });
+}
+
+// ---------- 6th grade, chapter 6: Equations (ios/design/grade6.md) ----------
+// An equation is two sides that balance: what's left of = is as long as what's right of it, both from one block line.
+// Whatever is done to one side is done to the other. x is a plain strip with no squares in it (chapter 5's strip).
+// a row of cells, each its own outlined square (s squares), live while it moves; crossed ones have a stroke through them
+function cellRow(k, x, y, n, s, o = {}) {
+  for (let j = 0; j < n; j++) {
+    const cx = x + j * s, cr = o.crossFrom != null && j >= o.crossFrom;
+    rect(`${k}${j}_${cx}_${y}`, cx, y, s, s, { fill: cr ? "none" : (o.fill || "var(--tint)"), c: o.c || "var(--chapter)", live: o.live });
+    if (cr) path(`${k}x${j}_${cx}_${y}`, `M${sq(cx + 0.35)} ${sq(y + s - 0.35)}L${sq(cx + s - 0.35)} ${sq(y + 0.35)}`, { c: o.c || "var(--chapter)", live: o.live });
+  }
+}
+// quarters and halves as school prints them in one cell: 1¼, ½, ¾
+const QG = { 1: "¼", 2: "½", 3: "¾" };
+const V4 = (cells, cv, fr) => (fr ? (Math.floor(cells / 4) || "") + (QG[cells % 4] || "") || "0" : fm(cells * cv));
+
+// ---------- the 3D paper (8th grade's tilt, as grade6-ch5.html and grade8-ch1.html draw it) ----------
+// The paper turns and tips back about a point (no perspective in this preview: the app's long lens is RealityKit's);
+// cubes and folded faces stand on it and words stay upright. t is 0 flat, 1 tilted.
+const PHI = 28 * Math.PI / 180, THETA = 52 * Math.PI / 180;
+function tilter(L) {
+  Object.assign(L, { tiltFrom: 0, tiltTo: 0, tiltAt: -1e9, piv: { x: 0, y: 0 } });
+  L.t = function () { const u = Math.min(1, (performance.now() - this.tiltAt) / 1100); return this.tiltFrom + (this.tiltTo - this.tiltFrom) * ease(Math.max(0, u)); };
+  L.tiltTo1 = function (to, after) { this.tiltFrom = this.t(); this.tiltTo = to; this.tiltAt = performance.now(); if (after) later(1150, after); };
+  L.proj = function (x, y, z, t = this.t()) {
+    const f = PHI * t, th = THETA * t, c = Math.cos(f), s = Math.sin(f), dx = x - this.piv.x, dy = y - this.piv.y;
+    return { x: this.piv.x + c * dx - s * dy, y: this.piv.y + (s * dx + c * dy) * Math.cos(th) - z * Math.sin(th) };
+  };
+  L.depth = function (x, y, z, t = this.t()) {
+    const f = PHI * t, th = THETA * t;
+    return ((x - this.piv.x) * Math.sin(f) + (y - this.piv.y) * Math.cos(f)) * Math.sin(th) + z * Math.cos(th);
+  };
+  L.paperMatrix = function () {
+    const t = this.t(); if (t <= 0.001) return null;
+    const f = PHI * t, th = THETA * t, c = Math.cos(f), s = Math.sin(f), a = c, b = s * Math.cos(th), cc = -s, d = c * Math.cos(th);
+    const px = sq(this.piv.x), py = sq(this.piv.y);
+    return [a, b, cc, d, px - (a * px + cc * py), py - (b * px + d * py)];
+  };
+  // a box's bounds as seen at tilt t
+  L.bounds = function (x0, y0, x1, y1, z1, t) {
+    let a = 1e9, b = 1e9, c = -1e9, d = -1e9;
+    for (const x of [x0, x1]) for (const y of [y0, y1]) for (const z of [0, z1]) {
+      const q = this.proj(x, y, z, t); a = Math.min(a, q.x); b = Math.min(b, q.y); c = Math.max(c, q.x); d = Math.max(d, q.y);
+    }
+    return { x0: a, y0: b, x1: c, y1: d };
+  };
+  // where the words and the record sit beside a tilted picture (grade8-ch1.html's places)
+  L.tiltPlaces = function (fb) {
+    const hx = Math.min(0, Math.floor(fb.x0)), hy = Math.min(0, Math.floor(fb.y0 - 7));
+    return { hx, hy, nx: Math.ceil((fb.x1 + 3) / 5) * 5, ny: Math.max(hy + 7, Math.round(fb.y0) + 1) };
+  };
+  return L;
+}
+// small cubes (B squares an edge) standing on the tilted paper, drawn back to front; each rises over 0.4 s from its
+// time; lit ones (a whole made of small ones) in the stronger shade
+const CUBE = { top: "var(--cube-top)", front: "var(--cube-front)", side: "var(--cube-side)" };
+const CUBE_LIT = { top: "color-mix(in srgb, var(--chapter) 45%, var(--paper))", front: "color-mix(in srgb, var(--chapter) 62%, var(--paper))", side: "color-mix(in srgb, var(--chapter) 78%, var(--paper))" };
+function drawCubes(L, list, t, B = 5) {
+  const now = performance.now(), cubes = [];
+  const corner = (x, y, z) => { const q = L.proj(x, y, z, t); return `${sq(q.x)},${sq(q.y)}`; };
+  for (const c of list) {
+    const h = ease(Math.max(0, Math.min(1, (now - c.at) / 400)));
+    if (h <= 0) continue;
+    cubes.push({ ...c, h, d: L.depth(c.x + B / 2, c.y + B / 2, (c.k + h / 2) * B, t) });
+  }
+  cubes.sort((p, q) => p.d - q.d);
+  for (const c of cubes) {
+    const x0 = c.x, x1 = x0 + B, y0 = c.y, y1 = y0 + B, z0 = c.k * B, z1 = (c.k + c.h) * B, id = `${x0}_${y0}_${c.k}${c.lit ? "L" : ""}`, F = c.lit ? CUBE_LIT : CUBE;
+    const face = (n, pts, fill) => put(`${n}${id}`, "polygon", { points: pts.map(p => corner(...p)).join(" "), fill, stroke: "var(--cube-edge)", "stroke-width": 1.5, "stroke-linejoin": "round" }, "none");
+    face("top", [[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]], F.top);
+    face("front", [[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]], F.front);
+    face("side", [[x1, y0, z0], [x1, y1, z0], [x1, y1, z1], [x1, y0, z1]], F.side);
+  }
+}
+
+// ---------- 6th grade, chapter 7: Area and volume (ios/design/grade6.md) ----------
+// One square is one square unit, every corner on a grid point, so every area can be counted. A shape is two squares a
+// unit when it fits the screen that way (14 units or less each way), else one.
+const FIT = f => Math.min(1116 / sq(f.w), 654 / sq(f.h), 1.25);
+const ptsStr = pts => pts.map(p => `${sq(p[0])},${sq(p[1])}`).join(" ");
+// a shape on the paper, its corners in squares
+function poly(k, pts, o = {}) {
+  put(k, "polygon", { points: ptsStr(pts), fill: o.fill || "var(--tint)", stroke: o.c === null ? null : (o.c || "var(--chapter)"),
+    "stroke-width": 1.5, "stroke-linejoin": "round", "stroke-dasharray": o.dash ? "6 6" : null, opacity: o.op ?? null }, o.live ? "none" : "fade");
+}
+// a shape's unit squares, faint (finer than the one line weight, as a picture's inner squares are), cut to its outline;
+// the units' lattice runs from org, U squares a unit
+function faint(k, pts, U, org, o = {}) {
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const id = "cp" + k.replace(/[^A-Za-z0-9]/g, "_");
+  let g = "";
+  for (let x = org[0] + Math.ceil((x0 - org[0]) / U + 1e-6) * U; x < x1 - 1e-6; x += U) g += `<line x1="${sq(x)}" y1="${sq(y0)}" x2="${sq(x)}" y2="${sq(y1)}"/>`;
+  for (let y = org[1] + Math.ceil((y0 - org[1]) / U + 1e-6) * U; y < y1 - 1e-6; y += U) g += `<line x1="${sq(x0)}" y1="${sq(y)}" x2="${sq(x1)}" y2="${sq(y)}"/>`;
+  put(k + "cp", "clipPath", { id }, "none", null, `<polygon points="${ptsStr(pts)}"/>`);
+  put(k, "g", { "clip-path": `url(#${id})`, stroke: "var(--chapter)", "stroke-width": 1, opacity: 0.45 }, o.live ? "none" : "fade", null, g);
+}
+// is (x, y) inside the polygon
+function pip(pts, x, y) {
+  let c = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const [xi, yi] = pts[i], [xj, yj] = pts[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c;
+  }
+  return c;
+}
+const centroid = pts => [pts.reduce((s, p) => s + p[0], 0) / pts.length, pts.reduce((s, p) => s + p[1], 0) / pts.length];
+// a height: a dashed line with a square corner where it meets the base (the corner on the side `toward`, ±1 across)
+function heightLine(k, x, y0, y1, toward) {
+  line(`${k}l`, x, y0, x, y1, { dash: true, c: "var(--ink2)" });
+  const m = 0.6 * toward, yb = Math.max(y0, y1), up = y1 > y0 ? -0.6 : 0.6;
+  path(`${k}c`, `M${sq(x + m)} ${sq(yb)}V${sq(yb + up)}H${sq(x)}`, { c: "var(--ink2)" });
+}
+// the record's boxes: a box token for cellsLine
+const BX = (L, id, n) => ({ box: id, cells: n, value: L.vals[id] || "", state: boxState(L, id) });
+const GREEN = v => ({ s: String(v), c: "var(--right)" });
+// the Check block, or Next problem once it's done
+function endBlock(L, x, y) {
+  if (L.stage === "done") block("next", x, y, 10, "Next problem", "next");
+  else if (L.typing) block("check", x, y, 7, "Check", "check");
+}
+
+// ---------- Area of a parallelogram (g6-para) ----------
+// New. The parallelogram from row 6: its base b on a grid line, its top s units along, its height dashed outside the
+// top corner. Cut straight down a column from the top side to the bottom side; slide a piece to the other end (it snaps
+// when its slanted side meets the other); the b by h rectangle counts its squares row by row; write Area = b × h.
+const PARA_STORY = [{ s: "It's a garden bed, measured in feet.", u: "square feet" }, { s: "It's a sign, measured in inches.", u: "square inches" }];
+function genPara(i) {
+  if (i < 3) { const b = rnd(4, 10); return { b, h: rnd(2, 6), s: rnd(1, Math.min(3, b - 1)), lean: 1, story: null }; }
+  const b = rnd(4, 16);
+  return { b, h: rnd(2, 12), s: rnd(1, b - 1), lean: rnd(0, 1) ? 1 : -1, story: i >= 5 && rnd(0, 1) ? pick1(PARA_STORY) : null };
+}
+function dPara(i, P0) {
+  const P = P0 || genPara(i), { b, h, s, lean, story } = P, A = b * h, Y0 = 6, CH = "var(--chapter)";
+  const U = b + s <= 14 && h <= 14 ? 2 : 1, BL = lean > 0 ? 0 : s, TL = lean > 0 ? s : 0, unit = story ? story.u : "square units";
+  const X = x => x * U, Y = y => Y0 + y * U, toSq = pts => pts.map(([x, y]) => [X(x), Y(y)]);
+  const whole = [[BL, h], [BL + b, h], [TL + b, 0], [TL, 0]];
+  const leftOf = c => lean > 0 ? [[0, h], [s, 0], [c, 0], [c, h]] : [[0, 0], [c, 0], [c, h], [s, h]];
+  const rightOf = c => lean > 0 ? [[c, 0], [s + b, 0], [b, h], [c, h]] : [[c, 0], [b, 0], [s + b, h], [c, h]];
+  const RY = Y(h) + 4, stages = ["cut", "slide", "write", "done"];
+  const L = withBoxes({
+    id: "para", nums: { b, h, s, lean, U, A, Y0, BL, TL, RY, story: !!story }, maxZoom: 1.25,
+    stage: "cut", msg: null, verdict: null, typing: false, held: null, c: null, side: null, d: 0, rows: 0,
+    progress() { return stageIndex(stages, this.stage); },
+    past(k) { return stages.indexOf(this.stage) > stages.indexOf(k); },
+    pieces(d = this.d) {
+      if (this.c == null) return [{ id: "W", pts: whole }];
+      const sh = (pts, e) => pts.map(([x, y]) => [x + e, y]);
+      return [{ id: "L", pts: sh(leftOf(this.c), this.side === "L" ? d : 0) }, { id: "R", pts: sh(rightOf(this.c), this.side === "R" ? d : 0) }];
+    },
+    frame() {
+      const xs = this.pieces(this.held ? 0 : this.d).flatMap(p => p.pts.map(q => q[0])), lo = Math.min(0, ...xs), hi = Math.max(...xs);
+      const x0 = lo < 0 ? Math.floor((X(lo) - 2) / 5) * 5 : 0;
+      return { x: x0 - 2, y: -0.5, w: Math.max(46, X(hi) + 10 - x0), h: RY + 7 };
+    },
+    grab(q) {
+      if (this.stage === "cut") {
+        if (q.x < -2 || q.x > X(b + s) + 2 || q.y < Y0 - 3 || q.y > Y(h) + 3) return false;
+        this.held = "cut"; this.q0 = q; this.q1 = q; this.msg = null; return true;
+      }
+      if (this.stage === "slide") {
+        for (const p of this.pieces()) if (pip(toSq(p.pts), q.x, q.y)) { this.held = "slide"; this.side = p.id; this.g0 = q.x; this.d = 0; this.msg = null; return true; }
+      }
+      return false;
+    },
+    drag(q) {
+      if (this.held === "cut") this.q1 = q;
+      if (this.held === "slide") this.d = clamp(Math.round((q.x - this.g0) / U), -b - 3, b + 3);
+    },
+    cutCol() { return Math.round(this.q1.x / U); },
+    release() {
+      const hd = this.held; this.held = null; if (!hd) return;
+      if (hd === "cut") {
+        const c = this.cutCol(), ya = Math.min(this.q0.y, this.q1.y), yb = Math.max(this.q0.y, this.q1.y);
+        if (yb - ya < 1) return;
+        if (c >= s && c <= b && ya <= Y0 + 0.75 && yb >= Y(h) - 0.75) { this.c = c; this.stage = "slide"; }
+        else this.msg = "Cut from the top side to the bottom side.";
+        return;
+      }
+      const want = this.side === "L" ? b : -b;
+      if (Math.abs(this.d - want) <= 1) { this.d = want; this.stage = "write"; this.count(); }
+      else { if (this.d) this.msg = "Slide it to the other end."; this.d = 0; this.side = null; }
+    },
+    // See: the rectangle's squares count row by row, then the area is written
+    count() {
+      this.rows = 0;
+      for (let r = 1; r <= h; r++) later(300 + r * 170, () => { this.rows = r; });
+      later(300 + h * 170 + 450, () => { this.typing = true; this.active = "a"; openKeys(); });
+    },
+    act(z) {
+      if (boxAct(this, z)) return;
+      if (z !== "check" || this.stage !== "write" || !this.typing) return;
+      const v = numv(this.vals.a);
+      if (isNaN(v)) { this.msg = "Write the number."; return; }
+      if (v === A) { this.verdict = null; this.msg = null; this.stage = "done"; this.typing = false; return; }
+      this.verdict = "wrong";
+      this.msg = v * 2 === A ? "That's a triangle's area. A parallelogram is the whole rectangle." : v === b + h ? `Multiply: ${h} rows of ${b}.` : `Count the squares: ${h} rows of ${b}.`;
+    },
+    scene() {
+      const st = this.stage, held = this.held, counting = st === "write" && !this.typing, f = this.frame(), wx = f.x + 2;
+      const say = { cut: ["Cut straight down.", story ? story.s : "Drag down a grid line."], slide: ["Slide the piece to the other end.", "Drag either piece."],
+        write: counting ? ["The same squares make a rectangle.", ""] : ["Write the area.", ""],
+        done: [`Cut and slide: the same squares make a ${b} by ${h} rectangle.`, ""] }[st];
+      dhead(this, say[0], say[1], wx);
+      const cut = this.c != null;
+      for (const p of this.pieces()) {
+        const sp = toSq(p.pts), key = `pc${p.id}${this.c}_${p.id === this.side ? this.d : 0}`;
+        poly(key, sp, { live: cut });
+        faint(key + "f", sp, U, [0, Y0], { live: cut });
+      }
+      if (held === "cut") {
+        const c = this.cutCol(), ok = c >= s && c <= b;
+        line("cutl", X(c), Math.min(this.q0.y, this.q1.y), X(c), Math.max(this.q0.y, this.q1.y), { c: ok ? CH : "var(--ink2)", dash: true, live: true });
+        if (ok) text("rd", c === BL ? "a cut at the corner" : `a cut ${Math.abs(c - BL)} from the corner`, X(b + s) + 2, Y0 + 1, "small", { anchor: "start", c: CH, live: true });
+      }
+      if (st === "cut" || st === "slide") {
+        lab("bl", b, "below", Y(h), X(BL + b / 2), "say");
+        const hx = lean > 0 ? X(s + b) : X(0), ex = lean > 0 ? X(b) : X(s);
+        if (held !== "slide") heightLine("hh", hx, Y0, Y(h), lean > 0 ? -1 : 1);
+        line("hb", ex, Y(h), hx, Y(h), { dash: true, c: "var(--ink2)" });
+        lab("hlab", h, lean > 0 ? "right" : "left", hx, Y0 + h * U / 2, "say");
+      } else {
+        const lo = this.side === "L" ? this.c : this.c - b;
+        for (let r = 0; r < this.rows; r++) rect(`row${r}`, X(lo), Y(r), X(b), U, { fill: "var(--tint-strong)" });
+        if (this.rows) text(`cnt${this.rows}`, String(b * this.rows), X(lo + b) + 1, Y(this.rows - 0.5), "small", { anchor: "start", c: CH, live: true });
+        lab("bl2", b, "below", Y(h), X(lo + b / 2), "say");
+        lab("hl2", h, "left", X(lo), Y0 + h * U / 2, "say");
+      }
+      if (this.typing || st === "done") {
+        const end = cellsLine("r0", [{ word: "Area" }, "=", String(b), "×", String(h), "=", st === "done" ? GREEN(A) : BX(this, "a", Math.max(2, String(A).length))], wx, RY);
+        text("ru", unit, end + 0.6, RY, "small", { anchor: "start" });
+      }
+      endBlock(this, wx, RY + 3);
+    },
+  });
+  return L;
+}
+
+// ---------- Area of a triangle (g6-tri) ----------
+// The web's generator (b and h 2–20, b × h even) and slips. A picture number (Core adds it) puts the top over one end,
+// over the base or past its end. A copy turned half a turn waits beside it, dashed; slide it against the slanted side:
+// the two make a b by h rectangle, or a parallelogram that cuts and slides into one (played, as g6-para's moves).
+function genTri(i) {
+  let b, h; do { b = rnd(2, 20); h = rnd(2, 20); } while ((b * h) % 2);
+  const kind = i < 3 ? [1, 0, 2][i] : rnd(0, 2);
+  const p = kind === 0 ? pick1([0, b]) : kind === 1 ? rnd(1, b - 1) : b + rnd(1, Math.max(1, Math.min(4, b - 1)));
+  return { b, h, p };
+}
+function dTri(i, P0) {
+  const P = P0 || genTri(i), { b, h, p } = P, R = b * h, A = R / 2, Y0 = 6, CH = "var(--chapter)";
+  const W = Math.max(b, p), sig = p < b ? p : p - b, T = p < b ? [b + p, h] : [p, h], WAIT = [2 * W + 2, h], fitR = p < b ? b + p : p;
+  const lay = U => { const rx = Math.ceil((fitR * U + 3) / 5) * 5; return { U, rx, f: { x: -2, y: -0.5, w: Math.max(46, (2 * W + 2) * U + 4, rx + 26), h: Math.max(Y0 + h * U + 3, Y0 + 13) } }; };
+  const { U, rx, f: FR } = FIT(lay(2).f) >= 0.78 ? lay(2) : lay(1);
+  const X = x => x * U, Y = y => Y0 + y * U, toSq = pts => pts.map(([x, y]) => [X(x), Y(y)]);
+  const tri = [[0, h], [b, h], [p, 0]], copyAt = O => tri.map(([x, y]) => [O[0] - x, O[1] - y]);
+  const stages = ["fit", "see", "rect", "half", "done"];
+  const L = withBoxes({
+    id: "tri", nums: { b, h, p, U, Y0, T, WAIT, sig, R, A }, maxZoom: 1.25,
+    stage: "fit", msg: null, verdict: null, typing: false, held: false, O: WAIT.slice(), cutAt: 0, slideAt: 0,
+    progress() { return stageIndex(stages, this.stage); },
+    past(k) { return stages.indexOf(this.stage) > stages.indexOf(k); },
+    frame() { return FR; },
+    animating() { return performance.now() - this.slideAt < 800; },
+    grab(q) {
+      if (this.stage !== "fit" || !pip(toSq(copyAt(this.O)), q.x, q.y)) return false;
+      this.held = true; this.g0 = q; this.O0 = this.O.slice(); this.msg = null; return true;
+    },
+    drag(q) { if (this.held) this.O = [this.O0[0] + Math.round((q.x - this.g0.x) / U), this.O0[1] + Math.round((q.y - this.g0.y) / U)]; },
+    release() {
+      if (!this.held) return; this.held = false;
+      if (Math.abs(this.O[0] - T[0]) <= 1 && Math.abs(this.O[1] - T[1]) <= 1) { this.O = T.slice(); this.stage = "see"; this.see(); return; }
+      if (this.O[0] !== WAIT[0] || this.O[1] !== WAIT[1]) this.msg = "Put it against the slanted side.";
+      this.O = WAIT.slice();
+    },
+    // See: a rectangle at once, or a parallelogram that's cut straight down at the base's end and slid across
+    see() {
+      const go = () => { this.stage = "rect"; this.typing = true; this.active = "rect"; openKeys(); };
+      if (!sig) { later(700, go); return; }
+      later(600, () => { this.cutAt = 1; });
+      later(1200, () => { this.slideAt = performance.now(); });
+      later(2200, go);
+    },
+    act(z) {
+      if (boxAct(this, z)) return;
+      if (z !== "check" || !this.typing) return;
+      const id = this.stage, v = numv(this.vals[id]);
+      if (id !== this.active) { this.active = id; }
+      if (isNaN(v)) { this.msg = "Write the number."; return; }
+      if (id === "rect") {
+        if (v === R) { this.verdict = null; this.msg = null; this.stage = "half"; this.active = "half"; return; }
+        this.verdict = "wrong"; this.msg = v === b + h ? "Multiply base × height." : `The rectangle is ${h} rows of ${b}.`; return;
+      }
+      if (v === A) { this.verdict = null; this.msg = null; this.stage = "done"; this.typing = false; return; }
+      this.verdict = "wrong"; this.msg = v === R ? "A triangle is half of a rectangle: divide by 2." : `Two triangles make ${R}: take half.`;
+    },
+    scene() {
+      const st = this.stage, fitted = this.past("fit"), now = performance.now();
+      const say = { fit: ["Fit the copy against it.", "Drag the copy."], see: [sig ? "Cut and slide: it's a rectangle." : "The two make a rectangle.", ""],
+        rect: ["Write the rectangle's area.", ""], half: ["Write the triangle's area.", ""],
+        done: [`Two copies make a ${b} by ${h} rectangle, so one is half.`, ""] }[st];
+      dhead(this, say[0], say[1]);
+      if (!fitted) {
+        poly("tri", toSq(tri)); faint("trif", toSq(tri), U, [0, Y0]);
+        poly(`cp${this.O}`, toSq(copyAt(this.O)), { fill: "var(--tint-strong)", dash: true, live: true });
+        lab("bl", b, "below", Y(h), X(b / 2), "say");
+        if (p > 0 && p < b) { heightLine("hh", X(p), Y0, Y(h), 1); lab("hl", h, "right", X(p) + 0.2, Y0 + h * U / 2, "say"); }
+        else if (p > b) { heightLine("hh", X(p), Y0, Y(h), -1); line("hb", X(b), Y(h), X(p), Y(h), { dash: true, c: "var(--ink2)" }); lab("hl", h, "right", X(p), Y0 + h * U / 2, "say"); }
+        else lab("hl", h, p === 0 ? "left" : "right", X(p), Y0 + h * U / 2, "say");
+      } else {
+        // the two as one shape: the part left of x = b stays; the triangle past it is cut and slid back a base length
+        const u = this.slideAt ? ease(Math.min(1, (now - this.slideAt) / 700)) : 0, off = -b * u;
+        const stay = sig ? [[0, h], [b, h], [b, 0], [sig, 0]] : [[0, h], [b, h], [b, 0], [0, 0]];
+        poly("stay", toSq(stay), { live: true }); faint("stayf", toSq(stay), U, [0, Y0], { live: true });
+        if (sig) {
+          const mv = [[b + off, h], [b + sig + off, 0], [b + off, 0]];
+          poly(`mv${u.toFixed(3)}`, toSq(mv), { live: true }); faint(`mvf${u.toFixed(3)}`, toSq(mv), U, [0, Y0], { live: true });
+          if (this.cutAt && !this.slideAt) line("cutl", X(b), Y0, X(b), Y(h), { c: CH, dash: true });
+        }
+        // the seam where the copy met the triangle, dashed
+        const s0 = p < b ? [b, h] : [0, h], s1 = [p, 0];
+        if (p < b || !sig) line("seam", X(s0[0]), Y(s0[1]), X(s1[0]), Y(s1[1]), { dash: true, c: CH });
+        else {
+          const yb = h * (1 - b / p);
+          line("seamA", X(0), Y(h), X(b), Y(yb), { dash: true, c: CH, live: true });
+          line(`seamB${u.toFixed(3)}`, X(b + off), Y(yb), X(p + off), Y(0), { dash: true, c: CH, live: true });
+        }
+        lab("bl", b, "below", Y(h), X(b / 2), "say");
+        lab("hl2", h, "left", X(0) - 0.2, Y0 + h * U / 2, "say");
+      }
+      if (this.past("see")) {
+        cellsLine("r1", [String(b), "×", String(h), "=", this.past("rect") ? GREEN(R) : BX(this, "rect", Math.max(2, String(R).length))], rx, Y0 + 1);
+        if (this.past("rect")) {
+          const end = cellsLine("r2", [String(R), "÷", "2", "=", st === "done" ? GREEN(A) : BX(this, "half", Math.max(2, String(A).length))], rx, Y0 + 4);
+          text("ru", "square units", end + 0.6, Y0 + 4, "small", { anchor: "start" });
+        }
+        endBlock(this, rx, this.past("rect") ? Y0 + 7 : Y0 + 4);
+      }
+    },
+  });
+  return L;
+}
+
+// ---------- Area of a trapezoid (g6-trap) ----------
+// The web's generator (bases 2–15 and different, height 2–12, a whole area), its slips and its picture: a right
+// trapezoid (bottom a, top b, left side upright) and its copy beside it. Picked up, the copy swings half a turn (the
+// web's motion); slid against the slanted side it snaps, and the two make a rectangle a + b long.
+function genTrap() { let a, b, h; do { a = rnd(2, 15); b = rnd(2, 15); h = rnd(2, 12); } while (a === b || ((a + b) * h) % 2); return { a, b, h }; }
+function dTrap(i, P0) {
+  const P = P0 || genTrap(i), { a, b, h } = P, S = a + b, Pr = S * h, A = Pr / 2, Y0 = 6, CH = "var(--chapter)";
+  const W = Math.max(a, b), C0 = [W + 2 + W / 2, h / 2], OW = [2 * W + 2, h], T = [S, h];
+  const lay = U => { const rx = Math.ceil((S * U + 3) / 5) * 5; return { U, rx, f: { x: -3, y: -0.5, w: Math.max(46, (2 * W + 2) * U + 5, rx + 27), h: Math.max(Y0 + h * U + 3, Y0 + 16) } }; };
+  const { U, rx, f: FR } = FIT(lay(2).f) >= 0.78 ? lay(2) : lay(1);
+  const X = x => x * U, Y = y => Y0 + y * U, toSq = pts => pts.map(([x, y]) => [X(x), Y(y)]);
+  const trap = [[0, h], [a, h], [b, 0], [0, 0]];
+  const stages = ["fit", "sum", "times", "half", "done"];
+  const L = withBoxes({
+    id: "trap", nums: { a, b, h, U, Y0, C0, OW, T, S, Pr, A }, maxZoom: 1.25,
+    stage: "fit", msg: null, verdict: null, typing: false, held: false, turned: false, turnAt: -1e9, D: [0, 0],
+    progress() { return stageIndex(stages, this.stage); },
+    past(k) { return stages.indexOf(this.stage) > stages.indexOf(k); },
+    frame() { return FR; },
+    animating() { return performance.now() - this.turnAt < 520; },
+    // the copy now: turning half a turn about its middle as it's picked up, moved by whole units
+    copy() {
+      const th = this.turned ? Math.PI * ease(Math.min(1, (performance.now() - this.turnAt) / 450)) : 0, c = Math.cos(th), s = Math.sin(th);
+      return trap.map(([x, y]) => { const dx = x + W + 2 - C0[0], dy = y - C0[1]; return [C0[0] + this.D[0] + c * dx - s * dy, C0[1] + this.D[1] + s * dx + c * dy]; });
+    },
+    grab(q) {
+      if (this.stage !== "fit" || !pip(toSq(this.copy()), q.x, q.y)) return false;
+      if (!this.turned) { this.turned = true; this.turnAt = performance.now(); }
+      this.held = true; this.g0 = q; this.D0 = this.D.slice(); this.msg = null; return true;
+    },
+    drag(q) { if (this.held) this.D = [this.D0[0] + Math.round((q.x - this.g0.x) / U), this.D0[1] + Math.round((q.y - this.g0.y) / U)]; },
+    release() {
+      if (!this.held) return; this.held = false;
+      const O = [OW[0] + this.D[0], OW[1] + this.D[1]];
+      if (Math.abs(O[0] - T[0]) <= 1 && Math.abs(O[1] - T[1]) <= 1) {
+        this.turnAt = -1e9; this.D = [T[0] - OW[0], T[1] - OW[1]]; this.stage = "sum";
+        later(700, () => { this.typing = true; this.active = "sum"; openKeys(); });
+        return;
+      }
+      if (this.D[0] || this.D[1]) this.msg = "Put it against the slanted side.";
+      this.D = [0, 0];
+    },
+    act(z) {
+      if (boxAct(this, z)) return;
+      if (z !== "check" || !this.typing) return;
+      const id = this.stage, v = numv(this.vals[id]);
+      if (id !== this.active) this.active = id;
+      if (isNaN(v)) { this.msg = "Write the number."; return; }
+      const right = { sum: S, times: Pr, half: A }[id], next = { sum: "times", times: "half", half: "done" }[id];
+      if (v === right) { this.verdict = null; this.msg = null; this.stage = next; if (next === "done") this.typing = false; else this.active = next; return; }
+      this.verdict = "wrong";
+      this.msg = id === "sum" ? (v === a * b ? "Put the bases end to end: add them." : `The bottom is ${a} and ${b} end to end.`)
+        : id === "times" ? (v === S + h ? "Area is length times height." : `The rectangle is ${h} rows of ${S}.`)
+          : (v === Pr ? "Divide by 2 at the end." : "That area holds two trapezoids. Take half.");
+    },
+    scene() {
+      const st = this.stage, fitted = this.past("fit");
+      const say = { fit: ["Fit the copy against it.", "Pick it up and slide it."], sum: ["The two make a rectangle.", ""], times: ["Write the rectangle's area.", ""],
+        half: ["Write the trapezoid's area.", ""], done: [`Two trapezoids make a ${S} by ${h} rectangle, so one is half.`, ""] }[st];
+      if (st === "sum" && this.typing) say[0] = "Write how long the rectangle is.";
+      dhead(this, say[0], say[1]);
+      poly("trap", toSq(trap)); faint("trapf", toSq(trap), U, [0, Y0]);
+      const cp = this.copy(), key = `cp${cp.map(q => q.map(v => v.toFixed(2)).join(",")).join(";")}`;
+      poly(key, toSq(cp), fitted ? { live: true } : { fill: "var(--tint-strong)", dash: true, live: true });
+      if (fitted) { faint("cpf", toSq(cp), U, [0, Y0], { live: true }); line("seam", X(a), Y(h), X(b), Y(0), { dash: true, c: CH }); }
+      path("rc", `M${sq(X(0) + 0.6)} ${sq(Y(h))}V${sq(Y(h) - 0.6)}H${sq(X(0))}`, { c: "var(--ink2)" });
+      lab("ba", a, "below", Y(h), X(a / 2), "say"); lab("bb", b, "above", Y0, X(b / 2), "say"); lab("hh", h, "left", X(0), Y0 + h * U / 2, "say");
+      if (fitted) { lab("ba2", b, "below", Y(h), X(a + b / 2), "say"); lab("bb2", a, "above", Y0, X(b + a / 2), "say"); }
+      if (this.typing || st === "done") {
+        const n = { sum: 0, times: 1, half: 2, done: 3 }[st], rows = [Y0 + 1, Y0 + 4, Y0 + 7];
+        cellsLine("r1", [String(a), "+", String(b), "=", n > 0 ? GREEN(S) : BX(this, "sum", 2)], rx, rows[0]);
+        if (n >= 1) cellsLine("r2", [String(S), "×", String(h), "=", n > 1 ? GREEN(Pr) : BX(this, "times", Math.max(2, String(Pr).length))], rx, rows[1]);
+        if (n >= 2) { const end = cellsLine("r3", [String(Pr), "÷", "2", "=", n > 2 ? GREEN(A) : BX(this, "half", Math.max(2, String(A).length))], rx, rows[2]); text("ru", "square units", end + 0.6, rows[2], "small", { anchor: "start" }); }
+        endBlock(this, rx, rows[Math.min(n, 2)] + 3);
+      }
+    },
+  });
+  return L;
+}
+
+// ---------- Area of a polygon (g6-poly) ----------
+// New. A shape made of rectangles and right triangles, every corner on a grid point, its straight sides labelled. Cut
+// along grid lines (each cut runs edge to edge, from side to side or to another cut; a tap takes a cut back); Cut
+// names each piece small, or says the piece that's neither. A rectangle with a corner off can instead be cut along
+// its slanted side: the cut takes the corner away. Write each piece, then add (or take away).
+const near = (a, b) => Math.abs(a[0] - b[0]) < 1e-4 && Math.abs(a[1] - b[1]) < 1e-4;
+const onSeg = (X, a, b) => Math.abs((b[0] - a[0]) * (X[1] - a[1]) - (b[1] - a[1]) * (X[0] - a[0])) < 1e-6
+  && X[0] >= Math.min(a[0], b[0]) - 1e-6 && X[0] <= Math.max(a[0], b[0]) + 1e-6 && X[1] >= Math.min(a[1], b[1]) - 1e-6 && X[1] <= Math.max(a[1], b[1]) + 1e-6;
+// the stretches of the grid line x = k (vert) or y = k strictly inside a piece, as [lo, hi] along the line
+function chords(pts, vert, k) {
+  const at = K => {
+    const xs = [];
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i], q = pts[(i + 1) % pts.length], pa = vert ? p[0] : p[1], qa = vert ? q[0] : q[1], pl = vert ? p[1] : p[0], ql = vert ? q[1] : q[0];
+      if ((pa > K) !== (qa > K)) xs.push(pl + (K - pa) * (ql - pl) / (qa - pa));
+    }
+    xs.sort((u, v) => u - v);
+    const r = []; for (let i = 0; i + 1 < xs.length; i += 2) r.push([xs[i], xs[i + 1]]); return r;
+  };
+  const A = at(k - 1e-7), B = at(k + 1e-7), out = [];
+  for (const a of A) for (const b of B) { const lo = Math.max(a[0], b[0]), hi = Math.min(a[1], b[1]); if (hi - lo > 1e-3) out.push([Math.round(lo * 1e4) / 1e4, Math.round(hi * 1e4) / 1e4]); }
+  return out;
+}
+// split a piece along a chord P→Q (both on its outline)
+function splitAt(pts, P, Q) {
+  const v = [];
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length]; v.push(a);
+    v.push(...[P, Q].filter(X => onSeg(X, a, b) && !near(X, a) && !near(X, b)).sort((X, Y) => Math.hypot(X[0] - a[0], X[1] - a[1]) - Math.hypot(Y[0] - a[0], Y[1] - a[1])));
+  }
+  const iP = v.findIndex(X => near(X, P)), iQ = v.findIndex(X => near(X, Q));
+  const walk = (s, e) => { const r = []; for (let i = s; ; i = (i + 1) % v.length) { r.push(v[i]); if (i === e) break; } return r; };
+  return [walk(iP, iQ), walk(iQ, iP)];
+}
+function simplify(pts) {
+  let r = pts.filter((p, i) => !near(p, pts[(i + 1) % pts.length]));
+  for (let again = true; again;) {
+    again = false;
+    for (let i = 0; i < r.length; i++) {
+      const a = r[(i + r.length - 1) % r.length], b = r[i], c = r[(i + 1) % r.length];
+      if (Math.abs((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])) < 1e-6) { r.splice(i, 1); again = true; break; }
+    }
+  }
+  return r;
+}
+// a rectangle, a right triangle (legs along the grid), or neither
+function kindOf(pts) {
+  const r = simplify(pts), xs = r.map(p => p[0]), ys = r.map(p => p[1]);
+  const w = Math.max(...xs) - Math.min(...xs), h = Math.max(...ys) - Math.min(...ys);
+  const ax = r.map((p, i) => { const q = r[(i + 1) % r.length]; return Math.abs(p[0] - q[0]) < 1e-6 || Math.abs(p[1] - q[1]) < 1e-6; });
+  if (r.length === 4 && ax.every(Boolean)) return { k: "rect", w, h, A: w * h };
+  if (r.length === 3 && ax.filter(Boolean).length === 2) return { k: "tri", w, h, A: w * h / 2 };
+  return null;
+}
+const evenRnd = (lo, hi, ok) => { for (;;) { const v = rnd(lo, hi); if (ok(v)) return v; } };
+function genPoly(i) {
+  const kind = i < 3 ? "L" : i < 6 ? "rt" : pick1(["tri2", "take", "house"]);
+  let pts, cuts, hts = [], take = null;
+  if (kind === "L") {
+    const W = rnd(5, 12), H = rnd(5, 12), cw = rnd(2, W - 3), ch = rnd(2, H - 3);
+    pts = [[0, 0], [W - cw, 0], [W - cw, ch], [W, ch], [W, H], [0, H]]; cuts = [[[W - cw, ch], [W - cw, H]]];
+  } else if (kind === "rt") {
+    const H = rnd(2, 10), t = evenRnd(2, 6, t => (t * H) % 2 === 0), W = rnd(3, 12 - t);
+    pts = [[0, 0], [W, 0], [W + t, H], [0, H]]; cuts = [[[W, 0], [W, H]]];
+  } else if (kind === "tri2") {
+    // both halves' areas whole: an even height, or an even base split at an even point
+    const H = rnd(2, 12), B = H % 2 ? 2 * rnd(2, 6) : rnd(4, 12), p = evenRnd(2, B - 2, p => (p * H) % 2 === 0);
+    pts = [[0, H], [B, H], [p, 0]]; cuts = [[[p, 0], [p, H]]]; hts = [{ a: [p, 0], b: [p, H], s: H }];
+  } else if (kind === "house") {
+    const W = 2 * rnd(2, 6), r = evenRnd(2, 6, r => (W / 2 * r) % 2 === 0), H = rnd(2, 8);
+    pts = [[0, r], [W / 2, 0], [W, r], [W, r + H], [0, r + H]]; cuts = [[[0, r], [W, r]], [[W / 2, 0], [W / 2, r]]]; hts = [{ a: [W / 2, 0], b: [W / 2, r], s: r }];
+  } else {
+    const W = rnd(5, 12), H = rnd(5, 12), t = rnd(2, W - 3), u = evenRnd(2, H - 3, u => (t * u) % 2 === 0);
+    pts = [[0, 0], [W - t, 0], [W, u], [W, H], [0, H]]; cuts = [[[W - t, 0], [W - t, H]], [[W - t, u], [W, u]]];
+    take = { rect: [[0, 0], [W, 0], [W, H], [0, H]], tri: [[W - t, 0], [W, 0], [W, u]], legs: [{ a: [W - t, 0], b: [W, 0], s: t }, { a: [W, 0], b: [W, u], s: u }] };
+  }
+  // turned and flipped for variety (every corner stays on a grid point)
+  const tr = rnd(0, 1), fx = rnd(0, 1), fy = rnd(0, 1), xs = pts.map(p => tr ? p[1] : p[0]), ys = pts.map(p => tr ? p[0] : p[1]);
+  const Wb = Math.max(...xs), Hb = Math.max(...ys);
+  const T = ([x, y]) => { if (tr) [x, y] = [y, x]; return [fx ? Wb - x : x, fy ? Hb - y : y]; };
+  const TS = s => ({ ...s, a: T(s.a), b: T(s.b) });
+  return { kind, pts: pts.map(T), cuts: cuts.map(c => c.map(T)), hts: hts.map(TS), W: Wb, H: Hb,
+    take: take && { rect: take.rect.map(T), tri: take.tri.map(T), legs: take.legs.map(TS) } };
+}
+function dPoly(i, P0) {
+  const P = P0 || genPoly(i), { pts, W, H, take } = P, Y0 = 6, X0 = 2, CH = "var(--chapter)";
+  const lay = U => { const rx = Math.ceil((X0 + W * U + 4) / 5) * 5; return { U, rx, f: { x: -2, y: -0.5, w: Math.max(46, rx + 30), h: Math.max(Y0 + H * U + 3, Y0 + 20) } }; };
+  const { U, rx, f: FR } = Math.max(W, H) <= 14 && FIT(lay(2).f) >= 0.75 ? lay(2) : lay(1);
+  const X = x => X0 + x * U, Y = y => Y0 + y * U, toSq = q => q.map(([x, y]) => [X(x), Y(y)]), toU = q => ({ x: (q.x - X0) / U, y: (q.y - Y0) / U });
+  const stages = ["cut", "write", "done"];
+  const L = withBoxes({
+    id: "poly", nums: { ...P, U, Y0, X0 }, maxZoom: 1.25,
+    stage: "cut", msg: null, verdict: null, typing: false, held: false, cuts: [], pieces: [pts], takeCut: false, bad: [], parts: null, k: 0,
+    progress() { return stageIndex(stages, this.stage); },
+    past(k) { return stages.indexOf(this.stage) > stages.indexOf(k); },
+    frame() { return FR; },
+    recompute() {
+      let pcs = [pts]; const kept = [];
+      for (const c of this.cuts) {
+        let done = false;
+        pcs = pcs.flatMap(pc => {
+          if (done || !chords(pc, c.vert, c.k).some(([lo, hi]) => Math.abs(lo - c.lo) < 1e-3 && Math.abs(hi - c.hi) < 1e-3)) return [pc];
+          done = true; return splitAt(pc, c.vert ? [c.k, c.lo] : [c.lo, c.k], c.vert ? [c.k, c.hi] : [c.hi, c.k]);
+        });
+        if (done) kept.push(c);
+      }
+      this.cuts = kept; this.pieces = pcs; this.bad = [];
+    },
+    grab(q) {
+      if (this.stage !== "cut" || q.x < X(0) - 2.5 || q.x > X(W) + 2.5 || q.y < Y0 - 2.5 || q.y > Y(H) + 2.5) return false;
+      this.held = true; this.q0 = q; this.q1 = q; this.msg = null; this.bad = []; return true;
+    },
+    drag(q) { if (this.held) this.q1 = q; },
+    release() {
+      if (!this.held) return; this.held = false;
+      const a = toU(this.q0), z = toU(this.q1), dx = z.x - a.x, dy = z.y - a.y, tol = 0.7 / U;
+      if (Math.hypot(dx, dy) * U < 0.8) {
+        // a tap on a cut takes it back
+        const n = this.cuts.length;
+        this.cuts = this.cuts.filter(c => { const ac = c.vert ? z.x : z.y, al = c.vert ? z.y : z.x; return !(Math.abs(ac - c.k) < tol && al > c.lo - tol && al < c.hi + tol); });
+        if (this.cuts.length !== n) this.recompute();
+        if (take && this.takeCut) { const [p1, p2] = this.slant(); if (segDist(z, p1, p2) < tol) this.takeCut = false; }
+        return;
+      }
+      if (take) {
+        const [p1, p2] = this.slant();
+        if (segDist(a, p1, p2) < 1.2 / U + 0.3 && segDist(z, p1, p2) < 1.2 / U + 0.3 && Math.hypot(dx, dy) > 0.6 * Math.hypot(p2[0] - p1[0], p2[1] - p1[1])) {
+          this.takeCut = true; this.cuts = []; this.recompute(); return;
+        }
+      }
+      const vert = Math.abs(dy) > Math.abs(dx), k = Math.round(vert ? (a.x + z.x) / 2 : (a.y + z.y) / 2);
+      const mid = vert ? (a.y + z.y) / 2 : (a.x + z.x) / 2, span = Math.abs(vert ? dy : dx);
+      let found = null;
+      for (const pc of this.pieces) for (const [lo, hi] of chords(pc, vert, k)) if (mid > lo - 0.01 && mid < hi + 0.01) found = { vert, k, lo, hi };
+      if (!found || span < 0.6 * (found.hi - found.lo)) { this.msg = "Cut along a grid line, from edge to edge."; return; }
+      if (this.cuts.some(c => c.vert === vert && c.k === k && Math.abs(c.lo - found.lo) < 1e-3)) return;
+      this.takeCut = false; this.cuts.push(found); this.recompute();
+    },
+    slant() { return slantOf(pts); },
+    act(z) {
+      if (z === "cut") {
+        if (this.stage !== "cut") return;
+        let parts;
+        if (this.takeCut) {
+          const r = kindOf(take.rect), t = kindOf(take.tri);
+          parts = [{ ...r, pts: take.rect, sign: 1 }, { ...t, pts: take.tri, sign: -1 }];
+        } else {
+          const ks = this.pieces.map(kindOf);
+          this.bad = ks.map((k, j) => (k ? -1 : j)).filter(j => j >= 0);
+          if (this.bad.length) { this.msg = "That piece isn't a rectangle or a triangle."; return; }
+          parts = this.pieces.map((pc, j) => ({ ...ks[j], pts: pc, sign: 1 }));
+          parts.sort((p, q) => { const a = centroid(p.pts), b = centroid(q.pts); return Math.abs(a[1] - b[1]) > 0.01 ? a[1] - b[1] : a[0] - b[0]; });
+        }
+        this.parts = parts; this.msg = null; this.stage = "write"; this.typing = true; this.k = 0; this.active = "p0"; return;
+      }
+      if (boxAct(this, z)) return;
+      if (z !== "check" || this.stage !== "write") return;
+      const ps = this.parts, n = ps.length, id = this.k < n ? `p${this.k}` : "s"; this.active = id;
+      const v = numv(this.vals[id]);
+      if (isNaN(v)) { this.msg = "Write the number."; return; }
+      if (this.k < n) {
+        const pc = ps[this.k];
+        if (v === pc.A) { this.verdict = null; this.msg = null; this.k++; this.active = this.k < n ? `p${this.k}` : "s"; return; }
+        this.verdict = "wrong";
+        this.msg = pc.k === "tri" && v === pc.w * pc.h ? "A triangle is half its rectangle: divide by 2." : v === pc.w + pc.h ? "Multiply the two sides."
+          : `It's ${pc.h} rows of ${pc.w}${pc.k === "tri" ? ", then half" : ""}.`;
+        return;
+      }
+      const S = ps.reduce((s, p) => s + p.sign * p.A, 0);
+      if (v === S) { this.verdict = null; this.msg = null; this.stage = "done"; this.typing = false; return; }
+      this.verdict = "wrong";
+      this.msg = this.takeCut && v === ps[0].A + ps[1].A ? "The corner is taken away: subtract it."
+        : ps.some(p => v === S + p.A) ? "That counts a piece twice." : this.takeCut ? "Take the corner's area from the rectangle's." : "Add the pieces' areas.";
+    },
+    scene() {
+      const st = this.stage, ps = this.parts;
+      const words = n => ["", "a", "two", "three", "four"][n] || String(n);
+      const list = () => { const r = ps.filter(p => p.k === "rect").length, t = ps.filter(p => p.k === "tri").length;
+        const w = (n, s) => n ? `${words(n)} ${s}${n > 1 ? "s" : ""}` : ""; return [w(r, "rectangle"), w(t, "triangle")].filter(Boolean).join(" and "); };
+      const say = { cut: ["Cut it into rectangles and triangles.", this.cuts.length || this.takeCut ? "Tap a cut to take it back. Tap Cut when it's done."
+          : take ? "Drag along a grid line, or along the slanted side to take its corner off." : "Drag along a grid line, edge to edge."],
+        write: [this.takeCut ? "Write each area, then take the corner away." : "Write each piece's area, then add them.", ""],
+        done: [this.takeCut ? "Take the corner away: the rectangle less the triangle." : `Cut into ${ps ? list() : ""}, the areas add.`, ""] }[st];
+      dhead(this, say[0], say[1]);
+      // the shape, or its pieces
+      if (st === "cut") {
+        this.pieces.forEach((pc, j) => {
+          const bad = this.bad.includes(j), k = `pc${j}_${pc.map(p => p.join(",")).join(";")}${bad}`;
+          poly(k, toSq(pc), { c: bad ? "var(--wrong)" : CH, live: this.cuts.length > 0 }); faint(k + "f", toSq(pc), U, [X0, Y0], { live: this.cuts.length > 0 });
+        });
+        for (const c of this.cuts) line(`cut${c.vert}${c.k}_${c.lo}`, c.vert ? X(c.k) : X(c.lo), c.vert ? Y(c.lo) : Y(c.k), c.vert ? X(c.k) : X(c.hi), c.vert ? Y(c.hi) : Y(c.k), { c: CH });
+        if (take) {
+          poly(`tk${this.takeCut}`, toSq(take.tri), { fill: this.takeCut ? "url(#stripes)" : "none", c: CH, dash: true, live: true });
+          for (const g of take.legs) legLabel(`tl${g.s}${g.a}`, g, X, Y, take.rect);
+        }
+        if (this.held) {
+          const a = this.q0, z = this.q1, vert = Math.abs(z.y - a.y) > Math.abs(z.x - a.x);
+          line("drag", vert ? Math.round(((a.x + z.x) / 2 - X0) / U) * U + X0 : a.x, vert ? a.y : Math.round(((a.y + z.y) / 2 - Y0) / U) * U + Y0,
+            vert ? Math.round(((a.x + z.x) / 2 - X0) / U) * U + X0 : z.x, vert ? z.y : Math.round(((a.y + z.y) / 2 - Y0) / U) * U + Y0, { c: CH, dash: true, live: true });
+        }
+        block("cut", rx, Y0 + 1, 6, "Cut", "cut");
+      } else {
+        for (const [j, p] of ps.entries()) {
+          const neg = p.sign < 0;
+          poly(`pt${j}`, toSq(p.pts), neg ? { fill: "url(#stripes)", dash: true } : {});
+          if (!neg) faint(`ptf${j}`, toSq(p.pts), U, [X0, Y0]);
+          // its name in it; on two rows when the piece is too narrow for one
+          const c = centroid(simplify(p.pts)), nm = `${p.w} × ${p.h}${p.k === "tri" ? " ÷ 2" : ""}`;
+          if (p.k !== "tri" || textW(nm, "small") <= p.w * U * 0.6 - 0.4) text(`nm${j}`, nm, X(c[0]), Y(c[1]), "small", { c: "var(--ink)" });
+          else { text(`nm${j}a`, `${p.w} × ${p.h}`, X(c[0]), Y(c[1]) - 0.6, "small", { c: "var(--ink)" }); text(`nm${j}b`, "÷ 2", X(c[0]), Y(c[1]) + 0.6, "small", { c: "var(--ink)" }); }
+        }
+      }
+      // the shape's straight sides, labelled outside; heights dashed
+      for (const [j, e] of edgeLabels(pts).entries()) lab(`el${j}_${e.s}`, e.s, e.side, e.h ? Y(e.y) : X(e.x), e.h ? X(e.m) : Y(e.m), "say");
+      if (st === "cut") for (const g of P.hts) { heightLine(`ht${g.s}`, X(g.a[0]), Y(Math.min(g.a[1], g.b[1])), Y(Math.max(g.a[1], g.b[1])), 1);
+        if (g.a[0] === g.b[0]) lab(`htl${g.s}`, g.s, "right", X(g.a[0]) + 0.2, (Y(g.a[1]) + Y(g.b[1])) / 2, "say"); }
+      // the record: each piece, then the total
+      if (ps) {
+        const n = ps.length, row = j => Y0 + 1 + 3 * j;
+        ps.forEach((p, j) => {
+          if (j > this.k) return;
+          const toks = [String(p.w), "×", String(p.h), ...(p.k === "tri" ? ["÷", "2"] : []), "="];
+          cellsLine(`rp${j}`, [...toks, j < this.k ? GREEN(p.A) : BX(this, `p${j}`, Math.max(2, String(p.A).length))], rx, row(j));
+        });
+        if (this.k >= n) {
+          const S = ps.reduce((s, p) => s + p.sign * p.A, 0), toks = [];
+          ps.forEach((p, j) => { if (j) toks.push(p.sign < 0 ? "−" : "+"); toks.push(String(p.A)); });
+          const end = cellsLine("rs", [...toks, "=", st === "done" ? GREEN(S) : BX(this, "s", Math.max(2, String(S).length))], rx, row(n));
+          text("ru", "square units", end + 0.6, row(n), "small", { anchor: "start" });
+        }
+        endBlock(this, rx, row(Math.min(this.k, n)) + 3);
+      }
+    },
+  });
+  return L;
+}
+// the slanted side of a rectangle with a corner off
+function slantOf(pts) {
+  for (let i = 0; i < pts.length; i++) { const a = pts[i], b = pts[(i + 1) % pts.length]; if (a[0] !== b[0] && a[1] !== b[1]) return [a, b]; }
+  return [pts[0], pts[1]];
+}
+function segDist(q, a, b) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], u = clamp(((q.x - a[0]) * dx + (q.y - a[1]) * dy) / (dx * dx + dy * dy), 0, 1);
+  return Math.hypot(q.x - a[0] - u * dx, q.y - a[1] - u * dy);
+}
+// a straight side's length, half a square outside it
+function edgeLabels(pts) {
+  const out = [];
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length];
+    if (a[1] === b[1] && a[0] !== b[0]) { const m = (a[0] + b[0]) / 2; out.push({ s: Math.abs(b[0] - a[0]), side: pip(pts, m, a[1] - 0.05) ? "below" : "above", y: a[1], m, h: true }); }
+    else if (a[0] === b[0] && a[1] !== b[1]) { const m = (a[1] + b[1]) / 2; out.push({ s: Math.abs(b[1] - a[1]), side: pip(pts, a[0] - 0.05, m) ? "right" : "left", x: a[0], m, h: false }); }
+  }
+  return out;
+}
+// a leg of the corner that's taken off, labelled outside the whole rectangle
+function legLabel(k, g, X, Y, rect) {
+  if (g.a[1] === g.b[1]) { const m = (g.a[0] + g.b[0]) / 2; lab(k, g.s, pip(rect, m, g.a[1] - 0.05) ? "below" : "above", Y(g.a[1]), X(m), "say"); }
+  else { const m = (g.a[1] + g.b[1]) / 2; lab(k, g.s, pip(rect, g.a[0] - 0.05, m) ? "right" : "left", X(g.a[0]), Y(m), "say"); }
+}
+
+// ---------- Nets and surface area (g6-nets) · 3D ----------
+// New. Square: one square unit, two squares a unit. Flat, from row 6: the net, faces sharing their fold lines, its outer
+// sides labelled. Drag a face toward the middle: the paper tilts (Unit cubes' view) and the face turns up about its
+// edge (a face on a face goes with it); 5 of 6 faces, and it closes. It opens flat; tap a face: its area is written in
+// it, and after the first, faces the same size light together; write SA. Boxes and cubes, then prisms and pyramids.
+function boxDims(caps) { for (;;) { const d = caps.map(c => rnd(2, c)).sort((p, q) => q - p); if (!(d[0] === d[1] && d[1] === d[2])) return { kind: "box", a: d[0], c: d[1], b: d[2] }; } }
+function genNets(i) {
+  // a cube's net is 4 edges across and 3 down, so cubes stop at 4 to keep it 44 × 28 squares or less
+  if (i < 3) return i === 0 || (i === 2 && rnd(0, 1)) ? { kind: "cube", e: rnd(2, 4) } : boxDims([5, 5, 5]);
+  if (i < 6) return boxDims([6, 5, 4]);
+  const r = i % 3;
+  if (r === 0) return { kind: "prism", tri: pick1(["right", "iso"]), L: rnd(2, 5) };
+  if (r === 1) { for (;;) { const s = rnd(2, 6), l = rnd(3, 6); if (2 * l > s && (s * l) % 2 === 0 && s + 2 * l <= 14) return { kind: "pyr", s, l }; } }
+  return rnd(0, 2) ? boxDims([6, 5, 4]) : { kind: "cube", e: rnd(2, 4) };
+}
+// the net's faces in units: each folds about its hinge (a point P on it and n, the way into the face) by up to target
+function netOf(P) {
+  const F = (id, pts, parent, Pt, n, target, w, h, tri) => ({ id, pts, parent, P: Pt, n, target, w, h, tri: !!tri, A: tri ? w * h / 2 : w * h,
+    key: tri ? `t${w}x${h}` : `r${Math.min(w, h)}x${Math.max(w, h)}` });
+  const R = (x0, y0, x1, y1) => [[x0, y0], [x1, y0], [x1, y1], [x0, y1]], Q = Math.PI / 2;
+  if (P.kind === "box" || P.kind === "cube") {
+    const a = P.e || P.a, b = P.e || P.b, c = P.e || P.c;
+    return { solid: P.kind, w: 2 * a + 2 * b, h: 2 * b + c, zbox: b, V: a * b * c, cube: P.e || 0, faces: [
+      F("base", R(b, b, b + a, b + c), null, null, null, 0, a, c),
+      F("s0", R(0, b, b, b + c), "base", [b, b], [-1, 0], Q, b, c),
+      F("s2", R(b + a, b, 2 * b + a, b + c), "base", [b + a, b], [1, 0], Q, b, c),
+      F("s3", R(2 * b + a, b, 2 * b + 2 * a, b + c), "s2", [2 * b + a, b], [1, 0], Q, a, c),
+      F("cT", R(b, 0, b + a, b), "base", [b, b], [0, -1], Q, a, b),
+      F("cB", R(b, b + c, b + a, 2 * b + c), "base", [b, b + c], [0, 1], Q, a, b)] };
+  }
+  if (P.kind === "prism") {
+    const [q, th, ax] = P.tri === "right" ? [4, 3, 0] : [6, 4, 3], sL = Math.hypot(ax, th), sR = Math.hypot(q - ax, th), Lh = P.L;
+    return { solid: "prism", w: sL + q + sR, h: 2 * th + Lh, zbox: th, V: q * th / 2 * Lh, faces: [
+      F("base", R(sL, th, sL + q, th + Lh), null, null, null, 0, q, Lh),
+      F("fl", R(0, th, sL, th + Lh), "base", [sL, th], [-1, 0], Math.PI - Math.atan2(th, ax), sL, Lh),
+      F("fr", R(sL + q, th, sL + q + sR, th + Lh), "base", [sL + q, th], [1, 0], Math.PI - Math.atan2(th, q - ax), sR, Lh),
+      F("cT", [[sL, th], [sL + q, th], [sL + ax, 0]], "base", [sL, th], [0, -1], Q, q, th, true),
+      F("cB", [[sL, th + Lh], [sL + q, th + Lh], [sL + ax, 2 * th + Lh]], "base", [sL, th + Lh], [0, 1], Q, q, th, true)] };
+  }
+  const { s, l } = P, tg = Math.acos(-s / (2 * l));
+  return { solid: "pyramid", w: s + 2 * l, h: s + 2 * l, zbox: Math.sqrt(l * l - s * s / 4), V: null, faces: [
+    F("base", R(l, l, l + s, l + s), null, null, null, 0, s, s),
+    F("tT", [[l, l], [l + s, l], [l + s / 2, 0]], "base", [l, l], [0, -1], tg, s, l, true),
+    F("tB", [[l, l + s], [l + s, l + s], [l + s / 2, 2 * l + s]], "base", [l, l + s], [0, 1], tg, s, l, true),
+    F("tL", [[l, l], [l, l + s], [0, l + s / 2]], "base", [l, l], [-1, 0], tg, s, l, true),
+    F("tR", [[l + s, l], [l + s, l + s], [2 * l + s, l + s / 2]], "base", [l + s, l], [1, 0], tg, s, l, true)] };
+}
+// turn a point about a face's hinge (on the paper) by al, the face's side rising off the paper
+function foldRot(p, f, al) {
+  const e = [f.n[1], -f.n[0]], v = [p[0] - f.P[0], p[1] - f.P[1], p[2]], c = Math.cos(al), s = Math.sin(al), ed = e[0] * v[0] + e[1] * v[1];
+  const ex = [e[1] * v[2], -e[0] * v[2], e[0] * v[1] - e[1] * v[0]];
+  return [f.P[0] + v[0] * c + ex[0] * s + e[0] * ed * (1 - c), f.P[1] + v[1] * c + ex[1] * s + e[1] * ed * (1 - c), v[2] * c + ex[2] * s];
+}
+// the outer sides to label: tops that no other face shares, and the net's left end
+function netLabels(faces) {
+  const edges = faces.flatMap(f => f.pts.map((a, i) => ({ f, a, b: f.pts[(i + 1) % f.pts.length] })));
+  const shared = e => edges.some(o => o.f !== e.f && ((near(o.a, e.a) && near(o.b, e.b)) || (near(o.a, e.b) && near(o.b, e.a))));
+  const out = [];
+  for (const e of edges) {
+    if (shared(e)) continue;
+    const pts = e.f.pts;
+    if (e.a[1] === e.b[1] && e.a[0] !== e.b[0] && !pip(pts, (e.a[0] + e.b[0]) / 2, e.a[1] - 0.05)) out.push({ s: Math.abs(e.b[0] - e.a[0]), side: "above", y: e.a[1], m: (e.a[0] + e.b[0]) / 2 });
+    if (e.a[0] === e.b[0] && e.a[0] === 0 && e.a[1] !== e.b[1] && !pip(pts, e.a[0] - 0.05, (e.a[1] + e.b[1]) / 2)) out.push({ s: Math.abs(e.b[1] - e.a[1]), side: "left", x: e.a[0], m: (e.a[1] + e.b[1]) / 2 });
+  }
+  return out;
+}
+function dNets(i, P0) {
+  const P = P0 || genNets(i), N = netOf(P), Y0 = 6, U = 2, CH = "var(--chapter)", byId = {};
+  N.faces.forEach(f => (byId[f.id] = f));
+  const SA = N.faces.reduce((s, f) => s + f.A, 0), nF = N.faces.length, RY = Y0 + N.h * U + 4, sol = N.solid === "cube" ? "box" : N.solid;
+  const groups = [];
+  for (const f of N.faces) { const g = groups.find(g => g.key === f.key); if (g) g.n++; else groups.push({ key: f.key, A: f.A, n: 1 }); }
+  const terms = N.cube ? ["6", "×", String(N.cube), { sup: 2 }] : groups.flatMap((g, j) => [...(j ? ["+"] : []), ...(g.n > 1 ? [String(g.n), "×"] : []), String(g.A)]);
+  const recW = 34 + 2 * terms.reduce((s, t) => s + (typeof t === "string" ? t.length : 0.5), 0);
+  const bc = centroid(byId.base.pts);
+  const stages = ["fold", "tap", "write", "done"];
+  const L = tilter(withBoxes({
+    id: "nets", nums: { ...P, SA, nF, U, Y0, RY, w: N.w, h: N.h, V: N.V, solid: N.solid }, net: N, maxZoom: 1.25,
+    stage: "fold", msg: null, verdict: null, typing: false, held: null, ang: {}, anim: {}, lit: new Set(), order: [],
+    progress() { return stageIndex(stages, this.stage === "closed" ? "fold" : this.stage); },
+    animating() { const now = performance.now(); return now - this.tiltAt < 1250 || Object.values(this.anim).some(a => now - a.t0 < a.ms + 60); },
+    angNow(id) { const a = this.anim[id]; if (a) { const u = (performance.now() - a.t0) / a.ms; if (u < 1) return a.from + (a.to - a.from) * ease(Math.max(0, u)); } return this.ang[id] || 0; },
+    animTo(id, to, ms) { this.anim[id] = { from: this.angNow(id), to, t0: performance.now(), ms }; this.ang[id] = to; },
+    world(f, x, y) { let p = [x, y, 0]; for (let g = f; g && g.parent; g = byId[g.parent]) p = foldRot(p, g, this.angNow(g.id)); return p; },
+    scr(f, x, y) { const p = this.world(f, x, y); return this.proj(p[0] * U, Y0 + p[1] * U, p[2] * U); },
+    facePts(f) { return f.pts.map(([x, y]) => { const q = this.scr(f, x, y); return [q.x, q.y]; }); },
+    upCount() { return N.faces.filter(f => f.parent && this.ang[f.id] === f.target).length; },
+    tiltedNow() { return (this.stage === "fold" || this.stage === "closed") && this.tiltTo === 1; },
+    // the faces' screen bounds at tilt t with each face at angOf(face)
+    boundsAt(angOf, t = 1) {
+      const A = {}; for (const f of N.faces) A[f.id] = angOf(f);
+      const sa = this.ang, sn = this.anim; this.ang = A; this.anim = {};
+      const r = { x0: 1e9, y0: 1e9, x1: -1e9, y1: -1e9 };
+      for (const f of N.faces) for (const [x, y] of f.pts) {
+        const p = this.world(f, x, y), q = this.proj(p[0] * U, Y0 + p[1] * U, p[2] * U, t);
+        r.x0 = Math.min(r.x0, q.x); r.y0 = Math.min(r.y0, q.y); r.x1 = Math.max(r.x1, q.x); r.y1 = Math.max(r.y1, q.y);
+      }
+      this.ang = sa; this.anim = sn; return r;
+    },
+    // what the tilted camera holds: the faces as they are, all folded, and a face on a face standing straight up on its way over
+    fb() {
+      const bs = [this.boundsAt(f => this.ang[f.id] || 0), this.boundsAt(f => f.target), this.boundsAt(f => (!f.parent || f.parent === "base" ? f.target : 0))];
+      return { x0: Math.min(...bs.map(b => b.x0)), y0: Math.min(...bs.map(b => b.y0)), x1: Math.max(...bs.map(b => b.x1)), y1: Math.max(...bs.map(b => b.y1)) };
+    },
+    // tilted, the solid is centred under the words, which sit 7 rows above its top
+    frame() {
+      if (!this.tiltedNow()) return { x: -2, y: -0.5, w: Math.max(46, N.w * U + 16, recW + 4), h: RY + 7 };
+      const fb = this.fb(), hy = Math.floor(fb.y0 - 7), w = Math.max(46, fb.x1 - fb.x0 + 34);
+      return { x: (fb.x0 + fb.x1) / 2 - w / 2, y: hy - 0.5, w, h: fb.y1 + 3 - hy };
+    },
+    // the faces back to front, as seen now
+    sorted() {
+      const t = this.t();
+      return N.faces.map(fc => {
+        const w = fc.pts.map(([x, y]) => this.world(fc, x, y)), c3 = [0, 1, 2].map(k => w.reduce((s, p) => s + p[k], 0) / w.length);
+        return { fc, w, d: this.depth(c3[0] * U, Y0 + c3[1] * U, c3[2] * U + 0.01 * (fc.parent ? 1 : 0), t) };
+      }).sort((a, b) => a.d - b.d);
+    },
+    grab(q) {
+      if (this.stage !== "fold") return false;
+      const hit = this.sorted().reverse().find(({ fc }) => fc.parent && !(this.ang[fc.id] > 0) && pip(this.facePts(fc), q.x, q.y));
+      if (!hit) return false;
+      const f = hit.fc;
+      if ((this.ang[f.id] || 0) > 0) return false;
+      if (f.parent !== "base" && !this.ang[f.parent]) { this.msg = "Fold the sides up first."; return true; }
+      if (this.tiltTo < 1) { this.piv = { x: bc[0] * U, y: Y0 + bc[1] * U }; this.tiltTo1(1); }
+      const c = centroid(f.pts), dd = (c[0] - f.P[0]) * f.n[0] + (c[1] - f.P[1]) * f.n[1], hm = [c[0] - dd * f.n[0], c[1] - dd * f.n[1]];
+      const A = this.scr(f, c[0], c[1]), B = this.scr(f, hm[0], hm[1]);
+      this.held = { f, q0: q, dir: [B.x - A.x, B.y - A.y] }; this.msg = null; return true;
+    },
+    drag(q) {
+      const h = this.held; if (!h) return;
+      const dd = h.dir[0] ** 2 + h.dir[1] ** 2 || 1, u = ((q.x - h.q0.x) * h.dir[0] + (q.y - h.q0.y) * h.dir[1]) / dd;
+      delete this.anim[h.f.id]; this.ang[h.f.id] = h.f.target * clamp(u * 1.15, 0, 1);
+    },
+    release() {
+      const h = this.held; this.held = null; if (!h) return;
+      const f = h.f;
+      if ((this.ang[f.id] || 0) >= 0.45 * f.target) {
+        this.animTo(f.id, f.target, 260);
+        if (this.upCount() === nF - 1) this.close();
+      } else { this.animTo(f.id, 0, 220); this.msg = "Fold it all the way up."; }
+    },
+    // it closes, then opens and the paper lies flat
+    close() {
+      this.stage = "closed";
+      later(1500, () => { for (const f of N.faces) if (f.parent) this.animTo(f.id, 0, 900); this.tiltTo1(0); });
+      later(2700, () => { this.stage = "tap"; });
+    },
+    tap(q) {
+      if (this.stage !== "tap") return false;
+      const f = N.faces.find(fc => pip(this.facePts(fc), q.x, q.y));
+      if (!f) { this.msg = "Tap a face of the net."; return true; }
+      if (this.lit.has(f.id)) return false;
+      this.msg = null;
+      const add = fc => { if (!this.lit.has(fc.id)) { this.lit.add(fc.id); this.order.push(fc.A); } };
+      if (!this.lit.size) add(f); else N.faces.filter(fc => fc.key === f.key).forEach(add);
+      if (this.lit.size === nF) { this.stage = "write"; this.typing = true; this.active = "sa"; }
+      return true;
+    },
+    act(z) {
+      if (boxAct(this, z)) return;
+      if (z !== "check" || this.stage !== "write") return;
+      const v = numv(this.vals.sa);
+      if (isNaN(v)) { this.msg = "Write the number."; return; }
+      if (v === SA) { this.verdict = null; this.msg = null; this.stage = "done"; this.typing = false; return; }
+      this.verdict = "wrong";
+      this.msg = N.V != null && v === N.V ? "That's the cubes inside. The surface is the faces." : nF === 6 && v * 2 === SA ? "That's 3 faces. A box has 6." : "Add the faces' areas: every face counts.";
+    },
+    leave(then) { this.typing = false; if (this.t() > 0.01) { this.tiltTo1(0, then); render(); } else then(); },
+    scene() {
+      const st = this.stage, t = this.t(), f = this.frame(), flat = t < 0.01 && N.faces.every(fc => !this.angNow(fc.id));
+      UP = true;
+      const say = { fold: [`Fold it into a ${sol}.`, "Drag each face toward the middle."], closed: [`It closes into a ${sol}.`, ""],
+        tap: ["Tap each face.", "Its area is written in it."], write: ["Write the surface area.", "Every face counts."],
+        done: [`The net is the ${sol}'s outside laid flat: ${SA} squares cover it.`, ""] }[st];
+      dhead(this, say[0], say[1], f.x + 2, f.y + 0.5);
+      for (const { fc, w } of this.sorted()) {
+        const pp = w.map(p => { const q = this.proj(p[0] * U, Y0 + p[1] * U, p[2] * U, t); return [q.x, q.y]; });
+        const u1 = [0, 1, 2].map(k => w[1][k] - w[0][k]), u2 = [0, 1, 2].map(k => w[2][k] - w[0][k]);
+        const nrm = [u1[1] * u2[2] - u1[2] * u2[1], u1[2] * u2[0] - u1[0] * u2[2], u1[0] * u2[1] - u1[1] * u2[0]], len = Math.hypot(...nrm) || 1;
+        const fill = this.lit.has(fc.id) ? "var(--tint-strong)" : Math.abs(nrm[2]) / len > 0.8 ? CUBE.top : Math.abs(nrm[0]) > Math.abs(nrm[1]) ? CUBE.side : CUBE.front;
+        put(`f${fc.id}${this.lit.has(fc.id)}`, "polygon", { points: ptsStr(pp), fill, stroke: "var(--cube-edge)", "stroke-width": 1.5, "stroke-linejoin": "round" }, flat ? "fade" : "none");
+      }
+      if (flat) {
+        // the outer sides, and each triangle's height dashed (a square's sides inside it when no outer side shows them)
+        for (const [j, e] of netLabels(N.faces).entries()) lab(`nl${j}_${e.s}`, e.s, e.side, e.side === "above" ? Y0 + e.y * U : e.x * U, e.side === "above" ? e.m * U : Y0 + e.m * U, "say");
+        if (P.kind === "pyr" && !this.lit.has("base")) { const b = byId.base.pts; lab("bs", P.s, "below", Y0 + b[0][1] * U, (b[0][0] + P.s / 2) * U, "say"); }
+        for (const fc of N.faces) if (fc.tri) {
+          const ap = fc.pts[2], dd = (ap[0] - fc.P[0]) * fc.n[0] + (ap[1] - fc.P[1]) * fc.n[1], ft = [ap[0] - dd * fc.n[0], ap[1] - dd * fc.n[1]];
+          if (fc.pts.slice(0, 2).some(p => near(p, ft)) || this.lit.has(fc.id)) continue;
+          line(`th${fc.id}`, ap[0] * U, Y0 + ap[1] * U, ft[0] * U, Y0 + ft[1] * U, { dash: true, c: "var(--ink2)" });
+          const m = [(ap[0] + ft[0]) / 2 * U, Y0 + (ap[1] + ft[1]) / 2 * U];
+          if (!this.lit.has(fc.id)) { if (fc.n[0]) lab(`thl${fc.id}`, fc.h, "above", m[1] - 0.1, m[0] + (fc.n[0] > 0 ? 1 : -1) * 0.2 * fc.h * U, "small"); else lab(`thl${fc.id}`, fc.h, "right", m[0] + 0.1, m[1], "small"); }
+        }
+        // the areas written in the lit faces
+        for (const fc of N.faces) if (this.lit.has(fc.id)) {
+          const c = fc.tri ? centroid(fc.pts) : centroid(fc.pts), cx = c[0] * U, cy = Y0 + c[1] * U;
+          const one = `${fc.w} × ${fc.h}${fc.tri ? " ÷ 2" : ""} = ${fc.A}`, room = (fc.tri ? (fc.n[0] ? fc.h : fc.w) * 0.6 : fc.w) * U - 0.8;
+          if (textW(one, "small") <= room) text(`ar${fc.id}`, one, cx, cy, "small", { c: "var(--ink)" });
+          else { text(`ar${fc.id}a`, `${fc.w} × ${fc.h}${fc.tri ? " ÷ 2" : ""}`, cx, cy - 0.6, "small", { c: "var(--ink)" }); text(`ar${fc.id}b`, `= ${fc.A}`, cx, cy + 0.6, "small", { c: "var(--ink)" }); }
+        }
+      }
+      // readouts: faces up while folding; the running total while tapping
+      if (st === "fold" || st === "closed") {
+        // just right of the faces as they are now
+        const n = 1 + this.upCount(), cb = this.boundsAt(fc => this.angNow(fc.id), t);
+        if (this.held || n > 1) text(`rd${n}`, `${n} of ${nF} faces`, cb.x1 + 1.5, (cb.y0 + cb.y1) / 2, "small", { anchor: "start", c: CH, live: true });
+      }
+      if (this.order.length && st !== "done") text(`tot${this.order.length}`, `${this.order.join(" + ")} = ${this.order.reduce((s, v) => s + v, 0)}`, 0, Y0 + N.h * U + 1.4, "small", { anchor: "start", c: CH, live: true });
+      if (st === "write" || st === "done") {
+        const end = cellsLine("rec", [{ word: "SA" }, "=", ...terms, "=", st === "done" ? GREEN(SA) : BX(this, "sa", Math.max(2, String(SA).length))], 0, RY);
+        text("ru", "square units", end + 0.6, RY, "small", { anchor: "start" });
+      }
+      endBlock(this, 0, RY + 3);
+      UP = false;
+    },
+  }));
+  return L;
+}
+
+// ---------- Volume with fraction edges (g6-fracvol) · 3D ----------
+// New. Square: one block (5 × 5 squares) is a small cube with edges of 1/2; a whole cube is 2 × 2 × 2 blocks, its
+// edges in ink. Flat: the floor, its lengths as fractions, its small squares; cover it (Volume of a box's move). The
+// paper tilts and the floor rises into the first layer; drag up the layers; 8 small cubes in a corner light as one
+// whole; write N ÷ 8, then the record V = l × w × h, the same as the count. Thirds: a whole is 3 × 3 × 3 blocks.
+const GLY = { 2: { 1: "½" }, 3: { 1: "⅓", 2: "⅔" } };
+const edgeS = (n, d) => (n % d ? (Math.floor(n / d) || "") + GLY[d][n % d] : String(n / d));
+function genFrac(i) {
+  const mode = i < 6 ? "count" : ["count", "bh", "third"][i % 3], d = mode === "third" ? 3 : 2;
+  for (;;) {
+    const x = rnd(d, 6), y = rnd(d, 6), z = rnd(d, 6), odd = [x, y, z].filter(n => n % d).length;
+    if (x * y * z > 72) continue;
+    if (mode === "count" ? odd !== (i < 3 ? 1 : i < 6 ? 2 : 3) : odd === 0) continue;
+    return { x, y, z, d, mode };
+  }
+}
+function dFrac(i, P0) {
+  const P = P0 || genFrac(i), { x, y, z, d, mode } = P, B = 5, X0 = 5, Y0 = 6, CH = "var(--chapter)";
+  const floor = x * y, N = floor * z, per = d ** 3, V = N / per, Vs = mixedStr(N, per);
+  const ls = edgeS(x, d), ws = edgeS(y, d), hs = edgeS(z, d), Bs = mixedStr(floor, d * d), X1 = X0 + x * B, Y1 = Y0 + y * B;
+  const stages = ["cover", "build", "see", "write", "done"];
+  const L = tilter(withBoxes({
+    id: "fracvol", nums: { ...P, N, per, V, Vs, X0, Y0, B }, maxZoom: 1.25,
+    stage: "cover", msg: null, verdict: null, typing: false, held: null, covered: new Set(), layers: 0, riseAt: [], lit: false,
+    progress() { return stageIndex(stages, this.stage); },
+    past(k) { return stages.indexOf(this.stage) > stages.indexOf(k); },
+    animating() { const now = performance.now(); return now - this.tiltAt < 1250 || this.riseAt.some(a => now - a < 450 && now - a > -1500); },
+    fb() { return this.bounds(X0, Y0, X1, Y1, (z + 1) * B, 1); },
+    frame() {
+      if (this.stage === "cover" && this.tiltTo < 1) return { x: -2, y: -0.5, w: Math.max(46, X1 + 18), h: Y1 + 4 };
+      // building, the box is centred under the words (7 rows above its top); then the record comes in beside it
+      const fb = this.fb(), hy = Math.floor(fb.y0 - 7);
+      if (this.stage === "cover" || this.stage === "build") { const w = Math.max(46, fb.x1 - fb.x0 + 34); return { x: (fb.x0 + fb.x1) / 2 - w / 2, y: hy - 0.5, w, h: fb.y1 + 3 - hy }; }
+      const { nx, ny } = this.tiltPlaces(fb), x0 = Math.floor(fb.x0) - 2;
+      return { x: x0, y: hy - 0.5, w: Math.max(46, nx + 32 - x0), h: Math.max(fb.y1 + 3, ny + 13) - hy + 0.5 };
+    },
+    cell(q) { const a = Math.floor((q.x - X0) / B), b = Math.floor((q.y - Y0) / B); return a >= 0 && a < x && b >= 0 && b < y ? `${a},${b}` : null; },
+    grab(q) {
+      if (this.stage === "cover") { const c = this.cell(q); if (!c) return false; this.covered.add(c); this.held = "cover"; this.msg = null; return true; }
+      if (this.stage === "build" && this.t() > 0.95) { this.held = { y0: q.y, l0: this.layers }; this.msg = null; return true; }
+      return false;
+    },
+    drag(q) {
+      if (this.held === "cover") { const c = this.cell(q); if (c) this.covered.add(c); return; }
+      if (this.held) this.setLayers(clamp(this.held.l0 + Math.round((this.held.y0 - q.y) / (B * Math.sin(THETA))), 1, z + 1));
+    },
+    setLayers(want) { const now = performance.now(); for (let k = this.layers; k < want; k++) this.riseAt[k] = now + (k - this.layers) * 120; this.layers = want; this.riseAt.length = want; },
+    release() {
+      const h = this.held; this.held = null; if (!h) return;
+      if (h === "cover") {
+        if (this.covered.size < floor) { this.msg = `Cover every square: ${this.covered.size} of ${floor} so far.`; return; }
+        this.stage = "build"; this.piv = { x: (X0 + X1) / 2, y: (Y0 + Y1) / 2 }; this.tiltTo1(1); this.setLayers(1); this.riseAt[0] = performance.now() + 1050;
+        return;
+      }
+      if (this.layers !== z) { this.msg = `That's ${edgeS(this.layers, d)} high. Build it to ${hs}.`; return; }
+      this.stage = "see";
+      later(500, () => { this.lit = true; });
+      later(1800, () => { this.stage = "write"; this.typing = true; this.active = "w"; openKeys(); });
+    },
+    act(zz) {
+      if (boxAct(this, zz)) return;
+      if (zz !== "check" || this.stage !== "write") return;
+      const vw = this.vals.w, vn = this.vals.n, vd = this.vals.d;
+      let v;
+      if (!vn && !vd) v = vw ? numv(vw) : NaN;
+      else { const w = vw ? numv(vw) : 0, a = numv(vn), b = numv(vd); v = isNaN(w) || isNaN(a) || isNaN(b) || !b ? NaN : w + a / b; }
+      if (isNaN(v)) { this.msg = "Write the whole number and the fraction."; return; }
+      if (Math.abs(v - V) < 1e-9) { this.verdict = null; this.msg = null; this.stage = "done"; this.typing = false; return; }
+      this.verdict = "wrong";
+      const wholes = Math.floor(x / d) * Math.floor(y / d) * Math.floor(z / d);
+      this.msg = v === N ? `${per} small cubes make one whole.` : v === wholes ? `The ${d === 2 ? "halves" : "thirds"} count too: share all ${N} small cubes into wholes of ${per}.` : `Share the ${N} small cubes into wholes of ${per}.`;
+    },
+    leave(then) { this.typing = false; if (this.t() > 0.01) { this.tiltTo1(0, then); render(); } else then(); },
+    scene() {
+      const st = this.stage, t = this.t(), tilted = t > 0.02 || st !== "cover", f = this.frame();
+      const say = { cover: ["Cover the floor.", "Drag across it."], build: [`Build it up to ${hs}.`, "Drag up, a layer at a time."],
+        see: [`${per} small cubes make one whole cube.`, ""], write: ["Write how many whole cubes.", ""],
+        done: [`${per} small cubes make one whole cube, so ${N} of them make ${Vs}.`, ""] }[st];
+      UP = true; dhead(this, say[0], say[1], f.x + 2, f.y + 0.5); UP = false;
+      // the floor on the paper: its small squares (chapter), the wholes' lines (ink), covered squares shaded
+      for (const c of this.covered) { const [a, b] = c.split(",").map(Number); rect(`cv${c}`, X0 + a * B, Y0 + b * B, B, B, { fill: "var(--tint-strong)", live: st === "cover" }); }
+      for (let a = 1; a < x; a++) line(`gx${a}`, X0 + a * B, Y0, X0 + a * B, Y1, { c: a % d ? CH : "var(--ink)" });
+      for (let b = 1; b < y; b++) line(`gy${b}`, X0, Y0 + b * B, X1, Y0 + b * B, { c: b % d ? CH : "var(--ink)" });
+      rect("fo", X0, Y0, x * B, y * B, { c: "var(--ink)" });
+      if (!tilted) {
+        lab("lx", ls, "below", Y1, (X0 + X1) / 2, "say"); lab("ly", ws, "left", X0, (Y0 + Y1) / 2, "say");
+        if (this.covered.size) text(`cnt${this.covered.size}`, `${this.covered.size} small square${this.covered.size === 1 ? "" : "s"}`, X1 + 1.5, Y0 + 1, "small", { anchor: "start", c: CH, live: true });
+      }
+      UP = true;
+      if (tilted) {
+        const pr = (a, b, c) => this.proj(a, b, c, t), Z = z * B;
+        const XX = [X0, X1], YY = [Y0, Y1], ZZ = [0, Z];
+        // the box's full height, dashed (its top and its upright edges)
+        [[0,0,1,1,0,1],[0,1,1,1,1,1],[0,0,1,0,1,1],[1,0,1,1,1,1],[0,0,0,0,0,1],[1,0,0,1,0,1],[0,1,0,0,1,1],[1,1,0,1,1,1]].forEach((e, j) => {
+          const p = pr(XX[e[0]], YY[e[1]], ZZ[e[2]]), q = pr(XX[e[3]], YY[e[4]], ZZ[e[5]]);
+          put(`wire${j}`, "line", { x1: sq(p.x), y1: sq(p.y), x2: sq(q.x), y2: sq(q.y), stroke: "var(--ink3)", "stroke-width": 1.5, "stroke-dasharray": "6 6" }, "none");
+        });
+        const list = [];
+        for (let k = 0; k < this.layers; k++) for (let b = 0; b < y; b++) for (let a = 0; a < x; a++)
+          list.push({ x: X0 + a * B, y: Y0 + b * B, k, at: this.riseAt[k] ?? -1e9, lit: this.lit && a < d && b >= y - d && k < d });
+        drawCubes(this, list, t, B);
+        // the lengths on the edges the child sees: along the front, along the right side, up the front corner
+        const fx = pr((X0 + X1) / 2, Y1, 0), lx = pr(X1, (Y0 + Y1) / 2, 0), hz = pr(X0, Y1, Z / 2);
+        text("lx", ls, fx.x, fx.y + 1.6, "say", { c: "var(--ink)" });
+        text("ly", ws, lx.x + 1.4, lx.y + 0.8, "say", { anchor: "start", c: "var(--ink)" });
+        if (st !== "build") text("lz", hs, hz.x - 1.2, hz.y, "say", { anchor: "end", c: "var(--ink)" });
+        const fb = this.fb(), top = pr((X0 + X1) / 2, (Y0 + Y1) / 2, Math.max(this.layers, 1) * B);
+        if (st === "build" && this.layers && (this.held || this.msg)) text(`ro${this.layers}`, `${floor * this.layers} small cubes`, this.bounds(X0, Y0, X1, Y1, this.layers * B, t).x1 + 1.5, top.y, "small", { anchor: "start", c: CH, live: true });
+        // the record beside it
+        const { nx, ny } = this.tiltPlaces(fb);
+        let row = ny + 1;
+        if (mode === "bh") { cellsLine("rB", ["B", "=", ls, "×", ws, "=", { s: Bs, c: CH }], nx, row); row += 3; }
+        if (st === "write" || st === "done") {
+          const ans = st === "done" ? [GREEN(Vs)] : [BX(this, "w", 1), " ", BX(this, "n", 1), "/", BX(this, "d", 1)];
+          const end = cellsLine("rD", [String(N), "÷", String(per), "=", ...ans], nx, row);
+          text("ru", "cubic units", end + 0.6, row, "small", { anchor: "start" });
+          if (st === "done") { row += 3; cellsLine("rV", mode === "bh" ? ["V", "=", Bs, "×", hs, "=", { s: Vs, c: CH }] : ["V", "=", ls, "×", ws, "×", hs, "=", { s: Vs, c: CH }], nx, row); }
+          endBlock(this, nx, row + 3);
+        }
+      }
+      UP = false;
+    },
+  }));
+  return L;
+}
+
+// ---------- lessons, the bar ----------
+let lesson;
+const LESSONS = {
+  para: { name: "Area of a parallelogram", make: i => dPara(i) },
+  tri: { name: "Area of a triangle", make: i => dTri(i) },
+  trap: { name: "Area of a trapezoid", make: i => dTrap(i) },
+  poly: { name: "Area of a polygon", make: i => dPoly(i) },
+  nets: { name: "Nets and surface area", make: i => dNets(i) },
+  fracvol: { name: "Volume with fraction edges", make: i => dFrac(i) },
+};
+const pick = document.getElementById("pick");
+pick.innerHTML = Object.entries(LESSONS).map(([id, e]) => `<option value="${id}">${esc(e.name)}</option>`).join("");
+// each lesson counts its problems: the n-th problem is generated with index n (easy first)
+const idxOf = {};
+let firstIndex = 0;
+function start(id) {
+  id = String(id || "").replace(/^g6-/, "");
+  if (!LESSONS[id]) id = "para";
+  const i = idxOf[id] ?? firstIndex; idxOf[id] = i + 1;
+  token++;
+  lesson = LESSONS[id].make(i);
+  lesson.index = i;
+  pick.value = id;
+  drawn = new Set(); keys.blur();
+  render(); frame(lesson.frame(), true);
+  try { localStorage.setItem("g6ch7-lesson", id); } catch (err) {}
+}
+pick.onchange = () => start(pick.value);
+document.getElementById("fresh").onclick = () => leave();
+// a 3D lesson lies flat before the next problem
+function leave() { const go = () => start(lesson.id); if (lesson.leave) lesson.leave(go); else go(); }
+let first = "para";
+try {
+  const q = new URLSearchParams(location.search);
+  first = q.get("l") || localStorage.getItem("g6ch7-lesson") || "para";
+  if (q.get("i")) firstIndex = Math.max(0, parseInt(q.get("i"), 10) || 0);
+  if (q.get("theme")) document.documentElement.dataset.theme = q.get("theme");
+} catch (err) {}
+start(first);
+</script>
