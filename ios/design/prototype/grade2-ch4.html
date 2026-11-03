@@ -1,0 +1,936 @@
+<title>2nd Grade: Length</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700&display=swap">
+<style>
+/* Layout: the whole screen is one sheet of graph paper seen through one camera; the floating pill at the bottom is
+   the only chrome. 1 square = 20 paper units, a strong line every 5 squares (a block). iPad landscape only.
+   2nd grade, chapter 4 (Length): amber (as Kindergarten's Measurement). */
+:root {
+  --paper: #F3F1EC; --grid: #E2DED6; --grid-strong: #D3CEC4;
+  --ink: #1D1C1A; --ink2: #6E6A63; --ink3: #A39E95;
+  --chapter: #B7791F; --tint: rgba(197, 138, 27, .2); --tint-strong: rgba(197, 138, 27, .4);
+  --right: #178A57; --wrong: #C8372D;
+  --pill: rgba(255, 255, 255, .94); --pill-line: #E4E0D8;
+  --round: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C;
+  --chapter: #F0B341; --tint: rgba(240, 179, 65, .22); --tint-strong: rgba(240, 179, 65, .42);
+  --right: #3CCF8E; --wrong: #FF6B5E;
+  --pill: rgba(40, 40, 37, .94); --pill-line: #3A3A36; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C;
+  --chapter: #F0B341; --tint: rgba(240, 179, 65, .22); --tint-strong: rgba(240, 179, 65, .42);
+  --right: #3CCF8E; --wrong: #FF6B5E;
+  --pill: rgba(40, 40, 37, .94); --pill-line: #3A3A36; color-scheme: dark }
+html, body { height: 100%; }
+body { background: var(--paper); color: var(--ink); font-family: var(--round); overflow: hidden; touch-action: none; margin: 0;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+#paper { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+svg text { font-family: var(--round); font-variant-numeric: tabular-nums; }
+.say { font-size: 28px; font-weight: 600; fill: var(--ink); }
+.small { font-size: 20px; font-weight: 600; fill: var(--ink2); }
+.maths { font-size: 36px; font-weight: 600; fill: var(--ink); }
+
+/* drawing in: lines stroke on, words and fills fade in, one after another */
+.in-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .55s ease-out forwards; }
+.in-fade { opacity: 0; animation: fade .4s ease-out forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes fade { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .in-line, .in-fade { animation-duration: .01s; } }
+
+/* the one floating bar */
+#bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 999px; background: var(--pill);
+  border: 1px solid var(--pill-line); box-shadow: 0 6px 24px rgba(0,0,0,.08); max-width: calc(100vw - 32px);
+  font-family: var(--round); }
+#bar button { font: 600 17px var(--round); color: var(--ink); background: none; border: 0; padding: 10px 14px;
+  border-radius: 999px; cursor: pointer; white-space: nowrap; }
+#bar button:focus-visible { outline: 2px solid var(--chapter); outline-offset: 2px; }
+#bar select { font: 600 17px var(--round); color: var(--ink); background: none; border: 0; padding: 10px 26px 10px 14px;
+  border-radius: 999px; cursor: pointer; -webkit-appearance: none; appearance: none; max-width: 52vw; text-overflow: ellipsis;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink2) 50%), linear-gradient(135deg, var(--ink2) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%; background-size: 5px 5px; background-repeat: no-repeat; }
+#bar select:focus-visible { outline: 2px solid var(--chapter); outline-offset: 2px; }
+#bar .sep { width: 1px; align-self: stretch; background: var(--pill-line); margin: 4px 4px; }
+#bar .progress { display: flex; flex-direction: column; gap: 6px; padding: 0 10px; min-width: 196px; }
+#bar .progress span { font: 600 14px var(--round); color: var(--ink2); }
+#bar .track { height: 4px; border-radius: 2px; background: var(--pill-line); overflow: hidden; }
+#bar .track i { display: block; height: 100%; background: var(--chapter); transition: width .4s ease; }
+#keys { position: fixed; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; font-size: 16px; }
+</style>
+
+<svg id="paper" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-label="Graph paper lesson">
+  <defs>
+    <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
+      <path d="M20 0V100M40 0V100M60 0V100M80 0V100M0 20H100M0 40H100M0 60H100M0 80H100" stroke="var(--grid)" stroke-width="1" fill="none"/>
+      <path d="M0 0V100M0 0H100" stroke="var(--grid-strong)" stroke-width="1.5" fill="none"/>
+    </pattern>
+    <pattern id="stripes" width="20" height="20" patternUnits="userSpaceOnUse">
+      <rect width="20" height="20" fill="var(--tint)"/>
+      <path d="M-5 5L5 -5M0 20L20 0M15 25L25 15" stroke="var(--chapter)" stroke-width="1.5" opacity=".55"/>
+    </pattern>
+  </defs>
+  <g id="paperg">
+    <rect x="-20000" y="-20000" width="40000" height="40000" fill="url(#grid)"/>
+    <g id="scene"></g>
+  </g>
+</svg>
+
+<nav id="bar" aria-label="Lessons">
+  <select id="pick" aria-label="Lesson"></select>
+  <div class="sep"></div>
+  <div class="progress"><span id="stepname">Step 1 of 3</span><div class="track"><i id="track" style="width:0"></i></div></div>
+  <div class="sep"></div>
+  <button id="fresh" type="button">New problem</button>
+</nav>
+<input id="keys" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Answer">
+
+<script>
+"use strict";
+// ---------- the paper: squares, drawing, camera (the kit of new5-lessons.html) ----------
+const SQ = 20, svg = document.getElementById("paper"), sceneEl = document.getElementById("scene");
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pickOne = list => list[rnd(0, list.length - 1)];
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+const count = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+const ceil5 = n => Math.ceil(n / 5) * 5;
+
+let items = [];
+// one thing on the paper: its key (a new key draws in), its tag and attributes in paper units, how it draws in
+function put(k, tag, a, kind = "fade", text, html) { items.push({ k, tag, a, kind, text, html }); }
+const sq = n => n * SQ;
+function line(k, x1, y1, x2, y2, o = {}) {
+  put(k, "line", { x1: sq(x1), y1: sq(y1), x2: sq(x2), y2: sq(y2), stroke: o.c || "var(--ink)", "stroke-width": o.w || 1.5,
+    "stroke-dasharray": o.dash ? "6 6" : null, "stroke-linecap": "butt", pathLength: o.dash ? null : 1 }, o.live ? "none" : o.dash ? "fade" : "line");
+}
+function path(k, d, o = {}) {
+  put(k, "path", { d, fill: o.fill || "none", stroke: o.c || "var(--ink)", "stroke-width": o.w || 1.5, pathLength: o.dash ? null : 1,
+    "stroke-dasharray": o.dash ? "6 6" : null }, o.live ? "none" : o.dash ? "fade" : "line");
+}
+function rect(k, x, y, w, h, o = {}) {
+  const outline = o.c && !o.fill && !o.dash;
+  put(k, "rect", { x: sq(x), y: sq(y), width: sq(w), height: sq(h), fill: o.fill || "none", stroke: o.c || null,
+    "stroke-width": o.c ? (o.w || 1.5) : null, opacity: o.op ?? null, "stroke-dasharray": o.dash ? (o.dash === true ? "6 6" : o.dash) : null,
+    pathLength: outline ? 1 : null }, o.live ? "none" : outline ? "line" : "fade");
+}
+function text(k, s, x, y, cls, o = {}) {
+  put(k, "text", { x: sq(x), y: sq(y), class: cls, "text-anchor": o.anchor || "middle", "dominant-baseline": "central",
+    style: o.c ? `fill:${o.c}` : null }, o.live ? "none" : "fade", s);
+}
+// words in rows of 2 squares, wrapped at a width in squares
+function words(k, s, x, y, widthSq, cls = "say", o = {}) {
+  const per = cls === "say" ? 0.72 : 0.52, max = Math.max(8, Math.floor(widthSq / per));
+  const rows = []; let cur = "";
+  for (const w of s.split(" ")) { if ((cur + " " + w).trim().length > max && cur) { rows.push(cur); cur = w; } else cur = (cur + " " + w).trim(); }
+  if (cur) rows.push(cur);
+  rows.forEach((r, i) => text(`${k}:${i}:${r}`, r, x, y + i * 2, cls, { anchor: "start", c: o.c, live: o.live }));
+  return rows.length;
+}
+// a number written as school writes it on squared paper: 2 squares a digit, lined up on the right
+function digits(k, s, right, row, o = {}) {
+  let col = 0;
+  for (let i = s.length - 1; i >= 0; i--) { text(`${k}${i}${s[i]}`, s[i], right - col - 1, row, "maths", { c: o.c }); col += 2; }
+}
+// a block drawn on the paper: an outline, its word and arrow (Check, Next problem)
+function block(k, x, y, w, label, act, o = {}) {
+  rect(`${k}o`, x, y, w, 2, { c: "var(--ink)" });
+  text(`${k}w${label}`, label, x + 1, y + 1, "small", { anchor: "start", c: "var(--ink)" });
+  if (o.arrow !== false) path(`${k}a`, `M${sq(x + w - 1.6)} ${sq(y + 1)}h${sq(0.8)}m-6 -6l6 6l-6 6`, {});
+  put(`${k}hit`, "rect", { x: sq(x), y: sq(y), width: sq(w), height: sq(2), fill: "transparent", "data-act": act }, "none");
+}
+// a word block to tap: a pick on the paper (+ or −, Add or Take away), its word centred
+function pickBlock(k, x, y, w, label, act, cls = "maths", c) {
+  rect(`${k}o${c || ""}`, x, y, w, 2, { c: c || "var(--ink)" });
+  text(`${k}w${label}`, label, x + w / 2, y + 1, cls, { c: cls === "small" ? "var(--ink)" : c });
+  put(`${k}hit`, "rect", { x: sq(x), y: sq(y), width: sq(w), height: sq(2), fill: "transparent", "data-act": act }, "none");
+}
+const CAPH = { small: 0.7, say: 1.0, maths: 1.3 };
+function lab(k, s, side, edge, along, cls = "small", c, live) {
+  const h = CAPH[cls] / 2;
+  if (side === "above") text(k, s, along, edge - 0.5 - h, cls, { c, live });
+  else if (side === "below") text(k, s, along, edge + 0.5 + h, cls, { c, live });
+  else if (side === "left") text(k, s, edge - 0.5, along, cls, { c, anchor: "end", live });
+  else text(k, s, edge + 0.5, along, cls, { c, anchor: "start", live });
+}
+// an answer box in the record: cells of 2 squares, the typed digits lined up on the right
+function dbox(k, x, y, cells, value, state, actName = "box:ans") {
+  const c = state === "right" ? "var(--right)" : state === "wrong" ? "var(--wrong)" : state === "idle" ? "var(--ink3)" : "var(--ink)";
+  const vc = state === "right" || state === "wrong" ? c : null;
+  rect(`${k}o${cells}${state}`, x, y, cells * 2, 2, { c });
+  if (value) digits(`${k}v${value}${state}`, value, x + cells * 2, y + 1, { c: vc });
+  if (state === "active") put(`${k}cur`, "line", { x1: sq(x + cells * 2 + 0.4), y1: sq(y + 0.35), x2: sq(x + cells * 2 + 0.4), y2: sq(y + 1.65), stroke: "var(--chapter)", "stroke-width": 1.5 }, "none");
+  put(`${k}hit`, "rect", { x: sq(x), y: sq(y), width: sq(cells * 2), height: sq(2), fill: "transparent", "data-act": actName }, "none");
+}
+// lessons with answer boxes: each box has its own value; the hidden input types into the active one
+function withBoxes(L) {
+  L.vals = {}; L.active = null;
+  Object.defineProperty(L, "typed", { get() { return this.vals[this.active] || ""; }, configurable: true });
+  L.type = function (v) { if (this.active != null) this.vals[this.active] = v; this.verdict = null; this.msg = null; };
+  return L;
+}
+function boxAct(L, a) { if (a.startsWith("box:")) { if (L.canType && !L.canType(a.slice(4))) return true; L.active = a.slice(4); L.typing = true; return true; } return false; }
+function boxState(L, id) { return L.verdict && L.active === id ? L.verdict : L.active === id && L.typing ? "active" : "idle"; }
+const stageIndex = (list, st) => [Math.max(0, list.indexOf(st)), list.length - 1];
+
+// an equation written on the squares: 2 squares a digit or sign; a box where the child writes
+function eqRow(k, toks, x, yc, o = {}) {
+  let cx = x;
+  toks.forEach((t, i) => {
+    if (t && t.box) { dbox(`${k}b${t.box}`, cx, yc - 1, t.cells || 2, t.val || "", t.state, `box:${t.box}`); cx += 2 * (t.cells || 2); return; }
+    const s = String(typeof t === "object" ? t.t : t), c = typeof t === "object" ? t.c : o.c;
+    for (const ch of s) { text(`${k}:${i}:${ch}:${cx}:${c || ""}`, ch, cx + 1, yc, "maths", { c }); cx += 2; }
+  });
+  return cx;
+}
+
+// ---------- motion: pieces glide (a spring's path) to where the lesson puts them; drawing-in survives re-renders ----------
+const GL = new Map(); let frameNo = 0;
+const spring = u => u >= 1 ? 1 : (1 - (1 + 7 * u) * Math.exp(-7 * u)) / (1 - 8 * Math.exp(-7));
+function glide(k, x, y, now = false, dur = 450) {
+  const t = performance.now(); let g = GL.get(k);
+  if (!g || now) { g = { fx: x, fy: y, tx: x, ty: y, t0: t - dur, dur }; GL.set(k, g); }
+  else if (g.tx !== x || g.ty !== y) { const c = glideAt(g, t); Object.assign(g, { fx: c.x, fy: c.y, tx: x, ty: y, t0: t, dur }); }
+  g.seen = frameNo;
+  return glideAt(g, t);
+}
+function glideAt(g, t) { const e = spring(Math.min(1, (t - g.t0) / g.dur)); return { x: g.fx + (g.tx - g.fx) * e, y: g.fy + (g.ty - g.fy) * e }; }
+// a piece that appears where another was (a ten opening, a ten closing) starts from there
+function seed(k, x, y) { GL.set(k, { fx: x, fy: y, tx: x, ty: y, t0: performance.now() - 1000, dur: 450, seen: frameNo }); }
+const gliding = () => { const t = performance.now(); for (const g of GL.values()) if (t - g.t0 < g.dur) return true; return false; };
+
+let born = new Map(), raf = 0;
+const DRAWN = { line: 0.55, fade: 0.4 };
+function render() {
+  items = []; frameNo++;
+  lesson.scene();
+  const now = performance.now(), next = new Map(); let n = 0, out = "";
+  for (const it of items) {
+    const a = { ...it.a };
+    if (it.kind !== "none") {
+      let b = born.get(it.k);
+      if (!b) b = { t0: now, delay: Math.min(n++ * 0.035, 1.2), kind: it.kind };
+      next.set(it.k, b);
+      const el = (now - b.t0) / 1000;
+      if (el < b.delay + DRAWN[b.kind] + 0.05) {
+        a.class = ((a.class || "") + (b.kind === "line" ? " in-line" : " in-fade")).trim();
+        a.style = `animation-delay:${(b.delay - el).toFixed(3)}s;` + (a.style || "");
+      }
+    }
+    const attrs = Object.entries(a).filter(([, v]) => v != null).map(([k, v]) => `${k}="${esc(v)}"`).join(" ");
+    out += `<${it.tag} ${attrs}>${it.html != null ? it.html : it.text != null ? esc(it.text) : ""}</${it.tag}>`;
+  }
+  sceneEl.innerHTML = out;
+  born = next;
+  for (const [k, g] of GL) if (g.seen !== frameNo) GL.delete(k);
+  if (gliding() && !raf) raf = requestAnimationFrame(() => { raf = 0; render(); });
+  const [i, of] = lesson.progress();
+  document.getElementById("stepname").textContent = `Problem ${probIndex + 1} · Step ${Math.min(i + 1, of)} of ${of}`;
+  document.getElementById("track").style.width = `${Math.round(100 * i / of)}%`;
+}
+
+// the camera: frames what the lesson shows now, its top rows at the top of the screen, eased (0.75 s), never past 125%
+const cam = { x: 0, y: 0, s: 1 }; let camTo = null, camFrom = null, camT0 = 0;
+function fitTo(f) {
+  const W = innerWidth, H = innerHeight, top = 20, bottom = 104;
+  const s = Math.min((W - 48) / sq(f.w), (H - top - bottom) / sq(f.h), (lesson && lesson.maxZoom) || 1.25);
+  return { s, x: sq(f.x + f.w / 2) - W / 2 / s, y: sq(f.y) - top / s };
+}
+function frame(f, now) {
+  const t = fitTo(f);
+  if (now) { camTo = null; Object.assign(cam, t); applyCam(); return; }
+  camFrom = { ...cam }; camTo = t; camT0 = performance.now(); requestAnimationFrame(stepCam);
+}
+function stepCam(t) {
+  if (!camTo) return;
+  const u = Math.min(1, (t - camT0) / 750), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+  for (const k of ["x", "y", "s"]) cam[k] = camFrom[k] + (camTo[k] - camFrom[k]) * e;
+  applyCam();
+  if (u < 1) requestAnimationFrame(stepCam); else camTo = null;
+}
+function applyCam() { svg.setAttribute("viewBox", `${cam.x} ${cam.y} ${innerWidth / cam.s} ${innerHeight / cam.s}`); }
+addEventListener("resize", () => frame(lesson.frame(), true));
+
+// ---------- the voice (K–2): the instruction, a miss and the last line are read aloud; the speaker mark reads again ----------
+let said = new Set(), saying = [];
+function forSpeech(s) {
+  return s.replace(/(^|\s)\?(?=[\s.,]|$)/g, "$1question mark").replace(/−/g, " minus ").replace(/\+/g, " plus ").replace(/=/g, " equals ");
+}
+function speak(s) {
+  try {
+    const ss = window.speechSynthesis;
+    if (!ss || typeof SpeechSynthesisUtterance === "undefined") return;
+    if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;   // browsers speak only after a first touch
+    const u = new SpeechSynthesisUtterance(forSpeech(s)); u.lang = "en-US"; u.rate = 0.9; ss.speak(u);
+  } catch (e) { /* no voice here */ }
+}
+function hush() { try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) { /* no voice here */ } }
+function voice(list, missLine) {
+  const fresh = list.filter(s => s && !said.has(s));
+  if (fresh.some(s => s !== missLine)) hush();
+  fresh.forEach(speak);
+  said = new Set(list); saying = list;
+}
+function sayAgain() { hush(); saying.forEach(speak); }
+// the speaker mark: a small drawn speaker in the margin, level with the first line of words
+function speaker(y) {
+  const x = sq(-3), t = sq(y);
+  path("spk", `M${x + 5} ${t + 15}h8l10 -9v28l-10 -9h-8z`, { c: "var(--ink2)" });
+  path("spkw1", `M${x + 28} ${t + 14}q5 6 0 12`, { c: "var(--ink2)" });
+  path("spkw2", `M${x + 32} ${t + 9}q10 11 0 22`, { c: "var(--ink2)" });
+  put("spkhit", "rect", { x, y: t, width: sq(2), height: sq(2), fill: "transparent", "data-act": "speak" }, "none");
+}
+
+// ---------- the top rows: a story (numbers in the chapter colour), the instruction, then a miss (red) or the readout ----------
+function storyRows(sentences, widthSq) {
+  const max = Math.floor(widthSq / 0.72), rows = []; let cur = "";
+  for (const s of sentences) { if (!cur) cur = s; else if ((cur + " " + s).length <= max) cur += " " + s; else { rows.push(cur); cur = s; } }
+  if (cur) rows.push(cur);
+  const out = [];
+  for (const r of rows) {
+    if (r.length <= max) { out.push(r); continue; }
+    let c = ""; for (const w of r.split(" ")) { if ((c + " " + w).trim().length > max && c) { out.push(c); c = w; } else c = (c + " " + w).trim(); }
+    if (c) out.push(c);
+  }
+  return out;
+}
+function richLine(k, s, x, y, all) {
+  const html = s.split(" ").map(w => all || /^\d/.test(w) ? `<tspan style="fill:var(--chapter)">${esc(w)}</tspan>` : esc(w)).join(" ");
+  put(k, "text", { x: sq(x), y: sq(y), class: "say", "text-anchor": "start", "dominant-baseline": "central" }, "fade", null, html);
+}
+// where the instruction sits (row centre): under the story's lines, or on rows 0–2
+const instrY = rows => rows && rows.length ? 2 * rows.length + 2 : 1;
+function header(L, say, readout, width = 44) {
+  const rows = L.storyRows || [], iy = instrY(rows);
+  speaker(rows.length ? 0 : 0);
+  rows.forEach((r, i) => richLine(`st${i}:${r}`, r, 0, 1 + 2 * i, L.storyAll));
+  words(`say-${say}`, say, 0, iy, width);
+  if (L.msg) words(`msg-${L.msg}`, L.msg, 0, iy + 2.3, width, "small", { c: "var(--wrong)" });
+  else if (readout) text(`ro-${readout}`, readout, 0, iy + 2.6, "say", { anchor: "start", c: "var(--chapter)", live: !!L.held });
+  voice([rows.length ? L.storySentences.join(" ") : null, say, L.msg].filter(Boolean), L.msg);
+}
+
+// ---------- hands: tap, drag (on the lesson's picture) or pan the paper; mouse and touch alike ----------
+const keys = document.getElementById("keys");
+function openKeys() { keys.value = lesson.typed || ""; keys.focus({ preventScroll: true }); }
+keys.addEventListener("input", () => { lesson.type(keys.value.replace(/[^0-9]/g, "").slice(0, lesson.maxLen ? lesson.maxLen() : 3)); render(); });
+keys.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); act("check"); } });
+function toPaper(e) { const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse()); return { x: p.x / SQ, y: p.y / SQ }; }
+let down = null;
+svg.addEventListener("pointerdown", e => {
+  if (e.button > 0) return;
+  const p = toPaper(e), hit = e.target.closest("[data-act]");
+  down = { p, sx: e.clientX, sy: e.clientY, act: hit && hit.dataset.act, moved: false, grabbed: false, cam: { ...cam } };
+  if (!down.act && lesson.grab) { if (lesson.grab(p)) down.grabbed = true; render(); }
+  svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener("pointermove", e => {
+  if (!down) return;
+  if (Math.hypot(e.clientX - down.sx, e.clientY - down.sy) > 6) down.moved = true;
+  if (down.grabbed) { if (lesson.drag) lesson.drag(toPaper(e)); render(); return; }
+  if (down.moved && !down.act) { camTo = null; cam.x = down.cam.x - (e.clientX - down.sx) / cam.s; cam.y = down.cam.y - (e.clientY - down.sy) / cam.s; applyCam(); }
+});
+function up(e) {
+  if (!down) return;
+  const d = down; down = null;
+  if (d.grabbed) { if (lesson.release) lesson.release(toPaper(e)); afterMove(); return; }
+  if (d.moved) return;
+  if (d.act) { act(d.act); return; }
+  if (lesson.tap && lesson.tap(toPaper(e))) afterMove();
+}
+svg.addEventListener("pointerup", up);
+svg.addEventListener("pointercancel", up);
+function afterMove() { render(); frame(lesson.frame()); if (lesson.typing) openKeys(); else keys.blur(); }
+function act(a) {
+  if (a === "speak") { sayAgain(); return; }
+  if (a === "next") { leave(); return; }
+  lesson.act(a);
+  if (!lesson.typing) keys.blur(); else openKeys();
+  render(); frame(lesson.frame());
+}
+let timers = [];
+const later = (ms, fn) => timers.push(setTimeout(() => { fn(); render(); }, ms));
+const inBox = (q, x, y, w, h, m = 0.5) => q.x >= x - m && q.x <= x + w + m && q.y >= y - m && q.y <= y + h + m;
+
+// ---------- 2nd grade, chapter 4's pieces ----------
+// Length: an inch is a block (5 squares) and a centimeter 2 squares, so an inch is 2½ cm on the paper, as in life.
+// Feet and meters are drawn smaller: a foot a block, a meter 2 blocks.
+const UNIT = { in: { per: 5, one: "inch", many: "inches" }, cm: { per: 2, one: "centimeter", many: "centimeters" },
+  ft: { per: 5, one: "foot", many: "feet" }, m: { per: 10, one: "meter", many: "meters" } };
+const NAMES = [["Mia", "she"], ["Leo", "he"], ["Ana", "she"], ["Sam", "he"], ["Zoe", "she"], ["Ben", "he"]];
+const cap = s => s[0].toUpperCase() + s.slice(1);
+// a check of a written answer: right, or the first slip that matches, or a plain line
+function checkAnswer(L, want, slips, plain, id = "ans") {
+  const v = L.vals[id]; if (!v) return false;
+  if (+v === want) { L.verdict = "right"; L.typing = false; L.msg = null; return true; }
+  L.verdict = "wrong"; L.active = id;
+  const s = slips.find(([n]) => n === +v && n !== want);
+  L.msg = s ? s[1] : plain;
+  return false;
+}
+// the live readout beside the picture, in the chapter colour
+const sideRO = (s, x, y, live) => text(`ro:${s}`, s, x, y, "say", { anchor: "start", c: "var(--chapter)", live });
+const tw = s => Math.ceil(String(s).length * 0.72);          // a line's width in squares at 28
+const snap5 = n => Math.max(0, 5 * Math.round(n / 5));
+// the picture's left edge, on a block line, so it sits centred under the widest of the lesson's lines
+const under = (lines, picW) => snap5((Math.min(44, Math.max(...lines.map(tw))) - picW) / 2);
+const pl = (...pts) => "M" + pts.map(([a, b]) => `${sq(a)} ${sq(b)}`).join("L") + "Z";
+// a hop: an arc over a line from x1 to x2 (squares), its peak h squares up (down when h < 0)
+function arc(k, x1, x2, y, h, o = {}) { path(k, `M${sq(x1)} ${sq(y)}Q${sq((x1 + x2) / 2)} ${sq(y - 2 * h)} ${sq(x2)} ${sq(y)}`, { c: o.c || "var(--chapter)", live: o.live }); }
+// the hops from a to b: whole hops of `big` first, then ones (or the rest in one hop)
+function hopsOf(a, b, big = 1, rest = "ones") {
+  const s = Math.sign(b - a), out = []; let p = a;
+  while (Math.abs(b - p) >= big) { out.push([p, p + s * big]); p += s * big; }
+  if (p !== b) { if (rest === "one") out.push([p, b]); else while (p !== b) { out.push([p, p + s]); p += s; } }
+  return out;
+}
+// Hop along a line: a drag from a mark lays hops to where the finger is, snapping at each mark; a drag from the last
+// hop's end goes on from there. H = { at: x → snapped value, band: [y1, y2], xr: [x1, x2], near }
+function hopper(L, H, done) {
+  return {
+    grab(q) {
+      if (q.y < H.band[0] || q.y > H.band[1] || q.x < H.xr[0] - 1.5 || q.x > H.xr[1] + 1.5) return false;
+      const v = H.at(q.x), c = L.chain;
+      if (!(c && Math.abs(v - c.to) <= (H.near || 0))) L.chain = { from: v, to: v };
+      L.msg = null; L.held = true; return true;
+    },
+    drag(q) { if (L.chain && L.held) L.chain.to = H.at(q.x); },
+    release() { L.held = null; const c = L.chain; if (c && c.to !== c.from) done(c); },
+  };
+}
+// a ruler: a strip 3 squares tall; its marks hang from the edge next to the thing it measures, the numbers past them
+// (small); a short mark halfway along each inch. `below`: the thing lies under the ruler.
+function ruler(k, x0, y, per, max, o = {}) {
+  const W = per * max, e = o.below ? y + 3 : y, d = o.below ? -1 : 1;
+  rect(`${k}s${W}`, x0 - 1, y, W + 2, 3, { c: "var(--ink)" });
+  for (let v = 0; v <= max; v++) {
+    const x = x0 + v * per, lit = o.lit && o.lit.includes(v);
+    line(`${k}m${v}`, x, e, x, e + d);
+    if (per >= 4 && v < max) line(`${k}h${v}`, x + per / 2, e, x + per / 2, e + d * 0.5);
+    text(`${k}n${v}${lit ? "l" : ""}`, v, x, e + 2 * d, "small", { c: lit ? "var(--chapter)" : null });
+  }
+}
+// the things measured: line drawings 2 squares tall from x0 to x1, softly tinted; a name inside when it fits
+const TIP = { pencil: 1.6, crayon: 1.4, marker: 1 };
+function drawThing(k, name, x0, x1, y, o = {}) {
+  const f = { fill: "var(--tint)", c: "var(--ink)" }, m = y + 1, K = `${k}${name}${x0}:${x1}:${y}`, w = x1 - x0;
+  const ln = (j, a, b, c, d) => line(`${K}l${j}`, a, b, c, d);
+  const circ = (j, cx, cy, r, fill) => put(`${K}c${j}`, "circle", { cx: sq(cx), cy: sq(cy), r: sq(r), fill: fill || "var(--tint)", stroke: "var(--ink)", "stroke-width": 1.5 }, "fade");
+  const box = (t, b) => path(K, pl([x0, t], [x1, t], [x1, b], [x0, b]), f);
+  switch (name) {
+    case "pencil": path(K, pl([x0, y], [x1 - 1.6, y], [x1, m], [x1 - 1.6, y + 2], [x0, y + 2]), f); ln(1, x0 + 1.2, y, x0 + 1.2, y + 2); ln(2, x1 - 1.6, y, x1 - 1.6, y + 2); break;
+    case "crayon": path(K, pl([x0, y + .2], [x1 - 1.4, y + .2], [x1 - 1.4, y + .5], [x1, y + .85], [x1, y + 1.15], [x1 - 1.4, y + 1.5], [x1 - 1.4, y + 1.8], [x0, y + 1.8]), f); ln(1, x0 + 1, y + .2, x0 + 1, y + 1.8); break;
+    case "marker": path(K, pl([x0, y + .2], [x1 - 1, y + .2], [x1 - 1, y + .6], [x1, y + .8], [x1, y + 1.2], [x1 - 1, y + 1.4], [x1 - 1, y + 1.8], [x0, y + 1.8]), f); ln(1, x1 - 3, y + .2, x1 - 3, y + 1.8); break;
+    case "ribbon": path(K, pl([x0, y], [x1, y], [x1 - .8, m], [x1, y + 2], [x0, y + 2], [x0 + .8, m]), f); break;
+    case "straw": box(y + .3, y + 1.7); break;
+    case "key": circ(1, x0 + 1, m, 1); circ(2, x0 + 1, m, .35, "var(--paper)");
+      path(K, pl([x0 + 2, y + .7], [x1, y + .7], [x1, y + 1.6], [x1 - .6, y + 1.6], [x1 - .6, y + 1.3], [x1 - 1.2, y + 1.3], [x1 - 1.2, y + 1.6], [x1 - 1.8, y + 1.6], [x1 - 1.8, y + 1.3], [x0 + 2, y + 1.3]), f); break;
+    case "spoon": put(`${K}b`, "ellipse", { cx: sq(x1 - 1.8), cy: sq(m), rx: sq(1.8), ry: sq(1), fill: "var(--tint)", stroke: "var(--ink)", "stroke-width": 1.5 }, "fade");
+      path(K, pl([x0, y + .7], [x1 - 3.6, y + .8], [x1 - 3.6, y + 1.2], [x0, y + 1.3]), f); break;
+    case "book": box(y, y + 2); ln(1, x0 + .6, y + .6, x1, y + .6); ln(2, x0 + .6, y + 1.4, x1, y + 1.4); break;
+    case "ruler": box(y + .4, y + 1.6); for (let i = 5; i < w; i += 5) ln(`t${i}`, x0 + i, y + .4, x0 + i, y + .9); break;
+    case "eraser": box(y + .3, y + 1.7); ln(1, x0 + w * .4, y + .3, x0 + w * .3, y + 1.7); break;
+    case "shoe": path(K, pl([x0, y + 2], [x0, y], [x0 + w * .3, y], [x0 + w * .42, y + .9], [x1 - 1.2, y + 1.1], [x1, y + 1.6], [x1, y + 2]), f); ln(1, x0, y + 1.6, x1, y + 1.6); break;
+    case "paper clip": put(`${K}o`, "rect", { x: sq(x0), y: sq(y + .5), width: sq(w), height: sq(1), rx: sq(.5), fill: "none", stroke: "var(--ink)", "stroke-width": 1.5 }, "fade");
+      put(`${K}i`, "rect", { x: sq(x0 + .5), y: sq(y + .8), width: sq(w - 1.3), height: sq(.4), rx: sq(.2), fill: "none", stroke: "var(--ink)", "stroke-width": 1.5 }, "fade"); break;
+    case "desk": box(y, y + .6); ln(1, x0 + .6, y + .6, x0 + .6, y + 2); ln(2, x1 - .6, y + .6, x1 - .6, y + 2); break;
+    case "rug": box(y + .8, y + 2); ln(1, x0 + .5, y + 1.4, x1 - .5, y + 1.4); break;
+    case "bed": path(K, pl([x0, y], [x0 + .6, y], [x0 + .6, y + .8], [x1, y + .8], [x1, y + 2], [x0, y + 2]), f); ln(1, x0 + .6, y + 1.4, x1, y + 1.4); break;
+    case "door": box(y + .2, y + 1.8); circ(1, x1 - 1.2, m, .3); break;
+    case "board": box(y + .5, y + 1.5); ln(1, x0 + 1, m, x1 - 1, m); break;
+    case "car": path(K, pl([x0, y + 1.5], [x0, y + .9], [x0 + w * .2, y + .8], [x0 + w * .32, y + .1], [x1 - w * .3, y + .1], [x1 - w * .15, y + .8], [x1, y + .9], [x1, y + 1.5]), f);
+      circ(1, x0 + w * .22, y + 1.5, .5); circ(2, x1 - w * .22, y + 1.5, .5); break;
+    case "log": box(y + .2, y + 1.8); put(`${K}e`, "ellipse", { cx: sq(x1 - .4), cy: sq(m), rx: sq(.4), ry: sq(.8), fill: "none", stroke: "var(--ink)", "stroke-width": 1.5 }, "fade"); break;
+  }
+  if (o.label) text(`${K}t`, o.label, (x0 + x1 - (TIP[name] || 0)) / 2, m, "small", { c: "var(--ink)" });
+}
+// the measuring pieces: a paper clip (an inch, a block long), a centimeter cube (2 × 2), a foot ruler (a block), a
+// meter stick (2 blocks), a yardstick (3 feet, its feet marked); n is a count written on it
+const TOOL = { clip: 5, cube: 2, foot: 5, meter: 10, yard: 15 };
+function tool(k, kind, x, y, o = {}) {
+  const w = TOOL[kind], c = o.ghost ? "var(--ink3)" : "var(--ink)";
+  if (kind === "clip") drawThing(k, "paper clip", x, x + 5, y - .5);
+  else if (kind === "cube") rect(`${k}c`, x, y, 2, 2, { fill: "var(--tint)", c });
+  else {
+    rect(`${k}s${kind}`, x, y, w, 2, { c, fill: o.ghost ? null : "var(--tint)", dash: o.ghost });
+    if (kind === "yard") for (const f of [5, 10]) line(`${k}f${f}`, x + f, y, x + f, y + 1);
+  }
+  const mid = kind === "clip" ? y + 1.8 : y + 1;
+  if (o.n != null) text(`${k}n${o.n}`, o.n, x + w / 2, mid, "small", { c: "var(--ink)" });
+  else if (o.name) text(`${k}w${o.name}`, o.name, x + w / 2, mid, "small", { c: "var(--ink)" });
+}
+// a list of landings, short: 1, 2, 3 … 7
+const landings = l => l.length > 4 ? `${l[0]}, ${l[1]}, ${l[2]} … ${l[l.length - 1]}` : l.join(", ");
+
+// ====================================================================================================================
+// ---------- Inches and centimeters (g2-measure) ----------
+// One square: an inch is a block, a centimeter 2 squares. The ruler (inches 0–10, 50 squares; centimeters 0–15, 30)
+// lies under the thing with 2 squares between for the hops; dashed lines drop from the thing's ends to the marks.
+const MTH = ["pencil", "crayon", "ribbon", "straw"];
+const MU = [{ u: "in", max: 10, min: 2, hi: 7 }, { u: "cm", max: 15, min: 3, hi: 11 }];
+function genMeasure(i) {
+  const unit = rnd(0, 1), m = MU[unit], th = rnd(0, 3);
+  if (i >= 4 && i % 4 === 0) {   // the fold: two things from 0 on one ruler, at least 1 apart
+    let a, b; do { a = rnd(m.min, m.hi); b = rnd(m.min, m.hi); } while (Math.abs(a - b) < 1);
+    return { unit, fold: true, th, th2: (th + rnd(1, 3)) % 4, long: Math.max(a, b), short: Math.min(a, b) };
+  }
+  const len = rnd(m.min, m.hi), start = i < 3 ? 0 : rnd(1, m.max - len);
+  return { unit, th, start, end: start + len };
+}
+function dMeasure(idx) {
+  const P = genMeasure(idx), M = MU[P.unit], u = M.u, per = UNIT[u].per, max = M.max, fold = !!P.fold;
+  const name = MTH[P.th], name2 = fold ? MTH[P.th2] : null;
+  const from = fold ? P.short : P.start, to = fold ? P.long : P.end, L = to - from, W = per * max;
+  const sayHop = fold ? "Hop the part sticking out." : "Hop from end to end.";
+  const sayDone = fold ? "Lined up at 0, the part sticking out is how much longer." : "Each hop is one space, and the spaces are the length.";
+  const X0 = under([sayHop, sayDone], W + 2), TY = 6, RY = fold ? 13 : 10, ROW = RY + 6;
+  const toks = fold || from ? [String(to), "−", String(from), "="] : [];
+  const recEnd = X0 + 2 * toks.join("").length + 4, CKX = ceil5(recEnd + 1 + tw(u) + 1);
+  const X = v => X0 + per * v, stages = ["hop", "write", "done"];
+  const L0 = withBoxes({
+    id: "g2-measure", maxZoom: 1.25, stage: "hop", msg: null, verdict: null, typing: false, held: null, P, chain: null,
+    progress() { return stageIndex(stages, this.stage); },
+    frame() { return { x: -4, y: -1, w: Math.max(X0 + W + 3 + tw(`${max} ${u}`), CKX + 10, 44) + 5, h: ROW + 4 }; },
+    spots() { return { from: { x: X(from), y: RY - 1 }, to: { x: X(to), y: RY - 1 }, at: v => ({ x: X(v), y: RY - 1 }) }; },
+    canType() { return this.stage === "write"; },
+    maxLen() { return 2; },
+    grab(q) { return this.stage === "hop" && this.hops.grab(q); },
+    drag(q) { this.hops.drag(q); },
+    release() { this.hops.release(); },
+    hopped(c) {
+      if (c.from !== from) { this.msg = `Start at the ${fold ? name2 : name}'s end.`; this.chain = null; return; }
+      if (c.to !== to) { this.msg = `That's ${Math.abs(c.to - c.from)}. The ${name} goes on to ${to}.`; return; }
+      this.stage = "write"; this.active = "ans"; this.typing = true; openKeys();
+    },
+    act(x) {
+      if (boxAct(this, x)) return;
+      if (x !== "check" || this.stage !== "write") return;
+      let slips, plain;
+      if (fold) {
+        slips = [[to, `That's the whole ${name}. Write the part sticking out.`], [L + 1, "Count the spaces between the marks, not the marks themselves."], [from, `That's the ${name2}. Write the part sticking out.`]];
+        plain = `Count the hops from ${from} to ${to}.`;
+      } else {
+        slips = [from > 0 && [to, `The ${name} starts at ${from}, not 0. Count the spaces from ${from} to ${to}.`], [L + 1, "Count the spaces between the marks, not the marks themselves."],
+          from > 0 && [to + from, `Take away the start: the ruler before ${from} is not part of the ${name}.`]].filter(Boolean);
+        plain = from ? `Count the hops from ${from} to ${to}.` : "It starts at 0, so the end is the length.";
+      }
+      if (checkAnswer(this, L, slips, plain)) this.stage = "done";
+    },
+    scene() {
+      const st = this.stage, c = this.chain;
+      header(this, { hop: sayHop, write: "Write how long it is.", done: sayDone }[st], null, 44);
+      // the things, lying just above the ruler; dashed lines drop from their ends to the marks
+      if (fold) {
+        drawThing("t1", name, X0, X(to), TY, { label: name }); drawThing("t2", name2, X0, X(from), TY + 3, { label: name2 });
+        line("d1", X(to), TY + 2, X(to), RY, { c: "var(--ink3)", dash: true }); line("d2", X(from), TY + 5, X(from), RY, { c: "var(--ink3)", dash: true });
+      } else {
+        drawThing("t", name, X(from), X(to), TY, { label: name });
+        line("d1", X(from), TY + 2, X(from), RY, { c: "var(--ink3)", dash: true }); line("d2", X(to), TY + 2, X(to), RY, { c: "var(--ink3)", dash: true });
+      }
+      const lit = c && c.to !== c.from ? [c.from, c.to] : st !== "hop" ? [from, to] : c ? [c.from] : [];
+      ruler("r", X0, RY, per, max, { lit });
+      // the hops, one space each, over the ruler's top edge
+      const hs = c ? hopsOf(c.from, c.to) : st !== "hop" ? hopsOf(from, to) : [];
+      hs.forEach(([a, b]) => arc(`h${a}:${b}`, X(a), X(b), RY, per > 2 ? 1.2 : 0.6));
+      if (st === "hop" && c && c.to !== c.from) sideRO(`${Math.abs(c.to - c.from)} ${u}`, X0 + W + 2, RY + 1.5, !!this.held);
+      if (st === "hop") return;
+      const end = eqRow("rec", [...toks, { box: "ans", cells: 2, val: this.vals.ans, state: boxState(this, "ans") }], X0, ROW + 1);
+      text("recu", u, end + 0.5, ROW + 1, "say", { anchor: "start" });
+      if (st === "done") block("next", CKX, ROW, 10, "Next problem", "next"); else block("check", CKX, ROW, 7, "Check", "check");
+    },
+  });
+  L0.hops = hopper(L0, { at: x => Math.max(0, Math.min(max, Math.round((x - X0) / per))), band: [TY - 1, RY + 3.5], xr: [X0, X0 + W] }, c => L0.hopped(c));
+  return L0;
+}
+
+// ====================================================================================================================
+// ---------- Measure with two units (g2-twounits) ----------
+// Inches and centimeters' scale, so the two rulers match as in life: the inch ruler over the thing (its marks hang
+// down to it), the centimeter ruler under it, both from its left end. An even number of inches, so both read whole.
+const TWO = { 2: "key", 4: "crayon", 6: "spoon", 8: "pencil", 10: "book", 12: "ruler" };
+function genTwoUnits(i) { const n = 2 * (i < 3 ? rnd(1, 3) : rnd(1, 6)); return { inches: n, cm: n * 5 / 2, name: TWO[n] }; }
+function dTwoUnits(idx) {
+  const P = genTwoUnits(idx), n = P.inches, cm = P.cm, name = P.name, imax = Math.min(12, n + 2), cmax = imax * 5 / 2;
+  const W = imax * 5, sayDone = "A centimeter is smaller, so more of them fit.";
+  const X0 = under([sayDone], W + 2), IY = 6, TY = 11, CY = 15, ROW = 21, PY = ROW + 4;
+  const X = (v, per) => X0 + per * v, stages = ["hopIn", "writeIn", "hopCm", "writeCm", "bigger", "done"];
+  const L = withBoxes({
+    id: "g2-twounits", maxZoom: 1.25, stage: "hopIn", msg: null, verdict: null, typing: false, held: null, P, chain: null, chains: {},
+    progress() { return stageIndex(stages, this.stage); },
+    frame() { const st = this.stage; return { x: -4, y: -1, w: Math.max(X0 + W + 3 + tw(`${cmax} cm`), X0 + 30, 44) + 5, h: (st === "done" ? PY + 5 : ROW + 3) + 1 }; },
+    spots() { return { inch: v => ({ x: X(v, 5), y: IY + 4 }), cm: v => ({ x: X(v, 2), y: CY - 1 }), inchSpace: { x: X0 + 2.5, y: IY + 1.5 }, cmSpace: { x: X0 + 1, y: CY + 1.5 } }; },
+    canType(id) { return (this.stage === "writeIn" && id === "in") || (this.stage === "writeCm" && id === "cm"); },
+    maxLen() { return 2; },
+    ruling() { return this.stage === "hopIn" ? "in" : this.stage === "hopCm" ? "cm" : null; },
+    grab(q) { const r = this.ruling(); return !!r && this.hops[r].grab(q); },
+    drag(q) { const r = this.ruling(); if (r) this.hops[r].drag(q); },
+    release() { const r = this.ruling(); if (r) this.hops[r].release(); },
+    hopped(c, r) {
+      const want = r === "in" ? n : cm;
+      if (c.from !== 0) { this.msg = `Start at the ${name}'s end.`; this.chain = null; return; }
+      if (c.to !== want) { this.msg = `That's ${Math.abs(c.to)}. The ${name} goes on to ${want}.`; return; }
+      this.chains[r] = c; this.chain = null;
+      this.stage = r === "in" ? "writeIn" : "writeCm"; this.active = r; this.typing = true; openKeys();
+    },
+    // Tap the bigger unit: one space on either ruler
+    tap(q) {
+      if (this.stage !== "bigger") return false;
+      if (inBox(q, X0, IY, W, 3, 0.3)) { this.msg = null; this.stage = "done"; seed("pin", X0, IY); seed("pcm", X0, CY); return true; }
+      if (inBox(q, X0, CY, cmax * 2, 3, 0.3)) { this.msg = `${cm} is more, but each centimeter is smaller.`; return true; }
+      return false;
+    },
+    act(x) {
+      if (boxAct(this, x)) return;
+      if (x !== "check") return;
+      if (this.stage === "writeIn" && checkAnswer(this, n, [[n + 1, "Count the spaces between the marks, not the marks themselves."], [cm, "That's the centimeters. Count the inches."]], "Count the hops on the inch ruler.", "in")) { this.stage = "hopCm"; this.verdict = null; this.active = null; }
+      else if (this.stage === "writeCm" && checkAnswer(this, cm, [[cm + 1, "Count the spaces between the marks, not the marks themselves."], [n, "That's the inches. Count the centimeters."]], "Count the hops on the centimeter ruler.", "cm")) { this.stage = "bigger"; this.verdict = null; this.active = null; }
+    },
+    scene() {
+      const st = this.stage, c = this.chain, r = this.ruling(), si = stages.indexOf(st);
+      const say = { hopIn: "Measure in inches.", writeIn: "Write how many inches.", hopCm: "Now in centimeters.", writeCm: "Write how many centimeters.", bigger: "Tap the bigger unit.", done: sayDone }[st];
+      header(this, say, null, 44);
+      drawThing("t", name, X0, X(n, 5), TY);
+      line("d0", X0, IY + 3, X0, CY, { c: "var(--ink3)", dash: true }); line("d1", X(n, 5), IY + 3, X(n, 5), CY, { c: "var(--ink3)", dash: true });
+      const chainOf = rr => rr === r ? c : this.chains[rr];
+      const litOf = rr => { const k = chainOf(rr); return k ? (k.to !== k.from ? [k.from, k.to] : [k.from]) : []; };
+      ruler("ri", X0, IY, 5, imax, { below: true, lit: litOf("in") });
+      ruler("rc", X0, CY, 2, cmax, { lit: litOf("cm") });
+      // the hops: under the inch ruler's marks, over the centimeter ruler's
+      const ki = chainOf("in"), kc = chainOf("cm");
+      if (ki) hopsOf(ki.from, ki.to).forEach(([a, b]) => arc(`hi${a}:${b}`, X(a, 5), X(b, 5), IY + 3, -1.2));
+      if (kc) hopsOf(kc.from, kc.to).forEach(([a, b]) => arc(`hc${a}:${b}`, X(a, 2), X(b, 2), CY, 0.6));
+      if (r && c && c.to !== c.from) sideRO(`${Math.abs(c.to - c.from)} ${r}`, X0 + W + 2, r === "in" ? IY + 1.5 : CY + 1.5, !!this.held);
+      // the record: [6] in, then [15] cm
+      if (si >= 1) {
+        dbox("bin", X0, ROW, 2, this.vals.in || "", si > 1 ? "right" : boxState(this, "in"), "box:in");
+        text("uin", "in", X0 + 4.5, ROW + 1, "say", { anchor: "start" });
+      }
+      if (si >= 3) {
+        dbox("bcm", X0 + 10, ROW, 2, this.vals.cm || "", si > 3 ? "right" : boxState(this, "cm"), "box:cm");
+        text("ucm", "cm", X0 + 14.5, ROW + 1, "say", { anchor: "start" });
+      }
+      if (st === "writeIn" || st === "writeCm") block("check", X0 + 20, ROW, 7, "Check", "check");
+      if (st === "done") {
+        block("next", X0 + 20, ROW, 10, "Next problem", "next");
+        // one inch and one centimeter lift out of the rulers and lie side by side
+        const pi = glide("pin", X0, PY, false, 650), pc = glide("pcm", X0 + 8, PY, false, 650);
+        put("pinr", "rect", { x: sq(pi.x), y: sq(pi.y), width: sq(5), height: sq(3), fill: "var(--tint-strong)", stroke: "var(--chapter)", "stroke-width": 1.5 }, "fade");
+        put("pcmr", "rect", { x: sq(pc.x), y: sq(pc.y), width: sq(2), height: sq(3), fill: "var(--tint-strong)", stroke: "var(--chapter)", "stroke-width": 1.5 }, "fade");
+        if (Math.abs(pi.y - PY) < 0.05) { lab("pinl", "1 in", "below", PY + 3, X0 + 2.5); lab("pcml", "1 cm", "below", PY + 3, X0 + 9); }
+      }
+    },
+  });
+  L.hops = {
+    in: hopper(L, { at: x => Math.max(0, Math.min(imax, Math.round((x - X0) / 5))), band: [IY - 0.5, TY], xr: [X0, X0 + W] }, c => L.hopped(c, "in")),
+    cm: hopper(L, { at: x => Math.max(0, Math.min(cmax, Math.round((x - X0) / 2))), band: [TY + 2, CY + 3.5], xr: [X0, X0 + W] }, c => L.hopped(c, "cm")),
+  };
+  return L;
+}
+
+// ====================================================================================================================
+// ---------- Estimate length (g2-estimate) ----------
+// As Inches and centimeters. The thing, its benchmark lying above its left end (a paper clip, an inch, a block long; a
+// centimeter cube, 2 × 2). A right guess lays benchmarks end to end along it, counted; the ruler then slides in under
+// it. The fold (feet and meters) draws a long thing smaller (a foot a block, a meter 2 blocks) and hops a foot ruler,
+// a yardstick (6 feet or more: hops of 3, then the rest) or a meter stick along it.
+const ETH = [[["crayon", 3, 4], ["marker", 5, 5], ["pencil", 6, 7], ["spoon", 6, 6], ["shoe", 9, 10], ["book", 11, 11]],
+  [["paper clip", 3, 3], ["crayon", 9, 9], ["eraser", 5, 5], ["marker", 13, 13], ["spoon", 15, 15], ["pencil", 18, 18]]];
+const EU = [{ u: "in", max: 12, bench: "paper clip", benches: "paper clips", far: 12, piece: "clip" }, { u: "cm", max: 20, bench: "cube", benches: "cubes", far: 30, piece: "cube" }];
+const EFOLD = { ft: [["desk", 3, 4], ["rug", 5, 5], ["bed", 6, 7], ["door", 7, 7], ["board", 8, 8]], m: [["door", 2, 2], ["board", 3, 3], ["car", 4, 4], ["log", 5, 5]] };
+function genEstimate(i) {
+  if (i >= 6 && i % 3 === 0) {
+    const u = pickOne(["ft", "m"]), list = EFOLD[u], t = rnd(0, list.length - 1), [name, lo, hi] = list[t];
+    return { fold: true, u, thing: t, name, len: rnd(lo, hi), start: 0 };
+  }
+  const early = i < 3, unit = early ? 0 : rnd(0, 1), list = ETH[unit], thing = (i * 5 + 2) % list.length, [name, lo, hi] = list[thing], len = rnd(lo, hi);
+  return { unit, u: EU[unit].u, thing, name, len, start: early ? 0 : Math.min(rnd(0, 2), EU[unit].max - len) };
+}
+function guessesOf(P) {
+  const d = P.u === "cm" || P.u === "m" ? 5 : 4, small = Math.max(1, Math.round(P.len / d)), big = P.len * d;
+  const k = (P.thing + P.start + P.len) % 3, vals = [P.len, small, big];
+  return { small, big, order: [...vals.slice(k), ...vals.slice(0, k)] };
+}
+function dEstimate(idx) {
+  const P = genEstimate(idx), fold = !!P.fold, u = P.u, U = UNIT[u], per = U.per, { len, start, name } = P;
+  const E = fold ? null : EU[P.unit], G = guessesOf(P);
+  const tl = fold ? (u === "ft" ? (len >= 6 ? "yard" : "foot") : "meter") : null;      // the tool hopped in the fold
+  const bench = fold ? (u === "ft" ? "foot" : "meter") : E.piece, benchName = fold ? (u === "ft" ? "foot ruler" : "meter stick") : E.bench;
+  const step = tl === "yard" ? 3 : 1;
+  const max = fold ? Math.max(len + 1, Math.ceil(len / step) * step) : u === "in" ? Math.min(12, Math.max(6, start + len + 2)) : Math.max(10, start + len + 2);
+  const W = per * max, labels = G.order.map(v => count(v, U.one, U.many));
+  const pw = Math.max(10, ceil5(Math.max(...labels.map(tw)) + 2));
+  const sayDone = fold ? (tl === "yard" ? `A yardstick is 3 feet, so count by 3s, then the rest.` : `A ${benchName} is one ${U.one}, and ${len} fit along the ${name}.`)
+    : `A ${E.bench} is about ${u === "in" ? "an inch" : "a centimeter"}, and about ${len} fit.`;
+  const X0 = under([sayDone], Math.max(W + 2, 3 * pw + 10)), TL = X0 + per * start, TR = TL + per * len;
+  const BY = 6, TY = 9, RY = 14, ROW1 = 20, ROW2 = 23, CKX = ceil5(X0 + tw("about") + 1 + 2 * String(len).length + 1 + tw(u) + 1);
+  const X = v => X0 + per * v, stages = ["guess", "hop", "write", "done"];
+  const L = withBoxes({
+    id: "g2-estimate", maxZoom: 1.25, stage: "guess", msg: null, verdict: null, typing: false, held: null, P, chain: null,
+    wrongPick: null, laid: 0, busy: false,
+    progress() { return stageIndex(stages, this.stage); },
+    frame() { return { x: -4, y: -1, w: Math.max(X0 + W + 1, TR + 2 + tw(fold ? `${landings(hopsOf(0, len, step, "one").map(h => h[1]))} ${u}` : `${len} ${u}`), CKX + 10, X0 + 3 * pw + 10, 44) + 5, h: ROW2 + 4 }; },
+    spots() { return { at: v => ({ x: X(v), y: RY - 1 }), from: { x: TL, y: RY - 1 }, to: { x: TR, y: RY - 1 } }; },
+    canType() { return this.stage === "write"; },
+    maxLen() { return 2; },
+    grab(q) { return this.stage === "hop" && !this.busy && this.hops.grab(q); },
+    drag(q) { this.hops.drag(q); },
+    release() { this.hops.release(); },
+    hopped(c) {
+      if (c.from !== start) { this.msg = `Start at the ${name}'s end.`; this.chain = null; return; }
+      if (c.to !== start + len) { this.msg = `That's ${Math.abs(c.to - c.from)}. The ${name} goes on to ${start + len}.`; return; }
+      this.stage = "write"; this.active = "ans"; this.typing = true; openKeys();
+    },
+    act(x) {
+      if (x.startsWith("pk:")) {
+        if (this.stage !== "guess" || this.busy) return;
+        const v = +x.slice(3);
+        if (v === len) {
+          this.msg = null; this.wrongPick = null; this.busy = true;
+          for (let j = 0; j < len; j++) later(160 * j, () => { seed(`lay${j}`, TL, BY + (bench === "clip" ? .5 : bench === "cube" ? 0 : 0)); this.laid = j + 1; });
+          later(160 * len + 900, () => { this.busy = false; this.stage = "hop"; seed("rul", fold ? TL : X0, RY + 6); frame(this.frame()); });
+          return;
+        }
+        this.wrongPick = v;
+        if (fold) this.msg = v === G.small ? `${count(v, U.one, U.many)} is ${count(v, benchName)}. The ${name} is much longer than that.` : `${count(v, U.one, U.many)} is much longer than the ${name}.`;
+        else this.msg = v === G.small ? `${count(v, U.one, U.many)} is about ${count(v, E.bench, E.benches)}. The ${name} is much longer than that.`
+          : `${count(v, U.one, U.many)} is ${v > E.far ? "longer than a whole ruler" : `much longer than the ${name}`}.`;
+        return;
+      }
+      if (boxAct(this, x)) return;
+      if (x !== "check" || this.stage !== "write") return;
+      const slips = fold ? [[len + 1, "Count the hops, not the marks."]] : [start > 0 && [start + len, `The ${name} starts at ${start}, not 0. Count the spaces from ${start} to ${start + len}.`], [len + 1, "Count the spaces between the marks, not the marks."]].filter(Boolean);
+      const plain = fold ? `Count the hops along the ${name}.` : start ? `It starts at ${start}, so count the spaces from there.` : "It starts at 0, so read the number at its end.";
+      if (checkAnswer(this, len, slips, plain)) this.stage = "done";
+    },
+    scene() {
+      const st = this.stage, c = this.chain;
+      const say = { guess: `Guess with the ${benchName}.`, hop: "Now measure it.", write: "Write how long it is.", done: sayDone }[st];
+      header(this, say, null, 44);
+      // the benchmark above the thing's left end, the thing
+      tool("bench", bench, TL, bench === "clip" ? BY + .5 : BY, { name: fold ? `1 ${u}` : null });
+      drawThing("t", name, TL, TR, TY);
+      // a wrong guess drawn dashed along the thing (red)
+      if (st === "guess" && this.wrongPick) line(`wg${this.wrongPick}`, TL, TY + 2.8, TL + per * this.wrongPick, TY + 2.8, { c: "var(--wrong)", dash: true });
+      // a right guess: benchmarks lay themselves end to end along it, counted
+      if (st === "guess") for (let j = 0; j < this.laid; j++) {
+        const g = glide(`lay${j}`, TL + TOOL[bench] * j, bench === "clip" ? TY + 3 : TY + 2.5);
+        tool(`lay${j}`, bench, g.x, g.y, { n: j + 1 });
+      }
+      if (fold && st !== "guess") {
+        // the tool hops along a line under the thing: whole lengths, then (a yardstick) the rest
+        const k = c || (st !== "hop" ? { from: 0, to: len } : null), hs = k ? hopsOf(k.from, k.to, step, "one") : [];
+        const g = glide("rul", TL + per * Math.max(0, hs.length ? hs[hs.length - 1][0] : 0), RY);
+        line("floor", TL, RY + 2, TL + W, RY + 2, { c: "var(--ink3)" });
+        tool("tool", tl, g.x, g.y, { name: `${step} ${u}` });
+        hs.forEach(([a, b]) => { arc(`h${a}:${b}`, X(a), X(b), RY, Math.min(1.6, per * Math.abs(b - a) * 0.2)); line(`lt${b}`, X(b), RY + 2, X(b), RY + 2.6); text(`ln${b}`, b, X(b), RY + 3.4, "small", { c: "var(--chapter)" }); });
+        if (st === "hop" && hs.length) sideRO(`${landings(hs.map(h => h[1]))} ${u}`, TR + 1.5, TY + 1, !!this.held);
+      } else if (st !== "guess") {
+        const g = glide("rul", X0, RY, false, 650), lit = c && c.to !== c.from ? [c.from, c.to] : st !== "hop" ? [start, start + len] : c ? [c.from] : [];
+        ruler("r", g.x, g.y, per, max, { lit });
+        line("d1", TL, TY + 2, TL, RY, { c: "var(--ink3)", dash: true }); line("d2", TR, TY + 2, TR, RY, { c: "var(--ink3)", dash: true });
+        const hs = c ? hopsOf(c.from, c.to) : st !== "hop" ? hopsOf(start, start + len) : [];
+        hs.forEach(([a, b]) => arc(`h${a}:${b}`, X(a), X(b), RY, per > 2 ? 1.2 : 0.6));
+        if (st === "hop" && c && c.to !== c.from) sideRO(`${Math.abs(c.to - c.from)} ${u}`, TR + 1.5, TY + 1, !!this.held);
+      }
+      // the guesses as word blocks; once right, the record's first line: about 6 in
+      if (st === "guess" && !this.laid) labels.forEach((lb, i) => pickBlock(`pk${i}`, X0 + i * (pw + 5), ROW1, pw, lb, `pk:${G.order[i]}`, "say", this.wrongPick === G.order[i] ? "var(--wrong)" : null));
+      if (this.laid || st !== "guess") {
+        text("ab", "about", X0, ROW1 + 1, "say", { anchor: "start" });
+        const e = eqRow("abn", [String(len)], X0 + tw("about") + 1, ROW1 + 1);
+        text("abu", u, e + 0.5, ROW1 + 1, "say", { anchor: "start" });
+      }
+      if (st === "write" || st === "done") {
+        const e = eqRow("rec", [{ box: "ans", cells: 2, val: this.vals.ans, state: boxState(this, "ans") }], X0 + tw("about") + 1 + 2 * String(len).length - 4, ROW2 + 1);
+        text("recu", u, e + 0.5, ROW2 + 1, "say", { anchor: "start" });
+        if (st === "done") block("next", CKX, ROW2, 10, "Next problem", "next"); else block("check", CKX, ROW2, 7, "Check", "check");
+      }
+    },
+  });
+  L.hops = hopper(L, { at: x => Math.max(0, Math.min(max, Math.round((x - X0) / per))), band: [TY - 0.5, RY + 3.5], xr: [X0, X0 + W] }, c => L.hopped(c));
+  return L;
+}
+
+// ====================================================================================================================
+// ---------- Lengths on a number line (g2-numline) ----------
+// One square is one unit of the story, a tape measure on a strong line: a mark every square, longer every 5, numbered
+// every 10. To 50 the line is 0–50; past 50 a square stands for 2 units (0–100, still 50 squares, so the camera stays
+// near full size) and the page says so. Each length is a bar 3 squares tall over the line from 0; the hops arc in the
+// 2 squares between the lowest bar and the line, tens then ones.
+const NL_UNIT = { ribbon: "cm", rope: "ft", string: "in", path: "m", fence: "m", board: "in" };
+const NL_TH = { join: ["ribbon", "rope", "string", "path", "fence", "board"], cut: ["ribbon", "rope", "string", "board"],
+  cmp: ["ribbon", "rope", "string", "path", "fence", "board"], part: ["ribbon", "rope", "string", "fence"] };
+function genNumline(i) {
+  const kind = i === 0 ? "join" : i === 1 ? "cut" : i === 2 ? "cmp" : pickOne(["join", "cut", "cmp", "part"]);
+  let a, b;
+  for (;;) {
+    a = rnd(10, 90); b = rnd(5, 60);
+    if (i < 3 && !(b < 10 || b % 10 === 0)) continue;
+    const ans = kind === "join" ? a + b : a - b, hi = kind === "join" ? a + b : a;
+    if (ans < 1 || ans > 100 || (i < 3 && hi > 50)) continue;
+    const cross = kind === "join" ? a % 10 + b % 10 >= 10 : a % 10 < b % 10;
+    if (i < 3 ? cross : !cross) continue;
+    break;
+  }
+  const th = pickOne(NL_TH[kind]), [N, pr] = pickOne(NAMES); let M; do M = pickOne(NAMES)[0]; while (M === N);
+  return { kind, a, b, ans: kind === "join" ? a + b : a - b, th, u: NL_UNIT[th], N, pr, M };
+}
+function nlStory(P) {
+  const { kind, a, b, th, u, N, pr, M } = P, Pr = cap(pr);
+  return {
+    join: [`${N} has a ${th} ${a} ${u} long.`, `${Pr} adds ${b} ${u} more.`, "How long is it now?"],
+    cut: [`${N} has a ${th} ${a} ${u} long.`, `${Pr} cuts off ${b} ${u}.`, "How long is it now?"],
+    cmp: [`${N}'s ${th} is ${a} ${u} long.`, `${M}'s ${th} is ${b} ${u} long.`, `How much longer is ${N}'s?`],
+    part: [`${N} needs ${a} ${u} of ${th}.`, `${Pr} has ${b} ${u}.`, `How much more does ${pr} need?`],
+  }[kind];
+}
+// a length as a bar 3 squares tall from x, a line inside it every ten units (tens counted from `from`)
+function nlBar(k, x, y, w, o = {}) {
+  const U = o.U || 1, style = o.style || "tint";
+  if (w <= 0) return;
+  if (style !== "ghost" && style !== "dash") rect(`${k}f${style}`, x, y, w, 3, { fill: style === "stripe" ? "url(#stripes)" : style === "lit" ? "var(--tint-strong)" : "var(--tint)" });
+  rect(`${k}o${style}${w}`, x, y, w, 3, { c: style === "ghost" || style === "dash" ? "var(--ink2)" : "var(--chapter)", dash: style === "ghost" || style === "dash" });
+  if (style === "tint" || style === "lit") { const from = o.from || 0; for (let m = Math.floor(from / 10) * 10 + 10; m < from + w * U - 0.01; m += 10) line(`${k}t${m}`, x + (m - from) / U, y, x + (m - from) / U, y + 3, { c: "var(--chapter)" }); }
+  if (o.n != null && w >= 2) {
+    // the number sits in the widest ten-cell nearest the bar's middle, clear of the ten lines
+    const from = o.from || 0, cuts = [x];
+    if (style === "tint" || style === "lit") for (let m = Math.floor(from / 10) * 10 + 10; m < from + w * U - 0.01; m += 10) cuts.push(x + (m - from) / U);
+    cuts.push(x + w);
+    const need = String(o.n).length * 0.9 + 0.8, mid = x + w / 2;
+    let best = null;
+    for (let i = 0; i + 1 < cuts.length; i++) { const a = cuts[i], b = cuts[i + 1]; if (b - a < need) continue; const cx = (a + b) / 2; if (!best || Math.abs(cx - mid) < Math.abs(best - mid)) best = cx; }
+    text(`${k}n${o.n}`, o.n, best ?? mid, y + 1.5, "maths", { c: o.nc || null });
+  }
+}
+function dNumline(idx) {
+  const P = genNumline(idx), { kind, a, b, ans, th, u, N, pr, M } = P, Pr = cap(pr), S = nlStory(P);
+  const hiV = kind === "join" ? a + b : a, U = hiV > 50 ? 2 : 1, LEN = 50 * U, X0 = 0, X = v => X0 + v / U;
+  const srows = storyRows(S, 50), iy = instrY(srows), nb = kind === "cmp" || kind === "part" ? 2 : 1;
+  const LY = ceil5(iy + 4.5 + 4 * nb), PT = LY - 4 * nb - 1, barY = j => PT + 4 * j, ROW = LY + 6;
+  // what each bar is, what the hands make
+  const bars = kind === "cmp" ? [{ v: a, name: `${N}'s ${th}`, lab: N }, { v: b, name: `${M}'s ${th}`, lab: M }] : kind === "part" ? [{ v: a, whole: true }, { v: b }] : [{ v: a }];
+  const drags = kind === "cmp" ? [0, 1] : kind === "part" ? [1] : [0];
+  const hopFrom = kind === "join" || kind === "cut" ? a : b, hopTo = kind === "join" ? a + b : kind === "cut" ? a - b : a, hopRow = kind === "join" || kind === "cut" ? 0 : 1;
+  const sign = hopTo > hopFrom ? "+" : "−";
+  const sayDone = { join: "Every number is a length from 0, so hopping on adds length.", cut: "Every number is a length from 0, so hopping back takes length off.",
+    cmp: "The gap between the ends is how much longer.", part: "The gap between the ends is how much more is needed." }[kind];
+  const toks = kind === "join" ? [String(a), "+", String(b), "="] : kind === "part" ? [{ t: "?", c: "var(--chapter)" }, "="] : [String(a), "−", String(b), "="];
+  const recRow = kind === "part" ? ROW + 3 : ROW, recEnd = X0 + 2 * toks.map(t => t.t || t).join("").length + 6, CKX = ceil5(recEnd + 1 + tw(u) + 1);
+  const stages = [...drags.map(j => `drag${j}`), "hop", "write", "done"];
+  const L = withBoxes({
+    id: "g2-numline", maxZoom: 1.25, stage: stages[0], msg: null, verdict: null, typing: false, held: null, P, U,
+    storyRows: srows, storySentences: S, chain: null, len: bars.map(() => 0),
+    progress() { return stageIndex(stages, this.stage); },
+    frame() { return { x: -4, y: -1, w: Math.max(X(LEN) + 2 + tw(`${a} ${sign} 10 = ${a + 10} … ${hopTo}`), CKX + 10, 50) + 5, h: recRow + 4 }; },
+    spots() { return { bar: (j, v) => ({ x: X(v), y: barY(j) + 1.5 }), at: v => ({ x: X(v), y: LY - 1 }), from: { x: X(hopFrom), y: LY - 1 }, to: { x: X(hopTo), y: LY - 1 } }; },
+    canType() { return this.stage === "write"; },
+    maxLen() { return 3; },
+    dragging() { return this.stage.startsWith("drag") ? +this.stage.slice(4) : null; },
+    at(x) { return Math.max(0, Math.min(LEN, Math.round((x - X0) * U))); },
+    grab(q) {
+      const j = this.dragging();
+      if (j != null) { if (!inBox(q, X0, barY(j), 50, 3, 0.8)) return false; this.held = { j }; this.msg = null; this.len[j] = this.at(q.x); return true; }
+      return this.stage === "hop" && this.hops.grab(q);
+    },
+    drag(q) { const h = this.held; if (h && h.j != null) this.len[h.j] = this.at(q.x); else if (this.stage === "hop") this.hops.drag(q); },
+    release() {
+      const h = this.held;
+      if (!(h && h.j != null)) { if (this.stage === "hop") this.hops.release(); return; }
+      this.held = null;
+      const j = h.j, v = this.len[j], want = bars[j].v; if (!v) return;
+      if (v !== want) { this.msg = kind === "cmp" ? `That's ${v}. ${cap(bars[j].name)} is ${want} ${u}.` : kind === "part" ? `That's ${v}. ${Pr} has ${want} ${u}.` : `That's ${v}. The ${th} is ${want} ${u}.`; return; }
+      this.stage = stages[stages.indexOf(this.stage) + 1];
+    },
+    hopped(c) {
+      if (c.from !== hopFrom) { this.msg = kind === "cmp" ? `Start at the end of ${M}'s ${th}.` : kind === "part" ? `Start at the end of the ${th} ${pr} has.` : `Start at the ${th}'s end.`; this.chain = null; return; }
+      const n = Math.abs(c.to - c.from);
+      if (Math.sign(c.to - c.from) !== Math.sign(hopTo - hopFrom)) { this.msg = kind === "cut" ? `${Pr} cut some off. Hop back.` : kind === "join" ? `${Pr} added more. Hop on.` : `Hop on to ${a}.`; this.chain = null; return; }
+      if (c.to !== hopTo) { this.msg = kind === "cut" ? `That's ${n} back. Hop ${b}.` : kind === "join" ? `That's ${n} on. Hop ${b}.` : `That's ${c.to}. Hop on to ${a}.`; return; }
+      this.stage = "write"; this.active = "ans"; this.typing = true; openKeys();
+    },
+    act(x) {
+      if (boxAct(this, x)) return;
+      if (x !== "check" || this.stage !== "write") return;
+      const other = { join: [Math.abs(a - b), "It got longer, so add."], cut: [a + b, "Some was cut off, so it's shorter."], cmp: [a + b, "Take the shorter from the longer."], part: [a + b, `It's the part still needed, so it's less than ${a}.`] }[kind];
+      const slips = [other, [ans + 10, "Count the ten-hops again."], [ans - 10, "Count the ten-hops again."], [ans + 1, "Count the hops, not the marks."]];
+      if (checkAnswer(this, ans, slips, "Count the hops: tens, then ones.")) this.stage = "done";
+    },
+    scene() {
+      const st = this.stage, c = this.chain, si = stages.indexOf(st), hopIdx = stages.indexOf("hop"), dj = this.dragging();
+      const say = st.startsWith("drag") ? `Drag from 0 to ${bars[dj].v}.` : st === "hop" ? (kind === "cut" ? `Hop back ${b}.` : kind === "join" ? `Hop on ${b}.` : `Hop from ${b} to ${a}.`) : st === "write" ? "Write the answer." : sayDone;
+      header(this, say, null, 50);
+      // the tape: a mark every square, longer every 5, numbered every 10
+      line("tape", X0, LY, X(LEN), LY);
+      for (let s = 0; s <= 50; s++) line(`tk${s}`, X0 + s, LY, X0 + s, LY + (s % 5 ? 0.5 : 1));
+      for (let v = 0; v <= LEN; v += 10) text(`tn${v}`, v, X(v), LY + 2, "small");
+      if (U === 2) text("each", `A square is 2 ${u}.`, X(LEN) + 2, LY + 2, "small", { anchor: "start" });
+      // the bars
+      bars.forEach((br, j) => {
+        const y = barY(j), done = si > stages.indexOf(`drag${j}`);
+        if (br.whole) { nlBar(`b${j}`, X0, y, X(br.v) - X0, { style: "dash", U, n: br.v }); return; }
+        const v = drags.includes(j) ? this.len[j] : br.v, sh = st === "write" || st === "done";
+        // cutting off: the piece cut off goes dashed
+        if (kind === "cut" && j === 0 && sh) { nlBar("b0", X0, y, X(a - b) - X0, { U, n: a - b === ans && st === "done" ? ans : null, nc: "var(--chapter)" }); nlBar("b0cut", X(a - b), y, X(a) - X(a - b), { style: "dash", U }); }
+        else nlBar(`b${j}`, X0, y, X(v) - X0, { U, n: done ? br.v : null });
+        if (br.lab) lab(`bl${j}`, br.lab, "left", X0, y + 1.5);
+        // the bar's end to drag: a small mark at its end while it's being made
+        if (dj === j) path(`hd${j}:${v}`, `M${sq(X(v) + 0.3)} ${sq(y + 0.9)}l${sq(0.8)} ${sq(0.6)}l${sq(-0.8)} ${sq(0.6)}z`, { c: "var(--chapter)", fill: "var(--chapter)", live: true });
+        if (dj === j && this.held && v) sideRO(`${v} ${u}`, X(LEN) + 2, y + 1.5, true);
+      });
+      // what the hops found: the piece added on, or the gap to the longer end
+      if (si > hopIdx && kind !== "cut") {
+        const x1 = X(Math.min(hopFrom, hopTo)), x2 = X(Math.max(hopFrom, hopTo));
+        nlBar("found", x1, barY(hopRow), x2 - x1, { style: "stripe", U, n: st === "done" && kind !== "join" ? ans : null, nc: "var(--chapter)" });
+      }
+      // the hops, tens then ones, in the 2 squares over the line
+      const k = c || (si > hopIdx ? { from: hopFrom, to: hopTo } : null), hs = k ? hopsOf(k.from, k.to, 10) : [];
+      hs.forEach(([p, q]) => arc(`hp${p}:${q}`, X(p), X(q), LY, Math.abs(q - p) >= 10 ? 1.5 : 0.5));
+      if (st === "hop" && hs.length) {
+        const f = hs[0], s = `${k.from} ${f[1] > f[0] ? "+" : "−"} ${Math.abs(f[1] - f[0])} = ${f[1]}${hs.length > 1 ? ` … ${k.to}` : ""}`;
+        sideRO(s, X(LEN) + 2, LY - 1, !!this.held);
+      }
+      // the record 3 rows under the line
+      if (st === "write" || st === "done") {
+        if (kind === "part") eqRow("eq1", [String(b), "+", { t: "?", c: "var(--chapter)" }, "=", String(a)], X0, ROW + 1);
+        const e = eqRow("rec", [...toks, { box: "ans", cells: 3, val: this.vals.ans, state: boxState(this, "ans") }], X0, recRow + 1);
+        text("recu", u, e + 0.5, recRow + 1, "say", { anchor: "start" });
+        if (st === "done") block("next", CKX, recRow, 10, "Next problem", "next"); else block("check", CKX, recRow, 7, "Check", "check");
+      }
+    },
+  });
+  L.hops = hopper(L, { at: x => L.at(x), band: [LY - 2.5, LY + 2.5], xr: [X0, X(LEN)], near: U }, c => L.hopped(c));
+  return L;
+}
+
+// ---------- lessons, the bar ----------
+let lesson, probIndex = 0;
+const LESSONS = {
+  "g2-measure": { name: "Inches and centimeters", make: dMeasure },
+  "g2-twounits": { name: "Measure with two units", make: dTwoUnits },
+  "g2-estimate": { name: "Estimate length", make: dEstimate },
+  "g2-numline": { name: "Lengths on a number line", make: dNumline },
+};
+window.GEN = { measure: genMeasure, twounits: genTwoUnits, estimate: genEstimate, numline: genNumline, guesses: guessesOf };
+const pick = document.getElementById("pick");
+pick.innerHTML = Object.entries(LESSONS).map(([id, e]) => `<option value="${id}">${esc(e.name)}</option>`).join("");
+function start(id) {
+  if (!LESSONS[id]) id = "g2-measure";
+  timers.forEach(clearTimeout); timers = [];
+  GL.clear(); born = new Map(); said = new Set(); hush();
+  lesson = LESSONS[id].make(probIndex);
+  pick.value = id; keys.blur();
+  render(); frame(lesson.frame(), true);
+  try { localStorage.setItem("g2ch4-lesson", id); } catch (err) { /* private window */ }
+}
+pick.onchange = () => { probIndex = 0; start(pick.value); };
+document.getElementById("fresh").onclick = () => leave();
+function leave() { probIndex++; start(lesson.id); }
+let first = "g2-measure";
+try {
+  const q = new URLSearchParams(location.search);
+  first = q.get("l") || localStorage.getItem("g2ch4-lesson") || first;
+  probIndex = Math.max(0, parseInt(q.get("i") || "0", 10) || 0);
+} catch (err) { /* private window */ }
+start(first);
+</script>
