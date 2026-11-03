@@ -136,7 +136,7 @@ public struct LessonPlan: Codable, Equatable, Sendable {
         let right = items.indices.filter { items[$0].part == .own && clean.indices.contains($0) && clean[$0] }.count
         let goal = Double(together.count + Self.own)
         if right == 0, togetherDone < together.count {
-            return Standing(words: "Together · \(togetherDone) of \(together.count) done", done: Double(togetherDone) / goal)
+            return Standing(words: "Guided · \(togetherDone) of \(together.count) done", done: Double(togetherDone) / goal)
         }
         if right < Self.own {
             return Standing(words: "On your own · \(right) of \(Self.own) right", done: Double(togetherDone + right) / goal)

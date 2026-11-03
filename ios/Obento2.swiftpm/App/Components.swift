@@ -19,9 +19,9 @@ extension Sketch {
     /// How a kind of words looks, everywhere it appears.
     struct Words {
         let size: CGFloat, weight: UIFont.Weight, colour: Colour
-        /// A problem's name over it ("Together 1"), a card's status, a test's line.
+        /// A problem's name over it ("Guided 1"), a card's status, a test's line.
         static let name = Words(size: Sketch.small, weight: .medium, colour: .ink3)
-        /// A part's heading on the page of problems ("Together"), a chapter's title is bigger (`chapter`).
+        /// A part's heading on the page of problems ("Guided"), a chapter's title is bigger (`chapter`).
         static let heading = Words(size: Sketch.wordSize, weight: .semibold, colour: .ink)
         static let chapter = Words(size: Sketch.wordSize, weight: .medium, colour: .ink)
         /// What to do now.

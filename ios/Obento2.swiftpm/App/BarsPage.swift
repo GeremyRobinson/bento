@@ -173,7 +173,7 @@ final class BarsPage {
     private func make(practice i: Int, run: LessonRun, plan: LessonPlan) -> any PageProblem {
         let it = plan.items[i]
         let k = plan.items[...i].filter { $0.part == it.part }.count
-        let label = it.part == .together ? "Together \(k)" : "On your own \(k)"
+        let label = it.part == .together ? "Guided \(k)" : "On your own \(k)"
         let m = Self.make(spec, origin: at, chapter: piece.chapter, instant: instant, run: run, label: label)
         (m as? WorkProblem)?.focus = it.focus
         (m as? CubesProblem)?.focus = it.focus
@@ -384,7 +384,7 @@ final class BarsPage {
         }
         guard let plan else { return (out, []) }
         let top = y
-        part("Together", plan.items.indices.filter { plan.items[$0].part == .together }.map { (.problem($0), problems[$0]) }, columns: Self.columns)
+        part("Guided", plan.items.indices.filter { plan.items[$0].part == .together }.map { (.problem($0), problems[$0]) }, columns: Self.columns)
         part("On your own · \(plan.ownRight(problems.map(\.lesson))) of \(LessonPlan.own) right",
              plan.items.indices.filter { plan.items[$0].part == .own }.map { (.problem($0), problems[$0]) }, columns: Self.columns)
         // the side column: the How to on top, always there to watch again (G 1 Nov: it's too important to hide), the
@@ -967,8 +967,8 @@ final class BarsPage {
         problems = problems.indices.map { i in
             let m = problems[i], it = plan.items[i]
             let k = plan.items[...i].filter { $0.part == it.part }.count
-            (m as? WorkProblem)?.label = it.part == .together ? "Together \(k)" : "On your own \(k)"
-            (m as? CubesProblem)?.label = it.part == .together ? "Together \(k)" : "On your own \(k)"
+            (m as? WorkProblem)?.label = it.part == .together ? "Guided \(k)" : "On your own \(k)"
+            (m as? CubesProblem)?.label = it.part == .together ? "Guided \(k)" : "On your own \(k)"
             return m
         }
     }

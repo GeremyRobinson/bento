@@ -356,7 +356,7 @@ struct IslandPage: View {
     // MARK: Help
 
     @ViewBuilder private var help: some View {
-        question("How a lesson works", "Watch the How to, do three problems together, then six alone. Six right opens the lesson test, and 10 of 12 passes it.")
+        question("How a lesson works", "Watch the How to, do three guided problems, then six on your own. Six right opens the lesson test, and 10 of 12 passes it.")
         question("Checks", "A passed lesson comes back for a short check after 3, 7, 21 and 60 days. If a check goes badly, it comes back the next day.")
         question("Resetting a lesson", "On the page behind this, open Lessons and tap the lesson.", line: false)
         link("Email us", tab: .help) {

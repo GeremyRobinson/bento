@@ -237,9 +237,9 @@ final class LessonPlanTests: XCTestCase {
         func standing(_ test: [LessonRun] = []) -> LessonPlan.Standing {
             plan.standing(solved: runs.map(\.isLast), clean: runs.indices.map { plan.clean($0, runs[$0]) }, test: test.map { $0.isLast ? !$0.missedAny : nil })
         }
-        XCTAssertEqual(standing().words, "Together · 0 of 3 done"); XCTAssertEqual(standing().done, 0)
+        XCTAssertEqual(standing().words, "Guided · 0 of 3 done"); XCTAssertEqual(standing().done, 0)
         work(&runs[0])
-        XCTAssertEqual(standing().words, "Together · 1 of 3 done")
+        XCTAssertEqual(standing().words, "Guided · 1 of 3 done")
         work(&runs[1]); work(&runs[2])
         XCTAssertEqual(standing().words, "On your own · 0 of 6 right")
         // a miss adds a fresh problem, and the goal stays 6
