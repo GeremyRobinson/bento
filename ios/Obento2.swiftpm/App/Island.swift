@@ -259,7 +259,7 @@ struct IslandPage: View {
                     let here = g == p.grade, live = Grades.isLive(g)
                     Button {
                         ui.islandGrade = Grades.onMe(g).replacingOccurrences(of: ".", with: "")
-                        if live { var q = AppSettings.profile; q.grade = g; AppSettings.set(profile: q, saving: saving) }
+                        if live { model.chooseGrade(g) }
                         ui.settingsVersion += 1
                     } label: {
                         Text(Grades.short(g)).font(Typeface.font(12, here ? .bold : .medium)).monospacedDigit()

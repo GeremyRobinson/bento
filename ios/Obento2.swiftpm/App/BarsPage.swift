@@ -105,7 +105,7 @@ final class BarsPage {
         /// the test's or has changed since.
         func question(_ i: Int, _ s: RunSnapshot?, from specs: [LessonSpec]) -> LessonRun? {
             let id = s?.spec ?? spec.id
-            let own = specs.first { $0.id == id } ?? (piece.id == "test-grade" && Map.gradeLessons.contains(id) ? Lessons.spec(id) : nil)
+            let own = specs.first { $0.id == id } ?? (Map.isGradeTest(piece.id) && Map.gradeLessons.contains(id) ? Lessons.spec(id) : nil)
             if let s, let own, let r = LessonRun.restored(own, s) { return r }
             if s != nil { afresh += 1 }
             return LessonPlan.testRun(specs, i, using: &rng)
@@ -472,7 +472,7 @@ final class BarsPage {
         /// The review's lessons with a miss, by name, each once, in the order they came.
         var missedNames: [String] {
             var names: [String] = []
-            for id in missed { if let n = Map.piece(id)?.name, !names.contains(n) { names.append(n) } }
+            for id in missed { if let n = Curriculum.name(of: id), !names.contains(n) { names.append(n) } }
             return names
         }
         /// Why in pieces that stay whole on the paper: the review's "Missed:", then each lesson's name with its comma

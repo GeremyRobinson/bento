@@ -54,7 +54,7 @@ extension Piece {
             [CGPoint(x: at.x + x * c, y: at.y + y * c), CGPoint(x: at.x + (x + w) * c, y: at.y + y * c),
              CGPoint(x: at.x + (x + w) * c, y: at.y + (y + h) * c), CGPoint(x: at.x + x * c, y: at.y + (y + h) * c)]
         }
-        if id == "test-grade" {
+        if Map.isGradeTest(id) {
             let p = { (x: Double, y: Double) in CGPoint(x: at.x + x * c, y: at.y + y * c) }
             return Self.starFan(p, cx: 4.5, cy: 2.4, r: 1.4)
         }
@@ -80,6 +80,12 @@ extension Piece {
         case "g5-units": return [box(0, 0, 4, 2)]                               // a foot of it
         case "g5-coord": return [box(5, 1, 2, 2)]                               // the point
         case "g5-shapes": return [[CGPoint(x: at.x + 2 * c, y: at.y), CGPoint(x: at.x + 9 * c, y: at.y), CGPoint(x: at.x + 7 * c, y: at.y + 4 * c), CGPoint(x: at.x, y: at.y + 4 * c)]]
+        // 4th grade, Big numbers (3 Nov)
+        case "g4-tentimes": return [box(6, 1, 5, 2)]                            // the full ten
+        case "g4-readwrite": return [box(0, 0, 2, 2)]                           // the digit pulled
+        case "g4-compare": return [box(3, 0, 2, 2)]                             // the place that decides
+        case "g4-placevalue": return [box(0, 2, 3, 2)]                          // the stretch down to the round number
+        case "g4-addsub": return [box(7, 0, 2, 2)]                              // the ones, first
         default: return []
         }
     }
@@ -133,7 +139,7 @@ extension Piece {
         func arc(_ x0: Double, _ x1: Double, _ y: Double, _ h: Double) -> [CGPoint] {
             (0...12).map { s in let f = Double(s) / 12; return P(x0 + (x1 - x0) * f, y - sin(.pi * f) * h) }
         }
-        if id == "test-grade" { // the grade's test: a medal, a star in its middle and two ribbon tails: 9 by 6... 5 wide
+        if Map.isGradeTest(id) { // the grade's test: a medal, a star in its middle and two ribbon tails: 9 by 6... 5 wide
             let ring = (0...32).map { s -> CGPoint in let a = Double(s) / 32 * 2 * .pi; return P(4.5 + 2.4 * cos(a), 2.4 + 2.4 * sin(a)) }
             return [ring, Self.star(P, cx: 4.5, cy: 2.4, r: 1.4), line((3.2, 4.3), (2.6, 6), (3.6, 5.5), (4.1, 6), (4.3, 4.8)), line((5.8, 4.3), (6.4, 6), (5.4, 5.5), (4.9, 6), (4.7, 4.8))]
         }
@@ -141,7 +147,24 @@ extension Piece {
             return [line((0, 0), (3.5, 0), (5, 1.5), (5, 6), (0, 6), (0, 0)), line((3.5, 0), (3.5, 1.5), (5, 1.5)),
                     line((1, 2.5), (3.5, 2.5)), line((1, 3.5), (3.5, 3.5)), line((1, 4.5), (2.5, 4.5))]
         }
+        // a lesson still to come (G 3 Nov): an empty frame
+        if !isTest && spec == nil { return [] }
         switch id {
+        case "g4-tentimes": // a disk opening into a ten-frame: 11 by 4
+            let disk = (0...24).map { k -> CGPoint in let a = Double(k) / 24 * 2 * .pi; return P(1 + cos(a), 2 + sin(a)) }
+            return [disk, line((3, 2), (5, 2)), line((4.5, 1.5), (5, 2), (4.5, 2.5)), box(6, 1, 5, 2), line((6, 2), (11, 2))]
+                + (7...10).map { x in line((Double(x), 1), (Double(x), 3)) }
+        case "g4-readwrite": // a number's digits, a comma after the thousands: 11 by 2
+            return [box(0, 0, 2, 2), box(2, 0, 2, 2), line((4.5, 1.6), (4.2, 2.4)), box(5, 0, 2, 2), box(7, 0, 2, 2), box(9, 0, 2, 2)]
+        case "g4-compare": // a longer number over a shorter one, lined up on the right: 11 by 4
+            return [3, 5, 7, 9].map { box(Double($0), 0, 2, 2) } + [5, 7, 9].map { box(Double($0), 2, 2, 2) } + [line((0, 1), (2, 2), (0, 3))]
+        case "g4-placevalue": // a number line in blocks and a hop down to the round number: 11 by 4
+            var out: [[CGPoint]] = [line((0, 4), (11, 4))]
+            for i in [0.0, 5, 10] { out.append(line((i, 3), (i, 4))) }
+            out.append(arc(3, 0, 4, 2))
+            return out
+        case "g4-addsub": // two numbers in columns, and the line under them: 9 by 4
+            return [1, 3, 5, 7].flatMap { x in [box(Double(x), 0, 2, 2), box(Double(x), 2, 2, 2)] } + [line((0, 4), (9, 4))]
         case "g5-volume": // a box of cubes, 4 by 3 by 2, as the lesson shows it
             return box3D(l: 4, h: 2, w: 3, u: 32)
         case "add": // thirds and thirds, added: 9 by 6
@@ -356,11 +379,11 @@ final class Rig {
         let px = 1 / lineScale
         // once the drawings have drawn in, only a new choice, zoom or learned lesson changes them: skip the rest
         let gone = snapped(model.mapGone(at: t), 40)
-        let settled = t - model.drawnAt > Piece.drawTime + 1, quick = "\(model.selected?.id ?? "") \(lineScale) \(Progress.shared.checks.count) \(gone) \(Store.shared.hasAllGrades)"
+        let settled = t - model.drawnAt > Piece.drawTime + 1, quick = "\(Map.grade) \(model.selected?.id ?? "") \(lineScale) \(Progress.shared.checks.count) \(gone) \(Store.shared.hasAllGrades)"
         if settled, quick == piecesQuick, !piecesKey.isEmpty { return }
         piecesQuick = settled ? quick : ""
         let now = Map.shown.map { p in (p, snapped(Piece.drawIn(p, time: t, drawnAt: model.drawnAt, from: model.drawFrom), 400) * gone, model.selected?.id == p.id, p.state) }
-        let key = now.map { "\($0.1) \($0.2) \($0.3) \($0.0.locked)" }.joined(separator: ",")
+        let key = now.map { "\($0.0.id) \($0.1) \($0.2) \($0.3) \($0.0.locked)" }.joined(separator: ",")
         guard key != piecesKey else { return }
         piecesKey = key
         var groups: [String: (colour: UIColor, width: Double, y: Float, segs: [(SIMD2<Float>, SIMD2<Float>)])] = [:]
@@ -375,7 +398,7 @@ final class Rig {
             // the others' frames are their chapter's colour too, lighter: no grey on the map
             let frameColour = lit ? UIColor(hex: hex) : UIColor(hex: Ink.mix(paperHex, hex, 0.3))
             // a test still waiting is a dashed frame: there, but not open yet
-            let locked = (p.isTest && !p.opens && state != .learned) || p.locked
+            let locked = (p.isTest && !p.opens && state != .learned) || p.locked || p.coming
             add("frame-\(p.chapter.rawValue)-\(lit)-\(on)", frameColour, on ? 2 : 1.5, 0.001, drawn(locked ? Self.dashes(p.outline) : p.outline, k))
             // a light fill in the chapter's colour, coming in with the drawing
             let strength = (k * 10).rounded() / 10 * 0.1

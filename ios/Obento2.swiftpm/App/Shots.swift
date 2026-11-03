@@ -39,6 +39,12 @@ enum Shots {
         AppSettings.set(profile: Profile(setUp: true), saving: false)
         Progress.shared.reset(to: ["g5-round", "add"])
         let args = ProcessInfo.processInfo.arguments
+        // -grade 4: that grade's map; a lesson's page (page-<id>) is shown on its own grade's
+        let pageGrade = name.hasPrefix("page-") ? Curriculum.grade(of: String(name.dropFirst(5).split(separator: "@").first ?? "").components(separatedBy: "-").prefix(2).joined(separator: "-")) : nil
+        if let g = args.firstIndex(of: "-grade").flatMap({ $0 + 1 < args.count ? Int(args[$0 + 1]) : nil }) ?? pageGrade, Grades.isLive(g) {
+            AppSettings.set(profile: Profile(grade: g, setUp: true), saving: false)
+            if g != 5 { Progress.shared.reset(to: []) }
+        }
         if args.contains("-landscape") || args.contains("-portrait"),
            let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
             scene.requestGeometryUpdate(UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: args.contains("-portrait") ? .portrait : .landscapeRight)) { e in
@@ -333,12 +339,12 @@ enum Shots {
                 Progress.shared.reset(to: whole, tests: ["test-whole": 10]); m.frameChapter(0)
             case "grade-test":
                 Progress.shared.reset(to: Set(Map.gradeLessons), tests: ["test-whole": 12, "test-decimals": 10, "test-fractions": 11, "test-measurement": 10])
-                m.select(Map.tests.first { $0.id == "test-grade" }!)
+                m.select(Map.tests.first { Map.isGradeTest($0.id) }!)
             case "test-page":
                 // a chapter's test, its 12 problems mixed from its lessons (-chapter=<n>: that chapter's; Whole numbers')
                 let n = args.first { $0.hasPrefix("-chapter=") }.flatMap { Int($0.dropFirst(9)) } ?? 0
                 let t = Map.tests[min(max(0, n), Map.tests.count - 2)]
-                Progress.shared.reset(to: Set(Map.pieces.filter { $0.chapter == t.chapter }.map(\.id)))
+                Progress.shared.reset(to: Set(Map.pieces.filter { $0.group == t.group }.map(\.id)))
                 m.select(t); m.open(t)
             case "selected-ad": m.select(Map.piece("add"))
             case "selected-many":
@@ -788,7 +794,7 @@ enum Shots {
     static func fresh(name: String) {
         Progress.shared.reset(to: [])
         for p in Map.all + [Map.review] { PageStore.clear(p.id) }
-        AppSettings.set(profile: Profile(name: name, setUp: true), saving: false)
+        AppSettings.set(profile: Profile(name: name, grade: AppSettings.profile.grade, setUp: true), saving: false)
     }
 
     /// `-seed-page <lesson id>` (the real-touch tests, never a screenshot): that lesson's page as a child left it today

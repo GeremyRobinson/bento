@@ -78,6 +78,11 @@ public enum Curriculum {
     /// The grade's own test, under everything. 5th grade's keeps the id it's always had.
     public static func gradeTest(_ grade: Int) -> String { grade == 5 ? "test-grade" : "test-grade-\(grade)" }
     public static func isGradeTest(_ id: String) -> Bool { id.hasPrefix("test-grade") }
+    /// A lesson's name on its map ("Comparing big numbers").
+    public static func name(of id: String) -> String? {
+        for g in Grades.all { for c in chapters(g) { if let l = c.lessons.first(where: { $0.id == id }) { return l.name } } }
+        return nil
+    }
     /// The grade a lesson or test is on (nil when it's on none).
     public static func grade(of id: String) -> Int? {
         Grades.all.first { g in id == gradeTest(g) || chapters(g).contains { $0.test == id || $0.lessons.contains { $0.id == id } } }

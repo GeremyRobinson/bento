@@ -196,13 +196,14 @@ final class GrownUpPage {
 
         // a square for each lesson, three squares a side, a chapter's together and a square between chapters: filled
         // learned, shaded started, open not yet (the chapter's outline round them, cut into its lessons)
-        var groups: [(chapter: Chapter, ids: [String])] = []
-        for piece in Map.pieces {
-            if groups.last?.chapter == piece.chapter { groups[groups.count - 1].ids.append(piece.id) } else { groups.append((piece.chapter, [piece.id])) }
+        // (the grade's lessons that are built: a lesson still to come has nothing to show)
+        var groups: [(chapter: Chapter, key: String, ids: [String])] = []
+        for piece in Map.pieces where piece.spec != nil {
+            if groups.last?.key == piece.group { groups[groups.count - 1].ids.append(piece.id) } else { groups.append((piece.chapter, piece.group, [piece.id])) }
         }
         let side = 3 * c, sy = P(0, 14).y
         var gx = P(0, 0).x
-        for (chapter, ids) in groups {
+        for (chapter, key, ids) in groups {
             let pen = Pen.chapter(chapter)
             for (i, id) in ids.enumerated() {
                 let r = CGRect(x: gx + Double(i) * side, y: sy, width: side, height: side)
@@ -213,11 +214,11 @@ final class GrownUpPage {
                 }
             }
             let r = CGRect(x: gx, y: sy, width: Double(ids.count) * side, height: side)
-            s.overLine("gu-wk-sqo-\(chapter)", [CGPoint(x: r.minX, y: r.minY), CGPoint(x: r.maxX, y: r.minY), CGPoint(x: r.maxX, y: r.maxY), CGPoint(x: r.minX, y: r.maxY), CGPoint(x: r.minX, y: r.minY)],
+            s.overLine("gu-wk-sqo-\(key)", [CGPoint(x: r.minX, y: r.minY), CGPoint(x: r.maxX, y: r.minY), CGPoint(x: r.maxX, y: r.maxY), CGPoint(x: r.minX, y: r.maxY), CGPoint(x: r.minX, y: r.minY)],
                        pen.tint(0.7), width: Sketch.stroke)
             for i in 1..<max(1, ids.count) {
                 let x = gx + Double(i) * side
-                s.overLine("gu-wk-sqc-\(chapter)\(i)", [CGPoint(x: x, y: sy), CGPoint(x: x, y: sy + side)], pen.tint(0.7), width: Sketch.stroke)
+                s.overLine("gu-wk-sqc-\(key)\(i)", [CGPoint(x: x, y: sy), CGPoint(x: x, y: sy + side)], pen.tint(0.7), width: Sketch.stroke)
             }
             gx = r.maxX + c
         }

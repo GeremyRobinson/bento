@@ -263,7 +263,7 @@ enum MePage {
     static func todayReason(_ pick: Piece, now: Double) -> Today.Reason {
         let open = Map.pieces.filter(\.opens).map(\.id), checks = Progress.shared.checks
         let deps = { (id: String) in Lessons.spec(id)?.depends ?? [] }
-        let why = Mastery.upNext(open, depends: deps, checks: checks, grade: 5, now: now)?.why ?? .next
+        let why = Mastery.upNext(open, depends: deps, checks: checks, grade: Map.grade, now: now)?.why ?? .next
         return Today.reason((pick.id, why), lessons: open, depends: deps, checks: checks, now: now)
     }
 
@@ -278,7 +278,7 @@ enum MePage {
         case .helps(let id): return "Helps with \(name(id))"
         case .buildsOn(let id): return "Builds on \(name(id))"
         case .first: return "The first lesson"
-        case .next: return "Next in \(pick.chapter.title)"
+        case .next: return "Next in \(Map.title(of: pick.group))"
         case .oldest: return "Not practiced in a while"
         }
     }

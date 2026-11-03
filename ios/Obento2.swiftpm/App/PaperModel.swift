@@ -5,13 +5,20 @@ struct Piece: Identifiable, Equatable {
     enum State { case learned, now, notYet }
     let id: String
     let name: String
+    /// Its chapter's colour.
     let chapter: Chapter
     /// Top-left of the picture frame, on grid lines.
     let at: Point
+    /// Its chapter on the map (MapChapter.key; a grade's chapters can share a colour, G 3 Nov: 4th grade has three
+    /// whole-number chapters).
+    var group: String = ""
     /// The lesson behind this piece, if one has been written.
     var spec: LessonSpec? { Lessons.spec(id) }
     /// Every lesson on the map with a spec opens; a test once it's ready.
     @MainActor var opens: Bool { !Map.locked(id) && (isTest ? Map.testReady(id) : spec != nil && Map.paperLessons.contains(id)) }
+    /// On the map ahead of its lesson (G 3 Nov): a lesson not built yet, or a test whose chapter (or grade) has one.
+    /// Drawn faint and dashed with nothing in it, its name under it; chosen, it says "Coming soon".
+    @MainActor var coming: Bool { Map.coming(id) }
     /// Waiting for the plan (Store): a chapter past the free first one, or its test, or the grade's test.
     @MainActor var locked: Bool { Map.locked(id) }
     /// A chapter or grade test, not a lesson (G 18 Oct).
@@ -22,7 +29,7 @@ struct Piece: Identifiable, Equatable {
     @MainActor var state: State {
         if isTest { return Progress.shared.passed(id) ? .learned : opens ? .now : .notYet }
         if Progress.shared.learned.contains(id) { return .learned }
-        let next = Map.pieces.first { $0.chapter == chapter && $0.opens && !Progress.shared.learned.contains($0.id) }
+        let next = Map.pieces.first { $0.group == group && $0.opens && !Progress.shared.learned.contains($0.id) }
         return next?.id == id ? .now : .notYet
     }
     /// Marked Go over on the map (G 20 Oct): a lesson learned at some time that's due back for its recheck (it opens on
@@ -60,6 +67,9 @@ struct ChapterGroup {
     let origin: Point
     let columns: Int
     let lessons: [(id: String, name: String)]
+    /// Its key (MapChapter.key: its test is "test-<key>") and title.
+    var key: String = ""
+    var title: String = ""
     /// Inside a group, one block between lessons (G 17 Oct): a frame and one block across; a frame and the block with
     /// its name down. Groups are two blocks apart. Start is the frame's tag, not a block under it (G 18 Oct).
     static let pitch = Size(4 * Paper.unit, 3 * Paper.unit)
@@ -75,132 +85,178 @@ struct ChapterGroup {
     var height: Double { Paper.unit + Double(rows) * Self.pitch.height }
 
     var pieces: [Piece] {
-        lessons.enumerated().map { i, l in Piece(id: l.id, name: l.name, chapter: chapter, at: slot(i)) }
+        lessons.enumerated().map { i, l in Piece(id: l.id, name: l.name, chapter: chapter, at: slot(i), group: key) }
     }
 
     /// The map lays itself out (G 3 Nov, "two packed columns"): chapters in order, each under the one before in
     /// whichever column is shorter, two blocks apart, so the map has no holes whatever size the chapters are.
-    static func packed(_ chapters: [(Chapter, [(id: String, name: String)])], columns: Int = 3) -> [ChapterGroup] {
+    static func packed(_ chapters: [MapChapter], columns: Int = 3) -> [ChapterGroup] {
         // the left column's lessons, then two blocks to the right column
         let colX = [0, Double(columns) * pitch.width - Paper.unit + 2 * Paper.unit]
         var y = [0.0, 0.0]
-        return chapters.map { chapter, lessons in
+        return chapters.map { ch in
             let c = y[1] < y[0] ? 1 : 0
-            let g = ChapterGroup(chapter: chapter, origin: Point(colX[c], y[c]), columns: columns, lessons: lessons)
+            let g = ChapterGroup(chapter: Chapter(rawValue: ch.colour) ?? .whole, origin: Point(colX[c], y[c]), columns: columns,
+                                 lessons: ch.lessons.map { ($0.id, $0.name) }, key: ch.key, title: ch.title)
             y[c] += g.height + 2 * Paper.unit
             return g
         }
     }
 }
 
-/// 5th grade on the paper: the 17 lessons of specs/k12/grade5.md in chapters, packed into two columns (G 3 Nov), and
-/// Geometry's two (added 1 Nov 2026) under Measurement.
-enum Map {
-    static let grade = (number: "5", name: "5th grade")
-    static let groups: [ChapterGroup] = ChapterGroup.packed([
-        (.whole, [("g5-mult2", "Multiply two-digit numbers"), ("g5-divide", "Long division"), ("g5-order", "Order of operations")]),
-        (.decimals, [("g5-pow10", "Multiply by 10, 100, 1000"), ("g5-round", "Rounding decimals"), ("g5-compare", "Comparing decimals"),
-                     ("g5-adddec", "Adding decimals"), ("g5-multdec", "Multiplying decimals"), ("g5-divdec", "Dividing by a decimal")]),
-        (.fractions, [("add", "Adding fractions"), ("sub", "Subtracting fractions"), ("mix", "Adding and subtracting"),
-                      ("g5-multfrac", "Multiplying fractions"), ("g5-improper", "Mixed numbers to fractions"),
-                      ("g5-fracdiv", "Fractions as division"), ("g5-fracof", "Fraction of a number"), ("g5-unitdiv", "Dividing by a unit fraction")]),
-        (.measurement, [("g5-volume", "Volume of a box"), ("g5-units", "Converting units")]),
-        // added 1 Nov 2026 (design/grade5.md)
-        (.geometry, [("g5-coord", "Points on a grid"), ("g5-shapes", "Sorting shapes")]),
-    ])
-    static let pieces = groups.flatMap(\.pieces)
+/// One grade's map, laid out (Core's Curriculum, G 3 Nov): its chapters packed into two columns, each chapter's test in
+/// the slot after its last lesson, the grade's test under everything. Worked out once per grade.
+struct GradeMap {
+    let grade: Int
+    let groups: [ChapterGroup]
+    let pieces: [Piece]
+    let tests: [Piece]
+    let all: [Piece]
+    /// The grade's test's id ("test-grade" for 5th grade, as it's always been).
+    let gradeTest: String
+    /// The lessons that open: every one with a spec.
+    let paperLessons: Set<String>
+    /// The grade's lessons a child can pass (the built ones), for "5 of 17 passed".
+    let gradeLessons: [String]
+    let bounds: Rect
 
-    /// Any piece by its id: a lesson or a test. (The Paper proof's two lessons, Unit cubes and Add with different
-    /// bottoms, are gone from the app since 25 Oct: their teaching lives in Volume of a box and Adding fractions.)
-    static func piece(_ id: String) -> Piece? { all.first { $0.id == id } }
-
-    /// Each chapter's test, in the slot after its last lesson, and the grade's test under everything (G 18 Oct).
-    static let tests: [Piece] = groups.map { g in
-        Piece(id: "test-\(g.chapter.rawValue)", name: "\(g.chapter.title) test", chapter: g.chapter, at: g.slot(g.lessons.count))
-    } + [Piece(id: "test-grade", name: "\(grade.name) test", chapter: .whole, at: gradeTestAt)]
-    /// The grade's test under everything in the shorter column, two blocks below its last chapter, as the next chapter
-    /// would go (G 3 Nov).
-    static let gradeTestAt: Point = {
+    init(grade: Int) {
+        self.grade = grade
+        let chapters = Curriculum.chapters(grade)
+        groups = ChapterGroup.packed(chapters)
+        pieces = groups.flatMap(\.pieces)
+        gradeTest = Curriculum.gradeTest(grade)
+        // the grade's test under everything in the shorter column, two blocks below its last chapter, as the next
+        // chapter would go (G 3 Nov)
         let ends = Dictionary(grouping: groups, by: \.origin.x).mapValues { $0.map { $0.origin.y + $0.height + 2 * Paper.unit }.max()! }
-        let c = ends.min { $0.value < $1.value || ($0.value == $1.value && $0.key < $1.key) }!
-        return Point(c.key, c.value)
-    }()
+        let c = ends.min { $0.value < $1.value || ($0.value == $1.value && $0.key < $1.key) } ?? (key: 0, value: 0)
+        let gradeName = Grades.name(grade)
+        tests = groups.map { g in
+            Piece(id: "test-\(g.key)", name: "\(g.title) test", chapter: g.chapter, at: g.slot(g.lessons.count), group: g.key)
+        } + [Piece(id: gradeTest, name: "\(gradeName) test", chapter: groups.first?.chapter ?? .whole, at: Point(c.key, c.value), group: "")]
+        all = pieces + tests
+        paperLessons = Set(pieces.map(\.id).filter { Lessons.spec($0) != nil })
+        gradeLessons = pieces.map(\.id).filter { Lessons.spec($0) != nil }
+        // every group, from its title to its last row's name and Start, with a cell to spare
+        let x0 = groups.map(\.origin.x).min() ?? 0, y0 = groups.map(\.origin.y).min() ?? 0
+        let x1 = all.map { $0.at.x + Piece.size.width }.max() ?? 0, y1 = all.map { $0.at.y + Piece.size.height + Paper.unit }.max() ?? 0
+        let m = Paper.cell
+        bounds = Rect(x: x0 - m, y: y0 - m, width: x1 - x0 + 2 * m, height: y1 - y0 + 2 * m)
+    }
+}
+
+/// The map of the child's grade (G 3 Nov: the map, its chapters and its lessons come from the chosen grade): 5th grade's
+/// 21 lessons as they've always been, or 4th grade's. Everything here reads the grade's own map, so each grade keeps its
+/// own lessons, tests and progress (their ids are its own).
+@MainActor
+enum Map {
+    /// The grade the map shows: the child's, when it has lessons (else 5th).
+    static var grade: Int { let g = AppSettings.profile.grade; return Grades.isLive(g) ? g : Grades.live }
+    private static var made: [Int: GradeMap] = [:]
+    /// A grade's map, laid out once.
+    static func of(_ g: Int) -> GradeMap { if let m = made[g] { return m }; let m = GradeMap(grade: g); made[g] = m; return m }
+    static var current: GradeMap { of(grade) }
+
+    static var groups: [ChapterGroup] { current.groups }
+    static var pieces: [Piece] { current.pieces }
+    /// Each chapter's test, in the slot after its last lesson, and the grade's test under everything (G 18 Oct).
+    static var tests: [Piece] { current.tests }
     /// Everything on the map, shown or not yet.
-    static let all = pieces + tests
+    static var all: [Piece] { current.all }
+    static var gradeTest: String { current.gradeTest }
+    nonisolated static func isGradeTest(_ id: String) -> Bool { Curriculum.isGradeTest(id) }
+
+    /// Any piece by its id: a lesson or a test, on this grade's map first, then on any grade's (a page saved on another
+    /// grade, a screenshot of one). (The Paper proof's two lessons, Unit cubes and Add with different bottoms, are gone
+    /// from the app since 25 Oct: their teaching lives in Volume of a box and Adding fractions.)
+    static func piece(_ id: String) -> Piece? {
+        current.all.first { $0.id == id } ?? Curriculum.grade(of: id).flatMap { of($0).all.first { $0.id == id } }
+    }
+
+    /// Ahead of its lesson (G 3 Nov): a lesson not built yet; a chapter's test with a lesson not built; the grade's test
+    /// while any of its lessons isn't.
+    static func coming(_ id: String) -> Bool {
+        guard let p = piece(id) else { return false }
+        if !p.isTest { return p.spec == nil }
+        let m = Curriculum.grade(of: id).map(of) ?? current
+        if isGradeTest(id) { return m.pieces.contains { $0.spec == nil } }
+        return m.pieces.contains { $0.group == p.group && $0.spec == nil }
+    }
 
     /// Nothing started anywhere yet (G 26 Oct): no lesson checked, no test taken, no page of problems saved. A new
     /// install's map looks untouched: no Up next tabs, no counts, no tests waiting (Core/Setup.swift, Fresh).
-    @MainActor static var untouched: Bool {
+    static var untouched: Bool {
         Fresh.untouched(checks: Progress.shared.checks, tests: Progress.shared.tests, pagesSaved: (all + [review]).contains { PageStore.load($0.id) != nil })
     }
     /// What the map draws now: every lesson and every test (a test faint until it opens, G 3 Nov).
-    @MainActor static var shown: [Piece] { Fresh.showsTests ? all : pieces }
+    static var shown: [Piece] { Fresh.showsTests ? all : pieces }
 
     /// A chapter's test opens once every lesson in it has been learned (G 18 Oct); the grade's test once every chapter
     /// test is passed (G 20 Oct). Once taken, or started, a test stays open: it can be taken again. Lessons are always
-    /// open; only tests wait.
-    @MainActor static func testReady(_ id: String) -> Bool {
+    /// open; only tests wait. A test ahead of its lessons never opens.
+    static func testReady(_ id: String) -> Bool {
+        if coming(id) { return false }
         if Progress.shared.tests[id] != nil || PageStore.load(id) != nil { return true }
-        if id == "test-grade" { return tests.filter { $0.id != "test-grade" }.allSatisfy { Progress.shared.passed($0.id) } }
-        guard let t = tests.first(where: { $0.id == id }) else { return false }
-        let lessons = pieces.filter { $0.chapter == t.chapter }
+        let m = Curriculum.grade(of: id).map(of) ?? current
+        if isGradeTest(id) { return m.tests.filter { !isGradeTest($0.id) }.allSatisfy { Progress.shared.passed($0.id) } }
+        guard let t = m.tests.first(where: { $0.id == id }) else { return false }
+        let lessons = m.pieces.filter { $0.group == t.group }
         return !lessons.isEmpty && lessons.allSatisfy { Progress.shared.learned.contains($0.id) }
     }
     /// The lessons a test asks from, in the order it takes them, one question each in turn: a chapter's test its
     /// lessons in map order; the grade's test the chapters in turn, each chapter's lessons in a fresh order, so its 12
     /// questions reach every chapter and, taken again, other lessons.
-    @MainActor static func testSpecs(_ t: Piece, using rng: inout SeededRandom) -> [LessonSpec] {
+    static func testSpecs(_ t: Piece, using rng: inout SeededRandom) -> [LessonSpec] {
         // the daily review: a lesson for each of its problems, weighted to the weak and the old (Core/Review.swift)
         if t.id == review.id {
             return Review.pick(openLessons, checks: Progress.shared.checks, now: Progress.shared.now, using: &rng).compactMap { Lessons.spec($0) }
         }
-        guard t.id == "test-grade" else { return pieces.filter { $0.chapter == t.chapter }.compactMap(\.spec) }
-        let chapters = groups.map { $0.lessons.compactMap { Lessons.spec($0.id) }.shuffled(using: &rng) }.filter { !$0.isEmpty }
+        let m = Curriculum.grade(of: t.id).map(of) ?? current
+        guard isGradeTest(t.id) else { return m.pieces.filter { $0.group == t.group }.compactMap(\.spec) }
+        let chapters = m.groups.map { $0.lessons.compactMap { Lessons.spec($0.id) }.shuffled(using: &rng) }.filter { !$0.isEmpty }
         let rounds = (LessonPlan.test + chapters.count - 1) / max(1, chapters.count)
         return (0..<rounds).flatMap { k in chapters.map { $0[k % $0.count] } }
     }
-    /// Free without the plan (G 30 Oct, the money plan): the first chapter of the grade, with its test. Everything else
+    /// Free without the plan (G 30 Oct, the money plan): the first chapter of each grade, with its test. Everything else
     /// waits for All grades (Store). The daily review is never locked; it asks only from lessons that are open.
-    static var freeChapter: Chapter { groups[0].chapter }
-    @MainActor static func locked(_ id: String) -> Bool {
+    static func locked(_ id: String) -> Bool {
         if Store.shared.hasAllGrades || id == review.id { return false }
-        if id == "test-grade" { return true }
-        guard let c = all.first(where: { $0.id == id })?.chapter else { return false }
-        return c != freeChapter
+        if isGradeTest(id) { return true }
+        guard let p = piece(id) else { return false }
+        let m = Curriculum.grade(of: id).map(of) ?? current
+        return p.group != m.groups.first?.key
     }
     /// The grade's lessons a family can open now (all of them with the plan).
-    @MainActor static var openLessons: [String] { gradeLessons.filter { !locked($0) } }
+    static var openLessons: [String] { gradeLessons.filter { !locked($0) } }
 
     /// The daily review's page (G's plan, step 7): a page of problems like a test, where Me is on the paper (it opens from
     /// Me, so it draws in where Me was). Not on the map, not counted, never a lesson.
     static let review = Piece(id: "review", name: "Daily review", chapter: .whole, at: MePage.corner)
     /// The chapter a lesson is in, for a page that mixes them (the review gives each problem its own lesson's colour).
-    static func chapter(of id: String) -> Chapter? { pieces.first { $0.id == id }?.chapter }
-    /// The lessons that open: every one with a spec (all 17).
-    static let paperLessons: Set<String> = Set(pieces.map(\.id).filter { Lessons.spec($0) != nil })
+    static func chapter(of id: String) -> Chapter? { piece(id)?.chapter }
+    /// A chapter's title by its key ("Big numbers").
+    static func title(of group: String) -> String { groups.first { $0.key == group }?.title ?? "" }
+    /// The lessons that open: every one with a spec.
+    static var paperLessons: Set<String> { current.paperLessons }
 
     /// Today's pick, by the web's rules (Core/Mastery.swift): a lesson due back for its recheck first, then what to go
     /// over, then what builds on the lesson just learned, then the first one ready. Only lessons that open are picked.
-    @MainActor static var today: Piece? {
+    static var today: Piece? {
         let open = pieces.filter(\.opens)
         let pick = Mastery.upNext(open.map(\.id), depends: { Lessons.spec($0)?.depends ?? [] },
-                                  checks: Progress.shared.checks, grade: 5, now: Progress.shared.now)
+                                  checks: Progress.shared.checks, grade: grade, now: Progress.shared.now)
         return open.first { $0.id == pick?.id }
     }
-    /// The grade's lessons (the specs' 17), for "5 of 17 learned": the same lessons the chapters count.
-    static let gradeLessons = pieces.map(\.id)
+    /// The grade's lessons a child can pass (the built ones; 5th grade's 21), for "5 of 21 passed": the same lessons
+    /// the chapters count.
+    static var gradeLessons: [String] { current.gradeLessons }
     /// Every group, from its title to its last row's name and Start, with a cell to spare: what the overview shows.
     /// Worked out from the layout, so it stays right when groups move.
-    static let bounds: Rect = {
-        let x0 = groups.map(\.origin.x).min()!, y0 = groups.map(\.origin.y).min()!
-        let x1 = all.map { $0.at.x + Piece.size.width }.max()!, y1 = all.map { $0.at.y + Piece.size.height + Paper.unit }.max()!
-        let m = Paper.cell
-        return Rect(x: x0 - m, y: y0 - m, width: x1 - x0 + 2 * m, height: y1 - y0 + 2 * m)
-    }()
+    static var bounds: Rect { current.bounds }
     /// What's on the map now (G 26 Oct: the Lessons button framed every place a test might one day go, so it sat far out
     /// with the lessons in a corner): the groups' titles, the pieces shown with their names, and "Start here" when it's
     /// there, a cell to spare. The overview frames this, as a lesson frames what it shows.
-    @MainActor static var shownBounds: Rect {
+    static var shownBounds: Rect {
         let x0 = groups.map(\.origin.x).min()!, y0 = groups.map(\.origin.y).min()!
         // a piece and the ink of its name and its line under it (3 squares), not the whole block kept for them, so the
         // map fills the screen as a lesson's page does (G 26 Oct)
@@ -211,6 +267,7 @@ enum Map {
         return Rect(x: r.x - m, y: r.y - m, width: r.width + 2 * m, height: r.height + 2 * m)
     }
 }
+
 
 /// A page of its own on the paper instead of the map (G 20 Oct): Me (the child's own page, MePage) or the grown-ups'
 /// page (GrownUpPage), each on the sheet left of the map; or setting up (SetupPage, G 26 Oct), above it.
@@ -458,8 +515,23 @@ final class PaperModel {
     /// map is the Lessons button's, its words too small to read). The other chapters are a pan or a pinch away.
     func frameGroup(duration: Double = CameraTiming.fly) {
         guard let today = Map.today ?? Map.pieces.first(where: { $0.state == .now }),
-              let i = Map.groups.firstIndex(where: { $0.chapter == today.chapter }) else { fly(to: overview, duration: duration); return }
+              let i = Map.groups.firstIndex(where: { $0.key == today.group }) else { fly(to: overview, duration: duration); return }
         fly(to: chapterView(i, showing: today), duration: duration)
+    }
+
+    /// A grade with lessons chosen (the grade row, Me, Settings; G 3 Nov): the child's grade is it from now on, and the
+    /// map is that grade's, drawn in afresh and framed on its chapter up next. Each grade keeps its own progress.
+    func chooseGrade(_ g: Int) {
+        guard Grades.isLive(g) else { return }
+        var p = AppSettings.profile
+        guard p.grade != g else { return }
+        p.grade = g
+        AppSettings.set(profile: p, saving: !shotMode)
+        selected = nil
+        guard place == nil, bars == nil else { return }
+        drawFrom = nil
+        drawnAt = instant ? PaperClock.now - 100 : PaperClock.now
+        frameGroup(duration: CameraTiming.glide)
     }
 
     /// The crosshair: glide to the lesson that's up next.
@@ -475,11 +547,11 @@ final class PaperModel {
     /// at the sides), the next chapter coming in under it. A chapter too tall for the room above the bar shows from its
     /// title down, or, when `piece` is further down, down to it; the rest is a scroll away.
     func chapterView(_ i: Int, showing piece: Piece? = nil) -> PaperCamera {
-        let g = Map.groups[i], all = Map.shown.filter { $0.chapter == g.chapter && $0.id != "test-grade" }
+        let g = Map.groups[i], all = Map.shown.filter { $0.group == g.key && !Map.isGradeTest($0.id) }
         var r = all.map { Rect(x: $0.at.x, y: $0.at.y, width: Piece.size.width, height: Piece.size.height + Paper.unit) }
             .reduce(Rect(x: g.origin.x, y: g.origin.y, width: 1, height: 1)) { $0.union($1) }
         // a fresh map: "Start here, Mia." beside the first lesson is in view too, a square to spare
-        if StartHere.shows, let p = StartHere.piece, p.chapter == g.chapter {
+        if StartHere.shows, let p = StartHere.piece, p.group == g.key {
             let b = StartHere.bounds(for: p)
             r = r.union(Rect(x: b.x - Paper.cell, y: b.y, width: b.width + Paper.cell, height: b.height))
         }
@@ -694,7 +766,7 @@ final class PaperModel {
             case .review?: open(Map.review, from: .me)
             case .shelf(let k)?: openShelf(k)
             case .back?: openShelf(nil)
-            case .grade(let g)?: meGradeSaid = g
+            case .grade(let g)?: meGradeSaid = g; chooseGrade(g)
             case nil: break
             }
         case .grownUp: grownUp.tap(p, model: self)

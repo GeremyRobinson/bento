@@ -299,14 +299,14 @@ struct Toolbar: View {
         .frame(width: 300)
     }
 
-    /// The grades, K to 12, as blocks: 5th live, the others dead for now (no maps for them yet). A dead one only says
-    /// it's coming.
+    /// The grades, K to 12, as blocks: 4th and 5th live (tapping one shows its map), the others dead for now (no maps
+    /// for them yet). A dead one only says it's coming.
     private var gradeRow: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
                 ForEach(Grades.all, id: \.self) { g in
-                    GradeBlock(grade: g) {
-                        if Grades.isLive(g) { ui.open = nil; ui.gradeSaid = nil } else { ui.gradeSaid = Grades.picked(g) }
+                    GradeBlock(grade: g, chosen: g == AppSettings.profile.grade) {
+                        if Grades.isLive(g) { ui.open = nil; ui.gradeSaid = nil; model.chooseGrade(g) } else { ui.gradeSaid = Grades.picked(g) }
                     }
                 }
             }
@@ -642,21 +642,23 @@ struct StepSquares: View {
 /// A grade's block in the grade row: the live grade lit, the others dashed (dead, "coming soon").
 struct GradeBlock: View {
     let grade: Int
+    /// The child's grade: lit. Another grade with lessons is plain; the rest dashed.
+    var chosen = false
     let action: () -> Void
     var body: some View {
         let live = Grades.isLive(grade)
         Button(action: action) {
-            Text(Grades.short(grade)).font(Typeface.font(15, live ? .bold : .medium)).monospacedDigit()
+            Text(Grades.short(grade)).font(Typeface.font(15, chosen ? .bold : .medium)).monospacedDigit()
                 .frame(width: 36, height: 36)
-                .background(live ? Ink.litFill : .clear)
-                .overlay(Rectangle().strokeBorder(live ? Ink.lit : Ink.ink3, style: StrokeStyle(lineWidth: 1.5, dash: live ? [] : [4, 3])))
-                .foregroundStyle(live ? Ink.lit : Ink.ink3)
+                .background(chosen ? Ink.litFill : .clear)
+                .overlay(Rectangle().strokeBorder(chosen ? Ink.lit : live ? Ink.ink : Ink.ink3, style: StrokeStyle(lineWidth: 1.5, dash: live ? [] : [4, 3])))
+                .foregroundStyle(chosen ? Ink.lit : live ? Ink.ink : Ink.ink3)
                 .contentShape(Rectangle())
         }
         .buttonStyle(Press())
         .accessibilityLabel(Grades.name(grade))
         .accessibilityValue(live ? "" : "Coming soon")
-        .accessibilityAddTraits(live ? .isSelected : [])
+        .accessibilityAddTraits(chosen ? .isSelected : [])
     }
 }
 

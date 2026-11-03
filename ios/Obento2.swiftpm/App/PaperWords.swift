@@ -145,7 +145,7 @@ extension Rig {
         let d = mapDrawer ?? { let d = SketchDrawer(); words.addChild(d.root); mapDrawer = d; return d }()
         // a lesson comes due on its own, as time passes: that changes its tab too
         let due = Map.pieces.filter(\.goOver).map(\.id).joined(separator: ",")
-        let key = "\(Progress.shared.checks.count) \(Progress.shared.learned.count) \(due) \(Progress.shared.tests) \(isDark) \(PageStore.version) \(model.selected?.id ?? "") \(model.drawnAt) \(AppSettings.name) \(AppSettings.needsSetup) \(Store.shared.hasAllGrades)"
+        let key = "\(Map.grade) \(Progress.shared.checks.count) \(Progress.shared.learned.count) \(due) \(Progress.shared.tests) \(isDark) \(PageStore.version) \(model.selected?.id ?? "") \(model.drawnAt) \(AppSettings.name) \(AppSettings.needsSetup) \(Store.shared.hasAllGrades)"
         if key != d.key, model.mapLeftAt == nil {
             d.key = key
             d.build(mapSketch(model, dark: isDark), rig: self, chapter: Chapter.whole.hex, dark: isDark, origin: .zero, from: t, now: t)
@@ -160,6 +160,8 @@ extension Rig {
     /// chapter's colour) when it's news or something to do; grey while it waits.
     @MainActor static func line(_ p: Piece) -> (text: String, lit: Bool)? {
         let saved = PageStore.load(p.id)
+        // ahead of its lesson (G 3 Nov): nothing to say until it's chosen ("Coming soon" then, as its tab)
+        if p.coming { return nil }
         // waiting for the plan: said once, quietly (what it got to stays saved, and shows again with the plan)
         if p.locked { return ("Locked", false) }
         guard p.isTest else {
@@ -170,7 +172,7 @@ extension Rig {
         if let s = saved, !s.recorded { return ("\(s.solved) of \(s.problems.count) done", true) }
         if let r = Progress.shared.tests[p.id] { return (r.passed ? "Passed · \(r.right) of \(r.of)" : "Take it again", true) }
         if p.opens { return ("\(LessonPlan.test) problems", true) }
-        return (p.id == "test-grade" ? "Pass the chapter tests first" : "Pass the lessons first", false)
+        return (Map.isGradeTest(p.id) ? "Pass the chapter tests first" : "Pass the lessons first", false)
     }
 
     private func mapSketch(_ model: PaperModel, dark: Bool) -> Sketch {
@@ -184,11 +186,11 @@ extension Rig {
         for g in Map.groups {
             let o = g.origin, done = g.lessons.filter { Progress.shared.learned.contains($0.id) }.count
             s.startAt = at(Point(o.x + 150, o.y + 100))
-            s.polygon("dot\(g.chapter)", Self.circle(CGPoint(x: o.x + 5, y: o.y + 27), 5), .hex(g.chapter.hex, g.chapter.darkHex))
-            s.label("title\(g.chapter)", g.chapter.title, .chapter, at: CGPoint(x: o.x + 20, y: o.y + 40))
-            let w = PaperText.width(g.chapter.title, PaperText.font(Sketch.Words.chapter.size, Sketch.Words.chapter.weight))
+            s.polygon("dot\(g.key)", Self.circle(CGPoint(x: o.x + 5, y: o.y + 27), 5), .hex(g.chapter.hex, g.chapter.darkHex))
+            s.label("title\(g.key)", g.title, .chapter, at: CGPoint(x: o.x + 20, y: o.y + 40))
+            let w = PaperText.width(g.title, PaperText.font(Sketch.Words.chapter.size, Sketch.Words.chapter.weight))
             if Fresh.showsCount(learned: done) {
-                s.label("count\(g.chapter)", "\(done) of \(g.lessons.count)", .count, at: CGPoint(x: o.x + 32 + w, y: o.y + 37), slot: "count\(g.chapter)")
+                s.label("count\(g.key)", "\(done) of \(g.lessons.count)", .count, at: CGPoint(x: o.x + 32 + w, y: o.y + 37), slot: "count\(g.key)")
             }
         }
         for p in shown {
@@ -196,7 +198,8 @@ extension Rig {
             let hex = p.chapter.hex, darkHex = p.chapter.darkHex, chapter = Sketch.Colour.hex(hex, darkHex)
             s.startAt = at(p.frame.mid)
             // its name under it; how far it got (or for a test how it went or what it waits for) is its tab (G 3 Nov)
-            s.label(id + "name", p.name, .label, at: CGPoint(x: r.minX, y: r.maxY + 30), anchor: UnitPoint(x: 0, y: 0.5))
+            // a lesson still to come: its name quiet, as its frame is
+            s.label(id + "name", p.name, p.coming ? .label.colour(.ink3) : .label, at: CGPoint(x: r.minX, y: r.maxY + 30), anchor: UnitPoint(x: 0, y: 0.5))
             let line = Self.line(p)
             if p.isTest {
                 // a test's badge (G 18 Oct): a round seal on the frame's top-left corner, how many problems it has (a tick
@@ -208,7 +211,14 @@ extension Rig {
                 if passed { s.overLine(id + "tick", [CGPoint(x: corner.x - 8, y: corner.y), CGPoint(x: corner.x - 2.5, y: corner.y + 6), CGPoint(x: corner.x + 9, y: corner.y - 6.5)], mark, width: Sketch.stroke) }
                 else { s.text(id + "n", "\(LessonPlan.test)", at: corner, size: 15, weight: .bold, mark) }
             }
-            if model.selected?.id == p.id && p.locked {
+            if model.selected?.id == p.id && p.coming {
+                // chosen, but its lesson isn't built yet: it says so, quietly, and nothing opens
+                s.startAt = nil
+                let soon = "Coming soon", w = PaperText.width(soon, PaperText.font(Sketch.Words.tab.size, Sketch.Words.tab.weight)) + 24
+                s.tab(id, frame: r, soon, width: (w / Paper.cell).rounded(.up) * Paper.cell, colour: .ink3)
+            } else if p.coming {
+                // a lesson or test still to come: no tab
+            } else if model.selected?.id == p.id && p.locked {
                 // chosen, but waiting for the plan: no Start, only who to ask (no price, nothing to buy, G 30 Oct)
                 s.startAt = nil
                 let ask = "Ask a grown-up", w = PaperText.width(ask, PaperText.font(Sketch.Words.tab.size, Sketch.Words.tab.weight)) + 24
