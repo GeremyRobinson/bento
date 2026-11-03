@@ -198,7 +198,7 @@ const keys = document.getElementById("keys");
 function openKeys() { keys.value = (lesson.typed || "").replace("−", "-"); keys.focus({ preventScroll: true }); }
 keys.addEventListener("input", () => {
   const raw = keys.value.replace(/[−–]/g, "-"), neg = raw.trim().startsWith("-");
-  lesson.type(((neg ? "−" : "") + raw.replace(/[^0-9.]/g, "")).slice(0, 5)); render();
+  lesson.type(((neg ? "−" : "") + raw.replace(/[^0-9.]/g, "")).slice(0, (lesson.cap && lesson.cap()) || 5)); render();
 });
 keys.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); act("check"); } });
 
@@ -283,7 +283,18 @@ function tokW(t) {
   return Math.ceil(tw(t.s, t.cls || "maths") + 0.4);
 }
 const listW = l => l.reduce((s, t) => s + tokW(t), 0);
+// a box grows to fit what's typed in it (chapter 4); its cap, the answer's length + 2, is kept for the keys
+function growBoxes(L, toks) {
+  return toks.map(t => {
+    if (t.f) return { ...t, f: t.f.map(r => growBoxes(L, r)) };
+    if (!t.box) return t;
+    if (t.cap && L.caps) L.caps[t.box] = t.cap;
+    const v = (L.vals && L.vals[t.box]) || "";
+    return { ...t, cells: Math.max(t.cells, Math.ceil((tw(v) + 0.6) / 2)) };
+  });
+}
 function mrow(L, k, x, ry, toks) {
+  toks = growBoxes(L, toks);
   for (const [i, t] of toks.entries()) {
     const w = tokW(t), kk = `${k}${i}`;
     if (t.box) dbox(`${kk}${t.box}`, x, ry - 1, t.cells, L.vals[t.box] || "", boxState(L, t.box), `box:${t.box}`);
@@ -569,7 +580,15 @@ function textBox(s, x, y, cls, anchor) { const w = tw(s, cls), h = PX[cls] / SQ 
 // does a box touch anything drawn so far: a word, a line, a path's straight runs, a filled shape?
 function boxHits(bx) {
   const inB = (x, y) => x > bx[0] && x < bx[2] && y > bx[1] && y < bx[3];
-  const segHit = (x1, y1, x2, y2) => { for (let j = 0; j <= 16; j++) if (inB(x1 + (x2 - x1) * j / 16, y1 + (y2 - y1) * j / 16)) return true; return false; };
+  // a segment against the box, exactly (clipped to it), so a long axis is never stepped over
+  const segHit = (x1, y1, x2, y2) => {
+    let t0 = 0, t1 = 1; const dx = x2 - x1, dy = y2 - y1;
+    for (const [p, q] of [[-dx, x1 - bx[0]], [dx, bx[2] - x1], [-dy, y1 - bx[1]], [dy, bx[3] - y1]]) {
+      if (Math.abs(p) < 1e-12) { if (q < 0) return false; continue; }
+      const r = q / p; if (p < 0) { if (r > t1) return false; if (r > t0) t0 = r; } else { if (r < t0) return false; if (r < t1) t1 = r; }
+    }
+    return true;
+  };
   const over = (p, q, r, t) => p < bx[2] && r > bx[0] && q < bx[3] && t > bx[1];
   for (const it of items) {
     const a = it.a;
@@ -604,7 +623,7 @@ function flushNames() {
 function placeName(k, s, x, y, dx, dy, cls = "say", c, o = {}) {
   const L0 = Math.hypot(dx, dy) || 1, base = Math.atan2(dy / L0, dx / L0), d = o.d ?? 0.9, h = CAPH[cls] / 2 + 0.2;  // eslint-disable-line
   let best = null;
-  const tries = []; for (const dd of o.fixed ? [d] : [d, d + 1.2, d + 2.4, d + 4, d + 6]) for (const turn of o.fixed ? [0] : Math.abs(Math.sin(2 * base)) < 0.05 ? [45, -45, 0, 90, -90, 135, -135, 180] : [0, 45, -45, 90, -90, 135, -135, 180]) tries.push([turn, dd]);   // along an axis: off it first
+  const tries = []; for (const dd of o.fixed ? [d] : [d, d + 1.2, d + 2.4, d + 4, d + 6, d + 8, d + 10, d + 12]) for (const turn of o.fixed ? [0] : Math.abs(Math.sin(2 * base)) < 0.05 ? [45, -45, 0, 90, -90, 135, -135, 180, 22.5, -22.5, 67.5, -67.5, 112.5, -112.5, 157.5, -157.5] : [0, 45, -45, 90, -90, 135, -135, 180, 22.5, -22.5, 67.5, -67.5, 112.5, -112.5, 157.5, -157.5]) tries.push([turn, dd]);   // along an axis: off it first
   for (const [turn, dd] of tries) {
     const t = base + turn * D2R, ex = Math.cos(t), ey = Math.sin(t), d = dd;
     const anchor = ex > 0.38 ? "start" : ex < -0.38 ? "end" : "middle";
@@ -698,7 +717,8 @@ function finish(L, say, sub) {
 // what every chapter 4 lesson shares: stages, a grab within reach of the hand, Check
 function base(o) {
   const L = withBoxes(Object.assign({
-    msg: null, verdict: null, typing: false, grabbed: false, moved: false, _fr: { x: -1, y: -1, w: 60, h: 40 },
+    msg: null, verdict: null, typing: false, grabbed: false, moved: false, _fr: { x: -1, y: -1, w: 60, h: 40 }, caps: {},
+    cap() { return this.caps[this.active] || 5; },
     progress() { return stageIndex(this.stages, this.stage); },
     frame() { return this._fr; },
     go(s) {
@@ -716,7 +736,7 @@ function base(o) {
 }
 // a typed box's number, or null
 const val = (L, id) => nv(L.vals[id]);
-const ans = (L, id, v, done) => (done ? [{ s: sgnT(v), c: CH }] : [{ box: id, cells: Math.max(2, cellsFor(sgnT(v))) }]);
+const ans = (L, id, v, done) => (done ? [{ s: sgnT(v), c: CH }] : [{ box: id, cells: Math.max(2, cellsFor(sgnT(v))), cap: sgnT(v).length + 2 }]);
 // the record's rows: the readout row, then a line of working every 4 rows
 const ROW = { scale: 6.5, ro: 9, r0: 13 };
 // the record's rows start level with the picture's top
@@ -991,6 +1011,7 @@ function dAdd(Q, kf) {
       } else if (st === "stretch") {
         if (this.c === Q.c) return this.next();
         if (mv) this.msg = sgn(this.c) !== sgn(Q.c) ? `${sgnT(Q.c)}u turns as it stretches: pull it through the tail, the other way.` : `Stretch it to ${sgnT(Q.c)}u: ${Math.abs(Q.c)} u's, tip to tail.`;
+        this.c = 1;                                                     // a miss springs back to u
       } else if (st === "across") {
         const w = s[0];
         if (this.pu === w) return this.next();
@@ -1048,8 +1069,8 @@ function dAdd(Q, kf) {
         if (si >= 1 && pv) line(`p2${si > 1}`, Bp.x, A.y, Bp.x, G.Y(Q.A[1] + pv), { c: si > 1 ? "var(--ink)" : CH, live: si === 1 });
         if (si >= 2) {
           corner("cn", Bp.x, A.y, -sgn(w[0]), 0, 0, -sgn(w[1]));
-          text(`la${w[0]}`, String(Math.abs(w[0])), G.X(Q.A[0] + w[0] / 2), A.y + sgn(w[1]) * 0.9, "small");
-          text(`lb${w[1]}`, String(Math.abs(w[1])), Bp.x + sgn(w[0]) * 0.6, G.Y(Q.A[1] + w[1] / 2), "small", { anchor: w[0] > 0 ? "start" : "end" });
+          nameAt(`la${w[0]}`, String(Math.abs(w[0])), G.X(Q.A[0] + w[0] / 2), A.y, 0, sgn(w[1]), "small", null, { d: 0.3 });
+          nameAt(`lb${w[1]}`, String(Math.abs(w[1])), Bp.x, G.Y(Q.A[1] + w[1] / 2), sgn(w[0]), 0, "small", null, { d: 0.5 });
           arrow("ab", A.x, A.y, Bp.x, Bp.y);
           nameAt("abn", "u", (A.x + Bp.x) / 2, (A.y + Bp.y) / 2, -sgn(w[0]) * 0.7, -sgn(w[1]) * 0.7, "say", CH, { d: 0.8 });
         }
@@ -1345,8 +1366,8 @@ function dDir(Q, kf) {
             if (dn) row("wv", [{ s: "v =" }, { s: vt(...Q.v), c: CH }], true);
           } else {
             const xs = fmtN(Q.v[0], 1), ys = fmtN(Q.v[1], 1);
-            row("wx", [{ s: `x = ${Q.L} cos ${Q.t}° =` }, ...(dn ? [{ s: xs, c: CH }] : [{ box: "x", cells: 2 }])], dn);
-            row("wy", [{ s: `y = ${Q.L} sin ${Q.t}° =` }, ...(dn ? [{ s: ys, c: CH }] : [{ box: "y", cells: 2 }])], dn);
+            row("wx", [{ s: `x = ${Q.L} cos ${Q.t}° =` }, ...(dn ? [{ s: xs, c: CH }] : [{ box: "x", cells: 2, cap: xs.length + 2 }])], dn);
+            row("wy", [{ s: `y = ${Q.L} sin ${Q.t}° =` }, ...(dn ? [{ s: ys, c: CH }] : [{ box: "y", cells: 2, cap: ys.length + 2 }])], dn);
           }
         }
       } else {
@@ -1522,9 +1543,10 @@ function dDot(Q, kf) {
       if (zeroSt) {
         const P1 = a * vv[0], P2 = b * vv[1];
         if (P1) rectF("z1", RX, RY, Math.abs(a), Math.abs(vv[0]), P1 < 0, true);
-        if (P2) rectF("z2", R2X, RY, Math.abs(b), Math.abs(vv[1]), P2 < 0, true);
+        const same = Math.abs(P1) === Math.abs(P2), w2 = same ? Math.abs(a) : Math.abs(b), h2 = same ? Math.abs(vv[0]) : Math.abs(vv[1]);   // equal counts: the same shape
+        if (P2) rectF("z2", R2X, RY, w2, h2, P2 < 0, true);
         if (P1) text("z1n", sgnT(P1), RX + Math.abs(a) / 2, RY + Math.abs(vv[0]) + 1.2, "small", { live: true });
-        if (P2) text("z2n", sgnT(P2), R2X + Math.abs(b) / 2, RY + Math.abs(vv[1]) + 1.2, "small", { live: true });
+        if (P2) text("z2n", sgnT(P2), R2X + w2 / 2, RY + h2 + 1.2, "small", { live: true });
       } else if (!past("slide")) {
         rectF("r1", RX, RY, this.r1[0], this.r1[1], st !== "x" && X < 0, true);
         if (si >= 1) rectF("r2", this.at2[0], this.at2[1], this.r2[0], this.r2[1], st !== "y" && Y < 0, true);
@@ -1566,7 +1588,7 @@ function dDot(Q, kf) {
       if (K === "zero" && st === "done") row("z", [{ s: `${vt(a, b)} · ${vt(...this.vz)} =` }, { s: "0", c: CH }], true);
       if (K === "angle" && si >= stages.indexOf("cos")) {
         const cd = past("cos");
-        row("c", [{ s: `cos θ = ${D} ÷ (${Q.m1} × ${Q.m2}) =` }, ...(cd ? [{ s: fmtN(Q.cos, 2), c: CH }] : [{ box: "cs", cells: 3 }])], cd);
+        row("c", [{ s: `cos θ = ${D} ÷ (${Q.m1} × ${Q.m2}) =` }, ...(cd ? [{ s: fmtN(Q.cos, 2), c: CH }] : [{ box: "cs", cells: 3, cap: fmtN(Q.cos, 2).length + 2 }])], cd);
         if (st === "done") row("t", [{ s: "θ ≈" }, { s: `${Q.th}°`, c: CH }], true);
       }
       if (this.typing) block("check", RX, y - 1, 7, "Check", "check");
