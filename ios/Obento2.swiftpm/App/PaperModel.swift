@@ -64,16 +64,23 @@ struct ChapterGroup {
     /// its name down. Groups are two blocks apart. Start is the frame's tag, not a block under it (G 18 Oct).
     static let pitch = Size(4 * Paper.unit, 3 * Paper.unit)
 
+    /// Whether a full last row may end with the test as one more card: in the right-hand column only (G 3 Nov, two
+    /// blocks between the columns: a 4th card in the left column pushed the right one out, and the test hides until a
+    /// lesson in its chapter is learned, so its spot read as a wide empty gap).
+    var testAtRowEnd = false
+
     /// Where slot i's frame sits: lessons fill rows of `columns`; the chapter's test (slot `lessons.count`) takes the
-    /// next slot, or, when the last row is full, sits at that row's end as one more card (G 3 Nov: a test kept a whole
-    /// empty row for itself until it opened, which left holes in the map).
+    /// next slot, or, when the last row is full and the group may, sits at that row's end as one more card.
     func slot(_ i: Int) -> Point {
         let n = lessons.count
-        let (row, col) = i == n && n > 0 && n % columns == 0 ? ((n - 1) / columns, columns) : (i / columns, i % columns)
+        let (row, col) = i == n && testAtRowEnd && n > 0 && n % columns == 0 ? ((n - 1) / columns, columns) : (i / columns, i % columns)
         return Point(origin.x + Double(col) * Self.pitch.width, origin.y + Paper.unit + Double(row) * Self.pitch.height)
     }
-    /// Lesson rows (the test never adds one).
-    var rows: Int { max(1, (lessons.count + columns - 1) / columns) }
+    /// Rows, the test's slot included (a test at the row's end adds none).
+    var rows: Int {
+        let slots = testAtRowEnd && lessons.count % columns == 0 ? lessons.count : lessons.count + 1
+        return max(1, (slots + columns - 1) / columns)
+    }
     /// From the title's row to the end of the last row's names.
     var height: Double { Paper.unit + Double(rows) * Self.pitch.height }
 
@@ -84,12 +91,13 @@ struct ChapterGroup {
     /// The map lays itself out (G 3 Nov, "two packed columns"): chapters in order, each under the one before in
     /// whichever column is shorter, two blocks apart, so the map has no holes whatever size the chapters are.
     static func packed(_ chapters: [(Chapter, [(id: String, name: String)])], columns: Int = 3) -> [ChapterGroup] {
-        // a column is a row of lessons plus the test's card at its end, then two blocks to the next column
-        let colX = [0, Double(columns + 1) * pitch.width - Paper.unit + 2 * Paper.unit]
+        // the left column's lessons, then two blocks to the right column
+        let colX = [0, Double(columns) * pitch.width - Paper.unit + 2 * Paper.unit]
         var y = [0.0, 0.0]
         return chapters.map { chapter, lessons in
             let c = y[1] < y[0] ? 1 : 0
-            let g = ChapterGroup(chapter: chapter, origin: Point(colX[c], y[c]), columns: columns, lessons: lessons)
+            var g = ChapterGroup(chapter: chapter, origin: Point(colX[c], y[c]), columns: columns, lessons: lessons)
+            g.testAtRowEnd = c == 1
             y[c] += g.height + 2 * Paper.unit
             return g
         }
