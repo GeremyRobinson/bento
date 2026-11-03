@@ -493,6 +493,8 @@ public enum Lessons {
         RoundDecimals.spec, AddDecimals.spec, MultiplyDecimals.spec, DivideByDecimal.spec,
         PointsOnGrid.spec, SortingShapes.spec,
         CompareDecimals.spec, FractionsAsDivision.spec,
+        // 4th grade, Big numbers (3 Nov 2026)
+        TensHundreds.spec, ReadWriteBig.spec, CompareBig.spec, PlaceValueRound.spec, AddSubBig.spec,
     ]
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }

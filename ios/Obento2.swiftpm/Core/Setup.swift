@@ -54,13 +54,13 @@ public enum Reminder: String, Codable, CaseIterable, Sendable {
     }
 }
 
-/// Kindergarten to 12th grade, as the grade blocks name them. Only 5th grade has lessons; the others are dead blocks
-/// that say they're coming soon (no maps for them yet).
+/// Kindergarten to 12th grade, as the grade blocks name them. A grade with lessons built is live (4th and 5th, 3 Nov);
+/// the others are dead blocks that say they're coming soon (Curriculum has no map for them yet).
 public enum Grades {
     public static let all = Array(0...12)
-    /// The one grade with lessons.
+    /// The grade a new install starts on.
     public static let live = 5
-    public static func isLive(_ g: Int) -> Bool { g == live }
+    public static func isLive(_ g: Int) -> Bool { Curriculum.isLive(g) }
 
     /// On its block: K, 1, 2 … 12.
     public static func short(_ g: Int) -> String { g == 0 ? "K" : "\(g)" }

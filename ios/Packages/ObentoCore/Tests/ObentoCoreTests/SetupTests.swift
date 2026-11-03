@@ -53,7 +53,7 @@ final class SetupTests: XCTestCase {
     func testGrades() {
         XCTAssertEqual(Grades.all.count, 13)
         XCTAssertEqual(Grades.all.map(Grades.short), ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"])
-        XCTAssertEqual(Grades.all.filter(Grades.isLive), [5])
+        XCTAssertEqual(Grades.all.filter(Grades.isLive), [4, 5])
         XCTAssertEqual(Grades.name(0), "Kindergarten")
         XCTAssertEqual(Grades.name(1), "1st grade")
         XCTAssertEqual(Grades.name(2), "2nd grade")
