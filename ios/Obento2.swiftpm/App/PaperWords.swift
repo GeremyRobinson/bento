@@ -195,11 +195,9 @@ extension Rig {
             let r = CGRect(x: p.at.x, y: p.at.y, width: Piece.size.width, height: Piece.size.height), id = p.id
             let hex = p.chapter.hex, darkHex = p.chapter.darkHex, chapter = Sketch.Colour.hex(hex, darkHex)
             s.startAt = at(p.frame.mid)
-            // its name, and under it how far it got, or for a test how it went or what it waits for
+            // its name under it; how far it got (or for a test how it went or what it waits for) is its tab (G 3 Nov)
             s.label(id + "name", p.name, .label, at: CGPoint(x: r.minX, y: r.maxY + 30), anchor: UnitPoint(x: 0, y: 0.5))
-            if let line = Self.line(p) {
-                s.label(id + "line", line.text, Sketch.Words(size: Sketch.small, weight: .medium, colour: line.lit ? chapter : .ink3), at: CGPoint(x: r.minX, y: r.maxY + 50), anchor: UnitPoint(x: 0, y: 0.5), slot: id + "line")
-            }
+            let line = Self.line(p)
             if p.isTest {
                 // a test's badge (G 18 Oct): a round seal on the frame's top-left corner, how many problems it has (a tick
                 // once passed); filled in the chapter's colour when it can be taken, an outline while it waits
@@ -209,7 +207,8 @@ extension Rig {
                 let mark: Sketch.Colour = ready ? .hex(0xFFFFFF, 0xFFFFFF) : .hex(Ink.mix(0xF3F2EF, hex, 0.7), Ink.mix(0x121211, darkHex, 0.7))
                 if passed { s.overLine(id + "tick", [CGPoint(x: corner.x - 8, y: corner.y), CGPoint(x: corner.x - 2.5, y: corner.y + 6), CGPoint(x: corner.x + 9, y: corner.y - 6.5)], mark, width: Sketch.stroke) }
                 else { s.text(id + "n", "\(LessonPlan.test)", at: corner, size: 15, weight: .bold, mark) }
-            } else if model.selected?.id == p.id && p.locked {
+            }
+            if model.selected?.id == p.id && p.locked {
                 // chosen, but waiting for the plan: no Start, only who to ask (no price, nothing to buy, G 30 Oct)
                 s.startAt = nil
                 let ask = "Ask a grown-up", w = PaperText.width(ask, PaperText.font(Sketch.Words.tab.size, Sketch.Words.tab.weight)) + 24
@@ -220,11 +219,20 @@ extension Rig {
                 s.startAt = nil
                 let word = p.goOver ? "Go over" : PageStore.load(p.id) == nil ? "Start" : "Continue"
                 s.tab(id, frame: r, word, width: p.start.width, arrow: true, colour: chapter)
+            } else if let line, !line.lit {
+                // waiting (a test before its lessons are passed, or locked): a faint tab
+                s.tab(id, frame: r, line.text, width: Sketch.tabWidth(line.text), colour: .hex(Ink.mix(0xF3F2EF, hex, 0.12), Ink.mix(0x121211, darkHex, 0.18)), ink: .ink3)
             } else if !Fresh.showsTabs(untouched: untouched) {
                 // nothing started yet: no tabs
             } else if p.goOver {
                 // learned, and its time to come back has come (or its recheck came back low): Go over, not Up next
                 s.tab(id, frame: r, "Go over", colour: chapter)
+            } else if let line, line.text.hasPrefix("Passed") {
+                // passed: a soft tab, so a map of finished lessons stays calm
+                s.tab(id, frame: r, line.text, width: Sketch.tabWidth(line.text), colour: .hex(Ink.mix(0xF3F2EF, hex, 0.2), Ink.mix(0x121211, darkHex, 0.3)), ink: chapter)
+            } else if let line {
+                // under way, or a test to take: where it stands, in the Up next tab's place (G 3 Nov)
+                s.tab(id, frame: r, line.text, width: Sketch.tabWidth(line.text), colour: chapter)
             } else if p.state == .now {
                 s.tab(id, frame: r, "Up next", colour: chapter)
             }

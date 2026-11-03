@@ -128,15 +128,19 @@ extension Sketch {
     /// A tab on a frame's top-right corner, in the chapter's colour ("Done", "Now", "Up next", "Start"), with an arrow
     /// when it's something to tap.
     /// `colour`: its chapter's (the map draws many chapters at once, so it says which).
-    mutating func tab(_ id: String, frame r: CGRect, _ word: String, width: Double = 80, arrow: Bool = false, colour: Colour = .chapter) {
-        let t = CGRect(x: r.maxX - width, y: r.minY - Paper.cell, width: width, height: Paper.cell)
+    mutating func tab(_ id: String, frame r: CGRect, _ word: String, width: Double = 80, arrow: Bool = false, colour: Colour = .chapter, ink: Colour? = nil) {
+        let t = CGRect(x: r.maxX - width, y: r.minY - Paper.cell, width: width, height: Paper.cell), ink = ink ?? Words.tab.colour
         fill("\(id)tab\(word)\(width)\(colour)", t, colour)
         if arrow {
-            text("\(id)tabw\(word)", word, at: CGPoint(x: t.minX + 12, y: t.midY), size: Words.tab.size, weight: Words.tab.weight, Words.tab.colour, anchor: UnitPoint(x: 0, y: 0.5), digits: false)
-            self.icon("\(id)taba", "arrow-right", in: CGRect(x: t.maxX - 26, y: t.midY - 8, width: 16, height: 16), Words.tab.colour)
+            text("\(id)tabw\(word)\(ink)", word, at: CGPoint(x: t.minX + 12, y: t.midY), size: Words.tab.size, weight: Words.tab.weight, ink, anchor: UnitPoint(x: 0, y: 0.5), digits: false)
+            self.icon("\(id)taba", "arrow-right", in: CGRect(x: t.maxX - 26, y: t.midY - 8, width: 16, height: 16), ink)
         } else {
-            text("\(id)tabw\(word)", word, at: CGPoint(x: t.midX, y: t.midY), size: Words.tab.size, weight: Words.tab.weight, Words.tab.colour, digits: false)
+            text("\(id)tabw\(word)\(ink)", word, at: CGPoint(x: t.midX, y: t.midY), size: Words.tab.size, weight: Words.tab.weight, ink, digits: false)
         }
+    }
+    /// A tab just wide enough for its words: whole squares, at least the Up next tab's 4.
+    static func tabWidth(_ word: String) -> Double {
+        max(80, ((PaperText.width(word, PaperText.font(Words.tab.size, Words.tab.weight)) + 24) / Paper.cell).rounded(.up) * Paper.cell)
     }
 
     /// A thumbnail's frame (a lesson on the map, a problem on its page): its outline in the chapter's colour, light
