@@ -1,0 +1,842 @@
+<title>7th Grade: Adding Negatives</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700&display=swap">
+<style>
+/* Layout: the whole screen is one sheet of graph paper seen through one camera; the floating pill at the bottom is
+   the only chrome. 1 square = 20 paper units, a strong line every 5 squares (a block).
+   Chapter 3, Adding negatives, has no colour of its own in grade7.md; it keeps chapter 1's blue, the colour of 6th
+   grade's negatives (grade6-ch4.html), whose stripes it uses: positive is solid, negative is the same blue striped. */
+:root {
+  --paper: #F3F1EC; --grid: #E2DED6; --grid-strong: #D3CEC4;
+  --ink: #1D1C1A; --ink2: #6E6A63; --ink3: #A39E95;
+  --chapter: #4F63D9; --tint: rgba(79, 99, 217, .22); --tint-strong: rgba(79, 99, 217, .42);
+  --right: #178A57; --wrong: #C8372D;
+  --pill: rgba(255, 255, 255, .94); --pill-line: #E4E0D8;
+  --round: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C;
+  --chapter: #8C9BFF; --tint: rgba(140, 155, 255, .22); --tint-strong: rgba(140, 155, 255, .42);
+  --right: #3CCF8E; --wrong: #FF6B5E;
+  --pill: rgba(40, 40, 37, .94); --pill-line: #3A3A36; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #1C1C1A; --grid: #2A2A27; --grid-strong: #363632;
+  --ink: #F1EEE8; --ink2: #A9A49B; --ink3: #77736C;
+  --chapter: #8C9BFF; --tint: rgba(140, 155, 255, .22); --tint-strong: rgba(140, 155, 255, .42);
+  --right: #3CCF8E; --wrong: #FF6B5E;
+  --pill: rgba(40, 40, 37, .94); --pill-line: #3A3A36; color-scheme: dark }
+html, body { height: 100%; margin: 0; }
+body { background: var(--paper); color: var(--ink); font-family: var(--round); overflow: hidden; touch-action: none;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+#paper { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+svg text { font-family: var(--round); font-variant-numeric: tabular-nums; }
+.say { font-size: 28px; font-weight: 600; fill: var(--ink); }
+.small { font-size: 20px; font-weight: 600; fill: var(--ink2); }
+.maths { font-size: 36px; font-weight: 600; fill: var(--ink); }
+
+/* drawing in: lines stroke on, words and fills fade in, one after another */
+.in-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .55s ease-out forwards; }
+.in-fade { opacity: 0; animation: fade .4s ease-out forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes fade { to { opacity: 1; } }
+/* a flipped arrow turns over like a card, round 0 */
+.flip-in { transform-box: view-box; animation: flipin .5s ease-out; }
+@keyframes flipin { from { transform: scaleX(-1); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .in-line, .in-fade, .flip-in { animation-duration: .01s; } }
+
+/* the one floating bar */
+#bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 999px; background: var(--pill);
+  border: 1px solid var(--pill-line); box-shadow: 0 6px 24px rgba(0,0,0,.08); max-width: calc(100vw - 32px);
+  font-family: var(--round); }
+#bar button { font: 600 17px var(--round); color: var(--ink); background: none; border: 0; padding: 10px 14px;
+  border-radius: 999px; cursor: pointer; white-space: nowrap; }
+#bar button:focus-visible { outline: 2px solid var(--chapter); outline-offset: 2px; }
+#bar select { font: 600 17px var(--round); color: var(--ink); background: none; border: 0; padding: 10px 26px 10px 14px;
+  border-radius: 999px; cursor: pointer; -webkit-appearance: none; appearance: none; max-width: 52vw; text-overflow: ellipsis;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink2) 50%), linear-gradient(135deg, var(--ink2) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%; background-size: 5px 5px; background-repeat: no-repeat; }
+#bar select:focus-visible { outline: 2px solid var(--chapter); outline-offset: 2px; }
+#bar .sep { width: 1px; align-self: stretch; background: var(--pill-line); margin: 4px 4px; }
+#bar .progress { display: flex; flex-direction: column; gap: 6px; padding: 0 10px; min-width: 150px; }
+#bar .progress span { font: 600 14px var(--round); color: var(--ink2); white-space: nowrap; }
+#bar .track { height: 4px; border-radius: 2px; background: var(--pill-line); overflow: hidden; }
+#bar .track i { display: block; height: 100%; background: var(--chapter); transition: width .4s ease; }
+/* the live readout of a hand move, big in the pill's middle while the finger is down */
+#bar #live { font: 600 22px var(--round); color: var(--chapter); padding: 0 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+#bar #live:empty, #bar #live:empty + .sep { display: none; }
+#keys { position: fixed; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; font-size: 16px; }
+</style>
+
+<svg id="paper" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-label="Graph paper lesson">
+  <defs>
+    <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
+      <path d="M20 0V100M40 0V100M60 0V100M80 0V100M0 20H100M0 40H100M0 60H100M0 80H100" stroke="var(--grid)" stroke-width="1" fill="none"/>
+      <path d="M0 0V100M0 0H100" stroke="var(--grid-strong)" stroke-width="1.5" fill="none"/>
+    </pattern>
+    <pattern id="stripes" width="20" height="20" patternUnits="userSpaceOnUse">
+      <rect width="20" height="20" fill="var(--tint)"/>
+      <path d="M-5 5L5 -5M0 20L20 0M15 25L25 15" stroke="var(--chapter)" stroke-width="1.5" opacity=".55"/>
+    </pattern>
+  </defs>
+  <g id="paperg">
+    <rect x="-20000" y="-20000" width="40000" height="40000" fill="url(#grid)"/>
+    <g id="scene"></g>
+  </g>
+</svg>
+
+<nav id="bar" aria-label="Lessons">
+  <select id="pick" aria-label="Lesson"></select>
+  <div class="sep"></div>
+  <span id="live" aria-live="polite"></span>
+  <div class="sep"></div>
+  <div class="progress"><span id="stepname">Step 1 of 3</span><div class="track"><i id="track" style="width:0"></i></div></div>
+  <div class="sep"></div>
+  <button id="fresh" type="button">New problem</button>
+</nav>
+<input id="keys" inputmode="decimal" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Answer">
+
+<script>
+"use strict";
+// ---------- the paper: squares, drawing, camera (the kit of new5-lessons.html) ----------
+const SQ = 20, svg = document.getElementById("paper"), sceneEl = document.getElementById("scene");
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = list => list[rnd(0, list.length - 1)];
+const gcd = (a, b) => b ? gcd(b, a % b) : a;
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+const fmt = v => String(Math.round(v * 100) / 100);
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+let items = [];
+let drawn = new Set();
+function put(k, tag, a, kind = "fade", text, bb) { items.push({ k, tag, a, kind, text, bb }); }
+const sq = n => n * SQ;
+function line(k, x1, y1, x2, y2, o = {}) {
+  put(k, "line", { x1: sq(x1), y1: sq(y1), x2: sq(x2), y2: sq(y2), stroke: o.c || "var(--ink)", "stroke-width": 1.5,
+    "stroke-dasharray": o.dash ? "6 6" : null, "stroke-linecap": "butt", pathLength: o.dash ? null : 1 }, o.live ? "none" : o.dash ? "fade" : "line");
+}
+// a path; bb is its reach in squares [left, top, right, bottom] so the camera can frame it
+function path(k, d, o = {}) {
+  put(k, "path", { d, fill: o.fill || "none", stroke: o.c || "var(--ink)", "stroke-width": 1.5, pathLength: o.dash ? null : 1,
+    "stroke-dasharray": o.dash ? "6 6" : null, opacity: o.op ?? null }, o.live ? "none" : o.dash ? "fade" : "line", null, o.bb || null);
+}
+function rect(k, x, y, w, h, o = {}) {
+  put(k, "rect", { x: sq(x), y: sq(y), width: sq(w), height: sq(h), fill: o.fill || "none", stroke: o.c || null,
+    "stroke-width": o.c ? 1.5 : null, opacity: o.op ?? null, "stroke-dasharray": o.dash ? "6 6" : null,
+    pathLength: o.c && !o.fill && !o.dash ? 1 : null }, o.live ? "none" : o.c && !o.fill && !o.dash ? "line" : "fade");
+}
+function dot(k, x, y, r, o = {}) { put(k, "circle", { cx: sq(x), cy: sq(y), r: sq(r), fill: o.c || "var(--chapter)" }, o.live ? "none" : "fade"); }
+function text(k, s, x, y, cls, o = {}) {
+  put(k, "text", { x: sq(x), y: sq(y), class: cls, "text-anchor": o.anchor || "middle", "dominant-baseline": "central",
+    style: o.c ? `fill:${o.c}` : null }, o.live ? "none" : "fade", s);
+}
+// words in rows of 2 squares, wrapped at a width in squares
+function words(k, s, x, y, widthSq, cls = "say", o = {}) {
+  const per = cls === "say" ? 0.72 : 0.52, max = Math.max(8, Math.floor(widthSq / per));
+  const rows = []; let cur = "";
+  for (const w of s.split(" ")) { if ((cur + " " + w).trim().length > max && cur) { rows.push(cur); cur = w; } else cur = (cur + " " + w).trim(); }
+  if (cur) rows.push(cur);
+  rows.forEach((r, i) => text(`${k}:${i}:${r}`, r, x, y + i * 2, cls, { anchor: "start", c: o.c }));
+  return rows.length;
+}
+// a number written as school writes it on squared paper: 2 squares a digit, the point on the grid line between
+function digits(k, s, right, row, o = {}) {
+  let col = 0;
+  for (let i = s.length - 1; i >= 0; i--) {
+    const ch = s[i];
+    if (ch === ".") { text(`${k}.${i}`, ".", right - col, row, "maths", { c: o.c }); continue; }
+    text(`${k}${i}${ch}`, ch, right - col - 1, row, "maths", { c: o.c }); col += 2;
+  }
+}
+// a block drawn on the paper: an outline, its word and arrow (Check, Cut, Next problem)
+function block(k, x, y, w, label, act, o = {}) {
+  rect(`${k}o`, x, y, w, 2, { c: "var(--ink)" });
+  text(`${k}w${label}`, label, x + 1, y + 1, "small", { anchor: "start", c: "var(--ink)" });
+  if (o.arrow !== false) path(`${k}a`, `M${sq(x + w - 1.6)} ${sq(y + 1)}h${sq(0.8)}m-6 -6l6 6l-6 6`, {});
+  put(`${k}hit`, "rect", { x: sq(x), y: sq(y), width: sq(w), height: sq(2), fill: "transparent", "data-act": act }, "none");
+}
+const CAPH = { small: 0.7, say: 1.0, maths: 1.3 };
+// a label's ink half a square from what it labels
+function lab(k, s, side, edge, along, cls = "small", c) {
+  const h = CAPH[cls] / 2;
+  if (side === "above") text(k, s, along, edge - 0.5 - h, cls, { c });
+  else if (side === "below") text(k, s, along, edge + 0.5 + h, cls, { c });
+  else if (side === "left") text(k, s, edge - 0.5, along, cls, { c, anchor: "end" });
+  else text(k, s, edge + 0.5, along, cls, { c, anchor: "start" });
+}
+// an answer box in the record: cells of 2 squares, what's typed in its middle
+function dbox(k, x, y, cells, value, state, actName) {
+  const c = state === "right" ? "var(--right)" : state === "wrong" ? "var(--wrong)" : state === "idle" ? "var(--ink3)" : "var(--ink)";
+  const vc = state === "right" || state === "wrong" ? c : null;
+  rect(`${k}o${cells}`, x, y, cells * 2, 2, { c });
+  if (value) text(`${k}v`, value, x + cells, y + 1, "maths", { c: vc, live: true });
+  if (state === "active") {
+    const cx = x + cells + (value ? value.length * 0.31 : 0) + 0.25;
+    put(`${k}cur`, "line", { x1: sq(cx), y1: sq(y + 0.35), x2: sq(cx), y2: sq(y + 1.65), stroke: "var(--chapter)", "stroke-width": 1.5 }, "none");
+  }
+  put(`${k}hit`, "rect", { x: sq(x), y: sq(y), width: sq(cells * 2), height: sq(2), fill: "transparent", "data-act": actName }, "none");
+}
+// what to do on the rows above the picture: one line, and a small second line (or what a miss says, in red)
+function dhead(L, say, sub) {
+  words(`say-${say}`, say, 0, 1, 60);
+  if (L.msg) words(`msg-${L.msg}`, L.msg, 0, 3.3, 60, "small", { c: "var(--wrong)" });
+  else if (sub) words(`sub-${sub}`, sub, 0, 3.3, 60, "small");
+}
+// lessons with answer boxes: each box has its own value; the hidden input types into the active one
+function withBoxes(L) {
+  L.vals = {}; L.active = null;
+  Object.defineProperty(L, "typed", { get() { return this.vals[this.active] || ""; }, configurable: true });
+  L.type = function (v) { if (this.active != null) this.vals[this.active] = v; this.verdict = null; this.msg = null; };
+  return L;
+}
+function boxAct(L, a) { if (a.startsWith("box:")) { L.active = a.slice(4); L.typing = true; L.verdict = null; return true; } return false; }
+function boxState(L, id) { return L.verdict && L.active === id ? L.verdict : L.active === id ? "active" : "idle"; }
+const ring = (k, x, y, r = 1.05) => path(k, `M${sq(x + r)} ${sq(y)}a${sq(r)} ${sq(r)} 0 1 1 0 -0.1`, { c: "var(--chapter)", bb: [x - r, y - r, x + r, y + r] });
+const stageIndex = (list, st) => [Math.max(0, list.indexOf(st)), list.length - 1];
+
+// ---------- what's drawn reaches: the camera frames it ----------
+const CHW = { maths: 1.05, say: 0.7, small: 0.55 }, CHH = { maths: 0.7, say: 0.55, small: 0.4 };
+function extentOf(it) {
+  const a = it.a;
+  if (it.bb) return it.bb;
+  if (a["data-act"]) return null;
+  if (it.tag === "line") return [Math.min(a.x1, a.x2) / SQ, Math.min(a.y1, a.y2) / SQ, Math.max(a.x1, a.x2) / SQ, Math.max(a.y1, a.y2) / SQ];
+  if (it.tag === "rect") return [a.x / SQ, a.y / SQ, (a.x + a.width) / SQ, (a.y + a.height) / SQ];
+  if (it.tag === "circle") return [(a.cx - a.r) / SQ, (a.cy - a.r) / SQ, (a.cx + a.r) / SQ, (a.cy + a.r) / SQ];
+  if (it.tag === "text") {
+    const cls = (a.class || "").split(" ")[0], w = String(it.text).length * (CHW[cls] || 0.6), h = CHH[cls] || 0.5, x = a.x / SQ, y = a.y / SQ;
+    const l = a["text-anchor"] === "start" ? x : a["text-anchor"] === "end" ? x - w : x - w / 2;
+    return [l, y - h, l + w, y + h];
+  }
+  return null;
+}
+let reachBox = null;
+
+let raf = 0;
+function render() {
+  items = [];
+  lesson.scene();
+  const next = new Set(); let n = 0, out = "";
+  let bx = [Infinity, Infinity, -Infinity, -Infinity];
+  for (const it of items) {
+    next.add(it.k);
+    const e = extentOf(it);
+    if (e) bx = [Math.min(bx[0], e[0]), Math.min(bx[1], e[1]), Math.max(bx[2], e[2]), Math.max(bx[3], e[3])];
+    const fresh = !drawn.has(it.k) && it.kind !== "none", a = { ...it.a };
+    if (fresh) {
+      a.class = ((a.class || "") + (it.kind === "line" ? " in-line" : " in-fade")).trim();
+      a.style = `animation-delay:${Math.min(n++ * 0.035, 1.2).toFixed(3)}s;` + (a.style || "");
+    }
+    const attrs = Object.entries(a).filter(([, v]) => v != null).map(([k, v]) => `${k}="${esc(v)}"`).join(" ");
+    out += `<${it.tag} ${attrs}>${it.text != null ? esc(it.text) : ""}</${it.tag}>`;
+  }
+  sceneEl.innerHTML = out;
+  reachBox = bx;
+  drawn = next;
+  const [i, of] = lesson.progress();
+  document.getElementById("stepname").textContent = `Problem ${lesson.index + 1} · Step ${Math.min(i + 1, of)} of ${of}`;
+  document.getElementById("track").style.width = `${Math.round(100 * i / of)}%`;
+  document.getElementById("live").textContent = down && down.grabbed && lesson.live ? lesson.live() : "";
+}
+// the frame: what's drawn now, from the top-left of the words, a square of margin round it
+function autoFrame() {
+  const b = reachBox;
+  const x0 = Math.min(0, b[0]) - 1, y0 = Math.min(0, b[1]) - 0.5;
+  return { x: x0, y: y0, w: b[2] - x0 + 1, h: b[3] - y0 + 1 };
+}
+
+// the camera: frames what the lesson shows now, eased (0.75 s), never past 125%. The frame's top sits at the top of
+// the screen (the words on the top rows, never an empty band above them); it's centred across.
+const cam = { x: 0, y: 0, s: 1 }; let camTo = null, camFrom = null, camT0 = 0;
+function fitTo(f) {
+  const W = innerWidth, H = innerHeight, top = 24, bottom = 100;
+  const s = Math.min((W - 48) / sq(f.w), (H - top - bottom) / sq(f.h), 1.25);
+  return { s, x: sq(f.x + f.w / 2) - W / 2 / s, y: sq(f.y) - top / s };
+}
+function frame(f, now) {
+  const t = fitTo(f);
+  if (now) { Object.assign(cam, t); camTo = null; applyCam(); return; }
+  camFrom = { ...cam }; camTo = t; camT0 = performance.now(); requestAnimationFrame(stepCam);
+}
+function stepCam(t) {
+  if (!camTo) return;
+  const u = Math.min(1, Math.max(0, (t - camT0) / 750)), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+  for (const k of ["x", "y", "s"]) cam[k] = camFrom[k] + (camTo[k] - camFrom[k]) * e;
+  applyCam();
+  if (u < 1) requestAnimationFrame(stepCam); else camTo = null;
+}
+function applyCam() { svg.setAttribute("viewBox", `${cam.x} ${cam.y} ${innerWidth / cam.s} ${innerHeight / cam.s}`); }
+addEventListener("resize", () => frame(autoFrame(), true));
+
+// ---------- typing (the iPad's own number keys) ----------
+const keys = document.getElementById("keys");
+function openKeys() { keys.value = lesson.typed || ""; keys.focus({ preventScroll: true }); }
+// a minus typed anywhere makes the number negative (the paper's own minus key, drawn by Check, does the same)
+keys.addEventListener("input", () => { const v = keys.value, neg = /[-−]/.test(v); lesson.type((neg ? "−" : "") + v.replace(/[^0-9.]/g, "").slice(0, 5)); render(); });
+keys.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); act("check"); } });
+
+// ---------- hands: tap, drag (on the lesson's picture) or pan the paper; mouse and touch alike ----------
+function toPaper(e) { const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse()); return { x: p.x / SQ, y: p.y / SQ }; }
+let down = null;
+svg.addEventListener("pointerdown", e => {
+  if (down) return;
+  const p = toPaper(e), hit = e.target.closest("[data-act]");
+  down = { id: e.pointerId, p, sx: e.clientX, sy: e.clientY, act: hit && hit.dataset.act, moved: false, grabbed: false, cam: { ...cam } };
+  if (!down.act && lesson.grab && lesson.grab(p)) { down.grabbed = true; render(); }
+  svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener("pointermove", e => {
+  if (!down || e.pointerId !== down.id) return;
+  if (Math.hypot(e.clientX - down.sx, e.clientY - down.sy) > 6) down.moved = true;
+  if (down.grabbed) { if (down.moved) { lesson.drag(toPaper(e)); render(); } return; }
+  if (down.moved && !down.act) { camTo = null; cam.x = down.cam.x - (e.clientX - down.sx) / cam.s; cam.y = down.cam.y - (e.clientY - down.sy) / cam.s; applyCam(); }
+});
+function lift(e) {
+  if (!down || e.pointerId !== down.id) return;
+  const d = down; down = null;
+  if (d.grabbed) { lesson.release(toPaper(e), d.moved); after(); return; }
+  if (d.moved) return;
+  if (d.act) { act(d.act); return; }
+  if (lesson.tap && lesson.tap(toPaper(e))) after();
+}
+svg.addEventListener("pointerup", lift);
+// a cancelled touch puts back what the finger held
+svg.addEventListener("pointercancel", e => { if (down && e.pointerId === down.id) { const d = down; down = null; if (d.grabbed && lesson.cancel) lesson.cancel(); render(); } });
+function after() { if (lesson.typing) openKeys(); render(); frame(autoFrame()); }
+function act(a) {
+  if (a === "type") { openKeys(); return; }
+  if (a === "next") { start(lesson.id, lesson.index + 1); return; }
+  lesson.act(a);
+  if (!lesson.typing) keys.blur(); else openKeys();
+  render(); frame(autoFrame());
+}
+
+// ---------- numbers: fractions and how the paper writes them ----------
+function fr(n, d = 1) { const g = gcd(Math.abs(n), Math.abs(d)) || 1; return { n: n / g, d: d / g }; }
+const fval = f => f.n / f.d;
+const fdiv = (a, b) => fr(a.n * b.d, a.d * b.n), fmul = (a, b) => fr(a.n * b.n, a.d * b.d);
+const feq = (a, b) => a.n * b.d === b.n * a.d;
+// (fifths are written 2/5: the rounded font's fifths glyphs are too small to read)
+const GLY = { "1/2": "½", "1/3": "⅓", "2/3": "⅔", "1/4": "¼", "3/4": "¾", "1/6": "⅙", "5/6": "⅚", "1/8": "⅛", "3/8": "⅜", "5/8": "⅝", "7/8": "⅞" };
+// a fraction as a word on the paper: 2, ½, 1½, 2/9, 1 4/9
+function fs(f) {
+  const w = Math.floor(f.n / f.d), r = f.n % f.d;
+  if (!r) return String(w);
+  const g = GLY[`${r}/${f.d}`];
+  return w ? (g ? `${w}${g}` : `${w} ${r}/${f.d}`) : (g || `${r}/${f.d}`);
+}
+const divisors = n => { const d = []; for (let i = 1; i <= n; i++) if (n % i === 0) d.push(i); return d; };
+const nearest = (list, x) => list.reduce((b, v) => Math.abs(v - x) < Math.abs(b - x) ? v : b);
+
+// ---------- the record: a line of school maths on the squares ----------
+// Tokens: "12" (2 squares a digit, the point on a line), "x" (2 squares a letter), "=" "÷" "×" "+" (3 squares),
+// { w: "km" } words, { fv: fraction, improper } a fraction stacked (a mixed number's whole beside it),
+// { cfr: [top, bottom] } a fraction over a fraction, { box, cells } and { fbox: [top, bottom] } answer boxes.
+const OPS = new Set(["=", "÷", "×", "+", "−"]);
+const fracW = (n, d) => 2 * Math.max(String(n).length, String(d).length, 1) + 2;
+function tokW(t) {
+  if (typeof t !== "object") t = { t: String(t) };
+  if (t.t != null) { const s = String(t.t); return OPS.has(s) ? 3 : 2 * s.replace(".", "").length; }
+  if (t.w != null) return Math.ceil(t.w.length * 0.6) + 1;
+  if (t.fv) { const f = t.fv; if (f.d === 1) return 2 * String(f.n).length; const w = t.improper ? 0 : Math.floor(f.n / f.d); return (w ? 2 * String(w).length : 0) + fracW(t.improper ? f.n : f.n % f.d, f.d); }
+  if (t.cfr) return Math.max(tokW(t.cfr[0]), tokW(t.cfr[1])) + 2;
+  if (t.sn != null) { const v = t.sn, isF = typeof v === "object", neg = isF ? v.n < 0 : v < 0, par = t.paren && neg;
+    if (!isF && (t.tight || !Number.isInteger(v))) return tightW(snStr(v, par));
+    return (par ? 2 : 0) + (neg ? 2 : 0) + (isF ? tokW({ fv: snFv(t), improper: !!t.over }) : 2 * String(Math.abs(v)).length); }
+  if (t.box) return t.cells * 2;
+  if (t.fbox) return 4;
+  return t.sp || 0;
+}
+function mtok(k, t, x, cy, L) {
+  if (typeof t !== "object") t = { t: String(t) };
+  const c = t.c;
+  if (t.t != null) {
+    const s = String(t.t);
+    if (OPS.has(s)) { text(`${k}${s}`, s, x + 1.5, cy, "maths", { c }); return x + 3; }
+    if (/^[0-9.]+$/.test(s)) { const w = 2 * s.replace(".", "").length; digits(`${k}n${s}`, s, x + w, cy, { c }); return x + w; }
+    [...s].forEach((ch, j) => text(`${k}l${j}${ch}`, ch, x + 2 * j + 1, cy, "maths", { c }));
+    return x + 2 * s.length;
+  }
+  if (t.w != null) { text(`${k}w${t.w}`, t.w, x + 0.5, cy, "say", { anchor: "start", c }); return x + tokW(t); }
+  if (t.fv) {
+    const f = t.fv;
+    if (f.d === 1) return mtok(k, { t: String(f.n), c }, x, cy, L);
+    const w = t.improper ? 0 : Math.floor(f.n / f.d), n = t.improper ? f.n : f.n % f.d;
+    if (w) x = mtok(`${k}W`, { t: String(w), c }, x, cy, L);
+    const fw = fracW(n, f.d);
+    text(`${k}t${n}`, String(n), x + fw / 2, cy - 1, "maths", { c });
+    line(`${k}bar${fw}`, x + 0.5, cy, x + fw - 0.5, cy, { c });
+    text(`${k}b${f.d}`, String(f.d), x + fw / 2, cy + 1, "maths", { c });
+    return x + fw;
+  }
+  if (t.cfr) {
+    const W = tokW(t), [a, b] = t.cfr;
+    mtok(`${k}A`, a, x + (W - tokW(a)) / 2, cy - 2, L);
+    line(`${k}main${W}`, x + 0.25, cy, x + W - 0.25, cy, { c });
+    mtok(`${k}B`, b, x + (W - tokW(b)) / 2, cy + 2, L);
+    return x + W;
+  }
+  if (t.sn != null) {
+    // a signed number: a whole number 2 squares a digit (the minus too), a decimal one tight number (and a whole
+    // number among decimals, t.tight), a fraction
+    // stacked; a negative in brackets when it follows a sign, a square for each bracket
+    const v = t.sn, isF = typeof v === "object", neg = isF ? v.n < 0 : v < 0, par = t.paren && neg;
+    if (!isF && (t.tight || !Number.isInteger(v))) { const s = snStr(v, par), w = tightW(s); text(`${k}d${s}`, s, x + w / 2, cy, "maths", { c }); return x + w; }
+    if (par) { text(`${k}(`, "(", x + 0.5, cy, "maths", { c }); x += 1; }
+    if (neg) { text(`${k}m`, "−", x + 1, cy, "maths", { c }); x += 2; }
+    x = isF ? mtok(`${k}f`, { fv: snFv(t), improper: !!t.over, c }, x, cy, L) : mtok(`${k}i`, { t: String(Math.abs(v)), c }, x, cy, L);
+    if (par) { text(`${k})`, ")", x + 0.5, cy, "maths", { c }); x += 1; }
+    return x;
+  }
+  if (t.box) { dbox(`${k}${t.box}`, x, cy - 1, t.cells, L.vals[t.box] || "", boxState(L, t.box), "box:" + t.box); return x + 2 * t.cells; }
+  if (t.fbox) {
+    const [a, b] = t.fbox;
+    dbox(`${k}${a}`, x, cy - 2, 2, L.vals[a] || "", boxState(L, a), "box:" + a);
+    dbox(`${k}${b}`, x, cy, 2, L.vals[b] || "", boxState(L, b), "box:" + b);
+    return x + 4;
+  }
+  return x + (t.sp || 0);
+}
+const fmtS = v => (v < 0 ? "−" : "") + fmt(Math.abs(v));
+const snStr = (v, par) => par ? `(${fmtS(v)})` : fmtS(v);
+const CW = { "−": 1.1, ".": 0.55, "(": 0.6, ")": 0.6 };
+const tightW = s => Math.ceil([...s].reduce((w, ch) => w + (CW[ch] ?? 1.1), 0)) + 1;
+// a signed fraction's size as a stacked fraction: over its own bottom, or over a shared one (t.over)
+const snFv = t => { const a = Math.abs(t.sn.n); return t.over ? { n: a * t.over / t.sn.d, d: t.over } : { n: a, d: t.sn.d }; };
+function mrow(k, toks, x, cy, L) { toks.forEach((t, i) => { x = mtok(`${k}.${i}.`, t, x, cy, L); }); return x; }
+
+// ---------- hand moves this chapter adds to the kit (built once, reused by later chapters) ----------
+// The ruler: cuts a length (in squares) into equal pieces. Its grip sits over the first cut; dragging it sets the
+// piece, snapping to lengths that divide the whole, so the pieces are always equal. Cuts are dashed while tried,
+// solid in the chapter colour once right.
+const Ruler = {
+  snap: (total, along, base = 1) => nearest(divisors(total / base).map(d => d * base), clamp(along, base, total)),
+  draw(k, x0, y1, y2, total, s, o = {}) {
+    for (let x = s; x < total - 1e-9; x += s) {
+      if (o.ticks) { for (const y of [y1, y2]) line(`${k}t${s}_${x}_${y}`, x0 + x, y - 0.6, x0 + x, y + 0.6, { c: "var(--chapter)" }); continue; }
+      line(`${k}c${s}_${x}${o.solid}`, x0 + x, y1, x0 + x, y2, { c: o.solid ? "var(--chapter)" : "var(--ink2)", dash: !o.solid, live: o.live });
+    }
+    if (!o.solid) {
+      const gx = x0 + s;
+      path(`${k}grip`, `M${sq(gx - 0.6)} ${sq(y1 - 0.9)}h${sq(1.2)}l${sq(-0.6)} ${sq(0.8)}z`, { c: "var(--chapter)", fill: "var(--chapter)", live: true, bb: [gx - 0.6, y1 - 0.9, gx + 0.6, y1] });
+    }
+  },
+};
+// Hops: lay hops of one length along a line from its start. A tap adds a hop; a drag lays as many as the finger
+// reaches. Over the line (up) or under it.
+const Hops = {
+  arc(k, x1, x2, y, up, o = {}) {
+    const h = (up ? -1 : 1) * Math.min(2, (x2 - x1) / 2);
+    path(k, `M${sq(x1)} ${sq(y)}Q${sq((x1 + x2) / 2)} ${sq(y + 2 * h)} ${sq(x2)} ${sq(y)}`, { c: o.c || "var(--chapter)", live: o.live, bb: [x1, Math.min(y, y + h), x2, Math.max(y, y + h)] });
+  },
+  // how many hops a finger at x reaches, and the move's rules (a tap adds one; past the end says so)
+  count: (x0, len, x, max) => clamp(Math.round((x - x0) / len), 0, max),
+};
+// The plane, first quadrant: across a block a unit, up `yu` squares a unit, its axes on strong lines.
+function Plane(ox, oy, xmax, ymax, yu, every, names) {
+  const P = (u, v) => ({ x: ox + 5 * u, y: oy - v * yu });
+  return {
+    P, ox, oy, xmax, ymax, yu,
+    snap: q => ({ u: clamp(Math.round((q.x - ox) / 5), 0, xmax), v: clamp(Math.round((oy - q.y) / yu), 0, ymax) }),
+    has: q => q.x > ox - 2 && q.x < ox + 5 * xmax + 2 && q.y > oy - ymax * yu - 2 && q.y < oy + 2,
+    draw(k) {
+      const xEnd = ox + 5 * xmax + 1.5, yEnd = oy - ymax * yu - 1;
+      line(`${k}ax`, ox, oy, xEnd, oy); path(`${k}axa`, `M${sq(xEnd - 0.8)} ${sq(oy - 0.8)}L${sq(xEnd)} ${sq(oy)}L${sq(xEnd - 0.8)} ${sq(oy + 0.8)}`, { bb: [xEnd - 1, oy - 1, xEnd, oy + 1] });
+      line(`${k}ay`, ox, oy, ox, yEnd); path(`${k}aya`, `M${sq(ox - 0.8)} ${sq(yEnd + 0.8)}L${sq(ox)} ${sq(yEnd)}L${sq(ox + 0.8)} ${sq(yEnd + 0.8)}`, { bb: [ox - 1, yEnd, ox + 1, yEnd + 1] });
+      lab(`${k}xn${names[0]}`, names[0], "right", xEnd, oy, "small"); lab(`${k}yn${names[1]}`, names[1], "right", ox + 0.5, yEnd + 0.2, "small");
+      for (let i = 0; i <= xmax; i++) { line(`${k}xt${i}`, ox + 5 * i, oy, ox + 5 * i, oy + 0.5); lab(`${k}xl${i}`, i, "below", oy + 0.5, ox + 5 * i, "small"); }
+      for (let j = every; j <= ymax; j += every) { line(`${k}yt${j}`, ox - 0.5, oy - j * yu, ox, oy - j * yu); lab(`${k}yl${j}`, j, "left", ox - 0.5, oy - j * yu, "small"); }
+    },
+  };
+}
+// Pick: two or three answers drawn as blocks in the record; tap one
+function pickBlocks(k, opts, x, y, wrong) {
+  opts.forEach((o, i) => {
+    const w = Math.ceil(o.length * 0.55) + 2, yy = y + 3 * i;
+    rect(`${k}${i}o${wrong === i}`, x, yy, w, 2, { c: wrong === i ? "var(--wrong)" : "var(--ink)" });
+    text(`${k}${i}w${o}`, o, x + 1, yy + 1, "small", { anchor: "start", c: wrong === i ? "var(--wrong)" : "var(--ink)" });
+    put(`${k}${i}hit`, "rect", { x: sq(x), y: sq(yy), width: sq(w), height: sq(2), fill: "transparent", "data-act": `pick:${i}` }, "none");
+  });
+}
+const tick = (k, x, y) => path(k, `M${sq(x - 0.6)} ${sq(y)}l${sq(0.4)} ${sq(0.45)}l${sq(0.8)} ${sq(-0.9)}`, { c: "var(--chapter)", bb: [x - 0.7, y - 0.5, x + 0.7, y + 0.5] });
+
+// Drag a length (LESSONS.md's move): a bracket from a fixed end to the handle, snapped to whole pieces. Dashed while
+// it's tried, solid once right; end ticks on both ends.
+function bracket(k, x1, x2, y, o = {}) {
+  const a = Math.min(x1, x2), b = Math.max(x1, x2), c = o.c || "var(--chapter)", live = !o.solid;
+  line(`${k}l${a}_${b}${o.solid}`, a, y, b, y, { c, dash: live, live });
+  line(`${k}ta${a}${o.solid}`, a, y - 0.6, a, y + 0.6, { c, live });
+  line(`${k}tb${b}${o.solid}`, b, y - 0.6, b, y + 0.6, { c, live });
+}
+const handleDot = (k, x, y) => dot(k, x, y, down && down.grabbed ? 0.7 : 0.55, { live: true });
+
+// ---------- what chapter 3 adds to the kit (built once, reused by later chapters) ----------
+// Negative is striped: what goes right (a hop, an arrow) is solid in the chapter colour, what goes left is the same
+// colour striped.
+const fillOf = d => d > 0 ? "var(--tint-strong)" : "url(#stripes)";
+// a hop: a hump over the line from x1 to x2 (squares), filled solid or striped by its way, at most 2.5 squares high
+function hump(k, x1, x2, y, o = {}) {
+  const h = Math.min(2.5, Math.abs(x2 - x1) / 2), m = (x1 + x2) / 2, d = `M${sq(x1)} ${sq(y)}Q${sq(m)} ${sq(y - 2 * h)} ${sq(x2)} ${sq(y)}`;
+  const bb = [Math.min(x1, x2), y - h, Math.max(x1, x2), y];
+  path(`${k}f`, d + "Z", { c: "none", fill: fillOf(x2 - x1), live: true, op: o.op, bb });
+  path(`${k}s`, d, { c: o.c || "var(--chapter)", live: o.live, op: o.op, bb });
+  return h;
+}
+// an arrow a square tall from its tail to its head (squares), solid or striped by its way
+function arrowBar(k, x0, x1, y, o = {}) {
+  const d = Math.sign(x1 - x0) || 1, hd = Math.min(0.9, Math.abs(x1 - x0) / 2);
+  put(k, "path", { d: `M${sq(x0)} ${sq(y - 0.5)}H${sq(x1 - d * hd)}L${sq(x1)} ${sq(y)}L${sq(x1 - d * hd)} ${sq(y + 0.5)}H${sq(x0)}Z`,
+    fill: fillOf(x1 - x0), stroke: "var(--chapter)", "stroke-width": 1.5, class: o.cls || null, style: o.style || null },
+    o.live || o.cls ? "none" : "fade", null, [Math.min(x0, x1), y - 0.5, Math.max(x0, x1), y + 0.5]);
+}
+// The number line across: 0 at x0 (on a strong line), U squares a one, ticks every S squares (and the problem's
+// pieces), longer at the ones and longest at 0; numbers under it every `every` ones, 0 in ink; arrowheads at both ends.
+function numLine(k, x0, y, xL, xR, U, S, piece, every, skip) {
+  line(`${k}l${xL}_${xR}`, xL, y, xR, y);
+  path(`${k}ar${xR}`, `M${sq(xR - 0.8)} ${sq(y - 0.8)}L${sq(xR)} ${sq(y)}L${sq(xR - 0.8)} ${sq(y + 0.8)}`, { bb: [xR - 1, y - 1, xR, y + 1] });
+  path(`${k}al${xL}`, `M${sq(xL + 0.8)} ${sq(y - 0.8)}L${sq(xL)} ${sq(y)}L${sq(xL + 0.8)} ${sq(y + 0.8)}`, { bb: [xL, y - 1, xL + 1, y + 1] });
+  for (let s = Math.ceil(xL - x0 + 1); s <= xR - x0 - 1; s++) {
+    if (s % S) continue;
+    const t = s === 0 ? 0.9 : s % U === 0 ? 0.6 : s % piece === 0 ? 0.45 : 0.3;
+    line(`${k}t${s}_${t}`, x0 + s, y - t, x0 + s, y + t);
+    if (s % U === 0 && (s / U) % every === 0 && !skip(x0 + s)) lab(`${k}n${s}`, fmtS(s / U), "below", y + 0.6, x0 + s, "small", s === 0 ? "var(--ink)" : null);
+  }
+}
+const PIECES = { 1: ["one", "ones"], 2: ["half", "halves"], 3: ["third", "thirds"], 4: ["quarter", "quarters"], 6: ["sixth", "sixths"], 12: ["twelfth", "twelfths"], 10: ["tenth", "tenths"] };
+const parse = s => s ? +String(s).replace("−", "-") : NaN;
+
+// ---------- generators: the web's for the two integer lessons, the design's for the new one ----------
+const nz = m => { let x; do x = rnd(-m, m); while (!x); return x; };
+// g7-addint as the web: a and b −15 to 15, not 0, not both positive
+function genAddInt() { let a, b; do { a = nz(15); b = nz(15); } while (a > 0 && b > 0); return { a, b }; }
+// g7-subint as the web: problems 1–3 a 1–6 minus −1 to −5; then a and b −12 to 12, not 0
+function genSubInt(i) { return i < 3 ? { a: rnd(1, 6), b: -rnd(1, 5) } : { a: nz(12), b: nz(12) }; }
+// g7-addrat, in squares: tenths (10 a one) or twelfths (12 a one). Problems 1–3 tenths, one number negative, sizes
+// to 3; 4–6 halves, thirds, quarters or sixths, sizes to 2; 7+ taking away (odd numbered) and three numbers with a
+// pair that makes 0 (even), tenths or twelfths. The line holds 0 and every number: at most 5 ones of tenths, 4 of
+// twelfths, so it stays at a square a piece and the camera stays near 100%.
+function ratSize(dec, max) { if (dec) return rnd(1, max * 10); const d = pick([2, 3, 4, 6]); return rnd(1, max * d) * 12 / d; }
+function genAddRat(i) {
+  const dec = i < 3 ? true : i < 6 ? false : Math.random() < 0.5, Q = dec ? 10 : 12, kind = i < 6 ? "add" : i % 2 === 0 ? "sub" : "three";
+  const fits = ks => Math.max(0, ...ks) - Math.min(0, ...ks) <= (dec ? 5 : 4) * Q, whole = k => k % Q === 0, sg = () => Math.random() < 0.5 ? -1 : 1;
+  for (;;) {
+    if (kind === "add") {
+      const s1 = sg(), A = s1 * ratSize(dec, dec ? 3 : 2), B = -s1 * ratSize(dec, dec ? 3 : 2), s = A + B;
+      if (!s || (whole(A) && whole(B)) || (!dec && whole(s)) || !fits([A, s])) continue;
+      return { dec, kind, A, B };
+    }
+    if (kind === "sub") {
+      const A = sg() * ratSize(dec, 2), Bt = (Math.random() < 2 / 3 ? -1 : 1) * ratSize(dec, 2), s = A - Bt;
+      if (!s || (whole(A) && whole(Bt)) || (!dec && whole(s)) || !fits([A, Bt, -Bt, s])) continue;
+      return { dec, kind, A, Bt };
+    }
+    const p = sg() * ratSize(dec, 2), q = sg() * ratSize(dec, 2);
+    if (Math.abs(q) === Math.abs(p) || whole(q) || !fits([p, -p, q])) continue;
+    const ks = [[p, q, -p], [p, -p, q], [q, p, -p]][rnd(0, 2)];
+    return { dec, kind, ks };
+  }
+}
+
+// =====================================================================================================
+// The three lessons share one picture: the number line, a square a step (or a piece), a start dot with its name, a
+// hop drawn as a hump (solid right, striped left). Adding integers: drag the hop, see it split at 0, write.
+// Subtracting integers: flip the arrow of what's taken away over 0, hop by it, see how far apart, write.
+// Negative fractions and decimals: the same in tenths or twelfths; three numbers cancel a pair first.
+// =====================================================================================================
+function lNeg(id, index) {
+  const P = GEN[id](index), rat = id === "addrat", dec = rat && P.dec, frac = rat && !dec;
+  const kind = id === "addint" ? "add" : id === "subint" ? "sub" : P.kind;
+  let U, A = 0, B = 0, Bt = 0, ks = [];
+  if (!rat) {
+    // a one is as many squares (1 to 4) as keep the line within 50 squares, so short problems still fill the width
+    const vals = id === "addint" ? [0, P.a, P.a + P.b] : [0, P.a, P.b, -P.b, P.a - P.b];
+    U = clamp(Math.floor(50 / (Math.max(...vals) - Math.min(...vals) + 2)), 1, 4);
+    A = P.a * U; if (kind === "add") B = P.b * U; else Bt = P.b * U;
+  } else {
+    // a square a tenth (or twelfth); 2 to 4 squares a piece when the line is short, so it still fills the width
+    const pk = P.kind === "add" ? [0, P.A, P.A + P.B] : P.kind === "sub" ? [0, P.A, P.Bt, -P.Bt, P.A - P.Bt] : [0, ...P.ks];
+    const m = clamp(Math.floor(50 / (Math.max(...pk) - Math.min(...pk) + 4)), 1, 4);
+    U = (dec ? 10 : 12) * m; A = (P.A || 0) * m; B = (P.B || 0) * m; Bt = (P.Bt || 0) * m; ks = (P.ks || []).map(k => k * m);
+  }
+  const S = rat ? U / (dec ? 10 : 12) : U;
+  const left = kind === "three" ? ks.find(k => !ks.includes(-k)) : 0, pairK = kind === "three" ? ks.find(k => ks.includes(-k)) : 0;
+  const H0 = kind === "three" ? 0 : A, HB = kind === "add" ? B : kind === "sub" ? -Bt : left, T = H0 + HB;
+  const span = kind === "add" ? [0, A, T] : kind === "sub" ? [0, A, Bt, -Bt, T] : [0, ...ks];
+  const lo = Math.min(...span), hi = Math.max(...span), spare = rat ? 2 * S : U;
+  // where it sits: 0 on a strong line, the line and the readouts beside it centred near the words' middle
+  const Wp = hi - lo + 2 * spare + 10;
+  const x0 = Math.ceil((Math.max(0, 30 - Wp / 2) + spare - lo) / 5) * 5, X = k => x0 + k;
+  const LY = 10, xL = x0 + lo - spare, xR = x0 + hi + spare, XC = xR + 1.5;
+  // names: a number in squares as the paper writes it; the pieces a hop counts in
+  const Lcd = frac ? [...(kind === "three" ? ks : [A, B, Bt]).filter(k => k), T].reduce((l, k) => { const d = fr(Math.abs(k), U).d; return l * d / gcd(l, d); }, 1) : 1;
+  const nm = k => (k < 0 ? "−" : "") + (frac ? fs(fr(Math.abs(k), U)) : fmt(Math.abs(k) / U));
+  const par = k => k < 0 ? `(${nm(k)})` : nm(k);
+  const PC = !rat ? ["step", "steps"] : dec ? PIECES[10] : PIECES[Lcd];
+  const pcs = k => !rat ? Math.abs(k) / U : dec ? Math.abs(k) / S : Math.abs(k) * Lcd / U;
+  const pw = n => `${n} ${n === 1 ? PC[0] : PC[1]}`;
+  const recV = k => frac ? fr(k, U) : k / U;
+  const piece = frac ? U / Lcd : dec ? U / 2 : U;
+  const key = !rat ? (U > 1 ? `${U} squares = 1` : "1 square = 1") : dec ? (S > 1 ? `${S} squares = 0.1` : "1 square = 0.1") : `${U} squares = 1`;
+  const stages = kind === "add" ? ["hop", "write", "done"] : kind === "sub" ? ["flip", "hop", "write", "done"] : ["slide", "hop", "write", "done"];
+  const snapK = x => Math.round(x / S) * S;
+  const crossing = Math.sign(H0) !== Math.sign(HB) && Math.abs(HB) >= Math.abs(H0) && H0 !== 0;
+  const pairNote = kind === "three" ? `${nm(pairK)} and ${nm(-pairK)} make 0.` : "";
+  const L = withBoxes({
+    id, index, P, stage: stages[0], cur: H0, H: Bt, gone: [], sl: null, msg: null, verdict: null, typing: false,
+    progress() { return stageIndex(stages, this.stage); },
+    rest() { return ks.map((k, i) => i).filter(i => !this.gone.includes(i)); },
+    rowY(j) { return LY + 4.5 + 2.5 * j; },
+    live() {
+      const st = this.stage;
+      if (st === "hop") { const d = this.cur - H0; return d ? `${nm(Math.abs(d))} ${d > 0 ? "right" : "left"}` : "0"; }
+      if (st === "flip") return `${nm(Bt)} → ${this.H > 0 ? "+" : ""}${nm(this.H)}`;
+      if (st === "slide" && this.sl) return nm(ks[this.sl.i]);
+      return "";
+    },
+    grab(q) {
+      const st = this.stage;
+      if (st === "hop" && Math.abs(q.y - LY) < 4 && q.x > xL - 1 && q.x < xR + 1) { this.msg = null; return true; }
+      if (st === "flip" && Math.abs(q.y - this.rowY(0)) < 1.5 && q.x > X(Math.min(0, this.H)) - 1 && q.x < X(Math.max(0, this.H)) + 1) { this.msg = null; return true; }
+      if (st === "slide") {
+        const r = this.rest();
+        for (let j = 0; j < r.length; j++) {
+          const k = ks[r[j]];
+          if (Math.abs(q.y - this.rowY(j)) <= 1 && q.x > X(Math.min(0, k)) - 1 && q.x < X(Math.max(0, k)) + 1) { this.sl = { i: r[j], j, q0: q, dx: 0, dy: 0 }; this.msg = null; return true; }
+        }
+      }
+      return false;
+    },
+    drag(q) {
+      const st = this.stage;
+      if (st === "hop") this.cur = clamp(snapK(q.x - x0), lo - spare, hi + spare);
+      else if (st === "flip") this.H = clamp(snapK(q.x - x0), lo - spare + S, hi + spare - S);
+      else if (this.sl) { this.sl.dx = Math.round(q.x - this.sl.q0.x); this.sl.dy = q.y - this.sl.q0.y; }
+    },
+    cancel() { this.cur = H0; this.H = Bt; this.sl = null; },
+    release() {
+      const st = this.stage;
+      if (st === "hop") {
+        const d = this.cur - H0;
+        if (this.cur === T) { this.stage = "write"; this.active = frac ? "t" : "s"; this.typing = true; this.msg = null; return; }
+        if (!d) return;
+        if (kind === "sub" && this.cur === A + Bt) this.msg = "That's the arrow before the flip. Use the flipped one.";
+        else if (Math.sign(d) !== Math.sign(HB)) this.msg = `Adding ${nm(HB)} moves ${HB > 0 ? "right" : "left"}.`;
+        else this.msg = rat ? `That's ${nm(Math.abs(d))}. Move ${nm(Math.abs(HB))}.` : `That's ${pw(Math.abs(d) / U)}. Move ${Math.abs(HB) / U}.`;
+        this.cur = H0; return;
+      }
+      if (st === "flip") {
+        if (this.H === -Bt) { this.stage = "hop"; this.flipped = true; this.msg = null; return; }
+        if (this.H !== Bt) this.msg = "Flip it over 0: the same size, the other way.";
+        this.H = Bt; return;
+      }
+      if (st === "slide" && this.sl) {
+        const s = this.sl, r = this.rest(); this.sl = null;
+        const j = r.findIndex((idx, jj) => idx !== s.i && Math.abs(this.rowY(s.j) + s.dy - this.rowY(jj)) < 1.25);
+        if (j < 0) return;
+        const a = ks[s.i], b = ks[r[j]];
+        if (a + b === 0) { this.gone.push(s.i, r[j]); this.stage = "hop"; this.msg = null; return; }
+        this.msg = `${nm(a)} and ${nm(b)} don't make 0.`;
+      }
+    },
+    act(c) {
+      if (boxAct(this, c)) return;
+      if (c === "neg") {
+        if (this.active != null) { const v = this.vals[this.active] || ""; this.vals[this.active] = v.startsWith("−") ? v.slice(1) : "−" + v; this.verdict = null; this.msg = null; this.typing = true; }
+        return;
+      }
+      if (c !== "check" || this.stage !== "write") return;
+      const right = () => { this.verdict = "right"; this.stage = "done"; this.typing = false; this.msg = null; };
+      let v;
+      if (frac) {
+        const t = parse(this.vals.t), b = parse(this.vals.b);
+        if (isNaN(t) || isNaN(b) || !b) { this.msg = "Write the top and the bottom."; this.active = isNaN(t) ? "t" : "b"; return; }
+        if (t * U === T * b) return right();
+        this.verdict = "wrong";
+        const twoB = kind === "three" ? null : [A, kind === "add" ? B : -Bt].map(k => fr(Math.abs(k), U).d);
+        if (twoB && Math.abs(b) === twoB[0] + twoB[1]) { this.msg = `Same-size pieces: ${PC[1]} with ${PC[1]}.`; return; }
+        v = t / b;
+      } else {
+        v = parse(this.vals.s);
+        if (isNaN(v)) { this.msg = "Write it in the box."; return; }
+        if (Math.abs(v - T / U) < 1e-9) return right();
+        this.verdict = "wrong";
+      }
+      const is = w => Math.abs(v - w) < 1e-9;
+      if (id === "addint") {
+        const a = P.a, b = P.b, same = Math.sign(a) === Math.sign(b);
+        if (a + b && is(-(a + b))) this.msg = same ? "Both numbers are negative, so the answer is negative." : "Use the sign of the number with the bigger size.";
+        else if (!same && Math.abs(v) === Math.abs(a) + Math.abs(b)) this.msg = "One goes up and one goes down, so they cancel. Subtract the sizes.";
+        else if (same && Math.abs(a) !== Math.abs(b) && Math.abs(v) === Math.abs(Math.abs(a) - Math.abs(b))) this.msg = "Both numbers step the same way, so their sizes add.";
+        else this.msg = "Read the number where the point landed.";
+        return;
+      }
+      if (id === "subint") {
+        const a = P.a, b = P.b;
+        if (is(a + b)) this.msg = "Subtracting means adding the opposite.";
+        else if (is(b - a)) this.msg = `Start at ${fmtS(a)} and move ${Math.abs(b)} ${b < 0 ? "right" : "left"}.`;
+        else this.msg = "Read the number where the point landed.";
+        return;
+      }
+      if (kind === "sub" && is((A + Bt) / U)) this.msg = `Taking away ${nm(Bt)} is adding ${nm(-Bt)}.`;
+      else if (is(-T / U)) this.msg = "Use the sign of the number with the bigger size.";
+      else if (kind !== "three" && Math.sign(H0) !== Math.sign(HB) && is((Math.abs(H0) + Math.abs(HB)) / U * Math.sign(v))) this.msg = "One goes up and one goes down, so they cancel. Subtract the sizes.";
+      else this.msg = kind === "three" ? `Cancel the pair: what's left is the answer.` : frac ? `Count the ${PC[1]} from 0 to where the point landed.` : "Read the number where the point landed.";
+    },
+    // the last words: why
+    why() {
+      if (id === "subint") return P.b < 0 ? `Taking away ${fmtS(P.b)} is the same as adding ${-P.b}.` : `Taking away ${P.b} is adding −${P.b}.`;
+      if (kind === "three") return `${nm(pairK)} and ${nm(-pairK)} make 0, so ${nm(left)} is left.`;
+      const nA = pcs(H0), nB = pcs(HB), m = pcs(T), dir = T > 0 ? "right" : "left";
+      if (!rat) {
+        if (!T) return "Opposites cancel: 0.";
+        if (Math.sign(P.a) === Math.sign(P.b)) return "Both are negative, so the answer is negative.";
+        if (crossing) return `${nA} of the steps cancel the ${fmtS(P.a)}. ${m} ${m === 1 ? "is" : "are"} left, to the ${dir}.`;
+        return `The ${pw(nB)} cancel ${nB} of the ${fmtS(P.a)}. ${m} ${m === 1 ? "is" : "are"} left, to the ${dir}.`;
+      }
+      const Cap = PC[1][0].toUpperCase() + PC[1].slice(1);
+      if (Math.sign(H0) === Math.sign(HB)) return `${Cap} hop like ones: ${nA} and ${pw(nB)} make ${m}.`;
+      return `${Cap} hop like ones: ${crossing ? nA : nB} ${PC[1]} cancel and ${m} ${m === 1 ? "is" : "are"} left.`;
+    },
+    scene() {
+      const st = this.stage, seen = st === "write" || st === "done", done = st === "done", grabbed = down && down.grabbed;
+      const say = {
+        hop: kind === "add" ? ["Drag the point to make the hop.", `It snaps to each ${rat ? PC[0] : "step"}.`]
+          : kind === "sub" ? ["Now hop by the flipped arrow.", "Drag the point from the start."] : ["Hop from 0 by what's left.", pairNote],
+        flip: ["Flip the arrow over 0.", "Drag its tip across 0."],
+        slide: ["Cancel a pair first.", "Slide an arrow onto its opposite."],
+        write: [kind === "three" ? "Write what's left." : frac ? `Write where it lands, in ${PC[1]}.` : "Write where it lands.", pairNote],
+        done: [this.why(), ""],
+      }[st];
+      dhead(this, say[0], say[1]);
+      // the line; the start's name under its dot, so the numbers under the line leave it room
+      const skip = xx => kind !== "three" && Math.abs(xx - X(A)) < 2.5;
+      numLine("nl", x0, LY, xL, xR, U, S, piece, rat || U >= 3 ? 1 : 5, skip);   // every one once a one is 3 squares or more
+      // the square's meaning, and the live readout, beside the line
+      text(`key${key}`, key, XC, LY, "small", { anchor: "start" });
+      if (grabbed && this.live()) text("ro", this.live(), XC, LY - 2, "small", { anchor: "start", c: "var(--chapter)", live: true });
+      // what lies under the line: what's taken away (sub), the three numbers (three)
+      let base = LY + 4;
+      if (kind === "sub") {
+        const AY = this.rowY(0), Hh = this.flipped ? -Bt : this.H, live = st === "flip";
+        // the arrow turns over like a card when it lands flipped
+        const ak = `arr${Hh}${this.flipped ? "f" : ""}`, fresh = this.flipped && !drawn.has(ak);
+        arrowBar(ak, X(0), X(Hh), AY, { live, cls: fresh ? "flip-in" : null, style: fresh ? `transform-origin:${sq(X(0))}px ${sq(AY)}px` : null });
+        if (!(live && grabbed)) {
+          const nmA = this.flipped ? `+ ${par(-Bt)}` : `− ${par(Bt)}`;
+          if (Hh < 0) text(`an${nmA}`, nmA, X(Hh) - 0.6, AY, "maths", { anchor: "end" }); else text(`an${nmA}`, nmA, X(Hh) + 0.6, AY, "maths", { anchor: "start" });
+        }
+        // where it was: the web's hollow mark at b, which the last step measures from
+        if (this.flipped) path(`was${Bt}`, `M${sq(X(Bt) + 0.4)} ${sq(LY)}a${sq(0.4)} ${sq(0.4)} 0 1 1 0 -0.01`, { c: "var(--ink2)", bb: [X(Bt) - 0.4, LY - 0.4, X(Bt) + 0.4, LY + 0.4] });
+        base = LY + 7;
+      }
+      if (kind === "three") {
+        const r = this.rest();
+        r.forEach((i, j) => {
+          const k = ks[i], s = this.sl && this.sl.i === i ? this.sl : null, dx = s ? s.dx : 0, y = this.rowY(j) + (s ? s.dy : 0);
+          arrowBar(`ta${i}_${j}${s ? "d" : ""}`, X(dx), X(dx + k), y, { live: !!s });
+          const n = i === 0 ? nm(k) : `+ ${par(k)}`;
+          if (k < 0) text(`tn${i}_${j}${n}`, n, X(dx + k) - 0.6, y, "maths", { anchor: "end", live: !!s });
+          else text(`tn${i}_${j}${n}`, n, X(dx + k) + 0.6, y, "maths", { anchor: "start", live: !!s });
+        });
+        base = LY + 4.5 + 2.5 * r.length;
+      }
+      // the start: a dot and its name
+      if (kind !== "three") { dot("st", X(A), LY, 0.4, { c: "var(--ink)" }); text(`sn${A}`, nm(A), X(A), LY + 2, "maths"); }
+      // the hop: while it's dragged, a hump to the finger and its steps counted under a bracket; once it lands, the
+      // hump stays. Adding, its name waits over the start, then rides over the hump.
+      const hopName = `+ ${par(HB)}`;
+      if (st === "hop") {
+        const d = this.cur - H0;
+        if (d) {
+          hump("hl", X(H0), X(this.cur), LY, { live: true });
+          bracket("hb", X(H0), X(this.cur), base);
+          text("hc", pw(pcs(d)), (X(H0) + X(this.cur)) / 2, base + 1.3, "small", { c: "var(--chapter)", live: true });
+        } else if (kind === "add") text(`hn${hopName}`, hopName, X(H0), LY - 1.9, "maths");
+        handleDot("hd", X(this.cur), LY);
+      }
+      if (seen) {
+        const split = rat || id === "addint" ? crossing : false;
+        let top;
+        if (split) {
+          const h1 = hump("h1", X(H0), X(0), LY, { op: 0.4 }), h2 = T ? hump("h2", X(0), X(T), LY) : 0; top = Math.max(h1, h2);
+        } else top = hump("hp", X(H0), X(T), LY);
+        if (kind === "add") text(`hn2${hopName}`, hopName, (X(H0) + X(T)) / 2, LY - top - 1.3, "maths");
+        dot("lnd", X(T), LY, 0.45);
+        // see: what cancels and what's left (adding); how far apart (taking away whole numbers)
+        const brk = (k, a, b, y, s, c, cls = "small", side = 0) => {
+          bracket(k, X(a), X(b), y, { solid: true, c });
+          const w = s.length * CHW[cls], m = (X(a) + X(b)) / 2, cx = side < 0 ? Math.min(m, X(0) - 0.5 - w / 2) : side > 0 ? Math.max(m, X(0) + 0.5 + w / 2) : m;
+          text(`${k}t${s}`, s, cx, y + (cls === "maths" ? 1.6 : 1.3), cls, { c });
+        };
+        if (id === "subint") brk("ap", Bt, A, base, `${Math.abs(P.a - P.b)} apart`, "var(--chapter)");
+        else if (kind !== "three") {
+          const sd = Math.sign(H0);
+          if (split) {
+            brk("c1", H0, 0, base, rat ? `${pw(pcs(H0))} cancel` : `${fmtS(H0 / U)} and ${fmtS(-H0 / U)} make 0`, "var(--ink2)", "small", sd);
+            if (T) brk("c2", 0, T, base, rat ? pw(pcs(T)) : String(Math.abs(T / U)), "var(--chapter)", rat ? "small" : "maths", -sd);
+          } else if (Math.sign(H0) === Math.sign(HB)) {
+            brk("sm", 0, T, base, rat ? `${pcs(H0)} + ${pcs(HB)} = ${pw(pcs(T))}` : `${Math.abs(H0 / U)} + ${Math.abs(HB / U)} = ${Math.abs(T / U)} from 0`, "var(--chapter)");
+          } else {
+            brk("c1", T, H0, base, `${rat ? pw(pcs(HB)) : Math.abs(HB / U)} cancel`, "var(--ink2)");
+            brk("c2", 0, T, base + 3, rat ? pw(pcs(T)) : String(Math.abs(T / U)), "var(--chapter)", rat ? "small" : "maths");
+            base += 3;
+          }
+        }
+        // the record: the sum as school writes it, the answer typed
+        const cy = base + (frac ? 7 : 6), C = "var(--chapter)", over = frac ? { over: Lcd } : {};
+        const ans = done ? { sn: recV(T), c: C, tight: dec, ...(kind === "three" ? {} : over) } : frac ? { fbox: ["t", "b"] } : { box: "s", cells: 3 };
+        const R = (k, o = {}) => ({ sn: recV(k), tight: dec, ...o });
+        const toks = kind === "add" ? (frac ? [R(A), "+", R(B, { paren: true }), "=", R(A, over), "+", R(B, { ...over, paren: true }), "=", ans] : [R(A), "+", R(B, { paren: true }), "=", ans])
+          : kind === "sub" ? [R(A), "−", R(Bt, { paren: true }), "=", R(A, over), "+", R(-Bt, { ...over, paren: true }), "=", ans]
+          : [R(ks[0]), "+", R(ks[1], { paren: true }), "+", R(ks[2], { paren: true }), "=", ans];
+        mrow("rec", toks, 0, cy, this);
+        const by = cy + (frac ? 4 : 3);
+        if (done) block("next", 0, by, 10, "Next problem", "next");
+        else {
+          block("check", 0, by, 7, "Check", "check");
+          // the paper's minus key: a tap turns the number in the box negative (or back)
+          rect("negk", 8, by, 3, 2, { c: "var(--ink)" });
+          text("negt", "−", 9.5, by + 1, "maths");
+          put("neghit", "rect", { x: sq(8), y: sq(by), width: sq(3), height: sq(2), fill: "transparent", "data-act": "neg" }, "none");
+        }
+      }
+    },
+  });
+  // for the preview's own checks: where things are, in squares
+  L.geo = { x0, LY, U, S, A, B, Bt, H0, HB, T, ks, lo, hi, spare, Lcd, frac, dec, kind };
+  return L;
+}
+
+// ---------- lessons, the bar ----------
+let lesson;
+const LESSONS = {
+  addint: { name: "Adding integers", make: i => lNeg("addint", i) },
+  subint: { name: "Subtracting integers", make: i => lNeg("subint", i) },
+  addrat: { name: "Negative fractions and decimals", make: i => lNeg("addrat", i) },
+};
+const GEN = { addint: genAddInt, subint: genSubInt, addrat: genAddRat };
+const pickEl = document.getElementById("pick");
+pickEl.innerHTML = Object.entries(LESSONS).map(([id, e]) => `<option value="${id}">${esc(e.name)}</option>`).join("");
+function start(id, index = 0) {
+  if (!LESSONS[id]) id = "addint";
+  lesson = LESSONS[id].make(index);
+  pickEl.value = id;
+  drawn = new Set(); keys.blur(); down = null;
+  render(); frame(autoFrame(), true);
+  try { localStorage.setItem("g7ch3-lesson", id); } catch (err) {}
+}
+pickEl.onchange = () => start(pickEl.value, 0);
+document.getElementById("fresh").onclick = () => start(lesson.id, lesson.index);
+let first = "addint", firstP = 0;
+try {
+  const q = new URLSearchParams(location.search);
+  first = q.get("l") || localStorage.getItem("g7ch3-lesson") || "addint";
+  firstP = Math.max(0, (+q.get("p") || 1) - 1);
+  if (q.get("theme")) document.documentElement.dataset.theme = q.get("theme");
+} catch (err) {}
+start(first, firstP);
+// for the preview's own checks: paper squares to screen points
+window.T = { GEN, start, get lesson() { return lesson; }, scr(x, y) { const p = new DOMPoint(x * SQ, y * SQ).matrixTransform(svg.getScreenCTM()); return { x: p.x, y: p.y }; } };
+</script>
