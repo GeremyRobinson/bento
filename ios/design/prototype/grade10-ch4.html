@@ -798,7 +798,12 @@ function readout(k, s, cands, segs, live, col) {
 // part named and marked (ticks on sides, arcs on angles); on the right, the parts given for DEF lie loose: a stick for
 // each side, a wedge for each angle, marked to match. SSS and SAS from whole-sided triangles (corners on crossings);
 // ASA and AAS with whole angles 30-110 and a side 6-15; not enough: SSA (two places) or AAA (two sizes).
-const CONG_W = [[4, 0, 3], [4, 4, 3], [6, 3, 4], [8, 4, 3], [8, 0, 6], [8, 8, 6], [12, 0, 5], [12, 12, 5], [12, 6, 8]];
+// scalene only (every side and angle different, angles at least 5° apart): equal marks mean equal parts
+const CONG_W = [[4, 0, 3], [4, 4, 3], [8, 0, 6], [8, 8, 6], [12, 0, 5], [12, 12, 5], [21, 6, 8], [21, 15, 8], [14, 5, 12], [14, 9, 12]];
+function scalene(P, Q, R) {
+  const s = [dist(P, Q), dist(P, R), dist(Q, R)], a = [angAt([P, Q, R], 0), angAt([P, Q, R], 1), angAt([P, Q, R], 2)];
+  return Math.min(...a) >= 20 && [[0, 1], [0, 2], [1, 2]].every(([i, j]) => Math.abs(s[i] - s[j]) >= 0.3 && Math.abs(a[i] - a[j]) >= 5);
+}
 const TICKW = ["", "one-tick", "two-tick", "three-tick"], ARCW = ["", "one-arc", "two-arc", "three-arc"];
 function genCong(i) {
   const kind = i === 0 ? "SSS" : i === 1 ? "SAS" : i === 2 ? pick1(["SSS", "SAS"]) : i === 3 ? "ASA" : i === 4 ? "AAS" : i === 5 ? pick1(["SSA", "AAA"])
@@ -808,7 +813,7 @@ function genCong(i) {
     if (kind === "SSS" || kind === "SAS") { const [b, x, y] = CONG_W[rnd(0, (i < 3 ? 6 : CONG_W.length) - 1)]; c = b; F = V(x, y); }
     else if (kind === "SSA") {
       const al = rnd(30, 60), cc = rnd(8, 15), h = cc * Math.sin(al * DEG), m = cc * Math.cos(al * DEG), a = rnd(Math.floor(h) + 1, cc - 1), r = Math.sqrt(a * a - h * h);
-      if (a <= h + 0.3 || m - r < 3 || 2 * r < 3) continue;
+      if (a <= h + 0.3 || m - r < 4.5 || 2 * r < 3) continue;
       const ts = rnd(0, 1) ? [m + r, m - r] : [m - r, m + r];
       c = cc; F = mul(unit(al * DEG), ts[0]); F2 = mul(unit(al * DEG), ts[1]);
     } else {
@@ -817,10 +822,11 @@ function genCong(i) {
       c = kind === "AAA" ? rnd(6, 8) : rnd(6, 15);
       F = mul(unit(al * DEG), c * Math.sin(be * DEG) / Math.sin(ga * DEG));
     }
+    if (!scalene(V(0, 0), V(c, 0), F) || (F2 && !scalene(V(0, 0), V(c, 0), F2))) continue;
     const ext = [V(0, 0), V(c, 0), F, ...(F2 ? [F2] : []), ...(kind === "AAA" ? [mul(F, 1.4), V(1.4 * c, 0)] : [])];
     const x0 = Math.min(...ext.map(p => p.x)), x1 = Math.max(...ext.map(p => p.x)), y1 = Math.max(...ext.map(p => p.y));
     let k = 5; while (k > 1 && ((x1 - x0) * k > 24 || y1 * k > 19)) k--;
-    if ((x1 - x0) * k > 24 || y1 * k > 19 || (x1 - x0) * k < 16 || y1 * k < 6) continue;
+    if ((x1 - x0) * k > 24 || y1 * k > 19 || (x1 - x0) * k < 14 || y1 * k < 6) continue;
     const mode = i === 0 ? 0 : i === 1 ? 1 : i === 2 ? 2 : rnd(0, 3);
     return { kind, c, F, F2, k, mode };
   }
