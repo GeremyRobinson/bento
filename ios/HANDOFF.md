@@ -266,6 +266,27 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   the How to plays index-0 numbers as every lesson's does. Least zooms: 83%, 77%, 77%, 92%. Shots e.g.
   `page-gk-count10-1 -numbers kind=0,n=7,lay=3,rows=4,p0=0,p1=2,p2=14,p3=6,p4=38,p5=21,p6=33 -wrong2`,
   `page-gk-onemore-0 -numbers n=6 -hand grab=1,m=4`, `page-k-compare-1 -numbers top=6,bottom=4,spread=1,shift=0 -hand grab=1,gx=2.5,goff=0,off=-1`.
+- Kindergarten chapter 2, Shapes, is built (4 Nov; Core: `ShapesK` (`FlatShapes` k-shapes, `DrawShape` gk-draw, `Solids3K`
+  k-solids, `WhereIsIt` gk-position, `PutShapes` gk-compose), tests `ShapesKTests`; App: `FlatShapesLesson`, `DrawShapesLesson`,
+  `SolidShapesLesson`, `WhereIsItLesson`, `PutShapesLesson`, their shared `ShapesKitK` (`KS`: polygons, a side lit outside it, the
+  stick laid on each side in turn, word blocks) and `SolidsKitK` (`SK`: a box, sphere, cylinder and cone with their things' lines,
+  posed)). As the preview (`design/prototype/gradeK-ch2.html`), its words word for word; the preview's See lines that showed a
+  moment are said with the next instruction ("One circle at each end. Tap rolls or slides.", "One shape. Tap its name.").
+  **New shared pieces:** `Solids.Body` (a solid drawn as one mesh, each facet shaded by the way it faces; round outlines worked out
+  from the view), `Solids.Play` (solids that move by themselves: a push, a turn), `PaperLesson.standHeld` (the paper follows a finger
+  part way up; `dragPoint` reads the flat paper while it's held), `standDelay` (flat a moment before it first stands), `say(_:)` (what
+  to do changes within a step: "Push it."), `Sketch.vias` (a part morphs through several shapes: the stick) and a `via` on a part
+  already showing (Flat shapes' shape turns upright and back where it is).
+  Departures, each to show at 75%: solids are 2 blocks across (cylinder and cone 3 tall), not 4 (55%); the flat one sits up or down
+  the paper so it stands level with the solid (the +28° view drops what's to the right), so flat they're on a diagonal; the word
+  blocks and the record go in a row over what stands; Where is it?'s floor is 3 squares a floor square (5 was 44%), its record beside
+  the floor; Flat shapes' hexagon is 24 × 20, a circle 26 across, a triangle at most 27 tall, an upright square at most 26; Draw
+  shapes' Start over and record beside the place; Put shapes together's 2 triangles make a 3-block square, its rectangles wait
+  standing, the tray wraps at 13 blocks. "Drag it further up." is a notice, not a miss; a turned square or rectangle gets the stick,
+  not the turn. Least zooms: 76%, 76%, 80%, 76%, 79%. Shots e.g. `page-k-shapes-2 -numbers shape=3,w=10,h=5,turn=-15 -wrong`,
+  `page-gk-draw-0 -numbers kind=3 -tapsq 15,5,30,5,40,15`, `page-k-solids-0 -numbers shape=2,thing=0,turn=0,side=0 -drag 10,22,10,17 -hold`,
+  `page-gk-position-0 -numbers gon=-1,gx=5,gy=0,k0=3,k1=2,kind=0,n=2,on0=-1,on1=-1,ref=0,tx=-1,ty=-1,who=1,word=4,x0=5,x1=0,y0=2,y1=3 -wrong`,
+  `page-gk-compose-0 -numbers set=1 -drag 42,5,7,5 -hold`.
 
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost

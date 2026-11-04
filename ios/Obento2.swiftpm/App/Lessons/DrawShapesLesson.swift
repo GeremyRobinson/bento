@@ -16,7 +16,7 @@ struct DrawShapesLesson: PaperLesson {
     typealias C = (Int, Int)
     var liveKeys: Set<String> { ["cx", "cy", "r", "grab", "g"] }
     private func at(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
-    static let across = 10, down = 6, over = CGRect(x: 55, y: 0, width: 15, height: 4)
+    static let across = 10, down = 6, over = CGRect(x: 55, y: 0, width: 12, height: 4)
     static let centre = CGPoint(x: 25, y: 15)
     private func corners(_ s: PaperState) -> [C] { DrawShape.corners(s.run.kept) }
     private func closed(_ s: PaperState) -> Bool { (s.run.kept["closed"] ?? 0) != 0 }
@@ -64,7 +64,7 @@ struct DrawShapesLesson: PaperLesson {
                 KS.line(&pic, "rec2", [.n(0, .chapter), .w("corners")], x: 55, line: recY + 4)
                 pic.sketch.startAt = nil
             }
-            return PaperDrawing(picture: pic.sketch, live: live.sketch, extent: pic.R(-1, 0, 52, 31))
+            return PaperDrawing(picture: pic.sketch, live: live.sketch, extent: pic.R(0, 0, 67, 31))
         }
         var Cs = corners(s)
         // the finished drawing (the layout measures the last step before anything's drawn: a shape that would do)
@@ -121,7 +121,8 @@ struct DrawShapesLesson: PaperLesson {
             KS.line(&pic, "rec2", [.n(n, .chapter), .w("corners")], x: 55, line: recY + 4)
             pic.sketch.startAt = nil
         }
-        return PaperDrawing(picture: pic.sketch, live: live.sketch, extent: pic.R(-1, -1, 52, 32))
+        // room for Start over beside the place from the start, so the camera holds still as it comes
+        return PaperDrawing(picture: pic.sketch, live: live.sketch, extent: pic.R(0, -1, 67, 32))
     }
 
     func hands(_ s: PaperState) -> Hands? {
