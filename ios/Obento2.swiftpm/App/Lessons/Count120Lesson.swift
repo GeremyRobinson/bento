@@ -13,7 +13,8 @@ import SwiftUI
 /// was last checked. Hand while a count is held: "grab", "c", "skip", "dead", "lx", "ly".
 @MainActor
 struct Count120Lesson: PaperLesson {
-    var liveKeys: Set<String> { ["c", "skip", "dead", "lx", "ly"] }
+    /// The places counted ("c") are drawn on the picture as they light, over its lines; only the finger's walk is live.
+    var liveKeys: Set<String> { ["skip", "dead", "lx", "ly"] }
     private func at(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
     /// Count on's pad: a block under its chart. How many's record line and pad, under its four rows.
     private func padY(_ P: Count120.Parts) -> Double { P.many ? 25 : 5 * Double(P.rows) + 5 }
@@ -45,10 +46,8 @@ struct Count120Lesson: PaperLesson {
             if !place { N1.num(&pic, "cn", v, r0); continue }
             guard v <= P.s + c else { continue }
             // counted: filled, its number in the chapter's colour (a boxed place waits to be written)
-            if v <= P.s + w { N1.fill(&pic, "lit", v, r0) } else { N1.fill(&live, "lit", v, r0) }
-            if !P.boxed.contains(v) {
-                if v <= P.s + w { N1.num(&pic, "cn", v, r0, lit: true) } else { N1.num(&live, "cn", v, r0, lit: true) }
-            }
+            N1.fill(&pic, "lit", v, r0)
+            if !P.boxed.contains(v) { N1.num(&pic, "cn", v, r0, lit: true) }
         }
         N1.lines(&pic, "ch", r0, rows)
         for (i, v) in P.boxed.enumerated() {
@@ -134,10 +133,8 @@ struct Count120Lesson: PaperLesson {
         let w = st == 1 ? Int(s.run.kept["w"] ?? 0) : st > 1 ? P.o : 0
         let held = st == 1 && s.grabbed, c = held ? Int(s.h("c") ?? Double(w)) : w
         for v in (10 * r0 + 1)...min(120, 10 * (r0 + 4)) {
-            if v <= P.n { N1.fill(&pic, "sh", v, r0, KK.litCube) }
-            if v > 10 * P.T && v <= 10 * P.T + c {
-                if v <= 10 * P.T + w { N1.num(&pic, "cn", v, r0) } else { N1.num(&live, "cn", v, r0) }
-            }
+            if v <= P.n { N1.fill(&pic, "sh", v, r0) }
+            if v > 10 * P.T && v <= 10 * P.T + c { N1.num(&pic, "cn", v, r0) }
         }
         N1.lines(&pic, "ch", r0, 4)
         // the counted rows: outlined, their tens at the row's end
@@ -150,7 +147,7 @@ struct Count120Lesson: PaperLesson {
         switch st {
         case 0:
             let ry = 5 * Double(done - r0)
-            if s.on("ring") && !s.on("spot") { KK.hintBox(&pic, "hr", x: 0, y: 0, w: 50, h: 5 * Double(min(4, P.T - r0))) }
+            if s.on("ring") && !s.on("spot") { KK.hintBox(&pic, "hr", x: 0, y: ry, w: 50, h: 5 * Double(max(1, min(4, P.T - r0) - (done - r0)))) }
             if s.on("spot") && done < P.T { KK.hintBox(&pic, "spot", x: 0, y: ry, w: 50, h: 5) }
         case 1:
             let ry = 5 * Double(P.T - r0)

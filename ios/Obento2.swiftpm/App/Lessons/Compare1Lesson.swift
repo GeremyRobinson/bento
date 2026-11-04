@@ -51,8 +51,8 @@ struct Compare1Lesson: PaperLesson {
         if st > 0 && st < 3 {
             let both = onesLit
             func ro(_ t: Int, _ o: Int) -> String { both ? "\(Num1.pl(t, "ten", "tens")), \(Num1.pl(o, "one", "ones"))" : Num1.pl(t, "ten", "tens") }
-            pic.word("roA\(both)", ro(P.ta, P.ao), at: 30 - width(P.a) - 1, Self.line, KK.lit, anchor: UnitPoint(x: 1, y: 0.5))
-            pic.word("roB\(both)", ro(P.tb, P.bo), at: Self.bx + width(P.b) + 1, Self.line, KK.lit, anchor: UnitPoint(x: 0, y: 0.5))
+            pic.word("roA\(both)", ro(P.ta, P.ao), at: 30 - width(P.a) - 2.5, Self.line, KK.lit, anchor: UnitPoint(x: 1, y: 0.5))
+            pic.word("roB\(both)", ro(P.tb, P.bo), at: Self.bx + width(P.b) + 2.5, Self.line, KK.lit, anchor: UnitPoint(x: 0, y: 0.5))
         }
         switch st {
         case 0, 1:
@@ -62,8 +62,9 @@ struct Compare1Lesson: PaperLesson {
                     KK.hintBox(&pic, "hrB", x: Self.bx, y: Self.top, w: 30, h: max(3, 3 * Double(P.tb)))
                 } else {
                     let y = Self.top + 3 * Double(P.ta) + Self.gap(P.ta)
-                    KK.hintBox(&pic, "hrA", x: 0, y: y, w: 30, h: 3)
-                    KK.hintBox(&pic, "hrB", x: Self.bx, y: Self.top + 3 * Double(P.tb) + Self.gap(P.tb), w: 30, h: 3)
+                    // the ones, lit already: the ring is round them
+                    if P.ao > 0 { KK.hintBox(&pic, "hrA", x: 0, y: y, w: A1.x(P.ao), h: 3) }
+                    if P.bo > 0 { KK.hintBox(&pic, "hrB", x: Self.bx, y: Self.top + 3 * Double(P.tb) + Self.gap(P.tb), w: A1.x(P.bo), h: 3) }
                 }
             }
             if s.on("spot") { let m = numMid(P.big, P); KK.hint(&pic, "spot", m.x, m.y) }
@@ -74,7 +75,7 @@ struct Compare1Lesson: PaperLesson {
                 pic.sketch.box("sb\(i)\(bad)", pic.R(Self.gx, y, 4, 4), bad ? KK.red : .ink, width: Sketch.stroke)
                 pic.word("st\(i)\(bad)", g, at: Self.gx + 2, y + 2, bad ? KK.maths.colour(KK.red) : KK.maths)
             }
-            if s.on("ring") && !s.on("spot") && P.a != P.b { let m = numMid(P.big, P); KK.hint(&pic, "hr", m.x, m.y) }
+            if s.on("ring") && !s.on("spot") { KK.hintBox(&pic, "hr", x: Self.gx, y: Self.signY(0), w: 4, h: 14) }
             if s.on("spot") { KK.hintBox(&pic, "spot", x: Self.gx, y: Self.signY(P.sign), w: 4, h: 4) }
         default: break
         }

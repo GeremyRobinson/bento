@@ -10,7 +10,7 @@ import SwiftUI
 /// the ones are held: "grab", "lx", "ly" and the ones counted so far "h<k>".
 @MainActor
 struct TensOnes1Lesson: PaperLesson {
-    var liveKeys: Set<String> { Set(["lx", "ly"] + (0..<10).map { "h\($0)" }) }
+    var liveKeys: Set<String> { ["lx", "ly"] }
     private func at(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
     static let rx = 35.0, line = 2.0, padY = 5.0
     /// Row r's top: the tens' rows touch (a square apart, 9 tens and 9 ones showed at 63%), the ones a square under them.
@@ -50,10 +50,8 @@ struct TensOnes1Lesson: PaperLesson {
             }
         }
         // the ones as they're counted: their numbers under them
-        let kept = st == 1 ? KA.list(s, "c") : ones
         for (i, j) in ones.enumerated() {
-            if kept.contains(j) || !held { pic.word("cn\(j)", "\(i + 1)", at: A1.x(j) + 1.5, Self.rowY(t, t) + 3.5 + 1, KK.lit) }
-            else { live.word("cn\(j)", "\(i + 1)", at: A1.x(j) + 1.5, Self.rowY(t, t) + 3.5 + 1, KK.lit) }
+            pic.word("cn\(j)", "\(i + 1)", at: A1.x(j) + 1.5, Self.rowY(t, t) + 4.5, KK.lit)
         }
         if st < 2 {
             let k = grouped.count
@@ -64,8 +62,8 @@ struct TensOnes1Lesson: PaperLesson {
             }
             if !ones.isEmpty {
                 let ro = Num1.run(Array(1...ones.count))
-                if held && ones.count > kept.count { live.reads(ro); A1.note(&live, "ro", ro, x: Self.rx, y: Self.rowY(t, t) + 1.5) }
-                else { A1.note(&pic, "ro\(ones.count)", ro, x: Self.rx, y: Self.rowY(t, t) + 1.5) }
+                if held { live.reads(ro) }
+                A1.note(&pic, "ro\(ones.count)", ro, x: Self.rx, y: Self.rowY(t, t) + 1.5)
             }
         }
         let toks: [M7.Tok] = [.n(t), .w(t == 1 ? "ten and" : "tens and"), .n(o), .w(o == 1 ? "one is" : "ones is")]
