@@ -57,6 +57,28 @@ public enum Curriculum {
             MapLesson("k-tens", "Count by tens to 100"), MapLesson("gk-count100", "Count to 100")]),
     ]
 
+    /// 1st grade (design/grade1.md): 26 lessons in 6 chapters, in teaching order. Chapter 1 is built (4 Nov): only it is on
+    /// the map. Numbers to 120 is base-ten work, in the decimals' pink (as Kindergarten's Teens and tens).
+    static let grade1: [MapChapter] = [
+        MapChapter("g1-addsub", "Add and take away to 20", colour: "whole", [
+            MapLesson("g1-add20", "Add within 20"), MapLesson("g1-ten", "Make a ten to add"), MapLesson("g1-doubles", "Doubles and near doubles"),
+            MapLesson("g1-three", "Add three numbers"), MapLesson("g1-sub20", "Subtract within 20")]),
+        MapChapter("g1-equations", "Equations and stories", colour: "fractions", [
+            MapLesson("g1-related", "Add to take away"), MapLesson("g1-missing", "Missing numbers"), MapLesson("g1-equal", "True or false?"),
+            MapLesson("g1-story", "Story problems"), MapLesson("g1-more", "How many more?")]),
+        MapChapter("g1-numbers", "Numbers to 120", colour: "decimals", [
+            MapLesson("g1-count120", "Count to 120"), MapLesson("g1-tensones", "Tens and ones"), MapLesson("g1-compare", "Compare two-digit numbers"),
+            MapLesson("g1-tenmore", "10 more, 10 less")]),
+        MapChapter("g1-tens", "Adding and taking away tens", colour: "whole", [
+            MapLesson("g1-addtens", "Add tens to a number"), MapLesson("g1-add100", "Add within 100"), MapLesson("g1-subtens", "Take away tens")]),
+        MapChapter("g1-measure", "Length, time and graphs", colour: "measurement", [
+            MapLesson("g1-order3", "Longest to shortest"), MapLesson("g1-measure", "Measure length"), MapLesson("g1-time", "Time to the hour and half hour"),
+            MapLesson("g1-picgraph", "Picture graphs"), MapLesson("g1-tally", "Tally charts")]),
+        MapChapter("g1-shapes", "Shapes and equal parts", colour: "geometry", [
+            MapLesson("g1-shapes", "What makes a triangle"), MapLesson("g1-compose", "Put shapes together"), MapLesson("g1-build", "Build with solids"),
+            MapLesson("g1-halves", "Halves and fourths")]),
+    ]
+
     /// 4th grade (design/grade4.md): 35 lessons in 8 chapters, in teaching order. All 8 chapters are built (3 Nov).
     static let grade4: [MapChapter] = [
         MapChapter("g4-big", "Big numbers", colour: "whole", [
@@ -112,7 +134,7 @@ public enum Curriculum {
 
     /// A grade's chapters, in order (none for a grade with no map yet).
     public static func chapters(_ grade: Int) -> [MapChapter] {
-        switch grade { case 0: gradeK; case 4: grade4; case 5: grade5; case 6: grade6; default: [] }
+        switch grade { case 0: gradeK; case 1: grade1; case 4: grade4; case 5: grade5; case 6: grade6; default: [] }
     }
     /// A lesson is built when the app has its spec.
     public static func built(_ id: String) -> Bool { Lessons.spec(id) != nil }

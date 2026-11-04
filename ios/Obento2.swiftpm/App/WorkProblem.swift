@@ -605,9 +605,9 @@ final class WorkProblem: Identifiable, PageProblem {
         let l = lesson
         return intro ?? paperSay ?? (l.story && l.step.answer?.choices != nil ? l.words.hint : l.words.say)
     }
-    /// What to do now as the lesson's hands have changed it within the step (PaperLesson.say), if they have.
     /// The picture alone for a moment (PaperLesson.alone): no words, record or blocks; the camera on the picture.
     var alone: Bool { ghost == nil && paper?.alone(state()) == true }
+    /// What to do now as the lesson's hands have changed it within the step (PaperLesson.say), if they have.
     var paperSay: String? { ghost == nil && !solved ? paper?.say(state()) : nil }
     @ObservationIgnored private var heldFrame: Rect?
     /// How much of the screen's bottom a docked keyboard covers (PaperScreen sets it; iPadOS's floating number pad

@@ -192,6 +192,12 @@ extension Piece {
         case "k-teens": return [box(6, 2, 5, 1), box(6, 3, 1, 1)]               // the ones
         case "k-tens": return [box(4, 4, 2, 1)]                                 // the last ten counted
         case "gk-count100": return [box(9, 0, 1, 6)]                            // the last column: 10, 20, 30…
+        // 1st grade, Add and take away to 20 (4 Nov)
+        case "g1-add20": return [box(7, 2, 3, 1)]                               // the counters hopped on
+        case "g1-ten": return [box(8, 1, 2, 1)]                                 // the two that fill the ten
+        case "g1-doubles": return [box(6, 4, 1, 1)]                             // the one more
+        case "g1-three": return [box(0, 5, 10, 1)]                              // the ten made first
+        case "g1-sub20": return [box(6, 2, 4, 1)]                               // the counters hopped back over
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -366,6 +372,39 @@ extension Piece {
             }
         case "gk-count100": // the hundred chart's top rows: 10 by 6
             return [box(0, 0, 10, 6)] + (1..<10).map { x in line((Double(x), 0), (Double(x), 6)) } + (1..<6).map { y in line((0, Double(y)), (10, Double(y))) }
+        // 1st grade, Add and take away to 20 (4 Nov)
+        case "g1-add20", "g1-sub20", "g1-ten", "g1-doubles", "g1-three":
+            func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.4 * cos(a), y + 0.4 * sin(a)) } }
+            func ticks(_ y: Double) -> [[CGPoint]] { var out = [line((0, y), (10, y))]; for x in 0...10 { out.append(line((Double(x), y), (Double(x), y + 0.4))) }; return out }
+            switch id {
+            case "g1-add20": // counters on a line, three hopped on: 10 by 6
+                var out = ticks(3)
+                for j in 0..<10 { out.append(dot(Double(j) + 0.5, 2.5)) }
+                for j in 7..<10 { out.append(arc(Double(j), Double(j) + 1, 2, 0.6)) }
+                return out
+            case "g1-sub20": // counters on a line, the last four crossed out under a hop back: 10 by 6
+                var out = ticks(3)
+                for j in 0..<10 { out.append(dot(Double(j) + 0.5, 2.5)) }
+                for j in 6..<10 { out.append(line((Double(j) + 0.15, 2.85), (Double(j) + 0.85, 2.15))) }
+                out.append(arc(10, 6, 2, 1.6))
+                return out
+            case "g1-ten": // two rows of ten places, the top filled to ten: 10 by 6
+                var out: [[CGPoint]] = [box(0, 1, 10, 1), box(0, 3.5, 10, 1)]
+                for x in 1..<10 { out.append(line((Double(x), 1), (Double(x), 2))); out.append(line((Double(x), 3.5), (Double(x), 4.5))) }
+                for j in 0..<10 { out.append(dot(Double(j) + 0.5, 1.5)) }
+                for j in 0..<3 { out.append(dot(Double(j) + 0.5, 4)) }
+                return out
+            case "g1-doubles": // two rows lined up, pairs joined, one more: 7 by 6
+                var out: [[CGPoint]] = []
+                for j in 0..<7 { out.append(dot(Double(j) + 0.5, 4.5)) }
+                for j in 0..<6 { out.append(dot(Double(j) + 0.5, 1.5)); out.append(line((Double(j) + 0.5, 1.9), (Double(j) + 0.5, 4.1))) }
+                return out
+            default: // three groups, and the ten they make: 10 by 6
+                var out: [[CGPoint]] = [box(0, 5, 10, 1)]
+                for (y, n) in [(0.5, 3), (1.7, 4), (2.9, 7)] { for j in 0..<n { out.append(dot(Double(j) + 0.5, y)) } }
+                for x in 1..<10 { out.append(line((Double(x), 5), (Double(x), 6))) }
+                return out
+            }
         case "g6-ratio": // two rectangles of cells growing together a row at a time: 11 by 6
             return [box(0, 0, 4, 6), box(5, 0, 6, 6), line((2, 0), (2, 6)), line((7, 0), (7, 6)), line((9, 0), (9, 6))]
                 + [2.0, 4].flatMap { y in [line((0, y), (4, y)), line((5, y), (11, y))] }

@@ -241,6 +241,12 @@ enum PaperLessons {
         case "k-teens": return TeenNumbersLesson()
         case "k-tens": return CountTensLesson()
         case "gk-count100": return CountHundredLesson()
+        // 1st grade, Add and take away to 20 (4 Nov 2026)
+        case "g1-add20": return Add20Lesson()
+        case "g1-ten": return MakeTen1Lesson()
+        case "g1-doubles": return Doubles1Lesson()
+        case "g1-three": return Three1Lesson()
+        case "g1-sub20": return Sub20Lesson()
         default: return nil
         }
     }
