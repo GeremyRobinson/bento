@@ -66,7 +66,7 @@ struct GcfLesson: PaperLesson {
         if at == 2 && s.on("ring") { R6.ring(&pic, "ring", x: 0.5, y: ys[0], w: xv(P.long) - 1, h: ys[1] + H - ys[0]) }
         if cut {
             M7.row(&rec, "r1", [.t("GCF(\(P.A), \(P.B))"), .op("="), .n(g, .chapter)], x: 0, line: 1)
-            func box(_ id: String, _ v: Int) -> M7.Tok { at >= 3 ? .n(v, .chapter) : .box(id, cells: 1) }
+            func box(_ id: String, _ v: Int) -> M7.Tok { at >= 3 ? .n(v, .chapter) : .box(id, cells: 2) }
             M7.row(&rec, "r2", [.n(P.A), .op("+"), .n(P.B), .op("="), .n(g), .t("("), box("m", P.m), .op("+"), box("n", P.n), .t(")")], x: 0, line: 4)
         }
         return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: rec.boxes, actions: actions,

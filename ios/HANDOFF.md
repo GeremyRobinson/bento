@@ -87,8 +87,13 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
 - The keyboard never hides the work (3 Nov, app-wide): every keyboard notice counts (the system-hosted keys post only
   some), its frame is turned into the app's way up (the simulator holds the iPad portrait while the app is landscape, so
   the keys draw down the right side), and the camera frames into the room above, left or right of them
-  (`PaperModel.room`): the whole problem at 75%+, else from its left edge through the record (70%+), else the whole
-  problem down to 50%, else the record, its boxes and Check (`WorkProblem.stageFrame`); it glides there and back.
+  (`PaperModel.room`), in this order (call of 3 Nov, "keep the work readable"): the whole problem at 75%+; else the record
+  line being typed (this step's boxes, what's written on their rows, Check) with as much of the problem's width and then
+  of the picture above it as fits at 75%; else that line alone as big as it fits. The whole problem is never shrunk below
+  75% to fit beside the keys (`WorkProblem.stageFrame`, `Sketch.bounds(from:to:)`); it glides there and back.
+  `-keypad -zoomlog` writes the settled zoom to Documents/zoom.txt. Checked keys up: 4th Measurement story 72% → 75%,
+  5th Multiply two-digit 47% → 75% (the record and the picture's right part), 6th Ratio tables' column past the paper
+  53% → 63% (its line, the table beside the boxes, is wider than 75% allows), 6th Unit rates 90% (unchanged).
 - Never remove an animation (3 Nov): a sketch part can morph (`Sketch.morphs`, or `from` to start a new part in another
   shape) along a spring's path, and wait first (`Sketch.delay`); moved parts glide on the same spring. Chapter 5's whole
   grows into pieces (`M5.opened`) and full bars shrink into wholes (`M5.closed`); Tenths and hundredths' poured
@@ -110,6 +115,16 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   m + 2 rows (the preview's m + 3). Least zooms: 78%, 76%, 76%, 112%, 85%. A miss rings the general area (the total to reach, the bar,
   the table's column lit), a second the exact spot. Shots as before, e.g. `page-g6-ratiotable@6-2 -wrong` (the compare kind),
   `page-g6-rate-2 -numbers u=14,n=9,m=12,item=0,kind=0`, `map-started -grade 6 -whole`.
+- 6th grade chapter 2, Factors and fractions, is built (3 Nov; Core: `Factors6` (`Fact6`, `Lcm6`, `Gcf6`, `DivideFrac6`), tests
+  `FactorsG6Tests`; App: `LcmLesson`, `GcfLesson`, `DivideFractionsLesson`). As the preview: LCM hops b's along a line a square a
+  number (two up to 24), taps the first landing a goes into (a's hops come under to it), writes L ÷ a; GCF cuts two bars with the
+  ruler under them (any whole length; end dots green or red with what's over), writes A + B = g([m] + [n]); Dividing fractions picks
+  More/Less than 1 (the engine's choice row), lays c/d's under the a/b (the last cut off, dashed), cuts all three rows with the
+  ruler, then flips, multiplies and simplifies in one line; the ribbon story is index 5, 8… (in the pick's words, no operation step).
+  To show at 75%: bars 69 squares or longer (GCF's 72, Dividing fractions' wholes of 70 and 72) have their names over their right
+  ends, bars further apart; hint rings start inside the left edge. Least zooms: 79%, 75%, 75%, except GCF with a bar of 81
+  (g = 9 with a 9, about 3% of problems) at about 68% (G to decide). Shots e.g. `page-g6-lcm-1 -numbers a=4,b=6 -wrong`,
+  `page-g6-gcf-0 -numbers g=6,m=3,n=5 -drag 2,12,4,12 -hold`, `page-g6-divide-2 -numbers a=2,b=3,c=1,d=4,story=0`.
 
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost

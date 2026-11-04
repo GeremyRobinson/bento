@@ -50,7 +50,7 @@ struct LcmLesson: PaperLesson {
             pic.word("roa\(to)\(spot)", Lcm6.Parts.list(to / a, a) + (spot ? ": \(to / a) hops" : ""), at: 0, Self.roY, R6.lit, anchor: UnitPoint(x: 0, y: 0.5))
         }
         // hints: a first miss rings the general area, a second the exact spot (call of 3 Nov)
-        if at == 1 && s.on("ring") { R6.ring(&pic, "ring", x: endX - 1, y: Y - 1, w: 2, h: 2) }
+        if at == 1 && s.on("ring") { R6.ring(&pic, "ring", x: endX - 1.5, y: Y - 1, w: 1.5, h: 2) }
         if at == 1 && s.on("spot") { for j in 1...P.hops { pic.line("spot\(j)", [(xv(b * j), Y - 1.2), (xv(b * j), Y)], .chapter) } }
         if at == 2 && s.on("ring") { R6.ring(&pic, "ring", x: 0.5, y: Self.labelY - 0.8, w: endX + 0.5 - 1, h: 1.6) }
         if at == 2 && s.on("spot") { pic.circle("spot", at: xv(L), Self.labelY, radius: 1.3, .chapter, dashed: true) }

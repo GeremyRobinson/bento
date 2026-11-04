@@ -126,7 +126,9 @@ struct DivideFractionsLesson: PaperLesson {
             if s.on("ring") { R6.ring(&pic, "ring", x: 0.5, y: lay.roY - 0.8, w: roEnd - 1.5 - 1, h: 1.6) }
             if s.on("spot") { ro("spot", "\(P.a) × \(P.d) = \(P.S), \(P.b) × \(P.c) = \(P.L)", x: roEnd) }
         case 6:
-            if s.on("ring") { R6.ring(&pic, "ring", x: 0.5, y: YL, w: min(Double(P.copies) * Cl, reach) - 1, h: H) }
+            // the whole copies laid (or the a/b, when none fits whole)
+            let wholes = P.copies - (P.partLast ? 1 : 0)
+            if s.on("ring") { R6.ring(&pic, "ring", x: 0.5, y: wholes > 0 ? YL : Y1, w: (wholes > 0 ? Double(wholes) * Cl : Al) - 1, h: H) }
             if s.on("spot") { ro("spot", "\(P.S)/\(P.L) = \(Ratio6.mixed(P.S, P.L))", x: roEnd) }
         default: break
         }
