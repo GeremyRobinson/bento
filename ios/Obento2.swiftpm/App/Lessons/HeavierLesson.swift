@@ -12,7 +12,7 @@ import SwiftUI
 /// let go and where (it goes on from there).
 @MainActor
 struct HeavierLesson: PaperLesson {
-    var liveKeys: Set<String> { ["x", "y", "grab", "g", "dx", "dy"] }
+    var liveKeys: Set<String> { ["x", "y", "dx", "dy"] }
     private func at(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
     static let PX = [10.0, 55.0], beam = 5.0, tray = 25.0, line = 10.0, rows = [0.0, 10.0]
     static let same = CGRect(x: 25, y: 23, width: 15, height: 4)

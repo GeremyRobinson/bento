@@ -287,6 +287,20 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   `page-gk-draw-0 -numbers kind=3 -tapsq 15,5,30,5,40,15`, `page-k-solids-0 -numbers shape=2,thing=0,turn=0,side=0 -drag 10,22,10,17 -hold`,
   `page-gk-position-0 -numbers gon=-1,gx=5,gy=0,k0=3,k1=2,kind=0,n=2,on0=-1,on1=-1,ref=0,tx=-1,ty=-1,who=1,word=4,x0=5,x1=0,y0=2,y1=3 -wrong`,
   `page-gk-compose-0 -numbers set=1 -drag 42,5,7,5 -hold`.
+- Kindergarten chapter 3, Measure and sort, is built (4 Nov; Core: `MeasureK` (`LengthK` k-length, `Heavier` gk-heavier, `SortK`
+  k-sort), tests `MeasureKTests`; App: `LengthLesson`, `HeavierLesson`, `SortLesson`, their shared `MeasureKitK` (`KM`: a thing as long
+  as it is, sorting glyphs, a record line with its box in the middle, `KM.seeded` parts that start where they were)). As the preview
+  (`design/prototype/gradeK-ch3.html`), its words word for word; See lines said with the next instruction ("Count what sticks out.
+  Write how many stick out.", "Watch the balance. Tap the heavier one."; the same length's done line starts "They end at the same
+  place."). **New shared piece:** `Sketch.swings` (a part's morph or glide swings on a loose spring, past and back, 1.6 s: the
+  balance's beam, pans and what's on them). The number row can show some keys (`keys:`). Departures, to show at 75%: the taller kind
+  is 2–6 cubes and 6 high with the raised one lifted (7 was 69%); the sort field is 9 × 2 blocks (7 × 3 was 69% with three rows
+  under it); a sort's wrong tap shakes the thing (it swings in from a square aside) and outlines it red instead of the preview's
+  sideways shake; the readout counts only while a finger holds something. Least zooms: 75%, 77%, 78%. Shots e.g.
+  `page-k-length-2 -numbers top=0,bottom=2,a=7,b=4,shift=2,mover=1,tall=0 -wrong`, `page-gk-heavier-0 -numbers x=0,y=3 -drag 2.5,27.5,10,13.5 -then 1 -slow 5`
+  (films the tip), `page-k-sort-3 -numbers by=0,K=3,n0=5,n1=3,n2=7,c0=0,…,c14=17 -wrong2`.
+- Fixes of 4 Nov (chapter 2): Solid shapes' push sends the solid away from the flat shape; the die's dots are filled spots
+  (`Solids.Body.spots`) in the edges' dark colour.
 
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
