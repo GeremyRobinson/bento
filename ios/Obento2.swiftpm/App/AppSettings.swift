@@ -16,7 +16,7 @@ enum AppSettings {
     static var sound: Bool { memory["sound"] as? Bool ?? (shots ? nil : d.object(forKey: "sound") as? Bool) ?? true }
     /// Each step's words read out as they come. Off unless a grown-up turns it on (⋯ has Read it aloud either way), except
     /// in Kindergarten and 1st grade, where it's on until a grown-up turns it off (the voice: most can't read yet).
-    static var readAloud: Bool { memory["readAloud"] as? Bool ?? (shots ? nil : d.object(forKey: "readAloud") as? Bool) ?? (profile.grade <= 1) }
+    static var readAloud: Bool { memory["readAloud"] as? Bool ?? (shots ? nil : d.object(forKey: "readAloud") as? Bool) ?? (profile.grade <= 2) }
     /// "" as the iPad is set, or "light", or "dark".
     static var theme: String { memory["theme"] as? String ?? (shots ? nil : d.string(forKey: "theme")) ?? "" }
 

@@ -35,7 +35,7 @@ final class BigNumbersTests: XCTestCase {
     // MARK: grades on the map
 
     func testGrades() {
-        XCTAssertEqual(Grades.all.filter(Grades.isLive), [0, 1, 4, 5, 6])
+        XCTAssertEqual(Grades.all.filter(Grades.isLive), [0, 1, 2, 4, 5, 6])
         // 5th grade exactly as it was: the same chapters, lessons, ids and tests
         let g5 = Curriculum.chapters(5)
         XCTAssertEqual(g5.map(\.key), ["whole", "decimals", "fractions", "measurement", "geometry"])

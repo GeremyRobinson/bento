@@ -79,6 +79,28 @@ public enum Curriculum {
             MapLesson("g1-halves", "Halves and fourths")]),
     ]
 
+    /// 2nd grade (design/grade2.md): 27 lessons in 7 chapters, in teaching order. Chapter 1 is built (4 Nov): only it is on the map.
+    static let grade2: [MapChapter] = [
+        MapChapter("g2-addsub", "Adding and subtracting to 100", colour: "whole", [
+            MapLesson("g2-facts", "Facts to 20"), MapLesson("g2-regroup", "Adding with regrouping"), MapLesson("g2-subregroup", "Subtracting with regrouping"),
+            MapLesson("g2-addfour", "Add up to four numbers"), MapLesson("g2-story", "Story problems to 100"), MapLesson("g2-twostep", "Two-step story problems")]),
+        MapChapter("g2-numbers", "Numbers to 1000", colour: "decimals", [
+            MapLesson("g2-hundreds", "Hundreds, tens and ones"), MapLesson("g2-skip", "Skip counting"), MapLesson("g2-compare", "Compare three-digit numbers"),
+            MapLesson("g2-within1000", "Add and subtract within 1000")]),
+        MapChapter("g2-groups", "Equal groups", colour: "fractions", [
+            MapLesson("g2-evenodd", "Even and odd"), MapLesson("g2-arrays", "Arrays"), MapLesson("g2-squares", "Rows and columns of squares")]),
+        MapChapter("g2-length", "Length", colour: "measurement", [
+            MapLesson("g2-measure", "Inches and centimeters"), MapLesson("g2-twounits", "Measure with two units"), MapLesson("g2-estimate", "Estimate length"),
+            MapLesson("g2-numline", "Lengths on a number line")]),
+        MapChapter("g2-data", "Data", colour: "decimals", [
+            MapLesson("g2-makegraph", "Make a graph"), MapLesson("g2-bargraph", "Bar graphs"), MapLesson("g2-lineplot", "Line plots")]),
+        MapChapter("g2-timemoney", "Time and money", colour: "measurement", [
+            MapLesson("g2-time5", "Time to 5 minutes"), MapLesson("g2-coins", "Name the coin"), MapLesson("g2-money", "Counting money"),
+            MapLesson("g2-dollars", "Dollars and cents")]),
+        MapChapter("g2-shapes", "Shapes", colour: "geometry", [
+            MapLesson("g2-shapes", "Sides and corners"), MapLesson("g2-solids", "Faces, edges and corners"), MapLesson("g2-shares", "Halves, thirds and fourths")]),
+    ]
+
     /// 4th grade (design/grade4.md): 35 lessons in 8 chapters, in teaching order. All 8 chapters are built (3 Nov).
     static let grade4: [MapChapter] = [
         MapChapter("g4-big", "Big numbers", colour: "whole", [
@@ -134,7 +156,7 @@ public enum Curriculum {
 
     /// A grade's chapters, in order (none for a grade with no map yet).
     public static func chapters(_ grade: Int) -> [MapChapter] {
-        switch grade { case 0: gradeK; case 1: grade1; case 4: grade4; case 5: grade5; case 6: grade6; default: [] }
+        switch grade { case 0: gradeK; case 1: grade1; case 2: grade2; case 4: grade4; case 5: grade5; case 6: grade6; default: [] }
     }
     /// A lesson is built when the app has its spec.
     public static func built(_ id: String) -> Bool { Lessons.spec(id) != nil }
@@ -145,8 +167,8 @@ public enum Curriculum {
     /// The grade's own test, under everything. 5th grade's keeps the id it's always had.
     public static func gradeTest(_ grade: Int) -> String { grade == 5 ? "test-grade" : "test-grade-\(grade)" }
     public static func isGradeTest(_ id: String) -> Bool { id.hasPrefix("test-grade") }
-    /// Its words are spoken (Kindergarten and 1st grade: most can't read yet).
-    public static func voiced(_ id: String) -> Bool { grade(of: id).map { $0 <= 1 } ?? false }
+    /// Its words are spoken (Kindergarten to 2nd grade: most can't read yet, or are still young readers).
+    public static func voiced(_ id: String) -> Bool { grade(of: id).map { $0 <= 2 } ?? false }
     /// A lesson's name on its map ("Comparing big numbers").
     public static func name(of id: String) -> String? {
         for g in Grades.all { for c in chapters(g) { if let l = c.lessons.first(where: { $0.id == id }) { return l.name } } }

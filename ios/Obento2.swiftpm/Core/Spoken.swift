@@ -25,6 +25,8 @@ public enum Spoken {
             guard let top = Int(m[1]), let bottom = Int(m[2]), let name = denominators[bottom] else { return "\(m[1]) over \(m[2])" }
             return "\(top) \(name)\(top == 1 ? "" : "s")"
         }
+        // a lone ? (the story's unknown): "Put the ? on what we don't know."
+        out = replace(out, #"(^|\s)\?(?=[\s.,]|$)"#) { "\($0[1])question mark" }
         while out.contains("  ") { out = out.replacingOccurrences(of: "  ", with: " ") }
         return out.trimmingCharacters(in: .whitespaces)
     }
