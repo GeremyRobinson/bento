@@ -538,6 +538,8 @@ public enum Lessons {
         CountToTen.spec, OneMore.spec, CompareGroups.spec, CompareNumbers.spec,
         // Kindergarten, Shapes (4 Nov 2026)
         FlatShapes.spec, DrawShape.spec, Solids3K.spec, WhereIsIt.spec, PutShapes.spec,
+        // Kindergarten, Measure and sort (4 Nov 2026)
+        LengthK.spec, Heavier.spec, SortK.spec,
     ]
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }

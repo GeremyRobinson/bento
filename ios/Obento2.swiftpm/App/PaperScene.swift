@@ -175,6 +175,10 @@ extension Piece {
             case "gk-position": return [box(4, 1, 3, 3)]                          // the cube in front
             default: return [[q(0, 0), q(6, 6), q(0, 6)]]                         // one triangle in the square
             }
+        // Kindergarten, Measure and sort (4 Nov)
+        case "k-length": return [box(6, 0, 3, 2)]                               // the part that sticks out
+        case "gk-heavier": return [box(0.5, 3.6, 2, 1.2)]                       // the heavier one, gone down
+        case "k-sort": return [box(2, 0, 7, 1.6)]                               // the row with the most
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -289,6 +293,19 @@ extension Piece {
             return [line((0, 6), (8, 6), (11, 3), (3, 3), (0, 6)), box(4, 1, 3, 3), line((4, 1), (5, 0), (8, 0), (7, 1)), line((8, 0), (8, 3), (7, 4)), ball]
         case "gk-compose": // a square of two triangles, and a triangle waiting beside it: 11 by 6
             return [box(0, 0, 6, 6), line((0, 0), (6, 6)), line((8, 0), (8, 6), (11, 6), (8, 0))]
+        // Kindergarten, Measure and sort (4 Nov)
+        case "k-length": // two things from one start line, the shorter one's end dropped across the longer: 9 by 6
+            let dash = stride(from: 0.0, to: 6, by: 1).map { y in line((6, y), (6, y + 0.5)) }
+            return [line((0, 0), (0, 6)), box(0, 0.5, 9, 1.5), box(0, 4, 6, 1.5)] + (1..<9).map { x in line((Double(x), 0.5), (Double(x), 2)) }
+                + (1..<6).map { x in line((Double(x), 4), (Double(x), 5.5)) } + dash
+        case "gk-heavier": // a pan balance tipped, the heavy one down on the left: 11 by 6
+            return [line((5.5, 1.5), (5.5, 6)), line((4, 6), (7, 6)), line((1.5, 2.3), (9.5, 0.7)),
+                    line((1.5, 2.3), (0, 4.8)), line((1.5, 2.3), (3, 4.8)), line((0, 4.8), (3, 4.8)), box(0.8, 3.8, 1.4, 1),
+                    line((9.5, 0.7), (8, 3.2)), line((9.5, 0.7), (11, 3.2)), line((8, 3.2), (11, 3.2)), box(8.2, 2.2, 2.6, 1)]
+        case "k-sort": // three rows of things from one line, most at the top: 9 by 6
+            func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.45 * cos(a), y + 0.45 * sin(a)) } }
+            return [line((1.6, 0), (1.6, 6)), box(0, 0, 1.6, 1.6), box(0, 2.2, 1.6, 1.6), box(0, 4.4, 1.6, 1.6)]
+                + (0..<6).map { dot(2.4 + Double($0) * 1.1, 0.8) } + (0..<4).map { dot(2.4 + Double($0) * 1.1, 3) } + (0..<2).map { dot(2.4 + Double($0) * 1.1, 5.2) }
         case "g6-ratio": // two rectangles of cells growing together a row at a time: 11 by 6
             return [box(0, 0, 4, 6), box(5, 0, 6, 6), line((2, 0), (2, 6)), line((7, 0), (7, 6)), line((9, 0), (9, 6))]
                 + [2.0, 4].flatMap { y in [line((0, y), (4, y)), line((5, y), (11, y))] }

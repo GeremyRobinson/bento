@@ -220,6 +220,10 @@ enum PaperLessons {
         case "k-solids": return SolidShapesLesson()
         case "gk-position": return WhereIsItLesson()
         case "gk-compose": return PutShapesLesson()
+        // Kindergarten, Measure and sort (4 Nov 2026)
+        case "k-length": return LengthLesson()
+        case "gk-heavier": return HeavierLesson()
+        case "k-sort": return SortLesson()
         default: return nil
         }
     }

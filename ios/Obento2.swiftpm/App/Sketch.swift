@@ -33,7 +33,9 @@ struct Sketch {
         /// lies back flat): it goes there first, rests a beat, then on to its own shape.
         var via: Kind? = nil
         /// More shapes it goes through after `via`, each in turn with a beat's rest (a stick laid on each side in turn).
-        var vias: [Kind] = [] }
+        var vias: [Kind] = []
+        /// Its morph or glide swings on a loose spring, past where it's going and back, settling (a balance's beam tipping).
+        var swings = false }
     private(set) var items: [Item] = []
     /// When the parts added from now on start drawing in (a map piece's words with its frame), instead of one after
     /// another from the drawing's start.
@@ -44,6 +46,8 @@ struct Sketch {
     var snaps = false
     /// Whether the parts added from now on morph to a new shape (see Item.morphs).
     var morphs = false
+    /// Whether the parts added from now on swing as they morph or glide (see Item.swings).
+    var swings = false
     /// Where new parts start, by id (see Item.from): set before the part is added.
     var from: [String: Kind] = [:]
     /// How long the parts added from now on wait before they morph or glide (a column of pieces after another).
@@ -129,7 +133,7 @@ struct Sketch {
         return (out, changed)
     }
     private mutating func add(_ item: Item) {
-        var it = item; it.at = startAt; it.pace = pace; it.snaps = snaps; it.morphs = morphs || from[item.id] != nil; it.from = from[item.id]; it.delay = delay
+        var it = item; it.at = startAt; it.pace = pace; it.snaps = snaps; it.morphs = morphs || from[item.id] != nil; it.from = from[item.id]; it.delay = delay; it.swings = swings
         it.via = via[item.id]
         it.vias = vias[item.id] ?? []
         items.append(it)
@@ -152,7 +156,7 @@ struct Sketch {
         out.items = items.map { it in
             let kind = map(it.kind)
             return Item(id: it.id, kind: kind, colour: it.colour, at: it.at, slot: it.slot, pace: it.pace, snaps: it.snaps, morphs: it.morphs, from: it.from.map(map), delay: it.delay,
-                        via: it.via.map(map), vias: it.vias.map(map))
+                        via: it.via.map(map), vias: it.vias.map(map), swings: it.swings)
         }
         return out
     }
@@ -374,12 +378,23 @@ final class SketchDrawer {
     }
     /// How long a part takes to morph to its new shape: as long as a moved part glides, so they go together.
     static let morphTime = glide
+    /// How long a swinging part takes to settle (Item.swings).
+    static let swingTime = 1.6
+    /// How far along its way a part is `e` seconds after it set off: a spring's path over `length`, or a loose spring's
+    /// swing (past it and back, settling, as the preview's balance: 1 − e^(−t/0.26) cos(2πt/0.7)).
+    private static func path(_ n: Node, _ e: Double, _ length: Double) -> Double {
+        guard n.item?.swings == true else { return springPath(e / length) }
+        if e <= 0 { return 0 }
+        if e >= swingTime { return 1 }
+        return 1 - exp(-e / 0.26) * cos(e / 0.7 * 2 * .pi)
+    }
+    private static func length(_ n: Node, _ length: Double) -> Double { n.item?.swings == true ? swingTime : length }
     /// How long a part rests on its `via` shape before it morphs on (the print fading in under a fold's half).
     static let viaRest = 0.35
     /// A node's shape as it shows now: mid-morph, or its own moved by any glide.
     private func current(_ n: Node, at t: Double) -> [[CGPoint]]? {
         if let m = n.morph {
-            let f = springPath((t - m.start) / Self.morphTime)
+            let f = Self.path(n, t - m.start, Self.morphTime)
             return zip(m.from, m.to).map { a, b in zip(a, b).map { CGPoint(x: $0.x + ($1.x - $0.x) * f, y: $0.y + ($1.y - $0.y) * f) } }
         }
         guard let sh = n.shape, let e = n.parts.first else { return nil }
@@ -642,12 +657,12 @@ final class SketchDrawer {
         var moving = liveChild?.update(at: t) ?? false
         for n in nodes.values {
             if let m = n.morph, let sh = n.shape {
-                let f = springPath((t - m.start) / Self.morphTime)
+                let f = Self.path(n, t - m.start, Self.morphTime)
                 var now = sh
                 now.lines = zip(m.from, m.to).map { a, b in zip(a, b).map { CGPoint(x: $0.x + ($1.x - $0.x) * f, y: $0.y + ($1.y - $0.y) * f) } }
                 if let mesh = now.mesh(), let e = n.parts.first { e.model?.mesh = mesh }
                 if n.flips { let edgeOn = abs(f - 0.5) < 0.09 && t - m.start < Self.morphTime; for e in n.parts where e.isEnabled == edgeOn { e.isEnabled = !edgeOn } }
-                if t - m.start >= Self.morphTime { n.morph = nil; n.flips = false } else { moving = true }
+                if t - m.start >= Self.length(n, Self.morphTime) { n.morph = nil; n.flips = false } else { moving = true }
             }
             if let nx = n.next {
                 moving = true
@@ -658,9 +673,9 @@ final class SketchDrawer {
                 }
             }
             guard let mv = n.move else { continue }
-            let f = Float(springPath((t - mv.start) / Self.glide))
+            let f = Float(Self.path(n, t - mv.start, Self.glide))
             for (j, e) in n.parts.enumerated() where j < mv.to.count { e.position = mv.from[j] + (mv.to[j] - mv.from[j]) * f }
-            if f >= 1 { n.move = nil } else { moving = true }
+            if t - mv.start >= Self.length(n, Self.glide) { n.move = nil } else { moving = true }
         }
         if let p = pending {
             if t >= p.at { build(p.sketch, rig: p.rig, chapter: p.chapter, dark: p.dark, origin: p.origin, scale: p.scale, from: t, now: t) }

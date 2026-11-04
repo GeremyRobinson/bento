@@ -96,9 +96,9 @@ enum KK {
     static func key(_ v: Int, x0: Double = 0) -> CGRect { CGRect(x: x0 + Double(v - 1) * 5, y: 0, width: 5, height: 4) }
     /// The number row on row `y`: 0–10 in blocks, the one tapped that's wrong in red (red only for wrong); a hint's
     /// dashed ring round `spot`.
-    static func numberRow(_ pen: inout GridPen, _ id: String, y: Double, x0: Double = 0, wrong: Int? = nil, spot: Int? = nil) {
+    static func numberRow(_ pen: inout GridPen, _ id: String, y: Double, x0: Double = 0, wrong: Int? = nil, spot: Int? = nil, keys: ClosedRange<Int> = CountK.row) {
         // the wrong one last, so its red edges lie over its neighbours' ink
-        for v in CountK.row.filter({ $0 != wrong }) + CountK.row.filter({ $0 == wrong }) {
+        for v in keys.filter({ $0 != wrong }) + keys.filter({ $0 == wrong }) {
             let r = key(v, x0: x0), bad = wrong == v
             pen.sketch.box("\(id)k\(v)\(bad)", pen.R(r.minX, y, 5, 4), bad ? KK.red : .ink, width: Sketch.stroke)
             pen.word("\(id)t\(v)\(bad)", "\(v)", at: r.midX, y + 2, bad ? maths.colour(KK.red) : maths)
@@ -106,9 +106,9 @@ enum KK {
         if let spot { let r = key(spot, x0: x0); hintBox(&pen, "\(id)spot", x: r.minX, y: y, w: 5, h: 4) }
     }
     /// The number tapped on the row at `y` (nil: not on a key).
-    static func tapped(_ q: CGPoint, y: Double, x0: Double = 0) -> Int? {
+    static func tapped(_ q: CGPoint, y: Double, x0: Double = 0, keys: ClosedRange<Int> = CountK.row) -> Int? {
         guard q.y >= y, q.y <= y + 4 else { return nil }
-        return CountK.row.first { key($0, x0: x0).contains(CGPoint(x: q.x, y: q.y - y)) }
+        return keys.first { key($0, x0: x0).contains(CGPoint(x: q.x, y: q.y - y)) }
     }
     /// The middle of key `v` on the row at `y`: where the ghost finger taps.
     static func keySpot(_ v: Int, y: Double, x0: Double = 0) -> CGPoint { let r = key(v, x0: x0); return CGPoint(x: r.midX, y: y + 2) }
