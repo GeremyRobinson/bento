@@ -94,19 +94,20 @@ struct TwoByTwoLesson: PaperLesson {
             let x = x0 + Double(cx)
             live.line("stem1", [(x, q.hY), (x, top)], .ink)
             live.dot("h1", at: x, q.hY, radius: (s.grabbed ? 0.75 : 0.55) * k, .ink, over: true)
-            live.line("cut1d", [(x, top), (x, top + b)], .chapter, dashed: true)
+            live.line("cut1d", [(x, top), (x, top + b)], .ink, dashed: true)
         }
         if at == 2 {
             pic.line("cut1s", [(x0 + T, top), (x0 + T, top + b)], .ink)
             let y = top + Double(cy)
             live.line("stem2", [(q.hX, y), (x0, y)], .ink)
             live.dot("h2", at: q.hX, y, radius: (s.grabbed ? 0.75 : 0.55) * k, .ink, over: true)
-            live.line("cut2d", [(x0, y), (x0 + a, y)], .chapter, dashed: true)
+            live.line("cut2d", [(x0, y), (x0 + a, y)], .ink, dashed: true)
         }
         // its names: the across number over the top, the down number beside the left; the parts' sizes once cut
         let pg = parted ? 1.0 : 0
-        if at <= 1 && !s.grabbed && s.h("cx") == nil {
-            pic.label("wa", "\(P.a)", Self.name, .above, edge: top, along: x0 + a / 2)
+        if at == 0 { pic.label("wa", "\(P.a)", Self.name, .above, edge: top, along: x0 + a / 2) }
+        else if at == 1 && !s.grabbed && s.h("cx") == nil {
+            live.label("wa", "\(P.a)", Self.name, .above, edge: top, along: q.clear("\(P.a)", Self.name, of: x0 + Double(cx), x0 + a / 2))
         } else {
             let c1 = Double(cx), w1 = "\(cx)", w2 = "\(P.a - cx)", W: Sketch.Words = at == 1 ? Self.readout : Self.name
             var pen = at == 1 ? live : pic
@@ -114,8 +115,9 @@ struct TwoByTwoLesson: PaperLesson {
             pen.label("w2", w2, W, .above, edge: top, along: q.clear(w2, W, of: x0 + c1 + pg, x0 + c1 + pg + (a - c1) / 2))
             if at == 1 { live = pen; live.reads("\(w1) | \(w2)") } else { pic = pen }
         }
-        if at <= 1 || (at == 2 && !s.grabbed && s.h("cy") == nil) {
-            pic.label("hb", "\(P.b)", Self.name, .left, edge: x0, along: top + b / 2)
+        if at <= 1 { pic.label("hb", "\(P.b)", Self.name, .left, edge: x0, along: top + b / 2) }
+        else if at == 2 && !s.grabbed && s.h("cy") == nil {
+            live.label("hb", "\(P.b)", Self.name, .left, edge: x0, along: top + b / 2)
         } else {
             let c2 = Double(cy), h1 = "\(cy)", h2 = "\(P.b - cy)", W: Sketch.Words = at == 2 ? Self.readout : Self.name, hh = 0.5 * k
             var pen = at == 2 ? live : pic

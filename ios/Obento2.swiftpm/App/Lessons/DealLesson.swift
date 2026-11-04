@@ -120,7 +120,9 @@ struct DealLesson: PaperLesson {
                 let left = st.top[p].count, over = (s.h("over") ?? 0) != 0
                 let txt = over ? (left > 0 ? "Only \(left) \(BigNumbers.place(p, left)) left: not enough for \(dv) rows." : "No \(BigNumbers.places[p]) left to deal.")
                     : "\(sh) each · \(left) left"
-                pic.label("dl\(p)", txt, over ? Sketch.Words(size: Sketch.small, weight: .medium, colour: Self.red) : Self.count, .below, edge: S.bottom + 1, along: ch.mid(p))
+                // what's dealt, under the column; too many rounds asked for, what's wrong, from the chart's left edge
+                if over { pic.word("dl\(p)", txt, at: ch.x0, S.bottom + 2.2, Sketch.Words(size: Sketch.small, weight: .medium, colour: Self.red), anchor: UnitPoint(x: 0, y: 0.5)) }
+                else { pic.label("dl\(p)", txt, Self.count, .below, edge: S.bottom + 1, along: ch.mid(p)) }
                 if s.grabbed { live.reads("\(sh) each · \(left) left") }
             } else if sh > 0 {
                 pic.label("sh\(p)", "\(sh) each", Self.dim, .below, edge: S.bottom + 1, along: ch.mid(p))
@@ -205,7 +207,7 @@ struct DealLesson: PaperLesson {
         func onColumn(_ q: CGPoint) -> Bool { ch.place(at: q.x) == p && q.y >= Self.y0 - 0.5 && q.y <= bandBottom }
         switch ph {
         case .deal:
-            let had = Int((s.h("r") ?? 0).rounded()), most = st.top[p].count / dv
+            let had = Int((s.h("r") ?? 0).rounded()), most = State(plan, done: k, rounds: had).top[p].count / dv
             return Hands(
                 grab: { q in onColumn(q) ? ["grab": 1, "r": Double(had), "dr": 0, "gy": q.y] : nil },
                 drag: { q, h in
