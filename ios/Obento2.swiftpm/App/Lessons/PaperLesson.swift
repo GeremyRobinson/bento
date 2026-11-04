@@ -231,6 +231,12 @@ enum PaperLessons {
         case "k-bonds": return BondsLesson()
         case "k-make10": return MakeTenLesson()
         case "gk-five": return FiveLesson()
+        // Kindergarten, Teens and tens (4 Nov 2026)
+        case "k-count20": return CountTwentyLesson()
+        case "k-write": return WriteNumbersLesson()
+        case "k-teens": return TeenNumbersLesson()
+        case "k-tens": return CountTensLesson()
+        case "gk-count100": return CountHundredLesson()
         default: return nil
         }
     }

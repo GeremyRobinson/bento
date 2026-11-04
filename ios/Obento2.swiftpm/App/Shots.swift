@@ -339,7 +339,7 @@ enum Shots {
                 }
                 // a finger comes after the camera has framed the step, as a child's does
                 // (-pause N: N seconds instead of 1.5, so a filmed move starts on a problem already drawn on the screen)
-                if args.contains("-tapsq") || args.contains("-drag") || args.contains("-block") {
+                if args.contains("-tapsq") || args.contains("-drag") || args.contains("-path") || args.contains("-block") {
                     try? await Task.sleep(for: .seconds(numbers("-pause")?.first ?? 1.5))
                 }
                 // -slow N: from the finger's move on, the paper's clock runs N times slower (filmed frame by frame)
@@ -357,6 +357,19 @@ enum Shots {
                 if let d = numbers("-drag"), d.count == 4 {
                     m.dragStart(at: screen(d[0], d[1]))
                     for k in 1...12 { let f = Double(k) / 12; m.dragMove(to: screen(d[0] + (d[2] - d[0]) * f, d[1] + (d[3] - d[1]) * f)) }
+                    if !args.contains("-hold") { m.dragEnd() }
+                }
+                // -path x,y,x,y…: pressed at the first point and dragged through the rest, as a hand moves (a numeral traced),
+                // let go at the last (-hold keeps it down); -tapgap N waits N seconds after the drag
+                if let d = numbers("-path"), d.count >= 4 {
+                    m.dragStart(at: screen(d[0], d[1]))
+                    for i in stride(from: 2, to: d.count - 1, by: 2) {
+                        for k in 1...4 {
+                            let f = Double(k) / 4
+                            m.dragMove(to: screen(d[i - 2] + (d[i] - d[i - 2]) * f, d[i - 1] + (d[i + 1] - d[i - 1]) * f))
+                            try? await Task.sleep(for: .milliseconds(16))
+                        }
+                    }
                     if !args.contains("-hold") { m.dragEnd() }
                 }
                 if let i = args.firstIndex(of: "-block"), i + 1 < args.count,

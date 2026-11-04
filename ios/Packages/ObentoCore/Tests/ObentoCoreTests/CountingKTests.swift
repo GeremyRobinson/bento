@@ -25,11 +25,8 @@ final class CountingKTests: XCTestCase {
         XCTAssertEqual(ch.test, "test-gk-count")
         XCTAssertTrue(Curriculum.built(ch))
         for l in ch.lessons { XCTAssertEqual(Lessons.spec(l.id)?.title, l.name) }
-        // the first four chapters are built: the rest wait off the map
-        XCTAssertTrue(Curriculum.built(chapters[1]))
-        XCTAssertTrue(Curriculum.built(chapters[2]))
-        XCTAssertTrue(Curriculum.built(chapters[3]))
-        XCTAssertFalse(chapters.dropFirst(4).contains(where: Curriculum.built))
+        // every chapter is built (4 Nov): the grade's test is on the map
+        XCTAssertTrue(chapters.allSatisfy(Curriculum.built))
         XCTAssertEqual(Curriculum.grade(of: "gk-onemore"), 0)
         XCTAssertEqual(Curriculum.grade(of: "k-compare"), 0)
         XCTAssertEqual(Curriculum.gradeTest(0), "test-grade-0")

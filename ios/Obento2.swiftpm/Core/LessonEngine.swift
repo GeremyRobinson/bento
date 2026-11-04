@@ -542,6 +542,8 @@ public enum Lessons {
         LengthK.spec, Heavier.spec, SortK.spec,
         // Kindergarten, Add and take away (4 Nov 2026)
         AddK.spec, TakeAwayK.spec, StoryK.spec, BondsK.spec, MakeTenK.spec, FactsToFive.spec,
+        // Kindergarten, Teens and tens (4 Nov 2026)
+        Count20K.spec, WriteK.spec, TeenNumbersK.spec, TensK.spec, CountTo100.spec,
     ]
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }

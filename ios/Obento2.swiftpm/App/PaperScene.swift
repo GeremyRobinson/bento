@@ -186,6 +186,12 @@ extension Piece {
         case "k-bonds": return [(0...24).map { k in let a = Double(k) / 24 * 2 * .pi; return CGPoint(x: at.x + (6 + cos(a)) * c, y: at.y + (5 + sin(a)) * c) }] // the other part
         case "k-make10": return [box(4, 2, 6, 2)]                               // the empty boxes: how many more
         case "gk-five": return [box(6, 0, 1, 4)]                                // the finger raised
+        // Kindergarten, Teens and tens (4 Nov)
+        case "k-count20": return [box(0, 3, 4, 1)]                              // the bottom row, counted on from 10
+        case "k-write": return [box(7, 1, 3.5, 4.5)]                            // the numeral traced
+        case "k-teens": return [box(6, 2, 5, 1), box(6, 3, 1, 1)]               // the ones
+        case "k-tens": return [box(4, 4, 2, 1)]                                 // the last ten counted
+        case "gk-count100": return [box(9, 0, 1, 6)]                            // the last column: 10, 20, 30…
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -333,6 +339,33 @@ extension Piece {
             return [box(0, 0, 10, 4), line((0, 2), (10, 2))] + walls + dots
         case "gk-five": // a hand: a palm, four fingers up and one folded: 9 by 6
             return [box(0, 4, 9, 2), box(0, 1, 1, 3), box(2, 0, 1, 4), box(4, 0, 1, 4), box(6, 0, 1, 4), box(8, 3, 1, 1)]
+        // Kindergarten, Teens and tens (4 Nov)
+        case "k-count20": // the twenty track, the top row full, four on the bottom row: 10 by 2, from row 2
+            func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.3 * cos(a), y + 0.3 * sin(a)) } }
+            var out: [[CGPoint]] = [box(0, 2, 10, 2), line((0, 3), (10, 3))]
+            for x in 1..<10 { out.append(line((Double(x), 2), (Double(x), 4))) }
+            for j in 0..<14 { out.append(dot(Double(j % 10) + 0.5, Double(j / 10) + 2.5)) }
+            return out
+        case "k-write": // a ten frame with seven dots, and a 7 to trace beside it: 11 by 6
+            func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.3 * cos(a), y + 0.3 * sin(a)) } }
+            var out: [[CGPoint]] = [box(0, 2, 5, 2), line((0, 3), (5, 3)), line((7.5, 1.5), (10.5, 1.5), (8.5, 5.5))]
+            for x in 1..<5 { out.append(line((Double(x), 2), (Double(x), 4))) }
+            for j in 0..<7 { out.append(dot(Double(j % 5) + 0.5, Double(j / 5) + 2.5)) }
+            return out
+        case "k-teens": // a full ten frame and one with six, side by side: 11 by 2, from row 2
+            func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.3 * cos(a), y + 0.3 * sin(a)) } }
+            var out: [[CGPoint]] = [box(0, 2, 5, 2), line((0, 3), (5, 3)), box(6, 2, 5, 2), line((6, 3), (11, 3))]
+            for x in 1..<5 { out.append(line((Double(x), 2), (Double(x), 4))); out.append(line((Double(x) + 6, 2), (Double(x) + 6, 4))) }
+            for j in 0..<10 { out.append(dot(Double(j % 5) + 0.5, Double(j / 5) + 2.5)) }
+            for j in 0..<6 { out.append(dot(Double(j % 5) + 6.5, Double(j / 5) + 2.5)) }
+            return out
+        case "k-tens": // tiles of ten in rows of five: 10 by 5
+            return (0..<8).flatMap { t -> [[CGPoint]] in
+                let x = Double(t % 5) * 2, y = Double(t / 5) * 3 + 1
+                return [box(x + 0.15, y, 1.7, 1), line((x + 0.15, y + 0.5), (x + 1.85, y + 0.5))]
+            }
+        case "gk-count100": // the hundred chart's top rows: 10 by 6
+            return [box(0, 0, 10, 6)] + (1..<10).map { x in line((Double(x), 0), (Double(x), 6)) } + (1..<6).map { y in line((0, Double(y)), (10, Double(y))) }
         case "g6-ratio": // two rectangles of cells growing together a row at a time: 11 by 6
             return [box(0, 0, 4, 6), box(5, 0, 6, 6), line((2, 0), (2, 6)), line((7, 0), (7, 6)), line((9, 0), (9, 6))]
                 + [2.0, 4].flatMap { y in [line((0, y), (4, y)), line((5, y), (11, y))] }

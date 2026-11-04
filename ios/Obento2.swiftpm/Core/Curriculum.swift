@@ -38,8 +38,8 @@ public enum Curriculum {
         MapChapter("geometry", "Geometry", colour: "geometry", [MapLesson("g5-coord", "Points on a grid"), MapLesson("g5-shapes", "Sorting shapes")]),
     ]
 
-    /// Kindergarten (design/gradeK.md): 23 lessons in 5 chapters, in teaching order. Chapters 1–4 (Count to
-    /// 10, Shapes, Measure and sort, Add and take away) are built (4 Nov); the map shows only built chapters, so the rest wait off it.
+    /// Kindergarten (design/gradeK.md): 23 lessons in 5 chapters, in teaching order. All 5 chapters are built (4 Nov): every
+    /// chapter is on the map, and the grade's test under them. Teens and tens is base-ten work, in the decimals' pink (as 1st grade's Numbers to 120).
     static let gradeK: [MapChapter] = [
         MapChapter("gk-count", "Count to 10", colour: "whole", [
             MapLesson("gk-count10", "Count to 10"), MapLesson("gk-onemore", "One more"), MapLesson("k-compare", "More, less or the same"),
@@ -52,7 +52,7 @@ public enum Curriculum {
         MapChapter("gk-addsub", "Add and take away", colour: "whole", [
             MapLesson("k-add", "Adding within 10"), MapLesson("k-sub", "Taking away within 10"), MapLesson("k-story", "Story problems within 10"),
             MapLesson("k-bonds", "Number bonds"), MapLesson("k-make10", "Make 10"), MapLesson("gk-five", "Facts to 5")]),
-        MapChapter("gk-teens", "Teens and tens", colour: "whole", [
+        MapChapter("gk-teens", "Teens and tens", colour: "decimals", [
             MapLesson("k-count20", "Count to 20"), MapLesson("k-write", "Write numbers 0 to 20"), MapLesson("k-teens", "Teen numbers"),
             MapLesson("k-tens", "Count by tens to 100"), MapLesson("gk-count100", "Count to 100")]),
     ]
