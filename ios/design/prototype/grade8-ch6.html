@@ -826,12 +826,21 @@ function rightMark(k, ps, o = {}) {
 }
 // an arrow whose head stops `gap` squares short of where it points (a dot sits there)
 function arrowShort(k, x1, y1, x2, y2, gap, o) { const l = Math.hypot(x2 - x1, y2 - y1); if (l <= gap + 0.3) return; arrow(k, x1, y1, x2 - (x2 - x1) * gap / l, y2 - (y2 - y1) * gap / l, o); }
+// a flip handle: a round handle on a corner with a short double arrow through it, the way a flip carries it (toward
+// the axis it turns over)
+function flipHandle(k, f) {
+  const x = X(f.p.u), y = Y(f.p.v), dx = f.vert ? 0 : 1.3, dy = f.vert ? 1.3 : 0;
+  dot(`${k}d`, x, y, 0.45, { c: CH, live: true });
+  arrow(`${k}a${f.vert}`, x, y, x + dx, y + dy, { c: CH, live: true }); arrow(`${k}b${f.vert}`, x, y, x - dx, y - dy, { c: CH, live: true });
+}
 // a turn's ring: dashed, round a centre (units)
 const dashRing = (k, c, r) => put(k, "circle", { cx: sq(X(c.u)), cy: sq(Y(c.v)), r: sq(r * PK), fill: "none", stroke: "var(--ink2)", "stroke-width": 1.5, "stroke-dasharray": "6 6" }, "fade");
 
 // Names kept clear (as 10th grade's): every label is placed at the first of its candidate spots that crosses no line,
 // sits in no shape and overlaps no other label; the axes' numbers stand aside for them. Squares throughout.
 const textW = (s, cls) => cls === "say" ? s.length * 0.78 : [...s].reduce((w, ch) => w + (ch === "′" ? 0.3 : 0.62), 0);
+// a line of text's box as the screen draws it (the font's whole line, not just its ink)
+const textH = cls => cls === "say" ? 1.75 : 1.35;
 function segHitsBox(s, b) {
   let t0 = 0, t1 = 1; const dx = s.x2 - s.x1, dy = s.y2 - s.y1;
   for (const [p, q] of [[-dx, s.x1 - b.x0], [dx, b.x1 - s.x1], [-dy, s.y1 - b.y0], [dy, b.y1 - s.y1]]) {
@@ -844,37 +853,47 @@ function segHitsBox(s, b) {
 const boxesMeet = (a, b, pad) => a.x0 < b.x1 + pad && b.x0 < a.x1 + pad && a.y0 < b.y1 + pad && b.y0 < a.y1 + pad;
 const inPolyS = (p, q) => inPolyU({ u: p.x, v: p.y }, q.map(r => ({ u: r.x, v: r.y })));
 function Spots() {
-  const S = { segs: [], boxes: [], polys: [], out: [] };
+  const S = { segs: [], boxes: [], polys: [], out: [], limit: null };
   S.seg = (x1, y1, x2, y2, axis) => S.segs.push({ x1, y1, x2, y2, axis });
   S.segU = (a, b, axis) => S.seg(X(a.u), Y(a.v), X(b.u), Y(b.v), axis);
   S.poly = ps => { const q = ps.map(p => ({ x: X(p.u), y: Y(p.v) })); S.polys.push(q); q.forEach((a, i) => { const b = q[(i + 1) % q.length]; S.seg(a.x, a.y, b.x, b.y); }); };
   S.disc = (u, v, r = 0.6) => S.boxes.push({ x0: X(u) - r, y0: Y(v) - r, x1: X(u) + r, y1: Y(v) + r });
-  S.free = b => { const bb = { x0: b.x0 - 0.2, y0: b.y0 - 0.15, x1: b.x1 + 0.2, y1: b.y1 + 0.15 };
-    return !S.segs.some(s => segHitsBox(s, bb)) && !S.boxes.some(o => boxesMeet(o, b, 0.35)) && !S.polys.some(p => inPolyS({ x: (b.x0 + b.x1) / 2, y: (b.y0 + b.y1) / 2 }, p)); };
+  // every label already placed is in S.boxes, so each one keeps clear of the others (and of the See marks)
   S.place = (k, s, cls, cands, o = {}) => {
-    const w = textW(s, cls), h = cls === "say" ? 1.3 : 1.0, bx = c => ({ x0: c.x - w / 2, y0: c.y - h / 2, x1: c.x + w / 2, y1: c.y + h / 2 });
-    // the first spot that's clear; when none is, the one with the fewest things in the way (being outside counts least)
-    const cost = c => { const b = bx(c), bb = { x0: b.x0 - 0.2, y0: b.y0 - 0.15, x1: b.x1 + 0.2, y1: b.y1 + 0.15 };
-      return 3 * S.segs.filter(s => segHitsBox(s, bb)).length + 3 * S.boxes.filter(q => boxesMeet(q, b, 0.25)).length
+    const w = textW(s, cls), h = textH(cls), bx = c => ({ x0: c.x - w / 2, y0: c.y - h / 2, x1: c.x + w / 2, y1: c.y + h / 2 });
+    // what's in the way: another label most of all, then a line or a shape; being outside the plane counts least
+    const cost = c => { const b = bx(c), bb = { x0: b.x0 - 0.2, y0: b.y0 - 0.1, x1: b.x1 + 0.2, y1: b.y1 + 0.1 };
+      return 10 * S.boxes.filter(q => boxesMeet(q, b, 0.25)).length + 3 * S.segs.filter(s => segHitsBox(s, bb)).length
         + 3 * S.polys.filter(p => inPolyS({ x: c.x, y: c.y }, p)).length + (o.inside && !o.inside(b) ? 1 : 0); };
-    // o.hard: where it may never go (the record beside the picture)
-    const ok = o.hard ? cands.filter(q => o.hard(bx(q))) : cands;
-    let c = ok[0] || cands[0], cb = 1e9;
-    for (const q of ok) { const v = cost(q); if (v < cb) { cb = v; c = q; } if (!v) break; }
+    // never into the words over the picture or the record beside it (S.limit), nor where o.hard forbids
+    const okB = b => (!o.hard || o.hard(b)) && (!S.limit || S.limit(b));
+    const ok = cands.filter(q => okB(bx(q))), list = ok.length ? ok : cands;
+    let c = list[0], cb = 1e9;
+    for (const q of list) { const v = cost(q); if (v < cb) { cb = v; c = q; } if (!v) break; }
     S.boxes.push(bx(c)); S.out.push(() => text(k, s, c.x, c.y, cls, { c: o.c })); return c;
   };
   S.draw = () => S.out.forEach(f => f());
   // an axis number stands aside where a label, a line (not an axis) or a shape is
-  S.skip = (x, y) => { const b = { x0: x - 0.8, y0: y - 0.55, x1: x + 0.8, y1: y + 0.55 };
+  S.skip = (x, y) => { const b = { x0: x - 0.8, y0: y - 0.68, x1: x + 0.8, y1: y + 0.68 };
     return S.segs.some(s => !s.axis && segHitsBox(s, b)) || S.boxes.some(o => boxesMeet(o, b, 0.15)) || S.polys.some(p => inPolyS({ x, y }, p)); };
   return S;
 }
-// spots round a point (squares), the side `pref` points to first, then round it, then a little further out
+// a plane lesson's spots: the axes, the "2 squares = 1" row, and the limits a label stays in (below the words, left of
+// the record, not far left of the plane)
+function spots6(lay) {
+  const S = Spots(); axesInto(S, lay.box);
+  if (PK > 1) S.boxes.push({ x0: lay.fr.x + 2, y0: lay.T + 5 - 0.7, x1: lay.fr.x + 2 + textW(`${PK} squares = 1`, "small"), y1: lay.T + 5 + 0.7 });
+  S.limit = b => b.y0 >= lay.T + 4.4 && b.x1 <= lay.colX - 1 && b.x0 >= lay.px0 - 1;
+  return S;
+}
+// spots round a point (squares): sixteen ways, the side `pref` points to first, at four distances
 function around(x, y, s, cls, pref, g = 0.6) {
-  const w = textW(s, cls), h = cls === "say" ? 1.3 : 1.0, l = Math.hypot(pref.x, pref.y) || 1, px = pref.x / l, py = pref.y / l;
-  const dirs = [[1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1], [0, 1], [1, 1]].sort((a, b) => (b[0] * px + b[1] * py) / Math.hypot(...b) - (a[0] * px + a[1] * py) / Math.hypot(...a));
+  const w = textW(s, cls), h = textH(cls), l = Math.hypot(pref.x, pref.y) || 1, px = pref.x / l, py = pref.y / l;
+  const dirs = [];
+  for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8; dirs.push([Math.cos(a), Math.sin(a)]); }
+  dirs.sort((a, b) => (b[0] * px + b[1] * py) - (a[0] * px + a[1] * py));
   const out = [];
-  for (const gg of [g, g + 1.1]) for (const [dx, dy] of dirs) out.push({ x: x + dx * (gg + w / 2), y: y + dy * (gg + h / 2) });
+  for (const gg of [g, g + 0.9, g + 1.9, g + 3.2]) for (const [dx, dy] of dirs) out.push({ x: x + dx * (gg + w / 2), y: y + dy * (gg + h / 2) });
   return out;
 }
 // corner names: each outside its corner, away from the shape's middle
@@ -882,15 +901,18 @@ function cornerNames(S, k, ps, names, c) {
   const m = cenU(ps);
   ps.forEach((p, j) => S.place(`${k}${j}${names[j]}`, names[j], "small", around(X(p.u), Y(p.v), names[j], "small", { x: X(p.u) - X(m.u), y: Y(p.v) - Y(m.v) }, 0.45), { c: c || "var(--ink)" }));
 }
-// the See beat: a right triangle's legs (their lengths in units) and its right angle written beside it
+// the See beat: a right triangle's legs (their lengths in units) and its right angle written beside it; a leg's
+// length goes beside its middle outside first, then along it, then inside, then further out
 function seeMarks(S, k, ps, c) {
   const m = cenU(ps);
   [1, 2].forEach(j => {
     const a = ps[0], b = ps[j], len = Math.round(Math.hypot(b.u - a.u, b.v - a.v)), s = String(len);
-    const mx = (X(a.u) + X(b.u)) / 2, my = (Y(a.v) + Y(b.v)) / 2, vert = Math.abs(a.u - b.u) < 1e-9;
-    const nx = vert ? Math.sign(X(a.u) - X(m.u)) : 0, ny = vert ? 0 : Math.sign(Y(a.v) - Y(m.v));
-    const ext = vert ? textW(s, "small") / 2 : 0.5, ax = (X(b.u) - X(a.u)) / 4, ay = (Y(b.v) - Y(a.v)) / 4;
-    const cands = [[1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1], [1.8, 0]].map(([f, g]) => ({ x: mx + g * ax + nx * f * (0.5 + ext), y: my + g * ay + ny * f * (0.5 + ext) }));
+    const vert = Math.abs(a.u - b.u) < 1e-9, nx = vert ? Math.sign(X(a.u) - X(m.u)) : 0, ny = vert ? 0 : Math.sign(Y(a.v) - Y(m.v));
+    const ext = vert ? textW(s, "small") / 2 : textH("small") / 2, cands = [];
+    for (const d of [0.4, -0.4, 1.4, -1.4, 2.8, -2.8, 4.4, -4.4]) for (const t of [0.5, 0.3, 0.7, 0.15, 0.85]) {
+      const x = X(a.u) + (X(b.u) - X(a.u)) * t, y = Y(a.v) + (Y(b.v) - Y(a.v)) * t, off = d + Math.sign(d) * ext;
+      cands.push({ x: x + nx * off, y: y + ny * off });
+    }
     S.place(`${k}len${j}_${s}`, s, "small", cands, { c });
   });
   const d = { x: 2 * X(ps[0].u) - X(ps[1].u) - X(ps[2].u), y: 2 * Y(ps[0].v) - Y(ps[1].v) - Y(ps[2].v) };
@@ -1091,7 +1113,7 @@ function lTranslate(index, P0) {
         done: [`${dx > 0 ? "Right adds to x" : "Left takes from x"} and ${dy > 0 ? "up adds to y" : "down takes from y"}: ${pair(x + dx, y + dy)}.`, ""] }[st];
       dhead(this, say[0], say[1], lay.fr.x + 2, T, lay.ww);
       // the spots: axes, shapes, the point's path; then the names
-      const S = Spots(); axesInto(S, box);
+      const S = spots6(lay);
       const corner = cur[pi], mid = PU(x + dx, y);
       if (moved) S.poly(T0);
       S.poly(cur);
@@ -1214,7 +1236,7 @@ function lReflect(index, P0) {
       // the card turning over: each corner straight across the line to its image (seen from above, a card turning over)
       const u = st === "flip" ? ease(Math.max(0, phase(this.t0, 1300))) : si > 3 ? 1 : 0;
       const card = tri.map((p, j) => lerpP(p, img[j], u));
-      const S = Spots(); axesInto(S, box);
+      const S = spots6(lay);
       if (seg) S.segU(seg[0], seg[1]);
       S.poly(tri);
       if (si >= 3) S.poly(card);
@@ -1225,7 +1247,12 @@ function lReflect(index, P0) {
         const o = seg[0] === e ? seg[1] : seg[0], pf = m.k === "x" || m.k === "yb" ? { x: -1, y: -1 } : { x: 1, y: 1 };
         const inside = q => q.x0 >= X(box.u0) && q.x1 <= X(box.u1) && q.y0 >= Y(box.v1) && q.y1 <= Y(box.v0);
         const hard = q => q.x1 <= X(box.u1) + 1 && q.x0 >= X(box.u0) - 3 && q.y0 >= Y(box.v1) - 3 && q.y1 <= Y(box.v0) + 3;
-        S.place("mn" + s, s, "small", around(X(e.u), Y(e.v), s, "small", pf, 0.5).concat(around(X(o.u), Y(o.v), s, "small", { x: -pf.x, y: pf.y }, 0.5), nameSpots(box, s)), { c: CH, inside, hard }); }
+        const w = textW(s, "small"), h = textH("small"), lx = X(e.u) - X(o.u), ly = Y(e.v) - Y(o.v), ll = Math.hypot(lx, ly), nx = -ly / ll, ny = lx / ll, along = [];
+        for (const t of [0.92, 0.8, 0.65, 0.08, 0.2, 0.35, 0.5]) for (const sd of [1, -1]) for (const gg of [0.5, 1.6]) {
+          const off = gg + Math.abs(nx) * w / 2 + Math.abs(ny) * h / 2;
+          along.push({ x: X(o.u) + lx * t + sd * nx * off, y: Y(o.v) + ly * t + sd * ny * off });
+        }
+        S.place("mn" + s, s, "small", along.concat(around(X(e.u), Y(e.v), s, "small", pf, 0.5), nameSpots(box, s)), { c: CH, inside, hard }); }
       cornerNames(S, "nA", tri, N);
       if (si < 3) this.placed.forEach((p, j) => S.place(`np${j}`, N2[j], "small", around(X(p.u), Y(p.v), N2[j], "small", { x: X(p.u) - X(cenU(img).u), y: Y(p.v) - Y(cenU(img).v) }, 0.45), { c: CH }));
       else if (si > 3) cornerNames(S, "nB", img, N2, CH);
@@ -1306,7 +1333,8 @@ function lRotate(index, P0) {
       const colW = Math.max(16, recW(recs(false), this), recW(recs(true), this));
       // the window: every place a quarter turn can take it while turning; then just the triangle and its image
       const M = Math.max(...tri.map(p => Math.max(p.u, p.v)));
-      const b = st === "turn" ? { u0: -M, u1: M, v0: -M, v1: M } : boundsU(tri.concat(img, [O]));
+      // one frame for the whole problem (before and after the turn, and room to turn it): the camera never shrinks it
+      const b = { u0: -M, u1: M, v0: -M, v1: M };
       if (this.k == null) lay6(this, { u0: -M, u1: M, v0: -M, v1: M }, colW, 3 + 8 + 3);
       const lay = this.lay = lay6(this, b, colW, 3 + 8 + 3, si >= 1 ? colW : 7);
       const { T, colX, colY, box } = lay;
@@ -1316,7 +1344,7 @@ function lRotate(index, P0) {
       dhead(this, say[0], say[1], lay.fr.x + 2, T, lay.ww);
       const live = tri.map(p => rotP(p, O, this.th)), moving = !!this.held && Math.abs(this.th) > 1e-9;
       const badImg = this.bad != null && this.msg ? tri.map(p => turnQ(p, O, this.bad)) : null;
-      const S = Spots(); axesInto(S, box);
+      const S = spots6(lay);
       S.poly(tri); if (moving) S.poly(live); if (si >= 1) S.poly(img); if (badImg) S.poly(badImg);
       S.disc(0, 0, 0.5); if (st === "turn") S.disc(live[ni].u, live[ni].v, 1);
       if (st === "turn") S.place("tn", turnName(P.q), "small", nameSpots(box, turnName(P.q)), { c: CH });
@@ -1352,9 +1380,12 @@ function lCongruent(index, P0) {
   const stages = ["move", "done"];
   const L = withBoxes({
     id: "congruent", index, P, stage: "move", msg: null, verdict: null, typing: false, fr: null, lay: null, k: null,
-    cur: A0, moves: [], held: null, live: null, ro: "",
+    cur: A0, moves: [], held: null, live: null, ro: "", hinted: false,
     progress() { return stageIndex(stages, this.stage); },
     frame() { return this.fr; },
+    // the flip handle: the corner (not the right angle) farther from the ring handle, its arrows toward the nearer axis
+    flipMark() { const hd = this.hand(), j = [1, 2].reduce((b, k) => Math.hypot(this.cur[k].u - hd.h.u, this.cur[k].v - hd.h.v) > Math.hypot(this.cur[b].u - hd.h.u, this.cur[b].v - hd.h.v) ? k : b, 1);
+      const c = cenU(this.cur); return { p: this.cur[j], vert: Math.abs(c.v) <= Math.abs(c.u) }; },
     hand() { const R = this.cur[0], d = [1, 2].map(j => { const x = this.cur[j].u - R.u, y = this.cur[j].v - R.v, l = Math.hypot(x, y); return { x: x / l, y: y / l, l }; });
       const r = Math.max(d[0].l, d[1].l), bx = d[0].x + d[1].x, by = d[0].y + d[1].y, bl = Math.hypot(bx, by); return { R, r, h: PU(R.u + bx / bl * r, R.v + by / bl * r) }; },
     grab(q0) {
@@ -1394,7 +1425,10 @@ function lCongruent(index, P0) {
       } else { if (!h.ax || h.t < 0.5) return; this.cur = cur.map(p => mirror(p, { k: h.ax })); this.note({ k: "flip", ax: h.ax }); }
       if (sameAll(this.cur, B)) { this.stage = "done"; this.msg = null; return; }
       const c1 = cenU(this.cur), c2 = cenU(B);
-      if (Math.hypot(c1.u - c2.u, c1.v - c2.v) < 1.5) this.msg = Math.sign(area2(this.cur)) !== Math.sign(area2(B)) ? "It's facing the other way: it needs a flip." : "It's turned the wrong way: turn it by its handle.";
+      const needFlip = Math.sign(area2(this.cur)) !== Math.sign(area2(B));
+      if (Math.hypot(c1.u - c2.u, c1.v - c2.v) < 1.5) this.msg = needFlip ? "It's facing the other way: it needs a flip. Drag the corner with the arrows toward an axis." : "It's turned the wrong way: turn it by its handle.";
+      // the first move that leaves it facing the wrong way names the flip (once)
+      else if (needFlip && h.m !== "flip" && !this.hinted) { this.hinted = true; this.msg = "It needs a flip: drag the corner with the arrows toward an axis."; }
     },
     // the moves written as they happen: slides together, turns about one point together, a flip undone struck off
     note(mv) {
@@ -1416,12 +1450,12 @@ function lCongruent(index, P0) {
       const { T, colX, colY, box } = lay;
       this.fr = lay.fr;
       const say = done ? ["Moved without stretching, so the two shapes are congruent.", ""]
-        : ["Move the coloured triangle onto the outline.", "Drag it to slide it, drag a corner toward an axis to flip it, or turn it by its handle."];
+        : ["Move the coloured triangle onto the outline.", "Drag it to slide it, drag the corner with the arrows toward an axis to flip it, or turn it by its ring handle."];
       dhead(this, say[0], say[1], lay.fr.x + 2, T, lay.ww);
       const h = this.held, hd = this.hand(), shown = this.live || cur;
-      const S = Spots(); axesInto(S, box);
+      const S = spots6(lay);
       S.poly(B); S.poly(shown); if (moved) S.poly(A0);
-      if (!done) S.disc(hd.h.u, hd.h.v, 1);
+      if (!done) { S.disc(hd.h.u, hd.h.v, 1); const f = this.flipMark(); S.disc(f.p.u, f.p.v, 1.4); }
       if (done) { seeMarks(S, "s0", A0, "var(--ink2)"); seeMarks(S, "s1", cur, CH); }
       if (PK > 1) unitBeside(T, [], lay.fr.x + 2);
       axes("ax", box, { skip: S.skip });
@@ -1434,6 +1468,7 @@ function lCongruent(index, P0) {
       shapeU("a", shown, { live: true });
       if (done) { rightMark("rm0", A0, { c: "var(--ink2)" }); rightMark("rm1", cur, { c: CH }); }
       if (!done) handle("hd", h && h.m === "turn" ? rotP(hd.h, hd.R, h.th) : hd.h, h && h.m === "turn");
+      if (!done && !h) flipHandle("fm", this.flipMark());
       S.draw();
       readout(this.ro, colX, colY + 1);
       recLines(this, recs, colX, colY + 5, done ? "done" : "none");
@@ -1532,7 +1567,7 @@ function lDilate(index, P0) {
       const live = tri.map(p => PU(p.u * this.s, p.v * this.s)), stretched = Math.abs(this.s - 1) > 1e-9;
       const slid = shift(img, (this.sl || this.off).du, (this.sl || this.off).dv);
       const badImg = this.bad && this.msg ? tri.map(p => PU(p.u * this.bad, p.v * this.bad)) : null;
-      const S = Spots(); axesInto(S, box);
+      const S = spots6(lay);
       const rays = si <= 2 ? tri.map(p => { const s = clipLine(O, p, box); return s && [O, s[0].u + s[0].v > s[1].u + s[1].v ? s[0] : s[1]]; }) : [];
       rays.forEach(r => r && S.segU(r[0], r[1]));
       S.poly(tri); if (stretched) S.poly(live); if (badImg) S.poly(badImg);
