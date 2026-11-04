@@ -326,15 +326,20 @@ extension Rig {
             case .field(let f):
                 // right: green for a moment; wrong: red until they type again; the box being typed into is outlined
                 // in ink; the ghost's number written faintly (Show me), and gone again when it's over
-                let style: Sketch.Block = view.verdict.map { $0 ? Sketch.Block(stroke: green, text: green) : Sketch.Block(stroke: red, text: red) }
+                // a miss with several boxes: only the boxes that aren't what's wanted go red (red only for wrong); one
+                // that holds its expected number stays as it was
+                let want = view.step.answer?.expected[f], had = view.typed[f].flatMap { Double($0) }
+                let fine = view.verdict == false && (view.step.answer?.boxes.count ?? 0) > 1 && want != nil && had != nil && abs(want! - had!) < 1e-9
+                let verdict = fine ? nil : view.verdict
+                let style: Sketch.Block = verdict.map { $0 ? Sketch.Block(stroke: green, text: green) : Sketch.Block(stroke: red, text: red) }
                     ?? (view.active == f ? .main : Sketch.Block(stroke: .ink3))
-                s.block(id + "\(view.verdict as Bool?)", r, style, k: k, grows: true)
+                s.block(id + "\(verdict as Bool?)", r, style, k: k, grows: true)
                 // what the child types shows at once, as in any box; the ghost's number (Show me) writes itself in
                 // faintly and fades when it's over
                 s.pace = view.faint ? 0.6 : 0
                 let typed = view.typed[f]?.replacingOccurrences(of: "-", with: "−") ?? ""
                 let wb = m.layout.box(for: f, first: view.step.answer?.boxes.first), cell = wb?.cell ?? 2 * sq
-                let colour: Sketch.Colour = view.faint ? .ink3 : style.text, tag = "\(view.verdict as Bool?)\(view.faint)"
+                let colour: Sketch.Colour = view.faint ? .ink3 : style.text, tag = "\(verdict as Bool?)\(view.faint)"
                 if let wb, wb.point != nil {
                     // a sum in columns: lined up on the point, which is written on its line as the record's points are
                     for (j, c) in wb.placed(typed).enumerated() {

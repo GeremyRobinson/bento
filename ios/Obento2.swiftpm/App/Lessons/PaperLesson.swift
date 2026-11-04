@@ -149,6 +149,11 @@ enum PaperLessons {
         case "g6-lcm": return LcmLesson()
         case "g6-gcf": return GcfLesson()
         case "g6-divide": return DivideFractionsLesson()
+        // 6th grade, Long division and decimals (4 Nov 2026)
+        case "g6-longdiv": return LongDiv6Lesson(dec: false)
+        case "g6-decdiv": return LongDiv6Lesson(dec: true)
+        case "g6-decaddsub": return DecAddSubLesson()
+        case "g6-decmult": return DecMultLesson()
         default: return nil
         }
     }

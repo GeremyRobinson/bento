@@ -513,6 +513,8 @@ public enum Lessons {
         EquivRatio.spec, RatioTable.spec, UnitRate.spec, PercentOf.spec, PercentWhole.spec,
         // 6th grade, Factors and fractions (3 Nov 2026)
         Lcm6.spec, Gcf6.spec, DivideFrac6.spec,
+        // 6th grade, Long division and decimals (4 Nov 2026)
+        LongDivision6.spec, DecAddSub6.spec, DecMult6.spec, DivideDec6.spec,
     ]
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }

@@ -128,6 +128,11 @@ extension Piece {
             return [(0..<16).map { k in let a = Double(k) / 16 * 2 * .pi; return CGPoint(x: at.x + (6 + 0.6 * cos(a)) * c, y: at.y + (2 + 0.6 * sin(a)) * c) }]
         case "g6-gcf": return [box(0, 0, 3, 2), box(0, 4, 3, 2)]                // a piece of each bar
         case "g6-divide": return [box(0, 0, 8, 2)]                              // the amount laid along
+        // 6th grade, Long division and decimals (4 Nov)
+        case "g6-longdiv": return [box(0, 0, 5, 2)]                             // the rows dragged down
+        case "g6-decaddsub": return [box(6, 1, 4, 1)]                           // the discs slid in
+        case "g6-decmult": return [box(1, 0, 6, 2)]                             // the digits made whole
+        case "g6-decdiv": return [box(0, 2, 3, 1)]                              // the ones left, broken into tenths
         case "g4-lines", "g4-turns", "g4-protractor", "g4-angles", "g4-classify", "g4-symmetry":
             func q(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: at.x + x * c, y: at.y + y * c) }
             func pie(_ cx: Double, _ cy: Double, _ r: Double, _ a0: Double, _ a1: Double) -> [CGPoint] {
@@ -223,6 +228,17 @@ extension Piece {
             return [box(0, 0, 6, 2), line((3, 0), (3, 2)), box(0, 4, 9, 2), line((3, 4), (3, 6)), line((6, 4), (6, 6))]
         case "g6-divide": // an amount, and pieces laid along under it, the last cut off at its end: 9 by 4
             return [box(0, 0, 8, 2), box(0, 2, 3, 2), box(3, 2, 3, 2), line((6, 2), (9, 2), (9, 4), (6, 4)), line((8, 2), (8, 4))]
+        case "g6-longdiv", "g6-decdiv": // an amount in rows of 5, a short last row, and the bracket: 11 by 4 (a point under it)
+            let rows = [line((0, 0), (5, 0), (5, 2), (3, 2), (3, 3), (0, 3), (0, 0)), line((0, 1), (5, 1)), line((0, 2), (3, 2))]
+                + (1...4).map { x in line((Double(x), 0), (Double(x), x < 3 ? 3 : 2)) }
+            let bracket = line((7, 4), (7.6, 2.6), (7.3, 1), (11, 1))
+            if id == "g6-decdiv" { let pt = (0...12).map { k -> CGPoint in let a = Double(k) / 12 * 2 * .pi; return P(9 + 0.25 * cos(a), 3.3 + 0.25 * sin(a)) }; return rows + [bracket, pt] }
+            return rows + [bracket]
+        case "g6-decaddsub": // discs in place columns, the point's line between them, the line under: 11 by 6
+            func disc(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.4 * cos(a), y + 0.4 * sin(a)) } }
+            return [line((5, 0), (5, 6)), line((0, 5), (11, 5))] + [(1.0, 1.5), (2, 1.5), (3, 1.5), (7, 1.5), (1, 3.5), (7, 3.5), (8, 3.5), (9, 3.5)].map { disc($0.0, $0.1) }
+        case "g6-decmult": // a number's digit tiles moved a column left of the point's line: 11 by 4
+            return [box(1, 0, 3, 2), box(4, 0, 3, 2), line((7, 0), (7, 4)), line((8, 3), (10, 3)), line((8.6, 2.4), (8, 3), (8.6, 3.6)), box(4, 2, 3, 2)]
         case "g6-pctwhole": // a block, copies laid end to end with hops over them: 12 by 4
             return [box(0, 2, 3, 2), box(3, 2, 3, 2), box(6, 2, 3, 2), box(9, 2, 3, 2), arc(1.5, 4.5, 2, 1.5), arc(4.5, 7.5, 2, 1.5), arc(7.5, 10.5, 2, 1.5)]
         case "g4-tentimes": // a disk opening into a ten-frame: 11 by 4

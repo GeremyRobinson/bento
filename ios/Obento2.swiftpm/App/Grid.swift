@@ -19,6 +19,9 @@ struct WorkBox {
     /// written on the line itself, so the answer's places line up with the numbers above it. The box is its `cells`
     /// columns, ending at `right`.
     var point: Double?
+    /// How far apart what's typed is written when the box lines up on its point (nil: a cell): a sum in wide place
+    /// columns (6th grade's Adding and subtracting decimals, 10 squares a place) writes each digit in its column's middle.
+    var step: Double?
     /// A centred box after an = sign (a whole number answer at the end of the record): it keeps its left edge and grows
     /// to the right as more is typed than it holds, so it never covers the =.
     var keepsLeft = false
@@ -55,20 +58,21 @@ struct WorkBox {
     func placed(_ typed: String) -> [(ch: Character, x: Double)] {
         guard let point else { return [] }
         let parts = typed.split(separator: ".", omittingEmptySubsequences: false).map(Array.init)
-        let whole = parts.first ?? []
-        var out = whole.enumerated().map { (ch: $0.element, x: point - (Double(whole.count - $0.offset) - 0.5) * cell) }
+        let whole = parts.first ?? [], st = step ?? cell
+        var out = whole.enumerated().map { (ch: $0.element, x: point - (Double(whole.count - $0.offset) - 0.5) * st) }
         if parts.count > 1 {
             out.append((ch: ".", x: point))
-            out += parts[1].enumerated().map { (ch: $0.element, x: point + (Double($0.offset) + 0.5) * cell) }
+            out += parts[1].enumerated().map { (ch: $0.element, x: point + (Double($0.offset) + 0.5) * st) }
         }
         return out
     }
     /// Where the cursor goes when the box lines up on its point: just past the last digit typed.
     func pointCursor(_ typed: String) -> Double? {
         guard let point else { return nil }
+        let st = step ?? cell
         guard let dot = typed.firstIndex(of: ".") else { return point + 0.15 * cell }
         let after = typed.distance(from: dot, to: typed.endIndex) - 1
-        return point + (after == 0 ? 0.3 : Double(after) + 0.15) * cell
+        return after == 0 ? point + 0.3 * cell : point + (Double(after) - 0.5) * st + 0.65 * cell
     }
     /// Its rect with `typed` in it: a box lined up on its point grows either way to hold what's typed (a 4th whole digit
     /// to the left, a 3rd decimal to the right), as a column box grows left.
@@ -76,15 +80,16 @@ struct WorkBox {
         if word != nil { let w = wordWidth(typed); return CGRect(x: right - w, y: mid - cell / 2, width: w, height: cell) }
         guard let point else { return rect(typed: typed.count) }
         let parts = typed.split(separator: ".", omittingEmptySubsequences: false)
-        let whole = Double(parts.first?.count ?? 0), after = Double(parts.dropFirst().first?.count ?? 0)
-        let left = min(right - Double(cells) * cell, point - whole * cell), end = max(right, point + after * cell)
+        let whole = Double(parts.first?.count ?? 0), after = Double(parts.dropFirst().first?.count ?? 0), st = step ?? cell
+        let left = min(right - Double(cells) * st, point - whole * st), end = max(right, point + after * st)
         return CGRect(x: left, y: mid - cell / 2, width: end - left + 0.5 * cell, height: cell)
     }
     /// Its rect when `typed` digits are in it, with half a cell past its right edge for the cursor.
     func rect(typed: Int = 0) -> CGRect {
         if let word { return CGRect(x: right - word, y: mid - cell / 2, width: word, height: cell) }
         if point != nil {
-            return CGRect(x: right - Double(cells) * cell, y: mid - cell / 2, width: (Double(cells) + 0.5) * cell, height: cell)
+            let st = step ?? cell
+            return CGRect(x: right - Double(cells) * st, y: mid - cell / 2, width: Double(cells) * st + 0.5 * cell, height: cell)
         }
         if centred {
             let n = Double(max(cells, typed)), left = right - Double(cells) * cell, mid = right - Double(cells) * cell / 2
@@ -117,9 +122,9 @@ struct GridPen {
     /// An answer box `cells` digits wide whose right edge is column `right`, on the row whose middle is `mid` (a digit is
     /// `per` squares): it grows left as digits are typed, so they line up on the right as written work does.
     /// `keepsLeft`: a centred box that grows to the right (WorkBox.keepsLeft).
-    mutating func answerBox(_ id: String, right: Double, mid: Double, per: Double, cells: Int, spare: Int = 0, centred: Bool = false, point: Double? = nil, keepsLeft: Bool = false, commas: Bool = false, tight: Bool = false, word: Double? = nil) {
+    mutating func answerBox(_ id: String, right: Double, mid: Double, per: Double, cells: Int, spare: Int = 0, centred: Bool = false, point: Double? = nil, keepsLeft: Bool = false, commas: Bool = false, tight: Bool = false, word: Double? = nil, step: Double? = nil) {
         boxes.append(WorkBox(id: id, right: P(right, 0).x, mid: P(0, mid).y, cell: per * Self.sq, cells: cells, spare: spare, centred: centred,
-                             point: point.map { P($0, 0).x }, keepsLeft: keepsLeft, commas: commas, tight: tight, word: word.map { $0 * Self.sq }))
+                             point: point.map { P($0, 0).x }, step: step.map { $0 * Self.sq }, keepsLeft: keepsLeft, commas: commas, tight: tight, word: word.map { $0 * Self.sq }))
     }
 
     /// Every box the work has: the one `box`, then the named ones.
