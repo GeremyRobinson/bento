@@ -84,11 +84,18 @@ public enum Numerals {
     /// The strokes of a whole number written from (x, y), 6 × 10 squares a digit: each stroke's points in squares, in the
     /// order they're written (the first digit's strokes first).
     public static func strokes(_ n: Int, x: Double = 0, y: Double = 0) -> [[Pt]] {
-        String(n).enumerated().flatMap { di, ch -> [[Pt]] in
-            (paths[ch] ?? "").split(separator: "|").map { part in
-                even(outline(String(part).trimmingCharacters(in: .whitespaces))).map { (x + 6 * Double(di) + $0.x / 10, y + $0.y / 10) }
+        // written out step by step: GitHub's older compiler times out on the chained form
+        var out: [[Pt]] = []
+        for (di, ch) in String(n).enumerated() {
+            let left: Double = x + 6 * Double(di)
+            for part in (paths[ch] ?? "").split(separator: "|") {
+                let line: [Pt] = even(outline(String(part).trimmingCharacters(in: .whitespaces)))
+                var stroke: [Pt] = []
+                for q in line { stroke.append((left + q.x / 10, y + q.y / 10)) }
+                out.append(stroke)
             }
         }
+        return out
     }
 }
 

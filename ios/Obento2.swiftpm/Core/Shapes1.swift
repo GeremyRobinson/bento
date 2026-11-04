@@ -176,8 +176,19 @@ public enum WhatShape1 {
         if n < 3 { return -1 }
         for i in 0..<n { for j in (i + 2)..<max(i + 2, n) where !(i == 0 && j == n - 1) { if Shapes1.meet(c[i], c[(i + 1) % n], c[j], c[(j + 1) % n]) { return -2 } } }
         if n != P.need { return -(100 + n) }
-        let right = c.indices.allSatisfy { i in let a = c[(i + n - 1) % n], b = c[(i + 1) % n], p = c[i]; return (a.0 - p.0) * (b.0 - p.0) + (a.1 - p.1) * (b.1 - p.1) == 0 }
-        func l2(_ i: Int) -> Double { let a = c[i], b = c[(i + 1) % n]; return (b.0 - a.0) * (b.0 - a.0) + (b.1 - a.1) * (b.1 - a.1) }
+        // split into small sums: GitHub's older compiler times out on the one-line form
+        func squareAt(_ i: Int) -> Bool {
+            let a = c[(i + n - 1) % n], b = c[(i + 1) % n], p = c[i]
+            let dx: Double = (a.0 - p.0) * (b.0 - p.0)
+            let dy: Double = (a.1 - p.1) * (b.1 - p.1)
+            return dx + dy == 0
+        }
+        let right = c.indices.allSatisfy(squareAt)
+        func l2(_ i: Int) -> Double {
+            let a = c[i], b = c[(i + 1) % n]
+            let dx: Double = b.0 - a.0, dy: Double = b.1 - a.1
+            return dx * dx + dy * dy
+        }
         if (P.kind == "square" || P.kind == "rectangle") && !right { return -3 }
         if P.kind == "square" && !c.indices.allSatisfy({ l2($0) == l2(0) }) { return -4 }
         func key(_ p: [Shapes1.Pt]) -> String { Shapes1.norm(p).map { "\(Int($0.0)),\(Int($0.1))" }.sorted().joined(separator: ";") }
