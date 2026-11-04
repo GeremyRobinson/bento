@@ -124,7 +124,7 @@ struct DotPlotLesson: PaperLesson {
             if at == 5 { R6.ring(&pic, "ring", x: X(P.least) - 1, y: LY - 1, w: X(P.most) - X(P.least) + 2, h: 3) }
         }
         if s.on("spot") {
-            if let u = ringAt { pic.circle("spot", at: X(u), at == 4 ? LY - 2 * Double(P.tallest) - 1 : LY, radius: 1.3, .chapter, dashed: true) }
+            if let u = ringAt { pic.circle("spot", at: X(u), at == 4 ? LY - 2 * Double(P.tallest) + 1 : LY, radius: 1.3, .chapter, dashed: true) }
             // each stack's count over it
             if at == 3 { for u in 0...10 where P.counts[u] > 0 { pic.label("sc\(u)", "\(P.counts[u])", D8.lit, .above, edge: LY - 2 * Double(P.counts[u]), along: X(u)) } }
             if at == 5 { for u in [P.least, P.most] { pic.circle("spot\(u)", at: X(u), LY, radius: 1.3, .chapter, dashed: true) } }

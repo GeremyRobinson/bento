@@ -231,6 +231,21 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   words were 72%); a parallelogram's record goes beside it or under it, whichever shows it bigger; a net's record sits in the corner
   its shape leaves (on two lines there when long), else beside or under; a net stands once a face is first taken hold of and stays
   closed 1.2 s before it opens flat. Least zooms: 80%, 79%, 79%, 82%, 79%, 76% (Exponents 78%).
+- 6th grade chapter 8, Data, is built (4 Nov; the last chapter: all 36 lessons of 6th grade and its grade test are on the map; Core:
+  `Data6` (`DotPlot6`, `Histogram6`, `Mean6`, `Mad6`, `Median6`, `BoxPlot6`), tests `DataG6Tests`; App: `DotPlotLesson`, `HistogramLesson`,
+  `MeanLesson`, `MadLesson`, `MedianLesson`, `BoxPlotLesson`, their shared `DataKit6` (`D8`: the question, cards 4 × 2 crossed off once
+  placed, a dot or square gliding off its card onto its stack (`D8.glide`, as 4th grade's X's), bars of squares, numbers tight under bars,
+  `D8.via`, `D8.waiting` a faint box a later step fills)). As the preview (`design/prototype/grade6-ch8.html`), grey second lines folded
+  into the instructions (Histograms: the question, then "Tap the stretches it asks for."). The order cards went down is kept
+  (`run.kept["p<j>"]`) so stacks never reshuffle; a sort's order likewise (`o<p>`). Departures: Find the median's numbers are 1–25 (the
+  web's 1–30 is 68% tall under the words with room to grow; 25 is 76%); MAD's distance columns touch (2 apart) when 3 apart would pass 73
+  squares; the levelling and the "see" beats draw in at the start of the next step (MAD's distances slide off the bars into their row,
+  rest, then level, `Sketch.via`; the box draws in on the write step); the dot plot's pick is the engine's choice column with Check; a
+  sort and the measuring taps can't be missed (the hands make every move right), "Drag it higher." is a notice, not a miss; Mean and
+  MAD write their record on two rows while the keys are up (73% / 55% → 75%). Least zooms: 85%, 82%, 78%, 78%, 76%, 88%; keys up 75%+.
+  Shots e.g. `page-g6-dotplot-1 -hand p0=1,p1=2,p2=3`, `page-g6-mad-2 -numbers N=8,l0=14,v0=16,v1=19,v2=14,v3=19,v4=7,v5=6,v6=8,v7=7 -wrong -keypad`.
+- Fix of 4 Nov: a net's side names stand with it from the tilt's first frame (`Solids.Label`s on their faces, folding up with them,
+  `NetsLesson.standingNames`), and come back on the paper only once it lies flat again.
 - **The instruction is never a cut-off sliver** (call of 4 Nov, app-wide, `WorkProblem.keysFraming`): with the keys up, when the
   instruction's rows aren't all on the screen, it's written just above the line being typed (as a miss is), or, while a miss shows
   there, left out; back on its rows when the keys go.
