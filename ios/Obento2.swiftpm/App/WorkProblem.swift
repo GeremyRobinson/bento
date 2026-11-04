@@ -488,49 +488,87 @@ final class WorkProblem: Identifiable, PageProblem {
         // Show me is a preview: the camera holds still while it plays, even when its copy moves on a stage
         if ghost?.mode == .preview, let held = heldFrame { return held }
         guard let st = layout.stack else { return nil }
-        var r = st.frame
-        // the keyboard up for the record's box (G 3 Nov: it never hides the work; the call of 3 Nov: the work stays
-        // readable): the camera frames beside it (PaperModel.room) the first of these that shows at 75% or more: the whole
-        // problem; else the record line being typed (its boxes, the record's width and Check) with as much of the picture
-        // above it as fits; else that line alone, as big as it fits. The whole problem is never shown smaller just to fit
-        // it beside the keys.
-        if Self.keys != nil, wantsTyping, let zoom = Self.keyboardZoom {
-            let sq = Paper.cell, least = 0.75
-            func z(_ q: CGRect) -> Double { zoom(Rect(x: origin.x + q.minX, y: origin.y + q.minY, width: q.width, height: q.height)) }
-            if z(r) < least {
-                // the line being typed: this step's boxes, the record's width at their rows, and Check
-                let ids = Set(lesson.step.answer?.boxes ?? [])
-                let mine = layout.boxes.filter { ids.contains($0.id ?? "") }
-                var line = (mine.isEmpty ? layout.boxes : mine).reduce(CGRect.null) { $0.union($1.rect(for: "")) }
-                // what's written on the boxes' rows (the line's words and numbers), then Check
-                if !line.isNull, let p = paper, let b = p.draw(state()).record.bounds(from: line.minY - layout.workOffset.y, to: line.maxY - layout.workOffset.y) {
-                    line = line.union(b.offsetBy(dx: layout.workOffset.x, dy: layout.workOffset.y))
-                }
-                line = line.union(CGRect(x: st.blocksLeft * sq, y: st.blocksTop * sq, width: 7 * sq * st.plan.k, height: 2 * sq * st.plan.k))
-                line = line.insetBy(dx: -sq, dy: -sq)
-                if z(line) < least { r = line }
-                else {
-                    // as much of the problem's width as fits at 75%, then as much of the picture above the line
-                    func lerp(_ a: CGRect, _ b: CGRect, _ f: Double) -> CGRect {
-                        CGRect(x: a.minX + (b.minX - a.minX) * f, y: a.minY + (b.minY - a.minY) * f,
-                               width: a.width + (b.width - a.width) * f, height: a.height + (b.height - a.height) * f)
-                    }
-                    func grow(_ a: CGRect, to b: CGRect) -> CGRect {
-                        if z(b) >= least { return b }
-                        var lo = 0.0, hi = 1.0
-                        for _ in 0..<14 { let m = (lo + hi) / 2; if z(lerp(a, b, m)) >= least { lo = m } else { hi = m } }
-                        return lerp(a, b, lo)
-                    }
-                    let x0 = min(line.minX, r.minX), x1 = max(line.maxX, r.maxX)
-                    let wide = grow(line, to: CGRect(x: x0, y: line.minY, width: x1 - x0, height: line.height))
-                    let top = min(r.minY, wide.minY)
-                    r = grow(wide, to: CGRect(x: wide.minX, y: top, width: wide.width, height: wide.maxY - top))
-                }
-            }
-        }
+        let r = keysFraming(st)?.frame ?? st.frame
         let f = Rect(x: origin.x + r.minX, y: origin.y + r.minY, width: r.width, height: r.height)
         heldFrame = f
         return f
+    }
+
+    /// The keyboard up for the record's box (G 3 Nov: it never hides the work; the call of 3 Nov: the work stays
+    /// readable): the camera frames beside it (PaperModel.room) the first of these that shows at 75% or more: the whole
+    /// problem; else the record line being typed (its boxes, the record's width and Check) with as much of the picture
+    /// above it as fits; else that line alone, as big as it fits. The whole problem is never shown smaller just to fit
+    /// it beside the keys. Nil when the keys are down or the whole problem shows.
+    ///
+    /// A miss line is never cut off (call of 4 Nov, app-wide): framed on the line, what a miss says (rows 3–4, out of the
+    /// frame on the top rows) is written just above the line being typed instead, inside the frame, starting on the line's
+    /// left edge and wrapping to its width (`note`, in points from the origin, with its rows); it goes back to its rows
+    /// when the keys go.
+    func keysFraming(_ st: ProblemGrid.Stack) -> (frame: CGRect, note: CGRect?, rows: Int)? {
+        guard Self.keys != nil, wantsTyping, let zoom = Self.keyboardZoom else { return nil }
+        let sq = Paper.cell, least = 0.75, k = st.plan.k
+        var r = st.frame
+        func z(_ q: CGRect) -> Double { zoom(Rect(x: origin.x + q.minX, y: origin.y + q.minY, width: q.width, height: q.height)) }
+        guard z(r) < least else { return nil }
+        // the line being typed: this step's boxes, the record's width at their rows, and Check
+        let ids = Set(lesson.step.answer?.boxes ?? [])
+        let mine = layout.boxes.filter { ids.contains($0.id ?? "") }
+        var line = (mine.isEmpty ? layout.boxes : mine).reduce(CGRect.null) { $0.union($1.rect(for: "")) }
+        // what's written on the boxes' rows (the line's words and numbers), then Check
+        if !line.isNull, let p = paper, let b = p.draw(state()).record.bounds(from: line.minY - layout.workOffset.y, to: line.maxY - layout.workOffset.y) {
+            line = line.union(b.offsetBy(dx: layout.workOffset.x, dy: layout.workOffset.y))
+        }
+        line = line.union(CGRect(x: st.blocksLeft * sq, y: st.blocksTop * sq, width: 7 * sq * k, height: 2 * sq * k))
+        // what a miss says, on whole rows of squares just above the line (a square clear of it), as wide as the line,
+        // and above anything of the record or any words of the picture it would run into
+        var note: CGRect?, rows = 0
+        if let w = rowsWords {
+            let left = (line.minX / sq).rounded(.down) * sq, width = max(16 * sq * k, (line.maxX / sq).rounded(.up) * sq - left)
+            let f = PaperText.font(Sketch.Words.note.size * k, Sketch.Words.note.weight)
+            rows = max(1, PaperText.wrap(w.text, f, width: width).count)
+            let h = Double(rows) * Sketch.row * k
+            var bottom = (line.minY / sq).rounded(.down) * sq - sq
+            if let p = paper {
+                let d = p.draw(state())
+                for _ in 0..<12 {
+                    let band = CGRect(x: left, y: bottom - h, width: width, height: h + 0.5 * sq)
+                    let hit = [d.record.bounds(touching: band.offsetBy(dx: -layout.workOffset.x, dy: -layout.workOffset.y))?.offsetBy(dx: layout.workOffset.x, dy: layout.workOffset.y),
+                               d.picture.bounds(touching: band.offsetBy(dx: -layout.pictureOffset.x, dy: -layout.pictureOffset.y), words: true)?.offsetBy(dx: layout.pictureOffset.x, dy: layout.pictureOffset.y)]
+                        .compactMap { $0 }.reduce(CGRect.null) { $0.union($1) }
+                    if hit.isNull { break }
+                    bottom = (hit.minY / sq).rounded(.down) * sq - sq
+                }
+            }
+            let n = CGRect(x: left, y: bottom - h, width: width, height: h)
+            note = n
+            line = line.union(n)
+        }
+        line = line.insetBy(dx: -sq, dy: -sq)
+        if z(line) < least { r = line }
+        else {
+            // as much of the problem's width as fits at 75%, then as much of the picture above the line
+            func lerp(_ a: CGRect, _ b: CGRect, _ f: Double) -> CGRect {
+                CGRect(x: a.minX + (b.minX - a.minX) * f, y: a.minY + (b.minY - a.minY) * f,
+                       width: a.width + (b.width - a.width) * f, height: a.height + (b.height - a.height) * f)
+            }
+            func grow(_ a: CGRect, to b: CGRect) -> CGRect {
+                if z(b) >= least { return b }
+                var lo = 0.0, hi = 1.0
+                for _ in 0..<14 { let m = (lo + hi) / 2; if z(lerp(a, b, m)) >= least { lo = m } else { hi = m } }
+                return lerp(a, b, lo)
+            }
+            let x0 = min(line.minX, r.minX), x1 = max(line.maxX, r.maxX)
+            let wide = grow(line, to: CGRect(x: x0, y: line.minY, width: x1 - x0, height: line.height))
+            let top = min(r.minY, wide.minY)
+            r = grow(wide, to: CGRect(x: wide.minX, y: top, width: wide.width, height: wide.maxY - top))
+        }
+        // the usual rows still on the screen beside the keys: the miss stays there
+        if let w = rowsWords, note != nil, let shown = Self.keyboardShown?(Rect(x: origin.x + r.minX, y: origin.y + r.minY, width: r.width, height: r.height)) {
+            let f = PaperText.font(Sketch.Words.note.size * k, Sketch.Words.note.weight), plan = st.plan
+            let usual = CGRect(x: origin.x, y: origin.y + plan.msgTop * sq, width: min(plan.width * sq, PaperText.width(w.text, f)), height: Double(plan.msgRows) * Sketch.row * k)
+            if CGRect(x: shown.x, y: shown.y, width: shown.width, height: shown.height).insetBy(dx: sq, dy: sq).contains(usual) { note = nil }
+        }
+        return (r, note, rows)
     }
     @ObservationIgnored private var heldFrame: Rect?
     /// How much of the screen's bottom a docked keyboard covers (PaperScreen sets it; iPadOS's floating number pad
@@ -540,6 +578,8 @@ final class WorkProblem: Identifiable, PageProblem {
     /// paper rect shows framed beside it (PaperModel.keyboardZoom).
     static var keys: Rect?
     static var keyboardZoom: ((Rect) -> Double)?
+    /// The paper a rect shows framed beside the keyboard (all the room's paper, not only the rect).
+    static var keyboardShown: ((Rect) -> Rect)?
 
     private func time(_ delay: Double) -> Double { instant ? PaperClock.now - 100 : PaperClock.now + delay }
 

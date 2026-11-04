@@ -78,6 +78,16 @@ struct Sketch {
     var bounds: CGRect? { bounds { _ in true } }
     /// The bounds of the parts whose own middle lies between two heights (a line of the record: what's written on it).
     func bounds(from y0: Double, to y1: Double) -> CGRect? { bounds { $0.midY >= y0 && $0.midY <= y1 } }
+    /// The bounds of the parts that touch `r` (words only, `words`): what a line laid over `r` would run into.
+    func bounds(touching r: CGRect, words: Bool = false) -> CGRect? {
+        var out: CGRect?
+        for it in items {
+            if words, case .text = it.kind {} else if words { continue }
+            var one = Sketch(); one.items = [it]
+            if let q = one.bounds, q.intersects(r) { out = out.map { $0.union(q) } ?? q }
+        }
+        return out
+    }
     private func bounds(_ keep: (CGRect) -> Bool) -> CGRect? {
         var r: CGRect?
         for it in items {

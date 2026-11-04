@@ -629,6 +629,7 @@ final class PaperModel {
                          seed: Shots.seed(p.id))
         b.frame = { [weak self] r in self?.frameCurrent(r) }
         WorkProblem.keyboardZoom = { [weak self] r in self?.keyboardZoom(r) ?? 1 }
+        WorkProblem.keyboardShown = { [weak self] r in self?.keyboardShown(r) ?? r }
         b.close = { [weak self] in self?.close() }
         bars = b; selected = nil
         b.start()
@@ -672,6 +673,11 @@ final class PaperModel {
         if screen.width - k.x - k.width - gap > 300 { rooms.append(Rect(x: k.x + k.width + gap, y: top, width: screen.width - k.x - k.width - gap, height: whole.height)) }
         func fit(_ q: Rect) -> Double { min(maxZoom, (q.width - 2 * pad) / max(1, r.width), (q.height - 2 * pad) / max(1, r.height)) }
         return rooms.max { fit($0) < fit($1) } ?? whole
+    }
+    /// The paper `r` shows framed beside the keyboard: the room's whole size at that zoom, centred on `r`.
+    func keyboardShown(_ r: Rect) -> Rect {
+        let q = room(for: r, maxZoom: CameraTiming.lessonMax), z = keyboardZoom(r), w = q.width / z, h = q.height / z
+        return Rect(x: r.x + r.width / 2 - w / 2, y: r.y + r.height / 2 - h / 2, width: w, height: h)
     }
     /// How big `r` shows framed beside the keyboard (WorkProblem.stageFrame: the whole problem, or only its record).
     func keyboardZoom(_ r: Rect) -> Double {

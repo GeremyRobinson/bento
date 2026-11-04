@@ -305,12 +305,21 @@ extension Rig {
         let storyStep = l.story && l.step.answer?.choices != nil
         let say = m.intro ?? (storyStep ? l.words.hint : l.words.say)
         s.words("say\(l.index)", say, .say, x: o.x, top: o.y + plan.sayTop * sq, width: width, max: max(plan.sayRows, m.intro != nil ? 3 : 1), k: k)
-        // rows 3–4: what a miss says, or the hint
-        if let w = m.rowsWords {
+        // rows 3–4: what a miss says, or the hint; with the keys up and the camera on the line being typed, just above
+        // that line instead (call of 4 Nov: a miss line is never cut off), on paper over whatever is under it
+        let keyed = m.keysFraming(st).flatMap { f in f.note.map { ($0, f.rows) } }
+        if let w = m.rowsWords, keyed == nil {
             s.words("note", w.text, Sketch.Words.note.colour(w.colour), x: o.x, top: o.y + plan.msgTop * sq, width: width, max: plan.msgRows, k: k)
         }
         s.append(d.picture.transformed(to: P(0, plan.pictureTop), scale: 1))
         s.append(d.record.transformed(to: P(plan.recordLeft, plan.recordTop), scale: 1))
+        if let w = m.rowsWords, let (n, rows) = keyed {
+            // on paper only where it lies over part of the picture (its words stay clear of every other word)
+            if d.picture.bounds(touching: n.offsetBy(dx: 0, dy: -plan.pictureTop * sq)) != nil {
+                s.plate("keysnote", n.offsetBy(dx: o.x, dy: o.y).insetBy(dx: -sq, dy: 0), .paper)
+            }
+            s.words("keysnote", w.text, Sketch.Words.note.colour(w.colour), x: o.x + n.minX, top: o.y + n.minY, width: n.width, max: rows, k: k)
+        }
         let green = Sketch.Colour.hex(0x178A57, 0x3CCF8E), red = Sketch.Colour.hex(0xC8372D, 0xFF6B5E)
         for b in ProblemLayout.blocks(m) {
             let r = b.rect, id = "\(b.kind)"
