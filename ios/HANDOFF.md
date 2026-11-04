@@ -425,6 +425,27 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   `page-g1-build-0 -numbers set=4,t0=0,t1=1 -wrong2`, `page-g1-build-0 -numbers set=4,t0=2,t1=1 -showme -slow 2`,
   `page-g1-halves-0 -numbers shape=0,parts=4,cut=0,shaded=3 -drag 15,1,15,23 -hold`, `page-g1-halves-1 -numbers compare=1,shape=1,hcut=2,fcut=2`,
   `map-fresh -grade 1 -whole`.
+- **2nd grade is live** (4 Nov; Core: `Curriculum.grade2`, all 27 lessons in 7 chapters, only built chapters on the map; grade 2; read
+  aloud on by default for 2nd grade too (`AppSettings.readAloud`, `Curriculum.voiced` ≤ 2); first chapter free as every grade's). Chapter 1,
+  Adding and subtracting to 100, is built (Core: `AddSub2` (`G2`, `Facts2` g2-facts, `Regroup2` g2-regroup, `SubRegroup2` g2-subregroup,
+  `AddFour2` g2-addfour, `Bars2`, `Story2` g2-story, `TwoStep2` g2-twostep), tests `AddSub2Tests`; App: `Facts2Lesson`, `Regroup2Lesson`,
+  `SubRegroup2Lesson`, `AddFour2Lesson`, `Story2Lesson`, `TwoStep2Lesson`, their shared `AddKit2` (`A2`: 2 × 2 counters, a ten 20 × 2,
+  the column form, a story on the picture's top rows with its numbers lit, the bars to 100)). As the preview
+  (`design/prototype/grade2-ch1.html`), its words, slips and generators word for word; the preview types, so every answer is typed
+  with the iPad's keys and Check. New shared pieces: `PaperLesson.told` (a story drawn on the picture's top rows is said before the
+  first step's words, `WorkProblem.spokenText`), `PaperLesson.typedDemo` (Show me on a typed step plays a hand move first: Facts to
+  20's way, then the answer written); `Spoken` says a lone ? as "question mark". Departures: Facts to 20 is one typed step whose
+  picture the hands can also work (the box live from the start, as the preview), its notices ("The top row is full. That's 10.",
+  "That's 9. Take 8 away.") said as the instruction; past 50 a story's numbers are all even (1 square is 2 things, said on its own
+  row, so no bar ends mid-square); the preview's 8 + 7 is a near double by its own rule (|a − b| ≤ 1), so make a ten is tested on
+  8 + 5; Ana's bar shows no number until "How many does Ana have?" is answered (the preview's gave it away); a tall stack under a
+  story has its rows touching; a story's pick, Check and Next go beside its record line; checks use i4/i5/i6 where the spec says
+  "i3" twice (i3 is always the story kind). Least zooms: 125%, 77%, 77%, 86%, 76%, 78%; keys up 75%+. Shots e.g.
+  `page-g2-facts-0 -numbers a=8,b=5,kind=0 -drag 4.5,5.5,26,1.5`, `page-g2-regroup-1 -numbers a=47,b=38,story=0 -tapsq 5,16,5,13 -tapgap 2.5`,
+  `page-g2-subregroup-0 -numbers a=52,b=27,story=1`, `page-g2-addfour-0 -numbers n=3,n0=27,n1=34,n2=16 -drag 26,10.5,8,11 -hold`,
+  `page-g2-story-1 -numbers kind=9,W=46,p1=21,more=0,who=2,other=3,th=2`, `page-g2-twostep-2 -numbers kind=1,s=34,d=15,th=1`, `bar-grade-open -grade 2`.
+- 1st grade Build with solids (4 Nov): Show me filmed, it plays all three pieces and puts everything back; the ghost solid's dashed
+  rims and edges draw only once the paper is up (`Solids.Line.whenUp`).
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
   finger; `BarsKit.swift` the fractions' bars, ruler and sliding pieces). `App/LessonHands.swift`: hand moves.
