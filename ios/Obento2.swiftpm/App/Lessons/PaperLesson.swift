@@ -50,6 +50,9 @@ protocol PaperLesson {
     /// nil: the blocks go where the layout puts them. A place in the picture's squares (its left column, its top row):
     /// the blocks start there on this step, in room the picture leaves (a story's choices beside a tall picture).
     func blocksAt(_ s: PaperState) -> CGPoint?
+    /// Keys up and the camera on the line being typed: part of the picture (its squares) that must stay in the frame
+    /// with the line, as the number to write is read off it (where a fold printed a point).
+    func keysFocus(_ s: PaperState) -> CGRect?
     /// The same three for a run as it's shown (told as a story, its words take more rows), which is what the layout
     /// asks: its numbers' unless the lesson's size depends on more than its numbers.
     func scale(_ run: LessonRun) -> Double
@@ -69,6 +72,7 @@ extension PaperLesson {
     func recordBeside(_ n: Numbers) -> Double? { nil }
     func blocksLeft(_ n: Numbers) -> Double? { nil }
     func blocksAt(_ s: PaperState) -> CGPoint? { nil }
+    func keysFocus(_ s: PaperState) -> CGRect? { nil }
     func scale(_ run: LessonRun) -> Double { scale(run.numbers) }
     func recordBeside(_ run: LessonRun) -> Double? { recordBeside(run.numbers) }
     func messageRows(_ run: LessonRun) -> Int { messageRows(run.numbers) }
@@ -154,6 +158,12 @@ enum PaperLessons {
         case "g6-decdiv": return LongDiv6Lesson(dec: true)
         case "g6-decaddsub": return DecAddSubLesson()
         case "g6-decmult": return DecMultLesson()
+        // 6th grade, Negative numbers (4 Nov 2026)
+        case "g6-negatives": return NegativesLesson()
+        case "g6-compare": return CompareNegLesson()
+        case "g6-numline": return DistanceLesson()
+        case "g6-quadrants": return QuadrantsLesson()
+        case "g6-planeshapes": return PlaneShapesLesson()
         default: return nil
         }
     }
@@ -178,6 +188,9 @@ struct PaperState {
     /// The iPad's keys are up for this step's box (a lesson may lay its record line out on its own row then, so the line
     /// being typed and its part of the picture show at 75%: Ratio tables).
     var keys = false
+    /// The picture's top row, counted from the block line the problem starts on: where the grid's strong lines fall in the
+    /// picture's rows (a sheet of paper a fold lifts draws the grid's own lines on it).
+    var gridTop = 6.0
 
     var numbers: Numbers { run.numbers }
     var step: LessonStep { run.steps[index] }

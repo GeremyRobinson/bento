@@ -144,6 +144,31 @@ struct Sketch {
         }
         return out
     }
+    /// The same parts on a sheet laid over the rest (a fold's turning half, 6th grade's Negative numbers): every point
+    /// moved by `f` (in this sketch's points), lines drawn over plates and fills as plates so they sit on the sheet, words
+    /// moved with it unless `words` is false (the sheet's back). `from`: each part starts where `g` puts it and morphs on
+    /// the paper's spring to where `f` does (the sheet lying back flat). Ids get `tag` after them.
+    func lifted(_ f: (CGPoint) -> CGPoint, words: Bool = true, from g: ((CGPoint) -> CGPoint)? = nil, tag: String = "") -> Sketch {
+        var out = Sketch()
+        func kinds(_ kind: Kind, _ m: (CGPoint) -> CGPoint) -> [Kind] {
+            switch kind {
+            case .line(let pts, let w, true): GridPen.dashes(pts.map(m)).map { .overLine([$0.0, $0.1], width: w) }
+            case .line(let pts, let w, false), .overLine(let pts, let w): [.overLine(pts.map(m), width: w)]
+            case .fill(let pts), .plate(let pts): [.plate(pts.map(m))]
+            case .segments(let segs, let w): segs.map { .overLine([m($0.0), m($0.1)], width: w) }
+            case .text(let t, let p, let size, let weight, let anchor, let digits): words ? [.text(t, m(p), size: size, weight: weight, anchor: anchor, digits: digits)] : []
+            case .icon: []
+            }
+        }
+        for it in items {
+            let to = kinds(it.kind, f), was = g.map { kinds(it.kind, $0) }
+            for (i, k) in to.enumerated() {
+                out.items.append(Item(id: "\(it.id)\(to.count > 1 ? "#\(i)" : "")\(tag)", kind: k, colour: it.colour, at: it.at, slot: it.slot, pace: it.pace,
+                                      snaps: it.snaps, morphs: was != nil, from: was.map { $0[i] }, delay: it.delay))
+            }
+        }
+        return out
+    }
     /// A fraction written on the paper: top over bottom with its bar, centred on `p`.
     mutating func fraction(_ id: String, _ top: String, _ bottom: String, at p: CGPoint, size: CGFloat = 22, _ colour: Colour = .ink) {
         let w = max(PaperText.width(top, PaperText.font(size, .medium, digits: true)), PaperText.width(bottom, PaperText.font(size, .medium, digits: true))) + 6

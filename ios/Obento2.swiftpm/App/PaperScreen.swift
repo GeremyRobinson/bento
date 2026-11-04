@@ -212,6 +212,7 @@ struct SystemKeys: UIViewRepresentable {
                 if ch == "\n" { enter() }
                 else if ch.isNumber, let d = ch.wholeNumberValue { type(String(d)) }
                 else if ch == "." || ch == "," { type(".") }
+                else if ch == "-" || ch == "−" { type("−") }
             }
         }
         func deleteBackward() { type("del") }
@@ -248,7 +249,7 @@ struct NumberEntry: View {
                 guard new != " " else { return }
                 Practice.shared.touched()
                 if new.count < 1 { problem?.type("del") }
-                else { for ch in new.dropFirst() { if ch.isNumber, let d = ch.wholeNumberValue { problem?.type(String(d)) } else if ch == "." || ch == "," { problem?.type(".") } } }
+                else { for ch in new.dropFirst() { if ch.isNumber, let d = ch.wholeNumberValue { problem?.type(String(d)) } else if ch == "." || ch == "," { problem?.type(".") } else if ch == "-" || ch == "−" { problem?.type("−") } } }
                 text = " "
             }
             .onSubmit { problem?.go(); focused = problem != nil }

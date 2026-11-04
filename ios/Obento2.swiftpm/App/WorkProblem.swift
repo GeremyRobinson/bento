@@ -447,6 +447,7 @@ final class WorkProblem: Identifiable, PageProblem {
         s.active = run.active
         s.keys = Self.keys != nil && !auto && !solved && run.index == lesson.index && run.step.answer.map { $0.choices == nil && !$0.byHand } == true
         s.hand = ghost?.hand ?? hand
+        s.gridTop = plan?.pictureTop ?? 6
         // the ghost finger dragging: the hand where the finger is now, as the lesson's drag would have it (the live
         // parts follow the finger)
         if let t, let g = ghost, let base = g.held, let p = g.dragPoint(at: g.time(t)), let paper {
@@ -542,6 +543,10 @@ final class WorkProblem: Identifiable, PageProblem {
             let n = CGRect(x: left, y: bottom - h, width: width, height: h)
             note = n
             line = line.union(n)
+        }
+        // what the number is read off, kept in the frame with it
+        if let p = paper, let f = p.keysFocus(state()) {
+            line = line.union(CGRect(x: f.minX * sq + layout.pictureOffset.x, y: f.minY * sq + layout.pictureOffset.y, width: f.width * sq, height: f.height * sq))
         }
         line = line.insetBy(dx: -sq, dy: -sq)
         if z(line) < least { r = line }

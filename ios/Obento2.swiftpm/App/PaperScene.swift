@@ -133,6 +133,12 @@ extension Piece {
         case "g6-decaddsub": return [box(6, 1, 4, 1)]                           // the discs slid in
         case "g6-decmult": return [box(1, 0, 6, 2)]                             // the digits made whole
         case "g6-decdiv": return [box(0, 2, 3, 1)]                              // the ones left, broken into tenths
+        // 6th grade, Negative numbers (4 Nov)
+        case "g6-negatives": return [box(4, 3, 2, 3)]                           // below 0
+        case "g6-compare": return [box(1, 1, 2, 2)]                             // the lesser point
+        case "g6-numline": return [box(1, 0, 4, 2)]                             // the steps to 0
+        case "g6-quadrants": return [box(0, 0, 5, 3)]                           // quadrant II
+        case "g6-planeshapes": return [box(2, 1, 6, 4)]                         // the rectangle across the axis
         case "g4-lines", "g4-turns", "g4-protractor", "g4-angles", "g4-classify", "g4-symmetry":
             func q(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: at.x + x * c, y: at.y + y * c) }
             func pie(_ cx: Double, _ cy: Double, _ r: Double, _ a0: Double, _ a1: Double) -> [CGPoint] {
@@ -239,6 +245,20 @@ extension Piece {
             return [line((5, 0), (5, 6)), line((0, 5), (11, 5))] + [(1.0, 1.5), (2, 1.5), (3, 1.5), (7, 1.5), (1, 3.5), (7, 3.5), (8, 3.5), (9, 3.5)].map { disc($0.0, $0.1) }
         case "g6-decmult": // a number's digit tiles moved a column left of the point's line: 11 by 4
             return [box(1, 0, 3, 2), box(4, 0, 3, 2), line((7, 0), (7, 4)), line((8, 3), (10, 3)), line((8.6, 2.4), (8, 3), (8.6, 3.6)), box(4, 2, 3, 2)]
+        case "g6-negatives": // an upright line through 0, a point under it and its opposite printed over it, the fold across 0: 11 by 6
+            func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.5 * cos(a), y + 0.5 * sin(a)) } }
+            return [line((5, 0), (5, 6)), line((1, 3), (10, 3))] + [1.0, 2, 4, 5].map { y in line((4.6, y), (5.4, y)) } + [dot(5, 4.5), dot(5, 1.5)]
+        case "g6-compare": // a line across with two points, the lesser on the left, and < between their names: 11 by 4
+            func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.5 * cos(a), y + 0.5 * sin(a)) } }
+            return [line((0, 2), (11, 2))] + [2.0, 5, 8].map { x in line((x, 1.6), (x, 2.4)) } + [dot(2, 2), dot(8, 2), line((6, 3.2), (5, 3.6), (6, 4))]
+        case "g6-numline": // a line through 0, a bracket from a point to 0 and on to another: 11 by 4
+            return [line((0, 3), (11, 3)), line((1, 2.5), (1, 1), (5, 1), (5, 2.5)), line((5, 2.5), (5, 0.5), (10, 0.5), (10, 2.5))]
+                + [1.0, 5, 10].map { x in line((x, 2.6), (x, 3.4)) }
+        case "g6-quadrants": // two axes crossing at 0, a point and its mirror over the x-axis: 11 by 6
+            func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.5 * cos(a), y + 0.5 * sin(a)) } }
+            return [line((0, 3), (11, 3)), line((5.5, 0), (5.5, 6)), dot(2.5, 1), dot(2.5, 5)]
+        case "g6-planeshapes": // two axes and a rectangle across the y-axis: 11 by 6
+            return [line((0, 4), (11, 4)), line((5.5, 0), (5.5, 6)), box(2, 1, 6, 4)]
         case "g6-pctwhole": // a block, copies laid end to end with hops over them: 12 by 4
             return [box(0, 2, 3, 2), box(3, 2, 3, 2), box(6, 2, 3, 2), box(9, 2, 3, 2), arc(1.5, 4.5, 2, 1.5), arc(4.5, 7.5, 2, 1.5), arc(7.5, 10.5, 2, 1.5)]
         case "g4-tentimes": // a disk opening into a ten-frame: 11 by 4

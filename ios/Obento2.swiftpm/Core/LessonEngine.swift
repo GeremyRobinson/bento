@@ -386,14 +386,16 @@ public struct LessonRun: Sendable {
         typed = [:]; active = step.answer?.boxes.first
     }
 
-    /// A keypad press: a digit, ".", or "del". Goes into the active box; a box holds at most 7 characters.
+    /// A keypad press: a digit, ".", "−" (a minus, put first or taken off), or "del". Goes into the active box; a box holds at most 7 characters.
     public mutating func type(_ key: String) {
         guard let a = step.answer, let box = active ?? a.boxes.first else { return }
         active = box
         var t = typed[box] ?? ""
         switch key {
         case "del": if !t.isEmpty { t.removeLast() }
-        case ".": if !t.contains(".") && t.count < 7 { t += t.isEmpty ? "0." : "." }
+        case ".": if !t.contains(".") && t.count < 7 { t += t.isEmpty || t == "-" ? "0." : "." }
+        // a minus (6th grade's Negative numbers on): only first, a second press takes it off again
+        case "−", "-": t = t.hasPrefix("-") ? String(t.dropFirst()) : "-" + t
         default: if t.count < 7 { t = t == "0" ? key : t + key }
         }
         typed[box] = t.isEmpty ? nil : t
@@ -515,6 +517,8 @@ public enum Lessons {
         Lcm6.spec, Gcf6.spec, DivideFrac6.spec,
         // 6th grade, Long division and decimals (4 Nov 2026)
         LongDivision6.spec, DecAddSub6.spec, DecMult6.spec, DivideDec6.spec,
+        // 6th grade, Negative numbers (4 Nov 2026)
+        Negatives6.spec, Compare6.spec, Distance6.spec, Quadrants6.spec, Shapes6.spec,
     ]
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }
