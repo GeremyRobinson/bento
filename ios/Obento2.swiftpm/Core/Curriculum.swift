@@ -79,7 +79,7 @@ public enum Curriculum {
             MapLesson("g1-halves", "Halves and fourths")]),
     ]
 
-    /// 2nd grade (design/grade2.md): 27 lessons in 7 chapters, in teaching order. Chapter 1 is built (4 Nov): only it is on the map.
+    /// 2nd grade (design/grade2.md): 27 lessons in 7 chapters, in teaching order. Chapters 1 and 2 are built (4 Nov): only they are on the map.
     static let grade2: [MapChapter] = [
         MapChapter("g2-addsub", "Adding and subtracting to 100", colour: "whole", [
             MapLesson("g2-facts", "Facts to 20"), MapLesson("g2-regroup", "Adding with regrouping"), MapLesson("g2-subregroup", "Subtracting with regrouping"),

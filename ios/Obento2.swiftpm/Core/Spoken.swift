@@ -12,6 +12,8 @@ public enum Spoken {
 
     public static func text(_ s: String) -> String {
         var out = s.replacingOccurrences(of: "’", with: "'")
+        // the three signs to pick from, named
+        out = out.replacingOccurrences(of: "<, = or >", with: "less than, equals or greater than")
         for (sign, words) in signs { out = out.replacingOccurrences(of: sign, with: words) }
         // a sign with no spaces round it: 3+4=7
         for (sign, words) in [("+", " plus "), ("=", " equals "), ("×", " times "), ("÷", " divided by ")] { out = out.replacingOccurrences(of: sign, with: words) }

@@ -235,6 +235,11 @@ extension Piece {
         case "g2-addfour": return [box(0, 3, 4.5, 0.6)]                         // the new ten the ones made
         case "g2-story": return [box(6, 2.5, 4, 1.5)]                           // the part we don't know
         case "g2-twostep": return [box(6, 2, 3, 1.5)]                           // the first change, joined
+        // 2nd grade, Numbers to 1000 (4 Nov)
+        case "g2-hundreds": return [box(0, 0.5, 3, 3)]                          // a hundred, its flat
+        case "g2-skip": return [box(3.5, 4.4, 0.4, 0.4)]                       // where the hop lands
+        case "g2-compare": return [box(4, 1.2, 1, 0.8)]                         // the hundred both are in
+        case "g2-within1000": return [box(2, 4.2, 4, 0.8)]                      // the block that opened
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -517,6 +522,30 @@ extension Piece {
                 return out
             default: // a start bar, a change joined at its end, the next one waiting under it: 10 by 6
                 return [box(0, 2, 6, 1.5), box(6, 2, 3, 1.5), line((3, 2), (3, 3.5)), box(0, 4.5, 4, 1.5), line((0, 1.5), (0, 6))]
+            }
+        case "g2-hundreds", "g2-skip", "g2-compare", "g2-within1000":
+            switch id {
+            case "g2-hundreds": // two flats, four strips, three ones: 10 by 6
+            var out: [[CGPoint]] = [box(0, 0.5, 3, 3), box(3.5, 0.5, 3, 3)]
+            for x in 1..<3 { out.append(line((Double(x), 0.5), (Double(x), 3.5))); out.append(line((3.5 + Double(x), 0.5), (3.5 + Double(x), 3.5))) }
+            for i in 0..<4 { out.append(box(7 + 0.6 * Double(i), 0.5, 0.3, 3)) }
+            for i in 0..<3 { out.append(box(9.7, 0.5 + 0.6 * Double(i), 0.3, 0.3)) }
+            out.append(line((0, 5.5), (10, 5.5)))
+            return out
+        case "g2-skip": // a line, five hops of the same size: 10 by 6
+            var out: [[CGPoint]] = [line((0, 4.8), (10, 4.8))]
+            for i in 0...5 { out.append(line((Double(i) * 2, 4.2), (Double(i) * 2, 4.8))) }
+            for i in 0..<4 { out.append(arc(Double(i) * 2, Double(i) * 2 + 2, 4.6, 1.2)) }
+            return out
+        case "g2-compare": // line 1 in ten blocks, one lit, opened below into line 2: 10 by 6
+            var out: [[CGPoint]] = [line((0, 2), (10, 2)), line((0, 5.5), (10, 5.5)), line((4, 2.3), (0, 4.6)), line((5, 2.3), (10, 4.6))]
+            for i in 0...10 { out.append(line((Double(i), i % 5 == 0 ? 1.2 : 1.6), (Double(i), 2))); out.append(line((Double(i), i % 5 == 0 ? 4.7 : 5.1), (Double(i), 5.5))) }
+            return out
+        default: // within 1000: a line, a hop, the point dropped to the next line: 10 by 6
+            var out: [[CGPoint]] = [line((0, 5), (10, 5)), line((0, 1.5), (10, 1.5)), arc(2, 4, 4.8, 1)]
+            for i in 0...10 { out.append(line((Double(i), 4.5), (Double(i), 5))) }
+            out.append(line((3, 1.8), (0, 3.6))); out.append(line((4, 1.8), (10, 3.6)))
+            return out
             }
         case "g1-tenmore": // three rows of the chart, a number ringed, one row down lit: 10 by 3, from row 1.5
             let ring = (0...24).map { k in let a = Double(k) / 24 * 2 * .pi; return P(4.5 + 0.7 * cos(a), 3 + 0.7 * sin(a)) }

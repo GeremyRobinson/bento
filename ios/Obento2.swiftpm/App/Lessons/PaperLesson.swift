@@ -287,6 +287,10 @@ enum PaperLessons {
         case "g2-addfour": return AddFour2Lesson()
         case "g2-story": return Story2Lesson()
         case "g2-twostep": return TwoStep2Lesson()
+        case "g2-hundreds": return Hundreds2Lesson()
+        case "g2-skip": return Skip2Lesson()
+        case "g2-compare": return Compare2Lesson()
+        case "g2-within1000": return Within2Lesson()
         default: return nil
         }
     }
