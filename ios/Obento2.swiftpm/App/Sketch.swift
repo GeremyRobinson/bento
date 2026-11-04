@@ -75,21 +75,28 @@ struct Sketch {
     mutating func plate(_ id: String, _ pts: [CGPoint], _ colour: Colour) { add(Item(id: id, kind: .plate(pts), colour: colour)) }
     mutating func append(_ other: Sketch) { items += other.items }
     /// Everything it draws, in its own points: lines and shapes by their points, words by the box their font sets.
-    var bounds: CGRect? {
+    var bounds: CGRect? { bounds { _ in true } }
+    /// The bounds of the parts whose own middle lies between two heights (a line of the record: what's written on it).
+    func bounds(from y0: Double, to y1: Double) -> CGRect? { bounds { $0.midY >= y0 && $0.midY <= y1 } }
+    private func bounds(_ keep: (CGRect) -> Bool) -> CGRect? {
         var r: CGRect?
-        func add(_ q: CGRect) { r = r.map { $0.union(q) } ?? q }
-        func pts(_ ps: [CGPoint]) { for p in ps { add(CGRect(x: p.x, y: p.y, width: 0, height: 0)) } }
         for it in items {
+            let q: CGRect
             switch it.kind {
-            case .line(let ps, _, _), .fill(let ps), .plate(let ps), .overLine(let ps, _): pts(ps)
-            case .segments(let segs, _): pts(segs.flatMap { [$0.0, $0.1] })
-            case .icon(_, let q): add(q)
+            case .line(let ps, _, _), .fill(let ps), .plate(let ps), .overLine(let ps, _): q = Self.hull(ps)
+            case .segments(let segs, _): q = Self.hull(segs.flatMap { [$0.0, $0.1] })
+            case .icon(_, let b): q = b
             case .text(let t, let p, let size, let weight, let anchor, let digits):
                 let f = PaperText.font(size, weight, digits: digits), w = PaperText.width(t, f), h = Double(f.lineHeight)
-                add(CGRect(x: p.x - anchor.x * w, y: p.y - anchor.y * h, width: w, height: h))
+                q = CGRect(x: p.x - anchor.x * w, y: p.y - anchor.y * h, width: w, height: h)
             }
+            if keep(q) { r = r.map { $0.union(q) } ?? q }
         }
         return r
+    }
+    private static func hull(_ ps: [CGPoint]) -> CGRect {
+        guard let x0 = ps.map(\.x).min(), let x1 = ps.map(\.x).max(), let y0 = ps.map(\.y).min(), let y1 = ps.map(\.y).max() else { return .null }
+        return CGRect(x: x0, y: y0, width: x1 - x0, height: y1 - y0)
     }
     /// The same sketch with its slots saying what they said before (`was`), and whether any of them differs.
     func withSlots(_ was: [String: String]) -> (sketch: Sketch, changed: Bool) {

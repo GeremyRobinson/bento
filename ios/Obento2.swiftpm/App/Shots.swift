@@ -358,6 +358,12 @@ enum Shots {
                     w.play(.preview, frozen: at ?? 1.2)
                 }
                 if args.contains("-keypad"), let box = w.lesson.step.answer?.boxes.first { w.select(box) }
+                // -zoomlog: 5 s on (the keys up and the camera settled), the camera's zoom written to Documents/zoom.txt
+                if args.contains("-zoomlog") {
+                    try? await Task.sleep(for: .seconds(5))
+                    let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("zoom.txt")
+                    try? "\(m.camera(at: PaperClock.now).zoom)".write(to: url, atomically: true, encoding: .utf8)
+                }
                 // -typelater <digits>: typed into the step's box 5 s on, once the paper has gone still, and not checked
                 // (the number must show at once even when the clock has stopped)
                 if let i = args.firstIndex(of: "-typelater"), i + 1 < args.count, w.lesson.step.answer?.boxes.first != nil {

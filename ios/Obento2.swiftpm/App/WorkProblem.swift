@@ -488,28 +488,43 @@ final class WorkProblem: Identifiable, PageProblem {
         if ghost?.mode == .preview, let held = heldFrame { return held }
         guard let st = layout.stack else { return nil }
         var r = st.frame
-        // the keyboard up for the record's box (G 3 Nov: it never hides the work): the camera frames beside it
-        // (PaperModel.room), the first of these that shows well there: the whole problem at 75% or more; the problem from
-        // its left edge through the record's right end (most of it, at 70% or more); the whole problem at 50% or more
-        // (the keys are up only a moment); else the record, its boxes and Check
+        // the keyboard up for the record's box (G 3 Nov: it never hides the work; the call of 3 Nov: the work stays
+        // readable): the camera frames beside it (PaperModel.room) the first of these that shows at 75% or more: the whole
+        // problem; else the record line being typed (its boxes, the record's width and Check) with as much of the picture
+        // above it as fits; else that line alone, as big as it fits. The whole problem is never shown smaller just to fit
+        // it beside the keys.
         if Self.keys != nil, wantsTyping, let zoom = Self.keyboardZoom {
-            var rec = CGRect(x: st.blocksLeft * Paper.cell, y: st.blocksTop * Paper.cell, width: 7 * Paper.cell * st.plan.k, height: 2 * Paper.cell * st.plan.k)
-            if let p = paper, let b = p.draw(state()).record.bounds { rec = rec.union(b.offsetBy(dx: layout.workOffset.x, dy: layout.workOffset.y)) }
-            for b in layout.boxes { rec = rec.union(b.rect(for: "")) }
-            rec = rec.insetBy(dx: -Paper.cell, dy: -Paper.cell)
+            let sq = Paper.cell, least = 0.75
             func z(_ q: CGRect) -> Double { zoom(Rect(x: origin.x + q.minX, y: origin.y + q.minY, width: q.width, height: q.height)) }
-            let upTo = CGRect(x: r.minX, y: r.minY, width: max(2 * Paper.cell, rec.maxX - r.minX), height: max(r.height, rec.maxY - r.minY))
-            if z(r) >= 0.75 {}
-            else if upTo.width >= 0.75 * r.width, z(upTo) >= 0.7 { r = upTo }
-            else if z(r) >= 0.5 {}
-            else if z(rec) > z(r) {
-                // no closer than the problem showed before the keys came up: the record grown round its middle to that
-                // size, kept inside the problem so the rest is as much of it as fits
-                let want = max(z(r), min(st.plan.zoom, z(rec))), f = z(rec) / want
-                var q = rec.insetBy(dx: -rec.width * (f - 1) / 2, dy: -rec.height * (f - 1) / 2)
-                if q.width <= r.width { q.origin.x = min(max(q.minX, r.minX), r.maxX - q.width) }
-                if q.height <= r.height { q.origin.y = min(max(q.minY, r.minY), r.maxY - q.height) }
-                r = q
+            if z(r) < least {
+                // the line being typed: this step's boxes, the record's width at their rows, and Check
+                let ids = Set(lesson.step.answer?.boxes ?? [])
+                let mine = layout.boxes.filter { ids.contains($0.id ?? "") }
+                var line = (mine.isEmpty ? layout.boxes : mine).reduce(CGRect.null) { $0.union($1.rect(for: "")) }
+                // what's written on the boxes' rows (the line's words and numbers), then Check
+                if !line.isNull, let p = paper, let b = p.draw(state()).record.bounds(from: line.minY - layout.workOffset.y, to: line.maxY - layout.workOffset.y) {
+                    line = line.union(b.offsetBy(dx: layout.workOffset.x, dy: layout.workOffset.y))
+                }
+                line = line.union(CGRect(x: st.blocksLeft * sq, y: st.blocksTop * sq, width: 7 * sq * st.plan.k, height: 2 * sq * st.plan.k))
+                line = line.insetBy(dx: -sq, dy: -sq)
+                if z(line) < least { r = line }
+                else {
+                    // as much of the problem's width as fits at 75%, then as much of the picture above the line
+                    func lerp(_ a: CGRect, _ b: CGRect, _ f: Double) -> CGRect {
+                        CGRect(x: a.minX + (b.minX - a.minX) * f, y: a.minY + (b.minY - a.minY) * f,
+                               width: a.width + (b.width - a.width) * f, height: a.height + (b.height - a.height) * f)
+                    }
+                    func grow(_ a: CGRect, to b: CGRect) -> CGRect {
+                        if z(b) >= least { return b }
+                        var lo = 0.0, hi = 1.0
+                        for _ in 0..<14 { let m = (lo + hi) / 2; if z(lerp(a, b, m)) >= least { lo = m } else { hi = m } }
+                        return lerp(a, b, lo)
+                    }
+                    let x0 = min(line.minX, r.minX), x1 = max(line.maxX, r.maxX)
+                    let wide = grow(line, to: CGRect(x: x0, y: line.minY, width: x1 - x0, height: line.height))
+                    let top = min(r.minY, wide.minY)
+                    r = grow(wide, to: CGRect(x: wide.minX, y: top, width: wide.width, height: wide.maxY - top))
+                }
             }
         }
         let f = Rect(x: origin.x + r.minX, y: origin.y + r.minY, width: r.width, height: r.height)
