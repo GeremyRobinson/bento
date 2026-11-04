@@ -31,10 +31,6 @@ struct MadLesson: PaperLesson {
     }
 
     func recordRow(_ n: Numbers) -> Double? { G(n).BY + 4 }
-    func keysFocus(_ s: PaperState) -> CGRect? {
-        let g = G(s.numbers)
-        return stage(s) == 3 || stage(s) == 4 ? CGRect(x: g.DX - 1, y: g.BY - Double(max(g.P.mad, g.P.d.max() ?? 0)) - 1, width: g.step * Double(g.P.n) + 1, height: Double(max(g.P.mad, g.P.d.max() ?? 0)) + 4) : nil
-    }
     private func bits(_ s: PaperState) -> Int { Int((s.h("t") ?? 0).rounded()) }
 
     func draw(_ s: PaperState) -> PaperDrawing {
@@ -108,9 +104,11 @@ struct MadLesson: PaperLesson {
         if at >= 3 {
             let T: M7.Tok = at == 3 ? .box("T", cells: max(2, "\(P.dTotal)".count)) : .n(P.dTotal, at >= 5 ? .chapter : .ink)
             let A: M7.Tok = at == 4 ? .box("A", cells: max(1, "\(P.mad)".count)) : at >= 5 ? .n(P.mad, .chapter) : .gap(Record.boxWidth(cells: 1, commas: true))
-            if g.two { M7.row(&rec, "r1", g.lead, x: 0, line: 1); M7.row(&rec, "r2", g.tail(T, A), x: 0, line: 4) }
+            // keys up, the line being typed goes on a row of its own, so it and what it's read from show at 75%
+            let two = g.two || (s.keys && (at == 3 || at == 4))
+            if two { M7.row(&rec, "r1", g.lead, x: 0, line: 1); M7.row(&rec, "r2", g.tail(T, A), x: 0, line: 4) }
             else { M7.row(&rec, "r", g.lead + g.tail(T, A), x: 0, line: 1) }
-            if at == 3 { D8.waiting(&rec, "aw", g.two ? g.tail(T, A) : g.lead + g.tail(T, A), (g.two ? 0 : g.lead.count) + 5, x: 0, line: g.two ? 4 : 1) }
+            if at == 3 { D8.waiting(&rec, "aw", two ? g.tail(T, A) : g.lead + g.tail(T, A), (two ? 0 : g.lead.count) + 5, x: 0, line: two ? 4 : 1) }
         }
         let ext = pic.R(-1, 0, g.W + 2, BY + 3)
         return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: rec.boxes, extent: ext)

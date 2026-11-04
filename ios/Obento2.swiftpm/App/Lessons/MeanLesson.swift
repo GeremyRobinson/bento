@@ -80,10 +80,12 @@ struct MeanLesson: PaperLesson {
             let T: M7.Tok = at == 2 ? .box("T", cells: max(2, "\(P.total)".count)) : .n(P.total, at >= 4 ? .chapter : .ink)
             let c: M7.Tok = at == 3 ? .box("c", cells: 1) : at >= 4 ? .n(P.n, .chapter) : .gap(Record.boxWidth(cells: 1, commas: true))
             let M: M7.Tok = .n(P.mean, .chapter)
-            if g.two { M7.row(&rec, "r1", g.lead, x: 0, line: 1); M7.row(&rec, "r2", g.tail(T, c, M), x: 0, line: 4) }
+            // keys up, the line being typed goes on a row of its own, so it and what it's read from show at 75%
+            let two = g.two || (s.keys && (at == 2 || at == 3))
+            if two { M7.row(&rec, "r1", g.lead, x: 0, line: 1); M7.row(&rec, "r2", g.tail(T, c, M), x: 0, line: 4) }
             else { M7.row(&rec, "r", g.lead + g.tail(T, c, M), x: 0, line: 1) }
             // the count's box waits, faint, while the total is written
-            if at == 2 { D8.waiting(&rec, "cw", g.two ? g.tail(T, c, M) : g.lead + g.tail(T, c, M), (g.two ? 0 : g.lead.count) + 3, x: 0, line: g.two ? 4 : 1) }
+            if at == 2 { D8.waiting(&rec, "cw", two ? g.tail(T, c, M) : g.lead + g.tail(T, c, M), (two ? 0 : g.lead.count) + 3, x: 0, line: two ? 4 : 1) }
         }
         let ext = pic.R(-1, 0, g.PW + 16, BY + 3)
         return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: rec.boxes, extent: ext)
