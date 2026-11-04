@@ -26,6 +26,9 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
 - 4th grade chapter 1, Big numbers, is built (Core: `BigNumbers`, `TensHundreds`, `ReadWriteBig`, `CompareBig`,
   `PlaceValueRound`, `AddSubBig`; App: `Lessons/PlaceChart.swift` and a lesson file each). Shots: `page-g4-<id>-<step>`
   opens on 4th grade by itself; `-grade 4` for map moments.
+- 4th grade chapter 2, Multiplying and dividing, is built (3 Nov; Core: `TimesAsMany`, `MultiplyBig`, `TwoByTwo`, `Deal`
+  (g4-divide and g4-share share its phases), `StorySteps`; App: `TimesAsManyLesson`, `MultiplyBigLesson`, `TwoByTwoLesson`,
+  `DealLesson`, `StoryStepsLesson`). Shots as chapter 1's, e.g. `page-g4-divide-2 -wrong`.
 
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
