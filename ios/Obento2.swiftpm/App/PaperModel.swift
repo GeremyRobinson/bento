@@ -860,7 +860,11 @@ final class PaperModel {
 }
 
 enum PaperClock {
-    static var now: Double { frozen ?? Date().timeIntervalSinceReferenceDate }
+    static var now: Double { frozen ?? at(Date().timeIntervalSinceReferenceDate) }
+    /// Screenshots only (`-slow N`): the paper's clock running N times slower, so its motion can be filmed frame by
+    /// frame (a real moment turned into the paper's).
+    static var slow = 1.0, slowFrom = 0.0
+    static func at(_ real: Double) -> Double { slow == 1 ? real : slowFrom + (real - slowFrom) / slow }
     /// Screenshots only (`-freeze`): the paper held still at this moment, so a slow screenshot still catches it.
     static var frozen: Double?
 }

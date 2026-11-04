@@ -27,7 +27,7 @@ struct PaperScreen: View {
             let _ = quiet
             TimelineView(.animation(paused: !running)) { ctx in
                 // stopped, the clock's last frame is old: the cursor's blink moves it on
-                let t = PaperClock.frozen ?? max(ctx.date.timeIntervalSinceReferenceDate, blinkTick)
+                let t = PaperClock.frozen ?? max(PaperClock.at(ctx.date.timeIntervalSinceReferenceDate), blinkTick)
                 let cam = model.camera(at: t)
                 ZStack(alignment: .topLeading) {
                     // RealityKit's view keeps the size it was made at, so a new screen shape (rotating) makes a new one

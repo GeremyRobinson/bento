@@ -47,7 +47,7 @@ struct FracTimesWholeLesson: PaperLesson {
         // the answer bars: one to start, all of them once the pieces come
         for j in 0..<(L.dropped ? P.bars : 1) {
             let y = L.ay(j)
-            if L.closed(j) { M5.whole(&pic, "ab\(j)w", x: AX, y: y, W: L.Wb) }
+            if L.closed(j) { M5.closed(&pic, "ab\(j)w", x: AX, y: y, W: L.Wb) }
             else if j == P.full && L.recutDone {
                 let gr = gcd(P.rem, d)
                 F4.bar(&pic, "abr\(j)", x: AX, y: y, W: P.Wb, d: d / gr, on: P.rem / gr)

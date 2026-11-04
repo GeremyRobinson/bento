@@ -485,23 +485,23 @@ final class WorkProblem: Identifiable, PageProblem {
         guard let st = layout.stack else { return nil }
         var r = st.frame
         // the keyboard up for the record's box (G 3 Nov: it never hides the work): the camera frames beside it
-        // (PaperModel.room): the whole problem when it still shows at 75% or more there, else the record and its blocks,
-        // when they show bigger
-        if Self.keys != nil, wantsTyping {
-            // the record alone: its line, its boxes and Check, with a square round them
+        // (PaperModel.room), the first of these that shows well there: the whole problem at 75% or more; the problem from
+        // its left edge through the record's right end (most of it, at 70% or more); the whole problem at 50% or more
+        // (the keys are up only a moment); else the record, its boxes and Check
+        if Self.keys != nil, wantsTyping, let zoom = Self.keyboardZoom {
             var rec = CGRect(x: st.blocksLeft * Paper.cell, y: st.blocksTop * Paper.cell, width: 7 * Paper.cell * st.plan.k, height: 2 * Paper.cell * st.plan.k)
             if let p = paper, let b = p.draw(state()).record.bounds { rec = rec.union(b.offsetBy(dx: layout.workOffset.x, dy: layout.workOffset.y)) }
             for b in layout.boxes { rec = rec.union(b.rect(for: "")) }
             rec = rec.insetBy(dx: -Paper.cell, dy: -Paper.cell)
-            func g(_ q: CGRect) -> Rect { Rect(x: origin.x + q.minX, y: origin.y + q.minY, width: q.width, height: q.height) }
-            // or the problem from its left edge through the record's right end (what to do, the picture and the record,
-            // whatever's past the record left out), when that still shows at 70% or more
+            func z(_ q: CGRect) -> Double { zoom(Rect(x: origin.x + q.minX, y: origin.y + q.minY, width: q.width, height: q.height)) }
             let upTo = CGRect(x: r.minX, y: r.minY, width: max(2 * Paper.cell, rec.maxX - r.minX), height: max(r.height, rec.maxY - r.minY))
-            if let zoom = Self.keyboardZoom, zoom(g(r)) < 0.75, zoom(g(upTo)) >= 0.7 { r = upTo }
-            else if let zoom = Self.keyboardZoom, zoom(g(r)) < 0.75, zoom(g(rec)) > zoom(g(r)) {
+            if z(r) >= 0.75 {}
+            else if upTo.width >= 0.75 * r.width, z(upTo) >= 0.7 { r = upTo }
+            else if z(r) >= 0.5 {}
+            else if z(rec) > z(r) {
                 // no closer than the problem showed before the keys came up: the record grown round its middle to that
                 // size, kept inside the problem so the rest is as much of it as fits
-                let want = max(zoom(g(r)), min(st.plan.zoom, zoom(g(rec)))), f = zoom(g(rec)) / want
+                let want = max(z(r), min(st.plan.zoom, z(rec))), f = z(rec) / want
                 var q = rec.insetBy(dx: -rec.width * (f - 1) / 2, dy: -rec.height * (f - 1) / 2)
                 if q.width <= r.width { q.origin.x = min(max(q.minX, r.minX), r.maxX - q.width) }
                 if q.height <= r.height { q.origin.y = min(max(q.minY, r.minY), r.maxY - q.height) }

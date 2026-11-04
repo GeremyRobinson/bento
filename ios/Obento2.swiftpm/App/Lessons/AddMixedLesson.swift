@@ -52,7 +52,7 @@ struct AddMixedLesson: PaperLesson {
                 M5.whole(&pic, "R\(j)", x: XR, y: M5.step * Double(j), W: W, striped: true)
             }
         }
-        if L.traded { M5.whole(&pic, "T", x: 0, y: M5.step * Double(P.Wt), W: W) }
+        if L.traded { M5.closed(&pic, "T", x: 0, y: M5.step * Double(P.Wt), W: W) }
         // the left's part bar (the spill bar becomes it once the full one is traded)
         if !L.traded {
             M5.frame(&pic, "lpb", x: 0, y: L.partY, W: P.W, d: d)

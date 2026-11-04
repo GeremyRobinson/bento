@@ -333,6 +333,10 @@ enum Shots {
                 }
                 // a finger comes after the camera has framed the step, as a child's does
                 if args.contains("-tapsq") || args.contains("-drag") || args.contains("-block") { try? await Task.sleep(for: .seconds(1.5)) }
+                // -slow N: from the finger's move on, the paper's clock runs N times slower (filmed frame by frame)
+                if let i = args.firstIndex(of: "-slow"), i + 1 < args.count, let n = Double(args[i + 1]), n > 0 {
+                    PaperClock.slowFrom = Date().timeIntervalSinceReferenceDate; PaperClock.slow = n
+                }
                 // -tapsq x,y[,x,y…]: one tap, or several one after another
                 if let t = numbers("-tapsq"), t.count >= 2 { for i in stride(from: 0, to: t.count - 1, by: 2) { m.tap(at: screen(t[i], t[i + 1])) } }
                 if let d = numbers("-drag"), d.count == 4 {

@@ -15,6 +15,28 @@ enum M5 {
         pen.sketch.box(id + "o", pen.R(x, y, W, wh), .chapter, width: Sketch.stroke)
         if crossed { pen.line(id + "x", [(x + 0.5, y + wh - 0.25), (x + W - 0.5, y + 0.25)], .ink) }
     }
+    /// A whole bar opened into its `d` pieces (G: never remove an animation): the same bar, shaded, grown to a part
+    /// bar's height along a spring's path, its cuts growing down it as it opens (as the preview's does).
+    static func opened(_ pen: inout GridPen, _ id: String, x: Double, y: Double, W: Double, d: Int) {
+        let pw = W / Double(max(1, d))
+        func cuts(_ h: Double) -> [(CGPoint, CGPoint)] { (1..<max(2, d)).map { i in (pen.P(x + Double(i) * pw, y), pen.P(x + Double(i) * pw, y + h)) } }
+        pen.sketch.morphs = true
+        pen.fill(id + "f", col: x, row: y, w: W, h: F4.h, Bars.shade)
+        pen.sketch.box(id + "o", pen.R(x, y, W, F4.h), .chapter, width: Sketch.stroke)
+        pen.sketch.from[id + "c"] = .segments(cuts(wh), width: Sketch.stroke)
+        pen.sketch.segments(id + "c", cuts(F4.h), .chapter, width: Sketch.stroke)
+        pen.sketch.from = [:]
+        pen.sketch.morphs = false
+    }
+    /// A full bar of pieces closed into a whole (G: never remove an animation): the whole starts as the full bar, 4
+    /// tall where the pieces were, and shrinks to a whole's 2 along a spring's path while the pieces' cuts go.
+    static func closed(_ pen: inout GridPen, _ id: String, x: Double, y: Double, W: Double) {
+        let r = pen.R(x, y, W, F4.h)
+        pen.sketch.from[id + "f"] = .fill([CGPoint(x: r.minX, y: r.minY), CGPoint(x: r.maxX, y: r.minY), CGPoint(x: r.maxX, y: r.maxY), CGPoint(x: r.minX, y: r.maxY)])
+        pen.sketch.from[id + "o"] = .line([CGPoint(x: r.minX, y: r.minY), CGPoint(x: r.maxX, y: r.minY), CGPoint(x: r.maxX, y: r.maxY), CGPoint(x: r.minX, y: r.maxY), CGPoint(x: r.minX, y: r.minY)], width: Sketch.stroke, dashed: false)
+        whole(&pen, id, x: x, y: y, W: W)
+        pen.sketch.from = [:]
+    }
     /// Where a whole bar was (slid away): its outline, dashed.
     static func gone(_ pen: inout GridPen, _ id: String, x: Double, y: Double, W: Double, h: Double = wh) {
         pen.sketch.box(id, pen.R(x, y, W, h), .chapter, width: Sketch.stroke, dashed: true)

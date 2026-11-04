@@ -41,10 +41,8 @@ struct SubtractMixedLesson: PaperLesson {
         // the left's wholes; the last one, opened, is a bar of its pieces
         for j in 0..<P.w1 {
             let y = M5.step * Double(j)
-            if L.opened && j == P.w1 - 1 {
-                M5.frame(&pic, "op", x: 0, y: y, W: P.W, d: d)
-                for q in 0..<d { F4.piece(&pic, "o\(q)", x: Double(q) * pw, y: y, pw: pw) }
-            } else { M5.whole(&pic, "L\(j)", x: 0, y: y, W: W) }
+            if L.opened && j == P.w1 - 1 { M5.opened(&pic, "L\(j)", x: 0, y: y, W: W, d: d) }
+            else { M5.whole(&pic, "L\(j)", x: 0, y: y, W: W) }
         }
         // the part bar
         M5.frame(&pic, "lpb", x: 0, y: L.partY, W: P.W, d: d)
