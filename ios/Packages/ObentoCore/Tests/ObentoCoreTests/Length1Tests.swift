@@ -110,6 +110,7 @@ final class Length1Tests: XCTestCase {
         XCTAssertEqual(move(&l, ["x": 6]), .notYet("The short hand tells the hour. The long hand tells the minutes."))
         XCTAssertEqual(move(&l, ["x": 9]), .notYet("The short hand hasn't reached 9 yet. It's still 8."))
         XCTAssertEqual(move(&l, ["x": 8]), .moved(3))
+        XCTAssertEqual(l.words.say, "Write the minutes.")
         XCTAssertEqual(move(&l, ["y": 6]), .notYet("The long hand points at 6, but that means 30 minutes."))
         XCTAssertEqual(move(&l, ["y": 60]), .notYet("A whole hour is 60 minutes, but the long hand has only gone halfway around: 30 minutes."))
         XCTAssertEqual(move(&l, ["y": 8]), .notYet("That's the short hand. The long hand tells the minutes."))

@@ -234,6 +234,8 @@ public enum Time1 {
         public var hourSay: String { half ? "Tap the number the short hand just passed." : "Tap the number the short hand points at." }
         public var traceSay: String { half ? "Trace from 12 round to the long hand." : "Tap where the long hand points." }
         public static let writeSay = "Write the time."
+        /// The minutes step's own line, so "Write the time." isn't said twice.
+        public static let minutesSay = "Write the minutes."
         public func tapped(_ n: Int) -> String {
             if half && n == next { return "The short hand hasn't reached \(next) yet. It's still \(hour)." }
             if n == longAt { return "That's the long hand. The short hand tells the hour." }
@@ -282,7 +284,7 @@ public enum Time1 {
         let wh = LessonStep(StepWords(say: Parts.writeSay, hint: Parts.hourOther, action: "Check"),
             answer: Num1.write("x", P.hour, P.hourSlips, other: Parts.hourOther, hint: Parts.hourOther, explain: "The hour is \(P.hour)."),
             picture: ["at": 2], onMiss: ["ring": 1], hint2: ["spot": 1])
-        let wm = LessonStep(StepWords(say: Parts.writeSay, hint: Parts.minuteOther, action: "Check"),
+        let wm = LessonStep(StepWords(say: Parts.minutesSay, hint: Parts.minuteOther, action: "Check"),
             answer: Num1.write("y", P.minute, P.minuteSlips, other: Parts.minuteOther, hint: Parts.minuteOther, explain: "\(P.time) is \(P.said)."),
             picture: ["at": 3], onMiss: ["ring": 1], hint2: ["spot": 1])
         let done = LessonStep(StepWords(say: P.why, hint: "", action: "Next problem"), picture: ["at": 4])
