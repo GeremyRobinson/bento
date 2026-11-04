@@ -43,7 +43,10 @@ struct MadLesson: PaperLesson {
         for j in 0..<n where measured & (1 << j) != 0 {
             let x = D8.barX(j), v = P.v[j]
             if v > M { pic.fill("up\(j)", col: x, row: BY - Double(v), w: 4, h: Double(v - M), D8.strong) }
-            if v < M { pic.sketch.box("gp\(j)", pic.R(x, BY - Double(M), 4, Double(M - v)), .chapter, width: Sketch.stroke, dashed: true) }
+            if v < M {
+                pic.fill("gf\(j)", col: x, row: BY - Double(M), w: 4, h: Double(M - v), .tint(0.1))
+                pic.sketch.box("gp\(j)", pic.R(x, BY - Double(M), 4, Double(M - v)), .chapter, width: Sketch.stroke, dashed: true)
+            }
             pic.label("dl\(j)", "\(P.d[j])", D8.lit, .above, edge: BY - Double(max(v, M)), along: x + 2)
         }
         // the level line: the hand's while it's found, then on the mean
