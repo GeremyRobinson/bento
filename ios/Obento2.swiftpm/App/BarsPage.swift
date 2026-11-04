@@ -216,7 +216,7 @@ final class BarsPage {
         let now = PaperClock.now
         let terms: [(String, Bool)] = [
             // the How to between its taps (a tap it waits for is still: what it draws wakes the clock on its own)
-            ("problem", all.contains { $0.animating }), ("playing", playing && waiting == nil), ("building", building),
+            ("problem", all.contains { $0.animating }), ("alone", (current as? WorkProblem)?.alone == true), ("playing", playing && waiting == nil), ("building", building),
             ("leftCleared", now - leftClearedAt < 0.5), ("cards", now - cardsAt < 1.2), ("cardsGone", cardsGoneAt.map { now - $0 < 0.8 } ?? false),
         ]
         return terms.filter(\.1).map(\.0)

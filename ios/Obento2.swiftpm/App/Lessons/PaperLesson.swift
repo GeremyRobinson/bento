@@ -74,6 +74,9 @@ protocol PaperLesson {
     /// What to do now, when the hands have changed it within a step ("Push it." once rolls or slides is tapped): nil, the
     /// step's own words.
     func say(_ s: PaperState) -> String?
+    /// The picture alone for a moment (K Count to 100's whole chart, call of 4 Nov): the words, the record and the blocks
+    /// step aside and the camera frames only the picture, then they come back. Asked every frame (it may read the clock).
+    func alone(_ s: PaperState) -> Bool
 }
 
 extension PaperLesson {
@@ -95,6 +98,7 @@ extension PaperLesson {
     func standDelay(_ s: PaperState) -> Double { 0 }
     func standHeld(_ s: PaperState) -> (pivot: CGPoint, up: Double)? { nil }
     func say(_ s: PaperState) -> String? { nil }
+    func alone(_ s: PaperState) -> Bool { false }
     func scale(_ run: LessonRun) -> Double { scale(run.numbers) }
     func recordBeside(_ run: LessonRun) -> Double? { recordBeside(run.numbers) }
     func messageRows(_ run: LessonRun) -> Int { messageRows(run.numbers) }

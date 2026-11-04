@@ -5,10 +5,11 @@ import SwiftUI
 /// written up to the start (ringed); tap the next empty block, then the next, each writing its number in the chapter's
 /// colour (a tap anywhere else: "41 comes next. It starts the next row.", that block red). Which goes here?: the rows
 /// written but one block, dashed; tap its number from three under the chart (a wrong one: that number's block lights where
-/// it really is). Then the camera steps back to the whole chart (the rows glide down to their places, the rest drawing in)
-/// and the last column lights, 10, 20, … 100, with the last line.
+/// it really is). Then the See, as the preview's: the words and the record step aside and the camera frames the whole chart
+/// alone (the rows glide down to their places, the rest drawing in), the last column lights, 10, 20, … 100; then back to
+/// the three rows with the last line (call of 4 Nov: the chart alone shows at 66%+, not 53% under the words).
 ///
-/// Kept: "w" how many are written (count on), "bad" a block tapped that's wrong.
+/// Kept: "w" how many are written (count on), "bad" a block tapped that's wrong, "seeAt" when the right move was made.
 @MainActor
 struct CountHundredLesson: PaperLesson {
     private func at(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
@@ -18,11 +19,15 @@ struct CountHundredLesson: PaperLesson {
     static func block(_ v: Int, top: Int) -> CGPoint { CGPoint(x: 5 * Double((v - 1) % 10), y: 5 * Double(CountTo100.row(v) - top)) }
     static func mid(_ v: Int, top: Int) -> CGPoint { let b = block(v, top: top); return CGPoint(x: b.x + 2.5, y: b.y + 2.5) }
     private func key(_ i: Int) -> CGPoint { KT.keyAt(i, x: 5, y: Self.keys, w: 10, step: 15) }
-    func blocksAt(_ s: PaperState) -> CGPoint? { at(s) == 2 ? CGPoint(x: 55, y: 48) : nil }
+    /// How long the whole chart shows alone: the glide, the column lighting row by row, a rest.
+    static let see = 5.6
+    /// After the see: Next problem three rows under the three rows in play.
+    func blocksAt(_ s: PaperState) -> CGPoint? { at(s) == 2 ? CGPoint(x: 0, y: 18) : nil }
+    func alone(_ s: PaperState) -> Bool { at(s) == 2 && PaperClock.now - (s.run.kept["seeAt"] ?? -100) < Self.see }
 
     func draw(_ s: PaperState) -> PaperDrawing {
-        let P = CountTo100.Parts(s.numbers), st = at(s), done = st == 2
-        let top = done ? 0 : P.top, r0 = done ? 0 : P.top, r1 = done ? 9 : P.top + 2
+        let P = CountTo100.Parts(s.numbers), st = at(s), done = st == 2, see = done && alone(s)
+        let top = see ? 0 : P.top, r0 = see ? 0 : P.top, r1 = see ? 9 : P.top + 2
         let w = done ? P.m : Int((s.run.kept["w"] ?? 0).rounded())
         let (pick, wrong) = KK.typed(s, "x", want: P.n)
         let gap = !P.on && !done ? P.n : nil
@@ -47,9 +52,9 @@ struct CountHundredLesson: PaperLesson {
         if let g = gap { let b = Self.block(g, top: top); pic.sketch.box("gap", pic.R(b.x, b.y, 5, 5), .ink3, width: Sketch.stroke, dashed: true) }
         // the last column lights, a row after another (the see)
         if done {
-            for r in 0..<10 {
-                pic.sketch.delay = 0.9 + 0.28 * Double(r)
-                pic.fill("lit\(r)", col: 45, row: 5 * Double(r), w: 5, h: 5, KK.litCube)
+            for r in r0...r1 {
+                pic.sketch.delay = see ? 0.9 + 0.28 * Double(r) : 0
+                pic.fill("lit\(r)", col: 45, row: 5 * Double(r - top), w: 5, h: 5, KK.litCube)
             }
             pic.sketch.delay = 0
         }
@@ -61,14 +66,14 @@ struct CountHundredLesson: PaperLesson {
                 let shown = P.on ? v <= P.s + w || lit : v != gap
                 let mine = counted || lit || (!P.on && v == P.n)
                 if (counted || (!P.on && v == P.n && done)) && !lit { pic.fill("cf\(v)", col: b.x, row: b.y, w: 5, h: 5, KK.cube) }
-                if lit { pic.sketch.delay = 0.9 + 0.28 * Double(r) }
+                if lit && see { pic.sketch.delay = 0.9 + 0.28 * Double(r) }
                 if shown { pic.word("cn\(v)\(mine ? "c" : "")", "\(v)", at: b.x + 2.5, b.y + 2.5, mine ? KT.smallLit : KT.small) }
                 pic.sketch.delay = 0
             }
         }
         if P.on {
             let a = Self.mid(P.s, top: top); pic.circle("start", at: a.x, a.y, radius: 2.05, .chapter)
-            if done { let e = Self.mid(P.e, top: top); pic.circle("end", at: e.x, e.y, radius: 2.05, .chapter) }
+            if done && !see { let e = Self.mid(P.e, top: top); pic.circle("end", at: e.x, e.y, radius: 2.05, .chapter) }
         }
         if !done {
             if let bad = KA.kept(s, "bad"), P.on { let b = Self.block(bad, top: top); pic.sketch.box("bad\(bad)", pic.R(b.x, b.y, 5, 5), KK.red, width: Sketch.stroke) }
@@ -98,14 +103,14 @@ struct CountHundredLesson: PaperLesson {
                 let v = 10 * (top + Int(q.y / 5)) + Int(q.x / 5) + 1
                 if v == next {
                     let full = w + 1 == P.m
-                    return HandMove(hand: nil, missHand: nil, set: full ? [("k", Double(P.m))] : [], keep: ["w": Double(w + 1), "bad": -1], check: full)
+                    return HandMove(hand: nil, missHand: nil, set: full ? [("k", Double(P.m))] : [], keep: ["w": Double(w + 1), "bad": -1, "seeAt": PaperClock.now], check: full)
                 }
                 // the start and what's written already are tapped for nothing
                 if v <= P.s + w { return HandMove(hand: nil) }
                 return HandMove(hand: nil, missHand: nil, set: [("k", Double(-next))], keep: ["bad": Double(v)], check: true)
             })
         case 1:
-            return Hands(tap: { q in KT.keyTapped(q, P.choices, x: 5, y: Self.keys, w: 10, step: 15).map { HandMove(hand: nil, missHand: nil, set: [("x", Double($0))], check: true) } })
+            return Hands(tap: { q in KT.keyTapped(q, P.choices, x: 5, y: Self.keys, w: 10, step: 15).map { HandMove(hand: nil, missHand: nil, set: [("x", Double($0))], keep: ["seeAt": PaperClock.now], check: true) } })
         default: return nil
         }
     }

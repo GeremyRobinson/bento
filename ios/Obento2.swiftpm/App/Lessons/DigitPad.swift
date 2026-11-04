@@ -2,12 +2,13 @@ import SwiftUI
 
 /// The digit pad (the preview design/prototype/gradeK-ch5.html, grade1-ch3.html's): Kindergarten's one written number past
 /// 20, and 1st grade's numbers to 120, written by tapping drawn keys on the paper, never the iPad's keyboard. Ten keys,
-/// 0–9, and a rub-out, each 3 × 3 squares in one row (33 squares), drawn faint; the lesson's own Check block goes two
+/// 0–9, and a rub-out, each 4 × 4 squares in one row (44 squares; small fingers, call of 4 Nov: 80 pt at 100%, never under
+/// 60 pt at the 75% a lesson keeps), drawn faint; the lesson's own Check block goes two
 /// squares right of it (`checkAt`). A key tapped writes its digit into the record's box (a hand move that sets the box,
 /// not checked); Check checks it. After a miss the box is red until the next key starts it again.
 @MainActor
 enum DigitPad {
-    static let key = 3.0, width = 33.0
+    static let key = 4.0, width = 44.0
     /// Rub-out's place on the row.
     static let rubOut = 10
     static let digit = Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink)
@@ -18,10 +19,11 @@ enum DigitPad {
             let kx = x + key * Double(i)
             pen.sketch.box("\(id)k\(i)", pen.R(kx, y, key, key), .ink3, width: Sketch.stroke)
             if i < rubOut {
-                pen.word("\(id)n\(i)", "\(i)", at: kx + 1.5, y + 1.5, digit)
+                pen.word("\(id)n\(i)", "\(i)", at: kx + key / 2, y + key / 2, digit)
             } else {
                 // a rub-out: a key-shaped outline pointing left
-                pen.line("\(id)x", [(kx + 0.55, y + 1.5), (kx + 1.15, y + 0.9), (kx + 2.45, y + 0.9), (kx + 2.45, y + 2.1), (kx + 1.15, y + 2.1), (kx + 0.55, y + 1.5)], .ink2)
+                let m = key / 2
+                pen.line("\(id)x", [(kx + m - 1.3, y + m), (kx + m - 0.5, y + m - 0.8), (kx + m + 1.3, y + m - 0.8), (kx + m + 1.3, y + m + 0.8), (kx + m - 0.5, y + m + 0.8), (kx + m - 1.3, y + m)], .ink2)
             }
         }
         if let spot { KK.hintBox(&pen, "\(id)spot", x: x + key * Double(spot), y: y, w: key, h: key) }
@@ -32,7 +34,7 @@ enum DigitPad {
         return min(rubOut, Int((q.x - x) / key))
     }
     /// The middle of key `k`: where the ghost finger taps.
-    static func spot(_ k: Int, x: Double, y: Double) -> CGPoint { CGPoint(x: x + key * Double(k) + 1.5, y: y + 1.5) }
+    static func spot(_ k: Int, x: Double, y: Double) -> CGPoint { CGPoint(x: x + key * Double(k) + key / 2, y: y + key / 2) }
     /// Where the lesson's Check block goes: two squares right of the pad.
     static func checkAt(x: Double, y: Double) -> CGPoint { CGPoint(x: x + width + 2, y: y) }
 

@@ -688,9 +688,9 @@ final class PaperModel {
     }
 
     /// A rect framed clear of the bar (and the keyboard), with two cells to spare, never closer than `maxZoom`.
-    func framingBelowBar(_ r: Rect, maxZoom: Double) -> PaperCamera {
+    func framingBelowBar(_ r: Rect, maxZoom: Double, tight: Bool = false) -> PaperCamera {
         let q = room(for: r, maxZoom: maxZoom)
-        var cam = PaperCamera.framing(r, in: Size(q.width, q.height), pad: screen.width > 760 ? Self.margin : 8, maxZoom: maxZoom)
+        var cam = PaperCamera.framing(r, in: Size(q.width, q.height), pad: tight ? 4 : screen.width > 760 ? Self.margin : 8, maxZoom: maxZoom)
         cam.x += q.x; cam.y += q.y
         return cam
     }
@@ -698,7 +698,9 @@ final class PaperModel {
     /// Each step, the camera frames what the lesson shows right now: zoomed to fit it (in or out, up to 125%) and
     /// centred on it (G 17 Oct). A move too small to notice is skipped, so the camera doesn't twitch.
     func frameCurrent(_ r: Rect) {
-        let now = camera(at: PaperClock.now), to = framingBelowBar(r, maxZoom: CameraTiming.lessonMax)
+        // the picture alone for a moment (PaperLesson.alone): framed tight, nothing else on the screen to keep clear of
+        let tight = bars?.mode == .work && (bars?.current as? WorkProblem)?.alone == true
+        let now = camera(at: PaperClock.now), to = framingBelowBar(r, maxZoom: CameraTiming.lessonMax, tight: tight)
         let c0 = now.toPaper(Point(screen.width / 2, screen.height / 2)), c1 = to.toPaper(Point(screen.width / 2, screen.height / 2))
         if abs(to.zoom / now.zoom - 1) < 0.02, hypot(c1.x - c0.x, c1.y - c0.y) * now.zoom < 12 { return }
         fly(to: to, duration: CameraTiming.fly)

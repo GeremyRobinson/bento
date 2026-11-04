@@ -304,6 +304,7 @@ extension Rig {
         func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: o.x + x * sq, y: o.y + y * sq) }
         // the words draw in quickly (the solving area), the picture calmly
         s.pace = 0.4
+        if m.alone { s.append(d.picture.transformed(to: P(0, plan.pictureTop), scale: 1)); return s }
         if l.story, let story = l.spec.story?(l.numbers) {
             s.words("story", story, .tell, x: o.x, top: o.y, width: width, max: max(1, plan.storyRows), k: k)
         }
@@ -416,7 +417,7 @@ extension Rig {
                 l.kept.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }.joined(),
                 s.typed.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: ","), "\(s.faint)", s.active ?? "",
                 "\(s.verdict as Bool?)", "\(s.keys)", m.rowsWords.map { "\($0.text)\($0.colour)" } ?? "", m.intro ?? "", "\(m.howToButtons)",
-                "\(l.helps)", "\(dark)", "\(page.current === m)", "\(s.standEye.map { "\($0)" } ?? "")"].joined(separator: "|")
+                "\(l.helps)", "\(dark)", "\(page.current === m)", "\(m.alone)", "\(s.standEye.map { "\($0)" } ?? "")"].joined(separator: "|")
     }
 
     /// What the live parts read: the hand, the step, and the ghost finger where it is now.

@@ -496,7 +496,9 @@ final class WorkProblem: Identifiable, PageProblem {
         // Show me is a preview: the camera holds still while it plays, even when its copy moves on a stage
         if ghost?.mode == .preview, let held = heldFrame { return held }
         guard let st = layout.stack else { return nil }
-        let r = keysFraming(st)?.frame ?? st.frame
+        var r = keysFraming(st)?.frame ?? st.frame
+        // the picture alone for a moment: only it is framed
+        if alone, let b = paper?.draw(state()).picture.bounds { r = b.offsetBy(dx: 0, dy: st.plan.pictureTop * Paper.cell) }
         let f = Rect(x: origin.x + r.minX, y: origin.y + r.minY, width: r.width, height: r.height)
         heldFrame = f
         return f
@@ -604,6 +606,8 @@ final class WorkProblem: Identifiable, PageProblem {
         return intro ?? paperSay ?? (l.story && l.step.answer?.choices != nil ? l.words.hint : l.words.say)
     }
     /// What to do now as the lesson's hands have changed it within the step (PaperLesson.say), if they have.
+    /// The picture alone for a moment (PaperLesson.alone): no words, record or blocks; the camera on the picture.
+    var alone: Bool { ghost == nil && paper?.alone(state()) == true }
     var paperSay: String? { ghost == nil && !solved ? paper?.say(state()) : nil }
     @ObservationIgnored private var heldFrame: Rect?
     /// How much of the screen's bottom a docked keyboard covers (PaperScreen sets it; iPadOS's floating number pad
