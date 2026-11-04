@@ -118,7 +118,8 @@ extension Piece {
         // 4th grade, Lines and shapes (3 Nov)
         // 6th grade, Ratios and percents (3 Nov)
         case "g6-ratio": return [box(0, 0, 4, 6)]                               // the left side's rows
-        case "g6-ratiotable": return [box(4, 2, 1, 1), box(7, 0, 1, 1)]          // the two points
+        case "g6-ratiotable":                                                   // the two points
+            return [(3.0, 4.0), (6.0, 2.0)].map { c in (0..<16).map { k in let a = Double(k) / 16 * 2 * .pi; return CGPoint(x: at.x + (c.0 + 0.6 * cos(a)) * Paper.cell, y: at.y + (c.1 + 0.6 * sin(a)) * Paper.cell) } }
         case "g6-rate": return [box(6, 0, 3, 1)]                                // the row copied
         case "g6-pctof": return [box(0, 2, 3, 2)]                               // 30% shaded
         case "g6-pctwhole": return [box(0, 2, 3, 2)]                            // the block known
@@ -203,7 +204,8 @@ extension Piece {
             return [box(0, 0, 4, 6), box(5, 0, 6, 6), line((2, 0), (2, 6)), line((7, 0), (7, 6)), line((9, 0), (9, 6))]
                 + [2.0, 4].flatMap { y in [line((0, y), (4, y)), line((5, y), (11, y))] }
         case "g6-ratiotable": // the plane's corner, two points and the line through 0 and them: 11 by 6
-            return [line((0, 0), (0, 6), (11, 6)), line((0, 6), (9, 0)), box(4, 2, 1, 1), box(7, 0, 1, 1)]
+            func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.6 * cos(a), y + 0.6 * sin(a)) } }
+            return [line((0, 0), (0, 6), (11, 6)), line((0, 6), (9, 0)), dot(3, 4), dot(6, 2)]
         case "g6-rate": // rows shared a column at a time, and one row copied down: 9 by 6
             return [box(0, 0, 3, 4), line((1, 0), (1, 4)), line((2, 0), (2, 4))] + (1...3).map { y in line((0, Double(y)), (3, Double(y))) }
                 + [box(6, 0, 3, 6), line((7, 0), (7, 6)), line((8, 0), (8, 6))] + (1...5).map { y in line((6, Double(y)), (9, Double(y))) }

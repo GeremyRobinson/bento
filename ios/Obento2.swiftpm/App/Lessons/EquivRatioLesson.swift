@@ -45,7 +45,7 @@ struct EquivRatioLesson: PaperLesson {
             live.label("ro", ro, R6.lit, .right, edge: re + 0.8, along: bot(P, r))
             if s.grabbed { live.reads(ro) }
             // a hint: the total to reach ringed; a second miss, the row it's reached at
-            if s.on("ring") { R6.ring(&pic, "ring", x: xr + C * Double(P.b) / 2 - 1.5, y: bot(P, P.k) + 0.5, w: 3, h: 2) }
+            if s.on("ring") { R6.ring(&pic, "ring", x: xr + C * Double(P.b) / 2 - 1.5, y: bot(P, P.k) + 0.8, w: 3, h: 1.8) }
             if s.on("spot") { pic.line("spot", [(x0 - 1, bot(P, P.k)), (re + 1, bot(P, P.k))], .chapter, dashed: true) }
         }
         // See: the rows number down the side; every left row is a, every right row b
@@ -57,7 +57,7 @@ struct EquivRatioLesson: PaperLesson {
                 pic.label("rva\(j)\(left)", left, R6.lit, .right, edge: x0 + C * Double(P.a) + 0.3, along: y)
                 pic.label("rvb\(j)", "\(P.b)", R6.lit, .right, edge: re + 0.3, along: y)
             }
-            if at == 2 && s.on("ring") { R6.ring(&pic, "ringL", x: x0 + C * Double(P.a) / 2 - 1.5, y: bot(P, P.k) + 0.5, w: 3, h: 2) }
+            if at == 2 && s.on("ring") { R6.ring(&pic, "ringL", x: x0 + C * Double(P.a) / 2 - 1.5, y: bot(P, P.k) + 0.8, w: 3, h: 1.8) }
             let ans: M7.Tok = done ? .n(P.left, .chapter) : .box("x", cells: String(P.left).count)
             M7.row(&rec, "rec", [.n(P.a), .op(" : "), .n(P.b), .op("="), .n(P.a), .op("×"), .n(P.k), .op(" : "), .n(P.b), .op("×"), .n(P.k), .op("="), ans, .op(" : "), .n(P.total)], x: 0, line: 1)
         }

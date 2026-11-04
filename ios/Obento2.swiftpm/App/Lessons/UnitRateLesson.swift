@@ -80,7 +80,7 @@ struct UnitRateLesson: PaperLesson {
                 R6.handle(&live, "rh", xr + C * u, by, held: s.grabbed)
                 live.word("rro", P.rows(r), at: xr, by + 1.3, R6.lit, anchor: UnitPoint(x: 0, y: 0.5))
                 if s.grabbed { live.reads(P.rows(r)) }
-                if s.on("ring") { R6.ring(&pic, "ring", x: xr, y: y0 - 2.2, w: R6.width(P.rows(P.m)), h: 2) }
+                if s.on("ring") { R6.ring(&pic, "ring", x: xr, y: y0 - 2.4, w: R6.width(P.rows(P.m)), h: 1.6) }
                 if s.on("spot") { pic.line("spot", [(xr - 1, y0 + C * Double(P.m)), (xr + C * u + 1, y0 + C * Double(P.m))], .chapter, dashed: true) }
             }
             if at == 3 && s.on("ring") { R6.ring(&pic, "ringR", x: xr, y: y0, w: C * u + 1 + R6.width("$\(P.u * P.m)"), h: C * Double(P.m)) }

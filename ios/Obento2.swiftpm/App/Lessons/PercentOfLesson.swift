@@ -45,7 +45,7 @@ struct PercentOfLesson: PaperLesson {
                 if s.grabbed { live.reads(ro) }
             }
             // a hint: the scale ringed; a second miss, where one block of the right size ends
-            if at == 1, s.on("ring") { R6.ring(&pic, "ring", x: x0 - 1.8, y: y0 - 2.4, w: bw + 3.6, h: 1.7) }
+            if at == 1, s.on("ring") { R6.ring(&pic, "ring", x: x0 - 1.8, y: y0 - 2.4, w: bw + 2 + R6.width("\(P.W)", R6.maths) + 1.5, h: bh + 2.4) }
             if at == 1, s.on("spot") { pic.line("spot", [(x0 + Double(P.width), y0 - 1.5), (x0 + Double(P.width), y0 + bh + 1.5)], .chapter, dashed: true) }
             if at == 1 { actions = ["Cut"] }
         } else {
@@ -54,7 +54,7 @@ struct PercentOfLesson: PaperLesson {
             if at == 3 {
                 pic.word("pro\(on.count)", "\(on.count * P.base)%", at: x0, y0 + bh + 1.4, R6.lit, anchor: UnitPoint(x: 0, y: 0.5))
                 actions = ["Check"]
-                if s.on("ring") { R6.ring(&pic, "ring", x: x0 - 1.8, y: y0 - 2.4, w: bw + 3.6, h: 1.7) }
+                if s.on("ring") { R6.ring(&pic, "ring", x: x0 - 1.8, y: y0 - 2.4, w: bw + 2 + R6.width("\(P.W)", R6.maths) + 1.5, h: bh + 2.4) }
                 if s.on("spot") { let x = x0 + Double(P.p) * bw / 100; pic.line("spot", [(x, y0 - 1.5), (x, y0 + bh + 1.5)], .chapter, dashed: true) }
             }
             if at >= 4 { pic.label("bshade", "\(P.p)%", R6.lit, .below, edge: y0 + bh, along: x0 + Double(P.p) * bw / 200) }
