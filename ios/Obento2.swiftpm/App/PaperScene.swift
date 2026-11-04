@@ -241,7 +241,7 @@ extension Piece {
         case "g2-compare": return [box(4, 1.2, 1, 0.8)]                         // the hundred both are in
         case "g2-within1000": return [box(2, 4.2, 4, 0.8)]                      // the block that opened
         // 2nd grade, Equal groups (4 Nov)
-        case "g2-evenodd": return [box(8, 0, 1, 1)]                             // the dot with no partner
+        case "g2-evenodd": return [box(8.1, -0.1, 0.8, 0.8)]                    // the dot with no partner
         case "g2-arrays": return [box(2, 0, 6, 2)]                              // a row lit
         case "g2-squares": return [box(2, 0, 2, 2), box(6, 0, 2, 2), box(4, 2, 2, 2), box(2, 4, 2, 2), box(6, 4, 2, 2)] // the checker
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
@@ -544,8 +544,8 @@ extension Piece {
             switch id {
             case "g2-evenodd": // two rows of dots in pairs, one left over: 9 by 2, from row 0
                 var out: [[CGPoint]] = []
-                for j in 0..<9 { out.append(dot(Double(j / 2) * 2 + 0.5, Double(j % 2) + 0.5)) }
-                for c in 0..<4 { out.append(box(Double(c) * 2, 0, 1, 2)) }
+                for j in 0..<9 { out.append(dot(Double(j / 2) * 2 + 0.5, Double(j % 2) * 1.4 + 0.3, 0.3)) }
+                for c in 0..<4 { out.append(box(Double(c) * 2 - 0.2, -0.2, 1.4, 2.4)) }
                 return out
             case "g2-arrays": // three rows of three dots, a dot in the middle of each block: 6 by 6, from column 2
                 var out: [[CGPoint]] = []

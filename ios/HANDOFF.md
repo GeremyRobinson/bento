@@ -459,6 +459,27 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   `page-g2-hundreds-1 -numbers n=347,named=0,mix=1 -wrong`, `page-g2-hundreds-4 -numbers n=605,named=2,mix=3 -wrong`,
   `page-g2-skip-0 -numbers start=15,by=5,back=0 -drag 0,7,6,7 -hold`, `page-g2-compare-2 -numbers a=427,b=461 -wrong`,
   `page-g2-within1000-1 -numbers a=245,b=132,sub=0 -drag 13.5,12,22.5,12 -hold`, `select-g2-hundreds -grade 2`.
+- 2nd grade chapter 3, Equal groups, is built (4 Nov; Core: `Groups2` (`Groups2` shared lines, `EvenOdd2` g2-evenodd, `Arrays2` g2-arrays,
+  `Squares2` g2-squares), tests `Groups2Tests`; App: `EvenOdd2Lesson`, `Arrays2Lesson`, `Squares2Lesson`, their shared `GroupsKit2` (`EG2`:
+  a grid of blocks, "Tap each row" by tap or sweep with its numbers at the left, the readout, the running totals, `4 + 4 + 4 = [ ]`)). Blue.
+  As the preview (`design/prototype/grade2-ch3.html`), its words, slips and generators word for word; typed with the iPad's keys.
+  Even and odd: tap each dot (or drag across): it glides into the pair frame, pairs ring, "2, 4 … 12" then "6 pairs and 1"; the frame
+  glides up; even/odd are word blocks under it answered on the tap (red when wrong, as Compare's signs); `13 = [ ] + [ ] + 1`.
+  Arrays: tap each row, count one row ("4 in a row"), `4 + 4 + 4 = [ ]` with Check beside, totals at the rows' ends; the muffin story.
+  Rows and columns of squares: drag down the left side (or along the top) to cut, the cuts dash and snap to equal pieces, Cut; the
+  checker; tap each row; `4 + 4 + 4 = [ ] squares` with Check under it. Departures: the arrays and the rectangle start a block in (room
+  for the rows' numbers and the handle); the top cut's handle, hint and dashes sit inside the rectangle's top (clear of a miss line);
+  the number is written in the record from the write step (it doesn't glide there: words don't morph); a lit row's band replaces its
+  checker tiles while tapped, and an array's dots are plates while bands show (two fills over each other z-fight); a story of 5 rows
+  has its record 2 rows under (76%); checks use i4/i5 where the spec says i3 twice (i3 is the story); Squares' Check goes under the
+  record (beside it the keys covered it). Least zooms: 110%, 76%, 75%; keys up 87%, 76%, 75%. Shots e.g.
+  `page-g2-evenodd-0 -numbers n=13,mix=4 -showme -pause 2 -slow 1.5`, `page-g2-evenodd-1 -numbers n=13,mix=4 -wrong`,
+  `page-g2-arrays-1 -numbers rows=3,cols=4,story=0 -tapsq 7.5,7.5,12.5,7.5 -tapgap 1`, `page-g2-squares-0 -numbers rows=3,cols=4,first=1 -drag 4,1,4,5.5 -hold`.
+- Taps (4 Nov, shared): a finger that slips under 12 pt as it taps is one tap (`PaperModel.slip`, `fingerTap`, `cancelGrab`). Before, such
+  a tap started a drag: on nothing grabbable it panned the paper (the tap lost once the slip passed the system tap's ~10 pt, and the pan
+  coasted, so the next tap only stopped the paper); on a grabbable piece (Hundreds' last ten) the release and the tap both counted.
+  Clean real taps (XCUITest, 1 s and 0.35 s apart) always counted. Show me's kept moves now redraw the picture (the still key reads the
+  ghost's run), so dots counted by the ghost glide in.
 - 1st grade Build with solids (4 Nov): Show me filmed, it plays all three pieces and puts everything back; the ghost solid's dashed
   rims and edges draw only once the paper is up (`Solids.Line.whenUp`).
 ## How the code is laid out
