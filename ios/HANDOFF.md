@@ -35,6 +35,19 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   least zoom over many problems to the app's Documents/zooms.txt (`simctl get_app_container … data`).
 - 4th grade chapter 3, Factors and patterns, is built (3 Nov; Core: `Factors`, `PrimeComposite`, `Patterns`; App:
   `FactorsLesson`, `PrimeLesson`, `PatternsLesson`, their shared `SquaresKit`). Least zooms: 85%, 95%, 78%.
+- 4th grade chapter 4, Fractions, is built (3 Nov; Core: `Decompose` (with `Fractions4`, the whole's length and piece
+  names), `EquivFractions`, `CompareFractions`, `LikeFractions` (`.add`, `.take`); App: `DecomposeLesson`, `EquivLesson`,
+  `CompareFractionsLesson`, `LikeFractionsLesson`, their shared `FractionsKit4` (F4: pieces drawn one by one so they
+  glide, fractions in a column, record lines). The ruler (`BarsKit`) can sit under the bars (`under`, `reads`). Compare
+  and like fractions keep their bars 3 squares apart so the sign stands clear between the names. Least zooms: 86%, 83%,
+  87%, 76%, 90%. Shots: `page-g4-decompose-0 -numbers kind=0,a=5,d=8`; `select-<id> -grade 4` chooses a lesson on the map.
+- Chapter 1 fixed for 75% (3 Nov): Tens charts past 3 frames take 1-square cells (67% → 83%); Add and subtract keeps a
+  miss to one row, its record may go beside a five-column chart, six columns take 1-square cells (56% → 75%).
+- G's calls of 3 Nov (design/README.md) applied to 4th grade: numbers in a record line, list or Rounding's record are
+  written tight (`Record.tight`, width `Record.width(.n)`), column working keeps two squares a digit; the map lays out
+  only built chapters, the grade test once all are; Story problems' sharing amounts cut into whole squares.
+  Measured now and left: Multiply big numbers 73% (9 rows of 5,621), Story problems 73% (a take-away at i0),
+  Two-digit times two-digit 41% at its k = 2 scale (its words are drawn twice as big there).
 
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
