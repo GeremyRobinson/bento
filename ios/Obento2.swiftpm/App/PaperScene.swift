@@ -337,8 +337,13 @@ extension Piece {
             }
         case "k-compare": // two rows of dots matched in pairs, two on top with no partner: 7 by 6
             func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.4 * cos(a), y + 0.4 * sin(a)) } }
-            return (0..<7).map { dot(Double($0) + 0.5, 0.5) } + (0..<5).map { dot(Double($0) + 0.5, 5.5) }
-                + (0..<5).map { line((Double($0) + 0.5, 1), (Double($0) + 0.5, 5)) }
+            var parts: [[CGPoint]] = []
+            for i in 0..<7 { parts.append(dot(Double(i) + 0.5, 0.5)) }
+            for i in 0..<5 {
+                let x: Double = Double(i) + 0.5
+                parts += [dot(x, 5.5), line((x, 1), (x, 5))]
+            }
+            return parts
         case "gk-numcompare": // two trains, the shorter one's end dropped across to the longer: 7 by 6
             return [box(0, 0, 4, 2), box(0, 4, 7, 2), line((4, 0), (4, 6))] + (1..<4).map { x in line((Double(x), 0), (Double(x), 2)) }
                 + (1..<7).map { x in line((Double(x), 4), (Double(x), 6)) }
@@ -369,8 +374,11 @@ extension Piece {
             return beam + left + right
         case "k-sort": // three rows of things from one line, most at the top: 9 by 6
             func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.45 * cos(a), y + 0.45 * sin(a)) } }
-            return [line((1.6, 0), (1.6, 6)), box(0, 0, 1.6, 1.6), box(0, 2.2, 1.6, 1.6), box(0, 4.4, 1.6, 1.6)]
-                + (0..<6).map { dot(2.4 + Double($0) * 1.1, 0.8) } + (0..<4).map { dot(2.4 + Double($0) * 1.1, 3) } + (0..<2).map { dot(2.4 + Double($0) * 1.1, 5.2) }
+            var parts: [[CGPoint]] = [line((1.6, 0), (1.6, 6)), box(0, 0, 1.6, 1.6), box(0, 2.2, 1.6, 1.6), box(0, 4.4, 1.6, 1.6)]
+            for (count, y) in [(6, 0.8), (4, 3.0), (2, 5.2)] {
+                for i in 0..<count { parts.append(dot(2.4 + Double(i) * 1.1, y)) }
+            }
+            return parts
         // Kindergarten, Add and take away (4 Nov)
         case "k-add": // a train on a track, hops over the cubes counted on: 7 by 6
             return [box(0, 4, 7, 2)] + (1..<7).map { x in line((Double(x), 4), (Double(x), 6)) } + (4..<7).map { j in arc(Double(j) - 0.5, Double(j) + 0.5, 4, 1.5) }
