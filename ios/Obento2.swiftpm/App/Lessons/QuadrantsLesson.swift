@@ -69,17 +69,21 @@ struct QuadrantsLesson: PaperLesson {
             }
         }
         content(&pic, base)
+        // each landed half carries what's on it, less what a later fold has lifted off it
         for (j, l) in landed.enumerated() {
-            N6.flap(&pic, "fl\(j)", l.f, rect: Self.sheet(l.f), th: 0, from: l.th, gridTop: s.gridTop) { content(&$0) { l.f.lifted($0) } }
+            let later = Array(landed.dropFirst(j + 1).map(\.f)) + [heldFold, back?.0].compactMap { $0 }
+            N6.flap(&pic, "fl\(j)", l.f, rect: Self.sheet(l.f), th: 0, from: l.th, gridTop: s.gridTop) {
+                content(&$0) { p in l.f.carries(p) && !later.contains { $0.lifted(p) } }
+            }
         }
-        if let (f, th) = back { N6.flap(&pic, "fb", f, rect: Self.sheet(f), th: 0, from: th, gridTop: s.gridTop) { content(&$0) { f.lifted($0) } } }
+        if let (f, th) = back { N6.flap(&pic, "fb", f, rect: Self.sheet(f), th: 0, from: th, gridTop: s.gridTop) { content(&$0) { f.carries($0) } } }
         if let f = heldFold {
-            N6.flap(&live, "fh", f, rect: Self.sheet(f), th: s.h("th") ?? 0, gridTop: s.gridTop) { content(&$0) { f.lifted($0) } }
+            N6.flap(&live, "fh", f, rect: Self.sheet(f), th: s.h("th") ?? 0, gridTop: s.gridTop) { content(&$0) { f.carries($0) } }
             let m = Self.mirror(Int(s.h("ax") ?? 1), cur)
             live.reads(Neg6.pair(m.0, m.1))
         }
         // a fold over the wrong axis: where it printed, in red
-        if let b = bad { N6.point(&pic, "bp\(b.0)_\(b.1)", Pl.at(b.0, b.1), shade: 1, R6.red) }
+        if let b = bad { N6.point(&pic, "bp\(b.0)_\(b.1)", Pl.at(b.0, b.1), shade: 2, R6.red) }
         // the point being placed: from 0, dotted lines dropping to both axes as it moves, its pair beside it
         if placing {
             let u = s.h("u") ?? 0, v = s.h("v") ?? 0, p = Pl.at(u, v), shown = s.grabbed || s.h("u") != nil

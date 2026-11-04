@@ -31,6 +31,7 @@ struct CompareNegLesson: PaperLesson {
     }
     /// The measured points' order (by the hand, or all once measuring is done).
     private func measured(_ P: Compare6.Parts, _ s: PaperState) -> [Int] {
+        guard P.abs else { return [] }
         if stage(s) >= 4 { return [0, 1] }
         guard stage(s) == 3 else { return [] }
         return (0..<2).compactMap { j in s.h("m\(j)").map { (j, $0) } }.sorted { $0.1 < $1.1 }.map(\.0)
@@ -51,12 +52,14 @@ struct CompareNegLesson: PaperLesson {
         // brackets from 0, each with how far
         let meas = measured(P, s)
         func level(_ n: Int) -> Double { Y - 2 - 1.6 * Double(n) }
-        for (n, j) in meas.enumerated() {
+        // the shorter bracket under the longer, so neither's end crosses the other's words
+        func rank(_ v: Double) -> Int { P.vs.prefix(2).filter { abs($0) < abs(v) }.count }
+        for j in meas {
             let v = P.vs[j]
-            N6.bracket(&pic, "m\(j)", from: N.at(0).x, to: N.at(v).x, line: Y, level: level(n), "\(fmt(abs(v))) from 0")
+            N6.bracket(&pic, "m\(j)", from: N.at(0).x, to: N.at(v).x, line: Y, level: level(rank(v)), "\(fmt(abs(v))) from 0")
         }
         if at == 3, s.grabbed, let br = s.h("br") {
-            N6.bracket(&live, "br", from: N.at(0).x, to: N.at(br).x, line: Y, level: level(meas.count), br == 0 ? nil : "\(fmt(abs(br))) from 0")
+            N6.bracket(&live, "br", from: N.at(0).x, to: N.at(br).x, line: Y, level: level(P.abs ? rank(br) : 0), br == 0 ? nil : "\(fmt(abs(br))) from 0")
             live.reads("\(fmt(abs(br))) from 0")
         }
         // the points, each in its shade
@@ -84,7 +87,7 @@ struct CompareNegLesson: PaperLesson {
             for j in 0..<2 where !meas.contains(j) { let p = N.at(P.vs[j]); pic.circle("spot\(j)", at: p.x, p.y, radius: 1.3, .chapter, dashed: true) }
         }
         if at == 4 && s.on("ring") { let a = N.at(min(0, P.lo)).x, b = N.at(max(0, P.hi)).x; R6.ring(&pic, "ring", x: a, y: level(1) - 1.6, w: b - a, h: Y - level(1) + 1.6) }
-        if at == 4 && s.on("spot") { let n = meas.firstIndex(of: P.far) ?? 0, v = P.vs[P.far]; pic.circle("spot", at: (N.at(0).x + N.at(v).x) / 2, level(n) - 0.9, radius: 2.4, .chapter, dashed: true) }
+        if at == 4 && s.on("spot") { let v = P.vs[P.far]; pic.circle("spot", at: (N.at(0).x + N.at(v).x) / 2, level(rank(v)) - 0.9, radius: 2.4, .chapter, dashed: true) }
 
         // the record: a story's words, the order written, |−7| = 7
         if P.kind == 6 && at >= 5 { M7.row(&rec, "tw", [.w(P.tempWords, .chapter)], x: 0, line: 1) }

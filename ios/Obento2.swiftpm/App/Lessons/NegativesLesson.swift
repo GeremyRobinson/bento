@@ -70,15 +70,15 @@ struct NegativesLesson: PaperLesson {
         // the landed halves lie back flat (each from where it was let go), carrying what's on them
         for (j, l) in landed.enumerated() {
             let f = Self.fold(N, l.side)
-            N6.flap(&pic, "fl\(j)", f, rect: Self.sheet(N, l.side), th: 0, from: l.th, gridTop: s.gridTop) { content(&$0) { f.lifted($0) } }
+            N6.flap(&pic, "fl\(j)", f, rect: Self.sheet(N, l.side), th: 0, from: l.th, gridTop: s.gridTop) { content(&$0) { f.carries($0) } }
         }
         if let (th, sd) = back {
             let f = Self.fold(N, sd)
-            N6.flap(&pic, "fb", f, rect: Self.sheet(N, sd), th: 0, from: th, gridTop: s.gridTop) { content(&$0) { f.lifted($0) } }
+            N6.flap(&pic, "fb", f, rect: Self.sheet(N, sd), th: 0, from: th, gridTop: s.gridTop) { content(&$0) { f.carries($0) } }
         }
         if let sd = held {
             let f = Self.fold(N, sd)
-            N6.flap(&live, "fh", f, rect: Self.sheet(N, sd), th: s.h("th") ?? 0, gridTop: s.gridTop) { content(&$0) { f.lifted($0) } }
+            N6.flap(&live, "fh", f, rect: Self.sheet(N, sd), th: s.h("th") ?? 0, gridTop: s.gridTop) { content(&$0) { f.carries($0) } }
             zero(&live)
             if up { live.label("z0", "0", N6.small, .left, edge: N.x0 - 0.6, along: N.y0) } else { live.label("z0", "0", N6.small, .below, edge: N.y0 + 0.5, along: N.x0) }
         }

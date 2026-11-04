@@ -44,8 +44,9 @@ enum N6 {
             pen.sketch.segments("\(id)t\(keep(at(lo)))\(keep(at(hi)))", ticks, .ink, width: Sketch.stroke)
             let ls = labels ?? stride(from: lo.rounded(.up), through: hi, by: 1).filter { $0.truncatingRemainder(dividingBy: 5) == 0 }
             for v in ls {
+                // kept by where its words are (beside the line), not by the line's point
                 let p = at(v), on = lit == v
-                guard keep(p) else { continue }
+                guard keep(up ? CGPoint(x: x0 - 1, y: p.y) : CGPoint(x: p.x, y: y0 + 1)) else { continue }
                 if up { pen.label("\(id)l\(fmt(v))\(on)", fmt(v), on ? N6.lit : N6.small, .left, edge: x0 - 0.6, along: p.y) }
                 else { pen.label("\(id)l\(fmt(v))\(on)", fmt(v), on ? N6.lit : N6.small, .below, edge: y0 + 0.5, along: p.x) }
             }
@@ -86,13 +87,13 @@ enum N6 {
                 let x = ox + Double(i) * U
                 guard keep(CGPoint(x: x, y: oy)) else { continue }
                 ticks.append((pen.P(x, oy - 0.5), pen.P(x, oy + 0.5)))
-                if i % 2 == 0 { pen.label("\(id)xl\(i)", fmt(Double(i)), N6.small, .below, edge: oy + 0.5, along: x) }
+                if i % 2 == 0, keep(CGPoint(x: x, y: oy + 1)) { pen.label("\(id)xl\(i)", fmt(Double(i)), N6.small, .below, edge: oy + 0.5, along: x) }
             }
             for j in -Y...Y where j != 0 {
                 let y = oy - Double(j) * U
                 guard keep(CGPoint(x: ox, y: y)) else { continue }
                 ticks.append((pen.P(ox - 0.5, y), pen.P(ox + 0.5, y)))
-                if j % 2 == 0 { pen.label("\(id)yl\(j)", fmt(Double(j)), N6.small, .left, edge: ox - 0.6, along: y) }
+                if j % 2 == 0, keep(CGPoint(x: ox - 1, y: y)) { pen.label("\(id)yl\(j)", fmt(Double(j)), N6.small, .left, edge: ox - 0.6, along: y) }
             }
             pen.sketch.segments("\(id)t\(keep(at(-1, 0)))\(keep(at(1, 0)))\(keep(at(0, 1)))\(keep(at(0, -1)))", ticks, .ink, width: Sketch.stroke)
             for (n, a, b) in [("I", 1.0, 1.0), ("II", -1.0, 1.0), ("III", -1.0, -1.0), ("IV", 1.0, -1.0)] {
@@ -148,6 +149,9 @@ enum N6 {
             }
         }
         func lifted(_ p: CGPoint) -> Bool { ((vertical ? p.x : p.y) - at) * side > 1e-6 }
+        /// What the turning sheet carries: what's on its half, and what sits on the fold line itself (an axis, a tick
+        /// across the line), which stays where it is as the sheet turns and lies over the sheet's paper flat.
+        func carries(_ p: CGPoint) -> Bool { ((vertical ? p.x : p.y) - at) * side > -1e-6 }
         /// Where the finger is in the fold's terms: how far past the line on the lifted side.
         func past(_ q: CGPoint) -> Double { ((vertical ? q.x : q.y) - at) * side }
         /// The fold's angle for a finger that grabbed `g` squares from the line and is now at q.

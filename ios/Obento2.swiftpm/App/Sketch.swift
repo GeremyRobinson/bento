@@ -152,7 +152,8 @@ struct Sketch {
         var out = Sketch()
         func kinds(_ kind: Kind, _ m: (CGPoint) -> CGPoint) -> [Kind] {
             switch kind {
-            case .line(let pts, let w, true): GridPen.dashes(pts.map(m)).map { .overLine([$0.0, $0.1], width: w) }
+            // dashed where it lies flat, so it has the same dashes however it's turned
+            case .line(let pts, let w, true): GridPen.dashes(pts).map { .overLine([m($0.0), m($0.1)], width: w) }
             case .line(let pts, let w, false), .overLine(let pts, let w): [.overLine(pts.map(m), width: w)]
             case .fill(let pts), .plate(let pts): [.plate(pts.map(m))]
             case .segments(let segs, let w): segs.map { .overLine([m($0.0), m($0.1)], width: w) }
