@@ -129,15 +129,15 @@ struct Build1Lesson: PaperLesson {
     /// A ghost part's dashed lines: a box's edges; a cylinder's rims and sides, a cone's rim and sides, as seen from the eye.
     private func ghostLines(_ Sc: Scene, _ g: Build1.Ghost, id: String, colour: Sketch.Colour) -> [Solids.Line] {
         let B = Self.B, o = Vec3(Sc.FX + B * Double(g.at[0]), B * Double(g.at[1]), B * Double(g.at[2]))
-        if g.kind == "box" { return Self.boxEdges(o, Vec3(B * Double(g.d[0]), B * Double(g.d[1]), B * Double(g.d[2]))).enumerated().map { Solids.Line(id: "\(id)e\($0.offset)", pts: $0.element, colour: colour, dashed: true) } }
+        if g.kind == "box" { return Self.boxEdges(o, Vec3(B * Double(g.d[0]), B * Double(g.d[1]), B * Double(g.d[2]))).enumerated().map { Solids.Line(id: "\(id)e\($0.offset)", pts: $0.element, colour: colour, dashed: true, whenUp: true) } }
         let c = o + Vec3(B / 2, B / 2, 0), r = B / 2, h = B * Double(g.d[2]), e = SK.eye, l = max(1e-6, hypot(e.x, e.y)), side = Vec3(-e.y / l * r, e.x / l * r, 0)
         let rim = { (z: Double) in SK.ring(r, z, 40, closed: true).map { $0 + c } }
-        var out = [Solids.Line(id: "\(id)r0", pts: rim(0), colour: colour, dashed: true)]
+        var out = [Solids.Line(id: "\(id)r0", pts: rim(0), colour: colour, dashed: true, whenUp: true)]
         if g.kind == "cone" {
-            out += [Solids.Line(id: "\(id)s0", pts: [c + side, c + Vec3(0, 0, B)], colour: colour, dashed: true), Solids.Line(id: "\(id)s1", pts: [c - side, c + Vec3(0, 0, B)], colour: colour, dashed: true)]
+            out += [Solids.Line(id: "\(id)s0", pts: [c + side, c + Vec3(0, 0, B)], colour: colour, dashed: true, whenUp: true), Solids.Line(id: "\(id)s1", pts: [c - side, c + Vec3(0, 0, B)], colour: colour, dashed: true, whenUp: true)]
         } else {
-            out += [Solids.Line(id: "\(id)r1", pts: rim(h), colour: colour, dashed: true), Solids.Line(id: "\(id)s0", pts: [c + side, c + side + Vec3(0, 0, h)], colour: colour, dashed: true),
-                    Solids.Line(id: "\(id)s1", pts: [c - side, c - side + Vec3(0, 0, h)], colour: colour, dashed: true)]
+            out += [Solids.Line(id: "\(id)r1", pts: rim(h), colour: colour, dashed: true, whenUp: true), Solids.Line(id: "\(id)s0", pts: [c + side, c + side + Vec3(0, 0, h)], colour: colour, dashed: true, whenUp: true),
+                    Solids.Line(id: "\(id)s1", pts: [c - side, c - side + Vec3(0, 0, h)], colour: colour, dashed: true, whenUp: true)]
         }
         return out
     }

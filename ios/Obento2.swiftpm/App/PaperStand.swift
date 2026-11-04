@@ -115,7 +115,12 @@ struct Solids {
     /// A layer of cubes `l` × `w`, `B` squares an edge, from its back-left-bottom corner `at` (squares, z its height). New
     /// ones rise (Unit cubes' 0.7 s) after `delay`; gone ones sink.
     struct Block { var id: String; var at: Vec3; var l: Int; var w: Int; var B: Double; var look: Look = .auto; var delay = 0.0 }
-    struct Line { var id: String; var pts: [Vec3]; var colour: Sketch.Colour = .ink3; var dashed = false }
+    struct Line {
+        var id: String; var pts: [Vec3]; var colour: Sketch.Colour = .ink3; var dashed = false
+        /// Drawn only once the paper is up (a ghost solid's dashed rims and edges: seen straight down the flat paper they
+        /// are only rings over the footprint).
+        var whenUp = false
+    }
     /// Words on a point of what stands, facing the child (a length on an edge).
     struct Label { var id: String; var text: String; var at: Vec3; var words: Sketch.Words; var anchor: UnitPoint = .center }
     /// A solid drawn as one piece (Kindergarten's Shapes: a cube, sphere, cylinder or cone, a table): its facets each
@@ -348,7 +353,7 @@ extension Rig {
         d.root.position = SIMD3(Float((o.x + l.pictureOffset.x) / Paper.unit), 0, Float((o.y + l.pictureOffset.y) / Paper.unit))
         let key = stackedStillKey(m, page, dark: dark ?? false) + stackedLiveKey(m, at: t, dark: dark ?? false)
         if key != d.key { d.key = key; d.solids = paper.draw(m.state(at: t)).solids }
-        d.draw(chapter: m.chapter.hex, view: view, screen: screen, instant: m.instant && PaperClock.slow == 1, opened: m.openedAt + 0.3, left: m.leftAt, at: t)
+        d.draw(chapter: m.chapter.hex, view: view, screen: screen, instant: m.instant && PaperClock.slow == 1, opened: m.openedAt + 0.3, left: m.leftAt, up: m.stand.blend(at: t, instant: m.instant && PaperClock.slow == 1), at: t)
     }
 }
 
@@ -419,7 +424,7 @@ final class SolidsDrawer {
     }
 
     /// Draws them as they are at `t`. `opened`: when the problem drew in (they fade in with it); `left`: leaving (they fade).
-    func draw(chapter: UInt32, view v: PaperView3D, screen: Size, instant: Bool, opened: Double, left: Double?, at t: Double) {
+    func draw(chapter: UInt32, view v: PaperView3D, screen: Size, instant: Bool, opened: Double, left: Double?, up: Double = 1, at t: Double) {
         let dark = rig.dark ?? false, lk = "\(chapter) \(dark)"
         if lk != lookKey {
             lookKey = lk
@@ -520,11 +525,12 @@ final class SolidsDrawer {
         // lines (a box's full height, dashed)
         for l in s.lines {
             let sig = "\(l.pts.map { "\($0.x),\($0.y),\($0.z)" }) \(l.colour) \(l.dashed)"
-            if let was = lines[l.id], was.sig == sig { continue }
+            if let was = lines[l.id], was.sig == sig { was.e.isEnabled = !l.whenUp || up > 0.6; continue }
             let e = lines[l.id]?.e ?? { let e = ModelEntity(); root.addChild(e); return e }()
             var segs = zip(l.pts, l.pts.dropFirst()).map { (P($0), P($1)) }
             if l.dashed { segs = Self.dashed(segs) }
             e.model = Self.bars(segs, width: stroke).map { ModelComponent(mesh: $0, materials: [flat(colour(l.colour, chapter: chapter, dark: dark))]) }
+            e.isEnabled = !l.whenUp || up > 0.6
             lines[l.id] = (e, sig)
         }
         for (id, l) in lines where !s.lines.contains(where: { $0.id == id }) { l.e.removeFromParent(); lines[id] = nil }
