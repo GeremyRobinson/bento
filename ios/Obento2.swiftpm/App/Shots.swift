@@ -234,6 +234,10 @@ enum Shots {
                                 let f = ProblemGrid.stackedLayout(w, PaperState(run: run, index: 0).at(i, hint: false)).stack?.frame ?? .zero
                                 return (ProblemGrid.zoom(squares: f.width / Paper.cell, f.height / Paper.cell), f)
                             }
+                            // -verbose: every problem's steps, not only the least
+                            if args.contains("-verbose"), seed < 2 {
+                                out += "  i\(index) \(run.numbers.sorted { $0.key < $1.key }.map { "\($0.key)=\(Int($0.value))" }.joined(separator: ",")) " + zs.map { "\(Int(($0.0 * 100).rounded()))% \(Int($0.1.width / Paper.cell))x\(Int($0.1.height / Paper.cell))" }.joined(separator: " ") + "\n"
+                            }
                             if let z = zs.map(\.0).min(), z < least {
                                 least = z
                                 worst = "i\(index) \(run.numbers.sorted { $0.key < $1.key }.map { "\($0.key)=\(Int($0.value))" }.joined(separator: ",")) steps " + zs.map { "\(Int(($0.0 * 100).rounded()))% \(Int($0.1.width / Paper.cell))x\(Int($0.1.height / Paper.cell))" }.joined(separator: " ")

@@ -164,6 +164,11 @@ enum PaperLessons {
         case "g6-numline": return DistanceLesson()
         case "g6-quadrants": return QuadrantsLesson()
         case "g6-planeshapes": return PlaneShapesLesson()
+        // 6th grade, Expressions (4 Nov 2026)
+        case "g6-expo": return ExpoLesson()
+        case "g6-write": return WriteExprLesson()
+        case "g6-eval": return EvalExprLesson()
+        case "g6-equiv": return EquivExprLesson()
         default: return nil
         }
     }

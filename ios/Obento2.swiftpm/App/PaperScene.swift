@@ -139,6 +139,11 @@ extension Piece {
         case "g6-numline": return [box(1, 0, 4, 2)]                             // the steps to 0
         case "g6-quadrants": return [box(0, 0, 5, 3)]                           // quadrant II
         case "g6-planeshapes": return [box(2, 1, 6, 4)]                         // the rectangle across the axis
+        // 6th grade, Expressions (4 Nov)
+        case "g6-expo": return [box(0, 1, 4, 4)]                                // the square built
+        case "g6-write": return [box(0, 2, 5, 2)]                               // the n strip
+        case "g6-eval": return [box(0, 0, 4, 1), box(0, 1.5, 4, 1), box(0, 3, 4, 1)] // the x rows, stretched to x
+        case "g6-equiv": return [box(0, 1, 6, 3)]                               // the rows of x
         case "g4-lines", "g4-turns", "g4-protractor", "g4-angles", "g4-classify", "g4-symmetry":
             func q(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: at.x + x * c, y: at.y + y * c) }
             func pie(_ cx: Double, _ cy: Double, _ r: Double, _ a0: Double, _ a1: Double) -> [CGPoint] {
@@ -259,6 +264,17 @@ extension Piece {
             return [line((0, 3), (11, 3)), line((5.5, 0), (5.5, 6)), dot(2.5, 1), dot(2.5, 5)]
         case "g6-planeshapes": // two axes and a rectangle across the y-axis: 11 by 6
             return [line((0, 4), (11, 4)), line((5.5, 0), (5.5, 6)), box(2, 1, 6, 4)]
+        case "g6-expo": // a square of 4 by 4 blocks, and a cube standing beside it: 11 by 6
+            return [box(0, 1, 4, 4)] + [1.0, 2, 3].flatMap { k in [line((k, 1), (k, 5)), line((0, 1 + k), (4, 1 + k))] }
+                + [box(6, 2.5, 3, 3), line((6, 2.5), (7.5, 1), (10.5, 1), (9, 2.5)), line((10.5, 1), (10.5, 4), (9, 5.5))]
+        case "g6-write": // an n strip, its end dashed, then squares laid after it: 11 by 4
+            return [line((5, 2), (0, 2), (0, 4), (5, 4)), line((5, 2), (5, 2.6)), line((5, 3.4), (5, 4))]
+                + [5.5, 7, 8.5].map { x in box(x, 2.5, 1.5, 1.5) }
+        case "g6-eval": // three x rows stretched to the same length, their cells, and a y row striped: 11 by 6
+            return [0.0, 1.5, 3].flatMap { y in [box(0, y, 4, 1)] + [1.0, 2, 3].map { x in line((x, y), (x, y + 1)) } } + [box(6, 0, 5, 1), box(6, 1.5, 5, 1)]
+        case "g6-equiv": // rows of x and the number part, cut where x ends: 11 by 4
+            return [box(0, 1, 6, 3), box(7, 1, 3, 3), line((0, 2), (6, 2)), line((0, 3), (6, 3)), line((7, 2), (10, 2)), line((7, 3), (10, 3)),
+                    line((8, 1), (8, 4)), line((9, 1), (9, 4))]
         case "g6-pctwhole": // a block, copies laid end to end with hops over them: 12 by 4
             return [box(0, 2, 3, 2), box(3, 2, 3, 2), box(6, 2, 3, 2), box(9, 2, 3, 2), arc(1.5, 4.5, 2, 1.5), arc(4.5, 7.5, 2, 1.5), arc(7.5, 10.5, 2, 1.5)]
         case "g4-tentimes": // a disk opening into a ten-frame: 11 by 4
