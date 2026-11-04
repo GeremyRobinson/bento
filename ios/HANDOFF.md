@@ -166,6 +166,26 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   81%, 95%, 77%, 75%. Shots e.g. `page-g6-negatives-1 -numbers kind=2,n=9 -hand grab=1,sd=-1,g=12,th=1.1` (a fold held),
   `page-g6-compare-2 -numbers kind=5,a=-8,b=-5 -hand grab=1,br=-8`, `page-g6-quadrants-2 -numbers x=4,y=-2,kind=3 -wrong`,
   `page-g6-planeshapes-3 -numbers x1=-9,x2=9,y1=-6,y2=7,out=1,thing=1 -wrong -keypad`.
+- **The fold, finished** (4 Nov, "never remove an animation"): a half let go past upright now finishes its turn to 180° on the
+  spring, the print fades in under it, then it lies back flat, as the preview does (`Sketch.via`: a part morphs through a shape,
+  rests `SketchDrawer.viaRest`, then on to its own; `N6.flap(landed:)`, words on the sheet wait until it's flat). A long upright
+  number line numbers every second tick (every tick kept). Shots: `-pause N` waits N seconds before a finger moves (to film a
+  move on a problem already showing).
+- 6th grade chapter 5, Expressions, is built (4 Nov; Core: `Expressions6` (`Expr6`, `Expo6`, `Write6`, `Eval6`, `Equiv6`), tests
+  `ExpressionsG6Tests`; App: `ExpoLesson`, `WriteExprLesson`, `EvalExprLesson`, `EquivExprLesson`, their shared `ExpressionsKit6`
+  (`X6.strip` a letter's strip, its end dashed until known; `X6.View` Unit cubes' tilted view drawn on the paper)). As the preview
+  (`design/prototype/grade6-ch5.html`), grey second lines folded into the instructions. Exponents: tap the power, drag the corner
+  (a block a one), a cube's floor stands up in the tilted view (drawn on the paper with Unit cubes' angle, as the fold is, not the
+  paper's own tilt) and its layers are dragged up, each rising from the one under it; record beside. Write: tray (n strip, ten
+  squares), build line, Check (a lesson block), the short way typed, tap a part (a character, or a bracket under a longer part).
+  Evaluate: rows of x and y strips, drag an end; more than 5 rows put the record between the x and y rows (so keys up shows the line
+  beside the rows it's counted from). Equivalent: combine / distribute / factor / same-or-not; drag x to two lengths (its tries
+  listed under the record); Same / Not the same in a column beside them. Departures: cubes of 4 or 5 a side are 4 or 3 squares a one
+  (a block wouldn't stand up at 75%); the corner is 4 rows under the line with the square's sides named left and under it; the
+  same-or-not miss line can't name the x the child tried (Core doesn't see the drag). Least zooms: 79%, 110%, 83%, 88%; keys up
+  75%+ (9 rows of x 75%). Shots e.g. `page-g6-expo-2 -numbers a=3,n=3,b=2,c=7 -hand grab=1,l=2,y0=20,l0=1`,
+  `page-g6-write-0 -numbers kind=3,q=12 -wrong`, `page-g6-eval-1 -numbers a=9,b=7,x=8,y=4 -wrong -keypad`,
+  `page-g6-equiv-0 -numbers kind=1,a=3,b=4 -hand grab=1,col=6,cy=8`; `-shot zooms -ids … -verbose` lists every problem's steps.
 
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost

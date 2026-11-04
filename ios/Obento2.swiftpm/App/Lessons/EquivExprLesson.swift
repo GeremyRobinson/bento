@@ -129,7 +129,7 @@ struct EquivExprLesson: PaperLesson {
                     let cx = X0 + 2 * col
                     live.line("cut", [(cx, Y0 - 1), (cx, cy)], .chapter)
                     R6.handle(&live, "hc", cx, cy, held: true)
-                    if Int(col) == Int(xl) { live.word("rdc", "x | \(P.b)", at: cx + 0.8, Y0 - 2.4, X6.lit, anchor: UnitPoint(x: 0, y: 0.5)); live.reads("x | \(P.b)") }
+                    if Int(col) == Int(xl) { live.word("rdc", "x | \(P.b)", at: cx + 0.8, Y0 + 2 * Double(P.a) + 1.4, X6.lit, anchor: UnitPoint(x: 0, y: 0.5)); live.reads("x | \(P.b)") }
                 } else if let bad = s.h("bad") {
                     pen.line("badcut\(bad)", [(X0 + 2 * bad, Y0), (X0 + 2 * bad, Y0 + 2 * Double(P.a))], R6.red)
                 }
