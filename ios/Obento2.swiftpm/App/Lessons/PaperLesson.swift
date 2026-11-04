@@ -224,6 +224,13 @@ enum PaperLessons {
         case "k-length": return LengthLesson()
         case "gk-heavier": return HeavierLesson()
         case "k-sort": return SortLesson()
+        // Kindergarten, Add and take away (4 Nov 2026)
+        case "k-add": return AddLesson()
+        case "k-sub": return TakeAwayLesson()
+        case "k-story": return StoryLesson()
+        case "k-bonds": return BondsLesson()
+        case "k-make10": return MakeTenLesson()
+        case "gk-five": return FiveLesson()
         default: return nil
         }
     }

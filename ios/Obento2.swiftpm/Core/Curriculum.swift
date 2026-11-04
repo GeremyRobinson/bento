@@ -38,8 +38,8 @@ public enum Curriculum {
         MapChapter("geometry", "Geometry", colour: "geometry", [MapLesson("g5-coord", "Points on a grid"), MapLesson("g5-shapes", "Sorting shapes")]),
     ]
 
-    /// Kindergarten (design/gradeK.md): 23 lessons in 5 chapters, in teaching order. Chapters 1–3 (Count to
-    /// 10, Shapes, Measure and sort) are built (4 Nov); the map shows only built chapters, so the rest wait off it.
+    /// Kindergarten (design/gradeK.md): 23 lessons in 5 chapters, in teaching order. Chapters 1–4 (Count to
+    /// 10, Shapes, Measure and sort, Add and take away) are built (4 Nov); the map shows only built chapters, so the rest wait off it.
     static let gradeK: [MapChapter] = [
         MapChapter("gk-count", "Count to 10", colour: "whole", [
             MapLesson("gk-count10", "Count to 10"), MapLesson("gk-onemore", "One more"), MapLesson("k-compare", "More, less or the same"),

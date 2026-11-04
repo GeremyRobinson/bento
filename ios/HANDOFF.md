@@ -299,6 +299,20 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   sideways shake; the readout counts only while a finger holds something. Least zooms: 75%, 77%, 78%. Shots e.g.
   `page-k-length-2 -numbers top=0,bottom=2,a=7,b=4,shift=2,mover=1,tall=0 -wrong`, `page-gk-heavier-0 -numbers x=0,y=3 -drag 2.5,27.5,10,13.5 -then 1 -slow 5`
   (films the tip), `page-k-sort-3 -numbers by=0,K=3,n0=5,n1=3,n2=7,c0=0,…,c14=17 -wrong2`.
+- Kindergarten chapter 4, Add and take away, is built (4 Nov; Core: `AddSubK` (`AddK` k-add, `TakeAwayK` k-sub, `StoryK` k-story,
+  `BondsK` k-bonds, `MakeTenK` k-make10, `FactsToFive` gk-five), tests `AddSubKTests`; App: `AddLesson`, `TakeAwayLesson`,
+  `StoryLesson`, `BondsLesson`, `MakeTenLesson`, `FiveLesson`, their shared `AddKitK` (`KA`: a cube or counter, striped for the second
+  amount, numbered, crossed out; the dashed strip; the hop; a record line with its box anywhere; `KSlide`, the second train slid on
+  right after the first, home again on a miss)). As the preview (`design/prototype/gradeK-ch4.html`), its words word for word.
+  Departures: the story's first two sentences are its first instruction, said together (the preview read the first alone while the
+  counters went on); a story that adds rises to the top once the striped ones are on (no hops there, so no empty band); "None left."
+  is said with the write ("None left. Write how many are left."); Facts to 5's "Watch the hand." goes with the last line, as the hand
+  shows the fact; Number bonds' parts' circles are 1½ blocks under the whole's and the train a block higher (69% → 77%); Facts to
+  5's palm is a block tall (69% → 78%). A take that reaches its count is checked at once, so "That's 4 away. Take 3." can't come up
+  (as Sort's taps; a tap in the strip puts one back); taps have no readout (only a held finger reads). Least zooms: 95%, 89%, 89%,
+  77%, 77%, 78%. `-tapgap N` spaces `-tapsq`'s taps N seconds apart (each miss line is said; the voice log shows them). Shots e.g.
+  `page-k-add-0 -numbers a=3,b=4 -drag 37.5,2.5,22.5,12.5 -hold`, `page-k-story-0 -numbers a=5,b=2,take=1,who=0,what=0,tale=0 -wrong`,
+  `page-k-bonds-2 -numbers whole=5,part=2 -drag 20,17.5,30,17.5 -hold`, `page-gk-five-1 -numbers a=2,b=3,plus=1,mode=2`.
 - Fixes of 4 Nov (chapter 2): Solid shapes' push sends the solid away from the flat shape; the die's dots are filled spots
   (`Solids.Body.spots`) in the edges' dark colour.
 

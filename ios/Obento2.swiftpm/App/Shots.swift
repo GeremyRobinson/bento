@@ -346,8 +346,14 @@ enum Shots {
                 if let i = args.firstIndex(of: "-slow"), i + 1 < args.count, let n = Double(args[i + 1]), n > 0 {
                     PaperClock.slowFrom = Date().timeIntervalSinceReferenceDate; PaperClock.slow = n
                 }
-                // -tapsq x,y[,x,y…]: one tap, or several one after another
-                if let t = numbers("-tapsq"), t.count >= 2 { for i in stride(from: 0, to: t.count - 1, by: 2) { m.tap(at: screen(t[i], t[i + 1])) } }
+                // -tapsq x,y[,x,y…]: one tap, or several one after another (-tapgap N: N seconds apart, as a child taps, so
+                // each miss line is said and the camera settles on each step before the next tap)
+                if let t = numbers("-tapsq"), t.count >= 2 {
+                    for i in stride(from: 0, to: t.count - 1, by: 2) {
+                        if i > 0, let g = numbers("-tapgap")?.first { try? await Task.sleep(for: .seconds(g)) }
+                        m.tap(at: screen(t[i], t[i + 1]))
+                    }
+                }
                 if let d = numbers("-drag"), d.count == 4 {
                     m.dragStart(at: screen(d[0], d[1]))
                     for k in 1...12 { let f = Double(k) / 12; m.dragMove(to: screen(d[0] + (d[2] - d[0]) * f, d[1] + (d[3] - d[1]) * f)) }
