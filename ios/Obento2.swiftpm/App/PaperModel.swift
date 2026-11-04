@@ -651,7 +651,9 @@ final class PaperModel {
     func keyboardAppeared(_ h: Double, rect: Rect? = nil) {
         guard abs(h - keyboard) > 1 || rect != keys else { return }
         keyboard = h; keys = rect
-        if bars?.mode == .work { reframe() }
+        // a paper lesson frames its step's own rectangle beside the keys (WorkProblem.stageFrame), not its whole card
+        if bars?.mode == .work, let w = bars?.current as? WorkProblem, let r = w.stageFrame { frameCurrent(r) }
+        else if bars?.mode == .work { reframe() }
         // setting up's name, or the grown-ups' page's: the camera keeps it above the keys
         else if bars == nil, place != nil { reframePlace() }
     }

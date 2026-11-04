@@ -503,6 +503,8 @@ public enum Lessons {
         Decompose.spec, EquivFractions.spec, CompareFractions.spec, LikeFractions.add, LikeFractions.take,
         // 4th grade, Mixed numbers (3 Nov 2026)
         AddMixed.spec, SubtractMixed.spec, FracTimesWhole.spec,
+        // 4th grade, Decimals (3 Nov 2026)
+        TenthsHundredths.spec, DecimalLine.spec, CompareDec4.spec,
     ]
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }

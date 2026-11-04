@@ -106,6 +106,10 @@ extension Piece {
         case "g4-mixed": return [box(0, 0, 4, 1), box(0, 2, 4, 1), box(0, 4, 3, 2)] // the wholes, and the pieces
         case "g4-mixedsub": return [box(0, 0, 4, 1), box(0, 2, 4, 1), box(0, 4, 3, 2)]
         case "g4-fracwhole": return [box(0, 0, 2, 2), box(0, 3, 2, 2), box(5, 0, 4, 2)] // two groups' pieces, packed
+        // 4th grade, Decimals (3 Nov)
+        case "g4-dec": return [box(0, 0, 2, 4), box(2, 0, 1, 2)]                // tenths, and the hundredths poured after them
+        case "g4-decline": return [box(6, 0, 1, 1)]                             // the tenth it's in
+        case "g4-deccompare": return [box(0, 0, 2, 4), box(7, 0, 1, 4), box(8, 0, 1, 2)] // 0.5 against 0.45
         default: return []
         }
     }
@@ -220,6 +224,19 @@ extension Piece {
             return [box(0, 0, 4, 1), box(0, 2, 4, 1)] + bar(0, 4, 4, 4) + [box(5, 0, 4, 1), line((5.3, 0.8), (8.7, 0.2))] + bar(5, 2, 4, 4)
         case "g4-fracwhole": // two groups of two fourths, packed into one bar: 9 by 5
             return bar(0, 0, 4, 4) + bar(0, 3, 4, 4) + bar(5, 0, 4, 4)
+        case "g4-dec", "g4-deccompare": // two wholes cut into tenths (with < between when they're compared): 9 or 11 by 4
+            let x2 = id == "g4-dec" ? 5.0 : 7.0
+            var out: [[CGPoint]] = [box(0, 0, 4, 4), box(x2, 0, 4, 4)]
+            for x in [0.0, x2] { for i in 1...3 { out.append(line((x + Double(i), 0), (x + Double(i), 4))) } }
+            if id == "g4-deccompare" { out.append(line((6, 1), (5, 2), (6, 3))) }
+            return out
+        case "g4-decline": // a line of tenths, one opened below into hundredths: 11 by 6
+            var out: [[CGPoint]] = []
+            for y in [1.0, 5] {
+                out.append(line((0, y), (11, y))); out.append(line((10.5, y - 0.5), (11, y), (10.5, y + 0.5)))
+                for i in 0...10 { let tall = i % 5 == 0; out.append(line((Double(i), y - (tall ? 1 : 0.5)), (Double(i), y + (tall ? 1 : 0.5)))) }
+            }
+            return out + [line((6, 2), (0, 4)), line((7, 2), (10, 4))]
         case "g5-volume": // a box of cubes, 4 by 3 by 2, as the lesson shows it
             return box3D(l: 4, h: 2, w: 3, u: 32)
         case "add": // thirds and thirds, added: 9 by 6

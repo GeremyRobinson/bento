@@ -123,6 +123,10 @@ enum PaperLessons {
         case "g4-mixed": return AddMixedLesson()
         case "g4-mixedsub": return SubtractMixedLesson()
         case "g4-fracwhole": return FracTimesWholeLesson()
+        // 4th grade, Decimals (3 Nov 2026)
+        case "g4-dec": return TenthsHundredthsLesson()
+        case "g4-decline": return DecimalLineLesson()
+        case "g4-deccompare": return CompareDec4Lesson()
         default: return nil
         }
     }

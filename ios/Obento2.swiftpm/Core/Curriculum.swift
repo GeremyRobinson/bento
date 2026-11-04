@@ -38,7 +38,7 @@ public enum Curriculum {
         MapChapter("geometry", "Geometry", colour: "geometry", [MapLesson("g5-coord", "Points on a grid"), MapLesson("g5-shapes", "Sorting shapes")]),
     ]
 
-    /// 4th grade (design/grade4.md): 35 lessons in 8 chapters, in teaching order. Chapters 1 to 5 are built (3 Nov);
+    /// 4th grade (design/grade4.md): 35 lessons in 8 chapters, in teaching order. Chapters 1 to 6 are built (3 Nov);
     /// the rest come as their previews are approved.
     static let grade4: [MapChapter] = [
         MapChapter("g4-big", "Big numbers", colour: "whole", [

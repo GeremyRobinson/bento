@@ -58,6 +58,11 @@ enum F4 {
         case op(String, Sketch.Colour = .ink)
         case n(Int, Sketch.Colour = .ink)
         case box(String, cells: Int)
+        /// A decimal written tight, as one word (G 3 Nov: "0.62"), in the fewest whole squares it fits.
+        case d(String, Sketch.Colour = .ink)
+        /// A fraction `w` squares wide whose top and bottom are boxes or numbers written tight, `cells` digits at most
+        /// (4th grade's Decimals: 145/100).
+        case fr(top: Part, bottom: Part, w: Double, cells: Int)
         enum Part { case v(Int), box(String) }
         @MainActor var width: Double {
             switch self {
@@ -66,6 +71,8 @@ enum F4 {
             case .op(let o, _): Record.opWidth(o)
             case .n(let v, _): Record.width(.n(v))
             case .box(_, let cells): Record.boxWidth(cells: cells, commas: false) + 1
+            case .d(let t, _): (PaperText.width(t, PaperText.font(Sketch.maths, .medium, digits: true)) / Paper.cell + 0.5).rounded(.up)
+            case .fr(_, _, let w, _): w
             }
         }
     }
@@ -88,6 +95,16 @@ enum F4 {
                     }
                 }
             case .op(let o, let c): pen.word(k + o, o, at: cx + t.width / 2, line, Bars.maths.colour(c))
+            case .d(let v, let c): pen.word(k + "d", v, at: cx + t.width / 2, line, Bars.maths.colour(c))
+            case .fr(let top, let bottom, let w, let cells):
+                pen.rule(k + "bar", from: cx, to: cx + w, row: line, .ink)
+                let bw = Record.boxWidth(cells: cells, commas: false)
+                for (p, mid, nm) in [(top, line - 1, "t"), (bottom, line + 1, "b")] {
+                    switch p {
+                    case .v(let v): pen.word(k + nm, "\(v)", at: cx + w / 2, mid, Bars.maths)
+                    case .box(let b): pen.answerBox(b, right: cx + ((w + bw) / 2).rounded(.down), mid: mid, per: 2, cells: 1, word: bw)
+                    }
+                }
             case .n(let v, let c): Record.tight(&pen, k + "n\(v)", v, right: cx + t.width, row: line, c)
             case .box(let b, let cells):
                 // a square clear of what follows (a fraction's line starts on its edge)
