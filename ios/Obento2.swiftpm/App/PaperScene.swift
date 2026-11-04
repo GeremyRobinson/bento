@@ -148,6 +148,17 @@ extension Piece {
         case "g6-onestep": return [box(0, 0, 5, 1.5)]                           // x, what's left
         case "g6-ineq": return [box(4, 1.5, 7, 1)]                              // the numbers that work
         case "g6-depend": return [[CGPoint(x: at.x, y: at.y + 6 * c), CGPoint(x: at.x + 9 * c, y: at.y), CGPoint(x: at.x + 9 * c, y: at.y + 6 * c)]] // under the rule's line
+        // 6th grade, Area and volume (4 Nov)
+        case "g6-para", "g6-tri", "g6-trap", "g6-poly", "g6-nets", "g6-fracvol":
+            func q(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: at.x + x * c, y: at.y + y * c) }
+            switch id {
+            case "g6-para": return [[q(0, 4), q(3, 0), q(3, 4)]]                  // the piece cut off
+            case "g6-tri": return [[q(0, 6), q(10, 6), q(10, 0)]]                 // the triangle, half the rectangle
+            case "g6-trap": return [[q(0, 4), q(4, 4), q(7, 0), q(0, 0)]]         // the trapezoid
+            case "g6-poly": return [box(0, 0, 5, 6)]                              // one piece of the L
+            case "g6-nets": return [box(3, 2, 3, 2)]                              // the base
+            default: return [[q(1, 4), q(3, 4), q(3, 6), q(1, 6)]]                // a whole cube of small ones
+            }
         case "g4-lines", "g4-turns", "g4-protractor", "g4-angles", "g4-classify", "g4-symmetry":
             func q(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: at.x + x * c, y: at.y + y * c) }
             func pie(_ cx: Double, _ cy: Double, _ r: Double, _ a0: Double, _ a1: Double) -> [CGPoint] {
@@ -288,6 +299,19 @@ extension Piece {
         case "g6-depend": // two axes, the rule's line from 0 and its points at the stops: 11 by 6
             func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.4 * cos(a), y + 0.4 * sin(a)) } }
             return [line((0, 0), (0, 6), (11, 6)), line((0, 6), (9, 0)), dot(3, 4), dot(6, 2)]
+        case "g6-para": // a parallelogram cut straight down, its piece to slide to the other end: 11 by 4
+            return [line((0, 4), (8, 4), (11, 0), (3, 0), (0, 4)), line((3, 0), (3, 4)), line((8, 4), (11, 4), (11, 0))]
+        case "g6-tri": // a triangle and its turned copy, a rectangle together: 11 by 6
+            return [line((0, 6), (10, 6), (10, 0), (0, 6)), line((0, 6), (0, 0), (10, 0))]
+        case "g6-trap": // a trapezoid and its turned copy, a rectangle together: 11 by 4
+            return [line((0, 0), (0, 4), (11, 4), (11, 0), (0, 0)), line((4, 4), (7, 0))]
+        case "g6-poly": // an L cut into two rectangles: 11 by 6
+            return [line((0, 0), (5, 0), (5, 2), (11, 2), (11, 6), (0, 6), (0, 0)), line((5, 2), (5, 6))]
+        case "g6-nets": // a box's net: the strip of four sides, the top and bottom on one: 11 by 6
+            return [box(0, 2, 11, 2), line((3, 2), (3, 4)), line((6, 2), (6, 4)), line((8, 2), (8, 4)), box(3, 0, 3, 2), box(3, 4, 3, 2)]
+        case "g6-fracvol": // a box of small cubes standing, a whole one in its corner: 11 by 6
+            return [box(1, 2, 6, 4), line((1, 2), (4, 0), (10, 0), (7, 2)), line((10, 0), (10, 4), (7, 6))]
+                + [3.0, 5].map { x in line((x, 2), (x, 6)) } + [line((1, 4), (7, 4))] + [line((2.5, 1), (8.5, 1))]
         case "g6-pctwhole": // a block, copies laid end to end with hops over them: 12 by 4
             return [box(0, 2, 3, 2), box(3, 2, 3, 2), box(6, 2, 3, 2), box(9, 2, 3, 2), arc(1.5, 4.5, 2, 1.5), arc(4.5, 7.5, 2, 1.5), arc(7.5, 10.5, 2, 1.5)]
         case "g4-tentimes": // a disk opening into a ten-frame: 11 by 4
