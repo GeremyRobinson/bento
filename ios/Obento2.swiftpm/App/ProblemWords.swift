@@ -243,7 +243,7 @@ extension Rig {
             case .again: s.block(id, r, .plain, word: "Watch again", k: k)
             case .skip: s.block(id, r, .plain, word: "Skip", k: k)
             case .showMe, .reset: s.block(id, r, l.picture["showMe"] == 1 && b.kind == .showMe ? .main : .plain, icon: b.kind == .showMe ? "play" : "arrow-counter-clockwise", k: k)
-            case .choice(let n): s.block(id, r, l.typed["c"] == String(n) ? .picked : .plain, centred: l.step.answer?.choices?[n], size: Sketch.wordSize, k: k)
+            case .choice(let n): s.block(id + "\(m.verdict.map { $0.right } as Bool?)", r, Sketch.Block.choice(l.typed["c"] == String(n), verdict: m.verdict?.right), centred: l.step.answer?.choices?[n], size: Sketch.wordSize, k: k)
             case .field(let f):
                 // right: green for a moment; wrong: red until they type again; the box being typed into has a cursor
                 // after what's in it (steady: no looping animations); Show me's number written faintly, then gone
@@ -322,7 +322,7 @@ extension Rig {
             case .main: s.block(id, r, .main, word: view.run.words.action, arrow: true, k: k)
             case .again: s.block(id, r, .plain, word: "Watch again", k: k)
             case .skip: s.block(id, r, .plain, word: "Skip", k: k)
-            case .choice(let n): s.block(id, r, view.run.typed["c"] == String(n) ? .picked : .plain, centred: view.run.step.answer?.choices?[n], size: Sketch.wordSize, k: k)
+            case .choice(let n): s.block(id + "\(view.verdict as Bool?)", r, Sketch.Block.choice(view.run.typed["c"] == String(n), verdict: view.verdict), centred: view.run.step.answer?.choices?[n], size: Sketch.wordSize, k: k)
             case .field(let f):
                 // right: green for a moment; wrong: red until they type again; the box being typed into is outlined
                 // in ink; the ghost's number written faintly (Show me), and gone again when it's over
@@ -389,7 +389,7 @@ extension Rig {
         return ["\(l.numbers)", "\(l.story)", "\(l.index)", "\(s.index)", "\(l.isLast)",
                 s.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }.joined(), m.stillHand(s.hand),
                 s.typed.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: ","), "\(s.faint)", s.active ?? "",
-                "\(s.verdict as Bool?)", m.rowsWords.map { "\($0.text)\($0.colour)" } ?? "", m.intro ?? "", "\(m.howToButtons)",
+                "\(s.verdict as Bool?)", "\(s.keys)", m.rowsWords.map { "\($0.text)\($0.colour)" } ?? "", m.intro ?? "", "\(m.howToButtons)",
                 "\(l.helps)", "\(dark)", "\(page.current === m)"].joined(separator: "|")
     }
 

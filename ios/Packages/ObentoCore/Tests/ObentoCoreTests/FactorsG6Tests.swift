@@ -101,7 +101,7 @@ final class FactorsG6Tests: XCTestCase {
                 XCTAssertTrue((2...top).contains(s.g)); XCTAssertTrue((1...top).contains(s.m)); XCTAssertTrue((1...top).contains(s.n))
                 XCTAssertNotEqual(s.m, s.n); XCTAssertEqual(Fact6.gcd(s.m, s.n), 1)
                 XCTAssertEqual(Fact6.gcd(s.A, s.B), s.g)
-                XCTAssertLessThanOrEqual(s.long * s.U, 81)
+                XCTAssertLessThanOrEqual(s.long * s.U, 72)
             }
         }
         let c = checks(Gcf6.spec).map(Gcf6.Parts.init)

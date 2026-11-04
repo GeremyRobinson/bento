@@ -170,6 +170,9 @@ struct PaperState {
     /// Right or wrong on the record's box that was checked (green and red mean only these).
     var verdict: Bool?
     var active: String?
+    /// The iPad's keys are up for this step's box (a lesson may lay its record line out on its own row then, so the line
+    /// being typed and its part of the picture show at 75%: Ratio tables).
+    var keys = false
 
     var numbers: Numbers { run.numbers }
     var step: LessonStep { run.steps[index] }

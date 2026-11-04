@@ -105,6 +105,16 @@ extension Sketch {
         static let plain = Block()
         /// A picked choice: in the chapter's colour.
         static let picked = Block(stroke: .chapter, fill: .tint(0.12), text: .chapter)
+        /// A choice block: plain, or picked; a pick that was checked is red when wrong and green when right (G: red only
+        /// and always for wrong), never the picked colour.
+        static func choice(_ picked: Bool, verdict: Bool?) -> Block {
+            guard picked else { return .plain }
+            switch verdict {
+            case false?: let red = Colour.hex(0xC8372D, 0xFF6B5E); return Block(stroke: red, text: red)
+            case true?: let green = Colour.hex(0x178A57, 0x3CCF8E); return Block(stroke: green, text: green)
+            case nil: return .picked
+            }
+        }
     }
 
     /// A block on the paper (a button, an answer box, a key): its outline strokes on, its fill under it, then its word

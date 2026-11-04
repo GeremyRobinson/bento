@@ -99,7 +99,7 @@ final class WorkProblem: Identifiable, PageProblem {
         if stacked {
             // the plan is kept for the problem; the step's own parts (its blocks' row, its frame) are worked out from it
             let s = state()
-            let key = "\(lesson.numbers) \(lesson.story) \(s.index) \(s.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(stillHand(s.hand)) \(s.run.typed.sorted { $0.key < $1.key }) \(auto) \(howToButtons)"
+            let key = "\(lesson.numbers) \(lesson.story) \(s.index) \(s.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(stillHand(s.hand)) \(s.run.typed.sorted { $0.key < $1.key }) \(auto) \(howToButtons) \(s.keys)"
             if let c = laidOut, c.key == key { return c.layout }
             let l = ProblemGrid.stackedLayout(self, s)
             laidOut = (key, l)
@@ -315,7 +315,7 @@ final class WorkProblem: Identifiable, PageProblem {
         return play(.howTo)
     }
 
-    func choose(_ i: Int) { guard !busy else { return }; onTouch?(); lesson.choose(i); message = nil; onChange?() }
+    func choose(_ i: Int) { guard !busy else { return }; onTouch?(); lesson.choose(i); message = nil; verdict = nil; onChange?() }
     /// A key on the keypad: a digit, ".", "-", or "del", into the chosen box.
     /// When a key was last pressed: the cursor holds still a moment after, then blinks.
     @ObservationIgnored private(set) var typedAt: Double = 0
@@ -445,6 +445,7 @@ final class WorkProblem: Identifiable, PageProblem {
         s.faint = ghost?.mode == .preview
         s.verdict = ghost == nil ? verdict?.right : nil
         s.active = run.active
+        s.keys = Self.keys != nil && !auto && !solved && run.index == lesson.index && run.step.answer.map { $0.choices == nil && !$0.byHand } == true
         s.hand = ghost?.hand ?? hand
         // the ghost finger dragging: the hand where the finger is now, as the lesson's drag would have it (the live
         // parts follow the finger)

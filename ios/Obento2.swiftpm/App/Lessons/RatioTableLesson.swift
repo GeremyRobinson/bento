@@ -2,10 +2,10 @@ import SwiftUI
 
 /// Ratio tables on the paper, as in the preview (design/prototype/grade6-ch1.html, dRatioTable): the first-quadrant plane,
 /// two squares a unit, across 0–24 for the minutes and up 0–12 for the other amount; the table is the record under it
-/// (two rows a column), the written lines beside the table. Put a point for each of the first two columns (it snaps to
+/// (two rows a column), the written lines beside the table (under it while the keys are up). Put a point for each of the first two columns (it snaps to
 /// every grid point, dotted lines drop to both axes, the readout is its pair); the ruler line lays itself from 0 through
 /// both; slide a point along the line (it snaps only to the grid points on it) to fill each gap; write the column past
-/// the paper; slide to 1 lap and write how long 1 lap takes. The compare kind: two tables, a point for each first column,
+/// the paper; slide to 1 lap and write how long 1 lap takes (the written lines on their own rows under the table while the keys are up). The compare kind: two tables, a point for each first column,
 /// both lines on one plane, drag up the line at X minutes, then pick whose is more.
 ///
 /// The picture's squares: the plane's corner at (5, 25), its arrow tips on row 0. The table and the lines are the record,
@@ -21,9 +21,15 @@ struct RatioTableLesson: PaperLesson {
     private func plane(_ P: RatioTable.Parts) -> R6.Plane { var p = R6.Plane(); p.yName = P.S.up; return p }
     func recordRow(_ n: Numbers) -> Double? { R6.Plane().oy + 3 }
 
-    // MARK: the written lines beside the table
+    // MARK: the written lines beside the table, or under it while the keys are up
 
-    private func sx(_ P: RatioTable.Parts) -> Double { Self.header + Self.cellW * Double(P.cols.count) + 3 }
+    /// While a line is typed with the keys up (call of 4 Nov), the written lines go on their own rows under the table, so
+    /// the line being typed and its part of the picture show at 75% (beside the table the line was as wide as both: 63%):
+    /// the column past the paper's on `pastRow`, 1's on `unitRow`, from the table's left edge. With the keys down they
+    /// stay beside it (under it the whole problem would be too tall for 75%).
+    static let pastRow = 2 * rowH + 3, unitRow = 2 * rowH + 6
+    private func sx(_ P: RatioTable.Parts, under: Bool = false) -> Double { under ? 0 : Self.header + Self.cellW * Double(P.cols.count) + 3 }
+    private func rows(_ under: Bool) -> (past: Double, unit: Double) { under ? (Self.pastRow, Self.unitRow) : (1, 4) }
     private func pastLine(_ P: RatioTable.Parts, done: Bool) -> [M7.Tok] {
         [.w(P.past), done ? .n(P.b * P.tP, .chapter) : .box("x", cells: 2), .w("minutes")]
     }
@@ -32,14 +38,14 @@ struct RatioTableLesson: PaperLesson {
         return [.w(P.oneTakes)] + (P.a == 1 ? [.box("w", cells: 1)] : [.box("w", cells: 1), .box("n", cells: 1), .op("/"), .box("d", cells: 1)]) + [.w("minutes")]
     }
     /// Check sits two squares past the line being written, on its row.
-    private func checkX(_ P: RatioTable.Parts, unit: Bool) -> Double {
-        (sx(P) + M7.width(unit ? unitLine(P, done: false) : pastLine(P, done: false)) + 2).rounded(.up)
+    private func checkX(_ P: RatioTable.Parts, unit: Bool, under: Bool = false) -> Double {
+        (sx(P, under: under) + M7.width(unit ? unitLine(P, done: false) : pastLine(P, done: false)) + 2).rounded(.up)
     }
     func blocksAt(_ s: PaperState) -> CGPoint? {
         let P = RatioTable.Parts(s.numbers), at = stage(s), top = recordRow(s.numbers) ?? 28
         switch at {
-        case 4: return CGPoint(x: checkX(P, unit: false), y: top)
-        case 6, 7: return CGPoint(x: checkX(P, unit: true), y: top + 3)
+        case 4: return CGPoint(x: checkX(P, unit: false, under: s.keys), y: top + rows(s.keys).past - 1)
+        case 6, 7: return CGPoint(x: checkX(P, unit: true, under: s.keys), y: top + rows(s.keys).unit - 1)
         case 9: return CGPoint(x: 61, y: 2)
         case 10: return CGPoint(x: 40, y: top)
         default: return nil
@@ -135,10 +141,10 @@ struct RatioTableLesson: PaperLesson {
             default: break
             }
         }
-        // the written lines: the column past the paper, then 1
-        let x = sx(P)
-        if at >= 4 { M7.row(&rec, "sp", pastLine(P, done: at > 4), x: x, line: 1) }
-        if at >= 6 { M7.row(&rec, "su", unitLine(P, done: at > 6), x: x, line: 4) }
+        // the written lines: the column past the paper, then 1 (under the table while the keys are up)
+        let x = sx(P, under: s.keys), r = rows(s.keys)
+        if at >= 4 { M7.row(&rec, "sp", pastLine(P, done: at > 4), x: x, line: r.past) }
+        if at >= 6 { M7.row(&rec, "su", unitLine(P, done: at > 6), x: x, line: r.unit) }
     }
 
     private func drawCompare(_ s: PaperState, _ P: RatioTable.Parts, _ pl: R6.Plane, _ at: Int, _ held: (u: Double, v: Double)?,

@@ -134,12 +134,18 @@ public enum Gcf6 {
         public var subtracted: String { "Factoring out \(g) divides by it: \(A) ÷ \(g) and \(B) ÷ \(g)." }
     }
 
-    /// The web's generator: g 2–9; m and n 1–9, different, no shared factor; the first three all 5 or less.
+    /// The longest bar, in squares: past it the problem shows under 75% (call of 4 Nov: drop 9 × 9 = 81, don't shrink it).
+    public static let longest = 72
+    /// The web's generator: g 2–9; m and n 1–9, different, no shared factor; the first three all 5 or less. No bar is
+    /// longer than `longest` (only g = 9 with a 9, 81, is dropped).
     static func make(_ rng: inout SeededRandom, _ index: Int) -> Numbers {
         let top = index < 3 ? 5 : 9
-        var m = 1, n = 1
-        repeat { m = Int.random(in: 1...top, using: &rng); n = Int.random(in: 1...top, using: &rng) } while m == n || Fact6.gcd(m, n) != 1
-        return numbers(g: Int.random(in: 2...(index < 3 ? 5 : 9), using: &rng), m: m, n: n)
+        while true {
+            var m = 1, n = 1
+            repeat { m = Int.random(in: 1...top, using: &rng); n = Int.random(in: 1...top, using: &rng) } while m == n || Fact6.gcd(m, n) != 1
+            let g = Int.random(in: 2...top, using: &rng), P = Parts(numbers(g: g, m: m, n: n))
+            if P.long * P.U <= longest { return numbers(g: g, m: m, n: n) }
+        }
     }
 
     public static let spec = LessonSpec(id: "g6-gcf", title: "Factor out the GCF", master: "bars",
