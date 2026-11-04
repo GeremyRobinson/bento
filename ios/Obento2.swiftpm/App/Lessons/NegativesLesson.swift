@@ -43,8 +43,12 @@ struct NegativesLesson: PaperLesson {
 
         // what the paper carries: the line, the point, what the folds printed (each with its number)
         let placing = at <= 1
+        // a fold held across the line: 0's number and what 0 means step off the fold line to the side that stays down, so
+        // the turning half's edge doesn't run through them (on the money line "$0" read over "0")
+        let aside = held.flatMap { up ? nil : $0 }
+        let fives = stride(from: N.lo.rounded(.up), through: N.hi, by: 1).filter { $0.truncatingRemainder(dividingBy: 5) == 0 }
         func content(_ pen: inout GridPen, _ keep: (CGPoint) -> Bool) {
-            N.draw(&pen, "nl", keep: keep)
+            N.draw(&pen, "nl", keep: keep, labels: aside != nil ? fives.filter { $0 != 0 } : nil)
             if !placing {
                 let p = N.at(t)
                 if keep(p) { N6.point(&pen, "pt", p); N6.readout(&pen, "pr", p, Neg6.fm(t), up: up) }
@@ -65,10 +69,11 @@ struct NegativesLesson: PaperLesson {
         func zero(_ pen: inout GridPen) {
             if let z = P.zero {
                 if up { pen.label("zero", z, N6.small, .right, edge: N.x0 + 1.2, along: N.y0) }
+                else if let sd = aside { pen.word("zeroa", z, at: N.x0 - sd * 0.4, N.y0 - 2.05, N6.small, anchor: UnitPoint(x: sd > 0 ? 1 : 0, y: 0.5)) }
                 else { pen.label("zero", z, N6.small, .above, edge: N.y0 - 1.2, along: N.x0) }
             }
         }
-        zero(&pic)
+        if aside == nil { zero(&pic) }
         content(&pic, base)
         // the landed halves lie back flat (each from where it was let go), carrying what's on them
         for (j, l) in landed.enumerated() {
@@ -83,7 +88,8 @@ struct NegativesLesson: PaperLesson {
             let f = Self.fold(N, sd)
             N6.flap(&live, "fh", f, rect: Self.sheet(N, sd), th: s.h("th") ?? 0, gridTop: s.gridTop) { content(&$0) { f.carries($0) } }
             zero(&live)
-            if up { live.label("z0", "0", N6.small, .left, edge: N.x0 - 0.6, along: N.y0) } else { live.label("z0", "0", N6.small, .below, edge: N.y0 + 0.5, along: N.x0) }
+            if up { live.label("z0", "0", N6.small, .left, edge: N.x0 - 0.6, along: N.y0) }
+            else { live.word("z0a", "0", at: N.x0 - sd * 0.4, N.y0 + 1.35, N6.small, anchor: UnitPoint(x: sd > 0 ? 1 : 0, y: 0.5)) }
         }
         // the point being placed: it follows the finger, its sign showing as it crosses 0
         if placing {

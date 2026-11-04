@@ -304,6 +304,9 @@ final class SketchDrawer {
         var morph: (from: [[CGPoint]], to: [[CGPoint]], start: Double)?
         /// The shape it morphs on to once the morph now under way ends (Item.via), and when.
         var next: (shape: Shape, at: Double)?
+        /// Morphing on from its `via` shape (a fold's half lying back from over the other side): it passes edge-on half
+        /// way, squeezed into a dark smear on the fold line, so it isn't drawn for that moment.
+        var flips = false
         var start: Double, length: Double
         var undrawing = false
         var shown = -1.0
@@ -623,11 +626,12 @@ final class SketchDrawer {
                 var now = sh
                 now.lines = zip(m.from, m.to).map { a, b in zip(a, b).map { CGPoint(x: $0.x + ($1.x - $0.x) * f, y: $0.y + ($1.y - $0.y) * f) } }
                 if let mesh = now.mesh(), let e = n.parts.first { e.model?.mesh = mesh }
-                if t - m.start >= Self.morphTime { n.morph = nil } else { moving = true }
+                if n.flips { let edgeOn = abs(f - 0.5) < 0.09 && t - m.start < Self.morphTime; for e in n.parts where e.isEnabled == edgeOn { e.isEnabled = !edgeOn } }
+                if t - m.start >= Self.morphTime { n.morph = nil; n.flips = false } else { moving = true }
             }
             if let nx = n.next {
                 moving = true
-                if n.morph == nil, t >= nx.at, let sh = n.shape { n.next = nil; startMorph(n, from: sh.lines, to: nx.shape, at: nx.at) }
+                if n.morph == nil, t >= nx.at, let sh = n.shape { n.next = nil; startMorph(n, from: sh.lines, to: nx.shape, at: nx.at); n.flips = true }
             }
             guard let mv = n.move else { continue }
             let f = Float(springPath((t - mv.start) / Self.glide))

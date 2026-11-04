@@ -36,6 +36,9 @@ struct WorkBox {
     /// squares: the fewest that fit the answer, and a little room) and grows left a square at a time as more is typed.
     /// nil: column working (a vertical sum, long division, a place chart), a digit to each cell so the places line up.
     var word: Double?
+    /// A coefficient (a number written before a letter or a bracket, as in 3x or 2(n + 4)): what's typed is written right
+    /// up to the box's right edge, which the letter hugs, so a typed 3 reads as 3x with no square's gap.
+    var hugs = false
     /// The words' scale (a big problem's are drawn bigger).
     var k: Double { cell / (2 * Paper.cell) }
     /// What's typed as the line writes it: a whole number with its commas when the box writes them.
@@ -51,7 +54,7 @@ struct WorkBox {
     @MainActor func wordWidth(_ typed: String) -> Double {
         let sq = Paper.cell, least = word ?? 0
         guard !typed.isEmpty else { return least }
-        return max(least, ((tightWidth(typed) + 1.25 * sq * k) / sq).rounded(.up) * sq)
+        return max(least, ((tightWidth(typed) + (hugs ? 0.75 : 1.25) * sq * k) / sq).rounded(.up) * sq)
     }
     func moved(_ by: CGPoint) -> WorkBox { var b = self; b.right += by.x; b.mid += by.y; b.point = point.map { $0 + by.x }; return b }
     /// Where each typed character goes when the box lines up on its point: its middle's x (the point's: the line).
@@ -122,9 +125,9 @@ struct GridPen {
     /// An answer box `cells` digits wide whose right edge is column `right`, on the row whose middle is `mid` (a digit is
     /// `per` squares): it grows left as digits are typed, so they line up on the right as written work does.
     /// `keepsLeft`: a centred box that grows to the right (WorkBox.keepsLeft).
-    mutating func answerBox(_ id: String, right: Double, mid: Double, per: Double, cells: Int, spare: Int = 0, centred: Bool = false, point: Double? = nil, keepsLeft: Bool = false, commas: Bool = false, tight: Bool = false, word: Double? = nil, step: Double? = nil) {
+    mutating func answerBox(_ id: String, right: Double, mid: Double, per: Double, cells: Int, spare: Int = 0, centred: Bool = false, point: Double? = nil, keepsLeft: Bool = false, commas: Bool = false, tight: Bool = false, word: Double? = nil, step: Double? = nil, hugs: Bool = false) {
         boxes.append(WorkBox(id: id, right: P(right, 0).x, mid: P(0, mid).y, cell: per * Self.sq, cells: cells, spare: spare, centred: centred,
-                             point: point.map { P($0, 0).x }, step: step.map { $0 * Self.sq }, keepsLeft: keepsLeft, commas: commas, tight: tight, word: word.map { $0 * Self.sq }))
+                             point: point.map { P($0, 0).x }, step: step.map { $0 * Self.sq }, keepsLeft: keepsLeft, commas: commas, tight: tight, word: word.map { $0 * Self.sq }, hugs: hugs))
     }
 
     /// Every box the work has: the one `box`, then the named ones.

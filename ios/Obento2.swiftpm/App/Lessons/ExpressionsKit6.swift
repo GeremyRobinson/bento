@@ -10,7 +10,7 @@ enum X6 {
     /// Where each token of a line starting at column x runs, left to right (M7.row lays them the same way).
     static func columns(_ toks: [M7.Tok], x: Double) -> [(Double, Double)] {
         var cx = x
-        return toks.map { t in let a = cx; cx += t.width; return (a, cx) }
+        return M7.widths(toks).map { w in let a = cx; cx += w; return (a, cx) }
     }
     /// The token whose columns are nearest a finger at column x (nil off the line).
     static func token(at x: Double, _ cols: [(Double, Double)]) -> Int? {

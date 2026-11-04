@@ -171,6 +171,13 @@ enum N6 {
     static let minor = Sketch.Colour.hex(Ink.mix(0xF3F2EF, 0x1A1A19, 0.045), Ink.mix(0x121211, 0xECEBE7, 0.035))
     static let major = Sketch.Colour.hex(Ink.mix(0xF3F2EF, 0x1A1A19, 0.09), Ink.mix(0x121211, 0xECEBE7, 0.07))
     static func flap(_ pen: inout GridPen, _ id: String, _ f: Fold, rect r: CGRect, th: Double, from: Double? = nil, landed: Bool = false, gridTop: Double, content: (inout GridPen) -> Void) {
+        // within a few degrees of edge-on, a held half is a thin line in the chapter's colour (squeezed flat, its grid
+        // and what it carries would read as a dark smear on the fold line)
+        if from == nil, abs(th - .pi / 2) < 0.08 {
+            let m = f.map(th), c = [(r.minX, r.minY), (r.maxX, r.minY), (r.maxX, r.maxY), (r.minX, r.maxY)].map { m(CGPoint(x: $0.0, y: $0.1)) }
+            pen.line(id + "edge", (c + [c[0]]).map { ($0.x, $0.y) }, .chapter)
+            return
+        }
         var sheet = GridPen(stableIds: pen.stableIds)
         let front = th <= .pi / 2
         let corners = [(r.minX, r.minY), (r.maxX, r.minY), (r.maxX, r.maxY), (r.minX, r.maxY)].map { sheet.P($0.0, $0.1) }
