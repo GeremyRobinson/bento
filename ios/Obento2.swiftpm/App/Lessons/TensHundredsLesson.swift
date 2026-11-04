@@ -58,11 +58,11 @@ struct TensHundredsLesson: PaperLesson {
                 let k = 10 * done.count + P.r
                 pic.label("cnt\(k)", "\(k) \(BigNumbers.place(q, k))", Self.count, .below, edge: S.bottom, along: ch.mid(q))
             }
-            // a hint: the next disk to open, ringed
-            if at == 1, s.on("ring"), let j = (0..<P.h).first(where: { !done.contains($0) }) {
+            // a hint: the column to open a disk in (a first miss), then the next disk itself (a second)
+            if at == 1, s.on("spot"), let j = (0..<P.h).first(where: { !done.contains($0) }) {
                 let c = ch.slot(q + 1, j)
                 pic.circle("ring", at: c.x, c.y, radius: ch.r + 0.6, .chapter, dashed: true)
-            }
+            } else if at == 1, s.on("ring") { ch.ringColumn(&pic, "ringc", q + 1, top: Self.y0, bottom: S.bottom) }
         } else {
             // the place's disks; each full frame closed glides into the place up as one disk
             let left = (0..<P.c).filter { !done.contains($0 / 10) }

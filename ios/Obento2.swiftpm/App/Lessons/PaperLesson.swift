@@ -170,7 +170,8 @@ struct PaperState {
     func at(_ i: Int, hint: Bool) -> PaperState {
         var s = PaperState(run: run, index: i)
         let st = run.steps[i]
-        s.picture = hint ? st.picture.merging(st.onMiss) { $1 } : st.picture
+        // a hint's drawings, the first miss's and the second's (the exact spot, call of 3 Nov), so neither moves the camera
+        s.picture = hint ? st.picture.merging(st.onMiss) { $1 }.merging(st.hint2) { $1 } : st.picture
         return s
     }
 }

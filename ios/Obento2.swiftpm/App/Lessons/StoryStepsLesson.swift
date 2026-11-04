@@ -91,8 +91,8 @@ struct StoryStepsLesson: PaperLesson {
                 let amt = held == 1 ? P.first : P.c, len = held == 1 ? L.f : L.c
                 live.reads("\(amt) → \(Int(len.rounded()) * 10)")
             }
-            // a hint: where each end belongs, dashed
-            if s.on("ring") {
+            // a hint after a second miss: where each end belongs, dashed
+            if s.on("spot") {
                 let R = { (x: Int) in Double(StorySteps.round10(x)) / 10 }
                 if !L.fd { let x = P.share ? R(P.a) : R(P.b); pic.line("ringf", [(x, y1 - 1), (x, y1 + H + 1)], .chapter, dashed: true) }
                 if !L.cd {

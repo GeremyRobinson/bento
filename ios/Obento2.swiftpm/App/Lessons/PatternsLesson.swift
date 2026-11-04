@@ -68,12 +68,12 @@ struct PatternsLesson: PaperLesson {
             Squares.handle(&live, s, at: last + Double(len), ly)
             if s.grabbed && len > 0 { live.reads("+\(len) = \(vals[k - 1] + len)") }
             // a hint: where the next number lands, dashed
-            if s.on("ring"), k < 6 { pic.line("ring", [(Double(vals[k]), ly - 1.5), (Double(vals[k]), ly + 1)], .chapter, dashed: true) }
+            if s.on("spot"), k < 6 { pic.line("ring", [(Double(vals[k]), ly - 1.5), (Double(vals[k]), ly + 1)], .chapter, dashed: true) }
         }
         let rg = ringed(s, P)
         for v in rg.sorted() { let r = ringR(v); pic.ring("rg\(v)", col: Double(v) - r, row: ny - r, w: 2 * r, h: 2 * r) }
         // a hint while tapping: the next one to ring, dashed
-        if at == 2, s.on("ring"), let v = P.want.first(where: { !rg.contains($0) }) { pic.circle("ring", at: Double(v), ny, radius: ringR(v) + 0.3, .chapter, dashed: true) }
+        if at == 2, s.on("spot"), let v = P.want.first(where: { !rg.contains($0) }) { pic.circle("ring", at: Double(v), ny, radius: ringR(v) + 0.3, .chapter, dashed: true) }
 
         // the record: the numbers (the ones to tap ringed), odd and even in words, the choice, the far number
         if at >= 2 {
@@ -183,8 +183,8 @@ struct PatternsLesson: PaperLesson {
             if at == 1 {
                 let n = sh.C[2].count + add.count
                 live.reads("\(n) squares")
-                // a hint: where shape 4's new squares go, dashed
-                if s.on("ring") {
+                // a hint after a second miss: where shape 4's new squares go, dashed
+                if s.on("spot") {
                     for c in sh.C[3] where c.g == 3 { Squares.dashed(&pic, "ring\(c.x)_\(c.y)", sh.sx[3] + Double(c.x), sh.yb - 1 - Double(c.y), .chapter) }
                 }
             }
@@ -207,7 +207,7 @@ struct PatternsLesson: PaperLesson {
             if at == 2 {
                 Squares.handle(&live, s, at: Double(f + c * d), yr + 0.5)
                 if s.grabbed { live.reads("shape \(c + 1): \(f) + \(c) × \(d) = \(f + c * d)") }
-                if s.on("ring") { let x = Double(f + (P.q - 1) * d); pic.line("ring", [(x, yr - 1), (x, yr + 2)], .chapter, dashed: true) }
+                if s.on("spot") { let x = Double(f + (P.q - 1) * d); pic.line("ring", [(x, yr - 1), (x, yr + 2)], .chapter, dashed: true) }
             }
         }
         // the record: the counts, then shape q's, then how it's made

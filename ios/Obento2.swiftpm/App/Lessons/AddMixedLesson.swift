@@ -81,14 +81,18 @@ struct AddMixedLesson: PaperLesson {
         if held && at == 1 { live.reads(s.h("in") == 1 ? Mixed4.wholes(P.Wt) : Mixed4.wholes(P.w2)) }
         if held && at == 2 { live.reads(s.h("in") == 1 ? Fractions4.pieces(P.S, d) : "\(P.n2)/\(d)") }
         // hints: where they go (dashed), the full bar (ringed)
-        if at == 1 && !held && s.on("target") {
+        if at == 1 && !held && s.on("spot") {
             for j in 0..<P.w2 { M5.target(&pic, "tg\(j)", x: 0, y: M5.step * Double(P.w1 + j), w: W, h: M5.wh + 1) }
+        } else if at == 1 && !held && s.on("target") {
+            M5.ring(&pic, "tgc", x: 0, y: 0, w: W, h: M5.step * Double(P.w1 + P.w2 - 1) + M5.wh)
         }
-        if at == 2 && !held && s.on("target") {
+        if at == 2 && !held && s.on("spot") {
             for i in 0..<P.n2 {
                 let k = P.n1 + i
                 M5.target(&pic, "tg\(i)", x: Double(k % d) * pw, y: k < d ? L.partY : L.spillY, w: pw, h: F4.h)
             }
+        } else if at == 2 && !held && s.on("target") {
+            for y in P.n1 + P.n2 > d ? [L.partY, L.spillY] : [L.partY] { M5.ring(&pic, "tgb\(y)", x: 0, y: y, w: W, h: F4.h) }
         }
         if at == 3 && s.on("ring") { M5.ring(&pic, "ring", x: 0, y: L.partY, w: W, h: F4.h) }
 

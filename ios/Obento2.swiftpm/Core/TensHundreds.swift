@@ -74,7 +74,7 @@ public enum TensHundreds {
                                        if x < 0 { return .wrong("Count \(s.name): open the \(s.up).") }
                                        return .soft("Tap each \(s.up1).")
                                    }, byHand: true),
-                picture: ["at": 1], onMiss: ["ring": 1])
+                picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1])
         } else {
             move = LessonStep(StepWords(say: "\(s.question) Tap each full ten.", hint: "\(BigNumbers.cap(s.ten)) \(s.name) make a \(s.up1).", action: "Check"),
                 answer: AnswerTask(prompt: [.box("x")], expected: ["x": Double(h)], hint: "\(BigNumbers.cap(s.ten)) \(s.name) make a \(s.up1).",
@@ -85,7 +85,7 @@ public enum TensHundreds {
                                        if x < 0 { return .wrong("That frame has \(Int(-x)). Only a full ten closes.") }
                                        return .soft("Tap each full ten.")
                                    }, byHand: true),
-                picture: ["at": 1], onMiss: ["ring": 1])
+                picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1])
         }
 
         // write it: the count (A) or the number (B), with the web's slips

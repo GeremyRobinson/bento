@@ -108,7 +108,7 @@ public enum Deal {
                                       return x == 1 ? .right : x == 2 ? .wrong(msg) : .soft("Tap each: it opens into ten \(P[p - 1]).")
                                   }, byHand: true)
             }
-            return LessonStep(StepWords(say: say, hint: hint, action: "Check"), answer: task, picture: ["at": 1, "ph": Double(k)], onMiss: ["ring": 1])
+            return LessonStep(StepWords(say: say, hint: hint, action: "Check"), answer: task, picture: ["at": 1, "ph": Double(k)], onMiss: ["ring": 1], hint2: ["spot": 1])
         }
     }
 

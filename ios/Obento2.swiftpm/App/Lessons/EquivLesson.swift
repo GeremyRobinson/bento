@@ -34,12 +34,12 @@ struct EquivLesson: PaperLesson {
             if at == 1 {
                 actions = ["Cut"]
                 ruler(P).draw(s, live: &live, still: &pic)
-                // a hint: where the right cuts go, dashed over the lower bar
-                if s.on("ring") {
+                // a hint: the lower bar (a first miss), then where the right cuts go, dashed over it (a second)
+                if s.on("spot") {
                     for x in stride(from: P.pN, to: P.W, by: P.pN) where x % P.pb != 0 {
                         pic.line("hint\(x)", [(Double(x), Self.y2), (Double(x), Self.y2 + F4.h)], .chapter, dashed: true)
                     }
-                }
+                } else if s.on("ring") { pic.sketch.box("ringb", pic.R(-0.5, Self.y2 - 0.5, Double(P.W) + 1, F4.h + 1), .chapter, width: Sketch.stroke, dashed: true) }
             }
         } else {
             F4.bar(&pic, "l", y: Self.y2, W: P.W, d: P.N, on: P.A)

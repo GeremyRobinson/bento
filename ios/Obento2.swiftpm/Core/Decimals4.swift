@@ -68,13 +68,13 @@ public enum TenthsHundredths {
                                    default: return .wrong("That part is empty. Tap a shaded tenth.")
                                    }
                                }, byHand: true),
-            picture: ["at": 1], onMiss: ["ring": 1])
+            picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1])
         let say2 = "Same-size pieces now, so add the tops. Slide the striped hundredths into the first whole."
         let hint2 = "They go after the shaded hundredths."
         let slide = LessonStep(StepWords(say: say2, hint: hint2, action: "Check"),
             answer: AnswerTask(prompt: [.box("s")], expected: ["s": 1], hint: hint2, explain: "\(A) + \(b) = \(Dec4.hund(S)).",
                                check: { v in Dec4.int(v, "s") == 1 ? .right : .soft("Slide them into the first whole.") }, byHand: true),
-            picture: ["at": 2], onMiss: ["target": 1])
+            picture: ["at": 2], onMiss: ["target": 1], hint2: ["spot": 1])
         let say3 = "Write it as a decimal. Type it with its point."
         let hint3 = "Hundredths go two places after the point."
         let write = LessonStep(StepWords(say: say3, hint: hint3, action: "Check"),
@@ -179,7 +179,7 @@ public enum DecimalLine {
                                        let p = Dec4.int(v, "p")
                                        return p == t ? .right : .wrong("That’s \(s.at(p)). \(X) is \(Dec4.tenths(t)) past \(Dec4.text(s.lo1)).")
                                    }, byHand: true),
-                picture: ["at": 2], onMiss: ["ring": 1]))
+                picture: ["at": 2], onMiss: ["ring": 1], hint2: ["spot": 1]))
         } else {
             first = "\(s.intro) Tap the tenth the number is in."
             let hint1 = "Its tenths digit is \(t)."
@@ -188,7 +188,7 @@ public enum DecimalLine {
                                    explain: "\(X) is between \(Dec4.text(s.lo2)) and \(Dec4.text(s.lo2 + 10)).",
                                    check: { v in Dec4.int(v, "b") == t ? .right : .wrong("\(X) is between \(Dec4.text(s.lo2)) and \(Dec4.text(s.lo2 + 10)).") },
                                    byHand: true),
-                picture: ["at": 1], onMiss: ["ring": 1]))
+                picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1]))
             let say2 = "Each block is a hundredth now. Drag the point to the number."
             let hint2 = "Count \(Dec4.hund(u)) from \(Dec4.text(s.lo2))."
             out.append(LessonStep(StepWords(say: say2, hint: hint2, action: "Check"),
@@ -197,7 +197,7 @@ public enum DecimalLine {
                                        let p = Dec4.int(v, "p")
                                        return p == u ? .right : .wrong("That’s \(s.at(p)). \(X) is \(Dec4.hund(u)) past \(Dec4.text(s.lo2)).")
                                    }, byHand: true),
-                picture: ["at": 2], onMiss: ["ring": 1]))
+                picture: ["at": 2], onMiss: ["ring": 1], hint2: ["spot": 1]))
         }
         let say3 = "Write it as a fraction. Fill in the top and the bottom."
         let hint3 = s.tenOnly ? "Count the tenths from the start of the line to the point." : "Count the hundredths: a tenth is 10 of them."
@@ -328,7 +328,7 @@ public enum CompareDec4 {
             return LessonStep(StepWords(say: say, hint: hint, action: "Check"),
                 answer: AnswerTask(prompt: [.box("n")], expected: ["n": Double(want)], hint: hint, explain: "\(X): \(Dec4.hund(want)).",
                                    check: { v in let n = Dec4.int(v, "n"); return n == want ? .right : .wrong(s.shadeMiss(j, n)) }, byHand: true),
-                picture: ["at": Double(j + 1)], onMiss: ["ring": 1])
+                picture: ["at": Double(j + 1)], onMiss: ["ring": 1], hint2: ["spot": 1])
         }
         let say1 = "\(s.intro) Drag across the first grid."
         let hint3 = "Same-size pieces now: compare \(s.a) and \(s.b)."
@@ -339,7 +339,7 @@ public enum CompareDec4 {
                                    let i = Int(c.rounded())
                                    return i == s.k ? .right : .wrong(s.wrong(i))
                                }, byHand: true),
-            picture: ["at": 3], onMiss: ["ring": 1])
+            picture: ["at": 3], onMiss: ["ring": 1], hint2: ["spot": 1])
         return [LessonStep(StepWords(say: say1, hint: say1, action: "Let’s find out"), picture: ["at": 0]),
                 shade(0, say1), shade(1, "Now the second. Drag across the second grid."), choose,
                 LessonStep(StepWords(say: s.why, hint: s.why, action: "Next problem"), picture: ["at": 4])]

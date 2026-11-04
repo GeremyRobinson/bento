@@ -31,7 +31,8 @@ struct DecimalLineLesson: PaperLesson {
         pic.numberLine("l1", col: 0, row: y1, steps: 10, per: B, long: 5)
         pic.label("l1lo", "\(P.w)\(P.unit)", ink, .below, edge: y1, along: 0)
         pic.label("l1hi", "\(P.w + 1)\(P.unit)", ink, .below, edge: y1, along: L)
-        if at == 1 && s.on("ring") { D6.ring(&pic, "ring", x: t * B, y: y1 - 2, w: B, h: 2) }
+        if at == 1 && s.on("spot") { D6.ring(&pic, "ring", x: t * B, y: y1 - 2, w: B, h: 2) }
+        else if at == 1 && s.on("ring") { D6.ring(&pic, "ringl", x: 0, y: y1 - 2, w: L, h: 2) }
 
         // the point: on line 1 for a tenths decimal, else on line 2 once it's open
         let now = s.h("at") ?? 0
@@ -52,7 +53,8 @@ struct DecimalLineLesson: PaperLesson {
         if at == 2 && !s.grabbed && now == 0 && s.on("ring") == false {
             pic.word("arrow", "→", at: 2.5, Y - 3, Bars.maths.colour(.chapter))
         }
-        if at == 2 && s.on("ring") { pic.circle("ring2", at: Double(goal(P)) * B, Y, radius: 1.3, .chapter, dashed: true) }
+        if at == 2 && s.on("spot") { pic.circle("ring2", at: Double(goal(P)) * B, Y, radius: 1.3, .chapter, dashed: true) }
+        else if at == 2 && s.on("ring") { D6.ring(&pic, "ringl2", x: 0, y: Y - 2, w: L, h: 2) }
         if at == 2 && s.grabbed { live.reads(P.at(Int(now.rounded()))) }
 
         // the decimal over line 1's left end, then into the record, and the fraction written

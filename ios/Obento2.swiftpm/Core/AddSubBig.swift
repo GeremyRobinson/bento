@@ -149,7 +149,7 @@ public enum AddSubBig {
                                            default: return .soft(say)
                                            }
                                        }, byHand: true),
-                    picture: ["at": 1, "ph": Double(k)], onMiss: ["ring": 1]))
+                    picture: ["at": 1, "ph": Double(k)], onMiss: ["ring": 1], hint2: ["spot": 1]))
             case .close(let c):
                 let n = BigNumbers.digit(s.a, c) + BigNumbers.digit(s.b, c) + (s.columns[c].carryIn)
                 steps.append(LessonStep(StepWords(say: "Tap the full ten.", hint: "10 \(P[c]) make 1 \(P1[c + 1]).", action: "Check"),
@@ -160,7 +160,7 @@ public enum AddSubBig {
                                            if x == 5 { return .soft("\(n) \(BigNumbers.place(c, n)): tap the full ten first.") }
                                            return .soft("Tap the full frame of ten.")
                                        }, byHand: true),
-                    picture: ["at": 2, "ph": Double(k)], onMiss: ["ring": 1]))
+                    picture: ["at": 2, "ph": Double(k)], onMiss: ["ring": 1], hint2: ["spot": 1]))
             }
         }
         // the thousands and up, typed; the hands wrote the rest

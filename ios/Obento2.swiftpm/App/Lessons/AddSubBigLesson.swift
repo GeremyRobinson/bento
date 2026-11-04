@@ -135,8 +135,10 @@ struct AddSubBigLesson: PaperLesson {
                 let f = ch.frame(cp, 0)
                 pic.sketch.box("ring", pic.R(f.x - 0.5, f.y - 0.5, 5 * ch.c + 1, 2 * ch.c + 1), .chapter, width: Sketch.stroke, dashed: true)
             } else if at == 1, P.sub, moving.contains(P.at), !opened, let j = model.top[P.at + 1].indices.last {
+                // the column to open a disk in (a first miss), then the disk (a second)
                 let p = ch.slot(P.at + 1, j, band: g.yT)
-                pic.circle("ring", at: p.x, p.y, radius: ch.r + 0.6, .chapter, dashed: true)
+                if s.on("spot") { pic.circle("ring", at: p.x, p.y, radius: ch.r + 0.6, .chapter, dashed: true) }
+                else { ch.ringColumn(&pic, "ringc", P.at + 1, top: g.yT, bottom: ch.bottom(frames: (model.top[P.at + 1].count + 9) / 10, band: g.yT)) }
             } else if at == 1, let c = moving.first {
                 pic.sketch.box("ring", pic.R(ch.colX(c) + 0.5, g.yB - 0.5, ch.cw * Double(moving.count) - 1, 2 * ch.c + 1), .chapter, width: Sketch.stroke, dashed: true)
             }

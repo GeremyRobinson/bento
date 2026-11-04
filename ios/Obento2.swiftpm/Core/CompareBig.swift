@@ -101,7 +101,7 @@ public enum CompareBig {
                                        let at = Int(x.rounded())
                                        return at == s.aligned ? .right : .wrong(s.slid(at))
                                    }, byHand: true),
-                picture: ["at": 1], onMiss: ["ring": 1]))
+                picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1]))
         }
         if let fd = s.first {
             // tap the first place that differs: the box is the place tapped
@@ -114,7 +114,7 @@ public enum CompareBig {
                                        let pw = Int(x.rounded())
                                        return pw == fd ? .right : .wrong(s.tapped(pw))
                                    }, byHand: true),
-                picture: ["at": 2], onMiss: ["ring": 1]))
+                picture: ["at": 2], onMiss: ["ring": 1], hint2: ["spot": 1]))
         }
         // the sign: <, = or >
         let hint = s.first.map { fd in

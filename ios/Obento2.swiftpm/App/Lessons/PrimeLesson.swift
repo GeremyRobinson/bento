@@ -50,8 +50,8 @@ struct PrimeLesson: PaperLesson {
             let hd = handle(P, R)
             Squares.handle(&live, s, at: hd.x, hd.y)
             if s.grabbed { live.reads(Factors.rows(n, R)) }
-            // a hint: where the next rectangle's bottom edge goes (or where the tries stop), dashed
-            if s.on("ring") {
+            // a hint after a second miss: where the next rectangle's bottom edge goes (or where the tries stop), dashed
+            if s.on("spot") {
                 let a = P.rects.first { !f.contains($0) } ?? P.stop
                 pic.line("ring", [(-1, Self.top + Double(a)), (Double(n / a) + 1, Self.top + Double(a))], .chapter, dashed: true)
             }

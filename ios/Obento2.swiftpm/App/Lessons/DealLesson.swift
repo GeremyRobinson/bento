@@ -139,7 +139,9 @@ struct DealLesson: PaperLesson {
                 let b = ch.bottom(frames: max(1, (st.top[p].count + 9) / 10))
                 pic.sketch.box("ring", pic.R(ch.colX(p) + 0.25, Self.y0 - 0.5, ch.cw - 0.5, b - Self.y0 + 1), .chapter, width: Sketch.stroke, dashed: true)
             case .open(let p, _):
-                if !st.top[p].isEmpty { let c = ch.slot(p, st.top[p].count - 1); pic.circle("ring", at: c.x, c.y, radius: ch.r + 0.5, .chapter, dashed: true) }
+                // the column to open a disk in (a first miss), then the disk (a second)
+                if !st.top[p].isEmpty, s.on("spot") { let c = ch.slot(p, st.top[p].count - 1); pic.circle("ring", at: c.x, c.y, radius: ch.r + 0.5, .chapter, dashed: true) }
+                else if !st.top[p].isEmpty { ch.ringColumn(&pic, "ringc", p, top: Self.y0, bottom: ch.bottom(frames: max(1, (st.top[p].count + 9) / 10))) }
             }
         }
 

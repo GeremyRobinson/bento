@@ -110,7 +110,7 @@ struct LinePlotLesson: PaperLesson {
         // hints: where to look, ringed
         if s.on("ring") {
             let ringAt: Int? = at == 1 && placed < p.data.count ? p.data[placed] : at == 2 || at == 4 ? p.hi : at == 3 ? p.low : at == 5 ? p.v : nil
-            if let u = ringAt { pic.circle("ring", at: q.x(u), ly, radius: 1.3, .chapter, dashed: true) }
+            if let u = ringAt, s.on("spot") { pic.circle("ring", at: q.x(u), ly, radius: 1.3, .chapter, dashed: true) }
             if at == 6 { M7.ring(&pic, "ring", x: q.x(p.v) + 1, y: ly - 2 * Double(p.tallest), w: 48 - q.x(p.v) - 1, h: 2 * Double(p.tallest)) }
         }
 

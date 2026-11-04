@@ -75,7 +75,7 @@ struct MeasureStoryLesson: PaperLesson {
                 live.reads("\(p.amount(abs(len))) → \(p.place(x + len))")
             }
             live.dot("handle", at: Double(x + (s.grabbed ? len : 0)), LY, radius: s.grabbed ? 0.75 : 0.55, .ink, over: true)
-            if s.on("ring") {
+            if s.on("spot") {
                 let target = p.counts ? p.tx : x + (p.hops.indices.contains(ends(s, p).count) ? p.hops[ends(s, p).count] / p.per : 0)
                 pic.circle("ring", at: Double(target), LY, radius: 1.3, .chapter, dashed: true)
             }

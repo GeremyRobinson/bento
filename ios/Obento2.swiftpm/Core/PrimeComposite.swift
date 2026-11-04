@@ -82,7 +82,7 @@ public enum PrimeComposite {
                                    guard let r = v["x"] else { return .soft("Drag the bottom edge down.") }
                                    return s.tried(Int(r.rounded()), found: Int((v["f"] ?? 0).rounded()))
                                }, byHand: true),
-            picture: ["at": 1], onMiss: ["ring": 1]))
+            picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1]))
         // Prime or Composite, tapped: the box is the choice (0 Prime, 1 Composite)
         let want = s.prime ? 0.0 : 1
         steps.append(LessonStep(StepWords(say: "Is \(n) prime or composite? From here, any rectangle is one you’ve found, turned round.",

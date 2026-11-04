@@ -58,10 +58,11 @@ struct DecomposeLesson: PaperLesson {
         let copy = !unit && at >= 2
         var S1 = Set<Int>()
         if copy { S1 = splits(s, P, bar: 1); _ = drawBar(&pic, P, S1, b: 1, y: Self.y2) }
-        // a hint: the lines still to split, ringed (between the shaded pieces)
+        // a hint: the bar to split (a first miss), then the lines still to split, ringed (a second)
         if s.on("ring") && (at == 1 || at == 2) {
             let S = at == 1 ? S0 : S1, y = at == 1 ? Self.y1 : Self.y2
-            for j in 1..<a where !S.contains(j) { pic.circle("ring\(j)", at: jx(P, S, j), y + F4.h / 2, radius: 1, .chapter, dashed: true) }
+            if s.on("spot") { for j in 1..<a where !S.contains(j) { pic.circle("ring\(j)", at: jx(P, S, j), y + F4.h / 2, radius: 1, .chapter, dashed: true) } }
+            else { pic.sketch.box("ringb", pic.R(-0.5, y - 0.5, end + 1, F4.h + 1), .chapter, width: Sketch.stroke, dashed: true) }
         }
 
         // the record, a few rows under the bars

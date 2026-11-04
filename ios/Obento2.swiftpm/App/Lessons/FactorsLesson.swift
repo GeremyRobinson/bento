@@ -44,8 +44,8 @@ struct FactorsLesson: PaperLesson {
             if at >= 1 {
                 Squares.handle(&live, s, at: Double(g.q) / 2, yW + Double(R))
                 if s.grabbed { live.reads(Factors.rows(n, R)) }
-                // a hint: where the rectangle's bottom edge goes, dashed
-                if s.on("ring") {
+                // a hint after a second miss: where the rectangle's bottom edge goes, dashed
+                if s.on("spot") {
                     let a = at == 1 ? P.a1 : P.a2
                     pic.line("ring", [(-1, yW + Double(a)), (Double(n / a) + 1, yW + Double(a))], .chapter, dashed: true)
                 }
@@ -73,7 +73,7 @@ struct FactorsLesson: PaperLesson {
             if at == 3 {
                 Squares.handle(&live, s, at: Double(h * t), yRow + 1)
                 if s.grabbed { live.reads("\(h) \(h == 1 ? "hop" : "hops"): \(h * t)") }
-                if s.on("ring") { pic.line("ring", [(Double(n), yRow - 1), (Double(n), yRow + 3)], .chapter, dashed: true) }
+                if s.on("spot") { pic.line("ring", [(Double(n), yRow - 1), (Double(n), yRow + 3)], .chapter, dashed: true) }
             }
         }
 

@@ -81,14 +81,14 @@ public enum AddMixed {
             answer: AnswerTask(prompt: [.box("s")], expected: ["s": 1], hint: hint1,
                                explain: "\(Mixed4.wholes(s.w1)) and \(Mixed4.wholes(s.w2)) make \(Mixed4.wholes(Wt)).",
                                check: { v in (v["s"] ?? 0) == 1 ? .right : .soft("Put them under the wholes on the left.") }, byHand: true),
-            picture: ["at": 1], onMiss: ["target": 1])
+            picture: ["at": 1], onMiss: ["target": 1], hint2: ["spot": 1])
         let say2 = "Now put the \(name) together. Slide the striped \(name) into the left bar."
         let hint2 = "They go after the shaded \(name)."
         let pieces = LessonStep(StepWords(say: say2, hint: hint2, action: "Check"),
             answer: AnswerTask(prompt: [.box("s")], expected: ["s": 1], hint: hint2,
                                explain: "\(s.n1) + \(s.n2) = \(Fractions4.pieces(s.S, d)).",
                                check: { v in (v["s"] ?? 0) == 1 ? .right : .soft("Slide them into the left bar.") }, byHand: true),
-            picture: ["at": 2], onMiss: ["target": 1])
+            picture: ["at": 2], onMiss: ["target": 1], hint2: ["spot": 1])
         // the trade: the full bar tapped (1); the spill bar (−1) or a whole (−2) is a miss
         let say3 = "\(d) \(name) fill a bar, so trade them for 1 whole. Tap the full bar."
         let hint3 = "\(d)/\(d) is 1 whole."
@@ -102,7 +102,7 @@ public enum AddMixed {
                                    default: return .wrong("That bar isn’t full. Tap the full bar.")
                                    }
                                }, byHand: true),
-            picture: ["at": 3], onMiss: ["ring": 1])
+            picture: ["at": 3], onMiss: ["ring": 1], hint2: ["spot": 1])
         // write: the wholes, then the pieces (the bottom stays d)
         let say4 = (s.trade ? "Add the new whole to the \(Mixed4.wholes(Wt))." : "Put the wholes and the pieces back together.")
             + " Write the wholes, then the pieces."
@@ -211,27 +211,27 @@ public enum SubtractMixed {
                                    default: return .soft("Slide them onto the shaded pieces.")
                                    }
                                }, byHand: true),
-            picture: ["at": 1], onMiss: ["target": 1])
+            picture: ["at": 1], onMiss: ["target": 1], hint2: ["spot": 1])
         let say2 = "\(Fractions4.pieces(s.n1, d)) can’t take away \(s.n2). Open a whole. Tap a whole bar."
         let hint2 = "A whole is \(d) \(name)."
         let open = LessonStep(StepWords(say: say2, hint: hint2, action: "Check"),
             answer: AnswerTask(prompt: [.box("o")], expected: ["o": 1], hint: hint2,
                                explain: "A whole is \(d) \(name): \(s.n1) + \(d) = \(s.n1 + d).",
                                check: { v in Mixed4.int(v, "o") == 1 ? .right : .soft("Tap a whole bar.") }, byHand: true),
-            picture: ["at": 2], onMiss: ["ring": 1])
+            picture: ["at": 2], onMiss: ["ring": 1], hint2: ["spot": 1])
         let say3 = "Now take away the \(name). " + slide
         let take2 = LessonStep(StepWords(say: say3, hint: hint1, action: "Check"),
             answer: AnswerTask(prompt: [.box("s")], expected: ["s": 1], hint: hint1,
                                explain: "\(Fractions4.pieces(s.n1 + d, d)) take away \(s.n2): \(R) left.",
                                check: { v in Mixed4.int(v, "s") == 1 ? .right : .soft("Slide them onto the shaded pieces.") }, byHand: true),
-            picture: ["at": 3], onMiss: ["target": 1])
+            picture: ["at": 3], onMiss: ["target": 1], hint2: ["spot": 1])
         let say4 = "Now take away the wholes. Slide the striped wholes onto the shaded ones."
         let hint4 = "Each striped whole takes away a shaded one."
         let wholes = LessonStep(StepWords(say: say4, hint: hint4, action: "Check"),
             answer: AnswerTask(prompt: [.box("s")], expected: ["s": 1], hint: hint4,
                                explain: "\(Mixed4.wholes(s.w1 - (s.need ? 1 : 0))) take away \(s.w2): \(Wa) left.",
                                check: { v in Mixed4.int(v, "s") == 1 ? .right : .soft("Slide them onto the shaded wholes.") }, byHand: true),
-            picture: ["at": 4], onMiss: ["target": 1])
+            picture: ["at": 4], onMiss: ["target": 1], hint2: ["spot": 1])
         // write what's left: the wholes (none left: only the fraction), then the pieces
         let first = s.need ? Mixed4.mixed(s.w1 - 1, s.n1 + d, d) : Mixed4.mixed(s.w1, s.n1, d)
         let ans: MathLine = (Wa > 0 ? [.box("W")] : []) + [.frac(.box("N"), .num(Double(d)))]
@@ -323,7 +323,7 @@ public enum FracTimesWhole {
             answer: AnswerTask(prompt: [.box("s")], expected: ["s": 1], hint: hint1,
                                explain: "\(W) groups of \(Fractions4.pieces(n, d)) make \(Fractions4.pieces(S, d)).",
                                check: { v in Mixed4.int(v, "s") == 1 ? .right : .soft("Put them in the answer bar.") }, byHand: true),
-            picture: ["at": 1], onMiss: ["target": 1])
+            picture: ["at": 1], onMiss: ["target": 1], hint2: ["spot": 1])
         let count = "Count the \(name) in the answer bar\(s.bars > 1 ? "s" : "")."
         let top = LessonStep(StepWords(say: "How many \(name) in all? The pieces stay the same size.", hint: count, action: "Check"),
             answer: AnswerTask(prompt: [.num(Double(W)), .op("×"), .frac(.num(Double(n)), .num(Double(d))), .op("="), .frac(.box("T"), .num(Double(d)))],
@@ -352,7 +352,7 @@ public enum FracTimesWhole {
                                explain: S >= d ? "\(d) \(name) are 1 whole." : "\(S)/\(d) = \(S / g)/\(d / g).",
                                check: { v in Mixed4.int(v, "t") == 1 ? .right : .wrong(S >= d ? "That bar isn’t full. Tap a full bar." : "Tap the answer bar.") },
                                byHand: true),
-            picture: ["at": 3], onMiss: ["ring": 1])
+            picture: ["at": 3], onMiss: ["ring": 1], hint2: ["spot": 1])
         // write it another way: a whole number, a mixed number, or bigger pieces
         let writeSay = rem == 0 ? "Write it as a whole number." : S > d ? "Write it as a mixed number." : "Write it with the bigger pieces."
         let boxes = s.boxes

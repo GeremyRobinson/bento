@@ -51,11 +51,12 @@ struct CompareBigLesson: PaperLesson {
             let y = Self.dB
             if P.aligned > P.start { let x = bx(P.lB - 1) + 3; pic.line("arr", [(x, y), (x + 2, y)], .ink3); pic.line("arrh", [(x + 1.3, y - 0.7), (x + 2, y), (x + 1.3, y + 0.7)], .ink3) }
             else { let x = bx(0) - 3; pic.line("arr", [(x, y), (x - 2, y)], .ink3); pic.line("arrh", [(x - 1.3, y - 0.7), (x - 2, y), (x - 1.3, y + 0.7)], .ink3) }
-            // a hint: where its ones go, ringed under the ones
-            if s.on("ring") { pic.circle("ring", at: ch.mid(0), Self.dB, radius: 1.6, .chapter, dashed: true) }
+            // a hint: the ones column (a first miss), then where its ones go, ringed (a second)
+            if s.on("spot") { pic.circle("ring", at: ch.mid(0), Self.dB, radius: 1.6, .chapter, dashed: true) }
+            else if s.on("ring") { ch.ringColumn(&pic, "ringc", 0, top: Self.top + 0.5, bottom: Self.bottom - 0.5) }
         }
-        // a hint on the place: the column to look at, from the left
-        if at == 2, s.on("ring"), let fd = P.first {
+        // a hint on the place after a second miss: the column to look at (it's the answer, so not on a first miss)
+        if at == 2, s.on("spot"), let fd = P.first {
             pic.sketch.box("ring", pic.R(ch.colX(fd) + 0.5, Self.top + 0.5, ch.cw - 1, Self.bottom - Self.top - 1), .chapter, width: Sketch.stroke, dashed: true)
         }
         // the sign: the three blocks at the chart's right between the two numbers, then the one that's right

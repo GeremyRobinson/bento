@@ -68,7 +68,7 @@ public enum MultiplyBig {
                                    guard let r = v["x"] else { return .soft("Drag the handle down.") }
                                    return s.copied(Int(r.rounded())).map { .wrong($0) } ?? .right
                                }, byHand: true),
-            picture: ["at": 1], onMiss: ["ring": 1]))
+            picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1]))
         // each place's part, biggest first, with the web's slips
         for p in s.order {
             let d = s.digit(p), want = s.part(p), worth = d * BigNumbers.pow10(p)

@@ -107,7 +107,7 @@ public enum StorySteps {
                                    let amt = x / 1000 == 1 ? s.first : c
                                    return .wrong(s.rounded(amt, (x % 1000) * 10) ?? "Drag each bar’s end to the nearest ten.")
                                }, byHand: true),
-            picture: ["at": 1], onMiss: ["ring": 1]))
+            picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1]))
         // the two written steps, with g3-twostep's slips
         let check1 = s.share ? R(a) - R(c) : a * R(b)
         let slips1: [(Double, String)] = s.share ? [(Double(a + c), "\(c) are taken off first. Subtract.")] : [(Double(a + b), "That’s \(a) + \(b). \(a) groups of \(b): multiply.")]

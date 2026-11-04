@@ -98,7 +98,7 @@ public enum Factors {
                                        guard let r = v["x"] else { return .soft("Drag the bottom edge down.") }
                                        return s.tried(Int(r.rounded()), pair: k).map { .wrong($0) } ?? .right
                                    }, byHand: true),
-                picture: ["at": Double(1 + k)], onMiss: ["ring": 1]))
+                picture: ["at": Double(1 + k)], onMiss: ["ring": 1], hint2: ["spot": 1]))
         }
         // hop by t along the long row: the box is how many hops
         steps.append(LessonStep(StepWords(say: "Is \(n) a multiple of \(t)? Hop by \(t)s along the row.", hint: "Each hop is \(t) squares.", action: "Check"),
@@ -108,7 +108,7 @@ public enum Factors {
                                    guard let h = v["x"] else { return .soft("Hop by \(t)s along the row.") }
                                    return s.hopped(Int(h.rounded())).map { .wrong($0) } ?? .right
                                }, byHand: true),
-            picture: ["at": 3], onMiss: ["ring": 1]))
+            picture: ["at": 3], onMiss: ["ring": 1], hint2: ["spot": 1]))
         // Yes or No, tapped: the box is the choice (0 Yes, 1 No)
         let yn = s.isMultiple ? 0.0 : 1
         steps.append(LessonStep(StepWords(say: "Is \(n) a multiple of \(t)? Tap Yes or No.", hint: "Count by \(t)s. Do you land exactly on \(n)?", action: "Check"),

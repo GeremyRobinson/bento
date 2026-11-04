@@ -67,12 +67,16 @@ struct LikeFractionsLesson: PaperLesson {
             }
         }
         // hints: where the striped pieces go (dashed); the last piece to count (ringed)
-        if at == 1 && !held && s.on("target") {
+        if at == 1 && !held && s.on("spot") {
             for i in 0..<P.c { let p = slot(P, i); pic.sketch.box("tg\(i)", pic.R(p.x + 0.5, p.y + 0.5, pw - 1, F4.h - 1), .chapter, width: Sketch.stroke, dashed: true) }
+        } else if at == 1 && !held && s.on("target") {
+            for y in Set((0..<P.c).map { slot(P, $0).y }).sorted() { M5.ring(&pic, "tgb\(y)", x: 0, y: y, w: Double(P.W), h: F4.h) }
         }
-        if at == 2 && s.on("last") {
+        if at == 2 && s.on("spot") {
             let k = P.R - 1, x = Double(k % d) * pw, y = k >= d ? Self.y2 : Self.y1
             pic.circle("last", at: x + pw / 2, y + F4.h / 2, radius: min(1.3, pw / 2 - 0.15), .chapter, dashed: true)
+        } else if at == 2 && s.on("last") {
+            for y in P.R > d ? [Self.y1, Self.y2] : [Self.y1] { M5.ring(&pic, "lastb\(y)", x: 0, y: y, w: Double(P.W), h: F4.h) }
         }
 
         // the names at the bars' right ends, the sign between (hidden until a story's sign is picked); then down into

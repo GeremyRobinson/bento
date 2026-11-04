@@ -59,7 +59,7 @@ public enum EquivFractions {
                                    if m == s.b { return .soft("Drag the ruler to make the pieces smaller.") }
                                    return .wrong("Those are \(Fractions4.piece(m)). Cut into \(name).")
                                }, byHand: true),
-            picture: ["at": 1], onMiss: ["ring": 1])
+            picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1])
         // the top, typed, with the web's slips
         var known: [(values: [String: Double], message: String)] = []
         for (v, m) in [(s.a, "Whatever you multiply the bottom by, multiply the top by too."), (s.a + N - s.b, "Multiply the top by \(k)."),
@@ -71,7 +71,7 @@ public enum EquivFractions {
                                explain: "Do the same to the top. The shaded part has not changed: \(s.a) × \(k) = \(s.A).",
                                check: { v in Int((v["x"] ?? -1).rounded()) == s.A ? .right : .wrong("Count the shaded \(name).") },
                                incomplete: "Type the number in the box."),
-            picture: ["at": 2], onMiss: ["ring": 1])
+            picture: ["at": 2], onMiss: ["ring": 1], hint2: ["spot": 1])
         return [LessonStep(StepWords(say: say, hint: "Cut every \(Fractions4.piece(s.b, false)) into \(k).", action: "Let’s find out"), picture: ["at": 0]),
                 cut, write,
                 LessonStep(StepWords(say: "Every piece cut into \(k): \(k) times the pieces, the same amount.",

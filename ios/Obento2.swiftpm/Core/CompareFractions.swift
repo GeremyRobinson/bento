@@ -97,7 +97,7 @@ public enum CompareFractions {
                                    guard let n = v["x"], n > 0 else { return .soft("Drag the ruler first.") }
                                    return s.cut(Int(n.rounded())).map { .wrong($0) } ?? .right
                                }, byHand: true),
-            picture: ["at": 1], onMiss: ["oldCuts": 1])
+            picture: ["at": 1], onMiss: ["oldCuts": 1], hint2: ["spot": 1])
         let choose = LessonStep(StepWords(say: "Which is more? Tap <, = or >.", hint: "Count the pieces each bar has shaded.", action: "Check"),
             answer: AnswerTask(prompt: [.box("c")], expected: ["c": Double(s.k)], hint: "Count the pieces each bar has shaded.",
                                explain: s.why,
@@ -106,7 +106,7 @@ public enum CompareFractions {
                                    let i = Int(c.rounded())
                                    return i == s.k ? .right : .wrong(s.wrong(i))
                                }, byHand: true),
-            picture: ["at": 2], onMiss: ["ring": 1])
+            picture: ["at": 2], onMiss: ["ring": 1], hint2: ["spot": 1])
         return [LessonStep(StepWords(say: say, hint: hint, action: "Let’s find out"), picture: ["at": 0]),
                 cut, choose,
                 LessonStep(StepWords(say: s.why, hint: "Cut both into pieces of one size, then count the pieces.", action: "Next problem"), picture: ["at": 3])]

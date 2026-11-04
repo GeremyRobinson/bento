@@ -88,7 +88,7 @@ struct AreaPerimLesson: PaperLesson {
             if t > 0 { live.sketch.line("lit", q.path(t).map { live.P($0.x, $0.y) }, band, width: bandW) }
             live.dot("ht", at: q.tip(t).x, q.tip(t).y, radius: held ? 0.75 : 0.55, .ink, over: true)
             if held && t > 0 { live.reads(p.traced(t)) }
-            if s.on("ring") { pic.circle("ring", at: q.tip(p.l + p.w).x, q.tip(p.l + p.w).y, radius: 1.3, .chapter, dashed: true) }
+            if s.on("spot") { pic.circle("ring", at: q.tip(p.l + p.w).x, q.tip(p.l + p.w).y, radius: 1.3, .chapter, dashed: true) }
         }
         let traced = (p.fold == 0 && at >= 4) || (p.fold == 2 && at >= 6)
         if traced {
@@ -101,7 +101,7 @@ struct AreaPerimLesson: PaperLesson {
             if p.fold == 1 { live.dot("he", at: U * Double(a), Y0 + U * w / 2, radius: held ? 0.75 : 0.55, .ink, over: true) }
             else { live.dot("hc", at: U * Double(a), Y0 + U * Double(b), radius: held ? 0.75 : 0.55, .ink, over: true) }
             if held { live.reads(p.fold == 1 ? "\(p.w) × \(a) = \(p.w * a)" : "\(a) by \(b): \(a * b) square \(a * b == 1 ? "meter" : "meters")") }
-            if s.on("ring") {
+            if s.on("spot") {
                 if p.fold == 1 { pic.circle("ring", at: U * l, Y0 + U * w / 2, radius: 1.3, .chapter, dashed: true) }
                 else { pic.circle("ring", at: U * l, Y0 + U * w, radius: 1.3, .chapter, dashed: true) }
             }

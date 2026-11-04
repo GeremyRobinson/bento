@@ -85,7 +85,7 @@ public enum LikeFractions {
                                // dropped anywhere else they go back: what to do (a notice, not a miss)
                                check: { v in (v["s"] ?? 0) == 1 ? .right : .soft(sub ? "Slide them onto the shaded pieces." : "Put them in the top bar.") },
                                byHand: true),
-            picture: ["at": 1], onMiss: ["target": 1])
+            picture: ["at": 1], onMiss: ["target": 1], hint2: ["spot": 1])
         let more = !sub && R > d ? " More than 1 is fine here." : ""
         let count = sub ? "Count the \(name) that aren’t crossed out." : "Count the shaded \(name)\(s.spill ? " in both bars" : "")."
         let bottom = "The pieces are still \(name), so the bottom stays \(d)."
@@ -108,7 +108,7 @@ public enum LikeFractions {
                                    }
                                    return .right
                                }, incomplete: "Fill in both boxes."),
-            picture: ["at": 2], onMiss: ["last": 1])
+            picture: ["at": 2], onMiss: ["last": 1], hint2: ["spot": 1])
         let why = sub ? "Same-size pieces, so the tops are taken away." : "Same-size pieces, so the tops add."
         return [LessonStep(StepWords(say: say, hint: hint, action: "Let’s find out"), picture: ["at": 0]),
                 slide, write,

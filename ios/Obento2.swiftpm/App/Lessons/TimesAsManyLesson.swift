@@ -129,7 +129,7 @@ struct TimesAsManyLesson: PaperLesson {
             live.dot("hd", at: hd.x, hd.y, radius: s.grabbed ? 0.75 : 0.55, .ink, over: true)
         }
         // a hint: where the move should end, a dashed mark across Blue a square past it either side
-        if moving, s.on("ring") {
+        if moving, s.on("spot") {
             let end = x0 + (P.kind == 1 ? r : B)
             pic.line("ring", [(end, yB - 1), (end, yB + H + 1)], .chapter, dashed: true)
         }

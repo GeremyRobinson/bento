@@ -86,7 +86,7 @@ public enum ReadWriteBig {
                                        if b <= 0 { return .soft("Tap a column to put a disk in.") }
                                        return b == s.N ? .right : .wrong(s.built(b))
                                    }, incomplete: "Tap a column to put a disk in.", byHand: true),
-                picture: ["at": 1], onMiss: ["ring": 1])
+                picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1])
         } else {
             // each digit pulled: the box counts them; a 0 won't come, and one let go too soon goes back
             let want = s.parts.count
@@ -100,7 +100,7 @@ public enum ReadWriteBig {
                                        if x < 0, -x - 1 < 6 { return .soft("0 \(BigNumbers.places[-x - 1]) is nothing. Leave it.") }
                                        return .soft("Pull each digit down.")
                                    }, byHand: true),
-                picture: ["at": 1], onMiss: ["ring": 1])
+                picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1])
         }
         let done = LessonStep(StepWords(say: s.a ? "An empty place still needs its 0." : "Each digit is worth its place.",
                                         hint: "Each digit is worth its place, and an empty place still needs its 0.", action: "Next problem"),

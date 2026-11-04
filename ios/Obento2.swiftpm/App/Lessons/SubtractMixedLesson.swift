@@ -84,11 +84,14 @@ struct SubtractMixedLesson: PaperLesson {
         if held && at == 4 { live.reads(s.h("in") == 1 ? "\(Mixed4.wholes(P.w1 - P.w2 - (P.need ? 1 : 0))) left" : Mixed4.wholes(P.w2)) }
         // hints: where they go (dashed); the whole to open (ringed)
         if (at == 1 || at == 3) && !held && s.on("target") && (L.opened || !P.need) {
-            for i in 0..<P.n2 { let p = slots[T - P.n2 + i]; M5.target(&pic, "tg\(i)", x: p.x, y: p.y, w: pw, h: F4.h) }
+            if s.on("spot") { for i in 0..<P.n2 { let p = slots[T - P.n2 + i]; M5.target(&pic, "tg\(i)", x: p.x, y: p.y, w: pw, h: F4.h) } }
+            else { for y in Set((0..<P.n2).map { slots[T - P.n2 + $0].y }).sorted() { M5.ring(&pic, "tgb\(y)", x: 0, y: y, w: W, h: F4.h) } }
         }
         if at == 2 && s.on("ring") { M5.ring(&pic, "ring", x: 0, y: L.oY, w: W, h: M5.wh) }
-        if at == 4 && !held && s.on("target") {
+        if at == 4 && !held && s.on("spot") {
             for j in 0..<P.w2 { M5.target(&pic, "tg\(j)", x: 0, y: M5.step * Double(j), w: W, h: M5.wh + 1) }
+        } else if at == 4 && !held && s.on("target") {
+            M5.ring(&pic, "tgc", x: 0, y: 0, w: W, h: M5.step * Double(max(P.w1, P.w2) - 1) + M5.wh)
         }
 
         // the names, each under its column; opening a whole renames the left (into the record); then the problem. The

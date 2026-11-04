@@ -92,14 +92,14 @@ public enum TwoByTwo {
                                    guard let x = v["x"] else { return .soft("Drag the handle along the top.") }
                                    return Int(x.rounded()) == s.T ? .right : .wrong("Cut where the tens end.")
                                }, byHand: true),
-            picture: ["at": 1], onMiss: ["ring": 1]))
+            picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1]))
         steps.append(LessonStep(StepWords(say: "Cut across where the tens end. Drag the handle down the side.", hint: "\(s.b) is \(s.S) + \(v).", action: "Check"),
             answer: AnswerTask(prompt: [.box("x")], expected: ["x": Double(s.S)], hint: "\(s.b) is \(s.S) + \(v).", explain: "\(s.b) is \(s.S) + \(v).",
                                check: { x in
                                    guard let y = x["x"] else { return .soft("Drag the handle down the side.") }
                                    return Int(y.rounded()) == s.S ? .right : .wrong("Cut across where the tens end.")
                                }, byHand: true),
-            picture: ["at": 2], onMiss: ["ring": 1]))
+            picture: ["at": 2], onMiss: ["ring": 1], hint2: ["spot": 1]))
         // the four parts, with the web's slips
         let P = s.values, ts = t * sv
         let slips: [[(Double, String)]] = [

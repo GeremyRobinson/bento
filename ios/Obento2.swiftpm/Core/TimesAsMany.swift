@@ -126,7 +126,7 @@ public enum TimesAsMany {
                                    guard let x = v["x"] else { return .soft(s.move) }
                                    return s.moved(Int(x.rounded())).map { .wrong($0) } ?? .right
                                }, byHand: true),
-            picture: ["at": 1], onMiss: ["ring": 1])
+            picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1])
 
         // write it, with the preview's slips
         let ans = Double(s.answer)

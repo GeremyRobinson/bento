@@ -31,6 +31,11 @@ struct PlaceChart {
     /// Place p's column's left edge and middle (p 0 the ones, on the right).
     func colX(_ p: Int) -> Double { x0 + Double(n - 1 - p) * cw }
     func mid(_ p: Int) -> Double { colX(p) + cw / 2 }
+    /// A hint after a first miss: a dashed box round place p's column, from row `top` to `bottom` (the general area; the
+    /// exact disk or slot waits for a second miss, call of 3 Nov).
+    func ringColumn(_ pen: inout GridPen, _ id: String, _ p: Int, top: Double, bottom: Double) {
+        pen.sketch.box(id, pen.R(colX(p) + 0.25, top - 0.5, cw - 0.5, bottom - top + 1), .chapter, width: Sketch.stroke, dashed: true)
+    }
     /// The place under column x, or nil.
     func place(at x: Double) -> Int? {
         let i = Int(((x - x0) / cw).rounded(.down))

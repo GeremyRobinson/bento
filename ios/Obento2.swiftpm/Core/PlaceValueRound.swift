@@ -76,7 +76,7 @@ public enum PlaceValueRound {
                                    let bl = Int(b.rounded())
                                    return bl == s.block ? .right : .wrong("\(N) is between \(c(s.T)) and \(c(s.hi)).")
                                }, byHand: true),
-            picture: ["at": 1], onMiss: ["ring": 1])
+            picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1])
 
         // drag the point to the end it's closer to (0 the lower end, 10 the upper)
         let end = s.up ? 10.0 : 0
@@ -89,7 +89,7 @@ public enum PlaceValueRound {
                                    let far = e == 10 ? s.r - s.rest : s.rest
                                    return .wrong("That end is \(c(far)) away. The other end is \(c(s.r - far)).")
                                }, byHand: true),
-            picture: ["at": 2], onMiss: ["counts": 1])
+            picture: ["at": 2], onMiss: ["counts": 1], hint2: ["spot": 1])
 
         // write the closer end, with the web's slips
         let small = s.r / 10, finer = (s.n + small / 2) / small * small

@@ -61,7 +61,7 @@ struct ConvertLesson: PaperLesson {
             pic.word("t1\(j)", "\(j + 1)", at: tx + 2, y + q.bh / 2, Bars.maths)
             guard cut else { continue }
             pic.sketch.segments("bc\(j)", (1..<p.np).map { i in (pic.P(Double(i) * pS, y), pic.P(Double(i) * pS, y + q.bh)) }, .chapter, width: Sketch.stroke)
-            for i in 0..<p.np {
+            for i in 0..<p.np where u.pv == 1 || pS > 4 || i == 0 || (i + 1) % 5 == 0 {
                 let label = u.pv == 1 ? "\(j * u.per + i + 1)" : "\(Meas4.n(u.pv)) \(u.s)"
                 pic.word("bl\(j)_\(i)", label, at: (Double(i) + 0.5) * pS, y + q.bh / 2, ink)
             }
@@ -91,9 +91,11 @@ struct ConvertLesson: PaperLesson {
             var x = pS
             while x <= len && x < W { live.line("dc\(Int(x))", [(x, q.Y0 - 0.5), (x, q.Y0 + q.bh + 0.5)], .ink2, dashed: true); x += pS }
             if s.grabbed, len > 0 { let c = Int((len / pS).rounded()) * u.pv; live.reads("\(Meas4.n(c)) \(p.smallsOf(c))") }
-            if s.on("ring") { pic.circle("ring", at: W, RY, radius: 1.3, .chapter, dashed: true) }
+            if s.on("spot") { pic.circle("ring", at: W, RY, radius: 1.3, .chapter, dashed: true) }
+            else if s.on("ring") { M7.ring(&pic, "ringb", x: 0, y: q.Y0, w: W, h: q.bh) }
         }
-        if at == 2 && s.on("ring") { let w = Record.width(.n(p.all)); M7.ring(&pic, "ring", x: q.numRight - w, y: q.y(p.n - 1) + q.bh / 2 - 1, w: w, h: 2) }
+        if at == 2 && s.on("spot") { let w = Record.width(.n(p.all)); M7.ring(&pic, "ring", x: q.numRight - w, y: q.y(p.n - 1) + q.bh / 2 - 1, w: w, h: 2) }
+        else if at == 2 && s.on("ring") { M7.ring(&pic, "ringt", x: tx, y: q.Y0 - 2, w: q.numRight + 1 - tx, h: q.y(p.n - 1) + q.bh - q.Y0 + 2) }
         if at == 3 && s.on("ring") { M7.ring(&pic, "ring", x: 0, y: q.y(p.n), w: Double(p.xW), h: q.bh) }
 
         // the record, a row at a time; the amount goes into it at the end

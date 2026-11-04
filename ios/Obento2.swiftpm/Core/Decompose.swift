@@ -101,7 +101,7 @@ public enum Decompose {
                                        guard let j = v["x"] else { return .soft("Tap each line between the shaded pieces.") }
                                        return j < 0 ? .wrong("Split between the shaded pieces.") : Int(j.rounded()) == a - 1 ? .right : .soft("Tap each line between the shaded pieces.")
                                    }, byHand: true),
-                picture: ["at": 1], onMiss: ["ring": 1])
+                picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1])
             // how many pieces of 1/d, typed
             let known: [(values: [String: Double], message: String)] = [
                 (["x": Double(d)], "\(d) is the bottom: it says how big the pieces are. Count the pieces."),
@@ -128,7 +128,7 @@ public enum Decompose {
                                        guard let j = v["x"] else { return .soft("Tap a line between the shaded pieces.") }
                                        return j >= 1 && j < Double(a) ? .right : .wrong("Split between the shaded pieces.")
                                    }, byHand: true),
-                picture: ["at": 1], onMiss: ["ring": 1])
+                picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1])
             // the copy split another way: the box is 1 when its parts differ from the first's, 100 + the first split's
             // line when they're the same (what a miss says is that split's own sum), −1 off the shaded pieces
             let say2 = "Now break the copy another way. Tap lines between its shaded pieces."
@@ -143,7 +143,7 @@ public enum Decompose {
                                        if r < 0 { return .wrong("Split between the shaded pieces.") }
                                        return r == 1 ? .right : .wrong("That’s the same again. Split it somewhere else.")
                                    }, byHand: true),
-                picture: ["at": 2], onMiss: ["ring": 1])
+                picture: ["at": 2], onMiss: ["ring": 1], hint2: ["spot": 1])
             return [LessonStep(StepWords(say: say1, hint: "Tap a line inside the shaded part.", action: "Let’s find out"), picture: ["at": 0]),
                     split, copy,
                     LessonStep(StepWords(say: "The same \(a) pieces, grouped another way.", hint: "A fraction’s pieces can be grouped any way.",
@@ -157,7 +157,7 @@ public enum Decompose {
                                        guard let t = v["x"] else { return .soft("Tap each whole bar.") }
                                        return t < 0 ? .wrong("That one isn’t a whole. Tap the bars named 1.") : Int(t.rounded()) == s.w ? .right : .soft("Tap each whole bar.")
                                    }, byHand: true),
-                picture: ["at": 1], onMiss: ["ring": 1])
+                picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1])
             return [LessonStep(StepWords(say: say, hint: "A whole bar is all \(d) of its \(name).", action: "Let’s find out"), picture: ["at": 0]),
                     tap,
                     LessonStep(StepWords(say: "Each whole is \(d) \(name).", hint: "Each whole is \(d) \(name).", action: "Next problem"), picture: ["at": 2])]

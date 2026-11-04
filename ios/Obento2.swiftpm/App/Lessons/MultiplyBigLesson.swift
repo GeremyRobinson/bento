@@ -48,7 +48,7 @@ struct MultiplyBigLesson: PaperLesson {
                 live.dot("hd", at: mid, hy, radius: s.grabbed ? 0.75 : 0.55, .ink, over: true)
                 if s.grabbed { live.reads("× \(n)") }
                 // a hint: where the rows end, dashed
-                if s.on("ring") { pic.line("ring", [(ch.x0 - 1, ch.y0 + Double(m) * c), (ch.right + 1, ch.y0 + Double(m) * c)], .chapter, dashed: true) }
+                if s.on("spot") { pic.line("ring", [(ch.x0 - 1, ch.y0 + Double(m) * c), (ch.right + 1, ch.y0 + Double(m) * c)], .chapter, dashed: true) }
             }
         } else {
             // the copies braced at the left

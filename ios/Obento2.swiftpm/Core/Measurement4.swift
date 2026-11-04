@@ -123,7 +123,7 @@ public enum Convert4 {
                                known: u.slips.filter { $0.0 != per }.map { (["c": Double($0.0)], $0.1) }, hint: hint1,
                                explain: "1 \(u.one) is \(P) \(u.smalls).",
                                check: { v in let c = Meas4.int(v, "c"); return c == per ? .right : .wrong(s.cutMiss(c)) }, byHand: true),
-            picture: ["at": 1], onMiss: ["ring": 1])
+            picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1])
         let hint2 = "Every \(u.one) adds \(P) more \(u.smalls), so multiply."
         var known2: [(values: [String: Double], message: String)] = []
         for (w, msg) in [(n * 10, "That’s \(n) × 10. Each \(u.one) is \(P) \(u.smalls), so multiply by \(P)."),
@@ -137,7 +137,7 @@ public enum Convert4 {
                                    if r == all { return .right }
                                    return .wrong(known2.first { $0.values["R"] == Double(r) }?.message ?? "Count on \(P) for each \(u.one).")
                                }, incomplete: "Type the number in the box."),
-            picture: ["at": 2], onMiss: ["ring": 1])
+            picture: ["at": 2], onMiss: ["ring": 1], hint2: ["spot": 1])
         var out = [LessonStep(StepWords(say: say1, hint: hint1, action: "Let’s find out"), picture: ["at": 0]), cut, mul]
         if m > 0 {
             let hint3 = "Then hop on the \(m) extra \(s.smallsOf(m))."
@@ -151,7 +151,7 @@ public enum Convert4 {
                                        if r == tot { return .right }
                                        return .wrong(known3.first { $0.values["R"] == Double(r) }?.message ?? "Count on \(m) from \(Meas4.n(all)).")
                                    }, incomplete: "Type the number in the box."),
-                picture: ["at": 3], onMiss: ["ring": 1]))
+                picture: ["at": 3], onMiss: ["ring": 1], hint2: ["spot": 1]))
         }
         let why = "Every \(u.one) is \(P) \(u.smalls)."
         out.append(LessonStep(StepWords(say: why, hint: why, action: "Next problem"), picture: ["at": 4]))
@@ -411,7 +411,7 @@ public enum MeasureStory {
         let hop = LessonStep(StepWords(say: say1, hint: hint1, action: "Check"),
             answer: AnswerTask(prompt: [.box("x"), .box("h")], expected: ["x": Double(s.counts ? s.sx : s.starts.last ?? 0), "h": Double(s.counts ? s.tx - s.sx : (s.hops.last ?? 0) / s.per)],
                                hint: hint1, explain: "You land on \(s.place(s.x(s.end))).", check: { v in s.hop(x: Meas4.int(v, "x"), h: Meas4.int(v, "h")) }, byHand: true),
-            picture: ["at": 1], onMiss: ["ring": 1])
+            picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1])
         let unitWord = s.time ? (s.sub == .len ? "Type the hours and minutes." : "Type the time.") : s.money ? "Type it in dollars." : "Type it in \(s.unit!.s)."
         let hint2 = s.counts && s.time ? "Add up your hops: a square is 5 minutes." : "Read where you land on the line."
         var prompt: MathLine = [.text(s.lead), .op("=")]
@@ -508,7 +508,7 @@ public enum AreaPerim {
                                        let r = Meas4.int(v, box)
                                        return r == want ? .right : .wrong(known.first { $0.values[box] == Double(r) }?.message ?? other)
                                    }, incomplete: "Type the number in the box."),
-                picture: ["at": Double(at)], onMiss: ["ring": 1])
+                picture: ["at": Double(at)], onMiss: ["ring": 1], hint2: ["spot": 1])
         }
         let why = "Area counts the square meters inside; perimeter goes round the edge."
         let done = LessonStep(StepWords(say: why, hint: why, action: "Next problem"), picture: ["at": 7])
@@ -520,7 +520,7 @@ public enum AreaPerim {
                 answer: AnswerTask(prompt: [.num(Double(w)), .op("×"), .box("a"), .op("="), .num(Double(A))], expected: ["a": Double(l)], hint: hint1,
                                    explain: "\(w) × \(l) = \(A).",
                                    check: { v in let a = Meas4.int(v, "a"); return a == l ? .right : .wrong("\(w) × \(a) = \(w * a). The area is \(A) m².") }, byHand: true),
-                picture: ["at": 1], onMiss: ["ring": 1])
+                picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1])
             let write = typed("How long is the top? Type it.", "What times \(w) makes \(A)?", [.num(Double(w)), .op("×"), .box("R"), .op("="), .num(Double(A))], "R", l, [],
                               "What times \(w) makes \(A)? Count the \(s.blocks) along the top.", 6)
             return [LessonStep(StepWords(say: say1, hint: hint1, action: "Let’s find out"), picture: ["at": 0]), edge, write, done]
@@ -534,7 +534,7 @@ public enum AreaPerim {
                                        if t == half { return .right }
                                        return .wrong(t <= l ? "That’s \(t) m. Go along the top, then down the side." : "That’s \(s.traced(t)). Half of \(Pm) m is \(Pm / 2) m.")
                                    }, byHand: true),
-                picture: ["at": 3], onMiss: ["ring": 1])
+                picture: ["at": 3], onMiss: ["ring": 1], hint2: ["spot": 1])
             let write = typed("How long is the side? Type it.", "\(l) and what make \(Pm / 2)?", [.num(Double(l)), .op("+"), .box("R"), .op("="), .num(Double(Pm / 2))], "R", w,
                               [(Pm / 2, "\(Pm / 2) is both sides. Take away the \(l) m top."), (Pm - l, "Half of \(Pm) is \(Pm / 2): take \(l) from that.")],
                               "\(l) and what make \(Pm / 2)?", 6)
@@ -549,7 +549,7 @@ public enum AreaPerim {
                                        let a = Meas4.int(v, "a"), b = Meas4.int(v, "b")
                                        return a == l && b == w ? .right : .wrong("That’s \(a) m by \(b) m. Make it \(l) m by \(w) m.")
                                    }, byHand: true),
-                picture: ["at": 1], onMiss: ["ring": 1])
+                picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1])
             let area = typed("How many \(s.blocks) inside? Type the area.", "\(w) \(w == 1 ? "row" : "rows") of \(l) \(s.blocks) fill the inside.",
                              [.text("Area"), .op("="), .num(Double(l)), .op("×"), .num(Double(w)), .op("="), .box("A"), .text("m²")], "A", A,
                              [(Pm, "That’s the distance around. Area is length × width."), (half, "Area is length × width.")],
@@ -561,7 +561,7 @@ public enum AreaPerim {
                                        let t = Meas4.int(v, "t")
                                        return t == half ? .right : .wrong("That’s \(s.traced(t)). Trace one long side and one short side.")
                                    }, byHand: true),
-                picture: ["at": 3], onMiss: ["ring": 1])
+                picture: ["at": 3], onMiss: ["ring": 1], hint2: ["spot": 1])
             let halfStep = typed("How far did you trace? Type it.", hint3, [.num(Double(l)), .op("+"), .num(Double(w)), .op("="), .box("H")], "H", half,
                                  [(A, "This step goes along the edge: one long side plus one short side.")], "Add the two sides you traced.", 4)
             let per = typed("All the way round is that twice. Type the perimeter.", "All the way around is that twice.",
@@ -689,7 +689,7 @@ public enum LinePlot4 {
             LessonStep(StepWords(say: say, hint: hint, action: "Check"),
                 answer: AnswerTask(prompt: [.box(box)], expected: [box: Double(want)], hint: hint, explain: hint,
                                    check: { v in verdict(Meas4.int(v, box)) }, byHand: true),
-                picture: ["at": Double(at)], onMiss: ["ring": 1])
+                picture: ["at": Double(at)], onMiss: ["ring": 1], hint2: ["spot": 1])
         }
         var out: [LessonStep] = []
         if s.make {
@@ -702,7 +702,7 @@ public enum LinePlot4 {
                                        if u != data[k] { return .wrong("That’s \(s.said(u)). This \(th.one) is \(s.said(data[k])).") }
                                        return k >= 2 ? .right : .soft("Now the next card.")
                                    }, byHand: true),
-                picture: ["at": 1], onMiss: ["ring": 1]))
+                picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1]))
         }
         let hi = s.hi, low = s.low, v = s.v
         switch s.ask {

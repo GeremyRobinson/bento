@@ -142,7 +142,7 @@ public enum Patterns {
                                    guard let len = v["x"] else { return .soft("Drag each hop out from the last number.") }
                                    return p.hopped(Int(len.rounded())).map { .wrong($0) } ?? .right
                                }, byHand: true),
-            picture: ["at": 1], onMiss: ["ring": 1]))
+            picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1]))
         // tap the odd ones: the box is 1 once they're all ringed, or 1000 + a number tapped that isn't one
         let thint = p.target == 1 ? "Odd numbers end in 1, 3, 5, 7 or 9." : "Even numbers end in 0, 2, 4, 6 or 8."
         steps.append(LessonStep(StepWords(say: "Tap the \(p.targetWord) numbers.", hint: thint, action: "Check"),
@@ -153,7 +153,7 @@ public enum Patterns {
                                    if x == 1 { return .right }
                                    return x >= 1000 ? .wrong(p.tapped(x - 1000)) : .soft("Tap the \(p.targetWord) numbers.")
                                }, byHand: true),
-            picture: ["at": 2], onMiss: ["ring": 1]))
+            picture: ["at": 2], onMiss: ["ring": 1], hint2: ["spot": 1]))
         // odd or even, tapped: the box is the choice (0 Odd, 1 Even)
         let want = Double(p.answer), ask = "Will the \(ord(p.k)) number be odd or even?"
         let chint = d % 2 == 1 ? "Odd, even, odd, even: it repeats every 2." : "Adding \(d) keeps the start’s oddness."
@@ -179,7 +179,7 @@ public enum Patterns {
                                    guard let c = v["x"] else { return .soft("Tap squares to add them.") }
                                    return Int(c.rounded()) == p.n4 ? .right : .wrong("Shape 4 has \(d) more than shape 3: \(p.n4).")
                                }, byHand: true),
-            picture: ["at": 1], onMiss: ["ring": 1]))
+            picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1]))
         // drag out copies: the box is the shape the row was let go at
         steps.append(LessonStep(StepWords(say: "How many squares will shape \(q) have? Drag out copies of the new squares.", hint: "Shape \(q) has \(q - 1) copies after shape 1.", action: "Check"),
             answer: AnswerTask(prompt: [.box("x")], expected: ["x": Double(q)], hint: "Shape \(q) has \(q - 1) copies after shape 1.",
@@ -188,7 +188,7 @@ public enum Patterns {
                                    guard let j = v["x"] else { return .soft("Drag out copies of the new squares.") }
                                    return p.copied(Int(j.rounded())).map { .wrong($0) } ?? .right
                                }, byHand: true),
-            picture: ["at": 2], onMiss: ["ring": 1]))
+            picture: ["at": 2], onMiss: ["ring": 1], hint2: ["spot": 1]))
         // write it, with the preview's slips
         let slips = BigNumbers.slips(Double(ans), [(Double(q * d), "\(q) × \(d) forgets that shape 1 starts with \(f)."),
                                                    (Double(ans - d), "\(ans - d) is shape \(q - 1). Shape \(q) has one more copy."),

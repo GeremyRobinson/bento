@@ -47,7 +47,8 @@ struct TenthsHundredthsLesson: PaperLesson {
         if held { live.reads(s.h("in") == 1 ? Dec4.hund(P.S) : Dec4.hund(b)) }
         // hints: the shaded tenths (ringed), where the hundredths go (dashed)
         if at == 1 && s.on("ring") { D6.ring(&pic, "ring", x: 0, y: 0, w: Double(a) * D6.col, h: G) }
-        if at == 2 && !held && s.on("target") { M5.target(&pic, "tg", x: Double(a) * D6.col, y: 0, w: G - Double(a) * D6.col, h: G) }
+        if at == 2 && !held && s.on("spot") { M5.target(&pic, "tg", x: Double(a) * D6.col, y: 0, w: G - Double(a) * D6.col, h: G) }
+        else if at == 2 && !held && s.on("target") { D6.ring(&pic, "tgw", x: 0, y: 0, w: G, h: G) }
 
         // the names under the wholes, + between; from the slide on they go into the record, which grows a step at a time
         let nA: [F4.Tok] = [.f("\(a)", "10")], nB: [F4.Tok] = [.f("\(b)", "100")]
