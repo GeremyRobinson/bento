@@ -139,6 +139,12 @@ enum PaperLessons {
         case "g4-angles": return AnglesAddLesson()
         case "g4-classify": return ClassifyLesson()
         case "g4-symmetry": return SymmetryLesson()
+        // 6th grade, Ratios and percents (3 Nov 2026)
+        case "g6-ratio": return EquivRatioLesson()
+        case "g6-ratiotable": return RatioTableLesson()
+        case "g6-rate": return UnitRateLesson()
+        case "g6-pctof": return PercentOfLesson()
+        case "g6-pctwhole": return PercentWholeLesson()
         default: return nil
         }
     }

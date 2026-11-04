@@ -116,6 +116,12 @@ extension Piece {
         case "g4-area": return [box(0, 0, 6, 4)]                                // the square meters inside
         case "g4-lineplot": return [box(6, 2, 2, 2)]                            // the tallest stack's top X
         // 4th grade, Lines and shapes (3 Nov)
+        // 6th grade, Ratios and percents (3 Nov)
+        case "g6-ratio": return [box(0, 0, 4, 6)]                               // the left side's rows
+        case "g6-ratiotable": return [box(4, 2, 1, 1), box(7, 0, 1, 1)]          // the two points
+        case "g6-rate": return [box(6, 0, 3, 1)]                                // the row copied
+        case "g6-pctof": return [box(0, 2, 3, 2)]                               // 30% shaded
+        case "g6-pctwhole": return [box(0, 2, 3, 2)]                            // the block known
         case "g4-lines", "g4-turns", "g4-protractor", "g4-angles", "g4-classify", "g4-symmetry":
             func q(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: at.x + x * c, y: at.y + y * c) }
             func pie(_ cx: Double, _ cy: Double, _ r: Double, _ a0: Double, _ a1: Double) -> [CGPoint] {
@@ -193,6 +199,18 @@ extension Piece {
         // a lesson still to come (G 3 Nov): an empty frame
         if !isTest && spec == nil { return [] }
         switch id {
+        case "g6-ratio": // two rectangles of cells growing together a row at a time: 11 by 6
+            return [box(0, 0, 4, 6), box(5, 0, 6, 6), line((2, 0), (2, 6)), line((7, 0), (7, 6)), line((9, 0), (9, 6))]
+                + [2.0, 4].flatMap { y in [line((0, y), (4, y)), line((5, y), (11, y))] }
+        case "g6-ratiotable": // the plane's corner, two points and the line through 0 and them: 11 by 6
+            return [line((0, 0), (0, 6), (11, 6)), line((0, 6), (9, 0)), box(4, 2, 1, 1), box(7, 0, 1, 1)]
+        case "g6-rate": // rows shared a column at a time, and one row copied down: 9 by 6
+            return [box(0, 0, 3, 4), line((1, 0), (1, 4)), line((2, 0), (2, 4))] + (1...3).map { y in line((0, Double(y)), (3, Double(y))) }
+                + [box(6, 0, 3, 6), line((7, 0), (7, 6)), line((8, 0), (8, 6))] + (1...5).map { y in line((6, Double(y)), (9, Double(y))) }
+        case "g6-pctof": // a 0%–100% scale over a bar cut into tenths: 10 by 4
+            return [line((0, 0), (0, 1), (10, 1), (10, 0)), line((5, 0.4), (5, 1)), box(0, 2, 10, 2)] + (1...9).map { x in line((Double(x), 2), (Double(x), 4)) }
+        case "g6-pctwhole": // a block, copies laid end to end with hops over them: 12 by 4
+            return [box(0, 2, 3, 2), box(3, 2, 3, 2), box(6, 2, 3, 2), box(9, 2, 3, 2), arc(1.5, 4.5, 2, 1.5), arc(4.5, 7.5, 2, 1.5), arc(7.5, 10.5, 2, 1.5)]
         case "g4-tentimes": // a disk opening into a ten-frame: 11 by 4
             let disk = (0...24).map { k -> CGPoint in let a = Double(k) / 24 * 2 * .pi; return P(1 + cos(a), 2 + sin(a)) }
             return [disk, line((3, 2), (5, 2)), line((4.5, 1.5), (5, 2), (4.5, 2.5)), box(6, 1, 5, 2), line((6, 2), (11, 2))]
