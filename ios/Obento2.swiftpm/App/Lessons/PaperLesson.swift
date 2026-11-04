@@ -266,6 +266,7 @@ enum PaperLessons {
         case "g1-measure": return Cubes1Lesson()
         case "g1-time": return Time1Lesson()
         case "g1-picgraph": return PicGraph1Lesson()
+        case "g1-tally": return Tally1Lesson()
         default: return nil
         }
     }
