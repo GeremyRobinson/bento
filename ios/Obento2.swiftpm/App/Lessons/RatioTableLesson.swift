@@ -31,15 +31,15 @@ struct RatioTableLesson: PaperLesson {
         if done { return [.w(P.oneTakes), .t(P.unitRate, .chapter), .w("minutes")] }
         return [.w(P.oneTakes)] + (P.a == 1 ? [.box("w", cells: 1)] : [.box("w", cells: 1), .box("n", cells: 1), .op("/"), .box("d", cells: 1)]) + [.w("minutes")]
     }
-    /// Check sits two squares past the longer line, on the row of the line being written.
-    private func checkX(_ P: RatioTable.Parts) -> Double {
-        (sx(P) + max(M7.width(pastLine(P, done: false)), M7.width(unitLine(P, done: false))) + 2).rounded(.up)
+    /// Check sits two squares past the line being written, on its row.
+    private func checkX(_ P: RatioTable.Parts, unit: Bool) -> Double {
+        (sx(P) + M7.width(unit ? unitLine(P, done: false) : pastLine(P, done: false)) + 2).rounded(.up)
     }
     func blocksAt(_ s: PaperState) -> CGPoint? {
         let P = RatioTable.Parts(s.numbers), at = stage(s), top = recordRow(s.numbers) ?? 28
         switch at {
-        case 4: return CGPoint(x: checkX(P), y: top)
-        case 6, 7: return CGPoint(x: checkX(P), y: top + 3)
+        case 4: return CGPoint(x: checkX(P, unit: false), y: top)
+        case 6, 7: return CGPoint(x: checkX(P, unit: true), y: top + 3)
         case 9: return CGPoint(x: 61, y: 2)
         case 10: return CGPoint(x: 40, y: top)
         default: return nil
@@ -68,7 +68,7 @@ struct RatioTableLesson: PaperLesson {
             if let y = whole(h.v), y > 0 { live.label("lity", "\(y)", R6.lit, .left, edge: pl.ox - 0.4, along: pl.at(0, h.v).y) }
         }
         if P.compares { drawCompare(s, P, pl, at, held, &pic, &live, &rec) } else { drawTable(s, P, pl, at, held, &pic, &live, &rec) }
-        let right = max(checkX(P) + 10, 70)
+        let right = max(checkX(P, unit: true) + 10, 70)
         return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: rec.boxes, extent: pic.R(0, 0, right, 1))
     }
 
@@ -116,7 +116,7 @@ struct RatioTableLesson: PaperLesson {
         // a hint: the column to work on ringed; a second miss, its point on the plane (or what the box holds)
         let col: Int? = at == 1 ? (mask & 1 == 0 ? 1 : 2) : at == 2 ? P.tL : at == 3 ? P.tM : at == 4 ? P.tP : at == 5 || at == 6 ? 1 : nil
         if let t = col, let c = cols.firstIndex(of: t), s.on("ring") {
-            R6.ring(&rec, "ring\(t)", x: Self.header + Self.cellW * Double(c), y: 0, w: Self.cellW, h: 2 * H)
+            rec.fill("ring\(t)", col: Self.header + Self.cellW * Double(c), row: 0, w: Self.cellW, h: 2 * H, .tint(0.18))
         }
         if s.on("spot") {
             switch at {
@@ -173,15 +173,15 @@ struct RatioTableLesson: PaperLesson {
             }
             let ro = passed.isEmpty ? "\(Ratio6.half(v)) \(P.nm(v))"
                 : passed.enumerated().map { $0.offset == 0 ? "\($0.element.name) \(P.at($0.element)) \(P.nm(Double(P.at($0.element))))" : "\($0.element.name) \(P.at($0.element))" }.joined(separator: ", ")
-            let hv = pl.at(X, v), ry = min(hv.y, pl.at(X, Double(P.top)).y) + 1.3
+            let hv = pl.at(X, v), ry = min(hv.y, pl.at(X, Double(P.top)).y) - 1.3
             if at == 8 {
                 R6.handle(&live, "vh", hv.x, hv.y, held: s.grabbed)
-                if s.grabbed || v > 0 { live.word("vro", ro, at: hv.x + 1.2, ry, R6.lit, anchor: UnitPoint(x: 0, y: 0.5)) }
+                if s.grabbed || v > 0 { live.word("vro", ro, at: hv.x - 1.2, ry, R6.lit, anchor: UnitPoint(x: 1, y: 0.5)) }
                 if s.grabbed { live.reads(ro) }
                 if s.on("ring") { R6.ring(&pic, "ringv", x: t0.x - 1, y: t0.y, w: 2, h: b0.y - t0.y) }
                 if s.on("spot") { let c = pl.at(X, Double(P.top)); pic.circle("spot", at: c.x, c.y, radius: 1.2, .chapter, dashed: true) }
             } else {
-                pic.word("vro", ro, at: hv.x + 1.2, ry, R6.lit, anchor: UnitPoint(x: 0, y: 0.5))
+                pic.word("vro", ro, at: hv.x - 1.2, ry, R6.lit, anchor: UnitPoint(x: 1, y: 0.5))
             }
             // a hint while picking: where each line crosses, ringed
             if at == 9, s.on("ring") { for t in tables { let c = pl.at(X, Double(P.at(t))); pic.circle("pr\(t.name)", at: c.x, c.y, radius: 1, .chapter, dashed: true) } }
@@ -189,7 +189,7 @@ struct RatioTableLesson: PaperLesson {
         // a hint while placing: the table whose point is missing ringed; a second miss, its point
         if at == 1 {
             let i = mask & 1 == 0 ? 0 : 1
-            if s.on("ring") { R6.ring(&rec, "ringt\(i)", x: Double(i) * 20, y: 0, w: 16, h: 2 * Self.rowH) }
+            if s.on("ring") { rec.fill("ringt\(i)", col: Double(i) * 20 + 8, row: 0, w: 4, h: 2 * Self.rowH, .tint(0.18)) }
             if s.on("spot") { let t = tables[i], p = pl.at(Double(t.b), Double(t.a)); pic.circle("spot", at: p.x, p.y, radius: 1.2, .chapter, dashed: true) }
         }
         // the two tables: their first two columns

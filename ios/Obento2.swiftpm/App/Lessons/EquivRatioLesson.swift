@@ -57,9 +57,9 @@ struct EquivRatioLesson: PaperLesson {
                 pic.label("rva\(j)\(left)", left, R6.lit, .right, edge: x0 + C * Double(P.a) + 0.3, along: y)
                 pic.label("rvb\(j)", "\(P.b)", R6.lit, .right, edge: re + 0.3, along: y)
             }
-            if at == 2 && s.on("ring") { R6.ring(&pic, "ringL", x: x0, y: y0, w: C * Double(P.a), h: C * Double(P.k)) }
+            if at == 2 && s.on("ring") { R6.ring(&pic, "ringL", x: x0 + C * Double(P.a) / 2 - 1.5, y: bot(P, P.k) + 0.5, w: 3, h: 2) }
             let ans: M7.Tok = done ? .n(P.left, .chapter) : .box("x", cells: String(P.left).count)
-            M7.row(&rec, "rec", [.n(P.a), .op(":"), .n(P.b), .op("="), .n(P.a), .op("×"), .n(P.k), .op(":"), .n(P.b), .op("×"), .n(P.k), .op("="), ans, .op(":"), .n(P.total)], x: 0, line: 1)
+            M7.row(&rec, "rec", [.n(P.a), .op(" : "), .n(P.b), .op("="), .n(P.a), .op("×"), .n(P.k), .op(" : "), .n(P.b), .op("×"), .n(P.k), .op("="), ans, .op(" : "), .n(P.total)], x: 0, line: 1)
         }
         let reach = bot(P, P.maxRows) + 2
         return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: rec.boxes,
@@ -89,7 +89,7 @@ struct EquivRatioLesson: PaperLesson {
     func wrongMove(_ s: PaperState) -> HandMove? {
         guard stage(s) == 1 else { return nil }
         let P = EquivRatio.Parts(s.numbers), r = P.k > 2 ? P.k - 1 : P.k + 1
-        return HandMove(hand: ["r": Double(r)], missHand: nil, set: [("x", Double(r))], check: true)
+        return HandMove(hand: ["r": Double(r)], missHand: r > P.k ? ["r": 1] : nil, set: [("x", Double(r))], check: true)
     }
 
     func wrongTyping(_ s: PaperState) -> [String: Double]? {

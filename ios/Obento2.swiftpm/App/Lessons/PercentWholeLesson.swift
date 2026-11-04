@@ -42,7 +42,7 @@ struct PercentWholeLesson: PaperLesson {
             pic.word("ro\(c)", ro, at: x0, y0 + bh + 3, R6.lit, anchor: UnitPoint(x: 0, y: 0.5))
             if s.grabbed { live.reads(ro) }
             // a hint: the bar's end ringed; a second miss, where each block of the 100% ends
-            if s.on("ring") { R6.ring(&pic, "ring", x: x0 + bw - 1, y: y0, w: 2, h: bh) }
+            if s.on("ring") { R6.ring(&pic, "ring", x: x0 + bw + 0.3, y: y0, w: 2, h: bh) }
             if s.on("spot") { for j in 1..<P.k { pic.line("spot\(j)", [(x0 + Double(j) * pw, y0 - 1), (x0 + Double(j) * pw, y0)], .chapter) } }
         }
         if at == 2 && s.on("ring") { R6.ring(&pic, "ring", x: x0, y: y0, w: bw, h: bh) }
@@ -86,7 +86,7 @@ struct PercentWholeLesson: PaperLesson {
     func wrongMove(_ s: PaperState) -> HandMove? {
         guard stage(s) == 1 else { return nil }
         let P = PercentWhole.Parts(s.numbers), n = P.k > 2 ? P.k - 1 : P.k + 1
-        return HandMove(hand: ["c": Double(n)], missHand: nil, set: [("x", Double(n))], check: true)
+        return HandMove(hand: ["c": Double(n)], missHand: n > P.k ? ["c": 1] : nil, set: [("x", Double(n))], check: true)
     }
 
     func wrongTyping(_ s: PaperState) -> [String: Double]? {
