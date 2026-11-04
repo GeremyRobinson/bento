@@ -54,7 +54,7 @@ public enum Reminder: String, Codable, CaseIterable, Sendable {
     }
 }
 
-/// Kindergarten to 12th grade, as the grade blocks name them. A grade with lessons built is live (4th and 5th, 3 Nov);
+/// Kindergarten to 12th grade, as the grade blocks name them. A grade with lessons built is live (4th, 5th and 6th, 3 Nov);
 /// the others are dead blocks that say they're coming soon (Curriculum has no map for them yet).
 public enum Grades {
     public static let all = Array(0...12)

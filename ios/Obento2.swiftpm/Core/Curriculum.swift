@@ -64,9 +64,36 @@ public enum Curriculum {
             MapLesson("g4-angles", "Angles add up"), MapLesson("g4-classify", "Sorting by sides and angles"), MapLesson("g4-symmetry", "Lines of symmetry")]),
     ]
 
+    /// 6th grade (design/grade6.md): 36 lessons in 8 chapters, in teaching order. Chapter 1 is built (3 Nov); the map
+    /// shows only built chapters (call of 3 Nov), so the rest wait off it.
+    static let grade6: [MapChapter] = [
+        MapChapter("g6-ratios", "Ratios and percents", colour: "fractions", [
+            MapLesson("g6-ratio", "Equivalent ratios"), MapLesson("g6-ratiotable", "Ratio tables"), MapLesson("g6-rate", "Unit rates"),
+            MapLesson("g6-pctof", "Percent of a number"), MapLesson("g6-pctwhole", "Find the whole")]),
+        MapChapter("g6-factors", "Factors and fractions", colour: "fractions", [
+            MapLesson("g6-lcm", "Least common multiple"), MapLesson("g6-gcf", "Factor out the GCF"), MapLesson("g6-divide", "Dividing fractions")]),
+        MapChapter("g6-decimals", "Long division and decimals", colour: "decimals", [
+            MapLesson("g6-longdiv", "Long division"), MapLesson("g6-decaddsub", "Adding and subtracting decimals"),
+            MapLesson("g6-decmult", "Multiplying decimals"), MapLesson("g6-decdiv", "Dividing decimals")]),
+        MapChapter("g6-negatives", "Negative numbers", colour: "whole", [
+            MapLesson("g6-negatives", "Negative numbers"), MapLesson("g6-compare", "Compare and order"), MapLesson("g6-numline", "Distance on a number line"),
+            MapLesson("g6-quadrants", "Points in four quadrants"), MapLesson("g6-planeshapes", "Shapes on the plane")]),
+        MapChapter("g6-expressions", "Expressions", colour: "whole", [
+            MapLesson("g6-expo", "Exponents and order"), MapLesson("g6-write", "Write expressions"), MapLesson("g6-eval", "Evaluate expressions"),
+            MapLesson("g6-equiv", "Equivalent expressions")]),
+        MapChapter("g6-equations", "Equations", colour: "whole", [
+            MapLesson("g6-onestep", "One-step equations"), MapLesson("g6-ineq", "Inequalities"), MapLesson("g6-depend", "Two quantities")]),
+        MapChapter("g6-area", "Area and volume", colour: "geometry", [
+            MapLesson("g6-para", "Area of a parallelogram"), MapLesson("g6-tri", "Area of a triangle"), MapLesson("g6-trap", "Area of a trapezoid"),
+            MapLesson("g6-poly", "Area of a polygon"), MapLesson("g6-nets", "Nets and surface area"), MapLesson("g6-fracvol", "Volume with fraction edges")]),
+        MapChapter("g6-data", "Data", colour: "measurement", [
+            MapLesson("g6-dotplot", "Dot plots"), MapLesson("g6-histogram", "Histograms"), MapLesson("g6-mean", "Find the mean"),
+            MapLesson("g6-mad", "Mean absolute deviation"), MapLesson("g6-median", "Find the median"), MapLesson("g6-boxplot", "Box plots")]),
+    ]
+
     /// A grade's chapters, in order (none for a grade with no map yet).
     public static func chapters(_ grade: Int) -> [MapChapter] {
-        switch grade { case 4: grade4; case 5: grade5; default: [] }
+        switch grade { case 4: grade4; case 5: grade5; case 6: grade6; default: [] }
     }
     /// A lesson is built when the app has its spec.
     public static func built(_ id: String) -> Bool { Lessons.spec(id) != nil }
