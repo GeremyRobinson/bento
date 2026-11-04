@@ -34,7 +34,7 @@ struct CountHundredLesson: PaperLesson {
             for c in 0..<10 {
                 let v = 10 * r + c + 1, x = 5 * Double(c)
                 func edge(_ a: (Double, Double), _ b: (Double, Double), _ other: Int?) {
-                    if v == gap || other == gap { return }
+                    if let g = gap, v == g || other == g { return }
                     segs.append((pic.P(a.0, a.1), pic.P(b.0, b.1)))
                 }
                 edge((x, y), (x + 5, y), r > 0 ? v - 10 : nil)
@@ -60,7 +60,7 @@ struct CountHundredLesson: PaperLesson {
                 let counted = P.on && v > P.s && v <= P.s + w, lit = done && c == 9
                 let shown = P.on ? v <= P.s + w || lit : v != gap
                 let mine = counted || lit || (!P.on && v == P.n)
-                if counted || (!P.on && v == P.n && done) { pic.fill("cf\(v)", col: b.x, row: b.y, w: 5, h: 5, KK.cube) }
+                if (counted || (!P.on && v == P.n && done)) && !lit { pic.fill("cf\(v)", col: b.x, row: b.y, w: 5, h: 5, KK.cube) }
                 if lit { pic.sketch.delay = 0.9 + 0.28 * Double(r) }
                 if shown { pic.word("cn\(v)\(mine ? "c" : "")", "\(v)", at: b.x + 2.5, b.y + 2.5, mine ? KT.smallLit : KT.small) }
                 pic.sketch.delay = 0
