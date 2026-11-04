@@ -28,6 +28,7 @@ extension WorkProblem {
     func grab(_ p: Point) -> Bool {
         guard !busy, let held = hands?.grab?(squares(p)) else { return false }
         onTouch?()
+        handBeforeGrab = hand
         hand = held; dragging = true; handAt = PaperClock.now
         // what a miss said goes as the child tries again
         if message != nil { message = nil }
@@ -47,6 +48,15 @@ extension WorkProblem {
         guard dragging else { return }
         dragging = false
         if let r = hands?.release { apply(r(hand)) } else { onChange?() }
+    }
+
+    /// The finger lifted having barely moved (PaperModel.slip): no move was made; the hand is as it was before it took
+    /// hold, and the touch is a tap instead.
+    func cancelGrab() {
+        guard dragging else { return }
+        dragging = false
+        hand = handBeforeGrab
+        onChange?()
     }
 
     /// A drag is under way: the bar shows its readout (the calm pill, G 26 Oct).

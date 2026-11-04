@@ -559,6 +559,8 @@ public enum Lessons {
         Facts2.spec, Regroup2.spec, SubRegroup2.spec, AddFour2.spec, Story2.spec, TwoStep2.spec,
         // 2nd grade, Numbers to 1000 (4 Nov 2026)
         Hundreds2.spec, Skip2.spec, Compare2.spec, Within2.spec,
+        // 2nd grade, Equal groups (4 Nov 2026)
+        EvenOdd2.spec, Arrays2.spec, Squares2.spec,
     ]
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }

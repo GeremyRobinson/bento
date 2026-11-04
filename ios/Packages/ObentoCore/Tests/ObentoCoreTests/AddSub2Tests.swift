@@ -21,7 +21,7 @@ final class AddSub2Tests: XCTestCase {
         XCTAssertEqual(g2.count, 7); XCTAssertEqual(g2.flatMap(\.lessons).count, 27)
         let ch = g2[0]
         XCTAssertEqual(ch.title, "Adding and subtracting to 100"); XCTAssertEqual(ch.colour, "whole")
-        XCTAssertTrue(Curriculum.built(ch)); XCTAssertFalse(Curriculum.built(g2[2]))
+        XCTAssertTrue(Curriculum.built(ch)); XCTAssertFalse(Curriculum.built(g2[3]))
         for l in ch.lessons { XCTAssertEqual(Lessons.spec(l.id)?.title, l.name); XCTAssertTrue(Curriculum.voiced(l.id)); XCTAssertEqual(Curriculum.grade(of: l.id), 2) }
         XCTAssertEqual(Curriculum.gradeTest(2), "test-grade-2")
         XCTAssertEqual(Spoken.text("Put the ? on what we don't know."), "Put the question mark on what we don't know.")

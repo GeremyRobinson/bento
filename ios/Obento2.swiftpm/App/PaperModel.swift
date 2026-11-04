@@ -451,6 +451,7 @@ final class PaperModel {
         let p = camera(at: PaperClock.now).toPaper(s), now = PaperClock.now
         if !pressing {
             pressing = true
+
             // a finger on coasting paper stops it, as a hand on a sliding sheet does
             caught = flight?.curve == .coast
             if caught { stop() }
@@ -466,9 +467,31 @@ final class PaperModel {
         if grownUp.holding { grownUp.letGo(at: PaperClock.now) }
     }
 
+    /// The last tap a finger made (real time, screen point): one touch's tap and its slipped drag both end together, and
+    /// count once, whichever the gestures report first.
+    private var lastFingerTap: (t: Double, at: Point)?
+    private func takeTap(_ p: Point) -> Bool {
+        let now = Date().timeIntervalSinceReferenceDate
+        if let l = lastFingerTap, now - l.t < 0.12, hypot(p.x - l.at.x, p.y - l.at.y) < 2 * Self.slip { return false }
+        lastFingerTap = (now, p)
+        return true
+    }
+    /// Where this touch's drag started (a slipped tap is a tap there).
+    private var dragFrom: Point?
+    /// A finger slipping less than this (screen points) as it taps is still a tap (4 Nov: a child's quick taps slide a
+    /// few points; such a tap started a drag, so it panned the paper and was lost, or, on the piece the hand could grab,
+    /// counted twice, the tap and the release both; and its pan coasted, so the next tap only stopped the paper).
+    static let slip = 12.0
+    /// The system's tap: once per touch (a slipped tap may have been taken as a tap at its drag's end).
+    func fingerTap(at s: Point) {
+        guard takeTap(s) else { return }
+        tap(at: s)
+    }
+
     /// The camera was on its way to frame the step when the hand took hold (it held still under the finger).
     private var framingHeld = false
     func dragStart(at s: Point) {
+        dragFrom = s
         // a finger holding the grown-ups' square keeps the paper still
         if place == .grownUp, grownUp.holding { handDrag = true; return }
         guard !leaving, let b = bars, b.mode == .work, let m = b.current else { handDrag = false; return }
@@ -478,7 +501,15 @@ final class PaperModel {
     }
     func dragMove(to s: Point) { guard handDrag else { return }; bars?.current?.drag(to: paperPoint(s)) }
     /// The finger lifted after a drag, moving at `velocity` (points a second): a pan's paper coasts on.
-    func dragEnd(velocity: Point = Point(0, 0)) {
+    func dragEnd(velocity: Point = Point(0, 0), moved: Double = .infinity) {
+        // a tap that slipped a little: in a problem, the tap it was (once), not a drag; the paper doesn't coast
+        if moved < Self.slip, let from = dragFrom, let b = bars, b.mode == .work, place != .grownUp {
+            if handDrag { (b.current as? WorkProblem)?.cancelGrab(); handDrag = false; framingHeld = false }
+            dragFrom = nil
+            if takeTap(from) { tap(at: from) }
+            return
+        }
+        dragFrom = nil
         guard handDrag else {
             if !panTilted, !instant, let c = CameraFlight.coast(from: resting, velocity: velocity, start: PaperClock.now) { flight = c }
             return
@@ -882,3 +913,4 @@ enum PaperClock {
     /// Screenshots only (`-freeze`): the paper held still at this moment, so a slow screenshot still catches it.
     static var frozen: Double?
 }
+

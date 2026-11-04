@@ -291,6 +291,9 @@ enum PaperLessons {
         case "g2-skip": return Skip2Lesson()
         case "g2-compare": return Compare2Lesson()
         case "g2-within1000": return Within2Lesson()
+        case "g2-evenodd": return EvenOdd2Lesson()
+        case "g2-arrays": return Arrays2Lesson()
+        case "g2-squares": return Squares2Lesson()
         default: return nil
         }
     }

@@ -168,7 +168,8 @@ struct PaperScreen: View {
                     else { model.pan(v.translation.width - lastDrag.width, v.translation.height - lastDrag.height) }
                     lastDrag = v.translation }
                 .onEnded { v in
-                    model.dragEnd(velocity: pinched ? .init(0, 0) : .init(v.velocity.width, v.velocity.height))
+                    model.dragEnd(velocity: pinched ? .init(0, 0) : .init(v.velocity.width, v.velocity.height),
+                                  moved: pinched ? .infinity : hypot(v.translation.width, v.translation.height))
                     lastDrag = .zero; dragging = false; pinched = false })
             .simultaneousGesture(MagnifyGesture()
                 .onChanged { v in
@@ -177,7 +178,7 @@ struct PaperScreen: View {
                     guard !model.handDrag else { lastPinch = v.magnification; return }
                     model.zoom(by: v.magnification / lastPinch, at: .init(v.startLocation.x, v.startLocation.y)); lastPinch = v.magnification }
                 .onEnded { _ in lastPinch = 1; pinching = false })
-            .simultaneousGesture(SpatialTapGesture().onEnded { v in model.tap(at: .init(v.location.x, v.location.y)) })
+            .simultaneousGesture(SpatialTapGesture().onEnded { v in model.fingerTap(at: .init(v.location.x, v.location.y)) })
             // a finger down, from the moment it touches (a tap or a drag is only known later): the grown-ups' hold
             .simultaneousGesture(DragGesture(minimumDistance: 0)
                 .onChanged { v in model.press(at: .init(v.location.x, v.location.y)) }
