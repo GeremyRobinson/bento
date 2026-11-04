@@ -61,3 +61,13 @@ git history only). Claude leads the design (G, 20 Oct). `grade5.md` has every 5t
 | Tap the part that goes first | order |
 | Cover the floor, build the layers (3D) | volume |
 | Write (a box in the record) | every lesson's last number |
+
+## Calls made 3 Nov 2026 (G: "you make the calls on those")
+
+Every lesson built from now on (and the earlier ones when next touched) follows these:
+
+1. **Numbers in a line are written tight.** In a record line, a readout, a label or a sentence, a number is one word ("10,935", "16", "$27", "0.51", "+20%", "a(n)"), right-aligned in the squares its digits would take so it stays on the grid. Only **column working** (a vertical sum, long division, a place chart) keeps one digit per 2 squares, because there the places must line up.
+2. **Coins keep their real colours**, faintly: the penny copper, the others silver. Telling coins apart is the maths here.
+3. **A grade's map shows only the chapters that are built.** Unbuilt chapters (and the grade test, until every chapter is built) stay off the map; the map grows as chapters land. No "Coming soon" cards.
+4. **Story numbers divide evenly into whole squares.** A sharing story's generator only picks amounts whose parts are whole squares, so no blank stretch is ever left.
+5. Kept as they are: K Count to 100's whole-chart "see" moment at 66% (the one exception to 75%); K Teens and tens in the pink of 1st grade's Numbers to 120; the tracing band; Prime or composite leaving the last try's rows; each grade's first chapter free; a prime mark (′) drawn from a serif face so it doesn't read as an apostrophe; where a grade's design gives unequal axes for big values, follow the design.
