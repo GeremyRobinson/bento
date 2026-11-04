@@ -28,7 +28,6 @@ struct FracTimesWholeLesson: PaperLesson {
         /// What's still to tap: the full bars not closed, then the last bar when it changes its cuts.
         var targets: [Int] { (0..<P.full).filter { !closed($0) } + (P.recut && !recutDone ? [P.full] : []) }
     }
-    private func lastY(_ P: FracTimesWhole.Parts) -> Double { Double(max(5 * P.W, 5 * P.bars)) - 1 }
 
     func draw(_ s: PaperState) -> PaperDrawing {
         let P = FracTimesWhole.Parts(s.numbers), at = stage(s), L = Lay(P: P, at: at, hand: s.hand), d = P.d
@@ -90,8 +89,7 @@ struct FracTimesWholeLesson: PaperLesson {
             }
             F4.row(&rec, "rec", toks, x: 0, line: 2)
         }
-        return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: rec.boxes,
-                            extent: pic.R(0, 0, AX + L.Wb, lastY(P) + 1))
+        return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: rec.boxes)
     }
 
     /// Where the groups were, once they're emptied into the answer bars: the record from the top, the blocks under it.

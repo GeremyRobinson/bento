@@ -18,9 +18,10 @@ struct MultiplyBigLesson: PaperLesson {
     /// 2-square cells for three digits copied up to 3 times; more rows (or four digits) take 1-square cells, so the
     /// chart and its record are seen at 75% or more (G 3 Nov: the camera rarely goes under 75%; at 2-square cells
     /// 179 × 9 was seen at 57%).
-    /// Past 7 rows the names sit a row closer to the disks, and the record a row closer to the counts (9 rows of 5,621
+    static func chart(_ P: MultiplyBig.Parts) -> PlaceChart { PlaceChart(n: P.D, c: P.D == 3 && P.m <= 3 ? 2 : 1, pr: 2, x0: x0, y0: y0) }
+    /// Past 7 rows the record sits a row closer to the counts and its sum's rule right under the parts (9 rows of 5,621
     /// told as a story were seen at 73%).
-    static func chart(_ P: MultiplyBig.Parts) -> PlaceChart { PlaceChart(n: P.D, c: P.D == 3 && P.m <= 3 ? 2 : 1, pr: 2, x0: x0, y0: P.m >= 8 ? y0 - 1 : y0) }
+    static func tall(_ P: MultiplyBig.Parts) -> Bool { P.m >= 8 }
     private func rows(_ s: PaperState, _ P: MultiplyBig.Parts) -> Int { stage(s) >= 2 ? P.m : Int((s.h("rows") ?? 1).rounded()) }
     private func handleY(_ ch: PlaceChart, _ rows: Int) -> Double { ch.y0 + Double(rows) * ch.c + 1 }
 
@@ -76,9 +77,10 @@ struct MultiplyBigLesson: PaperLesson {
             if at >= 3 {
                 let last = 2 + 2 * Double(P.D - 1)
                 rec.word("plus", "+", at: 1.5, last, Record.maths)
-                rec.rule("rule", from: 0, to: xr, row: last + 2)
-                if at == 3 { rec.answerBox("x", right: xr, mid: last + 4, per: 2, cells: String(P.total).count, commas: true) }
-                else { Record.number(&rec, "tot", P.total, right: xr, row: last + 4, .chapter) }
+                let tall = Self.tall(P), ruleRow = last + (tall ? 1 : 2), totalRow = last + (tall ? 3 : 4)
+                rec.rule("rule", from: 0, to: xr, row: ruleRow)
+                if at == 3 { rec.answerBox("x", right: xr, mid: totalRow, per: 2, cells: String(P.total).count, commas: true) }
+                else { Record.number(&rec, "tot", P.total, right: xr, row: totalRow, .chapter) }
             }
             boxes = rec.boxes
         }
@@ -90,7 +92,7 @@ struct MultiplyBigLesson: PaperLesson {
     /// The record goes under the copies as they end up (m rows), not under the room the handle had.
     func recordRow(_ n: Numbers) -> Double? {
         let P = MultiplyBig.Parts(n), ch = Self.chart(P)
-        return ch.y0 + Double(P.m) * ch.c + 1 + (ch.c == 2 ? 4 : P.m >= 8 ? 1 : 2)
+        return ch.y0 + Double(P.m) * ch.c + 1 + (ch.c == 2 ? 4 : Self.tall(P) ? 1 : 2)
     }
     /// Every slip fits one row over the chart (a second row cost four-digit problems their 75%).
     func messageRows(_ n: Numbers) -> Int { 1 }

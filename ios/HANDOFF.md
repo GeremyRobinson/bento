@@ -46,8 +46,21 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
 - G's calls of 3 Nov (design/README.md) applied to 4th grade: numbers in a record line, list or Rounding's record are
   written tight (`Record.tight`, width `Record.width(.n)`), column working keeps two squares a digit; the map lays out
   only built chapters, the grade test once all are; Story problems' sharing amounts cut into whole squares.
-  Measured now and left: Multiply big numbers 73% (9 rows of 5,621), Story problems 73% (a take-away at i0),
-  Two-digit times two-digit 41% at its k = 2 scale (its words are drawn twice as big there).
+  Two-digit times two-digit stays at 41% at its k = 2 scale (its words are drawn twice as big there).
+- 4th grade chapter 5, Mixed numbers, is built (3 Nov; Core: `MixedNumbers4` (`Mixed4`, `AddMixed`, `SubtractMixed`,
+  `FracTimesWhole`); App: `AddMixedLesson`, `SubtractMixedLesson`, `FracTimesWholeLesson`, their shared `MixedKit5` (`M5`
+  bars half as long, whole bars 2 tall; `GroupSlide`, a group slid onto a target)). To keep every problem at 75% the
+  record sits in the column the hands emptied: under the right number's column (adding, subtracting; the names go into
+  it once the pieces are in), or where the groups were (times a whole number); `PaperLesson.blocksLeft` puts the blocks
+  under it, `blocksAt` puts a story's choices in a column beside a tall picture. Least zooms: 81%, 75% (a story's pick),
+  78%. Subtracting with too few pieces: the slide stops (a step, not a miss) and the next says "2 fifths can't take away
+  4. Open a whole. Tap a whole bar."; a whole tapped first opens it straight away.
+- The refined call 1 (3 Nov): a line's numbers and signs take the fewest whole squares they fit, centred, so gaps are
+  even (`Record.width`, `Record.opWidth`, `F4.Tok`); a number typed into a box in a line is written tight, right-aligned
+  with room for the cursor, the box the fewest whole squares that fit (`WorkBox.word`, `Record.boxWidth`). Boxes in
+  column working (and 5th grade's, whose lines are written two squares a digit) keep a digit to a cell.
+- Chapter 2 zooms (3 Nov): Multiply big numbers past 7 rows puts its record a row closer and the sum's rule right under
+  the parts (73% → 76%); Story problems with narrow bars put the record beside them (73% → 76%).
 
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
