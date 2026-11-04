@@ -191,7 +191,7 @@ final class Length1Tests: XCTestCase {
         XCTAssertEqual(move(&l, ["k": 11]), .notYet("That's the Bananas row. Find the Apples row."))
         XCTAssertEqual(move(&l, ["k": 12]), .moved(2))
         XCTAssertEqual(move(&l, ["x": 4]), .notYet("That's the Bananas row. Find the Apples row."))
-        XCTAssertEqual(move(&l, ["x": 4 + 0]), .notYet("That's the Bananas row. Find the Apples row."))
+        XCTAssertEqual(move(&l, ["x": Double(4 + 0)]), .notYet("That's the Bananas row. Find the Apples row."))
         XCTAssertEqual(move(&l, ["x": 14]), .notYet("The line across is the 5th mark of its bundle, not an extra one."))
         XCTAssertEqual(move(&l, ["x": 11]), .notYet("Count the bundles by 5s first: 5, 10. Then count on the single marks."))
         XCTAssertEqual(move(&l, ["x": 12]), .moved(3))

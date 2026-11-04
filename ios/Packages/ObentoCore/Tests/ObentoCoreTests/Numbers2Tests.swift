@@ -129,7 +129,7 @@ final class Numbers2Tests: XCTestCase {
         XCTAssertEqual(move(&l, ["s0": 5]), .notYet("They aren't between 500 and 600."))
         XCTAssertEqual(move(&l, ["s0": 4]), .moved(1))
         XCTAssertEqual(l.words.say, "Tap the ten each one is in.")
-        XCTAssertEqual(move(&l, ["p": -1 - 4]), .notYet("Neither number is between 440 and 450."))
+        XCTAssertEqual(move(&l, ["p": Double(-1 - 4)]), .notYet("Neither number is between 440 and 450."))
         XCTAssertEqual(move(&l, ["p": 1]), .moved(2))
         XCTAssertEqual(move(&l, ["g": 2]), .notYet("Look at the tens: 2 and 6. The open side faces the bigger one."))
         XCTAssertEqual(move(&l, ["g": 1]), .notYet("Look at the tens: 2 and 6. They're not the same."))

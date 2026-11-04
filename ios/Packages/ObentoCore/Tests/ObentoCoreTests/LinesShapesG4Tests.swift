@@ -260,7 +260,7 @@ final class LinesShapesG4Tests: XCTestCase {
         _ = l.go()
         XCTAssertEqual(move(&l, ["x": 2]), .notYet("There’s another square corner."))
         XCTAssertEqual(move(&l, ["x": 4]), .moved(2))
-        XCTAssertEqual(move(&l, ["y": 100 + 1]), .notYet("Not parallel: one goes straight across, the other straight up."))
+        XCTAssertEqual(move(&l, ["y": Double(100 + 1)]), .notYet("Not parallel: one goes straight across, the other straight up."))
         XCTAssertEqual(move(&l, ["y": 1]), .notYet("There’s another parallel pair."))
         XCTAssertEqual(move(&l, ["y": 0]), .notYet("Look again: two of its sides go the same steps."))
         XCTAssertEqual(move(&l, ["y": 2]), .moved(3))

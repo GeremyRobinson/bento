@@ -146,7 +146,7 @@ final class DecimalsG6Tests: XCTestCase {
         XCTAssertEqual(l.words.say, "Slide them in.")
         XCTAssertEqual(move(&l, ["x": 1]), .moved(3))
         XCTAssertEqual(l.words.say, "Tap ten tenths: they close into a one.")
-        XCTAssertEqual(move(&l, ["x": 1000 + 100 * 3 + 5]), .notYet("Only 5 ones: it takes ten to close."))
+        XCTAssertEqual(move(&l, ["x": Double(1000 + 100 * 3 + 5)]), .notYet("Only 5 ones: it takes ten to close."))
         XCTAssertEqual(move(&l, ["x": 1]), .moved(4))
         XCTAssertEqual(l.words.say, "Write the total under the line.")
         XCTAssertEqual(typeAll(&l, [("t", "15.15")]), .notYet("Each ten you closed is one more in the next place."))

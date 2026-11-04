@@ -214,7 +214,11 @@ final class AddDecimalsTests: XCTestCase {
                 XCTAssertFalse(values.contains { abs($0 - s.sum) < 1e-9 }, "\(n)")
                 XCTAssertEqual(Set(values.map { ($0 * 100).rounded() }).count, values.count, "\(n)")
                 // every step's picture names its stage
-                XCTAssertEqual(l.steps.map { $0.picture["at"]! }, [0, 1] + (s.nb > 0 ? [2] : []) + (s.carries ? [3] : []) + [4, 5])
+                var stages: [Double] = [0, 1]
+                if s.nb > 0 { stages.append(2) }
+                if s.carries { stages.append(3) }
+                stages += [4, 5]
+                XCTAssertEqual(l.steps.map { $0.picture["at"]! }, stages)
             }
         }
     }
