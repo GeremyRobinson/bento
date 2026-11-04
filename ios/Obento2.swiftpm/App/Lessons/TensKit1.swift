@@ -28,7 +28,7 @@ enum T1 {
         pen.word("na\(a)", "\(a)", at: 30, line, KK.maths, anchor: UnitPoint(x: 1, y: 0.5))
         pen.word("ns", sign, at: signX, line, KK.maths)
         pen.word("nb\(b)", "\(b)", at: bx, line, KK.maths, anchor: UnitPoint(x: 0, y: 0.5))
-        return (bx + KK.width("\(b)", KK.maths) + 1).rounded(.up)
+        return (bx + KK.width("\(b)", KK.maths) + 0.5).rounded(.up)
     }
     /// Each part `draw` makes, by id, as it would be drawn: where parts start from (Sketch.from) or pass through (via).
     static func kinds(_ draw: (inout GridPen) -> Void) -> [String: Sketch.Kind] {

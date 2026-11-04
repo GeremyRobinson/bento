@@ -378,6 +378,18 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   `page-g1-count120-1 -numbers kind=1,n=113 -path 2.5,17.5,7.5,17.5 -hold`, `page-g1-tensones-0 -numbers n=34 -tapsq 15,1.5,6,10.5`,
   `page-g1-compare-1 -numbers a=43,b=47 -wrong`, `page-g1-tenmore-0 -numbers n=34,more=1 -drag 17.5,7.5,17.5,12.5 -hold`.
 
+- 1st grade chapter 4, Adding and taking away tens, is built (4 Nov; Core: `Tens1` (`AddTens1` g1-addtens and g1-add100 (`spec100`),
+  `SubTens1` g1-subtens), tests `Tens1Tests`; App: `AddTens1Lesson` (both adding lessons, `tensOnly`), `SubTens1Lesson`, their shared
+  `TensKit1` (`T1`: a closed ten, a loose one in its place, the names line a | sign | b with the record going on after b, `T1.kinds` for a
+  part's from/via shapes)). Whole-number purple. As the preview (`design/prototype/grade1-ch4.html`), its words, slips and generators word
+  for word; the digit pad's grid where b stood (Take away: under the rows left, under the pile, or a row under all, whichever is shortest).
+  Add within 100's full ones row: the carried ones land on the row (`via`), it's ringed a beat while what was there waits (`delay`), then
+  the ten joins the tens and its inner lines draw in. Departures: Take away's counted rows aren't tinted (a tint under the counters
+  flickers), only numbered at their end; the take can't be missed (a short slide goes back, as the preview). Hints: a first miss rings the
+  tens, the ones row or the rows left; a second shows the dashed landing place, the ones to slide, the row to tap, or the number by the pad.
+  Least zooms: 75%, 75%, 78%. Shots e.g. `page-g1-addtens-0 -numbers a=23,b=30 -drag 50,4.5,20,8.5 -hold`,
+  `page-g1-add100-0 -numbers a=36,b=7 -drag 54.5,4.5,37.5,14.5 -slow 3` (films the close), `page-g1-add100-0 -numbers a=24,b=35 -drag 36.5,14.5,10,18`
+  (ones before tens), `page-g1-subtens-1 -numbers a=70,b=30 -tapsq 15,4.5,15,7.5`, `page-g1-subtens-2 -numbers a=90,b=10`.
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
   finger; `BarsKit.swift` the fractions' bars, ruler and sliding pieces). `App/LessonHands.swift`: hand moves.
