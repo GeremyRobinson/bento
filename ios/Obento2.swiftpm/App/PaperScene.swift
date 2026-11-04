@@ -110,6 +110,11 @@ extension Piece {
         case "g4-dec": return [box(0, 0, 2, 4), box(2, 0, 1, 2)]                // tenths, and the hundredths poured after them
         case "g4-decline": return [box(6, 0, 1, 1)]                             // the tenth it's in
         case "g4-deccompare": return [box(0, 0, 2, 4), box(7, 0, 1, 4), box(8, 0, 1, 2)] // 0.5 against 0.45
+        // 4th grade, Measurement (3 Nov)
+        case "g4-convert": return [box(0, 0, 3, 2)]                             // two inches of the first foot
+        case "g4-measure": return []
+        case "g4-area": return [box(0, 0, 6, 4)]                                // the square meters inside
+        case "g4-lineplot": return [box(6, 2, 2, 2)]                            // the tallest stack's top X
         default: return []
         }
     }
@@ -237,6 +242,21 @@ extension Piece {
                 for i in 0...10 { let tall = i % 5 == 0; out.append(line((Double(i), y - (tall ? 1 : 0.5)), (Double(i), y + (tall ? 1 : 0.5)))) }
             }
             return out + [line((6, 2), (0, 4)), line((7, 2), (10, 4))]
+        case "g4-convert": // two feet as bars, the first cut into inches: 9 by 6
+            return bar(0, 0, 9, 6) + [box(0, 4, 9, 2)]
+        case "g4-measure": // a line with a long tick each hour and two hops along it: 11 by 4
+            var out: [[CGPoint]] = [line((0, 4), (11, 4))]
+            for i in 0...11 { let big = i % 5 == 0; out.append(line((Double(i), big ? 3.4 : 3.7), (Double(i), big ? 4.6 : 4.3))) }
+            return out + [arc(1, 6, 4, 2.5), arc(6, 9, 4, 1.8)]
+        case "g4-area": // a rectangle of square meters, 3 by 2, its edge: 9 by 6
+            return [box(0, 0, 9, 6), line((3, 0), (3, 6)), line((6, 0), (6, 6)), line((0, 3), (9, 3))]
+        case "g4-lineplot": // X's stacked over a line with its ticks: 11 by 6
+            var out: [[CGPoint]] = [line((0, 5), (11, 5))]
+            for i in 0...4 { let x = 0.5 + 2.5 * Double(i); out.append(line((x, 5), (x, 6))) }
+            for (x, n) in [(3.0, 2), (5.5, 3), (8.0, 1)] {
+                for k in 0..<n { let y = 4.5 - 1.5 * Double(k); out.append(line((x - 0.5, y - 0.5), (x + 0.5, y + 0.5))); out.append(line((x - 0.5, y + 0.5), (x + 0.5, y - 0.5))) }
+            }
+            return out
         case "g5-volume": // a box of cubes, 4 by 3 by 2, as the lesson shows it
             return box3D(l: 4, h: 2, w: 3, u: 32)
         case "add": // thirds and thirds, added: 9 by 6

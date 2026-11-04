@@ -127,6 +127,11 @@ enum PaperLessons {
         case "g4-dec": return TenthsHundredthsLesson()
         case "g4-decline": return DecimalLineLesson()
         case "g4-deccompare": return CompareDec4Lesson()
+        // 4th grade, Measurement (3 Nov 2026)
+        case "g4-convert": return ConvertLesson()
+        case "g4-measure": return MeasureStoryLesson()
+        case "g4-area": return AreaPerimLesson()
+        case "g4-lineplot": return LinePlotLesson()
         default: return nil
         }
     }
