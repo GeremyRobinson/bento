@@ -283,6 +283,7 @@ enum PaperLessons {
         // 2nd grade, Adding and subtracting to 100 (4 Nov 2026)
         case "g2-facts": return Facts2Lesson()
         case "g2-regroup": return Regroup2Lesson()
+        case "g2-subregroup": return SubRegroup2Lesson()
         default: return nil
         }
     }
