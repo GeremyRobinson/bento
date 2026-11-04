@@ -27,7 +27,7 @@ struct CountTensLesson: PaperLesson {
             let p = Self.tile(t), k = counted.firstIndex(of: t)
             pic.fill("tf\(t)\(k == nil ? "" : "L")", col: p.x, row: p.y, w: 10, h: 5, k == nil ? KK.cube : KK.litCube)
             pic.sketch.box("to\(t)", pic.R(p.x, p.y, 10, 5), .chapter, width: Sketch.stroke)
-            for d in 0..<10 { pic.dot("td\(t)-\(d)", at: p.x + 1 + 2 * Double(d % 5), p.y + 1.5 + 2 * Double(d / 5), radius: 0.65, .chapter) }
+            for d in 0..<10 { pic.dot("td\(t)-\(d)", at: p.x + 1 + 2 * Double(d % 5), p.y + 1.5 + 2 * Double(d / 5), radius: 0.65, .chapter, over: true) }
             // its running total over it while counting (the record carries them after)
             if st == 0, let k {
                 pic.word("tt\(t)-\(k)", "\(10 * (k + 1))", at: p.x + 5, p.y - 2, KK.maths)
