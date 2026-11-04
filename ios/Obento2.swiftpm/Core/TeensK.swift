@@ -166,7 +166,7 @@ public enum Count20K {
         let topHint = "Tap each dot in the top row."
         let top = LessonStep(StepWords(say: "Count the top row.", hint: topHint, action: "Check"),
             answer: TeensK.hand("c", 10, hint: topHint, explain: "A full row is 10.", said: P.counted), picture: ["at": 0], onMiss: ["ring": 1], hint2: ["spot": 1])
-        let restHint = "Say 11 for the first dot in the bottom row."
+        let restHint = "Count on along the bottom row: 11, 12, 13..."
         let rest = LessonStep(StepWords(say: "Keep counting.", hint: restHint, action: "Check"),
             answer: TeensK.hand("d", n, hint: restHint, explain: "\(n) dots.", said: P.counted), picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1])
         return [top, rest, write, done]

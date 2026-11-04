@@ -315,6 +315,22 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   `page-k-bonds-2 -numbers whole=5,part=2 -drag 20,17.5,30,17.5 -hold`, `page-gk-five-1 -numbers a=2,b=3,plus=1,mode=2`.
 - Fixes of 4 Nov (chapter 2): Solid shapes' push sends the solid away from the flat shape; the die's dots are filled spots
   (`Solids.Body.spots`) in the edges' dark colour.
+- Kindergarten chapter 5, Teens and tens, is built (4 Nov; the last chapter: all 23 K lessons and the Kindergarten test are on the map;
+  Core: `TeensK` (`Numerals` the web's stroke shapes sampled evenly, `Count20K` k-count20, `WriteK` k-write, `TeenNumbersK` k-teens,
+  `TensK` k-tens, `CountTo100` gk-count100), tests `TeensKTests`; App: `CountTwentyLesson`, `WriteNumbersLesson`, `TeenNumbersLesson`,
+  `CountTensLesson`, `CountHundredLesson`, their shared `TeensKitK` (`KT`: ten frames, the number row grown to 20, picking keys, a
+  numeral's band drawn as quads edge to edge so it's even round curves, the traced ink as plates with the line over them)). Chapter in
+  the decimals' pink (call 5). **New shared piece: `DigitPad`** (0–9 and a rub-out, 3 × 3 squares a key, the lesson's Check two squares
+  right of it via `blocksAt`; a key sets the box unchecked, Check keeps "chk" and checks; red until the next key starts it again), for
+  1st grade too. As the preview (`design/prototype/gradeK-ch5.html`), its words word for word; See lines said with the next
+  instruction ("Watch the 0. Write the number.", "None. None is 0. Tap the 0."). Departures: two frames' numeral keys 4 squares under
+  them (74% → 75%); the ring's keys 1–20 five to a row beside it; taps have no readout (only a held finger reads: the make drag, the
+  trace's "1 of 2"); the whole-chart see is the done step (the 3 rows glide down into the whole chart, the last column lights row by
+  row) at 53% on the 11-inch iPad, under call 5's 66%: the chart alone is 50 squares tall (66% would need the words hidden while it
+  shows). Least zooms: 83%, 75%, 84%, 76%, 53% (the see; its counting step 100%). Shots e.g.
+  `page-k-count20-0 -numbers n=14,ring=0,off=0 -tapsq …`, `page-k-write-2 -numbers n=7 -path 35.6,0.6,38,0.6,40.5,0.6 -hold` (`-path`
+  drags a finger through points: a trace), `page-k-teens-0 -numbers ones=6,make=1 -path 2.5,2.5,22.5,7.5,32.5,2.5,37.5,7.5`,
+  `page-k-tens-1 -numbers rows=7 -tapsq 19.5,31.5,1.5,31.5 -block Check`, `page-gk-count100-0 -numbers kind=1,n=40,c0=50,c1=40,c2=30 -tapsq 10,22`.
 
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
