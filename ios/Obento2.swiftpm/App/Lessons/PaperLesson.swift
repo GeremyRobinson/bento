@@ -284,6 +284,7 @@ enum PaperLessons {
         case "g2-facts": return Facts2Lesson()
         case "g2-regroup": return Regroup2Lesson()
         case "g2-subregroup": return SubRegroup2Lesson()
+        case "g2-addfour": return AddFour2Lesson()
         default: return nil
         }
     }
