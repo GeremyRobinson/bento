@@ -50,8 +50,8 @@ enum F4 {
     }
 
     /// A part of the record: a fraction (4 squares wide, or `w`), one with boxes for its top and bottom, a sign (2 squares),
-    /// a whole number written tight, right-aligned in the squares its digits take (G 3 Nov: a number in a line is one
-    /// word), or a box for a whole number.
+    /// a whole number written tight, right-aligned in the whole squares it takes (G 3 Nov: a number in a line is
+    /// one word), or a box for a whole number.
     enum Tok {
         case f(String, String, Sketch.Colour = .ink, w: Double = 4)
         case fb(top: Part, bottom: Part)
@@ -59,12 +59,12 @@ enum F4 {
         case n(Int, Sketch.Colour = .ink)
         case box(String, cells: Int)
         enum Part { case v(Int), box(String) }
-        var width: Double {
+        @MainActor var width: Double {
             switch self {
             case .f(_, _, _, let w): w
             case .fb: 4
             case .op: 2
-            case .n(let v, _): 2 * Double(String(v).count)
+            case .n(let v, _): Record.width(.n(v))
             case .box(_, let cells): 2 * Double(cells) + 1
             }
         }
@@ -88,7 +88,7 @@ enum F4 {
                     }
                 }
             case .op(let o, let c): pen.word(k + o, o, at: cx + 1, line, Bars.maths.colour(c))
-            case .n(let v, let c): pen.word(k + "n\(v)", "\(v)", at: cx + t.width - 0.3, line, Bars.maths.colour(c), anchor: UnitPoint(x: 1, y: 0.5))
+            case .n(let v, let c): Record.tight(&pen, k + "n\(v)", v, right: cx + t.width, row: line, c)
             case .box(let b, let cells): pen.answerBox(b, right: cx + 2 * Double(cells), mid: line, per: 2, cells: cells)
             }
             cx += t.width

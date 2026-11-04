@@ -35,7 +35,7 @@ struct ReadWriteLesson: PaperLesson {
     private static func slots(_ P: ReadWriteBig.Parts) -> [Int: (x: Double, y: Double, plus: Bool)] {
         var out: [Int: (x: Double, y: Double, plus: Bool)] = [:], x = 3.0, y = parts
         for (i, pw) in P.parts.enumerated() {
-            let w = 2 * Double(String(P.value(pw)).count) + (i > 0 ? 3 : 0)
+            let w = Record.width(.n(P.value(pw))) + (i > 0 ? 3 : 0)
             if x + w > 62 { x = 0; y += 3 }
             out[pw] = (x, y, i > 0); x += w
         }

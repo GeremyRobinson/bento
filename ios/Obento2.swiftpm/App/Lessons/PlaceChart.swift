@@ -124,7 +124,8 @@ enum Record {
     static func width(_ w: String) -> Double { (PaperText.width(w, PaperText.font(Sketch.wordSize, .medium)) / Paper.cell + 1).rounded(.up) }
     static func width(_ t: Token) -> Double {
         switch t {
-        case .n(let v): 2 * Double(String(v).count)
+        // written tight: the whole squares it takes, a quarter square spare either side
+        case .n(let v): (tightWidth(v) + 0.5).rounded(.up)
         case .op: 3
         case .w(let s): width(s)
         case .gap(let g): g
@@ -134,7 +135,16 @@ enum Record {
     }
     static func width(_ toks: [Token]) -> Double { toks.reduce(0) { $0 + width($1) } }
 
-    /// A number written two squares a digit, its ones digit ending on column `right`, its commas on the grid lines.
+    /// A number in a line written tight, as one word (G 3 Nov, design/README.md "Calls made"): "10,935", right-aligned in
+    /// the whole squares it takes (Record.width), its right edge a quarter square in from column `right`.
+    static func tight(_ pen: inout GridPen, _ id: String, _ v: Int, right: Double, row: Double, _ colour: Sketch.Colour = .ink) {
+        pen.word(id, BigNumbers.commas(v), at: right - 0.25, row, maths.colour(colour), anchor: UnitPoint(x: 1, y: 0.5))
+    }
+    /// How wide a number written tight is, in squares.
+    static func tightWidth(_ v: Int) -> Double { PaperText.width(BigNumbers.commas(v), PaperText.font(Sketch.maths, .medium, digits: true)) / Paper.cell }
+
+    /// A number in column working (a vertical sum, long division, a place chart's digits): two squares a digit, its ones
+    /// digit ending on column `right`, its commas on the grid lines, so the places line up.
     static func number(_ pen: inout GridPen, _ id: String, _ v: Int, right: Double, row: Double, _ colour: Sketch.Colour = .ink) {
         let s = Array(String(v))
         for (k, ch) in s.reversed().enumerated() {
@@ -150,7 +160,7 @@ enum Record {
         for (i, t) in toks.enumerated() {
             let c = colours[i] ?? .ink, kid = "\(id).\(i)"
             switch t {
-            case .n(let v): number(&pen, kid + "n\(v)", v, right: cx + width(t), row: row, c)
+            case .n(let v): tight(&pen, kid + "n\(v)", v, right: cx + width(t), row: row, c)
             case .op(let o): pen.word(kid + o, o, at: cx + 1.5, row, maths.colour(c))
             case .w(let s): pen.word(kid + s, s, at: cx + 0.5, row, words.colour(c), anchor: UnitPoint(x: 0, y: 0.5))
             case .gap: break

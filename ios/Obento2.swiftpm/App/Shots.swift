@@ -255,6 +255,8 @@ enum Shots {
             case "paper": break
             // the Paper proof's pieces are off the map (20 Oct): a lesson on it is chosen instead
             case "selected": m.select(Map.piece("g5-volume"))
+            // select-<lesson id>: that lesson chosen on its grade's map
+            case let n where n.hasPrefix("select-"): m.select(Map.piece(String(n.dropFirst(7))))
             case let n where n.hasPrefix("cards-"):
                 // cards-<lesson id>[-done]: the page of problems after the How to; -done: the together ones solved, the
                 // first own one with a miss (a fresh one comes for it), two more right, and the page back
