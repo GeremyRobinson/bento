@@ -200,8 +200,8 @@ extension Piece {
         case "g1-sub20": return [box(6, 2, 4, 1)]                               // the counters hopped back over
         // 1st grade, Equations and stories (4 Nov)
         case "g1-related": return [box(6, 1, 4, 1)]                             // the part added on
-        case "g1-missing": return [box(4, 1, 6, 2)]                             // the two hops
-        case "g1-equal": return [box(7, 3.5, 1, 1)]                             // where the rows end
+        case "g1-missing": return [box(4, 2.5, 5, 1.5)]                            // the two hops
+        case "g1-equal": return [box(7, 2, 1, 3)]                                 // where the rows end
         case "g1-story": return [box(6, 2, 3, 1)]                               // the ones that came
         case "g1-more": return [box(6, 1, 3, 1)]                                // the ones with no partner
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack

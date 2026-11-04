@@ -350,6 +350,19 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   preview). Least zooms: 82%, 92%, 89%, 75%, 83%. Shots e.g. `page-g1-add20-1 -numbers a=3,b=9 -tapsq 3,10.5,30,10.5 -tapgap 2.6`,
   `page-g1-ten-0 -numbers a=8,b=5 -drag 13.5,5.5,24.5,1.5`, `page-g1-three-0 -numbers a=4,b=4,c=7,story=1`,
   `page-g1-sub20-0 -numbers a=14,b=6 -drag 42,6.5,33,6.5 -hold`, `bar-grade-open -grade 1`.
+- 1st grade chapter 2, Equations and stories, is built (4 Nov; Core: `Equations1` (`Related1` g1-related, `Missing1` g1-missing,
+  `Equal1` g1-equal, `Story1` g1-story, `More1` g1-more), tests `Equations1Tests`; App: `Related1Lesson`, `Missing1Lesson`,
+  `Equal1Lesson`, `Story1Lesson`, `More1Lesson`, their shared `EqKit1` (`E1`: the whole outlined, brackets with their numbers, a
+  dashed place (crossed once gone), the flag, True / False word blocks 10 × 4)). Fractions blue. As the preview
+  (`design/prototype/grade1-ch2.html`), its words, slips and generators word for word. Departures: a story's (and How many more?'s)
+  sentences start the first instruction (written once, said with it, as chapter 1's) instead of over the picture; True or
+  false?'s equation is on the picture's top rows; the number row goes under the record (chapter 1's), not beside it; the True /
+  False blocks are 4 squares tall like the keys; Add to take away labels the whole (12) at its end (grade1.md). `A1.record`
+  returns its end column. `-partial` (screenshots) shows a chapter while it's being built. Least zooms: 89%, 83%, 90%, 86%, 89%.
+  Shots e.g. `page-g1-related-0 -numbers c=12,a=8 -wrong`, `page-g1-missing-2 -numbers a=6,c=15,first=1`,
+  `page-g1-equal-0 -numbers make=0,lt=1,l0=4,l1=1,rt=2,r0=9,r1=2 -drag 18.5,5.5,14,5.5`, `page-g1-equal-0 -numbers
+  make=1,lt=1,l0=6,l1=2,rt=1,r0=-1,r1=3` (−1 is the box), `page-g1-story-0 -numbers kind=7,s=5,ch=4,e=9,thing=4,name=4 -tapsq
+  16.5,2.5`, `page-g1-more-0 -numbers kind=2,big=9,small=5,bn=0,sn=1 -drag 13.5,6.5,22.5,6.5 -hold`.
 
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
