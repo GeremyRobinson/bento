@@ -57,7 +57,7 @@ public enum Curriculum {
             MapLesson("k-tens", "Count by tens to 100"), MapLesson("gk-count100", "Count to 100")]),
     ]
 
-    /// 1st grade (design/grade1.md): 26 lessons in 6 chapters, in teaching order. Chapter 1 is built (4 Nov): only it is on
+    /// 1st grade (design/grade1.md): 26 lessons in 6 chapters, in teaching order. Chapters 1 and 2 are built (4 Nov): only they are on
     /// the map. Numbers to 120 is base-ten work, in the decimals' pink (as Kindergarten's Teens and tens).
     static let grade1: [MapChapter] = [
         MapChapter("g1-addsub", "Add and take away to 20", colour: "whole", [

@@ -108,6 +108,8 @@ struct ChapterGroup {
 /// test in the slot after its last lesson, the grade's test under everything once every chapter is built. Worked out
 /// once per grade.
 struct GradeMap {
+    /// Screenshots only (-partial): a chapter shows once any of its lessons is built, so a chapter being built can be checked.
+    static let partial = ProcessInfo.processInfo.arguments.contains("-partial")
     let grade: Int
     let groups: [ChapterGroup]
     let pieces: [Piece]
@@ -124,7 +126,7 @@ struct GradeMap {
     init(grade: Int) {
         self.grade = grade
         // only the chapters that are built (G 3 Nov, design/README.md "Calls made"): the map grows as chapters land
-        let every = Curriculum.chapters(grade), chapters = every.filter(Curriculum.built)
+        let every = Curriculum.chapters(grade), chapters = every.filter { Curriculum.built($0) || (Self.partial && $0.lessons.contains { Curriculum.built($0.id) }) }
         groups = ChapterGroup.packed(chapters)
         pieces = groups.flatMap(\.pieces)
         gradeTest = Curriculum.gradeTest(grade)

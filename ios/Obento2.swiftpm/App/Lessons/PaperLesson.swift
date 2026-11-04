@@ -247,6 +247,8 @@ enum PaperLessons {
         case "g1-doubles": return Doubles1Lesson()
         case "g1-three": return Three1Lesson()
         case "g1-sub20": return Sub20Lesson()
+        // 1st grade, Equations and stories (4 Nov 2026)
+        case "g1-related": return Related1Lesson()
         default: return nil
         }
     }
