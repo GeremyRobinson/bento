@@ -249,6 +249,7 @@ enum PaperLessons {
         case "g1-sub20": return Sub20Lesson()
         // 1st grade, Equations and stories (4 Nov 2026)
         case "g1-related": return Related1Lesson()
+        case "g1-missing": return Missing1Lesson()
         default: return nil
         }
     }
