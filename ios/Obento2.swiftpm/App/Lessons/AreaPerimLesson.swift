@@ -11,7 +11,7 @@ import SwiftUI
 struct AreaPerimLesson: PaperLesson {
     /// The rectangle's top, on a strong line; the given area or perimeter's row.
     static let Y0 = 5.0, givenRow = 1.0
-    var liveKeys: Set<String> { ["a", "b", "t"] }
+    var liveKeys: Set<String> { ["t"] }
 
     private func stage(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
 
@@ -154,21 +154,23 @@ struct AreaPerimLesson: PaperLesson {
         func near(_ c: CGPoint, _ x: Double, _ y: Double) -> Bool { abs(c.x - x) <= 2.5 && abs(c.y - y) <= 2.5 }
         if at == 1 && p.fold == 0 {
             let a = s.h("a") ?? 1, b = s.h("b") ?? 1
-            return Hands(grab: { c in near(c, U * a, Y0 + U * b) ? ["grab": 1, "a": a, "b": b] : nil },
-                         drag: { c, _ in ["grab": 1, "a": Double(min(q.maxA, max(1, Int((c.x / U).rounded())))), "b": Double(min(q.maxB, max(1, Int(((c.y - Y0) / U).rounded()))))] },
+            return Hands(grab: { c in near(c, U * a, Y0 + U * b) ? ["grab": 1, "a": a, "b": b, "a0": a, "b0": b] : nil },
+                         drag: { c, h in ["grab": 1, "a": Double(min(q.maxA, max(1, Int((c.x / U).rounded())))), "b": Double(min(q.maxB, max(1, Int(((c.y - Y0) / U).rounded())))),
+                                          "a0": h["a0"] ?? a, "b0": h["b0"] ?? b] },
                          release: { h in
                              let a2 = h["a"] ?? a, b2 = h["b"] ?? b
-                             if a2 == a && b2 == b { return HandMove(hand: ["a": a2, "b": b2], missHand: nil) }
+                             // let go where it was picked up: nothing to check
+                             if a2 == h["a0"] && b2 == h["b0"] { return HandMove(hand: ["a": a2, "b": b2], missHand: nil) }
                              return HandMove(hand: ["a": a2, "b": b2], missHand: nil, set: [("a", a2), ("b", b2)], check: true)
                          })
         }
         if at == 1 && p.fold == 1 {
             let a = s.h("a") ?? 1, w = Double(p.w)
-            return Hands(grab: { c in near(c, U * a, Y0 + U * w / 2) ? ["grab": 1, "a": a] : nil },
-                         drag: { c, _ in ["grab": 1, "a": Double(min(q.maxA, max(1, Int((c.x / U).rounded()))))] },
+            return Hands(grab: { c in near(c, U * a, Y0 + U * w / 2) ? ["grab": 1, "a": a, "a0": a] : nil },
+                         drag: { c, h in ["grab": 1, "a": Double(min(q.maxA, max(1, Int((c.x / U).rounded())))), "a0": h["a0"] ?? a] },
                          release: { h in
                              let a2 = h["a"] ?? a
-                             if a2 == a { return HandMove(hand: ["a": a2], missHand: nil) }
+                             if a2 == h["a0"] { return HandMove(hand: ["a": a2], missHand: nil) }
                              return HandMove(hand: ["a": a2], missHand: nil, set: [("a", a2)], check: true)
                          })
         }

@@ -60,6 +60,16 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   a tenth a column, a hundredth 2 × 2); `F4.Tok.d` writes a decimal tight, `.fr` a fraction with 3-digit boxes). The
   preview's grey second line is folded into each instruction. Least zooms: 75%, 81%, 76%. Shots as before, e.g.
   `page-g4-decline-1 -numbers w=1,h=45,story=1,thing=1`, `page-g4-deccompare-0 -numbers w=0,a=50,b=45,pa=1,pb=2`.
+- 4th grade chapter 7, Measurement, is built (3 Nov; Core: `Measurement4` (`Meas4`, `Convert4`, `MeasureStory`, `AreaPerim`,
+  `LinePlot4`); App: `ConvertLesson`, `MeasureStoryLesson`, `AreaPerimLesson`, `LinePlotLesson`, their shared `MeasureKit7` (`M7.row`:
+  numbers, times, prices, units, fractions and boxes written as words)). Converting: the ruler runs from the first bar's left end and
+  is checked as it's let go; more than 6 bars sit 2 squares a bar with the ruler on the first bar's top edge (75%). Story problems:
+  hops are hand state (`k`, `e0`…) until the last, which is checked; times typed in two boxes [h]:[min]. Area: `AreaPerim.Parts.U` is
+  5 squares a meter (a block) or 2 ("2 squares are 1 m."), chosen so every problem shows at 75%; the trace snaps to the corner-to-corner
+  point nearest the finger. Line plots: the cards wait in three columns beside the plot (so a tall stack still shows at 75%) and the
+  X's glide down from them. The preview's See stages (the bars counting on, the extra counting on, the half going round, the X's
+  dropping) draw in at the start of the next step. Least zooms: 75%, 88%, 76%, 75%. Shots as before, e.g.
+  `page-g4-convert-1 -numbers k=0,n=3,m=5,story=0`, `page-g4-area-0 -numbers l=5,w=3,fold=0 -drag 5,10,25,20`.
 - The keyboard never hides the work (3 Nov, app-wide): every keyboard notice counts (the system-hosted keys post only
   some), its frame is turned into the app's way up (the simulator holds the iPad portrait while the app is landscape, so
   the keys draw down the right side), and the camera frames into the room above, left or right of them
