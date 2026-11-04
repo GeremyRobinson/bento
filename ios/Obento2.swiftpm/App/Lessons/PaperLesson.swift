@@ -296,6 +296,7 @@ enum PaperLessons {
         case "g2-squares": return Squares2Lesson()
         // 2nd grade, Length (4 Nov 2026)
         case "g2-measure": return Measure2Lesson()
+        case "g2-twounits": return TwoUnits2Lesson()
         default: return nil
         }
     }
