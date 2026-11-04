@@ -47,8 +47,8 @@ struct Compose1Lesson: PaperLesson {
     private func trayAt(_ s: PaperState, _ S: Stage, _ j: Int) -> Pt { (s.run.kept["a\(S.i)_\(j)"] ?? S.tray[j].0, s.run.kept["b\(S.i)_\(j)"] ?? S.tray[j].1) }
     /// The record's first row: under the outline and the tray, whichever goes lower, for every stage.
     private func recY(_ P: Compose1.Parts) -> Double {
-        let low = P.stages.indices.map { let S = Stage(P, $0); return max(S.OH, S.trayBottom) }.max() ?? 20
-        return low + 3
+        // three rows under the tray, and clear of the count under the outline
+        return P.stages.indices.map { let S = Stage(P, $0); return max(S.trayBottom + 3, S.OH + 5) }.max() ?? 25
     }
     /// Done: Next problem beside the last record line.
     func blocksAt(_ s: PaperState) -> CGPoint? {
