@@ -390,6 +390,23 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   Least zooms: 75%, 75%, 78%. Shots e.g. `page-g1-addtens-0 -numbers a=23,b=30 -drag 50,4.5,20,8.5 -hold`,
   `page-g1-add100-0 -numbers a=36,b=7 -drag 54.5,4.5,37.5,14.5 -slow 3` (films the close), `page-g1-add100-0 -numbers a=24,b=35 -drag 36.5,14.5,10,18`
   (ones before tens), `page-g1-subtens-1 -numbers a=70,b=30 -tapsq 15,4.5,15,7.5`, `page-g1-subtens-2 -numbers a=90,b=10`.
+- 1st grade chapter 5, Length, time and graphs, is built (4 Nov; Core: `Length1` (`Len1` the things, themes and a pile's order,
+  `Order1` g1-order3 with the go-between, `Cubes1` g1-measure, `Time1` g1-time, `PicGraph1` g1-picgraph, `Tally1` g1-tally), tests
+  `Length1Tests`; App: `Order1Lesson`, `Cubes1Lesson`, `Time1Lesson`, `PicGraph1Lesson`, `Tally1Lesson`, their shared `LengthKit1` (`L5`: a
+  thing as a plain bar, the rows' small pictures drawn from the preview's paths, tally marks)). Measurement amber. As the preview
+  (`design/prototype/grade1-ch5.html`), its words, slips and generators word for word, the grey lines folded in ("Now the far ends tell.
+  Drag them…", "These two are stuck. Lay the string…", "How many apples? Tap each picture to count it."). `Spoken` says a time as a
+  person does ("8:30" is "half past 8", "3:00" is "3 o'clock"). Departures: a thing and its start are 12 blocks at most (the preview's 13
+  showed at 73%); the go-between's string is 2 squares longer than the longer thing, not a block (its floor at 32, not 35); the time is
+  written in two steps, the hour then the minutes (one box each, both "Write the time."), the pad's grid left of the clock; the hour
+  strip's hours are under its ends, not beside them (74% → 76%); Together draws a picture in 3 squares past 10 joined, not 11 (71% →
+  75%); a swap the wrong way is code 100 + 10 × longer + shorter. Hints: a first miss rings the start line, the far ends, the short
+  hand, 12, the row or the marks; a second shows the dashed place, the number, the next picture or mark, or the number by the pad.
+  Least zooms: 76%, 77%, 76%, 75%, 86%. Shots e.g. `page-g1-order3-1 -numbers between=0,n0=0,n1=1,n2=2,l0=7,l1=4,l2=9,s0=2,s1=3,s2=1
+  -drag 5,23,5,6 -hold`, `page-g1-order3-2 -numbers between=1,n0=8,n1=9,l0=5,l1=3 -wrong`, `page-g1-measure-1 -numbers
+  n0=0,n1=3,a=7,b=4 -drag 1,14.5,13,14.5 -hold`, `page-g1-time-1 -numbers hour=8,minute=30 -path 35,4.5,39,5,41,8,41,12,39,15 -hold`
+  (`-showme -slow 3` films the ghost's trace), `page-g1-picgraph-0 -numbers theme=0,c0=8,c1=3,c2=5,ask=0,x=0,y=1,sort=1,seed=7 -tapsq
+  3.5,23,7.5,23`, `page-g1-tally-0 -numbers theme=1,c0=12,c1=4,c2=9,ask=1,x=0,y=1 -tapsq 30,4.5`.
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
   finger; `BarsKit.swift` the fractions' bars, ruler and sliding pieces). `App/LessonHands.swift`: hand moves.
