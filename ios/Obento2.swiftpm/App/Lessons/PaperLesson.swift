@@ -77,6 +77,12 @@ protocol PaperLesson {
     /// The picture alone for a moment (K Count to 100's whole chart, call of 4 Nov): the words, the record and the blocks
     /// step aside and the camera frames only the picture, then they come back. Asked every frame (it may read the clock).
     func alone(_ s: PaperState) -> Bool
+    /// A story drawn on the picture's top rows (2nd grade's): its lines, said before the first step's words as the
+    /// problem opens (nil: none).
+    func told(_ s: PaperState) -> String?
+    /// Show me on a typed step whose picture the hands can also work (Facts to 20's "Make a ten, or just write it."): the
+    /// hand move played first, then the answer written.
+    func typedDemo(_ s: PaperState) -> [GhostMove]
 }
 
 extension PaperLesson {
@@ -99,6 +105,8 @@ extension PaperLesson {
     func standHeld(_ s: PaperState) -> (pivot: CGPoint, up: Double)? { nil }
     func say(_ s: PaperState) -> String? { nil }
     func alone(_ s: PaperState) -> Bool { false }
+    func told(_ s: PaperState) -> String? { nil }
+    func typedDemo(_ s: PaperState) -> [GhostMove] { [] }
     func scale(_ run: LessonRun) -> Double { scale(run.numbers) }
     func recordBeside(_ run: LessonRun) -> Double? { recordBeside(run.numbers) }
     func messageRows(_ run: LessonRun) -> Int { messageRows(run.numbers) }
@@ -272,6 +280,8 @@ enum PaperLessons {
         case "g1-compose": return Compose1Lesson()
         case "g1-build": return Build1Lesson()
         case "g1-halves": return Halves1Lesson()
+        // 2nd grade, Adding and subtracting to 100 (4 Nov 2026)
+        case "g2-facts": return Facts2Lesson()
         default: return nil
         }
     }

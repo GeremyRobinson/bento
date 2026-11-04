@@ -228,6 +228,13 @@ extension Piece {
             default: return [[q(2, 1.5), q(5, 1.5), q(4, 3), q(1, 3)]]             // the box's top
             }
         case "g1-halves": return [box(0, 0, 5, 6)]                              // a half, shaded
+        // 2nd grade, Adding and subtracting to 100 (4 Nov)
+        case "g2-facts": return [box(8, 1, 2, 1)]                               // the two slid up to make the ten
+        case "g2-regroup": return [box(0, 3.8, 4.5, 0.6)]                       // ten ones closed into a new ten
+        case "g2-subregroup": return [box(0, 4.6, 5, 0.6)]                      // the ten opened into ones
+        case "g2-addfour": return [box(0, 3, 4.5, 0.6)]                         // the new ten the ones made
+        case "g2-story": return [box(6, 2.5, 4, 1.5)]                           // the part we don't know
+        case "g2-twostep": return [box(6, 2, 3, 1.5)]                           // the first change, joined
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -477,6 +484,40 @@ extension Piece {
                     line((7.5, 5.4), (9, 0.5), (10.5, 5.4)), base]
         case "g1-halves": // a rectangle cut straight down into halves: 10 by 6
             return [box(0, 0, 10, 6), line((5, 0), (5, 6))]
+        // 2nd grade, Adding and subtracting to 100 (4 Nov)
+        case "g2-facts", "g2-regroup", "g2-subregroup", "g2-addfour", "g2-story", "g2-twostep":
+            func dot(_ x: Double, _ y: Double, _ r: Double = 0.4) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + r * cos(a), y + r * sin(a)) } }
+            func ten(_ x: Double, _ y: Double) -> [[CGPoint]] { [box(x, y, 4.5, 0.6)] + (1..<10).map { i in line((x + 0.45 * Double(i), y), (x + 0.45 * Double(i), y + 0.6)) } }
+            func cross(_ x: Double, _ y: Double) -> [CGPoint] { line((x, y + 0.6), (x + 4.5, y)) }
+            switch id {
+            case "g2-facts": // two rows of ten places, two slid up to fill the top: 10 by 6
+                var out: [[CGPoint]] = [box(0, 1, 10, 1), box(0, 3.5, 10, 1)]
+                for x in 1..<10 { out.append(line((Double(x), 1), (Double(x), 2))); out.append(line((Double(x), 3.5), (Double(x), 4.5))) }
+                for j in 0..<10 { out.append(dot(Double(j) + 0.5, 1.5)) }
+                for j in 0..<3 { out.append(dot(Double(j) + 0.5, 4)) }
+                out.append(arc(3.5, 8.5, 3.4, 0.5)); out.append(arc(4.5, 9.5, 3.4, 0.5))
+                return out
+            case "g2-regroup": // 4 tens and a new one, 3 tens beside, 5 ones: 10 by 6
+                var out = [0.6, 1.4, 2.2, 3.0, 3.8].flatMap { ten(0, $0) } + [0.6, 1.4, 2.2].flatMap { ten(5.5, $0) }
+                for j in 0..<5 { out.append(dot(0.25 + 0.45 * Double(j), 4.9, 0.18)) }
+                return out
+            case "g2-subregroup": // 5 tens, two crossed, one opened into ones: 10 by 6
+                var out = [0.6, 1.4, 2.2, 3.0].flatMap { ten(0, $0) } + [cross(0, 2.2), cross(0, 3.0)]
+                for j in 0..<10 { out.append(dot(0.25 + 0.45 * Double(j), 4.9, 0.18)); if j >= 5 { out.append(line((0.05 + 0.45 * Double(j), 5.1), (0.45 + 0.45 * Double(j), 4.7))) } }
+                return out
+            case "g2-addfour": // the total's tens, a new ten, three numbers beside: 10 by 6
+                var out = [0.6, 1.4, 2.2, 3.0].flatMap { ten(0, $0) }
+                out += [0.6, 2.2, 3.8].flatMap { ten(5.5, $0) }
+                for y in [1.6, 3.2, 4.8] { for j in 0..<4 { out.append(dot(5.75 + 0.45 * Double(j), y, 0.18)) } }
+                return out
+            case "g2-story": // a bar in two parts under the whole's bracket, the unknown part dashed: 10 by 6
+                var out: [[CGPoint]] = [box(0, 2.5, 6, 1.5), line((0, 2), (0, 1.5), (4.6, 1.5), (5, 1), (5.4, 1.5), (10, 1.5), (10, 2))]
+                for x in stride(from: 6.0, to: 10, by: 0.8) { out.append(line((x, 2.5), (min(10, x + 0.4), 2.5))); out.append(line((x, 4), (min(10, x + 0.4), 4))) }
+                out.append(line((10, 2.5), (10, 4))); out.append(line((3, 2.5), (3, 4)))
+                return out
+            default: // a start bar, a change joined at its end, the next one waiting under it: 10 by 6
+                return [box(0, 2, 6, 1.5), box(6, 2, 3, 1.5), line((3, 2), (3, 3.5)), box(0, 4.5, 4, 1.5), line((0, 1.5), (0, 6))]
+            }
         case "g1-tenmore": // three rows of the chart, a number ringed, one row down lit: 10 by 3, from row 1.5
             let ring = (0...24).map { k in let a = Double(k) / 24 * 2 * .pi; return P(4.5 + 0.7 * cos(a), 3 + 0.7 * sin(a)) }
             return [box(0, 1.5, 10, 3)] + (1..<10).map { x in line((Double(x), 1.5), (Double(x), 4.5)) } + [2.5, 3.5].map { y in line((0, y), (10, y)) } + [ring]

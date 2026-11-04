@@ -70,7 +70,7 @@ final class Voice: NSObject, AVSpeechSynthesizerDelegate {
 
     /// What the problem says now: what to do, and what a miss said, if anything (the speaker mark says both).
     static func words(_ m: WorkProblem) -> String {
-        [m.sayText, m.message?.text ?? ""].filter { !$0.isEmpty }.joined(separator: " ")
+        [m.spokenText, m.message?.text ?? ""].filter { !$0.isEmpty }.joined(separator: " ")
     }
 }
 

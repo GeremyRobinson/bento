@@ -608,6 +608,11 @@ final class WorkProblem: Identifiable, PageProblem {
     /// The picture alone for a moment (PaperLesson.alone): no words, record or blocks; the camera on the picture.
     var alone: Bool { ghost == nil && paper?.alone(state()) == true }
     /// What to do now as the lesson's hands have changed it within the step (PaperLesson.say), if they have.
+    /// What the voice says for the step: a story drawn on the picture first, as the problem opens (PaperLesson.told).
+    var spokenText: String {
+        let t = lesson.index == 0 && ghost == nil ? paper?.told(state()) : nil
+        return [t ?? "", sayText].filter { !$0.isEmpty }.joined(separator: " ")
+    }
     var paperSay: String? { ghost == nil && !solved ? paper?.say(state()) : nil }
     @ObservationIgnored private var heldFrame: Rect?
     /// How much of the screen's bottom a docked keyboard covers (PaperScreen sets it; iPadOS's floating number pad
@@ -630,7 +635,7 @@ final class WorkProblem: Identifiable, PageProblem {
         if a.choices != nil { return [.tap(.choice(Int(a.expected["c"] ?? 0)))] }
         if a.byHand { return paper?.demo(s) ?? [] }
         let want = s.run.wanted(a)
-        return a.boxes.compactMap { b in want[b].map { .write(box: b, text: fmt($0).replacingOccurrences(of: "−", with: "-")) } }
+        return (paper?.typedDemo(s) ?? []) + a.boxes.compactMap { b in want[b].map { .write(box: b, text: fmt($0).replacingOccurrences(of: "−", with: "-")) } }
     }
 
     /// Plays the step's moves with the ghost finger: a preview (Show me) on a copy that goes back at the end, or the
