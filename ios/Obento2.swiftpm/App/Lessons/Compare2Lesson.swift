@@ -60,7 +60,10 @@ struct Compare2Lesson: PaperLesson {
             }
             if spot {
                 let y = Self.Y(lv)
-                for (i, bl) in (st == 3 ? [da[lv], db[lv]] : [da[lv]]).enumerated() where (i == 0 ? la : lb) == nil || st != 3 {
+                let blocks: [Int] = st == 3 ? [da[lv], db[lv]] : [da[lv]]
+                for (i, bl) in blocks.enumerated() {
+                    let open: Bool = i == 0 ? la == nil : lb == nil
+                    guard open || st != 3 else { continue }
                     pic.sketch.box("sp\(i)", pic.R(Double(bl) * 5, y - 2, 5, 2), .chapter, width: Sketch.stroke, dashed: true)
                 }
             }

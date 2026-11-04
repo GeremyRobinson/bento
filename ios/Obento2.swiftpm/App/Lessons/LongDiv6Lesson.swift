@@ -95,8 +95,17 @@ struct LongDiv6Lesson: PaperLesson {
                 let kt = min(k, P.A / d)
                 live.fill("tk", col: 0, row: PT, w: S.W, h: Double(kt) * c, .tint(0.3))
                 if kt > 0 {
-                    let segs = (1..<max(2, d)).filter { $0 < d }.map { x in (live.P(Double(x) * c, PT), live.P(Double(x) * c, PT + Double(kt) * c)) }
-                        + (0...kt).map { r in (live.P(0, PT + Double(r) * c), live.P(S.W, PT + Double(r) * c)) }
+                    // built in loops: GitHub's compiler can't read the one-expression form in time
+                    let bottom: Double = PT + Double(kt) * c
+                    var segs = [(CGPoint, CGPoint)]()
+                    for x in 1..<max(2, d) where x < d {
+                        let gx: Double = Double(x) * c
+                        segs.append((live.P(gx, PT), live.P(gx, bottom)))
+                    }
+                    for r in 0...kt {
+                        let gy: Double = PT + Double(r) * c
+                        segs.append((live.P(0, gy), live.P(S.W, gy)))
+                    }
                     live.sketch.segments("tkl", segs, .tint(0.8), width: 1)
                 }
                 edge(&live, "e", k: k, A: P.A, S, handle: true, held: s.grabbed)
