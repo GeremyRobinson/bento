@@ -29,9 +29,12 @@ jobs:
         run: brew install xcodegen && xcodegen
       - name: Build for the iPad simulator
         run: |
+          # GitHub's Xcode is older than ours and gives up on long expressions sooner: give it more room
+          SLOW="-Xfrontend -solver-memory-threshold=4000000000 -Xfrontend -solver-scope-threshold=10000000 -Xfrontend -solver-trail-threshold=640000000"
           xcodebuild -project Obento2.xcodeproj -scheme Obento2 -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' -derivedDataPath build \
-            ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 \
+            ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO \
+            OTHER_SWIFT_FLAGS="\$(inherited) $SLOW" build > build.log 2>&1 \
             || { grep -E ": error:" -A4 build.log | head -200; exit 1; }
           grep -E ": warning:" build.log | grep Obento2/ | sort -u | head -40 || true
       - name: Build the Swift Playgrounds version

@@ -95,9 +95,13 @@ struct DivideByDecimalLesson: PaperLesson {
         // MARK: the line: a short tick every half, a long one every whole, the wholes numbered under it (not where the
         // dividend's own name is); drawn bigger than a square a tenth, a small tick every tenth too, so they still count
         pic.line("line", [(0, L), (W, L)], .ink)
-        pic.sketch.segments("ticks", stride(from: 0, through: 10 * q.wholes, by: u > 1 ? 1 : 5).map { c in
-            (pic.P(Double(c) * u, L - (c % 10 == 0 ? 2 : c % 5 == 0 ? 1 : 0.5)), pic.P(Double(c) * u, L))
-        }, .ink, width: Sketch.stroke)
+        var ticks = [(CGPoint, CGPoint)]()
+        for c in stride(from: 0, through: 10 * q.wholes, by: u > 1 ? 1 : 5) {
+            let x: Double = Double(c) * u
+            let tall: Double = c % 10 == 0 ? 2 : c % 5 == 0 ? 1 : 0.5
+            ticks.append((pic.P(x, L - tall), pic.P(x, L)))
+        }
+        pic.sketch.segments("ticks", ticks, .ink, width: Sketch.stroke)
         for j in 0...q.wholes where abs(Double(10 * j) * u - end) >= 2.5 * k {
             pic.label("w\(j)", "\(j)", Self.small, .below, edge: L, along: Double(10 * j) * u)
         }
