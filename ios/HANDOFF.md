@@ -187,6 +187,27 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   `page-g6-write-0 -numbers kind=3,q=12 -wrong`, `page-g6-eval-1 -numbers a=9,b=7,x=8,y=4 -wrong -keypad`,
   `page-g6-equiv-0 -numbers kind=1,a=3,b=4 -hand grab=1,col=6,cy=8`; `-shot zooms -ids … -verbose` lists every problem's steps.
 
+- 6th grade chapter 6, Equations, is built (4 Nov; Core: `Equations6` (`Eq6`, `OneStep6`, `Ineq6`, `Depend6`), tests
+  `EquationsG6Tests`; App: `OneStepLesson`, `InequalitiesLesson`, `TwoQuantitiesLesson`, their shared `EquationsKit6` (`E6.cells`: cells
+  tinted, strong or crossed off; `E6.value`: a value as a number or a whole and a fraction)). As the preview
+  (`design/prototype/grade6-ch6.html`), grey second lines folded into the instructions. One-step: slide the a off the end (the right
+  side's last a cross off with it), slide a tray onto the bottom's end (the crossed cells come back), drag the right edge until it's
+  all used, drag the bottom edge to all the rows; write x (a whole and a fraction box for the quarters type); check. A cell is 4
+  squares only while what slides still fits 60 squares across (else 2). Inequalities: the story is the picture's name; drag the
+  circle, tap it filled or open (kept, `run.kept["fill"]`), drag the arrow off the line's end, tap the test numbers that work. Two
+  quantities: the across axis's name right of its arrow (under it the problem was 72%), the table's 4-square columns with each number
+  tight on the middle grid line. Departures: the sign and the number are two steps (pick, then type), the sign's choices the engine's
+  row under the record; the circle starts 6 from the number (the preview's is random); a stop already made is let go with nothing
+  new (no check). Least zooms: 75%, 85%, 75%; keys up 75%+ (×'s rows aren't kept beside the line: 67% → 75%). Shots e.g.
+  `page-g6-onestep-0 -numbers kind=1,a=7,xc=15 -hand grab=1,h=3,g=0,d=-10`, `page-g6-ineq-3 -numbers sign=3,n=-4,age=0,t0=-12.5,t1=-6,t2=-4,t3=0 -wrong`,
+  `page-g6-depend-4 -numbers kind=1,st=0,c=5,back=1,xs=14 -wrong2`. A paper lesson's hands are asked again as the finger moves, so a
+  release compares with where the drag started kept in the hand ("from"), never with the hand state the hands were made from.
+  A kept-only move (no check) redraws the still picture (the still and layout keys read `run.kept`).
+- Fixes of 4 Nov: a coefficient box hugs its letter (`WorkBox.hugs`, `M7.hugs`/`M7.widths`: a typed 3 reads 3x; a lone bracket
+  takes one square, "3(2x + 1)" tight); the fold's half isn't a dark smear edge-on (held within ~5° of upright it's a thin line in
+  the chapter colour; lying back it isn't drawn for the moment it passes edge-on, `SketchDrawer.Node.flips`); a held fold across the
+  line moves 0's number and "$0" off the fold line to the side that stays down.
+
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
   finger; `BarsKit.swift` the fractions' bars, ruler and sliding pieces). `App/LessonHands.swift`: hand moves.
