@@ -450,7 +450,8 @@ final class SketchDrawer {
         }
         func P(_ p: CGPoint) -> CGPoint { CGPoint(x: o.x + p.x * k, y: o.y + p.y * k) }
         // light or dark is part of every part: switching redraws it all in the new colours
-        let sigs = s.items.map { "\($0.kind) \($0.colour) \(o) \(k) \(dark)" }
+        // a part given a shape to pass through (Item.via) changes even when its own shape is the same: it goes there and back
+        let sigs = s.items.map { "\($0.kind) \($0.colour) \(o) \(k) \(dark)" + ($0.via.map { " via \($0)" } ?? "") }
         var fresh = s.items.indices.filter { nodes[s.items[$0].id]?.sig != sigs[$0] }
         // a part that's the same but somewhere else (content above it grew) glides there instead of being drawn again
         // (G 19 Oct)
@@ -472,7 +473,11 @@ final class SketchDrawer {
             let item = s.items[i]
             guard item.morphs, let old = nodes[item.id], !old.undrawing, old.shown >= 1, let was = old.item, was.colour == item.colour,
                   let to = Self.shape(item.kind, P, scale: k), let sh = old.shape, sh.fits(to), let from = current(old, at: now) else { continue }
-            startMorph(old, from: from, to: to, at: now + item.delay)
+            // through its `via` shape first (a flat shape turning upright and back where it is)
+            if let v = item.via, let viaShape = Self.shape(v, P, scale: k), viaShape.fits(to) {
+                startMorph(old, from: from, to: viaShape, at: now + item.delay)
+                old.next = (to, now + item.delay + Self.morphTime + Self.viaRest); old.later = []
+            } else { startMorph(old, from: from, to: to, at: now + item.delay) }
             old.sig = sigs[i]; old.item = item
             moved.insert(item.id)
         }

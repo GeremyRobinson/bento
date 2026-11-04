@@ -54,25 +54,29 @@ struct FlatShapesLesson: PaperLesson {
             }
             if st <= 1 && s.on("spot"), let i = todo.first { let m = st == 0 ? KS.sideLabel(p, i, out: 0) : p[i]; pic.circle("spot", at: m.0, m.1, radius: 1.8, .chapter) }
         } else {
-            // the See: the shape (its lit sides, its corners) turns upright where it is and back; or the stick
+            // the See: the shape (its lit sides, its corners) turns upright where it is and back; a square or rectangle
+            // has the stick laid on each side instead (both at once would cross)
+            let four = P.kind == "square" || P.kind == "rectangle", turning = P.turned && !four
             let up = KS.turned(p, by: -P.angle, about: B.c)
-            func seeded(_ id: String, _ q: [Pt], _ qUp: [Pt], _ colour: Sketch.Colour, over: Bool = false) {
-                if P.turned { pic.sketch.from[id] = KS.kind(q, pic, over: over); pic.sketch.via[id] = KS.kind(qUp, pic, over: over) }
-                if over { pic.sketch.plate(id, q.map { pic.P($0.0, $0.1) }, colour) } else { KS.poly(&pic, id, q, colour) }
-                pic.sketch.from = [:]; pic.sketch.via = [:]
-            }
-            seeded("shape3", p, up, KS.fill)
+            // the parts already showing (the same ids) go upright and back where they are
+            pic.sketch.morphs = turning
+            func dotPts(_ c: Pt) -> [CGPoint] { (0..<24).map { i in let a = Double(i) / 24 * 2 * .pi; return pic.P(c.0 + 0.6 * cos(a), c.1 + 0.6 * sin(a)) } }
+            if turning { pic.sketch.via["shape"] = KS.kind(up, pic) }
+            KS.poly(&pic, "shape", p, KS.fill)
+            if turning { pic.sketch.via["shapeo"] = .line((up + [up[0]]).map { pic.P($0.0, $0.1) }, width: Sketch.stroke, dashed: false) }
+            KS.outline(&pic, "shapeo", p)
             for i in 0..<n {
-                let b = KS.edge(p, i), bu = KS.edge(up, i)
-                if !(P.kind == "square" || P.kind == "rectangle") { seeded("sd3\(i)", b, bu, KS.lit) }
-                let d = KS.circlePts(p[i], 0.6, 16), du = KS.circlePts(up[i], 0.6, 16)
-                seeded("cd3\(i)", d, du, .chapter, over: true)
+                if !four {
+                    if turning { pic.sketch.via["sd\(i)false"] = KS.kind(KS.edge(up, i), pic) }
+                    KS.poly(&pic, "sd\(i)false", KS.edge(p, i), KS.lit)
+                }
+                if turning { pic.sketch.via["cd\(i)"] = .plate(dotPts(up[i])) }
+                pic.dot("cd\(i)", at: p[i].0, p[i].1, radius: 0.6, .chapter, over: true)
             }
-            if !P.turned { KS.outline(&pic, "shapeo", p) }
-            var seeTime = P.turned ? SketchDrawer.morphTime * 2 + SketchDrawer.viaRest : 0
-            if P.kind == "square" || P.kind == "rectangle" {
-                KS.outline(&pic, "shapeo", p)
-                seeTime = KS.stick(&pic, "stk", p, start: PaperClock.now + 0.3) + 0.6
+            pic.sketch.via = [:]; pic.sketch.morphs = false
+            var seeTime = turning ? SketchDrawer.morphTime * 2 + SketchDrawer.viaRest : 0
+            if four {
+                seeTime = KS.stick(&pic, "stk", p, start: PaperClock.now) + 0.6
             }
             // the record beside it, once it's been seen
             pic.sketch.startAt = PaperClock.now + seeTime

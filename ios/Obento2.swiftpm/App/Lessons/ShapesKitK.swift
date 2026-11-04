@@ -52,7 +52,9 @@ enum KS {
     /// Side i lit: a band just outside it (so it never lies over the shape's own fill), `w` squares wide.
     static func edge(_ p: [Pt], _ i: Int, w: Double = 0.8) -> [Pt] {
         let a = p[i], b = p[(i + 1) % p.count], o = sideOut(p, i)
-        return [a, b, (b.0 + o.0 * w, b.1 + o.1 * w), (a.0 + o.0 * w, a.1 + o.1 * w)]
+        // its outer edge runs on past the corners as far as it's wide, so lit sides meet round a corner
+        let l = max(1e-9, hypot(b.0 - a.0, b.1 - a.1)), u = ((b.0 - a.0) / l * w, (b.1 - a.1) / l * w)
+        return [a, b, (b.0 + o.0 * w + u.0, b.1 + o.1 * w + u.1), (a.0 + o.0 * w - u.0, a.1 + o.1 * w - u.1)]
     }
     /// A polygon turned by `a` radians about `c`.
     static func turned(_ p: [Pt], by a: Double, about c: Pt) -> [Pt] {
