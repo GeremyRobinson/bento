@@ -1376,9 +1376,12 @@ function dTrig(i) {
         }
       }
       if (stg === "name") return;
+      // already in lowest terms: the ratio is written once, on its own line (no second, simplified line)
+      const lowest = len[topRole] === nn, writing = stg === "write" || stg === "see" || L.passed("write") || L.task.kind === "done";
+      if (lowest && writing) { tline("t1", [f, ref, "=", { frac: [BX("write", 0, 2), BX("write", 1, 2)] }], 1, R1, L); if (stg === "write") checkKeys(CKX, R1 - 1, false); return; }
       if (st.top != null) tline("t1", [f, ref, "=", { frac: [{ t: String(len[topRole]), c: "var(--chapter)" }, st.bot != null ? { t: String(len[botRole]), c: "var(--chapter)" } : ""] }], 1, R1, L);
       else tline("t1", [f, ref, "="], 1, R1, L);
-      if (stg === "write" || stg === "see" || L.passed("write") || L.task.kind === "done") {
+      if (writing) {
         tline("w1", [f, ref, "=", { frac: [BX("write", 0, 2), BX("write", 1, 2)] }], 1, R2, L);
         if (stg === "write") checkKeys(CKX, R2 - 1, false);
       }
