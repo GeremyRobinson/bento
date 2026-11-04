@@ -628,6 +628,7 @@ final class PaperModel {
                          test: p.isTest ? LessonPlan.test : review ? Review.problems : nil, recheck: !p.isTest && !review && Progress.shared.dueBack(p.id),
                          seed: Shots.seed(p.id))
         b.frame = { [weak self] r in self?.frameCurrent(r) }
+        WorkProblem.keyboardZoom = { [weak self] r in self?.keyboardZoom(r) ?? 1 }
         b.close = { [weak self] in self?.close() }
         bars = b; selected = nil
         b.start()
@@ -644,19 +645,43 @@ final class PaperModel {
 
     /// How much of the screen's bottom the iPad's keyboard covers while a number is typed.
     private(set) var keyboard: Double = 0
-    func keyboardAppeared(_ h: Double) {
-        guard abs(h - keyboard) > 1 else { return }
-        keyboard = h
+    /// Where the keyboard is drawn on the screen while it's up, wherever that is (docked along the bottom, a panel down
+    /// the side, a floating pad): the camera frames around it.
+    private(set) var keys: Rect?
+    func keyboardAppeared(_ h: Double, rect: Rect? = nil) {
+        guard abs(h - keyboard) > 1 || rect != keys else { return }
+        keyboard = h; keys = rect
         if bars?.mode == .work { reframe() }
         // setting up's name, or the grown-ups' page's: the camera keeps it above the keys
         else if bars == nil, place != nil { reframePlace() }
     }
 
+    /// The room on the screen the camera frames `r` into: under the top's margin and above the bar, and with the
+    /// keyboard up, beside it: above it, left or right of it, whichever shows `r` biggest (G 3 Nov: the keyboard never
+    /// hides the work).
+    func room(for r: Rect, maxZoom: Double) -> Rect {
+        let top = Self.chrome.top, bottom = max(Self.chrome.bottom, keyboard + 16)
+        let whole = Rect(x: 0, y: top, width: screen.width, height: screen.height - top - bottom)
+        guard let k = keys else { return whole }
+        let pad = screen.width > 760 ? Self.margin : 8, gap = 16.0
+        var rooms: [Rect] = []
+        if k.y - gap - top > 160 { rooms.append(Rect(x: 0, y: top, width: screen.width, height: min(whole.height, k.y - gap - top))) }
+        if k.x - gap > 300 { rooms.append(Rect(x: 0, y: top, width: k.x - gap, height: whole.height)) }
+        if screen.width - k.x - k.width - gap > 300 { rooms.append(Rect(x: k.x + k.width + gap, y: top, width: screen.width - k.x - k.width - gap, height: whole.height)) }
+        func fit(_ q: Rect) -> Double { min(maxZoom, (q.width - 2 * pad) / max(1, r.width), (q.height - 2 * pad) / max(1, r.height)) }
+        return rooms.max { fit($0) < fit($1) } ?? whole
+    }
+    /// How big `r` shows framed beside the keyboard (WorkProblem.stageFrame: the whole problem, or only its record).
+    func keyboardZoom(_ r: Rect) -> Double {
+        let q = room(for: r, maxZoom: CameraTiming.lessonMax), pad = screen.width > 760 ? Self.margin : 8
+        return min(CameraTiming.lessonMax, (q.width - 2 * pad) / max(1, r.width), (q.height - 2 * pad) / max(1, r.height))
+    }
+
     /// A rect framed clear of the bar (and the keyboard), with two cells to spare, never closer than `maxZoom`.
     func framingBelowBar(_ r: Rect, maxZoom: Double) -> PaperCamera {
-        let bottom = max(Self.chrome.bottom, keyboard + 16)
-        var cam = PaperCamera.framing(r, in: Size(screen.width, screen.height - Self.chrome.top - bottom), pad: screen.width > 760 ? Self.margin : 8, maxZoom: maxZoom)
-        cam.y += Self.chrome.top
+        let q = room(for: r, maxZoom: maxZoom)
+        var cam = PaperCamera.framing(r, in: Size(q.width, q.height), pad: screen.width > 760 ? Self.margin : 8, maxZoom: maxZoom)
+        cam.x += q.x; cam.y += q.y
         return cam
     }
 

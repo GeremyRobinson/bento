@@ -81,21 +81,45 @@ struct PaperScreen: View {
                 model.setReduceMotion(UIAccessibility.isReduceMotionEnabled)
             }
             .onChange(of: geo.size) { _, s in model.screen = Size(s.width, s.height) }
-            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { n in
-                // the keyboard's top, so the camera frames the problem in the paper still showing above it; only a
-                // keyboard docked across the bottom counts (iPadOS's floating number pad covers just its corner)
-                guard let f = n.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
-                let screen = geo.frame(in: .global)
-                let docked = f.width >= screen.width * 0.8 && f.maxY >= screen.maxY - 1
-                // a paper lesson's camera then frames its record above it (WorkProblem.stageFrame)
-                WorkProblem.keyboard = docked ? max(0, screen.maxY - f.minY) : 0
-                model.keyboardAppeared(WorkProblem.keyboard)
-            }
-            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in WorkProblem.keyboard = 0; model.keyboardAppeared(0) }
+            // the keyboard's frame, wherever it's drawn (docked along the bottom, a panel down the side, a floating pad):
+            // the camera frames the work in the paper still showing beside it (G 3 Nov: the keyboard never hides the
+            // work), gliding there as it comes up and back as it goes. Every notice of it counts (iPadOS posts only some
+            // of them for a keyboard hosted by the system).
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { keyboardMoved($0, geo) }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidChangeFrameNotification)) { keyboardMoved($0, geo) }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { keyboardMoved($0, geo) }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { keyboardMoved($0, geo) }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardGone() }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidHideNotification)) { _ in keyboardGone() }
         }
         .ignoresSafeArea()
         }
     }
+
+    /// The keyboard's end frame, in this view's points: its screen's coordinates turned into the window's (an iPad
+    /// held one way with the app turned the other reports the keys in the screen's own way up). A keyboard docked across
+    /// the bottom also sets how high it reaches (the bar rises above it).
+    private func keyboardMoved(_ n: Notification, _ geo: GeometryProxy) {
+        guard var f = n.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+        let window = UIApplication.shared.connectedScenes.compactMap { ($0 as? UIWindowScene)?.keyWindow }.first
+        if let w = window { f = w.convert(f, from: w.screen.coordinateSpace) }
+        let screen = geo.frame(in: .global)
+        // still in the iPad's own way up while the app is turned (a portrait screen showing the app in landscape): the
+        // keys along that screen's bottom edge lie down this view's right side
+        let fits = f.maxX <= screen.width + 1 && f.maxY <= screen.height + 1
+        if !fits, f.maxX <= screen.height + 1, f.maxY <= screen.width + 1 {
+            f = CGRect(x: f.minY, y: screen.height - f.maxX, width: f.height, height: f.width)
+        }
+        let docked = f.width >= screen.width * 0.8 && f.maxY >= screen.maxY - 1
+        WorkProblem.keyboard = docked ? max(0, screen.maxY - f.minY) : 0
+        let over = f.intersection(screen)
+        let keys = over.isNull || over.width < 40 || over.height < 40 ? nil
+            : Rect(x: over.minX - screen.minX, y: over.minY - screen.minY, width: over.width, height: over.height)
+        WorkProblem.keys = keys
+        model.keyboardAppeared(WorkProblem.keyboard, rect: keys)
+    }
+
+    private func keyboardGone() { WorkProblem.keyboard = 0; WorkProblem.keys = nil; model.keyboardAppeared(0, rect: nil) }
 
     /// The problem being worked that wants a typed number now (NumberTyping.wantsTyping): a typed step's, or Volume of a
     /// box's record.

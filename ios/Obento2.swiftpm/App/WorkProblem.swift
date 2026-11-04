@@ -484,15 +484,28 @@ final class WorkProblem: Identifiable, PageProblem {
         if ghost?.mode == .preview, let held = heldFrame { return held }
         guard let st = layout.stack else { return nil }
         var r = st.frame
-        // a docked keyboard up for the record's box: the record and its blocks, framed in the paper above it (beside a
-        // tall picture, the record's column, down to its blocks)
-        if Self.keyboard > 0, wantsTyping {
-            let top = (st.plan.recordTop - 1) * Paper.cell
-            if st.plan.beside {
-                let left = (st.plan.recordLeft - 2) * Paper.cell, bottom = (st.blocksTop + 2 * st.plan.k) * Paper.cell
-                r = CGRect(x: left, y: top, width: max(2 * Paper.cell, r.maxX - left), height: max(2 * Paper.cell, bottom - top))
-            } else {
-                r = CGRect(x: r.minX, y: top, width: r.width, height: max(2 * Paper.cell, r.maxY - top))
+        // the keyboard up for the record's box (G 3 Nov: it never hides the work): the camera frames beside it
+        // (PaperModel.room): the whole problem when it still shows at 75% or more there, else the record and its blocks,
+        // when they show bigger
+        if Self.keys != nil, wantsTyping {
+            // the record alone: its line, its boxes and Check, with a square round them
+            var rec = CGRect(x: st.blocksLeft * Paper.cell, y: st.blocksTop * Paper.cell, width: 7 * Paper.cell * st.plan.k, height: 2 * Paper.cell * st.plan.k)
+            if let p = paper, let b = p.draw(state()).record.bounds { rec = rec.union(b.offsetBy(dx: layout.workOffset.x, dy: layout.workOffset.y)) }
+            for b in layout.boxes { rec = rec.union(b.rect(for: "")) }
+            rec = rec.insetBy(dx: -Paper.cell, dy: -Paper.cell)
+            func g(_ q: CGRect) -> Rect { Rect(x: origin.x + q.minX, y: origin.y + q.minY, width: q.width, height: q.height) }
+            // or the problem from its left edge through the record's right end (what to do, the picture and the record,
+            // whatever's past the record left out), when that still shows at 70% or more
+            let upTo = CGRect(x: r.minX, y: r.minY, width: max(2 * Paper.cell, rec.maxX - r.minX), height: max(r.height, rec.maxY - r.minY))
+            if let zoom = Self.keyboardZoom, zoom(g(r)) < 0.75, zoom(g(upTo)) >= 0.7 { r = upTo }
+            else if let zoom = Self.keyboardZoom, zoom(g(r)) < 0.75, zoom(g(rec)) > zoom(g(r)) {
+                // no closer than the problem showed before the keys came up: the record grown round its middle to that
+                // size, kept inside the problem so the rest is as much of it as fits
+                let want = max(zoom(g(r)), min(st.plan.zoom, zoom(g(rec)))), f = zoom(g(rec)) / want
+                var q = rec.insetBy(dx: -rec.width * (f - 1) / 2, dy: -rec.height * (f - 1) / 2)
+                if q.width <= r.width { q.origin.x = min(max(q.minX, r.minX), r.maxX - q.width) }
+                if q.height <= r.height { q.origin.y = min(max(q.minY, r.minY), r.maxY - q.height) }
+                r = q
             }
         }
         let f = Rect(x: origin.x + r.minX, y: origin.y + r.minY, width: r.width, height: r.height)
@@ -503,6 +516,10 @@ final class WorkProblem: Identifiable, PageProblem {
     /// How much of the screen's bottom a docked keyboard covers (PaperScreen sets it; iPadOS's floating number pad
     /// covers only its corner and counts as none).
     static var keyboard: Double = 0
+    /// Where the keyboard is on the screen while it's up (any keyboard: docked, a panel, a floating pad), and how big a
+    /// paper rect shows framed beside it (PaperModel.keyboardZoom).
+    static var keys: Rect?
+    static var keyboardZoom: ((Rect) -> Double)?
 
     private func time(_ delay: Double) -> Double { instant ? PaperClock.now - 100 : PaperClock.now + delay }
 
