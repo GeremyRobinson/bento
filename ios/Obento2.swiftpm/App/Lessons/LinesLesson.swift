@@ -106,7 +106,7 @@ struct LinesLesson: PaperLesson {
         /// Where the page corner goes: the angle's corner along its first arm, or where the lines cross along the first.
         var target: (at: Pt, a: Double) { p.kind == 1 ? (C, a0) : (X, Geo4.angOf(Pt(0, 0), Pt(Double(p.d1.0), Double(p.d1.1)))) }
         func endType(_ i: Int, _ s: PaperState) -> Int {
-            if p.make { return Int(s.h("e\(i)") ?? 0) }
+            if p.make && G8.stage(s) == LinesRays.Stage.make.rawValue { return Int(s.h("e\(i)") ?? 0) }
             return i == 0 ? (p.item == 0 ? 2 : 1) : (p.item == 2 ? 1 : 2)
         }
         /// The made line's grid steps: what's drawn, or the right one once it's done.
@@ -154,7 +154,7 @@ struct LinesLesson: PaperLesson {
                 pic.word("pn\(nm)", nm, at: o.x, o.y, G8.say)
             }
         case 1:
-            if stage == .name || done || p.make { G8.pageCorner(&pic, "pc", at: q.C, q.a0) }
+            if stage == .name || done || p.make { G8.pageCorner(&pic, "pc", at: q.C, q.a0, laid: true) }
             G8.seg(&pic, "arm1", q.C, Geo4.pol(q.C, q.L1, q.a0))
             if p.make {
                 let v = s.h("v") ?? (done ? Double([45, 90, 135][p.item]) : 0), a2 = q.a0 + v
@@ -186,8 +186,8 @@ struct LinesLesson: PaperLesson {
             }
         default:
             let tg = q.target
-            if (stage == .name || done) && p.item > 0 && !p.make { G8.pageCorner(&pic, "pcl", at: q.X, tg.a) }
-            if p.make && done && p.item == 1 { G8.pageCorner(&pic, "pcl", at: q.X, tg.a) }
+            if (stage == .name || done) && p.item > 0 && !p.make { G8.pageCorner(&pic, "pcl", at: q.X, tg.a, laid: true) }
+            if p.make && done && p.item == 1 { G8.pageCorner(&pic, "pcl", at: q.X, tg.a, laid: true) }
             let allRun = stage != .run && stage != .ask
             for (i, ln) in q.lines.enumerated() {
                 let run = p.make || allRun || (s.h("r\(i)") ?? 0) > 0

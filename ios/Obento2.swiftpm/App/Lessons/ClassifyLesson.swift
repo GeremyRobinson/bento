@@ -66,7 +66,7 @@ struct ClassifyLesson: PaperLesson {
         let found: [(Int, Int)] = at == 2 ? pairs(s.hand) : at >= 3 ? p.pairs : []
         G8.fill(&pic, "shape", q.pts, .tint(0.2))
         // the page corner laid on the corner tapped: over the shape's fill, under its sides
-        if at == 1, let c = s.h("pc").map({ Int($0) }), c < n { G8.pageCorner(&pic, "pco\(c)", at: q.pts[c], q.pcAngle(c).a) }
+        if at == 1, let c = s.h("pc").map({ Int($0) }), c < n { G8.pageCorner(&pic, "pco\(c)", at: q.pts[c], q.pcAngle(c).a, laid: true) }
         G8.path(&pic, "shapeo", q.pts, .ink, closed: true)
         // the side picked first, lit
         if at == 2, let i = s.h("sel").map({ Int($0) }), i < n {

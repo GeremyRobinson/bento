@@ -49,9 +49,11 @@ enum G8 {
     }
     /// The page corner's square: its corner at `at`, its edges along a and a + 90.
     static func pcPts(_ at: Pt, _ a: Double) -> [Pt] { let p = Geo4.pol(at, pc, a); return [at, p, Geo4.pol(p, pc, a + 90), Geo4.pol(at, pc, a + 90)] }
-    static func pageCorner(_ pen: inout GridPen, _ id: String, at: Pt, _ a: Double) {
+    /// `laid`: lying on the picture, it's drawn as its edges only (a fill over the picture's own fills bands on the
+    /// screen); moved about or resting, it's a piece of paper hiding the grid.
+    static func pageCorner(_ pen: inout GridPen, _ id: String, at: Pt, _ a: Double, laid: Bool = false) {
         let pts = pcPts(at, a)
-        fill(&pen, id + "s", pts, .paper)
+        if !laid { fill(&pen, id + "s", pts, .paper) }
         path(&pen, id + "o", pts, .ink2, closed: true)
         cornerMark(&pen, id + "m", at, a, .ink2)
     }
@@ -64,7 +66,12 @@ enum G8 {
     /// the left. `use` ("R" or "L") lights the scale whose 0 is on the first arm and rings that 0.
     static func protractor(_ pen: inout GridPen, _ id: String, _ c: Pt, _ R: Double, use: String?) {
         let half = arcPts(c, R, 0, 180)
-        fill(&pen, id + "bg", half, .paper)
+        // its paper is a band round the scales, in pieces that each fill flat: the middle stays clear for the angle's
+        // own shading (fills that overlap band on the screen)
+        for k in 0..<18 {
+            let a0 = Double(10 * k), a1 = a0 + 10
+            fill(&pen, "\(id)bg\(k)", [Geo4.pol(c, R, a0), Geo4.pol(c, R, a0 + 5), Geo4.pol(c, R, a1), Geo4.pol(c, 6, a1), Geo4.pol(c, 6, a0)], .paper)
+        }
         path(&pen, id + "o", half, .ink2, closed: true)
         var t1: [(CGPoint, CGPoint)] = [], t5: [(CGPoint, CGPoint)] = []
         for d in 0...180 {

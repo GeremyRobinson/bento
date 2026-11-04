@@ -36,7 +36,7 @@ struct AnglesAddLesson: PaperLesson {
             let m = (from + to) / 2, rr = to - from < 25 ? 12.0 : 9, w = Geo4.pol(C, rr, m)
             pic.word(id, t, at: w.x, w.y, G8.say.colour(c))
         }
-        for i in 0..<q.laid(at) { G8.pageCorner(&pic, "pc\(i)", at: C, 90 * Double(i)) }
+        for i in 0..<q.laid(at) { G8.pageCorner(&pic, "pc\(i)", at: C, 90 * Double(i), laid: true) }
         if p.fold == 1 && at == 3 { G8.protractor(&pic, "pr", C, ProtractorLesson.PR, use: "R") }
         if done && p.miss != nil { G8.wedge(&pic, "mfill", C, 6, a, T) }
         if done && p.fold == 2 { G8.wedge(&pic, "mfill", C, 6, 0, T) }
