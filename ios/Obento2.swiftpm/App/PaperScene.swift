@@ -331,7 +331,9 @@ extension Piece {
         case "gk-onemore": // the number stairs, each train one cube longer: 7 by 6
             return (1...6).flatMap { k -> [[CGPoint]] in
                 let y = Double(k - 1), w = Double(k + 1)
-                return [box(0, y, w, 1)] + (1..<(k + 1)).map { x in line((Double(x), y), (Double(x), y + 1)) }
+                var parts: [[CGPoint]] = [box(0, y, w, 1)]
+                for x in 1..<(k + 1) { parts.append(line((Double(x), y), (Double(x), y + 1))) }
+                return parts
             }
         case "k-compare": // two rows of dots matched in pairs, two on top with no partner: 7 by 6
             func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.4 * cos(a), y + 0.4 * sin(a)) } }
@@ -360,9 +362,11 @@ extension Piece {
             return [line((0, 0), (0, 6)), box(0, 0.5, 9, 1.5), box(0, 4, 6, 1.5)] + (1..<9).map { x in line((Double(x), 0.5), (Double(x), 2)) }
                 + (1..<6).map { x in line((Double(x), 4), (Double(x), 5.5)) } + dash
         case "gk-heavier": // a pan balance tipped, the heavy one down on the left: 11 by 6
-            return [line((5.5, 1.5), (5.5, 6)), line((4, 6), (7, 6)), line((1.5, 2.3), (9.5, 0.7)),
-                    line((1.5, 2.3), (0, 4.8)), line((1.5, 2.3), (3, 4.8)), line((0, 4.8), (3, 4.8)), box(0.8, 3.8, 1.4, 1),
-                    line((9.5, 0.7), (8, 3.2)), line((9.5, 0.7), (11, 3.2)), line((8, 3.2), (11, 3.2)), box(8.2, 2.2, 2.6, 1)]
+            // in parts: GitHub's compiler can't read it as one list
+            let beam: [[CGPoint]] = [line((5.5, 1.5), (5.5, 6)), line((4, 6), (7, 6)), line((1.5, 2.3), (9.5, 0.7))]
+            let left: [[CGPoint]] = [line((1.5, 2.3), (0, 4.8)), line((1.5, 2.3), (3, 4.8)), line((0, 4.8), (3, 4.8)), box(0.8, 3.8, 1.4, 1)]
+            let right: [[CGPoint]] = [line((9.5, 0.7), (8, 3.2)), line((9.5, 0.7), (11, 3.2)), line((8, 3.2), (11, 3.2)), box(8.2, 2.2, 2.6, 1)]
+            return beam + left + right
         case "k-sort": // three rows of things from one line, most at the top: 9 by 6
             func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.45 * cos(a), y + 0.45 * sin(a)) } }
             return [line((1.6, 0), (1.6, 6)), box(0, 0, 1.6, 1.6), box(0, 2.2, 1.6, 1.6), box(0, 4.4, 1.6, 1.6)]
@@ -655,8 +659,10 @@ extension Piece {
         case "g6-planeshapes": // two axes and a rectangle across the y-axis: 11 by 6
             return [line((0, 4), (11, 4)), line((5.5, 0), (5.5, 6)), box(2, 1, 6, 4)]
         case "g6-expo": // a square of 4 by 4 blocks, and a cube standing beside it: 11 by 6
-            return [box(0, 1, 4, 4)] + [1.0, 2, 3].flatMap { k in [line((k, 1), (k, 5)), line((0, 1 + k), (4, 1 + k))] }
-                + [box(6, 2.5, 3, 3), line((6, 2.5), (7.5, 1), (10.5, 1), (9, 2.5)), line((10.5, 1), (10.5, 4), (9, 5.5))]
+            var parts: [[CGPoint]] = [box(0, 1, 4, 4)]
+            for k in [1.0, 2, 3] { parts += [line((k, 1), (k, 5)), line((0, 1 + k), (4, 1 + k))] }
+            let cube: [[CGPoint]] = [box(6, 2.5, 3, 3), line((6, 2.5), (7.5, 1), (10.5, 1), (9, 2.5)), line((10.5, 1), (10.5, 4), (9, 5.5))]
+            return parts + cube
         case "g6-write": // an n strip, its end dashed, then squares laid after it: 11 by 4
             return [line((5, 2), (0, 2), (0, 4), (5, 4)), line((5, 2), (5, 2.6)), line((5, 3.4), (5, 4))]
                 + [5.5, 7, 8.5].map { x in box(x, 2.5, 1.5, 1.5) }
