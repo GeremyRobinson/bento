@@ -169,6 +169,10 @@ enum PaperLessons {
         case "g6-write": return WriteExprLesson()
         case "g6-eval": return EvalExprLesson()
         case "g6-equiv": return EquivExprLesson()
+        // 6th grade, Equations (4 Nov 2026)
+        case "g6-onestep": return OneStepLesson()
+        case "g6-ineq": return InequalitiesLesson()
+        case "g6-depend": return TwoQuantitiesLesson()
         default: return nil
         }
     }

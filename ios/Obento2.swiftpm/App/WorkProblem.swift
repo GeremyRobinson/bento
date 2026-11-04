@@ -99,7 +99,7 @@ final class WorkProblem: Identifiable, PageProblem {
         if stacked {
             // the plan is kept for the problem; the step's own parts (its blocks' row, its frame) are worked out from it
             let s = state()
-            let key = "\(lesson.numbers) \(lesson.story) \(s.index) \(s.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(stillHand(s.hand)) \(s.run.typed.sorted { $0.key < $1.key }) \(auto) \(howToButtons) \(s.keys)"
+            let key = "\(lesson.numbers) \(lesson.story) \(s.index) \(s.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(stillHand(s.hand)) \(s.run.kept.sorted { $0.key < $1.key }) \(s.run.typed.sorted { $0.key < $1.key }) \(auto) \(howToButtons) \(s.keys)"
             if let c = laidOut, c.key == key { return c.layout }
             let l = ProblemGrid.stackedLayout(self, s)
             laidOut = (key, l)

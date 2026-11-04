@@ -144,6 +144,10 @@ extension Piece {
         case "g6-write": return [box(0, 2, 5, 2)]                               // the n strip
         case "g6-eval": return [box(0, 0, 4, 1), box(0, 1.5, 4, 1), box(0, 3, 4, 1)] // the x rows, stretched to x
         case "g6-equiv": return [box(0, 1, 6, 3)]                               // the rows of x
+        // 6th grade, Equations (4 Nov)
+        case "g6-onestep": return [box(0, 0, 5, 1.5)]                           // x, what's left
+        case "g6-ineq": return [box(4, 1.5, 7, 1)]                              // the numbers that work
+        case "g6-depend": return [[CGPoint(x: at.x, y: at.y + 6 * c), CGPoint(x: at.x + 9 * c, y: at.y), CGPoint(x: at.x + 9 * c, y: at.y + 6 * c)]] // under the rule's line
         case "g4-lines", "g4-turns", "g4-protractor", "g4-angles", "g4-classify", "g4-symmetry":
             func q(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: at.x + x * c, y: at.y + y * c) }
             func pie(_ cx: Double, _ cy: Double, _ r: Double, _ a0: Double, _ a1: Double) -> [CGPoint] {
@@ -275,6 +279,15 @@ extension Piece {
         case "g6-equiv": // rows of x and the number part, cut where x ends: 11 by 4
             return [box(0, 1, 6, 3), box(7, 1, 3, 3), line((0, 2), (6, 2)), line((0, 3), (6, 3)), line((7, 2), (10, 2)), line((7, 3), (10, 3)),
                     line((8, 1), (8, 4)), line((9, 1), (9, 4))]
+        case "g6-onestep": // x and 3 cells over a bar of cells, its last 3 crossed off with them: 11 by 4
+            return [box(0, 0, 5, 1.5)] + [5.0, 7, 9].map { x in box(x, 0, 2, 1.5) } + [box(0, 2.5, 11, 1.5)] + [5.0, 7, 9].map { x in line((x, 2.5), (x, 4)) }
+                + [5.0, 7, 9].map { x in line((x + 0.4, 3.7), (x + 1.6, 2.8)) }
+        case "g6-ineq": // a line, an open circle on it and the band running off its end: 11 by 4
+            let circ = (0...16).map { k -> CGPoint in let a = Double(k) / 16 * 2 * .pi; return P(4 + 0.5 * cos(a), 2 + 0.5 * sin(a)) }
+            return [line((0, 2), (3.5, 2)), circ, line((4.5, 2), (11, 2)), line((10.2, 1.2), (11, 2), (10.2, 2.8))] + [1.0, 2, 3, 5, 6, 7, 8, 9].map { x in line((x, 1.7), (x, 2.3)) }
+        case "g6-depend": // two axes, the rule's line from 0 and its points at the stops: 11 by 6
+            func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.4 * cos(a), y + 0.4 * sin(a)) } }
+            return [line((0, 0), (0, 6), (11, 6)), line((0, 6), (9, 0)), dot(3, 4), dot(6, 2)]
         case "g6-pctwhole": // a block, copies laid end to end with hops over them: 12 by 4
             return [box(0, 2, 3, 2), box(3, 2, 3, 2), box(6, 2, 3, 2), box(9, 2, 3, 2), arc(1.5, 4.5, 2, 1.5), arc(4.5, 7.5, 2, 1.5), arc(7.5, 10.5, 2, 1.5)]
         case "g4-tentimes": // a disk opening into a ten-frame: 11 by 4

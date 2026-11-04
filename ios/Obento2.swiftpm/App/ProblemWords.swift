@@ -402,6 +402,8 @@ extension Rig {
         let s = m.state(), l = m.lesson
         return ["\(l.numbers)", "\(l.story)", "\(l.index)", "\(s.index)", "\(l.isLast)",
                 s.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }.joined(), m.stillHand(s.hand),
+                // what a hand move keeps without checking (a circle tapped filled) redraws the picture too
+                l.kept.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }.joined(),
                 s.typed.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: ","), "\(s.faint)", s.active ?? "",
                 "\(s.verdict as Bool?)", "\(s.keys)", m.rowsWords.map { "\($0.text)\($0.colour)" } ?? "", m.intro ?? "", "\(m.howToButtons)",
                 "\(l.helps)", "\(dark)", "\(page.current === m)"].joined(separator: "|")

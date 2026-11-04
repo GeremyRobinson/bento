@@ -521,6 +521,8 @@ public enum Lessons {
         Negatives6.spec, Compare6.spec, Distance6.spec, Quadrants6.spec, Shapes6.spec,
         // 6th grade, Expressions (4 Nov 2026)
         Expo6.spec, Write6.spec, Eval6.spec, Equiv6.spec,
+        // 6th grade, Equations (4 Nov 2026)
+        OneStep6.spec, Ineq6.spec, Depend6.spec,
     ]
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }
