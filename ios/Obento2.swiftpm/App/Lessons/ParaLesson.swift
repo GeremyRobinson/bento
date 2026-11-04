@@ -12,11 +12,21 @@ import SwiftUI
 struct ParaLesson: PaperLesson {
     var liveKeys: Set<String> { ["grab", "x1", "y1", "d"] }
     private func stage(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
+    /// The record beside the picture when that fits at 75%, else under it.
+    func recordRow(_ n: Numbers) -> Double? { Shape(n).beside ? 0 : nil }
+    func blocksAt(_ s: PaperState) -> CGPoint? { let S = Shape(s.numbers); return stage(s) >= 3 && S.beside ? CGPoint(x: S.rx, y: 3) : nil }
+    static func record(_ P: Para6.Parts, _ x: M7.Tok) -> [M7.Tok] { [.t("Area"), .op("="), .n(P.b), .op("×"), .n(P.h), .op("="), x, .w(P.unit)] }
+    func keysFocus(_ s: PaperState) -> CGRect? { let S = Shape(s.numbers); return CGRect(x: 0, y: 0, width: S.X(2 * S.b), height: S.Y(S.h)) }
 
-    struct Shape {
+    @MainActor struct Shape {
         let P: Para6.Parts
         init(_ n: Numbers) { P = Para6.Parts(n) }
-        var U: Double { P.b + P.s <= 14 && P.h <= 14 ? 2 : 1 }
+        /// Two squares a unit when it's small enough to show that way with the record beside it at 75%, else one.
+        var U: Double { P.b + P.s <= 14 && P.h <= 12 && 4 * P.b + 40 <= 72 ? 2 : 1 }
+        /// The record beside the picture, past where either piece can slide.
+        var rx: Double { beside ? besideX : 0 }
+        var besideX: Double { ((X(P.lean > 0 ? max(b + s, 2 * b) : b + s) + 3) / 5).rounded(.up) * 5 }
+        var beside: Bool { besideX + M7.width(ParaLesson.record(P, .box("x", cells: 3))) + 1 - X(min(0, s - b)) + 2.5 <= 71 }
         var b: Double { Double(P.b) }
         var h: Double { Double(P.h) }
         var s: Double { Double(P.s) }
@@ -93,7 +103,7 @@ struct ParaLesson: PaperLesson {
         // the record under the picture
         if at >= 3 {
             let x: M7.Tok = at >= 4 ? .n(P.A, .chapter) : .box("x", cells: max(2, "\(P.A)".count))
-            M7.row(&rec, "r0", [.t("Area"), .op("="), .n(P.b), .op("×"), .n(P.h), .op("="), x, .w(P.unit)], x: 0, line: 1)
+            M7.row(&rec, "r0", Self.record(P, x), x: S.rx, line: 1)
         }
         // room for either piece slid to the other end
         let x0 = S.X(min(0, (cut ?? S.s) - b)) - (P.lean > 0 ? 0 : 2.5), x1 = max(S.X(b + S.s) + (at == 1 ? 14 : 3), S.X(2 * b + 1))

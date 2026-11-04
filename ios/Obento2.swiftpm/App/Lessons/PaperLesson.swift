@@ -63,6 +63,8 @@ protocol PaperLesson {
     /// This state stands the paper up (3D): the point of the picture (its squares, on the paper) the paper turns about, or
     /// nil (flat). The words it writes then stand facing the child where the flat paper has them (Standing.up places them).
     func stands(_ s: PaperState) -> CGPoint?
+    /// When a step stops standing: how long the paper stays up before it lies flat (a box closed a moment).
+    func lingers(_ s: PaperState) -> Double
 }
 
 extension PaperLesson {
@@ -80,6 +82,7 @@ extension PaperLesson {
     func keysFocus(_ s: PaperState) -> CGRect? { nil }
     var solid: Bool { false }
     func stands(_ s: PaperState) -> CGPoint? { nil }
+    func lingers(_ s: PaperState) -> Double { 0 }
     func scale(_ run: LessonRun) -> Double { scale(run.numbers) }
     func recordBeside(_ run: LessonRun) -> Double? { recordBeside(run.numbers) }
     func messageRows(_ run: LessonRun) -> Int { messageRows(run.numbers) }
@@ -185,6 +188,8 @@ enum PaperLessons {
         case "g6-tri": return TriLesson()
         case "g6-trap": return TrapLesson()
         case "g6-poly": return PolyLesson()
+        case "g6-nets": return NetsLesson()
+        case "g6-fracvol": return FracVolLesson()
         default: return nil
         }
     }
@@ -212,6 +217,10 @@ struct PaperState {
     /// The picture's top row, counted from the block line the problem starts on: where the grid's strong lines fall in the
     /// picture's rows (a sheet of paper a fold lifts draws the grid's own lines on it).
     var gridTop = 6.0
+    /// While the paper stands: where the camera looks (Standing.eye), so words beside what stands are placed as it shows.
+    var standEye: CGPoint?
+    /// How the paper is seen while it stands about `pivot`, from where the camera looks now.
+    func standing(_ pivot: CGPoint) -> Standing { Standing(pivot: pivot, eye: standEye) }
 
     var numbers: Numbers { run.numbers }
     var step: LessonStep { run.steps[index] }

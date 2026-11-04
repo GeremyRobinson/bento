@@ -20,17 +20,37 @@ import simd
 struct Standing {
     /// The point of the picture (its squares, on the paper) the paper turns about.
     let pivot: CGPoint
+    /// Where the camera looks, on the board (the flat paper's squares, from the picture's corner): the middle of the
+    /// screen. The long lens draws what's nearer the eye a little bigger away from there, so a word placed beside what
+    /// stands is placed as it's seen from there (nil: from the pivot, as the layout measures it).
+    var eye: CGPoint? = nil
+    init(pivot: CGPoint, eye: CGPoint? = nil) { self.pivot = pivot; self.eye = eye }
     static let tilted = PaperView3D(elevation: PaperView3D.tilted.elevation, azimuth: PaperView3D.tilted.azimuth, scale: Paper.unit)
     /// World units a square.
     static let c = Paper.cell / Paper.unit
 
     /// Where a point of the picture `z` squares above the paper shows while the paper stands, in the flat paper's squares.
     func up(_ x: Double, _ y: Double, _ z: Double = 0) -> CGPoint {
-        let d = Vec3((x - pivot.x) * Self.c, z * Self.c, (y - pivot.y) * Self.c)
+        let e = eye ?? pivot, (_, r, u) = Self.tilted.axes
+        // the eye's point, on the board through the pivot
+        let T = r * ((e.x - pivot.x) * Self.c) + u * (-(e.y - pivot.y) * Self.c)
+        let d = Vec3((x - pivot.x) * Self.c, z * Self.c, (y - pivot.y) * Self.c) - T
         let p = Self.tilted.project(d, screen: Size(0, 0))
-        return CGPoint(x: pivot.x + p.x / Paper.cell, y: pivot.y + p.y / Paper.cell)
+        return CGPoint(x: e.x + p.x / Paper.cell, y: e.y + p.y / Paper.cell)
     }
     func up(_ v: Vec3) -> CGPoint { up(v.x, v.y, v.z) }
+    /// The point of the paper that shows at `u` on the board (where a finger there lands on the standing paper).
+    func down(_ u: CGPoint) -> CGPoint {
+        var p = u
+        for _ in 0..<6 {
+            let q = up(p.x, p.y), ex = up(p.x + 1, p.y), ey = up(p.x, p.y + 1)
+            let a = ex.x - q.x, c = ex.y - q.y, b = ey.x - q.x, d = ey.y - q.y, det = a * d - b * c
+            guard abs(det) > 1e-9 else { break }
+            let rx = u.x - q.x, ry = u.y - q.y
+            p = CGPoint(x: p.x + (d * rx - b * ry) / det, y: p.y + (-c * rx + a * ry) / det)
+        }
+        return p
+    }
     /// What a set of points takes up, standing, in squares.
     func bounds(_ pts: [Vec3]) -> CGRect? {
         let q = pts.map(up)
@@ -83,6 +103,8 @@ struct Solids {
         var live = false
         /// Its outline dashed in the chapter's colour (a copy waiting to be fitted), not the cubes' edges.
         var dashed = false
+        /// How long it waits before it turns to a new angle (a box stays closed a moment before it opens).
+        var delay = 0.0
     }
     /// A layer of cubes `l` × `w`, `B` squares an edge, from its back-left-bottom corner `at` (squares, z its height). New
     /// ones rise (Unit cubes' 0.7 s) after `delay`; gone ones sink.
@@ -174,13 +196,14 @@ extension WorkProblem: TiltOwner {
                 if let o = TiltCamera.owner, o !== self, o.holdsCamera { o.lieFlat() }
                 TiltCamera.owner = self
             } else if stand.pivot != p { stand.pivot = p }
-        } else if stand.standing { lieFlat(over: TiltCamera.beat) }
+        } else if stand.standing { lieFlat(over: TiltCamera.beat, after: paper.lingers(state())) }
     }
 
-    func lieFlat(over duration: Double) {
+    /// The paper lies flat again over `duration`, `after` seconds from now (what stood stays a moment first).
+    func lieFlat(over duration: Double, after: Double = 0) {
         guard stand.standing else { return }
         let now = PaperClock.now
-        stand.from = stand.blend(at: now, instant: instant); stand.downAt = now; stand.downTime = instant && PaperClock.slow == 1 ? 0.0001 : duration
+        stand.from = stand.blend(at: now, instant: instant); stand.downAt = now + (instant && PaperClock.slow == 1 ? 0 : after); stand.downTime = instant && PaperClock.slow == 1 ? 0.0001 : duration
     }
 
     /// The tilted view at `b` (0 flat, 1 standing), from the flat camera's: the pivot where the flat camera shows it, at its zoom.
@@ -239,7 +262,16 @@ extension WorkProblem: TiltOwner {
     /// A point of the picture (squares, on the paper) where it shows now: standing, on the board.
     func shown(_ p: CGPoint) -> CGPoint {
         guard holdsCamera, let pv = stand.pivot else { return p }
-        return Standing(pivot: pv).up(p.x, p.y, 0)
+        return Standing(pivot: pv, eye: standEye).up(p.x, p.y, 0)
+    }
+    /// Where the camera looks while the paper stands, in the picture's squares (to the nearest two): the flat camera's
+    /// middle, which the standing view keeps on the board.
+    var standEye: CGPoint? {
+        // the picture's top from the plan (the layout itself reads this, through the problem's state)
+        guard holdsCamera, let top = plan?.pictureTop else { return nil }
+        let t = TiltCamera.flatNow.floorTarget, o = contentOrigin
+        func q(_ v: Double) -> Double { (v / 2).rounded() * 2 }
+        return CGPoint(x: q((t.x * Paper.unit - o.x) / Paper.cell), y: q((t.z * Paper.unit - o.y) / Paper.cell - top))
     }
 }
 
@@ -345,7 +377,7 @@ final class SolidsDrawer {
         for f in s.faces {
             let n = faces[f.id] ?? { let n = FaceNode(); root.addChild(n.fill); n.fill.addChild(n.edge); n.born = t; faces[f.id] = n; n.shown = f.angle; n.target = f.angle; n.from = f.angle; return n }()
             if f.live || instant { n.shown = f.angle; n.target = f.angle; n.start = -100 }
-            else if f.angle != n.target { n.from = n.shown; n.target = f.angle; n.start = t }
+            else if f.angle != n.target { n.from = n.shown; n.target = f.angle; n.start = t + f.delay }
         }
         for (id, n) in faces where !s.faces.contains(where: { $0.id == id }) { n.fill.removeFromParent(); faces[id] = nil }
         for f in faces.values where f.start > 0 {

@@ -588,7 +588,7 @@ public enum FracVol6 {
         let w = p.N / p.per, g = { (a: Int, b: Int) -> Int in var a = a, b = b; while b != 0 { (a, b) = (b, a % b) }; return a }(p.N % p.per, p.per)
         var expected: [String: Double] = ["w": Double(w)]
         if !p.whole { expected["n"] = Double((p.N % p.per) / g); expected["d"] = Double(p.per / g) }
-        let write = LessonStep(StepWords(say: "\(p.per) small cubes make one whole cube. Write how many whole cubes.", hint: shareHint, action: "Check"),
+        let write = LessonStep(StepWords(say: "Write how many whole cubes.", hint: shareHint, action: "Check"),
             answer: AnswerTask(prompt: prompt, expected: expected, hint: shareHint, explain: "That makes \(p.Vs).",
                 check: { v in
                     guard let w = v["w"] else { return .soft("Write the whole number and the fraction.") }

@@ -21,9 +21,11 @@ struct TriLesson: PaperLesson {
         var h: Double { Double(P.h) }
         var p: Double { Double(P.p) }
         var W: Double { max(b, p) }
-        var U: Double { W <= 12 && h <= 12 ? 2 : 1 }
+        /// Two squares a unit when the triangle, its copy waiting and the record beside show that way at 75%, else one.
+        var U: Double { max((2 * W + 2) * 2 + 4.5, rx(2) + 28.5) <= 71 && h <= 12 ? 2 : 1 }
+        func rx(_ u: Double) -> Double { (((P.p < P.b ? b + p : p) * u + 2) / 5).rounded(.up) * 5 }
         /// Where the copy's turning point waits, and where it fits.
-        var wait: CGPoint { CGPoint(x: 2 * W + 2, y: h) }
+        var wait: CGPoint { CGPoint(x: 2 * W + (U == 1 ? 1 : 2), y: h) }
         var target: CGPoint { CGPoint(x: P.p < P.b ? b + p : p, y: h) }
         /// How far the end past the base is cut off (0: a rectangle at once).
         var sig: Double { P.p < P.b ? p : p - b }
@@ -32,7 +34,7 @@ struct TriLesson: PaperLesson {
         var tri: [(Double, Double)] { [(0, h), (b, h), (p, 0)] }
         func copy(_ O: CGPoint) -> [(Double, Double)] { tri.map { (O.x - $0.0, O.y - $0.1) } }
         /// The record's column: on a block line past the rectangle (or the copy, while it waits).
-        var rx: Double { ((X(P.p < P.b ? b + p : p) + 3) / 5).rounded(.up) * 5 }
+        var rx: Double { rx(U) }
         func line(_ i: Int) -> Double { 1 + 3 * Double(i) }
     }
 
@@ -97,7 +99,7 @@ struct TriLesson: PaperLesson {
         func val(_ v: Int, _ step: Int) -> M7.Tok { at == step ? .box("x", cells: max(2, "\(v)".count)) : .n(v, .chapter) }
         if at >= 2 { M7.row(&rec, "r1", [.n(P.b), .op("×"), .n(P.h), .op("="), val(P.R, 2)], x: S.rx, line: S.line(0)) }
         if at >= 3 { M7.row(&rec, "r2", [.n(P.R), .op("÷"), .n(2), .op("="), val(P.A, 3), .w("square units")], x: S.rx, line: S.line(1)) }
-        let room = pic.R(-2.5, 0, max(S.X(2 * S.W + 2) + 2, S.rx + 26) + 2.5, S.X(h) + 2)
+        let room = pic.R(-2.5, 0, max(S.X(S.wait.x) + 2, S.rx + 26) + 2.5, S.X(h) + 2)
         return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: rec.boxes, extent: room)
     }
 

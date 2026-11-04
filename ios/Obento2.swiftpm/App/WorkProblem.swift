@@ -101,7 +101,7 @@ final class WorkProblem: Identifiable, PageProblem {
         if stacked {
             // the plan is kept for the problem; the step's own parts (its blocks' row, its frame) are worked out from it
             let s = state()
-            let key = "\(lesson.numbers) \(lesson.story) \(s.index) \(s.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(stillHand(s.hand)) \(s.run.kept.sorted { $0.key < $1.key }) \(s.run.typed.sorted { $0.key < $1.key }) \(auto) \(howToButtons) \(s.keys)"
+            let key = "\(lesson.numbers) \(lesson.story) \(s.index) \(s.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(stillHand(s.hand)) \(s.run.kept.sorted { $0.key < $1.key }) \(s.run.typed.sorted { $0.key < $1.key }) \(auto) \(howToButtons) \(s.keys) \(s.standEye.map { "\($0)" } ?? "")"
             if let c = laidOut, c.key == key { return c.layout }
             let l = ProblemGrid.stackedLayout(self, s)
             laidOut = (key, l)
@@ -454,6 +454,7 @@ final class WorkProblem: Identifiable, PageProblem {
         s.keys = Self.keys != nil && !auto && !solved && run.index == lesson.index && run.step.answer.map { $0.choices == nil && !$0.byHand } == true
         s.hand = ghost?.hand ?? hand
         s.gridTop = plan?.pictureTop ?? 6
+        s.standEye = standEye
         // the ghost finger dragging: the hand where the finger is now, as the lesson's drag would have it (the live
         // parts follow the finger)
         if let t, let g = ghost, let base = g.held, let p = g.dragPoint(at: g.time(t)), let paper {
@@ -511,7 +512,7 @@ final class WorkProblem: Identifiable, PageProblem {
     /// frame on the top rows) is written just above the line being typed instead, inside the frame, starting on the line's
     /// left edge and wrapping to its width (`note`, in points from the origin, with its rows); it goes back to its rows
     /// when the keys go.
-    func keysFraming(_ st: ProblemGrid.Stack) -> (frame: CGRect, note: CGRect?, rows: Int)? {
+    func keysFraming(_ st: ProblemGrid.Stack) -> (frame: CGRect, note: CGRect?, rows: Int, say: Bool, hideSay: Bool)? {
         guard Self.keys != nil, wantsTyping, let zoom = Self.keyboardZoom else { return nil }
         let sq = Paper.cell, least = 0.75, k = st.plan.k
         var r = st.frame
@@ -526,13 +527,16 @@ final class WorkProblem: Identifiable, PageProblem {
             line = line.union(b.offsetBy(dx: layout.workOffset.x, dy: layout.workOffset.y))
         }
         line = line.union(CGRect(x: st.blocksLeft * sq, y: st.blocksTop * sq, width: 7 * sq * k, height: 2 * sq * k))
+        let base = line, start = r
+        func place(_ text: String?, _ words: Sketch.Words) -> (frame: CGRect, note: CGRect?, rows: Int) {
+        var line = base, r = start
         // what a miss says, on whole rows of squares just above the line (a square clear of it), as wide as the line,
         // and above anything of the record or any words of the picture it would run into
         var note: CGRect?, rows = 0
-        if let w = rowsWords {
+        if let text {
             let left = (line.minX / sq).rounded(.down) * sq, width = max(16 * sq * k, (line.maxX / sq).rounded(.up) * sq - left)
-            let f = PaperText.font(Sketch.Words.note.size * k, Sketch.Words.note.weight)
-            rows = max(1, PaperText.wrap(w.text, f, width: width).count)
+            let f = PaperText.font(words.size * k, words.weight)
+            rows = max(1, PaperText.wrap(text, f, width: width).count)
             let h = Double(rows) * Sketch.row * k
             var bottom = (line.minY / sq).rounded(.down) * sq - sq
             if let p = paper {
@@ -574,12 +578,30 @@ final class WorkProblem: Identifiable, PageProblem {
             r = grow(wide, to: CGRect(x: wide.minX, y: top, width: wide.width, height: wide.maxY - top))
         }
         // the usual rows still on the screen beside the keys: the miss stays there
-        if let w = rowsWords, note != nil, let shown = Self.keyboardShown?(Rect(x: origin.x + r.minX, y: origin.y + r.minY, width: r.width, height: r.height)) {
+        if text != nil, let w = rowsWords, note != nil, let shown = Self.keyboardShown?(Rect(x: origin.x + r.minX, y: origin.y + r.minY, width: r.width, height: r.height)) {
             let f = PaperText.font(Sketch.Words.note.size * k, Sketch.Words.note.weight), plan = st.plan
             let usual = CGRect(x: origin.x, y: origin.y + plan.msgTop * sq, width: min(plan.width * sq, PaperText.width(w.text, f)), height: Double(plan.msgRows) * Sketch.row * k)
             if CGRect(x: shown.x, y: shown.y, width: shown.width, height: shown.height).insetBy(dx: sq, dy: sq).contains(usual) { note = nil }
         }
         return (r, note, rows)
+        }
+        let first = place(rowsWords?.text, .note)
+        // the instruction is never a cut-off sliver beside the keys (call of 4 Nov, app-wide): when its rows aren't all on
+        // the screen, it's written just above the line being typed, as a miss is (none showing), or not shown at all
+        let plan = st.plan, sayFont = PaperText.font(Sketch.Words.say.size * k, Sketch.Words.say.weight), say = sayText
+        let sayRect = CGRect(x: origin.x, y: origin.y + plan.sayTop * sq, width: min(plan.width * sq, PaperText.width(say, sayFont)),
+                             height: Double(plan.sayRows) * Sketch.row * k)
+        let fr = first.frame, shown = Self.keyboardShown?(Rect(x: origin.x + fr.minX, y: origin.y + fr.minY, width: fr.width, height: fr.height))
+        let seen = shown.map { CGRect(x: $0.x, y: $0.y, width: $0.width, height: $0.height) } ?? fr.offsetBy(dx: origin.x, dy: origin.y)
+        if say.isEmpty || seen.contains(sayRect) { return (first.frame, first.note, first.rows, false, false) }
+        if rowsWords != nil { return (first.frame, first.note, first.rows, false, true) }
+        let moved = place(say, .say)
+        return (moved.frame, moved.note, moved.rows, moved.note != nil, true)
+    }
+    /// What to do now, as the top rows write it.
+    var sayText: String {
+        let l = lesson
+        return intro ?? (l.story && l.step.answer?.choices != nil ? l.words.hint : l.words.say)
     }
     @ObservationIgnored private var heldFrame: Rect?
     /// How much of the screen's bottom a docked keyboard covers (PaperScreen sets it; iPadOS's floating number pad

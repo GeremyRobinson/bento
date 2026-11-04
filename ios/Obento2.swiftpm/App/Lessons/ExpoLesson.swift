@@ -70,7 +70,7 @@ struct ExpoLesson: PaperLesson {
         // the squares (or cubes) the power is counted from stay in the frame with its line
         let S = Shape(s.numbers)
         guard stage(s) == 4 else { return nil }
-        return S.P.cube ? S.cubeBounds : CGRect(x: Self.ox, y: Self.oy, width: S.a * S.B, height: S.a * S.B)
+        return S.P.cube ? (s.standing(S.stand.pivot).bounds(S.cubePts) ?? S.cubeBounds) : CGRect(x: Self.ox, y: Self.oy, width: S.a * S.B, height: S.a * S.B)
     }
 
     // MARK: drawing
@@ -123,11 +123,11 @@ struct ExpoLesson: PaperLesson {
         var solids = Solids(), standing: Standing?
         if at >= 3 {
             if tilted {
-                let St = S.stand, layers = at == 4 ? P.a : Int(s.h("l") ?? 1)
+                let St = s.standing(S.stand.pivot), layers = at == 4 ? P.a : Int(s.h("l") ?? 1)
                 standing = St
                 solids = cubes(S, layers: layers, wire: at == 3, lit: at == 3 && s.on("spot"), counts: at == 4 && s.on("spot"))
                 if at == 3 {
-                    let b = S.cubeBounds, tp = St.up(ox + a * B, oy + a * B / 2, Double(layers) * B)
+                    let b = St.bounds(S.cubePts) ?? S.cubeBounds, tp = St.up(ox + a * B, oy + a * B / 2, Double(layers) * B)
                     let ro = "\(P.a) × \(P.a) × \(layers)"
                     pic.word("rol\(layers)", ro, at: b.maxX + 1.5, tp.y, X6.lit, anchor: UnitPoint(x: 0, y: 0.5))
                     if s.grabbed { live.reads(ro) }

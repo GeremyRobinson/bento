@@ -22,7 +22,9 @@ struct TrapLesson: PaperLesson {
         var b: Double { Double(P.b) }
         var h: Double { Double(P.h) }
         var W: Double { max(a, b) }
-        var U: Double { P.S <= 20 && P.h <= 12 ? 2 : 1 }
+        /// Two squares a unit when the trapezoid, its copy and the record beside show that way at 75%, else one.
+        var U: Double { max((2 * W + 2) * 2 + 4.5, rx(2) + 29.5) <= 71 && P.h <= 12 ? 2 : 1 }
+        func rx(_ u: Double) -> Double { (((a + b) * u + 3) / 5).rounded(.up) * 5 }
         func X(_ x: Double) -> Double { x * U }
         func sq(_ pts: [(Double, Double)]) -> [CGPoint] { pts.map { CGPoint(x: $0.0 * U, y: $0.1 * U) } }
         var trap: [(Double, Double)] { [(0, h), (a, h), (b, 0), (0, 0)] }
@@ -32,7 +34,7 @@ struct TrapLesson: PaperLesson {
         func turned(_ dx: Double, _ dy: Double) -> [(Double, Double)] { trap.map { (2 * W + 2 - $0.0 + dx, h - $0.1 + dy) } }
         /// Where the turned copy fits: its offset.
         var fit: (Double, Double) { (a + b - (2 * W + 2), 0) }
-        var rx: Double { ((X(a + b) + 3) / 5).rounded(.up) * 5 }
+        var rx: Double { rx(U) }
         func line(_ i: Int) -> Double { 1 + 3 * Double(i) }
     }
 

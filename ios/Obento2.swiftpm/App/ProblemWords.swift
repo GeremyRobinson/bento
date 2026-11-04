@@ -304,21 +304,24 @@ extension Rig {
         // what to do (a story's pick asks only "Pick what to do"; the How to says its own)
         let storyStep = l.story && l.step.answer?.choices != nil
         let say = m.intro ?? (storyStep ? l.words.hint : l.words.say)
-        s.words("say\(l.index)", say, .say, x: o.x, top: o.y + plan.sayTop * sq, width: width, max: max(plan.sayRows, m.intro != nil ? 3 : 1), k: k)
+        let kf = m.keysFraming(st)
+        if kf?.hideSay != true {
+            s.words("say\(l.index)", say, .say, x: o.x, top: o.y + plan.sayTop * sq, width: width, max: max(plan.sayRows, m.intro != nil ? 3 : 1), k: k)
+        }
         // rows 3–4: what a miss says, or the hint; with the keys up and the camera on the line being typed, just above
         // that line instead (call of 4 Nov: a miss line is never cut off), on paper over whatever is under it
-        let keyed = m.keysFraming(st).flatMap { f in f.note.map { ($0, f.rows) } }
-        if let w = m.rowsWords, keyed == nil {
+        let keyed = kf.flatMap { f in f.note.map { ($0, f.rows) } }
+        if let w = m.rowsWords, keyed == nil || kf?.say == true {
             s.words("note", w.text, Sketch.Words.note.colour(w.colour), x: o.x, top: o.y + plan.msgTop * sq, width: width, max: plan.msgRows, k: k)
         }
         s.append(d.picture.transformed(to: P(0, plan.pictureTop), scale: 1))
         s.append(d.record.transformed(to: P(plan.recordLeft, plan.recordTop), scale: 1))
-        if let w = m.rowsWords, let (n, rows) = keyed {
+        if let (n, rows) = keyed, let w: (text: String, words: Sketch.Words) = kf?.say == true ? (say, .say) : m.rowsWords.map({ ($0.text, Sketch.Words.note.colour($0.colour)) }) {
             // on paper only where it lies over part of the picture (its words stay clear of every other word)
             if d.picture.bounds(touching: n.offsetBy(dx: 0, dy: -plan.pictureTop * sq)) != nil {
                 s.plate("keysnote", n.offsetBy(dx: o.x, dy: o.y).insetBy(dx: -sq, dy: 0), .paper)
             }
-            s.words("keysnote", w.text, Sketch.Words.note.colour(w.colour), x: o.x + n.minX, top: o.y + n.minY, width: n.width, max: rows, k: k)
+            s.words(kf?.say == true ? "keyssay\(l.index)" : "keysnote", w.text, w.words, x: o.x + n.minX, top: o.y + n.minY, width: n.width, max: rows, k: k)
         }
         let green = Sketch.Colour.hex(0x178A57, 0x3CCF8E), red = Sketch.Colour.hex(0xC8372D, 0xFF6B5E)
         for b in ProblemLayout.blocks(m) {
@@ -406,7 +409,7 @@ extension Rig {
                 l.kept.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }.joined(),
                 s.typed.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: ","), "\(s.faint)", s.active ?? "",
                 "\(s.verdict as Bool?)", "\(s.keys)", m.rowsWords.map { "\($0.text)\($0.colour)" } ?? "", m.intro ?? "", "\(m.howToButtons)",
-                "\(l.helps)", "\(dark)", "\(page.current === m)"].joined(separator: "|")
+                "\(l.helps)", "\(dark)", "\(page.current === m)", "\(s.standEye.map { "\($0)" } ?? "")"].joined(separator: "|")
     }
 
     /// What the live parts read: the hand, the step, and the ghost finger where it is now.
@@ -414,6 +417,6 @@ extension Rig {
         let s = m.state(at: t), early = !m.instant && t < m.openedAt + 0.9
         let finger = m.ghostFinger(at: t).map { "\(Int($0.at.x)),\(Int($0.at.y)) \($0.down) \($0.trail.map { "\(Int($0.x)),\(Int($0.y))" }) \(Int($0.shows * 20))" } ?? ""
         return ["\(early)", "\(s.index)", s.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }.joined(),
-                s.hand.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }.joined(), finger, "\(dark)"].joined(separator: "|")
+                s.hand.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }.joined(), finger, "\(dark)", "\(s.standEye.map { "\($0)" } ?? "")"].joined(separator: "|")
     }
 }
