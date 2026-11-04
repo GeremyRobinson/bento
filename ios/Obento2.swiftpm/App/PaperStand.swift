@@ -81,6 +81,8 @@ struct Solids {
         var hinge: (Vec3, Vec3)? = nil
         var angle = 0.0
         var live = false
+        /// Its outline dashed in the chapter's colour (a copy waiting to be fitted), not the cubes' edges.
+        var dashed = false
     }
     /// A layer of cubes `l` × `w`, `B` squares an edge, from its back-left-bottom corner `at` (squares, z its height). New
     /// ones rise (Unit cubes' 0.7 s) after `delay`; gone ones sink.
@@ -356,7 +358,7 @@ final class SolidsDrawer {
             let pts = s.placed(f) { faces[$0.id]?.shown ?? $0.angle }
             let normal = pts.count >= 3 ? (pts[1] - pts[0]).cross(pts[2] - pts[0]) : Vec3(0, 0, 1)
             let cat = abs(normal.z) / max(1e-9, normal.length) > 0.8 ? 0 : abs(normal.x) > abs(normal.y) ? 2 : 1
-            let sig = "\(pts.map { "\(($0.x * 1000).rounded()),\(($0.y * 1000).rounded()),\(($0.z * 1000).rounded())" }) \(f.look) \(cat) \(f.edges)"
+            let sig = "\(pts.map { "\(($0.x * 1000).rounded()),\(($0.y * 1000).rounded()),\(($0.z * 1000).rounded())" }) \(f.look) \(cat) \(f.edges) \(f.dashed)"
             guard sig != n.sig else { continue }
             n.sig = sig
             // on the paper, a hair over it (under the lines drawn on the paper)
@@ -364,7 +366,8 @@ final class SolidsDrawer {
             n.fill.model = Self.polygon(lifted.map(P)).map { ModelComponent(mesh: $0, materials: [material(f.look, normal: normal, chapter: chapter, dark: dark)]) }
             if f.edges {
                 let segs = zip(lifted, lifted.dropFirst() + [lifted[0]]).map { (P($0), P($1)) }
-                n.edge.model = Self.bars(segs, width: stroke).map { ModelComponent(mesh: $0, materials: [flat(looks.deep)]) }
+                n.edge.model = Self.bars(f.dashed ? Self.dashed(segs) : segs, width: stroke)
+                    .map { ModelComponent(mesh: $0, materials: [flat(f.dashed ? colour(.chapter, chapter: chapter, dark: dark) : looks.deep)]) }
             } else { n.edge.model = nil }
         }
 

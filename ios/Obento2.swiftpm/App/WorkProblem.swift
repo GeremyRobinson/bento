@@ -403,7 +403,7 @@ final class WorkProblem: Identifiable, PageProblem {
         if let g = ghost { lesson = g.run; hand = g.hand }
         ghost = nil
         // anything the moves didn't fill (a lesson with no demo for a step) is answered with what's expected
-        for (b, v) in a.expected where (lesson.typed[b] ?? "").isEmpty { lesson.set(b, v) }
+        for (b, v) in lesson.wanted(a) where (lesson.typed[b] ?? "").isEmpty { lesson.set(b, v) }
         go()
     }
 
@@ -601,7 +601,8 @@ final class WorkProblem: Identifiable, PageProblem {
         guard let a = s.step.answer else { return [] }
         if a.choices != nil { return [.tap(.choice(Int(a.expected["c"] ?? 0)))] }
         if a.byHand { return paper?.demo(s) ?? [] }
-        return a.boxes.compactMap { b in a.expected[b].map { .write(box: b, text: fmt($0).replacingOccurrences(of: "−", with: "-")) } }
+        let want = s.run.wanted(a)
+        return a.boxes.compactMap { b in want[b].map { .write(box: b, text: fmt($0).replacingOccurrences(of: "−", with: "-")) } }
     }
 
     /// Plays the step's moves with the ghost finger: a preview (Show me) on a copy that goes back at the end, or the

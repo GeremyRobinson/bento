@@ -45,11 +45,16 @@ public struct AnswerTask: Sendable {
     public var byHand: Bool
     /// What Check says while a box is still empty (nil: "Fill in every box.").
     public var incomplete: String?
+    /// What the boxes should hold worked out from what earlier hand moves kept (LessonRun.kept: the pieces a shape was
+    /// cut into), when that's what the step asks about; nil: `expected`. Its check reads the kept values too, as
+    /// "kept.<name>" beside the typed ones.
+    public var expectKept: (@Sendable (Numbers) -> [String: Double])?
 
     public init(prompt: MathLine, expected: [String: Double], known: [(values: [String: Double], message: String)] = [], hint: String, explain: String? = nil,
-                check: (@Sendable ([String: Double]) -> Verdict)? = nil, incomplete: String? = nil, choices: [String]? = nil, byHand: Bool = false) {
+                check: (@Sendable ([String: Double]) -> Verdict)? = nil, incomplete: String? = nil, choices: [String]? = nil, byHand: Bool = false,
+                expectKept: (@Sendable (Numbers) -> [String: Double])? = nil) {
         self.prompt = prompt; self.expected = expected; self.known = known; self.hint = hint; self.check = check; self.choices = choices
-        self.byHand = byHand; self.incomplete = incomplete
+        self.byHand = byHand; self.incomplete = incomplete; self.expectKept = expectKept
         self.explain = explain ?? "\(hint) That makes \(expected.count == 1 ? fmt(expected.values.first!) : "it")."
     }
 
@@ -278,7 +283,9 @@ public struct LessonRun: Sendable {
     }
 
     /// What earlier steps' boxes held: a wrong answer equal to one of them reused it.
-    var earlierAnswers: [Double] { steps[..<index].compactMap { $0.answer }.flatMap { $0.expected.values } }
+    var earlierAnswers: [Double] { steps[..<index].compactMap { $0.answer }.flatMap { wanted($0).values } }
+    /// What a step's boxes should hold: from what the hands kept when the step says so, else its `expected`.
+    public func wanted(_ a: AnswerTask) -> [String: Double] { a.expectKept?(kept) ?? a.expected }
 
     /// A fresh problem at this place in a run.
     public static func fresh(_ spec: LessonSpec, using rng: inout SeededRandom, index: Int = 3) -> LessonRun { LessonRun(spec, numbers: spec.generate(&rng, index)) }
@@ -429,7 +436,7 @@ public struct LessonRun: Sendable {
     public mutating func showAnswer() -> String? {
         guard let a = step.answer else { return nil }
         if helps && !oneTry { shown.insert(index) }
-        for (id, v) in a.expected { typed[id] = fmt(v).replacingOccurrences(of: "−", with: "-") }
+        for (id, v) in wanted(a) { typed[id] = fmt(v).replacingOccurrences(of: "−", with: "-") }
         return a.explain
     }
 
@@ -440,7 +447,7 @@ public struct LessonRun: Sendable {
             let values = typed.compactMapValues { Double($0) }
             let same = { (want: [String: Double]) in want.allSatisfy { abs((values[$0.key] ?? .nan) - $0.value) < 1e-9 } }
             if let check = a.check {
-                switch check(values) {
+                switch check(values.merging(kept.reduce(into: [String: Double]()) { $0["kept." + $1.key] = $1.value }) { a, _ in a }) {
                 case .right: break
                 case .soft(let line): return .notYet(line)
                 case .wrong(let line):
@@ -523,6 +530,8 @@ public enum Lessons {
         Expo6.spec, Write6.spec, Eval6.spec, Equiv6.spec,
         // 6th grade, Equations (4 Nov 2026)
         OneStep6.spec, Ineq6.spec, Depend6.spec,
+        // 6th grade, Area and volume (4 Nov 2026)
+        Para6.spec, Tri6.spec, Trap6.spec, Poly6.spec, Nets6.spec, FracVol6.spec,
     ]
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }

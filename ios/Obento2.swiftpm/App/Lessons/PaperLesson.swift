@@ -180,6 +180,11 @@ enum PaperLessons {
         case "g6-onestep": return OneStepLesson()
         case "g6-ineq": return InequalitiesLesson()
         case "g6-depend": return TwoQuantitiesLesson()
+        // 6th grade, Area and volume (4 Nov 2026)
+        case "g6-para": return ParaLesson()
+        case "g6-tri": return TriLesson()
+        case "g6-trap": return TrapLesson()
+        case "g6-poly": return PolyLesson()
         default: return nil
         }
     }
