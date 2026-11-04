@@ -22,7 +22,7 @@ final class AddSub1Tests: XCTestCase {
         let ch = Curriculum.chapters(1)[0]
         XCTAssertEqual(ch.title, "Add and take away to 20")
         XCTAssertTrue(Curriculum.built(ch))
-        XCTAssertTrue(Curriculum.built(Curriculum.chapters(1)[1])); XCTAssertFalse(Curriculum.built(Curriculum.chapters(1)[2]))
+        XCTAssertTrue(Curriculum.built(Curriculum.chapters(1)[2])); XCTAssertFalse(Curriculum.built(Curriculum.chapters(1)[3]))
         for l in ch.lessons { XCTAssertEqual(Lessons.spec(l.id)?.title, l.name); XCTAssertTrue(Curriculum.voiced(l.id)); XCTAssertEqual(Curriculum.grade(of: l.id), 1) }
         XCTAssertEqual(Curriculum.gradeTest(1), "test-grade-1")
     }

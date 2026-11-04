@@ -363,6 +363,20 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   `page-g1-equal-0 -numbers make=0,lt=1,l0=4,l1=1,rt=2,r0=9,r1=2 -drag 18.5,5.5,14,5.5`, `page-g1-equal-0 -numbers
   make=1,lt=1,l0=6,l1=2,rt=1,r0=-1,r1=3` (−1 is the box), `page-g1-story-0 -numbers kind=7,s=5,ch=4,e=9,thing=4,name=4 -tapsq
   16.5,2.5`, `page-g1-more-0 -numbers kind=2,big=9,small=5,bn=0,sn=1 -drag 13.5,6.5,22.5,6.5 -hold`.
+- 1st grade chapter 3, Numbers to 120, is built (4 Nov; Core: `Numbers1` (`Num1`, `Count120` g1-count120 (count on and how many?),
+  `TensOnes1` g1-tensones, `Compare1` g1-compare, `TenMore1` g1-tenmore), tests `Numbers1Tests`; App: `Count120Lesson`,
+  `TensOnes1Lesson`, `Compare1Lesson`, `TenMore1Lesson`, their shared `NumKit1` (`N1`: the 120 chart a few rows at a time, numbers small
+  or big with the tens lit and the ones underlined, a chart place as a box, the finger's walk so a quick drag never skips a place)).
+  Decimals pink. As the preview (`design/prototype/grade1-ch3.html`), its words, slips and generators word for word; every number on the
+  digit pad (now also a 3 × 4 grid, `DigitPad.Layout.grid`, Check a block under it; `chk:` and `most:` for two boxes and 5-digit slips
+  like 10010). The grey lines folded in ("Same tens: 4 and 4. Look at the ones. Tap the number with more ones.", "Same tens, same ones.
+  Tap the sign…", "No ones on their own. Write…"). Departures: Tens and ones' rows of ten touch (a square apart was 63%); Compare's
+  numbers on rows 0–2 and the ones touch 9 tens (70% → 75%); the gap is 6 squares so the sign keys are 4 × 4; a skip is said when the
+  finger lifts, not as it lands; How many?'s shading is the light tint (the strong one hid the counted rows' outlines); hints: a first
+  miss rings the row or stacks, a second shows the number beside its row or rings the key. Least zooms: 85%, 76%, 75%, 96%.
+  Shots e.g. `page-g1-count120-0 -numbers kind=0,s=97,m=6 -path 37.5,7.5,42.5,7.5,47.5,7.5,2.5,12.5 -hold`,
+  `page-g1-count120-1 -numbers kind=1,n=113 -path 2.5,17.5,7.5,17.5 -hold`, `page-g1-tensones-0 -numbers n=34 -tapsq 15,1.5,6,10.5`,
+  `page-g1-compare-1 -numbers a=43,b=47 -wrong`, `page-g1-tenmore-0 -numbers n=34,more=1 -drag 17.5,7.5,17.5,12.5 -hold`.
 
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
