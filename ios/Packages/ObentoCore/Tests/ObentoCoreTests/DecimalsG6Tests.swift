@@ -165,7 +165,7 @@ final class DecimalsG6Tests: XCTestCase {
         XCTAssertNil(ph.end.needy)
         let first = ph.before[ph.list.firstIndex(of: .breaks)!]
         XCTAssertEqual(first.needy, -3)
-        XCTAssertEqual(DecAddSub6.Parts.breakSay(first), "Only 0 thousandths, and no hundredths. Break a tenth first. Break one into ten.")
+        XCTAssertEqual(DecAddSub6.Parts.breakSay(first), "Only 0 thousandths, and no hundredths: break a tenth into ten first.")
         var l = LessonRun(DecAddSub6.spec, numbers: DecAddSub6.numbers(a: Dec6(124, 1), b: Dec6(3875, 3), add: false))
         _ = l.go()
         while l.step.answer?.byHand == true { _ = move(&l, ["x": 1]) }

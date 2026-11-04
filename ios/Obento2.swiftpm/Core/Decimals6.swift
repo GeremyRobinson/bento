@@ -402,9 +402,9 @@ public enum DecAddSub6 {
         public static func breakSay(_ c: Cols) -> String {
             guard let n = c.needy else { return "Break one into ten." }
             let lv = c.live(n), lend = c.lender(n) ?? n + 1
-            let line = c.live(n + 1) > 0 || lend == n + 1 ? "Only \(lv) \(Place6.name(n, lv)). Break a \(Place6.name(n + 1, 1))."
-                : "Only \(lv) \(Place6.name(n, lv)), and no \(Place6.name(n + 1)). Break a \(Place6.name(lend, 1)) first."
-            return "\(line) Break one into ten."
+            // the preview's two lines ("Break one into ten." and "Only 3 tenths. Break a one.") said as one
+            return c.live(n + 1) > 0 || lend == n + 1 ? "Only \(lv) \(Place6.name(n, lv)): break a \(Place6.name(n + 1, 1)) into ten."
+                : "Only \(lv) \(Place6.name(n, lv)), and no \(Place6.name(n + 1)): break a \(Place6.name(lend, 1)) into ten first."
         }
         /// A break tap's code: 1 done, 2 at or right of the place that needs it, 2000 + 10 (e + 3) + (lender + 3) a place
         /// with none, 3000 + … one further than the nearest.

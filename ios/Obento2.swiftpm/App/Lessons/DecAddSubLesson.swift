@@ -23,7 +23,12 @@ struct DecAddSubLesson: PaperLesson {
     private func stage(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
     private func phase(_ s: PaperState) -> Int { Int((s.picture["ph"] ?? 0).rounded()) }
     func recordRow(_ n: Numbers) -> Double? { 0 }
-    func blocksAt(_ s: PaperState) -> CGPoint? { stage(s) >= 5 ? CGPoint(x: 0, y: Self.YR + 2) : nil }
+    /// Check (then Next problem) under the answer's first column, so the line being typed stays narrow with the keys up.
+    func blocksAt(_ s: PaperState) -> CGPoint? {
+        guard stage(s) >= 5 else { return nil }
+        let P = DecAddSub6.Parts(s.numbers)
+        return CGPoint(x: Self.col(P.R >= 10 * Dec6.pow10(P.P) ? 1 : 0), y: Self.YR + 2)
+    }
 
     /// The columns as they are now: the phase's start with the hand's taps made on it.
     private func cols(_ s: PaperState, _ P: DecAddSub6.Parts) -> DecAddSub6.Cols {
@@ -62,7 +67,7 @@ struct DecAddSubLesson: PaperLesson {
             if fb > 0 { pic.word("frb\(fb)", "\(P.b.s) is \(Self.filled(P.b, fb))", at: 51.5, Self.YB, Self.lit, anchor: UnitPoint(x: 0, y: 0.5)) }
             // a hint: the number to fill ringed; a second miss, each empty place
             let row = P.needA > fa ? Self.YA : Self.YB, x = P.needA > fa ? P.a : P.b, f = P.needA > fa ? fa : fb, need = P.needA > fa ? P.needA : P.needB
-            if s.on("ring") { R6.ring(&pic, "ring", x: 0, y: row - 1, w: 50, h: 2) }
+            if s.on("ring") { R6.ring(&pic, "ring", x: 0.5, y: row - 1.5, w: 49, h: 1.95) }
             if s.on("spot") { for k in (f + 1)...max(f + 1, need) where k <= need { pic.circle("sp\(k)", at: Self.col(-x.p - k) + 5, row, radius: 1.3, .chapter, dashed: true) } }
         }
 
@@ -92,16 +97,16 @@ struct DecAddSubLesson: PaperLesson {
         // the column that needs breaking into: its waiting discs outlined; the ten to close outlined
         if at == 4, let n = C.needy {
             pic.sketch.box("need\(n)", pic.R(Self.col(n), Self.BB, 10, Double((C.waiting[n] ?? 0) + 4) / 5 * 2), .ink2, width: Sketch.stroke)
-            if s.on("ring") { R6.ring(&pic, "ring", x: Self.col(n), y: Self.BA, w: 10, h: Self.BB - Self.BA + 4) }
+            if s.on("ring") { R6.ring(&pic, "ring", x: Self.col(n) + 0.5, y: Self.BA + 0.5, w: 9, h: Self.BB - Self.BA + 3) }
             if s.on("spot"), let l = C.lender(n) { let p = Self.at(l, C.live(l) - 1, Self.BA); pic.circle("spot", at: p.x, p.y, radius: 1.3, .chapter, dashed: true) }
         }
         if at == 3, let e = C.full {
-            if s.on("ring") || s.on("spot") { R6.ring(&pic, "ring", x: Self.col(e), y: Self.BA, w: 10, h: 8) }
+            if s.on("ring") || s.on("spot") { R6.ring(&pic, "ring", x: Self.col(e) + 0.5, y: Self.BA + 0.5, w: 9, h: 7.5) }
             if s.on("spot") { pic.sketch.box("ten\(e)", pic.R(Self.col(e), Self.BA, 10, 4), .chapter, width: Sketch.stroke, dashed: true) }
         }
-        if at == 2 && s.on("ring") { R6.ring(&pic, "ring", x: 0, y: Self.BB, w: 50, h: 4) }
-        if at == 2 && s.on("spot") { R6.ring(&pic, "spot", x: 0, y: Self.BA, w: 50, h: 4) }
-        if at == 5 && s.on("ring") { R6.ring(&pic, "ring", x: 0, y: Self.BA, w: 50, h: Self.BB - Self.BA - 1) }
+        if at == 2 && s.on("ring") { R6.ring(&pic, "ring", x: 0.5, y: Self.BB, w: 49, h: 4) }
+        if at == 2 && s.on("spot") { R6.ring(&pic, "spot", x: 0.5, y: Self.BA, w: 49, h: 4) }
+        if at == 5 && s.on("ring") { R6.ring(&pic, "ring", x: 0.5, y: Self.BA + 0.5, w: 49, h: Self.YB - Self.BA - 2.5) }
 
         // the line, the answer under it: typed into its columns, then written in the chapter's colour
         rec.rule("ans", from: 0, to: 50, row: Self.YL)

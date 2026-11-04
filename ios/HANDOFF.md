@@ -123,8 +123,28 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   ruler, then flips, multiplies and simplifies in one line; the ribbon story is index 5, 8… (in the pick's words, no operation step).
   To show at 75%: bars 69 squares or longer (GCF's 72, Dividing fractions' wholes of 70 and 72) have their names over their right
   ends, bars further apart; hint rings start inside the left edge. Least zooms: 79%, 75%, 75%, except GCF with a bar of 81
-  (g = 9 with a 9, about 3% of problems) at about 68% (G to decide). Shots e.g. `page-g6-lcm-1 -numbers a=4,b=6 -wrong`,
+  (g = 9 with a 9, about 3% of problems) at about 68% (dropped 4 Nov, below). Shots e.g. `page-g6-lcm-1 -numbers a=4,b=6 -wrong`,
   `page-g6-gcf-0 -numbers g=6,m=3,n=5 -drag 2,12,4,12 -hold`, `page-g6-divide-2 -numbers a=2,b=3,c=1,d=4,story=0`.
+- Calls on chapter 2 (4 Nov): GCF's generator keeps every bar 72 squares or shorter (the 9 × 9 = 81 case is dropped, not
+  shrunk; `Gcf6.longest`), so GCF is at 75%+. A wrong pick in a choice block shows red, a right one green for its moment, never
+  the picked colour (`Sketch.Block.choice`, app-wide; `WorkProblem.choose` clears the verdict). A miss with several boxes reds
+  only the boxes not holding what's wanted (`Rig.stackedStill`). Ratio tables with the keys up writes its lines on their own
+  rows under the table (`PaperState.keys`, set while the iPad's keys are up for the step's box): 63% → 75%; keys down they stay
+  beside it (76%).
+- 6th grade chapter 3, Long division and decimals, is built (4 Nov; Core: `Decimals6` (`Dec6` exact decimals, `Place6` names,
+  `LongDiv6.Plan` shared by `LongDivision6` g6-longdiv and `DivideDec6` g6-decdiv, `DecAddSub6`, `DecMult6`), tests
+  `DecimalsG6Tests`; App: `LongDiv6Lesson` (both divisions), `DecAddSubLesson`, `DecMultLesson`). As the preview
+  (`design/prototype/grade6-ch3.html`): long division taps the digits it starts with, drags the bottom edge down a row of d at a
+  time ("3 rows · 69"), writes what's left in the bracket's column working (a digit to 2 squares, no commas); decimals divide after
+  both numbers' tiles are dragged left on a place chart, and break what's left into tenths (a tap, a 0 written after the point);
+  adding/subtracting fills 0s, slides b's discs up, closes ten or breaks one into ten (school marks over a's digits), types the
+  answer under the line digit by digit in its columns (`WorkBox.step`: a point-lined box 10 squares a place); multiplying drags
+  a's and b's tiles whole, writes the wholes' product in columns (partials typed from problem 4), drags the product back, taps
+  0s in. Each lesson draws its record in the picture's squares (`recordRow` 0) so taps on the bracket land; Check sits by the
+  line being typed (`blocksAt`). Least zooms: 76%, 89%, 76%, 82%. Keys up: 75% (long division's and multiplying's lines,
+  subtracting's answer row). Shots e.g. `page-g6-longdiv-3 -numbers d=23,q=304,r=9 -wrong`, `page-g6-decaddsub-2 -numbers
+  am=124,ap=1,bm=3875,bp=3,op=1 -wrong2`, `page-g6-decmult-2 -numbers am=425,ap=2,bm=36,bp=1,pt=1 -keypad`,
+  `page-g6-decdiv-0 -numbers d=15,q100=650,s=1 -drag 22,10,17,10 -hold`.
 
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost

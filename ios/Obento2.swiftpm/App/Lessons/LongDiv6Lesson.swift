@@ -91,17 +91,24 @@ struct LongDiv6Lesson: PaperLesson {
             amount(&pic, "a\(t)", A: P.A, carry: P.carry, striped: t > 0 && !P.app, taken: at == 3 ? P.qd : 0, S)
             if at == 3 { edge(&pic, "e", k: k, A: P.A, S, handle: false) }
             else {
-                live.fill("tk", col: 0, row: PT, w: S.W, h: Double(min(k, P.A / d)) * c, .tint(0.3))
+                // the rows taken fill in, their cells and rows still showing over the fill, so they count
+                let kt = min(k, P.A / d)
+                live.fill("tk", col: 0, row: PT, w: S.W, h: Double(kt) * c, .tint(0.3))
+                if kt > 0 {
+                    let segs = (1..<max(2, d)).filter { $0 < d }.map { x in (live.P(Double(x) * c, PT), live.P(Double(x) * c, PT + Double(kt) * c)) }
+                        + (0...kt).map { r in (live.P(0, PT + Double(r) * c), live.P(S.W, PT + Double(r) * c)) }
+                    live.sketch.segments("tkl", segs, .tint(0.8), width: 1)
+                }
                 edge(&live, "e", k: k, A: P.A, S, handle: true, held: s.grabbed)
                 if s.grabbed { live.reads("\(Place6.rows(k)) · \(k * d)") }
             }
             // a hint: the amount ringed; a second miss, the edge where the rows end
-            if at == 2 && s.on("ring") { R6.ring(&pic, "ring", x: 0, y: PT, w: S.W, h: Double((P.A + d - 1) / d) * c) }
+            if at == 2 && s.on("ring") { R6.ring(&pic, "ring", x: 0.5, y: PT, w: S.W - 1, h: Double((P.A + d - 1) / d) * c) }
             if at == 2 && s.on("spot") { pic.line("spot", [(-1, PT + Double(P.qd) * c), (S.W + 1, PT + Double(P.qd) * c)], .chapter, dashed: true) }
             if at == 3 && (s.on("ring") || s.on("spot")) {
                 // what's left: the short row ringed, and then each square in it outlined
                 let full = P.A / d
-                if P.left > 0 { R6.ring(&pic, "ringl", x: 0, y: PT + Double(full) * c, w: Double(P.A % d) * c, h: c) }
+                if P.left > 0 { R6.ring(&pic, "ringl", x: 0.5, y: PT + Double(full) * c, w: Double(P.A % d) * c - 1, h: c) }
                 if s.on("spot") { for i in 0..<P.left { pic.sketch.box("ls\(i)", pic.R(Double(i) * c, PT + Double(full) * c, c, c), .chapter, width: Sketch.stroke) } }
             }
         } else if at == 6 {
@@ -110,7 +117,7 @@ struct LongDiv6Lesson: PaperLesson {
             amount(&pic, "a\(t - 1)", A: Pp.A, carry: Pp.carry, striped: t > 1 && !Pp.app, taken: Pp.qd, S)
             // the squares left, outlined: they're what the finger taps
             for i in 0..<Pp.left { pic.sketch.box("bl\(i)", pic.R(Double(i) * c, PT + Double(Pp.qd) * c, c, c), .chapter, width: Sketch.stroke) }
-            if s.on("ring") { R6.ring(&pic, "ring", x: 0, y: PT + Double(Pp.qd) * c, w: Double(Pp.left) * c, h: c) }
+            if s.on("ring") { R6.ring(&pic, "ring", x: 0.5, y: PT + Double(Pp.qd) * c, w: Double(Pp.left) * c - 1, h: c) }
         } else if done, let Pl = places.last {
             name(Pl.e)
             amount(&pic, "a\(places.count - 1)", A: Pl.A, carry: Pl.carry, striped: places.count > 1 && !Pl.app, taken: Pl.qd, S)
@@ -184,17 +191,28 @@ struct LongDiv6Lesson: PaperLesson {
             var i = from
             while i < from + n { let row = i / d, col = i % d, run = min(d - col, from + n - i); body(Double(col) * c, PT + Double(row) * c, Double(run) * c); i += run }
         }
-        let plain = striped ? carry : A
-        runs(0, plain) { x, y, w in pen.fill("\(id)c\(y)_\(x)", col: x, row: y, w: w, h: c, .tint(0.22)) }
-        if striped && A > carry { runs(carry, A - carry) { x, y, w in pen.stripes("\(id)n\(y)_\(x)", col: x, row: y, w: w, h: c) } }
-        if taken > 0 { pen.fill("\(id)tk", col: 0, row: PT, w: W, h: Double(min(taken, full)) * c, .tint(0.3)) }
+        // each square filled once (fills that overlap band on the iPad): the rows taken darker
+        let plain = striped ? carry : A, tk = min(taken, full) * d
+        func fill(_ from: Int, _ n: Int, stripes: Bool) {
+            let cut = max(from, min(from + n, tk))
+            runs(from, cut - from) { x, y, w in
+                pen.fill("\(id)t\(y)_\(x)", col: x, row: y, w: w, h: c, .tint(0.4))
+                if stripes { pen.stripeLines("\(id)ts\(y)_\(x)", col: x, row: y, w: w, h: c) }
+            }
+            runs(cut, from + n - cut) { x, y, w in
+                if stripes { pen.stripes("\(id)n\(y)_\(x)", col: x, row: y, w: w, h: c) }
+                else { pen.fill("\(id)c\(y)_\(x)", col: x, row: y, w: w, h: c, .tint(0.22)) }
+            }
+        }
+        fill(0, plain, stripes: false)
+        if striped && A > carry { fill(carry, A - carry, stripes: true) }
         var segs: [(CGPoint, CGPoint)] = []
         for x in 1..<max(2, d) where x < d {
             let h = Double(x < short ? full + 1 : full) * c
             if h > 0 { segs.append((pen.P(Double(x) * c, PT), pen.P(Double(x) * c, PT + h))) }
         }
         if rowsN > 1 { for y in 1..<rowsN { segs.append((pen.P(0, PT + Double(y) * c), pen.P(y < full ? W : Double(short) * c, PT + Double(y) * c))) } }
-        if !segs.isEmpty { pen.sketch.segments("\(id)cl", segs, .tint(0.42), width: 1) }
+        if !segs.isEmpty { pen.sketch.segments("\(id)cl", segs, .tint(0.8), width: 1) }
         let o: [(Double, Double)] = full == 0 ? [(0, PT), (Double(short) * c, PT), (Double(short) * c, PT + c), (0, PT + c), (0, PT)]
             : short > 0 ? [(0, PT), (W, PT), (W, PT + Double(full) * c), (Double(short) * c, PT + Double(full) * c), (Double(short) * c, PT + Double(full + 1) * c), (0, PT + Double(full + 1) * c), (0, PT)]
             : [(0, PT), (W, PT), (W, PT + Double(full) * c), (0, PT + Double(full) * c), (0, PT)]
