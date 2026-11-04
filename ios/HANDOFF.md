@@ -250,6 +250,23 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   instruction's rows aren't all on the screen, it's written just above the line being typed (as a miss is), or, while a miss shows
   there, left out; back on its rows when the keys go.
 
+- **Kindergarten is live** (4 Nov; Core: `Curriculum.gradeK`, all 23 lessons in 5 chapters, only built chapters on the map; grade 0).
+  Chapter 1, Count to 10, is built (Core: `CountingK` (`CountK`, `CountToTen` gk-count10, `OneMore` gk-onemore, `CompareGroups`
+  k-compare, `CompareNumbers` gk-numcompare), `Spoken`, tests `CountingKTests`; App: `CountToTenLesson`, `OneMoreLesson`,
+  `CompareGroupsLesson`, `CompareNumbersLesson`, their shared `CountingKitK` (`KK`: counters, the ten track, trains of cubes, the
+  number row, the record's own box)). As the preview (`design/prototype/gradeK-ch1.html`), its words word for word.
+  **Shared K–1 pieces:** *the voice* (`App/Voice.swift`): every instruction, miss line and Say line is spoken as it appears
+  (`Listener`, tests too), an en-US voice (Ava/Samantha/Zoe, best quality the iPad has) at 0.86 × the default rate; the drawn
+  speaker mark three squares left of the instruction (`ProblemLayout.Kind.voice`) says it again; Settings' Read aloud is on by
+  itself for K and 1st grade (`AppSettings.readAloud`); `Spoken.text` says signs and money as a person does; debug builds log
+  each line to Documents/voice.log (screenshots log only, `-voice` to speak). *The number row* (`KK.numberRow`): 0–10 in blocks
+  under the record, the tapped number fills the record's box (a byHand step, no keyboard), red only when wrong.
+  Departures: One more shows its last three trains and the new one on every step (the See too), not the whole stair (50%);
+  the dots go up with the track rising first and then gliding onto it one by one (moved parts can now wait their `delay`);
+  the How to plays index-0 numbers as every lesson's does. Least zooms: 83%, 77%, 77%, 92%. Shots e.g.
+  `page-gk-count10-1 -numbers kind=0,n=7,lay=3,rows=4,p0=0,p1=2,p2=14,p3=6,p4=38,p5=21,p6=33 -wrong2`,
+  `page-gk-onemore-0 -numbers n=6 -hand grab=1,m=4`, `page-k-compare-1 -numbers top=6,bottom=4,spread=1,shift=0 -hand grab=1,gx=2.5,goff=0,off=-1`.
+
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
   finger; `BarsKit.swift` the fractions' bars, ruler and sliding pieces). `App/LessonHands.swift`: hand moves.
