@@ -52,6 +52,8 @@ final class WorkProblem: Identifiable, PageProblem {
     private(set) var hinting = false
     /// Show me (a preview) or the How to, playing the step's moves with a ghost finger.
     private(set) var ghost: GhostPlay?
+    /// The paper standing up for a step that rises off it (PaperStand.swift).
+    @ObservationIgnored let stand = StandTilt()
 
     // where things sit, in paper points from `origin`, inside the box (BarsPage.box): the problem above the origin, the
     // picture from the origin down, then the step
@@ -157,7 +159,11 @@ final class WorkProblem: Identifiable, PageProblem {
             || now - handAt < 0.4 || ghost != nil || (leftAt.map { now - $0 < 0.6 } ?? false)
             // a key just pressed: the clock runs while the cursor holds still after it and the number is written
             || now - typedAt < Blink.hold + 0.1
+            // the paper tilting up or lying flat again, and what stands moving
+            || (stand.upAt.map { now - $0 < TiltCamera.beat * StandTilt.slow + 0.2 } ?? false) || stand.downAt != nil || solidsMoving
     }
+    /// What stands is still moving (a face folding, a layer rising): the scene says so.
+    @ObservationIgnored var solidsMoving = false
     /// The cursor blinks in the box being typed into (ProblemLayout.cursor).
     var cursorSince: Double? { ProblemLayout.cursor(self) != nil ? typedAt : nil }
 
@@ -177,7 +183,7 @@ final class WorkProblem: Identifiable, PageProblem {
             self.onChange?()
         }
     }
-    func leave() { leftAt = time(0); ghost = nil; dragging = false }
+    func leave() { leftAt = time(0); ghost = nil; dragging = false; lieFlat() }
     func gone(at t: Double) -> Double { leftAt.map { 1 - ease((t - $0) / 0.5) } ?? 1 }
     func words(at t: Double) -> Double { ease((t - openedAt - 0.3) / 0.4) * gone(at: t) }
     func guide(at t: Double) -> Double { 1 }
@@ -734,7 +740,7 @@ final class WorkProblem: Identifiable, PageProblem {
         let l = layout, o = contentOrigin
         let found: CGPoint?
         switch spot {
-        case .picture(let p): found = CGPoint(x: o.x + l.pictureOffset.x + p.x * Paper.cell, y: o.y + l.pictureOffset.y + p.y * Paper.cell)
+        case .picture(let q): let p = shown(q); found = CGPoint(x: o.x + l.pictureOffset.x + p.x * Paper.cell, y: o.y + l.pictureOffset.y + p.y * Paper.cell)
         case .action(let name): found = ProblemLayout.blocks(self).first { $0.kind == .action(name) }.map { CGPoint(x: $0.rect.midX, y: $0.rect.midY) }
         case .check: found = ProblemLayout.blocks(self).first { $0.kind == .main }.map { CGPoint(x: $0.rect.midX, y: $0.rect.midY) }
         case .choice(let i): found = ProblemLayout.blocks(self).first { $0.kind == .choice(i) }.map { CGPoint(x: $0.rect.midX, y: $0.rect.midY) }

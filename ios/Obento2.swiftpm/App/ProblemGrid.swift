@@ -158,7 +158,7 @@ enum ProblemGrid {
         let base = PaperState(run: l, index: l.index)
         for i in l.steps.indices {
             let d = paper.draw(base.at(i, hint: true))
-            for b in [d.picture.bounds, d.extent].compactMap({ $0 }) { pic = pic.map { $0.union(b) } ?? b }
+            if let b = d.room { pic = pic.map { $0.union(b) } ?? b }
             if let b = withBoxes(d.record.bounds, d.boxes) { rec = rec.map { $0.union(b) } ?? b }
         }
         p.left = min(0, ((pic?.minX ?? 0) / sq).rounded(.down))
@@ -234,7 +234,7 @@ enum ProblemGrid {
         // room the step's move will make, and its hint's drawings, so a miss or a hint never moves the camera); with the
         // record beside the picture, under the record (where it starts, before it's written)
         let hinted = paper.draw(s.at(s.index, hint: true))
-        var bottom = plan.pictureTop * sq + ([d.picture.bounds?.maxY, d.extent?.maxY, hinted.picture.bounds?.maxY].compactMap { $0 }.max() ?? 0)
+        var bottom = plan.pictureTop * sq + ([d.room?.maxY, hinted.room?.maxY].compactMap { $0 }.max() ?? 0)
         let recordBottom = withBoxes(d.record.bounds, d.boxes).map { plan.recordTop * sq + $0.maxY }
         // the record beside part of the picture (PaperLesson.blocksLeft): the blocks under the record, from its column
         let side = recordBottom == nil ? nil : paper.blocksLeft(s.run.numbers), beside = plan.beside || side != nil

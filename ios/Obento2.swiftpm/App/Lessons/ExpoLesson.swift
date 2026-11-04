@@ -28,14 +28,19 @@ struct ExpoLesson: PaperLesson {
         static let parts = [0...0, 1...1, 2...4]
         var cols: [(Double, Double)] { X6.columns(toks, x: 0) }
         func span(_ p: Int) -> (Double, Double) { (cols[Shape.parts[p].lowerBound].0, cols[Shape.parts[p].upperBound].1) }
-        /// The tilted view of the cube, moved down so its top clears the line.
-        var view: X6.View {
-            var v = X6.View(px: ExpoLesson.ox + a * B / 2, py: ExpoLesson.oy + a * B / 2)
-            let b = v.bounds(ExpoLesson.ox, ExpoLesson.oy, ExpoLesson.ox + a * B, ExpoLesson.oy + a * B, a * B)
-            v.dy = max(0, ExpoLesson.top - b.minY).rounded(.up)
-            return v
+        /// The cube's eight corners, standing on its floor (squares, z up).
+        var cubePts: [Vec3] {
+            let e = a * B
+            var out: [Vec3] = []
+            for i in [0.0, e] { for j in [0.0, e] { for k in [0.0, e] { out.append(Vec3(ExpoLesson.ox + i, ExpoLesson.oy + j, k)) } } }
+            return out
         }
-        var cubeBounds: CGRect { view.bounds(ExpoLesson.ox, ExpoLesson.oy, ExpoLesson.ox + a * B, ExpoLesson.oy + a * B, a * B) }
+        /// While the cube stands (the paper tilts, PaperStand.swift): it turns about the point that shows the whole cube
+        /// under the line, from the corner's column.
+        var stand: Standing {
+            Standing(pivot: Standing.pivot(showing: cubePts, at: CGPoint(x: 0, y: ExpoLesson.top), from: CGPoint(x: ExpoLesson.ox + a * B / 2, y: ExpoLesson.oy + a * B / 2)))
+        }
+        var cubeBounds: CGRect { stand.bounds(cubePts) ?? .zero }
         /// The record's left column: beside the corner (or the standing cube), on a block line.
         var rx: Double {
             let flat = ((Double(cap) * B + 3) / 5).rounded(.up) * 5
@@ -46,6 +51,12 @@ struct ExpoLesson: PaperLesson {
     }
 
     func recordRow(_ n: Numbers) -> Double? { 0 }
+    var solid: Bool { true }
+    /// A cube stands up off the paper while its layers are built and counted.
+    func stands(_ s: PaperState) -> CGPoint? {
+        let S = Shape(s.numbers), at = stage(s)
+        return S.P.cube && (at == 3 || at == 4) ? S.stand.pivot : nil
+    }
     func blocksAt(_ s: PaperState) -> CGPoint? {
         let S = Shape(s.numbers), at = stage(s)
         switch at {
@@ -108,32 +119,22 @@ struct ExpoLesson: PaperLesson {
             if s.on("spot") { pic.sketch.box("spot", pic.R(ox, oy, a * B, a * B), .chapter, width: Sketch.stroke, dashed: true) }
         }
 
-        // built: the square (flat), or the cube standing up in the tilted view
+        // built: the square (flat), or the cube standing up off the paper (the paper tilts, PaperStand.swift)
+        var solids = Solids(), standing: Standing?
         if at >= 3 {
-            let flat = Self.floorShape(w: a, h: a, B: B), V = S.view
-            pic.sketch.morphs = true
-            for (id, k) in flat { pic.sketch.from[id] = k }
-            if tilted { Self.floor(&pic, w: a, h: a, B: B, true, map: { x, y in V.at(x, y, 0) }) }
-            else { Self.floor(&pic, w: a, h: a, B: B, P.cube) }
-            pic.sketch.morphs = false; pic.sketch.from = [:]
             if tilted {
-                let layers = at == 4 ? P.a : Int(s.h("l") ?? 1)
-                cubes(&pic, S, V, layers: layers, wire: at == 3, lit: at == 3 && s.on("spot"))
+                let St = S.stand, layers = at == 4 ? P.a : Int(s.h("l") ?? 1)
+                standing = St
+                solids = cubes(S, layers: layers, wire: at == 3, lit: at == 3 && s.on("spot"), counts: at == 4 && s.on("spot"))
                 if at == 3 {
-                    let tp = V.at(ox + a * B / 2, oy + a * B / 2, Double(layers) * B), b = S.cubeBounds
+                    let b = S.cubeBounds, tp = St.up(ox + a * B, oy + a * B / 2, Double(layers) * B)
                     let ro = "\(P.a) × \(P.a) × \(layers)"
                     pic.word("rol\(layers)", ro, at: b.maxX + 1.5, tp.y, X6.lit, anchor: UnitPoint(x: 0, y: 0.5))
                     if s.grabbed { live.reads(ro) }
                     if s.on("ring") { X6.ring(&pic, "ring", x: b.minX, y: b.minY, w: b.width, h: b.height) }
                 }
-                if at == 4 && s.on("spot") {
-                    // the running count beside each layer
-                    for l in 0..<P.a {
-                        let q = V.at(ox + a * B, oy + a * B, (Double(l) + 0.5) * B)
-                        pic.word("run\(l)", "\(P.a * P.a * (l + 1))", at: q.x + 1, q.y, X6.lit, anchor: UnitPoint(x: 0, y: 0.5))
-                    }
-                }
             } else {
+                Self.floor(&pic, w: a, h: a, B: B, P.cube)
                 // its sides named left and under it (over it would crowd the line above)
                 pic.label("sL", "\(P.a)", X6.words.colour(.chapter), .left, edge: ox - 0.6, along: oy + a * B / 2)
                 pic.label("sB", P.cube ? "\(P.a) layers of \(P.a * P.a)" : "\(P.a)", P.cube ? X6.lit : X6.words.colour(.chapter), .below, edge: oy + a * B + 0.4, along: ox + a * B / 2)
@@ -154,7 +155,7 @@ struct ExpoLesson: PaperLesson {
 
         var ext = pic.R(-1, 0, S.rx + 17, oy + Double(S.cap) * B + 2.5)
         if P.cube { let b = S.cubeBounds; ext = ext.union(pic.R(b.minX - 1, b.minY, b.width + 2, b.height + 1)) }
-        return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: rec.boxes, extent: ext)
+        return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: rec.boxes, extent: ext, solids: solids, standing: standing)
     }
 
     /// The floor's parts, flat: its fill, its outline and the lines between its blocks (each its own part, so the whole
@@ -179,64 +180,34 @@ struct ExpoLesson: PaperLesson {
         }
     }
 
-    /// The layers of cubes standing on the floor, each rising from the top of the one under it; the cube's own shape
-    /// dashed round them while they're built; each layer's count on its front.
-    private func cubes(_ pen: inout GridPen, _ S: Shape, _ V: X6.View, layers: Int, wire: Bool, lit: Bool) {
-        let a = S.a, B = S.B, X0 = Self.ox, Y0 = Self.oy, X1 = X0 + a * B, Y1 = Y0 + a * B, sq = Paper.cell
-        func P(_ x: Double, _ y: Double, _ z: Double) -> CGPoint { let p = V.at(x, y, z); return CGPoint(x: p.x * sq, y: p.y * sq) }
-        if wire {
-            let Z = a * B, xs = [X0, X1], ys = [Y0, Y1], zs = [0, Z]
-            let edges = [(0,0,0,1,0,0),(0,1,0,1,1,0),(0,0,0,0,1,0),(1,0,0,1,1,0),(0,0,1,1,0,1),(0,1,1,1,1,1),(0,0,1,0,1,1),(1,0,1,1,1,1),(0,0,0,0,0,1),(1,0,0,1,0,1),(0,1,0,0,1,1),(1,1,0,1,1,1)]
-            for (k, e) in edges.enumerated() {
-                pen.sketch.line("wire\(k)", [P(xs[e.0], ys[e.1], zs[e.2]), P(xs[e.3], ys[e.4], zs[e.5])], lit ? .chapter : .ink3, width: Sketch.stroke, dashed: true)
-            }
+    /// The cube standing on the paper in 3D: its floor, its layers (each rising on the one under it), the cube's own
+    /// shape dashed round them while they're built, each layer's count on its front (and, a hint, the running count).
+    private func cubes(_ S: Shape, layers: Int, wire: Bool, lit: Bool, counts: Bool) -> Solids {
+        var so = Solids()
+        let a = S.a, B = S.B, X0 = Self.ox, Y0 = Self.oy, X1 = X0 + a * B, Y1 = Y0 + a * B, Z = a * B
+        so.faces.append(Solids.Face(id: "floor", pts: [Vec3(X0, Y0, 0), Vec3(X1, Y0, 0), Vec3(X1, Y1, 0), Vec3(X0, Y1, 0)], look: .top))
+        // its blocks' lines, as the flat floor had them
+        for j in 1..<S.P.a {
+            let d = Double(j) * B
+            so.lines.append(Solids.Line(id: "flv\(j)", pts: [Vec3(X0 + d, Y0, 0.01), Vec3(X0 + d, Y1, 0.01)], colour: .chapter))
+            so.lines.append(Solids.Line(id: "flh\(j)", pts: [Vec3(X0, Y0 + d, 0.01), Vec3(X1, Y0 + d, 0.01)], colour: .chapter))
         }
-        // each part of a layer starts flat on the layer under it and rises to its own height
-        func part(_ id: String, _ pts: (Double) -> [CGPoint], z0: Double, plate: Sketch.Colour?) {
-            let to = pts(z0 + B), from = pts(z0)
-            if let c = plate { pen.sketch.from[id] = .plate(from); pen.sketch.plate(id, to, c) }
-            else { pen.sketch.from[id] = .overLine(from, width: Sketch.stroke); pen.sketch.overLine(id, to, .chapter, width: Sketch.stroke) }
+        // the floor rises into the first layer halfway through the tilt (Unit cubes)
+        for l in 0..<layers { so.blocks.append(Solids.Block(id: "L\(l)", at: Vec3(X0, Y0, Double(l) * B), l: S.P.a, w: S.P.a, B: B, delay: l == 0 ? TiltCamera.beat * 0.55 : 0)) }
+        // the cube's own shape dashed where it's still empty: up from the layers built, and its top
+        let z0 = Double(layers) * B
+        if wire, z0 < Z - 0.01 {
+            let c = lit ? Sketch.Colour.chapter : .ink3
+            so.lines.append(Solids.Line(id: "wiretop", pts: [Vec3(X0, Y0, Z), Vec3(X1, Y0, Z), Vec3(X1, Y1, Z), Vec3(X0, Y1, Z), Vec3(X0, Y0, Z)], colour: c, dashed: true))
+            for (k, (x, y)) in [(X0, Y0), (X1, Y0), (X1, Y1), (X0, Y1)].enumerated() {
+                so.lines.append(Solids.Line(id: "wireup\(k)", pts: [Vec3(x, y, z0), Vec3(x, y, Z)], colour: c, dashed: true))
+            }
         }
         for l in 0..<layers {
-            let z0 = Double(l) * B
-            // the floor rises into the first layer once it has stood up
-            pen.sketch.delay = l == 0 ? SketchDrawer.morphTime : 0
-            part("cf\(l)", { z in [P(X0, Y1, z0), P(X1, Y1, z0), P(X1, Y1, z), P(X0, Y1, z)] }, z0: z0, plate: X6.cubeFront)
-            part("cs\(l)", { z in [P(X1, Y1, z0), P(X1, Y0, z0), P(X1, Y0, z), P(X1, Y1, z)] }, z0: z0, plate: X6.cubeSide)
-            part("co\(l)", { z in [P(X0, Y1, z), P(X0, Y1, z0), P(X1, Y1, z0), P(X1, Y0, z0), P(X1, Y0, z), P(X1, Y1, z), P(X0, Y1, z)] }, z0: z0, plate: nil)
-            for j in 1..<S.P.a {
-                let d = Double(j) * B
-                part("cfv\(l)_\(j)", { z in [P(X0 + d, Y1, z0), P(X0 + d, Y1, z)] }, z0: z0, plate: nil)
-                part("csv\(l)_\(j)", { z in [P(X1, Y0 + d, z0), P(X1, Y0 + d, z)] }, z0: z0, plate: nil)
-            }
-            let q = V.at(X0 + (Double(S.P.a / 2) + 0.5) * B, Y1, z0 + B / 2)
-            pen.word("lay\(l)", "\(S.P.a * S.P.a)", at: q.x, q.y, X6.small.colour(.ink))
+            so.labels.append(Solids.Label(id: "lay\(l)", text: "\(S.P.a * S.P.a)", at: Vec3(X0 + (Double(S.P.a / 2) + 0.5) * B, Y1, (Double(l) + 0.5) * B), words: X6.small.colour(.ink)))
+            if counts { so.labels.append(Solids.Label(id: "run\(l)", text: "\(S.P.a * S.P.a * (l + 1))", at: Vec3(X1, Y1, (Double(l) + 0.5) * B), words: X6.lit, anchor: UnitPoint(x: -0.4, y: 0.5))) }
         }
-        pen.sketch.from = [:]
-        // the top, on the highest layer: it moves up as layers are added
-        // (shown at once on the floor when it's new, rising with the first layer)
-        let z = Double(max(1, layers)) * B, z0 = z - B
-        pen.sketch.morphs = true
-        func top(_ z: Double) -> [(String, Sketch.Kind)] {
-            var out: [(String, Sketch.Kind)] = [("ctop", .plate([P(X0, Y0, z), P(X1, Y0, z), P(X1, Y1, z), P(X0, Y1, z)])),
-                                                ("ctopo", .overLine([P(X0, Y0, z), P(X1, Y0, z), P(X1, Y1, z), P(X0, Y1, z), P(X0, Y0, z)], width: Sketch.stroke))]
-            for j in 1..<S.P.a {
-                let d = Double(j) * B
-                out.append(("ctv\(j)", .overLine([P(X0 + d, Y0, z), P(X0 + d, Y1, z)], width: Sketch.stroke)))
-                out.append(("cth\(j)", .overLine([P(X0, Y0 + d, z), P(X1, Y0 + d, z)], width: Sketch.stroke)))
-            }
-            return out
-        }
-        for (id, k) in top(z0) { pen.sketch.from[id] = k }
-        pen.sketch.delay = layers <= 1 ? SketchDrawer.morphTime : 0
-        for (id, k) in top(z) {
-            switch k {
-            case .plate(let pts): pen.sketch.plate(id, pts, X6.cubeTop)
-            case .overLine(let pts, let w): pen.sketch.overLine(id, pts, .chapter, width: w)
-            default: break
-            }
-        }
-        pen.sketch.morphs = false; pen.sketch.from = [:]; pen.sketch.delay = 0
+        return so
     }
 
     // MARK: the hands
@@ -263,12 +234,14 @@ struct ExpoLesson: PaperLesson {
                 return HandMove(hand: ["w": w, "h": h], missHand: ["w": w, "h": h, "bad": 1], set: [("x", w * 10 + h)], check: true)
             })
         case 3:
-            let l = s.h("l") ?? 1, b = S.cubeBounds, per = B * sin(PaperView3D.tilted.elevation * .pi / 180)
+            // the finger lands on the standing paper: dragged up the screen (away across the paper), the layers rise
+            let l = s.h("l") ?? 1, A = S.a * B
             return Hands(grab: { q in
-                b.insetBy(dx: -2, dy: -2).contains(q) ? ["grab": 1, "y0": q.y, "l0": l, "l": l] : nil
+                q.x > Self.ox - 4 && q.x < Self.ox + A + 4 && q.y > Self.oy - 2 * A - 4 && q.y < Self.oy + A + 4 ? ["grab": 1, "x0": q.x, "y0": q.y, "l0": l, "l": l] : nil
             }, drag: { q, hd in
                 var hd = hd
-                hd["l"] = Double(max(1, min(S.P.a + 1, Int(hd["l0"] ?? 1) + Int((((hd["y0"] ?? q.y) - q.y) / per).rounded()))))
+                let r = Standing.rise(from: CGPoint(x: hd["x0"] ?? q.x, y: hd["y0"] ?? q.y), to: q)
+                hd["l"] = Double(max(1, min(S.P.a + 1, Int(hd["l0"] ?? 1) + Int((r / B).rounded()))))
                 return hd
             }, release: { hd in
                 let l = hd["l"] ?? 1
@@ -286,9 +259,8 @@ struct ExpoLesson: PaperLesson {
             let w = s.h("w") ?? 1, h = s.h("h") ?? 1
             return [.drag(from: CGPoint(x: Self.ox + w * B, y: Self.oy + h * B), to: CGPoint(x: Self.ox + a * B, y: Self.oy + a * B))]
         case 3:
-            let l = s.h("l") ?? 1, per = B * sin(PaperView3D.tilted.elevation * .pi / 180)
-            let p = S.view.at(Self.ox + a * B / 2, Self.oy + a * B / 2, l * B)
-            return [.drag(from: p, to: CGPoint(x: p.x, y: p.y - (a - l) * per))]
+            let l = s.h("l") ?? 1, p = CGPoint(x: Self.ox + a * B / 2, y: Self.oy + a * B / 2)
+            return [.drag(from: p, to: Standing.away(from: p, rising: (a - l) * B))]
         default: return []
         }
     }

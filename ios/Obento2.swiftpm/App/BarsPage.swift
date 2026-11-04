@@ -753,7 +753,7 @@ final class BarsPage {
     /// A box of cubes leaving the paper (G 29 Oct: the cards came while it still stood, the camera still in close): how
     /// long until it has sunk and gone (`away`), and until its paper lies flat again (`flat`); nothing for other problems.
     private var drawingOut: (away: Double, flat: Double) {
-        guard !instant, let c = leaving as? CubesProblem else { return (0, 0) }
+        guard !instant, let c = leaving as? any TiltOwner else { return (0, 0) }
         let flat = c.flatEnds.map { max(0, $0 - PaperClock.now) } ?? 0
         return (max(flat, 0.45) + 0.1, flat)
     }

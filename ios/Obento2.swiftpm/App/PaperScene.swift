@@ -491,6 +491,8 @@ final class Rig {
     // the flat lesson
     let barsRoot = Entity()
     var sketches: [UUID: SketchDrawer] = [:]
+    /// A paper lesson's solids, by problem (PaperStand.swift).
+    var solids: [UUID: SolidsDrawer] = [:]
     /// What the camera last framed a problem's content for.
     var contentKey = ""
     /// The blinking cursor in the answer box being typed into.
@@ -668,6 +670,8 @@ final class Rig {
         guard let page else {
             for d in sketches.values { d.root.removeFromParent() }
             sketches = [:]
+            for d in solids.values { d.clear() }
+            solids = [:]
             drawCards(nil, at: t)
             clearCubesProblems(keeping: []); return
         }
@@ -690,6 +694,7 @@ final class Rig {
             }
         }
         for (id, d) in sketches where !every.contains(where: { $0.id == id }) { d.root.removeFromParent(); sketches[id] = nil }
+        for (id, d) in solids where !every.contains(where: { $0.id == id }) { d.clear(); solids[id] = nil }
         clearCubesProblems(keeping: shown)
         frameContent(page)
         if drawCards(page, at: t) { pageBuilding = true }
@@ -712,6 +717,10 @@ final class Rig {
         }
         let since = t - m.typedAt
         cursorEntity.isEnabled = Blink.on(since: since)
+        // on the words' board while the paper stands
+        let local = Transform(translation: SIMD3(0, 0.0027, 0))
+        let b = (m as? WorkProblem)?.board(view, screen: screen)
+        cursorEntity.transform = b.map { Transform(matrix: $0.matrix * local.matrix) } ?? local
     }
 
     /// The camera frames what's on the paper (G 19 Oct): the problem's picture and words as they are now, so when a

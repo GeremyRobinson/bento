@@ -58,6 +58,11 @@ protocol PaperLesson {
     func scale(_ run: LessonRun) -> Double
     func recordBeside(_ run: LessonRun) -> Double?
     func messageRows(_ run: LessonRun) -> Int
+    /// Something of it rises off the paper (shared 3D, PaperStand.swift): it draws `PaperDrawing.solids`.
+    var solid: Bool { get }
+    /// This state stands the paper up (3D): the point of the picture (its squares, on the paper) the paper turns about, or
+    /// nil (flat). The words it writes then stand facing the child where the flat paper has them (Standing.up places them).
+    func stands(_ s: PaperState) -> CGPoint?
 }
 
 extension PaperLesson {
@@ -73,6 +78,8 @@ extension PaperLesson {
     func blocksLeft(_ n: Numbers) -> Double? { nil }
     func blocksAt(_ s: PaperState) -> CGPoint? { nil }
     func keysFocus(_ s: PaperState) -> CGRect? { nil }
+    var solid: Bool { false }
+    func stands(_ s: PaperState) -> CGPoint? { nil }
     func scale(_ run: LessonRun) -> Double { scale(run.numbers) }
     func recordBeside(_ run: LessonRun) -> Double? { recordBeside(run.numbers) }
     func messageRows(_ run: LessonRun) -> Int { messageRows(run.numbers) }
@@ -237,6 +244,15 @@ struct PaperDrawing {
     var actions: [String] = []
     /// Room the picture needs beyond what's drawn now (a move about to make room for more), in its points.
     var extent: CGRect?
+    /// What stands off the paper, or lies on it in 3D (PaperStand.swift), in the picture's squares.
+    var solids = Solids()
+    /// While the step stands: how the paper is seen (what `solids` takes up is measured through it).
+    var standing: Standing?
+    /// The room the picture takes: what's drawn, the room it keeps, and its solids (seen standing or flat), in its points.
+    var room: CGRect? {
+        let s = solids.bounds(standing).map { CGRect(x: $0.minX * Paper.cell, y: $0.minY * Paper.cell, width: $0.width * Paper.cell, height: $0.height * Paper.cell) }
+        return [picture.bounds, extent, s].compactMap { $0 }.reduce(nil as CGRect?) { acc, r in acc.map { $0.union(r) } ?? r }
+    }
 }
 
 /// What the hands do on a step, in the lesson's squares (the picture's): a tap, a drag that starts on something the

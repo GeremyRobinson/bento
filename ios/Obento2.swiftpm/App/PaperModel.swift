@@ -412,6 +412,8 @@ final class PaperModel {
         }
         // the tilted problem's camera, between frames (TiltCamera.settle): what a tilt starts from and fits into (the
         // room the bar or the keyboard takes), and a problem no longer on the page lying flat again
+        // a paper lesson's step that stands up has the paper tilt; flat again when it doesn't (PaperStand.swift)
+        for case let w as WorkProblem in bars?.all ?? [] { w.standCheck(at: t) }
         TiltCamera.settle(at: t, flat: .matching(camera(at: t), screen: screen), screen: screen, top: Self.chrome.top,
                           bottom: max(Self.chrome.bottom, keyboard + 16)) { [bars] o in bars?.all.contains { $0 === o } ?? false }
     }

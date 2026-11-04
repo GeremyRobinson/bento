@@ -246,7 +246,12 @@ extension Rig {
                 live.build(stackedLive(m, at: t), rig: self, chapter: m.chapter.hex, dark: dark, origin: .zero, from: t, now: t)
             }
             if let left = m.leftAt { d.undrawAll(at: left) }
-            return d.update(at: t)
+            // standing (PaperStand.swift): the words face the child, what rises off the paper is drawn in 3D
+            d.root.transform = m.board(view, screen: screen) ?? .identity
+            drawSolids(m, page, at: t)
+            let rising = solids[m.id]?.moving(at: t) ?? false
+            if rising != m.solidsMoving { Task { @MainActor in m.solidsMoving = rising } }
+            return d.update(at: t) || rising
         }
         let key = "\(m.lesson.numbers) \(m.lesson.index) \(m.picture.sorted { $0.key < $1.key }.map { "\($0.key)\($0.value)" }) \(m.lesson.missedSteps.count) \(m.scale) \(m.ghost.map { "\($0.fired)" } ?? "") " + wordsKey(m, page, dark: dark)
         if key != d.key, m.leftAt == nil, wanted {

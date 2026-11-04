@@ -328,8 +328,10 @@ enum Shots {
                 // -tapsq x,y / -drag x0,y0,x1,y1 / -block Name: a finger's tap or drag on the picture (in its squares) or a
                 // tap on a block, made through the camera and the paper's own gesture handling, as a real finger's would be
                 @MainActor func screen(_ x: Double, _ y: Double) -> Point {
-                    let o = w.contentOrigin, l = w.layout
-                    return m.camera(at: PaperClock.now).toScreen(Point(o.x + l.pictureOffset.x + x * Paper.cell, o.y + l.pictureOffset.y + y * Paper.cell))
+                    let o = w.contentOrigin, l = w.layout, p = Point(o.x + l.pictureOffset.x + x * Paper.cell, o.y + l.pictureOffset.y + y * Paper.cell)
+                    // standing: where that point of the paper shows through the tilted view
+                    if let v = w.standingNow { return v.project(Vec3(p.x / Paper.unit, 0, p.y / Paper.unit), screen: m.screen) }
+                    return m.camera(at: PaperClock.now).toScreen(p)
                 }
                 func numbers(_ flag: String) -> [Double]? {
                     guard let i = args.firstIndex(of: flag), i + 1 < args.count else { return nil }
