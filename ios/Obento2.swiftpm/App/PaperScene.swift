@@ -165,6 +165,16 @@ extension Piece {
         case "gk-onemore": return [box(6, 5, 1, 1)]                             // the one more cube
         case "k-compare": return [box(5, 0, 2, 1)]                              // the dots with no partner
         case "gk-numcompare": return [box(4, 4, 3, 2)]                          // the cubes that are more
+        // Kindergarten, Shapes (4 Nov)
+        case "k-shapes", "gk-draw", "k-solids", "gk-position", "gk-compose":
+            func q(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: at.x + x * c, y: at.y + y * c) }
+            switch id {
+            case "k-shapes": return [[q(0, 6), q(7, 6), q(3, 0)]]                 // the triangle
+            case "gk-draw": return [[q(0, 6), q(6, 6), q(3, 0)]]                  // the triangle drawn on the dots
+            case "k-solids": return [[q(0, 2), q(2, 0), q(6, 0), q(4, 2)]]        // the cube's top
+            case "gk-position": return [box(4, 1, 3, 3)]                          // the cube in front
+            default: return [[q(0, 0), q(6, 6), q(0, 6)]]                         // one triangle in the square
+            }
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -265,6 +275,20 @@ extension Piece {
         case "gk-numcompare": // two trains, the shorter one's end dropped across to the longer: 7 by 6
             return [box(0, 0, 4, 2), box(0, 4, 7, 2), line((4, 0), (4, 6))] + (1..<4).map { x in line((Double(x), 0), (Double(x), 2)) }
                 + (1..<7).map { x in line((Double(x), 4), (Double(x), 6)) }
+        // Kindergarten, Shapes (4 Nov)
+        case "k-shapes": // a triangle, its corners dotted: 7 by 6
+            func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.35 * cos(a), y + 0.35 * sin(a)) } }
+            return [line((0, 6), (7, 6), (3, 0), (0, 6)), dot(0, 6), dot(7, 6), dot(3, 0)]
+        case "gk-draw": // dots on the crossings, a triangle drawn on them: 9 by 6
+            func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...12).map { k in let a = Double(k) / 12 * 2 * .pi; return P(x + 0.2 * cos(a), y + 0.2 * sin(a)) } }
+            return [line((0, 6), (6, 6), (3, 0), (0, 6))] + [0.0, 3, 6, 9].flatMap { x in [0.0, 3, 6].map { y in dot(x, y) } }
+        case "k-solids": // a cube standing, and the flat square beside it: 11 by 6
+            return [box(0, 2, 4, 4), line((0, 2), (2, 0), (6, 0), (4, 2)), line((6, 0), (6, 4), (4, 6)), box(7, 2, 4, 4)]
+        case "gk-position": // a floor, a cube on it in front, a ball behind: 11 by 6
+            let ball = (0...20).map { k -> CGPoint in let a = Double(k) / 20 * 2 * .pi; return P(9 + 1 * cos(a), 2 + 1 * sin(a)) }
+            return [line((0, 6), (8, 6), (11, 3), (3, 3), (0, 6)), box(4, 1, 3, 3), line((4, 1), (5, 0), (8, 0), (7, 1)), line((8, 0), (8, 3), (7, 4)), ball]
+        case "gk-compose": // a square of two triangles, and a triangle waiting beside it: 11 by 6
+            return [box(0, 0, 6, 6), line((0, 0), (6, 6)), line((8, 0), (8, 6), (11, 6), (8, 0))]
         case "g6-ratio": // two rectangles of cells growing together a row at a time: 11 by 6
             return [box(0, 0, 4, 6), box(5, 0, 6, 6), line((2, 0), (2, 6)), line((7, 0), (7, 6)), line((9, 0), (9, 6))]
                 + [2.0, 4].flatMap { y in [line((0, y), (4, y)), line((5, y), (11, y))] }

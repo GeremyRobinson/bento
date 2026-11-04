@@ -132,7 +132,7 @@ struct Listener: View {
         }
         // what to read: the open problem's step (or the How to's), as ⋯'s Read it aloud reads it
         let reading = page?.current
-        let words = reading.map { $0.intro ?? ($0.lesson.story && $0.lesson.step.answer?.choices != nil ? $0.lesson.words.hint : $0.lesson.words.say) }
+        let words = reading.map { ($0 as? WorkProblem)?.sayText ?? $0.intro ?? ($0.lesson.story && $0.lesson.step.answer?.choices != nil ? $0.lesson.words.hint : $0.lesson.words.say) }
         let readKey = reading.map { "\($0.id) \($0.lesson.index) \(words ?? "")" } ?? ""
         // Kindergarten and 1st grade: the voice says every instruction, miss line and Say line, in tests too (they can't
         // read the test either); a miss line is said each time a miss brings it

@@ -601,8 +601,10 @@ final class WorkProblem: Identifiable, PageProblem {
     /// What to do now, as the top rows write it.
     var sayText: String {
         let l = lesson
-        return intro ?? (l.story && l.step.answer?.choices != nil ? l.words.hint : l.words.say)
+        return intro ?? paperSay ?? (l.story && l.step.answer?.choices != nil ? l.words.hint : l.words.say)
     }
+    /// What to do now as the lesson's hands have changed it within the step (PaperLesson.say), if they have.
+    var paperSay: String? { ghost == nil && !solved ? paper?.say(state()) : nil }
     @ObservationIgnored private var heldFrame: Rect?
     /// How much of the screen's bottom a docked keyboard covers (PaperScreen sets it; iPadOS's floating number pad
     /// covers only its corner and counts as none).

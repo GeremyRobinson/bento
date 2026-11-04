@@ -65,6 +65,15 @@ protocol PaperLesson {
     func stands(_ s: PaperState) -> CGPoint?
     /// When a step stops standing: how long the paper stays up before it lies flat (a box closed a moment).
     func lingers(_ s: PaperState) -> Double
+    /// How long the paper waits, lying flat, before it first stands (Where is it?: the words are read on the flat paper,
+    /// then it tilts by itself).
+    func standDelay(_ s: PaperState) -> Double
+    /// The paper held part way up by a finger (Solid shapes' "Tilt the paper."): the pivot and how far up (0 flat, 1
+    /// standing), following the finger 1:1; let go, it stands on the spring when the step stands, else it falls back.
+    func standHeld(_ s: PaperState) -> (pivot: CGPoint, up: Double)?
+    /// What to do now, when the hands have changed it within a step ("Push it." once rolls or slides is tapped): nil, the
+    /// step's own words.
+    func say(_ s: PaperState) -> String?
 }
 
 extension PaperLesson {
@@ -83,6 +92,9 @@ extension PaperLesson {
     var solid: Bool { false }
     func stands(_ s: PaperState) -> CGPoint? { nil }
     func lingers(_ s: PaperState) -> Double { 0 }
+    func standDelay(_ s: PaperState) -> Double { 0 }
+    func standHeld(_ s: PaperState) -> (pivot: CGPoint, up: Double)? { nil }
+    func say(_ s: PaperState) -> String? { nil }
     func scale(_ run: LessonRun) -> Double { scale(run.numbers) }
     func recordBeside(_ run: LessonRun) -> Double? { recordBeside(run.numbers) }
     func messageRows(_ run: LessonRun) -> Int { messageRows(run.numbers) }
@@ -202,6 +214,12 @@ enum PaperLessons {
         case "gk-onemore": return OneMoreLesson()
         case "k-compare": return CompareGroupsLesson()
         case "gk-numcompare": return CompareNumbersLesson()
+        // Kindergarten, Shapes (4 Nov 2026)
+        case "k-shapes": return FlatShapesLesson()
+        case "gk-draw": return DrawShapesLesson()
+        case "k-solids": return SolidShapesLesson()
+        case "gk-position": return WhereIsItLesson()
+        case "gk-compose": return PutShapesLesson()
         default: return nil
         }
     }

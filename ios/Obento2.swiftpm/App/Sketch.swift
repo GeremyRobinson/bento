@@ -31,7 +31,9 @@ struct Sketch {
         var morphs = false; var from: Kind? = nil; var delay: Double = 0
         /// A shape it morphs through on the way from `from` to its own (a fold's half turning on over to 180° before it
         /// lies back flat): it goes there first, rests a beat, then on to its own shape.
-        var via: Kind? = nil }
+        var via: Kind? = nil
+        /// More shapes it goes through after `via`, each in turn with a beat's rest (a stick laid on each side in turn).
+        var vias: [Kind] = [] }
     private(set) var items: [Item] = []
     /// When the parts added from now on start drawing in (a map piece's words with its frame), instead of one after
     /// another from the drawing's start.
@@ -48,6 +50,8 @@ struct Sketch {
     var delay: Double = 0
     /// Shapes new parts morph through, by id (see Item.via): set before the part is added.
     var via: [String: Kind] = [:]
+    /// More shapes after the first, by id (see Item.vias).
+    var vias: [String: [Kind]] = [:]
     /// What a hand move reads now (the live drawing's readout: "3 rows", "fourths", "5 hops of 0.6 = 3"), so the bar
     /// can say it big in its middle while the finger is down (the calm pill, G 26 Oct). Drawn nowhere by itself.
     var readout: String?
@@ -127,6 +131,7 @@ struct Sketch {
     private mutating func add(_ item: Item) {
         var it = item; it.at = startAt; it.pace = pace; it.snaps = snaps; it.morphs = morphs || from[item.id] != nil; it.from = from[item.id]; it.delay = delay
         it.via = via[item.id]
+        it.vias = vias[item.id] ?? []
         items.append(it)
     }
     /// The same sketch in paper points: moved to `o` and drawn `k` times bigger.
@@ -147,7 +152,7 @@ struct Sketch {
         out.items = items.map { it in
             let kind = map(it.kind)
             return Item(id: it.id, kind: kind, colour: it.colour, at: it.at, slot: it.slot, pace: it.pace, snaps: it.snaps, morphs: it.morphs, from: it.from.map(map), delay: it.delay,
-                        via: it.via.map(map))
+                        via: it.via.map(map), vias: it.vias.map(map))
         }
         return out
     }
@@ -309,6 +314,8 @@ final class SketchDrawer {
         var morph: (from: [[CGPoint]], to: [[CGPoint]], start: Double)?
         /// The shape it morphs on to once the morph now under way ends (Item.via), and when.
         var next: (shape: Shape, at: Double)?
+        /// The shapes after that, in turn (Item.vias), its own last.
+        var later: [Shape] = []
         /// Morphing on from its `via` shape (a fold's half lying back from over the other side): it passes edge-on half
         /// way, squeezed into a dark smear on the fold line, so it isn't drawn for that moment.
         var flips = false
@@ -569,7 +576,9 @@ final class SketchDrawer {
                 // through its `via` shape first (when it fits), resting a beat there, then on to its own
                 if let v = item.via, let viaShape = Self.shape(v, P, scale: k), viaShape.fits(to) {
                     startMorph(node, from: fromShape.lines, to: viaShape, at: now + item.delay)
-                    node.next = (to, now + item.delay + Self.morphTime + Self.viaRest)
+                    let more = item.vias.compactMap { Self.shape($0, P, scale: k) }.filter { $0.fits(to) }
+                    node.next = (more.first ?? to, now + item.delay + Self.morphTime + Self.viaRest)
+                    node.later = more.isEmpty ? [] : Array(more.dropFirst()) + [to]
                 } else { startMorph(node, from: fromShape.lines, to: to, at: now + item.delay) }
             }
             nodes[item.id] = node
@@ -637,7 +646,11 @@ final class SketchDrawer {
             }
             if let nx = n.next {
                 moving = true
-                if n.morph == nil, t >= nx.at, let sh = n.shape { n.next = nil; startMorph(n, from: sh.lines, to: nx.shape, at: nx.at); n.flips = true }
+                if n.morph == nil, t >= nx.at, let sh = n.shape {
+                    n.next = nil; startMorph(n, from: sh.lines, to: nx.shape, at: nx.at)
+                    // a chain (Item.vias): each in turn; only a fold's lying back passes edge-on
+                    if let after = n.later.first { n.later.removeFirst(); n.next = (after, nx.at + Self.morphTime + Self.viaRest) } else if n.later.isEmpty && n.item?.vias.isEmpty != false { n.flips = true }
+                }
             }
             guard let mv = n.move else { continue }
             let f = Float(springPath((t - mv.start) / Self.glide))

@@ -309,7 +309,7 @@ extension Rig {
         }
         // what to do (a story's pick asks only "Pick what to do"; the How to says its own)
         let storyStep = l.story && l.step.answer?.choices != nil
-        let say = m.intro ?? (storyStep ? l.words.hint : l.words.say)
+        let say = m.intro ?? m.paperSay ?? (storyStep ? l.words.hint : l.words.say)
         let kf = m.keysFraming(st)
         if kf?.hideSay != true {
             s.words("say\(l.index)", say, .say, x: o.x, top: o.y + plan.sayTop * sq, width: width, max: max(plan.sayRows, m.intro != nil ? 3 : 1), k: k)

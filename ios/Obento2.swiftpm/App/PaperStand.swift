@@ -118,8 +118,38 @@ struct Solids {
     struct Line { var id: String; var pts: [Vec3]; var colour: Sketch.Colour = .ink3; var dashed = false }
     /// Words on a point of what stands, facing the child (a length on an edge).
     struct Label { var id: String; var text: String; var at: Vec3; var words: Sketch.Words; var anchor: UnitPoint = .center }
+    /// A solid drawn as one piece (Kindergarten's Shapes: a cube, sphere, cylinder or cone, a table): its facets each
+    /// shaded by the way it faces (light from the top left, as the cubes are: the top lightest, the right side darkest),
+    /// its edges and marks drawn on it, and, for a round one, the sides it shows from where the camera looks (worked out
+    /// as the view moves). In the picture's squares, placed where it stands.
+    struct Body {
+        var id: String
+        var facets: [[Vec3]]
+        /// The whole body's tone, or each facet's (lit: a flat face found; red: tapped and wrong).
+        var tone: Tone = .auto
+        var tones: [Tone]? = nil
+        /// Its edges (a cube's, a cylinder's rims), in the edge colour.
+        var edges: [[Vec3]] = []
+        /// Marks on it, thinner in tone (a can's rings, a die's dots, a ball's seam).
+        var marks: [[Vec3]] = []
+        /// Round parts whose outline depends on the view.
+        var rounds: [Round] = []
+    }
+    enum Tone: Equatable { case auto, lit, red }
+    enum Round: Equatable {
+        case sphere(Vec3, Double)
+        /// From the middle of one end to the other's, its radius.
+        case cylinder(Vec3, Vec3, Double)
+        /// From the middle of its base to its point, the base's radius.
+        case cone(Vec3, Vec3, Double)
+    }
+    /// What moves by itself for a while (a solid pushed, rolling; a solid turning once): drawn as `at(t)` says from
+    /// `start` for `length` seconds, then as it says at the end.
+    struct Play { var start: Double; var length: Double; var at: @MainActor (Double) -> Solids }
     var faces: [Face] = [], blocks: [Block] = [], lines: [Line] = [], labels: [Label] = []
-    var isEmpty: Bool { faces.isEmpty && blocks.isEmpty && lines.isEmpty && labels.isEmpty }
+    var bodies: [Body] = []
+    var play: Play?
+    var isEmpty: Bool { faces.isEmpty && blocks.isEmpty && lines.isEmpty && labels.isEmpty && bodies.isEmpty }
 
     /// A face's corners turned on its hinge and its parents' (by `angle(face)`).
     func placed(_ f: Face, angle: (Face) -> Double) -> [Vec3] {
@@ -142,7 +172,7 @@ struct Solids {
     }
     /// Every point that shows, folded as each face's angle says.
     var points: [Vec3] {
-        var out = faces.flatMap { placed($0) { $0.angle } } + lines.flatMap(\.pts) + labels.map(\.at)
+        var out = faces.flatMap { placed($0) { $0.angle } } + lines.flatMap(\.pts) + labels.map(\.at) + bodies.flatMap { $0.facets.flatMap { $0 } }
         for b in blocks { for i in [0.0, 1] { for j in [0.0, 1] { for k in [0.0, 1] {
             out.append(Vec3(b.at.x + i * Double(b.l) * b.B, b.at.y + j * Double(b.w) * b.B, b.at.z + k * b.B))
         } } } }
@@ -168,19 +198,26 @@ final class StandTilt {
     /// How far it stood when the move under way began.
     var from = 0.0
     var downTime = TiltCamera.beat
+    /// Held part way up by a finger (PaperLesson.standHeld): how far, followed 1:1.
+    var held: Double?
+    /// It has stood once for this problem (a lesson's standDelay is waited only the first time).
+    var stoodOnce = false
     /// Screenshots of a moment mid-tilt (`-slow`): the tilt this many times slower.
     static var slow = 1.0
 
     func blend(at t: Double, instant: Bool) -> Double {
+        if let h = held { return h }
         // screenshots cut straight to it, unless a move is being filmed (`-slow`)
         let instant = instant && PaperClock.slow == 1
-        if let d = downAt { return instant ? 0 : from * (1 - glide((t - d) / (downTime * Self.slow))) }
+        if let d = downAt { return instant ? 0 : from * (1 - glide(max(0, t - d) / (downTime * Self.slow))) }
         guard let u = upAt else { return 0 }
+        // waiting flat a moment first (standDelay)
+        if t < u { return from }
         return instant ? 1 : from + (1 - from) * glide((t - u) / (TiltCamera.beat * Self.slow))
     }
-    func holds(at t: Double) -> Bool { upAt != nil && (downAt.map { t - $0 < downTime * Self.slow } ?? true) }
+    func holds(at t: Double) -> Bool { held != nil || (upAt != nil && (downAt.map { t - $0 < downTime * Self.slow } ?? true)) }
     var standing: Bool { upAt != nil && downAt == nil }
-    func clear() { pivot = nil; upAt = nil; downAt = nil; from = 0 }
+    func clear() { pivot = nil; upAt = nil; downAt = nil; from = 0; held = nil }
 }
 
 extension WorkProblem: TiltOwner {
@@ -194,11 +231,27 @@ extension WorkProblem: TiltOwner {
     /// Between frames (PaperModel.settle): a step that stands has the paper tilt; one that doesn't, the paper lie flat.
     func standCheck(at t: Double) {
         guard leftAt == nil, let paper, paper.solid else { return }
-        let want = paper.stands(state())
+        let st = state()
+        // held part way up by a finger: it follows the finger
+        if let h = paper.standHeld(st) {
+            stand.pivot = h.pivot; stand.held = max(0, min(1, h.up)); stand.upAt = nil; stand.downAt = nil
+            if TiltCamera.owner !== self { if let o = TiltCamera.owner, o.holdsCamera { o.lieFlat() }; TiltCamera.owner = self }
+            return
+        }
+        // let go: on up on the spring when the step now stands, else back down flat
+        if let was = stand.held {
+            stand.held = nil; stand.from = was
+            if paper.stands(st) != nil { stand.upAt = t; stand.downAt = nil; stand.stoodOnce = true; return }
+            stand.upAt = t; stand.downAt = t; stand.downTime = TiltCamera.beat * 0.6
+            return
+        }
+        let want = paper.stands(st)
         if let p = want {
             if !stand.standing {
                 stand.from = stand.blend(at: t, instant: instant)
-                stand.pivot = p; stand.downAt = nil; stand.upAt = t
+                let wait = stand.stoodOnce ? 0 : paper.standDelay(st)
+                stand.stoodOnce = true
+                stand.pivot = p; stand.downAt = nil; stand.upAt = t + (instant && PaperClock.slow == 1 ? 0 : wait)
                 if let o = TiltCamera.owner, o !== self, o.holdsCamera { o.lieFlat() }
                 TiltCamera.owner = self
             } else if stand.pivot != p { stand.pivot = p }
@@ -244,7 +297,8 @@ extension WorkProblem: TiltOwner {
         return Point(p.x * Paper.unit, p.z * Paper.unit)
     }
     func dragPoint(_ s: Point) -> Point? {
-        guard let v = standingNow else { return nil }
+        // held part way up by the finger: the finger is read on the flat paper (it's the tilt it's moving)
+        guard stand.held == nil, let v = standingNow else { return nil }
         let p = v.unproject(s, screen: TiltCamera.screen)
         return Point(p.x * Paper.unit, p.z * Paper.unit)
     }
@@ -318,6 +372,11 @@ final class SolidsDrawer {
     private var blocks: [String: BlockNode] = [:]
     private var lines: [String: (e: ModelEntity, sig: String)] = [:]
     private var labels: [String: (stand: Stand, at: Vec3)] = [:]
+    private final class BodyNode { let fill = ModelEntity(), edges = ModelEntity(), marks = ModelEntity(), outline = ModelEntity(); var sig = "", outlineSig = "" }
+    private var bodies: [String: BodyNode] = [:]
+    /// The bodies' shades: 9 steps from the top's to the side's, for each tone (auto, lit, red).
+    private var bodyMats: [UnlitMaterial] = [], markColour = UIColor.gray
+    static let shades = 9
     private var lineScale = 0.0, lookKey = ""
     private var looks: (solid: [UnlitMaterial], ghost: [UnlitMaterial], lit: [UnlitMaterial], deep: UIColor)?
     private var fade = 1.0
@@ -367,19 +426,38 @@ final class SolidsDrawer {
             func face(_ f: Double) -> UnlitMaterial { flat(UIColor(hex: Ink.mix(surface, chapter, f))) }
             let lit = dark ? [face(0.95), face(0.82), face(0.7)] : [face(0.5), face(0.64), face(0.78)]
             looks = (l.solid, l.ghost, lit + [l.solid[3]], l.deep)
+            // the bodies' shades: the cubes' top, front and side as one run (light from the top left), lit toward the
+            // chapter's colour, red toward wrong's
+            let red: UInt32 = dark ? 0xFF6B5E : 0xC8372D
+            bodyMats = []
+            for tone in 0..<3 {
+                for i in 0..<Self.shades {
+                    let t = Double(i) / Double(Self.shades - 1)
+                    let f = dark ? 0.78 - 0.34 * t : 0.30 + 0.25 * t
+                    var c = Ink.mix(surface, chapter, f)
+                    if tone == 1 { c = Ink.mix(c, chapter, 0.45) }
+                    if tone == 2 { c = Ink.mix(c, red, 0.42) }
+                    bodyMats.append(flat(UIColor(hex: c)))
+                }
+            }
+            markColour = UIColor(hex: Ink.mix(l.deep.hexValue, surface, 0.35))
+            for b in bodies.values { b.sig = ""; b.outlineSig = "" }
             for n in faces.values { n.sig = "" }
             for b in blocks.values { b.lookKey = "" }
             for (id, l) in lines { lines[id] = (l.e, "") }
         }
-        if rig.lineScale != lineScale { lineScale = rig.lineScale; for n in faces.values { n.sig = "" }; for (id, l) in lines { lines[id] = (l.e, "") }; for b in blocks.values { b.sig = "" } }
+        if rig.lineScale != lineScale { lineScale = rig.lineScale; for n in faces.values { n.sig = "" }; for (id, l) in lines { lines[id] = (l.e, "") }; for b in blocks.values { b.sig = "" }; for b in bodies.values { b.sig = ""; b.outlineSig = "" } }
         guard let looks else { return }
         // coming in with the problem, going with it
         let k = instant ? (left == nil ? 1 : 0) : min(ease((t - opened) / 0.4), left.map { 1 - ease((t - $0) / 0.3) } ?? 1)
         if k != fade { fade = k; root.isEnabled = k > 0.001; if k >= 1 { root.components.remove(OpacityComponent.self) } else { root.components.set(OpacityComponent(opacity: Float(k))) } }
         func P(_ p: Vec3) -> SIMD3<Float> { SIMD3(Float(p.x), Float(p.z), Float(p.y)) }
 
+        // what plays by itself (a push, a turn) is drawn as it is now
+        let s: Solids
+        if let p = solids.play { s = p.at(min(t, p.start + p.length)) } else { s = solids }
+        drawBodies(s.bodies, view: v)
         // faces: each folds to its angle on the spring (at once while a finger holds it)
-        let s = solids
         for f in s.faces {
             let n = faces[f.id] ?? {
                 let n = FaceNode(); root.addChild(n.fill); n.fill.addChild(n.edge); n.born = t; faces[f.id] = n
@@ -464,12 +542,103 @@ final class SolidsDrawer {
         for (id, l) in labels where !s.labels.contains(where: { $0.id == id }) { l.stand.root.removeFromParent(); labels[id] = nil }
     }
 
-    /// Something is still moving: a face folding, a layer rising or sinking.
+    /// Something is still moving: a face folding, a layer rising or sinking, something playing by itself.
     func moving(at t: Double) -> Bool {
         faces.values.contains { $0.start > 0 } || blocks.values.contains { t - $0.riseAt < CubesTiming.rise || $0.sinkAt != nil }
+            || (solids.play.map { t <= $0.start + $0.length + 0.05 } ?? false)
     }
 
     func clear() { root.removeFromParent(); for l in labels.values { l.stand.root.removeFromParent() } }
+
+    // MARK: bodies
+
+    /// The bodies as they are: a mesh each (rebuilt only when they move), and the outline its round parts show from
+    /// where the camera looks now.
+    private func drawBodies(_ list: [Solids.Body], view v: PaperView3D) {
+        guard let looks else { return }
+        let d = v.axes.dir, eye = Vec3(d.x, d.z, d.y)
+        for b in list {
+            let n = bodies[b.id] ?? { let n = BodyNode(); root.addChild(n.fill); root.addChild(n.edges); root.addChild(n.marks); root.addChild(n.outline); bodies[b.id] = n; return n }()
+            func r(_ x: Double) -> Int { Int((x * 100).rounded()) }
+            let sig = "\(b.facets.count) \(b.facets.first.map { $0.map { "\(r($0.x)),\(r($0.y)),\(r($0.z))" }.joined() } ?? "") \(b.facets.last.map { $0.map { "\(r($0.x)),\(r($0.y)),\(r($0.z))" }.joined() } ?? "") \(b.edges.count) \(b.marks.count) \(b.tone) \(b.tones.map { "\($0)" } ?? "")"
+            if sig != n.sig {
+                n.sig = sig; n.outlineSig = ""
+                n.fill.model = Self.bodyMesh(b).map { ModelComponent(mesh: $0, materials: bodyMats) }
+                n.edges.model = Self.bars(b.edges.flatMap { l in zip(l, l.dropFirst()).map { (Self.P($0), Self.P($1)) } }, width: stroke)
+                    .map { ModelComponent(mesh: $0, materials: [flat(looks.deep)]) }
+                n.marks.model = Self.bars(b.marks.flatMap { l in zip(l, l.dropFirst()).map { (Self.P($0), Self.P($1)) } }, width: stroke * 0.8)
+                    .map { ModelComponent(mesh: $0, materials: [flat(markColour)]) }
+            }
+            // the outline of what's round, as it's seen now
+            let os = "\(r(eye.x * 50)) \(r(eye.y * 50)) \(r(eye.z * 50)) \(n.sig)"
+            if os != n.outlineSig {
+                n.outlineSig = os
+                let segs = b.rounds.flatMap { Self.outline($0, eye: eye) }.flatMap { l in zip(l, l.dropFirst()).map { (Self.P($0), Self.P($1)) } }
+                n.outline.model = Self.bars(segs, width: stroke).map { ModelComponent(mesh: $0, materials: [flat(looks.deep)]) }
+            }
+        }
+        for (id, n) in bodies where !list.contains(where: { $0.id == id }) {
+            for e in [n.fill, n.edges, n.marks, n.outline] { e.removeFromParent() }
+            bodies[id] = nil
+        }
+    }
+    private static func P(_ p: Vec3) -> SIMD3<Float> { SIMD3(Float(p.x), Float(p.z), Float(p.y)) }
+
+    /// A body's facets as one mesh: each facet's material is its tone's shade for the way it faces (outward, from the
+    /// body's middle): score = up − right, the top lightest, the right side darkest.
+    static func bodyMesh(_ b: Solids.Body) -> MeshResource? {
+        let all = b.facets.flatMap { $0 }
+        guard !all.isEmpty else { return nil }
+        let c = all.reduce(Vec3(0, 0, 0)) { $0 + $1 } * (1 / Double(all.count))
+        var pos: [SIMD3<Float>] = [], idx: [UInt32] = [], mats: [UInt32] = []
+        for (i, f) in b.facets.enumerated() where f.count >= 3 {
+            let m = f.reduce(Vec3(0, 0, 0)) { $0 + $1 } * (1 / Double(f.count))
+            var nrm = Vec3(0, 0, 1)
+            for k in 1..<(f.count - 1) { let q = (f[k] - f[0]).cross(f[k + 1] - f[0]); if q.length > 1e-9 { nrm = q.normalized; break } }
+            if nrm.dot(m - c) < 0 { nrm = nrm * -1 }
+            let score = max(-1, min(1, nrm.z - nrm.x)), level = Int(((1 - score) / 2 * Double(shades - 1)).rounded())
+            let tone = b.tones?[safe: i] ?? b.tone
+            let mat = UInt32((tone == .lit ? 1 : tone == .red ? 2 : 0) * shades + level)
+            let start = UInt32(pos.count)
+            pos += f.map(P)
+            for k in 1..<(f.count - 1) {
+                let a = start, p1 = start + UInt32(k), p2 = start + UInt32(k + 1)
+                idx += [a, p1, p2, a, p2, p1]; mats += [mat, mat]
+            }
+        }
+        guard !idx.isEmpty else { return nil }
+        var d = MeshDescriptor(name: "body")
+        d.positions = MeshBuffers.Positions(pos)
+        d.primitives = .triangles(idx)
+        d.materials = .perFace(mats)
+        return try? MeshResource.generate(from: [d])
+    }
+
+    /// The outline a round part shows from `eye` (the way to the camera): a sphere's circle across the view, a
+    /// cylinder's two sides, a cone's two sides to its point (none when it's seen end on).
+    static func outline(_ r: Solids.Round, eye e: Vec3) -> [[Vec3]] {
+        let d = e.normalized
+        func ring(_ c: Vec3, _ u: Vec3, _ v: Vec3, _ rad: Double) -> [Vec3] { (0...48).map { i in let a = Double(i) / 48 * 2 * .pi; return c + u * (rad * cos(a)) + v * (rad * sin(a)) } }
+        func perp(_ a: Vec3) -> Vec3 { abs(a.z) < 0.9 ? a.cross(Vec3(0, 0, 1)).normalized : a.cross(Vec3(1, 0, 0)).normalized }
+        switch r {
+        case .sphere(let c, let rad):
+            let u = perp(d), v = d.cross(u).normalized
+            return [ring(c, u, v, rad * 1.012)]
+        case .cylinder(let a0, let a1, let rad):
+            let ax = (a1 - a0).normalized, side = ax.cross(d)
+            guard side.length > 0.05 else { return [] }
+            let s = side.normalized * (rad * 1.01)
+            return [[a0 + s, a1 + s], [a0 - s, a1 - s]]
+        case .cone(let base, let apex, let rad):
+            let ax = (apex - base).normalized, h = (apex - base).length
+            let dp = d - ax * d.dot(ax), m = dp.length
+            guard m > 1e-6 else { return [] }
+            let e1 = dp * (1 / m), e2 = ax.cross(e1), cs = -rad * d.dot(ax) / (h * m)
+            guard abs(cs) <= 1 else { return [] }
+            let sn = (1 - cs * cs).squareRoot()
+            return [1.0, -1.0].map { k in [base + (e1 * cs + e2 * (k * sn)) * (rad * 1.01), apex] }
+        }
+    }
 
     // MARK: meshes
 
