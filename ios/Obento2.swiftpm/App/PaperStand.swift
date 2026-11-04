@@ -130,8 +130,10 @@ struct Solids {
         var tones: [Tone]? = nil
         /// Its edges (a cube's, a cylinder's rims), in the edge colour.
         var edges: [[Vec3]] = []
-        /// Marks on it, thinner in tone (a can's rings, a die's dots, a ball's seam).
+        /// Marks on it, thinner in tone (a can's rings, a ball's seam).
         var marks: [[Vec3]] = []
+        /// Spots filled on it in the edge colour, so they read from across the room (a die's dots).
+        var spots: [[Vec3]] = []
         /// Round parts whose outline depends on the view.
         var rounds: [Round] = []
     }
@@ -372,7 +374,7 @@ final class SolidsDrawer {
     private var blocks: [String: BlockNode] = [:]
     private var lines: [String: (e: ModelEntity, sig: String)] = [:]
     private var labels: [String: (stand: Stand, at: Vec3)] = [:]
-    private final class BodyNode { let fill = ModelEntity(), edges = ModelEntity(), marks = ModelEntity(), outline = ModelEntity(); var sig = "", outlineSig = "" }
+    private final class BodyNode { let fill = ModelEntity(), edges = ModelEntity(), marks = ModelEntity(), spots = ModelEntity(), outline = ModelEntity(); var sig = "", outlineSig = "" }
     private var bodies: [String: BodyNode] = [:]
     /// The bodies' shades: 9 steps from the top's to the side's, for each tone (auto, lit, red).
     private var bodyMats: [UnlitMaterial] = [], markColour = UIColor.gray
@@ -558,9 +560,9 @@ final class SolidsDrawer {
         guard let looks else { return }
         let d = v.axes.dir, eye = Vec3(d.x, d.z, d.y)
         for b in list {
-            let n = bodies[b.id] ?? { let n = BodyNode(); root.addChild(n.fill); root.addChild(n.edges); root.addChild(n.marks); root.addChild(n.outline); bodies[b.id] = n; return n }()
+            let n = bodies[b.id] ?? { let n = BodyNode(); root.addChild(n.fill); root.addChild(n.edges); root.addChild(n.marks); root.addChild(n.spots); root.addChild(n.outline); bodies[b.id] = n; return n }()
             func r(_ x: Double) -> Int { Int((x * 100).rounded()) }
-            let sig = "\(b.facets.count) \(b.facets.first.map { $0.map { "\(r($0.x)),\(r($0.y)),\(r($0.z))" }.joined() } ?? "") \(b.facets.last.map { $0.map { "\(r($0.x)),\(r($0.y)),\(r($0.z))" }.joined() } ?? "") \(b.edges.count) \(b.marks.count) \(b.tone) \(b.tones.map { "\($0)" } ?? "")"
+            let sig = "\(b.facets.count) \(b.facets.first.map { $0.map { "\(r($0.x)),\(r($0.y)),\(r($0.z))" }.joined() } ?? "") \(b.facets.last.map { $0.map { "\(r($0.x)),\(r($0.y)),\(r($0.z))" }.joined() } ?? "") \(b.edges.count) \(b.marks.count) \(b.spots.count) \(b.tone) \(b.tones.map { "\($0)" } ?? "")"
             if sig != n.sig {
                 n.sig = sig; n.outlineSig = ""
                 n.fill.model = Self.bodyMesh(b).map { ModelComponent(mesh: $0, materials: bodyMats) }
@@ -568,6 +570,7 @@ final class SolidsDrawer {
                     .map { ModelComponent(mesh: $0, materials: [flat(looks.deep)]) }
                 n.marks.model = Self.bars(b.marks.flatMap { l in zip(l, l.dropFirst()).map { (Self.P($0), Self.P($1)) } }, width: stroke * 0.8)
                     .map { ModelComponent(mesh: $0, materials: [flat(markColour)]) }
+                n.spots.model = Self.spotsMesh(b.spots).map { ModelComponent(mesh: $0, materials: [flat(looks.deep)]) }
             }
             // the outline of what's round, as it's seen now
             let os = "\(r(eye.x * 50)) \(r(eye.y * 50)) \(r(eye.z * 50)) \(n.sig)"
@@ -578,7 +581,7 @@ final class SolidsDrawer {
             }
         }
         for (id, n) in bodies where !list.contains(where: { $0.id == id }) {
-            for e in [n.fill, n.edges, n.marks, n.outline] { e.removeFromParent() }
+            for e in [n.fill, n.edges, n.marks, n.spots, n.outline] { e.removeFromParent() }
             bodies[id] = nil
         }
     }
@@ -611,6 +614,21 @@ final class SolidsDrawer {
         d.positions = MeshBuffers.Positions(pos)
         d.primitives = .triangles(idx)
         d.materials = .perFace(mats)
+        return try? MeshResource.generate(from: [d])
+    }
+
+    /// Filled spots (each a flat polygon lying on a face), seen from both sides.
+    static func spotsMesh(_ spots: [[Vec3]]) -> MeshResource? {
+        var pos: [SIMD3<Float>] = [], idx: [UInt32] = []
+        for f in spots where f.count >= 3 {
+            let start = UInt32(pos.count)
+            pos += f.map(P)
+            for k in 1..<(f.count - 1) { let a = start, p1 = start + UInt32(k), p2 = start + UInt32(k + 1); idx += [a, p1, p2, a, p2, p1] }
+        }
+        guard !idx.isEmpty else { return nil }
+        var d = MeshDescriptor(name: "spots")
+        d.positions = MeshBuffers.Positions(pos)
+        d.primitives = .triangles(idx)
         return try? MeshResource.generate(from: [d])
     }
 

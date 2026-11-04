@@ -27,6 +27,8 @@ enum SK {
         var ids: [String] = []
         var edges: [[Vec3]] = []
         var marks: [[Vec3]] = []
+        /// Filled spots on it (a die's dots).
+        var spots: [[Vec3]] = []
         /// A line round it that shows it turning (a ball's seam), drawn while it moves.
         var seam: [[Vec3]] = []
         var rounds: [Solids.Round] = []
@@ -35,7 +37,7 @@ enum SK {
         func posed(_ R: M3, _ C: Vec3) -> Shape {
             func f(_ p: Vec3) -> Vec3 { SK.mv(R, p) + C }
             var o = self
-            o.facets = facets.map { $0.map(f) }; o.edges = edges.map { $0.map(f) }; o.marks = marks.map { $0.map(f) }; o.seam = seam.map { $0.map(f) }
+            o.facets = facets.map { $0.map(f) }; o.edges = edges.map { $0.map(f) }; o.marks = marks.map { $0.map(f) }; o.spots = spots.map { $0.map(f) }; o.seam = seam.map { $0.map(f) }
             o.rounds = rounds.map {
                 switch $0 {
                 case .sphere(let c, let r): .sphere(f(c), r)
@@ -51,7 +53,7 @@ enum SK {
         /// The body to draw: `lit` faces lit, the seam shown when `seam`.
         func body(_ id: String, lit: Set<String> = [], tone: Solids.Tone = .auto, seam showSeam: Bool = false) -> Solids.Body {
             Solids.Body(id: id, facets: facets, tone: tone, tones: lit.isEmpty ? nil : ids.map { lit.contains($0) ? .lit : tone },
-                        edges: edges, marks: marks + (showSeam ? seam : []), rounds: rounds)
+                        edges: edges, marks: marks + (showSeam ? seam : []), spots: spots, rounds: rounds)
         }
     }
 
@@ -82,7 +84,8 @@ enum SK {
                                                           "left": [(-0.25, -0.25), (0.25, -0.25), (-0.25, 0.25), (0.25, 0.25)], "back": [(-0.25, -0.25), (0.25, -0.25), (0, 0), (-0.25, 0.25), (0.25, 0.25)]]
                 for (u, w) in pips[id] ?? [] {
                     let o = c + e1 * u + e2 * w
-                    s.marks.append((0...12).map { i in let t = Double(i) / 12 * 2 * .pi; return o + e1 * (0.07 * cos(t)) + e2 * (0.07 * sin(t)) + out * lift })
+                    // a filled dot, a little bigger than the outline was, in the edges' dark colour (G 4 Nov: they didn't read)
+                    s.spots.append((0..<16).map { i in let t = Double(i) / 16 * 2 * .pi; return o + e1 * (0.09 * cos(t)) + e2 * (0.09 * sin(t)) + out * lift })
                 }
             }
         }

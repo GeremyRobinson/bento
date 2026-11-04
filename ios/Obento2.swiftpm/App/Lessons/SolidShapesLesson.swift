@@ -59,13 +59,13 @@ struct SolidShapesLesson: PaperLesson {
         }
         /// Lifted or lowered so its lowest point touches the paper.
         func ground(_ R: SK.M3, _ C: Vec3) -> Vec3 { let m = G.points.map { SK.mv(R, $0).z }.min() ?? 0; return Vec3(C.x, C.y, -m) }
-        /// Pushed `e` seconds ago (toward the flat one, so the picture stays as it is): a sphere rolls; a cylinder lies down
-        /// and rolls away; a cone tips and rolls round its point; a cube slides and stops. It rests, then is set back.
+        /// Pushed `e` seconds ago, away from the flat one (G 4 Nov: never over it): a sphere rolls; a cylinder lies down and
+        /// rolls away; a cone tips and rolls round its point; a cube slides and stops. It rests, then is set back.
         func pushed(_ e: Double) -> (R: SK.M3, C: Vec3) {
             let r0 = rest, D = SolidShapesLesson.D
             guard e >= 0, e < SolidShapesLesson.push else { return r0 }
             let g = SolidShapesLesson.go, f = e < g ? e : e < g + SolidShapesLesson.hold ? g : g - (e - g - SolidShapesLesson.hold) / SolidShapesLesson.back * g
-            let u = f / g, away = P.side == 1 ? -1.0 : 1
+            let u = f / g, away = P.side == 1 ? 1.0 : -1
             switch P.kind {
             case "cube": return (r0.R, r0.C + Vec3(away * 10 * (1 - pow(1 - u, 3)), 0, 0))
             case "sphere": let d = 10 * ease(u); return (SK.mm(SK.ry(away * d / 10), r0.R), r0.C + Vec3(away * d, 0, 0))
@@ -280,7 +280,7 @@ struct SolidShapesLesson: PaperLesson {
             let j = P.s.rolls ? 0 : 1, from = paper(solidC)
             var moves: [GhostMove] = []
             if r.indices.contains(j) { moves.append(.tap(.picture(paper(CGPoint(x: r[j].midX, y: r[j].midY))))) }
-            moves.append(.drag(from: from, to: CGPoint(x: from.x + (P.side == 1 ? -6 : 6), y: from.y)))
+            moves.append(.drag(from: from, to: CGPoint(x: from.x + (P.side == 1 ? 6 : -6), y: from.y)))
             return moves
         case 4: return r.indices.contains(P.rightName) ? [.tap(.picture(paper(CGPoint(x: r[P.rightName].midX, y: r[P.rightName].midY))))] : []
         default: return []
