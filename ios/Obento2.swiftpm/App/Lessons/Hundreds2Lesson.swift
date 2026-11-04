@@ -20,7 +20,7 @@ struct Hundreds2Lesson: PaperLesson {
     private func at(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
     func recordRow(_ n: Numbers) -> Double? { Self.RY }
     func blocksLeft(_ n: Numbers) -> Double? { Self.RX }
-    func told(_ s: PaperState) -> String? { let P = Hundreds2.Parts(s.numbers); return P.read ? P.name : nil }
+    func told(_ s: PaperState) -> String? { let P = Hundreds2.Parts(s.numbers); return P.read ? P.nm + "." : nil }
 
     /// The flats' rows: 11 squares apart, or touching when seven or more could be in (so nine show at 75%).
     private static func rowH(_ P: Hundreds2.Parts) -> Double { P.D[0] >= 7 ? 10 : 11 }
@@ -62,7 +62,7 @@ struct Hundreds2Lesson: PaperLesson {
             let k = K[c]
             // its name over what's built (or waits), lit while it's the one being built
             let m = max(1, k + (c == st ? 1 : 0))
-            let cx = c == 0 ? (Double(min(3, m)) * 11 - 1) / 2 : c == 1 ? Self.TX + (2 * Double(min(10, m)) - 1) / 2 : Self.OX + (m > 5 ? 1.5 : 0.5)
+            let cx = c == 0 ? (Double(min(3, m)) * 11 - 1) / 2 : c == 1 ? (T == 1 ? Self.TX + 5 : Self.TX + (2 * Double(min(10, m)) - 1) / 2) : (T == 2 ? Self.OX + 1.5 : Self.OX + (m > 5 ? 1.5 : 0.5))
             pic.label("nm\(c)", Num2.place[c], c == st ? KK.lit : N2.small, .above, edge: PY - 0.5, along: cx)
             for j in 0..<k {
                 var r = Self.spot(P, c, j)
@@ -88,6 +88,10 @@ struct Hundreds2Lesson: PaperLesson {
         // hints: a first miss rings the column, a second shows the places the pieces go
         if st <= 2 {
             if ring { let r = Self.column(P, st, max(K[st], 1)); KK.hintBox(&pic, "hr\(st)", x: r.minX, y: r.minY, w: r.width, h: min(r.height, 32 - PY)) }
+            if spot && K[st] > P.D[st] {
+                let a = Self.spot(P, st, P.D[st]), b = Self.spot(P, st, K[st] - 1), u = a.union(b)
+                KK.hintBox(&pic, "sx\(st)", x: u.minX, y: u.minY, w: u.width, h: min(u.height, 32 - u.minY))
+            }
             if spot { for j in K[st]..<max(K[st], P.D[st]) { let r = Self.spot(P, st, j); pic.sketch.box("sp\(j)", pic.R(r.minX, r.minY, r.width, r.height), .chapter, width: Sketch.stroke, dashed: true) } }
         }
         if held { live.reads(st == 2 ? "\(K[2])" : "\(K[st] * [100, 10, 1][st])") }

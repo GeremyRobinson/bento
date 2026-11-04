@@ -8,21 +8,19 @@ import SwiftUI
 /// lands, the three in one row under the lines (`245 + 100 = 345   345 + 30 = 375   375 + 2 = 377`), so the problem shows at
 /// 75% and more; then `245 + 132 = [377]` under them.
 ///
-/// The lines are the record's (from the same corner), so a miss written over the sum with the keys up clears them.
+/// The sum is written 5 rows under the hops, so with the keys up a miss written over it has its rows clear.
 /// Hand: "grab", "gx", "k" the hops made on the line being hopped.
 @MainActor
 struct Within2Lesson: PaperLesson {
-    static let RY = 25.0
+    static let RY = 24.0, SY = 32.0
     struct Line { let y: Double, base: Int, per: Double, unit: Int, step: Double, w: Double }
     var liveKeys: Set<String> { ["k"] }
     private func at(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
     func recordRow(_ n: Numbers) -> Double? { 0 }
-    /// Keys up: the hops written in their row stay in the frame with the sum (the last one landed on the answer).
-    func keysFocus(_ s: PaperState) -> CGRect? { at(s) == 3 ? CGRect(x: 0, y: Self.RY - 1, width: 60, height: 2) : nil }
-    func blocksAt(_ s: PaperState) -> CGPoint? { at(s) >= 3 ? CGPoint(x: 25, y: Self.RY + 2) : nil }
+    func blocksAt(_ s: PaperState) -> CGPoint? { at(s) >= 3 ? CGPoint(x: 25, y: Self.SY - 1) : nil }
     private static func lines(_ P: Within2.Parts) -> [Line] {
-        [Line(y: 5, base: 0, per: 0.05, unit: 100, step: 5, w: 50), Line(y: 13, base: P.base2, per: 0.3, unit: 10, step: 3, w: 60),
-         Line(y: 21, base: P.base3, per: 3, unit: 1, step: 3, w: 60)]
+        [Line(y: 4, base: 0, per: 0.05, unit: 100, step: 5, w: 50), Line(y: 12, base: P.base2, per: 0.3, unit: 10, step: 3, w: 60),
+         Line(y: 20, base: P.base3, per: 3, unit: 1, step: 3, w: 60)]
     }
     private static func x(_ L: Line, _ v: Int) -> Double { Double(v - L.base) * L.per }
 
@@ -32,36 +30,36 @@ struct Within2Lesson: PaperLesson {
         let held = s.grabbed && st <= 2, k = st <= 2 ? Int(s.h("k") ?? 0) : 0
         // + 132 beside line 1, split as the web splits it, the place being hopped lit
         let y0 = LN[0].y
-        M7.row(&rec, "bsum", [.op(P.sg), .n(P.b)], x: 55, line: y0 - 1)
+        M7.row(&pic, "bsum", [.op(P.sg), .n(P.b)], x: 55, line: y0 - 1)
         var sx = 55.0
         for i in 0..<3 {
             let t = "\(P.part(i))", c: Sketch.Colour = i == n && st <= 2 ? .chapter : i < n || st > 2 ? .ink3 : .ink2
-            rec.word("sp\(i)\(t)\(c == .chapter)", t, at: sx, y0 + 1.5, Sketch.Words(size: Sketch.small, weight: .semibold, colour: c), anchor: UnitPoint(x: 0, y: 0.5))
+            pic.word("sp\(i)\(t)\(c == .chapter)", t, at: sx, y0 + 1.5, Sketch.Words(size: Sketch.small, weight: .semibold, colour: c), anchor: UnitPoint(x: 0, y: 0.5))
             sx += KK.width(t, N2.small) + 0.4
-            if i < 2 { rec.word("spp\(i)", "+", at: sx, y0 + 1.5, N2.small, anchor: UnitPoint(x: 0, y: 0.5)); sx += KK.width("+", N2.small) + 0.4 }
+            if i < 2 { pic.word("spp\(i)", "+", at: sx, y0 + 1.5, N2.small, anchor: UnitPoint(x: 0, y: 0.5)); sx += KK.width("+", N2.small) + 0.4 }
         }
         for j in 0..<open {
             let L = LN[j], y = L.y
-            N2.line(&rec, "ln\(j)", y: y, w: L.w, step: L.step, tall: j == 0 ? 10 : 10)
-            if j == 0 { rec.label("e0", "0", N2.small, .below, edge: y, along: 0); rec.label("e1", "1000", N2.small, .below, edge: y, along: 50) }
-            else { for i in 0...2 { rec.label("e\(j).\(L.base).\(i)", "\(L.base + i * 10 * L.unit)", N2.small, .below, edge: y, along: Double(i) * 30) } }
+            N2.line(&pic, "ln\(j)", y: y, w: L.w, step: L.step, tall: j == 0 ? 10 : 10)
+            if j == 0 { pic.label("e0", "0", N2.small, .below, edge: y, along: 0); pic.label("e1", "1000", N2.small, .below, edge: y, along: 50) }
+            else { for i in 0...2 { pic.label("e\(j).\(L.base).\(i)", "\(L.base + i * 10 * L.unit)", N2.small, .below, edge: y, along: Double(i) * 30) } }
             // the two blocks that open into the next line
             if j + 1 < open {
                 let nb = LN[j + 1], x1 = Self.x(L, nb.base), x2 = Self.x(L, nb.base + Int(nb.w / nb.per))
-                rec.fill("op\(j)", col: x1, row: y - 1.5, w: x2 - x1, h: 1.5, .tint(0.2))
-                rec.line("mgL\(j)", [(x1, y + 1.6), (0, nb.y - 4.2)], .chapter, dashed: true)
-                rec.line("mgR\(j)", [(x2, y + 1.6), (nb.w, nb.y - 4.2)], .chapter, dashed: true)
+                pic.fill("op\(j)", col: x1, row: y - 1.5, w: x2 - x1, h: 1.5, .tint(0.2))
+                pic.line("mgL\(j)", [(x1, y + 1.6), (0, nb.y - 4.2)], .chapter, dashed: true)
+                pic.line("mgR\(j)", [(x2, y + 1.6), (nb.w, nb.y - 4.2)], .chapter, dashed: true)
             }
             // the hops made on this line, and where they started
             let done = j < n || st >= 3, kk = done ? P.s * P.B[j] : j == n ? k : 0, x0 = Self.x(L, P.starts[j])
-            rec.label("st\(j)", "\(P.starts[j])", KK.maths.colour(j > 0 ? .chapter : .ink), .above, edge: y - 2.6, along: x0)
+            pic.label("st\(j)", "\(P.starts[j])", KK.maths.colour(j > 0 ? .chapter : .ink), .above, edge: y - 2.6, along: x0)
             let sgn = kk >= 0 ? 1.0 : -1.0
             for u in 0..<abs(kk) {
                 let a = x0 + sgn * Double(u) * L.step
-                if done { rec.hop("hp\(j).\(u)\(sgn)", from: a, to: a + sgn * L.step, row: y - 0.2, height: L.step * 0.36) }
+                if done { pic.hop("hp\(j).\(u)\(sgn)", from: a, to: a + sgn * L.step, row: y - 0.2, height: L.step * 0.36) }
                 else { live.hop("hp\(j).\(u)\(sgn)", from: a, to: a + sgn * L.step, row: y - 0.2, height: L.step * 0.36) }
             }
-            if done && j == 2 { let xe = Self.x(L, P.r); rec.label("end", "\(P.r)", KK.maths.colour(.chapter), .above, edge: y - (abs(xe - x0) < 5 ? 5.4 : 2.6), along: xe) }
+            if done && j == 2 { let xe = Self.x(L, P.r); pic.label("end", "\(P.r)", KK.maths.colour(.chapter), .above, edge: y - (abs(xe - x0) < 5 ? 5.4 : 2.6), along: xe) }
         }
         // the point: on the line being hopped; it drops to the next line as that opens
         let L = LN[n], pv = st <= 2 ? P.starts[n] + k * L.unit : P.r
@@ -75,8 +73,8 @@ struct Within2Lesson: PaperLesson {
         // hints: a first miss rings the line, a second the place the hops land
         let ring = s.on("ring") && !s.on("spot"), spot = s.on("spot")
         if st <= 2 {
-            if ring { KK.hintBox(&rec, "hr\(n)", x: 0, y: L.y - 2, w: L.w, h: 2) }
-            if spot { rec.circle("spot", at: Self.x(L, P.ends[n]), L.y, radius: 1, .chapter, dashed: true) }
+            if ring { KK.hintBox(&pic, "hr\(n)", x: 0, y: L.y - 2, w: L.w, h: 2) }
+            if spot { pic.circle("spot", at: Self.x(L, P.ends[n]), L.y, radius: 1, .chapter, dashed: true) }
         }
         // the record under the lines: each hop as it lands, in one row, then the sum
         var rx = 0.0
@@ -87,8 +85,8 @@ struct Within2Lesson: PaperLesson {
         }
         if st >= 3 {
             let toks: [M7.Tok] = [.n(P.a), .op(P.sg), .n(P.b), .op("=")] + [st == 4 ? .n(P.r, .chapter) : .box("x", cells: 3)]
-            let end = M7.row(&rec, "sum", toks, x: 0, line: Self.RY + 3)
-            if st == 3 && spot { A1.note(&rec, "spot", "\(P.r)", x: end + 1, y: Self.RY + 3) }
+            let end = M7.row(&rec, "sum", toks, x: 0, line: Self.SY)
+            if st == 3 && spot { A1.note(&rec, "spot", "\(P.r)", x: end + 1, y: Self.SY) }
         }
         return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: rec.boxes)
     }

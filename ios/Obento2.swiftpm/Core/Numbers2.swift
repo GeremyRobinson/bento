@@ -241,7 +241,9 @@ public enum Skip2 {
                                 picture: ["at": 0], onMiss: ["ring": 1], hint2: ["spot": 1])]
         let hints = ["Hop \(P.by) more.", "Same jump again.", "One more hop of \(P.by)."]
         for (k, j) in (3...5).enumerated() {
-            steps.append(LessonStep(StepWords(say: P.hop, hint: hints[k], action: "Check"),
+            // a number written whose hundreds digit changed: the next hop's line says why (the preview's note)
+            let say = j > 3 && P.by < 100 && P.crossed(j - 1) ? Parts.hundred + " " + P.hop : P.hop
+            steps.append(LessonStep(StepWords(say: say, hint: hints[k], action: "Check"),
                 answer: G2.hand("p\(j)", 1, hint: hints[k], explain: "", said: { _ in "Hop a whole jump." }),
                 picture: ["at": Double(2 * k + 1)], onMiss: ["ring": 1], hint2: ["spot": 1]))
             steps.append(LessonStep(StepWords(say: P.hop, hint: hints[k], action: "Check"),

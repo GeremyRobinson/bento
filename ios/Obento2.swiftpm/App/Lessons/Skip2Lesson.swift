@@ -8,24 +8,25 @@ import SwiftUI
 /// jump (the arc follows the finger) and write where you land in the box under the mark; the digits that changed light.
 /// Back (a fold) runs right to left, the numbers falling.
 ///
-/// The line and what's written on it are the record's (from the same corner), so a miss written over the line being typed
-/// with the keys up clears them. Hand: "grab", "gx", "k" the small hops (the jump), "d" how far the point has gone (a hop).
+/// The line, its hops and their labels are the record's (from the same corner), so a miss written over the box being
+/// typed with the keys up clears them; the numbers stay the picture's, so the line being typed is the box and Check. Hand: "grab", "gx", "k" the small hops (the jump), "d" how far the point has gone (a hop).
 @MainActor
 struct Skip2Lesson: PaperLesson {
     static let LY = 7.0
     var liveKeys: Set<String> { ["k", "d"] }
     private func at(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
     func recordRow(_ n: Numbers) -> Double? { 0 }
+    /// Keys up: the hop being written, from the number it starts on to the box, stays in the frame with the box.
+    func keysFocus(_ s: PaperState) -> CGRect? {
+        let P = Skip2.Parts(s.numbers), j = mark(at(s))
+        guard j > 0 else { return nil }
+        let a = min(X(P, j - 1), X(P, j)) - 3
+        return CGRect(x: a, y: Self.LY - 4, width: 16, height: 7)
+    }
     func blocksAt(_ s: PaperState) -> CGPoint? { CGPoint(x: Skip2.Parts(s.numbers).back ? 0 : 40, y: Self.LY + 6) }
     private func X(_ P: Skip2.Parts, _ j: Int) -> Double { P.back ? 50 - 10 * Double(j) : 10 * Double(j) }
     /// The mark being hopped to or written under (3–5), or 0.
     private func mark(_ st: Int) -> Int { st >= 1 && st <= 6 ? 3 + (st - 1) / 2 : 0 }
-
-    func say(_ s: PaperState) -> String? {
-        let P = Skip2.Parts(s.numbers), st = at(s), j = mark(st)
-        guard st == 3 || st == 5, P.crossed(j - 1) else { return nil }
-        return Skip2.Parts.hundred + " " + P.hop
-    }
 
     func draw(_ s: PaperState) -> PaperDrawing {
         let P = Skip2.Parts(s.numbers), st = at(s), j = mark(st), LY = Self.LY, sg = Double(P.s)
@@ -65,17 +66,17 @@ struct Skip2Lesson: PaperLesson {
             let v = P.v(m), str = Array("\(v)"), w = Record.width(.n(v)), x0 = X(P, m) - w / 2
             let written = m < 3 || st > 2 * (m - 3) + 2
             if written {
-                if m < 3 { rec.word("n\(m)", "\(v)", at: X(P, m), LY + 2, KK.maths) }
+                if m < 3 { pic.word("n\(m)", "\(v)", at: X(P, m), LY + 2, KK.maths) }
                 else {
                     let prev = Array(String("\(P.v(m - 1))".reversed()).padding(toLength: str.count, withPad: " ", startingAt: 0).reversed())
-                    N2.number(&rec, "w\(m)", v, x: x0, row: LY + 2) { prev[$0] != str[$0] ? .chapter : .ink }
+                    N2.number(&pic, "w\(m)", v, x: x0, row: LY + 2) { prev[$0] != str[$0] ? .chapter : .ink }
                 }
             } else if st == 2 * (m - 3) + 2 {
                 let bw = Record.boxWidth(cells: 3, commas: true), right = X(P, m) + (bw / 2).rounded(.up)
                 rec.answerBox("b\(m)", right: right, mid: LY + 2, per: 2, cells: 1, commas: true, word: bw)
             } else {
                 let bw = Record.boxWidth(cells: 3, commas: true), left = X(P, m) - (bw / 2).rounded(.down)
-                rec.sketch.box("bx\(m)", rec.R(left, LY + 1, bw, 2), .ink3, width: Sketch.stroke, dashed: true)
+                pic.sketch.box("bx\(m)", pic.R(left, LY + 1, bw, 2), .ink3, width: Sketch.stroke, dashed: true)
             }
         }
         // hints: a first miss rings the hop, a second the mark it lands on (or the number)
@@ -85,7 +86,7 @@ struct Skip2Lesson: PaperLesson {
             if ring { KK.hintBox(&rec, "hr", x: lo, y: LY - 3.5, w: 10, h: 3.5) }
             if spot { if st == 0 { rec.circle("sp", at: X(P, x1), LY, radius: 1, .chapter, dashed: true) } else { A1.note(&rec, "sp", "\(P.v(j))", x: X(P, j), y: LY + 4.5, centred: true) } }
         }
-        return PaperDrawing(picture: rec.sketch, live: live.sketch, record: rec.sketch, boxes: rec.boxes)
+        return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: rec.boxes)
     }
 
     func hands(_ s: PaperState) -> Hands? {

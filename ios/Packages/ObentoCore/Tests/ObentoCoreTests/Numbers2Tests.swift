@@ -98,6 +98,9 @@ final class Numbers2Tests: XCTestCase {
         XCTAssertEqual(move(&l, ["b3": 30]), .moved(3))
         XCTAssertEqual(l.steps.last?.words.say, "Every hop is 5, so each number is 5 more.")
 
+        let f = LessonRun(Skip2.spec, numbers: Skip2.numbers(start: 620, by: 10, back: true))
+        XCTAssertEqual(f.steps[3].words.say, "10 tens make a hundred, so the hundreds digit changed too. Hop back. Write where you land.")
+        XCTAssertEqual(f.steps[1].words.say, "Hop back. Write where you land.")
         let b = Skip2.Parts(Skip2.numbers(start: 640, by: 10, back: true))
         XCTAssertEqual(b.jump, "Hop back from 640 to 630.")
         XCTAssertEqual(b.slips(3).last?.1, "The numbers are getting smaller, so count back.")
