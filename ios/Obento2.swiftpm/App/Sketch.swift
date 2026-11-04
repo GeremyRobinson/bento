@@ -28,7 +28,7 @@ struct Sketch {
     /// along a spring's path instead of being drawn again. `from`: where a new part starts (the full bar a whole closes
     /// from): shown at once in that shape, it morphs into its own.
     struct Item { let id: String; let kind: Kind; let colour: Colour; var at: Double? = nil; var slot: String? = nil; var pace: Double = 1; var snaps = false
-        var morphs = false; var from: Kind? = nil }
+        var morphs = false; var from: Kind? = nil; var delay: Double = 0 }
     private(set) var items: [Item] = []
     /// When the parts added from now on start drawing in (a map piece's words with its frame), instead of one after
     /// another from the drawing's start.
@@ -41,6 +41,8 @@ struct Sketch {
     var morphs = false
     /// Where new parts start, by id (see Item.from): set before the part is added.
     var from: [String: Kind] = [:]
+    /// How long the parts added from now on wait before they morph or glide (a column of pieces after another).
+    var delay: Double = 0
     /// What a hand move reads now (the live drawing's readout: "3 rows", "fourths", "5 hops of 0.6 = 3"), so the bar
     /// can say it big in its middle while the finger is down (the calm pill, G 26 Oct). Drawn nowhere by itself.
     var readout: String?
@@ -101,7 +103,7 @@ struct Sketch {
         return (out, changed)
     }
     private mutating func add(_ item: Item) {
-        var it = item; it.at = startAt; it.pace = pace; it.snaps = snaps; it.morphs = morphs || from[item.id] != nil; it.from = from[item.id]
+        var it = item; it.at = startAt; it.pace = pace; it.snaps = snaps; it.morphs = morphs || from[item.id] != nil; it.from = from[item.id]; it.delay = delay
         items.append(it)
     }
     /// The same sketch in paper points: moved to `o` and drawn `k` times bigger.
@@ -121,7 +123,7 @@ struct Sketch {
         var out = Sketch()
         out.items = items.map { it in
             let kind = map(it.kind)
-            return Item(id: it.id, kind: kind, colour: it.colour, at: it.at, slot: it.slot, pace: it.pace, snaps: it.snaps, morphs: it.morphs, from: it.from.map(map))
+            return Item(id: it.id, kind: kind, colour: it.colour, at: it.at, slot: it.slot, pace: it.pace, snaps: it.snaps, morphs: it.morphs, from: it.from.map(map), delay: it.delay)
         }
         return out
     }
@@ -395,7 +397,7 @@ final class SketchDrawer {
             let item = s.items[i]
             guard item.morphs, let old = nodes[item.id], !old.undrawing, old.shown >= 1, let was = old.item, was.colour == item.colour,
                   let to = Self.shape(item.kind, P, scale: k), let sh = old.shape, sh.fits(to), let from = current(old, at: now) else { continue }
-            startMorph(old, from: from, to: to, at: now)
+            startMorph(old, from: from, to: to, at: now + item.delay)
             old.sig = sigs[i]; old.item = item
             moved.insert(item.id)
         }
@@ -496,7 +498,7 @@ final class SketchDrawer {
             // seeded: shown at once in the shape it starts from, then morphing into its own
             if showing, let seed = item.from, let to = node.shape, let fromShape = Self.shape(seed, P, scale: k), fromShape.fits(to) {
                 node.start = now; node.length = 0
-                startMorph(node, from: fromShape.lines, to: to, at: now)
+                startMorph(node, from: fromShape.lines, to: to, at: now + item.delay)
             }
             nodes[item.id] = node
             if item.at == nil { order += 1 }

@@ -25,8 +25,16 @@ struct TenthsHundredthsLesson: PaperLesson {
         pic.fill("ten", col: 0, row: 0, w: Double(a) * D6.col, h: G, Bars.shade)
         for i in 0..<b {
             if poured {
+                // each from where the hand let it go (kept by the slide), gliding to its place a column after another
                 let k = P.A + i, c = k < 100 ? D6.cell(k, x0: 0, y0: 0) : D6.cell(k - 100, x0: X2, y0: 0)
+                if at == 3, let dx = s.run.kept["dx"], let dy = s.run.kept["dy"] {
+                    let o = D6.cell(i, x0: X2, y0: 0)
+                    var was = GridPen(); was.stripes("sp\(i)", col: o.x + dx, row: o.y + dy, w: D6.col, h: D6.col)
+                    for it in was.sketch.items { pic.sketch.from[it.id] = it.kind }
+                    pic.sketch.delay = 0.1 * Double(k / 10 - a)
+                }
                 pic.stripes("sp\(i)", col: c.x, row: c.y, w: D6.col, h: D6.col)
+                pic.sketch.from = [:]; pic.sketch.delay = 0
             } else {
                 let c = D6.cell(i, x0: X2, y0: 0)
                 if held { live.stripes("sp\(i)", col: c.x + off.x, row: c.y + off.y, w: D6.col, h: D6.col) }
@@ -80,8 +88,11 @@ struct TenthsHundredthsLesson: PaperLesson {
             })
         case 2:
             let cols = Double((P.b + 9) / 10)
-            return GroupSlide(from: CGRect(x: X2 - 0.5, y: -0.5, width: cols * D6.col + 1, height: G + 1),
-                              over: { p in p.x >= -1 && p.x <= G + 1 && p.y >= -1 && p.y <= G + 1 }).hands()
+            var h = GroupSlide(from: CGRect(x: X2 - 0.5, y: -0.5, width: cols * D6.col + 1, height: G + 1),
+                               over: { p in p.x >= -1 && p.x <= G + 1 && p.y >= -1 && p.y <= G + 1 }).hands()
+            // where they were let go, so the poured hundredths glide from there
+            if let release = h.release { h.release = { s in var m = release(s); m.keep = ["dx": s["dx"] ?? 0, "dy": s["dy"] ?? 0]; return m } }
+            return h
         default: return nil
         }
     }
