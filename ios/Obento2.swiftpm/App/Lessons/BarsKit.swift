@@ -108,6 +108,11 @@ struct Ruler {
     var vertical = false
     /// Where its length starts along the way it measures (the left end of what it cuts, or its top when vertical).
     var at = 0.0
+    /// Under the bars it cuts (4th grade's Fractions): its ends rise towards them and the piece's name is under it.
+    var under = false
+    /// What the bar's middle reads while it's dragged, when that says more than the name under it ("Eighths: each half
+    /// into 4").
+    var reads: ((Int) -> String)? = nil
 
     /// A place `a` squares along the ruler's way and `b` across it, in the picture's squares.
     private func pt(_ a: Double, _ b: Double) -> (Double, Double) { vertical ? (b, at + a) : (at + a, b) }
@@ -125,17 +130,19 @@ struct Ruler {
     /// rings every old cut's dot on the still picture (each needs a new cut on it).
     func draw(_ s: PaperState, live: inout GridPen, still pic: inout GridPen) {
         let w = Double(length(s)), R = row, small = Bars.small
-        live.line("ruler", [pt(0, R + 1), pt(0, R), pt(w, R), pt(w, R + 1)], .chapter)
+        let end = under ? R - 1 : R + 1
+        live.line("ruler", [pt(0, end), pt(0, R), pt(w, R), pt(w, end)], .chapter)
         let hp = pt(w, R)
         live.dot("handle", at: hp.0, hp.1, radius: s.grabbed ? 0.75 : 0.6, .chapter, over: true)
         // the piece's name over the ruler, centred on it, but never past the bars' left end (a short ruler's long name,
         // "twenty-fourths", starts where the bars do)
         let name = readout?(Int(w)) ?? UnlikeFractions.pieceName(W / Int(w))
-        live.reads(name)
+        live.reads(reads?(Int(w)) ?? name)
         let half = PaperText.width(name, PaperText.font(small.size, small.weight, digits: true)) / 2 / Paper.cell
         // (its ink half a square over the handle, which a short ruler's name would otherwise touch); a ruler down the
         // side has it on its left, level with its middle
         if vertical { live.label("rulerw", name, small, .left, edge: R - 0.75, along: at + w / 2) }
+        else if under { live.label("rulerw", name, small, .below, edge: R + 0.75, along: at + max(w / 2, half)) }
         else { live.label("rulerw", name, small, .above, edge: R - 0.75, along: at + max(w / 2, half)) }
         // the cuts it would make, dashed across the bars
         for k in 1..<max(1, Int((Double(W) / w).rounded())) {

@@ -96,6 +96,12 @@ extension Piece {
         case "g4-factors": return [box(0, 0, 6, 2)]                             // the first rectangle found
         case "g4-prime": return [box(0, 0, 11, 1)]                              // the one long row
         case "g4-patterns": return [box(8, 0, 1, 2)]                            // the newest squares
+        // 4th grade, Fractions (3 Nov)
+        case "g4-decompose": return [box(0, 0, 2, 2), box(3, 0, 2, 2), box(6, 0, 2, 2)] // the pieces parted
+        case "g4-equiv": return [box(0, 4, 4.5, 2)]                             // the same amount, cut smaller
+        case "g4-fraccompare": return [box(0, 0, 6, 2), box(0, 4, 4.5, 2)]      // the two amounts
+        case "g4-likefrac": return [box(0, 0, 6, 2)]                            // the pieces together
+        case "g4-likesub": return [box(0, 0, 6, 2)]                             // what's left
         default: return []
         }
     }
@@ -194,6 +200,16 @@ extension Piece {
         case "g4-patterns": // towers growing by 2: 9 by 6
             return [box(0, 4, 1, 2), line((0, 5), (1, 5)), box(4, 2, 1, 4)] + (3...5).map { y in line((4, Double(y)), (5, Double(y))) }
                 + [box(8, 0, 1, 6)] + (1...5).map { y in line((8, Double(y)), (9, Double(y))) }
+        case "g4-decompose": // eighths, parted into three pieces: 8 by 2 (a square between)
+            return [box(0, 0, 2, 2), box(3, 0, 2, 2), box(6, 0, 2, 2)]
+        case "g4-equiv": // halves, and the same half cut into eighths: 9 by 6
+            return bar(0, 0, 9, 2) + [box(0, 4, 9, 2)] + (1..<8).map { i in let x = 9 * Double(i) / 8; return line((x, 4), (x, 6)) }
+        case "g4-fraccompare": // thirds over fourths: 9 by 6
+            return bar(0, 0, 9, 3) + [box(0, 4, 9, 2)] + (1..<4).map { i in let x = 9 * Double(i) / 4; return line((x, 4), (x, 6)) }
+        case "g4-likefrac": // sixths and sixths, put together: 9 by 6
+            return bar(0, 0, 9, 3) + bar(0, 4, 9, 3)
+        case "g4-likesub": // sixths, the last two crossed out: 9 by 2
+            return bar(0, 0, 9, 6) + [line((6.3, 1.7), (7.2, 0.3)), line((7.8, 1.7), (8.7, 0.3))]
         case "g5-volume": // a box of cubes, 4 by 3 by 2, as the lesson shows it
             return box3D(l: 4, h: 2, w: 3, u: 32)
         case "add": // thirds and thirds, added: 9 by 6

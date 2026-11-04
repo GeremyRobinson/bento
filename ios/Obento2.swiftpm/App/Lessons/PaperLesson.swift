@@ -105,6 +105,11 @@ enum PaperLessons {
         case "g4-factors": return FactorsLesson()
         case "g4-prime": return PrimeLesson()
         case "g4-patterns": return PatternsLesson()
+        // 4th grade, Fractions (3 Nov 2026)
+        case "g4-decompose": return DecomposeLesson()
+        case "g4-equiv": return EquivLesson()
+        case "g4-fraccompare": return CompareFractionsLesson()
+        case "g4-likefrac", "g4-likesub": return LikeFractionsLesson()
         default: return nil
         }
     }
