@@ -353,8 +353,9 @@ public enum PicGraph1 {
         /// The second line of the record: read a row's, the most's.
         public var rec2: String? { ask == 0 ? "The \(X) row is \(longer ? "longer" : "shorter") than the \(Y) row." : ask == 1 ? "\(th.names[rightRow]) has the \(word)." : nil }
         public static let why = "One picture for each, so the longest row has the most."
-        /// Together: past 11 joined, a picture is 3 squares (said on its own row) so the joined row fits.
-        public var small: Bool { ask == 3 && c[x] + c[y] > 11 }
+        /// Together: past 10 joined, a picture is 3 squares (said on its own row) so the joined row fits (the preview's 11 showed
+        /// at 71% on the 11-inch iPad).
+        public var small: Bool { ask == 3 && c[x] + c[y] > 10 }
     }
     /// The web's: three different counts 1–9; asks 0 and 1 for the first three (which start with a pile to sort), then each
     /// in turn; how many more has x past y.
