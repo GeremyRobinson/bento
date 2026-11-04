@@ -213,6 +213,12 @@ extension Piece {
         case "g1-addtens": return [box(0, 2.5, 10, 2)]                          // the new tens, joined
         case "g1-add100": return [box(0, 2.5, 10, 1)]                           // ten ones closed into a new ten
         case "g1-subtens": return [box(0, 0.5, 4.5, 2)]                         // the tens left
+        // 1st grade, Length, time and graphs (4 Nov)
+        case "g1-order3": return [box(0, 0.5, 9, 1)]                            // the longest, on top
+        case "g1-measure": return [box(4, 1.5, 3, 1)]                           // the cubes that stick out
+        case "g1-time": return [box(0, 5, 5, 1)]                                // half the hour, on the strip
+        case "g1-picgraph": return [box(0, 1, 8, 1)]                            // the longest row
+        case "g1-tally": return [box(0, 1, 4.5, 1.2)]                           // a bundle of five
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -418,6 +424,35 @@ extension Piece {
                 for r in 0..<2 {
                     out.append(box(5.5, 0.5 + Double(r), 4.5, 1))
                     out.append(line((5.7, 1.35 + Double(r)), (9.8, 0.65 + Double(r))))
+                }
+            }
+            return out
+        // 1st grade, Length, time and graphs (4 Nov)
+        case "g1-order3": // three things from a dashed line, longest on top: 10 by 6
+            var out: [[CGPoint]] = [box(0, 0.5, 9, 1), box(0, 2.5, 6, 1), box(0, 4.5, 3, 1)]
+            for y in stride(from: 0.0, to: 6, by: 0.8) { out.append(line((-0.4, y), (-0.4, y + 0.4))) }
+            return out
+        case "g1-measure": // a pencil and its cubes, a shorter one and its cubes: 10 by 6
+            var out: [[CGPoint]] = [box(0, 0.5, 7, 0.6), box(0, 3.5, 4, 0.6)]
+            for j in 0..<7 { out.append(box(Double(j), 1.5, 1, 1)) }
+            for j in 0..<4 { out.append(box(Double(j), 4.5, 1, 1)) }
+            return out
+        case "g1-time": // the clock at half past, the hour strip under it: 10 by 6
+            let face = (0...32).map { k in let a = Double(k) / 32 * 2 * .pi; return P(5 + 2.4 * cos(a), 2.4 + 2.4 * sin(a)) }
+            return [face, line((5, 2.4), (5, 4.2)), line((5, 2.4), (6.2, 1.3)), box(0, 5, 10, 1), line((5, 5), (5, 6))]
+        case "g1-picgraph": // three rows of pictures from one line: 10 by 6
+            func pic(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.38 * cos(a), y + 0.38 * sin(a)) } }
+            var out: [[CGPoint]] = [line((0, 0.5), (0, 5.5))]
+            for (r, n) in [8, 3, 5].enumerated() { for j in 0..<n { out.append(pic(Double(j) + 0.5, 1.5 + 1.75 * Double(r))) } }
+            return out
+        case "g1-tally": // three rows of tally marks, five across in bundles: 10 by 6
+            var out: [[CGPoint]] = []
+            for (r, n) in [7, 4, 9].enumerated() {
+                let y = 1 + 1.75 * Double(r)
+                for i in 0..<n {
+                    let b = Double(i / 5), j = i % 5
+                    if j < 4 { out.append(line((b * 5 + 0.5 + Double(j), y), (b * 5 + 0.5 + Double(j), y + 1.2))) }
+                    else { out.append(line((b * 5, y + 1.0), (b * 5 + 4, y + 0.2))) }
                 }
             }
             return out

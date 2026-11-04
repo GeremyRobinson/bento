@@ -261,6 +261,8 @@ enum PaperLessons {
         case "g1-addtens": return AddTens1Lesson(tensOnly: true)
         case "g1-add100": return AddTens1Lesson(tensOnly: false)
         case "g1-subtens": return SubTens1Lesson()
+        // 1st grade, Length, time and graphs (4 Nov 2026)
+        case "g1-order3": return Order1Lesson()
         default: return nil
         }
     }

@@ -33,7 +33,7 @@ final class Length1Tests: XCTestCase {
         XCTAssertEqual(move(&l, ["l": -1]), .notYet("Put its end on the line."))
         XCTAssertEqual(move(&l, ["l": 3]), .moved(1))
         XCTAssertEqual(l.words.say, "Now the far ends tell. Drag them into order, longest on top.")
-        XCTAssertEqual(move(&l, ["o": 21]), .notYet("The ribbon goes past the crayon's end, so it's longer."))
+        XCTAssertEqual(move(&l, ["o": 121]), .notYet("The ribbon goes past the crayon's end, so it's longer."))
         XCTAssertEqual(move(&l, ["o": 1]), .moved(2))
         XCTAssertEqual(l.words.say, "Line up the ends; the one that goes farthest is longest.")
         XCTAssertEqual(Order1.Parts(Order1.numbers([0, 1, 2], [7, 4, 9])).record, "ribbon, pencil, crayon")
@@ -57,7 +57,7 @@ final class Length1Tests: XCTestCase {
                 if P.between { XCTAssertNotEqual(P.a, P.b); XCTAssertTrue((3...6).contains(P.a)); XCTAssertNotEqual(P.names[0], P.names[1]); return }
                 XCTAssertEqual(Set(P.lens).count, 3); XCTAssertEqual(Set(P.names).count, 3)
                 XCTAssertFalse(P.lens[0] > P.lens[1] && P.lens[1] > P.lens[2])
-                for k in 0..<3 { XCTAssertLessThanOrEqual(P.lens[k] + P.shifts[k], 13) }
+                for k in 0..<3 { XCTAssertLessThanOrEqual(P.lens[k] + P.shifts[k], 12) }
                 if i < 3 { for p in [(0, 1), (0, 2), (1, 2)] { XCTAssertGreaterThanOrEqual(abs(P.lens[p.0] - P.lens[p.1]), 2) } }
             }
         }

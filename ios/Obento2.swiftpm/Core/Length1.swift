@@ -41,7 +41,7 @@ public enum Len1 {
 /// first (a mark where that thing stops), then along the second, then tap the longer one.
 ///
 /// "at": 0 line, 1 order, 2 done; the line's box "l": 3 once all are lined, −1 let go off the line; the order's "o": 1 once in
-/// order, 10 × the longer + the shorter for a swap the wrong way. Go-between "at": 0, 1, 2 tap, 3 done; "a", "b": 1 once the
+/// order, 100 + 10 × the longer + the shorter for a swap the wrong way. Go-between "at": 0, 1, 2 tap, 3 done; "a", "b": 1 once the
 /// string is laid, −1 let go elsewhere; "c" the thing tapped.
 public enum Order1 {
     public static func numbers(_ n: [Int], _ l: [Int], shifts s: [Int] = [1, 2, 3]) -> Numbers {
@@ -64,7 +64,7 @@ public enum Order1 {
         public var order: [Int] { lens.indices.sorted { lens[$0] > lens[$1] } }
         public var record: String { order.map { names[$0] }.joined(separator: ", ") }
         public func swapped(_ code: Int) -> String {
-            code == -1 ? "Put its end on the line." : "The \(names[max(0, min(2, code / 10))]) goes past the \(names[max(0, min(2, code % 10))])'s end, so it's longer."
+            code < 100 ? "Put its end on the line." : "The \(names[max(0, min(2, (code - 100) / 10))]) goes past the \(names[max(0, min(2, code % 10))])'s end, so it's longer."
         }
         public static let lineSay = "Slide each one's end to the dashed line."
         public static let orderSay = "Now the far ends tell. Drag them into order, longest on top."
@@ -84,7 +84,7 @@ public enum Order1 {
         public var betweenRecord: String { "The \(names[longer]) is longer than the \(names[1 - longer])." }
     }
     /// New (grade1.md): three different things and lengths 2–12, the first three at least 2 apart, then 1 apart allowed; never
-    /// already longest to shortest; each starts 1–3 blocks past the line (a different start each, all within 13 blocks).
+    /// already longest to shortest; each starts 1–3 blocks past the line (a different start each, all within 12 blocks: the preview's 13 showed at 73%).
     /// From the 7th, every third is a go-between (the things plus rug and desk, lengths 3–6, never equal).
     static func make(_ rng: inout SeededRandom, _ i: Int) -> Numbers {
         if i >= 6 && (i - 6) % 3 == 0 {
@@ -99,7 +99,7 @@ public enum Order1 {
             let gap = min(abs(l[0] - l[1]), abs(l[0] - l[2]), abs(l[1] - l[2]))
             if gap < (i < 3 ? 2 : 1) || (l[0] > l[1] && l[1] > l[2]) { continue }
             let s = MeasureK.shuffled([1, 2, 3], &rng)
-            if (0..<3).contains(where: { l[$0] + s[$0] > 13 }) { continue }
+            if (0..<3).contains(where: { l[$0] + s[$0] > 12 }) { continue }
             return numbers(n, l, shifts: s)
         }
     }
