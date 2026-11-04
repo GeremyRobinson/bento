@@ -12,7 +12,7 @@ final class WorkProblem: Identifiable, PageProblem {
     let auto: Bool
     let origin: Point
     let chapter: Chapter
-    let instant: Bool
+    var instant: Bool
     private(set) var lesson: LessonRun
     var message: (text: String, ok: Bool)?
     var intro: String?

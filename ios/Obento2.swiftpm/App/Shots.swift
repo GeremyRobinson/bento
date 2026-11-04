@@ -367,6 +367,15 @@ enum Shots {
                     w.play(.preview, frozen: at ?? 1.2)
                 }
                 if args.contains("-keypad"), let box = w.lesson.step.answer?.boxes.first { w.select(box) }
+                // -showme: Show me played as a child sees it (after -pause, at -slow), to film the move
+                if args.contains("-showme") {
+                    try? await Task.sleep(for: .seconds(numbers("-pause")?.first ?? 1.5))
+                    if let i = args.firstIndex(of: "-slow"), i + 1 < args.count, let n = Double(args[i + 1]), n > 0 {
+                        PaperClock.slowFrom = Date().timeIntervalSinceReferenceDate; PaperClock.slow = n
+                    }
+                    w.instant = false
+                    w.showMe()
+                }
                 // -zoomlog: 5 s on (the keys up and the camera settled), the camera's zoom written to Documents/zoom.txt
                 if args.contains("-zoomlog") {
                     try? await Task.sleep(for: .seconds(5))

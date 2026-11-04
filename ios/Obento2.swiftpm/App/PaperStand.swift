@@ -105,6 +105,12 @@ struct Solids {
         var dashed = false
         /// How long it waits before it turns to a new angle (a box stays closed a moment before it opens).
         var delay = 0.0
+        /// New, it turns from this angle to its own on the spring (a half folding over as it appears).
+        var from: Double? = nil
+        /// Lying flat, it lies over what's drawn on the paper (a half folded over the other), under the marks on it.
+        var over = false
+        /// Its outline's colour (nil: the cubes' edges).
+        var edge: Sketch.Colour? = nil
     }
     /// A layer of cubes `l` × `w`, `B` squares an edge, from its back-left-bottom corner `at` (squares, z its height). New
     /// ones rise (Unit cubes' 0.7 s) after `delay`; gone ones sink.
@@ -375,7 +381,12 @@ final class SolidsDrawer {
         // faces: each folds to its angle on the spring (at once while a finger holds it)
         let s = solids
         for f in s.faces {
-            let n = faces[f.id] ?? { let n = FaceNode(); root.addChild(n.fill); n.fill.addChild(n.edge); n.born = t; faces[f.id] = n; n.shown = f.angle; n.target = f.angle; n.from = f.angle; return n }()
+            let n = faces[f.id] ?? {
+                let n = FaceNode(); root.addChild(n.fill); n.fill.addChild(n.edge); n.born = t; faces[f.id] = n
+                n.shown = f.from ?? f.angle; n.target = f.angle; n.from = n.shown
+                if f.from != nil && !instant { n.start = t + f.delay } else { n.shown = f.angle }
+                return n
+            }()
             if f.live || instant { n.shown = f.angle; n.target = f.angle; n.start = -100 }
             else if f.angle != n.target { n.from = n.shown; n.target = f.angle; n.start = t + f.delay }
         }
@@ -390,16 +401,16 @@ final class SolidsDrawer {
             let pts = s.placed(f) { faces[$0.id]?.shown ?? $0.angle }
             let normal = pts.count >= 3 ? (pts[1] - pts[0]).cross(pts[2] - pts[0]) : Vec3(0, 0, 1)
             let cat = abs(normal.z) / max(1e-9, normal.length) > 0.8 ? 0 : abs(normal.x) > abs(normal.y) ? 2 : 1
-            let sig = "\(pts.map { "\(($0.x * 1000).rounded()),\(($0.y * 1000).rounded()),\(($0.z * 1000).rounded())" }) \(f.look) \(cat) \(f.edges) \(f.dashed)"
+            let sig = "\(pts.map { "\(($0.x * 1000).rounded()),\(($0.y * 1000).rounded()),\(($0.z * 1000).rounded())" }) \(f.look) \(cat) \(f.edges) \(f.dashed) \(String(describing: f.edge))"
             guard sig != n.sig else { continue }
             n.sig = sig
             // on the paper, a hair over it (under the lines drawn on the paper)
-            let lifted = pts.map { $0.z < 0.001 ? Vec3($0.x, $0.y, 0.006) : $0 }
-            n.fill.model = Self.polygon(lifted.map(P)).map { ModelComponent(mesh: $0, materials: [material(f.look, normal: normal, chapter: chapter, dark: dark)]) }
+            let lifted = pts.map { abs($0.z) < 0.001 ? Vec3($0.x, $0.y, f.over ? 0.0095 : 0.006) : $0 }
+            n.fill.model = Self.polygon(lifted.map(P), flat: f.pts.map { CGPoint(x: $0.x, y: $0.y) }).map { ModelComponent(mesh: $0, materials: [material(f.look, normal: normal, chapter: chapter, dark: dark)]) }
             if f.edges {
                 let segs = zip(lifted, lifted.dropFirst() + [lifted[0]]).map { (P($0), P($1)) }
                 n.edge.model = Self.bars(f.dashed ? Self.dashed(segs) : segs, width: stroke)
-                    .map { ModelComponent(mesh: $0, materials: [flat(f.dashed ? colour(.chapter, chapter: chapter, dark: dark) : looks.deep)]) }
+                    .map { ModelComponent(mesh: $0, materials: [flat(f.edge.map { colour($0, chapter: chapter, dark: dark) } ?? (f.dashed ? colour(.chapter, chapter: chapter, dark: dark) : looks.deep))]) }
             } else { n.edge.model = nil }
         }
 
@@ -462,15 +473,41 @@ final class SolidsDrawer {
 
     // MARK: meshes
 
-    /// A flat convex shape in space, both sides.
-    static func polygon(_ pts: [SIMD3<Float>]) -> MeshResource? {
+    /// A flat shape in space, both sides: cut into triangles as it lies flat (`flat`, its corners on the paper), so one
+    /// that bends in (half an arrow) fills as itself.
+    static func polygon(_ pts: [SIMD3<Float>], flat: [CGPoint]? = nil) -> MeshResource? {
         guard pts.count >= 3 else { return nil }
         var idx: [UInt32] = []
-        for i in 1..<(pts.count - 1) { let a: UInt32 = 0, b = UInt32(i), c = UInt32(i + 1); idx += [a, b, c, a, c, b] }
+        for (a, b, c) in triangles(flat ?? pts.map { CGPoint(x: Double($0.x), y: Double($0.z)) }) {
+            idx += [UInt32(a), UInt32(b), UInt32(c), UInt32(a), UInt32(c), UInt32(b)]
+        }
         var d = MeshDescriptor(name: "face")
         d.positions = MeshBuffers.Positions(pts)
         d.primitives = .triangles(idx)
         return try? MeshResource.generate(from: [d])
+    }
+    /// A polygon's triangles by its corners' indexes (ear clipping).
+    static func triangles(_ p: [CGPoint]) -> [(Int, Int, Int)] {
+        var v = Array(p.indices)
+        let area = p.indices.reduce(0.0) { s, i in let a = p[i], b = p[(i + 1) % p.count]; return s + a.x * b.y - b.x * a.y }
+        if area < 0 { v.reverse() }
+        func cross(_ a: CGPoint, _ b: CGPoint, _ c: CGPoint) -> Double { (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x) }
+        var out: [(Int, Int, Int)] = [], tries = 0
+        while v.count > 3 && tries < 500 {
+            tries += 1
+            var cut = false
+            for k in v.indices {
+                let i0 = v[(k + v.count - 1) % v.count], i1 = v[k], i2 = v[(k + 1) % v.count]
+                guard cross(p[i0], p[i1], p[i2]) > 1e-9 else { continue }
+                let inside = v.contains { j in j != i0 && j != i1 && j != i2 && A7.inside([p[i0], p[i1], p[i2]], p[j]) }
+                if inside { continue }
+                out.append((i0, i1, i2)); v.remove(at: k); cut = true; break
+            }
+            // what's left doesn't clip cleanly (corners in a line): a fan
+            if !cut { for k in 1..<(v.count - 1) { out.append((v[0], v[k], v[k + 1])) }; return out }
+        }
+        if v.count == 3 { out.append((v[0], v[1], v[2])) }
+        return out
     }
     /// Thin square bars along segments in space, `width` across (a line drawn in 3D).
     static func bars(_ segs: [(SIMD3<Float>, SIMD3<Float>)], width: Float) -> MeshResource? {

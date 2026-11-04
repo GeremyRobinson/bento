@@ -7,8 +7,9 @@ import SwiftUI
 /// or No, and it unfolds. How many lines: draw a fold line across it (it snaps to lines through the middle) and let go:
 /// it folds; a match stays drawn and counted, a miss shows what sticks out; No more; type the count.
 ///
-/// The fold is drawn on the flat paper with the preview's perspective (the paper's own tilt is kept for lessons that
-/// rise off it as solids); landing and unfolding glide on the paper's spring.
+/// The fold is a real fold off the paper (the shared 3D, PaperStand.swift, 4 Nov): the half is a face turning about the
+/// dashed line in true 3D under the long lens, following the finger; let go, it turns on over (or falls back) and later
+/// unfolds on the spring. The paper itself stays flat: what's read is how the half lands on the other, seen from above.
 ///
 /// The picture's squares: the shape's middle at (16, 16); the names, the count and the record from column 35.
 @MainActor
@@ -16,6 +17,13 @@ struct SymmetryLesson: PaperLesson {
     typealias Pt = Geo4.Pt
     static let ry = 6.0
     var liveKeys: Set<String> { ["th", "da"] }
+    var solid: Bool { true }
+    /// A half of the shape turned about the line at angle `a` through its middle by `deg`, as a face in 3D.
+    private func half(_ g: G, _ id: String, _ pts: [Pt], _ a: Double, _ deg: Double, live: Bool = false, from: Double? = nil, over: Bool = false) -> Solids.Face {
+        let o = g.at(Pt(0, 0)), e = Geo4.pol(o, 1, a)
+        return Solids.Face(id: id, pts: pts.map { let q = g.at($0); return Vec3(q.x, q.y, 0) }, look: .paint(.tint(0.45)),
+                           hinge: (Vec3(o.x, o.y, 0), Vec3(e.x, e.y, 0)), angle: deg, live: live, from: from, over: over, edge: .ink)
+    }
 
     /// Where the shape's middle goes (a grid point, with room round it for every line that can be drawn through it,
     /// each reaching 2 squares past the shape), and the column the names and the record start on.
@@ -85,27 +93,31 @@ struct SymmetryLesson: PaperLesson {
         let p = Symmetry4.Parts(s.numbers), st = G8.stage(s), done = st >= 3, local = p.local, held = s.grabbed
         var pic = GridPen(), live = GridPen(stableIds: true), rec = GridPen()
         let g = G(p), rx = g.rx, ry = Self.ry
+        var solids = Solids()
 
         if p.kind == 0 {
             let la = p.la, kept = s.run.kept
             if st == 1 && held, let th = s.h("th"), let sd = s.h("sd") {
+                // the half turns up off the paper about the line, following the finger
                 shape(&pic, g, "stay\(sd)", Symmetry4.half(local, la, -sd), fill: .tint(0.2))
-                shape(&live, g, "move", Symmetry4.half(local, la, sd).map { Symmetry4.folded($0, la, th) }, fill: .tint(0.45), over: true)
-            } else if st == 1, let back = s.h("back"), let sd = s.h("sd") {
-                // let go short of the line: the half falls back flat
-                let h = Symmetry4.half(local, la, sd)
+                solids.faces.append(half(g, "half", Symmetry4.half(local, la, sd), la, th * 180 / .pi, live: true))
+            } else if st == 1, s.h("back") != nil, let sd = s.h("sd") {
+                // let go short of the line: the half falls back flat on the spring
                 shape(&pic, g, "stay\(sd)", Symmetry4.half(local, la, -sd), fill: .tint(0.2))
-                shape(&pic, g, "back\(Int(back * 100))", h, fill: .tint(0.2), from: h.map { Symmetry4.folded($0, la, back) }, over: true)
+                shape(&pic, g, "flat\(sd)", Symmetry4.half(local, la, sd), fill: .tint(0.2))
+                solids.faces.append(half(g, "half", Symmetry4.half(local, la, sd), la, 0))
             } else if st == 2 {
-                let sd = kept["sd"] ?? 1, th = kept["th"] ?? .pi, h = Symmetry4.half(local, la, sd)
+                // let go past the line: it turns on over and lands on the other half
+                let sd = kept["sd"] ?? 1, h = Symmetry4.half(local, la, sd)
                 shape(&pic, g, "stay\(sd)", Symmetry4.half(local, la, -sd), fill: .tint(0.2))
-                shape(&pic, g, "landed", h.map { Symmetry4.refl($0, la) }, fill: .tint(0.45), from: h.map { Symmetry4.folded($0, la, th) }, over: true)
+                solids.faces.append(half(g, "half", h, la, 180, from: (kept["th"] ?? .pi) * 180 / .pi, over: true))
                 landing(&pic, g, p, la, sd)
                 G8.aside(&pic, "fd", p.landed(sd), x: rx, y: 2, w: 20)
             } else if done {
+                // it unfolds, back onto its own half
                 let sd = kept["sd"] ?? 1, h = Symmetry4.half(local, la, sd)
                 shape(&pic, g, "whole", local, fill: .tint(0.2))
-                shape(&pic, g, "unfold", h, fill: .tint(0.2), from: h.map { Symmetry4.refl($0, la) }, over: true)
+                solids.faces.append(half(g, "half", h, la, 0, from: 180))
             } else {
                 shape(&pic, g, "whole", local, fill: .tint(0.2))
             }
@@ -121,7 +133,7 @@ struct SymmetryLesson: PaperLesson {
                 // the last fold, landed: its half glides over the line
                 let n = Int(s.h("fc") ?? 0), h = Symmetry4.half(local, la, 1)
                 shape(&pic, g, "stay\(n)", Symmetry4.half(local, la, -1), fill: .tint(0.2))
-                shape(&pic, g, "fold\(n)", h.map { Symmetry4.refl($0, la) }, fill: .tint(0.45), from: h, over: true)
+                solids.faces.append(half(g, "fold\(n)", h, la, 180, from: 0, over: true))
                 landing(&pic, g, p, la, 1)
             } else {
                 shape(&pic, g, "whole", local, fill: .tint(0.2))
@@ -139,7 +151,7 @@ struct SymmetryLesson: PaperLesson {
         pic.dot("O", at: g.O.x, g.O.y, radius: 0.3, .ink, over: true)
         let ext = pic.R(0, 0, p.kind == 0 ? rx + 24 : 2 * g.O.x, g.bottom)
         return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: rec.boxes,
-                            actions: p.kind == 1 && st == 1 ? ["No more"] : [], extent: ext)
+                            actions: p.kind == 1 && st == 1 ? ["No more"] : [], extent: ext, solids: solids)
     }
 
     func recordBeside(_ n: Numbers) -> Double? { Self.ry - 2 }
