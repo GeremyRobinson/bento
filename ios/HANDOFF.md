@@ -100,6 +100,16 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   column working (and 5th grade's, whose lines are written two squares a digit) keep a digit to a cell.
 - Chapter 2 zooms (3 Nov): Multiply big numbers past 7 rows puts its record a row closer and the sum's rule right under
   the parts (73% → 76%); Story problems with narrow bars put the record beside them (73% → 76%).
+- **6th grade is live** (3 Nov; Core: `Curriculum.grade6`, all 36 lessons in 8 chapters, only built chapters on the map). Chapter 1,
+  Ratios and percents, is built (Core: `Ratios6` (`Ratio6`, `EquivRatio`, `RatioTable`, `UnitRate`, `PercentOf`, `PercentWhole`), tests
+  `RatiosG6Tests`; App: `EquivRatioLesson`, `RatioTableLesson`, `UnitRateLesson`, `PercentOfLesson`, `PercentWholeLesson`, their shared
+  `RatiosKit6` (`R6`: cells, the handle, a hint's ring, the first-quadrant plane two squares a unit)). To show at 75%: Equivalent ratios'
+  cells are 3 × 3 up to 6 times, 2 × 2 past; Ratio tables' table is two squares a row, 3 rows under the plane, its written lines beside it
+  with Check by the line being written (`blocksAt`), the compare's names in a column at the plane's top right; Unit rates' cells are 2 × 2
+  whenever that (record under or beside) shows at 75%, else one square with the first and every 5th row labelled, and the copy drags to
+  m + 2 rows (the preview's m + 3). Least zooms: 78%, 76%, 76%, 112%, 85%. A miss rings the general area (the total to reach, the bar,
+  the table's column lit), a second the exact spot. Shots as before, e.g. `page-g6-ratiotable@6-2 -wrong` (the compare kind),
+  `page-g6-rate-2 -numbers u=14,n=9,m=12,item=0,kind=0`, `map-started -grade 6 -whole`.
 
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
