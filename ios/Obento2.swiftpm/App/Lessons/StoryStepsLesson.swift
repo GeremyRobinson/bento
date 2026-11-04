@@ -141,6 +141,13 @@ struct StoryStepsLesson: PaperLesson {
 
     /// Every slip fits one row over the bars.
     func messageRows(_ n: Numbers) -> Int { 1 }
+    /// The record may go beside the bars (when that shows it bigger: a short take-away's narrow bars left its story
+    /// wrapped onto many rows, seen at 73%).
+    func recordBeside(_ n: Numbers) -> Double? {
+        let P = StorySteps.Parts(n)
+        let most = P.share ? 62.0 : Double(P.a) * Double(StorySteps.round10(P.b) / 10 + 1) + (P.kind == 1 ? Double(StorySteps.round10(P.c) / 10 + 1) : 0)
+        return most + 2 <= 34 ? 0 : nil
+    }
 
     func hands(_ s: PaperState) -> Hands? {
         guard stage(s) == 1 else { return nil }

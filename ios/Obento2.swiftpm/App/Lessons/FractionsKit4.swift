@@ -49,7 +49,7 @@ enum F4 {
         if let bottom { pen.word(id + "b", bottom, at: col + w / 2, line + 1, Bars.maths.colour(c)) }
     }
 
-    /// A part of the record: a fraction (4 squares wide, or `w`), one with boxes for its top and bottom, a sign (2 squares),
+    /// A part of the record: a fraction (4 squares wide, or `w`), one with boxes for its top and bottom, a sign (its fewest whole squares, 2 for + − × =),
     /// a whole number written tight, right-aligned in the whole squares it takes (G 3 Nov: a number in a line is
     /// one word), or a box for a whole number.
     enum Tok {
@@ -63,9 +63,9 @@ enum F4 {
             switch self {
             case .f(_, _, _, let w): w
             case .fb: 4
-            case .op: 2
+            case .op(let o, _): Record.opWidth(o)
             case .n(let v, _): Record.width(.n(v))
-            case .box(_, let cells): 2 * Double(cells) + 1
+            case .box(_, let cells): Record.boxWidth(cells: cells, commas: false) + 1
             }
         }
     }
@@ -87,9 +87,12 @@ enum F4 {
                     case .box(let b): pen.answerBox(b, right: cx + 4, mid: mid, per: 2, cells: 2, centred: true)
                     }
                 }
-            case .op(let o, let c): pen.word(k + o, o, at: cx + 1, line, Bars.maths.colour(c))
+            case .op(let o, let c): pen.word(k + o, o, at: cx + t.width / 2, line, Bars.maths.colour(c))
             case .n(let v, let c): Record.tight(&pen, k + "n\(v)", v, right: cx + t.width, row: line, c)
-            case .box(let b, let cells): pen.answerBox(b, right: cx + 2 * Double(cells), mid: line, per: 2, cells: cells)
+            case .box(let b, let cells):
+                // a square clear of what follows (a fraction's line starts on its edge)
+                let bw = Record.boxWidth(cells: cells, commas: false)
+                pen.answerBox(b, right: cx + bw, mid: line, per: 2, cells: 1, word: bw)
             }
             cx += t.width
         }

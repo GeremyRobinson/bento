@@ -90,20 +90,24 @@ struct PlaceValueLesson: PaperLesson {
             // ringed where they stand in it
             let right = Record.width(.n(P.n)), row = 1.0
             Record.tight(&rec, "num", P.n, right: right, row: row)
-            rec.word("approx", "≈", at: right + 1.5, row, Record.maths)
+            let ow = Record.opWidth("≈")
+            rec.word("approx", "≈", at: right + ow / 2, row, Record.maths)
             let cells = String(P.R).count
             if at == 3 {
-                rec.answerBox("x", right: right + 3 + 2 * Double(cells), mid: row, per: 2, cells: cells, commas: true)
+                let bw = Record.boxWidth(cells: cells, commas: true)
+                rec.answerBox("x", right: right + ow + bw, mid: row, per: 2, cells: 1, commas: true, word: bw)
             } else {
-                Record.tight(&rec, "R", P.R, right: right + 3 + Record.width(.n(P.R)), row: row, .chapter)
-                // a digit's middle in the tight number: what's written after it measured back from its right edge
+                Record.tight(&rec, "R", P.R, right: right + ow + Record.width(.n(P.R)), row: row, .chapter)
+                // a digit's middle in the tight number (centred in its squares): what's written after it measured back
+                // from its right edge
                 let text = Array(BigNumbers.commas(P.n)), font = PaperText.font(Sketch.maths, .medium, digits: true)
                 func w(_ s: String) -> Double { PaperText.width(s, font) / Paper.cell }
+                let inkRight = right - Record.width(.n(P.n)) / 2 + w(String(text)) / 2
                 func mid(_ place: Int) -> Double {
                     var seen = -1, i = text.count
                     while i > 0 { i -= 1; if text[i].isNumber { seen += 1; if seen == place { break } } }
                     // (the glyphs' own side bearing puts the ink a little right of the measured middle)
-                    return right - 0.25 - w(String(text[(i + 1)...])) - w(String(text[i])) / 2 + 0.08
+                    return inkRight - w(String(text[(i + 1)...])) - w(String(text[i])) / 2 + 0.08
                 }
                 rec.rule("under", from: mid(P.k) - 0.5, to: mid(P.k) + 0.5, row: row + 1, .chapter)
                 rec.ring("next", col: mid(P.k - 1) - 0.7, row: row - 1.2, w: 1.4, h: 2.4)

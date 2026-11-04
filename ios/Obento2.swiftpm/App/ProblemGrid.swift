@@ -137,6 +137,8 @@ enum ProblemGrid {
         /// The blocks' left edge, in squares (the record's, when it's beside the picture).
         var blocksLeft = 0.0
         var frame = CGRect.zero
+        /// A story's choices one under another (beside a tall picture).
+        var column = false
     }
 
     static func stackPlan(_ m: WorkProblem) -> StackPlan {
@@ -188,7 +190,7 @@ enum ProblemGrid {
         // blocks under the record, all framed
         func shown(_ q: StackPlan) -> Double {
             let blocks = 4 * k, recordEnd = q.recordTop + recH + blocks
-            let h = q.beside ? max(q.pictureTop + picH, recordEnd) : recordEnd
+            let h = q.beside || paper.blocksLeft(l.numbers) != nil ? max(q.pictureTop + picH, recordEnd) : recordEnd
             return ProblemGrid.zoom(squares: q.width - q.left, h)
         }
         func framed(_ q: StackPlan) -> StackPlan { var q = q; q.zoom = shown(q); return q }
@@ -234,15 +236,20 @@ enum ProblemGrid {
         let hinted = paper.draw(s.at(s.index, hint: true))
         var bottom = plan.pictureTop * sq + ([d.picture.bounds?.maxY, d.extent?.maxY, hinted.picture.bounds?.maxY].compactMap { $0 }.max() ?? 0)
         let recordBottom = withBoxes(d.record.bounds, d.boxes).map { plan.recordTop * sq + $0.maxY }
-        if !plan.beside, let r = recordBottom { bottom = max(bottom, r) }
-        let blocksTop = plan.beside ? recordBottom.map { ($0 / sq).rounded(.up) + 2 * k } ?? plan.recordTop : (bottom / sq).rounded(.up) + 2 * k
+        // the record beside part of the picture (PaperLesson.blocksLeft): the blocks under the record, from its column
+        let side = recordBottom == nil ? nil : paper.blocksLeft(s.run.numbers), beside = plan.beside || side != nil
+        if !beside, let r = recordBottom { bottom = max(bottom, r) }
+        let at = paper.blocksAt(s)
+        let blocksTop = at.map { plan.pictureTop + $0.y } ?? (beside ? recordBottom.map { ($0 / sq).rounded(.up) + 2 * k } ?? plan.recordTop : (bottom / sq).rounded(.up) + 2 * k)
         let a = s.step.answer
         // a story's choices: a row of them with Check under it, or beside a tall picture one under another
-        let choiceRows = Double(a?.choices.map { plan.beside ? 3 * $0.count + 2 : 5 } ?? 0)
+        let column = plan.beside || at != nil
+        let choiceRows = Double(a?.choices.map { column ? 3 * $0.count + 2 : 5 } ?? 0)
         let rows = k * (a?.choices != nil ? choiceRows : (!out.lessonBlocks.isEmpty || (a != nil && a?.byHand == false && !m.auto) || (s.run.isLast && !m.auto) || !m.howToButtons.isEmpty) ? 2 : 0)
         let frameBottom = max(rows > 0 ? (blocksTop + rows) * sq : 0, bottom, recordBottom ?? 0)
-        out.checkAt = CGPoint(x: plan.recordLeft * sq, y: blocksTop * sq)
-        out.stack = Stack(plan: plan, blocksTop: blocksTop, blocksLeft: plan.recordLeft, frame: CGRect(x: plan.left * sq, y: 0, width: (plan.width - plan.left) * sq, height: frameBottom))
+        let blocksLeft = at.map { $0.x } ?? plan.recordLeft + (side ?? 0)
+        out.checkAt = CGPoint(x: blocksLeft * sq, y: blocksTop * sq)
+        out.stack = Stack(plan: plan, blocksTop: blocksTop, blocksLeft: blocksLeft, frame: CGRect(x: plan.left * sq, y: 0, width: (plan.width - plan.left) * sq, height: frameBottom), column: column)
         // its box (BarsPage.box: taps land in it) holds it all, in whole blocks
         out.width = ((plan.width - plan.left) * sq + 2 * block) / block
         out.height = (frameBottom + 3 * block) / block

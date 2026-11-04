@@ -28,6 +28,28 @@ struct WorkBox {
     /// No room for the cursor past its right edge (the cursor sits just inside it): a box written right up to more of
     /// the number (the thousands and up of an answer whose hundreds the hands wrote), which it mustn't cover.
     var tight = false
+    /// A number in a line (G 3 Nov, design/README.md "Calls made" 1): what's typed is written tight, as one word, as the
+    /// line writes its numbers, right-aligned with room for the cursor; the box is this many points wide at least (whole
+    /// squares: the fewest that fit the answer, and a little room) and grows left a square at a time as more is typed.
+    /// nil: column working (a vertical sum, long division, a place chart), a digit to each cell so the places line up.
+    var word: Double?
+    /// The words' scale (a big problem's are drawn bigger).
+    var k: Double { cell / (2 * Paper.cell) }
+    /// What's typed as the line writes it: a whole number with its commas when the box writes them.
+    func written(_ typed: String) -> String {
+        guard commas, !typed.isEmpty, typed.allSatisfy(\.isNumber), let v = Int(typed) else { return typed }
+        return BigNumbers.commas(v)
+    }
+    /// How wide a number written tight is in a box, in points.
+    @MainActor func tightWidth(_ typed: String) -> Double {
+        PaperText.width(written(typed), PaperText.font(Sketch.maths * k, .medium, digits: true))
+    }
+    /// A word box's width with `typed` in it: its least, or the whole squares the number and its room need.
+    @MainActor func wordWidth(_ typed: String) -> Double {
+        let sq = Paper.cell, least = word ?? 0
+        guard !typed.isEmpty else { return least }
+        return max(least, ((tightWidth(typed) + 1.25 * sq * k) / sq).rounded(.up) * sq)
+    }
     func moved(_ by: CGPoint) -> WorkBox { var b = self; b.right += by.x; b.mid += by.y; b.point = point.map { $0 + by.x }; return b }
     /// Where each typed character goes when the box lines up on its point: its middle's x (the point's: the line).
     func placed(_ typed: String) -> [(ch: Character, x: Double)] {
@@ -50,7 +72,8 @@ struct WorkBox {
     }
     /// Its rect with `typed` in it: a box lined up on its point grows either way to hold what's typed (a 4th whole digit
     /// to the left, a 3rd decimal to the right), as a column box grows left.
-    func rect(for typed: String) -> CGRect {
+    @MainActor func rect(for typed: String) -> CGRect {
+        if word != nil { let w = wordWidth(typed); return CGRect(x: right - w, y: mid - cell / 2, width: w, height: cell) }
         guard let point else { return rect(typed: typed.count) }
         let parts = typed.split(separator: ".", omittingEmptySubsequences: false)
         let whole = Double(parts.first?.count ?? 0), after = Double(parts.dropFirst().first?.count ?? 0)
@@ -59,6 +82,7 @@ struct WorkBox {
     }
     /// Its rect when `typed` digits are in it, with half a cell past its right edge for the cursor.
     func rect(typed: Int = 0) -> CGRect {
+        if let word { return CGRect(x: right - word, y: mid - cell / 2, width: word, height: cell) }
         if point != nil {
             return CGRect(x: right - Double(cells) * cell, y: mid - cell / 2, width: (Double(cells) + 0.5) * cell, height: cell)
         }
@@ -93,9 +117,9 @@ struct GridPen {
     /// An answer box `cells` digits wide whose right edge is column `right`, on the row whose middle is `mid` (a digit is
     /// `per` squares): it grows left as digits are typed, so they line up on the right as written work does.
     /// `keepsLeft`: a centred box that grows to the right (WorkBox.keepsLeft).
-    mutating func answerBox(_ id: String, right: Double, mid: Double, per: Double, cells: Int, spare: Int = 0, centred: Bool = false, point: Double? = nil, keepsLeft: Bool = false, commas: Bool = false, tight: Bool = false) {
+    mutating func answerBox(_ id: String, right: Double, mid: Double, per: Double, cells: Int, spare: Int = 0, centred: Bool = false, point: Double? = nil, keepsLeft: Bool = false, commas: Bool = false, tight: Bool = false, word: Double? = nil) {
         boxes.append(WorkBox(id: id, right: P(right, 0).x, mid: P(0, mid).y, cell: per * Self.sq, cells: cells, spare: spare, centred: centred,
-                             point: point.map { P($0, 0).x }, keepsLeft: keepsLeft, commas: commas, tight: tight))
+                             point: point.map { P($0, 0).x }, keepsLeft: keepsLeft, commas: commas, tight: tight, word: word.map { $0 * Self.sq }))
     }
 
     /// Every box the work has: the one `box`, then the named ones.

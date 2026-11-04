@@ -102,6 +102,10 @@ extension Piece {
         case "g4-fraccompare": return [box(0, 0, 6, 2), box(0, 4, 4.5, 2)]      // the two amounts
         case "g4-likefrac": return [box(0, 0, 6, 2)]                            // the pieces together
         case "g4-likesub": return [box(0, 0, 6, 2)]                             // what's left
+        // 4th grade, Mixed numbers (3 Nov)
+        case "g4-mixed": return [box(0, 0, 4, 1), box(0, 2, 4, 1), box(0, 4, 3, 2)] // the wholes, and the pieces
+        case "g4-mixedsub": return [box(0, 0, 4, 1), box(0, 2, 4, 1), box(0, 4, 3, 2)]
+        case "g4-fracwhole": return [box(0, 0, 2, 2), box(0, 3, 2, 2), box(5, 0, 4, 2)] // two groups' pieces, packed
         default: return []
         }
     }
@@ -210,6 +214,12 @@ extension Piece {
             return bar(0, 0, 9, 3) + bar(0, 4, 9, 3)
         case "g4-likesub": // sixths, the last two crossed out: 9 by 2
             return bar(0, 0, 9, 6) + [line((6.3, 1.7), (7.2, 0.3)), line((7.8, 1.7), (8.7, 0.3))]
+        case "g4-mixed": // two wholes and a part on the left, a whole and a part on the right: 9 by 6
+            return [box(0, 0, 4, 1), box(0, 2, 4, 1)] + bar(0, 4, 4, 4) + [box(5, 0, 4, 1)] + bar(5, 2, 4, 4)
+        case "g4-mixedsub": // the same, the right's whole crossed out: 9 by 6
+            return [box(0, 0, 4, 1), box(0, 2, 4, 1)] + bar(0, 4, 4, 4) + [box(5, 0, 4, 1), line((5.3, 0.8), (8.7, 0.2))] + bar(5, 2, 4, 4)
+        case "g4-fracwhole": // two groups of two fourths, packed into one bar: 9 by 5
+            return bar(0, 0, 4, 4) + bar(0, 3, 4, 4) + bar(5, 0, 4, 4)
         case "g5-volume": // a box of cubes, 4 by 3 by 2, as the lesson shows it
             return box3D(l: 4, h: 2, w: 3, u: 32)
         case "add": // thirds and thirds, added: 9 by 6

@@ -43,6 +43,13 @@ protocol PaperLesson {
     /// instead, its first row level with that row, the blocks under it, when that shows the problem bigger on the screen
     /// (G 19 Oct rule 10: the arrangement that fills the screen best), as a picture taller than it's wide does.
     func recordBeside(_ n: Numbers) -> Double?
+    /// nil: the blocks go under everything, from the record's left edge. A column of the record: the record sits beside
+    /// part of the picture (in a column the hands emptied, or one shorter than the rest), and the blocks go two squares
+    /// under it, from this column (4th grade's Mixed numbers, so the problem shows at 75% or more).
+    func blocksLeft(_ n: Numbers) -> Double?
+    /// nil: the blocks go where the layout puts them. A place in the picture's squares (its left column, its top row):
+    /// the blocks start there on this step, in room the picture leaves (a story's choices beside a tall picture).
+    func blocksAt(_ s: PaperState) -> CGPoint?
     /// The same three for a run as it's shown (told as a story, its words take more rows), which is what the layout
     /// asks: its numbers' unless the lesson's size depends on more than its numbers.
     func scale(_ run: LessonRun) -> Double
@@ -60,6 +67,8 @@ extension PaperLesson {
     func wrongTyping(_ s: PaperState) -> [String: Double]? { nil }
     func scale(_ n: Numbers) -> Double { 1 }
     func recordBeside(_ n: Numbers) -> Double? { nil }
+    func blocksLeft(_ n: Numbers) -> Double? { nil }
+    func blocksAt(_ s: PaperState) -> CGPoint? { nil }
     func scale(_ run: LessonRun) -> Double { scale(run.numbers) }
     func recordBeside(_ run: LessonRun) -> Double? { recordBeside(run.numbers) }
     func messageRows(_ run: LessonRun) -> Int { messageRows(run.numbers) }
@@ -110,6 +119,10 @@ enum PaperLessons {
         case "g4-equiv": return EquivLesson()
         case "g4-fraccompare": return CompareFractionsLesson()
         case "g4-likefrac", "g4-likesub": return LikeFractionsLesson()
+        // 4th grade, Mixed numbers (3 Nov 2026)
+        case "g4-mixed": return AddMixedLesson()
+        case "g4-mixedsub": return SubtractMixedLesson()
+        case "g4-fracwhole": return FracTimesWholeLesson()
         default: return nil
         }
     }

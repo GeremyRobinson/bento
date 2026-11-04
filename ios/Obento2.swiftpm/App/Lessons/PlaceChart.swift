@@ -122,23 +122,32 @@ enum Record {
 
     /// A word's width in whole squares, half a square either side.
     static func width(_ w: String) -> Double { (PaperText.width(w, PaperText.font(Sketch.wordSize, .medium)) / Paper.cell + 1).rounded(.up) }
+    /// Laid out as words are (G 3 Nov, design/README.md "Calls made" 1): each number or sign takes the fewest whole
+    /// squares its tight width fits with a quarter square either side, and the next starts on the following square, so
+    /// the gaps are even ("7 × 10 = 70").
     static func width(_ t: Token) -> Double {
         switch t {
-        // written tight: the whole squares it takes, a quarter square spare either side
         case .n(let v): (tightWidth(v) + 0.5).rounded(.up)
-        case .op: 3
+        case .op(let o): opWidth(o)
         case .w(let s): width(s)
         case .gap(let g): g
-        // a box keeps half a cell for the cursor past its right edge: a square more before what follows
-        case .box(_, let cells): 2 * Double(cells) + 1
+        case .box(_, let cells): boxWidth(cells: cells, commas: true)
         }
     }
     static func width(_ toks: [Token]) -> Double { toks.reduce(0) { $0 + width($1) } }
+    /// A sign's whole squares (2 for + − × ÷ =).
+    static func opWidth(_ o: String) -> Double { (PaperText.width(o, PaperText.font(Sketch.maths, .medium, digits: true)) / Paper.cell + 0.5).rounded(.up) }
+    /// An answer box in a line: the fewest whole squares that fit an answer `cells` digits long written tight, and room
+    /// for the cursor.
+    static func boxWidth(cells: Int, commas: Bool) -> Double {
+        let sample = String(repeating: "8", count: max(1, cells)), text = commas && cells >= 4 ? BigNumbers.commas(Int(sample) ?? 0) : sample
+        return ((PaperText.width(text, PaperText.font(Sketch.maths, .medium, digits: true)) / Paper.cell + 1.25)).rounded(.up)
+    }
 
-    /// A number in a line written tight, as one word (G 3 Nov, design/README.md "Calls made"): "10,935", right-aligned in
-    /// the whole squares it takes (Record.width), its right edge a quarter square in from column `right`.
+    /// A number in a line written tight, as one word (G 3 Nov, design/README.md "Calls made"): "10,935", centred in the
+    /// whole squares it takes (Record.width), which end on column `right`.
     static func tight(_ pen: inout GridPen, _ id: String, _ v: Int, right: Double, row: Double, _ colour: Sketch.Colour = .ink) {
-        pen.word(id, BigNumbers.commas(v), at: right - 0.25, row, maths.colour(colour), anchor: UnitPoint(x: 1, y: 0.5))
+        pen.word(id, BigNumbers.commas(v), at: right - width(.n(v)) / 2, row, maths.colour(colour))
     }
     /// How wide a number written tight is, in squares.
     static func tightWidth(_ v: Int) -> Double { PaperText.width(BigNumbers.commas(v), PaperText.font(Sketch.maths, .medium, digits: true)) / Paper.cell }
@@ -161,10 +170,10 @@ enum Record {
             let c = colours[i] ?? .ink, kid = "\(id).\(i)"
             switch t {
             case .n(let v): tight(&pen, kid + "n\(v)", v, right: cx + width(t), row: row, c)
-            case .op(let o): pen.word(kid + o, o, at: cx + 1.5, row, maths.colour(c))
+            case .op(let o): pen.word(kid + o, o, at: cx + width(t) / 2, row, maths.colour(c))
             case .w(let s): pen.word(kid + s, s, at: cx + 0.5, row, words.colour(c), anchor: UnitPoint(x: 0, y: 0.5))
             case .gap: break
-            case .box(let b, let cells): pen.answerBox(b, right: cx + 2 * Double(cells), mid: row, per: 2, cells: cells, commas: true)
+            case .box(let b, _): pen.answerBox(b, right: cx + width(t), mid: row, per: 2, cells: 1, commas: true, word: width(t))
             }
             cx += width(t)
         }

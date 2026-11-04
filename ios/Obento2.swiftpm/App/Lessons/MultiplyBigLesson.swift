@@ -18,40 +18,42 @@ struct MultiplyBigLesson: PaperLesson {
     /// 2-square cells for three digits copied up to 3 times; more rows (or four digits) take 1-square cells, so the
     /// chart and its record are seen at 75% or more (G 3 Nov: the camera rarely goes under 75%; at 2-square cells
     /// 179 × 9 was seen at 57%).
-    static func chart(_ P: MultiplyBig.Parts) -> PlaceChart { PlaceChart(n: P.D, c: P.D == 3 && P.m <= 3 ? 2 : 1, pr: 2, x0: x0, y0: y0) }
+    /// Past 7 rows the names sit a row closer to the disks, and the record a row closer to the counts (9 rows of 5,621
+    /// told as a story were seen at 73%).
+    static func chart(_ P: MultiplyBig.Parts) -> PlaceChart { PlaceChart(n: P.D, c: P.D == 3 && P.m <= 3 ? 2 : 1, pr: 2, x0: x0, y0: P.m >= 8 ? y0 - 1 : y0) }
     private func rows(_ s: PaperState, _ P: MultiplyBig.Parts) -> Int { stage(s) >= 2 ? P.m : Int((s.h("rows") ?? 1).rounded()) }
-    private func handleY(_ ch: PlaceChart, _ rows: Int) -> Double { Self.y0 + Double(rows) * ch.c + 1 }
+    private func handleY(_ ch: PlaceChart, _ rows: Int) -> Double { ch.y0 + Double(rows) * ch.c + 1 }
 
     func draw(_ s: PaperState) -> PaperDrawing {
         let P = MultiplyBig.Parts(s.numbers), ch = Self.chart(P), at = stage(s), c = ch.c, m = P.m
         let n = rows(s, P), cur: Int? = at == 2 ? Int((s.picture["p"] ?? 0).rounded()) : nil
         var pic = GridPen(), live = GridPen(stableIds: true), rec = GridPen()
-        let bottom = Self.y0 + Double(max(n, at >= 1 ? 1 : 1)) * c + 1
-        if let cur { pic.fill("lit\(cur)", col: ch.colX(cur), row: Self.y0, w: ch.cw, h: Double(m) * c, .tint(0.16)) }
+        let bottom = ch.y0 + Double(max(n, at >= 1 ? 1 : 1)) * c + 1
+        if let cur { pic.fill("lit\(cur)", col: ch.colX(cur), row: ch.y0, w: ch.cw, h: Double(m) * c, .tint(0.16)) }
         ch.draw(&pic, "ch", bands: [], top: Self.top, bottom: bottom, lit: cur)
         // the rows: one copy each, every place's disks in a plain row
         for k in 0..<n {
             for p in 0..<P.D {
                 for j in 0..<P.digit(p) {
-                    ch.disk(&pic, "\(k)_\(p)_\(j)", at: CGPoint(x: ch.colX(p) + (Double(j) + 0.5) * c, y: Self.y0 + (Double(k) + 0.5) * c))
+                    ch.disk(&pic, "\(k)_\(p)_\(j)", at: CGPoint(x: ch.colX(p) + (Double(j) + 0.5) * c, y: ch.y0 + (Double(k) + 0.5) * c))
                 }
             }
         }
         // its name at the first row's right end
-        pic.word("name", BigNumbers.commas(P.n), at: ch.right + 0.5, Self.y0 + c / 2, Record.maths, anchor: UnitPoint(x: 0, y: 0.5))
+        pic.word("name", BigNumbers.commas(P.n), at: ch.right + 0.5, ch.y0 + c / 2, Record.maths, anchor: UnitPoint(x: 0, y: 0.5))
         if at <= 1 {
             let hy = handleY(ch, n), mid = (ch.x0 + ch.right) / 2
             if at == 1 {
                 live.dot("hd", at: mid, hy, radius: s.grabbed ? 0.75 : 0.55, .ink, over: true)
                 if s.grabbed { live.reads("× \(n)") }
                 // a hint: where the rows end, dashed
-                if s.on("ring") { pic.line("ring", [(ch.x0 - 1, Self.y0 + Double(m) * c), (ch.right + 1, Self.y0 + Double(m) * c)], .chapter, dashed: true) }
+                if s.on("ring") { pic.line("ring", [(ch.x0 - 1, ch.y0 + Double(m) * c), (ch.right + 1, ch.y0 + Double(m) * c)], .chapter, dashed: true) }
             }
         } else {
             // the copies braced at the left
-            let yb = Self.y0 + Double(m) * c
-            pic.line("brace", [(ch.x0 - 0.5, Self.y0), (ch.x0 - 1, Self.y0), (ch.x0 - 1, yb), (ch.x0 - 0.5, yb)], .ink)
-            pic.word("bracew", "× \(m)", at: ch.x0 - 1.5, Self.y0 + Double(m) * c / 2, Record.maths, anchor: UnitPoint(x: 1, y: 0.5))
+            let yb = ch.y0 + Double(m) * c
+            pic.line("brace", [(ch.x0 - 0.5, ch.y0), (ch.x0 - 1, ch.y0), (ch.x0 - 1, yb), (ch.x0 - 0.5, yb)], .ink)
+            pic.word("bracew", "× \(m)", at: ch.x0 - 1.5, ch.y0 + Double(m) * c / 2, Record.maths, anchor: UnitPoint(x: 1, y: 0.5))
         }
         // each place's count under its column, once it's lit
         let order = P.order
@@ -80,7 +82,7 @@ struct MultiplyBigLesson: PaperLesson {
             }
             boxes = rec.boxes
         }
-        let most = Self.y0 + 9 * c + 2
+        let most = ch.y0 + 9 * c + 2
         return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: boxes,
                             extent: at == 1 ? pic.R(ch.x0 - 4, 0, ch.right - ch.x0 + 8, most) : nil)
     }
@@ -88,7 +90,7 @@ struct MultiplyBigLesson: PaperLesson {
     /// The record goes under the copies as they end up (m rows), not under the room the handle had.
     func recordRow(_ n: Numbers) -> Double? {
         let P = MultiplyBig.Parts(n), ch = Self.chart(P)
-        return Self.y0 + Double(P.m) * ch.c + 1 + (ch.c == 2 ? 4 : 2)
+        return ch.y0 + Double(P.m) * ch.c + 1 + (ch.c == 2 ? 4 : P.m >= 8 ? 1 : 2)
     }
     /// Every slip fits one row over the chart (a second row cost four-digit problems their 75%).
     func messageRows(_ n: Numbers) -> Int { 1 }
@@ -100,7 +102,7 @@ struct MultiplyBigLesson: PaperLesson {
         let P = MultiplyBig.Parts(s.numbers), ch = Self.chart(P), n = rows(s, P), hy = handleY(ch, n)
         return Hands(
             grab: { q in abs(q.y - hy) <= 2 && q.x >= ch.x0 - 1 && q.x <= ch.right + 1 ? ["grab": 1, "rows": Double(n)] : nil },
-            drag: { q, _ in ["grab": 1, "rows": Double(max(1, min(9, Int(((q.y - 1 - Self.y0) / ch.c).rounded()))))] },
+            drag: { q, _ in ["grab": 1, "rows": Double(max(1, min(9, Int(((q.y - 1 - ch.y0) / ch.c).rounded()))))] },
             release: { h in
                 let r = Int((h["rows"] ?? 1).rounded())
                 guard r > 1 else { return HandMove(hand: ["rows": 1], missHand: nil) }

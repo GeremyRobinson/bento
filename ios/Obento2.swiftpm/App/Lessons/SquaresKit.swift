@@ -57,18 +57,19 @@ enum Squares {
         choiceRects(labels, x: x, y: y).firstIndex { $0.insetBy(dx: -0.3, dy: -0.3).contains(q) }
     }
 
-    /// Numbers with commas between, each written tight in the whole squares it takes, a comma two squares, from column x on the row whose middle
-    /// is y; `ringed` ones ringed, `tail` written after ("…"). Returns where it ends.
+    /// Numbers with commas between, laid out as words (G 3 Nov): each written tight with its comma after it, starting a
+    /// quarter square into the fewest whole squares it fits, the next on the following square, from column x on the row
+    /// whose middle is y; `ringed` ones ringed, `tail` written after ("…"). Returns where it ends.
     @discardableResult
     static func list(_ pen: inout GridPen, _ id: String, _ vals: [Int], x: Double, y: Double, ringed: Set<Int> = [], tail: String? = nil) -> Double {
         var cx = x
+        let font = PaperText.font(Sketch.maths, .medium, digits: true)
         for (i, v) in vals.enumerated() {
-            let w = Record.width(.n(v))
-            // written tight (G 3 Nov), right-aligned in its squares; a ring hugs it
-            Record.tight(&pen, "\(id)n\(i)", v, right: cx + w, row: y)
-            if ringed.contains(v) { let tw = Record.tightWidth(v); pen.ring("\(id)r\(i)", col: cx + w - 0.25 - tw - 0.45, row: y - 1.25, w: tw + 0.9, h: 2.5) }
+            let comma = i < vals.count - 1 || tail != nil, text = BigNumbers.commas(v) + (comma ? "," : "")
+            let w = (PaperText.width(text, font) / Paper.cell + 0.5).rounded(.up)
+            pen.word("\(id)n\(i)", text, at: cx + 0.25, y, Record.maths, anchor: UnitPoint(x: 0, y: 0.5))
+            if ringed.contains(v) { let tw = Record.tightWidth(v); pen.ring("\(id)r\(i)", col: cx + 0.25 - 0.45, row: y - 1.25, w: tw + 0.9, h: 2.5) }
             cx += w
-            if i < vals.count - 1 || tail != nil { pen.word("\(id)c\(i)", ",", at: cx + 0.75, y, Record.maths); cx += 2 }
         }
         if let tail { pen.word("\(id)t", tail, at: cx + 1, y, Record.maths); cx += 2 }
         return cx

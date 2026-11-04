@@ -82,9 +82,9 @@ enum ProblemLayout {
             for (i, c) in choices.enumerated() {
                 add(.choice(i), max(140 * k, ((PaperText.width(c, f) + 40 * k) / sq).rounded(.up) * sq))
                 // beside a tall picture, in the record's column: one under another
-                if st.plan.beside { x = left; y += 3 * sq * k }
+                if st.column { x = left; y += 3 * sq * k }
             }
-            if !st.plan.beside { y += 3 * sq * k }
+            if !st.column { y += 3 * sq * k }
             x = left
         }
         if let a = run.step.answer, a.choices == nil, !a.byHand {
@@ -118,7 +118,7 @@ enum ProblemLayout {
         func after(_ b: WorkBox) -> Double {
             b.rect(typed: Int(count)).midX + PaperText.width(l.typed[id] ?? "", PaperText.font(Sketch.maths * (L.stack?.plan.k ?? L.scale), .medium, digits: true)) / 2 + 0.1 * b.cell
         }
-        let x = L.inline ? m.origin.x + (b.map { $0.pointCursor(l.typed[id] ?? "") ?? ($0.centred ? after($0) : $0.right + ($0.tight ? -0.12 : 0.22) * cell) } ?? 0)
+        let x = L.inline ? m.origin.x + (b.map { $0.pointCursor(l.typed[id] ?? "") ?? ($0.word != nil ? $0.right - 0.6 * Paper.cell * $0.k : $0.centred ? after($0) : $0.right + ($0.tight ? -0.12 : 0.22) * cell) } ?? 0)
             : r.minX + cell + count * cell + 0.15 * cell
         return CGRect(x: x, y: r.midY - 0.4 * cell, width: 0, height: 0.8 * cell)
     }
@@ -341,6 +341,13 @@ extension Rig {
                         let at = CGPoint(x: o.x + c.x, y: r.midY)
                         if c.ch == "." { s.text("\(id)typed\(j).\(tag)", ".", at: at, size: Sketch.maths * k, weight: .bold, colour, anchor: UnitPoint(x: 0.5, y: 0.49)) }
                         else { s.text("\(id)typed\(j)\(c.ch)\(tag)", String(c.ch), at: at, size: Sketch.maths * k, weight: .medium, colour) }
+                    }
+                } else if let wb, wb.word != nil {
+                    // a number in a line: written tight, as the line writes its numbers, its right edge three quarters of a
+                    // square in from the box's (room for the cursor)
+                    if !typed.isEmpty {
+                        s.text("\(id)typed\(typed)\(tag)", wb.written(typed), at: CGPoint(x: r.maxX - 0.75 * sq * wb.k, y: r.midY), size: Sketch.maths * k, weight: .medium, colour,
+                               anchor: UnitPoint(x: 1, y: 0.5), digits: true)
                     }
                 } else if let wb, wb.centred {
                     // in the middle of the box as it is now (one that keeps its left edge has grown to the right)
