@@ -77,7 +77,7 @@ struct StoryStepsLesson: PaperLesson {
             } else {
                 // the rest cut by the ruler into b equal parts; n is one (the preview's parts of the estimate's whole
                 // squares ran past the rest when it doesn't share evenly: 500 into 9 parts of 6 squares is 54)
-                // each part whole squares (the rest's leftover squares stay in its dashed outline)
+                // each part whole squares (what the parts leave of the rest stays blank, before the part taken off)
                 let pw = max(1, (G.rest / Double(P.b)).rounded(.down))
                 for j in 0..<P.b { dashed("sp\(j)", Double(j) * pw, y2, pw, j == 0 ? .ink : .ink3) }
                 pic.label("nl", "n", Self.named, .below, edge: y2 + H, along: pw / 2)
@@ -105,9 +105,15 @@ struct StoryStepsLesson: PaperLesson {
         // the answer, marked on n's bar near the end of its estimate
         if at >= 4 {
             // on the grid: the square line nearest the answer (its number says it exactly)
-            let x = (Double(P.n) / 10).rounded()
-            pic.line("mark", [(x, y2 - 0.5), (x, y2 + H + 0.5)], .chapter)
-            pic.word("markw", "\(P.n)", at: x, y2 - 1.2, Self.mark)
+            if P.share {
+                // sharing: the parts are whole squares, so n is written over the first part, its own value
+                let pw = max(1, (G.rest / Double(P.b)).rounded(.down))
+                pic.label("markw", "\(P.n)", Self.mark, .above, edge: y2, along: pw / 2)
+            } else {
+                let x = (Double(P.n) / 10).rounded()
+                pic.line("mark", [(x, y2 - 0.5), (x, y2 + H + 0.5)], .chapter)
+                pic.word("markw", "\(P.n)", at: x, y2 - 1.2, Self.mark)
+            }
         }
 
         // the record: the story as an equation with a letter, the estimate, the two steps, n
@@ -135,8 +141,6 @@ struct StoryStepsLesson: PaperLesson {
 
     /// Every slip fits one row over the bars.
     func messageRows(_ n: Numbers) -> Int { 1 }
-    /// A short picture (groups of under 100) leaves room at its right: the record may go beside it.
-    func recordBeside(_ n: Numbers) -> Double? { 0 }
 
     func hands(_ s: PaperState) -> Hands? {
         guard stage(s) == 1 else { return nil }

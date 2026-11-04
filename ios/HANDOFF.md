@@ -29,6 +29,12 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
 - 4th grade chapter 2, Multiplying and dividing, is built (3 Nov; Core: `TimesAsMany`, `MultiplyBig`, `TwoByTwo`, `Deal`
   (g4-divide and g4-share share its phases), `StorySteps`; App: `TimesAsManyLesson`, `MultiplyBigLesson`, `TwoByTwoLesson`,
   `DealLesson`, `StoryStepsLesson`). Shots as chapter 1's, e.g. `page-g4-divide-2 -wrong`.
+  Fixed after (3 Nov): Multiply big numbers takes 1-square cells past 3 rows (179 × 9 was at 57%), the dividing lessons and
+  it keep a miss to one row, Story problems' bars start at their whole tens (a bar already at its nearest ten is pressed
+  and let go there), the shared parts and the answer's mark on whole squares. `-shot zooms -ids a,b` writes each lesson's
+  least zoom over many problems to the app's Documents/zooms.txt (`simctl get_app_container … data`).
+- 4th grade chapter 3, Factors and patterns, is built (3 Nov; Core: `Factors`, `PrimeComposite`, `Patterns`; App:
+  `FactorsLesson`, `PrimeLesson`, `PatternsLesson`, their shared `SquaresKit`). Least zooms: 85%, 95%, 78%.
 
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
