@@ -20,7 +20,9 @@ struct Story2Lesson: PaperLesson {
         func X(_ v: Int) -> Double { Double(v) / U }
         var T0: Double { 2 * Double(R) + 1 + (P.U == 2 ? 2 : 0) }
         var PB: Double { P.cmp ? T0 + 1 : T0 + 5 }
-        var tokY: Double { P.cmp ? PB + 12 : PB + 7 }
+        var tokY: Double { P.cmp ? PB + 12 : PB + 6 }
+        /// The record's first row: two rows under the ? (or the part slid off under the bar).
+        var recRow: Double { P.cmp ? PB + 17 : PB + 12 }
         func target(_ p: Story2.Piece) -> CGRect {
             switch (P.cmp, p) {
             case (false, .whole): return CGRect(x: 0, y: PB - 5, width: X(P.W), height: 4.5)
@@ -35,6 +37,13 @@ struct Story2Lesson: PaperLesson {
     }
     private func geo(_ n: Numbers) -> Geo { let P = Story2.Parts(n); return Geo(P: P, R: A2.storyRows(P.lines, width: 44).count) }
 
+    func recordRow(_ n: Numbers) -> Double? { geo(n).recRow }
+    /// The pick, Check and Next problem beside the record's line, not under it (so a story to 99 shows at 75%).
+    func blocksAt(_ s: PaperState) -> CGPoint? {
+        let G = geo(s.numbers), st = at(s)
+        guard st >= 1 else { return nil }
+        return CGPoint(x: 25, y: G.recRow + (st >= 2 && !G.P.same ? 3 : 0))
+    }
     func told(_ s: PaperState) -> String? { Story2.Parts(s.numbers).lines.joined(separator: " ") }
 
     func draw(_ s: PaperState) -> PaperDrawing {
@@ -72,7 +81,7 @@ struct Story2Lesson: PaperLesson {
             if op == "+" { pic.sketch.from = A2.kinds { q in A2.bar(&q, "bp2", x: G.X(P.p1) + 5, y: PB, w: G.X(P.p2), look(.p2).0, u: u, from: P.p1, n: look(.p2).1, nc: look(.p2).2) } }
             for p in [Story2.Piece.p1, .p2] {
                 let r = G.target(p), l = look(p)
-                if off(p) { A2.bar(&pic, "b\(p)", x: r.minX, y: r.minY + 7, w: r.width, .ghost, u: u, from: Int((r.minX * G.U).rounded()), n: l.1) }
+                if off(p) { A2.bar(&pic, "b\(p)", x: r.minX, y: r.minY + 6, w: r.width, .ghost, u: u, from: Int((r.minX * G.U).rounded()), n: l.1) }
                 else { A2.bar(&pic, "b\(p)", x: r.minX, y: r.minY, w: r.width, l.0, u: u, from: Int((r.minX * G.U).rounded()), n: l.1, nc: l.2) }
             }
             pic.sketch.from = [:]

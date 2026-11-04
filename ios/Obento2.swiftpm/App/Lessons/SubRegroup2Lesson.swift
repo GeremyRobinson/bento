@@ -15,7 +15,9 @@ struct SubRegroup2Lesson: PaperLesson {
     var liveKeys: Set<String> { ["dx", "dy"] }
     private func at(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
     static func top(_ P: SubRegroup2.Parts) -> Double { P.story ? 2 * Double(A2.storyRows(P.lines, width: 44).count) + 3 : 0 }
-    private func Y(_ P: SubRegroup2.Parts, _ r: Int) -> Double { Self.top(P) + A2.row * Double(r) }
+    /// Rows 3 squares apart, or touching (2) when a tall stack under a story would show under 75% (1st grade's Tens and ones).
+    static func row(_ P: SubRegroup2.Parts) -> Double { top(P) + 3 * Double(P.at + 1) <= 34 ? 3 : 2 }
+    private func Y(_ P: SubRegroup2.Parts, _ r: Int) -> Double { Self.top(P) + Self.row(P) * Double(r) }
 
     func told(_ s: PaperState) -> String? { let P = SubRegroup2.Parts(s.numbers); return P.story ? P.lines.joined(separator: " ") : nil }
     func recordBeside(_ n: Numbers) -> Double? { Self.top(SubRegroup2.Parts(n)) }
@@ -78,15 +80,15 @@ struct SubRegroup2Lesson: PaperLesson {
         let ring = s.on("ring") && !s.on("spot"), spot = s.on("spot")
         switch st {
         case 0:
-            if ring { KK.hintBox(&pic, "hr", x: 0, y: Y(P, 0), w: 20, h: A2.row * Double(P.at) - 1) }
+            if ring { KK.hintBox(&pic, "hr", x: 0, y: Y(P, 0), w: 20, h: Self.row(P) * Double(P.at) - 1) }
             if spot { KK.hintBox(&pic, "spot", x: 0, y: Y(P, P.at - 1), w: 20, h: 2) }
         case 1:
             if ring { KK.hintBox(&pic, "hr", x: 0, y: Y(P, P.at - 1), w: 20, h: 5) }
             if spot { pic.sketch.box("spot", pic.R(2 * Double(10 - P.bo), Y(P, P.at - 1), 2 * Double(P.bo), 2), .chapter, width: Sketch.stroke, dashed: true) }
         case 2:
-            if ring { KK.hintBox(&pic, "hr", x: 0, y: Y(P, 0), w: 20, h: A2.row * Double(P.at - 1) - 1) }
-            if spot { pic.sketch.box("spot", pic.R(0, Y(P, P.at - 1 - P.bt), 20, A2.row * Double(P.bt) - 1), .chapter, width: Sketch.stroke, dashed: true) }
-        case 3: if ring { KK.hintBox(&pic, "hr", x: 0, y: Y(P, 0), w: 20, h: A2.row * Double(P.at) + 2) }
+            if ring { KK.hintBox(&pic, "hr", x: 0, y: Y(P, 0), w: 20, h: Self.row(P) * Double(P.at - 1) - 1) }
+            if spot { pic.sketch.box("spot", pic.R(0, Y(P, P.at - 1 - P.bt), 20, Self.row(P) * Double(P.bt) - 1), .chapter, width: Sketch.stroke, dashed: true) }
+        case 3: if ring { KK.hintBox(&pic, "hr", x: 0, y: Y(P, 0), w: 20, h: Self.row(P) * Double(P.at) + 2) }
         default: break
         }
 
@@ -107,7 +109,7 @@ struct SubRegroup2Lesson: PaperLesson {
     /// Where carried dashed rows would land: 1 over the ones, 2 over the tens, 0 nowhere.
     private func over(_ P: SubRegroup2.Parts, _ w: Int, _ dx: Double, _ dy: Double) -> Int {
         let cx = Self.RX + dx + (w == 1 ? Double(P.bo) : 10)
-        let cy = (w == 1 ? Y(P, P.at) + 1 : Y(P, P.at - P.bt) + (A2.row * Double(P.bt) - 1) / 2) + dy
+        let cy = (w == 1 ? Y(P, P.at) + 1 : Y(P, P.at - P.bt) + (Self.row(P) * Double(P.bt) - 1) / 2) + dy
         guard cx > -3, cx < 23, cy > Y(P, 0) - 2, cy < Y(P, P.at) + 4 else { return 0 }
         return cy >= Y(P, P.at - 1) - 0.5 ? 1 : 2
     }
@@ -122,7 +124,7 @@ struct SubRegroup2Lesson: PaperLesson {
             Hands(
                 grab: { q in
                     if what == 1 && inBox(q, RX, Y(P, P.at), 2 * Double(P.bo), 2) { return ["grab": 1, "w": 1, "gx": q.x, "gy": q.y, "dx": 0, "dy": 0] }
-                    if inBox(q, RX, Y(P, P.at - P.bt), 20, A2.row * Double(P.bt) - 1) { return what == 2 ? ["grab": 1, "w": 2, "gx": q.x, "gy": q.y, "dx": 0, "dy": 0] : ["grab": 1, "w": 0] }
+                    if inBox(q, RX, Y(P, P.at - P.bt), 20, Self.row(P) * Double(P.bt) - 1) { return what == 2 ? ["grab": 1, "w": 2, "gx": q.x, "gy": q.y, "dx": 0, "dy": 0] : ["grab": 1, "w": 0] }
                     return nil
                 },
                 drag: { q, held in
@@ -147,7 +149,7 @@ struct SubRegroup2Lesson: PaperLesson {
         case 0:
             return Hands(tap: { q in
                 guard q.x >= -0.5, q.x <= 20.5 else { return nil }
-                let r = Int(((q.y - Self.top(P) + 0.5) / A2.row).rounded(.down))
+                let r = Int(((q.y - Self.top(P) + 0.5) / Self.row(P)).rounded(.down))
                 if r == P.at { return HandMove(hand: nil, missHand: nil, set: [("k", -1)], check: true) }
                 guard r >= 0, r < P.at else { return nil }
                 return HandMove(hand: nil, missHand: nil, set: [("k", 1)], keep: ["r": Double(r)], check: true)

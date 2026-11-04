@@ -15,7 +15,9 @@ struct Regroup2Lesson: PaperLesson {
     var liveKeys: Set<String> { ["dx", "dy"] }
     private func at(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
     static func top(_ P: Regroup2.Parts) -> Double { P.story ? 2 * Double(A2.storyRows(P.lines, width: 44).count) + 3 : 0 }
-    private func Y(_ P: Regroup2.Parts, _ r: Int) -> Double { Self.top(P) + A2.row * Double(r) }
+    /// Rows 3 squares apart, or touching (2) when a tall stack under a story would show under 75% (1st grade's Tens and ones).
+    static func row(_ P: Regroup2.Parts) -> Double { top(P) + 3 * Double(P.T + 1) <= 34 ? 3 : 2 }
+    private func Y(_ P: Regroup2.Parts, _ r: Int) -> Double { Self.top(P) + Self.row(P) * Double(r) }
 
     func told(_ s: PaperState) -> String? { let P = Regroup2.Parts(s.numbers); return P.story ? P.lines.joined(separator: " ") : nil }
     func recordBeside(_ n: Numbers) -> Double? { Self.top(Regroup2.Parts(n)) }
@@ -66,9 +68,9 @@ struct Regroup2Lesson: PaperLesson {
             if ring { KK.hintBox(&pic, "hr", x: 0, y: Y(P, P.at), w: 20, h: P.left > 0 ? 5 : 2) }
             if spot { KK.hintBox(&pic, "spot", x: -0.5, y: Y(P, P.at) - 0.5, w: 21, h: 3) }
         case 2:
-            if ring { KK.hintBox(&pic, "hr", x: 0, y: Y(P, 0), w: 20, h: A2.row * Double(P.at + 1) - 1) }
-            if spot { pic.sketch.box("spot", pic.R(0, Y(P, P.at + 1), 20, A2.row * Double(P.bt) - 1), .chapter, width: Sketch.stroke, dashed: true) }
-        case 3: if ring { KK.hintBox(&pic, "hr", x: 0, y: Y(P, 0), w: 20, h: A2.row * Double(P.T) + 2) }
+            if ring { KK.hintBox(&pic, "hr", x: 0, y: Y(P, 0), w: 20, h: Self.row(P) * Double(P.at + 1) - 1) }
+            if spot { pic.sketch.box("spot", pic.R(0, Y(P, P.at + 1), 20, Self.row(P) * Double(P.bt) - 1), .chapter, width: Sketch.stroke, dashed: true) }
+        case 3: if ring { KK.hintBox(&pic, "hr", x: 0, y: Y(P, 0), w: 20, h: Self.row(P) * Double(P.T) + 2) }
         default: break
         }
 
@@ -86,7 +88,7 @@ struct Regroup2Lesson: PaperLesson {
     /// Where carried rows would land: 1 a's ones, 2 a's tens, 0 nowhere.
     private func over(_ P: Regroup2.Parts, _ w: Int, _ dx: Double, _ dy: Double) -> Int {
         let cx = Self.RX + dx + (w == 1 ? Double(P.bo) : 10)
-        let cy = (w == 1 ? Y(P, P.bt) + 1 : Y(P, 0) + (A2.row * Double(P.bt) - 1) / 2) + dy
+        let cy = (w == 1 ? Y(P, P.bt) + 1 : Y(P, 0) + (Self.row(P) * Double(P.bt) - 1) / 2) + dy
         guard cx > -3, cx < 23 else { return 0 }
         return cy >= Y(P, P.at) - 1.5 ? 1 : 2
     }
@@ -97,7 +99,7 @@ struct Regroup2Lesson: PaperLesson {
     func hands(_ s: PaperState) -> Hands? {
         let P = Regroup2.Parts(s.numbers), RX = Self.RX, st = at(s)
         func inBox(_ q: CGPoint, _ x: Double, _ y: Double, _ w: Double, _ h: Double) -> Bool { q.x >= x - 0.5 && q.x <= x + w + 0.5 && q.y >= y - 0.5 && q.y <= y + h + 0.5 }
-        let tensBox = (RX, Y(P, 0), 20.0, A2.row * Double(P.bt) - 1)
+        let tensBox = (RX, Y(P, 0), 20.0, Self.row(P) * Double(P.bt) - 1)
         func carry(_ what: Int) -> Hands {
             Hands(
                 grab: { q in
@@ -125,7 +127,7 @@ struct Regroup2Lesson: PaperLesson {
         case 1:
             return Hands(tap: { q in
                 guard q.x >= -0.5, q.x <= 20.5 else { return nil }
-                let c = Int(((q.y - Self.top(P) + 0.5) / A2.row).rounded(.down)) - P.at
+                let c = Int(((q.y - Self.top(P) + 0.5) / Self.row(P)).rounded(.down)) - P.at
                 if c == 0 { return HandMove(hand: nil, missHand: nil, set: [("g", 1)], check: true) }
                 if c == 1 && P.left > 0 { return HandMove(hand: nil, missHand: nil, set: [("g", -1)], check: true) }
                 return nil
