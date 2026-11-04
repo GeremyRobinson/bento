@@ -204,6 +204,11 @@ extension Piece {
         case "g1-equal": return [box(7, 2, 1, 3)]                                 // where the rows end
         case "g1-story": return [box(6, 2, 3, 1)]                               // the ones that came
         case "g1-more": return [box(6, 1, 3, 1)]                                // the ones with no partner
+        // 1st grade, Numbers to 120 (4 Nov)
+        case "g1-count120": return [box(7, 2, 3, 1), box(0, 3, 2, 1)]           // the count on, past a row's end
+        case "g1-tensones": return [box(0, 0.5, 10, 1)]                         // a ten
+        case "g1-compare": return [box(5.5, 3.5, 4.5, 1)]                       // the ten more
+        case "g1-tenmore": return [box(4, 3.5, 1, 1)]                           // one row down
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -378,6 +383,23 @@ extension Piece {
             }
         case "gk-count100": // the hundred chart's top rows: 10 by 6
             return [box(0, 0, 10, 6)] + (1..<10).map { x in line((Double(x), 0), (Double(x), 6)) } + (1..<6).map { y in line((0, Double(y)), (10, Double(y))) }
+        // 1st grade, Numbers to 120 (4 Nov)
+        case "g1-count120": // four rows of the 120 chart: 10 by 4, from row 1
+            return [box(0, 1, 10, 4)] + (1..<10).map { x in line((Double(x), 1), (Double(x), 5)) } + [2.0, 3, 4].map { y in line((0, y), (10, y)) }
+        case "g1-tensones": // three tens closed into rows, four ones under them: 10 by 6
+            func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.4 * cos(a), y + 0.4 * sin(a)) } }
+            var out: [[CGPoint]] = []
+            for r in 0..<3 { out.append(box(0, 0.5 + 1.5 * Double(r), 10, 1)) }
+            for j in 0..<4 { out.append(dot(Double(j) + 0.5, 5)) }
+            return out
+        case "g1-compare": // two stacks of tens side by side, the right one a ten taller: 10 by 6
+            var out: [[CGPoint]] = []
+            for r in 0..<3 { out.append(box(0, 0.5 + Double(r), 4.5, 1)) }
+            for r in 0..<4 { out.append(box(5.5, 0.5 + Double(r), 4.5, 1)) }
+            return out + [line((0, 5.5), (2, 5.5)), line((5.5, 5.5), (7, 5.5))]
+        case "g1-tenmore": // three rows of the chart, a number ringed, one row down lit: 10 by 3, from row 1.5
+            let ring = (0...24).map { k in let a = Double(k) / 24 * 2 * .pi; return P(4.5 + 0.7 * cos(a), 3 + 0.7 * sin(a)) }
+            return [box(0, 1.5, 10, 3)] + (1..<10).map { x in line((Double(x), 1.5), (Double(x), 4.5)) } + [2.5, 3.5].map { y in line((0, y), (10, y)) } + [ring]
         // 1st grade, Add and take away to 20 (4 Nov)
         case "g1-add20", "g1-sub20", "g1-ten", "g1-doubles", "g1-three", "g1-related", "g1-missing", "g1-equal", "g1-story", "g1-more":
             func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.4 * cos(a), y + 0.4 * sin(a)) } }

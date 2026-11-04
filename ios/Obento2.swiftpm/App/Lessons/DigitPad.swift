@@ -13,30 +13,47 @@ enum DigitPad {
     static let rubOut = 10
     static let digit = Sketch.Words(size: Sketch.maths, weight: .medium, colour: .ink)
 
+    /// How the keys are laid out: one row (0–9, then the rub-out: 44 × 4 squares, Check two squares right of it), or a
+    /// grid beside a tall picture (1 2 3 / 4 5 6 / 7 8 9 / 0 and the rub-out: 12 × 16 squares, Check a square under it).
+    enum Layout { case row, grid }
+    /// Key k's top-left (0–9, or `rubOut`).
+    static func corner(_ k: Int, x: Double, y: Double, _ layout: Layout = .row) -> CGPoint {
+        switch layout {
+        case .row: return CGPoint(x: x + key * Double(k), y: y)
+        case .grid:
+            if k == 0 { return CGPoint(x: x + key, y: y + 3 * key) }
+            if k == rubOut { return CGPoint(x: x + 2 * key, y: y + 3 * key) }
+            return CGPoint(x: x + key * Double((k - 1) % 3), y: y + key * Double((k - 1) / 3))
+        }
+    }
+
     /// The pad from (x, y): its keys, and a hint's ring round key `spot`.
-    static func draw(_ pen: inout GridPen, _ id: String, x: Double, y: Double, spot: Int? = nil) {
+    static func draw(_ pen: inout GridPen, _ id: String, x: Double, y: Double, spot: Int? = nil, _ layout: Layout = .row) {
         for i in 0...rubOut {
-            let kx = x + key * Double(i)
-            pen.sketch.box("\(id)k\(i)", pen.R(kx, y, key, key), .ink3, width: Sketch.stroke)
+            let c = corner(i, x: x, y: y, layout), kx = c.x, ky = c.y
+            pen.sketch.box("\(id)k\(i)", pen.R(kx, ky, key, key), .ink3, width: Sketch.stroke)
             if i < rubOut {
-                pen.word("\(id)n\(i)", "\(i)", at: kx + key / 2, y + key / 2, digit)
+                pen.word("\(id)n\(i)", "\(i)", at: kx + key / 2, ky + key / 2, digit)
             } else {
                 // a rub-out: a key-shaped outline pointing left
                 let m = key / 2
-                pen.line("\(id)x", [(kx + m - 1.3, y + m), (kx + m - 0.5, y + m - 0.8), (kx + m + 1.3, y + m - 0.8), (kx + m + 1.3, y + m + 0.8), (kx + m - 0.5, y + m + 0.8), (kx + m - 1.3, y + m)], .ink2)
+                pen.line("\(id)x", [(kx + m - 1.3, ky + m), (kx + m - 0.5, ky + m - 0.8), (kx + m + 1.3, ky + m - 0.8), (kx + m + 1.3, ky + m + 0.8), (kx + m - 0.5, ky + m + 0.8), (kx + m - 1.3, ky + m)], .ink2)
             }
         }
-        if let spot { KK.hintBox(&pen, "\(id)spot", x: x + key * Double(spot), y: y, w: key, h: key) }
+        if let spot { let c = corner(spot, x: x, y: y, layout); KK.hintBox(&pen, "\(id)spot", x: c.x, y: c.y, w: key, h: key) }
     }
     /// The key tapped (0–9, or `rubOut`), or nil.
-    static func tapped(_ q: CGPoint, x: Double, y: Double) -> Int? {
-        guard q.y >= y, q.y <= y + key, q.x >= x, q.x < x + width else { return nil }
-        return min(rubOut, Int((q.x - x) / key))
+    static func tapped(_ q: CGPoint, x: Double, y: Double, _ layout: Layout = .row) -> Int? {
+        (0...rubOut).first { let c = corner($0, x: x, y: y, layout); return q.x >= c.x && q.x < c.x + key && q.y >= c.y && q.y <= c.y + key }
     }
     /// The middle of key `k`: where the ghost finger taps.
-    static func spot(_ k: Int, x: Double, y: Double) -> CGPoint { CGPoint(x: x + key * Double(k) + key / 2, y: y + key / 2) }
-    /// Where the lesson's Check block goes: two squares right of the pad.
-    static func checkAt(x: Double, y: Double) -> CGPoint { CGPoint(x: x + width + 2, y: y) }
+    static func spot(_ k: Int, x: Double, y: Double, _ layout: Layout = .row) -> CGPoint {
+        let c = corner(k, x: x, y: y, layout); return CGPoint(x: c.x + key / 2, y: c.y + key / 2)
+    }
+    /// Where the lesson's Check block goes: two squares right of the pad's row, or a square under its grid.
+    static func checkAt(x: Double, y: Double, _ layout: Layout = .row) -> CGPoint {
+        layout == .row ? CGPoint(x: x + width + 2, y: y) : CGPoint(x: x, y: y + 4 * key + 1)
+    }
 
     /// The number in the box after key `k`: a digit on the end (`fresh`: the box starts again, after a miss), the last
     /// digit rubbed out (nil: empty), at most `most` digits.
@@ -48,24 +65,25 @@ enum DigitPad {
     }
 
     /// A step's box written with the pad: what's in it, and whether it's red (it was checked as it is and it's wrong).
-    static func typed(_ s: PaperState, _ box: String, want: Int) -> (value: Int?, wrong: Bool) {
+    /// `chk`: the kept key that holds what was last checked (a lesson with two boxes keeps one for each).
+    static func typed(_ s: PaperState, _ box: String, want: Int, chk: String = "chk") -> (value: Int?, wrong: Bool) {
         let v = s.typed[box].flatMap { Double($0) }.map { Int($0.rounded()) }
-        let checked = s.run.kept["chk"].map { Int($0.rounded()) }
+        let checked = s.run.kept[chk].map { Int($0.rounded()) }
         return (v, v != nil && v == checked && v != want)
     }
     /// The pad's hands: its keys on the picture, and Check.
-    static func hands(_ s: PaperState, _ box: String, want: Int, x: Double, y: Double) -> Hands {
-        let (v, wrong) = typed(s, box, want: want)
+    static func hands(_ s: PaperState, _ box: String, want: Int, x: Double, y: Double, _ layout: Layout = .row, chk: String = "chk", most: Int = 3) -> Hands {
+        let (v, wrong) = typed(s, box, want: want, chk: chk)
         return Hands(tap: { q in
-            guard let k = tapped(q, x: x, y: y) else { return nil }
-            return HandMove(hand: nil, missHand: nil, set: [(box, press(k, v, fresh: wrong).map(Double.init))], check: false)
+            guard let k = tapped(q, x: x, y: y, layout) else { return nil }
+            return HandMove(hand: nil, missHand: nil, set: [(box, press(k, v, fresh: wrong, most: most).map(Double.init))], check: false)
         }, actions: ["Check": {
             guard let v else { return HandMove(hand: nil, missHand: nil) }
-            return HandMove(hand: nil, missHand: nil, set: [(box, Double(v))], keep: ["chk": Double(v)], check: true)
+            return HandMove(hand: nil, missHand: nil, set: [(box, Double(v))], keep: [chk: Double(v)], check: true)
         }])
     }
     /// Show me: the number's digits tapped, then Check.
-    static func demo(_ n: Int, x: Double, y: Double) -> [GhostMove] {
-        String(n).compactMap { $0.wholeNumberValue }.map { .tap(.picture(spot($0, x: x, y: y))) } + [.tap(.action("Check"))]
+    static func demo(_ n: Int, x: Double, y: Double, _ layout: Layout = .row) -> [GhostMove] {
+        String(n).compactMap { $0.wholeNumberValue }.map { .tap(.picture(spot($0, x: x, y: y, layout))) } + [.tap(.action("Check"))]
     }
 }

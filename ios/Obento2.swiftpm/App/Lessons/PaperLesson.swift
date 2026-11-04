@@ -253,6 +253,11 @@ enum PaperLessons {
         case "g1-equal": return Equal1Lesson()
         case "g1-story": return Story1Lesson()
         case "g1-more": return More1Lesson()
+        // 1st grade, Numbers to 120 (4 Nov 2026)
+        case "g1-count120": return Count120Lesson()
+        case "g1-tensones": return TensOnes1Lesson()
+        case "g1-compare": return Compare1Lesson()
+        case "g1-tenmore": return TenMore1Lesson()
         default: return nil
         }
     }
