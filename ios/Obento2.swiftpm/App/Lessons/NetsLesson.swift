@@ -154,10 +154,10 @@ struct NetsLesson: PaperLesson {
                     if s.grabbed { live.reads("\(n) of \(S.nF) faces") }
                 }
                 if at == 1 && s.on("ring"), let b = St.bounds(solids.points) { A7.ring(&pic, "ring", x: b.minX, y: b.minY, w: b.width, h: b.height) }
-            } else {
-                labels(&pic, S, lit: [])
-                if at == 1 && s.on("ring") { A7.ring(&pic, "ring", x: 0, y: 0, w: N.width * U, h: N.height * U) }
-            }
+            } else if at == 1 && s.on("ring") { A7.ring(&pic, "ring", x: 0, y: 0, w: N.width * U, h: N.height * U) }
+            // the net's names stand with it: on their faces in 3D from the first frame of the tilt, folding up with them
+            let ang = { (i: Int) -> Double in held == i ? S.face(i).turn * a : folded(s, i) ? S.face(i).turn : 0 }
+            standingNames(&solids, S, angle: ang)
             if at == 1 && s.on("spot") {
                 // the next face to fold: its fold line, dashed
                 if let i = (1..<S.nF).first(where: { !folded(s, $0) && (S.face($0).parent == "base" || S.index(S.face($0).parent).map { folded(s, $0) } == true) }) {
@@ -172,7 +172,10 @@ struct NetsLesson: PaperLesson {
             // flat again: the box opens (after it's stood closed a moment), the faces lit as they're tapped
             let litNow = (0..<S.nF).filter { lit(s, $0) }
             solids = S.solids({ _ in 0 }, look: { litNow.contains($0) ? .paint(A7.strong) : .auto }, delay: at == 2 ? 1.2 : 0)
+            // back on the paper once it lies flat again (while the closed box still stands, they wait)
+            if s.standEye != nil { pic.sketch.startAt = PaperClock.now + lingers(s) + TiltCamera.beat }
             labels(&pic, S, lit: Set(litNow))
+            pic.sketch.startAt = nil
             // the running total under the net
             let order = (0..<Int(s.h("no") ?? s.run.kept["no"] ?? 0)).map { Int(s.h("o\($0)") ?? s.run.kept["o\($0)"] ?? 0) }
             if !order.isEmpty && at == 2 {
@@ -199,6 +202,66 @@ struct NetsLesson: PaperLesson {
     /// The flat net's names: its outer sides (tops no other face shares, and its left end), a triangle's height dashed, and
     /// the areas written in the lit faces.
     private func labels(_ pen: inout GridPen, _ S: Shape, lit: Set<Int>) {
+        for n in names(S, lit: lit) {
+            if let l = n.line { pen.line(n.id, [(l.0.x, l.0.y), (l.1.x, l.1.y)], .ink2, dashed: true) }
+            else { pen.label(n.id, n.text, n.words, n.side, edge: n.edge, along: n.along) }
+        }
+        let U = S.U, faces = S.N.faces
+        for j in lit.sorted() {
+            let f = faces[j], c = A7.centroid(S.sq(f))
+            let one = "\(f.w) × \(f.h)\(f.tri ? " ÷ 2" : "") = \(f.A)", room = (f.tri ? Double(f.n.0 != 0 ? f.h : f.w) * 0.6 : Double(f.w)) * U - 0.8
+            if R6.width(one, A7.small.colour(.ink)) <= room { pen.word("ar\(f.id)", one, at: c.x, c.y, A7.small.colour(.ink)) }
+            else {
+                pen.word("ar\(f.id)a", "\(f.w) × \(f.h)\(f.tri ? " ÷ 2" : "")", at: c.x, c.y - 0.6, A7.small.colour(.ink))
+                pen.word("ar\(f.id)b", "= \(f.A)", at: c.x, c.y + 0.6, A7.small.colour(.ink))
+            }
+        }
+    }
+
+    /// One of the net's names: a label on a side of its face (j), or a triangle's dashed height (`line`).
+    private struct Name { var id: String; var text = ""; var words = A7.small; var side = GridPen.Side.above; var edge = 0.0; var along = 0.0; var face: Int
+        var line: (CGPoint, CGPoint)? = nil }
+
+    /// The same names standing with the net (shared 3D): each label on its 3D point, carried with its face as it folds (so
+    /// they turn with the paper from the tilt's first frame, never left floating where the flat paper had them), the heights
+    /// as lines on their faces. Two that fold onto one place show once.
+    private func standingNames(_ so: inout Solids, _ S: Shape, angle: (Int) -> Double) {
+        let faces = so.faces
+        func carry(_ p: Vec3, _ i: Int) -> Vec3 {
+            var pt = p, at: Solids.Face? = faces[i]
+            while let g = at {
+                if let h = g.hinge { pt = Solids.turn(pt, g, h, angle(S.index(g.id) ?? 0)) }
+                at = g.parent.flatMap { p in faces.first { $0.id == p } }
+            }
+            return pt
+        }
+        var shown: [(String, Vec3)] = []
+        for n in names(S, lit: []) {
+            if let l = n.line {
+                so.lines.append(Solids.Line(id: n.id, pts: [carry(Vec3(l.0.x, l.0.y, 0.01), n.face), carry(Vec3(l.1.x, l.1.y, 0.01), n.face)], colour: .ink2, dashed: true))
+                continue
+            }
+            // where GridPen.label puts its ink: half a square off the edge, a centred line on its capitals' middle
+            let cap = Double(PaperText.font(n.words.size, n.words.weight, digits: true).capHeight) / Paper.cell
+            let (x, y, anchor): (Double, Double, UnitPoint) = {
+                switch n.side {
+                case .above: return (n.along, n.edge - 0.5 - cap / 2, .center)
+                case .below: return (n.along, n.edge + 0.5 + cap / 2, .center)
+                case .left: return (n.edge - 0.5, n.along, UnitPoint(x: 1, y: 0.5))
+                case .right: return (n.edge + 0.5, n.along, UnitPoint(x: 0, y: 0.5))
+                }
+            }()
+            let p = carry(Vec3(x, y, 0), n.face)
+            if shown.contains(where: { $0.0 == n.text && ($0.1 - p).length < 1.2 }) { continue }
+            shown.append((n.text, p))
+            so.labels.append(Solids.Label(id: n.id, text: n.text, at: p, words: n.words, anchor: anchor))
+        }
+    }
+
+    /// The flat net's names: its outer sides (tops no other face shares, and its left end), a pyramid's base, a triangle's
+    /// height dashed (with its number).
+    private func names(_ S: Shape, lit: Set<Int>) -> [Name] {
+        var out: [Name] = []
         let U = S.U, faces = S.N.faces
         let edges = faces.enumerated().flatMap { j, f in f.pts.indices.map { (j, f.pts[$0], f.pts[($0 + 1) % f.pts.count]) } }
         func same(_ a: (Double, Double), _ b: (Double, Double)) -> Bool { abs(a.0 - b.0) < 1e-4 && abs(a.1 - b.1) < 1e-4 }
@@ -209,34 +272,26 @@ struct NetsLesson: PaperLesson {
         for e in edges where !shared(e) {
             let f = faces[e.0], pts = S.sq(f), (a, b) = (e.1, e.2)
             if a.1 == b.1 && a.0 != b.0, !A7.inside(pts, CGPoint(x: (a.0 + b.0) / 2 * U, y: a.1 * U - 0.05)) {
-                pen.label("nl\(k)", fmt(abs(b.0 - a.0)), A7.words, .above, edge: a.1 * U, along: (a.0 + b.0) / 2 * U); k += 1
+                out.append(Name(id: "nl\(k)", text: fmt(abs(b.0 - a.0)), words: A7.words, side: .above, edge: a.1 * U, along: (a.0 + b.0) / 2 * U, face: e.0)); k += 1
             }
             if a.0 == b.0 && a.0 == 0 && a.1 != b.1 {
-                pen.label("nl\(k)", fmt(abs(b.1 - a.1)), A7.words, .left, edge: 0, along: (a.1 + b.1) / 2 * U); k += 1
+                out.append(Name(id: "nl\(k)", text: fmt(abs(b.1 - a.1)), words: A7.words, side: .left, edge: 0, along: (a.1 + b.1) / 2 * U, face: e.0)); k += 1
             }
         }
         if S.N.kind == .pyramid && !lit.contains(0) {
             let b = faces[0].pts
-            pen.label("bs", "\(faces[0].w)", A7.small, .below, edge: b[2].1 * U, along: (b[0].0 + b[1].0) / 2 * U)
+            out.append(Name(id: "bs", text: "\(faces[0].w)", words: A7.small, side: .below, edge: b[2].1 * U, along: (b[0].0 + b[1].0) / 2 * U, face: 0))
         }
         for (j, f) in faces.enumerated() where f.tri && !lit.contains(j) {
             // a triangle's height, dashed from its tip to its base (unless it's a side already)
             let ap = f.pts[2], dd = (ap.0 - f.P.0) * f.n.0 + (ap.1 - f.P.1) * f.n.1, ft = (ap.0 - dd * f.n.0, ap.1 - dd * f.n.1)
             if same(ft, f.pts[0]) || same(ft, f.pts[1]) { continue }
-            pen.line("th\(f.id)", [(ap.0 * U, ap.1 * U), (ft.0 * U, ft.1 * U)], .ink2, dashed: true)
+            out.append(Name(id: "th\(f.id)", face: j, line: (CGPoint(x: ap.0 * U, y: ap.1 * U), CGPoint(x: ft.0 * U, y: ft.1 * U))))
             let m = ((ap.0 + ft.0) / 2 * U, (ap.1 + ft.1) / 2 * U)
-            if f.n.0 != 0 { pen.label("thl\(f.id)", "\(f.h)", A7.small, .above, edge: m.1 - 0.1, along: m.0) }
-            else { pen.label("thl\(f.id)", "\(f.h)", A7.small, .right, edge: m.0 + 0.1, along: m.1) }
+            if f.n.0 != 0 { out.append(Name(id: "thl\(f.id)", text: "\(f.h)", words: A7.small, side: .above, edge: m.1 - 0.1, along: m.0, face: j)) }
+            else { out.append(Name(id: "thl\(f.id)", text: "\(f.h)", words: A7.small, side: .right, edge: m.0 + 0.1, along: m.1, face: j)) }
         }
-        for j in lit.sorted() {
-            let f = faces[j], c = A7.centroid(S.sq(f))
-            let one = "\(f.w) × \(f.h)\(f.tri ? " ÷ 2" : "") = \(f.A)", room = (f.tri ? Double(f.n.0 != 0 ? f.h : f.w) * 0.6 : Double(f.w)) * U - 0.8
-            if R6.width(one, A7.small.colour(.ink)) <= room { pen.word("ar\(f.id)", one, at: c.x, c.y, A7.small.colour(.ink)) }
-            else {
-                pen.word("ar\(f.id)a", "\(f.w) × \(f.h)\(f.tri ? " ÷ 2" : "")", at: c.x, c.y - 0.6, A7.small.colour(.ink))
-                pen.word("ar\(f.id)b", "= \(f.A)", at: c.x, c.y + 0.6, A7.small.colour(.ink))
-            }
-        }
+        return out
     }
 
     // MARK: the hands
