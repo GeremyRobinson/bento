@@ -190,6 +190,13 @@ enum PaperLessons {
         case "g6-poly": return PolyLesson()
         case "g6-nets": return NetsLesson()
         case "g6-fracvol": return FracVolLesson()
+        // 6th grade, Data (4 Nov 2026)
+        case "g6-dotplot": return DotPlotLesson()
+        case "g6-histogram": return HistogramLesson()
+        case "g6-mean": return MeanLesson()
+        case "g6-mad": return MadLesson()
+        case "g6-median": return MedianLesson()
+        case "g6-boxplot": return BoxPlotLesson()
         default: return nil
         }
     }

@@ -64,8 +64,8 @@ public enum Curriculum {
             MapLesson("g4-angles", "Angles add up"), MapLesson("g4-classify", "Sorting by sides and angles"), MapLesson("g4-symmetry", "Lines of symmetry")]),
     ]
 
-    /// 6th grade (design/grade6.md): 36 lessons in 8 chapters, in teaching order. Chapters 1 and 2 are built (3 Nov), 3, 4, 5 and 6 on 4 Nov; the map
-    /// shows only built chapters (call of 3 Nov), so the rest wait off it.
+    /// 6th grade (design/grade6.md): 36 lessons in 8 chapters, in teaching order. Chapters 1 and 2 are built (3 Nov), 3 to 8 on 4 Nov: every
+    /// chapter is on the map, and the grade's test under them.
     static let grade6: [MapChapter] = [
         MapChapter("g6-ratios", "Ratios and percents", colour: "fractions", [
             MapLesson("g6-ratio", "Equivalent ratios"), MapLesson("g6-ratiotable", "Ratio tables"), MapLesson("g6-rate", "Unit rates"),

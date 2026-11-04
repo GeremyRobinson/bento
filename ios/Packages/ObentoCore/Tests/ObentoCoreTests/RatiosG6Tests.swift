@@ -33,9 +33,8 @@ final class RatiosG6Tests: XCTestCase {
         XCTAssertEqual(ch.test, "test-g6-ratios")
         XCTAssertTrue(Curriculum.built(ch))
         for l in ch.lessons { XCTAssertEqual(Lessons.spec(l.id)?.title, l.name) }
-        // chapters 1 to 7 are built: the rest stay off the map
-        XCTAssertTrue(chapters.prefix(7).allSatisfy(Curriculum.built))
-        XCTAssertFalse(chapters.dropFirst(7).contains(where: Curriculum.built))
+        // every chapter is built (the last, Data, on 4 Nov)
+        XCTAssertTrue(chapters.allSatisfy(Curriculum.built))
         XCTAssertEqual(Curriculum.grade(of: "g6-ratiotable"), 6)
         XCTAssertEqual(Curriculum.gradeTest(6), "test-grade-6")
         // every 6th grade id is its own
