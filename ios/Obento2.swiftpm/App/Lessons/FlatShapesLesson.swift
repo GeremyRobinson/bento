@@ -98,7 +98,11 @@ struct FlatShapesLesson: PaperLesson {
             KS.blocks(&pic, "nm", P.choices.map(ShapesK.cap), names(P), wrong: wrong, spot: s.on("spot") ? P.right : nil, ring: s.on("ring") && !s.on("spot"))
         }
         // room for the names (and the record) beside it on every step, so the camera holds still
-        let room = st >= 2 ? pic.R(-1, 0, Self.names.x + 16, max(Self.top + Double(P.height) + 3, Self.names.y + 20)) : pic.R(-1, 0, 38, Self.top + Double(P.height) + 3)
+        // split up: GitHub's older compiler can't read it on one line
+        let below: Double = Self.top + Double(P.height) + 3
+        let wide: Double = Self.names.x + 16
+        let tall: Double = max(below, Self.names.y + 20)
+        let room = st >= 2 ? pic.R(-1, 0, wide, tall) : pic.R(-1, 0, 38, below)
         return PaperDrawing(picture: pic.sketch, extent: room)
     }
 

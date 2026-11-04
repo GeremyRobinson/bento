@@ -204,14 +204,18 @@ struct Equal1Lesson: PaperLesson {
                 },
                 drag: { q, held in
                     var held = held
-                    let i = Int(held["side"] ?? 0), dx = (q.x - (held["gx"] ?? q.x)).rounded(), dy = (q.y - (held["gy"] ?? q.y)).rounded()
+                    let i = Int(held["side"] ?? 0)
+                    let gx: Double = held["gx"] ?? q.x, gy: Double = held["gy"] ?? q.y
+                    let dx: Double = (q.x - gx).rounded(), dy: Double = (q.y - gy).rounded()
                     if P.sides[i].t == 1 { var g = max(0, min(Self.gap + 3, Self.gap + dx)); if g < 1.5 { g = 0 }; held["dx"] = g }
                     else { held["dx"] = dx; held["dy"] = dy }
                     return held
                 },
                 release: { held in
                     let i = Int(held["side"] ?? 0), side = P.sides[i]
-                    let made = side.t == 1 ? (held["dx"] ?? 1) == 0 : ((held["dx"] ?? 0) * (held["dx"] ?? 0) + (held["dy"] ?? 0) * (held["dy"] ?? 0)) > 16
+                    let hx: Double = held["dx"] ?? 0, hy: Double = held["dy"] ?? 0
+                    let far: Bool = hx * hx + hy * hy > 16
+                    let made: Bool = side.t == 1 ? (held["dx"] ?? 1) == 0 : far
                     guard made else { return HandMove(hand: [:]) }
                     let key = i == 0 ? "jL" : "jR"
                     let all = P.sides.indices.allSatisfy { $0 == i || joinedNow($0) }
