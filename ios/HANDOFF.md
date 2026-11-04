@@ -444,6 +444,21 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   `page-g2-facts-0 -numbers a=8,b=5,kind=0 -drag 4.5,5.5,26,1.5`, `page-g2-regroup-1 -numbers a=47,b=38,story=0 -tapsq 5,16,5,13 -tapgap 2.5`,
   `page-g2-subregroup-0 -numbers a=52,b=27,story=1`, `page-g2-addfour-0 -numbers n=3,n0=27,n1=34,n2=16 -drag 26,10.5,8,11 -hold`,
   `page-g2-story-1 -numbers kind=9,W=46,p1=21,more=0,who=2,other=3,th=2`, `page-g2-twostep-2 -numbers kind=1,s=34,d=15,th=1`, `bar-grade-open -grade 2`.
+- 2nd grade chapter 2, Numbers to 1000, is built (4 Nov; Core: `Numbers2` (`Num2` number names, `Hundreds2` g2-hundreds, `Skip2`
+  g2-skip, `Compare2` g2-compare, `Within2` g2-within1000), tests `Numbers2Tests`; App: `Hundreds2Lesson`, `Skip2Lesson`, `Compare2Lesson`,
+  `Within2Lesson`, their shared `NumKit2` (`N2`: base-ten pieces, a tight number drawn a digit at a time with one ringed tall and narrow,
+  Rounding's lines)). Pink. As the preview (`design/prototype/grade2-ch2.html`), its words, slips and generators word for word; typed with
+  the iPad's keys. Departures: the number is written once in the record (under the tens and ones) from the start, its digit being built
+  ringed and its column's name lit, not over the columns (nine hundreds were 68%); a number told in words is written there in words
+  and said as the problem opens (`told`), not on the top rows; seven or more hundreds' flats touch row to row; the tenth ten (or one)
+  slides into a hundred and stays until the next tap; Skip counting's note after a hundred ("10 tens make a hundred…") goes with the
+  next hop's line, and not for hops of 100; Compare's sign blocks are drawn 3 × 4 under the record and answer on the tap; Within 1000's
+  three hops are written in one row under the lines, the sum 5 rows under them (so a miss with the keys up has its rows clear). Skip
+  counting and Within 1000 draw their lines in the record pen (recordRow 0) or picture so keys-up misses land clear (see each file).
+  `Spoken` says "<, = or >" as "less than, equals or greater than". Least zooms: 76%, 95%, 76%, 76%; keys up 75%. Shots e.g.
+  `page-g2-hundreds-1 -numbers n=347,named=0,mix=1 -wrong`, `page-g2-hundreds-4 -numbers n=605,named=2,mix=3 -wrong`,
+  `page-g2-skip-0 -numbers start=15,by=5,back=0 -drag 0,7,6,7 -hold`, `page-g2-compare-2 -numbers a=427,b=461 -wrong`,
+  `page-g2-within1000-1 -numbers a=245,b=132,sub=0 -drag 13.5,12,22.5,12 -hold`, `select-g2-hundreds -grade 2`.
 - 1st grade Build with solids (4 Nov): Show me filmed, it plays all three pieces and puts everything back; the ghost solid's dashed
   rims and edges draw only once the paper is up (`Solids.Line.whenUp`).
 ## How the code is laid out
