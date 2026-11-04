@@ -267,6 +267,11 @@ enum PaperLessons {
         case "g1-time": return Time1Lesson()
         case "g1-picgraph": return PicGraph1Lesson()
         case "g1-tally": return Tally1Lesson()
+        // 1st grade, Shapes and equal parts (4 Nov 2026)
+        case "g1-shapes": return WhatShape1Lesson()
+        case "g1-compose": return Compose1Lesson()
+        case "g1-build": return Build1Lesson()
+        case "g1-halves": return Halves1Lesson()
         default: return nil
         }
     }

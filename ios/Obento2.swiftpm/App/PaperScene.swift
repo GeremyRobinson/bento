@@ -219,6 +219,15 @@ extension Piece {
         case "g1-time": return [box(0, 5, 5, 1)]                                // half the hour, on the strip
         case "g1-picgraph": return [box(0, 1, 8, 1)]                            // the longest row
         case "g1-tally": return [box(0, 1, 4.5, 1.2)]                           // a bundle of five
+        // 1st grade, Shapes and equal parts (4 Nov)
+        case "g1-shapes", "g1-compose", "g1-build":
+            func q(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: at.x + x * c, y: at.y + y * c) }
+            switch id {
+            case "g1-shapes": return [[q(0, 6), q(7, 6), q(2, 0)]]                 // the triangle traced
+            case "g1-compose": return [[q(0, 3), q(6, 3), q(4.5, 6), q(1.5, 6)]]   // the trapezoid slid in
+            default: return [[q(2, 1.5), q(5, 1.5), q(4, 3), q(1, 3)]]             // the box's top
+            }
+        case "g1-halves": return [box(0, 0, 5, 6)]                              // a half, shaded
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -456,6 +465,18 @@ extension Piece {
                 }
             }
             return out
+        // 1st grade, Shapes and equal parts (4 Nov)
+        case "g1-shapes": // a triangle, its corners dotted, and a long thin one drawn beside it: 11 by 6
+            func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.3 * cos(a), y + 0.3 * sin(a)) } }
+            return [line((0, 6), (7, 6), (2, 0), (0, 6)), dot(0, 6), dot(7, 6), dot(2, 0), line((8, 6), (11, 5), (9, 0), (8, 6))]
+        case "g1-compose": // a hexagon of two trapezoids, and a triangle waiting beside it: 11 by 6
+            return [line((0, 3), (1.5, 0), (4.5, 0), (6, 3), (4.5, 6), (1.5, 6), (0, 3)), line((0, 3), (6, 3)), line((8, 6), (9, 3), (11, 6), (8, 6))]
+        case "g1-build": // a box of two cubes, a cone standing beside it: 11 by 6
+            let base = (0...20).map { k -> CGPoint in let a = Double(k) / 20 * .pi; return P(9 + 1.5 * cos(a), 5.4 + 0.6 * sin(a)) }
+            return [box(1, 3, 6, 3), line((1, 3), (2, 1.5), (8, 1.5), (7, 3)), line((8, 1.5), (8, 4.5), (7, 6)), line((4, 3), (4, 6)), line((4, 3), (5, 1.5)),
+                    line((7.5, 5.4), (9, 0.5), (10.5, 5.4)), base]
+        case "g1-halves": // a rectangle cut straight down into halves: 10 by 6
+            return [box(0, 0, 10, 6), line((5, 0), (5, 6))]
         case "g1-tenmore": // three rows of the chart, a number ringed, one row down lit: 10 by 3, from row 1.5
             let ring = (0...24).map { k in let a = Double(k) / 24 * 2 * .pi; return P(4.5 + 0.7 * cos(a), 3 + 0.7 * sin(a)) }
             return [box(0, 1.5, 10, 3)] + (1..<10).map { x in line((Double(x), 1.5), (Double(x), 4.5)) } + [2.5, 3.5].map { y in line((0, y), (10, y)) } + [ring]

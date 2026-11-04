@@ -578,12 +578,14 @@ public enum Halves1 {
         public var r: Double { W / 2 }
     }
     public static func geom(_ shape: Int, small: Bool = false, x0: Double = 0) -> Geom {
-        shape == 2 || shape == 1 ? Geom(kind: shape, x0: x0, W: 30, H: 30) : small ? Geom(kind: 0, x0: x0, W: 30, H: 20) : Geom(kind: 0, x0: x0, W: 40, H: 24)
+        // the compare kind's square and circle are 24 across (30 showed at 71% with the names and record under them)
+        shape == 2 || shape == 1 ? Geom(kind: shape, x0: x0, W: small ? 24 : 30, H: small ? 24 : 30) : small ? Geom(kind: 0, x0: x0, W: 30, H: 20) : Geom(kind: 0, x0: x0, W: 40, H: 24)
     }
     /// The cut patterns that make `parts` equal parts.
     public static func patterns(_ g: Geom, _ parts: Int) -> [[Int]] {
         let W = Int(g.W), H = Int(g.H)
-        if g.kind == 2 { return parts == 2 ? [[down(15)], [across(15)]] : [[down(15), across(15)]] }
+        let m = W / 2
+        if g.kind == 2 { return parts == 2 ? [[down(m)], [across(m)]] : [[down(m), across(m)]] }
         var L: [[Int]] = []
         if parts == 2 { L += [[down(W / 2)], [across(H / 2)]]; if g.kind == 1 { L += [[d0], [d1]] } }
         else {
@@ -599,7 +601,7 @@ public enum Halves1 {
         let x0 = g.x0, W = g.W, H = g.H
         let TL = (x0, 0.0), TR = (x0 + W, 0.0), BR = (x0 + W, H), BL = (x0, H), O = (x0 + W / 2, H / 2)
         if g.kind == 2 {
-            let v = cuts.contains(down(15)), h = cuts.contains(across(15))
+            let v = cuts.contains(down(Int(W) / 2)), h = cuts.contains(across(Int(W) / 2))
             func wedge(_ a0: Double, _ a1: Double) -> [Shapes1.Pt] { [(g.cx, g.cy)] + Shapes1.arc(g.cx, g.cy, g.r, a0, a1, Int(((a1 - a0) / 5).rounded())) }
             if v && h { return [wedge(180, 270), wedge(270, 360), wedge(0, 90), wedge(90, 180)] }
             if v { return [wedge(90, 270), wedge(270, 450)] }
@@ -622,7 +624,7 @@ public enum Halves1 {
         if c == d1 { return ((x0 + W, 0), (x0, H)) }
         let at = Double(c % 100), vertical = c / 100 == 1
         if g.kind == 2 {
-            let half = sqrt(max(0, g.r * g.r - (at - 15) * (at - 15)))
+            let half = sqrt(max(0, g.r * g.r - (at - g.r) * (at - g.r)))
             return vertical ? ((x0 + at, g.cy - half), (x0 + at, g.cy + half)) : ((g.cx - half, at), (g.cx + half, at))
         }
         return vertical ? ((x0 + at, 0), (x0 + at, H)) : ((x0, at), (x0 + W, at))
