@@ -81,7 +81,8 @@ enum A1 {
     enum Tok { case n(Int, Sketch.Colour = .ink), op(String), box(Int?, wrong: Bool) }
     /// A record line from column 0 on the row whose middle is `line`: numbers and signs written tight (M7's), boxes 4
     /// squares wide half a square on.
-    static func record(_ pen: inout GridPen, _ id: String, _ toks: [Tok], x x0: Double = 0, line: Double = 1) {
+    @discardableResult
+    static func record(_ pen: inout GridPen, _ id: String, _ toks: [Tok], x x0: Double = 0, line: Double = 1) -> Double {
         var x = x0, run: [M7.Tok] = [], k = 0
         func flush() {
             guard !run.isEmpty else { return }
@@ -99,6 +100,7 @@ enum A1 {
             }
         }
         flush()
+        return x
     }
 
     // MARK: the number row 0–20
