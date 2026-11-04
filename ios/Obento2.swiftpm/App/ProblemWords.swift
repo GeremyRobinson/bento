@@ -74,6 +74,10 @@ enum ProblemLayout {
             return max(least * k, (w / sq).rounded(.up) * sq)
         }
         var out: [Block] = []
+        // the speaker mark, three squares left of the instruction's first row, its tap a square bigger all round
+        if Curriculum.voiced(run.spec.id) {
+            out.append(Block(kind: .voice, rect: CGRect(x: o.x - 3.5 * sq, y: o.y + (st.plan.sayTop - 0.5) * sq, width: 3 * sq, height: 3 * sq)))
+        }
         var x = left, y = st.blocksTop * sq
         func add(_ kind: Kind, _ w: Double) { out.append(Block(kind: kind, rect: CGRect(x: o.x + x, y: o.y + y, width: w, height: 2 * sq * k))); x += w + sq * k }
         for a in L.lessonBlocks { add(.action(a), width(a, 120)) }
@@ -124,7 +128,8 @@ enum ProblemLayout {
     }
 
     /// `action`: a paper lesson's own block ("Cut"), running the lesson's code (Hands.actions).
-    enum Kind: Equatable { case main, nextProblem, showMe, reset, choice(Int), next, practise, again, skip, field(String), key(String), action(String) }
+    /// `voice`: the drawn speaker mark beside the instruction (Kindergarten and 1st grade): it says the words again.
+    enum Kind: Equatable { case main, nextProblem, showMe, reset, choice(Int), next, practise, again, skip, field(String), key(String), action(String), voice }
     struct Block { let kind: Kind; let rect: CGRect }
 
     /// The blocks a problem shows now, in paper points: its choices, and Check (Show me and Start over are in the bar).
@@ -243,6 +248,7 @@ extension Rig {
             case .again: s.block(id, r, .plain, word: "Watch again", k: k)
             case .skip: s.block(id, r, .plain, word: "Skip", k: k)
             case .showMe, .reset: s.block(id, r, l.picture["showMe"] == 1 && b.kind == .showMe ? .main : .plain, icon: b.kind == .showMe ? "play" : "arrow-counter-clockwise", k: k)
+            case .voice: s.speaker("speaker", in: r.insetBy(dx: 0.5 * Paper.cell, dy: 0.5 * Paper.cell))
             case .choice(let n): s.block(id + "\(m.verdict.map { $0.right } as Bool?)", r, Sketch.Block.choice(l.typed["c"] == String(n), verdict: m.verdict?.right), centred: l.step.answer?.choices?[n], size: Sketch.wordSize, k: k)
             case .field(let f):
                 // right: green for a moment; wrong: red until they type again; the box being typed into has a cursor
@@ -382,6 +388,7 @@ extension Rig {
                     }
                 }
                 s.pace = 0.4
+            case .voice: s.speaker("speaker", in: r.insetBy(dx: 0.5 * sq, dy: 0.5 * sq))
             case .showMe, .reset, .key: break
             }
         }

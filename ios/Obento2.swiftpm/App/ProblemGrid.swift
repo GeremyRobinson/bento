@@ -162,6 +162,8 @@ enum ProblemGrid {
             if let b = withBoxes(d.record.bounds, d.boxes) { rec = rec.map { $0.union(b) } ?? b }
         }
         p.left = min(0, ((pic?.minX ?? 0) / sq).rounded(.down))
+        // a lesson that's spoken has its speaker mark three squares left of the instruction: the frame starts a block left
+        if Curriculum.voiced(l.spec.id) { p.left = min(p.left, -5) }
         let picW = ((pic?.maxX ?? 0) / sq).rounded(.up), picH = ((pic?.maxY ?? 0) / sq).rounded(.up)
         let recW = ((rec?.maxX ?? 0) / sq).rounded(.up), recH = ((rec?.maxY ?? 0) / sq).rounded(.up)
         // what to do, each step's (a story's pick says "Pick what to do"), and the How to's idea when it plays

@@ -197,6 +197,11 @@ enum PaperLessons {
         case "g6-mad": return MadLesson()
         case "g6-median": return MedianLesson()
         case "g6-boxplot": return BoxPlotLesson()
+        // Kindergarten, Count to 10 (4 Nov 2026)
+        case "gk-count10": return CountToTenLesson()
+        case "gk-onemore": return OneMoreLesson()
+        case "k-compare": return CompareGroupsLesson()
+        case "gk-numcompare": return CompareNumbersLesson()
         default: return nil
         }
     }

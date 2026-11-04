@@ -160,6 +160,11 @@ extension Piece {
             default: return [[q(1, 4), q(3, 4), q(3, 6), q(1, 6)]]                // a whole cube of small ones
             }
         // 6th grade, Data (4 Nov)
+        // Kindergarten, Count to 10 (4 Nov)
+        case "gk-count10": return [box(0, 5, 3, 1)]                             // the dots counted onto the track
+        case "gk-onemore": return [box(6, 5, 1, 1)]                             // the one more cube
+        case "k-compare": return [box(5, 0, 2, 1)]                              // the dots with no partner
+        case "gk-numcompare": return [box(4, 4, 3, 2)]                          // the cubes that are more
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -243,6 +248,23 @@ extension Piece {
         // a lesson still to come (G 3 Nov): an empty frame
         if !isTest && spec == nil { return [] }
         switch id {
+        // Kindergarten, Count to 10 (4 Nov)
+        case "gk-count10": // dots scattered over a ten track, three counted onto it: 11 by 6
+            func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.4 * cos(a), y + 0.4 * sin(a)) } }
+            return [box(0, 5, 10, 1)] + (1...9).map { x in line((Double(x), 5), (Double(x), 6)) }
+                + [dot(0.5, 5.5), dot(1.5, 5.5), dot(2.5, 5.5), dot(4.5, 0.5), dot(7.5, 1.5), dot(2.5, 2.5), dot(10.5, 0.5), dot(5.5, 3.5)]
+        case "gk-onemore": // the number stairs, each train one cube longer: 7 by 6
+            return (1...6).flatMap { k -> [[CGPoint]] in
+                let y = Double(k - 1), w = Double(k + 1)
+                return [box(0, y, w, 1)] + (1..<(k + 1)).map { x in line((Double(x), y), (Double(x), y + 1)) }
+            }
+        case "k-compare": // two rows of dots matched in pairs, two on top with no partner: 7 by 6
+            func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.4 * cos(a), y + 0.4 * sin(a)) } }
+            return (0..<7).map { dot(Double($0) + 0.5, 0.5) } + (0..<5).map { dot(Double($0) + 0.5, 5.5) }
+                + (0..<5).map { line((Double($0) + 0.5, 1), (Double($0) + 0.5, 5)) }
+        case "gk-numcompare": // two trains, the shorter one's end dropped across to the longer: 7 by 6
+            return [box(0, 0, 4, 2), box(0, 4, 7, 2), line((4, 0), (4, 6))] + (1..<4).map { x in line((Double(x), 0), (Double(x), 2)) }
+                + (1..<7).map { x in line((Double(x), 4), (Double(x), 6)) }
         case "g6-ratio": // two rectangles of cells growing together a row at a time: 11 by 6
             return [box(0, 0, 4, 6), box(5, 0, 6, 6), line((2, 0), (2, 6)), line((7, 0), (7, 6)), line((9, 0), (9, 6))]
                 + [2.0, 4].flatMap { y in [line((0, y), (4, y)), line((5, y), (11, y))] }

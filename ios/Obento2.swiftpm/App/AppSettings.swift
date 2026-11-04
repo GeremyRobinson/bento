@@ -14,8 +14,9 @@ enum AppSettings {
 
     /// A soft sound for a step right, a miss, a problem done. On unless a grown-up turns it off.
     static var sound: Bool { memory["sound"] as? Bool ?? (shots ? nil : d.object(forKey: "sound") as? Bool) ?? true }
-    /// Each step's words read out as they come. Off unless a grown-up turns it on (⋯ has Read it aloud either way).
-    static var readAloud: Bool { memory["readAloud"] as? Bool ?? (shots ? nil : d.object(forKey: "readAloud") as? Bool) ?? false }
+    /// Each step's words read out as they come. Off unless a grown-up turns it on (⋯ has Read it aloud either way), except
+    /// in Kindergarten and 1st grade, where it's on until a grown-up turns it off (the voice: most can't read yet).
+    static var readAloud: Bool { memory["readAloud"] as? Bool ?? (shots ? nil : d.object(forKey: "readAloud") as? Bool) ?? (profile.grade <= 1) }
     /// "" as the iPad is set, or "light", or "dark".
     static var theme: String { memory["theme"] as? String ?? (shots ? nil : d.string(forKey: "theme")) ?? "" }
 
@@ -37,7 +38,7 @@ enum AppSettings {
     static func forgetAll(saving: Bool) {
         memory = [:]
         if saving && !shots { for k in ["profile", "sound", "readAloud", "theme"] { d.removeObject(forKey: k) } }
-        else { memory["profile"] = Profile.fresh; memory["sound"] = true; memory["readAloud"] = false; memory["theme"] = "" }
+        else { memory["profile"] = Profile.fresh; memory["sound"] = true; memory["readAloud"] = nil; memory["theme"] = "" }
     }
 
     static func set(sound on: Bool, saving: Bool) { put("sound", on, saving) }
@@ -133,12 +134,24 @@ struct Listener: View {
         let reading = page?.current
         let words = reading.map { $0.intro ?? ($0.lesson.story && $0.lesson.step.answer?.choices != nil ? $0.lesson.words.hint : $0.lesson.words.say) }
         let readKey = reading.map { "\($0.id) \($0.lesson.index) \(words ?? "")" } ?? ""
+        // Kindergarten and 1st grade: the voice says every instruction, miss line and Say line, in tests too (they can't
+        // read the test either); a miss line is said each time a miss brings it
+        let voiced = reading.map { Curriculum.voiced($0.lesson.spec.id) } ?? false
+        let missKey = voiced ? reading.map { p in "\(p.id) \(p.lesson.index) \(p.lesson.misses) \(p.lesson.missedSteps.count) \(p.message?.text ?? "")" } ?? "" : ""
         Color.clear.frame(width: 0, height: 0)
             .allowsHitTesting(false)
             .onChange(of: heard) { old, new in Self.sounds(old, new) }
             .onChange(of: readKey) { _, key in
-                guard !key.isEmpty, AppSettings.readAloud, !(page?.inTest ?? true), let words, !Shots.active else { return }
+                guard !key.isEmpty, AppSettings.readAloud, let words else { return }
+                if voiced { Voice.shared.say([words, reading?.message?.text ?? ""].filter { !$0.isEmpty }.joined(separator: " ")); return }
+                guard !(page?.inTest ?? true), !Shots.active else { return }
                 Speech.shared.say(words)
+            }
+            .onChange(of: missKey) { old, new in
+                // the same step, a new miss line: say it (a new step's words are said above, with any line it opens on)
+                guard voiced, AppSettings.readAloud, !new.isEmpty, let line = reading?.message?.text, !line.isEmpty,
+                      old.split(separator: " ").prefix(2) == new.split(separator: " ").prefix(2) else { return }
+                Voice.shared.say(line)
             }
     }
 

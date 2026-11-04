@@ -454,7 +454,8 @@ final class SketchDrawer {
                   let d = Self.delta(was.kind, item.kind), hypot(d.x, d.y) > 0.01 else { continue }
             let dv = SIMD3(Float(d.x * k / Paper.unit), 0, Float(d.y * k / Paper.unit))
             let from = old.parts.map(\.position), base = old.move?.to ?? from
-            old.move = (from, base.map { $0 + dv }, now)
+            // after its delay, if it has one (dots gliding onto a track one after another)
+            old.move = (from, base.map { $0 + dv }, now + item.delay)
             old.sig = sigs[i]; old.item = item
             moved.insert(item.id)
         }

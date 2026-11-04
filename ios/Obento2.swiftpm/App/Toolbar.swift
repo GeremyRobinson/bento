@@ -432,6 +432,7 @@ struct Toolbar: View {
     /// The instruction only, never the hint (G 20 Oct): that's the Hint button's, and counted.
     private func readAloud() {
         guard canRead, let s = problem?.lesson.words else { return }
+        if let w = problem as? WorkProblem, Curriculum.voiced(w.lesson.spec.id) { Voice.shared.say(Voice.words(w)); return }
         Speech.shared.say(problem?.intro ?? s.say)
     }
 }

@@ -855,7 +855,12 @@ final class BarsPage {
         // while the How to plays, only its blocks do anything
         if playing && !howToGone {
             if let b = ProblemLayout.blocks(howTo).first(where: { $0.rect.contains(CGPoint(x: p.x, y: p.y)) }) {
-                switch b.kind { case .skip: skipping = true; case .next, .practise, .again: press(b.kind); default: break }
+                switch b.kind {
+                case .skip: skipping = true
+                case .next, .practise, .again: press(b.kind)
+                case .voice: if let w = howTo as? WorkProblem { Voice.shared.say(Voice.words(w)) }
+                default: break
+                }
             }
             return
         }
@@ -887,6 +892,7 @@ final class BarsPage {
             case .field(let id): (m as? WorkProblem)?.select(id)
             case .key(let key): (m as? WorkProblem)?.type(key)
             case .action(let name): (m as? WorkProblem)?.act(name)
+            case .voice: if let w = m as? WorkProblem { Voice.shared.say(Voice.words(w)) }
             }
             return
         }
