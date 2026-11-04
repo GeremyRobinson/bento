@@ -51,7 +51,8 @@ final class BigNumbersTests: XCTestCase {
         XCTAssertEqual(g4[0].title, "Big numbers")
         XCTAssertEqual(g4[0].lessons.map(\.id), ["g4-tentimes", "g4-readwrite", "g4-compare", "g4-placevalue", "g4-addsub"])
         XCTAssertTrue(Curriculum.built(g4[0]))
-        XCTAssertFalse(g4.dropFirst().contains(where: Curriculum.built))
+        XCTAssertTrue(Curriculum.built(g4[1]))
+        XCTAssertFalse(g4.dropFirst(2).contains(where: Curriculum.built))
         XCTAssertEqual(Curriculum.gradeTest(4), "test-grade-4")
         XCTAssertTrue(Curriculum.isGradeTest("test-grade") && Curriculum.isGradeTest("test-grade-4"))
         // no id is on two grades: each grade's progress is its own
